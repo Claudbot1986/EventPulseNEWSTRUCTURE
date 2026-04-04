@@ -2,6 +2,60 @@
 
 ---
 
+## Nästa-steg-analys 2026-04-04 (loop 19)
+
+### Vad förbättrades denna loop
+- **BLOCKERINGSANALYS:** undersökte varför scheduler timeoutar för network-sources
+- **kulturhuset:** permanent blockerad — har `sourceAdapter: "kulturhuset"` i source definition men ingen sådan adapter finns i kod
+- **fryshuset:** felaktigt rapporterad som network-source — source definition säger `preferredPath: render` (JS-rendered, behöver D-renderGate)
+- **gso:** `preferredPath: unknown`, DNS-problem, `needsRecheck: true` — behöver manuell verifiering
+- **berwaldhallen:** VERKAR fungera — 216 events extraherade och köade (loop 18 verifierat)
+
+### Scheduler Hang Bug (sekundär)
+- Scheduler hänger efter att network path är klar (~20s in i körning)
+- **Symptom:** Printar "No likely_event_api with 200 status found" och sen inget mer
+- **Status:** Processen lever men returnerar aldrig — terminal timeout vid 180s
+- **Root cause:** Okänd — network path logik verkar korrekt, men processen hänger i avslutning
+- **Prioritet:** Låg — berwaldhallen fungerade (kanske pga att extractFromApi aldrig anropades där heller?)
+
+### Sources Status (Uppdaterad)
+| Källa | Status | Problem | Nästa verktyg |
+|-------|--------|---------|---------------|
+| berwaldhallen | success (216 events) | ✓ Fungerar | - |
+| konserthuset | success (11 events) | ✓ Fungerar | - |
+| kulturhuset | BLOCKED | sourceAdapter saknas | source_adapter (byggs aldrig?) |
+| fryshuset | BLOCKED | JS-rendered | D-renderGate (saknas) |
+| gso | BLOCKED | DNS/okänt | manual_review |
+| debaser | pending_source_adapter | extractorn missar Webflow | source_adapter |
+
+### Generalization Gate Check
+- kulturhuset = Site-Specific (ElasticSearch API) → source adapter krävs
+- fryshuset = Site-Specific (Nuxt.js) → D-renderGate krävs
+- gso = Site-Specific (DNS/okänd arkitektur) → manual review
+
+### Tre möjliga nästa steg
+
+| # | Steg | Systemnytta | Risk | Varför nu |
+|---|------|-------------|------|-----------|
+| 1 | **Bygga D-renderGate** | Hög: aktiverar SBF, malmolive, fryshuset | Medel: headless browser | 3 källor väntar |
+| 2 | **Fixa scheduler hang bug** | Medel: möjliggör verifiering av network path | Låg: logging/debug | Förhindrar framtida timeouts |
+| 3 | **Uppdatera kulturhuset source definition** | Låg: dokumentation | Låg: ingen kodändring | Felaktig preferredPath rapporterad |
+
+### Rekommenderat nästa steg
+- **#1 — Bygga D-renderGate**
+
+Motivering: Fryshuset, SBF och malmolive är alla blockerade av samma orsak (JS-rendering). D-renderGate aktiverar 3 källor samtidigt. Detta är "minsta säkra förändring" med högst systemnytta.
+
+### Två steg att INTE göra nu
+1. **Bygga source adapter för kulturhuset** — Site-Specific, ElasticSearch API, låg prioritet
+2. **Försöka fixa network path för gso** — DNS-problem kräver manuell intervention
+
+### System-effect-before-local-effect
+- Valt steg (#1): Bygga D-renderGate
+- Varför: Aktiverar 3 sources (fryshuset, SBF, malmolive) med en komponent
+
+---
+
 ## Nästa-steg-analys 2026-04-04 (loop 18)
 
 ### Vad förbättrades denna loop
