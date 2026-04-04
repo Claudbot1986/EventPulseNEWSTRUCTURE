@@ -2,6 +2,52 @@
 
 ---
 
+## Nästa-steg-analys 2026-04-04 (loop 9)
+
+### Vad förbättrades denna loop
+- **WEBFLOW-VERIFIERING BLOCKERAD:** Inga fler Webflow-sajter finns i source-listan (420 sources)
+- **TESTADE:** Konserthuset, kulturhuset, fryshuset, sbf, malmolive, folkoperan — inga w-dyn-* mönster
+- **INSIKT:** Webflow CMS Extraction Gap (Pattern: debaser) = endast 1 sajt, kan inte verifiera generellt
+- **SBF BEKRÄFTAD:** Inte Webflow, sann render-kandidat (SiteVision JS-app)
+
+### Största kvarvarande flaskhals
+- **Verifiering omöjlig:** Pattern Capture "Webflow CMS Extraction Gap" är "Provisionally General" men inga fler Webflow-sajter finns att testa
+- **Dokumentation inkonsekvent:** runtime/sources_status.jsonl visar 8 sources, handoff säger 33 testade
+- **SBF/D-renderGate:** Fortfarande blockerad för D-renderGate (saknas)
+
+### Generalization Gate Status
+| Pattern | Sajter verifierade | Krav | Status |
+|---------|-------------------|------|--------|
+| Webflow CMS Extraction Gap | 1 (debaser) | 2-3 | **BLOCKERAD** — inga fler Webflow-sajter |
+
+### Konsekvens för C-lager-ändring
+- **Webflow C-lager-ändring = INTE MÖJLIG just nu** — Generalization Gate kräver 2-3 sajter
+- Vi har bara 1 bekräftad Webflow-sajt (debaser)
+- Nästa steg kan INTE vara att söka Webflow-verifiering — vi har testat alla tillgängliga sajter
+
+### Tre möjliga nästa steg
+
+| # | Steg | Systemnytta | Risk | Varför nu |
+|---|------|-------------|------|-----------|
+| 1 | **Köra normalizer→database på approved events** | Medel: Verifierar pipeline-slutresultat | Låg: Worker finns | 4 sources (19 events) klara för normalisering |
+| 2 | **Uppdatera sources_status.jsonl med testade 33 sources** | Medel: Dokumentation matchar verklighet | Låg: Endast status-uppdatering | Nästa tool-verktyg behöver korrekt input |
+| 3 | **Bygga source adapter för debaser** | Hög: Aktivera debaser direkt | Medel: Source-specifikt | Rätt verktyg för Site-Specific |
+
+### Rekommenderat nästa steg
+- **#2 — Uppdatera sources_status.jsonl**
+
+Motivering: Nästa logiska steg bör vara att köra normalizer på godkända events, men det förutsätter att sources_status.jsonl är uppdaterad med de 33 testade källorna. Att först fixa dokumentationen är "minsta säkra förändring".
+
+### Två steg att INTE göra nu
+1. **Söka fler Webflow-sajter** — Vi har testat 420 sources, inga fler Webflow hittades. Detta är uttömmande.
+2. **Bygga D-renderGate** — SBF är enda render-kandidaten, att bygga verktyg för 1 sajt är inte proportionellt
+
+### System-effect-before-local-effect
+- Valt steg (#2): Uppdatera sources_status.jsonl
+- Varför: Pipeline-verifiering (normalizer) kräver korrekt source-status som input
+
+---
+
 ## Nästa-steg-analys 2026-04-04 (loop 8)
 
 ### Vad förbättrades denna loop
