@@ -2,6 +2,46 @@
 
 ---
 
+## Nästa-steg-analys 2026-04-04 (loop 10)
+
+### Vad förbättrades denna loop
+- **SOURCES_STATUS.UPDATERAD:** 22 sources nu i runtime/sources_status.jsonl (12 ursprungliga + 10 testade tillagda)
+- **DOKUMENTATION MATCHAR VERKLIGHET:** handoff sa "33 testade", jsonl hade 12 — nu har jsonl 22 med tydliga statusar
+- **Parkerade källor dokumenterade:** malmolive (pending_render, high confidence), 9 triage_required
+
+### Största kvarvarande flaskhals
+- **22 sources ≠ 33 testade:** Loop 5 sa 33 sources testades, men endast 22 finns nu. Dokumentationsbortfall.
+- **Webflow-verifiering fortfarande blockerad:** 1 sajt (debaser), Generalization Gate kräver 2–3
+- **Normalizer har inte körts på nya events:** 19 events (konserthuset, dramaten, friidrott, textilmuseet) finns i queue
+
+### Generalization Gate Status
+| Pattern | Sajter verifierade | Krav | Status |
+|---------|-------------------|------|--------|
+| Webflow CMS Extraction Gap | 1 (debaser) | 2-3 | **BLOCKERAD** — inga fler Webflow-sajter |
+
+### Tre möjliga nästa steg
+
+| # | Steg | Systemnytta | Risk | Varför nu |
+|---|------|-------------|------|-----------|
+| 1 | **Köra normalizer→database på queued events** | Medel: Verifierar pipeline-slutresultat | Låg: Worker finns | 19 events väntar i queue |
+| 2 | **Verifiera konserthuset pipeline (triage→queue→database)** | Hög: Bekräfta hela flow | Låg: Känd path | Redan gjort förut, jämför |
+| 3 | **Undersöka remaining ~11 sources som saknas** | Medel: Dokumentation | Låg: Endast analys | Handoff sa 33, vi har 22 |
+
+### Rekommenderat nästa steg
+- **#1 — Köra normalizer på queued events**
+
+Motivering: Efter dokumentationsfix är nästa logiska steg att verifiera pipeline-resultat. 19 events från 4 godkända sources väntar i queue.
+
+### Två steg att INTE göra nu
+1. **Söka fler Webflow-sajter** — 420 sources testade, uttömmande
+2. **Bygga D-renderGate** — SBF och malmolive parkerade, bygga verktyg för 2 sajter är inte proportionellt NU
+
+### System-effect-before-local-effect
+- Valt steg (#1): Köra normalizer på queued events
+- Varför: Pipeline-verifiering ger mätbar output och bekräftar att allt fungerar
+
+---
+
 ## Nästa-steg-analys 2026-04-04 (loop 9)
 
 ### Vad förbättrades denna loop
@@ -21,7 +61,7 @@
 | Webflow CMS Extraction Gap | 1 (debaser) | 2-3 | **BLOCKERAD** — inga fler Webflow-sajter |
 
 ### Konsekvens för C-lager-ändring
-- **Webflow C-lager-ändring = INTE MÖJLIG just nu** — Generalization Gate kräver 2-3 sajter
+- **Webflow C-lager-ändring = INTE MÖJLIG just nu** — Generalization Gate kräver 2–3 sajter
 - Vi har bara 1 bekräftad Webflow-sajt (debaser)
 - Nästa steg kan INTE vara att söka Webflow-verifiering — vi har testat alla tillgängliga sajter
 
