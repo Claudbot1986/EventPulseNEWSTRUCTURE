@@ -152,7 +152,29 @@ npx tsx -e "extractFromHtml(html, 'konserthuset', 'https://www.konserthuset.se/p
 
 ---
 
-## Nästa-steg-analys [2026-04-04]
+## Nästa-steg-analys [2026-04-04 — Loop 17]
+
+### Vad förbättrades denna loop
+- **berwaldhallen** via scheduler: 216 events via network path (Tixly API)
+- **konserthuset** via scheduler: 11 events via HTML path
+- **gso**: C1=manual_review (DNS resolution failed) — fel source, behöver ej köras
+- Network path integration fungerar i scheduler (execute_network)
+
+### Största kvarvarande flaskhals
+**Modellvalidering ej bred.** Bara 8/420 sources testade (1.9%). Ingen systematisk mätning av C0/C1/C2 prestanda.
+
+### Sources-status (efter denna körning)
+| Status | Antal |
+|--------|-------|
+| success | 8 |
+| fail | 9 |
+| pending_render | 2 |
+| pending_network | 3 |
+| pending_api | 2 |
+| triage_required | 8 |
+| never_run | ~380 |
+
+### Nästa-steg-analys [2026-04-04]
 
 ### Vad förbättrades denna loop
 - Identifierade root cause: C2 "promising" ≠ extractFromHtml() URL-datum krav
@@ -161,24 +183,24 @@ npx tsx -e "extractFromHtml(html, 'konserthuset', 'https://www.konserthuset.se/p
 - SiteVision CMS-pattern misstänkt (CSS-class cards, ej URL-datum)
 
 ### Största kvarvarande flaskhals
-**C2 vs extractFromHtml() osynkning.** C2 mäter page density, extractFromHtml() kräver URL-datum eller specifikt datum-format.
+**C2 vs extractFromHtml() osynkning.** C2 mäter page density men extractFromHtml() kräver URL-datum eller specifikt datum-format.
 
 ### Tre möjliga nästa steg
-| # | Steg | Systemnytta | Risk | Varför nu |
-|---|------|-------------|------|-----------|
-| 1 | Uppdatera scandinavium source → gotevent | Rättar fel source | Låg — identifierar rätt source | scandinavium.se är defunct |
-| 2 | Sök fler SiteVision-sajter | Möjliggör C-lager-ändring | Medium — kan öka brus | Mönstret kan vara generellt |
-| 3 | Lägg till CSS-class extraction | Förbättrar nrm, vasamuseet | Medium — false positives | SiteVision vanligt i Sverige |
+|| # | Steg | Systemnytta | Risk | Varför nu |
+||---|------|-------------|------|-----------|
+|| 1 | Batch-testa 10+ aldrig-körda sources via scheduler --triage-batch | Bred modellvalidering | Låg — readonly diagnostik | Mål: ≥10 sajter testade |
+|| 2 | Analysera siteviz/URL-mönster på 3+ fungerande sajter | Förstå extractFromHtml() krav | Låg | Förbättrar C2→extract synk |
+|| 3 | Sök nya Tixly-baserade venues (network path) | Utökar working sources | Medium — API kan saknas | bekräftad path för 1 venue |
 
 ### Rekommenderat nästa steg
-**[1] — Uppdatera scandinavium source till gotevent.se** (minsta förändring, högst precision)
+**[1] — Kör scheduler --triage-batch på triage_required + never_run sources** — bredast modellvalidering för minst arbete
 
 ### Två steg att INTE göra nu
-1. **Ändra C2 thresholds** baserat på 1-2 sajter — Generalization Gate
-2. **Lägg till CSS-class extraction** utan cross-site verifiering — "Provisionally General"
+1. **Fördjupa nrm/vasamuseet/scandinavium** — Site-Specific pattern (C2 vs extract gap), Generalization Gate stoppar
+2. **Bygga D-renderGate** — ej prioriterat (bara 2 sources i render-kö)
 
 ### System-effect-before-local-effect
-Att förstå att scandinavium redirectar sparar tid på att köra pipeline mot en defunct domain.
+10+ sources testade → mätbar modellprestanda → data-driven förbättring. Utan bred validering: enskilda fixes teater.
 
 ### Största kvarvarande flaskhals
 **C2 och extractFromHtml() är inte synkade.** C2 använder breadth_wrongtype-logik (dateCount, densityScore) för att avgöra "lovande", men extractFromHtml() kräver specifika URL-mönster (YYYY-MM-DD-HHMM eller /kalender/) för att extrahera events.
