@@ -2,6 +2,53 @@
 
 ---
 
+## Nästa-steg-analys 2026-04-04 (loop 6)
+
+### Vad förbättrades denna loop
+- **VIKTIG UPPTÄCKT: debaser är INTE JS-renderad!**
+- curl av debaser.se/kalender visar MASSOR av events i ren HTML
+- C1:s `likelyJsRendered` heuristic (`!hasMain && linkCount < 5`) är FEL för Webflow-sajter
+- Webflow-sajter använder `<div class="w-dyn-list">` istället för `<main>/<article>`
+- Debaser har 73KB HTML med fullständiga event-listor (datum, artister, platser)
+
+### Root-cause-analys
+- **C1 falskt positiv:** `hasMain=false` + `hasArticle=false` → likelyJsRendered=true
+- Debaser ANVÄNDER INTE `<main>` eller `<article>` - Webflow-mönster
+- Men sidan har massor av event-data i ren HTML: `class="collection-item-20 w-dyn-item"`, `<h3 class="h3 calendar-data">`, event-links med `/events/...`
+
+### Generalization Gate
+- Observation fràn EN sajt (debaser) → Site-Specific
+- Men misstanke om generellt mönster för Webflow-baserade sajter
+- KRÄVER 2-3 verifierade fall innan C1-ändring
+
+### Största kvarvarande flaskhals
+- **C1 likelyJsRendered heuristik missar Webflow-sajter**
+- 2 sources (debaser, sbf) parkerade som "pending_render" men kanske inte behöver det
+- D-renderGate-bygget kan vara ogrundat om dessa källor redan har HTML-data
+
+### Tre möjliga nästa steg
+
+| # | Steg | Systemnytta | Risk | Varför nu |
+|---|------|-------------|------|-----------|
+| 1 | **Undersök fler Webflow-sajter** | Hög: kan avslöja om debaser är ensam eller generellt mönster | Låg: endast curl/analys | 2+ fall behövs innan C1-ändring |
+| 2 | **Testa debaser kalender-sida via sourceTriage** | Hög: kan bevisa att debaser kan extraheras med HTML-path | Medel: om det fungerar kan debaser tas ur render-kön | Nästa logiska verifiering |
+| 3 | **Undersök SBF similarly** | Medel: sbf är också i render-kön | Låg: endast analys | Kan ge fler bevis för Webflow-mönstret |
+
+### Rekommenderat nästa steg
+- **#2 — Testa debaser kalender-sida via sourceTriage**
+
+Motivering: curl visar tydligt att debaser har events i HTML. Nästa steg är att verifiera med vårt faktiska verktyg (C1→C2→extract) för att bevisa om HTML-path fungerar för debaser eller inte.
+
+### Två steg att INTE göra nu
+1. **Bygga D-renderGate** — för tidigt, 2 källor i render-kön kan vara falska positiver
+2. **Ändra C1 likelyJsRendered logik** — endast 1 sajt verifierad hittills
+
+### System-effect-before-local-effect
+- Valt steg (#2): Testa debaser kalender-sida med sourceTriage
+- Varför: Om debaser fungerar med HTML-path, kan vi ta bort den från render-kön och slippa bygga D-renderGate för denna källa
+
+---
+
 ## Nästa-steg-analys 2026-04-04 (loop 5)
 
 ### Vad förbättrades denna loop

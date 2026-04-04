@@ -1,0 +1,21 @@
+{
+  "batchId": "02-Ingestion_model-validation-batch-3",
+  "timestamp": "2026-04-04T10:36:03.940Z",
+  "total": 4,
+  "diagnosis_counts": {
+    "no-jsonld": 2,
+    "fetch-failed": 2
+  },
+  "next_path_counts": {
+    "html-heuristics": 2,
+    "manual-review": 2
+  },
+  "approved_count": 0,
+  "approved_urls": [],
+  "network_gate": {
+    "model": "prelim_1src",
+    "signalsFound": 2,
+    "openAccessible": 0,
+    "blocked": 2
+  }
+}
