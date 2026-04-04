@@ -2,6 +2,63 @@
 
 ---
 
+## Nästa-steg-analys 2026-04-04 (loop 14)
+
+### Vad förbättrades denna loop
+- **VERKTYGSBLOCKERING ÅTGÄRDAD:** network_inspection var INTE saknad — verktygen fanns redan!
+  - `02-Ingestion/B-networkGate/networkInspector.ts` — 692 rader, fullt implementerad
+  - `02-Ingestion/B-networkGate/A-networkGate.ts` — `evaluateNetworkGate()`, 295 rader
+  - `02-Ingestion/B-networkGate/index.ts` — exporterar allt
+- **STOR MYTS:** handoff.md (loop 12) sa "network_inspection saknas" — STÄMMER INTE
+- **ROOT-CAUSE:** `scheduler.ts` hade en STUB som sa `skip_not_implemented` för `preferredPath=network`
+
+### Ändringar i scheduler.ts
+1. **Ny import:** `inspectUrl` + `evaluateNetworkGate`
+2. **Ny ExecuteNow-type:** `'execute_network'` tillagd
+3. **Ny logik:** `preferredPath=network` → `execute_network` istället för `skip_not_implemented`
+4. **Nytt exekveringsblock:** network path med:
+   - `inspectUrl()` — probing av 20+ API-endpoints
+   - `evaluateNetworkGate()` — breadth mode (2), require usable endpoint
+   - HTML fallback om gate säger 'html'
+   - Status-uppdatering med inspektionsresultat
+
+### Sources som påverkas
+| Källa | Status före | Status efter |
+|-------|-------------|--------------|
+| kulturhuset | pending_network (skipped) | pending_network (körs nu) |
+| berwaldhallen | pending_network (skipped) | pending_network (körs nu) |
+| fryshuset | pending_network (skipped) | pending_network (körs nu) |
+| gso | pending_network (skipped) | pending_network (körs nu) |
+
+### Kvarvarande flaskhals
+- **network_inspection är långsam:** 20+ endpoints × 15s timeout = ~5 minuter per källa
+- **Event-extraction från API:** Finns ingen adapter för att faktiskt extrahera events från API-svar
+  - network_inspection hittar endpoints men nästa steg (bygga network_event_extraction) saknas
+- **D-renderGate:** Fortfarande saknas för sbf, malmolive
+
+### Tre möjliga nästa steg
+
+| # | Steg | Systemnytta | Risk | Varför nu |
+|---|------|-------------|------|-----------|
+| 1 | **Bygga network_event_extraction** | Hög: aktiverar API-events | Medel: ny komponent | 4 källor kan potentiellt få events om API:hittas |
+| 2 | **Optimera network_inspection timeout** | Medel: snabbar uppalla 4 källor | Låg: bara config | Nuvarande 15s per endpoint är för långsamt |
+| 3 | **Bygga D-renderGate** | Hög: aktiverar 2 källor | Medel: headless browser | SBF och malmolive väntar |
+
+### Rekommenderat nästa steg
+- **#1 — Bygga network_event_extraction**
+
+Motivering: network_inspection kan nu köras men hittar bara endpoints — nästa steg är att faktiskt extrahera events från de API:er som hittas.
+
+### Två steg att INTE göra nu
+1. **Bygga D-renderGate** — endast 2 källor väntar, network har 4
+2. **Testa fler HTML-sources** — modellen redan utvärderad på 33+ sajter
+
+### System-effect-before-local-effect
+- Valt steg (#1): Bygga network_event_extraction
+- Varför: Nästa logiska steg i network-path. Utan detta kan network_inspection bara rapportera men inte leverera events.
+
+---
+
 ## Nästa-steg-analys 2026-04-04 (loop 13)
 
 ### Vad förbättrades denna loop
