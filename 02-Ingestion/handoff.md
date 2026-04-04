@@ -7,29 +7,32 @@
 ### Bakgrund
 01-Sources fas avslutad. Tre HTML-kandidater verifierades med C2 och extractFromHtml.
 
-### Verifieringsresultat
+### Verifieringsresultat (UPPDATERAD 2026-04-04)
 
-| Källa | C2 Verdict | C2 Score | Extraction |
-|--------|------------|----------|------------|
-| dramaten | unclear | 10 | 0 events |
-| malmoopera | promising | 48 | 0 events |
-| malmolive | promising | 22 | 0 events |
+| Källa | C0 Discovery | Extraction | Faktiskt utfall |
+|--------|-------------|------------|-----------------|
+| malmoopera | 18 links, 10 candidates, winner density=38 | 7-8 events ✓ | **FUNGERAR** |
+| malmoopera /pa-scen/ | - | HTTP 404 | Path existerar inte |
+| malmolive | Ej testad ännu | - | - |
+| dramaten | Ej testad ännu | - | - |
 
-### Root-cause (bekräftad från 01-Sources)
-- C2 mäter page-level signals (datePatterns, eventTitles, priceMarkers, eventListStructure)
-- extractFromHtml letar efter: URLs med datum ELLER /kalender/-länkar ELLER Swedish dates
-- Root-sidorna har höga signals men är INTE event-listings
-- Events finns på undersidor: `/pa-scen/`, `/program/`, `/kalender/`
+### Root-cause (UPPDATERAD efter verklig testning)
+- **C0 htmlFrontierDiscovery FUNGERAR** - finns och används i sourceTriage.ts (rad 96)
+- **C0 hittar 18 internal links** på malmoopera, rankar query-param URLs högst
+- **Root-sida ger 8 events** direkt via Swedish dates i text
+- **C0 winner URL ger 7 events** - query-param sidor fungerar
+- **/pa-scen/ finns EJ** - Malmö Opera har ingen sådan path (404)
+
+### Gammal felaktig analys (från 01-Sources)
+- Påstående: "Events finns på undersidor: `/pa-scen/`, `/program/`, `/kalender/`"
+- Verklighet: `/pa-scen/` = 404, `/program/` = 404, `/kalender/` = 404 på malmoopera
+- Events hittas via Swedish dates i root-sidans text och via query-param URLs
 
 ### Konsekvens för 02-Ingestion
-- **C2 fungerar korrekt** - kan identifiera "promising" pages
-- **Men extraction väljer fel sida** - root-sida istället för intern event-listing
-- **Behov: HTML Frontier Discovery** - hitta rätt intern sida innan extraction
-
-### Specifika källor att testa
-- **malmoopera** - C2=promising(48), 7 event-länkar, 8 svenska datum. Ska hitta `/pa-scen/` eller liknande
-- **malmolive** - C2=promising(22), 2 event-länkar. Ska hitta `/kalender/`
-- **dramaten** - C2=unclear(10), 0 event-länkar. Kräver mer scouting
+- **C0 (discoverEventCandidates) fungerar korrekt**
+- **Extraction fungerar** - Swedish dates + text-scraping hittar events
+- **Tidigare hypotes var fel** - problemet var inte "wrong page selection"
+- **Behöver verifiera malmolive och dramaten** för att förstå hela bilden
 
 ### Nästa steg enligt 02-Ingestion current-task
 1. Bygg HTML Frontier Discovery
@@ -265,6 +268,41 @@ Identifiera och kategorisera alla 100 källor efter varför de INTE levererar ev
 - Gör endast analys och dokumentation - INGA kodändringar
 - Uppdatera handoff.md med resultatet av analysen
 - Svara på svenska
+
+## Nästa-steg-analys 2026-04-04 (loop 2)
+
+### Vad förbättrades denna loop
+- Upptäckte att C0-htmlFrontierDiscovery FINNS och ANVÄNDS i sourceTriage.ts
+- Verifierade att Malmö Opera ROOT ger 8 events (inte 0 som handoff påstod)
+- Verifierade att C0 winner URL ger 7 events
+- Upptäckte att /pa-scen/ etc är 404 - pathen existerar inte
+- Korrekt analys: problemet är INTE "wrong page selection" som current-task säger
+
+### Största kvarvarande flaskhals
+- **Felaktiga förutsättningar** - handoff.md hade 0 events för malmoopera, verkligheten är 7-8
+- **Hela pipeline behöver verifieras** - vi testade individuella steg men inte hela flowet
+- **malmolive och dramaten är inte testade** - vet inte deras faktiska status
+
+### Tre möjliga nästa steg
+
+| # | Steg | Systemnytta | Risk | Varför nu |
+|---|------|-------------|------|-----------|
+| 1 | **Testa malmolive och dramaten** | Hög: förstå hela bilden | Låg: bara diagnostik | Vet malmoopera fungerar, behöver se om andra gör det |
+| 2 | **Kör sourceTriage på malmoopera** | Hög: bekräftar hela pipeline från triage→queue | Låg: befintlig kod | Säkerställ integration fungerar |
+| 3 | **Uppdatera current-task.md** | Medel: rätt förutsättningar | Låg: dokumentation | Felaktig task leder till fel arbete |
+
+### Rekommenderat nästa steg
+- **#1 — Testa malmolive och dramaten**
+
+Motivering: För att avgöra om problemet verkligen ligger i "wrong page selection" eller om det är något annat. Malmö Opera fungerar nu - behöver bekräfta om malmolive/dramaten har liknande framgång eller har verkliga problem.
+
+### Två steg att INTE göra nu
+1. **Bygga om extraction-logiken** — extraction fungerar för malmoopera. Att ändra globalt baserat på en källa är förbjudet enligt Generalization Gate.
+2. **Integrera C0 djupare** — C0 används redan i sourceTriage.ts. Att bygga om är prematurt utan att först verifiera befintlig integration.
+
+### System-effect-before-local-effect
+- Valt steg (#1): Testa malmolive och dramaten
+- Varför: Ger bredare bild av systemets faktiska status. Hjälper förstå om problemet är globalt eller site-specifikt. Utan denna info kan vi arbeta på fel premisser.
 
 ---
 
