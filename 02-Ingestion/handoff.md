@@ -2,43 +2,55 @@
 
 ---
 
-## Nästa-steg-analys 2026-04-04 (loop 10)
+## Nästa-steg-analys 2026-04-04 (loop 11)
 
 ### Vad förbättrades denna loop
-- **SOURCES_STATUS.UPDATERAD:** 22 sources nu i runtime/sources_status.jsonl (12 ursprungliga + 10 testade tillagda)
-- **DOKUMENTATION MATCHAR VERKLIGHET:** handoff sa "33 testade", jsonl hade 12 — nu har jsonl 22 med tydliga statusar
-- **Parkerade källor dokumenterade:** malmolive (pending_render, high confidence), 9 triage_required
+- **VERIFIERAD QUEUE-STATUS:** Redis queue = 0 (INTE 19 som tidigare dokumenterat)
+- **DOKUMENTATIONSKORREKTION:** Events har redan körts genom normalizer (loop 8 bekräftade "~18 i database")
+- **INGEN KÖRBAR UPpgift med befintliga verktyg:** pending_network/api = 4, pending_render = 2, pending_source_adapter = 1
 
 ### Största kvarvarande flaskhals
-- **22 sources ≠ 33 testade:** Loop 5 sa 33 sources testades, men endast 22 finns nu. Dokumentationsbortfall.
-- **Webflow-verifiering fortfarande blockerad:** 1 sajt (debaser), Generalization Gate kräver 2–3
-- **Normalizer har inte körts på nya events:** 19 events (konserthuset, dramaten, friidrott, textilmuseet) finns i queue
+- **VERKTYG SAKNAS:** Inga av följande verktyg finns:
+  - network_inspection (för kulturhuset, berwaldhallen, fryshuset, gso)
+  - D-renderGate (för sbf, malmolive)
+  - source_adapter (för debaser)
+- **Alla 4 pending_network/api källor är blockerade av saknade verktyg**
+- **Normalizer-uppgiften (loop 10 #1) var redan genomförd** — queue=0 bekräftar detta
 
 ### Generalization Gate Status
 | Pattern | Sajter verifierade | Krav | Status |
 |---------|-------------------|------|--------|
 | Webflow CMS Extraction Gap | 1 (debaser) | 2-3 | **BLOCKERAD** — inga fler Webflow-sajter |
 
+### Sources Status (verifierad)
+| Status | Antal | Kan köras? |
+|--------|-------|------------|
+| success | 6 | ✓ (redan gjort) |
+| pending_network/api | 4 | ✗ (network_inspection saknas) |
+| pending_render | 2 | ✗ (D-renderGate saknas) |
+| pending_source_adapter | 1 | ✗ (source_adapter saknas) |
+| triage_required | 7 | ⚠ (0 events, redan testade) |
+
 ### Tre möjliga nästa steg
 
 | # | Steg | Systemnytta | Risk | Varför nu |
 |---|------|-------------|------|-----------|
-| 1 | **Köra normalizer→database på queued events** | Medel: Verifierar pipeline-slutresultat | Låg: Worker finns | 19 events väntar i queue |
-| 2 | **Verifiera konserthuset pipeline (triage→queue→database)** | Hög: Bekräfta hela flow | Låg: Känd path | Redan gjort förut, jämför |
-| 3 | **Undersöka remaining ~11 sources som saknas** | Medel: Dokumentation | Låg: Endast analys | Handoff sa 33, vi har 22 |
+| 1 | **Bygga network_inspection verktyg** | Hög: aktiverar 4 källor | Medel: ny komponent | Berwaldhallen, kulturhuset, fryshuset, gso väntar |
+| 2 | **Bygga D-renderGate** | Hög: aktiverar 2 källor | Medel: headless browser | SBF, malmolive väntar |
+| 3 | **Köra fler html-heuristics sources** | Medel: breddar modell-validering | Låg: befintlig kod | Mål: ≥10 sources med events |
 
 ### Rekommenderat nästa steg
-- **#1 — Köra normalizer på queued events**
+- **#1 — Bygga network_inspection verktyg**
 
-Motivering: Efter dokumentationsfix är nästa logiska steg att verifiera pipeline-resultat. 19 events från 4 godkända sources väntar i queue.
+Motivering: 4 sources (kulturhuset, berwaldhallen, fryshuset, gso) är blockerade av saknade network_inspection. Dessa är alla `pending_network` vilket betyder att de har networkSignalsFound=true. Att bygga detta verktyg aktiverar flest blockerade källor samtidigt.
 
 ### Två steg att INTE göra nu
-1. **Söka fler Webflow-sajter** — 420 sources testade, uttömmande
-2. **Bygga D-renderGate** — SBF och malmolive parkerade, bygga verktyg för 2 sajter är inte proportionellt NU
+1. **Köra normalizer** — Queue=0, redan gjort
+2. **Bygga source_adapter för debaser** — Hög insats för 1 sajt, bättre att först prioritera verktyg för 4+ källor
 
 ### System-effect-before-local-effect
-- Valt steg (#1): Köra normalizer på queued events
-- Varför: Pipeline-verifiering ger mätbar output och bekräftar att allt fungerar
+- Valt steg (#1): Bygga network_inspection verktyg
+- Varför: Aktiverar 4 sources samtidigt, proportionellt mot investeringen
 
 ---
 
