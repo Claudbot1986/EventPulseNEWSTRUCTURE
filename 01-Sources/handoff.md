@@ -32,6 +32,64 @@ Problem: Behövde verifiera no-jsonld kandidaters lämpliga path
 2. ~~Välj 1-2 HTML-källor för HTML extraction test~~ ✓ KLART (testade operan = 0 events)
 3. ~~Uppdatera ALL_SOURCES.md med nya Statuser~~ ✓ KLART
 
+---
+
+## Verifierings-loop (2026-04-04)
+
+### Syfte
+Verifiera ett urval scoutade HTML-kandidater för att bekräfta att C2 och extraction fungerar korrekt.
+
+### Testade källor
+
+| Källa | URL | C2 Verdict | C2 Score | Extraction |
+|--------|-----|------------|----------|------------|
+| dramaten | https://www.dramaten.se | unclear | 10 | 0 events |
+| malmoopera | https://www.malmoopera.se | **promising** | 48 | 0 events |
+| malmolive | https://malmolive.se | **promising** | 22 | 0 events |
+
+### C2 Page-Level Markers
+
+| Källa | datePatterns | eventTitles | venueMarkers | priceMarkers | eventListStructure |
+|--------|-------------|-------------|--------------|--------------|-------------------|
+| dramaten | 3 | 12 | 3 | 0 | 0 |
+| malmoopera | **32** | 14 | 1 | **5** | **6** |
+| malmolive | **18** | 11 | 0 | 0 | 0 |
+
+### Root-Cause Analys
+
+**Problem:** C2 säger "promising" men extraction ger 0 events.
+
+**Förklaring:**
+1. C2 mäter **page-level signals** (datum i text, headings, liststruktur) - dessa är HÖGA för malmoopera/malmolive
+2. Men `extractFromHtml` letar efter:
+   - URLs med inbäddade datum (t.ex. `/2026-04-15-19-00/`)
+   - Länkar i `/kalender/` paths
+   - Swedish dates i näraliggande text
+3. Root-sidorna har datum i text men INTE som klickbara event-länkar
+4. Events finns på **undersidor** (t.ex. `/pa-scen/`, `/program/`, `/kalender/`)
+
+**Slutsats:**
+- Dessa källor behöver **HTML Frontier Discovery** för att hitta rätt interna sidor
+- C2 är korrekt som säger "promising" - sidan ser ut som en eventsida
+- Men rätt intern sida måste väljas före extraction kan fungera
+- Root-sida ≠ eventsida för dessa källor
+
+### Page Analysis (2026-04-04)
+
+| Källa | JSON-LD | Event-länkar | Svenska datum | Root-sida som eventsida? |
+|-------|---------|--------------|---------------|-------------------------|
+| dramaten | 0 | **0** | 6 st | ❌ NEJ - root är "Misantropen" (pjäs) |
+| malmoopera | 0 | **7** | 8 st | ⚠️ Delvis - datum i text men inte som events |
+| malmolive | 0 | **2** | 0 | ❌ NEJ - root är "Malmö Live Konserthus" |
+
+### Nästa steg
+1. ~~Verifiera HTML-kandidater~~ ✓ KLART
+2. Identifiera root-cause ✓ KLART
+3. Dokumentera behov av HTML Frontier Discovery
+4. Välja nästa kandidater att scouta
+
+---
+
 ### Batch scouting (2026-04-03)
 Datum: 2026-04-03
 Problem: Behövde systematiskt scouta alla untestade källor
