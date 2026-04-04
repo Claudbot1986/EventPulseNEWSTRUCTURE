@@ -113,8 +113,13 @@ export async function queueEvent(
   rawEvent: RawEventInput
 ): Promise<boolean> {
   try {
+    // Sanitize job ID: BullMQ doesn't allow colons in custom job IDs
+    // Tixly API returns IDs like "124187:1" with colons
+    // Note: eventId may already contain sourceId (e.g. "berwaldhallen-124187:1")
+    // so we only sanitize, don't add source prefix again
+    const sanitizedEventId = eventId.replace(/:/g, '-');
     await rawEventsQueue.add(`${source}:${eventId}`, rawEvent, {
-      jobId: `${source}:${eventId}`,
+      jobId: sanitizedEventId,
     });
     return true;
   } catch (err: any) {

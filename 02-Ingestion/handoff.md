@@ -2,6 +2,54 @@
 
 ---
 
+## Nästa-steg-analys 2026-04-04 (loop 18)
+
+### Vad förbättrades denna loop
+- **FIXADE QUEUE-QUEUE BUGG:** BullMQ accepterar inte colons i job IDs
+- **Problem:** Tixly API returnerar event IDs som `124187:1` (med colons) men BullMQ jobId får inte innehålla `:`
+- **Fix:** `fetchTools.ts` rad 113-127 — sanitera eventId genom att ersätta `:` med `-`
+- **Verifierat:** `Queued: 216/216` — alla events köade korrekt
+
+### Ändringar i fetchTools.ts
+```typescript
+// Före: jobId = `${source}:${eventId}` (fel — kolon i job ID)
+// Nu: jobId = eventId.replace(/:/g, '-') (santerat)
+```
+
+### Verifiering
+```
+API extraction: 216 events (1 raw, 0 parse errors)
+Queued: 216/216
+Redis: 100 berwaldhallen events med korrekta job IDs (t.ex. berwaldhallen-121473)
+```
+
+### Kvarvarande flaskhals
+- **Inga blockerande** — berwaldhallen network path fungerar nu fullt ut
+- **Nästa:** Köra scheduler på andra network-sources (kulturhuset, fryshuset, gso)
+
+### Tre möjliga nästa steg
+
+| # | Steg | Systemnytta | Risk | Varför nu |
+|---|------|-------------|------|-----------|
+| 1 | **Köra scheduler --source kulturhuset** | Hög: testa HTML-fallback | Låg: kulturhuset har ingen API, behöver HTML | Verifierar fallback path |
+| 2 | **Köra scheduler --source fryshuset** | Hög: aktivera fler network-sources | Låg: fryshuset har networkSignalsFound=true | Utöka network path |
+| 3 | **Bygga D-renderGate** | Hög: aktiverar 2 källor | Medel: headless browser | SBF och malmolive väntar |
+
+### Rekommenderat nästa steg
+- **#2 — Köra scheduler --source fryshuset**
+
+Motivering: berwaldhallen fungerar nu. Nästa steg är att utöka network path till andra sources. fryshuset har `networkSignalsFound=true` från tidigare tester.
+
+### Två steg att INTE göra nu
+1. **Bygga D-renderGate** — endast 2 källor (SBF, malmolive) väntar, network har 4
+2. **Köra --recheck på alla** — 420 sources tar timeout, onödigt
+
+### System-effect-before-local-effect
+- Valt steg (#2): Verifiera network path på fryshuset
+- Varför: Utökar redan verifierad network path till fler sources
+
+---
+
 ## Nästa-steg-analys 2026-04-04 (loop 17)
 
 ### Vad förbättrades denna loop
