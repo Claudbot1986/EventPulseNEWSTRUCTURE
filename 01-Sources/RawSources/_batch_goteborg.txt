@@ -1,0 +1,68 @@
+| Namn | URL | Stad | Kategori | Insamlad | Notis |
+|------|-----|------|----------|----------|-------|
+| Liseberg | https://www.gronalund.com | Göteborg | festival | 2026-04-04 | Nöjespark och konserter |
+| GöteborgsOperan | https://www.opera.se/goteborg | Göteborg | teater | 2026-04-04 | Operahus |
+| Stora Teatern Göteborg | https://www.storateatern.se | Göteborg | teater | 2026-04-04 | Stor teater |
+| Göteborgs Konserthus | https://www.konserthuset.se/goteborg | Göteborg | konserthus | 2026-04-04 | Konserthus |
+| Göteborgs Stadsteatern | https://www.stadsteatern.se | Göteborg | teater | 2026-04-04 | Kommunal teater |
+| Partille Arena | https://www.partillearena.se | Göteborg | arena | 2026-04-04 | Multiarena |
+| Scandinavium | https://www.scandinavium.se | Göteborg | arena | 2026-04-04 | Stor arena |
+| FriArena | https://www.friarena.se | Göteborg | arena | 2026-04-04 | Sportarena |
+| Universeum | https://www.universeum.se | Göteborg | museum | 2026-04-04 | Vetenskapscenter |
+| Naturhistoriska Museet | https://www.naturhistoriska.se | Göteborg | museum | 2026-04-04 | Naturhistoriskt |
+| Röhsska Museet | https://www.rohsska.se | Göteborg | museum | 2026-04-04 | Design och konsthantverk |
+| Göteborgs Konstmuseum | https://www.goteborgskonstmuseum.se | Göteborg | museum | 2026-04-04 | Konstmuseum |
+| Arkitekturgalleriet | https://www.arkitekturgalleriet.se | Göteborg | museum | 2026-04-04 | Arkitektur |
+| Boplanet | https://www.boplanet.se | Göteborg | museum | 2026-04-04 | Leikmuseum |
+| Slottsskogen | https://www.slottsskogen.se | Göteborg | park | 2026-04-04 | Park med konserter |
+| Botaniska Trädgården | https://www.botaniska.se | Göteborg | park | 2026-04-04 | Botanisk trädgård |
+| Trädgårdsföreningen | https://www.tradgardsforeningen.se | Göteborg | park | 2026-04-04 | Park och evenemang |
+| Sticky Fingers | https://www.stickyfingers.se | Göteborg | nattliv | 2026-04-04 | Musikklubb |
+| Pustervik | https://www.pustervik.nu | Göteborg | nattliv | 2026-04-04 | Kultur och nattliv |
+| Oceanen | https://www.oceanen.se | Göteborg | nattliv | 2026-04-04 | Kulturhus |
+| B.Republic | https://www.brepublic.se | Göteborg | nattliv | 2026-04-04 | Nattklubb |
+| Fängelset | https://www.fangelset.org | Göteborg | nattliv | 2026-04-04 | Musikklubb |
+| Downtown | https://www.downtown.se | Göteborg | nattliv | 2026-04-04 | Nattklubb |
+| IFK Göteborg | https://www.ifkgoteborg.se | Göteborg | idrott | 2026-04-04 | Fotbollsklubb |
+| BK Häcken | https://www.hacken.se | Göteborg | idrott | 2026-04-04 | Fotbollsklubb |
+| GAIS | https://www.gais.se | Göteborg | idrott | 2026-04-04 | Fotbollsklubb |
+| ÖIS | https://www.ois.se | Göteborg | idrott | 2026-04-04 | Fotbollsklubb |
+| Frölunda HC | https://www.frolundaIndians.com | Göteborg | idrott | 2026-04-04 | Ishockey |
+| Visit Gothenburg | https://www.visitgothenburg.se | Göteborg | turism | 2026-04-04 | Turistguide |
+| Chalmers | https://www.chalmers.se | Göteborg | universitet | 2026-04-04 | Tekniskt universitet |
+| Göteborgs Universitet | https://www.gu.se | Göteborg | universitet | 2026-04-04 | Universitet |
+| Göteborgs Symfoniorkester | https://www.gso.se | Göteborg | konserthus | 2026-04-04 | Symfoniorkester |
+| Röda Kvarn | https://www.rodakvarn.se | Göteborg | scen | 2026-04-04 | Biograf och scen |
+| Göteborgs Film Festival | https://www.gothenburgfilmfestival.com | Göteborg | festival | 2026-04-04 | Filmfestival |
+| Jazzfestivalen Göteborg | https://www.jazzfestivalen.se | Göteborg | festival | 2026-04-04 | Jazzfestival |
+| Liljevalchs | https://www.liljevalchs.se | Göteborg | museum | 2026-04-04 | Konsthall |
+| Hasselblad Center | https://www.hasselbladcenter.se | Göteborg | museum | 2026-04-04 | Fotografimuseum |
+| Volvo Museum | https://www.volvomuseum.se | Göteborg | museum | 2026-04-04 | Företagsmuseum |
+| Folkteatern | https://www.folkteatern.se | Göteborg | teater | 2026-04-04 | Folklig teater |
+| Teater Tribunalen | https://www.tribunalen.se | Göteborg | teater | 2026-04-04 | Inhyrd scen |
+| Regionteatern | https://www.regionteater.se | Göteborg | teater | 2026-04-04 | Regional teater |
+| Bokmässan | https://www.bokmassan.se | Göteborg | mässa | 2026-04-04 | Bokmässa |
+| Göteborgs Design Festival | https://www.designfestival.se | Göteborg | festival | 2026-04-04 | Designfestival |
+| Göteborgs Kulturfestival | https://www.kulturfestivalen.se | Göteborg | festival | 2026-04-04 | Kulturfestival |
+| Stenpiren | https://www.stenpiren.se | Göteborg | scen | 2026-04-04 | Kaj med evenemang |
+| Göteborgs Domkyrka | https://www.goteborgsdomkyrka.se | Göteborg | scen | 2026-04-04 | Domkyrka |
+| Masthuggskyrkan | https://www.masthuggskyrkan.se | Göteborg | scen | 2026-04-04 | Kyrka med konserter |
+| Paddan | https://www.paddan.se | Göteborg | turism | 2026-04-04 | Båtturer |
+| Strömma | https://www.stromma.se | Göteborg | turism | 2026-04-04 | Sightseeing |
+| Andra Långgatan | https://www.andra.se | Göteborg | nattliv | 2026-04-04 | Nattlivsstråk |
+| Kino | https://www.kinogoteborg.se | Göteborg | nattliv | 2026-04-04 | Biograf |
+| Göteborgs Litteraturhus | https://www.litteraturhuset.se | Göteborg | kulturhus | 2026-04-04 | Litterärt kulturhus |
+| Hammarkullen | https://www.hammarkullen.se | Göteborg | scen | 2026-04-04 | Kulturcentrum |
+| Ruddalen | https://www.ruddalen.se | Göteborg | park | 2026-04-04 | Park och idrott |
+| Mölndals | https://www.molndal.se | Göteborg | kommunal | 2026-04-04 | Kommun med evenemang |
+| Partille | https://www.partille.se | Göteborg | kommunal | 2026-04-04 | Kommun med evenemang |
+| Kungsbacka | https://www.kungsbacka.se | Göteborg | kommunal | 2026-04-04 | Kommun med evenemang |
+| Mölndals Futsal | https://www.molndalsfutsal.se | Göteborg | idrott | 2026-04-04 | Sportförening |
+| Göteborgs Arkitekturgalleri | https://www.arkitekturgalleriet.se | Göteborg | museum | 2026-04-04 | Arkitektur |
+| Liljevalchs Konsthall | https://www.liljevalchs.se | Göteborg | museum | 2026-04-04 | Konsthall |
+| Göteborgs Stadsbibliotek | https://www.goteborgsstad.se/bibliotek | Göteborg | scen | 2026-04-04 | Bibliotek med evenemang |
+| Fattar | https://www.fattar.se | Göteborg | nattliv | 2026-04-04 | Nattklubb |
+| Fyrfäderna | https://www.fyrfaderna.se | Göteborg | nattliv | 2026-04-04 | Musikklubb |
+| Neon | https://www.neon.se | Göteborg | nattliv | 2026-04-04 | Nattklubb |
+| Bar Brooklyn | https://www.barbrooklyn.se | Göteborg | nattliv | 2026-04-04 | Bar och event |
+| Spånggatan | https://www.spånggatan.se | Göteborg | nattliv | 2026-04-04 | Nattliv |

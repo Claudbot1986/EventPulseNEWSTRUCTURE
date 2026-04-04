@@ -1,0 +1,58 @@
+| Namn | URL | Stad | Kategori | Insamlad | Notis |
+|------|-----|------|----------|----------|-------|
+| Malmö Arena | https://www.malmöarena.se | Malmö | arena | 2026-04-04 | Multiarena |
+| Malmö Opera | https://www.malmöopera.se | Malmö | teater | 2026-04-04 | Operahus |
+| Malmö Stadsteatern | https://www.malmöstadsteatern.se | Malmö | teater | 2026-04-04 | Kommunal teater |
+| Malmö Konserthus | https://www.malmökonserthus.se | Malmö | konserthus | 2026-04-04 | Konserthus |
+| Malmö Museum | https://www.malmömuseum.se | Malmö | museum | 2026-04-04 | Stadsmuseum |
+| Moderna Museet Malmö | https://www.moderna.se/malmo | Malmö | museum | 2026-04-04 | Konstmuseum |
+| Form/Design Museum | https://www.formdesigncenter.se | Malmö | museum | 2026-04-04 | Design och form |
+| Malmö Konstmuseum | https://www.malmökonstmuseum.se | Malmö | museum | 2026-04-04 | Konstmuseum |
+| Teknikens och Sjöfartens Museum | https://www.tsfm.se | Malmö | museum | 2026-04-04 | Teknik och sjöfart |
+| Historiska Museet Malmö | https://www.malmöhistoriska.se | Malmö | museum | 2026-04-04 | Historiskt museum |
+| Malmö Stadsbibliotek | https://www.malmö.se/bibliotek | Malmö | scen | 2026-04-04 | Bibliotek med evenemang |
+| Slagthuset | https://www.slagthuset.se | Malmö | nattliv | 2026-04-04 | Nattklubb och event |
+| KB18 | https://www.kb18.se | Malmö | nattliv | 2026-04-04 | Musikklubb |
+| Inkonst | https://www.inkonst.se | Malmö | nattliv | 2026-04-04 | Kultur och nattliv |
+| Mejeriet | https://www.mejeriet.se | Malmö | nattliv | 2026-04-04 | Kulturhus och konserter |
+| Push | https://www.push.se | Malmö | nattliv | 2026-04-04 | Nattklubb |
+| Grand | https://www.grandmalmo.se | Malmö | nattliv | 2026-04-04 | Nattklubb |
+| Vega | https://www.vega.nu | Malmö | nattliv | 2026-04-04 | Musikvenue |
+| Rönn | https://www.ronn.se | Malmö | nattliv | 2026-04-04 | Bar och event |
+| Malmö FF | https://www.malmöfFF.se | Malmö | idrott | 2026-04-04 | Fotbollsklubb |
+| Malmö Redhawks | https://www.malmöredhawks.se | Malmö | idrott | 2026-04-04 | Ishockey |
+| Visit Malmö | https://www.visitmalmö.com | Malmö | turism | 2026-04-04 | Turistguide |
+| Malmö Stad | https://www.malmö.se | Malmö | kommunal | 2026-04-04 | Kommun |
+| Malmö Högskola | https://www.mah.se | Malmö | universitet | 2026-04-04 | Högskola |
+| LTH | https://www.lth.se | Malmö | universitet | 2026-04-04 | Teknisk högskola |
+| AlltiMalmö | https://www.alltimalmö.se | Malmö | eventportal | 2026-04-04 | Lokal eventguide |
+| Malmö Live | https://www.malmolive.se | Malmö | konserthus | 2026-04-04 | Konsert- och konferens |
+| Malmö Folkets Park | https://www.folketsparkmalmo.se | Malmö | park | 2026-04-04 | Park och evenemang |
+| Malmö Konsthall | https://www.konsthall.malmo.se | Malmö | museum | 2026-04-04 | Konsthall |
+| Triangeln | https://www.triangeln.se | Malmö | nattliv | 2026-04-04 | Nattlivscentrum |
+| Mobilia | https://www.mobilia.se | Malmö | nattliv | 2026-04-04 | Köpcentrum med nattliv |
+| Emporia | https://www.emporia.se | Malmö | arena | 2026-04-04 | Köpcentrum med evenemang |
+| Malmö Hockey | https://www.malmöhockey.se | Malmö | idrott | 2026-04-04 | Ishockey |
+| Malmö Bulldogs | https://www.bulldogs.se | Malmö | idrott | 2026-04-04 | Amerikansk fotboll |
+| Sydsvenskan | https://www.sydsvenskan.se | Malmö | eventportal | 2026-04-04 | Nyheter med evenemang |
+| HD | https://www.hd.se | Malmö | eventportal | 2026-04-04 | Nyheter |
+| Malmö ICC | https://www.malmöicc.se | Malmö | mässa | 2026-04-04 | Kongresscenter |
+| Malmö Mässan | https://www.malmömässan.se | Malmö | mässa | 2026-04-04 | Mäss- och kongress |
+| Swedish Match | https://www.swedishmatch.se | Malmö | eventportal | 2026-04-04 | Företagsevent |
+| Lund | https://www.lu.se | Lund | universitet | 2026-04-04 | Universitet |
+| Lunds Konserthus | https://www.lund.se/konserthus | Lund | konserthus | 2026-04-04 | Konserthus |
+| Lunds Stadsteatern | https://www.lund.se/stadsteatern | Lund | teater | 2026-04-04 | Kommunal teater |
+| Lunds Museum | https://www.historiska.se | Lund | museum | 2026-04-04 | Historiskt museum |
+| AF | https://www.af.lu.se | Lund | scen | 2026-04-04 | Studentkår med evenemang |
+| Jazz i Lund | https://www.jazzilund.se | Lund | festival | 2026-04-04 | Jazzfestival |
+| Staffan | https://www.staffan.nu | Lund | nattliv | 2026-04-04 | Musikvenue |
+| Lunds BK | https://www.lundsbk.se | Lund | idrott | 2026-04-04 | Fotbollsklubb |
+| Kulturen | https://www.kulturen.com | Lund | museum | 2026-04-04 | Kulturhistoriskt museum |
+| Helsingborg | https://www.helsingborg.se | Helsingborg | kommunal | 2026-04-04 | Kommun |
+| Helsingborg Konserthus | https://www.helsingborgkonserthus.se | Helsingborg | konserthus | 2026-04-04 | Konserthus |
+| Helsingborg Arena | https://www.helsingborgarena.se | Helsingborg | arena | 2026-04-04 | Multiarena |
+| Dunkers | https://www.dunkers.se | Helsingborg | museum | 2026-04-04 | Kulturhus och museum |
+| Ramlösa | https://www.ramlosa.com | Helsingborg | scen | 2026-04-04 | Hälsobrunn med evenemang |
+| Sofiero | https://www.sofiero.se | Helsingborg | park | 2026-04-04 | Slottspark med konserter |
+| Helsingborgs IF | https://www.helsingborgsif.se | Helsingborg | idrott | 2026-04-04 | Fotbollsklubb |
+| Visithelsingborg | https://www.visithelsingborg.se | Helsingborg | turism | 2026-04-04 | Turistguide |

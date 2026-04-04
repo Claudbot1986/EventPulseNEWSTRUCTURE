@@ -1,0 +1,100 @@
+| Namn | URL | Stad | Kategori | Insamlad | Notis |
+|------|-----|------|----------|----------|-------|
+| Konserthuset | https://www.konserthuset.se | Stockholm | konserthus | 2026-04-04 | Ledande konserthall |
+| Stora Teatern | https://www.storateatern.se | Stockholm | teater | 2026-04-04 | Historisk teater Södermalm |
+| Dramaten | https://www.dramaten.se | Stockholm | teater | 2026-04-04 | Kungliga Dramatiska Teatern |
+| Stockholms Stadsteater | https://www.stadsteatern.se | Stockholm | teater | 2026-04-04 | Kommunal teater |
+| Teater Galeasen | https://www.galeasen.se | Stockholm | teater | 2026-04-04 | Fristående teater |
+| Unga Teatern | https://www.ungateatern.se | Stockholm | teater | 2026-04-04 | Teater för barn och ungdom |
+| Oscarsteatern | https://www.oscarsteatern.se | Stockholm | teater | 2026-04-04 | Musikal- och operettteater |
+| Chinateatern | https://www.chinateatern.se | Stockholm | teater | 2026-04-04 | Intim scen i jugendstil |
+| Cirkus | https://www.cirkus.se | Stockholm | teater | 2026-04-04 | Varieté och show |
+| Intiman | https://www.intiman.se | Stockholm | teater | 2026-04-04 | Liten intim scen |
+| Rival | https://www.rival.se | Stockholm | teater | 2026-04-04 | Biograf och scen |
+| Mosebacke | https://www.mosebacke.se | Stockholm | scen | 2026-04-04 | Kulturhus på Södermalm |
+| Avicii Arena | https://www.aviciiarena.se | Stockholm | arena | 2026-04-04 | Tidigare Globen |
+| Friends Arena | https://www.friendsarena.se | Stockholm | arena | 2026-04-04 | Fotbollsarena Solna |
+| Tele2 Arena | https://www.tele2arena.se | Stockholm | arena | 2026-04-04 | Multiarena Johanneshov |
+| Hovet | https://www.thehovet.se | Stockholm | arena | 2026-04-04 | Ishockey och konserter |
+| Mall of Scandinavia | https://www.mallofscandinavia.se | Stockholm | arena | 2026-04-04 | Köpcentrum med scen |
+| Moderna Museet | https://www.modernamuseet.se | Stockholm | museum | 2026-04-04 | Modern och samtida konst |
+| Nationalmuseum | https://www.nationalmuseum.se | Stockholm | museum | 2026-04-04 | Konst och design |
+| Vasa Museum | https://www.vasamuseet.se | Stockholm | museum | 2026-04-04 | Skeppet Vasa |
+| Tekniska Museet | https://www.tekniskamuseet.se | Stockholm | museum | 2026-04-04 | Teknik och innovation |
+| Historiska Museet | https://www.historiskamuseet.se | Stockholm | museum | 2026-04-04 | Svensk historia |
+| Nordiska Museet | https://www.nordiskamuseet.se | Stockholm | museum | 2026-04-04 | Nordisk kulturhistoria |
+| Fotografiska | https://www.fotografiska.se | Stockholm | museum | 2026-04-04 | Fotografimuseum |
+| ArkDes | https://www.arkdes.se | Stockholm | museum | 2026-04-04 | Arkitektur och design |
+| Naturhistoriska | https://www.nrm.se | Stockholm | museum | 2026-04-04 | Naturvetenskap |
+| Junibacken | https://www.junibacken.se | Stockholm | museum | 2026-04-04 | Astrid Lindgren |
+| Livrustkammaren | https://www.livrustkammaren.se | Stockholm | museum | 2026-04-04 | Kungliga rustkammaren |
+| Nobelmuseet | https://www.nobelmuseet.se | Stockholm | museum | 2026-04-04 | Nobelpriset |
+| Medeltidsmuseet | https://www.medeltidsmuseet.se | Stockholm | museum | 2026-04-04 | Medeltida Stockholm |
+| Skansen | https://www.skansen.se | Stockholm | park | 2026-04-04 | Friluftsmuseum och djurpark |
+| Berwaldhallen | https://www.berwaldhallen.se | Stockholm | konserthus | 2026-04-04 | Hem för Radiotjänst |
+| KTH | https://www.kth.se | Stockholm | universitet | 2026-04-04 | Tekniska högskolan |
+| Stockholms Universitet | https://www.su.se | Stockholm | universitet | 2026-04-04 | Universitetet |
+| Konstfack | https://www.konstfack.se | Stockholm | universitet | 2026-04-04 | Konst och design |
+| Kulturhuset | https://www.kulturhuset.se | Stockholm | kulturhus | 2026-04-04 | Central kulturhub |
+| Medborgarhuset | https://www.medborgarhuset.se | Stockholm | kulturhus | 2026-04-04 | Kommunalt kulturcenter |
+| Storkyrkan | https://www.storkyrkan.se | Stockholm | scen | 2026-04-04 | Stockholm domkyrka |
+| Parkteatern | https://www.parkteatern.se | Stockholm | scen | 2026-04-04 | Utomhusteater i park |
+| Café Opera | https://www.cafeopera.se | Stockholm | nattliv | 2026-04-04 | Historiskt nattställe |
+| Gröna Lund | https://www.gronalund.com | Stockholm | festival | 2026-04-04 | Nöjesfält med konserter |
+| Way Out West | https://www.wayoutwest.se | Stockholm | festival | 2026-04-04 | Musikfestival |
+| Summerburst | https://www.summerburst.se | Stockholm | festival | 2026-04-04 | Elektronisk musikfestival |
+| Stockholm Music & Arts | https://www.stockholmmafestival.se | Stockholm | festival | 2026-04-04 | Musik och konstfestival |
+| Stockholm Jazz Festival | https://www.stockholmjazz.com | Stockholm | festival | 2026-04-04 | Jazzfestival |
+| AIK | https://www.aik.se | Stockholm | idrott | 2026-04-04 | Fotbollsklubb |
+| Djurgårdens IF | https://www.dif.se | Stockholm | idrott | 2026-04-04 | Fotboll och hockey |
+| Hammarby | https://www.hammarbyfotboll.se | Stockholm | idrott | 2026-04-04 | Fotbollsklubb |
+| IFK Stockholm | https://www.ifkstockholm.se | Stockholm | idrott | 2026-04-04 | Fotbollsklubb |
+| Vasalund | https://www.vasalund.se | Stockholm | idrott | 2026-04-04 | Fotbollsklubb |
+| Visit Stockholm | https://www.visitstockholm.com | Stockholm | turism | 2026-04-04 | Officiell turistguide |
+| ABF | https://www.abf.se | Stockholm | förening | 2026-04-04 | Studieförbund |
+| Studiefrämjandet | https://www.studieframjandet.se | Stockholm | förening | 2026-04-04 | Studieförbund |
+| Sensus | https://www.sensus.se | Stockholm | förening | 2026-04-04 | Studieförbund |
+| Folkuniversitetet | https://www.folkuniversitetet.se | Stockholm | förening | 2026-04-04 | Studieförbund |
+| IOGT-NTO | https://www.iogt.se | Stockholm | förening | 2026-04-04 | Nykterhetsrörelsen |
+| Pingstkyrkan | https://www.pingst.se | Stockholm | förening | 2026-04-04 | Kristen förening |
+| Ticketmaster | https://www.ticketmaster.se | Stockholm | eventportal | 2026-04-04 | Biljettförsäljning |
+| do310.com | https://www.do310.com | Stockholm | eventportal | 2026-04-04 | Eventguide |
+| Songkick | https://www.songkick.com | Stockholm | eventportal | 2026-04-04 | Konsertkalender |
+| Folkets Hus | https://www.folketshus.se | Stockholm | kulturhus | 2026-04-04 | Facklig och kulturell |
+| Barnens Ö | https://www.barnensö.se | Stockholm | park | 2026-04-04 | Familjepark Djurgården |
+| Djurgården | https://www.djurgarden.se | Stockholm | park | 2026-04-04 | Nationalstadsparken |
+| Globen | https://www.globen.se | Stockholm | arena | 2026-04-04 | Sfärisk arena |
+| Polismuseet | https://www.polismuseet.se | Stockholm | museum | 2026-04-04 | Svensk polishistoria |
+| Postmuseum | https://www.postmuseum.se | Stockholm | museum | 2026-04-04 | Postens historia |
+| Spårväg City | https://www.sparvagsmuseet.se | Stockholm | museum | 2026-04-04 | Spårvägshistoria |
+| Kungsträdgården | https://www.kungstradgarden.se | Stockholm | park | 2026-04-04 | Central park |
+| Rålambshovsparken | https://www.ralambshov.se | Stockholm | park | 2026-04-04 | Utomhuskonserter |
+| Filborna | https://www.filborna.se | Stockholm | konserthus | 2026-04-04 | Konserthall |
+| Kungliga Musikhögskolan | https://www.kmh.se | Stockholm | universitet | 2026-04-04 | Musiklärosäte |
+| Svenska Kulturhuset | https://www.svenskakulturhuset.se | Stockholm | kulturhus | 2026-04-04 | Kulturverksamhet |
+| Sturecompagniet | https://www.sturecompagniet.se | Stockholm | nattliv | 2026-04-04 | Nattklubb och bar |
+| Club Mecca | https://www.clubmecca.se | Stockholm | nattliv | 2026-04-04 | Nattklubb Södermalm |
+| BANG | https://www.bang.se | Stockholm | nattliv | 2026-04-04 | Nattklubb och bar |
+| Lådan | https://www.ladan.se | Stockholm | nattliv | 2026-04-04 | Nattklubb |
+| Slaktaren | https://www.slaktaren.se | Stockholm | nattliv | 2026-04-04 | Nattklubb |
+| Faith | https://www.faith.se | Stockholm | nattliv | 2026-04-04 | Restaurang och bar |
+| We Are Sarajevo | https://www.wearesarajevo.se | Stockholm | festival | 2026-04-04 | Musikfestival |
+| Stockholm Kulturfestival | https://www.kulturfestival.se | Stockholm | festival | 2026-04-04 | Kulturfestival |
+| Brommapojkarna | https://www.bpxf.se | Stockholm | idrott | 2026-04-04 | Fotbollsklubb |
+| Spånga IS | https://www.spanga.se | Stockholm | idrott | 2026-04-04 | Fotbollsklubb |
+| Ekerö | https://www.ekeroif.se | Stockholm | idrott | 2026-04-04 | Idrottsförening |
+| Järfälla | https://www.jarfalla.se | Stockholm | idrott | 2026-04-04 | Idrottsförening |
+| Åkersberga | https://www.akersberga.se | Stockholm | idrott | 2026-04-04 | Idrottsförening |
+| Visit Sweden | https://www.visitsweden.com | Stockholm | turism | 2026-04-04 | Nationell turistguide |
+| Open Air | https://www.openair.se | Stockholm | mässa | 2026-04-04 | Friluftsmässa |
+| Antikmässan | https://www.antikmassan.se | Stockholm | mässa | 2026-04-04 | Antikmässa |
+| Formex | https://www.formex.se | Stockholm | mässa | 2026-04-04 | Designmässa |
+| Stockholm Furniture | https://www.stockholmfurniture.se | Stockholm | mässa | 2026-04-04 | Möbelmässa |
+| Konstmässan | https://www.konstmassan.se | Stockholm | mässa | 2026-04-04 | Konstmässa |
+| Stockholm Live | https://www.stockholmlive.se | Stockholm | arena | 2026-04-04 | Evenemangsbolag |
+| Observatoriet | https://www.observatoriet.se | Stockholm | scen | 2026-04-04 | Vetenskapligt observatorium |
+| Engelbrekt | https://www.engelbrekt.se | Stockholm | scen | 2026-04-04 | Kyrka på Östermalm |
+| Nobel Prize Museum | https://www.nobelmuseet.se | Stockholm | museum | 2026-04-04 | Nobelpriset |
+| Centuri | https://www.centuri.se | Stockholm | museum | 2026-04-04 | Militärhistoria |
+| Blekholmen | https://www.blekholmen.se | Stockholm | park | 2026-04-04 | Naturpark |
+| The Secret | https://www.secret.se | Stockholm | nattliv | 2026-04-04 | Nattklubb |

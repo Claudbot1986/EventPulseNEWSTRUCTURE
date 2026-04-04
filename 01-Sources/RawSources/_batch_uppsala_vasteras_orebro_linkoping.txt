@@ -1,0 +1,60 @@
+| Namn | URL | Stad | Kategori | Insamlad | Notis |
+|------|-----|------|----------|----------|-------|
+| Uppsala Konserthus | https://www.uppsala-konserthus.se | Uppsala | konserthus | 2026-04-04 | Konserthus |
+| Uppsala Stadsteatern | https://www.uppsala-stadsteatern.se | Uppsala | teater | 2026-04-04 | Kommunal teater |
+| Uppsala Museum | https://www.uppsalamuseum.se | Uppsala | museum | 2026-04-04 | Stadsmuseum |
+| Linnaeus Museum | https://www.linnaeus.uu.se | Uppsala | museum | 2026-04-04 | Naturvetenskapligt |
+| Gamla Uppsala | https://www.gamlauppsala.se | Uppsala | museum | 2026-04-04 | Historiskt besökscentrum |
+| Uppsala Domkyrka | https://www.uppsaladomkyrka.se | Uppsala | scen | 2026-04-04 | Domkyrka med konserter |
+| Fyris Paper | https://www.fyrispaper.se | Uppsala | nattliv | 2026-04-04 | Musikvenue |
+| IFK Uppsala | https://www.ifkuppsala.se | Uppsala | idrott | 2026-04-04 | Fotbollsklubb |
+| Uppsala Teatern | https://www.uppsalateatern.se | Uppsala | teater | 2026-04-04 | Regional teater |
+| Stora Teatern Uppsala | https://www.storateaternuppsala.se | Uppsala | teater | 2026-04-04 | Stor teater |
+| Katalin | https://www.katalin.nu | Uppsala | nattliv | 2026-04-04 | Musikklubb |
+| Uppsala kommun | https://www.uppsala.se | Uppsala | kommunal | 2026-04-04 | Kommun med eventkalender |
+| Visit Uppsala | https://www.visituppsala.se | Uppsala | turism | 2026-04-04 | Turistguide |
+| Uppsala universitet | https://www.uu.se | Uppsala | universitet | 2026-04-04 | Universitet |
+| IK Sirius | https://www.iksirius.se | Uppsala | idrott | 2026-04-04 | Fotbollsklubb |
+| Uppsala Basket | https://www.uppsalabasket.se | Uppsala | idrott | 2026-04-04 | Basket |
+| Uppsala Stadsteatern | https://www.uppsala-stadsteatern.se | Uppsala | teater | 2026-04-04 | Teater |
+| Värmland | https://www.varmland.se | Uppsala | turism | 2026-04-04 | Regionturism |
+| Västerås Konserthus | https://www.vasteras.se/konserthus | Västerås | konserthus | 2026-04-04 | Konserthus |
+| Västerås Stadsteatern | https://www.vasteras.se/stadsteatern | Västerås | teater | 2026-04-04 | Kommunal teater |
+| Västerås Konstmuseum | https://www.vasteras.se/konstmuseum | Västerås | museum | 2026-04-04 | Konstmuseum |
+| ABB Arena | https://www.abb-arena.se | Västerås | arena | 2026-04-04 | Sport- och konsertarena |
+| Mälarenergi Arena | https://www.malarenergi.se | Västerås | arena | 2026-04-04 | Sportarena |
+| Rockfest Västerås | https://www.rockfestvasteras.se | Västerås | festival | 2026-04-04 | Musikfestival |
+| Västerås Art | https://www.vasterasart.se | Västerås | festival | 2026-04-04 | Konstfestival |
+| Västerås stad | https://www.vasteras.se | Västerås | kommunal | 2026-04-04 | Kommun |
+| Visit Västerås | https://www.visitvasteras.se | Västerås | turism | 2026-04-04 | Turistguide |
+| Västerås SK | https://www.vastersask.se | Västerås | idrott | 2026-04-04 | Fotbollsklubb |
+| Västerås Hockey | https://www.vasterasfh.se | Västerås | idrott | 2026-04-04 | Ishockey |
+| Örebro Konserthus | https://www.orebro-konserthus.se | Örebro | konserthus | 2026-04-04 | Konserthus |
+| Örebro Stadsteatern | https://www.orebro-stadsteatern.se | Örebro | teater | 2026-04-04 | Kommunal teater |
+| Örebro Län | https://www.orebro.se | Örebro | kommunal | 2026-04-04 | Län och kommun |
+| Kulturhuset Örebro | https://www.kulturhusetorebro.se | Örebro | kulturhus | 2026-04-04 | Kulturhus |
+| Örebro Vinterfest | https://www.orebrovinterfest.se | Örebro | festival | 2026-04-04 | Vinterfestival |
+| Repo Festival | https://www.repo.se | Örebro | festival | 2026-04-04 | Musikfestival |
+| Jazz i Örebro | https://www.jazzorebro.se | Örebro | festival | 2026-04-04 | Jazzfestival |
+| Örebro Festival | https://www.orebrofestivalen.se | Örebro | festival | 2026-04-04 | Musikfestival |
+| Örebro SK | https://www.orebrosk.se | Örebro | idrott | 2026-04-04 | Fotbollsklubb |
+| Örebro Hockey | https://www.orebrohockey.se | Örebro | idrott | 2026-04-04 | Ishockey |
+| Örebro universitet | https://www.oru.se | Örebro | universitet | 2026-04-04 | Universitet |
+| Kumla | https://www.kumla.se | Örebro | kommunal | 2026-04-04 | Kommun |
+| Hallsberg | https://www.hallsberg.se | Örebro | kommunal | 2026-04-04 | Kommun |
+| Lindesberg | https://www.lindesberg.se | Örebro | kommunal | 2026-04-04 | Kommun |
+| Linköping Konserthus | https://www.linkoping.se/konserthus | Linköping | konserthus | 2026-04-04 | Konserthus |
+| Linköping Stadsteatern | https://www.linkoping.se/stadsteatern | Linköping | teater | 2026-04-04 | Kommunal teater |
+| Linköping City | https://www.linkopingcity.se | Linköping | kommunal | 2026-04-04 | Stadswebb med evenemang |
+| Linköpings universitet | https://www.liu.se | Linköping | universitet | 2026-04-04 | Universitet |
+| Mjölby | https://www.mjolby.se | Linköping | kommunal | 2026-04-04 | Kommun |
+| Motala | https://www.motala.se | Linköping | kommunal | 2026-04-04 | Kommun |
+| Open Art | https://www.openart.se | Linköping | festival | 2026-04-04 | Konstfestival |
+| Stångebrofestivalen | https://www.stangebro.se | Linköping | festival | 2026-04-04 | Musikfestival |
+| IFK Norrköping | https://www.ifknorrkoping.se | Norrköping | idrott | 2026-04-04 | Fotbollsklubb |
+| Norrköping Konserthus | https://www.norrkoping.se/konserthus | Norrköping | konserthus | 2026-04-04 | Konserthus |
+| Norrköping Stadsteatern | https://www.norrkoping.se/stadsteatern | Norrköping | teater | 2026-04-04 | Kommunal teater |
+| Visualiseringscenter | https://www.visualiseringscenter.se | Norrköping | museum | 2026-04-04 | Vetenskapscenter |
+| Norrköping Museum | https://www.norrkoping.se/museum | Norrköping | museum | 2026-04-04 | Stadsmuseum |
+| Arbetets museum | https://www.arbetetsmuseum.se | Norrköping | museum | 2026-04-04 | Industrihistoriskt museum |
+| Norrköping Art | https://www.norrkopingart.se | Norrköping | festival | 2026-04-04 | Konstfestival |

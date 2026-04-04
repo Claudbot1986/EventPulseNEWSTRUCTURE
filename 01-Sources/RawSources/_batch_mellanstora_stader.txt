@@ -1,0 +1,82 @@
+| Namn | URL | Stad | Kategori | Insamlad | Notis |
+|------|-----|------|----------|----------|-------|
+| Jönköping Konserthus | https://www.jonkoping.se/konserthus | Jönköping | konserthus | 2026-04-04 | Konserthus |
+| Jönköping Stadsteatern | https://www.jonkoping.se/stadsteatern | Jönköping | teater | 2026-04-04 | Kommunal teater |
+| Jönköping University | https://www.ju.se | Jönköping | universitet | 2026-04-04 | Universitet |
+| Science Park | https://www.spp.se | Jönköping | scen | 2026-04-04 | Näringsliv och event |
+| A6 | https://www.centeraj6.se | Jönköping | nattliv | 2026-04-04 | Köpcentrum med nattliv |
+| Elmia | https://www.elmia.se | Jönköping | mässa | 2026-04-04 | Mäss- och kongresscenter |
+| Rumble | https://www.rumblematch.se | Jönköping | idrott | 2026-04-04 | Motionsanläggning |
+| Jönköping Södra | https://www.jonkopingsodra.se | Jönköping | idrott | 2026-04-04 | Fotbollsklubb |
+| HV71 | https://www.hv71.se | Jönköping | idrott | 2026-04-04 | Ishockey |
+| Jönköping | https://www.jonkoping.se | Jönköping | kommunal | 2026-04-04 | Kommun |
+| Växjö Konserthus | https://www.vx.se/konserthus | Växjö | konserthus | 2026-04-04 | Konserthus |
+| Växjö Teatern | https://www.vaexjoe-teatern.se | Växjö | teater | 2026-04-04 | Teater |
+| Smålandsposten | https://www.smp.se | Växjö | eventportal | 2026-04-04 | Nyheter |
+| Växjö Alcazar | https://www.alcazar.se | Växjö | scen | 2026-04-04 | scen och konferens |
+| Växjö Lakers | https://www.vaxjolakers.se | Växjö | idrott | 2026-04-04 | Ishockey |
+| Kalmar Teatern | https://www.kalmarteatern.se | Kalmar | teater | 2026-04-04 | Teater |
+| Kalmar Energi Arena | https://www.kalmarenergiarena.se | Kalmar | arena | 2026-04-04 | Sport- och konsertarena |
+| Kalmar Museum | https://www.kalmar-museum.se | Kalmar | museum | 2026-04-04 | Länsmuseum |
+| Kalmar kommun | https://www.kalmar.se | Kalmar | kommunal | 2026-04-04 | Kommun |
+| Öland | https://www.oland.se | Öland | turism | 2026-04-04 | Ö och turism |
+| Kalmar FF | https://www.kalmarff.se | Kalmar | idrott | 2026-04-04 | Fotbollsklubb |
+| Luleå Konserthus | https://www.lulea.se/konserthus | Luleå | konserthus | 2026-04-04 | Konserthus |
+| Luleå Stadsteatern | https://www.lulea.se/stadsteatern | Luleå | teater | 2026-04-04 | Kommunal teater |
+| Luleå Tekniska Universitet | https://www.ltu.se | Luleå | universitet | 2026-04-04 | Universitet |
+| Luleå HF | https://www.luleahf.se | Luleå | idrott | 2026-04-04 | Ishockey |
+| Studio Acusticum | https://www.studioacusticum.se | Luleå | scen | 2026-04-04 | Konserthus och teater |
+| Umeå Konserthus | https://www.umea.se/konserthus | Umeå | konserthus | 2026-04-04 | Konserthus |
+| Umeå Stadsteatern | https://www.umea.se/stadsteatern | Umeå | teater | 2026-04-04 | Kommunal teater |
+| Västerbottens Museum | https://www.vbm.se | Umeå | museum | 2026-04-04 | Länsmuseum |
+| Umeå universitet | https://www.umu.se | Umeå | universitet | 2026-04-04 | Universitet |
+| Umeå Jazz | https://www.umeajazz.se | Umeå | festival | 2026-04-04 | Jazzfestival |
+| Umeå IK | https://www.umeaik.se | Umeå | idrott | 2026-04-04 | Fotbollsklubb |
+| Gävle Konserthus | https://www.gavle.se/konserthus | Gävle | konserthus | 2026-04-04 | Konserthus |
+| Gävle Stadsteatern | https://www.gavle.se/stadsteatern | Gävle | teater | 2026-04-04 | Kommunal teater |
+| Gävle Konstmuseum | https://www.gavle.se/konst | Gävle | museum | 2026-04-04 | Konstmuseum |
+| Gävle IF | https://www.gavleif.se | Gävle | idrott | 2026-04-04 | Fotbollsklubb |
+| Gävle Zoo | https://www.gavlezoo.se | Gävle | museum | 2026-04-04 | Zoo |
+| Falun Konserthus | https://www.falu.se | Falun | konserthus | 2026-04-04 | Konserthus |
+| Falun Stadsteatern | https://www.falu.se/stadsteatern | Falun | teater | 2026-04-04 | Kommunal teater |
+| Falun FK | https://www.falunfk.se | Falun | idrott | 2026-04-04 | Fotbollsklubb |
+| Dalarna | https://www.dalarna.se | Falun | turism | 2026-04-04 | Regionturism |
+| Borlänge kommun | https://www.borlange.se | Borlänge | kommunal | 2026-04-04 | Kommun |
+| Karlstad Konserthus | https://www.karlstad.se/konserthus | Karlstad | konserthus | 2026-04-04 | Konserthus |
+| Karlstad Stadsteatern | https://www.karlstad.se/stadsteatern | Karlstad | teater | 2026-04-04 | Kommunal teater |
+| Karlstad IF | https://www.karlstadif.se | Karlstad | idrott | 2026-04-04 | Fotbollsklubb |
+| Värmland | https://www.varmland.se | Karlstad | turism | 2026-04-04 | Regionturism |
+| Varberg Arena | https://www.varberg.se/arena | Varberg | arena | 2026-04-04 | Sport- och konsertarena |
+| Varbergs IF | https://www.varbergsif.se | Varberg | idrott | 2026-04-04 | Fotbollsklubb |
+| Halmstad Konserthus | https://www.halmstad.se/konserthus | Halmstad | konserthus | 2026-04-04 | Konserthus |
+| Halmstad Stadsteatern | https://www.halmstad.se/stadsteatern | Halmstad | teater | 2026-04-04 | Kommunal teater |
+| Halmstads BK | https://www.hbk.se | Halmstad | idrott | 2026-04-04 | Fotbollsklubb |
+| Halland | https://www.halland.se | Halmstad | turism | 2026-04-04 | Regionturism |
+| Skövde Konserthus | https://www.skovde.se | Skövde | konserthus | 2026-04-04 | Konserthus |
+| Skövde Stadsteatern | https://www.skovde.se | Skövde | teater | 2026-04-04 | Kommunal teater |
+| Skövde IF | https://www.skovdeif.se | Skövde | idrott | 2026-04-04 | Fotbollsklubb |
+| Trollhättan | https://www.trollhattan.se | Trollhättan | kommunal | 2026-04-04 | Kommun |
+| Trollhättans IF | https://www.trollhattanif.se | Trollhättan | idrott | 2026-04-04 | Fotbollsklubb |
+| Uddevalla kommun | https://www.uddevalla.se | Uddevalla | kommunal | 2026-04-04 | Kommun |
+| Sundsvall | https://www.sundsvall.se | Sundsvall | kommunal | 2026-04-04 | Kommun |
+| Sundsvall Musik | https://www.musiksundsvall.se | Sundsvall | konserthus | 2026-04-04 | Musik och konserter |
+| Östersund | https://www.ostersund.se | Östersund | kommunal | 2026-04-04 | Kommun |
+| Östersunds FK | https://www.ofksverige.se | Östersund | idrott | 2026-04-04 | Fotbollsklubb |
+| Mora kommun | https://www.mora.se | Mora | kommunal | 2026-04-04 | Kommun |
+| Mora IK | https://www.moraik.se | Mora | idrott | 2026-04-04 | Ishockey |
+| Örnsköldsvik | https://www.ornskoldsvik.se | Örnsköldsvik | kommunal | 2026-04-04 | Kommun |
+| Nyköping | https://www.nykoping.se | Nyköping | kommunal | 2026-04-04 | Kommun |
+| Nyköpings BIS | https://www.nbis.se | Nyköping | idrott | 2026-04-04 | Fotbollsklubb |
+| Eskilstuna | https://www.eskilstuna.se | Eskilstuna | kommunal | 2026-04-04 | Kommun |
+| Eskilstuna United | https://www.eskilstunaunited.se | Eskilstuna | idrott | 2026-04-04 | Fotbollsklubb |
+| Katrineholm | https://www.katrineholm.se | Katrineholm | kommunal | 2026-04-04 | Kommun |
+| Karlskoga | https://www.karlskoga.se | Karlskoga | kommunal | 2026-04-04 | Kommun |
+| Stenungsund | https://www.stenungsund.se | Stenungsund | kommunal | 2026-04-04 | Kommun |
+| Lysekil | https://www.lysekil.se | Lysekil | kommunal | 2026-04-04 | Kommun |
+| Strömstad | https://www.stromstad.se | Strömstad | kommunal | 2026-04-04 | Kommun |
+| Mariestad | https://www.mariestad.se | Mariestad | kommunal | 2026-04-04 | Kommun |
+| Trelleborg | https://www.trelleborg.se | Trelleborg | kommunal | 2026-04-04 | Kommun |
+| Trelleborgs FF | https://www.trelleborgsff.se | Trelleborg | idrott | 2026-04-04 | Fotbollsklubb |
+| Ystad | https://www.ystad.se | Ystad | kommunal | 2026-04-04 | Kommun |
+| Karlskrona | https://www.karlskrona.se | Karlskrona | kommunal | 2026-04-04 | Kommun |
+| Karlskrona HF | https://www.karlskronahf.se | Karlskrona | idrott | 2026-04-04 | Ishockey |
