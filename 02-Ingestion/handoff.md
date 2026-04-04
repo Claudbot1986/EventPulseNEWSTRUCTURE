@@ -68,70 +68,77 @@
 >
 > **Future plan:** When current migration stabilizes, move git/repo root to `NEWSTRUCTURE` so that all relative paths, active context resolution and skills naturally use the correct project root.
 
-## Nästa-steg-analys 2026-04-04 (STRATEGISK ÖVERSYN)
+## Nästa-steg-analys 2026-04-04 (loop 2)
 
 ### Vad förbättrades denna loop
-- Strategisk omorientering: Från site-specifik felsökning → bred modell-validering
-- current-task.md uppdaterad med nya mål (10+ sources, precision/recall, generella mönster)
-- handoff.md uppdaterad med ny inriktning
 - **MODELL-VALIDERING GENOMFÖRD:** Körde sourceTriage på 23 no-jsonld candidates
+- **PHASE1→QUEUE VERIFIERAD:** 4/5 approved sources queueade (19 events)
+- Konserthuset: 11 events → queue ✓
+- Dramaten: 1 event → queue ✓
+- Friidrott: 4 events → queue ✓
+- Textilmuseet: 3 events → queue ✓
+- SBF: 0 events → C3 flagged JS-render → pending_render_queue
 
 ### Största kvarvarande flaskhals
-**Modell-validering GENOMFÖRD men visar specifika mönster:**
-- 5/23 approved (22%) — modellen hittar events på ~1/5 av no-jsonld sajter
+- SBF (7 events från triage) → C3 flagged som JS-render → D-renderGate saknas
 - 18/23 "gate=promising" men 0 events — signalsystemet hittar candidates men extraction failar
-- 5/23 "gate=unclear" eller "low_value" — candidate-val är suboptimalt
-- Root-sida (konserthuset) fungerar bättre än discovered candidates på flera sajter
+- Kalender/calendar-sidor har hög density men låg extractability
 
 ### Modell-Validering Resultat (2026-04-04)
 
 **Batch:** 23 no-jsonld URLs från 100testcandidates.md
 
-|| Mått | Värde |
-|------|------|-------|
+| Mått | Värde |
+|------|-------|
 | Sources testade | 23 | 100% |
 | Approved (events > 0) | 5 | 22% |
-| Events totalt | 26 | — |
-| Precision (C2→events) | 5/23 | 22% |
+| Events totalt | 26 (triage) / 19 (queue) | — |
+| Phase1→Queue | 4/5 success | 80% |
 | C0 candidates hittade | 20/23 | 87% |
-| Gate verdicts: promising | 12 | 52% |
-| Gate verdicts: unclear/maybe | 8 | 35% |
-| Gate verdicts: low_value | 3 | 13% |
+
+**Phase1→Queue Resultat:**
+
+| Källa | Triage events | Queue status | Anledning |
+|-------|---------------|--------------|-----------|
+| konserthuset | 11 | ✅ 11 queued | — |
+| dramaten | 1 | ✅ 1 queued | — |
+| friidrott | 4 | ✅ 4 queued | — |
+| textilmuseet | 3 | ✅ 3 queued | — |
+| sbf | 7 | ❌ 0 queued | C3 flagged JS-render → pending_render_queue |
 
 **Generella mönster identifierade:**
 
-1. **Root-sida vs discovered:** konserthuset ger 11 events från root, nrm.se hittade /kalendarium men 0 events, vasamuseet root bättre än discovered
+1. **Root-sida vs discovered:** konserthuset ger 11 events från root, nrm.se hittade /kalendarium men 0 events
 2. **High density ≠ events:** nrm.se density=300 → 0 events, friidrott.se density låg → 4 events
 3. **High density candidates misslyckas:** svenskfotboll.se (biljett/) density=9 → 0, shl.se density=200 → 0
 4. **Kalender-sidor:** Kalender/calendar-sidor har hög density men låg extractability
-5. **Universitets-sidor:** university events (su, gu, lu, miun) alla 0 events — ej event-sidor
-6. **Rödhussidan fungerar:** konserthuset, dramaten, sbf, friidrott, textilmuseet fungerar
+5. **SBF C3-flaggad:** Trots 7 events i triage, C3 säger JS-render vid phase1ToQueue → inkonsekvent
 
 **Site-Specific vs General:**
 
 | Observation | Klassificering | Handling |
 |-------------|----------------|----------|
-| Vasamuseet root > discovered | Site-Specific | Source adapter eller undersök |
+| SBF inkonsekvent (7→0) | Oklart | Undersök: triage≠phase1ToQueue |
+| Vasamuseet root > discovered | Site-Specific | Source adapter |
 | Universitets-sidor alla 0 | General (4+ sajter) | Föreslå: IGNORE university-event paths |
 | Kalender-sidor hög density→0 | General (4+ sajter) | Föreslå: lägre vikt för /kalender/ paths |
-| Konserthuset root funkar | Site-Specific (kanske) | Undersök om det är generellt mönster |
 
-### Tre möjliga nästa steg (GENERELLA)
+### Tre möjliga nästa steg
 
-||| # | Steg | Systemnytta | Risk | Varför nu |
+| # | Steg | Systemnytta | Risk | Varför nu |
 |---|------|-------------|------|-----------|
-| 1 | **Analysera failure patterns** | Medel-Hög: Hitta varför 18/23 har 0 events | Låg: Endast analys | Generella mönster → regeländring |
-| 2 | **Testa root vs candidates** | Hög: Optimera C0 för bättre candidates | Medel: Risk att minska recall | Förbättrar precision |
-| 3 | **Kör phase1ToQueue på approved** | Hög: Få 26 events till database | Låg: Befintlig kod | Validerar hela pipeline |
+| 1 | **Undersök SBF inkonsekvens** | Hög: Förstå triage≠phase1ToQueue | Medel: Kan vara C3 fel | SBF visade 7 events, nu 0 |
+| 2 | **Analysera failure patterns** | Medel-Hög: Hitta varför 18/23 har 0 events | Låg: Endast analys | Generella mönster → regeländring |
+| 3 | **Kör normalizer på queued events** | Hög: 19 events → database | Medel: Normalizer kan missa | Verifierar hela pipeline |
 
 ### Rekommenderat nästa steg
-**#3 — Kör phase1ToQueue på de 5 godkända sources**
+**#3 — Kör normalizer på queued events**
 
-Motivering: Vi har 5 approved sources (26 events). Att köra dessa genom phase1ToQueue→Queue→Database verifierar hela pipeline och ger mätbar output.
+Motivering: Vi har 19 events i queue (konserthuset, dramaten, friidrott, textilmuseet). Att köra normalizer→database verifierar hela pipeline och ger mätbar output.
 
 ### Två steg att INTE göra nu
 1. **Ändra IGNORE_PATTERNS för universitets-sidor** — Endast 4 sajter, ej verifierat generellt
-2. **Ändra candidate ranking vikter** — Ej generaliserat ännu, kräver mer data
+2. **Fixa SBF som site-specific** — Vi behöver förstå varför C3 säger JS-render när triage funkade
 
 ---
 
