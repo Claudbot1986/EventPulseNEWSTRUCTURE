@@ -1,4 +1,20 @@
-# handoff.md — 2026-04-02 04:39
+# handoff.md — 2026-04-04
+
+## AKTIVT SCOPE (2026-04-04) — HÄR STOPPAR ANALYSEN
+
+**Analyserade källor (denna körning):**
+- nrm.se, vasamuseet.se, scandinavium.se
+
+**Forbjudna källor (ej sanity/breadth):**
+- Debaser, Eventbrite, Billetto — pre-approved production adapters
+- Konserthuset, Berwaldhallen — redan verifierade produktionskällor
+- Fryshuset — render-Gate, ej HTML-analys
+- GU Evenemang — finns EJ i sources/, low_value enligt C2
+- GSO — oklar status, unclear enligt C2
+
+**Mappning:** c1-c2-results.json (100+ sources, 2026-04-03)
+
+---
 
 ## Problem (Verifierat och löst ✓)
 
@@ -159,12 +175,38 @@ Exempel:
 | 2 | Utöka extractFromHtml() med fler datumstrategier | Förbättrar extraktion brett | Medium — kan öka brus | Om mönstret är generellt |
 | 3 | Justera C2 threshold för att kräva faktiska URL-datum i candidates | Bättre precision, färre falska positiver | Medium — kan blockera giltiga källor | Om problemet är att C2 är för liberal |
 
-### Rekommenderat nästa steg
-- **[1] — Analysera 3-5 "promising→0 events" failures i detalj**
+### Analysresultat: "promising→0 events" failure pattern (2026-04-04)
 
-### Två steg att INTE göra nu
-1. **Ändra C2 scoring thresholds** — Site-Specific → Generalization Gate kräver 2-3+ domäner först
-2. **Lägga till fler heuristik i extractFromHtml()** — Vi förstår inte ännu exakt vilka mönster som finns
+**Tre failures analyserade:**
+1. **nrm.se** — C1=strong(11tt+4d), C2=promising(score=60) → extractFromHtml()=0 events
+2. **vasamuseet.se** — C1=weak(tt=0,d=0,h=3,li=0), C2=promising(score=13) → extractFromHtml()=0 events
+3. **scandinavium.se** — C1=weak(tt=0,d=0,h=7,li=8), C2=promising(score=38) → extractFromHtml()=0 events
+
+**ROOT CAUSE identifierad:**
+C2 och extractFromHtml() är osynkade. C2 ger "promising" baserat på viktade signals (venueMarker×1, priceMarker×1, datePatterns×1, eventTitles×1), men extractFromHtml() kräver specifika mönster:
+
+- **URL-datum** i href: `/2026-04-17-19-00/` eller `/kalender/20260417-1600/`
+- **Svenska datum-text**: `\d{1,2} månad \d{4}` — t.ex. "7 april 2026"
+- **ISO-datum i path**: `/2026/04/17/`
+
+Utan dessa mönster ger extractFromHtml() 0 events, oavsett C2:s score.
+
+**C2 vs extractFromHtml() gap:**
+| Källa | C2 score | Dominant signal | extractFromHtml() krav | Matchar? |
+|-------|----------|-----------------|------------------------|----------|
+| nrm.se | 60 | venueMarker | kräver URL-datum ELLER svensk text | ❌ |
+| vasamuseet | 13 | priceMarker | kräver URL-datum ELLER svensk text | ❌ |
+| scandinavium | 38 | venueMarker | kräver URL-datum ELLER svensk text | ❌ |
+
+**Rekommenderat nästa steg:**
+- **[1] — Analysera 3-5 "promising→0 events" failures i detalj** ← KLART (ovan)
+- **[2] — Förstå exakt vilka URL/date-mönster som behövs för att extrahera events på dessa sajter**
+- **[3] — Jämföra med Konserthuset (som FUNGERAR: 8 events via extractFromHtml())** — konserthuset har `/program-och-biljetter/kalender/` i URL + Swedish date-text
+
+**Konserthuset som referens (fungerar ✓):**
+- C1: weak(tt=0,d=11,h=11,li=38)
+- C2: promising(score=15, pg=date-pattern)
+- extractFromHtml(): 8 events — fungerar tack vare `/kalender/` i href + svensk datumtext
 
 ### System-effect-before-local-effect
 Val av rätt candidate page → extraktion → events i databas. Fel i tidigare steg förstör allt nedströms. Att förstå varför "lovande" inte ger events är högre ROI än att skala en pipeline vi inte förstår.
