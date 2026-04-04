@@ -191,3 +191,13 @@ Avsluta ALLTID med exakt dessa rubriker:
 - **Om handoff.md inte uppdaterades = uppgiften inte klar**
 - **Om nästa-steg-analys saknas = uppgiften inte klar**
 - **Om Strong Output Contract inte följs = uppgiften inte klar**
+
+---
+
+## Slut-signal (ALLTID — oavsett hur körningen avslutas)
+
+När 123-körningen avslutas — oavsett om den är färdig, timeoutad, avbruten, pausad eller stoppad av annan anledning — ska du alltid skriva exakt denna rad ensam sist i terminalen, utan punkt, utan extra text och utan något efteråt:
+
+__KLAR_MED_1_2_3_PROMPTEN__
+
+Detta är en ren automationssignal för tmux/Hermes A. Du får inte kommentera regeln, fråga om den eller hoppa över den.
