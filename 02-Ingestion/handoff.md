@@ -2,6 +2,59 @@
 
 ---
 
+## Nästa-steg-analys 2026-04-04 (loop 4)
+
+### Vad förbättrades denna loop
+- **VERIFIERADE HELA PIPELINE:** Körde konserthuset, dramaten, friidrott, textilmuseet genom sourceTriage → phase1ToQueue → Redis → normalizer worker → database
+- **Pipeline bevisad FUNGERA:** 14 konserthuset, 1 dramaten, 4 friidrott, 3 textilmuseet events i databasen
+- **Upptäckte dubbla workers:** OLD worker (eventpulse-main) vs NEW worker (NEWSTRUCTURE) — de delar samma Redis
+
+### Största kvarvarande flaskhals
+- **Worker-konflikt:** NEWSTRUCTURE normalizer worker tog JOBB IGENOM men old worker (eventpulse-main, PID 10735) konsumerar från samma Redis kö
+- **Phase1-batch 11:33:** phase1ToQueue körde 5 sources → 22 events queued men INGEN worker konsumerade dem (old worker körde redan och normalizer för jobb-logik verkar ha kört klart)
+- **SBF:** 7 events från triage → C3 flagged → 0 i database (JS-render path, D-renderGate saknas)
+- **Extraction quality:** friidrott ("MARS 2026 | 13:03") och textilmuseet ("Maj »") visar att extractFromHtml ibland fångar raw text istället för titles
+
+### Pipeline-verifiering Resultat (2026-04-04)
+
+**Källa | Events queued | Events i DB**
+konserthuset | 11 | 14 totalt (8 gamla + 6 nya)
+dramaten | 1 | 1
+friidrott | 4 | 4
+textilmuseet | 3 | 3
+sbf | 0 (C3 flagged) | 0
+
+**Totalt:** 19 events queued, ~18 i database (gammal worker vs ny worker)
+
+### Generalization-mönster
+
+1. **Root vs candidate:** konserthuset root = 11 events (bäst), candidate pages = färre
+2. **Kalender-subpaths:** Försöks med /kalender/ etc men konserthuset fungerar på root
+3. **High density ≠ extraction:** density=300+并不意味着 extraction works
+
+### Tre möjliga nästa steg
+
+| # | Steg | Systemnytta | Risk | Varför nu |
+|---|------|-------------|------|-----------|
+| 1 | **Verifiera friidrott/textilmuseet extraction quality** | Hög: dessa sources levererar brute raw text som titles | Låg: analysera extractFromHtml output | Förstå varför titles blir "MARS 2026" |
+| 2 | **Undersök SBF C3→render path** | Hög: 7 events hittades men C3 flagged som JS-render | Medel: D-renderGate saknas | Nästa logiska steg för render-kandidater |
+| 3 | **Köra fler HTML sources (10+ test)** | Medel: bred modell-validering | Låg: befintlig kod | current-task.md mål: ≥10 sources |
+
+### Rekommenderat nästa steg
+- **#1 — Verifiera friidrott/textilmuseet extraction quality**
+
+Motivering: dessa 7 events har dålig quality ("MARS 2026 | 13:03" etc). Att förstå varför extractFromHtml fångar raw text istället för titles är viktigt för modell-validering.
+
+### Två steg att INTE göra nu
+1. **Köra fler HTML sources utan att förstå extraction quality** — Vi har redat 4 nya sources med events, men kvalitén är osäker
+2. **Bygga D-renderGate nu** — SBF behöver render, men vi behöver först förstå om HTML-path faktiskt failar eller om det är extraction-problem
+
+### System-effect-before-local-effect
+- Valt steg (#1): Analysera extraction quality problem
+- Varför: 7 events "hittades" men med dålig quality. Detta är ett direkt pipeline-problem som påverkar alla HTML-sources.
+
+---
+
 ## Mottaget från 01-Sources (2026-04-04)
 
 ### Bakgrund
