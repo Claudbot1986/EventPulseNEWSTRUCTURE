@@ -155,9 +155,30 @@ npx tsx -e "extractFromHtml(html, 'konserthuset', 'https://www.konserthuset.se/p
 ## Nästa-steg-analys [2026-04-04]
 
 ### Vad förbättrades denna loop
-- Kartlade nuläget: 33 sources testade, 5 godkända (15%), 27 events totalt
-- Identifierade root cause: C2 säger "promising" men extractFromHtml() ger 0 events
-- Förstod pipelinen: sourceTriage → C0→C1→C2 → extractFromHtml()
+- Identifierade root cause: C2 "promising" ≠ extractFromHtml() URL-datum krav
+- NRM har events men URL-pattern `/evenemangsfakta/[slug]` utan datum
+- scandinavium.se redirectar till gotevent.se — source-status felaktig
+- SiteVision CMS-pattern misstänkt (CSS-class cards, ej URL-datum)
+
+### Största kvarvarande flaskhals
+**C2 vs extractFromHtml() osynkning.** C2 mäter page density, extractFromHtml() kräver URL-datum eller specifikt datum-format.
+
+### Tre möjliga nästa steg
+| # | Steg | Systemnytta | Risk | Varför nu |
+|---|------|-------------|------|-----------|
+| 1 | Uppdatera scandinavium source → gotevent | Rättar fel source | Låg — identifierar rätt source | scandinavium.se är defunct |
+| 2 | Sök fler SiteVision-sajter | Möjliggör C-lager-ändring | Medium — kan öka brus | Mönstret kan vara generellt |
+| 3 | Lägg till CSS-class extraction | Förbättrar nrm, vasamuseet | Medium — false positives | SiteVision vanligt i Sverige |
+
+### Rekommenderat nästa steg
+**[1] — Uppdatera scandinavium source till gotevent.se** (minsta förändring, högst precision)
+
+### Två steg att INTE göra nu
+1. **Ändra C2 thresholds** baserat på 1-2 sajter — Generalization Gate
+2. **Lägg till CSS-class extraction** utan cross-site verifiering — "Provisionally General"
+
+### System-effect-before-local-effect
+Att förstå att scandinavium redirectar sparar tid på att köra pipeline mot en defunct domain.
 
 ### Största kvarvarande flaskhals
 **C2 och extractFromHtml() är inte synkade.** C2 använder breadth_wrongtype-logik (dateCount, densityScore) för att avgöra "lovande", men extractFromHtml() kräver specifika URL-mönster (YYYY-MM-DD-HHMM eller /kalender/) för att extrahera events.
