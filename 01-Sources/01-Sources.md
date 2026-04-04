@@ -89,6 +89,17 @@ This folder contains the source layer of EventPulse. The folder structure itself
 | `source-matrices/` | Evaluation criteria and comparison data |
 | `diagnostics/` | Test results and failure analysis |
 | `archive/` | Rejected or deprecated sources |
+| `RawSources/` | Raw inbox of untested candidates for batch testing |
+
+## RawSources — rått mellanlager
+
+RawSources/ är enkel insamling, separerad från verifierade sources:
+
+- **RawSources/** — råa kandidater (namn, URL, stad, kategori, datum, notis)
+- **sources/** — verifierade startkällor med metadata (discoveredAt, preferredPath, discoveredBy)
+- **candidates/** — scoutade källor med diagnosresultat
+
+RawSources är INTE testad eller analyserad. Den fungerar som en inbox som batch-testas via sourceTriage innan uppromotering till sources/.
 
 ## AI-regler som gäller här
 
