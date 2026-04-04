@@ -1,0 +1,240 @@
+# Handoff – 02-Ingestion
+
+> **HISTORICAL ONLY — inactive after NEWSTRUCTURE migration.**
+> 
+> Active files now live in:
+> - `NEWSTRUCTURE/02-Ingestion/current-task.md`
+> - `NEWSTRUCTURE/02-Ingestion/handoff.md`
+> 
+> Do not use this file when domain-local files exist.
+>
+> **Future plan:** When current migration stabilizes, move git/repo root to `NEWSTRUCTURE` so that all relative paths, active context resolution and skills naturally use the correct project root.
+
+## Nästa-steg-analys 2026-04-04
+
+### Vad förbättrades denna loop
+- Batch-triage `--triage-batch` implementerad i scheduler.ts
+- 94 sources triaged på 5 minuter
+- 7 html_candidates identifierade och klara för C2-extraction
+- 4 render_candidates parkerade i pending_render_queue
+- 51 manual_review och 39 still_unknown dokumenterade
+
+### Största kvarvarande flaskhals
+**System-effect-before-local-effect:**
+- 7 html_candidates har screenUrl-signal men INGEN extraction har körts ännu
+- 4 render_candidates ligger i kö men D-renderGate saknas (kan inte bearbetas)
+- Nästa steg ska öka events-in-i-pipeline, inte förbättra triage-logik
+
+### Tre möjliga nästa steg
+
+| # | Steg | Systemnytta | Risk | Varför nu |
+|---|------|-------------|------|-----------|
+| 1 | **Kör C2-extraction på 7 html_candidates** | Hög: 7 sources → potentiellt 50+ events in i kö | Låg: C2 är beprövad | De är redan triaged, bara köra |
+| 2 | **Bygg D-renderGate för 4 render_candidates** | Medel: 4 sources → events via render | Hög: Ingen befintlig D-renderGate finns | Bottleneck just nu men komplext |
+| 3 | **Analysera 39 still_unknown** | Medel: Hitta fixbara URL-problem | Låg: Dokumentation/analys | Fler källor kan bli retrievable |
+
+### Rekommenderat nästa steg
+**#1 — Kör C2-extraction på 7 html_candidates**
+
+Motivering: Högst systemnytta/minst risk. html_candidates är verifierade som "stark/medium HTML-signal" av C1. Att köra C2 på dessa är minsta säkra förändring som faktiskt levererar events till pipelinen.
+
+**EFTER DENNA LOOP har 123 nu Rules Gap Check implementerad:**
+```
+═══ RULES GAP CHECK ═══
+Rule of Simplification:          ✓ bevisad
+HTML Frontier Discovery:         ✓ bevisad
+Candidate Ranking Signals:       ✓ page-signals bevisade
+AI-Assisted Routing:             ✗ endast dokumenterad
+Render Path Rule:                ✓ bevisad
+Generalization Gate:             ⚠ partiellt (exists, no stop-logic)
+═════════════════════════════════
+```
+
+### Två steg att INTE göra nu
+1. **Bygga D-renderGate** — Lockande men D finns inte ens. Bättre att först visa att 7 html_candidates kan leverera events med befintlig C2.
+2. **Förbättra 123/loop-ed-logiken** — Vi är redan mitt i det. Avsluta denna loop först.
+
+### System-effect-before-local-effect
+- Valt steg: C2 på html_candidates
+- Varför: Pipelinen är tom på events just nu. 7 html_candidates = bevisad capability utan ny kod. D-renderGate kräver helt ny komponent. 39 still_unknown kräver manuell analys.
+
+---
+
+## Senaste loop
+Datum: 2026-04-03
+Problem: Tre kvarvarande problem med routingmodellen:
+1. unknown blir implicit HTML-default (ej explicit triage)
+2. jsonld med 0 events blir silent fail
+3. routingbeslut sparas inte som långlivat runtime-minne
+
+Ändring:
+
+### 1. Nya statusar i SourceStatus
+- `pending_api` - för api-sources som inte kan köras ännu
+- `pending_network` - för network-sources som inte kan köras ännu
+- `triage_required` - för unknown-sources som misslyckats med HTML-triage
+- `needs_review` - för sources där etablerad path returnerar 0 events
+
+### 2. Nya routingminne-fält
+- `routingReason` - varför detta path valdes (spårbart)
+- `pendingNextTool` - nästa verktyg som behövs (D-renderGate, api_adapter, etc)
+- `triageAttempts` - antal triage-försök för unknown sources
+
+### 3. Scheduler-logik uppdaterad
+- api/network → pending_api/pending_network + pendingNextTool satt
+- jsonld med 0 events → needs_review + pendingNextTool=preferredPath_recheck
+- unknown med 0 events → triage_required + triageAttempts++
+- unknown med events → success + pendingNextTool=preferredPath_recheck (flaggar för uppdatering)
+
+Filer ändrade:
+- 02-Ingestion/tools/sourceRegistry.ts: Nya statusar och fält
+- 02-Ingestion/scheduler.ts: Uppdaterad updateSourceStatus-anrop
+
+Verifiering (från sources_status.jsonl):
+```
+kulturhuset: status=pending_network, routingReason="preferredPath=network...", pendingNextTool=network_inspection ✓
+ticketmaster: status=pending_api, routingReason="preferredPath=api...", pendingNextTool=api_adapter ✓
+berwaldhallen: status=needs_review, routingReason="Tixly API endpoint...", pendingNextTool=preferredPath_recheck ✓
+astronomiska-huddinge: status=success, routingReason="triage_success...", triageAttempts=1 ✓
+debaser: status=triage_required, triageAttempts=1 ✓
+```
+
+Commit: (kommer göras)
+
+---
+
+## Senaste loop
+Datum: 2026-04-03
+Problem: sources/ och runtime/ hade otydlig separation, saknade spårbarhetsfält och prioriteringslogik
+Ändring:
+- Uppdaterat SourceTruth interface med: preferredPathReason, systemVersionAtDecision, verifiedAt, needsRecheck
+- Uppdaterat SourceStatus interface med: lastSystemVersion, rename pending_render_gate → pending_render
+- Lagt till saknade status-poster (fryshuset, debaser, gso) i sources_status.jsonl
+- Fixat scheduler.ts error-sträng till 'pending_render'
+- Uppdaterat alla 8 sources med spårbarhetsfält (preferredPathReason, systemVersionAtDecision, verifiedAt, needsRecheck)
+- debaser och gso fick needsRecheck=true (behöver utredas)
+Verifiering: scheduler --status visar 8 sources, 8 statuses
+Commit: b5841e6 (sources spårbarhet), f7a4d17 (needsRecheck prioritering)
+
+## Öppna problem
+- C3 behöver integreras i phase1ToQueue (OLLAMA API fungerade, men integration i pipeline behövs)
+
+---
+
+## Nuvarande status
+
+- phase1ToQueue.ts är kopplad till NEWSTRUCTURE ✓
+- JSON-LD → Queue ✓
+- HTML-path → Queue ✓
+- Worker → Database ✓
+- Konserthuset: 8 events queued → database verifierat ✓
+- Berwaldhallen: database verifierat ✓
+
+Senaste commit:
+- 721aa22 feat(ingestion): add HTML extraction fallback for no-jsonld sources
+
+---
+
+## Nuvarande status
+
+- phase1ToQueue.ts är kopplad till NEWSTRUCTURE ✓
+- JSON-LD → Queue ✓
+- HTML-path → Queue ✓
+- Worker → Database ✓
+- Konserthuset: 8 events queued → database verifierat ✓
+- Berwaldhallen: database verifierat ✓
+- URL-dubblering fixat ✓ (a3b4f0e)
+
+Senaste commits:
+- a3b4f0e fix(ingestion): prevent URL path duplication in extractFromHtml resolveUrl
+- 721aa22 feat(ingestion): add HTML extraction fallback for no-jsonld sources
+
+---
+
+## Öppna problem
+
+Inga öppna problem.
+
+---
+
+## Nästa målsättning
+
+### Analysera HTML-path-flaskhalsar och optimera source-täckning
+
+#### Mål
+Identifiera och kategorisera alla 100 källor efter varför de INTE levererar events via HTML-path. Skapa en systematisk lista som visar exakt vilka flaskhalsar som finns och vilka källor som kan fixas med rätt verktyg.
+
+#### Analysuppgifter
+
+1. **Kategorisera alla sources som INTE gav events (86 st) i dessa grupper:**
+
+   | Kategori | Kännetecken | Exempel | Åtgärd |
+   |----------|-------------|---------|--------|
+   | `js-render` | HTML tom/substanslös, kräver JS-körning | Fryshuset, Debaser, Liseberg | Måste använda render-path (headless browser) |
+   | `fetch-fail` | DNS/timeout/403/404 | malmolive.se, operna.se | Fel URL, site nere, eller blockerat |
+   | `no-events-in-html` | HTML finns men inga event-länkar hittas | Berwaldhallen, GSO | HTML finns men selectors/hittar inte rätt mönster |
+   | `wrong-jsonld` | JSON-LD finns men är fel type (WebPage/Organization) | Avicii Arena, kulturhuset | Måste använda HTML-path istället |
+   | `api-required` | Events laddas via separat API, ej i HTML | ? | Måste använda network-path för att hitta API-endpoints |
+   | `calendar-subpath` | Events finns på undersida (kalender/program) | ? | Prova kända subpaths: /kalender/, /program/, /events/ |
+
+2. **För varje kategori, svara på:**
+   - Vilka features behövs för att lösa kategorin?
+   - Finns feature redan i pipelinen (render-path, network-path)?
+   - Vad är minsta ändring för att lösa?
+
+3. **Skapa prioritetsordning för implementation:**
+   - Vilken kategori täcker FLEST källor?
+   - Vilken kategori är ENKLAST att implementera?
+   - Vilken ger STÖRST täckning per insats?
+
+4. **Output: En komplett analysrapport i detta format:**
+
+```
+### Bottleneck-analys
+
+| Kategori | Antal källor | Exempel | Feature som behövs | Komplexitet |
+|----------|--------------|---------|-------------------|-------------|
+| js-render | X | ... | render-path | hög |
+| fetch-fail | X | ... | URL-fixar/undersökning | låg |
+| ... | ... | ... | ... | ... |
+
+### Rekommenderad prioritetsordning
+1. [Kort beskrivning av högsta prioritet]
+2. ...
+3. ...
+
+### Käll-lista som behöver render-path (JS)
+[Alla källor som är js-render med URL]
+
+### Käll-lista som behöver network-path (API)
+[Alla källor som troligen behöver API-inspektion]
+
+### Käll-lista med felaktig URL
+[Alla fetch-fail som kan vara URL-problem]
+
+### Övriga iakttagelser
+[Vad som helst intressant upptäcktes]
+```
+
+#### Arbetssätt
+- Använd test-results.json som bas (genererades vid 100-källa test)
+- Görstickprov på 5-10 källor för att verifiera kategori-klassificering
+- Om osäker på kategori, testa manuellt med curl/browser
+- Spara slutlig rapport i `01-Sources/HTML-path-bottleneck-analysis.md`
+
+#### Regler
+- Gör endast analys och dokumentation - INGA kodändringar
+- Uppdatera handoff.md med resultatet av analysen
+- Svara på svenska
+
+---
+
+## Regler för automatisk uppdatering
+
+AI-agenten ska efter varje loop:
+1. Uppdatera endast sektionen "Senaste loop"
+2. Uppdatera "Nuvarande status" endast om något faktiskt förändrats
+3. Ta bort lösta problem från "Öppna problem"
+4. Lägga till nya problem om de upptäcks
+5. Uppdatera "Nästa rekommenderade steg"
+6. Om handoff.md inte ändrats är loopen inte klar

@@ -1,0 +1,8 @@
+{"sourceId":"konserthuset","status":"never_run","lastRun":null,"lastSuccess":null,"consecutiveFailures":0,"lastEventsFound":0,"attempts":0}
+{"sourceId":"berwaldhallen","status":"never_run","lastRun":null,"lastSuccess":null,"consecutiveFailures":0,"lastEventsFound":0,"attempts":0}
+{"sourceId":"kulturhuset","status":"never_run","lastRun":null,"lastSuccess":null,"consecutiveFailures":0,"lastEventsFound":0,"attempts":0}
+{"sourceId":"ticketmaster","status":"never_run","lastRun":null,"lastSuccess":null,"consecutiveFailures":0,"lastEventsFound":0,"attempts":0}
+{"sourceId":"eventbrite","status":"never_run","lastRun":null,"lastSuccess":null,"consecutiveFailures":0,"lastEventsFound":0,"attempts":0}
+{"sourceId":"fryshuset","status":"never_run","lastRun":null,"lastSuccess":null,"consecutiveFailures":0,"lastEventsFound":0,"attempts":0}
+{"sourceId":"debaser","status":"pending_render","lastRun":"2026-04-03T09:15:29.841Z","lastSuccess":null,"consecutiveFailures":1,"lastEventsFound":0,"attempts":1,"lastError":"pending_render"}
+{"sourceId":"gso","status":"never_run","lastRun":null,"lastSuccess":null,"consecutiveFailures":0,"lastEventsFound":0,"attempts":0}

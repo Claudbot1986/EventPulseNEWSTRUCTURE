@@ -1,0 +1,19 @@
+{
+  "name": "eventpulse",
+  "version": "1.0.0",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "start": "expo start",
+    "android": "expo start --android",
+    "ios": "expo start --ios",
+    "verify-providers": "node scripts/verifyProviders.js"
+  },
+  "dependencies": {
+    "expo": "~54.0.2",
+    "expo-status-bar": "~3.0.0",
+    "react": "19.1.0",
+    "react-native": "0.81.5"
+  },
+  "private": true
+}
