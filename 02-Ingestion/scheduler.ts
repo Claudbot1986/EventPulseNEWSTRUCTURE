@@ -40,11 +40,13 @@ import {
 import { addPendingRender, getPendingRenders } from './tools/pendingRenderQueue';
 import { screenUrl, determineTriageOutcome } from './C-htmlGate/C1-preHtmlGate/C1-preHtmlGate';
 import type { TriageResult } from './C-htmlGate/C1-preHtmlGate/C1-preHtmlGate';
+import { inspectUrl } from './B-networkGate/networkInspector';
+import { evaluateNetworkGate } from './B-networkGate/A-networkGate';
 
 // ─── Routing Decision Types ────────────────────────────────────────────────────
 
 export type PathType = 'api' | 'jsonld' | 'html' | 'network' | 'render' | 'unknown';
-export type ExecuteNow = 'execute_now' | 'park_pending_render' | 'skip_not_implemented';
+export type ExecuteNow = 'execute_now' | 'park_pending_render' | 'skip_not_implemented' | 'execute_network';
 
 export interface RoutingDecision {
   path: PathType;
@@ -78,10 +80,12 @@ function selectSourcePath(source: SourceTruth, status: SourceStatus): RoutingDec
   }
   
   if (source.preferredPath === 'network') {
+    // Kör network_inspection + evaluateNetworkGate
+    // Den tidigare "skip" var en stub - verktygen finns nu
     return {
       path: 'network',
-      execute: 'skip_not_implemented',
-      reason: `preferredPath=network, ${source.preferredPathReason || 'network adapter not yet implemented'}`,
+      execute: 'execute_network',
+      reason: `preferredPath=network, running network_inspection`,
       routingSource: 'preferredPath',
     };
   }
@@ -199,12 +203,91 @@ async function runSource(source: SourceTruth, options: { recheck?: boolean } = {
     return;
   }
   
-  // ── Execute now: jsonld, html, eller unknown(triage) ───────────────────────
+  // ── Execute now: jsonld, html, unknown(triage), eller network ───────────────
   const { fetchHtml } = await import('./tools/fetchTools');
   const { extractFromJsonLd, extractFromHtml } = await import('./F-eventExtraction/extractor');
-  
+
+  // Fetch HTML for all paths (needed for HTML fallback in network path too)
   const fetchResult = await fetchHtml(source.url, { timeout: 20000 });
-  
+
+  let eventsFound = 0;
+  let pathUsed: 'jsonld' | 'html' | 'network' | 'render' = decision.path as any;
+
+  // ── NETWORK PATH EXECUTION ──────────────────────────────────────────────────
+  if (decision.execute === 'execute_network') {
+    if (!fetchResult.success || !fetchResult.html) {
+      updateSourceStatus(source.id, {
+        success: false,
+        eventsFound: 0,
+        pathUsed: 'network',
+        error: `Fetch failed: ${fetchResult.error}`,
+        lastRoutingReason: `network_inspection: fetch failed`,
+        lastRoutingSource: 'preferredPath',
+        pendingNextTool: 'network_inspection',
+      });
+      return;
+    }
+
+    console.log(`🌐 Network: Running inspectUrl on ${source.url}`);
+    const inspectorResult = await inspectUrl(source.url);
+    const verdict = inspectorResult.verdict;
+    console.log(`   Verdict: ${verdict} (${inspectorResult.summary.likely} likely, ${inspectorResult.summary.possible} possible, ${inspectorResult.summary.noise} noise)`);
+
+    // Evaluate with breadth mode (2) - require usable endpoint
+    const gateResult = await evaluateNetworkGate(source.url, 'no-jsonld', 2, inspectorResult);
+    console.log(`   Gate: ${gateResult.nextPath} | ${gateResult.reason}`);
+
+    if (gateResult.nextPath === 'network') {
+      // API is accessible - look for usable endpoint
+      const likely = inspectorResult.candidates.filter(c => c.label === 'likely_event_api' && c.statusCode === 200);
+      if (likely.length > 0) {
+        const top = likely[0];
+        console.log(`   Using: ${top.url} (${top.statusCode})`);
+        // TODO: Extract events from API response once network adapter exists
+        console.log(`   Keys found: [${top.keysFound?.slice(0, 8).join(', ')}]`);
+        if (top.promotion) {
+          console.log(`   Promotion: cleaner=${top.promotion.cleaner}, complete=${top.promotion.moreComplete}, stable=${top.promotion.moreStable}`);
+        }
+        updateSourceStatus(source.id, {
+          success: true,
+          eventsFound: 0, // Events extraction from API not yet implemented
+          pathUsed: 'network',
+          lastRoutingReason: `network_inspection: ${verdict}, endpoint accessible`,
+          lastRoutingSource: 'preferredPath',
+          pendingNextTool: 'network_inspection',
+        });
+      } else {
+        console.log(`   No likely_event_api with 200 status found`);
+        updateSourceStatus(source.id, {
+          success: false,
+          eventsFound: 0,
+          pathUsed: 'network',
+          lastRoutingReason: `network_inspection: ${verdict} but no accessible endpoint`,
+          lastRoutingSource: 'preferredPath',
+          pendingNextTool: 'network_inspection',
+        });
+      }
+    } else {
+      // Gate says HTML - fall back to HTML extraction
+      console.log(`   Gate: falling back to HTML`);
+      const htmlResult = extractFromHtml(fetchResult.html, source.id, source.url);
+      eventsFound = htmlResult.events.length;
+      pathUsed = 'html';
+      console.log(`   HTML fallback: ${eventsFound} events`);
+      updateSourceStatus(source.id, {
+        success: eventsFound > 0,
+        eventsFound,
+        pathUsed: 'html',
+        lastRoutingReason: `network_inspection: ${verdict} → HTML fallback`,
+        lastRoutingSource: 'preferredPath',
+        error: eventsFound === 0 ? 'network_blocked_html_fallback_zero_events' : undefined,
+        pendingNextTool: eventsFound === 0 ? 'network_inspection' : 'preferredPath_recheck',
+      });
+    }
+    return;
+  }
+  // ── END NETWORK PATH ──────────────────────────────────────────────────────
+
   if (!fetchResult.success || !fetchResult.html) {
     updateSourceStatus(source.id, {
       success: false,
@@ -213,9 +296,6 @@ async function runSource(source: SourceTruth, options: { recheck?: boolean } = {
     });
     return;
   }
-  
-  let eventsFound = 0;
-  let pathUsed: 'jsonld' | 'html' | 'network' | 'render' = decision.path as any;
   
   if (decision.path === 'jsonld') {
     // Endast JSON-LD, inget fallback
