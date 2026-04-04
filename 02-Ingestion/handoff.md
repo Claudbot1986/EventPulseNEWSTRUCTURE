@@ -2,6 +2,57 @@
 
 ---
 
+## Nästa-steg-analys 2026-04-04 (loop 17)
+
+### Vad förbättrades denna loop
+- **LAGT TILL --source FLAGGA I SCHEDULER:** Möjliggör verifiering av enstaka source utan att köra alla 420
+- **Ny CLI-flagga:** `npx tsx 02-Ingestion/scheduler.ts --source <sourceId>`
+- **Ändring i scheduler.ts:** Lade till `--source` argument-parsing (rad 593-605)
+- **Dokumentation uppdaterad:** Header-kommentar med ny flagga
+
+### Problem identifierat
+- **Loop 16 rekommenderade:** "Köra scheduler på berwaldhallen endast"
+- **Blocker:** Scheduler saknade `--source` flagga — `--recheck` kör alla 420 sources (timeout)
+- **Lösning:** La till `--source <sourceId>` för att köra en specifik source
+
+### Verifiering av fix
+- `berwaldhallen.jsonl`: `preferredPath: "network"` ✓
+- `scheduler.ts`: Har `execute_network` handler (rad 218-324) ✓
+- `extractFromApi`: Finns och returnerar 216 events (loop 15 verifierat) ✓
+- `scheduler.ts --source berwaldhallen`: NU MÖJLIG ✓
+
+### Nästa steg nu möjligt
+```
+npx tsx 02-Ingestion/scheduler.ts --source berwaldhallen
+```
+→ Kör network path på berwaldhallen → bekräfta 216 events i runtime/sources_status.jsonl
+
+### Kvarvarande flaskhals
+- **Inga** — berwaldhallen kan nu verifieras med `--source` flaggan
+
+### Tre möjliga nästa steg
+
+| # | Steg | Systemnytta | Risk | Varför nu |
+|---|------|-------------|------|-----------|
+| 1 | **Köra scheduler --source berwaldhallen** | Hög: bekräfta network path fungerar E2E | Låg: verifiering | Ändring gjord, nästa logiska steg |
+| 2 | **Köra scheduler --source kulturhuset** | Medel: testa HTML-fallback för network | Låg: verifiering | kulturhuset ingen API, fallback test |
+| 3 | **Bygga D-renderGate** | Hög: aktiverar 2 källor | Medel: headless browser | SBF och malmolive väntar |
+
+### Rekommenderat nästa steg
+- **#1 — Kör scheduler --source berwaldhallen**
+
+Motivering: Nu finns verktyget för att verifiera. Kör scheduler på berwaldhallen för att bekräfta network path faktiskt körs och events queuas till Redis.
+
+### Två steg att INTE göra nu
+1. **Bygga D-renderGate** — endast 2 källor väntar, network har 4 som kan aktiveras
+2. **Köra --recheck på alla** — 420 sources tar timeout, onödigt
+
+### System-effect-before-local-effect
+- Valt steg (#1): Verifiera berwaldhallen network path
+- Varför: Fix från loop 16 kan nu verifieras med `--source` flaggan
+
+---
+
 ## Nästa-steg-analys 2026-04-04 (loop 16)
 
 ### Vad förbättrades denna loop

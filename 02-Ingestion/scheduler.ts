@@ -9,6 +9,7 @@
  *   npx tsx 02-Ingestion/scheduler.ts              # kör nästa i prioritetskön
  *   npx tsx 02-Ingestion/scheduler.ts --all        # kör alla (ignorerar kö)
  *   npx tsx 02-Ingestion/scheduler.ts --recheck     # recheck alla oavsett lastRun
+ *   npx tsx 02-Ingestion/scheduler.ts --source <id> # kör en specifik source
  *   npx tsx 02-Ingestion/scheduler.ts --rebuild    # återuppbygga prioritetskön
  *   npx tsx 02-Ingestion/scheduler.ts --status     # visa status för alla sources
  *   npx tsx 02-Ingestion/scheduler.ts --pending    # visa pending_render_queue
@@ -587,6 +588,20 @@ async function main() {
     for (const p of pending) {
       console.log(`  ${p.sourceName} | ${p.signal} | ${p.reason.substring(0, 60)}`);
     }
+    return;
+  }
+
+  // ── RUN SINGLE SOURCE: --source <sourceId> ─────────────────────────────────
+  const sourceIndex = args.findIndex(a => a === '--source');
+  if (sourceIndex !== -1 && args[sourceIndex + 1]) {
+    const targetSourceId = args[sourceIndex + 1];
+    const source = getSource(targetSourceId);
+    if (!source) {
+      console.log(`Source '${targetSourceId}' hittades inte i sources/.`);
+      return;
+    }
+    console.log(`Kör source: ${source.id} (${source.url})\n`);
+    await runSource(source, { recheck: true });
     return;
   }
 
