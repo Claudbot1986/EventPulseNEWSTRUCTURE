@@ -74,32 +74,64 @@
 - Strategisk omorientering: Från site-specifik felsökning → bred modell-validering
 - current-task.md uppdaterad med nya mål (10+ sources, precision/recall, generella mönster)
 - handoff.md uppdaterad med ny inriktning
+- **MODELL-VALIDERING GENOMFÖRD:** Körde sourceTriage på 23 no-jsonld candidates
 
 ### Största kvarvarande flaskhals
-**Modell-validering saknas:**
-- C0/C1/C2 har endast testats på 1-3 sajter
-- Vi vet INTE om signalsystemet fungerar BRETT
-- Vi har ingen systematisk mätning av precision vs recall
+**Modell-validering GENOMFÖRD men visar specifika mönster:**
+- 5/23 approved (22%) — modellen hittar events på ~1/5 av no-jsonld sajter
+- 18/23 "gate=promising" men 0 events — signalsystemet hittar candidates men extraction failar
+- 5/23 "gate=unclear" eller "low_value" — candidate-val är suboptimalt
+- Root-sida (konserthuset) fungerar bättre än discovered candidates på flera sajter
+
+### Modell-Validering Resultat (2026-04-04)
+
+**Batch:** 23 no-jsonld URLs från 100testcandidates.md
+
+|| Mått | Värde |
+|------|------|-------|
+| Sources testade | 23 | 100% |
+| Approved (events > 0) | 5 | 22% |
+| Events totalt | 26 | — |
+| Precision (C2→events) | 5/23 | 22% |
+| C0 candidates hittade | 20/23 | 87% |
+| Gate verdicts: promising | 12 | 52% |
+| Gate verdicts: unclear/maybe | 8 | 35% |
+| Gate verdicts: low_value | 3 | 13% |
+
+**Generella mönster identifierade:**
+
+1. **Root-sida vs discovered:** konserthuset ger 11 events från root, nrm.se hittade /kalendarium men 0 events, vasamuseet root bättre än discovered
+2. **High density ≠ events:** nrm.se density=300 → 0 events, friidrott.se density låg → 4 events
+3. **High density candidates misslyckas:** svenskfotboll.se (biljett/) density=9 → 0, shl.se density=200 → 0
+4. **Kalender-sidor:** Kalender/calendar-sidor har hög density men låg extractability
+5. **Universitets-sidor:** university events (su, gu, lu, miun) alla 0 events — ej event-sidor
+6. **Rödhussidan fungerar:** konserthuset, dramaten, sbf, friidrott, textilmuseet fungerar
+
+**Site-Specific vs General:**
+
+| Observation | Klassificering | Handling |
+|-------------|----------------|----------|
+| Vasamuseet root > discovered | Site-Specific | Source adapter eller undersök |
+| Universitets-sidor alla 0 | General (4+ sajter) | Föreslå: IGNORE university-event paths |
+| Kalender-sidor hög density→0 | General (4+ sajter) | Föreslå: lägre vikt för /kalender/ paths |
+| Konserthuset root funkar | Site-Specific (kanske) | Undersök om det är generellt mönster |
 
 ### Tre möjliga nästa steg (GENERELLA)
 
-|| # | Steg | Systemnytta | Risk | Varför nu |
+||| # | Steg | Systemnytta | Risk | Varför nu |
 |---|------|-------------|------|-----------|
-| 1 | **Kör sourceTriage på 10+ html_candidates** | Hög: Bred validering av modellen | Låg: Befintlig kod | Vi måste veta om modellen fungerar BRETT |
-| 2 | **AI-analys av failure patterns** | Medel: Hitta generella mönster | Låg: Endast analys | Mönster över 3+ sajter → regeländring |
-| 3 | **Utvärdera IGNORE_PATTERNS effekt** | Medel: Vet vi om mönstren är för breda/restriktiva? | Låg: Analysera befintliga resultat | Generell förbättring kräver förståelse |
+| 1 | **Analysera failure patterns** | Medel-Hög: Hitta varför 18/23 har 0 events | Låg: Endast analys | Generella mönster → regeländring |
+| 2 | **Testa root vs candidates** | Hög: Optimera C0 för bättre candidates | Medel: Risk att minska recall | Förbättrar precision |
+| 3 | **Kör phase1ToQueue på approved** | Hög: Få 26 events till database | Låg: Befintlig kod | Validerar hela pipeline |
 
 ### Rekommenderat nästa steg
-**#1 — Systematisk modell-validering på 10+ html_candidates**
+**#3 — Kör phase1ToQueue på de 5 godkända sources**
 
-Motivering: Vi kan inte förbättra en modell vi inte har mätt brett. Nästa steg är att köra sourceTriage på 10+ html_candidates och samla systematiska data om:
-- C0 candidate discovery: hur många links hittas per sajt?
-- C1/C2 signals: korrelerar scores med faktiska events?
-- Extraction: hur ofta vald candidate faktiskt ger events?
+Motivering: Vi har 5 approved sources (26 events). Att köra dessa genom phase1ToQueue→Queue→Database verifierar hela pipeline och ger mätbar output.
 
 ### Två steg att INTE göra nu
-1. **Djupsökning på enskild sajt** — Lockande men genererar inte lära om modellen
-2. **Site-specifik kodändring** — Får ENDAST göras efter bred validering som visar 3+ sajter samma problem
+1. **Ändra IGNORE_PATTERNS för universitets-sidor** — Endast 4 sajter, ej verifierat generellt
+2. **Ändra candidate ranking vikter** — Ej generaliserat ännu, kräver mer data
 
 ---
 

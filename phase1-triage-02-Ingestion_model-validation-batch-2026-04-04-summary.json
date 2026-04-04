@@ -1,0 +1,26 @@
+{
+  "batchId": "02-Ingestion_model-validation-batch",
+  "timestamp": "2026-04-04T09:10:57.295Z",
+  "total": 23,
+  "diagnosis_counts": {
+    "no-jsonld": 23
+  },
+  "next_path_counts": {
+    "html-heuristics": 18,
+    "network": 5
+  },
+  "approved_count": 5,
+  "approved_urls": [
+    "https://www.konserthuset.se",
+    "https://www.dramaten.se",
+    "https://www.sbf.se",
+    "https://www.friidrott.se",
+    "https://www.textilmuseet.se"
+  ],
+  "network_gate": {
+    "model": "prelim_1src",
+    "signalsFound": 23,
+    "openAccessible": 5,
+    "blocked": 18
+  }
+}

@@ -1,0 +1,27 @@
+# Model Validation Batch - 2026-04-04
+# Sources: no-jsonld from 100testcandidates.md
+# Excluded: malmolive (JS-render), debaser (pending_render), fryshuset (JS-render)
+# Purpose: Validate C0/C1/C2 model across 10+ domains
+https://www.konserthuset.se
+https://www.berwaldhallen.se
+https://www.gso.se
+https://www.dramaten.se
+https://www.nrm.se
+https://www.gronalund.se
+https://www.vasamuseet.se
+https://www.astronomiska.se
+https://www.scandinavium.se
+https://www.fcc.se
+https://www.su.se/evenemang
+https://gu.se/evenemang
+https://www.lu.se/evenemang
+https://www.miun.se/evenemang
+https://www.svenskfotboll.se
+https://www.shl.se
+https://www.sbf.se
+https://www.friidrott.se
+https://www.tennis.se
+https://www.animagic.se
+https://www.rohus.se
+https://www.textilmuseet.se
+https://www.millesgarden.se
