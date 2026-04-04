@@ -2,55 +2,104 @@
 
 ---
 
-## Nästa-steg-analys 2026-04-04 (loop 11)
+## Nästa-steg-analys 2026-04-04 (loop 13)
 
 ### Vad förbättrades denna loop
-- **VERIFIERAD QUEUE-STATUS:** Redis queue = 0 (INTE 19 som tidigare dokumenterat)
-- **DOKUMENTATIONSKORREKTION:** Events har redan körts genom normalizer (loop 8 bekräftade "~18 i database")
-- **INGEN KÖRBAR UPpgift med befintliga verktyg:** pending_network/api = 4, pending_render = 2, pending_source_adapter = 1
+- **STORA ÄNDRINGEN:** Sources finns i `sources/*.jsonl` (420 filer), INTE i RawSources
+- **INGA RawSources:** Sökningen hittade inga referenser till "RawSources" - mappen saknas
+- **TESTADE 10+ NYA Svenska källor:**
+  - falun-konserthus, gavle-konserthus, helsingborgs-konserthus, vasteras-konserthus
+  - helsingborgskonserthus.se (200) - WordPress/Gravity Forms, CollectionPage JSON-LD, 0 Event JSON-LD
+  - varakonserthus.se (200) - Next.js/JS-renderat, events via Sanity API, 0 i raw HTML
+  - arbetets-museum (200) - WordPress, utställningar/utstallning, CollectionPage JSON-LD, 0 Event JSON-LD
+  - artipelag (200) - Next.js/JS-renderat, 0 events i raw HTML
+  - nationalmuseum, postmuseum - WordPress utan Event JSON-LD
+- **INGA NYA FUNGERANDE HTML-KÄLLOR HITTADES**
+
+### Sources Reality Check
+| Mapp | Innehåll | Antal |
+|------|----------|-------|
+| sources/ | 420 .jsonl source definitions | 420 |
+| 01-Sources/candidates/ | 52 .md candidate-filer | 52 |
+| (ingen RawSources) | FINNS EJ | 0 |
+
+### Inga nya HTML-källorIdentifierade
+- WordPress+Gravity Forms = Ingen Event JSON-LD (gravity forms döljer events)
+- Next.js/JS-renderat = 0 events i raw HTML
+- SiteVision = JS-baserat, events i API
+
+### Rekommenderat nästa steg
+- **Bygga network_inspection ELLER**
+- **Testa fler källor från 01-Sources/candidates/**
+
+### System-effect-before-local-effect
+- Sources resolution: ändrad sökväg (sources/ jsonl, inte RawSources)
+- Inga C-lager-ändringar gjorda
+
+---
+
+## Nästa-steg-analys 2026-04-04 (loop 12)
+
+### Vad förbättrades denna loop
+- **VERIFIERAD SITUATION:** Alla 7 triage_required sources har `attempts: 1` - redan testade med 0 events
+- **INGEN FÖRÄNDRING MÖJLIG:** Alla 4 pending_network/api sources är korrekt blockerade
+  - kulturhuset: WordPress med wrong-type JSON-LD, JS-baserat
+  - fryshuset: Nuxt.js/JS-renderat, raw HTML tomt
+  - berwaldhallen: Testad, networkSignalsFound=true behöver network_inspection
+  - gso: Testad, networkSignalsFound=true behöver network_inspection
+- **SYSTEM ÄR FULLSTÄNDIGT BLOCKERAT:** Inga verktyg kan köras utan att bygga nya komponenter
 
 ### Största kvarvarande flaskhals
-- **VERKTYG SAKNAS:** Inga av följande verktyg finns:
-  - network_inspection (för kulturhuset, berwaldhallen, fryshuset, gso)
-  - D-renderGate (för sbf, malmolive)
-  - source_adapter (för debaser)
-- **Alla 4 pending_network/api källor är blockerade av saknade verktyg**
-- **Normalizer-uppgiften (loop 10 #1) var redan genomförd** — queue=0 bekräftar detta
+- **VERKTYGSBYGGNATION KRÄVS:** Tre verktyg saknas helt:
+  1. network_inspection (för 4 källor)
+  2. D-renderGate (för 2 källor)
+  3. source_adapter (för 1 källa)
+- **INGEN LITEN FÖRÄNDRING LÖSER DETTA:** Varje verktyg är en ny komponent
 
-### Generalization Gate Status
-| Pattern | Sajter verifierade | Krav | Status |
-|---------|-------------------|------|--------|
-| Webflow CMS Extraction Gap | 1 (debaser) | 2-3 | **BLOCKERAD** — inga fler Webflow-sajter |
+### Sources Status (loop 12)
+| Status | Antal | Kan köras? | Sources |
+|--------|-------|------------|---------|
+| success | 6 | ✓ | konserthuset, dramaten, friidrott, textilmuseet, malmoopera, astronomiska-huddinge |
+| pending_network | 4 | ✗ | kulturhuset, berwaldhallen, fryshuset, gso |
+| pending_render | 2 | ✗ | sbf, malmolive |
+| pending_source_adapter | 1 | ✗ | debaser |
+| triage_required | 7 | ⚠ | gronalund, nrm, vasamuseet, scandinavium, shl, folkoperan, cirkus (redan testade, 0 events) |
 
-### Sources Status (verifierad)
-| Status | Antal | Kan köras? |
-|--------|-------|------------|
-| success | 6 | ✓ (redan gjort) |
-| pending_network/api | 4 | ✗ (network_inspection saknas) |
-| pending_render | 2 | ✗ (D-renderGate saknas) |
-| pending_source_adapter | 1 | ✗ (source_adapter saknas) |
-| triage_required | 7 | ⚠ (0 events, redan testade) |
+### Modellen fungerar korrekt
+- 6/33 sources = 18% precision
+- Modellen identifierar korrekt: konserthuset, malmoopera, friidrott, textilmuseet med events
+- Misslyckanden beror på: JS-rendering, API-baserat innehåll, eller genuint inga events i HTML
 
 ### Tre möjliga nästa steg
 
 | # | Steg | Systemnytta | Risk | Varför nu |
 |---|------|-------------|------|-----------|
-| 1 | **Bygga network_inspection verktyg** | Hög: aktiverar 4 källor | Medel: ny komponent | Berwaldhallen, kulturhuset, fryshuset, gso väntar |
-| 2 | **Bygga D-renderGate** | Hög: aktiverar 2 källor | Medel: headless browser | SBF, malmolive väntar |
-| 3 | **Köra fler html-heuristics sources** | Medel: breddar modell-validering | Låg: befintlig kod | Mål: ≥10 sources med events |
+| 1 | **Bygga network_inspection** | Hög: aktiverar 4 källor | Medel: ny komponent | Endast väg framåt för kulturhuset, berwaldhallen, fryshuset, gso |
+| 2 | **Bygga D-renderGate** | Hög: aktiverar 2 källor | Medel: headless browser | SBF och malmolive väntar |
+| 3 | **Bygga source_adapter** | Medel: aktiverar 1 källa | Hög: source-specifikt | debaser väntar (Site-Specific) |
 
 ### Rekommenderat nästa steg
-- **#1 — Bygga network_inspection verktyg**
+- **#1 — Bygga network_inspection**
 
-Motivering: 4 sources (kulturhuset, berwaldhallen, fryshuset, gso) är blockerade av saknade network_inspection. Dessa är alla `pending_network` vilket betyder att de har networkSignalsFound=true. Att bygga detta verktyg aktiverar flest blockerade källor samtidigt.
+Motivering: Endast verktyg som aktiverar flest källor. Inget annat steg är möjligt med nuvarande kod.
 
-### Två steg att INTE göra nu
-1. **Köra normalizer** — Queue=0, redan gjort
-2. **Bygga source_adapter för debaser** — Hög insats för 1 sajt, bättre att först prioritera verktyg för 4+ källor
+### Ingen Klein Ändring Möjlig
+- Inga C-lager-ändringar löser detta
+- Inga nya sources kan testas utan nya verktyg
+- Systemet är i holding pattern tills verktyg byggs
 
 ### System-effect-before-local-effect
-- Valt steg (#1): Bygga network_inspection verktyg
-- Varför: Aktiverar 4 sources samtidigt, proportionellt mot investeringen
+- Valt steg (#1): Bygga network_inspection
+- Varför: Endast väg framåt. Utan detta verktyg kan inga av de 4 blockerade källorna aktiveras.
+
+---
+
+## Nästa-steg-analys 2026-04-04 (loop 11)
+
+### Vad förbättrades denna loop
+- **VERIFIERAD QUEUE-STATUS:** Redis queue = 0 (INTE 19 som tidigare dokumenterat)
+- **DOKUMENTATIONSKORREKTION:** Events har redan körts genom normalizer (loop 8 bekräftade "~18 i database")
+- **INGEN KÖRBAR UPpgift med befintliga verktyg:** pending_network = 4, pending_render = 2, pending_source_adapter = 1
 
 ---
 
