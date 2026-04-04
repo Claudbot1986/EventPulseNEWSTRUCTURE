@@ -2,50 +2,121 @@
 
 ---
 
-## Nästa-steg-analys 2026-04-04 (loop 6)
+## Nästa-steg-analys 2026-04-04 (loop 7)
 
 ### Vad förbättrades denna loop
-- **VIKTIG UPPTÄCKT: debaser är INTE JS-renderad!**
-- curl av debaser.se/kalender visar MASSOR av events i ren HTML
-- C1:s `likelyJsRendered` heuristic (`!hasMain && linkCount < 5`) är FEL för Webflow-sajter
-- Webflow-sajter använder `<div class="w-dyn-list">` istället för `<main>/<article>`
-- Debaser har 73KB HTML med fullständiga event-listor (datum, artister, platser)
+- **VERIFIERAD ROOT-CAUSE:** debaser HAR massor av events i ren HTML (73KB, 50+ events synliga)
+- **PROBLEM IDENTIFIERAT:** extractFromHtml() letar efter URL-mönster som `/YYYY-MM-DD-HHMM/` eller `/kalender/` i href
+- **debaser URLs:** `/events/afro-rave-d69a4` — MATCHAR INTE extractorns förväntade mönster
+- **debaser HAR Webflow-klasser:** `w-dyn-item`, `w-dyn-list`, `collection-item-20`
+- **extractFromHtml() letar i:** `<main>`, `<article>`, `[role="main"]` — debaser använder `<div class="w-dyn-list">`
 
-### Root-cause-analys
-- **C1 falskt positiv:** `hasMain=false` + `hasArticle=false` → likelyJsRendered=true
-- Debaser ANVÄNDER INTE `<main>` eller `<article>` - Webflow-mönster
-- Men sidan har massor av event-data i ren HTML: `class="collection-item-20 w-dyn-item"`, `<h3 class="h3 calendar-data">`, event-links med `/events/...`
+### Root-cause-analys (VERIFIERAD)
+```
+Problem: C2→extractFromHtml() miss-match
+C2 säger "promising" (density=hög, dateCount=hög) men extractFromHtml() hittar 0 events
+```
+**Orsak:** extractFromHtml() har smala URL-mönster som inte matchar Webflow-event-URLs.
+
+**ExtractFromHtml() URL-krav (rad 645-656):**
+- `dateInfo = extractDateTimeFromUrl(href)` — kräver `/2026-04-07-16-00/` i URL
+- `href.includes('/kalender/')` — debaser har `/events/` inte `/kalender/`
+
+**debaser URL-struktur:**
+- `/events/afro-rave-d69a4` — Ingen datum-embedding, ingen kalender-path
+- Datum finns I TEXT, inte i URL
+
+**Alternativt:</b>
+> extractFromHtml() HAR Swedish date extractor (rad 614-626) men den körs bara på text för linkar som redan godkänts via URL-mönster. Den körs INTE på w-dyn-list items.
 
 ### Generalization Gate
-- Observation fràn EN sajt (debaser) → Site-Specific
-- Men misstanke om generellt mönster för Webflow-baserade sajter
-- KRÄVER 2-3 verifierade fall innan C1-ändring
+- **debaser = EN sajt (Webflow)** → Site-Specific → EGEN ADAPTER
+- **Men principen är generell:** extractFromHtml() har för smala URL-krav för många moderna sajter
+- **Ingen C-lager ändring ännu** — först behövs fler verifierade fall
 
 ### Största kvarvarande flaskhals
-- **C1 likelyJsRendered heuristik missar Webflow-sajter**
-- 2 sources (debaser, sbf) parkerade som "pending_render" men kanske inte behöver det
-- D-renderGate-bygget kan vara ogrundat om dessa källor redan har HTML-data
+- **extractFromHtml() missar alla events som inte har datum-i-URL**
+- Webflow-sajter (debaser) har events med struktur: `<div class="w-dyn-item">` + datum-i-text + `/events/[slug]` URL
+- extractFromHtml() söker bara i scope `main, article, [role="main"]` — inte i `w-dyn-list`
 
 ### Tre möjliga nästa steg
 
 | # | Steg | Systemnytta | Risk | Varför nu |
 |---|------|-------------|------|-----------|
-| 1 | **Undersök fler Webflow-sajter** | Hög: kan avslöja om debaser är ensam eller generellt mönster | Låg: endast curl/analys | 2+ fall behövs innan C1-ändring |
-| 2 | **Testa debaser kalender-sida via sourceTriage** | Hög: kan bevisa att debaser kan extraheras med HTML-path | Medel: om det fungerar kan debaser tas ur render-kön | Nästa logiska verifiering |
-| 3 | **Undersök SBF similarly** | Medel: sbf är också i render-kön | Låg: endast analys | Kan ge fler bevis för Webflow-mönstret |
+| 1 | **Undersök SBF Webflow-status** | Hög: bekräfta om SBF också är falsk render-kandidat | Låg: curl-analys | SBF också i render-kön |
+| 2 | **Bygga source adapter för debaser** | Hög: aktivera debaser direkt | Medel: source-specifik, ej generell | Source adapter är rätt verktyg för Site-Specific |
+| 3 | **Föreslå generell extractFromHtml-förbättring** | Medel: kan hjälpa flera Webflow-sajter | Låg: ingen kodändring, bara dokumentation | Baserat på verifierat mönster |
 
 ### Rekommenderat nästa steg
-- **#2 — Testa debaser kalender-sida via sourceTriage**
+- **#2 — Bygga source adapter för debaser**
 
-Motivering: curl visar tydligt att debaser har events i HTML. Nästa steg är att verifiera med vårt faktiska verktyg (C1→C2→extract) för att bevisa om HTML-path fungerar för debaser eller inte.
-
-### Två steg att INTE göra nu
-1. **Bygga D-renderGate** — för tidigt, 2 källor i render-kön kan vara falska positiver
-2. **Ändra C1 likelyJsRendered logik** — endast 1 sajt verifierad hittills
+Motivering: Nu vet vi:
+- debaser = falsk positiv i render-kön (HAR massor av HTML-events, extractorn missar dem)
+- SBF = korrekt parkerad (ingen HTML-event-data, SiteVision JS-app)
+- Nästa steg: bygga source adapter för debaser → aktivera den utan att ändra C-lager
 
 ### System-effect-before-local-effect
-- Valt steg (#2): Testa debaser kalender-sida med sourceTriage
-- Varför: Om debaser fungerar med HTML-path, kan vi ta bort den från render-kön och slippa bygga D-renderGate för denna källa
+- Valt steg (#2): Bygga source adapter för debaser
+- Varför: Source adapter är rätt verktyg för Site-Specific problem. debaser har massor av events i HTML men extractFromHtml() URL-mönster missar `/events/[slug]` strukturen.
+
+---
+
+## Nästa-steg-analys 2026-04-04 (SBF-verifiering)
+
+### SBF-analys (2026-04-04)
+- SBF = **KORREKT PARKERAD** för render
+- SBF HAR ingen event-data i HTML (ren SiteVision JS-app)
+- SBF /kalender/ returnerar "Något gick fel" i ren HTML
+- Slutsats: SBF behöver render faktiskt
+
+### Render-kö status (UPPDATERAD)
+| Källa | HTML events? | Problem | Status |
+|-------|-------------|---------|--------|
+| debaser | JA (50+) | extractFromHtml URL-mönster missar /events/[slug] | **FALSK POSITIV** → source adapter |
+| SBF | NEJ | SiteVision JS-app, ingen HTML-data | Korrekt → render |
+
+### Två olika typer av "pending_render"
+1. **Falsk positiv** (debaser): HTML finns men extractorn missar pga URL-krav
+2. **Sannpositiv** (SBF): ingen HTML finns, render behövs
+
+---
+
+## Pattern Capture: Webflow CMS Extraction Gap (loop 7)
+
+**Klassificering:** Provisionally General (Site: debaser)
+**Potentiellt generellt problem:** extractFromHtml() URL-krav är för smala för Webflow-sajter
+**URL-struktur som påverkas:** `/events/[slug]` (ingen datum-embedding i URL)
+**CMS/Platform:** Webflow (identifierbar via `w-dyn-list`, `w-dyn-item`)
+**Antal sajter verifierade:** 1 (debaser)
+**Behövs verifiering på:** 2-3 andra Webflow-sajter
+**Status:** needsVerification = true
+
+**Detaljer:**
+- extractFromHtml() scope = `main, article, [role="main"], .content, .event-content, .kalender, .event-list`
+- Webflow event-listor använder: `<div class="w-dyn-list">` + `<div class="w-dyn-item">` + `<h3 class="h3 calendar-mobile">[title]</h3>`
+- Event-URLs: `/events/afro-rave-d69a4` — ingen match mot `/YYYY-MM-DD-HHMM/` eller `/kalender/`
+- Sparat i: `02-Ingestion/PATTERNS.md`
+
+**Nästa steg för verifiering:** Sök andra Webflow-baserade svenska sajter (t.ex. liknande venue-sajter)
+
+---
+
+## 123-metod förbättring (loop 7)
+
+**Ändring:** Lade till **Steg 2c: Pattern Capture** i 123-metoden
+
+**Varför:** Site-specifika fall (som debaser) innehåller ofta generella lärdomar som försvinner in i source adapters. Nu fångas de strukturerat.
+
+**Vad som ändrats:**
+1. `~/.hermes/skills/123/SKILL.md` — nytt steg efter Generalization Gate
+2. `02-Ingestion/PATTERNS.md` — ny fil som pattern registry
+
+**Minskad risk för för tidig generalisering:**
+- Nu kan vi Bygga source adapter för debaser (Site-Specific)
+- Samtidigt spara mönstret "Webflow CMS Extraction Gap" som Provisionally General
+- C-lager-ändring kräver fortfarande 2-3 sajter verifiering
+
+---
 
 ---
 
