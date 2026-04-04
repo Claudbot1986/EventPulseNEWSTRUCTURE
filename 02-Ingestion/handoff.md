@@ -33,11 +33,28 @@
 - **Tidigare hypotes var fel** - problemet var inte "wrong page selection"
 - **Behöver verifiera malmolive och dramaten** för att förstå hela bilden
 
-### Nästa steg enligt 02-Ingestion current-task
-1. Bygg HTML Frontier Discovery
-2. Samla interna links från root pages
-3. Ranka candidates baserat på link-level och page-level signals
-4. Välj bästa candidate page före extraction
+### Nästa steg enligt 02-Ingestion current-task (UPPDATERAD 2026-04-04)
+
+**STRATEGISK NYINRIKTNING:** Från site-specifik felsökning → bred modell-validering
+
+1. **Systematisk modell-utvärdering**
+   - Kör sourceTriage på 10+ html_candidates
+   - Mät precision vs recall för C0/C1/C2
+   - Jämför genererade signalscores mot faktiska utfall
+
+2. **AI-Assisted Pattern Analysis**
+   - Använd AI för att jämföra utfall över flera sajter
+   - Hitta generella mönster i failure cases
+   - Föreslå endast generella förbättringar (ej site-specifika)
+
+3. **Regel-justering med Generalization Gate**
+   - Varje föreslagen ändring: "hjälper detta 3+ sajter?"
+   - Site-specifika fixes → source adapters, EJ C-lager
+
+**VIKTIGT:**
+- INGEN djupsökning på enskild site om det inte är för generellt mönster
+- INGEN site-specifik kod i C0/C1/C2
+- Varje ändring kräver bred validiering
 
 ---
 
@@ -51,53 +68,38 @@
 >
 > **Future plan:** When current migration stabilizes, move git/repo root to `NEWSTRUCTURE` so that all relative paths, active context resolution and skills naturally use the correct project root.
 
-## Nästa-steg-analys 2026-04-04
+## Nästa-steg-analys 2026-04-04 (STRATEGISK ÖVERSYN)
 
 ### Vad förbättrades denna loop
-- Batch-triage `--triage-batch` implementerad i scheduler.ts
-- 94 sources triaged på 5 minuter
-- 7 html_candidates identifierade och klara för C2-extraction
-- 4 render_candidates parkerade i pending_render_queue
-- 51 manual_review och 39 still_unknown dokumenterade
+- Strategisk omorientering: Från site-specifik felsökning → bred modell-validering
+- current-task.md uppdaterad med nya mål (10+ sources, precision/recall, generella mönster)
+- handoff.md uppdaterad med ny inriktning
 
 ### Största kvarvarande flaskhals
-**System-effect-before-local-effect:**
-- 7 html_candidates har screenUrl-signal men INGEN extraction har körts ännu
-- 4 render_candidates ligger i kö men D-renderGate saknas (kan inte bearbetas)
-- Nästa steg ska öka events-in-i-pipeline, inte förbättra triage-logik
+**Modell-validering saknas:**
+- C0/C1/C2 har endast testats på 1-3 sajter
+- Vi vet INTE om signalsystemet fungerar BRETT
+- Vi har ingen systematisk mätning av precision vs recall
 
-### Tre möjliga nästa steg
+### Tre möjliga nästa steg (GENERELLA)
 
-| # | Steg | Systemnytta | Risk | Varför nu |
+|| # | Steg | Systemnytta | Risk | Varför nu |
 |---|------|-------------|------|-----------|
-| 1 | **Kör C2-extraction på 7 html_candidates** | Hög: 7 sources → potentiellt 50+ events in i kö | Låg: C2 är beprövad | De är redan triaged, bara köra |
-| 2 | **Bygg D-renderGate för 4 render_candidates** | Medel: 4 sources → events via render | Hög: Ingen befintlig D-renderGate finns | Bottleneck just nu men komplext |
-| 3 | **Analysera 39 still_unknown** | Medel: Hitta fixbara URL-problem | Låg: Dokumentation/analys | Fler källor kan bli retrievable |
+| 1 | **Kör sourceTriage på 10+ html_candidates** | Hög: Bred validering av modellen | Låg: Befintlig kod | Vi måste veta om modellen fungerar BRETT |
+| 2 | **AI-analys av failure patterns** | Medel: Hitta generella mönster | Låg: Endast analys | Mönster över 3+ sajter → regeländring |
+| 3 | **Utvärdera IGNORE_PATTERNS effekt** | Medel: Vet vi om mönstren är för breda/restriktiva? | Låg: Analysera befintliga resultat | Generell förbättring kräver förståelse |
 
 ### Rekommenderat nästa steg
-**#1 — Kör C2-extraction på 7 html_candidates**
+**#1 — Systematisk modell-validering på 10+ html_candidates**
 
-Motivering: Högst systemnytta/minst risk. html_candidates är verifierade som "stark/medium HTML-signal" av C1. Att köra C2 på dessa är minsta säkra förändring som faktiskt levererar events till pipelinen.
-
-**EFTER DENNA LOOP har 123 nu Rules Gap Check implementerad:**
-```
-═══ RULES GAP CHECK ═══
-Rule of Simplification:          ✓ bevisad
-HTML Frontier Discovery:         ✓ bevisad
-Candidate Ranking Signals:       ✓ page-signals bevisade
-AI-Assisted Routing:             ✗ endast dokumenterad
-Render Path Rule:                ✓ bevisad
-Generalization Gate:             ⚠ partiellt (exists, no stop-logic)
-═════════════════════════════════
-```
+Motivering: Vi kan inte förbättra en modell vi inte har mätt brett. Nästa steg är att köra sourceTriage på 10+ html_candidates och samla systematiska data om:
+- C0 candidate discovery: hur många links hittas per sajt?
+- C1/C2 signals: korrelerar scores med faktiska events?
+- Extraction: hur ofta vald candidate faktiskt ger events?
 
 ### Två steg att INTE göra nu
-1. **Bygga D-renderGate** — Lockande men D finns inte ens. Bättre att först visa att 7 html_candidates kan leverera events med befintlig C2.
-2. **Förbättra 123/loop-ed-logiken** — Vi är redan mitt i det. Avsluta denna loop först.
-
-### System-effect-before-local-effect
-- Valt steg: C2 på html_candidates
-- Varför: Pipelinen är tom på events just nu. 7 html_candidates = bevisad capability utan ny kod. D-renderGate kräver helt ny komponent. 39 still_unknown kräver manuell analys.
+1. **Djupsökning på enskild sajt** — Lockande men genererar inte lära om modellen
+2. **Site-specifik kodändring** — Får ENDAST göras efter bred validering som visar 3+ sajter samma problem
 
 ---
 
