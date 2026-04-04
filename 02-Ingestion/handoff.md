@@ -9,11 +9,11 @@
 
 ### Verifieringsresultat (UPPDATERAD 2026-04-04)
 
-| Källa | C0 Discovery | Extraction | Faktiskt utfall |
-|--------|-------------|------------|-----------------|
-| malmoopera | 18 links, winner density=38 | 7-8 events ✓ | **FUNGERAR** |
-| malmolive | 42 links, winner density=113 | 0 events | **JS-render/403** |
-| dramaten | 9 links, winner density=267 | 1 event | Lågt men fungerar |
+| Källa | C0 Discovery | Extraction | Faktiskt utfall | Nästa steg |
+|--------|-------------|------------|-----------------|------------|
+| malmoopera | 18 links, winner density=38 | 7-8 events ✓ | **FUNGERAR** | Pipeline-verifiering |
+| malmolive | 42 links, winner density=113 | 0 events | **JS-render misstanke (403)** | → PARK: pending_render_gate |
+| dramaten | 9 links, winner density=267 | 1 event | Lågt men fungerar | Undersök candidates |
 
 ### Root-cause (UPPDATERAD efter verklig testning)
 - **C0 htmlFrontierDiscovery FUNGERAR** - finns och används i sourceTriage.ts (rad 96)
@@ -276,39 +276,44 @@ Identifiera och kategorisera alla 100 källor efter varför de INTE levererar ev
 - **dramaten**: Root=1 event, C0 winner=1 event, lågt men fungerar
 - **Nu har vi komplett bild** av de tre källorna från handoff
 
+### Render-Queue Blocking Rule tillämpad
+- malmolive är **stark misstanke render-kandidat** (C0 density=113, extraction=0, 403)
+- → **PARKERAD** för D-renderGate (ej vald som nästa steg)
+- → Nästa steg väljs från sources som KAN göras NU
+
 ### Fullständig status (uppdaterad)
 
-| Källa | Root Events | C0 Discovery | C0 Winner | Winner Events | Problem |
-|--------|-------------|-------------|-----------|--------------|---------|
-| malmoopera | 8 ✓ | 18 links | density=38 | 7 ✓ | **FUNGERAR** |
-| malmolive | 0 | 42 links | density=113 | 0 | **JS-render? 403 på /kalender/** |
-| dramaten | 1 | 9 links | density=267 | 1 | Lågt men fungerar |
+| Källa | Root Events | C0 Winner | Winner Events | Problem | Status |
+|--------|-------------|-----------|--------------|---------|--------|
+| malmoopera | 8 ✓ | density=38 | 7 ✓ | **FUNGERAR** | → Pipeline-verifiering |
+| malmolive | 0 | density=113 | 0 | **JS-render? 403** | → **PARK: pending_render_gate** |
+| dramaten | 1 | density=267 | 1 | Lågt | Undersök |
 
 ### Största kvarvarande flaskhals
-- **malmolive är blockerad** - JS-rendering eller annan skyddsåtgärd (403)
+- **malmolive är blockerad** - JS-rendering eller skyddsåtgärd (403)
 - **dramaten ger bara 1 event** - möjligen förbättrad candidate-sökning behövs
-- **Root cause för malmolive är OKÄNT** - vet inte om det är JS-render eller annat
+- **Men: malmoopera fungerar** - kan leverera 7-8 events via pipeline
 
 ### Tre möjliga nästa steg
 
 | # | Steg | Systemnytta | Risk | Varför nu |
 |---|------|-------------|------|-----------|
-| 1 | **Undersök malmolive med render/path** | Hög: kan ge 10+ events | Medel: behöver ny komponent | Blockerad nu, högsta potentiella impact |
-| 2 | **Kör sourceTriage på malmoopera → phase1ToQueue** | Hög: bekräftar hela fungerande pipeline | Låg: bara kör befintlig kod | malmoopera fungerar, bevisa det |
-| 3 | **Undersök dramaten candidate quality** | Medel: kan förbättra 1→5 events | Låg: analysera befintlig data | Lågt utfall men potentiellt fixbart |
+| 1 | **Kör sourceTriage på malmoopera → phase1ToQueue** | Hög: bekräftar fungerande pipeline | Låg: befintlig kod | Kan göras NU, ger 7-8 events |
+| 2 | **Undersök dramaten candidate quality** | Medel: kan förbättra 1→5 events | Låg: analysera | Potentiellt fixbart |
+| 3 | **Bygg D-renderGate för malmolive** | Hög: kan ge 10+ events | Hög: ny komponent | Blockerad just nu |
 
 ### Rekommenderat nästa steg
-- **#1 — Undersök malmolive med render/path**
+- **#1 — Kör sourceTriage på malmoopera → phase1ToQueue**
 
-Motivering: Högsta potentiella systemnytta. malmolive har 0 events nu men massor av internal links (42) och hög C0 density. Om det är JS-render behövs render-path. Om det är 403 på specifika paths kan vi undersöka alternativa URLs.
+Motivering: malmolive är parkerad (render-blockerad), dramaten ger lågt. malmoopera FUNGERAR med 7-8 events. Att bekräfta hela pipeline (triage→queue→database) är rätt steg NU.
 
 ### Två steg att INTE göra nu
-1. **Ändra extraction för malmolive** — extraction fungerar på malmoopera. malmolive är blockerad av annat problem.
-2. **Bygga D-renderGate generellt** — behöver först förstå om malmolive ens kan nås med render.
+1. **Undersök malmolive igen** — redan parkerad för D-renderGate, ingen mer analys kommer ge events med nuvarande verktyg.
+2. **Bygga D-renderGate nu** — för tidigt, ingen källa är fullt verifierad som render-kandidat.
 
 ### System-effect-before-local-effect
-- Valt steg (#1): Undersök malmolive
-- Varför: Ger högsta potentiella pipeline-nytta. Om malmolive kan leverera 10+ events är det en stor win. Måste först förstå varför det är blockerat.
+- Valt steg (#1): Kör sourceTriage på malmoopera
+- Varför: Endast steg som faktiskt kan leverera events NU. malmolive är blockerad. dramaten är osäker. malmoopera är bevisad.
 
 ---
 

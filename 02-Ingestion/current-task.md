@@ -16,35 +16,42 @@ If unclear → STOP.
 
 ## Problem (STRICT)
 
-HTML Path är för root-fixad och missar ofta rätt interna programsidor eller undermenyer.
+HTML Path fungerar för vissa sajter men den **generella modellen** är inte utvärderadBRETT.
 
 Nuvarande beteende:
-- boten analyserar ofta endast root-sidan
-- boten missar viktiga interna kandidatsidor som:
-  - `/pa-scen/`
-  - `/evenemang/musik-show`
-  - `/evenemang/sport`
-- därför hittar boten för få events trots att fler finns på samma domän
+- C0/C1/C2 har implementerats men endast testats på 1-3 sajter
+- Vi vet inte om signalsystemet (dateCount, timeTagCount, densityScore) fungerar **generellt**
+- Vi vet inte om IGNORE_PATTERNS och concept-scoring är för restriktiv eller för bred
+- Vi har ingen systematisk mätning av precision vs recall över **många domäner**
 
-Det primära problemet är nu inte extraction i sig, utan **discovery av rätt sida**.
+Det primära problemet är nu inte "enskild sajt fungerar inte", utan **"modellen är inte validerad brett"**.
 
 ---
 
 ## New Direction
 
-Nästa steg är att bygga ett tydligt steg för:
+Nästa steg är att **validiera modellen BRETT** innan vi gör fler site-specifika justeringar:
 
-1. **HTML Frontier Discovery**
-   - hitta och ranka interna kandidatsidor
-   - samla interna länkat från nav, header, submenu och tydliga sektioner
-   - prova flera toppkandidater billigt
-   - välja sidan med bäst event-signal före extraction
+1. **Systematisk modell-utvärdering**
+   - Kör sourceTriage på 10+ html_candidates
+   - Mät precision vs recall för C0/C1/C2
+   - Jämför genererade signalscores mot faktiska utfall
+   - Identifiera var modellen Missar vs var den Träffar
 
-2. **AI-Assisted Routing**
-   - använd AI endast som beslutsstöd när flera kandidater ser rimliga ut
-   - AI ska hjälpa till att välja mellan kandidatsidor
-   - AI får inte ersätta hela discovery- eller extraction-logiken
-   - AI måste alltid följas av verifierbar scoring och riktig extraction
+2. **AI-Assisted Pattern Analysis**
+   - Använd AI för att jämföra utfall över **flera sajter**
+   - Hitta generella mönster i failure cases
+   - Föreslå endast generella förbättringar (ej site-specifika)
+
+3. **Regel-justering medGeneralization Gate**
+   - Varje föreslagen ändring måste motiveras: "hjälper detta 3+ sajter?"
+   - Site-specifika fixes rapporteras men implementeras EJ i C-lager
+   - Source adapters används för site-specifika edge cases
+
+**VIKTIGT:** 
+- INGEN djupsökning på enskild site om det inte är för att förstå ett generellt mönster
+- INGEN site-specifik kod i C0/C1/C2
+- Varje ändring måste ha bred validiering innan den accepteras
 
 ---
 
@@ -64,19 +71,20 @@ AI-stöd får kopplas in endast som litet beslutssteg efter kandidatinsamling oc
 
 ## Goal (MEASURABLE)
 
-Minst 2 verkliga testdomäner ska visa tydlig förbättring i sidval före extraction.
+Minst 10 verkliga testdomäner ska testas och den generella modellens prestanda ska mätas.
 
 Mätetal:
-- antal interna kandidatlänkar hittade
-- antal toppkandidater provade
-- vald slutlig kandidatsida
-- antal extraherade events från vald sida
-- jämförelse mot tidigare root-only-beteende
+- antal sources testade (mål: ≥10)
+- precision: % av valda candidates som faktiskt ger events
+- recall: % av möjliga events som hittades (om källa har känt antal)
+- generella mönster identifierade i failure cases
+- förbättringsförslag som gäller BRETT (3+ sajter)
 
 Målnivå:
-- Malmö Opera: boten ska hitta `/pa-scen/` eller motsvarande som stark kandidatsida
-- Malmö Live: boten ska hitta `/kalender/` eller motsvarande som stark kandidatsida
-- vald kandidatsida ska ge tydligt bättre event-signal än root-sidan
+- Minst 10 html_candidates körda genom C0→C1→C2→extract
+- Dokumenterade mönster i vad som fungerar vs vad som inte fungerar
+- Minst 1 generell förbättring identifierad och testad
+- Inga site-specifika hardcoding-försök
 
 ---
 
@@ -126,23 +134,30 @@ verify-end-to-end.md
 
 ## Progress Tracking (CRITICAL)
 
-Track:
-- how many internal links were collected
-- where they came from (nav/header/submenu/content/footer)
-- top-ranked candidate pages
-- why they were ranked highly
-- which page was selected
-- how many events were extracted from selected page
-- whether AI was used, and why
+Track system-wide metrics, NOT per-site fixes:
+- sources tested (cumulative)
+- precision per source (did candidate selection match real events?)
+- recall per source (did we find most/all events?)
+- patterns found: what works generically, what fails generically
+- AI-generated insights: cross-site patterns in failure cases
+- rule changes proposed vs accepted (must have 3+ site evidence)
+
+DO NOT track:
+- "fixed X for site Y" (that's site-specific, not model improvement)
+- "now finding more events on Z" (symptom, not root cause)
+- individual site deep-dives unless they reveal a cross-site pattern
 
 ---
 
 ## Notes
 
-The hard truth:
-If the system opens the wrong page, better extraction will not save it.
+The new truth:
+- If the model doesn't work broadly, fixing individual sites is theater.
+- We need cross-site validation BEFORE proposing rule changes.
+- AI should find patterns across sites, not diagnose individual sites.
 
 Therefore:
-- first fix page discovery
-- then extraction
-- then optional AI support for difficult candidate selection
+- first validate the model broadly (10+ sites)
+- then find generic patterns
+- then improve the model with evidence
+- never hardcode for single sites
