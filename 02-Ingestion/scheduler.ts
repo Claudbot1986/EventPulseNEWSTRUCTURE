@@ -42,6 +42,7 @@ import { screenUrl, determineTriageOutcome } from './C-htmlGate/C1-preHtmlGate/C
 import type { TriageResult } from './C-htmlGate/C1-preHtmlGate/C1-preHtmlGate';
 import { inspectUrl } from './B-networkGate/networkInspector';
 import { evaluateNetworkGate } from './B-networkGate/A-networkGate';
+import { extractFromApi } from './B-networkGate/networkEventExtractor';
 
 // ─── Routing Decision Types ────────────────────────────────────────────────────
 
@@ -243,18 +244,53 @@ async function runSource(source: SourceTruth, options: { recheck?: boolean } = {
       if (likely.length > 0) {
         const top = likely[0];
         console.log(`   Using: ${top.url} (${top.statusCode})`);
-        // TODO: Extract events from API response once network adapter exists
         console.log(`   Keys found: [${top.keysFound?.slice(0, 8).join(', ')}]`);
         if (top.promotion) {
           console.log(`   Promotion: cleaner=${top.promotion.cleaner}, complete=${top.promotion.moreComplete}, stable=${top.promotion.moreStable}`);
         }
+        
+        // Extract events from API
+        const apiResult = await extractFromApi(top.url, source.id, { timeout: 15000 });
+        eventsFound = apiResult.events.length;
+        console.log(`   API extraction: ${eventsFound} events (${apiResult.rawCount} raw, ${apiResult.parseErrors.length} parse errors)`);
+        
+        if (eventsFound > 0) {
+          // Queue the extracted events
+          // Note: networkEventExtractor returns Tixly-format (startTime, endTime, imageUrl, etc.)
+          // queueEvents expects RawEventInput - we map between them
+          const { queueEvents } = await import('./tools/fetchTools');
+          const rawEvents = apiResult.events.map(e => ({
+            source_id: (e as any).id || `${source.id}-${Math.random().toString(36).slice(2)}`,
+            title: (e as any).title || 'Untitled',
+            description: (e as any).description || '',
+            start_time: (e as any).startTime ? new Date((e as any).startTime) : null,
+            end_time: (e as any).endTime ? new Date((e as any).endTime) : null,
+            url: (e as any).url || '',
+            image_url: (e as any).imageUrl || '',
+            venue_name: (e as any).venue || '',
+            category_slug: (e as any).category || 'unknown',
+            organizer_name: (e as any).organizer || '',
+            price: (e as any).price ? `${(e as any).price.min || 0}-${(e as any).price.max || 0}` : null,
+            status: (e as any).status || 'available',
+            venue_address: '',
+            lat: null,
+            lng: null,
+            categories: [],
+            event_url: (e as any).url || '',
+            start_date: (e as any).startTime ? new Date((e as any).startTime).toISOString().split('T')[0] : '',
+            end_date: (e as any).endTime ? new Date((e as any).endTime).toISOString().split('T')[0] : '',
+          }));
+          const { queued } = await queueEvents(source.id, rawEvents as any);
+          console.log(`   Queued: ${queued}/${eventsFound}`);
+        }
+        
         updateSourceStatus(source.id, {
-          success: true,
-          eventsFound: 0, // Events extraction from API not yet implemented
+          success: eventsFound > 0,
+          eventsFound,
           pathUsed: 'network',
-          lastRoutingReason: `network_inspection: ${verdict}, endpoint accessible`,
+          lastRoutingReason: `network_inspection: ${verdict}, extracted ${eventsFound} events from ${top.url}`,
           lastRoutingSource: 'preferredPath',
-          pendingNextTool: 'network_inspection',
+          pendingNextTool: eventsFound > 0 ? null : 'network_inspection',
         });
       } else {
         console.log(`   No likely_event_api with 200 status found`);

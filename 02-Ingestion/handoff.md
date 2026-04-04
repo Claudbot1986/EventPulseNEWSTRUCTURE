@@ -2,6 +2,56 @@
 
 ---
 
+## Nästa-steg-analys 2026-04-04 (loop 15)
+
+### Vad förbättrades denna loop
+- **NETWORK PATH AKTIVERAD:** `extractFromApi` fråm `networkEventExtractor.ts` inkopplad i scheduler.ts
+- **Verifierad:** `test-extractor.ts` visar 216 events extraherade fråm berwaldhallen Tixly API, 0 parse errors
+- **Ingen ny kod skriven:** `networkEventExtractor.ts` fanns redan — bara inte inkopplad
+- **Komponenterna som redan fanns:**
+  - `extractFromApi()` — Tixly-format, 203 rader, fungerar
+  - `fetchJson()` — i `fetchTools.ts`, fungerar
+  - `inspectUrl()` + `evaluateNetworkGate()` — redan inkopplade (loop 14)
+
+### Ändringar i scheduler.ts
+1. **Ny import:** `extractFromApi` fråm `./B-networkGate/networkEventExtractor`
+2. **Ersatt TODO-block** (rad 246-258) med faktiskt API-anrop:
+   - `extractFromApi(top.url, source.id, { timeout: 15000 })`
+   - Mappning Tixly-format → RawEventInput
+   - `queueEvents()` för att queua extraherade events
+   - `updateSourceStatus()` med korrekt eventsFound och pendingNextTool=null
+
+### Kvarvarande flaskhals
+- **network_inspection är fortfarande långsam:** ~5 minuter per källa (20+ endpoints × timeout)
+- **Typ-schema konflikt:** `ParsedEvent` (JSON-LD schema.ts) och `networkEventExtractor` returnerar olika fält
+  - JSON-LD: `title, date, time, endDate, endTime, venue, address, city, ...`
+  - Tixly: `id, title, description, startTime, endTime, url, imageUrl, venue, category, organizer, price, status`
+  - Lösning: `as any` casting i scheduler.ts (minsta säkra förändring)
+- **D-renderGate:** Fortfarande saknas för sbf, malmolive
+
+### Tre möjliga nästa steg
+
+| # | Steg | Systemnytta | Risk | Varför nu |
+|---|------|-------------|------|-----------|
+| 1 | **Köra network path på berwaldhallen via scheduler** | Hög: bekräfta 216 events i pipeline | Låg: redan verifierat lokalt | Nästa logiska steg efter integration |
+| 2 | **Optimera network_inspection timeout** | Medel: snabbar uppalla 4 källor | Låg: bara config | Nuvarande 15s per endpoint är för långsamt |
+| 3 | **Bygga D-renderGate** | Hög: aktiverar 2 källor | Medel: headless browser | SBF och malmolive väntar |
+
+### Rekommenderat nästa steg
+- **#1 — Köra network path på berwaldhallen**
+
+Motivering: Integration verifierad lokalt (test-extractor). Nästa steg är att köra hela pipeline genom scheduler för att bekräfta att events verkligen queuas och status uppdateras.
+
+### Två steg att INTE göra nu
+1. **Bygga D-renderGate** — endast 2 källor väntar, network har 4
+2. **C-lager optimering** — network_path nu möjlig, modellvalidering kan breddas
+
+### System-effect-before-local-effect
+- Valt steg (#1): Kör network path genom scheduler
+- Varför: Bekräfta hela integrationen från `inspectUrl` → `extractFromApi` → `queueEvents` → `updateSourceStatus`
+
+---
+
 ## Nästa-steg-analys 2026-04-04 (loop 14)
 
 ### Vad förbättrades denna loop
