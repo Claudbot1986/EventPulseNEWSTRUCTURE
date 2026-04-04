@@ -2,6 +2,48 @@
 
 ---
 
+## Nästa-steg-analys 2026-04-04 (loop 8)
+
+### Vad förbättrades denna loop
+- **VERIFIERAD ROOT-CAUSE:** debaser HAR massor av HTML-events (17 w-dyn-item blocks)
+- **FALSE POSITIVE UPPDATERAD:** debaser flyttad från `pending_render` → `pending_source_adapter`
+- **SBF BEKRÄFTAD:** SBF är sann render-kandidat (ingen HTML-event-data) — kvar i render-kön
+- **HTML-DIAGNOSTIK GENOMFÖRD:** 0 Swedish dates, 0 ISO dates, 34 /events/[slug] URLs
+
+### Största kvarvarande flaskhals
+- **debaser blockerad:** Source adapter saknas — men bygga nytt verktyg för 1 sajt är inte "minsta säkra förändring"
+- **SBF blockerar D-renderGate:** Sann render-kandidat som väntar på verktyg som inte finns
+- **Model precision 15%:** 33 sources testade, endast 5 godkända (15%)
+
+### Tre möjliga nästa steg
+
+| # | Steg | Systemnytta | Risk | Varför nu |
+|---|------|-------------|------|-----------|
+| 1 | **Sök Webflow-verifiering** | Hög: Om 2-3 Webflow-sajter har samma mönster → C-lager fix | Medel: Inga sajter hittade | Pattern Capture visar "Provisionally General" |
+| 2 | **Bygga source adapter för debaser** | Hög: Aktivera debaser direkt | Hög: Source-specifikt, ej generellt | Site-Specific → rätt verktyg |
+| 3 | **Köra normalizer→database på approved events** | Medel: Verifierar pipeline-slutresultat | Låg: Befintliga jobb i Redis | 4 sources redan approved |
+
+### Rekommenderat nästa steg
+- **#1 — Sök Webflow-verifiering**
+
+Motivering: Enligt Generalization Gate krävs 2-3 sajter innan C-lager-ändring. Vi har nu "Provisionally General" för Webflow CMS Extraction Gap. Att söka verifiering är låg-risk och följer reglerna.
+
+### Två steg att INTE göra nu
+1. **Bygga source adapter för debaser** — Hög insats för 1 sajt, bättre att förstå om mönstret är generellt
+2. **Fokusera på extraction quality** — friidrott/textilmuseet har "dåliga" titles men fungerar
+
+### System-effect-before-local-effect
+- Valt steg (#1): Sök Webflow-verifiering
+- Varför: C-lager-ändring kräver 2-3 sajter. Att söka först följer Generalization Gate och förhindrar premature optimization.
+
+### Render-kö Status (Loop 8)
+| Källa | HTML events? | Problem | Status |
+|-------|-------------|---------|--------|
+| debaser | JA (17 blocks) | extractFromHtml() URL-mönster missar /events/[slug] | **FALSE POSITIVE** → pending_source_adapter |
+| SBF | NEJ | SiteVision JS-app, ingen HTML-data | **TRUE POSITIVE** → pending_render_gate |
+
+---
+
 ## Nästa-steg-analys 2026-04-04 (loop 7)
 
 ### Vad förbättrades denna loop

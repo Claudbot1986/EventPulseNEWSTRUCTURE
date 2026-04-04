@@ -4,5 +4,5 @@
 {"sourceId":"ticketmaster","status":"never_run","lastRun":null,"lastSuccess":null,"consecutiveFailures":0,"lastEventsFound":0,"attempts":0}
 {"sourceId":"eventbrite","status":"never_run","lastRun":null,"lastSuccess":null,"consecutiveFailures":0,"lastEventsFound":0,"attempts":0}
 {"sourceId":"fryshuset","status":"never_run","lastRun":null,"lastSuccess":null,"consecutiveFailures":0,"lastEventsFound":0,"attempts":0}
-{"sourceId":"debaser","status":"pending_render","lastRun":"2026-04-03T09:15:29.841Z","lastSuccess":null,"consecutiveFailures":1,"lastEventsFound":0,"attempts":1,"lastError":"pending_render"}
+{"sourceId":"debaser","status":"pending_source_adapter","lastRun":"2026-04-03T09:15:29.841Z","lastSuccess":null,"consecutiveFailures":1,"lastEventsFound":0,"attempts":1,"lastError":"false_positive_render_queue — HTML has 17 w-dyn-item blocks, extractFromHtml() URL-patterns don't match Webflow /events/[slug]","pendingNextTool":"source_adapter"}
 {"sourceId":"gso","status":"never_run","lastRun":null,"lastSuccess":null,"consecutiveFailures":0,"lastEventsFound":0,"attempts":0}
