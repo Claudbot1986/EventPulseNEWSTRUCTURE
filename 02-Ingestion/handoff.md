@@ -2,6 +2,48 @@
 
 ---
 
+## Nästa-steg-analys 2026-04-04 (loop 16)
+
+### Vad förbättrades denna loop
+- **FIXADE ROOT-CAUSE:** berwaldhallen hade `preferredPath=jsonld` i source men `pending_network` i runtime
+- **Problem:** Scheduler läser source definition (jsonld), inte runtime status (network) → körde fel path
+- **Ändring:** Ändrade `preferredPath` i `sources/berwaldhallen.jsonl` till `network`
+- **Nu:** Scheduler väljer network path (rad 218-324) som använder `extractFromApi`
+
+### Ändring i sources/berwaldhallen.jsonl
+```json
+"preferredPath":"network"  // was "jsonld"
+"preferredPathReason":"Tixly API endpoint found via network inspection during 100-source test, verified 216 events via extractFromApi"
+```
+
+### Kvarvarande flaskhals
+- **Scheduler --recheck tar för lång tid:** 420 sources × network timeout = timeout
+- **Inga andra network sources identifierade:** Endast berwaldhallen har Tixly API bekräftat
+- **D-renderGate:** Fortfarande saknas för sbf, malmolive
+
+### Tre möjliga nästa steg
+
+| # | Steg | Systemnytta | Risk | Varför nu |
+|---|------|-------------|------|-----------|
+| 1 | **Köra scheduler på berwaldhallen endast** | Hög: bekräfta 216 events i pipeline | Låg: redan verifierat | Nästa logiska steg efter fix |
+| 2 | **Optimera scheduler för enstaka source** | Medel: snabbar upp utveckling | Låg: CLI-flagga | Nuvarande --recheck tar för långt |
+| 3 | **Bygga D-renderGate** | Hög: aktiverar 2 källor | Medel: headless browser | SBF och malmolive väntar |
+
+### Rekommenderat nästa steg
+- **#1 — Verifiera berwaldhallen via scheduler**
+
+Motivering: Ändring gjord men inte verifierad genom scheduler. Kör scheduler på berwaldhallen för att bekräfta network path faktiskt körs och events queuas.
+
+### Två steg att INTE göra nu
+1. **Bygga D-renderGate** — endast 2 källor väntar, network har 4
+2. **Optimera network_inspection timeout** — inte aktuellt ännu
+
+### System-effect-before-local-effect
+- Valt steg (#1): Verifiera berwaldhallen network path
+- Varför: Fix gjord men inte verifierad genom scheduler
+
+---
+
 ## Nästa-steg-analys 2026-04-04 (loop 15)
 
 ### Vad förbättrades denna loop
