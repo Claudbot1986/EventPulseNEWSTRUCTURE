@@ -161,3 +161,43 @@ Therefore:
 - then find generic patterns
 - then improve the model with evidence
 - never hardcode for single sites
+
+---
+
+## NEW DISCOVERY: Network Path Works for Some Sources
+
+### Key Findings (Loop 16)
+
+1. **berwaldhallen has working Tixly API**
+   - URL: `https://www.berwaldhallen.se/api/services/tixly/data`
+   - Returns 216 events (verified via curl)
+   - network_inspection correctly identifies `likely_event_api: 1`
+
+2. **network_event_extractor works**
+   - New file: `02-Ingestion/B-networkGate/networkEventExtractor.ts`
+   - Successfully extracts 216 events from berwaldhallen Tixly API
+   - 0 parse errors
+
+3. **kulturhuset has NO working API**
+   - All endpoints timeout or 404
+   - `likely_event_api: 0, possible_api: 1` (wp-json root)
+   - Should route to HTML-fallback
+
+4. **network_inspection performance improved**
+   - Batch size: 10 (was sequential, then 5)
+   - Timeout: 8s per endpoint (was 15s)
+   - Still slow for some sources
+
+### Implications
+
+- Network path is VIABLE for sources with accessible APIs (like berwaldhallen)
+- HTML-fallback still needed for sources without APIs (like kulturhuset)
+- Scheduler needs update to use network_event_extraction when likely_event_api > 0
+- Generalization: Tixly API format may apply to other Swedish venues
+
+### Next Steps
+
+1. Integrate network_event_extraction into scheduler.ts
+2. Test network path for other Tixly-based venues
+3. Continue HTML path validation for non-API sources
+4. Measure: how many sources have viable APIs vs need HTML-fallback

@@ -368,7 +368,7 @@ async function probeEndpoint(baseUrl: string, suffix: string): Promise<ApiCandid
     };
   }
 
-  const result = await fetchJson(url, { timeout: 15000 });
+  const result = await fetchJson(url, { timeout: 8000 }); // reduced from 15000ms to 8000ms for faster inspection
 
   if (!result.success) {
     return {
@@ -448,16 +448,22 @@ export async function inspectUrl(sourceUrl: string): Promise<NetworkInspectorRes
   const candidates: ApiCandidate[] = [];
   const errors: string[] = [];
 
-  // 1. Probe common patterns
-  for (const pattern of COMMON_PATTERNS) {
-    const candidate = await probeEndpoint(normalizedUrl, pattern);
-    if (candidate.error !== 'noise') {
-      candidates.push(candidate);
+  // 1. Probe common patterns in parallel batches of 10 (was sequential ~300s, now ~15s)
+  const BATCH_SIZE = 10;
+  for (let i = 0; i < COMMON_PATTERNS.length; i += BATCH_SIZE) {
+    const batch = COMMON_PATTERNS.slice(i, i + BATCH_SIZE);
+    const results = await Promise.all(
+      batch.map(pattern => probeEndpoint(normalizedUrl, pattern))
+    );
+    for (const candidate of results) {
+      if (candidate.error !== 'noise') {
+        candidates.push(candidate);
+      }
     }
   }
 
   // 2. Fetch page HTML and look for JSON Feeds / script hints
-  const htmlResult = await fetchHtml(normalizedUrl, { timeout: 15000 });
+  const htmlResult = await fetchHtml(normalizedUrl, { timeout: 8000 }); // reduced from 15000ms to 8000ms
   if (htmlResult.success && htmlResult.html) {
     const $ = load(htmlResult.html);
 
