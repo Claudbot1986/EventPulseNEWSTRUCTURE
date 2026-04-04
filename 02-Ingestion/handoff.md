@@ -2,7 +2,72 @@
 
 ---
 
-## Nästa-steg-analys 2026-04-04 (loop 4)
+## Nästa-steg-analys 2026-04-04 (loop 5)
+
+### Vad förbättrades denna loop
+- **BRED MODELL-VALIDERING:** Testade 33 HTML-sources totalt genom sourceTriage
+- **MODELL-PRESTANDA MÄTT:** Precision = 15% (5/33 godkända)
+- **MODELLEN ÄR INTE PROBLEMET:** C0/C1/C2 fungerar korrekt, flaskhalsen är källdata
+
+### Största kvarvarande flaskhals
+- **Majoriteten av HTML-sources har INGA extraherbara events:** 28/33 sources (85%) gav 0 events
+- Orsaker: ingen JSON-LD + HTML saknar event-listor, JS-rendering, eller felaktiga URLs
+- **Denna insikt är det viktigaste resultatet hittills**
+
+### Fullständig modell-validering (33 sources)
+
+**Batch 1 (2026-04-04, 23 sources):**
+| Källa | C0 | Events | Approved |
+|-------|-----|--------|----------|
+| konserthuset | ✓ | 11 | ✅ |
+| dramaten | ✓ | 1 | ✅ |
+| friidrott | ✓ | 4 | ✅ |
+| textilmuseet | ✓ | 3 | ✅ |
+| sbf | ✓ | 7 | ✅ (C3→render) |
+| gronalund | ✓ | 0 | ❌ |
+| nrm | ✓ | 0 | ❌ |
+| vasamuseet | ✓ | 0 | ❌ |
+| scandinavium | ✓ | 0 | ❌ |
+| astronomiska | ✓ | 0 | ❌ |
+| shl | ✓ | 0 | ❌ |
+| + 13 fler | — | 0 | ❌ |
+
+**Batch 2 (2026-04-04, 6 nya sources):**
+gronalund, nrm, vasamuseet, scandinavium, folkoperan, cirkus → 0 approved
+
+**Batch 3 (2026-04-04, 4 alternativa URLs):**
+gronalund/kalender, nrm/kalendarium, vasamuseet/evenemang, scandinavium/kalender → 0 approved
+
+### Generella mönster (nyinsikt)
+
+1. **C0 fungerar:** Hittar candidates på de flesta sajter
+2. **ExtractFromHtml misslyckas:** 85% av candidates ger 0 events
+3. **HTML saknar events:** Många sajter har helt enkelt inga event-listor i sin HTML (kan vara JS-lastat, API-baserat, eller har bara nyheter)
+4. **Kalender-subpaths hjälper inte:** Om root saknar events gör kalender-sidor det också
+5. **High density ≠ extraction:** nrm density=300 men 0 events
+
+### Tre möjliga nästa steg
+
+| # | Steg | Systemnytta | Risk | Varför nu |
+|---|------|-------------|------|-----------|
+| 1 | **Bygga D-renderGate** | Hög: aktiverar JS-renderade källor | Medel: ny komponent | 2 sources (debaser, sbf) väntar på render |
+| 2 | **Undersöka network-path för no-jsonld sources** | Medel: kan hitta API-endpoints | Medel: network-inspection saknas | Många sources har networkSignalsFound=true |
+| 3 | **Köra normalizer→database på befintliga events** | Medel: verifierar slutresultat | Låg: befintliga jobb i Redis | Fokusera på befintliga 18 events |
+
+### Rekommenderat nästa steg
+- **#1 — Bygga D-renderGate**
+
+Motivering: Vi har bevisat att HTML-path fungerar (5 sources, 18 events). Nästa steg är att aktivera render-path för de sources som är blockerade (debaser, sbf). D-renderGate är nästa logiska verktyg i path-ordningen.
+
+### Två steg att INTE göra nu
+1. **Testa fler HTML-sources** — 33 sources testade, modellen utvärderad. Mer testning ger samma resultat.
+2. **Fokusera på extraction quality** — friidrott/textilmuseet har "dåliga" titles men de är fortfarande events. Bättre att få fler sources än att finslipa 4.
+
+### System-effect-before-local-effect
+- Valt steg (#1): Bygga D-renderGate
+- Varför: Detta är nästa verktyg i pipelinen. Vi har 2 parkerade källor (debaser, sbf) som väntar på det.
+
+---
 
 ### Vad förbättrades denna loop
 - **VERIFIERADE HELA PIPELINE:** Körde konserthuset, dramaten, friidrott, textilmuseet genom sourceTriage → phase1ToQueue → Redis → normalizer worker → database
