@@ -44,11 +44,12 @@ import type { TriageResult } from './C-htmlGate/C1-preHtmlGate/C1-preHtmlGate';
 import { inspectUrl } from './B-networkGate/networkInspector';
 import { evaluateNetworkGate } from './B-networkGate/A-networkGate';
 import { extractFromApi } from './B-networkGate/networkEventExtractor';
+import { renderPage } from './D-renderGate/renderGate';
 
 // ─── Routing Decision Types ────────────────────────────────────────────────────
 
 export type PathType = 'api' | 'jsonld' | 'html' | 'network' | 'render' | 'unknown';
-export type ExecuteNow = 'execute_now' | 'park_pending_render' | 'skip_not_implemented' | 'execute_network';
+export type ExecuteNow = 'execute_now' | 'park_pending_render' | 'skip_not_implemented' | 'execute_network' | 'execute_render';
 
 export interface RoutingDecision {
   path: PathType;
@@ -92,22 +93,22 @@ function selectSourcePath(source: SourceTruth, status: SourceStatus): RoutingDec
     };
   }
   
-  // ── Kör aldrig: render kräver D-renderGate ────────────────────────────────
+  // ── Kör render path (D-renderGate) ────────────────────────────────────────────
   if (source.preferredPath === 'render') {
     return {
       path: 'render',
-      execute: 'park_pending_render',
-      reason: `preferredPath=render, D-renderGate not implemented yet`,
+      execute: 'execute_render',
+      reason: `preferredPath=render, D-renderGate available`,
       routingSource: 'preferredPath',
     };
   }
   
-  // ── Kör aldrig: redan i pending_render kö ─────────────────────────────────
+  // ── Kör render: redan i pending_render_gate ─────────────────────────────────
   if (status.status === 'pending_render_gate') {
     return {
       path: status.lastPathUsed || 'render',
-      execute: 'park_pending_render',
-      reason: `runtime_status=pending_render_gate, waiting for D-renderGate`,
+      execute: 'execute_render',
+      reason: `runtime_status=pending_render_gate, D-renderGate available`,
       routingSource: 'runtime_status',
     };
   }
@@ -324,6 +325,87 @@ async function runSource(source: SourceTruth, options: { recheck?: boolean } = {
     return;
   }
   // ── END NETWORK PATH ──────────────────────────────────────────────────────
+
+  // ── RENDER PATH (D-renderGate) ───────────────────────────────────────────────
+  if (decision.execute === 'execute_render') {
+    console.log(`🎬 Render: Running D-renderGate on ${source.url}`);
+    const renderResult = await renderPage(source.url, { timeout: 25000 });
+    
+    if (!renderResult.success) {
+      console.log(`   Render failed: ${renderResult.error}`);
+      updateSourceStatus(source.id, {
+        success: false,
+        eventsFound: 0,
+        pathUsed: 'render',
+        error: `render_failed: ${renderResult.error}`,
+        lastRoutingReason: `D-renderGate: ${renderResult.error}`,
+        lastRoutingSource: 'preferredPath',
+        pendingNextTool: 'D-renderGate',
+      });
+      return;
+    }
+    
+    console.log(`   Render success: ${renderResult.html?.length || 0} chars in ${renderResult.metrics?.renderTimeMs}ms`);
+    
+    if (!renderResult.html || renderResult.html.length < 1000) {
+      console.log(`   Render returned insufficient HTML`);
+      updateSourceStatus(source.id, {
+        success: false,
+        eventsFound: 0,
+        pathUsed: 'render',
+        error: 'render_returned_insufficient_html',
+        lastRoutingReason: `D-renderGate: insufficient HTML (${renderResult.html?.length || 0} chars)`,
+        lastRoutingSource: 'preferredPath',
+        pendingNextTool: 'D-renderGate',
+      });
+      return;
+    }
+    
+    // Now extract events from the rendered HTML
+    const { extractFromHtml } = await import('./F-eventExtraction/extractor');
+    const htmlResult = extractFromHtml(renderResult.html, source.id, source.url);
+    eventsFound = htmlResult.events.length;
+    console.log(`   Extracted ${eventsFound} events from rendered HTML`);
+    
+    if (eventsFound > 0) {
+      // Queue the events
+      const { queueEvents } = await import('./tools/fetchTools');
+      const rawEvents = htmlResult.events.map((e: any) => ({
+        source_id: e.id || `${source.id}-${Math.random().toString(36).slice(2)}`,
+        title: e.title || 'Untitled',
+        description: e.description || '',
+        start_time: e.startTime ? new Date(e.startTime) : (e.start_date ? new Date(e.start_date) : null),
+        end_time: e.endTime ? new Date(e.endTime) : (e.end_date ? new Date(e.end_date) : null),
+        url: e.url || '',
+        image_url: e.image || '',
+        venue_name: e.venue || '',
+        category_slug: e.category || 'unknown',
+        organizer_name: e.organizer || '',
+        price: e.price || null,
+        status: 'available',
+        venue_address: '',
+        lat: null,
+        lng: null,
+        categories: [],
+        event_url: e.url || '',
+        start_date: e.start_date || (e.startTime ? new Date(e.startTime).toISOString().split('T')[0] : ''),
+        end_date: e.end_date || (e.endTime ? new Date(e.endTime).toISOString().split('T')[0] : ''),
+      }));
+      const { queued } = await queueEvents(source.id, rawEvents as any);
+      console.log(`   Queued: ${queued}/${eventsFound}`);
+    }
+    
+    updateSourceStatus(source.id, {
+      success: eventsFound > 0,
+      eventsFound,
+      pathUsed: 'render',
+      lastRoutingReason: `D-renderGate: ${eventsFound > 0 ? `extracted ${eventsFound} events` : 'rendered but 0 events extracted'}`,
+      lastRoutingSource: 'preferredPath',
+      pendingNextTool: eventsFound > 0 ? null : 'D-renderGate',
+    });
+    return;
+  }
+  // ── END RENDER PATH ───────────────────────────────────────────────────────
 
   if (!fetchResult.success || !fetchResult.html) {
     updateSourceStatus(source.id, {

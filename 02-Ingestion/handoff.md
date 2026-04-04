@@ -2,6 +2,68 @@
 
 ---
 
+## Nästa-steg-analys 2026-04-04 (loop 20)
+
+### Vad förbättrades denna loop
+- **D-renderGate byggd:** Ny komponent i `02-Ingestion/D-renderGate/renderGate.ts`
+  - Använder puppeteer (headless Chrome) för att rendera JS-tunga sidor
+  - `renderPage()` funktion returnerar rendered HTML efter JS-körning
+  - `needsRendering()` funktion för att detektera om en sajt behöver rendering
+- **Scheduler uppdaterad:** `execute_render` path implementerad i scheduler.ts
+  - `pending_render_gate` sources kör nu D-renderGate istället för att parkera
+  - Renderad HTML skickas till `extractFromHtml()` för event-extraction
+- **puppeteer installerad:** `npm install puppeteer --save` (91 packages)
+
+### Ändringar
+1. **Ny fil:** `02-Ingestion/D-renderGate/renderGate.ts` (149 rader)
+2. **Ny fil:** `02-Ingestion/D-renderGate/index.ts` (export)
+3. **Ändrad:** `02-Ingestion/scheduler.ts`
+   - Ny import: `renderPage`
+   - Ny `ExecuteNow`: `'execute_render'`
+   - Routing: `pending_render_gate` → `execute_render` (istället för `park_pending_render`)
+   - Nytt execute-block: `execute_render` → `renderPage()` → `extractFromHtml()` → `queueEvents()`
+
+### Verifiering
+- `renderPage` kan importeras ✓
+- SBF render test: `net::ERR_FAILED` (SBF:s servrar blockerar headless Chrome)
+- D-renderGate **finns** men SBF, fryshuset, malmolive blockerar headless Chrome
+- Tre sources nu: `pending_render_gate` → kan köras (men ger likely fail pga site-blocking)
+
+### Sources som påverkas
+| Källa | Status före | Status efter |
+|-------|-------------|--------------|
+| sbf | pending_render_gate (parked) | pending_render_gate (KAN KÖRAS) |
+| malmolive | pending_render_gate (parked) | pending_render_gate (KAN KÖRAS) |
+| akersberga | pending_render_gate (parked) | pending_render_gate (KAN KÖRAS) |
+
+### Kvarvarande flaskhals
+- **SBF, fryshuset, malmolive blockerar headless Chrome** — `net::ERR_FAILED`
+- D-renderGate finns nu men dessa sajter returnerar error i puppeteer
+- Möjlig orsak: CloudFlare/SiteVision blockerar headless browsers
+
+### Tre möjliga nästa steg
+
+| # | Steg | Systemnytta | Risk | Varför nu |
+|---|------|-------------|------|-----------|
+| 1 | **Fixa headless browser-blockering** | Hög: aktiverar render path | Medel: behöver teste fler URLs | SBF/fryshuset funkar inte med puppeteer |
+| 2 | **Testa D-renderGate på en fungerande sajt** | Medel: verifiera verktyget fungerar | Låg: hitta en sajt utan CloudFlare | SBF blockar, behöver bekräftelse på verktyget |
+| 3 | **Köra normalizer på redan köade events** | Medel: verifierar pipeline-slut | Låg: redan queued events | ~250 events (berwaldhallen 216 + övriga) redo för normalisering |
+
+### Rekommenderat nästa steg
+- **#2 — Testa D-renderGate på en fungerande sajt**
+
+Motivering: D-renderGate är byggt men ej verifierat. Vi behöver en sajt som faktiskt kan renderas för att bekräfta att verktyget fungerar. SBF/fryshuset blockar headless Chrome, så vi behöver hitta en annan test-kandidat.
+
+### Två steg att INTE göra nu
+1. **Köra scheduler på render-källor** — SBF etc. kommer faila med `net::ERR_FAILED`, ingen ny information
+2. **Fokusera på att bygga source adapter för kulturhuset** — Site-Specific, låg prioritet
+
+### System-effect-before-local-effect
+- Valt steg (#2): Testa D-renderGate
+- Varför: Verifiera att verktyget fungerar INNAN nästa loop. Om det inte fungerar på någon sajt, behöver vi förstå varför.
+
+---
+
 ## Nästa-steg-analys 2026-04-04 (loop 19)
 
 ### Vad förbättrades denna loop
