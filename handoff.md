@@ -132,4 +132,61 @@ npx tsx -e "extractFromHtml(html, 'konserthuset', 'https://www.konserthuset.se/p
 1. ~~Bygga source management system~~ ✓ KLART
 2. ~~Rensa sources/~~ ✓ KLART
 3. ~~Rätta runtime/sources_status.jsonl~~ ✓ KLART
-4. Köra scheduler mot alla sources
+4. Analysera "promising→0 events" failure pattern [PÅGÅENDE]
+
+---
+
+## Nästa-steg-analys [2026-04-04]
+
+### Vad förbättrades denna loop
+- Kartlade nuläget: 33 sources testade, 5 godkända (15%), 27 events totalt
+- Identifierade root cause: C2 säger "promising" men extractFromHtml() ger 0 events
+- Förstod pipelinen: sourceTriage → C0→C1→C2 → extractFromHtml()
+
+### Största kvarvarande flaskhals
+**C2 och extractFromHtml() är inte synkade.** C2 använder breadth_wrongtype-logik (dateCount, densityScore) för att avgöra "lovande", men extractFromHtml() kräver specifika URL-mönster (YYYY-MM-DD-HHMM eller /kalender/) för att extrahera events.
+
+Exempel:
+- nrm.se: C2 säger promising (dateCount=0 men density hög) → extractFromHtml() hittar 0 events
+- vasamuseet.se: C2 säger promising → 0 events
+- scandinavium.se: C2 säger promising → 0 events
+
+### Tre möjliga nästa steg
+
+| # | Steg | Systemnytta | Risk | Varför nu |
+|---|------|-------------|------|-----------|
+| 1 | Analysera 3-5 "promising→0 events" failures i detalj (nrm, vasamuseet, scandinavium) | Hitta exakt var extraktionen brister | Låg — diagnostik | Rätt timing för att förstå presisionsproblem |
+| 2 | Utöka extractFromHtml() med fler datumstrategier | Förbättrar extraktion brett | Medium — kan öka brus | Om mönstret är generellt |
+| 3 | Justera C2 threshold för att kräva faktiska URL-datum i candidates | Bättre precision, färre falska positiver | Medium — kan blockera giltiga källor | Om problemet är att C2 är för liberal |
+
+### Rekommenderat nästa steg
+- **[1] — Analysera 3-5 "promising→0 events" failures i detalj**
+
+### Två steg att INTE göra nu
+1. **Ändra C2 scoring thresholds** — Site-Specific → Generalization Gate kräver 2-3+ domäner först
+2. **Lägga till fler heuristik i extractFromHtml()** — Vi förstår inte ännu exakt vilka mönster som finns
+
+### System-effect-before-local-effect
+Val av rätt candidate page → extraktion → events i databas. Fel i tidigare steg förstör allt nedströms. Att förstå varför "lovande" inte ger events är högre ROI än att skala en pipeline vi inte förstår.
+
+---
+
+### Förklaring av pipeline-resultat
+
+Pipeline: diagnoseUrl → networkGate → runHtmlDiscovery(C0→C1→C2) → extractFromHtml()
+
+Batch 1 (23 sources):
+- gate=unclear: 8 (C2 kan inte avgöra)
+- gate=promising: 6 (C2 säger lovande men 0 events) ← PROBLEMET
+- extracted: 5 (faktiskt extrigerade events ✓)
+- gate=low_value: 3 (C2 säger lågt värde)
+- gate=maybe: 1
+
+**Kärnproblem:** C2:s "promising" baseras på sidstruktur (dateCount, densityScore), inte på om URL-patterns i extractFromHtml() matchar.
+
+### Nästa konkreta undersökning
+Köra sourceTriage direkt på nrm.se och vasamuseet.se för att se exakt:
+1. Vilka candidates C0 hittar
+2. Vilka signals C1 mäter
+3. Vad C2 scorer
+4. Vad extractFromHtml() faktiskt hittar
