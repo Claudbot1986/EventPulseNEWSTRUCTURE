@@ -196,6 +196,14 @@ function countEventListStructure($: CheerioAPI): number {
   return listCount >= 3 ? listCount : 0;
 }
 
+// ─── Swedish date text helper ─────────────────────────────────────────────────
+
+const SWE_DATE_REGEX = /\d{1,2}\s+(?:januari|februari|mars|april|maj|juni|juli|augusti|september|oktober|november|december|jan|feb|mar|apr|maj|jun|jul|aug|sep|okt|nov|dec)\b|\d{4}-\d{2}-\d{2}|(?:Idag|Imorgon|Måndag|Tisdag|Onsdag|Torsdag|Fredag|Lördag|Söndag)\s+\d|\b\d{1,2}\s+(?:januari|februari|mars|april|maj|juni|juli|augusti|september|oktober|november|december)\b/gi;
+
+function hasSwedishDateText($el: any): boolean {
+  return SWE_DATE_REGEX.test($el.text());
+}
+
 // ─── Candidate list extraction ────────────────────────────────────────────────
 
 function extractEventCardCandidates($: CheerioAPI): CandidateItem[] {
@@ -213,6 +221,17 @@ function extractEventCardCandidates($: CheerioAPI): CandidateItem[] {
     if ($el.find('time[datetime]').length === 0) return;
     candidates.push(assessItemQuality($, $el));
   });
+
+  // Fallback: if no candidates found, try link + Swedish date text (no <time datetime> required)
+  if (candidates.length === 0) {
+    eventScope.find('li, article').each((_: any, el: any) => {
+      const $el = $(el);
+      const hasLink = $el.find('a[href]').filter((_: any, a: any) => ($(a).attr('href') ?? '').trim().length > 0).length > 0;
+      if (hasLink && hasSwedishDateText($el)) {
+        candidates.push(assessItemQuality($, $el));
+      }
+    });
+  }
 
   return candidates;
 }
