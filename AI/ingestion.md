@@ -316,3 +316,9 @@ For HTML sources, truth often begins with the correct page choice.
 
 Wrong page → weak extraction  
 Right page → meaningful extraction
+
+---
+
+## Exit Rule
+
+Every output must end with `__KLAR_MED_1_2_3_PROMPTEN__` as the very last line, alone on its own line. No exceptions, no matter the exit path.
