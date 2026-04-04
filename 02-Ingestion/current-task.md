@@ -1,35 +1,20 @@
 # Current Task
 
-> **HISTORICAL ONLY — inactive after NEWSTRUCTURE migration.**
-> 
-> Active files now live in:
-> - `NEWSTRUCTURE/02-Ingestion/current-task.md`
-> - `NEWSTRUCTURE/02-Ingestion/handoff.md`
-> 
-> Do not use this file when domain-local files exist.
->
-> **Future plan:** When current migration stabilizes, move git/repo root to `NEWSTRUCTURE` so that all relative paths, active context resolution and skills naturally use the correct project root.
+## Område
+02-Ingestion
+
+## Status
+**AKTIV** — Tidigare markerad som "HISTORICAL ONLY", nu aktiverad efter 01-Sources fasavslut.
 
 ## Purpose
-
 This file defines the CURRENT task for the AI.
-
 It is the ONLY valid task.
 Nothing else may be worked on.
-
 If unclear → STOP.
 
 ---
 
-## Task Definition
-
-### Domain
-
-ingestion
-
----
-
-### Problem (STRICT)
+## Problem (STRICT)
 
 HTML Path är för root-fixad och missar ofta rätt interna programsidor eller undermenyer.
 
@@ -45,13 +30,13 @@ Det primära problemet är nu inte extraction i sig, utan **discovery av rätt s
 
 ---
 
-### New Direction
+## New Direction
 
 Nästa steg är att bygga ett tydligt steg för:
 
 1. **HTML Frontier Discovery**
    - hitta och ranka interna kandidatsidor
-   - samla interna länkar från nav, header, submenu och tydliga sektioner
+   - samla interna länkat från nav, header, submenu och tydliga sektioner
    - prova flera toppkandidater billigt
    - välja sidan med bäst event-signal före extraction
 
@@ -63,7 +48,7 @@ Nästa steg är att bygga ett tydligt steg för:
 
 ---
 
-### Entry Point (CRITICAL)
+## Entry Point (CRITICAL)
 
 Primärt område:
 - `services/ingestion/src/tools/`
@@ -77,7 +62,7 @@ AI-stöd får kopplas in endast som litet beslutssteg efter kandidatinsamling oc
 
 ---
 
-### Goal (MEASURABLE)
+## Goal (MEASURABLE)
 
 Minst 2 verkliga testdomäner ska visa tydlig förbättring i sidval före extraction.
 
@@ -89,13 +74,13 @@ Mätetal:
 - jämförelse mot tidigare root-only-beteende
 
 Målnivå:
-- Folkoperan: boten ska hitta `/pa-scen/` eller motsvarande som stark kandidatsida
-- Avicii Arena: boten ska hitta kategori-/undermenysidor under Evenemang, t.ex. Musik/Show eller Sport
+- Malmö Opera: boten ska hitta `/pa-scen/` eller motsvarande som stark kandidatsida
+- Malmö Live: boten ska hitta `/kalender/` eller motsvarande som stark kandidatsida
 - vald kandidatsida ska ge tydligt bättre event-signal än root-sidan
 
 ---
 
-### Constraints
+## Constraints
 
 - Do not modify other domains
 - Do not introduce fake data
@@ -107,13 +92,13 @@ Målnivå:
 
 ---
 
-### Workflow
+## Workflow
 
 ingestion-loop.md
 
 ---
 
-### Verification
+## Verification
 
 verify-end-to-end.md
 
