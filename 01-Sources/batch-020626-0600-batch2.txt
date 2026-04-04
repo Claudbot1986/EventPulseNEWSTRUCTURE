@@ -1,0 +1,24 @@
+# Batch 2 - Kommunala kalendrar och turistbyråer (ID 21-40)
+# Förbättrad sourceScout med bättre no-jsonld/weak-HTML-hantering
+
+# KOMMUN/TURISTBYRÅ
+https://www.visitstockholm.se/event/
+https://evenemang.malmo.se/
+https://goteborg.se/wps/portal/start/uppleva-och-gora/evenemang-och-turistinformation
+https://www.gavle.se/gavlekalendern/
+https://vellinge.se/evenemangskalender/
+https://www.bollnas.se/turism/upplev-bollnas/evenemang
+https://staffanstorp.se/nyheter/ny-evenemangskalender/
+http://www.tanum.se/naringslivarbete/planeringskalenderforevenemang
+https://www.svedala.se/uppleva/kalender
+https://www.pitea.se/en/visitors/events/
+http://www.sundbyberg.se/arkiv/evenemang-och-aktiviteter/
+https://destinationuppsala.se/
+https://vadhanderisverige.se/stockholm/evenemangskalender/
+https://www.weekendmalmo.se/kalender
+https://evenemangskalender.se/
+https://www.lokalhelhet.se/kalender/
+https://www.dagen.se/kalendern/
+https://www.turistinformationlund.se/
+https://www.visitorebro.se/evenemangskalender/
+https://visit.norrkoping.se/se-och-gora/evenemangskalender

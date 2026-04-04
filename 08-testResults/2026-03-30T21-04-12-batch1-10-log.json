@@ -1,0 +1,538 @@
+[
+  {
+    "id": 1,
+    "name": "Konserthuset Stockholm",
+    "url": "https://www.konserthuset.se",
+    "prevStatus": "no-jsonld",
+    "steps": [
+      {
+        "step": "01-Sources/Diagnosis",
+        "status": "warn",
+        "detail": "Diagnosis: no — No <script type=\"application/ld+json\"> tags found in HTML. Page has no structure"
+      },
+      {
+        "step": "01-Sources/Diagnosis",
+        "status": "warn",
+        "detail": "Events extracted: 0",
+        "events": 0
+      },
+      {
+        "step": "02-Ingestion/Fetch",
+        "status": "pass",
+        "detail": "Fetched 112389 bytes"
+      },
+      {
+        "step": "02-Ingestion/NetworkGate",
+        "status": "skip",
+        "detail": "No open API found"
+      },
+      {
+        "step": "02-Ingestion/Extract",
+        "status": "warn",
+        "detail": "No events extracted (0 parse errors)",
+        "events": 0
+      },
+      {
+        "step": "03-Queue",
+        "status": "skip",
+        "detail": "No events to queue"
+      },
+      {
+        "step": "05-Supabase",
+        "status": "skip",
+        "detail": "No events queued — skipped DB check"
+      },
+      {
+        "step": "06-UI",
+        "status": "skip",
+        "detail": "No events in DB — UI nothing to show"
+      }
+    ],
+    "finalStatus": "fail",
+    "eventsQueued": 0,
+    "eventsNormalized": 0,
+    "errors": []
+  },
+  {
+    "id": 2,
+    "name": "Berwaldhallen",
+    "url": "https://www.berwaldhallen.se",
+    "prevStatus": "no-jsonld",
+    "steps": [
+      {
+        "step": "01-Sources/Diagnosis",
+        "status": "warn",
+        "detail": "Diagnosis: no — No <script type=\"application/ld+json\"> tags found in HTML. Page has no structure"
+      },
+      {
+        "step": "01-Sources/Diagnosis",
+        "status": "warn",
+        "detail": "Events extracted: 0",
+        "events": 0
+      },
+      {
+        "step": "02-Ingestion/Fetch",
+        "status": "pass",
+        "detail": "Fetched 410393 bytes"
+      },
+      {
+        "step": "02-Ingestion/NetworkGate",
+        "status": "skip",
+        "detail": "No open API found"
+      },
+      {
+        "step": "02-Ingestion/Extract",
+        "status": "warn",
+        "detail": "No events extracted (0 parse errors)",
+        "events": 0
+      },
+      {
+        "step": "03-Queue",
+        "status": "skip",
+        "detail": "No events to queue"
+      },
+      {
+        "step": "05-Supabase",
+        "status": "skip",
+        "detail": "No events queued — skipped DB check"
+      },
+      {
+        "step": "06-UI",
+        "status": "skip",
+        "detail": "No events in DB — UI nothing to show"
+      }
+    ],
+    "finalStatus": "fail",
+    "eventsQueued": 0,
+    "eventsNormalized": 0,
+    "errors": []
+  },
+  {
+    "id": 3,
+    "name": "GSO",
+    "url": "https://www.gso.se",
+    "prevStatus": "no-jsonld",
+    "steps": [
+      {
+        "step": "01-Sources/Diagnosis",
+        "status": "warn",
+        "detail": "Diagnosis: no — No <script type=\"application/ld+json\"> tags found in HTML. Page has no structure"
+      },
+      {
+        "step": "01-Sources/Diagnosis",
+        "status": "warn",
+        "detail": "Events extracted: 0",
+        "events": 0
+      },
+      {
+        "step": "02-Ingestion/Fetch",
+        "status": "pass",
+        "detail": "Fetched 100747 bytes"
+      },
+      {
+        "step": "02-Ingestion/NetworkGate",
+        "status": "warn",
+        "detail": "Found /api/v1/events endpoint"
+      },
+      {
+        "step": "02-Ingestion/Extract",
+        "status": "warn",
+        "detail": "No events extracted (0 parse errors)",
+        "events": 0
+      },
+      {
+        "step": "03-Queue",
+        "status": "skip",
+        "detail": "No events to queue"
+      },
+      {
+        "step": "05-Supabase",
+        "status": "skip",
+        "detail": "No events queued — skipped DB check"
+      },
+      {
+        "step": "06-UI",
+        "status": "skip",
+        "detail": "No events in DB — UI nothing to show"
+      }
+    ],
+    "finalStatus": "fail",
+    "eventsQueued": 0,
+    "eventsNormalized": 0,
+    "errors": []
+  },
+  {
+    "id": 4,
+    "name": "Malmö Live",
+    "url": "https://www.malmolive.se",
+    "prevStatus": "no-jsonld",
+    "steps": [
+      {
+        "step": "01-Sources/Diagnosis",
+        "status": "warn",
+        "detail": "Diagnosis: no — No <script type=\"application/ld+json\"> tags found in HTML. Page has no structure"
+      },
+      {
+        "step": "01-Sources/Diagnosis",
+        "status": "warn",
+        "detail": "Events extracted: 0",
+        "events": 0
+      },
+      {
+        "step": "02-Ingestion/Fetch",
+        "status": "pass",
+        "detail": "Fetched 60396 bytes"
+      },
+      {
+        "step": "02-Ingestion/NetworkGate",
+        "status": "skip",
+        "detail": "No open API found"
+      },
+      {
+        "step": "02-Ingestion/Extract",
+        "status": "warn",
+        "detail": "No events extracted (0 parse errors)",
+        "events": 0
+      },
+      {
+        "step": "03-Queue",
+        "status": "skip",
+        "detail": "No events to queue"
+      },
+      {
+        "step": "05-Supabase",
+        "status": "skip",
+        "detail": "No events queued — skipped DB check"
+      },
+      {
+        "step": "06-UI",
+        "status": "skip",
+        "detail": "No events in DB — UI nothing to show"
+      }
+    ],
+    "finalStatus": "fail",
+    "eventsQueued": 0,
+    "eventsNormalized": 0,
+    "errors": []
+  },
+  {
+    "id": 5,
+    "name": "Fryshuset",
+    "url": "https://fryshuset.se",
+    "prevStatus": "no-jsonld",
+    "steps": [
+      {
+        "step": "01-Sources/Diagnosis",
+        "status": "warn",
+        "detail": "Diagnosis: no — No <script type=\"application/ld+json\"> tags found in HTML. Page has no structure"
+      },
+      {
+        "step": "01-Sources/Diagnosis",
+        "status": "warn",
+        "detail": "Events extracted: 0",
+        "events": 0
+      },
+      {
+        "step": "02-Ingestion/Fetch",
+        "status": "pass",
+        "detail": "Fetched 94883 bytes"
+      },
+      {
+        "step": "02-Ingestion/NetworkGate",
+        "status": "skip",
+        "detail": "No open API found"
+      },
+      {
+        "step": "02-Ingestion/Extract",
+        "status": "warn",
+        "detail": "No events extracted (0 parse errors)",
+        "events": 0
+      },
+      {
+        "step": "03-Queue",
+        "status": "skip",
+        "detail": "No events to queue"
+      },
+      {
+        "step": "05-Supabase",
+        "status": "skip",
+        "detail": "No events queued — skipped DB check"
+      },
+      {
+        "step": "06-UI",
+        "status": "skip",
+        "detail": "No events in DB — UI nothing to show"
+      }
+    ],
+    "finalStatus": "fail",
+    "eventsQueued": 0,
+    "eventsNormalized": 0,
+    "errors": []
+  },
+  {
+    "id": 6,
+    "name": "Avicii Arena",
+    "url": "https://www.aviciiarena.se",
+    "prevStatus": "wrong-type",
+    "steps": [
+      {
+        "step": "01-Sources/Diagnosis",
+        "status": "warn",
+        "detail": "Diagnosis: wrong — Found 1 JSON-LD block(s) with types [] but none produced events. No JSON-LD Even"
+      },
+      {
+        "step": "01-Sources/Diagnosis",
+        "status": "warn",
+        "detail": "Events extracted: 0",
+        "events": 0
+      },
+      {
+        "step": "02-Ingestion/Fetch",
+        "status": "pass",
+        "detail": "Fetched 212702 bytes"
+      },
+      {
+        "step": "02-Ingestion/NetworkGate",
+        "status": "skip",
+        "detail": "No open API found"
+      },
+      {
+        "step": "02-Ingestion/Extract",
+        "status": "warn",
+        "detail": "No events extracted (0 parse errors)",
+        "events": 0
+      },
+      {
+        "step": "03-Queue",
+        "status": "skip",
+        "detail": "No events to queue"
+      },
+      {
+        "step": "05-Supabase",
+        "status": "skip",
+        "detail": "No events queued — skipped DB check"
+      },
+      {
+        "step": "06-UI",
+        "status": "skip",
+        "detail": "No events in DB — UI nothing to show"
+      }
+    ],
+    "finalStatus": "fail",
+    "eventsQueued": 0,
+    "eventsNormalized": 0,
+    "errors": []
+  },
+  {
+    "id": 7,
+    "name": "Kulturhuset Stadsteatern",
+    "url": "https://www.kulturhuset.se",
+    "prevStatus": "wrong-type",
+    "steps": [
+      {
+        "step": "01-Sources/Diagnosis",
+        "status": "warn",
+        "detail": "Diagnosis: wrong — Found 1 JSON-LD block(s) with types [] but none produced events. No JSON-LD Even"
+      },
+      {
+        "step": "01-Sources/Diagnosis",
+        "status": "warn",
+        "detail": "Events extracted: 0",
+        "events": 0
+      },
+      {
+        "step": "02-Ingestion/Fetch",
+        "status": "pass",
+        "detail": "Fetched 47505 bytes"
+      },
+      {
+        "step": "02-Ingestion/NetworkGate",
+        "status": "warn",
+        "detail": "Found /api/v1/events endpoint"
+      },
+      {
+        "step": "02-Ingestion/Extract",
+        "status": "warn",
+        "detail": "No events extracted (0 parse errors)",
+        "events": 0
+      },
+      {
+        "step": "03-Queue",
+        "status": "skip",
+        "detail": "No events to queue"
+      },
+      {
+        "step": "05-Supabase",
+        "status": "skip",
+        "detail": "No events queued — skipped DB check"
+      },
+      {
+        "step": "06-UI",
+        "status": "skip",
+        "detail": "No events in DB — UI nothing to show"
+      }
+    ],
+    "finalStatus": "fail",
+    "eventsQueued": 0,
+    "eventsNormalized": 0,
+    "errors": []
+  },
+  {
+    "id": 8,
+    "name": "Malmö Opera",
+    "url": "https://www.malmoopera.se",
+    "prevStatus": "no-jsonld",
+    "steps": [
+      {
+        "step": "01-Sources/Diagnosis",
+        "status": "warn",
+        "detail": "Diagnosis: no — No <script type=\"application/ld+json\"> tags found in HTML. Page has no structure"
+      },
+      {
+        "step": "01-Sources/Diagnosis",
+        "status": "warn",
+        "detail": "Events extracted: 0",
+        "events": 0
+      },
+      {
+        "step": "02-Ingestion/Fetch",
+        "status": "pass",
+        "detail": "Fetched 80745 bytes"
+      },
+      {
+        "step": "02-Ingestion/NetworkGate",
+        "status": "skip",
+        "detail": "No open API found"
+      },
+      {
+        "step": "02-Ingestion/Extract",
+        "status": "warn",
+        "detail": "No events extracted (0 parse errors)",
+        "events": 0
+      },
+      {
+        "step": "03-Queue",
+        "status": "skip",
+        "detail": "No events to queue"
+      },
+      {
+        "step": "05-Supabase",
+        "status": "skip",
+        "detail": "No events queued — skipped DB check"
+      },
+      {
+        "step": "06-UI",
+        "status": "skip",
+        "detail": "No events in DB — UI nothing to show"
+      }
+    ],
+    "finalStatus": "fail",
+    "eventsQueued": 0,
+    "eventsNormalized": 0,
+    "errors": []
+  },
+  {
+    "id": 9,
+    "name": "GöteborgsOperan",
+    "url": "https://www.goteborgsoperan.se",
+    "prevStatus": "DNS",
+    "steps": [
+      {
+        "step": "01-Sources/Diagnosis",
+        "status": "warn",
+        "detail": "Diagnosis: fetch — HTTP unknown: getaddrinfo ENOTFOUND www.goteborgsoperan.se"
+      },
+      {
+        "step": "01-Sources/Diagnosis",
+        "status": "warn",
+        "detail": "Events extracted: 0",
+        "events": 0
+      },
+      {
+        "step": "02-Ingestion/Fetch",
+        "status": "fail",
+        "detail": "HTTP undefined: getaddrinfo ENOTFOUND www.goteborgsoperan.se"
+      },
+      {
+        "step": "02-Ingestion/NetworkGate",
+        "status": "skip",
+        "detail": "Skipped — not no-jsonld/wrong-type"
+      },
+      {
+        "step": "03-Queue",
+        "status": "skip",
+        "detail": "No events to queue"
+      },
+      {
+        "step": "05-Supabase",
+        "status": "skip",
+        "detail": "No events queued — skipped DB check"
+      },
+      {
+        "step": "06-UI",
+        "status": "skip",
+        "detail": "No events in DB — UI nothing to show"
+      }
+    ],
+    "finalStatus": "fail",
+    "eventsQueued": 0,
+    "eventsNormalized": 0,
+    "errors": [
+      "Fetch failed: getaddrinfo ENOTFOUND www.goteborgsoperan.se"
+    ]
+  },
+  {
+    "id": 10,
+    "name": "Kungliga Operan",
+    "url": "https://www.operan.se",
+    "prevStatus": "no-jsonld",
+    "steps": [
+      {
+        "step": "01-Sources/Diagnosis",
+        "status": "warn",
+        "detail": "Diagnosis: no — No <script type=\"application/ld+json\"> tags found in HTML. Page has no structure"
+      },
+      {
+        "step": "01-Sources/Diagnosis",
+        "status": "warn",
+        "detail": "Events extracted: 0",
+        "events": 0
+      },
+      {
+        "step": "02-Ingestion/Fetch",
+        "status": "pass",
+        "detail": "Fetched 106834 bytes"
+      },
+      {
+        "step": "02-Ingestion/NetworkGate",
+        "status": "skip",
+        "detail": "No open API found"
+      },
+      {
+        "step": "02-Ingestion/Extract",
+        "status": "warn",
+        "detail": "No events extracted (0 parse errors)",
+        "events": 0
+      },
+      {
+        "step": "03-Queue",
+        "status": "skip",
+        "detail": "No events to queue"
+      },
+      {
+        "step": "05-Supabase",
+        "status": "skip",
+        "detail": "No events queued — skipped DB check"
+      },
+      {
+        "step": "06-UI",
+        "status": "skip",
+        "detail": "No events in DB — UI nothing to show"
+      }
+    ],
+    "finalStatus": "fail",
+    "eventsQueued": 0,
+    "eventsNormalized": 0,
+    "errors": []
+  }
+]

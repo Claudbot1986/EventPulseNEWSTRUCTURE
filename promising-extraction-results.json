@@ -1,0 +1,274 @@
+[
+  {
+    "name": "Konserthuset Stockholm",
+    "url": "https://www.konserthuset.se",
+    "c2Score": 15,
+    "jsonLdEvents": 0,
+    "htmlEvents": 11,
+    "totalEvents": 11
+  },
+  {
+    "name": "Malmö Opera",
+    "url": "https://www.malmoopera.se",
+    "c2Score": 49,
+    "jsonLdEvents": 0,
+    "htmlEvents": 7,
+    "totalEvents": 7
+  },
+  {
+    "name": "Avicii Arena",
+    "url": "https://aviciiarena.se",
+    "c2Score": 28,
+    "jsonLdEvents": 0,
+    "htmlEvents": 6,
+    "totalEvents": 6
+  },
+  {
+    "name": "Avicii Arena (sport)",
+    "url": "https://www.aviciiarena.se",
+    "c2Score": 28,
+    "jsonLdEvents": 0,
+    "htmlEvents": 6,
+    "totalEvents": 6
+  },
+  {
+    "name": "Lunds Universitet",
+    "url": "https://www.lu.se/evenemang",
+    "c2Score": 24,
+    "jsonLdEvents": 0,
+    "htmlEvents": 5,
+    "totalEvents": 5
+  },
+  {
+    "name": "Moderna Museet",
+    "url": "https://www.modernamuseet.se",
+    "c2Score": 60,
+    "jsonLdEvents": 0,
+    "htmlEvents": 4,
+    "totalEvents": 4
+  },
+  {
+    "name": "Friidrottsförbundet",
+    "url": "https://www.friidrott.se",
+    "c2Score": 36,
+    "jsonLdEvents": 0,
+    "htmlEvents": 4,
+    "totalEvents": 4
+  },
+  {
+    "name": "Friends Arena",
+    "url": "https://friendsarena.se",
+    "c2Score": 30,
+    "jsonLdEvents": 0,
+    "htmlEvents": 3,
+    "totalEvents": 3
+  },
+  {
+    "name": "Textilmuséet",
+    "url": "https://www.textilmuseet.se",
+    "c2Score": 51,
+    "jsonLdEvents": 0,
+    "htmlEvents": 3,
+    "totalEvents": 3
+  },
+  {
+    "name": "Tele2 Arena",
+    "url": "https://tele2arena.se",
+    "c2Score": 23,
+    "jsonLdEvents": 0,
+    "htmlEvents": 2,
+    "totalEvents": 2
+  },
+  {
+    "name": "Folkoperan",
+    "url": "https://www.folkoperan.se",
+    "c2Score": 10,
+    "jsonLdEvents": 0,
+    "htmlEvents": 1,
+    "totalEvents": 1
+  },
+  {
+    "name": "Dramaten",
+    "url": "https://www.dramaten.se",
+    "c2Score": 10,
+    "jsonLdEvents": 0,
+    "htmlEvents": 1,
+    "totalEvents": 1
+  },
+  {
+    "name": "Nationalmuseum",
+    "url": "https://www.nationalmuseum.se",
+    "c2Score": 25,
+    "jsonLdEvents": 0,
+    "htmlEvents": 1,
+    "totalEvents": 1
+  },
+  {
+    "name": "Berwaldhallen",
+    "url": "https://www.berwaldhallen.se",
+    "c2Score": 27,
+    "jsonLdEvents": 0,
+    "htmlEvents": 0,
+    "totalEvents": 0
+  },
+  {
+    "name": "Malmö Live",
+    "url": "https://malmolive.se",
+    "c2Score": 22,
+    "jsonLdEvents": 0,
+    "htmlEvents": 0,
+    "totalEvents": 0
+  },
+  {
+    "name": "Debaser",
+    "url": "https://debaser.se",
+    "c2Score": 67,
+    "jsonLdEvents": 0,
+    "htmlEvents": 0,
+    "totalEvents": 0
+  },
+  {
+    "name": "Stora Teatern Uppsala",
+    "url": "https://www.storateatern.se",
+    "c2Score": 51,
+    "jsonLdEvents": 0,
+    "htmlEvents": 0,
+    "totalEvents": 0
+  },
+  {
+    "name": "Cirkus",
+    "url": "https://www.cirkus.se",
+    "c2Score": 31,
+    "jsonLdEvents": 0,
+    "htmlEvents": 0,
+    "totalEvents": 0
+  },
+  {
+    "name": "Naturhistoriska Riksmuseet",
+    "url": "https://www.nrm.se",
+    "c2Score": 60,
+    "jsonLdEvents": 0,
+    "htmlEvents": 0,
+    "totalEvents": 0
+  },
+  {
+    "name": "Nordiska Museet",
+    "url": "https://www.nordiskamuseet.se",
+    "c2Score": 26,
+    "jsonLdEvents": 0,
+    "htmlEvents": 0,
+    "totalEvents": 0
+  },
+  {
+    "name": "ArkDes",
+    "url": "https://arkdes.se",
+    "c2Score": 20,
+    "jsonLdEvents": 0,
+    "htmlEvents": 0,
+    "totalEvents": 0
+  },
+  {
+    "name": "Waldemarsudde",
+    "url": "https://www.waldemarsudde.se",
+    "c2Score": 18,
+    "jsonLdEvents": 0,
+    "htmlEvents": 0,
+    "totalEvents": 0
+  },
+  {
+    "name": "Skansen",
+    "url": "https://www.skansen.se",
+    "c2Score": 12,
+    "jsonLdEvents": 0,
+    "htmlEvents": 0,
+    "totalEvents": 0
+  },
+  {
+    "name": "Junibacken",
+    "url": "https://www.junibacken.se",
+    "c2Score": 48,
+    "jsonLdEvents": 0,
+    "htmlEvents": 0,
+    "totalEvents": 0
+  },
+  {
+    "name": "Liseberg",
+    "url": "https://www.liseberg.se",
+    "c2Score": 45,
+    "jsonLdEvents": 0,
+    "htmlEvents": 0,
+    "totalEvents": 0
+  },
+  {
+    "name": "Vasamuseet",
+    "url": "https://www.vasamuseet.se",
+    "c2Score": 13,
+    "jsonLdEvents": 0,
+    "htmlEvents": 0,
+    "totalEvents": 0
+  },
+  {
+    "name": "Scandinavium",
+    "url": "https://www.scandinavium.se",
+    "c2Score": 38,
+    "jsonLdEvents": 0,
+    "htmlEvents": 0,
+    "totalEvents": 0
+  },
+  {
+    "name": "Svenska Fotbollförbundet",
+    "url": "https://www.svenskfotboll.se",
+    "c2Score": 193,
+    "jsonLdEvents": 0,
+    "htmlEvents": 0,
+    "totalEvents": 0
+  },
+  {
+    "name": "Svenska Baskethallsförbundet",
+    "url": "https://www.sbf.se",
+    "c2Score": 41,
+    "jsonLdEvents": 0,
+    "htmlEvents": 0,
+    "totalEvents": 0
+  },
+  {
+    "name": "Ridsportförbundet",
+    "url": "https://www.ridsport.se",
+    "c2Score": 25,
+    "jsonLdEvents": 0,
+    "htmlEvents": 0,
+    "totalEvents": 0
+  },
+  {
+    "name": "Svenska Schackförbundet",
+    "url": "https://schack.se/evenemang",
+    "c2Score": 798,
+    "jsonLdEvents": 0,
+    "htmlEvents": 0,
+    "totalEvents": 0
+  },
+  {
+    "name": "Svenska Tennisförbundet",
+    "url": "https://www.tennis.se",
+    "c2Score": 11,
+    "jsonLdEvents": 0,
+    "htmlEvents": 0,
+    "totalEvents": 0
+  },
+  {
+    "name": "Helsingborgs Konserthus",
+    "url": "https://www.helsingborgskonserthus.se",
+    "c2Score": 325,
+    "jsonLdEvents": 0,
+    "htmlEvents": 0,
+    "totalEvents": 0
+  },
+  {
+    "name": "Liseberg (nöje)",
+    "url": "https://www.liseberg.se",
+    "c2Score": 45,
+    "jsonLdEvents": 0,
+    "htmlEvents": 0,
+    "totalEvents": 0
+  }
+]
