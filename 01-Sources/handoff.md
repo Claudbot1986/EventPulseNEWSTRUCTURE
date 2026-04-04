@@ -127,6 +127,38 @@ Commit: ed2ca14 (efter uppdatering)
 
 ---
 
+---
+
+## Fasavslutning (2026-04-04)
+
+### Sammanfattning
+**01-Sources fas AVSLUTAD.** Nästa aktiv domain är `02-Ingestion`.
+
+### Vad som verifierades
+- C2 och extractFromHtml testades på 3 HTML-kandidater
+- **dramaten**: C2=unclear(10), 0 events
+- **malmoopera**: C2=promising(48), 0 events  
+- **malmolive**: C2=promising(22), 0 events
+
+### Root-cause (bekräftad)
+- C2 mäter page-level signals (datum i text, headings, liststruktur)
+- Men extractFromHtml behöver: URLs med datum ELLER /kalender/-länkar ELLER Swedish dates
+- Root-sidorna = nationalscen/konserthus, INTE event-listings
+- Events finns på undersidor: `/pa-scen/`, `/program/`, `/kalender/`
+- **Nästa steg: HTML Frontier Discovery i 02-Ingestion**
+
+### Överlämning till 02-Ingestion
+Läs:
+- NEWSTRUCTURE/02-Ingestion/current-task.md
+- NEWSTRUCTURE/02-Ingestion/handoff.md
+
+Fokus för 02-Ingestion:
+1. HTML Frontier Discovery för malmoopera, malmolive, dramaten
+2. Hitta rätt intern sida före extraction
+3. C2 kan redan identifiera "promising" pages - nu behövs intern page-val
+
+---
+
 ## Tidigare loop (2026-04-02)
 Datum: 2026-04-02
 Problem: Inga handoff-filer fanns för området

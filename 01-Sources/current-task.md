@@ -3,22 +3,30 @@
 ## Område
 01-Sources
 
+## Status
+**✓ KLAR FÖR DENNA FAS** — Inaktiv tills vidare.
+
 ## Aktivt mål
 Identifiera och sortera kandidatkällor så att rätt källor går vidare till rätt path.
 
 ## Problem som arbetas på nu
-Nästa steg är att fortsätta verifiera kandidater och avgöra om de hör hemma i JSON-LD, Network, HTML eller manual review.
+**FAS AVSLUTAD.** Uppgiften för 01-Sources i denna fas är klar.
+
+### Vad som verifierades (2026-04-04)
+- Testade 3 HTML-kandidater: dramaten, malmoopera, malmolive
+- C2 säger "promising" men extractFromHtml ger 0 events
+- Root-cause identifierad: Root-sidor ≠ event-listings, behövs intern page discovery
+- Nästa verkliga steg: HTML Frontier Discovery i 02-Ingestion
 
 ## Exakt nästa steg
-1. Läs senaste scouting-resultat
-2. Välj en liten uppsättning kandidater
-3. Kör verifiering
-4. Dokumentera utfallet i handoff.md
-5. Gör git commit om filer ändrades
+**→ ÖVERLÄMNAT TILL 02-INGESTION**
+
+ Nästa aktiv domain är `02-Ingestion` enligt handoff.md.
+ Läs: NEWSTRUCTURE/02-Ingestion/current-task.md
+ Läs: NEWSTRUCTURE/02-Ingestion/handoff.md
 
 ## Tillåtna filer att ändra
-- 01-Sources/**
-- 00-ScoutingEvidence/**
+- 01-Sources/** (endast för avslutande av dokumentation)
 
 ## Får INTE ändras
 - 04-Normalizer/**
@@ -26,4 +34,4 @@ Nästa steg är att fortsätta verifiera kandidater och avgöra om de hör hemma
 - 06-UI/**
 
 ## Klar-definition
-Uppgiften är klar när en liten verifierbar grupp kandidater har analyserats och nästa tydliga steg är dokumenterat.
+**✓ KLAR.** Nästa steg ligger i 02-Ingestion-domänen.

@@ -1,5 +1,44 @@
 # Handoff – 02-Ingestion
 
+---
+
+## Mottaget från 01-Sources (2026-04-04)
+
+### Bakgrund
+01-Sources fas avslutad. Tre HTML-kandidater verifierades med C2 och extractFromHtml.
+
+### Verifieringsresultat
+
+| Källa | C2 Verdict | C2 Score | Extraction |
+|--------|------------|----------|------------|
+| dramaten | unclear | 10 | 0 events |
+| malmoopera | promising | 48 | 0 events |
+| malmolive | promising | 22 | 0 events |
+
+### Root-cause (bekräftad från 01-Sources)
+- C2 mäter page-level signals (datePatterns, eventTitles, priceMarkers, eventListStructure)
+- extractFromHtml letar efter: URLs med datum ELLER /kalender/-länkar ELLER Swedish dates
+- Root-sidorna har höga signals men är INTE event-listings
+- Events finns på undersidor: `/pa-scen/`, `/program/`, `/kalender/`
+
+### Konsekvens för 02-Ingestion
+- **C2 fungerar korrekt** - kan identifiera "promising" pages
+- **Men extraction väljer fel sida** - root-sida istället för intern event-listing
+- **Behov: HTML Frontier Discovery** - hitta rätt intern sida innan extraction
+
+### Specifika källor att testa
+- **malmoopera** - C2=promising(48), 7 event-länkar, 8 svenska datum. Ska hitta `/pa-scen/` eller liknande
+- **malmolive** - C2=promising(22), 2 event-länkar. Ska hitta `/kalender/`
+- **dramaten** - C2=unclear(10), 0 event-länkar. Kräver mer scouting
+
+### Nästa steg enligt 02-Ingestion current-task
+1. Bygg HTML Frontier Discovery
+2. Samla interna links från root pages
+3. Ranka candidates baserat på link-level och page-level signals
+4. Välj bästa candidate page före extraction
+
+---
+
 > **HISTORICAL ONLY — inactive after NEWSTRUCTURE migration.**
 > 
 > Active files now live in:
