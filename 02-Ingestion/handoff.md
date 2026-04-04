@@ -11,10 +11,9 @@
 
 | Källa | C0 Discovery | Extraction | Faktiskt utfall |
 |--------|-------------|------------|-----------------|
-| malmoopera | 18 links, 10 candidates, winner density=38 | 7-8 events ✓ | **FUNGERAR** |
-| malmoopera /pa-scen/ | - | HTTP 404 | Path existerar inte |
-| malmolive | Ej testad ännu | - | - |
-| dramaten | Ej testad ännu | - | - |
+| malmoopera | 18 links, winner density=38 | 7-8 events ✓ | **FUNGERAR** |
+| malmolive | 42 links, winner density=113 | 0 events | **JS-render/403** |
+| dramaten | 9 links, winner density=267 | 1 event | Lågt men fungerar |
 
 ### Root-cause (UPPDATERAD efter verklig testning)
 - **C0 htmlFrontierDiscovery FUNGERAR** - finns och används i sourceTriage.ts (rad 96)
@@ -269,40 +268,47 @@ Identifiera och kategorisera alla 100 källor efter varför de INTE levererar ev
 - Uppdatera handoff.md med resultatet av analysen
 - Svara på svenska
 
-## Nästa-steg-analys 2026-04-04 (loop 2)
+## Nästa-steg-analys 2026-04-04 (loop 3)
 
 ### Vad förbättrades denna loop
-- Upptäckte att C0-htmlFrontierDiscovery FINNS och ANVÄNDS i sourceTriage.ts
-- Verifierade att Malmö Opera ROOT ger 8 events (inte 0 som handoff påstod)
-- Verifierade att C0 winner URL ger 7 events
-- Upptäckte att /pa-scen/ etc är 404 - pathen existerar inte
-- Korrekt analys: problemet är INTE "wrong page selection" som current-task säger
+- **Testade malmolive och dramaten** enligt rekommenderat nästa steg
+- **malmolive**: Root=0 events, C0 winner density=113 men 0 extraction, JS-rendering misstänkt (403 på /kalender/)
+- **dramaten**: Root=1 event, C0 winner=1 event, lågt men fungerar
+- **Nu har vi komplett bild** av de tre källorna från handoff
+
+### Fullständig status (uppdaterad)
+
+| Källa | Root Events | C0 Discovery | C0 Winner | Winner Events | Problem |
+|--------|-------------|-------------|-----------|--------------|---------|
+| malmoopera | 8 ✓ | 18 links | density=38 | 7 ✓ | **FUNGERAR** |
+| malmolive | 0 | 42 links | density=113 | 0 | **JS-render? 403 på /kalender/** |
+| dramaten | 1 | 9 links | density=267 | 1 | Lågt men fungerar |
 
 ### Största kvarvarande flaskhals
-- **Felaktiga förutsättningar** - handoff.md hade 0 events för malmoopera, verkligheten är 7-8
-- **Hela pipeline behöver verifieras** - vi testade individuella steg men inte hela flowet
-- **malmolive och dramaten är inte testade** - vet inte deras faktiska status
+- **malmolive är blockerad** - JS-rendering eller annan skyddsåtgärd (403)
+- **dramaten ger bara 1 event** - möjligen förbättrad candidate-sökning behövs
+- **Root cause för malmolive är OKÄNT** - vet inte om det är JS-render eller annat
 
 ### Tre möjliga nästa steg
 
 | # | Steg | Systemnytta | Risk | Varför nu |
 |---|------|-------------|------|-----------|
-| 1 | **Testa malmolive och dramaten** | Hög: förstå hela bilden | Låg: bara diagnostik | Vet malmoopera fungerar, behöver se om andra gör det |
-| 2 | **Kör sourceTriage på malmoopera** | Hög: bekräftar hela pipeline från triage→queue | Låg: befintlig kod | Säkerställ integration fungerar |
-| 3 | **Uppdatera current-task.md** | Medel: rätt förutsättningar | Låg: dokumentation | Felaktig task leder till fel arbete |
+| 1 | **Undersök malmolive med render/path** | Hög: kan ge 10+ events | Medel: behöver ny komponent | Blockerad nu, högsta potentiella impact |
+| 2 | **Kör sourceTriage på malmoopera → phase1ToQueue** | Hög: bekräftar hela fungerande pipeline | Låg: bara kör befintlig kod | malmoopera fungerar, bevisa det |
+| 3 | **Undersök dramaten candidate quality** | Medel: kan förbättra 1→5 events | Låg: analysera befintlig data | Lågt utfall men potentiellt fixbart |
 
 ### Rekommenderat nästa steg
-- **#1 — Testa malmolive och dramaten**
+- **#1 — Undersök malmolive med render/path**
 
-Motivering: För att avgöra om problemet verkligen ligger i "wrong page selection" eller om det är något annat. Malmö Opera fungerar nu - behöver bekräfta om malmolive/dramaten har liknande framgång eller har verkliga problem.
+Motivering: Högsta potentiella systemnytta. malmolive har 0 events nu men massor av internal links (42) och hög C0 density. Om det är JS-render behövs render-path. Om det är 403 på specifika paths kan vi undersöka alternativa URLs.
 
 ### Två steg att INTE göra nu
-1. **Bygga om extraction-logiken** — extraction fungerar för malmoopera. Att ändra globalt baserat på en källa är förbjudet enligt Generalization Gate.
-2. **Integrera C0 djupare** — C0 används redan i sourceTriage.ts. Att bygga om är prematurt utan att först verifiera befintlig integration.
+1. **Ändra extraction för malmolive** — extraction fungerar på malmoopera. malmolive är blockerad av annat problem.
+2. **Bygga D-renderGate generellt** — behöver först förstå om malmolive ens kan nås med render.
 
 ### System-effect-before-local-effect
-- Valt steg (#1): Testa malmolive och dramaten
-- Varför: Ger bredare bild av systemets faktiska status. Hjälper förstå om problemet är globalt eller site-specifikt. Utan denna info kan vi arbeta på fel premisser.
+- Valt steg (#1): Undersök malmolive
+- Varför: Ger högsta potentiella pipeline-nytta. Om malmolive kan leverera 10+ events är det en stor win. Måste först förstå varför det är blockerat.
 
 ---
 
