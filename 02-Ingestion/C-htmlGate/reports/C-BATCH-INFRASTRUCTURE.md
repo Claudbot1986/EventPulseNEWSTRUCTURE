@@ -13,10 +13,13 @@ C-htmlGate batch-loop är systematiskt iterationsarbete för att förbättra den
 {
   "currentBatch": 1,
   "batchSize": 10,
-  "status": "idle|pending|testing|completed",
+  "status": "idle|pending|testing|baseline_only|completed",
   "batchSources": ["src1", "src2", ...],
   "completedBatches": [1, 2, ...],
-  "lastBatchRun": "ISO timestamp"
+  "lastBatchRun": "ISO timestamp",
+  "cyclesCompleted": 0,
+  "maxCyclesAllowed": 3,
+  "stopReason": null | "plateau" | "no-general-improvement" | "d-problem" | "max-cycles"
 }
 ```
 
