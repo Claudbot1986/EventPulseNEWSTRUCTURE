@@ -2,6 +2,162 @@
 
 ---
 
+## Nästa-steg-analys 2026-04-05 (loop 30)
+
+### Vad förbättrades denna loop
+- **ROTORSAK IDENTIFIERAD:** C1-signaler vs event-extraction mismatch förklaras av SiteVision CMS
+- **Pattern dokumenterat:** SiteVision CMS med `/visit-events/` URL utan tid
+- **Förklaring:** Kalenderwidget-datum räknas som `dateCount` i C1 men representerar UI-text, inte event-links
+- **Inga kodändringar:** Endast analys och dokumentation
+
+### Ändringar
+1. **02-Ingestion/PATTERNS.md:** Lade till nytt mönster "SiteVision CMS med `/visit-events/` utan tid"
+
+### Verifiering
+```
+✓ Pattern dokumenterat i PATTERNS.md
+✓ 4 sajter verifierade: borlange, malmo, uppsala, stenungsund
+✓ Extractor URL-mönster (rad 546-605) matchar INTE SiteVision-format
+```
+
+### Root-cause (nyckelobservation)
+
+**C1 misstolkar kommun-sajter:**
+```
+C1: tt=7, d=11 → "strong signal" → html_candidate
+
+Reality:
+- 7 time-tags = kalenderwidget-datum i UI
+- 11 dates = samma kalender-datum i olika format
+- 0 events = extractFromHtml() URL-mönster kräver tid, SiteVision har bara datum
+```
+
+**Specifikt problem:** Extractor (rad 546) Pattern A: `/YYYY-MM-DD-HHMM/` kräver tid
+- Borlänge: `/visit-events/2026-04-02-pasklovs-hyrkart` = YYYY-MM-DD bara, INGEN TID
+- Matchar inte → 0 events
+
+### Sources som påverkas
+| Källa | C1 Signaler | Events | Observation |
+|-------|-------------|--------|-------------|
+| borlange-kommun | 7tt + 11d | 0 | SiteVision, `/visit-events/` utan tid |
+| malmo-stad | 3tt + 15d | 0 | SiteVision, datum utan tid |
+| uppsala-kommun | 6tt + 6d | 0 | SiteVision, datum utan tid |
+| stenungsund | strong | 0 | SiteVision, datum utan tid |
+| abf | 9tt + 20d | 8 | WordPress, `/evenemang-och-kurser/` |
+| konserthuset | strong | 11 | Custom, `/YYYYMMDD-HHMM/` |
+
+### Generalization Gate Status
+| Pattern | Sajter | Krav | Status |
+|---------|--------|------|--------|
+| SiteVision CMS `/visit-events/` utan tid | 4 | 2-3 | **Provisionally General** |
+
+### Kvarvarande flaskhals
+- **C1 fortsätter överskatta kommun-sajter** — höga tt/d-signaler tolkas som stark potential
+- **15% precision totalt** — 85% av html_candidates misslyckas
+- **Render-källor (7 st)** — Fortfarande blockerade
+- **Phantom sources** — 3 poster pekar på sources som inte finns
+
+### Tre möjliga nästa steg
+
+| # | Steg | Systemnytta | Risk | Varför nu |
+|---|------|-------------|------|-----------|
+| 1 | **Kör --triage-batch på 20+ aldrig-testade** | Hög: breddar modell-validering | Låg: beprövad metod | Mer data för Generalization Gate |
+| 2 | **Undersök SiteVision-sajter med fungerande API** | Medel: hittar network path | Medel: research | Undviker HTML-path problemet helt |
+| 3 | **Fixa phantom sources i sources_status** | Låg: datakvalitet | Låg: rensa felposter | Felposter förvirrar analys |
+
+### Rekommenderat nästa steg
+- **#1 — Kör --triage-batch på 20+ aldrig-testade**
+
+Motivering: Nu när SiteVision-mönstret är dokumenterat kan vi undvika att testa fler SiteVision-sajter (de kommer ändå inte fungera). Nästa steg är att bredda modell-validering med icke-SiteVision-sajter för att få bättre precision-statistik.
+
+### Två steg att INTE göra nu
+1. **Ändra extractor URL-mönster för SiteVision** — Site-Specific, 4 sajter ej nog för General
+2. **Bygga source adapter för kommun-sajter** — Site-Specific, går emot bred validerings-mål
+
+### System-effect-before-local-effect
+- Valt steg (#1): Breddar modell-validering
+- Varför: Vi behöver icke-SiteVision-sajter för att mäta verklig C1-prestion utan SiteVision-förvirring
+
+---
+
+## Nästa-steg-analys 2026-04-05 (loop 29)
+
+### Vad förbättrades denna loop
+- **Modell-validering BREDDADES:** Körde scheduler på smalandsposten, bokmassan, studio-acusticum, konserthuset
+- **MODELL-ANALYS SLUTFÖRD:** C1-signaler korrelerar INTE med event-extraction
+- **Upptäckt:** scheduler.ts fungerar med tsx (inte ts-node)
+- **Phantom sources:** gronalund, nrm, shl finns i sources_status men INTE i sources/ (fel poster)
+
+### Ändringar
+Inga kodändringar denna loop.
+
+### Verifiering
+```
+✓ scheduler --source smalandsposten: 0 events, html_candidate (18tt) → 0
+✓ scheduler --source bokmassan: 0 events, html_candidate (5tt) → 0
+✓ scheduler --source studio-acusticum: 5 events (bekräftad)
+✓ scheduler --source konserthuset: 11 events (bekräftad)
+```
+
+### Modell-Validering: C1-SIGNALER vs EVENTS (NYCKELRESULTAT)
+
+**Data:** 39 html_candidate-sources med C1-signaler.
+
+| Signal-nivå | Sources | Med events | Precision |
+|-------------|---------|------------|-----------|
+| Hög (tt>=10 eller d>=10) | 22 | 5 | **23%** |
+| Medium (5<=tt<10 eller 5<=d<10) | 17 | 3 | **18%** |
+| Low (tt<5 och d<5) | 4 | 0 | **0%** |
+
+**Total precision:** 8/43 html_candidates = **19%**
+
+**Framgångsrika (8 st):** abf(8), konserthuset(11), studio-acusticum(5), dramaten, friidrott, textilmuseet, malmoopera, berwaldhallen(216), karlskrona(4), katrineholm(2), kungsbacka(1), aik(1)
+
+**Kommunsajter-specifikt problem (10 st analyserade):**
+- borlange-kommun: 0 events (tt=7, d=11)
+- malmo-stad: 0 events (tt=3, d=15)
+- mariestad: 0 events (tt=2, d=4)
+- uppsala-kommun: 0 events (tt=6, d=6)
+- ystad: 0 events (tt=6, d=7)
+- skovde-stadsteatern: 0 events (tt=10, d=20)
+- jonkoping: 0 events (tt=2, d=20)
+- karlskrona: 4 events ✓ (kommun, låg effektivitet)
+- katrineholm: 2 events ✓ (kommun, låg effektivitet)
+- kungsbacka: 1 event ✓ (kommun, låg effektivitet)
+
+**Slutsats:** Kommun-sajter har konsekvent höga C1-signaler men låg event-extraction. C1 screening överskattar kommun-sajters potential.
+
+**Provisionally General pattern:** "Kommunsajter överskattas av C1" — verifierat på 10 sajter, behöver 2-3 fler för General.
+
+### Kvarvarande flaskhals
+- **C1 misstolkar kommun-sajter:** Höga tt/d-signaler korrelerar inte med events
+- **15% precision totalt:** 85% av html_candidates misslyckas trots C1-godkännande
+- **Phantom sources:** 3 poster pekar på sources som inte finns (sources_status in-sync med verkligheten)
+- **Render-källor (7 st):** Fortfarande blockerade
+
+### Tre möjliga nästa steg
+
+| # | Steg | Systemnytta | Risk | Varför nu |
+|---|------|-------------|------|-----------|
+| 1 | **Analysera VARFÖR abf/konserthuset fungerar** | Hög: förstå skillnaden | Låg: dokumentation | 85% misslyckas - vi måste förstå undantagen |
+| 2 | **Kör --triage-batch på 20 nya aldrig-testade** | Medel: breddar modell-data | Låg: tsx fungerar nu | Mer data behövs för Generalization Gate |
+| 3 | **Fixa phantom sources i sources_status** | Låg: datakvalitet | Låg: rensa felposter | Felposter förvirrar framtida analys |
+
+### Rekommenderat nästa steg
+- **#1 — Analysera abf/konserthuset/studio-acusticum DOM vs misslyckade**
+
+Motivering: Vi har nu 8 success och 31 fail. Att förstå VARFÖR de 8 lyckas ( snarare än ännu fler fail) ger insikt om C1/C2-gränssnittet. abf har låg signal (9tt+20d) men 8 events; kommunsajter har hög signal men 0 events. Detta mönster behöver rotorsakas.
+
+### Två steg att INTE göra nu
+1. **Ändra IGNORE_PATTERNS eller scoring** — Site-Specific, 8 sajter ej nog för General
+2. **Bygga source adapter för enskild sajt** — går emot bred validerings-mål
+
+### System-effect-before-local-effect
+- Valt steg (#1): Förstå modellens undantag
+- Varför: 85% misslyckande-rate är symptom, inte rotorsak. Vi måste förstå vad de 8 framgångarna gör rätt.
+
+---
+
 ## Nästa-steg-analys 2026-04-05 (loop 28)
 
 ### Vad förbättrades denna loop

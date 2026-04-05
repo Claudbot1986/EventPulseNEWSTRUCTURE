@@ -39,15 +39,42 @@ Denna fil fångar **potentiellt generella mönster** upptäckta genom site-speci
 
 ---
 
+### Pattern: SiteVision CMS med `/visit-events/` utan tid
+
+**Klassificering:** Provisionally General
+**Upptäckt via:** borlange-kommun, malmo-stad, uppsala-kommun, stenungsund
+**Datum:** 2026-04-05
+
+**Potentiellt generellt problem:**
+`extractFromHtml()` URL-mönster (rad 546-605) kräver:
+- Pattern A: `/YYYY-MM-DD-HHMM/` (datum + tid)
+- Pattern B: `/YYYYMMDD-HHMM/`
+- Pattern C: `/YYYY/MM/DD/`
+
+Men SiteVision-baserade kommunsajter har:
+- `/visit-events/YYYY-MM-DD-title` (datum UTAN tid)
+- Kalenderwidget-datum räknas som `dateCount` i C1 men representerar UI-text, inte event-links
+- `<article class="item-*">` i custom webapp components, INTE i C1 scope
+
+**URL-struktur som påverkas:** `/visit-events/YYYY-MM-DD-title` (SiteVision standard)
+
+**CMS/Platform:** SiteVision CMS (identifierbar via `/visit-events/` paths)
+
+**Antal sajter verifierade:** 4 (borlange, malmo, uppsala, stenungsund)
+
+**Status:** needsVerification = true
+
+---
+
 ## Avvisade mönster
 
-(Ingem inga ännu)
+(Inga ännu)
 
 ---
 
 ##Verifierade mönster (klara för C-lager)
 
-(Ingem inga ännu)
+(Inga ännu)
 
 ---
 
@@ -62,14 +89,14 @@ Denna fil fångar **potentiellt generella mönster** upptäckta genom site-speci
 
 ## Krav för generalisering till C-lager
 
-| Steg | Krav |
-|------|------|
-| 1 | Mönster dokumenterat här med minst 1 sajt |
-| 2 | Samma mönster verifierat på 2–3 ytterligare sajter |
-| 3 | Sajterna ska vara från OLIKA organisationer/ägare (ej samma CMS-implementation) |
-| 4 | CRAFT-regler godkänner ändringen |
-| 5 | Output från Steg 2c (Pattern Capture) dokumenterad |
+|| Steg | Krav |
+||------|------|
+|| 1 | Mönster dokumenterat här med minst 1 sajt |
+|| 2 | Samma mönster verifierat på 2–3 ytterligare sajter |
+|| 3 | Sajterna ska vara från OLIKA organisationer/ägare (ej samma CMS-implementation) |
+|| 4 | CRAFT-regler godkänner ändringen |
+|| 5 | Output från Steg 2c (Pattern Capture) dokumenterad |
 
 ---
 
-*Senast uppdaterad: 2026-04-04*
+*Senast uppdaterad: 2026-04-05*
