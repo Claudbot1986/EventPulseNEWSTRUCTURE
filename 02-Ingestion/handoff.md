@@ -2,6 +2,80 @@
 
 ---
 
+## Nästa-steg-analys 2026-04-05 (loop 28)
+
+### Vad förbättrades denna loop
+- **Körde triage-batch på 119 sources:** Timeout efter 300s, endast delvis slutfört
+- **Testade stenungsund:** html_candidate (strong), 0 events - kommun-sajt samma mönster
+- **Testade studio-acusticum:** html_candidate (strong), 5 events - NY SUCCESS källa
+
+### Ändringar
+Inga kodändringar denna loop.
+
+### Verifiering
+```
+✓ scheduler --source studio-acusticum: 5 events, exit 0
+✓ scheduler --source stenungsund: 0 events, exit 0
+✗ --triage-batch: timeout vid 300s (119 sources, för långsamt)
+```
+
+### Sources som påverkas
+| Källa | Status | Events | Observation |
+|-------|--------|--------|-------------|
+| studio-acusticum | success | 5 | Ny framgång |
+| stenungsund | fail | 0 | Kommun-sajt |
+
+### Modell-analys (uppdaterad)
+**Success sources fördelning:**
+
+| Path | Count | Total events | Avg events |
+|------|-------|--------------|------------|
+| html-heuristics | 5 | 27 | 5.4 |
+| network | 1 | 216 | 216.0 |
+| unknown | 6 | 21 | 3.5 |
+
+**Totalt:** 12 success sources (uppfyller 10+ mål)
+
+**Kommune-sajter mönster (3 verifierade):**
+- katrineholm: 2 events
+- kungsbacka: 1 event
+- karlskrona: 4 events
+
+**Slutsats:** Kommun-sajter har låg event-extraction oavsett C1-signaler. C1 överskattar dessa.
+
+### Generalization Gate Status
+| Pattern | Sajter | Krav | Status |
+|---------|--------|------|--------|
+| Kommun-sajter med hög C1 men låga events | 3 | 2-3 | **Provisionally General** |
+
+### Kvarvarande flaskhals
+- **Triage-batch för långsam:** 119 sources tar >300s, timeoutar
+- **--triage-batch ineffektiv:** Kör C1 på alla, inte bara triage_required
+- **Render-källor (4 st):** Fortfarande blockerade av CloudFlare
+
+### Tre möjliga nästa steg
+
+| # | Steg | Systemnytta | Risk | Varför nu |
+|---|------|-------------|------|-----------|
+| 1 | **Kör scheduler --source på render-kandidat (t.ex. sbf)** | Medel: testar D-renderGate | Hög: CloudFlare blockerar | 4 render-källor väntar |
+| 2 | **Optimera triage-batch hastighet** | Medel: möjliggör bredare triage | Låg: prestandajustering | 119 sources timeoutar |
+| 3 | **Undersök network path för fler Tixly-venues** | Medel: hittar fler high-event sources | Låg: liknande format | Berwaldhallen = 216 events |
+
+### Rekommenderat nästa steg
+- **#1 — Kör scheduler --source på sbf (render-kandidat)**
+
+Motivering: D-renderGate finns nu (byggt i loop 20). 4 render-källor är parkerade. Att testa sbf visar om D-renderGate faktiskt fungerar för SiteVision-sajter utan CloudFlare.
+
+### Två steg att INTE göra nu
+1. **Köra --triage-batch** — timeoutar vid 300s, ineffektivt
+2. **Bygga source adapter för enskild sajt** — Site-Specific
+
+### System-effect-before-local-effect
+- Valt steg (#1): Testar D-renderGate E2E
+- Varför: D-renderGate byggdes i loop 20 men verifierades aldrig ordentligt
+
+---
+
 ## Nästa-steg-analys 2026-04-05 (loop 27)
 
 ### Vad förbättrades denna loop
