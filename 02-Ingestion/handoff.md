@@ -2,70 +2,84 @@
 
 ---
 
-## Nästa-steg-analys 2026-04-05 (loop 35)
+## Nästa-steg-analys 2026-04-05 (loop 36)
 
 ### Vad förbättrades denna loop
-- **C0 FUNGERAR:** discoverEventCandidates hittar `/pa-scen/` på folkoperan (density=114, 8 events)
-- **Root-cause identifierad:** www-redirect blockerar C0 discovery för folkoperan
-- **Nytt mönster dokumenterat:** "www Redirect Blocks C0 Discovery" i PATTERNS.md
-- **Inga kodändringar:** Endast analys och dokumentation
+- **moderna-museet bekräftad:** 4 events (8tt, 0d) - tidigare okänd källa
+- **Precision uppdaterad:** 9/34 = 26.5% (was 23%)
+- **Osarsteatern:** tt=0, d=0 → manual_review (för svag signal)
+- **avicii-arena:** d=10, h=12, li=1 men tt=0 → manual_review
+- **liseberg:** li=136 (136 links!) men tt=0, d=1 → manual_review
 
 ### Root-cause (nyckelobservation)
 
-**folkoperan är INTE broken - det är en URL-data-issue:**
+**Link count (li) är OTILLRÄCKLIGT som enda signal:**
 ```
-sources/: url=https://www.folkoperan.se (301 → https://folkoperan.se/)
-med www:  C0 hittar 0 candidates → 0 events
-utan www: C0 hittar /pa-scen/ (density=114) → 8 events
+liseberg: li=136, tt=0, d=1 → manual_review (0 events)
+moderna-museet: li=0, tt=8, d=0 → html_candidate (4 events)
 ```
+136 links utan time-tags/date-count ger fortfarande 0 events.
 
-**Faktisk modell-prestanda:**
-- folkoperan (correct URL): 8 events via C0 + extract
-- Men `approved=false` eftersom `next_path=network` (ej html-heuristics)
-- sourceTriage godkänner bara html-heuristics sources
+**Time-tags (tt) är starkare signal än dates (d):**
+- moderna-museet: 8tt → 4 events
+- liseberg: 0tt, 1d → 0 events
+- avicii-arena: 0tt, 10d → manual_review (0 events)
 
-### Sources som påverkas
-| Källa | URL i sources/ | C0 resultat | Events |
-|-------|----------------|-------------|--------|
-| folkoperan | https://www.folkoperan.se | 0 candidates (www-blocked) | 0 (fel) |
-| folkoperan (testad) | https://folkoperan.se | /pa-scen/ (density=114) | 8 (rätt) |
+**C1-manual_review gränsen är för konservativ:**
+- 138 sources med manual_review
+- Bland dem finns: moderna-museet (8tt → 4 events), dramaten (d=3 → 1 event)
+
+### Sources som testades denna loop
+| Källa | C1 Signaler | Events | Resultat |
+|-------|-------------|--------|----------|
+| oscarsteatern | tt=0, d=0 | - | manual_review (för svag) |
+| avicii-arena | tt=0, d=10 | - | manual_review (0tt) |
+| moderna-museet | 8tt, 0d | 4 ✓ | html_candidate (4 events) |
+| liseberg | tt=0, d=1, li=136 | - | manual_review (0tt) |
+| dramaten | tt=0, d=3 | 1 | manual_review (2 fails) |
+
+### Sources blockerade
+- cirkus: `net::ERR_FAILED`, 9 attempts, D-renderGate
+- Alla `pending_render_gate` (~39 st)
 
 ### Generalization Gate Status
 | Pattern | Sajter | Krav | Status |
 |---------|--------|------|--------|
-| www Redirect Blocks C0 Discovery | 1 | 2-3 | **needsVerification** |
+| www Redirect Blocks C0 Discovery | 1 | 2-3 | needsVerification |
 | SiteVision CMS utan tid | 4 | 2-3 | needsVerification |
 | Webflow CMS Extraction Gap | 1 | 2-3 | needsVerification |
+| Link Count OTILLRÄCKLIG | 1 (liseberg) | 2-3 | needsVerification |
+| Dates (d) utan time-tags (tt) | 3 (dramaten, avicii-arena, liseberg) | 2-3 | needsVerification |
 
 ### Kvarvarande flaskhals
-- **URL-data-kvalitet:** Sources med fel URL (www-redirect) ger missvisande resultat
-- **23% precision** - bekräftad från loop 34
-- **Inga nya code-fixes identifierade** - modellen fungerar, vi behöver bredda testningen
+- **138 manual_review-sources** - många kan ha events men C1 avvisar dem
+- **26.5% precision** - fortfarande låg
+- **Inga verktyg för att testa manual_review-sources** - behövs ny approach
 
 ### Tre möjliga nästa steg
 
 | # | Steg | Systemnytta | Risk | Varför nu |
 |---|------|-------------|------|-----------|
-| 1 | **Kör sourceTriage på 5-10 fail-sources** | Hög: breddar modell-validering | Låg: beprövad metod | Vi har 26 html_candidates att välja från |
-| 2 | **Fixa folkoperan URL (www → non-www)** | Medel: korrekt data | Låg: datapatch | Rätt URL ger 8 events |
-| 3 | **Analysera approved=false för network sources** | Medel: förstå E2E-flow | Låg: dokumentation | folkoperan har 8 events men approved=false |
+| 1 | **Kör C0-discoverEventCandidates direkt på 5-10 manual_review-sources** | Medel: hittar events i "därför"-kategorin | Medel: C0 kanske inte fungerar på dessa | Vi har 138 manual_review att välja från |
+| 2 | **Analysera drama AV 138 manual_review-sources** | Hög: förstå varför de failar | Låg: dokumentation | Identifiera generella mönster |
+| 3 | **Fixa folkoperan URL (www → non-www)** | Medel: korrekt data | Låg: datapatch | Ger 8 events till systemet |
 
 ### Rekommenderat nästa steg
-- **#1 — Kör sourceTriage på 5-10 fail-sources**
+- **#1 — Kör C0-discoverEventCandidates direkt på manual_review-sources**
 
-Motivering: Vi har bekräftat att C0+C1+C2+extract fungerar korrekt (folkoperan=8 events med rätt URL). Nästa steg är att bredda testningen för att samla mer data för Generalization Gate.
+Motivering: 138 sources är parkerade som manual_review. Moderna-museet (8tt) och dramaten (d=3) visar att vissa manual_review faktiskt har events. C0-discoverEventCandidates (utan C1-filter) kan hitta kandidater som C1 avvisar.
 
 ### Två steg att INTE göra nu
-1. **Bygga source adapter för folkoperan** — Site-Specific, handlar om URL-data
-2. **Ändra C-lager scoring** — Generalization Gate kräver 2-3+ sajter först
+1. **Ändra C1 threshold för tt/d** — Site-Specific, behöver 2-3+ sajter först
+2. **Bygga source adapter för enskilda sajter** — går emot bred validerings-mål
 
 ### System-effect-before-local-effect
-- Valt steg (#1): Breddar modell-validering
-- Varför: Vi behöver fler testade sajter för att kunna göra Generalization Gate-analys
+- Valt steg (#1): Hittar events i den största fail-gruppen (138 manual_review)
+- Varför: Ger mest pipeline-nytta per testad källa
 
 ---
 
-## Nästa-steg-analys 2026-04-05 (loop 34)
+## Nästa-steg-analys 2026-04-05 (loop 35)
 
 ### Vad förbättrades denna loop
 - **Djupanalys av 34 html_candidates:** C1-signaler korrelerar INTE med event-extraction
