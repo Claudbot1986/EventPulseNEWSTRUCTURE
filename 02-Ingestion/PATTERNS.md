@@ -63,6 +63,47 @@ C0 (htmlFrontierDiscovery) misslyckas med att hitta event-candidates när käll-
 
 ---
 
+### Pattern: timeTagCount utan datum-filter
+
+**Klassificering:** Provisionally General
+**Upptäckt via:** polismuseet.se
+**Datum:** 2026-04-05
+
+**Potentiellt generellt problem:**
+`timeTagCount` i C1 (rad 147 i C1-preHtmlGate.ts) räknar ALLA `<time[datetime]>` elements, inklusive:
+- Öppettider (`datetime="11:00:00"`) — UTAN datum
+- Stängtider
+- Tid-only timestamps
+
+Men modellen behandlar alla time-tags som "event-tider".
+
+**Root-cause:**
+```
+C1: const timeTagCount = $('time[datetime]').length;
+```
+Svenska sajter använder ofta `<time datetime="11:00:00">` för öppettider, t.ex.:
+```html
+<time datetime="11:00:00">Öppet 11:00</time>
+<time datetime="17:00:00">Stängt 17:00</time>
+```
+
+**Vad modellen tror:** "24tt = många event-tider"
+**Verklighet:** "24tt = öppettider för utställningar"
+
+**Förbättrad signal behövs:**
+- `datetime` med datum → event-tid (t.ex. `datetime="2026-05-01T19:00"`)
+- `datetime` UTAN datum → öppettid (t.ex. `datetime="11:00:00"`)
+
+**CMS/Platform:** Ej CMS-specifikt — öppettider är vanligt överallt
+
+**Antal sajter verifierade:** 1 (polismuseet)
+**Sajter att söka verifiering på:** Mål: 2-3 andra sajter med öppettider (t.ex. museer, biografer, badhus)
+
+**Status:** needsVerification = true
+**Nästa steg:** Undersök 2-3 triage_required-sources för att bekräfta mönstret
+
+---
+
 ### Pattern: SiteVision CMS med `/visit-events/` utan tid
 
 **Klassificering:** Provisionally General

@@ -2,6 +2,78 @@
 
 ---
 
+## Nästa-steg-analys 2026-04-05 (loop 39)
+
+### Vad förbättrades denna loop
+- **Modell-validering AVancerad:** Undersökte 3 `triage_required` sources med höga time-tag signaler
+- **Root-cause identifierad:** `timeTagCount` räknar ÖPPETTIDER, inte event-tider
+- **Ny modell-insikt:** polismuseet har 24tt men dessa är `datetime="11:00:00"` utan datum = öppettider
+
+### Root-cause (nyckelobservation)
+
+**timeTagCount-signalen är FELKALIBRERAD:**
+```
+polismuseet: 24tt → 0 events (24 öppettider utan datum)
+karlskoga: 3tt → 0 events (3 öppettider på root, fel page vald)
+```
+
+**Problem:** `timeTagCount` räknar ALLA `<time[datetime]>` elements, inklusive:
+- Öppettider (`datetime="11:00:00"`)
+- Stängtider
+- Andra tid-only timestamps
+
+**Vad modellen tror:** "24tt = många event-tider"
+**Verklighet:** "24tt = öppettider för utställningar"
+
+**Förbättrad signal behövs:**
+- `datetime` med datum → event-tid (t.ex. `datetime="2026-05-01T19:00"`)
+- `datetime` UTAN datum → öppettid (t.ex. `datetime="11:00:00"`)
+
+### Sources blockerade (updated)
+| Kategori | Antal | Exempel |
+|---------|-------|---------|
+| fail (infra) | 402 | DNS/timeout/404 |
+| pending_render_gate | 5 | cirkus, arkdes, debaser |
+| pending_api | 2 | ticketmaster, eventbrite |
+| triage_required | 14 | polismuseet, ltu, ifk-uppsala |
+| Success | 20 | berwaldhallen, konserthuset, abf |
+
+### Generalization Gate Status
+| Pattern | Sajter | Krav | Status |
+|---------|--------|------|--------|
+| timeTagCount utan datum-filter | 1 (polismuseet) | 2-3 | **needsVerification** |
+| C1 väljer fel page | 1 (karlskoga) | 2-3 | needsVerification |
+| www Redirect Blocks C0 | 1 (folkoperan) | 2-3 | needsVerification |
+| SiteVision CMS utan tid | 4 | 2-3 | Provisionally General |
+
+### Kvarvarande flaskhals
+- **14 triage_required sources** — C1 säger `html_candidate` men extraction=0
+- **timeTagCount är felkalibrerad** — räknar öppettider som event-tider
+- **Modell-validering fortfarande omöjlig** — 20/420 = 4.8% success rate
+
+### Tre möjliga nästa steg
+
+| # | Steg | Systemnytta | Risk | Varför nu |
+|---|------|-------------|------|-----------|
+| 1 | **Undersök fler triage_required-sources** | Medel: förstå om öppettids-problemet är generellt | Låg: dokumentation | 14 kvar, vi behöver 10+ för Generalization Gate |
+| 2 | **Filtrera timeTagCount för datum-bärande** | Hög: förbättrar C1 precision | Medel: kan påverka andra sajter | polismuseet visar tydligt problem |
+| 3 | **Kör phase1ToQueue på 20 success-sources** | Medel: verifierar att redan hittade events når databasen | Låg: verifiering | Vi har 20 fungerande |
+
+### Rekommenderat nästa steg
+- **#1 — Undersök fler triage_required-sources**
+
+Motivering: Vi behöver 2-3 sajter som bekräftar att öppettids-problemet är generellt INNAN vi ändrar timeTagCount-signalen. 14 triage_required ger gott om material.
+
+### Två steg att INTE göra nu
+1. **Ändra timeTagCount-logik nu** — Endast 1 sajt bekräftad (polismuseet), Generalization Gate kräver 2-3
+2. **Köra phase1ToQueue på alla 20** — Lägre prioritet än modell-validering
+
+### System-effect-before-local-effect
+- Valt steg (#1): Identifierar om timeTagCount-problemet är generellt
+- Varför: Om ja, fixar vi 14+ sources samtidigt
+
+---
+
 ## Nästa-steg-analys 2026-04-05 (loop 38)
 
 ### Vad förbättrades denna loop
