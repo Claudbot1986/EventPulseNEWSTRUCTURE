@@ -2,6 +2,154 @@
 
 ---
 
+## Nästa-steg-analys 2026-04-05 (loop 46)
+
+### Vad förbättrades denna loop
+- **schack.se performer-string BEKRÄFTAD:** JsonLdEventSchema.safeParse() failade på alla 50 events pga `performer: "Svenska Schackförbundet"` (string istället för object)
+- **Schema-fix APPLICERAD:** Added `z.string()` to PerformerSchema union i schema.ts
+- **50 events VERIFIERADE:** extractFromJsonLd() returnerar nu 50 events för schack.se
+
+### Root-cause (nyckelobservation)
+
+**Dubbelt problem identifierat:**
+
+1. **Schema-problem (FIXAT):** `JsonLdEventSchema` accepterade inte `performer` som plain string
+   - Schack har: `"performer": "Svenska Schackförbundet"` (WP CMS serialization)
+   - PerformerSchema krävde: object med name, eller PersonSchema, eller OrganizationSchema
+   - Fix: Lade till `z.string()` som fallback i PerformerSchema union
+   - **Klassificering: General** — backwards compatible, löser flera CMS
+
+2. **Routing-problem (EJ FIXAT):** `unknown` preferredPath i scheduler → alltid `extractFromHtml()`
+   - C1 säger `html_candidate` → scheduler kör `extractFromHtml()` (rad 565)
+   - `extractFromJsonLd()` anropas ALDRIG för `unknown` path
+   - Schack har JSON-LD men HTML-extraction hittar 0
+   - **Klassificering: needsVerification** — endast 1 sajt bekräftad (schack)
+
+### Sources blockerade (updated)
+| Kategori | Antal | Exempel |
+|----------|-------|---------|
+| Success (events>0) | 20 | berwaldhallen(216), konserthuset(11) |
+| fail (infra) | 376 | DNS/timeout/404 |
+| SiteVision (JS) | ~15 | karlskoga, borlange, malmo-stad |
+| pending_render_gate | 5 | cirkus, arkdes, debaser |
+| pending_api | 2 | ticketmaster, eventbrite |
+| manual_review | 3 | bokmassan, smalandsposten, stenungsund |
+| triage_required | 14 | hallsberg, ifk-uppsala, karlskoga, polismuseet |
+| **JSON-LD miss (schema)** | **1** | **svenska-schackf-rbundet (FIXAD)** |
+| JSON-LD miss (routing) | 1 | svenska-schackf-rbundet (fortfarande) |
+
+### Generalization Gate Status
+| Pattern | Sajter | Krav | Status |
+|---------|--------|------|--------|
+| SiteVision CMS utan tid | ~15 | 2-3 | **VERIFIERAD** |
+| Sportsajt C0 missar | 1 | 2-3 | Site-Specific |
+| timeTagCount utan datum | 2 (polismuseet, nrm) | 2-3 | needsVerification |
+| JSON-LD performer string (schema) | 1 (schack) | 2-3 | **FIXAD (General)** |
+| JSON-LD miss i triage path | 1 (schack) | 2-3 | needsVerification |
+
+### Kvarvarande flaskhals
+- **14 triage_required sources** — C1=says html_candidate men extraction=0
+- **Routing för `unknown`**: scheduler anropar aldrig `extractFromJsonLd()` för `unknown` preferredPath
+- **Schack fortfarande blockerad**: även om schema fixad, routing går fortfarande till HTML
+
+### Tre möjliga nästa steg
+
+| # | Steg | Systemnytta | Risk | Varför nu |
+|---|------|-------------|------|-----------|
+| 1 | **Undersök 2-3 fler triage_required för JSON-LD** | Hög: bekräftar om routing-fix behövs | Låg: diagnostik | Vi behöver 2-3 sajter för Generalization Gate |
+| 2 | **Fixa scheduler routing för `unknown`→JSON-LD first** | Hög: system-nivå fix | Medel: kan påverka alla sources | Endast om 2-3 sajter bekräftar mönstret |
+| 3 | **Kör phase1ToQueue på 20 success-sources** | Medel: verifierar pipeline | Låg: verifiering | Vi har 20 verifierade källor |
+
+### Rekommenderat nästa steg
+- **#1 — Undersök 2-3 fler triage_required för JSON-LD**
+
+Motivering: Routing-fix för `unknown` path kräver 2-3 sajter enligt Generalization Gate. Undersök om andra triage_required-sources också har JSON-LD som missas.
+
+### Två steg att INTE göra nu
+1. **Ändra scheduler routing NU** — Endast 1 sajt bekräftad (schack), Generalization Gate kräver 2-3
+2. **Köra phase1ToQueue på schack** — Inte ännu, behöver först fixa routing så extractFromJsonLd anropas
+
+### System-effect-before-local-effect
+- Valt steg (#1): Breddar modell-validering med JSON-LD pattern
+- Varför: Vi behöver 2-3 sajter för att Generalization Gate ska acceptera routing-ändring
+
+---
+
+## Nästa-steg-analys 2026-04-05 (loop 45)
+
+### Vad förbättrades denna loop
+- **svenska-schackf-rbundet UNDERSÖKT:** URL=https://schack.se/evenemang
+- **JSON-LD BEKRÄFTAD:** 50 Events i raw HTML, alla med `@type:"Event"` + startDate + url
+- **Root-cause IDENTIFIERAD:** `extractFromHtml()` anropas istället för `extractFromJsonLd()` för `unknown` preferredPath
+- **Verifierad:** `extractFromJsonLd()` hittar 50 events korrekt med fullständig validering
+
+### Root-cause (nyckelobservation)
+
+**Problem: Triage path för `unknown` routing anropar `extractFromHtml()` istället för `extractFromJsonLd()`**
+
+schack.se har 50 verifierbara events i JSON-LD:
+- Script 2: `[{..., "@type":"Event", "name":"Påskturneringen", "startDate":"2026-04-05T09:00:00+02:00", ...}, ...]` (50 items)
+- Alla 50 events har: name, startDate, url, description
+- `extractFromJsonLd()` validerar alla 50 med Zod
+
+**Men scheduler.ts line 565:** `const htmlResult = extractFromHtml(fetchResult.html, source.id, source.url);`
+
+**Orsak:** När `preferredPath = "unknown"` och `decision.execute = 'execute_now'`:
+1. Scheduler kör `selectSourcePath()` → returnerar `execute_now` för unknown
+2. C1 screening körs → returnerar `html_candidate`
+3. Scheduler går till `html_candidate`-branch → anropar `extractFromHtml()`
+4. `extractFromHtml()` letar efter URL-datum patterns → hittar 0
+5. Källa markeras `triage_required`
+
+**Felet:** `extractFromHtml()` (HTML heuristics) anropas för en källa som har JSON-LD.
+
+### Sources blockerade (updated)
+| Kategori | Antal | Exempel |
+|----------|-------|---------|
+| Success (events>0) | 20 | berwaldhallen(216), konserthuset(11), aik(1) |
+| fail (infra) | 376 | DNS/timeout/404 |
+| SiteVision (JS) | ~15 | karlskoga, borlange, malmo-stad, jonkoping |
+| pending_render_gate | 5 | cirkus, arkdes, debaser |
+| pending_api | 2 | ticketmaster, eventbrite |
+| manual_review | 3 | bokmassan, smalandsposten, stenungsund |
+| triage_required | 14 | hallsberg, ifk-uppsala, karlskoga, polismuseet, **svenska-schackf-rbundet** |
+
+### Generalization Gate Status
+| Pattern | Sajter | Krav | Status |
+|---------|--------|------|--------|
+| SiteVision CMS utan tid | ~15 | 2-3 | **VERIFIERAD** |
+| Sportsajt C0 missar | 1 | 2-3 | Site-Specific |
+| timeTagCount utan datum | 2 (polismuseet, nrm) | 2-3 | needsVerification |
+| Kommun-sajt överskattad | ~10 | 2-3 | needsVerification |
+| **JSON-LD miss i triage path** | 1 (schack) | 2-3 | **needsVerification** |
+
+### Kvarvarande flaskhals
+- **14 triage_required sources** — alla har C1=html_candidate men extraction=0
+- **Inga försöker JSON-LD first** — möjligen har fler valid JSON-LD
+
+### Tre möjliga nästa steg
+
+| # | Steg | Systemnytta | Risk | Varför nu |
+|---|------|-------------|------|-----------|
+| 1 | **Köra extractFromJsonLd() direct på schack.se** | Hög: bevisar att fix fungerar | Låg: låg risk | redan verifierad JSON-LD finns |
+| 2 | **Undersök stockholm-jazz-festival-1 JSON-LD** | Medel: breddar modell-data | Låg: diagnostik | misstänkt samma problem |
+| 3 | **Fixa scheduler att försöka JSON-LD först** | Hög: system-nivå fix | Medel: kan påverka alla sources | Endast för `unknown` path |
+
+### Rekommenderat nästa steg
+- **#2 — Undersök stockholm-jazz-festival-1 JSON-LD**
+
+Motivering: schack.se bekräftade att JSON-LD finns men missas. stockholm-jazz-festival-1 har `26tt 0d` men kan ha samma problem. Om ja → bekräftar mönstret för Generalization Gate.
+
+### Två steg att INTE göra nu
+1. **Ändra scheduler JSON-LD path** — Endast 1 sajt bekräftad (schack), Generalization Gate kräver 2-3
+2. **Köra phase1ToQueue på schack** — Inte ännu, behöver först fixa routing så extractFromJsonLd anropas
+
+### System-effect-before-local-effect
+- Valt steg (#2): Breddar modell-validering med JSON-LD pattern
+- Varför: Vi behöver 2-3 sajter för att Generalization Gate ska acceptera ändring
+
+---
+
 ## Nästa-steg-analys 2026-04-05 (loop 44)
 
 ### Vad förbättrades denna loop

@@ -41,6 +41,7 @@ export const PerformerSchema = z.union([
   OrganizationSchema,
   PersonSchema,
   z.object({ name: JsonLdString }), // fallback
+  z.string(), // plain string fallback (some CMS serialize performers as strings)
 ]);
 
 export const OfferSchema = z.object({
