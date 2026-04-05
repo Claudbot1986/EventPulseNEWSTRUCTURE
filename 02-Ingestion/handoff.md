@@ -2,6 +2,69 @@
 
 ---
 
+## Nästa-steg-analys 2026-04-05 (loop 48)
+
+### Vad förbättrades denna loop
+- **svenska-schackf-rbundet preferredPath UPPDATERAD:** `unknown` → `jsonld`
+- **Manuell routing-fix VERIFIERAD:** extractFromJsonLd() returnerar 50 events (befintlig kod bekräftad fungera)
+- **Root-cause bekräftad:** routing för `unknown` → alltid `extractFromHtml()` var korrekt identifierat i loop 45-47
+
+### Root-cause (nyckelobservation)
+
+**Problem: Triage path för `unknown` routing anropar `extractFromHtml()` istället för `extractFromJsonLd()`**
+
+- Endast **1 av 14 triage_required** har JSON-LD (schack)
+- 13/14 triage_required har ingen JSON-LD → HTML path är korrekt för dem
+- Schack har 50 bevisade events i JSON-LD men missas pga `unknown` preferredPath → C1 html_candidate → extractFromHtml() → 0 events
+- **Lösning:** Manuell preferredPath-uppdatering till `jsonld` (ej systemändring)
+
+### Sources blockerade (updated)
+| Kategori | Antal | Exempel |
+|----------|-------|---------|
+| Success (events>0) | 22 | berwaldhallen(216), konserthuset(11), **schack(50)** |
+| fail (infra) | 376 | DNS/timeout/404 |
+| SiteVision (JS) | ~15 | karlskoga, borlange, malmo-stad |
+| pending_render_gate | 5 | cirkus, arkdes, debaser |
+| pending_api | 2 | ticketmaster, eventbrite |
+| manual_review | 335 | väntar manuell granskning |
+| triage_required | 13 | hallsberg, ifk-uppsala, karlskoga, polismuseet |
+| JSON-LD miss (routing) | **0** | **schack nu FIXAD** |
+
+### Generalization Gate Status
+| Pattern | Sajter | Krav | Status |
+|---------|--------|------|--------|
+| SiteVision CMS utan tid | ~15 | 2-3 | **VERIFIERAD** |
+| JSON-LD miss i triage path | 1 (schack) | 2-3 | **FIXAD via manual path update** |
+| timeTagCount utan datum | 2 | 2-3 | needsVerification |
+
+### Kvarvarande flaskhals
+- **13 triage_required sources** — alla har C1=html_candidate men extraction=0
+- **Schack nu löst** — 50 events klara för phase1ToQueue
+- **Majoriteten triage_required är SiteVision/JS eller defunct** — ej fixbara med nuvarande verktyg
+
+### Tre möjliga nästa steg
+
+| # | Steg | Systemnytta | Risk | Varför nu |
+|---|------|-------------|------|-----------|
+| 1 | **Kör phase1ToQueue på schack** | Hög: 50 events till queue | Låg: beprövad metod | Nu när preferredPath=jsonld |
+| 2 | **Undersök 2-3 fler triage_required** | Medel: breddar modell-data | Låg: diagnostik | Söka fler JSON-LD eller fixbara |
+| 3 | **Kör phase1ToQueue på 21 success-sources** | Medel: verifierar pipeline | Låg: batch | Pipeline-verifiering |
+
+### Rekommenderat nästa steg
+- **#1 — Kör phase1ToQueue på schack**
+
+Motivering: Nu när schack har preferredPath=jsonld kan vi verifiera att extractFromJsonLd() → phase1ToQueue → queue → worker → DB fungerar för denna källa. 50 events är ett bra test-case.
+
+### Två steg att INTE göra nu
+1. **Ändra scheduler routing-logik för unknown→JSON-LD** — Endast 1 sajt bekräftad, Generalization Gate kräver 2-3+
+2. **Undersöka fler triage_required för JSON-LD** — Loop 47 visade att JSON-LD är ovanligt i denna grupp
+
+### System-effect-before-local-effect
+- Valt steg (#1): Verifierar JSON-LD path through full pipeline
+- Varför: Schack är unik och värd att köra genom full pipeline för att bekräfta 50 events → DB
+
+---
+
 ## Nästa-steg-analys 2026-04-05 (loop 47)
 
 ### Vad förbättrades denna loop
