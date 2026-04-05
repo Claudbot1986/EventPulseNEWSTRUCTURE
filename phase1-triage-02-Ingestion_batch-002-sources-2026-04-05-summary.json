@@ -1,0 +1,25 @@
+{
+  "batchId": "02-Ingestion_batch-002-sources",
+  "timestamp": "2026-04-05T21:38:03.817Z",
+  "total": 10,
+  "diagnosis_counts": {
+    "no-jsonld": 1,
+    "fetch-failed": 4,
+    "wrong-type": 5
+  },
+  "next_path_counts": {
+    "html-heuristics": 3,
+    "manual-review": 4,
+    "network": 3
+  },
+  "approved_count": 1,
+  "approved_urls": [
+    "https://www.friidrott.se"
+  ],
+  "network_gate": {
+    "model": "prelim_1src",
+    "signalsFound": 6,
+    "openAccessible": 3,
+    "blocked": 3
+  }
+}

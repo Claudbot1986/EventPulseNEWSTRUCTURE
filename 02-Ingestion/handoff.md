@@ -2,6 +2,107 @@
 
 ---
 
+## Nästa-steg-analys 2026-04-06 (loop 54)
+
+### Vad förbättrades denna loop
+- **Batch 004 klar:** 10 C-kandidater testade via C0→C1→C2→extract
+- **2 nya success-sources:** sundsvall (2 events), vasteras (6 events)
+- **Batch 004 stopReason:** plateau — C0 hittar 0 candidates för alla 10, C2 säger "promising" men extraction=0 för 8/10
+- **Total success nu:** 26 källor (24 + 2 nya)
+
+### Root-cause (nyckelobservation)
+
+**Batch 004 bekräftar strukturell HTML-extraction-barriär:**
+
+| Problem | Antal | Exempel | Orsak |
+|---------|-------|---------|-------|
+| C0=0 candidates | 10 | ALLA 10 i batch 004 | Inga event-liknande sidor hittade |
+| C2=promising men 0 events | 8 | stockholm-jazz, fotboll, uppsala, ystad, falkenberg, helagotland | Höga signals men ej event-sidor |
+| ROOT-sida fungerar | 2 | sundsvall, vasteras | Event-lista finns direkt på startsida |
+
+**Slutsats:** C0:s interna candidate-discovery fungerar dåligt. De 2 sources som lyckades hade events direkt på ROOT-sida, utan att C0 behövde hitta interna sidor.
+
+### Sources-blockerare (uppdaterad)
+| Kategori | Antal | Exempel |
+|----------|-------|---------|
+| Success (events>0) | **26** | berwaldhallen(216), avicii-arena-sport(6), **sundsvall(2)**, **vasteras(6)** |
+| fail (infra) | 384 | DNS/timeout/404 |
+| SiteVision/JS | ~15 | karlskoga, borlange, malmo-stad |
+| pending_render_gate | 5 | cirkus, arkdes, debaser |
+| pending_api | 2 | ticketmaster, eventbrite |
+
+### Tre möjliga nästa steg
+
+| # | Steg | Systemnytta | Risk | Varför nu |
+|---|------|-------------|------|-----------|
+| 1 | **Kör phase1ToQueue på 26 success-sources** | Hög: verifierar pipeline | Låg: batch | Vi har 26 bekräftade källor, behöver verifiera events→DB |
+| 2 | **Undersök C0:candidates=0 problemet** | Hög: fixar rotor till 50+ potential | Hög: Generalization Gate kräver 2-3+ sajter | C0 fungerar inte för batch 004's sajter |
+| 3 | **Släpp batch-loop, gå till fri analys** | Varierar | Medel: riskerar att överge modellvalidering | Batch 1-4 visar strukturell barriär |
+
+### Rekommenderat nästa steg
+- **#1 — Kör phase1ToQueue på 26 success-sources**
+
+Motivering: Med 26 bekräftade källor behöver vi verifiera att events faktiskt flödar genom hela pipeline: extraction → queue → worker → DB. Batch 1-4 har visat att breddning av C-kandidater ger få nya success (totalt 4 nya: friidrottsf-rbundet, avicii-arena-sport, sundsvall, vasteras).
+
+### Två steg att INTE göra nu
+1. **Fortsätta batch-loop** — Batch 1-4 har konsekvent få nya success, plateau uppnått
+2. **Ändra C0 candidate-discovery threshold** — Generalization Gate kräver 2-3+ sajter, batch 004 visar inte generellt mönster
+
+### System-effect-before-local-effect
+- Valt steg (#1): Verifierar full pipeline för 26 success-sources
+- Varför: Vi har 26 bekräftade källor, vi behöver bekräfta att events → DB
+
+---
+
+## Nästa-steg-analys 2026-04-06 (loop 53)
+
+### Vad förbättrades denna loop
+- **Batch 003 klar:** 10 C-kandidater testade via C0→C1→C2→extract
+- **0 nya success-sources:** Alla 10 fail med 0 events
+- **Batch 003 stopReason:** plateau — C0 hittar 0 candidates för 4/10, C2 säger "promising" men extraction=0
+- **Total success nu:** 24 källor (oförändrat)
+
+### Root-cause (nyckelobservation)
+
+**Batch 003 visar strukturell HTML-extraction-barriär:**
+
+| Problem | Antal | Exempel | Orsak |
+|---------|-------|---------|-------|
+| C0=0 candidates | 4 | hallsberg, moderna-museet, orebro-sk, polismuseet | Inga event-liknande sidor hittade |
+| Fel page vald av C0 | 4 | karlskoga, kumla, ltu, nrm | Fel subpage vald (ej kalender/evenemang) |
+| C2=promising men 0 events | 2 | kungliga-musikhogskolan, polismuseet | Höga signals men ej event-sidor |
+
+**Slutsats:** Kommun/universitet/museum-sajter har ofta SiteVision eller CMS med evenemang i subdirectories som C0 inte upptäcker. C2:s "promising" baseras på density men hittar inte rätt page.
+
+### Sources-blockerare (uppdaterad)
+| Kategori | Antal | Exempel |
+|----------|-------|---------|
+| Success (events>0) | **24** | berwaldhallen(216), avicii-arena-sport(6), friidrottsf-rbundet(3) |
+| fail (infra) | 384 | DNS/timeout/404 |
+| SiteVision/JS | ~15 | karlskoga, borlange, malmo-stad |
+| pending_render_gate | 5 | cirkus, arkdes, debaser |
+| pending_api | 2 | ticketmaster, eventbrite |
+| manual_review | 4+ | arbetsam, a6, abb-arena, malmo-opera |
+
+### Tre möjliga nästa steg
+
+| # | Steg | Systemnytta | Risk | Varför nu |
+|---|------|-------------|------|-----------|
+| 1 | **Kör phase1ToQueue på 24 success-sources** | Hög: verifierar pipeline | Låg: batch | Vi har 24 bekräftade källor, behöver verifiera events→DB |
+| 2 | **Undersök SiteVision-sajter för render-path** | Medel: potentiellt 15+ nya | Hög: behöver D-renderGate | Största gruppen som ej testats |
+| 3 | **Släpp batch-triage, gå till fri analys** | Varierar | Medel: riskerar att överge modellvalidering | Batch 1-3 visar få nya success via ren HTML |
+
+### Rekommenderat nästa steg
+- **#1 — Kör phase1ToQueue på 24 success-sources**
+
+Motivering: Med 24 bekräftade källor behöver vi verifiera att events faktiskt flödar genom hela pipeline: extraction → queue → worker → DB. Batch 1-3 har visat att breddning av C-kandidater ger få nya success.
+
+### Två steg att INTE göra nu
+1. **Fortsätta batch-loop** — Batch 1-3 har konsekvent 0-2 nya success, plateau uppnått
+2. **Ändra C0/C1/C2 signalthreshold** — Generalization Gate kräver 2-3+ sajter, batch 003 visar inte generellt mönster
+
+---
+
 ## Nästa-steg-analys 2026-04-06 (loop 52)
 
 ### Vad förbättrades denna loop
