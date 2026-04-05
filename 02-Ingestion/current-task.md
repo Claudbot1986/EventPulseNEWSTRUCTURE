@@ -6,6 +6,18 @@
 ## Status
 **AKTIV** — Tidigare markerad som "HISTORICAL ONLY", nu aktiverad efter 01-Sources fasavslut.
 
+## Hård stop-regel (C-batch-state)
+
+**Om `02-Ingestion/C-htmlGate/reports/batch-state.jsonl` existerar med `status ∈ {pending, testing, idle}`:**
+- ALL fri root-cause-analys är BLOCKERAD
+- ALL fri val av "nästa steg" från triage_required är BLOCKERAD
+- Endast giltiga beteendet är C-batchflödet nedan
+- current-task.md ska peka på batch-state som enda startpunkt
+- Ingen annan uppgift får väljas förrän batch-state är `completed`
+
+**Om batch-state INTE existerar eller status = completed:**
+- Då är denna current-task giltig som startpunkt
+
 ## Purpose
 This file defines the CURRENT task for the AI.
 It is the ONLY valid task.
