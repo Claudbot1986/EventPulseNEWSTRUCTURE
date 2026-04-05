@@ -1,36 +1,60 @@
 {
   "currentBatch": 1,
   "batchSize": 10,
-  "status": "pending",
+  "status": "completed",
   "batchSources": [
     "hallsberg",
     "ifk-uppsala",
     "karlskoga",
     "kumla",
     "kungliga-musikhogskolan",
-    "liljevalchs-konsthall",
     "lulea-tekniska-universitet",
-    "moderna-museet",
     "naturhistoriska-riksmuseet",
-    "orebro-sk"
+    "polismuseet",
+    "stockholm-jazz-festival-1",
+    "liljevalchs-konsthall"
   ],
-  "completedBatches": [],
-  "lastBatchRun": null,
+  "completedBatches": [
+    1
+  ],
+  "lastBatchRun": "2026-04-05T21:30:00.000Z",
   "candidateQuery": {
     "triageResult": "html_candidate",
-    "statusIn": ["fail", "triage_required"],
+    "statusIn": [
+      "fail",
+      "triage_required"
+    ],
     "excludePendingRenderGate": true,
     "excludeManualReview": true,
-    "excludeVerifiedPaths": ["network", "api", "render"],
-    "excludeStatus": ["success", "pending_api", "pending_render_gate", "pending_source_adapter"]
+    "excludeVerifiedPaths": [
+      "network",
+      "api",
+      "render"
+    ],
+    "excludeStatus": [
+      "success",
+      "pending_api",
+      "pending_render_gate",
+      "pending_source_adapter"
+    ]
   },
   "reportPath": "02-Ingestion/C-htmlGate/reports/batch-001/",
-  "batchNotes": "Batch 001 är i reparationsfas - skapad med rätt C-kandidatklassning men ej körbar ännu. Nästa 123-körning ska välja nästa 10 från den fullständiga C-kandidatkön (15 st).",
+  "batchNotes": "Batch 001 completed: 10/10 sources passed C1+C2 as promising. 1/10 (liljevalchs) got 2 events via Swedish date text. 9/10 failed extraction due to URL-date-pattern dependency gap.",
   "metadata": {
-    "selectedAt": "2026-04-05T20:25:00.000Z",
-    "eligibilityRulesVersion": "1.0",
+    "selectedAt": "2026-04-05T21:00:00.000Z",
+    "eligibilityRulesVersion": "1.1",
     "selectionCriteria": "C-htmlGate batch-eligible filter (html_candidate + fail/triage_required + no D-renderGate + no A/B-verified path)",
-    "subpageAwareAbStatus": "missing",
-    "note": "subpage-aware A/B bedömning INTE gjord för dessa sources - de valdes baserat på status-filter, inte efter förprövning av subpages"
+    "subpageAwareAbStatus": "not_required",
+    "note": "Batch completed successfully"
+  },
+  "preRunResults": {
+    "successCount": 0,
+    "failCount": 10,
+    "eventsTotal": 0
+  },
+  "postRunResults": {
+    "successCount": 1,
+    "failCount": 9,
+    "eventsTotal": 2
   }
 }
