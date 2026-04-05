@@ -2,6 +2,74 @@
 
 ---
 
+## Nästa-steg-analys 2026-04-05 (loop 37)
+
+### Vad förbättrades denna loop
+- **ROTORSAK BEKRÄFTAD för folkoperan:** C0 hittar 0 links pga www→non-www redirect
+- **C0 fungerar:** Verifierat på helsingborgs-konserthus (68 links → winner=/evenemang/)
+- **SiteVision-mönster verifierat bredare:** 6 fail, 2 lyckas ( få events), 1 karlskrona=inte SiteVision
+- **Precision:** 9/34 = 26.5% (oförändrad)
+
+### Root-cause (nyckelobservation)
+
+**folkoperan www→non-www redirect bugg:**
+```
+1. Source URL: https://www.folkoperan.se
+2. Server redirectar till https://folkoperan.se (utan www)
+3. cheerio laddar HTML från folkoperan.se
+4. cheerio ser hrefs: https://folkoperan.se/pa-scen/
+5. C0 sätter baseUrl = new URL('https://www.folkoperan.se').origin = 'www.folkoperan.se'
+6. Origin-check: 'folkoperan.se' !== 'www.folkoperan.se' → ALLA 64 links FILTRERAS UT
+```
+Resultat: C0 hittar 0 links, scheduler ger manual_review.
+
+**Men - Site-Specific enligt Generalization Gate:**
+- Pattern "www Redirect Blocks C0 Discovery" verifierat på EN sajt
+- Kräver 2-3 sajter innan C0-ändring tillåts
+
+### Sources som testades denna loop
+| Källa | Test | Resultat |
+|-------|------|----------|
+| folkoperan | C0-discoverEventCandidates | 0 links (www-redirect) |
+| helsingborgs-konserthus | C0-discoverEventCandidates | 68 links → winner=/evenemang/ ✓ |
+| oland | C0-discoverEventCandidates | 6 links → winner=/kalender ✓ |
+
+### Generalization Gate Status
+| Pattern | Sajter | Krav | Status |
+|---------|--------|------|--------|
+| www Redirect Blocks C0 Discovery | 1 (folkoperan) | 2-3 | needsVerification |
+| SiteVision CMS utan tid | 6 | 2-3 | **Provisionally General** |
+| Kommun-sajter låg event-extraction | 8 | 2-3 | **Provisionally General** |
+
+### Kvarvarande flaskhals
+- **26.5% precision** - C1 överskattar många sajter
+- **9 success sources** - långt under 10+ modell-valideringsmål
+- **Inga verktyg för att testa 335 manual_review-sources** - kräver ny approach
+- **folkoperan www-redirect** - Site-Specific, ingen C-lager fix möjlig
+
+### Tre möjliga nästa steg
+
+| # | Steg | Systemnytta | Risk | Varför nu |
+|---|------|-------------|------|-----------|
+| 1 | **Undersöknetwork path för Tixly-baserade sajter** | Hög: kan hitta 100+ events | Låg: beprövat mönster | Berwaldhallen=216 via Tixly API |
+| 2 | **Kör scheduler --source på hög-signal manual_review** | Medel: breddar modell-data | Medel: folkoperan visar att infra failures är vanliga | Vi har fortfarande ingen data för de flesta |
+| 3 | **Analysera folkoperan /pa-scen/ direkt** | Medel: förstå www-redirect mönstret | Låg: dokumentation | Kan hjälpa framtida source adapters |
+
+### Rekommenderat nästa steg
+- **#1 — Undersök network path för Tixly-baserade sajter**
+
+Motivering: Berwaldhallen (Tixly API) ger 216 events. Andra Tixly-baserade svenska venues kan finnas. Network path är beprövat och kan snabbt öka event-kapitalet.
+
+### Två steg att INTE göra nu
+1. **Ändra C0 för www-redirect** — Site-Specific, endast folkoperan verifierad
+2. **Köra fler scheduler --source på manual_review** — folkoperan visar att infra failures är grunden, inte svag modell
+
+### System-effect-before-local-effect
+- Valt steg (#1): Ger flest events per insats
+- Varför: Berwaldhallen visar att network API path fungerar för Tixly; letar efter fler sådana
+
+---
+
 ## Nästa-steg-analys 2026-04-05 (loop 36)
 
 ### Vad förbättrades denna loop
