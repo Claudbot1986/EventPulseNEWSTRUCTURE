@@ -6,7 +6,7 @@
 |-------|-------|
 | batchId | batch-001 |
 | createdAt | 2026-04-05T20:25:00.000Z |
-| status | completed |
+| status | baseline_only (incomplete — förbättringsloop EJ fullföljd) |
 | completedAt | 2026-04-05T21:30:00.000Z |
 | eligibilityRulesVersion | 1.1 |
 | selectionCriteria | C-htmlGate batch-eligible filter (html_candidate + fail/triage_required + no D-renderGate + no A/B-verified path) |

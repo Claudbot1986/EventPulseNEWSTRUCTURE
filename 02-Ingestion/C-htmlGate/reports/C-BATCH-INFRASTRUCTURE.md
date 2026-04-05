@@ -24,7 +24,8 @@ C-htmlGate batch-loop är systematiskt iterationsarbete för att förbättra den
 - `idle` → nästa 123 kan köra batch
 - `pending` → batch förberedd men ej bekräftad
 - `testing` → batch körs just nu
-- `completed` → batch klar, nästa 123 tar nästa batch
+- `baseline_only` → första körning gjord, förbättringsloop INTE fullföljd — nästa 123 ska fortsätta med AI-analys
+- `completed` → batch fullföljd med förbättringsloop (eller bekräftad stopp vid plateau/max-cycles)
 
 ## C-kandidatklassning
 
@@ -48,19 +49,30 @@ C-htmlGate batch-loop är systematiskt iterationsarbete för att förbättra den
 
 ## Workflow i 123 (se ~/.hermes/skills/123/SKILL.md Steg 1b)
 
-1. Läs batch-state.jsonl → currentBatch + status
-2. Om completed → inkrementera currentBatch, reset status
-3. Om batch redan completed → hoppa
-4. Hämta 10 C-kandidater (enligt filter ovan)
-5. Kör C-htmlGate baseline → före-resultat
-6. AI-analys → föreslå generaliserbar förbättring (3+ sajter)
-7. Applicera förbättring om generaliserbar
-8. Kör C igen → efter-resultat
-9. Spara batchrapport + källrapporter
-10. Uppdatera batch-state.jsonl → completed
+```
+1. Läs batch-state.jsonl → currentBatch + status + cyclesCompleted
+2. Om status = "completed" → inkrementera currentBatch, reset status
+3. Om status = "baseline_only" → fortsätt med steg 8 (AI-analys), hoppa inte till ny batch
+4. Om batch redan completed → hoppa till nästa batch
+5. Hämta 10 C-kandidater (enligt filter ovan)
+6. Kör C-htmlGate baseline → före-resultat, spara baseline per källa
+7. **FORTSÄTT MED FÖRBÄTTRINGSLOOP:**
+8. AI-analys → identifiera generell förbättring (3+ sajter)
+   - Om ingen generell förbättring möjlig → stopReason="no-general-improvement" → steg 13
+9. Applicera högst EN liten generell modellförbättring
+10. Kör C igen → cykel-resultat
+11. Jämför: om förbättring → fortsätt, annars → stopReason="plateau" → steg 13
+12. Upprepa steg 8-11 (max 3 cykler totalt, cyclesCompleted++)
+13. Spara batchrapport (med alla cykler) + källrapporter
+14. Uppdatera batch-state.jsonl → status="completed", stopReason, completedBatches
+```
 
-## Batch 001 Status
+**Platå-regler (stopReason):**
+- `plateau`: ingen tydlig förbättring vs föregående cykel
+- `no-general-improvement`: nästa ändring riskerar att vara site-specifik
+- `d-problem`: kvarvarande fail är D/render/manual-problem, ej C
+- `max-cycles`: 3 förbättringscykler genomförda
 
-Batch 001 har 10 C-kandidater valda enligt ovan filter. Totalt finns 15 C-kandidater i kön, så batch 002 kan väljas direkt efter att 001 är klar.
+**Batch 001 Status**
 
-**Nästa körning:** 123 kan välja nästa 10 från kön (polismuseet, stockholm-jazz-festival-1, svenska-fotbollf-rbundet, uppsala-kommun, ystad, plus 5 från samma kategori).
+Batch 001 har status `baseline_only` — första körning gjord men förbättringsloop EJ fullföljd. Rapporter bevaras som historik. Nästa 123 ska fortsätta med AI-analys (steg 8) för att fullfölja förbättringsloopen.

@@ -3141,3 +3141,82 @@ Motivering: phase1ToQueue bevisade extraction→queue fungerar. Worker startas m
 - Varför: Utan worker går inga events till databasen
 - Pipeline-status just nu: Source(20 success) → Triage ✅ → Extraction ✅ → Queue ✅ → **DB ❌ (blocked)**
 
+
+---
+
+## Nästa-steg-analys 2026-04-05 (loop 51 - C-Batch-001)
+
+### Vad förbättrades denna loop
+- **Batch 001 completed:** 10/10 C-kandidater körda via C0→C1→C2→extract
+- **C2 bekräftad:** Alla 10 som "promising" (scores 22-134) — C2 kalibrerad korrekt
+- **1 source success:** liljevalchs-konsthall (2 events via Swedish date text)
+- **9 sources fail:** Alla med 0 events pga extractFromHtml() URL-date-pattern dependency
+- **Root cause identifierad:** extractFromHtml() kräver URL-datummönster men dessa Swedish institutional sites (SiteVision CMS) har datum i `<time datetime>` men INTE i URLs
+
+### Root-cause (nyckelobservation)
+
+**C0/C1/C2 fungerar korrekt — gapet är i extractFromHtml():**
+
+| Källa | timeTagCount | dateCount | C2-score | extraction | Problem |
+|-------|-------------|-----------|----------|------------|---------|
+| hallsberg | 6 | 6 | 44 | 0 | URL-pattern saknas |
+| ifk-uppsala | 6 | 2 | 31 | 0 | URL-pattern saknas |
+| karlskoga | 3 | 0 | 26 | 0 | URL-pattern saknas |
+| kumla | 4 | 4 | 38 | 0 | URL-pattern saknas |
+| kungliga-musikhogskolan | 5 | 5 | 41 | 0 | URL-pattern saknas |
+| lulea-tekniska-universitet | 11 | 6 | 65 | 0 | URL-pattern saknas |
+| naturhistoriska-riksmuseet | 15 | 4 | 80 | 0 | URL-pattern saknas |
+| polismuseet | 24 | 0 | 124 | 0 | URL-pattern saknas |
+| stockholm-jazz-festival-1 | 26 | 0 | 134 | 0 | URL-pattern saknas |
+| liljevalchs-konsthall | 3 | 6 | 22 | 2 | Swedish date textfungerar |
+
+**Mönster:** Swedish kommunal/museum/universitet-sajter (SiteVision CMS) använder event grids med:
+- `<time datetime="ISO">` med datum INTE i URLs
+- Per-event anchor-länkar UTAN datummönster i href
+- Swedish date text i kort utan näraliggande event-länkar
+- Slug-baserade `/kalender/` URLs (WordPress/Tribe Events-stil)
+
+### Sources-status uppdaterad
+- hallsberg: fail (triage_required → fail)
+- ifk-uppsala: fail (triage_required → fail)
+- karlskoga: fail (triage_required → fail)
+- kumla: fail (triage_required → fail)
+- kungliga-musikhogskolan: fail (triage_required → fail)
+- lulea-tekniska-universitet: fail (triage_required → fail)
+- naturhistoriska-riksmuseet: fail (triage_required → fail)
+- polismuseet: fail (triage_required → fail)
+- stockholm-jazz-festival-1: fail (triage_required → fail)
+- liljevalchs-konsthall: **success** (2 events, status changed to success)
+
+### Generalization Gate Status
+| Pattern | Sajter | Krav | Status |
+|---------|--------|------|--------|
+| Swedish institutional (SiteVision) time-tag-no-URL | 9 | 2-3 | **VERIFIERAD (Site-Specific)** |
+| extractFromHtml URL-date-pattern dependency | 9 | 3+ | **Provisionally General** |
+| Slug-based /kalender/ URLs | 1 | 2-3 | needsVerification |
+
+### Kvarvarande flaskhals
+- **extractFromHtml() URL-date-pattern dependency** — fungerar inte för SiteVision-sajter
+- **C0 frontier discovery inte testad** — dessa sources behöver kanske subpage discovery för att hitta event detail pages med datum i URLs
+- **batch-state completed** — nästa 123 kan välja ny batch
+
+### Tre möjliga nästa steg
+
+| # | Steg | Systemnytta | Risk | Varför nu |
+|---|------|-------------|------|-----------|
+| 1 | **Kör C0 frontier discovery på 2-3 av dessa sources** | Hög: kan hitta event pages med URL-datum | Medel: C0 kanske inte hittar pages | De 9 fail-sources behöver subpage discovery |
+| 2 | **Förbättra extractFromHtml() för time-tag parse** | Hög: skulle lösa 9 sources | Medel: Generalization risk | Pattern verifierad på 9 Sajter |
+| 3 | **Välj nästa batch (batch 002)** | Medel: fortsätter C-validering | Låg: beprövat workflow | batch-state=succeeded, 5 fler C-kandidater |
+
+### Rekommenderat nästa steg
+- **#1 — Kör C0 frontier discovery på hallsberg + kumla**
+
+Motivering: C0 är designad för att hitta event-list candidate pages. Dessa 9 sources har höga timeTagCounts (6-26) vilket indikerar event-innehåll. C0 kan potentiellt hitta event detail pages där URLs HAR datum-mönster (t.ex. `/kalender/2026-04-15/`), vilket would unlock extractFromHtml().
+
+### Två steg att INTE göra nu
+1. **Förbättra extractFromHtml() globally** — 9 sources är Site-Specific pattern (SiteVision CMS), generaliserbar ändring kräver 3+ verifierade Sajter
+2. **Ropa AI-analys för dessa 9** — AI kan inte skapa URL-datummönster där de inte finns; C0 subpage discovery är rätt verktyg
+
+### System-effect-before-local-effect
+- Valt steg (#1): C0 discovery testades aldrig på dessa sources. Om C0 hittar event pages med datum i URLs → extractFromHtml() fungerar → 9 sources blir success.
+- Varför: Flaskhalsen är page-discovery, inte extraction quality. C0 löser root cause.
