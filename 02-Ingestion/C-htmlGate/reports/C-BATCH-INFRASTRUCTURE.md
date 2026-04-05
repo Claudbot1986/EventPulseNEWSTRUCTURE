@@ -50,7 +50,7 @@ C-htmlGate batch-loop är systematiskt iterationsarbete för att förbättra den
 **Batch-rapport:** `02-Ingestion/C-htmlGate/reports/batch-{N}/batch-{N}-report.md`
 **Källrapporter:** `02-Ingestion/C-htmlGate/reports/batch-{N}/sources/{sourceId}.md`
 
-## Workflow i 123 (se ~/.hermes/skills/123/SKILL.md Steg 1b)
+## Workflow i 123 (se `02-Ingestion/C-htmlGate/123.md` Steg 1b)
 
 ```
 1. Läs batch-state.jsonl → currentBatch + status + cyclesCompleted
