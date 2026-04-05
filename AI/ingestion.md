@@ -176,6 +176,44 @@ Do NOT move to render simply because root-page extraction was weak.
 
 ---
 
+## Metod vs. Verifiering: Facit
+
+EventPulse har fem metodkategorier (A, B, C, D, E). En källa KAN vara
+flera metodkandidater SAMTIDIGT före testning. Endast verifiering avgör
+vilken som faktiskt fungerar.
+
+### A — JSON-LD
+- **Verifierad A:** Riktig schema.org/Event i `<script type="application/ld+json">`
+- **Inte verifierad A:** Sajten HAR script-taggar men vi har inte testat om de innehåller events
+
+### B — Network/API
+- **Verifierad B:** Intern API/XHR hittad OCH returnerar structured event data OCH är stabil
+- **Inte verifierad B:** Nätverksförfrågningar observerade, men vi har inte bekräftat att de ger events
+
+### C — HTML
+- **Verifierad C:** HTML-extraktion har bevisat sig ge events > 0
+- **C-kandidat:** Sajten har `<main>`/HTML-struktur men extraktion är inte verifierad
+
+### D — Render (PENDING)
+- **D-pending:** Misstanke om JS-rendering baserat på weak/no-main i C1
+- **D-integrerad:** EJ ännu — D-renderGate är inte integrerat i pipeline
+
+### E — Manual
+- **E-verklig:** Alla A→B→C→D testade och misslyckade, mänsklig granskning krävs
+
+### Vanliga feltolkningar
+
+| Feltolkning | Korrekt tolkning |
+|-------------|------------------|
+| "preferredPath: unknown betyder aldrig körd" | Fel. Betyder "path ej bestämd vid import". Kan ha körts men misslyckats ELLER aldrig körts. |
+| "Rad i sources_status.jsonl = fullt testad" | Fel. Varje rad betyder att source TRIAGE-KÖRTS, inte att alla paths testats. |
+| "Source i sources/ = verifierad" | Fel. sources/ innehåller source-definitions. Verifiering kräver events > 0. |
+| "Root saknar API = hela källan saknar API" | Fel. /events, /kalender, /program kan innehålla API eller JSON-LD. |
+| "C1=säger html_candidate = C är rätt path" | Fel. C1 är pre-check, inte verifiering. Extraktion kan fortfarande ge 0. |
+| "D betyder source kräver render" | Fel. D-pending betyder MISSTANKE. Verifiering saknas. |
+
+---
+
 ## Raw Data Rule
 
 Raw data must always be preserved.

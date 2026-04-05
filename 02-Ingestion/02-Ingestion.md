@@ -4,6 +4,33 @@
 
 02-Ingestion is the data transformation layer between 01-Sources and 03-Queue. It receives raw source data and transforms it into structured event records. The pipeline is progressive: it tries the cheapest extraction methods first and escalates to more expensive ones only when necessary.
 
+## Path Priority: Korrekt Flöde
+
+Ordningen A→B→C→D→E gäller för VARJE page som testas, inte bara root.
+
+**Viktigt:** Root-URL är INTE hela källan. Många källor har:
+- Root utan data → /events har JSON-LD
+- Root utan API → /kalender har intern API
+- Root med weak HTML → /program har rik HTML
+
+**Därför:**
+
+1. Testa root med A (JSON-LD)
+2. Testa root med B (Network inspection)
+3. Om A+B misslyckas på root → undersök subpages
+4. Testa subpages med A (JSON-LD)
+5. Testa subpages med B (Network)
+6. Om A+B misslyckat på ALLA pages → C (HTML)
+7. Om C ger svaga signaler OCH JS-misstanke → D-pending (ej integrerat)
+8. Om allt misslyckat → E (Manual)
+
+**Exempel:**
+- Källa X: Root → 0 JSON-LD, 0 API
+- Källa X: /events → 50 JSON-LD events ← VI TESTADE INTE DENNA
+- Felklassning: C-kandidat (borde vara A-verifierad)
+
+---
+
 ## A-H Stage Structure
 
 The A-H stages are **progressive escalation paths**, not a linear sequence every source passes through. Most sources use only 2-3 stages. The pipeline short-circuits as soon as a stage produces high-quality output.
@@ -66,11 +93,23 @@ DOM-based extraction for sources without JSON-LD or open API.
 
 Falls through to D if C produces insufficient quality signals.
 
-### D — renderGate
+### D — renderGate (NOT INTEGRATED — PENDING)
 
-Headless/Cloudflare rendering for JavaScript-heavy pages that cannot be parsed from static HTML. Last resort due to latency and cost.
+**Status:** D-renderGate är EJ integrerat i pipeline.
 
-Activated only when C returns low-confidence results and JS-rendering is the likely cause.
+D-pending används när:
+- C1-preHtmlGate returnerar `likelyJsRendered: true`
+- C2-htmlGate ger svaga signaler OCH evidence suggest JS-hidden content
+- Root + subpages har testats med A+B utan framgång
+
+D är INTE integrerat förrän:
+- D-renderGate.ts är implementerat
+- Cloudflare adapter är konfigurerad
+- Fallback-logik är skriven i scheduler.ts
+
+**Felklassning att undvika:**
+- source är "D" betyder ej "kräver render" — det betyder "MISSTANKE: kan kräva render"
+- D-pending ska inte rapporteras som verifierad path
 
 ### E — detailProbe
 

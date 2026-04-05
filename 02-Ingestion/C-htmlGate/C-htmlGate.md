@@ -20,11 +20,18 @@ Reference implementations in `services/ingestion/src/tools/C-htmlGate/`.
 - **v2.0**: Initial two-step split (C1/C2)
 
 ## Decision Logic
-
-C-htmlGate is entered when:
-- No JSON-LD found in page
-- No viable API endpoint discovered via B-networkGate
+C-htmlGate (som C-kandidat) testas när:
+- No JSON-LD found on root ELLER på event-candidate subpages
+- No viable API endpoint discovered via B-networkGate (inkl. subpages)
 - Page renders events client-side via DOM manipulation
+
+C-htmlGate är VERKLIGT verifierad först när:
+- extractFromHtml() har gett events > 0
+
+C-htmlGate är fortfarande C-kandidat om:
+- C1 säger "html_candidate" men extractFromHtml() = 0 events
+
+**Viktigt:** C ska INTE väljas före A+B har testats på subpages.
 
 ## Current Status
 

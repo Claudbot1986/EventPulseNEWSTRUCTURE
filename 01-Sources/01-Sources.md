@@ -101,6 +101,26 @@ RawSources/ är enkel insamling, separerad från verifierade sources:
 
 RawSources är INTE testad eller analyserad. Den fungerar som en inbox som batch-testas via sourceTriage innan uppromotering till sources/.
 
+## Source Metadata: methodCandidate vs. verificationStatus
+
+Sources i `/sources/` bör ha dessa metadatafält för att undvika förväxling:
+
+| Fält | Möjliga värden | Betydelse |
+|------|----------------|-----------|
+| `methodCandidate` | `jsonld`, `network`, `html`, `render`, `unknown` | Vad systemet TROR kan fungera baserat på initial screening |
+| `verificationStatus` | `untested`, `tested_no_events`, `tested_with_events`, `blocked` | Vad som faktiskt HAR VERIFIERATS genom körning |
+| `checkedSubpages` | `["/events", "/kalender"]` | Vilka subpages som testats för A+B |
+| `preferredPath` | `jsonld`, `network`, `html`, `render`, `unknown` | BEKRÄFTAD metod som faktiskt gett events > 0 |
+| `lastTested` | ISO timestamp | När verification senast kördes |
+
+### Tolkningsregler
+
+- `preferredPath: unknown` ≠ aldrig körd
+- `verificationStatus: untested` = aldrig körd
+- `verificationStatus: tested_no_events` = kördes men misslyckades
+- `preferredPath: html` + `eventsFound: 0` = ej verifierad ännu
+- `preferredPath: html` + `eventsFound: 5` = VERIFIERAD
+
 ## AI-regler som gäller här
 
 Domänspecifika regler för sources:
