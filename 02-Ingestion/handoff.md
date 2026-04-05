@@ -2,6 +2,72 @@
 
 ---
 
+## Nästa-steg-analys 2026-04-05 (loop 42)
+
+### Vad förbättrades denna loop
+- **scheduler.ts network path VERIFIERAD:** kulturhuset körs med `execute_network` → routing → inspect → gate → 0 events (korrekt, sajten har ingen API)
+- **aik pipeline verifierad:** scheduler --source aik → 1 event via C1→HTML→queue
+- **karlskoga undersökt:** SiteVision CMS, evenemangskalender-widget med 1 datetime i raw HTML (JS-hydrated) → 0 events
+
+### Root-cause (nyckelobservation)
+
+**Karlskoga bekräftar "SiteVision CMS utan tid"-mönstret:**
+```
+karlskoga: /uppleva--gora/evenemang.html → 0 datetime-tags
+karlskoga: /uppleva--gora/evenemang/evenemangskalender.html → 1 datetime (JS-widget)
+Root page: C1 säger "3tt 0d 10h 0v" → html_candidate → 0 events
+Evenemangskalender: JS-hydrated widget → finns EJ i raw HTML
+```
+
+**SiteVision-kommuner saknar events i raw HTML.** Events loadas via:
+- Envision/calendar widgets
+- JavaScript-fetch efter page load
+- Datum/tid finns i JS-data, inte i `<time datetime="...">`
+
+### Sources blockerade (updated)
+| Kategori | Antal | Exempel |
+|----------|-------|---------|
+| Success (events>0) | 20 | berwaldhallen(216), konserthuset(11), aik(1) |
+| fail (infra) | ~380 | DNS/timeout/404 |
+| SiteVision (JS) | ~15 | karlskoga, borlange, malmo-stad, jonkoping |
+| pending_render_gate | ~10 | cirkus, arkdes, debaser |
+| pending_api | 2 | ticketmaster, eventbrite |
+
+### Generalization Gate Status
+| Pattern | Sajter | Krav | Status |
+|---------|--------|------|--------|
+| SiteVision CMS utan tid | ~15 (karlskoga, borlange, malmo-stad, jonkoping, osv) | 2-3 | **VERIFIERAD** |
+| Sportsajt C0 missar | 1 (ifk-uppsala) | 2-3 | Site-Specific |
+| timeTagCount utan datum | 2 (polismuseet, nrm) | 2-3 | needsVerification |
+
+### Kvarvarande flaskhals
+- **~15 SiteVision-kommuner** — alla har JS-hydrated widgets, raw HTML = 0 events
+- **20/420 success rate = 4.8%** — låg men stabil
+- **Inga fler network APIs att hitta** — Tixly enda mönstret
+
+### Tre möjliga nästa steg
+
+| # | Steg | Systemnytta | Risk | Varför nu |
+|---|------|-------------|------|-----------|
+| 1 | **Kör phase1ToQueue på 20 success-sources** | Medel: verifierar events→DB pipeline | Låg: beprövad metod | Vi har 20 verifierade källor |
+| 2 | **Dokumentera SiteVision-mönstret** | Medel: förstå scope av JS-problemet | Låg: dokumentation | 15+ sajter påverkas |
+| 3 | **Undersök en icke-SiteVision triage_required** | Medel: hittar fler som passar modellen | Låg: förklarar om ingen hittas | karlskoga visade SiteVision |
+
+### Rekommenderat nästa steg
+- **#1 — Kör phase1ToQueue på 20 success-sources**
+
+Motivering: Network path och scheduler pipeline verifierade. Nästa steg är att verifiera att events från 20 success-sources faktiskt når databasen och normalizeras korrekt. Detta validerar den fullständiga pipeline: source → triage → extraction → queue → normalize → DB.
+
+### Två steg att INTE göra nu
+1. **Bygga source adapter för SiteVision** — Site-Specific, 15+ Sajter kräver generisk lösning (render eller API)
+2. **Fixa timeTagCount-datum-filter** — Endast 2 sajter bekräftad, Generalization Gate kräver 2-3+
+
+### System-effect-before-local-effect
+- Valt steg (#1): Verifierar hela pipeline från source till DB
+- Varför: Utan att events faktiskt persisteras är allt annat teoretiskt
+
+---
+
 ## Nästa-steg-analys 2026-04-05 (loop 40)
 
 ### Vad förbättrades denna loop
@@ -2432,3 +2498,72 @@ AI-agenten ska efter varje loop:
 4. Lägga till nya problem om de upptäcks
 5. Uppdatera "Nästa rekommenderade steg"
 6. Om handoff.md inte ändrats är loopen inte klar
+
+---
+
+## Nästa-steg-analys 2026-04-05 (loop 43)
+
+### Vad förbättrades denna loop
+- **phase1ToQueue KÖRD på 18 HTML success-sources:** 18/18 ✅ extracted + queued
+- **107 events i Redis queue (bull:raw_events:*)** — extraction→queue pipeline verifierad
+- **Normalizer worker SAKNAS** — events i queue men ingen processing till DB
+
+### Root-cause (nyckelobservation)
+
+**phase1ToQueue fungerar korrekt för HTML path:**
+```
+konserthuset: JSON-LD=0, HTML=11 events ✅
+abf: JSON-LD=0, HTML=8 events ✅
+jonkoping: JSON-LD=0, HTML=7 events ✅
+...
+Total: 18/18 sources extracted + queued
+```
+
+**Men normalizer worker är inte igång:**
+- Inga `bull:raw_events:waiting` eller `bull:raw_events:active` jobs
+- Worker-processen körs inte (ps aux bekräftar)
+- Events i Redis men ingen konsumerar dem → ingen DB-insert
+
+### Sources blockerade (updated)
+| Kategori | Antal | Exempel |
+|----------|-------|---------|
+| Success (events>0) | 20 | berwaldhallen(216), konserthuset(11), aik(1) |
+| Queued to Redis | 19 | 18 HTML + network batch |
+| Pending normalizer | 19 | blockeras av: ingen worker |
+| fail (infra) | ~380 | DNS/timeout/404 |
+| SiteVision (JS) | ~15 | karlskoga, borlange, malmo-stad, jonkoping |
+
+### Generalization Gate Status
+| Pattern | Sajter | Krav | Status |
+|---------|--------|------|--------|
+| SiteVision CMS utan tid | ~15 (karlskoga, borlange, malmo-stad, jonkoping) | 2-3 | **VERIFIERAD** |
+| Sportsajt C0 missar | 1 (ifk-uppsala) | 2-3 | Site-Specific |
+| timeTagCount utan datum | 2 (polismuseet, nrm) | 2-3 | needsVerification |
+
+### Kvarvarande flaskhals
+- **Normalizer worker IGENOM** — ingen worker = pipeline bruten
+- **107 events i Redis** — väntar på processing
+- **20/420 success rate = 4.8%** — låg men stabil
+
+### Tre möjliga nästa steg
+
+| # | Steg | Systemnytta | Risk | Varför nu |
+|---|------|-------------|------|-----------|
+| 1 | **Starta normalizer worker** | Hög: slutför pipeline till DB | Låg: beprövad kod | `npx tsx 03-Queue/startWorker.ts` |
+| 2 | **Kör phase1ToQueue på berwaldhallen** | Medel: 216 extra events | Låg: network path separat | Network path separat från HTML path |
+| 3 | **Fixa auto-start av worker** | Medel: förstå start-mekanism | Låg: devops | Worker borde starta automatiskt |
+
+### Rekommenderat nästa steg
+- **#1 — Starta normalizer worker**
+
+Motivering: phase1ToQueue bevisade extraction→queue fungerar. Worker startas med `npx tsx 03-Queue/startWorker.ts` — detta slutför pipeline: queue → normalize → DB. Utan detta stannar alla events i Redis.
+
+### Två steg att INTE göra nu
+1. **Undersök SiteVision JS** — Worker saknas, inte HTML-extraction
+2. **Fixa AI-routing** — Pipeline är bruten, AI hjälper inte
+
+### System-effect-before-local-effect
+- Valt steg (#1): Verifierar fullständig pipeline från source till DB
+- Varför: Utan worker går inga events till databasen
+- Pipeline-status just nu: Source(20 success) → Triage ✅ → Extraction ✅ → Queue ✅ → **DB ❌ (blocked)**
+
