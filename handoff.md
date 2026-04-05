@@ -321,6 +321,78 @@ Köra sourceTriage direkt på nrm.se och vasamuseet.se för att se exakt:
 
 ---
 
+## Nästa-steg-analys [2026-04-05 — Loop 19]
+
+### Vad förbättrades denna loop
+- **Verifierade root cause för triage_required → 0 events**: Scheduler:s triage-mode kör endast C1 på root-sida, INTE C0 som upptäcker interna candidatesidor
+- **Verifierade att kommunal-sajter har两层 navigation**: Root-sida har "uppleva och göra" meny → event-sida under → eventsida med kalender i tredej
+- **Verifierade att polismuseet.se har /kalendarium/ page**: Root-URL redirectar, /kalendarium/ finns men extractFromHtml() kan inte extrahera events pga fel format
+- **Identificerade SiteVision CMS-mönster**: Kumla, Hallsberg, Karlskoga använder SiteVision med navigationsstruktur som inte matchar extractFromHtml() scope
+
+### Största kvarvarande flaskhals
+**Scheduler:s triage-mode bypassar C0 (htmlFrontierDiscovery)**. Kod i `scheduler.ts` rad 561-628:
+1. Kör `screenUrl()` (C1) på root URL
+2. Om C1 = html_candidate → direkt `extractFromHtml()` på root-sida
+3. **Aldrig**: kör C0 för att upptäcka interna candidate pages
+4. **Aldrig**: kör C2 för att utvärdera candidates
+
+### Sources-status (efter denna körning)
+| Status | Antal | Kommentar |
+|--------|-------|-----------|
+| success | 20 | +1 (katrineholm med 2 events) |
+| fail | 376 | |
+| triage_required | 14 | Stabil, samma sources failar repeterat |
+| pending_render_gate | 5 | |
+| manual_review | 3 | |
+
+### Root-cause bevis
+
+**hallsberg, karlskoga, kumla (alla SiteVision):**
+- C1 säger: `html_candidate (strong/medium) - 6-4 time-tags + 6-4 dates`
+- extractFromHtml() på root: `0 events`
+- curl visar: Endast navigationsmenyer och nyhetssidor på root
+- Event-calendar under: `/uppleva-och-gora/kalender-och-evenemang/` eller liknande
+
+**polismuseet:**
+- C1 säger: `html_candidate (strong) - 24tt + 10 dates`
+- extractFromHtml() på root: `0 events`
+- curl visar: `/besok-polismuseet/kalendarium/` har eventsida med `/kalendarium/pratapolis/`, `/kalendarium/pa-patrull/`, `/kalendarium/guidad-visning-polisliv/`
+- Men `/kalendarium/` har INTE URL-datum-mönster och extractFromHtml() ignorerar det
+
+**katrineholm (fungerar):**
+- C1 säger: `html_candidate (strong) - 23 time-tags + 20 dates`
+- extractFromHtml() på root: `2 events`
+- Root har redan events i rätt format
+
+### Tre möjliga nästa steg
+
+| # | Steg | Systemnytta | Risk | Varför nu |
+|---|------|-------------|------|-----------|
+| 1 | Aktivera C0 discovery i scheduler triage-mode | Fixar 14+ triage_required sources som har events men på intern page | Medium — C0 kan hitta fel pages | 14 sources har strong C1 men 0 events - chansen är hög |
+| 2 | Analysera sitevision-sajter som grupp (kumla, hallsberg, karlskoga, etc.) | Förstå SiteVision navigation patterns generellt | Låg - diagnostik | SiteVision är vanligt i Sverige (kommuner, myndigheter) |
+| 3 | Uppdatera sources_status.jsonl för korrekta event page URLs | Gör att scheduler kan köras direkt på rätt page | Medium - manuell insats | Finns redan internal candidates för vissa sources |
+
+### Rekommenderat nästa steg
+**[1] — Aktivera C0 discovery i scheduler.ts triage-mode** — Endast ändring behövs: i `runSource()` när `triageOutcome === 'html_candidate'`, kör `discoverEventCandidates()` före `extractFromHtml()`. Detta fixar 14+ triage_required sources som har stark C1 men 0 events på root.
+
+### Två steg att INTE göra nu
+1. **Ändra extractFromHtml() för att han fler URL-format** — Generalization Gate stoppar. SiteVision-sajter har olika URL-strukturer. Bättre att hitta rätt page via C0.
+2. **Justera C1 thresholds för att minska html_candidate** — Detta skulle minska recall. Strong signals är korrekta, problemet är att vi testar root istället för candidates.
+
+### System-effect-before-local-effect
+Aktivera C0 i triage-mode ger bred effekt: varje triage_required source som har strong/medium C1 men 0 events är en kandidat. C0 upptäcker interna pages som gör att extractFromHtml() hittar events. Detta är högre ROI än site-specifika fixes.
+
+### Evidence från denna körning
+```
+hallsberg: C1=strong (6tt+6d) → extractFromHtml(root)=0 → SiteVision, ingen kalender-sida i root
+kumla: C1=strong (4tt+4d) → extractFromHtml(root)=0 → SiteVision, "uppleva och göra" meny inte events
+karlskoga: C1=medium (3tt+10h) → extractFromHtml(root)=0 → SiteVision, ingen event-page på root
+polismuseet: C1=strong (24tt+10d) → extractFromHtml(root)=0 → /kalendarium/ existerar men url-format fel
+katrineholm: C1=strong (23tt+20d) → extractFromHtml(root)=2 → fungerar pga events redan på root
+```
+
+---
+
 ## NÄSTA-STEG-ANALYS [2026-04-05 — Loop 18]
 
 ### Vad förbättrades denna loop
