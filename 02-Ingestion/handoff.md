@@ -2,6 +2,65 @@
 
 ---
 
+## Nästa-steg-analys 2026-04-05 (loop 34)
+
+### Vad förbättrades denna loop
+- **Djupanalys av 34 html_candidates:** C1-signaler korrelerar INTE med event-extraction
+- **Precision: 23%** (8/34 html_candidates med events>0)
+- **Triage-batch timeoutar:** För långsam för batch-körning (60s timeout)
+- **Inga kodändringar:** Analys och rotorsaksidentifiering
+
+### Root-cause (nyckelobservation)
+- **Flaskhalsen är INTE för få testade sajter** - vi har redan 34 html_candidates analyserade
+- **Flaskhalsen är triage-batch prestanda** - timeout vid 60s för batch
+- **Flaskhalsen är 23% precision** - C1 överskattar kommun-sajter (SiteVision med kalenderwidget)
+- **dramaten har 1 event men status=fail** - status-tracking logik bugg (consecutiveFailures=1)
+
+### html_candidates Analys (34 st)
+| Kategori | Antal | Exempel |
+|----------|-------|---------|
+| Lyckade (events>0) | 8 | abf(8), konserthuset(11), studio-acusticum(5), karlskrona(4), katrineholm(2), berwaldhallen(216), kungsbacka(1), aik(1) |
+| SiteVision kommuner | ~10 | borlange, malmo, uppsala, stenungsund - kalenderwidget, ej events |
+| Låga signaler (tt=0,d=0) | ~8 | vasamuseet, scandinavium - för få event-signaler |
+| Infrastructure-fel | ~4 | malmo-opera (certifikat), halmstad-konserthus (404) |
+| Övriga fail | ~4 | Diverse problem |
+
+### Verifierad data
+```
+Total html_candidates: 34
+Success: 8 (events>0)
+Fail: 26 (events=0)
+Precision: 23%
+```
+
+### Kvarvarande flaskhals
+- **Triage-batch prestanda** - timeoutar vid 60s
+- **23% precision** - C1 överskattar SiteVision kommuner
+- **dramaten status-bugg** - 1 event extraherat men status=fail
+
+### Tre möjliga nästa steg
+
+| # | Steg | Systemnytta | Risk | Varför nu |
+|---|------|-------------|------|-----------|
+| 1 | **Fixa triage-batch prestanda** | Hög: möjliggör bred testning | Medel: prestanda-analys krävs | 30+ sources timeoutar |
+| 2 | **Kör scheduler --source på enskild html_candidate** | Medel: validerar modellen | Låg: beprövad metod | Vi har 26 fail att välja från |
+| 3 | **Analysera fail-patterns** | Medel: förstå rotorsak | Låg: dokumentation | Vi har 34 sajter, nog data |
+
+### Rekommenderat nästa steg
+- **#2 — Kör scheduler --source på en ny html_candidate**
+
+Motivering: Triage-batch timeoutar. Att köra enskilda scheduler --source kommandon på fail-källor (t.ex. folkoperan som aldrig körts via scheduler) validerar modellen utan batch-timeout.
+
+### Två steg att INTE göra nu
+1. **Fixa dramatic status-bugg via jq** — risk för fil-corruption (försökte, filen blev corrupted)
+2. **Köra triage-batch** — timeoutar vid 60s, behöver prestandafix först
+
+### System-effect-before-local-effect
+- Valt steg (#2): Breddar modell-validering med enskilda tests
+- Varför: Utan fungerande batch behöver vi enskilda tests för att förstå modellens prestanda
+
+---
+
 ## Nästa-steg-analys 2026-04-05 (loop 33)
 
 ### Vad förbättrades denna loop
