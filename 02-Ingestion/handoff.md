@@ -2,6 +2,84 @@
 
 ---
 
+## Nästa-steg-analys 2026-04-05 (loop 49)
+
+### Vad förbättrades denna loop
+- **scheduler.ts JSON-LD path FIXAD:** `queueEvents`-anrop lagt till för jsonld path (rad 449-462)
+- **svenska-schackf-rbundet KÖRD:** 50/50 events queued ✓
+- **sources_status.jsonl UPDATED:** schack nu `success` med 50 events
+
+### Root-cause (nyckelobservation)
+
+**Problem: JSON-LD path i scheduler queueade INTE events.**
+
+scheduler.ts rad 427-447 (jsonld branch):
+- Extraherade 50 events korrekt
+- Uppdaterade status till `success` med `eventsFound: 50`
+- **MEN:** Kallade aldrig `queueEvents()` för att faktiskt queua dem till 03-Queue
+
+**Lösning:** Lagt till `queueEvents()`-anrop efter framgångsrik JSON-LD extraktion:
+```typescript
+const rawEvents = jsonLdResult.events.map(e => {
+  const raw = toRawEventInput(e);
+  return {
+    ...raw,
+    source_id: source.id,
+    source_url: source.url,
+    detected_language: 'sv' as const,
+    raw_payload: e as Record<string, unknown>,
+  };
+});
+const { queued } = await queueEvents(source.id, rawEvents as any);
+console.log(`   Queued: ${queued}/${eventsFound}`);
+```
+
+### Sources blockerade (updated)
+| Kategori | Antal | Exempel |
+|----------|-------|---------|
+| Success (events>0) | **22** | berwaldhallen(216), konserthuset(11), **schack(50)** |
+| fail (infra) | 376 | DNS/timeout/404 |
+| SiteVision (JS) | ~15 | karlskoga, borlange, malmo-stad |
+| pending_render_gate | 5 | cirkus, arkdes, debaser |
+| pending_api | 2 | ticketmaster, eventbrite |
+| manual_review | 335 | väntar manuell granskning |
+| triage_required | 13 | hallsberg, ifk-uppsala, karlskoga, polismuseet |
+
+### Generalization Gate Status
+| Pattern | Sajter | Krav | Status |
+|---------|--------|------|--------|
+| SiteVision CMS utan tid | ~15 | 2-3 | **VERIFIERAD** |
+| JSON-LD miss i triage path | 1 (schack) | 2-3 | **FIXAD (manual preferredPath)** |
+| timeTagCount utan datum | 2 | 2-3 | needsVerification |
+
+### Kvarvarande flaskhals
+- **13 triage_required sources** — alla har C1=html_candidate men extraction=0
+- **335 manual_review** — väntar manuell granskning
+- **5 pending_render_gate** — D-renderGate behövs
+
+### Tre möjliga nästa steg
+
+| # | Steg | Systemnytta | Risk | Varför nu |
+|---|------|-------------|------|-----------|
+| 1 | **Kör phase1ToQueue på 22 success-sources** | Hög: verifierar pipeline | Låg: batch | Vi har nu 22 bekräftade källor |
+| 2 | **Undersök 2-3 triage_required för JSON-LD** | Medel: breddar modell-data | Låg: diagnostik | Söka fler fixbara källor |
+| 3 | **Kör normalizer på 50 schack-events** | Hög: bekräftar DB-persist | Låg: beprövad metod | 50 events i queue |
+
+### Rekommenderat nästa steg
+- **#1 — Kör phase1ToQueue på 22 success-sources**
+
+Motivering: Nu när JSON-LD path fungerar fullt ut (extract + queue), bör vi verifiera att alla 22 success-sources kan köras genom hela pipeline: extraction → queue → worker → DB.
+
+### Två steg att INTE göra nu
+1. **Ändra scheduler routing för `unknown`→JSON-LD** — Endast 1 sajt bekräftad, Generalization Gate kräver 2-3+
+2. **Dyk djupt i triage_required** —大多数 är SiteVision/JS eller defunct, inte fixbara med nuvarande verktyg
+
+### System-effect-before-local-effect
+- Valt steg (#1): Verifierar full pipeline för alla 22 success-sources
+- Varför: Vi har 22 bekräftade källor, nu behöver vi verifiera hela kedjan
+
+---
+
 ## Nästa-steg-analys 2026-04-05 (loop 48)
 
 ### Vad förbättrades denna loop

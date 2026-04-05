@@ -208,7 +208,7 @@ async function runSource(source: SourceTruth, options: { recheck?: boolean } = {
   
   // ── Execute now: jsonld, html, unknown(triage), eller network ───────────────
   const { fetchHtml } = await import('./tools/fetchTools');
-  const { extractFromJsonLd, extractFromHtml } = await import('./F-eventExtraction/extractor');
+  const { extractFromJsonLd, extractFromHtml, toRawEventInput } = await import('./F-eventExtraction/extractor');
 
   // Fetch HTML for all paths (needed for HTML fallback in network path too)
   const fetchResult = await fetchHtml(source.url, { timeout: 20000 });
@@ -445,6 +445,21 @@ async function runSource(source: SourceTruth, options: { recheck?: boolean } = {
       console.log(`⚠️  JSON-LD returned 0 events - source marked needs_review`);
       return;
     }
+
+    // Queue the extracted events
+    const { queueEvents } = await import('./tools/fetchTools');
+    const rawEvents = jsonLdResult.events.map(e => {
+      const raw = toRawEventInput(e);
+      return {
+        ...raw,
+        source_id: source.id,
+        source_url: source.url,
+        detected_language: 'sv' as const,
+        raw_payload: e as Record<string, unknown>,
+      };
+    });
+    const { queued } = await queueEvents(source.id, rawEvents as any);
+    console.log(`   Queued: ${queued}/${eventsFound}`);
 
   } else if (decision.path === 'html') {
     // HTML extraction med etablerad preferredPath=html
