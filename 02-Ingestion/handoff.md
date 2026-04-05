@@ -2,6 +2,174 @@
 
 ---
 
+## Nästa-steg-analys 2026-04-05 (loop 25)
+
+### Vad förbättrades denna loop
+- **Körde --triage-batch:** 84+ nya sources triageades på ~2 minuter
+- **Nya entries i sources_status.jsonl:** Från 29 till 113 entries
+- **Ny triage-resultat:** 6 html_candidate, 7 render_candidate, 36 manual_review, 43 still_unknown, 21 unknown
+- **Identifierade cirkus.se:** Next.js/Payload CMS med events i embedded JSON - extractor förstår det INTE
+- **Inga kodändringar:** Undersökning och verifiering
+
+### Ändringar
+Inga kodändringar denna loop.
+
+### Verifiering
+```
+✓ --triage-batch fungerar: 84+ källor triageade
+✓ sources_status.jsonl uppdaterad: 113 entries (was 29)
+✓ cirkus: Next.js/Payload med events i <script> JSON
+✗ cirkus: 0 events (extractor stödjer inte embedded JSON i script tags)
+```
+
+### Sources som påverkas
+| Källa | Problem | Status |
+|-------|---------|--------|
+| cirkus | Next.js/Payload, events i embedded JSON | Site-Specific → source adapter krävs |
+| halmstad-konserthus | 404 (URL saknas) | fail |
+| folkteatern | manual_review (ingen kalender) | fail |
+| borlange-kommun | html_candidate (0 events) | fail |
+| 7 render_candidates | JS-render behövs | pending_render_gate |
+
+### Kvarvarande flaskhals
+- **Cirkus.se som exempel:** Många Next.js/Payload-sajter har events i embedded JSON - generell extraktor覆盖率 låg
+- **Scheduler hang-bug:** Processen returnerar inte efter triage (kräver `kill`)
+- **sources_status.jsonl är nu i synk med verkligheten:** 113 av 420 källor testade
+
+### Tre möjliga nästa steg
+
+| # | Steg | Systemnytta | Risk | Varför nu |
+|---|------|-------------|------|-----------|
+| 1 | **Kör scheduler på borlange-kommun** | Hög: html_candidate med events>0 förväntat | Låg: verifiering | Bra test-kandidat |
+| 2 | **Undersök cirkus.se som case study** | Medel: förstå Next.js/Payload mönster | Låg: dokumentation | Kan påverka 10+ sajter |
+| 3 | **Fix scheduler hang-bug** | Medel: möjliggör längre batch | Låg: unref/process.exit | Förhindrar timeout |
+
+### Rekommenderat nästa steg
+- **#1 — Kör scheduler på borlange-kommun**
+
+Motivering: borlange-kommun har `html_candidate` med 7 time-tags + 11 dates (bra signaler). Kör scheduler för att verifiera om extractFromHtml() kan hämta events, eller om det är samma problem som cirkus (embedded JSON).
+
+### Två steg att INTE göra nu
+1. **Bygga source adapter för cirkus** — Site-Specific, Payload CMS är komplext
+2. **Köra fler triage-batch** — redan 113 testade, fokusera på att verifiera html_candidates
+
+### System-effect-before-local-effect
+- Valt steg (#1): Verifiera html_candidate med scheduler
+- Varför: Breddar modell-validering med en ny "lyckad" källa
+
+---
+
+## Nästa-steg-analys 2026-04-05 (loop 24)
+
+### Vad förbättrades denna loop
+- **VERIFIERADE FIX FRÅN LOOP 23:** scheduler.ts network path med alla fält fungerar nu
+- **Körde normalizer worker:** 100 jobs processades, 227 berwaldhallen events nu i databasen
+- **Total events:** 2207 (+100 denna session)
+- **Pipeline E2E bekräftad:** Network → Queue → Normalizer → Database
+
+### Ändringar
+Inga kodändringar denna loop - verifiering endast.
+
+### Verifiering
+```
+✓ berwaldhallen: 216 events extraherade via Tixly API
+✓ 216/216 köade till raw_events queue
+✓ Normalizer worker processade 100 jobs
+✓ 227 berwaldhallen events i databasen
+✗ BullMQ removeOnComplete:100 tog bort completed jobs (förvirrande vid felsökning)
+```
+
+### Sources som påverkas
+| Källa | Status | Händelse |
+|-------|--------|----------|
+| berwaldhallen | success | 227 events i DB (network path) |
+
+### Kvarvarande flaskhals
+- **Scheduler hang-bug:** Processen returnerar aldrig efter `runSource` completion
+- **BullMQ removeOnComplete:100:** Försvårar lokal felsökning (jobs försvinner efter 100)
+- **Render-källor (5):** Fortfarande blockerade av CloudFlare
+- **Inga html-candidates testade denna loop**
+
+### Tre möjliga nästa steg
+
+| # | Steg | Systemnytta | Risk | Varför nu |
+|---|------|-------------|------|-----------|
+| 1 | **Kör scheduler på nästa html-source** | Hög: breddar modell-validering | Låg: verifiering | 8 sources framgångsrika, behöver fler |
+| 2 | **Fix scheduler hang-bug** | Medel: möjliggör batch-körning | Låg: unref/process.exit | Förhindrar framtida timeouts |
+| 3 | **Öka BullMQ removeOnComplete** | Låg: förbättrar felsökning | Låg: bara config | Förvirrande att jobs försvinner |
+
+### Rekommenderat nästa steg
+- **#1 — Kör scheduler på nästa html-source**
+
+Motivering: Current-task.md kräver bred modell-validering (10+ sajter). Vi har 8 framgångsrika men få är html-heuristics. Kör nästa html-source (t.ex. arkdes, artipelag) för att öka statistisk signifikans.
+
+### Två steg att INTE göra nu
+1. **Bygga D-renderGate stealth mode** — Site-Specific (CloudFlare), 5 sources blockerade
+2. **Djupanalysera enskild sajt** — Site-Specific, går emot bred validerings-mål
+
+### System-effect-before-local-effect
+- Valt steg (#1): Bredda html-source testning
+- Varför: Modellen behöver valideras brett innan site-specifika justeringar
+
+---
+
+## Nästa-steg-analys 2026-04-05 (loop 23)
+
+### Vad förbättrades denna loop
+- **FIXADE ROOT-CAUSE:** scheduler.ts network path saknade kritiska RawEventInput-fält
+- **Problem:** `source`, `raw_payload`, `is_free`, `detected_language` var `undefined` i network events
+- **Konsekvens:** 105+ berwaldhallen events i Redis, 82 events med `source=null` i DB
+- **Fix:** Lade till alla saknade fält i mappningen (rad 264-293)
+
+### Ändringar
+1. **scheduler.ts rad 264-293:** 
+   - Lade till `source: source.id` (KRITISKT)
+   - Lade till `raw_payload: e as Record<string, unknown>` (KRITISKT)
+   - Lade till `is_free: false` (boolean)
+   - Lade till `detected_language: 'sv' as const` (enum)
+   - Lade till `price_min_sek`, `price_max_sek`
+   - Fixade `start_time` till ISO-sträng (was Date object)
+   - Fixade `categories` till array med category
+   - Tog bort duplicate `source_id`
+
+### Verifiering
+- Redis kö är tom (0 jobs) - väntar på ny körning
+- Fixad kod: commit `91d1d9a`
+- Nästa steg: Kör scheduler på berwaldhallen för att verifiera
+
+### Sources som påverkas
+| Källa | Problem | Status |
+|-------|---------|--------|
+| berwaldhallen | 216 events, saknade source/raw_payload | FIX VERIFIERING VÄNTAR |
+
+### Kvarvarande flaskhals
+- **Inga** i scheduler network path (fixad)
+- Redis kö tom - behöver ny körning för att verifiera
+- Scheduler hang-bug kvarstår (processen returnerar inte)
+
+### Tre möjliga nästa steg
+
+| # | Steg | Systemnytta | Risk | Varför nu |
+|---|------|-------------|------|-----------|
+| 1 | **Kör scheduler --source berwaldhallen** | Hög: verifierar fix | Låg: verifiering | Fixad kod behöver testas |
+| 2 | **Fix scheduler hang-bug** | Medel: möjliggör batch | Låg: unref/process.exit | Förhindrar framtida timeouts |
+| 3 | **Kör normalizer worker** | Medel: processar köade events | Låg: .env finns nu | 0 events i kö, behöver nya först |
+
+### Rekommenderat nästa steg
+- **#1 — Kör scheduler --source berwaldhallen**
+
+Motivering: Fixad kod behöver verifieras. Kör scheduler på berwaldhallen för att bekräfta att 216 events nu får korrekt `source` och `raw_payload` och kan processas genom normalizer till databasen.
+
+### Två steg att INTE göra nu
+1. **Köra normalizer worker** — Redis är tom, behöver först nya events från scheduler
+2. **Bygga D-renderGate stealth mode** — CloudFlare site-specifikt, 5 sources väntar
+
+### System-effect-before-local-effect
+- Valt steg (#1): Verifiera normalizer fix
+- Varför: Pipeline är trasig i mitten (network → queue → normalizer). Att verifiera fixen visar om hela E2E-flödet fungerar.
+
+---
+
 ## Nästa-steg-analys 2026-04-05 (loop 22)
 
 ### Vad förbättrades denna loop
