@@ -318,3 +318,56 @@ Köra sourceTriage direkt på nrm.se och vasamuseet.se för att se exakt:
 2. Vilka signals C1 mäter
 3. Vad C2 scorer
 4. Vad extractFromHtml() faktiskt hittar
+
+---
+
+## NÄSTA-STEG-ANALYS [2026-04-05 — Loop 18]
+
+### Vad förbättrades denna loop
+- **12 nya sources blev success** från html_candidate status (screened men aldrig extraherade)
+- **Total events ökade från ~250 till 278** (+28 events)
+- **success rate förbättrad: 9→20 sources** (+122% ökning)
+- **fail reducerat: 402→376** (-26 sources omplacerade till success)
+- Identifierade root cause: **triage-batch körde ENBART C1, inte extractFromHtml()**
+
+### Största kvarvarande flaskhals
+**Modellvalidering fortfarande begränsad.** Även med 20 success sources:
+- Många har lågt eventantal (1-4 events)
+- Vissa (13 stycken) har strong C1 signals men ändå 0 events efter full pipeline
+- render_candidate (40) och still_unknown (197) blockerar fortfarande
+
+### Sources-status (efter denna körning)
+| Status | Antal | Kommentar |
+|--------|-------|-----------|
+| success | 20 | +11 från denna session |
+| fail | 376 | -26 från denna session |
+| pending_render_gate | 5 | |
+| render_candidate | 40 | C1 sa JS-rendered |
+| manual_review | 138 | C1 kunde inte avgöra |
+| still_unknown | 197 | Fetch-fel (404, timeout, DNS) |
+
+### Tre möjliga nästa steg
+| # | Steg | Systemnytta | Risk | Varför nu |
+|---|------|-------------|------|-----------|
+| 1 | Kör scheduler på render_candidate (40 sources) | Utökar working sources med ~20-30% | Medium — D-renderGate behövs | Alla har starka signals men HTML behöver rendering |
+| 2 | Fördjupa 13 "strong signal → 0 events" sources | Förstå C1→C2→extract gap | Låg — diagnostik | dessa har tt≥6 eller d≥10 men ändå 0 events |
+| 3 | Analysera still_unknown (197) — varför fetch failar | Förstå blockeringsorsak | Låg — kan vara DNS/robots/blocking | Största enskilda grupp efter success |
+
+### Rekommenderat nästa steg
+**[2] — Analysera 13 "strong signal → 0 events" sources** — dessa har C1 med tt≥6 ELLER d≥10 men ändå 0 events efter full pipeline (scheduler med C0→C1→C2→extractFromHtml). Exempel: polismuseet (24tt), hallsberg (6tt+6d), karlskoga (10tt). Root cause kan vara:
+- extractFromHtml() URL-date kravet är för restriktivt
+- C2 density scoring mismatchar med extract logik
+- Dessa sources har datum i text men inte i URL
+
+### Två steg att INTE göra nu
+1. **Köra triage-batch igen** — det löste problemet denna gång MEN det var en engångsfix pga att triage-batch bara körde C1. Om nya sources läggs till behöver de full pipeline, inte bara C1.
+2. **Justera IGNORE_PATTERNS eller scoring weights** — Generalization Gate regler gäller. Vi har bara 20 success sources, inte tillräckligt för att dra generella slutsatser.
+
+### System-effect-before-local-effect
+13 "strong signal → 0 events" sources representar en specifik subgrupp där C1 säger strong/medium men extractFromHtml() returnerar 0. Att förstå detta gap hjälper C2→extract synkningen generellt, inte bara dessa specifika sources.
+
+### Root-cause upptäckt denna session
+**triage-batch kommandot i scheduler.ts körde endast C1 (screenUrl), INTE hela pipelinen (C0→C1→C2→extractFromHtml).**
+- Konsekvens: 27 sources fick triageResult=html_candidate men extraktion kördes aldrig
+- Lösning: Kör scheduler --source <id> istället för --triage-batch för full pipeline
+- Dokumenterad i systemet: html_extraction_review som pendingNextTool betyder "vänta på full pipeline"
