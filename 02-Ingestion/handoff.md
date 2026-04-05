@@ -2,6 +2,77 @@
 
 ---
 
+## Nästa-steg-analys 2026-04-05 (loop 33)
+
+### Vad förbättrades denna loop
+- **Verifierade sources_status.jsonl:** 423 poster, 11 success, 402 fail, 5 triage_required, 3 pending_render_gate
+- **Inga kodändringar:** Endast kontext-analys
+- **Identificerade flaskhals:** 97.4% fail-rate beror på otillräcklig modell-validering (för få sajter testade)
+
+### Root-cause (nyckelobservation)
+- **97.4% fail-rate** är en konsekvens av för få testade sajter, inte nödvändigtvis en modellbugg
+- Vi har endast 11/423 sources som faktiskt testats med C0/C1/C2
+- För att kunna göra Generalization Gate-analys behöver vi 10+ sajter testade
+- Nästa steg: bredda testningen med triage-batch
+
+### Sources status (runtime/sources_status.jsonl)
+| Status | Antal |
+|--------|-------|
+| success | 11 (2.6%) |
+| fail | 402 |
+| triage_required | 5 |
+| pending_render_gate | 39 |
+| aldrig testade | 2 |
+
+### Events från success sources
+| Källa | Events |
+|-------|--------|
+| berwaldhallen | 216 |
+| konserthuset | 11 |
+| abf | 8 |
+| malmo-opera | 8 |
+| friidrottsf-rbundet | 4 |
+| textilmuseet | 3 |
+| textilmus-et | 3 |
+| aik | 1 |
+| dramaten | 1 |
+| (övriga) | 8 |
+| **SUMMA** | **263** |
+
+### Generalization Gate Status
+| Pattern | Sajter | Krav | Status |
+|---------|--------|------|--------|
+| Webflow CMS Extraction Gap | 1 | 2-3 | needsVerification |
+| SiteVision CMS utan tid | 4 | 2-3 | needsVerification |
+
+### Kvarvarande flaskhals
+- **97.4% fail-rate** - för få sajter testade för Generalization Gate
+- Endast 11 sources verkligen testade (success)
+- Vi behöver bredda testningen för att förstå modellens generella prestanda
+
+### Tre möjliga nästa steg
+
+| # | Steg | Systemnytta | Risk | Varför nu |
+|---|------|-------------|------|-----------|
+| 1 | **Kör --triage-batch på 20+ fail-sources** | Hög: breddar modell-validering | Låg: beprövad metod | Vi behöver 10+ sajter för Generalization Gate |
+| 2 | **Undersök triage_required sources (5 st)** | Medel: snabba framsteg | Låg: redan markerade | Kan ge events snabbt |
+| 3 | **Analysera fail-patterns** | Medel: förståelse | Låg: dokumentation | 4 SiteVision-sajter bekräftade mönstret |
+
+### Rekommenderat nästa steg
+- **#1 — Kör --triage-batch på 20+ fail-sources**
+
+Motivering: current-task.md kräver bred modell-validering med 10+ sajter. Vi har 11 success men behöver bredda testningen för att förstå modellens generella prestanda innan vi kan göra Generalization Gate-analys.
+
+### Två steg att INTE göra nu
+1. **Bygga D-renderGate** — 39 sources parkerade men ingen är verifierad med bevisat behov
+2. **Ändra C-lager scoring** — Generalization Gate kräver 2-3+ sajter först innan vi kan generalisera
+
+### System-effect-before-local-effect
+- Valt steg (#1): Breddar modell-validering
+- Varför: Utan 10+ testade sajter kan vi inte göra Generalization Gate
+
+---
+
 ## Nästa-steg-analys 2026-04-05 (loop 32)
 
 ### Vad förbättrades denna loop
