@@ -25,5 +25,12 @@
     "excludeStatus": ["success", "pending_api", "pending_render_gate", "pending_source_adapter"]
   },
   "reportPath": "02-Ingestion/C-htmlGate/reports/batch-001/",
-  "batchNotes": "Batch 001 är i reparationsfas - skapad med rätt C-kandidatklassning men ej körbar ännu. Nästa 123-körning ska välja nästa 10 från den fullständiga C-kandidatkön (15 st)."
+  "batchNotes": "Batch 001 är i reparationsfas - skapad med rätt C-kandidatklassning men ej körbar ännu. Nästa 123-körning ska välja nästa 10 från den fullständiga C-kandidatkön (15 st).",
+  "metadata": {
+    "selectedAt": "2026-04-05T20:25:00.000Z",
+    "eligibilityRulesVersion": "1.0",
+    "selectionCriteria": "C-htmlGate batch-eligible filter (html_candidate + fail/triage_required + no D-renderGate + no A/B-verified path)",
+    "subpageAwareAbStatus": "missing",
+    "note": "subpage-aware A/B bedömning INTE gjord för dessa sources - de valdes baserat på status-filter, inte efter förprövning av subpages"
+  }
 }
