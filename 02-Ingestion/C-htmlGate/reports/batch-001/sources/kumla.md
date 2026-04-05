@@ -1,33 +1,86 @@
 # Source: kumla
 
-**Batch:** batch-001  
-**Status:** triage_required  
-**LastRun:** 2026-04-05T08:49:21.525Z  
-**LastEventsFound:** 0  
-**Attempts:** 4  
-**ConsecutiveFailures:** 3  
+## Identity
 
-## Triage History
-- 2026-04-05T04:03:35.986Z: html_candidate | 4 time-tags + 4 dates | events=N/A
-- 2026-04-05T08:03:49.303Z: html_candidate | 4 time-tags + 4 dates | events=0
-- 2026-04-05T08:49:21.526Z: html_candidate | 4 time-tags + 4 dates | events=0
+| Field | Value |
+|-------|-------|
+| sourceId | kumla |
+| sourceName | Kumla |
+| url | https://www.kumla.se |
+| city | Örebro |
+| type | kommunal |
+| batchId | batch-001 |
+| createdAt | 2026-04-05T20:25:00.000Z |
 
-## Pending Next Tool
-html_extraction_review
+## Batch Context
 
-## Last Error
-triage_required: C1 said html_candidate but extraction returned 0 events
+| Field | Value |
+|-------|-------|
+| methodCandidate | html_candidate |
+| verificationStatus | batch-eligible |
+| eligibilityRulesVersion | 1.0 |
+| selectionCriteria | C-htmlGate batch-eligible filter (html_candidate + fail/triage_required + no D-renderGate + no A/B-verified path) |
+| subpageAwareAbStatus | missing |
 
-## Triage Result
-**Recommended Path:** html  
-**Triage Result:** html_candidate  
-**Confidence:** 0
+## Pre-Run State
 
-## C-Batch Eligibility
-- `triageResult = "html_candidate"`: YES
-- `status ∈ fail/triage_required`: YES
-- `pendingNextTool ≠ D-renderGate`: YES
-- `preferredPath ∉ A/B-verified`: YES
-- `lastEventsFound = 0`: YES
+| Field | Value |
+|-------|-------|
+| rootChecked | yes |
+| subpagesCheckedCount | unknown |
+| likelyEventSubpages | unknown |
+| preRunEventsFound | 0 |
+| preRunVerdict | unclear |
+| preRunFailureMode | extraction-failed |
 
-**C-Batch Eligible:** YES
+## Post-Run State
+
+| Field | Value |
+|-------|-------|
+| postRunEventsFound | - |
+| postRunVerdict | - |
+| postRunFailureMode | - |
+| deltaEvents | - |
+
+## HTML Pattern Analysis
+
+| Field | Value |
+|-------|-------|
+| htmlPatternType | unknown |
+| patternSignals | 4tt=+ 4d= |
+
+## AI Finding Summary
+
+**What C found:** C1 identified html_candidate. Extraction returned 0 events. Triage reason: 4 time-tags + 4 dates
+**What AI analyzed:** Not yet run
+**What was difficult:** Unknown - batch not executed
+**What was changed:** No change
+**What happened after:** No change applied
+
+## Learning
+
+| Field | Value |
+|-------|-------|
+| generalizableLearning | unknown |
+| learningDescription | - |
+| remainingIssue | batch not executed |
+| needsD | unclear |
+| notes | subpage-aware A/B assessment missing |
+
+## Verification
+
+| Check | Result |
+|-------|--------|
+| root HTML fetched | 2026-04-05 |
+| subpages found | unknown |
+| C0 density adequate | unclear |
+| C1 signals present | yes |
+| extraction worked | no |
+
+## Compact Data (for JSON extraction)
+
+```
+SOURCE_START
+{"sourceId":"kumla","sourceName":"Kumla","url":"https://www.kumla.se","city":"Örebro","type":"kommunal","batchId":"batch-001","methodCandidate":"html_candidate","verificationStatus":"batch-eligible","eligibilityRulesVersion":"1.0","selectionCriteria":"C-htmlGate batch-eligible filter","subpageAwareAbStatus":"missing","rootChecked":true,"subpagesCheckedCount":null,"likelyEventSubpages":null,"preRunEventsFound":0,"postRunEventsFound":null,"deltaEvents":null,"preRunVerdict":"unclear","postRunVerdict":null,"preRunFailureMode":"extraction-failed","postRunFailureMode":null,"htmlPatternType":null,"patternSignals":"4tt=+ 4d=","aiFindingSummary":"C1: 4 time-tags + 4 dates, 0 events","generalizableLearning":null,"remainingIssue":"batch not executed","needsD":"unclear","notes":"subpageAwareAbStatus missing"}
+SOURCE_END
+```

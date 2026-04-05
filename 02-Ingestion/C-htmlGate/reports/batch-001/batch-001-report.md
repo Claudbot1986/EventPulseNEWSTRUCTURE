@@ -1,68 +1,84 @@
-# C-htmlGate Batch 001 Rapport
+# C-htmlGate Batch 001 Report
 
-**Batch-ID:** batch-001  
-**Datum:** 2026-04-05  
-**Status:** pending (körs ej aktivt, reparationsfas)
+## Batch Header
 
-## Metadata
-
-| Fält | Värde |
-|------|-------|
-| Vald at | 2026-04-05T20:25:00.000Z |
-| Eligibility-regler version | 1.0 |
-| Urvalsgrund | C-htmlGate batch-eligible filter (html_candidate + fail/triage_required + no D-renderGate + no A/B-verified path) |
+| Field | Value |
+|-------|-------|
+| batchId | batch-001 |
+| createdAt | 2026-04-05T20:25:00.000Z |
+| status | pending (not yet run) |
+| eligibilityRulesVersion | 1.0 |
+| selectionCriteria | C-htmlGate batch-eligible filter (html_candidate + fail/triage_required + no D-renderGate + no A/B-verified path) |
 | subpageAwareAbStatus | missing |
 
-**OBS:** subpage-aware A/B-bedömning är **INTE gjord** för dessa sources. De valdes baserat på status-filter i sources_status.jsonl, inte efter förprövning av subpages. Detta betyder att batchens källor är "batch-eligible enligt filter" men INTE nödvändigtvis "subpage-verifyade C-kandidater".
+**Note:** subpage-aware A/B assessment is **NOT done** for these sources. They were selected based on status filters in sources_status.jsonl, not after subpage pre-verification.
 
-## Översikt
+## Metrics
 
-| Metric | Värde |
-|--------|-------|
-| Sources i batch | 10 |
-| Före-events (totalt) | 0 |
-| Efter-events (totalt) | Ej körd ännu |
-| AI-analys genförbättring | Pågår |
+| Metric | Pre | Post | Delta |
+|--------|-----|------|-------|
+| sourcesTotal | 10 | 10 | 0 |
+| successCount | 0 | - | - |
+| failCount | 10 | - | - |
+| eventsFoundTotal | 0 | - | - |
 
-## Validering av batch-urval
+## Sources Summary
 
-**Grund för C-kandidatklassning (enligt nuvarande filter):**
-- `triageResult = "html_candidate"` — C1 identifierade HTML-eventstruktur
-- `status ∈ {"fail", "triage_required"}` — HTML-path testad men ej bekräftad
-- `pendingNextTool = "html_extraction_review"` — väntar på förbättrad C-modell
-- `lastEventsFound = 0` — extrahering gav 0 events
+| # | sourceId | sourceName | city/type | preEvents | postEvents | delta | preVerdict | postVerdict | methodCandidate | needsD |
+|---|----------|------------|-----------|-----------|-------------|-------|------------|-------------|-----------------|--------|
+| 1 | hallsberg | Hallsberg | Örebro/kommunal | 0 | - | - | unclear | - | html_candidate | unclear |
+| 2 | ifk-uppsala | IFK Uppsala | Uppsala/fotbollsklubb | 0 | - | - | unclear | - | html_candidate | unclear |
+| 3 | karlskoga | Karlskoga | Örebro/kommunal | 0 | - | - | unclear | - | html_candidate | unclear |
+| 4 | kumla | Kumla | Örebro/kommunal | 0 | - | - | unclear | - | html_candidate | unclear |
+| 5 | kungliga-musikhogskolan | Kungliga Musikhögskolan | Stockholm/musiklärosäte | 0 | - | - | unclear | - | html_candidate | unclear |
+| 6 | liljevalchs-konsthall | Liljevalchs Konsthall | Göteborg/museum | 0 | - | - | unclear | - | html_candidate | unclear |
+| 7 | lulea-tekniska-universitet | Luleå Tekniska Universitet | Luleå/universitet | 0 | - | - | unclear | - | html_candidate | unclear |
+| 8 | moderna-museet | Moderna Museet | Stockholm/museum | 0 | - | - | unclear | - | html_candidate | unclear |
+| 9 | naturhistoriska-riksmuseet | Naturhistoriska Riksmuseet | Stockholm/museum | 0 | - | - | unclear | - | html_candidate | unclear |
+| 10 | orebro-sk | Örebro SK | Örebro/fotbollsklubb | 0 | - | - | unclear | - | html_candidate | unclear |
 
-**Exkluderade från C-batch (bekräftat):**
-- `status = "success"` → A/B-verifierade (22 st): konserthuset, berwaldhallen, abf, aik, etc.
-- `preferredPath = "network"` → B-verifierade: berwaldhallen (216 events), kulturhuset
-- `pendingNextTool = "D-renderGate"` → D-pending: debaser, cirkus, arkdes, akersberga, etc.
-- `triageResult = "manual_review"` → manuell granskning: ~150 st
-- `status = "pending_api"` → API-källa: ticketmaster, eventbrite
+## Pattern Groups Found
 
-**Viktigt att notera:** Dessa sources är batch-eligible enligt filter men har EJ genomgått subpage-aware A/B-förprövning. Framtida körning kan behöva justera urvalet efter förprövning.
+- kommunal-institution (4 sources: hallsberg, karlskoga, kumla, uppsala-kommun-related)
+- idrottsförening (2 sources: ifk-uppsala, orebro-sk)
+- museum (3 sources: liljevalchs-konsthall, moderna-museet, naturhistoriska-riksmuseet)
+- utbildning (1 source: kungliga-musikhogskolan)
+- universitet (1 source: lulea-tekniska-universitet)
 
-## Sources i batch 001
+## AI Analysis Summary
 
-| # | Källa | Status | Försök | C1-signaler | Eligibility |
-|---|-------|--------|--------|-------------|-------------|
-| 1 | hallsberg | triage_required | 5 | 6tt + 6d | batch-eligible |
-| 2 | ifk-uppsala | triage_required | 4 | 6tt + 2d + 7h | batch-eligible |
-| 3 | karlskoga | triage_required | 5 | 3tt + 10h | batch-eligible |
-| 4 | kumla | triage_required | 4 | 4tt + 4d | batch-eligible |
-| 5 | kungliga-musikhogskolan | triage_required | 3 | 5tt + 5d | batch-eligible |
-| 6 | liljevalchs-konsthall | fail | 2 | 3tt + 6d | batch-eligible |
-| 7 | lulea-tekniska-universitet | triage_required | 3 | 11tt + 6d | batch-eligible |
-| 8 | moderna-museet | fail | 2 | 8tt + 12h | batch-eligible |
-| 9 | naturhistoriska-riksmuseet | triage_required | 3 | 15tt + 4d | batch-eligible |
-| 10 | orebro-sk | triage_required | 3 | 10tt + 11h | batch-eligible |
+**Status:** Not yet run (batch is in pending state)
 
-## Rapporthistorik
+## Changes Applied to C-Model
 
-Denna batch ersätter det tidigare grova batchvalet med rätt C-kandidatklassning.
-Källrapporter sparas i: `02-Ingestion/C-htmlGate/reports/batch-001/sources/`
+None yet - batch not executed.
 
-## Nästa steg
+## Unresolved Issues
 
-- [ ] subpage-aware A/B-förprövning innan körning (ej obligatoriskt men rekommenderat)
-- [ ] Förbered för körning när 123 anropas nästa gång
-- [ ] Uppdatera batch-state.jsonl efter bekräftelse
+- 10 sources have 0 events found
+- All sources have status fail/triage_required with html_candidate result
+- subpageAwareAbStatus = missing
+- Unknown whether root-only analysis is sufficient or subpage discovery is needed
+
+## Generalizable Learnings
+
+None yet - batch not executed.
+
+## Linked Source Reports
+
+- `sources/hallsberg.md`
+- `sources/ifk-uppsala.md`
+- `sources/karlskoga.md`
+- `sources/kumla.md`
+- `sources/kungliga-musikhogskolan.md`
+- `sources/liljevalchs-konsthall.md`
+- `sources/lulea-tekniska-universitet.md`
+- `sources/moderna-museet.md`
+- `sources/naturhistoriska-riksmuseet.md`
+- `sources/orebro-sk.md`
+
+## Summary (JSONL format for programmatic analysis)
+
+```
+{"batchId":"batch-001","createdAt":"2026-04-05T20:25:00.000Z","status":"pending","eligibilityRulesVersion":"1.0","selectionCriteria":"C-htmlGate batch-eligible filter (html_candidate + fail/triage_required + no D-renderGate + no A/B-verified path)","subpageAwareAbStatus":"missing","sourcesTotal":10,"preRunSuccessCount":0,"postRunSuccessCount":0,"deltaSuccess":0,"preRunEventsFoundTotal":0,"postRunEventsFoundTotal":0,"deltaEventsTotal":0,"majorPatternGroups":["kommunal-institution","idrottsförening","museum","utbildning","universitet"],"changesApplied":[],"unresolvedCount":10,"dPendingCount":0,"noImprovementCount":10}
+```
