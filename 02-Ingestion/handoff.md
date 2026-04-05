@@ -2,6 +2,52 @@
 
 ---
 
+## Nästa-steg-analys 2026-04-05 (loop 27)
+
+### Vad förbättrades denna loop
+- **Fixade scheduler hang-bug för --source branch:** Lade till `process.exit(0)` efter `runSource()` i `--source` branchen (rad 695)
+- **Verifierade fix:** `scheduler --source konserthuset` avslutas nu korrekt (exit 0) istället för att hänga
+
+### Ändringar
+1. **scheduler.ts rad 695:** Ändrade `return;` → `process.exit(0);` i `--source` branchen
+
+### Verifiering
+```
+✓ scheduler --source konserthuset: 11 events, exit 0 (ingen hang)
+✓ Process avslutas direkt efter resultat
+```
+
+### Sources som påverkas
+Inga sources direkt, men alla `--source` kommandon fungerar nu korrekt utan hang.
+
+### Kvarvarande flaskhals
+- **Scheduler hang-bug VAR INTE FULLSTÄNDIGT FIXAD i loop 26:** Fixen lade endast till `process.exit(0)` i queue-branch (rad 859), inte i `--source` branch (rad 695)
+- **307+ aldrig testade sources:** Fortfarande ingen systematisk breddning av modell-validering
+- **5 triage_required sources:** Kan nu köras korrekt med `--triage-batch`
+
+### Tre möjliga nästa steg
+
+| # | Steg | Systemnytta | Risk | Varför nu |
+|---|------|-------------|------|-----------|
+| 1 | **Kör --triage-batch** | Hög: breddar modell-validering | Låg: beprövad metod | 5 sources eligible, schedulern fungerar nu |
+| 2 | **Kör scheduler --source på en ny html_candidate** | Medel: ökar success sources | Låg: verifiering | 8 html_candidates med 0 events behöver analys |
+| 3 | **Undersök borlange-kommun SiteVision-mönster** | Låg: förstår SiteVision-beteende | Låg: dokumentation | Kan påverka framtida triage |
+
+### Rekommenderat nästa steg
+- **#1 — Kör --triage-batch**
+
+Motivering: Scheduler fungerar nu korrekt för både `--source` och `--triage-batch`. 5 sources är triage_required, och fler aldrig-testade sources finns. Detta breddar modell-validering enligt current-task.md.
+
+### Två steg att INTE göra nu
+1. **Köra scheduler --source på redan-success sources** — onödig upprepning
+2. **Bygga source adapter för enskild sajt** — Site-Specific, går emot bred validerings-mål
+
+### System-effect-before-local-effect
+- Valt steg (#1): Breddar modell-validering
+- Varför: current-task.md kräver 10+ sajter testade, och 5 triage_required + 307+ aldrig testade finns
+
+---
+
 ## Nästa-steg-analys 2026-04-05 (loop 26)
 
 ### Vad förbättrades denna loop

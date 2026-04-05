@@ -692,7 +692,7 @@ async function main() {
     }
     console.log(`Kör source: ${source.id} (${source.url})\n`);
     await runSource(source, { recheck: true });
-    return;
+    process.exit(0);
   }
 
   // ── BATCH TRIAGE: Kör C1 på alla triage_required/unknown/never_run ─────────
