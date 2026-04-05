@@ -12,11 +12,26 @@ It is the ONLY valid task.
 Nothing else may be worked on.
 If unclear → STOP.
 
+## Huvudmål (C — HTML Path — JUST NU)
+
+**C:s huvudmål just nu är att testa om HTML-scrapingmodellen är effektiv i praktiken.**
+
+Gör så här:
+1. Testa cirka 10 olika HTML-källor via nuvarande HTML-heuristik (C0→C1→C2→extract)
+2. AI analyserar varje källa och kontrollerar om HTML-modellens slutsatser är sanna, ofullständiga eller felaktiga
+3. Om modellen missar events eller misstolkar strukturen → förbättra HTML-modellen så källan kan scrapas korrekt efteråt
+4. Spela in återanvändbara mönster: vilka HTML-mönster, blocktyper, signaler och extraktionsmetoder som fungerar
+5. Om en metod är generell nog → den ska kunna appliceras på snarlika källor utan AI-analys
+
+**Strategisk målbild:** Utveckla generella HTML-metoder som tillsammans kan hitta och extrahera events från ~85% av scrapbara HTML-sidor.
+
+**Viktigt:** Fokus på bred mönsterigenkänning, inte site-specifika hack.
+
 ---
 
 ## Problem (STRICT)
 
-HTML Path fungerar för vissa sajter men den **generella modellen** är inte utvärderadBRETT.
+HTML Path fungerar för vissa sajter men den **generella modellen** är inte utvärderad BRETT.
 
 Nuvarande beteende:
 - C0/C1/C2 har implementerats men endast testats på 1-3 sajter
@@ -43,7 +58,7 @@ Nästa steg är att **validiera modellen BRETT** innan vi gör fler site-specifi
    - Hitta generella mönster i failure cases
    - Föreslå endast generella förbättringar (ej site-specifika)
 
-3. **Regel-justering medGeneralization Gate**
+3. **Regel-justering med Generalization Gate**
    - Varje föreslagen ändring måste motiveras: "hjälper detta 3+ sajter?"
    - Site-specifika fixes rapporteras men implementeras EJ i C-lager
    - Source adapters används för site-specifika edge cases
