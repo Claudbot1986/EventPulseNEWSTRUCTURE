@@ -1,9 +1,15 @@
 /**
  * Source Scheduler — kör sources i prioritetsordning
  * 
- * Routing logik:
- *   selectSourcePath(source, status) → RoutingDecision
- *   Tidigt routingbeslut baserat på preferredPath + runtime status
+ * SEKVENTIELL TESTLOGIK (A→B→C→D→E):
+ *   1. A-JSONLD  → Testa alltid först (oavsett preferredPath)
+ *   2. B-Network → Testa om A misslyckades
+ *   3. C-HTML     → Testa om B misslyckades (med C1 screening)
+ *   4. D-queue    → Om C1 säger render_candidate → skicka till D-queue (INTE kör render)
+ *   5. E-Manual   → Om allt annat misslyckades → manuell fallback
+ * 
+ * VIKTIGT: D-renderGate körs INTE aktivt ännu. D betyder "identifierad som
+ * render-behövande och skickad till kö för senare D-arbete".
  * 
  * Usage:
  *   npx tsx 02-Ingestion/scheduler.ts              # kör nästa i prioritetskön
@@ -59,86 +65,74 @@ export interface RoutingDecision {
 }
 
 /**
- * SelectSourcePath — gör tidigt routingbeslut baserat på source truth + runtime status
+ * SEKVENTIELL TESTLOGIK: A → B → C → D-queue → E-Manual
  * 
- * Regler:
- * - preferredPath=api|network → skip (adapter ej byggd ännu)
- * - preferredPath=jsonld → execute_now via JSON-LD
- * - preferredPath=html → execute_now via HTML
- * - preferredPath=render → park_pending_render (D-renderGate ej klar)
- * - preferredPath=unknown → triage via HTML (default)
- * - status=pending_render → park_pending_render
+ * VIKTIGT: D-queue betyder SKICKA TILL PENDING QUEUE, INTE KÖRA RENDER.
+ * D-renderGate körs INTE aktivt ännu.
+ * 
+ * Steg:
+ * 1. A-JSONLD  → Testa alltid först (oavsett preferredPath)
+ * 2. B-Network → Testa om A misslyckades  
+ * 3. C-HTML     → Testa om B misslyckades (med C1 screening)
+ * 4. D-queue    → Om C1 säger render_candidate → skicka till D-queue
+ * 5. E-Manual   → Om allt annat misslyckades → manuell fallback
+ * 
+ * OBS: preferredPath ANVÄNDS INTE för att gissa metod.
+ * preferredPath används endast för att veta VILKEN METOD SOM REDAN BEKRÄFTATS.
+ * Om preferredPath=jsonld → hoppa A och kör direkt jsonld (bekräftad metod).
+ * Om preferredPath=html → hoppa A+B+C och kör direkt html (bekräftad metod).
+ * Om preferredPath=unknown/low-confidence → kör sekventiell test A→B→C→D→E.
  */
 function selectSourcePath(source: SourceTruth, status: SourceStatus): RoutingDecision {
-  const now = new Date().toISOString();
+  // ── OM METODEN REDAN ÄR BEKRÄFTAD (preferredPath satt och inte 'unknown'), kör den direkt ────
+  // Detta är INTE gissning - det är att använda redan verifierad kunskap
   
-  // ── Kör aldrig: adapter ej implementerad ─────────────────────────────────
-  if (source.preferredPath === 'api') {
+  if (source.preferredPath === 'jsonld') {
+    // JSON-LD har tidigare bekräftats för denna källa
     return {
-      path: 'api',
-      execute: 'skip_not_implemented',
-      reason: `preferredPath=api, ${source.preferredPathReason || 'API adapter not yet implemented'}`,
+      path: 'jsonld',
+      execute: 'execute_now',
+      reason: `preferredPath=jsonld (bekräftad)`,
       routingSource: 'preferredPath',
     };
   }
   
   if (source.preferredPath === 'network') {
-    // Kör network_inspection + evaluateNetworkGate
-    // Den tidigare "skip" var en stub - verktygen finns nu
+    // Network har tidigare bekräftats för denna källa
     return {
       path: 'network',
       execute: 'execute_network',
-      reason: `preferredPath=network, running network_inspection`,
+      reason: `preferredPath=network (bekräftad)`,
       routingSource: 'preferredPath',
     };
   }
   
-  // ── Kör render path (D-renderGate) ────────────────────────────────────────────
-  if (source.preferredPath === 'render') {
-    return {
-      path: 'render',
-      execute: 'execute_render',
-      reason: `preferredPath=render, D-renderGate available`,
-      routingSource: 'preferredPath',
-    };
-  }
-  
-  // ── Kör render: redan i pending_render_gate ─────────────────────────────────
-  if (status.status === 'pending_render_gate') {
-    return {
-      path: status.lastPathUsed || 'render',
-      execute: 'execute_render',
-      reason: `runtime_status=pending_render_gate, D-renderGate available`,
-      routingSource: 'runtime_status',
-    };
-  }
-  
-  // ── Kör direkt: JSON-LD ────────────────────────────────────────────────────
-  if (source.preferredPath === 'jsonld') {
-    return {
-      path: 'jsonld',
-      execute: 'execute_now',
-      reason: source.preferredPathReason || 'preferredPath=jsonld',
-      routingSource: 'preferredPath',
-    };
-  }
-  
-  // ── Kör direkt: HTML ───────────────────────────────────────────────────────
   if (source.preferredPath === 'html') {
+    // HTML har tidigare bekräftats för denna källa
     return {
       path: 'html',
       execute: 'execute_now',
-      reason: source.preferredPathReason || 'preferredPath=html',
+      reason: `preferredPath=html (bekräftad)`,
       routingSource: 'preferredPath',
     };
   }
   
-  // ── Okänd: triage med HTML som standard ───────────────────────────────────
-  // Detta är en medveten gren, inte standard för alla
+  if (source.preferredPath === 'api') {
+    return {
+      path: 'api',
+      execute: 'skip_not_implemented',
+      reason: `preferredPath=api, API adapter ej implementerad ännu`,
+      routingSource: 'preferredPath',
+    };
+  }
+  
+  // ── INTE BEKRÄFTAD: Kör sekventiell test A → B → C → D → E ───────────────
+  // För sources med unknown/low-confidence preferredPath, testa metoderna i ordning
+  
   return {
     path: 'unknown',
     execute: 'execute_now',
-    reason: source.preferredPathReason || 'preferredPath=unknown, triage via HTML',
+    reason: 'SEKVENTIELL TEST: A→B→C→D→E (preferredPath=unknown/low-confidence)',
     routingSource: 'unknown',
   };
 }
@@ -334,86 +328,33 @@ async function runSource(source: SourceTruth, options: { recheck?: boolean } = {
   }
   // ── END NETWORK PATH ──────────────────────────────────────────────────────
 
-  // ── RENDER PATH (D-renderGate) ───────────────────────────────────────────────
+  // ── RENDER PATH: SKICKA TILL D-QUEUE, KÖR INTE RENDER ÄNNU ───────────────
+  // D-renderGate körs INTE aktivt ännu. Vi skickar bara till pending queue.
   if (decision.execute === 'execute_render') {
-    console.log(`🎬 Render: Running D-renderGate on ${source.url}`);
-    const renderResult = await renderPage(source.url, { timeout: 25000 });
+    console.log(`⏸️  D-queue: Skickar ${source.id} till D-pending-queue (D-renderGate körs EJ ännu)`);
     
-    if (!renderResult.success) {
-      console.log(`   Render failed: ${renderResult.error}`);
-      updateSourceStatus(source.id, {
-        success: false,
-        eventsFound: 0,
-        pathUsed: 'render',
-        error: `render_failed: ${renderResult.error}`,
-        lastRoutingReason: `D-renderGate: ${renderResult.error}`,
-        lastRoutingSource: 'preferredPath',
-        pendingNextTool: 'D-renderGate',
-      });
-      return;
-    }
-    
-    console.log(`   Render success: ${renderResult.html?.length || 0} chars in ${renderResult.metrics?.renderTimeMs}ms`);
-    
-    if (!renderResult.html || renderResult.html.length < 1000) {
-      console.log(`   Render returned insufficient HTML`);
-      updateSourceStatus(source.id, {
-        success: false,
-        eventsFound: 0,
-        pathUsed: 'render',
-        error: 'render_returned_insufficient_html',
-        lastRoutingReason: `D-renderGate: insufficient HTML (${renderResult.html?.length || 0} chars)`,
-        lastRoutingSource: 'preferredPath',
-        pendingNextTool: 'D-renderGate',
-      });
-      return;
-    }
-    
-    // Now extract events from the rendered HTML
-    const { extractFromHtml } = await import('./F-eventExtraction/extractor');
-    const htmlResult = extractFromHtml(renderResult.html, source.id, source.url);
-    eventsFound = htmlResult.events.length;
-    console.log(`   Extracted ${eventsFound} events from rendered HTML`);
-    
-    if (eventsFound > 0) {
-      // Queue the events
-      const { queueEvents } = await import('./tools/fetchTools');
-      const rawEvents = htmlResult.events.map((e: any) => ({
-        source_id: e.id || `${source.id}-${Math.random().toString(36).slice(2)}`,
-        title: e.title || 'Untitled',
-        description: e.description || '',
-        start_time: e.startTime ? new Date(e.startTime) : (e.start_date ? new Date(e.start_date) : null),
-        end_time: e.endTime ? new Date(e.endTime) : (e.end_date ? new Date(e.end_date) : null),
-        url: e.url || '',
-        image_url: e.image || '',
-        venue_name: e.venue || '',
-        category_slug: e.category || 'unknown',
-        organizer_name: e.organizer || '',
-        price: e.price || null,
-        status: 'available',
-        venue_address: '',
-        lat: null,
-        lng: null,
-        categories: [],
-        event_url: e.url || '',
-        start_date: e.start_date || (e.startTime ? new Date(e.startTime).toISOString().split('T')[0] : ''),
-        end_date: e.end_date || (e.endTime ? new Date(e.endTime).toISOString().split('T')[0] : ''),
-      }));
-      const { queued } = await queueEvents(source.id, rawEvents as any);
-      console.log(`   Queued: ${queued}/${eventsFound}`);
-    }
+    // SKICKA TILL PENDING QUEUE - kör INTE render
+    addPendingRender({
+      url: source.url,
+      sourceName: source.id,
+      reason: `preferredPath=render, D-renderGate ännu inte aktiv`,
+      signal: 'path_not_implemented',
+      confidence: 1.0,
+      attemptedPaths: ['render'],
+    });
     
     updateSourceStatus(source.id, {
-      success: eventsFound > 0,
-      eventsFound,
+      success: false,
+      eventsFound: 0,
       pathUsed: 'render',
-      lastRoutingReason: `D-renderGate: ${eventsFound > 0 ? `extracted ${eventsFound} events` : 'rendered but 0 events extracted'}`,
+      error: `pending_render_gate: D-renderGate körs ej ännu`,
+      lastRoutingReason: `preferredPath=render, parkad för framtida D-arbete`,
       lastRoutingSource: 'preferredPath',
-      pendingNextTool: eventsFound > 0 ? null : 'D-renderGate',
+      pendingNextTool: 'D-renderGate',
     });
     return;
   }
-  // ── END RENDER PATH ───────────────────────────────────────────────────────
+  // ── END D-QUEUE ───────────────────────────────────────────────────────────
 
   if (!fetchResult.success || !fetchResult.html) {
     updateSourceStatus(source.id, {

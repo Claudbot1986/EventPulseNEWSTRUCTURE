@@ -2,6 +2,86 @@
 
 ---
 
+## Nästa-steg-analys 2026-04-05 (loop 50)
+
+### Vad förbättrades denna loop
+- **Sources-reality BEKRÄFTAD:** 21 success (328 events), 11 path-but-fail, 407 ALDRIG körda (preferredPath=N/A)
+- **Insikt:** current-task.md:s mål "validera modellen BRETT" är delvis uppfyllt — 21 källor HAR testats
+- **Verklig flaskhals identifierad:** 407 sources har `preferredPath=N/A` och `error=Unknown` — dessa har ALDRIG körts genom triage
+
+### Root-cause (nyckelobservation)
+
+**Kritisk distinktion:** De 376 "fail" är INTE "testade och misslyckades" — de flesta är "aldrig testade":
+
+| Kategori | Antal | Verklighet |
+|----------|-------|------------|
+| Success (events>0) | 21 | ✓ Verkligt testade |
+| Path satt men fail | 11 | ✓ Faktiskt körda men misslyckades |
+| **preferredPath=N/A** | **407** | **✗ ALDRIG körda** |
+
+**407 sources med `preferredPath=N/A` och `error=Unknown`** = dessa importerades från RawSources men kördes ALDRIG genom triage.
+
+**Innebörd:** Det finns en stor mängd "untested sources" som borde testas. Målpopulationen för bred modell-validering är mycket större än de 21 som lyckats.
+
+### Sources-blockerare (reality)
+| Kategori | Antal | Exempel |
+|----------|-------|---------|
+| Success (events>0) | 21 | berwaldhallen(216), schack(50), konserthuset(11) |
+| Path但ej success | 11 | kulturhuset, fryshuset, dramaten, vasamuseet |
+| **ALDRIG testade** | **407** | **preferredPath=N/A, error=Unknown** |
+| pending_render_gate | 41 | debaser, cirkus, arkdes |
+
+### Signal-analys för 21 Success Sources
+
+**Låg-event problem:** 9 av 21 har ≤2 events trots höga signals:
+
+| Källa | Events | Signals (tt+d) | Problem |
+|-------|--------|----------------|---------|
+| mariestad | 1 | 6 | Signals överskattar |
+| liljevalchs | 2 | 9 | Signals överskattar |
+| mjolby | 1 | 16 | Signals överskattar |
+| malmo-stad | 1 | 18 | Signals överskattar |
+| borlange | 1 | 18 | Signals överskattar |
+| molndals | 1 | 24 | Signals överskattar |
+| kungsbacka | 1 | 27 | Signals överskattar |
+| aik | 1 | 30 | Signals överskattar |
+| katrineholm | 2 | 43 | Signals överskattar |
+
+**Slutsats:** `timeTagCount + dateCount` hittar "event-like content" men extraction hittar få/inga events.
+
+### Generalization Gate Status
+| Pattern | Sajter | Krav | Status |
+|---------|--------|------|--------|
+| Low extraction trots hög density | 9 | 2-3 | **VERIFIERAD** — men site-specifik orsak? |
+
+### Kvarvarande flaskhals
+- **407 aldrig testade sources** — största potentiella kvantiteten
+- **9 låg-event success** — signalsystemet överskattar (kan bero på sidstruktur)
+- **41 pending_render_gate** — D-renderGate saknas
+
+### Tre möjliga nästa steg
+
+| # | Steg | Systemnytta | Risk | Varför nu |
+|---|------|-------------|------|-----------|
+| 1 | **Kör triage på 5-10 av de 407 aldrig testade** | Hög: breddar modell-data | Låg: diagnostik | Största gruppen, har aldrig körts |
+| 2 | **Analysera 1-2 låg-event sources (mariestad, liljevalchs)** | Medel: förstå signals vs extraction gap | Låg: detaljerad analys | 9/21 har detta problem |
+| 3 | **Verifiera full pipeline för 1 success källa (phase1ToQueue→DB)** | Medel: bekräftar end-to-end | Låg: beprövad metod | Säkerställer att events faktiskt når databas |
+
+### Rekommenderat nästa steg
+- **#1 — Kör triage på 5-10 aldrig testade sources**
+
+Motivering: 407 sources har ALDRIG körts. Detta är den största potentiella källan till nya success-sources. Vi behöver bredda testningen INNAN vi kan göra generella slutsatser.
+
+### Två steg att INTE göra nu
+1. **Ändra signal-threshold** — 9 låg-event källor kan ha site-specifika orsaker (extraction vs signals)
+2. **Fokusera på 41 pending_render_gate** — D-renderGate finns inte, dessa är blockerade
+
+### System-effect-before-local-effect
+- Valt steg (#1): Breddar modell-validering till den stora untested gruppen
+- Varför: Vi kan inte göra generella uttalanden om modellen om 407/420 källor aldrig körts
+
+---
+
 ## Nästa-steg-analys 2026-04-05 (loop 49)
 
 ### Vad förbättrades denna loop

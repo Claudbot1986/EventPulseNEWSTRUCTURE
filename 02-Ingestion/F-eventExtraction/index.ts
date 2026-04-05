@@ -7,7 +7,7 @@
  * Extracted fields:
  * - title, date, time, venue, URL, ticket URL, status
  *
- * Output feeds into G-qualityGate for confidence scoring.
+ * Output feeds into G-qualityGate (moved to TEMP/ - not currently active).
  */
 
 export { extractFromJsonLd, extractHighConfidenceEvents, extractFromHtml, toRawEventInput } from './extractor';
