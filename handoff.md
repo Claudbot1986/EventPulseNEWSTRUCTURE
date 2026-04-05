@@ -1,4 +1,57 @@
-# handoff.md — 2026-04-05
+# handoff.md — 2026-04-05 (UPPDATERAD)
+
+## LOOP 20: Modellvalidering via sourceTriage
+
+### Vad förbättrades denna loop
+- Körde 7 aldrig-testade sources genom sourceTriage (C0→C1→C2 full pipeline)
+- **Resultat: 1/7 success** (friidrott.se - 4 events via network path)
+- C0 hittade candidatesidor för 4/7 sources men de flesta gav fortfarande 0 events
+- Identifierade root cause: C2 vs extractFromHtml() osynkning bekräftad
+
+### C0 Discovery-resultat
+| Källa | C0 candidate | Density | Slutsats |
+|-------|-------------|---------|----------|
+| friidrott | root | - | network→4 events ✓ |
+| folkoperan | root | - | wrong-type, 0 events |
+| dunkers | /evenemang-dunkers/ | 25 | wrong-type, 0 events |
+| eskilstuna | root | - | no-jsonld, 0 events |
+| helsingborgskonserthus | /evenemang/ | 258 | wrong-type, 0 events |
+| lindesberg | /omsorg-och-stod/... | 11 | no-jsonld, 0 events |
+| lth | /kalendarium/ | 30 | no-jsonld, 0 events |
+
+### Root-cause bekräftad
+**C2→extractFromHtml() gap:** C2 ger "promising" baserat på density, MEN extractFromHtml() kräver specifika URL-datum-mönster. Exempel:
+- helsingborgskonserthus: C0 hittade /evenemang/ (density=258), C2 säger promising → MEN 0 events
+- lth: C0 hittade /kalendarium/ (density=30), C2 säger promising → MEN 0 events
+
+**Slutsats:** extractFromHtml() URL-datum-krav är för restriktivt för dessa sajter.
+
+### Sources-status (efter denna körning)
+| Status | Antal | Kommentar |
+|--------|-------|-----------|
+| success | 12 | +1 (friidrott) |
+| fail | 386 | -1 |
+| triage_required | 14 | Oförändrad |
+
+### Tre möjliga nästa steg
+
+| # | Steg | Systemnytta | Risk | Varför nu |
+|---|------|-------------|------|-----------|
+| 1 | Utöka extractFromHtml() med fler datumstrategier (query-param, relaterade-sidor) | Fixar 4+ sajter med dates i URL params | Medium — kan öka brus | Root cause bekräftad: query-param datum |
+| 2 | Analysera varför wrong-type → 0 events (JSON-LD finns men inga events) | Förstår JSON-LD extraction gap | Låg | 3/7 sources hade JSON-LD men 0 events |
+| 3 | Kör C0→C2 på fler aldrig-testade sources (20+) | Bred modellvalidering | Låg | Mål: ≥10 nya testade |
+
+### Rekommenderat nästa steg
+**[1] — Analysera extractFromHtml() URL-datum gap på 3-5 sources** — Root cause bekräftad: query-param datum (arkdes, lth) och URL-datum-format. Behöver utökas.
+
+### Två steg att INTE göra nu
+1. **Ändra C2 scoring weights** — Generalization Gate stoppar. Bara 12 success sources.
+2. **Bygga D-renderGate** — ej prioriterat (bara 3 sources i render-kö)
+
+### System-effect-before-local-effect
+Att förstå extractFromHtml() gapet är högre ROI än att skala en pipeline vi inte förstår.
+
+---
 
 ## VIKTIG UPPDATERING: Sources Reality (2026-04-05)
 
