@@ -2,6 +2,59 @@
 
 ---
 
+## Nästa-steg-analys 2026-04-06 (loop 52)
+
+### Vad förbättrades denna loop
+- **Batch 002 klar:** 10 C-kandidater testade via sourceTriage (C0→C1→C2→extract)
+- **2 nya success-sources:** friidrottsf-rbundet (3 events via network), avicii-arena-sport (6 events via network)
+- **Batch 002 stopReason:** plateau — 4/8 failures är infrastructure (DNS/ENOTFOUND), 4/8 är wrong-type JSON-LD
+- **Total success nu:** 24 källor (22 tidigare + 2 nya)
+
+### Root-cause (nyckelobservation)
+
+**Batch 002 visar tydlig infrastructure vs content-distinktion:**
+
+| Kategori | Antal | Exempel | Orsak |
+|----------|-------|---------|--------|
+| Infrastructure fail | 4 | arbetsam, a6, abb-arena, malmo-opera | DNS/-certifikat |
+| Wrong-type JSON-LD | 4 | allt-om-mat, artipelag, af, avicii-arena | Finns JSON-LD men ej Event-typ |
+| Network viable | 2 | friidrottsf-rbundet, avicii-arena-sport | Network gate extrakterar |
+| HTML viable | 0 | - | Ingen ren HTML källa |
+
+**Slutsats:** Batch 002 innehåller fårena "ren HTML" kandidater. Flertalet är antingen:
+1. Infrastructure-problem (ej C-lager fixbar)
+2. JSON-LD wrong-type men network-viable
+3. Network gate fungerar för arena-typer
+
+### Sources-blockerare (uppdaterad)
+| Kategori | Antal | Exempel |
+|----------|-------|---------|
+| Success (events>0) | **24** | berwaldhallen(216), avicii-arena-sport(6), friidrottsf-rbundet(3) |
+| fail (infra) | 384 | DNS/timeout/404 |
+| SiteVision (JS) | ~15 | karlskoga, borlange, malmo-stad |
+| pending_render_gate | 5 | cirkus, arkdes, debaser |
+| pending_api | 2 | ticketmaster, eventbrite |
+| manual_review | 4+ | arbetsam, a6, abb-arena, malmo-opera |
+
+### Tre möjliga nästa steg
+
+| # | Steg | Systemnytta | Risk | Varför nu |
+|---|------|-------------|------|-----------|
+| 1 | **Kör phase1ToQueue på 24 success-sources** | Hög: verifierar pipeline | Låg: batch | Nu när vi har 24 bekräftade källor |
+| 2 | **Undersök wrong-type JSON-LD för network path** | Medel: potentiellt 4+ nya | Medel: behöver network gate justering | avicii-arena visar att network fungerar för arena-typer |
+| 3 | **Batch 3 — välj renare HTML-kandidater** | Medel: breddar modell-data | Låg: diagnostik | Batch 002 hade få HTML-viable, nästa bör välja bättre |
+
+### Rekommenderat nästa steg
+- **#1 — Kör phase1ToQueue på 24 success-sources**
+
+Motivering: Med 24 bekräftade källor (varav 2 nya från batch 002) behöver vi verifiera att events faktiskt flödar genom hela pipeline: extraction → queue → worker → DB.
+
+### Två steg att INTE göra nu
+1. **Fortsätta förbättringscykel på batch 002** — plateau pga infrastructure/wrong-type, ej fixbar med C-lager
+2. **Ändra C1 signal-threshold** — batch 002 visar få HTML-viable, Generalization Gate kräver 2-3+ sajter
+
+---
+
 ## Nästa-steg-analys 2026-04-05 (loop 51)
 
 ### Vad förbättrades denna loop

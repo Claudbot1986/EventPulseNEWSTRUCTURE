@@ -1,20 +1,20 @@
 {
-  "currentBatch": 1,
+  "currentBatch": 2,
   "batchSize": 10,
   "status": "completed",
   "batchSources": [
-    "hallsberg",
-    "ifk-uppsala",
-    "karlskoga",
-    "kumla",
-    "kungliga-musikhogskolan",
-    "lulea-tekniska-universitet",
-    "naturhistoriska-riksmuseet",
-    "polismuseet",
-    "stockholm-jazz-festival-1",
-    "liljevalchs-konsthall"
+    "friidrottsf-rbundet",
+    "malmo-opera",
+    "allt-om-mat",
+    "arbetsam",
+    "artipelag",
+    "a6",
+    "abb-arena",
+    "af",
+    "avicii-arena-sport",
+    "avicii-arena"
   ],
-  "completedBatches": [1],
+  "completedBatches": [1, 2],
   "lastBatchRun": "2026-04-06T00:00:00.000Z",
   "candidateQuery": {
     "triageResult": "html_candidate",
@@ -24,14 +24,13 @@
     "excludeVerifiedPaths": ["network", "api", "render"],
     "excludeStatus": ["success", "pending_api", "pending_render_gate", "pending_source_adapter"]
   },
-  "reportPath": "02-Ingestion/C-htmlGate/reports/batch-001/",
-  "batchNotes": "Batch 001 completed with plateau stopReason. Pre: 0 success / 0 events. Post: 2 success / 5 events. 2 infrastructure fail (DNS/timeout), 6 extraction gap (timeTagOnly-noUrlDate pattern). Enhancement to F-eventExtraction Strategy 4 was considered but not implemented due to plateau — same pattern across all 6 failing sources with no clear improvement trajectory.",
+  "reportPath": "02-Ingestion/C-htmlGate/reports/batch-002/",
+  "batchNotes": "Batch 002 completed. Pre: 0 success / 0 events. Post: 2 success / 9 events. 4 infrastructure fail (DNS/certificate), 4 unclear/no events (wrong-type/JSON-LD but no Event data). Network gate found events for friidrottsf-rbundet (3) and avicii-arena-sport (6). Pattern: arena/museum/event-venue types often have JSON-LD wrong-type but network gate can extract.",
   "metadata": {
-    "selectedAt": "2026-04-05T21:00:00.000Z",
+    "selectedAt": "2026-04-06T00:00:00.000Z",
     "completedAt": "2026-04-06T00:00:00.000Z",
     "eligibilityRulesVersion": "1.1",
-    "selectionCriteria": "C-htmlGate batch-eligible filter (html_candidate + fail/triage_required + no D-renderGate + no A/B-verified path)",
-    "subpageAwareAbStatus": "not_required"
+    "selectionCriteria": "C-htmlGate batch-eligible filter (fail/triage_required + unknown path + no D-renderGate + no A/B-verified path)"
   },
   "preRunResults": {
     "successCount": 0,
@@ -40,12 +39,29 @@
   },
   "postRunResults": {
     "successCount": 2,
-    "failCount": 6,
-    "infrastructureFail": 2,
-    "eventsTotal": 5
+    "failCount": 8,
+    "infrastructureFail": 4,
+    "eventsTotal": 9
   },
   "cyclesCompleted": 0,
   "maxCyclesAllowed": 3,
   "stopReason": "plateau",
-  "plateauReached": true
+  "plateauReached": true,
+  "patternsFound": [
+    "infrastructure-fail (DNS/ENOTFOUND)",
+    "wrong-type (JSON-LD exists but no Event type)",
+    "network-gate-viable (avicii-arena, friidrott)"
+  ],
+  "sourceResults": [
+    {"sourceId": "friidrottsf-rbundet", "events": 3, "verdict": "success", "path": "network", "failureMode": null},
+    {"sourceId": "malmo-opera", "events": 0, "verdict": "fail", "path": "infrastructure", "failureMode": "certificate-mismatch"},
+    {"sourceId": "allt-om-mat", "events": 0, "verdict": "fail", "path": "unclear", "failureMode": "wrong-type-jsonld"},
+    {"sourceId": "arbetsam", "events": 0, "verdict": "fail", "path": "infrastructure", "failureMode": "DNS-ENOTFOUND"},
+    {"sourceId": "artipelag", "events": 0, "verdict": "fail", "path": "unclear", "failureMode": "wrong-type-jsonld"},
+    {"sourceId": "a6", "events": 0, "verdict": "fail", "path": "infrastructure", "failureMode": "DNS-ENOTFOUND"},
+    {"sourceId": "abb-arena", "events": 0, "verdict": "fail", "path": "infrastructure", "failureMode": "DNS-ENOTFOUND"},
+    {"sourceId": "af", "events": 0, "verdict": "fail", "path": "unclear", "failureMode": "wrong-type-jsonld"},
+    {"sourceId": "avicii-arena-sport", "events": 6, "verdict": "success", "path": "network", "failureMode": null},
+    {"sourceId": "avicii-arena", "events": 0, "verdict": "fail", "path": "unclear", "failureMode": "wrong-type-jsonld"}
+  ]
 }
