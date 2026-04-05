@@ -2,71 +2,69 @@
 
 ---
 
-## Nästa-steg-analys 2026-04-05 (loop 37)
+## Nästa-steg-analys 2026-04-05 (loop 38)
 
 ### Vad förbättrades denna loop
-- **ROTORSAK BEKRÄFTAD för folkoperan:** C0 hittar 0 links pga www→non-www redirect
-- **C0 fungerar:** Verifierat på helsingborgs-konserthus (68 links → winner=/evenemang/)
-- **SiteVision-mönster verifierat bredare:** 6 fail, 2 lyckas ( få events), 1 karlskrona=inte SiteVision
-- **Precision:** 9/34 = 26.5% (oförändrad)
+- **Tixly-sökning AVSLUTAD:** Endast berwaldhallen har verifierat Tixly API. Inga andra svenska venues i source-listan.
+- **Network path uttömd:** inga fler Tixly/Event API hittades i 420 sources
+- **Verifierad verklighet:** 9/420 sources = 2.1% fungerar, 402 fail, 4 pending_render_gate, 2 pending_api
 
 ### Root-cause (nyckelobservation)
 
-**folkoperan www→non-www redirect bugg:**
+**Tixly-mönstret är isolerat till EN sajt:**
 ```
-1. Source URL: https://www.folkoperan.se
-2. Server redirectar till https://folkoperan.se (utan www)
-3. cheerio laddar HTML från folkoperan.se
-4. cheerio ser hrefs: https://folkoperan.se/pa-scen/
-5. C0 sätter baseUrl = new URL('https://www.folkoperan.se').origin = 'www.folkoperan.se'
-6. Origin-check: 'folkoperan.se' !== 'www.folkoperan.se' → ALLA 64 links FILTRERAS UT
+- berwaldhallen: /api/services/tixly/data → 216 events ✓
+- folkoperan: /api/services/tixly/data → 404 (saknas)
+- Inga andra venues i 420 sources använder Tixly
+- Network path har redan hittat alla API:er (berwaldhallen enda framgång)
 ```
-Resultat: C0 hittar 0 links, scheduler ger manual_review.
 
-**Men - Site-Specific enligt Generalization Gate:**
-- Pattern "www Redirect Blocks C0 Discovery" verifierat på EN sajt
-- Kräver 2-3 sajter innan C0-ändring tillåts
+**Source-validering blockerad av infrastructure:**
+- 402 sources fail pga: DNS-fel, timeouts, 404s, certifikatfel
+- Inte modellproblem utan infrastructure-problem
+- Inga nya verktyg behövs - behöver bara hitta vilka 9 som fungerar
 
-### Sources som testades denna loop
-| Källa | Test | Resultat |
-|-------|------|----------|
-| folkoperan | C0-discoverEventCandidates | 0 links (www-redirect) |
-| helsingborgs-konserthus | C0-discoverEventCandidates | 68 links → winner=/evenemang/ ✓ |
-| oland | C0-discoverEventCandidates | 6 links → winner=/kalender ✓ |
+### Sources blockerade (updated)
+| Kategori | Antal | Exempel |
+|----------|-------|---------|
+| fail (infra) | 402 | DNS/timeout/404 |
+| pending_render_gate | 4 | cirkus, moderna-museet-malmo |
+| pending_api | 2 | ticketmaster, eventbrite |
+| Success | 9 | berwaldhallen, konserthuset, abf, etc |
 
 ### Generalization Gate Status
 | Pattern | Sajter | Krav | Status |
 |---------|--------|------|--------|
-| www Redirect Blocks C0 Discovery | 1 (folkoperan) | 2-3 | needsVerification |
+| Tixly API | 1 (berwaldhallen) | 2-3 | **BLOCKERAD** — inga fler sajter |
+| www Redirect Blocks C0 | 1 (folkoperan) | 2-3 | needsVerification |
 | SiteVision CMS utan tid | 6 | 2-3 | **Provisionally General** |
-| Kommun-sajter låg event-extraction | 8 | 2-3 | **Provisionally General** |
 
 ### Kvarvarande flaskhals
-- **26.5% precision** - C1 överskattar många sajter
-- **9 success sources** - långt under 10+ modell-valideringsmål
-- **Inga verktyg för att testa 335 manual_review-sources** - kräver ny approach
-- **folkoperan www-redirect** - Site-Specific, ingen C-lager fix möjlig
+- **9/420 = 2.1% success rate** - model validation omöjlig med så få
+- **Inga fler network API:er att upptäcka** - Tixly är enda mönstret
+- **Infrastrukturfel dominerar** - 402 fail pga DNS/timeout/404, inte modell
+- **inga verktyg för att fixa infra-fel** - source adapter behövs för varje
 
 ### Tre möjliga nästa steg
 
 | # | Steg | Systemnytta | Risk | Varför nu |
 |---|------|-------------|------|-----------|
-| 1 | **Undersöknetwork path för Tixly-baserade sajter** | Hög: kan hitta 100+ events | Låg: beprövat mönster | Berwaldhallen=216 via Tixly API |
-| 2 | **Kör scheduler --source på hög-signal manual_review** | Medel: breddar modell-data | Medel: folkoperan visar att infra failures är vanliga | Vi har fortfarande ingen data för de flesta |
-| 3 | **Analysera folkoperan /pa-scen/ direkt** | Medel: förstå www-redirect mönstret | Låg: dokumentation | Kan hjälpa framtida source adapters |
+| 1 | **Kör scheduler --source på 5-10 aldrig-testade** | Medel: breddar modell-data | Medel: infra failures vanliga | Vi har 400+ att välja från |
+| 2 | **Undersök ticketmaster/eventbrite API** | Hög: globala APIs | Hög: dessa är komplexa | pending_api, enda kvar |
+| 3 | **Dokumentera alla fail-mönster** | Medel: förstå rotorsak | Låg: dokumentation | 402 fail - vi vet inte mönstret |
 
 ### Rekommenderat nästa steg
-- **#1 — Undersök network path för Tixly-baserade sajter**
+- **#1 — Kör scheduler --source på 5-10 aldrig-testade**
 
-Motivering: Berwaldhallen (Tixly API) ger 216 events. Andra Tixly-baserade svenska venues kan finnas. Network path är beprövat och kan snabbt öka event-kapitalet.
+Motivering: Vi har 400+ aldrig-testade källor. Att välja 5-10 från olika kategorier (kommun, förening, venue) breddar modell-valideringen.
 
 ### Två steg att INTE göra nu
-1. **Ändra C0 för www-redirect** — Site-Specific, endast folkoperan verifierad
-2. **Köra fler scheduler --source på manual_review** — folkoperan visar att infra failures är grunden, inte svag modell
+1. **Leta fler Tixly-API:er** — bekräftat: endast berwaldhallen finns
+2. **Bygga source adapters för enskilda sajter** — Site-Specific, går emot bred validerings-mål
 
 ### System-effect-before-local-effect
-- Valt steg (#1): Ger flest events per insats
-- Varför: Berwaldhallen visar att network API path fungerar för Tixly; letar efter fler sådana
+- Valt steg (#1): Breddar modell-validering med befintliga verktyg
+- Varför: Vi behöver 10+ sajter för Generalization Gate, vi har 9
 
 ---
 
