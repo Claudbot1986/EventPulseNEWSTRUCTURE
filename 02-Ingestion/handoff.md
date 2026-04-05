@@ -2,6 +2,154 @@
 
 ---
 
+## Nästa-steg-analys 2026-04-05 (loop 32)
+
+### Vad förbättrades denna loop
+- **Fixade phantom sources i sources_status.jsonl:** 5 poster pekade på filer som inte finns i sources/
+- **3 poster namnkorrigerades:** friidrott→friidrottsf-rbundet, malmoopera→malmo-opera, textilmuseet→textilmus-et
+- **2 orphaned poster borttagna:** malmolive (aldrig importerad), sbf (fins inte heller som source-fil)
+- **Nuvarande verklighet:** 420 source-filer, 423 status-poster, 0 phantoms
+
+### Ändringar
+1. **runtime/sources_status.jsonl:** Uppdaterade 3 poster och tog bort 2
+   - friidrott → friidrottsf-rbundet (filen finns: friidrottsf-rbundet.jsonl)
+   - malmoopera → malmo-opera (filen finns: malmo-opera.jsonl)
+   - textilmuseet → textilmus-et (filen finns: textilmus-et.jsonl, typo i filnamn)
+   - malmolive → borttagen (ingen motsvarande fil, aldrig importerad)
+   - sbf → borttagen (ingen motsvarande fil, aldrig importerad)
+
+### Verifiering
+```
+✓ sources_status.jsonl: 425 → 423 poster
+✓ Phantom sources: 5 → 0
+✓ Alla 3 namnkorrigerade matchar nu existerande filer
+✓ Success sources (11 st): alla verifierade mot faktiska filer
+```
+
+### Root-cause (nyckelobservation)
+
+**Phantom sources uppstår genom namn-mismatch mellan två system:**
+1. `01-Sources/ALL_SOURCES.md` och `01-Sources/candidates/` använder svenska normaliserade IDn
+2. `sources/` filer kan ha annorlunda namn (t.ex. "friidrottsf-rbundet" vs "friidrott")
+3. `sources_status.jsonl` behöll original-IDn från triage men source-filerna heter annorlunda
+
+**Dokumenterade filnamn-typor:**
+- `textilmuseet` → faktisk fil: `textilmus-et.jsonl` (间-utelämnad)
+
+### Sources som påverkas
+| Källa | Åtgärd | Orsak |
+|-------|--------|-------|
+| friidrott | → friidrottsf-rbundet | namn-match med fil |
+| malmoopera | → malmo-opera | namn-match med fil |
+| textilmuseet | → textilmus-et | namn-match med fil (typo) |
+| malmolive | borttagen | aldrig importerad till sources/ |
+| sbf | borttagen | aldrig importerad till sources/ |
+
+### Generalization Gate Status
+| Pattern | Sajter | Krav | Status |
+|---------|--------|------|--------|
+| Filnamn-typo i source-import | 1 | 1 | **Dokumenterad** (textilmus-et) |
+
+### Kvarvarande flaskhals
+- **~97% fail-rate** fortfarande: 402/413 fail
+- **Inga nya sources hittade:** Bara städning denna loop
+- **malmolive och sbf är nu helt borta:** Dessa sources måste återskapas om de önskas
+
+### Tre möjliga nästa steg
+
+| # | Steg | Systemnytta | Risk | Varför nu |
+|---|------|-------------|------|-----------|
+| 1 | **Kör --triage-batch på 20+ aldrig-testade** | Hög: breddar modell-validering | Låg: beprövad metod | Vi behöver 10+ sajter för Generalization Gate |
+| 2 | **Återskapa malmolive och sbf som sources** | Medel: återställer förlorade källor | Låg: de kan återskapas från 01-Sources | Dessa hade events men är nu borta |
+| 3 | **Undersök dramaten-statusbugg** | Låg: 1 event extraheras men fail-status | Låg: scheduler-logik | Visar statusuppdateringsproblem |
+
+### Rekommenderat nästa steg
+- **#1 — Kör --triage-batch på 20+ aldrig-testade**
+
+Motivering: Nu när phantom-sources är fixade kan vi bredda modell-valideringen med verkliga tester. Vi behöver 10+ sajter för att kunna göra Generalization Gate-analys.
+
+### Två steg att INTE göra nu
+1. **Fixa dramaten-statusbugg** — Låg prioritet, 1 event skillnad
+2. **Bygga source adapters för enskilda sajter** — Site-Specific, går emot bred validerings-mål
+
+### System-effect-before-local-effect
+- Valt steg (#1): Breddar modell-validering
+- Varför: Utan 10+ testade sajter kan vi inte göra Generalization Gate
+
+---
+
+## Nästa-steg-analys 2026-04-05 (loop 31)
+
+### Verifiering
+```
+✓ cirkus: 6tt, 0 events (Next.js/Payload, embedded JSON)
+✓ arkdes: 2tt, 0 events
+✓ bokmassan: 5tt, 0 events
+✓ smalandsposten: 18tt, 0 events (nyhetssida, inte events)
+✓ stenungsund: 0 events (bekräftad SiteVision)
+✗ stenungsund: 0 events - SiteVision /visit-events/ utan tid
+```
+
+### Root-cause (nyckelobservation)
+
+**C1 misstolkar sajter med `<time>` element:**
+```
+smalandsposten: 18tt, 0 events
+→ 18 time-tags = NYHETSARTIKLAR, inte events
+→ C1 hittar tidtaggar men ingen event-url struktur
+
+bokmassan: 5tt, 0 events  
+→ Evenemangsida för författarmöten, men inga event-links
+```
+
+**Sources status-datakvalitet:**
+- 428 poster i sources_status.jsonl
+- 3 phantom: gronalund, nrm, shl (finns INTE i sources/)
+- dramaten: 1 event extraherat men status=fail (bugg)
+
+### Sources som påverkas
+| Källa | C1 Signaler | Events | Observation |
+|-------|-------------|--------|-------------|
+| cirkus | 6tt | 0 | Next.js/Payload, embedded JSON |
+| arkdes | 2tt | 0 | Museum, inga event-links |
+| bokmassan | 5tt | 0 | Författarmöten, låg event-signal |
+| smalandsposten | 18tt | 0 | Nyhetssida, 49 headings |
+| stenungsund | 0tt | 0 | SiteVision /visit-events/ |
+
+### Generalization Gate Status
+| Pattern | Sajter | Krav | Status |
+|---------|--------|------|--------|
+| SiteVision CMS utan tid | 5 | 2-3 | **Provisionally General** (borlange, malmo, uppsala, stenungsund + fler) |
+
+### Kvarvarande flaskhals
+- **C1 överskattar sajter:** Alla 5 nya testade sajter misslyckades
+- **~97% fail-rate:** 402/413 fail
+- **Phantom sources:** 3 poster pekar på icke-existerande sources
+- **dramaten bugg:** 1 event men fail-status
+
+### Tre möjliga nästa steg
+
+| # | Steg | Systemnytta | Risk | Varför nu |
+|---|------|-------------|------|-----------|
+| 1 | **Fixa phantom sources (gronalund, nrm, shl)** | Låg: datakvalitet | Låg: ta bort poster | Felposter förvirrar framtida analys |
+| 2 | **Sök nya icke-SiteVision-sajter** | Medel: breddar modell-validering | Medel: hitta nya källor | 10+ testade behövs |
+| 3 | **Undersök dramaten-statusbugg** | Låg: 1 event extraheras men fail rapporteras | Låg: scheduler-logik | Visar statusuppdateringsproblem |
+
+### Rekommenderat nästa steg
+- **#1 — Fixa phantom sources i sources_status.jsonl**
+
+Motivering: De 3 phantom-sources (gronalund, nrm, shl) finns i status men inte i sources/. Att ta bort dessa poster förbättrar datakvalitet och analys noggrannhet.
+
+### Två steg att INTE göra nu
+1. **Bygga source adapter för enskild sajt** — Site-Specific, går emot bred validerings-mål
+2. **Ändra C1 scoring** — 97% fail-rate beror inte på scoring utan på verkliga skillnader
+
+### System-effect-before-local-effect
+- Valt steg (#1): Förbättrar datakvalitet
+- Varför: Analys blir mer exakt när felposter tas bort
+
+---
+
 ## Nästa-steg-analys 2026-04-05 (loop 30)
 
 ### Vad förbättrades denna loop
