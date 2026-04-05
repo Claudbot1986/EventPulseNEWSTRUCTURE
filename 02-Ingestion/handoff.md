@@ -2,6 +2,78 @@
 
 ---
 
+## Nästa-steg-analys 2026-04-05 (loop 40)
+
+### Vad förbättrades denna loop
+- **timeTagCount-mönster BEKRÄFTAT:** 14 triage_required sources undersökta
+- **2+ sajter verifierade:** polismuseet (24 öppettider utan datum) + nrm ("Hela dagen", "10:30")
+- **Root-cause bekräftad:** `datetime="HH:MM:SS"` utan datum = öppettider
+- **Ny insikt:** timeTagCount MED datum fungerar (ifk-uppsala, ltu, karlskoga, hallsberg, kumla har alla datum-bärande datetime) men ger fortfarande 0 events
+
+### Root-cause (nyckelobservation)
+
+**timeTagCount UTAN datum-filter är bekräftad på 2+ sajter:**
+
+| Källa | timeTagCount | datetime-typ | Events | Observation |
+|-------|--------------|--------------|--------|-------------|
+| polismuseet | 24 | `11:00:00`, `17:00:00` | 0 | 24 öppettider utan datum |
+| nrm | 10+ | `"Hela dagen"`, `"10:30"` | 0 | öppettider, ej events |
+| ifk-uppsala | 6 | `2026-03-27T20:49:59` | 0 | blogposts, ej events |
+| ltu | 5+ | `2026-04-02`, `2026-04-09T11:30` | 0 | nyhetssida, ej events |
+
+**Vad modellen tror:** "timeTagCount >= 3 → html_candidate"
+**Verklighet:** timeTagCount MED datum (ifk-uppsala, ltu, karlskoga) ger fortfarande 0 events
+
+**Förbättrad signal behövs:**
+- `datetime` med datum → event-tid (t.ex. `datetime="2026-05-01T19:00"`)
+- `datetime` UTAN datum → öppettid (t.ex. `datetime="11:00:00"`)
+- Men: även datum-bärande timeTags ger 0 events (fel page vald, ingen event-page)
+
+### Sources blockerade (updated)
+| Kategori | Antal | Exempel |
+|---------|-------|---------|
+| fail (infra) | 376 | DNS/timeout/404 |
+| triage_required | 14 | polismuseet, nrm, ifk-uppsala, karlskoga |
+| pending_render_gate | 5 | cirkus, arkdes, debaser |
+| pending_api | 2 | ticketmaster, eventbrite |
+| Success | 20 | berwaldhallen, konserthuset, abf |
+
+### Generalization Gate Status
+| Pattern | Sajter | Krav | Status |
+|---------|--------|------|--------|
+| timeTagCount utan datum-filter | 2 (polismuseet, nrm) | 2-3 | **needsVerification** |
+| timeTagCount MED datum men 0 events | 5 (ifk-uppsala, ltu, karlskoga, hallsberg, kumla) | 2-3 | needsVerification |
+| SiteVision CMS utan tid | 4 | 2-3 | Provisionally General |
+
+### Kvarvarande flaskhals
+- **14 triage_required sources** — C1 säger `html_candidate` men extraction=0
+- **timeTagCount är felkalibrerad** — räknar öppettider som event-tider
+- **Modell-validering fortfarande omöjlig** — 20/420 = 4.8% success rate
+- **Fel page vald** — ifk-uppsala, karlskoga, kumla har datum-bärande timeTags men fel page/ingen event-page
+
+### Tre möjliga nästa steg
+
+| # | Steg | Systemnytta | Risk | Varför nu |
+|---|------|-------------|------|-----------|
+| 1 | **Fixa timeTagCount-datum-filter i C1** | Hög: förbättrar C1 precision | Medel: kan påverka andra sajter | polismuseet + nrm bekräftar mönstret |
+| 2 | **Undersök C0 page discovery på ifk-uppsala** | Medel: förstå varför blogposts valts | Låg: dokumentation | ifk-uppsala har eventsignal men fel page |
+| 3 | **Kör phase1ToQueue på 20 success-sources** | Medel: verifierar pipeline | Låg: verifiering | Vi har 20 fungerande |
+
+### Rekommenderat nästa steg
+- **#2 — Undersök C0 page discovery på ifk-uppsala**
+
+Motivering: ifk-uppsala har 6tt MED datum men ger 0 events. Detta tyder på att C0 page discovery inte hittar rätt page, inte att timeTagCount-signalen är fel. Vi behöver förstå page-discovery-problemet.
+
+### Två steg att INTE göra nu
+1. **Ändra timeTagCount-logik NU** — Endast 2 sajter bekräftad (polismuseet, nrm), Generalization Gate kräver 2-3 med samma root-cause
+2. **Köra phase1ToQueue på alla 20** — Lägre prioritet än modell-validering
+
+### System-effect-before-local-effect
+- Valt steg (#2): Förstår page-discovery-problemet
+- Varför: Utan rätt page hittar vi inga events oavsett signal-kvalitet
+
+---
+
 ## Nästa-steg-analys 2026-04-05 (loop 39)
 
 ### Vad förbättrades denna loop
