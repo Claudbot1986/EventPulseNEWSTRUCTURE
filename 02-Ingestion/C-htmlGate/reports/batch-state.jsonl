@@ -20,7 +20,10 @@
     "triageResult": "html_candidate",
     "statusIn": ["fail", "triage_required"],
     "excludePendingRenderGate": true,
-    "excludeManualReview": true
+    "excludeManualReview": true,
+    "excludeVerifiedPaths": ["network", "api", "render"],
+    "excludeStatus": ["success", "pending_api", "pending_render_gate", "pending_source_adapter"]
   },
-  "notes": "First C-batch for model validation. Sources selected as C-candidates (html_candidate triage result + fail/triage_required status, no D-renderGate pending)"
+  "reportPath": "02-Ingestion/C-htmlGate/reports/batch-001/",
+  "batchNotes": "Batch 001 är i reparationsfas - skapad med rätt C-kandidatklassning men ej körbar ännu. Nästa 123-körning ska välja nästa 10 från den fullständiga C-kandidatkön (15 st)."
 }
