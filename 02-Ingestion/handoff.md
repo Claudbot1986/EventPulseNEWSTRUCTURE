@@ -2,6 +2,59 @@
 
 ---
 
+## Nästa-steg-analys 2026-04-05 (loop 21)
+
+### Vad förbättrades denna loop
+- **D-renderGate execute_render BEKRÄFTAD:** Scheduler väljer `execute_render` korrekt för render-källor
+- **Verifierat:** Fryshuset kör `renderPage()` → `net::ERR_FAILED` (CloudFlare blockerar)
+- **Verifierat:** ABF (html) → 8 events extraherade
+- **Verifierat:** Scandinavium → 0 events, `manual_review` (ingen event-signal)
+
+### Ändringar
+Inga kodändringar denna loop - endast verifiering.
+
+### Verifiering
+- `execute_render` path: ✓ Scheduler väljer rätt path för render-källor
+- `renderPage()` anropas: ✓
+- Site-Specific CloudFlare-blockering: ✗ Alla 5 render-källor blockerar headless Chrome
+
+### Sources som påverkas
+| Källa | Status | Problem |
+|-------|--------|---------|
+| fryshuset | pending_render_gate | CloudFlare blockerar headless Chrome |
+| sbf | pending_render | CloudFlare blockerar headless Chrome |
+| malmolive | pending_render | CloudFlare blockerar headless Chrome |
+| akersberga | pending_render_gate | CloudFlare blockerar headless Chrome |
+| bor-s-zoo-animagic | pending_render_gate | CloudFlare blockerar headless Chrome |
+
+### Kvarvarande flaskhals
+- **Site-Specific:** Alla render-källor blockerar headless Chrome - D-renderGate kan inte testa dessa
+- **Ingen miljöfil:** .env saknas så normalizer kan inte köras
+- **Events i Redis:** 326 events fast i raw_events-kö (kräver normalizer worker)
+
+### Tre möjliga nästa steg
+
+| # | Steg | Systemnytta | Risk | Varför nu |
+|---|------|-------------|------|-----------|
+| 1 | **Fixa CloudFlare-bypass för D-renderGate** | Hög: aktiverar 5 render-källor | Hög: behöver stealth teknik | Alla render-källor är blockerade |
+| 2 | **Skapa .env och kör normalizer worker** | Medel: validerar pipeline-slut | Låg: .env behövs för produktion | 326 events väntar på normalisering |
+| 3 | **Scouta nya källor (icke-CloudFlare)** | Medel: breddar källbas | Låg: nya sajter | 420 källor finns, många otrestade |
+
+### Rekommenderat nästa steg
+- **#2 — Skapa .env och kör normalizer worker**
+
+Motivering: D-renderGate fungerar (Site-Specific blockerar). Normalizer kan köras nu - 326 events i Redis bevisar att events kommit genom pipeline. Att köra normalizer validerar hela E2E-flödet.
+
+### Två steg att INTE göra nu
+1. **Fixa CloudFlare-bypass** — Site-Specific, kräver stealth/tekniker som behöver testas noggrant
+2. **Scouta nya källor** — 420 källor finns redan, vi har redan 8 "success" och 16 "pending"
+
+### System-effect-before-local-effect
+- Valt steg (#2): Kör normalizer
+- Varför: Validerar hela pipeline (ingestion → queue → normalize → database). Detta visar om hela systemet fungerar E2E.
+
+---
+
 ## Nästa-steg-analys 2026-04-04 (loop 20)
 
 ### Vad förbättrades denna loop
