@@ -24,6 +24,16 @@ Inga sources direkt, men alla `--source` kommandon fungerar nu korrekt utan hang
 - **Scheduler hang-bug VAR INTE FULLSTÄNDIGT FIXAD i loop 26:** Fixen lade endast till `process.exit(0)` i queue-branch (rad 859), inte i `--source` branch (rad 695)
 - **307+ aldrig testade sources:** Fortfarande ingen systematisk breddning av modell-validering
 - **5 triage_required sources:** Kan nu köras korrekt med `--triage-batch`
+- **Modell-validering insikt:** C1 strong signals (time-tags + dates) korrelerar INTE med hög event-extraction för kommun-sajter
+
+### Modell-analys (3 nya html_candidates testade)
+| Källa | C1 Signaler | Events | Observation |
+|-------|-------------|--------|-------------|
+| katrineholm | 23tt + 20d | 2 | Starka signaler men få events från root |
+| karlskrona | 10tt + 20d | 4 | Starka signaler men få events |
+| kungsbacka | 7tt + 20d | 1 | Starka signaler men 1 event |
+
+**Slutsats:** Kommun-sajter har ofta starka C1-signaler (datumkalendrar) men låg event-extraction från root. C1-screening överskattar dessa sajters potential.
 
 ### Tre möjliga nästa steg
 
