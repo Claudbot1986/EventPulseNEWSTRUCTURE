@@ -1,3 +1,46 @@
+# handoff.md — 2026-04-05
+
+## VIKTIG UPPDATERING: Sources Reality (2026-04-05)
+
+**Antal sources i sources_status.jsonl:** 423
+
+**Fördelning:**
+| Status | Antal | Kommentar |
+|--------|-------|-----------|
+| fail (NO_REASON) | 387 | Bulk-importerade, aldriq testade |
+| success | 11 | Verkligt testade |
+| triage_required | 5 | cirkus, arkdes, bokmassan, smalandsposten, stenungsund |
+| pending_render_gate | 3 | debaser, 2 andra |
+| pending_api | 2 | ticketmaster, eventbrite |
+
+**ROOT CAUSE:** 91% av sources kördes ALDRIG genom C0→C1→C2. De bulk-importerades men ingen triage kördes.
+
+**Nästa steg:** Bygg batch-triage runner ELLER analysera triage_required sources manuellt.
+
+---
+
+## TRIAGE_REQUIRED ANALYS (2026-04-05)
+
+**5 triage_required sources analyserade:**
+
+| Källa | Root Cause | Åtgärd |
+|--------|------------|--------|
+| **cirkus** | JS-rendered (Next.js) - events i `self.__next_f.push()` payload, ej HTML DOM | `pending_render_gate` |
+| **arkdes** | Datum i query-param (`?recurring-date=2026-04-04`) - extractFromHtml() stödjer EJ query-param | `pending_render_gate` |
+| **bokmassan** | Svenska datum "27 september 2026" finns men extraktion misslyckas | `manual_review` |
+| **smalandsposten** | Inga event-länkar i raw HTML - möjligen aggregat eller extern domän | `manual_review` |
+| **stenungsund** | Event-länkar pekar på extern domän (vastsverige.com) | `manual_review` |
+
+**ROOT CAUSE:** extractFromHtml() design gap - kräver URL-datum ELLER svensk datum-text i anchor, men arkdes har datum i query-param och andra har external event sources.
+
+**Sources status uppdaterad:** 5 sources omklassificerade.
+
+---
+
+**Föregående analys:**
+
+---
+
 # handoff.md — 2026-04-04
 
 ## AKTIVT SCOPE (2026-04-04) — HÄR STOPPAR ANALYSEN
