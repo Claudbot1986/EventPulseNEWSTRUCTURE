@@ -1,0 +1,19 @@
+{
+  "batchId": "_tmp_folkoperan-batch",
+  "timestamp": "2026-04-05T06:35:15.405Z",
+  "total": 1,
+  "diagnosis_counts": {
+    "wrong-type": 1
+  },
+  "next_path_counts": {
+    "network": 1
+  },
+  "approved_count": 0,
+  "approved_urls": [],
+  "network_gate": {
+    "model": "prelim_1src",
+    "signalsFound": 1,
+    "openAccessible": 1,
+    "blocked": 0
+  }
+}

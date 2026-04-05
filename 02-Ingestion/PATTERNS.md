@@ -39,6 +39,30 @@ Denna fil fångar **potentiellt generella mönster** upptäckta genom site-speci
 
 ---
 
+### Pattern: www Redirect Blocks C0 Discovery
+
+**Klassificering:** Provisionally General
+**Upptäckt via:** folkoperan.se
+**Datum:** 2026-04-05
+
+**Potentiellt generellt problem:**
+C0 (htmlFrontierDiscovery) misslyckas med att hitta event-candidates när käll-URL har `www` som pekar på icke-www via 301-redirect:
+- `https://www.folkoperan.se` → 301 → `https://folkoperan.se/`
+- C0 analyserar www-versionen och hittar inga candidates
+- C0 med direkt non-www hittar `/pa-scen/` med density=114 och 8 events
+
+**URL-struktur som påverkas:** Alla sajter med www→non-www redirect
+
+**Root-cause:** C0 använder käll-URL för link discovery, men redirect-status påverkar vilka links som hittas.
+
+**Antal sajter verifierade:** 1 (folkoperan)
+
+**Sajter att söka verifiering på:** Mål: 2-3 andra sajter med www-redirect
+
+**Status:** needsVerification = true
+
+---
+
 ### Pattern: SiteVision CMS med `/visit-events/` utan tid
 
 **Klassificering:** Provisionally General

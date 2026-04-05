@@ -2,6 +2,69 @@
 
 ---
 
+## Nästa-steg-analys 2026-04-05 (loop 35)
+
+### Vad förbättrades denna loop
+- **C0 FUNGERAR:** discoverEventCandidates hittar `/pa-scen/` på folkoperan (density=114, 8 events)
+- **Root-cause identifierad:** www-redirect blockerar C0 discovery för folkoperan
+- **Nytt mönster dokumenterat:** "www Redirect Blocks C0 Discovery" i PATTERNS.md
+- **Inga kodändringar:** Endast analys och dokumentation
+
+### Root-cause (nyckelobservation)
+
+**folkoperan är INTE broken - det är en URL-data-issue:**
+```
+sources/: url=https://www.folkoperan.se (301 → https://folkoperan.se/)
+med www:  C0 hittar 0 candidates → 0 events
+utan www: C0 hittar /pa-scen/ (density=114) → 8 events
+```
+
+**Faktisk modell-prestanda:**
+- folkoperan (correct URL): 8 events via C0 + extract
+- Men `approved=false` eftersom `next_path=network` (ej html-heuristics)
+- sourceTriage godkänner bara html-heuristics sources
+
+### Sources som påverkas
+| Källa | URL i sources/ | C0 resultat | Events |
+|-------|----------------|-------------|--------|
+| folkoperan | https://www.folkoperan.se | 0 candidates (www-blocked) | 0 (fel) |
+| folkoperan (testad) | https://folkoperan.se | /pa-scen/ (density=114) | 8 (rätt) |
+
+### Generalization Gate Status
+| Pattern | Sajter | Krav | Status |
+|---------|--------|------|--------|
+| www Redirect Blocks C0 Discovery | 1 | 2-3 | **needsVerification** |
+| SiteVision CMS utan tid | 4 | 2-3 | needsVerification |
+| Webflow CMS Extraction Gap | 1 | 2-3 | needsVerification |
+
+### Kvarvarande flaskhals
+- **URL-data-kvalitet:** Sources med fel URL (www-redirect) ger missvisande resultat
+- **23% precision** - bekräftad från loop 34
+- **Inga nya code-fixes identifierade** - modellen fungerar, vi behöver bredda testningen
+
+### Tre möjliga nästa steg
+
+| # | Steg | Systemnytta | Risk | Varför nu |
+|---|------|-------------|------|-----------|
+| 1 | **Kör sourceTriage på 5-10 fail-sources** | Hög: breddar modell-validering | Låg: beprövad metod | Vi har 26 html_candidates att välja från |
+| 2 | **Fixa folkoperan URL (www → non-www)** | Medel: korrekt data | Låg: datapatch | Rätt URL ger 8 events |
+| 3 | **Analysera approved=false för network sources** | Medel: förstå E2E-flow | Låg: dokumentation | folkoperan har 8 events men approved=false |
+
+### Rekommenderat nästa steg
+- **#1 — Kör sourceTriage på 5-10 fail-sources**
+
+Motivering: Vi har bekräftat att C0+C1+C2+extract fungerar korrekt (folkoperan=8 events med rätt URL). Nästa steg är att bredda testningen för att samla mer data för Generalization Gate.
+
+### Två steg att INTE göra nu
+1. **Bygga source adapter för folkoperan** — Site-Specific, handlar om URL-data
+2. **Ändra C-lager scoring** — Generalization Gate kräver 2-3+ sajter först
+
+### System-effect-before-local-effect
+- Valt steg (#1): Breddar modell-validering
+- Varför: Vi behöver fler testade sajter för att kunna göra Generalization Gate-analys
+
+---
+
 ## Nästa-steg-analys 2026-04-05 (loop 34)
 
 ### Vad förbättrades denna loop
