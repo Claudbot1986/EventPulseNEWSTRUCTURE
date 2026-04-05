@@ -74,6 +74,77 @@ Motivering: ifk-uppsala har 6tt MED datum men ger 0 events. Detta tyder på att 
 
 ---
 
+## Nästa-steg-analys 2026-04-05 (loop 41)
+
+### Vad förbättrades denna loop
+- **C0 page discovery på ifk-uppsala kördes direkt**
+- **Root-cause bekräftad:** C0 hittar 0 links på ifk-uppsala — sportsajter matchar inte EVENT_CONCEPTS
+
+### Root-cause (nyckelobservation)
+
+**C0 concept-coverage är för smal för sportsajter:**
+```
+ifk-uppsala links:
+  /fotboll-herr/ → score=0 (matchar inget koncept)
+  /a-lag/ → score=0
+  /u21/ → score=0
+  Inga kalender/evenemang/event/match/datum i navigation
+```
+
+**C0 `shouldIgnore()` ignorerar INTE dessa, men `calculateConceptScore()` returnerar score=0.**
+Därför: links med score=0 → `if (score === 0) return;` → 0 candidates
+
+**Men:** ifk-uppsala är en sportsajt — inte en venue/event-sajt. Detta är Site-Specific.
+
+**ifk-uppsala timeTags:**
+- 6 timeTags MED datum: `2026-03-27T20:49:59`, `2026-03-22T14:00:47`
+- Dessa är BLOG POSTS om avslutade matcher — INTE kommande events
+- Root-extraction ger 0 events korrekt — det finns inga kommande matcher på sidan
+
+### Sources blockerade (updated)
+| Kategori | Antal | Exempel |
+|---------|-------|---------|
+| fail (infra) | 376 | DNS/timeout/404 |
+| triage_required | 14 | polismuseet, nrm, ifk-uppsala, karlskoga |
+| pending_render_gate | 5 | cirkus, arkdes, debaser |
+| pending_api | 2 | ticketmaster, eventbrite |
+| Success | 20 | berwaldhallen, konserthuset, abf |
+
+### Generalization Gate Status
+| Pattern | Sajter | Krav | Status |
+|---------|--------|------|--------|
+| timeTagCount utan datum-filter | 2 (polismuseet, nrm) | 2-3 | needsVerification |
+| Sportsajt (fotbollsklubb) C0 missar | 1 (ifk-uppsala) | 2-3 | **Site-Specific** |
+| SiteVision CMS utan tid | 4 | 2-3 | Provisionally General |
+
+### Kvarvarande flaskhals
+- **14 triage_required sources** — C1 säger `html_candidate` men extraction=0
+- **timeTagCount är felkalibrerad** — räknar öppettider som event-tider
+- **Modell-validering fortfarande omöjlig** — 20/420 = 4.8% success rate
+
+### Tre möjliga nästa steg
+
+| # | Steg | Systemnytta | Risk | Varför nu |
+|---|------|-------------|------|-----------|
+| 1 | **Undersök karlskoga (triage_required)** | Medel: karlskoga kan ha riktig event-sida | Låg: dokumentation | ifk-uppsala visade sportsajt, inte event |
+| 2 | **Fixa timeTagCount-datum-filter i C1** | Hög: förbättrar C1 precision | Medel: kan påverka andra sajter | polismuseet + nrm bekräftar mönstret |
+| 3 | **Kör phase1ToQueue på 20 success-sources** | Medel: verifierar pipeline | Låg: verifiering | Vi har 20 fungerande |
+
+### Rekommenderat nästa steg
+- **#1 — Undersök karlskoga (triage_required)**
+
+Motivering: ifk-uppsala visade sig vara sportsajt utan event-navigation. Vi behöver en triage_required källa som faktiskt HAR event-liknande navigation men ändå ger 0 events. karlskoga kan ha en sådan sida.
+
+### Två steg att INTE göra nu
+1. **Lägga till sportspecifika koncept i C0** — Site-Specific, ifk-uppsala är en fotbollsklubb, inte en event-venue
+2. **Ändra timeTagCount-logik NU** — Endast 2 sajter bekräftad, Generalization Gate kräver 2-3
+
+### System-effect-before-local-effect
+- Valt steg (#1): Hittar en triage_required källa som faktiskt passar modellens förutsättningar
+- Varför: Vi behöver en kandidat med rätt förutsättningar för att kunna validera modellen
+
+---
+
 ## Nästa-steg-analys 2026-04-05 (loop 39)
 
 ### Vad förbättrades denna loop
