@@ -1,0 +1,26 @@
+{
+  "currentBatch": 1,
+  "batchSize": 10,
+  "status": "pending",
+  "batchSources": [
+    "hallsberg",
+    "ifk-uppsala",
+    "karlskoga",
+    "kumla",
+    "kungliga-musikhogskolan",
+    "liljevalchs-konsthall",
+    "lulea-tekniska-universitet",
+    "moderna-museet",
+    "naturhistoriska-riksmuseet",
+    "orebro-sk"
+  ],
+  "completedBatches": [],
+  "lastBatchRun": null,
+  "candidateQuery": {
+    "triageResult": "html_candidate",
+    "statusIn": ["fail", "triage_required"],
+    "excludePendingRenderGate": true,
+    "excludeManualReview": true
+  },
+  "notes": "First C-batch for model validation. Sources selected as C-candidates (html_candidate triage result + fail/triage_required status, no D-renderGate pending)"
+}
