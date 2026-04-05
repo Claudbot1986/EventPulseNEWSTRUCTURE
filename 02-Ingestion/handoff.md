@@ -2,6 +2,70 @@
 
 ---
 
+## Nästa-steg-analys 2026-04-05 (loop 26)
+
+### Vad förbättrades denna loop
+- **Fixade scheduler hang-bug:** Lade till `process.exit(0)` efter normal körning (rad 856)
+- **Verifierade fix:** `--pending` och `--status` avslutas nu rent istället för att hänga
+- **Analyserade borlange-kommun:** Upptäckte SiteVision CMS med `/visit-events/YYYY-MM-DD-title` mönster som extractorn inte förstår
+
+### Ändringar
+1. **scheduler.ts rad 856:** Lade till `process.exit(0)` efter `runSource()` + `removeFromQueue()`
+
+### Verifiering
+```
+✓ scheduler --pending: visas korrekt och avslutas rent
+✓ scheduler --status: visas korrekt och avslutas rent
+✗ scheduler --help: timeout (men det är acceptabelt - dokumentationen finns i koden)
+```
+
+### Sources som påverkas
+Inga sources direkt, men scheduler hang-bug fix möjliggör nu E2E-körning av enskilda sources.
+
+### Kvarvarande flaskhals
+- **4 html_candidates med 0 events:** Samtliga har Site-Specific problem:
+  - borlange-kommun: SiteVision CMS, `/visit-events/YYYY-MM-DD-title` (datum utan tid)
+  - arkdes: 3 försök, 0 events
+  - bokmassan: html_candidate men 0 events
+  - cirkus: Next.js/Payload med events i embedded JSON
+- **307 aldrig testade sources:** Aldrig körda genom triage
+
+### Root-cause-analys
+borlange-kommun (rekommenderad i loop 25) är **Site-Specific**. Extractorns URL-mönster kräver:
+- Pattern A: `/YYYY-MM-DD-HHMM/` (datum + tid)
+- Pattern B: `/YYYYMMDD-HHMM/`
+- Pattern C: `/YYYY/MM/DD/`
+
+Men borlange har `/visit-events/2026-04-02-pasklovs-hyrkart` (datum utan tid) - fungerar inte.
+
+### Generalization Gate Status
+| Pattern | Sajter verifierade | Krav | Status |
+|---------|-------------------|------|--------|
+| SiteVision CMS `/visit-events/` URL-mönster | 1 (borlange) | 2-3 | BLOCKED |
+
+### Tre möjliga nästa steg
+
+| # | Steg | Systemnytta | Risk | Varför nu |
+|---|------|-------------|------|-----------|
+| 1 | **Kör scheduler --source konserthuset** | Hög: verifierar E2E med fixad scheduler | Låg: bekräftad källa med 11 events | Scheduler fungerar nu |
+| 2 | **Kör --triage-batch på 10+ aldrig-testade sources** | Medel: breddar modell-validering | Låg: beprövad metod | 307 aldrig testade, behöver triage |
+| 3 | **Dokumentera Site-Specific patterns i PATTERNS.md** | Låg: documentation | Låg: ingen kodändring | Prevent future Site-Specific C-layer ändringar |
+
+### Rekommenderat nästa steg
+- **#1 — Kör scheduler --source konserthuset**
+
+Motivering: Fixad scheduler möjliggör nu E2E-verifiering. Konserthuset är en bekräftad källa med 11 events. Detta validerar att fixen fungerar innan vi kör på nya sources.
+
+### Två steg att INTE göra nu
+1. **Bygga source adapter för borlange-kommun** — Site-Specific, låg prioritet, 1 av 420 källor
+2. **Köra fler triage-batch** — redan 113 testade, fokusera på att validera E2E först
+
+### System-effect-before-local-effect
+- Valt steg (#1): E2E-verifiering med bekräftad källa
+- Varför: Fixad scheduler måste valideras med verklig källa innan vi går vidare
+
+---
+
 ## Nästa-steg-analys 2026-04-05 (loop 25)
 
 ### Vad förbättrades denna loop

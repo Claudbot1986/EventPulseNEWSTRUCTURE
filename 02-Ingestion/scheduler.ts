@@ -853,6 +853,10 @@ async function main() {
   
   await runSource(source);
   removeFromQueue(next.sourceId);
+  
+  // Exit cleanly after processing (fixes scheduler hang-bug)
+  // BullMQ workers continue in background, but main process should exit
+  process.exit(0);
 }
 
 main().catch(console.error);
