@@ -262,22 +262,30 @@ async function runSource(source: SourceTruth, options: { recheck?: boolean } = {
           // queueEvents expects RawEventInput - we map between them
           const { queueEvents } = await import('./tools/fetchTools');
           const rawEvents = apiResult.events.map(e => ({
+            // Required RawEventInput fields
+            source: source.id,  // CRITICAL: was missing, caused source_id=null in DB
             source_id: (e as any).id || `${source.id}-${Math.random().toString(36).slice(2)}`,
             title: (e as any).title || 'Untitled',
             description: (e as any).description || '',
-            start_time: (e as any).startTime ? new Date((e as any).startTime) : null,
-            end_time: (e as any).endTime ? new Date((e as any).endTime) : null,
+            start_time: (e as any).startTime ? new Date((e as any).startTime).toISOString() : new Date().toISOString(),
+            end_time: (e as any).endTime ? new Date((e as any).endTime).toISOString() : null,
             url: (e as any).url || '',
             image_url: (e as any).imageUrl || '',
             venue_name: (e as any).venue || '',
-            category_slug: (e as any).category || 'unknown',
-            organizer_name: (e as any).organizer || '',
-            price: (e as any).price ? `${(e as any).price.min || 0}-${(e as any).price.max || 0}` : null,
-            status: (e as any).status || 'available',
             venue_address: '',
             lat: null,
             lng: null,
-            categories: [],
+            categories: [(e as any).category || 'unknown'],
+            is_free: false,
+            price_min_sek: (e as any).price?.min ?? null,
+            price_max_sek: (e as any).price?.max ?? null,
+            ticket_url: (e as any).url || null,
+            detected_language: 'sv' as const,
+            raw_payload: e as Record<string, unknown>,  // CRITICAL: was missing, required field
+            // Legacy fields for backwards compatibility
+            organizer_name: (e as any).organizer || '',
+            price: (e as any).price ? `${(e as any).price.min || 0}-${(e as any).price.max || 0}` : null,
+            status: (e as any).status || 'available',
             event_url: (e as any).url || '',
             start_date: (e as any).startTime ? new Date((e as any).startTime).toISOString().split('T')[0] : '',
             end_date: (e as any).endTime ? new Date((e as any).endTime).toISOString().split('T')[0] : '',
