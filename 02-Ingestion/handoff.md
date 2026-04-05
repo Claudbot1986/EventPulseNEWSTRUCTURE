@@ -2,6 +2,81 @@
 
 ---
 
+## Nästa-steg-analys 2026-04-05 (loop 47)
+
+### Vad förbättrades denna loop
+- **JSON-LD undersökt i 5 triage_required:** ltu, stockholm-jazz, nrm, kmh, schack
+- **Majoriteten AVSAKR JSON-LD:** 4/5 triage_required har ingen JSON-LD
+- **Endast schack.se bekräftad JSON-LD:** 50 events i script type="application/ld+json"
+- **Routing-problem kvarstår:** `unknown` → alltid `extractFromHtml()`, aldrig `extractFromJsonLd()`
+
+### Root-cause (nyckelobservation)
+
+**JSON-LD är SÄLLAN anledningen till triage_required:**
+
+| Källa | Type | JSON-LD | Observation |
+|-------|------|---------|-------------|
+| svenska-schackf-rbundet | sport | ✓ Ja (50 events) | Endast BEKRÄFTAD |
+| lulea-tekniska-universitet | universitet | ✗ Nej | SiteVision/JS-hydrated |
+| stockholm-jazz-festival-1 | festival | ✗ Nej | Hemsida defunct/nere |
+| naturhistoriska-riksmuseet | museum | ✗ Nej | Saknar JSON-LD |
+| kungliga-musikhogskolan | musiklärosäte | ✗ Nej | Saknar JSON-LD |
+
+**Slutsats:** De 14 triage_required är inte "JSON-LD missade" — de är HTML-extraction failures av andra anledningar (SiteVision, defunct, fel page vald).
+
+**Routing-logiken är korrekt för 13/14 triage_required:**
+- Om ingen JSON-LD finns → HTML är rätt path
+- Endast schack har JSON-LD men missas pga routing
+
+### Sources blockerade (updated)
+| Kategori | Antal | Exempel |
+|----------|-------|---------|
+| Success (events>0) | 21 | berwaldhallen(216), konserthuset(11) |
+| fail (infra) | 376 | DNS/timeout/404 |
+| SiteVision (JS) | ~15 | karlskoga, borlange, malmo-stad |
+| pending_render_gate | 5 | cirkus, arkdes, debaser |
+| pending_api | 2 | ticketmaster, eventbrite |
+| manual_review | 335 | väntar manuell granskning |
+| triage_required | 14 | hallsberg, ifk-uppsala, karlskoga, polismuseet |
+| **JSON-LD miss (routing)** | **1** | **svenska-schackf-rbundet** |
+
+### Generalization Gate Status
+| Pattern | Sajter | Krav | Status |
+|---------|--------|------|--------|
+| SiteVision CMS utan tid | ~15 | 2-3 | **VERIFIERAD** |
+| Sportsajt C0 missar | 1 | 2-3 | Site-Specific |
+| timeTagCount utan datum | 2 (polismuseet, nrm) | 2-3 | needsVerification |
+| JSON-LD performer string (schema) | 1 (schack) | 2-3 | **FIXAD (General)** |
+| **JSON-LD miss i triage path** | **1 (schack)** | **2-3** | **NEKAD — JSON-LD sällan i triage_required** |
+
+### Kvarvarande flaskhals
+- **Schack är UNIK:** Endast JSON-LD källa bland 14 triage_required
+- **Routing-fix behövs EJ för majoriteten:** 13/14 triage_required har ingen JSON-LD
+- **13/14 är HTML-extraction failures:** SiteVision, defunct, eller fel page vald
+
+### Tre möjliga nästa steg
+
+| # | Steg | Systemnytta | Risk | Varför nu |
+|---|------|-------------|------|-----------|
+| 1 | **Fixa schack routing manuellt** | Medel: bevisar 50 events tillgängliga | Låg: ändrar endast 1 source | Endast 1 källa behöver det |
+| 2 | **Undersök SiteVision ~15 sources** | Hög: potentiellt 15+ nya success | Medel: behöver render eller API | Största gruppen som faktiskt går att fixas |
+| 3 | **Kör phase1ToQueue på 21 success-sources** | Medel: verifierar pipeline | Låg: beprövad metod | Vi har 21 verifierade källor |
+
+### Rekommenderat nästa steg
+- **#1 — Fixa schack routing manuellt**
+
+Motivering: Schack är den ENDA källan med JSON-LD bland triage_required. En enkel manuell preferredPath-uppdatering till "jsonld" bevisar att 50 events kan extraheras utan att ändra systemets routing-logik.
+
+### Två steg att INTE göra nu
+1. **Ändra scheduler routing för `unknown`** — JSON-LD är sällan orsaken, 13/14 triage_required har ingen JSON-LD
+2. **Undersöka fler triage_required för JSON-LD** — Vi har nu bevis för att det är ovanligt
+
+### System-effect-before-local-effect
+- Valt steg (#1): Fixar schack-specifikt problem utan att påverka systemet
+- Varför: Generalization Gate visar att routing-ändring inte behövs för gruppen
+
+---
+
 ## Nästa-steg-analys 2026-04-05 (loop 46)
 
 ### Vad förbättrades denna loop
