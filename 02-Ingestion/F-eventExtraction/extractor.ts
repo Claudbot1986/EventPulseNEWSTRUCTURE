@@ -555,6 +555,11 @@ export function extractFromHtml(html: string, source: string, baseUrl?: string):
     // Matches: "7 april 2026" or "26 april 2026"
     const sweDateRegex = /(\d{1,2})\s+(januari|februari|mars|april|maj|juni|juli|augusti|september|oktober|november|december)\s+(\d{4})/gi;
 
+    // Strategy 4: <time datetime="ISO-date"> elements
+    // Matches: <time datetime="2026-04-05"> or <time datetime="2026-04-05T14:00">
+    // These contain ISO dates that URL/text strategies miss
+    const timeTagRegex = /<time[^>]*datetime="([^"]*)"[^>]*>/gi;
+
     // Build absolute URL from relative
     function resolveUrl(href: string): string {
       if (href.startsWith('http')) return href;
@@ -782,6 +787,111 @@ export function extractFromHtml(html: string, source: string, baseUrl?: string):
           });
         }
       }
+    }
+
+    // Strategy 4: <time datetime="ISO-date"> elements (Tribe Events Calendar)
+    // Many Swedish venues use The Events Calendar (Tribe) plugin which embeds
+    // dates in <time> tags with ISO datetime attributes, not in URLs
+    // Pattern: <time class="tribe-events-pro-photo__event-date-tag-datetime" datetime="2026-04-05">
+    timeTagRegex.lastIndex = 0;
+    let timeMatch;
+    const timeTagMatches: Array<{ datetime: string; href?: string; title?: string }> = [];
+
+    while ((timeMatch = timeTagRegex.exec(html)) !== null) {
+      const datetimeAttr = timeMatch[1];
+      // Only process ISO dates (YYYY-MM-DD or YYYY-MM-DDTHH:MM)
+      if (/^\d{4}-\d{2}-\d{2}/.test(datetimeAttr)) {
+        timeTagMatches.push({ datetime: datetimeAttr });
+      }
+    }
+
+    // Now find links near these time tags using DOM
+    // Look for event list items with structure: [time-tag] [link with title]
+    const eventListItems = $('li[class*="tribe-events-pro-photo"][class*="event-item"], li[class*="tribe-common-h"][class*="event-item"], li[class*="type-tribe_events"]');
+    eventListItems.each((_: any, el: any) => {
+      const $el = $(el);
+      // Get datetime from time tag within this item
+      const timeEl = $el.find('time[datetime]').first();
+      const datetime = timeEl.attr('datetime') || '';
+      if (!datetime || !/^\d{4}-\d{2}-\d{2}/.test(datetime)) return;
+
+      // Get event link from this item
+      const link = $el.find('a[class*="tribe-events"][href]').first();
+      const href = link.attr('href') || '';
+      const title = link.find('span').first().text().trim() || link.text().trim();
+
+      if (href && title && title.length > 2) {
+        const key = `${title}|${datetime.split('T')[0]}|${href}`;
+        if (seenKeys.has(key)) return;
+        seenKeys.add(key);
+
+        const [datePart, timePart] = datetime.split('T');
+        events.push({
+          title: title.replace(/\s+/g, ' ').trim(),
+          date: datePart,
+          time: timePart ? timePart.substring(0, 5) : '',
+          venue: source,
+          url: resolveUrl(href),
+          category: 'art',
+          source,
+          sourceUrl: resolveUrl(href),
+          confidence: {
+            score: 0.6,
+            hasTitle: true,
+            hasDate: true,
+            hasVenue: false,
+            hasUrl: true,
+            hasDescription: false,
+            hasTicketInfo: false,
+            signals: ['html-time-tag', 'tribe-events-calendar'],
+          },
+        });
+      }
+    });
+
+    // Fallback: if we found timeTag matches but no list items, try scope-based extraction
+    if (events.length === 0 && timeTagMatches.length > 0) {
+      scope.find('a[href*="/kalender/"]').each((_: any, el: any) => {
+        const href = $(el).attr('href') || '';
+        const text = $(el).text().trim();
+        if (text.length < 3 || seenKeys.has(href)) return;
+
+        // Find time tag near this link
+        const $link = $(el);
+        const parent = $link.parent();
+        const prevTime = parent.prev().find('time[datetime]').first();
+        const nextTime = parent.next().find('time[datetime]').first();
+        const timeEl = prevTime.length ? prevTime : nextTime;
+        const datetime = timeEl.attr('datetime') || '';
+
+        if (datetime && /^\d{4}-\d{2}-\d{2}/.test(datetime)) {
+          const [datePart, timePart] = datetime.split('T');
+          const key = `${text}|${datePart}|${href}`;
+          if (seenKeys.has(key)) return;
+          seenKeys.add(key);
+
+          events.push({
+            title: text.replace(/\s+/g, ' ').trim(),
+            date: datePart,
+            time: timePart ? timePart.substring(0, 5) : '',
+            venue: source,
+            url: resolveUrl(href),
+            category: 'art',
+            source,
+            sourceUrl: resolveUrl(href),
+            confidence: {
+              score: 0.5,
+              hasTitle: true,
+              hasDate: true,
+              hasVenue: false,
+              hasUrl: true,
+              hasDescription: false,
+              hasTicketInfo: false,
+              signals: ['html-time-tag', 'kalender-link'],
+            },
+          });
+        }
+      });
     }
   } catch (e) {
     parseErrors.push(`HTML extraction error: ${(e as Error).message}`);

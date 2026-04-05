@@ -2,6 +2,73 @@
 
 ---
 
+## Nästa-steg-analys 2026-04-05 (loop 51)
+
+### Vad förbättrades denna loop
+- **Strategy 4 ("time-tag") tillagd till extractFromHtml():** Ny extraditionsstrategi som hanterar `<time datetime="ISO-date">` elements som finns i Tribe Events Calendar (WordPress-plugin)
+- **Verifierad på liljevalchs:** 8 events extraherade med `html-time-tag, tribe-events-calendar` signals
+- **Root-cause bekräftad:** Batch-001:s 9/10 källor med 0 events har INTE ISO-datum i `<time>` tags — de har antingen tid-only datetime ("11:00:00") eller text-datum som inte hittas av Swedish-date strategy
+- **Batch-state återställd:** `status` satt till `baseline_only` för att fortsätta förbättringsloopen
+
+### Root-cause (nyckelobservation)
+
+**Pattern: `extractFromHtml()` URL-date-pattern dependency missar Tribe Events Calendar**
+
+De 9 failing sources i batch-001 har:
+1. **Liljevalchs (nu fixad):** Tribe Events Calendar med `<time datetime="2026-04-05">` → Strategy 4 fixar detta
+2. **Hallsberg, Kumla, Karlskoga:** Kommun-sajter med SiteVision — öppettider i `<time>` tags, INTE event-datum
+3. **Polismuseet:** Öppettider (`datetime="11:00:00"`) — ingen relevant datum-signal
+4. **NRM:** Text-baserade "Hela dagen", "10:30" i datetime — ej ISO-datum
+5. **IFK Uppsala:** Blogpost-datum i text, ej i struktur
+
+**Slutsats:** Endast liljevalchs bland batch-001 kan fixas med Strategy 4. Övriga är strukturellt olika (öppettider, text-datum, ingen kalender-plugin).
+
+### Sources-blockerare (uppdaterad)
+| Kategori | Antal | Exempel |
+|----------|-------|---------|
+| Success (events>0) | **22** | berwaldhallen(216), konserthuset(11), schack(50), liljevalchs(8) |
+| fail (infra) | 384 | DNS/timeout/404 |
+| SiteVision (JS) | ~15 | karlskoga, borlange, malmo-stad |
+| pending_render_gate | 5 | cirkus, arkdes, debaser |
+| pending_api | 2 | ticketmaster, eventbrite |
+| manual_review | 3 | bokmassan, smalandsposten, stenungsund |
+| triage_required | 4 | hallsberg, ifk-uppsala, kumla, polismuseet |
+
+### Generalization Gate Status
+| Pattern | Sajter | Krav | Status |
+|---------|--------|------|--------|
+| Tribe Events Calendar (time-tag) | 1 (liljevalchs) | 2-3 | **needsVerification** |
+| SiteVision utan datum | ~15 | 2-3 | **VERIFIERAD** |
+| timeTagCount utan datum-filter | 2 (polismuseet, nrm) | 2-3 | **needsVerification** |
+
+### Kvarvarande flaskhals
+- **Strategy 4 begränsad:** Fixar bara Tribe Events Calendar (1 av 10 batch-sources)
+- **9/10 batch-sources har strukturellt annorlunda problem:** Öppettider, text-datum, SiteVision
+- **400+ sources aldrig testade:** Största potentiella kvantiteten
+
+### Tre möjliga nästa steg
+
+| # | Steg | Systemnytta | Risk | Varför nu |
+|---|------|-------------|------|-----------|
+| 1 | **Sök 2-3 fler Tribe Events-sajter för Strategy 4-verifiering** | Medel: bekräftar generalisering | Låg: diagnostik | Endast 1 sajt bekräftad, Generalization Gate kräver 2-3 |
+| 2 | **Kör phase1ToQueue på 22 success-sources** | Hög: verifierar pipeline | Låg: batch | Vi har nu 22 bekräftade källor, inklusive liljevalchs(8) |
+| 3 | **Undersök SiteVision-sajter för render-path** | Medel: potentiellt 15+ nya | Hög: behöver D-renderGate | Största gruppen, ej fixbar med nuvarande verktyg |
+
+### Rekommenderat nästa steg
+- **#2 — Kör phase1ToQueue på 22 success-sources**
+
+Motivering: Med liljevalchs nu fixad (8 events) har vi 22 success-sources. Nästa steg är att verifiera att events faktiskt flödar genom hela pipeline: extraction → queue → worker → DB.
+
+### Två steg att INTE göra nu
+1. **Fortsätta förbättringscykel på batch-001** — Endast 1/10 sources kan fixas med Strategy 4, övriga har strukturellt olika problem
+2. **Ändra C1 signal-threshold** — 9 låg-event källor kan ha site-specifika orsaker, Generalization Gate kräver 2-3+ sajter
+
+### System-effect-before-local-effect
+- Valt steg (#2): Verifierar full pipeline för 22 success-sources
+- Varför: Vi har nu 22 bekräftade källor, vi behöver bekräfta att events → DB
+
+---
+
 ## Nästa-steg-analys 2026-04-05 (loop 50)
 
 ### Vad förbättrades denna loop
