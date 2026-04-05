@@ -2,6 +2,79 @@
 
 ---
 
+## Nästa-steg-analys 2026-04-05 (loop 44)
+
+### Vad förbättrades denna loop
+- **Context resolution KÖRD:** CWD, projekt-rot, domän, regler, AI-filer alla verifierade
+- **Sources-analys UPPDATERAD:** 420 status-rader, 20 success, 376 fail, 14 triage_required, 5 pending_render_gate, 2 pending_api, 3 manual_review
+- **C0-htmlFrontierDiscovery BEKRÄFTAD:** Finns i sourceTriage.ts (rad 25, 96), används för intern page discovery
+- **Scheduler triage_path TESTAD:** hallsberg och polismuseet körda, båda 0 events
+- **root-cause IDENTIFIERAD:** 14 triage_required har C1=html_candidate men extraction=0 pga för bred signalsämnen
+
+### Root-cause (nyckelobservation)
+
+**Triage_required källa: C1 hittar time-tags + dates MEN extraction=0.**
+
+Testade:
+- hallsberg: `6tt + 6d` → "strong" → 0 events
+- polismuseet: `24tt + 0d` → "html_candidate" → 0 events
+
+**Gemensamt mönster:** C1:s strong/html_candidate-signal baseras på timeTagCount >= 3 men ignorerar:
+1. Om datetime innehåller datum eller bara tid (`11:00:00` vs `2026-05-01T19:00`)
+2. Om tidtaggarna faktiskt är öppettider eller event-tider
+
+**Verifierad observation:**
+- polismuseet: 24tt → öppettider (museum) → 0 events
+- hallsberg: 6tt + 6d → kommun-sajt utan event-page → 0 events
+- ifk-uppsala: 6tt + 2d → blogposts om avslutade matcher → 0 events
+
+### Sources blockerade (updated)
+| Kategori | Antal | Exempel |
+|----------|-------|---------|
+| Success (events>0) | 20 | berwaldhallen(216), konserthuset(11), aik(1) |
+| fail (infra) | 376 | DNS/timeout/404 |
+| SiteVision (JS) | ~15 | karlskoga, borlange, malmo-stad, jonkoping |
+| pending_render_gate | 5 | cirkus, arkdes, debaser |
+| pending_api | 2 | ticketmaster, eventbrite |
+| manual_review | 3 | bokmassan, smalandsposten, stenungsund |
+| triage_required | 14 | hallsberg, ifk-uppsala, karlskoga, polismuseet |
+
+### Generalization Gate Status
+| Pattern | Sajter | Krav | Status |
+|---------|--------|------|--------|
+| SiteVision CMS utan tid | ~15 | 2-3 | **VERIFIERAD** |
+| Sportsajt C0 missar | 1 | 2-3 | Site-Specific |
+| timeTagCount utan datum | 2 (polismuseet, nrm) | 2-3 | needsVerification |
+| Kommun-sajt överskattad | ~10 | 2-3 | needsVerification |
+
+### Kvarvarande flaskhals
+- **14 triage_required sources** — alla har C1=html_candidate men 0 events vid extraction
+- **C1 strong-signal överskattar** — timeTagCount >= 3 inkluderar öppettider, inte bara events
+- **23% precision** (20/420 success rate) — låg men stabil
+
+### Tre möjliga nästa steg
+
+| # | Steg | Systemnytta | Risk | Varför nu |
+|---|------|-------------|------|-----------|
+| 1 | **Undersök en icke-kommun triage_required** | Hög: hittar ny framgång | Låg: svenska fotbollförbundet kan ha events | stockholm-jazz-festival (26tt), svenska-schackf-rbundet (103tt) |
+| 2 | **Analysera varför 335 manual_review får 0 events** | Medel: förstå fail-mönster | Låg: dokumentation | Största gruppen (335) |
+| 3 | **Verifiera siteTriage.ts C0-discoverEventCandidates-anrop** | Medel: säkerställer att C0 körs | Låg: kodgranskning | sourceTriage.ts har C0, scheduler.ts har det INTE |
+
+### Rekommenderat nästa steg
+- **#1 — Undersök svenska-schackf-rbundet eller stockholm-jazz-festival-1**
+
+Motivering: stockholm-jazz-festival-1 har `26tt 0d 35h` — det är en festival-sajt med höga signaler. Om den har events (istället för öppettider) är den en ny success källa.
+
+### Två steg att INTE göra nu
+1. **Ändra C1:s timeTagCount-threshold** — Endast 2-4 sajter bekräftade för öppettids-problemet, Generalization Gate kräver 2-3+
+2. **Köra batch-triage på 14 triage_required** — Var och en behöver individuell analys först för Generalization Gate
+
+### System-effect-before-local-effect
+- Valt steg (#1): Hittar events i triage_required-gruppen
+- Varför: Vi behöver fler succéer för att Generalization Gate ska kunna acceptera ändringar
+
+---
+
 ## Nästa-steg-analys 2026-04-05 (loop 43)
 
 ### Vad förbättrades denna loop
