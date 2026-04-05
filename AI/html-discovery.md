@@ -311,3 +311,26 @@ Wrong page selection destroys extraction quality.
 
 Choose the right page first.
 Only then optimize extraction.
+
+---
+
+## Cross-Site Verification in Batch Context
+
+HTML Discovery heuristics in batch loops must follow the same cross-site rule as the rest of C-htmlGate:
+
+1. A pattern observed on 1 site → document as "site-specific observation"
+2. A pattern confirmed on 2-3 sites → document as "provisionally general, needs verification"
+3. A pattern confirmed on 3+ unrelated sites → may be added to heuristics
+
+**Batch analysis is the verification mechanism.** Each batch of 10 C-candidates tests whether existing heuristics hold across domains. Patterns that fail repeatedly across batches signal a need for model review.
+
+**Allowed to change based on batch evidence:**
+- Adding to concept families (after 3+ site confirmation)
+- Canonicalization fixes (www/www-less)
+- Bounded search limits adjustment
+
+**Forbidden to change based on single batch:**
+- Removing terms from IGNORE_PATTERNS
+- Changing scoring weights
+- Changing URL token logic
+- Editing negative keyword lists

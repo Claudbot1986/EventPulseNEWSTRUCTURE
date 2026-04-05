@@ -14,8 +14,8 @@ Work in strict loops:
 ## Domain-Specific Workflows
 
 | Domain | Workflow file |
-|--------|-------------|
-| Ingestion | `AI/workflows/ingestion-loop.md` (root) |
+|--------|---------------|
+| Ingestion | `AI/workflows/ingestion-loop.md` (full version) |
 | Discovery | `AI/workflows/discovery-loop.md` (root) |
 | UI | `AI/workflows/ui-loop.md` (root) |
 

@@ -176,6 +176,64 @@ Do NOT move to render simply because root-page extraction was weak.
 
 ---
 
+## C-htmlGate Batch-Loop — Iterativ Modellförbättring
+
+C-htmlGate ska användas som en **iterativ förbättringsloop** där batchar av C-kandidater testas systematiskt för att förbättra den generella HTML-modellen.
+
+### Batch-Loops Princip
+
+C-batch-loop är INTE vanlig source-testing. Det är en **modellutvärderingsprocess**:
+
+1. Ta 10 C-kandidater från kön
+2. Kör C-htmlGate en gång på alla 10 (baseline)
+3. Analysera resultaten med AI:
+   - Varför lyckades eller misslyckades C för varje källa?
+   - Vilka HTML-mönster verkar generella?
+   - Vilka förbättringar bör göras i C-modellen?
+4. Applicera förbättringar
+5. Kör C igen på samma 10 (efter-förbättring)
+6. Jämför utfall före/efter
+7. Spara resultat i rapport under `C-htmlGate/reports/`
+
+### Batch-Kriterier
+
+**C-batcher gäller ENDAST C-kandidater:**
+- INTE redan verifierade A/B-källor
+- INTE D-pending (render-misstankar) — dessa ska inte ingå i C-batcher
+- C-kandidat = källa där A+B testats och misslyckats, HTML-extraktion inte verifierad
+
+### Rapporteringskrav
+
+Varje batchrapport ska sparas i `02-Ingestion/C-htmlGate/reports/` och innehålla:
+
+```
+batch-{N}-{datum}.md
+- antal sources i batch
+- före/efter-events per source
+- generella mönster identifierade
+- förbättringsförslag (ej site-specifika)
+- cross-site verification status
+```
+
+**Kompakthetskrav:** Rapporter ska vara tillräckligt kompakta för att fungera även när 100–200 batchrapporter finns. Undvik att spara fullständiga HTML-dumpar eller källkod.
+
+### Målet är Generella Metoder
+
+- INGA site-specifika hacks i C-modellen
+- Förbättringar ska vara verifierbara över 3+ oberoende domäner
+- Site-specifika problem -> source adapter, inte C-modelländring
+- Varje batch bidrar till en växande kunskapsbank
+
+### AI-Roll i Batch-Analys
+
+AI analyserar batchresultat för att:
+- Identifiera återkommande HTML-mönster över flera sajter
+- Jämföra före/efter-extraktion på samma källa
+- Föreslå generella förbättringar (ej site-specifika)
+- Gradera förbättringsförslag: "sannolikt general" vs "kräver verifiering"
+
+---
+
 ## Metod vs. Verifiering: Facit
 
 EventPulse har fem metodkategorier (A, B, C, D, E). En källa KAN vara
