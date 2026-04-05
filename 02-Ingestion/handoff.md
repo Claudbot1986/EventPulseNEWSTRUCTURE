@@ -2,6 +2,63 @@
 
 ---
 
+## Nästa-steg-analys 2026-04-05 (loop 43)
+
+### Vad förbättrades denna loop
+- **phase1ToQueue pipeline VERIFIERAD för 3 nya success-sources:**
+  - mjolby: 1 event → queue ✓
+  - ornskoldsvik: 4 events → queue ✓
+  - skovde: 3 events → queue ✓
+- **Pipeline-slutpunkt verifierad:** Events når databasen (Supabase)
+- **Verifierad:** Full pipeline C0→C1→C2→extractFromHtml()→phase1ToQueue→queue→worker→DB fungerar
+
+### Root-cause (nyckelobservation)
+**Full pipeline fungerar.** phase1ToQueue tar emot URLs från triage, extraherar events via extractFromHtml(), och queuear dem. Worker-processorn Persist to DB fungerar (konserthuset, studioacusticum, skovde, ornskoldsvik bekräftade i databasen).
+
+### Sources blockerade (updated)
+| Kategori | Antal | Exempel |
+|----------|-------|---------|
+| Success (events>0) | 20 | berwaldhallen(216), konserthuset(11), aik(1) |
+| fail (infra) | ~380 | DNS/timeout/404 |
+| SiteVision (JS) | ~15 | karlskoga, borlange, malmo-stad, jonkoping |
+| pending_render_gate | ~10 | cirkus, arkdes, debaser |
+| pending_api | 2 | ticketmaster, eventbrite |
+
+### Generalization Gate Status
+| Pattern | Sajter | Krav | Status |
+|---------|--------|------|--------|
+| SiteVision CMS utan tid | ~15 | 2-3 | **VERIFIERAD** |
+| Sportsajt C0 missar | 1 | 2-3 | Site-Specific |
+| timeTagCount utan datum | 2 | 2-3 | needsVerification |
+
+### Kvarvarande flaskhals
+- **~15 SiteVision-kommuner** — alla har JS-hydrated widgets, raw HTML = 0 events
+- **20/420 success rate = 4.8%** — låg men stabil
+- **Inga fler network APIs att hitta** — Tixly enda mönstret
+
+### Tre möjliga nästa steg
+
+| # | Steg | Systemnytta | Risk | Varför nu |
+|---|------|-------------|------|-----------|
+| 1 | **Undersök 2-3 fler triage_required sources** | Medel: breddar modell-data | Låg: diagnostik | Vi har 14 kvar, behöver fler succéer |
+| 2 | **Verifiera phase1ToQueue för alla 20 success-sources** | Medel: säkerställer full pipeline | Låg: batch-testa | Vi har 20 verifierade källor |
+| 3 | **Undersök SiteVision JS-widget pattern** | Hög: förstår 15+ sources | Låg: dokumentation | Render-queue är redan planerad |
+
+### Rekommenderat nästa steg
+- **#1 — Undersök 2-3 fler triage_required sources**
+
+Motivering: Vi har 20 success men modellen behöver bredare testning för Generalization Gate. 14 triage_required sources finns kvar, varav vissa kan ha fungerande event-pages.
+
+### Två steg att INTE göra nu
+1. **Bygga source adapter för SiteVision** — Site-Specific, 15+ Sajter kräver generisk lösning (render eller API)
+2. **Ändra C1 thresholds** — Endast 2 sajter bekräftad för timeTagCount-problemet, Generalization Gate kräver 2-3+
+
+### System-effect-before-local-effect
+- Valt steg (#1): Breddar modell-validering med befintliga verktyg
+- Varför: Vi behöver fler succéer för att Generalization Gate ska kunna acceptera ändringar
+
+---
+
 ## Nästa-steg-analys 2026-04-05 (loop 42)
 
 ### Vad förbättrades denna loop
