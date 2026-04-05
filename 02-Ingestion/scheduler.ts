@@ -50,12 +50,17 @@ import type { TriageResult } from './C-htmlGate/C1-preHtmlGate/C1-preHtmlGate';
 import { inspectUrl } from './B-networkGate/networkInspector';
 import { evaluateNetworkGate } from './B-networkGate/A-networkGate';
 import { extractFromApi } from './B-networkGate/networkEventExtractor';
-import { renderPage } from './D-renderGate/renderGate';
+// D-renderGate: renderPage FINNS men KÖRS INTE ännu.
+// Denna import är kvar för framtida integration men är inaktiv just nu.
 
 // ─── Routing Decision Types ────────────────────────────────────────────────────
 
 export type PathType = 'api' | 'jsonld' | 'html' | 'network' | 'render' | 'unknown';
-export type ExecuteNow = 'execute_now' | 'park_pending_render' | 'skip_not_implemented' | 'execute_network' | 'execute_render';
+// D-renderGate är inte integrerad ännu.
+export type ExecuteNow = 'execute_now' | 'park_pending_render' | 'skip_not_implemented' | 'execute_network' | 'queue_render_only';
+
+// queue_render_only betyder: lägg endast i pending_render_queue
+// D-renderGate KÖRS INTE — detta är endast en kö för framtida render-arbete
 
 export interface RoutingDecision {
   path: PathType;
@@ -328,9 +333,9 @@ async function runSource(source: SourceTruth, options: { recheck?: boolean } = {
   }
   // ── END NETWORK PATH ──────────────────────────────────────────────────────
 
-  // ── RENDER PATH: SKICKA TILL D-QUEUE, KÖR INTE RENDER ÄNNU ───────────────
-  // D-renderGate körs INTE aktivt ännu. Vi skickar bara till pending queue.
-  if (decision.execute === 'execute_render') {
+  // ── D-QUEUE: SKICKA TILL PENDING QUEUE, KÖR INTE RENDER ÄNNU ─────────────
+  // D-renderGate är INTE integrerad. Vi skickar endast till pending_render_queue.
+  if (decision.execute === 'queue_render_only') {
     console.log(`⏸️  D-queue: Skickar ${source.id} till D-pending-queue (D-renderGate körs EJ ännu)`);
     
     // SKICKA TILL PENDING QUEUE - kör INTE render

@@ -1926,7 +1926,7 @@ Motivering: D-renderGate fungerar (Site-Specific blockerar). Normalizer kan kör
   - `renderPage()` funktion returnerar rendered HTML efter JS-körning
   - `needsRendering()` funktion för att detektera om en sajt behöver rendering
 - **Scheduler uppdaterad:** `execute_render` path implementerad i scheduler.ts
-  - `pending_render_gate` sources kör nu D-renderGate istället för att parkera
+  - `pending_render_gate` sources: läggs i kö för framtida D-renderGate-arbete (D körs EJ ännu)
   - Renderad HTML skickas till `extractFromHtml()` för event-extraction
 - **puppeteer installerad:** `npm install puppeteer --save` (91 packages)
 
