@@ -1,10 +1,21 @@
 {
-  "currentBatch": 2,
+  "currentBatch": 1,
   "batchSize": 10,
   "status": "idle",
-  "batchSources": null,
-  "completedBatches": [1],
-  "lastBatchRun": "2026-04-06T06:30:00.000Z",
+  "batchSources": [
+    "hallsberg",
+    "ifk-uppsala",
+    "karlskoga",
+    "kumla",
+    "kungliga-musikhogskolan",
+    "lulea-tekniska-universitet",
+    "moderna-museet",
+    "naturhistoriska-riksmuseet",
+    "orebro-sk",
+    "polismuseet"
+  ],
+  "completedBatches": [],
+  "lastBatchRun": null,
   "candidateQuery": {
     "triageResult": "html_candidate",
     "statusIn": [
@@ -26,27 +37,27 @@
     ]
   },
   "reportPath": "02-Ingestion/C-htmlGate/reports/batch-001/batch-001-full-report.md",
-  "batchNotes": "State synced from batch-001-full-report.md. batch-001 completed with status=no-general-improvement.",
+  "batchNotes": "MANUAL ONE-TIME RESTORE: Resetting to batch-001 for re-run. This is an exceptional manual override, not a permanent batch-system rule change.",
   "metadata": {
     "selectedAt": "2026-04-06T05:54:00.000Z",
-    "completedAt": "2026-04-06T06:30:00.000Z",
+    "completedAt": null,
     "eligibilityRulesVersion": "1.1",
     "selectionCriteria": "C-htmlGate batch - pending selection",
-    "executionStatus": "completed",
-    "resetNote": "State synced from batch-001-full-report.md"
+    "executionStatus": "pending",
+    "resetNote": "MANUAL ONE-TIME RESTORE for batch-001 re-run"
   },
   "preRunResults": null,
   "postRunResults": null,
   "cyclesCompleted": 0,
   "maxCyclesAllowed": 3,
-  "stopReason": "no-general-improvement",
-  "plateauReached": true,
-  "patternsFound": ["JS-Rendered-False-Negative"],
+  "stopReason": null,
+  "plateauReached": false,
+  "patternsFound": [],
   "plateauDecision": {
-    "plateauReached": true,
-    "plateauReason": "no-general-improvement",
+    "plateauReached": false,
+    "plateauReason": null,
     "consecutiveZeroImprovementCycles": 0,
     "recommendation": "continue",
-    "stopCriteriaMet": "no-general-improvement"
+    "stopCriteriaMet": null
   }
 }
