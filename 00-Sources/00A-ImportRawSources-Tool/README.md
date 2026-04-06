@@ -5,6 +5,50 @@
 Verktyget importerar råa source-listor till deduplicerade canonical sources.
 Detta är **endast ett importverktyg** — det skriver inte direkt till `sources/`.
 
+## SÄKERHETSREGLER (hårda)
+
+### 1. Append-only — importpreview ersätter ALDRIG sources/
+
+**Hård regel:** `importpreview.jsonl` får **aldrig** representera ett replacement set för `sources/`.
+ verktyget är designat för att endast lägga till — aldrig minska eller ersätta.
+
+**Tillåtna matchStatus i preview:**
+- `new` — ny source, skall läggas till i sources/
+- `matched_existing` — matchar befintlig, behåller befintlig
+- `duplicate_in_import` — ignoreras, påverkar inte sources/
+- `manualreview` — kräver manuellt beslut innan någon skrivning
+- `invalid_raw_row` — kasseras, når aldrig preview
+- `skipped_already_imported_file` — hoppas över, når aldrig preview
+
+**Om preview innehåller något annat statusvärde → verktyget avbryter med:**
+```
+[SECURITY ABORT] append-only guard triggered:
+  File:  runtime/import-preview.jsonl
+  Source: example.se
+  Status: 'replacement_candidate' — NOT in allowed append-only list
+  Message: importpreview is NEVER a replacement set for sources/.
+```
+
+### 2. Backup före import
+
+**Varje 00A-körning backar upp nuvarande `sources/` innan någon importlogik börjar.**
+
+- Backup-plats: `00-Sources/tmp/old-sources-after-00A-imports/`
+- Backup-namn: `Old-sources-YYYYMMDD-HHmmss.tar.gz`
+- Format: `tar.gz` — inga kolon i filnamnet
+- **Om backup misslyckas → abortar importen helt**
+- Om `sources/` inte finns → skippar backup (inte fel)
+
+Logg-exempel:
+```
+[00A] Step 0: Pre-import backup of sources/
+
+[BACKUP] SUCCESS
+  Path:            /Users/.../NEWSTRUCTURE/00-Sources/tmp/old-sources-after-00A-imports/Old-sources-20260406-214300.tar.gz
+  Sources files:   420
+  Archive size:    892.1 KB
+```
+
 ## Inputformat
 
 ```

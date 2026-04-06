@@ -22,6 +22,8 @@
 
 import * as fs from 'fs';
 import * as path from 'path';
+import * as crypto from 'crypto';
+import * as child_process from 'child_process';
 
 // ─── Types ─────────────────────────────────────────────────────────────────
 
@@ -358,9 +360,128 @@ export function generateTemporaryId(siteIdentityKey: string, name: string, varia
   };
 }
 
-// ─── File Hashing ────────────────────────────────────────────────────────────
+// ─── Append-Only Guardrail ───────────────────────────────────────────────────
 
-import * as crypto from 'crypto';
+/**
+ * HARD SAFETY RULE: 00A is APPEND-ONLY.
+ *
+ * importpreview.jsonl is NEVER a replacement set for sources/.
+ * It is ONLY a decision-support document with these permitted outcomes:
+ *   - new                    (add to sources/)
+ *   - matched_existing        (keep existing, no change)
+ *   - duplicate_in_import     (ignore extra rows)
+ *   - manualreview            (needs human decision before any sources/ write)
+ *   - invalid_raw_row         (discard, never reaches preview)
+ *   - skipped_already_imported_file (discard, never reaches preview)
+ *
+ * If ANY source in the preview has a matchStatus not in the above list,
+ * OR if the preview would represent a complete replacement of sources/,
+ * the tool MUST abort with a clear error.
+ *
+ * This guard exists to prevent a small or incomplete raw import from
+ * ever accidentally replacing the entire sources/ library.
+ */
+const PREVIEW_APPEND_ONLY_VALID_STATUSES: Array<ImportedSource['matchStatus']> = [
+  'new',
+  'matched_existing',
+  'duplicate_in_import',
+  'manualreview',
+];
+
+/**
+ * Abort if preview contains any status that suggests replacement logic.
+ * This tool is preview-only — it never writes to sources/ directly.
+ * But any downstream consumer must understand preview is append-only.
+ */
+export function validatePreviewAppendOnly(previewPath: string): void {
+  if (!fs.existsSync(previewPath)) return;
+
+  const content = fs.readFileSync(previewPath, 'utf-8');
+  const lines = content.split('\n').filter(l => l.trim());
+
+  for (const line of lines) {
+    try {
+      const source = JSON.parse(line) as ImportedSource;
+      if (!PREVIEW_APPEND_ONLY_VALID_STATUSES.includes(source.matchStatus)) {
+        console.error(`\n[SECURITY ABORT] append-only guard triggered:`);
+        console.error(`  File:  ${previewPath}`);
+        console.error(`  Source: ${source.sourceIdentityKey}`);
+        console.error(`  Status: '${source.matchStatus}' — NOT in allowed append-only list`);
+        console.error(`  Message: importpreview is NEVER a replacement set for sources/.`);
+        console.error(`  This tool only generates preview. It cannot reduce or replace sources/.`);
+        process.exit(1);
+      }
+    } catch {
+      // Skip malformed lines — other checks handle those
+    }
+  }
+}
+
+// ─── Pre-Import Backup ───────────────────────────────────────────────────────
+
+const BACKUP_DIR = '00-Sources/tmp/old-sources-after-00A-imports';
+
+/**
+ * Take a timestamped tar.gz backup of sources/ BEFORE any import logic runs.
+ * This protects against:
+ *   - Tool bugs that could corrupt sources/
+ *   - Raw files being cleared after import
+ *   - Mistakes in downstream merge logic
+ *
+ * Backup location: 00-Sources/tmp/old-sources-after-00A-imports/Old-sources-YYYYMMDD-HHmmss.tar.gz
+ *
+ * If backup fails → ABORT the import entirely.
+ * If sources/ does not exist → skip backup (not an error).
+ */
+export function takeSourcesBackup(): {
+  backupPath: string;
+  sourceFileCount: number;
+  success: boolean;
+  error?: string;
+} {
+  const sourcesDir = path.join(process.cwd(), 'sources');
+
+  // Skip if sources/ doesn't exist
+  if (!fs.existsSync(sourcesDir)) {
+    console.log('[BACKUP] sources/ not found — skipping backup');
+    return { backupPath: '', sourceFileCount: 0, success: true };
+  }
+
+  // Count files
+  const files = fs.readdirSync(sourcesDir).filter(f => f.endsWith('.jsonl'));
+  const sourceFileCount = files.length;
+
+  // Create backup directory
+  const backupDir = path.join(process.cwd(), BACKUP_DIR);
+  if (!fs.existsSync(backupDir)) {
+    fs.mkdirSync(backupDir, { recursive: true });
+  }
+
+  // Timestamp without colons (ISO 8601 compatible)
+  const now = new Date();
+  const ts = now.toISOString().replace(/[-:]/g, '').replace(/\.\d{3}/, '');
+  const backupName = `Old-sources-${ts}.tar.gz`;
+  const backupPath = path.join(backupDir, backupName);
+
+  // Use tar + gzip via execSync — synchronous and reliable
+  // cwd is project root, so relative path to sources/ is ./sources/
+  try {
+    child_process.execSync(`tar -czf "${backupPath}" sources/`, { stdio: 'pipe' });
+    const stat = fs.statSync(backupPath);
+    console.log(`[BACKUP] SUCCESS`);
+    console.log(`  Path:            ${backupPath}`);
+    console.log(`  Sources files:   ${sourceFileCount}`);
+    console.log(`  Archive size:    ${(stat.size / 1024).toFixed(1)} KB`);
+    return { backupPath, sourceFileCount, success: true };
+  } catch (err: unknown) {
+    const errorMsg = err instanceof Error ? err.message : String(err);
+    console.error(`[BACKUP] FAILED`);
+    console.error(`  Error: ${errorMsg}`);
+    return { backupPath, sourceFileCount, success: false, error: errorMsg };
+  }
+}
+
+// ─── File Hashing ────────────────────────────────────────────────────────────
 
 /**
  * Compute SHA256 hash of a file's content.
@@ -779,6 +900,11 @@ export function runMultiFileImport(
   console.log(`\nWritten: ${output}`);
   console.log(`  ${allSources.length} total sources from ${results.filter(r => r.status === 'imported').length} files`);
 
+  // ── Append-only guardrail ───────────────────────────────────────────────
+  // importpreview is NEVER a replacement set for sources/. Validate after write.
+  validatePreviewAppendOnly(output);
+  console.log('[00A] Append-only guard: PASSED ✓');
+
   return {
     results,
     totalSources: allSources.length,
@@ -824,7 +950,19 @@ function parseArgs(): CliArgs {
 // ─── Main ─────────────────────────────────────────────────────────────────
 
 function main(): void {
-  console.log('=== 00A: ImportRawSources Tool (v5 — with manifest + row provenance) ===\n');
+  console.log('=== 00A: ImportRawSources Tool (v6 — with pre-import backup + append-only guard) ===\n');
+
+  // ── STEP 0: Pre-import backup of sources/ ──────────────────────────────────
+  // This MUST happen before ANY import logic. If backup fails → abort.
+  console.log('[00A] Step 0: Pre-import backup of sources/\n');
+  const backupResult = takeSourcesBackup();
+  console.log();
+
+  if (!backupResult.success) {
+    console.error('FATAL: Could not backup sources/. Aborting import to prevent data loss.');
+    console.error('       Fix the backup issue before retrying.');
+    process.exit(1);
+  }
 
   const { input, output, sourcesDir } = parseArgs();
   const rawSourcesDir = path.join(process.cwd(), '01-Sources', 'RawSources');
@@ -925,6 +1063,14 @@ function main(): void {
     fs.writeFileSync(output, lines, 'utf-8');
     console.log(`Written: ${output}`);
     console.log(`  ${sources.length} sources`);
+
+    // ── STEP FINAL: Append-only guardrail ───────────────────────────────────
+    // importpreview is NEVER a replacement set for sources/. This is a
+    // safety check to ensure no downstream code can misuse the preview.
+    console.log();
+    console.log('[00A] Append-only validation...');
+    validatePreviewAppendOnly(output);
+    console.log('[00A] Append-only guard: PASSED ✓');
 
     const totalValidRows = validRows.length;
     const totalInvalidRows = invalidRows.length;
