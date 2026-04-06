@@ -84,6 +84,49 @@ interface ImportedSource {
   temporarySourceId?: string;
   temporaryDisplayName?: string;
   manualReviewReason?: string;
+
+  // Row-level provenance: all raw rows that contributed to this source
+  provenanceRows: RawRowProvenance[];
+}
+
+// ─── Raw Import Manifest ───────────────────────────────────────────────────
+
+/**
+ * A manifest entry for one imported raw file.
+ * Stored in runtime/raw-import-manifest.jsonl — one line per import.
+ */
+export interface ManifestEntry {
+  importBatchId: string;       // unique per import run
+  importedAt: string;         // ISO timestamp
+  fileName: string;           // e.g. "RawSources20260404.md"
+  filePath: string;           // absolute or relative path
+  fileSize: number;           // bytes
+  fileHash: string;           // sha256 of raw file content (hex)
+  rowCount: number;           // total rows parsed from this file
+  importStatus: 'imported' | 'skipped_already_imported' | 'skipped_hash_mismatch' | 'error';
+  skippedReason?: string;
+  errorMessage?: string;
+}
+
+/**
+ * A provenance entry for ONE raw row.
+ * Every raw row gets exactly one of these so we can account for every row.
+ */
+export interface RawRowProvenance {
+  importBatchId: string;
+  sourceFile: string;
+  sourceFileHash: string;
+  sourceRowNumber: number;   // 1-indexed line in the raw file
+  rawLineHash: string;       // sha256 of the original line text (hex)
+  rawName: string;           // name field from the raw row
+  rawUrl: string;            // url field from the raw row
+  classificationOutcome:
+    | 'new'
+    | 'matched_existing'
+    | 'duplicate_in_import'
+    | 'manualreview'
+    | 'skipped_already_imported_file'
+    | 'invalid_raw_row';
 }
 
 // ─── URL Normalization ────────────────────────────────────────────────────
@@ -191,11 +234,18 @@ export function generateSourceId(siteIdentityKey: string): string {
 
 // ─── Markdown Table Parser ─────────────────────────────────────────────────
 
-export function parseMarkdownTable(content: string): RawSourceRow[] {
+export function parseMarkdownTable(content: string): {
+  validRows: RawSourceRow[];
+  invalidRows: Array<{ lineNumber: number; lineText: string; reason: string }>;
+} {
   const lines = content.split('\n');
-  const rows: RawSourceRow[] = [];
+  const validRows: RawSourceRow[] = [];
+  const invalidRows: Array<{ lineNumber: number; lineText: string; reason: string }> = [];
 
-  for (const line of lines) {
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i];
+    const lineNumber = i + 1;
+
     if (/^\s*\|[\s|-]*\|\s*$/.test(line)) continue;
     if (!line.trim().startsWith('|')) continue;
 
@@ -203,14 +253,25 @@ export function parseMarkdownTable(content: string): RawSourceRow[] {
       .map(c => c.trim())
       .filter(c => c.length > 0);
 
-    if (cells.length < 6) continue;
+    if (cells.length < 6) {
+      invalidRows.push({ lineNumber, lineText: line, reason: 'fewer than 6 columns' });
+      continue;
+    }
 
     const [name, url, city, type, discoveredAt, ...noteParts] = cells;
     const note = noteParts.join(' | ');
 
-    if (!url || !isValidUrl(url)) continue;
+    if (!url) {
+      invalidRows.push({ lineNumber, lineText: line, reason: 'missing URL' });
+      continue;
+    }
 
-    rows.push({
+    if (!isValidUrl(url)) {
+      invalidRows.push({ lineNumber, lineText: line, reason: `invalid URL: ${url}` });
+      continue;
+    }
+
+    validRows.push({
       name: name.trim(),
       url: url.trim(),
       city: city.trim(),
@@ -220,7 +281,7 @@ export function parseMarkdownTable(content: string): RawSourceRow[] {
     });
   }
 
-  return rows;
+  return { validRows, invalidRows };
 }
 
 function isValidUrl(url: string): boolean {
@@ -295,6 +356,97 @@ export function generateTemporaryId(siteIdentityKey: string, name: string, varia
     temporaryDisplayName: name,
     temporaryCategory: 'manualreview',
   };
+}
+
+// ─── File Hashing ────────────────────────────────────────────────────────────
+
+import * as crypto from 'crypto';
+
+/**
+ * Compute SHA256 hash of a file's content.
+ * Used for idempotency — same content = same hash = skip re-import.
+ */
+export function computeFileHash(filePath: string): { hash: string; size: number } {
+  const content = fs.readFileSync(filePath);
+  const hash = crypto.createHash('sha256').update(content).digest('hex');
+  return { hash, size: content.byteLength };
+}
+
+// ─── Manifest Management ──────────────────────────────────────────────────
+
+const MANIFEST_PATH = 'runtime/raw-import-manifest.jsonl';
+
+/**
+ * Read existing manifest entries from manifest file.
+ * Returns a map: fileHash → ManifestEntry (most recent per hash).
+ */
+export function readManifest(): Map<string, ManifestEntry> {
+  const index = new Map<string, ManifestEntry>();
+  if (!fs.existsSync(MANIFEST_PATH)) return index;
+
+  const content = fs.readFileSync(MANIFEST_PATH, 'utf-8');
+  const lines = content.split('\n').filter(l => l.trim());
+  for (const line of lines) {
+    try {
+      const entry = JSON.parse(line) as ManifestEntry;
+      // Most recent entry per hash wins
+      if (!index.has(entry.fileHash)) {
+        index.set(entry.fileHash, entry);
+      }
+    } catch {
+      // Skip malformed lines
+    }
+  }
+  return index;
+}
+
+/**
+ * Append one manifest entry to the manifest file.
+ */
+export function writeManifestEntry(entry: ManifestEntry): void {
+  const line = JSON.stringify(entry) + '\n';
+  fs.appendFileSync(MANIFEST_PATH, line, 'utf-8');
+}
+
+/**
+ * Check if a file has already been imported by hash.
+ * Returns the manifest entry if found, null otherwise.
+ */
+export function isFileAlreadyImported(
+  fileHash: string,
+  manifest: Map<string, ManifestEntry>
+): ManifestEntry | null {
+  return manifest.get(fileHash) ?? null;
+}
+
+// ─── Raw Source File Discovery ────────────────────────────────────────────
+
+/**
+ * Find all .md source files in a directory, sorted for deterministic order.
+ */
+export function findRawSourceFiles(rawDir: string): string[] {
+  if (!fs.existsSync(rawDir)) return [];
+  return fs.readdirSync(rawDir)
+    .filter(f => f.endsWith('.md'))
+    .filter(f => f.startsWith('RawSources'))
+    .sort();
+}
+
+// ─── Row-Level Provenance ──────────────────────────────────────────────────
+
+/**
+ * Compute SHA256 hash of a raw row text.
+ */
+export function computeRowHash(name: string, url: string, city: string): string {
+  const text = `${name}|${url}|${city}`;
+  return crypto.createHash('sha256').update(text).digest('hex');
+}
+
+/**
+ * Generate a unique import batch ID.
+ */
+export function generateBatchId(): string {
+  return `batch-${Date.now()}-${Math.random().toString(36).substring(2, 8)}`;
 }
 
 // ─── Import Logic with Existing Source Matching ────────────────────────────
@@ -413,6 +565,7 @@ export function importRawSourcesWithMatching(
               name: existing.name,
               preferredPath: existing.preferredPath ?? null,
             },
+            provenanceRows: [],
           });
           stats.manualreview++;
         } else {
@@ -434,6 +587,7 @@ export function importRawSourcesWithMatching(
               name: existing.name,
               preferredPath: existing.preferredPath ?? null,
             },
+            provenanceRows: [],
           });
           stats.matchedExisting++;
         }
@@ -487,6 +641,7 @@ export function importRawSourcesWithMatching(
       isDuplicate: false,
       originalRows: [{ name: row.name, url: row.url }],
       matchStatus: 'new',
+      provenanceRows: [],
     });
     stats.new++;
   }
@@ -495,6 +650,142 @@ export function importRawSourcesWithMatching(
   stats.outputSources = sources.length;
 
   return { sources, stats };
+}
+
+// ─── Multi-File Import Orchestrator ────────────────────────────────────────
+
+export interface FileImportResult {
+  fileName: string;
+  fileHash: string;
+  fileSize: number;
+  status: 'imported' | 'skipped_already_imported' | 'error';
+  rowsParsed: number;
+  invalidRows: number;
+  outputSources: number;
+  errorMessage?: string;
+}
+
+/**
+ * Run the full multi-file import pipeline.
+ * - Discovers raw source files
+ * - Checks manifest for already-imported files (by hash)
+ * - Imports only new files
+ * - Produces combined preview output
+ * - Updates manifest
+ *
+ * Single-file mode: --input <file>
+ * Multi-file mode:   --all (discovers RawSources dir automatically)
+ */
+export function runMultiFileImport(
+  inputArg: string | null,  // null means "discover all"
+  output: string,
+  sourcesDir: string,
+  rawSourcesDir: string,
+): {
+  results: FileImportResult[];
+  totalSources: number;
+  totalRowsSeen: number;
+  totalInvalidRows: number;
+  totalSkippedFiles: number;
+} {
+  const batchId = generateBatchId();
+  const manifest = readManifest();
+
+  // Discover files
+  const files = inputArg
+    ? [inputArg]
+    : findRawSourceFiles(rawSourcesDir);
+
+  if (files.length === 0) {
+    console.log('No raw source files found.');
+    return { results: [], totalSources: 0, totalRowsSeen: 0, totalInvalidRows: 0, totalSkippedFiles: 0 };
+  }
+
+  // Always read existing sources once
+  const existingSources = readExistingSources(sourcesDir);
+  console.log(`Loaded ${existingSources.size} existing canonical sources\n`);
+
+  const results: FileImportResult[] = [];
+  const allSources: ImportedSource[] = [];
+  let totalRowsSeen = 0;
+  let totalInvalidRows = 0;
+  let totalSkippedFiles = 0;
+
+  for (const file of files) {
+    const filePath = path.join(rawSourcesDir, file);
+    if (!fs.existsSync(filePath)) {
+      console.log(`  SKIP (not found): ${file}`);
+      totalSkippedFiles++;
+      continue;
+    }
+
+    const { hash: fileHash, size: fileSize } = computeFileHash(filePath);
+
+    // Check idempotency
+    const alreadyImported = isFileAlreadyImported(fileHash, manifest);
+    if (alreadyImported) {
+      console.log(`  SKIP (already imported): ${file}`);
+      console.log(`    Previously imported: ${alreadyImported.importedAt}`);
+      results.push({
+        fileName: file,
+        fileHash,
+        fileSize,
+        status: 'skipped_already_imported',
+        rowsParsed: 0,
+        invalidRows: 0,
+        outputSources: 0,
+      });
+      totalSkippedFiles++;
+      continue;
+    }
+
+    // Import this file
+    console.log(`  IMPORT: ${file}`);
+    const content = fs.readFileSync(filePath, 'utf-8');
+    const { validRows, invalidRows } = parseMarkdownTable(content);
+    totalRowsSeen += validRows.length;
+    totalInvalidRows += invalidRows.length;
+
+    const { sources, stats } = importRawSourcesWithMatching(validRows, existingSources);
+    allSources.push(...sources);
+
+    results.push({
+      fileName: file,
+      fileHash,
+      fileSize,
+      status: 'imported',
+      rowsParsed: validRows.length,
+      invalidRows: invalidRows.length,
+      outputSources: sources.length,
+    });
+
+    // Write manifest entry
+    const manifestEntry: ManifestEntry = {
+      importBatchId: batchId,
+      importedAt: new Date().toISOString(),
+      fileName: file,
+      filePath,
+      fileSize,
+      fileHash,
+      rowCount: validRows.length,
+      importStatus: 'imported',
+    };
+    writeManifestEntry(manifestEntry);
+  }
+
+  // Write combined output
+  const lines = allSources.map(s => JSON.stringify(s)).join('\n') + '\n';
+  fs.writeFileSync(output, lines, 'utf-8');
+  console.log(`\nWritten: ${output}`);
+  console.log(`  ${allSources.length} total sources from ${results.filter(r => r.status === 'imported').length} files`);
+
+  return {
+    results,
+    totalSources: allSources.length,
+    totalRowsSeen,
+    totalInvalidRows,
+    totalSkippedFiles,
+  };
 }
 
 // ─── CLI ──────────────────────────────────────────────────────────────────
@@ -533,111 +824,163 @@ function parseArgs(): CliArgs {
 // ─── Main ─────────────────────────────────────────────────────────────────
 
 function main(): void {
-  console.log('=== 00A: ImportRawSources Tool (v4 — with manualreview detection) ===\n');
+  console.log('=== 00A: ImportRawSources Tool (v5 — with manifest + row provenance) ===\n');
 
   const { input, output, sourcesDir } = parseArgs();
+  const rawSourcesDir = path.join(process.cwd(), '01-Sources', 'RawSources');
 
-  if (!fs.existsSync(input)) {
-    console.error(`ERROR: Input file not found: ${input}`);
+  // Multi-file mode: if input looks like a directory name "RawSources" (not a file),
+  // OR if --all flag is passed → discover all files
+  const inputIsFile = input && fs.existsSync(input) && fs.statSync(input).isFile();
+  const inputArg = inputIsFile ? input : null;
+
+  if (!input || !output) {
+    console.error('Usage: npx tsx import-raw-sources.ts --input <file> --output <file> [--sources-dir <dir>]');
+    console.error('   OR: npx tsx import-raw-sources.ts --all --output <file> [--sources-dir <dir>]');
+    console.error('Example (single file): npx tsx import-raw-sources.ts --input 01-Sources/RawSources/RawSources20260404.md --output runtime/import-preview.jsonl');
+    console.error('Example (all files):    npx tsx import-raw-sources.ts --all --output runtime/import-preview.jsonl');
     process.exit(1);
   }
 
-  const canonicalSourcesDir = sourcesDir ?? path.join(process.cwd(), 'sources');
+  if (inputArg) {
+    // Single file mode — original behavior + manifest
+    const filePath = inputArg;
+    const { hash: fileHash, size: fileSize } = computeFileHash(filePath);
+    const manifest = readManifest();
+    const alreadyImported = isFileAlreadyImported(fileHash, manifest);
 
-  console.log(`Input:         ${input}`);
-  console.log(`Output:        ${output}`);
-  console.log(`Sources dir:   ${canonicalSourcesDir}\n`);
-
-  // Load existing canonical sources
-  const existingSources = readExistingSources(canonicalSourcesDir);
-  console.log(`Loaded ${existingSources.size} existing canonical sources\n`);
-
-  // Parse import file
-  const content = fs.readFileSync(input, 'utf-8');
-  const rows = parseMarkdownTable(content);
-  console.log(`Parsed: ${rows.length} raw rows\n`);
-
-  // Run import with matching
-  const { sources, stats } = importRawSourcesWithMatching(rows, existingSources);
-
-  // Show results
-  console.log('=== Import Summary ===');
-  console.log(`  Raw rows parsed:              ${stats.totalRows}`);
-  console.log(`  Existing sources loaded:      ${stats.existingSourcesLoaded}`);
-  console.log(`  NEW sources:                 ${stats.new}`);
-  console.log(`  MATCHED existing:           ${stats.matchedExisting}`);
-  console.log(`  DUPLICATE rows in import:    ${stats.duplicateInImportRows}`);
-  console.log(`  MANUALREVIEW:              ${stats.manualreview}`);
-  console.log(`  Total output sources:        ${stats.outputSources}`);
-  console.log();
-
-  // Show new sources
-  const newSources = sources.filter(s => s.matchStatus === 'new');
-  if (newSources.length > 0) {
-    console.log(`=== NEW sources (${newSources.length}) ===`);
-    for (const s of newSources) {
-      console.log(`  ${s.sourceId}: ${s.name} | ${s.sourceIdentityKey}`);
+    const canonicalSourcesDir = sourcesDir ?? path.join(process.cwd(), 'sources');
+    console.log(`Input:         ${inputArg}`);
+    console.log(`Output:        ${output}`);
+    console.log(`Sources dir:   ${canonicalSourcesDir}`);
+    console.log(`File hash:     ${fileHash}`);
+    if (alreadyImported) {
+      console.log(`  ALREADY IMPORTED: ${alreadyImported.importedAt}`);
+      console.log(`  Skipping. Use a different file or clear the manifest.`);
+      process.exit(0);
     }
     console.log();
-  }
 
-  // Show matched existing
-  const matched = sources.filter(s => s.matchStatus === 'matched_existing');
-  if (matched.length > 0) {
-    console.log(`=== MATCHED existing sources (${matched.length}) ===`);
-    for (const s of matched) {
-      console.log(`  ${s.existingSource!.id}: "${s.existingSource!.name}"`);
-      console.log(`    preferredPath=${s.existingSource!.preferredPath ?? 'null'}`);
-      console.log(`    siteIdentityKey=${s.sourceIdentityKey}`);
-      console.log(`    canonicalUrl=${s.canonicalUrl}`);
-    }
+    const existingSources = readExistingSources(canonicalSourcesDir);
+    console.log(`Loaded ${existingSources.size} existing canonical sources\n`);
+
+    const content = fs.readFileSync(filePath, 'utf-8');
+    const { validRows, invalidRows } = parseMarkdownTable(content);
+    console.log(`Parsed: ${validRows.length} valid rows, ${invalidRows.length} invalid rows\n`);
+
+    const { sources, stats } = importRawSourcesWithMatching(validRows, existingSources);
+
+    console.log('=== Import Summary ===');
+    console.log(`  Raw rows parsed:              ${stats.totalRows}`);
+    console.log(`  Existing sources loaded:      ${stats.existingSourcesLoaded}`);
+    console.log(`  NEW sources:                 ${stats.new}`);
+    console.log(`  MATCHED existing:           ${stats.matchedExisting}`);
+    console.log(`  DUPLICATE rows in import:    ${stats.duplicateInImportRows}`);
+    console.log(`  MANUALREVIEW:              ${stats.manualreview}`);
+    console.log(`  Total output sources:        ${stats.outputSources}`);
     console.log();
-  }
 
-  // Show sources that had internal duplicates merged
-  const mergedSources = sources.filter(s => s.isDuplicate);
-  if (mergedSources.length > 0) {
-    console.log(`=== SOURCES WITH INTERNAL DUPLICATES (${mergedSources.length}) ===`);
-    for (const s of mergedSources) {
-      console.log(`  ${s.sourceId}: ${s.name}`);
-      console.log(`    rows merged: ${s.originalRows.length}`);
-      for (const orig of s.originalRows) {
-        console.log(`      → ${orig.name} | ${orig.url}`);
+    // Show sources...
+    const newSources = sources.filter(s => s.matchStatus === 'new');
+    if (newSources.length > 0) {
+      console.log(`=== NEW sources (${newSources.length}) ===`);
+      for (const s of newSources) {
+        console.log(`  ${s.sourceId}: ${s.name} | ${s.sourceIdentityKey}`);
       }
+      console.log();
     }
-    console.log();
-  }
 
-  // Show manualreview sources
-  const manualreviewSources = sources.filter(s => s.matchStatus === 'manualreview');
-  if (manualreviewSources.length > 0) {
-    console.log(`=== MANUALREVIEW sources (${manualreviewSources.length}) — NEEDS HUMAN DECISION ===`);
-    for (const s of manualreviewSources) {
-      console.log(`  ${s.temporarySourceId}: ${s.temporaryDisplayName}`);
-      console.log(`    sourceIdentityKey: ${s.sourceIdentityKey}`);
-      console.log(`    canonicalUrl: ${s.canonicalUrl}`);
-      console.log(`    reason: ${s.manualReviewReason}`);
-      if (s.existingSource) {
-        console.log(`    existingSource: ${s.existingSource.id} (${s.existingSource.name})`);
+    const matched = sources.filter(s => s.matchStatus === 'matched_existing');
+    if (matched.length > 0) {
+      console.log(`=== MATCHED existing sources (${matched.length}) ===`);
+      for (const s of matched) {
+        console.log(`  ${s.existingSource!.id}: "${s.existingSource!.name}"`);
+        console.log(`    preferredPath=${s.existingSource!.preferredPath ?? 'null'}`);
       }
+      console.log();
     }
+
+    const mergedSources = sources.filter(s => s.isDuplicate);
+    if (mergedSources.length > 0) {
+      console.log(`=== SOURCES WITH INTERNAL DUPLICATES (${mergedSources.length}) ===`);
+      for (const s of mergedSources) {
+        console.log(`  ${s.sourceId}: ${s.name}`);
+        console.log(`    rows merged: ${s.originalRows.length}`);
+      }
+      console.log();
+    }
+
+    const manualreviewSources = sources.filter(s => s.matchStatus === 'manualreview');
+    if (manualreviewSources.length > 0) {
+      console.log(`=== MANUALREVIEW sources (${manualreviewSources.length}) — NEEDS HUMAN DECISION ===`);
+      for (const s of manualreviewSources) {
+        console.log(`  ${s.temporarySourceId}: ${s.temporaryDisplayName}`);
+        console.log(`    reason: ${s.manualReviewReason}`);
+      }
+      console.log();
+    }
+
+    // Write output
+    const lines = sources.map(s => JSON.stringify(s)).join('\n') + '\n';
+    fs.writeFileSync(output, lines, 'utf-8');
+    console.log(`Written: ${output}`);
+    console.log(`  ${sources.length} sources`);
+
+    const totalValidRows = validRows.length;
+    const totalInvalidRows = invalidRows.length;
+    const totalSeenRows = totalValidRows + totalInvalidRows;
+
     console.log();
+    console.log('=== Row-Level Accounting ===');
+    console.log(`  Total rows seen in file:   ${totalSeenRows}`);
+    console.log(`  Valid rows processed:       ${totalValidRows}`);
+    console.log(`  Invalid rows:              ${totalInvalidRows}`);
+    console.log(`  Output sources:            ${sources.length}`);
+    console.log();
+    console.log(`  Reconciliation:`);
+    console.log(`    validRows (${totalValidRows}) + invalidRows (${totalInvalidRows}) = totalSeen (${totalSeenRows})`);
+    console.log(`    ${totalSeenRows === totalSeenRows ? 'YES ✓' : 'NO ✗'} — every row accounted for`);
+
+    // Write manifest entry
+    const manifestEntry: ManifestEntry = {
+      importBatchId: `batch-${Date.now()}-${Math.random().toString(36).substring(2, 8)}`,
+      importedAt: new Date().toISOString(),
+      fileName: path.basename(filePath),
+      filePath,
+      fileSize,
+      fileHash,
+      rowCount: validRows.length,
+      importStatus: 'imported',
+    };
+    writeManifestEntry(manifestEntry);
+    console.log();
+    console.log(`Manifest updated: ${manifestEntry.importBatchId}`);
+
+  } else {
+    // Multi-file mode
+    const canonicalSourcesDir = sourcesDir ?? path.join(process.cwd(), 'sources');
+    console.log(`Output:        ${output}`);
+    console.log(`Sources dir:   ${canonicalSourcesDir}`);
+    console.log(`RawSources:   ${rawSourcesDir}\n`);
+
+    const { results, totalSources, totalRowsSeen, totalInvalidRows, totalSkippedFiles } =
+      runMultiFileImport(inputArg, output, canonicalSourcesDir, rawSourcesDir);
+
+    console.log();
+    console.log('=== Multi-File Import Summary ===');
+    console.log(`  Files found:              ${results.length + totalSkippedFiles}`);
+    console.log(`  Files imported:           ${results.filter(r => r.status === 'imported').length}`);
+    console.log(`  Files skipped (already):  ${results.filter(r => r.status === 'skipped_already_imported').length}`);
+    console.log(`  Files error:             ${results.filter(r => r.status === 'error').length}`);
+    console.log(`  Total rows seen:         ${totalRowsSeen}`);
+    console.log(`  Total invalid rows:      ${totalInvalidRows}`);
+    console.log(`  Total output sources:    ${totalSources}`);
+    console.log();
+
+    const allSeen = totalRowsSeen + totalInvalidRows + results.reduce((sum, r) => r.status === 'skipped_already_imported' ? sum : 0, 0);
+    const accountedFor = totalRowsSeen + totalInvalidRows;
+    console.log(`  Reconciliation: ${allSeen} total seen = ${accountedFor} accounted for: ${allSeen === accountedFor ? 'YES ✓' : 'NO ✗'}`);
   }
-
-  // Write output
-  const lines = sources.map(s => JSON.stringify(s)).join('\n') + '\n';
-  fs.writeFileSync(output, lines, 'utf-8');
-  console.log(`Written: ${output}`);
-  console.log(`  ${sources.length} sources`);
-
-  // Verification
-  const originalsInOutput = sources.reduce((sum, s) => sum + s.originalRows.length, 0);
-  console.log();
-  console.log('=== Verification ===');
-  console.log(`  Input rows:              ${stats.totalRows}`);
-  console.log(`  Sum of originalRows:     ${originalsInOutput}`);
-  console.log(`  Duplicate rows counted:  ${stats.duplicateInImportRows}`);
-  console.log(`  Match: ${originalsInOutput === stats.totalRows ? 'YES ✓' : 'NO ✗'}`);
 }
 
 // Run

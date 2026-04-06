@@ -55,6 +55,44 @@ För varje importerad rad: om siteIdentityKey matchar en befintlig source →
 Två rader med samma siteIdentityKey inom samma importbatch slås ihop.
 Båda bevaras i `originalRows[]` och `isDuplicate = true`.
 
+## RawSources-mappen
+
+Mappen `01-Sources/RawSources/` fungerar som en **dumpmapp** för råa source-listor.
+Inga krav finns på filnamn förutom att de ska vara markdown-tabeller med rätt kolumner.
+
+00A kan läsa:
+- **En enskild fil:** `--input 01-Sources/RawSources/RawSources20260404.md`
+- **Alla filer i mappen:** `--all --output runtime/import-preview.jsonl`
+
+## Idempotens: raw-import-manifest.jsonl
+
+Varje importerad fil loggas i `runtime/raw-import-manifest.jsonl` med:
+- Filens SHA256-hash
+- Filstorlek
+- Importdatum
+- Radantal
+
+**Idempotensregler:**
+- Samma filhash → filen hoppas över som redan importerad
+- Samma innehåll, annat filnamn → hoppas över som duplicat
+- Ny fil, nytt innehåll → importeras normalt
+
+## Spårbarhet: varje rå rad är spårbar
+
+Varje rå rad i en importfil får **exakt ett explicit utfall**:
+
+| Outcome | Betydelse |
+|---------|-----------|
+| `new` | Ny source, ingen match i `sources/` |
+| `matched_existing` | Matchar en befintlig source i `sources/` |
+| `duplicate_in_import` | Samma hostname i samma importfil |
+| `manualreview` | Namn eller stad skiljer sig från befintlig source — kräver manuell bedömning |
+| `skipped_already_imported_file` | Hela filen hoppades över (redan importerad) |
+| `invalid_raw_row` | Rad saknar giltig URL eller har för få kolumner |
+
+**Reconciliation:**
+`validRows + invalidRows = totalSeenRows` — alltid.
+
 ## Match-status
 
 || Värde | Betydelse |
