@@ -2,117 +2,95 @@
 
 **Genererad:** 2026-04-06
 **Källa:** `sources/*.jsonl` (420 filer)
-**Analysverktyg:** bash + python3 (read-only)
+**Analysverktyg:** canonical-collision-detector.ts (read-only)
 
 ---
 
 ## Sammanfattning
 
-| Kategori | Antal hostnames | Exempel |
-|----------|----------------|---------|
-| 4 filer per hostname | 1 | www.vasteras.se |
-| 3 filer per hostname | 3 | www.norrkoping.se, www.jonkoping.se, www.gavle.se |
-| 2 filer per hostname | 19 | Se nedan |
-| 1 fil per hostname | ~396 | Normalt |
+| Decision | Antal hostname-grupper | Filer | Exempel |
+|----------|------------------------|-------|---------|
+| keep-separate-subvenues | 13 | 37 | www.vasteras.se → 4 paths |
+| merge-duplicate-imports | 3 | 6 | uppsala-stadsteatern + liseberg |
+| manual-review | 7 | 15 | www.stadsteatern.se (2 städer), gronalund.com |
+| data-error | 1 | 1 | liseberg-1 på fel hostname |
+| **Total** | **24** | **59** | |
 
 ---
 
-## TYPDELT COLLISIONER
+## keep-separate-subvenues
 
-### Typ A: Olika venues på samma sajt (LEGELEGISKT — granska manuellt)
+### 13 hostnames med olika paths — ALLA subvenues separeras
 
-| sourceIdentityKey | Filer | Namn | Stad | Status |
-|-------------------|-------|------|------|--------|
-| www.stadsteatern.se | goteborgs-stadsteatern.jsonl | Göteborgs Stadsteater | Göteborg | Manuell granskning: OLIKA städer, samma hostname |
-| www.stadsteatern.se | stockholms-stadsteater.jsonl | Stockholms Stadsteater | Stockholm | Manuell granskning: OLIKA städer, samma hostname |
-| www.vasteras.se | vasteras-konserthus.jsonl | Västerås Konserthus | Västerås | Manuell granskning |
-| www.vasteras.se | vasteras-konstmuseum.jsonl | Västerås Konstmuseum | Västerås | Manuell granskning |
-| www.vasteras.se | vasteras-stad.jsonl | Västerås stad | Västerås | Manuell granskning |
-| www.vasteras.se | vasteras-stadsteatern.jsonl | Västerås Stadsteater | Västerås | Manuell granskning |
-| www.norrkoping.se | norrkoping-konserthus.jsonl | Norrköpings Konserthus | Norrköping | Manuell granskning |
-| www.norrkoping.se | norrkoping-museum.jsonl | Norrköpings Museum | Norrköping | Manuell granskning |
-| www.norrkoping.se | norrkoping-stadsteatern.jsonl | Norrköpings Stadsteater | Norrköping | Manuell granskning |
-| www.jonkoping.se | jonkoping.jsonl | Jönköping | Jönköping | Manuell granskning |
-| www.jonkoping.se | jonkoping-konserthus.jsonl | Jönköpings Konserthus | Jönköping | Manuell granskning |
-| www.jonkoping.se | jonkoping-stadsteatern.jsonl | Jönköpings Stadsteater | Jönköping | Manuell granskning |
-| www.gavle.se | gavle-konserthus.jsonl | Gävle Konserthus | Gävle | Manuell granskning |
-| www.gavle.se | gavle-konstmuseum.jsonl | Gävle Konstmuseum | Gävle | Manuell granskning |
-| www.gavle.se | gavle-stadsteatern.jsonl | Gävle Stadsteater | Gävle | Manuell granskning |
-| www.lund.se | lunds-konserthus.jsonl | Lunds Konserthus | Lund | Manuell granskning |
-| www.lund.se | lunds-stadsteatern.jsonl | Lunds Stadsteater | Lund | Manuell granskning |
-
-**OBS:** `www.stadsteatern.se` är ett tydligt exempel där samma hostname
-har helt olika venues i helt olika städer. Site-level deduplication
-AVSLÖJAR detta — det ska inte döljas. Manuell granskning krävs.
+| sourceIdentityKey | Filer | sourceIdentityKeys | Decision |
+|-------------------|-------|-------------------|----------|
+| aviciiarena.se | avicii-arena.jsonl, avicii-arena-sport.jsonl | aviciiarena.se + aviciiarena.se-sport | keep-separate-subvenues |
+| falu.se | falun-konserthus.jsonl, falun-stadsteatern.jsonl | falu.se-konserthus + falu.se-stadsteatern | keep-separate-subvenues |
+| gavle.se | gavle-konserthus.jsonl, gavle-konstmuseum.jsonl, gavle-stadsteatern.jsonl | gavle.se-konserthus + gavle.se-konst + gavle.se-stadsteatern | keep-separate-subvenues |
+| halmstad.se | halmstad-konserthus.jsonl, halmstad-stadsteatern.jsonl | halmstad.se-konserthus + halmstad.se-stadsteatern | keep-separate-subvenues |
+| jonkoping.se | jonkoping.jsonl, jonkoping-konserthus.jsonl, jonkoping-stadsteatern.jsonl | jonkoping.se + jonkoping.se-konserthus + jonkoping.se-stadsteatern | keep-separate-subvenues |
+| karlstad.se | karlstad-konserthus.jsonl, karlstad-stadsteatern.jsonl | karlstad.se-konserthus + karlstad.se-stadsteatern | keep-separate-subvenues |
+| linkoping.se | linkoping-konserthus.jsonl, linkoping-stadsteatern.jsonl | linkoping.se-konserthus + linkoping.se-stadsteatern | keep-separate-subvenues |
+| lulea.se | lulea-konserthus.jsonl, lulea-stadsteatern.jsonl | lulea.se-konserthus + lulea.se-stadsteatern | keep-separate-subvenues |
+| lund.se | lunds-konserthus.jsonl, lunds-stadsteatern.jsonl | lund.se-konserthus + lund.se-stadsteatern | keep-separate-subvenues |
+| malmö.se | malmo-stad.jsonl, malmo-stadsbibliotek.jsonl | malmoe.se + malmoe.se-bibliotek | keep-separate-subvenues |
+| norrkoping.se | norrkoping-konserthus.jsonl, norrkoping-museum.jsonl, norrkoping-stadsteatern.jsonl | norrkoping.se-konserthus + norrkoping.se-museum + norrkoping.se-stadsteatern | keep-separate-subvenues |
+| umea.se | umea-konserthus.jsonl, umea-stadsteatern.jsonl | umea.se-konserthus + umea.se-stadsteatern | keep-separate-subvenues |
+| vasteras.se | vasteras-konserthus.jsonl, vasteras-konstmuseum.jsonl, vasteras-stad.jsonl, vasteras-stadsteatern.jsonl | vasteras.se-konserthus + vasteras.se-konstmuseum + vasteras.se + vasteras.se-stadsteatern | keep-separate-subvenues |
 
 ---
 
-### Typ B: Samma venue importerad flera gånger (MERGE-KANDIDATER)
+## merge-duplicate-imports
 
-| sourceIdentityKey | Filer | ID | Namn | city | difference |
-|-------------------|-------|-----|------|------|------------|
-| www.gronalund.se | gr-na-lund.jsonl, gr-na-lund-n-je.jsonl | gr-na-lund, gr-na-lund-n-je | Gröna Lund (nöje) | Stockholm | test#33 vs test#98, samma URL, samma namn |
-| www.liseberg.se | liseberg.jsonl, liseberg-n-je.jsonl | liseberg, liseberg-n-je | Liseberg (nöje) | Göteborg | test#34 vs test#99, samma URL, samma namn |
-| www.varmland.se | varmland.jsonl, varmland-1.jsonl | varmland, varmland-1 | Värmland | Karlstad vs Uppsala | Samma URL, olika city, samma type=turism |
+### 3 hostnames — slå ihop dubbletter
 
-**OBS:** Värmland är intressant: `varmland-1` har city="Uppsala" men
-url är `www.varmland.se` som pekar mot Karlstad. Detta är troligen
-ett importfel där Uppsala felaktigt angavs.
+| sourceIdentityKey | Filer | Namn | city | Skillnad | Decision |
+|-------------------|-------|------|------|----------|----------|
+| uppsala-stadsteatern.se | uppsala-stadsteatern.jsonl + uppsala-stadsteatern-1.jsonl | Uppsala Stadsteatern | Uppsala | Samma URL, samma namn | merge |
+| liseberg.se | liseberg.jsonl + liseberg-n-je.jsonl | Liseberg | Göteborg | Samma URL, samma namn, olika type=nöje | merge |
+| gronalund.se | gr-na-lund.jsonl + gr-na-lund-n-je.jsonl | Gröna Lund | Stockholm | Samma URL, samma namn, olika type=nöje | merge |
 
 ---
 
-### Typ C: Fel hostname / DATA FEL
+## manual-review
 
-| Fil | ID | URL | Name | Felbeskrivning |
-|-----|-----|-----|------|----------------|
-| liseberg-1.jsonl | liseberg-1 | https://www.gronalund.com | Liseberg | FEL! Liseberg = www.liseberg.se INTE www.gronalund.com |
-| grona-lund.jsonl | grona-lund | https://www.gronalund.com | Gröna Lund | Korrekt hostname för Gröna Lund? Ja. |
-| gronalund.jsonl | (saknas) | — | — | Filen saknas trots listning |
+### 7 hostnames — kräver mänsklig bedömning
 
-**Åtgärd:** `liseberg-1.jsonl` bör antingen:
-- Fas 3.1: Rapporteras som datafel i collision-report
-- Senare: Flyttas till `sources_v2/` rättade som `liseberg.se`
+| sourceIdentityKey | Filer | Namn | city | Fråga | Decision |
+|-------------------|-------|------|------|-------|----------|
+| stadsteatern.se | goteborgs-stadsteatern.jsonl + stockholms-stadsteater.jsonl | Göteborgs Stadsteater + Stockholms Stadsteater | Göteborg + Stockholm | Två städer på samma hostname. Separata venues? | manual-review → SEPARATE med suffix |
+| arkitekturgalleriet.se | arkitekturgalleriet.jsonl + goteborgs-arkitekturgalleri.jsonl | Arkitekturgalleriet + Göteborgs Arkitekturgalleri | Göteborg | Samma venue? Namnvariant? | manual-review |
+| gronalund.com | grona-lund.jsonl + liseberg-1.jsonl | Gröna Lund + Liseberg | Stockholm + Göteborg |Två helt olika nöjesfält på samma hostname | manual-review → FIX för liseberg-1 |
+| liljevalchs.se | liljevalchs.jsonl + liljevalchs-konsthall.jsonl | Liljevalchs + Liljevalchs Konsthall | Göteborg | Samma venue? Namnvariant? | manual-review |
+| malmoarena.se | malm-arena.jsonl + malm-arena-ishockey.jsonl | Malmö Arena + Malmö Arena (ishockey) | Malmö | Arena + sport-subpage? | manual-review |
+| skovde.se | skovde-konserthus.jsonl + skovde-stadsteatern.jsonl | Skövde Konserthus + Skövde Stadsteatern | Skövde | Olika venue-typer? | manual-review → SEPARATE |
+| varmland.se | varmland.jsonl + varmland-1.jsonl | Värmland | Karlstad + Uppsala | Importfel: Uppsala ska inte vara Värmland | manual-review → MERGE |
 
 ---
 
-## ALLA 2-FILS HOSTNAMES
+## data-error
+
+### 1 post — uppenbart fel
+
+| Fil | ID | URL | Name | Felbeskrivning | Decision |
+|-----|-----|-----|------|----------------|----------|
+| liseberg-1.jsonl | liseberg-1 | https://www.gronalund.com | Liseberg | FEL! Liseberg = www.liseberg.se, inte gronalund.com | data-error → fix hostname |
+
+---
+
+## Antal unika hostnames (uppdaterad)
 
 ```
-4 filer:  www.vasteras.se
-3 filer:  www.norrkoping.se, www.jonkoping.se, www.gavle.se
-2 filer:  www.varmland.se, www.uppsala-stadsteatern.se, www.umea.se,
-          www.stadsteatern.se, www.skovde.se, www.malmö.se,
-          www.malmoarena.se, www.lund.se, www.lulea.se,
-          www.liseberg.se, www.linkoping.se, www.liljevalchs.se,
-          www.karlstad.se, www.halmstad.se, www.gronalund.se,
-          www.gronalund.com, www.falu.se, www.arkitekturgalleriet.se
+Unika hostnames:     396
+Totalt filer:        420
+Duplicerade filer:   59 (i 24 hostname-grupper)
 ```
 
 ---
 
-## ANTAL UNIKA HOSTNAMES
+## Verktyg som behövs
 
-```
-Unika hostnames:  396
-Totalt filer:     420
-Duplicerade filer: 24
-```
-
-Av 420 filer är 24 duplicerade (samma hostname = 2+ filer).
-Detta innebär 24 filer som potentiellt behöver merge eller manuell granskning.
-
----
-
-## REKOMMENDERAD PRIORITETSORDNING
-
-1. **Typ C (1 fil)** — liseberg-1.jsonl fel hostname — enklast
-2. **Typ B (5 hostnames)** — merge dubbletter — medel
-3. **Typ A (15 hostnames)** — manuell granskning — kräver mest arbete
-
----
-
-## VERKTYG SOM BEHÖVS
-
-- `canonical-collision-detector.ts` — read-only, genererar denna rapport
-- Manuell granskningslista — Excel/MD per hostname
-- Merge-beslut loggas i `sources_v2/_collision-report/decisions.jsonl`
+- `canonical-collision-detector.ts` — redan skapat, read-only
+- `source-identity-decision-rules.md` — skapat i Fas 3.2, regler + exempel
+- Manuell granskningslista — per hostname, med beslutskolumn
+- Beslut loggas i `sources_v2/_collision-report/decisions.jsonl`
