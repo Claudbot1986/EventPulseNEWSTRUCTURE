@@ -4,7 +4,6 @@
  */
 
 import axios from 'axios';
-import { rawEventsQueue } from '../../03-Queue/queue';
 import type { RawEventInput } from '@eventpulse/shared';
 
 export interface FetchResult {
@@ -113,10 +112,9 @@ export async function queueEvent(
   rawEvent: RawEventInput
 ): Promise<boolean> {
   try {
-    // Sanitize job ID: BullMQ doesn't allow colons in custom job IDs
-    // Tixly API returns IDs like "124187:1" with colons
-    // Note: eventId may already contain sourceId (e.g. "berwaldhallen-124187:1")
-    // so we only sanitize, don't add source prefix again
+    // Lazy import to avoid initializing Redis/ioredis for batch scripts
+    // that only use fetchHtml/fetchJson without queueing events
+    const { rawEventsQueue } = await import('../../03-Queue/queue.js');
     const sanitizedEventId = eventId.replace(/:/g, '-');
     await rawEventsQueue.add(`${source}:${eventId}`, rawEvent, {
       jobId: sanitizedEventId,
