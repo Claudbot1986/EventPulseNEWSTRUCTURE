@@ -2,6 +2,51 @@
 
 ---
 
+## Nästa-steg-analys 2026-04-06 (loop 59 — efter batch 008 completed)
+
+### Vad hände denna loop
+- **queueEvents() FIXAD för html-path:** Upptäckte att scheduler.ts saknade queueEvents()-anrop för html-path och unknown→success-branch
+- **Verifierade på konserthuset:** 11 events extraherade OCH 11/11 queued ✓
+- **Root-cause:** Samma bugg som jsonld-path (fixad i loop 49) fanns kvar för html-path
+- **Effekt:** 24 success-sources kan nu flöda events till 03-Queue
+
+### Root-cause (nyckelobservation)
+
+**scheduler.ts hade INGEN queueEvents() för html-path:**
+- `jsonld` path → queueEvents() ✓ (fixat i loop 49)
+- `network` path → queueEvents() ✓
+- `html` path → queueEvents() ✗ MISSING
+- `unknown→success` (C1 triage) → queueEvents() ✗ MISSING
+
+**Konsekvens:** De 24 "success"-källorna extraherade events men queuade dem ALDRIG till 03-Queue. Events nådde aldrig normalizer eller databas.
+
+### Ändringar
+1. **scheduler.ts rad ~417:** Lagt till queueEvents() för `html` path (established preferredPath)
+2. **scheduler.ts rad ~600:** Lagt till queueEvents() för `unknown→success` branch (C1 triage success)
+
+### Tre möjliga nästa steg
+
+|| # | Steg | Systemnytta | Risk | Varför nu |
+||---|------|-------------|------|-----------|
+|| 1 | **Kör scheduler --source på fler success-sources** | Hög: verifierar queueing för alla 24 | Låg: beprövat | Vi har 24 bekräftade källor, fixen behöver verifieras |
+|| 2 | **Kör normalizer på köade events** | Hög: verifierar normalizer→DB | Medel: normalizer kan ha egna buggar | Events finns nu i 03-Queue |
+|| 3 | **Scout nya html_candidates för batch 009** | Medel: breddar testning | Hög: C0=0 barriären kvarstår | Batch-poolen behöver återfyllas |
+
+### Rekommenderat nästa steg
+- **#1 — Kör scheduler --source på fler success-sources**
+
+Motivering: Fixen behöver verifieras BRETT innan vi går vidare till normalizer. Kör 3-5 success-sources för att bekräfta queueing fungerar konsekvent.
+
+### Två steg att INTE göra nu
+1. **Kör normalizer direkt** — normalizer kan ha egna buggar, vi behöver först bekräfta att events faktiskt queuats korrekt
+2. **Starta ny batch-loop** — C-Batch-Loop pool är uttömd och C0=0 barriären är välkänd, ingen ny information just nu
+
+### System-effect-before-local-effect
+- Valt steg (#1): Verifierar att fixen fungerar BREDD för fler källor
+- Varför: Utan verifierad queueing → ingen pipeline
+
+---
+
 ## Nästa-steg-analys 2026-04-06 (loop 58 — C-Batch-Loop UTESLUTEN)
 
 ### Vad hände denna loop

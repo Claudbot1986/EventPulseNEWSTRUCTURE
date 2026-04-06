@@ -1,0 +1,282 @@
+[
+  {
+    "sourceId": "kungliga-musikhogskolan",
+    "url": "https://www.kmh.se",
+    "c0": {
+      "candidates": 0,
+      "winnerUrl": "https://www.kmh.se/konserter---evenemang.html",
+      "winnerDensity": 0,
+      "duration": 0
+    },
+    "c1": {
+      "verdict": "undefined",
+      "likelyJsRendered": false,
+      "timeTagCount": 0,
+      "dateCount": 0,
+      "duration": 191
+    },
+    "c2": {
+      "verdict": "promising",
+      "score": 431,
+      "reason": "",
+      "duration": 214
+    },
+    "extract": {
+      "eventsFound": 0,
+      "duration": 1
+    },
+    "success": false
+  },
+  {
+    "sourceId": "lulea-tekniska-universitet",
+    "url": "https://www.ltu.se",
+    "c0": {
+      "candidates": 0,
+      "winnerUrl": "https://www.ltu.se/utbildning/upplev-studentlivet-hos-oss",
+      "winnerDensity": 0,
+      "duration": 0
+    },
+    "c1": {
+      "verdict": "undefined",
+      "likelyJsRendered": false,
+      "timeTagCount": 0,
+      "dateCount": 0,
+      "duration": 180
+    },
+    "c2": {
+      "verdict": "unclear",
+      "score": 9,
+      "reason": "",
+      "duration": 188
+    },
+    "extract": {
+      "eventsFound": 0,
+      "duration": 0
+    },
+    "success": false
+  },
+  {
+    "sourceId": "uppsala-kommun",
+    "url": "https://www.uppsala.se",
+    "c0": {
+      "candidates": 0,
+      "winnerUrl": "https://www.uppsala.se/kultur-idrott-fritid/arrangera-evenemang/",
+      "winnerDensity": 0,
+      "duration": 0
+    },
+    "c1": {
+      "verdict": "undefined",
+      "likelyJsRendered": false,
+      "timeTagCount": 0,
+      "dateCount": 0,
+      "duration": 124
+    },
+    "c2": {
+      "verdict": "maybe",
+      "score": 11,
+      "reason": "",
+      "duration": 144
+    },
+    "extract": {
+      "eventsFound": 0,
+      "duration": 1
+    },
+    "success": false
+  },
+  {
+    "sourceId": "ystad",
+    "url": "https://www.ystad.se",
+    "c0": {
+      "candidates": 0,
+      "winnerUrl": "https://www.ystad.se/ystads-teater",
+      "winnerDensity": 0,
+      "duration": 0
+    },
+    "c1": {
+      "verdict": "undefined",
+      "likelyJsRendered": false,
+      "timeTagCount": 0,
+      "dateCount": 0,
+      "duration": 422
+    },
+    "c2": {
+      "verdict": "unclear",
+      "score": 7,
+      "reason": "",
+      "duration": 519
+    },
+    "extract": {
+      "eventsFound": 0,
+      "duration": 0
+    },
+    "success": false
+  },
+  {
+    "sourceId": "astronomiska-huddinge",
+    "url": "https://www.astronomiskahuddinge.se",
+    "c0": {
+      "candidates": 0,
+      "winnerUrl": null,
+      "winnerDensity": 0,
+      "duration": 0
+    },
+    "c1": {
+      "verdict": "undefined",
+      "likelyJsRendered": false,
+      "timeTagCount": 0,
+      "dateCount": 0,
+      "duration": 4
+    },
+    "c2": {
+      "verdict": "unclear",
+      "score": 0,
+      "reason": "",
+      "duration": 3
+    },
+    "extract": {
+      "eventsFound": 0,
+      "duration": 0
+    },
+    "success": false
+  },
+  {
+    "sourceId": "allt-om-mat",
+    "url": "https://www.alltommat.se",
+    "c0": {
+      "candidates": 0,
+      "winnerUrl": null,
+      "winnerDensity": 0,
+      "duration": 0
+    },
+    "c1": {
+      "verdict": "undefined",
+      "likelyJsRendered": false,
+      "timeTagCount": 0,
+      "dateCount": 0,
+      "duration": 260
+    },
+    "c2": {
+      "verdict": "unclear",
+      "score": 4,
+      "reason": "",
+      "duration": 297
+    },
+    "extract": {
+      "eventsFound": 0,
+      "duration": 0
+    },
+    "success": false
+  },
+  {
+    "sourceId": "arbetsam",
+    "url": "https://www.arbetsam.se",
+    "c0": {
+      "candidates": 0,
+      "winnerUrl": null,
+      "winnerDensity": 0,
+      "duration": 0
+    },
+    "c1": {
+      "verdict": "undefined",
+      "likelyJsRendered": false,
+      "timeTagCount": 0,
+      "dateCount": 0,
+      "duration": 70
+    },
+    "c2": {
+      "verdict": "unclear",
+      "score": 0,
+      "reason": "",
+      "duration": 69
+    },
+    "extract": {
+      "eventsFound": 0,
+      "duration": 0
+    },
+    "success": false
+  },
+  {
+    "sourceId": "artipelag",
+    "url": "https://www.artipelag.se",
+    "c0": {
+      "candidates": 0,
+      "winnerUrl": null,
+      "winnerDensity": 0,
+      "duration": 0
+    },
+    "c1": {
+      "verdict": "undefined",
+      "likelyJsRendered": false,
+      "timeTagCount": 0,
+      "dateCount": 0,
+      "duration": 481
+    },
+    "c2": {
+      "verdict": "unclear",
+      "score": 4,
+      "reason": "",
+      "duration": 372
+    },
+    "extract": {
+      "eventsFound": 0,
+      "duration": 0
+    },
+    "success": false
+  },
+  {
+    "sourceId": "avicii-arena",
+    "url": "https://www.aviciiarena.se",
+    "c0": {
+      "candidates": 0,
+      "winnerUrl": null,
+      "winnerDensity": 0,
+      "duration": 0
+    },
+    "c1": {
+      "verdict": "undefined",
+      "likelyJsRendered": false,
+      "timeTagCount": 0,
+      "dateCount": 0,
+      "duration": 260
+    },
+    "c2": {
+      "verdict": "promising",
+      "score": 28,
+      "reason": "",
+      "duration": 222
+    },
+    "extract": {
+      "eventsFound": 0,
+      "duration": 0
+    },
+    "success": false
+  },
+  {
+    "sourceId": "halmstad-konserthus",
+    "url": "https://www.halmstadkonserthus.se",
+    "c0": {
+      "candidates": 0,
+      "winnerUrl": null,
+      "winnerDensity": 0,
+      "duration": 0
+    },
+    "c1": {
+      "verdict": "undefined",
+      "likelyJsRendered": false,
+      "timeTagCount": 0,
+      "dateCount": 0,
+      "duration": 3
+    },
+    "c2": {
+      "verdict": "unclear",
+      "score": 0,
+      "reason": "",
+      "duration": 2
+    },
+    "extract": {
+      "eventsFound": 0,
+      "duration": 0
+    },
+    "success": false
+  }
+]

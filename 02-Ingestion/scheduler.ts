@@ -414,6 +414,23 @@ async function runSource(source: SourceTruth, options: { recheck?: boolean } = {
     eventsFound = htmlResult.events.length;
     pathUsed = 'html';
 
+    // Queue the extracted events (samma mönster som jsonld/network)
+    if (eventsFound > 0) {
+      const rawEvents = htmlResult.events.map(e => {
+        const raw = toRawEventInput(e);
+        return {
+          ...raw,
+          source: source.id,
+          source_url: source.url,
+          detected_language: 'sv' as const,
+          raw_payload: e as Record<string, unknown>,
+        };
+      });
+      const { queueEvents } = await import('./tools/fetchTools');
+      const { queued } = await queueEvents(source.id, rawEvents as any);
+      console.log(`   Queued: ${queued}/${eventsFound}`);
+    }
+
   } else if (decision.path === 'unknown') {
     // Triage via C1-preHtmlGate: screening INNAN full extraction
     // C1 avgör vilket path som är lämpligt
@@ -570,6 +587,21 @@ async function runSource(source: SourceTruth, options: { recheck?: boolean } = {
           triageReason: preGateResult.reason,
         });
         console.log(`✓ Triage successful (${eventsFound} events) but source needs preferredPath update`);
+
+        // Queue the extracted events (samma mönster som jsonld/network)
+        const rawEvents = htmlResult.events.map(e => {
+          const raw = toRawEventInput(e);
+          return {
+            ...raw,
+            source: source.id,
+            source_url: source.url,
+            detected_language: 'sv' as const,
+            raw_payload: e as Record<string, unknown>,
+          };
+        });
+        const { queueEvents } = await import('./tools/fetchTools');
+        const { queued } = await queueEvents(source.id, rawEvents as any);
+        console.log(`   Queued: ${queued}/${eventsFound}`);
 
         // --- V1 Learning: Record triage med framgång ---
         const successLearning = recordTriageAttempt(source.id, {
