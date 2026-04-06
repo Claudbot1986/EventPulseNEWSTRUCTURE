@@ -148,7 +148,12 @@ sources som har duplicerade rader). `Total output sources` är antalet unika sou
 - [ ] Manuell granskning krävs för att godkänna preview innan faktisk import
 - [ ] Ingen idempotenskontroll mot befintliga canonical sources (samma import kan köras flera gånger)
 
-## Användning
+## Idempotenskrav
+
+- Samma importfil körs två gånger → **identisk output** (samma antal sources, samma sourceIds, samma matchStatus)
+- Verktyget påverkar **inte** befintliga `sources/*.jsonl`
+- Nästa steg: manuell granskning av preview, sedan eventuell merge
+- **Kritiskt:** `readExistingSources()` sorterar filer alfabetiskt för deterministisk ordning vid site-level-kollisioner (t.ex. två filer med samma hostname)
 
 ```bash
 npx tsx 00-Sources/00A-ImportRawSources-Tool/import-raw-sources.ts \

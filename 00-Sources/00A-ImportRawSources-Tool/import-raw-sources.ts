@@ -243,7 +243,10 @@ export function readExistingSources(sourcesDir: string): Map<string, ExistingSou
     return index;
   }
 
-  const files = fs.readdirSync(sourcesDir).filter(f => f.endsWith('.jsonl'));
+  // Sort for DETERMINISTIC ordering — critical for idempotence
+  const files = fs.readdirSync(sourcesDir)
+    .filter(f => f.endsWith('.jsonl'))
+    .sort();
 
   for (const file of files) {
     try {
