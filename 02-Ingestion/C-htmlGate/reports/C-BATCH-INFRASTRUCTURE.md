@@ -50,6 +50,25 @@ C-htmlGate batch-loop är systematiskt iterationsarbete för att förbättra den
 **Batch-rapport:** `02-Ingestion/C-htmlGate/reports/batch-{N}/batch-{N}-report.md`
 **Källrapporter:** `02-Ingestion/C-htmlGate/reports/batch-{N}/sources/{sourceId}.md`
 
+## Improvements Bank
+
+**Sökväg:** `02-Ingestion/C-htmlGate/reports/improvements-bank.jsonl`
+
+Strukturerad bank med generella HTML-scraping-förbättringar. Se `IMPROVEMENTS-BANK.md` för full dokumentation.
+
+**Fält per förbättring:**
+- `stableId` — permanent ID (t.ex. IMP-001)
+- `name` — maskinläsbart namn
+- `status` — proposed/tested/useful/weak/rejected
+- `supportedByBatches` — vilka batchar som triggat den
+
+**Lägga till:** `echo '{"stableId":"IMP-N","status":"proposed",...}' >> improvements-bank.jsonl`
+
+**Referera i batch-rapport:**
+```json
+{ "appliedImprovements": ["IMP-001", "IMP-005"], "newImprovementsProposed": ["IMP-009"] }
+```
+
 ## Workflow i 123 (se `02-Ingestion/C-htmlGate/123.md` Steg 1b)
 
 ```
