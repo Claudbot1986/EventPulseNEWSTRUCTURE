@@ -73,8 +73,8 @@ UI-visning och vidare analys tills slutgiltigt beslut fattats.
 | liljevalchs.se | manualreview-liljevalchs-se-alt | Liljevalchs | manualreview | Liljevalchs | Göteborg | REVIEW |
 | malmoarena.se | manualreview-malmoarena-se-ishockey | Malmö Arena (ishockey) | manualreview | Malmö Arena (ishockey) | Malmö | SEPARATE |
 | malmoarena.se | manualreview-malmoarena-se-main | Malmö Arena | manualreview | Malmö Arena | Malmö | SEPARATE |
-| skovde.se | manualreview-skosvde-se-konserthus | Skövde Konserthus | manualreview | Skövde Konserthus | Skövde | SEPARATE |
-| skovde.se | manualreview-skosvde-se-stadsteatern | Skövde Stadsteatern | manualreview | Skövde Stadsteatern | Skövde | SEPARATE |
+| skovde.se | manualreview-skovde-se-konserthus | Skövde Konserthus | manualreview | Skövde Konserthus | Skövde | SEPARATE |
+| skovde.se | manualreview-skovde-se-stadsteatern | Skövde Stadsteatern | manualreview | Skövde Stadsteatern | Skövde | SEPARATE |
 | varmland.se | manualreview-varmland-se-karlstad | Värmland (Karlstad) | manualreview | Värmland | Karlstad | MERGE |
 | varmland.se | manualreview-varmland-se-uppsala | Värmland (Uppsala - fel) | manualreview | Värmland | Uppsala | MERGE |
 
