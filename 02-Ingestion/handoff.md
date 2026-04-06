@@ -2,6 +2,126 @@
 
 ---
 
+## Nästa-steg-analys 2026-04-06 (loop 57)
+
+### Vad förbättrades denna loop
+- **Batch 007 kördes:** 10 genuinely nya html_candidates (moderna, polis, nrm, jazz, fotboll, bokmassan, stenungsund, hallsberg, ifk-uppsala, karlskoga)
+- **0/10 success:** Samma C0=0 barriär som batch 001-006 bekräftad
+- **svenska-fotbollf-rbundet:** C1 likelyJsRendered=true → D-renderGate candidate
+- **Total success fortfarande:** 24 källor (oförändrat sedan batch 006)
+
+### Root-cause (nyckelobservation)
+
+**Batch 007 bekräftar strukturell C0-link-discovery-barriär över 70+ sources:**
+
+| Problem | Antal batch 007 | Ackumulerat |
+|---------|----------------|-------------|
+| C0=0 candidates | 9/10 | ~60+ sources |
+| C0 hittade 1 candidate | 1/10 | 2 sources totalt |
+| C2=promising men 0 events | 8/10 | ~50+ sources |
+| likelyJsRendered=true | 1/10 | 5+ D-pending |
+
+**Slutsats:** C0 link-discovery hittar INGA event-links på dessa sajter. möjliga orsaker:
+1. Sajterna har ingen standard navstruktur som C0 kan identifiera
+2. C0:s IGNORE_PATTERNS filtrerar bort alla relevanta links
+3. Cheerio region-classification misslyckas på dessa CMS:er
+4. Event-links finns inte i menyn utan dyker bara upp på startsidan
+
+**Men:** Generalization Gate förbjuder C-lager-ändring utan 2-3+ sajter med samma rotorsak. Batch 007 ger ingen ny rotorsak.
+
+### Sources-blockerare (uppdaterad)
+| Kategori | Antal | Exempel |
+|----------|-------|---------|
+| Success (events>0) | **24** | berwaldhallen(216), konserthuset(11), abf(8), jonkoping(7) |
+| fail (infra) | 382+ | DNS/timeout/404 |
+| C0=0 barriär | ~60+ | Moderna, polis, jazz, etc. |
+| render_candidate (D-pending) | 5+ | svenska-fotbollf-rbundet, cirkus, arkdes |
+| manual_review | 3 | gso, dramaten, vasamuseet |
+
+### Tre möjliga nästa steg
+
+| # | Steg | Systemnytta | Risk | Varför nu |
+|---|------|-------------|------|-----------|
+| 1 | **Kör phase1ToQueue på 24 success-sources** | Hög: verifierar pipeline | Låg: batch | Vi har 24 bekräftade källor, behöver verifiera events→DB |
+| 2 | **Undersök C0 debug på 2-3 sajter** | Hög: förstå rotorsak | Medel: Generalization Gate | För att hitta rotorsak till C0=0 |
+| 3 | **Markera 5+ D-renderGate candidates** | Medel: flyttar fram pipeline | Låg: dokumentation | Dessa är blockade av saknad D-renderGate |
+
+### Rekommenderat nästa steg
+- **#1 — Kör phase1ToQueue på 24 success-sources**
+
+Motivering: Med 24 bekräftade källor behöver vi verifiera att events faktiskt flödar genom hela pipeline: extraction → queue → worker → DB. Batch 1-7 har konsekvent visat att C-htmlGate ger få nya success.
+
+### Två steg att INTE göra nu
+1. **Ändra C0 link-discovery** — Generalization Gate kräver 2-3+ sajter med verifierad rotorsak
+2. **Fortsätta batch-loop** — 7 batchar har visat samma barriär, ingen ny information
+
+### System-effect-before-local-effect
+- Valt steg (#1): Verifierar full pipeline för 24 success-sources
+- Varför: Vi har 24 bekräftade källor, vi behöver bekräfta att events → DB
+
+---
+
+## Nästa-steg-analys 2026-04-06 (loop 56)
+
+### Vad förbättrades denna loop
+- **Batch 006 analysis:** Bekräftad strukturell barriär — C0 hittar 0 candidates för ALLA 10, samma mönster som batch 001-005
+- **C0 diagnostic test:** kmh.se HAR bevisligen event-links i nav (/konserter---evenemang.html med "evenemang"-koncept, depth=1)
+- **Root-cause misstanke:** C0:s link-discovery fungerar inte korrekt i praktiken, möjligen på grund av cheererio-selectorer eller tidiga returns
+- **Men:** Generalization Gate förbjuder C-lager-ändring baserat på en enda sajt
+- **Total success:** 24 källor (oförändrat efter batch 006)
+
+### Root-cause (nyckelobservation)
+
+**Batch 006 bekräftar strukturell HTML-extraction-barriär — NU FÖR 60 SAMTLIGA TESTADE:**
+
+| Problem | Antal | Exempel | Orsak |
+|---------|-------|---------|-------|
+| C0=0 candidates | ALLA 10 i batch 006 | Alla 10 | Inga event-liknande sidor hittade |
+| C2=promising men 0 events | 2/10 | kmh(431), avicii(28) | Density finns men fel page/el. typ |
+| ROOT-fungerar inte | ALLA 10 | Alla | Event-lista finns ej på startsida |
+
+**C0 diagnostic på kmh.se:** HTML:en innehåller `/konserter---evenemang.html` med "evenemang" i anchor, depth=1. C0 BORDE hitta denna link.
+
+**Slutsats:** C0 candidate-discovery fungerar INTE för dessa sajter. Möjliga orsaker:
+1. Cheerio region-classification misslyckas
+2. Early return i C0 innan candidates samlas
+3. Någon annan bugg i link-filtering
+
+**Men:** Generalization Gate förbjuder C-lager-ändring baserat på EN sajt. Vi behöver 2-3+ sajter med samma problem för att göra generell fix.
+
+### Sources-blockerare (uppdaterad)
+| Kategori | Antal | Exempel |
+|----------|-------|---------|
+| Success (events>0) | **24** | berwaldhallen(216), konserthuset(11), abf(8), jonkoping(7) |
+| fail (infra) | 346 | DNS/timeout/404 |
+| triage_required | 4 | kungliga-musikhogskolan, lulea-tekniska-universitet, uppsala-kommun, ystad |
+| render_candidate (D-pending) | 41 | halmstads-bk, hammardby, ifk-stockholm |
+| manual_review | 3 | gso, dramaten, vasamuseet |
+| **Nya html_candidates (ej körda)** | **10** | hallsberg, ifk-uppsala, karlskoga, kumla, moderna-museet, naturhistoriska-riksmuseet, orebro-sk, polismuseet, stockholm-jazz-festival-1, svenska-fotbolllf-rbundet |
+
+### Tre möjliga nästa steg
+
+| # | Steg | Systemnytta | Risk | Varför nu |
+|---|------|-------------|------|-----------|
+| 1 | **Välj nya 10 html_candidates för batch 007** | Medel: breddar testning | Låg: diagnostik | 10 nya html_candidates finns, kan ge insikt om C0=0-barriären |
+| 2 | **Kör phase1ToQueue på 24 success-sources** | Hög: verifierar pipeline | Låg: batch | Vi har 24 bekräftade källor, behöver verifiera events→DB |
+| 3 | **Undersök C0:candidates=0 på 2-3 sajter** | Hög: förstå rotorsaken | Medel: Generalization Gate | För att kunna göra generell förbättring |
+
+### Rekommenderat nästa steg
+- **#2 — Kör phase1ToQueue på 24 success-sources**
+
+Motivering: Med 24 bekräftade källor behöver vi verifiera att events faktiskt flödar genom hela pipeline: extraction → queue → worker → DB. Batch 1-6 har konsekvent visat att C-htmlGate ger få nya success. phase1ToQueue är redan implementerad och väntar på körning.
+
+### Två steg att INTE göra nu
+1. **Fortsätta batch-loop utan rotorsaksförståelse** — C0=0 barriären behöver förstås FÖRE nästa batch
+2. **Ändra C0 candidate-discovery** — Generalization Gate kräver 2-3+ sajter först
+
+### System-effect-before-local-effect
+- Valt steg (#2): Verifierar full pipeline för 24 success-sources
+- Varför: Vi har 24 bekräftade källor, vi behöver bekräfta att events → DB
+
+---
+
 ## Nästa-steg-analys 2026-04-06 (loop 54)
 
 ### Vad förbättrades denna loop
