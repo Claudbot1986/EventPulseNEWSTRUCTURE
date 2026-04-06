@@ -481,6 +481,246 @@ export function takeSourcesBackup(): {
   }
 }
 
+// ─── Write New Sources to sources/ ─────────────────────────────────────────────
+
+/**
+ * HARD SAFETY RULE: Only 'new' sources from preview may be written to sources/.
+ *
+ * All other matchStatus are strictly IGNORED for write:
+ *   - matched_existing    → no write (keep existing)
+ *   - duplicate_in_import → no write (discarded)
+ *   - manualreview        → no write (needs human decision)
+ *   - invalid_raw_row     → no write (was never in preview)
+ *   - skipped_already_imported_file → no write (was never in preview)
+ *
+ * Write plan (dry-run) is always shown before any write.
+ * If any file conflict is detected → ABORT.
+ *
+ * Backup is taken before write begins.
+ * Write is atomic: all-or-nothing via temp dir + rename.
+ */
+export interface WritePlan {
+  newSources: ImportedSource[];
+  filesToWrite: string[];          // full paths
+  fileConflicts: string[];         // files that already exist
+  writeSafe: boolean;
+}
+
+export interface WriteResult {
+  success: boolean;
+  writtenCount: number;
+  backupPath: string;
+  newFiles: string[];
+  errors: string[];
+}
+
+/**
+ * Build a write plan from a preview file.
+ * Returns plan WITHOUT performing any write.
+ * Only 'new' sources are eligible for write.
+ */
+export function buildWritePlan(previewPath: string, sourcesDir: string): WritePlan {
+  const previewContent = fs.readFileSync(previewPath, 'utf-8');
+  const lines = previewContent.split('\n').filter(l => l.trim());
+
+  const newSources: ImportedSource[] = [];
+  const ignoredByStatus: Record<string, number> = {};
+  const fileConflicts: string[] = [];
+
+  for (const line of lines) {
+    try {
+      const source = JSON.parse(line) as ImportedSource;
+      if (source.matchStatus === 'new') {
+        newSources.push(source);
+      } else {
+        ignoredByStatus[source.matchStatus] = (ignoredByStatus[source.matchStatus] ?? 0) + 1;
+      }
+    } catch {
+      // Skip malformed
+    }
+  }
+
+  // Check for file conflicts — if a target .jsonl file already exists, that's a conflict
+  for (const src of newSources) {
+    const targetPath = path.join(sourcesDir, `${src.sourceId}.jsonl`);
+    if (fs.existsSync(targetPath)) {
+      fileConflicts.push(targetPath);
+    }
+  }
+
+  // Write is safe only if no conflicts and at least one new source
+  const writeSafe = newSources.length > 0 && fileConflicts.length === 0;
+
+  return { newSources, filesToWrite: newSources.map(s => path.join(sourcesDir, `${s.sourceId}.jsonl`)), fileConflicts, writeSafe };
+}
+
+/**
+ * Write only 'new' sources from preview to sources/ — APPEND-ONLY.
+ *
+ * Safety guarantees:
+ * 1. Only matchStatus='new' is ever written
+ * 2. Backup taken before write
+ * 3. Atomic: write to temp dir, then rename all at once
+ * 4. If any step fails → full rollback, exit with error
+ * 5. If any file already exists → ABORT (no overwrite)
+ *
+ * Returns WriteResult with details.
+ */
+export function writeNewSourcesToSources(previewPath: string, sourcesDir: string): WriteResult {
+  const errors: string[] = [];
+
+  // ── Step 1: Build write plan ──────────────────────────────────────────────
+  console.log('[WRITE] Building write plan...');
+  const plan = buildWritePlan(previewPath, sourcesDir);
+
+  // Count ignored statuses by reading preview again
+  const previewContent = fs.readFileSync(previewPath, 'utf-8');
+  const previewLines = previewContent.split('\n').filter(l => l.trim());
+  const ignoredByStatus: Record<string, number> = {};
+  for (const line of previewLines) {
+    try {
+      const source = JSON.parse(line) as ImportedSource;
+      if (source.matchStatus !== 'new') {
+        ignoredByStatus[source.matchStatus] = (ignoredByStatus[source.matchStatus] ?? 0) + 1;
+      }
+    } catch { /* skip */ }
+  }
+
+  if (plan.newSources.length === 0) {
+    console.log('[WRITE] No new sources to write — preview contains only matched/duplicate/manualreview.');
+    console.log('[WRITE] Nothing written to sources/.');
+    return { success: true, writtenCount: 0, backupPath: '', newFiles: [], errors: [] };
+  }
+
+  console.log(`[WRITE] Write plan:`);
+  console.log(`  New sources to write: ${plan.newSources.length}`);
+  for (const [status, count] of Object.entries(ignoredByStatus)) {
+    console.log(`  ${status}: ${count} — IGNORED (no write)`);
+  }
+  console.log(`  Files to create: ${plan.filesToWrite.length}`);
+
+  // ── Step 2: Check for file conflicts ─────────────────────────────────────
+  if (plan.fileConflicts.length > 0) {
+    console.error('[WRITE] SECURITY ABORT: file conflicts detected.');
+    console.error(`  These files already exist in sources/ and would be overwritten:`);
+    for (const f of plan.fileConflicts) {
+      console.error(`    ${f}`);
+    }
+    console.error('  Write operation aborted. No files were modified.');
+    return {
+      success: false,
+      writtenCount: 0,
+      backupPath: '',
+      newFiles: [],
+      errors: [`${plan.fileConflicts.length} file conflicts — aborting`],
+    };
+  }
+
+  // ── Step 3: Backup ───────────────────────────────────────────────────────
+  console.log('\n[WRITE] Taking backup before write...');
+  const backupResult = takeSourcesBackup();
+  if (!backupResult.success) {
+    console.error('[WRITE] FATAL: Could not backup sources/. Aborting write.');
+    return {
+      success: false,
+      writtenCount: 0,
+      backupPath: '',
+      newFiles: [],
+      errors: ['Backup failed'],
+    };
+  }
+  console.log('[WRITE] Backup ready.\n');
+
+  // ── Step 4: Atomic write via temp dir ────────────────────────────────────
+  // Write to a temp directory first, then rename (atomic on POSIX)
+  const tempDir = path.join(process.cwd(), '00-Sources', 'tmp', `write-staging-${Date.now()}`);
+  fs.mkdirSync(tempDir, { recursive: true });
+
+  const newFiles: string[] = [];
+  try {
+    for (const source of plan.newSources) {
+      const targetPath = path.join(sourcesDir, `${source.sourceId}.jsonl`);
+      const tempPath = path.join(tempDir, `${source.sourceId}.jsonl`);
+
+      // Build canonical source record
+      const canonicalRecord = {
+        id: source.sourceId,
+        url: source.canonicalUrl,
+        name: source.name,
+        type: source.type,
+        city: source.city,
+        discoveredAt: source.discoveredAt,
+        discoveredBy: '00A-import',
+        preferredPath: null,
+        preferredPathReason: `Initial import from preview: ${path.basename(previewPath)}`,
+        systemVersionAtDecision: null,
+        verifiedAt: null,
+        needsRecheck: true,
+        lastSystemVersion: null,
+        metadata: {
+          rawSourceFile: 'import-preview',
+          rawCity: source.city,
+          rawCategory: source.type,
+          rawNotice: source.note,
+          importBatchId: source.provenanceRows[0]?.importBatchId ?? null,
+          sourceIdentityKey: source.sourceIdentityKey,
+          canonicalUrl: source.canonicalUrl,
+        },
+      };
+
+      fs.writeFileSync(tempPath, JSON.stringify(canonicalRecord) + '\n', 'utf-8');
+      newFiles.push(targetPath);
+    }
+
+    // Move all files from temp to actual location (atomic rename per file)
+    for (const source of plan.newSources) {
+      const tempPath = path.join(tempDir, `${source.sourceId}.jsonl`);
+      const targetPath = path.join(sourcesDir, `${source.sourceId}.jsonl`);
+      fs.renameSync(tempPath, targetPath);
+    }
+
+    // Clean up temp dir
+    fs.rmSync(tempDir, { recursive: true });
+
+    console.log(`[WRITE] SUCCESS — ${newFiles.length} new sources written to sources/`);
+    for (const f of newFiles) {
+      console.log(`  + ${path.basename(f)}`);
+    }
+
+    return {
+      success: true,
+      writtenCount: newFiles.length,
+      backupPath: backupResult.backupPath,
+      newFiles,
+      errors: [],
+    };
+  } catch (err: unknown) {
+    const errorMsg = err instanceof Error ? err.message : String(err);
+    console.error(`[WRITE] FATAL ERROR during write: ${errorMsg}`);
+    console.error('[WRITE] Rolling back: removing any partially-written files...');
+
+    // Remove any files that were written
+    for (const f of newFiles) {
+      try { if (fs.existsSync(f)) fs.unlinkSync(f); } catch { /* ignore */ }
+    }
+
+    // Clean up temp dir
+    try { fs.rmSync(tempDir, { recursive: true }); } catch { /* ignore */ }
+
+    console.error('[WRITE] Rollback complete. No files were left in inconsistent state.');
+    console.error('[WRITE] Restore from backup if needed:');
+    console.error(`  ${backupResult.backupPath}`);
+
+    return {
+      success: false,
+      writtenCount: 0,
+      backupPath: backupResult.backupPath,
+      newFiles: [],
+      errors: [errorMsg],
+    };
+  }
+}
+
 // ─── File Hashing ────────────────────────────────────────────────────────────
 
 /**
@@ -920,6 +1160,7 @@ interface CliArgs {
   input: string;
   output: string;
   sourcesDir?: string;
+  applyNew: boolean;
 }
 
 function parseArgs(): CliArgs {
@@ -927,6 +1168,7 @@ function parseArgs(): CliArgs {
   let input: string | undefined;
   let output: string | undefined;
   let sourcesDir: string | undefined;
+  let applyNew = false;
 
   for (let i = 0; i < args.length; i++) {
     if (args[i] === '--input' && i + 1 < args.length) {
@@ -935,36 +1177,28 @@ function parseArgs(): CliArgs {
       output = args[++i];
     } else if (args[i] === '--sources-dir' && i + 1 < args.length) {
       sourcesDir = args[++i];
+    } else if (args[i] === '--apply-new') {
+      applyNew = true;
     }
   }
 
   if (!input || !output) {
-    console.error('Usage: npx tsx import-raw-sources.ts --input <file> --output <file> [--sources-dir <dir>]');
+    console.error('Usage: npx tsx import-raw-sources.ts --input <file> --output <file> [--sources-dir <dir>] [--apply-new]');
+    console.error('  --apply-new: write new sources from preview to sources/ (append-only, only "new" status)');
     console.error('Example: npx tsx import-raw-sources.ts --input 01-Sources/RawSources/RawSources20260404.md --output runtime/import-preview.jsonl');
+    console.error('Example with write: npx tsx import-raw-sources.ts --input 01-Sources/RawSources/RawSources20260404.md --output runtime/import-preview.jsonl --apply-new');
     process.exit(1);
   }
 
-  return { input, output, sourcesDir };
+  return { input, output, sourcesDir, applyNew };
 }
 
 // ─── Main ─────────────────────────────────────────────────────────────────
 
 function main(): void {
-  console.log('=== 00A: ImportRawSources Tool (v6 — with pre-import backup + append-only guard) ===\n');
+  console.log('=== 00A: ImportRawSources Tool (v7 — with write-step for new sources) ===\n');
 
-  // ── STEP 0: Pre-import backup of sources/ ──────────────────────────────────
-  // This MUST happen before ANY import logic. If backup fails → abort.
-  console.log('[00A] Step 0: Pre-import backup of sources/\n');
-  const backupResult = takeSourcesBackup();
-  console.log();
-
-  if (!backupResult.success) {
-    console.error('FATAL: Could not backup sources/. Aborting import to prevent data loss.');
-    console.error('       Fix the backup issue before retrying.');
-    process.exit(1);
-  }
-
-  const { input, output, sourcesDir } = parseArgs();
+  const { input, output, sourcesDir, applyNew } = parseArgs();
   const rawSourcesDir = path.join(process.cwd(), '01-Sources', 'RawSources');
 
   // Multi-file mode: if input looks like a directory name "RawSources" (not a file),
@@ -982,12 +1216,22 @@ function main(): void {
 
   if (inputArg) {
     // Single file mode — original behavior + manifest
+    const canonicalSourcesDir = sourcesDir ?? path.join(process.cwd(), 'sources');
+
+    // ── STEP 0: Pre-import backup of sources/ ─────────────────────────────
+    console.log('[00A] Step 0: Pre-import backup of sources/\n');
+    const backupResult = takeSourcesBackup();
+    if (!backupResult.success) {
+      console.error('FATAL: Could not backup sources/. Aborting import.');
+      process.exit(1);
+    }
+    console.log();
+
     const filePath = inputArg;
     const { hash: fileHash, size: fileSize } = computeFileHash(filePath);
     const manifest = readManifest();
     const alreadyImported = isFileAlreadyImported(fileHash, manifest);
 
-    const canonicalSourcesDir = sourcesDir ?? path.join(process.cwd(), 'sources');
     console.log(`Input:         ${inputArg}`);
     console.log(`Output:        ${output}`);
     console.log(`Sources dir:   ${canonicalSourcesDir}`);
@@ -1071,6 +1315,24 @@ function main(): void {
     console.log('[00A] Append-only validation...');
     validatePreviewAppendOnly(output);
     console.log('[00A] Append-only guard: PASSED ✓');
+
+    // ── STEP OPTIONAL: Write new sources to sources/ ───────────────────────
+    if (applyNew) {
+      console.log();
+      console.log('[00A] Step apply-new: Writing new sources to sources/\n');
+      const writeResult = writeNewSourcesToSources(output, canonicalSourcesDir);
+      if (!writeResult.success) {
+        console.error('FATAL: Write failed. No changes made to sources/. Restore from backup if needed:');
+        console.error(`  ${writeResult.backupPath}`);
+        process.exit(1);
+      }
+      console.log();
+      console.log('[00A] apply-new complete.');
+    } else {
+      console.log();
+      console.log('[00A] Preview-only mode. Run with --apply-new to write new sources.');
+      console.log('[00A] NOTE: Run --apply-new only after reviewing the preview.');
+    }
 
     const totalValidRows = validRows.length;
     const totalInvalidRows = invalidRows.length;

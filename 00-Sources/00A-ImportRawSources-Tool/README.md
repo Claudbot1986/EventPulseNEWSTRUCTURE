@@ -39,7 +39,7 @@ Detta är **endast ett importverktyg** — det skriver inte direkt till `sources
 - **Om backup misslyckas → abortar importen helt**
 - Om `sources/` inte finns → skippar backup (inte fel)
 
-Logg-exempel:
+**Logg-exempel:**
 ```
 [00A] Step 0: Pre-import backup of sources/
 
@@ -50,7 +50,6 @@ Logg-exempel:
 ```
 
 ## Inputformat
-
 ```
 | Namn | URL | Stad | Kategori | Insamlad | Notis |
 | ABF | https://www.abf.se | Stockholm | förening | 2026-04-04 | Studieförbund |
@@ -251,6 +250,75 @@ sources som har duplicerade rader). `Total output sources` är antalet unika sou
 - Verktyget påverkar **inte** befintliga `sources/*.jsonl`
 - Nästa steg: manuell granskning av preview, sedan eventuell merge
 - **Kritiskt:** `readExistingSources()` sorterar filer alfabetiskt för deterministisk ordning vid site-level-kollisioner (t.ex. två filer med samma hostname)
+
+## Write-step: --apply-new
+
+### Steg 1: Generera preview (preview-only)
+```bash
+npx tsx 00-Sources/00A-ImportRawSources-Tool/import-raw-sources.ts \
+  --input 01-Sources/RawSources/RawSources20260404.md \
+  --output runtime/import-preview.jsonl
+```
+
+### Steg 2: Granska preview
+Granska `runtime/import-preview.jsonl` noga:
+- Vilka är `new`? → dessa läggs till i sources/
+- Vilka är `matched_existing`? → inget skrivs
+- Vilka är `manualreview`? → kräver manuellt beslut
+
+### Steg 3: Skriv new-sources till sources/ (med --apply-new)
+```bash
+npx tsx 00-Sources/00A-ImportRawSources-Tool/import-raw-sources.ts \
+  --input 01-Sources/RawSources/RawSources20260404.md \
+  --output runtime/import-preview.jsonl \
+  --apply-new
+```
+
+### Säkerhetsregler för write-step
+
+**Endast `matchStatus = "new"` skrivs till sources/.**
+Alla andra statusvärden ignoreras helt för write:
+
+| Status | Write? | Åtgärd |
+|--------|--------|--------|
+| `new` | ✓ JA | Ny fil `{sourceId}.jsonl` skapas |
+| `matched_existing` | ✗ IGNORED | Behöver ingen åtgärd |
+| `duplicate_in_import` | ✗ IGNORED | Ignoreras |
+| `manualreview` | ✗ IGNORED | Kräver manuellt beslut |
+| `invalid_raw_row` | ✗ aldrig i preview | Kasserad före preview |
+| `skipped_already_imported_file` | ✗ aldrig i preview | Hoppad före preview |
+
+**Atomär write:**
+1. Backup av `sources/` tas före write
+2. Write sker till temp-katalog, sedan rename (atomärt på POSIX)
+3. Om något går fel → full rollback, inga filer lämnas i inkonsekvent tillstånd
+4. Om filen `{sourceId}.jsonl` redan finns → ABORT (inget överskrivande)
+
+### Write-resultat (exempel)
+
+```
+[WRITE] Write plan:
+  New sources to write: 3
+  matched_existing: 297 — IGNORED (no write)
+  manualreview: 34 — IGNORED (no write)
+  Files to create: 3
+
+[WRITE] SECURITY ABORT: file conflicts detected.
+  These files already exist in sources/ and would be overwritten:
+    /path/to/sources/existing-source.jsonl
+  Write operation aborted. No files were modified.
+```
+
+### Checklista före write
+- [ ] Granska import-preview.jsonl
+- [ ] Bekräfta att inga `matched_existing` eller `manualreview` felaktigt behandlas som `new`
+- [ ] Verifiera att antalet `new` är rimligt
+- [ ] Kör med --apply-new
+- [ ] Bekräfta att sources/ nu har fler filer (aldrig färre)
+- [ ] Bekräfta att befintliga filer inte har ändrats
+- [ ] Bekräfta att runtime/sources_status.jsonl inte har ändrats
+
+## Användning
 
 ```bash
 npx tsx 00-Sources/00A-ImportRawSources-Tool/import-raw-sources.ts \
