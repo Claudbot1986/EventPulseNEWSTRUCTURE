@@ -10,9 +10,9 @@
  * Output: 02-Ingestion/C-htmlGate/reports/batch-001/baseline-results.jsonl
  */
 
-import { discoverEventCandidates, screenUrl, evaluateHtmlGate } from './index';
-import { extractFromHtml } from '../F-eventExtraction/extractor';
-import { fetchHtml } from '../tools/fetchTools';
+import { discoverEventCandidates, screenUrl, evaluateHtmlGate } from './index.js';
+import { extractFromHtml } from '../F-eventExtraction/extractor.js';
+import { fetchHtml } from '../tools/fetchTools.js';
 import { writeFileSync, appendFileSync, mkdirSync, existsSync } from 'fs';
 
 const sources = [
