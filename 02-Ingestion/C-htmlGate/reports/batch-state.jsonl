@@ -1,23 +1,45 @@
 {
-  "currentBatch": 8,
+  "currentBatch": 10,
   "batchSize": 10,
-  "status": "completed",
+  "status": "idle",
   "batchSources": [],
-  "completedBatches": [1, 2, 3, 4, 5, 6, 7, 8],
-  "lastBatchRun": "2026-04-06T03:16:00.000Z",
+  "completedBatches": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9
+  ],
+  "lastBatchRun": "2026-04-06T04:23:00.000Z",
   "candidateQuery": {
     "triageResult": "html_candidate",
-    "statusIn": ["fail", "triage_required"],
+    "statusIn": [
+      "fail",
+      "triage_required"
+    ],
     "excludePendingRenderGate": true,
     "excludeManualReview": true,
-    "excludeVerifiedPaths": ["network", "api", "render"],
-    "excludeStatus": ["success", "pending_api", "pending_render_gate", "pending_source_adapter"]
+    "excludeVerifiedPaths": [
+      "network",
+      "api",
+      "render"
+    ],
+    "excludeStatus": [
+      "success",
+      "pending_api",
+      "pending_render_gate",
+      "pending_source_adapter"
+    ]
   },
   "reportPath": "02-Ingestion/C-htmlGate/reports/batch-008/",
-  "batchNotes": "Batch 008: INGEN KÖRNING - pool av html_candidates är uttömd. Alla 29+ html_candidates har körts i batch 1-7. C-Batch-Loop avslutas tills nya källor identifieras.",
+  "batchNotes": "Batch 009: NO CANDIDATES - pool genuinely exhausted. 0 html_candidates remain. C-Batch-Loop completed after 9 batches. 22 success sources exist, all 4 triage_required blocked by D-renderGate absence, 3 manual_review blocked by human review requirement.",
   "metadata": {
-    "selectedAt": "2026-04-06T03:16:00.000Z",
-    "completedAt": "2026-04-06T03:16:00.000Z",
+    "selectedAt": "2026-04-06T04:23:00.000Z",
+    "completedAt": "2026-04-06T04:23:00.000Z",
     "eligibilityRulesVersion": "1.1",
     "selectionCriteria": "C-htmlGate batch - genuinely untested html_candidates",
     "executionStatus": "no-candidates"

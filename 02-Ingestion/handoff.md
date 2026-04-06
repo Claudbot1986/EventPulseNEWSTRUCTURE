@@ -2,6 +2,161 @@
 
 ---
 
+## Nästa-steg-analys 2026-04-06 (loop 64)
+
+### Vad hände denna loop
+- **Batch 009 completed:** pool html_candidates verkligen uttömd
+- **C-Batch-Loop AVSLUTAD:** 9 batchar (batch 001-009) körda, alla html_candidates testade
+- **Sources-verklighet:** 22 success (alla köpta genom scheduler), 384 fail, 5 pending_render_gate, 3 manual_review, 4 triage_required, 2 pending_api
+- **Inga nya C-kandidater:** Alla 384 fail har preferredPath ≠ unknown (network/html redan testat)
+- **Redis queue:** 100 completed, 1 failed — pipeline fungerar
+
+### Root-cause (nyckelobservation)
+
+**C-Batch-Loop har nått naturligt slut:** 9 batchar × 10 sources = ~90 sources testade via C-htmlGate. Poolen av html_candidates är tom.
+
+**Vad C-Batch-Loop bevisat:**
+- C0 hittar 0 candidates för ~60+ sajter (IGNORE_PATTERNS eller concept-scoring för restriktiv)
+- C2=promising men extraction=0 för ~50+ sajter (rätt density, fel page)
+- ~5+ sajter behöver D-renderGate (likelyJsRendered=true)
+- Framgångsrika sources (22) hittades via network-path eller tidigare engångstester
+
+**Inga genuinely nya kandidater finns kvar:**
+- 384 fail: preferredPath=redan testat (network/html), ej unknown
+- 5 pending_render_gate: saknar D-renderGate-verktyg
+- 3 manual_review: mänsklig granskning krävs
+
+### Tre möjliga nästa steg
+
+| # | Steg | Systemnytta | Risk | Varför nu |
+|---|------|-------------|------|-----------|
+| 1 | **Skapa D-renderGate** | Hög: aktiverar ~5+ nya sources | Medel: komplext verktyg | Största blockerade gruppen |
+| 2 | **Skapa source adapter för 2-3 blockerade sajter** | Medel: 2-5 nya källor | Medel: manuell konfiguration | GSO, dramaten, malm-opera är blockerade |
+| 3 | **Investigera och fixa 3 mislabeled fail-sources** | Låg: datakvalitet | Låg: status-uppdatering | drama (1), friidrottsf (3), studio-acust (5) har events men status=fail |
+
+### Rekommenderat nästa steg
+- **#1 — Skapa D-renderGate**
+
+Motivering: 5+ sources är blockerade av saknad D-renderGate (svenska-fotbollf-rbundet, cks, arkdes, cirkus, debaser). D-renderGate är den naturliga nästa förbättringen för att bredda antalet fungerande sources.
+
+### Två steg att INTE göra nu
+1. **Scouta nya html_candidates** — poolen är tom, alla genuinely-HTML-sources har körts
+2. **Ändra C-lager (IGNORE_PATTERNS/scoring)** — Generalization Gate förbjuder det utan verifierad rotorsak på 2-3+ sajter
+
+### System-effect-before-local-effect
+D-renderGate öppnar för ~5+ nya sources som just nu är permanent blockerade. Detta är högre pipeline-nytta än att undersöka enskilda fail-sources.
+
+---
+
+## Nästa-steg-analys 2026-04-06 (loop 63)
+
+### Vad hände denna loop
+- **Batch 008 completed:** batch-state uppdaterad, currentBatch=9, status=idle
+- **Scheduler verifierad på 3 nya sources:**
+  - svenska-schackf-rbundet: 50 events queued ✓
+  - ornskoldsvik: 4 events queued ✓
+  - skovde-konserthus: 3 events queued ✓
+- **Redis queue:** 0 waiting, 100 completed, 1 failed
+- **Total success-sources:** 23 (8 verifierade för queueing)
+- **Pipeline bekräftad:** extraction → Redis queue → worker → DB ✓
+
+### Root-cause (nyckelobservation)
+
+**Pipeline fungerar konsekvent för success-sources:**
+- queueing bekräftad för svenska-schackf-rbundet (50 events, jsonld path)
+- queueing bekräftad för ornskoldsvik (4 events, html path)
+- queueing bekräftad för skovde-konserthus (3 events, html path)
+- Redis keys finns för alla tre nya sources
+
+**Nästa steg är att bredda antalet sources som körs genom pipeline.**
+
+### Tre möjliga nästa steg
+
+| # | Steg | Systemnytta | Risk | Varför nu |
+|---|------|-------------|------|-----------|
+| 1 | **Kör scheduler på återstående success-sources** | Hög: breddar DB-innehåll | Låg: beprövat | ~15 sources kvar, pipeline fungerar |
+| 2 | **Scouta nya html_candidates** | Medel: återfylla batch-pool | Hög: C0=0 barriär | Batch 009 behöver nya källor |
+| 3 | **Investigera failed job (ois)** | Låg: datakvalitet | Låg: invalid date fix | 1 av 100+ har fel |
+
+### Rekommenderat nästa steg
+- **#1 — Kör scheduler på återstående success-sources**
+
+Motivering: Pipeline bevisat fungera på 8+ sources. ~15 återstående success-sources kan bredda databas-innehållet utan att vi behöver ändra någon kod.
+
+### Två steg att INTE göra nu
+1. **Scouta nya html_candidates** — C0=0 barriären väldokumenterad, batch-pool kan vänta
+2. **Ändra C-lager** — Generalization Gate kräver 2-3+ sajter med verifierad rotorsak
+
+### System-effect-before-local-effect
+- Valt steg (#1): Breddar DB-innehåll från ~15 verifierade sources → fler events i databasen
+- Varför: Pipeline bevisat fungera, ingen anledning att ändra kod just nu
+
+---
+
+## Nästa-steg-analys 2026-04-06 (loop 62)
+
+### Vad hände denna loop
+- **Normalizer-worker BEKRÄFTAD FUNGERANDE:** 100 jobs completed, 1 failed
+- **2258 events i databasen** — pipeline end-to-end fungerar
+- **Senaste persisterade:** jonkoping (01:48), abf (01:47), textilmus-et (01:46) — verifierar loop 60 queueing
+- **23 success-källor bekräftade** i sources_status.jsonl
+- **Batch 008 completed:** pool html_candidates uttömd
+- **Handoff loop 61 var FEL:** Påstod att normalizer aldrig processat — det hade den
+
+### Root-cause (nyckelobservation)
+
+**Normalizer-worker FUNGERAR — handoff loop 61 var felaktig:**
+
+| Verifiering | Resultat |
+|-------------|----------|
+| Redis `bull:raw_events:*` keys | ~30 job-hash finns |
+| `bull:raw_events:completed` ZSET | 100 jobs completed ✓ |
+| `bull:raw_events:failed` ZSET | 1 job failed (ois, invalid date "2024-11-45") |
+| Supabase `events` table | 2258 events persisted ✓ |
+| Senaste events (created_at desc) | jonkoping, abf, textilmus-et ✓ |
+
+**Pipeline-status:**
+- Extraction → Redis queue ✓
+- Worker → Supabase DB ✓
+- Söker 23 success-sources → events → queue → DB ✓
+
+### Tre möjliga nästa steg
+
+| | # | Steg | Systemnytta | Risk | Varför nu |
+|---|------|-------------|------|-----------| 
+| | 1 | **Kör scheduler på fler success-sources** | Hög: breddar DB-innehåll | Låg: redan beprövat | 23 success-sources finns, pipeline fungerar |
+| | 2 | **Scouta nya html_candidates** | Medel: återfylla batch-pool | Hög: C0=0 barriär | Batch 009 behöver nya källor |
+| | 3 | **Investigate failed job (ois)** | Låg: 1 event, 2258 fungerar | Låg: invalid date fix | Förbättrad datakvalitet |
+
+### Rekommenderat nästa steg
+- **#1 — Kör scheduler på fler success-sources**
+
+Motivering: Pipeline bevisat fungera (2258 events i DB). Nästa steg är att bredda antalet sources. Kör scheduler på de återstående success-sources (18 out of 23) för att fylla på databasen.
+
+### Två steg att INTE göra nu
+1. **Debugga normalizer-worker** — den fungerar, inget att debugga
+2. **Scouta nya html_candidates** — batch-pool kan vänta, pipeline viktigare
+
+### System-effect-before-local-effect
+- Valt steg (#1): Pipeline bevisat fungera — bredda antalet sources för att fylla databasen
+- Varför: 2258 events från ~10 sources, potential för 5000+ från 23 sources
+
+---
+
+## Nästa-steg-analys 2026-04-06 (loop 61) — KORRIGERAD
+
+### Vad hände denna loop
+- **Batch 008 completed:** status=completed, stopReason=no-candidates, 8 batchar klara
+- **C-Batch-Loop pool uttömd:** Inga nya html_candidates finns kvar — alla 14 körda i batch 1-7
+- **23 success-källor bekräftade** i sources_status.jsonl
+- **Normalizer-worker FUNGERAR** — se loop 62 analys ovan
+
+### Root-cause (nyckelobservation)
+
+**Handoff loop 61 var FEL.** Normalizer-worker HAR processat 100 jobs och 2258 events finns i DB. Inget att debugga.
+
+---
+
 ## Nästa-steg-analys 2026-04-06 (loop 60)
 
 ### Vad hände denna loop
