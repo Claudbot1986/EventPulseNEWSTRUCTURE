@@ -1,42 +1,229 @@
 {
   "currentBatch": 1,
   "batchSize": 10,
-  "status": "idle",
-  "batchSources": [],
-  "completedBatches": [],
-  "lastBatchRun": null,
+  "status": "completed",
+  "batchSources": [
+    "hallsberg",
+    "ifk-uppsala",
+    "karlskoga",
+    "kumla",
+    "kungliga-musikhogskolan",
+    "lulea-tekniska-universitet",
+    "moderna-museet",
+    "naturhistoriska-riksmuseet",
+    "orebro-sk",
+    "polismuseet"
+  ],
+  "completedBatches": [
+    1
+  ],
+  "lastBatchRun": "2026-04-06T06:30:00.000Z",
   "candidateQuery": {
     "triageResult": "html_candidate",
-    "statusIn": ["fail", "triage_required"],
+    "statusIn": [
+      "fail",
+      "triage_required"
+    ],
     "excludePendingRenderGate": true,
     "excludeManualReview": true,
-    "excludeVerifiedPaths": ["network", "api", "render"],
-    "excludeStatus": ["success", "pending_api", "pending_render_gate", "pending_source_adapter"]
+    "excludeVerifiedPaths": [
+      "network",
+      "api",
+      "render"
+    ],
+    "excludeStatus": [
+      "success",
+      "pending_api",
+      "pending_render_gate",
+      "pending_source_adapter"
+    ]
   },
-  "reportPath": null,
-  "batchNotes": "RESET: Previous batch-state was inconsistent. batch-010 was an erroneous artifact from wrong execution path. batch-001 through batch-007 exist as report folders but none have verified postRun success > 0. System reset to batch 01 pending state.",
+  "reportPath": "02-Ingestion/C-htmlGate/reports/batch-001/batch-001-full-report.md",
+  "batchNotes": "Batch-001 completed with no-general-improvement stopReason. Root cause: all 10 sources are JavaScript-rendered but C1 JS-detection (likelyJsRendered) returns false negatives. Verified via curl vs browser on kmh, polismuseet, nrm.",
   "metadata": {
-    "selectedAt": null,
-    "completedAt": null,
+    "selectedAt": "2026-04-06T05:54:00.000Z",
+    "completedAt": "2026-04-06T06:30:00.000Z",
     "eligibilityRulesVersion": "1.1",
     "selectionCriteria": "C-htmlGate batch - pending selection",
-    "executionStatus": "pending",
-    "resetNote": "State reset - batch-001 is first valid pending batch. No batch has verified extraction success. batch-010 artifact moved to TEMP/batch-010-artifact/"
+    "executionStatus": "completed",
+    "resetNote": "State reset - batch-001 is first valid pending batch"
   },
   "preRunResults": {
     "successCount": 0,
-    "failCount": 0,
+    "failCount": 10,
     "eventsTotal": 0
   },
   "postRunResults": {
     "successCount": 0,
-    "failCount": 0,
+    "failCount": 10,
     "eventsTotal": 0
   },
   "cyclesCompleted": 0,
   "maxCyclesAllowed": 3,
-  "stopReason": null,
+  "stopReason": "no-general-improvement",
   "plateauReached": false,
-  "patternsFound": [],
-  "sourceResults": []
+  "patternsFound": [
+    "JS-Rendered-False-Negative"
+  ],
+  "sourceResults": [
+    {
+      "sourceId": "hallsberg",
+      "eventsFound": 0,
+      "c0Candidates": 0,
+      "c2Score": 44,
+      "c2Verdict": "promising",
+      "likelyJsRendered": false,
+      "status": "fail",
+      "reason": "JS-rendered (suspected, not verified)"
+    },
+    {
+      "sourceId": "ifk-uppsala",
+      "eventsFound": 0,
+      "c0Candidates": 0,
+      "c2Score": 31,
+      "c2Verdict": "promising",
+      "likelyJsRendered": false,
+      "status": "fail",
+      "reason": "DNS fail"
+    },
+    {
+      "sourceId": "karlskoga",
+      "eventsFound": 0,
+      "c0Candidates": 2,
+      "c2Score": 12,
+      "c2Verdict": "promising",
+      "likelyJsRendered": false,
+      "status": "fail",
+      "reason": "JS-rendered (suspected, not verified)"
+    },
+    {
+      "sourceId": "kumla",
+      "eventsFound": 0,
+      "c0Candidates": 1,
+      "c2Score": 16,
+      "c2Verdict": "maybe",
+      "likelyJsRendered": false,
+      "status": "fail",
+      "reason": "JS-rendered (suspected, not verified)"
+    },
+    {
+      "sourceId": "kungliga-musikhogskolan",
+      "eventsFound": 0,
+      "c0Candidates": 1,
+      "c2Score": 431,
+      "c2Verdict": "promising",
+      "likelyJsRendered": false,
+      "status": "fail",
+      "reason": "JS-rendered (VERIFIED via curl: 0 event links)"
+    },
+    {
+      "sourceId": "lulea-tekniska-universitet",
+      "eventsFound": 0,
+      "c0Candidates": 2,
+      "c2Score": 9,
+      "c2Verdict": "unclear",
+      "likelyJsRendered": false,
+      "status": "fail",
+      "reason": "JS-rendered (suspected, not verified)"
+    },
+    {
+      "sourceId": "moderna-museet",
+      "eventsFound": 0,
+      "c0Candidates": 0,
+      "c2Score": 59,
+      "c2Verdict": "promising",
+      "likelyJsRendered": false,
+      "status": "fail",
+      "reason": "JS-rendered (suspected, not verified)"
+    },
+    {
+      "sourceId": "naturhistoriska-riksmuseet",
+      "eventsFound": 0,
+      "c0Candidates": 2,
+      "c2Score": 118,
+      "c2Verdict": "promising",
+      "likelyJsRendered": false,
+      "status": "fail",
+      "reason": "JS-rendered (VERIFIED via curl: 0 event links)"
+    },
+    {
+      "sourceId": "orebro-sk",
+      "eventsFound": 0,
+      "c0Candidates": 0,
+      "c2Score": 11,
+      "c2Verdict": "maybe",
+      "likelyJsRendered": false,
+      "status": "fail",
+      "reason": "low signals, needs investigation"
+    },
+    {
+      "sourceId": "polismuseet",
+      "eventsFound": 0,
+      "c0Candidates": 0,
+      "c2Score": 124,
+      "c2Verdict": "promising",
+      "likelyJsRendered": false,
+      "status": "fail",
+      "reason": "JS-rendered (VERIFIED via curl: 0 event links)"
+    }
+  ],
+  "cycleMeasurement": {
+    "cycleNumber": 0,
+    "sourcesImprovedCount": 0,
+    "sourcesRegressedCount": 0,
+    "eventsDelta": 0,
+    "successDelta": 0,
+    "likelyGeneralizationScore": "low",
+    "siteSpecificRisk": "none",
+    "changeCost": "small",
+    "plateauCandidate": false,
+    "plateauReason": null,
+    "appliedImprovements": [],
+    "newImprovementsProposed": []
+  },
+  "cycleHistory": [],
+  "plateauDecision": {
+    "plateauReached": false,
+    "plateauReason": null,
+    "consecutiveZeroImprovementCycles": 0,
+    "recommendation": "continue",
+    "stopCriteriaMet": null
+  },
+  "measurementSchema": {
+    "sourcesImprovedCount": "sources where post-run events > pre-run events",
+    "sourcesRegressedCount": "sources where post-run events < pre-run events",
+    "eventsDelta": "postRunEventsTotal - preRunEventsTotal",
+    "successDelta": "postRunSuccessCount - preRunSuccessCount",
+    "likelyGeneralizationScore": "low=<1 site improved, medium=1-2, high=3+ (cross-site evidence)",
+    "siteSpecificRisk": "none=no hacks, low=1 site, medium=2-3 sites, high=4+ (hack accumulation)",
+    "changeCost": "small=logic tweak, medium=new pattern, high=architecture change",
+    "plateauCandidate": "true if 2+ zero-improvement cycles OR generalization declining",
+    "plateauReason": "specific reason if plateauCandidate=true"
+  },
+  "plateauRules": [
+    {
+      "ruleId": "PLATEAU-001",
+      "condition": "sourcesImprovedCount = 0 for 2+ consecutive cycles",
+      "implication": "plateauCandidate = true",
+      "reason": "no measurable improvement despite changes"
+    },
+    {
+      "ruleId": "PLATEAU-002",
+      "condition": "eventsDelta = 0 for 2+ cycles after initial success",
+      "implication": "plateauCandidate = true",
+      "reason": "diminishing returns on event extraction"
+    },
+    {
+      "ruleId": "PLATEAU-003",
+      "condition": "likelyGeneralizationScore declining over 2+ cycles",
+      "implication": "plateauCandidate = true",
+      "reason": "changes becoming more site-specific"
+    },
+    {
+      "ruleId": "PLATEAU-004",
+      "condition": "siteSpecificRisk increasing to \"high\"",
+      "implication": "stop immediately, do not implement",
+      "reason": "accumulating hacks signals wrong direction"
+    }
+  ]
 }
