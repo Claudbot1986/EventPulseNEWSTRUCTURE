@@ -56,15 +56,27 @@
 
 ### 7 hostnames — kräver mänsklig bedömning
 
-| sourceIdentityKey | Filer | Namn | city | Fråga | Decision |
-|-------------------|-------|------|------|-------|----------|
-| stadsteatern.se | goteborgs-stadsteatern.jsonl + stockholms-stadsteater.jsonl | Göteborgs Stadsteater + Stockholms Stadsteater | Göteborg + Stockholm | Två städer på samma hostname. Separata venues? | manual-review → SEPARATE med suffix |
-| arkitekturgalleriet.se | arkitekturgalleriet.jsonl + goteborgs-arkitekturgalleri.jsonl | Arkitekturgalleriet + Göteborgs Arkitekturgalleri | Göteborg | Samma venue? Namnvariant? | manual-review |
-| gronalund.com | grona-lund.jsonl + liseberg-1.jsonl | Gröna Lund + Liseberg | Stockholm + Göteborg |Två helt olika nöjesfält på samma hostname | manual-review → FIX för liseberg-1 |
-| liljevalchs.se | liljevalchs.jsonl + liljevalchs-konsthall.jsonl | Liljevalchs + Liljevalchs Konsthall | Göteborg | Samma venue? Namnvariant? | manual-review |
-| malmoarena.se | malm-arena.jsonl + malm-arena-ishockey.jsonl | Malmö Arena + Malmö Arena (ishockey) | Malmö | Arena + sport-subpage? | manual-review |
-| skovde.se | skovde-konserthus.jsonl + skovde-stadsteatern.jsonl | Skövde Konserthus + Skövde Stadsteatern | Skövde | Olika venue-typer? | manual-review → SEPARATE |
-| varmland.se | varmland.jsonl + varmland-1.jsonl | Värmland | Karlstad + Uppsala | Importfel: Uppsala ska inte vara Värmland | manual-review → MERGE |
+**TEMPORÄR NAMNGIVNING:** poster med `decision = manual-review` har under testfasen
+temporär kategori `manualreview` och prefix `manualreview-`. Detta är INTE
+slutlig canonical identity — det är endast en testmarkering för att möjliggöra
+UI-visning och vidare analys tills slutgiltigt beslut fattats.
+
+|| sourceIdentityKey | temporarySourceId | temporaryDisplayName | temporaryCategory | Namn | city | Decision |
+|-------------------|-------------------|---------------------|--------------------|------|------|----------|
+| stadsteatern.se | manualreview-stadsteatern-se-goteborg | Göteborgs Stadsteater | manualreview | Göteborgs Stadsteater | Göteborg | SEPARATE |
+| stadsteatern.se | manualreview-stadsteatern-se-stockholm | Stockholms Stadsteater | manualreview | Stockholms Stadsteater | Stockholm | SEPARATE |
+| arkitekturgalleriet.se | manualreview-arkitekturgalleriet-se | Arkitekturgalleriet | manualreview | Arkitekturgalleriet | Göteborg | REVIEW |
+| arkitekturgalleriet.se | manualreview-arkitekturgalleriet-se-alt | Göteborgs Arkitekturgalleri | manualreview | Göteborgs Arkitekturgalleri | Göteborg | REVIEW |
+| gronalund.com | manualreview-gronalund-com | Gröna Lund | manualreview | Gröna Lund | Stockholm | REVIEW |
+| gronalund.com | manualreview-liseberg-1-fix | Liseberg (fel hostname) | manualreview | Liseberg | Göteborg | FIX |
+| liljevalchs.se | manualreview-liljevalchs-se | Liljevalchs Konsthall | manualreview | Liljevalchs Konsthall | Göteborg | REVIEW |
+| liljevalchs.se | manualreview-liljevalchs-se-alt | Liljevalchs | manualreview | Liljevalchs | Göteborg | REVIEW |
+| malmoarena.se | manualreview-malmoarena-se-ishockey | Malmö Arena (ishockey) | manualreview | Malmö Arena (ishockey) | Malmö | SEPARATE |
+| malmoarena.se | manualreview-malmoarena-se-main | Malmö Arena | manualreview | Malmö Arena | Malmö | SEPARATE |
+| skovde.se | manualreview-skosvde-se-konserthus | Skövde Konserthus | manualreview | Skövde Konserthus | Skövde | SEPARATE |
+| skovde.se | manualreview-skosvde-se-stadsteatern | Skövde Stadsteatern | manualreview | Skövde Stadsteatern | Skövde | SEPARATE |
+| varmland.se | manualreview-varmland-se-karlstad | Värmland (Karlstad) | manualreview | Värmland | Karlstad | MERGE |
+| varmland.se | manualreview-varmland-se-uppsala | Värmland (Uppsala - fel) | manualreview | Värmland | Uppsala | MERGE |
 
 ---
 

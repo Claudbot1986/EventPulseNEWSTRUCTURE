@@ -296,7 +296,54 @@ NEWSTRUCTURE/
 
 ---
 
-## 9. Nästa lilla implementationsteg (Fas 3.2)
+## 9. Temporary manualreview-namngivning
+
+### 9.1 Bakgrund
+
+Sources med `decision = manual-review` har ännu inte fått slutgiltigt beslut.
+För att dessa ska synas i UI, rapporter och vidare testning ska de under
+testfasen ha en tydlig temporär kategori och ett tydligt temporärt namn/id.
+
+**Detta är INTE slutlig canonical identity.**
+
+### 9.2 Regler för temporär namngivning
+
+| Regel | Värde |
+|-------|-------|
+| `temporaryCategory` | `manualreview` |
+| Prefix | `manualreview-` |
+| Format (en venue) | `manualreview-{hostname}` |
+| Format (flera venues) | `manualreview-{hostname}-{site}` |
+
+### 9.3 Exempel
+
+| sourceIdentityKey | temporarySourceId | temporaryDisplayName | Anledning |
+|-------------------|--------------------|-----------------------|----------|
+| `stadsteatern.se` | `manualreview-stadsteatern-se-goteborg` | Göteborgs Stadsteater | Två städer, samma hostname |
+| `stadsteatern.se` | `manualreview-stadsteatern-se-stockholm` | Stockholms Stadsteater | Två städer, samma hostname |
+| `arkitekturgalleriet.se` | `manualreview-arkitekturgalleriet-se` | Arkitekturgalleriet | Samma venue, olika namn |
+| `gronalund.com` | `manualreview-liseberg-1-fix` | Liseberg (fel hostname) | Datafel — fel sajt |
+| `malmoarena.se` | `manualreview-malmoarena-se-main` | Malmö Arena | Huvudarena |
+| `malmoarena.se` | `manualreview-malmoarena-se-ishockey` | Malmö Arena (ishockey) | Ishockey subpage |
+
+### 9.4 Användningsområde
+
+Dessa temporära IDn används för:
+- UI-visning av sources under test
+- Mellanrapporter tills slutgiltigt beslut
+- Vidare testning och analys
+- **INTE** för final routing, queue-placement eller produktionsdata
+
+### 9.5 När slutbeslut tas
+
+När en `manual-review`-source får slutgiltigt beslut ersätts:
+- `temporaryCategory` → den slutgiltiga kategorin
+- `temporarySourceId` → den slutgiltiga `sourceId` enligt `domain-site`-regeln
+- `temporaryDisplayName` → officiellt namn
+
+---
+
+## 10. Nästa lilla implementationsteg (Fas 3.3)
 
 **Endast detta, ingen migrering:**
 1. Skapa `source-identity-decision-rules.md` (denna fils systerfil med regler och exempel)
@@ -306,7 +353,7 @@ NEWSTRUCTURE/
 
 ---
 
-## 10. sourceIdentityKey i praktiken
+## 11. sourceIdentityKey i praktiken
 
 Fråga: **Behöver vi verkligen två nivåer?**
 
