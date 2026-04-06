@@ -59,7 +59,7 @@ Do not cross domains casually.
 ## Workflows
 
 Use exactly one:
-- ingestion → `ingestion-loop.md`
+- ingestion → `02-Ingestion/C-htmlGate/123.md` (auktoritativ C-htmlGate-loop)
 - discovery → `discovery-loop.md`
 - UI → `ui-loop.md`
 
