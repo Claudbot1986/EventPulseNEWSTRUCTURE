@@ -57,11 +57,26 @@ Båda bevaras i `originalRows[]` och `isDuplicate = true`.
 
 ## Match-status
 
-| Värde | Betydelse |
+|| Värde | Betydelse |
 |-------|-----------|
 | `new` | Ingen match i befintliga `sources/`, ingen dup i import |
 | `matched_existing` | siteIdentityKey matchar en befintlig source i `sources/` |
 | `duplicate_in_import` | Samma siteIdentityKey inom importbatchen |
+| `manualreview` | **Ny:** Osäkerhet — namn eller stad skiljer sig åt, kräver mänsklig bedömning |
+
+## Temporär manualreview-namngivning
+
+Sources med `matchStatus = manualreview` får temporär metadata:
+
+| Fält | Värde | Exempel |
+|------|-------|---------|
+| `temporaryCategory` | `manualreview` | `manualreview` |
+| `temporarySourceId` | `manualreview-{hostname}` | `manualreview-liseberg-se` |
+| `temporaryDisplayName` | Namnet från importraden | `Liseberg` |
+| `manualReviewReason` | Konfliktsbeskrivning | `Name conflict with existing...` |
+
+**OBS:** Detta är INTE slutlig canonical identity. Det är en testmarkering för
+att möjliggöra UI-visning och analys. Slutgiltig beslut ska fattas manuellt.
 
 ## sourceId-regler
 

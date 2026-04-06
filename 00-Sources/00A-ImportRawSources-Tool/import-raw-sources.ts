@@ -70,13 +70,20 @@ interface ImportedSource {
   originalRows: Array<{ name: string; url: string }>;
 
   // Match against existing canonical sources
-  matchStatus: 'new' | 'matched_existing' | 'duplicate_in_import';
+  matchStatus: 'new' | 'matched_existing' | 'duplicate_in_import' | 'manualreview';
   matchedBy?: 'sourceIdentityKey';
   existingSource?: {
     id: string;
     name: string;
     preferredPath: string | null;
   };
+
+  // Temporary metadata for manualreview sources
+  // Used during test/analysis phase — NOT final canonical identity
+  temporaryCategory?: 'manualreview';
+  temporarySourceId?: string;
+  temporaryDisplayName?: string;
+  manualReviewReason?: string;
 }
 
 // ─── URL Normalization ────────────────────────────────────────────────────
@@ -270,6 +277,26 @@ export function readExistingSources(sourcesDir: string): Map<string, ExistingSou
   return index;
 }
 
+// ─── Manualreview Detection ─────────────────────────────────────────────────
+
+/**
+ * Generate temporary ID/display-name for manualreview sources.
+ * Conservative: when in doubt, mark as manualreview.
+ */
+export function generateTemporaryId(siteIdentityKey: string, name: string, variantIndex = 0): {
+  temporarySourceId: string;
+  temporaryDisplayName: string;
+  temporaryCategory: 'manualreview';
+} {
+  const prefix = `manualreview-${siteIdentityKey.replace(/\./g, '-')}`;
+  const suffix = variantIndex > 0 ? `-site${variantIndex + 1}` : '';
+  return {
+    temporarySourceId: `${prefix}${suffix}`,
+    temporaryDisplayName: name,
+    temporaryCategory: 'manualreview',
+  };
+}
+
 // ─── Import Logic with Existing Source Matching ────────────────────────────
 
 export interface ImportResult {
@@ -279,6 +306,7 @@ export interface ImportResult {
     new: number;
     matchedExisting: number;
     duplicateInImportRows: number;  // how many RAW rows were duplicates
+    manualreview: number;           // sources flagged for manual review
     outputSources: number;           // how many unique sources in output
     existingSourcesLoaded: number;
   };
@@ -308,6 +336,7 @@ export function importRawSourcesWithMatching(
     new: 0,
     matchedExisting: 0,
     duplicateInImportRows: 0,
+    manualreview: 0,
     outputSources: 0,
     existingSourcesLoaded: existingSources.size,
   };
@@ -330,30 +359,84 @@ export function importRawSourcesWithMatching(
         // Already added as primary — just record this row
         const primary = outputMap.get(siteIdentityKey)!;
         primary.originalRows.push({ name: row.name, url: row.url });
-        primary.isDuplicate = true;
-        stats.duplicateInImportRows++;
+
+        // Conservative: if names or cities differ from existing, flag as manualreview
+        if (primary.name !== row.name || primary.city !== row.city) {
+          if (primary.matchStatus !== 'manualreview') {
+            const existingName = primary.name;
+            const existingCity = primary.city;
+            primary.matchStatus = 'manualreview';
+            const tempMeta = generateTemporaryId(siteIdentityKey, row.name, 0);
+            primary.temporaryCategory = tempMeta.temporaryCategory;
+            primary.temporarySourceId = tempMeta.temporarySourceId;
+            primary.temporaryDisplayName = tempMeta.temporaryDisplayName;
+            primary.manualReviewReason =
+              `Import row conflicts with existing source '${existing.id}': ` +
+              `existing name='${existing.name}' city='${existing.city}', ` +
+              `import name='${row.name}' city='${row.city}'`;
+            stats.manualreview++;
+          }
+        } else {
+          primary.isDuplicate = true;
+          stats.duplicateInImportRows++;
+        }
       } else {
         // First occurrence — create as matched_existing
-        outputMap.set(siteIdentityKey, {
-          sourceId: existing.id,
-          sourceIdentityKey: siteIdentityKey,
-          canonicalUrl,
-          name: row.name,
-          city: row.city,
-          type: row.type,
-          discoveredAt: row.discoveredAt,
-          note: row.note,
-          isDuplicate: false,
-          originalRows: [{ name: row.name, url: row.url }],
-          matchStatus: 'matched_existing',
-          matchedBy: 'sourceIdentityKey',
-          existingSource: {
-            id: existing.id,
-            name: existing.name,
-            preferredPath: existing.preferredPath ?? null,
-          },
-        });
-        stats.matchedExisting++;
+        // BUT: if name/city conflicts with existing source, flag as manualreview
+        const nameConflict = existing.name && existing.name !== row.name;
+        const cityConflict = existing.city && existing.city !== row.city;
+
+        if (nameConflict || cityConflict) {
+          // Conservative: mark as manualreview instead of auto-matching
+          const tempMeta = generateTemporaryId(siteIdentityKey, row.name, 0);
+          outputMap.set(siteIdentityKey, {
+            sourceId: tempMeta.temporarySourceId,
+            sourceIdentityKey: siteIdentityKey,
+            canonicalUrl,
+            name: row.name,
+            city: row.city,
+            type: row.type,
+            discoveredAt: row.discoveredAt,
+            note: row.note,
+            isDuplicate: false,
+            originalRows: [{ name: row.name, url: row.url }],
+            matchStatus: 'manualreview',
+            temporaryCategory: tempMeta.temporaryCategory,
+            temporarySourceId: tempMeta.temporarySourceId,
+            temporaryDisplayName: tempMeta.temporaryDisplayName,
+            manualReviewReason:
+              `Name/city conflict with existing source '${existing.id}': ` +
+              `existing name='${existing.name}' city='${existing.city}', ` +
+              `import name='${row.name}' city='${row.city}'`,
+            existingSource: {
+              id: existing.id,
+              name: existing.name,
+              preferredPath: existing.preferredPath ?? null,
+            },
+          });
+          stats.manualreview++;
+        } else {
+          outputMap.set(siteIdentityKey, {
+            sourceId: existing.id,
+            sourceIdentityKey: siteIdentityKey,
+            canonicalUrl,
+            name: row.name,
+            city: row.city,
+            type: row.type,
+            discoveredAt: row.discoveredAt,
+            note: row.note,
+            isDuplicate: false,
+            originalRows: [{ name: row.name, url: row.url }],
+            matchStatus: 'matched_existing',
+            matchedBy: 'sourceIdentityKey',
+            existingSource: {
+              id: existing.id,
+              name: existing.name,
+              preferredPath: existing.preferredPath ?? null,
+            },
+          });
+          stats.matchedExisting++;
+        }
       }
       batchSeen.add(siteIdentityKey);
       continue;
@@ -364,8 +447,29 @@ export function importRawSourcesWithMatching(
       // Duplicate within import batch
       const primary = outputMap.get(siteIdentityKey)!;
       primary.originalRows.push({ name: row.name, url: row.url });
-      primary.isDuplicate = true;
-      stats.duplicateInImportRows++;
+
+      // Conservative: if names or cities differ, flag as manualreview
+      if (primary.name !== row.name || primary.city !== row.city) {
+        // Mark the existing entry as manualreview if not already
+        if (primary.matchStatus !== 'manualreview') {
+          const existingNames = [primary.name];
+          const existingCities = [primary.city];
+          const tempMeta = generateTemporaryId(siteIdentityKey, primary.name, 0);
+          primary.matchStatus = 'manualreview';
+          primary.temporaryCategory = tempMeta.temporaryCategory;
+          primary.temporarySourceId = tempMeta.temporarySourceId;
+          primary.temporaryDisplayName = tempMeta.temporaryDisplayName;
+          primary.manualReviewReason =
+            `Conflicting rows within import batch: names=[${existingNames.join('|')}|${row.name}], cities=[${existingCities.join('|')}|${row.city}]`;
+          // Update temporarySourceId for second variant
+          const tempMeta2 = generateTemporaryId(siteIdentityKey, row.name, 1);
+          primary.temporarySourceId = tempMeta2.temporarySourceId;
+          stats.manualreview++;
+        }
+      } else {
+        primary.isDuplicate = true;
+        stats.duplicateInImportRows++;
+      }
       continue;
     }
 
@@ -429,7 +533,7 @@ function parseArgs(): CliArgs {
 // ─── Main ─────────────────────────────────────────────────────────────────
 
 function main(): void {
-  console.log('=== 00A: ImportRawSources Tool (v3 — site-level identity) ===\n');
+  console.log('=== 00A: ImportRawSources Tool (v4 — with manualreview detection) ===\n');
 
   const { input, output, sourcesDir } = parseArgs();
 
@@ -463,6 +567,7 @@ function main(): void {
   console.log(`  NEW sources:                 ${stats.new}`);
   console.log(`  MATCHED existing:           ${stats.matchedExisting}`);
   console.log(`  DUPLICATE rows in import:    ${stats.duplicateInImportRows}`);
+  console.log(`  MANUALREVIEW:              ${stats.manualreview}`);
   console.log(`  Total output sources:        ${stats.outputSources}`);
   console.log();
 
@@ -498,6 +603,22 @@ function main(): void {
       console.log(`    rows merged: ${s.originalRows.length}`);
       for (const orig of s.originalRows) {
         console.log(`      → ${orig.name} | ${orig.url}`);
+      }
+    }
+    console.log();
+  }
+
+  // Show manualreview sources
+  const manualreviewSources = sources.filter(s => s.matchStatus === 'manualreview');
+  if (manualreviewSources.length > 0) {
+    console.log(`=== MANUALREVIEW sources (${manualreviewSources.length}) — NEEDS HUMAN DECISION ===`);
+    for (const s of manualreviewSources) {
+      console.log(`  ${s.temporarySourceId}: ${s.temporaryDisplayName}`);
+      console.log(`    sourceIdentityKey: ${s.sourceIdentityKey}`);
+      console.log(`    canonicalUrl: ${s.canonicalUrl}`);
+      console.log(`    reason: ${s.manualReviewReason}`);
+      if (s.existingSource) {
+        console.log(`    existingSource: ${s.existingSource.id} (${s.existingSource.name})`);
       }
     }
     console.log();
