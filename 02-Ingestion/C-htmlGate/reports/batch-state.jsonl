@@ -1,48 +1,27 @@
 {
-  "currentBatch": 10,
+  "currentBatch": 1,
   "batchSize": 10,
   "status": "idle",
   "batchSources": [],
-  "completedBatches": [
-    1,
-    2,
-    3,
-    4,
-    5,
-    6,
-    7,
-    8,
-    9
-  ],
-  "lastBatchRun": "2026-04-06T04:23:00.000Z",
+  "completedBatches": [],
+  "lastBatchRun": null,
   "candidateQuery": {
     "triageResult": "html_candidate",
-    "statusIn": [
-      "fail",
-      "triage_required"
-    ],
+    "statusIn": ["fail", "triage_required"],
     "excludePendingRenderGate": true,
     "excludeManualReview": true,
-    "excludeVerifiedPaths": [
-      "network",
-      "api",
-      "render"
-    ],
-    "excludeStatus": [
-      "success",
-      "pending_api",
-      "pending_render_gate",
-      "pending_source_adapter"
-    ]
+    "excludeVerifiedPaths": ["network", "api", "render"],
+    "excludeStatus": ["success", "pending_api", "pending_render_gate", "pending_source_adapter"]
   },
-  "reportPath": "02-Ingestion/C-htmlGate/reports/batch-008/",
-  "batchNotes": "Batch 009: NO CANDIDATES - pool genuinely exhausted. 0 html_candidates remain. C-Batch-Loop completed after 9 batches. 22 success sources exist, all 4 triage_required blocked by D-renderGate absence, 3 manual_review blocked by human review requirement.",
+  "reportPath": null,
+  "batchNotes": "RESET: Previous batch-state was inconsistent. batch-010 was an erroneous artifact from wrong execution path. batch-001 through batch-007 exist as report folders but none have verified postRun success > 0. System reset to batch 01 pending state.",
   "metadata": {
-    "selectedAt": "2026-04-06T04:23:00.000Z",
-    "completedAt": "2026-04-06T04:23:00.000Z",
+    "selectedAt": null,
+    "completedAt": null,
     "eligibilityRulesVersion": "1.1",
-    "selectionCriteria": "C-htmlGate batch - genuinely untested html_candidates",
-    "executionStatus": "no-candidates"
+    "selectionCriteria": "C-htmlGate batch - pending selection",
+    "executionStatus": "pending",
+    "resetNote": "State reset - batch-001 is first valid pending batch. No batch has verified extraction success. batch-010 artifact moved to TEMP/batch-010-artifact/"
   },
   "preRunResults": {
     "successCount": 0,
@@ -56,7 +35,7 @@
   },
   "cyclesCompleted": 0,
   "maxCyclesAllowed": 3,
-  "stopReason": "no-candidates",
+  "stopReason": null,
   "plateauReached": false,
   "patternsFound": [],
   "sourceResults": []
