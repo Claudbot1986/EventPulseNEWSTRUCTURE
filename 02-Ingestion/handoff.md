@@ -2,6 +2,54 @@
 
 ---
 
+## Nästa-steg-analys 2026-04-06 (loop 58 — C-Batch-Loop UTESLUTEN)
+
+### Vad hände denna loop
+- **Batch 008 initierad:** batch-state.jsonl uppdaterad från batch 007 (completed) → batch 8 (idle)
+- **Ingen körning:** C-Batch-Loop poolen är UTTSCHÖD
+- **Upptäckt:** Alla 29+ html_candidates har redan körts i batch 1-7
+- **Batch 8 avslutad:** status=completed, stopReason=no-candidates
+- **C-Batch-Loop pausad** tills nya källor identifieras
+
+### Root-cause (nyckelobservation)
+
+**C-Batch-Loop har fullständigt tömt sin kandidatpool:**
+
+|| Resurs | Status |
+|--------|--------|--------|
+| html_candidates totalt i triage | 34 | varav 29 körda i batch 1-7 |
+| Återstående obatchade html_candidates | 0 | pool uttömd |
+| still_unknown sources | 197 | ~95% DNS/timeout/SSL-fel |
+| render_candidate | 40 | D-renderGate saknas |
+| success (events>0) | 24 | bekräftade fungerande |
+
+**197 "still_unknown" är i praktiken döda URLs:**
+- DNS/timeout/SSL-fel dominerar
+- Endast ~10-15% av 420 sources är potentiellt aktiva
+- De 24 framgångsrika är redan identifierade
+
+**Nästa steg kräver användarbeslut** — se tre alternativ nedan.
+
+### Tre möjliga riktningar
+
+|| # | Riktning | Systemnytta | Risk | Varför nu |
+|---|--|----------|---------|------|-----------|
+| 1 | **Kör phase1ToQueue på 24 success-sources** | Hög: verifierar pipeline end-to-end | Låg: bekräftade källor | Pipeline-verifiering är naturligt nästa steg |
+| 2 | **Triage 197x still_unknown för hand商业模式** | Medel: kan hitta nya källor | Hög: de flesta är döda URLs | Endast sätt att hitta nya html_candidates |
+| 3 | **Undersök C0 root-cause på 2-3 sajter** | Hög: kan förbättra C0 | Medel: Generalization Gate | Förstå varför C0=0 för så många |
+
+### Rekommenderat nästa steg
+- **#1 — phase1ToQueue på 24 success-sources** — pipeline-verifiering, ingen batch-pool krävs
+
+### Två steg att INTE göra nu
+1. **Undersök C0 root-cause** — Generalization Gate förbjuder C-lager-ändring utan 2-3+ sajter med samma rotorsak. Batch 1-7 har inte gett detta.
+2. **Scout nya källor** — 197 still_unknown är nästan uteslutande döda URLs, inte värt tiden
+
+### System-effect-before-local-effect
+phase1ToQueue verifierar hela pipeline (events→queue→normalizer→DB) på redan bekräftade källor. Detta är högsta pipeline-nytta just nu.
+
+---
+
 ## Nästa-steg-analys 2026-04-06 (loop 57)
 
 ### Vad förbättrades denna loop

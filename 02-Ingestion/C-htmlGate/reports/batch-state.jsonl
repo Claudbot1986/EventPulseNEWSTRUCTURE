@@ -1,21 +1,10 @@
 {
-  "currentBatch": 7,
+  "currentBatch": 8,
   "batchSize": 10,
   "status": "completed",
-  "batchSources": [
-    "moderna-museet",
-    "polismuseet",
-    "naturhistoriska-riksmuseet",
-    "stockholm-jazz-festival-1",
-    "svenska-fotbollf-rbundet",
-    "bokmassan",
-    "stenungsund",
-    "hallsberg",
-    "ifk-uppsala",
-    "karlskoga"
-  ],
-  "completedBatches": [1, 2, 3, 4, 5, 6, 7],
-  "lastBatchRun": "2026-04-06T03:00:00.000Z",
+  "batchSources": [],
+  "completedBatches": [1, 2, 3, 4, 5, 6, 7, 8],
+  "lastBatchRun": "2026-04-06T03:16:00.000Z",
   "candidateQuery": {
     "triageResult": "html_candidate",
     "statusIn": ["fail", "triage_required"],
@@ -24,45 +13,29 @@
     "excludeVerifiedPaths": ["network", "api", "render"],
     "excludeStatus": ["success", "pending_api", "pending_render_gate", "pending_source_adapter"]
   },
-  "reportPath": "02-Ingestion/C-htmlGate/reports/batch-007/",
-  "batchNotes": "Batch 007: 0/10 success. 9/10: C0=0 candidates. 1/10 (nrm): C0 hittade /kalendarium men extraction=0. svenska-fotbollf: C1 likelyJsRendered=true. StopReason: no-general-improvement — samma C0=0 barriär som batch 001-006, ingen ny rotorsak.",
+  "reportPath": "02-Ingestion/C-htmlGate/reports/batch-008/",
+  "batchNotes": "Batch 008: INGEN KÖRNING - pool av html_candidates är uttömd. Alla 29+ html_candidates har körts i batch 1-7. C-Batch-Loop avslutas tills nya källor identifieras.",
   "metadata": {
-    "selectedAt": "2026-04-06T02:52:00.000Z",
-    "completedAt": "2026-04-06T03:00:00.000Z",
+    "selectedAt": "2026-04-06T03:16:00.000Z",
+    "completedAt": "2026-04-06T03:16:00.000Z",
     "eligibilityRulesVersion": "1.1",
-    "selectionCriteria": "C-htmlGate batch - genuinely untested html_candidates"
+    "selectionCriteria": "C-htmlGate batch - genuinely untested html_candidates",
+    "executionStatus": "no-candidates"
   },
   "preRunResults": {
     "successCount": 0,
-    "failCount": 10,
+    "failCount": 0,
     "eventsTotal": 0
   },
   "postRunResults": {
     "successCount": 0,
-    "failCount": 10,
+    "failCount": 0,
     "eventsTotal": 0
   },
   "cyclesCompleted": 0,
   "maxCyclesAllowed": 3,
-  "stopReason": "no-general-improvement",
-  "plateauReached": true,
-  "patternsFound": [
-    "ALL 7 batches: C0 finds 0 candidates for vast majority",
-    "C2=promising but extraction=0: density signals do not correlate with event pages",
-    "svenska-fotbollf-rbundet: C1 likelyJsRendered=true → D-renderGate candidate",
-    "Only 2 sources in 70+ had C0 find a candidate (nrm, karlskoga)",
-    "Both those still extraction=0"
-  ],
-  "sourceResults": [
-    {"sourceId":"moderna-museet","events":0,"verdict":"fail","path":"html","c0":0,"c2":59,"failureMode":"c0-no-candidates"},
-    {"sourceId":"polismuseet","events":0,"verdict":"fail","path":"html","c0":0,"c2":124,"failureMode":"c0-no-candidates"},
-    {"sourceId":"naturhistoriska-riksmuseet","events":0,"verdict":"fail","path":"html","c0":1,"c2":118,"failureMode":"c0-found-wrong-page"},
-    {"sourceId":"stockholm-jazz-festival-1","events":0,"verdict":"fail","path":"html","c0":0,"c2":134,"failureMode":"c0-no-candidates"},
-    {"sourceId":"svenska-fotbollf-rbundet","events":0,"verdict":"fail","path":"html","c0":0,"c2":0,"failureMode":"likely-js-rendered"},
-    {"sourceId":"bokmassan","events":0,"verdict":"fail","path":"html","c0":0,"c2":36,"failureMode":"c0-no-candidates"},
-    {"sourceId":"stenungsund","events":0,"verdict":"fail","path":"html","c0":0,"c2":0,"failureMode":"c0-no-candidates-unclear"},
-    {"sourceId":"hallsberg","events":0,"verdict":"fail","path":"html","c0":0,"c2":44,"failureMode":"c0-no-candidates"},
-    {"sourceId":"ifk-uppsala","events":0,"verdict":"fail","path":"html","c0":0,"c2":31,"failureMode":"c0-no-candidates"},
-    {"sourceId":"karlskoga","events":0,"verdict":"fail","path":"html","c0":1,"c2":12,"failureMode":"c0-found-wrong-page"}
-  ]
+  "stopReason": "no-candidates",
+  "plateauReached": false,
+  "patternsFound": [],
+  "sourceResults": []
 }
