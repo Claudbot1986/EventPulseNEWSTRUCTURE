@@ -67,6 +67,18 @@
 | needsD | unclear |
 | notes | subpage-aware A/B assessment missing |
 
+## Learning Grouping
+
+| Field | Value |
+|-------|-------|
+| siteFamily | kommunal |
+| likelyCms | sharepoint |
+| contentPatternGuess | subpage-event-calendar |
+| likelyEventPresentation | no-clear-presentation |
+| likelyJsShell | likely |
+| candidateDifficulty | hard |
+| needsSubpageDiscovery | True |
+
 ## Verification
 
 | Check | Result |

@@ -67,6 +67,18 @@
 | needsD | unclear |
 | notes | subpage-aware A/B assessment missing |
 
+## Learning Grouping
+
+| Field | Value |
+|-------|-------|
+| siteFamily | idrott |
+| likelyCms | unknown |
+| contentPatternGuess | root-event-page |
+| likelyEventPresentation | no-clear-presentation |
+| likelyJsShell | likely |
+| candidateDifficulty | hard |
+| needsSubpageDiscovery | unclear |
+
 ## Verification
 
 | Check | Result |

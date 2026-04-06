@@ -225,5 +225,115 @@
       "implication": "stop immediately, do not implement",
       "reason": "accumulating hacks signals wrong direction"
     }
-  ]
+  ],
+  "batchClassification": {
+    "batchId": "batch-001",
+    "heterogeneityScore": "high",
+    "learningPotential": "low",
+    "groupings": {
+      "siteFamily": {
+        "kommunal": [
+          "hallsberg",
+          "karlskoga",
+          "kumla"
+        ],
+        "museum": [
+          "moderna-museet",
+          "naturhistoriska-riksmuseet",
+          "liljevalchs-konsthall"
+        ],
+        "universitet": [
+          "kungliga-musikhogskolan",
+          "lulea-tekniska-universitet"
+        ],
+        "idrott": [
+          "ifk-uppsala",
+          "orebro-sk"
+        ]
+      },
+      "likelyCms": {
+        "sharepoint": [
+          "hallsberg",
+          "karlskoga",
+          "kumla",
+          "orebro-sk"
+        ],
+        "custom-js": [
+          "moderna-museet",
+          "naturhistoriska-riksmuseet",
+          "kungliga-musikhogskolan"
+        ],
+        "unknown": [
+          "ifk-uppsala",
+          "lulea-tekniska-universitet",
+          "liljevalchs-konsthall"
+        ]
+      },
+      "contentPatternGuess": {
+        "subpage-event-calendar": [
+          "karlskoga",
+          "kumla",
+          "kungliga-musikhogskolan",
+          "lulea-tekniska-universitet"
+        ],
+        "root-event-page": [
+          "hallsberg",
+          "ifk-uppsala",
+          "moderna-museet",
+          "naturhistoriska-riksmuseet",
+          "orebro-sk",
+          "liljevalchs-konsthall"
+        ]
+      },
+      "likelyEventPresentation": {
+        "time-tag-list": [
+          "hallsberg",
+          "kumla",
+          "kungliga-musikhogskolan",
+          "lulea-tekniska-universitet",
+          "naturhistoriska-riksmuseet",
+          "liljevalchs-konsthall"
+        ],
+        "no-clear-presentation": [
+          "ifk-uppsala",
+          "karlskoga",
+          "moderna-museet",
+          "orebro-sk"
+        ]
+      },
+      "likelyJsShell": {
+        "likely": [
+          "ifk-uppsala",
+          "karlskoga",
+          "moderna-museet",
+          "orebro-sk"
+        ],
+        "possible": [
+          "hallsberg",
+          "kumla",
+          "kungliga-musikhogskolan",
+          "lulea-tekniska-universitet",
+          "naturhistoriska-riksmuseet",
+          "liljevalchs-konsthall"
+        ]
+      }
+    },
+    "issues": [
+      "too-many-site-families-in-one-batch",
+      "js-rendered-sources-mixed-with-static",
+      "no-subpage-vs-root-separation"
+    ],
+    "recommendations": {
+      "futureBatchDesign": [
+        "group-by-site-family-for-targetted-learning",
+        "separate-js-rendered-from-static",
+        "group-by-content-pattern-before-running"
+      ],
+      "idealBatchSize": {
+        "perFamily": 3,
+        "perPattern": 5,
+        "maxHeterogeneity": "low"
+      }
+    }
+  }
 }
