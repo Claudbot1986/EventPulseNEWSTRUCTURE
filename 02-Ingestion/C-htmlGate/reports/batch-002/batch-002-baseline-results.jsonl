@@ -1,0 +1,110 @@
+[
+  {
+    "sourceId": "uppsala-kommun",
+    "url": "https://www.uppsala.se",
+    "c0": {
+      "candidates": 0,
+      "winnerUrl": "https://www.uppsala.se/kultur-idrott-fritid/arrangera-evenemang/",
+      "winnerDensity": 13,
+      "duration": 746
+    },
+    "c1": {
+      "likelyJsRendered": false,
+      "timeTagCount": 1,
+      "dateCount": 1,
+      "duration": 140
+    },
+    "c2": {
+      "verdict": "maybe",
+      "score": 11,
+      "reason": "[breadth_nojsonld] score=11(adj) >= 12? maybe pg=event-heading",
+      "duration": 195
+    },
+    "extract": {
+      "eventsFound": 0,
+      "duration": 0
+    },
+    "success": false
+  },
+  {
+    "sourceId": "ystad",
+    "url": "https://www.ystad.se",
+    "c0": {
+      "candidates": 0,
+      "winnerUrl": "https://www.ystad.se/ystads-teater",
+      "winnerDensity": 21,
+      "duration": 2397
+    },
+    "c1": {
+      "likelyJsRendered": false,
+      "timeTagCount": 0,
+      "dateCount": 0,
+      "duration": 431
+    },
+    "c2": {
+      "verdict": "unclear",
+      "score": 7,
+      "reason": "[breadth_nojsonld] score=7(adj) >= 12? unclear pg=event-heading",
+      "duration": 569
+    },
+    "extract": {
+      "eventsFound": 0,
+      "duration": 1
+    },
+    "success": false
+  },
+  {
+    "sourceId": "stockholm-jazz-festival-1",
+    "url": "https://www.stockholmjazz.com",
+    "c0": {
+      "candidates": 0,
+      "winnerUrl": null,
+      "winnerDensity": 0,
+      "duration": 8644
+    },
+    "c1": {
+      "likelyJsRendered": false,
+      "timeTagCount": 26,
+      "dateCount": 0,
+      "duration": 2566
+    },
+    "c2": {
+      "verdict": "promising",
+      "score": 134,
+      "reason": "[breadth_nojsonld] score=134(adj) >= 12? promising pg=time-tag cand=cards=strong(26/26),lists=weak(1t 1l 1d)",
+      "duration": 2587
+    },
+    "extract": {
+      "eventsFound": 0,
+      "duration": 0
+    },
+    "success": false
+  },
+  {
+    "sourceId": "svenska-fotbollf-rbundet",
+    "url": "https://www.svenskfotboll.se",
+    "c0": {
+      "candidates": 0,
+      "winnerUrl": "https://www.svenskfotboll.se/biljett/",
+      "winnerDensity": 9,
+      "duration": 405
+    },
+    "c1": {
+      "likelyJsRendered": false,
+      "timeTagCount": 0,
+      "dateCount": 0,
+      "duration": 112
+    },
+    "c2": {
+      "verdict": "promising",
+      "score": 12,
+      "reason": "[breadth_nojsonld] score=12(adj) >= 12? promising pg=event-heading",
+      "duration": 92
+    },
+    "extract": {
+      "eventsFound": 0,
+      "duration": 1
+    },
+    "success": false
+  }
+]

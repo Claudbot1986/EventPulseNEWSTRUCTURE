@@ -1,4 +1,54 @@
-# handoff.md — 2026-04-05 (UPPDATERAD)
+# handoff.md — 2026-04-06
+
+## LOOP 21: C-Batch-001 Körning (C-htmlGate)
+
+### Vad förbättrades denna loop
+- Körde C-Batch-001 (10 html_candidate sources) genom C0→C1→C2→extract
+- **Resultat: 3/10 success, 6 events total**
+- Moderna-museet: 4 events (WordPress, Swedish date i anchor)
+- Lulea-tekniska-universitet: 1 event
+- Orebro-sk: 1 event
+- 7/10 sources fortsätter ge 0 events
+
+### Största kvarvarande flaskhals
+**C2 vs extractFromHtml() osynkning.** C2 säger "promising" baserat på density/cards, MEN extractFromHtml() kräver URL-datum eller Swedish date-text i anchor. Hög C2-score ≠ events.
+
+### Sources-status (efter denna körning)
+|| Status | Antal | Kommentar |
+|--------|-------|-----------|
+| success | +3 | Moderna-museet, Ltu, Orebro-sk |
+| fail | +7 | Fortfarande 0 events |
+
+### Nästa-steg-analys [2026-04-06]
+
+### Vad förbättrades denna loop
+- C-Batch-001 kördes (10 sources)
+- 3/10 success, 6 events total
+- Identifierat: Swedish date-pattern i anchor-text fungerar (moderna-museet, orebro-sk)
+- Identifierat: C2 promising ≠ extract success
+
+### Största kvarvarande flaskhals
+**C2 vs extractFromHtml() gap.** C2 ger "promising" baserat på density/cards, MEN extractFromHtml() kräver specifika URL-datum eller Swedish date-text. Hög C2-score (kungliga-musikhogskolan=431, nrm=118) → 0 events.
+
+### Tre möjliga nästa steg
+
+| # | Steg | Systemnytta | Risk | Varför nu |
+|---|------|-------------|------|-----------|
+| 1 | Utöka extractFromHtml() med Swedish date-pattern för anchor utan URL-datum | Fixar sajter med datum i text | Medium — kan öka brus | moderna-museet visar att det fungerar |
+| 2 | Verifiera Swedish date-pattern på 2-3 andra sajter | Bekräftar Generalization Gate | Låg | Krävs innan C-lager-ändring |
+| 3 | Analysera SiteVision-sajter (kumla, hallsberg, karlskoga) | Förstå kommunal navigation | Låg | Vanligt CMS i Sverige |
+
+### Rekommenderat nästa steg
+**[2] — Verifiera Swedish date-pattern på 2-3 andra sajter** — Generalization Gate kräver 2-3 sajter innan C-lager-ändring. Välj sajter som moderna-museet (WordPress) för att bekräfta mönstret.
+
+### Två steg att INTE göra nu
+1. **Ändra C2 scoring weights** — Generalization Gate stoppar. Bara 3 fler success från denna batch.
+2. **Bygga D-renderGate** — ej prioriterat (inga D-kandidater identifierade i denna batch)
+
+### System-effect-before-local-effect
+Verifiering av Swedish date-pattern på 2-3 sajter → bekräftar eller motbevisar mönstret → möjliggör C-lager-ändring som hjälper alla WordPress/vanliga CMS-sajter.
+
+---
 
 ## LOOP 20: Modellvalidering via sourceTriage
 

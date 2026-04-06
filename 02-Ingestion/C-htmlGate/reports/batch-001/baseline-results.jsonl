@@ -1,0 +1,137 @@
+[
+  {
+    "sourceId": "hallsberg",
+    "url": "https://www.hallsberg.se",
+    "c0": {
+      "candidates": 0,
+      "winnerUrl": null,
+      "winnerDensity": 0,
+      "duration": 518
+    },
+    "c1": {
+      "likelyJsRendered": false,
+      "timeTagCount": 6,
+      "dateCount": 6,
+      "duration": 165
+    },
+    "c2": {
+      "verdict": "promising",
+      "score": 44,
+      "reason": "[breadth_nojsonld] score=44(adj) >= 12? promising pg=time-tag cand=cards=medium(6/6),lists=medium(2/2)",
+      "duration": 170
+    },
+    "extract": {
+      "eventsFound": 0,
+      "duration": 1
+    },
+    "success": false
+  },
+  {
+    "sourceId": "ifk-uppsala",
+    "url": "https://www.ifkuppsala.se",
+    "c0": {
+      "candidates": 0,
+      "winnerUrl": null,
+      "winnerDensity": 0,
+      "duration": 876
+    },
+    "c1": {
+      "likelyJsRendered": false,
+      "timeTagCount": 6,
+      "dateCount": 2,
+      "duration": 119
+    },
+    "c2": {
+      "verdict": "promising",
+      "score": 31,
+      "reason": "[breadth_nojsonld] score=31(adj) >= 12? promising pg=time-tag neg=news-article cand=cards=medium(6/6),lists=none",
+      "duration": 104
+    },
+    "extract": {
+      "eventsFound": 0,
+      "duration": 1
+    },
+    "success": false
+  },
+  {
+    "sourceId": "karlskoga",
+    "url": "https://www.karlskoga.se",
+    "c0": {
+      "candidates": 2,
+      "winnerUrl": "https://www.karlskoga.se/bygga-bo--miljo/kulturmiljoprogrammet.html",
+      "winnerDensity": 15,
+      "duration": 674
+    },
+    "c1": {
+      "likelyJsRendered": false,
+      "timeTagCount": 1,
+      "dateCount": 1,
+      "duration": 146
+    },
+    "c2": {
+      "verdict": "promising",
+      "score": 12,
+      "reason": "[breadth_nojsonld] score=12(adj) >= 12? promising pg=time-tag",
+      "duration": 137
+    },
+    "extract": {
+      "eventsFound": 0,
+      "duration": 0
+    },
+    "success": false
+  },
+  {
+    "sourceId": "kumla",
+    "url": "https://www.kumla.se",
+    "c0": {
+      "candidates": 1,
+      "winnerUrl": "https://www.kumla.se/kommun-och-politik/agenda-2030.html",
+      "winnerDensity": 12,
+      "duration": 595
+    },
+    "c1": {
+      "likelyJsRendered": false,
+      "timeTagCount": 0,
+      "dateCount": 1,
+      "duration": 165
+    },
+    "c2": {
+      "verdict": "maybe",
+      "score": 16,
+      "reason": "[breadth_nojsonld] score=16(adj) >= 12? maybe pg=event-list",
+      "duration": 178
+    },
+    "extract": {
+      "eventsFound": 0,
+      "duration": 1
+    },
+    "success": false
+  },
+  {
+    "sourceId": "kungliga-musikhogskolan",
+    "url": "https://www.kmh.se",
+    "c0": {
+      "candidates": 1,
+      "winnerUrl": "https://www.kmh.se/konserter---evenemang.html",
+      "winnerDensity": 395,
+      "duration": 659
+    },
+    "c1": {
+      "likelyJsRendered": false,
+      "timeTagCount": 84,
+      "dateCount": 0,
+      "duration": 193
+    },
+    "c2": {
+      "verdict": "promising",
+      "score": 431,
+      "reason": "[breadth_nojsonld] score=431(adj) >= 12? promising pg=time-tag cand=cards=strong(42/42),lists=weak(1t 1l 1d)",
+      "duration": 201
+    },
+    "extract": {
+      "eventsFound": 0,
+      "duration": 0
+    },
+    "success": false
+  }
+]

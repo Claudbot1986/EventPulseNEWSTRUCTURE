@@ -1,0 +1,142 @@
+[
+  {
+    "sourceId": "lulea-tekniska-universitet",
+    "url": "https://www.ltu.se",
+    "c0": {
+      "candidates": 2,
+      "winnerUrl": "https://www.ltu.se/utbildning/upplev-studentlivet-hos-oss",
+      "winnerDensity": 13,
+      "duration": 975
+    },
+    "c1": {
+      "likelyJsRendered": false,
+      "timeTagCount": 1,
+      "dateCount": 1,
+      "duration": 189
+    },
+    "c2": {
+      "verdict": "unclear",
+      "score": 9,
+      "reason": "[breadth_nojsonld] score=9(adj) >= 12? unclear pg=time-tag",
+      "duration": 223
+    },
+    "extract": {
+      "eventsFound": 1,
+      "fetchError": null,
+      "duration": 152
+    },
+    "success": true
+  },
+  {
+    "sourceId": "moderna-museet",
+    "url": "https://www.modernamuseet.se",
+    "c0": {
+      "candidates": 0,
+      "winnerUrl": null,
+      "winnerDensity": 0,
+      "duration": 973
+    },
+    "c1": {
+      "likelyJsRendered": false,
+      "timeTagCount": 10,
+      "dateCount": 0,
+      "duration": 282
+    },
+    "c2": {
+      "verdict": "promising",
+      "score": 59,
+      "reason": "[breadth_nojsonld] score=59(adj) >= 12? promising pg=time-tag neg=news-article cand=cards=strong(6/10),lists=weak(0t 0l 0d)",
+      "duration": 307
+    },
+    "extract": {
+      "eventsFound": 4,
+      "fetchError": null,
+      "duration": 323
+    },
+    "success": true
+  },
+  {
+    "sourceId": "naturhistoriska-riksmuseet",
+    "url": "https://www.nrm.se",
+    "c0": {
+      "candidates": 2,
+      "winnerUrl": "https://www.nrm.se/vart-utbud/kalendarium",
+      "winnerDensity": 270,
+      "duration": 1222
+    },
+    "c1": {
+      "likelyJsRendered": false,
+      "timeTagCount": 7,
+      "dateCount": 20,
+      "duration": 275
+    },
+    "c2": {
+      "verdict": "promising",
+      "score": 118,
+      "reason": "[breadth_nojsonld] score=118(adj) >= 12? promising pg=date-pattern neg=news-article cand=cards=medium(14/14),lists=weak(1t 1l 1d)",
+      "duration": 298
+    },
+    "extract": {
+      "eventsFound": 0,
+      "fetchError": null,
+      "duration": 290
+    },
+    "success": false
+  },
+  {
+    "sourceId": "orebro-sk",
+    "url": "https://www.orebro.se",
+    "c0": {
+      "candidates": 0,
+      "winnerUrl": null,
+      "winnerDensity": 0,
+      "duration": 388
+    },
+    "c1": {
+      "likelyJsRendered": false,
+      "timeTagCount": 0,
+      "dateCount": 1,
+      "duration": 144
+    },
+    "c2": {
+      "verdict": "maybe",
+      "score": 11,
+      "reason": "[breadth_nojsonld] score=11(adj) >= 12? maybe pg=venue-marker cand=cards=medium(4/4),lists=none",
+      "duration": 120
+    },
+    "extract": {
+      "eventsFound": 1,
+      "fetchError": null,
+      "duration": 162
+    },
+    "success": true
+  },
+  {
+    "sourceId": "polismuseet",
+    "url": "https://www.polismuseet.se",
+    "c0": {
+      "candidates": 0,
+      "winnerUrl": null,
+      "winnerDensity": 0,
+      "duration": 865
+    },
+    "c1": {
+      "likelyJsRendered": false,
+      "timeTagCount": 24,
+      "dateCount": 0,
+      "duration": 411
+    },
+    "c2": {
+      "verdict": "promising",
+      "score": 124,
+      "reason": "[breadth_nojsonld] score=124(adj) >= 12? promising pg=time-tag",
+      "duration": 384
+    },
+    "extract": {
+      "eventsFound": 0,
+      "fetchError": null,
+      "duration": 357
+    },
+    "success": false
+  }
+]

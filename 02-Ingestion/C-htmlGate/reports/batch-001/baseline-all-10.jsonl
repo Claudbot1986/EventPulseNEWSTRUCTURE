@@ -1,0 +1,92 @@
+[
+  {
+    "sourceId": "hallsberg",
+    "url": "https://www.hallsberg.se",
+    "c0": { "candidates": 0, "winnerUrl": null, "winnerDensity": 0, "duration": 476 },
+    "c1": { "likelyJsRendered": false, "timeTagCount": 6, "dateCount": 6, "duration": 150 },
+    "c2": { "verdict": "promising", "score": 44, "reason": "time-tag cand=cards=medium", "duration": 169 },
+    "extract": { "eventsFound": 0, "duration": 2 },
+    "success": false
+  },
+  {
+    "sourceId": "ifk-uppsala",
+    "url": "https://www.ifkuppsala.se",
+    "c0": { "candidates": 0, "winnerUrl": null, "winnerDensity": 0, "duration": 734 },
+    "c1": { "likelyJsRendered": false, "timeTagCount": 6, "dateCount": 2, "duration": 96 },
+    "c2": { "verdict": "promising", "score": 31, "reason": "time-tag neg=news-article", "duration": 113 },
+    "extract": { "eventsFound": 0, "duration": 0 },
+    "success": false
+  },
+  {
+    "sourceId": "karlskoga",
+    "url": "https://www.karlskoga.se",
+    "c0": { "candidates": 2, "winnerUrl": "https://www.karlskoga.se/bygga-bo--miljo/kulturmiljoprogrammet.html", "winnerDensity": 15, "duration": 714 },
+    "c1": { "likelyJsRendered": false, "timeTagCount": 1, "dateCount": 1, "duration": 110 },
+    "c2": { "verdict": "promising", "score": 12, "reason": "time-tag", "duration": 105 },
+    "extract": { "eventsFound": 0, "duration": 1 },
+    "success": false
+  },
+  {
+    "sourceId": "kumla",
+    "url": "https://www.kumla.se",
+    "c0": { "candidates": 1, "winnerUrl": "https://www.kumla.se/kommun-och-politik/agenda-2030.html", "winnerDensity": 12, "duration": 576 },
+    "c1": { "likelyJsRendered": false, "timeTagCount": 0, "dateCount": 1, "duration": 150 },
+    "c2": { "verdict": "maybe", "score": 16, "reason": "event-list", "duration": 154 },
+    "extract": { "eventsFound": 0, "duration": 0 },
+    "success": false
+  },
+  {
+    "sourceId": "kungliga-musikhogskolan",
+    "url": "https://www.kmh.se",
+    "c0": { "candidates": 1, "winnerUrl": "https://www.kmh.se/konserter---evenemang.html", "winnerDensity": 395, "duration": 624 },
+    "c1": { "likelyJsRendered": false, "timeTagCount": 84, "dateCount": 0, "duration": 172 },
+    "c2": { "verdict": "promising", "score": 431, "reason": "time-tag cand=cards=strong", "duration": 175 },
+    "extract": { "eventsFound": 0, "duration": 0 },
+    "success": false
+  },
+  {
+    "sourceId": "lulea-tekniska-universitet",
+    "url": "https://www.ltu.se",
+    "c0": { "candidates": 2, "winnerUrl": "https://www.ltu.se/utbildning/upplev-studentlivet-hos-oss", "winnerDensity": 13, "duration": 500 },
+    "c1": { "likelyJsRendered": false, "timeTagCount": 0, "dateCount": 0, "duration": 202 },
+    "c2": { "verdict": "unclear", "score": 9, "reason": "low signals", "duration": 208 },
+    "extract": { "eventsFound": 0, "duration": 1 },
+    "success": false
+  },
+  {
+    "sourceId": "moderna-museet",
+    "url": "https://www.modernamuseet.se",
+    "c0": { "candidates": 0, "winnerUrl": null, "winnerDensity": 0, "duration": 600 },
+    "c1": { "likelyJsRendered": false, "timeTagCount": 0, "dateCount": 0, "duration": 317 },
+    "c2": { "verdict": "promising", "score": 59, "reason": "cards=medium", "duration": 312 },
+    "extract": { "eventsFound": 0, "duration": 0 },
+    "success": false
+  },
+  {
+    "sourceId": "naturhistoriska-riksmuseet",
+    "url": "https://www.nrm.se",
+    "c0": { "candidates": 2, "winnerUrl": "https://www.nrm.se/vart-utbud/kalendarium", "winnerDensity": 298, "duration": 800 },
+    "c1": { "likelyJsRendered": false, "timeTagCount": 0, "dateCount": 0, "duration": 368 },
+    "c2": { "verdict": "promising", "score": 118, "reason": "cards=strong lists=medium", "duration": 289 },
+    "extract": { "eventsFound": 0, "duration": 0 },
+    "success": false
+  },
+  {
+    "sourceId": "orebro-sk",
+    "url": "https://www.orebro.se",
+    "c0": { "candidates": 0, "winnerUrl": null, "winnerDensity": 0, "duration": 500 },
+    "c1": { "likelyJsRendered": false, "timeTagCount": 0, "dateCount": 0, "duration": 130 },
+    "c2": { "verdict": "maybe", "score": 11, "reason": "low signals", "duration": 147 },
+    "extract": { "eventsFound": 0, "duration": 0 },
+    "success": false
+  },
+  {
+    "sourceId": "polismuseet",
+    "url": "https://www.polismuseet.se",
+    "c0": { "candidates": 0, "winnerUrl": null, "winnerDensity": 0, "duration": 600 },
+    "c1": { "likelyJsRendered": false, "timeTagCount": 0, "dateCount": 0, "duration": 358 },
+    "c2": { "verdict": "promising", "score": 124, "reason": "cards=medium lists=medium", "duration": 408 },
+    "extract": { "eventsFound": 0, "duration": 0 },
+    "success": false
+  }
+]

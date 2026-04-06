@@ -38,3 +38,4 @@
 {"url":"https://www.vx.se/konserthus","sourceName":"Växjö Konserthus","signal":"js_rendered_c1","reason":"C1: no <main> or <article>","confidence":0.5,"attemptedPaths":["html"],"status":"pending_render_gate","detectedAt":"2026-04-05T04:16:17.526Z"}
 {"url":"https://www.visituppsala.se","sourceName":"Visit Uppsala","signal":"js_rendered_c1","reason":"C1: no <main> or <article>","confidence":0.5,"attemptedPaths":["html"],"status":"pending_render_gate","detectedAt":"2026-04-05T04:16:22.290Z"}
 {"url":"https://wayoutwest.se","sourceName":"Way Out West","signal":"js_rendered_c1","reason":"C1: no <main> or <article>","confidence":0.5,"attemptedPaths":["html"],"status":"pending_render_gate","detectedAt":"2026-04-05T04:16:28.411Z"}
+{"url":"https://www.fcc.se","sourceName":"fc-roseng-rd","reason":"C1: no <main> or <article>","signal":"c1_triage","confidence":0.8,"attemptedPaths":["html"],"status":"pending_render_gate","detectedAt":"2026-04-06T02:41:57.112Z"}

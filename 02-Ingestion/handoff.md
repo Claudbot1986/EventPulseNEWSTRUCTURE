@@ -2,6 +2,62 @@
 
 ---
 
+## Nästa-steg-analys 2026-04-06 (loop 65)
+
+### Vad hände denna loop
+- **Batch 002 kördes:** 4 återstående html_candidates testade via C0→C1→C2→extract
+- **0/4 success:** Samma C0=0 barriär som alla tidigare batchar bekräftad
+- **C-Batch-Loop AVSLUTAD:** batch 001 + 002 körda, pool uttömd
+- **svenska-fotbollf-rbundet:** C2=promising(12), likelyJsRendered=false → ej D-kandidat denna gång
+- **stockholm-jazz-festival-1:** C2=promising(134), timeTagCount=26 men 0 events → datum-embedded i anchor-text krävs
+
+### Root-cause (nyckelobservation)
+
+**C-Batch-Loop är permanent uttömd efter batch 001-002:**
+- Batch 001: 10 html_candidates → 3 success (moderna-museet, orebro-sk, lulea-tekniska)
+- Batch 002: 4 återstående html_candidates → 0 success
+- Totalt: 14 html_candidates körda via C-htmlGate
+- Alla återstående html_candidates i sources_status har redan körts
+
+**C0=0 barriären är konsekvent:**
+- uppsala-kommun: C0=0, winner=/arrangera-evenemang/ (ej event-sida)
+- ystad: C0=0, winner=/ystads-teater (ej event-sida)
+- stockholm-jazz: C0=0, ROOT utan candidates
+- svenska-fotboll: C0=0, winner=/biljett/ (ej event-sida)
+
+**Slutsats:** C0:s link-discovery hittar inte rätt interna sidor. IGNORE_PATTERNS eller concept-scoring är för restriktiv.
+
+### Sources-verklighet (uppdaterad)
+- **22 success** (alla via scheduler/network-path)
+- **~384 fail** (DNS/timeout/404)
+- **~34 html_candidates totalt**, alla körda (14 via batch, rest via tidigare triage)
+- **5+ pending_render_gate** (svenska-fotbollf-rbundet, cirkus, arkdes, etc.) — D-renderGate saknas
+- **3 manual_review** (gso, dramaten, vasamuseet)
+- **2 pending_api** (ticketmaster, eventbrite)
+
+### Tre möjliga nästa steg
+
+|| # | Steg | Systemnytta | Risk | Varför nu ||
+|---|------|-------------|------|-----------|
+|| 1 | **Skapa D-renderGate** | Hög: aktiverar ~5+ sources | Medel: komplext verktyg | Största blockerade gruppen ||
+|| 2 | **Köra scheduler på återstående success-sources** | Medel: breddar DB-innehåll | Låg: beprövat | ~15 sources kvar ||
+|| 3 | **Undersöka 3 mislabeled fail-sources** | Låg: datakvalitet | Låg: status-fix | drama, friidrottsf, studio-acust har events men status=fail ||
+
+### Rekommenderat nästa steg
+- **#1 — Skapa D-renderGate**
+
+Motivering: 5+ sources är permanent blockerade av saknad D-renderGate. Detta är den naturliga nästa förbättringen för att bredda antalet fungerande sources. C-Batch-Loop har bevisat att alla tillgängliga html_candidates är uttömda.
+
+### Två steg att INTE göra nu
+1. **Köra fler C-batchar** — poolen är tom, alla html_candidates körda
+2. **Ändra C0/C1/C2** — Generalization Gate förbjuder det utan 2-3+ sajter med verifierad rotorsak
+
+### System-effect-before-local-effect
+- Valt steg (#1): D-renderGate öppnar för ~5+ nya sources som är permanent blockerade
+- Varför: C-Batch-Loop har nått naturligt slut, D-renderGate är nästa logiska steg
+
+---
+
 ## Nästa-steg-analys 2026-04-06 (loop 64)
 
 ### Vad hände denna loop

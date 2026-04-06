@@ -1,0 +1,87 @@
+{
+  "sourceResults": [
+    {
+      "source": "hallsberg",
+      "eventsFound": 0,
+      "c0Candidates": 0,
+      "c1Result": "error",
+      "c2Score": 44,
+      "extractionSuccess": false
+    },
+    {
+      "source": "ifk-uppsala",
+      "eventsFound": 0,
+      "c0Candidates": 0,
+      "c1Result": "error",
+      "c2Score": 31,
+      "extractionSuccess": false
+    },
+    {
+      "source": "karlskoga",
+      "eventsFound": 0,
+      "c0Candidates": 0,
+      "c1Result": "error",
+      "c2Score": 12,
+      "extractionSuccess": false
+    },
+    {
+      "source": "kumla",
+      "eventsFound": 0,
+      "c0Candidates": 0,
+      "c1Result": "error",
+      "c2Score": 16,
+      "extractionSuccess": false
+    },
+    {
+      "source": "kungliga-musikhogskolan",
+      "eventsFound": 0,
+      "c0Candidates": 0,
+      "c1Result": "error",
+      "c2Score": 431,
+      "extractionSuccess": false
+    },
+    {
+      "source": "lulea-tekniska-universitet",
+      "eventsFound": 1,
+      "c0Candidates": 0,
+      "c1Result": "error",
+      "c2Score": 9,
+      "extractionSuccess": true
+    },
+    {
+      "source": "moderna-museet",
+      "eventsFound": 4,
+      "c0Candidates": 0,
+      "c1Result": "error",
+      "c2Score": 59,
+      "extractionSuccess": true
+    },
+    {
+      "source": "naturhistoriska-riksmuseet",
+      "eventsFound": 0,
+      "c0Candidates": 0,
+      "c1Result": "error",
+      "c2Score": 118,
+      "extractionSuccess": false
+    },
+    {
+      "source": "orebro-sk",
+      "eventsFound": 1,
+      "c0Candidates": 0,
+      "c1Result": "error",
+      "c2Score": 11,
+      "extractionSuccess": true
+    },
+    {
+      "source": "polismuseet",
+      "eventsFound": 0,
+      "c0Candidates": 0,
+      "c1Result": "error",
+      "c2Score": 124,
+      "extractionSuccess": false
+    }
+  ],
+  "successCount": 3,
+  "failCount": 7,
+  "eventsTotal": 6
+}

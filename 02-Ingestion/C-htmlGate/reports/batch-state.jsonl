@@ -1,21 +1,18 @@
 {
-  "currentBatch": 1,
+  "currentBatch": 2,
   "batchSize": 10,
-  "status": "idle",
+  "status": "completed",
   "batchSources": [
-    "hallsberg",
-    "ifk-uppsala",
-    "karlskoga",
-    "kumla",
-    "kungliga-musikhogskolan",
-    "lulea-tekniska-universitet",
-    "moderna-museet",
-    "naturhistoriska-riksmuseet",
-    "orebro-sk",
-    "polismuseet"
+    "uppsala-kommun",
+    "ystad",
+    "stockholm-jazz-festival-1",
+    "svenska-fotbollf-rbundet"
   ],
-  "completedBatches": [],
-  "lastBatchRun": null,
+  "completedBatches": [
+    1,
+    2
+  ],
+  "lastBatchRun": "2026-04-06T08:00:00.000Z",
   "candidateQuery": {
     "triageResult": "html_candidate",
     "statusIn": [
@@ -37,27 +34,83 @@
     ]
   },
   "reportPath": "02-Ingestion/C-htmlGate/reports/batch-001/batch-001-full-report.md",
-  "batchNotes": "MANUAL ONE-TIME RESTORE: Resetting to batch-001 for re-run. This is an exceptional manual override, not a permanent batch-system rule change.",
+  "batchNotes": "Small batch - only 4 html_candidates remain in pool",
   "metadata": {
     "selectedAt": "2026-04-06T05:54:00.000Z",
-    "completedAt": null,
+    "completedAt": "2026-04-06T08:00:00.000Z",
     "eligibilityRulesVersion": "1.1",
     "selectionCriteria": "C-htmlGate batch - pending selection",
-    "executionStatus": "pending",
+    "executionStatus": "completed",
     "resetNote": "MANUAL ONE-TIME RESTORE for batch-001 re-run"
   },
-  "preRunResults": null,
-  "postRunResults": null,
+  "preRunResults": {
+    "successCount": 0,
+    "eventsTotal": 0,
+    "sources": []
+  },
+  "postRunResults": {
+    "successCount": 0,
+    "eventsTotal": 0,
+    "sources": [
+      {
+        "id": "uppsala-kommun",
+        "events": 0,
+        "c0": 0,
+        "c2": "maybe(11)"
+      },
+      {
+        "id": "ystad",
+        "events": 0,
+        "c0": 0,
+        "c2": "unclear(7)"
+      },
+      {
+        "id": "stockholm-jazz-festival-1",
+        "events": 0,
+        "c0": 0,
+        "c2": "promising(134)"
+      },
+      {
+        "id": "svenska-fotbollf-rbundet",
+        "events": 0,
+        "c0": 0,
+        "c2": "promising(12)"
+      }
+    ]
+  },
   "cyclesCompleted": 0,
   "maxCyclesAllowed": 3,
-  "stopReason": null,
-  "plateauReached": false,
-  "patternsFound": [],
+  "stopReason": "no-candidates",
+  "plateauReached": true,
+  "patternsFound": [
+    {
+      "name": "C2 promising but 0 events",
+      "description": "C2 gives promising verdict based on density/cards, but extractFromHtml() returns 0 events",
+      "affected": [
+        "kungliga-musikhogskolan",
+        "nrm",
+        "polismuseet",
+        "hallsberg",
+        "ifk-uppsala",
+        "karlskoga"
+      ],
+      "rootCause": "C2 uses page-level signals (density, cards, lists) but extractFromHtml() requires URL-date or Swedish date-text in anchor"
+    },
+    {
+      "name": "Swedish date in anchor text",
+      "description": "moderna-museet and orebro-sk succeed because they have Swedish date-text in anchor elements",
+      "affected": [
+        "moderna-museet",
+        "orebro-sk"
+      ],
+      "pattern": "extractFromHtml() finds events when Swedish date format exists in anchor"
+    }
+  ],
   "plateauDecision": {
-    "plateauReached": false,
-    "plateauReason": null,
+    "plateauReached": true,
+    "plateauReason": "no-general-improvement - next proposed change requires verification on 2-3 more sites before implementing",
     "consecutiveZeroImprovementCycles": 0,
-    "recommendation": "continue",
-    "stopCriteriaMet": null
+    "recommendation": "stop",
+    "stopCriteriaMet": "no-general-improvement"
   }
 }

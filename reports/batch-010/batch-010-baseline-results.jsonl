@@ -6,23 +6,24 @@
       "candidates": 0,
       "winnerUrl": null,
       "winnerDensity": 0,
-      "duration": 434
+      "duration": 430
     },
     "c1": {
       "likelyJsRendered": false,
       "timeTagCount": 6,
       "dateCount": 6,
-      "duration": 152
+      "duration": 147
     },
     "c2": {
       "verdict": "promising",
       "score": 44,
       "reason": "[breadth_nojsonld] score=44(adj) >= 12? promising pg=time-tag cand=cards=medium(6/6),lists=medium(2/2)",
-      "duration": 169
+      "duration": 166
     },
     "extract": {
       "eventsFound": 0,
-      "duration": 1
+      "fetchError": null,
+      "duration": 161
     },
     "success": false
   },
@@ -33,7 +34,7 @@
       "candidates": 0,
       "winnerUrl": null,
       "winnerDensity": 0,
-      "duration": 358
+      "duration": 776
     },
     "c1": {
       "likelyJsRendered": false,
@@ -45,11 +46,12 @@
       "verdict": "promising",
       "score": 31,
       "reason": "[breadth_nojsonld] score=31(adj) >= 12? promising pg=time-tag neg=news-article cand=cards=medium(6/6),lists=none",
-      "duration": 96
+      "duration": 112
     },
     "extract": {
       "eventsFound": 0,
-      "duration": 1
+      "fetchError": null,
+      "duration": 100
     },
     "success": false
   },
@@ -60,23 +62,24 @@
       "candidates": 0,
       "winnerUrl": "https://www.karlskoga.se/bygga-bo--miljo/kulturmiljoprogrammet.html",
       "winnerDensity": 15,
-      "duration": 688
+      "duration": 682
     },
     "c1": {
       "likelyJsRendered": false,
       "timeTagCount": 1,
       "dateCount": 1,
-      "duration": 145
+      "duration": 122
     },
     "c2": {
       "verdict": "promising",
       "score": 12,
       "reason": "[breadth_nojsonld] score=12(adj) >= 12? promising pg=time-tag",
-      "duration": 121
+      "duration": 142
     },
     "extract": {
       "eventsFound": 0,
-      "duration": 1
+      "fetchError": null,
+      "duration": 125
     },
     "success": false
   },
@@ -87,23 +90,24 @@
       "candidates": 0,
       "winnerUrl": "https://www.kumla.se/kommun-och-politik/agenda-2030.html",
       "winnerDensity": 12,
-      "duration": 669
+      "duration": 637
     },
     "c1": {
       "likelyJsRendered": false,
       "timeTagCount": 0,
       "dateCount": 1,
-      "duration": 198
+      "duration": 146
     },
     "c2": {
       "verdict": "maybe",
       "score": 16,
       "reason": "[breadth_nojsonld] score=16(adj) >= 12? maybe pg=event-list",
-      "duration": 164
+      "duration": 166
     },
     "extract": {
       "eventsFound": 0,
-      "duration": 0
+      "fetchError": null,
+      "duration": 165
     },
     "success": false
   },
@@ -114,23 +118,24 @@
       "candidates": 0,
       "winnerUrl": "https://www.kmh.se/konserter---evenemang.html",
       "winnerDensity": 395,
-      "duration": 618
+      "duration": 656
     },
     "c1": {
       "likelyJsRendered": false,
       "timeTagCount": 84,
       "dateCount": 0,
-      "duration": 182
+      "duration": 163
     },
     "c2": {
       "verdict": "promising",
       "score": 431,
       "reason": "[breadth_nojsonld] score=431(adj) >= 12? promising pg=time-tag cand=cards=strong(42/42),lists=weak(1t 1l 1d)",
-      "duration": 197
+      "duration": 210
     },
     "extract": {
       "eventsFound": 0,
-      "duration": 1
+      "fetchError": null,
+      "duration": 247
     },
     "success": false
   },
@@ -141,25 +146,26 @@
       "candidates": 0,
       "winnerUrl": "https://www.ltu.se/utbildning/upplev-studentlivet-hos-oss",
       "winnerDensity": 13,
-      "duration": 947
+      "duration": 882
     },
     "c1": {
       "likelyJsRendered": false,
       "timeTagCount": 1,
       "dateCount": 1,
-      "duration": 139
+      "duration": 169
     },
     "c2": {
       "verdict": "unclear",
       "score": 9,
       "reason": "[breadth_nojsonld] score=9(adj) >= 12? unclear pg=time-tag",
-      "duration": 196
+      "duration": 166
     },
     "extract": {
-      "eventsFound": 0,
-      "duration": 0
+      "eventsFound": 1,
+      "fetchError": null,
+      "duration": 155
     },
-    "success": false
+    "success": true
   },
   {
     "sourceId": "moderna-museet",
@@ -168,25 +174,26 @@
       "candidates": 0,
       "winnerUrl": null,
       "winnerDensity": 0,
-      "duration": 3319
+      "duration": 715
     },
     "c1": {
       "likelyJsRendered": false,
-      "timeTagCount": 8,
+      "timeTagCount": 10,
       "dateCount": 0,
-      "duration": 330
+      "duration": 285
     },
     "c2": {
       "verdict": "promising",
-      "score": 49,
-      "reason": "[breadth_nojsonld] score=49(adj) >= 12? promising pg=time-tag neg=news-article cand=cards=strong(5/8),lists=weak(0t 0l 0d)",
-      "duration": 303
+      "score": 59,
+      "reason": "[breadth_nojsonld] score=59(adj) >= 12? promising pg=time-tag neg=news-article cand=cards=strong(6/10),lists=weak(0t 0l 0d)",
+      "duration": 290
     },
     "extract": {
-      "eventsFound": 0,
-      "duration": 1
+      "eventsFound": 4,
+      "fetchError": null,
+      "duration": 299
     },
-    "success": false
+    "success": true
   },
   {
     "sourceId": "naturhistoriska-riksmuseet",
@@ -194,53 +201,55 @@
     "c0": {
       "candidates": 0,
       "winnerUrl": "https://www.nrm.se/vart-utbud/kalendarium",
-      "winnerDensity": 298,
-      "duration": 1301
+      "winnerDensity": 270,
+      "duration": 1175
     },
     "c1": {
       "likelyJsRendered": false,
-      "timeTagCount": 9,
+      "timeTagCount": 7,
       "dateCount": 20,
-      "duration": 354
+      "duration": 398
     },
     "c2": {
       "verdict": "promising",
-      "score": 131,
-      "reason": "[breadth_nojsonld] score=131(adj) >= 12? promising pg=date-pattern neg=news-article cand=cards=medium(18/18),lists=weak(1t 1l 1d)",
-      "duration": 311
+      "score": 118,
+      "reason": "[breadth_nojsonld] score=118(adj) >= 12? promising pg=date-pattern neg=news-article cand=cards=medium(14/14),lists=weak(1t 1l 1d)",
+      "duration": 368
     },
     "extract": {
       "eventsFound": 0,
-      "duration": 0
+      "fetchError": null,
+      "duration": 257
     },
     "success": false
   },
   {
     "sourceId": "orebro-sk",
-    "url": "https://www.orebrosk.se",
+    "url": "https://www.orebro.se",
     "c0": {
       "candidates": 0,
       "winnerUrl": null,
       "winnerDensity": 0,
-      "duration": 563
+      "duration": 325
     },
     "c1": {
       "likelyJsRendered": false,
-      "timeTagCount": 10,
-      "dateCount": 0,
-      "duration": 199
+      "timeTagCount": 0,
+      "dateCount": 1,
+      "duration": 130
     },
     "c2": {
-      "verdict": "promising",
-      "score": 51,
-      "reason": "[breadth_nojsonld] score=51(adj) >= 12? promising pg=time-tag neg=news-article cand=cards=medium(10/10),lists=none",
-      "duration": 171
+      "verdict": "maybe",
+      "score": 11,
+      "reason": "[breadth_nojsonld] score=11(adj) >= 12? maybe pg=venue-marker cand=cards=medium(4/4),lists=none",
+      "duration": 128
     },
     "extract": {
-      "eventsFound": 0,
-      "duration": 0
+      "eventsFound": 1,
+      "fetchError": null,
+      "duration": 131
     },
-    "success": false
+    "success": true
   },
   {
     "sourceId": "polismuseet",
@@ -249,23 +258,24 @@
       "candidates": 0,
       "winnerUrl": null,
       "winnerDensity": 0,
-      "duration": 920
+      "duration": 776
     },
     "c1": {
       "likelyJsRendered": false,
       "timeTagCount": 24,
       "dateCount": 0,
-      "duration": 442
+      "duration": 349
     },
     "c2": {
       "verdict": "promising",
       "score": 124,
       "reason": "[breadth_nojsonld] score=124(adj) >= 12? promising pg=time-tag",
-      "duration": 476
+      "duration": 374
     },
     "extract": {
       "eventsFound": 0,
-      "duration": 0
+      "fetchError": null,
+      "duration": 379
     },
     "success": false
   }
