@@ -2,6 +2,50 @@
 
 ---
 
+## Nästa-steg-analys 2026-04-06 (loop 60)
+
+### Vad hände denna loop
+- **queueEvents() verifierad BRETT:** Fixen från loop 59 (html-path + unknown→success) bekräftad på 5 källor
+- **berwaldhallen (network):** 216/216 queued ✓
+- **konserthuset (html):** 11/11 queued ✓ (redan verifierad loop 59)
+- **abf (html):** 8/8 queued ✓
+- **jonkoping (html):** 8/8 queued ✓
+- **textilmus-et (html):** 1/1 queued ✓
+- **Totalt nu:** 5/23 success-sources verifierade för queueing
+- **Insikt:** queueing fungerar konsekvent för både network- och html-path
+
+### Root-cause (nyckelobservation)
+
+**queueEvents() fixen är verifierad och fungerar:**
+- html-path: queueEvents() anropas ✓ (fixad loop 59)
+- network-path: queueEvents() anropas ✓ (redan fungerade)
+- unknown→success: queueEvents() anropas ✓ (fixad loop 59)
+
+**Konsekvens:** Events flödar nu korrekt från extraction till 03-Queue för både html och network paths.
+
+### Tre möjliga nästa steg
+
+| # | Steg | Systemnytta | Risk | Varför nu |
+|---|------|-------------|------|-----------|
+| 1 | **Kör normalizer på köade events** | Hög: verifierar normalizer→DB | Medel: normalizer kan ha buggar | Events finns nu i 03-Queue, nästa steg i pipeline |
+| 2 | **Verifiera återstående 18 success-sources** | Medel: bekräftar bredd | Låg: mekanisk upprepning | 5/23 verifierade, 18 återstår |
+| 3 | **Scout nya html_candidates för framtida batchar** | Låg: batch-pool tom | Hög: C0=0 barriären kvar | Inga nya kandidater klara just nu |
+
+### Rekommenderat nästa steg
+- **#1 — Kör normalizer på köade events**
+
+Motivering: Events har nu verifierats köade för 5+ källor. Nästa steg i pipeline är normalizer som tar emot events från 03-Queue och persisterar till databas. Om normalizer fungerar har vi en komplett fungerande pipeline.
+
+### Två steg att INTE göra nu
+1. **Verifiera alla 23 success-sources** — tidskrävande utan ny insikt, 5/23 räcker för att bekräfta funktionalitet
+2. **Scout nya html_candidates** — C-Batch-Loop pool är tom och C0=0 barriären är välkänd
+
+### System-effect-before-local-effect
+- Valt steg (#1): Verifierar normalizer-steget i pipeline
+- Varför: Från alla 23 success-sources → events → queue → normalizer → DB är nästa naturliga steg
+
+---
+
 ## Nästa-steg-analys 2026-04-06 (loop 59 — efter batch 008 completed)
 
 ### Vad hände denna loop
