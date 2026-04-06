@@ -1,0 +1,87 @@
+{
+  "sourceResults": [
+    {
+      "source": "polismuseet",
+      "eventsFound": 0,
+      "c0Candidates": 0,
+      "c1Result": "error",
+      "c2Score": 124,
+      "extractionSuccess": false
+    },
+    {
+      "source": "stockholm-jazz-festival-1",
+      "eventsFound": 0,
+      "c0Candidates": 0,
+      "c1Result": "error",
+      "c2Score": 134,
+      "extractionSuccess": false
+    },
+    {
+      "source": "uppsala-kommun",
+      "eventsFound": 1,
+      "c0Candidates": 0,
+      "c1Result": "error",
+      "c2Score": 11,
+      "extractionSuccess": true
+    },
+    {
+      "source": "ystad",
+      "eventsFound": 0,
+      "c0Candidates": 0,
+      "c1Result": "error",
+      "c2Score": 7,
+      "extractionSuccess": false
+    },
+    {
+      "source": "svenska-fotbollf-rbundet",
+      "eventsFound": 0,
+      "c0Candidates": 0,
+      "c1Result": "error",
+      "c2Score": 12,
+      "extractionSuccess": false
+    },
+    {
+      "source": "hallsberg",
+      "eventsFound": 0,
+      "c0Candidates": 0,
+      "c1Result": "error",
+      "c2Score": 44,
+      "extractionSuccess": false
+    },
+    {
+      "source": "ifk-uppsala",
+      "eventsFound": 0,
+      "c0Candidates": 0,
+      "c1Result": "error",
+      "c2Score": 31,
+      "extractionSuccess": false
+    },
+    {
+      "source": "karlskoga",
+      "eventsFound": 0,
+      "c0Candidates": 0,
+      "c1Result": "error",
+      "c2Score": 12,
+      "extractionSuccess": false
+    },
+    {
+      "source": "kumla",
+      "eventsFound": 0,
+      "c0Candidates": 0,
+      "c1Result": "error",
+      "c2Score": 16,
+      "extractionSuccess": false
+    },
+    {
+      "source": "kungliga-musikhogskolan",
+      "eventsFound": 0,
+      "c0Candidates": 0,
+      "c1Result": "error",
+      "c2Score": 431,
+      "extractionSuccess": false
+    }
+  ],
+  "successCount": 1,
+  "failCount": 9,
+  "eventsTotal": 1
+}

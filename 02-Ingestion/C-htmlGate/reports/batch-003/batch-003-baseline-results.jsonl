@@ -1,0 +1,282 @@
+[
+  {
+    "sourceId": "polismuseet",
+    "url": "https://www.polismuseet.se",
+    "c0": {
+      "candidates": 0,
+      "winnerUrl": null,
+      "winnerDensity": 0,
+      "duration": 1072
+    },
+    "c1": {
+      "likelyJsRendered": false,
+      "timeTagCount": 24,
+      "dateCount": 0,
+      "duration": 421
+    },
+    "c2": {
+      "verdict": "promising",
+      "score": 124,
+      "reason": "[breadth_nojsonld] score=124(adj) >= 12? promising pg=time-tag",
+      "duration": 387
+    },
+    "extract": {
+      "eventsFound": 0,
+      "fetchError": null,
+      "duration": 371
+    },
+    "success": false
+  },
+  {
+    "sourceId": "stockholm-jazz-festival-1",
+    "url": "https://www.stockholmjazz.com",
+    "c0": {
+      "candidates": 0,
+      "winnerUrl": null,
+      "winnerDensity": 0,
+      "duration": 5421
+    },
+    "c1": {
+      "likelyJsRendered": false,
+      "timeTagCount": 26,
+      "dateCount": 0,
+      "duration": 2049
+    },
+    "c2": {
+      "verdict": "promising",
+      "score": 134,
+      "reason": "[breadth_nojsonld] score=134(adj) >= 12? promising pg=time-tag cand=cards=strong(26/26),lists=weak(1t 1l 1d)",
+      "duration": 2336
+    },
+    "extract": {
+      "eventsFound": 0,
+      "fetchError": null,
+      "duration": 2220
+    },
+    "success": false
+  },
+  {
+    "sourceId": "uppsala-kommun",
+    "url": "https://www.uppsala.se",
+    "c0": {
+      "candidates": 0,
+      "winnerUrl": "https://www.uppsala.se/kultur-idrott-fritid/arrangera-evenemang/",
+      "winnerDensity": 13,
+      "duration": 655
+    },
+    "c1": {
+      "likelyJsRendered": false,
+      "timeTagCount": 1,
+      "dateCount": 1,
+      "duration": 162
+    },
+    "c2": {
+      "verdict": "maybe",
+      "score": 11,
+      "reason": "[breadth_nojsonld] score=11(adj) >= 12? maybe pg=event-heading",
+      "duration": 150
+    },
+    "extract": {
+      "eventsFound": 1,
+      "fetchError": null,
+      "duration": 156
+    },
+    "success": true
+  },
+  {
+    "sourceId": "ystad",
+    "url": "https://www.ystad.se",
+    "c0": {
+      "candidates": 0,
+      "winnerUrl": "https://www.ystad.se/ystads-teater",
+      "winnerDensity": 21,
+      "duration": 2281
+    },
+    "c1": {
+      "likelyJsRendered": false,
+      "timeTagCount": 0,
+      "dateCount": 0,
+      "duration": 411
+    },
+    "c2": {
+      "verdict": "unclear",
+      "score": 7,
+      "reason": "[breadth_nojsonld] score=7(adj) >= 12? unclear pg=event-heading",
+      "duration": 543
+    },
+    "extract": {
+      "eventsFound": 0,
+      "fetchError": null,
+      "duration": 646
+    },
+    "success": false
+  },
+  {
+    "sourceId": "svenska-fotbollf-rbundet",
+    "url": "https://www.svenskfotboll.se",
+    "c0": {
+      "candidates": 0,
+      "winnerUrl": "https://www.svenskfotboll.se/biljett/",
+      "winnerDensity": 9,
+      "duration": 523
+    },
+    "c1": {
+      "likelyJsRendered": false,
+      "timeTagCount": 0,
+      "dateCount": 0,
+      "duration": 99
+    },
+    "c2": {
+      "verdict": "promising",
+      "score": 12,
+      "reason": "[breadth_nojsonld] score=12(adj) >= 12? promising pg=event-heading",
+      "duration": 102
+    },
+    "extract": {
+      "eventsFound": 0,
+      "fetchError": null,
+      "duration": 118
+    },
+    "success": false
+  },
+  {
+    "sourceId": "hallsberg",
+    "url": "https://www.hallsberg.se",
+    "c0": {
+      "candidates": 0,
+      "winnerUrl": null,
+      "winnerDensity": 0,
+      "duration": 430
+    },
+    "c1": {
+      "likelyJsRendered": false,
+      "timeTagCount": 6,
+      "dateCount": 6,
+      "duration": 138
+    },
+    "c2": {
+      "verdict": "promising",
+      "score": 44,
+      "reason": "[breadth_nojsonld] score=44(adj) >= 12? promising pg=time-tag cand=cards=medium(6/6),lists=medium(2/2)",
+      "duration": 155
+    },
+    "extract": {
+      "eventsFound": 0,
+      "fetchError": null,
+      "duration": 153
+    },
+    "success": false
+  },
+  {
+    "sourceId": "ifk-uppsala",
+    "url": "https://www.ifkuppsala.se",
+    "c0": {
+      "candidates": 0,
+      "winnerUrl": null,
+      "winnerDensity": 0,
+      "duration": 728
+    },
+    "c1": {
+      "likelyJsRendered": false,
+      "timeTagCount": 6,
+      "dateCount": 2,
+      "duration": 118
+    },
+    "c2": {
+      "verdict": "promising",
+      "score": 31,
+      "reason": "[breadth_nojsonld] score=31(adj) >= 12? promising pg=time-tag neg=news-article cand=cards=medium(6/6),lists=none",
+      "duration": 1134
+    },
+    "extract": {
+      "eventsFound": 0,
+      "fetchError": null,
+      "duration": 104
+    },
+    "success": false
+  },
+  {
+    "sourceId": "karlskoga",
+    "url": "https://www.karlskoga.se",
+    "c0": {
+      "candidates": 0,
+      "winnerUrl": "https://www.karlskoga.se/bygga-bo--miljo/kulturmiljoprogrammet.html",
+      "winnerDensity": 15,
+      "duration": 796
+    },
+    "c1": {
+      "likelyJsRendered": false,
+      "timeTagCount": 1,
+      "dateCount": 1,
+      "duration": 139
+    },
+    "c2": {
+      "verdict": "promising",
+      "score": 12,
+      "reason": "[breadth_nojsonld] score=12(adj) >= 12? promising pg=time-tag",
+      "duration": 186
+    },
+    "extract": {
+      "eventsFound": 0,
+      "fetchError": null,
+      "duration": 128
+    },
+    "success": false
+  },
+  {
+    "sourceId": "kumla",
+    "url": "https://www.kumla.se",
+    "c0": {
+      "candidates": 0,
+      "winnerUrl": "https://www.kumla.se/kommun-och-politik/agenda-2030.html",
+      "winnerDensity": 12,
+      "duration": 672
+    },
+    "c1": {
+      "likelyJsRendered": false,
+      "timeTagCount": 0,
+      "dateCount": 1,
+      "duration": 160
+    },
+    "c2": {
+      "verdict": "maybe",
+      "score": 16,
+      "reason": "[breadth_nojsonld] score=16(adj) >= 12? maybe pg=event-list",
+      "duration": 146
+    },
+    "extract": {
+      "eventsFound": 0,
+      "fetchError": null,
+      "duration": 170
+    },
+    "success": false
+  },
+  {
+    "sourceId": "kungliga-musikhogskolan",
+    "url": "https://www.kmh.se",
+    "c0": {
+      "candidates": 0,
+      "winnerUrl": "https://www.kmh.se/konserter---evenemang.html",
+      "winnerDensity": 395,
+      "duration": 611
+    },
+    "c1": {
+      "likelyJsRendered": false,
+      "timeTagCount": 84,
+      "dateCount": 0,
+      "duration": 216
+    },
+    "c2": {
+      "verdict": "promising",
+      "score": 431,
+      "reason": "[breadth_nojsonld] score=431(adj) >= 12? promising pg=time-tag cand=cards=strong(42/42),lists=weak(1t 1l 1d)",
+      "duration": 221
+    },
+    "extract": {
+      "eventsFound": 0,
+      "fetchError": null,
+      "duration": 227
+    },
+    "success": false
+  }
+]

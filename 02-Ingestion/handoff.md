@@ -2,6 +2,57 @@
 
 ---
 
+## Nästa-steg-analys 2026-04-06 (loop 66 — efter batch 003)
+
+### Vad hände denna loop
+- **Batch 003 kördes:** 10 html_candidates testade via C0→C1→C2→extract
+- **1/10 success:** uppsala-kommun (1 event), alla andra 0 events
+- **C0=0 barriär:** 9/10 sources fick 0 C0 candidates
+- **svenska-fotbollf-rbundet:** C2=promising(12), likelyJsRendered=false, winner=/biljett/ — ej D-kandidat
+- **C-Batch-Loop AVSLUTAD:** batch 001-003 körda, alla 11 html_candidates uttömd
+- **Total success nu:** 26 källor
+
+### Root-cause (nyckelobservation)
+
+**C-Batch-Loop Pool UTÖMD efter batch 001-003:**
+- Batch 001: 10 html_candidates → 3 success (moderna-museet, orebro-sk, lulea-tekniska)
+- Batch 002: 4 html_candidates → 0 success
+- Batch 003: 10 html_candidates → 1 success (uppsala-kommun: 1 event)
+- Totalt: 24 html_candidates körda via C-htmlGate (alla 11 obatchade körda)
+
+**C0=0 barriären är konsekvent:** ~22+ sajter har C0=0, C2=promising men extraction=0.
+
+### Sources-verklighet (uppdaterad)
+- **26 success** (alla via scheduler/network-path)
+- **~381 fail** (DNS/timeout/404)
+- **0 obatchade html_candidates** — pool tom
+- **6 pending_render_gate** — blockerade av saknad D-renderGate
+- **3 manual_review** — mänsklig granskning
+- **2 pending_api** — ticketmaster, eventbrite
+
+### Tre möjliga nästa steg
+
+|| # | Steg | Systemnytta | Risk | Varför nu ||
+||---|------|-------------|------|-----------| 
+|| 1 | **Skapa D-renderGate** | Hög: aktiverar ~6 sources | Medel: komplext verktyg | Största blockerade gruppen ||
+|| 2 | **Köra scheduler på återstående success-sources** | Medel: breddar DB-innehåll | Låg: beprövat | ~15 sources kvar ||
+|| 3 | **Undersöka mislabeled fail-sources** | Låg: datakvalitet | Låg: status-fix | drama, friidrottsf, studio-acust har events men status=fail ||
+
+### Rekommenderat nästa steg
+- **#1 — Skapa D-renderGate**
+
+Motivering: C-Batch-Loop har bevisat att alla html_candidates körts och poolen är tom. 6 sources är permanent blockerade av saknad D-renderGate. Detta är den naturliga nästa förbättringen för att bredda antalet fungerande sources.
+
+### Två steg att INTE göra nu
+1. **Köra fler C-batchar** — poolen är tom, alla html_candidates körda
+2. **Ändra C0/C1/C2** — Generalization Gate förbjuder det utan 2-3+ sajter med verifierad rotorsak
+
+### System-effect-before-local-effect
+- Valt steg (#1): D-renderGate öppnar för ~6 nya sources som är permanent blockerade
+- Varför: C-Batch-Loop har nått naturligt slut, D-renderGate är nästa logiska steg
+
+---
+
 ## Nästa-steg-analys 2026-04-06 (loop 65)
 
 ### Vad hände denna loop

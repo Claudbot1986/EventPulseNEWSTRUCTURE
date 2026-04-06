@@ -1,116 +1,48 @@
 {
-  "currentBatch": 2,
+  "currentBatch": 3,
   "batchSize": 10,
   "status": "completed",
   "batchSources": [
+    "polismuseet",
+    "stockholm-jazz-festival-1",
     "uppsala-kommun",
     "ystad",
-    "stockholm-jazz-festival-1",
-    "svenska-fotbollf-rbundet"
+    "svenska-fotbollf-rbundet",
+    "hallsberg",
+    "ifk-uppsala",
+    "karlskoga",
+    "kumla",
+    "kungliga-musikhogskolan"
   ],
-  "completedBatches": [
-    1,
-    2
-  ],
-  "lastBatchRun": "2026-04-06T08:00:00.000Z",
+  "completedBatches": [1, 2],
+  "lastBatchRun": "2026-04-06T15:38:00.000Z",
   "candidateQuery": {
     "triageResult": "html_candidate",
-    "statusIn": [
-      "fail",
-      "triage_required"
-    ],
+    "statusIn": ["fail", "triage_required"],
     "excludePendingRenderGate": true,
     "excludeManualReview": true,
-    "excludeVerifiedPaths": [
-      "network",
-      "api",
-      "render"
-    ],
-    "excludeStatus": [
-      "success",
-      "pending_api",
-      "pending_render_gate",
-      "pending_source_adapter"
-    ]
+    "excludeVerifiedPaths": ["network", "api", "render"],
+    "excludeStatus": ["success", "pending_api", "pending_render_gate", "pending_source_adapter"]
   },
-  "reportPath": "02-Ingestion/C-htmlGate/reports/batch-001/batch-001-full-report.md",
-  "batchNotes": "Small batch - only 4 html_candidates remain in pool",
+  "reportPath": "02-Ingestion/C-htmlGate/reports/batch-003/batch-003-full-report.md",
+  "batchNotes": "Batch 003: 10 html_candidates with pendingNextTool=html_extraction_review, not yet tested via C-batch loop",
   "metadata": {
-    "selectedAt": "2026-04-06T05:54:00.000Z",
-    "completedAt": "2026-04-06T08:00:00.000Z",
+    "selectedAt": "2026-04-06T15:38:00.000Z",
     "eligibilityRulesVersion": "1.1",
-    "selectionCriteria": "C-htmlGate batch - pending selection",
-    "executionStatus": "completed",
-    "resetNote": "MANUAL ONE-TIME RESTORE for batch-001 re-run"
+    "selectionCriteria": "C-htmlGate batch - pending sources with html_candidate triageResult and pendingNextTool=html_extraction_review",
+    "executionStatus": "idle",
+    "resetNote": "Incremented from batch 002 completed"
   },
   "preRunResults": {
-    "successCount": 0,
-    "eventsTotal": 0,
+    "successCount": null,
+    "eventsTotal": null,
     "sources": []
   },
-  "postRunResults": {
-    "successCount": 0,
-    "eventsTotal": 0,
-    "sources": [
-      {
-        "id": "uppsala-kommun",
-        "events": 0,
-        "c0": 0,
-        "c2": "maybe(11)"
-      },
-      {
-        "id": "ystad",
-        "events": 0,
-        "c0": 0,
-        "c2": "unclear(7)"
-      },
-      {
-        "id": "stockholm-jazz-festival-1",
-        "events": 0,
-        "c0": 0,
-        "c2": "promising(134)"
-      },
-      {
-        "id": "svenska-fotbollf-rbundet",
-        "events": 0,
-        "c0": 0,
-        "c2": "promising(12)"
-      }
-    ]
-  },
+  "postRunResults": null,
   "cyclesCompleted": 0,
   "maxCyclesAllowed": 3,
-  "stopReason": "no-candidates",
-  "plateauReached": true,
-  "patternsFound": [
-    {
-      "name": "C2 promising but 0 events",
-      "description": "C2 gives promising verdict based on density/cards, but extractFromHtml() returns 0 events",
-      "affected": [
-        "kungliga-musikhogskolan",
-        "nrm",
-        "polismuseet",
-        "hallsberg",
-        "ifk-uppsala",
-        "karlskoga"
-      ],
-      "rootCause": "C2 uses page-level signals (density, cards, lists) but extractFromHtml() requires URL-date or Swedish date-text in anchor"
-    },
-    {
-      "name": "Swedish date in anchor text",
-      "description": "moderna-museet and orebro-sk succeed because they have Swedish date-text in anchor elements",
-      "affected": [
-        "moderna-museet",
-        "orebro-sk"
-      ],
-      "pattern": "extractFromHtml() finds events when Swedish date format exists in anchor"
-    }
-  ],
-  "plateauDecision": {
-    "plateauReached": true,
-    "plateauReason": "no-general-improvement - next proposed change requires verification on 2-3 more sites before implementing",
-    "consecutiveZeroImprovementCycles": 0,
-    "recommendation": "stop",
-    "stopCriteriaMet": "no-general-improvement"
-  }
+  "stopReason": null,
+  "plateauReached": null,
+  "patternsFound": [],
+  "plateauDecision": null
 }
