@@ -25,6 +25,179 @@ import { addPendingRender } from './tools/pendingRenderQueue';
 import { rawEventsQueue } from '../03-Queue/queue';
 import { readFileSync } from 'fs';
 import type { RawEventInput } from '@eventpulse/shared';
+import { load } from 'cheerio';
+import { discoverEventCandidates } from './C-htmlGate/C0-htmlFrontierDiscovery';
+import type { PreGateCategorization } from './C-htmlGate/C1-preHtmlGate/C1-preHtmlGate';
+
+// ─── Pre-C Grouping Helper ────────────────────────────────────────────────────
+
+interface GroupingData {
+  siteFamily: string | null;
+  likelyCms: string | null;
+  contentPatternGuess: string | null;
+  likelyEventPresentation: string | null;
+  likelyJsShell: string | null;
+  candidateDifficulty: string | null;
+  needsSubpageDiscovery: boolean | null;
+}
+
+/**
+ * Derive siteFamily from the existing 'type' field.
+ * This is Step 1 - cheap preliminary grouping.
+ */
+function deriveSiteFamily(type: string | undefined): string {
+  if (!type) return 'unknown';
+  const map: Record<string, string> = {
+    'akademi': 'universitet',
+    'universitet': 'universitet',
+    'museum': 'museum',
+    'kommunal': 'kommunal',
+    'idrott': 'idrott',
+    'sport': 'idrott',
+    'teater': 'teater',
+    'scen': 'scen',
+    'konserthus': 'konserthus',
+    'opera': 'opera',
+    'festival': 'festival',
+    'arena': 'arena',
+    'park': 'natur',
+    'nattliv': 'nattliv',
+    'turism': 'turism',
+    'mat': 'mat',
+    'familj': 'familj',
+    'media': 'media',
+    'förening': 'förening',
+    'kulturhus': 'kulturhus',
+    'mässa': 'mässa',
+    'aggregator': 'aggregator',
+    'eventportal': 'eventportal',
+    'nöje': 'nöje',
+    'musik': 'musik',
+    'underhållning': 'underhållning',
+  };
+  return map[type] ?? 'annat';
+}
+
+/**
+ * Derive candidateDifficulty from C1 pre-HTML gate categorization.
+ */
+function deriveCandidateDifficulty(categorization: PreGateCategorization | undefined): string {
+  if (!categorization) return 'unknown';
+  const map: Record<PreGateCategorization, string> = {
+    'strong': 'easy',
+    'medium': 'medium',
+    'weak': 'medium',
+    'noise': 'hard',
+    'unfetchable': 'hard',
+    'no-main': 'hard',
+  };
+  return map[categorization] ?? 'unknown';
+}
+
+/**
+ * Derive likelyCms from HTML content - simple cheap heuristic.
+ * Only detects SharePoint, WordPress, Drupal for now.
+ */
+function deriveLikelyCms(html: string | undefined): string {
+  if (!html) return 'unknown';
+  // SharePoint detection
+  if (html.includes('sharepoint') || html.includes('SPSuite')) return 'sharepoint';
+  if (html.includes('ms-vue2') || html.includes('_layouts/')) return 'sharepoint';
+  // WordPress detection
+  if (html.includes('/wp-content/') || html.includes('/wp-includes/')) return 'wordpress';
+  if (html.includes('wp-json')) return 'wordpress';
+  // Drupal detection
+  if (html.includes('/sites/default/') || html.includes('drupal-settings')) return 'drupal';
+  // SiteVision detection (common in Swedish municipalities)
+  if (html.includes('sitevision') || html.includes('_incSp/')) return 'sitevision';
+  // Custom JS frameworks - common for museums/venues
+  if (html.includes('react') || html.includes('nextjs') || html.includes('__NEXT_DATA__')) return 'custom-js';
+  if (html.includes('gatsby') || html.includes('nuxt')) return 'custom-js';
+  return 'unknown';
+}
+
+/**
+ * Derive contentPatternGuess from HTML structure.
+ */
+function deriveContentPatternGuess(html: string | undefined): string {
+  if (!html) return 'unknown';
+  const $ = load(html);
+  // Calendar table pattern
+  if ($('table.calendar, .kalender-tabell, [class*="calendar-table"]').length > 0) {
+    return 'calendar_table';
+  }
+  // Card grid pattern (common in museums, venues)
+  if ($('[class*="card-grid"], [class*="event-card"], article.card').length > 0) {
+    return 'list_cards';
+  }
+  // Article stream pattern (blogs, news)
+  if ($('article, .article-list, .post-list').length > 0) {
+    return 'article_stream';
+  }
+  // Agenda list pattern
+  if ($('ul.agenda, .agenda-list, [class*="event-list"]').length > 0) {
+    return 'agenda_list';
+  }
+  return 'unknown';
+}
+
+/**
+ * Derive likelyEventPresentation from HTML structure.
+ */
+function deriveEventPresentation(html: string | undefined, timeTagCount: number, listItemCount: number): string {
+  if (!html) return 'unknown';
+  const $ = load(html);
+  if (timeTagCount >= 3) return 'time_tag_list';
+  if ($('[class*="card"], article').length > 0 && listItemCount > 5) return 'card_grid';
+  if ($('ul, ol').length > 3) return 'agenda_list';
+  if ($('table').length > 0) return 'calendar_table';
+  return 'unknown';
+}
+
+/**
+ * Full grouping derivation - called after C1 screenUrl has run.
+ * This is Step 2 - refined grouping with actual HTML inspection.
+ */
+function deriveGrouping(
+  type: string | undefined,
+  categorization: PreGateCategorization | undefined,
+  likelyJsRendered: boolean,
+  c1Result: { hasMain: boolean; timeTagCount: number; listItemCount: number; htmlBytes?: number; dateCount: number } | null,
+  html: string | undefined,
+  rootUrl: string
+): GroupingData {
+  const siteFamily = deriveSiteFamily(type);
+  const candidateDifficulty = deriveCandidateDifficulty(categorization);
+  const likelyCms = deriveLikelyCms(html);
+  const contentPatternGuess = deriveContentPatternGuess(html);
+  const likelyEventPresentation = c1Result
+    ? deriveEventPresentation(html, c1Result.timeTagCount, c1Result.listItemCount)
+    : null;
+
+  // likelyJsShell: use C1 result directly
+  const likelyJsShell = likelyJsRendered ? 'likely' : 'none';
+
+  // needsSubpageDiscovery: heuristic - if root has low signals and looks like index
+  let needsSubpageDiscovery: boolean | null = null;
+  if (c1Result) {
+    // If root page has no main, few links, and low date count, events likely on subpage
+    if (!c1Result.hasMain && c1Result.timeTagCount === 0 && c1Result.dateCount === 0) {
+      needsSubpageDiscovery = true;
+    } else if (c1Result.hasMain && c1Result.timeTagCount > 0) {
+      needsSubpageDiscovery = false;
+    }
+  }
+
+  return {
+    siteFamily,
+    likelyCms,
+    contentPatternGuess,
+    likelyEventPresentation,
+    likelyJsShell,
+    candidateDifficulty,
+    needsSubpageDiscovery,
+  };
+}
 
 interface QueuedResult {
   url: string;
@@ -34,11 +207,25 @@ interface QueuedResult {
   queued_ids: string[];
   errors: string[];
   status: 'success' | 'partial' | 'fail' | 'pending_render_gate';
+  /** Pre-C grouping metadata - populated by deriveGrouping() */
+  grouping?: {
+    siteFamily: string | null;
+    likelyCms: string | null;
+    contentPatternGuess: string | null;
+    likelyEventPresentation: string | null;
+    likelyJsShell: string | null;
+    candidateDifficulty: string | null;
+    needsSubpageDiscovery: boolean | null;
+  };
 }
 
 // ─── Fetch + Extract + Queue for a single URL ────────────────────────────────
 
-async function phase1CandidateToQueue(url: string, sourceName: string): Promise<QueuedResult> {
+async function phase1CandidateToQueue(
+  url: string,
+  sourceName: string,
+  sourceType?: string
+): Promise<QueuedResult> {
   const result: QueuedResult = {
     url,
     source: sourceName,
@@ -59,11 +246,13 @@ async function phase1CandidateToQueue(url: string, sourceName: string): Promise<
   }
 
   // Step 1b: Run C1 pre-HTML gate to detect JS-rendered pages
+  let c1Result = null;
+  let likelyJsRendered = false;
   const attemptedPaths: string[] = [];
   try {
-    const c1Result = await screenUrl(url);
+    c1Result = await screenUrl(url);
+    likelyJsRendered = c1Result.likelyJsRendered;
     // JS-rendered: main exists but is nearly empty (content loaded via JS)
-    const mainText = c1Result.hasMain ? '' : ''; // we already have the info
     if (c1Result.likelyJsRendered || (c1Result.hasMain && c1Result.htmlBytes && c1Result.htmlBytes > 50000 && c1Result.dateCount === 0 && c1Result.timeTagCount === 0)) {
       console.log(`[phase1→queue] C1 flagged as likely JS-rendered: ${c1Result.reason}`);
       addPendingRender({
@@ -77,12 +266,17 @@ async function phase1CandidateToQueue(url: string, sourceName: string): Promise<
       });
       result.status = 'pending_render_gate';
       result.errors.push('JS-rendered page: added to pending_render_queue for D-renderGate');
+      // Still derive grouping before returning - even JS-rendered sources need grouping
+      result.grouping = deriveGrouping(sourceType, c1Result.categorization, likelyJsRendered, c1Result, fetchResult.html, url);
       return result;
     }
   } catch (c1Error) {
     // C1 screening failed, continue with normal flow
     console.log(`[phase1→queue] C1 screening skipped: ${c1Error instanceof Error ? c1Error.message : 'unknown'}`);
   }
+
+  // Derive grouping after C1 has run (Step 2 refinement)
+  result.grouping = deriveGrouping(sourceType, c1Result?.categorization, likelyJsRendered, c1Result, fetchResult.html, url);
 
   // Step 2: Extract events — try JSON-LD first, fall back to HTML heuristics
   let extractResult = extractFromJsonLd(fetchResult.html, sourceName, url);

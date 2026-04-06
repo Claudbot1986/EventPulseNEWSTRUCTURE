@@ -219,6 +219,59 @@ Upprepa tills alla batchar är klara.
 
 ---
 
+## Batchurvalsregler
+
+Grupperingsfält används för att bygga **homogena batchar** som är mer lärorika. Regel:
+
+### Grundregler för batchurval
+
+| Regel | Värde | Syfte |
+|-------|-------|-------|
+| MAX siteFamily | 2 per batch | Behåll lärande fokuserat |
+| UNVIK | likelyJsShell = likely/verified | Dessa ska till D-renderGate |
+| MAX candidateDifficulty | 2 nivåer per batch | Blanda inte easy med hard |
+| MIN per grupp | 3 källor | Statistisk signifikans |
+
+### Exempel: Bra vs Dålig batch
+
+**Bra batch (homogen):**
+```json
+{
+  "batchId": "batch-sharepoint-kommunal-001",
+  "sources": ["hallsberg", "karlskoga", "kumla", "orebro-sk"],
+  "siteFamily": ["kommunal"],
+  "likelyCms": "sharepoint",
+  "candidateDifficulty": ["medium"],
+  "heterogeneityScore": "low"
+}
+```
+
+**Dålig batch (för heterogen):**
+```json
+{
+  "batchId": "batch-mixed-001",
+  "sources": ["kungliga-musikhogskolan", "moderna-museet", "ifk-uppsala"],
+  "siteFamily": ["universitet", "museum", "idrott"],
+  "likelyCms": ["custom-js", "sharepoint", "unknown"],
+  "candidateDifficulty": ["hard", "medium", "easy"],
+  "heterogeneityScore": "high"
+}
+```
+
+### Hur man bygger en homogen batch
+
+```bash
+# 1. Hämta alla källor med samma siteFamily
+grep '"siteFamily": "museum"' 02-Ingestion/C-candidates-queue.jsonl
+
+# 2. Filtrera bort JS-renderade
+grep '"likelyJsShell": "none"' ... | grep '"siteFamily": "museum"'
+
+# 3. Välj max 10 med liknande candidateDifficulty
+```
+
+---
+
 ## Arkitektonisk separation: Pre-C vs Post-C
 
 ### Pre-C: Gruppering i C-candidates-queue
@@ -232,7 +285,7 @@ Grupperingsfält i `C-candidates-queue.jsonl` fylls i av `phase1ToQueue.ts` **in
 ### Post-C: Batchkörning och rapportering
 
 När en batch väl körs:
-- `batch-state.jsonl` innehåller **köra metadata** (cyclesCompleted, plateauDecision, etc.)
+- `batch-state.jsonl` innehåller **körningsmetadata** (cyclesCompleted, plateauDecision, etc.)
 - `batch-XXX/sources/*.md` innehåller **per-källa resultat**
 - Rapporter beskriver resultat, INTE gruppering
 
