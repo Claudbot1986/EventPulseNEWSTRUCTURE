@@ -1,21 +1,10 @@
 {
-  "currentBatch": 1,
+  "currentBatch": 2,
   "batchSize": 10,
   "status": "idle",
-  "batchSources": [
-    "hallsberg",
-    "ifk-uppsala",
-    "karlskoga",
-    "kumla",
-    "kungliga-musikhogskolan",
-    "lulea-tekniska-universitet",
-    "moderna-museet",
-    "naturhistoriska-riksmuseet",
-    "orebro-sk",
-    "polismuseet"
-  ],
-  "completedBatches": [],
-  "lastBatchRun": null,
+  "batchSources": null,
+  "completedBatches": [1],
+  "lastBatchRun": "2026-04-06T06:30:00.000Z",
   "candidateQuery": {
     "triageResult": "html_candidate",
     "statusIn": [
@@ -37,27 +26,27 @@
     ]
   },
   "reportPath": "02-Ingestion/C-htmlGate/reports/batch-001/batch-001-full-report.md",
-  "batchNotes": "State reset - batch-001 restored as next valid batch. Previous state had currentBatch=2 with no batch-002 report, indicating incorrect batch advancement.",
+  "batchNotes": "State synced from batch-001-full-report.md. batch-001 completed with status=no-general-improvement.",
   "metadata": {
     "selectedAt": "2026-04-06T05:54:00.000Z",
-    "completedAt": null,
+    "completedAt": "2026-04-06T06:30:00.000Z",
     "eligibilityRulesVersion": "1.1",
     "selectionCriteria": "C-htmlGate batch - pending selection",
-    "executionStatus": "pending",
-    "resetNote": "State reset - batch-001 is first valid pending batch"
+    "executionStatus": "completed",
+    "resetNote": "State synced from batch-001-full-report.md"
   },
   "preRunResults": null,
   "postRunResults": null,
   "cyclesCompleted": 0,
   "maxCyclesAllowed": 3,
-  "stopReason": null,
-  "plateauReached": false,
-  "patternsFound": [],
+  "stopReason": "no-general-improvement",
+  "plateauReached": true,
+  "patternsFound": ["JS-Rendered-False-Negative"],
   "plateauDecision": {
-    "plateauReached": false,
-    "plateauReason": null,
+    "plateauReached": true,
+    "plateauReason": "no-general-improvement",
     "consecutiveZeroImprovementCycles": 0,
     "recommendation": "continue",
-    "stopCriteriaMet": null
+    "stopCriteriaMet": "no-general-improvement"
   }
 }
