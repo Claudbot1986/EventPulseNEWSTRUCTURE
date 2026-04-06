@@ -67,17 +67,6 @@
 | needsD | unclear |
 | notes | subpage-aware A/B assessment missing |
 
-## Learning Grouping
-
-| Field | Value |
-|-------|-------|
-| siteFamily | museum |
-| likelyCms | custom-js |
-| contentPatternGuess | root-event-page |
-| likelyEventPresentation | time-tag-list |
-| likelyJsShell | likely |
-| candidateDifficulty | hard |
-| needsSubpageDiscovery | False |
 
 ## Verification
 

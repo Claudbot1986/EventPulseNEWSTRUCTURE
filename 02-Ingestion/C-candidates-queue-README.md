@@ -69,9 +69,40 @@ Dessa källor är redan hanterade och ska INTE testas igenom C:
   "batchStatus": "pending|testing|completed|failed",
   "lastTested": "2026-04-05T12:00:00Z",
   "eventsFound": 0,
-  "notes": ""
+  "notes": "",
+  "grouping": {
+    "siteFamily": null,
+    "likelyCms": null,
+    "contentPatternGuess": null,
+    "likelyEventPresentation": null,
+    "likelyJsShell": null,
+    "candidateDifficulty": null,
+    "needsSubpageDiscovery": null
+  }
 }
 ```
+
+### Grupperingsfält (pre-C-entry)
+
+**Viktigt:** Gruppering ska ske INNAN en källa väljs in i en C-batch, inte efter. Detta möjliggör smart batchurval baserat på liknande källtyper.
+
+#### Fältbeskrivning
+
+| Fält | Typ | Beskrivning |
+|------|-----|-------------|
+| `siteFamily` | string? | huvudkategori: kommunal, museum, universitet, idrott, teater, etc. |
+| `likelyCms` | string? | upptäckt CMS: sharepoint, wordpress, custom-js, sitevision, unknown |
+| `contentPatternGuess` | string? | sidstruktur: root-event-page, subpage-event-calendar, article-list, etc. |
+| `likelyEventPresentation` | string? | eventvisning: time-tag-list, card-grid, agenda-list, calendar-widget |
+| `likelyJsShell` | string? | js-risk: none, possible, likely, verified |
+| `candidateDifficulty` | string? | svårighet: easy, medium, hard, unknown |
+| `needsSubpageDiscovery` | boolean? | behöver undersöka undersidor: true, false, unclear |
+
+#### Varför pre-C-gruppering?
+
+- **Smarta batchar:** Batchar grupperas efter liknande siteFamily eller contentPattern
+- **Homogena batcher:** Max 2 siteFamily per batch för effektivt lärande
+- **Tidig riskbedömning:** likelyJsShell och candidateDifficulty identifieras före batchval
 
 ### Batch-status
 
@@ -185,3 +216,32 @@ Upprepa tills alla batchar är klara.
 3. **Säg ifrån** om en källa verkar vara B eller A, inte C
 4. **Markera D-pending** korrekt, kör inte D-renderGate
 5. **Håll isär** methodCandidate (vad vi tror) och verificationStatus (vad som bevisades)
+
+---
+
+## Arkitektonisk separation: Pre-C vs Post-C
+
+### Pre-C: Gruppering i C-candidates-queue
+
+Grupperingsfält i `C-candidates-queue.jsonl` fylls i av `phase1ToQueue.ts` **innan** en källa väljs in i en batch. Detta möjliggör:
+
+- Smart batchurval baserat på siteFamily, likelyCms, contentPatternGuess
+- Homogena batchar med ≤2 siteFamily för effektivt lärande
+- Tidig riskbedömning (likelyJsShell, candidateDifficulty)
+
+### Post-C: Batchkörning och rapportering
+
+När en batch väl körs:
+- `batch-state.jsonl` innehåller **köra metadata** (cyclesCompleted, plateauDecision, etc.)
+- `batch-XXX/sources/*.md` innehåller **per-källa resultat**
+- Rapporter beskriver resultat, INTE gruppering
+
+### Vad som SKA vara var
+
+| Aktivitet | Plats | Tid |
+|-----------|-------|-----|
+| Gruppering (siteFamily, likelyCms, etc.) | `C-candidates-queue.jsonl` | Pre-batch |
+| Batch-val (vilka källor körs ihop) | `batch-state.jsonl` | Vid batchstart |
+| Per-cykel mätning (eventsDelta, etc.) | `batch-state.jsonl` | Post-varje-cykel |
+| Per-källa resultat | `batch-XXX/sources/*.md` | Post-varje-källa |
+| Mönsterlärande | `improvements-bank.jsonl` | Post-batch |
