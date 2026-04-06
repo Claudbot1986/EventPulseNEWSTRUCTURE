@@ -7,110 +7,136 @@ Detta är **endast ett importverktyg** — det skriver inte direkt till `sources
 
 ## Inputformat
 
-Verktyget läser en rå textfil med formatet:
-
 ```
 | Namn | URL | Stad | Kategori | Insamlad | Notis |
 | ABF | https://www.abf.se | Stockholm | förening | 2026-04-04 | Studieförbund |
 ```
 
-## Två typer av deduplicering
+## Source-identitetsregel: site-level
 
-### 1. Intern import-dedup (inom samma importfil)
+**I detta steg är source-identitet SITE-LEVEL, inte path-level.**
 
-Två rader med samma canonical URL inom samma importbatch slås ihop till en source.
-Se `duplicate_in_import` i matchStatus.
+Två URLs på samma sajt (hostname) behandlas som samma source:
+- `https://www.liseberg.se/`
+- `https://liseberg.se/evenemang/`
+- `https://www.liseberg.se/biljetter`
+→ alla → **1 source** med identity key `liseberg.se`
 
-### 2. Matchning mot befintliga canonical sources
+**Varför:** RebuildPlan.md säger att `sources/` är canonical truth.
+Om varje subpath på samma sajt skapade en egen source, skulle sajter med
+events på `/kalender/`, `/evenemang/`, `/program/` etc. skapa många duplicerade
+sources. Site-level deduplication håller antalet nere.
 
-Verktyget läser alla befintliga `sources/*.jsonl` och matchar importerade rader mot dessa.
-Detta avgör om en rad är:
-- **ny** — ingen match i befintliga sources
-- **matched_existing** — samma URL finns redan i `sources/`
-- **duplicate_in_import** — samma URL inom importfilen
+**Edge case — TODO:** Om samma hostname har helt olika event-utbud på olika paths
+(t.ex. en sajt med två separata evenemangsavdelningar) kan site-level deduplication
+dölja detta. I nuläget är regeln: site-level vinner. Manuell granskning av
+preview kan fånga sådana fall.
 
-## Deduplikationsregler (URL-normalisering)
+## Två-nivå URL-system
 
-Canonicalisering av URL:
-1. Strippa protokoll (`http://` och `https://`)
-2. Strippa `www.`-prefix
-3. Strippa avslutande `/`
-4. Lägg till `/` om ingen path finns
-5. Konvertera till lowercase
+### sourceIdentityKey
+Site-level identity för deduplication och matchning. Endast hostname.
+Format: `liseberg.se`, `aik.se`, `ungateatern.se`
 
-Exempel: `https://www.ARKitekturgalleriet.se/` → `arkitekturgalleriet.se`
+### canonicalUrl
+Representativ URL med path för audit. Visar vilken URL som valdes.
+Format: `liseberg.se/`, `liseberg.se/evenemang`
+
+## Deduplikeringsregler
+
+### 1. Matchning mot befintliga `sources/*.jsonl`
+
+Verktyget läser alla befintliga `sources/*.jsonl` och indexerar på siteIdentityKey.
+För varje importerad rad: om siteIdentityKey matchar en befintlig source →
+`matchStatus = matched_existing` (behåller befintligt id).
+
+### 2. Intern import-dedup
+
+Två rader med samma siteIdentityKey inom samma importbatch slås ihop.
+Båda bevaras i `originalRows[]` och `isDuplicate = true`.
+
+## Match-status
+
+| Värde | Betydelse |
+|-------|-----------|
+| `new` | Ingen match i befintliga `sources/`, ingen dup i import |
+| `matched_existing` | siteIdentityKey matchar en befintlig source i `sources/` |
+| `duplicate_in_import` | Samma siteIdentityKey inom importbatchen |
 
 ## sourceId-regler
 
-**Matched existing sources:** Behåller befintligt `id` från `sources/*.jsonl`.
+**Matched existing:** Behåller befintligt `id` från `sources/*.jsonl`.
 
-**Nya sources:** Genereras från hostname:
-1. Extrahera hostname
-2. Strippa `.se`, `.no`, `.dk`, `.fi`, `.nu`
-3. Ersätt svenska tecken (å→a, ä→a, ö→o)
-4. Ersätt `_` och `-` med `-`
-5. Strippa ledande/avslutande `-`
-6. Max 40 tecken
+**Nya sources:** Genereras från siteIdentityKey:
+1. Strippa `.se`, `.no`, `.dk`, `.fi`, `.nu`
+2. Ersätt svenska tecken (å→a, ä→a, ö→o)
+3. Ersätt `_` och `-` med `-`
+4. Strippa ledande/avslutande `-`
+5. Max 40 tecken
 
 ## Output: import-preview
 
-Verktyget skapar `import-preview.jsonl` med:
+Verktyget skapar `import-preview.jsonl`:
 
 ```json
 {
-  "sourceId": "unga-teatern",
-  "canonicalUrl": "ungateatern.se/",
-  "name": "Unga Teatern",
-  "city": "Stockholm",
-  "type": "teater",
+  "sourceId": "liseberg",
+  "sourceIdentityKey": "liseberg.se",
+  "canonicalUrl": "liseberg.se/",
+  "name": "Liseberg",
+  "city": "Göteborg",
+  "type": "nöje",
   "discoveredAt": "2026-04-06",
-  "note": "Test",
-  "dedupeKey": "ungateatern.se/",
-  "isDuplicate": false,
+  "note": "Test: root URL",
+  "isDuplicate": true,
   "originalRows": [
-    { "name": "Unga Teatern", "url": "https://www.ungateatern.se" }
+    { "name": "Liseberg", "url": "https://www.liseberg.se" },
+    { "name": "Liseberg Evenemang", "url": "https://liseberg.se/evenemang/" },
+    { "name": "Liseberg Biljetter", "url": "https://www.liseberg.se/biljetter" }
   ],
   "matchStatus": "matched_existing",
-  "matchedBy": "canonicalUrl",
+  "matchedBy": "sourceIdentityKey",
   "existingSource": {
-    "id": "unga-teatern",
-    "name": "Unga Teatern",
+    "id": "liseberg",
+    "name": "Liseberg (nöje)",
     "preferredPath": "unknown"
   }
 }
 ```
 
-### matchStatus-värden
+## Statistik
 
-| Värde | Betydelse |
-|-------|-----------|
-| `new` | Ingen match i befintliga `sources/`, ingen dup inom import |
-| `matched_existing` | Samma canonical URL finns i `sources/` |
-| `duplicate_in_import` | Samma canonical URL inom importfilen (merged med primär) |
+```
+Raw rows parsed:       8
+NEW sources:           1
+MATCHED existing:      4
+DUPLICATE rows:        3   ← antal RADER som var duplikat
+Total output sources:  5   ← antal unika output-sources
+```
 
-## matchStatus hierarki
+**Viktigt:** `DUPLICATE rows` räknar hur många RADER som var duplikat (ej hur många
+sources som har duplicerade rader). `Total output sources` är antalet unika sources.
 
-**Matchning mot existing har PRIORITET över intern dedup.**
+## URL-normaliseringsexempel
 
-Logik:
-1. Om `dedupeKey` matchar befintlig source → `matched_existing` (behåller existing id)
-2. Om `dedupeKey` redan setts i importen → `duplicate_in_import`
-3. Annars → `new`
-
-## Viktigt: Olika URL:er med samma hostname = OLIKA sources
-
-`liseberg.se/` och `liseberg.se/evenemang/` är **olika** sources i verktygets ögon.
-Detta är korrekt beteende — subpage-event är en potentiellt separat källa.
+| Input | sourceIdentityKey | canonicalUrl |
+|-------|-------------------|--------------|
+| `https://www.liseberg.se/` | `liseberg.se` | `liseberg.se/` |
+| `https://liseberg.se/evenemang/` | `liseberg.se` | `liseberg.se/evenemang` |
+| `http://WWW.LISEBERG.SE/` | `liseberg.se` | `liseberg.se/` |
+| `https://AIK.se` | `aik.se` | `aik.se/` |
+| `https://www.nyttest.se` | `nyttest.se` | `nyttest.se/` |
 
 ## Vad verktyget gör
 
 - [x] Läser råa markdown-tabell-filer
-- [x] Normaliserar URLs
+- [x] Site-level source identity (hostname)
 - [x] Genererar stabila sourceIds för nya sources
-- [x] Deduplicerar inom importfilen
-- [x] Matchar mot befintliga `sources/*.jsonl`
-- [x] Sätter matchStatus korrekt
-- [x] Presenterar alla original-rader i `originalRows`
+- [x] Deduplicerar inom importfilen (site-level)
+- [x] Matchar mot befintliga `sources/*.jsonl` (site-level)
+- [x] Korrekt statistik: duplicate_rows vs output_sources
+- [x] Presenterar alla original-rader i `originalRows[]`
+- [x] Separerar `sourceIdentityKey` (för dedup) och `canonicalUrl` (för audit)
 
 ## Vad verktyget ÄNNU INTE gör
 
@@ -118,10 +144,9 @@ Detta är korrekt beteende — subpage-event är en potentiellt separat källa.
 - [ ] Gör inte merge med `runtime/sources_reset_state.jsonl`
 - [ ] Sätter inte `preferredPath` för nya sources
 - [ ] Sätter inte `discoveredBy` för nya sources
-- [ ] Hanterar inte case-insensitiv name-dedup (endast URL)
-- [ ] Ingen merge av sources med samma hostname men olika paths
-- [ ] Ingen batch-import med flera filer
-- [ ] Ingen idempotenskontroll mot befintliga canonical sources (samma import kan köras flera gånger och producera samma output — men om befintliga sources redan har data kan det leda till duplicates i `sources/`)
+- [ ] Hanterar inte case-insensitiv name-dedup (endast site-level URL)
+- [ ] Manuell granskning krävs för att godkänna preview innan faktisk import
+- [ ] Ingen idempotenskontroll mot befintliga canonical sources (samma import kan köras flera gånger)
 
 ## Användning
 
@@ -131,9 +156,3 @@ npx tsx 00-Sources/00A-ImportRawSources-Tool/import-raw-sources.ts \
   --output runtime/import-preview.jsonl \
   --sources-dir sources/
 ```
-
-## Idempotenskrav
-
-- Kör samma importfil två gånger → samma `import-preview.jsonl` (samma matchStatus)
-- Verktyget påverkar **inte** befintliga `sources/*.jsonl`
-- Nästa steg: manuell granskning av preview, sedan eventuell merge

@@ -4,7 +4,7 @@
  * Phase 2: 00A-ImportRawSources-Tool
  *
  * Importerar råa source-listor med:
- * - URL-normalisering
+ * - URL-normalisering (site-level identity + path-aware canonicalUrl)
  * - Stabil sourceId-generering
  * - Deduplikering inom importfilen
  * - Matchning mot befintliga canonical sources i sources/*.jsonl
@@ -36,7 +36,7 @@ interface RawSourceRow {
 
 /** A single existing source read from sources/*.jsonl */
 interface ExistingSource {
-  id: string;          // sourceId in canonical sources
+  id: string;
   url: string;
   name: string;
   city: string;
@@ -48,13 +48,17 @@ interface ExistingSource {
 
 /**
  * Output format for import preview.
- * Each ImportedSource represents one deduplicated source from the import,
- * with matchStatus indicating how it relates to existing canonical sources.
+ * Each ImportedSource represents one deduplicated source from the import.
+ *
+ * KEY CONCEPT — Two-level URL identity:
+ * - sourceIdentityKey: site-level key for deduplication and matching (hostname only)
+ * - canonicalUrl: the representative URL chosen for this source (with path if present)
  */
 interface ImportedSource {
   // Identity
-  sourceId: string;        // authoritative sourceId (existing.id if matched, else generated)
-  canonicalUrl: string;    // normalized URL
+  sourceId: string;           // authoritative sourceId (existing.id if matched, else generated)
+  sourceIdentityKey: string;  // site-level key: hostname only (for deduplication)
+  canonicalUrl: string;       // representative URL with path (for display/audit)
   name: string;
   city: string;
   type: string;
@@ -62,14 +66,13 @@ interface ImportedSource {
   note: string;
 
   // Deduplication tracking
-  dedupeKey: string;       // the normalized URL used for deduplication
-  isDuplicate: boolean;    // true if this was a duplicate within the import batch
+  isDuplicate: boolean;      // true if this source had multiple rows merged
   originalRows: Array<{ name: string; url: string }>;
 
   // Match against existing canonical sources
   matchStatus: 'new' | 'matched_existing' | 'duplicate_in_import';
-  matchedBy?: 'canonicalUrl';      // which field matched
-  existingSource?: {                  // populated only if matchStatus === 'matched_existing'
+  matchedBy?: 'sourceIdentityKey';
+  existingSource?: {
     id: string;
     name: string;
     preferredPath: string | null;
@@ -79,15 +82,50 @@ interface ImportedSource {
 // ─── URL Normalization ────────────────────────────────────────────────────
 
 /**
- * Normalize a URL to its canonical form for deduplication.
+ * Normalize to site-level identity key.
+ * Used for deduplication and matching against existing sources.
  * Rules:
- * 1. Strip protocol (http://, https://)
- * 2. Strip www. prefix
- * 3. Strip trailing slash
- * 4. Ensure path exists (root = /)
- * 5. Lowercase
+ * 1. Strip protocol
+ * 2. Strip www.
+ * 3. Lowercase
+ * 4. Keep ONLY hostname — strip entire path
+ *
+ * Examples:
+ *   https://www.liseberg.se/          → liseberg.se
+ *   https://liseberg.se/evenemang/    → liseberg.se
+ *   http://WWW.LISEBERG.SE/          → liseberg.se
  */
-export function normalizeUrl(rawUrl: string): string {
+export function normalizeToSiteIdentityKey(rawUrl: string): string {
+  let url = rawUrl.trim();
+
+  // Strip protocol
+  url = url.replace(/^https?:\/\//, '');
+
+  // Strip www.
+  url = url.replace(/^www\./, '');
+
+  // Strip path, query, fragment — keep only hostname
+  url = url.split('/')[0] ?? url;
+
+  return url.toLowerCase();
+}
+
+/**
+ * Normalize to canonical URL for display purposes.
+ * Keeps the path for audit purposes.
+ * Rules:
+ * 1. Strip protocol
+ * 2. Strip www.
+ * 3. Strip trailing slash
+ * 4. Ensure root path = /
+ * 5. Lowercase
+ *
+ * Examples:
+ *   https://www.liseberg.se/           → liseberg.se/
+ *   https://liseberg.se/evenemang/     → liseberg.se/evenemang
+ *   http://liseberg.se                 → liseberg.se/
+ */
+export function normalizeToCanonicalUrl(rawUrl: string): string {
   let url = rawUrl.trim();
 
   // Strip protocol
@@ -110,11 +148,11 @@ export function normalizeUrl(rawUrl: string): string {
 // ─── SourceId Generation ──────────────────────────────────────────────────
 
 /**
- * Generate a stable sourceId from a hostname.
+ * Generate a stable sourceId from a site identity key.
  * Used only for NEW sources — matched sources keep their existing id.
  */
-export function generateSourceId(canonicalUrl: string): string {
-  let host = canonicalUrl.split('/')[0] ?? canonicalUrl;
+export function generateSourceId(siteIdentityKey: string): string {
+  let host = siteIdentityKey;
 
   // Strip country TLDs common in Scandinavia
   host = host.replace(/\.se$/, '');
@@ -191,7 +229,11 @@ function isValidUrl(url: string): boolean {
 
 /**
  * Read all existing sources from sources/*.jsonl and build an index
- * keyed by normalized URL.
+ * keyed by SITE-LEVEL identity (hostname only).
+ *
+ * This means existing sources with URL like https://liseberg.se/ and
+ * https://liseberg.se/evenemang/ both map to the same key "liseberg.se"
+ * and the first one wins (stable ordering).
  */
 export function readExistingSources(sourcesDir: string): Map<string, ExistingSource> {
   const index = new Map<string, ExistingSource>();
@@ -212,8 +254,11 @@ export function readExistingSources(sourcesDir: string): Map<string, ExistingSou
       const source = JSON.parse(lines[0]) as ExistingSource;
       if (!source.id || !source.url) continue;
 
-      const dedupeKey = normalizeUrl(source.url);
-      index.set(dedupeKey, source);
+      const siteKey = normalizeToSiteIdentityKey(source.url);
+      // First source per site wins — later ones with same site are skipped
+      if (!index.has(siteKey)) {
+        index.set(siteKey, source);
+      }
     } catch {
       // Skip malformed files
     }
@@ -230,20 +275,26 @@ export interface ImportResult {
     totalRows: number;
     new: number;
     matchedExisting: number;
-    duplicateInImport: number;
+    duplicateInImportRows: number;  // how many RAW rows were duplicates
+    outputSources: number;           // how many unique sources in output
     existingSourcesLoaded: number;
   };
 }
 
 /**
- * Import raw sources with:
- * 1. Matching against existing canonical sources
- * 2. Internal deduplication within the import batch
+ * Import raw sources with site-level deduplication and matching.
  *
- * Priority order:
- * - If dedupeKey matches an existing source → matchStatus = 'matched_existing'
- * - If dedupeKey matches another row in the same import batch → matchStatus = 'duplicate_in_import'
- * - Otherwise → matchStatus = 'new'
+ * KEY CHANGE: sourceIdentityKey is site-level (hostname only).
+ * This means:
+ *   https://www.liseberg.se/
+ *   https://liseberg.se/evenemang/
+ *   https://www.LISEBERG.Se/
+ * all map to the same sourceIdentityKey = "liseberg.se"
+ *
+ * Priority order for matchStatus:
+ * - If siteIdentityKey matches an existing source → matched_existing
+ * - If siteIdentityKey already seen in this import batch → duplicate_in_import
+ * - Otherwise → new
  */
 export function importRawSourcesWithMatching(
   rows: RawSourceRow[],
@@ -253,102 +304,88 @@ export function importRawSourcesWithMatching(
     totalRows: rows.length,
     new: 0,
     matchedExisting: 0,
-    duplicateInImport: 0,
+    duplicateInImportRows: 0,
+    outputSources: 0,
     existingSourcesLoaded: existingSources.size,
   };
 
-  // Phase 1: For each row, determine matchStatus
-  const rowResults: Array<{
-    row: RawSourceRow;
-    dedupeKey: string;
-    matchStatus: 'new' | 'matched_existing' | 'duplicate_in_import';
-    existingSource?: ExistingSource;
-  }> = [];
+  // Track seen siteIdentityKeys in this import batch
+  const batchSeen = new Set<string>();
+
+  // Track for building final output
+  const outputMap = new Map<string, ImportedSource>();
 
   for (const row of rows) {
-    const dedupeKey = normalizeUrl(row.url);
+    const siteIdentityKey = normalizeToSiteIdentityKey(row.url);
+    const canonicalUrl = normalizeToCanonicalUrl(row.url);
 
     // Check 1: Does this match an existing canonical source?
-    if (existingSources.has(dedupeKey)) {
-      rowResults.push({
-        row,
-        dedupeKey,
-        matchStatus: 'matched_existing',
-        existingSource: existingSources.get(dedupeKey),
-      });
+    if (existingSources.has(siteIdentityKey)) {
+      const existing = existingSources.get(siteIdentityKey)!;
+
+      if (outputMap.has(siteIdentityKey)) {
+        // Already added as primary — just record this row
+        const primary = outputMap.get(siteIdentityKey)!;
+        primary.originalRows.push({ name: row.name, url: row.url });
+        primary.isDuplicate = true;
+        stats.duplicateInImportRows++;
+      } else {
+        // First occurrence — create as matched_existing
+        outputMap.set(siteIdentityKey, {
+          sourceId: existing.id,
+          sourceIdentityKey: siteIdentityKey,
+          canonicalUrl,
+          name: row.name,
+          city: row.city,
+          type: row.type,
+          discoveredAt: row.discoveredAt,
+          note: row.note,
+          isDuplicate: false,
+          originalRows: [{ name: row.name, url: row.url }],
+          matchStatus: 'matched_existing',
+          matchedBy: 'sourceIdentityKey',
+          existingSource: {
+            id: existing.id,
+            name: existing.name,
+            preferredPath: existing.preferredPath ?? null,
+          },
+        });
+        stats.matchedExisting++;
+      }
+      batchSeen.add(siteIdentityKey);
       continue;
     }
 
-    // Check 2: Has this dedupeKey already appeared in this import batch?
-    const alreadySeen = rowResults.some(r => r.dedupeKey === dedupeKey);
-    if (alreadySeen) {
-      rowResults.push({
-        row,
-        dedupeKey,
-        matchStatus: 'duplicate_in_import',
-      });
+    // Check 2: Has this siteIdentityKey already appeared in this import batch?
+    if (batchSeen.has(siteIdentityKey)) {
+      // Duplicate within import batch
+      const primary = outputMap.get(siteIdentityKey)!;
+      primary.originalRows.push({ name: row.name, url: row.url });
+      primary.isDuplicate = true;
+      stats.duplicateInImportRows++;
       continue;
     }
 
     // New source
-    rowResults.push({
-      row,
-      dedupeKey,
-      matchStatus: 'new',
-    });
-  }
-
-  // Phase 2: Build ImportedSource array from row results
-  const sources: ImportedSource[] = [];
-  const dedupeSeen = new Set<string>();
-
-  for (const result of rowResults) {
-    const { row, dedupeKey, matchStatus, existingSource } = result;
-
-    // Track for internal dedup detection
-    if (dedupeSeen.has(dedupeKey)) {
-      // This is a duplicate within the batch — find the primary entry
-      const primary = sources.find(s => s.dedupeKey === dedupeKey);
-      if (primary) {
-        primary.originalRows.push({ name: row.name, url: row.url });
-        primary.isDuplicate = true;
-      }
-      continue;
-    }
-    dedupeSeen.add(dedupeKey);
-
-    // Build the ImportedSource
-    const imported: ImportedSource = {
-      sourceId: existingSource?.id ?? generateSourceId(dedupeKey),
-      canonicalUrl: dedupeKey,
+    batchSeen.add(siteIdentityKey);
+    outputMap.set(siteIdentityKey, {
+      sourceId: generateSourceId(siteIdentityKey),
+      sourceIdentityKey: siteIdentityKey,
+      canonicalUrl,
       name: row.name,
       city: row.city,
       type: row.type,
       discoveredAt: row.discoveredAt,
       note: row.note,
-      dedupeKey,
       isDuplicate: false,
       originalRows: [{ name: row.name, url: row.url }],
-      matchStatus,
-    };
-
-    if (matchStatus === 'matched_existing' && existingSource) {
-      imported.matchedBy = 'canonicalUrl';
-      imported.existingSource = {
-        id: existingSource.id,
-        name: existingSource.name,
-        preferredPath: existingSource.preferredPath ?? null,
-      };
-      stats.matchedExisting++;
-    } else if (matchStatus === 'duplicate_in_import') {
-      imported.isDuplicate = true;
-      stats.duplicateInImport++;
-    } else {
-      stats.new++;
-    }
-
-    sources.push(imported);
+      matchStatus: 'new',
+    });
+    stats.new++;
   }
+
+  const sources = Array.from(outputMap.values());
+  stats.outputSources = sources.length;
 
   return { sources, stats };
 }
@@ -389,7 +426,7 @@ function parseArgs(): CliArgs {
 // ─── Main ─────────────────────────────────────────────────────────────────
 
 function main(): void {
-  console.log('=== 00A: ImportRawSources Tool (v2 — with existing source matching) ===\n');
+  console.log('=== 00A: ImportRawSources Tool (v3 — site-level identity) ===\n');
 
   const { input, output, sourcesDir } = parseArgs();
 
@@ -398,7 +435,6 @@ function main(): void {
     process.exit(1);
   }
 
-  // Default sources dir to sources/ in project root
   const canonicalSourcesDir = sourcesDir ?? path.join(process.cwd(), 'sources');
 
   console.log(`Input:         ${input}`);
@@ -421,10 +457,10 @@ function main(): void {
   console.log('=== Import Summary ===');
   console.log(`  Raw rows parsed:              ${stats.totalRows}`);
   console.log(`  Existing sources loaded:      ${stats.existingSourcesLoaded}`);
-  console.log(`  NEW sources:                  ${stats.new}`);
-  console.log(`  MATCHED existing:            ${stats.matchedExisting}`);
-  console.log(`  DUPLICATE in import batch:   ${stats.duplicateInImport}`);
-  console.log(`  Total deduplicated output:    ${sources.length}`);
+  console.log(`  NEW sources:                 ${stats.new}`);
+  console.log(`  MATCHED existing:           ${stats.matchedExisting}`);
+  console.log(`  DUPLICATE rows in import:    ${stats.duplicateInImportRows}`);
+  console.log(`  Total output sources:        ${stats.outputSources}`);
   console.log();
 
   // Show new sources
@@ -432,7 +468,7 @@ function main(): void {
   if (newSources.length > 0) {
     console.log(`=== NEW sources (${newSources.length}) ===`);
     for (const s of newSources) {
-      console.log(`  ${s.sourceId}: ${s.name} | ${s.canonicalUrl}`);
+      console.log(`  ${s.sourceId}: ${s.name} | ${s.sourceIdentityKey}`);
     }
     console.log();
   }
@@ -444,19 +480,21 @@ function main(): void {
     for (const s of matched) {
       console.log(`  ${s.existingSource!.id}: "${s.existingSource!.name}"`);
       console.log(`    preferredPath=${s.existingSource!.preferredPath ?? 'null'}`);
-      console.log(`    import URL: ${s.canonicalUrl}`);
+      console.log(`    siteIdentityKey=${s.sourceIdentityKey}`);
+      console.log(`    canonicalUrl=${s.canonicalUrl}`);
     }
     console.log();
   }
 
-  // Show internal duplicates
-  const internalDups = sources.filter(s => s.matchStatus === 'duplicate_in_import');
-  if (internalDups.length > 0) {
-    console.log(`=== DUPLICATES in import batch (${internalDups.length}) ===`);
-    for (const s of internalDups) {
-      console.log(`  ${s.sourceId} (${s.canonicalUrl})`);
+  // Show sources that had internal duplicates merged
+  const mergedSources = sources.filter(s => s.isDuplicate);
+  if (mergedSources.length > 0) {
+    console.log(`=== SOURCES WITH INTERNAL DUPLICATES (${mergedSources.length}) ===`);
+    for (const s of mergedSources) {
+      console.log(`  ${s.sourceId}: ${s.name}`);
+      console.log(`    rows merged: ${s.originalRows.length}`);
       for (const orig of s.originalRows) {
-        console.log(`    → ${orig.name} | ${orig.url}`);
+        console.log(`      → ${orig.name} | ${orig.url}`);
       }
     }
     console.log();
@@ -474,6 +512,7 @@ function main(): void {
   console.log('=== Verification ===');
   console.log(`  Input rows:              ${stats.totalRows}`);
   console.log(`  Sum of originalRows:     ${originalsInOutput}`);
+  console.log(`  Duplicate rows counted:  ${stats.duplicateInImportRows}`);
   console.log(`  Match: ${originalsInOutput === stats.totalRows ? 'YES ✓' : 'NO ✗'}`);
 }
 
