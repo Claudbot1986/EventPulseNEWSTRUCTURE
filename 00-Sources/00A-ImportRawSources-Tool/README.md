@@ -128,18 +128,25 @@ Varje importerad fil loggas i `runtime/raw-import-manifest.jsonl` med:
 
 ## Spårbarhet: varje rå rad är spårbar
 
-Varje rå rad i en importfil får **exakt ett explicit utfall** (row-level traceability):
+Varje rå rad i en importfil får **exakt ett explicit utfall** (row-level traceability).
+
+`provenanceRows[]` på varje `ImportedSource` innehåller alla rader som bidrog till den source. Ingen source har någonsin tom `provenanceRows`.
 
 || rowOutcome | Betydelse | Påverkar source? |
 |------------|-----------|------------------|
-| `new_row` | Ny source, ingen match i `sources/` | ✓ skrivs till `sources/` |
-| `new_row_needs_review` | Ny source som är flaggad för manuell granskning | ✓ skrivs med `requiresManualReview=true` |
+| `new_row` | Ny source, ingen match i `sources/`, ingen konflikt | ✓ skrivs till `sources/` |
+| `new_row_needs_review` | Ny source som är flaggad för manuell granskning (name/city-konflikt med hostname-match) | ✓ skrivs med `requiresManualReview=true` |
 | `matched_existing_row` | Matchar en befintlig source i `sources/` | ✗ behåller befintlig |
 | `duplicate_row_in_batch` | Samma hostname i samma importfil | ✗ ignoreras |
-| `skipped_already_imported_file` | Hela filen hoppades över (redan importerad) | ✗ aldrig i pipeline |
-| `invalid_row` | Rad saknar giltig URL eller har för få kolumner | ✗ aldrig i pipeline |
+| `skipped_already_imported_file` | Hela filen hoppades över (redan importerad) | ✗ aldrig i pipeline — provenance sparas i `.skipped-provenance.jsonl` |
+| `invalid_row` | Rad saknar giltig URL eller har för få kolumner | ✗ aldrig i pipeline — provenance sparas i `.invalid-provenance.jsonl` |
 
 **Reconciliation:** `validRows + invalidRows = totalSeenRows` — alltid.
+
+**Provenance-filer:**
+- `import-preview.jsonl` — varje source har `provenanceRows[]` med alla bidragande rader
+- `import-preview.invalid-provenance.jsonl` — en rad per ogiltig rad
+- `import-preview.skipped-provenance.jsonl` — en rad per hoppad filrad (idempotens)
 
 ## Match-status
 

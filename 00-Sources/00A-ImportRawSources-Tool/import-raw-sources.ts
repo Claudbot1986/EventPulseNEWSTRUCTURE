@@ -34,6 +34,12 @@ interface RawSourceRow {
   type: string;
   discoveredAt: string;
   note: string;
+  /** SHA256 of name|url|city — for provenance row traceability */
+  rawLineHash: string;
+  /** Original URL before normalization — for provenance */
+  rawUrl: string;
+  /** 1-indexed line number in the original file — for provenance */
+  lineNumber: number;
 }
 
 /** A single existing source read from sources/*.jsonl */
@@ -131,8 +137,8 @@ export interface ManifestEntry {
  * Every raw row gets exactly one of these so we can account for every row.
  *
  * IMPORTANT — This is ROW-LEVEL traceability, SEPARATE from matchStatus.
- * - matchStatus:     source-level import outcome (new | matched_existing | duplicate_in_import)
- * - classificationOutcome: row-level what-happened-to-this-row
+ * - matchStatus:   source-level import outcome (new | matched_existing | duplicate_in_import)
+ * - rowOutcome:    row-level what-happened-to-this-row
  *
  * The word "new" is shared but means different things:
  *   - matchStatus.new = this source WILL be written to sources/
@@ -177,6 +183,9 @@ export interface RawRowProvenance {
     | 'duplicate_row_in_batch'     // row was duplicate within import batch
     | 'skipped_already_imported_file' // file was already imported, all rows skipped
     | 'invalid_row';               // row was invalid, never reached import pipeline
+
+  /** For invalid_row: why the row was rejected. For skipped_already_imported_file: why the file was skipped. */
+  rowReason?: string;
 }
 
 // ─── URL Normalization ────────────────────────────────────────────────────
@@ -286,11 +295,25 @@ export function generateSourceId(siteIdentityKey: string): string {
 
 export function parseMarkdownTable(content: string): {
   validRows: RawSourceRow[];
-  invalidRows: Array<{ lineNumber: number; lineText: string; reason: string }>;
+  invalidRows: Array<{
+    lineNumber: number;
+    lineText: string;
+    reason: string;
+    rawLineHash: string;
+    rawUrl: string;
+    rawName: string;
+  }>;
 } {
   const lines = content.split('\n');
   const validRows: RawSourceRow[] = [];
-  const invalidRows: Array<{ lineNumber: number; lineText: string; reason: string }> = [];
+  const invalidRows: Array<{
+    lineNumber: number;
+    lineText: string;
+    reason: string;
+    rawLineHash: string;
+    rawUrl: string;
+    rawName: string;
+  }> = [];
 
   for (let i = 0; i < lines.length; i++) {
     const line = lines[i];
@@ -304,7 +327,16 @@ export function parseMarkdownTable(content: string): {
       .filter(c => c.length > 0);
 
     if (cells.length < 6) {
-      invalidRows.push({ lineNumber, lineText: line, reason: 'fewer than 6 columns' });
+      const name = cells[0] ?? '';
+      const url = cells[1] ?? '';
+      invalidRows.push({
+        lineNumber,
+        lineText: line,
+        reason: 'fewer than 6 columns',
+        rawLineHash: computeRowHash(name, url, ''),
+        rawUrl: url,
+        rawName: name,
+      });
       continue;
     }
 
@@ -312,12 +344,26 @@ export function parseMarkdownTable(content: string): {
     const note = noteParts.join(' | ');
 
     if (!url) {
-      invalidRows.push({ lineNumber, lineText: line, reason: 'missing URL' });
+      invalidRows.push({
+        lineNumber,
+        lineText: line,
+        reason: 'missing URL',
+        rawLineHash: computeRowHash(name, '', ''),
+        rawUrl: '',
+        rawName: name,
+      });
       continue;
     }
 
     if (!isValidUrl(url)) {
-      invalidRows.push({ lineNumber, lineText: line, reason: `invalid URL: ${url}` });
+      invalidRows.push({
+        lineNumber,
+        lineText: line,
+        reason: `invalid URL: ${url}`,
+        rawLineHash: computeRowHash(name, url, city),
+        rawUrl: url,
+        rawName: name,
+      });
       continue;
     }
 
@@ -328,6 +374,9 @@ export function parseMarkdownTable(content: string): {
       type: type.trim(),
       discoveredAt: discoveredAt.trim(),
       note: note.trim(),
+      rawLineHash: computeRowHash(name.trim(), url.trim(), city.trim()),
+      rawUrl: url.trim(),
+      lineNumber,
     });
   }
 
@@ -928,14 +977,47 @@ export function generateBatchId(): string {
 
 export interface ImportResult {
   sources: ImportedSource[];
+  /** Invalid rows that never reached the import pipeline (bad URL, missing columns) */
+  invalidRowProvenance: RawRowProvenance[];
+  /** Skipped file rows — file was already imported, all its rows get this treatment */
+  skippedRowProvenance: RawRowProvenance[];
   stats: {
     totalRows: number;
     new: number;
+    newNeedsReview: number;
     matchedExisting: number;
     duplicateInImportRows: number;  // how many RAW rows were duplicates
     manualreview: number;           // sources flagged for manual review
     outputSources: number;           // how many unique sources in output
     existingSourcesLoaded: number;
+    invalidRows: number;            // how many rows were invalid
+  };
+}
+
+/**
+ * Build a provenance entry for a raw row.
+ */
+function makeRowProvenance(
+  row: RawSourceRow,
+  lineNumber: number,
+  fileContext: {
+    batchId: string;
+    fileName: string;
+    fileHash: string;
+  },
+  outcome: RawRowProvenance['rowOutcome'],
+  reason?: string,
+): RawRowProvenance {
+  return {
+    importBatchId: fileContext.batchId,
+    sourceFile: fileContext.fileName,
+    sourceFileHash: fileContext.fileHash,
+    sourceRowNumber: lineNumber,
+    rawLineHash: row.rawLineHash,
+    rawName: row.name,
+    rawUrl: row.rawUrl,
+    rowOutcome: outcome,
+    rowReason: reason,
   };
 }
 
@@ -953,21 +1035,32 @@ export interface ImportResult {
  * - If siteIdentityKey matches an existing source → matched_existing
  * - If siteIdentityKey already seen in this import batch → duplicate_in_import
  * - Otherwise → new
+ *
+ * EVERY row gets exactly one RawRowProvenance entry, attached to its source.
+ * provenanceRows is NEVER empty for a source that had rows contribute to it.
  */
 export function importRawSourcesWithMatching(
   rows: RawSourceRow[],
   existingSources: Map<string, ExistingSource>,
   sourcesDir: string,
   reservedInBatch: Set<string>,
+  fileContext: {
+    batchId: string;
+    fileName: string;
+    fileHash: string;
+  },
+  invalidRows: Array<{ lineNumber: number; lineText: string; reason: string; rawUrl: string; rawName: string; rawLineHash: string }>,
 ): ImportResult {
   const stats = {
     totalRows: rows.length,
     new: 0,
+    newNeedsReview: 0,
     matchedExisting: 0,
     duplicateInImportRows: 0,
     manualreview: 0,
     outputSources: 0,
     existingSourcesLoaded: existingSources.size,
+    invalidRows: invalidRows.length,
   };
 
   // Track seen siteIdentityKeys in this import batch
@@ -976,16 +1069,26 @@ export function importRawSourcesWithMatching(
   // Track for building final output
   const outputMap = new Map<string, ImportedSource>();
 
+  // All provenance entries — returned so caller can aggregate across files
+  const allRowProvenance: RawRowProvenance[] = [];
+
+  // Helper: get or create a provenance array for a source
+  function getProvenanceArr(source: ImportedSource): RawRowProvenance[] {
+    if (!source.provenanceRows) source.provenanceRows = [];
+    return source.provenanceRows;
+  }
+
   for (const row of rows) {
     const siteIdentityKey = normalizeToSiteIdentityKey(row.url);
     const canonicalUrl = normalizeToCanonicalUrl(row.url);
+    const lineNumber = row.lineNumber;
 
     // Check 1: Does this match an existing canonical source?
     if (existingSources.has(siteIdentityKey)) {
       const existing = existingSources.get(siteIdentityKey)!;
 
       if (outputMap.has(siteIdentityKey)) {
-        // Already added as primary — just record this row
+        // Already added as primary — this row is a duplicate within batch
         const primary = outputMap.get(siteIdentityKey)!;
         primary.originalRows.push({ name: row.name, url: row.url });
 
@@ -1001,22 +1104,24 @@ export function importRawSourcesWithMatching(
             primary.reviewTags = ['manualreview', 'name_conflict', 'city_conflict'];
             primary.manualReviewReasons = reasons;
             stats.manualreview++;
+            // Update rowOutcome for this row — it contributed to a needs-review source
+            getProvenanceArr(primary).push(makeRowProvenance(row, lineNumber, fileContext, 'new_row_needs_review', `name/city conflict with existing source`));
+          } else {
+            getProvenanceArr(primary).push(makeRowProvenance(row, lineNumber, fileContext, 'duplicate_row_in_batch', `name/city conflict already flagged`));
           }
+          stats.duplicateInImportRows++;
         } else {
           primary.isDuplicate = true;
           stats.duplicateInImportRows++;
+          getProvenanceArr(primary).push(makeRowProvenance(row, lineNumber, fileContext, 'duplicate_row_in_batch'));
         }
       } else {
-        // First occurrence — create as matched_existing
-        // BUT: if name/city conflicts with existing source, flag as manualreview
+        // First occurrence — create as matched_existing or new+review
         const nameConflict = existing.name && existing.name !== row.name;
         const cityConflict = existing.city && existing.city !== row.city;
 
         if (nameConflict || cityConflict) {
-          // NEW + review flag: hostname matched but name/city differs — create as new source
-          // with review flag and a conflictVariant to ensure unique sourceId.
-          // The sourceId is derived from hostname + conflictVariant so it can NEVER
-          // collide with the existing source's file.
+          // NEW + review flag: hostname matched but name/city differs
           const tags: Array<'manualreview' | 'name_conflict' | 'city_conflict'> = ['manualreview'];
           if (nameConflict) tags.push('name_conflict');
           if (cityConflict) tags.push('city_conflict');
@@ -1024,13 +1129,13 @@ export function importRawSourcesWithMatching(
           if (nameConflict) reasons.push(`name='${existing.name}' vs import name='${row.name}'`);
           if (cityConflict) reasons.push(`city='${existing.city}' vs import city='${row.city}'`);
 
-          // Generate a conflict-variant sourceId: hostname + '-conflict-' + next available variant
-          // findNextConflictVariant scans both existing files in sources/ (persistent)
-          // AND reserved IDs in this batch, so variants are unique across all batches.
           const baseId = generateSourceId(siteIdentityKey);
           const nextVariant = findNextConflictVariant(baseId, sourcesDir, reservedInBatch);
           const conflictId = `${baseId}-conflict-${nextVariant}`;
           reservedInBatch.add(conflictId);
+
+          const provenance: RawRowProvenance[] = [];
+          provenance.push(makeRowProvenance(row, lineNumber, fileContext, 'new_row_needs_review', reasons.join('; ')));
 
           outputMap.set(siteIdentityKey, {
             sourceId: conflictId,
@@ -1053,10 +1158,14 @@ export function importRawSourcesWithMatching(
               name: existing.name,
               preferredPath: existing.preferredPath ?? null,
             },
-            provenanceRows: [],
+            provenanceRows: provenance,
           });
           stats.manualreview++;
+          stats.newNeedsReview++;
         } else {
+          const provenance: RawRowProvenance[] = [];
+          provenance.push(makeRowProvenance(row, lineNumber, fileContext, 'matched_existing_row'));
+
           outputMap.set(siteIdentityKey, {
             sourceId: existing.id,
             sourceIdentityKey: siteIdentityKey,
@@ -1075,7 +1184,7 @@ export function importRawSourcesWithMatching(
               name: existing.name,
               preferredPath: existing.preferredPath ?? null,
             },
-            provenanceRows: [],
+            provenanceRows: provenance,
           });
           stats.matchedExisting++;
         }
@@ -1100,16 +1209,28 @@ export function importRawSourcesWithMatching(
           primary.reviewTags = ['manualreview', 'name_conflict', 'city_conflict'];
           primary.manualReviewReasons = reasons;
           stats.manualreview++;
+          getProvenanceArr(primary).push(makeRowProvenance(row, lineNumber, fileContext, 'new_row_needs_review', reasons.join('; ')));
+          stats.duplicateInImportRows++;
+        } else {
+          getProvenanceArr(primary).push(makeRowProvenance(row, lineNumber, fileContext, 'duplicate_row_in_batch', `name/city conflict already flagged`));
+          stats.duplicateInImportRows++;
         }
       } else {
         primary.isDuplicate = true;
         stats.duplicateInImportRows++;
+        getProvenanceArr(primary).push(makeRowProvenance(row, lineNumber, fileContext, 'duplicate_row_in_batch'));
       }
       continue;
     }
 
     // New source
     batchSeen.add(siteIdentityKey);
+
+    // Determine rowOutcome: clean new or needs review
+    // In this path there are no conflicts since it's a genuinely new site
+    const provenance: RawRowProvenance[] = [];
+    provenance.push(makeRowProvenance(row, lineNumber, fileContext, 'new_row'));
+
     outputMap.set(siteIdentityKey, {
       sourceId: generateSourceId(siteIdentityKey),
       sourceIdentityKey: siteIdentityKey,
@@ -1122,15 +1243,33 @@ export function importRawSourcesWithMatching(
       isDuplicate: false,
       originalRows: [{ name: row.name, url: row.url }],
       matchStatus: 'new',
-      provenanceRows: [],
+      provenanceRows: provenance,
     });
     stats.new++;
+  }
+
+  // Collect all provenance from all sources into allRowProvenance
+  for (const source of Array.from(outputMap.values())) {
+    allRowProvenance.push(...(source.provenanceRows ?? []));
   }
 
   const sources = Array.from(outputMap.values());
   stats.outputSources = sources.length;
 
-  return { sources, stats };
+  // Build provenance for all invalid rows (they never reached the matching logic)
+  const invalidRowProvenance: RawRowProvenance[] = invalidRows.map(inv => ({
+    importBatchId: fileContext.batchId,
+    sourceFile: fileContext.fileName,
+    sourceFileHash: fileContext.fileHash,
+    sourceRowNumber: inv.lineNumber,
+    rawLineHash: inv.rawLineHash,
+    rawName: inv.rawName,
+    rawUrl: inv.rawUrl,
+    rowOutcome: 'invalid_row',
+    rowReason: inv.reason,
+  }));
+
+  return { sources, invalidRowProvenance, skippedRowProvenance: [], stats };
 }
 
 // ─── Multi-File Import Orchestrator ────────────────────────────────────────
@@ -1168,6 +1307,10 @@ export function runMultiFileImport(
   totalRowsSeen: number;
   totalInvalidRows: number;
   totalSkippedFiles: number;
+  /** All invalid-row provenance entries across all files */
+  invalidRowProvenance: RawRowProvenance[];
+  /** Provenance for skipped files (rows from already-imported files) */
+  skippedFileProvenance: RawRowProvenance[];
 } {
   const batchId = generateBatchId();
   const manifest = readManifest();
@@ -1179,7 +1322,7 @@ export function runMultiFileImport(
 
   if (files.length === 0) {
     console.log('No raw source files found.');
-    return { results: [], totalSources: 0, totalRowsSeen: 0, totalInvalidRows: 0, totalSkippedFiles: 0 };
+    return { results: [], totalSources: 0, totalRowsSeen: 0, totalInvalidRows: 0, totalSkippedFiles: 0, invalidRowProvenance: [], skippedFileProvenance: [] };
   }
 
   // Always read existing sources once
@@ -1191,6 +1334,10 @@ export function runMultiFileImport(
   let totalRowsSeen = 0;
   let totalInvalidRows = 0;
   let totalSkippedFiles = 0;
+
+  // All provenance across all files
+  const allInvalidRowProvenance: RawRowProvenance[] = [];
+  const allSkippedFileProvenance: RawRowProvenance[] = [];
 
   // Reserved conflict-variant IDs — shared across all files in this multi-file batch
   // This ensures unique variant numbers within the batch too
@@ -1211,6 +1358,44 @@ export function runMultiFileImport(
     if (alreadyImported) {
       console.log(`  SKIP (already imported): ${file}`);
       console.log(`    Previously imported: ${alreadyImported.importedAt}`);
+
+      // Read the file to get row count and build provenance for all skipped rows
+      const content = fs.readFileSync(filePath, 'utf-8');
+      const { validRows, invalidRows } = parseMarkdownTable(content);
+      const allRows = validRows.length + invalidRows.length;
+
+      // Create skipped provenance for every row in this already-imported file
+      const skippedProvenance: RawRowProvenance[] = [];
+      // First add provenance for valid rows
+      for (let i = 0; i < validRows.length; i++) {
+        skippedProvenance.push({
+          importBatchId: alreadyImported.importBatchId,
+          sourceFile: file,
+          sourceFileHash: fileHash,
+          sourceRowNumber: i + 1,
+          rawLineHash: validRows[i].rawLineHash,
+          rawName: validRows[i].name,
+          rawUrl: validRows[i].rawUrl,
+          rowOutcome: 'skipped_already_imported_file',
+          rowReason: `File already imported at ${alreadyImported.importedAt} (batch ${alreadyImported.importBatchId})`,
+        });
+      }
+      // Then for invalid rows
+      for (const inv of invalidRows) {
+        skippedProvenance.push({
+          importBatchId: alreadyImported.importBatchId,
+          sourceFile: file,
+          sourceFileHash: fileHash,
+          sourceRowNumber: inv.lineNumber,
+          rawLineHash: inv.rawLineHash,
+          rawName: inv.rawName,
+          rawUrl: inv.rawUrl,
+          rowOutcome: 'skipped_already_imported_file',
+          rowReason: `File already imported at ${alreadyImported.importedAt}; row was invalid: ${inv.reason}`,
+        });
+      }
+      allSkippedFileProvenance.push(...skippedProvenance);
+
       results.push({
         fileName: file,
         fileHash,
@@ -1231,8 +1416,16 @@ export function runMultiFileImport(
     totalRowsSeen += validRows.length;
     totalInvalidRows += invalidRows.length;
 
-    const { sources, stats } = importRawSourcesWithMatching(validRows, existingSources, sourcesDir, reservedInBatch);
+    const { sources, invalidRowProvenance } = importRawSourcesWithMatching(
+      validRows,
+      existingSources,
+      sourcesDir,
+      reservedInBatch,
+      { batchId, fileName: file, fileHash },
+      invalidRows,
+    );
     allSources.push(...sources);
+    allInvalidRowProvenance.push(...invalidRowProvenance);
 
     results.push({
       fileName: file,
@@ -1275,6 +1468,8 @@ export function runMultiFileImport(
     totalRowsSeen,
     totalInvalidRows,
     totalSkippedFiles,
+    invalidRowProvenance: allInvalidRowProvenance,
+    skippedFileProvenance: allSkippedFileProvenance,
   };
 }
 
@@ -1363,6 +1558,56 @@ function main(): void {
     if (alreadyImported) {
       console.log(`  ALREADY IMPORTED: ${alreadyImported.importedAt}`);
       console.log(`  Skipping. Use a different file or clear the manifest.`);
+
+      // Build provenance for all rows in the skipped file
+      const content = fs.readFileSync(filePath, 'utf-8');
+      const { validRows, invalidRows } = parseMarkdownTable(content);
+
+      const skippedProvenance: RawRowProvenance[] = [];
+      for (let i = 0; i < validRows.length; i++) {
+        skippedProvenance.push({
+          importBatchId: alreadyImported.importBatchId,
+          sourceFile: path.basename(filePath),
+          sourceFileHash: fileHash,
+          sourceRowNumber: i + 1,
+          rawLineHash: validRows[i].rawLineHash,
+          rawName: validRows[i].name,
+          rawUrl: validRows[i].rawUrl,
+          rowOutcome: 'skipped_already_imported_file',
+          rowReason: `File already imported at ${alreadyImported.importedAt}`,
+        });
+      }
+      for (const inv of invalidRows) {
+        skippedProvenance.push({
+          importBatchId: alreadyImported.importBatchId,
+          sourceFile: path.basename(filePath),
+          sourceFileHash: fileHash,
+          sourceRowNumber: inv.lineNumber,
+          rawLineHash: inv.rawLineHash,
+          rawName: inv.rawName,
+          rawUrl: inv.rawUrl,
+          rowOutcome: 'skipped_already_imported_file',
+          rowReason: `File already imported; row was invalid: ${inv.reason}`,
+        });
+      }
+
+      const outcomeCounts: Record<string, number> = {};
+      for (const prov of skippedProvenance) {
+        outcomeCounts[prov.rowOutcome] = (outcomeCounts[prov.rowOutcome] ?? 0) + 1;
+      }
+      console.log();
+      console.log('=== Row-Level Provenance (skipped file) ===');
+      for (const [outcome, count] of Object.entries(outcomeCounts).sort()) {
+        console.log(`  ${outcome}: ${count}`);
+      }
+      console.log();
+      console.log(`Manifest entry: batch ${alreadyImported.importBatchId}`);
+
+      // Write skipped provenance to a separate file for traceability
+      const skippedOutputPath = output.replace(/\.jsonl$/, '.skipped-provenance.jsonl');
+      const skippedLines = skippedProvenance.map(p => JSON.stringify(p)).join('\n') + '\n';
+      fs.writeFileSync(skippedOutputPath, skippedLines, 'utf-8');
+      console.log(`Skipped provenance written: ${skippedOutputPath}`);
       process.exit(0);
     }
     console.log();
@@ -1374,12 +1619,21 @@ function main(): void {
     const { validRows, invalidRows } = parseMarkdownTable(content);
     console.log(`Parsed: ${validRows.length} valid rows, ${invalidRows.length} invalid rows\n`);
 
-    const { sources, stats } = importRawSourcesWithMatching(validRows, existingSources, canonicalSourcesDir, new Set<string>());
+    const batchId = `batch-${Date.now()}-${Math.random().toString(36).substring(2, 8)}`;
+    const { sources, invalidRowProvenance, stats } = importRawSourcesWithMatching(
+      validRows,
+      existingSources,
+      canonicalSourcesDir,
+      new Set<string>(),
+      { batchId, fileName: path.basename(filePath), fileHash },
+      invalidRows,
+    );
 
     console.log('=== Import Summary ===');
     console.log(`  Raw rows parsed:              ${stats.totalRows}`);
     console.log(`  Existing sources loaded:      ${stats.existingSourcesLoaded}`);
-    console.log(`  NEW sources:                 ${stats.new}`);
+    console.log(`  NEW (clean):                 ${stats.new - stats.newNeedsReview}`);
+    console.log(`  NEW (needs review):         ${stats.newNeedsReview}`);
     console.log(`  MATCHED existing:           ${stats.matchedExisting}`);
     console.log(`  DUPLICATE rows in import:    ${stats.duplicateInImportRows}`);
     console.log(`  MANUALREVIEW:              ${stats.manualreview}`);
@@ -1467,6 +1721,22 @@ function main(): void {
     const totalInvalidRows = invalidRows.length;
     const totalSeenRows = totalValidRows + totalInvalidRows;
 
+    // Count row outcomes from provenanceRows
+    const outcomeCounts: Record<string, number> = {};
+    for (const src of sources) {
+      for (const prov of src.provenanceRows ?? []) {
+        outcomeCounts[prov.rowOutcome] = (outcomeCounts[prov.rowOutcome] ?? 0) + 1;
+      }
+    }
+    for (const prov of invalidRowProvenance) {
+      outcomeCounts[prov.rowOutcome] = (outcomeCounts[prov.rowOutcome] ?? 0) + 1;
+    }
+
+    console.log();
+    console.log('=== Row-Level Provenance ===');
+    for (const [outcome, count] of Object.entries(outcomeCounts).sort()) {
+      console.log(`  ${outcome}: ${count}`);
+    }
     console.log();
     console.log('=== Row-Level Accounting ===');
     console.log(`  Total rows seen in file:   ${totalSeenRows}`);
@@ -1474,13 +1744,22 @@ function main(): void {
     console.log(`  Invalid rows:              ${totalInvalidRows}`);
     console.log(`  Output sources:            ${sources.length}`);
     console.log();
+    const totalAccounted = Object.values(outcomeCounts).reduce((a, b) => a + b, 0);
+    console.log(`  Provenance entries:         ${totalAccounted}`);
     console.log(`  Reconciliation:`);
     console.log(`    validRows (${totalValidRows}) + invalidRows (${totalInvalidRows}) = totalSeen (${totalSeenRows})`);
     console.log(`    ${totalSeenRows === totalSeenRows ? 'YES ✓' : 'NO ✗'} — every row accounted for`);
+    console.log(`    provenance (${totalAccounted}) = totalSeen (${totalSeenRows}) ? ${totalAccounted === totalSeenRows ? 'YES ✓' : 'NO ✗'} — every row has provenance`);
+
+    // Write invalid row provenance to a separate file for traceability
+    const invalidProvPath = output.replace(/\.jsonl$/, '.invalid-provenance.jsonl');
+    const invalidProvLines = invalidRowProvenance.map(p => JSON.stringify(p)).join('\n') + '\n';
+    fs.writeFileSync(invalidProvPath, invalidProvLines, 'utf-8');
+    console.log(`Invalid provenance written: ${invalidProvPath}`);
 
     // Write manifest entry
     const manifestEntry: ManifestEntry = {
-      importBatchId: `batch-${Date.now()}-${Math.random().toString(36).substring(2, 8)}`,
+      importBatchId: batchId,
       importedAt: new Date().toISOString(),
       fileName: path.basename(filePath),
       filePath,
@@ -1491,7 +1770,7 @@ function main(): void {
     };
     writeManifestEntry(manifestEntry);
     console.log();
-    console.log(`Manifest updated: ${manifestEntry.importBatchId}`);
+    console.log(`Manifest updated: ${batchId}`);
 
   } else {
     // Multi-file mode
@@ -1500,9 +1779,22 @@ function main(): void {
     console.log(`Sources dir:   ${canonicalSourcesDir}`);
     console.log(`RawSources:   ${rawSourcesDir}\n`);
 
-    const { results, totalSources, totalRowsSeen, totalInvalidRows, totalSkippedFiles } =
+    const { results, totalSources, totalRowsSeen, totalInvalidRows, totalSkippedFiles, invalidRowProvenance, skippedFileProvenance } =
       runMultiFileImport(inputArg, output, canonicalSourcesDir, rawSourcesDir);
 
+    console.log();
+    console.log('=== Row-Level Provenance ===');
+    // Count outcomes from all provenance
+    const outcomeCounts: Record<string, number> = {};
+    for (const prov of invalidRowProvenance) {
+      outcomeCounts[prov.rowOutcome] = (outcomeCounts[prov.rowOutcome] ?? 0) + 1;
+    }
+    for (const prov of skippedFileProvenance) {
+      outcomeCounts[prov.rowOutcome] = (outcomeCounts[prov.rowOutcome] ?? 0) + 1;
+    }
+    for (const [outcome, count] of Object.entries(outcomeCounts).sort()) {
+      console.log(`  ${outcome}: ${count}`);
+    }
     console.log();
     console.log('=== Multi-File Import Summary ===');
     console.log(`  Files found:              ${results.length + totalSkippedFiles}`);
