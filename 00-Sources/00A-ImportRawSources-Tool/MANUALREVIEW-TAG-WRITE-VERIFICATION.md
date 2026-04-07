@@ -97,6 +97,32 @@ Verifiera att `manualreview` nu behandlas som en tagg/flagga istället för ett 
 }
 ```
 
+## Flерbatch-test: conflict-varianter är persisted över batchar
+
+### Syfte
+Verifiera att conflict-variantnummer är unika och ökar över flera import-batchar.
+`abf-conflict-1` (batch 1) → `abf-conflict-2` (batch 2) → `abf-conflict-3` (batch 3)
+
+### Batch 1: Första konflikt för abf
+Input: `abf.se` med stadskillnad
+Förväntat: `abf-conflict-1.jsonl`
+
+### Batch 2: Andra konflikt för abf (medan `abf-conflict-1.jsonl` redan finns)
+Input: `abf.se` med annat namn
+Förväntat: `abf-conflict-2.jsonl` (inte `abf-conflict-1` som skulle krascha)
+
+### Batch 3: Tredje konflikt för abf
+Input: `abf.se` med tredje namnet
+Förväntat: `abf-conflict-3.jsonl`
+
+### Implementering
+```typescript
+findNextConflictVariant(baseSourceId, sourcesDir, reservedInBatch)
+```
+- Söker igenom befintliga filer i `sources/` (persistent över alla tidigare batchar)
+- Söker igenom reserverade IDn i aktuell batch (för multipla konflikter i samma batch)
+- Returnerar nästa lediga nummer (max + 1)
+
 ## Säkerhetsgarantier
 
 1. **`matched_existing` skrivs aldrig** — filen `abf.jsonl` förblev oförändrad
@@ -106,8 +132,9 @@ Verifiera att `manualreview` nu behandlas som en tagg/flagga istället för ett 
 5. **Backup före write** — `Old-sources-YYYYMMDDTHHmmssZ.tar.gz`
 6. **sources_status.jsonl oförändrad** — 420 rader före och efter
 7. **sources/ endast ökar** — 421 → 425 filer
+8. **`matchStatus='manualreview'` kan inte längre produceras** — typningen tillåter det inte
 
 ## Commit
 ```
-Treat manualreview as source tag instead of write blocker in 00A
+Make conflict variants persistent across batches and remove manualreview matchStatus
 ```

@@ -23,6 +23,9 @@ Detta är **endast ett importverktyg** — det skriver inte direkt till `sources
 En source med `matchStatus='new'` och `requiresManualReview=true` skrivs fortfarande till `sources/` — den är bara
 markerad för manuell granskning under ingestion.
 
+**matchStatus kan endast vara:** `new` | `matched_existing` | `duplicate_in_import`
+**manualreview som värde existerar inte i matchStatus — det är enbart en tagg i `reviewTags[]`.**
+
 **Om preview innehåller något annat statusvärde → verktyget avbryter med:**
 ```
 [SECURITY ABORT] append-only guard triggered:
@@ -297,7 +300,7 @@ Alla andra matchStatus ignoreras helt för write:
 |--------|-----------|
 | `requiresManualReview: true` | Source skrivs men behöver manuell granskning under ingestion |
 | `reviewTags` | T.ex. `["manualreview", "name_conflict"]` — varför den är flaggad |
-| `conflictVariant` | Om hostname matchade befintlig source men med annat name/city: unik sourceId skapas |
+| `conflictVariant` | Om hostname matchade befintlig source men med annat name/city: unik sourceId skapas. **Numreringen är persistent över batchar** — `findNextConflictVariant()` söker igenom både befintliga filer i `sources/` och reserverade IDn i aktuell batch |
 
 **Atomär write:**
 1. Backup av `sources/` tas före write
