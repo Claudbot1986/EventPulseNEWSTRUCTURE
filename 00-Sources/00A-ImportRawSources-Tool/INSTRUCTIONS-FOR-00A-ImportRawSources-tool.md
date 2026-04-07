@@ -63,9 +63,13 @@ npx tsx 00-Sources/00A-ImportRawSources-Tool/import-raw-sources.ts \
 | Fil | Innehåll |
 |-----|----------|
 | `runtime/import-preview.jsonl` | Alla importerade sources (ny + befintliga) |
+| `runtime/00A-file-scan-report.jsonl` | En rad per fil i RawSources/ — fullständig filnivå-redovisning |
 | `runtime/import-preview.invalid-provenance.jsonl` | Rader som var ogiltiga |
 | `runtime/import-preview.skipped-provenance.jsonl` | Rader från redan importerade filer |
 | `00-Sources/tmp/old-sources-after-00A-imports/*.tar.gz` | Backup av sources/ före import |
+
+Varje rad i `00A-file-scan-report.jsonl` innehåller:
+`fileName`, `filePath`, `scanOutcome`, `reason`, `fileSize`, `fileHash`, `previouslyImportedAt` (om relevant)
 
 ## Hur du vet att det fungerade
 

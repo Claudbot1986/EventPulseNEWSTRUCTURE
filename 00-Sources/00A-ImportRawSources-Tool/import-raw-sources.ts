@@ -946,7 +946,82 @@ export function isFileAlreadyImported(
 // ─── Raw Source File Discovery ────────────────────────────────────────────
 
 /**
+ * Discover all candidate files in RawSources and perform a full scan of each.
+ * Returns one FileScanEntry per file with explicit outcome and reason.
+ * This replaces findRawSourceFiles for --all mode.
+ */
+export function findRawSourceFilesWithScan(
+  rawDir: string,
+  manifest: ReturnType<typeof readManifest>,
+): FileScanEntry[] {
+  if (!fs.existsSync(rawDir)) return [];
+
+  const allEntries = fs.readdirSync(rawDir).sort().map((file): FileScanEntry => {
+    const filePath = path.join(rawDir, file);
+    const entry: FileScanEntry = {
+      fileName: file,
+      filePath,
+      scanOutcome: 'error',
+      reason: 'unknown',
+      fileSize: 0,
+    };
+
+    // File not found on disk
+    if (!fs.existsSync(filePath)) {
+      entry.scanOutcome = 'error';
+      entry.reason = 'File not found on disk';
+      return entry;
+    }
+
+    const stat = fs.statSync(filePath);
+    entry.fileSize = stat.size;
+
+    // Empty file
+    if (stat.size === 0) {
+      entry.scanOutcome = 'skipped_empty';
+      entry.reason = 'File is empty (0 bytes)';
+      return entry;
+    }
+
+    // Unsupported filename pattern
+    if (!file.startsWith('RawSources') && !file.startsWith('_batch_')) {
+      entry.scanOutcome = 'skipped_unsupported_filename';
+      entry.reason = `Filename does not match RawSources* or _batch_* pattern`;
+      return entry;
+    }
+
+    // Compute hash for idempotency check
+    try {
+      const { hash, size } = computeFileHash(filePath);
+      entry.fileHash = hash;
+      entry.fileSize = size; // override with hashed size
+
+      const alreadyImported = isFileAlreadyImported(hash, manifest);
+      if (alreadyImported) {
+        entry.scanOutcome = 'skipped_already_imported';
+        entry.reason = `Already imported at ${alreadyImported.importedAt} (batch ${alreadyImported.importBatchId})`;
+        entry.previouslyImportedAt = alreadyImported.importedAt;
+        entry.batchId = alreadyImported.importBatchId;
+        return entry;
+      }
+    } catch {
+      entry.scanOutcome = 'error';
+      entry.reason = 'Could not compute file hash';
+      return entry;
+    }
+
+    // Passes all checks — ready to import
+    entry.scanOutcome = 'imported';
+    entry.reason = 'Ready to import';
+    return entry;
+  });
+
+  return allEntries;
+}
+
+/**
  * Find all .md source files in a directory, sorted for deterministic order.
+ * @deprecated Use findRawSourceFilesWithScan for --all mode (includes scan reporting)
  */
 export function findRawSourceFiles(rawDir: string): string[] {
   if (!fs.existsSync(rawDir)) return [];
@@ -1284,6 +1359,36 @@ export interface FileImportResult {
   errorMessage?: string;
 }
 
+/** Outcome values for per-file scan reporting */
+export type FileScanOutcome =
+  | 'imported'
+  | 'skipped_already_imported'
+  | 'skipped_excluded'
+  | 'skipped_unsupported_filename'
+  | 'skipped_empty'
+  | 'error';
+
+/**
+ * One entry per file in the file-level scan report.
+ * Every file discovered in RawSources gets exactly one entry.
+ */
+export interface FileScanEntry {
+  fileName: string;
+  filePath: string;
+  scanOutcome: FileScanOutcome;
+  /** Human-readable reason for the outcome */
+  reason: string;
+  fileSize: number;
+  fileHash?: string;
+  importedAt?: string;
+  previouslyImportedAt?: string;
+  batchId?: string;
+  rowsParsed?: number;
+  invalidRows?: number;
+  outputSources?: number;
+  errorMessage?: string;
+}
+
 /**
  * Run the full multi-file import pipeline.
  * - Discovers raw source files
@@ -1310,29 +1415,30 @@ export function runMultiFileImport(
   invalidRowProvenance: RawRowProvenance[];
   /** Provenance for skipped files (rows from already-imported files) */
   skippedFileProvenance: RawRowProvenance[];
+  /** One entry per file in RawSources dir — full scan report */
+  fileScanReport: FileScanEntry[];
 } {
   const batchId = generateBatchId();
   const manifest = readManifest();
 
-  // Discover files
-  const files = inputArg
-    ? [inputArg]
-    : findRawSourceFiles(rawSourcesDir);
-
-  if (files.length === 0) {
-    console.log('No raw source files found.');
-    return { results: [], totalSources: 0, totalRowsSeen: 0, totalInvalidRows: 0, totalSkippedFiles: 0, invalidRowProvenance: [], skippedFileProvenance: [] };
-  }
+  // Discover all files in RawSources with full scan metadata (before importing anything)
+  const fileScanReport = inputArg
+    ? [] // single-file mode: no file scan report
+    : findRawSourceFilesWithScan(rawSourcesDir, manifest);
 
   // Always read existing sources once
   const existingSources = readExistingSources(sourcesDir);
   console.log(`Loaded ${existingSources.size} existing canonical sources\n`);
 
+  // Multi-file mode: only iterate over files that passed the scan
+  const filesToImport = inputArg
+    ? [] // single-file mode handled in main(); multi-file body is no-op here
+    : fileScanReport.filter(e => e.scanOutcome === 'imported');
+
   const results: FileImportResult[] = [];
   const allSources: ImportedSource[] = [];
   let totalRowsSeen = 0;
   let totalInvalidRows = 0;
-  let totalSkippedFiles = 0;
 
   // All provenance across all files
   const allInvalidRowProvenance: RawRowProvenance[] = [];
@@ -1342,74 +1448,11 @@ export function runMultiFileImport(
   // This ensures unique variant numbers within the batch too
   const reservedInBatch = new Set<string>();
 
-  for (const file of files) {
-    const filePath = path.join(rawSourcesDir, file);
-    if (!fs.existsSync(filePath)) {
-      console.log(`  SKIP (not found): ${file}`);
-      totalSkippedFiles++;
-      continue;
-    }
-
-    const { hash: fileHash, size: fileSize } = computeFileHash(filePath);
-
-    // Check idempotency
-    const alreadyImported = isFileAlreadyImported(fileHash, manifest);
-    if (alreadyImported) {
-      console.log(`  SKIP (already imported): ${file}`);
-      console.log(`    Previously imported: ${alreadyImported.importedAt}`);
-
-      // Read the file to get row count and build provenance for all skipped rows
-      const content = fs.readFileSync(filePath, 'utf-8');
-      const { validRows, invalidRows } = parseMarkdownTable(content);
-      const allRows = validRows.length + invalidRows.length;
-
-      // Create skipped provenance for every row in this already-imported file
-      const skippedProvenance: RawRowProvenance[] = [];
-      // First add provenance for valid rows
-      for (let i = 0; i < validRows.length; i++) {
-        skippedProvenance.push({
-          importBatchId: alreadyImported.importBatchId,
-          sourceFile: file,
-          sourceFileHash: fileHash,
-          sourceRowNumber: i + 1,
-          rawLineHash: validRows[i].rawLineHash,
-          rawName: validRows[i].name,
-          rawUrl: validRows[i].rawUrl,
-          rowOutcome: 'skipped_already_imported_file',
-          rowReason: `File already imported at ${alreadyImported.importedAt} (batch ${alreadyImported.importBatchId})`,
-        });
-      }
-      // Then for invalid rows
-      for (const inv of invalidRows) {
-        skippedProvenance.push({
-          importBatchId: alreadyImported.importBatchId,
-          sourceFile: file,
-          sourceFileHash: fileHash,
-          sourceRowNumber: inv.lineNumber,
-          rawLineHash: inv.rawLineHash,
-          rawName: inv.rawName,
-          rawUrl: inv.rawUrl,
-          rowOutcome: 'skipped_already_imported_file',
-          rowReason: `File already imported at ${alreadyImported.importedAt}; row was invalid: ${inv.reason}`,
-        });
-      }
-      allSkippedFileProvenance.push(...skippedProvenance);
-
-      results.push({
-        fileName: file,
-        fileHash,
-        fileSize,
-        status: 'skipped_already_imported',
-        rowsParsed: 0,
-        invalidRows: 0,
-        outputSources: 0,
-      });
-      totalSkippedFiles++;
-      continue;
-    }
+  // ── Import only the files that passed the scan ──────────────────────────
+  for (const entry of filesToImport) {
+    const { fileName, filePath, fileHash, fileSize } = entry;
 
     // Import this file
-    console.log(`  IMPORT: ${file}`);
     const content = fs.readFileSync(filePath, 'utf-8');
     const { validRows, invalidRows } = parseMarkdownTable(content);
     totalRowsSeen += validRows.length;
@@ -1420,15 +1463,15 @@ export function runMultiFileImport(
       existingSources,
       sourcesDir,
       reservedInBatch,
-      { batchId, fileName: file, fileHash },
+      { batchId, fileName, fileHash: fileHash! },
       invalidRows,
     );
     allSources.push(...sources);
     allInvalidRowProvenance.push(...invalidRowProvenance);
 
     results.push({
-      fileName: file,
-      fileHash,
+      fileName,
+      fileHash: fileHash!,
       fileSize,
       status: 'imported',
       rowsParsed: validRows.length,
@@ -1440,14 +1483,60 @@ export function runMultiFileImport(
     const manifestEntry: ManifestEntry = {
       importBatchId: batchId,
       importedAt: new Date().toISOString(),
-      fileName: file,
+      fileName,
       filePath,
       fileSize,
-      fileHash,
+      fileHash: fileHash!,
       rowCount: validRows.length,
       importStatus: 'imported',
     };
     writeManifestEntry(manifestEntry);
+  }
+
+  // ── Build skipped-file provenance for already-imported files ────────────
+  for (const entry of fileScanReport.filter(e => e.scanOutcome === 'skipped_already_imported')) {
+    const { fileName, filePath, fileHash, fileSize, batchId: importedBatchId, previouslyImportedAt } = entry;
+    const content = fs.readFileSync(filePath, 'utf-8');
+    const { validRows, invalidRows } = parseMarkdownTable(content);
+
+    const skippedProvenance: RawRowProvenance[] = [];
+    for (let i = 0; i < validRows.length; i++) {
+      skippedProvenance.push({
+        importBatchId: importedBatchId!,
+        sourceFile: fileName,
+        sourceFileHash: fileHash!,
+        sourceRowNumber: i + 1,
+        rawLineHash: validRows[i].rawLineHash,
+        rawName: validRows[i].name,
+        rawUrl: validRows[i].rawUrl,
+        rowOutcome: 'skipped_already_imported_file',
+        rowReason: `File already imported at ${previouslyImportedAt} (batch ${importedBatchId})`,
+      });
+    }
+    for (const inv of invalidRows) {
+      skippedProvenance.push({
+        importBatchId: importedBatchId!,
+        sourceFile: fileName,
+        sourceFileHash: fileHash!,
+        sourceRowNumber: inv.lineNumber,
+        rawLineHash: inv.rawLineHash,
+        rawName: inv.rawName,
+        rawUrl: inv.rawUrl,
+        rowOutcome: 'skipped_already_imported_file',
+        rowReason: `File already imported at ${previouslyImportedAt}; row was invalid: ${inv.reason}`,
+      });
+    }
+    allSkippedFileProvenance.push(...skippedProvenance);
+
+    results.push({
+      fileName,
+      fileHash: fileHash!,
+      fileSize,
+      status: 'skipped_already_imported',
+      rowsParsed: 0,
+      invalidRows: 0,
+      outputSources: 0,
+    });
   }
 
   // Write combined output
@@ -1466,11 +1555,12 @@ export function runMultiFileImport(
     totalSources: allSources.length,
     totalRowsSeen,
     totalInvalidRows,
-    totalSkippedFiles,
+    totalSkippedFiles: fileScanReport.filter(e => e.scanOutcome !== 'imported').length,
     invalidRowProvenance: allInvalidRowProvenance,
     skippedFileProvenance: allSkippedFileProvenance,
+    fileScanReport,
   };
-}
+  }
 
 // ─── CLI ──────────────────────────────────────────────────────────────────
 
@@ -1544,7 +1634,7 @@ function main(): void {
     console.log(`Output:        ${outputFile}`);
     console.log(`Sources dir:   ${canonicalSourcesDir}\n`);
 
-    const { results, totalSources, totalRowsSeen, totalInvalidRows, totalSkippedFiles, invalidRowProvenance, skippedFileProvenance } =
+    const { results, totalSources, totalRowsSeen, totalInvalidRows, totalSkippedFiles, invalidRowProvenance, skippedFileProvenance, fileScanReport } =
       runMultiFileImport(null, outputFile, canonicalSourcesDir, rawSourcesDir);
 
     console.log();
@@ -1561,7 +1651,7 @@ function main(): void {
     }
     console.log();
     console.log('=== Multi-File Import Summary ===');
-    console.log(`  Files found:              ${results.length + totalSkippedFiles}`);
+    console.log(`  Files found:              ${fileScanReport.length}`);
     console.log(`  Files imported:           ${results.filter(r => r.status === 'imported').length}`);
     console.log(`  Files skipped (already):  ${results.filter(r => r.status === 'skipped_already_imported').length}`);
     console.log(`  Files error:             ${results.filter(r => r.status === 'error').length}`);
@@ -1572,6 +1662,16 @@ function main(): void {
     const allSeen = totalRowsSeen + totalInvalidRows + results.reduce((sum, r) => r.status === 'skipped_already_imported' ? sum : 0, 0);
     const accountedFor = totalRowsSeen + totalInvalidRows;
     console.log(`  Reconciliation: ${allSeen} total seen = ${accountedFor} accounted for: ${allSeen === accountedFor ? 'YES ✓' : 'NO ✗'}`);
+
+    // ── File Scan Report ─────────────────────────────────────────────────
+    const scanReportPath = path.join(process.cwd(), 'runtime', '00A-file-scan-report.jsonl');
+    const scanLines = fileScanReport.map(e => JSON.stringify(e)).join('\n') + '\n';
+    fs.writeFileSync(scanReportPath, scanLines, 'utf-8');
+    console.log();
+    console.log('=== File Scan Report ===');
+    for (const e of fileScanReport) {
+      console.log(`  ${e.fileName.padEnd(30)} ${e.scanOutcome}`);
+    }
 
     if (applyNew) {
       console.log();
@@ -1838,7 +1938,7 @@ function main(): void {
     console.log(`Sources dir:   ${canonicalSourcesDir}`);
     console.log(`RawSources:   ${rawSourcesDir}\n`);
 
-    const { results, totalSources, totalRowsSeen, totalInvalidRows, totalSkippedFiles, invalidRowProvenance, skippedFileProvenance } =
+    const { results, totalSources, totalRowsSeen, totalInvalidRows, totalSkippedFiles, invalidRowProvenance, skippedFileProvenance, fileScanReport } =
       runMultiFileImport(inputArg, output, canonicalSourcesDir, rawSourcesDir);
 
     console.log();
