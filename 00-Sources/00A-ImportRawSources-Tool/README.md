@@ -128,42 +128,29 @@ Varje importerad fil loggas i `runtime/raw-import-manifest.jsonl` med:
 
 ## Spårbarhet: varje rå rad är spårbar
 
-Varje rå rad i en importfil får **exakt ett explicit utfall**:
+Varje rå rad i en importfil får **exakt ett explicit utfall** (row-level traceability):
 
-| Outcome | Betydelse |
-|---------|-----------|
-| `new` | Ny source, ingen match i `sources/` |
-| `matched_existing` | Matchar en befintlig source i `sources/` |
-| `duplicate_in_import` | Samma hostname i samma importfil |
-| `manualreview` | Namn eller stad skiljer sig från befintlig source — kräver manuell bedömning |
-| `skipped_already_imported_file` | Hela filen hoppades över (redan importerad) |
-| `invalid_raw_row` | Rad saknar giltig URL eller har för få kolumner |
+|| rowOutcome | Betydelse | Påverkar source? |
+|------------|-----------|------------------|
+| `new_row` | Ny source, ingen match i `sources/` | ✓ skrivs till `sources/` |
+| `new_row_needs_review` | Ny source som är flaggad för manuell granskning | ✓ skrivs med `requiresManualReview=true` |
+| `matched_existing_row` | Matchar en befintlig source i `sources/` | ✗ behåller befintlig |
+| `duplicate_row_in_batch` | Samma hostname i samma importfil | ✗ ignoreras |
+| `skipped_already_imported_file` | Hela filen hoppades över (redan importerad) | ✗ aldrig i pipeline |
+| `invalid_row` | Rad saknar giltig URL eller har för få kolumner | ✗ aldrig i pipeline |
 
-**Reconciliation:**
-`validRows + invalidRows = totalSeenRows` — alltid.
+**Reconciliation:** `validRows + invalidRows = totalSeenRows` — alltid.
 
 ## Match-status
 
 || Värde | Betydelse |
-|-------|-----------|
+|-------|--------|-----------|
 | `new` | Ingen match i befintliga `sources/`, ingen dup i import |
 | `matched_existing` | siteIdentityKey matchar en befintlig source i `sources/` |
 | `duplicate_in_import` | Samma siteIdentityKey inom importbatchen |
-| `manualreview` | **Ny:** Osäkerhet — namn eller stad skiljer sig åt, kräver mänsklig bedömning |
 
-## Temporär manualreview-namngivning
-
-Sources med `matchStatus = manualreview` får temporär metadata:
-
-| Fält | Värde | Exempel |
-|------|-------|---------|
-| `temporaryCategory` | `manualreview` | `manualreview` |
-| `temporarySourceId` | `manualreview-{hostname}` | `manualreview-liseberg-se` |
-| `temporaryDisplayName` | Namnet från importraden | `Liseberg` |
-| `manualReviewReason` | Konfliktsbeskrivning | `Name conflict with existing...` |
-
-**OBS:** Detta är INTE slutlig canonical identity. Det är en testmarkering för
-att möjliggöra UI-visning och analys. Slutgiltig beslut ska fattas manuellt.
+**`manualreview` är INTE ett matchStatus.** Det är enbart en **tagg/flagga** på source-nivå.
+Se `requiresManualReview` och `reviewTags` nedan.
 
 ## sourceId-regler
 

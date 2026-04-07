@@ -129,22 +129,54 @@ export interface ManifestEntry {
 /**
  * A provenance entry for ONE raw row.
  * Every raw row gets exactly one of these so we can account for every row.
+ *
+ * IMPORTANT — This is ROW-LEVEL traceability, SEPARATE from matchStatus.
+ * - matchStatus:     source-level import outcome (new | matched_existing | duplicate_in_import)
+ * - classificationOutcome: row-level what-happened-to-this-row
+ *
+ * The word "new" is shared but means different things:
+ *   - matchStatus.new = this source WILL be written to sources/
+ *   - rowOutcome.new_row = this row contributed to a new source (may still need review)
+ *
+ * A row that creates a conflict source gets:
+ *   - matchStatus = 'new'
+ *   - requiresManualReview = true
+ *   - reviewTags = ['manualreview', 'name_conflict', ...]
+ *   - rowOutcome = 'new_row_needs_review'
+ *
+ * A row that matches an existing source gets:
+ *   - matchStatus = 'matched_existing'
+ *   - rowOutcome = 'matched_existing_row'
+ *
+ * A row that is a duplicate within the import batch gets:
+ *   - matchStatus = 'duplicate_in_import' (source-level)
+ *   - rowOutcome = 'duplicate_row_in_batch'
+ *
+ * A row from an already-imported file gets:
+ *   - never reaches the import pipeline
+ *   - rowOutcome = 'skipped_already_imported_file'
+ *
+ * An invalid row (bad URL, missing columns) gets:
+ *   - never reaches the import pipeline
+ *   - rowOutcome = 'invalid_row'
  */
 export interface RawRowProvenance {
   importBatchId: string;
   sourceFile: string;
   sourceFileHash: string;
   sourceRowNumber: number;   // 1-indexed line in the raw file
-  rawLineHash: string;       // sha256 of the original line text (hex)
-  rawName: string;           // name field from the raw row
-  rawUrl: string;            // url field from the raw row
-  classificationOutcome:
-    | 'new'
-    | 'matched_existing'
-    | 'duplicate_in_import'
-    | 'manualreview'
-    | 'skipped_already_imported_file'
-    | 'invalid_raw_row';
+  rawLineHash: string;        // sha256 of the original line text (hex)
+  rawName: string;            // name field from the raw row
+  rawUrl: string;             // url field from the raw row
+
+  /** What happened to this specific row during import — ROW-LEVEL traceability. */
+  rowOutcome:
+    | 'new_row'                    // row created or contributed to a NEW source (matchStatus='new')
+    | 'new_row_needs_review'       // row created new source AND it is flagged for manual review
+    | 'matched_existing_row'       // row matched existing source (matchStatus='matched_existing')
+    | 'duplicate_row_in_batch'     // row was duplicate within import batch
+    | 'skipped_already_imported_file' // file was already imported, all rows skipped
+    | 'invalid_row';               // row was invalid, never reached import pipeline
 }
 
 // ─── URL Normalization ────────────────────────────────────────────────────

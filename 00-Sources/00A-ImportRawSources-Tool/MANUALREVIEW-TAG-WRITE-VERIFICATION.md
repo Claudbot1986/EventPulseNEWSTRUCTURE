@@ -6,6 +6,44 @@
 ## Syfte
 Verifiera att `manualreview` nu behandlas som en tagg/flagga istället för ett write-blockerande matchStatus.
 
+## Två-nivå modell: matchStatus vs rowOutcome vs taggar
+
+### Nivå 1: `matchStatus` (source-level import-utfall)
+Endast tre värden — strikt typat:
+
+| matchStatus | Betydelse | Skrivs? |
+|------------|-----------|---------|
+| `new` | Ny source | ✓ JA (med eller utan requiresManualReview) |
+| `matched_existing` | Matchar befintlig | ✗ IGNORED |
+| `duplicate_in_import` | Dubblett i import | ✗ IGNORED |
+
+### Nivå 2: Taggar (source-level metadata)
+Flaggor som följer med in i source-filen:
+
+| Tag | Betydelse |
+|-----|-----------|
+| `requiresManualReview: true` | Source behöver manuell granskning under ingestion |
+| `reviewTags: ['manualreview', ...]` | Varför granskning behövs |
+| `conflictVariant: N` | Persistent numrering över batchar |
+
+### Nivå 3: `rowOutcome` (row-level traceability)
+Spårbarhet för varje rå rad — separat från matchStatus:
+
+| rowOutcome | Betydelse |
+|------------|-----------|
+| `new_row` | Rad skapade bidrog till ny source |
+| `new_row_needs_review` | Rad → ny source + granskningsflagga |
+| `matched_existing_row` | Rad matchade befintlig source |
+| `duplicate_row_in_batch` | Rad var intern dublett |
+| `skipped_already_imported_file` | Fil var redan importerad |
+| `invalid_row` | Rad var ogiltig |
+
+### manualreview-placering
+- `matchStatus`: ALDRIG — taggen är borta här
+- `reviewTags`: JA — `['manualreview', 'name_conflict', ...]`
+- `rowOutcome`: JA — `new_row_needs_review` (när manualreview-taggen är satt)
+- `requiresManualReview`: JA — `true` när granskningsflagga behövs
+
 ## Ändringsbeskrivning
 
 ### Före
@@ -19,13 +57,13 @@ Verifiera att `manualreview` nu behandlas som en tagg/flagga istället för ett 
 - `buildWritePlan()` skriver ALLA `'new'` poster — med eller utan flagga
 - Flaggan följer med in i source-filen som `requiresManualReview: true`
 
-## MatchStatus vs reviewTags
+## matchStatus vs reviewTags vs rowOutcome
 
-| Koncept | matchStatus | reviewTags |
-|---------|------------|------------|
-| Vad det är | Huvudutfall av import-match | Osäkerhets-flagga på en ny source |
-| Värden | `new`, `matched_existing`, `duplicate_in_import` | `manualreview`, `name_conflict`, `city_conflict`, `type_uncertain` |
-| Används för | Att avgöra om source ska skrivas | Att markera att source behöver granskas |
+|| Koncept | matchStatus | reviewTags | rowOutcome |
+|---------|------------|------------|------------|
+| Vad det är | Source-level import-utfall | Source-level metadata | Row-level traceability |
+| Värden | `new`, `matched_existing`, `duplicate_in_import` | `manualreview`, `name_conflict`, `city_conflict` | `new_row`, `new_row_needs_review`, `matched_existing_row`, `duplicate_row_in_batch`, `skipped_already_imported_file`, `invalid_row` |
+| Används för | Att avgöra om source ska skrivas | Att markera att source behöver granskning | Att spåra varje rå rad |
 
 ## Testfälle
 
