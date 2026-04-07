@@ -7,7 +7,8 @@
   "scripts": {
     "type-check": "tsc --noEmit",
     "batch": "tsx 08-testResults/260330-batch1-10.ts",
-    "worker": "tsx 03-Queue/startWorker.ts"
+    "worker": "tsx 03-Queue/startWorker.ts",
+    "import:sources": "tsx 00-Sources/00A-ImportRawSources-Tool/import-raw-sources.ts --all --output runtime/import-preview.jsonl --apply-new"
   },
   "dependencies": {
     "@eventpulse/shared": "file:./packages/shared",
