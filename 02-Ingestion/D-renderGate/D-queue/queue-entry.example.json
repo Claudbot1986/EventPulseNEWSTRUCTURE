@@ -1,0 +1,8 @@
+{
+  "sourceId": "svenska-fotboll",
+  "queuedAt": "2026-04-07T18:30:00.000Z",
+  "queueName": "D",
+  "attempt": 0,
+  "priority": 50,
+  "queueReason": "C1 likelyJsRendered=true, needs D-renderGate verification"
+}

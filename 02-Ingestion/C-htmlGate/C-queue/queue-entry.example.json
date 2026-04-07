@@ -1,0 +1,8 @@
+{
+  "sourceId": "moderna-museet",
+  "queuedAt": "2026-04-07T18:30:00.000Z",
+  "queueName": "C",
+  "attempt": 1,
+  "priority": 100,
+  "queueReason": "HTML-candidate, C0 candidate=/kalender/ discovered"
+}
