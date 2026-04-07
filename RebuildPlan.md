@@ -137,8 +137,8 @@ Skapa separata operativa köer utan att skapa separata masterregister.
 Köstruktur
 
 Följande köer ska finnas:
-	•	A-networkGate/A-queue/
-	•	B-jsonGate/B-queue/
+	•	A-directAPI-networkGate/A-queue/
+	•	B-JSON-feedGate/B-queue/
 	•	C-htmlGate/C-queue/
 	•	D-renderGate/D-queue/
 	•	H-manualReview/H-queue/

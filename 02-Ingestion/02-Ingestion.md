@@ -39,10 +39,10 @@ The A-H stages are **progressive escalation paths**, not a linear sequence every
 Source URL
     │
     ▼
-A-Direct-API ──── (Ticketmaster, Eventbrite, Kulturhuset, Billetto)
-    │              Direct API calls. No gate needed — API is the source.
+A-directAPI-networkGate ──── (Ticketmaster, Eventbrite, Kulturhuset, Billetto)
+    │              Riktiga API/XHR/network-källor. Inga gate-logik — API:t är källan.
     ▼
-B-networkGate ──── (Used when JSON-LD fails or is absent)
+B-JSON-feedGate ──── (Used when JSON-LD fails or is absent)
     │              Inspects XHR/fetch calls in-page to find internal APIs.
     │              Falls through to C if API is blocked, key-required, or noisy.
     ▼
@@ -73,7 +73,7 @@ Sources with documented, open API access. Examples: Ticketmaster, Eventbrite, Bi
 
 No gate logic — the API **is** the extraction path. These sources bypass B-D entirely.
 
-### B — networkGate
+### B — JSON-feedGate
 
 Evaluates whether in-page network requests (XHR/fetch) expose a cleaner event data endpoint than HTML. Runs `networkInspector` against the source URL.
 
@@ -188,7 +188,7 @@ The A-H naming maps to these files. The folder structure documents the intent; t
 
 | Stage | Purpose | Exit Condition |
 |-------|---------|----------------|
-| A | Direct API call | API available |
+| A | Riktiga API/XHR/network-källor | API available |
 | B | Network inspection | Open API found or fall through |
 | C | HTML heuristics | Sufficient quality or fall through |
 | D | Render | JS needed or fall through |

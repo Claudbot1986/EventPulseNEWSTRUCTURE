@@ -20,11 +20,11 @@ Köerna A/B/C/D/H är **tunna operativa lager** — inte egna masterregister.
 
 ```
 02-Ingestion/
-  A-Direct-API/A-queue/      ← Network/API-källor
-  B-networkGate/B-queue/     ← JSON/feed-källor
-  C-htmlGate/C-queue/        ← HTML-källor
-  D-renderGate/D-queue/      ← JS-render-källor
-  H-manualReview/H-queue/     ← Manuellt granskning
+  A-directAPI-networkGate/A-queue/      ← Riktiga API/XHR/network-källor
+  B-JSON-feedGate/B-queue/             ← JSON-LD, RSS, ICS, statiska JSON-filer och andra feed-källor
+  C-htmlGate/C-queue/                  ← HTML-källor
+  D-renderGate/D-queue/                ← JS-render-källor
+  H-manualReview/H-queue/              ← Manuellt granskning
 ```
 
 ---

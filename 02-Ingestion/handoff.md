@@ -2927,7 +2927,7 @@ Motivering: Ändring gjord men inte verifierad genom scheduler. Kör scheduler p
   - `inspectUrl()` + `evaluateNetworkGate()` — redan inkopplade (loop 14)
 
 ### Ändringar i scheduler.ts
-1. **Ny import:** `extractFromApi` fråm `./B-networkGate/networkEventExtractor`
+1. **Ny import:** `extractFromApi` fråm `./B-JSON-feedGate/networkEventExtractor`
 2. **Ersatt TODO-block** (rad 246-258) med faktiskt API-anrop:
    - `extractFromApi(top.url, source.id, { timeout: 15000 })`
    - Mappning Tixly-format → RawEventInput
@@ -2969,9 +2969,9 @@ Motivering: Integration verifierad lokalt (test-extractor). Nästa steg är att 
 
 ### Vad förbättrades denna loop
 - **VERKTYGSBLOCKERING ÅTGÄRDAD:** network_inspection var INTE saknad — verktygen fanns redan!
-  - `02-Ingestion/B-networkGate/networkInspector.ts` — 692 rader, fullt implementerad
-  - `02-Ingestion/B-networkGate/A-networkGate.ts` — `evaluateNetworkGate()`, 295 rader
-  - `02-Ingestion/B-networkGate/index.ts` — exporterar allt
+  - `02-Ingestion/B-JSON-feedGate/networkInspector.ts` — 692 rader, fullt implementerad
+  - `02-Ingestion/B-JSON-feedGate/A-networkGate.ts` — `evaluateNetworkGate()`, 295 rader
+  - `02-Ingestion/B-JSON-feedGate/index.ts` — exporterar allt
 - **STOR MYTS:** handoff.md (loop 12) sa "network_inspection saknas" — STÄMMER INTE
 - **ROOT-CAUSE:** `scheduler.ts` hade en STUB som sa `skip_not_implemented` för `preferredPath=network`
 

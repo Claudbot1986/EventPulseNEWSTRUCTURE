@@ -12,7 +12,7 @@ Main HTML extraction using DOM heuristics. Applies CSS selector patterns, microd
 ## Position in Pipeline
 
 ```
-Page HTML → B-networkGate → [no API] → C1-preHtmlGate → C2-htmlGate → D-renderGate (if needed)
+Page HTML → B-JSON-feedGate → [no API] → C1-preHtmlGate → C2-htmlGate → D-renderGate (if needed)
 ```
 
 ## Version

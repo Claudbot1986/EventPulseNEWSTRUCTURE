@@ -75,7 +75,7 @@ This folder contains the source layer of EventPulse. The folder structure itself
 ## Relationship to other folders
 
 - **01-Sources** feeds into **02-Ingestion** — sources provide raw data to ingestion pipeline
-- **02-Ingestion/A-Direct-API** handles API-based sources (ticketmaster, eventbrite)
+- **02-Ingestion/A-directAPI-networkGate** handles real API/XHR/network-based sources (ticketmaster, eventbrite)
 - **02-Ingestion/C-htmlGate** handles HTML-based sources
 - **03-Queue** receives processed events from ingestion
 - **06-UI** displays events from sources

@@ -11,7 +11,7 @@
 - `01-Sources/candidate-lists/010331-1945-100-candidates.md` — ~100 källor (scouting)
 - `01-Sources/active/active.md` — 6 aktiva källor
 - `02-Ingestion/sourceRunner.ts` — 8 hardkodade API-källor
-- `02-Ingestion/A-Direct-API/adapters/` — 5 API-adapters
+- `02-Ingestion/A-directAPI-networkGate/adapters/` — 5 API-adapters
 - `sources/` — vår nya source truth-mapp
 - `runtime/sources_status.jsonl` — **FEL: innehöll source truth istället för status**
 

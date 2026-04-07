@@ -73,7 +73,7 @@ Om JSON-LD saknas:
 Undersök om sidan laddar event via interna XHR/API-anrop.
 
 Plats:
-- `02-Ingestion/B-networkGate/`
+- `02-Ingestion/B-JSON-feedGate/`
 - `02-Ingestion/networkInspector.ts`
 
 Regel:

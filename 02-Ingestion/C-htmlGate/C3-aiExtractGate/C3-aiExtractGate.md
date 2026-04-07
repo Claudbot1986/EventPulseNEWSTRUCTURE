@@ -5,7 +5,7 @@ AI-augmented extraction step. Activated when C2 returns "promising" but `extract
 ## Position in Pipeline
 
 ```
-Page HTML → B-networkGate → C1-preHtmlGate → C2-htmlGate → C3-aiExtractGate → D-renderGate
+Page HTML → B-JSON-feedGate → C1-preHtmlGate → C2-htmlGate → C3-aiExtractGate → D-renderGate
 ```
 
 ## Trigger Condition
@@ -25,7 +25,7 @@ C3 runs when:
 ## What it does NOT do
 
 - No browser rendering (D-renderGate handles JS)
-- No network/API discovery (B-networkGate handles that)
+- No network/API discovery (B-JSON-feedGate handles that)
 - No JSON-LD extraction (F-eventExtraction handles that)
 
 ## AI Strategy

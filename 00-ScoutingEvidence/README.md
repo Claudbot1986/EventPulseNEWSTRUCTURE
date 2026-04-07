@@ -53,8 +53,8 @@ ScoutResult = {
 ## Reuses
 
 - `01-Sources/diagnostics/jsonLdDiagnostic.ts` — JSON-LD first pass
-- `02-Ingestion/B-networkGate/networkInspector.ts` — Network/API inspection
-- `02-Ingestion/B-networkGate/A-networkGate.ts` — GotEvent model routing
+- `02-Ingestion/B-JSON-feedGate/networkInspector.ts` — Network/API inspection
+- `02-Ingestion/B-JSON-feedGate/A-networkGate.ts` — GotEvent model routing
 - `02-Ingestion/C-htmlGate/C1-preHtmlGate/C1-preHtmlGate.ts` — HTML structure screening
 - `02-Ingestion/tools/fetchTools.ts` — HTTP fetching
 

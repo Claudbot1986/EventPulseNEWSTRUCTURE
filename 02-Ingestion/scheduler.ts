@@ -47,9 +47,9 @@ import {
 import { addPendingRender, getPendingRenders } from './tools/pendingRenderQueue';
 import { screenUrl, determineTriageOutcome } from './C-htmlGate/C1-preHtmlGate/C1-preHtmlGate';
 import type { TriageResult } from './C-htmlGate/C1-preHtmlGate/C1-preHtmlGate';
-import { inspectUrl } from './B-networkGate/networkInspector';
-import { evaluateNetworkGate } from './B-networkGate/A-networkGate';
-import { extractFromApi } from './B-networkGate/networkEventExtractor';
+import { inspectUrl } from './B-JSON-feedGate/networkInspector';
+import { evaluateNetworkGate } from './B-JSON-feedGate/A-networkGate';
+import { extractFromApi } from './B-JSON-feedGate/networkEventExtractor';
 // D-renderGate: renderPage FINNS men KÖRS INTE ännu.
 // Denna import är kvar för framtida integration men är inaktiv just nu.
 

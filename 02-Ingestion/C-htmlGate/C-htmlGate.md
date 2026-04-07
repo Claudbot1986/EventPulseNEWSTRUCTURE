@@ -22,7 +22,7 @@ Reference implementations in `services/ingestion/src/tools/C-htmlGate/`.
 ## Decision Logic
 C-htmlGate (som C-kandidat) testas när:
 - No JSON-LD found on root ELLER på event-candidate subpages
-- No viable API endpoint discovered via B-networkGate (inkl. subpages)
+- No viable API endpoint discovered via B-JSON-feedGate (inkl. subpages)
 - Page renders events client-side via DOM manipulation
 
 C-htmlGate är VERKLIGT verifierad först när:

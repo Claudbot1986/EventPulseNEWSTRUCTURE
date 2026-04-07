@@ -21,7 +21,7 @@
  */
 
 import { diagnoseUrl, type DiagnosticResult } from '../01-Sources/diagnostics/jsonLdDiagnostic';
-import { evaluateNetworkGate } from './B-networkGate/A-networkGate';
+import { evaluateNetworkGate } from './B-JSON-feedGate/A-networkGate';
 import { discoverEventCandidates, type FrontierDiscoveryResult } from './C-htmlGate/C0-htmlFrontierDiscovery';
 import { screenUrl } from './C-htmlGate/C1-preHtmlGate/C1-preHtmlGate';
 import { evaluateHtmlGate } from './C-htmlGate/C2-htmlGate/C2-htmlGate';

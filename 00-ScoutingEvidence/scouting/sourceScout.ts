@@ -37,10 +37,10 @@ import { scoutTimestamp, slugify } from './scoutResult.js';
 import { diagnoseUrl } from '../../01-Sources/diagnostics/jsonLdDiagnostic.js';
 
 // networkInspector — Network/API second pass
-import { inspectUrl } from '../../02-Ingestion/B-networkGate/networkInspector.js';
+import { inspectUrl } from '../../02-Ingestion/B-JSON-feedGate/networkInspector.js';
 
 // networkGate — GotEvent model routing
-import { evaluateNetworkGate } from '../../02-Ingestion/B-networkGate/A-networkGate.js';
+import { evaluateNetworkGate } from '../../02-Ingestion/B-JSON-feedGate/A-networkGate.js';
 
 // C1-preHtmlGate — HTML third pass
 import { screenUrl } from '../../02-Ingestion/C-htmlGate/C1-preHtmlGate/C1-preHtmlGate.js';

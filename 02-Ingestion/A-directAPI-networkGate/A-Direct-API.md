@@ -1,4 +1,4 @@
-# A-Direct-API
+# A-directAPI-networkGate
 
 Sources with direct API access bypass HTML/DOM extraction entirely, providing structured JSON data directly.
 

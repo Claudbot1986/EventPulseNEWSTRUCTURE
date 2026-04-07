@@ -1,5 +1,5 @@
 /**
- * B-networkGate — Network Path Gate
+ * B-JSON-feedGate — Network Path Gate
  *
  * Routing logic for the Network Path in the source triage pipeline.
  * Runs after JSON-LD check fails, before HTML heuristics.

@@ -201,7 +201,7 @@ Therefore:
    - network_inspection correctly identifies `likely_event_api: 1`
 
 2. **network_event_extractor works**
-   - New file: `02-Ingestion/B-networkGate/networkEventExtractor.ts`
+   - New file: `02-Ingestion/B-JSON-feedGate/networkEventExtractor.ts`
    - Successfully extracts 216 events from berwaldhallen Tixly API
    - 0 parse errors
 
