@@ -39,6 +39,9 @@ export interface SourceTruth {
   // Verifiering och recheck
   verifiedAt?: string;                // Senaste verifieringstid
   needsRecheck?: boolean;             // Tvinga omvärdering nästa kör
+  // Review flag from 00A import
+  requiresManualReview?: boolean;     // Source flagged for manual review during ingestion
+  reviewTags?: string[];              // Why flagged: manualreview, name_conflict, city_conflict, etc.
   // Backwards compatibility
   lastSystemVersion?: string;
   metadata?: Record<string, unknown>;
@@ -49,6 +52,7 @@ export interface SourceStatus {
   status: 'never_run' | 'success' | 'partial' | 'fail' | 'error' |
     'pending_render_gate' | 'pending_api_adapter' | 'pending_network_adapter' |
     'triage_required' | 'routing_review_required' | 'needs_recheck';
+  ingestionStage: 'pending' | 'A' | 'B' | 'C' | 'D' | 'completed' | 'failed';
   lastRun: string | null;
   lastSuccess: string | null;
   consecutiveFailures: number;
@@ -242,20 +246,40 @@ export function recordTriageAttempt(
 
 // ─── Status hantering ─────────────────────────────────────────────────────────
 
+/**
+ * Derive ingestionStage from legacy status field.
+ * Used for migrating old status entries that predate the ingestionStage field.
+ */
+function deriveIngestionStage(status: SourceStatus): SourceStatus['ingestionStage'] {
+  if (status.status === 'success' && status.lastEventsFound > 0) return 'completed';
+  if (status.status === 'fail') return 'failed';
+  if (status.status === 'pending_render_gate') return 'D';
+  if (status.status === 'pending_api_adapter') return 'A';
+  if (status.status === 'pending_network_adapter') return 'B';
+  if (status.status === 'triage_required' || status.status === 'routing_review_required') return 'C';
+  if (status.status === 'never_run') return 'pending';
+  // partial, error, needs_recheck — default to pending
+  return 'pending';
+}
+
 function readStatusFile(): Map<string, SourceStatus> {
   const map = new Map<string, SourceStatus>();
   if (!existsSync(STATUS_FILE)) return map;
-  
+
   const content = readFileSync(STATUS_FILE, 'utf8');
   const lines = content.split('\n').filter(l => l.trim());
-  
+
   for (const line of lines) {
     try {
       const status = JSON.parse(line) as SourceStatus;
+      // Migrate old entries that don't have ingestionStage set
+      if (!status.ingestionStage) {
+        status.ingestionStage = deriveIngestionStage(status);
+      }
       map.set(status.sourceId, status);
     } catch {}
   }
-  
+
   return map;
 }
 
@@ -269,15 +293,24 @@ function writeStatusFile(statuses: Map<string, SourceStatus>): void {
  */
 export function getSourceStatus(sourceId: string): SourceStatus {
   const statuses = readStatusFile();
-  return statuses.get(sourceId) || {
-    sourceId,
-    status: 'never_run',
-    lastRun: null,
-    lastSuccess: null,
-    consecutiveFailures: 0,
-    lastEventsFound: 0,
-    attempts: 0,
-  };
+  const status = statuses.get(sourceId);
+  if (!status) {
+    return {
+      sourceId,
+      status: 'never_run',
+      ingestionStage: 'pending',
+      lastRun: null,
+      lastSuccess: null,
+      consecutiveFailures: 0,
+      lastEventsFound: 0,
+      attempts: 0,
+    };
+  }
+  // Ensure ingestionStage is always set
+  if (!status.ingestionStage) {
+    status.ingestionStage = deriveIngestionStage(status);
+  }
+  return status;
 }
 
 /**
@@ -298,6 +331,7 @@ export function updateSourceStatus(
     success: boolean;
     eventsFound: number;
     pathUsed?: 'jsonld' | 'html' | 'network' | 'render';
+    ingestionStage?: 'pending' | 'A' | 'B' | 'C' | 'D' | 'completed' | 'failed';
     error?: string;
     // Routingminne
     lastRoutingReason?: string;
@@ -316,6 +350,7 @@ export function updateSourceStatus(
   const current = statuses.get(sourceId) || {
     sourceId,
     status: 'never_run' as const,
+    ingestionStage: 'pending' as const,
     lastRun: null,
     lastSuccess: null,
     consecutiveFailures: 0,
@@ -365,44 +400,85 @@ export function updateSourceStatus(
     current.lastError = undefined;
     current.pendingNextTool = undefined; // Klar, inget nästa verktyg
     current.routingReviewReason = undefined; // Ingen review längre
+    current.ingestionStage = 'completed';
 
   } else if (!result.success && result.error?.includes('pending_render_gate')) {
     current.status = 'pending_render_gate';
     current.consecutiveFailures++;
     current.lastError = result.error;
+    current.ingestionStage = 'D';
 
   } else if (!result.success && result.error?.includes('pending_api_adapter')) {
     current.status = 'pending_api_adapter';
     current.consecutiveFailures++;
     current.lastError = result.error;
+    current.ingestionStage = 'A';
 
   } else if (!result.success && result.error?.includes('pending_network_adapter')) {
     current.status = 'pending_network_adapter';
     current.consecutiveFailures++;
     current.lastError = result.error;
+    current.ingestionStage = 'B';
 
   } else if (!result.success && result.error?.includes('triage_required')) {
     current.status = 'triage_required';
     current.consecutiveFailures++;
     current.lastError = result.error;
+    current.ingestionStage = 'C';
 
   } else if (!result.success && result.error?.includes('routing_review_required')) {
     current.status = 'routing_review_required';
     current.lastError = result.error;
+    current.ingestionStage = 'C';
 
   } else if (!result.success && result.error?.includes('needs_recheck')) {
     current.status = 'needs_recheck';
     current.lastError = result.error;
+    current.ingestionStage = result.ingestionStage ?? 'pending';
 
   } else if (!result.success) {
     current.status = result.eventsFound > 0 ? 'partial' : 'fail';
     current.consecutiveFailures++;
     current.lastError = result.error;
+    current.ingestionStage = result.eventsFound > 0 ? 'completed' : 'failed';
   }
 
   current.lastPathUsed = result.pathUsed;
   statuses.set(sourceId, current);
   writeStatusFile(statuses);
+}
+
+/**
+ * Säkerställ att en source har en status-entry i sources_status.jsonl.
+ * Om source redan har en status, gör inget.
+ * Används när nya sources importeras via 00A så att de hamnar i pending-kön.
+ */
+export function ensureSourceStatus(sourceId: string): void {
+  const statuses = readStatusFile();
+  let isNew = false;
+
+  if (!statuses.has(sourceId)) {
+    const newStatus: SourceStatus = {
+      sourceId,
+      status: 'never_run',
+      ingestionStage: 'pending',
+      lastRun: null,
+      lastSuccess: null,
+      consecutiveFailures: 0,
+      lastEventsFound: 0,
+      attempts: 0,
+    };
+    statuses.set(sourceId, newStatus);
+    writeStatusFile(statuses);
+    isNew = true;
+  }
+
+  // Also ensure source is in priority queue
+  const queue = readPriorityFile();
+  const alreadyInQueue = queue.some(e => e.sourceId === sourceId);
+  if (!alreadyInQueue) {
+    addToPriorityQueue(sourceId, 2, 'never_run'); // priority 2 = never_run
+  }
 }
 
 // ─── Priority Queue ───────────────────────────────────────────────────────────
@@ -476,15 +552,21 @@ export function rebuildPriorityQueue(): void {
   const queue: PriorityEntry[] = [];
   
   for (const source of sources) {
-    const status = statuses.get(source.id) || {
-      sourceId: source.id,
-      status: 'never_run' as const,
-      lastRun: null,
-      lastSuccess: null,
-      consecutiveFailures: 0,
-      lastEventsFound: 0,
-      attempts: 0,
-    };
+    let status = statuses.get(source.id);
+    if (!status) {
+      // Ny source (t.ex. importerad via 00A) — skapa status-entry så den hamnar i kön
+      status = {
+        sourceId: source.id,
+        status: 'never_run' as const,
+        ingestionStage: 'pending' as const,
+        lastRun: null,
+        lastSuccess: null,
+        consecutiveFailures: 0,
+        lastEventsFound: 0,
+        attempts: 0,
+      };
+      statuses.set(source.id, status);
+    }
     
     let priority: number;
     let reason: string;
@@ -529,7 +611,10 @@ export function rebuildPriorityQueue(): void {
       runsSinceAdd: 0,
     });
   }
-  
+
+  // Persist any new status entries created for 00A-imported sources
+  writeStatusFile(statuses);
+
   // Sortera efter priority
   queue.sort((a, b) => a.priority - b.priority);
   writePriorityFile(queue);

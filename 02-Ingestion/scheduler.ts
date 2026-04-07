@@ -384,6 +384,7 @@ async function runSource(source: SourceTruth, options: { recheck?: boolean } = {
         success: false,
         eventsFound: 0,
         pathUsed: 'jsonld',
+        ingestionStage: 'A',
         error: `needs_review: JSON-LD extraction returned 0 events despite preferredPath=jsonld`,
         lastRoutingReason: decision.reason,
         pendingNextTool: 'preferredPath_recheck',
@@ -406,6 +407,16 @@ async function runSource(source: SourceTruth, options: { recheck?: boolean } = {
     });
     const { queued } = await queueEvents(source.id, rawEvents as any);
     console.log(`   Queued: ${queued}/${eventsFound}`);
+    // JSON-LD success → A path done
+    updateSourceStatus(source.id, {
+      success: true,
+      eventsFound,
+      pathUsed: 'jsonld',
+      ingestionStage: 'A',
+      lastRoutingReason: decision.reason,
+      lastRoutingSource: 'preferredPath',
+    });
+    return;
 
   } else if (decision.path === 'html') {
     // HTML extraction med etablerad preferredPath=html
@@ -429,6 +440,16 @@ async function runSource(source: SourceTruth, options: { recheck?: boolean } = {
       const { queueEvents } = await import('./tools/fetchTools');
       const { queued } = await queueEvents(source.id, rawEvents as any);
       console.log(`   Queued: ${queued}/${eventsFound}`);
+      // HTML success → C path done
+      updateSourceStatus(source.id, {
+        success: true,
+        eventsFound,
+        pathUsed: 'html',
+        ingestionStage: 'C',
+        lastRoutingReason: decision.reason,
+        lastRoutingSource: 'preferredPath',
+      });
+      return;
     }
 
   } else if (decision.path === 'unknown') {
@@ -624,10 +645,16 @@ async function runSource(source: SourceTruth, options: { recheck?: boolean } = {
   const success = eventsFound > 0;
   console.log(`\nResultat: ${success ? '✓ SUCCESS' : '✗ FAIL'} | ${eventsFound} events | path: ${pathUsed}`);
 
+  // Derive ingestionStage from pathUsed
+  const stageFromPath: Record<string, 'A' | 'B' | 'C' | 'D'> = {
+    jsonld: 'A', network: 'B', html: 'C', render: 'D',
+  };
+
   updateSourceStatus(source.id, {
     success,
     eventsFound,
     pathUsed,
+    ingestionStage: success ? (stageFromPath[pathUsed ?? ''] ?? 'pending') : (stageFromPath[pathUsed ?? ''] ?? 'pending'),
     lastRoutingReason: decision.reason,
     lastRoutingSource: decision.routingSource,
     error: success ? undefined : 'no_events_extracted',
