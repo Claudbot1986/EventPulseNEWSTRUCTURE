@@ -244,9 +244,9 @@ vilken som faktiskt fungerar.
 - **Verifierad A:** Riktig schema.org/Event i `<script type="application/ld+json">`
 - **Inte verifierad A:** Sajten HAR script-taggar men vi har inte testat om de innehåller events
 
-### B — Network/API
-- **Verifierad B:** Intern API/XHR hittad OCH returnerar structured event data OCH är stabil
-- **Inte verifierad B:** Nätverksförfrågningar observerade, men vi har inte bekräftat att de ger events
+### B — JSON/Feed
+- **Verifierad B:** Feed (JSON-LD, RSS, ICS, static JSON) hittad OCH returnerar structured event data
+- **Inte verifierad B:** Feed-link eller script-tag observerad, men vi har inte bekräftat att den ger events
 
 ### C — HTML
 - **Verifierad C:** HTML-extraktion har bevisat sig ge events > 0

@@ -1,37 +1,57 @@
 # B-JSON-feedGate
 
-Network inspection layer for discovering hidden API endpoints that power a page dynamically, and JSON/feed structured data sources (JSON-LD, RSS, ICS, static JSON files).
+Feed extraction layer for discovering structured event data in HTML or via simple static endpoints.
 
 ## Purpose
 
-When a page has no JSON-LD but loads events via XHR/fetch (e.g., a JavaScript-driven event calendar), this step intercepts those network requests to find a cleaner data source than rendered HTML. Also handles direct JSON/feed sources like RSS, ICS, and static JSON files.
+When a page has no JSON-LD but exposes event data via feeds (RSS, ICS, static JSON files, script tags with JSON-LD, event-calendar endpoints), this step extracts that structured data directly. Falls through to C-htmlGate when no usable feed is found.
+
+## Scope
+
+B-JSON-feedGate handles:
+- JSON-LD embedded in `<script type="application/ld+json">`
+- RSS/Atom feeds
+- ICS (iCalendar) feeds
+- Static JSON files with event data
+- Feed links discovered in HTML (`<link rel="alternate" type="application/rss+xml">`)
+- Event-calendar API responses (simple JSON endpoints, not requiring browser/XHR)
+
+B-JSON-feedGate does NOT handle:
+- XHR/fetch network inspection (that is A-directAPI-networkGate)
+- JS-rendered content (that is D-renderGate)
+- Live API endpoints requiring API keys (those belong in A)
 
 ## Tools
 
-- `A-networkGate.ts` — main gate logic
-- `networkInspector.ts` — request interception and analysis
+- `A-networkGate.ts` — main gate logic (feed evaluation)
+- `networkInspector.ts` — optional: used to discover XHR-based feeds if applicable
 
 ## Decision Rule
-From `network-path-strategy.md`:
 
-> Use API only if it is cleaner AND more complete AND more stable than HTML.
+> Use feed data if it is directly readable and contains usable event data.
 
-All three conditions must be satisfied. If the XHR/fetch endpoint returns incomplete or unstable data, fall through to C-htmlGate.
+Feed must be:
+1. Accessible without authentication or API key
+2. Return structured event data (JSON, XML/RSS, ICS)
+3. Not require JavaScript execution to load
+
+If the feed requires browser rendering or returns opaque/binary formats, fall through to C-htmlGate.
 
 ### B-inspektion MÅSTE inkludera subpages
 B-JSON-feedGate får inte bara testa root-URL.
-Många källor har ingen API på root men väl på:
+Många källor har ingen feed på root men väl på:
 - /events
 - /kalender
 - /program
 - /whatson
-- /api/events
+- /feed
+- /events/rss
 
 **Korrekt B-flöde:**
-1. Inspect root for network requests
-2. Inspect discovered event-candidate subpages for network requests
-3. Only conclude "no viable API" after subpage inspection
+1. Check root for feed links and JSON-LD
+2. Check discovered event-candidate subpages for feeds
+3. Only conclude "no viable feed" after subpage inspection
 
 ## Current Status
 
-**Partially implemented.** `A-networkGate.ts` exists. `networkInspector.ts` exists for request interception. The routing logic between this step and C-htmlGate is not yet fully wired in the ingestion pipeline.
+**Partially implemented.** Feed extraction logic exists. Integration into scheduler is ongoing.

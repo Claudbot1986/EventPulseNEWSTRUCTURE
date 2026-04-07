@@ -15,11 +15,11 @@ Ordningen A→B→C→D→E gäller för VARJE page som testas, inte bara root.
 
 **Därför:**
 
-1. Testa root med A (JSON-LD)
-2. Testa root med B (Network inspection)
+1. Testa root med A (API/Network inspection)
+2. Testa root med B (JSON/feed-gate)
 3. Om A+B misslyckas på root → undersök subpages
-4. Testa subpages med A (JSON-LD)
-5. Testa subpages med B (Network)
+4. Testa subpages med A (API/Network)
+5. Testa subpages med B (JSON/feed)
 6. Om A+B misslyckat på ALLA pages → C (HTML)
 7. Om C ger svaga signaler OCH JS-misstanke → D-pending (ej integrerat)
 8. Om allt misslyckat → E (Manual)
@@ -43,8 +43,8 @@ A-directAPI-networkGate ──── (Ticketmaster, Eventbrite, Kulturhuset, Bil
     │              Riktiga API/XHR/network-källor. Inga gate-logik — API:t är källan.
     ▼
 B-JSON-feedGate ──── (Used when JSON-LD fails or is absent)
-    │              Inspects XHR/fetch calls in-page to find internal APIs.
-    │              Falls through to C if API is blocked, key-required, or noisy.
+    │              JSON-LD, RSS, ICS, static JSON and other direct feeds.
+    │              Falls through to C if no usable feed found.
     ▼
 C-htmlGate ────── (Used when no open API found)
     │              DOM-based extraction: selectors, repetitive block detection.
@@ -67,22 +67,20 @@ H-manualReview ── (Only when G fails)
                    Human review for unresolvable events.
 ```
 
-### A — Direct-API
+### A — directAPI-networkGate
 
 Sources with documented, open API access. Examples: Ticketmaster, Eventbrite, Billetto, Kulturhuset.
 
-No gate logic — the API **is** the extraction path. These sources bypass B-D entirely.
+Uses direct API calls or intercepts XHR/fetch requests from the page to find internal API endpoints. No gate logic — the API **is** the extraction path. These sources bypass B-D entirely.
 
 ### B — JSON-feedGate
 
-Evaluates whether in-page network requests (XHR/fetch) expose a cleaner event data endpoint than HTML. Runs `networkInspector` against the source URL.
+Evaluates whether the page exposes usable event feeds directly in HTML or simple static endpoints such as JSON-LD, RSS, ICS, static JSON, or other feed formats. May use `networkInspector` to discover feed-based XHR endpoints, but B's primary scope is feed extraction, not general network inspection.
 
 Routing outcomes:
-- `network` — internal API found and accessible without auth; route to network path
-- `html` — no usable API; fall through to C-htmlGate
-- `blocked-review` — API exists but requires key or returns errors; route to H
-
-Key lesson (GotEvent): **network signals exist does not mean Network Path is usable**. An API that returns HTTP 500 or requires an API key is not a viable path.
+- `feed` — usable feed (JSON-LD, RSS, ICS, static JSON) found directly in HTML or simple endpoint
+- `html` — no usable feed; fall through to C-htmlGate
+- `blocked-review` — feed requires key or returns errors; route to H
 
 ### C — htmlGate
 
@@ -147,8 +145,8 @@ Human review queue for events that cannot be automatically resolved. Only reache
 | Priority | Path | Tool | When Used |
 |----------|------|------|-----------|
 | 1 | JSON-LD | jsonLdDiagnostic.ts | Fastest — always test first |
-| 2 | Network | A-networkGate.ts | After no-jsonld or wrong-type |
-| 3 | HTML | C-htmlGate.ts | Network insufficient/blocked |
+| 2 | Network | A-directAPI-networkGate | After no-jsonld or wrong-type |
+| 3 | HTML | C-htmlGate.ts | No feed found |
 | 4 | Render | Cloudflare adapter | Last resort — high cost |
 | 5 | Manual | H-manualReview | Only when all above fail |
 
@@ -171,10 +169,11 @@ The folder structure is a placeholder. Actual code lives in:
 ```
 services/ingestion/src/
   tools/
-    A-networkGate.ts        # B-stage logic
+    A-directAPI-networkGate/  # A-stage logic (API adapters)
+    B-JSON-feedGate/         # B-stage logic (feed extraction)
     C-htmlGate/             # C-stage logic (C1 + C2)
     jsonLdExtractor.ts      # JSON-LD fast path (pre-A)
-    networkInspector.ts     # Used by B
+    networkInspector.ts     # Used by A for XHR/fetch inspection
   fetch/
     cloudflareAdapter.ts    # D-stage logic
   extract/
@@ -189,7 +188,7 @@ The A-H naming maps to these files. The folder structure documents the intent; t
 | Stage | Purpose | Exit Condition |
 |-------|---------|----------------|
 | A | Riktiga API/XHR/network-källor | API available |
-| B | Network inspection | Open API found or fall through |
+| B | JSON-LD, RSS, ICS, static JSON, feeds | Usable feed found or fall through |
 | C | HTML heuristics | Sufficient quality or fall through |
 | D | Render | JS needed or fall through |
 | E | Detail enrichment | Optional, always beneficial |

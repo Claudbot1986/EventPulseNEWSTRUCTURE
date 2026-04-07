@@ -68,24 +68,36 @@ Om JSON-LD fungerar:
 
 ---
 
-### 2. Network Path
+### 2. Network Path (A-directAPI-networkGate)
 Om JSON-LD saknas:
-Undersök om sidan laddar event via interna XHR/API-anrop.
+Undersök om sidan laddar event via interna XHR/API-anrop som kan fångas genom network inspection.
 
 Plats:
-- `02-Ingestion/B-JSON-feedGate/`
+- `02-Ingestion/A-directAPI-networkGate/`
 - `02-Ingestion/networkInspector.ts`
 
 Regel:
 Network path används endast om endpointen ger renare, mer komplett och stabilare data än HTML-path.
 
 Om network-resultatet är oklart eller sämre:
-→ fallback till HTML-path
+→ fallback till JSON/feed-path (B) eller HTML-path (C)
 
 ---
 
-### 3. HTML Path
-Om varken JSON-LD eller bättre network-endpoint finns:
+### 3. JSON/Feed Path (B-JSON-feedGate)
+Om varken JSON-LD eller network path finns:
+Läs event-data direkt från feeds: RSS, ICS, statiska JSON-filer, JSON-LD i script-taggar, eller andra enkla endpoints.
+
+Plats:
+- `02-Ingestion/B-JSON-feedGate/`
+
+Regel:
+Feed-path används när sidan exponderar strukturerad event-data utan att kräva XHR-inspektion eller rendering.
+
+---
+
+### 4. HTML Path
+Om varken JSON-LD eller bättre network-endpoint eller feed finns:
 analysera repetitiva HTML-block och DOM-struktur.
 
 Plats:
@@ -101,8 +113,8 @@ Extrahera minst:
 
 ---
 
-### 4. Render / Headless Path
-Om sidan kräver JavaScript och inte går att lösa via JSON-LD, Network eller HTML.
+### 5. Render / Headless Path
+Om sidan kräver JavaScript och inte går att lösa via JSON-LD, Network, Feed eller HTML.
 
 Plats:
 - `02-Ingestion/D-renderGate/`
