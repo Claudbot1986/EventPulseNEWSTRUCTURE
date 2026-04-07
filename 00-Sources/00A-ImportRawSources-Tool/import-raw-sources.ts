@@ -74,7 +74,7 @@ interface ImportedSource {
   // Match against existing canonical sources
   // matchStatus is the OUTCOME of the import match decision.
   // For NEW sources that need review, use reviewTags/requiresManualReview instead.
-  matchStatus: 'new' | 'matched_existing' | 'duplicate_in_import' | 'manualreview';
+  matchStatus: 'new' | 'matched_existing' | 'duplicate_in_import';
   matchedBy?: 'sourceIdentityKey';
   existingSource?: {
     id: string;
@@ -85,6 +85,8 @@ interface ImportedSource {
   // REVIEW FLAGS: these do NOT block write to sources/.
   // A source with requiresManualReview=true is still a valid, writable source.
   // It is simply marked for review during ingestion.
+  // NOTE: 'manualreview' is a review TAG (in reviewTags[]), NEVER a matchStatus value.
+  // matchStatus can only be: 'new' | 'matched_existing' | 'duplicate_in_import'.
   requiresManualReview?: boolean;
   reviewTags?: Array<'manualreview' | 'name_conflict' | 'city_conflict' | 'type_uncertain'>;
   manualReviewReasons?: string[];
@@ -354,6 +356,60 @@ export function readExistingSources(sourcesDir: string): Map<string, ExistingSou
   return index;
 }
 
+// ─── Conflict Variant Helper ─────────────────────────────────────────────────
+
+/**
+ * Find the next available conflict-variant number for a given base sourceId.
+ *
+ * Scans both:
+ *  1. Existing files already in sources/ (persistent across batches)
+ *  2. Reserved IDs already assigned in the current batch
+ *
+ * This ensures conflict variants are unique and monotonically increasing
+ * across multiple import batches — batch 1 gets -conflict-1, batch 2 gets
+ * -conflict-2, batch 3 gets -conflict-3, etc.
+ *
+ * @param baseSourceId     The base id e.g. "abf"
+ * @param sourcesDir       Path to sources/ directory
+ * @param reservedInBatch  Set of sourceIds already reserved in current batch
+ * @returns                The next available variant number (e.g. 1, 2, 3…)
+ */
+export function findNextConflictVariant(
+  baseSourceId: string,
+  sourcesDir: string,
+  reservedInBatch: Set<string>,
+): number {
+  let maxVariant = 0;
+
+  // 1. Scan existing files in sources/ (persistent across all previous batches)
+  if (fs.existsSync(sourcesDir)) {
+    const files = fs.readdirSync(sourcesDir).filter(f => f.endsWith('.jsonl'));
+    for (const file of files) {
+      const match = file.match(new RegExp(`^${escapeRegExp(baseSourceId)}-conflict-(\\d+)\\.jsonl$`));
+      if (match) {
+        const n = parseInt(match[1], 10);
+        if (n > maxVariant) maxVariant = n;
+      }
+    }
+  }
+
+  // 2. Scan reserved IDs in the current batch (handles multiple conflicts in same batch)
+  const reservedArray = Array.from(reservedInBatch);
+  for (const reserved of reservedArray) {
+    const match = reserved.match(new RegExp(`^${escapeRegExp(baseSourceId)}-conflict-(\\d+)$`));
+    if (match) {
+      const n = parseInt(match[1], 10);
+      if (n > maxVariant) maxVariant = n;
+    }
+  }
+
+  return maxVariant + 1;
+}
+
+function escapeRegExp(str: string): string {
+  return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
 // ─── Manualreview Detection ─────────────────────────────────────────────────
 
 /**
@@ -384,9 +440,11 @@ export function generateTemporaryId(siteIdentityKey: string, name: string, varia
  *   - new                    (add to sources/)
  *   - matched_existing        (keep existing, no change)
  *   - duplicate_in_import     (ignore extra rows)
- *   - manualreview            (needs human decision before any sources/ write)
  *   - invalid_raw_row         (discard, never reaches preview)
  *   - skipped_already_imported_file (discard, never reaches preview)
+ *
+ * NOTE: 'manualreview' is a REVIEW TAG, not a matchStatus value.
+ * Sources that need review have matchStatus='new' with requiresManualReview=true.
  *
  * If ANY source in the preview has a matchStatus not in the above list,
  * OR if the preview would represent a complete replacement of sources/,
@@ -399,7 +457,6 @@ const PREVIEW_APPEND_ONLY_VALID_STATUSES: Array<ImportedSource['matchStatus']> =
   'new',
   'matched_existing',
   'duplicate_in_import',
-  'manualreview',
 ];
 
 /**
@@ -867,7 +924,9 @@ export interface ImportResult {
  */
 export function importRawSourcesWithMatching(
   rows: RawSourceRow[],
-  existingSources: Map<string, ExistingSource>
+  existingSources: Map<string, ExistingSource>,
+  sourcesDir: string,
+  reservedInBatch: Set<string>,
 ): ImportResult {
   const stats = {
     totalRows: rows.length,
@@ -933,9 +992,13 @@ export function importRawSourcesWithMatching(
           if (nameConflict) reasons.push(`name='${existing.name}' vs import name='${row.name}'`);
           if (cityConflict) reasons.push(`city='${existing.city}' vs import city='${row.city}'`);
 
-          // Generate a conflict-variant sourceId: hostname + '-conflict-' + variant
+          // Generate a conflict-variant sourceId: hostname + '-conflict-' + next available variant
+          // findNextConflictVariant scans both existing files in sources/ (persistent)
+          // AND reserved IDs in this batch, so variants are unique across all batches.
           const baseId = generateSourceId(siteIdentityKey);
-          const conflictId = `${baseId}-conflict-1`;
+          const nextVariant = findNextConflictVariant(baseId, sourcesDir, reservedInBatch);
+          const conflictId = `${baseId}-conflict-${nextVariant}`;
+          reservedInBatch.add(conflictId);
 
           outputMap.set(siteIdentityKey, {
             sourceId: conflictId,
@@ -951,7 +1014,7 @@ export function importRawSourcesWithMatching(
             matchStatus: 'new',
             requiresManualReview: true,
             reviewTags: tags,
-            conflictVariant: 1,
+            conflictVariant: nextVariant,
             manualReviewReasons: reasons,
             existingSource: {
               id: existing.id,
@@ -1097,6 +1160,10 @@ export function runMultiFileImport(
   let totalInvalidRows = 0;
   let totalSkippedFiles = 0;
 
+  // Reserved conflict-variant IDs — shared across all files in this multi-file batch
+  // This ensures unique variant numbers within the batch too
+  const reservedInBatch = new Set<string>();
+
   for (const file of files) {
     const filePath = path.join(rawSourcesDir, file);
     if (!fs.existsSync(filePath)) {
@@ -1132,7 +1199,7 @@ export function runMultiFileImport(
     totalRowsSeen += validRows.length;
     totalInvalidRows += invalidRows.length;
 
-    const { sources, stats } = importRawSourcesWithMatching(validRows, existingSources);
+    const { sources, stats } = importRawSourcesWithMatching(validRows, existingSources, sourcesDir, reservedInBatch);
     allSources.push(...sources);
 
     results.push({
@@ -1275,7 +1342,7 @@ function main(): void {
     const { validRows, invalidRows } = parseMarkdownTable(content);
     console.log(`Parsed: ${validRows.length} valid rows, ${invalidRows.length} invalid rows\n`);
 
-    const { sources, stats } = importRawSourcesWithMatching(validRows, existingSources);
+    const { sources, stats } = importRawSourcesWithMatching(validRows, existingSources, canonicalSourcesDir, new Set<string>());
 
     console.log('=== Import Summary ===');
     console.log(`  Raw rows parsed:              ${stats.totalRows}`);
