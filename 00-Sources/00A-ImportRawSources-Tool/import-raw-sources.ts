@@ -1515,7 +1515,28 @@ function main(): void {
   const { input, output, sourcesDir, applyNew, all } = parseArgs();
   const rawSourcesDir = path.join(process.cwd(), '01-Sources', 'RawSources');
 
-  // Multi-file mode: --all flag passed, or no input but --all was specified → discover all files
+  // Validation: --input and --all are mutually exclusive
+  if (input && all) {
+    console.error('ERROR: --input and --all cannot be used together.\n');
+    console.error('Usage:');
+    console.error('  --input <file>    Import one raw file');
+    console.error('  --all             Import all files from 01-Sources/RawSources/');
+    process.exit(1);
+  }
+
+  // Help: if neither --input nor --all
+  if (!input && !all) {
+    console.error('Usage:');
+    console.error('  --input <file>    Import one raw file');
+    console.error('  --all             Import all files from 01-Sources/RawSources/');
+    console.error('');
+    console.error('Examples:');
+    console.error('  Single file: npx tsx import-raw-sources.ts --input 01-Sources/RawSources/RawSources20260404.md --output runtime/import-preview.jsonl');
+    console.error('  All files:   npx tsx import-raw-sources.ts --all --output runtime/import-preview.jsonl [--apply-new]');
+    process.exit(1);
+  }
+
+  // Multi-file mode: --all flag passed → discover all files
   if (all) {
     const canonicalSourcesDir = sourcesDir ?? path.join(process.cwd(), 'sources');
     const outputFile = output ?? path.join(process.cwd(), 'runtime', 'import-preview.jsonl');
@@ -1566,14 +1587,6 @@ function main(): void {
       console.log('[00A] Preview-only mode. Run with --apply-new to write new sources.');
     }
     return;
-  }
-
-  if (!input || !output) {
-    console.error('Usage: npx tsx import-raw-sources.ts --input <file> --output <file> [--sources-dir <dir>]');
-    console.error('   OR: npx tsx import-raw-sources.ts --all --output <file> [--sources-dir <dir>] [--apply-new]');
-    console.error('Example (single file): npx tsx import-raw-sources.ts --input 01-Sources/RawSources/RawSources20260404.md --output runtime/import-preview.jsonl');
-    console.error('Example (all files):    npx tsx import-raw-sources.ts --all --output runtime/import-preview.jsonl [--apply-new]');
-    process.exit(1);
   }
 
   const inputIsFile = input && fs.existsSync(input) && fs.statSync(input).isFile();
