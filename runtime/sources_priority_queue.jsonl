@@ -84,3 +84,4 @@
 {"sourceId":"konserthuset","priority":2,"reason":"never_run","addedAt":"2026-04-03T10:18:49.536Z","runsSinceAdd":0}
 {"sourceId":"kulturhuset","priority":2,"reason":"never_run","addedAt":"2026-04-03T10:18:49.536Z","runsSinceAdd":0}
 {"sourceId":"ticketmaster","priority":2,"reason":"never_run","addedAt":"2026-04-03T10:18:49.537Z","runsSinceAdd":0}
+{"sourceId":"abf-conflict-1","priority":2,"reason":"never_run","addedAt":"2026-04-07T04:21:24.533Z","runsSinceAdd":0}
