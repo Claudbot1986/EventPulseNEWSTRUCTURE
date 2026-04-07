@@ -72,6 +72,8 @@ interface ImportedSource {
   originalRows: Array<{ name: string; url: string }>;
 
   // Match against existing canonical sources
+  // matchStatus is the OUTCOME of the import match decision.
+  // For NEW sources that need review, use reviewTags/requiresManualReview instead.
   matchStatus: 'new' | 'matched_existing' | 'duplicate_in_import' | 'manualreview';
   matchedBy?: 'sourceIdentityKey';
   existingSource?: {
@@ -80,12 +82,24 @@ interface ImportedSource {
     preferredPath: string | null;
   };
 
-  // Temporary metadata for manualreview sources
+  // REVIEW FLAGS: these do NOT block write to sources/.
+  // A source with requiresManualReview=true is still a valid, writable source.
+  // It is simply marked for review during ingestion.
+  requiresManualReview?: boolean;
+  reviewTags?: Array<'manualreview' | 'name_conflict' | 'city_conflict' | 'type_uncertain'>;
+  manualReviewReasons?: string[];
+
+  // When a hostname matches an existing source but name/city differs,
+  // we create a NEW source (not a replacement). The sourceId must be unique
+  // so we use conflictVariant to make it distinct from the existing source.
+  conflictVariant?: number;  // 1 = first conflict variant, 2 = second, etc.
+  manualReviewReason?: string;
+
+  // Temporary metadata for manualreview sources (DEPRECATED: use reviewTags instead)
   // Used during test/analysis phase — NOT final canonical identity
   temporaryCategory?: 'manualreview';
   temporarySourceId?: string;
   temporaryDisplayName?: string;
-  manualReviewReason?: string;
 
   // Row-level provenance: all raw rows that contributed to this source
   provenanceRows: RawRowProvenance[];
@@ -485,11 +499,12 @@ export function takeSourcesBackup(): {
 
 /**
  * HARD SAFETY RULE: Only 'new' sources from preview may be written to sources/.
+ * 'manualreview' is a REVIEW FLAG/TAG, not a blocking matchStatus.
+ * Sources with requiresManualReview=true are still valid, writable sources.
  *
  * All other matchStatus are strictly IGNORED for write:
  *   - matched_existing    → no write (keep existing)
  *   - duplicate_in_import → no write (discarded)
- *   - manualreview        → no write (needs human decision)
  *   - invalid_raw_row     → no write (was never in preview)
  *   - skipped_already_imported_file → no write (was never in preview)
  *
@@ -593,7 +608,11 @@ export function writeNewSourcesToSources(previewPath: string, sourcesDir: string
   }
 
   console.log(`[WRITE] Write plan:`);
-  console.log(`  New sources to write: ${plan.newSources.length}`);
+  const flaggedNew = plan.newSources.filter(s => s.requiresManualReview).length;
+  const cleanNew = plan.newSources.length - flaggedNew;
+  console.log(`  Total new sources to write: ${plan.newSources.length}`);
+  if (cleanNew > 0) console.log(`    clean new (no flags):         ${cleanNew}`);
+  if (flaggedNew > 0) console.log(`    flagged (needs review):       ${flaggedNew} — will be written with requiresManualReview=true`);
   for (const [status, count] of Object.entries(ignoredByStatus)) {
     console.log(`  ${status}: ${count} — IGNORED (no write)`);
   }
@@ -657,6 +676,10 @@ export function writeNewSourcesToSources(previewPath: string, sourcesDir: string
         verifiedAt: null,
         needsRecheck: true,
         lastSystemVersion: null,
+        // Review flag — if set, this source needs human review during ingestion
+        // but is still a fully valid source that can proceed through normal ingestion
+        requiresManualReview: source.requiresManualReview ?? false,
+        reviewTags: source.reviewTags ?? [],
         metadata: {
           rawSourceFile: 'import-preview',
           rawCity: source.city,
@@ -665,6 +688,8 @@ export function writeNewSourcesToSources(previewPath: string, sourcesDir: string
           importBatchId: source.provenanceRows[0]?.importBatchId ?? null,
           sourceIdentityKey: source.sourceIdentityKey,
           canonicalUrl: source.canonicalUrl,
+          manualReviewReasons: source.manualReviewReasons ?? [],
+          existingSourceId: source.existingSource?.id ?? null,
         },
       };
 
@@ -873,20 +898,17 @@ export function importRawSourcesWithMatching(
         const primary = outputMap.get(siteIdentityKey)!;
         primary.originalRows.push({ name: row.name, url: row.url });
 
-        // Conservative: if names or cities differ from existing, flag as manualreview
+        // Conservative: if names or cities differ from existing, add review flag
         if (primary.name !== row.name || primary.city !== row.city) {
-          if (primary.matchStatus !== 'manualreview') {
+          if (!primary.requiresManualReview) {
             const existingName = primary.name;
             const existingCity = primary.city;
-            primary.matchStatus = 'manualreview';
-            const tempMeta = generateTemporaryId(siteIdentityKey, row.name, 0);
-            primary.temporaryCategory = tempMeta.temporaryCategory;
-            primary.temporarySourceId = tempMeta.temporarySourceId;
-            primary.temporaryDisplayName = tempMeta.temporaryDisplayName;
-            primary.manualReviewReason =
-              `Import row conflicts with existing source '${existing.id}': ` +
-              `existing name='${existing.name}' city='${existing.city}', ` +
-              `import name='${row.name}' city='${row.city}'`;
+            const reasons: string[] = [];
+            if (primary.name !== row.name) reasons.push(`name='${existingName}' vs import row name='${row.name}'`);
+            if (primary.city !== row.city) reasons.push(`city='${existingCity}' vs import row city='${row.city}'`);
+            primary.requiresManualReview = true;
+            primary.reviewTags = ['manualreview', 'name_conflict', 'city_conflict'];
+            primary.manualReviewReasons = reasons;
             stats.manualreview++;
           }
         } else {
@@ -900,10 +922,23 @@ export function importRawSourcesWithMatching(
         const cityConflict = existing.city && existing.city !== row.city;
 
         if (nameConflict || cityConflict) {
-          // Conservative: mark as manualreview instead of auto-matching
-          const tempMeta = generateTemporaryId(siteIdentityKey, row.name, 0);
+          // NEW + review flag: hostname matched but name/city differs — create as new source
+          // with review flag and a conflictVariant to ensure unique sourceId.
+          // The sourceId is derived from hostname + conflictVariant so it can NEVER
+          // collide with the existing source's file.
+          const tags: Array<'manualreview' | 'name_conflict' | 'city_conflict'> = ['manualreview'];
+          if (nameConflict) tags.push('name_conflict');
+          if (cityConflict) tags.push('city_conflict');
+          const reasons: string[] = [];
+          if (nameConflict) reasons.push(`name='${existing.name}' vs import name='${row.name}'`);
+          if (cityConflict) reasons.push(`city='${existing.city}' vs import city='${row.city}'`);
+
+          // Generate a conflict-variant sourceId: hostname + '-conflict-' + variant
+          const baseId = generateSourceId(siteIdentityKey);
+          const conflictId = `${baseId}-conflict-1`;
+
           outputMap.set(siteIdentityKey, {
-            sourceId: tempMeta.temporarySourceId,
+            sourceId: conflictId,
             sourceIdentityKey: siteIdentityKey,
             canonicalUrl,
             name: row.name,
@@ -913,14 +948,11 @@ export function importRawSourcesWithMatching(
             note: row.note,
             isDuplicate: false,
             originalRows: [{ name: row.name, url: row.url }],
-            matchStatus: 'manualreview',
-            temporaryCategory: tempMeta.temporaryCategory,
-            temporarySourceId: tempMeta.temporarySourceId,
-            temporaryDisplayName: tempMeta.temporaryDisplayName,
-            manualReviewReason:
-              `Name/city conflict with existing source '${existing.id}': ` +
-              `existing name='${existing.name}' city='${existing.city}', ` +
-              `import name='${row.name}' city='${row.city}'`,
+            matchStatus: 'new',
+            requiresManualReview: true,
+            reviewTags: tags,
+            conflictVariant: 1,
+            manualReviewReasons: reasons,
             existingSource: {
               id: existing.id,
               name: existing.name,
@@ -963,22 +995,15 @@ export function importRawSourcesWithMatching(
       const primary = outputMap.get(siteIdentityKey)!;
       primary.originalRows.push({ name: row.name, url: row.url });
 
-      // Conservative: if names or cities differ, flag as manualreview
+      // Conservative: if names or cities differ, add review flag to the existing new source
       if (primary.name !== row.name || primary.city !== row.city) {
-        // Mark the existing entry as manualreview if not already
-        if (primary.matchStatus !== 'manualreview') {
+        if (!primary.requiresManualReview) {
           const existingNames = [primary.name];
           const existingCities = [primary.city];
-          const tempMeta = generateTemporaryId(siteIdentityKey, primary.name, 0);
-          primary.matchStatus = 'manualreview';
-          primary.temporaryCategory = tempMeta.temporaryCategory;
-          primary.temporarySourceId = tempMeta.temporarySourceId;
-          primary.temporaryDisplayName = tempMeta.temporaryDisplayName;
-          primary.manualReviewReason =
-            `Conflicting rows within import batch: names=[${existingNames.join('|')}|${row.name}], cities=[${existingCities.join('|')}|${row.city}]`;
-          // Update temporarySourceId for second variant
-          const tempMeta2 = generateTemporaryId(siteIdentityKey, row.name, 1);
-          primary.temporarySourceId = tempMeta2.temporarySourceId;
+          const reasons: string[] = [`Conflicting rows within import batch: names=[${existingNames.join('|')}|${row.name}], cities=[${existingCities.join('|')}|${row.city}]`];
+          primary.requiresManualReview = true;
+          primary.reviewTags = ['manualreview', 'name_conflict', 'city_conflict'];
+          primary.manualReviewReasons = reasons;
           stats.manualreview++;
         }
       } else {
@@ -1292,12 +1317,17 @@ function main(): void {
       console.log();
     }
 
-    const manualreviewSources = sources.filter(s => s.matchStatus === 'manualreview');
-    if (manualreviewSources.length > 0) {
-      console.log(`=== MANUALREVIEW sources (${manualreviewSources.length}) — NEEDS HUMAN DECISION ===`);
-      for (const s of manualreviewSources) {
-        console.log(`  ${s.temporarySourceId}: ${s.temporaryDisplayName}`);
-        console.log(`    reason: ${s.manualReviewReason}`);
+    const manualreviewFlagged = sources.filter(s => s.requiresManualReview === true);
+    if (manualreviewFlagged.length > 0) {
+      console.log(`=== SOURCES WITH MANUALREVIEW FLAG (${manualreviewFlagged.length}) — will be written to sources/ but need review during ingestion ===`);
+      for (const s of manualreviewFlagged) {
+        console.log(`  ${s.sourceId}: ${s.name} | ${s.sourceIdentityKey}`);
+        if (s.manualReviewReasons) {
+          for (const r of s.manualReviewReasons) {
+            console.log(`    reason: ${r}`);
+          }
+        }
+        console.log(`    tags: ${(s.reviewTags ?? []).join(', ')}`);
       }
       console.log();
     }

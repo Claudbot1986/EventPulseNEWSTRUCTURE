@@ -13,12 +13,15 @@ Detta är **endast ett importverktyg** — det skriver inte direkt till `sources
  verktyget är designat för att endast lägga till — aldrig minska eller ersätta.
 
 **Tillåtna matchStatus i preview:**
-- `new` — ny source, skall läggas till i sources/
-- `matched_existing` — matchar befintlig, behåller befintlig
+- `new` — ny source, skall läggas till i sources/ (även om den har `requiresManualReview`-flagga)
+- `matched_existing` — matchar befintlig, behåller befintlig, inget skrivs
 - `duplicate_in_import` — ignoreras, påverkar inte sources/
-- `manualreview` — kräver manuellt beslut innan någon skrivning
 - `invalid_raw_row` — kasseras, når aldrig preview
 - `skipped_already_imported_file` — hoppas över, når aldrig preview
+
+**Viktigt:** `manualreview` är nu en **tagg/flagga** (`requiresManualReview`), inte ett eget matchStatus.
+En source med `matchStatus='new'` och `requiresManualReview=true` skrivs fortfarande till `sources/` — den är bara
+markerad för manuell granskning under ingestion.
 
 **Om preview innehåller något annat statusvärde → verktyget avbryter med:**
 ```
@@ -277,16 +280,24 @@ npx tsx 00-Sources/00A-ImportRawSources-Tool/import-raw-sources.ts \
 ### Säkerhetsregler för write-step
 
 **Endast `matchStatus = "new"` skrivs till sources/.**
-Alla andra statusvärden ignoreras helt för write:
+`manualreview` är en **tagg/flagga**, inte ett blockerande matchStatus.
+Alla andra matchStatus ignoreras helt för write:
 
-| Status | Write? | Åtgärd |
-|--------|--------|--------|
-| `new` | ✓ JA | Ny fil `{sourceId}.jsonl` skapas |
-| `matched_existing` | ✗ IGNORED | Behöver ingen åtgärd |
+| matchStatus | Write? | Åtgärd |
+|-------------|--------|--------|
+| `new` | ✓ JA | Ny fil `{sourceId}.jsonl` skapas (även om `requiresManualReview=true`) |
+| `matched_existing` | ✗ IGNORED | Behåller befintlig, inget skrivs |
 | `duplicate_in_import` | ✗ IGNORED | Ignoreras |
-| `manualreview` | ✗ IGNORED | Kräver manuellt beslut |
 | `invalid_raw_row` | ✗ aldrig i preview | Kasserad före preview |
 | `skipped_already_imported_file` | ✗ aldrig i preview | Hoppad före preview |
+
+**Flaggor på nya sources:**
+
+| Flagga | Betydelse |
+|--------|-----------|
+| `requiresManualReview: true` | Source skrivs men behöver manuell granskning under ingestion |
+| `reviewTags` | T.ex. `["manualreview", "name_conflict"]` — varför den är flaggad |
+| `conflictVariant` | Om hostname matchade befintlig source men med annat name/city: unik sourceId skapas |
 
 **Atomär write:**
 1. Backup av `sources/` tas före write
@@ -298,21 +309,24 @@ Alla andra statusvärden ignoreras helt för write:
 
 ```
 [WRITE] Write plan:
-  New sources to write: 3
+  Total new sources to write: 4
+    clean new (no flags):         3
+    flagged (needs review):       1 — will be written with requiresManualReview=true
   matched_existing: 297 — IGNORED (no write)
-  manualreview: 34 — IGNORED (no write)
-  Files to create: 3
+  Files to create: 4
 
-[WRITE] SECURITY ABORT: file conflicts detected.
-  These files already exist in sources/ and would be overwritten:
-    /path/to/sources/existing-source.jsonl
-  Write operation aborted. No files were modified.
+[WRITE] SUCCESS — 4 new sources written to sources/
+  + clean-source-1.jsonl
+  + clean-source-2.jsonl
+  + clean-source-3.jsonl
+  + conflict-source-conflict-1.jsonl  ← has requiresManualReview=true
 ```
 
 ### Checklista före write
 - [ ] Granska import-preview.jsonl
-- [ ] Bekräfta att inga `matched_existing` eller `manualreview` felaktigt behandlas som `new`
-- [ ] Verifiera att antalet `new` är rimligt
+- [ ] Bekräfta att `matched_existing` och `duplicate_in_import` ignoreras vid write
+- [ ] Verifiera att `requiresManualReview`-flaggade sources är avsiktligt flaggade
+- [ ] Verifiera att alla nya sources har unika sourceIds (inga filkonflikter)
 - [ ] Kör med --apply-new
 - [ ] Bekräfta att sources/ nu har fler filer (aldrig färre)
 - [ ] Bekräfta att befintliga filer inte har ändrats
