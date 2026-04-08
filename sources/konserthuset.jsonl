@@ -1,1 +1,51 @@
-{"id": "konserthuset", "url": "https://www.konserthuset.se/program-och-biljetter/kalender/", "name": "Konserthuset Stockholm", "type": "konserthus", "city": "Stockholm", "discoveredAt": "2026-03-28T00:00:00.000Z", "discoveredBy": "100testcandidates", "preferredPath": "html", "preferredPathReason": "HTML extraction successful, 8 events found via CSS selectors", "systemVersionAtDecision": "1.0.0", "verifiedAt": "2026-04-03T00:00:00.000Z", "needsRecheck": false, "lastSystemVersion": "1.0.0", "metadata": {"originalTestUrl": "www.konserthuset.se", "testStatus": "no-jsonld", "htmlExtractionEvents": 8, "verifiedE2E": true}, "currentQueue": "C", "routingConfidence": "medium", "routingReason": "preferredPath=html, standard HTML extraction", "routedAt": "2026-04-07T18:45:45.334669+00:00", "route-history": [{"routedAt": "2026-04-07T18:45:45.334669+00:00", "queue": "C", "confidence": "medium", "reason": "preferredPath=html, standard HTML extraction", "phase": "phase5-initial-routing"}]}
+{
+  "id": "konserthuset",
+  "url": "https://www.konserthuset.se/program-och-biljetter/kalender/",
+  "name": "Konserthuset Stockholm",
+  "type": "konserthus",
+  "city": "Stockholm",
+  "discoveredAt": "2026-03-28T00:00:00.000Z",
+  "discoveredBy": "100testcandidates",
+  "preferredPath": "html",
+  "preferredPathReason": "HTML extraction successful, 8 events found via CSS selectors",
+  "systemVersionAtDecision": "1.0.0",
+  "verifiedAt": "2026-04-03T00:00:00.000Z",
+  "needsRecheck": false,
+  "lastSystemVersion": "1.0.0",
+  "metadata": {
+    "originalTestUrl": "www.konserthuset.se",
+    "testStatus": "no-jsonld",
+    "htmlExtractionEvents": 8,
+    "verifiedE2E": true
+  },
+  "currentQueue": "pending",
+  "routingConfidence": "reset",
+  "routingReason": "[LEGACY-pre-reset] preferredPath=html, standard HTML extraction",
+  "routedAt": "2026-04-07T18:45:45.334669+00:00",
+  "route-history": [
+    {
+      "routedAt": "2026-04-07T18:45:45.334669+00:00",
+      "queue": "C",
+      "confidence": "medium",
+      "reason": "preferredPath=html, standard HTML extraction",
+      "phase": "phase5-initial-routing"
+    }
+  ],
+  "legacyQueueRouting": {
+    "previousCurrentQueue": "C",
+    "previousRoutingConfidence": "medium",
+    "previousRoutingReason": "preferredPath=html, standard HTML extraction",
+    "previousRoutedAt": "2026-04-07T18:45:45.334669+00:00",
+    "previousRouteHistory": [
+      {
+        "routedAt": "2026-04-07T18:45:45.334669+00:00",
+        "queue": "C",
+        "confidence": "medium",
+        "reason": "preferredPath=html, standard HTML extraction",
+        "phase": "phase5-initial-routing"
+      }
+    ],
+    "resetAt": "2026-04-08T16:35:03.363Z",
+    "resetReason": "Phase 1 reset — queue routing neutralized, see legacyQueueRouting"
+  }
+}

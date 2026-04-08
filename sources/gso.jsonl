@@ -1,1 +1,50 @@
-{"id": "gso", "url": "https://www.gso.se", "name": "Göteborgs Symfoniker", "type": "konserthus", "city": "Göteborg", "discoveredAt": "2026-03-28T00:00:00.000Z", "discoveredBy": "100testcandidates", "preferredPath": "unknown", "preferredPathReason": "DNS resolution unclear, needs manual verification", "systemVersionAtDecision": "1.0.0", "verifiedAt": "2026-03-28T00:00:00.000Z", "needsRecheck": true, "lastSystemVersion": "1.0.0", "metadata": {"originalTestUrl": "www.gso.se", "testStatus": "no-jsonld", "dnsStatus": "unknown"}, "currentQueue": "C", "routingConfidence": "low", "routingReason": "preferredPath=unknown, requires HTML analysis", "routedAt": "2026-04-07T18:45:45.324259+00:00", "route-history": [{"routedAt": "2026-04-07T18:45:45.324259+00:00", "queue": "C", "confidence": "low", "reason": "preferredPath=unknown, requires HTML analysis", "phase": "phase5-initial-routing"}]}
+{
+  "id": "gso",
+  "url": "https://www.gso.se",
+  "name": "Göteborgs Symfoniker",
+  "type": "konserthus",
+  "city": "Göteborg",
+  "discoveredAt": "2026-03-28T00:00:00.000Z",
+  "discoveredBy": "100testcandidates",
+  "preferredPath": "unknown",
+  "preferredPathReason": "DNS resolution unclear, needs manual verification",
+  "systemVersionAtDecision": "1.0.0",
+  "verifiedAt": "2026-03-28T00:00:00.000Z",
+  "needsRecheck": true,
+  "lastSystemVersion": "1.0.0",
+  "metadata": {
+    "originalTestUrl": "www.gso.se",
+    "testStatus": "no-jsonld",
+    "dnsStatus": "unknown"
+  },
+  "currentQueue": "pending",
+  "routingConfidence": "reset",
+  "routingReason": "[LEGACY-pre-reset] preferredPath=unknown, requires HTML analysis",
+  "routedAt": "2026-04-07T18:45:45.324259+00:00",
+  "route-history": [
+    {
+      "routedAt": "2026-04-07T18:45:45.324259+00:00",
+      "queue": "C",
+      "confidence": "low",
+      "reason": "preferredPath=unknown, requires HTML analysis",
+      "phase": "phase5-initial-routing"
+    }
+  ],
+  "legacyQueueRouting": {
+    "previousCurrentQueue": "C",
+    "previousRoutingConfidence": "low",
+    "previousRoutingReason": "preferredPath=unknown, requires HTML analysis",
+    "previousRoutedAt": "2026-04-07T18:45:45.324259+00:00",
+    "previousRouteHistory": [
+      {
+        "routedAt": "2026-04-07T18:45:45.324259+00:00",
+        "queue": "C",
+        "confidence": "low",
+        "reason": "preferredPath=unknown, requires HTML analysis",
+        "phase": "phase5-initial-routing"
+      }
+    ],
+    "resetAt": "2026-04-08T16:35:03.354Z",
+    "resetReason": "Phase 1 reset — queue routing neutralized, see legacyQueueRouting"
+  }
+}

@@ -1,1 +1,58 @@
-{"id": "dubblett-v2-test", "url": "dubblett-v2-test.se/", "name": "Dubblett Intern V2", "type": "nöje", "city": "Teststad", "discoveredAt": "2026-04-07", "discoveredBy": "00A-import", "preferredPath": null, "preferredPathReason": "Initial import from preview: test-manualreview-v2-preview.jsonl", "systemVersionAtDecision": null, "verifiedAt": null, "needsRecheck": true, "lastSystemVersion": null, "requiresManualReview": false, "reviewTags": [], "metadata": {"rawSourceFile": "import-preview", "rawCity": "Teststad", "rawCategory": "nöje", "rawNotice": "Rad 1", "importBatchId": null, "sourceIdentityKey": "dubblett-v2-test.se", "canonicalUrl": "dubblett-v2-test.se/", "manualReviewReasons": [], "existingSourceId": null}, "currentQueue": "H", "routingConfidence": "low", "routingReason": "test/conflict source - requires manual review", "routedAt": "2026-04-07T18:45:45.312106+00:00", "route-history": [{"routedAt": "2026-04-07T18:45:45.312106+00:00", "queue": "H", "confidence": "low", "reason": "test/conflict source - requires manual review", "phase": "phase5-initial-routing"}]}
+{
+  "id": "dubblett-v2-test",
+  "url": "dubblett-v2-test.se/",
+  "name": "Dubblett Intern V2",
+  "type": "nöje",
+  "city": "Teststad",
+  "discoveredAt": "2026-04-07",
+  "discoveredBy": "00A-import",
+  "preferredPath": null,
+  "preferredPathReason": "Initial import from preview: test-manualreview-v2-preview.jsonl",
+  "systemVersionAtDecision": null,
+  "verifiedAt": null,
+  "needsRecheck": true,
+  "lastSystemVersion": null,
+  "requiresManualReview": false,
+  "reviewTags": [],
+  "metadata": {
+    "rawSourceFile": "import-preview",
+    "rawCity": "Teststad",
+    "rawCategory": "nöje",
+    "rawNotice": "Rad 1",
+    "importBatchId": null,
+    "sourceIdentityKey": "dubblett-v2-test.se",
+    "canonicalUrl": "dubblett-v2-test.se/",
+    "manualReviewReasons": [],
+    "existingSourceId": null
+  },
+  "currentQueue": "pending",
+  "routingConfidence": "reset",
+  "routingReason": "[LEGACY-pre-reset] test/conflict source - requires manual review",
+  "routedAt": "2026-04-07T18:45:45.312106+00:00",
+  "route-history": [
+    {
+      "routedAt": "2026-04-07T18:45:45.312106+00:00",
+      "queue": "H",
+      "confidence": "low",
+      "reason": "test/conflict source - requires manual review",
+      "phase": "phase5-initial-routing"
+    }
+  ],
+  "legacyQueueRouting": {
+    "previousCurrentQueue": "H",
+    "previousRoutingConfidence": "low",
+    "previousRoutingReason": "test/conflict source - requires manual review",
+    "previousRoutedAt": "2026-04-07T18:45:45.312106+00:00",
+    "previousRouteHistory": [
+      {
+        "routedAt": "2026-04-07T18:45:45.312106+00:00",
+        "queue": "H",
+        "confidence": "low",
+        "reason": "test/conflict source - requires manual review",
+        "phase": "phase5-initial-routing"
+      }
+    ],
+    "resetAt": "2026-04-08T16:35:03.332Z",
+    "resetReason": "Phase 1 reset — queue routing neutralized, see legacyQueueRouting"
+  }
+}

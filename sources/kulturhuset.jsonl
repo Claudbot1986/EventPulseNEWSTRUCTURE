@@ -1,1 +1,51 @@
-{"id": "kulturhuset", "url": "https://www.kulturhuset.se", "name": "Kulturhuset Stadsteatern", "type": "kulturhus", "city": "Stockholm", "discoveredAt": "2026-03-28T00:00:00.000Z", "discoveredBy": "active", "preferredPath": "network", "preferredPathReason": "Active production source using ElasticSearch API", "systemVersionAtDecision": "1.0.0", "verifiedAt": "2026-04-03T00:00:00.000Z", "needsRecheck": false, "lastSystemVersion": "1.0.0", "metadata": {"method": "ElasticSearch API", "sourceAdapter": "kulturhuset", "testStatus": "wrong-type", "activeProduction": true}, "currentQueue": "A", "routingConfidence": "high", "routingReason": "preferredPath=network, verified API endpoint", "routedAt": "2026-04-07T18:45:45.336890+00:00", "route-history": [{"routedAt": "2026-04-07T18:45:45.336890+00:00", "queue": "A", "confidence": "high", "reason": "preferredPath=network, verified API endpoint", "phase": "phase5-initial-routing"}]}
+{
+  "id": "kulturhuset",
+  "url": "https://www.kulturhuset.se",
+  "name": "Kulturhuset Stadsteatern",
+  "type": "kulturhus",
+  "city": "Stockholm",
+  "discoveredAt": "2026-03-28T00:00:00.000Z",
+  "discoveredBy": "active",
+  "preferredPath": "network",
+  "preferredPathReason": "Active production source using ElasticSearch API",
+  "systemVersionAtDecision": "1.0.0",
+  "verifiedAt": "2026-04-03T00:00:00.000Z",
+  "needsRecheck": false,
+  "lastSystemVersion": "1.0.0",
+  "metadata": {
+    "method": "ElasticSearch API",
+    "sourceAdapter": "kulturhuset",
+    "testStatus": "wrong-type",
+    "activeProduction": true
+  },
+  "currentQueue": "pending",
+  "routingConfidence": "reset",
+  "routingReason": "[LEGACY-pre-reset] preferredPath=network, verified API endpoint",
+  "routedAt": "2026-04-07T18:45:45.336890+00:00",
+  "route-history": [
+    {
+      "routedAt": "2026-04-07T18:45:45.336890+00:00",
+      "queue": "A",
+      "confidence": "high",
+      "reason": "preferredPath=network, verified API endpoint",
+      "phase": "phase5-initial-routing"
+    }
+  ],
+  "legacyQueueRouting": {
+    "previousCurrentQueue": "A",
+    "previousRoutingConfidence": "high",
+    "previousRoutingReason": "preferredPath=network, verified API endpoint",
+    "previousRoutedAt": "2026-04-07T18:45:45.336890+00:00",
+    "previousRouteHistory": [
+      {
+        "routedAt": "2026-04-07T18:45:45.336890+00:00",
+        "queue": "A",
+        "confidence": "high",
+        "reason": "preferredPath=network, verified API endpoint",
+        "phase": "phase5-initial-routing"
+      }
+    ],
+    "resetAt": "2026-04-08T16:35:03.366Z",
+    "resetReason": "Phase 1 reset — queue routing neutralized, see legacyQueueRouting"
+  }
+}

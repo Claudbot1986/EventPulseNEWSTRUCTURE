@@ -1,1 +1,51 @@
-{"id": "tele2-arena", "url": "https://tele2arena.se", "name": "Tele2 Arena", "type": "arena", "city": "Stockholm", "discoveredAt": "2026-03-28T00:00:00.000Z", "discoveredBy": "100testcandidates", "preferredPath": "unknown", "preferredPathReason": "Initial diagnosis from 100testcandidates: wrong-type", "systemVersionAtDecision": null, "verifiedAt": null, "needsRecheck": true, "lastSystemVersion": null, "metadata": {"testNumber": 45, "testRun": "2026-03-28", "diagnosis100": "wrong-type", "testNotes": "🏷️ wrong-type"}, "currentQueue": "C", "routingConfidence": "low", "routingReason": "preferredPath=unknown, requires HTML analysis", "routedAt": "2026-04-07T18:45:45.371001+00:00", "route-history": [{"routedAt": "2026-04-07T18:45:45.371001+00:00", "queue": "C", "confidence": "low", "reason": "preferredPath=unknown, requires HTML analysis", "phase": "phase5-initial-routing"}]}
+{
+  "id": "tele2-arena",
+  "url": "https://tele2arena.se",
+  "name": "Tele2 Arena",
+  "type": "arena",
+  "city": "Stockholm",
+  "discoveredAt": "2026-03-28T00:00:00.000Z",
+  "discoveredBy": "100testcandidates",
+  "preferredPath": "unknown",
+  "preferredPathReason": "Initial diagnosis from 100testcandidates: wrong-type",
+  "systemVersionAtDecision": null,
+  "verifiedAt": null,
+  "needsRecheck": true,
+  "lastSystemVersion": null,
+  "metadata": {
+    "testNumber": 45,
+    "testRun": "2026-03-28",
+    "diagnosis100": "wrong-type",
+    "testNotes": "🏷️ wrong-type"
+  },
+  "currentQueue": "pending",
+  "routingConfidence": "reset",
+  "routingReason": "[LEGACY-pre-reset] preferredPath=unknown, requires HTML analysis",
+  "routedAt": "2026-04-07T18:45:45.371001+00:00",
+  "route-history": [
+    {
+      "routedAt": "2026-04-07T18:45:45.371001+00:00",
+      "queue": "C",
+      "confidence": "low",
+      "reason": "preferredPath=unknown, requires HTML analysis",
+      "phase": "phase5-initial-routing"
+    }
+  ],
+  "legacyQueueRouting": {
+    "previousCurrentQueue": "C",
+    "previousRoutingConfidence": "low",
+    "previousRoutingReason": "preferredPath=unknown, requires HTML analysis",
+    "previousRoutedAt": "2026-04-07T18:45:45.371001+00:00",
+    "previousRouteHistory": [
+      {
+        "routedAt": "2026-04-07T18:45:45.371001+00:00",
+        "queue": "C",
+        "confidence": "low",
+        "reason": "preferredPath=unknown, requires HTML analysis",
+        "phase": "phase5-initial-routing"
+      }
+    ],
+    "resetAt": "2026-04-08T16:35:03.395Z",
+    "resetReason": "Phase 1 reset — queue routing neutralized, see legacyQueueRouting"
+  }
+}

@@ -1,1 +1,51 @@
-{"id": "fryshuset", "url": "https://fryshuset.se/kalendarium", "name": "Fryshuset", "type": "arena", "city": "Stockholm", "discoveredAt": "2026-03-28T00:00:00.000Z", "discoveredBy": "100testcandidates", "preferredPath": "render", "preferredPathReason": "JS-rendered (Nuxt), needs D-renderGate when available", "systemVersionAtDecision": "1.0.0", "verifiedAt": "2026-03-28T00:00:00.000Z", "needsRecheck": false, "lastSystemVersion": "1.0.0", "metadata": {"originalTestUrl": "fryshuset.se", "testStatus": "no-jsonld", "jsRendered": true, "needsDRenderGate": true}, "currentQueue": "D", "routingConfidence": "medium", "routingReason": "preferredPath=render, JS-rendering required", "routedAt": "2026-04-07T18:45:45.317799+00:00", "route-history": [{"routedAt": "2026-04-07T18:45:45.317799+00:00", "queue": "D", "confidence": "medium", "reason": "preferredPath=render, JS-rendering required", "phase": "phase5-initial-routing"}]}
+{
+  "id": "fryshuset",
+  "url": "https://fryshuset.se/kalendarium",
+  "name": "Fryshuset",
+  "type": "arena",
+  "city": "Stockholm",
+  "discoveredAt": "2026-03-28T00:00:00.000Z",
+  "discoveredBy": "100testcandidates",
+  "preferredPath": "render",
+  "preferredPathReason": "JS-rendered (Nuxt), needs D-renderGate when available",
+  "systemVersionAtDecision": "1.0.0",
+  "verifiedAt": "2026-03-28T00:00:00.000Z",
+  "needsRecheck": false,
+  "lastSystemVersion": "1.0.0",
+  "metadata": {
+    "originalTestUrl": "fryshuset.se",
+    "testStatus": "no-jsonld",
+    "jsRendered": true,
+    "needsDRenderGate": true
+  },
+  "currentQueue": "pending",
+  "routingConfidence": "reset",
+  "routingReason": "[LEGACY-pre-reset] preferredPath=render, JS-rendering required",
+  "routedAt": "2026-04-07T18:45:45.317799+00:00",
+  "route-history": [
+    {
+      "routedAt": "2026-04-07T18:45:45.317799+00:00",
+      "queue": "D",
+      "confidence": "medium",
+      "reason": "preferredPath=render, JS-rendering required",
+      "phase": "phase5-initial-routing"
+    }
+  ],
+  "legacyQueueRouting": {
+    "previousCurrentQueue": "D",
+    "previousRoutingConfidence": "medium",
+    "previousRoutingReason": "preferredPath=render, JS-rendering required",
+    "previousRoutedAt": "2026-04-07T18:45:45.317799+00:00",
+    "previousRouteHistory": [
+      {
+        "routedAt": "2026-04-07T18:45:45.317799+00:00",
+        "queue": "D",
+        "confidence": "medium",
+        "reason": "preferredPath=render, JS-rendering required",
+        "phase": "phase5-initial-routing"
+      }
+    ],
+    "resetAt": "2026-04-08T16:35:03.347Z",
+    "resetReason": "Phase 1 reset — queue routing neutralized, see legacyQueueRouting"
+  }
+}

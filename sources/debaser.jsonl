@@ -1,1 +1,51 @@
-{"id": "debaser", "url": "https://debaser.se", "name": "Debaser", "type": "musik", "city": "Stockholm", "discoveredAt": "2026-03-28T00:00:00.000Z", "discoveredBy": "100testcandidates", "preferredPath": "unknown", "preferredPathReason": "JS-rendered (Nuxt), needs D-renderGate or manual investigation", "systemVersionAtDecision": "1.0.0", "verifiedAt": "2026-03-28T00:00:00.000Z", "needsRecheck": true, "lastSystemVersion": "1.0.0", "metadata": {"originalTestUrl": "debaser.se", "testStatus": "no-jsonld", "jsRendered": true, "needsInvestigation": true}, "currentQueue": "C", "routingConfidence": "low", "routingReason": "preferredPath=unknown, requires HTML analysis", "routedAt": "2026-04-07T18:45:45.310959+00:00", "route-history": [{"routedAt": "2026-04-07T18:45:45.310959+00:00", "queue": "C", "confidence": "low", "reason": "preferredPath=unknown, requires HTML analysis", "phase": "phase5-initial-routing"}]}
+{
+  "id": "debaser",
+  "url": "https://debaser.se",
+  "name": "Debaser",
+  "type": "musik",
+  "city": "Stockholm",
+  "discoveredAt": "2026-03-28T00:00:00.000Z",
+  "discoveredBy": "100testcandidates",
+  "preferredPath": "unknown",
+  "preferredPathReason": "JS-rendered (Nuxt), needs D-renderGate or manual investigation",
+  "systemVersionAtDecision": "1.0.0",
+  "verifiedAt": "2026-03-28T00:00:00.000Z",
+  "needsRecheck": true,
+  "lastSystemVersion": "1.0.0",
+  "metadata": {
+    "originalTestUrl": "debaser.se",
+    "testStatus": "no-jsonld",
+    "jsRendered": true,
+    "needsInvestigation": true
+  },
+  "currentQueue": "pending",
+  "routingConfidence": "reset",
+  "routingReason": "[LEGACY-pre-reset] preferredPath=unknown, requires HTML analysis",
+  "routedAt": "2026-04-07T18:45:45.310959+00:00",
+  "route-history": [
+    {
+      "routedAt": "2026-04-07T18:45:45.310959+00:00",
+      "queue": "C",
+      "confidence": "low",
+      "reason": "preferredPath=unknown, requires HTML analysis",
+      "phase": "phase5-initial-routing"
+    }
+  ],
+  "legacyQueueRouting": {
+    "previousCurrentQueue": "C",
+    "previousRoutingConfidence": "low",
+    "previousRoutingReason": "preferredPath=unknown, requires HTML analysis",
+    "previousRoutedAt": "2026-04-07T18:45:45.310959+00:00",
+    "previousRouteHistory": [
+      {
+        "routedAt": "2026-04-07T18:45:45.310959+00:00",
+        "queue": "C",
+        "confidence": "low",
+        "reason": "preferredPath=unknown, requires HTML analysis",
+        "phase": "phase5-initial-routing"
+      }
+    ],
+    "resetAt": "2026-04-08T16:35:03.331Z",
+    "resetReason": "Phase 1 reset — queue routing neutralized, see legacyQueueRouting"
+  }
+}

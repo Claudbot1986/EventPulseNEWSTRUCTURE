@@ -1,1 +1,51 @@
-{"id": "g-teborgs-posten", "url": "https://www.gp.se/evenemang", "name": "Göteborgs-Posten", "type": "media", "city": "Göteborg", "discoveredAt": "2026-03-28T00:00:00.000Z", "discoveredBy": "100testcandidates", "preferredPath": "unknown", "preferredPathReason": "Initial diagnosis from 100testcandidates: bad-url", "systemVersionAtDecision": null, "verifiedAt": null, "needsRecheck": true, "lastSystemVersion": null, "metadata": {"testNumber": 86, "testRun": "2026-03-28", "diagnosis100": "bad-url", "testNotes": "🔗 bad-url (404)"}, "currentQueue": "C", "routingConfidence": "low", "routingReason": "preferredPath=unknown, requires HTML analysis", "routedAt": "2026-04-07T18:45:45.319250+00:00", "route-history": [{"routedAt": "2026-04-07T18:45:45.319250+00:00", "queue": "C", "confidence": "low", "reason": "preferredPath=unknown, requires HTML analysis", "phase": "phase5-initial-routing"}]}
+{
+  "id": "g-teborgs-posten",
+  "url": "https://www.gp.se/evenemang",
+  "name": "Göteborgs-Posten",
+  "type": "media",
+  "city": "Göteborg",
+  "discoveredAt": "2026-03-28T00:00:00.000Z",
+  "discoveredBy": "100testcandidates",
+  "preferredPath": "unknown",
+  "preferredPathReason": "Initial diagnosis from 100testcandidates: bad-url",
+  "systemVersionAtDecision": null,
+  "verifiedAt": null,
+  "needsRecheck": true,
+  "lastSystemVersion": null,
+  "metadata": {
+    "testNumber": 86,
+    "testRun": "2026-03-28",
+    "diagnosis100": "bad-url",
+    "testNotes": "🔗 bad-url (404)"
+  },
+  "currentQueue": "pending",
+  "routingConfidence": "reset",
+  "routingReason": "[LEGACY-pre-reset] preferredPath=unknown, requires HTML analysis",
+  "routedAt": "2026-04-07T18:45:45.319250+00:00",
+  "route-history": [
+    {
+      "routedAt": "2026-04-07T18:45:45.319250+00:00",
+      "queue": "C",
+      "confidence": "low",
+      "reason": "preferredPath=unknown, requires HTML analysis",
+      "phase": "phase5-initial-routing"
+    }
+  ],
+  "legacyQueueRouting": {
+    "previousCurrentQueue": "C",
+    "previousRoutingConfidence": "low",
+    "previousRoutingReason": "preferredPath=unknown, requires HTML analysis",
+    "previousRoutedAt": "2026-04-07T18:45:45.319250+00:00",
+    "previousRouteHistory": [
+      {
+        "routedAt": "2026-04-07T18:45:45.319250+00:00",
+        "queue": "C",
+        "confidence": "low",
+        "reason": "preferredPath=unknown, requires HTML analysis",
+        "phase": "phase5-initial-routing"
+      }
+    ],
+    "resetAt": "2026-04-08T16:35:03.347Z",
+    "resetReason": "Phase 1 reset — queue routing neutralized, see legacyQueueRouting"
+  }
+}

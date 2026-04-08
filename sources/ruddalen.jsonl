@@ -1,1 +1,51 @@
-{"id": "ruddalen", "url": "https://www.ruddalen.se", "name": "Ruddalen", "type": "park", "city": "Göteborg", "discoveredAt": "2026-04-04T00:00:00.000Z", "discoveredBy": "RawSources20260404", "preferredPath": "unknown", "preferredPathReason": "Initial import from RawSources20260404.md: Park och idrott", "systemVersionAtDecision": null, "verifiedAt": null, "needsRecheck": true, "lastSystemVersion": null, "metadata": {"rawSourceFile": "RawSources20260404.md", "rawCity": "Göteborg", "rawCategory": "park", "rawNotice": "Park och idrott"}, "currentQueue": "C", "routingConfidence": "low", "routingReason": "preferredPath=unknown, requires HTML analysis", "routedAt": "2026-04-07T18:45:45.359313+00:00", "route-history": [{"routedAt": "2026-04-07T18:45:45.359313+00:00", "queue": "C", "confidence": "low", "reason": "preferredPath=unknown, requires HTML analysis", "phase": "phase5-initial-routing"}]}
+{
+  "id": "ruddalen",
+  "url": "https://www.ruddalen.se",
+  "name": "Ruddalen",
+  "type": "park",
+  "city": "Göteborg",
+  "discoveredAt": "2026-04-04T00:00:00.000Z",
+  "discoveredBy": "RawSources20260404",
+  "preferredPath": "unknown",
+  "preferredPathReason": "Initial import from RawSources20260404.md: Park och idrott",
+  "systemVersionAtDecision": null,
+  "verifiedAt": null,
+  "needsRecheck": true,
+  "lastSystemVersion": null,
+  "metadata": {
+    "rawSourceFile": "RawSources20260404.md",
+    "rawCity": "Göteborg",
+    "rawCategory": "park",
+    "rawNotice": "Park och idrott"
+  },
+  "currentQueue": "pending",
+  "routingConfidence": "reset",
+  "routingReason": "[LEGACY-pre-reset] preferredPath=unknown, requires HTML analysis",
+  "routedAt": "2026-04-07T18:45:45.359313+00:00",
+  "route-history": [
+    {
+      "routedAt": "2026-04-07T18:45:45.359313+00:00",
+      "queue": "C",
+      "confidence": "low",
+      "reason": "preferredPath=unknown, requires HTML analysis",
+      "phase": "phase5-initial-routing"
+    }
+  ],
+  "legacyQueueRouting": {
+    "previousCurrentQueue": "C",
+    "previousRoutingConfidence": "low",
+    "previousRoutingReason": "preferredPath=unknown, requires HTML analysis",
+    "previousRoutedAt": "2026-04-07T18:45:45.359313+00:00",
+    "previousRouteHistory": [
+      {
+        "routedAt": "2026-04-07T18:45:45.359313+00:00",
+        "queue": "C",
+        "confidence": "low",
+        "reason": "preferredPath=unknown, requires HTML analysis",
+        "phase": "phase5-initial-routing"
+      }
+    ],
+    "resetAt": "2026-04-08T16:35:03.383Z",
+    "resetReason": "Phase 1 reset — queue routing neutralized, see legacyQueueRouting"
+  }
+}

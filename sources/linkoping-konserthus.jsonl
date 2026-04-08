@@ -1,1 +1,51 @@
-{"id": "linkoping-konserthus", "url": "https://www.linkoping.se/konserthus", "name": "Linköping Konserthus", "type": "konserthus", "city": "Linköping", "discoveredAt": "2026-04-04T00:00:00.000Z", "discoveredBy": "RawSources20260404", "preferredPath": "unknown", "preferredPathReason": "Initial import from RawSources20260404.md: Konserthus", "systemVersionAtDecision": null, "verifiedAt": null, "needsRecheck": true, "lastSystemVersion": null, "metadata": {"rawSourceFile": "RawSources20260404.md", "rawCity": "Linköping", "rawCategory": "konserthus", "rawNotice": "Konserthus"}, "currentQueue": "C", "routingConfidence": "low", "routingReason": "preferredPath=unknown, requires HTML analysis", "routedAt": "2026-04-07T18:45:45.338671+00:00", "route-history": [{"routedAt": "2026-04-07T18:45:45.338671+00:00", "queue": "C", "confidence": "low", "reason": "preferredPath=unknown, requires HTML analysis", "phase": "phase5-initial-routing"}]}
+{
+  "id": "linkoping-konserthus",
+  "url": "https://www.linkoping.se/konserthus",
+  "name": "Linköping Konserthus",
+  "type": "konserthus",
+  "city": "Linköping",
+  "discoveredAt": "2026-04-04T00:00:00.000Z",
+  "discoveredBy": "RawSources20260404",
+  "preferredPath": "unknown",
+  "preferredPathReason": "Initial import from RawSources20260404.md: Konserthus",
+  "systemVersionAtDecision": null,
+  "verifiedAt": null,
+  "needsRecheck": true,
+  "lastSystemVersion": null,
+  "metadata": {
+    "rawSourceFile": "RawSources20260404.md",
+    "rawCity": "Linköping",
+    "rawCategory": "konserthus",
+    "rawNotice": "Konserthus"
+  },
+  "currentQueue": "pending",
+  "routingConfidence": "reset",
+  "routingReason": "[LEGACY-pre-reset] preferredPath=unknown, requires HTML analysis",
+  "routedAt": "2026-04-07T18:45:45.338671+00:00",
+  "route-history": [
+    {
+      "routedAt": "2026-04-07T18:45:45.338671+00:00",
+      "queue": "C",
+      "confidence": "low",
+      "reason": "preferredPath=unknown, requires HTML analysis",
+      "phase": "phase5-initial-routing"
+    }
+  ],
+  "legacyQueueRouting": {
+    "previousCurrentQueue": "C",
+    "previousRoutingConfidence": "low",
+    "previousRoutingReason": "preferredPath=unknown, requires HTML analysis",
+    "previousRoutedAt": "2026-04-07T18:45:45.338671+00:00",
+    "previousRouteHistory": [
+      {
+        "routedAt": "2026-04-07T18:45:45.338671+00:00",
+        "queue": "C",
+        "confidence": "low",
+        "reason": "preferredPath=unknown, requires HTML analysis",
+        "phase": "phase5-initial-routing"
+      }
+    ],
+    "resetAt": "2026-04-08T16:35:03.367Z",
+    "resetReason": "Phase 1 reset — queue routing neutralized, see legacyQueueRouting"
+  }
+}
