@@ -17,10 +17,10 @@ import { fileURLToPath } from 'url';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// Use process.cwd() for project-root-relative paths.
-// This ensures sources/ and runtime/ are always resolved from NEWSTRUCTURE/ root,
-// not from the importing module's location.
-const PROJECT_ROOT = process.cwd();
+// Use __dirname for stable project-root-relative paths.
+// This ensures sources/ and runtime/ are always resolved from the project root,
+// regardless of where the user runs the script from.
+const PROJECT_ROOT = path.resolve(__dirname, '../../');
 const SOURCES_DIR = path.resolve(PROJECT_ROOT, 'sources');
 const RUNTIME_DIR = path.resolve(PROJECT_ROOT, 'runtime');
 const STATUS_FILE = path.resolve(RUNTIME_DIR, 'sources_status.jsonl');
