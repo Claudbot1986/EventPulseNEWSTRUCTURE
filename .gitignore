@@ -21,3 +21,6 @@ build/
 *.tmp
 *.bak
 *.swp
+
+# Temp directory
+TEMP/
