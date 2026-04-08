@@ -17,8 +17,12 @@ import { fileURLToPath } from 'url';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-const SOURCES_DIR = path.resolve(__dirname, '../../sources');
-const RUNTIME_DIR = path.resolve(__dirname, '../../runtime');
+// Use process.cwd() for project-root-relative paths.
+// This ensures sources/ and runtime/ are always resolved from NEWSTRUCTURE/ root,
+// not from the importing module's location.
+const PROJECT_ROOT = process.cwd();
+const SOURCES_DIR = path.resolve(PROJECT_ROOT, 'sources');
+const RUNTIME_DIR = path.resolve(PROJECT_ROOT, 'runtime');
 const STATUS_FILE = path.resolve(RUNTIME_DIR, 'sources_status.jsonl');
 const PRIORITY_FILE = path.resolve(RUNTIME_DIR, 'sources_priority_queue.jsonl');
 
@@ -117,23 +121,42 @@ export interface PriorityEntry {
 
 /**
  * Hämta alla sources från sources/
+ * Stöder två format:
+ *   1. Multi-line JSON (pretty-printed) — en komplett JSON-object per fil
+ *   2. JSONL — en JSON-object per rad
  */
 export function getAllSources(): SourceTruth[] {
   if (!existsSync(SOURCES_DIR)) return [];
-  
+
   const files = readdirSync(SOURCES_DIR).filter(f => f.endsWith('.jsonl'));
   const sources: SourceTruth[] = [];
-  
+
   for (const file of files) {
-    const content = readFileSync(path.join(SOURCES_DIR, file), 'utf8');
+    const content = readFileSync(path.join(SOURCES_DIR, file), 'utf8').trim();
+
+    // Först: försök parsa hela filen som en JSON-object (multi-line format)
+    try {
+      const parsed = JSON.parse(content) as SourceTruth;
+      if (parsed && parsed.id) {
+        sources.push(parsed);
+        continue;
+      }
+    } catch {}
+
+    // Andra: försök parsa varje rad som separat JSON (JSONL-format)
     const lines = content.split('\n').filter(l => l.trim());
     for (const line of lines) {
       try {
-        sources.push(JSON.parse(line) as SourceTruth);
-      } catch {}
+        const parsed = JSON.parse(line) as SourceTruth;
+        if (parsed && parsed.id) {
+          sources.push(parsed);
+        }
+      } catch {
+        // Rad kunde inte parsas, ignorera
+      }
     }
   }
-  
+
   return sources;
 }
 
