@@ -1195,47 +1195,84 @@ export function importRawSourcesWithMatching(
         const cityConflict = existing.city && existing.city !== row.city;
 
         if (nameConflict || cityConflict) {
-          // NEW + review flag: hostname matched but name/city differs
-          const tags: Array<'manualreview' | 'name_conflict' | 'city_conflict'> = ['manualreview'];
-          if (nameConflict) tags.push('name_conflict');
-          if (cityConflict) tags.push('city_conflict');
-          const reasons: string[] = [];
-          if (nameConflict) reasons.push(`name='${existing.name}' vs import name='${row.name}'`);
-          if (cityConflict) reasons.push(`city='${existing.city}' vs import city='${row.city}'`);
+          // TRIVIAL DUP FIX: if canonicalUrl exactly matches the existing source's URL,
+          // this is a raw-data error — the import row describes the same real URL
+          // but with a conflicting name/city. We do NOT create a conflict variant.
+          const existingCanonicalUrl = normalizeToCanonicalUrl(existing.url);
+          if (canonicalUrl === existingCanonicalUrl) {
+            // Same real URL with conflicting name/city — raw-data error.
+            // Keep existing source, add provenance, flag for review.
+            const provenance: RawRowProvenance[] = [];
+            provenance.push(makeRowProvenance(row, lineNumber, fileContext, 'matched_existing_row', `same canonical URL as existing source but different name/city — url-conflict, raw-data error`));
+            outputMap.set(siteIdentityKey, {
+              sourceId: existing.id,
+              sourceIdentityKey: siteIdentityKey,
+              canonicalUrl,
+              name: row.name,
+              city: row.city,
+              type: row.type,
+              discoveredAt: row.discoveredAt,
+              note: row.note,
+              isDuplicate: false,
+              originalRows: [{ name: row.name, url: row.url }],
+              matchStatus: 'matched_existing',
+              matchedBy: 'sourceIdentityKey',
+              requiresManualReview: true,
+              reviewTags: ['manualreview', 'url_conflict', 'name_conflict', 'city_conflict'],
+              manualReviewReasons: [`existing source url='${existing.url}' matches import url, but name='${existing.name}' vs import name='${row.name}', city='${existing.city}' vs import city='${row.city}'`],
+              existingSource: {
+                id: existing.id,
+                name: existing.name,
+                preferredPath: existing.preferredPath ?? null,
+              },
+              provenanceRows: provenance,
+            });
+            stats.matchedExisting++;
+            stats.manualreview++;
+          } else {
+            // URLs differ — genuinely different pages on same host (e.g. /konserthus vs /konst).
+            // Proceed with conflict variant creation.
+            const tags: Array<'manualreview' | 'name_conflict' | 'city_conflict'> = ['manualreview'];
+            if (nameConflict) tags.push('name_conflict');
+            if (cityConflict) tags.push('city_conflict');
+            const reasons: string[] = [];
+            if (nameConflict) reasons.push(`name='${existing.name}' vs import name='${row.name}'`);
+            if (cityConflict) reasons.push(`city='${existing.city}' vs import city='${row.city}'`);
 
-          const baseId = generateSourceId(siteIdentityKey);
-          const nextVariant = findNextConflictVariant(baseId, sourcesDir, reservedInBatch);
-          const conflictId = `${baseId}-conflict-${nextVariant}`;
-          reservedInBatch.add(conflictId);
+            const baseId = generateSourceId(siteIdentityKey);
+            const nextVariant = findNextConflictVariant(baseId, sourcesDir, reservedInBatch);
+            const conflictId = `${baseId}-conflict-${nextVariant}`;
+            reservedInBatch.add(conflictId);
 
-          const provenance: RawRowProvenance[] = [];
-          provenance.push(makeRowProvenance(row, lineNumber, fileContext, 'new_row_needs_review', reasons.join('; ')));
+            const provenance: RawRowProvenance[] = [];
+            provenance.push(makeRowProvenance(row, lineNumber, fileContext, 'new_row_needs_review', reasons.join('; ')));
 
-          outputMap.set(siteIdentityKey, {
-            sourceId: conflictId,
-            sourceIdentityKey: siteIdentityKey,
-            canonicalUrl,
-            name: row.name,
-            city: row.city,
-            type: row.type,
-            discoveredAt: row.discoveredAt,
-            note: row.note,
-            isDuplicate: false,
-            originalRows: [{ name: row.name, url: row.url }],
-            matchStatus: 'new',
-            requiresManualReview: true,
-            reviewTags: tags,
-            conflictVariant: nextVariant,
-            manualReviewReasons: reasons,
-            existingSource: {
-              id: existing.id,
-              name: existing.name,
-              preferredPath: existing.preferredPath ?? null,
-            },
-            provenanceRows: provenance,
-          });
-          stats.manualreview++;
-          stats.newNeedsReview++;
+            outputMap.set(siteIdentityKey, {
+              sourceId: conflictId,
+              sourceIdentityKey: siteIdentityKey,
+              canonicalUrl,
+              name: row.name,
+              city: row.city,
+              type: row.type,
+              discoveredAt: row.discoveredAt,
+              note: row.note,
+              isDuplicate: false,
+              originalRows: [{ name: row.name, url: row.url }],
+              matchStatus: 'new',
+              requiresManualReview: true,
+              reviewTags: tags,
+              conflictVariant: nextVariant,
+              manualReviewReasons: reasons,
+              existingSource: {
+                id: existing.id,
+                name: existing.name,
+                preferredPath: existing.preferredPath ?? null,
+              },
+              provenanceRows: provenance,
+            });
+            stats.manualreview++;
+            stats.newNeedsReview++;
+          }
         } else {
           const provenance: RawRowProvenance[] = [];
           provenance.push(makeRowProvenance(row, lineNumber, fileContext, 'matched_existing_row'));
@@ -1273,6 +1310,17 @@ export function importRawSourcesWithMatching(
       const primary = outputMap.get(siteIdentityKey)!;
       primary.originalRows.push({ name: row.name, url: row.url });
 
+      // TRIVIAL DUP FIX: if canonicalUrl is EXACTLY the same, this is a raw-data error
+      // (two rows tried to describe the same real URL with different labels).
+      // We do NOT create a new source — we treat this as a url-conflict on the existing one.
+      if (canonicalUrl === primary.canonicalUrl) {
+        primary.isDuplicate = true;
+        stats.duplicateInImportRows++;
+        getProvenanceArr(primary).push(makeRowProvenance(row, lineNumber, fileContext, 'duplicate_row_in_batch', `same canonical URL as primary row but different name/city — raw-data error, not a new source`));
+        continue;
+      }
+
+      // Names/cities differ AND URLs differ — legitimate different pages on same host.
       // Conservative: if names or cities differ, add review flag to the existing new source
       if (primary.name !== row.name || primary.city !== row.city) {
         if (!primary.requiresManualReview) {
