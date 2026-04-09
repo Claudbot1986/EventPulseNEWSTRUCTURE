@@ -27,9 +27,92 @@ import { getAllSources, getSourceStatus, updateSourceStatus, getSource } from '.
 import { fetchHtml, queueEvents } from '../tools/fetchTools';
 import { extractFromJsonLd } from '../F-eventExtraction/extractor';
 
-// ─── preA Queue File ───────────────────────────────────────────────────────────
+// ─── Queue File Paths ─────────────────────────────────────────────────────────
 
-const PREA_QUEUE_FILE = path.resolve(__dirname, '../../../runtime/preA-queue.jsonl');
+const RUNTIME_DIR = path.resolve(__dirname, '../../runtime');
+const PREA_QUEUE_FILE = path.resolve(RUNTIME_DIR, 'preA-queue.jsonl');
+const PREUI_QUEUE_FILE = path.resolve(RUNTIME_DIR, 'preUI-queue.jsonl');
+const PREB_QUEUE_FILE = path.resolve(RUNTIME_DIR, 'preB-queue.jsonl');
+
+// ─── Shared Queue Entry Interface ──────────────────────────────────────────────
+
+interface QueueEntry {
+  sourceId: string;
+  queueName: string;
+  queuedAt: string;
+  priority: number;
+  attempt: number;
+  queueReason: string;
+  workerNotes?: string;
+}
+
+// ─── preUI Queue (A success → preUI) ──────────────────────────────────────────
+
+function readPreUIQueue(): QueueEntry[] {
+  if (!existsSync(PREUI_QUEUE_FILE)) return [];
+  const content = readFileSync(PREUI_QUEUE_FILE, 'utf8');
+  return content.split('\n').filter(l => l.trim()).map(l => JSON.parse(l) as QueueEntry);
+}
+
+function writePreUIQueue(entries: QueueEntry[]): void {
+  const content = entries.map(e => JSON.stringify(e)).join('\n') + '\n';
+  // Skapa filen vid första skrivningen (append-sätt för att bevara befintligt innehåll)
+  if (!existsSync(PREUI_QUEUE_FILE)) {
+    writeFileSync(PREUI_QUEUE_FILE, content, 'utf8');
+  } else {
+    writeFileSync(PREUI_QUEUE_FILE, content, 'utf8');
+  }
+}
+
+function addToPreUIQueue(sourceId: string, eventsFound: number, reason: string): void {
+  const queue = readPreUIQueue();
+  // Dublettkontroll inom samma körning
+  if (queue.some(e => e.sourceId === sourceId)) return;
+  queue.push({
+    sourceId,
+    queueName: 'preUI',
+    queuedAt: new Date().toISOString(),
+    priority: 1,
+    attempt: 1,
+    queueReason: reason,
+    workerNotes: `A: ${eventsFound} events`,
+  });
+  writePreUIQueue(queue);
+}
+
+// ─── preB Queue (ej A → preB) ─────────────────────────────────────────────────
+
+function readPreBQueue(): QueueEntry[] {
+  if (!existsSync(PREB_QUEUE_FILE)) return [];
+  const content = readFileSync(PREB_QUEUE_FILE, 'utf8');
+  return content.split('\n').filter(l => l.trim()).map(l => JSON.parse(l) as QueueEntry);
+}
+
+function writePreBQueue(entries: QueueEntry[]): void {
+  const content = entries.map(e => JSON.stringify(e)).join('\n') + '\n';
+  if (!existsSync(PREB_QUEUE_FILE)) {
+    writeFileSync(PREB_QUEUE_FILE, content, 'utf8');
+  } else {
+    writeFileSync(PREB_QUEUE_FILE, content, 'utf8');
+  }
+}
+
+function addToPreBQueue(sourceId: string, reason: string): void {
+  const queue = readPreBQueue();
+  // Dublettkontroll inom samma körning
+  if (queue.some(e => e.sourceId === sourceId)) return;
+  queue.push({
+    sourceId,
+    queueName: 'preB',
+    queuedAt: new Date().toISOString(),
+    priority: 2,
+    attempt: 1,
+    queueReason: reason,
+  });
+  writePreBQueue(queue);
+}
+
+// ─── preA Queue File ───────────────────────────────────────────────────────────
 
 interface PreAEntry {
   sourceId: string;
@@ -215,6 +298,15 @@ function finalizeSource(item: SourceWithOrigin, result: AResult): void {
     lastRoutingReason: `toolA(${queueOrigin}): ${result.success ? `${result.eventsFound} events` : result.error}`,
     lastRoutingSource: 'runtime_status',
   });
+
+  // ── Queue-hop baserat på utfall ──────────────────────────────────────────
+  if (result.success && result.eventsFound > 0) {
+    // A success → preUI
+    addToPreUIQueue(sourceId, result.eventsFound, `toolA(${queueOrigin}): ${result.eventsFound} events`);
+  } else {
+    // ej A / fail → preB
+    addToPreBQueue(sourceId, `toolA(${queueOrigin}): ${result.error ?? 'no events'}`);
+  }
 
   // Ta bort från preA-queue om det kom därifrån
   if (queueOrigin === 'preA') {
