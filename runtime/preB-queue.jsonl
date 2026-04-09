@@ -1,0 +1,3 @@
+{"sourceId":"allt-om-mat","queueName":"preB","queuedAt":"2026-04-09T19:00:00.000Z","priority":2,"attempt":0,"queueReason":"toolA: WebPage JSON-LD - no events via JSON-LD"}
+{"sourceId":"alltimalmo","queueName":"preB","queuedAt":"2026-04-09T19:00:00.000Z","priority":2,"attempt":0,"queueReason":"toolA: No JSON-LD tags - no JSON-LD found"}
+{"sourceId":"andra-langgatan","queueName":"preB","queuedAt":"2026-04-09T19:00:00.000Z","priority":2,"attempt":0,"queueReason":"toolA: No JSON-LD tags - no JSON-LD found"}
