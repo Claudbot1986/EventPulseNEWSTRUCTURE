@@ -31,6 +31,9 @@ import { getSource, getSourceStatus, updateSourceStatus } from '../tools/sourceR
 import { evaluateNetworkGate, summarizeNetworkGateResult } from './A-networkGate';
 import { extractFromApi } from './networkEventExtractor';
 import { inspectUrl } from './networkInspector';
+import { queueEvents } from '../tools/fetchTools';
+import type { ParsedEvent } from '../F-eventExtraction/schema';
+import { fileURLToPath } from 'url';
 
 // ─── Queue File Paths ─────────────────────────────────────────────────────────
 
@@ -207,12 +210,14 @@ async function runBOnSource(entry: PreBEntry): Promise<BResult> {
   // Try extraction on top candidates
   let totalEvents = 0;
   const triedUrls: string[] = [];
+  const allExtractedEvents: ParsedEvent[] = [];
 
   for (const candidate of candidatesToTry) {
     triedUrls.push(candidate.url);
     try {
       const extractResult = await extractFromApi(candidate.url, sourceId);
       totalEvents += extractResult.events.length;
+      allExtractedEvents.push(...extractResult.events);
       if (extractResult.events.length > 0) {
         console.log(`         extracted ${extractResult.events.length} events from ${candidate.url}`);
       }
@@ -234,10 +239,20 @@ async function runBOnSource(entry: PreBEntry): Promise<BResult> {
     };
   }
 
+  // Persist events to BullMQ/Redis queue
+  const rawEvents = allExtractedEvents.map(e => ({
+    ...e,
+    source: sourceId,
+    source_url: source.url,
+    detected_language: 'sv' as const,
+    raw_payload: e as unknown as Record<string, unknown>,
+  }));
+  const { queued } = await queueEvents(sourceId, rawEvents as any);
+
   return {
     sourceId,
     success: true,
-    eventsFound: totalEvents,
+    eventsFound: queued,
     nextPath: 'network',
     inspectorVerdict: gateResult.inspectorVerdict,
     status: 'success',
@@ -357,7 +372,6 @@ async function main() {
 }
 
 // Allow top-level execution
-import { fileURLToPath } from 'url';
 if (import.meta.url === process.argv[1] || process.argv[1]?.endsWith(fileURLToPath(import.meta.url))) {
   main().catch(console.error);
 }
