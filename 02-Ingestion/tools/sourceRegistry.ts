@@ -162,20 +162,32 @@ export function getAllSources(): SourceTruth[] {
 
 /**
  * Hämta en specifik source
+ * Stöder både multi-line JSON och JSONL-format (samma logik som getAllSources)
  */
 export function getSource(id: string): SourceTruth | null {
   const filePath = path.join(SOURCES_DIR, `${id}.jsonl`);
   if (!existsSync(filePath)) return null;
-  
-  const content = readFileSync(filePath, 'utf8');
-  const lines = content.split('\n').filter(l => l.trim());
-  if (lines.length === 0) return null;
-  
+
+  const content = readFileSync(filePath, 'utf8').trim();
+  if (!content) return null;
+
+  // Först: försök parsa hela filen som en JSON-object (multi-line format)
   try {
-    return JSON.parse(lines[0]) as SourceTruth;
-  } catch {
-    return null;
+    const parsed = JSON.parse(content) as SourceTruth;
+    if (parsed && parsed.id) {
+      return parsed;
+    }
+  } catch {}
+
+  // Andra: försök parsa första raden som JSONL
+  const firstLine = content.split('\n')[0].trim();
+  if (firstLine) {
+    try {
+      return JSON.parse(firstLine) as SourceTruth;
+    } catch {}
   }
+
+  return null;
 }
 
 // ─── Triage Learning (runtime-only) ──────────────────────────────────────────
