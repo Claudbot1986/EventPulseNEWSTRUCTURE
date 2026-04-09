@@ -32,7 +32,8 @@ import { evaluateNetworkGate, summarizeNetworkGateResult } from './A-networkGate
 import { extractFromApi } from './networkEventExtractor';
 import { inspectUrl } from './networkInspector';
 import { queueEvents } from '../tools/fetchTools';
-import type { ParsedEvent } from '../F-eventExtraction/schema';
+import { toRawEventInput } from '../F-eventExtraction';
+import type { RawEventInput } from '@eventpulse/shared';
 import { fileURLToPath } from 'url';
 
 // ─── Queue File Paths ─────────────────────────────────────────────────────────
@@ -240,14 +241,13 @@ async function runBOnSource(entry: PreBEntry): Promise<BResult> {
   }
 
   // Persist events to BullMQ/Redis queue
-  const rawEvents = allExtractedEvents.map(e => ({
-    ...e,
-    source: sourceId,
-    source_url: source.url,
-    detected_language: 'sv' as const,
-    raw_payload: e as unknown as Record<string, unknown>,
-  }));
-  const { queued } = await queueEvents(sourceId, rawEvents as any);
+  const rawEvents: RawEventInput[] = allExtractedEvents.map(e => {
+    const raw = toRawEventInput(e);
+    raw.source = sourceId;
+    raw.detected_language = 'sv';
+    return raw;
+  });
+  const { queued } = await queueEvents(sourceId, rawEvents);
 
   return {
     sourceId,
