@@ -104,6 +104,10 @@ const NOISE_PATTERNS = [
   'hotjar', 'segment.io', 'mixpanel', 'amplitude',
   'analytics', 'tracking', 'pixel', 'beacon',
   '.map', // source maps
+  // WordPress REST API — these endpoints do NOT return events
+  // They are detected by COMMON_PATTERNS but must be filtered before scoring
+  '/wp-json/oembed/',       // oEmbed responses (title/type/html, not event data)
+  '/wp-json/wp/v2/pages',   // WordPress page content (page metadata, not events)
 ];
 
 function isNoise(url: string): boolean {
