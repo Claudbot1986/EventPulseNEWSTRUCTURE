@@ -1,6 +1,12 @@
 # C-htmlGate Improvements Bank
 
-## Syfte
+**Document Type: PLANERAD DOKUMENTATION / INAKTIV**
+**Status: BANK STRUCTURERAD MEN ANVÄNDS EJ AKTIVT**
+
+> **VAD DETTA ÄR:** En strukturerad bank för att spåra generella HTML-scraping-förbättringar över många batchar.
+> **VAD DETTA INTE ÄR:** Aktivt använd. `improvements-bank.jsonl` finns men inga förbättringscykler har körts.
+>
+> **Rekommendation:** När C-rebuild-plan.md implementeras och batch-looparna körs på riktigt, aktivera denna bank igen.
 
 Strukturerad förteckning över generella HTML-scraping-förbättringar som C-batchar kan referera till och återanvända. Banken är utformad för att vara spårbar över 100–200 batchar utan att bli stor eller ostrukturerad.
 

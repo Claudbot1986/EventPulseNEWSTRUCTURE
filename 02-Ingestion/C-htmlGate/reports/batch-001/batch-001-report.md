@@ -1,5 +1,8 @@
 # C-htmlGate Batch 001 Report
 
+**Document Type: HISTORICAL REPORT**
+**Datum:** 2026-04-05 (skapad), 2026-04-06 (completed)
+
 ## Batch Header
 
 | Field | Value |

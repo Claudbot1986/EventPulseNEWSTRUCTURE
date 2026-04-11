@@ -1,6 +1,12 @@
 # C-htmlGate Batch Measurement
 
-## Syfte
+**Document Type: PLANERAD DOKUMENTATION**
+**Status: DOKUMENTERAD MEN INAKTIV**
+
+> **VAD DETTA ÄR:** Definierar mätfält för att göra C-batchar mätbara över tid.
+> **VAD DETTA INTE ÄR:** Används ej aktivt — förbättringsloopen kördes aldrig.
+>
+> **Bakgrund:** `cyclesCompleted=0` visar att inga mätningar faktiskt genomförts.
 
 Gör C-batchar mätbara och möjliga att utvärdera vetenskapligt över 100–200 batchar. Definierar tydliga fält för att avgöra om en förbättringscykel gav verklig förbättring och när en batch har nått plateau.
 

@@ -1,5 +1,11 @@
 # C-htmlGate Batch {BATCH_N} Rapport
 
+**Document Type: TEMPLATE / PLANERAD**
+**Status: DOKUMENTERAD**
+
+> **VAD DETTA ÄR:** Mall för batch-rapporter.
+> **VAD DETTA INTE ÄR:** Faktisk körning. Användes aldrig i förbättringsloop-format.
+
 **Batch-ID:** batch-{BATCH_N}  
 **Datum:** {DATUM}  
 **Status:** {STATUS}

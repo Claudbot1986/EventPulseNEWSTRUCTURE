@@ -1,8 +1,10 @@
 # C2-htmlGate
 
-**⚠️ NAMNRÖRA-VARNING:** Se [C-status-matrix.md](../C-status-matrix.md) för förklaring av C0/C1/C2/C3/C4-AI-namnröran innan du läser denna fil.
+**Document Type: CURRENT IMPLEMENTATION REFERENCE**
+**Status: AKTIV I KOD**
 
-`C2-htmlGate/` matchar canonical **C2** (Grov HTML-screening + routing-signal). Namnet är korrekt.
+> **NAMNRÖRA-VARNING:** Se [C-status-matrix.md](../C-status-matrix.md) för förklaring av C0/C1/C2/C3/C4-AI-namnröran innan du läser denna fil.
+> `C2-htmlGate/` matchar canonical **C2** (Grov HTML-screening + routing-signal). Namnet är korrekt — denna fil är den minst vilseledande i C-spåret.
 
 ---
 

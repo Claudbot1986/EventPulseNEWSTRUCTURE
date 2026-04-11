@@ -1,7 +1,22 @@
 # C-Spår Statusmatris — Verklighet vs Plan
 
-**Skapad:** 2026-04-11  
-**Syfte:** Ge en snabb, sann och spårbar översikt över vad som faktiskt finns i kod, vad som används, vad som bara är dokumenterat, och vad som ska betraktas som legacy eller planerat.
+**Document Type: NEW CANONICAL MODEL / PRIMÄR SNABBÖVERSIKT**
+**Skapad:** 2026-04-11
+**Syfte:** Denna fil är DEN PRIMÄRA snabböversikten för C-spåret. Den ersätter alla äldre statusbeskrivningar.
+
+**Kort sammanfattning av C-spårets dokumentlandskap:**
+
+| Fil | Roll |
+|-----|------|
+| **C-status-matrix.md** | **← DU ÄR HÄR — PRIMÄR SNABBÖVERSIKT** |
+| C-testRig1-2-3loop.md | Ny canonical målmodell (target semantics) |
+| C-rebuild-plan.md | Ny rebuild-plan (steg-för-steg) |
+| C-htmlGate.md | Current implementation (blandad) |
+| 123.md | Workflow execution rules |
+| C-BATCH-INFRASTRUCTURE.md | Legacy/historisk — kördes aldrig i förbättringsloop |
+| PHASE5-INITIAL-ROUTING-REPORT.md | Historisk rapport |
+
+---
 
 ---
 

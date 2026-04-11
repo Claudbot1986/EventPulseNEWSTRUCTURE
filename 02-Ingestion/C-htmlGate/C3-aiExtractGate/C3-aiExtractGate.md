@@ -1,8 +1,10 @@
 # C3-aiExtractGate
 
-**⚠️ NAMNRÖRA-VARNING:** Se [C-status-matrix.md](../C-status-matrix.md) för förklaring av C0/C1/C2/C3/C4-AI-namnröran innan du läser denna fil.
+**Document Type: CURRENT IMPLEMENTATION REFERENCE**
+**Status: AKTIV I KOD — men namnet är VILSELÄDANDE**
 
-`C3-aiExtractGate/` i nuvarande implementation matchar canonical **C4-AI** (AI-fallback), inte canonical C3. Namnet är vilseledande.
+> **NAMNRÖRA-VARNING:** Se [C-status-matrix.md](../C-status-matrix.md) för förklaring av C0/C1/C2/C3/C4-AI-namnröran innan du läser denna fil.
+> **VIKTIGT:** `C3-aiExtractGate/` i nuvarande implementation matchar canonical **C4-AI** (AI-fallback), inte canonical C3. Filnamnet är vilseledande.
 
 ---
 

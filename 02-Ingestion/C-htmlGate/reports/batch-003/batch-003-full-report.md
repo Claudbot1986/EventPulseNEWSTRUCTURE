@@ -1,5 +1,6 @@
 # Batch 003 Rapport
 
+**Document Type: HISTORICAL REPORT**
 **Datum:** 2026-04-06  
 **Batch:** 003  
 **Sources:** 10 (polismuseet, stockholm-jazz-festival-1, uppsala-kommun, ystad, svenska-fotbollf-rbundet, hallsberg, ifk-uppsala, karlskoga, kumla, kungliga-musikhogskolan)  

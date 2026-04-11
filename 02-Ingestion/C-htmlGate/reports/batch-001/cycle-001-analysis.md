@@ -1,6 +1,8 @@
 # Batch 001 — AI Analys (Cycle 1)
 
-## Baseline Resultat
+**Document Type: HISTORICAL REPORT**
+**Datum:** 2026-04-06
+**Batch:** batch-001
 
 | Källa | C0 | C1 | C2 | Events |
 |--------|----|----|-----|--------|

@@ -1,14 +1,19 @@
 # C-htmlGate Batch Infrastructure
 
-**⚠️ HISTORISK DOKUMENTATION — ANVÄND [C-status-matrix.md](./C-status-matrix.md) FÖR AKTUELL STATUS.**
+**Document Type: LEGACY / HISTORISK DOKUMENTATION**
+**Status: INAKTIV — Förbättringsloopen kördes aldrig**
 
-**⚠️ NAMNRÖRA:** Denna fil använder C0/C1/C2-terminologi från nuvarande implementation. Se C-status-matrix.md för förklaring av hur nuvarande C0/C1/C2 mappas till canonical C1/C2/C3/C4-AI.
-
-Denna fil beskrev den planerade batch-infrastrukturen. **Förbättringsloopen kördes aldrig** (`cyclesCompleted=0`, `preRunResults=null`, `postRunResults=null`). 
-
-**Batch-script (run-batch-001.ts etc.) är legacy engångs-test, inte aktiv pipeline.** De körde C0→C1→C2→extractFromHtml() på hardkodade sourcelistor utan förbättringscykler.
-
-**Rekommendation:** Om batch-loop återupptas, skriv ny infrastrukturdokumentation baserad på verklig körning.
+> **⚠️ HISTORISK DOKUMENTATION — ANVÄND [C-status-matrix.md](./C-status-matrix.md) FÖR AKTUELL STATUS.**
+> **⚠️ NAMNRÖRA:** Denna fil använder C0/C1/C2-terminologi från nuvarande implementation.
+>
+> **VAD DETTA ÄR:** Dokumentation av en planerad batch-infrastruktur som ALDRIG kördes i sin tänkta form.
+> - `cyclesCompleted=0` — förbättringsloopen kördes aldrig
+> - `preRunResults=null` — baseline kördes men sparades inte
+> - `postRunResults=null` — inga förbättringscykler
+>
+> **Batch-script (run-batch-001.ts etc.) är legacy engångs-test, inte aktiv pipeline.**
+>
+> **Rekommendation:** Om batch-loop återupptas, skriv ny infrastrukturdokumentation baserad på C-rebuild-plan.md och C-testRig1-2-3loop.md.
 
 ## Översikt
 

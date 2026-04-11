@@ -1,6 +1,12 @@
 # C1-preHtmlGate — Triage Tool
 
-## ⚠️ CANONICAL NAMNING — DETTA ÄR NAMNRÖRAN
+**Document Type: CURRENT IMPLEMENTATION REFERENCE**
+**Status: AKTIV I KOD**
+
+> **VARNING:** C1 i nuvarande implementation är INTE samma sak som C1 i canonical målmodell.
+> Se [C-status-matrix.md](../C-status-matrix.md) för förklaring av namnröran.
+
+**⚠️ CANONICAL NAMNING — DETTA ÄR NAMNRÖRAN**
 
 **VARNING: C1 i nuvarande implementation är INTE samma sak som C1 i canonical målmodell.**
 

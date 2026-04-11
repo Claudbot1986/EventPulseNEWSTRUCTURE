@@ -1,6 +1,13 @@
 # C-rebuild-plan
 
+**Document Type: NEW REBUILD PLAN / STYRDOKUMENT**
+**Status: PLANERAD — Ej implementerad**
+
 **⚠️ NAMNRÖRA-VARNING:** Se [C-status-matrix.md](./C-status-matrix.md) för förklaring av C0/C1/C2/C3/C4-AI-namnröran innan du läser denna fil.
+
+**Vad denna fil är:** Styrmål och steg-för-steg-plan för att bygga om C-spåret till en manuell, verifierbar testrigg. Denna plan är NY — skapad efter C-status-matrix för att dokumentera den planerade rebuilden.
+
+**Vad denna fil INTE är:** Aktiv implementation. Verklig kod kör fortfarande legacy-flöden.
 
 ---
 

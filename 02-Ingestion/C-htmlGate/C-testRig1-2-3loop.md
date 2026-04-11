@@ -1,8 +1,12 @@
 # C-TestRig och Canonical C-Pipeline — Målmodell
 
-**DETTA DOKUMENT BESKRIVER ENDAST CANONICAL MÅLMODELL, INTE AKTIV IMPLEMENTATION.**
+**Document Type: NEW CANONICAL MODEL (TARGET SEMANTICS)**
+**Status: PLANERAD — Ej fullt implementerad i kod**
 
-För faktisk implementation-status, se [C-status-matrix.md](./C-status-matrix.md).
+> **DETTA ÄR DEN CANONICAL MÅLMODELLEN.** Beskriver det önskade slutläget.
+> Verklig kod matchar inte denna namngivning ännu.
+> För faktisk implementation-status, se [C-status-matrix.md](./C-status-matrix.md).
+> För rebuild-steg, se [C-rebuild-plan.md](./C-rebuild-plan.md).
 
 ---
 

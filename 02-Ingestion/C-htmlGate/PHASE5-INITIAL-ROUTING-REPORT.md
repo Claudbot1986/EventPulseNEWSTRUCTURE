@@ -1,10 +1,16 @@
 # Phase 5 — Initial Routing Report
 
-**Date:** 2026-04-07  
-**Executed by:** Hermes Agent  
-**Phase:** 5 of RebuildPlan.md
+**Document Type: HISTORICAL REPORT**
+**Status: COMPLETE — 2026-04-07**
 
-**⚠️ NAMNRÖRA-VARNING:** C0/C1/C2-terminologi i denna fil refererar till nuvarande implementation. Se [C-status-matrix.md](./C-status-matrix.md) för förklaring av hur dessa mappas till canonical C1/C2/C3/C4-AI.
+> **⚠️ DETTA ÄR EN HISTORISK RAPPORT FRÅN 2026-04-07.**
+> Bilder och slutsatser i denna fil speglar förhållandena VID DEN TIDPUNKTEN och ska inte tolkas som aktuell status.
+>
+> **⚠️ NAMNRÖRA-VARNING:** C0/C1/C2-terminologi i denna fil refererar till nuvarande implementation. Se [C-status-matrix.md](./C-status-matrix.md) för förklaring av hur dessa mappas till canonical C1/C2/C3/C4-AI.
+>
+> **Författare:** Hermes Agent
+> **Genomförandedatum:** 2026-04-07
+> **Phase:** 5 of RebuildPlan.md
 
 ---
 

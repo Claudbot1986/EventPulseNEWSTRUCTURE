@@ -1,6 +1,15 @@
 # C-htmlGate
 
-**⚠️ VIKTIGT:** För en snabb, sann statusöversikt över C-spårets komponenter och den aktuella namnröran, se [C-status-matrix.md](./C-status-matrix.md).
+**Document Type: CURRENT IMPLEMENTATION REFERENCE**
+**Status: LEGACY IMPLEMENTATION — delvis obsolet**
+
+> **VARNING:** Detta dokument beskriver delvis obsolet terminologi.
+> C0/C1/C2 i detta dokument refererar till gammal namngivning.
+> Se [C-status-matrix.md](./C-status-matrix.md) för korrekt mappning mellan legacy och canonical.
+>
+> **Rekommendation:** Detta dokument är i praktiken legacy. Målmodellen beskrivs i C-testRig1-2-3loop.md.
+
+**⚠️ VIKTIGT:** För en snabb, sann statusöversikt, se [C-status-matrix.md](./C-status-matrix.md).
 
 ---
 
