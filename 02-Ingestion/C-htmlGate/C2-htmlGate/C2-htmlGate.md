@@ -1,5 +1,11 @@
 # C2-htmlGate
 
+**⚠️ NAMNRÖRA-VARNING:** Se [C-status-matrix.md](../C-status-matrix.md) för förklaring av C0/C1/C2/C3/C4-AI-namnröran innan du läser denna fil.
+
+`C2-htmlGate/` matchar canonical **C2** (Grov HTML-screening + routing-signal). Namnet är korrekt.
+
+---
+
 Main HTML extraction using DOM heuristics. Applies CSS selector patterns, microdata extraction, and common DOM structure analysis to extract event data from rendered HTML.
 
 ## Extraction Techniques

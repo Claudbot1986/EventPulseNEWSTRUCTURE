@@ -1,5 +1,7 @@
 # C-htmlGate Batch {N} Report
 
+**⚠️ NAMNRÖRA-VARNING:** Denna mall använder C0/C1/C2-terminologi från nuvarande implementation. Se [C-status-matrix.md](../C-status-matrix.md) för förklaring av hur dessa mappas till canonical C1/C2/C3/C4-AI.
+
 ## Batch Header
 
 | Field | Value |

@@ -1,5 +1,11 @@
 # C3-aiExtractGate
 
+**⚠️ NAMNRÖRA-VARNING:** Se [C-status-matrix.md](../C-status-matrix.md) för förklaring av C0/C1/C2/C3/C4-AI-namnröran innan du läser denna fil.
+
+`C3-aiExtractGate/` i nuvarande implementation matchar canonical **C4-AI** (AI-fallback), inte canonical C3. Namnet är vilseledande.
+
+---
+
 AI-augmented extraction step. Activated when C2 returns "promising" but `extractFromHtml()` finds 0 events.
 
 ## Position in Pipeline

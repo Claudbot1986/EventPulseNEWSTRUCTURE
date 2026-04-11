@@ -2,6 +2,8 @@
 
 **⚠️ HISTORISK DOKUMENTATION — ANVÄND [C-status-matrix.md](./C-status-matrix.md) FÖR AKTUELL STATUS.**
 
+**⚠️ NAMNRÖRA:** Denna fil använder C0/C1/C2-terminologi från nuvarande implementation. Se C-status-matrix.md för förklaring av hur nuvarande C0/C1/C2 mappas till canonical C1/C2/C3/C4-AI.
+
 Denna fil beskrev den planerade batch-infrastrukturen. **Förbättringsloopen kördes aldrig** (`cyclesCompleted=0`, `preRunResults=null`, `postRunResults=null`). 
 
 **Batch-script (run-batch-001.ts etc.) är legacy engångs-test, inte aktiv pipeline.** De körde C0→C1→C2→extractFromHtml() på hardkodade sourcelistor utan förbättringscykler.

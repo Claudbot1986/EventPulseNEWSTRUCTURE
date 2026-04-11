@@ -1,6 +1,33 @@
 # C-htmlGate
 
-**⚠️ VIKTIGT:** För en snabb, sann statusöversikt över C-spårets komponenter, se [C-status-matrix.md](./C-status-matrix.md).
+**⚠️ VIKTIGT:** För en snabb, sann statusöversikt över C-spårets komponenter och den aktuella namnröran, se [C-status-matrix.md](./C-status-matrix.md).
+
+---
+
+## ⚠️ C0/C1-NAMNRÖRA — LÄS DETTA FÖRST
+
+**Nuvarande implementation och canonical målmodell använder samma namn på olika saker. Detta är den nuvarande namnröran:**
+
+| Nuvarande Implementation | Canonical Målmodell | Vad som är lurigt |
+|------------------------|---------------------|-------------------|
+| `C0-htmlFrontierDiscovery/` | **C1** (Discovery/Frontier) | C0 heter inte "C1" men gör det som canonical C1 ska göra |
+| `C1-preHtmlGate/` | **C2** (Grov HTML-screening) | C1 heter "C1" men gör det som canonical C2 ska göra |
+| `C2-htmlGate/` | **C2** (Grov HTML-screening) | ✓ Namn och funktion matchar |
+| `extractFromHtml()` | **C3** (HTML-extraktion) | ✓ Namn och funktion matchar |
+| `C3-aiExtractGate.ts` | **C4-AI** (AI-fallback) | ✓ Namn och funktion matchar |
+
+**VARNING:** "Nuvarande C1" i kod ≠ "Canonical C1". Nuvarande C1 heter C1 men gör screening (canonical C2). Den verkliga discovery-funktionen ligger i `C0-htmlFrontierDiscovery/` (nuvarande C0), inte i `C1-preHtmlGate/`.
+
+**Enkelt att komma ihåg:**
+```
+Nuvarande C0 = Canonical C1  (discovery/frontier)
+Nuvarande C1 = Canonical C2  (screening, routing-signal)
+Nuvarande C2 = Canonical C2  (screening fortsättning)
+extractFromHtml() = Canonical C3 (HTML-extraktion)
+C3-aiExtractGate = Canonical C4-AI (AI-fallback)
+```
+
+---
 
 HTML extraction layer using DOM heuristics — the fallback when no JSON-LD and no viable API endpoint is available.
 

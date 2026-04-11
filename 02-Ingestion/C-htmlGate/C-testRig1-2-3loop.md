@@ -6,6 +6,35 @@ För faktisk implementation-status, se [C-status-matrix.md](./C-status-matrix.md
 
 ---
 
+## ⚠️ DO NOT CONFUSE: Current vs Canonical
+
+**Detta dokument beskriver canonical MÅLMODELL. Den verkliga koden matchar inte denna namngivning ännu.**
+
+| Nuvarande Implementation (current code) | Canonical Målmodell (this doc) | VARNING |
+|---------------------------------------|-------------------------------|---------|
+| `C0-htmlFrontierDiscovery/` | **C1** (Discovery/Frontier) | C0 gör discovery men heter inte C1 |
+| `C1-preHtmlGate/` | **C2** (Grov HTML-screening) | C1 gör screening men heter C1 (vilseledande!) |
+| `C2-htmlGate/` | **C2** (Grov HTML-screening) | ✓ Match |
+| `extractFromHtml()` | **C3** (HTML-extraktion) | ✓ Match |
+| `C3-aiExtractGate.ts` | **C4-AI** (AI-fallback) | ✓ Match |
+
+**KRITISKT ATT FÖRSTÅ:**
+- Nuvarande `C1-preHtmlGate/` heter "C1" men gör **screening**, inte discovery
+- Canonical `C1` = Discovery/Frontier
+- Canonical `C2` = Grov HTML-screening + routing-signal
+- **Därför: Nuvarande C1 ≈ Canonical C2**, inte Canonical C1
+- Den verkliga discovery-funktionen finns i nuvarande C0, inte C1
+
+**Enkelt att komma ihåg:**
+```
+Nuvarande C0 = Canonical C1  (discovery/frontier)
+Nuvarande C1 = Canonical C2  (screening)  ← NAMNET ÄR VILSELEDANDE!
+extractFromHtml() = Canonical C3 (HTML-extraktion)
+C3-aiExtractGate = Canonical C4-AI (AI-fallback)
+```
+
+---
+
 ## CANONICAL TARGET SEMANTICS — C-PIPELINE
 
 > **DETTA ÄR DEN STYRANDE MÅLBILDEN FRÅN OCH MED NU.**

@@ -1,21 +1,31 @@
 # C1-preHtmlGate — Triage Tool
 
-## CANONICAL NAMNING — RELATION TILL C0
+## ⚠️ CANONICAL NAMNING — DETTA ÄR NAMNRÖRAN
 
-**C1 i nuvarande implementation och C1 i canonical målmodell är Samma ting, olika namn.**
+**VARNING: C1 i nuvarande implementation är INTE samma sak som C1 i canonical målmodell.**
 
 Den nuvarande koden har:
 - **C0** (`C0-htmlFrontierDiscovery/`) — hittar interna links, mäter event-density, väljer bästa candidate
 - **C1** (`C1-preHtmlGate/`) — screening via fetch + DOM-analys
 
-**Canonical målmodell** börjar vid C1 (Discovery/Frontier), utan C0 före sig.
+Canonical målmodell börjar vid C1 (Discovery/Frontier), utan C0 före sig.
 
-Det betyder:
-- **Nuvarande C0 ≈ Canonical C1** (båda gör discovery/frontier)
-- **Nuvarande C1 = Canonical C1** (samma funktion)
+**Det betyder:**
+- **Nuvarande C0 ≈ Canonical C1** (båda gör discovery/frontier — hittar och väljer bästa candidate)
+- **Nuvarande C1 ≈ Canonical C2** (båda gör screening — men nuvarande C1 heter "C1" vilket är lurigt)
 - **Nuvarande C2 = Canonical C2** (HTML-screening)
 - **extractFromHtml() = Canonical C3** (HTML-extraktion)
 - **C3-aiExtractGate = Canonical C4-AI** (AI-fallback)
+
+**VARNING:** `C1-preHtmlGate/` heter "C1" men gör **screening**, inte discovery. I canonical målmodell gör C1 **discovery** och C2 gör **screening**. Därför: nuvarande C1 ≈ canonical C2.
+
+**Enkelt att komma ihåg:**
+```
+Nuvarande C0 = Canonical C1  (båda gör discovery)
+Nuvarande C1 = Canonical C2  (båda gör screening)
+extractFromHtml() = Canonical C3
+C3-aiExtractGate = Canonical C4-AI
+```
 
 ## Purpose
 

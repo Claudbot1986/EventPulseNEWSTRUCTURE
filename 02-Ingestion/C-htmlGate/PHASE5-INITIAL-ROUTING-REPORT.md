@@ -4,6 +4,8 @@
 **Executed by:** Hermes Agent  
 **Phase:** 5 of RebuildPlan.md
 
+**⚠️ NAMNRÖRA-VARNING:** C0/C1/C2-terminologi i denna fil refererar till nuvarande implementation. Se [C-status-matrix.md](./C-status-matrix.md) för förklaring av hur dessa mappas till canonical C1/C2/C3/C4-AI.
+
 ---
 
 ## Summary

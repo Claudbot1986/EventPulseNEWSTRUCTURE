@@ -5,6 +5,37 @@
 
 ---
 
+## ⚠️ VARNING: NAMNRÖRA — DET HÄR ÄR PROBLEMET
+
+**Läs detta FÖRST om du ska arbeta med C-spåret.**
+
+Det finns en kvarvarande namnröra mellan nuvarande implementation och canonical målmodell:
+
+| Nuvarande kodbenämning | Vad den GÖR i praktiken | Canonical målmodell | Match? |
+|------------------------|-------------------------|--------------------|--------|
+| `C0-htmlFrontierDiscovery/` | Discovery: hittar interna links, mäter density, väljer bästa candidate | **C1** (Discovery/Frontier) | ✓ Mappning klar |
+| `C1-preHtmlGate/` | Screening: billig fetch + DOM-analys, avgör html/render/manual | **C2** (Grov HTML-screening) | ⚠️ **NAMNET ÄR VILSELEDANDE** |
+| `C2-htmlGate/` | Weighted scoring + routing-signal | **C2** (Grov HTML-screening) | ✓ Match |
+| `extractFromHtml()` i `F-eventExtraction/` | Första HTML-extraktionssteget | **C3** (HTML-extraktion) | ✓ Match |
+| `C3-aiExtractGate.ts` | AI-fallback: körs endast när C2=promising men extract=0 | **C4-AI** (AI-fallback) | ✓ Match |
+
+**DET VIKTIGASTE ATT FÖRSTÅ:**
+- `C1-preHtmlGate/` heter "C1" men gör **screening**, inte discovery
+- I canonical målmodell heter screening-steget **C2**
+- Därför: **nuvarande C1 ≈ canonical C2**, inte canonical C1
+- Nuvarande C0 är det som faktiskt gör discovery/frontier-arbete ≈ canonical C1
+
+**Enkelt att komma ihåg:**
+```
+Nuvarande C0 = Canonical C1  (båda gör discovery/frontier)
+Nuvarande C1 = Canonical C2  (båda gör screening)
+Nuvarande C2 = Canonical C2  (samma)
+extractFromHtml() = Canonical C3 (samma)
+C3-aiExtractGate = Canonical C4-AI (samma)
+```
+
+---
+
 ## Översikt: Tre Parallella Sanningar
 
 | Lager | Beskrivning | Status |
@@ -20,7 +51,7 @@
 | Komponent | Finns i kod? | Används i batch-loop? | Används i produktion? | Documenterad? | Status | Anteckningar |
 |-----------|-------------|---------------------|----------------------|---------------|--------|--------------|
 | **C0** (`C0-htmlFrontierDiscovery/`) | ✓ Ja | ⚠️ Delvis | ✗ Nej | ✓ Ja | **Legacy/Parallell** | Dokumentationen säger "C0 förekommer inte i målmodellen" (`C-testRig1-2-3loop.md` rad 19). I verklig körning används C0 som första steg (discoverEventCandidates). Call: `discoverEventCandidates()` → väljer bästa candidate från interna links. |
-| **C1** (`C1-preHtmlGate/`) | ✓ Ja | ✓ Ja | ✗ Nej | ✓ Ja | **Current Implementation** | Används i alla run-batch-*.ts script. Export: `screenUrl()`. Matcher canonical C1-definition (Discovery/Frontier). Körs före C2. |
+| **C1** (`C1-preHtmlGate/`) | ✓ Ja | ✓ Ja | ✗ Nej | ✓ Ja | **Current Implementation (⚠️ NAMNET ÄR VILSELEDANDE)** | Används i alla run-batch-*.ts script. Export: `screenUrl()`. Gör **screening** (billig fetch + DOM-analys), INTE discovery. ⚠️ **Matchar INTE canonical C1** (det gör C0). Matchar **canonical C2** (Grov HTML-screening). Körs före C2. |
 | **C2** (`C2-htmlGate/`) | ✓ Ja | ✓ Ja | ✗ Nej | ✓ Ja | **Current Implementation** | Används i alla run-batch-*.ts script. Export: `evaluateHtmlGate()`. Weighted scoring + candidate quality. Gör routingbeslut: promising/maybe/unclear/low_value. |
 | **C3** (`C3-aiExtractGate/`) | ✓ Ja | ⚠️ Endast fallback | ✗ Nej | ✓ Ja | **Partial Implementation** | Körs ENBART när C2=promising MEN extractFromHtml()=0 events. Är INTE "första HTML-extraktionssteget" som canonical modell säger — `extractFromHtml()` från `F-eventExtraction/extractor.ts` är faktiskt första extraktionssteget. |
 | **C4-AI** (`C3-aiExtractGate` alias) | ✓ Ja | ✗ Nej | ✗ Nej | ✓ Ja | **Dokumenterad som alias** | I `123.md` rad 28 står: "C4-AI = '123-loopen' = samma koncept, olika terminologi." I praktiken körs C3-aiExtractGate inte i loop-format utan endast som engångs-AI-fallback. |

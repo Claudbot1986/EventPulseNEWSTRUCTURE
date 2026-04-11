@@ -1,5 +1,19 @@
 # Ingestion Rules
 
+**⚠️ VIKTIGT OM C-SPÅRET:** Den canonicala C-pipeline (C1/C2/C3/C4-AI) beskrivs i `C-testRig1-2-3loop.md`. Men **nuvarande implementation använder andra namn**:
+
+| Nuvarande Implementation | Canonical Målmodell | Varning |
+|------------------------|---------------------|---------|
+| `C0-htmlFrontierDiscovery/` | **C1** (Discovery/Frontier) | C0 gör discovery men heter inte C1 |
+| `C1-preHtmlGate/` | **C2** (Grov HTML-screening) | ⚠️ C1 gör screening men heter C1 (vilseledande!) |
+| `C2-htmlGate/` | **C2** | ✓ Match |
+| `extractFromHtml()` | **C3** (HTML-extraktion) | ✓ Match |
+| `C3-aiExtractGate.ts` | **C4-AI** (AI-fallback) | ✓ Match |
+
+**Läs [C-status-matrix.md](../02-Ingestion/C-htmlGate/C-status-matrix.md) för fullständig förklaring.**
+
+---
+
 ## Canonical C-Pipeline Reference
 
 > **Obs:** Den canonicala C-pipeline semantiken (C1/C2/C3/C4-AI) definieras i
