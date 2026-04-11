@@ -1,15 +1,26 @@
 # C-htmlGate
 
-**Document Type: CURRENT IMPLEMENTATION REFERENCE**
-**Status: LEGACY IMPLEMENTATION — delvis obsolet**
+**Document Type: HISTORICAL / LEGACY REFERENCE**
+**Status: AKTIVT ANVÄND I KOD — men dokumentationen är föråldrad**
 
-> **VARNING:** Detta dokument beskriver delvis obsolet terminologi.
-> C0/C1/C2 i detta dokument refererar till gammal namngivning.
-> Se [C-status-matrix.md](./C-status-matrix.md) för korrekt mappning mellan legacy och canonical.
+> **DENNA FIL ÄR HISTORISK. DEN ÄR INTE LÄNGRE STYRANDE.**
 >
-> **Rekommendation:** Detta dokument är i praktiken legacy. Målmodellen beskrivs i C-testRig1-2-3loop.md.
-
-**⚠️ VIKTIGT:** För en snabb, sann statusöversikt, se [C-status-matrix.md](./C-status-matrix.md).
+> **Varför:** C-htmlGate.md beskriver en föråldrad tvåstegs-pipeline (C0→C1→C2→extractFromHtml()). Denna pipeline är inte längre den korrekta beskrivningen av C-spåret.
+>
+> **Vad den ersätts av:**
+> | Behöver du... | Läs istället... |
+> |---------------|-----------------|
+> | Snabböversikt och status | [C-status-matrix.md](./C-status-matrix.md) |
+> | Canonical målmodell | [C-testRig1-2-3loop.md](./C-testRig1-2-3loop.md) |
+> | Rebuild-plan | [C-rebuild-plan.md](./C-rebuild-plan.md) |
+> | Workflow execution | [123.md](./123.md) |
+>
+> **Viktigt:** C-htmlGate.md får INTE längre användas som styrande dokumentation. All information där är antingen:
+> - Föråldrad (pipeline-beskrivning)
+> - Bättre dokumenterad någon annanstans (namnröra, decision logic)
+> - Helt fel i ljuset av canonical målmodellen
+>
+> **Författaranmärkning:** Denna fil behövs fortfarande som **historisk referens** eftersom den dokumenterar den faktiska koden som körs (C0→C1→C2→extract→C3-aiExtractGate). Men den ska ALDRIG läsas som om den vore den önskade målmodellen.
 
 ---
 
