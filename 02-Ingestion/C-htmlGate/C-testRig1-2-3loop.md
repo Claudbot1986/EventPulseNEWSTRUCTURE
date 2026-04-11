@@ -1,4 +1,10 @@
-# C Test Rig and 123 Learning Loop
+# C-TestRig och Canonical C-Pipeline — Målmodell
+
+**DETTA DOKUMENT BESKRIVER ENDAST CANONICAL MÅLMODELL, INTE AKTIV IMPLEMENTATION.**
+
+För faktisk implementation-status, se [C-status-matrix.md](./C-status-matrix.md).
+
+---
 
 ## CANONICAL TARGET SEMANTICS — C-PIPELINE
 

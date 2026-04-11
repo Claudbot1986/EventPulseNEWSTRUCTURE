@@ -2,7 +2,11 @@
 
 **⚠️ HISTORISK DOKUMENTATION — ANVÄND [C-status-matrix.md](./C-status-matrix.md) FÖR AKTUELL STATUS.**
 
-Denna fil beskriver den planerade batch-infrastrukturen. I verkligheten kördes aldrig förbättringsloopen (`cyclesCompleted=0`, `preRunResults=null`, `postRunResults=null`). Batch-scripten (run-batch-001.ts etc.) är legacy engångs-test, inte aktiv pipeline.
+Denna fil beskrev den planerade batch-infrastrukturen. **Förbättringsloopen kördes aldrig** (`cyclesCompleted=0`, `preRunResults=null`, `postRunResults=null`). 
+
+**Batch-script (run-batch-001.ts etc.) är legacy engångs-test, inte aktiv pipeline.** De körde C0→C1→C2→extractFromHtml() på hardkodade sourcelistor utan förbättringscykler.
+
+**Rekommendation:** Om batch-loop återupptas, skriv ny infrastrukturdokumentation baserad på verklig körning.
 
 ## Översikt
 

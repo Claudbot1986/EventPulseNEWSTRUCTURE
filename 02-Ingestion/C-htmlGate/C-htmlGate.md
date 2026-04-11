@@ -6,10 +6,23 @@ HTML extraction layer using DOM heuristics — the fallback when no JSON-LD and 
 
 ## Pipeline
 
-C-htmlGate is a two-step pipeline:
+**NUVARANDE IMPLEMENTATION:** C0→C1→C2→extractFromHtml() → C3-aiExtractGate(fallback)
 
-1. **C1-preHtmlGate** — Pre-filtering: removes noise, identifies repetitive event blocks
-2. **C2-htmlGate** — Actual HTML extraction: CSS selectors, microdata patterns, common DOM structures
+**CANONICAL MÅLMODELL:** C1→C2→C3→C4-AI
+
+C-htmlGate är en tre-stegs pipeline plus fallback:
+
+1. **C0-htmlFrontierDiscovery** (Legacy/Current) — Hittar interna event-candidate pages via bounded link crawling. Mäter density, väljer bästa candidate.
+   - `discoverEventCandidates()` i `C0-htmlFrontierDiscovery/`
+   - **C0 motsvarar det som canonical målmodell kallar C1 (Discovery/Frontier)**
+2. **C1-preHtmlGate** — Pre-filtering via billig fetch + DOM-analys. Avgör om sida är html_candidate, render_candidate, eller manual_review.
+   - `screenUrl()` i `C1-preHtmlGate/`
+3. **C2-htmlGate** — Weighted scoring + candidate quality assessment. Gör routingbeslut (promising/maybe/unclear/low_value).
+   - `evaluateHtmlGate()` i `C2-htmlGate/`
+4. **extractFromHtml()** — Faktiska HTML-extraktionen. Första platsen där events extraheras. Finns i `F-eventExtraction/extractor.ts`.
+5. **C3-aiExtractGate** (AI-fallback) — Körs ENBART när C2=promising MEN extractFromHtml()=0 events. Detta är C4-AI-rollen i canonical modell, inte C3.
+
+**VIKTIGT:** I nuvarande implementation är C3 i praktiken `extractFromHtml()`. `C3-aiExtractGate.ts` är AI-fallback (C4-AI). Canonical C3 (HTML-extraktion) implementeras av `extractFromHtml()`, inte av C3-aiExtractGate.
 
 ## Tools
 
@@ -41,11 +54,13 @@ C-htmlGate är fortfarande C-kandidat om:
 
 ---
 
-## C-htmlGate Batch-Loop
+## C-htmlGate Batch-Loop (LEGACY/PLANERAD — EJ AKTIV)
 
-C-htmlGate används som en **iterativ förbättringsloop** för att validera och förbättra den generella HTML-modellen.
+**⚠️ Denna sektion beskriver planerad funktion, inte aktiv implementation.**
 
-### Batch-Loops Arbetssätt
+Batch-loop konceptet (10 kandidater → baseline → AI-analys → re-run → jämför) dokumenterades men kördes aldrig med förbättringscykler (`cyclesCompleted=0` i batch-state.jsonl).
+
+### Batch-Loops Arbetssätt (Planerad)
 
 1. **Ta 10 C-kandidater åt gången** från C-kandidatkön
 2. **Kör C-htmlGate en gång** på alla 10 (baseline-förbättring)

@@ -1,5 +1,22 @@
 # C1-preHtmlGate — Triage Tool
 
+## CANONICAL NAMNING — RELATION TILL C0
+
+**C1 i nuvarande implementation och C1 i canonical målmodell är Samma ting, olika namn.**
+
+Den nuvarande koden har:
+- **C0** (`C0-htmlFrontierDiscovery/`) — hittar interna links, mäter event-density, väljer bästa candidate
+- **C1** (`C1-preHtmlGate/`) — screening via fetch + DOM-analys
+
+**Canonical målmodell** börjar vid C1 (Discovery/Frontier), utan C0 före sig.
+
+Det betyder:
+- **Nuvarande C0 ≈ Canonical C1** (båda gör discovery/frontier)
+- **Nuvarande C1 = Canonical C1** (samma funktion)
+- **Nuvarande C2 = Canonical C2** (HTML-screening)
+- **extractFromHtml() = Canonical C3** (HTML-extraktion)
+- **C3-aiExtractGate = Canonical C4-AI** (AI-fallback)
+
 ## Purpose
 
 C1-preHtmlGate är ett **rent triage-verktyg** för sources med status `triage_required`. Den ger snabb, billig HTML-screening INNAN fullständig event-extraction.
