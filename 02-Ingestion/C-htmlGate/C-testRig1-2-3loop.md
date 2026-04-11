@@ -686,6 +686,47 @@ AI may not:
 
 ---
 
+## Primary Fail Classification in C4-AI
+
+**OBS:** Detta avsnitt är nytt — lades till efter batch-011 erfarenheter.
+
+### Regel: C4-AI ska först svara på den större frågan
+
+För varje fail-fall ska C4-AI först göra en bred **primärklassificering** som svarar på:
+> "VAR I PIPELINEN misslyckades detta, och VARFÖR?"
+
+Syftet är att C4-AI ska hjälpa oss förstå HELA felbilden i batchen — inte bara html-problem eller network-problem. Alla nio primärkategorier ska behandlas likvärdigt.
+
+### Nivå 1: Primära fail-kategorier
+
+Varje fail-fall ska först klassificeras i EN av dessa nio primära kategorier:
+
+| Kod | Namn | Betydelse | Routing? | Exempel |
+|-----|------|-----------|----------|---------|
+| `discovery_failure` | Upptäckarmisslyckande | C1 hittade inga candidates eller ingen användbar URL | Nej | 0 candidates, DNS-fel |
+| `screening_failure` | Screeningmisslyckande | C2 hittade candidates men inga såg lovande ut | Nej | C2=unclear, score=1 |
+| `routing_failure` | Routemisslyckande | C2 detekterade tydlig A/B/D-signal | **Ja** — routing | (clear A/B/D signal) |
+| `extraction_failure` | Extraktionsmisslyckande | C2=promising men C3 extraherade 0 events | Nej | C2=promising, C3=0 |
+| `network_failure` | Nätverksmisslyckande | Nätverksfel inträffade (DNS, timeout, 404, cert etc.) | Möjligen — se nätverksfel-underkategorier | DNS-fel, timeout, 404 |
+| `canonical_source_data_failure` | Fel i source-konfiguration | Fel canonical URL, fel preferredPath, fel metadata | Nej — fixas i source-config | HTTP 404 pga fel URL |
+| `environment_or_tooling_failure` | Miljö- eller verktygsfel | Fetch-miljön blockerar eller fel verktygskonfiguration | Möjligen | User-Agent-blockering |
+| `mixed_failure` | Blandat misslyckande | Flera feltyper samtidigt | Bedöms från fall till fall | — |
+| `unclear_failure` | Oklart misslyckande | Ingen tydlig primär orsak | Nej — kräver mer diagnostik | — |
+
+**Regler:**
+- Varje fail-fall får EN primärklassificering — inte flera
+- `network_failure` och `canonical_source_data_failure` är separata — `canonical_source_data_failure` handlar om fel i source-konfigurationen, inte nätverket i sig
+- `environment_or_tooling_failure` handlar om fetch-miljö, inte om nätverksfel eller source-config
+- `discovery_failure` med underliggande nätverksfel (t.ex. DNS-fel som hindrar all discovery) → primärklass = `discovery_failure`, underliggande nätverksfel dokumenteras separat
+
+### Nivå 2: Nätverksfel-underklassificering (endast om primärklass = `network_failure`)
+
+Om primärklassen är `network_failure`, ska C4-AI underklassificera i en av följande nätverksfeltyper INNAN routing eller verktygsförbättring föreslås:
+
+**Regel: Network Error ≠ Automatic Routing Signal.**
+
+---
+
 ## Network Error Handling in C4-AI
 
 **OBS:** Detta avsnitt är nytt — lades till efter batch-011 erfarenheter.
@@ -700,7 +741,7 @@ Innan 123 får föreslå routing eller verktygsförbättring måste nätverksfel
 2. C4-AI analyserar nätverksfelet → klassificerar typ
 3. Baserat på klassificering → avgör om routing är motiverad eller om det är fetch-miljö/url-problem
 
-### Obligatoriska nätverksfelkategorier
+### Obligatoriska nätverksfelkategorier (underkategorier till `network_failure`)
 
 | Kod | Namn | Routing? | Förbättring? |
 |-----|------|----------|--------------|
