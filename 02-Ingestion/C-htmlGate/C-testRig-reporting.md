@@ -53,9 +53,24 @@ routeSuccess        [number]  Antal källor med route_success
 fail                [number]  Antal källor med fail
 failTypeDistribution [object] Fördelning per fail-typ, t.ex.:
                               {
-                                "C0-discovery-fail": 7,
+                                "C0-discovery-fail": 5,
                                 "C2/C3-glapp-fail": 2,
-                                "C2-gränsfall": 1
+                                "C2-gränsfall": 1,
+                                "network-error-fail": 2
+                              }
+networkErrorDistribution [object] Fördelning per nätverksfeltyp (endast om network-error-fail finns), t.ex.:
+                              {
+                                "url_problem": 1,
+                                "dns_problem": 0,
+                                "timeout_problem": 1,
+                                "tls_certificate_problem": 0,
+                                "http_404_problem": 0,
+                                "http_403_problem": 0,
+                                "http_5xx_problem": 0,
+                                "blocked_or_fetch_environment_problem": 0,
+                                "likely_requires_D": 0,
+                                "likely_requires_A_or_B": 0,
+                                "unclear_network_failure": 0
                               }
 winningStageDistribution [object] Fördelning per winningStage, t.ex.:
                               {
@@ -92,9 +107,23 @@ Markdown med codeblock för strukturerad data. Fälten ska vara explicita, inte 
 | totalEventsExtracted | 0 |
 
 ### failTypeDistribution
-- C0-discovery-fail: 7
+- C0-discovery-fail: 5
 - C2/C3-glapp-fail: 2
 - C2-gränsfall: 1
+- network-error-fail: 2
+
+### networkErrorDistribution
+- url_problem: 1
+- dns_problem: 0
+- timeout_problem: 1
+- tls_certificate_problem: 0
+- http_404_problem: 0
+- http_403_problem: 0
+- http_5xx_problem: 0
+- blocked_or_fetch_environment_problem: 0
+- likely_requires_D: 0
+- likely_requires_A_or_B: 0
+- unclear_network_failure: 0
 
 ### winningStageDistribution
 - C1: 0
@@ -136,7 +165,18 @@ url                  [string]  Root-URL för sourcen
 winningStage         [string]  "C1" | "C2" | "C3" | "C4-AI"
 outcomeType          [string]  "extract_success" | "route_success" | "fail"
 routeSuggestion      [string]  "UI" | "A" | "B" | "D" | "Fail"
-failType            [string]  "C0-discovery-fail" | "C2/C3-glapp-fail" | "C2-gränsfall" | "unknown" (endast om outcomeType=fail)
+failType            [string]  "C0-discovery-fail" | "C2/C3-glapp-fail" | "C2-gränsfall" | "network-error-fail" | "unknown" (endast om outcomeType=fail)
+networkErrorType    [string|null]  Nätverksfeltyp om fail beror på nätverksproblem, annars null. Värden:
+                              "url_problem" | "dns_problem" | "timeout_problem" | "tls_certificate_problem" |
+                              "http_404_problem" | "http_403_problem" | "http_5xx_problem" |
+                              "blocked_or_fetch_environment_problem" | "likely_requires_D" |
+                              "likely_requires_A_or_B" | "unclear_network_failure" | null
+networkErrorDiagnosis [string|null]  C4-AI:s diagnos av nätverksfelet — kort och konkret, t.ex.:
+                              "HTTP 404 beror sannolikt på fel canonical URL (källa pekar på /evenemang/ som inte finns)"
+                              "Timeout beror på serverbelastning — möjligen tillfälligt"
+                              "Certificate error är problem på sajten, inte vår fetch"
+                              null om inget nätverksfel
+networkErrorConfidence [string|null]  "high" | "medium" | "low" | null — hur säker är nätverksfel-klassificeringen
 evidence            [string]  Kort, konkret motivering. T.ex.
                               "0 candidates found despite root page load"
 c0Candidates        [number]  Antal candidates hittade i C1 (eller "N/A" om C1 inte kördes)
@@ -168,8 +208,11 @@ finalDecision       [string]  Slutligt beslut för sourcen i denna runda, t.ex.:
 | winningStage | C1 |
 | outcomeType | fail |
 | routeSuggestion | Fail |
-| failType | C0-discovery-fail |
-| evidence | 0 internal candidates found, no event-like paths detected |
+| failType | network-error-fail |
+| networkErrorType | dns_problem |
+| networkErrorDiagnosis | DNS resolution failed for www.brommapojkarna.se. This could be a temporary DNS issue or a permanent problem with the domain. The source's canonical URL may be incorrect. |
+| networkErrorConfidence | medium |
+| evidence | 0 internal candidates found — DNS failure prevented any page fetch |
 | c0Candidates | 0 |
 | winnerUrl | null |
 | c2Verdict | N/A |
@@ -177,8 +220,34 @@ finalDecision       [string]  Slutligt beslut för sourcen i denna runda, t.ex.:
 | eventsFound | 0 |
 | changeApplied | null |
 | improvedAfterChange | N/A |
-| rootCause | C0-discovery-fail: no internal links found |
+| rootCause | network-error-fail: dns_problem — DNS resolution failed before any page could be fetched |
 | finalDecision | postTestC-Fail-round1 |
+
+## Källrapport: kth
+
+| Fält | Värde |
+|------|-------|
+| batchId | batch-011 |
+| roundNumber | 1 |
+| sourceId | kth |
+| url | https://www.kth.se |
+| winningStage | C1 |
+| outcomeType | fail |
+| routeSuggestion | Fail |
+| failType | network-error-fail |
+| networkErrorType | url_problem |
+| networkErrorDiagnosis | HTTP 404 on all attempted URLs. The canonical URL (www.kth.se) redirects to a different path structure. Likely the source's preferredPath needs updating to match KTH's actual events URL structure (/kalender/ or similar). |
+| networkErrorConfidence | high |
+| evidence | HTTP 404 on root fetch — canonical URL appears incorrect |
+| c0Candidates | 0 |
+| winnerUrl | null |
+| c2Verdict | N/A |
+| c2Score | N/A |
+| eventsFound | 0 |
+| changeApplied | null |
+| improvedAfterChange | N/A |
+| rootCause | network-error-fail: url_problem — HTTP 404 caused by incorrect canonical URL |
+| finalDecision | postTestC-Fail-round1
 ```
 
 ---
@@ -220,6 +289,27 @@ sourcesWorsened      [array]  Lista med sourceIds som försämrades
 decision             [string]  "keep" | "revert" | "unclear"
 runNextRound         [boolean]  true | false — om nästa runda ska köras
 stopReason           [string]  Om runNextRound=false, varför: t.ex. "plateau", "no-general-improvement"
+networkErrorAnalysis [object]  Nätverksfel-analys för denna runda (endast om network-error-fail finns):
+                              {
+                                "totalNetworkErrors": N,
+                                "byType": {
+                                  "url_problem": N,
+                                  "dns_problem": N,
+                                  "timeout_problem": N,
+                                  "tls_certificate_problem": N,
+                                  "http_404_problem": N,
+                                  "http_403_problem": N,
+                                  "http_5xx_problem": N,
+                                  "blocked_or_fetch_environment_problem": N,
+                                  "likely_requires_D": N,
+                                  "likely_requires_A_or_B": N,
+                                  "unclear_network_failure": N
+                                },
+                                "routingSignals": ["sourceId1", "sourceId2"], // vilka nätverksfel sommotiverar routing
+                                "fetchEnvironmentProblems": ["sourceId3"], // timeout/cert/DNS — troligen miljö, inte routing
+                                "urlProblems": ["sourceId4"], // 404 — troligen fel URL, inte routing
+                                "networkErrorConclusion": "Kort sammanfattning av nätverksfelen i denna runda och vad de betyder för verktygsförbättring vs routing"
+                              }
 ```
 
 ### Exempel
@@ -271,6 +361,25 @@ true
 
 ### stopReason
 (null)
+
+### networkErrorAnalysis
+- totalNetworkErrors: 7
+- byType:
+  - url_problem: 2 (kth, g-teborgs-posten)
+  - dns_problem: 1 (brommapojkarna)
+  - timeout_problem: 2 (ik-sirius, helsingborg-arena)
+  - tls_certificate_problem: 1 (medeltidsmuseet)
+  - http_404_problem: 2 (kth, g-teborgs-posten)
+  - http_403_problem: 0
+  - http_5xx_problem: 0
+  - blocked_or_fetch_environment_problem: 0
+  - likely_requires_D: 0
+  - likely_requires_A_or_B: 0
+  - unclear_network_failure: 1 (brommapojkarna)
+- routingSignals: []
+- fetchEnvironmentProblems: ["ik-sirius", "helsingborg-arena", "medeltidsmuseet"]
+- urlProblems: ["kth", "g-teborgs-posten"]
+- networkErrorConclusion: "7 nätverksfel. 2 är url_problem — sourcen bör inte routeas utan fixas i source-config. 2 är timeout_problem — möjligen generellt men endast 2 sajter. 1 är tls_certificate_problem — problem på sajten. 1 är dns_problem — oklart. 0 är tydliga routing-signaler. Root URL fallback hjälpte inte."
 ```
 
 ---
@@ -317,6 +426,52 @@ learnedRule          [string]  Den lärda regeln, strukturerat: t.ex.
                               "C0 path-inspektion måste täcka /kalender/, /event/, /program/ som breda keyword-familjer"
 confidence           [string]  "high" | "medium" | "low"
 shouldBeReusedLater  [string]  "ja" | "nej" | "prövas-igen"
+networkErrorClassification [object]  Nätverksfel-klassificering (endast om network-error-fail finns i fail-mängden):
+                              {
+                                "totalNetworkErrors": N,
+                                "byType": {
+                                  "url_problem": N,
+                                  "dns_problem": N,
+                                  "timeout_problem": N,
+                                  "tls_certificate_problem": N,
+                                  "http_404_problem": N,
+                                  "http_403_problem": N,
+                                  "http_5xx_problem": N,
+                                  "blocked_or_fetch_environment_problem": N,
+                                  "likely_requires_D": N,
+                                  "likely_requires_A_or_B": N,
+                                  "unclear_network_failure": N
+                                },
+                                "confirmedRoutingSignals": [
+                                  {
+                                    "sourceId": "xxx",
+                                    "networkErrorType": "likely_requires_D",
+                                    "reason": "HTTP 200 on render-capable fetcher but 0 events on raw fetch — JS rendering required"
+                                  }
+                                ],
+                                "confirmedFetchEnvironmentProblems": [
+                                  {
+                                    "sourceId": "xxx",
+                                    "networkErrorType": "timeout_problem",
+                                    "reason": "Timeout on multiple fetch attempts — likely server load or network issue"
+                                  }
+                                ],
+                                "confirmedUrlProblems": [
+                                  {
+                                    "sourceId": "xxx",
+                                    "networkErrorType": "http_404_problem",
+                                    "reason": "HTTP 404 on all attempted URLs — canonical URL appears incorrect"
+                                  }
+                                ],
+                                "unclearNetworkFailures": [
+                                  {
+                                    "sourceId": "xxx",
+                                    "networkErrorType": "unclear_network_failure",
+                                    "reason": "DNS works but fetch fails with unclear error — more investigation needed"
+                                  }
+                                ],
+                                "conclusion": "Sammanfattning: X nätverksfel, Y är routing-signaler, Z är fetch-miljöproblem, W är url-problem, U är oklara. Nästa steg bör vara..."
+                              }
 ```
 
 ### Exempel
@@ -350,6 +505,38 @@ shouldBeReusedLater  [string]  "ja" | "nej" | "prövas-igen"
               svenska event-sajter använder detta mönster brett. |
 | confidence | medium |
 | shouldBeReusedLater | prövas-igen |
+
+### networkErrorClassification
+
+| Fält | Värde |
+|------|-------|
+| totalNetworkErrors | 7 |
+| url_problem | 2 |
+| dns_problem | 1 |
+| timeout_problem | 2 |
+| tls_certificate_problem | 1 |
+| http_404_problem | 2 |
+| http_403_problem | 0 |
+| http_5xx_problem | 0 |
+| blocked_or_fetch_environment_problem | 0 |
+| likely_requires_D | 0 |
+| likely_requires_A_or_B | 0 |
+| unclear_network_failure | 1 |
+
+**confirmedRoutingSignals:** [] (inga nätverksfel klassades som tydliga D/A/B-signaler)
+
+**confirmedFetchEnvironmentProblems:**
+- ik-sirius: timeout_problem — timeout på två oberoende fetch-försök
+- helsingborg-arena: timeout_problem — timeout, samma mönster som ik-sirius, möjligen generellt
+
+**confirmedUrlProblems:**
+- kth: http_404_problem — HTTP 404, fel canonical URL
+- g-teborgs-posten: http_404_problem — HTTP 404, fel canonical URL
+
+**unclearNetworkFailures:**
+- brommapojkarna: dns_problem — DNS resolution failed, oklart om det är fel URL eller tillfälligt DNS-problem
+
+**conclusion:** 7 nätverksfel. 2 är url_problem (kth, g-teborgs-posten) — dessa bör inte routeas utan bör fixas i source-config. 2 är timeout_problem (ik-sirius, helsingborg-arena) — samma mönster, möjligen generellt men endast 2 sajter, klassas som Provisionally General. 1 är tls_certificate_problem (medeltidsmuseet) — problem på sajten, inte vår fetch. 1 är dns_problem (brommapojkarna) — oklart. 0 är tydliga routing-signaler. Root URL fallback hjälpte inte. Nästa runda bör fokusera på C3 för varmland/liseberg, inte på nätverksfel.
 ```
 
 ---
@@ -446,9 +633,9 @@ Utan denna struktur: ingen återanvändbar erfarenhetsbank, bara lös text.
 
 | Lager | Minst obligatoriskt |
 |-------|---------------------|
-| **Batchrapport** | batchId, roundNumber, sourcesIn, extractSuccess, routeSuccess, fail, failTypeDistribution, winningStageDistribution, totalEventsExtracted, beforeSummary, afterSummary, stopReason |
-| **Källrapport** | batchId, roundNumber, sourceId, url, winningStage, outcomeType, failType, evidence, eventsFound, improvedAfterChange, rootCause, finalDecision |
-| **Rundrapport** | batchId, roundNumber, failSetUsed, hypothesis, changeApplied, whyGeneral, beforeResults, afterResults, sourcesImproved, sourcesUnchanged, sourcesWorsened, decision, runNextRound |
-| **C4-AI-lärrapport** | batchId, roundNumber, observedPattern, hypothesis, proposedGeneralChange, changeApplied, whyGeneral, beforeSummary, afterSummary, sourcesImproved, sourcesUnchanged, sourcesWorsened, decision, learnedRule, confidence, shouldBeReusedLater |
+| **Batchrapport** | batchId, roundNumber, sourcesIn, extractSuccess, routeSuccess, fail, failTypeDistribution, networkErrorDistribution, winningStageDistribution, totalEventsExtracted, beforeSummary, afterSummary, stopReason |
+| **Källrapport** | batchId, roundNumber, sourceId, url, winningStage, outcomeType, failType, networkErrorType, networkErrorDiagnosis, networkErrorConfidence, evidence, eventsFound, improvedAfterChange, rootCause, finalDecision |
+| **Rundrapport** | batchId, roundNumber, failSetUsed, hypothesis, changeApplied, whyGeneral, beforeResults, afterResults, sourcesImproved, sourcesUnchanged, sourcesWorsened, decision, runNextRound, networkErrorAnalysis |
+| **C4-AI-lärrapport** | batchId, roundNumber, observedPattern, hypothesis, proposedGeneralChange, changeApplied, whyGeneral, beforeSummary, afterSummary, sourcesImproved, sourcesUnchanged, sourcesWorsened, decision, learnedRule, confidence, shouldBeReusedLater, networkErrorClassification |
 
 ---

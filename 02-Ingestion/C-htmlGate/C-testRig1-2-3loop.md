@@ -682,6 +682,76 @@ AI may not:
 - replace the general tools as hidden production logic
 - be used as a silent fallback that masks weak C-tools
 - create site-specific extraction paths
+- treat network errors as automatic routing signals without classification
+
+---
+
+## Network Error Handling in C4-AI
+
+**OBS:** Detta avsnitt är nytt — lades till efter batch-011 erfarenheter.
+
+### Regel: Network Error ≠ Automatic Routing Signal
+
+Ett nätverksfel i fail-mängden får INTE automatiskt behandlas som routing-signal till A, B eller D.
+Innan 123 får föreslå routing eller verktygsförbättring måste nätverksfelet först klassificeras.
+
+**Workflow:**
+1. C1→C2→C3 körs → fail med nätverksfel observeras
+2. C4-AI analyserar nätverksfelet → klassificerar typ
+3. Baserat på klassificering → avgör om routing är motiverad eller om det är fetch-miljö/url-problem
+
+### Obligatoriska nätverksfelkategorier
+
+| Kod | Namn | Routing? | Förbättring? |
+|-----|------|----------|--------------|
+| `url_problem` | Fel canonical URL | Nej — fixas i source-config | Nej — site-specific |
+| `dns_problem` | DNS misslyckades | Nej utan klar evidens | Nej — oklart |
+| `timeout_problem` | Timeout | Nej — möjligen tillfälligt | Kanske — om 2+ sajter |
+| `tls_certificate_problem` | Certifikatfel | Nej — sajten har problem | Nej — inte vårt problem |
+| `http_404_problem` | HTTP 404 | Nej — beror oftast på fel URL | Nej — url-problem |
+| `http_403_problem` | HTTP 403 | Möjligen D-signal | Kanske — undersök |
+| `http_5xx_problem` | Serverfel | Nej — troligen tillfälligt | Nej — avvakta |
+| `blocked_or_fetch_environment_problem` | Fetch-miljö | Möjligen D-signal | Kanske — undersök miljö |
+| `likely_requires_D` | Sannolikt D-signal | **Ja** — routing till D | Ej aktuellt |
+| `likely_requires_A_or_B` | Sannolikt A/B-signal | **Ja** — routing till A/B | Ej aktuellt |
+| `unclear_network_failure` | Oklart | Nej — kräver mer diagnostik | Nej — oklart |
+
+### Vad C4-AI måste avgöra för varje nätverksfel
+
+1. **Vad sa felet?** (t.ex. "DNS failure", "ETIMEDOUT", "certificate has expired")
+2. **Vilken kategori passar?** (se tabellen ovan)
+3. **Varför uppstod felet?** — beror det på:
+   - fel URL (url_problem, http_404_problem)
+   - tillfälligt driftfel (dns_problem, timeout_problem, http_5xx_problem)
+   - problem på sajten (tls_certificate_problem)
+   - fetch-miljö (blocked_or_fetch_environment_problem)
+   - tydlig D/A/B-signal (likely_requires_D, likely_requires_A_or_B)
+4. **Är routing motiverad?** — endast för likely_requires_D och likely_requires_A_or_B
+5. **Är verktygsförbättring motiverad?** — endast för timeout_problem/blocked om 2+ sajter
+
+### C4-AI och network error — May and May Not
+
+C4-AI may:
+- classify network errors by type
+- determine if a network error is a clear D/A/B signal
+- identify fetch-environment problems (timeout, block) that affect multiple sites
+- conclude that network errors are NOT routing signals and should not trigger routing
+
+C4-AI may not:
+- automatically route a source to D/A/B because of a network error
+- treat all network errors as the same category
+- conclude "this source needs D" based on vague network evidence alone
+- skip network error classification and jump to routing suggestions
+- hide network errors behind a generic "fail" classification
+
+### Rapporteringskrav
+
+Varje nätverksfel i fail-mängden ska dokumenteras med:
+- networkErrorType (kategori)
+- networkErrorDiagnosis (C4-AI:s analys)
+- networkErrorConfidence (säkerhet)
+
+Se C-testRig-reporting.md för fullständiga fält på källnivå, rundnivå och C4-AI-lärrapportnivå.
 
 ---
 
