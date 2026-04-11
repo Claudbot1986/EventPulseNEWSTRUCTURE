@@ -709,14 +709,14 @@ Varje fail-fall ska först klassificeras i EN av dessa nio primära kategorier:
 | `extraction_failure` | Extraktionsmisslyckande | C2=promising men C3 extraherade 0 events | Nej | C2=promising, C3=0 |
 | `network_failure` | Nätverksmisslyckande | Nätverksfel inträffade (DNS, timeout, 404, cert etc.) | Möjligen — se nätverksfel-underkategorier | DNS-fel, timeout, 404 |
 | `canonical_source_data_failure` | Fel i source-konfiguration | Fel canonical URL, fel preferredPath, fel metadata | Nej — fixas i source-config | HTTP 404 pga fel URL |
-| `environment_or_tooling_failure` | Miljö- eller verktygsfel | Fetch-miljön blockerar eller fel verktygskonfiguration | Möjligen | User-Agent-blockering |
+| `environment_or_tooling_failure` | Miljö- eller verktygsfel | VÅR egen fetch-miljö eller verktygskonfiguration är trasig — proxyfel, SSL-stack trasig, headless-miljön fungerar inte, fel DNS-upplösning i vår miljö | Möjligen — annan fetch-miljö kan lösa | Proxy timeout, SSL handshake failure, headless crash |
 | `mixed_failure` | Blandat misslyckande | Flera feltyper samtidigt | Bedöms från fall till fall | — |
 | `unclear_failure` | Oklart misslyckande | Ingen tydlig primär orsak | Nej — kräver mer diagnostik | — |
 
 **Regler:**
 - Varje fail-fall får EN primärklassificering — inte flera
 - `network_failure` och `canonical_source_data_failure` är separata — `canonical_source_data_failure` handlar om fel i source-konfigurationen, inte nätverket i sig
-- `environment_or_tooling_failure` handlar om fetch-miljö, inte om nätverksfel eller source-config
+- `environment_or_tooling_failure` handlar om VÅR egen trasiga miljö/verktygskonfiguration — detta är **INTE** samma sak som `blocked_or_fetch_environment_problem` (som handlar om att MÅL-sajten blockerar VÅR SPECIFIKA fetcher)
 - `discovery_failure` med underliggande nätverksfel (t.ex. DNS-fel som hindrar all discovery) → primärklass = `discovery_failure`, underliggande nätverksfel dokumenteras separat
 
 ### Nivå 2: Nätverksfel-underklassificering (endast om primärklass = `network_failure`)
@@ -752,7 +752,7 @@ Innan 123 får föreslå routing eller verktygsförbättring måste nätverksfel
 | `http_404_problem` | HTTP 404 | Nej — beror oftast på fel URL | Nej — url-problem |
 | `http_403_problem` | HTTP 403 | Möjligen D-signal | Kanske — undersök |
 | `http_5xx_problem` | Serverfel | Nej — troligen tillfälligt | Nej — avvakta |
-| `blocked_or_fetch_environment_problem` | Fetch-miljö | Möjligen D-signal | Kanske — undersök miljö |
+| `blocked_or_fetch_environment_problem` | Mål-sajten blockerar vår specifika fetcher | Möjligen D-signal (om content finns men kräver render) | Kanske — om 2+ sajter visar samma mönster |
 | `likely_requires_D` | Sannolikt D-signal | **Ja** — routing till D | Ej aktuellt |
 | `likely_requires_A_or_B` | Sannolikt A/B-signal | **Ja** — routing till A/B | Ej aktuellt |
 | `unclear_network_failure` | Oklart | Nej — kräver mer diagnostik | Nej — oklart |
