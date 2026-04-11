@@ -548,6 +548,23 @@ Not allowed:
 
 ## Round Logic
 
+### Critical Distinction: batch-state vs fail-round-data
+
+These are two different things that must never be confused:
+
+| Artefakt | Vad det styr | Vad det INTE är |
+|----------|-------------|-----------------|
+| `batch-state.jsonl` | Vilket batch-nummer som körs, batchens status | Styr INTE förbättringsloopens failmängd |
+| `postTestC-Fail-round*.jsonl` | Exakt vilka källor som analyseras i 123-loopen | Är INTE samma sak som batch-state |
+
+**123-loopen arbetar alltid på `postTestC-Fail-round*.jsonl` — aldrig på batch-state som startpunkt för analys.**
+
+**Fail-round-regler:**
+- Round 1: batch körs → fail-mängd till `postTestC-Fail-round1` → 123-runda-1
+- Round 2: `postTestC-Fail-round1` → 123-runda-2 → re-run samma failmängd → `postTestC-Fail-round2`
+- Round 3: `postTestC-Fail-round2` → 123-runda-3 → re-run → `postTestC-Fail-round3`
+- Ny batch får ALDRIG blandas in mitt i förbättringsloopen
+
 ### Round 1
 All sources from `postB-preC` run through `C1 -> C2 -> C3`.
 
@@ -582,6 +599,23 @@ Remaining unresolved sources go to:
 > **Observera:** "123" är legacy-benämningen för den AI-assisterade förbättringsloopen.
 > I målmodellen heter detta **C4-AI**.
 > 123-loopen och C4-AI refererar till samma koncept men med olika terminologi.
+
+### Critical: C4-AI vs AI-som-fallback (Hidden Extraction)
+
+**These are two fundamentally different things. They must never be conflated:**
+
+| Aspect | C4-AI (förbättringsloop) | AI-som-fallback (dold extraktion) |
+|--------|--------------------------|-----------------------------------|
+| **Purpose** | Analysera varför C0/C1/C2/C3 misslyckades, föreslå generella verktygsförbättringar | Extrahera events med AI när C3 misslyckas — för att "rädda" enskilda fail |
+| **Runs on** | Alla fail-fall (samlat) | Enskilda fail-fall |
+| **Output** | Förbättringsförslag, mönster, verktygsändringar | Events (fabricerade om C3 misslyckas) |
+| **Is in C core?** | Nej — utanför pipeline | Ja — inbäddad i C-flödet |
+| **Allowed in 123?** | Ja — enda tillåtna AI-användning | Nej — blockerad |
+| **Counts as success?** | Ja — om verktygen förbättras | Nej — masking weak tools är förbjudet |
+
+**Rule: C4-AI use in 123 loop is ONLY for tool improvement analysis. AI-as-fallback to "rescue" individual fail cases is FORBIDDEN.**
+
+**AI results without tool improvement do NOT count as genuine general success.**
 
 ### Purpose
 
@@ -735,22 +769,33 @@ No auto-promotion.
 
 ## Reporting Standard
 
-Every C test run and every 123 loop must produce a concise report containing:
+**AUKTORITATIV RAPPORTSPECIFIKATION:** [C-testRig-reporting.md](./C-testRig-reporting.md) — definierar de fyra obligatoriska rapportlagren med fullständiga fältlistor.
 
-C1→C2→C3 results:
-- input queue and source count
-- stage-by-stage success counts (C1, C2, C3 separately)
-- stage-by-stage extracted event counts
-- winning-stage distribution (C1 vs C2 vs C3)
-- route-suggestion distribution (A/B/D/UI)
-- fail distribution by stage
-- top evidence patterns
+Every C test run and every 123 loop must produce a report in EXACTLY four layers:
 
-AI analysis (after C1→C2→C3 on fail set):
-- identified cross-site patterns (or "no pattern found")
-- which stage is the main bottleneck (C1, C2, or C3)
-- before/after comparison if tools changed
-- exact next step recommendation
+### Layer 1: Batch Report
+Complete per-batch summary including all cycles (baseline + improvement rounds).
+See: [C-testRig-reporting.md Lag 1](./C-testRig-reporting.md#lag-1-batchrapport)
+
+### Layer 2: Source Reports
+Per-source structured records for every source in every round.
+See: [C-testRig-reporting.md Lag 2](./C-testRig-reporting.md#lag-2-källrapport)
+
+### Layer 3: Round Report
+Per-123-round structured report with hypothesis, change, and before/after comparison.
+See: [C-testRig-reporting.md Lag 3](./C-testRig-reporting.md#lag-3-rundrapport-123-runda)
+
+### Layer 4: C4-AI Learnings
+Structured mandatory learning record. NOT optional free text. NOT hidden fallback.
+See: [C-testRig-reporting.md Lag 4](./C-testRig-reporting.md#lag-4-c4-ai-lärrapport)
+
+### Important rules
+
+- Reports are NOT logs. Reports are building blocks for a future experience bank for general HTML scraping.
+- C4-AI Learnings layer is mandatory for every round — "no pattern found" must also be documented
+- Before/after comparison is required for every 123 round
+- Source-level traceability is required: every source in every round must be traceable
+- AI results without tool improvement do NOT count as genuine general success
 
 ---
 

@@ -381,28 +381,53 @@ C4-AI får inte:
 
 ## 13. Rapportering per batch
 
-Efter varje batch måste en tydlig rapport skapas.
+**AUKTORITATIV RAPPORTSPECIFIKATION:** [C-testRig-reporting.md](./C-testRig-reporting.md) — där definieras de fyra obligatoriska rapportlagren med fullständiga fältlistor.
 
-Rapporten ska minst innehålla:
+Efter varje batch måste fyra rapportlager skapas, inget får utelämnas:
 
-- antal sources i batchen
-- hur många som fick `extract_success`
-- hur många som fick `route_success`
-- hur många som failade
-- hur många som vann i C1
-- hur många som vann i C2
-- hur många som vann i C3
-- hur många som vann i C4-AI
-- hur många events som extraherades i C3
-- vilka sourceIds som gav events
-- hur många som routeades till A
-- hur många som routeades till B
-- hur många som routeades till D
-- vanligaste failorsakerna
-- vad som ändrades inför nästa runda
-- om förbättringen faktiskt hjälpte på samma failmängd
+**Lag 1 — Batchrapport** (`reports/batch-{N}/batch-report.md`):
+Obligatoriskt innehåll:
+- batchId, roundNumber, inputQueue, sourcesIn
+- extractSuccess, routeSuccess, fail
+- failTypeDistribution (C0-discovery-fail / C2/C3-glapp-fail / C2-gränsfall)
+- winningStageDistribution (C1 / C2 / C3 / C4-AI)
+- totalEventsExtracted
+- generalChangesTested (en post per cykel)
+- beforeSummary, afterSummary
+- stopReason, nextStep
 
-Utan denna rapportering blir 123-loopen inte verifierbar.
+**Lag 2 — Källrapporter** (`reports/batch-{N}/source-reports/{sourceId}.md`):
+En fil per source. Obligatoriskt innehåll per källa:
+- batchId, roundNumber, sourceId, url
+- winningStage, outcomeType, routeSuggestion
+- failType, evidence
+- c0Candidates, winnerUrl, c2Verdict, c2Score
+- eventsFound, changeApplied, improvedAfterChange
+- rootCause, finalDecision
+
+**Lag 3 — Rundrapporter** (`reports/batch-{N}/round-{N}-report.md`):
+En fil per 123-runda. Obligatoriskt innehåll:
+- batchId, roundNumber, failSetUsed
+- hypothesis, changeApplied, whyGeneral
+- beforeResults, afterResults
+- sourcesImproved, sourcesUnchanged, sourcesWorsened
+- decision, runNextRound, stopReason
+
+**Lag 4 — C4-AI-lärrapport** (`reports/batch-{N}/c4-ai-learnings.md`):
+En fil per batch. Obligatoriskt innehåll:
+- batchId, roundNumber
+- observedPattern, hypothesis, proposedGeneralChange
+- changeApplied, whyGeneral
+- beforeSummary, afterSummary
+- sourcesImproved, sourcesUnchanged, sourcesWorsened
+- decision, learnedRule, confidence, shouldBeReusedLater
+
+**Regler:**
+- Rapporter är byggstenar för en framtida erfarenhetsbank — inte loggfiler
+- C4-AI-lärrapporten är obligatorisk, inte frivillig fri text
+- Före/efter-jämförelse krävs för varje 123-runda
+- Varje källa i varje runda måste kunna spåras via källrapport
+- Utan denna rapportering blir 123-loopen inte verifierbar
 
 ---
 

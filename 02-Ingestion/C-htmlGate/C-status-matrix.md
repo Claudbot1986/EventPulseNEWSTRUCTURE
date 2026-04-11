@@ -11,6 +11,7 @@
 | **C-status-matrix.md** | **← DU ÄR HÄR — PRIMÄR SNABBÖVERSIKT** |
 | C-testRig1-2-3loop.md | Ny canonical målmodell (target semantics) |
 | C-rebuild-plan.md | Ny rebuild-plan (steg-för-steg) |
+| **C-testRig-reporting.md** | **NY — AUKTORITATIV RAPPORTSPECIFIKATION** — definierar alla fyra obligatoriska rapportlager (batch, source, round, C4-AI learnings) |
 | **C-htmlGate.md** | Historical/legacy — föråldrad dokumentation, ersatt av status-matrix, testRig och rebuild-plan |
 | 123.md | Workflow execution rules |
 | C-BATCH-INFRASTRUCTURE.md | Legacy/historisk — kördes aldrig i förbättringsloop |
@@ -109,8 +110,11 @@ C3-aiExtractGate = Canonical C4-AI (samma)
 |----------|-------------------|----------------|
 | `C-htmlGate.md` | Beskriver "two-step pipeline" (C1/C2) — obsolet | Uppdatera till C0→C1→C2→C3 pipeline |
 | `C1-preHtmlGate.md` | Refererar till "C0→C1→C2→extract" - äldre terminologi | Synkronisera med canonical namn |
-| `123.md` | Mycket lång, definerar tre parallella sanningar | Behåll som workflow-styrning, låt statusmatris vara snabböversikt |
+| `123.md` | Mycket lång, definerar tre parallella sanningar | Behåll som workflow-styrning, uppdatera Steg 6 med rapporteringsreferens till C-testRig-reporting.md |
 | `C-BATCH-INFRASTRUCTURE.md` | Beskriver batch-loop som om den körs | Markera som legacy/dokumentation |
+
+**Ny fil tillagd:**
+| `C-testRig-reporting.md` | Helt ny — saknades helt | Auktoritativ rapporteringsspecifikation med fyra obligatoriska rapportlager |
 
 ---
 
