@@ -1,5 +1,20 @@
 # Ingestion Rules
 
+## Canonical C-Pipeline Reference
+
+> **Obs:** Den canonicala C-pipeline semantiken (C1/C2/C3/C4-AI) definieras i
+> `02-Ingestion/C-htmlGate/C-testRig1-2-3loop.md`.
+>
+> Kort summary:
+> - C1 = Discovery / Frontier
+> - C2 = Grov HTML-screening + routing-signal (routear till A, B eller D)
+> - C3 = HTML-extraktion (icke-AI)
+> - C4-AI = Separat AI-analys, endast på fail-fall efter C1→C2→C3
+>
+> "123" och "C4-AI" refererar till samma koncept.
+
+---
+
 ## Purpose
 
 This file defines how ingestion must behave in EventPulse.

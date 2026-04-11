@@ -1,5 +1,37 @@
 # C Test Rig and 123 Learning Loop
 
+## CANONICAL TARGET SEMANTICS — C-PIPELINE
+
+> **DETTA ÄR DEN STYRANDE MÅLBILDEN FRÅN OCH MED NU.**
+> Verklig kod följer ännu inte nödvändigtvis denna semantik fullt ut.
+> Dokumentationen ska reflektera målmodellen, inte nuvarande implementation.
+
+### Canonical C-Pipeline Definitions
+
+| Stage | Name | Role |
+|-------|------|------|
+| **C1** | Discovery / Frontier | Hitta och prioritera candidate pages. Samla interna links, mät page density, välj bästa kandidat. |
+| **C2** | Grov HTML-screening + routing-signal | Screena HTML-struktur, detektera A/B/D-mönster, ge routing-signaler till testköer A, B eller D. Kanroutea vidare till postTestC-A, postTestC-B, postTestC-D. |
+| **C3** | HTML-extraktion | Extrahera events från HTML med regelbaserad logik (icke-AI). Är första platsen där verklig HTML-extraktion sker i målmodellen. |
+| **C4-AI** | Separat AI-analys och/eller AI-fallback | Kör endast EFTER C1→C2→C3 har körts, och ENBART på fail-fallen. Används för att analysera mönster över fail-fall och föreslå generella förbättringar. **Lätt att koppla bort.** |
+
+### Legacy Naming
+
+- **C0**: Legacy-benämning. Förekommer inte i målmodellen. Om det nämns i gammal kod/dokumentation, avser typiskt det som nu heter C1.
+- **C1/C2/C3**: Gällande stagedefinitioner i målmodellen.
+- **C4-AI**: Post-C AI-steg, alltid separat från C1/C2/C3.
+
+### Important Clarifications
+
+- **C2 routear till**: `postTestC-A`, `postTestC-B`, `postTestC-D` — detta är test observations, inte canonical truth.
+- **C3 är första HTML-extraktionssteget** i målmodellen.
+- **C4-AI är lätt att koppla bort** — det är en fristående analysfas, inte inbäddad i C1/C2 eller C3.
+- **Testväggen gäller**: testutfall är inte canonical sanning.
+- **`postTestC-UI`** är staged test-output.
+- **Ingen H-routing** i denna fas.
+
+---
+
 ## Purpose
 
 This document defines the controlled **C test phase** for EventPulse.
@@ -193,107 +225,97 @@ This routes to the relevant fail-round queue.
 
 ---
 
-## Definitions of C1, C2, C3
+## Canonical Definitions of C1, C2, C3, C4-AI
 
-### C1 — Coarse HTML Discovery and Page Typing
+### C1 — Discovery / Frontier
 
-C1 is the first non-AI test layer.
+**[Målmodell:]** C1 är discovery/frontier-lagret. Jobbar är att:
+- Hämta root page
+- Hämta en liten mängd relevanta interna subpages
+- Inspecta allmän HTML-struktur
+- Detektera breda page patterns
+- Estimera vilken typ av source det verkar vara
 
-Its job is to:
+**I nuvarande implementation (legacy-gate):** C1 är den första icke-AI testlagen. Coarse HTML discovery.
 
-- fetch the root page
-- fetch a small set of relevant internal subpages
-- inspect general HTML structure
-- detect broad page patterns
-- estimate what type of source this appears to be
+**Regler:**
+- C1 måste använda **generella heuristik only**
+- C1 får INTE använda AI
+- C1 använder signals som: repeated card/list structures, date/time density, event/calendar/tickets/program paths, Swedish date formats, recurring title/date/location groupings
 
-C1 must use **general heuristics only**.
-
-Examples of allowed signals:
-
-- repeated card/list structures
-- date/time density
-- links containing event/calendar/tickets/program paths
-- article vs calendar vs landing-page patterns
-- event-like blocks
-- venue-program page structures
-- Swedish date formats
-- recurring title/date/location groupings
-
-C1 may produce:
-- extract_success
-- route_success
-- continue_to_C2
-- fail
-
-C1 must not use AI.
+**Output:**
+- `extract_success`
+- `route_success`
+- `continue_to_C2`
+- `fail`
 
 ---
 
-### C2 — Refined HTML Scan with Deeper Heuristics
+### C2 — Grov HTML-Screening + Routing-Signal
 
-C2 is the refined scanning layer between C1 and C3.
+**[Målmodell:]** C2 är grov HTML-screening som kan routea till A, B eller D. Jobbet är att:
+- Applicera djupare generella heuristik på pages identifierade av C1
+- Detektera starka reroute-signaler till A, B eller D genom strukturell evidens
+- Score page quality och event-density signals mer precist
+- Avgöra vilka pages som är värda att skicka till C3 för extraktion
+-Rejecta pages som visar tydliga A/B/D patterns utan att waste C3 på dem
 
-Its job is to:
+**I nuvarande implementation:** C2 är refined scanning layer.
 
-- apply deeper general heuristics to the pages identified by C1
-- detect strong reroute signals to A, B or D through structural evidence
-- score page quality and event-density signals more precisely
-- narrow down which pages are worth passing to C3 for extraction
-- reject pages that show clear A/B/D patterns without wasting C3 on them
+**Regler:**
+- C2 måste förbli generic och icke-AI
+- C2 routear till `postTestC-A`, `postTestC-B`, `postTestC-D` — detta är **test observations, inte canonical truth**
 
-C2 must remain generic and non-AI.
-
-Allowed:
-- refined density scoring (timeTagCount, dateCount, link-depth analysis)
-- repeated-block inference across subpages
-- reroute-signal detection (API endpoints, JSON-LD fragments, feed links visible in HTML)
-- internal link structure analysis within limits
-- path-pattern recognition for calendar/event/ticket listings
-
-Forbidden:
-- one-off logic for a single site
-- hand-tuned rules for one domain
-- treating vague signals as confirmed reroutes
-
-C2 may produce:
-- route_success (A/B/D signal detected — strong enough to route without C3)
-- continue_to_C3 (worth attempting extraction)
-- fail (low quality, no signal)
+**Output:**
+- `route_success` (A/B/D signal detected — strong enough to route without C3)
+- `continue_to_C3` (worth attempting extraction)
+- `fail` (low quality, no signal)
 
 ---
 
-### C3 — HTML Event Extraction
+### C3 — HTML-Extraktion
 
-C3 is the HTML extraction stage inside the test rig.
+**[Målmodell:]** C3 är första platsen där verklig HTML-extraktion sker. Jobbet är att:
+- Extrahera actual event records från HTML med generella extraktionspatterns
+- Parsa date/time/title/location från strukturerade HTML blocks
+- Producera reala extraherade events eller ett clean fail
+- **INTE** analysera varför extraktion misslyckades — det är jobbet för C4-AI efter C1→C2→C3
 
-Its job is to:
+**I nuvarande implementation:** C3 är HTML extraction stage. Rule-based (icke-AI).
 
-- extract actual event records from HTML using general extraction patterns
-- parse date/time/title/location from structured HTML blocks
-- produce real extracted events or a clean fail
-- NOT to analyze why extraction failed — that is the job of the AI step after C1→C2→C3
+**CRITISKT:** C3 är icke-AI. Använd INTE AI för extraktion i detta steg.
 
-C3 is non-AI. It uses rule-based extraction logic only.
+**Output:**
+- `extract_success` (reala events extraherade — går till postTestC-UI)
+- `route_success` (extraktion fails men A/B/D signal hittades — går till postTestC-A/B/D)
+- `fail` (inget användbart hittades)
 
-C3 may produce:
-- extract_success (real events extracted — goes to postTestC-UI)
-- route_success (extraction fails but A/B/D signal found — goes to postTestC-A/B/D)
-- fail (nothing usable found)
-
-C3 must not:
-- use AI to extract
-- analyze failure causes (that is for the post-C AI step)
-- be described as "AI-assisted extraction"
-
-**Important distinction:**
-- C3 = HTML extraction (non-AI)
-- AI = used AFTER C3 on the fail set, in the 123 learning loop, to analyze patterns and improve C1/C2/C3
-
-If C3 succeeds, the result must be marked as:
+**Om C3 lyckas:** Markeras som:
 - `winningStage = C3`
 - `outcomeType = extract_success`
 - test-phase only
+
+---
+
+### C4-AI — AI-Analys (Post-C Fallback)
+
+**[Målmodell:]** C4-AI är separat AI-analys som körs ENDÅ EFTER C1→C2→C3 har körts, och ENBART på fail-fallen.
+
+**CRITISKT:** C4-AI är INTE en del av C1, C2 eller C3. Det är alltid separat.
+
+**Jobbet är att:**
+- Analysera mönster över fail-fall
+- Identifiera generella förbättringsmöjligheter för C1/C2/C3
+- Föreslå små, generella modellförbättringar
+
+**Regler:**
+- C4-AI får endast köras på fail-fall efter C1→C2→C3
+- C4-AI är **lätt att koppla bort** — det är en fristående analysfas
+- C4-AI får INTE användas för att mask svaga Cverktyg
+- C4-AI får INTE fabricera events eller overrides measured evidence
+
+**Workflow:**
+`postB-preC → C1 → C2 → C3 → fail set → C4-AI analysis → tool improvements → re-run`
 
 ---
 
@@ -516,25 +538,30 @@ Remaining unresolved sources go to:
 
 ---
 
-## The 123 Learning Loop
+## The 123 Learning Loop (Legacy — C4-AI in Target Model)
 
-## Purpose
+> **Observera:** "123" är legacy-benämningen för den AI-assisterade förbättringsloopen.
+> I målmodellen heter detta **C4-AI**.
+> 123-loopen och C4-AI refererar till samma koncept men med olika terminologi.
 
-123 is the controlled learning loop for improving C1, C2 and C3 through analysis of fail cases.
+### Purpose
 
-The sequence is always:
+123/C4-AI är den kontrollerade learningslingan för att förbättra C1, C2 och C3 genom analys av fail-fall.
 
-`postB-preC → C1 → C2 → C3 → fail set → 123 AI analysis → tool improvements → re-run`
+Sekvensen är alltid:
 
-AI is only applied AFTER C1→C2→C3 on the fail set. AI is never part of C1, C2 or C3.
+`postB-preC → C1 → C2 → C3 → fail set → C4-AI analysis → tool improvements → re-run`
 
-It must operate only on the current fail-round set.
+AI appliceras ENDÅ efter C1→C2→C3 på fail-fallet. AI är aldrig en del av C1, C2 eller C3.
 
-It must not wander across unrelated domains or invent architecture changes.
+Det måste operera endast på det aktuella fail-round-setet.
+Det får inte wander across unrelated domains eller hitta på architecture changes.
 
 ---
 
-## What 123 Must Do
+## What C4-AI (123) Must Do
+
+> **Observera:** "123" är legacy-benämning. Målmodellen använder "C4-AI".
 
 When the user invokes `123`, the agent must:
 
@@ -550,7 +577,9 @@ When the user invokes `123`, the agent must:
 
 ---
 
-## What 123 Must Never Do
+## What C4-AI (123) Must Never Do
+
+> **Observera:** "123" är legacy-benämning. Målmodellen använder "C4-AI".
 
 123 must never:
 
