@@ -462,20 +462,42 @@ En fil per batch. Obligatoriskt innehåll:
 
 ### Ny primär kandidat (2026-04-11): `run-dynamic-pool.ts`
 
-**Status: AKTIV EXPERIMENTELL RUNNER / PENDING VERIFICATION**
+### <implemented_and_verified>
+- Dynamic test pool (max 10 active C-sources) — VERIFIED (batch-13)
+- Per-source `roundsParticipated` (max 3) — VERIFIED
+- Exit conditions (events → UI, A/B/D-signal → A/B/D, 3 rounds → manual-review) — VERIFIED
+- Refill between rounds only from postB-preC — VERIFIED
+- Sources that left pool cannot rejoin — VERIFIED
+- Four-level reporting: pool/batch, source, round, C4-AI — VERIFIED (structure generated)
+- Round 1 executed — VERIFIED
+- Round 2 executed — VERIFIED
+- Round 3 executed — VERIFIED
+- Pool state persistence (pool-state.json) — VERIFIED (write)
+- Queue routing verified — 10 sources routed to correct queues
+- Resume from pool-state — RESUME_VERIFIED (2026-04-11)
+</implemented_and_verified>
 
-`run-dynamic-pool.ts` är den **nya primära kandidaten** för C-testRiggen. Den implementerar:
+### <implemented_but_unverified>
+- **run-dynamic-pool.ts in true production loop** — Not verified. Only tested as single batch run in batch-13.
+</implemented_but_unverified>
 
-- Dynamisk testpool på max 10 aktiva C-källor
-- Per-source `roundsParticipated` (max 3)
-- Exitvillkor: events → UI, A/B/D-signal → A/B/D, 3 rundor utan lösning → manual-review
-- Refill endast mellan rundor, endast från `postB-preC`
-- Sources som lämnat poolen får inte återkomma
-- Rapportering på fyra nivåer: pool/batch, source, round, C4-AI
+### <placeholder_only>
+- **C4-AI** — C4_AI_PLACEHOLDER. No AI analysis connected. c4-ai-learnings.md is a placeholder structure only. Must NOT be described as "working" or "completed".
+- **Canonical naming (C1/C2/C3/C4-AI)** — Not yet aligned with code. Current code uses C0/C1/C2/C3.
+</placeholder_only>
 
-**Mognadsgrad:** Experimental — round-1-körning verifierad (2026-04-11). Fullständig 3-rundersverifiering återstår. C4-AI är fortfarande placeholder.
+### Status labels for run-dynamic-pool.ts
+```
+RUNNER_EXECUTES: confirmed
+FLOW_PARTIALLY_VERIFIED: rounds 1-3 executed
+RESUME_VERIFIED: resume verified (2026-04-11)
+C4_AI_PLACEHOLDER: C4-AI not executed
+NOT_CANONICAL_YET: first working version, not final
+```
 
-**Får INTE beskrivas som "canonical" förrän:** verifierad round-1 + refill + exit + state-persistens + C4-AI-hook är demonstrerade.
+**Mognadsgrad:** Experimental — rounds 1-3 körning verifierad (2026-04-11). Resume verifierad (2026-04-11). C4-AI är fortfarande placeholder.
+
+**Får INTE beskrivas som "canonical" förrän:** resume + C4-AI-hook är demonstrerade.
 
 - Dynamisk testpool på max 10 aktiva C-källor
 - Per-source `roundsParticipated` (max 3)

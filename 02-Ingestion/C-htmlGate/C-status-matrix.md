@@ -65,6 +65,45 @@ C3-aiExtractGate = Canonical C4-AI (samma)
 
 ## Komponent-status
 
+### <implemented_and_verified>
+Functions that have been confirmed working in terminal execution.
+
+| Komponent | Status | Anteckningar |
+|-----------|--------|--------------|
+| **discoverEventCandidates()** | Implemented and verified | Used as C0 in run-dynamic-pool.ts. Finds internal links, measures density, selects best candidate. |
+| **screenUrl()** | Implemented and verified | Used as C1 in run-dynamic-pool.ts. Screening: cheap fetch + DOM analysis. |
+| **evaluateHtmlGate()** | Implemented and verified | Used as C2 in run-dynamic-pool.ts. Weighted scoring + candidate quality. |
+| **extractFromHtml()** | Implemented and verified | Used as C3 in run-dynamic-pool.ts. First HTML extraction step. Returns {eventsFound, ...}. |
+| **run-dynamic-pool.ts** | Implemented and partially verified | RUNNER_EXECUTES: confirmed. FLOW_PARTIALLY_VERIFIED: rounds 1-3 executed. NOT_CANONICAL_YET. |
+| **Dynamic pool refill** | Verified | Refill between rounds confirmed working in batch-13. |
+| **Pool state persistence** | Verified (write) | pool-state.json written after each round. |
+| **Queue routing** | Verified | 10 sources correctly routed to output queues in batch-13. |
+| **Resume from pool-state** | RESUME_VERIFIED | Resume tested 2026-04-11 — correctly loads state, continues from right round, no duplicate exits. See resume-verification-report.md. |
+</implemented_and_verified>
+
+### <implemented_but_unverified>
+Code exists but verification is missing.
+
+| Komponent | Status | Anteckningar |
+|-----------|--------|--------------|
+| **run-dynamic-pool.ts in production** | Not verified | Only tested in batch-13 as a single run. |
+| **Improvements-bank** | Not verified | Structure exists in reports/ but not actively populated. |
+</implemented_but_unverified>
+
+### <placeholder_only>
+Future function or empty layer — no real implementation.
+
+| Komponent | Status | Anteckningar |
+|-----------|--------|--------------|
+| **C4-AI** | C4_AI_PLACEHOLDER | No AI analysis connected in run-dynamic-pool.ts. c4-ai-learnings.md is a placeholder structure only. Must not be described as "completed" or "working". |
+| **C3-aiExtractGate in loop context** | Not connected | Only runs as one-off fallback, not in the batch loop. |
+| **Canonical model (C1/C2/C3/C4-AI naming)** | Not yet aligned | Current code uses C0/C1/C2/C3 naming. Canonical names not yet enforced in code. |
+</placeholder_only>
+
+---
+
+### Legacy status table (historical reference only)
+
 | Komponent | Finns i kod? | Används i batch-loop? | Används i produktion? | Documenterad? | Status | Anteckningar |
 |-----------|-------------|---------------------|----------------------|---------------|--------|--------------|
 | **C0** (`C0-htmlFrontierDiscovery/`) | ✓ Ja | ⚠️ Delvis | ✗ Nej | ✓ Ja | **Legacy/Parallell** | Dokumentationen säger "C0 förekommer inte i målmodellen" (`C-testRig1-2-3loop.md` rad 19). I verklig körning används C0 som första steg (discoverEventCandidates). Call: `discoverEventCandidates()` → väljer bästa candidate från interna links. |
