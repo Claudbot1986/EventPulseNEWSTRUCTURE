@@ -167,10 +167,9 @@ Each source processed by the C test rig must end in **exactly one** of these que
 - `postTestC-A`
 - `postTestC-B`
 - `postTestC-D`
-- `postTestC-Fail-round1`
-- `postTestC-Fail-round2`
-- `postTestC-Fail-round3`
-- `postTestC-Fail`
+- `postTestC-manual-review`
+
+**`postTestC-manual-review` replaces all previous fail queue names** (including `postTestC-Fail-round1/2/3` and `postTestC-Fail`).
 
 ### Meaning of each queue
 
@@ -210,20 +209,11 @@ This means:
 - route suggestion = D
 - this is a test routing observation only
 
-#### `postTestC-Fail-round1`
-Source failed to produce extraction success or route success during the first full C pass.
+#### `postTestC-manual-review`
+Source participated in 3 rounds without events and without established A/B/D routing.
+Requires manual handling.
 
-#### `postTestC-Fail-round2`
-Source failed again after round-1 learning improvements.
-
-#### `postTestC-Fail-round3`
-Source failed again after round-2 learning improvements.
-
-#### `postTestC-Fail`
-Final unresolved set after three controlled rounds.
-
-This is the final fail set for this test phase.
-It is not yet H.
+**Exit rule per source:** A source leaves the pool as soon as any exit condition is met. A source that has left the pool may not rejoin in later rounds of the same test run.
 
 ---
 
@@ -548,49 +538,76 @@ Not allowed:
 
 ## Round Logic
 
-### Critical Distinction: batch-state vs fail-round-data
+### NY MODELL: Dynamisk testpool (gäller från 2026-04-11)
 
-These are two different things that must never be confused:
+**Denna modell ersätter alla tidigare formuleringar om "samma 10 källor genom tre rundor".**
 
-| Artefakt | Vad det styr | Vad det INTE är |
-|----------|-------------|-----------------|
-| `batch-state.jsonl` | Vilket batch-nummer som körs, batchens status | Styr INTE förbättringsloopens failmängd |
-| `postTestC-Fail-round*.jsonl` | Exakt vilka källor som analyseras i 123-loopen | Är INTE samma sak som batch-state |
+#### Grundprincip
 
-**123-loopen arbetar alltid på `postTestC-Fail-round*.jsonl` — aldrig på batch-state som startpunkt för analys.**
+Vi använder **inte** en statisk batch där exakt samma 10 källor alltid går alla 3 rundor tillsammans.
 
-**Fail-round-regler:**
-- Round 1: batch körs → fail-mängd till `postTestC-Fail-round1` → 123-runda-1
-- Round 2: `postTestC-Fail-round1` → 123-runda-2 → re-run samma failmängd → `postTestC-Fail-round2`
-- Round 3: `postTestC-Fail-round2` → 123-runda-3 → re-run → `postTestC-Fail-round3`
-- Ny batch får ALDRIG blandas in mitt i förbättringsloopen
+Vi använder i stället en **dynamisk testpool på 10 aktiva C-källor** där:
+- varje source har eget `roundsParticipated` (max 3)
+- varje source lämnar poolen så snart exitvillkor uppnås
+- poolen fylls på mellan rundor från `postB-preC`
 
-### Round 1
-All sources from `postB-preC` run through `C1 -> C2 -> C3`.
+#### Aktiv testpool
 
-Unresolved sources go to:
-- `postTestC-Fail-round1`
+En mängd av max 10 aktiva C-källor som för närvarande genomgår testprocessen.
 
-### Round 2
-Sources in `postTestC-Fail-round1` are analyzed by the 123 learning loop.
-Only approved general improvements may be added to C1/C2/C3.
-Then the same fail set is re-run.
+#### Refill-pool: `postB-preC`
 
-Unresolved sources go to:
-- `postTestC-Fail-round2`
+**Den enda inkommande poolen för påfyllning av den aktiva testpoolen är `postB-preC`.**
 
-### Round 3
-Sources in `postTestC-Fail-round2` are analyzed again by the 123 learning loop.
-Only approved general improvements may be added.
-Then the same fail set is re-run.
+Inga andra köer eller källistor får användas för att fylla på testpoolen.
 
-Unresolved sources go to:
-- `postTestC-Fail-round3`
+#### poolRoundNumber
 
-### Final unresolved state
-Sources in `postTestC-Fail-round3` are re-run one final time if planned.
-Remaining unresolved sources go to:
-- `postTestC-Fail`
+Ett heltal som beskriver vilken runda testpoolen just genomgår (1, 2, 3, ...).
+
+#### Per-source-regel (PINSKILD)
+
+| Villkor | Åtgärd |
+|---------|--------|
+| source har deltagit i 3 rundor utan events | → `postTestC-manual-review` |
+| events hittades | → `postTestC-UI` |
+| C1/C2/C3 fastställer med hög säkerhet A-signal | → `postTestC-A` |
+| C1/C2/C3 fastställer med hög säkerhet B-signal | → `postTestC-B` |
+| C1/C2/C3 fastställer med hög säkerhet D-signal | → `postTestC-D` |
+
+**En source som lämnat poolen får inte återkomma i senare rundor av samma testkörning.**
+
+#### Poolregel
+
+- Poolen är **dynamisk mellan rundor** men **fast under själva rundan**
+- `poolRoundNumber` ökar efter varje runda
+- Refill får endast ske **mellan rundor**, aldrig mitt i en runda
+
+#### Exit-köer (samtlista)
+
+- `postTestC-UI` — events hittades
+- `postTestC-A` — A-signal (hög konfidens)
+- `postTestC-B` — B-signal (hög konfidens)
+- `postTestC-D` — D-signal (hög konfidens)
+- `postTestC-manual-review` — 3 rundor utan events (ersätter alla tidigare restkö-namn)
+
+#### Exempel: Poolens livscykel
+
+```
+Runda 1: 10 sources → 3 lämnar (2 events, 1 D) → 7 kvarvarande
+Refill: postB-preC → 3 nya → 10 aktiva
+Runda 2: 10 sources → 2 lämnar (1 A, 1 efter 3:e rondan) → 8 kvarvarande
+Refill: postB-preC → 2 nya → 10 aktiva
+Runda 3: 10 sources → alla lämnar (events/A/B/D/manual-review)
+→ Poolen tom → testkörning klar
+```
+
+#### Pool vs batch-state
+
+| Artefakt | Vad det styr |
+|----------|-------------|
+| `batch-state.jsonl` | Poolens övergripande status, pool-nummer, stopReason |
+| `postB-preC` | Refill-pool för påfyllnad mellan rundor |
 
 ---
 

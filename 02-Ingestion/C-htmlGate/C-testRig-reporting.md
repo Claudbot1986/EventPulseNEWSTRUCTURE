@@ -89,7 +89,7 @@ generalChangesTested [array]  Lista med generella ändringar som testades i rund
                               (en per förbättringscykel)
 beforeSummary        [string]  Före-sammanfattning: antal success/fail/events per källa före ändring
 afterSummary         [string]  Efter-sammanfattning: antal success/fail/events per källa efter ändring
-stopReason           [string]  "plateau" | "no-general-improvement" | "d-problem" | "max-cycles"
+stopReason           [string]  "pool-exhausted" | "max-rounds-reached" | "no-sources-available" | "plateau"
 nextStep             [string]  Kort beslut om nästa steg
 ```
 
@@ -142,10 +142,10 @@ Markdown med codeblock för strukturerad data. Fälten ska vara explicita, inte 
 Baseline: 0/10 extract_success, 0/10 route_success, 10/10 fail, 0 events
 
 ### stopReason
-baseline_only — round 1 klar, förbättringsloop pågår
+pool-exhausted | max-rounds-reached | no-sources-available
 
 ### nextStep
-Kör 123-runda-1 på postTestC-Fail-round1
+Nästa steg baserat på poolens slutstatus
 ```
 
 ---
@@ -169,7 +169,7 @@ sourceId             [string]  Källans ID
 url                  [string]  Root-URL för sourcen
 winningStage         [string]  "C1" | "C2" | "C3" | "C4-AI"
 outcomeType          [string]  "extract_success" | "route_success" | "fail"
-routeSuggestion      [string]  "UI" | "A" | "B" | "D" | "Fail"
+routeSuggestion      [string]  "UI" | "A" | "B" | "D" | "manual-review"
 failType            [string]  Primär fail-klassificering (nivå 1): "discovery_failure" | "screening_failure" | "routing_failure" | "extraction_failure" | "network_failure" | "canonical_source_data_failure" | "environment_or_tooling_failure" | "mixed_failure" | "unclear_failure" | "unknown" (endast om outcomeType=fail)
 networkFailureSubType [string|null]  Nätverksfel-undertyp (nivå 2) — endast om failType="network_failure". Värden:
                               "url_problem" | "dns_problem" | "timeout_problem" | "tls_certificate_problem" |
@@ -196,8 +196,8 @@ rootCause           [string]  kort root-cause-klassning: t.ex.
                               "C0-discovery-fail: no internal links found"
                               "C2/C3-glapp-fail: C2=promising but C3 extracted 0"
                               "C2-gränsfall: unclear verdict with low score"
-finalDecision       [string]  Slutligt beslut för sourcen i denna runda, t.ex.:
-                              "postTestC-Fail-round1" | "postTestC-UI" | "postTestC-A"
+finalDecision       [string]  Slutligt beslut för sourcen i denna runda:
+                              "postTestC-UI" | "postTestC-A" | "postTestC-B" | "postTestC-D" | "postTestC-manual-review"
 ```
 
 ### Exempel
@@ -272,8 +272,8 @@ Beskriver exakt vad som hände i en enskild 123-förbättringsrunda: vilken hypo
 ```
 batchId              [string]  T.ex. "batch-011"
 roundNumber          [number]  1, 2 eller 3
-failSetUsed          [string]  Vilken fail-kö som användes som input, t.ex.
-                              "runtime/postTestC-Fail-round1.jsonl"
+failSetUsed          [string]  Vilka källor som ingick i rundan (kvarvarande aktiva pool), t.ex.
+                              "runtime/postTestC-pool-round1.jsonl" eller liknande
 hypothesis           [string]  Den generella hypotes som testades, t.ex.
                               "C0 hittar för få candidates pga för smal path-inspektion"
 changeApplied        [string]  Konkret ändring som gjordes, t.ex.
@@ -292,8 +292,8 @@ sourcesImproved      [array]  Lista med sourceIds som förbättrades
 sourcesUnchanged     [array]  Lista med sourceIds som var oförändrade
 sourcesWorsened      [array]  Lista med sourceIds som försämrades
 decision             [string]  "keep" | "revert" | "unclear"
-runNextRound         [boolean]  true | false — om nästa runda ska köras
-stopReason           [string]  Om runNextRound=false, varför: t.ex. "plateau", "no-general-improvement"
+runNextRound         [boolean]  true | false — om nästa runda ska köras (inom samma pool)
+stopReason           [string]  Om runNextRound=false, varför: t.ex. "pool-exhausted", "no-sources-available"
 networkErrorAnalysis [object]  Nätverksfel-analys för denna runda (endast om network-error-fail finns):
                               {
                                 "totalNetworkErrors": N,
@@ -552,24 +552,29 @@ networkErrorClassification [object]  Nätverksfel-klassificering (endast om netw
 
 ---
 
-## 7. Rapporternas relation till fail-round-logiken
+## 7. Rapporternas relation till dynamisk pool-modell (UPPDATERAD 2026-04-11)
 
-### Fail-round styr vilka källor som analyseras
+### Poollogik styr vilka källor som analyseras
 
-123-loopen arbetar på en fast failmängd:
+Den dynamiska testpoolen styr vilka källor som analyseras i varje runda:
 
 ```
-batch körs → postTestC-Fail-round1 → 123-runda-1 → förbättring
-  → re-run på samma failmängd → postTestC-Fail-round2 → 123-runda-2
-    → re-run → postTestC-Fail-round3 → 123-runda-3 → postTestC-Fail
+Runda 1: 10 sources → exitvillkor → kvarvarande pool → refill (om < 10)
+  → C4-AI-analys → förbättring (eventuellt)
+  → Runda 2
+
+Runda 2: kvarvarande + nytillagda → exitvillkor → kvarvarande pool → refill
+  → C4-AI-analys → förbättring (eventuellt)
+  → Runda 3
+
+Runda 3: kvarvarande + nytillagda → exitvillkor → sources → postTestC-UI/A/B/D/manual-review
 ```
 
 **Regler:**
-- Ny batch får INTE blandas in mitt i förbättringsloopen
-- `postTestC-Fail-round1` är startpunkten för 123-loopen efter batch-011
-- `batch-state.jsonl` och `postTestC-Fail-round*.jsonl` är olika saker:
-  - `batch-state.jsonl` styr vilket batch-nummer som körs
-  - `postTestC-Fail-round*.jsonl` är källan för förbättringsarbete
+- Refill får endast ske **mellan rundor**, aldrig mitt i en runda
+- Sources som lämnat poolen får inte återkomma i samma testkörning
+- `postB-preC` är den enda inkommande poolen för refill
+- `postTestC-manual-review` ersätter alla tidigare fail-restkö-namn
 
 ---
 

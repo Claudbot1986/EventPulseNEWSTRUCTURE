@@ -149,26 +149,26 @@ Det viktiga är att batchen blir den tydliga arbetsenheten.
 
 ---
 
-## 6. Inkommande pool
+## 6. Inkommande pool (UPPDATERAD 2026-04-11)
 
-Den enda inkommande poolen i denna fas är:
-
-- `postB-preC`
+**Den enda inkommande poolen för refill av den aktiva testpoolen är `postB-preC`.**
 
 Inkommande pool ska hållas hel. Batchmaker ska välja arbetsmängden från poolen, inte tömma eller skriva om canonical source-data.
 
 ---
 
-## 7. Batchmaker
+## 7. Batchmaker (UPPDATERAD 2026-04-11)
 
 ## Mål
 
-Batchmaker ska skapa en **manuell testbatch om 10 källor** från `postB-preC`.
+Batchmaker ska fylla den aktiva testpoolen till 10 sources från `postB-preC`:
+- Vid initialt skapande: välj 10 eligible C-källor
+- Vid refill (mellan rundor): fyll på med nya eligible C-källor tills poolen har 10
 
 ## Krav
 
 Batchmaker får inte bara ta första 10.
-Den ska försöka skapa en **avsiktligt blandad och lärandenyttig batch**.
+Den ska försöka skapa en **avsiktligt blandad och lärandenyttig pool**.
 
 Det betyder att Batchmaker, så långt det går med generella signaler, ska försöka få spridning i till exempel:
 
@@ -181,7 +181,7 @@ Det betyder att Batchmaker, så långt det går med generella signaler, ska för
 
 ### Viktig nyans
 
-Batchmaker ska inte påstå att batchen är objektivt perfekt representativ.
+Batchmaker ska inte påstå att poolen är objektivt perfekt representativ.
 Den ska vara **avsiktligt blandad och rimligt varierad** för lärande.
 
 ## Batchmaker får inte
@@ -189,7 +189,8 @@ Den ska vara **avsiktligt blandad och rimligt varierad** för lärande.
 - ändra canonical source-sanning
 - skriva om `sources/`
 - routea direkt till produktion
-- smuggla in AI-beslut som batchurvalssanning
+- smuggla in AI-beslut som poolurvalssanning
+- fylla på från andra källor än `postB-preC`
 
 ---
 
@@ -270,7 +271,7 @@ Tillåtna värden:
 
 ---
 
-## 10. Testutfallsköer
+## 10. Testutfallsköer (UPPDATERAD 2026-04-11)
 
 Efter C1 → C2 → C3 ska varje source hamna i **exakt en** testutfallskö.
 
@@ -280,10 +281,9 @@ Efter C1 → C2 → C3 ska varje source hamna i **exakt en** testutfallskö.
 - `postTestC-A`
 - `postTestC-B`
 - `postTestC-D`
-- `postTestC-Fail-round1`
-- `postTestC-Fail-round2`
-- `postTestC-Fail-round3`
-- `postTestC-Fail`
+- `postTestC-manual-review`
+
+**`postTestC-manual-review` ersätter alla tidigare restkö-namn** (inklusive `postTestC-Fail`, `postTestC-Fail-round1/2/3` som slutliga lager).
 
 ### Betydelse
 
@@ -307,54 +307,49 @@ Detta är endast testobservation.
 Sourcen verkar med stark signal vara bättre kandidat för D.
 Detta är endast testobservation.
 
-#### `postTestC-Fail-round1`
+#### `postTestC-manual-review`
 
-Sourcen misslyckades i första batchrundan.
-
-#### `postTestC-Fail-round2`
-
-Sourcen misslyckades igen efter första förbättringsvarvet.
-
-#### `postTestC-Fail-round3`
-
-Sourcen misslyckades igen efter andra förbättringsvarvet.
-
-#### `postTestC-Fail`
-
-Slutligt restlager efter tre kontrollerade rundor.
-Detta är fortfarande inte H.
+Source har deltagit i 3 rundor utan events och utan fastställd A/B/D-routing.
+Kräver manuell handläggning. Ersätter alla tidigare fail-restkö-namn.
 
 ---
 
-## 11. Round-logik
+## 11. Round-logik (UPPDATERAD 2026-04-11)
 
-### Round 1
+**DENNA MODELL ERSÄTTER ALLA TIDIGARE FORMULERINGAR OM "SAMMA 10 KÄLLOR GENOM TRE RUNDOR".**
 
-- Batchmaker väljer 10 källor från `postB-preC`
-- batchen körs genom `C1 → C2 → C3`
-- varje source får resultatfält
-- varje source hamnar i exakt en testutfallskö
-- fail-fallen från just denna batch går till `postTestC-Fail-round1`
+### Grundmodell
 
-### Round 2
+- Aktiv testpool: max 10 C-källor
+- Refill-pool: endast `postB-preC`
+- Per source: `roundsParticipated` (max 3)
+- Refill: endast mellan rundor, aldrig mitt i runda
 
-- endast fail-fallen från **samma batch** analyseras
-- C4-AI används för analys och förbättringsförslag
-- endast små generella förbättringar får göras
-- samma failmängd körs igen genom C1 → C2 → C3
-- kvarvarande misslyckanden går till `postTestC-Fail-round2`
+### Per-source exitvillkor
 
-### Round 3
+| Villkor | Åtgärd |
+|---------|--------|
+| events hittades | → `postTestC-UI` |
+| A-signal (hög konfidens) | → `postTestC-A` |
+| B-signal (hög konfidens) | → `postTestC-B` |
+| D-signal (hög konfidens) | → `postTestC-D` |
+| 3 rundor utan events | → `postTestC-manual-review` |
 
-- samma princip igen
-- samma failmängd analyseras
-- endast generella förbättringar
-- omkörning på samma failmängd
-- kvarvarande går till `postTestC-Fail-round3`
+### Rundflöde
 
-### Slutligt restlager
+**Runda N:**
+- Kör C1 → C2 → C3 på alla kvarvarande aktiva sources
+- Varje source hamnar i exakt en utfallskö
+- Sources som lämnar poolen ersätts inte förrän mellan rundor
 
-- källor som fortfarande misslyckas efter tre kontrollerade rundor går till `postTestC-Fail`
+**Mellan rundor:**
+- Beräkna nya aktiva poolstorlek
+- Om pool < 10: Batchmaker fyller på med eligible sources från `postB-preC`
+- Sources som redan lämnat poolen får inte återkomma
+- poolRoundNumber += 1
+
+**Upprepning:**
+- Steg 1–2 upprepas tills alla aktiva sources lämnat poolen eller nått 3 rundor
 
 ---
 
