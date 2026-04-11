@@ -757,6 +757,106 @@ Innan 123 får föreslå routing eller verktygsförbättring måste nätverksfel
 | `likely_requires_A_or_B` | Sannolikt A/B-signal | **Ja** — routing till A/B | Ej aktuellt |
 | `unclear_network_failure` | Oklart | Nej — kräver mer diagnostik | Nej — oklart |
 
+### Gränsdragning: `http_403_problem` vs `blocked_or_fetch_environment_problem`
+
+**Standardregel:** `http_403_problem` är standardklassen när vi ENBART vet att target svarade 403.
+
+**Mer specifik klassning kräver mer evidens.**
+
+#### `http_403_problem` — STANDARD (standardklassning vid osäkerhet)
+
+- **Kärnfrågan:** Vilken är den mest sannolika orsaken till 403:an?
+- **Standardklassning:** `http_403_problem`
+- **När välja denna:** När vi inte har starkare bevis för en specifik orsak.
+- **Typiska exempel:**
+  - Vi får 403 och ingen annan information
+  - Vi får 403 men vet inte om det beror på blockering, auth, geo-restriction, eller något annat
+- **Typiska icke-exempel:**
+  - 403 PLUS bot-detektionssida i body
+  - 403 PLUS explicit User-Agent-blockering i headers
+  - 403 PLUS att annan fetcher (t.ex. vanilla curl) får 200
+
+#### `blocked_or_fetch_environment_problem` — SPECIFIK (kräver starkare evidens)
+
+- **Kärnfrågan:** Blockerar target aktivt VÅR SPECIFIKA fetcher baserat på vår signatur?
+- **Standardklassning:** `blocked_or_fetch_environment_problem`
+- **När välja denna:** När det finns konkret evidens för att target specifikt blockerar vår fetcher.
+- **Typiska exempel:**
+  - Bot-detektionssida i response body (inte bara 403, utan en faktisk bot-block-sida)
+  - Response headers som explicit nekar vår User-Agent eller anger bot-policy
+  - Samma URL ger 200 med annan User-Agent men 403 med vår
+  - Känd anti-bot-tjänst identifierad (Cloudflare, PerimeterX, etc.)
+- **Typiska icke-exempel:**
+  - 403 utan body-analysis
+  - 403 från en sajt vi aldrig testat med annan fetcher
+  - Vag misstanke utan konkret evidens
+- **Evidens som krävs för denna klassning:**
+  1. Response body visar bot-detektions- eller blockeringssida
+  2. ELLER response headers innehåller explicit blockering av vår fetcher-signatur
+  3. ELLER annan fetcher (vanilla curl, annan IP) får 200 på samma URL
+  4. **Utan denna evidens: använd `http_403_problem`**
+
+### Gränsdragning: `timeout_problem` vs `blocked_or_fetch_environment_problem` vs `environment_or_tooling_failure`
+
+**Standardregel:** `timeout_problem` är standardklassen när vi ENBART ser timeout utan starkare bevis.
+
+**Tre helt olika nivåer — olika evidenskrav:**
+
+#### `timeout_problem` — STANDARD (standardklassning vid osäkerhet)
+
+- **Kärnfrågan:** Vad är den mest sannolika orsaken till timeout?
+- **Standardklassning:** `timeout_problem`
+- **När välja denna:** När timeout observeras utan starkare bevis för specifik orsak.
+- **Typiska exempel:**
+  - Timeout utan annan information
+  - Timeout på en sajt som normalt fungerar — möjligen tillfällig belastning
+  - Timeout som inträffar enstaka gång, inte reproducerbart
+- **Typiska icke-exempel:**
+  - Timeout PLUS tydlig bot-signatur i headers
+  - Timeout PLUS att timeout sker på identiskt sätt varje gång
+  - Timeout PLUS att alternativ fetcher fungerar
+
+#### `blocked_or_fetch_environment_problem` — SPECIFIK (kräver starkare evidens)
+
+- **Kärnfrågan:** Blockerar target aktivt VÅR SPECIFIKA fetcher genom att timeouta?
+- **Standardklassning:** `blocked_or_fetch_environment_problem`
+- **När välja denna:** När timeout har egenskaper som tyder på aktiv blockering av vår fetcher.
+- **Typiska exempel:**
+  - Timeout på exakt samma sätt varje försök (statiskt, inte flaky)
+  - Timeout PLUS att liknande sajter (annan domän, samma mönster) också timeoutar
+  - Timeout PLUS response headers som tyder på bot-detektion
+- **Typiska icke-exempel:**
+  - Enstaka timeout utan reproducerbarhet
+  - Timeout på en sajt som normalt är stabil
+- **Evidens som krävs för denna klassning:**
+  1. Timeout är reproducerbar (inte flaky/tillfällig)
+  2. OCH samma mönster på 2+ sajter (generellt) ELLER stark bot-signatur i response
+  3. **Utan denna evidens: använd `timeout_problem`**
+
+#### `environment_or_tooling_failure` — SPECIFIK (kräver starkare evidens)
+
+- **Kärnfrågan:** Är VÅR egen miljö eller verktygskonfiguration problemet?
+- **OBS:** Detta är en **Nivå 1-primärklass**, inte en Nivå 2-nätverksfel-underklass.
+  - `environment_or_tooling_failure` (Nivå 1) = VÅR miljö trasig
+  - `blocked_or_fetch_environment_problem` (Nivå 2 under `network_failure`) = MÅL-sajten blockerar VÅR fetcher
+  - **Vilseledande likhet:** Båda har "environment" i namnet men handlar om helt olika saker.
+- **Standardklassning:** `environment_or_tooling_failure`
+- **När välja denna:** När det finns tydlig evidens att vår egen miljö eller verktygskonfiguration är problemet.
+- **Typiska exempel:**
+  - Proxy timeout — vår proxy returnerar timeout, inte target
+  - SSL handshake failure — vår SSL-stack kan inte ansluta överhuvudtaget
+  - DNS resolution failure i vår miljö — egen DNS-mislyckande
+  - Headless browser crash — vårt verktyg kraschar, inte target svarar fel
+- **Typiska icke-exempel:**
+  - Target svarar långsamt → `timeout_problem`
+  - Target blockerar vår fetcher → `blocked_or_fetch_environment_problem`
+  - Vi vet inte varför timeout uppstod → `timeout_problem`
+- **Evidens som krävs för denna klassning:**
+  1. Felet uppstår på target som normalt fungerar från annan miljö
+  2. OCH felmeddelandet pekar på vår stack (t.ex. "ECONREFUSED", proxy error, SSL error)
+  3. OCH alternativ miljö (annan IP, annan maskin) kan nå samma target
+  4. **Utan denna evidens: använd `timeout_problem` eller `blocked_or_fetch_environment_problem`**
+
 ### Vad C4-AI måste avgöra för varje nätverksfel
 
 1. **Vad sa felet?** (t.ex. "DNS failure", "ETIMEDOUT", "certificate has expired")
