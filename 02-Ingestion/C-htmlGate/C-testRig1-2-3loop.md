@@ -591,6 +591,32 @@ Ett heltal som beskriver vilken runda testpoolen just genomgår (1, 2, 3, ...).
 - `postTestC-D` — D-signal (hög konfidens)
 - `postTestC-manual-review` — 3 rundor utan events (ersätter alla tidigare restkö-namn)
 
+#### Round-resultat som separat spårnings- och rapporteringslager
+
+**VIKTIGT: Exit-köer ersätter inte round-begreppet.**
+
+De fem exit-kösnamnen ersätter de gamla statiska `postTestC-Fail-round1/2/3`-köerna som **primär loopmodell**.
+
+**Men round-1/2/3 som analytiskt begrepp finns fortfarande kvar och är obligatoriskt.**
+
+Det betyder:
+
+| Vad som ERSÄTTS | Vad som BESTÅR |
+|-----------------|----------------|
+| Statisk batch: samma 10 källor går 3 rundor tillsammans | Round-1/2/3 som **spårningslager** — varje source har eget `roundsParticipated` |
+| Fasta `postTestC-Fail-round1/2/3`-köer som pipeline-steg | Round-1/2/3 som **rapporteringslager** — varje runda dokumenteras separat (Lag 3: Rundrapport) |
+| Fail-kö-modellen som primär loopmekanism | Round-1/2/3 som **jämförelselager** — före/efter per runda krävs för att verifiera förbättring |
+| | Round-1/2/3 som **erfarenhetsbankslager** — C4-AI-lärdomar byggs på round-specifik data |
+
+**Konkreta exempel på vad som fortfarande gäller:**
+- Varje source ska kunna rapporteras: "failade i round 1", "failade i round 2", "failade i round 3"
+- C4-AI-analysen görs **per runda** och dokumenteras i `round-N-report.md`
+- Före/efter-jämförelse görs **mellan round N och round N+1**
+- Erfarenhetsbanken struktureras med round-specifik data: "round 1: 7/10 fail, round 2: 5/10 fail, round 3: 3/10 fail"
+- Varje source i källrapporten har `roundNumber: 1|2|3` — detta fält försvinner inte
+
+**Därför:** Dynamisk poolmodell ≠ bortfall av round-spårning. Poolmodellen styr **vilka källor som analyseras**. Round-logiken styr **hur vi mäter och rapporterar framsteg**.
+
 #### Exempel: Poolens livscykel
 
 ```
@@ -656,7 +682,7 @@ Det får inte wander across unrelated domains eller hitta på architecture chang
 When the user invokes `123`, the agent must:
 
 1. read the relevant C-test documentation first
-2. inspect the current fail-round input only (postTestC-Fail-round1/2/3)
+2. inspect the current fail-set from the active test pool (the sources that failed in the current round)
 3. use AI analysis on fail cases to identify patterns across C1, C2 and C3 results
 4. compare C1/C2/C3 failure distributions to find root causes
 5. identify reusable, cross-site patterns from the AI analysis

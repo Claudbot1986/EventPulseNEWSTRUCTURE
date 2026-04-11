@@ -554,9 +554,37 @@ networkErrorClassification [object]  Nätverksfel-klassificering (endast om netw
 
 ## 7. Rapporternas relation till dynamisk pool-modell (UPPDATERAD 2026-04-11)
 
-### Poollogik styr vilka källor som analyseras
+### Poollogik styr vilka källor som analyseras — men round-spårningen försvinner inte
 
-Den dynamiska testpoolen styr vilka källor som analyseras i varje runda:
+Den dynamiska testpoolen styr vilka källor som analyseras i varje runda.
+
+**Men den dynamiska poolmodellen ersätter inte round-1/2/3 som spårnings-, rapporterings- och erfarenhetsbanksbegrepp.**
+
+Detta är en viktig distinktion:
+
+| Gammal modell (statisk batch) | Ny modell (dynamisk pool) | Round-begreppet |
+|-------------------------------|--------------------------|-----------------|
+| Samma 10 källor走 alla 3 rundor tillsammans | Sources lämnar poolen så snart exitvillkor nås | **Fortsatt aktivt** — varje source räknar sina egna rundor |
+| Fasta `postTestC-Fail-round1/2/3`-köer som fysisk pipeline | Enskilda exit-köer (postTestC-UI/A/B/D/manual-review) | **Fortsatt aktivt** — Lag 3-rundrapport krävs för varje runda |
+| Fail-kö-modellen som primär loopmekanism | Dynamisk refill från postB-preC | **Fortsatt aktivt** — före/efter-jämförelse görs per runda |
+
+**Vad detta betyder för rapporteringen:**
+
+- Varje källrapport innehåller `roundNumber: 1|2|3` — detta fält är obligatoriskt och försvinner inte
+- Varje batchrapport innehåller `roundNumber` — detta försvinner inte
+- Rundrapport (Lag 3) skapas **per runda** — inte bara om samma sources körde alla tre
+- C4-AI-lärrapporten innehåller round-specifik data
+- Erfarenhetsbanken struktureras med round-specifik data
+
+**Exempel: Dynamisk pool — samma source i tre rapporter:**
+```
+batch-011, källa "sthlm-folkhogskola":
+  - source-reports/sthlm-folkhogskola.md: roundNumber=1, outcomeType=fail
+  - source-reports/sthlm-folkhogskola.md: roundNumber=2, outcomeType=fail
+  - source-reports/sthlm-folkhogskola.md: roundNumber=3, finalDecision=postTestC-manual-review
+```
+
+Utan round-specifik spårning: ingen erfarenhetsbank, inga före/efter-jämförelser, inga C4-AI-lärdomar per runda.
 
 ```
 Runda 1: 10 sources → exitvillkor → kvarvarande pool → refill (om < 10)

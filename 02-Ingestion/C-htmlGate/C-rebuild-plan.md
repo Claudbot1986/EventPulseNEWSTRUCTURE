@@ -283,7 +283,10 @@ Efter C1 → C2 → C3 ska varje source hamna i **exakt en** testutfallskö.
 - `postTestC-D`
 - `postTestC-manual-review`
 
-**`postTestC-manual-review` ersätter alla tidigare restkö-namn** (inklusive `postTestC-Fail`, `postTestC-Fail-round1/2/3` som slutliga lager).
+**`postTestC-manual-review` ersätter alla tidigare restkö-namn** (inklusive `postTestC-Fail`, `postTestC-Fail-round1/2/3` som fysiska pipeline-köer).
+
+**Men round-1/2/3 som spårnings-, rapporterings- och erfarenhetsbanksbegrepp finns fortfarande kvar.**
+Se avsnitt 11 nedan för detaljer.
 
 ### Betydelse
 
@@ -316,7 +319,36 @@ Kräver manuell handläggning. Ersätter alla tidigare fail-restkö-namn.
 
 ## 11. Round-logik (UPPDATERAD 2026-04-11)
 
-**DENNA MODELL ERSÄTTER ALLA TIDIGARE FORMULERINGAR OM "SAMMA 10 KÄLLOR GENOM TRE RUNDOR".**
+**DENNA MODELL ERSÄTTER ALLA TIDIGARE FORMULERINGAR OM "SAMMA 10 KÄLLOR GENOM TRE RUNDOR" SOM PRIMÄR LOOPMEKANISM.**
+
+**Men round-1/2/3 som spårnings-, rapporterings-, jämförelse- och erfarenhetsbanksbegrepp finns fortfarande kvar — de ersätts inte av den dynamiska poolmodellen.**
+
+### Vad som ersattes vs vad som består
+
+| Äldre modell | Ny modell | Round-begreppet |
+|-------------|-----------|-----------------|
+| Statisk batch: samma 10 källor走 alla 3 rundor tillsammans | Dynamisk pool: sources lämnar när exitvillkor nås | **Består** — varje source har eget `roundsParticipated` (max 3) |
+| Fasta `postTestC-Fail-round1/2/3`-köer som pipeline-steg | Enskilda exit-köer (postTestC-UI/A/B/D/manual-review) | **Består** — round 1/2/3 som rapporteringslager |
+| Fail-kö-modellen som primär loopmekanism | Dynamisk refill från postB-preC | **Består** — före/efter-jämförelse per runda |
+
+### Round-resultat som obligatoriskt spårningslager
+
+**Varje source måste kunna följas genom sina rundor.** Detta gäller även i den dynamiska poolmodellen:
+
+- `roundNumber` är obligatoriskt fält i källrapporten (Lag 2)
+- `roundNumber` är obligatoriskt fält i batchrapporten (Lag 1)
+- Rundrapport (Lag 3) skapas för varje round 1, 2 och 3
+- C4-AI-lärrapporten (Lag 4) innehåller round-specifik data
+
+**Exempel: Samma source i tre rapporter:**
+```
+Källa "sthlm-folkhogskola" i batch-011:
+  - round-1-report.md: roundNumber=1, fail (extraction_failure)
+  - round-2-report.md: roundNumber=2, fail (extraction_failure)
+  - round-3-report.md: roundNumber=3, finalDecision=postTestC-manual-review
+```
+
+utan denna spårning skulle erfarenhetsbanken och före/efter-jämförelserna förloras.
 
 ### Grundmodell
 
