@@ -18,6 +18,43 @@
 **Om batch-state INTE existerar eller status = completed:**
 - Då är denna current-task giltig som startpunkt
 
+---
+
+## 🚫 HARD SCOPE BOUNDARY — 123 ÄR EN C-TESTRIGG-LOOP
+
+**DENNA REGLER ÄR BINDANDE. 123 FÅR ALDRIG VERKA UTANFÖR C-SPÅRET.**
+
+### 🚫 VAD 123 INTE FÅR GÖRA (EXPLICITA FÖRBUD)
+
+1. **Ändra `02-Ingestion/scheduler.ts`** — inga som helst ändringar
+2. **Integrera D-renderGate i scheduler eller produktionsflöden** — D är separat
+3. **Röra preUI/UI-produktionsflöden** — normalizer, BullMQ, Supabase, UI-queue
+4. **Bygga A/B/D/H-integrering i produktionsflöden** — inte 123:s ansvar
+5. **Byta batch mitt i en runda** — arbeta på exakt samma failmängd
+6. **Starta ny batch utan uttryckligt uppdrag** — batchar definierade via batch-maker
+7. **Göra ändringar utanför C-testRiggen** — ingenting i scheduler, runtime (utom rapporter), services/ingestion (utom C-htmlGate)
+
+### ✅ VAD 123 ENBART FÅR GÖRA
+
+- C1/C2/C3/C4-AI förbättring inom `02-Ingestion/C-htmlGate/`
+- Små generella ändringar i C-komponenter
+- Analysera samma failmängd (`postTestC-Fail-round*.jsonl`)
+- Skriva rapporter till `C-htmlGate/reports/batch-{N}/`
+
+### 🎯 SCOPE-CHECKLISTA
+
+```
+Uppgift berör scheduler.ts?:           [JA/NEJ] → OM JA: STOPP
+Uppgift berör D-renderGate?:          [JA/NEJ] → OM JA: STOPP
+Uppgift berör preUI/UI-flöden?:       [JA/NEJ] → OM JA: STOPP
+Uppgift berör A/B/H-integration?:     [JA/NEJ] → OM JA: STOPP
+Uppgift är inom C-testRiggen?:        [JA/NEJ] → OM NEJ: STOPP
+```
+
+**Om ja på någon av de fyra första frågorna → uppgiften är förbjuden för 123.**
+
+---
+
 ## Purpose
 This file defines the CURRENT task for the AI.
 It is the ONLY valid task.
@@ -219,12 +256,14 @@ Therefore:
 
 - Network path is VIABLE for sources with accessible APIs (like berwaldhallen)
 - HTML-fallback still needed for sources without APIs (like kulturhuset)
-- Scheduler needs update to use network_event_extraction when likely_event_api > 0
 - Generalization: Tixly API format may apply to other Swedish venues
 
 ### Next Steps
 
-1. Integrate network_event_extraction into scheduler.ts
-2. Test network path for other Tixly-based venues
-3. Continue HTML path validation for non-API sources
-4. Measure: how many sources have viable APIs vs need HTML-fallback
+> **VIKTIGT:** Punkterna nedan är dokumenterade observationer — de ligger UTANFÖR 123:s scope.
+> Scheduler-integrering och produktionsflöden är separata uppdrag, inte 123-arbete.
+
+1. ~~Integrate network_event_extraction into scheduler.ts~~ ← **FORBUDEN FÖR 123**
+2. Test network path for other Tixly-based venues ← separat uppdrag
+3. Continue HTML path validation for non-API sources ← 123:s jobb
+4. Measure: how many sources have viable APIs vs need HTML-fallback ← 123:s jobb (inom C-testRiggen)

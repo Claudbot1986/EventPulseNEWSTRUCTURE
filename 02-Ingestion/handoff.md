@@ -2,6 +2,39 @@
 
 ---
 
+## 🚫 HARD SCOPE BOUNDARY — 123 ÄR EN C-TESTRIGG-LOOP
+
+**DENNA REGLER ÄR BINDANDE. 123 FÅR ALDRIG VERKA UTANFÖR C-SPÅRET.**
+
+### 🚫 VAD 123 INTE FÅR GÖRA
+
+1. **Ändra `02-Ingestion/scheduler.ts`** — förbjudet
+2. **Integrera D-renderGate i scheduler eller produktionsflöden** — D är separat
+3. **Röra preUI/UI-produktionsflöden** — normalizer, BullMQ, Supabase, UI-queue
+4. **Bygga A/B/D/H-integrering i produktionsflöden** — inte 123:s ansvar
+5. **Byta batch mitt i en runda** — arbeta på exakt samma failmängd
+6. **Starta ny batch utan uttryckligt uppdrag**
+7. **Göra ändringar utanför C-testRiggen** — endast `02-Ingestion/C-htmlGate/` och `C-htmlGate/reports/`
+
+### ✅ VAD 123 ENBART FÅR GÖRA
+
+- C1/C2/C3/C4-AI förbättring inom `02-Ingestion/C-htmlGate/`
+- Små generella ändringar i C-komponenter
+- Analysera samma failmängd (`postTestC-Fail-round*.jsonl`)
+- Skriva rapporter till `C-htmlGate/reports/batch-{N}/`
+
+### 🎯 SCOPE-CHECKLISTA
+
+```
+Uppgift berör scheduler.ts?:           [JA/NEJ] → OM JA: STOPP
+Uppgift berör D-renderGate?:          [JA/NEJ] → OM JA: STOPP
+Uppgift berör preUI/UI-flöden?:       [JA/NEJ] → OM JA: STOPP
+Uppgift berör A/B/H-integration?:     [JA/NEJ] → OM JA: STOPP
+Uppgift är inom C-testRiggen?:        [JA/NEJ] → OM NEJ: STOPP
+```
+
+---
+
 ## Nästa-steg-analys 2026-04-06 (loop 66 — efter batch 003)
 
 ### Vad hände denna loop
