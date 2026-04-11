@@ -1,7 +1,10 @@
 /**
  * C-htmlGate — Dynamic Test Pool Runner
  *
- * Implements the new canonical model (2026-04-11):
+ * STATUS: AKTIV EXPERIMENTELL RUNNER / PENDING VERIFICATION
+ * Får INTE beskrivas som "canonical" förrän fullständig verifiering är klar.
+ *
+ * Implementerar den nya dynamiska testpoolmodellen (2026-04-11):
  * - Dynamic test pool of max 10 active C-sources
  * - Each source has its own roundsParticipated (max 3)
  * - Sources leave the pool immediately when exit condition is met
@@ -20,6 +23,16 @@
  * - postTestC-B → B-signal
  * - postTestC-D → D-signal
  * - postTestC-manual-review → after 3 rounds without resolution
+ *
+ * State persistence:
+ * - Pool state saved to reports/batch-{N}/pool-state.json after each round
+ * - Can resume from saved state on next run
+ * - Batch completion marked in reports/batch-state.jsonl
+ *
+ * C4-AI gap:
+ * - C4-AI is a PLACEHOLDER — no real AI analysis is connected
+ * - c4-ai-learnings.md is generated with fail-data but no AI analysis
+ * - See c4-ai-learnings.md for what needs to be connected
  */
 
 import { discoverEventCandidates, screenUrl, evaluateHtmlGate } from './index';
@@ -116,6 +129,69 @@ interface PoolState {
   exited: { source: PoolSource; decision: string; result: CResult | null }[];
   failed: PoolSource[]; // still in pool, failed this round
   newlyRefilled: PoolSource[];
+  allExitedIds: string[]; // tracks all sources that ever left the pool
+}
+
+// ---------------------------------------------------------------------------
+// Pool State Persistence
+// ---------------------------------------------------------------------------
+
+const POOL_STATE_FILE = (batchNum: number) => join(REPORTS_DIR, `batch-${batchNum}`, 'pool-state.json');
+
+interface PersistedPoolState {
+  poolRoundNumber: number;
+  activePool: PoolSource[];
+  exited: { source: PoolSource; decision: string; result: CResult | null }[];
+  allExitedIds: string[];
+  lastSaved: string;
+}
+
+function savePoolState(state: PoolState, batchNum: number): void {
+  const persisted: PersistedPoolState = {
+    poolRoundNumber: state.poolRoundNumber,
+    activePool: state.activePool,
+    exited: state.exited,
+    allExitedIds: Array.from(new Set(state.exited.map(e => e.source.sourceId))),
+    lastSaved: new Date().toISOString(),
+  };
+  const path = POOL_STATE_FILE(batchNum);
+  mkdirSync(dirname(path), { recursive: true });
+  writeFileSync(path, JSON.stringify(persisted, null, 2));
+  console.log(`[State] Pool state saved to batch-${batchNum}/pool-state.json`);
+}
+
+function loadPoolState(batchNum: number): PoolState | null {
+  const path = POOL_STATE_FILE(batchNum);
+  try {
+    const raw = readFileSync(path, 'utf8');
+    const persisted: PersistedPoolState = JSON.parse(raw);
+    console.log(`[State] Loaded pool state from batch-${batchNum}/pool-state.json (round ${persisted.poolRoundNumber})`);
+    return {
+      poolRoundNumber: persisted.poolRoundNumber,
+      activePool: persisted.activePool,
+      exited: persisted.exited,
+      failed: [],
+      newlyRefilled: [],
+      allExitedIds: persisted.allExitedIds,
+    };
+  } catch {
+    return null;
+  }
+}
+
+function readBatchState(): { currentBatch: number; status: string } | null {
+  try {
+    const raw = readFileSync(join(REPORTS_DIR, 'batch-state.jsonl'), 'utf8').trim();
+    if (!raw) return null;
+    return JSON.parse(raw);
+  } catch {
+    return null;
+  }
+}
+
+function writeBatchStateEntry(entry: Record<string, unknown>): void {
+  const path = join(REPORTS_DIR, 'batch-state.jsonl');
+  appendFileSync(path, JSON.stringify(entry) + '\n');
 }
 
 // ---------------------------------------------------------------------------
@@ -388,13 +464,13 @@ async function runSourceOnPool(source: PoolSource, roundNum: number): Promise<CR
     const c1Start = Date.now();
     const c1 = await screenUrl(targetUrl);
     result.c1 = {
-      verdict: c1.verdict,
+      verdict: c1.categorization, // PreGateResult uses 'categorization', not 'verdict'
       likelyJsRendered: c1.likelyJsRendered,
       timeTagCount: c1.timeTagCount,
       dateCount: c1.dateCount,
       duration: Date.now() - c1Start,
     };
-    console.log(`C1: likelyJsRendered=${c1.likelyJsRendered} verdict=${c1.verdict}`);
+    console.log(`C1: likelyJsRendered=${c1.likelyJsRendered} verdict=${c1.categorization}`);
 
     // C2 — HTML Gate
     const c2Start = Date.now();
@@ -700,16 +776,52 @@ ${round.exits.map(e => `- ${e.source.sourceId}: ${e.decision}`).join('\n')}
     roundIdx++;
   }
 
-  // --- Layer 4: C4-AI Learnings (placeholder — requires AI analysis) ---
+  // --- Layer 4: C4-AI Learnings ---
+  // NOTE: C4-AI is a PLACEHOLDER in this implementation.
+  // The runner produces the structure for this report but no AI analysis is connected.
+  // What C4-AI SHOULD receive: all fail-type sources from this batch, grouped by fail pattern
+  // What C4-AI SHOULD output: structured learnings per C-testRig-reporting.md Lag 4 spec
+  const failResults = roundResults.flatMap(r => r.results).filter(r => r.outcomeType === 'fail');
   const c4Report = `
 ## C4-AI Learnings batch-${batchNum}
 
-| Field | Value |
-|-------|-------|
-| batchId | batch-${batchNum} |
-| observedPattern | (not yet analyzed — requires AI step) |
-| hypothesis | (not yet formulated) |
-| decision | unclear |
+**STATUS: IMPLEMENTATION GAP — C4-AI NOT YET CONNECTED**
+
+### Vad C4-AI borde göra
+C4-AI ska analysera fail-mängden från rundan och ge strukturerade lärdomar enligt C-testRig-reporting.md Lag 4.
+
+### C4-AI-input (vad som finns)
+- Antal fail: ${failResults.length}
+${failResults.length > 0 ? failResults.map(r => `  - ${r.sourceId}: failType=${r.failType ?? 'unknown'}, evidence="${r.evidence}", winningStage=${r.winningStage}`).join('\n') : '  (ingen fail-data ännu)'}
+
+### C4-AI-output som borde produceras
+- observedPattern: string
+- hypothesis: string
+- proposedGeneralChange: string
+- changeApplied: string | null
+- whyGeneral: string
+- beforeSummary: string
+- afterSummary: string
+- sourcesImproved: string[]
+- sourcesUnchanged: string[]
+- sourcesWorsened: string[]
+- decision: "keep" | "revert" | "unclear"
+- learnedRule: string
+- confidence: "high" | "medium" | "low"
+- shouldBeReusedLater: "ja" | "nej" | "prövas-igen"
+- networkErrorClassification: object (per Lag 4 spec)
+
+### Nästa steg för C4-AI
+1. Anslut AI-analys till fail-mängden efter varje runda
+2. Mata in fail-typer, evidens och winningStage till AI
+3. Ta emot strukturerade learnings och spara i denna rapportfil
+4. Koppla learnings till erfarenhetsbanken
+
+### Krav för att C4-AI ska räknas som implementerad
+- AI tar emot fail-mängd och ger strukturerade learnings
+- Learnings sparas i denna fil efter varje runda
+- AI-resultat påverkar INTE enskilda källors utfall (AI är analys, inte extraktion)
+- AI får INTE fabricera events eller overrides measured evidence
 `.trim();
   writeFileSync(join(batchDir, 'c4-ai-learnings.md'), c4Report);
 
@@ -721,36 +833,49 @@ ${round.exits.map(e => `- ${e.source.sourceId}: ${e.decision}`).join('\n')}
 // ---------------------------------------------------------------------------
 
 async function main() {
-  const BATCH_NUM = 13; // Next batch number
+  // Read batch number from batch-state.jsonl, fallback to 13
+  const batchState = readBatchState();
+  const BATCH_NUM = batchState?.currentBatch ?? 13;
 
   console.log('='.repeat(60));
   console.log('DYNAMIC TEST POOL — NEW CANONICAL MODEL');
   console.log('='.repeat(60));
+  console.log(`Batch number: ${BATCH_NUM}`);
 
   // Step 0: Clear output queues
   clearOutputQueues();
 
-  // Step 1: Build initial pool
-  console.log('\n[Step 1] Building initial pool from postB-preC...');
-  const initial = buildInitialPool();
+  // Step 1: Check for existing pool state (resume scenario)
+  const savedState = loadPoolState(BATCH_NUM);
+  let state: PoolState;
+  let roundResults: { results: CResult[]; exits: { source: PoolSource; decision: string; result: CResult }[]; fails: PoolSource[] }[] = [];
 
-  if (!initial || initial.pool.length === 0) {
-    console.error('ERROR: No eligible sources in postB-preC. Aborting.');
-    return;
+  if (savedState && savedState.poolRoundNumber > 0) {
+    // Resume from saved state
+    console.log(`\n[Step 1] Resuming pool from saved state (round ${savedState.poolRoundNumber})`);
+    state = savedState;
+    // Round results will be loaded from the pool state later if needed
+  } else {
+    // Fresh start — build initial pool
+    console.log('\n[Step 1] Building initial pool from postB-preC...');
+    const initial = buildInitialPool();
+
+    if (!initial || initial.pool.length === 0) {
+      console.error('ERROR: No eligible sources in postB-preC. Aborting.');
+      return;
+    }
+
+    console.log(`  Selected ${initial.pool.length} sources (eligible in postB-preC: ${initial.eligibleInPrec})`);
+
+    state = {
+      poolRoundNumber: 0,
+      activePool: initial.pool,
+      exited: [],
+      failed: [],
+      newlyRefilled: [],
+      allExitedIds: [],
+    };
   }
-
-  console.log(`  Selected ${initial.pool.length} sources (eligible in postB-preC: ${initial.eligibleInPrec})`);
-
-  const state: PoolState = {
-    poolRoundNumber: 0,
-    activePool: initial.pool,
-    exited: [],
-    failed: [],
-    newlyRefilled: [],
-  };
-
-  const allExitedIds = new Set<string>();
-  const roundResults: { results: CResult[]; exits: { source: PoolSource; decision: string; result: CResult }[]; fails: PoolSource[] }[] = [];
 
   // Step 2: Run rounds
   while (state.activePool.length > 0 && state.poolRoundNumber < 3) {
@@ -759,10 +884,12 @@ async function main() {
     const roundOutput = await runPoolRound(state);
     roundResults.push(roundOutput);
 
-    // Update exited list
+    // Update exited list and allExitedIds
     for (const exit of roundOutput.exits) {
       state.exited.push(exit);
-      allExitedIds.add(exit.source.sourceId);
+      if (!state.allExitedIds.includes(exit.source.sourceId)) {
+        state.allExitedIds.push(exit.source.sourceId);
+      }
     }
 
     // Update active pool — only sources that stayed in pool
@@ -773,9 +900,12 @@ async function main() {
     console.log(`  Exited: ${state.exited.length}`);
     console.log(`  Newly exited this round: ${roundOutput.exits.length}`);
 
+    // Save pool state after each round
+    savePoolState(state, BATCH_NUM);
+
     // Step 3: Refill between rounds (if more rounds will follow)
     if (state.poolRoundNumber < 3 && state.activePool.length > 0) {
-      const refill = refillPool(state.activePool, new Set(state.activePool.map(s => s.sourceId)), allExitedIds);
+      const refill = refillPool(state.activePool, new Set(state.activePool.map(s => s.sourceId)), new Set(state.allExitedIds));
       if (refill.newSources.length > 0) {
         state.activePool.push(...refill.newSources);
         state.newlyRefilled = refill.newSources;
@@ -814,6 +944,20 @@ async function main() {
 
   // Write reports
   writeReports(state, roundResults, BATCH_NUM);
+
+  // Mark batch as completed in batch-state.jsonl
+  const completionEntry = {
+    batchId: `batch-${BATCH_NUM}`,
+    type: 'run-completion',
+    completedAt: new Date().toISOString(),
+    poolRoundNumber: state.poolRoundNumber,
+    totalExited: state.exited.length,
+    totalActive: state.activePool.length,
+    queueDistribution: queueSummary,
+    stopReason: state.poolRoundNumber >= 3 ? 'max-rounds-reached' : 'pool-exhausted',
+  };
+  appendFileSync(join(REPORTS_DIR, 'batch-state.jsonl'), JSON.stringify(completionEntry) + '\n');
+  console.log('\n[State] Batch completion recorded in batch-state.jsonl');
 
   console.log('\nDone.');
 }

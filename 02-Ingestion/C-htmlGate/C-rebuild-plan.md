@@ -460,9 +460,22 @@ En fil per batch. Obligatoriskt innehåll:
 
 ## 14. Förhållande till legacy batchspår
 
-### Ny aktiv runner (2026-04-11): `run-dynamic-pool.ts`
+### Ny primär kandidat (2026-04-11): `run-dynamic-pool.ts`
 
-Den nya canonical runnern för C-testRiggen är `run-dynamic-pool.ts`. Den implementerar:
+**Status: AKTIV EXPERIMENTELL RUNNER / PENDING VERIFICATION**
+
+`run-dynamic-pool.ts` är den **nya primära kandidaten** för C-testRiggen. Den implementerar:
+
+- Dynamisk testpool på max 10 aktiva C-källor
+- Per-source `roundsParticipated` (max 3)
+- Exitvillkor: events → UI, A/B/D-signal → A/B/D, 3 rundor utan lösning → manual-review
+- Refill endast mellan rundor, endast från `postB-preC`
+- Sources som lämnat poolen får inte återkomma
+- Rapportering på fyra nivåer: pool/batch, source, round, C4-AI
+
+**Mognadsgrad:** Experimental — round-1-körning verifierad (2026-04-11). Fullständig 3-rundersverifiering återstår. C4-AI är fortfarande placeholder.
+
+**Får INTE beskrivas som "canonical" förrän:** verifierad round-1 + refill + exit + state-persistens + C4-AI-hook är demonstrerade.
 
 - Dynamisk testpool på max 10 aktiva C-källor
 - Per-source `roundsParticipated` (max 3)
