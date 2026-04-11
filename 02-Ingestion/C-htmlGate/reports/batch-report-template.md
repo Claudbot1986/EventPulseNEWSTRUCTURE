@@ -1,49 +1,22 @@
 # C-htmlGate Batch {BATCH_N} Rapport
 
-**Document Type: TEMPLATE / PLANERAD**
-**Status: DOKUMENTERAD**
+**Document Type: HISTORICAL / LEGACY TEMPLATE**
+**Status: ALDRIG ANVÄND**
 
-> **VAD DETTA ÄR:** Mall för batch-rapporter.
-> **VAD DETTA INTE ÄR:** Faktisk körning. Användes aldrig i förbättringsloop-format.
+> **DENNA FIL ÄR HISTORISK. LÄS INTE DENNA FIL SOM AKTIV TEMPLATE.**
+>
+> **VAD DETTA ÄR:** En planerad mall för batch-rapporter.
+> **VAD DETTA INTE ÄR:** Användes aldrig i förbättringsloop-format.
+>
+> **Ersättande filer:**
 
-**Batch-ID:** batch-{BATCH_N}  
-**Datum:** {DATUM}  
-**Status:** {STATUS}
+| Behöver du... | Läs istället... |
+|---------------|-----------------|
+| Batch-workflow | [123.md](../123.md) |
+| Rapportering per batch | [C-rebuild-plan.md](../C-rebuild-plan.md) |
 
-## Översikt
+---
 
-| Metric | Värde |
-|--------|-------|
-| Sources i batch | {ANTAL} |
-| Före-events (totalt) | {FORE_TOTAL} |
-| Efter-events (totalt) | {EFTER_TOTAL} |
-| AI-analys genförbättring | {AI_IMPROVEMENT} |
-
-## Sources i denna batch
-
-| Källa | Före | Efter | Delta | AI-analys |
-|-------|------|-------|-------|-----------|
-| {SOURCES_TABLE_ROWS} |
-
-## AI-analys och modellförbättring
-
-### Generella mönster identifierade
-- {PATTERNS}
-
-### Förbättringar föreslagna
-- {IMPROVEMENTS}
-
-### Förbättringar implementerade
-- {IMPLEMENTED}
-
-### Site-specifika observationer (ej i C-lager)
-- {SITE_SPECIFIC}
-
-## Batch-koppling
-
-**Batchrapport:** `batch-{BATCH_N}-{DATUM}.md`  
-**Källrapporter:** `sources/{SOURCE_ID}.md` (en per källa)
-
-## Nästa steg
-
-- {NEXT_STEPS}
+**Historisk anmärkning:**
+- Mallen definierades men aldrig använd
+- Faktiska batch-rapporter finns i `batch-{N}/` mapparna som historiska referenser

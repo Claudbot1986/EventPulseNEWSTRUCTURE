@@ -1,70 +1,18 @@
-# C-htmlGate Batch {N} Report
+# C-htmlGate Batch {N} Report Template
 
-**⚠️ NAMNRÖRA-VARNING:** Denna mall använder C0/C1/C2-terminologi från nuvarande implementation. Se [C-status-matrix.md](../C-status-matrix.md) för förklaring av hur dessa mappas till canonical C1/C2/C3/C4-AI.
+**Document Type: HISTORICAL / LEGACY TEMPLATE**
+**Status: ALDRIG ANVÄND**
 
-## Batch Header
+> **DENNA FIL ÄR HISTORISK. LÄS INTE DENNA FIL SOM AKTIV TEMPLATE.**
+>
+> **VAD DETTA ÄR:** En detaljerad mall för batch-rapporter med C0/C1/C2-terminologi.
+> **VAD DETTA INTE ÄR:** Användes aldrig. `cyclesCompleted=0`.
+>
+> **⚠️ NAMNRÖRA-VARNING:** Denna mall använder C0/C1/C2-terminologi som är föråldrad.
+>
+> **Ersättande filer:**
 
-| Field | Value |
-|-------|-------|
-| batchId | batch-{N} |
-| createdAt | {ISO timestamp} |
-| status | {idle/pending/testing/completed} |
-| eligibilityRulesVersion | {version} |
-| selectionCriteria | {text} |
-| subpageAwareAbStatus | {done/partial/missing} |
-
-## Metrics
-
-| Metric | Pre | Post | Delta |
-|--------|-----|------|-------|
-| sourcesTotal | {N} | {N} | 0 |
-| successCount | {N} | {N} | {+/-N} |
-| failCount | {N} | {N} | {+/-N} |
-| eventsFoundTotal | {N} | {N} | {+/-N} |
-
-## Sources Summary
-
-| # | sourceId | sourceName | city/type | preEvents | postEvents | delta | preVerdict | postVerdict | methodCandidate | needsD |
-|---|----------|------------|-----------|-----------|-------------|-------|------------|-------------|-----------------|--------|
-| 1 | {id} | {name} | {city}/{type} | {N} | {N} | {+/-N} | {verdict} | {verdict} | {method} | {yes/no} |
-... | ... | ... | ... | ... | ... | ... | ... | ... | ... | ... |
-
-## Pattern Groups Found
-
-- {pattern group 1} ({count} sources)
-- {pattern group 2} ({count} sources)
-
-## AI Analysis Summary
-
-**Sources with improvement:** {N}
-**Sources with no improvement:** {N}
-**Major pattern:** {description}
-
-## Changes Applied to C-Model
-
-1. {change 1 description}
-2. {change 2 description}
-3. ...
-
-## Unresolved Issues
-
-- {count} sources still failing
-- {count} sources need D-renderGate
-- {count} sources have ambiguous signals
-
-## Generalizable Learnings
-
-- {learning 1}
-- {learning 2}
-
-## Linked Source Reports
-
-- `sources/{source1}.md`
-- `sources/{source2}.md`
-- ...
-
-## Source Reports
-
-### sourceId: {id}
-
-[Embedded compact source data - see sources/{id}.md for full report]
+| Behöver du... | Läs istället... |
+|---------------|-----------------|
+| Batch-workflow | [123.md](../../123.md) |
+| Snabböversikt | [C-status-matrix.md](../../C-status-matrix.md) |
