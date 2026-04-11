@@ -194,54 +194,67 @@ export interface RawRowProvenance {
  * Normalize to site-level identity key.
  * Used for deduplication and matching against existing sources.
  * Rules:
- * 1. Strip protocol
- * 2. Strip www.
- * 3. Lowercase
- * 4. Keep ONLY hostname — strip entire path
+ * 1. Strip protocol (case-insensitive)
+ * 2. Strip www. (case-insensitive)
+ * 3. Keep ONLY hostname — strip entire path
+ * 4. Lowercase
  *
  * Examples:
  *   https://www.liseberg.se/          → liseberg.se
  *   https://liseberg.se/evenemang/    → liseberg.se
- *   http://WWW.LISEBERG.SE/          → liseberg.se
+ *   HTTP://WWW.LISEBERG.SE/          → liseberg.se
+ *   HTTPS://WWW.LISEBERG.SE/         → liseberg.se
  */
 export function normalizeToSiteIdentityKey(rawUrl: string): string {
   let url = rawUrl.trim();
 
-  // Strip protocol
-  url = url.replace(/^https?:\/\//, '');
+  // Strip protocol (case-insensitive)
+  url = url.replace(/^https?:\/\//i, '');
 
-  // Strip www.
-  url = url.replace(/^www\./, '');
+  // Strip www. (case-insensitive)
+  url = url.replace(/^www\./i, '');
 
-  // Strip path, query, fragment — keep only hostname
-  url = url.split('/')[0] ?? url;
+  // Keep only hostname — strip path/query/fragment
+  const slashIndex = url.indexOf('/');
+  url = slashIndex >= 0 ? url.substring(0, slashIndex) : url;
 
   return url.toLowerCase();
 }
 
 /**
  * Normalize to canonical URL for display purposes.
- * Keeps the path for audit purposes.
+ * Keeps the path and protocol for audit purposes.
  * Rules:
- * 1. Strip protocol
+ * 1. Extract and preserve protocol (http:// or https://)
  * 2. Strip www.
- * 3. Strip trailing slash
- * 4. Ensure root path = /
- * 5. Lowercase
+ * 3. Lowercase host
+ * 4. Strip trailing slash
+ * 5. Ensure root path = /
+ *
+ * IMPORTANT: Protocol is PRESERVED to ensure canonicalUrl remains a valid URL.
+ * http:// or https:// is REQUIRED for a valid canonical URL.
  *
  * Examples:
- *   https://www.liseberg.se/           → liseberg.se/
- *   https://liseberg.se/evenemang/     → liseberg.se/evenemang
- *   http://liseberg.se                 → liseberg.se/
+ *   https://www.liseberg.se/           → https://liseberg.se/
+ *   https://liseberg.se/evenemang/     → https://liseberg.se/evenemang
+ *   http://liseberg.se                 → http://liseberg.se/
+ *   HTTP://WWW.LISEBERG.SE/           → http://liseberg.se/
  */
 export function normalizeToCanonicalUrl(rawUrl: string): string {
   let url = rawUrl.trim();
 
+  // Extract and preserve protocol (only http or https accepted)
+  const protocolMatch = url.match(/^(https?:\/\/)/i);
+  const protocol = protocolMatch ? protocolMatch[1].toLowerCase() : 'https://';
+
   // Strip protocol
-  url = url.replace(/^https?:\/\//, '');
+  url = url.replace(/^https?:\/\//i, '');
 
   // Strip www.
-  url = url.replace(/^www\./, '');
+  url = url.replace(/^www\./i, '');
+
+  // Lowercase
+  url = url.toLowerCase();
 
   // Strip trailing slash
   url = url.replace(/\/$/, '');
@@ -251,7 +264,7 @@ export function normalizeToCanonicalUrl(rawUrl: string): string {
     url = url + '/';
   }
 
-  return url.toLowerCase();
+  return protocol + url;
 }
 
 // ─── SourceId Generation ──────────────────────────────────────────────────
@@ -367,6 +380,22 @@ export function parseMarkdownTable(content: string): {
       continue;
     }
 
+    // Explicit protocol check: http:// or https:// required for canonical URL validity.
+    // isValidUrl() already checked protocol via URL constructor, but this explicit
+    // check catches edge cases (e.g. "http://" with no host) and makes the rule visible.
+    // Case-insensitive to handle HTTPS://, HTTP:// etc.
+    if (!url.match(/^https?:\/\//i)) {
+      invalidRows.push({
+        lineNumber,
+        lineText: line,
+        reason: `URL missing http/https protocol: ${url}`,
+        rawLineHash: computeRowHash(name, url, city),
+        rawUrl: url,
+        rawName: name,
+      });
+      continue;
+    }
+
     validRows.push({
       name: name.trim(),
       url: url.trim(),
@@ -381,6 +410,15 @@ export function parseMarkdownTable(content: string): {
   }
 
   return { validRows, invalidRows };
+}
+
+/**
+ * Check that a URL string has http:// or https:// prefix.
+ * Unlike isValidUrl() which validates the full URL, this only checks the protocol prefix.
+ * Used to validate that normalizeToCanonicalUrl() did NOT strip the only protocol.
+ */
+function hasValidProtocol(url: string): boolean {
+  return url.match(/^https?:\/\//i) !== null;
 }
 
 function isValidUrl(url: string): boolean {
@@ -684,6 +722,11 @@ export function buildWritePlan(previewPath: string, sourcesDir: string): WritePl
     try {
       const source = JSON.parse(line) as ImportedSource;
       if (source.matchStatus === 'new') {
+        // Block write for sources with invalid_url tag — they must not become canonical
+        if (source.reviewTags?.includes('invalid_url')) {
+          ignoredByStatus['invalid_url'] = (ignoredByStatus['invalid_url'] ?? 0) + 1;
+          continue;
+        }
         newSources.push(source);
       } else {
         ignoredByStatus[source.matchStatus] = (ignoredByStatus[source.matchStatus] ?? 0) + 1;
@@ -1156,6 +1199,34 @@ export function importRawSourcesWithMatching(
     const siteIdentityKey = normalizeToSiteIdentityKey(row.url);
     const canonicalUrl = normalizeToCanonicalUrl(row.url);
     const lineNumber = row.lineNumber;
+
+    // DEFENSIVE: If canonicalUrl has no protocol after normalization,
+    // this source must NOT become canonical truth silently.
+    // Mark as requiresManualReview so write-step can detect and block it.
+    if (!hasValidProtocol(canonicalUrl)) {
+      const reasons = [`URL has no http/https protocol after normalization: raw='${row.url}' normalized='${canonicalUrl}'`];
+      outputMap.set(siteIdentityKey, {
+        sourceId: generateSourceId(siteIdentityKey),
+        sourceIdentityKey: siteIdentityKey,
+        canonicalUrl,
+        name: row.name,
+        city: row.city,
+        type: row.type,
+        discoveredAt: row.discoveredAt,
+        note: row.note,
+        isDuplicate: false,
+        originalRows: [{ name: row.name, url: row.url }],
+        matchStatus: 'new',
+        requiresManualReview: true,
+        reviewTags: ['manualreview', 'invalid_url'],
+        manualReviewReasons: reasons,
+        provenanceRows: [makeRowProvenance(row, lineNumber, fileContext, 'new_row_needs_review', reasons[0])],
+      });
+      stats.newNeedsReview++;
+      stats.manualreview++;
+      batchSeen.add(siteIdentityKey);
+      continue;
+    }
 
     // Check 1: Does this match an existing canonical source?
     if (existingSources.has(siteIdentityKey)) {
