@@ -1,5 +1,7 @@
 # C-htmlGate
 
+**⚠️ VIKTIGT:** För en snabb, sann statusöversikt över C-spårets komponenter, se [C-status-matrix.md](./C-status-matrix.md).
+
 HTML extraction layer using DOM heuristics — the fallback when no JSON-LD and no viable API endpoint is available.
 
 ## Pipeline

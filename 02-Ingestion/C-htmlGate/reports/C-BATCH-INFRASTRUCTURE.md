@@ -1,5 +1,9 @@
 # C-htmlGate Batch Infrastructure
 
+**⚠️ HISTORISK DOKUMENTATION — ANVÄND [C-status-matrix.md](./C-status-matrix.md) FÖR AKTUELL STATUS.**
+
+Denna fil beskriver den planerade batch-infrastrukturen. I verkligheten kördes aldrig förbättringsloopen (`cyclesCompleted=0`, `preRunResults=null`, `postRunResults=null`). Batch-scripten (run-batch-001.ts etc.) är legacy engångs-test, inte aktiv pipeline.
+
 ## Översikt
 
 C-htmlGate batch-loop är systematiskt iterationsarbete för att förbättra den generella HTML-modellen genom att testa 10 C-kandidater åt gången.
