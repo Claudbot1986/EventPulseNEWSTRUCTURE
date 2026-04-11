@@ -3960,3 +3960,65 @@ Motivering: C0 är designad för att hitta event-list candidate pages. Dessa 9 s
 ### System-effect-before-local-effect
 - Valt steg (#1): C0 discovery testades aldrig på dessa sources. Om C0 hittar event pages med datum i URLs → extractFromHtml() fungerar → 9 sources blir success.
 - Varför: Flaskhalsen är page-discovery, inte extraction quality. C0 löser root cause.
+
+---
+
+## Nästa-steg-analys 2026-04-11 (Steg 4 — C-rebuild-plan)
+
+### Vad hände denna session
+- **Steg 4 implementerat:** Byggde manuell C-testkedja med korrekta resultatfält
+- **postTestC köer skapade:** postTestC-UI, postTestC-A, postTestC-B, postTestC-D, postTestC-Fail-round1/2/3, postTestC-Fail
+- **run-batch-011.ts skapades:** Kör C0→C1→C2→extract med steg-4 fält
+- **Batch 011 kördes:** 10 html_candidates från current-batch.jsonl
+
+### Batch 011 Resultat
+| Källa | C0 | C2 | Events | outcomeType |
+|--------|-----|-----|--------|-------------|
+| brommapojkarna | 0 candidates | unclear(0) | 0 | fail |
+| varmland | 1 candidate | promising(34) | 0 | fail |
+| svenska-hockeyligan-shl | 0 candidates | unclear(1) | 0 | fail |
+| nykoping | 0 candidates | unclear(7) | 0 | fail |
+| liseberg-n-je | 1 candidate | promising(187) | 0 | fail |
+| medeltidsmuseet | 0 candidates | unclear(0) | 0 | fail |
+| ik-sirius | 0 candidates | unclear(0) | 0 | fail |
+| kth | 0 candidates | unclear(0) | 0 | fail |
+| helsingborg-arena | 0 candidates | unclear(0) | 0 | fail |
+| g-teborgs-posten | 0 candidates | unclear(0) | 0 | fail |
+
+**0/10 extract_success, 0/10 route_success, 10/10 fail**
+
+### Root-cause (nyckelobservation)
+**C0=0 barriären fortsätter:** 7/10 sources har 0 C0 candidates. Detta bekräftar att C0:s link-discovery inte fungerar för dessa domäner.
+
+**varmland och liseberg** hade fina C2-promising (34, 187) men 0 events → extraction misslyckas även när C2 säger promising.
+
+### Steg 4 Implementation
+- ✅ postTestC köer skapade i runtime/
+- ✅ run-batch-011.ts med winningStage, outcomeType, routeSuggestion, evidence, roundNumber
+- ✅ Routing till korrekt kö per source
+- ✅ batch-state.jsonl uppdaterad (batch=4, status=completed)
+
+### Kvarvarande flaskhals
+- **C0 candidate discovery** — hittar inte interna event pages för 70% av testade sources
+- **C2 promising → extraction fail** — trots höga C2 scores, extraction returnerar 0 events
+
+### Tre möjliga nästa steg
+
+| # | Steg | Systemnytta | Risk | Varför nu |
+|---|------|-------------|------|-----------|
+| 1 | **Analysera varmland + liseberg** — C2=promising men 0 events | Hög: förstå gapet | Låg: undersökning | Kan avslöja extraction-problem |
+| 2 | **Förbättra C0 link-discovery** | Hög: 70% miss rate | Medel: Generalization | Kräver 2-3+ verifierade Sajter |
+| 3 | **Välj nästa batch** | Medel: fortsätt validering | Låg: beprövat | postTestC-Fail-round1 har 10 nya |
+
+### Rekommenderat nästa steg
+- **#1 — Analysera varmland + liseberg**
+
+Motivering: Dessa två sources har C2=promising (34, 187) men 0 events. De representerar ett annat problem än C0=0 — nämligen att C2 hittar "lovande" sidor men extraction misslyckas. Detta kan peka på en generell extraction-issue snarare än discovery-issue.
+
+### Två steg att INTE göra nu
+1. **Ändra IGNORE_PATTERNS** — Generalization Gate förbjuder detta utan 2-3+ Sajter
+2. **AI-analys på fail-fall** — C4-AI ska endast köras efter Steg 5 (fail-round hantering)
+
+### System-effect-before-local-effect
+- Valt steg (#1): Analys av varmland + liseberg kan avslöja om flaskhalsen är C0 (discovery) eller C3 (extraction)
+- Varför: Rätt diagnosis avgör vilken förbättring som behövs
