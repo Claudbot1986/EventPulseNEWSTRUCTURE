@@ -1,12 +1,12 @@
 /**
  * C-htmlGate — Dynamic Test Pool Runner
  *
- * STATUS LABELS:
- *   RUNNER_EXECUTES          — koden körbar, bekräftad i terminal
- *   FLOW_PARTIALLY_VERIFIED  — round 1-3 körda, refill verifierad
- *   RESUME_VERIFIED          — resume från pool-state VERIFIERAD (2026-04-11)
- *   C4_AI_PLACEHOLDER        — C4-AI är tom placeholder, ingen AI inkopplad
- *   NOT_CANONICAL_YET        — får EJ beskrivas som canonical förrän verifierad
+STATUS LABELS:
+  RUNNER_EXECUTES          — koden körbar, bekräftad i terminal
+  FLOW_PARTIALLY_VERIFIED  — round 1-3 körda, refill verifierad
+  RESUME_VERIFIED          — resume från pool-state VERIFIERAD (2026-04-11)
+  C4_AI_INTEGRATED         — C4-AI inkopplad och körande efter varje round
+  NOT_CANONICAL_YET        — får EJ beskrivas som canonical förrän verifierad
  *
  * Denna fil är den första fungerande versionen av den dynamiska poolmodellen.
  * Det är INTE slutlig canonical implementation.
@@ -42,6 +42,8 @@
 
 import { discoverEventCandidates, screenUrl, evaluateHtmlGate } from './index';
 import { extractFromHtml } from '../F-eventExtraction/extractor';
+import { runC4Analysis, type C4InputSource, type C4RoundAnalysis, FailCategory } from './C4-ai-analysis';
+import { saveRoundDerivedRules, loadAllDerivedRules, isImprovementEnabled, type DerivedRulesStore } from './c4-derived-rules';
 import { readFileSync, writeFileSync, mkdirSync, appendFileSync, readdirSync } from 'fs';
 import { join, dirname } from 'path';
 import { fileURLToPath } from 'url';
@@ -51,6 +53,22 @@ const __dirname = dirname(__filename);
 
 // Project root: two levels up from C-htmlGate/
 const PROJECT_ROOT = join(__dirname, '..', '..');
+
+// ---------------------------------------------------------------------------
+// Batch Directory Initialization — ensures batch dir exists before any writes
+// ---------------------------------------------------------------------------
+
+/**
+ * Ensures the batch-specific report directory exists.
+ * Creates the directory recursively if it doesn't exist.
+ * Returns the absolute path to the batch directory.
+ * This must be called BEFORE any batch-specific file writes (reports, pool-state, etc.)
+ */
+function ensureBatchDir(batchNum: number): string {
+  const batchDir = join(REPORTS_DIR, `batch-${batchNum}`);
+  mkdirSync(batchDir, { recursive: true });
+  return batchDir;
+}
 
 // ---------------------------------------------------------------------------
 // Paths
@@ -108,7 +126,16 @@ interface PoolSource {
 }
 
 interface CStageResult {
-  c0: { candidates: number; winnerUrl: string | null; winnerDensity: number; duration: number; rootFallback: boolean };
+  c0: {
+    candidates: number;
+    winnerUrl: string | null;
+    winnerDensity: number;
+    duration: number;
+    rootFallback: boolean;
+    ruleAppliedSource: 'none' | 'link-discovery' | 'derived-rule' | 'swedish-patterns';
+    ruleAppliedPaths: string[];
+    ruleWinnerPath: string | null;
+  };
   c1: { verdict: string; likelyJsRendered: boolean; timeTagCount: number; dateCount: number; duration: number };
   c2: { verdict: string; score: number; reason: string; duration: number };
   extract: { eventsFound: number; duration: number };
@@ -126,6 +153,12 @@ interface CResult extends CStageResult {
   error?: string;
   failType?: string;
   networkFailureSubType?: string;
+  // Rule tracking: was a derived rule applied in this round?
+  derivedRuleApplied?: {
+    ruleKey: string;
+    pathsTested: string[];
+    winnerPath: string | null;
+  };
 }
 
 interface PoolState {
@@ -188,7 +221,9 @@ function readBatchState(): { currentBatch: number; status: string } | null {
   try {
     const raw = readFileSync(join(REPORTS_DIR, 'batch-state.jsonl'), 'utf8').trim();
     if (!raw) return null;
-    return JSON.parse(raw);
+    // batch-state.jsonl is JSONL (one JSON per line) — parse only the first line
+    const firstLine = raw.split('\n')[0];
+    return JSON.parse(firstLine);
   } catch {
     return null;
   }
@@ -197,6 +232,31 @@ function readBatchState(): { currentBatch: number; status: string } | null {
 function writeBatchStateEntry(entry: Record<string, unknown>): void {
   const path = join(REPORTS_DIR, 'batch-state.jsonl');
   appendFileSync(path, JSON.stringify(entry) + '\n');
+}
+
+// ---------------------------------------------------------------------------
+// Audit Log
+// ---------------------------------------------------------------------------
+
+const AUDIT_PATH = join(RUNTIME_DIR, 'sources_audit.jsonl');
+
+interface AuditEntry {
+  timestamp: string;
+  sourceId: string;
+  event: 'queued_to' | 'dropped_from_pool' | 'processed_in_batch' | 'exited_pool' | 'rule_generated' | 'rule_applied';
+  batch?: number;
+  round?: number;
+  target?: string;        // for queued_to: which queue
+  reason?: string;         // for dropped_from_pool: why
+  metadata?: Record<string, unknown>;
+}
+
+function writeAuditEntry(entry: Omit<AuditEntry, 'timestamp'>): void {
+  const full: AuditEntry = {
+    timestamp: new Date().toISOString(),
+    ...entry,
+  };
+  appendFileSync(AUDIT_PATH, JSON.stringify(full) + '\n');
 }
 
 // ---------------------------------------------------------------------------
@@ -298,21 +358,77 @@ function buildDiversifiers(c: { signals: QueueSignals; status: SourceStatus | un
 /**
  * Build initial pool of 10 diversifierade C-källor from postB-preC.
  * Returns null if fewer than 10 eligible sources exist.
+ *
+ * For verification batches: selects ONLY from verificationSources list,
+ * ignoring diversity scoring. Each source in the list is included if eligible.
  */
-function buildInitialPool(): { pool: PoolSource[]; eligibleInPrec: number } | null {
+function buildInitialPool(
+  batchType: 'normal' | 'verification' = 'normal',
+  verificationSources: string[] = []
+): { pool: PoolSource[]; eligibleInPrec: number } | null {
   const queueEntries = parseJsonl<QueueEntry>(QUEUES.PREC);
   const allStatuses = parseJsonl<SourceStatus>(QUEUES.SOURCES_STATUS);
   const statusMap = new Map<string, SourceStatus>();
   for (const s of allStatuses) statusMap.set(s.sourceId, s);
   const canonicalUrls = loadCanonicalUrls();
 
-  // Build candidate list
-  const candidates = queueEntries.map(entry => {
+  // Build candidate list and track drops
+  const candidates = [];
+  const dropped: { entry: QueueEntry; reason: string }[] = [];
+
+  for (const entry of queueEntries) {
+    const url = canonicalUrls.get(entry.sourceId) ?? null;
+    if (url === null) {
+      dropped.push({ entry, reason: 'url_missing_from_sources' });
+      writeAuditEntry({ sourceId: entry.sourceId, event: 'dropped_from_pool', reason: 'url_missing_from_sources', metadata: { at: 'buildInitialPool' } });
+      continue;
+    }
     const signals = parseQueueSignals(entry.queueReason);
     const status = statusMap.get(entry.sourceId);
-    const url = canonicalUrls.get(entry.sourceId) ?? null;
-    return { entry, signals, status, url };
-  }).filter(c => c.url !== null);
+    candidates.push({ entry, signals, status, url });
+  }
+
+  if (dropped.length > 0) {
+    console.warn(`[AUDIT] ${dropped.length}/${queueEntries.length} sources dropped from postB-preC pool build:`);
+    for (const d of dropped.slice(0, 5)) {
+      console.warn(`  - ${d.entry.sourceId}: ${d.reason}`);
+    }
+    if (dropped.length > 5) console.warn(`  ... and ${dropped.length - 5} more`);
+  }
+
+  // VERIFICATION BATCH: select only from verificationSources list
+  if (batchType === 'verification' && verificationSources.length > 0) {
+    const verifSet = new Set(verificationSources);
+    const verifCandidates = candidates.filter(c => verifSet.has(c.entry.sourceId));
+    console.log(`[VerificationBatch] Selected ${verifCandidates.length} verification sources from ${verificationSources.length} requested`);
+
+    const verifSelected: PoolSource[] = [];
+    for (const c of verifCandidates) {
+      const poolSource: PoolSource = {
+        sourceId: c.entry.sourceId,
+        url: c.url!,
+        roundsParticipated: 0,
+        diversifiers: buildDiversifiers(c),
+        queueReason: c.entry.queueReason,
+        enrichedData: {
+          lastPathUsed: c.status?.lastPathUsed ?? null,
+          lastEventsFound: c.status?.lastEventsFound ?? 0,
+          consecutiveFailures: c.status?.consecutiveFailures ?? 0,
+          triageResult: c.status?.triageResult ?? null,
+        },
+      };
+      verifSelected.push(poolSource);
+      writeAuditEntry({
+        sourceId: poolSource.sourceId,
+        event: 'queued_to',
+        target: 'C-pool',
+        metadata: { source: 'buildInitialPool', batchType: 'verification', targetImprovement: verificationSources[0] },
+      });
+    }
+
+    if (verifSelected.length === 0) return null;
+    return { pool: verifSelected, eligibleInPrec: verifCandidates.length };
+  }
 
   const BATCH_SIZE = 10;
   const selected: PoolSource[] = [];
@@ -354,7 +470,7 @@ function buildInitialPool(): { pool: PoolSource[]; eligibleInPrec: number } | nu
       if (chosen.status.triageResult) diversityState.triageResult.add(chosen.status.triageResult);
     }
 
-    selected.push({
+    const poolSource: PoolSource = {
       sourceId: chosen.entry.sourceId,
       url: chosen.url!,
       roundsParticipated: 0,
@@ -366,6 +482,13 @@ function buildInitialPool(): { pool: PoolSource[]; eligibleInPrec: number } | nu
         consecutiveFailures: chosen.status?.consecutiveFailures ?? 0,
         triageResult: chosen.status?.triageResult ?? null,
       },
+    };
+    selected.push(poolSource);
+    writeAuditEntry({
+      sourceId: poolSource.sourceId,
+      event: 'queued_to',
+      target: 'C-pool',
+      metadata: { source: 'buildInitialPool' },
     });
   }
 
@@ -380,12 +503,21 @@ function buildInitialPool(): { pool: PoolSource[]; eligibleInPrec: number } | nu
 /**
  * Refill pool to max 10 from postB-preC.
  * Excludes sources already in pool or already exited.
+ *
+ * For verification batches: NO refill — only the verification sources are tested.
  */
 function refillPool(
   currentPool: PoolSource[],
   exitedIds: Set<string>,
-  allExitedIds: Set<string>
+  allExitedIds: Set<string>,
+  batchType: 'normal' | 'verification' = 'normal',
+  verificationSources: string[] = []
 ): { newSources: PoolSource[]; refillCount: number; availableInPrec: number } {
+
+  // VERIFICATION BATCH: do not refill with random sources
+  if (batchType === 'verification') {
+    return { newSources: [], refillCount: 0, availableInPrec: 0 };
+  }
   const queueEntries = parseJsonl<QueueEntry>(QUEUES.PREC);
   const allStatuses = parseJsonl<SourceStatus>(QUEUES.SOURCES_STATUS);
   const statusMap = new Map<string, SourceStatus>();
@@ -394,32 +526,60 @@ function refillPool(
 
   // Filter: eligible, not in pool, not already exited
   const activeIds = new Set(currentPool.map(s => s.sourceId));
-  const eligible = queueEntries
-    .filter(entry => !activeIds.has(entry.sourceId) && !allExitedIds.has(entry.sourceId))
-    .map(entry => {
-      const signals = parseQueueSignals(entry.queueReason);
-      const status = statusMap.get(entry.sourceId);
-      const url = canonicalUrls.get(entry.sourceId) ?? null;
-      return { entry, signals, status, url };
-    })
-    .filter(c => c.url !== null);
+
+  // Map entries and track drops
+  const mapped: { entry: QueueEntry; signals: QueueSignals; status: SourceStatus | undefined; url: string | null }[] = [];
+  const dropped: { entry: QueueEntry; reason: string }[] = [];
+
+  for (const entry of queueEntries) {
+    if (activeIds.has(entry.sourceId) || allExitedIds.has(entry.sourceId)) {
+      continue; // skip - already in pool or exited
+    }
+    const url = canonicalUrls.get(entry.sourceId) ?? null;
+    if (url === null) {
+      dropped.push({ entry, reason: 'url_missing_from_sources' });
+      writeAuditEntry({ sourceId: entry.sourceId, event: 'dropped_from_pool', reason: 'url_missing_from_sources', metadata: { at: 'refillPool' } });
+      continue;
+    }
+    const signals = parseQueueSignals(entry.queueReason);
+    const status = statusMap.get(entry.sourceId);
+    mapped.push({ entry, signals, status, url });
+  }
+
+  if (dropped.length > 0) {
+    console.warn(`[AUDIT] ${dropped.length} sources dropped during refill:`);
+    for (const d of dropped.slice(0, 5)) {
+      console.warn(`  - ${d.entry.sourceId}: ${d.reason}`);
+    }
+  }
+
+  const eligible = mapped.filter(c => c.url !== null);
 
   const needed = 10 - currentPool.length;
   const toSelect = eligible.slice(0, needed);
 
-  const newSources: PoolSource[] = toSelect.map(chosen => ({
-    sourceId: chosen.entry.sourceId,
-    url: chosen.url!,
-    roundsParticipated: 0,
-    diversifiers: buildDiversifiers(chosen),
-    queueReason: chosen.entry.queueReason,
-    enrichedData: {
-      lastPathUsed: chosen.status?.lastPathUsed ?? null,
-      lastEventsFound: chosen.status?.lastEventsFound ?? 0,
-      consecutiveFailures: chosen.status?.consecutiveFailures ?? 0,
-      triageResult: chosen.status?.triageResult ?? null,
-    },
-  }));
+  const newSources: PoolSource[] = toSelect.map(chosen => {
+    const ps: PoolSource = {
+      sourceId: chosen.entry.sourceId,
+      url: chosen.url!,
+      roundsParticipated: 0,
+      diversifiers: buildDiversifiers(chosen),
+      queueReason: chosen.entry.queueReason,
+      enrichedData: {
+        lastPathUsed: chosen.status?.lastPathUsed ?? null,
+        lastEventsFound: chosen.status?.lastEventsFound ?? 0,
+        consecutiveFailures: chosen.status?.consecutiveFailures ?? 0,
+        triageResult: chosen.status?.triageResult ?? null,
+      },
+    };
+    writeAuditEntry({
+      sourceId: ps.sourceId,
+      event: 'queued_to',
+      target: 'C-pool',
+      metadata: { source: 'refillPool' },
+    });
+    return ps;
+  });
 
   return {
     newSources,
@@ -432,13 +592,17 @@ function refillPool(
 // Step 3: Run C1→C2→C3 on a single source
 // ---------------------------------------------------------------------------
 
-async function runSourceOnPool(source: PoolSource, roundNum: number): Promise<CResult> {
+async function runSourceOnPool(
+  source: PoolSource,
+  roundNum: number,
+  derivedRules?: DerivedRulesStore,
+): Promise<CResult> {
   console.log(`\n=== ${source.sourceId} (round ${roundNum}) ===`);
 
   const result: CResult = {
     sourceId: source.sourceId,
     url: source.url,
-    c0: { candidates: 0, winnerUrl: null, winnerDensity: 0, duration: 0, rootFallback: false },
+    c0: { candidates: 0, winnerUrl: null, winnerDensity: 0, duration: 0, rootFallback: false, ruleAppliedSource: 'none', ruleAppliedPaths: [], ruleWinnerPath: null },
     c1: { verdict: 'unknown', likelyJsRendered: false, timeTagCount: 0, dateCount: 0, duration: 0 },
     c2: { verdict: 'unknown', score: 0, reason: '', duration: 0 },
     extract: { eventsFound: 0, duration: 0 },
@@ -453,14 +617,34 @@ async function runSourceOnPool(source: PoolSource, roundNum: number): Promise<CR
   try {
     // C0 (Canonical C1) — Discovery/Frontier
     const c0Start = Date.now();
-    const c0 = await discoverEventCandidates(source.url);
+    const c0 = await discoverEventCandidates(source.url, derivedRules, source.sourceId);
+
+    // Track if a derived rule was applied
+    const ruleKey = `${source.sourceId}__NEEDS_SUBPAGE_DISCOVERY`;
+    const ruleUsed = derivedRules?.has(ruleKey) && c0?.ruleApplied?.source === 'derived-rule';
+
     result.c0 = {
       candidates: c0?.candidatesFound || 0,
       winnerUrl: c0?.winner?.url || null,
       winnerDensity: c0?.winner?.eventDensityScore || 0,
       duration: Date.now() - c0Start,
       rootFallback: false,
+      ruleAppliedSource: c0?.ruleApplied?.source || 'none',
+      ruleAppliedPaths: c0?.ruleApplied?.pathsTested || [],
+      ruleWinnerPath: c0?.winner?.href || null,
     };
+
+    if (ruleUsed) {
+      result.derivedRuleApplied = {
+        ruleKey,
+        pathsTested: c0?.ruleApplied?.pathsTested || [],
+        winnerPath: c0?.winner?.href || null,
+      };
+      console.log(`[Rule-Track] ${source.sourceId}: DERIVED RULE APPLIED in round ${roundNum} — paths tested: [${(c0?.ruleApplied?.pathsTested || []).join(', ')}], winner: ${c0?.winner?.href || 'none'}`);
+    } else if (c0?.ruleApplied?.source === 'swedish-patterns') {
+      console.log(`[Rule-Track] ${source.sourceId}: SWEDISH PATTERNS APPLIED in round ${roundNum} — winner: ${c0?.winner?.href || 'none'}`);
+    }
+
     console.log(`C0: ${c0?.candidatesFound || 0} candidates, winner=${c0?.winner?.url || 'none'}`);
 
     const targetUrl = c0?.winner?.url || source.url;
@@ -477,6 +661,36 @@ async function runSourceOnPool(source: PoolSource, roundNum: number): Promise<CR
     };
     console.log(`C1: likelyJsRendered=${c1.likelyJsRendered} verdict=${c1.categorization}`);
 
+    // [C1-DIRECT-ROUTING] Check for strong D signal BEFORE running C2/C3
+    // If likelyJsRendered=true AND (0 timeTags OR 0 dates OR no structural content) → direct D route
+    // This is a cheap early exit that bypasses expensive C2/C3 and doesn't need C4
+    // EXCEPTION: if IMP-006 is enabled AND C0 found a winner via Swedish patterns or derived rules, always continue to C2/C3.
+    // The likelyJsRendered flag is evaluated on the ROOT URL, but Swedish pattern subpages
+    // often don't have the same JS-rendering issues. Give C2/C3 a chance before D-routing.
+    const c0FoundSubpageWinner = isImprovementEnabled('IMP-006') && (c0?.ruleApplied?.source === 'swedish-patterns' || c0?.ruleApplied?.source === 'derived-rule');
+    const c1Dsignal =
+      c1.likelyJsRendered &&
+      (c1.timeTagCount === 0 || c1.dateCount === 0 || c1.categorization === 'noise') &&
+      !c0FoundSubpageWinner &&   // ← IMP-006: don't short-circuit if C0 found subpage candidates (when enabled)
+      !!(c0?.candidatesFound);   // ← only if C0 actually ran and found candidates
+
+    if (c1Dsignal) {
+      console.log(`[C1-DirectRoute] Strong JS-render signal detected — short-circuit to D (skip C2/C3)`);
+      result.c1.verdict = c1.categorization;
+      result.c1.likelyJsRendered = c1.likelyJsRendered;
+      result.c1.timeTagCount = c1.timeTagCount;
+      result.c1.dateCount = c1.dateCount;
+      result.c1.duration = Date.now() - c1Start;
+      result.c2 = { verdict: 'skipped', score: 0, reason: 'c1-direct-route', duration: 0 };
+      result.extract = { eventsFound: 0, duration: 0 };
+      result.outcomeType = 'route_success';
+      result.winningStage = 'C1';
+      result.routeSuggestion = 'D';
+      result.evidence = `C1: likelyJsRendered=true + (timeTags=${c1.timeTagCount} OR dates=${c1.dateCount}) — direct D route, C2/C3 skipped`;
+      result.success = false;
+      return result;
+    }
+
     // C2 — HTML Gate
     const c2Start = Date.now();
     const c2 = await evaluateHtmlGate(targetUrl, 'no-jsonld', 2);
@@ -489,8 +703,14 @@ async function runSourceOnPool(source: PoolSource, roundNum: number): Promise<CR
     console.log(`C2: verdict=${c2.verdict} score=${c2.score}`);
 
     // C3 — HTML Extraction
+    // Prefer C1 (screenUrl) HTML as it was fetched first and most reliably.
+    // C2 HTML may be empty if C2's fetch failed or timed out differently.
     const extStart = Date.now();
-    const ext = await extractFromHtml(targetUrl, source.sourceId, source.url);
+    const extHtml = c1.html ?? c2.html ?? '';
+    if (!extHtml) {
+      console.log(`[C3-WARN] No HTML available for ${source.sourceId} (C1 html=${!!c1.html}, C2 html=${!!c2.html}) — C3 will process empty string`);
+    }
+    const ext = extractFromHtml(extHtml, source.sourceId, source.url);
     result.extract = {
       eventsFound: ext.events.length,
       duration: Date.now() - extStart,
@@ -609,6 +829,16 @@ function routeResult(result: CResult, roundsParticipated: number): string {
   if (queuePath) {
     queueEntry.queueName = queueName;
     appendFileSync(queuePath, JSON.stringify(queueEntry) + '\n');
+    writeAuditEntry({
+      sourceId: result.sourceId,
+      event: 'exited_pool',
+      target: queueName,
+      metadata: {
+        round: result.roundNumber,
+        outcome: result.outcomeType,
+        evidence: result.evidence,
+      },
+    });
   }
 
   return queueName;
@@ -628,7 +858,10 @@ function clearOutputQueues(): void {
 // Step 6: Main pool loop
 // ---------------------------------------------------------------------------
 
-async function runPoolRound(state: PoolState): Promise<{
+async function runPoolRound(
+  state: PoolState,
+  derivedRules?: DerivedRulesStore,
+): Promise<{
   results: CResult[];
   exits: { source: PoolSource; decision: string; result: CResult }[];
   fails: PoolSource[];
@@ -644,7 +877,7 @@ async function runPoolRound(state: PoolState): Promise<{
 
   for (const source of activePool) {
     const newRounds = source.roundsParticipated + 1;
-    const result = await runSourceOnPool(source, poolRoundNumber);
+    const result = await runSourceOnPool(source, poolRoundNumber, derivedRules);
     results.push(result);
 
     const decision = routeResult(result, newRounds);
@@ -671,7 +904,8 @@ async function runPoolRound(state: PoolState): Promise<{
 function writeReports(
   state: PoolState,
   roundResults: { results: CResult[]; exits: { source: PoolSource; decision: string; result: CResult }[]; fails: PoolSource[] }[],
-  batchNum: number
+  batchNum: number,
+  c4AllResults: C4RoundAnalysis[]
 ): void {
   // Skip report regeneration if roundResults is empty (resume from completed batch)
   if (roundResults.length === 0 && state.poolRoundNumber >= 3) {
@@ -713,7 +947,7 @@ function writeReports(
 ### STATUS LABELS
 RUNNER_EXECUTES: confirmed
 FLOW_PARTIALLY_VERIFIED: rounds 1-3 executed
-C4_AI_PLACEHOLDER: C4-AI not executed, placeholder only
+C4_AI_INTEGRATED: C4-AI inkopplad, kör efter varje round (IMPLEMENTED_EARLY_VERSION)
 RESUME_VERIFIED: resume verified (2026-04-11)
 NOT_CANONICAL_YET: first working version, not final canonical
 
@@ -745,6 +979,27 @@ ${remainingSources.length > 0
 
 ---
 
+### FAIL CATEGORY SUMMARY
+|| Category | Count ||
+||----------|-------|
+|| WRONG_ENTRY_PAGE | ${c4AllResults.flatMap(r => r.results).filter(r => r.failCategory === FailCategory.WRONG_ENTRY_PAGE).length} |
+|| NEEDS_SUBPAGE_DISCOVERY | ${c4AllResults.flatMap(r => r.results).filter(r => r.failCategory === FailCategory.NEEDS_SUBPAGE_DISCOVERY).length} |
+|| LIKELY_JS_RENDER | ${c4AllResults.flatMap(r => r.results).filter(r => r.failCategory === FailCategory.LIKELY_JS_RENDER).length} |
+|| EXTRACTION_PATTERN_MISMATCH | ${c4AllResults.flatMap(r => r.results).filter(r => r.failCategory === FailCategory.EXTRACTION_PATTERN_MISMATCH).length} |
+|| LOW_VALUE_SOURCE | ${c4AllResults.flatMap(r => r.results).filter(r => r.failCategory === FailCategory.LOW_VALUE_SOURCE).length} |
+|| UNKNOWN | ${c4AllResults.flatMap(r => r.results).filter(r => r.failCategory === FailCategory.UNKNOWN).length} |
+
+### TOP NEXT ACTIONS
+| Action | Count |
+|--------|-------|
+| tillbaka till C1 | ${c4AllResults.flatMap(r => r.results).filter(r => r.nextQueue === 'retry-pool').length} |
+| till D-renderGate | ${c4AllResults.flatMap(r => r.results).filter(r => r.nextQueue === 'D').length} |
+| discard/manual review | ${c4AllResults.flatMap(r => r.results).filter(r => r.nextQueue === 'manual-review').length} |
+| till A | ${c4AllResults.flatMap(r => r.results).filter(r => r.nextQueue === 'A').length} |
+| till B | ${c4AllResults.flatMap(r => r.results).filter(r => r.nextQueue === 'B').length} |
+
+---
+
 ### <generated_artifacts>
 - batch-report.md: generated
 - round-reports: ${roundResults.length} generated (round-1 through round-${roundResults.length})
@@ -762,10 +1017,10 @@ ${remainingSources.length > 0
 - pool-state persisted: saved to batch-${batchNum}/pool-state.json
 </verified_capabilities>
 
-### <not_verified_yet>
-- resume from pool-state (RESUME_VERIFIED)
-- real C4-AI analysis (C4_AI_PLACEHOLDER — placeholder report only)
-- canonical status (NOT_CANONICAL_YET)
+| <not_verified_yet>
+| - resume from pool-state (RESUME_VERIFIED)
+| - real C4-AI analysis (C4_AI_INTEGRATED — AI inkopplad och körande)
+| - canonical status (NOT_CANONICAL_YET)
 </not_verified_yet>
 `.trim();
 
@@ -887,28 +1142,164 @@ ${failResults.length > 0 ? failResults.map(r => `  - ${r.sourceId}: failType=${r
 }
 
 // ---------------------------------------------------------------------------
+// Rule Effectiveness Report
+// ---------------------------------------------------------------------------
+
+interface RuleEffectivenessEntry {
+  sourceId: string;
+  ruleGeneratedRound: number;
+  failCategory: string;
+  suggestedPaths: string[];
+  suggestedQueue: string;
+  ruleAppliedRound: number | null; // round where the rule was actually applied
+  appliedPaths: string[];         // paths that were actually tested via rule
+  outcomeBeforeRule: {
+    round: number;
+    c0Candidates: number;
+    eventsFound: number;
+  };
+  outcomeAfterRule: {
+    round: number;
+    c0Candidates: number;
+    eventsFound: number;
+    improved: boolean;
+  } | null;
+  helped: boolean | null; // true/false/null if rule not yet applied
+}
+
+function writeRuleEffectivenessReport(
+  roundResults: { results: CResult[]; exits: { source: PoolSource; decision: string; result: CResult }[]; fails: PoolSource[] }[],
+  c4AllResults: C4RoundAnalysis[],
+  allDerivedRules: DerivedRulesStore,
+  batchNum: number
+): void {
+  const batchDir = join(REPORTS_DIR, `batch-${batchNum}`);
+  const reportPath = join(batchDir, 'rule-effectiveness.jsonl');
+
+  const entries: RuleEffectivenessEntry[] = [];
+
+  // Build a map of sourceId -> rules generated
+  const rulesGenerated = new Map<string, { round: number; rule: any }>();
+  for (const c4Result of c4AllResults) {
+    for (const r of c4Result.results) {
+      if (r.failCategoryConfidence >= 0.6 && r.discoveredPaths && r.discoveredPaths.length > 0) {
+        rulesGenerated.set(r.sourceId, { round: c4Result.roundNumber, rule: r });
+      }
+    }
+  }
+
+  // For each source that had a rule generated, find its outcomes
+  const rulesGeneratedEntries = Array.from(rulesGenerated.entries());
+  for (const [sourceId, ruleInfo] of rulesGeneratedEntries) {
+    const { round: genRound, rule } = ruleInfo;
+    const genRoundIdx = genRound - 1;
+
+    // Find outcome in the round the rule was generated
+    const outcomeBefore = roundResults[genRoundIdx]?.results.find(r => r.sourceId === sourceId);
+
+    // Find outcome in the NEXT round (if any) where rule was applied
+    const nextRoundIdx = genRoundIdx + 1;
+    const outcomeAfter = nextRoundIdx < roundResults.length
+      ? roundResults[nextRoundIdx].results.find(r => r.sourceId === sourceId)
+      : null;
+
+    // Check if rule was actually applied (ruleApplied.source === 'derived-rule' in C0)
+    const appliedRound = outcomeAfter
+      ? (outcomeAfter.c0.ruleAppliedSource === 'derived-rule' ? genRound + 1 : null)
+      : null;
+
+    const helped: boolean | null = appliedRound !== null && outcomeAfter
+      ? (outcomeAfter.c0.candidates > (outcomeBefore?.c0.candidates ?? 0)) ||
+        (outcomeAfter.extract.eventsFound > (outcomeBefore?.extract.eventsFound ?? 0))
+      : null;
+
+    entries.push({
+      sourceId,
+      ruleGeneratedRound: genRound,
+      failCategory: rule.failCategory,
+      suggestedPaths: rule.discoveredPaths?.map((dp: any) => dp.path) ?? [],
+      suggestedQueue: rule.nextQueue,
+      ruleAppliedRound: appliedRound,
+      appliedPaths: outcomeAfter?.c0.ruleAppliedPaths ?? [],
+      outcomeBeforeRule: outcomeBefore
+        ? { round: genRound, c0Candidates: outcomeBefore.c0.candidates, eventsFound: outcomeBefore.extract.eventsFound }
+        : { round: genRound, c0Candidates: 0, eventsFound: 0 },
+      outcomeAfterRule: outcomeAfter
+        ? {
+            round: genRound + 1,
+            c0Candidates: outcomeAfter.c0.candidates,
+            eventsFound: outcomeAfter.extract.eventsFound,
+            improved: helped ?? false,
+          }
+        : null,
+      helped,
+    });
+  }
+
+  // Write JSONL report
+  for (const entry of entries) {
+    appendFileSync(reportPath, JSON.stringify(entry) + '\n');
+  }
+
+  // Also write a summary markdown
+  const summaryPath = join(batchDir, 'rule-effectiveness.md');
+  const lines: string[] = [
+    `## Rule Effectiveness Report batch-${batchNum}`,
+    '',
+    `**Generated:** ${new Date().toISOString()}`,
+    `**Total rules generated:** ${entries.length}`,
+    `**Rules applied in next round:** ${entries.filter(e => e.ruleAppliedRound !== null).length}`,
+    `**Rules that improved outcomes:** ${entries.filter(e => e.helped === true).length}`,
+    '',
+    '| Source | Gen Round | Category | Suggested Paths | Applied? | Helped? |',
+    '|--------|----------|---------|-----------------|----------|---------|',
+  ];
+  for (const e of entries) {
+    const paths = e.suggestedPaths.slice(0, 2).join(', ') + (e.suggestedPaths.length > 2 ? '...' : '');
+    const applied = e.ruleAppliedRound ? `Yes (r${e.ruleAppliedRound})` : 'No';
+    const helped = e.helped === null ? 'N/A' : e.helped ? 'YES' : 'no';
+    lines.push(`| ${e.sourceId} | ${e.ruleGeneratedRound} | ${e.failCategory} | ${paths} | ${applied} | ${helped} |`);
+  }
+  writeFileSync(summaryPath, lines.join('\n'));
+
+  console.log(`[Rule-Effectiveness] Report written to ${reportPath}`);
+  console.log(`[Rule-Effectiveness] Summary written to ${summaryPath}`);
+}
+
+// ---------------------------------------------------------------------------
 // Main
 // ---------------------------------------------------------------------------
 
 async function main() {
-  // Read batch number from batch-state.jsonl, fallback to 13
+  // Read batch number and type from batch-state.jsonl
   const batchState = readBatchState();
   const BATCH_NUM = batchState?.currentBatch ?? 13;
+  const BATCH_TYPE: 'normal' | 'verification' = (batchState as any)?.batchType ?? 'normal';
+  const TARGET_IMPROVEMENT: string | null = (batchState as any)?.targetImprovement ?? null;
+  const VERIFICATION_SOURCES: string[] = (batchState as any)?.verificationSources ?? [];
 
   console.log('='.repeat(60));
   console.log('DYNAMIC TEST POOL RUNNER — EXPERIMENTAL');
   console.log('STATUS: RUNNER_EXECUTES | FLOW_PARTIALLY_VERIFIED');
-  console.log('STATUS: C4_AI_PLACEHOLDER | NOT_CANONICAL_YET');
+  console.log('STATUS: C4_AI_INTEGRATED | NOT_CANONICAL_YET');
   console.log('='.repeat(60));
   console.log(`Batch number: ${BATCH_NUM}`);
+  console.log(`Batch type: ${BATCH_TYPE}${BATCH_TYPE === 'verification' ? ` (improvement: ${TARGET_IMPROVEMENT})` : ''}`);
 
-  // Step 0: Clear output queues
+  // Step 0: ENSURE BATCH DIRECTORY EXISTS before any file writes
+  // This prevents ENOENT errors when C4 or other components try to write
+  // to batch-specific report files (e.g., c4-ai-analysis-round-X.md)
+  const BATCH_DIR = ensureBatchDir(BATCH_NUM);
+  console.log(`[Init] Batch directory ready: ${BATCH_DIR}`);
+
+  // Step 1: Clear output queues
   clearOutputQueues();
 
   // Step 1: Check for existing pool state (resume scenario)
   const savedState = loadPoolState(BATCH_NUM);
   let state: PoolState;
   let roundResults: { results: CResult[]; exits: { source: PoolSource; decision: string; result: CResult }[]; fails: PoolSource[] }[] = [];
+  let c4AllResults: C4RoundAnalysis[] = [];
 
   if (savedState && savedState.poolRoundNumber > 0) {
     // Resume from saved state
@@ -918,7 +1309,7 @@ async function main() {
   } else {
     // Fresh start — build initial pool
     console.log('\n[Step 1] Building initial pool from postB-preC...');
-    const initial = buildInitialPool();
+    const initial = buildInitialPool(BATCH_TYPE, VERIFICATION_SOURCES);
 
     if (!initial || initial.pool.length === 0) {
       console.error('ERROR: No eligible sources in postB-preC. Aborting.');
@@ -938,10 +1329,22 @@ async function main() {
   }
 
   // Step 2: Run rounds
+  // Load derived rules from all prior batches — will be updated after each C4 run
+  let allDerivedRules = loadAllDerivedRules(BATCH_NUM);
+  const loadedRuleCount = allDerivedRules.size;
+  if (loadedRuleCount > 0) {
+    console.log(`[Learning-Loop] Loaded ${loadedRuleCount} derived rules from prior batches`);
+    allDerivedRules.forEach((rule, key) => {
+      console.log(`  RULE: ${rule.sourceId} → ${rule.failCategory} (conf=${rule.confidence}, paths=${rule.suggestedPaths.join(',')})`);
+    });
+  } else {
+    console.log(`[Learning-Loop] No prior derived rules found — starting fresh`);
+  }
+
   while (state.activePool.length > 0 && state.poolRoundNumber < 3) {
     state.poolRoundNumber++;
 
-    const roundOutput = await runPoolRound(state);
+    const roundOutput = await runPoolRound(state, allDerivedRules);
     roundResults.push(roundOutput);
 
     // Update exited list and allExitedIds
@@ -955,17 +1358,244 @@ async function main() {
     // Update active pool — only sources that stayed in pool
     state.activePool = roundOutput.fails;
 
-    console.log(`\nAfter round ${state.poolRoundNumber}:`);
+    // [RULE-EFFECTIVENESS-REPORT] Analyze rule impact this round
+    // Compare outcomes for sources where derived rules were applied vs not
+    const sourcesWithDerivedRuleApplied = roundOutput.results.filter(r => r.derivedRuleApplied);
+    const sourcesWithoutRuleApplied = roundOutput.results.filter(r => !r.derivedRuleApplied);
+    const derivedRuleHits = sourcesWithDerivedRuleApplied.filter(r => r.extract.eventsFound > 0 || r.c0.candidates > 0);
+    console.log(`\n[Rule-Effectiveness] Round ${state.poolRoundNumber}:`);
+    console.log(`  Sources WITH derived rule applied: ${sourcesWithDerivedRuleApplied.length}`);
+    console.log(`  Sources WITHOUT rule applied: ${sourcesWithoutRuleApplied.length}`);
+    console.log(`  Derived rule HITS (candidates>0 or events>0): ${derivedRuleHits.length}`);
+    if (sourcesWithDerivedRuleApplied.length > 0) {
+      for (const r of sourcesWithDerivedRuleApplied) {
+        console.log(`    - ${r.sourceId}: c0Candidates=${r.c0.candidates}, events=${r.extract.eventsFound}, winner=${r.c0.winnerUrl || 'none'}`);
+      }
+    }
+
+    // [STEP 4-INTEGRATION] C4-AI analysis of unresolved sources after each round
+    // Build C4InputSource with ACTUAL C0 results (not hardcoded 0)
+    const c4InputSources: any[] = [];
+    for (const src of roundOutput.fails) {
+      const result = roundOutput.results.find(r => r.sourceId === src.sourceId);
+      c4InputSources.push({
+        sourceId: src.sourceId,
+        url: src.url,
+        failType: result?.failType || 'unresolved',
+        evidence: result?.evidence || src.queueReason || '',
+        winningStage: result?.winningStage || 'C3',
+        c0Candidates: result?.c0.candidates ?? 0,
+        c0LinksFound: result?.c0.ruleAppliedPaths
+          ? result.c0.ruleAppliedPaths.map((p, i) => ({ href: p, anchorText: 'derived-rule', score: 10 - i, region: 'rule' }))
+          : [],
+        c0RootFallback: result?.c0.rootFallback ?? false,
+        c0WinnerUrl: result?.c0.winnerUrl ?? null,
+        c1Verdict: result?.c1.verdict ?? null,
+        c1LikelyJsRendered: result?.c1.likelyJsRendered ?? false,
+        c1TimeTagCount: result?.c1.timeTagCount ?? 0,
+        c1DateCount: result?.c1.dateCount ?? 0,
+        c2Verdict: result?.c2.verdict ?? null,
+        c2Score: result?.c2.score ?? null,
+        c2Reason: result?.c2.reason ?? null,
+        eventsFound: result?.extract.eventsFound ?? 0,
+        consecutiveFailures: src.roundsParticipated,
+        lastPathUsed: src.enrichedData?.lastPathUsed ?? null,
+        triageResult: src.enrichedData?.triageResult ?? null,
+        diversifiers: src.diversifiers,
+      });
+    }
+
+    const c4Analysis = await runC4Analysis(
+      c4InputSources,
+      `batch-${BATCH_NUM}`,
+      state.poolRoundNumber,
+      BATCH_DIR
+    );
+
+    // [SAVE-DERIVED-RULES] Save C4 results as derived rules for future rounds
+    // Only for: NEEDS_SUBPAGE_DISCOVERY, LIKELY_JS_RENDER, WRONG_ENTRY_PAGE
+    const RULE_ELIGIBLE_CATEGORIES = [
+      FailCategory.NEEDS_SUBPAGE_DISCOVERY,
+      FailCategory.LIKELY_JS_RENDER,
+      FailCategory.WRONG_ENTRY_PAGE,
+    ];
+    const eligibleResults = c4Analysis.results.filter(
+      r => r.failCategoryConfidence >= 0.6 && RULE_ELIGIBLE_CATEGORIES.includes(r.failCategory)
+    );
+    if (eligibleResults.length > 0) {
+      saveRoundDerivedRules(
+        eligibleResults,
+        state.poolRoundNumber,
+        `batch-${BATCH_NUM}`,
+        BATCH_NUM
+      );
+      // Audit: log rule generation
+      for (const r of eligibleResults) {
+        writeAuditEntry({
+          sourceId: r.sourceId,
+          event: 'rule_generated',
+          round: state.poolRoundNumber,
+          metadata: {
+            failCategory: r.failCategory,
+            confidence: r.failCategoryConfidence,
+            suggestedPaths: r.discoveredPaths?.map((dp: any) => dp.path) ?? [],
+            suggestedQueue: r.nextQueue,
+          },
+        });
+      }
+    }
+
+    // [LEARNING-LOOP-FIX] Track sources that generated rules this round
+    // These sources should STAY in pool for round N+1 to apply their own rules
+    const sourcesThatGeneratedRules = new Set<string>();
+    for (const r of eligibleResults) {
+      sourcesThatGeneratedRules.add(r.sourceId);
+    }
+    if (sourcesThatGeneratedRules.size > 0) {
+      console.log(`[Learning-Loop-Fix] Sources that generated rules this round (will get rule-application round): ${Array.from(sourcesThatGeneratedRules).join(', ')}`);
+    }
+
+    // Reload derived rules so the NEXT round uses all known rules including those just saved
+    allDerivedRules = loadAllDerivedRules(BATCH_NUM);
+
+    c4AllResults.push(c4Analysis);
+
+    // Route sources based on C4-AI nextQueue recommendation
+    for (const c4Result of c4Analysis.results) {
+      const src = state.activePool.find(s => s.sourceId === c4Result.sourceId);
+      if (!src) continue;
+
+      const queueEntry = {
+        sourceId: src.sourceId,
+        queueName: '',
+        queuedAt: new Date().toISOString(),
+        priority: 1,
+        attempt: 1,
+        queueReason: `C4-AI: ${c4Result.likelyCategory} — conf=${c4Result.confidenceBreakdown.overall}`,
+        workerNotes: `C4-AI nextQueue=${c4Result.nextQueue}, catConf=${c4Result.confidenceBreakdown.categoryConfidence}, signals=${c4Result.improvementSignals.join('; ')}`,
+        winningStage: 'C4-AI',
+        outcomeType: 'fail',
+        routeSuggestion: c4Result.nextQueue,
+        roundNumber: state.poolRoundNumber,
+        roundsParticipated: src.roundsParticipated,
+        c4Analysis: {
+          likelyCategory: c4Result.likelyCategory,
+          improvementSignals: c4Result.improvementSignals,
+          suggestedRules: c4Result.suggestedRules,
+        },
+      };
+
+      // [PROMPT-5] LIKELY_JS_RENDER + moderate+ confidence → immediate D-routing
+      // Source exits pool and is NEVER refilled back to C-pool
+      // Threshold lowered from 0.85 to 0.70 based on batch-15 analysis: many LIKELY_JS_RENDER
+      // sources (conf 0.60-0.75) were going to manual-review instead of D
+      if (c4Result.failCategory === FailCategory.LIKELY_JS_RENDER && c4Result.failCategoryConfidence >= 0.70) {
+        queueEntry.queueName = 'postTestC-D';
+        queueEntry.queueReason = `C4-AI: ${c4Result.likelyCategory} — D-renderGate warranted (conf=${c4Result.failCategoryConfidence.toFixed(2)})`;
+        queueEntry.workerNotes = `PROMPT-5 AUTO-D-ROUTING: failCategory=LIKELY_JS_RENDER, confidence=${c4Result.failCategoryConfidence.toFixed(2)} >= 0.70 — routed to D-renderGate`;
+        appendFileSync(QUEUES.D, JSON.stringify(queueEntry) + '\n');
+
+        // Remove from active pool, add to exited — source is DONE from C-pool
+        state.activePool = state.activePool.filter(s => s.sourceId !== c4Result.sourceId);
+        state.exited.push({
+          source: src,
+          decision: 'postTestC-D',
+          result: null as any,
+        });
+        if (!state.allExitedIds.includes(src.sourceId)) {
+          state.allExitedIds.push(src.sourceId);
+        }
+        console.log(`  [C4-PROMPT5] ${src.sourceId} → postTestC-D (LIKELY_JS_RENDER conf=${c4Result.failCategoryConfidence.toFixed(2)} >= 0.70 — NO refill to C-pool)`);
+        continue; // next source — do NOT go through switch
+      }
+
+      // [STEP-3: RULE-VALIDATION-CHAIN] Sources that generated rules this round
+      // MUST stay in pool for round N+1 to re-test with their own newly created rules.
+      // This closes the learning loop: rule created → same source re-tested with rule.
+      const sourceGeneratedRuleThisRound = sourcesThatGeneratedRules.has(c4Result.sourceId);
+
+      let queuePath = '';
+      let queueName = '';
+
+      if (sourceGeneratedRuleThisRound) {
+        queuePath = '';
+        queueName = 'STAYS_IN_POOL';
+        console.log(`  [Step3-Chain] ${c4Result.sourceId}: generated rule this round → FORCE STAY for rule-validation round`);
+      } else {
+      switch (c4Result.nextQueue) {
+        case 'UI':
+          queuePath = QUEUES.UI;
+          queueName = 'postTestC-UI';
+          break;
+        case 'A':
+          queuePath = QUEUES.A;
+          queueName = 'postTestC-A';
+          break;
+        case 'B':
+          queuePath = QUEUES.B;
+          queueName = 'postTestC-B';
+          break;
+        case 'D':
+          queuePath = QUEUES.D;
+          queueName = 'postTestC-D';
+          break;
+        case 'manual-review':
+          // [P2-FIX] All sources get 2-3 subpage-path retries before manual-review.
+          // Override manual-review → retry-pool for any source with roundsParticipated < 3.
+          // Only send to manual-review after exhausting all retry rounds.
+          // Exception: if roundsParticipated >= 3, manual-review is final (no more retries possible).
+          if (src.roundsParticipated < 3) {
+            queuePath = '';
+            queueName = 'STAYS_IN_POOL';
+            console.log(`  [P2-Fix] ${c4Result.sourceId}: roundsParticipated=${src.roundsParticipated} < 3 — OVERRIDE manual-review → retry-pool (subpage-path retry #${src.roundsParticipated + 1})`);
+          } else {
+            queuePath = QUEUES.MANUAL_REVIEW;
+            queueName = 'postTestC-manual-review';
+          }
+          break;
+        case 'retry-pool':
+          // Stay in pool — no queue write
+          queuePath = '';
+          queueName = 'STAYS_IN_POOL';
+          break;
+        default:
+          queuePath = '';
+          queueName = 'STAYS_IN_POOL';
+      }
+      } // end else (sourceGeneratedRuleThisRound)
+
+      if (queuePath) {
+        queueEntry.queueName = queueName;
+        appendFileSync(queuePath, JSON.stringify(queueEntry) + '\n');
+      }
+
+      if (queueName !== 'STAYS_IN_POOL') {
+        // Remove from active pool, add to exited
+        state.activePool = state.activePool.filter(s => s.sourceId !== c4Result.sourceId);
+        state.exited.push({
+          source: src,
+          decision: queueName,
+          result: null as any, // C4-AI result has no CResult
+        });
+        if (!state.allExitedIds.includes(src.sourceId)) {
+          state.allExitedIds.push(src.sourceId);
+        }
+        console.log(`  [C4] ${src.sourceId} → ${queueName} (C4-AI override)`);
+      } else {
+        console.log(`  [C4] ${src.sourceId} → retry-pool (C4-AI)`);
+      }
+    }
+
+    console.log(`\nAfter C4-AI routing:`);
     console.log(`  Active pool: ${state.activePool.length}`);
     console.log(`  Exited: ${state.exited.length}`);
-    console.log(`  Newly exited this round: ${roundOutput.exits.length}`);
 
     // Save pool state after each round
     savePoolState(state, BATCH_NUM);
 
     // Step 3: Refill between rounds (if more rounds will follow)
     if (state.poolRoundNumber < 3 && state.activePool.length > 0) {
-      const refill = refillPool(state.activePool, new Set(state.activePool.map(s => s.sourceId)), new Set(state.allExitedIds));
+      const refill = refillPool(state.activePool, new Set(state.activePool.map(s => s.sourceId)), new Set(state.allExitedIds), BATCH_TYPE, VERIFICATION_SOURCES);
       if (refill.newSources.length > 0) {
         state.activePool.push(...refill.newSources);
         state.newlyRefilled = refill.newSources;
@@ -987,7 +1617,7 @@ async function main() {
   console.log('--- STATUS SUMMARY ---');
   console.log('RUNNER_EXECUTES: confirmed');
   console.log('FLOW_PARTIALLY_VERIFIED: rounds 1-3 executed');
-  console.log('C4_AI_PLACEHOLDER: C4-AI not executed, placeholder only');
+  console.log('C4_AI_INTEGRATED: C4-AI inkopplad och körande');
   console.log('RESUME_VERIFIED: resume verified (2026-04-11)');
   console.log('NOT_CANONICAL_YET: this is first working version, not final');
 
@@ -1009,10 +1639,29 @@ async function main() {
     console.log(`  ${queue}: ${count}`);
   }
 
-  // Write reports
-  writeReports(state, roundResults, BATCH_NUM);
+  // Write reports (include derived rules for learning-loop verification)
+
+  // [RULE-EFFECTIVENESS] Write structured report to rule-effectiveness.jsonl and summary to rule-effectiveness.md
+  if (roundResults.length > 0) {
+    writeRuleEffectivenessReport(roundResults, c4AllResults, allDerivedRules, BATCH_NUM);
+  }
 
   // Mark batch as completed in batch-state.jsonl
+  // Include derived rules summary for fail-set rerun proof
+  const derivedRulesSummary = {
+    totalRulesLoaded: allDerivedRules.size,
+    rulesBySource: Array.from(allDerivedRules.entries()).map(([key, rule]) => ({
+      key,
+      sourceId: rule.sourceId,
+      failCategory: rule.failCategory,
+      confidence: rule.confidence,
+      suggestedPaths: rule.suggestedPaths,
+      suggestedQueue: rule.suggestedQueue,
+    })),
+    ruleSourcesExitedInSameRound: Array.from(allDerivedRules.entries())
+      .filter(([key]) => state.allExitedIds.some(id => key.startsWith(id + '__')))
+      .map(([key]) => key.split('__')[0]),
+  };
   const completionEntry = {
     batchId: `batch-${BATCH_NUM}`,
     type: 'run-completion',
@@ -1022,6 +1671,7 @@ async function main() {
     totalActive: state.activePool.length,
     queueDistribution: queueSummary,
     stopReason: state.poolRoundNumber >= 3 ? 'max-rounds-reached' : 'pool-exhausted',
+    derivedRulesSummary,
   };
   appendFileSync(join(REPORTS_DIR, 'batch-state.jsonl'), JSON.stringify(completionEntry) + '\n');
   console.log('\n[State] Batch completion recorded in batch-state.jsonl');
