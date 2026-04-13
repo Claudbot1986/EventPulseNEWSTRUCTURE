@@ -1,0 +1,282 @@
+{
+  "version": 1,
+  "lastUpdated": "2026-04-13T17:02:43.942Z",
+  "totalBatchesAnalyzed": 17,
+  "totalSourcesProcessed": 262,
+  "dominantBottleneck": {
+    "category": "UNKNOWN",
+    "count": 54,
+    "percentage": "20.6%",
+    "description": "C0 hittar inga event candidates på root URL. Swedish patterns hittar candidates men C1 likelyJsRendered=true triggar D-route och hoppar över C2/C3. Extraction körs aldrig."
+  },
+  "failCategoryDistribution": [
+    {
+      "category": "UNKNOWN",
+      "count": 54,
+      "sources": [
+        "naturhistoriska-riksmuseet",
+        "vega",
+        "vaxjo-lakers",
+        "blekholmen",
+        "bk-hacken",
+        "boplanet",
+        "bor-s-zoo-animagic",
+        "botaniska-tradgarden",
+        "stora-teatern-g-teborg",
+        "cirkus"
+      ]
+    },
+    {
+      "category": "WRONG_ENTRY_PAGE",
+      "count": 41,
+      "sources": [
+        "karlskrona-hf",
+        "malmo-hogskola",
+        "naturhistoriska-museet",
+        "blekholmen",
+        "borlange-kommun",
+        "club-mecca",
+        "umea-konserthus",
+        "lunds-konserthus",
+        "vega",
+        "botaniska-tradgarden"
+      ]
+    },
+    {
+      "category": "NEEDS_SUBPAGE_DISCOVERY",
+      "count": 28,
+      "sources": [
+        "mittuniversitetet",
+        "kungsbacka",
+        "h-gskolan-i-sk-vde",
+        "malm-opera",
+        "bk-hacken",
+        "blekholmen",
+        "boplanet",
+        "borlange-kommun",
+        "botaniska-tradgarden",
+        "brommapojkarna"
+      ]
+    },
+    {
+      "category": "LOW_VALUE_SOURCE",
+      "count": 22,
+      "sources": [
+        "ois",
+        "open-art",
+        "goteborgs-arkitekturgalleri",
+        "centuri",
+        "orebro-vinterfest",
+        "vaxjo-lakers",
+        "bk-hacken",
+        "boplanet",
+        "brommapojkarna",
+        "friidrottsf-rbundet"
+      ]
+    },
+    {
+      "category": "LIKELY_JS_RENDER",
+      "count": 14,
+      "sources": [
+        "svenska-innebandyf-rbundet",
+        "malmo-hogskola",
+        "ralambshovsparken",
+        "kino",
+        "norrkoping-art",
+        "botaniska-tradgarden",
+        "oland",
+        "sundsvall",
+        "chalmers",
+        "mittuniversitetet"
+      ]
+    },
+    {
+      "category": "EXTRACTION_PATTERN_MISMATCH",
+      "count": 10,
+      "sources": [
+        "goteborgs-arkitekturgalleri",
+        "svenska-fotbollf-rbundet",
+        "oland",
+        "borlange-kommun",
+        "friidrottsf-rbundet",
+        "sundsvall",
+        "mittuniversitetet"
+      ]
+    }
+  ],
+  "ruleEffectiveness": {
+    "totalRulesGenerated": 75,
+    "totalRulesAppliedNextRound": 2,
+    "totalRulesThatImprovedOutcome": 0,
+    "applicationRate": "2.7%",
+    "note": "Learning loop never closed across all batches — 40 rules generated, 0 applied in next round, 0 improved outcomes. See batch-14 FAIL_SET_RERUN_PROOF."
+  },
+  "improvementAttempts": [
+    {
+      "batch": "011",
+      "change": "Root URL fallback i C0",
+      "result": "0/10 events. INGEN förbättring.",
+      "outcome": "reverted"
+    },
+    {
+      "batch": "13",
+      "change": "C4-AI placeholder inkopplad",
+      "result": "0 regler sparades — placeholder only.",
+      "outcome": "failed"
+    },
+    {
+      "batch": "14",
+      "change": "C4-AI aktiv, 6 regler sparade",
+      "result": "FAIL_SET_RERUN_PROOF: alla 6 exitade samma round, activePool=0. Aldrig re-körda med regler.",
+      "outcome": "failed"
+    },
+    {
+      "batch": "15",
+      "change": "24 regler laddade, 22 nya genererade",
+      "result": "0 applicerade, 0 förbättrade. Loop bröt: sources exitade samma round som regler skapades.",
+      "outcome": "failed"
+    },
+    {
+      "batch": "16",
+      "change": "29 regler laddade, 5 nya genererade",
+      "result": "0 applicerade, 0 förbättrade. rule-effectiveness: 0/5 rules hjälpte.",
+      "outcome": "failed"
+    },
+    {
+      "batch": "17",
+      "change": "34 regler laddade, 0 nya genererade",
+      "result": "Endast 2 sources exitade (borlange→postTestC-UI, oland→postTestC-UI). IMP-001 C3-fix, inte regler.",
+      "outcome": "partial"
+    },
+    {
+      "batch": "18",
+      "change": "40 regler laddade, 6 nya genererade",
+      "result": "0 applicerade, 0 förbättrade. 4 orphaned sources i limbo.",
+      "outcome": "failed"
+    }
+  ],
+  "swedishPatternPerformance": {
+    "sourcesTested": 14,
+    "c2Hits": 8,
+    "c2HitRate": "57%",
+    "sourcesWithEventsFound": 1,
+    "c2HitToEventRate": "12.5% (1/8)",
+    "note": "borlange-kommun events=10 berodde på IMP-001 C3-fix, inte Swedish pattern. Utan detta fix: 0/8 = 0%."
+  },
+  "neverRetryList": [
+    {
+      "improvement": "Root URL fallback i C0",
+      "testedIn": "batch-011",
+      "result": "FÖRVÄRRAD — 0 events, 10 fail, REVERTED",
+      "evidence": "batch-011 batch-report.md"
+    },
+    {
+      "improvement": "C4-AI placeholder (ingen riktig regelgenerering)",
+      "testedIn": "batch-13",
+      "result": "0 regler sparades, 0 förbättrade outcomes",
+      "evidence": "batch-13 c4-derived-rules.jsonl empty"
+    },
+    {
+      "improvement": "Derived rules lasagne (24-40 regler laddade)",
+      "testedIn": "batch-15 till batch-18",
+      "result": "0 regler applicerades i nästa round, 0 outcomes förbättrade",
+      "evidence": "batch-14..18 rule-effectiveness.jsonl: 0% application rate"
+    },
+    {
+      "improvement": "Swedish patterns probing /events, /program, /kalender",
+      "testedIn": "swedish-pattern-verification + batch-18",
+      "result": "C2 hit rate 57% men events-found rate 0% (förutom borlange med C3-fix)",
+      "evidence": "swedish-pattern-performance: 0/8 Swedish pattern hits yielded events"
+    },
+    {
+      "improvement": "Swedish pattern → D-routing (kungsbacka, cirkus, borlange)",
+      "testedIn": "batch-16, batch-17, batch-18",
+      "result": "C2=promising men C3 extraction=0. D-route fungerade inte.",
+      "evidence": "batch-16..18: kungsbacka→D, cirkus→D, borlange→D men 0 events"
+    },
+    {
+      "improvement": "PROMPT-5 LIKELY_JS_RENDER conf>=0.85 → D-route",
+      "testedIn": "batch-14",
+      "result": "Aldrig triggad — 0 sources nådde conf>=0.85",
+      "evidence": "batch-14: max conf was 0.75 (LIKELY_JS_RENDER)"
+    },
+    {
+      "improvement": "Rule application via retry-pool för NEEDS_SUBPAGE_DISCOVERY",
+      "testedIn": "batch-15 (borlange-kommun, boplanet)",
+      "result": "Rule applicerades men 0 events förbättrade",
+      "evidence": "batch-15 rule-effectiveness.jsonl: helped=null for all"
+    }
+  ],
+  "orphanSources": [
+    {
+      "sourceId": "bk-hacken",
+      "reason": "roundsParticipated=2, genererade rule i round 2, tvingades stanna via STEP3-CHAIN, aldrig fick round 3 exit",
+      "lastSeenBatch": "batch-18",
+      "suggestedAction": "manuell routing till postTestC-manual-review"
+    },
+    {
+      "sourceId": "blekholmen",
+      "reason": "roundsParticipated=2, aldrig avrundad pga STEP3-CHAIN bug",
+      "lastSeenBatch": "batch-18",
+      "suggestedAction": "manuell routing till postTestC-manual-review"
+    },
+    {
+      "sourceId": "boplanet",
+      "reason": "roundsParticipated=2, aldrig avrundad pga STEP3-CHAIN bug",
+      "lastSeenBatch": "batch-18",
+      "suggestedAction": "manuell routing till postTestC-manual-review"
+    },
+    {
+      "sourceId": "bor-s-zoo-animagic",
+      "reason": "roundsParticipated=2, genererade rule i round 3, aldrig avrundad",
+      "lastSeenBatch": "batch-18",
+      "suggestedAction": "manuell routing till postTestC-manual-review"
+    }
+  ],
+  "blockedByBug": [
+    {
+      "bugId": "STEP3-CHAIN-BUG",
+      "description": "run-dynamic-pool.ts: sources som genererar rules i round N tvingas stanna i retry-pool via STEP3-CHAIN. När poolRoundNumber=3 nås avbryts loopen MEDAN dessa källor fortfarande är i retry-pool. De får aldrig sin exit till postTestC-manual-review.",
+      "affectedSources": 4,
+      "workaround": "Efter varje batch, manuellt routes orphaned sources till postTestC-manual-review. Kör nästa batch."
+    }
+  ],
+  "nextRecommendedExperiment": {
+    "experiment": "C1→D-route bypass för Swedish pattern C0 candidates",
+    "description": "När C0 hittar candidates via Swedish patterns OCH C2 visar promise (density score > 0), fortsätt till C2/C3 även om C1 säger likelyJsRendered=true. Idag triggar likelyJsRendered=true D-route och hoppar över extraction helt.",
+    "expectedImpact": "Potentiellt 4+ nya event sources (kungsbacka, cirkus, borlange-kommun, h-gskolan-i-sk-vde) utan att vänta på D-renderGate.",
+    "concreteHypothesis": "C1 likelyJsRendered=true är falsk positiv för Swedish municipal/komman sites som kungsbacka.se — de har statiskt HTML men saknar time-tags i rå-HTML pga server-side rendering med datum-widget. C2 broad density scoring (kungsbacka: density=151, score=105) fångar dessa bättre än C1 time-tag check.",
+    "test": "Skapa verification batch med kungsbacka, cirkus, borlange-kommun, h-gskolan-i-sk-vde. Kör med och utan C1→D-route bypass. Jämför extraction results.",
+    "confidence": "medium",
+    "whyNow": "Dominant bottleneck sedan batch-11 har varit C0=0 / Swedish patterns → 0 events. Nu finns tillräckligt data för att formulera hypotes. Swedish pattern verification bekräftar C2 hits men 0 events på grund av D-route.",
+    "blockedBy": [
+      "STEP3-CHAIN-BUG"
+    ]
+  },
+  "top3CandidateImprovements": [
+    {
+      "rank": 1,
+      "improvement": "C1→D-route bypass när C0 candidates finns + Swedish pattern match",
+      "expectedBottleneckTarget": "discovery_failure",
+      "confidence": "medium",
+      "generalizationRisk": "medium",
+      "note": "C1 likelyJsRendered=true är falsk positiv för Swedish municipal sites. C2 density scoring fångar dessa bättre. Kungsbacka, cirkus, borlange-kommun har C2 hits men blockerades av D-route."
+    },
+    {
+      "rank": 2,
+      "improvement": "Fixa STEP3-CHAIN bug + hantera orphaned sources",
+      "expectedBottleneckTarget": "system-integrity",
+      "confidence": "high",
+      "generalizationRisk": "low",
+      "note": "4 sources är i limbo. Runner bug måste fixas före nästa batch. Låg risk, hög dataintegritet."
+    },
+    {
+      "rank": 3,
+      "improvement": "C3 extraction för Swedish pattern hits — ignorera C1 likelyJsRendered",
+      "expectedBottleneckTarget": "extraction_failure",
+      "confidence": "low",
+      "generalizationRisk": "high",
+      "note": "Swedish pattern hits har 0% events-found rate. Misstankar: extraction behöver target HTML, inte C1 HTML. Föreslås ej som högsta prioritet pga hög generalization risk."
+    }
+  ]
+}

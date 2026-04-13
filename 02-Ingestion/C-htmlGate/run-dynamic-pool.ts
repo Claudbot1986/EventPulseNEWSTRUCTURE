@@ -43,6 +43,7 @@ STATUS LABELS:
 import { discoverEventCandidates, screenUrl, evaluateHtmlGate } from './index';
 import { extractFromHtml } from '../F-eventExtraction/extractor';
 import { runC4Analysis, type C4InputSource, type C4RoundAnalysis, FailCategory } from './C4-ai-analysis';
+import { c4DeepAnalyze, verifyProposals, type C4PipelineResult, type C4DeepAnalysisResult } from './c4-deep-analysis';
 import { saveRoundDerivedRules, loadAllDerivedRules, isImprovementEnabled, type DerivedRulesStore } from './c4-derived-rules';
 import { readFileSync, writeFileSync, mkdirSync, appendFileSync, readdirSync } from 'fs';
 import { join, dirname } from 'path';
@@ -664,15 +665,16 @@ async function runSourceOnPool(
     // [C1-DIRECT-ROUTING] Check for strong D signal BEFORE running C2/C3
     // If likelyJsRendered=true AND (0 timeTags OR 0 dates OR no structural content) → direct D route
     // This is a cheap early exit that bypasses expensive C2/C3 and doesn't need C4
-    // EXCEPTION: if IMP-006 is enabled AND C0 found a winner via Swedish patterns or derived rules, always continue to C2/C3.
+    // EXCEPTION: if IMP-002 is enabled AND C0 found a winner via Swedish patterns or derived rules, always continue to C2/C3.
     // The likelyJsRendered flag is evaluated on the ROOT URL, but Swedish pattern subpages
     // often don't have the same JS-rendering issues. Give C2/C3 a chance before D-routing.
-    const c0FoundSubpageWinner = isImprovementEnabled('IMP-006') && (c0?.ruleApplied?.source === 'swedish-patterns' || c0?.ruleApplied?.source === 'derived-rule');
+    // [IMP-002] FIX: removed !!c0?.candidatesFound — Swedish patterns find candidates on subpages, not root.
+    //   root candidatesFound=0 but Swedish pattern winner exists → bypass should still fire.
+    const c0FoundSubpageWinner = isImprovementEnabled('IMP-002') && (c0?.ruleApplied?.source === 'swedish-patterns' || c0?.ruleApplied?.source === 'derived-rule');
     const c1Dsignal =
       c1.likelyJsRendered &&
       (c1.timeTagCount === 0 || c1.dateCount === 0 || c1.categorization === 'noise') &&
-      !c0FoundSubpageWinner &&   // ← IMP-006: don't short-circuit if C0 found subpage candidates (when enabled)
-      !!(c0?.candidatesFound);   // ← only if C0 actually ran and found candidates
+      !c0FoundSubpageWinner;  // ← IMP-002: bypass if Swedish patterns/derived rules found a winner
 
     if (c1Dsignal) {
       console.log(`[C1-DirectRoute] Strong JS-render signal detected — short-circuit to D (skip C2/C3)`);
@@ -1267,7 +1269,368 @@ function writeRuleEffectivenessReport(
 }
 
 // ---------------------------------------------------------------------------
-// Main
+// Programmatic API (for 123-autonomous-loop.ts)
+// ---------------------------------------------------------------------------
+
+export interface DynamicPoolOptions {
+  batchNum?: number;
+  batchType?: 'normal' | 'verification';
+  targetImprovement?: string | null;
+  verificationSources?: string[];
+}
+
+export async function runDynamicPoolBatch(options: DynamicPoolOptions = {}): Promise<{
+  batchNum: number;
+  poolRoundNumber: number;
+  totalExited: number;
+  totalActive: number;
+  queueDistribution: Record<string, number>;
+  stopReason: string;
+  derivedRulesSummary: {
+    totalRulesLoaded: number;
+    rulesBySource: { key: string; sourceId: string; failCategory: string; confidence: number; suggestedPaths: string[]; suggestedQueue: string }[];
+    ruleSourcesExitedInSameRound: string[];
+  };
+}> {
+  const {
+    batchNum = 13,
+    batchType = 'normal',
+    targetImprovement = null,
+    verificationSources = [],
+  } = options;
+
+  const BATCH_NUM = batchNum;
+  const BATCH_TYPE: 'normal' | 'verification' = batchType;
+  const TARGET_IMPROVEMENT: string | null = targetImprovement;
+  const VERIFICATION_SOURCES: string[] = verificationSources;
+
+  console.log('='.repeat(60));
+  console.log('DYNAMIC TEST POOL RUNNER — PROGRAMMATIC ENTRY');
+  console.log('='.repeat(60));
+  console.log(`Batch number: ${BATCH_NUM}`);
+  console.log(`Batch type: ${BATCH_TYPE}${BATCH_TYPE === 'verification' ? ` (improvement: ${TARGET_IMPROVEMENT})` : ''}`);
+
+  // Step 0: ENSURE BATCH DIRECTORY EXISTS
+  const BATCH_DIR = ensureBatchDir(BATCH_NUM);
+  console.log(`[Init] Batch directory ready: ${BATCH_DIR}`);
+
+  // Step 1: Clear output queues
+  clearOutputQueues();
+
+  // Step 1: Check for existing pool state (resume scenario)
+  const savedState = loadPoolState(BATCH_NUM);
+  let state: PoolState;
+  let roundResults: { results: CResult[]; exits: { source: PoolSource; decision: string; result: CResult }[]; fails: PoolSource[] }[] = [];
+  let c4AllResults: C4RoundAnalysis[] = [];
+
+  if (savedState && savedState.poolRoundNumber > 0) {
+    console.log(`\n[Step 1] Resuming pool from saved state (round ${savedState.poolRoundNumber})`);
+    state = savedState;
+  } else {
+    console.log('\n[Step 1] Building initial pool from postB-preC...');
+    const initial = buildInitialPool(BATCH_TYPE, VERIFICATION_SOURCES);
+
+    if (!initial || initial.pool.length === 0) {
+      throw new Error('No eligible sources in postB-preC');
+    }
+
+    console.log(`  Selected ${initial.pool.length} sources (eligible in postB-preC: ${initial.eligibleInPrec})`);
+
+    state = {
+      poolRoundNumber: 0,
+      activePool: initial.pool,
+      exited: [],
+      failed: [],
+      newlyRefilled: [],
+      allExitedIds: [],
+    };
+  }
+
+  // Step 2: Run rounds
+  let allDerivedRules = loadAllDerivedRules(BATCH_NUM);
+  const loadedRuleCount = allDerivedRules.size;
+  if (loadedRuleCount > 0) {
+    console.log(`[Learning-Loop] Loaded ${loadedRuleCount} derived rules from prior batches`);
+  }
+
+  while (state.activePool.length > 0 && state.poolRoundNumber < 3) {
+    state.poolRoundNumber++;
+
+    const roundOutput = await runPoolRound(state, allDerivedRules);
+    roundResults.push(roundOutput);
+
+    for (const exit of roundOutput.exits) {
+      state.exited.push(exit);
+      if (!state.allExitedIds.includes(exit.source.sourceId)) {
+        state.allExitedIds.push(exit.source.sourceId);
+      }
+    }
+
+    state.activePool = roundOutput.fails;
+
+    const sourcesWithDerivedRuleApplied = roundOutput.results.filter(r => r.derivedRuleApplied);
+    const derivedRuleHits = sourcesWithDerivedRuleApplied.filter(r => r.extract.eventsFound > 0 || r.c0.candidates > 0);
+    console.log(`\n[Rule-Effectiveness] Round ${state.poolRoundNumber}:`);
+    console.log(`  Sources WITH derived rule applied: ${sourcesWithDerivedRuleApplied.length}`);
+    console.log(`  Derived rule HITS: ${derivedRuleHits.length}`);
+
+    // C4-AI analysis
+    const c4InputSources: any[] = [];
+    for (const src of roundOutput.fails) {
+      const result = roundOutput.results.find(r => r.sourceId === src.sourceId);
+      c4InputSources.push({
+        sourceId: src.sourceId,
+        url: src.url,
+        failType: result?.failType || 'unresolved',
+        evidence: result?.evidence || src.queueReason || '',
+        winningStage: result?.winningStage || 'C3',
+        c0Candidates: result?.c0.candidates ?? 0,
+        c0LinksFound: result?.c0.ruleAppliedPaths
+          ? result.c0.ruleAppliedPaths.map((p: string, i: number) => ({ href: p, anchorText: 'derived-rule', score: 10 - i, region: 'rule' }))
+          : [],
+        c0RootFallback: result?.c0.rootFallback ?? false,
+        c0WinnerUrl: result?.c0.winnerUrl ?? null,
+        c1Verdict: result?.c1.verdict ?? null,
+        c1LikelyJsRendered: result?.c1.likelyJsRendered ?? false,
+        c1TimeTagCount: result?.c1.timeTagCount ?? 0,
+        c1DateCount: result?.c1.dateCount ?? 0,
+        c2Verdict: result?.c2.verdict ?? null,
+        c2Score: result?.c2.score ?? null,
+        c2Reason: result?.c2.reason ?? null,
+        eventsFound: result?.extract.eventsFound ?? 0,
+        consecutiveFailures: src.roundsParticipated,
+        lastPathUsed: src.enrichedData?.lastPathUsed ?? null,
+        triageResult: src.enrichedData?.triageResult ?? null,
+        diversifiers: src.diversifiers,
+      });
+    }
+
+    const c4Analysis = await runC4Analysis(c4InputSources, `batch-${BATCH_NUM}`, state.poolRoundNumber, BATCH_DIR);
+
+    // [C4-DEEP-ANALYSIS] Run ground truth analysis on failed sources
+    // C4 fetches URLs directly, extracts events, compares against C3 results
+    // This identifies GENERIC patterns and generates code change proposals
+    const failedSourcesForC4: C4PipelineResult[] = roundOutput.results
+      .filter(r => r.outcomeType === 'fail' || r.extract.eventsFound === 0)
+      .map(r => ({
+        sourceId: r.sourceId,
+        url: r.url,
+        c0: r.c0,
+        c1: r.c1,
+        c2: r.c2,
+        c3: { eventsFound: r.extract.eventsFound },
+        failType: r.failType || 'unknown',
+        evidence: r.evidence,
+      }));
+    if (failedSourcesForC4.length > 0) {
+      try {
+        const deepResult = await c4DeepAnalyze(failedSourcesForC4, `batch-${BATCH_NUM}`, state.poolRoundNumber);
+        if (deepResult.proposals.length > 0) {
+          console.log(`\n[C4-Deep] Generated ${deepResult.proposals.length} code change proposals:`);
+          for (const p of deepResult.proposals) {
+            console.log(`  - ${p.proposalId}: ${p.targetCondition}`);
+            console.log(`    ${p.currentBehavior} → ${p.proposedBehavior}`);
+          }
+        }
+      } catch (e: any) {
+        console.warn(`[C4-Deep] Analysis failed: ${e.message}`);
+      }
+    }
+
+    const RULE_ELIGIBLE_CATEGORIES = [
+      FailCategory.NEEDS_SUBPAGE_DISCOVERY,
+      FailCategory.LIKELY_JS_RENDER,
+      FailCategory.WRONG_ENTRY_PAGE,
+    ];
+    const eligibleResults = c4Analysis.results.filter(
+      r => r.failCategoryConfidence >= 0.6 && RULE_ELIGIBLE_CATEGORIES.includes(r.failCategory)
+    );
+    if (eligibleResults.length > 0) {
+      saveRoundDerivedRules(eligibleResults, state.poolRoundNumber, `batch-${BATCH_NUM}`, BATCH_NUM);
+      for (const r of eligibleResults) {
+        writeAuditEntry({
+          sourceId: r.sourceId,
+          event: 'rule_generated',
+          round: state.poolRoundNumber,
+          metadata: {
+            failCategory: r.failCategory,
+            confidence: r.failCategoryConfidence,
+            suggestedPaths: r.discoveredPaths?.map((dp: any) => dp.path) ?? [],
+            suggestedQueue: r.nextQueue,
+          },
+        });
+      }
+    }
+
+    const sourcesThatGeneratedRules = new Set<string>(eligibleResults.map(r => r.sourceId));
+
+    allDerivedRules = loadAllDerivedRules(BATCH_NUM);
+    c4AllResults.push(c4Analysis);
+
+    // C4 routing
+    for (const c4Result of c4Analysis.results) {
+      const src = state.activePool.find(s => s.sourceId === c4Result.sourceId);
+      if (!src) continue;
+
+      const queueEntry = {
+        sourceId: src.sourceId,
+        queueName: '',
+        queuedAt: new Date().toISOString(),
+        priority: 1,
+        attempt: 1,
+        queueReason: `C4-AI: ${c4Result.likelyCategory} — conf=${c4Result.confidenceBreakdown.overall}`,
+        workerNotes: `C4-AI nextQueue=${c4Result.nextQueue}`,
+        winningStage: 'C4-AI' as const,
+        outcomeType: 'fail' as const,
+        routeSuggestion: c4Result.nextQueue,
+        roundNumber: state.poolRoundNumber,
+        roundsParticipated: src.roundsParticipated,
+      };
+
+      if (c4Result.failCategory === FailCategory.LIKELY_JS_RENDER && c4Result.failCategoryConfidence >= 0.70) {
+        queueEntry.queueName = 'postTestC-D';
+        appendFileSync(QUEUES.D, JSON.stringify(queueEntry) + '\n');
+        state.activePool = state.activePool.filter(s => s.sourceId !== c4Result.sourceId);
+        state.exited.push({ source: src, decision: 'postTestC-D', result: null as any });
+        if (!state.allExitedIds.includes(src.sourceId)) state.allExitedIds.push(src.sourceId);
+        console.log(`  [C4-PROMPT5] ${src.sourceId} → postTestC-D`);
+        continue;
+      }
+
+      const sourceGeneratedRuleThisRound = sourcesThatGeneratedRules.has(c4Result.sourceId);
+
+      let queuePath = '';
+      let queueName = '';
+
+      if (sourceGeneratedRuleThisRound) {
+        queuePath = '';
+        queueName = 'STAYS_IN_POOL';
+      } else {
+        switch (c4Result.nextQueue) {
+          case 'UI': queuePath = QUEUES.UI; queueName = 'postTestC-UI'; break;
+          case 'A': queuePath = QUEUES.A; queueName = 'postTestC-A'; break;
+          case 'B': queuePath = QUEUES.B; queueName = 'postTestC-B'; break;
+          case 'D': queuePath = QUEUES.D; queueName = 'postTestC-D'; break;
+          case 'manual-review':
+            if (src.roundsParticipated < 3) {
+              queuePath = ''; queueName = 'STAYS_IN_POOL';
+            } else {
+              queuePath = QUEUES.MANUAL_REVIEW; queueName = 'postTestC-manual-review';
+            }
+            break;
+          default: queuePath = ''; queueName = 'STAYS_IN_POOL';
+        }
+      }
+
+      if (queuePath) {
+        queueEntry.queueName = queueName;
+        appendFileSync(queuePath, JSON.stringify(queueEntry) + '\n');
+      }
+
+      if (queueName !== 'STAYS_IN_POOL') {
+        state.activePool = state.activePool.filter(s => s.sourceId !== c4Result.sourceId);
+        state.exited.push({ source: src, decision: queueName, result: null as any });
+        if (!state.allExitedIds.includes(src.sourceId)) state.allExitedIds.push(src.sourceId);
+      }
+    }
+
+    savePoolState(state, BATCH_NUM);
+
+    if (state.poolRoundNumber < 3 && state.activePool.length > 0) {
+      const refill = refillPool(state.activePool, new Set(state.activePool.map(s => s.sourceId)), new Set(state.allExitedIds), BATCH_TYPE, VERIFICATION_SOURCES);
+      if (refill.newSources.length > 0) {
+        state.activePool.push(...refill.newSources);
+        state.newlyRefilled = refill.newSources;
+      }
+    }
+  }
+
+  // Route orphaned sources to manual-review
+  if (state.activePool.length > 0) {
+    for (const src of state.activePool) {
+      const queueEntry = {
+        sourceId: src.sourceId,
+        queueName: 'postTestC-manual-review',
+        queueReason: `[ORPHAN-FIX] Orphaned after max rounds — STEP3-CHAIN forced stay`,
+        winningStage: 'C4-AI' as const,
+        outcomeType: 'fail' as const,
+        routeSuggestion: 'manual-review',
+        roundNumber: src.roundsParticipated,
+        roundsParticipated: src.roundsParticipated,
+        queuedAt: new Date().toISOString(),
+        priority: 1,
+        attempt: 1,
+        workerNotes: 'ORPHAN-FIX: routed to manual-review after max rounds',
+      };
+      appendFileSync(QUEUES.MANUAL_REVIEW, JSON.stringify(queueEntry) + '\n');
+      state.exited.push({ source: src, decision: 'postTestC-manual-review', result: null as any });
+    }
+  }
+
+  // Build queue summary
+  const queueSummary: Record<string, number> = {
+    'postTestC-UI': 0, 'postTestC-A': 0, 'postTestC-B': 0,
+    'postTestC-D': 0, 'postTestC-manual-review': 0,
+  };
+  for (const exit of state.exited) {
+    const q = exit.decision;
+    if (q in queueSummary) queueSummary[q]++;
+  }
+
+  // Write reports
+  if (roundResults.length > 0) {
+    writeRuleEffectivenessReport(roundResults, c4AllResults, allDerivedRules, BATCH_NUM);
+  }
+
+  const derivedRulesSummary = {
+    totalRulesLoaded: allDerivedRules.size,
+    rulesBySource: Array.from(allDerivedRules.entries()).map(([key, rule]) => ({
+      key,
+      sourceId: rule.sourceId,
+      failCategory: rule.failCategory,
+      confidence: rule.confidence,
+      suggestedPaths: rule.suggestedPaths,
+      suggestedQueue: rule.suggestedQueue,
+    })),
+    ruleSourcesExitedInSameRound: Array.from(allDerivedRules.entries())
+      .filter(([key]) => state.allExitedIds.some(id => key.startsWith(id + '__')))
+      .map(([key]) => key.split('__')[0]),
+  };
+
+  // Mark batch complete
+  const completionEntry = {
+    batchId: `batch-${BATCH_NUM}`,
+    type: 'run-completion',
+    completedAt: new Date().toISOString(),
+    poolRoundNumber: state.poolRoundNumber,
+    totalExited: state.exited.length,
+    totalActive: state.activePool.length,
+    queueDistribution: queueSummary,
+    stopReason: state.poolRoundNumber >= 3 ? 'max-rounds-reached' : 'pool-exhausted',
+    derivedRulesSummary,
+  };
+  appendFileSync(join(REPORTS_DIR, 'batch-state.jsonl'), JSON.stringify(completionEntry) + '\n');
+
+  console.log('\n[DynamicPool] Batch complete:', {
+    batchNum: BATCH_NUM,
+    rounds: state.poolRoundNumber,
+    exited: state.exited.length,
+    queueDistribution: queueSummary,
+  });
+
+  return {
+    batchNum: BATCH_NUM,
+    poolRoundNumber: state.poolRoundNumber,
+    totalExited: state.exited.length,
+    totalActive: state.activePool.length,
+    queueDistribution: queueSummary,
+    stopReason: state.poolRoundNumber >= 3 ? 'max-rounds-reached' : 'pool-exhausted',
+    derivedRulesSummary,
+  };
+}
+
+// ---------------------------------------------------------------------------
+// Main (CLI entry)
 // ---------------------------------------------------------------------------
 
 async function main() {
@@ -1606,6 +1969,38 @@ async function main() {
     }
   }
 
+  // [IMP-001-FIX] Route any remaining activePool sources to manual-review
+  // These are orphaned sources that were forced to STAY via STEP3-CHAIN
+  // but the loop terminated before they could exit.
+  // This fix ensures no source is left in limbo after max rounds.
+  if (state.activePool.length > 0) {
+    console.log(`\n[IMP-001-FIX] ${state.activePool.length} sources still in activePool after max rounds — routing to manual-review:`);
+    for (const src of state.activePool) {
+      const queueEntry = {
+        sourceId: src.sourceId,
+        queueName: 'postTestC-manual-review',
+        queueReason: `[IMP-001-FIX] Orphaned: forced STAY via STEP3-CHAIN in round ${src.roundsParticipated}, loop terminated before exit`,
+        winningStage: 'C4-AI',
+        outcomeType: 'fail',
+        routeSuggestion: 'manual-review',
+        roundNumber: src.roundsParticipated,
+        roundsParticipated: src.roundsParticipated,
+        queuedAt: new Date().toISOString(),
+        priority: 1,
+        attempt: 1,
+        workerNotes: `IMP-001-FIX: orphaned after max rounds (poolRoundNumber=3 reached while source was in STEP3-CHAIN forced stay)`,
+      };
+      appendFileSync(QUEUES.MANUAL_REVIEW, JSON.stringify(queueEntry) + '\n');
+      console.log(`  [IMP-001-FIX] ${src.sourceId} → postTestC-manual-review (rounds=${src.roundsParticipated})`);
+      state.exited.push({
+        source: src,
+        decision: 'postTestC-manual-review',
+        result: null as any,
+      });
+    }
+    console.log('[IMP-001-FIX] All orphaned sources routed to postTestC-manual-review');
+  }
+
   // Step 4: Final report
   console.log(`\n${'='.repeat(60)}`);
   console.log('RUN COMPLETE — VERIFICATION STATUS BELOW');
@@ -1675,6 +2070,20 @@ async function main() {
   };
   appendFileSync(join(REPORTS_DIR, 'batch-state.jsonl'), JSON.stringify(completionEntry) + '\n');
   console.log('\n[State] Batch completion recorded in batch-state.jsonl');
+
+  // [123-Learning-Memory] Update canonical memory file after batch completion
+  console.log('\n[Learning-Memory] Updating 123-learning-memory.json...');
+  const { execSync: execSyncMemory } = await import('child_process');
+  try {
+    execSyncMemory('npx tsx 123-learning-memory.ts', {
+      cwd: __dirname,
+      stdio: 'pipe',
+      timeout: 30000,
+    });
+    console.log('[Learning-Memory] Updated successfully');
+  } catch (e: any) {
+    console.warn('[Learning-Memory] Update failed:', e.message);
+  }
 
   console.log('\nDone.');
 }
