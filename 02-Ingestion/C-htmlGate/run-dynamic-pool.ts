@@ -222,9 +222,10 @@ function readBatchState(): { currentBatch: number; status: string } | null {
   try {
     const raw = readFileSync(join(REPORTS_DIR, 'batch-state.jsonl'), 'utf8').trim();
     if (!raw) return null;
-    // batch-state.jsonl is JSONL (one JSON per line) — parse only the first line
-    const firstLine = raw.split('\n')[0];
-    return JSON.parse(firstLine);
+    // batch-state.jsonl is JSONL (one JSON per line) — parse only the LAST line (most recent state)
+    const lastLine = raw.split('\n').filter(l => l.trim()).slice(-1)[0];
+    if (!lastLine) return null;
+    return JSON.parse(lastLine);
   } catch {
     return null;
   }
@@ -365,7 +366,8 @@ function buildDiversifiers(c: { signals: QueueSignals; status: SourceStatus | un
  */
 function buildInitialPool(
   batchType: 'normal' | 'verification' = 'normal',
-  verificationSources: string[] = []
+  verificationSources: string[] = [],
+  sources?: string[]
 ): { pool: PoolSource[]; eligibleInPrec: number } | null {
   const queueEntries = parseJsonl<QueueEntry>(QUEUES.PREC);
   const allStatuses = parseJsonl<SourceStatus>(QUEUES.SOURCES_STATUS);
@@ -431,6 +433,40 @@ function buildInitialPool(
     return { pool: verifSelected, eligibleInPrec: verifCandidates.length };
   }
 
+  // EXPLICIT SOURCES: use exactly the provided source IDs (for 123-autonomous-loop)
+  if (sources && sources.length > 0) {
+    const sourceSet = new Set(sources);
+    const explicitCandidates = candidates.filter(c => sourceSet.has(c.entry.sourceId));
+    console.log(`[ExplicitSources] Selected ${explicitCandidates.length} explicit sources from ${sources.length} requested`);
+
+    const explicitSelected: PoolSource[] = [];
+    for (const c of explicitCandidates) {
+      const poolSource: PoolSource = {
+        sourceId: c.entry.sourceId,
+        url: c.url!,
+        roundsParticipated: 0,
+        diversifiers: buildDiversifiers(c),
+        queueReason: c.entry.queueReason,
+        enrichedData: {
+          lastPathUsed: c.status?.lastPathUsed ?? null,
+          lastEventsFound: c.status?.lastEventsFound ?? 0,
+          consecutiveFailures: c.status?.consecutiveFailures ?? 0,
+          triageResult: c.status?.triageResult ?? null,
+        },
+      };
+      explicitSelected.push(poolSource);
+      writeAuditEntry({
+        sourceId: poolSource.sourceId,
+        event: 'queued_to',
+        target: 'C-pool',
+        metadata: { source: 'buildInitialPool', explicitSources: sources.join(',') },
+      });
+    }
+
+    if (explicitSelected.length === 0) return null;
+    return { pool: explicitSelected, eligibleInPrec: explicitCandidates.length };
+  }
+
   const BATCH_SIZE = 10;
   const selected: PoolSource[] = [];
   const usedIds = new Set<string>();
@@ -491,6 +527,19 @@ function buildInitialPool(
       target: 'C-pool',
       metadata: { source: 'buildInitialPool' },
     });
+  }
+
+  // Drain selected sources from postB-preC
+  // Write back the non-selected entries so selected sources are removed from queue
+  const selectedIds = new Set(selected.map(p => p.sourceId));
+  const remainingEntries = queueEntries.filter(e => !selectedIds.has(e.sourceId));
+  if (remainingEntries.length > 0) {
+    const remainingLines = remainingEntries.map(e => JSON.stringify(e)).join('\n') + '\n';
+    writeFileSync(QUEUES.PREC, remainingLines);
+    console.log(`[BuildPool] Drained ${selectedIds.size} sources from postB-preC, ${remainingEntries.length} remain`);
+  } else {
+    writeFileSync(QUEUES.PREC, '');
+    console.log(`[BuildPool] Drained all ${selectedIds.size} sources from postB-preC (queue now empty)`);
   }
 
   if (selected.length === 0) return null;
@@ -581,6 +630,20 @@ function refillPool(
     });
     return ps;
   });
+
+  // If we selected some sources, write the remaining (non-selected) back to postB-preC
+  // This "drains" the selected sources from the queue so they are not chosen again
+  const selectedIds = new Set(toSelect.map(c => c.entry.sourceId));
+  const remainingEntries = queueEntries.filter(e => !selectedIds.has(e.sourceId));
+  if (remainingEntries.length > 0) {
+    const remainingLines = remainingEntries.map(e => JSON.stringify(e)).join('\n') + '\n';
+    writeFileSync(QUEUES.PREC, remainingLines);
+    console.log(`[Refill] Drained ${selectedIds.size} selected sources, ${remainingEntries.length} remain in postB-preC`);
+  } else {
+    // All entries were selected — clear the queue
+    writeFileSync(QUEUES.PREC, '');
+    console.log(`[Refill] Drained all ${selectedIds.size} sources from postB-preC (queue now empty)`);
+  }
 
   return {
     newSources,
@@ -1277,6 +1340,7 @@ export interface DynamicPoolOptions {
   batchType?: 'normal' | 'verification';
   targetImprovement?: string | null;
   verificationSources?: string[];
+  sources?: string[]; // explicit source IDs to test (for 123-autonomous-loop)
 }
 
 export async function runDynamicPoolBatch(options: DynamicPoolOptions = {}): Promise<{
@@ -1297,6 +1361,7 @@ export async function runDynamicPoolBatch(options: DynamicPoolOptions = {}): Pro
     batchType = 'normal',
     targetImprovement = null,
     verificationSources = [],
+    sources = [],
   } = options;
 
   const BATCH_NUM = batchNum;
@@ -1328,7 +1393,7 @@ export async function runDynamicPoolBatch(options: DynamicPoolOptions = {}): Pro
     state = savedState;
   } else {
     console.log('\n[Step 1] Building initial pool from postB-preC...');
-    const initial = buildInitialPool(BATCH_TYPE, VERIFICATION_SOURCES);
+    const initial = buildInitialPool(BATCH_TYPE, VERIFICATION_SOURCES, sources);
 
     if (!initial || initial.pool.length === 0) {
       throw new Error('No eligible sources in postB-preC');
@@ -1634,6 +1699,16 @@ export async function runDynamicPoolBatch(options: DynamicPoolOptions = {}): Pro
 // ---------------------------------------------------------------------------
 
 async function main() {
+  // Parse CLI arguments for explicit sources
+  const args = process.argv.slice(2);
+  let EXPLICIT_SOURCES: string[] = [];
+  for (let i = 0; i < args.length; i++) {
+    if (args[i] === '--sources' && args[i + 1]) {
+      EXPLICIT_SOURCES = args[i + 1].split(',').map(s => s.trim());
+      i++;
+    }
+  }
+
   // Read batch number and type from batch-state.jsonl
   const batchState = readBatchState();
   const BATCH_NUM = batchState?.currentBatch ?? 13;
@@ -1672,7 +1747,7 @@ async function main() {
   } else {
     // Fresh start — build initial pool
     console.log('\n[Step 1] Building initial pool from postB-preC...');
-    const initial = buildInitialPool(BATCH_TYPE, VERIFICATION_SOURCES);
+    const initial = buildInitialPool(BATCH_TYPE, VERIFICATION_SOURCES, EXPLICIT_SOURCES);
 
     if (!initial || initial.pool.length === 0) {
       console.error('ERROR: No eligible sources in postB-preC. Aborting.');

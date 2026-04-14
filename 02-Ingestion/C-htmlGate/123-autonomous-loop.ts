@@ -20,6 +20,7 @@
  *   Output: State transitions, code changes, batch runs, memory updates
  */
 
+import { basename } from 'path';
 import { readFileSync, writeFileSync, existsSync, appendFileSync } from 'fs';
 import { join, dirname } from 'path';
 import { fileURLToPath } from 'url';
@@ -138,7 +139,7 @@ interface MemoryData {
 interface BatchState {
   currentBatch: number;
   batchSize: number;
-  status: 'idle' | 'testing' | 'baseline_only' | 'completed';
+  status: 'idle' | 'pending' | 'testing' | 'baseline_only' | 'completed';
   batchSources: string[];
   completedBatches: number[];
   lastBatchRun: string;
@@ -203,7 +204,7 @@ const FORBIDDEN_TARGETS = [
 const C_ONLY_PATTERN = /^(C-htmlGate|C0-htmlFrontierDiscovery|C1-preHtmlGate|C2-htmlGate|C3-aiExtractGate|F-eventExtraction)/;
 
 function enforceScope(filePath: string): boolean {
-  const basename = require('path').basename(filePath);
+  const bname = basename(filePath);
 
   // Check forbidden targets
   for (const forbidden of FORBIDDEN_TARGETS) {
@@ -243,7 +244,17 @@ function loadMemory(): MemoryData | null {
 }
 
 function loadBatchState(): BatchState | null {
-  return readJson(FILES.BATCH_STATE, null);
+  try {
+    if (!existsSync(FILES.BATCH_STATE)) return null;
+    const raw = readFileSync(FILES.BATCH_STATE, 'utf8').trim();
+    if (!raw) return null;
+    // batch-state.jsonl is JSONL — read the LAST line (most recent state)
+    const lastLine = raw.split('\n').filter(l => l.trim()).slice(-1)[0];
+    if (!lastLine) return null;
+    return JSON.parse(lastLine);
+  } catch {
+    return null;
+  }
 }
 
 interface C4Proposal {
@@ -720,10 +731,120 @@ function transitionTo(newState: ImprovementState, payload?: any): void {
 }
 
 // ---------------------------------------------------------------------------
+// Dynamic Batch Starter — fetches from postB-preC and starts new batch
+// ---------------------------------------------------------------------------
+
+interface BatchStartResult {
+  success: boolean;
+  reason: string;
+  sourcesSelected?: string[];
+  batchNumber?: number;
+}
+
+async function startNewDynamicBatch(currentBatchState: BatchState | null): Promise<BatchStartResult> {
+  // FIX: If current batch is already completed/pending, don't start a new one
+  if (currentBatchState && (currentBatchState.status === 'completed' || currentBatchState.status === 'pending')) {
+    log(`[BatchStarter] Batch ${currentBatchState.currentBatch} is ${currentBatchState.status} — checking if we need to start a new one`);
+    // If it's completed, we're good. If it's pending, run-dynamic-pool should pick it up.
+    if (currentBatchState.status === 'pending') {
+      log(`[BatchStarter] Batch ${currentBatchState.currentBatch} is pending — run-dynamic-pool should resume it`);
+      // Try to run it
+    } else {
+      return { success: false, reason: `Current batch ${currentBatchState.currentBatch} is ${currentBatchState.status}` };
+    }
+  }
+
+  const batchNum = (currentBatchState?.currentBatch || 24) + 1;
+
+  log(`[BatchStarter] Preparing batch-${batchNum} from postB-preC...`);
+
+  // Read current postB-preC queue
+  let precRaw: string;
+  try {
+    precRaw = readFileSync(FILES.POSTB_PREC, 'utf8').trim();
+  } catch (e: any) {
+    return { success: false, reason: `Cannot read postB-preC: ${e.message}` };
+  }
+
+  if (!precRaw) {
+    return { success: false, reason: 'postB-preC is empty' };
+  }
+
+  // Parse entries — each line is JSON with sourceId
+  const lines = precRaw.split('\n').filter(l => l.trim());
+  if (lines.length === 0) {
+    return { success: false, reason: 'postB-preC is empty' };
+  }
+
+  // Select first 10 sources
+  const selectedLines = lines.slice(0, 10);
+  const remainingLines = lines.slice(10);
+  const selectedIds = selectedLines.map(l => JSON.parse(l).sourceId);
+
+  log(`[BatchStarter] Selected ${selectedIds.length} sources: ${selectedIds.join(', ')}`);
+  log(`[BatchStarter] ${remainingLines.length} sources remain in postB-preC`);
+
+  // Write remaining back to postB-preC (run-dynamic-pool will pick up the 10 we leave in front)
+  try {
+    if (remainingLines.length > 0) {
+      writeFileSync(FILES.POSTB_PREC, remainingLines.join('\n') + '\n');
+    } else {
+      writeFileSync(FILES.POSTB_PREC, '');
+    }
+  } catch (e: any) {
+    return { success: false, reason: `Cannot update postB-preC: ${e.message}` };
+  }
+
+  // Update batch-state: create new batch entry
+  const newBatchEntry = {
+    currentBatch: batchNum,
+    batchSize: selectedIds.length,
+    status: 'pending' as const,
+    batchSources: selectedIds,
+    completedBatches: currentBatchState?.completedBatches || [],
+    lastBatchRun: null,
+    cyclesCompleted: 0,
+    maxCyclesAllowed: 3,
+    stopReason: null,
+  };
+
+  // Append to batch-state.jsonl
+  try {
+    const stateLine = JSON.stringify(newBatchEntry) + '\n';
+    appendFileSync(FILES.BATCH_STATE, stateLine);
+  } catch (e: any) {
+    return { success: false, reason: `Cannot write batch-state: ${e.message}` };
+  }
+
+  log(`[BatchStarter] Wrote batch-${batchNum} to batch-state.jsonl`);
+
+  // Run the dynamic pool with selected sources in postB-preC
+  try {
+    log(`[BatchStarter] Starting run-dynamic-pool.ts with ${selectedIds.length} sources in postB-preC...`);
+    const cmd = `cd "${PROJECT_ROOT}" && npx tsx 02-Ingestion/C-htmlGate/run-dynamic-pool.ts`;
+    log(`[BatchStarter] Executing: ${cmd}`);
+    const output = execSync(cmd, { timeout: 600000, encoding: 'utf8', maxBuffer: 10 * 1024 * 1024 });
+    log(`[BatchStarter] Output (first 1000 chars): ${output.substring(0, 1000)}`);
+
+    return {
+      success: true,
+      reason: `Batch ${batchNum} completed with ${selectedIds.length} sources from postB-preC`,
+      sourcesSelected: selectedIds,
+      batchNumber: batchNum,
+    };
+  } catch (e: any) {
+    log(`[BatchStarter] Error running batch: ${e.message}`);
+    if (e.stdout) log(`[BatchStarter] Stdout: ${e.stdout.substring(0, 500)}`);
+    if (e.stderr) log(`[BatchStarter] Stderr: ${e.stderr.substring(0, 500)}`);
+    return { success: false, reason: `Batch execution failed: ${e.message}` };
+  }
+}
+
+// ---------------------------------------------------------------------------
 // Main Loop
 // ---------------------------------------------------------------------------
 
-function autonomousLoop(): { action: string; reason: string } {
+async function autonomousLoop(): Promise<{ action: string; reason: string }> {
   logSection('123 AUTONOMOUS LOOP');
 
   const impState = loadImprovementState();
@@ -753,6 +874,14 @@ function autonomousLoop(): { action: string; reason: string } {
     const result = implementCodeChange();
     if (result.success) {
       return { action: 'coded', reason: result.reason };
+    }
+    // IMP is blocked — but try to start batch anyway if batch is idle or null
+    log('[Loop] Improvement blocked, but checking if batch can start...');
+    if (!batchState || batchState.status === 'idle') {
+      const batchResult = await startNewDynamicBatch(batchState);
+      if (batchResult.success) {
+        return { action: 'batch_started', reason: batchResult.reason };
+      }
     }
     return { action: 'blocked', reason: result.reason };
   }
@@ -815,19 +944,24 @@ function autonomousLoop(): { action: string; reason: string } {
       activatedAt: imp.activatedAt,
     });
 
-    // Select next improvement
+    // Select next improvement — but continue to Step 6 to start batch
     const result = selectNextImprovement();
     if (result.success) {
-      return { action: 'selected', reason: `Completed ${imp.id}, selected next` };
+      log(`[Loop] Selected next improvement: ${result.reason}`);
+    } else {
+      log(`[Loop] No more improvements: ${result.reason}`);
     }
-    return { action: 'idle', reason: `Completed ${imp.id}, no more candidates` };
+    // Fall through to Step 6 to start batch with postB-preC sources
   }
 
-  // Step 6: Run dynamic batch if batch is idle
+  // Step 6: Run dynamic batch if batch is idle or if start_batch was returned
   if (batchState?.status === 'idle') {
     log('[Loop] Starting new dynamic batch...');
-    // This would initialize a new batch
-    return { action: 'start_batch', reason: 'Batch is idle' };
+    const batchResult = await startNewDynamicBatch(batchState);
+    if (batchResult.success) {
+      return { action: 'batch_started', reason: batchResult.reason };
+    }
+    return { action: 'batch_failed', reason: batchResult.reason };
   }
 
   return { action: 'idle', reason: 'No action needed' };
@@ -837,7 +971,7 @@ function autonomousLoop(): { action: string; reason: string } {
 // CLI Entry Point
 // ---------------------------------------------------------------------------
 
-function main() {
+async function main() {
   const args = process.argv.slice(2);
 
   // Handle --status flag
@@ -879,7 +1013,7 @@ function main() {
   // Run the autonomous loop
   logSection('123 AUTONOMOUS LOOP STARTING');
 
-  const result = autonomousLoop();
+  const result = await autonomousLoop();
 
   log(`[Result] Action: ${result.action}`);
   log(`[Result] Reason: ${result.reason}`);
@@ -889,4 +1023,7 @@ function main() {
   console.log('='.repeat(60));
 }
 
-main();
+main().catch(e => {
+  console.error('Fatal error:', e);
+  process.exit(1);
+});
