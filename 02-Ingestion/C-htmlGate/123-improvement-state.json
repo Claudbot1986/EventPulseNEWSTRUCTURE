@@ -1,62 +1,8 @@
 {
   "version": 1,
-  "lastUpdated": "2026-04-13T04:28:53.350Z",
-  "currentState": "active",
-  "currentImprovement": {
-    "id": "IMP-002",
-    "experiment": "C1→D-route bypass när C0 candidates finns + Swedish pattern match",
-    "description": "När C0 hittar candidates via Swedish patterns OCH C2 visar promise (density score > 0), fortsätt till C2/C3 även om C1 säger likelyJsRendered=true. Idag triggar likelyJsRendered=true D-route och hoppar över extraction helt.",
-    "targetBottleneck": "discovery_failure",
-    "confidence": "medium",
-    "generalizationRisk": "medium",
-    "hypothesis": "C1 likelyJsRendered=true är falsk positiv för Swedish municipal/komman sites som kungsbacka.se — de har statiskt HTML men saknar time-tags i rå-HTML pga server-side rendering med datum-widget. C2 broad density scoring (kungsbacka: density=151, score=105) fångar dessa bättre än C1 time-tag check.",
-    "affectedCStage": "C1",
-    "affectedFile": "run-dynamic-pool.ts",
-    "codeChange": "In run-dynamic-pool.ts (C1-DIRECT-ROUTING), modify the c1Dsignal condition: remove !!c0?.candidatesFound so the C0→Swedish-pattern bypass fires even when root URL has 0 candidates. Swedish patterns find candidates on subpages, not root.",
-    "verificationSources": [
-      "kungsbacka",
-      "cirkus",
-      "borlange-kommun",
-      "h-gskolan-i-sk-vde",
-      "friidrottsf-rbundet",
-      "sundsvall"
-    ],
-    "regressionSources": [
-      "mittuniversitetet",
-      "malm-opera",
-      "blekholmen",
-      "boplanet",
-      "chalmers"
-    ],
-    "createdAt": "2026-04-13T04:24:30.857Z",
-    "verificationResult": {
-      "batchId": "batch-21",
-      "improvedSources": [
-        "borlange-kommun",
-        "kungsbacka"
-      ],
-      "unchangedSources": [
-        "friidrottsf-rbundet",
-        "sundsvall",
-        "cirkus",
-        "h-gskolan-i-sk-vde"
-      ],
-      "regressedSources": [],
-      "netImprovement": 16,
-      "decision": "keep",
-      "reason": "IMP-002 bypass verified: 2/6 sources now produce events (16 total). borlange-kommun=10 events (strong verdict, C2=145), kungsbacka=6 events (weak verdict, C2=105). No regressions."
-    },
-    "verifiedAt": "2026-04-13T04:24:51.599Z",
-    "regressionResult": {
-      "batchId": "batch-22",
-      "newBreakages": [],
-      "netAssessment": "malm-opera stable at 4 events, blekholmen/boplanet/chalmers/mittuniversitetet unchanged at 0 events",
-      "decision": "keep",
-      "reason": "No regressions. IMP-002 bypass doesn't cause regressions on different Swedish site types. malm-opera improved from 0 to 4 events (same as IMP-001 baseline), confirming bypass doesn't break existing behavior."
-    },
-    "regressedAt": "2026-04-13T04:28:53.350Z",
-    "activatedAt": "2026-04-13T04:28:53.350Z"
-  },
+  "lastUpdated": "2026-04-14T18:25:00.000Z",
+  "currentState": "none",
+  "currentImprovement": null,
   "completedImprovements": [
     {
       "id": "IMP-001",
@@ -151,6 +97,67 @@
       "verifiedAt": "2026-04-13T04:24:51.599Z"
     }
   ],
-  "failedImprovements": [],
+  "failedImprovements": [
+    {
+      "id": "IMP-003",
+      "experiment": "C3 extraction för Swedish pattern hits — ignorera C1 likelyJsRendered",
+      "description": "När C0 hittar candidates via Swedish patterns OCH C2 visar promise (density score > 0), fortsätt till C2/C3 även om C1 säger likelyJsRendered=true. Idag triggar likelyJsRendered=true D-route och hoppar över extraction helt.",
+      "targetBottleneck": "extraction_failure",
+      "confidence": "low",
+      "generalizationRisk": "high",
+      "hypothesis": "C1 likelyJsRendered=true är falsk positiv för Swedish municipal/komman sites som kungsbacka.se — de har statiskt HTML men saknar time-tags i rå-HTML pga server-side rendering med datum-widget. C2 broad density scoring (kungsbacka: density=151, score=105) fångar dessa bättre än C1 time-tag check.",
+      "affectedCStage": "C1",
+      "affectedFile": "/Users/claudgashi/EventPulse-recovery/clawdbot2/project/00EVENTPULSEFINALDESTINATION/NEWSTRUCTURE/02-Ingestion/C-htmlGate/C1-preHtmlGate/index.ts",
+      "codeChange": "In extractor.ts, when C0 candidates found via Swedish pattern AND C2 score > 0, use C2 HTML (not C1 HTML) for extraction.",
+      "verificationSources": [
+        "kungsbacka",
+        "cirkus",
+        "borlange-kommun",
+        "h-gskolan-i-sk-vde",
+        "friidrottsf-rbundet",
+        "sundsvall"
+      ],
+      "regressionSources": [
+        "mittuniversitetet",
+        "malm-opera",
+        "blekholmen",
+        "boplanet",
+        "chalmers"
+      ],
+      "createdAt": "2026-04-14T17:46:00.608Z",
+      "rolledBackAt": "2026-04-14T17:50:12.684Z",
+      "rollbackReason": "Target file not found: /Users/claudgashi/EventPulse-recovery/clawdbot2/project/00EVENTPULSEFINALDESTINATION/NEWSTRUCTURE/02-Ingestion/C-htmlGate/C1-preHtmlGate/index.ts"
+    },
+    {
+      "id": "IMP-004",
+      "experiment": "C3 extraction för Swedish pattern hits — ignorera C1 likelyJsRendered",
+      "description": "När C0 hittar candidates via Swedish patterns OCH C2 visar promise (density score > 0), fortsätt till C2/C3 även om C1 säger likelyJsRendered=true. Idag triggar likelyJsRendered=true D-route och hoppar över extraction helt.",
+      "targetBottleneck": "extraction_failure",
+      "confidence": "low",
+      "generalizationRisk": "high",
+      "hypothesis": "C1 likelyJsRendered=true är falsk positiv för Swedish municipal/komman sites som kungsbacka.se — de har statiskt HTML men saknar time-tags i rå-HTML pga server-side rendering med datum-widget. C2 broad density scoring (kungsbacka: density=151, score=105) fångar dessa bättre än C1 time-tag check.",
+      "affectedCStage": "C1",
+      "affectedFile": "/Users/claudgashi/EventPulse-recovery/clawdbot2/project/00EVENTPULSEFINALDESTINATION/NEWSTRUCTURE/02-Ingestion/C-htmlGate/C1-preHtmlGate/index.ts",
+      "codeChange": "In extractor.ts, when C0 candidates found via Swedish pattern AND C2 score > 0, use C2 HTML (not C1 HTML) for extraction.",
+      "verificationSources": [
+        "kungsbacka",
+        "cirkus",
+        "borlange-kommun",
+        "h-gskolan-i-sk-vde",
+        "friidrottsf-rbundet",
+        "sundsvall"
+      ],
+      "regressionSources": [
+        "mittuniversitetet",
+        "malm-opera",
+        "blekholmen",
+        "boplanet",
+        "chalmers"
+      ],
+      "createdAt": "2026-04-14T17:50:43.279Z",
+      "rolledBackAt": "2026-04-14T18:21:32.320Z",
+      "rollbackReason": "Target file not found: /Users/claudgashi/EventPulse-recovery/clawdbot2/project/00EVENTPULSEFINALDESTINATION/NEWSTRUCTURE/02-Ingestion/C-htmlGate/C1-preHtmlGate/index.ts"
+    }
+  ],
   "blockedByBug": []
 }

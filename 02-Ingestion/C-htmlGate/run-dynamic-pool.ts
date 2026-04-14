@@ -44,7 +44,7 @@ import { discoverEventCandidates, screenUrl, evaluateHtmlGate } from './index';
 import { extractFromHtml } from '../F-eventExtraction/extractor';
 import { runC4Analysis, type C4InputSource, type C4RoundAnalysis, FailCategory } from './C4-ai-analysis';
 import { c4DeepAnalyze, verifyProposals, type C4PipelineResult, type C4DeepAnalysisResult } from './c4-deep-analysis';
-import { saveRoundDerivedRules, loadAllDerivedRules, isImprovementEnabled, type DerivedRulesStore } from './c4-derived-rules';
+import { saveRoundDerivedRules, loadAllDerivedRules, isImprovementEnabled, proposeCandidateRulesAsImprovements, type DerivedRulesStore } from './c4-derived-rules';
 import { readFileSync, writeFileSync, mkdirSync, appendFileSync, readdirSync } from 'fs';
 import { join, dirname } from 'path';
 import { fileURLToPath } from 'url';
@@ -302,10 +302,11 @@ interface QueueSignals {
   has404s: boolean;
 }
 
-function parseQueueSignals(reason: string): QueueSignals {
-  const errorMatch = reason.match(/(\d+)\s*(?:fel|errors?|404s?)/i);
+function parseQueueSignals(reason: string | undefined | null): QueueSignals {
+  const safeReason = reason ?? '';
+  const errorMatch = safeReason.match(/(\d+)\s*(?:fel|errors?|404s?)/i);
   const errorCount = errorMatch ? parseInt(errorMatch[1], 10) : 0;
-  const has404s = /\d+\s*404/i.test(reason);
+  const has404s = /\d+\s*404/i.test(safeReason);
   return { errorCount, has404s };
 }
 
@@ -386,7 +387,7 @@ function buildInitialPool(
       writeAuditEntry({ sourceId: entry.sourceId, event: 'dropped_from_pool', reason: 'url_missing_from_sources', metadata: { at: 'buildInitialPool' } });
       continue;
     }
-    const signals = parseQueueSignals(entry.queueReason);
+    const signals = parseQueueSignals((entry as any).routingReason ?? (entry as any).queueReason ?? '');
     const status = statusMap.get(entry.sourceId);
     candidates.push({ entry, signals, status, url });
   }
@@ -412,7 +413,7 @@ function buildInitialPool(
         url: c.url!,
         roundsParticipated: 0,
         diversifiers: buildDiversifiers(c),
-        queueReason: c.entry.queueReason,
+        queueReason: (c.entry as any).routingReason ?? (c.entry as any).queueReason ?? '',
         enrichedData: {
           lastPathUsed: c.status?.lastPathUsed ?? null,
           lastEventsFound: c.status?.lastEventsFound ?? 0,
@@ -446,7 +447,7 @@ function buildInitialPool(
         url: c.url!,
         roundsParticipated: 0,
         diversifiers: buildDiversifiers(c),
-        queueReason: c.entry.queueReason,
+        queueReason: (c.entry as any).routingReason ?? (c.entry as any).queueReason ?? '',
         enrichedData: {
           lastPathUsed: c.status?.lastPathUsed ?? null,
           lastEventsFound: c.status?.lastEventsFound ?? 0,
@@ -512,7 +513,7 @@ function buildInitialPool(
       url: chosen.url!,
       roundsParticipated: 0,
       diversifiers: buildDiversifiers(chosen),
-      queueReason: chosen.entry.queueReason,
+      queueReason: (chosen.entry as any).routingReason ?? (chosen.entry as any).queueReason ?? '',
       enrichedData: {
         lastPathUsed: chosen.status?.lastPathUsed ?? null,
         lastEventsFound: chosen.status?.lastEventsFound ?? 0,
@@ -591,7 +592,7 @@ function refillPool(
       writeAuditEntry({ sourceId: entry.sourceId, event: 'dropped_from_pool', reason: 'url_missing_from_sources', metadata: { at: 'refillPool' } });
       continue;
     }
-    const signals = parseQueueSignals(entry.queueReason);
+    const signals = parseQueueSignals((entry as any).routingReason ?? (entry as any).queueReason ?? '');
     const status = statusMap.get(entry.sourceId);
     mapped.push({ entry, signals, status, url });
   }
@@ -614,7 +615,7 @@ function refillPool(
       url: chosen.url!,
       roundsParticipated: 0,
       diversifiers: buildDiversifiers(chosen),
-      queueReason: chosen.entry.queueReason,
+      queueReason: (chosen.entry as any).routingReason ?? (chosen.entry as any).queueReason ?? '',
       enrichedData: {
         lastPathUsed: chosen.status?.lastPathUsed ?? null,
         lastEventsFound: chosen.status?.lastEventsFound ?? 0,
@@ -1536,6 +1537,11 @@ export async function runDynamicPoolBatch(options: DynamicPoolOptions = {}): Pro
           },
         });
       }
+      // [C4-IMPROVEMENT-PROPOSAL] Propose candidateRuleForC0C3 as improvements for 123-loop
+      const proposalResult = proposeCandidateRulesAsImprovements(BATCH_NUM, 0.70);
+      if (proposalResult.proposed > 0) {
+        console.log(`[C4-ImprovementProposal] Batch ${BATCH_NUM}: proposed ${proposalResult.proposed} improvements (${proposalResult.skipped} skipped, ${proposalResult.errors.length} errors)`);
+      }
     }
 
     const sourcesThatGeneratedRules = new Set<string>(eligibleResults.map(r => r.sourceId));
@@ -1911,6 +1917,11 @@ async function main() {
             suggestedQueue: r.nextQueue,
           },
         });
+      }
+      // [C4-IMPROVEMENT-PROPOSAL] Propose candidateRuleForC0C3 as improvements for 123-loop
+      const proposalResult = proposeCandidateRulesAsImprovements(BATCH_NUM, 0.70);
+      if (proposalResult.proposed > 0) {
+        console.log(`[C4-ImprovementProposal] Batch ${BATCH_NUM}: proposed ${proposalResult.proposed} improvements (${proposalResult.skipped} skipped, ${proposalResult.errors.length} errors)`);
       }
     }
 

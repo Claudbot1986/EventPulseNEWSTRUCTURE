@@ -352,6 +352,68 @@ Return a JSON array with one entry per source. No markdown fences, no code block
 }
 
 // ---------------------------------------------------------------------------
+// Robust JSON Parser — handles imperfect AI responses
+// ---------------------------------------------------------------------------
+
+function robustParse(response: string): any[] {
+  // Strategy 1: Try to extract JSON array with bracket matching
+  const jsonMatch = response.match(/\[[\s\S]*\]/);
+  if (jsonMatch) {
+    try {
+      return JSON.parse(jsonMatch[0]);
+    } catch {
+      // Try to fix trailing comma issues
+      try {
+        const fixed = jsonMatch[0].replace(/,(\s*[}\]])/g, '$1');
+        return JSON.parse(fixed);
+      } catch {
+        // Try to fix unquoted keys
+        try {
+          const fixed2 = jsonMatch[0].replace(/([{,]\s*)([a-zA-Z_][a-zA-Z0-9_]*)\s*:/g, '$1"$2":');
+          return JSON.parse(fixed2);
+        } catch {
+          // Fall through to next strategy
+        }
+      }
+    }
+  }
+
+  // Strategy 2: Try parsing the whole response as JSON
+  try {
+    return JSON.parse(response);
+  } catch {
+    // Fall through
+  }
+
+  // Strategy 3: Try extracting individual JSON objects from the response
+  // Look for {...} patterns and try to parse each one
+  const objectMatches = response.match(/\{[\s\S]*?\}(?=\s*[,}\]]|\s*$)/g);
+  if (objectMatches && objectMatches.length > 0) {
+    const results: any[] = [];
+    for (const objStr of objectMatches) {
+      try {
+        // Try to fix common issues
+        let fixed = objStr
+          .replace(/,(\s*[}\]])/g, '$1')           // trailing commas
+          .replace(/([{,]\s*)([a-zA-Z_][a-zA-Z0-9_]*)\s*:/g, '$1"$2":'); // unquoted keys
+        const parsed = JSON.parse(fixed);
+        if (parsed.sourceId) {
+          results.push(parsed);
+        }
+      } catch {
+        // Skip malformed objects
+      }
+    }
+    if (results.length > 0) {
+      console.log(`[C4-RobustParse] Extracted ${results.length} objects via object-level parsing`);
+      return results;
+    }
+  }
+
+  throw new Error('Could not parse AI response as JSON');
+}
+
+// ---------------------------------------------------------------------------
 // Main analysis function
 // ---------------------------------------------------------------------------
 
@@ -384,15 +446,11 @@ export async function runC4Analysis(
       system: 'You are an expert EventPulse system analyst. Return only valid JSON.',
     });
 
-    // Parse JSON array from response
+    // Parse JSON array from response — ROBUST PARSING
+    // Tries multiple strategies to handle imperfect AI responses
     let parsed: any[];
     try {
-      const jsonMatch = response.match(/\[[\s\S]*\]/);
-      if (jsonMatch) {
-        parsed = JSON.parse(jsonMatch[0]);
-      } else {
-        parsed = JSON.parse(response);
-      }
+      parsed = robustParse(response);
     } catch {
       console.warn('[C4] Failed to parse AI response, using fallback per-source analysis');
       parsed = sources.map(s => ({
