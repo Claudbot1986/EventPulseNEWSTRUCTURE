@@ -862,33 +862,39 @@ function routeResult(result: CResult, roundsParticipated: number): string {
   let queuePath: string;
   let queueName: string;
 
-  switch (result.routeSuggestion) {
-    case 'UI':
-      queuePath = QUEUES.UI;
-      queueName = 'postTestC-UI';
-      break;
-    case 'A':
-      queuePath = QUEUES.A;
-      queueName = 'postTestC-A';
-      break;
-    case 'B':
-      queuePath = QUEUES.B;
-      queueName = 'postTestC-B';
-      break;
-    case 'D':
-      queuePath = QUEUES.D;
-      queueName = 'postTestC-D';
-      break;
-    default:
-      // Check if this source has now participated in 3 rounds
-      if (roundsParticipated >= 3) {
-        queuePath = QUEUES.MANUAL_REVIEW;
-        queueName = 'postTestC-manual-review';
-      } else {
-        // Fail but not yet at 3 rounds — stays in pool (logged, not queued)
-        queuePath = '';
-        queueName = 'STAYS_IN_POOL';
-      }
+  // [SAFETY] extract_success MUST go to UI — no exceptions
+  if (result.outcomeType === 'extract_success') {
+    queuePath = QUEUES.UI;
+    queueName = 'postTestC-UI';
+  } else {
+    switch (result.routeSuggestion) {
+      case 'UI':
+        queuePath = QUEUES.UI;
+        queueName = 'postTestC-UI';
+        break;
+      case 'A':
+        queuePath = QUEUES.A;
+        queueName = 'postTestC-A';
+        break;
+      case 'B':
+        queuePath = QUEUES.B;
+        queueName = 'postTestC-B';
+        break;
+      case 'D':
+        queuePath = QUEUES.D;
+        queueName = 'postTestC-D';
+        break;
+      default:
+        // Check if this source has now participated in 3 rounds
+        if (roundsParticipated >= 3) {
+          queuePath = QUEUES.MANUAL_REVIEW;
+          queueName = 'postTestC-manual-review';
+        } else {
+          // Fail but not yet at 3 rounds — stays in pool (logged, not queued)
+          queuePath = '';
+          queueName = 'STAYS_IN_POOL';
+        }
+    }
   }
 
   if (queuePath) {
