@@ -280,7 +280,7 @@ function extractVerificationSources(memory: MemoryData): string[] {
 
 function extractRegressionSources(memory: MemoryData): string[] {
   // Different group — sources with similar but not identical failure
-  // These are WRONG_ENTRY_PAGE and NEEDS_SUBPAGE_DISCOVERY sources
+  // These are ENTRY_PAGE_NO_EVENTS (replaced WRONG_ENTRY_PAGE 2026-04-14) and NEEDS_SUBPAGE_DISCOVERY sources
   // that are NOT in the verification group
   return ['mittuniversitetet', 'malm-opera', 'blekholmen', 'boplanet', 'chalmers'];
 }

@@ -93,12 +93,59 @@ Code exists but verification is missing.
 ### <placeholder_only>
 Future function or empty layer — no real implementation.
 
-| Komponent | Status | Anteckningar |
+|| Komponent | Status | Anteckningar |
 |-----------|--------|--------------|
-| **C4-AI** | C4_AI_PLACEHOLDER | No AI analysis connected in run-dynamic-pool.ts. c4-ai-learnings.md is a placeholder structure only. Must not be described as "completed" or "working". |
 | **C3-aiExtractGate in loop context** | Not connected | Only runs as one-off fallback, not in the batch loop. |
 | **Canonical model (C1/C2/C3/C4-AI naming)** | Not yet aligned | Current code uses C0/C1/C2/C3 naming. Canonical names not yet enforced in code. |
 </placeholder_only>
+
+### <experimental_partially_verified>
+Komponenter som är experimentella och endast partiellt verifierade.
+
+| Komponent | Status | Verifieringsnivå | Anteckningar |
+|-----------|--------|------------------|---------------|
+| **C4-AI (failCategory)** | EXPERIMENTAL | Partially verified | C4-AI körs i run-dynamic-pool.ts efter varje round. Tilldelar failCategory (ENTRY_PAGE_NO_EVENTS (2026-04-14 NY, ersätter WRONG_ENTRY_PAGE), NEEDS_SUBPAGE_DISCOVERY, LIKELY_JS_RENDER, EXTRACTION_PATTERN_MISMATCH, LOW_VALUE_SOURCE, no_viable_path_found (2026-04-14 NY), robots_or_policy_blocked (2026-04-14 NY), likely_js_render_required (2026-04-14 NY), ambiguous_multiple_paths (2026-04-14 NY), insufficient_html_signal (2026-04-14 NY), UNKNOWN). failCategory används för routing-beslut. Pilotfall: bk-hacken, blekholmen. **Gap:** suggestedRules genereras men kopplas INTE till C1/C2/C3-ändring. **batch-14:** c4-ai-learnings.md är fortfarande placeholder (`STATUS: IMPLEMENTATION GAP — C4-AI NOT YET CONNECTED`). |
+| **C4-AI routing (C1/D/discard)** | EXPERIMENTAL | Partially verified | C4-AI föreslår routing: tillbaka till C1 (retry), D (render-gateway), eller discard (manual-review). routing-beslut baserat på failCategory + confidence. Ej verifierad i produktionskörning. |
+| **Batch 10 → C1→C2→C3→C4-AI** | EXPERIMENTAL | Partially verified | Fullständig pipeline körs i run-dynamic-pool.ts. C1=Discovery, C2=Screening, C3=Extraction, C4-AI=AI-analys på fail. Körde 14 sources genom 3 rundor i batch-13. **batch-14:** 10 sources × 1 round. INTE canonical ännu. |
+
+### <learning_loop_status_2026-04-12>
+
+**123-loop Status: `partially learning` (uppdaterad från `analysis only`)**
+
+||| Aspekt | Bevisat | Ej bevisat |
+||--------|---------|------------|
+||| C4-AI genererar suggestedRules | ✓ (c4-ai-analysis-round-1.md batch-14, 9 sources analyserade) | - |
+||| C4-AI kör efter varje round | ✓ (batch-14: c4-ai-analysis-round-1.md producerad) | - |
+||| suggestedRules sparas permanent | ✓ (c4-derived-rules.jsonl: 6 rules, batch-14) | - |
+||| Rules lastas vid körning | ✓ (loadAllDerivedRules() fungerar) | - |
+||| Rules påverkar routing för nya sources | ✓ (5 sources i batch-14 fick ändrad routing B/D) | - |
+||| Rules kopplas till C1/C2/C3 | ✗ | C4-derived-rules.jsonl innehåller per-source routing hints, inte generella C1/C2/C3-ändringar |
+||| C1/C2/C3-kod förbättrad | ✗ | Inga ändringar i discoverEventCandidates(), screenUrl(), evaluateHtmlGate(), extractFromHtml() |
+||| Samma fail-set omkört | ✗ | batch-14 pool exhausted efter round 1, batch-15 krävs |
+||| Före/efter-jämförelse | ✗ | c4-ai-learnings.md fortfarande "IMPLEMENTATION GAP" |
+||| improvements-bank uppdaterad | ✗ | 8 entries från 2026-04-06, inga nya från batch-14 |
+||| events extraction förbättrad | ✗ | batch-14: 0 events, 9 fail |
+
+**Slutsats: `partially learning`**
+
+**Vad som är nytt sedan 2026-04-11:**
+- C4-AI genererar nu rules och sparar dem till c4-derived-rules.jsonl
+- Rules påverkar routing (5 av 9 fail-sources fick ändrad väg: B eller D)
+- Två separata rule stores: c4-derived-rules.jsonl (källspecifika routing hints) vs improvements-bank.jsonl (generella C1/C2/C3-förbättringar)
+
+**Vad som fortfarande saknas för `operational learning loop`:**
+1. Generella regler baserade på C4-AI:s observed patterns — måste testas på C1/C2/C3
+2. Omkörning av samma fail-set efter generell ändring — batch-15 krävs
+3. Före/efter-jämförelse som visar förbättrat utfall
+4. improvements-bank.jsonl uppdaterad med verifierade generella regler
+5. Lag 4 (c4-ai-learnings.md) fylld med verklig data, inte "IMPLEMENTATION GAP"
+
+**Viktigt förbehåll:**
+- c4-derived-rules.jsonl rules är **per-source routing hints**, inte generella C1/C2/C3-ändringar
+- Dessa rules gäller specifika källor (mittuniversitetet→B, svenska-innebandy→D), inte universella mönster
+- Inget i batch-14 bevisar att extractFromHtml() eller discoverEventCandidates() förbättrats
+
+</experimental_partially_verified>
 
 ---
 
@@ -110,10 +157,10 @@ Future function or empty layer — no real implementation.
 | **C1** (`C1-preHtmlGate/`) | ✓ Ja | ✓ Ja | ✗ Nej | ✓ Ja | **Current Implementation (⚠️ NAMNET ÄR VILSELEDANDE)** | Används i alla run-batch-*.ts script. Export: `screenUrl()`. Gör **screening** (billig fetch + DOM-analys), INTE discovery. ⚠️ **Matchar INTE canonical C1** (det gör C0). Matchar **canonical C2** (Grov HTML-screening). Körs före C2. |
 | **C2** (`C2-htmlGate/`) | ✓ Ja | ✓ Ja | ✗ Nej | ✓ Ja | **Current Implementation** | Används i alla run-batch-*.ts script. Export: `evaluateHtmlGate()`. Weighted scoring + candidate quality. Gör routingbeslut: promising/maybe/unclear/low_value. |
 | **C3** (`C3-aiExtractGate/`) | ✓ Ja | ⚠️ Endast fallback | ✗ Nej | ✓ Ja | **Partial Implementation** | Körs ENBART när C2=promising MEN extractFromHtml()=0 events. Är INTE "första HTML-extraktionssteget" som canonical modell säger — `extractFromHtml()` från `F-eventExtraction/extractor.ts` är faktiskt första extraktionssteget. |
-| **C4-AI** (`C3-aiExtractGate` alias) | ✓ Ja | ✗ Nej | ✗ Nej | ✓ Ja | **PLACEHOLDER — IMPLEMENTATION GAP** | I `run-dynamic-pool.ts` är C4-AI en placeholder som bara skriver en tom rapport. Ingen verklig AI-analys inkopplad. I `123.md` beskrivs C4-AI som "123-loopen". I praktiken körs C3-aiExtractGate inte i loop-format utan endast som engångs-AI-fallback. **Gapet är: ingen strukturerad AI-analys av fail-mängden efter varje runda.** |
+| **C4-AI** (`C3-aiExtractGate` alias) | ✓ Ja | ✓ Ja (run-dynamic-pool) | ✗ Nej | ✓ Ja | **IMPLEMENTED_EARLY_VERSION — INTE FULLSTÄNDIG** | I `run-dynamic-pool.ts` anropas `runC4Analysis()` efter varje round. Skriver c4-ai-analysis-round-X.md. C4-AI ger: likelyCategory, nextQueue, improvementSignals, suggestedRules, confidenceBreakdown. Pilotfall: bk-hacken, blekholmen. **Gap:** suggestedRules kopplade inte ännu till C1/C2/C3. C4-AI route:ar sources men påverkar inte C1/C2/C3 förändring. |
 | **extractFromHtml()** | ✓ Ja | ✓ Ja | ✓ Ja | ✓ Ja | **Canonical Extraction** | Finns i `F-eventExtraction/extractor.ts`. Är den verkliga första HTML-extraktionssteget. Returnerar `{eventsFound, ...}`. |
 | **batch-state.jsonl** | ✓ Ja | ⚠️ Delvis (ny modell) | ✗ Nej | ✓ Ja | **Under utveckling** | Används av `run-dynamic-pool.ts` för pool-state. `currentBatch=13, status=pending`. State-persistens mellan sessioner behöver förbättras (run-dynamic-pool.ts skriver inte tillbaka efter körning ännu). |
-| **run-dynamic-pool.ts** | ✓ Ja | ✓ Ja (ny) | ✗ Nej | ✓ Ja | **AKTIV EXPERIMENTELL RUNNER / PENDING VERIFICATION** | Ny primär kandidat för C-testRiggen (2026-04-11). Implementerar dynamisk testpool med refill från postB-preC. Round-1-verifiering pågår. **C4-AI är fortfarande placeholder** — ingen verklig AI-analys inkopplad. State-persistens mellan sessioner behöver förbättras. Får INTE beskrivas som "canonical" förrän verifierad. |
+|| **run-dynamic-pool.ts** | ✓ Ja | ✓ Ja (ny) | ✗ Nej | ✓ Ja | **AKTIV EXPERIMENTELL RUNNER / NOT CANONICAL YET** | Ny primär kandidat för C-testRiggen (2026-04-11). Implementerar dynamisk testpool med refill från postB-preC. C4-AI är nu inkopplad (IMPLEMENTED_EARLY_VERSION). Full pipeline: Batch 10 → C1 → C2 → C3 → C4-AI → routing (C1 retry / D / discard). failCategory + routing är experimental. Körde batch-13: 14 sources × 3 rounds. State-persistens mellan sessioner behöver förbättras. Får INTE beskrivas som "canonical" förrän verifierad. |
 | **run-batch-001.ts – run-batch-010.ts** | ✓ Ja (10 st) | ✗ Nej (engångs) | ✗ Nej | ✓ Ja | **Legacy baseline batch** | Engångs test-script med hardkodade sourcelistor. Ingen follow-loop. Ingen förbättringscykel. `cyclesCompleted=0` i batch-state visar att förbättringsloopen aldrig kördes. |
 | **Improvements-bank** | ✓ Ja | ✗ Nej | ✗ Nej | ✓ Ja | **Planerad/Dokumenterad** | `reports/improvements-bank.jsonl` + `reports/IMPROVEMENTS-BANK.md` finns. Dokumenterar struktur för generella förbättringar. Används ej aktivt. |
 | **batch-001/2/3 rapporter** | ✓ Ja | ✗ Nej | ✗ Nej | ✓ Ja | **Historik** | Reports/batch-{N}/ finns med baseline-resultat och summary. Är dokumentation av körda tester, inte aktiv pipeline. |

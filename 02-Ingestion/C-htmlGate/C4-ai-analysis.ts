@@ -19,12 +19,47 @@ import { join } from 'path';
 // Types
 // ---------------------------------------------------------------------------
 
+/**
+ * FAILURE CATEGORY REPLACEMENT (2026-04-14):
+ *
+ * OLD: WRONG_ENTRY_PAGE was treated as terminal failure → manual-review.
+ * NEW: "Entry page did not contain events yet — continue guided discovery."
+ *
+ * WRONG_ENTRY_PAGE is now DEPRECATED. It is replaced by:
+ *   - ENTRY_PAGE_NO_EVENTS: C4 should attempt human-like discovery first
+ *   - If discovery fails after 1-3 nav levels → no_viable_path_found
+ *
+ * New manual-review categories (only reached AFTER limited human-like discovery):
+ *   - no_viable_path_found: exhausted all reasonable navigation paths
+ *   - robots_or_policy_blocked: robots.txt or meta policy blocked discovery
+ *   - likely_js_render_required: content requires JS rendering (D-route)
+ *   - ambiguous_multiple_paths: multiple equally valid paths, no way to choose
+ *   - insufficient_html_signal: HTML lacks any event-like signals
+ */
 export enum FailCategory {
+  // DEPRECATED — replaced by ENTRY_PAGE_NO_EVENTS + no_viable_path_found
   WRONG_ENTRY_PAGE = 'WRONG_ENTRY_PAGE',
+  // NEW: Entry page had no events — C4 must attempt human-like discovery first
+  ENTRY_PAGE_NO_EVENTS = 'ENTRY_PAGE_NO_EVENTS',
+  // Continues to exist — C4 found subpage candidates worth trying
   NEEDS_SUBPAGE_DISCOVERY = 'NEEDS_SUBPAGE_DISCOVERY',
+  // Continues to exist — direct D-routing warranted
   LIKELY_JS_RENDER = 'LIKELY_JS_RENDER',
+  // Continues to exist
   EXTRACTION_PATTERN_MISMATCH = 'EXTRACTION_PATTERN_MISMATCH',
+  // Continues to exist
   LOW_VALUE_SOURCE = 'LOW_VALUE_SOURCE',
+  // NEW: only reached AFTER human-like discovery exhausted
+  NO_VIABLE_PATH_FOUND = 'no_viable_path_found',
+  // NEW: robots.txt or policy blocked discovery
+  ROBOTS_OR_POLICY_BLOCKED = 'robots_or_policy_blocked',
+  // NEW: same as LIKELY_JS_RENDER but explicit
+  LIKELY_JS_RENDER_REQUIRED = 'likely_js_render_required',
+  // NEW: multiple paths, cannot determine correct one
+  AMBIGUOUS_MULTIPLE_PATHS = 'ambiguous_multiple_paths',
+  // NEW: HTML lacks event signals
+  INSUFFICIENT_HTML_SIGNAL = 'insufficient_html_signal',
+  // Fallback
   UNKNOWN = 'UNKNOWN',
 }
 
@@ -74,6 +109,12 @@ export interface DiscoveredPath {
   confidence: number;  // 0–1 how confident this path contains events
 }
 
+export interface CandidateRuleForC0C3 {
+  pathPattern: string;       // e.g. "/events|/kalender|/program"
+  appliesTo: string;         // e.g. "Swedish cultural/municipal sites with event listings"
+  confidence: number;        // 0–1
+}
+
 export interface C4AnalysisResult {
   sourceId: string;
   likelyCategory: string;
@@ -84,6 +125,14 @@ export interface C4AnalysisResult {
   suggestedRules: string[];
   // Structured: specific paths discovered from C0 links/URLs on THIS source
   discoveredPaths: DiscoveredPath[];
+  // NEW: whether C4 attempted human-like discovery
+  discoveryAttempted: boolean;
+  // NEW: paths actually tried during human-like discovery
+  discoveryPathsTried: string[];
+  // NEW: free-text reasoning about the discovery path
+  humanLikeDiscoveryReasoning: string;
+  // NEW: generalizable candidate rule for C0–C3
+  candidateRuleForC0C3: CandidateRuleForC0C3 | null;
   // Structured: explicit routing if C1/C2 signals are strong enough
   directRouting?: {
     target: 'A' | 'B' | 'D';
@@ -137,10 +186,26 @@ function writeC4Report(
     lines.push(`| failCategory | ${r.failCategory} |`);
     lines.push(`| failCategoryConfidence | ${r.failCategoryConfidence.toFixed(2)} |`);
     lines.push(`| nextQueue | ${r.nextQueue} |`);
+    lines.push(`| discoveryAttempted | ${r.discoveryAttempted} |`);
+    if (r.discoveryPathsTried.length > 0) {
+      lines.push(`| discoveryPathsTried | ${r.discoveryPathsTried.join(', ')} |`);
+    }
     if (r.directRouting) {
       lines.push(`| directRouting | ${r.directRouting.target} (conf=${r.directRouting.confidence.toFixed(2)}) |`);
     }
     lines.push('');
+    if (r.humanLikeDiscoveryReasoning) {
+      lines.push('**humanLikeDiscoveryReasoning:**');
+      lines.push(r.humanLikeDiscoveryReasoning);
+      lines.push('');
+    }
+    if (r.candidateRuleForC0C3) {
+      lines.push('**candidateRuleForC0C3:**');
+      lines.push(`- pathPattern: \`${r.candidateRuleForC0C3.pathPattern}\``);
+      lines.push(`- appliesTo: ${r.candidateRuleForC0C3.appliesTo}`);
+      lines.push(`- confidence: ${r.candidateRuleForC0C3.confidence.toFixed(2)}`);
+      lines.push('');
+    }
     lines.push('**discoveredPaths:**');
     if (r.discoveredPaths.length > 0) {
       for (const dp of r.discoveredPaths) {
@@ -178,7 +243,9 @@ function buildAnalysisPrompt(sources: C4InputSource[]): string {
   return `You are an expert analyst for the EventPulse HTML scraping system.
 
 ## Your task
-Analyze failed event sources and return STRUCTURED routing + improvement advice.
+Analyze failed event sources using HUMAN-LIKE DISCOVERY. When the entry page did not contain events,
+your job is to find the correct path to event content through intelligent navigation analysis —
+NOT to immediately send to manual-review.
 
 ## Input: Array of failed sources
 ${sourcesJson}
@@ -189,7 +256,7 @@ Return a JSON array with one object per source. All fields are required.
 {
   "sourceId": "xxx",
   "likelyCategory": "why this source fails in 1-2 words",
-  "failCategory": "WRONG_ENTRY_PAGE" | "NEEDS_SUBPAGE_DISCOVERY" | "LIKELY_JS_RENDER" | "EXTRACTION_PATTERN_MISMATCH" | "LOW_VALUE_SOURCE" | "UNKNOWN",
+  "failCategory": "ENTRY_PAGE_NO_EVENTS" | "NEEDS_SUBPAGE_DISCOVERY" | "LIKELY_JS_RENDER" | "EXTRACTION_PATTERN_MISMATCH" | "LOW_VALUE_SOURCE" | "no_viable_path_found" | "robots_or_policy_blocked" | "likely_js_render_required" | "ambiguous_multiple_paths" | "insufficient_html_signal" | "UNKNOWN",
   "failCategoryConfidence": 0.0–1.0,
   "nextQueue": "UI" | "A" | "B" | "D" | "manual-review" | "retry-pool",
   "improvementSignals": ["signal1", "signal2"],
@@ -205,9 +272,18 @@ Return a JSON array with one object per source. All fields are required.
       "path": "/events",
       "source": "nav-link",
       "anchorText": "Kommande evenemang",
-      "confidence": 0.85
+      "confidence": 0.85,
+      "navReason": "Human-like reasoning: page has 'Evenemang' link in main nav"
     }
   ],
+  "discoveryAttempted": true,
+  "discoveryPathsTried": ["/events", "/kalender", "/program"],
+  "humanLikeDiscoveryReasoning": "Tried: homepage → Events link in nav → found event listing",
+  "candidateRuleForC0C3": {
+    pathPattern: "/events|/kalender|/program",
+    appliesTo: "Swedish cultural/municipal sites with event listings",
+    confidence: 0.8
+  },
   "directRouting": {
     "target": "D",
     "reason": "c1LikelyJsRendered=true with 0 timeTags indicates client-side rendering",
@@ -215,55 +291,62 @@ Return a JSON array with one object per source. All fields are required.
   }
 }
 
-## Field definitions
+## NEW BEHAVIOR: Human-Like Discovery for ENTRY_PAGE_NO_EVENTS
 
-### discoveredPaths (REQUIRED — even if empty [])
-Specific URL paths discovered from c0LinksFound on THIS source. Each path must:
-- Be an EXACT path found in c0LinksFound (e.g. "/events", "/biljetter")
-- Reference the link's anchorText if it came from a nav/sidebar/content link
-- Have a confidence score based on how likely this path contains events
+When failCategory would previously have been WRONG_ENTRY_PAGE, you MUST now:
 
-### directRouting (optional — omit if not applicable)
-If c1LikelyJsRendered=true OR strong A/B signals detected in C1/C2, set this to bypass C4 threshold logic:
-- target: "D" if JS-render suspected, "A" if API pattern found, "B" if structured data found
-- reason: why this routing is warranted
-- confidence: 0.0–1.0
+1. **Try to find the correct path** — analyze c0LinksFound for event-indicating links
+2. **Consider these common Swedish event paths**:
+   - /events, /evenemang, /kalender, /program, /schema
+   - /konserter, /biljetter, /aktuelt, /aktuellt, /vad-hander
+   - /schedule, /lineup, /dates, /tickets
+3. **Weigh link signals**:
+   - Anchor text: evenemang, kalender, events, program, händer, aktuellt, biljetter, schedule, lineup
+   - Date signals in proximity: månad, vecka, dag, januari, feb, mars, etc.
+   - Event structure: time tags, location, ticket prices near links
+4. **Max 1–3 navigation levels** — do NOT crawl extensively
+5. **Document the path that worked** in discoveredPaths + humanLikeDiscoveryReasoning
+6. **Formulate a general candidate rule** in candidateRuleForC0C3.pathPattern
 
-### failCategoryConfidence guidelines
-- 0.90–1.0: Very strong evidence (e.g., likelyJsRendered=true + 0 timeTags)
-- 0.70–0.89: Strong evidence (e.g., likelyJsRendered=true + few timeTags)
-- 0.60–0.69: Moderate evidence (e.g., error patterns + domain hints)
-- <0.60: Weak evidence → consider "UNKNOWN" or "retry-pool"
+Only send to manual-review via "no_viable_path_found" AFTER attempting human-like discovery.
 
-### FailCategory definitions
-- WRONG_ENTRY_PAGE: entry URL is not the event page, wrong section of site
-- NEEDS_SUBPAGE_DISCOVERY: events exist but are on subpages not found from entry
-- LIKELY_JS_RENDER: content appears to be rendered client-side, not in raw HTML
-- EXTRACTION_PATTERN_MISMATCH: HTML structure doesn't match current extraction patterns
-- LOW_VALUE_SOURCE: site has events but they are sparse/archived/outside scope
-- UNKNOWN: insufficient evidence to categorize
+## FailCategory definitions (UPDATED 2026-04-14)
 
-### Queue routing rules
+- **ENTRY_PAGE_NO_EVENTS** (NEW, replaces WRONG_ENTRY_PAGE): Entry page had no events — C4 must attempt human-like discovery FIRST. This is NOT a terminal failure. nextQueue should be "retry-pool" with discovered paths.
+- **NEEDS_SUBPAGE_DISCOVERY**: C4 found subpage candidates worth trying via derived rules
+- **LIKELY_JS_RENDER**: content appears to be rendered client-side → direct D route
+- **LIKELY_JS_RENDER_REQUIRED** (NEW): same as above but explicit → D route
+- **EXTRACTION_PATTERN_MISMATCH**: HTML structure doesn't match extraction patterns
+- **LOW_VALUE_SOURCE**: site has events but sparse/archived/outside scope
+- **no_viable_path_found** (NEW): exhausted all reasonable navigation paths → manual-review
+- **robots_or_policy_blocked** (NEW): robots.txt or meta policy blocked discovery → manual-review
+- **ambiguous_multiple_paths** (NEW): multiple equally valid paths, cannot determine → manual-review
+- **insufficient_html_signal** (NEW): HTML lacks any event-like signals → manual-review
+- **UNKNOWN**: insufficient evidence to categorize
+
+## Queue routing rules
 - "UI": extract succeeded → events found → route to UI
 - "A": API/feed pattern detected → route to A
 - "B": structured data pattern detected → route to B
 - "D": JS-rendered content → route to D (render fallback)
-- "manual-review": 3+ rounds without resolution → route to manual review
-- "retry-pool": worth another round in the pool with same approach
+- "retry-pool": C4 found event-indicating paths but needs another round to test them
+- "manual-review": only for no_viable_path_found, robots_or_policy_blocked, ambiguous_multiple_paths, insufficient_html_signal
 
-## CRITICAL — discoveredPaths must come from c0LinksFound
-Look at c0LinksFound in the input. For each link that has relevant anchor text or URL:
+## CRITICAL — discoveredPaths must come from c0LinksFound + human-like reasoning
+Look at c0LinksFound in the input. For each link:
 - Extract the href path (e.g., "/events", "/program/konserter")
 - Set source: "nav-link" if from <nav>, "sidebar-link" if from <aside>, "content-link" if from <main>/<article>, "url-pattern" if derived from URL structure
 - Set confidence based on how event-indicating the anchor text is
 
-If c0LinksFound is empty or has no relevant links, discoveredPaths should be [].
+For ENTRY_PAGE_NO_EVENTS: MUST provide discoveredPaths with confidence > 0.5 OR explain why no paths were found.
 
 ## Important constraints
-- Do NOT fabricate paths — only use what is in c0LinksFound
+- Do NOT fabricate paths — only use c0LinksFound + reasoning
 - Do NOT fabricate events or override measured evidence
 - suggestedRules is human-readable explanation, not code
 - improvementSignals should identify WHAT to investigate (not HOW to fix)
+- C4 must ATTEMPT human-like discovery before sending to manual-review
+- candidateRuleForC0C3 is REQUIRED for ENTRY_PAGE_NO_EVENTS — formulate a general path pattern
 
 Return a JSON array with one entry per source. No markdown fences, no code blocks.`;
 }
@@ -370,6 +453,29 @@ export async function runC4Analysis(
           }
         : undefined;
 
+      // Parse new human-like discovery fields
+      const discoveryAttempted = Boolean(aiResult.discoveryAttempted);
+      const discoveryPathsTried: string[] = Array.isArray(aiResult.discoveryPathsTried)
+        ? aiResult.discoveryPathsTried.filter((p: any) => typeof p === 'string')
+        : [];
+      const humanLikeDiscoveryReasoning = typeof aiResult.humanLikeDiscoveryReasoning === 'string'
+        ? aiResult.humanLikeDiscoveryReasoning
+        : '';
+      const candidateRuleForC0C3: CandidateRuleForC0C3 | null =
+        aiResult.candidateRuleForC0C3 && typeof aiResult.candidateRuleForC0C3 === 'object'
+          ? {
+              pathPattern: typeof aiResult.candidateRuleForC0C3.pathPattern === 'string'
+                ? aiResult.candidateRuleForC0C3.pathPattern
+                : '',
+              appliesTo: typeof aiResult.candidateRuleForC0C3.appliesTo === 'string'
+                ? aiResult.candidateRuleForC0C3.appliesTo
+                : '',
+              confidence: typeof aiResult.candidateRuleForC0C3.confidence === 'number'
+                ? aiResult.candidateRuleForC0C3.confidence
+                : 0.5,
+            }
+          : null;
+
       return {
         sourceId: src.sourceId,
         likelyCategory: aiResult.likelyCategory || 'unclear',
@@ -383,6 +489,10 @@ export async function runC4Analysis(
           ? aiResult.suggestedRules
           : [],
         discoveredPaths,
+        discoveryAttempted,
+        discoveryPathsTried,
+        humanLikeDiscoveryReasoning,
+        candidateRuleForC0C3,
         directRouting: directRouting?.target ? directRouting : undefined,
         confidenceBreakdown: normalizedCb,
       };
@@ -427,6 +537,10 @@ export async function runC4Analysis(
       improvementSignals: ['C4-AI unavailable — default to retry-pool'],
       suggestedRules: [],
       discoveredPaths: [],
+      discoveryAttempted: false,
+      discoveryPathsTried: [],
+      humanLikeDiscoveryReasoning: '',
+      candidateRuleForC0C3: null,
       confidenceBreakdown: {
         overall: 0.1,
         categoryConfidence: 0.1,

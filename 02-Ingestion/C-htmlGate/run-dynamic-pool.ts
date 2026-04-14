@@ -1053,11 +1053,16 @@ ${remainingSources.length > 0
 ### FAIL CATEGORY SUMMARY
 || Category | Count ||
 ||----------|-------|
-|| WRONG_ENTRY_PAGE | ${c4AllResults.flatMap(r => r.results).filter(r => r.failCategory === FailCategory.WRONG_ENTRY_PAGE).length} |
+|| ENTRY_PAGE_NO_EVENTS | ${c4AllResults.flatMap(r => r.results).filter(r => r.failCategory === FailCategory.ENTRY_PAGE_NO_EVENTS).length} |
 || NEEDS_SUBPAGE_DISCOVERY | ${c4AllResults.flatMap(r => r.results).filter(r => r.failCategory === FailCategory.NEEDS_SUBPAGE_DISCOVERY).length} |
 || LIKELY_JS_RENDER | ${c4AllResults.flatMap(r => r.results).filter(r => r.failCategory === FailCategory.LIKELY_JS_RENDER).length} |
 || EXTRACTION_PATTERN_MISMATCH | ${c4AllResults.flatMap(r => r.results).filter(r => r.failCategory === FailCategory.EXTRACTION_PATTERN_MISMATCH).length} |
 || LOW_VALUE_SOURCE | ${c4AllResults.flatMap(r => r.results).filter(r => r.failCategory === FailCategory.LOW_VALUE_SOURCE).length} |
+|| no_viable_path_found | ${c4AllResults.flatMap(r => r.results).filter(r => r.failCategory === FailCategory.NO_VIABLE_PATH_FOUND).length} |
+|| robots_or_policy_blocked | ${c4AllResults.flatMap(r => r.results).filter(r => r.failCategory === FailCategory.ROBOTS_OR_POLICY_BLOCKED).length} |
+|| likely_js_render_required | ${c4AllResults.flatMap(r => r.results).filter(r => r.failCategory === FailCategory.LIKELY_JS_RENDER_REQUIRED).length} |
+|| ambiguous_multiple_paths | ${c4AllResults.flatMap(r => r.results).filter(r => r.failCategory === FailCategory.AMBIGUOUS_MULTIPLE_PATHS).length} |
+|| insufficient_html_signal | ${c4AllResults.flatMap(r => r.results).filter(r => r.failCategory === FailCategory.INSUFFICIENT_HTML_SIGNAL).length} |
 || UNKNOWN | ${c4AllResults.flatMap(r => r.results).filter(r => r.failCategory === FailCategory.UNKNOWN).length} |
 
 ### TOP NEXT ACTIONS
@@ -1511,7 +1516,7 @@ export async function runDynamicPoolBatch(options: DynamicPoolOptions = {}): Pro
     const RULE_ELIGIBLE_CATEGORIES = [
       FailCategory.NEEDS_SUBPAGE_DISCOVERY,
       FailCategory.LIKELY_JS_RENDER,
-      FailCategory.WRONG_ENTRY_PAGE,
+      FailCategory.ENTRY_PAGE_NO_EVENTS,
     ];
     const eligibleResults = c4Analysis.results.filter(
       r => r.failCategoryConfidence >= 0.6 && RULE_ELIGIBLE_CATEGORIES.includes(r.failCategory)
@@ -1671,6 +1676,7 @@ export async function runDynamicPoolBatch(options: DynamicPoolOptions = {}): Pro
   // Mark batch complete
   const completionEntry = {
     batchId: `batch-${BATCH_NUM}`,
+    currentBatch: BATCH_NUM,
     type: 'run-completion',
     completedAt: new Date().toISOString(),
     poolRoundNumber: state.poolRoundNumber,
@@ -1717,7 +1723,9 @@ async function main() {
 
   // Read batch number and type from batch-state.jsonl
   const batchState = readBatchState();
-  const BATCH_NUM = batchState?.currentBatch ?? 13;
+  // Extract batch number: prefer currentBatch, fall back to parsing batchId (e.g. "batch-25" → 25)
+  const BATCH_NUM_FROM_ID = batchState?.batchId ? parseInt(batchState.batchId.replace('batch-', ''), 10) : null;
+  const BATCH_NUM = batchState?.currentBatch ?? BATCH_NUM_FROM_ID ?? 13;
   const BATCH_TYPE: 'normal' | 'verification' = (batchState as any)?.batchType ?? 'normal';
   const TARGET_IMPROVEMENT: string | null = (batchState as any)?.targetImprovement ?? null;
   const VERIFICATION_SOURCES: string[] = (batchState as any)?.verificationSources ?? [];
@@ -1740,17 +1748,34 @@ async function main() {
   clearOutputQueues();
 
   // Step 1: Check for existing pool state (resume scenario)
+  // If batch-state.jsonl's last entry is a FRESH batch-start (not a completion),
+  // any existing pool-state.json is stale from a prior run with the same batch number.
+  const lastEntryRaw = readFileSync(join(REPORTS_DIR, 'batch-state.jsonl'), 'utf8').trim().split('\n').filter(l => l.trim()).slice(-1)[0];
+  const lastEntry = lastEntryRaw ? JSON.parse(lastEntryRaw) : null;
+  // Also compare against batchId field (for when BATCH_NUM default doesn't match currentBatch)
+  const isFreshBatchStart = lastEntry?.type === 'batch-start' &&
+    (lastEntry?.batchId === `batch-${BATCH_NUM}` || lastEntry?.currentBatch === BATCH_NUM);
+
+  // IMPORTANT: If this is a fresh batch-start, clear any stale pool-state.json from prior runs
+  // BEFORE loadPoolState reads it (loadPoolState caches the result and we can't undo that)
+  if (isFreshBatchStart) {
+    const stalePath = join(REPORTS_DIR, `batch-${BATCH_NUM}`, 'pool-state.json');
+    try { unlinkSync(stalePath); } catch {}
+    console.log('\n[Step 1] Fresh batch-start detected — cleared any stale pool-state.json');
+  }
+
   const savedState = loadPoolState(BATCH_NUM);
   let state: PoolState;
   let roundResults: { results: CResult[]; exits: { source: PoolSource; decision: string; result: CResult }[]; fails: PoolSource[] }[] = [];
   let c4AllResults: C4RoundAnalysis[] = [];
 
-  if (savedState && savedState.poolRoundNumber > 0) {
+  if (savedState && savedState.poolRoundNumber > 0 && !isFreshBatchStart) {
     // Resume from saved state
     console.log(`\n[Step 1] Resuming pool from saved state (round ${savedState.poolRoundNumber})`);
     state = savedState;
     // Round results will be loaded from the pool state later if needed
   } else {
+    // Fresh start
     // Fresh start — build initial pool
     console.log('\n[Step 1] Building initial pool from postB-preC...');
     const initial = buildInitialPool(BATCH_TYPE, VERIFICATION_SOURCES, EXPLICIT_SOURCES);
@@ -1857,11 +1882,11 @@ async function main() {
     );
 
     // [SAVE-DERIVED-RULES] Save C4 results as derived rules for future rounds
-    // Only for: NEEDS_SUBPAGE_DISCOVERY, LIKELY_JS_RENDER, WRONG_ENTRY_PAGE
+    // Only for: NEEDS_SUBPAGE_DISCOVERY, LIKELY_JS_RENDER, ENTRY_PAGE_NO_EVENTS (the new replacement for WRONG_ENTRY_PAGE)
     const RULE_ELIGIBLE_CATEGORIES = [
       FailCategory.NEEDS_SUBPAGE_DISCOVERY,
       FailCategory.LIKELY_JS_RENDER,
-      FailCategory.WRONG_ENTRY_PAGE,
+      FailCategory.ENTRY_PAGE_NO_EVENTS,
     ];
     const eligibleResults = c4Analysis.results.filter(
       r => r.failCategoryConfidence >= 0.6 && RULE_ELIGIBLE_CATEGORIES.includes(r.failCategory)

@@ -19,8 +19,11 @@
  */
 
 import { readFileSync, appendFileSync, writeFileSync, existsSync } from 'fs';
-import { join } from 'path';
+import { join, dirname } from 'path';
 import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 
 // ---------------------------------------------------------------------------
 // Types
@@ -329,11 +332,12 @@ function determineWhyC3Failed(
     };
   }
 
-  // Case 6: C1 blocked with wrong entry page
-  if (c1.verdict === 'wrong-entry-page' && groundTruth.eventsFound > 0) {
+  // Case 6: C1 blocked with entry page having no events — now replaced by ENTRY_PAGE_NO_EVENTS
+  // C4 should attempt human-like discovery first; if events exist on subpages, C0 should find them
+  if ((c1.verdict === 'wrong-entry-page' || c1.verdict === 'no-events') && groundTruth.eventsFound > 0) {
     return {
-      genericReason: `C1 wrong-entry-page determination is incorrect for ${detectSourceScope(pipeline.sourceId, pipeline.url)}`,
-      proposedBehavior: `For Swedish municipal sites, do not classify as wrong-entry-page when URL contains municipal domain pattern`,
+      genericReason: `C1 entry-page determination missed events on subpages — C0 should find via human-like discovery`,
+      proposedBehavior: `For sites where entry page lacks events but subpages have them: C4 generates candidate paths for C0 to probe`,
     };
   }
 
