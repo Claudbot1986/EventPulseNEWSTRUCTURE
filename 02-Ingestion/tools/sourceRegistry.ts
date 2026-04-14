@@ -379,6 +379,8 @@ export function updateSourceStatus(
     triageResult?: TriageResult;
     triageRecommendedPath?: 'html' | 'render' | 'network' | 'manual_review';
     triageReason?: string;
+    // preferredPath update (e.g. when routing to postB-preC)
+    preferredPath?: 'jsonld' | 'html' | 'network' | 'render' | 'api' | 'unknown';
   }
 ): void {
   const statuses = readStatusFile();
@@ -424,6 +426,11 @@ export function updateSourceStatus(
   }
   if (result.triageReason) {
     current.triageReason = result.triageReason;
+  }
+
+  // ── preferredPath update ──────────────────────────────────────────────────
+  if (result.preferredPath) {
+    current.preferredPath = result.preferredPath;
   }
 
   // ── Bestäm ny status ──────────────────────────────────────────────────────

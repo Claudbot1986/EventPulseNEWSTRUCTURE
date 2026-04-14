@@ -137,6 +137,17 @@ function addToPostBPreCQueue(sourceId: string, reason: string): void {
     queueReason: reason,
   });
   writeFileSync(POSTB_PREC_FILE, queue.map(e => JSON.stringify(e)).join('\n') + '\n', 'utf8');
+
+  // [FIX] Update sources_status with preferredPath=html and status=eligible
+  // This ensures the source is recognized as an eligible C-pool candidate
+  updateSourceStatus(sourceId, {
+    success: false,
+    eventsFound: 0,
+    preferredPath: 'html',
+    ingestionStage: 'B',
+    lastRoutingReason: `postB-preC: ${reason}`,
+    lastRoutingSource: 'runtime_status',
+  });
 }
 
 // ─── B Tool Execution ─────────────────────────────────────────────────────────
