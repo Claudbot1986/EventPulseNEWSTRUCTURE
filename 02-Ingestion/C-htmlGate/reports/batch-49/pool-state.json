@@ -1,0 +1,617 @@
+{
+  "poolRoundNumber": 3,
+  "activePool": [
+    {
+      "sourceId": "paddan",
+      "url": "https://paddan.se/",
+      "roundsParticipated": 2,
+      "diversifiers": [
+        "failures_2",
+        "path_network"
+      ],
+      "queueReason": "preferredPath=unknown, requires HTML analysis",
+      "enrichedData": {
+        "lastPathUsed": "network",
+        "lastEventsFound": 0,
+        "consecutiveFailures": 2,
+        "triageResult": null
+      }
+    }
+  ],
+  "exited": [
+    {
+      "source": {
+        "sourceId": "neon",
+        "url": "https://neon.se/",
+        "roundsParticipated": 0,
+        "diversifiers": [
+          "failures_2",
+          "path_network"
+        ],
+        "queueReason": "preferredPath=unknown, requires HTML analysis",
+        "enrichedData": {
+          "lastPathUsed": "network",
+          "lastEventsFound": 0,
+          "consecutiveFailures": 2,
+          "triageResult": null
+        }
+      },
+      "decision": "postTestC-D",
+      "result": {
+        "sourceId": "neon",
+        "url": "https://neon.se/",
+        "c0": {
+          "candidates": 0,
+          "winnerUrl": null,
+          "winnerDensity": 0,
+          "duration": 2032,
+          "rootFallback": false,
+          "ruleAppliedSource": "none",
+          "ruleAppliedPaths": [
+            "/events",
+            "/program",
+            "/kalender",
+            "/schema",
+            "/evenemang",
+            "/kalendarium",
+            "/aktiviteter",
+            "/kultur",
+            "/fritid",
+            "/matcher",
+            "/biljetter"
+          ],
+          "ruleWinnerPath": null
+        },
+        "c1": {
+          "verdict": "no-main",
+          "likelyJsRendered": true,
+          "timeTagCount": 0,
+          "dateCount": 0,
+          "duration": 125
+        },
+        "c2": {
+          "verdict": "skipped",
+          "score": 0,
+          "reason": "c1-direct-route",
+          "duration": 0
+        },
+        "extract": {
+          "eventsFound": 0,
+          "duration": 0
+        },
+        "winningStage": "C1",
+        "outcomeType": "route_success",
+        "routeSuggestion": "D",
+        "evidence": "C1: likelyJsRendered=true + (timeTags=0 OR dates=0) — direct D route, C2/C3 skipped",
+        "roundNumber": 1,
+        "success": false
+      }
+    },
+    {
+      "source": {
+        "sourceId": "lunds-konserthus",
+        "url": "https://lund.se/konserthus",
+        "roundsParticipated": 2,
+        "diversifiers": [
+          "failures_2",
+          "path_network"
+        ],
+        "queueReason": "preferredPath=unknown, requires HTML analysis",
+        "enrichedData": {
+          "lastPathUsed": "network",
+          "lastEventsFound": 0,
+          "consecutiveFailures": 2,
+          "triageResult": null
+        }
+      },
+      "decision": "postTestC-manual-review",
+      "result": {
+        "sourceId": "lunds-konserthus",
+        "url": "https://lund.se/konserthus",
+        "c0": {
+          "candidates": 0,
+          "winnerUrl": null,
+          "winnerDensity": 0,
+          "duration": 255,
+          "rootFallback": false,
+          "ruleAppliedSource": "none",
+          "ruleAppliedPaths": [],
+          "ruleWinnerPath": null
+        },
+        "c1": {
+          "verdict": "unfetchable",
+          "likelyJsRendered": false,
+          "timeTagCount": 0,
+          "dateCount": 0,
+          "duration": 115
+        },
+        "c2": {
+          "verdict": "unclear",
+          "score": 0,
+          "reason": "fetchHtml failed: HTTP 404",
+          "duration": 145
+        },
+        "extract": {
+          "eventsFound": 0,
+          "duration": 0
+        },
+        "winningStage": "C3",
+        "outcomeType": "fail",
+        "routeSuggestion": "Fail",
+        "evidence": "C0: no internal event candidates discovered",
+        "roundNumber": 3,
+        "success": false,
+        "failType": "discovery_failure"
+      }
+    },
+    {
+      "source": {
+        "sourceId": "storsj-odjuret",
+        "url": "https://storsjoodjuret.se/",
+        "roundsParticipated": 2,
+        "diversifiers": [
+          "failures_2",
+          "path_network"
+        ],
+        "queueReason": "preferredPath=unknown, requires HTML analysis",
+        "enrichedData": {
+          "lastPathUsed": "network",
+          "lastEventsFound": 0,
+          "consecutiveFailures": 2,
+          "triageResult": null
+        }
+      },
+      "decision": "postTestC-manual-review",
+      "result": {
+        "sourceId": "storsj-odjuret",
+        "url": "https://storsjoodjuret.se/",
+        "c0": {
+          "candidates": 0,
+          "winnerUrl": null,
+          "winnerDensity": 0,
+          "duration": 4,
+          "rootFallback": false,
+          "ruleAppliedSource": "none",
+          "ruleAppliedPaths": [],
+          "ruleWinnerPath": null
+        },
+        "c1": {
+          "verdict": "unfetchable",
+          "likelyJsRendered": false,
+          "timeTagCount": 0,
+          "dateCount": 0,
+          "duration": 1
+        },
+        "c2": {
+          "verdict": "unclear",
+          "score": 0,
+          "reason": "fetchHtml failed: getaddrinfo ENOTFOUND storsjoodjuret.se",
+          "duration": 1
+        },
+        "extract": {
+          "eventsFound": 0,
+          "duration": 0
+        },
+        "winningStage": "C3",
+        "outcomeType": "fail",
+        "routeSuggestion": "Fail",
+        "evidence": "C0: no internal event candidates discovered",
+        "roundNumber": 3,
+        "success": false,
+        "failType": "discovery_failure"
+      }
+    },
+    {
+      "source": {
+        "sourceId": "stora-teatern-g-teborg",
+        "url": "https://stora-teatern.goteborg.se/",
+        "roundsParticipated": 2,
+        "diversifiers": [
+          "failures_2",
+          "path_network"
+        ],
+        "queueReason": "preferredPath=unknown, requires HTML analysis",
+        "enrichedData": {
+          "lastPathUsed": "network",
+          "lastEventsFound": 0,
+          "consecutiveFailures": 2,
+          "triageResult": null
+        }
+      },
+      "decision": "postTestC-manual-review",
+      "result": {
+        "sourceId": "stora-teatern-g-teborg",
+        "url": "https://stora-teatern.goteborg.se/",
+        "c0": {
+          "candidates": 0,
+          "winnerUrl": null,
+          "winnerDensity": 0,
+          "duration": 2,
+          "rootFallback": false,
+          "ruleAppliedSource": "none",
+          "ruleAppliedPaths": [],
+          "ruleWinnerPath": null
+        },
+        "c1": {
+          "verdict": "unfetchable",
+          "likelyJsRendered": false,
+          "timeTagCount": 0,
+          "dateCount": 0,
+          "duration": 2
+        },
+        "c2": {
+          "verdict": "unclear",
+          "score": 0,
+          "reason": "fetchHtml failed: getaddrinfo ENOTFOUND stora-teatern.goteborg.se",
+          "duration": 2
+        },
+        "extract": {
+          "eventsFound": 0,
+          "duration": 0
+        },
+        "winningStage": "C3",
+        "outcomeType": "fail",
+        "routeSuggestion": "Fail",
+        "evidence": "C0: no internal event candidates discovered",
+        "roundNumber": 3,
+        "success": false,
+        "failType": "discovery_failure"
+      }
+    },
+    {
+      "source": {
+        "sourceId": "umea-stadsteatern",
+        "url": "https://umea.se/stadsteatern",
+        "roundsParticipated": 2,
+        "diversifiers": [
+          "failures_2",
+          "path_network"
+        ],
+        "queueReason": "preferredPath=unknown, requires HTML analysis",
+        "enrichedData": {
+          "lastPathUsed": "network",
+          "lastEventsFound": 0,
+          "consecutiveFailures": 2,
+          "triageResult": null
+        }
+      },
+      "decision": "postTestC-manual-review",
+      "result": {
+        "sourceId": "umea-stadsteatern",
+        "url": "https://umea.se/stadsteatern",
+        "c0": {
+          "candidates": 0,
+          "winnerUrl": null,
+          "winnerDensity": 0,
+          "duration": 409,
+          "rootFallback": false,
+          "ruleAppliedSource": "none",
+          "ruleAppliedPaths": [],
+          "ruleWinnerPath": null
+        },
+        "c1": {
+          "verdict": "unfetchable",
+          "likelyJsRendered": false,
+          "timeTagCount": 0,
+          "dateCount": 0,
+          "duration": 145
+        },
+        "c2": {
+          "verdict": "unclear",
+          "score": 0,
+          "reason": "fetchHtml failed: HTTP 404",
+          "duration": 187
+        },
+        "extract": {
+          "eventsFound": 0,
+          "duration": 0
+        },
+        "winningStage": "C3",
+        "outcomeType": "fail",
+        "routeSuggestion": "Fail",
+        "evidence": "C0: no internal event candidates discovered",
+        "roundNumber": 3,
+        "success": false,
+        "failType": "discovery_failure"
+      }
+    },
+    {
+      "source": {
+        "sourceId": "jazz-i-lund",
+        "url": "https://jazzilund.se/",
+        "roundsParticipated": 2,
+        "diversifiers": [
+          "failures_2",
+          "path_network"
+        ],
+        "queueReason": "preferredPath=unknown, requires HTML analysis",
+        "enrichedData": {
+          "lastPathUsed": "network",
+          "lastEventsFound": 0,
+          "consecutiveFailures": 2,
+          "triageResult": null
+        }
+      },
+      "decision": "postTestC-manual-review",
+      "result": {
+        "sourceId": "jazz-i-lund",
+        "url": "https://jazzilund.se/",
+        "c0": {
+          "candidates": 0,
+          "winnerUrl": null,
+          "winnerDensity": 0,
+          "duration": 5005,
+          "rootFallback": false,
+          "ruleAppliedSource": "none",
+          "ruleAppliedPaths": [],
+          "ruleWinnerPath": null
+        },
+        "c1": {
+          "verdict": "unfetchable",
+          "likelyJsRendered": false,
+          "timeTagCount": 0,
+          "dateCount": 0,
+          "duration": 5004
+        },
+        "c2": {
+          "verdict": "unclear",
+          "score": 0,
+          "reason": "fetchHtml failed: timeout of 20000ms exceeded",
+          "duration": 5004
+        },
+        "extract": {
+          "eventsFound": 0,
+          "duration": 1
+        },
+        "winningStage": "C3",
+        "outcomeType": "fail",
+        "routeSuggestion": "Fail",
+        "evidence": "C0: no internal event candidates discovered",
+        "roundNumber": 3,
+        "success": false,
+        "failType": "discovery_failure"
+      }
+    },
+    {
+      "source": {
+        "sourceId": "kalmar-museum",
+        "url": "https://kalmar-museum.se/",
+        "roundsParticipated": 2,
+        "diversifiers": [
+          "failures_2",
+          "path_network"
+        ],
+        "queueReason": "preferredPath=unknown, requires HTML analysis",
+        "enrichedData": {
+          "lastPathUsed": "network",
+          "lastEventsFound": 0,
+          "consecutiveFailures": 2,
+          "triageResult": null
+        }
+      },
+      "decision": "postTestC-manual-review",
+      "result": {
+        "sourceId": "kalmar-museum",
+        "url": "https://kalmar-museum.se/",
+        "c0": {
+          "candidates": 0,
+          "winnerUrl": null,
+          "winnerDensity": 0,
+          "duration": 3,
+          "rootFallback": false,
+          "ruleAppliedSource": "none",
+          "ruleAppliedPaths": [],
+          "ruleWinnerPath": null
+        },
+        "c1": {
+          "verdict": "unfetchable",
+          "likelyJsRendered": false,
+          "timeTagCount": 0,
+          "dateCount": 0,
+          "duration": 2
+        },
+        "c2": {
+          "verdict": "unclear",
+          "score": 0,
+          "reason": "fetchHtml failed: getaddrinfo ENOTFOUND kalmar-museum.se",
+          "duration": 3
+        },
+        "extract": {
+          "eventsFound": 0,
+          "duration": 0
+        },
+        "winningStage": "C3",
+        "outcomeType": "fail",
+        "routeSuggestion": "Fail",
+        "evidence": "C0: no internal event candidates discovered",
+        "roundNumber": 3,
+        "success": false,
+        "failType": "discovery_failure"
+      }
+    },
+    {
+      "source": {
+        "sourceId": "historiska-museet-malmo",
+        "url": "https://malmöhistoriska.se/",
+        "roundsParticipated": 2,
+        "diversifiers": [
+          "failures_2",
+          "path_network"
+        ],
+        "queueReason": "preferredPath=unknown, requires HTML analysis",
+        "enrichedData": {
+          "lastPathUsed": "network",
+          "lastEventsFound": 0,
+          "consecutiveFailures": 2,
+          "triageResult": null
+        }
+      },
+      "decision": "postTestC-manual-review",
+      "result": {
+        "sourceId": "historiska-museet-malmo",
+        "url": "https://malmöhistoriska.se/",
+        "c0": {
+          "candidates": 0,
+          "winnerUrl": null,
+          "winnerDensity": 0,
+          "duration": 1,
+          "rootFallback": false,
+          "ruleAppliedSource": "none",
+          "ruleAppliedPaths": [],
+          "ruleWinnerPath": null
+        },
+        "c1": {
+          "verdict": "unfetchable",
+          "likelyJsRendered": false,
+          "timeTagCount": 0,
+          "dateCount": 0,
+          "duration": 2
+        },
+        "c2": {
+          "verdict": "unclear",
+          "score": 0,
+          "reason": "fetchHtml failed: getaddrinfo ENOTFOUND xn--malmhistoriska-ypb.se",
+          "duration": 1
+        },
+        "extract": {
+          "eventsFound": 0,
+          "duration": 0
+        },
+        "winningStage": "C3",
+        "outcomeType": "fail",
+        "routeSuggestion": "Fail",
+        "evidence": "C0: no internal event candidates discovered",
+        "roundNumber": 3,
+        "success": false,
+        "failType": "discovery_failure"
+      }
+    },
+    {
+      "source": {
+        "sourceId": "open-air",
+        "url": "https://openair.se/",
+        "roundsParticipated": 2,
+        "diversifiers": [
+          "failures_2",
+          "path_network"
+        ],
+        "queueReason": "preferredPath=unknown, requires HTML analysis",
+        "enrichedData": {
+          "lastPathUsed": "network",
+          "lastEventsFound": 0,
+          "consecutiveFailures": 2,
+          "triageResult": null
+        }
+      },
+      "decision": "postTestC-manual-review",
+      "result": {
+        "sourceId": "open-air",
+        "url": "https://openair.se/",
+        "c0": {
+          "candidates": 0,
+          "winnerUrl": null,
+          "winnerDensity": 0,
+          "duration": 1,
+          "rootFallback": false,
+          "ruleAppliedSource": "none",
+          "ruleAppliedPaths": [],
+          "ruleWinnerPath": null
+        },
+        "c1": {
+          "verdict": "unfetchable",
+          "likelyJsRendered": false,
+          "timeTagCount": 0,
+          "dateCount": 0,
+          "duration": 4
+        },
+        "c2": {
+          "verdict": "unclear",
+          "score": 0,
+          "reason": "fetchHtml failed: getaddrinfo ENOTFOUND openair.se",
+          "duration": 2
+        },
+        "extract": {
+          "eventsFound": 0,
+          "duration": 0
+        },
+        "winningStage": "C3",
+        "outcomeType": "fail",
+        "routeSuggestion": "Fail",
+        "evidence": "C0: no internal event candidates discovered",
+        "roundNumber": 3,
+        "success": false,
+        "failType": "discovery_failure"
+      }
+    },
+    {
+      "source": {
+        "sourceId": "uppsala-konserthus",
+        "url": "https://uppsalakonserthus.se/",
+        "roundsParticipated": 2,
+        "diversifiers": [
+          "failures_2",
+          "path_network"
+        ],
+        "queueReason": "preferredPath=unknown, requires HTML analysis",
+        "enrichedData": {
+          "lastPathUsed": "network",
+          "lastEventsFound": 0,
+          "consecutiveFailures": 2,
+          "triageResult": null
+        }
+      },
+      "decision": "postTestC-manual-review",
+      "result": {
+        "sourceId": "uppsala-konserthus",
+        "url": "https://uppsalakonserthus.se/",
+        "c0": {
+          "candidates": 0,
+          "winnerUrl": null,
+          "winnerDensity": 0,
+          "duration": 1,
+          "rootFallback": false,
+          "ruleAppliedSource": "none",
+          "ruleAppliedPaths": [],
+          "ruleWinnerPath": null
+        },
+        "c1": {
+          "verdict": "unfetchable",
+          "likelyJsRendered": false,
+          "timeTagCount": 0,
+          "dateCount": 0,
+          "duration": 2
+        },
+        "c2": {
+          "verdict": "unclear",
+          "score": 0,
+          "reason": "fetchHtml failed: getaddrinfo ENOTFOUND uppsalakonserthus.se",
+          "duration": 1
+        },
+        "extract": {
+          "eventsFound": 0,
+          "duration": 0
+        },
+        "winningStage": "C3",
+        "outcomeType": "fail",
+        "routeSuggestion": "Fail",
+        "evidence": "C0: no internal event candidates discovered",
+        "roundNumber": 3,
+        "success": false,
+        "failType": "discovery_failure"
+      }
+    }
+  ],
+  "allExitedIds": [
+    "neon",
+    "lunds-konserthus",
+    "storsj-odjuret",
+    "stora-teatern-g-teborg",
+    "umea-stadsteatern",
+    "jazz-i-lund",
+    "kalmar-museum",
+    "historiska-museet-malmo",
+    "open-air",
+    "uppsala-konserthus"
+  ],
+  "lastSaved": "2026-04-15T02:52:04.244Z"
+}

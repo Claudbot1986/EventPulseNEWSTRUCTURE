@@ -1,0 +1,332 @@
+[
+  {
+    "sourceId": "brommapojkarna",
+    "url": "https://bpxf.se/",
+    "c0": {
+      "candidates": 0,
+      "winnerUrl": null,
+      "winnerDensity": 0,
+      "duration": 58,
+      "rootFallback": false
+    },
+    "c1": {
+      "likelyJsRendered": false,
+      "timeTagCount": 0,
+      "dateCount": 0,
+      "duration": 2
+    },
+    "c2": {
+      "verdict": "unclear",
+      "score": 0,
+      "reason": "fetchHtml failed: getaddrinfo ENOTFOUND bpxf.se",
+      "duration": 2
+    },
+    "extract": {
+      "eventsFound": 0,
+      "duration": 2
+    },
+    "winningStage": "C3",
+    "outcomeType": "fail",
+    "routeSuggestion": "Fail",
+    "evidence": "C0: no internal event candidates discovered, root fallback also failed",
+    "roundNumber": 1,
+    "success": false
+  },
+  {
+    "sourceId": "varmland",
+    "url": "https://varmland.se/",
+    "c0": {
+      "candidates": 1,
+      "winnerUrl": "https://varmland.se/start",
+      "winnerDensity": 118,
+      "duration": 784,
+      "rootFallback": false
+    },
+    "c1": {
+      "likelyJsRendered": false,
+      "timeTagCount": 0,
+      "dateCount": 20,
+      "duration": 345
+    },
+    "c2": {
+      "verdict": "promising",
+      "score": 34,
+      "reason": "[breadth_nojsonld] score=34(adj) >= 12? promising pg=date-pattern",
+      "duration": 341
+    },
+    "extract": {
+      "eventsFound": 0,
+      "duration": 0
+    },
+    "winningStage": "C3",
+    "outcomeType": "fail",
+    "routeSuggestion": "Fail",
+    "evidence": "C3: extraction returned 0 events despite C2 promising (score=34)",
+    "roundNumber": 1,
+    "success": false
+  },
+  {
+    "sourceId": "svenska-hockeyligan-shl",
+    "url": "https://shl.se/",
+    "c0": {
+      "candidates": 5,
+      "winnerUrl": "https://shl.se/biljetter",
+      "winnerDensity": 210,
+      "duration": 4212,
+      "rootFallback": false
+    },
+    "c1": {
+      "likelyJsRendered": false,
+      "timeTagCount": 0,
+      "dateCount": 0,
+      "duration": 257
+    },
+    "c2": {
+      "verdict": "unclear",
+      "score": 1,
+      "reason": "[breadth_nojsonld] score=1(adj) >= 12? unclear pg=event-heading",
+      "duration": 220
+    },
+    "extract": {
+      "eventsFound": 0,
+      "duration": 2
+    },
+    "winningStage": "C3",
+    "outcomeType": "fail",
+    "routeSuggestion": "Fail",
+    "evidence": "C2: verdict=unclear, score=1 too low",
+    "roundNumber": 1,
+    "success": false
+  },
+  {
+    "sourceId": "nykoping",
+    "url": "https://nykoping.se/",
+    "c0": {
+      "candidates": 0,
+      "winnerUrl": null,
+      "winnerDensity": 0,
+      "duration": 865,
+      "rootFallback": false
+    },
+    "c1": {
+      "likelyJsRendered": false,
+      "timeTagCount": 0,
+      "dateCount": 3,
+      "duration": 303
+    },
+    "c2": {
+      "verdict": "unclear",
+      "score": 7,
+      "reason": "[breadth_nojsonld] score=7(adj) >= 12? unclear pg=event-heading",
+      "duration": 306
+    },
+    "extract": {
+      "eventsFound": 0,
+      "duration": 0
+    },
+    "winningStage": "C3",
+    "outcomeType": "fail",
+    "routeSuggestion": "Fail",
+    "evidence": "C0: no internal event candidates discovered, root fallback also failed",
+    "roundNumber": 1,
+    "success": false
+  },
+  {
+    "sourceId": "liseberg-n-je",
+    "url": "https://liseberg.se/",
+    "c0": {
+      "candidates": 10,
+      "winnerUrl": "https://liseberg.se/parken/evenemang/",
+      "winnerDensity": 158,
+      "duration": 17037,
+      "rootFallback": false
+    },
+    "c1": {
+      "likelyJsRendered": false,
+      "timeTagCount": 0,
+      "dateCount": 20,
+      "duration": 1539
+    },
+    "c2": {
+      "verdict": "promising",
+      "score": 187,
+      "reason": "[breadth_nojsonld] score=187(adj) >= 12? promising pg=venue-marker cand=cards=medium(62/62),lists=none",
+      "duration": 1010
+    },
+    "extract": {
+      "eventsFound": 0,
+      "duration": 0
+    },
+    "winningStage": "C3",
+    "outcomeType": "fail",
+    "routeSuggestion": "Fail",
+    "evidence": "C3: extraction returned 0 events despite C2 promising (score=187)",
+    "roundNumber": 1,
+    "success": false
+  },
+  {
+    "sourceId": "medeltidsmuseet",
+    "url": "https://medeltidsmuseet.se/",
+    "c0": {
+      "candidates": 0,
+      "winnerUrl": null,
+      "winnerDensity": 0,
+      "duration": 688,
+      "rootFallback": false
+    },
+    "c1": {
+      "likelyJsRendered": false,
+      "timeTagCount": 0,
+      "dateCount": 0,
+      "duration": 439
+    },
+    "c2": {
+      "verdict": "unclear",
+      "score": 0,
+      "reason": "fetchHtml failed: unable to verify the first certificate; if the root CA is installed locally, try running Node.js with --use-system-ca",
+      "duration": 408
+    },
+    "extract": {
+      "eventsFound": 0,
+      "duration": 1
+    },
+    "winningStage": "C3",
+    "outcomeType": "fail",
+    "routeSuggestion": "Fail",
+    "evidence": "C0: no internal event candidates discovered, root fallback also failed",
+    "roundNumber": 1,
+    "success": false
+  },
+  {
+    "sourceId": "ik-sirius",
+    "url": "https://iksirius.se/",
+    "c0": {
+      "candidates": 0,
+      "winnerUrl": null,
+      "winnerDensity": 0,
+      "duration": 15011,
+      "rootFallback": false
+    },
+    "c1": {
+      "likelyJsRendered": false,
+      "timeTagCount": 0,
+      "dateCount": 0,
+      "duration": 15011
+    },
+    "c2": {
+      "verdict": "unclear",
+      "score": 0,
+      "reason": "fetchHtml failed: timeout of 20000ms exceeded",
+      "duration": 20021
+    },
+    "extract": {
+      "eventsFound": 0,
+      "duration": 2
+    },
+    "winningStage": "C3",
+    "outcomeType": "fail",
+    "routeSuggestion": "Fail",
+    "evidence": "C0: no internal event candidates discovered, root fallback also failed",
+    "roundNumber": 1,
+    "success": false
+  },
+  {
+    "sourceId": "kth",
+    "url": "https://kth.se/evenemang",
+    "c0": {
+      "candidates": 0,
+      "winnerUrl": null,
+      "winnerDensity": 0,
+      "duration": 565,
+      "rootFallback": false
+    },
+    "c1": {
+      "likelyJsRendered": false,
+      "timeTagCount": 0,
+      "dateCount": 0,
+      "duration": 225
+    },
+    "c2": {
+      "verdict": "unclear",
+      "score": 0,
+      "reason": "fetchHtml failed: HTTP 404",
+      "duration": 254
+    },
+    "extract": {
+      "eventsFound": 0,
+      "duration": 1
+    },
+    "winningStage": "C3",
+    "outcomeType": "fail",
+    "routeSuggestion": "Fail",
+    "evidence": "C0: no internal event candidates discovered, root fallback also failed",
+    "roundNumber": 1,
+    "success": false
+  },
+  {
+    "sourceId": "helsingborg-arena",
+    "url": "https://helsingborgarena.se/",
+    "c0": {
+      "candidates": 0,
+      "winnerUrl": null,
+      "winnerDensity": 0,
+      "duration": 15007,
+      "rootFallback": false
+    },
+    "c1": {
+      "likelyJsRendered": false,
+      "timeTagCount": 0,
+      "dateCount": 0,
+      "duration": 15009
+    },
+    "c2": {
+      "verdict": "unclear",
+      "score": 0,
+      "reason": "fetchHtml failed: timeout of 20000ms exceeded",
+      "duration": 20011
+    },
+    "extract": {
+      "eventsFound": 0,
+      "duration": 3
+    },
+    "winningStage": "C3",
+    "outcomeType": "fail",
+    "routeSuggestion": "Fail",
+    "evidence": "C0: no internal event candidates discovered, root fallback also failed",
+    "roundNumber": 1,
+    "success": false
+  },
+  {
+    "sourceId": "g-teborgs-posten",
+    "url": "https://gp.se/evenemang",
+    "c0": {
+      "candidates": 0,
+      "winnerUrl": null,
+      "winnerDensity": 0,
+      "duration": 760,
+      "rootFallback": false
+    },
+    "c1": {
+      "likelyJsRendered": false,
+      "timeTagCount": 0,
+      "dateCount": 0,
+      "duration": 223
+    },
+    "c2": {
+      "verdict": "unclear",
+      "score": 0,
+      "reason": "fetchHtml failed: HTTP 404",
+      "duration": 210
+    },
+    "extract": {
+      "eventsFound": 0,
+      "duration": 1
+    },
+    "winningStage": "C3",
+    "outcomeType": "fail",
+    "routeSuggestion": "Fail",
+    "evidence": "C0: no internal event candidates discovered, root fallback also failed",
+    "roundNumber": 1,
+    "success": false
+  }
+]

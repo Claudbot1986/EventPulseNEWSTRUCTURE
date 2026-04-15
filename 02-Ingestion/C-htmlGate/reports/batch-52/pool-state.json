@@ -1,0 +1,300 @@
+{
+  "poolRoundNumber": 2,
+  "activePool": [
+    {
+      "sourceId": "stockholm-live",
+      "url": "https://stockholmlive.se/",
+      "roundsParticipated": 2,
+      "diversifiers": [
+        "failures_2",
+        "path_network"
+      ],
+      "queueReason": "re-queued by 123-system: was ingestionStage=failed with no error",
+      "enrichedData": {
+        "lastPathUsed": "network",
+        "lastEventsFound": 0,
+        "consecutiveFailures": 2,
+        "triageResult": null
+      }
+    },
+    {
+      "sourceId": "antikmassan",
+      "url": "https://antikmassan.se/",
+      "roundsParticipated": 2,
+      "diversifiers": [
+        "failures_1",
+        "path_jsonld"
+      ],
+      "queueReason": "re-queued by 123-system: was ingestionStage=failed with no error",
+      "enrichedData": {
+        "lastPathUsed": "jsonld",
+        "lastEventsFound": 0,
+        "consecutiveFailures": 1,
+        "triageResult": null
+      }
+    },
+    {
+      "sourceId": "slakthuset",
+      "url": "https://slakthuset.se/",
+      "roundsParticipated": 2,
+      "diversifiers": [
+        "failures_2",
+        "path_network"
+      ],
+      "queueReason": "re-queued by 123-system: was ingestionStage=failed with no error",
+      "enrichedData": {
+        "lastPathUsed": "network",
+        "lastEventsFound": 0,
+        "consecutiveFailures": 2,
+        "triageResult": null
+      }
+    },
+    {
+      "sourceId": "ostersunds-fk",
+      "url": "https://ofksverige.se/",
+      "roundsParticipated": 2,
+      "diversifiers": [
+        "failures_2",
+        "path_network"
+      ],
+      "queueReason": "re-queued by 123-system: was ingestionStage=failed with no error",
+      "enrichedData": {
+        "lastPathUsed": "network",
+        "lastEventsFound": 0,
+        "consecutiveFailures": 2,
+        "triageResult": null
+      }
+    },
+    {
+      "sourceId": "friidrottsf-rbundet",
+      "url": "https://friidrott.se/",
+      "roundsParticipated": 2,
+      "diversifiers": [
+        "failures_2",
+        "path_network"
+      ],
+      "queueReason": "re-queued by 123-system: was ingestionStage=failed with no error",
+      "enrichedData": {
+        "lastPathUsed": "network",
+        "lastEventsFound": 0,
+        "consecutiveFailures": 2,
+        "triageResult": null
+      }
+    },
+    {
+      "sourceId": "billetto-aggregator",
+      "url": "https://billetto.se/",
+      "roundsParticipated": 2,
+      "diversifiers": [
+        "failures_2",
+        "path_network"
+      ],
+      "queueReason": "re-queued by 123-system: was ingestionStage=failed with no error",
+      "enrichedData": {
+        "lastPathUsed": "network",
+        "lastEventsFound": 0,
+        "consecutiveFailures": 2,
+        "triageResult": null
+      }
+    },
+    {
+      "sourceId": "naturhistoriska-museet",
+      "url": "https://naturhistoriska.se/",
+      "roundsParticipated": 2,
+      "diversifiers": [
+        "failures_2",
+        "path_network"
+      ],
+      "queueReason": "re-queued by 123-system: was ingestionStage=failed with no error",
+      "enrichedData": {
+        "lastPathUsed": "network",
+        "lastEventsFound": 0,
+        "consecutiveFailures": 2,
+        "triageResult": null
+      }
+    },
+    {
+      "sourceId": "svenska-bowlingf-rbundet",
+      "url": "https://svenska-bowling.se/",
+      "roundsParticipated": 2,
+      "diversifiers": [
+        "failures_2",
+        "path_network"
+      ],
+      "queueReason": "manual-review re-queued by 123-system",
+      "enrichedData": {
+        "lastPathUsed": "network",
+        "lastEventsFound": 0,
+        "consecutiveFailures": 2,
+        "triageResult": null
+      }
+    },
+    {
+      "sourceId": "vasteras-hockey",
+      "url": "https://vasterasfh.se/",
+      "roundsParticipated": 2,
+      "diversifiers": [
+        "failures_2",
+        "path_network"
+      ],
+      "queueReason": "manual-review re-queued by 123-system",
+      "enrichedData": {
+        "lastPathUsed": "network",
+        "lastEventsFound": 0,
+        "consecutiveFailures": 2,
+        "triageResult": null
+      }
+    }
+  ],
+  "exited": [
+    {
+      "source": {
+        "sourceId": "molndals",
+        "url": "https://molndal.se/",
+        "roundsParticipated": 0,
+        "diversifiers": [
+          "failures_2",
+          "path_network"
+        ],
+        "queueReason": "re-queued by 123-system: was ingestionStage=failed with no error",
+        "enrichedData": {
+          "lastPathUsed": "network",
+          "lastEventsFound": 0,
+          "consecutiveFailures": 2,
+          "triageResult": null
+        }
+      },
+      "decision": "postTestC-UI",
+      "result": {
+        "sourceId": "molndals",
+        "url": "https://molndal.se/",
+        "c0": {
+          "candidates": 1,
+          "winnerUrl": "https://molndal.se/evenemang",
+          "winnerDensity": 332,
+          "duration": 2044,
+          "rootFallback": false,
+          "ruleAppliedSource": "link-discovery",
+          "ruleAppliedPaths": [],
+          "ruleWinnerPath": "/evenemang"
+        },
+        "c1": {
+          "verdict": "strong",
+          "likelyJsRendered": false,
+          "timeTagCount": 26,
+          "dateCount": 20,
+          "duration": 767
+        },
+        "c2": {
+          "verdict": "promising",
+          "score": 209,
+          "reason": "[breadth_nojsonld] score=209(adj) >= 12? promising pg=time-tag cand=cards=strong(13/13),lists=medium(2/2)",
+          "duration": 811
+        },
+        "extract": {
+          "eventsFound": 40,
+          "duration": 18
+        },
+        "winningStage": "C3",
+        "outcomeType": "extract_success",
+        "routeSuggestion": "UI",
+        "evidence": "extracted 40 events from HTML",
+        "roundNumber": 1,
+        "success": true
+      }
+    },
+    {
+      "source": {
+        "sourceId": "akersberga",
+        "url": "https://akersberga.se/",
+        "roundsParticipated": 0,
+        "diversifiers": [
+          "failures_1",
+          "triage_still_unknown",
+          "path_jsonld"
+        ],
+        "queueReason": "re-queued by 123-system: retryable failure",
+        "enrichedData": {
+          "lastPathUsed": "jsonld",
+          "lastEventsFound": 0,
+          "consecutiveFailures": 1,
+          "triageResult": "still_unknown"
+        }
+      },
+      "decision": "postTestC-D",
+      "result": {
+        "sourceId": "akersberga",
+        "url": "https://akersberga.se/",
+        "c0": {
+          "candidates": 0,
+          "winnerUrl": null,
+          "winnerDensity": 0,
+          "duration": 1861,
+          "rootFallback": false,
+          "ruleAppliedSource": "none",
+          "ruleAppliedPaths": [
+            "/events",
+            "/program",
+            "/kalender",
+            "/schema",
+            "/evenemang",
+            "/kalendarium",
+            "/aktiviteter",
+            "/utställningar",
+            "/exhibition",
+            "/exhibitions",
+            "/exhibits",
+            "/visa",
+            "/scen",
+            "/teater",
+            "/repertoar",
+            "/forestillinger",
+            "/forestilling",
+            "/shown",
+            "/matcher",
+            "/tickets",
+            "/biljetter",
+            "/arena",
+            "/hall",
+            "/kultur",
+            "/fritid",
+            "/besok",
+            "/planera",
+            "/oppet",
+            "/konserter",
+            "/konsert"
+          ],
+          "ruleWinnerPath": null
+        },
+        "c1": {
+          "verdict": "no-main",
+          "likelyJsRendered": true,
+          "timeTagCount": 0,
+          "dateCount": 0,
+          "duration": 102
+        },
+        "c2": {
+          "verdict": "skipped",
+          "score": 0,
+          "reason": "c1-direct-route",
+          "duration": 0
+        },
+        "extract": {
+          "eventsFound": 0,
+          "duration": 0
+        },
+        "winningStage": "C1",
+        "outcomeType": "route_success",
+        "routeSuggestion": "D",
+        "evidence": "C1: likelyJsRendered=true + (timeTags=0 OR dates=0) — direct D route, C2/C3 skipped",
+        "roundNumber": 2,
+        "success": false
+      }
+    }
+  ],
+  "allExitedIds": [
+    "molndals",
+    "akersberga"
+  ],
+  "lastSaved": "2026-04-15T17:19:19.013Z"
+}

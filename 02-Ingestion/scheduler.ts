@@ -462,9 +462,73 @@ async function runSource(source: SourceTruth, options: { recheck?: boolean } = {
     console.log(`🔍 C1: Screening ${source.id}...`);
     const preGateResult = await screenUrl(source.url);
     const triageOutcome = determineTriageOutcome(preGateResult);
-    console.log(`   C1 result: ${triageOutcome} (${preGateResult.categorization}) - ${preGateResult.reason}`);
+    console.log(`   C1 result: ${triageOutcome} (${preGateResult.categorization}) - ${preGateResult.reason}${preGateResult.earlyRoute ? ` [EARLY_ROUTE: ${preGateResult.earlyRoute}]` : ''}`);
 
-    // Baserat på C1:s triage-utfall
+    // ─────────────────────────────────────────────────────────────
+    // EARLY ROUTING — only for very strong generic signals
+    // ─────────────────────────────────────────────────────────────
+    if (preGateResult.earlyRoute === 'A' || preGateResult.earlyRoute === 'B') {
+      // Clear structured-data endpoint detected (JSON/RSS/ICS/API)
+      console.log(`🚀 C1: Early route ${preGateResult.earlyRoute} — structured data endpoint detected`);
+      updateSourceStatus(source.id, {
+        success: false,
+        eventsFound: 0,
+        error: `early_route_${preGateResult.earlyRoute}: C1 detected structured data endpoint`,
+        pathUsed: preGateResult.earlyRoute,
+        lastRoutingReason: `C1 early route: ${preGateResult.reason}`,
+        lastRoutingSource: 'triage',
+        pendingNextTool: `${preGateResult.earlyRoute === 'A' ? 'A-networkGate' : 'B-JSON-feedGate'}`,
+        triageAttempts: newTriageAttempts,
+        triageResult: triageOutcome,
+        triageRecommendedPath: preGateResult.earlyRoute,
+        triageReason: preGateResult.reason,
+        earlyRouteDecision: preGateResult.earlyRoute,
+      });
+      const earlyLearning = recordTriageAttempt(source.id, {
+        timestamp: new Date().toISOString(),
+        outcome: triageOutcome,
+        recommendedPath: preGateResult.earlyRoute,
+        triageReason: `early_route: ${preGateResult.reason}`,
+      });
+      console.log(`   Learning: confidence=${earlyLearning.newConfidence.toFixed(2)} | candidate=${earlyLearning.candidateForPromotion}`);
+      return;
+
+    } else if (preGateResult.earlyRoute === 'D') {
+      // Clear JS shell detected — route to D-renderGate
+      console.log(`🚀 C1: Early route D — clear JS shell detected`);
+      addPendingRender({
+        url: source.url,
+        sourceName: source.id,
+        reason: `C1 early route D: ${preGateResult.reason}`,
+        signal: 'c1_early_js_shell',
+        confidence: 0.9,
+        attemptedPaths: ['html'],
+      });
+      updateSourceStatus(source.id, {
+        success: false,
+        eventsFound: 0,
+        error: `early_route_D: C1 detected clear JS shell`,
+        pathUsed: 'html',
+        lastRoutingReason: `C1 early route: ${preGateResult.reason}`,
+        lastRoutingSource: 'triage',
+        pendingNextTool: 'D-renderGate',
+        triageAttempts: newTriageAttempts,
+        triageResult: triageOutcome,
+        triageRecommendedPath: 'render',
+        triageReason: preGateResult.reason,
+        earlyRouteDecision: 'D',
+      });
+      const dLearning = recordTriageAttempt(source.id, {
+        timestamp: new Date().toISOString(),
+        outcome: triageOutcome,
+        recommendedPath: 'render',
+        triageReason: `early_route_D: ${preGateResult.reason}`,
+      });
+      console.log(`   Learning: confidence=${dLearning.newConfidence.toFixed(2)} | candidate=${dLearning.candidateForPromotion}`);
+      return;
+    }
+
+    // Baserat på C1:s triage-utfall (normal flow — no early route)
     if (triageOutcome === 'render_candidate') {
       // Sida är sannolikt JS-renderad - parkera för D-renderGate
       addPendingRender({

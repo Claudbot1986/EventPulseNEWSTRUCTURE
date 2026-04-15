@@ -35,6 +35,175 @@ Uppgift är inom C-testRiggen?:        [JA/NEJ] → OM NEJ: STOPP
 
 ---
 
+## Nästa-steg-analys 2026-04-14 (loop 123 — efter batch-024, C-pool STATUS)
+
+### Vad hände denna loop
+- **C-Batch-Loop Mode INAKTIV:** batch-024 completed, status=no-sources-available
+- **Pool uttömd bekräftad:** Inga eligible html_candidate sources i postB-preC
+- **Zombie pending batches upptäckta:** batch-020 (IMP-001 regression) och batch-021 (IMP-002 verification) står som `status: pending` men ALDRIG KÖRDA — inga reportfiler finns
+- **IMP-002 status inkonsekvens:** memory säger "in regression testing phase" men batch-021 verification aldrig körd
+
+### Root-cause (nyckelobservation)
+
+**123 kan inte progediera inom egen scope:**
+- C-Batch-Loop Mode: INAKTIV (completed)
+- PostB-preC: TOM (no eligible sources)
+- Nästa steg (#1): "Kör scheduler på 64 success-sources" — FORBUDEN FÖR 123 (hard scope boundary: scheduler.ts-ändring)
+- batch-020/021 verification: Planerade men aldrig körda (inget material i reports/)
+- 123-improvement-gate: Kan inte välja candidate eftersom pool saknas
+
+**C-testRiggen är permanent uttömd på källor.** 54 derived rules finns, IMP-001/IMP-002 är markerade "active" men verification/regression för IMP-002 kördes aldrig.
+
+### Sources-verklighet (slutlig)
+
+| Kategori | Antal | Status |
+|----------|-------|--------|
+| success (events>0) | 64 | Kan köras via scheduler (UTANFÖR 123:s scope) |
+| fail | 361 | diverse orsaker |
+| html_candidate (eligible) | 0 | postB-preC tom |
+| pending_render_gate | ~10-15 | Blockerade av saknad D-renderGate (UTANFÖR 123:s scope) |
+| pending_api | 2 | ticketmaster, eventbrite |
+| pending_source_adapter | 1 | debaser |
+
+### Tre möjliga nästa steg
+
+| # | Steg | Systemnytta |Risk |Varför nu |
+|---|------|-------------|------|----------|
+| 1 | **Köra scheduler på 64 success-sources** | Hög: breddar DB | Låg | Pipeline fungerar, källor bekräftade | **FORBUDEN FÖR 123 — kräver ändring i scheduler.ts** |
+| 2 | **Separata uppdrag: D-renderGate, B-spår, source adapters** | Hög: aktiverar ~25 sources | Medel | Största blockadegrupperna | **UTANFÖR 123:s scope** |
+| 3 | **Avsluta 123-loop eller ge nytt explicit uppdrag** | Låg: frigör resurser | Låg | 123 har inget materials | **Användarbeslut krävs** |
+
+### Rekommenderat nästa steg
+
+**Ingen. 123 kan inte utföra meningsfullt arbete inom sin scope.**
+
+123:s regler förhindrar:
+- scheduler.ts-ändring (förbjudet)
+- D-renderGate-integrering (förbjudet)
+- preUI/UI-flöden (förbjudet)
+- Nya batchar utan eligible sources i postB-preC (regel 1235)
+
+**Användaren bör antingen:**
+1. Ge 123 ett nytt explicit uppdrag inom C-testRiggen (t.ex. "analysera 54 derived rules")
+2. ELLER begära att scheduler körs på 64 success-sources (separat uppdrag)
+
+### Två steg att INTE göra nu
+
+1. **Försöka köra C-batch utan eligible sources** — postB-preC tom, kan inte återfyllas inom 123:s regler
+2. **Ändra C0/C1/C2/C3 utan verifierad rotorsak** — Generalization Gate kräver 2-3+ sajter, C-Batch-Loop har inte gett detta
+
+### System-effect-before-local-effect
+
+Valt steg: none — effekten av 123:s arbete är nu begränsad till routing-mekanism (C-htmlGate → B/D/manual-review), inte extraktion.
+
+---
+
+## Nästa-steg-analys 2026-04-13 (loop 123 — efter batch-024, C4-AI cross-batch)
+
+### Vad hände denna loop
+- **C4-AI cross-batch analys:** Sammanfattade 24 batchar (batch 001-024)
+- **123-learning-memory uppdaterad:** c4-ai_cross_batch_analysis event loggat
+- **54 derived rules:** Skapade över 24 batchar
+- **C-Batch-Loop permanent uttömd:** stopReason=no-sources-available
+- **Dominanta failure categories:** NEEDS_SUBPAGE_DISCOVERY, LIKELY_JS_RENDER, WRONG_ENTRY_PAGE, C2_TO_C3_GAP
+
+### Root-cause (nyckelobservation)
+
+**C-htmlGate fungerar bäst som routing-mekanism, inte extraktionsväg:**
+- ~60+ sources: C0 hittar 0 candidates (discovery_failure → routing till B/D/manual-review)
+- ~30+ sources: C2=promising men C3=0 (extraction_failure)
+- ~10-15 sources: D-signal (needs D-renderGate)
+- ~10-15 sources: Network/API-signal (needs B-spår)
+- ~10-15 sources: events via IMP-001/IMP-002 (C3 extraktion)
+
+**C-Batch-Loop har nått naturligt slut:** Efter 24 batchar är alla genuinely-HTML sources med eligible status uttömda.
+
+### Sources-verklighet (slutlig)
+- **success:** 64 källor
+- **fail:** 361 källor
+- **html_candidate (felklassificerade):** 2 (af, allt-om-mat med recommendedPath=network)
+- **pending_render_gate:** ~10-15 (blockerade av saknad D-renderGate — UTANFÖR 123:s scope)
+- **manual_review:** ~60+ (postTestC-manual-review)
+- **pending_api:** 2 (ticketmaster, eventbrite)
+- **pending_source_adapter:** 1 (debaser)
+
+### Tre möjliga nästa steg
+
+|| # | Steg | Systemnytta | Risk | Varför nu |
+||---|------|-------------|------|-----------|
+|| 1 | **Köra scheduler på 64 success-sources** | Hög: breddar DB-innehåll | Låg: verifierade källor | Pipeline fungerar, 64 bekräftade källor kan köras |
+|| 2 | **C4-AI djupanalys av 54 derived rules** | Medel: sammanfatta lärdomar | Låg: analys endag | Material finns för att hitta generella mönster |
+|| 3 | **Starta ny C-pool med bredare eligibility** | Medel: återfylla poolen | Hög: nya kriterier behövs | Befintliga criteria exkluderar nästan allt |
+
+### Rekommenderat nästa steg
+- **#1 — Köra scheduler på 64 success-sources**
+
+Motivering: C-Batch-Loop är permanent uttömd. Nästa naturliga steg är att bredda antalet sources som körs genom pipeline. 64 success-sources har bevisat events och kan köras via scheduler.
+
+### Två steg att INTE göra nu
+1. **Försöka återfylla C-poolen** — eligibility-kriterierna exkluderar allt, nya kriterier behövs (och ligger utanför 123:s scope)
+2. **Ändra C0/C1/C2/C3** — Generalization Gate kräver 2-3+ sajter med verifierad rotorsak, C-Batch-Loop har inte gett detta
+
+### System-effect-before-local-effect
+- Valt steg (#1): Pipeline (scheduler → queue → normalizer → DB) på 64 källor breddar databas-innehållet
+- Varför: C-Batch-Loop har nått naturligt slut, nästa steg är produktiv användning av redan verifierade sources
+
+---
+
+## Nästa-steg-analys 2026-04-13 (loop 123 — efter batch-024)
+
+### Vad hände denna loop
+- **batch-state.jsonl uppdaterad:** batch-024 markerad som `completed` med `stopReason=no-sources-available`
+- **Pool-uttömning bekräftad:** Endast 2 html_candidate-fail-sources finns (af, allt-om-mat), båda med `recommendedPath=network` (exkluderade av candidateQuery)
+- **batchSources tom:** Batch-024 kördes aldrig som en enhet — poolState visar round 3 completed men batch-state var `idle`
+- **C-Batch-Loop permanent uttömd:** 24 batchar (batch 001-024) körda, inga nya eligible sources
+
+### Root-cause (nyckelobservation)
+
+**C-Batch-Loop har nått naturligt slut efter 24 batchar:**
+- Total: 24 batchar × ~10 sources = ~240+ sources testade
+- Slutsats: Alla genuinely-HTML sources med `triageResult=html_candidate` och `recommendedPath≠network` har körts
+- Återstående 2 candidates (af, allt-om-mat) är felklassificerade som `html_candidate` men har `recommendedPath=network`
+
+**C-htmlGate har bevisat:**
+- ~60+ sources: C0 hittar 0 candidates (discovery_failure)
+- ~30+ sources: C2=promising men C3=0 (extraction_failure)
+- ~10+ sources: C2=promising, C3 hittar events (IMP-001/IMP-002 candidate)
+- ~5+ sources: D-signal (pending_render_gate)
+- ~10+ sources: network/API-signal (B-spår)
+
+### Sources-verklighet (slutlig)
+- **success:** 64 källor
+- **fail:** 361 källor
+- **html_candidate (felklassificerade):** 2 (af, allt-om-mat med recommendedPath=network)
+- **pending_render_gate:** ~5+ (blockerade av saknad D-renderGate — UTANFÖR 123:s scope)
+- **manual_review:** ~10+ (postTestC-manual-review)
+- **pending_api:** 2 (ticketmaster, eventbrite)
+- **pending_source_adapter:** 1 (debser)
+
+### Tre möjliga nästa steg
+
+|| # | Steg | Systemnytta | Risk | Varför nu |
+|---|------|-------------|------|-----------|
+| 1 | **Köra sourceTriage på 64 success-sources** | Hög: breddar DB-innehåll | Låg: verifierade källor | Pipeline fungerar, 64 bekräftade källor kan köras |
+| 2 | **C4-AI cross-batch analys** | Medel: sammanfatta lärdomar | Låg: analys endast | 24 batchar + 54 derived rules ger material |
+| 3 | **Starta ny C-pool med bredare eligibility** | Medel: återfylla poolen | Hög: nya kriterier behövs | Befintliga criteria exkluderar nästan allt |
+
+### Rekommenderat nästa steg
+- **#1 — Köra sourceTriage på 64 success-sources**
+
+Motivering: C-Batch-Loop är permanent uttömd. Nästa naturliga steg är att bredda antalet sources som körs genom pipeline. 64 success-sources har bevisat events och kan köras via scheduler.
+
+### Två steg att INTE göra nu
+1. **Försöka återfylla C-poolen** — eligibility-kriterierna exkluderar allt, nya kriterier behövs (och ligger utanför 123:s scope)
+2. **Ändra C0/C1/C2/C3** — Generalization Gate kräver 2-3+ sajter med verifierad rotorsak, C-Batch-Loop har inte gett detta
+
+### System-effect-before-local-effect
+- Valt steg (#1): Pipeline (scheduler → queue → normalizer → DB) på 64 källor breddar databas-innehållet
+- Varför: C-Batch-Loop har nått naturligt slut, nästa steg är produktiv användning av redan verifierade sources
+
+---
+
 ## Nästa-steg-analys 2026-04-06 (loop 66 — efter batch 003)
 
 ### Vad hände denna loop
@@ -4055,3 +4224,112 @@ Motivering: Dessa två sources har C2=promising (34, 187) men 0 events. De repre
 ### System-effect-before-local-effect
 - Valt steg (#1): Analys av varmland + liseberg kan avslöja om flaskhalsen är C0 (discovery) eller C3 (extraction)
 - Varför: Rätt diagnosis avgör vilken förbättring som behövs
+
+---
+
+## Nästa-steg-analys 2026-04-12 (batch-18)
+
+### Vad hände denna loop
+- **Batch 018 kördes:** 10 html_candidates via run-dynamic-pool.ts
+- **0/10 events extracted** — sämsta batchen hittills
+- **4 → postTestC-D:** halmstads-bk (C1-direct-route), millesgården (C1-direct-route), debaser (C1-direct-route), sundsvall (C4-AI LIKELY_JS_RENDER conf=0.72)
+- **6 → postTestC-manual-review:** friidrottsf-rbundet, vasteras-stadsteatern, linkoping-stadsteatern, sensus, volvo-museum, stora-teatern-g-teborg
+- **4 fast i poolen:** bk-hacken, blekholmen, boplanet, bor-s-zoo-animagic (roundsParticipated=2, aldrig avrundade till manual-review)
+- **Derived rules sparat:** 6 nya rules från batch-18 (vasteras, linkoping-stadsteatern, sensus, sundsvall, volvo-museum, stora-teatern)
+- **Swedish pattern hits:** friidrottsf-rbundet (/events), sundsvall (/kultur) — båda 0 events
+- **0 derived rule HITS** — inga sources fick sina regler applicerade och förbättrades
+
+### Root-cause (nyckelobservation)
+
+**Felmönster batch-18:**
+1. **C0=0 barriär fortsätter:** 8/10 sources har 0 C0 candidates. Alla Swedish pattern-träffar gav fortfarande 0 events.
+2. **Swedish pattern → 0 events:** friidrottsf-rbundet (score=6, /events) + sundsvall (score=10, /kultur) — båda hittade kandidater men extraction=0.
+3. **4 sources fast i poolen:** run-dynamic-pool.ts bug — sources som genererar rules i round N stannar kvar via "STEP3-CHAIN" men när poolRoundNumber=3 nås avbryts loopen MEDAN dessa sources fortfarande är i retry-pool. De får aldrig sin round 3 exit till manual-review.
+4. **Learning loop sluten = falsk:** Rules genereras men inga sources körs med dem i samma batch. "ruleSourcesExitedInSameRound" = 0 för batch-18.
+5. **C1-direct-route fungerar:** halmstads-bk, millesgården, debaser fick D-signal via C1 utan att gå via C4-AI.
+
+### Kvarvarande flaskhalsar
+- **4 sources är nu "orphaned":** bk-hacken, blekholmen, boplanet, bor-s-zoo-animagic — status oklar, inte i någon kö, inte i aktiv pool
+- **C0→C3 = 0 fortfarande:** Swedish patterns hittar candidates men extraction returnerar fortfarande 0 events
+- **Learning loop applied = 0:** Inga sources har någonsin fått sina genererade regler applicerade och blivit förbättrade
+
+### Tre möjliga nästa steg
+
+| # | Steg | Systemnytta | Risk | Varför nu |
+|---|------|-------------|------|-----------|
+| 1 | **Fixa runner bug + hantera 4 orphaned sources** | Hög: rättar ett feltillstånd | Låg: påverkar endast 4 sources | 4 sources är i limbo, behöver manuell routing |
+| 2 | **Köra nästa batch (batch-019)** | Medel: fortsätt testning | Låg: beprövat | 332 källor fortfarande i postB-preC |
+| 3 | **Analysera Swedish pattern → 0 events** | Medel: förstå gapet | Låg: undersökning | Två Swedish pattern-träffar men fortfarande 0 events |
+
+### Rekommenderat nästa steg
+- **#1 — Fixa runner bug + hantera 4 orphaned sources**
+
+Motivering: bk-hacken, blekholmen, boplanet, bor-s-zoo-animagic är i ett Oregon state utan exit. De behöver manuellt routes till postTestC-manual-review (alla har roundsParticipated=2, alla behöver round 3). Utan detta förblir de i ett undefined state.
+
+### Två steg att INTE göra nu
+1. **Ändra C0/C1/C2/C3** — Generalization Gate förbjuder det utan 2-3+ Sajter med verifierad rotorsak
+2. **Köra C4-AI** — redan kördes, inga generella förbättringsförslag för C-lager
+
+### System-effect-before-local-effect
+- Valt steg (#1): Fixar ett feltillstånd som blockerar 4 sources permanent. Systemet får ingen direkt händelsenytta men dataintegriteten säkerställs.
+- Varför: 4 sources i limbo är värre än att bara köra nästa batch — de kommer annars aldrig till någon slutdestination.
+
+---
+
+## Nästa-steg-analys 2026-04-13 (loop 123 - batch-23 completed)
+
+### Vad hände denna loop
+- **batch-22 regression bekräftad:** IMP-002 regression batch klar. 0 regressions, malm-opera=4 events.
+- **batch-23 kördes:** 10 sources testade med IMP-002 active
+- **Ny discovery:** molndals=**40 events** → UI (Swedish municipal, IMP-002 Swedish pattern)
+- **malm-opera:** 4 events → UI (regression source, oförändrad)
+- **Slagthuset:** → D (JS-render signal, c0=10 candidates)
+- **10 sources:** → manual-review (DNS/404 failures)
+- **batch-24:** inställd (idle), 329 sources kvar i postB-preC
+
+### Ackumulerad total (batch 13-23)
+- **5 sources med events:** borlange-kommun(10), molndals(40), kungsbacka(6), malm-opera(4), oland(1)
+- **61 events totalt**
+- **IMP-002 active** (C1→D-route bypass + Swedish pattern match)
+
+### Root-cause (nyckelobservation)
+
+**IMP-002 Swedish pattern fungerar:**
+- borlange-kommun: 10 events (batch-17, batch-19, batch-21)
+- molndals: 40 events (batch-23, ny!)
+- kungsbacka: 6 events (batch-19, batch-21)
+- Pattern: Swedish municipal sites med `/kalender`, `/evenemang` subpages
+- IMP-002 Swedish pattern hittar candidates på subpages som C0 link-discovery missar
+
+**Fortfarande dominerade failures:**
+- DNS/404 failures: ~30+ sources (boplanet, blekholmen, etc.)
+- C0=0 barriären: många sajter saknar discoverable event-links
+- C2=promising men 0 events: rätt density, fel page
+
+### Sources-verklighet (uppdaterad)
+- **5 success** (C-htmlGate via IMP-002)
+- **~382 fail** (DNS/timeout/404)
+- **329 källor kvar i postB-preC**
+- **2 active improvements:** IMP-001 (STEP3-CHAIN bug), IMP-002 (Swedish pattern)
+- **0 pending candidates** i 123-improvement-state.json
+
+### Tre möjliga nästa steg
+
+| # | Steg | Systemnytta | Risk | Varför nu |
+|---|------|-------------|------|-----------|
+| 1 | **Kör batch-24 (normal batch)** | Medel: fortsätt exploration | Låg: beprövat | 329 sources kvar, IMP-002 active |
+| 2 | **Analysera DNS-failure pattern** | Medel: förstå barriers | Låg: undersökning | 30+ sources dör på DNS, kan vara återanvändbara |
+| 3 | **Scouta nya html_candidates** | Låg: återfylla pool | Hög: C0=0 barriär | postB-preC har fortfarande 329 källor |
+
+### Rekommenderat nästa steg
+- **#1 — Kör batch-24**
+
+Motivering: IMP-002 är active och fungerar (molndals=40 events). Fortsätt batcha för att se om Swedish pattern hittar fler. batch-24 är inställd och redo.
+
+### Två steg att INTE göra nu
+1. **Ändra C0/C1/C2** — Generalization Gate förbjuder det utan 2-3+ sajter med verifierad rotorsak
+2. **Scouta nya html_candidates** — postB-preC har 329 källor, ingen anledning att scouta nytt just nu
+
+### System-effect-before-local-effect
+- Valt steg (#1): Fortsätt batch-loop exploration med IMP-002 active
+- Varför: Swedish pattern har bevisat sig på 3+ sources (borlange-kommun, molndals, kungsbacka), fortsätt samla data

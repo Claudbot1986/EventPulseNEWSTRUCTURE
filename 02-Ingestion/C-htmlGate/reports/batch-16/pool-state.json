@@ -1,0 +1,647 @@
+{
+  "poolRoundNumber": 3,
+  "activePool": [
+    {
+      "sourceId": "bk-hacken",
+      "url": "https://hacken.se/",
+      "roundsParticipated": 2,
+      "diversifiers": [
+        "has_404s",
+        "failures_2",
+        "path_network"
+      ],
+      "queueReason": "toolB(preB): [breadth] unclear (0 likely, 0 possible) — Inga tydliga API:er hittades. 0 404s, 18 fel. Fler mönster kan finnas.. But: API structure attempted (18 errors) but no usable endpoints found. GotEvent lesson: API structure ≠ usable event data. Routing to HTML.",
+      "enrichedData": {
+        "lastPathUsed": "network",
+        "lastEventsFound": 0,
+        "consecutiveFailures": 2,
+        "triageResult": null
+      }
+    },
+    {
+      "sourceId": "blekholmen",
+      "url": "https://blekholmen.se/",
+      "roundsParticipated": 2,
+      "diversifiers": [
+        "has_404s",
+        "failures_2",
+        "path_network"
+      ],
+      "queueReason": "toolB(preB): [breadth] unclear (0 likely, 0 possible) — Inga tydliga API:er hittades. 0 404s, 18 fel. Fler mönster kan finnas.. But: API structure attempted (18 errors) but no usable endpoints found. GotEvent lesson: API structure ≠ usable event data. Routing to HTML.",
+      "enrichedData": {
+        "lastPathUsed": "network",
+        "lastEventsFound": 0,
+        "consecutiveFailures": 2,
+        "triageResult": null
+      }
+    },
+    {
+      "sourceId": "boplanet",
+      "url": "https://boplanet.se/",
+      "roundsParticipated": 2,
+      "diversifiers": [
+        "has_404s",
+        "failures_2",
+        "path_network"
+      ],
+      "queueReason": "toolB(preB): [breadth] unclear (0 likely, 0 possible) — Inga tydliga API:er hittades. 0 404s, 18 fel. Fler mönster kan finnas.. But: API structure attempted (18 errors) but no usable endpoints found. GotEvent lesson: API structure ≠ usable event data. Routing to HTML.",
+      "enrichedData": {
+        "lastPathUsed": "network",
+        "lastEventsFound": 0,
+        "consecutiveFailures": 2,
+        "triageResult": null
+      }
+    },
+    {
+      "sourceId": "bor-s-zoo-animagic",
+      "url": "https://animagic.se/",
+      "roundsParticipated": 2,
+      "diversifiers": [
+        "has_404s",
+        "errors_10",
+        "failures_2",
+        "path_network"
+      ],
+      "queueReason": "toolB(preB): [breadth] unclear (0 likely, 0 possible) — Inga tydliga API:er hittades. 10 404s, 18 fel. Fler mönster kan finnas.. But: No network/API signals detected. GotEvent lesson: API structure ≠ usable event data. Routing to HTML.",
+      "enrichedData": {
+        "lastPathUsed": "network",
+        "lastEventsFound": 0,
+        "consecutiveFailures": 2,
+        "triageResult": null
+      }
+    },
+    {
+      "sourceId": "borlange-kommun",
+      "url": "https://borlange.se/",
+      "roundsParticipated": 1,
+      "diversifiers": [
+        "has_404s",
+        "errors_18",
+        "failures_2",
+        "path_network"
+      ],
+      "queueReason": "toolB(preB): [breadth] unclear (0 likely, 0 possible) — Inga tydliga API:er hittades. 18 404s, 18 fel. Fler mönster kan finnas.. But: No network/API signals detected. GotEvent lesson: API structure ≠ usable event data. Routing to HTML.",
+      "enrichedData": {
+        "lastPathUsed": "network",
+        "lastEventsFound": 0,
+        "consecutiveFailures": 2,
+        "triageResult": null
+      }
+    }
+  ],
+  "exited": [
+    {
+      "source": {
+        "sourceId": "jonkoping-stadsteatern",
+        "url": "https://jonkoping.se/stadsteatern",
+        "roundsParticipated": 0,
+        "diversifiers": [
+          "has_404s",
+          "errors_18",
+          "failures_2",
+          "path_network"
+        ],
+        "queueReason": "toolB(preB): [breadth] unclear (0 likely, 0 possible) — Inga tydliga API:er hittades. 18 404s, 18 fel. Fler mönster kan finnas.. But: No network/API signals detected. GotEvent lesson: API structure ≠ usable event data. Routing to HTML.",
+        "enrichedData": {
+          "lastPathUsed": "network",
+          "lastEventsFound": 0,
+          "consecutiveFailures": 2,
+          "triageResult": null
+        }
+      },
+      "decision": "postTestC-D",
+      "result": {
+        "sourceId": "jonkoping-stadsteatern",
+        "url": "https://jonkoping.se/stadsteatern",
+        "c0": {
+          "candidates": 0,
+          "winnerUrl": null,
+          "winnerDensity": 0,
+          "duration": 1237,
+          "rootFallback": false,
+          "ruleAppliedSource": "none",
+          "ruleAppliedPaths": [
+            "/events",
+            "/program",
+            "/kalender",
+            "/schema",
+            "/evenemang",
+            "/kalendarium",
+            "/aktiviteter",
+            "/kultur",
+            "/fritid",
+            "/matcher",
+            "/biljetter"
+          ],
+          "ruleWinnerPath": null
+        },
+        "c1": {
+          "verdict": "no-main",
+          "likelyJsRendered": true,
+          "timeTagCount": 0,
+          "dateCount": 0,
+          "duration": 76
+        },
+        "c2": {
+          "verdict": "low_value",
+          "score": 0,
+          "reason": "[breadth_nojsonld] score=0(adj) >= 12? low_value pg=time-tag",
+          "duration": 70
+        },
+        "extract": {
+          "eventsFound": 0,
+          "duration": 0
+        },
+        "winningStage": "C1",
+        "outcomeType": "route_success",
+        "routeSuggestion": "D",
+        "evidence": "C1: likelyJsRendered=true — content requires D-render",
+        "roundNumber": 1,
+        "success": false
+      }
+    },
+    {
+      "source": {
+        "sourceId": "eventbrite",
+        "url": "https://eventbrite.se/",
+        "roundsParticipated": 0,
+        "diversifiers": [
+          "has_404s",
+          "errors_18",
+          "failures_2",
+          "path_network"
+        ],
+        "queueReason": "toolB(preB): [breadth] unclear (0 likely, 0 possible) — Inga tydliga API:er hittades. 18 404s, 18 fel. Fler mönster kan finnas.. But: No network/API signals detected. GotEvent lesson: API structure ≠ usable event data. Routing to HTML.",
+        "enrichedData": {
+          "lastPathUsed": "network",
+          "lastEventsFound": 0,
+          "consecutiveFailures": 2,
+          "triageResult": null
+        }
+      },
+      "decision": "postTestC-D",
+      "result": {
+        "sourceId": "eventbrite",
+        "url": "https://eventbrite.se/",
+        "c0": {
+          "candidates": 1,
+          "winnerUrl": "https://eventbrite.se/signin/signup?referrer=%2Fmytickets",
+          "winnerDensity": 0,
+          "duration": 2251,
+          "rootFallback": false,
+          "ruleAppliedSource": "link-discovery",
+          "ruleAppliedPaths": [],
+          "ruleWinnerPath": "/signin/signup?referrer=%2Fmytickets"
+        },
+        "c1": {
+          "verdict": "no-main",
+          "likelyJsRendered": true,
+          "timeTagCount": 0,
+          "dateCount": 0,
+          "duration": 1043
+        },
+        "c2": {
+          "verdict": "skipped",
+          "score": 0,
+          "reason": "c1-direct-route",
+          "duration": 0
+        },
+        "extract": {
+          "eventsFound": 0,
+          "duration": 0
+        },
+        "winningStage": "C1",
+        "outcomeType": "route_success",
+        "routeSuggestion": "D",
+        "evidence": "C1: likelyJsRendered=true + (timeTags=0 OR dates=0) — direct D route, C2/C3 skipped",
+        "roundNumber": 1,
+        "success": false
+      }
+    },
+    {
+      "source": {
+        "sourceId": "svenska-fotbollf-rbundet",
+        "url": "https://svenskfotboll.se/",
+        "roundsParticipated": 1,
+        "diversifiers": [
+          "has_404s",
+          "errors_19",
+          "failures_2",
+          "path_network"
+        ],
+        "queueReason": "toolB(preB): [breadth] unclear (0 likely, 0 possible) — Inga tydliga API:er hittades. 19 404s, 21 fel. Fler mönster kan finnas.. But: No network/API signals detected. GotEvent lesson: API structure ≠ usable event data. Routing to HTML.",
+        "enrichedData": {
+          "lastPathUsed": "network",
+          "lastEventsFound": 0,
+          "consecutiveFailures": 2,
+          "triageResult": null
+        }
+      },
+      "decision": "postTestC-D",
+      "result": null
+    },
+    {
+      "source": {
+        "sourceId": "oland",
+        "url": "https://oland.se/",
+        "roundsParticipated": 1,
+        "diversifiers": [
+          "has_404s",
+          "errors_17",
+          "failures_2",
+          "path_network"
+        ],
+        "queueReason": "toolB(preB): [breadth] unclear (0 likely, 0 possible) — Inga tydliga API:er hittades. 17 404s, 17 fel. Fler mönster kan finnas.. But: No network/API signals detected. GotEvent lesson: API structure ≠ usable event data. Routing to HTML.",
+        "enrichedData": {
+          "lastPathUsed": "network",
+          "lastEventsFound": 0,
+          "consecutiveFailures": 2,
+          "triageResult": null
+        }
+      },
+      "decision": "postTestC-D",
+      "result": null
+    },
+    {
+      "source": {
+        "sourceId": "slottsskogen",
+        "url": "https://slottsskogen.se/",
+        "roundsParticipated": 1,
+        "diversifiers": [
+          "has_404s",
+          "errors_10",
+          "failures_2",
+          "path_network"
+        ],
+        "queueReason": "toolB(preB): [breadth] unclear (0 likely, 0 possible) — Inga tydliga API:er hittades. 10 404s, 18 fel. Fler mönster kan finnas.. But: No network/API signals detected. GotEvent lesson: API structure ≠ usable event data. Routing to HTML.",
+        "enrichedData": {
+          "lastPathUsed": "network",
+          "lastEventsFound": 0,
+          "consecutiveFailures": 2,
+          "triageResult": null
+        }
+      },
+      "decision": "postTestC-D",
+      "result": {
+        "sourceId": "slottsskogen",
+        "url": "https://slottsskogen.se/",
+        "c0": {
+          "candidates": 0,
+          "winnerUrl": null,
+          "winnerDensity": 0,
+          "duration": 895,
+          "rootFallback": false,
+          "ruleAppliedSource": "none",
+          "ruleAppliedPaths": [
+            "/events",
+            "/program",
+            "/kalender",
+            "/schema",
+            "/evenemang",
+            "/kalendarium",
+            "/events",
+            "/program",
+            "/kalender",
+            "/schema",
+            "/evenemang",
+            "/kalendarium",
+            "/aktiviteter",
+            "/kultur",
+            "/fritid",
+            "/matcher",
+            "/biljetter"
+          ],
+          "ruleWinnerPath": null
+        },
+        "c1": {
+          "verdict": "no-main",
+          "likelyJsRendered": true,
+          "timeTagCount": 0,
+          "dateCount": 0,
+          "duration": 46
+        },
+        "c2": {
+          "verdict": "unclear",
+          "score": 0,
+          "reason": "fetchHtml failed: HTTP 429",
+          "duration": 34
+        },
+        "extract": {
+          "eventsFound": 0,
+          "duration": 1
+        },
+        "winningStage": "C1",
+        "outcomeType": "route_success",
+        "routeSuggestion": "D",
+        "evidence": "C1: likelyJsRendered=true — content requires D-render",
+        "roundNumber": 2,
+        "success": false
+      }
+    },
+    {
+      "source": {
+        "sourceId": "vega",
+        "url": "https://vega.nu/",
+        "roundsParticipated": 2,
+        "diversifiers": [
+          "failures_2",
+          "path_network"
+        ],
+        "queueReason": "toolB(preB): [breadth] low_value (0 likely, 0 possible) —  Inga event-liknande API:er hittades på vanliga mönster.. But: No network/API signals detected. GotEvent lesson: API structure ≠ usable event data. Routing to HTML.",
+        "enrichedData": {
+          "lastPathUsed": "network",
+          "lastEventsFound": 0,
+          "consecutiveFailures": 2,
+          "triageResult": null
+        }
+      },
+      "decision": "postTestC-manual-review",
+      "result": {
+        "sourceId": "vega",
+        "url": "https://vega.nu/",
+        "c0": {
+          "candidates": 0,
+          "winnerUrl": null,
+          "winnerDensity": 0,
+          "duration": 129,
+          "rootFallback": false,
+          "ruleAppliedSource": "none",
+          "ruleAppliedPaths": [],
+          "ruleWinnerPath": null
+        },
+        "c1": {
+          "verdict": "unfetchable",
+          "likelyJsRendered": false,
+          "timeTagCount": 0,
+          "dateCount": 0,
+          "duration": 54
+        },
+        "c2": {
+          "verdict": "unclear",
+          "score": 0,
+          "reason": "fetchHtml failed: Cross-domain redirect blocked: vega.nu → tobiasnygren.se",
+          "duration": 49
+        },
+        "extract": {
+          "eventsFound": 0,
+          "duration": 1
+        },
+        "winningStage": "C3",
+        "outcomeType": "fail",
+        "routeSuggestion": "Fail",
+        "evidence": "C0: no internal event candidates discovered",
+        "roundNumber": 3,
+        "success": false,
+        "failType": "discovery_failure"
+      }
+    },
+    {
+      "source": {
+        "sourceId": "vaxjo-lakers",
+        "url": "https://vaxjolakers.se/",
+        "roundsParticipated": 2,
+        "diversifiers": [
+          "has_404s",
+          "errors_8",
+          "failures_2",
+          "path_network"
+        ],
+        "queueReason": "toolB(preB): [breadth] unclear (0 likely, 0 possible) — Inga tydliga API:er hittades. 8 404s, 8 fel. Fler mönster kan finnas.. But: No network/API signals detected. GotEvent lesson: API structure ≠ usable event data. Routing to HTML.",
+        "enrichedData": {
+          "lastPathUsed": "network",
+          "lastEventsFound": 0,
+          "consecutiveFailures": 2,
+          "triageResult": null
+        }
+      },
+      "decision": "postTestC-manual-review",
+      "result": {
+        "sourceId": "vaxjo-lakers",
+        "url": "https://vaxjolakers.se/",
+        "c0": {
+          "candidates": 0,
+          "winnerUrl": null,
+          "winnerDensity": 0,
+          "duration": 5004,
+          "rootFallback": false,
+          "ruleAppliedSource": "none",
+          "ruleAppliedPaths": [],
+          "ruleWinnerPath": null
+        },
+        "c1": {
+          "verdict": "unfetchable",
+          "likelyJsRendered": false,
+          "timeTagCount": 0,
+          "dateCount": 0,
+          "duration": 5004
+        },
+        "c2": {
+          "verdict": "unclear",
+          "score": 0,
+          "reason": "fetchHtml failed: timeout of 20000ms exceeded",
+          "duration": 5003
+        },
+        "extract": {
+          "eventsFound": 0,
+          "duration": 1
+        },
+        "winningStage": "C3",
+        "outcomeType": "fail",
+        "routeSuggestion": "Fail",
+        "evidence": "C0: no internal event candidates discovered",
+        "roundNumber": 3,
+        "success": false,
+        "failType": "discovery_failure"
+      }
+    },
+    {
+      "source": {
+        "sourceId": "umea-konserthus",
+        "url": "https://umea.se/konserthus",
+        "roundsParticipated": 2,
+        "diversifiers": [
+          "has_404s",
+          "errors_17",
+          "failures_2",
+          "path_network"
+        ],
+        "queueReason": "toolB(preB): [breadth] unclear (0 likely, 0 possible) — Inga tydliga API:er hittades. 17 404s, 17 fel. Fler mönster kan finnas.. But: No network/API signals detected. GotEvent lesson: API structure ≠ usable event data. Routing to HTML.",
+        "enrichedData": {
+          "lastPathUsed": "network",
+          "lastEventsFound": 0,
+          "consecutiveFailures": 2,
+          "triageResult": null
+        }
+      },
+      "decision": "postTestC-manual-review",
+      "result": {
+        "sourceId": "umea-konserthus",
+        "url": "https://umea.se/konserthus",
+        "c0": {
+          "candidates": 0,
+          "winnerUrl": null,
+          "winnerDensity": 0,
+          "duration": 437,
+          "rootFallback": false,
+          "ruleAppliedSource": "none",
+          "ruleAppliedPaths": [],
+          "ruleWinnerPath": null
+        },
+        "c1": {
+          "verdict": "unfetchable",
+          "likelyJsRendered": false,
+          "timeTagCount": 0,
+          "dateCount": 0,
+          "duration": 161
+        },
+        "c2": {
+          "verdict": "unclear",
+          "score": 0,
+          "reason": "fetchHtml failed: HTTP 404",
+          "duration": 159
+        },
+        "extract": {
+          "eventsFound": 0,
+          "duration": 0
+        },
+        "winningStage": "C3",
+        "outcomeType": "fail",
+        "routeSuggestion": "Fail",
+        "evidence": "C0: no internal event candidates discovered",
+        "roundNumber": 3,
+        "success": false,
+        "failType": "discovery_failure"
+      }
+    },
+    {
+      "source": {
+        "sourceId": "orebro-vinterfest",
+        "url": "https://orebrovinterfest.se/",
+        "roundsParticipated": 2,
+        "diversifiers": [
+          "has_404s",
+          "failures_2",
+          "path_network"
+        ],
+        "queueReason": "toolB(preB): [breadth] unclear (0 likely, 0 possible) — Inga tydliga API:er hittades. 0 404s, 18 fel. Fler mönster kan finnas.. But: API structure attempted (18 errors) but no usable endpoints found. GotEvent lesson: API structure ≠ usable event data. Routing to HTML.",
+        "enrichedData": {
+          "lastPathUsed": "network",
+          "lastEventsFound": 0,
+          "consecutiveFailures": 2,
+          "triageResult": null
+        }
+      },
+      "decision": "postTestC-manual-review",
+      "result": {
+        "sourceId": "orebro-vinterfest",
+        "url": "https://orebrovinterfest.se/",
+        "c0": {
+          "candidates": 0,
+          "winnerUrl": null,
+          "winnerDensity": 0,
+          "duration": 4,
+          "rootFallback": false,
+          "ruleAppliedSource": "none",
+          "ruleAppliedPaths": [],
+          "ruleWinnerPath": null
+        },
+        "c1": {
+          "verdict": "unfetchable",
+          "likelyJsRendered": false,
+          "timeTagCount": 0,
+          "dateCount": 0,
+          "duration": 2
+        },
+        "c2": {
+          "verdict": "unclear",
+          "score": 0,
+          "reason": "fetchHtml failed: getaddrinfo ENOTFOUND orebrovinterfest.se",
+          "duration": 2
+        },
+        "extract": {
+          "eventsFound": 0,
+          "duration": 0
+        },
+        "winningStage": "C3",
+        "outcomeType": "fail",
+        "routeSuggestion": "Fail",
+        "evidence": "C0: no internal event candidates discovered",
+        "roundNumber": 3,
+        "success": false,
+        "failType": "discovery_failure"
+      }
+    },
+    {
+      "source": {
+        "sourceId": "lunds-konserthus",
+        "url": "https://lund.se/konserthus",
+        "roundsParticipated": 2,
+        "diversifiers": [
+          "has_404s",
+          "errors_18",
+          "failures_2",
+          "path_network"
+        ],
+        "queueReason": "toolB(preB): [breadth] unclear (0 likely, 0 possible) — Inga tydliga API:er hittades. 18 404s, 18 fel. Fler mönster kan finnas.. But: No network/API signals detected. GotEvent lesson: API structure ≠ usable event data. Routing to HTML.",
+        "enrichedData": {
+          "lastPathUsed": "network",
+          "lastEventsFound": 0,
+          "consecutiveFailures": 2,
+          "triageResult": null
+        }
+      },
+      "decision": "postTestC-manual-review",
+      "result": {
+        "sourceId": "lunds-konserthus",
+        "url": "https://lund.se/konserthus",
+        "c0": {
+          "candidates": 0,
+          "winnerUrl": null,
+          "winnerDensity": 0,
+          "duration": 256,
+          "rootFallback": false,
+          "ruleAppliedSource": "none",
+          "ruleAppliedPaths": [],
+          "ruleWinnerPath": null
+        },
+        "c1": {
+          "verdict": "unfetchable",
+          "likelyJsRendered": false,
+          "timeTagCount": 0,
+          "dateCount": 0,
+          "duration": 174
+        },
+        "c2": {
+          "verdict": "unclear",
+          "score": 0,
+          "reason": "fetchHtml failed: HTTP 404",
+          "duration": 107
+        },
+        "extract": {
+          "eventsFound": 0,
+          "duration": 1
+        },
+        "winningStage": "C3",
+        "outcomeType": "fail",
+        "routeSuggestion": "Fail",
+        "evidence": "C0: no internal event candidates discovered",
+        "roundNumber": 3,
+        "success": false,
+        "failType": "discovery_failure"
+      }
+    }
+  ],
+  "allExitedIds": [
+    "jonkoping-stadsteatern",
+    "eventbrite",
+    "svenska-fotbollf-rbundet",
+    "oland",
+    "slottsskogen",
+    "vega",
+    "vaxjo-lakers",
+    "umea-konserthus",
+    "orebro-vinterfest",
+    "lunds-konserthus"
+  ],
+  "lastSaved": "2026-04-12T16:29:39.496Z"
+}

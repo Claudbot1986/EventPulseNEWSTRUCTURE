@@ -1,0 +1,633 @@
+{
+  "poolRoundNumber": 3,
+  "activePool": [],
+  "exited": [
+    {
+      "source": {
+        "sourceId": "folkets-hus",
+        "url": "https://folketshus.se/",
+        "roundsParticipated": 0,
+        "diversifiers": [
+          "has_404s",
+          "errors_6",
+          "failures_2",
+          "path_network"
+        ],
+        "queueReason": "toolB(preB): [breadth] unclear (0 likely, 0 possible) — Inga tydliga API:er hittades. 6 404s, 18 fel. Fler mönster kan finnas.. But: No network/API signals detected. GotEvent lesson: API structure ≠ usable event data. Routing to HTML.",
+        "enrichedData": {
+          "lastPathUsed": "network",
+          "lastEventsFound": 0,
+          "consecutiveFailures": 2,
+          "triageResult": null
+        }
+      },
+      "decision": "postTestC-D",
+      "result": {
+        "sourceId": "folkets-hus",
+        "url": "https://folketshus.se/",
+        "c0": {
+          "candidates": 0,
+          "winnerUrl": null,
+          "winnerDensity": 0,
+          "duration": 547,
+          "rootFallback": false
+        },
+        "c1": {
+          "verdict": "no-main",
+          "likelyJsRendered": true,
+          "timeTagCount": 0,
+          "dateCount": 0,
+          "duration": 187
+        },
+        "c2": {
+          "verdict": "low_value",
+          "score": 0,
+          "reason": "[breadth_nojsonld] score=0(adj) >= 12? low_value pg=time-tag",
+          "duration": 236
+        },
+        "extract": {
+          "eventsFound": 0,
+          "duration": 0
+        },
+        "winningStage": "C1",
+        "outcomeType": "route_success",
+        "routeSuggestion": "D",
+        "evidence": "C1: likelyJsRendered=true — content requires D-render",
+        "roundNumber": 1,
+        "success": false
+      }
+    },
+    {
+      "source": {
+        "sourceId": "debaser",
+        "url": "https://debaser.se/",
+        "roundsParticipated": 0,
+        "diversifiers": [
+          "has_404s",
+          "errors_17",
+          "failures_2",
+          "path_network"
+        ],
+        "queueReason": "toolB(preB): [breadth] unclear (0 likely, 0 possible) — Inga tydliga API:er hittades. 17 404s, 17 fel. Fler mönster kan finnas.. But: No network/API signals detected. GotEvent lesson: API structure ≠ usable event data. Routing to HTML.",
+        "enrichedData": {
+          "lastPathUsed": "network",
+          "lastEventsFound": 0,
+          "consecutiveFailures": 2,
+          "triageResult": null
+        }
+      },
+      "decision": "postTestC-D",
+      "result": {
+        "sourceId": "debaser",
+        "url": "https://debaser.se/",
+        "c0": {
+          "candidates": 10,
+          "winnerUrl": "https://debaser.se/kalender",
+          "winnerDensity": 3000,
+          "duration": 1537,
+          "rootFallback": false
+        },
+        "c1": {
+          "verdict": "noise",
+          "likelyJsRendered": true,
+          "timeTagCount": 0,
+          "dateCount": 0,
+          "duration": 133
+        },
+        "c2": {
+          "verdict": "promising",
+          "score": 900,
+          "reason": "[breadth_nojsonld] score=900(adj) >= 12? promising pg=price-marker",
+          "duration": 205
+        },
+        "extract": {
+          "eventsFound": 0,
+          "duration": 0
+        },
+        "winningStage": "C1",
+        "outcomeType": "route_success",
+        "routeSuggestion": "D",
+        "evidence": "C1: likelyJsRendered=true — content requires D-render",
+        "roundNumber": 1,
+        "success": false
+      }
+    },
+    {
+      "source": {
+        "sourceId": "halmstads-bk",
+        "url": "https://hbk.se/",
+        "roundsParticipated": 0,
+        "diversifiers": [
+          "failures_2",
+          "path_network"
+        ],
+        "queueReason": "toolB(preB): [breadth] low_value (0 likely, 0 possible) —  Inga event-liknande API:er hittades på vanliga mönster.. But: No network/API signals detected. GotEvent lesson: API structure ≠ usable event data. Routing to HTML.",
+        "enrichedData": {
+          "lastPathUsed": "network",
+          "lastEventsFound": 0,
+          "consecutiveFailures": 2,
+          "triageResult": null
+        }
+      },
+      "decision": "postTestC-D",
+      "result": {
+        "sourceId": "halmstads-bk",
+        "url": "https://hbk.se/",
+        "c0": {
+          "candidates": 6,
+          "winnerUrl": "https://hbk.se/biljetter/bortamatcher",
+          "winnerDensity": 2,
+          "duration": 1173,
+          "rootFallback": false
+        },
+        "c1": {
+          "verdict": "no-main",
+          "likelyJsRendered": true,
+          "timeTagCount": 0,
+          "dateCount": 0,
+          "duration": 75
+        },
+        "c2": {
+          "verdict": "unclear",
+          "score": 2,
+          "reason": "[breadth_nojsonld] score=2(adj) >= 12? unclear pg=price-marker",
+          "duration": 89
+        },
+        "extract": {
+          "eventsFound": 0,
+          "duration": 0
+        },
+        "winningStage": "C1",
+        "outcomeType": "route_success",
+        "routeSuggestion": "D",
+        "evidence": "C1: likelyJsRendered=true — content requires D-render",
+        "roundNumber": 1,
+        "success": false
+      }
+    },
+    {
+      "source": {
+        "sourceId": "kino",
+        "url": "https://kinogoteborg.se/",
+        "roundsParticipated": 1,
+        "diversifiers": [
+          "has_404s",
+          "failures_2",
+          "path_network"
+        ],
+        "queueReason": "toolB(preB): [breadth] unclear (0 likely, 0 possible) — Inga tydliga API:er hittades. 0 404s, 18 fel. Fler mönster kan finnas.. But: API structure attempted (18 errors) but no usable endpoints found. GotEvent lesson: API structure ≠ usable event data. Routing to HTML.",
+        "enrichedData": {
+          "lastPathUsed": "network",
+          "lastEventsFound": 0,
+          "consecutiveFailures": 2,
+          "triageResult": null
+        }
+      },
+      "decision": "postTestC-manual-review",
+      "result": null
+    },
+    {
+      "source": {
+        "sourceId": "open-art",
+        "url": "https://openart.se/",
+        "roundsParticipated": 1,
+        "diversifiers": [
+          "has_404s",
+          "errors_18",
+          "failures_2",
+          "path_network"
+        ],
+        "queueReason": "toolB(preB): [breadth] unclear (0 likely, 0 possible) — Inga tydliga API:er hittades. 18 404s, 18 fel. Fler mönster kan finnas.. But: No network/API signals detected. GotEvent lesson: API structure ≠ usable event data. Routing to HTML.",
+        "enrichedData": {
+          "lastPathUsed": "network",
+          "lastEventsFound": 0,
+          "consecutiveFailures": 2,
+          "triageResult": null
+        }
+      },
+      "decision": "postTestC-manual-review",
+      "result": null
+    },
+    {
+      "source": {
+        "sourceId": "karlskrona-hf",
+        "url": "https://karlskronahf.se/",
+        "roundsParticipated": 1,
+        "diversifiers": [
+          "has_404s",
+          "failures_2",
+          "path_network"
+        ],
+        "queueReason": "toolB(preB): [breadth] unclear (0 likely, 0 possible) — Inga tydliga API:er hittades. 0 404s, 18 fel. Fler mönster kan finnas.. But: API structure attempted (18 errors) but no usable endpoints found. GotEvent lesson: API structure ≠ usable event data. Routing to HTML.",
+        "enrichedData": {
+          "lastPathUsed": "network",
+          "lastEventsFound": 0,
+          "consecutiveFailures": 2,
+          "triageResult": null
+        }
+      },
+      "decision": "postTestC-manual-review",
+      "result": null
+    },
+    {
+      "source": {
+        "sourceId": "norrkoping-art",
+        "url": "https://norrkopingart.se/",
+        "roundsParticipated": 1,
+        "diversifiers": [
+          "has_404s",
+          "failures_2",
+          "path_network"
+        ],
+        "queueReason": "toolB(preB): [breadth] unclear (0 likely, 0 possible) — Inga tydliga API:er hittades. 0 404s, 18 fel. Fler mönster kan finnas.. But: API structure attempted (18 errors) but no usable endpoints found. GotEvent lesson: API structure ≠ usable event data. Routing to HTML.",
+        "enrichedData": {
+          "lastPathUsed": "network",
+          "lastEventsFound": 0,
+          "consecutiveFailures": 2,
+          "triageResult": null
+        }
+      },
+      "decision": "postTestC-manual-review",
+      "result": null
+    },
+    {
+      "source": {
+        "sourceId": "malmo-hogskola",
+        "url": "https://mah.se/",
+        "roundsParticipated": 1,
+        "diversifiers": [
+          "has_404s",
+          "failures_2",
+          "path_network"
+        ],
+        "queueReason": "toolB(preB): [breadth] unclear (0 likely, 0 possible) — Inga tydliga API:er hittades. 0 404s, 18 fel. Fler mönster kan finnas.. But: API structure attempted (18 errors) but no usable endpoints found. GotEvent lesson: API structure ≠ usable event data. Routing to HTML.",
+        "enrichedData": {
+          "lastPathUsed": "network",
+          "lastEventsFound": 0,
+          "consecutiveFailures": 2,
+          "triageResult": null
+        }
+      },
+      "decision": "postTestC-manual-review",
+      "result": null
+    },
+    {
+      "source": {
+        "sourceId": "naturhistoriska-museet",
+        "url": "https://naturhistoriska.se/",
+        "roundsParticipated": 1,
+        "diversifiers": [
+          "has_404s",
+          "failures_2",
+          "path_network"
+        ],
+        "queueReason": "toolB(preB): [breadth] unclear (0 likely, 0 possible) — Inga tydliga API:er hittades. 0 404s, 18 fel. Fler mönster kan finnas.. But: API structure attempted (18 errors) but no usable endpoints found. GotEvent lesson: API structure ≠ usable event data. Routing to HTML.",
+        "enrichedData": {
+          "lastPathUsed": "network",
+          "lastEventsFound": 0,
+          "consecutiveFailures": 2,
+          "triageResult": null
+        }
+      },
+      "decision": "postTestC-manual-review",
+      "result": null
+    },
+    {
+      "source": {
+        "sourceId": "bor-s-zoo-animagic",
+        "url": "https://animagic.se/",
+        "roundsParticipated": 0,
+        "diversifiers": [
+          "has_404s",
+          "errors_10",
+          "failures_2",
+          "path_network"
+        ],
+        "queueReason": "toolB(preB): [breadth] unclear (0 likely, 0 possible) — Inga tydliga API:er hittades. 10 404s, 18 fel. Fler mönster kan finnas.. But: No network/API signals detected. GotEvent lesson: API structure ≠ usable event data. Routing to HTML.",
+        "enrichedData": {
+          "lastPathUsed": "network",
+          "lastEventsFound": 0,
+          "consecutiveFailures": 2,
+          "triageResult": null
+        }
+      },
+      "decision": "postTestC-D",
+      "result": {
+        "sourceId": "bor-s-zoo-animagic",
+        "url": "https://animagic.se/",
+        "c0": {
+          "candidates": 0,
+          "winnerUrl": null,
+          "winnerDensity": 0,
+          "duration": 329,
+          "rootFallback": false
+        },
+        "c1": {
+          "verdict": "no-main",
+          "likelyJsRendered": true,
+          "timeTagCount": 0,
+          "dateCount": 0,
+          "duration": 76
+        },
+        "c2": {
+          "verdict": "low_value",
+          "score": 0,
+          "reason": "[breadth_nojsonld] score=0(adj) >= 12? low_value pg=time-tag",
+          "duration": 52
+        },
+        "extract": {
+          "eventsFound": 0,
+          "duration": 0
+        },
+        "winningStage": "C1",
+        "outcomeType": "route_success",
+        "routeSuggestion": "D",
+        "evidence": "C1: likelyJsRendered=true — content requires D-render",
+        "roundNumber": 2,
+        "success": false
+      }
+    },
+    {
+      "source": {
+        "sourceId": "goteborgs-arkitekturgalleri",
+        "url": "https://arkitekturgalleriet.se/",
+        "roundsParticipated": 2,
+        "diversifiers": [
+          "has_404s",
+          "failures_2",
+          "path_network"
+        ],
+        "queueReason": "toolB(preB): [breadth] unclear (0 likely, 0 possible) — Inga tydliga API:er hittades. 0 404s, 18 fel. Fler mönster kan finnas.. But: API structure attempted (18 errors) but no usable endpoints found. GotEvent lesson: API structure ≠ usable event data. Routing to HTML.",
+        "enrichedData": {
+          "lastPathUsed": "network",
+          "lastEventsFound": 0,
+          "consecutiveFailures": 2,
+          "triageResult": null
+        }
+      },
+      "decision": "postTestC-manual-review",
+      "result": null
+    },
+    {
+      "source": {
+        "sourceId": "centuri",
+        "url": "https://centuri.se/",
+        "roundsParticipated": 1,
+        "diversifiers": [
+          "has_404s",
+          "errors_18",
+          "failures_2",
+          "path_network"
+        ],
+        "queueReason": "toolB(preB): [breadth] unclear (0 likely, 0 possible) — Inga tydliga API:er hittades. 18 404s, 18 fel. Fler mönster kan finnas.. But: No network/API signals detected. GotEvent lesson: API structure ≠ usable event data. Routing to HTML.",
+        "enrichedData": {
+          "lastPathUsed": "network",
+          "lastEventsFound": 0,
+          "consecutiveFailures": 2,
+          "triageResult": null
+        }
+      },
+      "decision": "postTestC-manual-review",
+      "result": null
+    },
+    {
+      "source": {
+        "sourceId": "bk-hacken",
+        "url": "https://hacken.se/",
+        "roundsParticipated": 2,
+        "diversifiers": [
+          "has_404s",
+          "failures_2",
+          "path_network"
+        ],
+        "queueReason": "toolB(preB): [breadth] unclear (0 likely, 0 possible) — Inga tydliga API:er hittades. 0 404s, 18 fel. Fler mönster kan finnas.. But: API structure attempted (18 errors) but no usable endpoints found. GotEvent lesson: API structure ≠ usable event data. Routing to HTML.",
+        "enrichedData": {
+          "lastPathUsed": "network",
+          "lastEventsFound": 0,
+          "consecutiveFailures": 2,
+          "triageResult": null
+        }
+      },
+      "decision": "postTestC-manual-review",
+      "result": null
+    },
+    {
+      "source": {
+        "sourceId": "blekholmen",
+        "url": "https://blekholmen.se/",
+        "roundsParticipated": 2,
+        "diversifiers": [
+          "has_404s",
+          "failures_2",
+          "path_network"
+        ],
+        "queueReason": "toolB(preB): [breadth] unclear (0 likely, 0 possible) — Inga tydliga API:er hittades. 0 404s, 18 fel. Fler mönster kan finnas.. But: API structure attempted (18 errors) but no usable endpoints found. GotEvent lesson: API structure ≠ usable event data. Routing to HTML.",
+        "enrichedData": {
+          "lastPathUsed": "network",
+          "lastEventsFound": 0,
+          "consecutiveFailures": 2,
+          "triageResult": null
+        }
+      },
+      "decision": "postTestC-manual-review",
+      "result": null
+    },
+    {
+      "source": {
+        "sourceId": "boplanet",
+        "url": "https://boplanet.se/",
+        "roundsParticipated": 2,
+        "diversifiers": [
+          "has_404s",
+          "failures_2",
+          "path_network"
+        ],
+        "queueReason": "toolB(preB): [breadth] unclear (0 likely, 0 possible) — Inga tydliga API:er hittades. 0 404s, 18 fel. Fler mönster kan finnas.. But: API structure attempted (18 errors) but no usable endpoints found. GotEvent lesson: API structure ≠ usable event data. Routing to HTML.",
+        "enrichedData": {
+          "lastPathUsed": "network",
+          "lastEventsFound": 0,
+          "consecutiveFailures": 2,
+          "triageResult": null
+        }
+      },
+      "decision": "postTestC-manual-review",
+      "result": null
+    },
+    {
+      "source": {
+        "sourceId": "borlange-kommun",
+        "url": "https://borlange.se/",
+        "roundsParticipated": 2,
+        "diversifiers": [
+          "has_404s",
+          "errors_18",
+          "failures_2",
+          "path_network"
+        ],
+        "queueReason": "toolB(preB): [breadth] unclear (0 likely, 0 possible) — Inga tydliga API:er hittades. 18 404s, 18 fel. Fler mönster kan finnas.. But: No network/API signals detected. GotEvent lesson: API structure ≠ usable event data. Routing to HTML.",
+        "enrichedData": {
+          "lastPathUsed": "network",
+          "lastEventsFound": 0,
+          "consecutiveFailures": 2,
+          "triageResult": null
+        }
+      },
+      "decision": "postTestC-manual-review",
+      "result": null
+    },
+    {
+      "source": {
+        "sourceId": "botaniska-tradgarden",
+        "url": "https://botaniska.se/",
+        "roundsParticipated": 2,
+        "diversifiers": [
+          "has_404s",
+          "errors_18",
+          "failures_2",
+          "path_network"
+        ],
+        "queueReason": "toolB(preB): [breadth] unclear (0 likely, 0 possible) — Inga tydliga API:er hittades. 18 404s, 18 fel. Fler mönster kan finnas.. But: No network/API signals detected. GotEvent lesson: API structure ≠ usable event data. Routing to HTML.",
+        "enrichedData": {
+          "lastPathUsed": "network",
+          "lastEventsFound": 0,
+          "consecutiveFailures": 2,
+          "triageResult": null
+        }
+      },
+      "decision": "postTestC-D",
+      "result": null
+    },
+    {
+      "source": {
+        "sourceId": "brommapojkarna",
+        "url": "https://bpxf.se/",
+        "roundsParticipated": 2,
+        "diversifiers": [
+          "has_404s",
+          "failures_2",
+          "path_network"
+        ],
+        "queueReason": "toolB(preB): [breadth] unclear (0 likely, 0 possible) — Inga tydliga API:er hittades. 0 404s, 18 fel. Fler mönster kan finnas.. But: API structure attempted (18 errors) but no usable endpoints found. GotEvent lesson: API structure ≠ usable event data. Routing to HTML.",
+        "enrichedData": {
+          "lastPathUsed": "network",
+          "lastEventsFound": 0,
+          "consecutiveFailures": 2,
+          "triageResult": null
+        }
+      },
+      "decision": "postTestC-manual-review",
+      "result": null
+    },
+    {
+      "source": {
+        "sourceId": "chalmers",
+        "url": "https://chalmers.se/",
+        "roundsParticipated": 2,
+        "diversifiers": [
+          "has_404s",
+          "errors_19",
+          "failures_2",
+          "path_network"
+        ],
+        "queueReason": "toolB(preB): [breadth] unclear (0 likely, 0 possible) — Inga tydliga API:er hittades. 19 404s, 19 fel. Fler mönster kan finnas.. But: No network/API signals detected. GotEvent lesson: API structure ≠ usable event data. Routing to HTML.",
+        "enrichedData": {
+          "lastPathUsed": "network",
+          "lastEventsFound": 0,
+          "consecutiveFailures": 2,
+          "triageResult": null
+        }
+      },
+      "decision": "postTestC-manual-review",
+      "result": null
+    },
+    {
+      "source": {
+        "sourceId": "cirkus",
+        "url": "https://cirkus.se/",
+        "roundsParticipated": 1,
+        "diversifiers": [
+          "has_404s",
+          "errors_12",
+          "failures_2",
+          "path_network"
+        ],
+        "queueReason": "toolB(preB): [breadth] unclear (0 likely, 0 possible) — Inga tydliga API:er hittades. 12 404s, 19 fel. Fler mönster kan finnas.. But: No network/API signals detected. GotEvent lesson: API structure ≠ usable event data. Routing to HTML.",
+        "enrichedData": {
+          "lastPathUsed": "network",
+          "lastEventsFound": 0,
+          "consecutiveFailures": 2,
+          "triageResult": null
+        }
+      },
+      "decision": "postTestC-manual-review",
+      "result": null
+    },
+    {
+      "source": {
+        "sourceId": "club-mecca",
+        "url": "https://clubmecca.se/",
+        "roundsParticipated": 1,
+        "diversifiers": [
+          "has_404s",
+          "failures_2",
+          "path_network"
+        ],
+        "queueReason": "toolB(preB): [breadth] unclear (0 likely, 0 possible) — Inga tydliga API:er hittades. 0 404s, 18 fel. Fler mönster kan finnas.. But: API structure attempted (18 errors) but no usable endpoints found. GotEvent lesson: API structure ≠ usable event data. Routing to HTML.",
+        "enrichedData": {
+          "lastPathUsed": "network",
+          "lastEventsFound": 0,
+          "consecutiveFailures": 2,
+          "triageResult": null
+        }
+      },
+      "decision": "postTestC-manual-review",
+      "result": null
+    },
+    {
+      "source": {
+        "sourceId": "dalarna",
+        "url": "https://dalarna.se/",
+        "roundsParticipated": 1,
+        "diversifiers": [
+          "has_404s",
+          "failures_2",
+          "path_network"
+        ],
+        "queueReason": "toolB(preB): [breadth] unclear (0 likely, 0 possible) — Inga tydliga API:er hittades. 0 404s, 18 fel. Fler mönster kan finnas.. But: API structure attempted (18 errors) but no usable endpoints found. GotEvent lesson: API structure ≠ usable event data. Routing to HTML.",
+        "enrichedData": {
+          "lastPathUsed": "network",
+          "lastEventsFound": 0,
+          "consecutiveFailures": 2,
+          "triageResult": null
+        }
+      },
+      "decision": "postTestC-manual-review",
+      "result": null
+    }
+  ],
+  "allExitedIds": [
+    "folkets-hus",
+    "debaser",
+    "halmstads-bk",
+    "kino",
+    "open-art",
+    "karlskrona-hf",
+    "norrkoping-art",
+    "malmo-hogskola",
+    "naturhistoriska-museet",
+    "bor-s-zoo-animagic",
+    "goteborgs-arkitekturgalleri",
+    "centuri",
+    "bk-hacken",
+    "blekholmen",
+    "boplanet",
+    "borlange-kommun",
+    "botaniska-tradgarden",
+    "brommapojkarna",
+    "chalmers",
+    "cirkus",
+    "club-mecca",
+    "dalarna"
+  ],
+  "lastSaved": "2026-04-12T07:57:14.116Z"
+}

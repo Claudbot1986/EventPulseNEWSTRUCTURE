@@ -1,0 +1,590 @@
+{
+  "poolRoundNumber": 3,
+  "activePool": [],
+  "exited": [
+    {
+      "source": {
+        "sourceId": "malmo-massan",
+        "url": "https://malmömässan.se/",
+        "roundsParticipated": 2,
+        "diversifiers": [
+          "failures_2",
+          "path_network"
+        ],
+        "queueReason": "preferredPath=unknown, requires HTML analysis",
+        "enrichedData": {
+          "lastPathUsed": "network",
+          "lastEventsFound": 0,
+          "consecutiveFailures": 2,
+          "triageResult": null
+        }
+      },
+      "decision": "postTestC-manual-review",
+      "result": {
+        "sourceId": "malmo-massan",
+        "url": "https://malmömässan.se/",
+        "c0": {
+          "candidates": 0,
+          "winnerUrl": null,
+          "winnerDensity": 0,
+          "duration": 71,
+          "rootFallback": false,
+          "ruleAppliedSource": "none",
+          "ruleAppliedPaths": [],
+          "ruleWinnerPath": null
+        },
+        "c1": {
+          "verdict": "unfetchable",
+          "likelyJsRendered": false,
+          "timeTagCount": 0,
+          "dateCount": 0,
+          "duration": 114
+        },
+        "c2": {
+          "verdict": "unclear",
+          "score": 0,
+          "reason": "fetchHtml failed: connect ECONNREFUSED 217.70.184.38:443",
+          "duration": 74
+        },
+        "extract": {
+          "eventsFound": 0,
+          "duration": 1
+        },
+        "winningStage": "C3",
+        "outcomeType": "fail",
+        "routeSuggestion": "Fail",
+        "evidence": "C0: no internal event candidates discovered",
+        "roundNumber": 3,
+        "success": false,
+        "failType": "discovery_failure"
+      }
+    },
+    {
+      "source": {
+        "sourceId": "antikmassan",
+        "url": "https://antikmassan.se/",
+        "roundsParticipated": 2,
+        "diversifiers": [
+          "failures_1",
+          "path_jsonld"
+        ],
+        "queueReason": "preferredPath=unknown, requires HTML analysis",
+        "enrichedData": {
+          "lastPathUsed": "jsonld",
+          "lastEventsFound": 0,
+          "consecutiveFailures": 1,
+          "triageResult": null
+        }
+      },
+      "decision": "postTestC-manual-review",
+      "result": {
+        "sourceId": "antikmassan",
+        "url": "https://antikmassan.se/",
+        "c0": {
+          "candidates": 1,
+          "winnerUrl": "https://antikmassan.se/program",
+          "winnerDensity": 0,
+          "duration": 349,
+          "rootFallback": false,
+          "ruleAppliedSource": "link-discovery",
+          "ruleAppliedPaths": [],
+          "ruleWinnerPath": "/program"
+        },
+        "c1": {
+          "verdict": "unfetchable",
+          "likelyJsRendered": false,
+          "timeTagCount": 0,
+          "dateCount": 0,
+          "duration": 58
+        },
+        "c2": {
+          "verdict": "unclear",
+          "score": 0,
+          "reason": "fetchHtml failed: Redirect loop detected: https://antikmassan.se/program",
+          "duration": 25
+        },
+        "extract": {
+          "eventsFound": 0,
+          "duration": 1
+        },
+        "winningStage": "C3",
+        "outcomeType": "fail",
+        "routeSuggestion": "Fail",
+        "evidence": "C2: verdict=unclear, score=0 too low",
+        "roundNumber": 3,
+        "success": false,
+        "failType": "screening_failure"
+      }
+    },
+    {
+      "source": {
+        "sourceId": "hovet",
+        "url": "https://hovet.se/",
+        "roundsParticipated": 2,
+        "diversifiers": [
+          "failures_2",
+          "path_network"
+        ],
+        "queueReason": "preferredPath=unknown, requires HTML analysis",
+        "enrichedData": {
+          "lastPathUsed": "network",
+          "lastEventsFound": 0,
+          "consecutiveFailures": 2,
+          "triageResult": null
+        }
+      },
+      "decision": "postTestC-manual-review",
+      "result": {
+        "sourceId": "hovet",
+        "url": "https://hovet.se/",
+        "c0": {
+          "candidates": 0,
+          "winnerUrl": null,
+          "winnerDensity": 0,
+          "duration": 3,
+          "rootFallback": false,
+          "ruleAppliedSource": "none",
+          "ruleAppliedPaths": [],
+          "ruleWinnerPath": null
+        },
+        "c1": {
+          "verdict": "unfetchable",
+          "likelyJsRendered": false,
+          "timeTagCount": 0,
+          "dateCount": 0,
+          "duration": 2
+        },
+        "c2": {
+          "verdict": "unclear",
+          "score": 0,
+          "reason": "fetchHtml failed: getaddrinfo ENOTFOUND hovet.se",
+          "duration": 1
+        },
+        "extract": {
+          "eventsFound": 0,
+          "duration": 0
+        },
+        "winningStage": "C3",
+        "outcomeType": "fail",
+        "routeSuggestion": "Fail",
+        "evidence": "C0: no internal event candidates discovered",
+        "roundNumber": 3,
+        "success": false,
+        "failType": "discovery_failure"
+      }
+    },
+    {
+      "source": {
+        "sourceId": "katrineholm",
+        "url": "https://katrineholm.se/",
+        "roundsParticipated": 2,
+        "diversifiers": [
+          "failures_2",
+          "path_network"
+        ],
+        "queueReason": "preferredPath=unknown, requires HTML analysis",
+        "enrichedData": {
+          "lastPathUsed": "network",
+          "lastEventsFound": 0,
+          "consecutiveFailures": 2,
+          "triageResult": null
+        }
+      },
+      "decision": "postTestC-manual-review",
+      "result": {
+        "sourceId": "katrineholm",
+        "url": "https://katrineholm.se/",
+        "c0": {
+          "candidates": 1,
+          "winnerUrl": "https://katrineholm.se/evenemangskalendern.html",
+          "winnerDensity": 8,
+          "duration": 1122,
+          "rootFallback": false,
+          "ruleAppliedSource": "link-discovery",
+          "ruleAppliedPaths": [],
+          "ruleWinnerPath": "/evenemangskalendern.html"
+        },
+        "c1": {
+          "verdict": "weak",
+          "likelyJsRendered": false,
+          "timeTagCount": 0,
+          "dateCount": 0,
+          "duration": 139
+        },
+        "c2": {
+          "verdict": "unclear",
+          "score": 4,
+          "reason": "[breadth_nojsonld] score=4(adj) >= 12? unclear pg=event-heading",
+          "duration": 184
+        },
+        "extract": {
+          "eventsFound": 0,
+          "duration": 4
+        },
+        "winningStage": "C3",
+        "outcomeType": "fail",
+        "routeSuggestion": "Fail",
+        "evidence": "C2: verdict=unclear, score=4 too low",
+        "roundNumber": 3,
+        "success": false,
+        "failType": "screening_failure"
+      }
+    },
+    {
+      "source": {
+        "sourceId": "g-teborgs-universitet",
+        "url": "https://gu.se/evenemang",
+        "roundsParticipated": 2,
+        "diversifiers": [
+          "failures_2",
+          "path_network"
+        ],
+        "queueReason": "preferredPath=unknown, requires HTML analysis",
+        "enrichedData": {
+          "lastPathUsed": "network",
+          "lastEventsFound": 0,
+          "consecutiveFailures": 2,
+          "triageResult": null
+        }
+      },
+      "decision": "postTestC-manual-review",
+      "result": {
+        "sourceId": "g-teborgs-universitet",
+        "url": "https://gu.se/evenemang",
+        "c0": {
+          "candidates": 4,
+          "winnerUrl": "https://gu.se/studera-vid-goteborgs-universitet/program-pa-grundniva",
+          "winnerDensity": 13,
+          "duration": 995,
+          "rootFallback": false,
+          "ruleAppliedSource": "link-discovery",
+          "ruleAppliedPaths": [],
+          "ruleWinnerPath": "/studera-vid-goteborgs-universitet/program-pa-grundniva"
+        },
+        "c1": {
+          "verdict": "medium",
+          "likelyJsRendered": false,
+          "timeTagCount": 1,
+          "dateCount": 2,
+          "duration": 126
+        },
+        "c2": {
+          "verdict": "promising",
+          "score": 17,
+          "reason": "[breadth_nojsonld] score=17(adj) >= 12? promising pg=event-heading neg=news-article",
+          "duration": 117
+        },
+        "extract": {
+          "eventsFound": 0,
+          "duration": 44
+        },
+        "winningStage": "C3",
+        "outcomeType": "fail",
+        "routeSuggestion": "Fail",
+        "evidence": "C3: extraction returned 0 events despite C2 promising (score=17)",
+        "roundNumber": 3,
+        "success": false,
+        "failType": "extraction_failure"
+      }
+    },
+    {
+      "source": {
+        "sourceId": "lunds-museum",
+        "url": "https://historiska.se/",
+        "roundsParticipated": 2,
+        "diversifiers": [
+          "failures_2",
+          "path_network"
+        ],
+        "queueReason": "preferredPath=unknown, requires HTML analysis",
+        "enrichedData": {
+          "lastPathUsed": "network",
+          "lastEventsFound": 0,
+          "consecutiveFailures": 2,
+          "triageResult": null
+        }
+      },
+      "decision": "postTestC-manual-review",
+      "result": {
+        "sourceId": "lunds-museum",
+        "url": "https://historiska.se/",
+        "c0": {
+          "candidates": 2,
+          "winnerUrl": "https://historiska.se/skola/skolprogram/",
+          "winnerDensity": 0,
+          "duration": 854,
+          "rootFallback": false,
+          "ruleAppliedSource": "link-discovery",
+          "ruleAppliedPaths": [],
+          "ruleWinnerPath": "https://historiska.se/skola/skolprogram/"
+        },
+        "c1": {
+          "verdict": "unfetchable",
+          "likelyJsRendered": false,
+          "timeTagCount": 0,
+          "dateCount": 0,
+          "duration": 65
+        },
+        "c2": {
+          "verdict": "unclear",
+          "score": 0,
+          "reason": "fetchHtml failed: Redirect loop detected: https://historiska.se/skola/skolprogram",
+          "duration": 40
+        },
+        "extract": {
+          "eventsFound": 0,
+          "duration": 0
+        },
+        "winningStage": "C3",
+        "outcomeType": "fail",
+        "routeSuggestion": "Fail",
+        "evidence": "C2: verdict=unclear, score=0 too low",
+        "roundNumber": 3,
+        "success": false,
+        "failType": "screening_failure"
+      }
+    },
+    {
+      "source": {
+        "sourceId": "gavle-if",
+        "url": "https://gavleif.se/",
+        "roundsParticipated": 2,
+        "diversifiers": [
+          "failures_2",
+          "path_network"
+        ],
+        "queueReason": "preferredPath=unknown, requires HTML analysis",
+        "enrichedData": {
+          "lastPathUsed": "network",
+          "lastEventsFound": 0,
+          "consecutiveFailures": 2,
+          "triageResult": null
+        }
+      },
+      "decision": "postTestC-manual-review",
+      "result": {
+        "sourceId": "gavle-if",
+        "url": "https://gavleif.se/",
+        "c0": {
+          "candidates": 0,
+          "winnerUrl": null,
+          "winnerDensity": 0,
+          "duration": 2,
+          "rootFallback": false,
+          "ruleAppliedSource": "none",
+          "ruleAppliedPaths": [],
+          "ruleWinnerPath": null
+        },
+        "c1": {
+          "verdict": "unfetchable",
+          "likelyJsRendered": false,
+          "timeTagCount": 0,
+          "dateCount": 0,
+          "duration": 1
+        },
+        "c2": {
+          "verdict": "unclear",
+          "score": 0,
+          "reason": "fetchHtml failed: getaddrinfo ENOTFOUND gavleif.se",
+          "duration": 1
+        },
+        "extract": {
+          "eventsFound": 0,
+          "duration": 0
+        },
+        "winningStage": "C3",
+        "outcomeType": "fail",
+        "routeSuggestion": "Fail",
+        "evidence": "C0: no internal event candidates discovered",
+        "roundNumber": 3,
+        "success": false,
+        "failType": "discovery_failure"
+      }
+    },
+    {
+      "source": {
+        "sourceId": "parkteatern",
+        "url": "https://parkteatern.se/",
+        "roundsParticipated": 2,
+        "diversifiers": [
+          "failures_2",
+          "path_network"
+        ],
+        "queueReason": "preferredPath=unknown, requires HTML analysis",
+        "enrichedData": {
+          "lastPathUsed": "network",
+          "lastEventsFound": 0,
+          "consecutiveFailures": 2,
+          "triageResult": null
+        }
+      },
+      "decision": "postTestC-manual-review",
+      "result": {
+        "sourceId": "parkteatern",
+        "url": "https://parkteatern.se/",
+        "c0": {
+          "candidates": 0,
+          "winnerUrl": null,
+          "winnerDensity": 0,
+          "duration": 0,
+          "rootFallback": false,
+          "ruleAppliedSource": "none",
+          "ruleAppliedPaths": [],
+          "ruleWinnerPath": null
+        },
+        "c1": {
+          "verdict": "unfetchable",
+          "likelyJsRendered": false,
+          "timeTagCount": 0,
+          "dateCount": 0,
+          "duration": 1
+        },
+        "c2": {
+          "verdict": "unclear",
+          "score": 0,
+          "reason": "fetchHtml failed: getaddrinfo ENOTFOUND parkteatern.se",
+          "duration": 1
+        },
+        "extract": {
+          "eventsFound": 0,
+          "duration": 0
+        },
+        "winningStage": "C3",
+        "outcomeType": "fail",
+        "routeSuggestion": "Fail",
+        "evidence": "C0: no internal event candidates discovered",
+        "roundNumber": 3,
+        "success": false,
+        "failType": "discovery_failure"
+      }
+    },
+    {
+      "source": {
+        "sourceId": "ruddalen",
+        "url": "https://ruddalen.se/",
+        "roundsParticipated": 2,
+        "diversifiers": [
+          "failures_2",
+          "path_network"
+        ],
+        "queueReason": "preferredPath=unknown, requires HTML analysis",
+        "enrichedData": {
+          "lastPathUsed": "network",
+          "lastEventsFound": 0,
+          "consecutiveFailures": 2,
+          "triageResult": null
+        }
+      },
+      "decision": "postTestC-manual-review",
+      "result": {
+        "sourceId": "ruddalen",
+        "url": "https://ruddalen.se/",
+        "c0": {
+          "candidates": 0,
+          "winnerUrl": null,
+          "winnerDensity": 0,
+          "duration": 1,
+          "rootFallback": false,
+          "ruleAppliedSource": "none",
+          "ruleAppliedPaths": [],
+          "ruleWinnerPath": null
+        },
+        "c1": {
+          "verdict": "unfetchable",
+          "likelyJsRendered": false,
+          "timeTagCount": 0,
+          "dateCount": 0,
+          "duration": 1
+        },
+        "c2": {
+          "verdict": "unclear",
+          "score": 0,
+          "reason": "fetchHtml failed: getaddrinfo ENOTFOUND ruddalen.se",
+          "duration": 1
+        },
+        "extract": {
+          "eventsFound": 0,
+          "duration": 0
+        },
+        "winningStage": "C3",
+        "outcomeType": "fail",
+        "routeSuggestion": "Fail",
+        "evidence": "C0: no internal event candidates discovered",
+        "roundNumber": 3,
+        "success": false,
+        "failType": "discovery_failure"
+      }
+    },
+    {
+      "source": {
+        "sourceId": "andra-langgatan",
+        "url": "https://andra.se/",
+        "roundsParticipated": 2,
+        "diversifiers": [
+          "failures_1",
+          "triage_still_unknown",
+          "path_network"
+        ],
+        "queueReason": "preferredPath=unknown, requires HTML analysis",
+        "enrichedData": {
+          "lastPathUsed": "network",
+          "lastEventsFound": 0,
+          "consecutiveFailures": 1,
+          "triageResult": "still_unknown"
+        }
+      },
+      "decision": "postTestC-manual-review",
+      "result": {
+        "sourceId": "andra-langgatan",
+        "url": "https://andra.se/",
+        "c0": {
+          "candidates": 0,
+          "winnerUrl": null,
+          "winnerDensity": 0,
+          "duration": 5004,
+          "rootFallback": false,
+          "ruleAppliedSource": "none",
+          "ruleAppliedPaths": [],
+          "ruleWinnerPath": null
+        },
+        "c1": {
+          "verdict": "unfetchable",
+          "likelyJsRendered": false,
+          "timeTagCount": 0,
+          "dateCount": 0,
+          "duration": 5006
+        },
+        "c2": {
+          "verdict": "unclear",
+          "score": 0,
+          "reason": "fetchHtml failed: timeout of 20000ms exceeded",
+          "duration": 5003
+        },
+        "extract": {
+          "eventsFound": 0,
+          "duration": 1
+        },
+        "winningStage": "C3",
+        "outcomeType": "fail",
+        "routeSuggestion": "Fail",
+        "evidence": "C0: no internal event candidates discovered",
+        "roundNumber": 3,
+        "success": false,
+        "failType": "discovery_failure"
+      }
+    }
+  ],
+  "allExitedIds": [
+    "malmo-massan",
+    "antikmassan",
+    "hovet",
+    "katrineholm",
+    "g-teborgs-universitet",
+    "lunds-museum",
+    "gavle-if",
+    "parkteatern",
+    "ruddalen",
+    "andra-langgatan"
+  ],
+  "lastSaved": "2026-04-14T18:31:09.455Z"
+}

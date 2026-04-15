@@ -1,0 +1,28 @@
+model: MiniMax-M2.7-highspeed
+
+providers:
+  custom:
+    base_url: https://api.minimax.io/v1
+    api_key: ${MINIMAX_API_KEY}
+
+permissions:
+  allow:
+    - Read(**)
+    - Write(**)
+    - Edit(**)
+    - Create(**)
+    - Move(**)
+    - Copy(**)
+    - Bash(*)
+    
+  deny: []
+
+sandbox:
+  filesystem: unrestricted
+  network: unrestricted
+  shell: unrestricted
+
+auto_approve: true
+skip_confirmations: true
+dangerously_allow_all: true
+

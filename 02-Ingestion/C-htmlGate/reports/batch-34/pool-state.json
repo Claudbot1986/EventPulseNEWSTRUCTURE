@@ -1,0 +1,626 @@
+{
+  "poolRoundNumber": 3,
+  "activePool": [
+    {
+      "sourceId": "bar-brooklyn",
+      "url": "https://barbrooklyn.se/",
+      "roundsParticipated": 2,
+      "diversifiers": [
+        "failures_2",
+        "path_network"
+      ],
+      "queueReason": "preferredPath=unknown, requires HTML analysis",
+      "enrichedData": {
+        "lastPathUsed": "network",
+        "lastEventsFound": 0,
+        "consecutiveFailures": 2,
+        "triageResult": null
+      }
+    },
+    {
+      "sourceId": "barnens-o",
+      "url": "https://barnensö.se/",
+      "roundsParticipated": 2,
+      "diversifiers": [
+        "failures_2",
+        "path_network"
+      ],
+      "queueReason": "preferredPath=unknown, requires HTML analysis",
+      "enrichedData": {
+        "lastPathUsed": "network",
+        "lastEventsFound": 0,
+        "consecutiveFailures": 2,
+        "triageResult": null
+      }
+    },
+    {
+      "sourceId": "billetto-aggregator",
+      "url": "https://billetto.se/",
+      "roundsParticipated": 2,
+      "diversifiers": [
+        "failures_2",
+        "path_network"
+      ],
+      "queueReason": "preferredPath=unknown, requires HTML analysis",
+      "enrichedData": {
+        "lastPathUsed": "network",
+        "lastEventsFound": 0,
+        "consecutiveFailures": 2,
+        "triageResult": null
+      }
+    },
+    {
+      "sourceId": "bk-hacken",
+      "url": "https://hacken.se/",
+      "roundsParticipated": 2,
+      "diversifiers": [
+        "failures_2",
+        "path_network"
+      ],
+      "queueReason": "preferredPath=unknown, requires HTML analysis",
+      "enrichedData": {
+        "lastPathUsed": "network",
+        "lastEventsFound": 0,
+        "consecutiveFailures": 2,
+        "triageResult": null
+      }
+    }
+  ],
+  "exited": [
+    {
+      "source": {
+        "sourceId": "elmia",
+        "url": "https://elmia.se/",
+        "roundsParticipated": 0,
+        "diversifiers": [
+          "failures_2",
+          "path_network"
+        ],
+        "queueReason": "preferredPath=unknown, requires HTML analysis",
+        "enrichedData": {
+          "lastPathUsed": "network",
+          "lastEventsFound": 0,
+          "consecutiveFailures": 2,
+          "triageResult": null
+        }
+      },
+      "decision": "postTestC-D",
+      "result": {
+        "sourceId": "elmia",
+        "url": "https://elmia.se/",
+        "c0": {
+          "candidates": 10,
+          "winnerUrl": "https://elmia.se/produktionsmassorna/",
+          "winnerDensity": 56,
+          "duration": 5486,
+          "rootFallback": false,
+          "ruleAppliedSource": "link-discovery",
+          "ruleAppliedPaths": [],
+          "ruleWinnerPath": "/produktionsmassorna/"
+        },
+        "c1": {
+          "verdict": "no-main",
+          "likelyJsRendered": true,
+          "timeTagCount": 8,
+          "dateCount": 0,
+          "duration": 472
+        },
+        "c2": {
+          "verdict": "skipped",
+          "score": 0,
+          "reason": "c1-direct-route",
+          "duration": 0
+        },
+        "extract": {
+          "eventsFound": 0,
+          "duration": 0
+        },
+        "winningStage": "C1",
+        "outcomeType": "route_success",
+        "routeSuggestion": "D",
+        "evidence": "C1: likelyJsRendered=true + (timeTags=8 OR dates=0) — direct D route, C2/C3 skipped",
+        "roundNumber": 1,
+        "success": false
+      }
+    },
+    {
+      "source": {
+        "sourceId": "millesg-rden",
+        "url": "https://millesgarden.se/",
+        "roundsParticipated": 0,
+        "diversifiers": [
+          "failures_2",
+          "path_network"
+        ],
+        "queueReason": "preferredPath=unknown, requires HTML analysis",
+        "enrichedData": {
+          "lastPathUsed": "network",
+          "lastEventsFound": 0,
+          "consecutiveFailures": 2,
+          "triageResult": null
+        }
+      },
+      "decision": "postTestC-D",
+      "result": {
+        "sourceId": "millesg-rden",
+        "url": "https://millesgarden.se/",
+        "c0": {
+          "candidates": 2,
+          "winnerUrl": "https://millesgarden.se/besoka-museet/kalendarium-och-evenemang",
+          "winnerDensity": 0,
+          "duration": 7207,
+          "rootFallback": false,
+          "ruleAppliedSource": "link-discovery",
+          "ruleAppliedPaths": [],
+          "ruleWinnerPath": "/besoka-museet/kalendarium-och-evenemang"
+        },
+        "c1": {
+          "verdict": "no-main",
+          "likelyJsRendered": true,
+          "timeTagCount": 0,
+          "dateCount": 0,
+          "duration": 325
+        },
+        "c2": {
+          "verdict": "skipped",
+          "score": 0,
+          "reason": "c1-direct-route",
+          "duration": 0
+        },
+        "extract": {
+          "eventsFound": 0,
+          "duration": 0
+        },
+        "winningStage": "C1",
+        "outcomeType": "route_success",
+        "routeSuggestion": "D",
+        "evidence": "C1: likelyJsRendered=true + (timeTags=0 OR dates=0) — direct D route, C2/C3 skipped",
+        "roundNumber": 1,
+        "success": false
+      }
+    },
+    {
+      "source": {
+        "sourceId": "ronn",
+        "url": "https://ronn.se/",
+        "roundsParticipated": 0,
+        "diversifiers": [
+          "failures_2",
+          "path_network"
+        ],
+        "queueReason": "preferredPath=unknown, requires HTML analysis",
+        "enrichedData": {
+          "lastPathUsed": "network",
+          "lastEventsFound": 0,
+          "consecutiveFailures": 2,
+          "triageResult": null
+        }
+      },
+      "decision": "postTestC-D",
+      "result": {
+        "sourceId": "ronn",
+        "url": "https://ronn.se/",
+        "c0": {
+          "candidates": 0,
+          "winnerUrl": null,
+          "winnerDensity": 0,
+          "duration": 1021,
+          "rootFallback": false,
+          "ruleAppliedSource": "none",
+          "ruleAppliedPaths": [
+            "/events",
+            "/program",
+            "/kalender",
+            "/schema",
+            "/evenemang",
+            "/kalendarium",
+            "/aktiviteter",
+            "/kultur",
+            "/fritid",
+            "/matcher",
+            "/biljetter"
+          ],
+          "ruleWinnerPath": null
+        },
+        "c1": {
+          "verdict": "no-main",
+          "likelyJsRendered": true,
+          "timeTagCount": 0,
+          "dateCount": 0,
+          "duration": 53
+        },
+        "c2": {
+          "verdict": "skipped",
+          "score": 0,
+          "reason": "c1-direct-route",
+          "duration": 0
+        },
+        "extract": {
+          "eventsFound": 0,
+          "duration": 0
+        },
+        "winningStage": "C1",
+        "outcomeType": "route_success",
+        "routeSuggestion": "D",
+        "evidence": "C1: likelyJsRendered=true + (timeTags=0 OR dates=0) — direct D route, C2/C3 skipped",
+        "roundNumber": 1,
+        "success": false
+      }
+    },
+    {
+      "source": {
+        "sourceId": "chalmers",
+        "url": "https://chalmers.se/",
+        "roundsParticipated": 1,
+        "diversifiers": [
+          "failures_2",
+          "path_network"
+        ],
+        "queueReason": "preferredPath=unknown, requires HTML analysis",
+        "enrichedData": {
+          "lastPathUsed": "network",
+          "lastEventsFound": 0,
+          "consecutiveFailures": 2,
+          "triageResult": null
+        }
+      },
+      "decision": "postTestC-D",
+      "result": null
+    },
+    {
+      "source": {
+        "sourceId": "hovet-1",
+        "url": "https://thehovet.se/",
+        "roundsParticipated": 2,
+        "diversifiers": [
+          "failures_2",
+          "path_network"
+        ],
+        "queueReason": "preferredPath=unknown, requires HTML analysis",
+        "enrichedData": {
+          "lastPathUsed": "network",
+          "lastEventsFound": 0,
+          "consecutiveFailures": 2,
+          "triageResult": null
+        }
+      },
+      "decision": "postTestC-manual-review",
+      "result": {
+        "sourceId": "hovet-1",
+        "url": "https://thehovet.se/",
+        "c0": {
+          "candidates": 0,
+          "winnerUrl": null,
+          "winnerDensity": 0,
+          "duration": 4,
+          "rootFallback": false,
+          "ruleAppliedSource": "none",
+          "ruleAppliedPaths": [],
+          "ruleWinnerPath": null
+        },
+        "c1": {
+          "verdict": "unfetchable",
+          "likelyJsRendered": false,
+          "timeTagCount": 0,
+          "dateCount": 0,
+          "duration": 2
+        },
+        "c2": {
+          "verdict": "unclear",
+          "score": 0,
+          "reason": "fetchHtml failed: getaddrinfo ENOTFOUND thehovet.se",
+          "duration": 1
+        },
+        "extract": {
+          "eventsFound": 0,
+          "duration": 1
+        },
+        "winningStage": "C3",
+        "outcomeType": "fail",
+        "routeSuggestion": "Fail",
+        "evidence": "C0: no internal event candidates discovered",
+        "roundNumber": 3,
+        "success": false,
+        "failType": "discovery_failure"
+      }
+    },
+    {
+      "source": {
+        "sourceId": "goteborgs-stadsbibliotek",
+        "url": "https://goteborgsstad.se/bibliotek",
+        "roundsParticipated": 2,
+        "diversifiers": [
+          "failures_2",
+          "path_network"
+        ],
+        "queueReason": "preferredPath=unknown, requires HTML analysis",
+        "enrichedData": {
+          "lastPathUsed": "network",
+          "lastEventsFound": 0,
+          "consecutiveFailures": 2,
+          "triageResult": null
+        }
+      },
+      "decision": "postTestC-manual-review",
+      "result": {
+        "sourceId": "goteborgs-stadsbibliotek",
+        "url": "https://goteborgsstad.se/bibliotek",
+        "c0": {
+          "candidates": 0,
+          "winnerUrl": null,
+          "winnerDensity": 0,
+          "duration": 168,
+          "rootFallback": false,
+          "ruleAppliedSource": "none",
+          "ruleAppliedPaths": [],
+          "ruleWinnerPath": null
+        },
+        "c1": {
+          "verdict": "unfetchable",
+          "likelyJsRendered": false,
+          "timeTagCount": 0,
+          "dateCount": 0,
+          "duration": 125
+        },
+        "c2": {
+          "verdict": "unclear",
+          "score": 0,
+          "reason": "fetchHtml failed: Hostname/IP does not match certificate's altnames: Host: goteborgsstad.se. is not in the cert's altnames: DNS:goteborg.se, DNS:*.goteborg.se",
+          "duration": 111
+        },
+        "extract": {
+          "eventsFound": 0,
+          "duration": 0
+        },
+        "winningStage": "C3",
+        "outcomeType": "fail",
+        "routeSuggestion": "Fail",
+        "evidence": "C0: no internal event candidates discovered",
+        "roundNumber": 3,
+        "success": false,
+        "failType": "discovery_failure"
+      }
+    },
+    {
+      "source": {
+        "sourceId": "fattar",
+        "url": "https://fattar.se/",
+        "roundsParticipated": 2,
+        "diversifiers": [
+          "failures_2",
+          "path_network"
+        ],
+        "queueReason": "preferredPath=unknown, requires HTML analysis",
+        "enrichedData": {
+          "lastPathUsed": "network",
+          "lastEventsFound": 0,
+          "consecutiveFailures": 2,
+          "triageResult": null
+        }
+      },
+      "decision": "postTestC-manual-review",
+      "result": {
+        "sourceId": "fattar",
+        "url": "https://fattar.se/",
+        "c0": {
+          "candidates": 0,
+          "winnerUrl": null,
+          "winnerDensity": 0,
+          "duration": 3,
+          "rootFallback": false,
+          "ruleAppliedSource": "none",
+          "ruleAppliedPaths": [],
+          "ruleWinnerPath": null
+        },
+        "c1": {
+          "verdict": "unfetchable",
+          "likelyJsRendered": false,
+          "timeTagCount": 0,
+          "dateCount": 0,
+          "duration": 2
+        },
+        "c2": {
+          "verdict": "unclear",
+          "score": 0,
+          "reason": "fetchHtml failed: getaddrinfo ENOTFOUND fattar.se",
+          "duration": 2
+        },
+        "extract": {
+          "eventsFound": 0,
+          "duration": 0
+        },
+        "winningStage": "C3",
+        "outcomeType": "fail",
+        "routeSuggestion": "Fail",
+        "evidence": "C0: no internal event candidates discovered",
+        "roundNumber": 3,
+        "success": false,
+        "failType": "discovery_failure"
+      }
+    },
+    {
+      "source": {
+        "sourceId": "norrk-pings-tidningar",
+        "url": "https://nt.se/evenemang",
+        "roundsParticipated": 2,
+        "diversifiers": [
+          "failures_2",
+          "path_network"
+        ],
+        "queueReason": "preferredPath=unknown, requires HTML analysis",
+        "enrichedData": {
+          "lastPathUsed": "network",
+          "lastEventsFound": 0,
+          "consecutiveFailures": 2,
+          "triageResult": null
+        }
+      },
+      "decision": "postTestC-manual-review",
+      "result": {
+        "sourceId": "norrk-pings-tidningar",
+        "url": "https://nt.se/evenemang",
+        "c0": {
+          "candidates": 0,
+          "winnerUrl": null,
+          "winnerDensity": 0,
+          "duration": 497,
+          "rootFallback": false,
+          "ruleAppliedSource": "none",
+          "ruleAppliedPaths": [],
+          "ruleWinnerPath": null
+        },
+        "c1": {
+          "verdict": "unfetchable",
+          "likelyJsRendered": false,
+          "timeTagCount": 0,
+          "dateCount": 0,
+          "duration": 152
+        },
+        "c2": {
+          "verdict": "unclear",
+          "score": 0,
+          "reason": "fetchHtml failed: HTTP 404",
+          "duration": 158
+        },
+        "extract": {
+          "eventsFound": 0,
+          "duration": 1
+        },
+        "winningStage": "C3",
+        "outcomeType": "fail",
+        "routeSuggestion": "Fail",
+        "evidence": "C0: no internal event candidates discovered",
+        "roundNumber": 3,
+        "success": false,
+        "failType": "discovery_failure"
+      }
+    },
+    {
+      "source": {
+        "sourceId": "orebro-vinterfest",
+        "url": "https://orebrovinterfest.se/",
+        "roundsParticipated": 2,
+        "diversifiers": [
+          "failures_2",
+          "path_network"
+        ],
+        "queueReason": "preferredPath=unknown, requires HTML analysis",
+        "enrichedData": {
+          "lastPathUsed": "network",
+          "lastEventsFound": 0,
+          "consecutiveFailures": 2,
+          "triageResult": null
+        }
+      },
+      "decision": "postTestC-manual-review",
+      "result": {
+        "sourceId": "orebro-vinterfest",
+        "url": "https://orebrovinterfest.se/",
+        "c0": {
+          "candidates": 0,
+          "winnerUrl": null,
+          "winnerDensity": 0,
+          "duration": 4,
+          "rootFallback": false,
+          "ruleAppliedSource": "none",
+          "ruleAppliedPaths": [],
+          "ruleWinnerPath": null
+        },
+        "c1": {
+          "verdict": "unfetchable",
+          "likelyJsRendered": false,
+          "timeTagCount": 0,
+          "dateCount": 0,
+          "duration": 2
+        },
+        "c2": {
+          "verdict": "unclear",
+          "score": 0,
+          "reason": "fetchHtml failed: getaddrinfo ENOTFOUND orebrovinterfest.se",
+          "duration": 2
+        },
+        "extract": {
+          "eventsFound": 0,
+          "duration": 0
+        },
+        "winningStage": "C3",
+        "outcomeType": "fail",
+        "routeSuggestion": "Fail",
+        "evidence": "C0: no internal event candidates discovered",
+        "roundNumber": 3,
+        "success": false,
+        "failType": "discovery_failure"
+      }
+    },
+    {
+      "source": {
+        "sourceId": "stersund-festival",
+        "url": "https://ostersund.se/festival",
+        "roundsParticipated": 2,
+        "diversifiers": [
+          "failures_2",
+          "path_network"
+        ],
+        "queueReason": "preferredPath=unknown, requires HTML analysis",
+        "enrichedData": {
+          "lastPathUsed": "network",
+          "lastEventsFound": 0,
+          "consecutiveFailures": 2,
+          "triageResult": null
+        }
+      },
+      "decision": "postTestC-manual-review",
+      "result": {
+        "sourceId": "stersund-festival",
+        "url": "https://ostersund.se/festival",
+        "c0": {
+          "candidates": 0,
+          "winnerUrl": null,
+          "winnerDensity": 0,
+          "duration": 339,
+          "rootFallback": false,
+          "ruleAppliedSource": "none",
+          "ruleAppliedPaths": [],
+          "ruleWinnerPath": null
+        },
+        "c1": {
+          "verdict": "unfetchable",
+          "likelyJsRendered": false,
+          "timeTagCount": 0,
+          "dateCount": 0,
+          "duration": 45
+        },
+        "c2": {
+          "verdict": "unclear",
+          "score": 0,
+          "reason": "fetchHtml failed: HTTP 404",
+          "duration": 64
+        },
+        "extract": {
+          "eventsFound": 0,
+          "duration": 0
+        },
+        "winningStage": "C3",
+        "outcomeType": "fail",
+        "routeSuggestion": "Fail",
+        "evidence": "C0: no internal event candidates discovered",
+        "roundNumber": 3,
+        "success": false,
+        "failType": "discovery_failure"
+      }
+    }
+  ],
+  "allExitedIds": [
+    "elmia",
+    "millesg-rden",
+    "ronn",
+    "chalmers",
+    "hovet-1",
+    "goteborgs-stadsbibliotek",
+    "fattar",
+    "norrk-pings-tidningar",
+    "orebro-vinterfest",
+    "stersund-festival"
+  ],
+  "lastSaved": "2026-04-14T18:42:29.397Z"
+}

@@ -1,0 +1,601 @@
+{
+  "poolRoundNumber": 3,
+  "activePool": [
+    {
+      "sourceId": "dalarna",
+      "url": "https://dalarna.se/",
+      "roundsParticipated": 2,
+      "diversifiers": [
+        "failures_2",
+        "path_network"
+      ],
+      "queueReason": "preferredPath=unknown, requires HTML analysis",
+      "enrichedData": {
+        "lastPathUsed": "network",
+        "lastEventsFound": 0,
+        "consecutiveFailures": 2,
+        "triageResult": null
+      }
+    },
+    {
+      "sourceId": "din-gastrotek",
+      "url": "https://gastrotek.se/",
+      "roundsParticipated": 2,
+      "diversifiers": [
+        "failures_2",
+        "path_network"
+      ],
+      "queueReason": "preferredPath=unknown, requires HTML analysis",
+      "enrichedData": {
+        "lastPathUsed": "network",
+        "lastEventsFound": 0,
+        "consecutiveFailures": 2,
+        "triageResult": null
+      }
+    }
+  ],
+  "exited": [
+    {
+      "source": {
+        "sourceId": "karlskrona",
+        "url": "https://karlskrona.se/",
+        "roundsParticipated": 0,
+        "diversifiers": [
+          "failures_2",
+          "path_network"
+        ],
+        "queueReason": "preferredPath=unknown, requires HTML analysis",
+        "enrichedData": {
+          "lastPathUsed": "network",
+          "lastEventsFound": 0,
+          "consecutiveFailures": 2,
+          "triageResult": null
+        }
+      },
+      "decision": "postTestC-UI",
+      "result": {
+        "sourceId": "karlskrona",
+        "url": "https://karlskrona.se/",
+        "c0": {
+          "candidates": 1,
+          "winnerUrl": "https://karlskrona.se/naringsliv/n%C3%A4ringslivet-i-karlskrona/",
+          "winnerDensity": 13,
+          "duration": 993,
+          "rootFallback": false,
+          "ruleAppliedSource": "link-discovery",
+          "ruleAppliedPaths": [],
+          "ruleWinnerPath": "/naringsliv/näringslivet-i-karlskrona/"
+        },
+        "c1": {
+          "verdict": "medium",
+          "likelyJsRendered": false,
+          "timeTagCount": 1,
+          "dateCount": 1,
+          "duration": 162
+        },
+        "c2": {
+          "verdict": "unclear",
+          "score": 7,
+          "reason": "[breadth_nojsonld] score=7(adj) >= 12? unclear pg=time-tag",
+          "duration": 213
+        },
+        "extract": {
+          "eventsFound": 1,
+          "duration": 27
+        },
+        "winningStage": "C3",
+        "outcomeType": "extract_success",
+        "routeSuggestion": "UI",
+        "evidence": "extracted 1 events from HTML",
+        "roundNumber": 1,
+        "success": true
+      }
+    },
+    {
+      "source": {
+        "sourceId": "globen",
+        "url": "https://globen.se/",
+        "roundsParticipated": 1,
+        "diversifiers": [
+          "failures_2",
+          "path_network"
+        ],
+        "queueReason": "preferredPath=unknown, requires HTML analysis",
+        "enrichedData": {
+          "lastPathUsed": "network",
+          "lastEventsFound": 0,
+          "consecutiveFailures": 2,
+          "triageResult": null
+        }
+      },
+      "decision": "postTestC-D",
+      "result": null
+    },
+    {
+      "source": {
+        "sourceId": "h-gskolan-i-sk-vde",
+        "url": "https://his.se/evenemang",
+        "roundsParticipated": 2,
+        "diversifiers": [
+          "failures_2",
+          "path_network"
+        ],
+        "queueReason": "preferredPath=unknown, requires HTML analysis",
+        "enrichedData": {
+          "lastPathUsed": "network",
+          "lastEventsFound": 0,
+          "consecutiveFailures": 2,
+          "triageResult": null
+        }
+      },
+      "decision": "postTestC-manual-review",
+      "result": {
+        "sourceId": "h-gskolan-i-sk-vde",
+        "url": "https://his.se/evenemang",
+        "c0": {
+          "candidates": 0,
+          "winnerUrl": null,
+          "winnerDensity": 0,
+          "duration": 386,
+          "rootFallback": false,
+          "ruleAppliedSource": "none",
+          "ruleAppliedPaths": [],
+          "ruleWinnerPath": null
+        },
+        "c1": {
+          "verdict": "unfetchable",
+          "likelyJsRendered": false,
+          "timeTagCount": 0,
+          "dateCount": 0,
+          "duration": 97
+        },
+        "c2": {
+          "verdict": "unclear",
+          "score": 0,
+          "reason": "fetchHtml failed: HTTP 404",
+          "duration": 83
+        },
+        "extract": {
+          "eventsFound": 0,
+          "duration": 1
+        },
+        "winningStage": "C3",
+        "outcomeType": "fail",
+        "routeSuggestion": "Fail",
+        "evidence": "C0: no internal event candidates discovered",
+        "roundNumber": 3,
+        "success": false,
+        "failType": "discovery_failure"
+      }
+    },
+    {
+      "source": {
+        "sourceId": "inkonst",
+        "url": "https://inkonst.se/",
+        "roundsParticipated": 2,
+        "diversifiers": [
+          "failures_2",
+          "path_network"
+        ],
+        "queueReason": "preferredPath=unknown, requires HTML analysis",
+        "enrichedData": {
+          "lastPathUsed": "network",
+          "lastEventsFound": 0,
+          "consecutiveFailures": 2,
+          "triageResult": null
+        }
+      },
+      "decision": "postTestC-manual-review",
+      "result": {
+        "sourceId": "inkonst",
+        "url": "https://inkonst.se/",
+        "c0": {
+          "candidates": 0,
+          "winnerUrl": null,
+          "winnerDensity": 0,
+          "duration": 55,
+          "rootFallback": false,
+          "ruleAppliedSource": "none",
+          "ruleAppliedPaths": [],
+          "ruleWinnerPath": null
+        },
+        "c1": {
+          "verdict": "unfetchable",
+          "likelyJsRendered": false,
+          "timeTagCount": 0,
+          "dateCount": 0,
+          "duration": 51
+        },
+        "c2": {
+          "verdict": "unclear",
+          "score": 0,
+          "reason": "fetchHtml failed: connect ECONNREFUSED 64.176.190.213:443",
+          "duration": 90
+        },
+        "extract": {
+          "eventsFound": 0,
+          "duration": 0
+        },
+        "winningStage": "C3",
+        "outcomeType": "fail",
+        "routeSuggestion": "Fail",
+        "evidence": "C0: no internal event candidates discovered",
+        "roundNumber": 3,
+        "success": false,
+        "failType": "discovery_failure"
+      }
+    },
+    {
+      "source": {
+        "sourceId": "varbergs-if",
+        "url": "https://varbergsif.se/",
+        "roundsParticipated": 2,
+        "diversifiers": [
+          "failures_2",
+          "path_network"
+        ],
+        "queueReason": "preferredPath=unknown, requires HTML analysis",
+        "enrichedData": {
+          "lastPathUsed": "network",
+          "lastEventsFound": 0,
+          "consecutiveFailures": 2,
+          "triageResult": null
+        }
+      },
+      "decision": "postTestC-manual-review",
+      "result": {
+        "sourceId": "varbergs-if",
+        "url": "https://varbergsif.se/",
+        "c0": {
+          "candidates": 0,
+          "winnerUrl": null,
+          "winnerDensity": 0,
+          "duration": 3,
+          "rootFallback": false,
+          "ruleAppliedSource": "none",
+          "ruleAppliedPaths": [],
+          "ruleWinnerPath": null
+        },
+        "c1": {
+          "verdict": "unfetchable",
+          "likelyJsRendered": false,
+          "timeTagCount": 0,
+          "dateCount": 0,
+          "duration": 3
+        },
+        "c2": {
+          "verdict": "unclear",
+          "score": 0,
+          "reason": "fetchHtml failed: getaddrinfo ENOTFOUND varbergsif.se",
+          "duration": 2
+        },
+        "extract": {
+          "eventsFound": 0,
+          "duration": 0
+        },
+        "winningStage": "C3",
+        "outcomeType": "fail",
+        "routeSuggestion": "Fail",
+        "evidence": "C0: no internal event candidates discovered",
+        "roundNumber": 3,
+        "success": false,
+        "failType": "discovery_failure"
+      }
+    },
+    {
+      "source": {
+        "sourceId": "melodifestivalen-svt",
+        "url": "https://svt.se/melodifestivalen",
+        "roundsParticipated": 2,
+        "diversifiers": [
+          "failures_2",
+          "path_network"
+        ],
+        "queueReason": "preferredPath=unknown, requires HTML analysis",
+        "enrichedData": {
+          "lastPathUsed": "network",
+          "lastEventsFound": 0,
+          "consecutiveFailures": 2,
+          "triageResult": null
+        }
+      },
+      "decision": "postTestC-manual-review",
+      "result": {
+        "sourceId": "melodifestivalen-svt",
+        "url": "https://svt.se/melodifestivalen",
+        "c0": {
+          "candidates": 0,
+          "winnerUrl": null,
+          "winnerDensity": 0,
+          "duration": 382,
+          "rootFallback": false,
+          "ruleAppliedSource": "none",
+          "ruleAppliedPaths": [],
+          "ruleWinnerPath": null
+        },
+        "c1": {
+          "verdict": "unfetchable",
+          "likelyJsRendered": false,
+          "timeTagCount": 0,
+          "dateCount": 0,
+          "duration": 200
+        },
+        "c2": {
+          "verdict": "unclear",
+          "score": 0,
+          "reason": "fetchHtml failed: HTTP 404",
+          "duration": 156
+        },
+        "extract": {
+          "eventsFound": 0,
+          "duration": 2
+        },
+        "winningStage": "C3",
+        "outcomeType": "fail",
+        "routeSuggestion": "Fail",
+        "evidence": "C0: no internal event candidates discovered",
+        "roundNumber": 3,
+        "success": false,
+        "failType": "discovery_failure"
+      }
+    },
+    {
+      "source": {
+        "sourceId": "ifk-stockholm",
+        "url": "https://ifkstockholm.se/",
+        "roundsParticipated": 2,
+        "diversifiers": [
+          "failures_2",
+          "path_network"
+        ],
+        "queueReason": "preferredPath=unknown, requires HTML analysis",
+        "enrichedData": {
+          "lastPathUsed": "network",
+          "lastEventsFound": 0,
+          "consecutiveFailures": 2,
+          "triageResult": null
+        }
+      },
+      "decision": "postTestC-manual-review",
+      "result": {
+        "sourceId": "ifk-stockholm",
+        "url": "https://ifkstockholm.se/",
+        "c0": {
+          "candidates": 0,
+          "winnerUrl": null,
+          "winnerDensity": 0,
+          "duration": 682,
+          "rootFallback": false,
+          "ruleAppliedSource": "none",
+          "ruleAppliedPaths": [
+            "/events",
+            "/program",
+            "/kalender",
+            "/schema",
+            "/evenemang",
+            "/events",
+            "/program",
+            "/kalender",
+            "/schema",
+            "/evenemang",
+            "/kalendarium",
+            "/aktiviteter",
+            "/kultur",
+            "/fritid",
+            "/matcher",
+            "/biljetter"
+          ],
+          "ruleWinnerPath": null
+        },
+        "c1": {
+          "verdict": "unfetchable",
+          "likelyJsRendered": false,
+          "timeTagCount": 0,
+          "dateCount": 0,
+          "duration": 54
+        },
+        "c2": {
+          "verdict": "unclear",
+          "score": 0,
+          "reason": "fetchHtml failed: HTTP 429",
+          "duration": 23
+        },
+        "extract": {
+          "eventsFound": 0,
+          "duration": 1
+        },
+        "winningStage": "C3",
+        "outcomeType": "fail",
+        "routeSuggestion": "Fail",
+        "evidence": "C0: no internal event candidates discovered",
+        "roundNumber": 3,
+        "success": false,
+        "failType": "discovery_failure"
+      }
+    },
+    {
+      "source": {
+        "sourceId": "hasselblad-center",
+        "url": "https://hasselbladcenter.se/",
+        "roundsParticipated": 2,
+        "diversifiers": [
+          "failures_2",
+          "path_network"
+        ],
+        "queueReason": "preferredPath=unknown, requires HTML analysis",
+        "enrichedData": {
+          "lastPathUsed": "network",
+          "lastEventsFound": 0,
+          "consecutiveFailures": 2,
+          "triageResult": null
+        }
+      },
+      "decision": "postTestC-manual-review",
+      "result": {
+        "sourceId": "hasselblad-center",
+        "url": "https://hasselbladcenter.se/",
+        "c0": {
+          "candidates": 0,
+          "winnerUrl": null,
+          "winnerDensity": 0,
+          "duration": 2,
+          "rootFallback": false,
+          "ruleAppliedSource": "none",
+          "ruleAppliedPaths": [],
+          "ruleWinnerPath": null
+        },
+        "c1": {
+          "verdict": "unfetchable",
+          "likelyJsRendered": false,
+          "timeTagCount": 0,
+          "dateCount": 0,
+          "duration": 3
+        },
+        "c2": {
+          "verdict": "unclear",
+          "score": 0,
+          "reason": "fetchHtml failed: getaddrinfo ENOTFOUND hasselbladcenter.se",
+          "duration": 2
+        },
+        "extract": {
+          "eventsFound": 0,
+          "duration": 0
+        },
+        "winningStage": "C3",
+        "outcomeType": "fail",
+        "routeSuggestion": "Fail",
+        "evidence": "C0: no internal event candidates discovered",
+        "roundNumber": 3,
+        "success": false,
+        "failType": "discovery_failure"
+      }
+    },
+    {
+      "source": {
+        "sourceId": "malmo-konstmuseum",
+        "url": "https://malmökonstmuseum.se/",
+        "roundsParticipated": 2,
+        "diversifiers": [
+          "failures_2",
+          "path_network"
+        ],
+        "queueReason": "preferredPath=unknown, requires HTML analysis",
+        "enrichedData": {
+          "lastPathUsed": "network",
+          "lastEventsFound": 0,
+          "consecutiveFailures": 2,
+          "triageResult": null
+        }
+      },
+      "decision": "postTestC-manual-review",
+      "result": {
+        "sourceId": "malmo-konstmuseum",
+        "url": "https://malmökonstmuseum.se/",
+        "c0": {
+          "candidates": 0,
+          "winnerUrl": null,
+          "winnerDensity": 0,
+          "duration": 3,
+          "rootFallback": false,
+          "ruleAppliedSource": "none",
+          "ruleAppliedPaths": [],
+          "ruleWinnerPath": null
+        },
+        "c1": {
+          "verdict": "unfetchable",
+          "likelyJsRendered": false,
+          "timeTagCount": 0,
+          "dateCount": 0,
+          "duration": 2
+        },
+        "c2": {
+          "verdict": "unclear",
+          "score": 0,
+          "reason": "fetchHtml failed: getaddrinfo ENOTFOUND xn--malmkonstmuseum-ctb.se",
+          "duration": 2
+        },
+        "extract": {
+          "eventsFound": 0,
+          "duration": 0
+        },
+        "winningStage": "C3",
+        "outcomeType": "fail",
+        "routeSuggestion": "Fail",
+        "evidence": "C0: no internal event candidates discovered",
+        "roundNumber": 3,
+        "success": false,
+        "failType": "discovery_failure"
+      }
+    },
+    {
+      "source": {
+        "sourceId": "kungliga-musikhogskolan",
+        "url": "https://kmh.se/",
+        "roundsParticipated": 2,
+        "diversifiers": [
+          "failures_2",
+          "path_network"
+        ],
+        "queueReason": "preferredPath=unknown, requires HTML analysis",
+        "enrichedData": {
+          "lastPathUsed": "network",
+          "lastEventsFound": 0,
+          "consecutiveFailures": 2,
+          "triageResult": null
+        }
+      },
+      "decision": "postTestC-manual-review",
+      "result": {
+        "sourceId": "kungliga-musikhogskolan",
+        "url": "https://kmh.se/",
+        "c0": {
+          "candidates": 1,
+          "winnerUrl": "https://kmh.se/konserter---evenemang.html",
+          "winnerDensity": 386,
+          "duration": 796,
+          "rootFallback": false,
+          "ruleAppliedSource": "link-discovery",
+          "ruleAppliedPaths": [],
+          "ruleWinnerPath": "/konserter---evenemang.html"
+        },
+        "c1": {
+          "verdict": "medium",
+          "likelyJsRendered": false,
+          "timeTagCount": 82,
+          "dateCount": 0,
+          "duration": 192
+        },
+        "c2": {
+          "verdict": "promising",
+          "score": 421,
+          "reason": "[breadth_nojsonld] score=421(adj) >= 12? promising pg=time-tag cand=cards=strong(41/41),lists=weak(1t 1l 1d)",
+          "duration": 188
+        },
+        "extract": {
+          "eventsFound": 0,
+          "duration": 42
+        },
+        "winningStage": "C3",
+        "outcomeType": "fail",
+        "routeSuggestion": "Fail",
+        "evidence": "C3: extraction returned 0 events despite C2 promising (score=421)",
+        "roundNumber": 3,
+        "success": false,
+        "failType": "extraction_failure"
+      }
+    }
+  ],
+  "allExitedIds": [
+    "karlskrona",
+    "globen",
+    "h-gskolan-i-sk-vde",
+    "inkonst",
+    "varbergs-if",
+    "melodifestivalen-svt",
+    "ifk-stockholm",
+    "hasselblad-center",
+    "malmo-konstmuseum",
+    "kungliga-musikhogskolan"
+  ],
+  "lastSaved": "2026-04-14T19:14:17.929Z"
+}

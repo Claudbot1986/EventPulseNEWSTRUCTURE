@@ -372,8 +372,11 @@ async function main() {
   const dry = args.includes('--dry');
 
   // ── Limit ────────────────────────────────────────────────────────────────
+  // 0 = unlimited (kör alla aldrig körda + preA)
   const limitIdx = args.indexOf('--limit');
-  const limit = limitIdx !== -1 && args[limitIdx + 1] ? parseInt(args[limitIdx + 1], 10) : 10;
+  const limitFromArgs = limitIdx !== -1 && args[limitIdx + 1] ? parseInt(args[limitIdx + 1], 10) : 0;
+  // useNumber() ger Infinity för 0 → kör alla
+  const limit = limitFromArgs || Infinity;
 
   // ── Get batch ────────────────────────────────────────────────────────────
   const batch = getNextABatch(limit);

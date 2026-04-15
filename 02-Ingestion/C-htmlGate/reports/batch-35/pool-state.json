@@ -1,0 +1,776 @@
+{
+  "poolRoundNumber": 3,
+  "activePool": [
+    {
+      "sourceId": "blekholmen",
+      "url": "https://blekholmen.se/",
+      "roundsParticipated": 2,
+      "diversifiers": [
+        "failures_2",
+        "path_network"
+      ],
+      "queueReason": "preferredPath=unknown, requires HTML analysis",
+      "enrichedData": {
+        "lastPathUsed": "network",
+        "lastEventsFound": 0,
+        "consecutiveFailures": 2,
+        "triageResult": null
+      }
+    },
+    {
+      "sourceId": "boplanet",
+      "url": "https://boplanet.se/",
+      "roundsParticipated": 2,
+      "diversifiers": [
+        "failures_2",
+        "path_network"
+      ],
+      "queueReason": "preferredPath=unknown, requires HTML analysis",
+      "enrichedData": {
+        "lastPathUsed": "network",
+        "lastEventsFound": 0,
+        "consecutiveFailures": 2,
+        "triageResult": null
+      }
+    },
+    {
+      "sourceId": "bor-s-zoo-animagic",
+      "url": "https://animagic.se/",
+      "roundsParticipated": 2,
+      "diversifiers": [
+        "failures_2",
+        "path_network"
+      ],
+      "queueReason": "preferredPath=unknown, requires HTML analysis",
+      "enrichedData": {
+        "lastPathUsed": "network",
+        "lastEventsFound": 0,
+        "consecutiveFailures": 2,
+        "triageResult": null
+      }
+    },
+    {
+      "sourceId": "botaniska-tradgarden",
+      "url": "https://botaniska.se/",
+      "roundsParticipated": 2,
+      "diversifiers": [
+        "failures_2",
+        "path_network"
+      ],
+      "queueReason": "preferredPath=unknown, requires HTML analysis",
+      "enrichedData": {
+        "lastPathUsed": "network",
+        "lastEventsFound": 0,
+        "consecutiveFailures": 2,
+        "triageResult": null
+      }
+    },
+    {
+      "sourceId": "brommapojkarna",
+      "url": "https://bpxf.se/",
+      "roundsParticipated": 1,
+      "diversifiers": [
+        "failures_2",
+        "path_network"
+      ],
+      "queueReason": "preferredPath=unknown, requires HTML analysis",
+      "enrichedData": {
+        "lastPathUsed": "network",
+        "lastEventsFound": 0,
+        "consecutiveFailures": 2,
+        "triageResult": null
+      }
+    }
+  ],
+  "exited": [
+    {
+      "source": {
+        "sourceId": "kumla",
+        "url": "https://kumla.se/",
+        "roundsParticipated": 0,
+        "diversifiers": [
+          "failures_2",
+          "path_network"
+        ],
+        "queueReason": "preferredPath=unknown, requires HTML analysis",
+        "enrichedData": {
+          "lastPathUsed": "network",
+          "lastEventsFound": 0,
+          "consecutiveFailures": 2,
+          "triageResult": null
+        }
+      },
+      "decision": "postTestC-UI",
+      "result": {
+        "sourceId": "kumla",
+        "url": "https://kumla.se/",
+        "c0": {
+          "candidates": 1,
+          "winnerUrl": "https://kumla.se/kommun-och-politik/agenda-2030.html",
+          "winnerDensity": 12,
+          "duration": 886,
+          "rootFallback": false,
+          "ruleAppliedSource": "link-discovery",
+          "ruleAppliedPaths": [],
+          "ruleWinnerPath": "/kommun-och-politik/agenda-2030.html"
+        },
+        "c1": {
+          "verdict": "weak",
+          "likelyJsRendered": false,
+          "timeTagCount": 0,
+          "dateCount": 1,
+          "duration": 221
+        },
+        "c2": {
+          "verdict": "maybe",
+          "score": 16,
+          "reason": "[breadth_nojsonld] score=16(adj) >= 12? maybe pg=event-list",
+          "duration": 201
+        },
+        "extract": {
+          "eventsFound": 1,
+          "duration": 17
+        },
+        "winningStage": "C3",
+        "outcomeType": "extract_success",
+        "routeSuggestion": "UI",
+        "evidence": "extracted 1 events from HTML",
+        "roundNumber": 1,
+        "success": true
+      }
+    },
+    {
+      "source": {
+        "sourceId": "lunds-bk",
+        "url": "https://lundsbk.se/",
+        "roundsParticipated": 0,
+        "diversifiers": [
+          "failures_2",
+          "path_network"
+        ],
+        "queueReason": "preferredPath=unknown, requires HTML analysis",
+        "enrichedData": {
+          "lastPathUsed": "network",
+          "lastEventsFound": 0,
+          "consecutiveFailures": 2,
+          "triageResult": null
+        }
+      },
+      "decision": "postTestC-D",
+      "result": {
+        "sourceId": "lunds-bk",
+        "url": "https://lundsbk.se/",
+        "c0": {
+          "candidates": 2,
+          "winnerUrl": "https://lundsbk.se/kalender",
+          "winnerDensity": 27,
+          "duration": 2192,
+          "rootFallback": false,
+          "ruleAppliedSource": "link-discovery",
+          "ruleAppliedPaths": [],
+          "ruleWinnerPath": "/kalender"
+        },
+        "c1": {
+          "verdict": "no-main",
+          "likelyJsRendered": true,
+          "timeTagCount": 0,
+          "dateCount": 0,
+          "duration": 180
+        },
+        "c2": {
+          "verdict": "skipped",
+          "score": 0,
+          "reason": "c1-direct-route",
+          "duration": 0
+        },
+        "extract": {
+          "eventsFound": 0,
+          "duration": 0
+        },
+        "winningStage": "C1",
+        "outcomeType": "route_success",
+        "routeSuggestion": "D",
+        "evidence": "C1: likelyJsRendered=true + (timeTags=0 OR dates=0) — direct D route, C2/C3 skipped",
+        "roundNumber": 1,
+        "success": false
+      }
+    },
+    {
+      "source": {
+        "sourceId": "hammarkullen",
+        "url": "https://hammarkullen.se/",
+        "roundsParticipated": 0,
+        "diversifiers": [
+          "failures_2",
+          "path_network"
+        ],
+        "queueReason": "preferredPath=unknown, requires HTML analysis",
+        "enrichedData": {
+          "lastPathUsed": "network",
+          "lastEventsFound": 0,
+          "consecutiveFailures": 2,
+          "triageResult": null
+        }
+      },
+      "decision": "postTestC-D",
+      "result": {
+        "sourceId": "hammarkullen",
+        "url": "https://hammarkullen.se/",
+        "c0": {
+          "candidates": 0,
+          "winnerUrl": null,
+          "winnerDensity": 0,
+          "duration": 7193,
+          "rootFallback": false,
+          "ruleAppliedSource": "none",
+          "ruleAppliedPaths": [
+            "/events",
+            "/program",
+            "/kalender",
+            "/schema",
+            "/evenemang",
+            "/kalendarium",
+            "/aktiviteter",
+            "/kultur",
+            "/fritid",
+            "/matcher",
+            "/biljetter"
+          ],
+          "ruleWinnerPath": null
+        },
+        "c1": {
+          "verdict": "no-main",
+          "likelyJsRendered": true,
+          "timeTagCount": 0,
+          "dateCount": 0,
+          "duration": 391
+        },
+        "c2": {
+          "verdict": "skipped",
+          "score": 0,
+          "reason": "c1-direct-route",
+          "duration": 0
+        },
+        "extract": {
+          "eventsFound": 0,
+          "duration": 0
+        },
+        "winningStage": "C1",
+        "outcomeType": "route_success",
+        "routeSuggestion": "D",
+        "evidence": "C1: likelyJsRendered=true + (timeTags=0 OR dates=0) — direct D route, C2/C3 skipped",
+        "roundNumber": 1,
+        "success": false
+      }
+    },
+    {
+      "source": {
+        "sourceId": "oceanen",
+        "url": "https://oceanen.se/",
+        "roundsParticipated": 0,
+        "diversifiers": [
+          "failures_2",
+          "path_network"
+        ],
+        "queueReason": "preferredPath=unknown, requires HTML analysis",
+        "enrichedData": {
+          "lastPathUsed": "network",
+          "lastEventsFound": 0,
+          "consecutiveFailures": 2,
+          "triageResult": null
+        }
+      },
+      "decision": "postTestC-D",
+      "result": {
+        "sourceId": "oceanen",
+        "url": "https://oceanen.se/",
+        "c0": {
+          "candidates": 0,
+          "winnerUrl": null,
+          "winnerDensity": 0,
+          "duration": 1088,
+          "rootFallback": false,
+          "ruleAppliedSource": "none",
+          "ruleAppliedPaths": [
+            "/events",
+            "/program",
+            "/kalender",
+            "/schema",
+            "/evenemang",
+            "/kalendarium",
+            "/aktiviteter",
+            "/kultur",
+            "/fritid",
+            "/matcher",
+            "/biljetter"
+          ],
+          "ruleWinnerPath": null
+        },
+        "c1": {
+          "verdict": "no-main",
+          "likelyJsRendered": true,
+          "timeTagCount": 0,
+          "dateCount": 0,
+          "duration": 124
+        },
+        "c2": {
+          "verdict": "skipped",
+          "score": 0,
+          "reason": "c1-direct-route",
+          "duration": 0
+        },
+        "extract": {
+          "eventsFound": 0,
+          "duration": 0
+        },
+        "winningStage": "C1",
+        "outcomeType": "route_success",
+        "routeSuggestion": "D",
+        "evidence": "C1: likelyJsRendered=true + (timeTags=0 OR dates=0) — direct D route, C2/C3 skipped",
+        "roundNumber": 1,
+        "success": false
+      }
+    },
+    {
+      "source": {
+        "sourceId": "textilmus-et",
+        "url": "https://textilmuseet.se/",
+        "roundsParticipated": 0,
+        "diversifiers": [
+          "failures_2",
+          "path_network"
+        ],
+        "queueReason": "preferredPath=unknown, requires HTML analysis",
+        "enrichedData": {
+          "lastPathUsed": "network",
+          "lastEventsFound": 0,
+          "consecutiveFailures": 2,
+          "triageResult": null
+        }
+      },
+      "decision": "postTestC-UI",
+      "result": {
+        "sourceId": "textilmus-et",
+        "url": "https://textilmuseet.se/",
+        "c0": {
+          "candidates": 0,
+          "winnerUrl": "https://textilmuseet.se/aktiviteter",
+          "winnerDensity": 65,
+          "duration": 1489,
+          "rootFallback": false,
+          "ruleAppliedSource": "swedish-patterns",
+          "ruleAppliedPaths": [
+            "/events",
+            "/program",
+            "/kalender",
+            "/schema",
+            "/evenemang",
+            "/kalendarium",
+            "/aktiviteter"
+          ],
+          "ruleWinnerPath": "/aktiviteter"
+        },
+        "c1": {
+          "verdict": "weak",
+          "likelyJsRendered": false,
+          "timeTagCount": 18,
+          "dateCount": 0,
+          "duration": 246
+        },
+        "c2": {
+          "verdict": "promising",
+          "score": 97,
+          "reason": "[breadth_nojsonld] score=97(adj) >= 12? promising pg=time-tag cand=cards=strong(18/18),lists=weak(1t 1l 1d)",
+          "duration": 246
+        },
+        "extract": {
+          "eventsFound": 1,
+          "duration": 19
+        },
+        "winningStage": "C3",
+        "outcomeType": "extract_success",
+        "routeSuggestion": "UI",
+        "evidence": "extracted 1 events from HTML",
+        "roundNumber": 1,
+        "success": true
+      }
+    },
+    {
+      "source": {
+        "sourceId": "borlange-kommun",
+        "url": "https://borlange.se/",
+        "roundsParticipated": 0,
+        "diversifiers": [
+          "failures_2",
+          "path_network"
+        ],
+        "queueReason": "preferredPath=unknown, requires HTML analysis",
+        "enrichedData": {
+          "lastPathUsed": "network",
+          "lastEventsFound": 0,
+          "consecutiveFailures": 2,
+          "triageResult": null
+        }
+      },
+      "decision": "postTestC-UI",
+      "result": {
+        "sourceId": "borlange-kommun",
+        "url": "https://borlange.se/",
+        "c0": {
+          "candidates": 0,
+          "winnerUrl": "https://borlange.se/evenemang",
+          "winnerDensity": 125,
+          "duration": 2368,
+          "rootFallback": false,
+          "ruleAppliedSource": "swedish-patterns",
+          "ruleAppliedPaths": [
+            "/events",
+            "/program",
+            "/kalender",
+            "/schema",
+            "/events",
+            "/program",
+            "/kalender",
+            "/schema",
+            "/evenemang"
+          ],
+          "ruleWinnerPath": "/evenemang"
+        },
+        "c1": {
+          "verdict": "strong",
+          "likelyJsRendered": false,
+          "timeTagCount": 18,
+          "dateCount": 20,
+          "duration": 268
+        },
+        "c2": {
+          "verdict": "promising",
+          "score": 145,
+          "reason": "[breadth_nojsonld] score=145(adj) >= 12? promising pg=time-tag neg=news-article cand=cards=medium(12/12),lists=weak(1t 1l 1d)",
+          "duration": 251
+        },
+        "extract": {
+          "eventsFound": 10,
+          "duration": 19
+        },
+        "winningStage": "C3",
+        "outcomeType": "extract_success",
+        "routeSuggestion": "UI",
+        "evidence": "extracted 10 events from HTML",
+        "roundNumber": 2,
+        "success": true
+      }
+    },
+    {
+      "source": {
+        "sourceId": "goteborgs-design-festival",
+        "url": "https://designfestival.se/",
+        "roundsParticipated": 2,
+        "diversifiers": [
+          "failures_2",
+          "path_network"
+        ],
+        "queueReason": "preferredPath=unknown, requires HTML analysis",
+        "enrichedData": {
+          "lastPathUsed": "network",
+          "lastEventsFound": 0,
+          "consecutiveFailures": 2,
+          "triageResult": null
+        }
+      },
+      "decision": "postTestC-manual-review",
+      "result": {
+        "sourceId": "goteborgs-design-festival",
+        "url": "https://designfestival.se/",
+        "c0": {
+          "candidates": 0,
+          "winnerUrl": null,
+          "winnerDensity": 0,
+          "duration": 3,
+          "rootFallback": false,
+          "ruleAppliedSource": "none",
+          "ruleAppliedPaths": [],
+          "ruleWinnerPath": null
+        },
+        "c1": {
+          "verdict": "unfetchable",
+          "likelyJsRendered": false,
+          "timeTagCount": 0,
+          "dateCount": 0,
+          "duration": 2
+        },
+        "c2": {
+          "verdict": "unclear",
+          "score": 0,
+          "reason": "fetchHtml failed: getaddrinfo ENOTFOUND designfestival.se",
+          "duration": 1
+        },
+        "extract": {
+          "eventsFound": 0,
+          "duration": 0
+        },
+        "winningStage": "C3",
+        "outcomeType": "fail",
+        "routeSuggestion": "Fail",
+        "evidence": "C0: no internal event candidates discovered",
+        "roundNumber": 3,
+        "success": false,
+        "failType": "discovery_failure"
+      }
+    },
+    {
+      "source": {
+        "sourceId": "malmo-stadsteatern",
+        "url": "https://malmöstadsteatern.se/",
+        "roundsParticipated": 2,
+        "diversifiers": [
+          "failures_2",
+          "path_network"
+        ],
+        "queueReason": "preferredPath=unknown, requires HTML analysis",
+        "enrichedData": {
+          "lastPathUsed": "network",
+          "lastEventsFound": 0,
+          "consecutiveFailures": 2,
+          "triageResult": null
+        }
+      },
+      "decision": "postTestC-manual-review",
+      "result": {
+        "sourceId": "malmo-stadsteatern",
+        "url": "https://malmöstadsteatern.se/",
+        "c0": {
+          "candidates": 0,
+          "winnerUrl": null,
+          "winnerDensity": 0,
+          "duration": 1,
+          "rootFallback": false,
+          "ruleAppliedSource": "none",
+          "ruleAppliedPaths": [],
+          "ruleWinnerPath": null
+        },
+        "c1": {
+          "verdict": "unfetchable",
+          "likelyJsRendered": false,
+          "timeTagCount": 0,
+          "dateCount": 0,
+          "duration": 1
+        },
+        "c2": {
+          "verdict": "unclear",
+          "score": 0,
+          "reason": "fetchHtml failed: getaddrinfo ENOTFOUND xn--malmstadsteatern-pwb.se",
+          "duration": 1
+        },
+        "extract": {
+          "eventsFound": 0,
+          "duration": 0
+        },
+        "winningStage": "C3",
+        "outcomeType": "fail",
+        "routeSuggestion": "Fail",
+        "evidence": "C0: no internal event candidates discovered",
+        "roundNumber": 3,
+        "success": false,
+        "failType": "discovery_failure"
+      }
+    },
+    {
+      "source": {
+        "sourceId": "universeum",
+        "url": "https://universeum.se/",
+        "roundsParticipated": 2,
+        "diversifiers": [
+          "failures_2",
+          "path_network"
+        ],
+        "queueReason": "preferredPath=unknown, requires HTML analysis",
+        "enrichedData": {
+          "lastPathUsed": "network",
+          "lastEventsFound": 0,
+          "consecutiveFailures": 2,
+          "triageResult": null
+        }
+      },
+      "decision": "postTestC-manual-review",
+      "result": {
+        "sourceId": "universeum",
+        "url": "https://universeum.se/",
+        "c0": {
+          "candidates": 3,
+          "winnerUrl": "https://universeum.se/besok/biljetter",
+          "winnerDensity": 8,
+          "duration": 1170,
+          "rootFallback": false,
+          "ruleAppliedSource": "link-discovery",
+          "ruleAppliedPaths": [],
+          "ruleWinnerPath": "/besok/biljetter"
+        },
+        "c1": {
+          "verdict": "weak",
+          "likelyJsRendered": false,
+          "timeTagCount": 0,
+          "dateCount": 0,
+          "duration": 171
+        },
+        "c2": {
+          "verdict": "unclear",
+          "score": 3,
+          "reason": "[breadth_nojsonld] score=3(adj) >= 12? unclear pg=event-heading",
+          "duration": 166
+        },
+        "extract": {
+          "eventsFound": 0,
+          "duration": 7
+        },
+        "winningStage": "C3",
+        "outcomeType": "fail",
+        "routeSuggestion": "Fail",
+        "evidence": "C2: verdict=unclear, score=3 too low",
+        "roundNumber": 3,
+        "success": false,
+        "failType": "screening_failure"
+      }
+    },
+    {
+      "source": {
+        "sourceId": "junibacken",
+        "url": "https://junibacken.se/",
+        "roundsParticipated": 2,
+        "diversifiers": [
+          "failures_2",
+          "path_network"
+        ],
+        "queueReason": "preferredPath=unknown, requires HTML analysis",
+        "enrichedData": {
+          "lastPathUsed": "network",
+          "lastEventsFound": 0,
+          "consecutiveFailures": 2,
+          "triageResult": null
+        }
+      },
+      "decision": "postTestC-manual-review",
+      "result": {
+        "sourceId": "junibacken",
+        "url": "https://junibacken.se/",
+        "c0": {
+          "candidates": 0,
+          "winnerUrl": null,
+          "winnerDensity": 0,
+          "duration": 5227,
+          "rootFallback": false,
+          "ruleAppliedSource": "none",
+          "ruleAppliedPaths": [
+            "/events",
+            "/program",
+            "/kalender",
+            "/schema",
+            "/evenemang",
+            "/kalendarium",
+            "/aktiviteter",
+            "/kultur",
+            "/fritid",
+            "/matcher",
+            "/biljetter"
+          ],
+          "ruleWinnerPath": null
+        },
+        "c1": {
+          "verdict": "weak",
+          "likelyJsRendered": false,
+          "timeTagCount": 0,
+          "dateCount": 0,
+          "duration": 716
+        },
+        "c2": {
+          "verdict": "promising",
+          "score": 60,
+          "reason": "[breadth_nojsonld] score=60(adj) >= 12? promising pg=venue-marker cand=cards=medium(6/6),lists=none",
+          "duration": 519
+        },
+        "extract": {
+          "eventsFound": 0,
+          "duration": 8
+        },
+        "winningStage": "C3",
+        "outcomeType": "fail",
+        "routeSuggestion": "Fail",
+        "evidence": "C0: no internal event candidates discovered",
+        "roundNumber": 3,
+        "success": false,
+        "failType": "discovery_failure"
+      }
+    },
+    {
+      "source": {
+        "sourceId": "visit-sweden",
+        "url": "https://visitsweden.com/",
+        "roundsParticipated": 2,
+        "diversifiers": [
+          "failures_2",
+          "path_network"
+        ],
+        "queueReason": "preferredPath=unknown, requires HTML analysis",
+        "enrichedData": {
+          "lastPathUsed": "network",
+          "lastEventsFound": 0,
+          "consecutiveFailures": 2,
+          "triageResult": null
+        }
+      },
+      "decision": "postTestC-manual-review",
+      "result": {
+        "sourceId": "visit-sweden",
+        "url": "https://visitsweden.com/",
+        "c0": {
+          "candidates": 1,
+          "winnerUrl": "https://visitsweden.com/about-sweden/passport-and-visas/",
+          "winnerDensity": 0,
+          "duration": 392,
+          "rootFallback": false,
+          "ruleAppliedSource": "link-discovery",
+          "ruleAppliedPaths": [],
+          "ruleWinnerPath": "https://visitsweden.com/about-sweden/passport-and-visas/"
+        },
+        "c1": {
+          "verdict": "unfetchable",
+          "likelyJsRendered": false,
+          "timeTagCount": 0,
+          "dateCount": 0,
+          "duration": 48
+        },
+        "c2": {
+          "verdict": "unclear",
+          "score": 0,
+          "reason": "fetchHtml failed: Redirect loop detected: https://visitsweden.com/about-sweden/passport-and-visas",
+          "duration": 35
+        },
+        "extract": {
+          "eventsFound": 0,
+          "duration": 1
+        },
+        "winningStage": "C3",
+        "outcomeType": "fail",
+        "routeSuggestion": "Fail",
+        "evidence": "C2: verdict=unclear, score=0 too low",
+        "roundNumber": 3,
+        "success": false,
+        "failType": "screening_failure"
+      }
+    }
+  ],
+  "allExitedIds": [
+    "kumla",
+    "lunds-bk",
+    "hammarkullen",
+    "oceanen",
+    "textilmus-et",
+    "borlange-kommun",
+    "goteborgs-design-festival",
+    "malmo-stadsteatern",
+    "universeum",
+    "junibacken",
+    "visit-sweden"
+  ],
+  "lastSaved": "2026-04-14T19:03:38.713Z"
+}

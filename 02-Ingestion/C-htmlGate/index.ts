@@ -16,6 +16,6 @@
  * Backwards compatibility: evaluateHtmlGate from this index re-exports from C2.
  */
 export { evaluateHtmlGate, type HtmlGateResult, type HtmlVerdict } from './C2-htmlGate/C2-htmlGate';
-export { screenUrl, type PreGateResult, type PreGateCategorization } from './C1-preHtmlGate/C1-preHtmlGate';
+export { screenUrl, screenUrlWithDerivedRules, type PreGateResult, type PreGateCategorization } from './C1-preHtmlGate/C1-preHtmlGate';
 export { evaluateAiExtract, type AiExtractResult, type AiVerdict, type AiExtractedEvent, type AiExtractor } from './C3-aiExtractGate/C3-aiExtractGate';
 export { discoverEventCandidates, type FrontierDiscoveryResult, type CandidatePage } from './C0-htmlFrontierDiscovery';

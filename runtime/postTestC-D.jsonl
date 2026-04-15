@@ -1,0 +1,1 @@
+{"sourceId":"akersberga","queueName":"postTestC-D","queuedAt":"2026-04-15T17:14:17.814Z","priority":1,"attempt":1,"queueReason":"C1: likelyJsRendered=true + (timeTags=0 OR dates=0) — direct D route, C2/C3 skipped","workerNotes":"C1: route_success","winningStage":"C1","outcomeType":"route_success","routeSuggestion":"D","roundNumber":2,"roundsParticipated":1}

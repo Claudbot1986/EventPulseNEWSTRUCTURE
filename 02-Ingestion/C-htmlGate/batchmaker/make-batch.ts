@@ -10,26 +10,35 @@
  * - Får inte skriva om sources/
  * - Batchen ska vara "rimligt varierad för lärande"
  *
- * Diversifieringssignaler vi kan använda från postB-preC + sources_status:
- * - Olika queueReason-mönster (404s vs errors, olika felräkningar)
- * - Olika triageResult (html_candidate vs still_unknown)
- * - Olika lastPathUsed (jsonld vs network)
- * - Olika consecutiveFailures (0 vs 1 vs 2)
- * - Olika lastEventsFound (0 vs >0)
+ * Inputs:
+ * - runtime/postB-preC-queue.jsonl — poolen av HTML-kandidater
+ * - runtime/sources_status.jsonl — statusdata för enrichment
+ * - sources/{sourceId}.jsonl — canonical URL per source
+ *
+ * Output:
+ * - 02-Ingestion/C-htmlGate/batchmaker/current-batch.jsonl
  */
 
-import { readFileSync, writeFileSync, existsSync, readdirSync } from 'fs';
-
+import { readFileSync, writeFileSync, readdirSync } from 'fs';
 import { resolve, dirname, join } from 'path';
 import { fileURLToPath } from 'url';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
+// ---------------------------------------------------------------------------
+// Paths
+// ---------------------------------------------------------------------------
+
 const RUNTIME_DIR = resolve(__dirname, '../../../runtime');
 const POSTB_PREC_PATH = `${RUNTIME_DIR}/postB-preC-queue.jsonl`;
 const SOURCES_STATUS_PATH = `${RUNTIME_DIR}/sources_status.jsonl`;
+const SOURCES_DIR = resolve(__dirname, '../../../sources');
 const OUTPUT_PATH = resolve(__dirname, './current-batch.jsonl');
+
+// ---------------------------------------------------------------------------
+// Types
+// ---------------------------------------------------------------------------
 
 interface QueueEntry {
   sourceId: string;
@@ -52,58 +61,83 @@ interface SourceStatus {
 
 interface BatchEntry {
   sourceId: string;
-  /** Canonical URL from sources/{sourceId}.jsonl — resolved at batch creation time */
-  url: string | null;
+  url: string;
   selectionReason: string;
   diversifiers: string[];
   queueReason: string;
-  enrichedData?: {
-    lastPathUsed?: string | null;
-    lastEventsFound?: number;
-    consecutiveFailures?: number;
-    triageResult?: string | null;
+  enrichedData: {
+    lastPathUsed: string | null;
+    lastEventsFound: number;
+    consecutiveFailures: number;
+    triageResult: string | null;
   };
 }
 
-// Parse helpers
+// ---------------------------------------------------------------------------
+// Parse
+// ---------------------------------------------------------------------------
+
 function parseJsonl<T>(path: string): T[] {
-  const content = readFileSync(path, 'utf8');
-  return content.split('\n').filter(Boolean).map(line => JSON.parse(line) as T);
+  const raw = readFileSync(path, 'utf8').trim();
+  if (!raw) return [];
+  return raw.split('\n').map(line => JSON.parse(line) as T);
 }
 
-/**
- * Load canonical source URLs from sources/ directory.
- * Returns a map: sourceId → url (from the canonical source file).
- * This is used to embed URL directly in batch output so C-testriggen
- * does not need to look it up from side-artifacts.
- */
-function loadCanonicalSourceUrls(sourcesDir: string): Map<string, string> {
-  const urlIndex = new Map<string, string>();
-  if (!existsSync(sourcesDir)) {
-    console.warn(`  WARNING: sources dir not found: ${sourcesDir}`);
-    return urlIndex;
-  }
+// ---------------------------------------------------------------------------
+// Load canonical URL for a single source from sources/{sourceId}.jsonl
+// Returns null if not found or malformed.
+// ---------------------------------------------------------------------------
+
+function loadSourceUrl(sourceId: string): string | null {
+  const filePath = join(SOURCES_DIR, `${sourceId}.jsonl`);
   try {
-    const files = readdirSync(sourcesDir).filter(f => f.endsWith('.jsonl'));
+    const content = readFileSync(filePath, 'utf8').trim();
+    if (!content) return null;
+    const source = JSON.parse(content);
+    return source.url ?? null;
+  } catch {
+    return null;
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Load all canonical URLs from sources/ into a Map for fast lookup
+// ---------------------------------------------------------------------------
+
+function loadAllCanonicalUrls(): Map<string, string> {
+  const urlMap = new Map<string, string>();
+  try {
+    const files = readdirSync(SOURCES_DIR).filter(f => f.endsWith('.jsonl'));
     for (const file of files) {
       try {
-        const content = readFileSync(join(sourcesDir, file), 'utf-8').trim();
+        const content = readFileSync(join(SOURCES_DIR, file), 'utf8').trim();
+        if (!content) continue;
         const source = JSON.parse(content);
         if (source.id && source.url) {
-          urlIndex.set(source.id, source.url);
+          urlMap.set(source.id, source.url);
         }
       } catch {
-        // Skip malformed files
+        // skip malformed files
       }
     }
   } catch {
-    // Skip on error
+    // sources dir missing
   }
-  return urlIndex;
+  return urlMap;
 }
 
-// Extract signal from queueReason
-function extractQueueSignals(reason: string): { errorCount: number; has404s: boolean; hasNetworkSignal: boolean } {
+// ---------------------------------------------------------------------------
+// Parse queueReason to extract error signals
+// ---------------------------------------------------------------------------
+
+interface QueueSignals {
+  errorCount: number;
+  has404s: boolean;
+  hasNetworkSignal: boolean;
+}
+
+function parseQueueSignals(reason: string): QueueSignals {
+  // Match patterns like "18 fel", "18 errors", "18 404s"
   const errorMatch = reason.match(/(\d+)\s*(?:fel|errors?|404s?)/i);
   const errorCount = errorMatch ? parseInt(errorMatch[1], 10) : 0;
   const has404s = /\d+\s*404/i.test(reason);
@@ -111,205 +145,234 @@ function extractQueueSignals(reason: string): { errorCount: number; has404s: boo
   return { errorCount, has404s, hasNetworkSignal };
 }
 
-// Select diverse batch
-function selectDiversifiedBatch(
-  entries: QueueEntry[],
-  statuses: Map<string, SourceStatus>,
-  count: number,
-  canonicalUrls: Map<string, string>
-): BatchEntry[] {
-  const selected: BatchEntry[] = [];
-  const usedSourceIds = new Set<string>();
+// ---------------------------------------------------------------------------
+// Diversity scoring for a candidate
+// ---------------------------------------------------------------------------
 
-  // Create candidate list with all signals
-  const candidates: Array<{
-    entry: QueueEntry;
-    signals: ReturnType<typeof extractQueueSignals>;
-    status?: SourceStatus;
-  }> = entries.map(entry => {
-    const status = statuses.get(entry.sourceId);
-    const signals = extractQueueSignals(entry.queueReason);
-    return { entry, signals, status };
+interface DiversityState {
+  errorBuckets: Set<number>;     // 0, 1-9, 10-17, 18+
+  has404sValues: Set<boolean>;
+  consecutiveFailures: Set<number>;
+  lastEventsFound: Set<number>;   // 0 vs >0
+  lastPathUsed: Set<string>;
+  triageResult: Set<string>;
+}
+
+function scoreCandidate(
+  candidate: Candidate,
+  state: DiversityState
+): number {
+  let score = 0;
+
+  // Primary: error bucket diversity (most important)
+  const errorBucket = bucketize(candidate.signals.errorCount);
+  if (!state.errorBuckets.has(errorBucket)) score += 4;
+
+  // Secondary: 404s presence diversity
+  if (!state.has404sValues.has(candidate.signals.has404s)) score += 2;
+
+  // Tertiary: consecutive failures diversity
+  if (!state.consecutiveFailures.has(candidate.status?.consecutiveFailures ?? -1)) {
+    score += 2;
+  }
+
+  // Mix of events found
+  const hasEvents = (candidate.status?.lastEventsFound ?? 0) > 0 ? 1 : 0;
+  if (!state.lastEventsFound.has(hasEvents)) score += 2;
+
+  // Mix of lastPathUsed
+  const path = candidate.status?.lastPathUsed ?? 'none';
+  if (!state.lastPathUsed.has(path)) score += 1;
+
+  // Mix of triageResult
+  const triage = candidate.status?.triageResult ?? 'none';
+  if (!state.triageResult.has(triage)) score += 1;
+
+  // Small random jitter to avoid deterministic picking within buckets
+  score += Math.random() * 0.4;
+
+  return score;
+}
+
+function bucketize(errorCount: number): number {
+  if (errorCount === 0) return 0;
+  if (errorCount < 10) return 1;
+  if (errorCount < 18) return 2;
+  return 3;
+}
+
+interface Candidate {
+  entry: QueueEntry;
+  signals: QueueSignals;
+  status: SourceStatus | undefined;
+  url: string | null;
+}
+
+// ---------------------------------------------------------------------------
+// Build diversifier label list for a chosen candidate
+// ---------------------------------------------------------------------------
+
+function buildDiversifiers(c: Candidate): string[] {
+  const d: string[] = [];
+  if (c.signals.has404s) d.push('has_404s');
+  if (c.signals.errorCount > 0) d.push(`errors_${c.signals.errorCount}`);
+  if (c.status) {
+    if (c.status.consecutiveFailures > 0) d.push(`failures_${c.status.consecutiveFailures}`);
+    if (c.status.lastEventsFound > 0) d.push(`events_${c.status.lastEventsFound}`);
+    if (c.status.triageResult) d.push(`triage_${c.status.triageResult}`);
+    if (c.status.lastPathUsed) d.push(`path_${c.status.lastPathUsed}`);
+  }
+  return d;
+}
+
+// ---------------------------------------------------------------------------
+// Main
+// ---------------------------------------------------------------------------
+
+function main() {
+  console.log('=== C-htmlGate Batchmaker ===\n');
+
+  // 1. Load pool
+  console.log(`Reading: ${POSTB_PREC_PATH}`);
+  const queueEntries = parseJsonl<QueueEntry>(POSTB_PREC_PATH);
+  console.log(`  ${queueEntries.length} entries in postB-preC pool\n`);
+
+  // 2. Load status enrichment
+  console.log(`Reading: ${SOURCES_STATUS_PATH}`);
+  const allStatuses = parseJsonl<SourceStatus>(SOURCES_STATUS_PATH);
+  const statusMap = new Map<string, SourceStatus>();
+  for (const s of allStatuses) statusMap.set(s.sourceId, s);
+  console.log(`  ${allStatuses.length} status records loaded\n`);
+
+  // 3. Load canonical URLs
+  const canonicalUrls = loadAllCanonicalUrls();
+  console.log(`  ${canonicalUrls.size} canonical URLs loaded from sources/\n`);
+
+  // 4. Build candidate list with signals
+  const candidates: Candidate[] = queueEntries.map(entry => {
+    const signals = parseQueueSignals(entry.queueReason);
+    const status = statusMap.get(entry.sourceId);
+    const url = canonicalUrls.get(entry.sourceId) ?? loadSourceUrl(entry.sourceId);
+    return { entry, signals, status, url };
   });
 
-  // Diversifieringsaxlar
-  const dimensions = {
-    errorCountBuckets: new Set<number>(),    // 0, low, medium, high
-    has404s: new Set<boolean>(),
-    consecutiveFailures: new Set<number>(),
-    lastEventsFound: new Set<number>(),        // 0 vs >0
-    lastPathUsed: new Set<string>(),
-    triageResult: new Set<string>(),
+  // 5. Filter out candidates without URLs (shouldn't happen per user, but be safe)
+  const withUrl = candidates.filter(c => c.url !== null);
+  const withoutUrl = candidates.length - withUrl.length;
+  if (withoutUrl > 0) {
+    console.warn(`  WARNING: ${withoutUrl} candidates have no URL in sources/ — skipping\n`);
+  }
+  console.log(`  ${withUrl.length} candidates with URLs\n`);
+
+  // 6. Diversified selection
+  const BATCH_SIZE = 10;
+  const selected: BatchEntry[] = [];
+  const usedIds = new Set<string>();
+
+  const diversityState: DiversityState = {
+    errorBuckets: new Set(),
+    has404sValues: new Set(),
+    consecutiveFailures: new Set(),
+    lastEventsFound: new Set(),
+    lastPathUsed: new Set(),
+    triageResult: new Set(),
   };
 
-  while (selected.length < count && candidates.length > 0) {
-    // Find best candidate that adds diversity
+  const remaining = [...withUrl];
+
+  while (selected.length < BATCH_SIZE && remaining.length > 0) {
+    // Score all remaining candidates
     let bestIdx = -1;
     let bestScore = -1;
 
-    for (let i = 0; i < candidates.length; i++) {
-      const c = candidates[i];
-      if (usedSourceIds.has(c.entry.sourceId)) continue;
-
-      const signals = c.signals;
-      const status = c.status;
-
-      // Calculate diversity score
-      let score = 0;
-
-      // Prefer candidates that add new error-count bucket
-      const errorBucket = signals.errorCount === 0 ? 0 : signals.errorCount < 10 ? 1 : signals.errorCount < 18 ? 2 : 3;
-      if (!dimensions.errorCountBuckets.has(errorBucket)) score += 3;
-
-      // Prefer candidates that add new has404s variation
-      if (!dimensions.has404s.has(signals.has404s)) score += 2;
-
-      // Prefer candidates with different consecutiveFailures
-      if (status && !dimensions.consecutiveFailures.has(status.consecutiveFailures)) {
-        score += 2;
-      }
-
-      // Prefer mix of lastEventsFound (0 vs >0)
-      const hasEvents = (status?.lastEventsFound ?? 0) > 0;
-      if (!dimensions.lastEventsFound.has(hasEvents ? 1 : 0)) score += 2;
-
-      // Prefer mix of lastPathUsed
-      if (status?.lastPathUsed && !dimensions.lastPathUsed.has(status.lastPathUsed)) {
-        score += 1;
-      }
-
-      // Prefer mix of triageResult
-      if (status?.triageResult && !dimensions.triageResult.has(status.triageResult)) {
-        score += 1;
-      }
-
-      // Add small random factor to avoid always picking same within bucket
-      score += Math.random() * 0.5;
-
+    for (let i = 0; i < remaining.length; i++) {
+      if (usedIds.has(remaining[i].entry.sourceId)) continue;
+      const score = scoreCandidate(remaining[i], diversityState);
       if (score > bestScore) {
         bestScore = score;
         bestIdx = i;
       }
     }
 
-    if (bestIdx === -1) {
-      // No more diverse candidates, take remaining
-      const remaining = candidates.find(c => !usedSourceIds.has(c.entry.sourceId));
-      if (remaining) {
-        selected.push(createBatchEntry(remaining.entry, remaining.signals, remaining.status, 'final_pick', [], canonicalUrls.get(remaining.entry.sourceId) ?? null));
-        usedSourceIds.add(remaining.entry.sourceId);
+    if (bestIdx === -1) break;
+
+    const chosen = remaining.splice(bestIdx, 1)[0];
+    usedIds.add(chosen.entry.sourceId);
+
+    // Update diversity tracking
+    const errorBucket = bucketize(chosen.signals.errorCount);
+    diversityState.errorBuckets.add(errorBucket);
+    diversityState.has404sValues.add(chosen.signals.has404s);
+
+    if (chosen.status) {
+      diversityState.consecutiveFailures.add(chosen.status.consecutiveFailures);
+      diversityState.lastEventsFound.add(chosen.status.lastEventsFound > 0 ? 1 : 0);
+      if (chosen.status.lastPathUsed) {
+        diversityState.lastPathUsed.add(chosen.status.lastPathUsed);
       }
-      break;
+      if (chosen.status.triageResult) {
+        diversityState.triageResult.add(chosen.status.triageResult);
+      }
     }
 
-    const chosen = candidates[bestIdx];
-    candidates.splice(bestIdx, 1);
+    const diversifiers = buildDiversifiers(chosen);
+    const reason = diversityState.errorBuckets.size === 1 && selected.length === 0
+      ? 'first_pick'
+      : 'diversity_selection';
 
-    // Update dimensions tracking
-    const errorBucket = chosen.signals.errorCount === 0 ? 0 : chosen.signals.errorCount < 10 ? 1 : chosen.signals.errorCount < 18 ? 2 : 3;
-    dimensions.errorCountBuckets.add(errorBucket);
-    dimensions.has404s.add(chosen.signals.has404s);
-
-    if (chosen.status) {
-      dimensions.consecutiveFailures.add(chosen.status.consecutiveFailures);
-      dimensions.lastEventsFound.add(chosen.status.lastEventsFound > 0 ? 1 : 0);
-      if (chosen.status.lastPathUsed) dimensions.lastPathUsed.add(chosen.status.lastPathUsed);
-      if (chosen.status.triageResult) dimensions.triageResult.add(chosen.status.triageResult);
-    }
-
-    const diversifiers: string[] = [];
-    if (chosen.signals.has404s) diversifiers.push('has_404s');
-    if (chosen.signals.errorCount > 0) diversifiers.push(`errors_${chosen.signals.errorCount}`);
-    if (chosen.status) {
-      if (chosen.status.consecutiveFailures > 0) diversifiers.push(`failures_${chosen.status.consecutiveFailures}`);
-      if (chosen.status.lastEventsFound > 0) diversifiers.push(`has_events_${chosen.status.lastEventsFound}`);
-      if (chosen.status.triageResult) diversifiers.push(`triage_${chosen.status.triageResult}`);
-    }
-
-    selected.push(createBatchEntry(chosen.entry, chosen.signals, chosen.status, 'diversity_selection', diversifiers, canonicalUrls.get(chosen.entry.sourceId) ?? null));
-    usedSourceIds.add(chosen.entry.sourceId);
+    selected.push({
+      sourceId: chosen.entry.sourceId,
+      url: chosen.url!,
+      selectionReason: reason,
+      diversifiers,
+      queueReason: chosen.entry.queueReason,
+      enrichedData: {
+        lastPathUsed: chosen.status?.lastPathUsed ?? null,
+        lastEventsFound: chosen.status?.lastEventsFound ?? 0,
+        consecutiveFailures: chosen.status?.consecutiveFailures ?? 0,
+        triageResult: chosen.status?.triageResult ?? null,
+      },
+    });
   }
 
-  return selected;
-}
-
-function createBatchEntry(
-  entry: QueueEntry,
-  signals: ReturnType<typeof extractQueueSignals>,
-  status: SourceStatus | undefined,
-  reason: string,
-  diversifiers: string[] = [],
-  url: string | null = null
-): BatchEntry {
-  return {
-    sourceId: entry.sourceId,
-    url,
-    selectionReason: reason,
-    diversifiers,
-    queueReason: entry.queueReason,
-    enrichedData: status ? {
-      lastPathUsed: status.lastPathUsed,
-      lastEventsFound: status.lastEventsFound,
-      consecutiveFailures: status.consecutiveFailures,
-      triageResult: status.triageResult,
-    } : undefined,
-  };
-}
-
-async function main() {
-  console.log('=== C-htmlGate Batchmaker ===\n');
-
-  // Load queue entries
-  console.log(`Reading: ${POSTB_PREC_PATH}`);
-  const queueEntries = parseJsonl<QueueEntry>(POSTB_PREC_PATH);
-  console.log(`  Found ${queueEntries.length} entries in postB-preC\n`);
-
-  // Load source statuses for enrichment
-  console.log(`Reading: ${SOURCES_STATUS_PATH}`);
-  const allStatuses = parseJsonl<SourceStatus>(SOURCES_STATUS_PATH);
-  const statusMap = new Map<string, SourceStatus>();
-  for (const s of allStatuses) {
-    statusMap.set(s.sourceId, s);
-  }
-  console.log(`  Loaded ${allStatuses.length} status records\n`);
-
-  // Load canonical source URLs from sources/ for embedding in batch
-  const canonicalSourcesDir = resolve(process.cwd(), 'sources');
-  const canonicalUrls = loadCanonicalSourceUrls(canonicalSourcesDir);
-  console.log(`Loaded ${canonicalUrls.size} canonical source URLs from sources/\n`);
-
-  // Find sources that exist in both queue and status
-  const inBoth = queueEntries.filter(e => statusMap.has(e.sourceId));
-  const inQueueOnly = queueEntries.filter(e => !statusMap.has(e.sourceId));
-  console.log(`Queue entries with status enrichment: ${inBoth.length}`);
-  console.log(`Queue entries without status: ${inQueueOnly.length}\n`);
-
-  // Select diversified batch
-  const batch = selectDiversifiedBatch(queueEntries, statusMap, 10, canonicalUrls);
-
-  console.log('=== SELECTED BATCH (10 sources) ===\n');
-  for (let i = 0; i < batch.length; i++) {
-    const b = batch[i];
+  // 7. Report
+  console.log('=== SELECTED BATCH ===\n');
+  for (let i = 0; i < selected.length; i++) {
+    const b = selected[i];
     console.log(`${i + 1}. ${b.sourceId}`);
-    console.log(`   URL: ${b.url ?? '(not found in canonical sources)'}`);
-    console.log(`   Reason: ${b.selectionReason}`);
+    console.log(`   URL:        ${b.url}`);
+    console.log(`   Reason:     ${b.selectionReason}`);
     console.log(`   Diversifiers: ${b.diversifiers.join(', ') || '(none)'}`);
-    if (b.enrichedData) {
-      const e = b.enrichedData;
-      console.log(`   Path: ${e.lastPathUsed ?? 'unknown'}, Events: ${e.lastEventsFound ?? 0}, Failures: ${e.consecutiveFailures ?? 0}, Triage: ${e.triageResult ?? 'unknown'}`);
-    }
-    console.log(`   Queue reason: ${b.queueReason.substring(0, 80)}...`);
+    console.log(`   Path:       ${b.enrichedData.lastPathUsed ?? 'unknown'}`);
+    console.log(`   Events:     ${b.enrichedData.lastEventsFound}`);
+    console.log(`   Failures:   ${b.enrichedData.consecutiveFailures}`);
+    console.log(`   Triage:     ${b.enrichedData.triageResult ?? 'unknown'}`);
     console.log();
   }
 
-  // Write batch to file
-  const batchLines = batch.map(b => JSON.stringify(b)).join('\n');
-  writeFileSync(OUTPUT_PATH, batchLines + '\n');
-  console.log(`\nBatch written to: ${OUTPUT_PATH}`);
+  // Diversity summary
+  console.log('--- Diversity summary ---');
+  console.log(`  Error buckets:  ${[...diversityState.errorBuckets].sort().join(', ')}`);
+  console.log(`  404s presence:  ${[...diversityState.has404sValues].map(v => v.toString()).join(', ')}`);
+  console.log(`  Failures:       ${[...diversityState.consecutiveFailures].sort().join(', ')}`);
+  console.log(`  Events found:  ${[...diversityState.lastEventsFound].sort().join(', ')}`);
+  console.log(`  Path used:      ${[...diversityState.lastPathUsed].sort().join(', ')}`);
+  console.log(`  Triage:         ${[...diversityState.triageResult].sort().join(', ')}`);
+  console.log();
 
-  // Also print sourceIds for easy copying
-  console.log('\nSource IDs for run-batch:');
-  console.log(batch.map(b => b.sourceId).join(', '));
+  // 8. Write output
+  const outputLines = selected.map(b => JSON.stringify(b)).join('\n');
+  writeFileSync(OUTPUT_PATH, outputLines + '\n');
+  console.log(`Batch written to: ${OUTPUT_PATH}\n`);
+
+  console.log('Source IDs for run-batch:');
+  console.log(selected.map(b => b.sourceId).join(', '));
+  console.log();
 }
 
-main().catch(console.error);
+try {
+  main();
+} catch (err) {
+  console.error('Fatal error:', err);
+  process.exit(1);
+}

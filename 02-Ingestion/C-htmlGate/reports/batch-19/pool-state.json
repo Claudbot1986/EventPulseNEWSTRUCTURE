@@ -1,0 +1,395 @@
+{
+  "poolRoundNumber": 3,
+  "activePool": [],
+  "exited": [
+    {
+      "source": {
+        "sourceId": "borlange-kommun",
+        "url": "https://borlange.se/",
+        "roundsParticipated": 0,
+        "diversifiers": [
+          "has_404s",
+          "errors_18",
+          "failures_2",
+          "path_network"
+        ],
+        "queueReason": "toolB(preB): [breadth] unclear (0 likely, 0 possible) — Inga tydliga API:er hittades. 18 404s, 18 fel. Fler mönster kan finnas.. But: No network/API signals detected. GotEvent lesson: API structure ≠ usable event data. Routing to HTML.",
+        "enrichedData": {
+          "lastPathUsed": "network",
+          "lastEventsFound": 0,
+          "consecutiveFailures": 2,
+          "triageResult": null
+        }
+      },
+      "decision": "postTestC-UI",
+      "result": {
+        "sourceId": "borlange-kommun",
+        "url": "https://borlange.se/",
+        "c0": {
+          "candidates": 0,
+          "winnerUrl": "https://borlange.se/evenemang",
+          "winnerDensity": 125,
+          "duration": 2431,
+          "rootFallback": false,
+          "ruleAppliedSource": "swedish-patterns",
+          "ruleAppliedPaths": [
+            "/events",
+            "/program",
+            "/kalender",
+            "/schema",
+            "/events",
+            "/program",
+            "/kalender",
+            "/schema",
+            "/evenemang"
+          ],
+          "ruleWinnerPath": "/evenemang"
+        },
+        "c1": {
+          "verdict": "strong",
+          "likelyJsRendered": false,
+          "timeTagCount": 18,
+          "dateCount": 20,
+          "duration": 220
+        },
+        "c2": {
+          "verdict": "promising",
+          "score": 145,
+          "reason": "[breadth_nojsonld] score=145(adj) >= 12? promising pg=time-tag neg=news-article cand=cards=medium(12/12),lists=weak(1t 1l 1d)",
+          "duration": 221
+        },
+        "extract": {
+          "eventsFound": 10,
+          "duration": 17
+        },
+        "winningStage": "C3",
+        "outcomeType": "extract_success",
+        "routeSuggestion": "UI",
+        "evidence": "extracted 10 events from HTML",
+        "roundNumber": 1,
+        "success": true
+      }
+    },
+    {
+      "source": {
+        "sourceId": "kungsbacka",
+        "url": "https://kungsbacka.se/",
+        "roundsParticipated": 0,
+        "diversifiers": [
+          "has_404s",
+          "errors_18",
+          "failures_2",
+          "path_network"
+        ],
+        "queueReason": "toolB(preB): [breadth] unclear (0 likely, 0 possible) — Inga tydliga API:er hittades. 18 404s, 18 fel. Fler mönster kan finnas.. But: No network/API signals detected. GotEvent lesson: API structure ≠ usable event data. Routing to HTML.",
+        "enrichedData": {
+          "lastPathUsed": "network",
+          "lastEventsFound": 0,
+          "consecutiveFailures": 2,
+          "triageResult": null
+        }
+      },
+      "decision": "postTestC-UI",
+      "result": {
+        "sourceId": "kungsbacka",
+        "url": "https://kungsbacka.se/",
+        "c0": {
+          "candidates": 1,
+          "winnerUrl": "https://kungsbacka.se/uppleva-och-gora/evenemang",
+          "winnerDensity": 165,
+          "duration": 1721,
+          "rootFallback": false,
+          "ruleAppliedSource": "link-discovery",
+          "ruleAppliedPaths": [],
+          "ruleWinnerPath": "/uppleva-och-gora/evenemang"
+        },
+        "c1": {
+          "verdict": "weak",
+          "likelyJsRendered": false,
+          "timeTagCount": 0,
+          "dateCount": 20,
+          "duration": 509
+        },
+        "c2": {
+          "verdict": "promising",
+          "score": 105,
+          "reason": "[breadth_nojsonld] score=105(adj) >= 12? promising pg=date-pattern cand=cards=medium(8/8),lists=none",
+          "duration": 490
+        },
+        "extract": {
+          "eventsFound": 6,
+          "duration": 14
+        },
+        "winningStage": "C3",
+        "outcomeType": "extract_success",
+        "routeSuggestion": "UI",
+        "evidence": "extracted 6 events from HTML",
+        "roundNumber": 1,
+        "success": true
+      }
+    },
+    {
+      "source": {
+        "sourceId": "cirkus",
+        "url": "https://cirkus.se/",
+        "roundsParticipated": 2,
+        "diversifiers": [
+          "has_404s",
+          "errors_12",
+          "failures_2",
+          "path_network"
+        ],
+        "queueReason": "toolB(preB): [breadth] unclear (0 likely, 0 possible) — Inga tydliga API:er hittades. 12 404s, 19 fel. Fler mönster kan finnas.. But: No network/API signals detected. GotEvent lesson: API structure ≠ usable event data. Routing to HTML.",
+        "enrichedData": {
+          "lastPathUsed": "network",
+          "lastEventsFound": 0,
+          "consecutiveFailures": 2,
+          "triageResult": null
+        }
+      },
+      "decision": "postTestC-manual-review",
+      "result": {
+        "sourceId": "cirkus",
+        "url": "https://cirkus.se/",
+        "c0": {
+          "candidates": 0,
+          "winnerUrl": null,
+          "winnerDensity": 0,
+          "duration": 219,
+          "rootFallback": false,
+          "ruleAppliedSource": "none",
+          "ruleAppliedPaths": [],
+          "ruleWinnerPath": null
+        },
+        "c1": {
+          "verdict": "unfetchable",
+          "likelyJsRendered": false,
+          "timeTagCount": 0,
+          "dateCount": 0,
+          "duration": 122
+        },
+        "c2": {
+          "verdict": "unclear",
+          "score": 0,
+          "reason": "fetchHtml failed: Redirect loop detected: https://cirkus.se/sv",
+          "duration": 125
+        },
+        "extract": {
+          "eventsFound": 0,
+          "duration": 2
+        },
+        "winningStage": "C3",
+        "outcomeType": "fail",
+        "routeSuggestion": "Fail",
+        "evidence": "C0: no internal event candidates discovered",
+        "roundNumber": 3,
+        "success": false,
+        "failType": "discovery_failure"
+      }
+    },
+    {
+      "source": {
+        "sourceId": "friidrottsf-rbundet",
+        "url": "https://friidrott.se/",
+        "roundsParticipated": 2,
+        "diversifiers": [
+          "has_404s",
+          "errors_1",
+          "failures_2",
+          "path_network"
+        ],
+        "queueReason": "toolB(preB): [breadth] unclear (0 likely, 0 possible) — Inga tydliga API:er hittades. 1 404s, 18 fel. Fler mönster kan finnas.. But: No network/API signals detected. GotEvent lesson: API structure ≠ usable event data. Routing to HTML.",
+        "enrichedData": {
+          "lastPathUsed": "network",
+          "lastEventsFound": 0,
+          "consecutiveFailures": 2,
+          "triageResult": null
+        }
+      },
+      "decision": "postTestC-manual-review",
+      "result": {
+        "sourceId": "friidrottsf-rbundet",
+        "url": "https://friidrott.se/",
+        "c0": {
+          "candidates": 0,
+          "winnerUrl": "https://friidrott.se/events",
+          "winnerDensity": 6,
+          "duration": 1334,
+          "rootFallback": false,
+          "ruleAppliedSource": "derived-rule",
+          "ruleAppliedPaths": [
+            "/events"
+          ],
+          "ruleWinnerPath": "/events"
+        },
+        "c1": {
+          "verdict": "noise",
+          "likelyJsRendered": false,
+          "timeTagCount": 0,
+          "dateCount": 0,
+          "duration": 183
+        },
+        "c2": {
+          "verdict": "low_value",
+          "score": 0,
+          "reason": "[breadth_nojsonld] score=0(adj) >= 12? low_value pg=time-tag",
+          "duration": 174
+        },
+        "extract": {
+          "eventsFound": 0,
+          "duration": 8
+        },
+        "winningStage": "C3",
+        "outcomeType": "fail",
+        "routeSuggestion": "Fail",
+        "evidence": "C3: extraction returned 0 events despite C2 promising (score=0)",
+        "roundNumber": 3,
+        "success": false,
+        "derivedRuleApplied": {
+          "ruleKey": "friidrottsf-rbundet__NEEDS_SUBPAGE_DISCOVERY",
+          "pathsTested": [
+            "/events"
+          ],
+          "winnerPath": "/events"
+        },
+        "failType": "extraction_failure"
+      }
+    },
+    {
+      "source": {
+        "sourceId": "h-gskolan-i-sk-vde",
+        "url": "https://his.se/evenemang",
+        "roundsParticipated": 2,
+        "diversifiers": [
+          "has_404s",
+          "errors_16",
+          "failures_2",
+          "path_network"
+        ],
+        "queueReason": "toolB(preB): [breadth] unclear (0 likely, 0 possible) — Inga tydliga API:er hittades. 16 404s, 16 fel. Fler mönster kan finnas.. But: No network/API signals detected. GotEvent lesson: API structure ≠ usable event data. Routing to HTML.",
+        "enrichedData": {
+          "lastPathUsed": "network",
+          "lastEventsFound": 0,
+          "consecutiveFailures": 2,
+          "triageResult": null
+        }
+      },
+      "decision": "postTestC-manual-review",
+      "result": {
+        "sourceId": "h-gskolan-i-sk-vde",
+        "url": "https://his.se/evenemang",
+        "c0": {
+          "candidates": 0,
+          "winnerUrl": null,
+          "winnerDensity": 0,
+          "duration": 279,
+          "rootFallback": false,
+          "ruleAppliedSource": "none",
+          "ruleAppliedPaths": [],
+          "ruleWinnerPath": null
+        },
+        "c1": {
+          "verdict": "unfetchable",
+          "likelyJsRendered": false,
+          "timeTagCount": 0,
+          "dateCount": 0,
+          "duration": 79
+        },
+        "c2": {
+          "verdict": "unclear",
+          "score": 0,
+          "reason": "fetchHtml failed: HTTP 404",
+          "duration": 90
+        },
+        "extract": {
+          "eventsFound": 0,
+          "duration": 1
+        },
+        "winningStage": "C3",
+        "outcomeType": "fail",
+        "routeSuggestion": "Fail",
+        "evidence": "C0: no internal event candidates discovered",
+        "roundNumber": 3,
+        "success": false,
+        "failType": "discovery_failure"
+      }
+    },
+    {
+      "source": {
+        "sourceId": "sundsvall",
+        "url": "https://sundsvall.se/",
+        "roundsParticipated": 2,
+        "diversifiers": [
+          "has_404s",
+          "errors_18",
+          "failures_2",
+          "path_network"
+        ],
+        "queueReason": "toolB(preB): [breadth] unclear (0 likely, 0 possible) — Inga tydliga API:er hittades. 18 404s, 18 fel. Fler mönster kan finnas.. But: No network/API signals detected. GotEvent lesson: API structure ≠ usable event data. Routing to HTML.",
+        "enrichedData": {
+          "lastPathUsed": "network",
+          "lastEventsFound": 0,
+          "consecutiveFailures": 2,
+          "triageResult": null
+        }
+      },
+      "decision": "postTestC-manual-review",
+      "result": {
+        "sourceId": "sundsvall",
+        "url": "https://sundsvall.se/",
+        "c0": {
+          "candidates": 0,
+          "winnerUrl": "https://sundsvall.se/kultur",
+          "winnerDensity": 10,
+          "duration": 1689,
+          "rootFallback": false,
+          "ruleAppliedSource": "swedish-patterns",
+          "ruleAppliedPaths": [
+            "/events",
+            "/program",
+            "/kalender",
+            "/schema",
+            "/evenemang",
+            "/kalendarium",
+            "/aktiviteter",
+            "/kultur"
+          ],
+          "ruleWinnerPath": "/kultur"
+        },
+        "c1": {
+          "verdict": "weak",
+          "likelyJsRendered": false,
+          "timeTagCount": 0,
+          "dateCount": 0,
+          "duration": 233
+        },
+        "c2": {
+          "verdict": "promising",
+          "score": 13,
+          "reason": "[breadth_nojsonld] score=13(adj) >= 12? promising pg=event-list",
+          "duration": 267
+        },
+        "extract": {
+          "eventsFound": 0,
+          "duration": 9
+        },
+        "winningStage": "C3",
+        "outcomeType": "fail",
+        "routeSuggestion": "Fail",
+        "evidence": "C3: extraction returned 0 events despite C2 promising (score=13)",
+        "roundNumber": 3,
+        "success": false,
+        "failType": "extraction_failure"
+      }
+    }
+  ],
+  "allExitedIds": [
+    "borlange-kommun",
+    "kungsbacka",
+    "cirkus",
+    "friidrottsf-rbundet",
+    "h-gskolan-i-sk-vde",
+    "sundsvall"
+  ],
+  "lastSaved": "2026-04-13T03:20:48.675Z"
+}

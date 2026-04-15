@@ -78,6 +78,8 @@ export interface HtmlGateResult {
   reason: string;
   modelStatus: 'prelim_1src';
   htmlBytes?: number;
+  /** Raw HTML string fetched from targetUrl — use this for extractFromHtml to avoid double-fetch */
+  html?: string;
   phaseMode: 1 | 2 | 3;
   /** Weighted page-level score (after penalties, before candidate adjustment) */
   score: number;
@@ -506,6 +508,7 @@ export async function evaluateHtmlGate(
     reason: reasonParts.join(' '),
     modelStatus: 'prelim_1src',
     htmlBytes,
+    html: htmlResult.html,
     phaseMode,
     score,
     markersFound: markers.timeTags + markers.datePatterns + markers.eventTitles + markers.venueMarkers + markers.priceMarkers + markers.eventListStructure,

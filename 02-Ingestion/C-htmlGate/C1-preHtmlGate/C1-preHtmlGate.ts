@@ -33,6 +33,9 @@
  */
 import { fetchHtml } from '../../tools/fetchTools';
 import { load } from 'cheerio';
+import type { DerivedRulesStore } from '../c4-derived-rules';
+import { getRuleForSourceCategory, getGenericSubpagePaths } from '../c4-derived-rules';
+import { FailCategory } from '../C4-ai-analysis';
 
 /**
  * Möjliga utfall från C1-preHtmlGate triage
@@ -49,6 +52,16 @@ export type PreGateCategorization = 'strong' | 'medium' | 'weak' | 'noise' | 'un
  * Result from the pre-HTML gate screening pass.
  * Flat diagnostic — no routing decision, no weighted scoring.
  */
+/**
+ * Early routing decision — only set for very strong signals.
+ * null = no strong signal detected, use normal C1 flow.
+ */
+export type EarlyRouteDecision = 'A' | 'B' | 'D' | null;
+
+/**
+ * Result from the pre-HTML gate screening pass.
+ * Flat diagnostic — no routing decision, no weighted scoring.
+ */
 export interface PreGateResult {
   /** Source URL */
   url: string;
@@ -58,6 +71,8 @@ export interface PreGateResult {
   fetchError?: string;
   /** HTML byte size if fetched */
   htmlBytes?: number;
+  /** Raw HTML string fetched from targetUrl — use this for extractFromHtml to avoid double-fetch */
+  html?: string;
   /** Whether <main> was found in the document */
   hasMain: boolean;
   /** Whether <article> was found */
@@ -88,6 +103,8 @@ export interface PreGateResult {
   categorization: PreGateCategorization;
   /** Human-readable summary of what was found */
   reason: string;
+  /** Early routing decision — only set for very strong generic signals */
+  earlyRoute: EarlyRouteDecision;
 }
 
 /**
@@ -136,6 +153,7 @@ export async function screenUrl(url: string): Promise<PreGateResult> {
       timeTagCount: 0, isoDateCount: 0, sweDateCount: 0, dateCount: 0,
       headingCount: 0, listContainerCount: 0, listItemCount: 0, linkCount: 0,
       venueMarkerCount: 0, priceMarkerCount: 0, likelyJsRendered: false,
+      earlyRoute: null,
     };
   }
 
@@ -183,13 +201,39 @@ export async function screenUrl(url: string): Promise<PreGateResult> {
     reason = `tt=${timeTagCount} d=${dateCount} h=${headingCount} li=${listItemCount}`;
   } else {
     categorization = 'noise';
-    reason = `low-signal page (tt=${timeTagCount} d=${dateCount} h=${headingCount})`;
+    reason: `low-signal page (tt=${timeTagCount} d=${dateCount} h=${headingCount})`;
+  }
+
+  // ─────────────────────────────────────────────────────────────
+  // EARLY ROUTING — only strong generic signals, very conservative
+  // ─────────────────────────────────────────────────────────────
+  let earlyRoute: EarlyRouteDecision = null;
+
+  // SIGNAL A/B: Clear structured-data endpoint (JSON/RSS/ICS/API)
+  // Strong signals: URL file extension OR content-type link tag
+  const urlLower = url.toLowerCase();
+  const hasJsonExt  = urlLower.endsWith('.json');
+  const hasRssExt   = urlLower.endsWith('.rss') || urlLower.endsWith('.xml') || urlLower.endsWith('.atom');
+  const hasIcsExt   = urlLower.endsWith('.ics');
+  const hasApiPath  = /\/api\//.test(url) || /\/json\//.test(url) || /\/feed\//.test(url);
+  const hasAlternateJson = $('link[type="application/json"], link[type="application/feed+json"], link[type="application/atom+xml"]').length > 0;
+
+  if (hasJsonExt || hasRssExt || hasIcsExt || hasApiPath || hasAlternateJson) {
+    earlyRoute = 'A'; // Structured-data path (JSON/RSS extraction)
+  }
+
+  // SIGNAL D: Clear JS shell with no event content
+  // Requires: likelyJsRendered + very few links + decent page size (not empty/cached)
+  const jsShellSignal = !hasMain && linkCount < 5 && likelyJsRendered && htmlBytes > 50000;
+  if (jsShellSignal) {
+    earlyRoute = 'D'; // JS-render gate needed
   }
 
   return {
     url,
     fetchable: true,
     htmlBytes,
+    html: r.html,
     hasMain,
     hasArticle,
     timeTagCount,
@@ -205,5 +249,86 @@ export async function screenUrl(url: string): Promise<PreGateResult> {
     likelyJsRendered,
     categorization,
     reason,
+    earlyRoute,
   };
+}
+
+/**
+ * C1 med stöd för derived rules (C4 feedback loop).
+ *
+ * Om en source har en NEEDS_SUBPAGE_DISCOVERY rule med suggestedPaths:
+ * - Testar source URL först (vanligt screenUrl)
+ * - Vid fail: testar varje suggestedPath som candidate URL
+ * - Returnerar bästa resultatet bland alla candidates
+ *
+ * Regel最后一次:
+ * - sourceId behövs för att slå upp rule
+ * - derivedRules behövs för att hämta regler
+ * - Base URL behövs för att bygga candidate URLs
+ */
+export async function screenUrlWithDerivedRules(
+  sourceId: string,
+  baseUrl: string,
+  derivedRules?: DerivedRulesStore
+): Promise<PreGateResult & { testedSubpages?: string[]; bestSubpageUrl?: string }> {
+  // Steg 1: Testa source URL
+  const initialResult = await screenUrl(baseUrl);
+
+  // Steg 2: Om redan stark candidate, returnera direkt
+  if (initialResult.categorization === 'strong' || initialResult.categorization === 'medium') {
+    return { ...initialResult, testedSubpages: [], bestSubpageUrl: undefined };
+  }
+
+  // Steg 3: Kolla om det finns en NEEDS_SUBPAGE_DISCOVERY rule
+  // SOURCE-SPECIFIC RULE HAR HÖGST PRIORITET (från c4-derived-rules.jsonl)
+  let rule = derivedRules
+    ? getRuleForSourceCategory(derivedRules, sourceId, FailCategory.NEEDS_SUBPAGE_DISCOVERY)
+    : null;
+
+  // Steg 3b: GENERIC FALLBACK från improvements-bank.jsonl (via IMP-006)
+  // Endast om ingen source-specifik rule finns
+  const subpagePaths = rule?.suggestedPaths?.length
+    ? rule.suggestedPaths
+    : getGenericSubpagePaths(FailCategory.NEEDS_SUBPAGE_DISCOVERY);
+
+  if (subpagePaths.length === 0) {
+    return { ...initialResult, testedSubpages: [], bestSubpageUrl: undefined };
+  }
+
+  // Steg 4: Bygg candidate URLs och testa dem
+  const testedSubpages: string[] = [];
+  const baseOrigin = new URL(baseUrl).origin;
+
+  for (const suggestedPath of subpagePaths) {
+    const candidateUrl = `${baseOrigin}${suggestedPath}`;
+    testedSubpages.push(candidateUrl);
+
+    const candidateResult = await screenUrl(candidateUrl);
+
+    // Behåll bästa candidate baserat på categorization
+    if (candidateResult.categorization === 'strong' || candidateResult.categorization === 'medium') {
+      console.log(`[C1-DerivedRules] Found better candidate via subpage: ${candidateUrl} → ${candidateResult.categorization}`);
+      return {
+        ...candidateResult,
+        testedSubpages,
+        bestSubpageUrl: candidateUrl,
+      };
+    }
+
+    // Behåll bästa även om 'weak' (förbättring mot 'noise'/'no-main')
+    if (
+      candidateResult.categorization === 'weak' &&
+      (initialResult.categorization === 'noise' || initialResult.categorization === 'no-main')
+    ) {
+      console.log(`[C1-DerivedRules] Improved via subpage: ${candidateUrl} → ${candidateResult.categorization}`);
+      return {
+        ...candidateResult,
+        testedSubpages,
+        bestSubpageUrl: candidateUrl,
+      };
+    }
+  }
+
+  // Alla candidates misslyckades, returnera initial result
+  return { ...initialResult, testedSubpages, bestSubpageUrl: undefined };
 }

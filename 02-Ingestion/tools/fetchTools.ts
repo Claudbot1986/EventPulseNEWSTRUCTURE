@@ -12,44 +12,138 @@ export interface FetchResult {
   data?: any;
   error?: string;
   statusCode?: number;
+  /** Final URL after following redirects (for debugging/auditing) */
+  finalUrl?: string;
+  /** Redirect chain for auditing: ['301:/path', '308:/other'] */
+  redirectChain?: string[];
 }
 
 /**
- * Fetch HTML content from a URL
+ * Fetch HTML content from a URL.
+ * Follows 301/302/307/308 redirects up to MAX_REDIRECTS.
+ * Same-domain redirects only for security.
+ * Returns content from the final non-redirect URL.
  */
+const MAX_REDIRECTS = 3;
+
 export async function fetchHtml(url: string, options: {
   headers?: Record<string, string>;
   timeout?: number;
 } = {}): Promise<FetchResult> {
-  try {
-    const response = await axios.get(url, {
-      headers: {
-        'User-Agent': 'EventPulse/1.0 (event-ingestion)',
-        'Accept': 'text/html,application/xhtml+xml,*/*',
-        ...options.headers,
-      },
-      timeout: options.timeout || 30000,
-      validateStatus: (status) => status < 500,
-    });
+  let currentUrl = url.replace(/\/+$/, '') || '/';
+  const redirectChain: string[] = [];
+  const seenUrls = new Set<string>();
 
-    if (response.status !== 200) {
+  while (true) {
+    // Loop detection (uses normalized URLs)
+    if (seenUrls.has(currentUrl)) {
       return {
         success: false,
-        error: `HTTP ${response.status}`,
-        statusCode: response.status,
+        error: `Redirect loop detected: ${currentUrl}`,
+        finalUrl: currentUrl,
+        redirectChain,
       };
     }
+    seenUrls.add(currentUrl);
 
-    return {
-      success: true,
-      html: response.data,
-      statusCode: response.status,
-    };
-  } catch (err: any) {
-    return {
-      success: false,
-      error: err.message,
-    };
+    try {
+      const response = await axios.get(currentUrl, {
+        headers: {
+          'User-Agent': 'EventPulse/1.0 (event-ingestion)',
+          'Accept': 'text/html,application/xhtml+xml,*/*',
+          ...options.headers,
+        },
+        timeout: options.timeout || 30000,
+        validateStatus: (status) => status < 500,
+        maxRedirects: 0, // we handle redirects manually to capture final URL
+      });
+
+      if (response.status >= 300 && response.status < 400) {
+        const location = response.headers['location'];
+        if (!location) {
+          return {
+            success: false,
+            error: `HTTP ${response.status} without Location header`,
+            statusCode: response.status,
+            finalUrl: currentUrl,
+            redirectChain,
+          };
+        }
+
+        // Resolve relative Location against current URL
+        let nextUrl: string;
+        try {
+          nextUrl = new URL(location, currentUrl).href;
+        } catch {
+          return {
+            success: false,
+            error: `Invalid redirect Location: ${location}`,
+            statusCode: response.status,
+            finalUrl: currentUrl,
+            redirectChain,
+          };
+        }
+
+        // Same-domain only — block cross-domain redirects for security.
+        // Allow www subdomain redirects (same registered domain, stripped for comparison).
+        const currentUrlObj = new URL(currentUrl);
+        const nextUrlObj = new URL(nextUrl);
+        const currentBase = currentUrlObj.hostname.replace(/^www\./, '');
+        const nextBase = nextUrlObj.hostname.replace(/^www\./, '');
+        if (currentBase !== nextBase) {
+          return {
+            success: false,
+            error: `Cross-domain redirect blocked: ${currentUrlObj.hostname} → ${nextUrlObj.hostname}`,
+            statusCode: response.status,
+            finalUrl: currentUrl,
+            redirectChain,
+          };
+        }
+
+        // Normalize trailing slashes before loop detection and before next iteration.
+        // /events/ and /events are the same URL — prevents /path ↔ /path/ oscillation.
+        const normalizedNext = nextUrl.replace(/\/+$/, '') || '/';
+
+        redirectChain.push(`${response.status}:${normalizedNext}`);
+        currentUrl = normalizedNext;
+
+        if (redirectChain.length >= MAX_REDIRECTS) {
+          return {
+            success: false,
+            error: `Exceeded ${MAX_REDIRECTS} redirects`,
+            finalUrl: currentUrl,
+            redirectChain,
+          };
+        }
+        continue;
+      }
+
+      if (response.status !== 200) {
+        return {
+          success: false,
+          error: `HTTP ${response.status}`,
+          statusCode: response.status,
+          finalUrl: currentUrl,
+          redirectChain,
+        };
+      }
+
+      return {
+        success: true,
+        html: response.data,
+        statusCode: response.status,
+        finalUrl: currentUrl,
+        redirectChain,
+      };
+    } catch (err: any) {
+      // Network-level errors (DNS, timeout, etc.) — fail immediately
+      return {
+        success: false,
+        error: err.message,
+        finalUrl: currentUrl,
+        redirectChain,
+      };
+    }
   }
 }
 

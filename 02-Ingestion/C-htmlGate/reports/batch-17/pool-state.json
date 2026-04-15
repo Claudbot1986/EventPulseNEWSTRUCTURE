@@ -1,0 +1,137 @@
+{
+  "poolRoundNumber": 1,
+  "activePool": [],
+  "exited": [
+    {
+      "source": {
+        "sourceId": "borlange-kommun",
+        "url": "https://borlange.se/",
+        "roundsParticipated": 0,
+        "diversifiers": [
+          "has_404s",
+          "errors_18",
+          "failures_2",
+          "path_network"
+        ],
+        "queueReason": "toolB(preB): [breadth] unclear (0 likely, 0 possible) — Inga tydliga API:er hittades. 18 404s, 18 fel. Fler mönster kan finnas.. But: No network/API signals detected. GotEvent lesson: API structure ≠ usable event data. Routing to HTML.",
+        "enrichedData": {
+          "lastPathUsed": "network",
+          "lastEventsFound": 0,
+          "consecutiveFailures": 2,
+          "triageResult": null
+        }
+      },
+      "decision": "postTestC-UI",
+      "result": {
+        "sourceId": "borlange-kommun",
+        "url": "https://borlange.se/",
+        "c0": {
+          "candidates": 0,
+          "winnerUrl": "https://borlange.se/evenemang",
+          "winnerDensity": 125,
+          "duration": 2602,
+          "rootFallback": false,
+          "ruleAppliedSource": "swedish-patterns",
+          "ruleAppliedPaths": [
+            "/events",
+            "/program",
+            "/kalender",
+            "/schema",
+            "/events",
+            "/program",
+            "/kalender",
+            "/schema",
+            "/evenemang"
+          ],
+          "ruleWinnerPath": "/evenemang"
+        },
+        "c1": {
+          "verdict": "strong",
+          "likelyJsRendered": false,
+          "timeTagCount": 18,
+          "dateCount": 20,
+          "duration": 274
+        },
+        "c2": {
+          "verdict": "promising",
+          "score": 145,
+          "reason": "[breadth_nojsonld] score=145(adj) >= 12? promising pg=time-tag neg=news-article cand=cards=medium(12/12),lists=weak(1t 1l 1d)",
+          "duration": 212
+        },
+        "extract": {
+          "eventsFound": 10,
+          "duration": 17
+        },
+        "winningStage": "C3",
+        "outcomeType": "extract_success",
+        "routeSuggestion": "UI",
+        "evidence": "extracted 10 events from HTML",
+        "roundNumber": 1,
+        "success": true
+      }
+    },
+    {
+      "source": {
+        "sourceId": "oland",
+        "url": "https://oland.se/",
+        "roundsParticipated": 0,
+        "diversifiers": [
+          "has_404s",
+          "errors_17",
+          "failures_2",
+          "path_network"
+        ],
+        "queueReason": "toolB(preB): [breadth] unclear (0 likely, 0 possible) — Inga tydliga API:er hittades. 17 404s, 17 fel. Fler mönster kan finnas.. But: No network/API signals detected. GotEvent lesson: API structure ≠ usable event data. Routing to HTML.",
+        "enrichedData": {
+          "lastPathUsed": "network",
+          "lastEventsFound": 0,
+          "consecutiveFailures": 2,
+          "triageResult": null
+        }
+      },
+      "decision": "postTestC-UI",
+      "result": {
+        "sourceId": "oland",
+        "url": "https://oland.se/",
+        "c0": {
+          "candidates": 6,
+          "winnerUrl": "https://oland.se/kalender",
+          "winnerDensity": 14,
+          "duration": 3583,
+          "rootFallback": false,
+          "ruleAppliedSource": "link-discovery",
+          "ruleAppliedPaths": [],
+          "ruleWinnerPath": "/kalender"
+        },
+        "c1": {
+          "verdict": "weak",
+          "likelyJsRendered": false,
+          "timeTagCount": 0,
+          "dateCount": 9,
+          "duration": 156
+        },
+        "c2": {
+          "verdict": "promising",
+          "score": 12,
+          "reason": "[breadth_nojsonld] score=12(adj) >= 12? promising pg=date-pattern",
+          "duration": 191
+        },
+        "extract": {
+          "eventsFound": 1,
+          "duration": 8
+        },
+        "winningStage": "C3",
+        "outcomeType": "extract_success",
+        "routeSuggestion": "UI",
+        "evidence": "extracted 1 events from HTML",
+        "roundNumber": 1,
+        "success": true
+      }
+    }
+  ],
+  "allExitedIds": [
+    "borlange-kommun",
+    "oland"
+  ],
+  "lastSaved": "2026-04-12T18:26:24.829Z"
+}

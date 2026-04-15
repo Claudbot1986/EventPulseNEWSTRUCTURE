@@ -616,6 +616,9 @@ export function extractFromHtml(html: string, source: string, baseUrl?: string):
       september: '09', oktober: '10', november: '11', december: '12',
     };
 
+    // ISO date pattern in text: YYYY-MM-DD
+    const isoDateRegex = /(\d{4})-(\d{2})-(\d{2})/g;
+
     // Extract date from Swedish text
     function extractSwedishDate(text: string): string | null {
       sweDateRegex.lastIndex = 0;
@@ -625,6 +628,22 @@ export function extractFromHtml(html: string, source: string, baseUrl?: string):
         const month = sweMonthMap[monthName.toLowerCase()];
         if (month) {
           return `${year}-${month}-${day.padStart(2, '0')}`;
+        }
+      }
+      return null;
+    }
+
+    // Extract date from ISO text pattern (YYYY-MM-DD)
+    function extractIsoDateFromText(text: string): string | null {
+      isoDateRegex.lastIndex = 0;
+      const match = isoDateRegex.exec(text);
+      if (match) {
+        const [, year, month, day] = match;
+        // Validate reasonable date values
+        const m = parseInt(month, 10);
+        const d = parseInt(day, 10);
+        if (m >= 1 && m <= 12 && d >= 1 && d <= 31) {
+          return `${year}-${month}-${day}`;
         }
       }
       return null;
@@ -789,6 +808,51 @@ export function extractFromHtml(html: string, source: string, baseUrl?: string):
       }
     }
 
+    // Also scan page text for ISO dates (YYYY-MM-DD) and build events from them
+    // This catches sources like varmland.se that embed ISO dates in text
+    isoDateRegex.lastIndex = 0;
+    let isoMatch;
+    while ((isoMatch = isoDateRegex.exec(pageText)) !== null) {
+      const [, year, month, day] = isoMatch;
+      // Validate reasonable date values
+      const m = parseInt(month, 10);
+      const d = parseInt(day, 10);
+      if (m < 1 || m > 12 || d < 1 || d > 31) continue;
+
+      const dateStr = `${year}-${month}-${day}`;
+      const key = `iso-text-date|${dateStr}`;
+      if (seenKeys.has(key)) continue;
+
+      // Find nearby title (look for capitalized text near the date)
+      const datePos = pageText.indexOf(isoMatch[0]);
+      const snippet = pageText.substring(Math.max(0, datePos - 100), datePos + 100);
+      const titleMatch = snippet.match(/[A-ZÄÖÅ][^.!?\n]{5,60}(?=\s*[-–—:.|,])/);
+
+      if (titleMatch) {
+        const title = titleMatch[0].replace(/\s+/g, ' ').trim();
+        if (title.length > 5) {
+          seenKeys.add(key);
+          events.push({
+            title,
+            date: dateStr,
+            venue: source,
+            source,
+            sourceUrl: baseUrl,
+            confidence: {
+              score: 0.4,
+              hasTitle: true,
+              hasDate: true,
+              hasVenue: false,
+              hasUrl: false,
+              hasDescription: false,
+              hasTicketInfo: false,
+              signals: ['html-iso-text-date', 'html-title-snippet'],
+            },
+          });
+        }
+      }
+    }
+
     // Strategy 4: <time datetime="ISO-date"> elements (Tribe Events Calendar)
     // Many Swedish venues use The Events Calendar (Tribe) plugin which embeds
     // dates in <time> tags with ISO datetime attributes, not in URLs
@@ -893,6 +957,202 @@ export function extractFromHtml(html: string, source: string, baseUrl?: string):
         }
       });
     }
+
+    // Strategy 5: Generic <time datetime> extraction for non-Tribe event containers
+    // IMP-001: Captures events from any structured event page using <time datetime> markup
+    // that doesn't follow Tribe Events class naming conventions.
+    // Examples: match-link__event (svenskafotbollf), appointment blocks, program pages
+    //
+    // Filter strategy:
+    // - Accept: containers with class containing event/match/appointment/game/kalender/program/agenda
+    // - Reject: time tags inside nav, breadcrumb, footer, or news-* class containers
+    const eventContainerSelectors = [
+      '[class*="event"][class*="item"]',
+      '[class*="event"][class*="card"]',
+      '[class*="event"][class*="row"]',
+      '[class*="match"][class*="item"]',
+      '[class*="match"][class*="row"]',
+      '[class*="match"][class*="event"]',
+      '[class*="appointment"]',
+      '[class*="program"][class*="item"]',
+      '[class*="kalender"][class*="item"]',
+      '[class*="agenda"]',
+      'li[class*="event"]',
+      'li[class*="match"]',
+      'li[class*="appointment"]',
+    ];
+    const newsSelectors = [
+      '[class*="news"]',
+      '[class*="article"]',
+      '[class*="blog"]',
+      '[class*="post"]',
+    ];
+    const navSelectors = ['nav', 'footer', '[class*="breadcrumb"]', '[class*="breadcrumbs"]'];
+
+    function isInEventContainer($el: any): boolean {
+      for (const sel of eventContainerSelectors) {
+        if ($el.closest(sel).length > 0) return true;
+      }
+      return false;
+    }
+
+    function isRejectedContainer($el: any): boolean {
+      for (const sel of navSelectors) {
+        if ($el.closest(sel).length > 0) return true;
+      }
+      for (const sel of newsSelectors) {
+        if ($el.closest(sel).length > 0) return true;
+      }
+      return false;
+    }
+
+    function looksLikeDateLabel(text: string): boolean {
+      const normalized = text.toLowerCase().replace(/\s+/g, ' ').trim();
+      return (
+        normalized.length < 4 ||
+        /^(datum|date|time|kl|klockan|time:|date:)$/i.test(normalized) ||
+        /^\d{1,2}[\.:]\d{2}/.test(normalized) ||
+        /^(jan|feb|mar|apr|maj|jun|jul|aug|sep|okt|nov|dec)/i.test(normalized)
+      );
+    }
+
+    // Find all <time datetime> elements in the page
+    const allTimeEls = $('time[datetime]');
+    allTimeEls.each((_: any, el: any) => {
+      const $time = $(el);
+      const datetime = $time.attr('datetime') || '';
+
+      // Only process ISO dates
+      if (!/^\d{4}-\d{2}-\d{2}/.test(datetime)) return;
+
+      // Skip if in nav/breadcrumb/news
+      if (isRejectedContainer($time)) return;
+
+      // Find the event container (narrow: the element containing the time tag)
+      const $narrowContainer = (() => {
+        for (const sel of eventContainerSelectors) {
+          const $found = $time.closest(sel);
+          if ($found.length > 0) return $found;
+        }
+        // Fallback: use parent if it seems event-like
+        const $parent = $time.parent();
+        const parentClass = $parent.attr('class') || '';
+        if (/event|match|appointment|program/i.test(parentClass)) return $parent;
+        return null;
+      })();
+
+      if (!$narrowContainer || $narrowContainer.length === 0) return;
+
+      // Find the broader row container (parent of narrow container)
+      // This is where actual event links typically live
+      // e.g. for match-link__event span inside match-link__info-row div
+      const $rowContainer = $narrowContainer.parent();
+
+      // Find all candidate links in both narrow container AND its row container
+      function findEventLinks($searchIn: any): any {
+        return $searchIn.find('a[href]').filter((_: any, a: any) => {
+          const href = $(a).attr('href') || '';
+          const text = $(a).text().trim();
+          if (!href || href === '#' || href === '/' || href.startsWith('#')) return false;
+          if (href.length < 3) return false;
+          if (looksLikeDateLabel(text)) return false;
+          return true;
+        });
+      }
+
+      const $links = $rowContainer.length > 0
+        ? findEventLinks($rowContainer).length > 0
+          ? findEventLinks($rowContainer)
+          : findEventLinks($narrowContainer)
+        : findEventLinks($narrowContainer);
+
+      // Prefer link that contains the datetime or is near the time element
+      let $bestLink: any = null;
+      let bestDistance = Infinity;
+
+      $links.each((__: any, a: any) => {
+        const $a = $(a);
+        // Distance: count siblings between narrow container and link within row container
+        const $rowChildren = $rowContainer.children();
+        const containerIdx = $rowChildren.index($narrowContainer);
+        const linkIdx = $rowChildren.index($a);
+        const distance = Math.abs(containerIdx - linkIdx);
+        if (distance < bestDistance) {
+          bestDistance = distance;
+          $bestLink = $a;
+        }
+      });
+
+      // Fallback: use the first substantial link in row container
+      if (!$bestLink || $bestLink.length === 0) {
+        $links.each((__: any, a: any) => {
+          if (!$bestLink) {
+            const text = $(a).text().trim();
+            if (text.length > 3 && !looksLikeDateLabel(text)) {
+              $bestLink = $(a);
+            }
+          }
+        });
+      }
+
+      const href = $bestLink ? $bestLink.attr('href') || '' : '';
+      let linkText = $bestLink ? $bestLink.text().trim().replace(/\s+/g, ' ') : '';
+
+      // If no link text (or link is just a CTA like "Boka"), try to get title from sibling spans
+      if (linkText.length < 3 || looksLikeDateLabel(linkText) || /^(boka|book|köp|buy|läs|read|mer|more)$/i.test(linkText)) {
+        // Look for title span in the same row container
+        const titleSpan = $rowContainer.find('[class*="title"]').first();
+        const siblingTitle = titleSpan.text().trim().replace(/\s+/g, ' ');
+        if (siblingTitle.length > 3 && !looksLikeDateLabel(siblingTitle)) {
+          linkText = siblingTitle;
+        }
+      }
+
+      // Skip if still no meaningful title
+      if (linkText.length < 3 || looksLikeDateLabel(linkText)) return;
+
+      // Skip if href is a generic redirect URL without event identifier
+      if (href.includes('/go-to/') || href.includes('redirect=')) {
+        // These are redirect URLs — still use them but lower confidence
+      }
+
+      const [datePart, timePart] = datetime.split('T');
+      const key = `time-datetime|${datePart}|${href}|${linkText.substring(0, 20)}`;
+      if (seenKeys.has(key)) return;
+      seenKeys.add(key);
+
+      // Determine category from row container class (falls back to narrow container)
+      let category = 'culture';
+      const rowClass = $rowContainer.attr('class') || '';
+      const narrowClass = $narrowContainer.attr('class') || '';
+      const containerClass = rowClass || narrowClass;
+      if (/match|game|sport/i.test(containerClass)) category = 'sports';
+      else if (/konsert|musik/i.test(containerClass)) category = 'music';
+      else if (/teater|scen/i.test(containerClass)) category = 'theater';
+      else if (/utstallning|konst/i.test(containerClass)) category = 'art';
+      else if (/barn|familj/i.test(containerClass)) category = 'family';
+
+      events.push({
+        title: linkText,
+        date: datePart,
+        time: timePart ? timePart.substring(0, 5) : '',
+        venue: source,
+        url: resolveUrl(href),
+        category,
+        source,
+        sourceUrl: resolveUrl(href),
+        confidence: {
+          score: href.includes('/go-to/') ? 0.45 : 0.55,
+          hasTitle: true,
+          hasDate: true,
+          hasVenue: false,
+          hasUrl: true,
+          hasDescription: false,
+          hasTicketInfo: false,
+          signals: ['html-time-tag', 'generic-event-container'],
+        },
+      });
+    });
   } catch (e) {
     parseErrors.push(`HTML extraction error: ${(e as Error).message}`);
   }

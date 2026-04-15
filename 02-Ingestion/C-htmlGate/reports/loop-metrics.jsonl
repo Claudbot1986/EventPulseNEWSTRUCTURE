@@ -1,0 +1,436 @@
+{
+  "generatedAt": "2026-04-12T10:00:00.000Z (updated with P1+P2+P3 fixes)",
+  "schemaVersion": "1.0",
+  "summary": {
+    "totalBatches": 8,
+    "totalSourcesProcessed": 83,
+    "totalSuccessfulExtractions": 1,
+    "overallSuccessRate": 0.012,
+    "rulesCreatedTotal": 6,
+    "rulesAppliedTotal": 0,
+    "failSetRerunProofBatches": 0,
+    "improvementsBank": {
+      "total": 9,
+      "tested": 2,
+      "proposed": 5,
+      "validated": 1,
+      "partially_validated": 1
+    },
+    "failCategoryDistribution": {
+      "NEEDS_SUBPAGE_DISCOVERY": 13,
+      "LIKELY_JS_RENDER": 5,
+      "WRONG_ENTRY_PAGE": 6
+    }
+  },
+  "trendData": {
+    "successRateOverTime": [
+      {
+        "batchId": "batch-001",
+        "rate": 0.0,
+        "success": 0,
+        "total": 5
+      },
+      {
+        "batchId": "batch-002",
+        "rate": 0.0,
+        "success": 0,
+        "total": 4
+      },
+      {
+        "batchId": "batch-003",
+        "rate": 0.1,
+        "success": 1,
+        "total": 10
+      },
+      {
+        "batchId": "batch-011",
+        "rate": 0.0,
+        "success": 0,
+        "total": 10
+      },
+      {
+        "batchId": "batch-012",
+        "rate": 0.0,
+        "success": 0,
+        "total": 10
+      },
+      {
+        "batchId": "batch-13",
+        "rate": 0.0,
+        "success": 0,
+        "total": 12
+      },
+      {
+        "batchId": "batch-14",
+        "rate": 0.0,
+        "success": 0,
+        "total": 10
+      },
+      {
+        "batchId": "batch-15",
+        "rate": 0.0,
+        "success": 0,
+        "total": 22
+      }
+    ],
+    "rulesCreationVsApplication": {
+      "rulesCreatedTotal": 6,
+      "rulesAppliedCount": 0,
+      "applicationRate": 0.0
+    }
+  },
+  "improvementsByStatus": {
+    "proposed": [
+      {
+        "id": "IMP-001",
+        "name": "supports_time_datetime",
+        "problemType": "date_extraction",
+        "generalizable": true,
+        "siteSpecificRisk": "low",
+        "lastValidated": null,
+        "supportedByBatches": []
+      },
+      {
+        "id": "IMP-002",
+        "name": "supports_swedish_date_text",
+        "problemType": "date_extraction",
+        "generalizable": true,
+        "siteSpecificRisk": "low",
+        "lastValidated": null,
+        "supportedByBatches": []
+      },
+      {
+        "id": "IMP-003",
+        "name": "anchor_plus_nearby_date",
+        "problemType": "date_extraction",
+        "generalizable": true,
+        "siteSpecificRisk": "medium",
+        "lastValidated": null,
+        "supportedByBatches": []
+      },
+      {
+        "id": "IMP-004",
+        "name": "article_card_detection",
+        "problemType": "structure_detection",
+        "generalizable": true,
+        "siteSpecificRisk": "low",
+        "lastValidated": null,
+        "supportedByBatches": []
+      },
+      {
+        "id": "IMP-007",
+        "name": "list_item_event_blocks",
+        "problemType": "structure_detection",
+        "generalizable": true,
+        "siteSpecificRisk": "medium",
+        "lastValidated": null,
+        "supportedByBatches": []
+      }
+    ],
+    "tested": [
+      {
+        "id": "IMP-005",
+        "name": "js_shell_detection",
+        "problemType": "routing",
+        "generalizable": true,
+        "siteSpecificRisk": "none",
+        "lastValidated": "2026-04-06T07:00:00.000Z",
+        "supportedByBatches": [
+          "batch-001"
+        ]
+      },
+      {
+        "id": "IMP-008",
+        "name": "fetch_before_extract",
+        "problemType": "pipeline_bug",
+        "generalizable": false,
+        "siteSpecificRisk": "none",
+        "lastValidated": "2026-04-06T07:00:00.000Z",
+        "supportedByBatches": [
+          "batch-001",
+          "batch-010"
+        ]
+      }
+    ],
+    "validated": [
+      {
+        "id": "IMP-006",
+        "name": "subpage_required_before_c",
+        "problemType": "discovery",
+        "generalizable": true,
+        "siteSpecificRisk": "low",
+        "lastValidated": "2026-04-12T10:00:00.000Z",
+        "supportedByBatches": [
+          "batch-15"
+        ],
+        "note": "P1+P2 fix validates this improvement"
+      }
+    ],
+    "partially-validated": [
+      {
+        "id": "IMP-009",
+        "name": "candidate_subpage_paths_swedish_institutions",
+        "problemType": "discovery",
+        "generalizable": true,
+        "siteSpecificRisk": "low",
+        "lastValidated": "2026-04-12T10:00:00.000Z",
+        "supportedByBatches": [
+          "batch-14",
+          "batch-15"
+        ],
+        "note": "Swedish patterns implemented; P1 fix addresses c1Dsignal bypass; 0% hit rate in batch-15 needs investigation"
+      }
+    ]
+  },
+  "perBatch": [
+    {
+      "batchId": "batch-001",
+      "phase": "baseline",
+      "totalSources": 5,
+      "successCount": 0,
+      "successRate": 0.0,
+      "c0DiscoveryRate": 0.6,
+      "likelyJsRenderRate": 0.0,
+      "avgC2Score": 106.8,
+      "totalEventsFound": 0,
+      "avgEventsPerSource": 0.0,
+      "outcomeDistribution": {
+        "unknown": 5
+      },
+      "rulesCreated": 0,
+      "rulesApplied": false,
+      "failCategoryCounts": {},
+      "exitRoutes": {
+        "postTestC-UI": 0,
+        "postTestC-A": 0,
+        "postTestC-B": 0,
+        "postTestC-D": 0,
+        "postTestC-manual-review": 0
+      },
+      "stopReason": "completed",
+      "roundsCompleted": 1
+    },
+    {
+      "batchId": "batch-002",
+      "phase": "baseline",
+      "totalSources": 4,
+      "successCount": 0,
+      "successRate": 0.0,
+      "c0DiscoveryRate": 0.0,
+      "likelyJsRenderRate": 0.0,
+      "avgC2Score": 41.0,
+      "totalEventsFound": 0,
+      "avgEventsPerSource": 0.0,
+      "outcomeDistribution": {
+        "unknown": 4
+      },
+      "rulesCreated": 0,
+      "rulesApplied": false,
+      "failCategoryCounts": {},
+      "exitRoutes": {
+        "postTestC-UI": 0,
+        "postTestC-A": 0,
+        "postTestC-B": 0,
+        "postTestC-D": 0,
+        "postTestC-manual-review": 0
+      },
+      "stopReason": "completed",
+      "roundsCompleted": 1
+    },
+    {
+      "batchId": "batch-003",
+      "phase": "baseline",
+      "totalSources": 10,
+      "successCount": 1,
+      "successRate": 0.1,
+      "c0DiscoveryRate": 0.0,
+      "likelyJsRenderRate": 0.0,
+      "avgC2Score": 82.2,
+      "totalEventsFound": 1,
+      "avgEventsPerSource": 0.1,
+      "outcomeDistribution": {
+        "unknown": 10
+      },
+      "rulesCreated": 0,
+      "rulesApplied": false,
+      "failCategoryCounts": {},
+      "exitRoutes": {
+        "postTestC-UI": 0,
+        "postTestC-A": 0,
+        "postTestC-B": 0,
+        "postTestC-D": 0,
+        "postTestC-manual-review": 0
+      },
+      "stopReason": "completed",
+      "roundsCompleted": 1
+    },
+    {
+      "batchId": "batch-011",
+      "phase": "baseline",
+      "totalSources": 10,
+      "successCount": 0,
+      "successRate": 0.0,
+      "c0DiscoveryRate": 0.0,
+      "likelyJsRenderRate": 0.0,
+      "avgC2Score": 22.9,
+      "totalEventsFound": 0,
+      "avgEventsPerSource": 0.0,
+      "outcomeDistribution": {
+        "fail": 10
+      },
+      "rulesCreated": 0,
+      "rulesApplied": false,
+      "failCategoryCounts": {},
+      "exitRoutes": {
+        "postTestC-UI": 0,
+        "postTestC-A": 0,
+        "postTestC-B": 0,
+        "postTestC-D": 0,
+        "postTestC-manual-review": 0
+      },
+      "stopReason": "completed",
+      "roundsCompleted": 1
+    },
+    {
+      "batchId": "batch-012",
+      "phase": "baseline",
+      "totalSources": 10,
+      "successCount": 0,
+      "successRate": 0.0,
+      "c0DiscoveryRate": 0.3,
+      "likelyJsRenderRate": 0.0,
+      "avgC2Score": 22.9,
+      "totalEventsFound": 0,
+      "avgEventsPerSource": 0.0,
+      "outcomeDistribution": {
+        "fail": 10
+      },
+      "rulesCreated": 0,
+      "rulesApplied": false,
+      "failCategoryCounts": {},
+      "exitRoutes": {
+        "postTestC-UI": 0,
+        "postTestC-A": 0,
+        "postTestC-B": 0,
+        "postTestC-D": 0,
+        "postTestC-manual-review": 0
+      },
+      "stopReason": "completed",
+      "roundsCompleted": 1
+    },
+    {
+      "batchId": "batch-13",
+      "phase": "pool-loop",
+      "totalSources": 12,
+      "successCount": 0,
+      "successRate": 0.0,
+      "c0DiscoveryRate": null,
+      "likelyJsRenderRate": 0.2,
+      "avgC2Score": null,
+      "totalEventsFound": null,
+      "avgEventsPerSource": null,
+      "outcomeDistribution": {
+        "postTestC-UI": 0,
+        "postTestC-A": 0,
+        "postTestC-B": 0,
+        "postTestC-D": 2,
+        "postTestC-manual-review": 8
+      },
+      "rulesCreated": 0,
+      "rulesApplied": false,
+      "failSetRerunProof": false,
+      "failCategoryCounts": {},
+      "exitRoutes": {
+        "postTestC-UI": 0,
+        "postTestC-A": 0,
+        "postTestC-B": 0,
+        "postTestC-D": 2,
+        "postTestC-manual-review": 8
+      },
+      "stopReason": "max-rounds-reached",
+      "roundsCompleted": 3,
+      "poolExhausted": false
+    },
+    {
+      "batchId": "batch-14",
+      "phase": "pool-loop",
+      "totalSources": 10,
+      "successCount": 0,
+      "successRate": 0.0,
+      "c0DiscoveryRate": null,
+      "likelyJsRenderRate": 0.4,
+      "avgC2Score": null,
+      "totalEventsFound": null,
+      "avgEventsPerSource": null,
+      "outcomeDistribution": {
+        "postTestC-UI": 0,
+        "postTestC-A": 0,
+        "postTestC-B": 6,
+        "postTestC-D": 4,
+        "postTestC-manual-review": 0
+      },
+      "rulesCreated": 6,
+      "rulesApplied": false,
+      "failSetRerunProof": false,
+      "failCategoryCounts": {},
+      "exitRoutes": {
+        "postTestC-UI": 0,
+        "postTestC-A": 0,
+        "postTestC-B": 6,
+        "postTestC-D": 4,
+        "postTestC-manual-review": 0
+      },
+      "stopReason": "pool-exhausted",
+      "roundsCompleted": 1,
+      "poolExhausted": true
+    },
+    {
+      "batchId": "batch-15",
+      "phase": "pool-loop",
+      "totalSources": 22,
+      "successCount": 0,
+      "successRate": 0.0,
+      "c0DiscoveryRate": null,
+      "likelyJsRenderRate": 0.227,
+      "avgC2Score": null,
+      "totalEventsFound": null,
+      "avgEventsPerSource": null,
+      "outcomeDistribution": {
+        "postTestC-UI": 0,
+        "postTestC-A": 0,
+        "postTestC-B": 0,
+        "postTestC-D": 5,
+        "postTestC-manual-review": 17
+      },
+      "rulesCreated": 0,
+      "rulesApplied": false,
+      "failSetRerunProof": false,
+      "failCategoryCounts": {
+        "NEEDS_SUBPAGE_DISCOVERY": 13,
+        "LIKELY_JS_RENDER": 5,
+        "WRONG_ENTRY_PAGE": 6
+      },
+      "exitRoutes": {
+        "postTestC-UI": 0,
+        "postTestC-A": 0,
+        "postTestC-B": 0,
+        "postTestC-D": 5,
+        "postTestC-manual-review": 17
+      },
+      "stopReason": "max-rounds-reached",
+      "roundsCompleted": 3,
+      "poolExhausted": false
+    }
+  ],
+  "pendingP3": {
+    "nextRecommended": "IMP-001",
+    "reason": "date extraction from <time datetime> elements is low-risk, generalizable, directly addresses date_extraction problem type",
+    "remainingProposed": [
+      "IMP-001",
+      "IMP-002",
+      "IMP-003",
+      "IMP-004",
+      "IMP-007"
+    ]
+  }
+}

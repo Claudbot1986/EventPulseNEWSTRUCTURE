@@ -1,18 +1,18 @@
 {
   "version": 1,
-  "lastUpdated": "2026-04-13T17:02:43.942Z",
-  "totalBatchesAnalyzed": 17,
-  "totalSourcesProcessed": 262,
+  "lastUpdated": "2026-04-15T02:53:56.508Z",
+  "totalBatchesAnalyzed": 45,
+  "totalSourcesProcessed": 107,
   "dominantBottleneck": {
     "category": "UNKNOWN",
-    "count": 54,
-    "percentage": "20.6%",
+    "count": 251,
+    "percentage": "234.6%",
     "description": "C0 hittar inga event candidates på root URL. Swedish patterns hittar candidates men C1 likelyJsRendered=true triggar D-route och hoppar över C2/C3. Extraction körs aldrig."
   },
   "failCategoryDistribution": [
     {
       "category": "UNKNOWN",
-      "count": 54,
+      "count": 251,
       "sources": [
         "naturhistoriska-riksmuseet",
         "vega",
@@ -27,8 +27,40 @@
       ]
     },
     {
+      "category": "no_viable_path_found",
+      "count": 125,
+      "sources": [
+        "a6",
+        "kino",
+        "mosebacke",
+        "the-secret",
+        "repo-festival",
+        "malmo-folkets-park",
+        "vasteras-stadsteatern",
+        "alltimalmo",
+        "arbetsam",
+        "arkitekturgalleriet"
+      ]
+    },
+    {
+      "category": "ENTRY_PAGE_NO_EVENTS",
+      "count": 51,
+      "sources": [
+        "vasteras-stadsteatern",
+        "grona-lund",
+        "arkdes",
+        "goteborgs-stadsbibliotek",
+        "norrk-pings-tidningar",
+        "stersund-festival",
+        "junibacken",
+        "blekholmen",
+        "boplanet",
+        "bor-s-zoo-animagic"
+      ]
+    },
+    {
       "category": "WRONG_ENTRY_PAGE",
-      "count": 41,
+      "count": 49,
       "sources": [
         "karlskrona-hf",
         "malmo-hogskola",
@@ -44,7 +76,7 @@
     },
     {
       "category": "NEEDS_SUBPAGE_DISCOVERY",
-      "count": 28,
+      "count": 48,
       "sources": [
         "mittuniversitetet",
         "kungsbacka",
@@ -60,7 +92,7 @@
     },
     {
       "category": "LOW_VALUE_SOURCE",
-      "count": 22,
+      "count": 29,
       "sources": [
         "ois",
         "open-art",
@@ -76,7 +108,7 @@
     },
     {
       "category": "LIKELY_JS_RENDER",
-      "count": 14,
+      "count": 21,
       "sources": [
         "svenska-innebandyf-rbundet",
         "malmo-hogskola",
@@ -92,7 +124,7 @@
     },
     {
       "category": "EXTRACTION_PATTERN_MISMATCH",
-      "count": 10,
+      "count": 15,
       "sources": [
         "goteborgs-arkitekturgalleri",
         "svenska-fotbollf-rbundet",
@@ -100,15 +132,48 @@
         "borlange-kommun",
         "friidrottsf-rbundet",
         "sundsvall",
-        "mittuniversitetet"
+        "mittuniversitetet",
+        "kungliga-musikhogskolan",
+        "sparvag-city",
+        "grand"
+      ]
+    },
+    {
+      "category": "robots_or_policy_blocked",
+      "count": 11,
+      "sources": [
+        "goteborgs-stadsbibliotek",
+        "stromma",
+        "centuri",
+        "inkonst",
+        "goteborgsoperan",
+        "goteborgs-stadsteatern",
+        "nobelmuseet",
+        "medeltidsmuseet",
+        "sensus"
+      ]
+    },
+    {
+      "category": "insufficient_html_signal",
+      "count": 10,
+      "sources": [
+        "barnens-o",
+        "bk-hacken",
+        "dalarna",
+        "vaxjo-alcazar",
+        "tekniska-museet",
+        "regionteatern",
+        "stockholms-stadsteater",
+        "paddan",
+        "goteborgs-litteraturhus"
       ]
     }
   ],
   "ruleEffectiveness": {
-    "totalRulesGenerated": 75,
-    "totalRulesAppliedNextRound": 2,
+    "totalRulesGenerated": 226,
+    "totalRulesAppliedNextRound": 5,
     "totalRulesThatImprovedOutcome": 0,
-    "applicationRate": "2.7%",
+    "applicationRate": "2.2%",
     "note": "Learning loop never closed across all batches — 40 rules generated, 0 applied in next round, 0 improved outcomes. See batch-14 FAIL_SET_RERUN_PROOF."
   },
   "improvementAttempts": [
