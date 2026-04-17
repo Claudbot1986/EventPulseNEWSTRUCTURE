@@ -452,8 +452,8 @@ export async function inspectUrl(sourceUrl: string): Promise<NetworkInspectorRes
   const candidates: ApiCandidate[] = [];
   const errors: string[] = [];
 
-  // 1. Probe common patterns in parallel batches of 10 (was sequential ~300s, now ~15s)
-  const BATCH_SIZE = 10;
+  // 1. Probe common patterns in parallel batches of 30 (was sequential ~300s, now ~15s)
+  const BATCH_SIZE = 30;
   for (let i = 0; i < COMMON_PATTERNS.length; i += BATCH_SIZE) {
     const batch = COMMON_PATTERNS.slice(i, i + BATCH_SIZE);
     const results = await Promise.all(
