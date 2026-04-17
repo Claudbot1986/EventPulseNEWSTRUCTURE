@@ -1,20 +1,20 @@
 ## C4-AI Analysis Round 2 (batch-52)
 
-**Timestamp:** 2026-04-15T17:14:17.817Z
-**Sources analyzed:** 9
+**Timestamp:** 2026-04-15T17:53:36.970Z
+**Sources analyzed:** 10
 
 ### Overall Pattern
-C4-AI unavailable — fallback to retry-pool for all sources
+Top failure categories: 10× unclear
 
 ---
 
-### Source: stockholm-live
+### Source: kth
 
 | Field | Value |
 |-------|-------|
-| likelyCategory | analysis_unavailable |
+| likelyCategory | unclear |
 | failCategory | UNKNOWN |
-| failCategoryConfidence | 0.10 |
+| failCategoryConfidence | 0.50 |
 | nextQueue | retry-pool |
 | discoveryAttempted | false |
 
@@ -22,19 +22,19 @@ C4-AI unavailable — fallback to retry-pool for all sources
 (none)
 
 **improvementSignals:**
-- C4-AI unavailable — default to retry-pool
+- AI analysis unavailable
 
 **suggestedRules:**
 
 ---
 
-### Source: antikmassan
+### Source: andra-langgatan
 
 | Field | Value |
 |-------|-------|
-| likelyCategory | analysis_unavailable |
+| likelyCategory | unclear |
 | failCategory | UNKNOWN |
-| failCategoryConfidence | 0.10 |
+| failCategoryConfidence | 0.50 |
 | nextQueue | retry-pool |
 | discoveryAttempted | false |
 
@@ -42,19 +42,19 @@ C4-AI unavailable — fallback to retry-pool for all sources
 (none)
 
 **improvementSignals:**
-- C4-AI unavailable — default to retry-pool
+- AI analysis unavailable
 
 **suggestedRules:**
 
 ---
 
-### Source: slakthuset
+### Source: goteborgs-kulturfestival
 
 | Field | Value |
 |-------|-------|
-| likelyCategory | analysis_unavailable |
+| likelyCategory | unclear |
 | failCategory | UNKNOWN |
-| failCategoryConfidence | 0.10 |
+| failCategoryConfidence | 0.50 |
 | nextQueue | retry-pool |
 | discoveryAttempted | false |
 
@@ -62,19 +62,19 @@ C4-AI unavailable — fallback to retry-pool for all sources
 (none)
 
 **improvementSignals:**
-- C4-AI unavailable — default to retry-pool
+- AI analysis unavailable
 
 **suggestedRules:**
 
 ---
 
-### Source: ostersunds-fk
+### Source: gr-na-lund
 
 | Field | Value |
 |-------|-------|
-| likelyCategory | analysis_unavailable |
+| likelyCategory | unclear |
 | failCategory | UNKNOWN |
-| failCategoryConfidence | 0.10 |
+| failCategoryConfidence | 0.50 |
 | nextQueue | retry-pool |
 | discoveryAttempted | false |
 
@@ -82,19 +82,19 @@ C4-AI unavailable — fallback to retry-pool for all sources
 (none)
 
 **improvementSignals:**
-- C4-AI unavailable — default to retry-pool
+- AI analysis unavailable
 
 **suggestedRules:**
 
 ---
 
-### Source: friidrottsf-rbundet
+### Source: falun-konserthus
 
 | Field | Value |
 |-------|-------|
-| likelyCategory | analysis_unavailable |
+| likelyCategory | unclear |
 | failCategory | UNKNOWN |
-| failCategoryConfidence | 0.10 |
+| failCategoryConfidence | 0.50 |
 | nextQueue | retry-pool |
 | discoveryAttempted | false |
 
@@ -102,19 +102,19 @@ C4-AI unavailable — fallback to retry-pool for all sources
 (none)
 
 **improvementSignals:**
-- C4-AI unavailable — default to retry-pool
+- AI analysis unavailable
 
 **suggestedRules:**
 
 ---
 
-### Source: billetto-aggregator
+### Source: malmo-ff
 
 | Field | Value |
 |-------|-------|
-| likelyCategory | analysis_unavailable |
+| likelyCategory | unclear |
 | failCategory | UNKNOWN |
-| failCategoryConfidence | 0.10 |
+| failCategoryConfidence | 0.50 |
 | nextQueue | retry-pool |
 | discoveryAttempted | false |
 
@@ -122,19 +122,19 @@ C4-AI unavailable — fallback to retry-pool for all sources
 (none)
 
 **improvementSignals:**
-- C4-AI unavailable — default to retry-pool
+- AI analysis unavailable
 
 **suggestedRules:**
 
 ---
 
-### Source: naturhistoriska-museet
+### Source: goteborgs-stadsbibliotek
 
 | Field | Value |
 |-------|-------|
-| likelyCategory | analysis_unavailable |
+| likelyCategory | unclear |
 | failCategory | UNKNOWN |
-| failCategoryConfidence | 0.10 |
+| failCategoryConfidence | 0.50 |
 | nextQueue | retry-pool |
 | discoveryAttempted | false |
 
@@ -142,19 +142,19 @@ C4-AI unavailable — fallback to retry-pool for all sources
 (none)
 
 **improvementSignals:**
-- C4-AI unavailable — default to retry-pool
+- AI analysis unavailable
 
 **suggestedRules:**
 
 ---
 
-### Source: svenska-bowlingf-rbundet
+### Source: lth
 
 | Field | Value |
 |-------|-------|
-| likelyCategory | analysis_unavailable |
+| likelyCategory | unclear |
 | failCategory | UNKNOWN |
-| failCategoryConfidence | 0.10 |
+| failCategoryConfidence | 0.50 |
 | nextQueue | retry-pool |
 | discoveryAttempted | false |
 
@@ -162,19 +162,19 @@ C4-AI unavailable — fallback to retry-pool for all sources
 (none)
 
 **improvementSignals:**
-- C4-AI unavailable — default to retry-pool
+- AI analysis unavailable
 
 **suggestedRules:**
 
 ---
 
-### Source: vasteras-hockey
+### Source: ystad
 
 | Field | Value |
 |-------|-------|
-| likelyCategory | analysis_unavailable |
+| likelyCategory | unclear |
 | failCategory | UNKNOWN |
-| failCategoryConfidence | 0.10 |
+| failCategoryConfidence | 0.50 |
 | nextQueue | retry-pool |
 | discoveryAttempted | false |
 
@@ -182,7 +182,27 @@ C4-AI unavailable — fallback to retry-pool for all sources
 (none)
 
 **improvementSignals:**
-- C4-AI unavailable — default to retry-pool
+- AI analysis unavailable
+
+**suggestedRules:**
+
+---
+
+### Source: botaniska-tradgarden
+
+| Field | Value |
+|-------|-------|
+| likelyCategory | unclear |
+| failCategory | UNKNOWN |
+| failCategoryConfidence | 0.50 |
+| nextQueue | retry-pool |
+| discoveryAttempted | false |
+
+**discoveredPaths:**
+(none)
+
+**improvementSignals:**
+- AI analysis unavailable
 
 **suggestedRules:**
 

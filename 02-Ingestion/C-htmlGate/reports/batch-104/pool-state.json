@@ -1,0 +1,671 @@
+{
+  "poolRoundNumber": 3,
+  "activePool": [
+    {
+      "sourceId": "a6",
+      "url": "https://centeraj6.se/",
+      "roundsParticipated": 2,
+      "diversifiers": [
+        "failures_4"
+      ],
+      "queueReason": "[FINAL-DRAIN] Source left in postB-preC when batch 103 completed — routed to manual-review",
+      "enrichedData": {
+        "lastPathUsed": null,
+        "lastEventsFound": 0,
+        "consecutiveFailures": 4,
+        "triageResult": null
+      }
+    },
+    {
+      "sourceId": "abb-arena",
+      "url": "https://abb-arena.se/",
+      "roundsParticipated": 2,
+      "diversifiers": [
+        "failures_4"
+      ],
+      "queueReason": "[FINAL-DRAIN] Source left in postB-preC when batch 103 completed — routed to manual-review",
+      "enrichedData": {
+        "lastPathUsed": null,
+        "lastEventsFound": 0,
+        "consecutiveFailures": 4,
+        "triageResult": null
+      }
+    }
+  ],
+  "exited": [
+    {
+      "source": {
+        "sourceId": "nykopings-bis",
+        "url": "https://nbis.se/",
+        "roundsParticipated": 0,
+        "diversifiers": [
+          "path_jsonld"
+        ],
+        "queueReason": "[FINAL-DRAIN] Source left in postB-preC when batch 103 completed — routed to manual-review",
+        "enrichedData": {
+          "lastPathUsed": "jsonld",
+          "lastEventsFound": 0,
+          "consecutiveFailures": 0,
+          "triageResult": null
+        }
+      },
+      "decision": "postTestC-D",
+      "result": {
+        "sourceId": "nykopings-bis",
+        "url": "https://nbis.se/",
+        "c0": {
+          "candidates": 0,
+          "winnerUrl": null,
+          "winnerDensity": 0,
+          "duration": 3943,
+          "rootFallback": false,
+          "ruleAppliedSource": "none",
+          "ruleAppliedPaths": [
+            "/events",
+            "/program",
+            "/kalender",
+            "/schema",
+            "/evenemang",
+            "/kalendarium",
+            "/aktiviteter",
+            "/utställningar",
+            "/exhibition",
+            "/exhibitions",
+            "/exhibits",
+            "/visa",
+            "/scen",
+            "/teater",
+            "/repertoar",
+            "/forestillinger",
+            "/forestilling",
+            "/shown",
+            "/matcher",
+            "/tickets",
+            "/biljetter",
+            "/arena",
+            "/hall",
+            "/kultur",
+            "/fritid",
+            "/besok",
+            "/planera",
+            "/oppet",
+            "/konserter",
+            "/konsert"
+          ],
+          "ruleWinnerPath": null
+        },
+        "c1": {
+          "verdict": "no-main",
+          "likelyJsRendered": true,
+          "timeTagCount": 0,
+          "dateCount": 0,
+          "duration": 61
+        },
+        "c2": {
+          "verdict": "skipped",
+          "score": 0,
+          "reason": "c1-direct-route",
+          "duration": 0
+        },
+        "extract": {
+          "eventsFound": 0,
+          "duration": 0
+        },
+        "winningStage": "C1",
+        "outcomeType": "route_success",
+        "routeSuggestion": "D",
+        "evidence": "C1: likelyJsRendered=true + (timeTags=0 OR dates=0) — direct D route, C2/C3 skipped",
+        "roundNumber": 1,
+        "success": false
+      }
+    },
+    {
+      "source": {
+        "sourceId": "scandinavium",
+        "url": "https://scandinavium.se/",
+        "roundsParticipated": 0,
+        "diversifiers": [
+          "path_jsonld"
+        ],
+        "queueReason": "[FINAL-DRAIN] Source left in postB-preC when batch 103 completed — routed to manual-review",
+        "enrichedData": {
+          "lastPathUsed": "jsonld",
+          "lastEventsFound": 0,
+          "consecutiveFailures": 0,
+          "triageResult": null
+        }
+      },
+      "decision": "postTestC-UI",
+      "result": {
+        "sourceId": "scandinavium",
+        "url": "https://scandinavium.se/",
+        "c0": {
+          "candidates": 10,
+          "winnerUrl": "https://scandinavium.se/",
+          "winnerDensity": 121,
+          "duration": 2507,
+          "rootFallback": false,
+          "ruleAppliedSource": "link-discovery",
+          "ruleAppliedPaths": [],
+          "ruleWinnerPath": "/"
+        },
+        "c1": {
+          "verdict": "weak",
+          "likelyJsRendered": false,
+          "timeTagCount": 0,
+          "dateCount": 0,
+          "duration": 190
+        },
+        "c2": {
+          "verdict": "promising",
+          "score": 38,
+          "reason": "[breadth_nojsonld] score=38(adj) >= 6? promising pg=venue-marker cand=cards=medium(4/4),lists=none",
+          "duration": 204
+        },
+        "extract": {
+          "eventsFound": 7,
+          "duration": 20
+        },
+        "winningStage": "C3",
+        "outcomeType": "extract_success",
+        "routeSuggestion": "UI",
+        "evidence": "extracted 7 events from HTML",
+        "roundNumber": 1,
+        "success": true
+      }
+    },
+    {
+      "source": {
+        "sourceId": "malmo-icc",
+        "url": "https://malmöicc.se/",
+        "roundsParticipated": 2,
+        "diversifiers": [
+          "path_jsonld"
+        ],
+        "queueReason": "[FINAL-DRAIN] Source left in postB-preC when batch 103 completed — routed to manual-review",
+        "enrichedData": {
+          "lastPathUsed": "jsonld",
+          "lastEventsFound": 0,
+          "consecutiveFailures": 0,
+          "triageResult": null
+        }
+      },
+      "decision": "postTestC-manual-review",
+      "result": {
+        "sourceId": "malmo-icc",
+        "url": "https://malmöicc.se/",
+        "c0": {
+          "candidates": 0,
+          "winnerUrl": null,
+          "winnerDensity": 0,
+          "duration": 1,
+          "rootFallback": false,
+          "ruleAppliedSource": "none",
+          "ruleAppliedPaths": [],
+          "ruleWinnerPath": null
+        },
+        "c1": {
+          "verdict": "unfetchable",
+          "likelyJsRendered": false,
+          "timeTagCount": 0,
+          "dateCount": 0,
+          "duration": 1
+        },
+        "c2": {
+          "verdict": "unclear",
+          "score": 0,
+          "reason": "fetchHtml failed: getaddrinfo ENOTFOUND xn--malmicc-d1a.se",
+          "duration": 2
+        },
+        "extract": {
+          "eventsFound": 0,
+          "duration": 0
+        },
+        "winningStage": "C3",
+        "outcomeType": "fail",
+        "routeSuggestion": "Fail",
+        "evidence": "C0: no internal event candidates discovered",
+        "roundNumber": 3,
+        "success": false,
+        "failType": "discovery_failure"
+      }
+    },
+    {
+      "source": {
+        "sourceId": "folkoperan",
+        "url": "https://folkoperan.se/",
+        "roundsParticipated": 2,
+        "diversifiers": [
+          "events_1",
+          "path_network"
+        ],
+        "queueReason": "[FINAL-DRAIN] Source left in postB-preC when batch 103 completed — routed to manual-review",
+        "enrichedData": {
+          "lastPathUsed": "network",
+          "lastEventsFound": 1,
+          "consecutiveFailures": 0,
+          "triageResult": null
+        }
+      },
+      "decision": "postTestC-manual-review",
+      "result": {
+        "sourceId": "folkoperan",
+        "url": "https://folkoperan.se/",
+        "c0": {
+          "candidates": 8,
+          "winnerUrl": "https://folkoperan.se/stod-oss/folkoperans-talangprogram/",
+          "winnerDensity": 0,
+          "duration": 1890,
+          "rootFallback": false,
+          "ruleAppliedSource": "link-discovery",
+          "ruleAppliedPaths": [],
+          "ruleWinnerPath": "https://folkoperan.se/stod-oss/folkoperans-talangprogram/"
+        },
+        "c1": {
+          "verdict": "unfetchable",
+          "likelyJsRendered": false,
+          "timeTagCount": 0,
+          "dateCount": 0,
+          "duration": 145
+        },
+        "c2": {
+          "verdict": "unclear",
+          "score": 0,
+          "reason": "fetchHtml failed: Redirect loop detected: https://folkoperan.se/stod-oss/folkoperans-talangprogram",
+          "duration": 110
+        },
+        "extract": {
+          "eventsFound": 0,
+          "duration": 0
+        },
+        "winningStage": "C3",
+        "outcomeType": "fail",
+        "routeSuggestion": "Fail",
+        "evidence": "C2: verdict=unclear, score=0 too low",
+        "roundNumber": 3,
+        "success": false,
+        "failType": "screening_failure"
+      }
+    },
+    {
+      "source": {
+        "sourceId": "kalmar-museum",
+        "url": "https://kalmar-museum.se/",
+        "roundsParticipated": 2,
+        "diversifiers": [
+          "failures_2"
+        ],
+        "queueReason": "[FINAL-DRAIN] Source left in postB-preC when batch 103 completed — routed to manual-review",
+        "enrichedData": {
+          "lastPathUsed": null,
+          "lastEventsFound": 0,
+          "consecutiveFailures": 2,
+          "triageResult": null
+        }
+      },
+      "decision": "postTestC-manual-review",
+      "result": {
+        "sourceId": "kalmar-museum",
+        "url": "https://kalmar-museum.se/",
+        "c0": {
+          "candidates": 0,
+          "winnerUrl": null,
+          "winnerDensity": 0,
+          "duration": 4,
+          "rootFallback": false,
+          "ruleAppliedSource": "none",
+          "ruleAppliedPaths": [],
+          "ruleWinnerPath": null
+        },
+        "c1": {
+          "verdict": "unfetchable",
+          "likelyJsRendered": false,
+          "timeTagCount": 0,
+          "dateCount": 0,
+          "duration": 2
+        },
+        "c2": {
+          "verdict": "unclear",
+          "score": 0,
+          "reason": "fetchHtml failed: getaddrinfo ENOTFOUND kalmar-museum.se",
+          "duration": 2
+        },
+        "extract": {
+          "eventsFound": 0,
+          "duration": 0
+        },
+        "winningStage": "C3",
+        "outcomeType": "fail",
+        "routeSuggestion": "Fail",
+        "evidence": "C0: no internal event candidates discovered",
+        "roundNumber": 3,
+        "success": false,
+        "failType": "discovery_failure"
+      }
+    },
+    {
+      "source": {
+        "sourceId": "andra-langgatan",
+        "url": "https://andra.se/",
+        "roundsParticipated": 2,
+        "diversifiers": [
+          "failures_4"
+        ],
+        "queueReason": "[FINAL-DRAIN] Source left in postB-preC when batch 103 completed — routed to manual-review",
+        "enrichedData": {
+          "lastPathUsed": null,
+          "lastEventsFound": 0,
+          "consecutiveFailures": 4,
+          "triageResult": null
+        }
+      },
+      "decision": "postTestC-manual-review",
+      "result": {
+        "sourceId": "andra-langgatan",
+        "url": "https://andra.se/",
+        "c0": {
+          "candidates": 0,
+          "winnerUrl": null,
+          "winnerDensity": 0,
+          "duration": 5004,
+          "rootFallback": false,
+          "ruleAppliedSource": "none",
+          "ruleAppliedPaths": [],
+          "ruleWinnerPath": null
+        },
+        "c1": {
+          "verdict": "unfetchable",
+          "likelyJsRendered": false,
+          "timeTagCount": 0,
+          "dateCount": 0,
+          "duration": 5004
+        },
+        "c2": {
+          "verdict": "unclear",
+          "score": 0,
+          "reason": "fetchHtml failed: timeout of 20000ms exceeded",
+          "duration": 5008
+        },
+        "extract": {
+          "eventsFound": 0,
+          "duration": 0
+        },
+        "winningStage": "C3",
+        "outcomeType": "fail",
+        "routeSuggestion": "Fail",
+        "evidence": "C0: no internal event candidates discovered",
+        "roundNumber": 3,
+        "success": false,
+        "failType": "discovery_failure"
+      }
+    },
+    {
+      "source": {
+        "sourceId": "umea-jazz",
+        "url": "https://umeajazz.se/",
+        "roundsParticipated": 2,
+        "diversifiers": [
+          "path_jsonld"
+        ],
+        "queueReason": "[FINAL-DRAIN] Source left in postB-preC when batch 103 completed — routed to manual-review",
+        "enrichedData": {
+          "lastPathUsed": "jsonld",
+          "lastEventsFound": 0,
+          "consecutiveFailures": 0,
+          "triageResult": null
+        }
+      },
+      "decision": "postTestC-manual-review",
+      "result": {
+        "sourceId": "umea-jazz",
+        "url": "https://umeajazz.se/",
+        "c0": {
+          "candidates": 0,
+          "winnerUrl": null,
+          "winnerDensity": 0,
+          "duration": 7,
+          "rootFallback": false,
+          "ruleAppliedSource": "none",
+          "ruleAppliedPaths": [],
+          "ruleWinnerPath": null
+        },
+        "c1": {
+          "verdict": "unfetchable",
+          "likelyJsRendered": false,
+          "timeTagCount": 0,
+          "dateCount": 0,
+          "duration": 3
+        },
+        "c2": {
+          "verdict": "unclear",
+          "score": 0,
+          "reason": "fetchHtml failed: getaddrinfo ENOTFOUND umeajazz.se",
+          "duration": 4
+        },
+        "extract": {
+          "eventsFound": 0,
+          "duration": 0
+        },
+        "winningStage": "C3",
+        "outcomeType": "fail",
+        "routeSuggestion": "Fail",
+        "evidence": "C0: no internal event candidates discovered",
+        "roundNumber": 3,
+        "success": false,
+        "failType": "discovery_failure"
+      }
+    },
+    {
+      "source": {
+        "sourceId": "ridsportf-rbundet",
+        "url": "https://ridsport.se/",
+        "roundsParticipated": 2,
+        "diversifiers": [
+          "path_jsonld"
+        ],
+        "queueReason": "[FINAL-DRAIN] Source left in postB-preC when batch 103 completed — routed to manual-review",
+        "enrichedData": {
+          "lastPathUsed": "jsonld",
+          "lastEventsFound": 0,
+          "consecutiveFailures": 0,
+          "triageResult": null
+        }
+      },
+      "decision": "postTestC-manual-review",
+      "result": {
+        "sourceId": "ridsportf-rbundet",
+        "url": "https://ridsport.se/",
+        "c0": {
+          "candidates": 3,
+          "winnerUrl": "https://ridsport.se/4.67b6229918c43331e911d04a/12.67b6229918c43331e911d055.portlet?state=rss&sv.contenttype=text/xml;charset=UTF-8",
+          "winnerDensity": 48,
+          "duration": 983,
+          "rootFallback": false,
+          "ruleAppliedSource": "link-discovery",
+          "ruleAppliedPaths": [],
+          "ruleWinnerPath": "https://ridsport.se/4.67b6229918c43331e911d04a/12.67b6229918c43331e911d055.portlet?state=rss&sv.contenttype=text/xml;charset=UTF-8"
+        },
+        "c1": {
+          "verdict": "no-main",
+          "likelyJsRendered": false,
+          "timeTagCount": 0,
+          "dateCount": 0,
+          "duration": 110
+        },
+        "c2": {
+          "verdict": "low_value",
+          "score": 0,
+          "reason": "[breadth_nojsonld] score=0(adj) >= 6? low_value pg=time-tag",
+          "duration": 65
+        },
+        "extract": {
+          "eventsFound": 0,
+          "duration": 2
+        },
+        "winningStage": "C3",
+        "outcomeType": "fail",
+        "routeSuggestion": "Fail",
+        "evidence": "C3: extraction returned 0 events despite C2 promising (score=0)",
+        "roundNumber": 3,
+        "success": false,
+        "failType": "extraction_failure"
+      }
+    },
+    {
+      "source": {
+        "sourceId": "malmo-konstmuseum",
+        "url": "https://malmökonstmuseum.se/",
+        "roundsParticipated": 2,
+        "diversifiers": [
+          "path_jsonld"
+        ],
+        "queueReason": "[FINAL-DRAIN] Source left in postB-preC when batch 103 completed — routed to manual-review",
+        "enrichedData": {
+          "lastPathUsed": "jsonld",
+          "lastEventsFound": 0,
+          "consecutiveFailures": 0,
+          "triageResult": null
+        }
+      },
+      "decision": "postTestC-manual-review",
+      "result": {
+        "sourceId": "malmo-konstmuseum",
+        "url": "https://malmökonstmuseum.se/",
+        "c0": {
+          "candidates": 0,
+          "winnerUrl": null,
+          "winnerDensity": 0,
+          "duration": 3,
+          "rootFallback": false,
+          "ruleAppliedSource": "none",
+          "ruleAppliedPaths": [],
+          "ruleWinnerPath": null
+        },
+        "c1": {
+          "verdict": "unfetchable",
+          "likelyJsRendered": false,
+          "timeTagCount": 0,
+          "dateCount": 0,
+          "duration": 2
+        },
+        "c2": {
+          "verdict": "unclear",
+          "score": 0,
+          "reason": "fetchHtml failed: getaddrinfo ENOTFOUND xn--malmkonstmuseum-ctb.se",
+          "duration": 2
+        },
+        "extract": {
+          "eventsFound": 0,
+          "duration": 0
+        },
+        "winningStage": "C3",
+        "outcomeType": "fail",
+        "routeSuggestion": "Fail",
+        "evidence": "C0: no internal event candidates discovered",
+        "roundNumber": 3,
+        "success": false,
+        "failType": "discovery_failure"
+      }
+    },
+    {
+      "source": {
+        "sourceId": "ladan",
+        "url": "https://ladan.se/",
+        "roundsParticipated": 2,
+        "diversifiers": [
+          "path_jsonld"
+        ],
+        "queueReason": "[FINAL-DRAIN] Source left in postB-preC when batch 103 completed — routed to manual-review",
+        "enrichedData": {
+          "lastPathUsed": "jsonld",
+          "lastEventsFound": 0,
+          "consecutiveFailures": 0,
+          "triageResult": null
+        }
+      },
+      "decision": "postTestC-manual-review",
+      "result": {
+        "sourceId": "ladan",
+        "url": "https://ladan.se/",
+        "c0": {
+          "candidates": 0,
+          "winnerUrl": null,
+          "winnerDensity": 0,
+          "duration": 2216,
+          "rootFallback": false,
+          "ruleAppliedSource": "none",
+          "ruleAppliedPaths": [
+            "/events",
+            "/program",
+            "/kalender",
+            "/schema",
+            "/evenemang",
+            "/kalendarium",
+            "/aktiviteter",
+            "/utställningar",
+            "/exhibition",
+            "/exhibitions",
+            "/exhibits",
+            "/visa",
+            "/scen",
+            "/teater",
+            "/repertoar",
+            "/forestillinger",
+            "/forestilling",
+            "/shown",
+            "/matcher",
+            "/tickets",
+            "/biljetter",
+            "/arena",
+            "/hall",
+            "/kultur",
+            "/fritid",
+            "/besok",
+            "/planera",
+            "/oppet",
+            "/konserter",
+            "/konsert"
+          ],
+          "ruleWinnerPath": null
+        },
+        "c1": {
+          "verdict": "no-main",
+          "likelyJsRendered": false,
+          "timeTagCount": 0,
+          "dateCount": 0,
+          "duration": 32
+        },
+        "c2": {
+          "verdict": "low_value",
+          "score": 0,
+          "reason": "[breadth_nojsonld] score=0(adj) >= 6? low_value pg=time-tag",
+          "duration": 32
+        },
+        "extract": {
+          "eventsFound": 0,
+          "duration": 1
+        },
+        "winningStage": "C3",
+        "outcomeType": "fail",
+        "routeSuggestion": "Fail",
+        "evidence": "C0: no internal event candidates discovered",
+        "roundNumber": 3,
+        "success": false,
+        "failType": "discovery_failure"
+      }
+    }
+  ],
+  "allExitedIds": [
+    "nykopings-bis",
+    "scandinavium",
+    "malmo-icc",
+    "folkoperan",
+    "kalmar-museum",
+    "andra-langgatan",
+    "umea-jazz",
+    "ridsportf-rbundet",
+    "malmo-konstmuseum",
+    "ladan"
+  ],
+  "lastSaved": "2026-04-17T14:35:39.967Z"
+}

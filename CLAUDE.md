@@ -1,5 +1,16 @@
 # CLAUDE.md
 
+Läs alltid först följande Obsidian-filer innan du analyserar eller ändrar kod:
+- /Users/claudgashi/EventPulse-ObsidianVault/EventPulse/00-Core/03-Canonical-Truths.md
+- /Users/claudgashi/EventPulse-ObsidianVault/EventPulse/00-Core/08-Verification-Principles.md
+- /Users/claudgashi/EventPulse-ObsidianVault/EventPulse/02-Operations/02-Current-Task.md
+- /Users/claudgashi/EventPulse-ObsidianVault/EventPulse/02-Operations/05-Verification-Status.md
+
+Arbeta sedan i detta repo:
+- /Users/claudgashi/EventPulse-recovery/clawdbot2/project/00EVENTPULSEFINALDESTINATION/NEWSTRUCTURE
+
+Om du verifierar något viktigt ska du uppdatera rätt Obsidian-fil efteråt.
+
 ## EventPulse
 
 You are working on EventPulse, a real city event discovery system.

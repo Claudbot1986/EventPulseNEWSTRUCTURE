@@ -444,10 +444,10 @@ export async function evaluateHtmlGate(
   type ThresholdKey = 'sanity' | 'breadth_nojsonld' | 'breadth_wrongtype' | 'smoke_nojsonld' | 'smoke_wrongtype';
   const thresholds: Record<ThresholdKey, number> = {
     sanity:            1,
-    breadth_nojsonld:  12,  // v2.2: calibrated; splits clear_html from text_date/borderline well
-    breadth_wrongtype: 10,  // v2.2: raised from 3
-    smoke_nojsonld:   12,   // v2.2: raised from 4
-    smoke_wrongtype:  14,   // v2.2: raised from 5
+    breadth_nojsonld:  6,   // v3: lowered from 12 — many "unclear" sources yield events via C3; reduce from 12 to 6
+    breadth_wrongtype: 6,   // v3: lowered from 10 — allow more through to C3 extraction attempt
+    smoke_nojsonld:    6,   // v3: lowered from 12 — C3 can extract from low-density pages
+    smoke_wrongtype:   8,   // v3: lowered from 14 — C3 handles smoke cases better than C2 density scoring
   };
   const thresholdKey: ThresholdKey = phaseMode === 1
     ? 'sanity'

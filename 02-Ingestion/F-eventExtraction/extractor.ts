@@ -652,8 +652,16 @@ export function extractFromHtml(html: string, source: string, baseUrl?: string):
     // Find event candidate links in main content
     const eventLinks: Array<{ href: string; text: string }> = [];
 
-    // Scope: main content area
-    const scope = $('main, article, [role="main"], .content, .event-content, .kalender, .event-list');
+    // Scope: main content area + fallback to body if no main content found
+    // IMP-003 FIX: If scope selector finds very few elements (< 5), fall back to body.
+    //   Many Swedish venue pages don't use <main> and have events in non-standard containers.
+    //   Restrictive scoping causes the extractor to miss events that are outside semantic containers.
+    const $scope = $('main, article, [role="main"], .content, .event-content, .kalender, .event-list');
+    const scopeElementCount = $scope.length;
+    const scope = scopeElementCount >= 5 ? $scope : $('body');
+    if (scopeElementCount < 5) {
+      parseErrors.push(`scope-warning: only ${scopeElementCount} main-scope elements found, falling back to body (IMP-003)`);
+    }
 
     // Find all links that look like event links
     scope.find('a[href]').each((_: any, el: any) => {

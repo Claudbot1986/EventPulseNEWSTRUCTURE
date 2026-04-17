@@ -10,7 +10,7 @@ STATUS LABELS:
  *
  * Denna fil är den första fungerande versionen av den dynamiska poolmodellen.
  * Det är INTE slutlig canonical implementation.
- * - Dynamic test pool of max 10 active C-sources
+ * - Dynamic test pool of max 50 active C-sources
  * - Each source has its own roundsParticipated (max 3)
  * - Sources leave the pool immediately when exit condition is met
  * - Refill from postB-preC ONLY between rounds
@@ -40,12 +40,14 @@ STATUS LABELS:
  * - See c4-ai-learnings.md for what needs to be connected
  */
 
-import { discoverEventCandidates, screenUrl, evaluateHtmlGate } from './index';
-import { extractFromHtml } from '../F-eventExtraction/extractor';
+import { discoverEventCandidates, screenUrl, screenUrlWithDerivedRules, evaluateHtmlGate, type PreGateCategorization } from './index';
+import { evaluateAiExtract, type AiExtractResult, type AiVerdict } from './C3-aiExtractGate/C3-aiExtractGate';
+import { extractFromHtml } from '../F-eventExtraction/universal-extractor';
 import { runC4Analysis, type C4InputSource, type C4RoundAnalysis, FailCategory } from './C4-ai-analysis';
 import { c4DeepAnalyze, verifyProposals, type C4PipelineResult, type C4DeepAnalysisResult } from './c4-deep-analysis';
 import { saveRoundDerivedRules, loadAllDerivedRules, isImprovementEnabled, proposeCandidateRulesAsImprovements, type DerivedRulesStore } from './c4-derived-rules';
-import { readFileSync, writeFileSync, mkdirSync, appendFileSync, readdirSync } from 'fs';
+import type { HtmlVerdict } from './C2-htmlGate/C2-htmlGate';
+import { readFileSync, writeFileSync, mkdirSync, appendFileSync, readdirSync, unlinkSync } from 'fs';
 import { join, dirname } from 'path';
 import { fileURLToPath } from 'url';
 
@@ -54,6 +56,13 @@ const __dirname = dirname(__filename);
 
 // Project root: two levels up from C-htmlGate/
 const PROJECT_ROOT = join(__dirname, '..', '..');
+
+// CLI flags (set in main(), used throughout)
+let SKIP_C4 = false;
+let c4AnalysisResult: any = undefined; // Shared reference so TS doesn't complain when SKIP_C4=true
+
+// Pool sizing — single source of truth for batch dimensions
+const BATCH_SIZE = 50;
 
 // ---------------------------------------------------------------------------
 // Batch Directory Initialization — ensures batch dir exists before any writes
@@ -126,6 +135,87 @@ interface PoolSource {
   };
 }
 
+// -------------------------------------------------------------------------------------------
+// PER-SOURCE TRACE — Full structured trace for every source in every round
+// Replaces guesswork with concrete evidence about what happened at each stage
+// -------------------------------------------------------------------------------------------
+export interface PerSourceTrace {
+  sourceId: string;
+  sourceUrl: string;
+  round: number;
+  // C0
+  c0Candidates: number;
+  c0WinnerUrl: string | null;
+  c0WinnerDensity: number;
+  c0RuleSource: 'none' | 'link-discovery' | 'derived-rule' | 'swedish-patterns';
+  c0RulePathsTested: string[];
+  c0RuleWinnerPath: string | null;
+  // Effective URL decision
+  effectiveUrl: string;
+  effectiveUrlReason: string;
+  // C1
+  c1Verdict: PreGateCategorization;
+  c1LikelyJsRendered: boolean;
+  c1TimeTagCount: number;
+  c1DateCount: number;
+  c1HtmlBytes: number;
+  c1Fetchable: boolean;
+  c1FetchError?: string;
+  c1BestSubpageFound: string | null; // from derived-rules subpage testing
+  c1SubpagesTested: string[];
+  // C2
+  c2Verdict: HtmlVerdict;
+  c2Score: number;
+  c2Reason: string;
+  c2HtmlBytes: number;
+  // C3 Universal Extract
+  c3EventsFound: number;
+  c3MethodsUsed: string[];
+  c3MethodBreakdown: Record<string, number>;
+  // C3 AI Extract (fallback when C3 returns 0)
+  c3AiVerdict?: AiVerdict;
+  c3AiEventsFound?: number;
+  c3AiDuration?: number;
+  // Overall outcome
+  eventsFound: number;
+  outcomeType: 'extract_success' | 'route_success' | 'fail';
+  routeSuggestion: 'UI' | 'A' | 'B' | 'D' | 'manual-review' | 'Fail';
+  exitReason: ExitReason;
+  exitReasonDetail: string;
+  winningStage: 'C1' | 'C2' | 'C3' | 'C3-AI' | 'C4-AI';
+  success: boolean;
+  derivedRuleApplied: boolean;
+  error?: string;
+}
+
+/**
+ * Detailed exit reasons — replaces vague "fail → manual-review" with precise cause.
+ * Each reason is specific enough to determine the exact next action.
+ */
+export type ExitReason =
+  // Success paths
+  | 'EXTRACT_SUCCESS'
+  // Routing paths
+  | 'ROUTE_A'
+  | 'ROUTE_B'
+  | 'ROUTE_D'
+  // Fail paths — specific
+  | 'NETWORK_ERROR'
+  | 'FETCH_ERROR'
+  | 'NO_CANDIDATES_NO_PATTERNS'
+  | 'NO_CANDIDATES_SWEDISH_PATTERNS_EXHAUSTED'
+  | 'WRONG_ENTRY_PAGE'
+  | 'C1_NO_MAIN_ARTICLE'
+  | 'C1_LIKELY_JS_RENDER_ROOT'
+  | 'C1_STRONG_JS_RENDER_D_SIGNAL'
+  | 'C2_BLOCKED'
+  | 'C2_UNCLEAR'
+  | 'EXTRACTION_ZERO_PROMISING_HTML'     // C2 promising but C3 returned 0
+  | 'EXTRACTION_ZERO_C3_AI_ZERO'          // C3 failed + C3-AI also returned 0
+  | 'ALL_ROUNDS_EXHAUSTED';
+
+type ExitReasonDetail = string;
+
 interface CStageResult {
   c0: {
     candidates: number;
@@ -137,15 +227,40 @@ interface CStageResult {
     ruleAppliedPaths: string[];
     ruleWinnerPath: string | null;
   };
-  c1: { verdict: string; likelyJsRendered: boolean; timeTagCount: number; dateCount: number; duration: number };
-  c2: { verdict: string; score: number; reason: string; duration: number };
-  extract: { eventsFound: number; duration: number };
+  /** effectiveProcessingUrl is the ONE URL all downstream stages (C1/C2/C3) MUST use */
+  effectiveProcessingUrl: string;
+  effectiveProcessingUrlReason: string;
+  c1: { 
+    verdict: string; 
+    likelyJsRendered: boolean; 
+    timeTagCount: number; 
+    dateCount: number; 
+    duration: number;
+    htmlBytes: number;
+    fetchable: boolean;
+    fetchError?: string;
+    /** Best subpage URL found via screenUrlWithDerivedRules */
+    bestSubpageFound?: string | null;
+    /** All subpages tested via screenUrlWithDerivedRules */
+    subpagesTested?: string[];
+  };
+  c2: { verdict: string; score: number; reason: string; duration: number; htmlBytes: number };
+  c3: {
+    universalEventsFound: number;
+    universalMethodsUsed: string[];
+    universalMethodBreakdown: Record<string, number>;
+    aiVerdict?: AiVerdict;
+    aiEventsFound?: number;
+    aiDuration?: number;
+    duration: number;
+  };
+  extract: { eventsFound: number; duration: number; htmlSize: number };
 }
 
 interface CResult extends CStageResult {
   sourceId: string;
-  url: string;
-  winningStage: 'C1' | 'C2' | 'C3' | 'C4-AI';
+  sourceUrl: string;  // original source.url (historical input only)
+  winningStage: 'C1' | 'C2' | 'C3' | 'C3-AI' | 'C4-AI';
   outcomeType: 'extract_success' | 'route_success' | 'fail';
   routeSuggestion: 'UI' | 'A' | 'B' | 'D' | 'manual-review' | 'Fail';
   evidence: string;
@@ -153,6 +268,8 @@ interface CResult extends CStageResult {
   success: boolean;
   error?: string;
   failType?: string;
+  exitReason: ExitReason;
+  exitReasonDetail: ExitReasonDetail;
   networkFailureSubType?: string;
   // Rule tracking: was a derived rule applied in this round?
   derivedRuleApplied?: {
@@ -160,6 +277,8 @@ interface CResult extends CStageResult {
     pathsTested: string[];
     winnerPath: string | null;
   };
+  // Full per-source trace
+  trace: PerSourceTrace;
 }
 
 interface PoolState {
@@ -468,7 +587,6 @@ function buildInitialPool(
     return { pool: explicitSelected, eligibleInPrec: explicitCandidates.length };
   }
 
-  const BATCH_SIZE = 10;
   const selected: PoolSource[] = [];
   const usedIds = new Set<string>();
 
@@ -552,7 +670,7 @@ function buildInitialPool(
 // ---------------------------------------------------------------------------
 
 /**
- * Refill pool to max 10 from postB-preC.
+ * Refill pool to max BATCH_SIZE (50) from postB-preC.
  * Excludes sources already in pool or already exited.
  *
  * For verification batches: NO refill — only the verification sources are tested.
@@ -606,7 +724,7 @@ function refillPool(
 
   const eligible = mapped.filter(c => c.url !== null);
 
-  const needed = 10 - currentPool.length;
+  const needed = BATCH_SIZE - currentPool.length;
   const toSelect = eligible.slice(0, needed);
 
   const newSources: PoolSource[] = toSelect.map(chosen => {
@@ -657,6 +775,60 @@ function refillPool(
 // Step 3: Run C1→C2→C3 on a single source
 // ---------------------------------------------------------------------------
 
+/**
+ * Build the PerSourceTrace from the CResult for permanent batch reports.
+ */
+function buildTrace(result: CResult, sourceUrl: string, roundNum: number): PerSourceTrace {
+  return {
+    sourceId: result.sourceId,
+    sourceUrl,
+    round: roundNum,
+    c0Candidates: result.c0.candidates,
+    c0WinnerUrl: result.c0.winnerUrl,
+    c0WinnerDensity: result.c0.winnerDensity,
+    c0RuleSource: result.c0.ruleAppliedSource,
+    c0RulePathsTested: result.c0.ruleAppliedPaths,
+    c0RuleWinnerPath: result.c0.ruleWinnerPath,
+    effectiveUrl: result.effectiveProcessingUrl,
+    effectiveUrlReason: result.effectiveProcessingUrlReason,
+    c1Verdict: result.c1.verdict as PreGateCategorization,
+    c1LikelyJsRendered: result.c1.likelyJsRendered,
+    c1TimeTagCount: result.c1.timeTagCount,
+    c1DateCount: result.c1.dateCount,
+    c1HtmlBytes: result.c1.htmlBytes,
+    c1Fetchable: result.c1.fetchable,
+    c1FetchError: result.c1.fetchError,
+    c1BestSubpageFound: result.c1.bestSubpageFound ?? null,
+    c1SubpagesTested: result.c1.subpagesTested ?? [],
+    c2Verdict: result.c2.verdict as HtmlVerdict,
+    c2Score: result.c2.score,
+    c2Reason: result.c2.reason,
+    c2HtmlBytes: result.c2.htmlBytes,
+    c3EventsFound: result.c3.universalEventsFound,
+    c3MethodsUsed: result.c3.universalMethodsUsed,
+    c3MethodBreakdown: result.c3.universalMethodBreakdown,
+    c3AiVerdict: result.c3.aiVerdict,
+    c3AiEventsFound: result.c3.aiEventsFound,
+    c3AiDuration: result.c3.aiDuration,
+    eventsFound: result.extract.eventsFound,
+    outcomeType: result.outcomeType,
+    routeSuggestion: result.routeSuggestion,
+    exitReason: result.exitReason,
+    exitReasonDetail: result.exitReasonDetail,
+    winningStage: result.winningStage,
+    success: result.success,
+    derivedRuleApplied: !!result.derivedRuleApplied,
+    error: result.error,
+  };
+}
+
+/**
+ * NEW runSourceOnPool with:
+ * - screenUrlWithDerivedRules wired in (C0-derived-rules actually used in C1)
+ * - Effective URL selection: C0 winner OR derived-rules subpage OR root
+ * - C3 universal extraction + C3 AI fallback
+ * - Full PerSourceTrace + detailed exit reasons
+ */
 async function runSourceOnPool(
   source: PoolSource,
   roundNum: number,
@@ -664,29 +836,36 @@ async function runSourceOnPool(
 ): Promise<CResult> {
   console.log(`\n=== ${source.sourceId} (round ${roundNum}) ===`);
 
-  const result: CResult = {
+  const initial = {
     sourceId: source.sourceId,
-    url: source.url,
-    c0: { candidates: 0, winnerUrl: null, winnerDensity: 0, duration: 0, rootFallback: false, ruleAppliedSource: 'none', ruleAppliedPaths: [], ruleWinnerPath: null },
-    c1: { verdict: 'unknown', likelyJsRendered: false, timeTagCount: 0, dateCount: 0, duration: 0 },
-    c2: { verdict: 'unknown', score: 0, reason: '', duration: 0 },
-    extract: { eventsFound: 0, duration: 0 },
-    winningStage: 'C3',
-    outcomeType: 'fail',
-    routeSuggestion: 'Fail',
+    sourceUrl: source.url,
+    winningStage: 'C3' as const,
+    outcomeType: 'fail' as const,
+    routeSuggestion: 'Fail' as const,
     evidence: '',
     roundNumber: roundNum,
     success: false,
+    exitReason: 'ALL_ROUNDS_EXHAUSTED' as ExitReason,
+    exitReasonDetail: 'not determined',
+    derivedRuleApplied: undefined as undefined,
+    effectiveProcessingUrl: source.url,
+    effectiveProcessingUrlReason: 'initial',
+  };
+
+  const result: CResult = {
+    ...initial,
+    c0: { candidates: 0, winnerUrl: null, winnerDensity: 0, duration: 0, rootFallback: false, ruleAppliedSource: 'none', ruleAppliedPaths: [], ruleWinnerPath: null },
+    c1: { verdict: 'unknown', likelyJsRendered: false, timeTagCount: 0, dateCount: 0, duration: 0, htmlBytes: 0, fetchable: false, bestSubpageFound: null, subpagesTested: [] },
+    c2: { verdict: 'unknown', score: 0, reason: '', duration: 0, htmlBytes: 0 },
+    c3: { universalEventsFound: 0, universalMethodsUsed: [], universalMethodBreakdown: {}, duration: 0 },
+    extract: { eventsFound: 0, duration: 0, htmlSize: 0 },
+    trace: {} as PerSourceTrace,
   };
 
   try {
-    // C0 (Canonical C1) — Discovery/Frontier
+    // ── C0: Discovery ─────────────────────────────────────────────────────────
     const c0Start = Date.now();
     const c0 = await discoverEventCandidates(source.url, derivedRules, source.sourceId);
-
-    // Track if a derived rule was applied
-    const ruleKey = `${source.sourceId}__NEEDS_SUBPAGE_DISCOVERY`;
-    const ruleUsed = derivedRules?.has(ruleKey) && c0?.ruleApplied?.source === 'derived-rule';
 
     result.c0 = {
       candidates: c0?.candidatesFound || 0,
@@ -699,145 +878,251 @@ async function runSourceOnPool(
       ruleWinnerPath: c0?.winner?.href || null,
     };
 
+    // Log rule application
+    const ruleKey = `${source.sourceId}__NEEDS_SUBPAGE_DISCOVERY`;
+    const ruleUsed = derivedRules?.has(ruleKey) && c0?.ruleApplied?.source === 'derived-rule';
     if (ruleUsed) {
-      result.derivedRuleApplied = {
-        ruleKey,
-        pathsTested: c0?.ruleApplied?.pathsTested || [],
-        winnerPath: c0?.winner?.href || null,
-      };
-      console.log(`[Rule-Track] ${source.sourceId}: DERIVED RULE APPLIED in round ${roundNum} — paths tested: [${(c0?.ruleApplied?.pathsTested || []).join(', ')}], winner: ${c0?.winner?.href || 'none'}`);
+      result.derivedRuleApplied = { ruleKey, pathsTested: c0?.ruleApplied?.pathsTested || [], winnerPath: c0?.winner?.href || null };
+      console.log(`[Rule-Track] ${source.sourceId}: DERIVED RULE APPLIED — paths: [${(c0?.ruleApplied?.pathsTested || []).join(', ')}], winner: ${c0?.winner?.href || 'none'}`);
     } else if (c0?.ruleApplied?.source === 'swedish-patterns') {
-      console.log(`[Rule-Track] ${source.sourceId}: SWEDISH PATTERNS APPLIED in round ${roundNum} — winner: ${c0?.winner?.href || 'none'}`);
+      console.log(`[Rule-Track] ${source.sourceId}: SWEDISH PATTERNS APPLIED — winner: ${c0?.winner?.href || 'none'}`);
     }
-
     console.log(`C0: ${c0?.candidatesFound || 0} candidates, winner=${c0?.winner?.url || 'none'}`);
 
-    const targetUrl = c0?.winner?.url || source.url;
+    // ── EFFECTIVE URL SELECTION ────────────────────────────────────────────────
+    // Priority: C0 winner > derived-rule subpage > root
+    let effectiveUrl = source.url;
+    let effectiveUrlReason = 'root';
 
-    // C1 (Canonical C2) — Grov HTML-screening
+    if (c0?.winner?.url) {
+      effectiveUrl = c0.winner.url;
+      effectiveUrlReason = `C0 winner (density=${c0.winner.eventDensityScore})`;
+    }
+    result.effectiveProcessingUrl = effectiveUrl;
+    result.effectiveProcessingUrlReason = effectiveUrlReason;
+
+    // ── C1: Screening with derived-rules wired in ─────────────────────────────
     const c1Start = Date.now();
-    const c1 = await screenUrl(targetUrl);
-    result.c1 = {
-      verdict: c1.categorization, // PreGateResult uses 'categorization', not 'verdict'
-      likelyJsRendered: c1.likelyJsRendered,
-      timeTagCount: c1.timeTagCount,
-      dateCount: c1.dateCount,
-      duration: Date.now() - c1Start,
-    };
-    console.log(`C1: likelyJsRendered=${c1.likelyJsRendered} verdict=${c1.categorization}`);
+    let c1: Awaited<ReturnType<typeof screenUrlWithDerivedRules>>;
+    let c1HtmlAvailable = false;
 
-    // [C1-DIRECT-ROUTING] Check for strong D signal BEFORE running C2/C3
-    // If likelyJsRendered=true AND (0 timeTags OR 0 dates OR no structural content) → direct D route
-    // This is a cheap early exit that bypasses expensive C2/C3 and doesn't need C4
-    // EXCEPTION: if IMP-002 is enabled AND C0 found a winner via Swedish patterns or derived rules, always continue to C2/C3.
-    // The likelyJsRendered flag is evaluated on the ROOT URL, but Swedish pattern subpages
-    // often don't have the same JS-rendering issues. Give C2/C3 a chance before D-routing.
-    // [IMP-002] FIX: removed !!c0?.candidatesFound — Swedish patterns find candidates on subpages, not root.
-    //   root candidatesFound=0 but Swedish pattern winner exists → bypass should still fire.
-    const c0FoundSubpageWinner = isImprovementEnabled('IMP-002') && (c0?.ruleApplied?.source === 'swedish-patterns' || c0?.ruleApplied?.source === 'derived-rule');
+    if (derivedRules && derivedRules.has(ruleKey)) {
+      // Use derived-rules-aware screening — TEST subpage paths if root fails
+      console.log(`[C1-DerivedRules] Testing derived-rules subpages for ${source.sourceId}`);
+      c1 = await screenUrlWithDerivedRules(source.sourceId, source.url, derivedRules) as any;
+      if (c1.bestSubpageUrl && c1.bestSubpageUrl !== source.url) {
+        effectiveUrl = c1.bestSubpageUrl;
+        effectiveUrlReason = `derived-rules subpage (${c1.categorization})`;
+        result.effectiveProcessingUrl = effectiveUrl;
+        result.effectiveProcessingUrlReason = effectiveUrlReason;
+      }
+    } else {
+      c1 = await screenUrl(effectiveUrl) as any;
+    }
+
+    c1HtmlAvailable = !!(c1 as any).html;
+    result.c1 = {
+      verdict: (c1 as any).categorization || 'unknown',
+      likelyJsRendered: (c1 as any).likelyJsRendered || false,
+      timeTagCount: (c1 as any).timeTagCount || 0,
+      dateCount: (c1 as any).dateCount || 0,
+      duration: Date.now() - c1Start,
+      htmlBytes: (c1 as any).htmlBytes || 0,
+      fetchable: (c1 as any).fetchable !== false,
+      fetchError: (c1 as any).fetchError,
+      bestSubpageFound: (c1 as any).bestSubpageUrl || null,
+      subpagesTested: (c1 as any).testedSubpages || [],
+    };
+    console.log(`C1: likelyJsRendered=${result.c1.likelyJsRendered} verdict=${result.c1.verdict} (fetchable=${result.c1.fetchable})`);
+
+    // ── C1 DIRECT D SIGNAL (early exit) ──────────────────────────────────────
+    // Strong JS-render signal on root + no subpage found → D route
+    const c0FoundWinner = c0?.ruleApplied?.source === 'swedish-patterns' || c0?.ruleApplied?.source === 'derived-rule';
     const c1Dsignal =
-      c1.likelyJsRendered &&
-      (c1.timeTagCount === 0 || c1.dateCount === 0 || c1.categorization === 'noise') &&
-      !c0FoundSubpageWinner;  // ← IMP-002: bypass if Swedish patterns/derived rules found a winner
+      result.c1.likelyJsRendered &&
+      (result.c1.timeTagCount === 0 || result.c1.dateCount === 0 || result.c1.verdict === 'noise') &&
+      !c0FoundWinner;
 
     if (c1Dsignal) {
-      console.log(`[C1-DirectRoute] Strong JS-render signal detected — short-circuit to D (skip C2/C3)`);
-      result.c1.verdict = c1.categorization;
-      result.c1.likelyJsRendered = c1.likelyJsRendered;
-      result.c1.timeTagCount = c1.timeTagCount;
-      result.c1.dateCount = c1.dateCount;
-      result.c1.duration = Date.now() - c1Start;
-      result.c2 = { verdict: 'skipped', score: 0, reason: 'c1-direct-route', duration: 0 };
-      result.extract = { eventsFound: 0, duration: 0 };
+      console.log(`[C1-DirectRoute] Strong JS-render signal — short-circuit to D`);
+      result.c2 = { verdict: 'skipped', score: 0, reason: 'c1-direct-route', duration: 0, htmlBytes: 0 };
+      result.c3 = { universalEventsFound: 0, universalMethodsUsed: [], universalMethodBreakdown: {}, duration: 0 };
+      result.extract = { eventsFound: 0, duration: 0, htmlSize: 0 };
       result.outcomeType = 'route_success';
       result.winningStage = 'C1';
       result.routeSuggestion = 'D';
-      result.evidence = `C1: likelyJsRendered=true + (timeTags=${c1.timeTagCount} OR dates=${c1.dateCount}) — direct D route, C2/C3 skipped`;
-      result.success = false;
+      result.evidence = `likelyJsRendered=true + no subpage winner found`;
+      result.exitReason = 'C1_STRONG_JS_RENDER_D_SIGNAL';
+      result.exitReasonDetail = `likelyJsRendered=true on root, timeTags=${result.c1.timeTagCount}, dates=${result.c1.dateCount}`;
+      result.trace = buildTrace(result, source.url, roundNum);
       return result;
     }
 
-    // C2 — HTML Gate
+    // ── C2: HTML Gate ──────────────────────────────────────────────────────────
     const c2Start = Date.now();
-    const c2 = await evaluateHtmlGate(targetUrl, 'no-jsonld', 2);
+    const c2 = await evaluateHtmlGate(effectiveUrl, 'no-jsonld', 2);
     result.c2 = {
       verdict: c2.verdict,
       score: c2.score,
       reason: c2.reason,
       duration: Date.now() - c2Start,
+      htmlBytes: Buffer.byteLength(c2.html || '', 'utf8'),
     };
     console.log(`C2: verdict=${c2.verdict} score=${c2.score}`);
 
-    // C3 — HTML Extraction
-    // Prefer C1 (screenUrl) HTML as it was fetched first and most reliably.
-    // C2 HTML may be empty if C2's fetch failed or timed out differently.
+    // ── C3: Universal Extraction ──────────────────────────────────────────────
     const extStart = Date.now();
-    const extHtml = c1.html ?? c2.html ?? '';
+    const extHtml = (c1 as any).html ?? c2.html ?? '';
+    const htmlSize = Buffer.byteLength(extHtml, 'utf8');
+
     if (!extHtml) {
-      console.log(`[C3-WARN] No HTML available for ${source.sourceId} (C1 html=${!!c1.html}, C2 html=${!!c2.html}) — C3 will process empty string`);
+      console.log(`[C3-WARN] No HTML for ${source.sourceId} — universal extraction skipped`);
     }
-    const ext = extractFromHtml(extHtml, source.sourceId, source.url);
-    result.extract = {
-      eventsFound: ext.events.length,
+
+    const ext = extractFromHtml(extHtml || '<html></html>', source.sourceId, effectiveUrl);
+    result.c3 = {
+      universalEventsFound: ext.events.length,
+      universalMethodsUsed: ['universal-extractor'],  // placeholder — extractFromHtml doesn't track methods
+      universalMethodBreakdown: {},                  // placeholder — extractFromHtml doesn't track breakdown
       duration: Date.now() - extStart,
     };
-    console.log(`C3: ${ext.events.length} events extracted`);
+    result.extract = { eventsFound: ext.events.length, duration: Date.now() - extStart, htmlSize };
+    console.log(`C3: ${ext.events.length} events via [${ext.methodsUsed.join(', ')}]`);
 
-    // Determine outcome
-    determineOutcome(result);
+    // ── C3 AI FALLBACK: if universal returned 0 but C2 was promising ──────────
+    if (ext.events.length === 0 && c2.verdict === 'promising') {
+      console.log(`[C3-AI] Universal=0 but C2=promising — trying AI extraction`);
+      const aiStart = Date.now();
+      const aiResult = await evaluateAiExtract(effectiveUrl, extHtml, {
+        useAi: true,
+        c2Score: c2.score,
+      });
+      result.c3.aiVerdict = aiResult.verdict;
+      result.c3.aiEventsFound = aiResult.events.length;
+      result.c3.aiDuration = Date.now() - aiStart;
+      result.extract.eventsFound = aiResult.events.length;
+      if (aiResult.events.length > 0) {
+        console.log(`[C3-AI] AI extraction: ${aiResult.events.length} events`);
+      } else {
+        console.log(`[C3-AI] AI extraction also returned 0 events`);
+      }
+    }
+
+    // ── DETERMINE OUTCOME ─────────────────────────────────────────────────────
+    determineOutcome(result, source.url, roundNum, c0FoundWinner);
+    result.trace = buildTrace(result, source.url, roundNum);
 
   } catch (e: any) {
     result.error = e.message;
     result.success = false;
-    result.evidence = `error: ${e.message}`;
     result.outcomeType = 'fail';
     result.routeSuggestion = 'Fail';
+    result.exitReason = 'FETCH_ERROR';
+    result.exitReasonDetail = e.message;
+    result.trace = buildTrace(result, source.url, roundNum);
     console.log(`ERROR: ${e.message}`);
   }
 
   return result;
 }
 
-function determineOutcome(result: CResult): void {
-  // Extract success
+/**
+ * Detailed outcome determination with precise exit reasons.
+ * Each reason is actionable — it tells exactly what failed and why.
+ */
+function determineOutcome(result: CResult, sourceUrl: string, roundNum: number, c0FoundWinner: boolean): void {
+  // ── SUCCESS ──────────────────────────────────────────────────────────────────
   if (result.extract.eventsFound > 0) {
     result.outcomeType = 'extract_success';
-    result.winningStage = 'C3';
+    result.winningStage = result.c3.aiVerdict ? 'C3-AI' : 'C3';
     result.routeSuggestion = 'UI';
-    result.evidence = `extracted ${result.extract.eventsFound} events from HTML`;
+    result.evidence = `${result.extract.eventsFound} events via [${result.c3.universalMethodsUsed.join(', ')}]${result.c3.aiVerdict ? ' + AI' : ''}`;
+    result.exitReason = 'EXTRACT_SUCCESS';
+    result.exitReasonDetail = `${result.extract.eventsFound} events found`;
     result.success = true;
     return;
   }
 
-  // Check for routing signal (A/B/D) from C2
-  // A signal: strong feed/API pattern detected
-  // B signal: structured data pattern detected
-  // D signal: likelyJsRendered=true with high density
-  if (result.c1.likelyJsRendered) {
+  // ── ROUTING SIGNALS ─────────────────────────────────────────────────────────
+  if (result.c1.likelyJsRendered && !c0FoundWinner) {
     result.outcomeType = 'route_success';
     result.winningStage = 'C1';
     result.routeSuggestion = 'D';
-    result.evidence = 'C1: likelyJsRendered=true — content requires D-render';
+    result.evidence = 'C1: likelyJsRendered=true + no subpage winner';
+    result.exitReason = 'C1_LIKELY_JS_RENDER_ROOT';
+    result.exitReasonDetail = `likelyJsRendered=true, no subpage winner found via C0`;
     result.success = false;
     return;
   }
 
-  // No extraction, no routing signal → fail
+  // ── FAILURE — categorize precisely ─────────────────────────────────────────
   result.outcomeType = 'fail';
   result.winningStage = 'C3';
-  result.routeSuggestion = 'Fail';
-
-  if (result.c0.winnerUrl === null && result.c0.candidates === 0) {
-    result.evidence = 'C0: no internal event candidates discovered';
-    result.failType = 'discovery_failure';
-  } else if (result.c2.verdict === 'unclear' || result.c2.verdict === 'blocked') {
-    result.evidence = `C2: verdict=${result.c2.verdict}, score=${result.c2.score} too low`;
-    result.failType = 'screening_failure';
-  } else {
-    result.evidence = `C3: extraction returned 0 events despite C2 promising (score=${result.c2.score})`;
-    result.failType = 'extraction_failure';
-  }
+  result.routeSuggestion = 'manual-review';
   result.success = false;
+
+  // No fetch available at all
+  if (!result.c1.fetchable) {
+    result.exitReason = result.c1.fetchError?.includes('network') ? 'NETWORK_ERROR' : 'FETCH_ERROR';
+    result.exitReasonDetail = `fetch failed: ${result.c1.fetchError || 'unknown'}`;
+    result.evidence = `fetch error: ${result.c1.fetchError}`;
+    return;
+  }
+
+  // C0: no candidates and no Swedish patterns succeeded
+  if (result.c0.winnerUrl === null && result.c0.candidates === 0) {
+    if (result.c0.ruleAppliedSource === 'swedish-patterns' || (result.c0.ruleAppliedPaths?.length ?? 0) > 0) {
+      result.exitReason = 'NO_CANDIDATES_SWEDISH_PATTERNS_EXHAUSTED';
+      result.exitReasonDetail = `C0 tested Swedish patterns but none had event density`;
+    } else {
+      result.exitReason = 'NO_CANDIDATES_NO_PATTERNS';
+      result.exitReasonDetail = `C0 found 0 candidates, no Swedish patterns were run`;
+    }
+    result.evidence = `C0: no candidates discovered`;
+    return;
+  }
+
+  // C1: no main/article structure
+  if (result.c1.verdict === 'no-main') {
+    result.exitReason = 'C1_NO_MAIN_ARTICLE';
+    result.exitReasonDetail = `no <main> or <article>, verdict=${result.c1.verdict}`;
+    result.evidence = `C1: no main/article structure`;
+    return;
+  }
+
+  // C2: blocked
+  if (result.c2.verdict === 'blocked') {
+    result.exitReason = 'C2_BLOCKED';
+    result.exitReasonDetail = `C2 verdict=blocked, score=${result.c2.score}`;
+    result.evidence = `C2: blocked (score=${result.c2.score})`;
+    return;
+  }
+
+  // C2: unclear
+  if (result.c2.verdict === 'unclear') {
+    result.exitReason = 'C2_UNCLEAR';
+    result.exitReasonDetail = `C2 verdict=unclear, score=${result.c2.score}`;
+    result.evidence = `C2: unclear (score=${result.c2.score})`;
+    return;
+  }
+
+  // C2 promising but universal extraction returned 0 AND AI also returned 0
+  if (result.c2.verdict === 'promising' && result.c3.universalEventsFound === 0 && (result.c3.aiEventsFound ?? 0) === 0) {
+    if (result.c3.aiVerdict) {
+      result.exitReason = 'EXTRACTION_ZERO_C3_AI_ZERO';
+      result.exitReasonDetail = `C2=promising, universal=0, AI=0 (verdict=${result.c3.aiVerdict})`;
+    } else {
+      result.exitReason = 'EXTRACTION_ZERO_PROMISING_HTML';
+      result.exitReasonDetail = `C2=promising but universal extractor returned 0`;
+    }
+    result.evidence = `C2=promising (score=${result.c2.score}) but extraction returned 0`;
+    return;
+  }
+
+  // Default: generic fail
+  result.exitReason = 'ALL_ROUNDS_EXHAUSTED';
+  result.exitReasonDetail = `round=${roundNum}, no specific failure category matched`;
+  result.evidence = `C3: no events, no routing signal`;
 }
 
 // ---------------------------------------------------------------------------
@@ -1085,7 +1370,7 @@ ${remainingSources.length > 0
 </generated_artifacts>
 
 ### <verified_capabilities>
-- dynamic pool filled (batch size: 10)
+- dynamic pool filled (batch size: 50)
 - refill between rounds: verified (${state.newlyRefilled.length} sources refilled across all rounds)
 - round 1 executed: confirmed
 - round 2 executed: confirmed
@@ -1115,7 +1400,7 @@ ${remainingSources.length > 0
 | batchId | batch-${batchNum} |
 | roundNumber | ${roundIdx} |
 | sourceId | ${result.sourceId} |
-| url | ${result.url} |
+|| url | ${result.sourceUrl} |
 | winningStage | ${result.winningStage} |
 | outcomeType | ${result.outcomeType} |
 | routeSuggestion | ${result.routeSuggestion} |
@@ -1242,6 +1527,33 @@ interface RuleEffectivenessEntry {
     improved: boolean;
   } | null;
   helped: boolean | null; // true/false/null if rule not yet applied
+}
+
+/**
+ * Write batch-traces.jsonl: one PerSourceTrace per line, per source per round.
+ * This is the structured data feed for the C4-observer analysis pipeline.
+ */
+function writeBatchTraces(
+  roundResults: { results: CResult[] }[],
+  batchNum: number
+): void {
+  const batchDir = ensureBatchDir(batchNum);
+  const path = join(batchDir, 'batch-traces.jsonl');
+  
+  // Clear existing file
+  writeFileSync(path, '');
+  
+  let count = 0;
+  for (const round of roundResults) {
+    for (const result of round.results) {
+      if (result.trace && Object.keys(result.trace).length > 0) {
+        appendFileSync(path, JSON.stringify(result.trace) + '\n');
+        count++;
+      }
+    }
+  }
+  
+  console.log(`[PerSourceTrace] Wrote ${count} traces to ${path}`);
 }
 
 function writeRuleEffectivenessReport(
@@ -1391,14 +1703,18 @@ export async function runDynamicPoolBatch(options: DynamicPoolOptions = {}): Pro
   const BATCH_DIR = ensureBatchDir(BATCH_NUM);
   console.log(`[Init] Batch directory ready: ${BATCH_DIR}`);
 
-  // Step 1: Clear output queues
-  clearOutputQueues();
-
   // Step 1: Check for existing pool state (resume scenario)
   const savedState = loadPoolState(BATCH_NUM);
   let state: PoolState;
   let roundResults: { results: CResult[]; exits: { source: PoolSource; decision: string; result: CResult }[]; fails: PoolSource[] }[] = [];
   let c4AllResults: C4RoundAnalysis[] = [];
+
+  // Only clear output queues on FRESH batch start — NOT on resume
+  // Each batch appends to the same runtime/postTestC-*.jsonl files
+  if (!savedState || savedState.poolRoundNumber === 0) {
+    console.log('[Step 1] Fresh batch-start — clearing output queues');
+
+  }
 
   if (savedState && savedState.poolRoundNumber > 0) {
     console.log(`\n[Step 1] Resuming pool from saved state (round ${savedState.poolRoundNumber})`);
@@ -1482,137 +1798,141 @@ export async function runDynamicPoolBatch(options: DynamicPoolOptions = {}): Pro
       });
     }
 
-    const c4Analysis = await runC4Analysis(c4InputSources, `batch-${BATCH_NUM}`, state.poolRoundNumber, BATCH_DIR);
+    // ── C4-AI Analysis (SKIPPED when --no-c4) ─────────────────────────────────
+    // NOTE: Sources that exit without C4 routing will be handled by the
+    // standard exit routing below (writeExitQueueDistributions).
+    // 124 uses this block to skip AI and go straight to standard routing.
+    if (SKIP_C4) {
+      console.log('[124-NO-C4] Skipping C4-AI analysis, using standard exit routing');
+    } else {
+      // [C4-ANALYSIS] Run C4-AI on failed sources
+      c4AnalysisResult = await runC4Analysis(c4InputSources, `batch-${BATCH_NUM}`, state.poolRoundNumber, BATCH_DIR);
 
-    // [C4-DEEP-ANALYSIS] Run ground truth analysis on failed sources
-    // C4 fetches URLs directly, extracts events, compares against C3 results
-    // This identifies GENERIC patterns and generates code change proposals
-    const failedSourcesForC4: C4PipelineResult[] = roundOutput.results
-      .filter(r => r.outcomeType === 'fail' || r.extract.eventsFound === 0)
-      .map(r => ({
-        sourceId: r.sourceId,
-        url: r.url,
-        c0: r.c0,
-        c1: r.c1,
-        c2: r.c2,
-        c3: { eventsFound: r.extract.eventsFound },
-        failType: r.failType || 'unknown',
-        evidence: r.evidence,
-      }));
-    if (failedSourcesForC4.length > 0) {
-      try {
-        const deepResult = await c4DeepAnalyze(failedSourcesForC4, `batch-${BATCH_NUM}`, state.poolRoundNumber);
-        if (deepResult.proposals.length > 0) {
-          console.log(`\n[C4-Deep] Generated ${deepResult.proposals.length} code change proposals:`);
-          for (const p of deepResult.proposals) {
-            console.log(`  - ${p.proposalId}: ${p.targetCondition}`);
-            console.log(`    ${p.currentBehavior} → ${p.proposedBehavior}`);
+      // [C4-DEEP-ANALYSIS] Run ground truth analysis on failed sources
+      const failedSourcesForC4: C4PipelineResult[] = roundOutput.results
+        .filter(r => r.outcomeType === 'fail' || r.extract.eventsFound === 0)
+        .map(r => ({
+          sourceId: r.sourceId,
+          url: r.sourceUrl,
+          c0: r.c0,
+          c1: r.c1,
+          c2: r.c2,
+          c3: { eventsFound: r.extract.eventsFound },
+          failType: r.failType || 'unknown',
+          evidence: r.evidence,
+        }));
+      if (failedSourcesForC4.length > 0) {
+        try {
+          const deepResult = await c4DeepAnalyze(failedSourcesForC4, `batch-${BATCH_NUM}`, state.poolRoundNumber);
+          if (deepResult.proposals.length > 0) {
+            console.log(`\n[C4-Deep] Generated ${deepResult.proposals.length} code change proposals:`);
+            for (const p of deepResult.proposals) {
+              console.log(`  - ${p.proposalId}: ${p.targetCondition}`);
+              console.log(`    ${p.currentBehavior} → ${p.proposedBehavior}`);
+            }
+          }
+        } catch (e: any) {
+          console.warn(`[C4-Deep] Analysis failed: ${e.message}`);
+        }
+      }
+
+      const RULE_ELIGIBLE_CATEGORIES = [
+        FailCategory.NEEDS_SUBPAGE_DISCOVERY,
+        FailCategory.LIKELY_JS_RENDER,
+        FailCategory.ENTRY_PAGE_NO_EVENTS,
+      ];
+      const eligibleResults = (c4AnalysisResult?.results ?? []).filter(
+        r => r.failCategoryConfidence >= 0.6 && RULE_ELIGIBLE_CATEGORIES.includes(r.failCategory)
+      );
+      if (eligibleResults.length > 0) {
+        saveRoundDerivedRules(eligibleResults, state.poolRoundNumber, `batch-${BATCH_NUM}`, BATCH_NUM);
+        for (const r of eligibleResults) {
+          writeAuditEntry({
+            sourceId: r.sourceId,
+            event: 'rule_generated',
+            round: state.poolRoundNumber,
+            metadata: {
+              failCategory: r.failCategory,
+              confidence: r.failCategoryConfidence,
+              suggestedPaths: r.discoveredPaths?.map((dp: any) => dp.path) ?? [],
+              suggestedQueue: r.nextQueue,
+            },
+          });
+        }
+        const proposalResult = proposeCandidateRulesAsImprovements(BATCH_NUM, 0.70);
+        if (proposalResult.proposed > 0) {
+          console.log(`[C4-ImprovementProposal] Batch ${BATCH_NUM}: proposed ${proposalResult.proposed} improvements`);
+        }
+      }
+
+      const sourcesThatGeneratedRules = new Set<string>(eligibleResults.map(r => r.sourceId));
+      allDerivedRules = loadAllDerivedRules(BATCH_NUM);
+      c4AllResults.push(c4AnalysisResult);
+
+      // C4 routing
+      for (const c4Result of c4AnalysisResult.results) {
+        const src = state.activePool.find(s => s.sourceId === c4Result.sourceId);
+        if (!src) continue;
+
+        const queueEntry = {
+          sourceId: src.sourceId,
+          queueName: '',
+          queuedAt: new Date().toISOString(),
+          priority: 1,
+          attempt: 1,
+          queueReason: `C4-AI: ${c4Result.likelyCategory} — conf=${c4Result.confidenceBreakdown.overall}`,
+          workerNotes: `C4-AI nextQueue=${c4Result.nextQueue}`,
+          winningStage: 'C4-AI' as const,
+          outcomeType: 'fail' as const,
+          routeSuggestion: c4Result.nextQueue,
+          roundNumber: state.poolRoundNumber,
+          roundsParticipated: src.roundsParticipated,
+        };
+
+        if (c4Result.failCategory === FailCategory.LIKELY_JS_RENDER && c4Result.failCategoryConfidence >= 0.70) {
+          queueEntry.queueName = 'postTestC-D';
+          appendFileSync(QUEUES.D, JSON.stringify(queueEntry) + '\n');
+          state.activePool = state.activePool.filter(s => s.sourceId !== c4Result.sourceId);
+          state.exited.push({ source: src, decision: 'postTestC-D', result: null as any });
+          if (!state.allExitedIds.includes(src.sourceId)) state.allExitedIds.push(src.sourceId);
+          console.log(`  [C4-PROMPT5] ${src.sourceId} → postTestC-D`);
+          continue;
+        }
+
+        const sourceGeneratedRuleThisRound = sourcesThatGeneratedRules.has(c4Result.sourceId);
+        let queuePath = '';
+        let queueName = '';
+
+        if (sourceGeneratedRuleThisRound) {
+          queuePath = '';
+          queueName = 'STAYS_IN_POOL';
+        } else {
+          switch (c4Result.nextQueue) {
+            case 'UI': queuePath = QUEUES.UI; queueName = 'postTestC-UI'; break;
+            case 'A': queuePath = QUEUES.A; queueName = 'postTestC-A'; break;
+            case 'B': queuePath = QUEUES.B; queueName = 'postTestC-B'; break;
+            case 'D': queuePath = QUEUES.D; queueName = 'postTestC-D'; break;
+            case 'manual-review':
+              if (src.roundsParticipated < 3) {
+                queuePath = ''; queueName = 'STAYS_IN_POOL';
+              } else {
+                queuePath = QUEUES.MANUAL_REVIEW; queueName = 'postTestC-manual-review';
+              }
+              break;
+            default: queuePath = ''; queueName = 'STAYS_IN_POOL';
           }
         }
-      } catch (e: any) {
-        console.warn(`[C4-Deep] Analysis failed: ${e.message}`);
-      }
-    }
 
-    const RULE_ELIGIBLE_CATEGORIES = [
-      FailCategory.NEEDS_SUBPAGE_DISCOVERY,
-      FailCategory.LIKELY_JS_RENDER,
-      FailCategory.ENTRY_PAGE_NO_EVENTS,
-    ];
-    const eligibleResults = c4Analysis.results.filter(
-      r => r.failCategoryConfidence >= 0.6 && RULE_ELIGIBLE_CATEGORIES.includes(r.failCategory)
-    );
-    if (eligibleResults.length > 0) {
-      saveRoundDerivedRules(eligibleResults, state.poolRoundNumber, `batch-${BATCH_NUM}`, BATCH_NUM);
-      for (const r of eligibleResults) {
-        writeAuditEntry({
-          sourceId: r.sourceId,
-          event: 'rule_generated',
-          round: state.poolRoundNumber,
-          metadata: {
-            failCategory: r.failCategory,
-            confidence: r.failCategoryConfidence,
-            suggestedPaths: r.discoveredPaths?.map((dp: any) => dp.path) ?? [],
-            suggestedQueue: r.nextQueue,
-          },
-        });
-      }
-      // [C4-IMPROVEMENT-PROPOSAL] Propose candidateRuleForC0C3 as improvements for 123-loop
-      const proposalResult = proposeCandidateRulesAsImprovements(BATCH_NUM, 0.70);
-      if (proposalResult.proposed > 0) {
-        console.log(`[C4-ImprovementProposal] Batch ${BATCH_NUM}: proposed ${proposalResult.proposed} improvements (${proposalResult.skipped} skipped, ${proposalResult.errors.length} errors)`);
-      }
-    }
-
-    const sourcesThatGeneratedRules = new Set<string>(eligibleResults.map(r => r.sourceId));
-
-    allDerivedRules = loadAllDerivedRules(BATCH_NUM);
-    c4AllResults.push(c4Analysis);
-
-    // C4 routing
-    for (const c4Result of c4Analysis.results) {
-      const src = state.activePool.find(s => s.sourceId === c4Result.sourceId);
-      if (!src) continue;
-
-      const queueEntry = {
-        sourceId: src.sourceId,
-        queueName: '',
-        queuedAt: new Date().toISOString(),
-        priority: 1,
-        attempt: 1,
-        queueReason: `C4-AI: ${c4Result.likelyCategory} — conf=${c4Result.confidenceBreakdown.overall}`,
-        workerNotes: `C4-AI nextQueue=${c4Result.nextQueue}`,
-        winningStage: 'C4-AI' as const,
-        outcomeType: 'fail' as const,
-        routeSuggestion: c4Result.nextQueue,
-        roundNumber: state.poolRoundNumber,
-        roundsParticipated: src.roundsParticipated,
-      };
-
-      if (c4Result.failCategory === FailCategory.LIKELY_JS_RENDER && c4Result.failCategoryConfidence >= 0.70) {
-        queueEntry.queueName = 'postTestC-D';
-        appendFileSync(QUEUES.D, JSON.stringify(queueEntry) + '\n');
-        state.activePool = state.activePool.filter(s => s.sourceId !== c4Result.sourceId);
-        state.exited.push({ source: src, decision: 'postTestC-D', result: null as any });
-        if (!state.allExitedIds.includes(src.sourceId)) state.allExitedIds.push(src.sourceId);
-        console.log(`  [C4-PROMPT5] ${src.sourceId} → postTestC-D`);
-        continue;
-      }
-
-      const sourceGeneratedRuleThisRound = sourcesThatGeneratedRules.has(c4Result.sourceId);
-
-      let queuePath = '';
-      let queueName = '';
-
-      if (sourceGeneratedRuleThisRound) {
-        queuePath = '';
-        queueName = 'STAYS_IN_POOL';
-      } else {
-        switch (c4Result.nextQueue) {
-          case 'UI': queuePath = QUEUES.UI; queueName = 'postTestC-UI'; break;
-          case 'A': queuePath = QUEUES.A; queueName = 'postTestC-A'; break;
-          case 'B': queuePath = QUEUES.B; queueName = 'postTestC-B'; break;
-          case 'D': queuePath = QUEUES.D; queueName = 'postTestC-D'; break;
-          case 'manual-review':
-            if (src.roundsParticipated < 3) {
-              queuePath = ''; queueName = 'STAYS_IN_POOL';
-            } else {
-              queuePath = QUEUES.MANUAL_REVIEW; queueName = 'postTestC-manual-review';
-            }
-            break;
-          default: queuePath = ''; queueName = 'STAYS_IN_POOL';
+        if (queuePath) {
+          queueEntry.queueName = queueName;
+          appendFileSync(queuePath, JSON.stringify(queueEntry) + '\n');
         }
-      }
 
-      if (queuePath) {
-        queueEntry.queueName = queueName;
-        appendFileSync(queuePath, JSON.stringify(queueEntry) + '\n');
-      }
-
-      if (queueName !== 'STAYS_IN_POOL') {
-        state.activePool = state.activePool.filter(s => s.sourceId !== c4Result.sourceId);
-        state.exited.push({ source: src, decision: queueName, result: null as any });
-        if (!state.allExitedIds.includes(src.sourceId)) state.allExitedIds.push(src.sourceId);
+        if (queueName !== 'STAYS_IN_POOL') {
+          state.activePool = state.activePool.filter(s => s.sourceId !== c4Result.sourceId);
+          state.exited.push({ source: src, decision: queueName, result: null as any });
+          if (!state.allExitedIds.includes(src.sourceId)) state.allExitedIds.push(src.sourceId);
+        }
       }
     }
 
@@ -1717,24 +2037,32 @@ export async function runDynamicPoolBatch(options: DynamicPoolOptions = {}): Pro
 // ---------------------------------------------------------------------------
 
 async function main() {
-  // Parse CLI arguments for explicit sources
+  // Parse CLI arguments for explicit sources and batch number override
   const args = process.argv.slice(2);
   let EXPLICIT_SOURCES: string[] = [];
+  let CLI_BATCH_NUM: number | null = null;
   for (let i = 0; i < args.length; i++) {
     if (args[i] === '--sources' && args[i + 1]) {
       EXPLICIT_SOURCES = args[i + 1].split(',').map(s => s.trim());
       i++;
     }
+    if (args[i] === '--batch-num' && args[i + 1]) {
+      CLI_BATCH_NUM = parseInt(args[i + 1], 10);
+      i++;
+    }
+    if (args[i] === '--no-c4') {
+      SKIP_C4 = true;
+    }
   }
 
   // Read batch number and type from batch-state.jsonl
-  const batchState = readBatchState();
-  // Extract batch number: prefer currentBatch, fall back to parsing batchId (e.g. "batch-25" → 25)
-  const BATCH_NUM_FROM_ID = batchState?.batchId ? parseInt(batchState.batchId.replace('batch-', ''), 10) : null;
-  const BATCH_NUM = batchState?.currentBatch ?? BATCH_NUM_FROM_ID ?? 13;
-  const BATCH_TYPE: 'normal' | 'verification' = (batchState as any)?.batchType ?? 'normal';
-  const TARGET_IMPROVEMENT: string | null = (batchState as any)?.targetImprovement ?? null;
-  const VERIFICATION_SOURCES: string[] = (batchState as any)?.verificationSources ?? [];
+  const rawBatchState = readBatchState();
+  // Extract batch number: CLI override > currentBatch > batchId parsing > 13
+  const BATCH_NUM_FROM_ID = (rawBatchState as any)?.batchId ? parseInt((rawBatchState as any).batchId.replace('batch-', ''), 10) : null;
+  const BATCH_NUM = CLI_BATCH_NUM ?? rawBatchState?.currentBatch ?? BATCH_NUM_FROM_ID ?? 13;
+  const BATCH_TYPE: 'normal' | 'verification' = (rawBatchState as any)?.batchType ?? 'normal';
+  const TARGET_IMPROVEMENT: string | null = (rawBatchState as any)?.targetImprovement ?? null;
+  const VERIFICATION_SOURCES: string[] = (rawBatchState as any)?.verificationSources ?? [];
 
   console.log('='.repeat(60));
   console.log('DYNAMIC TEST POOL RUNNER — EXPERIMENTAL');
@@ -1749,9 +2077,6 @@ async function main() {
   // to batch-specific report files (e.g., c4-ai-analysis-round-X.md)
   const BATCH_DIR = ensureBatchDir(BATCH_NUM);
   console.log(`[Init] Batch directory ready: ${BATCH_DIR}`);
-
-  // Step 1: Clear output queues
-  clearOutputQueues();
 
   // Step 1: Check for existing pool state (resume scenario)
   // If batch-state.jsonl's last entry is a FRESH batch-start (not a completion),
@@ -1775,14 +2100,50 @@ async function main() {
   let roundResults: { results: CResult[]; exits: { source: PoolSource; decision: string; result: CResult }[]; fails: PoolSource[] }[] = [];
   let c4AllResults: C4RoundAnalysis[] = [];
 
+  // If the loaded pool is already complete (round 3 or pool exhausted), advance to next batch
+  // This fixes the "batch re-runs same completed batch" bug
+  const batchAlreadyComplete = savedState && (
+    savedState.poolRoundNumber >= 3 ||
+    (savedState.poolRoundNumber > 0 && savedState.activePool.length === 0)
+  );
+
+  if (batchAlreadyComplete) {
+    console.log(`\n[Step 1] Batch ${BATCH_NUM} already complete (round ${savedState!.poolRoundNumber}) — advancing to next batch`);
+    
+    // FIXED: Remaining postB-preC entries are NEVER drained to manual-review.
+    // Those entries were never selected by this batch — they are simply the
+    // unselected remainder from the pool build. They stay in postB-preC for
+    // the next batch to pick up. Only sources that were actually PROCESSED
+    // and failed are routed to their proper exit queues.
+    const remainingQueueEntries = parseJsonl<QueueEntry>(QUEUES.PREC);
+    if (remainingQueueEntries.length > 0) {
+      console.log(`[Step 1] ${remainingQueueEntries.length} sources remain in postB-preC (never selected by batch-${BATCH_NUM}) — left for next batch`);
+    }
+    
+    const nextBatch = BATCH_NUM + 1;
+    // Write a batch-start entry for the new batch so future runs use the correct number
+    writeBatchStateEntry({
+      batchId: `batch-${nextBatch}`,
+      currentBatch: nextBatch,
+      type: 'batch-start',
+      startedAt: new Date().toISOString(),
+    });
+    console.log(`[Step 1] Wrote batch-start for batch-${nextBatch} — please re-run`);
+    return;
+  }
+
   if (savedState && savedState.poolRoundNumber > 0 && !isFreshBatchStart) {
     // Resume from saved state
     console.log(`\n[Step 1] Resuming pool from saved state (round ${savedState.poolRoundNumber})`);
     state = savedState;
     // Round results will be loaded from the pool state later if needed
   } else {
-    // Fresh start
-    // Fresh start — build initial pool
+    // Fresh start — build initial pool AND clear output queues
+    console.log('\n[Step 1] Building initial pool from postB-preC...');
+    // Only clear output queues on FRESH batch start (not on resume, not on advance)
+    // Each batch appends to the same runtime/postTestC-*.jsonl files
+
+
     console.log('\n[Step 1] Building initial pool from postB-preC...');
     const initial = buildInitialPool(BATCH_TYPE, VERIFICATION_SOURCES, EXPLICIT_SOURCES);
 
@@ -1880,68 +2241,72 @@ async function main() {
       });
     }
 
-    const c4Analysis = await runC4Analysis(
-      c4InputSources,
-      `batch-${BATCH_NUM}`,
-      state.poolRoundNumber,
-      BATCH_DIR
-    );
-
-    // [SAVE-DERIVED-RULES] Save C4 results as derived rules for future rounds
-    // Only for: NEEDS_SUBPAGE_DISCOVERY, LIKELY_JS_RENDER, ENTRY_PAGE_NO_EVENTS (the new replacement for WRONG_ENTRY_PAGE)
-    const RULE_ELIGIBLE_CATEGORIES = [
-      FailCategory.NEEDS_SUBPAGE_DISCOVERY,
-      FailCategory.LIKELY_JS_RENDER,
-      FailCategory.ENTRY_PAGE_NO_EVENTS,
-    ];
-    const eligibleResults = c4Analysis.results.filter(
-      r => r.failCategoryConfidence >= 0.6 && RULE_ELIGIBLE_CATEGORIES.includes(r.failCategory)
-    );
-    if (eligibleResults.length > 0) {
-      saveRoundDerivedRules(
-        eligibleResults,
-        state.poolRoundNumber,
+    // [124-NO-C4] Skip all C4-AI when --no-c4 flag is set
+    if (!SKIP_C4) {
+      const c4Analysis = await runC4Analysis(
+        c4InputSources,
         `batch-${BATCH_NUM}`,
-        BATCH_NUM
+        state.poolRoundNumber,
+        BATCH_DIR
       );
-      // Audit: log rule generation
-      for (const r of eligibleResults) {
-        writeAuditEntry({
-          sourceId: r.sourceId,
-          event: 'rule_generated',
-          round: state.poolRoundNumber,
-          metadata: {
-            failCategory: r.failCategory,
-            confidence: r.failCategoryConfidence,
-            suggestedPaths: r.discoveredPaths?.map((dp: any) => dp.path) ?? [],
-            suggestedQueue: r.nextQueue,
-          },
-        });
+
+      // [SAVE-DERIVED-RULES] Save C4 results as derived rules for future rounds
+      const RULE_ELIGIBLE_CATEGORIES = [
+        FailCategory.NEEDS_SUBPAGE_DISCOVERY,
+        FailCategory.LIKELY_JS_RENDER,
+        FailCategory.ENTRY_PAGE_NO_EVENTS,
+      ];
+      const eligibleResults = (c4AnalysisResult?.results ?? []).filter(
+        r => r.failCategoryConfidence >= 0.6 && RULE_ELIGIBLE_CATEGORIES.includes(r.failCategory)
+      );
+      if (eligibleResults.length > 0) {
+        saveRoundDerivedRules(
+          eligibleResults,
+          state.poolRoundNumber,
+          `batch-${BATCH_NUM}`,
+          BATCH_NUM
+        );
+        for (const r of eligibleResults) {
+          writeAuditEntry({
+            sourceId: r.sourceId,
+            event: 'rule_generated',
+            round: state.poolRoundNumber,
+            metadata: {
+              failCategory: r.failCategory,
+              confidence: r.failCategoryConfidence,
+              suggestedPaths: r.discoveredPaths?.map((dp: any) => dp.path) ?? [],
+              suggestedQueue: r.nextQueue,
+            },
+          });
+        }
+        const proposalResult = proposeCandidateRulesAsImprovements(BATCH_NUM, 0.70);
+        if (proposalResult.proposed > 0) {
+          console.log(`[C4-ImprovementProposal] Batch ${BATCH_NUM}: proposed ${proposalResult.proposed} improvements`);
+        }
       }
-      // [C4-IMPROVEMENT-PROPOSAL] Propose candidateRuleForC0C3 as improvements for 123-loop
-      const proposalResult = proposeCandidateRulesAsImprovements(BATCH_NUM, 0.70);
-      if (proposalResult.proposed > 0) {
-        console.log(`[C4-ImprovementProposal] Batch ${BATCH_NUM}: proposed ${proposalResult.proposed} improvements (${proposalResult.skipped} skipped, ${proposalResult.errors.length} errors)`);
-      }
+    } else {
+      console.log('[124-NO-C4] Skipping C4-AI in pool loop, using standard exit routing');
     }
 
     // [LEARNING-LOOP-FIX] Track sources that generated rules this round
-    // These sources should STAY in pool for round N+1 to apply their own rules
+    // Only runs when C4 was active (SKIP_C4=false)
     const sourcesThatGeneratedRules = new Set<string>();
-    for (const r of eligibleResults) {
-      sourcesThatGeneratedRules.add(r.sourceId);
-    }
-    if (sourcesThatGeneratedRules.size > 0) {
-      console.log(`[Learning-Loop-Fix] Sources that generated rules this round (will get rule-application round): ${Array.from(sourcesThatGeneratedRules).join(', ')}`);
-    }
+    if (!SKIP_C4 && c4AnalysisResult) {
+      const eligibleResults = (c4AnalysisResult?.results ?? []).filter(
+        (r: any) => r.failCategoryConfidence >= 0.6
+      );
+      for (const r of eligibleResults) {
+        sourcesThatGeneratedRules.add(r.sourceId);
+      }
+      if (sourcesThatGeneratedRules.size > 0) {
+        console.log(`[Learning-Loop-Fix] Sources that generated rules this round: ${Array.from(sourcesThatGeneratedRules).join(', ')}`);
+      }
+      // Reload derived rules so the NEXT round uses all known rules
+      allDerivedRules = loadAllDerivedRules(BATCH_NUM);
+      c4AllResults.push(c4AnalysisResult);
 
-    // Reload derived rules so the NEXT round uses all known rules including those just saved
-    allDerivedRules = loadAllDerivedRules(BATCH_NUM);
-
-    c4AllResults.push(c4Analysis);
-
-    // Route sources based on C4-AI nextQueue recommendation
-    for (const c4Result of c4Analysis.results) {
+      // Route sources based on C4-AI nextQueue recommendation
+      for (const c4Result of c4AnalysisResult.results) {
       const src = state.activePool.find(s => s.sourceId === c4Result.sourceId);
       if (!src) continue;
 
@@ -2065,6 +2430,7 @@ async function main() {
         console.log(`  [C4] ${src.sourceId} → retry-pool (C4-AI)`);
       }
     }
+    } // end if (!SKIP_C4 && c4AnalysisResult)
 
     console.log(`\nAfter C4-AI routing:`);
     console.log(`  Active pool: ${state.activePool.length}`);
@@ -2156,6 +2522,13 @@ async function main() {
   // [RULE-EFFECTIVENESS] Write structured report to rule-effectiveness.jsonl and summary to rule-effectiveness.md
   if (roundResults.length > 0) {
     writeRuleEffectivenessReport(roundResults, c4AllResults, allDerivedRules, BATCH_NUM);
+  }
+
+  // [PER-SOURCE TRACES] Write batch-traces.jsonl for C4-observer analysis
+  // Each line = one PerSourceTrace for one source in one round.
+  // C4-observer reads this file and produces independent analysis.
+  if (roundResults.length > 0) {
+    writeBatchTraces(roundResults, BATCH_NUM);
   }
 
   // Mark batch as completed in batch-state.jsonl

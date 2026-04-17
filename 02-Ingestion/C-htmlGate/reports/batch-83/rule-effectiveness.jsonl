@@ -1,0 +1,1 @@
+{"sourceId":"chalmers","ruleGeneratedRound":2,"failCategory":"no_viable_path_found","suggestedPaths":["/utbildning/hitta-program/","/"],"suggestedQueue":"retry-pool","ruleAppliedRound":null,"appliedPaths":[],"outcomeBeforeRule":{"round":2,"c0Candidates":2,"eventsFound":0},"outcomeAfterRule":{"round":3,"c0Candidates":2,"eventsFound":0,"improved":false},"helped":null}

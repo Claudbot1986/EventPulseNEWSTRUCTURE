@@ -1,157 +1,127 @@
 {
-  "poolRoundNumber": 2,
-  "activePool": [
-    {
-      "sourceId": "stockholm-live",
-      "url": "https://stockholmlive.se/",
-      "roundsParticipated": 2,
-      "diversifiers": [
-        "failures_2",
-        "path_network"
-      ],
-      "queueReason": "re-queued by 123-system: was ingestionStage=failed with no error",
-      "enrichedData": {
-        "lastPathUsed": "network",
-        "lastEventsFound": 0,
-        "consecutiveFailures": 2,
-        "triageResult": null
-      }
-    },
-    {
-      "sourceId": "antikmassan",
-      "url": "https://antikmassan.se/",
-      "roundsParticipated": 2,
-      "diversifiers": [
-        "failures_1",
-        "path_jsonld"
-      ],
-      "queueReason": "re-queued by 123-system: was ingestionStage=failed with no error",
-      "enrichedData": {
-        "lastPathUsed": "jsonld",
-        "lastEventsFound": 0,
-        "consecutiveFailures": 1,
-        "triageResult": null
-      }
-    },
-    {
-      "sourceId": "slakthuset",
-      "url": "https://slakthuset.se/",
-      "roundsParticipated": 2,
-      "diversifiers": [
-        "failures_2",
-        "path_network"
-      ],
-      "queueReason": "re-queued by 123-system: was ingestionStage=failed with no error",
-      "enrichedData": {
-        "lastPathUsed": "network",
-        "lastEventsFound": 0,
-        "consecutiveFailures": 2,
-        "triageResult": null
-      }
-    },
-    {
-      "sourceId": "ostersunds-fk",
-      "url": "https://ofksverige.se/",
-      "roundsParticipated": 2,
-      "diversifiers": [
-        "failures_2",
-        "path_network"
-      ],
-      "queueReason": "re-queued by 123-system: was ingestionStage=failed with no error",
-      "enrichedData": {
-        "lastPathUsed": "network",
-        "lastEventsFound": 0,
-        "consecutiveFailures": 2,
-        "triageResult": null
-      }
-    },
-    {
-      "sourceId": "friidrottsf-rbundet",
-      "url": "https://friidrott.se/",
-      "roundsParticipated": 2,
-      "diversifiers": [
-        "failures_2",
-        "path_network"
-      ],
-      "queueReason": "re-queued by 123-system: was ingestionStage=failed with no error",
-      "enrichedData": {
-        "lastPathUsed": "network",
-        "lastEventsFound": 0,
-        "consecutiveFailures": 2,
-        "triageResult": null
-      }
-    },
-    {
-      "sourceId": "billetto-aggregator",
-      "url": "https://billetto.se/",
-      "roundsParticipated": 2,
-      "diversifiers": [
-        "failures_2",
-        "path_network"
-      ],
-      "queueReason": "re-queued by 123-system: was ingestionStage=failed with no error",
-      "enrichedData": {
-        "lastPathUsed": "network",
-        "lastEventsFound": 0,
-        "consecutiveFailures": 2,
-        "triageResult": null
-      }
-    },
-    {
-      "sourceId": "naturhistoriska-museet",
-      "url": "https://naturhistoriska.se/",
-      "roundsParticipated": 2,
-      "diversifiers": [
-        "failures_2",
-        "path_network"
-      ],
-      "queueReason": "re-queued by 123-system: was ingestionStage=failed with no error",
-      "enrichedData": {
-        "lastPathUsed": "network",
-        "lastEventsFound": 0,
-        "consecutiveFailures": 2,
-        "triageResult": null
-      }
-    },
-    {
-      "sourceId": "svenska-bowlingf-rbundet",
-      "url": "https://svenska-bowling.se/",
-      "roundsParticipated": 2,
-      "diversifiers": [
-        "failures_2",
-        "path_network"
-      ],
-      "queueReason": "manual-review re-queued by 123-system",
-      "enrichedData": {
-        "lastPathUsed": "network",
-        "lastEventsFound": 0,
-        "consecutiveFailures": 2,
-        "triageResult": null
-      }
-    },
-    {
-      "sourceId": "vasteras-hockey",
-      "url": "https://vasterasfh.se/",
-      "roundsParticipated": 2,
-      "diversifiers": [
-        "failures_2",
-        "path_network"
-      ],
-      "queueReason": "manual-review re-queued by 123-system",
-      "enrichedData": {
-        "lastPathUsed": "network",
-        "lastEventsFound": 0,
-        "consecutiveFailures": 2,
-        "triageResult": null
-      }
-    }
-  ],
+  "poolRoundNumber": 3,
+  "activePool": [],
   "exited": [
     {
       "source": {
-        "sourceId": "molndals",
-        "url": "https://molndal.se/",
-        "roundsParticipated": 0,
+        "sourceId": "kth",
+        "url": "https://kth.se/evenemang",
+        "roundsParticipated": 2,
+        "diversifiers": [
+          "failures_2",
+          "path_network"
+        ],
+        "queueReason": "manual-review re-queued by 123-system",
+        "enrichedData": {
+          "lastPathUsed": "network",
+          "lastEventsFound": 0,
+          "consecutiveFailures": 2,
+          "triageResult": null
+        }
+      },
+      "decision": "postTestC-manual-review",
+      "result": {
+        "sourceId": "kth",
+        "url": "https://kth.se/evenemang",
+        "c0": {
+          "candidates": 0,
+          "winnerUrl": null,
+          "winnerDensity": 0,
+          "duration": 370,
+          "rootFallback": false,
+          "ruleAppliedSource": "none",
+          "ruleAppliedPaths": [],
+          "ruleWinnerPath": null
+        },
+        "c1": {
+          "verdict": "unfetchable",
+          "likelyJsRendered": false,
+          "timeTagCount": 0,
+          "dateCount": 0,
+          "duration": 234
+        },
+        "c2": {
+          "verdict": "unclear",
+          "score": 0,
+          "reason": "fetchHtml failed: HTTP 404",
+          "duration": 206
+        },
+        "extract": {
+          "eventsFound": 0,
+          "duration": 1
+        },
+        "winningStage": "C3",
+        "outcomeType": "fail",
+        "routeSuggestion": "Fail",
+        "evidence": "C0: no internal event candidates discovered",
+        "roundNumber": 3,
+        "success": false,
+        "failType": "discovery_failure"
+      }
+    },
+    {
+      "source": {
+        "sourceId": "andra-langgatan",
+        "url": "https://andra.se/",
+        "roundsParticipated": 2,
+        "diversifiers": [
+          "failures_1",
+          "triage_still_unknown",
+          "path_network"
+        ],
+        "queueReason": "re-queued by 123-system: was ingestionStage=failed with no error",
+        "enrichedData": {
+          "lastPathUsed": "network",
+          "lastEventsFound": 0,
+          "consecutiveFailures": 1,
+          "triageResult": "still_unknown"
+        }
+      },
+      "decision": "postTestC-manual-review",
+      "result": {
+        "sourceId": "andra-langgatan",
+        "url": "https://andra.se/",
+        "c0": {
+          "candidates": 0,
+          "winnerUrl": null,
+          "winnerDensity": 0,
+          "duration": 5006,
+          "rootFallback": false,
+          "ruleAppliedSource": "none",
+          "ruleAppliedPaths": [],
+          "ruleWinnerPath": null
+        },
+        "c1": {
+          "verdict": "unfetchable",
+          "likelyJsRendered": false,
+          "timeTagCount": 0,
+          "dateCount": 0,
+          "duration": 5013
+        },
+        "c2": {
+          "verdict": "unclear",
+          "score": 0,
+          "reason": "fetchHtml failed: timeout of 20000ms exceeded",
+          "duration": 5015
+        },
+        "extract": {
+          "eventsFound": 0,
+          "duration": 4
+        },
+        "winningStage": "C3",
+        "outcomeType": "fail",
+        "routeSuggestion": "Fail",
+        "evidence": "C0: no internal event candidates discovered",
+        "roundNumber": 3,
+        "success": false,
+        "failType": "discovery_failure"
+      }
+    },
+    {
+      "source": {
+        "sourceId": "goteborgs-kulturfestival",
+        "url": "https://kulturfestivalen.se/",
+        "roundsParticipated": 2,
         "diversifiers": [
           "failures_2",
           "path_network"
@@ -164,137 +134,457 @@
           "triageResult": null
         }
       },
-      "decision": "postTestC-UI",
+      "decision": "postTestC-manual-review",
       "result": {
-        "sourceId": "molndals",
-        "url": "https://molndal.se/",
-        "c0": {
-          "candidates": 1,
-          "winnerUrl": "https://molndal.se/evenemang",
-          "winnerDensity": 332,
-          "duration": 2044,
-          "rootFallback": false,
-          "ruleAppliedSource": "link-discovery",
-          "ruleAppliedPaths": [],
-          "ruleWinnerPath": "/evenemang"
-        },
-        "c1": {
-          "verdict": "strong",
-          "likelyJsRendered": false,
-          "timeTagCount": 26,
-          "dateCount": 20,
-          "duration": 767
-        },
-        "c2": {
-          "verdict": "promising",
-          "score": 209,
-          "reason": "[breadth_nojsonld] score=209(adj) >= 12? promising pg=time-tag cand=cards=strong(13/13),lists=medium(2/2)",
-          "duration": 811
-        },
-        "extract": {
-          "eventsFound": 40,
-          "duration": 18
-        },
-        "winningStage": "C3",
-        "outcomeType": "extract_success",
-        "routeSuggestion": "UI",
-        "evidence": "extracted 40 events from HTML",
-        "roundNumber": 1,
-        "success": true
-      }
-    },
-    {
-      "source": {
-        "sourceId": "akersberga",
-        "url": "https://akersberga.se/",
-        "roundsParticipated": 0,
-        "diversifiers": [
-          "failures_1",
-          "triage_still_unknown",
-          "path_jsonld"
-        ],
-        "queueReason": "re-queued by 123-system: retryable failure",
-        "enrichedData": {
-          "lastPathUsed": "jsonld",
-          "lastEventsFound": 0,
-          "consecutiveFailures": 1,
-          "triageResult": "still_unknown"
-        }
-      },
-      "decision": "postTestC-D",
-      "result": {
-        "sourceId": "akersberga",
-        "url": "https://akersberga.se/",
+        "sourceId": "goteborgs-kulturfestival",
+        "url": "https://kulturfestivalen.se/",
         "c0": {
           "candidates": 0,
           "winnerUrl": null,
           "winnerDensity": 0,
-          "duration": 1861,
+          "duration": 117,
           "rootFallback": false,
           "ruleAppliedSource": "none",
-          "ruleAppliedPaths": [
-            "/events",
-            "/program",
-            "/kalender",
-            "/schema",
-            "/evenemang",
-            "/kalendarium",
-            "/aktiviteter",
-            "/utställningar",
-            "/exhibition",
-            "/exhibitions",
-            "/exhibits",
-            "/visa",
-            "/scen",
-            "/teater",
-            "/repertoar",
-            "/forestillinger",
-            "/forestilling",
-            "/shown",
-            "/matcher",
-            "/tickets",
-            "/biljetter",
-            "/arena",
-            "/hall",
-            "/kultur",
-            "/fritid",
-            "/besok",
-            "/planera",
-            "/oppet",
-            "/konserter",
-            "/konsert"
-          ],
+          "ruleAppliedPaths": [],
           "ruleWinnerPath": null
         },
         "c1": {
-          "verdict": "no-main",
-          "likelyJsRendered": true,
+          "verdict": "unfetchable",
+          "likelyJsRendered": false,
           "timeTagCount": 0,
           "dateCount": 0,
-          "duration": 102
+          "duration": 104
         },
         "c2": {
-          "verdict": "skipped",
+          "verdict": "unclear",
           "score": 0,
-          "reason": "c1-direct-route",
-          "duration": 0
+          "reason": "fetchHtml failed: Hostname/IP does not match certificate's altnames: Host: kulturfestivalen.se. is not in the cert's altnames: DNS:*.one.com, DNS:one.com",
+          "duration": 87
         },
         "extract": {
           "eventsFound": 0,
           "duration": 0
         },
-        "winningStage": "C1",
-        "outcomeType": "route_success",
-        "routeSuggestion": "D",
-        "evidence": "C1: likelyJsRendered=true + (timeTags=0 OR dates=0) — direct D route, C2/C3 skipped",
-        "roundNumber": 2,
-        "success": false
+        "winningStage": "C3",
+        "outcomeType": "fail",
+        "routeSuggestion": "Fail",
+        "evidence": "C0: no internal event candidates discovered",
+        "roundNumber": 3,
+        "success": false,
+        "failType": "discovery_failure"
+      }
+    },
+    {
+      "source": {
+        "sourceId": "gr-na-lund",
+        "url": "https://gronalund.se/",
+        "roundsParticipated": 2,
+        "diversifiers": [
+          "failures_2",
+          "path_network"
+        ],
+        "queueReason": "re-queued by 123-system: was ingestionStage=failed with no error",
+        "enrichedData": {
+          "lastPathUsed": "network",
+          "lastEventsFound": 0,
+          "consecutiveFailures": 2,
+          "triageResult": null
+        }
+      },
+      "decision": "postTestC-manual-review",
+      "result": {
+        "sourceId": "gr-na-lund",
+        "url": "https://gronalund.se/",
+        "c0": {
+          "candidates": 0,
+          "winnerUrl": null,
+          "winnerDensity": 0,
+          "duration": 164,
+          "rootFallback": false,
+          "ruleAppliedSource": "none",
+          "ruleAppliedPaths": [],
+          "ruleWinnerPath": null
+        },
+        "c1": {
+          "verdict": "unfetchable",
+          "likelyJsRendered": false,
+          "timeTagCount": 0,
+          "dateCount": 0,
+          "duration": 67
+        },
+        "c2": {
+          "verdict": "unclear",
+          "score": 0,
+          "reason": "fetchHtml failed: Cross-domain redirect blocked: gronalund.se → www.gronalund.com",
+          "duration": 43
+        },
+        "extract": {
+          "eventsFound": 0,
+          "duration": 0
+        },
+        "winningStage": "C3",
+        "outcomeType": "fail",
+        "routeSuggestion": "Fail",
+        "evidence": "C0: no internal event candidates discovered",
+        "roundNumber": 3,
+        "success": false,
+        "failType": "discovery_failure"
+      }
+    },
+    {
+      "source": {
+        "sourceId": "falun-konserthus",
+        "url": "https://falu.se/",
+        "roundsParticipated": 2,
+        "diversifiers": [
+          "failures_2",
+          "path_network"
+        ],
+        "queueReason": "re-queued by 123-system: was ingestionStage=failed with no error",
+        "enrichedData": {
+          "lastPathUsed": "network",
+          "lastEventsFound": 0,
+          "consecutiveFailures": 2,
+          "triageResult": null
+        }
+      },
+      "decision": "postTestC-manual-review",
+      "result": {
+        "sourceId": "falun-konserthus",
+        "url": "https://falu.se/",
+        "c0": {
+          "candidates": 0,
+          "winnerUrl": null,
+          "winnerDensity": 0,
+          "duration": 430,
+          "rootFallback": false,
+          "ruleAppliedSource": "none",
+          "ruleAppliedPaths": [],
+          "ruleWinnerPath": null
+        },
+        "c1": {
+          "verdict": "unfetchable",
+          "likelyJsRendered": false,
+          "timeTagCount": 0,
+          "dateCount": 0,
+          "duration": 245
+        },
+        "c2": {
+          "verdict": "unclear",
+          "score": 0,
+          "reason": "fetchHtml failed: unable to verify the first certificate; if the root CA is installed locally, try running Node.js with --use-system-ca",
+          "duration": 295
+        },
+        "extract": {
+          "eventsFound": 0,
+          "duration": 0
+        },
+        "winningStage": "C3",
+        "outcomeType": "fail",
+        "routeSuggestion": "Fail",
+        "evidence": "C0: no internal event candidates discovered",
+        "roundNumber": 3,
+        "success": false,
+        "failType": "discovery_failure"
+      }
+    },
+    {
+      "source": {
+        "sourceId": "malmo-ff",
+        "url": "https://malmöfff.se/",
+        "roundsParticipated": 2,
+        "diversifiers": [
+          "failures_2",
+          "path_network"
+        ],
+        "queueReason": "re-queued by 123-system: was ingestionStage=failed with no error",
+        "enrichedData": {
+          "lastPathUsed": "network",
+          "lastEventsFound": 0,
+          "consecutiveFailures": 2,
+          "triageResult": null
+        }
+      },
+      "decision": "postTestC-manual-review",
+      "result": {
+        "sourceId": "malmo-ff",
+        "url": "https://malmöfff.se/",
+        "c0": {
+          "candidates": 0,
+          "winnerUrl": null,
+          "winnerDensity": 0,
+          "duration": 2,
+          "rootFallback": false,
+          "ruleAppliedSource": "none",
+          "ruleAppliedPaths": [],
+          "ruleWinnerPath": null
+        },
+        "c1": {
+          "verdict": "unfetchable",
+          "likelyJsRendered": false,
+          "timeTagCount": 0,
+          "dateCount": 0,
+          "duration": 2
+        },
+        "c2": {
+          "verdict": "unclear",
+          "score": 0,
+          "reason": "fetchHtml failed: getaddrinfo ENOTFOUND xn--malmfff-d1a.se",
+          "duration": 1
+        },
+        "extract": {
+          "eventsFound": 0,
+          "duration": 0
+        },
+        "winningStage": "C3",
+        "outcomeType": "fail",
+        "routeSuggestion": "Fail",
+        "evidence": "C0: no internal event candidates discovered",
+        "roundNumber": 3,
+        "success": false,
+        "failType": "discovery_failure"
+      }
+    },
+    {
+      "source": {
+        "sourceId": "goteborgs-stadsbibliotek",
+        "url": "https://goteborgsstad.se/bibliotek",
+        "roundsParticipated": 2,
+        "diversifiers": [
+          "failures_2",
+          "path_network"
+        ],
+        "queueReason": "re-queued by 123-system: was ingestionStage=failed with no error",
+        "enrichedData": {
+          "lastPathUsed": "network",
+          "lastEventsFound": 0,
+          "consecutiveFailures": 2,
+          "triageResult": null
+        }
+      },
+      "decision": "postTestC-manual-review",
+      "result": {
+        "sourceId": "goteborgs-stadsbibliotek",
+        "url": "https://goteborgsstad.se/bibliotek",
+        "c0": {
+          "candidates": 0,
+          "winnerUrl": null,
+          "winnerDensity": 0,
+          "duration": 140,
+          "rootFallback": false,
+          "ruleAppliedSource": "none",
+          "ruleAppliedPaths": [],
+          "ruleWinnerPath": null
+        },
+        "c1": {
+          "verdict": "unfetchable",
+          "likelyJsRendered": false,
+          "timeTagCount": 0,
+          "dateCount": 0,
+          "duration": 162
+        },
+        "c2": {
+          "verdict": "unclear",
+          "score": 0,
+          "reason": "fetchHtml failed: Hostname/IP does not match certificate's altnames: Host: goteborgsstad.se. is not in the cert's altnames: DNS:goteborg.se, DNS:*.goteborg.se",
+          "duration": 100
+        },
+        "extract": {
+          "eventsFound": 0,
+          "duration": 1
+        },
+        "winningStage": "C3",
+        "outcomeType": "fail",
+        "routeSuggestion": "Fail",
+        "evidence": "C0: no internal event candidates discovered",
+        "roundNumber": 3,
+        "success": false,
+        "failType": "discovery_failure"
+      }
+    },
+    {
+      "source": {
+        "sourceId": "lth",
+        "url": "https://lth.se/",
+        "roundsParticipated": 2,
+        "diversifiers": [
+          "failures_2",
+          "path_network"
+        ],
+        "queueReason": "re-queued by 123-system: was ingestionStage=failed with no error",
+        "enrichedData": {
+          "lastPathUsed": "network",
+          "lastEventsFound": 0,
+          "consecutiveFailures": 2,
+          "triageResult": null
+        }
+      },
+      "decision": "postTestC-manual-review",
+      "result": {
+        "sourceId": "lth",
+        "url": "https://lth.se/",
+        "c0": {
+          "candidates": 10,
+          "winnerUrl": "https://lth.se/kalendarium/?evenemang=hallbarhetsveckan-2026",
+          "winnerDensity": 32,
+          "duration": 1836,
+          "rootFallback": false,
+          "ruleAppliedSource": "link-discovery",
+          "ruleAppliedPaths": [],
+          "ruleWinnerPath": "/kalendarium/?evenemang=hallbarhetsveckan-2026"
+        },
+        "c1": {
+          "verdict": "weak",
+          "likelyJsRendered": false,
+          "timeTagCount": 0,
+          "dateCount": 4,
+          "duration": 167
+        },
+        "c2": {
+          "verdict": "promising",
+          "score": 26,
+          "reason": "[breadth_nojsonld] score=26(adj) >= 12? promising pg=event-list",
+          "duration": 159
+        },
+        "extract": {
+          "eventsFound": 0,
+          "duration": 27
+        },
+        "winningStage": "C3",
+        "outcomeType": "fail",
+        "routeSuggestion": "Fail",
+        "evidence": "C3: extraction returned 0 events despite C2 promising (score=26)",
+        "roundNumber": 3,
+        "success": false,
+        "failType": "extraction_failure"
+      }
+    },
+    {
+      "source": {
+        "sourceId": "ystad",
+        "url": "https://ystad.se/",
+        "roundsParticipated": 2,
+        "diversifiers": [
+          "failures_2",
+          "path_network"
+        ],
+        "queueReason": "re-queued by 123-system: was ingestionStage=failed with no error",
+        "enrichedData": {
+          "lastPathUsed": "network",
+          "lastEventsFound": 0,
+          "consecutiveFailures": 2,
+          "triageResult": null
+        }
+      },
+      "decision": "postTestC-manual-review",
+      "result": {
+        "sourceId": "ystad",
+        "url": "https://ystad.se/",
+        "c0": {
+          "candidates": 2,
+          "winnerUrl": "https://ystad.se/uppleva-och-gora/evenemang",
+          "winnerDensity": 22,
+          "duration": 1279,
+          "rootFallback": false,
+          "ruleAppliedSource": "link-discovery",
+          "ruleAppliedPaths": [],
+          "ruleWinnerPath": "/uppleva-och-gora/evenemang"
+        },
+        "c1": {
+          "verdict": "weak",
+          "likelyJsRendered": false,
+          "timeTagCount": 0,
+          "dateCount": 0,
+          "duration": 312
+        },
+        "c2": {
+          "verdict": "unclear",
+          "score": 4,
+          "reason": "[breadth_nojsonld] score=4(adj) >= 12? unclear pg=event-list",
+          "duration": 274
+        },
+        "extract": {
+          "eventsFound": 0,
+          "duration": 12
+        },
+        "winningStage": "C3",
+        "outcomeType": "fail",
+        "routeSuggestion": "Fail",
+        "evidence": "C2: verdict=unclear, score=4 too low",
+        "roundNumber": 3,
+        "success": false,
+        "failType": "screening_failure"
+      }
+    },
+    {
+      "source": {
+        "sourceId": "botaniska-tradgarden",
+        "url": "https://botaniska.se/",
+        "roundsParticipated": 2,
+        "diversifiers": [
+          "failures_2",
+          "path_network"
+        ],
+        "queueReason": "re-queued by 123-system: was ingestionStage=failed with no error",
+        "enrichedData": {
+          "lastPathUsed": "network",
+          "lastEventsFound": 0,
+          "consecutiveFailures": 2,
+          "triageResult": null
+        }
+      },
+      "decision": "postTestC-manual-review",
+      "result": {
+        "sourceId": "botaniska-tradgarden",
+        "url": "https://botaniska.se/",
+        "c0": {
+          "candidates": 0,
+          "winnerUrl": null,
+          "winnerDensity": 0,
+          "duration": 188,
+          "rootFallback": false,
+          "ruleAppliedSource": "none",
+          "ruleAppliedPaths": [],
+          "ruleWinnerPath": null
+        },
+        "c1": {
+          "verdict": "unfetchable",
+          "likelyJsRendered": false,
+          "timeTagCount": 0,
+          "dateCount": 0,
+          "duration": 170
+        },
+        "c2": {
+          "verdict": "unclear",
+          "score": 0,
+          "reason": "fetchHtml failed: Hostname/IP does not match certificate's altnames: Host: botaniska.se. is not in the cert's altnames: DNS:*.vgregion.se, DNS:vgregion.se",
+          "duration": 154
+        },
+        "extract": {
+          "eventsFound": 0,
+          "duration": 1
+        },
+        "winningStage": "C3",
+        "outcomeType": "fail",
+        "routeSuggestion": "Fail",
+        "evidence": "C0: no internal event candidates discovered",
+        "roundNumber": 3,
+        "success": false,
+        "failType": "discovery_failure"
       }
     }
   ],
   "allExitedIds": [
-    "molndals",
-    "akersberga"
+    "kth",
+    "andra-langgatan",
+    "goteborgs-kulturfestival",
+    "gr-na-lund",
+    "falun-konserthus",
+    "malmo-ff",
+    "goteborgs-stadsbibliotek",
+    "lth",
+    "ystad",
+    "botaniska-tradgarden"
   ],
-  "lastSaved": "2026-04-15T17:19:19.013Z"
+  "lastSaved": "2026-04-15T17:56:00.496Z"
 }

@@ -18,7 +18,7 @@
  *   npx tsx 02-Ingestion/C-htmlGate/123-autonomous-loop-v3.ts --max-iter=3
  */
 
-import { readFileSync, writeFileSync, appendFileSync, existsSync, readdirSync, mkdirSync } from 'fs';
+import { readFileSync, writeFileSync, appendFileSync, existsSync, readdirSync, mkdirSync, unlinkSync } from 'fs';
 import { join, dirname } from 'path';
 import { fileURLToPath } from 'url';
 import { execSync } from 'child_process';
@@ -34,6 +34,7 @@ const RUNTIME_DIR = join(PROJECT_ROOT, 'runtime');
 const PATHS = {
   IMPROVEMENT_STATE: join(C_HTML_GATE, '123-improvement-state.json'),
   POSTB_PREC: join(RUNTIME_DIR, 'postB-preC-queue.jsonl'),
+  BATCH_LOCK: join(C_HTML_GATE, '.123-batch.lock'),
 };
 
 // ------------------------------------------------------------------
@@ -143,6 +144,78 @@ interface ImprovementStateFile {
 
 function log(msg: string): void {
   console.log('[' + new Date().toISOString().substring(11, 19) + '] ' + msg);
+}
+
+function tryAcquireLock(lockPath: string): boolean {
+  try {
+    writeFileSync(lockPath, process.pid.toString(), { flag: 'wx' });
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+function releaseLock(lockPath: string): void {
+  try { unlinkSync(lockPath); } catch { /* ignore */ }
+}
+
+/**
+ * Cleanup stale processes and lock files before a new run.
+ * Kills orphaned tsx/node processes running C-htmlGate, A-directAPI, B-JSON-feed scripts.
+ * Removes stale .lock files.
+ */
+function cleanupStaleProcesses(): { killed: number; locksRemoved: number } {
+  let killed = 0;
+  let locksRemoved = 0;
+
+  // 1. Kill orphaned tsx/node processes related to our ingestion pipelines
+  const patterns = [
+    'run-dynamic-pool',
+    '123-autonomous-loop',
+    'runA.ts',
+    'runB.ts',
+  ];
+
+  try {
+    const psOutput = execSync(
+      'ps aux | grep -E "run-dynamic-pool|123-autonomous-loop|runA\\.ts|runB\\.ts" | grep -v grep',
+      { encoding: 'utf8', timeout: 10000 }
+    );
+    const lines = psOutput.trim().split('\n');
+    for (const line of lines) {
+      if (!line.trim()) continue;
+      const pidMatch = line.trim().match(/^\S+/);
+      if (pidMatch) {
+        const pid = parseInt(pidMatch[0], 10);
+        if (pid && pid !== process.pid) {
+          try {
+            process.kill(pid, 'SIGKILL');
+            killed++;
+          } catch { /* process may already be dead */ }
+        }
+      }
+    }
+  } catch { /* no processes found */ }
+
+  // 2. Remove stale lock files
+  const lockFiles = [
+    PATHS.BATCH_LOCK,
+    join(C_HTML_GATE, '.batch.lock'),
+    join(C_HTML_GATE, 'run-dynamic.lock'),
+  ];
+  for (const lf of lockFiles) {
+    try {
+      if (existsSync(lf)) {
+        unlinkSync(lf);
+        locksRemoved++;
+      }
+    } catch { /* ignore */ }
+  }
+
+  if (killed > 0 || locksRemoved > 0) {
+    console.log(`[Cleanup] Killed ${killed} stale processes, removed ${locksRemoved} lock files`);
+  }
+  return { killed, locksRemoved };
 }
 
 function section(title: string): void {
@@ -767,6 +840,11 @@ async function runLoop(maxIterations = 3): Promise<LoopResult> {
   const sourcesInPrec = precRaw ? precRaw.split('\n').filter(l => l.trim()).length : 0;
   log('postB-preC: ' + sourcesInPrec + ' sources');
 
+  // NOTE: JS-rendered detection is now BUILT INTO C1-preHtmlGate.ts itself.
+  // screenUrl() checks for AppRegistry x2+, Next.js __NEXT_DATA__, React hydration markers.
+  // Sources flagged likelyJsRendered=true will be routed directly to D in run-dynamic-pool.ts.
+  // No external reroute step needed.
+
   // Load recent outcomes
   const outcomes = loadRecentBatchOutcomes(5);
   log('Loaded ' + outcomes.length + ' batches');
@@ -851,6 +929,31 @@ async function runLoop(maxIterations = 3): Promise<LoopResult> {
     result.iterations++;
   }
 
+  // FALLBACK: If no improvements were activated in THIS run but postB-preC still has sources,
+  // run a normal batch to keep the queue moving
+  // improvementsActivated includes prior runs from state, so check iterations instead
+  if (result.iterations === 0 && sourcesInPrec > 0) {
+    log('\n[WARNING] No improvements activated this run but queue has ' + sourcesInPrec + ' sources.');
+    log('[INFO] Trying to acquire lock and run normal batch...');
+    if (tryAcquireLock(PATHS.BATCH_LOCK)) {
+      try {
+        log('[INFO] Lock acquired, running batch...');
+        const br = runDynamicBatch();
+        if (br.success) {
+          result.message += ' | Normal batch executed: ' + br.batchId;
+          log('[INFO] Batch completed: ' + br.batchId);
+        } else {
+          result.message += ' | Normal batch FAILED';
+          log('[ERROR] Batch failed.');
+        }
+      } finally {
+        releaseLock(PATHS.BATCH_LOCK);
+      }
+    } else {
+      log('[INFO] Could not acquire lock (another instance running). Skipping batch.');
+    }
+  }
+
   result.finalState = state.currentState;
   result.message = 'Iter: ' + result.iterations + ', Activated: ' + result.improvementsActivated + ', Rolled back: ' + result.improvementsRolledBack;
   log('\n' + result.message);
@@ -893,6 +996,9 @@ function patternToImprovement(pattern: FailurePattern, state: ImprovementStateFi
 
 async function main() {
   const args = process.argv.slice(2);
+
+  // Clean up stale processes and locks BEFORE any work
+  cleanupStaleProcesses();
 
   if (args.includes('--reset')) {
     const state = loadState();

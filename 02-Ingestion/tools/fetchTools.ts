@@ -29,6 +29,7 @@ const MAX_REDIRECTS = 3;
 export async function fetchHtml(url: string, options: {
   headers?: Record<string, string>;
   timeout?: number;
+  signal?: AbortSignal;
 } = {}): Promise<FetchResult> {
   let currentUrl = url.replace(/\/+$/, '') || '/';
   const redirectChain: string[] = [];
@@ -56,6 +57,7 @@ export async function fetchHtml(url: string, options: {
         timeout: options.timeout || 30000,
         validateStatus: (status) => status < 500,
         maxRedirects: 0, // we handle redirects manually to capture final URL
+        signal: options.signal,
       });
 
       if (response.status >= 300 && response.status < 400) {
@@ -84,21 +86,13 @@ export async function fetchHtml(url: string, options: {
           };
         }
 
-        // Same-domain only — block cross-domain redirects for security.
-        // Allow www subdomain redirects (same registered domain, stripped for comparison).
+        // Cross-domain redirect detected — follow it for discovery purposes.
+        // Many Swedish sites use cross-domain redirects for event content (e.g. vega.nu → tobiasnygren.se).
+        // Continue to the next URL, record the cross-domain hop in redirectChain.
         const currentUrlObj = new URL(currentUrl);
         const nextUrlObj = new URL(nextUrl);
-        const currentBase = currentUrlObj.hostname.replace(/^www\./, '');
-        const nextBase = nextUrlObj.hostname.replace(/^www\./, '');
-        if (currentBase !== nextBase) {
-          return {
-            success: false,
-            error: `Cross-domain redirect blocked: ${currentUrlObj.hostname} → ${nextUrlObj.hostname}`,
-            statusCode: response.status,
-            finalUrl: currentUrl,
-            redirectChain,
-          };
-        }
+        redirectChain.push(`XDOMAIN:${currentUrlObj.hostname}→${nextUrlObj.hostname}`);
+        currentUrl = nextUrl;
 
         // Normalize trailing slashes before loop detection and before next iteration.
         // /events/ and /events are the same URL — prevents /path ↔ /path/ oscillation.

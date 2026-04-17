@@ -33,6 +33,7 @@ const RUNTIME_DIR = path.resolve(__dirname, '../../runtime');
 const PREA_QUEUE_FILE = path.resolve(RUNTIME_DIR, 'preA-queue.jsonl');
 const PREUI_QUEUE_FILE = path.resolve(RUNTIME_DIR, 'preUI-queue.jsonl');
 const PREB_QUEUE_FILE = path.resolve(RUNTIME_DIR, 'preB-queue.jsonl');
+const POSTA_QUEUE_FILE = path.resolve(RUNTIME_DIR, 'postA-queue.jsonl');
 
 // ─── Shared Queue Entry Interface ──────────────────────────────────────────────
 
@@ -46,7 +47,7 @@ interface QueueEntry {
   workerNotes?: string;
 }
 
-// ─── preUI Queue (A success → preUI) ──────────────────────────────────────────
+// ─── preUI Queue ───────────────────────────────────────────────────────────────
 
 function readPreUIQueue(): QueueEntry[] {
   if (!existsSync(PREUI_QUEUE_FILE)) return [];
@@ -78,6 +79,29 @@ function addToPreUIQueue(sourceId: string, eventsFound: number, reason: string):
     workerNotes: `A: ${eventsFound} events`,
   });
   writePreUIQueue(queue);
+}
+
+// ─── postA Queue (A success → postA) ────────────────────────────────────────
+
+function readPostAQueue(): QueueEntry[] {
+  if (!existsSync(POSTA_QUEUE_FILE)) return [];
+  const content = readFileSync(POSTA_QUEUE_FILE, 'utf8');
+  return content.split('\n').filter(l => l.trim()).map(l => JSON.parse(l) as QueueEntry);
+}
+
+function addToPostAQueue(sourceId: string, eventsFound: number, reason: string): void {
+  const queue = readPostAQueue();
+  if (queue.some(e => e.sourceId === sourceId)) return;
+  queue.push({
+    sourceId,
+    queueName: 'postA',
+    queuedAt: new Date().toISOString(),
+    priority: 1,
+    attempt: 1,
+    queueReason: reason,
+    workerNotes: `A: ${eventsFound} events`,
+  });
+  writeFileSync(POSTA_QUEUE_FILE, queue.map(e => JSON.stringify(e)).join('\n') + '\n', 'utf8');
 }
 
 // ─── preB Queue (ej A → preB) ─────────────────────────────────────────────────
@@ -301,8 +325,8 @@ function finalizeSource(item: SourceWithOrigin, result: AResult): void {
 
   // ── Queue-hop baserat på utfall ──────────────────────────────────────────
   if (result.success && result.eventsFound > 0) {
-    // A success → preUI
-    addToPreUIQueue(sourceId, result.eventsFound, `toolA(${queueOrigin}): ${result.eventsFound} events`);
+    // A success → postA
+    addToPostAQueue(sourceId, result.eventsFound, `toolA(${queueOrigin}): ${result.eventsFound} events`);
   } else {
     // ej A / fail → preB
     addToPreBQueue(sourceId, `toolA(${queueOrigin}): ${result.error ?? 'no events'}`);

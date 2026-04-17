@@ -301,13 +301,26 @@ export async function discoverEventCandidates(
   const rootFetch = await fetchHtml(rootUrl, { timeout: 15000 });
   
   if (!rootFetch.success || !rootFetch.html) {
+    // Distinguish between fetch errors and empty discovery
+    const isNetworkError = rootFetch.error && (
+      rootFetch.error.includes('DNS') ||
+      rootFetch.error.includes('ENOTFOUND') ||
+      rootFetch.error.includes('ECONNREFUSED') ||
+      rootFetch.error.includes('ETIMEDOUT') ||
+      rootFetch.error.includes('SSL') ||
+      rootFetch.error.includes('TIMEOUT') ||
+      rootFetch.error.includes('fetch') ||
+      rootFetch.error.includes('network')
+    );
     return {
       rootUrl,
       totalInternalLinks: 0,
       candidatesFound: 0,
       topCandidates: [],
       winner: undefined,
-      winnerReason: 'root fetch failed',
+      winnerReason: isNetworkError 
+        ? `fetch error: ${rootFetch.error}`
+        : 'no internal event candidates discovered',
       rootRejected: false,
       debug: { allLinksByRegion: {}, topScoringLinks: [] },
       ruleApplied: { source: 'none', pathsTested: [], winnerPath: null },
@@ -361,59 +374,14 @@ export async function discoverEventCandidates(
   candidates.sort((a, b) => b.eventDensityScore - a.eventDensityScore);
 
   // -----------------------------------------------------------------------
-  // Derived Rules Fallback: NEEDS_SUBPAGE_DISCOVERY
-  // If no candidates found and a rule exists, try suggested paths directly
+  // Swedish Patterns Fallback (IMP-009) — IMMEDIATE when 0 candidates
+  // Run BEFORE density threshold check so discovered candidates compete properly
   // -----------------------------------------------------------------------
   let subpageFallback: CandidatePage | undefined;
   let subpageFallbackSource: 'derived-rule' | 'swedish-patterns' | undefined;
   const pathsTested: string[] = [];
-  if (candidates.length === 0 && sourceId && derivedRules) {
-    const ruleKey = `${sourceId}__${FailCategory.NEEDS_SUBPAGE_DISCOVERY}`;
-    const rule = derivedRules.get(ruleKey);
-    if (rule && rule.suggestedPaths.length > 0) {
-      console.log(`[Learning-Loop-C0] ${sourceId}: no candidates from link discovery — testing ${rule.suggestedPaths.length} derived rule paths (conf=${rule.confidence}, category=${rule.failCategory})`);
-      for (const suggestedPath of rule.suggestedPaths) {
-        pathsTested.push(suggestedPath);
-        const candidateUrl = new URL(suggestedPath, rootUrl).href;
-        try {
-          const metrics = await measureEventDensity(candidateUrl);
-          const densityScore =
-            metrics.dateMentions * 2 +
-            metrics.timeTagCount * 3 +
-            metrics.eventBlockCount +
-            metrics.ticketCtaCount +
-            Math.min(metrics.linkCount, 10);
-          if (densityScore > 0) {
-            subpageFallback = {
-              url: candidateUrl,
-              href: suggestedPath,
-              sourceRegion: 'subpage-rule',
-              eventDensityScore: densityScore,
-              metrics,
-              concepts: rule.suggestedPaths,
-              rankingReason: `derived-rule fallback: ${suggestedPath} score=${densityScore}`,
-            };
-            subpageFallbackSource = 'derived-rule';
-            console.log(`[Learning-Loop-C0] ${sourceId}: derived rule PATH HIT → ${candidateUrl} (score=${densityScore}) — WINNER via learned rule`);
-            break; // use first successful one
-          }
-        } catch {
-          // try next path
-        }
-      }
-      if (!subpageFallback) {
-        console.log(`[Learning-Loop-C0] ${sourceId}: derived rule paths exhausted — no density found`);
-      }
-    }
-  }
-
-  // -----------------------------------------------------------------------
-  // Swedish Patterns Fallback (IMP-009)
-  // If no candidates AND no derived rule hit, try common Swedish event paths
-  // These are built-in patterns based on batch-14/batch-15 learning loop findings
-  // -----------------------------------------------------------------------
-  if (candidates.length === 0 && !subpageFallback) {
-    console.log(`[C0] ${sourceId || rootUrl}: no candidates from link discovery or derived rules — testing ${SWEDISH_EVENT_PATTERNS.length} Swedish event path patterns`);
+  if (candidates.length === 0) {
+    console.log(`[C0] ${sourceId || rootUrl}: no candidates from link discovery — testing ${SWEDISH_EVENT_PATTERNS.length} Swedish event path patterns`);
     for (const pattern of SWEDISH_EVENT_PATTERNS) {
       pathsTested.push(pattern);
       const candidateUrl = new URL(pattern, rootUrl).href;
@@ -443,11 +411,44 @@ export async function discoverEventCandidates(
         // try next path
       }
     }
+    // Also test domain-base Swedish pattern as last resort (for sites like lund.se/stadsteatern
+    // where the event calendar lives at lund.se/evenemang, not lund.se/stadsteatern/evenemang)
+    if (!subpageFallback) {
+      const baseUrl = getBaseUrl(rootUrl);
+      for (const pattern of SWEDISH_EVENT_PATTERNS) {
+        const candidateUrl = `${baseUrl}${pattern}`;
+        try {
+          const metrics = await measureEventDensity(candidateUrl);
+          const densityScore =
+            metrics.dateMentions * 2 +
+            metrics.timeTagCount * 3 +
+            metrics.eventBlockCount +
+            metrics.ticketCtaCount +
+            Math.min(metrics.linkCount, 10);
+          if (densityScore > 0) {
+            subpageFallback = {
+              url: candidateUrl,
+              href: pattern,
+              sourceRegion: 'swedish-patterns-domain-base',
+              eventDensityScore: densityScore,
+              metrics,
+              concepts: SWEDISH_EVENT_PATTERNS,
+              rankingReason: `swedish-patterns domain-base fallback: ${candidateUrl} score=${densityScore}`,
+            };
+            subpageFallbackSource = 'swedish-patterns';
+            console.log(`[C0] ${sourceId || rootUrl}: SWEDISH_PATTERN HIT (domain-base) → ${candidateUrl} (score=${densityScore})`);
+            break;
+          }
+        } catch {
+          // try next
+        }
+      }
+    }
     if (!subpageFallback) {
       console.log(`[C0] ${sourceId || rootUrl}: all Swedish patterns exhausted — no event density found`);
     }
   }
-  
+
   const rootMetrics = await measureEventDensity(rootUrl);
   const rootDensityScore = 
     rootMetrics.dateMentions * 2 +
@@ -462,6 +463,7 @@ export async function discoverEventCandidates(
   let rootRejected = false;
   let rootRejectionReason: string | undefined;
   
+  // If candidates found via link discovery, compare against root density
   if (bestCandidate && bestCandidate.eventDensityScore > rootDensityScore * 1.5) {
     winner = bestCandidate;
     rootRejected = true;

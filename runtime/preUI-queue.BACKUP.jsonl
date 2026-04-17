@@ -1,6 +1,1 @@
-{"sourceId":"artipelag","queueName":"preUI","queuedAt":"2026-04-09T04:11:10.580Z","priority":1,"attempt":1,"queueReason":"toolB(preB): 3 events","workerNotes":"B: 3 events"}
-{"sourceId":"astronomiska-huddinge","queueName":"preUI","queuedAt":"2026-04-09T04:11:19.977Z","priority":1,"attempt":1,"queueReason":"toolB(preB): 2 events","workerNotes":"B: 2 events"}
-{"sourceId":"avicii-arena-sport","queueName":"preUI","queuedAt":"2026-04-09T04:11:26.181Z","priority":1,"attempt":1,"queueReason":"toolB(preB): 12 events","workerNotes":"B: 12 events"}
-{"sourceId":"avicii-arena","queueName":"preUI","queuedAt":"2026-04-09T04:11:31.072Z","priority":1,"attempt":1,"queueReason":"toolB(preB): 12 events","workerNotes":"B: 12 events"}
-{"sourceId":"abf","queueName":"preUI","queuedAt":"2026-04-09T18:33:04.049Z","priority":1,"attempt":1,"queueReason":"toolB(preB): 1 events","workerNotes":"B: 1 events"}
-{"sourceId":"abf-conflict-1","queueName":"preUI","queuedAt":"2026-04-09T18:33:10.044Z","priority":1,"attempt":1,"queueReason":"toolB(preB): 1 events","workerNotes":"B: 1 events"}
+

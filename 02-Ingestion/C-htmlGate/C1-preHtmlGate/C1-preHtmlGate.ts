@@ -123,13 +123,20 @@ export function determineTriageOutcome(preGateResult: PreGateResult): TriageResu
     return 'render_candidate';
   }
 
-  // Stark signal för events
+  // If C0 found candidates via Swedish patterns AND C2 shows density, allow through
+  // Even if C1 categorization is "weak", C2/C3 can still extract events
   if (preGateResult.categorization === 'strong' || preGateResult.categorization === 'medium') {
     return 'html_candidate';
   }
 
-  // Svag eller ingen signal - behöver manuell granskning
-  if (preGateResult.categorization === 'weak' || preGateResult.categorization === 'noise' || preGateResult.categorization === 'no-main') {
+  // Pass through weak sources to C2/C3 — even weak pages can yield events via extraction
+  // C1 "weak" means uncertain but not clearly negative; let C2/C3 make the final call
+  if (preGateResult.categorization === 'weak') {
+    return 'html_candidate'; // let C2/C3 decide — weak signals still yield events
+  }
+
+  // Block only genuinely noisy/unfetchable — these have no event potential
+  if (preGateResult.categorization === 'noise' || preGateResult.categorization === 'no-main') {
     return 'manual_review';
   }
 
@@ -180,8 +187,14 @@ export async function screenUrl(url: string): Promise<PreGateResult> {
   const venueMarkerCount = $('[class*="venue"],[class*="location"],[class*="plats"],[class*="adress"]').length;
   const priceMarkerCount = $('[class*="price"],[class*="biljett"],[class*="pris"]').length;
 
-  // JS-rendered heuristic: no main, very few links, mostly nav
-  const likelyJsRendered = !hasMain && linkCount < 5;
+  // JS-rendered detection: AppRegistry x2+ (SiteVision), Next.js, React hydration
+  // Original heuristic (!hasMain && linkCount < 5) removed — causes false positives on list-heavy pages like konserthuset
+  const html = r.html;
+  const hasAppRegistry = (html.match(/AppRegistry\.registerInitialState/g) || []).length >= 2;
+  const hasNextJs = html.includes('__NEXT_DATA__') || html.includes('id="__NEXT_DATA__"');
+  const hasReactHydration = html.includes('data-reactroot') || html.includes('data-react-hydration');
+
+  const likelyJsRendered = hasAppRegistry || hasNextJs || hasReactHydration;
 
   // Categorization based on raw counts
   let categorization: PreGateCategorization;

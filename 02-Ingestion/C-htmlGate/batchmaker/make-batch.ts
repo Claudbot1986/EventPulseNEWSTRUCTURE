@@ -265,7 +265,7 @@ function main() {
   console.log(`  ${withUrl.length} candidates with URLs\n`);
 
   // 6. Diversified selection
-  const BATCH_SIZE = 10;
+  const BATCH_SIZE = 50;
   const selected: BatchEntry[] = [];
   const usedIds = new Set<string>();
 

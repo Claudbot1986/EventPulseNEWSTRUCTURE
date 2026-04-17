@@ -1,18 +1,18 @@
 {
   "version": 1,
-  "lastUpdated": "2026-04-15T02:53:56.508Z",
-  "totalBatchesAnalyzed": 45,
-  "totalSourcesProcessed": 107,
+  "lastUpdated": "2026-04-17T15:10:36.298Z",
+  "totalBatchesAnalyzed": 96,
+  "totalSourcesProcessed": 1186,
   "dominantBottleneck": {
     "category": "UNKNOWN",
-    "count": 251,
-    "percentage": "234.6%",
+    "count": 800,
+    "percentage": "67.5%",
     "description": "C0 hittar inga event candidates på root URL. Swedish patterns hittar candidates men C1 likelyJsRendered=true triggar D-route och hoppar över C2/C3. Extraction körs aldrig."
   },
   "failCategoryDistribution": [
     {
       "category": "UNKNOWN",
-      "count": 251,
+      "count": 800,
       "sources": [
         "naturhistoriska-riksmuseet",
         "vega",
@@ -28,7 +28,7 @@
     },
     {
       "category": "no_viable_path_found",
-      "count": 125,
+      "count": 320,
       "sources": [
         "a6",
         "kino",
@@ -44,7 +44,7 @@
     },
     {
       "category": "ENTRY_PAGE_NO_EVENTS",
-      "count": 51,
+      "count": 142,
       "sources": [
         "vasteras-stadsteatern",
         "grona-lund",
@@ -56,6 +56,22 @@
         "blekholmen",
         "boplanet",
         "bor-s-zoo-animagic"
+      ]
+    },
+    {
+      "category": "NEEDS_SUBPAGE_DISCOVERY",
+      "count": 70,
+      "sources": [
+        "mittuniversitetet",
+        "kungsbacka",
+        "h-gskolan-i-sk-vde",
+        "malm-opera",
+        "bk-hacken",
+        "blekholmen",
+        "boplanet",
+        "borlange-kommun",
+        "botaniska-tradgarden",
+        "brommapojkarna"
       ]
     },
     {
@@ -75,24 +91,24 @@
       ]
     },
     {
-      "category": "NEEDS_SUBPAGE_DISCOVERY",
-      "count": 48,
+      "category": "EXTRACTION_PATTERN_MISMATCH",
+      "count": 38,
       "sources": [
-        "mittuniversitetet",
-        "kungsbacka",
-        "h-gskolan-i-sk-vde",
-        "malm-opera",
-        "bk-hacken",
-        "blekholmen",
-        "boplanet",
+        "goteborgs-arkitekturgalleri",
+        "svenska-fotbollf-rbundet",
+        "oland",
         "borlange-kommun",
-        "botaniska-tradgarden",
-        "brommapojkarna"
+        "friidrottsf-rbundet",
+        "sundsvall",
+        "mittuniversitetet",
+        "kungliga-musikhogskolan",
+        "sparvag-city",
+        "grand"
       ]
     },
     {
       "category": "LOW_VALUE_SOURCE",
-      "count": 29,
+      "count": 35,
       "sources": [
         "ois",
         "open-art",
@@ -108,7 +124,7 @@
     },
     {
       "category": "LIKELY_JS_RENDER",
-      "count": 21,
+      "count": 34,
       "sources": [
         "svenska-innebandyf-rbundet",
         "malmo-hogskola",
@@ -123,24 +139,8 @@
       ]
     },
     {
-      "category": "EXTRACTION_PATTERN_MISMATCH",
-      "count": 15,
-      "sources": [
-        "goteborgs-arkitekturgalleri",
-        "svenska-fotbollf-rbundet",
-        "oland",
-        "borlange-kommun",
-        "friidrottsf-rbundet",
-        "sundsvall",
-        "mittuniversitetet",
-        "kungliga-musikhogskolan",
-        "sparvag-city",
-        "grand"
-      ]
-    },
-    {
       "category": "robots_or_policy_blocked",
-      "count": 11,
+      "count": 28,
       "sources": [
         "goteborgs-stadsbibliotek",
         "stromma",
@@ -150,12 +150,13 @@
         "goteborgs-stadsteatern",
         "nobelmuseet",
         "medeltidsmuseet",
-        "sensus"
+        "sensus",
+        "tradgardsforeningen"
       ]
     },
     {
       "category": "insufficient_html_signal",
-      "count": 10,
+      "count": 26,
       "sources": [
         "barnens-o",
         "bk-hacken",
@@ -165,15 +166,16 @@
         "regionteatern",
         "stockholms-stadsteater",
         "paddan",
-        "goteborgs-litteraturhus"
+        "goteborgs-litteraturhus",
+        "unga-teatern"
       ]
     }
   ],
   "ruleEffectiveness": {
-    "totalRulesGenerated": 226,
-    "totalRulesAppliedNextRound": 5,
+    "totalRulesGenerated": 373,
+    "totalRulesAppliedNextRound": 7,
     "totalRulesThatImprovedOutcome": 0,
-    "applicationRate": "2.2%",
+    "applicationRate": "1.9%",
     "note": "Learning loop never closed across all batches — 40 rules generated, 0 applied in next round, 0 improved outcomes. See batch-14 FAIL_SET_RERUN_PROOF."
   },
   "improvementAttempts": [
