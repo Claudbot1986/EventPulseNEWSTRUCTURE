@@ -8,7 +8,7 @@
  * Flöde enligt RebuildPlan:
  *   preB → B-verktyg
  *   Utfall:
- *     1. events utvinns → preUI
+ *     1. events utvinns → postB
  *     2. stark B-kandidat men ej full extraction → postB
  *     3. ej B → postB-preC
  *
@@ -34,7 +34,6 @@ import { inspectUrl } from './networkInspector';
 import { queueEvents } from '../tools/fetchTools';
 import { toRawEventInput } from '../F-eventExtraction';
 import type { RawEventInput } from '@eventpulse/shared';
-import { fileURLToPath } from 'url';
 
 // ─── Queue File Paths ─────────────────────────────────────────────────────────
 
@@ -286,7 +285,7 @@ function finalizeSource(entry: PreBEntry, result: BResult): void {
   });
 
   if (result.success && result.eventsFound > 0) {
-    addToPreUIQueue(sourceId, result.eventsFound, `toolB(preB): ${result.eventsFound} events`);
+    addToPostBQueue(sourceId, `toolB(preB): ${result.eventsFound} events`, result.inspectorVerdict);
   } else if (result.nextPath === 'network' && result.inspectorVerdict === 'promising') {
     addToPostBQueue(sourceId, `toolB(preB): ${result.error ?? 'no events'}`, result.inspectorVerdict);
   } else {
@@ -331,9 +330,9 @@ async function main() {
   // ── Dry run ──────────────────────────────────────────────────────────────
   const dry = args.includes('--dry');
 
-  // ── Limit ────────────────────────────────────────────────────────────────
+  // ── Limit (default: 100 — was 10, too small for 255+ sources) ──────────────
   const limitIdx = args.indexOf('--limit');
-  const limit = limitIdx !== -1 && args[limitIdx + 1] ? parseInt(args[limitIdx + 1], 10) : 10;
+  const limit = limitIdx !== -1 && args[limitIdx + 1] ? parseInt(args[limitIdx + 1], 10) : 100;
 
   // ── Read queue ───────────────────────────────────────────────────────────
   const queue = readPreBQueue();
