@@ -446,4 +446,4 @@ Right page → meaningful extraction
 
 ## Exit Rule
 
-Every output must end with `__KLAR_MED_1_2_3_PROMPTEN__` as the very last line, alone on its own line. No exceptions, no matter the exit path.
+Every output must end with the actual result of the task, not a marker.

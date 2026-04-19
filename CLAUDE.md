@@ -269,7 +269,7 @@ If you changed files:
 
 ## Output After Every Task
 
-Every task output must end with `__KLAR_MED_1_2_3_PROMPTEN__` as the very last line, alone on its own line, no period, no text after. This applies to ALL exit paths: normal completion, timeout, early stop, interruption, error path, handoff/partial stop.
+Every task output must end with the actual result of the task, not a marker. Report what changed, why, how verified, what remains unclear, and recommended next step.
 
 ---
 

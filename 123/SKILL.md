@@ -133,5 +133,4 @@ Efter varje loop:
 ## Två steg att inte göra nu
 ## Handoff
 ## Commit
-__KLAR_MED_1_2_3_PROMPTEN__
 ```
