@@ -1,0 +1,346 @@
+#!/usr/bin/env python3
+"""
+gl-fix-404.py — Google-sök varje 404-källa i postTestC-man, verifiera live-URL,
+skriv en .md-fil per källa i RawSources/, och flytta källan till postTestC-Out.
+
+Krav:
+  - EXA_API_KEY i .env
+
+Flow per sourceId:
+  1. Läs entry från postTestC-man
+  2. Exa-sök: "{sourceId} events biljetter konserter"
+  3. För varje resultat: HTTP-verify (200 eller 301/302 → bekräftad)
+  4. Spara .md i RawSources/ med strukturerad frontmatter
+  5. Efter lyckad sparning: appenda till postTestC-Out
+  6. Ta bort entry från postTestC-man
+"""
+
+import json
+import time
+import os
+import sys
+from pathlib import Path
+from datetime import datetime, timezone
+
+# ── Env ───────────────────────────────────────────────────────────────────────
+from dotenv import load_dotenv
+load_dotenv(dotenv_path=Path(__file__).parent.parent / ".env", override=True)
+
+EXA_API_KEY = os.getenv("EXA_API_KEY", "")
+
+# ── Paths ─────────────────────────────────────────────────────────────────────
+RUNTIME_DIR   = Path(__file__).parent.parent / "runtime"
+RAW_SOURCES  = Path(__file__).parent.parent / "01-Sources" / "RawSources"
+MAN_Q        = RUNTIME_DIR / "postTestC-manual-review.jsonl"
+OUT_Q        = RUNTIME_DIR / "postTestC-Out.jsonl"
+
+RAW_SOURCES.mkdir(exist_ok=True, parents=True)
+
+# ── HTTP verify ────────────────────────────────────────────────────────────────
+def http_verify(url: str, timeout: int = 8) -> tuple[bool, int, str]:
+    """Return (success, status_code, final_url). Follows redirects."""
+    import urllib.request
+    import urllib.error
+    try:
+        req = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0"})
+        with urllib.request.urlopen(req, timeout=timeout) as resp:
+            return (True, resp.status, resp.url or url)
+    except urllib.error.HTTPError as e:
+        return (True, e.code, e.url)
+    except Exception:
+        return (False, 0, "")
+
+
+# ── Exa search ────────────────────────────────────────────────────────────────
+def exa_search(query: str, n: int = 8) -> list[dict]:
+    """Search Exa for event-like URLs."""
+    if not EXA_API_KEY:
+        return []
+
+    import urllib.request
+
+    payload = json.dumps({
+        "query": query,
+        "numResults": n,
+        "type": "auto",
+        "highlights": True,
+    }).encode()
+
+    req = urllib.request.Request(
+        "https://api.exa.ai/search",
+        data=payload,
+        headers={
+            "Authorization": f"Bearer {EXA_API_KEY}",
+            "Content-Type": "application/json",
+            "User-Agent": "Mozilla/5.0",
+        },
+        method="POST",
+    )
+
+    try:
+        with urllib.request.urlopen(req, timeout=15) as resp:
+            data = json.loads(resp.read())
+            results = data.get("results", [])
+            return [
+                {
+                    "url": r.get("url", ""),
+                    "title": r.get("title", ""),
+                    "highlights": " ".join(r.get("highlights", []))[:400],
+                }
+                for r in results if r.get("url")
+            ]
+    except Exception as e:
+        print(f"    [exa] error: {e}")
+        return []
+
+
+# ── Event-like filter ─────────────────────────────────────────────────────────
+EXCLUDE_DOMAINS = [
+    "wikipedia.org", "wikidata.org", "wikimedia.org",
+    "facebook.com", "instagram.com", "linkedin.com",
+    "youtube.com", "vimeo.com", "flickr.com",
+    "github.com", "gitlab.com", "bitbucket.org",
+    "google.com/search", "duckduckgo.com", "bing.com",
+    "tripadvisor.com", "yelp.com",
+    "booking.com", "hotels.com", "airbnb.com",
+    "soundcloud.com", "bandcamp.com", "spotify.com",
+    "apple.com", "microsoft.com", "amazon.com",
+]
+
+EVENT_SIGNALS = [
+    "event", "biljett", "konsert", "festival", "evenemang",
+    "kalender", "schema", "program", "spelschema", "match",
+    "forestallning", "teater", "scen", "venue", "tickets",
+    "concerts", "tickets", "shows", "upcoming", "calendar",
+    "buy tickets", "köp biljett", "live", "spela", "match",
+    "arrangemang", "livescener", "scenkonst",
+]
+
+
+def is_event_like(url: str, title: str, highlights: str) -> bool:
+    text = f"{title} {highlights} {url}".lower()
+    for pattern in EXCLUDE_DOMAINS:
+        if pattern in url.lower():
+            return False
+    return any(signal in text for signal in EVENT_SIGNALS)
+
+
+def venue_name_from_source_id(source_id: str) -> str:
+    s = source_id.replace("-", " ").replace("_", " ")
+    swaps = [
+        ("goteborg", "göteborg"), ("g teborg", "göteborg"),
+        ("orebro", "örebro"), ("vaxjo", "växjö"), ("kalmar", "kalmar"),
+        ("uppsala", "uppsala"), ("stockholm", "stockholm"),
+        ("malmo", "malmö"), ("umea", "umeå"), ("helsingborg", "helsingborg"),
+        ("svenska ", ""), (" i ", " "), ("svenska ", ""),
+    ]
+    for old, new in swaps:
+        s = s.replace(old, new)
+    return s.strip().title()
+
+
+# ── Write md ──────────────────────────────────────────────────────────────────
+def write_md(source_id: str, verified_url: str, status_code: int,
+            exa_title: str, search_query: str) -> Path:
+    ts = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M UTC")
+
+    # Extract city if recognizable
+    city_map = {
+        "stockholm": "Stockholm", "göteborg": "Göteborg", "gothenburg": "Göteborg",
+        "malmö": "Malmö", "malmo": "Malmö", "uppsala": "Uppsala",
+        "örebro": "Örebro", "orebro": "Örebro", "växjö": "Växjö", "vaxjo": "Växjö",
+        "kalmar": "Kalmar", "umeå": "Umeå", "umea": "Umeå",
+        "helsingborg": "Helsingborg", "gävle": "Gävle", "linköping": "Linköping",
+    }
+    city = next((v for k, v in city_map.items() if k in source_id.lower()), "Sverige")
+
+    content = f"""---
+sourceId: {source_id}
+city: {city}
+originalDomain: https://{source_id.replace("-", "")}.se/
+verifiedUrl: {verified_url}
+httpStatus: {status_code}
+foundVia: exa-search
+searchQuery: "{search_query}"
+aiTitle: "{exa_title}"
+addedAt: "{ts}"
+addedBy: gl-fix-404.py
+status: candidate-404-recovered
+---
+
+# {source_id}
+
+**Verifierad livelänk:** [{verified_url}]({verified_url})
+
+Ursprunglig domän (död): `https://{source_id.replace("-", "")}.se/`
+
+## Exa-sök
+
+- **Sökte:** `{search_query}`
+- **Fann:** {exa_title}
+- **URL:** {verified_url}
+- **HTTP:** {status_code}
+
+## Event-liknande?
+
+Länken är verifierad som event-sajt (konserthus, teater, festival, arena, etc).
+Filen är sparad i RawSources/ för granskning.
+
+## Nästa steg
+
+Kör `importRawSources.ts` eller flytta manuellt till `sources/` efter godkännande.
+
+---
+_genererad: {ts} av gl-fix-404.py_
+"""
+
+    out_path = RAW_SOURCES / f"{source_id}.md"
+    out_path.write_text(content, encoding="utf-8")
+    return out_path
+
+
+# ── Queue helpers ─────────────────────────────────────────────────────────────
+def read_man_queue() -> list[dict]:
+    if not MAN_Q.exists():
+        return []
+    return [json.loads(l) for l in MAN_Q.read_text().splitlines() if l.strip()]
+
+
+def write_man_queue(entries: list[dict]):
+    MAN_Q.write_text(
+        "\n".join(json.dumps(e, ensure_ascii=False) for e in entries) + "\n",
+        encoding="utf-8",
+    )
+
+
+def read_out_queue() -> set[str]:
+    """Return set of sourceIds already in postTestC-Out."""
+    if not OUT_Q.exists():
+        return set()
+    seen = set()
+    for line in OUT_Q.read_text().splitlines():
+        if line.strip():
+            try:
+                entry = json.loads(line)
+                if entry.get("sourceId"):
+                    seen.add(entry["sourceId"])
+            except Exception:
+                pass
+    return seen
+
+
+def append_out(entry: dict):
+    with OUT_Q.open("a", encoding="utf-8") as f:
+        f.write(json.dumps(entry, ensure_ascii=False) + "\n")
+
+
+# ── Main ──────────────────────────────────────────────────────────────────────
+def main():
+    entries = read_man_queue()
+    if not entries:
+        print("  postTestC-man är tom — inget att göra.")
+        return
+
+    if not EXA_API_KEY:
+        print("  FEL: EXA_API_KEY saknas i .env — kan inte söka.")
+        sys.exit(1)
+
+    # Skip entries already in postTestC-Out
+    already_done = read_out_queue()
+    entries = [e for e in entries if e.get("sourceId") not in already_done]
+
+    total = len(entries)
+    processed = 0
+    failed = 0
+    skipped = 0
+
+    print(f"\n{'='*60}")
+    print(f"  gl-fix-404  │  {total} källor i postTestC-man (efter exkludering)")
+    print(f"{'='*60}\n")
+
+    remaining = []
+
+    for idx, entry in enumerate(entries):
+        source_id = entry.get("sourceId", "")
+        if not source_id:
+            remaining.append(entry)
+            skipped += 1
+            continue
+
+        venue_name = venue_name_from_source_id(source_id)
+        print(f"[{idx+1}/{total}] {source_id} ({venue_name})")
+
+        search_queries = [
+            f'"{venue_name}" evenemang konserter biljetter',
+            f'"{venue_name}" event tickets concerts',
+            f'"{venue_name}" konserthus teater arena festival',
+            f'site:.se "{venue_name}" evenemang OR biljetter',
+            f"{venue_name} göteborg evenemang",
+            f"{venue_name} stockholm konsert",
+        ]
+
+        best = None
+
+        for sq in search_queries:
+            results = exa_search(sq, n=8)
+            if not results:
+                time.sleep(0.25)
+                continue
+
+            for r in results:
+                url = r["url"]
+                if not url or len(url) < 12:
+                    continue
+                if not is_event_like(url, r["title"], r.get("highlights", "")):
+                    continue
+
+                ok, status_code, final_url = http_verify(url)
+                if not ok:
+                    continue
+                # Accept 200 or common redirects
+                if status_code >= 400 and status_code not in (301, 302, 303, 307, 308):
+                    continue
+
+                best = {
+                    "url": final_url,
+                    "title": r["title"],
+                    "status": status_code,
+                    "query": sq,
+                }
+                break
+
+            if best:
+                break
+            time.sleep(0.25)
+
+        if best:
+            md_path = write_md(source_id, best["url"], best["status"],
+                               best["title"], best["query"])
+            print(f"  ✓ {best['url']}")
+            print(f"    md: {md_path.name}")
+
+            entry_out = dict(entry)
+            entry_out["queueName"] = "postTestC-Out"
+            entry_out["verifiedUrl"] = best["url"]
+            entry_out["httpStatus"] = best["status"]
+            append_out(entry_out)
+            processed += 1
+        else:
+            print(f"  ✗ ingen verifierad URL")
+            remaining.append(entry)
+            failed += 1
+
+        time.sleep(0.5)
+
+    write_man_queue(remaining)
+
+    print(f"\n{'='*60}")
+    print(f"  KLAR  │  {processed} fixerade  │  {failed} utan URL  │  {skipped} hoppade")
+    print(f"  md: {RAW_SOURCES}/ ({processed} filer)")
+    print(f"  postTestC-Out: {OUT_Q} (+{processed})")
+    print(f"  postTestC-man: {MAN_Q} ({len(remaining)} kvar)")
+    print(f"{'='*60}\n")
+
+
+if __name__ == "__main__":
+    main()

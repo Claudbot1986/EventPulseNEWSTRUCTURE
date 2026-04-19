@@ -1,13 +1,63 @@
 # CLAUDE.md
 
-Läs alltid först följande Obsidian-filer innan du analyserar eller ändrar kod:
-- /Users/claudgashi/EventPulse-ObsidianVault/EventPulse/00-Core/03-Canonical-Truths.md
-- /Users/claudgashi/EventPulse-ObsidianVault/EventPulse/00-Core/08-Verification-Principles.md
-- /Users/claudgashi/EventPulse-ObsidianVault/EventPulse/02-Operations/02-Current-Task.md
-- /Users/claudgashi/EventPulse-ObsidianVault/EventPulse/02-Operations/05-Verification-Status.md
+## EventPulse Obsidian vault workflow
 
-Arbeta sedan i detta repo:
-- /Users/claudgashi/EventPulse-recovery/clawdbot2/project/00EVENTPULSEFINALDESTINATION/NEWSTRUCTURE
+This repository uses an Obsidian vault as structured project memory.
+
+Vault root:
+`/Users/claudgashi/EventPulse-ObsidianVault/EventPulse`
+
+### Mandatory first read
+Always read these first if they exist:
+- `00-Core/03-Canonical-Truths.md`
+- `00-Core/08-Verification-Principles.md`
+- `02-Operations/02-Current-Task.md`
+- `02-Operations/05-Verification-Status.md`
+
+### Task-driven note discovery
+After the mandatory files:
+
+1. Determine the active domain from the user request, current task, touched files, queue names, stage names, and errors.
+2. Extract domain keywords.
+3. Search the vault for matching `.md` and `.canvas` files.
+4. Rank files by:
+   - direct filename/domain match
+   - same subsystem
+   - same failure family
+   - same queue/state family
+   - direct relevance to current verification work
+5. Read the top 3–6 files only.
+
+### EventPulse domain hints
+Use these hints for note discovery:
+
+- If task relates to `C-htmlGate`, `C0`, `C1`, `C2`, `C3`, `postB-preC`, `manual-review`, `D-renderGate`, `batch`, `123`, `derived rules`, `swedish patterns`, `extraction`:
+  prioritize:
+  - `01-Architecture/*C-htmlGate*`
+  - `03-Patterns/*`
+  - `05-Canvas/*123*`
+  - relevant `02-Operations/*`
+
+- If task relates to `sources`, `provider`, `canonical identity`, `rawSources`, `onboarding`:
+  prioritize:
+  - `04-Sources/*`
+  - relevant `01-Architecture/*`
+  - relevant `02-Operations/*`
+
+- If task relates to `frontend`, `UI`, `fetchEvents`, `Supabase`, `end-to-end`:
+  prioritize:
+  - `01-Architecture/*`
+  - `00-Core/15-Provider-Onboarding-Definition-of-Done.md`
+  - relevant `02-Operations/*`
+
+### Discipline
+Do not read large parts of the vault by default.
+Do not treat broad note collection as progress.
+Prefer a small high-relevance note set over a large vague note set.
+
+### Write-back discipline
+If a change is actually verified, update the most relevant operations/status note in the vault.
+Do not write back guesses, unverified interpretations, or speculative conclusions.
 
 Om du verifierar något viktigt ska du uppdatera rätt Obsidian-fil efteråt.
 
