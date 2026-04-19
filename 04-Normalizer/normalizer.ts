@@ -336,8 +336,8 @@ export async function processRawEvent(job: Job<RawEventInput>): Promise<void> {
   console.log(`[normalizer] venue_id=${venue_id ?? 'null'}, category_slug=${category_slug}`);
 
   const normalized: Partial<NormalizedEvent> & Record<string, unknown> = {
-    title_en: raw.title,
-    title_sv: raw.detected_language === 'sv' ? raw.title : null,
+    title_en: raw.detected_language === 'en' ? raw.title : raw.title ?? null,
+    title_sv: raw.detected_language === 'sv' ? raw.title : raw.title,
     description_en: raw.description ?? null,
     description_sv: raw.detected_language === 'sv' ? raw.description : null,
     start_time: raw.start_time,

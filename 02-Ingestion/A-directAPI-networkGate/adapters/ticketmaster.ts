@@ -1,6 +1,6 @@
 import axios from 'axios';
 import { createClient } from '@supabase/supabase-js';
-import { rawEventsQueue } from '../../03-Queue/queue';
+import { rawEventsQueue } from '../../../03-Queue/queue';
 import type { RawEventInput, VenueCandidate } from '@eventpulse/shared';
 
 const API_KEY = process.env.TICKETMASTER_API_KEY!;
@@ -484,7 +484,9 @@ async function saveVenueCandidates(events: any[]): Promise<string> {
 }
 
 // Run as entry point: npx tsx src/sources/ticketmaster.ts
-if (require.main === module) {
+import { fileURLToPath } from 'url';
+const __filename = fileURLToPath(import.meta.url);
+if (process.argv[1] === __filename) {
   scrapeTicketmaster()
     .then(r => { console.log('[ticketmaster] Exit:', r); process.exit(0); })
     .catch(e => { console.error('[ticketmaster] Fatal:', e); process.exit(1); });

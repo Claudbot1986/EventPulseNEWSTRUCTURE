@@ -28,6 +28,7 @@ function getConnection(): IORedis {
 
 export const rawEventsQueue = new Queue<RawEventInput>('raw_events', {
   connection: { getConnection },
+  prefix: 'bull',
   defaultJobOptions: {
     attempts: 3,
     backoff: { type: 'exponential', delay: 5000 },
@@ -39,6 +40,7 @@ export const rawEventsQueue = new Queue<RawEventInput>('raw_events', {
 // Smoke test queue - uses separate queue name for isolation
 export const smokeTestQueue = new Queue<RawEventInput>('ingestion_smoke', {
   connection: { getConnection },
+  prefix: 'bull',
   defaultJobOptions: {
     attempts: 3,
     backoff: { type: 'exponential', delay: 5000 },
@@ -49,7 +51,7 @@ export const smokeTestQueue = new Queue<RawEventInput>('ingestion_smoke', {
 
 export const searchSyncQueue = new Queue<{ event_id: string; action: 'upsert' | 'delete' }>(
   'search_sync',
-  { connection: { getConnection } }
+  { connection: { getConnection }, prefix: 'bull' }
 );
 
 export function createNormalizerWorker(
@@ -58,6 +60,7 @@ export function createNormalizerWorker(
 ) {
   const worker = new Worker<RawEventInput>(queueName, processor, {
     connection: { getConnection },
+    prefix: 'bull',
     concurrency: 5,
   });
 
@@ -73,6 +76,7 @@ export function createSmokeTestWorker(
 ) {
   const worker = new Worker<RawEventInput>('ingestion_smoke', processor, {
     connection: { getConnection },
+    prefix: 'bull',
     concurrency: 3,  // Lower concurrency for smoke test
   });
 

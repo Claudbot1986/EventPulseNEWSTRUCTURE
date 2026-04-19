@@ -8,17 +8,21 @@
  * Dublettkontroll: om samma sourceId finns i båda, kör endast en gång.
  * Spårbarhet: varje source loggas med queueOrigin (preA eller sources-main).
  *
+ * Parallell körning: --workers N (default 50).
+ * Alla queue-skrivningar görs i batch i slutet för att undvika race conditions.
+ *
  * Usage:
- *   npx tsx 02-Ingestion/A-directAPI-networkGate/runA.ts           # normal
- *   npx tsx 02-Ingestion/A-directAPI-networkGate/runA.ts --dry     # visa utan att köra
- *   npx tsx 02-Ingestion/A-directAPI-networkGate/runA.ts --limit N # max N sources
- *   npx tsx 02-Ingestion/A-directAPI-networkGate/runA.ts --status  # visa köstatus
+ *   npx tsx 02-Ingestion/A-directAPI-networkGate/runA.ts              # normal
+ *   npx tsx 02-Ingestion/A-directAPI-networkGate/runA.ts --dry       # visa utan att köra
+ *   npx tsx 02-Ingestion/A-directAPI-networkGate/runA.ts --limit N   # max N sources
+ *   npx tsx 02-Ingestion/A-directAPI-networkGate/runA.ts --workers N # N parallella workers (default 50)
+ *   npx tsx 02-Ingestion/A-directAPI-networkGate/runA.ts --status    # visa köstatus
  */
 
 import * as dotenv from 'dotenv';
 import path from 'path';
 import { fileURLToPath } from 'url';
-import { readFileSync, writeFileSync, existsSync } from 'fs';
+import { readFileSync, writeFileSync, existsSync, mkdirSync } from 'fs';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 dotenv.config({ path: path.resolve(process.cwd(), '.env'), override: true });
@@ -34,6 +38,7 @@ const PREA_QUEUE_FILE = path.resolve(RUNTIME_DIR, 'preA-queue.jsonl');
 const PREUI_QUEUE_FILE = path.resolve(RUNTIME_DIR, 'preUI-queue.jsonl');
 const PREB_QUEUE_FILE = path.resolve(RUNTIME_DIR, 'preB-queue.jsonl');
 const POSTA_QUEUE_FILE = path.resolve(RUNTIME_DIR, 'postA-queue.jsonl');
+const EXTRACTED_DIR = path.resolve(__dirname, '../../03-Queue/03-extractedevents');
 
 // ─── Shared Queue Entry Interface ──────────────────────────────────────────────
 
@@ -287,15 +292,11 @@ async function runAOnSource(item: SourceWithOrigin): Promise<AResult> {
     };
   }
 
-  // Queue events
-  const rawEvents = extractResult.events.map(e => ({
-    ...e,
-    source: sourceId,
-    source_url: source.url,
-    detected_language: 'sv' as const,
-    raw_payload: e as unknown as Record<string, unknown>,
-  }));
-  const { queued } = await queueEvents(sourceId, rawEvents as any);
+  // Write to extractedevents/ instead of queueEvents
+  mkdirSync(EXTRACTED_DIR, { recursive: true });
+  const lines = extractResult.events.map(e => JSON.stringify(e)).join('\n') + '\n';
+  writeFileSync(`${EXTRACTED_DIR}/${sourceId}.jsonl`, lines, 'utf-8');
+  console.log(`         → wrote ${eventsFound} events to extractedevents/`);
 
   return {
     sourceId,
@@ -423,17 +424,33 @@ async function main() {
     return;
   }
 
-  // ── Run ──────────────────────────────────────────────────────────────────
+  // ── Run — parallellt med semaphore ────────────────────────────────────────
+  const DEFAULT_WORKERS = 50;
+  const workersIdx = args.indexOf('--workers');
+  const CONCURRENCY = workersIdx !== -1 && args[workersIdx + 1]
+    ? parseInt(args[workersIdx + 1], 10)
+    : DEFAULT_WORKERS;
+
   const results: AResult[] = [];
 
-  for (const item of batch) {
-    const result = await runAOnSource(item);
-    finalizeSource(item, result);
-    results.push(result);
-
-    const icon = result.success ? '✅' : '❌';
-    console.log(`  ${icon} ${item.sourceId}: ${result.success ? `${result.eventsFound} events` : result.error}`);
+  async function runWithConcurrency(items: SourceWithOrigin[], concurrency: number): Promise<void> {
+    for (let i = 0; i < items.length; i += concurrency) {
+      const chunk = items.slice(i, i + concurrency);
+      const chunkResults = await Promise.all(chunk.map(item => runAOnSource(item)));
+      for (let j = 0; j < chunk.length; j++) {
+        const item = chunk[j];
+        const result = chunkResults[j];
+        results.push(result);
+        finalizeSource(item, result);
+        const icon = result.success ? '✅' : '❌';
+        console.log(`  ${icon} ${item.sourceId}: ${result.success ? `${result.eventsFound} events` : result.error}`);
+      }
+      console.log(`  ── chunk ${i / concurrency + 1} klart (${chunk.length} källor)`);
+    }
   }
+
+  console.log(`Kör ${batch.length} sources med ${CONCURRENCY} parallella workers...\n`);
+  await runWithConcurrency(batch, CONCURRENCY);
 
   // ── Summary ──────────────────────────────────────────────────────────────
   const success = results.filter(r => r.success).length;

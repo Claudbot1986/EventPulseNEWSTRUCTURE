@@ -42,7 +42,8 @@ STATUS LABELS:
 
 import { discoverEventCandidates, screenUrl, screenUrlWithDerivedRules, evaluateHtmlGate, type PreGateCategorization } from './index';
 import { evaluateAiExtract, type AiExtractResult, type AiVerdict } from './C3-aiExtractGate/C3-aiExtractGate';
-import { extractFromHtml } from '../F-eventExtraction/universal-extractor';
+import { extractFromHtml, type ExtractResult } from '../F-eventExtraction/universal-extractor';
+import type { ParsedEvent } from '../F-eventExtraction/schema';
 import { runC4Analysis, type C4InputSource, type C4RoundAnalysis, FailCategory } from './C4-ai-analysis';
 import { c4DeepAnalyze, verifyProposals, type C4PipelineResult, type C4DeepAnalysisResult } from './c4-deep-analysis';
 import { saveRoundDerivedRules, loadAllDerivedRules, isImprovementEnabled, proposeCandidateRulesAsImprovements, type DerivedRulesStore } from './c4-derived-rules';
@@ -63,6 +64,8 @@ let c4AnalysisResult: any = undefined; // Shared reference so TS doesn't complai
 
 // Pool sizing — single source of truth for batch dimensions
 const BATCH_SIZE = 50;
+let POOL_WORKERS = 5; // parallel workers per round (set via --workers N)
+let MAX_ROUNDS = 3;   // max pool rounds (set via --max-rounds N)
 
 // ---------------------------------------------------------------------------
 // Batch Directory Initialization — ensures batch dir exists before any writes
@@ -87,6 +90,7 @@ function ensureBatchDir(batchNum: number): string {
 const RUNTIME_DIR = join(PROJECT_ROOT, 'runtime');
 const SOURCES_DIR = join(PROJECT_ROOT, 'sources');
 const REPORTS_DIR = join(__dirname, 'reports');
+const C_EXTRACTED_DIR = join(PROJECT_ROOT, '03-Queue', '03-extractedevents', 'C');
 
 const QUEUES = {
   PREC: join(RUNTIME_DIR, 'postB-preC-queue.jsonl'),
@@ -97,6 +101,30 @@ const QUEUES = {
   D: join(RUNTIME_DIR, 'postTestC-D.jsonl'),
   MANUAL_REVIEW: join(RUNTIME_DIR, 'postTestC-manual-review.jsonl'),
 };
+
+// Load existing sourceIds from MANUAL_REVIEW to prevent duplicate entries
+function getExistingManualReviewIds(): Set<string> {
+  try {
+    const content = readFileSync(QUEUES.MANUAL_REVIEW, 'utf8');
+    const ids = new Set<string>();
+    for (const line of content.split('\n')) {
+      if (!line.trim()) continue;
+      try {
+        const entry = JSON.parse(line);
+        if (entry.sourceId) ids.add(entry.sourceId);
+      } catch { /* skip malformed lines */ }
+    }
+    return ids;
+  } catch { return new Set(); }
+}
+
+// Append to MANUAL_REVIEW only if sourceId not already present
+function appendToManualReview(entry: Record<string, unknown>): void {
+  const existing = getExistingManualReviewIds();
+  if (!existing.has(entry.sourceId as string)) {
+    appendFileSync(QUEUES.MANUAL_REVIEW, JSON.stringify(entry) + '\n');
+  }
+}
 
 // ---------------------------------------------------------------------------
 // Types
@@ -254,7 +282,7 @@ interface CStageResult {
     aiDuration?: number;
     duration: number;
   };
-  extract: { eventsFound: number; duration: number; htmlSize: number };
+  extract: { eventsFound: number; duration: number; htmlSize: number; extractedEvents?: ParsedEvent[] };
 }
 
 interface CResult extends CStageResult {
@@ -822,6 +850,51 @@ function buildTrace(result: CResult, sourceUrl: string, roundNum: number): PerSo
   };
 }
 
+// ─── URL variant normalization ─────────────────────────────────────────────────
+
+interface UrlVariantResult {
+  url: string;
+  reason: string;
+}
+
+/**
+ * Test a URL (or bare domain) with multiple protocol/domain prefixes.
+ * Returns the first variant that responds with HTTP < 400.
+ * Uses HEAD requests with 5s timeout for speed.
+ */
+async function tryUrlVariants(rawUrl: string): Promise<UrlVariantResult> {
+  const stripped = rawUrl.replace(/^https?:\/\//, '').replace(/\/+$/, '') || '/';
+  const hasPath = stripped.includes('/');
+
+  const variants: Array<{ url: string; reason: string }> = [
+    { url: `https://${stripped}`, reason: 'https' },
+    { url: `https://www.${stripped}`, reason: 'https+www' },
+    { url: `http://${stripped}`, reason: 'http' },
+    { url: `http://www.${stripped}`, reason: 'http+www' },
+  ];
+
+  if (hasPath && !rawUrl.match(/^https?:\/\//)) {
+    variants.unshift({ url: `https://${rawUrl.replace(/^https?:\/\//, '')}`, reason: 'https+path' });
+  }
+
+  for (const variant of variants) {
+    try {
+      const res = await axios.head(variant.url, {
+        timeout: 5000,
+        validateStatus: (s) => s < 400,
+        maxRedirects: 0,
+      });
+      if (res.status < 400) {
+        return { url: variant.url, reason: variant.reason };
+      }
+    } catch {
+      // try next variant
+    }
+  }
+
+  return { url: rawUrl, reason: 'original' };
+}
+
 /**
  * NEW runSourceOnPool with:
  * - screenUrlWithDerivedRules wired in (C0-derived-rules actually used in C1)
@@ -836,6 +909,13 @@ async function runSourceOnPool(
 ): Promise<CResult> {
   console.log(`\n=== ${source.sourceId} (round ${roundNum}) ===`);
 
+  // ── URL variant normalization: try https/www/http prefixes ─────────────────
+  const urlVariant = await tryUrlVariants(source.url);
+  const effectiveUrl = urlVariant.url;
+  if (urlVariant.reason !== 'original') {
+    console.log(`[UrlVariant] ${source.url} → ${effectiveUrl} (${urlVariant.reason})`);
+  }
+
   const initial = {
     sourceId: source.sourceId,
     sourceUrl: source.url,
@@ -848,8 +928,8 @@ async function runSourceOnPool(
     exitReason: 'ALL_ROUNDS_EXHAUSTED' as ExitReason,
     exitReasonDetail: 'not determined',
     derivedRuleApplied: undefined as undefined,
-    effectiveProcessingUrl: source.url,
-    effectiveProcessingUrlReason: 'initial',
+    effectiveProcessingUrl: effectiveUrl,
+    effectiveProcessingUrlReason: `url-variant:${urlVariant.reason}`,
   };
 
   const result: CResult = {
@@ -865,7 +945,7 @@ async function runSourceOnPool(
   try {
     // ── C0: Discovery ─────────────────────────────────────────────────────────
     const c0Start = Date.now();
-    const c0 = await discoverEventCandidates(source.url, derivedRules, source.sourceId);
+    const c0 = await discoverEventCandidates(effectiveUrl, derivedRules, source.sourceId);
 
     result.c0 = {
       candidates: c0?.candidatesFound || 0,
@@ -890,9 +970,8 @@ async function runSourceOnPool(
     console.log(`C0: ${c0?.candidatesFound || 0} candidates, winner=${c0?.winner?.url || 'none'}`);
 
     // ── EFFECTIVE URL SELECTION ────────────────────────────────────────────────
-    // Priority: C0 winner > derived-rule subpage > root
-    let effectiveUrl = source.url;
-    let effectiveUrlReason = 'root';
+    // Priority: C0 winner > url-variant (already set) > root
+    let effectiveUrlReason = 'url-variant';
 
     if (c0?.winner?.url) {
       effectiveUrl = c0.winner.url;
@@ -909,8 +988,8 @@ async function runSourceOnPool(
     if (derivedRules && derivedRules.has(ruleKey)) {
       // Use derived-rules-aware screening — TEST subpage paths if root fails
       console.log(`[C1-DerivedRules] Testing derived-rules subpages for ${source.sourceId}`);
-      c1 = await screenUrlWithDerivedRules(source.sourceId, source.url, derivedRules) as any;
-      if (c1.bestSubpageUrl && c1.bestSubpageUrl !== source.url) {
+      c1 = await screenUrlWithDerivedRules(source.sourceId, effectiveUrl, derivedRules) as any;
+      if (c1.bestSubpageUrl && c1.bestSubpageUrl !== effectiveUrl) {
         effectiveUrl = c1.bestSubpageUrl;
         effectiveUrlReason = `derived-rules subpage (${c1.categorization})`;
         result.effectiveProcessingUrl = effectiveUrl;
@@ -986,7 +1065,7 @@ async function runSourceOnPool(
       universalMethodBreakdown: {},                  // placeholder — extractFromHtml doesn't track breakdown
       duration: Date.now() - extStart,
     };
-    result.extract = { eventsFound: ext.events.length, duration: Date.now() - extStart, htmlSize };
+    result.extract = { eventsFound: ext.events.length, duration: Date.now() - extStart, htmlSize, extractedEvents: ext.events };
     console.log(`C3: ${ext.events.length} events via [${ext.methodsUsed.join(', ')}]`);
 
     // ── C3 AI FALLBACK: if universal returned 0 but C2 was promising ──────────
@@ -1001,6 +1080,7 @@ async function runSourceOnPool(
       result.c3.aiEventsFound = aiResult.events.length;
       result.c3.aiDuration = Date.now() - aiStart;
       result.extract.eventsFound = aiResult.events.length;
+      if (aiResult.events.length > 0) result.extract.extractedEvents = aiResult.events;
       if (aiResult.events.length > 0) {
         console.log(`[C3-AI] AI extraction: ${aiResult.events.length} events`);
       } else {
@@ -1152,6 +1232,15 @@ function routeResult(result: CResult, roundsParticipated: number): string {
   if (result.outcomeType === 'extract_success') {
     queuePath = QUEUES.UI;
     queueName = 'postTestC-UI';
+    // Write events to isolated C output folder (03-Queue/03-extractedevents/C/)
+    const events = result.extract.extractedEvents;
+    if (events && events.length > 0) {
+      mkdirSync(C_EXTRACTED_DIR, { recursive: true });
+      const outFile = join(C_EXTRACTED_DIR, `${result.sourceId}.jsonl`);
+      const lines = events.map(e => JSON.stringify(e)).join('\n') + '\n';
+      writeFileSync(outFile, lines, 'utf-8');
+      console.log(`[C-Extract] Wrote ${events.length} events → ${outFile}`);
+    }
   } else {
     switch (result.routeSuggestion) {
       case 'UI':
@@ -1170,8 +1259,30 @@ function routeResult(result: CResult, roundsParticipated: number): string {
         queuePath = QUEUES.D;
         queueName = 'postTestC-D';
         break;
-      default:
-        // Check if this source has now participated in 3 rounds
+      default: {
+        // [OPTIMIZATION A] Fast-exit for unfetchable sources after round 1
+        // These sources can never be fetched — testing them 3 times is wasteful
+        const isUnfetchableError = result.exitReason === 'FETCH_ERROR' || result.exitReason === 'NETWORK_ERROR';
+        if (isUnfetchableError && roundsParticipated >= 1) {
+          queuePath = QUEUES.MANUAL_REVIEW;
+          queueName = 'postTestC-manual-review';
+          break;
+        }
+
+        // [OPTIMIZATION B] C2-hög + 0 events → D-renderGate
+        // High C2 score but no events extracted — likely JS-rendered content
+        // Route to D (JS rendering) instead of manual review
+        const isC2PromisingZeroEvents =
+          (result.exitReason === 'EXTRACTION_ZERO_PROMISING_HTML' ||
+           result.exitReason === 'EXTRACTION_ZERO_C3_AI_ZERO') &&
+          result.c2.score >= 20;
+        if (isC2PromisingZeroEvents) {
+          queuePath = QUEUES.D;
+          queueName = 'postTestC-D';
+          break;
+        }
+
+        // Default: check if this source has now participated in 3 rounds
         if (roundsParticipated >= 3) {
           queuePath = QUEUES.MANUAL_REVIEW;
           queueName = 'postTestC-manual-review';
@@ -1180,6 +1291,7 @@ function routeResult(result: CResult, roundsParticipated: number): string {
           queuePath = '';
           queueName = 'STAYS_IN_POOL';
         }
+      }
     }
   }
 
@@ -1232,20 +1344,35 @@ async function runPoolRound(
   const exits: { source: PoolSource; decision: string; result: CResult }[] = [];
   const fails: PoolSource[] = [];
 
-  for (const source of activePool) {
+  // Phase 1: run all sources in parallel with worker pool
+  const pairResults: Array<{ source: PoolSource; result: CResult }> = new Array(activePool.length);
+  let pIdx = 0;
+
+  async function poolWorker() {
+    while (true) {
+      const i = pIdx++;
+      if (i >= activePool.length) break;
+      const source = activePool[i];
+      pairResults[i] = { source, result: await runSourceOnPool(source, poolRoundNumber, derivedRules) };
+    }
+  }
+
+  const workerCount = Math.min(POOL_WORKERS, activePool.length);
+  console.log(`  [parallel] ${workerCount} workers for ${activePool.length} sources`);
+  await Promise.all(Array.from({ length: workerCount }, poolWorker));
+
+  // Phase 2: process results sequentially (safe, deterministic)
+  for (const { source, result } of pairResults) {
     const newRounds = source.roundsParticipated + 1;
-    const result = await runSourceOnPool(source, poolRoundNumber, derivedRules);
     results.push(result);
 
     const decision = routeResult(result, newRounds);
 
     if (decision === 'STAYS_IN_POOL') {
-      // Increment rounds and keep in pool
       source.roundsParticipated = newRounds;
       fails.push(source);
       console.log(`  → STAYS IN POOL (round ${newRounds}/3)`);
     } else {
-      // Source exited the pool
       exits.push({ source, decision, result });
       console.log(`  → EXITED: ${decision}`);
     }
@@ -1746,7 +1873,7 @@ export async function runDynamicPoolBatch(options: DynamicPoolOptions = {}): Pro
     console.log(`[Learning-Loop] Loaded ${loadedRuleCount} derived rules from prior batches`);
   }
 
-  while (state.activePool.length > 0 && state.poolRoundNumber < 3) {
+  while (state.activePool.length > 0 && state.poolRoundNumber < MAX_ROUNDS) {
     state.poolRoundNumber++;
 
     const roundOutput = await runPoolRound(state, allDerivedRules);
@@ -1938,7 +2065,7 @@ export async function runDynamicPoolBatch(options: DynamicPoolOptions = {}): Pro
 
     savePoolState(state, BATCH_NUM);
 
-    if (state.poolRoundNumber < 3 && state.activePool.length > 0) {
+    if (state.poolRoundNumber < MAX_ROUNDS && state.activePool.length > 0) {
       const refill = refillPool(state.activePool, new Set(state.activePool.map(s => s.sourceId)), new Set(state.allExitedIds), BATCH_TYPE, VERIFICATION_SOURCES);
       if (refill.newSources.length > 0) {
         state.activePool.push(...refill.newSources);
@@ -1964,7 +2091,7 @@ export async function runDynamicPoolBatch(options: DynamicPoolOptions = {}): Pro
         attempt: 1,
         workerNotes: 'ORPHAN-FIX: routed to manual-review after max rounds',
       };
-      appendFileSync(QUEUES.MANUAL_REVIEW, JSON.stringify(queueEntry) + '\n');
+      appendToManualReview(queueEntry);
       state.exited.push({ source: src, decision: 'postTestC-manual-review', result: null as any });
     }
   }
@@ -2053,6 +2180,14 @@ async function main() {
     if (args[i] === '--no-c4') {
       SKIP_C4 = true;
     }
+    if (args[i] === '--workers' && args[i + 1]) {
+      POOL_WORKERS = parseInt(args[i + 1], 10);
+      i++;
+    }
+    if (args[i] === '--max-rounds' && args[i + 1]) {
+      MAX_ROUNDS = parseInt(args[i + 1], 10);
+      i++;
+    }
   }
 
   // Read batch number and type from batch-state.jsonl
@@ -2100,11 +2235,39 @@ async function main() {
   let roundResults: { results: CResult[]; exits: { source: PoolSource; decision: string; result: CResult }[]; fails: PoolSource[] }[] = [];
   let c4AllResults: C4RoundAnalysis[] = [];
 
+  // SIGINT handler — Ctrl+C writes in-flight sources back to postB-preC so nothing is lost
+  process.once('SIGINT', () => {
+    console.log('\n[SIGINT] Ctrl+C — sparar pågående källor tillbaka till postB-preC...');
+    try {
+      const inFlight = state?.activePool ?? [];
+      if (inFlight.length > 0) {
+        const lines = inFlight.map(s => JSON.stringify({
+          sourceId: s.sourceId,
+          queueName: 'postB-preC',
+          queuedAt: new Date().toISOString(),
+          priority: 3,
+          attempt: 1,
+          queueReason: s.queueReason ?? 'SIGINT: re-queued for next run',
+        })).join('\n') + '\n';
+        appendFileSync(QUEUES.PREC, lines);
+        console.log(`[SIGINT] ${inFlight.length} källor återlagda i postB-preC.`);
+      } else {
+        console.log('[SIGINT] Inga pågående källor att spara.');
+      }
+    } catch (e: any) {
+      console.error('[SIGINT] Fel vid sparning:', e.message);
+    }
+    process.exit(0);
+  });
+
   // If the loaded pool is already complete (round 3 or pool exhausted), advance to next batch
   // This fixes the "batch re-runs same completed batch" bug
   const batchAlreadyComplete = savedState && (
     savedState.poolRoundNumber >= 3 ||
-    (savedState.poolRoundNumber > 0 && savedState.activePool.length === 0)
+    (savedState.poolRoundNumber > 0 && savedState.activePool.length === 0) ||
+    // [TOOL-4-FIX] When savedState.poolRoundNumber >= MAX_ROUNDS, this run already
+    // executed its rounds. Advance to next batch instead of stalling.
+    savedState.poolRoundNumber >= MAX_ROUNDS
   );
 
   if (batchAlreadyComplete) {
@@ -2177,7 +2340,7 @@ async function main() {
     console.log(`[Learning-Loop] No prior derived rules found — starting fresh`);
   }
 
-  while (state.activePool.length > 0 && state.poolRoundNumber < 3) {
+  while (state.activePool.length > 0 && state.poolRoundNumber < MAX_ROUNDS) {
     state.poolRoundNumber++;
 
     const roundOutput = await runPoolRound(state, allDerivedRules);
@@ -2440,7 +2603,7 @@ async function main() {
     savePoolState(state, BATCH_NUM);
 
     // Step 3: Refill between rounds (if more rounds will follow)
-    if (state.poolRoundNumber < 3 && state.activePool.length > 0) {
+    if (state.poolRoundNumber < MAX_ROUNDS && state.activePool.length > 0) {
       const refill = refillPool(state.activePool, new Set(state.activePool.map(s => s.sourceId)), new Set(state.allExitedIds), BATCH_TYPE, VERIFICATION_SOURCES);
       if (refill.newSources.length > 0) {
         state.activePool.push(...refill.newSources);
@@ -2473,7 +2636,7 @@ async function main() {
         attempt: 1,
         workerNotes: `IMP-001-FIX: orphaned after max rounds (poolRoundNumber=3 reached while source was in STEP3-CHAIN forced stay)`,
       };
-      appendFileSync(QUEUES.MANUAL_REVIEW, JSON.stringify(queueEntry) + '\n');
+      appendToManualReview(queueEntry);
       console.log(`  [IMP-001-FIX] ${src.sourceId} → postTestC-manual-review (rounds=${src.roundsParticipated})`);
       state.exited.push({
         source: src,
@@ -2578,7 +2741,7 @@ async function main() {
   console.log('\nDone.');
 }
 
-main().catch(err => {
+main().then(() => process.exit(0)).catch(err => {
   console.error('Fatal error:', err);
   process.exit(1);
 });

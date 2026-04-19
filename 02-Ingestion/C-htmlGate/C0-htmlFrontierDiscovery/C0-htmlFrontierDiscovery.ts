@@ -127,6 +127,13 @@ const SWEDISH_EVENT_PATTERNS = [
   // Additional common patterns
   '/konserter',
   '/konsert',
+  // Extended patterns (batch-107 learning: mobilia → /aterkommande-event)
+  '/aterkommande-event',
+  // Additional general Swedish event paths (verified across multiple venue types)
+  '/arrangemang',
+  '/planditt',
+  '/hitta-pa',
+  '/vad-hander',
 ];
 
 const MAX_DEPTH = 2;

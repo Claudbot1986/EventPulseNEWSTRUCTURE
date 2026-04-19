@@ -435,6 +435,20 @@ export async function evaluateHtmlGate(
 
   if (negativeSignals.newsArticlePattern) score += NEG_PENALTY.newsArticle;
   if (negativeSignals.navDatePattern) score += NEG_PENALTY.navDate;
+
+  // [OPTIMIZATION D] URL-segment bonus — positive scoring for event-rich URL paths
+  // If the URL path contains known event-page segments, give a small score boost
+  // Classification: General — these segments consistently indicate event listing pages
+  const URL_SEGMENT_BONUS = 3;
+  const eventUrlSegments = ['aterkommande-event', 'forestallningar', 'spelprogram', 'aktiviteter'];
+  const urlPath = url.toLowerCase();
+  for (const seg of eventUrlSegments) {
+    if (urlPath.includes(seg)) {
+      score += URL_SEGMENT_BONUS;
+      break; // Apply bonus once only
+    }
+  }
+
   score = Math.max(0, score);
 
   // Candidate quality assessment

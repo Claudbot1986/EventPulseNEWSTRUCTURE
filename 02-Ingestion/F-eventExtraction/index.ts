@@ -10,8 +10,8 @@
  * Output feeds into G-qualityGate (moved to TEMP/ - not currently active).
  */
 
-export { extractFromJsonLd, extractHighConfidenceEvents, extractFromHtml, toRawEventInput } from './extractor';
-export type { ExtractResult } from './extractor';
+export { extractFromJsonLd, extractHighConfidenceEvents, toRawEventInput } from './extractor';
+export { extractFromHtml, type ExtractResult } from './universal-extractor';
 export type { ParsedEvent, ExtractionConfidence } from './schema';
 export {
   JsonLdEventSchema,

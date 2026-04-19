@@ -1,1 +1,14 @@
 
+{"sourceId":"liseberg-1","queueName":"postTestC-UI","queuedAt":"2026-04-19T13:11:27.324Z","priority":3,"attempt":3,"queueReason":"toolScB: 1 events extracted via ScrapingBee","workerNotes":"C3"}
+{"sourceId":"medeltidsmuseet","queueName":"postTestC-UI","queuedAt":"2026-04-19T13:11:27.324Z","priority":3,"attempt":3,"queueReason":"toolScB: 3 events extracted via ScrapingBee","workerNotes":"C1"}
+{"sourceId":"fotografiska-1","queueName":"postTestC-UI","queuedAt":"2026-04-19T13:11:27.324Z","priority":1,"attempt":3,"queueReason":"toolScB: 3 events extracted via ScrapingBee","workerNotes":"C1"}
+{"sourceId":"lunds-universitet","queueName":"postTestC-UI","queuedAt":"2026-04-19T13:12:48.895Z","priority":1,"attempt":3,"queueReason":"toolScB: 18 events extracted via ScrapingBee","workerNotes":"C1"}
+{"sourceId":"svenska-fotbollf-rbundet","queueName":"postTestC-UI","queuedAt":"2026-04-19T13:12:48.895Z","priority":1,"attempt":3,"queueReason":"toolScB: 11 events extracted via ScrapingBee","workerNotes":"C1, C2"}
+{"sourceId":"mobilia","queueName":"postTestC-UI","queuedAt":"2026-04-19T13:12:48.895Z","priority":1,"attempt":3,"queueReason":"toolScB: 1 events extracted via ScrapingBee","workerNotes":"C1"}
+{"sourceId":"swedish-food","queueName":"postTestC-UI","queuedAt":"2026-04-19T13:12:48.895Z","priority":1,"attempt":3,"queueReason":"toolScB: 19 events extracted via ScrapingBee","workerNotes":"C3"}
+{"sourceId":"malmo-museum","queueName":"postTestC-UI","queuedAt":"2026-04-19T13:12:48.895Z","priority":1,"attempt":3,"queueReason":"toolScB: 3 events extracted via ScrapingBee","workerNotes":"C1"}
+{"sourceId":"cirkus","queueName":"postTestC-UI","queuedAt":"2026-04-19T13:12:48.895Z","priority":1,"attempt":3,"queueReason":"toolScB: 5 events extracted via ScrapingBee","workerNotes":"C1"}
+{"sourceId":"gr-na-lund-n-je","queueName":"postTestC-UI","queuedAt":"2026-04-19T13:14:13.250Z","priority":1,"attempt":3,"queueReason":"toolScB: 1 events extracted via ScrapingBee","workerNotes":"C3"}
+{"sourceId":"moderna-museet","queueName":"postTestC-UI","queuedAt":"2026-04-19T13:14:13.250Z","priority":1,"attempt":3,"queueReason":"toolScB: 6 events extracted via ScrapingBee","workerNotes":"C1"}
+{"sourceId":"karlskrona","queueName":"postTestC-UI","queuedAt":"2026-04-19T13:14:13.250Z","priority":1,"attempt":3,"queueReason":"toolScB: 6 events extracted via ScrapingBee","workerNotes":"C2"}
+{"sourceId":"gr-na-lund","queueName":"postTestC-UI","queuedAt":"2026-04-19T13:14:13.250Z","priority":1,"attempt":3,"queueReason":"toolScB: 1 events extracted via ScrapingBee","workerNotes":"C3"}

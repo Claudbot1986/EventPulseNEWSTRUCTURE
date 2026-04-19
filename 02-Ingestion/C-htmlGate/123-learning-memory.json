@@ -1,12 +1,12 @@
 {
   "version": 1,
-  "lastUpdated": "2026-04-17T15:10:36.298Z",
-  "totalBatchesAnalyzed": 96,
-  "totalSourcesProcessed": 1186,
+  "lastUpdated": "2026-04-19T12:40:11.997Z",
+  "totalBatchesAnalyzed": 113,
+  "totalSourcesProcessed": 18326,
   "dominantBottleneck": {
     "category": "UNKNOWN",
     "count": 800,
-    "percentage": "67.5%",
+    "percentage": "4.4%",
     "description": "C0 hittar inga event candidates på root URL. Swedish patterns hittar candidates men C1 likelyJsRendered=true triggar D-route och hoppar över C2/C3. Extraction körs aldrig."
   },
   "failCategoryDistribution": [

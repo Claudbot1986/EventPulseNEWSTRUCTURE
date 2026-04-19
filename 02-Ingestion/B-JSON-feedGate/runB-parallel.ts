@@ -16,9 +16,8 @@
  * FLÖDE:
  *   preB → B-verktyg (parallel)
  *   Utfall:
- *     1. events utvinns → postB
- *     2. stark B-kandidat men ej full extraction → postB
- *     3. ej B → postB-preC
+ *     1. events utvinns → postB + extractedevents/
+ *     2. inga events → postB-preC
  *
  * Usage:
  *   npx tsx 02-Ingestion/B-JSON-feedGate/runB-parallel.ts              # normal (100 sources)
@@ -52,6 +51,7 @@ const PREUI_QUEUE_FILE    = path.resolve(RUNTIME_DIR, 'preUI-queue.jsonl');
 const POSTB_QUEUE_FILE    = path.resolve(RUNTIME_DIR, 'postB-queue.jsonl');
 const POSTB_PREC_FILE     = path.resolve(RUNTIME_DIR, 'postB-preC-queue.jsonl');
 const SOURCES_STATUS_FILE = path.resolve(RUNTIME_DIR, 'sources_status.jsonl');
+const EXTRACTED_DIR       = path.resolve(__dirname, '../../03-Queue/03-extractedevents');
 
 // ─── Queue Entry ──────────────────────────────────────────────────────────────
 
@@ -234,19 +234,23 @@ async function runBOnSource(entry: PreBEntry): Promise<BResult> {
     };
   }
 
-  // Persist events to BullMQ/Redis queue
-  const rawEvents: RawEventInput[] = allExtractedEvents.map(e => {
-    const raw = toRawEventInput(e);
-    raw.source = sourceId;
-    raw.detected_language = 'sv';
-    return raw;
-  });
-  const { queued } = await queueEvents(sourceId, rawEvents);
+  // Persist events to disk (extractedevents/)
+  if (allExtractedEvents.length > 0) {
+    const { mkdirSync, writeFileSync } = await import('fs');
+    mkdirSync(EXTRACTED_DIR, { recursive: true });
+    const lines = allExtractedEvents.map(e => JSON.stringify(e)).join('\n') + '\n';
+    writeFileSync(`${EXTRACTED_DIR}/${sourceId}.jsonl`, lines, 'utf-8');
+    console.log(`         → wrote ${allExtractedEvents.length} events to extractedevents/`);
+  }
+
+  // Events written to extractedevents/ above
+  // NOTE: queueEvents removed to avoid duplicate job creation
+  // importToEventPulse.ts handles all queueing from extractedevents/
 
   return {
     sourceId,
     success: true,
-    eventsFound: queued,
+    eventsFound: allExtractedEvents.length,
     nextPath: 'network',
     inspectorVerdict: gateResult.inspectorVerdict,
     status: 'success',
@@ -337,7 +341,7 @@ function finalizeSourceBatch(
     newStatusMap.set(entry.sourceId, statusEntry);
 
     if (result.success && result.eventsFound > 0) {
-      // B success → postB queue
+      // 100% successful extraction → postB + extractedevents/
       if (!postBMap.has(entry.sourceId) && ![...newPostB].some(e => e.sourceId === entry.sourceId)) {
         newPostB.push({
           sourceId: entry.sourceId,
@@ -345,25 +349,12 @@ function finalizeSourceBatch(
           queuedAt: new Date().toISOString(),
           priority: 2,
           attempt: 1,
-          queueReason: `toolB(preB): ${result.eventsFound} events`,
-          workerNotes: result.inspectorVerdict,
-        });
-      }
-    } else if (result.nextPath === 'network' && result.inspectorVerdict === 'promising') {
-      // Strong B candidate → postB queue
-      if (!postBMap.has(entry.sourceId) && ![...newPostB].some(e => e.sourceId === entry.sourceId)) {
-        newPostB.push({
-          sourceId: entry.sourceId,
-          queueName: 'postB',
-          queuedAt: new Date().toISOString(),
-          priority: 2,
-          attempt: 1,
-          queueReason: `toolB(preB): ${result.error ?? 'no events'}`,
+          queueReason: `toolB(preB): ${result.eventsFound} events extracted → extractedevents/`,
           workerNotes: result.inspectorVerdict,
         });
       }
     } else {
-      // Not B → postB-preC queue
+      // No events extracted → postB-preC (HTML/C-spår)
       if (!postBPreCMap.has(entry.sourceId) && ![...newPostBPreC].some(e => e.sourceId === entry.sourceId)) {
         newPostBPreC.push({
           sourceId: entry.sourceId,
@@ -371,11 +362,10 @@ function finalizeSourceBatch(
           queuedAt: new Date().toISOString(),
           priority: 3,
           attempt: 1,
-          queueReason: `toolB(preB): ${result.error ?? 'not network-accessible'}`,
+          queueReason: `toolB(preB): ${result.error ?? 'no events extracted'}`,
         });
-        // Also update preferredPath=html in status
         statusEntry.consecutiveFailures = 0;
-        statusEntry.lastRoutingReason = `postB-preC: ${result.error ?? 'not network-accessible'}`;
+        statusEntry.lastRoutingReason = `postB-preC: ${result.error ?? 'no events extracted'}`;
         statusEntry.lastRoutingSource = 'runtime_status';
       }
     }
@@ -510,15 +500,13 @@ async function main() {
   const elapsed = Date.now() - startTime;
 
   // ── Summary ──────────────────────────────────────────────────────────────
-  const success = results.filter(r => r.success).length;
-  const strongCandidate = results.filter(r => !r.success && r.nextPath === 'network' && r.inspectorVerdict === 'promising').length;
-  const toC = results.filter(r => !r.success && !(r.nextPath === 'network' && r.inspectorVerdict === 'promising')).length;
+  const success = results.filter(r => r.success && r.eventsFound > 0).length;
+  const toC = results.filter(r => !r.success || r.eventsFound === 0).length;
   const totalEvents = results.reduce((s, r) => s + r.eventsFound, 0);
 
   console.log(`\n═══ B-RUNNER SUMMARY ═══`);
   console.log(`  Total:          ${batch.length}`);
-  console.log(`  ✅ success:     ${success}`);
-  console.log(`  ⚠️  postB:      ${strongCandidate} (stark B-kandidat)`);
+  console.log(`  ✅ success:     ${success} → postB + extractedevents/`);
   console.log(`  ❌ → preC:     ${toC}`);
   console.log(`  Events:         ${totalEvents}`);
   console.log(`  Elapsed:        ${(elapsed / 1000).toFixed(1)}s`);
@@ -531,7 +519,7 @@ async function main() {
 
 // Allow top-level execution
 if (import.meta.url === process.argv[1] || process.argv[1]?.endsWith(fileURLToPath(import.meta.url))) {
-  main().catch(console.error);
+  main().then(() => process.exit(0)).catch((e) => { console.error(e); process.exit(1); });
 }
 
 export { runBOnSource, runParallel };
