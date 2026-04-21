@@ -30,7 +30,7 @@
 import * as dotenv from 'dotenv';
 import path from 'path';
 import { fileURLToPath } from 'url';
-import { readFileSync, writeFileSync, existsSync } from 'fs';
+import { readFileSync, writeFileSync, existsSync, appendFileSync, mkdirSync } from 'fs';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -46,12 +46,24 @@ import type { RawEventInput } from '@eventpulse/shared';
 // ─── Queue File Paths ─────────────────────────────────────────────────────────
 
 const RUNTIME_DIR = path.resolve(__dirname, '../../runtime');
+const LOGS_DIR = path.resolve(RUNTIME_DIR, 'logs');
+const RUN_LOG = path.resolve(LOGS_DIR, `runB-parallel-${new Date().toISOString().replace(/[:.]/g, '-')}.log`);
 const PREB_QUEUE_FILE    = path.resolve(RUNTIME_DIR, 'preB-queue.jsonl');
 const PREUI_QUEUE_FILE    = path.resolve(RUNTIME_DIR, 'preUI-queue.jsonl');
 const POSTB_QUEUE_FILE    = path.resolve(RUNTIME_DIR, 'postB-queue.jsonl');
 const POSTB_PREC_FILE     = path.resolve(RUNTIME_DIR, 'postB-preC-queue.jsonl');
 const SOURCES_STATUS_FILE = path.resolve(RUNTIME_DIR, 'sources_status.jsonl');
 const EXTRACTED_DIR       = path.resolve(__dirname, '../../03-Queue/03-extractedevents');
+
+// --- Log helper — terminal + per-run file ---
+
+function log(...args: unknown[]) {
+  const ts = new Date().toISOString();
+  const msg = args.map(a => String(a)).join(' ');
+  const line = `${ts}  ${msg}`;
+  console.log(line);
+  appendFileSync(RUN_LOG, line + '\n', 'utf8');
+}
 
 // ─── Queue Entry ──────────────────────────────────────────────────────────────
 
@@ -436,9 +448,12 @@ async function main() {
   const allStatuses = readSourcesStatus();
 
   if (allPreB.length === 0) {
-    console.log('[B-runner] preB-queue is empty. Nothing to run.');
+    log('[B-runner] preB-queue is empty. Nothing to run.');
     return;
   }
+
+  mkdirSync(LOGS_DIR, { recursive: true });
+  writeFileSync(RUN_LOG, '', 'utf8');
 
   // Deduplicate preB by sourceId (keep first occurrence)
   const seenPreB = new Set<string>();
@@ -453,29 +468,30 @@ async function main() {
   const batch = preBUnique.slice(0, LIMIT);
   const remaining = preBUnique.slice(LIMIT);
 
-  console.log(`preB-queue: ${batch.length} sources this run (of ${preBUnique.length} unique, ${allPreB.length} total)`);
-  console.log(`Workers: ${WORKERS} (concurrency)`);
-  console.log(`\nQueue state at start:`);
-  console.log(`  preB-queue:   ${allPreB.length} (unique: ${preBUnique.length})`);
-  console.log(`  postB-queue:  ${allPostB.length}`);
-  console.log(`  postB-preC:   ${allPostBPreC.length}`);
+  log(`═══ B-RUNNER PARALLEL ═══`);
+  log(`preB-queue: ${batch.length} sources this run (of ${preBUnique.length} unique, ${allPreB.length} total)`);
+  log(`Workers: ${WORKERS} (concurrency)`);
+  log(`Queue state at start:`);
+  log(`  preB-queue:   ${allPreB.length} (unique: ${preBUnique.length})`);
+  log(`  postB-queue:  ${allPostB.length}`);
+  log(`  postB-preC:   ${allPostBPreC.length}`);
 
   if (dry) {
-    console.log('\nDRY RUN — inga sources körs:\n');
+    log('DRY RUN — inga sources körs:');
     for (const entry of batch) {
       const source = getSource(entry.sourceId);
-      console.log(`  ${entry.sourceId}: ${source?.url ?? 'N/A'} | ${entry.queueReason}`);
+      log(`  ${entry.sourceId}: ${source?.url ?? 'N/A'} | ${entry.queueReason}`);
     }
     return;
   }
 
   // ── Run B in parallel ────────────────────────────────────────────────────
-  console.log(`\nRunning ${batch.length} sources with ${WORKERS} workers...`);
+  log(`Running ${batch.length} sources with ${WORKERS} workers...`);
 
   const results = await runParallel(batch, runBOnSource, WORKERS);
 
   // ── Finalize: batch update all queues in ONE operation each ─────────────
-  console.log('\nFinalizing batch...');
+  log('Finalizing batch...');
 
   const {
     newPreUI,
@@ -504,17 +520,18 @@ async function main() {
   const toC = results.filter(r => !r.success || r.eventsFound === 0).length;
   const totalEvents = results.reduce((s, r) => s + r.eventsFound, 0);
 
-  console.log(`\n═══ B-RUNNER SUMMARY ═══`);
-  console.log(`  Total:          ${batch.length}`);
-  console.log(`  ✅ success:     ${success} → postB + extractedevents/`);
-  console.log(`  ❌ → preC:     ${toC}`);
-  console.log(`  Events:         ${totalEvents}`);
-  console.log(`  Elapsed:        ${(elapsed / 1000).toFixed(1)}s`);
-  console.log(`  Throughput:      ${(batch.length / (elapsed / 1000)).toFixed(1)} sources/sec`);
-  console.log(`\nQueue state at end:`);
-  console.log(`  preB-queue:    ${remaining.length} (unprocessed)`);
-  console.log(`  postB-queue:   +${newPostB.length} → ${finalPostB.length}`);
-  console.log(`  postB-preC:    +${newPostBPreC.length} → ${finalPostBPreC.length}`);
+  log('');
+  log('═══ B-RUNNER SUMMARY ═══');
+  log(`  Total:          ${batch.length}`);
+  log(`  ✅ success:     ${success} → postB + extractedevents/`);
+  log(`  ❌ → preC:     ${toC}`);
+  log(`  Events:         ${totalEvents}`);
+  log(`  Elapsed:        ${(elapsed / 1000).toFixed(1)}s`);
+  log(`  Throughput:      ${(batch.length / (elapsed / 1000)).toFixed(1)} sources/sec`);
+  log(`Queue state at end:`);
+  log(`  preB-queue:    ${remaining.length} (unprocessed)`);
+  log(`  postB-queue:   +${newPostB.length} → ${finalPostB.length}`);
+  log(`  postB-preC:    +${newPostBPreC.length} → ${finalPostBPreC.length}`);
 }
 
 // Allow top-level execution

@@ -1,260 +1,104 @@
-{"sourceId":"linkoping-stadsteatern","queueName":"postTestC-man","queuedAt":"2026-04-19T13:11:27.323Z","priority":3,"attempt":3,"queueReason":"toolScB: HTTP 404 — manual review needed"}
-{"sourceId":"stora-teatern-uppsala-1","queueName":"postTestC-man","queuedAt":"2026-04-19T13:11:27.323Z","priority":3,"attempt":3,"queueReason":"toolScB: HTTP 500 — manual review needed"}
-{"sourceId":"fryshuset","queueName":"postTestC-man","queuedAt":"2026-04-19T13:11:27.323Z","priority":3,"attempt":3,"queueReason":"toolScB: no events found — manual review needed"}
-{"sourceId":"liljevalchs-konsthall","queueName":"postTestC-man","queuedAt":"2026-04-19T13:11:27.323Z","priority":3,"attempt":3,"queueReason":"toolScB: no events found — manual review needed"}
-{"sourceId":"malmo-konstmuseum","queueName":"postTestC-man","queuedAt":"2026-04-19T13:11:27.323Z","priority":3,"attempt":3,"queueReason":"toolScB: HTTP 500 — manual review needed"}
-{"sourceId":"fc-roseng-rd","queueName":"postTestC-man","queuedAt":"2026-04-19T13:11:27.323Z","priority":3,"attempt":3,"queueReason":"toolScB: no events found — manual review needed"}
-{"sourceId":"malmo-hogskola","queueName":"postTestC-man","queuedAt":"2026-04-19T13:11:27.324Z","priority":3,"attempt":3,"queueReason":"toolScB: no events found — manual review needed"}
-{"sourceId":"boplanet","queueName":"postTestC-man","queuedAt":"2026-04-19T13:11:27.324Z","priority":3,"attempt":3,"queueReason":"toolScB: HTTP 500 — manual review needed"}
-{"sourceId":"uppsala-stadsteatern","queueName":"postTestC-man","queuedAt":"2026-04-19T13:11:27.324Z","priority":3,"attempt":3,"queueReason":"toolScB: HTTP 500 — manual review needed"}
-{"sourceId":"teknikens-och-sjofartens-museum","queueName":"postTestC-man","queuedAt":"2026-04-19T13:11:27.324Z","priority":3,"attempt":3,"queueReason":"toolScB: HTTP 500 — manual review needed"}
-{"sourceId":"stockholm-music-arts","queueName":"postTestC-man","queuedAt":"2026-04-19T13:11:27.324Z","priority":3,"attempt":3,"queueReason":"toolScB: HTTP 500 — manual review needed"}
-{"sourceId":"karolinska-institutet","queueName":"postTestC-man","queuedAt":"2026-04-19T13:11:27.324Z","priority":3,"attempt":3,"queueReason":"toolScB: HTTP 404 — manual review needed"}
-{"sourceId":"linkoping-konserthus","queueName":"postTestC-man","queuedAt":"2026-04-19T13:11:27.324Z","priority":3,"attempt":3,"queueReason":"toolScB: HTTP 404 — manual review needed"}
-{"sourceId":"konstfack","queueName":"postTestC-man","queuedAt":"2026-04-19T13:11:27.324Z","priority":3,"attempt":3,"queueReason":"toolScB: timeout of 30000ms exceeded — manual review needed"}
-{"sourceId":"din-gastrotek","queueName":"postTestC-man","queuedAt":"2026-04-19T13:11:27.324Z","priority":3,"attempt":3,"queueReason":"toolScB: HTTP 500 — manual review needed"}
-{"sourceId":"uppsala-konserthus","queueName":"postTestC-man","queuedAt":"2026-04-19T13:11:27.324Z","priority":3,"attempt":3,"queueReason":"toolScB: HTTP 500 — manual review needed"}
-{"sourceId":"orebro-stadsteatern","queueName":"postTestC-man","queuedAt":"2026-04-19T13:11:27.324Z","priority":3,"attempt":3,"queueReason":"toolScB: HTTP 500 — manual review needed"}
-{"sourceId":"helsingborgs-dagblad","queueName":"postTestC-man","queuedAt":"2026-04-19T13:11:27.324Z","priority":3,"attempt":3,"queueReason":"toolScB: HTTP 404 — manual review needed"}
-{"sourceId":"lunds-bk","queueName":"postTestC-man","queuedAt":"2026-04-19T13:11:27.324Z","priority":3,"attempt":3,"queueReason":"toolScB: no events found — manual review needed"}
-{"sourceId":"g-teborgs-jazz-festival","queueName":"postTestC-man","queuedAt":"2026-04-19T13:11:27.324Z","priority":3,"attempt":3,"queueReason":"toolScB: timeout of 30000ms exceeded — manual review needed"}
-{"sourceId":"fyris-paper","queueName":"postTestC-man","queuedAt":"2026-04-19T13:11:27.324Z","priority":3,"attempt":3,"queueReason":"toolScB: HTTP 500 — manual review needed"}
-{"sourceId":"staffan","queueName":"postTestC-man","queuedAt":"2026-04-19T13:11:27.324Z","priority":3,"attempt":3,"queueReason":"toolScB: HTTP 500 — manual review needed"}
-{"sourceId":"svenska-kulturhuset","queueName":"postTestC-man","queuedAt":"2026-04-19T13:11:27.324Z","priority":3,"attempt":3,"queueReason":"toolScB: HTTP 500 — manual review needed"}
-{"sourceId":"blekholmen","queueName":"postTestC-man","queuedAt":"2026-04-19T13:11:27.324Z","priority":3,"attempt":3,"queueReason":"toolScB: no events found — manual review needed"}
-{"sourceId":"nobelmuseet","queueName":"postTestC-man","queuedAt":"2026-04-19T13:11:27.324Z","priority":3,"attempt":3,"queueReason":"toolScB: HTTP 500 — manual review needed"}
-{"sourceId":"umea-konserthus","queueName":"postTestC-man","queuedAt":"2026-04-19T13:11:27.324Z","priority":3,"attempt":3,"queueReason":"toolScB: HTTP 404 — manual review needed"}
-{"sourceId":"tradgardsforeningen","queueName":"postTestC-man","queuedAt":"2026-04-19T13:11:27.324Z","priority":3,"attempt":3,"queueReason":"toolScB: no events found — manual review needed"}
-{"sourceId":"helsingborgs-if","queueName":"postTestC-man","queuedAt":"2026-04-19T13:11:27.324Z","priority":3,"attempt":3,"queueReason":"toolScB: HTTP 500 — manual review needed"}
-{"sourceId":"svenska-innebandyf-rbundet","queueName":"postTestC-man","queuedAt":"2026-04-19T13:11:27.324Z","priority":3,"attempt":3,"queueReason":"toolScB: HTTP 500 — manual review needed"}
-{"sourceId":"ik-sirius","queueName":"postTestC-man","queuedAt":"2026-04-19T13:11:27.324Z","priority":3,"attempt":3,"queueReason":"toolScB: timeout of 30000ms exceeded — manual review needed"}
-{"sourceId":"club-mecca","queueName":"postTestC-man","queuedAt":"2026-04-19T13:11:27.324Z","priority":3,"attempt":3,"queueReason":"toolScB: HTTP 500 — manual review needed"}
-{"sourceId":"stersund-festival","queueName":"postTestC-man","queuedAt":"2026-04-19T13:11:27.324Z","priority":3,"attempt":3,"queueReason":"toolScB: HTTP 404 — manual review needed"}
-{"sourceId":"mosebacke","queueName":"postTestC-man","queuedAt":"2026-04-19T13:11:27.324Z","priority":3,"attempt":3,"queueReason":"toolScB: HTTP 500 — manual review needed"}
-{"sourceId":"norrkoping-konserthus","queueName":"postTestC-man","queuedAt":"2026-04-19T13:11:27.324Z","priority":3,"attempt":3,"queueReason":"toolScB: HTTP 404 — manual review needed"}
-{"sourceId":"ladan","queueName":"postTestC-man","queuedAt":"2026-04-19T13:11:27.324Z","priority":3,"attempt":3,"queueReason":"toolScB: no events found — manual review needed"}
-{"sourceId":"ostersunds-fk","queueName":"postTestC-man","queuedAt":"2026-04-19T13:11:27.324Z","priority":3,"attempt":3,"queueReason":"toolScB: HTTP 500 — manual review needed"}
-{"sourceId":"halmstad-stadsteatern","queueName":"postTestC-man","queuedAt":"2026-04-19T13:11:27.324Z","priority":3,"attempt":3,"queueReason":"toolScB: HTTP 404 — manual review needed"}
-{"sourceId":"goteborgs-design-festival","queueName":"postTestC-man","queuedAt":"2026-04-19T13:11:27.324Z","priority":3,"attempt":3,"queueReason":"toolScB: HTTP 500 — manual review needed"}
-{"sourceId":"form-design-museum","queueName":"postTestC-man","queuedAt":"2026-04-19T13:11:27.324Z","priority":3,"attempt":3,"queueReason":"toolScB: HTTP 500 — manual review needed"}
-{"sourceId":"uppsala-universitet","queueName":"postTestC-man","queuedAt":"2026-04-19T13:11:27.324Z","priority":3,"attempt":3,"queueReason":"toolScB: HTTP 404 — manual review needed"}
-{"sourceId":"lunds-stadsteatern","queueName":"postTestC-man","queuedAt":"2026-04-19T13:11:27.324Z","priority":3,"attempt":3,"queueReason":"toolScB: HTTP 404 — manual review needed"}
-{"sourceId":"medborgarhuset","queueName":"postTestC-man","queuedAt":"2026-04-19T13:11:27.324Z","priority":3,"attempt":3,"queueReason":"toolScB: timeout of 30000ms exceeded — manual review needed"}
-{"sourceId":"ticketmaster","queueName":"postTestC-man","queuedAt":"2026-04-19T13:11:27.324Z","priority":3,"attempt":3,"queueReason":"toolScB: HTTP 500 — manual review needed"}
-{"sourceId":"get-lost","queueName":"postTestC-man","queuedAt":"2026-04-19T13:11:27.324Z","priority":3,"attempt":3,"queueReason":"toolScB: HTTP 500 — manual review needed"}
-{"sourceId":"halmstad-konserthus","queueName":"postTestC-man","queuedAt":"2026-04-19T13:11:27.324Z","priority":3,"attempt":3,"queueReason":"toolScB: HTTP 404 — manual review needed"}
-{"sourceId":"slaktaren","queueName":"postTestC-man","queuedAt":"2026-04-19T13:11:27.324Z","priority":3,"attempt":3,"queueReason":"toolScB: timeout of 30000ms exceeded — manual review needed"}
-{"sourceId":"repo-festival","queueName":"postTestC-man","queuedAt":"2026-04-19T13:11:27.324Z","priority":3,"attempt":3,"queueReason":"toolScB: HTTP 500 — manual review needed"}
-{"sourceId":"arbetsam","queueName":"postTestC-man","queuedAt":"2026-04-19T13:11:27.324Z","priority":3,"attempt":3,"queueReason":"toolScB: HTTP 500 — manual review needed"}
-{"sourceId":"ruddalen","queueName":"postTestC-man","queuedAt":"2026-04-19T13:11:27.324Z","priority":3,"attempt":3,"queueReason":"toolScB: HTTP 500 — manual review needed"}
-{"sourceId":"mall-of-scandinavia","queueName":"postTestC-man","queuedAt":"2026-04-19T13:11:27.324Z","priority":3,"attempt":3,"queueReason":"toolScB: timeout of 30000ms exceeded — manual review needed"}
-{"sourceId":"goteborgs-arkitekturgalleri","queueName":"postTestC-man","queuedAt":"2026-04-19T13:11:27.324Z","priority":3,"attempt":3,"queueReason":"toolScB: no events found — manual review needed"}
-{"sourceId":"helsingborg-arena","queueName":"postTestC-man","queuedAt":"2026-04-19T13:11:27.324Z","priority":3,"attempt":3,"queueReason":"toolScB: timeout of 30000ms exceeded — manual review needed"}
-{"sourceId":"svenska-bowlingf-rbundet","queueName":"postTestC-man","queuedAt":"2026-04-19T13:11:27.324Z","priority":3,"attempt":3,"queueReason":"toolScB: HTTP 500 — manual review needed"}
-{"sourceId":"vasteras-sk","queueName":"postTestC-man","queuedAt":"2026-04-19T13:11:27.324Z","priority":3,"attempt":3,"queueReason":"toolScB: HTTP 500 — manual review needed"}
-{"sourceId":"ronn","queueName":"postTestC-man","queuedAt":"2026-04-19T13:11:27.324Z","priority":1,"attempt":3,"queueReason":"toolScB: no events found — manual review needed"}
-{"sourceId":"hammarkullen","queueName":"postTestC-man","queuedAt":"2026-04-19T13:11:27.324Z","priority":1,"attempt":3,"queueReason":"toolScB: no events found — manual review needed"}
-{"sourceId":"vaxjo-konserthus","queueName":"postTestC-man","queuedAt":"2026-04-19T13:11:27.324Z","priority":1,"attempt":3,"queueReason":"toolScB: no events found — manual review needed"}
-{"sourceId":"stockholm-jazz-festival-1","queueName":"postTestC-man","queuedAt":"2026-04-19T13:11:27.324Z","priority":1,"attempt":3,"queueReason":"toolScB: no events found — manual review needed"}
-{"sourceId":"way-out-west","queueName":"postTestC-man","queuedAt":"2026-04-19T13:11:27.324Z","priority":1,"attempt":3,"queueReason":"toolScB: no events found — manual review needed"}
-{"sourceId":"malmo-bulldogs","queueName":"postTestC-man","queuedAt":"2026-04-19T13:11:27.324Z","priority":1,"attempt":3,"queueReason":"toolScB: no events found — manual review needed"}
-{"sourceId":"oceanen","queueName":"postTestC-man","queuedAt":"2026-04-19T13:11:27.324Z","priority":1,"attempt":3,"queueReason":"toolScB: no events found — manual review needed"}
-{"sourceId":"jazz-i-orebro","queueName":"postTestC-man","queuedAt":"2026-04-19T13:11:27.324Z","priority":1,"attempt":3,"queueReason":"toolScB: HTTP 500 — manual review needed"}
-{"sourceId":"storsj-odjuret","queueName":"postTestC-man","queuedAt":"2026-04-19T13:11:27.324Z","priority":1,"attempt":3,"queueReason":"toolScB: HTTP 500 — manual review needed"}
-{"sourceId":"jazzfestivalen-goteborg","queueName":"postTestC-man","queuedAt":"2026-04-19T13:11:27.324Z","priority":1,"attempt":3,"queueReason":"toolScB: timeout of 30000ms exceeded — manual review needed"}
-{"sourceId":"a6","queueName":"postTestC-man","queuedAt":"2026-04-19T13:11:27.324Z","priority":1,"attempt":3,"queueReason":"toolScB: HTTP 500 — manual review needed"}
-{"sourceId":"svenska-schackf-rbundet","queueName":"postTestC-man","queuedAt":"2026-04-19T13:11:27.324Z","priority":1,"attempt":3,"queueReason":"toolScB: no events found — manual review needed"}
-{"sourceId":"summerburst","queueName":"postTestC-man","queuedAt":"2026-04-19T13:11:27.324Z","priority":1,"attempt":3,"queueReason":"toolScB: HTTP 500 — manual review needed"}
-{"sourceId":"melodifestivalen-svt","queueName":"postTestC-man","queuedAt":"2026-04-19T13:11:27.324Z","priority":1,"attempt":3,"queueReason":"toolScB: HTTP 404 — manual review needed"}
-{"sourceId":"uppsala-stadsteatern-1","queueName":"postTestC-man","queuedAt":"2026-04-19T13:11:27.324Z","priority":1,"attempt":3,"queueReason":"toolScB: HTTP 500 — manual review needed"}
-{"sourceId":"orebro-hockey","queueName":"postTestC-man","queuedAt":"2026-04-19T13:11:27.324Z","priority":1,"attempt":3,"queueReason":"toolScB: timeout of 30000ms exceeded — manual review needed"}
-{"sourceId":"hasselblad-center","queueName":"postTestC-man","queuedAt":"2026-04-19T13:11:27.324Z","priority":1,"attempt":3,"queueReason":"toolScB: HTTP 500 — manual review needed"}
-{"sourceId":"uppsala-linn-science-park","queueName":"postTestC-man","queuedAt":"2026-04-19T13:11:27.324Z","priority":1,"attempt":3,"queueReason":"toolScB: HTTP 500 — manual review needed"}
-{"sourceId":"slagthuset","queueName":"postTestC-man","queuedAt":"2026-04-19T13:11:27.324Z","priority":1,"attempt":3,"queueReason":"toolScB: no events found — manual review needed"}
-{"sourceId":"regionteatern","queueName":"postTestC-man","queuedAt":"2026-04-19T13:11:27.324Z","priority":1,"attempt":3,"queueReason":"toolScB: HTTP 500 — manual review needed"}
-{"sourceId":"malmo-folkets-park","queueName":"postTestC-man","queuedAt":"2026-04-19T13:11:27.324Z","priority":1,"attempt":3,"queueReason":"toolScB: HTTP 500 — manual review needed"}
-{"sourceId":"stockholm-music-arts-1","queueName":"postTestC-man","queuedAt":"2026-04-19T13:11:27.324Z","priority":1,"attempt":3,"queueReason":"toolScB: HTTP 500 — manual review needed"}
-{"sourceId":"af","queueName":"postTestC-man","queuedAt":"2026-04-19T13:11:27.324Z","priority":1,"attempt":3,"queueReason":"toolScB: no events found — manual review needed"}
-{"sourceId":"sundsvall-musik","queueName":"postTestC-man","queuedAt":"2026-04-19T13:11:27.324Z","priority":1,"attempt":3,"queueReason":"toolScB: HTTP 500 — manual review needed"}
-{"sourceId":"teater-galeasen","queueName":"postTestC-man","queuedAt":"2026-04-19T13:11:27.324Z","priority":1,"attempt":3,"queueReason":"toolScB: no events found — manual review needed"}
-{"sourceId":"lulea-konserthus","queueName":"postTestC-man","queuedAt":"2026-04-19T13:11:27.324Z","priority":1,"attempt":3,"queueReason":"toolScB: HTTP 404 — manual review needed"}
-{"sourceId":"gavle-zoo","queueName":"postTestC-man","queuedAt":"2026-04-19T13:11:27.324Z","priority":1,"attempt":3,"queueReason":"toolScB: HTTP 500 — manual review needed"}
-{"sourceId":"malmo-icc","queueName":"postTestC-man","queuedAt":"2026-04-19T13:11:27.324Z","priority":1,"attempt":3,"queueReason":"toolScB: HTTP 500 — manual review needed"}
-{"sourceId":"polismuseum","queueName":"postTestC-man","queuedAt":"2026-04-19T13:11:27.324Z","priority":1,"attempt":3,"queueReason":"toolScB: timeout of 30000ms exceeded — manual review needed"}
-{"sourceId":"ekero","queueName":"postTestC-man","queuedAt":"2026-04-19T13:11:27.324Z","priority":1,"attempt":3,"queueReason":"toolScB: HTTP 500 — manual review needed"}
-{"sourceId":"kalmar-teatern","queueName":"postTestC-man","queuedAt":"2026-04-19T13:11:27.324Z","priority":1,"attempt":3,"queueReason":"toolScB: HTTP 500 — manual review needed"}
-{"sourceId":"andra-langgatan","queueName":"postTestC-man","queuedAt":"2026-04-19T13:11:27.324Z","priority":1,"attempt":3,"queueReason":"toolScB: timeout of 30000ms exceeded — manual review needed"}
-{"sourceId":"lunds-konserthus","queueName":"postTestC-man","queuedAt":"2026-04-19T13:11:27.324Z","priority":1,"attempt":3,"queueReason":"toolScB: HTTP 404 — manual review needed"}
-{"sourceId":"varberg-arena","queueName":"postTestC-man","queuedAt":"2026-04-19T13:11:27.324Z","priority":1,"attempt":3,"queueReason":"toolScB: HTTP 404 — manual review needed"}
-{"sourceId":"norrk-pings-tidningar","queueName":"postTestC-man","queuedAt":"2026-04-19T13:11:27.324Z","priority":1,"attempt":3,"queueReason":"toolScB: HTTP 404 — manual review needed"}
-{"sourceId":"rumble","queueName":"postTestC-man","queuedAt":"2026-04-19T13:11:27.324Z","priority":1,"attempt":3,"queueReason":"toolScB: HTTP 500 — manual review needed"}
-{"sourceId":"malmo-arena","queueName":"postTestC-man","queuedAt":"2026-04-19T13:11:27.324Z","priority":1,"attempt":3,"queueReason":"toolScB: timeout of 30000ms exceeded — manual review needed"}
-{"sourceId":"skovde-if","queueName":"postTestC-man","queuedAt":"2026-04-19T13:11:27.324Z","priority":1,"attempt":3,"queueReason":"toolScB: HTTP 500 — manual review needed"}
-{"sourceId":"studio-acusticum","queueName":"postTestC-man","queuedAt":"2026-04-19T13:11:27.324Z","priority":1,"attempt":3,"queueReason":"toolScB: no events found — manual review needed"}
-{"sourceId":"kino","queueName":"postTestC-man","queuedAt":"2026-04-19T13:11:27.324Z","priority":1,"attempt":3,"queueReason":"toolScB: HTTP 500 — manual review needed"}
-{"sourceId":"b-republic","queueName":"postTestC-man","queuedAt":"2026-04-19T13:12:48.895Z","priority":1,"attempt":3,"queueReason":"toolScB: HTTP 500 — manual review needed"}
-{"sourceId":"paddan","queueName":"postTestC-man","queuedAt":"2026-04-19T13:12:48.895Z","priority":1,"attempt":3,"queueReason":"toolScB: timeout of 30000ms exceeded — manual review needed"}
-{"sourceId":"rockfest-vasteras","queueName":"postTestC-man","queuedAt":"2026-04-19T13:12:48.895Z","priority":1,"attempt":3,"queueReason":"toolScB: HTTP 500 — manual review needed"}
-{"sourceId":"dubblett-v2-test","queueName":"postTestC-man","queuedAt":"2026-04-19T13:12:48.895Z","priority":1,"attempt":3,"queueReason":"toolScB: HTTP 400 — manual review needed"}
-{"sourceId":"karlskrona-hf","queueName":"postTestC-man","queuedAt":"2026-04-19T13:12:48.895Z","priority":1,"attempt":3,"queueReason":"toolScB: HTTP 500 — manual review needed"}
-{"sourceId":"v-ster-s-konstmuseum","queueName":"postTestC-man","queuedAt":"2026-04-19T13:12:48.895Z","priority":1,"attempt":3,"queueReason":"toolScB: HTTP 500 — manual review needed"}
-{"sourceId":"uppsala-reggae-festival","queueName":"postTestC-man","queuedAt":"2026-04-19T13:12:48.895Z","priority":1,"attempt":3,"queueReason":"toolScB: HTTP 500 — manual review needed"}
-{"sourceId":"friidrottsf-rbundet","queueName":"postTestC-man","queuedAt":"2026-04-19T13:12:48.895Z","priority":1,"attempt":3,"queueReason":"toolScB: no events found — manual review needed"}
-{"sourceId":"uppsala-teatern","queueName":"postTestC-man","queuedAt":"2026-04-19T13:12:48.895Z","priority":1,"attempt":3,"queueReason":"toolScB: HTTP 500 — manual review needed"}
-{"sourceId":"vasteras-konstmuseum","queueName":"postTestC-man","queuedAt":"2026-04-19T13:12:48.895Z","priority":1,"attempt":3,"queueReason":"toolScB: HTTP 404 — manual review needed"}
-{"sourceId":"uppsala-museum","queueName":"postTestC-man","queuedAt":"2026-04-19T13:12:48.895Z","priority":1,"attempt":3,"queueReason":"toolScB: timeout of 30000ms exceeded — manual review needed"}
-{"sourceId":"orebro-vinterfest","queueName":"postTestC-man","queuedAt":"2026-04-19T13:12:48.895Z","priority":1,"attempt":3,"queueReason":"toolScB: HTTP 500 — manual review needed"}
-{"sourceId":"mora-ik","queueName":"postTestC-man","queuedAt":"2026-04-19T13:12:48.895Z","priority":1,"attempt":3,"queueReason":"toolScB: timeout of 30000ms exceeded — manual review needed"}
-{"sourceId":"test-write-verify","queueName":"postTestC-man","queuedAt":"2026-04-19T13:12:48.895Z","priority":1,"attempt":3,"queueReason":"toolScB: HTTP 400 — manual review needed"}
-{"sourceId":"vaxjo-alcazar","queueName":"postTestC-man","queuedAt":"2026-04-19T13:12:48.895Z","priority":1,"attempt":3,"queueReason":"toolScB: HTTP 404 — manual review needed"}
-{"sourceId":"kth","queueName":"postTestC-man","queuedAt":"2026-04-19T13:12:48.895Z","priority":1,"attempt":3,"queueReason":"toolScB: HTTP 404 — manual review needed"}
-{"sourceId":"fyrfaderna","queueName":"postTestC-man","queuedAt":"2026-04-19T13:12:48.895Z","priority":1,"attempt":3,"queueReason":"toolScB: HTTP 500 — manual review needed"}
-{"sourceId":"dalarna","queueName":"postTestC-man","queuedAt":"2026-04-19T13:12:48.895Z","priority":1,"attempt":3,"queueReason":"toolScB: HTTP 500 — manual review needed"}
-{"sourceId":"masthuggskyrkan","queueName":"postTestC-man","queuedAt":"2026-04-19T13:12:48.895Z","priority":1,"attempt":3,"queueReason":"toolScB: HTTP 500 — manual review needed"}
-{"sourceId":"trollhattan","queueName":"postTestC-man","queuedAt":"2026-04-19T13:12:48.895Z","priority":1,"attempt":3,"queueReason":"toolScB: no events found — manual review needed"}
-{"sourceId":"malmo-massan","queueName":"postTestC-man","queuedAt":"2026-04-19T13:12:48.895Z","priority":1,"attempt":3,"queueReason":"toolScB: HTTP 500 — manual review needed"}
-{"sourceId":"norrkoping-art","queueName":"postTestC-man","queuedAt":"2026-04-19T13:12:48.895Z","priority":1,"attempt":3,"queueReason":"toolScB: HTTP 500 — manual review needed"}
-{"sourceId":"kungstradgarden","queueName":"postTestC-man","queuedAt":"2026-04-19T13:12:48.895Z","priority":1,"attempt":3,"queueReason":"toolScB: timeout of 30000ms exceeded — manual review needed"}
-{"sourceId":"brommapojkarna","queueName":"postTestC-man","queuedAt":"2026-04-19T13:12:48.895Z","priority":1,"attempt":3,"queueReason":"toolScB: HTTP 500 — manual review needed"}
-{"sourceId":"open-air","queueName":"postTestC-man","queuedAt":"2026-04-19T13:12:48.895Z","priority":1,"attempt":3,"queueReason":"toolScB: HTTP 500 — manual review needed"}
-{"sourceId":"observatoriet","queueName":"postTestC-man","queuedAt":"2026-04-19T13:12:48.895Z","priority":1,"attempt":3,"queueReason":"toolScB: no events found — manual review needed"}
-{"sourceId":"h-gskolan-i-sk-vde","queueName":"postTestC-man","queuedAt":"2026-04-19T13:12:48.895Z","priority":1,"attempt":3,"queueReason":"toolScB: HTTP 404 — manual review needed"}
-{"sourceId":"vega","queueName":"postTestC-man","queuedAt":"2026-04-19T13:12:48.895Z","priority":1,"attempt":3,"queueReason":"toolScB: no events found — manual review needed"}
-{"sourceId":"malm-konserthus","queueName":"postTestC-man","queuedAt":"2026-04-19T13:12:48.895Z","priority":1,"attempt":3,"queueReason":"toolScB: HTTP 500 — manual review needed"}
-{"sourceId":"goteborgs-kulturfestival","queueName":"postTestC-man","queuedAt":"2026-04-19T13:12:48.895Z","priority":1,"attempt":3,"queueReason":"toolScB: HTTP 404 — manual review needed"}
-{"sourceId":"we-are-sarajevo","queueName":"postTestC-man","queuedAt":"2026-04-19T13:12:48.895Z","priority":1,"attempt":3,"queueReason":"toolScB: HTTP 500 — manual review needed"}
-{"sourceId":"goteborgs-stadsbibliotek","queueName":"postTestC-man","queuedAt":"2026-04-19T13:12:48.895Z","priority":1,"attempt":3,"queueReason":"toolScB: HTTP 500 — manual review needed"}
-{"sourceId":"falun-stadsteatern","queueName":"postTestC-man","queuedAt":"2026-04-19T13:12:48.895Z","priority":1,"attempt":3,"queueReason":"toolScB: no events found — manual review needed"}
-{"sourceId":"visit-gothenburg","queueName":"postTestC-man","queuedAt":"2026-04-19T13:12:48.895Z","priority":1,"attempt":3,"queueReason":"toolScB: HTTP 500 — manual review needed"}
-{"sourceId":"karlstad-konserthus","queueName":"postTestC-man","queuedAt":"2026-04-19T13:12:48.895Z","priority":1,"attempt":3,"queueReason":"toolScB: HTTP 404 — manual review needed"}
-{"sourceId":"jazz-i-lund","queueName":"postTestC-man","queuedAt":"2026-04-19T13:12:48.895Z","priority":1,"attempt":3,"queueReason":"toolScB: timeout of 30000ms exceeded — manual review needed"}
-{"sourceId":"mittuniversitetet","queueName":"postTestC-man","queuedAt":"2026-04-19T13:12:48.895Z","priority":1,"attempt":3,"queueReason":"toolScB: no events found — manual review needed"}
-{"sourceId":"arkitekturgalleriet","queueName":"postTestC-man","queuedAt":"2026-04-19T13:12:48.895Z","priority":1,"attempt":3,"queueReason":"toolScB: no events found — manual review needed"}
-{"sourceId":"vasteras-stadsteatern","queueName":"postTestC-man","queuedAt":"2026-04-19T13:12:48.895Z","priority":1,"attempt":3,"queueReason":"toolScB: HTTP 404 — manual review needed"}
-{"sourceId":"folkets-hus","queueName":"postTestC-man","queuedAt":"2026-04-19T13:12:48.895Z","priority":1,"attempt":3,"queueReason":"toolScB: no events found — manual review needed"}
-{"sourceId":"g-teborgs-universitet","queueName":"postTestC-man","queuedAt":"2026-04-19T13:12:48.895Z","priority":1,"attempt":3,"queueReason":"toolScB: no events found — manual review needed"}
-{"sourceId":"djurgardens-if","queueName":"postTestC-man","queuedAt":"2026-04-19T13:12:48.895Z","priority":1,"attempt":3,"queueReason":"toolScB: no events found — manual review needed"}
-{"sourceId":"akersberga","queueName":"postTestC-man","queuedAt":"2026-04-19T13:12:48.895Z","priority":1,"attempt":3,"queueReason":"toolScB: no events found — manual review needed"}
-{"sourceId":"ramlosa","queueName":"postTestC-man","queuedAt":"2026-04-19T13:12:48.895Z","priority":1,"attempt":3,"queueReason":"toolScB: HTTP 500 — manual review needed"}
-{"sourceId":"fotografiska","queueName":"postTestC-man","queuedAt":"2026-04-19T13:12:48.895Z","priority":1,"attempt":3,"queueReason":"toolScB: no events found — manual review needed"}
-{"sourceId":"triangeln","queueName":"postTestC-man","queuedAt":"2026-04-19T13:12:48.895Z","priority":1,"attempt":3,"queueReason":"toolScB: no events found — manual review needed"}
-{"sourceId":"jonkoping-stadsteatern","queueName":"postTestC-man","queuedAt":"2026-04-19T13:12:48.895Z","priority":1,"attempt":3,"queueReason":"toolScB: HTTP 404 — manual review needed"}
-{"sourceId":"allt-om-mat","queueName":"postTestC-man","queuedAt":"2026-04-19T13:12:48.895Z","priority":1,"attempt":3,"queueReason":"toolScB: no events found — manual review needed"}
-{"sourceId":"goteborgs-stadsteatern","queueName":"postTestC-man","queuedAt":"2026-04-19T13:12:48.895Z","priority":1,"attempt":3,"queueReason":"toolScB: HTTP 500 — manual review needed"}
-{"sourceId":"folkteatern","queueName":"postTestC-man","queuedAt":"2026-04-19T13:12:48.895Z","priority":1,"attempt":3,"queueReason":"toolScB: no events found — manual review needed"}
-{"sourceId":"abb-arena","queueName":"postTestC-man","queuedAt":"2026-04-19T13:12:48.895Z","priority":1,"attempt":3,"queueReason":"toolScB: HTTP 500 — manual review needed"}
-{"sourceId":"frolunda-hc","queueName":"postTestC-man","queuedAt":"2026-04-19T13:12:48.895Z","priority":1,"attempt":3,"queueReason":"toolScB: timeout of 30000ms exceeded — manual review needed"}
-{"sourceId":"stockholms-stadsteater","queueName":"postTestC-man","queuedAt":"2026-04-19T13:12:48.895Z","priority":1,"attempt":3,"queueReason":"toolScB: HTTP 500 — manual review needed"}
-{"sourceId":"unga-teatern","queueName":"postTestC-man","queuedAt":"2026-04-19T13:12:48.895Z","priority":1,"attempt":3,"queueReason":"toolScB: HTTP 500 — manual review needed"}
-{"sourceId":"jonkoping-sodra","queueName":"postTestC-man","queuedAt":"2026-04-19T13:12:48.895Z","priority":1,"attempt":3,"queueReason":"toolScB: HTTP 500 — manual review needed"}
-{"sourceId":"unt-uppsala","queueName":"postTestC-man","queuedAt":"2026-04-19T13:12:48.895Z","priority":1,"attempt":3,"queueReason":"toolScB: HTTP 404 — manual review needed"}
-{"sourceId":"slu","queueName":"postTestC-man","queuedAt":"2026-04-19T13:12:48.895Z","priority":1,"attempt":3,"queueReason":"toolScB: HTTP 404 — manual review needed"}
-{"sourceId":"stromma","queueName":"postTestC-man","queuedAt":"2026-04-19T13:12:48.895Z","priority":1,"attempt":3,"queueReason":"toolScB: no events found — manual review needed"}
-{"sourceId":"emporia","queueName":"postTestC-man","queuedAt":"2026-04-19T13:12:48.895Z","priority":1,"attempt":3,"queueReason":"toolScB: no events found — manual review needed"}
-{"sourceId":"downtown","queueName":"postTestC-man","queuedAt":"2026-04-19T13:12:48.895Z","priority":1,"attempt":3,"queueReason":"toolScB: HTTP 500 — manual review needed"}
-{"sourceId":"spanggatan","queueName":"postTestC-man","queuedAt":"2026-04-19T13:12:48.895Z","priority":1,"attempt":3,"queueReason":"toolScB: HTTP 500 — manual review needed"}
-{"sourceId":"white-guide","queueName":"postTestC-man","queuedAt":"2026-04-19T13:12:48.895Z","priority":1,"attempt":3,"queueReason":"toolScB: timeout of 30000ms exceeded — manual review needed"}
-{"sourceId":"karlstad-stadsteatern","queueName":"postTestC-man","queuedAt":"2026-04-19T13:12:48.895Z","priority":1,"attempt":3,"queueReason":"toolScB: HTTP 404 — manual review needed"}
-{"sourceId":"globen","queueName":"postTestC-man","queuedAt":"2026-04-19T13:12:48.895Z","priority":1,"attempt":3,"queueReason":"toolScB: HTTP 500 — manual review needed"}
-{"sourceId":"spanga-is","queueName":"postTestC-man","queuedAt":"2026-04-19T13:12:48.895Z","priority":1,"attempt":3,"queueReason":"toolScB: HTTP 500 — manual review needed"}
-{"sourceId":"goteborgs-film-festival","queueName":"postTestC-man","queuedAt":"2026-04-19T13:12:48.895Z","priority":1,"attempt":3,"queueReason":"toolScB: HTTP 500 — manual review needed"}
-{"sourceId":"kalmar-museum","queueName":"postTestC-man","queuedAt":"2026-04-19T13:12:48.895Z","priority":1,"attempt":3,"queueReason":"toolScB: HTTP 500 — manual review needed"}
-{"sourceId":"gavle-if","queueName":"postTestC-man","queuedAt":"2026-04-19T13:12:48.895Z","priority":1,"attempt":3,"queueReason":"toolScB: HTTP 500 — manual review needed"}
-{"sourceId":"falun-konserthus","queueName":"postTestC-man","queuedAt":"2026-04-19T13:12:48.895Z","priority":1,"attempt":3,"queueReason":"toolScB: no events found — manual review needed"}
-{"sourceId":"umea-jazz","queueName":"postTestC-man","queuedAt":"2026-04-19T13:12:48.895Z","priority":1,"attempt":3,"queueReason":"toolScB: HTTP 500 — manual review needed"}
-{"sourceId":"orebro-konserthus","queueName":"postTestC-man","queuedAt":"2026-04-19T13:12:48.895Z","priority":1,"attempt":3,"queueReason":"toolScB: HTTP 500 — manual review needed"}
-{"sourceId":"helsingborg-konserthus","queueName":"postTestC-man","queuedAt":"2026-04-19T13:12:48.895Z","priority":1,"attempt":3,"queueReason":"toolScB: HTTP 500 — manual review needed"}
-{"sourceId":"ralambshovsparken","queueName":"postTestC-man","queuedAt":"2026-04-19T13:12:48.895Z","priority":1,"attempt":3,"queueReason":"toolScB: HTTP 500 — manual review needed"}
-{"sourceId":"linkopings-universitet","queueName":"postTestC-man","queuedAt":"2026-04-19T13:12:48.895Z","priority":1,"attempt":3,"queueReason":"toolScB: no events found — manual review needed"}
-{"sourceId":"sydsvenskan","queueName":"postTestC-man","queuedAt":"2026-04-19T13:12:48.895Z","priority":1,"attempt":3,"queueReason":"toolScB: HTTP 404 — manual review needed"}
-{"sourceId":"uppsala-domkyrka","queueName":"postTestC-man","queuedAt":"2026-04-19T13:12:48.895Z","priority":1,"attempt":3,"queueReason":"toolScB: timeout of 30000ms exceeded — manual review needed"}
-{"sourceId":"the-secret","queueName":"postTestC-man","queuedAt":"2026-04-19T13:12:48.895Z","priority":1,"attempt":3,"queueReason":"toolScB: HTTP 500 — manual review needed"}
-{"sourceId":"malm-universitet","queueName":"postTestC-man","queuedAt":"2026-04-19T13:12:48.895Z","priority":1,"attempt":3,"queueReason":"toolScB: HTTP 404 — manual review needed"}
-{"sourceId":"kalmar-energi-arena","queueName":"postTestC-man","queuedAt":"2026-04-19T13:12:48.895Z","priority":1,"attempt":3,"queueReason":"toolScB: HTTP 500 — manual review needed"}
-{"sourceId":"falun-fk","queueName":"postTestC-man","queuedAt":"2026-04-19T13:12:48.895Z","priority":1,"attempt":3,"queueReason":"toolScB: HTTP 500 — manual review needed"}
-{"sourceId":"vasteras-hockey","queueName":"postTestC-man","queuedAt":"2026-04-19T13:12:48.895Z","priority":1,"attempt":3,"queueReason":"toolScB: HTTP 500 — manual review needed"}
-{"sourceId":"slottsskogen","queueName":"postTestC-man","queuedAt":"2026-04-19T13:12:48.895Z","priority":1,"attempt":3,"queueReason":"toolScB: no events found — manual review needed"}
-{"sourceId":"naturhistoriska-museet","queueName":"postTestC-man","queuedAt":"2026-04-19T13:12:48.895Z","priority":1,"attempt":3,"queueReason":"toolScB: HTTP 500 — manual review needed"}
-{"sourceId":"trollhattans-if","queueName":"postTestC-man","queuedAt":"2026-04-19T13:12:48.895Z","priority":1,"attempt":3,"queueReason":"toolScB: HTTP 500 — manual review needed"}
-{"sourceId":"chalmers","queueName":"postTestC-man","queuedAt":"2026-04-19T13:12:48.895Z","priority":1,"attempt":3,"queueReason":"toolScB: no events found — manual review needed"}
-{"sourceId":"elmia","queueName":"postTestC-man","queuedAt":"2026-04-19T13:12:48.895Z","priority":1,"attempt":3,"queueReason":"toolScB: no events found — manual review needed"}
-{"sourceId":"eggers-arena-ehco","queueName":"postTestC-man","queuedAt":"2026-04-19T13:12:48.895Z","priority":1,"attempt":3,"queueReason":"toolScB: HTTP 500 — manual review needed"}
-{"sourceId":"sturecompagniet","queueName":"postTestC-man","queuedAt":"2026-04-19T13:12:48.895Z","priority":1,"attempt":3,"queueReason":"toolScB: no events found — manual review needed"}
-{"sourceId":"malmo-hockey","queueName":"postTestC-man","queuedAt":"2026-04-19T13:14:13.249Z","priority":1,"attempt":3,"queueReason":"toolScB: HTTP 500 — manual review needed"}
-{"sourceId":"bor-s-zoo-animagic","queueName":"postTestC-man","queuedAt":"2026-04-19T13:14:13.250Z","priority":1,"attempt":3,"queueReason":"toolScB: no events found — manual review needed"}
-{"sourceId":"vasamuseet","queueName":"postTestC-man","queuedAt":"2026-04-19T13:14:13.250Z","priority":1,"attempt":3,"queueReason":"toolScB: no events found — manual review needed"}
-{"sourceId":"hovet","queueName":"postTestC-man","queuedAt":"2026-04-19T13:14:13.250Z","priority":1,"attempt":3,"queueReason":"toolScB: HTTP 500 — manual review needed"}
-{"sourceId":"gais","queueName":"postTestC-man","queuedAt":"2026-04-19T13:14:13.250Z","priority":1,"attempt":3,"queueReason":"toolScB: no events found — manual review needed"}
-{"sourceId":"goteborgs-litteraturhus","queueName":"postTestC-man","queuedAt":"2026-04-19T13:14:13.250Z","priority":1,"attempt":3,"queueReason":"toolScB: timeout of 30000ms exceeded — manual review needed"}
-{"sourceId":"vasteras-konserthus","queueName":"postTestC-man","queuedAt":"2026-04-19T13:14:13.250Z","priority":1,"attempt":3,"queueReason":"toolScB: HTTP 404 — manual review needed"}
-{"sourceId":"malmo-redhawks","queueName":"postTestC-man","queuedAt":"2026-04-19T13:14:13.250Z","priority":1,"attempt":3,"queueReason":"toolScB: HTTP 500 — manual review needed"}
-{"sourceId":"vasalund","queueName":"postTestC-man","queuedAt":"2026-04-19T13:14:13.250Z","priority":1,"attempt":3,"queueReason":"toolScB: HTTP 404 — manual review needed"}
-{"sourceId":"norrkoping-stadsteatern","queueName":"postTestC-man","queuedAt":"2026-04-19T13:14:13.250Z","priority":1,"attempt":3,"queueReason":"toolScB: HTTP 404 — manual review needed"}
-{"sourceId":"visit-uppsala","queueName":"postTestC-man","queuedAt":"2026-04-19T13:14:13.250Z","priority":1,"attempt":3,"queueReason":"toolScB: HTTP 500 — manual review needed"}
-{"sourceId":"roda-kvarn","queueName":"postTestC-man","queuedAt":"2026-04-19T13:14:13.250Z","priority":1,"attempt":3,"queueReason":"toolScB: HTTP 404 — manual review needed"}
-{"sourceId":"malmo-stadsteatern","queueName":"postTestC-man","queuedAt":"2026-04-19T13:14:13.250Z","priority":1,"attempt":3,"queueReason":"toolScB: HTTP 500 — manual review needed"}
-{"sourceId":"fattar","queueName":"postTestC-man","queuedAt":"2026-04-19T13:14:13.250Z","priority":1,"attempt":3,"queueReason":"toolScB: HTTP 500 — manual review needed"}
-{"sourceId":"bar-brooklyn","queueName":"postTestC-man","queuedAt":"2026-04-19T13:14:13.250Z","priority":1,"attempt":3,"queueReason":"toolScB: HTTP 500 — manual review needed"}
-{"sourceId":"hv71","queueName":"postTestC-man","queuedAt":"2026-04-19T13:14:13.250Z","priority":1,"attempt":3,"queueReason":"toolScB: timeout of 30000ms exceeded — manual review needed"}
-{"sourceId":"parkteatern","queueName":"postTestC-man","queuedAt":"2026-04-19T13:14:13.250Z","priority":1,"attempt":3,"queueReason":"toolScB: HTTP 500 — manual review needed"}
-{"sourceId":"vaxjo-teatern","queueName":"postTestC-man","queuedAt":"2026-04-19T13:14:13.250Z","priority":1,"attempt":3,"queueReason":"toolScB: HTTP 500 — manual review needed"}
-{"sourceId":"umea-stadsteatern","queueName":"postTestC-man","queuedAt":"2026-04-19T13:14:13.250Z","priority":1,"attempt":3,"queueReason":"toolScB: HTTP 404 — manual review needed"}
-{"sourceId":"faith","queueName":"postTestC-man","queuedAt":"2026-04-19T13:14:13.250Z","priority":1,"attempt":3,"queueReason":"toolScB: no events found — manual review needed"}
-{"sourceId":"stenpiren","queueName":"postTestC-man","queuedAt":"2026-04-19T13:14:13.250Z","priority":1,"attempt":3,"queueReason":"toolScB: timeout of 30000ms exceeded — manual review needed"}
-{"sourceId":"swedish-match","queueName":"postTestC-man","queuedAt":"2026-04-19T13:14:13.250Z","priority":1,"attempt":3,"queueReason":"toolScB: no events found — manual review needed"}
-{"sourceId":"teater-tribunalen","queueName":"postTestC-man","queuedAt":"2026-04-19T13:14:13.250Z","priority":1,"attempt":3,"queueReason":"toolScB: HTTP 500 — manual review needed"}
-{"sourceId":"halland","queueName":"postTestC-man","queuedAt":"2026-04-19T13:14:13.250Z","priority":1,"attempt":3,"queueReason":"toolScB: HTTP 404 — manual review needed"}
-{"sourceId":"flaggad-v2-test","queueName":"postTestC-man","queuedAt":"2026-04-19T13:14:13.250Z","priority":1,"attempt":3,"queueReason":"toolScB: HTTP 400 — manual review needed"}
-{"sourceId":"friarena","queueName":"postTestC-man","queuedAt":"2026-04-19T13:14:13.250Z","priority":1,"attempt":3,"queueReason":"toolScB: HTTP 500 — manual review needed"}
-{"sourceId":"stockholm-live","queueName":"postTestC-man","queuedAt":"2026-04-19T13:14:13.250Z","priority":1,"attempt":3,"queueReason":"toolScB: HTTP 500 — manual review needed"}
-{"sourceId":"karlstad-if","queueName":"postTestC-man","queuedAt":"2026-04-19T13:14:13.250Z","priority":1,"attempt":3,"queueReason":"toolScB: HTTP 500 — manual review needed"}
-{"sourceId":"goteborgs-domkyrka","queueName":"postTestC-man","queuedAt":"2026-04-19T13:14:13.250Z","priority":1,"attempt":3,"queueReason":"toolScB: HTTP 500 — manual review needed"}
-{"sourceId":"lulea-hf","queueName":"postTestC-man","queuedAt":"2026-04-19T13:14:13.250Z","priority":1,"attempt":3,"queueReason":"toolScB: HTTP 500 — manual review needed"}
-{"sourceId":"linkoping-city","queueName":"postTestC-man","queuedAt":"2026-04-19T13:14:13.250Z","priority":1,"attempt":3,"queueReason":"toolScB: HTTP 500 — manual review needed"}
-{"sourceId":"alltimalmo","queueName":"postTestC-man","queuedAt":"2026-04-19T13:14:13.250Z","priority":1,"attempt":3,"queueReason":"toolScB: HTTP 500 — manual review needed"}
-{"sourceId":"historiska-museet-malmo","queueName":"postTestC-man","queuedAt":"2026-04-19T13:14:13.250Z","priority":1,"attempt":3,"queueReason":"toolScB: HTTP 500 — manual review needed"}
-{"sourceId":"g-teborgs-posten","queueName":"postTestC-man","queuedAt":"2026-04-19T13:14:13.250Z","priority":1,"attempt":3,"queueReason":"toolScB: HTTP 404 — manual review needed"}
-{"sourceId":"partille","queueName":"postTestC-man","queuedAt":"2026-04-19T13:14:13.250Z","priority":1,"attempt":3,"queueReason":"toolScB: no events found — manual review needed"}
-{"sourceId":"jonkoping-konserthus","queueName":"postTestC-man","queuedAt":"2026-04-19T13:14:13.250Z","priority":1,"attempt":3,"queueReason":"toolScB: HTTP 404 — manual review needed"}
-{"sourceId":"stockholm-kulturfestival","queueName":"postTestC-man","queuedAt":"2026-04-19T13:14:13.250Z","priority":1,"attempt":3,"queueReason":"toolScB: no events found — manual review needed"}
-{"sourceId":"neon","queueName":"postTestC-man","queuedAt":"2026-04-19T13:14:13.250Z","priority":1,"attempt":3,"queueReason":"toolScB: no events found — manual review needed"}
-{"sourceId":"kulturhuset-orebro","queueName":"postTestC-man","queuedAt":"2026-04-19T13:14:13.250Z","priority":1,"attempt":3,"queueReason":"toolScB: timeout of 30000ms exceeded — manual review needed"}
-{"sourceId":"ren-ny-kalla-v2-test","queueName":"postTestC-man","queuedAt":"2026-04-19T13:14:13.250Z","priority":1,"attempt":3,"queueReason":"toolScB: HTTP 400 — manual review needed"}
-{"sourceId":"barnens-o","queueName":"postTestC-man","queuedAt":"2026-04-19T13:14:13.250Z","priority":1,"attempt":3,"queueReason":"toolScB: timeout of 30000ms exceeded — manual review needed"}
-{"sourceId":"vaxjo-lakers","queueName":"postTestC-man","queuedAt":"2026-04-19T13:14:13.250Z","priority":1,"attempt":3,"queueReason":"toolScB: timeout of 30000ms exceeded — manual review needed"}
-{"sourceId":"norrkoping-museum","queueName":"postTestC-man","queuedAt":"2026-04-19T13:14:13.250Z","priority":1,"attempt":3,"queueReason":"toolScB: HTTP 404 — manual review needed"}
-{"sourceId":"linnaeus-museum","queueName":"postTestC-man","queuedAt":"2026-04-19T13:14:13.250Z","priority":1,"attempt":3,"queueReason":"toolScB: HTTP 500 — manual review needed"}
-{"sourceId":"halmstads-bk","queueName":"postTestC-man","queuedAt":"2026-04-19T13:14:13.250Z","priority":1,"attempt":3,"queueReason":"toolScB: no events found — manual review needed"}
-{"sourceId":"orebro-festival","queueName":"postTestC-man","queuedAt":"2026-04-19T13:14:13.250Z","priority":1,"attempt":3,"queueReason":"toolScB: HTTP 500 — manual review needed"}
-{"sourceId":"gamla-uppsala","queueName":"postTestC-man","queuedAt":"2026-04-19T13:14:13.250Z","priority":1,"attempt":3,"queueReason":"toolScB: HTTP 500 — manual review needed"}
-{"sourceId":"bk-hacken","queueName":"postTestC-man","queuedAt":"2026-04-19T13:14:13.250Z","priority":1,"attempt":3,"queueReason":"toolScB: timeout of 30000ms exceeded — manual review needed"}
-{"sourceId":"storkyrkan","queueName":"postTestC-man","queuedAt":"2026-04-19T13:14:13.250Z","priority":1,"attempt":3,"queueReason":"toolScB: timeout of 30000ms exceeded — manual review needed"}
-{"sourceId":"ifk-stockholm","queueName":"postTestC-man","queuedAt":"2026-04-19T13:14:13.250Z","priority":1,"attempt":3,"queueReason":"toolScB: no events found — manual review needed"}
-{"sourceId":"vasteras-art","queueName":"postTestC-man","queuedAt":"2026-04-19T13:14:13.250Z","priority":1,"attempt":3,"queueReason":"toolScB: HTTP 500 — manual review needed"}
-{"sourceId":"varbergs-if","queueName":"postTestC-man","queuedAt":"2026-04-19T13:14:13.250Z","priority":1,"attempt":3,"queueReason":"toolScB: HTTP 500 — manual review needed"}
-{"sourceId":"sticky-fingers","queueName":"postTestC-man","queuedAt":"2026-04-19T13:14:13.250Z","priority":1,"attempt":3,"queueReason":"toolScB: HTTP 500 — manual review needed"}
-{"sourceId":"malmo-ff","queueName":"postTestC-man","queuedAt":"2026-04-19T13:14:13.250Z","priority":1,"attempt":3,"queueReason":"toolScB: HTTP 500 — manual review needed"}
-{"sourceId":"lulea-stadsteatern","queueName":"postTestC-man","queuedAt":"2026-04-19T13:14:13.250Z","priority":1,"attempt":3,"queueReason":"toolScB: HTTP 404 — manual review needed"}
-{"sourceId":"stangebrofestivalen","queueName":"postTestC-man","queuedAt":"2026-04-19T13:14:13.250Z","priority":1,"attempt":3,"queueReason":"toolScB: timeout of 30000ms exceeded — manual review needed"}
-{"sourceId":"stora-teatern-g-teborg","queueName":"postTestC-man","queuedAt":"2026-04-19T13:14:13.250Z","priority":1,"attempt":3,"queueReason":"toolScB: HTTP 500 — manual review needed"}
-{"sourceId":"inkonst","queueName":"postTestC-man","queuedAt":"2026-04-19T13:14:13.250Z","priority":1,"attempt":3,"queueReason":"toolScB: HTTP 500 — manual review needed"}
-{"sourceId":"stockholm-jazz-festival","queueName":"postTestC-man","queuedAt":"2026-04-19T13:14:13.250Z","priority":1,"attempt":3,"queueReason":"toolScB: HTTP 500 — manual review needed"}
-{"sourceId":"molndals-futsal","queueName":"postTestC-man","queuedAt":"2026-04-19T13:14:13.250Z","priority":1,"attempt":3,"queueReason":"toolScB: HTTP 500 — manual review needed"}
-{"sourceId":"uppsala-konserthus-1","queueName":"postTestC-man","queuedAt":"2026-04-19T13:14:13.250Z","priority":1,"attempt":3,"queueReason":"toolScB: HTTP 500 — manual review needed"}
-{"sourceId":"konstmassan","queueName":"postTestC-man","queuedAt":"2026-04-19T13:14:13.250Z","priority":1,"attempt":3,"queueReason":"toolScB: timeout of 30000ms exceeded — manual review needed"}
-{"sourceId":"volvo-museum","queueName":"postTestC-man","queuedAt":"2026-04-19T13:14:13.250Z","priority":1,"attempt":3,"queueReason":"toolScB: no events found — manual review needed"}
-{"sourceId":"liljevalchs","queueName":"postTestC-man","queuedAt":"2026-04-19T13:14:13.250Z","priority":1,"attempt":3,"queueReason":"toolScB: no events found — manual review needed"}
-{"sourceId":"slakthuset","queueName":"postTestC-man","queuedAt":"2026-04-19T13:14:13.250Z","priority":1,"attempt":3,"queueReason":"toolScB: HTTP 404 — manual review needed"}
-{"sourceId":"malmo-konserthus","queueName":"postTestC-man","queuedAt":"2026-04-19T13:14:13.250Z","priority":1,"attempt":3,"queueReason":"toolScB: HTTP 500 — manual review needed"}
-{"sourceId":"hovet-1","queueName":"postTestC-man","queuedAt":"2026-04-19T13:14:13.250Z","priority":1,"attempt":3,"queueReason":"toolScB: HTTP 500 — manual review needed"}
-{"sourceId":"botaniska-tradgarden","queueName":"postTestC-man","queuedAt":"2026-04-19T13:14:13.250Z","priority":1,"attempt":3,"queueReason":"toolScB: no events found — manual review needed"}
-{"sourceId":"tekniska-museet","queueName":"postTestC-man","queuedAt":"2026-04-19T13:14:13.250Z","priority":1,"attempt":3,"queueReason":"toolScB: timeout of 30000ms exceeded — manual review needed"}
-{"sourceId":"nationalmuseum","queueName":"postTestC-man","queuedAt":"2026-04-19T13:14:13.250Z","priority":1,"attempt":3,"queueReason":"toolScB: no events found — manual review needed"}
-{"sourceId":"do310-com","queueName":"postTestC-man","queuedAt":"2026-04-19T13:14:13.250Z","priority":1,"attempt":3,"queueReason":"toolScB: HTTP 500 — manual review needed"}
-{"sourceId":"fangelset","queueName":"postTestC-man","queuedAt":"2026-04-19T13:14:13.250Z","priority":1,"attempt":3,"queueReason":"toolScB: HTTP 500 — manual review needed"}
-{"sourceId":"katalin","queueName":"postTestC-man","queuedAt":"2026-04-19T13:14:13.250Z","priority":1,"attempt":3,"queueReason":"toolScB: HTTP 500 — manual review needed"}
-{"sourceId":"hammarby","queueName":"postTestC-man","queuedAt":"2026-04-19T13:14:13.250Z","priority":1,"attempt":3,"queueReason":"toolScB: no events found — manual review needed"}
-{"sourceId":"push","queueName":"postTestC-man","queuedAt":"2026-04-19T13:14:13.250Z","priority":1,"attempt":3,"queueReason":"toolScB: no events found — manual review needed"}
-{"sourceId":"moderna-museet-malmo","queueName":"postTestC-man","queuedAt":"2026-04-19T13:14:13.250Z","priority":1,"attempt":3,"queueReason":"toolScB: HTTP 500 — manual review needed"}
-{"sourceId":"stockholm-furniture","queueName":"postTestC-man","queuedAt":"2026-04-19T13:14:13.250Z","priority":1,"attempt":3,"queueReason":"toolScB: no events found — manual review needed"}
-{"sourceId":"kb18","queueName":"postTestC-man","queuedAt":"2026-04-19T13:14:13.250Z","priority":1,"attempt":3,"queueReason":"toolScB: no events found — manual review needed"}
+{"sourceId": "goteborgs-domkyrka", "queueName": "postTestC-man", "queuedAt": "2026-04-19T20:46:41.899Z", "priority": 3, "attempt": 2, "queueReason": "toolScB: homepage+AI found 0 events after scraping all links — manual review needed"}
+{"sourceId": "alltimalmo", "queueName": "postTestC-man", "queuedAt": "2026-04-19T20:46:41.899Z", "priority": 3, "attempt": 2, "queueReason": "toolScB: homepage+AI found 0 events after scraping all links — manual review needed"}
+{"sourceId": "ren-ny-kalla-v2-test", "queueName": "postTestC-man", "queuedAt": "2026-04-19T20:46:41.899Z", "priority": 3, "attempt": 2, "queueReason": "toolScB: AI found no event URLs on homepage — manual review needed"}
+{"sourceId": "vaxjo-lakers", "queueName": "postTestC-man", "queuedAt": "2026-04-19T20:46:41.899Z", "priority": 3, "attempt": 2, "queueReason": "toolScB: AI found no event URLs on homepage — manual review needed"}
+{"sourceId": "bk-hacken", "queueName": "postTestC-man", "queuedAt": "2026-04-19T20:46:41.899Z", "priority": 3, "attempt": 2, "queueReason": "toolScB: AI found no event URLs on homepage — manual review needed"}
+{"sourceId": "varbergs-if", "queueName": "postTestC-man", "queuedAt": "2026-04-19T20:46:41.899Z", "priority": 3, "attempt": 2, "queueReason": "toolScB: AI found no event URLs on homepage — manual review needed"}
+{"sourceId": "stangebrofestivalen", "queueName": "postTestC-man", "queuedAt": "2026-04-19T20:46:41.899Z", "priority": 3, "attempt": 2, "queueReason": "toolScB: AI found no event URLs on homepage — manual review needed"}
+{"sourceId": "inkonst", "queueName": "postTestC-man", "queuedAt": "2026-04-19T20:46:41.899Z", "priority": 3, "attempt": 2, "queueReason": "toolScB: homepage+AI found 0 events after scraping all links — manual review needed"}
+{"sourceId": "stockholm-jazz-festival", "queueName": "postTestC-man", "queuedAt": "2026-04-19T20:46:41.899Z", "priority": 3, "attempt": 2, "queueReason": "toolScB: homepage+AI found 0 events after scraping all links — manual review needed"}
+{"sourceId": "molndals-futsal", "queueName": "postTestC-man", "queuedAt": "2026-04-19T20:46:41.899Z", "priority": 3, "attempt": 2, "queueReason": "toolScB: homepage+AI found 0 events after scraping all links — manual review needed"}
+{"sourceId": "hovet-1", "queueName": "postTestC-man", "queuedAt": "2026-04-19T20:46:41.899Z", "priority": 3, "attempt": 2, "queueReason": "toolScB: AI found no event URLs on homepage — manual review needed"}
+{"sourceId": "boplanet", "queueName": "postTestC-man", "queuedAt": "2026-04-19T20:46:41.899Z", "priority": 3, "attempt": 2, "queueReason": "toolScB: AI found no event URLs on homepage — manual review needed"}
+{"sourceId": "stockholm-music-arts", "queueName": "postTestC-man", "queuedAt": "2026-04-19T20:46:41.899Z", "priority": 3, "attempt": 2, "queueReason": "toolScB: homepage+AI found 0 events after scraping all links — manual review needed"}
+{"sourceId": "konstfack", "queueName": "postTestC-man", "queuedAt": "2026-04-19T20:46:41.899Z", "priority": 3, "attempt": 2, "queueReason": "toolScB: homepage+AI found 0 events after scraping all links — manual review needed"}
+{"sourceId": "fyris-paper", "queueName": "postTestC-man", "queuedAt": "2026-04-19T20:46:41.899Z", "priority": 3, "attempt": 2, "queueReason": "toolScB: AI found no event URLs on homepage — manual review needed"}
+{"sourceId": "staffan", "queueName": "postTestC-man", "queuedAt": "2026-04-19T20:46:41.899Z", "priority": 3, "attempt": 2, "queueReason": "toolScB: homepage+AI found 0 events after scraping all links — manual review needed"}
+{"sourceId": "svenska-kulturhuset", "queueName": "postTestC-man", "queuedAt": "2026-04-19T20:46:41.899Z", "priority": 3, "attempt": 2, "queueReason": "toolScB: homepage+AI found 0 events after scraping all links — manual review needed"}
+{"sourceId": "form-design-museum", "queueName": "postTestC-man", "queuedAt": "2026-04-19T20:46:41.899Z", "priority": 3, "attempt": 2, "queueReason": "toolScB: homepage+AI found 0 events after scraping all links — manual review needed"}
+{"sourceId": "svenska-bowlingf-rbundet", "queueName": "postTestC-man", "queuedAt": "2026-04-19T20:46:41.899Z", "priority": 3, "attempt": 2, "queueReason": "toolScB: AI found no event URLs on homepage — manual review needed"}
+{"sourceId": "storsj-odjuret", "queueName": "postTestC-man", "queuedAt": "2026-04-19T20:46:41.899Z", "priority": 3, "attempt": 2, "queueReason": "toolScB: AI found no event URLs on homepage — manual review needed"}
+{"sourceId": "summerburst", "queueName": "postTestC-man", "queuedAt": "2026-04-19T20:46:41.899Z", "priority": 3, "attempt": 2, "queueReason": "toolScB: AI found no event URLs on homepage — manual review needed"}
+{"sourceId": "hasselblad-center", "queueName": "postTestC-man", "queuedAt": "2026-04-19T20:46:41.899Z", "priority": 3, "attempt": 2, "queueReason": "toolScB: AI found no event URLs on homepage — manual review needed"}
+{"sourceId": "regionteatern", "queueName": "postTestC-man", "queuedAt": "2026-04-19T20:46:41.899Z", "priority": 3, "attempt": 2, "queueReason": "toolScB: homepage+AI found 0 events after scraping all links — manual review needed"}
+{"sourceId": "malmo-folkets-park", "queueName": "postTestC-man", "queuedAt": "2026-04-19T20:46:41.899Z", "priority": 3, "attempt": 2, "queueReason": "toolScB: AI found no event URLs on homepage — manual review needed"}
+{"sourceId": "stockholm-music-arts-1", "queueName": "postTestC-man", "queuedAt": "2026-04-19T20:46:41.899Z", "priority": 3, "attempt": 2, "queueReason": "toolScB: homepage+AI found 0 events after scraping all links — manual review needed"}
+{"sourceId": "gavle-zoo", "queueName": "postTestC-man", "queuedAt": "2026-04-19T20:46:41.899Z", "priority": 3, "attempt": 2, "queueReason": "toolScB: homepage+AI found 0 events after scraping all links — manual review needed"}
+{"sourceId": "polismuseum", "queueName": "postTestC-man", "queuedAt": "2026-04-19T20:46:41.899Z", "priority": 3, "attempt": 2, "queueReason": "toolScB: homepage+AI found 0 events after scraping all links — manual review needed"}
+{"sourceId": "andra-langgatan", "queueName": "postTestC-man", "queuedAt": "2026-04-19T20:46:41.899Z", "priority": 3, "attempt": 2, "queueReason": "toolScB: AI found no event URLs on homepage — manual review needed"}
+{"sourceId": "malmo-arena", "queueName": "postTestC-man", "queuedAt": "2026-04-19T20:46:41.899Z", "priority": 3, "attempt": 2, "queueReason": "toolScB: AI found no event URLs on homepage — manual review needed"}
+{"sourceId": "skovde-if", "queueName": "postTestC-man", "queuedAt": "2026-04-19T20:46:41.899Z", "priority": 3, "attempt": 2, "queueReason": "toolScB: AI found no event URLs on homepage — manual review needed"}
+{"sourceId": "kino", "queueName": "postTestC-man", "queuedAt": "2026-04-19T20:46:41.899Z", "priority": 3, "attempt": 2, "queueReason": "toolScB: AI found no event URLs on homepage — manual review needed"}
+{"sourceId": "b-republic", "queueName": "postTestC-man", "queuedAt": "2026-04-19T20:46:41.899Z", "priority": 3, "attempt": 2, "queueReason": "toolScB: AI found no event URLs on homepage — manual review needed"}
+{"sourceId": "mora-ik", "queueName": "postTestC-man", "queuedAt": "2026-04-19T20:46:41.899Z", "priority": 3, "attempt": 2, "queueReason": "toolScB: homepage+AI found 0 events after scraping all links — manual review needed"}
+{"sourceId": "test-write-verify", "queueName": "postTestC-man", "queuedAt": "2026-04-19T20:46:41.899Z", "priority": 3, "attempt": 2, "queueReason": "toolScB: AI found no event URLs on homepage — manual review needed"}
+{"sourceId": "vaxjo-alcazar", "queueName": "postTestC-man", "queuedAt": "2026-04-19T20:46:41.899Z", "priority": 3, "attempt": 2, "queueReason": "toolScB: homepage+AI found 0 events after scraping all links — manual review needed"}
+{"sourceId": "dalarna", "queueName": "postTestC-man", "queuedAt": "2026-04-19T20:46:41.899Z", "priority": 3, "attempt": 2, "queueReason": "toolScB: No events found on any Swedish path — manual review needed"}
+{"sourceId": "masthuggskyrkan", "queueName": "postTestC-man", "queuedAt": "2026-04-19T20:46:41.899Z", "priority": 3, "attempt": 2, "queueReason": "toolScB: AI found no event URLs on homepage — manual review needed"}
+{"sourceId": "brommapojkarna", "queueName": "postTestC-man", "queuedAt": "2026-04-19T20:46:41.899Z", "priority": 3, "attempt": 2, "queueReason": "toolScB: AI found no event URLs on homepage — manual review needed"}
+{"sourceId": "h-gskolan-i-sk-vde", "queueName": "postTestC-man", "queuedAt": "2026-04-19T20:46:41.899Z", "priority": 3, "attempt": 2, "queueReason": "toolScB: homepage+AI found 0 events after scraping all links — manual review needed"}
+{"sourceId": "goteborgs-kulturfestival", "queueName": "postTestC-man", "queuedAt": "2026-04-19T20:46:41.899Z", "priority": 3, "attempt": 2, "queueReason": "toolScB: AI found no event URLs on homepage — manual review needed"}
+{"sourceId": "jazz-i-lund", "queueName": "postTestC-man", "queuedAt": "2026-04-19T20:46:41.899Z", "priority": 3, "attempt": 2, "queueReason": "toolScB: ScB failed to return homepage HTML — manual review needed"}
+{"sourceId": "goteborgs-stadsteatern", "queueName": "postTestC-man", "queuedAt": "2026-04-19T20:46:41.899Z", "priority": 3, "attempt": 2, "queueReason": "toolScB: homepage+AI found 0 events after scraping all links — manual review needed"}
+{"sourceId": "unga-teatern", "queueName": "postTestC-man", "queuedAt": "2026-04-19T20:46:41.899Z", "priority": 3, "attempt": 2, "queueReason": "toolScB: homepage+AI found 0 events after scraping all links — manual review needed"}
+{"sourceId": "jonkoping-sodra", "queueName": "postTestC-man", "queuedAt": "2026-04-19T20:46:41.899Z", "priority": 3, "attempt": 2, "queueReason": "toolScB: AI found no event URLs on homepage — manual review needed"}
+{"sourceId": "umea-jazz", "queueName": "postTestC-man", "queuedAt": "2026-04-19T20:46:41.900Z", "priority": 3, "attempt": 2, "queueReason": "toolScB: homepage+AI found 0 events after scraping all links — manual review needed"}
+{"sourceId": "the-secret", "queueName": "postTestC-man", "queuedAt": "2026-04-19T20:48:24.107Z", "priority": 3, "attempt": 2, "queueReason": "toolScB: homepage+AI found 0 events after scraping all links — manual review needed"}
+{"sourceId": "falun-fk", "queueName": "postTestC-man", "queuedAt": "2026-04-19T20:48:24.107Z", "priority": 3, "attempt": 2, "queueReason": "toolScB: AI found no event URLs on homepage — manual review needed"}
+{"sourceId": "vasteras-hockey", "queueName": "postTestC-man", "queuedAt": "2026-04-19T20:48:24.107Z", "priority": 3, "attempt": 2, "queueReason": "toolScB: AI found no event URLs on homepage — manual review needed"}
+{"sourceId": "naturhistoriska-museet", "queueName": "postTestC-man", "queuedAt": "2026-04-19T20:48:24.107Z", "priority": 3, "attempt": 2, "queueReason": "toolScB: AI found no event URLs on homepage — manual review needed"}
+{"sourceId": "trollhattans-if", "queueName": "postTestC-man", "queuedAt": "2026-04-19T20:48:24.107Z", "priority": 3, "attempt": 2, "queueReason": "toolScB: ScB failed to return homepage HTML — manual review needed"}
+{"sourceId": "hv71", "queueName": "postTestC-man", "queuedAt": "2026-04-19T20:48:24.107Z", "priority": 3, "attempt": 2, "queueReason": "toolScB: AI found no event URLs on homepage — manual review needed"}
+{"sourceId": "g-teborgs-posten", "queueName": "postTestC-man", "queuedAt": "2026-04-19T20:48:24.107Z", "priority": 3, "attempt": 2, "queueReason": "toolScB: AI found no event URLs on homepage — manual review needed"}
+{"sourceId": "jonkoping-konserthus", "queueName": "postTestC-man", "queuedAt": "2026-04-19T20:48:24.107Z", "priority": 3, "attempt": 2, "queueReason": "toolScB: homepage+AI found 0 events after scraping all links — manual review needed"}
+{"sourceId": "lulea-stadsteatern", "queueName": "postTestC-man", "queuedAt": "2026-04-19T20:48:24.107Z", "priority": 3, "attempt": 2, "queueReason": "toolScB: homepage+AI found 0 events after scraping all links — manual review needed"}
+{"sourceId": "slakthuset", "queueName": "postTestC-man", "queuedAt": "2026-04-19T20:48:24.107Z", "priority": 3, "attempt": 2, "queueReason": "toolScB: AI found no event URLs on homepage — manual review needed"}
+{"sourceId": "karolinska-institutet", "queueName": "postTestC-man", "queuedAt": "2026-04-19T20:48:24.107Z", "priority": 3, "attempt": 2, "queueReason": "toolScB: homepage+AI found 0 events after scraping all links — manual review needed"}
+{"sourceId": "norrkoping-konserthus", "queueName": "postTestC-man", "queuedAt": "2026-04-19T20:48:24.107Z", "priority": 3, "attempt": 2, "queueReason": "toolScB: AI found no event URLs on homepage — manual review needed"}
+{"sourceId": "lunds-stadsteatern", "queueName": "postTestC-man", "queuedAt": "2026-04-19T20:48:24.107Z", "priority": 3, "attempt": 2, "queueReason": "toolScB: AI found no event URLs on homepage — manual review needed"}
+{"sourceId": "melodifestivalen-svt", "queueName": "postTestC-man", "queuedAt": "2026-04-19T20:48:24.107Z", "priority": 3, "attempt": 2, "queueReason": "toolScB: AI found no event URLs on homepage — manual review needed"}
+{"sourceId": "kth", "queueName": "postTestC-man", "queuedAt": "2026-04-19T20:48:24.107Z", "priority": 3, "attempt": 2, "queueReason": "toolScB: homepage+AI found 0 events after scraping all links — manual review needed"}
+{"sourceId": "karlstad-konserthus", "queueName": "postTestC-man", "queuedAt": "2026-04-19T20:48:24.107Z", "priority": 3, "attempt": 2, "queueReason": "toolScB: AI found no event URLs on homepage — manual review needed"}
+{"sourceId": "vasteras-stadsteatern", "queueName": "postTestC-man", "queuedAt": "2026-04-19T20:48:24.107Z", "priority": 3, "attempt": 2, "queueReason": "toolScB: homepage+AI found 0 events after scraping all links — manual review needed"}
+{"sourceId": "jonkoping-stadsteatern", "queueName": "postTestC-man", "queuedAt": "2026-04-19T20:48:24.107Z", "priority": 3, "attempt": 2, "queueReason": "toolScB: homepage+AI found 0 events after scraping all links — manual review needed"}
+{"sourceId": "unt-uppsala", "queueName": "postTestC-man", "queuedAt": "2026-04-19T20:48:24.107Z", "priority": 3, "attempt": 2, "queueReason": "toolScB: AI found no event URLs on homepage — manual review needed"}
+{"sourceId": "vasteras-konserthus", "queueName": "postTestC-man", "queuedAt": "2026-04-19T20:48:24.107Z", "priority": 3, "attempt": 2, "queueReason": "toolScB: AI found no event URLs on homepage — manual review needed"}
+{"sourceId": "vasalund", "queueName": "postTestC-man", "queuedAt": "2026-04-19T20:48:24.107Z", "priority": 3, "attempt": 2, "queueReason": "toolScB: homepage+AI found 0 events after scraping all links — manual review needed"}
+{"sourceId": "norrkoping-stadsteatern", "queueName": "postTestC-man", "queuedAt": "2026-04-19T20:48:24.107Z", "priority": 3, "attempt": 2, "queueReason": "toolScB: homepage+AI found 0 events after scraping all links — manual review needed"}
+{"sourceId": "barnens-o", "addedAt": "2026-04-19T23:00:00.000Z", "addedBy": "manual", "reason": "404-recovery restoration"}
+{"sourceId": "downtown", "addedAt": "2026-04-19T23:00:00.000Z", "addedBy": "manual", "reason": "404-recovery restoration"}
+{"sourceId": "fyrfaderna", "addedAt": "2026-04-19T23:00:00.000Z", "addedBy": "manual", "reason": "404-recovery restoration"}
+{"sourceId": "gamla-uppsala", "addedAt": "2026-04-19T23:00:00.000Z", "addedBy": "manual", "reason": "404-recovery restoration"}
+{"sourceId": "globen", "addedAt": "2026-04-19T23:00:00.000Z", "addedBy": "manual", "reason": "404-recovery restoration"}
+{"sourceId": "gavle-if", "addedAt": "2026-04-19T23:00:00.000Z", "addedBy": "manual", "reason": "404-recovery restoration"}
+{"sourceId": "halland", "addedAt": "2026-04-19T23:00:00.000Z", "addedBy": "manual", "reason": "404-recovery restoration"}
+{"sourceId": "halmstad-konserthus", "addedAt": "2026-04-19T23:00:00.000Z", "addedBy": "manual", "reason": "404-recovery restoration"}
+{"sourceId": "halmstad-stadsteatern", "addedAt": "2026-04-19T23:00:00.000Z", "addedBy": "manual", "reason": "404-recovery restoration"}
+{"sourceId": "karlstad-stadsteatern", "addedAt": "2026-04-19T23:00:00.000Z", "addedBy": "manual", "reason": "404-recovery restoration"}
+{"sourceId": "lulea-hf", "addedAt": "2026-04-19T23:00:00.000Z", "addedBy": "manual", "reason": "404-recovery restoration"}
+{"sourceId": "lulea-konserthus", "addedAt": "2026-04-19T23:00:00.000Z", "addedBy": "manual", "reason": "404-recovery restoration"}
+{"sourceId": "malmo-hockey", "addedAt": "2026-04-19T23:00:00.000Z", "addedBy": "manual", "reason": "404-recovery restoration"}
+{"sourceId": "malmo-icc", "addedAt": "2026-04-19T23:00:00.000Z", "addedBy": "manual", "reason": "404-recovery restoration"}
+{"sourceId": "malmo-redhawks", "addedAt": "2026-04-19T23:00:00.000Z", "addedBy": "manual", "reason": "404-recovery restoration"}
+{"sourceId": "malmo-stadsteatern", "addedAt": "2026-04-19T23:00:00.000Z", "addedBy": "manual", "reason": "404-recovery restoration"}
+{"sourceId": "open-air", "addedAt": "2026-04-19T23:00:00.000Z", "addedBy": "manual", "reason": "404-recovery restoration"}
+{"sourceId": "repo-festival", "addedAt": "2026-04-19T23:00:00.000Z", "addedBy": "manual", "reason": "404-recovery restoration"}
+{"sourceId": "roda-kvarn", "addedAt": "2026-04-19T23:00:00.000Z", "addedBy": "manual", "reason": "404-recovery restoration"}
+{"sourceId": "sundsvall-musik", "addedAt": "2026-04-19T23:00:00.000Z", "addedBy": "manual", "reason": "404-recovery restoration"}
+{"sourceId": "sydsvenskan", "addedAt": "2026-04-19T23:00:00.000Z", "addedBy": "manual", "reason": "404-recovery restoration"}
+{"sourceId": "uppsala-konserthus", "addedAt": "2026-04-19T23:00:00.000Z", "addedBy": "manual", "reason": "404-recovery restoration"}
+{"sourceId": "uppsala-konserthus-1", "addedAt": "2026-04-19T23:00:00.000Z", "addedBy": "manual", "reason": "404-recovery restoration"}
+{"sourceId": "uppsala-teatern", "addedAt": "2026-04-19T23:00:00.000Z", "addedBy": "manual", "reason": "404-recovery restoration"}
+{"sourceId": "uppsala-universitet", "addedAt": "2026-04-19T23:00:00.000Z", "addedBy": "manual", "reason": "404-recovery restoration"}
+{"sourceId": "visit-gothenburg", "addedAt": "2026-04-19T23:00:00.000Z", "addedBy": "manual", "reason": "404-recovery restoration"}
+{"sourceId": "botaniska-tradgarden", "addedAt": "2026-04-19T23:30:00.000Z", "addedBy": "manual", "reason": "404-recovery restoration batch2"}
+{"sourceId": "linnaeus-museum", "addedAt": "2026-04-19T23:30:00.000Z", "addedBy": "manual", "reason": "404-recovery restoration batch2"}
+{"sourceId": "malm-universitet", "addedAt": "2026-04-19T23:30:00.000Z", "addedBy": "manual", "reason": "404-recovery restoration batch2"}
+{"sourceId": "orebro-stadsteatern", "addedAt": "2026-04-19T23:30:00.000Z", "addedBy": "manual", "reason": "404-recovery restoration batch2"}
+{"sourceId": "parkteatern", "addedAt": "2026-04-19T23:30:00.000Z", "addedBy": "manual", "reason": "404-recovery restoration batch2"}
+{"sourceId": "slu", "addedAt": "2026-04-19T23:30:00.000Z", "addedBy": "manual", "reason": "404-recovery restoration batch2"}
+{"sourceId": "spanga-is", "addedAt": "2026-04-19T23:30:00.000Z", "addedBy": "manual", "reason": "404-recovery restoration batch2"}
+{"sourceId": "stockholms-stadsteater", "addedAt": "2026-04-19T23:30:00.000Z", "addedBy": "manual", "reason": "404-recovery restoration batch2"}
+{"sourceId": "svenska-innebandyf-rbundet", "addedAt": "2026-04-19T23:30:00.000Z", "addedBy": "manual", "reason": "404-recovery restoration batch2"}
+{"sourceId": "uppsala-museum", "addedAt": "2026-04-19T23:30:00.000Z", "addedBy": "manual", "reason": "404-recovery restoration batch2"}
+{"sourceId": "vaxjo-teatern", "addedAt": "2026-04-19T23:30:00.000Z", "addedBy": "manual", "reason": "404-recovery restoration batch2"}

@@ -1,0 +1,5091 @@
+{
+  "poolRoundNumber": 1,
+  "activePool": [
+    {
+      "sourceId": "akersberga",
+      "url": "https://akersberga.se/",
+      "roundsParticipated": 1,
+      "diversifiers": [
+        "has_404s",
+        "errors_17",
+        "failures_13",
+        "path_jsonld"
+      ],
+      "queueReason": "toolB(preB): [breadth] unclear (0 likely, 0 possible) — Inga tydliga API:er hittades. 17 404s, 17 fel. Fler mönster kan finnas.. But: No network/API signals detected. GotEvent lesson: API structure ≠ usable event data. Routing to HTML.",
+      "enrichedData": {
+        "lastPathUsed": "jsonld",
+        "lastEventsFound": 0,
+        "consecutiveFailures": 13,
+        "triageResult": null
+      }
+    },
+    {
+      "sourceId": "jonkoping",
+      "url": "https://jonkoping.se/",
+      "roundsParticipated": 1,
+      "diversifiers": [
+        "failures_12",
+        "path_jsonld"
+      ],
+      "queueReason": "toolB(preB): [breadth] low_value (0 likely, 0 possible) —  Inga event-liknande API:er hittades på vanliga mönster.. But: No network/API signals detected. GotEvent lesson: API structure ≠ usable event data. Routing to HTML.",
+      "enrichedData": {
+        "lastPathUsed": "jsonld",
+        "lastEventsFound": 0,
+        "consecutiveFailures": 12,
+        "triageResult": null
+      }
+    },
+    {
+      "sourceId": "ramlosa",
+      "url": "https://ramlosa.com/",
+      "roundsParticipated": 1,
+      "diversifiers": [
+        "failures_9",
+        "path_jsonld"
+      ],
+      "queueReason": "toolB(preB): [breadth] low_value (0 likely, 0 possible) —  Inga event-liknande API:er hittades på vanliga mönster.. But: No network/API signals detected. GotEvent lesson: API structure ≠ usable event data. Routing to HTML.",
+      "enrichedData": {
+        "lastPathUsed": "jsonld",
+        "lastEventsFound": 0,
+        "consecutiveFailures": 9,
+        "triageResult": null
+      }
+    },
+    {
+      "sourceId": "fotografiska",
+      "url": "https://fotografiska.com/",
+      "roundsParticipated": 1,
+      "diversifiers": [
+        "has_404s",
+        "errors_18",
+        "failures_11",
+        "path_jsonld"
+      ],
+      "queueReason": "toolB(preB): [breadth] unclear (0 likely, 0 possible) — Inga tydliga API:er hittades. 18 404s, 18 fel. Fler mönster kan finnas.. But: No network/API signals detected. GotEvent lesson: API structure ≠ usable event data. Routing to HTML.",
+      "enrichedData": {
+        "lastPathUsed": "jsonld",
+        "lastEventsFound": 0,
+        "consecutiveFailures": 11,
+        "triageResult": null
+      }
+    },
+    {
+      "sourceId": "triangeln",
+      "url": "https://triangeln.se/",
+      "roundsParticipated": 1,
+      "diversifiers": [
+        "has_404s",
+        "errors_18",
+        "failures_9",
+        "path_jsonld"
+      ],
+      "queueReason": "toolB(preB): [breadth] unclear (0 likely, 0 possible) — Inga tydliga API:er hittades. 18 404s, 18 fel. Fler mönster kan finnas.. But: No network/API signals detected. GotEvent lesson: API structure ≠ usable event data. Routing to HTML.",
+      "enrichedData": {
+        "lastPathUsed": "jsonld",
+        "lastEventsFound": 0,
+        "consecutiveFailures": 9,
+        "triageResult": null
+      }
+    },
+    {
+      "sourceId": "way-out-west",
+      "url": "https://wayoutwest.se/",
+      "roundsParticipated": 1,
+      "diversifiers": [
+        "has_404s",
+        "errors_15",
+        "failures_9",
+        "path_jsonld"
+      ],
+      "queueReason": "toolB(preB): [breadth] unclear (0 likely, 0 possible) — Inga tydliga API:er hittades. 15 404s, 19 fel. Fler mönster kan finnas.. But: No network/API signals detected. GotEvent lesson: API structure ≠ usable event data. Routing to HTML.",
+      "enrichedData": {
+        "lastPathUsed": "jsonld",
+        "lastEventsFound": 0,
+        "consecutiveFailures": 9,
+        "triageResult": null
+      }
+    },
+    {
+      "sourceId": "jonkoping-stadsteatern",
+      "url": "https://jonkoping.se/stadsteatern",
+      "roundsParticipated": 1,
+      "diversifiers": [
+        "failures_12",
+        "path_jsonld"
+      ],
+      "queueReason": "toolB(preB): [breadth] low_value (0 likely, 0 possible) —  Inga event-liknande API:er hittades på vanliga mönster.. But: No network/API signals detected. GotEvent lesson: API structure ≠ usable event data. Routing to HTML.",
+      "enrichedData": {
+        "lastPathUsed": "jsonld",
+        "lastEventsFound": 0,
+        "consecutiveFailures": 12,
+        "triageResult": null
+      }
+    },
+    {
+      "sourceId": "allt-om-mat",
+      "url": "https://alltommat.se/",
+      "roundsParticipated": 1,
+      "diversifiers": [
+        "has_404s",
+        "errors_15",
+        "failures_13",
+        "path_jsonld"
+      ],
+      "queueReason": "toolB(preB): [breadth] unclear (0 likely, 0 possible) — Inga tydliga API:er hittades. 15 404s, 18 fel. Fler mönster kan finnas.. But: No network/API signals detected. GotEvent lesson: API structure ≠ usable event data. Routing to HTML.",
+      "enrichedData": {
+        "lastPathUsed": "jsonld",
+        "lastEventsFound": 0,
+        "consecutiveFailures": 13,
+        "triageResult": null
+      }
+    }
+  ],
+  "exited": [
+    {
+      "source": {
+        "sourceId": "uppsala-reggae-festival",
+        "url": "https://uppsala-reggae.se/",
+        "roundsParticipated": 0,
+        "diversifiers": [
+          "has_404s",
+          "failures_9",
+          "path_jsonld"
+        ],
+        "queueReason": "toolB(preB): [breadth] unclear (0 likely, 0 possible) — Inga tydliga API:er hittades. 0 404s, 18 fel. Fler mönster kan finnas.. But: API structure attempted (18 errors) but no usable endpoints found. GotEvent lesson: API structure ≠ usable event data. Routing to HTML.",
+        "enrichedData": {
+          "lastPathUsed": "jsonld",
+          "lastEventsFound": 0,
+          "consecutiveFailures": 9,
+          "triageResult": null
+        }
+      },
+      "decision": "postTestC-manual-review",
+      "result": {
+        "sourceId": "uppsala-reggae-festival",
+        "sourceUrl": "https://uppsala-reggae.se/",
+        "winningStage": "C3",
+        "outcomeType": "fail",
+        "routeSuggestion": "manual-review",
+        "evidence": "fetch error: getaddrinfo ENOTFOUND uppsala-reggae.se",
+        "roundNumber": 1,
+        "success": false,
+        "exitReason": "FETCH_ERROR",
+        "exitReasonDetail": "fetch failed: getaddrinfo ENOTFOUND uppsala-reggae.se",
+        "effectiveProcessingUrl": "https://uppsala-reggae.se/",
+        "effectiveProcessingUrlReason": "url-variant",
+        "c0": {
+          "candidates": 0,
+          "winnerUrl": null,
+          "winnerDensity": 0,
+          "duration": 17,
+          "rootFallback": false,
+          "ruleAppliedSource": "none",
+          "ruleAppliedPaths": [],
+          "ruleWinnerPath": null
+        },
+        "c1": {
+          "verdict": "unfetchable",
+          "likelyJsRendered": false,
+          "timeTagCount": 0,
+          "dateCount": 0,
+          "duration": 2,
+          "htmlBytes": 0,
+          "fetchable": false,
+          "fetchError": "getaddrinfo ENOTFOUND uppsala-reggae.se",
+          "bestSubpageFound": null,
+          "subpagesTested": []
+        },
+        "c2": {
+          "verdict": "unclear",
+          "score": 0,
+          "reason": "fetchHtml failed: getaddrinfo ENOTFOUND uppsala-reggae.se",
+          "duration": 1,
+          "htmlBytes": 0
+        },
+        "c3": {
+          "universalEventsFound": 0,
+          "universalMethodsUsed": [
+            "universal-extractor"
+          ],
+          "universalMethodBreakdown": {},
+          "duration": 0
+        },
+        "extract": {
+          "eventsFound": 0,
+          "duration": 0,
+          "htmlSize": 0,
+          "extractedEvents": []
+        },
+        "trace": {
+          "sourceId": "uppsala-reggae-festival",
+          "sourceUrl": "https://uppsala-reggae.se/",
+          "round": 1,
+          "c0Candidates": 0,
+          "c0WinnerUrl": null,
+          "c0WinnerDensity": 0,
+          "c0RuleSource": "none",
+          "c0RulePathsTested": [],
+          "c0RuleWinnerPath": null,
+          "effectiveUrl": "https://uppsala-reggae.se/",
+          "effectiveUrlReason": "url-variant",
+          "c1Verdict": "unfetchable",
+          "c1LikelyJsRendered": false,
+          "c1TimeTagCount": 0,
+          "c1DateCount": 0,
+          "c1HtmlBytes": 0,
+          "c1Fetchable": false,
+          "c1FetchError": "getaddrinfo ENOTFOUND uppsala-reggae.se",
+          "c1BestSubpageFound": null,
+          "c1SubpagesTested": [],
+          "c2Verdict": "unclear",
+          "c2Score": 0,
+          "c2Reason": "fetchHtml failed: getaddrinfo ENOTFOUND uppsala-reggae.se",
+          "c2HtmlBytes": 0,
+          "c3EventsFound": 0,
+          "c3MethodsUsed": [
+            "universal-extractor"
+          ],
+          "c3MethodBreakdown": {},
+          "eventsFound": 0,
+          "outcomeType": "fail",
+          "routeSuggestion": "manual-review",
+          "exitReason": "FETCH_ERROR",
+          "exitReasonDetail": "fetch failed: getaddrinfo ENOTFOUND uppsala-reggae.se",
+          "winningStage": "C3",
+          "success": false,
+          "derivedRuleApplied": false
+        }
+      }
+    },
+    {
+      "source": {
+        "sourceId": "centuri",
+        "url": "https://centuri.se/",
+        "roundsParticipated": 0,
+        "diversifiers": [
+          "has_404s",
+          "errors_18",
+          "failures_11",
+          "path_jsonld"
+        ],
+        "queueReason": "toolB(preB): [breadth] unclear (0 likely, 0 possible) — Inga tydliga API:er hittades. 18 404s, 18 fel. Fler mönster kan finnas.. But: No network/API signals detected. GotEvent lesson: API structure ≠ usable event data. Routing to HTML.",
+        "enrichedData": {
+          "lastPathUsed": "jsonld",
+          "lastEventsFound": 0,
+          "consecutiveFailures": 11,
+          "triageResult": null
+        }
+      },
+      "decision": "postTestC-manual-review",
+      "result": {
+        "sourceId": "centuri",
+        "sourceUrl": "https://centuri.se/",
+        "winningStage": "C3",
+        "outcomeType": "fail",
+        "routeSuggestion": "manual-review",
+        "evidence": "fetch error: Exceeded 3 redirects",
+        "roundNumber": 1,
+        "success": false,
+        "exitReason": "FETCH_ERROR",
+        "exitReasonDetail": "fetch failed: Exceeded 3 redirects",
+        "effectiveProcessingUrl": "https://centuri.se/",
+        "effectiveProcessingUrlReason": "url-variant",
+        "c0": {
+          "candidates": 0,
+          "winnerUrl": null,
+          "winnerDensity": 0,
+          "duration": 1597,
+          "rootFallback": false,
+          "ruleAppliedSource": "none",
+          "ruleAppliedPaths": [],
+          "ruleWinnerPath": null
+        },
+        "c1": {
+          "verdict": "unfetchable",
+          "likelyJsRendered": false,
+          "timeTagCount": 0,
+          "dateCount": 0,
+          "duration": 231,
+          "htmlBytes": 0,
+          "fetchable": false,
+          "fetchError": "Exceeded 3 redirects",
+          "bestSubpageFound": null,
+          "subpagesTested": []
+        },
+        "c2": {
+          "verdict": "unclear",
+          "score": 0,
+          "reason": "fetchHtml failed: Exceeded 3 redirects",
+          "duration": 178,
+          "htmlBytes": 0
+        },
+        "c3": {
+          "universalEventsFound": 0,
+          "universalMethodsUsed": [
+            "universal-extractor"
+          ],
+          "universalMethodBreakdown": {},
+          "duration": 0
+        },
+        "extract": {
+          "eventsFound": 0,
+          "duration": 0,
+          "htmlSize": 0,
+          "extractedEvents": []
+        },
+        "trace": {
+          "sourceId": "centuri",
+          "sourceUrl": "https://centuri.se/",
+          "round": 1,
+          "c0Candidates": 0,
+          "c0WinnerUrl": null,
+          "c0WinnerDensity": 0,
+          "c0RuleSource": "none",
+          "c0RulePathsTested": [],
+          "c0RuleWinnerPath": null,
+          "effectiveUrl": "https://centuri.se/",
+          "effectiveUrlReason": "url-variant",
+          "c1Verdict": "unfetchable",
+          "c1LikelyJsRendered": false,
+          "c1TimeTagCount": 0,
+          "c1DateCount": 0,
+          "c1HtmlBytes": 0,
+          "c1Fetchable": false,
+          "c1FetchError": "Exceeded 3 redirects",
+          "c1BestSubpageFound": null,
+          "c1SubpagesTested": [],
+          "c2Verdict": "unclear",
+          "c2Score": 0,
+          "c2Reason": "fetchHtml failed: Exceeded 3 redirects",
+          "c2HtmlBytes": 0,
+          "c3EventsFound": 0,
+          "c3MethodsUsed": [
+            "universal-extractor"
+          ],
+          "c3MethodBreakdown": {},
+          "eventsFound": 0,
+          "outcomeType": "fail",
+          "routeSuggestion": "manual-review",
+          "exitReason": "FETCH_ERROR",
+          "exitReasonDetail": "fetch failed: Exceeded 3 redirects",
+          "winningStage": "C3",
+          "success": false,
+          "derivedRuleApplied": false
+        }
+      }
+    },
+    {
+      "source": {
+        "sourceId": "friidrottsf-rbundet",
+        "url": "https://friidrott.se/",
+        "roundsParticipated": 0,
+        "diversifiers": [
+          "has_404s",
+          "errors_1",
+          "failures_11",
+          "path_jsonld"
+        ],
+        "queueReason": "toolB(preB): [breadth] unclear (0 likely, 0 possible) — Inga tydliga API:er hittades. 1 404s, 18 fel. Fler mönster kan finnas.. But: No network/API signals detected. GotEvent lesson: API structure ≠ usable event data. Routing to HTML.",
+        "enrichedData": {
+          "lastPathUsed": "jsonld",
+          "lastEventsFound": 0,
+          "consecutiveFailures": 11,
+          "triageResult": null
+        }
+      },
+      "decision": "postTestC-manual-review",
+      "result": {
+        "sourceId": "friidrottsf-rbundet",
+        "sourceUrl": "https://friidrott.se/",
+        "winningStage": "C3",
+        "outcomeType": "fail",
+        "routeSuggestion": "Fail",
+        "evidence": "",
+        "roundNumber": 1,
+        "success": false,
+        "exitReason": "FETCH_ERROR",
+        "exitReasonDetail": "Assignment to constant variable.",
+        "effectiveProcessingUrl": "https://friidrott.se/",
+        "effectiveProcessingUrlReason": "url-variant:original",
+        "c0": {
+          "candidates": 0,
+          "winnerUrl": "https://friidrott.se/events",
+          "winnerDensity": 6,
+          "duration": 2250,
+          "rootFallback": false,
+          "ruleAppliedSource": "swedish-patterns",
+          "ruleAppliedPaths": [
+            "/events"
+          ],
+          "ruleWinnerPath": "/events"
+        },
+        "c1": {
+          "verdict": "unknown",
+          "likelyJsRendered": false,
+          "timeTagCount": 0,
+          "dateCount": 0,
+          "duration": 0,
+          "htmlBytes": 0,
+          "fetchable": false,
+          "bestSubpageFound": null,
+          "subpagesTested": []
+        },
+        "c2": {
+          "verdict": "unknown",
+          "score": 0,
+          "reason": "",
+          "duration": 0,
+          "htmlBytes": 0
+        },
+        "c3": {
+          "universalEventsFound": 0,
+          "universalMethodsUsed": [],
+          "universalMethodBreakdown": {},
+          "duration": 0
+        },
+        "extract": {
+          "eventsFound": 0,
+          "duration": 0,
+          "htmlSize": 0
+        },
+        "trace": {
+          "sourceId": "friidrottsf-rbundet",
+          "sourceUrl": "https://friidrott.se/",
+          "round": 1,
+          "c0Candidates": 0,
+          "c0WinnerUrl": "https://friidrott.se/events",
+          "c0WinnerDensity": 6,
+          "c0RuleSource": "swedish-patterns",
+          "c0RulePathsTested": [
+            "/events"
+          ],
+          "c0RuleWinnerPath": "/events",
+          "effectiveUrl": "https://friidrott.se/",
+          "effectiveUrlReason": "url-variant:original",
+          "c1Verdict": "unknown",
+          "c1LikelyJsRendered": false,
+          "c1TimeTagCount": 0,
+          "c1DateCount": 0,
+          "c1HtmlBytes": 0,
+          "c1Fetchable": false,
+          "c1BestSubpageFound": null,
+          "c1SubpagesTested": [],
+          "c2Verdict": "unknown",
+          "c2Score": 0,
+          "c2Reason": "",
+          "c2HtmlBytes": 0,
+          "c3EventsFound": 0,
+          "c3MethodsUsed": [],
+          "c3MethodBreakdown": {},
+          "eventsFound": 0,
+          "outcomeType": "fail",
+          "routeSuggestion": "Fail",
+          "exitReason": "FETCH_ERROR",
+          "exitReasonDetail": "Assignment to constant variable.",
+          "winningStage": "C3",
+          "success": false,
+          "derivedRuleApplied": false,
+          "error": "Assignment to constant variable."
+        },
+        "error": "Assignment to constant variable."
+      }
+    },
+    {
+      "source": {
+        "sourceId": "eventbrite",
+        "url": "https://eventbrite.se/",
+        "roundsParticipated": 0,
+        "diversifiers": [
+          "has_404s",
+          "errors_18",
+          "failures_11",
+          "path_jsonld"
+        ],
+        "queueReason": "toolB(preB): [breadth] unclear (0 likely, 0 possible) — Inga tydliga API:er hittades. 18 404s, 18 fel. Fler mönster kan finnas.. But: No network/API signals detected. GotEvent lesson: API structure ≠ usable event data. Routing to HTML.",
+        "enrichedData": {
+          "lastPathUsed": "jsonld",
+          "lastEventsFound": 0,
+          "consecutiveFailures": 11,
+          "triageResult": null
+        }
+      },
+      "decision": "postTestC-manual-review",
+      "result": {
+        "sourceId": "eventbrite",
+        "sourceUrl": "https://eventbrite.se/",
+        "winningStage": "C3",
+        "outcomeType": "fail",
+        "routeSuggestion": "Fail",
+        "evidence": "",
+        "roundNumber": 1,
+        "success": false,
+        "exitReason": "FETCH_ERROR",
+        "exitReasonDetail": "Assignment to constant variable.",
+        "effectiveProcessingUrl": "https://eventbrite.se/",
+        "effectiveProcessingUrlReason": "url-variant:original",
+        "c0": {
+          "candidates": 1,
+          "winnerUrl": "https://eventbrite.se/signin/signup?referrer=%2Fmytickets",
+          "winnerDensity": 0,
+          "duration": 3222,
+          "rootFallback": false,
+          "ruleAppliedSource": "link-discovery",
+          "ruleAppliedPaths": [],
+          "ruleWinnerPath": "/signin/signup?referrer=%2Fmytickets"
+        },
+        "c1": {
+          "verdict": "unknown",
+          "likelyJsRendered": false,
+          "timeTagCount": 0,
+          "dateCount": 0,
+          "duration": 0,
+          "htmlBytes": 0,
+          "fetchable": false,
+          "bestSubpageFound": null,
+          "subpagesTested": []
+        },
+        "c2": {
+          "verdict": "unknown",
+          "score": 0,
+          "reason": "",
+          "duration": 0,
+          "htmlBytes": 0
+        },
+        "c3": {
+          "universalEventsFound": 0,
+          "universalMethodsUsed": [],
+          "universalMethodBreakdown": {},
+          "duration": 0
+        },
+        "extract": {
+          "eventsFound": 0,
+          "duration": 0,
+          "htmlSize": 0
+        },
+        "trace": {
+          "sourceId": "eventbrite",
+          "sourceUrl": "https://eventbrite.se/",
+          "round": 1,
+          "c0Candidates": 1,
+          "c0WinnerUrl": "https://eventbrite.se/signin/signup?referrer=%2Fmytickets",
+          "c0WinnerDensity": 0,
+          "c0RuleSource": "link-discovery",
+          "c0RulePathsTested": [],
+          "c0RuleWinnerPath": "/signin/signup?referrer=%2Fmytickets",
+          "effectiveUrl": "https://eventbrite.se/",
+          "effectiveUrlReason": "url-variant:original",
+          "c1Verdict": "unknown",
+          "c1LikelyJsRendered": false,
+          "c1TimeTagCount": 0,
+          "c1DateCount": 0,
+          "c1HtmlBytes": 0,
+          "c1Fetchable": false,
+          "c1BestSubpageFound": null,
+          "c1SubpagesTested": [],
+          "c2Verdict": "unknown",
+          "c2Score": 0,
+          "c2Reason": "",
+          "c2HtmlBytes": 0,
+          "c3EventsFound": 0,
+          "c3MethodsUsed": [],
+          "c3MethodBreakdown": {},
+          "eventsFound": 0,
+          "outcomeType": "fail",
+          "routeSuggestion": "Fail",
+          "exitReason": "FETCH_ERROR",
+          "exitReasonDetail": "Assignment to constant variable.",
+          "winningStage": "C3",
+          "success": false,
+          "derivedRuleApplied": false,
+          "error": "Assignment to constant variable."
+        },
+        "error": "Assignment to constant variable."
+      }
+    },
+    {
+      "source": {
+        "sourceId": "uppsala-teatern",
+        "url": "https://uppsalateatern.se/",
+        "roundsParticipated": 0,
+        "diversifiers": [
+          "has_404s",
+          "failures_9",
+          "path_jsonld"
+        ],
+        "queueReason": "toolB(preB): [breadth] unclear (0 likely, 0 possible) — Inga tydliga API:er hittades. 0 404s, 18 fel. Fler mönster kan finnas.. But: API structure attempted (18 errors) but no usable endpoints found. GotEvent lesson: API structure ≠ usable event data. Routing to HTML.",
+        "enrichedData": {
+          "lastPathUsed": "jsonld",
+          "lastEventsFound": 0,
+          "consecutiveFailures": 9,
+          "triageResult": null
+        }
+      },
+      "decision": "postTestC-manual-review",
+      "result": {
+        "sourceId": "uppsala-teatern",
+        "sourceUrl": "https://uppsalateatern.se/",
+        "winningStage": "C3",
+        "outcomeType": "fail",
+        "routeSuggestion": "manual-review",
+        "evidence": "fetch error: getaddrinfo ENOTFOUND uppsalateatern.se",
+        "roundNumber": 1,
+        "success": false,
+        "exitReason": "FETCH_ERROR",
+        "exitReasonDetail": "fetch failed: getaddrinfo ENOTFOUND uppsalateatern.se",
+        "effectiveProcessingUrl": "https://uppsalateatern.se/",
+        "effectiveProcessingUrlReason": "url-variant",
+        "c0": {
+          "candidates": 0,
+          "winnerUrl": null,
+          "winnerDensity": 0,
+          "duration": 3,
+          "rootFallback": false,
+          "ruleAppliedSource": "none",
+          "ruleAppliedPaths": [],
+          "ruleWinnerPath": null
+        },
+        "c1": {
+          "verdict": "unfetchable",
+          "likelyJsRendered": false,
+          "timeTagCount": 0,
+          "dateCount": 0,
+          "duration": 2,
+          "htmlBytes": 0,
+          "fetchable": false,
+          "fetchError": "getaddrinfo ENOTFOUND uppsalateatern.se",
+          "bestSubpageFound": null,
+          "subpagesTested": []
+        },
+        "c2": {
+          "verdict": "unclear",
+          "score": 0,
+          "reason": "fetchHtml failed: getaddrinfo ENOTFOUND uppsalateatern.se",
+          "duration": 1,
+          "htmlBytes": 0
+        },
+        "c3": {
+          "universalEventsFound": 0,
+          "universalMethodsUsed": [
+            "universal-extractor"
+          ],
+          "universalMethodBreakdown": {},
+          "duration": 0
+        },
+        "extract": {
+          "eventsFound": 0,
+          "duration": 0,
+          "htmlSize": 0,
+          "extractedEvents": []
+        },
+        "trace": {
+          "sourceId": "uppsala-teatern",
+          "sourceUrl": "https://uppsalateatern.se/",
+          "round": 1,
+          "c0Candidates": 0,
+          "c0WinnerUrl": null,
+          "c0WinnerDensity": 0,
+          "c0RuleSource": "none",
+          "c0RulePathsTested": [],
+          "c0RuleWinnerPath": null,
+          "effectiveUrl": "https://uppsalateatern.se/",
+          "effectiveUrlReason": "url-variant",
+          "c1Verdict": "unfetchable",
+          "c1LikelyJsRendered": false,
+          "c1TimeTagCount": 0,
+          "c1DateCount": 0,
+          "c1HtmlBytes": 0,
+          "c1Fetchable": false,
+          "c1FetchError": "getaddrinfo ENOTFOUND uppsalateatern.se",
+          "c1BestSubpageFound": null,
+          "c1SubpagesTested": [],
+          "c2Verdict": "unclear",
+          "c2Score": 0,
+          "c2Reason": "fetchHtml failed: getaddrinfo ENOTFOUND uppsalateatern.se",
+          "c2HtmlBytes": 0,
+          "c3EventsFound": 0,
+          "c3MethodsUsed": [
+            "universal-extractor"
+          ],
+          "c3MethodBreakdown": {},
+          "eventsFound": 0,
+          "outcomeType": "fail",
+          "routeSuggestion": "manual-review",
+          "exitReason": "FETCH_ERROR",
+          "exitReasonDetail": "fetch failed: getaddrinfo ENOTFOUND uppsalateatern.se",
+          "winningStage": "C3",
+          "success": false,
+          "derivedRuleApplied": false
+        }
+      }
+    },
+    {
+      "source": {
+        "sourceId": "vasteras-konstmuseum",
+        "url": "https://vasteras.se/konstmuseum",
+        "roundsParticipated": 0,
+        "diversifiers": [
+          "has_404s",
+          "errors_17",
+          "failures_9",
+          "path_jsonld"
+        ],
+        "queueReason": "toolB(preB): [breadth] unclear (0 likely, 0 possible) — Inga tydliga API:er hittades. 17 404s, 17 fel. Fler mönster kan finnas.. But: No network/API signals detected. GotEvent lesson: API structure ≠ usable event data. Routing to HTML.",
+        "enrichedData": {
+          "lastPathUsed": "jsonld",
+          "lastEventsFound": 0,
+          "consecutiveFailures": 9,
+          "triageResult": null
+        }
+      },
+      "decision": "postTestC-manual-review",
+      "result": {
+        "sourceId": "vasteras-konstmuseum",
+        "sourceUrl": "https://vasteras.se/konstmuseum",
+        "winningStage": "C3",
+        "outcomeType": "fail",
+        "routeSuggestion": "manual-review",
+        "evidence": "fetch error: HTTP 404",
+        "roundNumber": 1,
+        "success": false,
+        "exitReason": "FETCH_ERROR",
+        "exitReasonDetail": "fetch failed: HTTP 404",
+        "effectiveProcessingUrl": "https://vasteras.se/konstmuseum",
+        "effectiveProcessingUrlReason": "url-variant",
+        "c0": {
+          "candidates": 0,
+          "winnerUrl": null,
+          "winnerDensity": 0,
+          "duration": 542,
+          "rootFallback": false,
+          "ruleAppliedSource": "none",
+          "ruleAppliedPaths": [],
+          "ruleWinnerPath": null
+        },
+        "c1": {
+          "verdict": "unfetchable",
+          "likelyJsRendered": false,
+          "timeTagCount": 0,
+          "dateCount": 0,
+          "duration": 138,
+          "htmlBytes": 0,
+          "fetchable": false,
+          "fetchError": "HTTP 404",
+          "bestSubpageFound": null,
+          "subpagesTested": []
+        },
+        "c2": {
+          "verdict": "unclear",
+          "score": 0,
+          "reason": "fetchHtml failed: HTTP 404",
+          "duration": 115,
+          "htmlBytes": 0
+        },
+        "c3": {
+          "universalEventsFound": 0,
+          "universalMethodsUsed": [
+            "universal-extractor"
+          ],
+          "universalMethodBreakdown": {},
+          "duration": 0
+        },
+        "extract": {
+          "eventsFound": 0,
+          "duration": 0,
+          "htmlSize": 0,
+          "extractedEvents": []
+        },
+        "trace": {
+          "sourceId": "vasteras-konstmuseum",
+          "sourceUrl": "https://vasteras.se/konstmuseum",
+          "round": 1,
+          "c0Candidates": 0,
+          "c0WinnerUrl": null,
+          "c0WinnerDensity": 0,
+          "c0RuleSource": "none",
+          "c0RulePathsTested": [],
+          "c0RuleWinnerPath": null,
+          "effectiveUrl": "https://vasteras.se/konstmuseum",
+          "effectiveUrlReason": "url-variant",
+          "c1Verdict": "unfetchable",
+          "c1LikelyJsRendered": false,
+          "c1TimeTagCount": 0,
+          "c1DateCount": 0,
+          "c1HtmlBytes": 0,
+          "c1Fetchable": false,
+          "c1FetchError": "HTTP 404",
+          "c1BestSubpageFound": null,
+          "c1SubpagesTested": [],
+          "c2Verdict": "unclear",
+          "c2Score": 0,
+          "c2Reason": "fetchHtml failed: HTTP 404",
+          "c2HtmlBytes": 0,
+          "c3EventsFound": 0,
+          "c3MethodsUsed": [
+            "universal-extractor"
+          ],
+          "c3MethodBreakdown": {},
+          "eventsFound": 0,
+          "outcomeType": "fail",
+          "routeSuggestion": "manual-review",
+          "exitReason": "FETCH_ERROR",
+          "exitReasonDetail": "fetch failed: HTTP 404",
+          "winningStage": "C3",
+          "success": false,
+          "derivedRuleApplied": false
+        }
+      }
+    },
+    {
+      "source": {
+        "sourceId": "mobilia",
+        "url": "https://mobilia.se/",
+        "roundsParticipated": 0,
+        "diversifiers": [
+          "has_404s",
+          "failures_9",
+          "path_jsonld"
+        ],
+        "queueReason": "toolB(preB): [breadth] unclear (0 likely, 0 possible) — Inga tydliga API:er hittades. 0 404s, 19 fel. Fler mönster kan finnas.. But: API structure attempted (19 errors) but no usable endpoints found. GotEvent lesson: API structure ≠ usable event data. Routing to HTML.",
+        "enrichedData": {
+          "lastPathUsed": "jsonld",
+          "lastEventsFound": 0,
+          "consecutiveFailures": 9,
+          "triageResult": null
+        }
+      },
+      "decision": "postTestC-manual-review",
+      "result": {
+        "sourceId": "mobilia",
+        "sourceUrl": "https://mobilia.se/",
+        "winningStage": "C3",
+        "outcomeType": "fail",
+        "routeSuggestion": "Fail",
+        "evidence": "",
+        "roundNumber": 1,
+        "success": false,
+        "exitReason": "FETCH_ERROR",
+        "exitReasonDetail": "Assignment to constant variable.",
+        "effectiveProcessingUrl": "https://mobilia.se/",
+        "effectiveProcessingUrlReason": "url-variant:original",
+        "c0": {
+          "candidates": 1,
+          "winnerUrl": "https://mobilia.se/artiklar/aterkommande-event/",
+          "winnerDensity": 4,
+          "duration": 1082,
+          "rootFallback": false,
+          "ruleAppliedSource": "link-discovery",
+          "ruleAppliedPaths": [],
+          "ruleWinnerPath": "/artiklar/aterkommande-event/"
+        },
+        "c1": {
+          "verdict": "unknown",
+          "likelyJsRendered": false,
+          "timeTagCount": 0,
+          "dateCount": 0,
+          "duration": 0,
+          "htmlBytes": 0,
+          "fetchable": false,
+          "bestSubpageFound": null,
+          "subpagesTested": []
+        },
+        "c2": {
+          "verdict": "unknown",
+          "score": 0,
+          "reason": "",
+          "duration": 0,
+          "htmlBytes": 0
+        },
+        "c3": {
+          "universalEventsFound": 0,
+          "universalMethodsUsed": [],
+          "universalMethodBreakdown": {},
+          "duration": 0
+        },
+        "extract": {
+          "eventsFound": 0,
+          "duration": 0,
+          "htmlSize": 0
+        },
+        "trace": {
+          "sourceId": "mobilia",
+          "sourceUrl": "https://mobilia.se/",
+          "round": 1,
+          "c0Candidates": 1,
+          "c0WinnerUrl": "https://mobilia.se/artiklar/aterkommande-event/",
+          "c0WinnerDensity": 4,
+          "c0RuleSource": "link-discovery",
+          "c0RulePathsTested": [],
+          "c0RuleWinnerPath": "/artiklar/aterkommande-event/",
+          "effectiveUrl": "https://mobilia.se/",
+          "effectiveUrlReason": "url-variant:original",
+          "c1Verdict": "unknown",
+          "c1LikelyJsRendered": false,
+          "c1TimeTagCount": 0,
+          "c1DateCount": 0,
+          "c1HtmlBytes": 0,
+          "c1Fetchable": false,
+          "c1BestSubpageFound": null,
+          "c1SubpagesTested": [],
+          "c2Verdict": "unknown",
+          "c2Score": 0,
+          "c2Reason": "",
+          "c2HtmlBytes": 0,
+          "c3EventsFound": 0,
+          "c3MethodsUsed": [],
+          "c3MethodBreakdown": {},
+          "eventsFound": 0,
+          "outcomeType": "fail",
+          "routeSuggestion": "Fail",
+          "exitReason": "FETCH_ERROR",
+          "exitReasonDetail": "Assignment to constant variable.",
+          "winningStage": "C3",
+          "success": false,
+          "derivedRuleApplied": false,
+          "error": "Assignment to constant variable."
+        },
+        "error": "Assignment to constant variable."
+      }
+    },
+    {
+      "source": {
+        "sourceId": "uppsala-museum",
+        "url": "https://uppsalamuseum.se/",
+        "roundsParticipated": 0,
+        "diversifiers": [
+          "has_404s",
+          "failures_9",
+          "path_jsonld"
+        ],
+        "queueReason": "toolB(preB): [breadth] unclear (0 likely, 0 possible) — Inga tydliga API:er hittades. 0 404s, 18 fel. Fler mönster kan finnas.. But: API structure attempted (18 errors) but no usable endpoints found. GotEvent lesson: API structure ≠ usable event data. Routing to HTML.",
+        "enrichedData": {
+          "lastPathUsed": "jsonld",
+          "lastEventsFound": 0,
+          "consecutiveFailures": 9,
+          "triageResult": null
+        }
+      },
+      "decision": "postTestC-manual-review",
+      "result": {
+        "sourceId": "uppsala-museum",
+        "sourceUrl": "https://uppsalamuseum.se/",
+        "winningStage": "C3",
+        "outcomeType": "fail",
+        "routeSuggestion": "manual-review",
+        "evidence": "fetch error: timeout of 15000ms exceeded",
+        "roundNumber": 1,
+        "success": false,
+        "exitReason": "FETCH_ERROR",
+        "exitReasonDetail": "fetch failed: timeout of 15000ms exceeded",
+        "effectiveProcessingUrl": "https://uppsalamuseum.se/",
+        "effectiveProcessingUrlReason": "url-variant",
+        "c0": {
+          "candidates": 0,
+          "winnerUrl": null,
+          "winnerDensity": 0,
+          "duration": 5005,
+          "rootFallback": false,
+          "ruleAppliedSource": "none",
+          "ruleAppliedPaths": [],
+          "ruleWinnerPath": null
+        },
+        "c1": {
+          "verdict": "unfetchable",
+          "likelyJsRendered": false,
+          "timeTagCount": 0,
+          "dateCount": 0,
+          "duration": 5005,
+          "htmlBytes": 0,
+          "fetchable": false,
+          "fetchError": "timeout of 15000ms exceeded",
+          "bestSubpageFound": null,
+          "subpagesTested": []
+        },
+        "c2": {
+          "verdict": "unclear",
+          "score": 0,
+          "reason": "fetchHtml failed: timeout of 20000ms exceeded",
+          "duration": 5007,
+          "htmlBytes": 0
+        },
+        "c3": {
+          "universalEventsFound": 0,
+          "universalMethodsUsed": [
+            "universal-extractor"
+          ],
+          "universalMethodBreakdown": {},
+          "duration": 0
+        },
+        "extract": {
+          "eventsFound": 0,
+          "duration": 0,
+          "htmlSize": 0,
+          "extractedEvents": []
+        },
+        "trace": {
+          "sourceId": "uppsala-museum",
+          "sourceUrl": "https://uppsalamuseum.se/",
+          "round": 1,
+          "c0Candidates": 0,
+          "c0WinnerUrl": null,
+          "c0WinnerDensity": 0,
+          "c0RuleSource": "none",
+          "c0RulePathsTested": [],
+          "c0RuleWinnerPath": null,
+          "effectiveUrl": "https://uppsalamuseum.se/",
+          "effectiveUrlReason": "url-variant",
+          "c1Verdict": "unfetchable",
+          "c1LikelyJsRendered": false,
+          "c1TimeTagCount": 0,
+          "c1DateCount": 0,
+          "c1HtmlBytes": 0,
+          "c1Fetchable": false,
+          "c1FetchError": "timeout of 15000ms exceeded",
+          "c1BestSubpageFound": null,
+          "c1SubpagesTested": [],
+          "c2Verdict": "unclear",
+          "c2Score": 0,
+          "c2Reason": "fetchHtml failed: timeout of 20000ms exceeded",
+          "c2HtmlBytes": 0,
+          "c3EventsFound": 0,
+          "c3MethodsUsed": [
+            "universal-extractor"
+          ],
+          "c3MethodBreakdown": {},
+          "eventsFound": 0,
+          "outcomeType": "fail",
+          "routeSuggestion": "manual-review",
+          "exitReason": "FETCH_ERROR",
+          "exitReasonDetail": "fetch failed: timeout of 15000ms exceeded",
+          "winningStage": "C3",
+          "success": false,
+          "derivedRuleApplied": false
+        }
+      }
+    },
+    {
+      "source": {
+        "sourceId": "swedish-food",
+        "url": "https://swedishfood.com/",
+        "roundsParticipated": 0,
+        "diversifiers": [
+          "has_404s",
+          "errors_2",
+          "failures_9",
+          "path_jsonld"
+        ],
+        "queueReason": "toolB(preB): [breadth] unclear (0 likely, 0 possible) — Inga tydliga API:er hittades. 2 404s, 18 fel. Fler mönster kan finnas.. But: No network/API signals detected. GotEvent lesson: API structure ≠ usable event data. Routing to HTML.",
+        "enrichedData": {
+          "lastPathUsed": "jsonld",
+          "lastEventsFound": 0,
+          "consecutiveFailures": 9,
+          "triageResult": null
+        }
+      },
+      "decision": "postTestC-manual-review",
+      "result": {
+        "sourceId": "swedish-food",
+        "sourceUrl": "https://swedishfood.com/",
+        "winningStage": "C3",
+        "outcomeType": "fail",
+        "routeSuggestion": "manual-review",
+        "evidence": "fetch error: Exceeded 3 redirects",
+        "roundNumber": 1,
+        "success": false,
+        "exitReason": "FETCH_ERROR",
+        "exitReasonDetail": "fetch failed: Exceeded 3 redirects",
+        "effectiveProcessingUrl": "https://swedishfood.com/",
+        "effectiveProcessingUrlReason": "url-variant",
+        "c0": {
+          "candidates": 0,
+          "winnerUrl": null,
+          "winnerDensity": 0,
+          "duration": 546,
+          "rootFallback": false,
+          "ruleAppliedSource": "none",
+          "ruleAppliedPaths": [],
+          "ruleWinnerPath": null
+        },
+        "c1": {
+          "verdict": "unfetchable",
+          "likelyJsRendered": false,
+          "timeTagCount": 0,
+          "dateCount": 0,
+          "duration": 111,
+          "htmlBytes": 0,
+          "fetchable": false,
+          "fetchError": "Exceeded 3 redirects",
+          "bestSubpageFound": null,
+          "subpagesTested": []
+        },
+        "c2": {
+          "verdict": "unclear",
+          "score": 0,
+          "reason": "fetchHtml failed: Exceeded 3 redirects",
+          "duration": 117,
+          "htmlBytes": 0
+        },
+        "c3": {
+          "universalEventsFound": 0,
+          "universalMethodsUsed": [
+            "universal-extractor"
+          ],
+          "universalMethodBreakdown": {},
+          "duration": 0
+        },
+        "extract": {
+          "eventsFound": 0,
+          "duration": 0,
+          "htmlSize": 0,
+          "extractedEvents": []
+        },
+        "trace": {
+          "sourceId": "swedish-food",
+          "sourceUrl": "https://swedishfood.com/",
+          "round": 1,
+          "c0Candidates": 0,
+          "c0WinnerUrl": null,
+          "c0WinnerDensity": 0,
+          "c0RuleSource": "none",
+          "c0RulePathsTested": [],
+          "c0RuleWinnerPath": null,
+          "effectiveUrl": "https://swedishfood.com/",
+          "effectiveUrlReason": "url-variant",
+          "c1Verdict": "unfetchable",
+          "c1LikelyJsRendered": false,
+          "c1TimeTagCount": 0,
+          "c1DateCount": 0,
+          "c1HtmlBytes": 0,
+          "c1Fetchable": false,
+          "c1FetchError": "Exceeded 3 redirects",
+          "c1BestSubpageFound": null,
+          "c1SubpagesTested": [],
+          "c2Verdict": "unclear",
+          "c2Score": 0,
+          "c2Reason": "fetchHtml failed: Exceeded 3 redirects",
+          "c2HtmlBytes": 0,
+          "c3EventsFound": 0,
+          "c3MethodsUsed": [
+            "universal-extractor"
+          ],
+          "c3MethodBreakdown": {},
+          "eventsFound": 0,
+          "outcomeType": "fail",
+          "routeSuggestion": "manual-review",
+          "exitReason": "FETCH_ERROR",
+          "exitReasonDetail": "fetch failed: Exceeded 3 redirects",
+          "winningStage": "C3",
+          "success": false,
+          "derivedRuleApplied": false
+        }
+      }
+    },
+    {
+      "source": {
+        "sourceId": "orebro-vinterfest",
+        "url": "https://orebrovinterfest.se/",
+        "roundsParticipated": 0,
+        "diversifiers": [
+          "has_404s",
+          "failures_9",
+          "path_jsonld"
+        ],
+        "queueReason": "toolB(preB): [breadth] unclear (0 likely, 0 possible) — Inga tydliga API:er hittades. 0 404s, 18 fel. Fler mönster kan finnas.. But: API structure attempted (18 errors) but no usable endpoints found. GotEvent lesson: API structure ≠ usable event data. Routing to HTML.",
+        "enrichedData": {
+          "lastPathUsed": "jsonld",
+          "lastEventsFound": 0,
+          "consecutiveFailures": 9,
+          "triageResult": null
+        }
+      },
+      "decision": "postTestC-manual-review",
+      "result": {
+        "sourceId": "orebro-vinterfest",
+        "sourceUrl": "https://orebrovinterfest.se/",
+        "winningStage": "C3",
+        "outcomeType": "fail",
+        "routeSuggestion": "manual-review",
+        "evidence": "fetch error: getaddrinfo ENOTFOUND orebrovinterfest.se",
+        "roundNumber": 1,
+        "success": false,
+        "exitReason": "FETCH_ERROR",
+        "exitReasonDetail": "fetch failed: getaddrinfo ENOTFOUND orebrovinterfest.se",
+        "effectiveProcessingUrl": "https://orebrovinterfest.se/",
+        "effectiveProcessingUrlReason": "url-variant",
+        "c0": {
+          "candidates": 0,
+          "winnerUrl": null,
+          "winnerDensity": 0,
+          "duration": 3,
+          "rootFallback": false,
+          "ruleAppliedSource": "none",
+          "ruleAppliedPaths": [],
+          "ruleWinnerPath": null
+        },
+        "c1": {
+          "verdict": "unfetchable",
+          "likelyJsRendered": false,
+          "timeTagCount": 0,
+          "dateCount": 0,
+          "duration": 2,
+          "htmlBytes": 0,
+          "fetchable": false,
+          "fetchError": "getaddrinfo ENOTFOUND orebrovinterfest.se",
+          "bestSubpageFound": null,
+          "subpagesTested": []
+        },
+        "c2": {
+          "verdict": "unclear",
+          "score": 0,
+          "reason": "fetchHtml failed: getaddrinfo ENOTFOUND orebrovinterfest.se",
+          "duration": 2,
+          "htmlBytes": 0
+        },
+        "c3": {
+          "universalEventsFound": 0,
+          "universalMethodsUsed": [
+            "universal-extractor"
+          ],
+          "universalMethodBreakdown": {},
+          "duration": 0
+        },
+        "extract": {
+          "eventsFound": 0,
+          "duration": 0,
+          "htmlSize": 0,
+          "extractedEvents": []
+        },
+        "trace": {
+          "sourceId": "orebro-vinterfest",
+          "sourceUrl": "https://orebrovinterfest.se/",
+          "round": 1,
+          "c0Candidates": 0,
+          "c0WinnerUrl": null,
+          "c0WinnerDensity": 0,
+          "c0RuleSource": "none",
+          "c0RulePathsTested": [],
+          "c0RuleWinnerPath": null,
+          "effectiveUrl": "https://orebrovinterfest.se/",
+          "effectiveUrlReason": "url-variant",
+          "c1Verdict": "unfetchable",
+          "c1LikelyJsRendered": false,
+          "c1TimeTagCount": 0,
+          "c1DateCount": 0,
+          "c1HtmlBytes": 0,
+          "c1Fetchable": false,
+          "c1FetchError": "getaddrinfo ENOTFOUND orebrovinterfest.se",
+          "c1BestSubpageFound": null,
+          "c1SubpagesTested": [],
+          "c2Verdict": "unclear",
+          "c2Score": 0,
+          "c2Reason": "fetchHtml failed: getaddrinfo ENOTFOUND orebrovinterfest.se",
+          "c2HtmlBytes": 0,
+          "c3EventsFound": 0,
+          "c3MethodsUsed": [
+            "universal-extractor"
+          ],
+          "c3MethodBreakdown": {},
+          "eventsFound": 0,
+          "outcomeType": "fail",
+          "routeSuggestion": "manual-review",
+          "exitReason": "FETCH_ERROR",
+          "exitReasonDetail": "fetch failed: getaddrinfo ENOTFOUND orebrovinterfest.se",
+          "winningStage": "C3",
+          "success": false,
+          "derivedRuleApplied": false
+        }
+      }
+    },
+    {
+      "source": {
+        "sourceId": "mora-ik",
+        "url": "https://moraik.se/",
+        "roundsParticipated": 0,
+        "diversifiers": [
+          "has_404s",
+          "failures_9",
+          "path_jsonld"
+        ],
+        "queueReason": "toolB(preB): [breadth] unclear (0 likely, 0 possible) — Inga tydliga API:er hittades. 0 404s, 18 fel. Fler mönster kan finnas.. But: API structure attempted (18 errors) but no usable endpoints found. GotEvent lesson: API structure ≠ usable event data. Routing to HTML.",
+        "enrichedData": {
+          "lastPathUsed": "jsonld",
+          "lastEventsFound": 0,
+          "consecutiveFailures": 9,
+          "triageResult": null
+        }
+      },
+      "decision": "postTestC-manual-review",
+      "result": {
+        "sourceId": "mora-ik",
+        "sourceUrl": "https://moraik.se/",
+        "winningStage": "C3",
+        "outcomeType": "fail",
+        "routeSuggestion": "manual-review",
+        "evidence": "fetch error: timeout of 15000ms exceeded",
+        "roundNumber": 1,
+        "success": false,
+        "exitReason": "FETCH_ERROR",
+        "exitReasonDetail": "fetch failed: timeout of 15000ms exceeded",
+        "effectiveProcessingUrl": "https://moraik.se/",
+        "effectiveProcessingUrlReason": "url-variant",
+        "c0": {
+          "candidates": 0,
+          "winnerUrl": null,
+          "winnerDensity": 0,
+          "duration": 5006,
+          "rootFallback": false,
+          "ruleAppliedSource": "none",
+          "ruleAppliedPaths": [],
+          "ruleWinnerPath": null
+        },
+        "c1": {
+          "verdict": "unfetchable",
+          "likelyJsRendered": false,
+          "timeTagCount": 0,
+          "dateCount": 0,
+          "duration": 5005,
+          "htmlBytes": 0,
+          "fetchable": false,
+          "fetchError": "timeout of 15000ms exceeded",
+          "bestSubpageFound": null,
+          "subpagesTested": []
+        },
+        "c2": {
+          "verdict": "unclear",
+          "score": 0,
+          "reason": "fetchHtml failed: timeout of 20000ms exceeded",
+          "duration": 5005,
+          "htmlBytes": 0
+        },
+        "c3": {
+          "universalEventsFound": 0,
+          "universalMethodsUsed": [
+            "universal-extractor"
+          ],
+          "universalMethodBreakdown": {},
+          "duration": 0
+        },
+        "extract": {
+          "eventsFound": 0,
+          "duration": 0,
+          "htmlSize": 0,
+          "extractedEvents": []
+        },
+        "trace": {
+          "sourceId": "mora-ik",
+          "sourceUrl": "https://moraik.se/",
+          "round": 1,
+          "c0Candidates": 0,
+          "c0WinnerUrl": null,
+          "c0WinnerDensity": 0,
+          "c0RuleSource": "none",
+          "c0RulePathsTested": [],
+          "c0RuleWinnerPath": null,
+          "effectiveUrl": "https://moraik.se/",
+          "effectiveUrlReason": "url-variant",
+          "c1Verdict": "unfetchable",
+          "c1LikelyJsRendered": false,
+          "c1TimeTagCount": 0,
+          "c1DateCount": 0,
+          "c1HtmlBytes": 0,
+          "c1Fetchable": false,
+          "c1FetchError": "timeout of 15000ms exceeded",
+          "c1BestSubpageFound": null,
+          "c1SubpagesTested": [],
+          "c2Verdict": "unclear",
+          "c2Score": 0,
+          "c2Reason": "fetchHtml failed: timeout of 20000ms exceeded",
+          "c2HtmlBytes": 0,
+          "c3EventsFound": 0,
+          "c3MethodsUsed": [
+            "universal-extractor"
+          ],
+          "c3MethodBreakdown": {},
+          "eventsFound": 0,
+          "outcomeType": "fail",
+          "routeSuggestion": "manual-review",
+          "exitReason": "FETCH_ERROR",
+          "exitReasonDetail": "fetch failed: timeout of 15000ms exceeded",
+          "winningStage": "C3",
+          "success": false,
+          "derivedRuleApplied": false
+        }
+      }
+    },
+    {
+      "source": {
+        "sourceId": "test-write-verify",
+        "url": "test-write-verify.se/",
+        "roundsParticipated": 0,
+        "diversifiers": [
+          "has_404s",
+          "failures_9",
+          "path_jsonld"
+        ],
+        "queueReason": "toolB(preB): [breadth] unclear (0 likely, 0 possible) — Inga tydliga API:er hittades. 0 404s, 18 fel. Fler mönster kan finnas.. But: API structure attempted (18 errors) but no usable endpoints found. GotEvent lesson: API structure ≠ usable event data. Routing to HTML.",
+        "enrichedData": {
+          "lastPathUsed": "jsonld",
+          "lastEventsFound": 0,
+          "consecutiveFailures": 9,
+          "triageResult": null
+        }
+      },
+      "decision": "postTestC-manual-review",
+      "result": {
+        "sourceId": "test-write-verify",
+        "sourceUrl": "test-write-verify.se/",
+        "winningStage": "C3",
+        "outcomeType": "fail",
+        "routeSuggestion": "manual-review",
+        "evidence": "fetch error: Invalid URL",
+        "roundNumber": 1,
+        "success": false,
+        "exitReason": "FETCH_ERROR",
+        "exitReasonDetail": "fetch failed: Invalid URL",
+        "effectiveProcessingUrl": "test-write-verify.se/",
+        "effectiveProcessingUrlReason": "url-variant",
+        "c0": {
+          "candidates": 0,
+          "winnerUrl": null,
+          "winnerDensity": 0,
+          "duration": 0,
+          "rootFallback": false,
+          "ruleAppliedSource": "none",
+          "ruleAppliedPaths": [],
+          "ruleWinnerPath": null
+        },
+        "c1": {
+          "verdict": "unfetchable",
+          "likelyJsRendered": false,
+          "timeTagCount": 0,
+          "dateCount": 0,
+          "duration": 1,
+          "htmlBytes": 0,
+          "fetchable": false,
+          "fetchError": "Invalid URL",
+          "bestSubpageFound": null,
+          "subpagesTested": []
+        },
+        "c2": {
+          "verdict": "unclear",
+          "score": 0,
+          "reason": "fetchHtml failed: Invalid URL",
+          "duration": 0,
+          "htmlBytes": 0
+        },
+        "c3": {
+          "universalEventsFound": 0,
+          "universalMethodsUsed": [
+            "universal-extractor"
+          ],
+          "universalMethodBreakdown": {},
+          "duration": 0
+        },
+        "extract": {
+          "eventsFound": 0,
+          "duration": 0,
+          "htmlSize": 0,
+          "extractedEvents": []
+        },
+        "trace": {
+          "sourceId": "test-write-verify",
+          "sourceUrl": "test-write-verify.se/",
+          "round": 1,
+          "c0Candidates": 0,
+          "c0WinnerUrl": null,
+          "c0WinnerDensity": 0,
+          "c0RuleSource": "none",
+          "c0RulePathsTested": [],
+          "c0RuleWinnerPath": null,
+          "effectiveUrl": "test-write-verify.se/",
+          "effectiveUrlReason": "url-variant",
+          "c1Verdict": "unfetchable",
+          "c1LikelyJsRendered": false,
+          "c1TimeTagCount": 0,
+          "c1DateCount": 0,
+          "c1HtmlBytes": 0,
+          "c1Fetchable": false,
+          "c1FetchError": "Invalid URL",
+          "c1BestSubpageFound": null,
+          "c1SubpagesTested": [],
+          "c2Verdict": "unclear",
+          "c2Score": 0,
+          "c2Reason": "fetchHtml failed: Invalid URL",
+          "c2HtmlBytes": 0,
+          "c3EventsFound": 0,
+          "c3MethodsUsed": [
+            "universal-extractor"
+          ],
+          "c3MethodBreakdown": {},
+          "eventsFound": 0,
+          "outcomeType": "fail",
+          "routeSuggestion": "manual-review",
+          "exitReason": "FETCH_ERROR",
+          "exitReasonDetail": "fetch failed: Invalid URL",
+          "winningStage": "C3",
+          "success": false,
+          "derivedRuleApplied": false
+        }
+      }
+    },
+    {
+      "source": {
+        "sourceId": "vaxjo-alcazar",
+        "url": "https://alcazar.se/",
+        "roundsParticipated": 0,
+        "diversifiers": [
+          "has_404s",
+          "failures_9",
+          "path_jsonld"
+        ],
+        "queueReason": "toolB(preB): [breadth] unclear (0 likely, 0 possible) — Inga tydliga API:er hittades. 0 404s, 18 fel. Fler mönster kan finnas.. But: API structure attempted (18 errors) but no usable endpoints found. GotEvent lesson: API structure ≠ usable event data. Routing to HTML.",
+        "enrichedData": {
+          "lastPathUsed": "jsonld",
+          "lastEventsFound": 0,
+          "consecutiveFailures": 9,
+          "triageResult": null
+        }
+      },
+      "decision": "postTestC-manual-review",
+      "result": {
+        "sourceId": "vaxjo-alcazar",
+        "sourceUrl": "https://alcazar.se/",
+        "winningStage": "C3",
+        "outcomeType": "fail",
+        "routeSuggestion": "manual-review",
+        "evidence": "fetch error: Hostname/IP does not match certificate's altnames: Host: alcazar.se. is not in the cert's altnames: DNS:yono1.active24.cz",
+        "roundNumber": 1,
+        "success": false,
+        "exitReason": "FETCH_ERROR",
+        "exitReasonDetail": "fetch failed: Hostname/IP does not match certificate's altnames: Host: alcazar.se. is not in the cert's altnames: DNS:yono1.active24.cz",
+        "effectiveProcessingUrl": "https://alcazar.se/",
+        "effectiveProcessingUrlReason": "url-variant",
+        "c0": {
+          "candidates": 0,
+          "winnerUrl": null,
+          "winnerDensity": 0,
+          "duration": 296,
+          "rootFallback": false,
+          "ruleAppliedSource": "none",
+          "ruleAppliedPaths": [],
+          "ruleWinnerPath": null
+        },
+        "c1": {
+          "verdict": "unfetchable",
+          "likelyJsRendered": false,
+          "timeTagCount": 0,
+          "dateCount": 0,
+          "duration": 216,
+          "htmlBytes": 0,
+          "fetchable": false,
+          "fetchError": "Hostname/IP does not match certificate's altnames: Host: alcazar.se. is not in the cert's altnames: DNS:yono1.active24.cz",
+          "bestSubpageFound": null,
+          "subpagesTested": []
+        },
+        "c2": {
+          "verdict": "unclear",
+          "score": 0,
+          "reason": "fetchHtml failed: Hostname/IP does not match certificate's altnames: Host: alcazar.se. is not in the cert's altnames: DNS:yono1.active24.cz",
+          "duration": 366,
+          "htmlBytes": 0
+        },
+        "c3": {
+          "universalEventsFound": 0,
+          "universalMethodsUsed": [
+            "universal-extractor"
+          ],
+          "universalMethodBreakdown": {},
+          "duration": 0
+        },
+        "extract": {
+          "eventsFound": 0,
+          "duration": 0,
+          "htmlSize": 0,
+          "extractedEvents": []
+        },
+        "trace": {
+          "sourceId": "vaxjo-alcazar",
+          "sourceUrl": "https://alcazar.se/",
+          "round": 1,
+          "c0Candidates": 0,
+          "c0WinnerUrl": null,
+          "c0WinnerDensity": 0,
+          "c0RuleSource": "none",
+          "c0RulePathsTested": [],
+          "c0RuleWinnerPath": null,
+          "effectiveUrl": "https://alcazar.se/",
+          "effectiveUrlReason": "url-variant",
+          "c1Verdict": "unfetchable",
+          "c1LikelyJsRendered": false,
+          "c1TimeTagCount": 0,
+          "c1DateCount": 0,
+          "c1HtmlBytes": 0,
+          "c1Fetchable": false,
+          "c1FetchError": "Hostname/IP does not match certificate's altnames: Host: alcazar.se. is not in the cert's altnames: DNS:yono1.active24.cz",
+          "c1BestSubpageFound": null,
+          "c1SubpagesTested": [],
+          "c2Verdict": "unclear",
+          "c2Score": 0,
+          "c2Reason": "fetchHtml failed: Hostname/IP does not match certificate's altnames: Host: alcazar.se. is not in the cert's altnames: DNS:yono1.active24.cz",
+          "c2HtmlBytes": 0,
+          "c3EventsFound": 0,
+          "c3MethodsUsed": [
+            "universal-extractor"
+          ],
+          "c3MethodBreakdown": {},
+          "eventsFound": 0,
+          "outcomeType": "fail",
+          "routeSuggestion": "manual-review",
+          "exitReason": "FETCH_ERROR",
+          "exitReasonDetail": "fetch failed: Hostname/IP does not match certificate's altnames: Host: alcazar.se. is not in the cert's altnames: DNS:yono1.active24.cz",
+          "winningStage": "C3",
+          "success": false,
+          "derivedRuleApplied": false
+        }
+      }
+    },
+    {
+      "source": {
+        "sourceId": "kth",
+        "url": "https://kth.se/evenemang",
+        "roundsParticipated": 0,
+        "diversifiers": [
+          "has_404s",
+          "failures_11",
+          "path_jsonld"
+        ],
+        "queueReason": "toolB(preB): [breadth] unclear (0 likely, 0 possible) — Inga tydliga API:er hittades. 0 404s, 18 fel. Fler mönster kan finnas.. But: API structure attempted (18 errors) but no usable endpoints found. GotEvent lesson: API structure ≠ usable event data. Routing to HTML.",
+        "enrichedData": {
+          "lastPathUsed": "jsonld",
+          "lastEventsFound": 0,
+          "consecutiveFailures": 11,
+          "triageResult": null
+        }
+      },
+      "decision": "postTestC-manual-review",
+      "result": {
+        "sourceId": "kth",
+        "sourceUrl": "https://kth.se/evenemang",
+        "winningStage": "C3",
+        "outcomeType": "fail",
+        "routeSuggestion": "manual-review",
+        "evidence": "fetch error: HTTP 404",
+        "roundNumber": 1,
+        "success": false,
+        "exitReason": "FETCH_ERROR",
+        "exitReasonDetail": "fetch failed: HTTP 404",
+        "effectiveProcessingUrl": "https://kth.se/evenemang",
+        "effectiveProcessingUrlReason": "url-variant",
+        "c0": {
+          "candidates": 0,
+          "winnerUrl": null,
+          "winnerDensity": 0,
+          "duration": 612,
+          "rootFallback": false,
+          "ruleAppliedSource": "none",
+          "ruleAppliedPaths": [],
+          "ruleWinnerPath": null
+        },
+        "c1": {
+          "verdict": "unfetchable",
+          "likelyJsRendered": false,
+          "timeTagCount": 0,
+          "dateCount": 0,
+          "duration": 309,
+          "htmlBytes": 0,
+          "fetchable": false,
+          "fetchError": "HTTP 404",
+          "bestSubpageFound": null,
+          "subpagesTested": []
+        },
+        "c2": {
+          "verdict": "unclear",
+          "score": 0,
+          "reason": "fetchHtml failed: HTTP 404",
+          "duration": 321,
+          "htmlBytes": 0
+        },
+        "c3": {
+          "universalEventsFound": 0,
+          "universalMethodsUsed": [
+            "universal-extractor"
+          ],
+          "universalMethodBreakdown": {},
+          "duration": 0
+        },
+        "extract": {
+          "eventsFound": 0,
+          "duration": 0,
+          "htmlSize": 0,
+          "extractedEvents": []
+        },
+        "trace": {
+          "sourceId": "kth",
+          "sourceUrl": "https://kth.se/evenemang",
+          "round": 1,
+          "c0Candidates": 0,
+          "c0WinnerUrl": null,
+          "c0WinnerDensity": 0,
+          "c0RuleSource": "none",
+          "c0RulePathsTested": [],
+          "c0RuleWinnerPath": null,
+          "effectiveUrl": "https://kth.se/evenemang",
+          "effectiveUrlReason": "url-variant",
+          "c1Verdict": "unfetchable",
+          "c1LikelyJsRendered": false,
+          "c1TimeTagCount": 0,
+          "c1DateCount": 0,
+          "c1HtmlBytes": 0,
+          "c1Fetchable": false,
+          "c1FetchError": "HTTP 404",
+          "c1BestSubpageFound": null,
+          "c1SubpagesTested": [],
+          "c2Verdict": "unclear",
+          "c2Score": 0,
+          "c2Reason": "fetchHtml failed: HTTP 404",
+          "c2HtmlBytes": 0,
+          "c3EventsFound": 0,
+          "c3MethodsUsed": [
+            "universal-extractor"
+          ],
+          "c3MethodBreakdown": {},
+          "eventsFound": 0,
+          "outcomeType": "fail",
+          "routeSuggestion": "manual-review",
+          "exitReason": "FETCH_ERROR",
+          "exitReasonDetail": "fetch failed: HTTP 404",
+          "winningStage": "C3",
+          "success": false,
+          "derivedRuleApplied": false
+        }
+      }
+    },
+    {
+      "source": {
+        "sourceId": "fyrfaderna",
+        "url": "https://fyrfaderna.se/",
+        "roundsParticipated": 0,
+        "diversifiers": [
+          "has_404s",
+          "failures_11",
+          "path_jsonld"
+        ],
+        "queueReason": "toolB(preB): [breadth] unclear (0 likely, 0 possible) — Inga tydliga API:er hittades. 0 404s, 18 fel. Fler mönster kan finnas.. But: API structure attempted (18 errors) but no usable endpoints found. GotEvent lesson: API structure ≠ usable event data. Routing to HTML.",
+        "enrichedData": {
+          "lastPathUsed": "jsonld",
+          "lastEventsFound": 0,
+          "consecutiveFailures": 11,
+          "triageResult": null
+        }
+      },
+      "decision": "postTestC-manual-review",
+      "result": {
+        "sourceId": "fyrfaderna",
+        "sourceUrl": "https://fyrfaderna.se/",
+        "winningStage": "C3",
+        "outcomeType": "fail",
+        "routeSuggestion": "manual-review",
+        "evidence": "fetch error: getaddrinfo ENOTFOUND fyrfaderna.se",
+        "roundNumber": 1,
+        "success": false,
+        "exitReason": "FETCH_ERROR",
+        "exitReasonDetail": "fetch failed: getaddrinfo ENOTFOUND fyrfaderna.se",
+        "effectiveProcessingUrl": "https://fyrfaderna.se/",
+        "effectiveProcessingUrlReason": "url-variant",
+        "c0": {
+          "candidates": 0,
+          "winnerUrl": null,
+          "winnerDensity": 0,
+          "duration": 3,
+          "rootFallback": false,
+          "ruleAppliedSource": "none",
+          "ruleAppliedPaths": [],
+          "ruleWinnerPath": null
+        },
+        "c1": {
+          "verdict": "unfetchable",
+          "likelyJsRendered": false,
+          "timeTagCount": 0,
+          "dateCount": 0,
+          "duration": 3,
+          "htmlBytes": 0,
+          "fetchable": false,
+          "fetchError": "getaddrinfo ENOTFOUND fyrfaderna.se",
+          "bestSubpageFound": null,
+          "subpagesTested": []
+        },
+        "c2": {
+          "verdict": "unclear",
+          "score": 0,
+          "reason": "fetchHtml failed: getaddrinfo ENOTFOUND fyrfaderna.se",
+          "duration": 2,
+          "htmlBytes": 0
+        },
+        "c3": {
+          "universalEventsFound": 0,
+          "universalMethodsUsed": [
+            "universal-extractor"
+          ],
+          "universalMethodBreakdown": {},
+          "duration": 0
+        },
+        "extract": {
+          "eventsFound": 0,
+          "duration": 0,
+          "htmlSize": 0,
+          "extractedEvents": []
+        },
+        "trace": {
+          "sourceId": "fyrfaderna",
+          "sourceUrl": "https://fyrfaderna.se/",
+          "round": 1,
+          "c0Candidates": 0,
+          "c0WinnerUrl": null,
+          "c0WinnerDensity": 0,
+          "c0RuleSource": "none",
+          "c0RulePathsTested": [],
+          "c0RuleWinnerPath": null,
+          "effectiveUrl": "https://fyrfaderna.se/",
+          "effectiveUrlReason": "url-variant",
+          "c1Verdict": "unfetchable",
+          "c1LikelyJsRendered": false,
+          "c1TimeTagCount": 0,
+          "c1DateCount": 0,
+          "c1HtmlBytes": 0,
+          "c1Fetchable": false,
+          "c1FetchError": "getaddrinfo ENOTFOUND fyrfaderna.se",
+          "c1BestSubpageFound": null,
+          "c1SubpagesTested": [],
+          "c2Verdict": "unclear",
+          "c2Score": 0,
+          "c2Reason": "fetchHtml failed: getaddrinfo ENOTFOUND fyrfaderna.se",
+          "c2HtmlBytes": 0,
+          "c3EventsFound": 0,
+          "c3MethodsUsed": [
+            "universal-extractor"
+          ],
+          "c3MethodBreakdown": {},
+          "eventsFound": 0,
+          "outcomeType": "fail",
+          "routeSuggestion": "manual-review",
+          "exitReason": "FETCH_ERROR",
+          "exitReasonDetail": "fetch failed: getaddrinfo ENOTFOUND fyrfaderna.se",
+          "winningStage": "C3",
+          "success": false,
+          "derivedRuleApplied": false
+        }
+      }
+    },
+    {
+      "source": {
+        "sourceId": "dalarna",
+        "url": "https://dalarna.se/",
+        "roundsParticipated": 0,
+        "diversifiers": [
+          "has_404s",
+          "failures_11",
+          "path_jsonld"
+        ],
+        "queueReason": "toolB(preB): [breadth] unclear (0 likely, 0 possible) — Inga tydliga API:er hittades. 0 404s, 18 fel. Fler mönster kan finnas.. But: API structure attempted (18 errors) but no usable endpoints found. GotEvent lesson: API structure ≠ usable event data. Routing to HTML.",
+        "enrichedData": {
+          "lastPathUsed": "jsonld",
+          "lastEventsFound": 0,
+          "consecutiveFailures": 11,
+          "triageResult": null
+        }
+      },
+      "decision": "postTestC-manual-review",
+      "result": {
+        "sourceId": "dalarna",
+        "sourceUrl": "https://dalarna.se/",
+        "winningStage": "C3",
+        "outcomeType": "fail",
+        "routeSuggestion": "manual-review",
+        "evidence": "fetch error: write EPROTO 80A0680102000000:error:0A000458:SSL routines:ssl3_read_bytes:tlsv1 unrecognized name:ssl/record/rec_layer_s3.c:918:SSL alert number 112\n",
+        "roundNumber": 1,
+        "success": false,
+        "exitReason": "FETCH_ERROR",
+        "exitReasonDetail": "fetch failed: write EPROTO 80A0680102000000:error:0A000458:SSL routines:ssl3_read_bytes:tlsv1 unrecognized name:ssl/record/rec_layer_s3.c:918:SSL alert number 112\n",
+        "effectiveProcessingUrl": "https://dalarna.se/",
+        "effectiveProcessingUrlReason": "url-variant",
+        "c0": {
+          "candidates": 0,
+          "winnerUrl": null,
+          "winnerDensity": 0,
+          "duration": 88,
+          "rootFallback": false,
+          "ruleAppliedSource": "none",
+          "ruleAppliedPaths": [],
+          "ruleWinnerPath": null
+        },
+        "c1": {
+          "verdict": "unfetchable",
+          "likelyJsRendered": false,
+          "timeTagCount": 0,
+          "dateCount": 0,
+          "duration": 598,
+          "htmlBytes": 0,
+          "fetchable": false,
+          "fetchError": "write EPROTO 80A0680102000000:error:0A000458:SSL routines:ssl3_read_bytes:tlsv1 unrecognized name:ssl/record/rec_layer_s3.c:918:SSL alert number 112\n",
+          "bestSubpageFound": null,
+          "subpagesTested": [
+            "https://dalarna.se/events",
+            "https://dalarna.se/program",
+            "https://dalarna.se/kalender",
+            "https://dalarna.se/schema"
+          ]
+        },
+        "c2": {
+          "verdict": "unclear",
+          "score": 0,
+          "reason": "fetchHtml failed: write EPROTO 80A0680102000000:error:0A000458:SSL routines:ssl3_read_bytes:tlsv1 unrecognized name:ssl/record/rec_layer_s3.c:918:SSL alert number 112\n",
+          "duration": 140,
+          "htmlBytes": 0
+        },
+        "c3": {
+          "universalEventsFound": 0,
+          "universalMethodsUsed": [
+            "universal-extractor"
+          ],
+          "universalMethodBreakdown": {},
+          "duration": 0
+        },
+        "extract": {
+          "eventsFound": 0,
+          "duration": 0,
+          "htmlSize": 0,
+          "extractedEvents": []
+        },
+        "trace": {
+          "sourceId": "dalarna",
+          "sourceUrl": "https://dalarna.se/",
+          "round": 1,
+          "c0Candidates": 0,
+          "c0WinnerUrl": null,
+          "c0WinnerDensity": 0,
+          "c0RuleSource": "none",
+          "c0RulePathsTested": [],
+          "c0RuleWinnerPath": null,
+          "effectiveUrl": "https://dalarna.se/",
+          "effectiveUrlReason": "url-variant",
+          "c1Verdict": "unfetchable",
+          "c1LikelyJsRendered": false,
+          "c1TimeTagCount": 0,
+          "c1DateCount": 0,
+          "c1HtmlBytes": 0,
+          "c1Fetchable": false,
+          "c1FetchError": "write EPROTO 80A0680102000000:error:0A000458:SSL routines:ssl3_read_bytes:tlsv1 unrecognized name:ssl/record/rec_layer_s3.c:918:SSL alert number 112\n",
+          "c1BestSubpageFound": null,
+          "c1SubpagesTested": [
+            "https://dalarna.se/events",
+            "https://dalarna.se/program",
+            "https://dalarna.se/kalender",
+            "https://dalarna.se/schema"
+          ],
+          "c2Verdict": "unclear",
+          "c2Score": 0,
+          "c2Reason": "fetchHtml failed: write EPROTO 80A0680102000000:error:0A000458:SSL routines:ssl3_read_bytes:tlsv1 unrecognized name:ssl/record/rec_layer_s3.c:918:SSL alert number 112\n",
+          "c2HtmlBytes": 0,
+          "c3EventsFound": 0,
+          "c3MethodsUsed": [
+            "universal-extractor"
+          ],
+          "c3MethodBreakdown": {},
+          "eventsFound": 0,
+          "outcomeType": "fail",
+          "routeSuggestion": "manual-review",
+          "exitReason": "FETCH_ERROR",
+          "exitReasonDetail": "fetch failed: write EPROTO 80A0680102000000:error:0A000458:SSL routines:ssl3_read_bytes:tlsv1 unrecognized name:ssl/record/rec_layer_s3.c:918:SSL alert number 112\n",
+          "winningStage": "C3",
+          "success": false,
+          "derivedRuleApplied": false
+        }
+      }
+    },
+    {
+      "source": {
+        "sourceId": "masthuggskyrkan",
+        "url": "https://masthuggskyrkan.se/",
+        "roundsParticipated": 0,
+        "diversifiers": [
+          "has_404s",
+          "failures_9",
+          "path_jsonld"
+        ],
+        "queueReason": "toolB(preB): [breadth] unclear (0 likely, 0 possible) — Inga tydliga API:er hittades. 0 404s, 18 fel. Fler mönster kan finnas.. But: API structure attempted (18 errors) but no usable endpoints found. GotEvent lesson: API structure ≠ usable event data. Routing to HTML.",
+        "enrichedData": {
+          "lastPathUsed": "jsonld",
+          "lastEventsFound": 0,
+          "consecutiveFailures": 9,
+          "triageResult": null
+        }
+      },
+      "decision": "postTestC-manual-review",
+      "result": {
+        "sourceId": "masthuggskyrkan",
+        "sourceUrl": "https://masthuggskyrkan.se/",
+        "winningStage": "C3",
+        "outcomeType": "fail",
+        "routeSuggestion": "manual-review",
+        "evidence": "fetch error: getaddrinfo ENOTFOUND masthuggskyrkan.se",
+        "roundNumber": 1,
+        "success": false,
+        "exitReason": "FETCH_ERROR",
+        "exitReasonDetail": "fetch failed: getaddrinfo ENOTFOUND masthuggskyrkan.se",
+        "effectiveProcessingUrl": "https://masthuggskyrkan.se/",
+        "effectiveProcessingUrlReason": "url-variant",
+        "c0": {
+          "candidates": 0,
+          "winnerUrl": null,
+          "winnerDensity": 0,
+          "duration": 4,
+          "rootFallback": false,
+          "ruleAppliedSource": "none",
+          "ruleAppliedPaths": [],
+          "ruleWinnerPath": null
+        },
+        "c1": {
+          "verdict": "unfetchable",
+          "likelyJsRendered": false,
+          "timeTagCount": 0,
+          "dateCount": 0,
+          "duration": 2,
+          "htmlBytes": 0,
+          "fetchable": false,
+          "fetchError": "getaddrinfo ENOTFOUND masthuggskyrkan.se",
+          "bestSubpageFound": null,
+          "subpagesTested": []
+        },
+        "c2": {
+          "verdict": "unclear",
+          "score": 0,
+          "reason": "fetchHtml failed: getaddrinfo ENOTFOUND masthuggskyrkan.se",
+          "duration": 3,
+          "htmlBytes": 0
+        },
+        "c3": {
+          "universalEventsFound": 0,
+          "universalMethodsUsed": [
+            "universal-extractor"
+          ],
+          "universalMethodBreakdown": {},
+          "duration": 0
+        },
+        "extract": {
+          "eventsFound": 0,
+          "duration": 0,
+          "htmlSize": 0,
+          "extractedEvents": []
+        },
+        "trace": {
+          "sourceId": "masthuggskyrkan",
+          "sourceUrl": "https://masthuggskyrkan.se/",
+          "round": 1,
+          "c0Candidates": 0,
+          "c0WinnerUrl": null,
+          "c0WinnerDensity": 0,
+          "c0RuleSource": "none",
+          "c0RulePathsTested": [],
+          "c0RuleWinnerPath": null,
+          "effectiveUrl": "https://masthuggskyrkan.se/",
+          "effectiveUrlReason": "url-variant",
+          "c1Verdict": "unfetchable",
+          "c1LikelyJsRendered": false,
+          "c1TimeTagCount": 0,
+          "c1DateCount": 0,
+          "c1HtmlBytes": 0,
+          "c1Fetchable": false,
+          "c1FetchError": "getaddrinfo ENOTFOUND masthuggskyrkan.se",
+          "c1BestSubpageFound": null,
+          "c1SubpagesTested": [],
+          "c2Verdict": "unclear",
+          "c2Score": 0,
+          "c2Reason": "fetchHtml failed: getaddrinfo ENOTFOUND masthuggskyrkan.se",
+          "c2HtmlBytes": 0,
+          "c3EventsFound": 0,
+          "c3MethodsUsed": [
+            "universal-extractor"
+          ],
+          "c3MethodBreakdown": {},
+          "eventsFound": 0,
+          "outcomeType": "fail",
+          "routeSuggestion": "manual-review",
+          "exitReason": "FETCH_ERROR",
+          "exitReasonDetail": "fetch failed: getaddrinfo ENOTFOUND masthuggskyrkan.se",
+          "winningStage": "C3",
+          "success": false,
+          "derivedRuleApplied": false
+        }
+      }
+    },
+    {
+      "source": {
+        "sourceId": "trollhattan",
+        "url": "https://trollhattan.se/",
+        "roundsParticipated": 0,
+        "diversifiers": [
+          "has_404s",
+          "errors_18",
+          "failures_9",
+          "path_jsonld"
+        ],
+        "queueReason": "toolB(preB): [breadth] unclear (0 likely, 0 possible) — Inga tydliga API:er hittades. 18 404s, 18 fel. Fler mönster kan finnas.. But: No network/API signals detected. GotEvent lesson: API structure ≠ usable event data. Routing to HTML.",
+        "enrichedData": {
+          "lastPathUsed": "jsonld",
+          "lastEventsFound": 0,
+          "consecutiveFailures": 9,
+          "triageResult": null
+        }
+      },
+      "decision": "postTestC-manual-review",
+      "result": {
+        "sourceId": "trollhattan",
+        "sourceUrl": "https://trollhattan.se/",
+        "winningStage": "C3",
+        "outcomeType": "fail",
+        "routeSuggestion": "manual-review",
+        "evidence": "fetch error: Exceeded 3 redirects",
+        "roundNumber": 1,
+        "success": false,
+        "exitReason": "FETCH_ERROR",
+        "exitReasonDetail": "fetch failed: Exceeded 3 redirects",
+        "effectiveProcessingUrl": "https://trollhattan.se/",
+        "effectiveProcessingUrlReason": "url-variant",
+        "c0": {
+          "candidates": 0,
+          "winnerUrl": null,
+          "winnerDensity": 0,
+          "duration": 655,
+          "rootFallback": false,
+          "ruleAppliedSource": "none",
+          "ruleAppliedPaths": [],
+          "ruleWinnerPath": null
+        },
+        "c1": {
+          "verdict": "unfetchable",
+          "likelyJsRendered": false,
+          "timeTagCount": 0,
+          "dateCount": 0,
+          "duration": 109,
+          "htmlBytes": 0,
+          "fetchable": false,
+          "fetchError": "Exceeded 3 redirects",
+          "bestSubpageFound": null,
+          "subpagesTested": []
+        },
+        "c2": {
+          "verdict": "unclear",
+          "score": 0,
+          "reason": "fetchHtml failed: Exceeded 3 redirects",
+          "duration": 137,
+          "htmlBytes": 0
+        },
+        "c3": {
+          "universalEventsFound": 0,
+          "universalMethodsUsed": [
+            "universal-extractor"
+          ],
+          "universalMethodBreakdown": {},
+          "duration": 0
+        },
+        "extract": {
+          "eventsFound": 0,
+          "duration": 0,
+          "htmlSize": 0,
+          "extractedEvents": []
+        },
+        "trace": {
+          "sourceId": "trollhattan",
+          "sourceUrl": "https://trollhattan.se/",
+          "round": 1,
+          "c0Candidates": 0,
+          "c0WinnerUrl": null,
+          "c0WinnerDensity": 0,
+          "c0RuleSource": "none",
+          "c0RulePathsTested": [],
+          "c0RuleWinnerPath": null,
+          "effectiveUrl": "https://trollhattan.se/",
+          "effectiveUrlReason": "url-variant",
+          "c1Verdict": "unfetchable",
+          "c1LikelyJsRendered": false,
+          "c1TimeTagCount": 0,
+          "c1DateCount": 0,
+          "c1HtmlBytes": 0,
+          "c1Fetchable": false,
+          "c1FetchError": "Exceeded 3 redirects",
+          "c1BestSubpageFound": null,
+          "c1SubpagesTested": [],
+          "c2Verdict": "unclear",
+          "c2Score": 0,
+          "c2Reason": "fetchHtml failed: Exceeded 3 redirects",
+          "c2HtmlBytes": 0,
+          "c3EventsFound": 0,
+          "c3MethodsUsed": [
+            "universal-extractor"
+          ],
+          "c3MethodBreakdown": {},
+          "eventsFound": 0,
+          "outcomeType": "fail",
+          "routeSuggestion": "manual-review",
+          "exitReason": "FETCH_ERROR",
+          "exitReasonDetail": "fetch failed: Exceeded 3 redirects",
+          "winningStage": "C3",
+          "success": false,
+          "derivedRuleApplied": false
+        }
+      }
+    },
+    {
+      "source": {
+        "sourceId": "malmo-massan",
+        "url": "https://malmömässan.se/",
+        "roundsParticipated": 0,
+        "diversifiers": [
+          "has_404s",
+          "failures_9",
+          "path_jsonld"
+        ],
+        "queueReason": "toolB(preB): [breadth] unclear (0 likely, 0 possible) — Inga tydliga API:er hittades. 0 404s, 18 fel. Fler mönster kan finnas.. But: API structure attempted (18 errors) but no usable endpoints found. GotEvent lesson: API structure ≠ usable event data. Routing to HTML.",
+        "enrichedData": {
+          "lastPathUsed": "jsonld",
+          "lastEventsFound": 0,
+          "consecutiveFailures": 9,
+          "triageResult": null
+        }
+      },
+      "decision": "postTestC-manual-review",
+      "result": {
+        "sourceId": "malmo-massan",
+        "sourceUrl": "https://malmömässan.se/",
+        "winningStage": "C3",
+        "outcomeType": "fail",
+        "routeSuggestion": "manual-review",
+        "evidence": "fetch error: connect ECONNREFUSED 217.70.184.38:443",
+        "roundNumber": 1,
+        "success": false,
+        "exitReason": "FETCH_ERROR",
+        "exitReasonDetail": "fetch failed: connect ECONNREFUSED 217.70.184.38:443",
+        "effectiveProcessingUrl": "https://malmömässan.se/",
+        "effectiveProcessingUrlReason": "url-variant",
+        "c0": {
+          "candidates": 0,
+          "winnerUrl": null,
+          "winnerDensity": 0,
+          "duration": 70,
+          "rootFallback": false,
+          "ruleAppliedSource": "none",
+          "ruleAppliedPaths": [],
+          "ruleWinnerPath": null
+        },
+        "c1": {
+          "verdict": "unfetchable",
+          "likelyJsRendered": false,
+          "timeTagCount": 0,
+          "dateCount": 0,
+          "duration": 102,
+          "htmlBytes": 0,
+          "fetchable": false,
+          "fetchError": "connect ECONNREFUSED 217.70.184.38:443",
+          "bestSubpageFound": null,
+          "subpagesTested": []
+        },
+        "c2": {
+          "verdict": "unclear",
+          "score": 0,
+          "reason": "fetchHtml failed: connect ECONNREFUSED 217.70.184.38:443",
+          "duration": 74,
+          "htmlBytes": 0
+        },
+        "c3": {
+          "universalEventsFound": 0,
+          "universalMethodsUsed": [
+            "universal-extractor"
+          ],
+          "universalMethodBreakdown": {},
+          "duration": 0
+        },
+        "extract": {
+          "eventsFound": 0,
+          "duration": 0,
+          "htmlSize": 0,
+          "extractedEvents": []
+        },
+        "trace": {
+          "sourceId": "malmo-massan",
+          "sourceUrl": "https://malmömässan.se/",
+          "round": 1,
+          "c0Candidates": 0,
+          "c0WinnerUrl": null,
+          "c0WinnerDensity": 0,
+          "c0RuleSource": "none",
+          "c0RulePathsTested": [],
+          "c0RuleWinnerPath": null,
+          "effectiveUrl": "https://malmömässan.se/",
+          "effectiveUrlReason": "url-variant",
+          "c1Verdict": "unfetchable",
+          "c1LikelyJsRendered": false,
+          "c1TimeTagCount": 0,
+          "c1DateCount": 0,
+          "c1HtmlBytes": 0,
+          "c1Fetchable": false,
+          "c1FetchError": "connect ECONNREFUSED 217.70.184.38:443",
+          "c1BestSubpageFound": null,
+          "c1SubpagesTested": [],
+          "c2Verdict": "unclear",
+          "c2Score": 0,
+          "c2Reason": "fetchHtml failed: connect ECONNREFUSED 217.70.184.38:443",
+          "c2HtmlBytes": 0,
+          "c3EventsFound": 0,
+          "c3MethodsUsed": [
+            "universal-extractor"
+          ],
+          "c3MethodBreakdown": {},
+          "eventsFound": 0,
+          "outcomeType": "fail",
+          "routeSuggestion": "manual-review",
+          "exitReason": "FETCH_ERROR",
+          "exitReasonDetail": "fetch failed: connect ECONNREFUSED 217.70.184.38:443",
+          "winningStage": "C3",
+          "success": false,
+          "derivedRuleApplied": false
+        }
+      }
+    },
+    {
+      "source": {
+        "sourceId": "norrkoping-art",
+        "url": "https://norrkopingart.se/",
+        "roundsParticipated": 0,
+        "diversifiers": [
+          "has_404s",
+          "failures_9",
+          "path_jsonld"
+        ],
+        "queueReason": "toolB(preB): [breadth] unclear (0 likely, 0 possible) — Inga tydliga API:er hittades. 0 404s, 18 fel. Fler mönster kan finnas.. But: API structure attempted (18 errors) but no usable endpoints found. GotEvent lesson: API structure ≠ usable event data. Routing to HTML.",
+        "enrichedData": {
+          "lastPathUsed": "jsonld",
+          "lastEventsFound": 0,
+          "consecutiveFailures": 9,
+          "triageResult": null
+        }
+      },
+      "decision": "postTestC-manual-review",
+      "result": {
+        "sourceId": "norrkoping-art",
+        "sourceUrl": "https://norrkopingart.se/",
+        "winningStage": "C3",
+        "outcomeType": "fail",
+        "routeSuggestion": "manual-review",
+        "evidence": "fetch error: getaddrinfo ENOTFOUND norrkopingart.se",
+        "roundNumber": 1,
+        "success": false,
+        "exitReason": "FETCH_ERROR",
+        "exitReasonDetail": "fetch failed: getaddrinfo ENOTFOUND norrkopingart.se",
+        "effectiveProcessingUrl": "https://norrkopingart.se/",
+        "effectiveProcessingUrlReason": "url-variant",
+        "c0": {
+          "candidates": 0,
+          "winnerUrl": null,
+          "winnerDensity": 0,
+          "duration": 4,
+          "rootFallback": false,
+          "ruleAppliedSource": "none",
+          "ruleAppliedPaths": [],
+          "ruleWinnerPath": null
+        },
+        "c1": {
+          "verdict": "unfetchable",
+          "likelyJsRendered": false,
+          "timeTagCount": 0,
+          "dateCount": 0,
+          "duration": 2,
+          "htmlBytes": 0,
+          "fetchable": false,
+          "fetchError": "getaddrinfo ENOTFOUND norrkopingart.se",
+          "bestSubpageFound": null,
+          "subpagesTested": []
+        },
+        "c2": {
+          "verdict": "unclear",
+          "score": 0,
+          "reason": "fetchHtml failed: getaddrinfo ENOTFOUND norrkopingart.se",
+          "duration": 2,
+          "htmlBytes": 0
+        },
+        "c3": {
+          "universalEventsFound": 0,
+          "universalMethodsUsed": [
+            "universal-extractor"
+          ],
+          "universalMethodBreakdown": {},
+          "duration": 0
+        },
+        "extract": {
+          "eventsFound": 0,
+          "duration": 0,
+          "htmlSize": 0,
+          "extractedEvents": []
+        },
+        "trace": {
+          "sourceId": "norrkoping-art",
+          "sourceUrl": "https://norrkopingart.se/",
+          "round": 1,
+          "c0Candidates": 0,
+          "c0WinnerUrl": null,
+          "c0WinnerDensity": 0,
+          "c0RuleSource": "none",
+          "c0RulePathsTested": [],
+          "c0RuleWinnerPath": null,
+          "effectiveUrl": "https://norrkopingart.se/",
+          "effectiveUrlReason": "url-variant",
+          "c1Verdict": "unfetchable",
+          "c1LikelyJsRendered": false,
+          "c1TimeTagCount": 0,
+          "c1DateCount": 0,
+          "c1HtmlBytes": 0,
+          "c1Fetchable": false,
+          "c1FetchError": "getaddrinfo ENOTFOUND norrkopingart.se",
+          "c1BestSubpageFound": null,
+          "c1SubpagesTested": [],
+          "c2Verdict": "unclear",
+          "c2Score": 0,
+          "c2Reason": "fetchHtml failed: getaddrinfo ENOTFOUND norrkopingart.se",
+          "c2HtmlBytes": 0,
+          "c3EventsFound": 0,
+          "c3MethodsUsed": [
+            "universal-extractor"
+          ],
+          "c3MethodBreakdown": {},
+          "eventsFound": 0,
+          "outcomeType": "fail",
+          "routeSuggestion": "manual-review",
+          "exitReason": "FETCH_ERROR",
+          "exitReasonDetail": "fetch failed: getaddrinfo ENOTFOUND norrkopingart.se",
+          "winningStage": "C3",
+          "success": false,
+          "derivedRuleApplied": false
+        }
+      }
+    },
+    {
+      "source": {
+        "sourceId": "kungstradgarden",
+        "url": "https://kungstradgarden.se/",
+        "roundsParticipated": 0,
+        "diversifiers": [
+          "has_404s",
+          "failures_9",
+          "path_jsonld"
+        ],
+        "queueReason": "toolB(preB): [breadth] unclear (0 likely, 0 possible) — Inga tydliga API:er hittades. 0 404s, 18 fel. Fler mönster kan finnas.. But: API structure attempted (18 errors) but no usable endpoints found. GotEvent lesson: API structure ≠ usable event data. Routing to HTML.",
+        "enrichedData": {
+          "lastPathUsed": "jsonld",
+          "lastEventsFound": 0,
+          "consecutiveFailures": 9,
+          "triageResult": null
+        }
+      },
+      "decision": "postTestC-manual-review",
+      "result": {
+        "sourceId": "kungstradgarden",
+        "sourceUrl": "https://kungstradgarden.se/",
+        "winningStage": "C3",
+        "outcomeType": "fail",
+        "routeSuggestion": "manual-review",
+        "evidence": "fetch error: timeout of 15000ms exceeded",
+        "roundNumber": 1,
+        "success": false,
+        "exitReason": "FETCH_ERROR",
+        "exitReasonDetail": "fetch failed: timeout of 15000ms exceeded",
+        "effectiveProcessingUrl": "https://kungstradgarden.se/",
+        "effectiveProcessingUrlReason": "url-variant",
+        "c0": {
+          "candidates": 0,
+          "winnerUrl": null,
+          "winnerDensity": 0,
+          "duration": 5004,
+          "rootFallback": false,
+          "ruleAppliedSource": "none",
+          "ruleAppliedPaths": [],
+          "ruleWinnerPath": null
+        },
+        "c1": {
+          "verdict": "unfetchable",
+          "likelyJsRendered": false,
+          "timeTagCount": 0,
+          "dateCount": 0,
+          "duration": 5005,
+          "htmlBytes": 0,
+          "fetchable": false,
+          "fetchError": "timeout of 15000ms exceeded",
+          "bestSubpageFound": null,
+          "subpagesTested": []
+        },
+        "c2": {
+          "verdict": "unclear",
+          "score": 0,
+          "reason": "fetchHtml failed: timeout of 20000ms exceeded",
+          "duration": 5004,
+          "htmlBytes": 0
+        },
+        "c3": {
+          "universalEventsFound": 0,
+          "universalMethodsUsed": [
+            "universal-extractor"
+          ],
+          "universalMethodBreakdown": {},
+          "duration": 0
+        },
+        "extract": {
+          "eventsFound": 0,
+          "duration": 0,
+          "htmlSize": 0,
+          "extractedEvents": []
+        },
+        "trace": {
+          "sourceId": "kungstradgarden",
+          "sourceUrl": "https://kungstradgarden.se/",
+          "round": 1,
+          "c0Candidates": 0,
+          "c0WinnerUrl": null,
+          "c0WinnerDensity": 0,
+          "c0RuleSource": "none",
+          "c0RulePathsTested": [],
+          "c0RuleWinnerPath": null,
+          "effectiveUrl": "https://kungstradgarden.se/",
+          "effectiveUrlReason": "url-variant",
+          "c1Verdict": "unfetchable",
+          "c1LikelyJsRendered": false,
+          "c1TimeTagCount": 0,
+          "c1DateCount": 0,
+          "c1HtmlBytes": 0,
+          "c1Fetchable": false,
+          "c1FetchError": "timeout of 15000ms exceeded",
+          "c1BestSubpageFound": null,
+          "c1SubpagesTested": [],
+          "c2Verdict": "unclear",
+          "c2Score": 0,
+          "c2Reason": "fetchHtml failed: timeout of 20000ms exceeded",
+          "c2HtmlBytes": 0,
+          "c3EventsFound": 0,
+          "c3MethodsUsed": [
+            "universal-extractor"
+          ],
+          "c3MethodBreakdown": {},
+          "eventsFound": 0,
+          "outcomeType": "fail",
+          "routeSuggestion": "manual-review",
+          "exitReason": "FETCH_ERROR",
+          "exitReasonDetail": "fetch failed: timeout of 15000ms exceeded",
+          "winningStage": "C3",
+          "success": false,
+          "derivedRuleApplied": false
+        }
+      }
+    },
+    {
+      "source": {
+        "sourceId": "brommapojkarna",
+        "url": "https://bpxf.se/",
+        "roundsParticipated": 0,
+        "diversifiers": [
+          "has_404s",
+          "failures_11",
+          "path_jsonld"
+        ],
+        "queueReason": "toolB(preB): [breadth] unclear (0 likely, 0 possible) — Inga tydliga API:er hittades. 0 404s, 18 fel. Fler mönster kan finnas.. But: API structure attempted (18 errors) but no usable endpoints found. GotEvent lesson: API structure ≠ usable event data. Routing to HTML.",
+        "enrichedData": {
+          "lastPathUsed": "jsonld",
+          "lastEventsFound": 0,
+          "consecutiveFailures": 11,
+          "triageResult": null
+        }
+      },
+      "decision": "postTestC-manual-review",
+      "result": {
+        "sourceId": "brommapojkarna",
+        "sourceUrl": "https://bpxf.se/",
+        "winningStage": "C3",
+        "outcomeType": "fail",
+        "routeSuggestion": "manual-review",
+        "evidence": "fetch error: getaddrinfo ENOTFOUND bpxf.se",
+        "roundNumber": 1,
+        "success": false,
+        "exitReason": "FETCH_ERROR",
+        "exitReasonDetail": "fetch failed: getaddrinfo ENOTFOUND bpxf.se",
+        "effectiveProcessingUrl": "https://bpxf.se/",
+        "effectiveProcessingUrlReason": "url-variant",
+        "c0": {
+          "candidates": 0,
+          "winnerUrl": null,
+          "winnerDensity": 0,
+          "duration": 4,
+          "rootFallback": false,
+          "ruleAppliedSource": "none",
+          "ruleAppliedPaths": [],
+          "ruleWinnerPath": null
+        },
+        "c1": {
+          "verdict": "unfetchable",
+          "likelyJsRendered": false,
+          "timeTagCount": 0,
+          "dateCount": 0,
+          "duration": 12,
+          "htmlBytes": 0,
+          "fetchable": false,
+          "fetchError": "getaddrinfo ENOTFOUND bpxf.se",
+          "bestSubpageFound": null,
+          "subpagesTested": [
+            "https://bpxf.se/events",
+            "https://bpxf.se/program",
+            "https://bpxf.se/kalender",
+            "https://bpxf.se/schema"
+          ]
+        },
+        "c2": {
+          "verdict": "unclear",
+          "score": 0,
+          "reason": "fetchHtml failed: getaddrinfo ENOTFOUND bpxf.se",
+          "duration": 2,
+          "htmlBytes": 0
+        },
+        "c3": {
+          "universalEventsFound": 0,
+          "universalMethodsUsed": [
+            "universal-extractor"
+          ],
+          "universalMethodBreakdown": {},
+          "duration": 0
+        },
+        "extract": {
+          "eventsFound": 0,
+          "duration": 0,
+          "htmlSize": 0,
+          "extractedEvents": []
+        },
+        "trace": {
+          "sourceId": "brommapojkarna",
+          "sourceUrl": "https://bpxf.se/",
+          "round": 1,
+          "c0Candidates": 0,
+          "c0WinnerUrl": null,
+          "c0WinnerDensity": 0,
+          "c0RuleSource": "none",
+          "c0RulePathsTested": [],
+          "c0RuleWinnerPath": null,
+          "effectiveUrl": "https://bpxf.se/",
+          "effectiveUrlReason": "url-variant",
+          "c1Verdict": "unfetchable",
+          "c1LikelyJsRendered": false,
+          "c1TimeTagCount": 0,
+          "c1DateCount": 0,
+          "c1HtmlBytes": 0,
+          "c1Fetchable": false,
+          "c1FetchError": "getaddrinfo ENOTFOUND bpxf.se",
+          "c1BestSubpageFound": null,
+          "c1SubpagesTested": [
+            "https://bpxf.se/events",
+            "https://bpxf.se/program",
+            "https://bpxf.se/kalender",
+            "https://bpxf.se/schema"
+          ],
+          "c2Verdict": "unclear",
+          "c2Score": 0,
+          "c2Reason": "fetchHtml failed: getaddrinfo ENOTFOUND bpxf.se",
+          "c2HtmlBytes": 0,
+          "c3EventsFound": 0,
+          "c3MethodsUsed": [
+            "universal-extractor"
+          ],
+          "c3MethodBreakdown": {},
+          "eventsFound": 0,
+          "outcomeType": "fail",
+          "routeSuggestion": "manual-review",
+          "exitReason": "FETCH_ERROR",
+          "exitReasonDetail": "fetch failed: getaddrinfo ENOTFOUND bpxf.se",
+          "winningStage": "C3",
+          "success": false,
+          "derivedRuleApplied": false
+        }
+      }
+    },
+    {
+      "source": {
+        "sourceId": "kumla",
+        "url": "https://kumla.se/",
+        "roundsParticipated": 0,
+        "diversifiers": [
+          "has_404s",
+          "errors_18",
+          "failures_9",
+          "path_jsonld"
+        ],
+        "queueReason": "toolB(preB): [breadth] unclear (0 likely, 0 possible) — Inga tydliga API:er hittades. 18 404s, 18 fel. Fler mönster kan finnas.. But: No network/API signals detected. GotEvent lesson: API structure ≠ usable event data. Routing to HTML.",
+        "enrichedData": {
+          "lastPathUsed": "jsonld",
+          "lastEventsFound": 0,
+          "consecutiveFailures": 9,
+          "triageResult": null
+        }
+      },
+      "decision": "postTestC-manual-review",
+      "result": {
+        "sourceId": "kumla",
+        "sourceUrl": "https://kumla.se/",
+        "winningStage": "C3",
+        "outcomeType": "fail",
+        "routeSuggestion": "Fail",
+        "evidence": "",
+        "roundNumber": 1,
+        "success": false,
+        "exitReason": "FETCH_ERROR",
+        "exitReasonDetail": "Assignment to constant variable.",
+        "effectiveProcessingUrl": "https://kumla.se/",
+        "effectiveProcessingUrlReason": "url-variant:original",
+        "c0": {
+          "candidates": 1,
+          "winnerUrl": "https://kumla.se/kommun-och-politik/agenda-2030.html",
+          "winnerDensity": 12,
+          "duration": 770,
+          "rootFallback": false,
+          "ruleAppliedSource": "link-discovery",
+          "ruleAppliedPaths": [],
+          "ruleWinnerPath": "/kommun-och-politik/agenda-2030.html"
+        },
+        "c1": {
+          "verdict": "unknown",
+          "likelyJsRendered": false,
+          "timeTagCount": 0,
+          "dateCount": 0,
+          "duration": 0,
+          "htmlBytes": 0,
+          "fetchable": false,
+          "bestSubpageFound": null,
+          "subpagesTested": []
+        },
+        "c2": {
+          "verdict": "unknown",
+          "score": 0,
+          "reason": "",
+          "duration": 0,
+          "htmlBytes": 0
+        },
+        "c3": {
+          "universalEventsFound": 0,
+          "universalMethodsUsed": [],
+          "universalMethodBreakdown": {},
+          "duration": 0
+        },
+        "extract": {
+          "eventsFound": 0,
+          "duration": 0,
+          "htmlSize": 0
+        },
+        "trace": {
+          "sourceId": "kumla",
+          "sourceUrl": "https://kumla.se/",
+          "round": 1,
+          "c0Candidates": 1,
+          "c0WinnerUrl": "https://kumla.se/kommun-och-politik/agenda-2030.html",
+          "c0WinnerDensity": 12,
+          "c0RuleSource": "link-discovery",
+          "c0RulePathsTested": [],
+          "c0RuleWinnerPath": "/kommun-och-politik/agenda-2030.html",
+          "effectiveUrl": "https://kumla.se/",
+          "effectiveUrlReason": "url-variant:original",
+          "c1Verdict": "unknown",
+          "c1LikelyJsRendered": false,
+          "c1TimeTagCount": 0,
+          "c1DateCount": 0,
+          "c1HtmlBytes": 0,
+          "c1Fetchable": false,
+          "c1BestSubpageFound": null,
+          "c1SubpagesTested": [],
+          "c2Verdict": "unknown",
+          "c2Score": 0,
+          "c2Reason": "",
+          "c2HtmlBytes": 0,
+          "c3EventsFound": 0,
+          "c3MethodsUsed": [],
+          "c3MethodBreakdown": {},
+          "eventsFound": 0,
+          "outcomeType": "fail",
+          "routeSuggestion": "Fail",
+          "exitReason": "FETCH_ERROR",
+          "exitReasonDetail": "Assignment to constant variable.",
+          "winningStage": "C3",
+          "success": false,
+          "derivedRuleApplied": false,
+          "error": "Assignment to constant variable."
+        },
+        "error": "Assignment to constant variable."
+      }
+    },
+    {
+      "source": {
+        "sourceId": "open-air",
+        "url": "https://openair.se/",
+        "roundsParticipated": 0,
+        "diversifiers": [
+          "has_404s",
+          "failures_9",
+          "path_jsonld"
+        ],
+        "queueReason": "toolB(preB): [breadth] unclear (0 likely, 0 possible) — Inga tydliga API:er hittades. 0 404s, 18 fel. Fler mönster kan finnas.. But: API structure attempted (18 errors) but no usable endpoints found. GotEvent lesson: API structure ≠ usable event data. Routing to HTML.",
+        "enrichedData": {
+          "lastPathUsed": "jsonld",
+          "lastEventsFound": 0,
+          "consecutiveFailures": 9,
+          "triageResult": null
+        }
+      },
+      "decision": "postTestC-manual-review",
+      "result": {
+        "sourceId": "open-air",
+        "sourceUrl": "https://openair.se/",
+        "winningStage": "C3",
+        "outcomeType": "fail",
+        "routeSuggestion": "manual-review",
+        "evidence": "fetch error: getaddrinfo ENOTFOUND openair.se",
+        "roundNumber": 1,
+        "success": false,
+        "exitReason": "FETCH_ERROR",
+        "exitReasonDetail": "fetch failed: getaddrinfo ENOTFOUND openair.se",
+        "effectiveProcessingUrl": "https://openair.se/",
+        "effectiveProcessingUrlReason": "url-variant",
+        "c0": {
+          "candidates": 0,
+          "winnerUrl": null,
+          "winnerDensity": 0,
+          "duration": 11,
+          "rootFallback": false,
+          "ruleAppliedSource": "none",
+          "ruleAppliedPaths": [],
+          "ruleWinnerPath": null
+        },
+        "c1": {
+          "verdict": "unfetchable",
+          "likelyJsRendered": false,
+          "timeTagCount": 0,
+          "dateCount": 0,
+          "duration": 2,
+          "htmlBytes": 0,
+          "fetchable": false,
+          "fetchError": "getaddrinfo ENOTFOUND openair.se",
+          "bestSubpageFound": null,
+          "subpagesTested": []
+        },
+        "c2": {
+          "verdict": "unclear",
+          "score": 0,
+          "reason": "fetchHtml failed: getaddrinfo ENOTFOUND openair.se",
+          "duration": 2,
+          "htmlBytes": 0
+        },
+        "c3": {
+          "universalEventsFound": 0,
+          "universalMethodsUsed": [
+            "universal-extractor"
+          ],
+          "universalMethodBreakdown": {},
+          "duration": 0
+        },
+        "extract": {
+          "eventsFound": 0,
+          "duration": 0,
+          "htmlSize": 0,
+          "extractedEvents": []
+        },
+        "trace": {
+          "sourceId": "open-air",
+          "sourceUrl": "https://openair.se/",
+          "round": 1,
+          "c0Candidates": 0,
+          "c0WinnerUrl": null,
+          "c0WinnerDensity": 0,
+          "c0RuleSource": "none",
+          "c0RulePathsTested": [],
+          "c0RuleWinnerPath": null,
+          "effectiveUrl": "https://openair.se/",
+          "effectiveUrlReason": "url-variant",
+          "c1Verdict": "unfetchable",
+          "c1LikelyJsRendered": false,
+          "c1TimeTagCount": 0,
+          "c1DateCount": 0,
+          "c1HtmlBytes": 0,
+          "c1Fetchable": false,
+          "c1FetchError": "getaddrinfo ENOTFOUND openair.se",
+          "c1BestSubpageFound": null,
+          "c1SubpagesTested": [],
+          "c2Verdict": "unclear",
+          "c2Score": 0,
+          "c2Reason": "fetchHtml failed: getaddrinfo ENOTFOUND openair.se",
+          "c2HtmlBytes": 0,
+          "c3EventsFound": 0,
+          "c3MethodsUsed": [
+            "universal-extractor"
+          ],
+          "c3MethodBreakdown": {},
+          "eventsFound": 0,
+          "outcomeType": "fail",
+          "routeSuggestion": "manual-review",
+          "exitReason": "FETCH_ERROR",
+          "exitReasonDetail": "fetch failed: getaddrinfo ENOTFOUND openair.se",
+          "winningStage": "C3",
+          "success": false,
+          "derivedRuleApplied": false
+        }
+      }
+    },
+    {
+      "source": {
+        "sourceId": "observatoriet",
+        "url": "https://observatoriet.se/",
+        "roundsParticipated": 0,
+        "diversifiers": [
+          "has_404s",
+          "failures_9",
+          "path_jsonld"
+        ],
+        "queueReason": "toolB(preB): [breadth] unclear (0 likely, 0 possible) — Inga tydliga API:er hittades. 0 404s, 18 fel. Fler mönster kan finnas.. But: API structure attempted (18 errors) but no usable endpoints found. GotEvent lesson: API structure ≠ usable event data. Routing to HTML.",
+        "enrichedData": {
+          "lastPathUsed": "jsonld",
+          "lastEventsFound": 0,
+          "consecutiveFailures": 9,
+          "triageResult": null
+        }
+      },
+      "decision": "postTestC-manual-review",
+      "result": {
+        "sourceId": "observatoriet",
+        "sourceUrl": "https://observatoriet.se/",
+        "winningStage": "C3",
+        "outcomeType": "fail",
+        "routeSuggestion": "manual-review",
+        "evidence": "fetch error: Hostname/IP does not match certificate's altnames: Host: observatoriet.se. is not in the cert's altnames: DNS:*.r103.websupport.se",
+        "roundNumber": 1,
+        "success": false,
+        "exitReason": "FETCH_ERROR",
+        "exitReasonDetail": "fetch failed: Hostname/IP does not match certificate's altnames: Host: observatoriet.se. is not in the cert's altnames: DNS:*.r103.websupport.se",
+        "effectiveProcessingUrl": "https://observatoriet.se/",
+        "effectiveProcessingUrlReason": "url-variant",
+        "c0": {
+          "candidates": 0,
+          "winnerUrl": null,
+          "winnerDensity": 0,
+          "duration": 218,
+          "rootFallback": false,
+          "ruleAppliedSource": "none",
+          "ruleAppliedPaths": [],
+          "ruleWinnerPath": null
+        },
+        "c1": {
+          "verdict": "unfetchable",
+          "likelyJsRendered": false,
+          "timeTagCount": 0,
+          "dateCount": 0,
+          "duration": 183,
+          "htmlBytes": 0,
+          "fetchable": false,
+          "fetchError": "Hostname/IP does not match certificate's altnames: Host: observatoriet.se. is not in the cert's altnames: DNS:*.r103.websupport.se",
+          "bestSubpageFound": null,
+          "subpagesTested": []
+        },
+        "c2": {
+          "verdict": "unclear",
+          "score": 0,
+          "reason": "fetchHtml failed: Hostname/IP does not match certificate's altnames: Host: observatoriet.se. is not in the cert's altnames: DNS:*.r103.websupport.se",
+          "duration": 215,
+          "htmlBytes": 0
+        },
+        "c3": {
+          "universalEventsFound": 0,
+          "universalMethodsUsed": [
+            "universal-extractor"
+          ],
+          "universalMethodBreakdown": {},
+          "duration": 0
+        },
+        "extract": {
+          "eventsFound": 0,
+          "duration": 0,
+          "htmlSize": 0,
+          "extractedEvents": []
+        },
+        "trace": {
+          "sourceId": "observatoriet",
+          "sourceUrl": "https://observatoriet.se/",
+          "round": 1,
+          "c0Candidates": 0,
+          "c0WinnerUrl": null,
+          "c0WinnerDensity": 0,
+          "c0RuleSource": "none",
+          "c0RulePathsTested": [],
+          "c0RuleWinnerPath": null,
+          "effectiveUrl": "https://observatoriet.se/",
+          "effectiveUrlReason": "url-variant",
+          "c1Verdict": "unfetchable",
+          "c1LikelyJsRendered": false,
+          "c1TimeTagCount": 0,
+          "c1DateCount": 0,
+          "c1HtmlBytes": 0,
+          "c1Fetchable": false,
+          "c1FetchError": "Hostname/IP does not match certificate's altnames: Host: observatoriet.se. is not in the cert's altnames: DNS:*.r103.websupport.se",
+          "c1BestSubpageFound": null,
+          "c1SubpagesTested": [],
+          "c2Verdict": "unclear",
+          "c2Score": 0,
+          "c2Reason": "fetchHtml failed: Hostname/IP does not match certificate's altnames: Host: observatoriet.se. is not in the cert's altnames: DNS:*.r103.websupport.se",
+          "c2HtmlBytes": 0,
+          "c3EventsFound": 0,
+          "c3MethodsUsed": [
+            "universal-extractor"
+          ],
+          "c3MethodBreakdown": {},
+          "eventsFound": 0,
+          "outcomeType": "fail",
+          "routeSuggestion": "manual-review",
+          "exitReason": "FETCH_ERROR",
+          "exitReasonDetail": "fetch failed: Hostname/IP does not match certificate's altnames: Host: observatoriet.se. is not in the cert's altnames: DNS:*.r103.websupport.se",
+          "winningStage": "C3",
+          "success": false,
+          "derivedRuleApplied": false
+        }
+      }
+    },
+    {
+      "source": {
+        "sourceId": "h-gskolan-i-sk-vde",
+        "url": "https://his.se/evenemang",
+        "roundsParticipated": 0,
+        "diversifiers": [
+          "has_404s",
+          "failures_11",
+          "path_jsonld"
+        ],
+        "queueReason": "toolB(preB): [breadth] unclear (0 likely, 0 possible) — Inga tydliga API:er hittades. 0 404s, 18 fel. Fler mönster kan finnas.. But: API structure attempted (18 errors) but no usable endpoints found. GotEvent lesson: API structure ≠ usable event data. Routing to HTML.",
+        "enrichedData": {
+          "lastPathUsed": "jsonld",
+          "lastEventsFound": 0,
+          "consecutiveFailures": 11,
+          "triageResult": null
+        }
+      },
+      "decision": "postTestC-manual-review",
+      "result": {
+        "sourceId": "h-gskolan-i-sk-vde",
+        "sourceUrl": "https://his.se/evenemang",
+        "winningStage": "C3",
+        "outcomeType": "fail",
+        "routeSuggestion": "manual-review",
+        "evidence": "fetch error: Parse Error: Unexpected whitespace after header value",
+        "roundNumber": 1,
+        "success": false,
+        "exitReason": "FETCH_ERROR",
+        "exitReasonDetail": "fetch failed: Parse Error: Unexpected whitespace after header value",
+        "effectiveProcessingUrl": "https://his.se/evenemang",
+        "effectiveProcessingUrlReason": "url-variant",
+        "c0": {
+          "candidates": 0,
+          "winnerUrl": null,
+          "winnerDensity": 0,
+          "duration": 244,
+          "rootFallback": false,
+          "ruleAppliedSource": "none",
+          "ruleAppliedPaths": [],
+          "ruleWinnerPath": null
+        },
+        "c1": {
+          "verdict": "unfetchable",
+          "likelyJsRendered": false,
+          "timeTagCount": 0,
+          "dateCount": 0,
+          "duration": 984,
+          "htmlBytes": 0,
+          "fetchable": false,
+          "fetchError": "Parse Error: Unexpected whitespace after header value",
+          "bestSubpageFound": null,
+          "subpagesTested": [
+            "https://his.se/events",
+            "https://his.se/program",
+            "https://his.se/kalender",
+            "https://his.se/schema"
+          ]
+        },
+        "c2": {
+          "verdict": "unclear",
+          "score": 0,
+          "reason": "fetchHtml failed: Parse Error: Unexpected whitespace after header value",
+          "duration": 165,
+          "htmlBytes": 0
+        },
+        "c3": {
+          "universalEventsFound": 0,
+          "universalMethodsUsed": [
+            "universal-extractor"
+          ],
+          "universalMethodBreakdown": {},
+          "duration": 0
+        },
+        "extract": {
+          "eventsFound": 0,
+          "duration": 0,
+          "htmlSize": 0,
+          "extractedEvents": []
+        },
+        "trace": {
+          "sourceId": "h-gskolan-i-sk-vde",
+          "sourceUrl": "https://his.se/evenemang",
+          "round": 1,
+          "c0Candidates": 0,
+          "c0WinnerUrl": null,
+          "c0WinnerDensity": 0,
+          "c0RuleSource": "none",
+          "c0RulePathsTested": [],
+          "c0RuleWinnerPath": null,
+          "effectiveUrl": "https://his.se/evenemang",
+          "effectiveUrlReason": "url-variant",
+          "c1Verdict": "unfetchable",
+          "c1LikelyJsRendered": false,
+          "c1TimeTagCount": 0,
+          "c1DateCount": 0,
+          "c1HtmlBytes": 0,
+          "c1Fetchable": false,
+          "c1FetchError": "Parse Error: Unexpected whitespace after header value",
+          "c1BestSubpageFound": null,
+          "c1SubpagesTested": [
+            "https://his.se/events",
+            "https://his.se/program",
+            "https://his.se/kalender",
+            "https://his.se/schema"
+          ],
+          "c2Verdict": "unclear",
+          "c2Score": 0,
+          "c2Reason": "fetchHtml failed: Parse Error: Unexpected whitespace after header value",
+          "c2HtmlBytes": 0,
+          "c3EventsFound": 0,
+          "c3MethodsUsed": [
+            "universal-extractor"
+          ],
+          "c3MethodBreakdown": {},
+          "eventsFound": 0,
+          "outcomeType": "fail",
+          "routeSuggestion": "manual-review",
+          "exitReason": "FETCH_ERROR",
+          "exitReasonDetail": "fetch failed: Parse Error: Unexpected whitespace after header value",
+          "winningStage": "C3",
+          "success": false,
+          "derivedRuleApplied": false
+        }
+      }
+    },
+    {
+      "source": {
+        "sourceId": "vega",
+        "url": "https://vega.nu/",
+        "roundsParticipated": 0,
+        "diversifiers": [
+          "failures_9",
+          "path_jsonld"
+        ],
+        "queueReason": "toolB(preB): [breadth] low_value (0 likely, 0 possible) —  Inga event-liknande API:er hittades på vanliga mönster.. But: No network/API signals detected. GotEvent lesson: API structure ≠ usable event data. Routing to HTML.",
+        "enrichedData": {
+          "lastPathUsed": "jsonld",
+          "lastEventsFound": 0,
+          "consecutiveFailures": 9,
+          "triageResult": null
+        }
+      },
+      "decision": "postTestC-manual-review",
+      "result": {
+        "sourceId": "vega",
+        "sourceUrl": "https://vega.nu/",
+        "winningStage": "C3",
+        "outcomeType": "fail",
+        "routeSuggestion": "Fail",
+        "evidence": "",
+        "roundNumber": 1,
+        "success": false,
+        "exitReason": "FETCH_ERROR",
+        "exitReasonDetail": "Assignment to constant variable.",
+        "effectiveProcessingUrl": "https://vega.nu/",
+        "effectiveProcessingUrlReason": "url-variant:original",
+        "c0": {
+          "candidates": 0,
+          "winnerUrl": "https://vega.nu/events",
+          "winnerDensity": 10,
+          "duration": 921,
+          "rootFallback": false,
+          "ruleAppliedSource": "swedish-patterns",
+          "ruleAppliedPaths": [
+            "/events"
+          ],
+          "ruleWinnerPath": "/events"
+        },
+        "c1": {
+          "verdict": "unknown",
+          "likelyJsRendered": false,
+          "timeTagCount": 0,
+          "dateCount": 0,
+          "duration": 0,
+          "htmlBytes": 0,
+          "fetchable": false,
+          "bestSubpageFound": null,
+          "subpagesTested": []
+        },
+        "c2": {
+          "verdict": "unknown",
+          "score": 0,
+          "reason": "",
+          "duration": 0,
+          "htmlBytes": 0
+        },
+        "c3": {
+          "universalEventsFound": 0,
+          "universalMethodsUsed": [],
+          "universalMethodBreakdown": {},
+          "duration": 0
+        },
+        "extract": {
+          "eventsFound": 0,
+          "duration": 0,
+          "htmlSize": 0
+        },
+        "trace": {
+          "sourceId": "vega",
+          "sourceUrl": "https://vega.nu/",
+          "round": 1,
+          "c0Candidates": 0,
+          "c0WinnerUrl": "https://vega.nu/events",
+          "c0WinnerDensity": 10,
+          "c0RuleSource": "swedish-patterns",
+          "c0RulePathsTested": [
+            "/events"
+          ],
+          "c0RuleWinnerPath": "/events",
+          "effectiveUrl": "https://vega.nu/",
+          "effectiveUrlReason": "url-variant:original",
+          "c1Verdict": "unknown",
+          "c1LikelyJsRendered": false,
+          "c1TimeTagCount": 0,
+          "c1DateCount": 0,
+          "c1HtmlBytes": 0,
+          "c1Fetchable": false,
+          "c1BestSubpageFound": null,
+          "c1SubpagesTested": [],
+          "c2Verdict": "unknown",
+          "c2Score": 0,
+          "c2Reason": "",
+          "c2HtmlBytes": 0,
+          "c3EventsFound": 0,
+          "c3MethodsUsed": [],
+          "c3MethodBreakdown": {},
+          "eventsFound": 0,
+          "outcomeType": "fail",
+          "routeSuggestion": "Fail",
+          "exitReason": "FETCH_ERROR",
+          "exitReasonDetail": "Assignment to constant variable.",
+          "winningStage": "C3",
+          "success": false,
+          "derivedRuleApplied": false,
+          "error": "Assignment to constant variable."
+        },
+        "error": "Assignment to constant variable."
+      }
+    },
+    {
+      "source": {
+        "sourceId": "malm-konserthus",
+        "url": "https://malmo-konserthus.se/",
+        "roundsParticipated": 0,
+        "diversifiers": [
+          "has_404s",
+          "failures_9",
+          "path_jsonld"
+        ],
+        "queueReason": "toolB(preB): [breadth] unclear (0 likely, 0 possible) — Inga tydliga API:er hittades. 0 404s, 18 fel. Fler mönster kan finnas.. But: API structure attempted (18 errors) but no usable endpoints found. GotEvent lesson: API structure ≠ usable event data. Routing to HTML.",
+        "enrichedData": {
+          "lastPathUsed": "jsonld",
+          "lastEventsFound": 0,
+          "consecutiveFailures": 9,
+          "triageResult": null
+        }
+      },
+      "decision": "postTestC-manual-review",
+      "result": {
+        "sourceId": "malm-konserthus",
+        "sourceUrl": "https://malmo-konserthus.se/",
+        "winningStage": "C3",
+        "outcomeType": "fail",
+        "routeSuggestion": "manual-review",
+        "evidence": "fetch error: getaddrinfo ENOTFOUND malmo-konserthus.se",
+        "roundNumber": 1,
+        "success": false,
+        "exitReason": "FETCH_ERROR",
+        "exitReasonDetail": "fetch failed: getaddrinfo ENOTFOUND malmo-konserthus.se",
+        "effectiveProcessingUrl": "https://malmo-konserthus.se/",
+        "effectiveProcessingUrlReason": "url-variant",
+        "c0": {
+          "candidates": 0,
+          "winnerUrl": null,
+          "winnerDensity": 0,
+          "duration": 4,
+          "rootFallback": false,
+          "ruleAppliedSource": "none",
+          "ruleAppliedPaths": [],
+          "ruleWinnerPath": null
+        },
+        "c1": {
+          "verdict": "unfetchable",
+          "likelyJsRendered": false,
+          "timeTagCount": 0,
+          "dateCount": 0,
+          "duration": 3,
+          "htmlBytes": 0,
+          "fetchable": false,
+          "fetchError": "getaddrinfo ENOTFOUND malmo-konserthus.se",
+          "bestSubpageFound": null,
+          "subpagesTested": []
+        },
+        "c2": {
+          "verdict": "unclear",
+          "score": 0,
+          "reason": "fetchHtml failed: getaddrinfo ENOTFOUND malmo-konserthus.se",
+          "duration": 2,
+          "htmlBytes": 0
+        },
+        "c3": {
+          "universalEventsFound": 0,
+          "universalMethodsUsed": [
+            "universal-extractor"
+          ],
+          "universalMethodBreakdown": {},
+          "duration": 0
+        },
+        "extract": {
+          "eventsFound": 0,
+          "duration": 0,
+          "htmlSize": 0,
+          "extractedEvents": []
+        },
+        "trace": {
+          "sourceId": "malm-konserthus",
+          "sourceUrl": "https://malmo-konserthus.se/",
+          "round": 1,
+          "c0Candidates": 0,
+          "c0WinnerUrl": null,
+          "c0WinnerDensity": 0,
+          "c0RuleSource": "none",
+          "c0RulePathsTested": [],
+          "c0RuleWinnerPath": null,
+          "effectiveUrl": "https://malmo-konserthus.se/",
+          "effectiveUrlReason": "url-variant",
+          "c1Verdict": "unfetchable",
+          "c1LikelyJsRendered": false,
+          "c1TimeTagCount": 0,
+          "c1DateCount": 0,
+          "c1HtmlBytes": 0,
+          "c1Fetchable": false,
+          "c1FetchError": "getaddrinfo ENOTFOUND malmo-konserthus.se",
+          "c1BestSubpageFound": null,
+          "c1SubpagesTested": [],
+          "c2Verdict": "unclear",
+          "c2Score": 0,
+          "c2Reason": "fetchHtml failed: getaddrinfo ENOTFOUND malmo-konserthus.se",
+          "c2HtmlBytes": 0,
+          "c3EventsFound": 0,
+          "c3MethodsUsed": [
+            "universal-extractor"
+          ],
+          "c3MethodBreakdown": {},
+          "eventsFound": 0,
+          "outcomeType": "fail",
+          "routeSuggestion": "manual-review",
+          "exitReason": "FETCH_ERROR",
+          "exitReasonDetail": "fetch failed: getaddrinfo ENOTFOUND malmo-konserthus.se",
+          "winningStage": "C3",
+          "success": false,
+          "derivedRuleApplied": false
+        }
+      }
+    },
+    {
+      "source": {
+        "sourceId": "goteborgs-kulturfestival",
+        "url": "https://kulturfestivalen.se/",
+        "roundsParticipated": 0,
+        "diversifiers": [
+          "has_404s",
+          "failures_11",
+          "path_jsonld"
+        ],
+        "queueReason": "toolB(preB): [breadth] unclear (0 likely, 0 possible) — Inga tydliga API:er hittades. 0 404s, 18 fel. Fler mönster kan finnas.. But: API structure attempted (18 errors) but no usable endpoints found. GotEvent lesson: API structure ≠ usable event data. Routing to HTML.",
+        "enrichedData": {
+          "lastPathUsed": "jsonld",
+          "lastEventsFound": 0,
+          "consecutiveFailures": 11,
+          "triageResult": null
+        }
+      },
+      "decision": "postTestC-manual-review",
+      "result": {
+        "sourceId": "goteborgs-kulturfestival",
+        "sourceUrl": "https://kulturfestivalen.se/",
+        "winningStage": "C3",
+        "outcomeType": "fail",
+        "routeSuggestion": "manual-review",
+        "evidence": "fetch error: Hostname/IP does not match certificate's altnames: Host: kulturfestivalen.se. is not in the cert's altnames: DNS:*.one.com, DNS:one.com",
+        "roundNumber": 1,
+        "success": false,
+        "exitReason": "FETCH_ERROR",
+        "exitReasonDetail": "fetch failed: Hostname/IP does not match certificate's altnames: Host: kulturfestivalen.se. is not in the cert's altnames: DNS:*.one.com, DNS:one.com",
+        "effectiveProcessingUrl": "https://kulturfestivalen.se/",
+        "effectiveProcessingUrlReason": "url-variant",
+        "c0": {
+          "candidates": 0,
+          "winnerUrl": null,
+          "winnerDensity": 0,
+          "duration": 110,
+          "rootFallback": false,
+          "ruleAppliedSource": "none",
+          "ruleAppliedPaths": [],
+          "ruleWinnerPath": null
+        },
+        "c1": {
+          "verdict": "unfetchable",
+          "likelyJsRendered": false,
+          "timeTagCount": 0,
+          "dateCount": 0,
+          "duration": 112,
+          "htmlBytes": 0,
+          "fetchable": false,
+          "fetchError": "Hostname/IP does not match certificate's altnames: Host: kulturfestivalen.se. is not in the cert's altnames: DNS:*.one.com, DNS:one.com",
+          "bestSubpageFound": null,
+          "subpagesTested": []
+        },
+        "c2": {
+          "verdict": "unclear",
+          "score": 0,
+          "reason": "fetchHtml failed: Hostname/IP does not match certificate's altnames: Host: kulturfestivalen.se. is not in the cert's altnames: DNS:*.one.com, DNS:one.com",
+          "duration": 155,
+          "htmlBytes": 0
+        },
+        "c3": {
+          "universalEventsFound": 0,
+          "universalMethodsUsed": [
+            "universal-extractor"
+          ],
+          "universalMethodBreakdown": {},
+          "duration": 0
+        },
+        "extract": {
+          "eventsFound": 0,
+          "duration": 0,
+          "htmlSize": 0,
+          "extractedEvents": []
+        },
+        "trace": {
+          "sourceId": "goteborgs-kulturfestival",
+          "sourceUrl": "https://kulturfestivalen.se/",
+          "round": 1,
+          "c0Candidates": 0,
+          "c0WinnerUrl": null,
+          "c0WinnerDensity": 0,
+          "c0RuleSource": "none",
+          "c0RulePathsTested": [],
+          "c0RuleWinnerPath": null,
+          "effectiveUrl": "https://kulturfestivalen.se/",
+          "effectiveUrlReason": "url-variant",
+          "c1Verdict": "unfetchable",
+          "c1LikelyJsRendered": false,
+          "c1TimeTagCount": 0,
+          "c1DateCount": 0,
+          "c1HtmlBytes": 0,
+          "c1Fetchable": false,
+          "c1FetchError": "Hostname/IP does not match certificate's altnames: Host: kulturfestivalen.se. is not in the cert's altnames: DNS:*.one.com, DNS:one.com",
+          "c1BestSubpageFound": null,
+          "c1SubpagesTested": [],
+          "c2Verdict": "unclear",
+          "c2Score": 0,
+          "c2Reason": "fetchHtml failed: Hostname/IP does not match certificate's altnames: Host: kulturfestivalen.se. is not in the cert's altnames: DNS:*.one.com, DNS:one.com",
+          "c2HtmlBytes": 0,
+          "c3EventsFound": 0,
+          "c3MethodsUsed": [
+            "universal-extractor"
+          ],
+          "c3MethodBreakdown": {},
+          "eventsFound": 0,
+          "outcomeType": "fail",
+          "routeSuggestion": "manual-review",
+          "exitReason": "FETCH_ERROR",
+          "exitReasonDetail": "fetch failed: Hostname/IP does not match certificate's altnames: Host: kulturfestivalen.se. is not in the cert's altnames: DNS:*.one.com, DNS:one.com",
+          "winningStage": "C3",
+          "success": false,
+          "derivedRuleApplied": false
+        }
+      }
+    },
+    {
+      "source": {
+        "sourceId": "we-are-sarajevo",
+        "url": "https://wearesarajevo.se/",
+        "roundsParticipated": 0,
+        "diversifiers": [
+          "has_404s",
+          "failures_9",
+          "path_jsonld"
+        ],
+        "queueReason": "toolB(preB): [breadth] unclear (0 likely, 0 possible) — Inga tydliga API:er hittades. 0 404s, 18 fel. Fler mönster kan finnas.. But: API structure attempted (18 errors) but no usable endpoints found. GotEvent lesson: API structure ≠ usable event data. Routing to HTML.",
+        "enrichedData": {
+          "lastPathUsed": "jsonld",
+          "lastEventsFound": 0,
+          "consecutiveFailures": 9,
+          "triageResult": null
+        }
+      },
+      "decision": "postTestC-manual-review",
+      "result": {
+        "sourceId": "we-are-sarajevo",
+        "sourceUrl": "https://wearesarajevo.se/",
+        "winningStage": "C3",
+        "outcomeType": "fail",
+        "routeSuggestion": "manual-review",
+        "evidence": "fetch error: getaddrinfo ENOTFOUND wearesarajevo.se",
+        "roundNumber": 1,
+        "success": false,
+        "exitReason": "FETCH_ERROR",
+        "exitReasonDetail": "fetch failed: getaddrinfo ENOTFOUND wearesarajevo.se",
+        "effectiveProcessingUrl": "https://wearesarajevo.se/",
+        "effectiveProcessingUrlReason": "url-variant",
+        "c0": {
+          "candidates": 0,
+          "winnerUrl": null,
+          "winnerDensity": 0,
+          "duration": 17,
+          "rootFallback": false,
+          "ruleAppliedSource": "none",
+          "ruleAppliedPaths": [],
+          "ruleWinnerPath": null
+        },
+        "c1": {
+          "verdict": "unfetchable",
+          "likelyJsRendered": false,
+          "timeTagCount": 0,
+          "dateCount": 0,
+          "duration": 3,
+          "htmlBytes": 0,
+          "fetchable": false,
+          "fetchError": "getaddrinfo ENOTFOUND wearesarajevo.se",
+          "bestSubpageFound": null,
+          "subpagesTested": []
+        },
+        "c2": {
+          "verdict": "unclear",
+          "score": 0,
+          "reason": "fetchHtml failed: getaddrinfo ENOTFOUND wearesarajevo.se",
+          "duration": 2,
+          "htmlBytes": 0
+        },
+        "c3": {
+          "universalEventsFound": 0,
+          "universalMethodsUsed": [
+            "universal-extractor"
+          ],
+          "universalMethodBreakdown": {},
+          "duration": 0
+        },
+        "extract": {
+          "eventsFound": 0,
+          "duration": 0,
+          "htmlSize": 0,
+          "extractedEvents": []
+        },
+        "trace": {
+          "sourceId": "we-are-sarajevo",
+          "sourceUrl": "https://wearesarajevo.se/",
+          "round": 1,
+          "c0Candidates": 0,
+          "c0WinnerUrl": null,
+          "c0WinnerDensity": 0,
+          "c0RuleSource": "none",
+          "c0RulePathsTested": [],
+          "c0RuleWinnerPath": null,
+          "effectiveUrl": "https://wearesarajevo.se/",
+          "effectiveUrlReason": "url-variant",
+          "c1Verdict": "unfetchable",
+          "c1LikelyJsRendered": false,
+          "c1TimeTagCount": 0,
+          "c1DateCount": 0,
+          "c1HtmlBytes": 0,
+          "c1Fetchable": false,
+          "c1FetchError": "getaddrinfo ENOTFOUND wearesarajevo.se",
+          "c1BestSubpageFound": null,
+          "c1SubpagesTested": [],
+          "c2Verdict": "unclear",
+          "c2Score": 0,
+          "c2Reason": "fetchHtml failed: getaddrinfo ENOTFOUND wearesarajevo.se",
+          "c2HtmlBytes": 0,
+          "c3EventsFound": 0,
+          "c3MethodsUsed": [
+            "universal-extractor"
+          ],
+          "c3MethodBreakdown": {},
+          "eventsFound": 0,
+          "outcomeType": "fail",
+          "routeSuggestion": "manual-review",
+          "exitReason": "FETCH_ERROR",
+          "exitReasonDetail": "fetch failed: getaddrinfo ENOTFOUND wearesarajevo.se",
+          "winningStage": "C3",
+          "success": false,
+          "derivedRuleApplied": false
+        }
+      }
+    },
+    {
+      "source": {
+        "sourceId": "malmo-museum",
+        "url": "https://malmömuseum.se/",
+        "roundsParticipated": 0,
+        "diversifiers": [
+          "has_404s",
+          "failures_9",
+          "path_jsonld"
+        ],
+        "queueReason": "toolB(preB): [breadth] unclear (0 likely, 0 possible) — Inga tydliga API:er hittades. 0 404s, 18 fel. Fler mönster kan finnas.. But: API structure attempted (18 errors) but no usable endpoints found. GotEvent lesson: API structure ≠ usable event data. Routing to HTML.",
+        "enrichedData": {
+          "lastPathUsed": "jsonld",
+          "lastEventsFound": 0,
+          "consecutiveFailures": 9,
+          "triageResult": null
+        }
+      },
+      "decision": "postTestC-manual-review",
+      "result": {
+        "sourceId": "malmo-museum",
+        "sourceUrl": "https://malmömuseum.se/",
+        "winningStage": "C3",
+        "outcomeType": "fail",
+        "routeSuggestion": "manual-review",
+        "evidence": "fetch error: Hostname/IP does not match certificate's altnames: Host: xn--malmmuseum-hcb.se. is not in the cert's altnames: DNS:02.se, DNS:www.02.se",
+        "roundNumber": 1,
+        "success": false,
+        "exitReason": "FETCH_ERROR",
+        "exitReasonDetail": "fetch failed: Hostname/IP does not match certificate's altnames: Host: xn--malmmuseum-hcb.se. is not in the cert's altnames: DNS:02.se, DNS:www.02.se",
+        "effectiveProcessingUrl": "https://malmömuseum.se/",
+        "effectiveProcessingUrlReason": "url-variant",
+        "c0": {
+          "candidates": 0,
+          "winnerUrl": null,
+          "winnerDensity": 0,
+          "duration": 223,
+          "rootFallback": false,
+          "ruleAppliedSource": "none",
+          "ruleAppliedPaths": [],
+          "ruleWinnerPath": null
+        },
+        "c1": {
+          "verdict": "unfetchable",
+          "likelyJsRendered": false,
+          "timeTagCount": 0,
+          "dateCount": 0,
+          "duration": 173,
+          "htmlBytes": 0,
+          "fetchable": false,
+          "fetchError": "Hostname/IP does not match certificate's altnames: Host: xn--malmmuseum-hcb.se. is not in the cert's altnames: DNS:02.se, DNS:www.02.se",
+          "bestSubpageFound": null,
+          "subpagesTested": []
+        },
+        "c2": {
+          "verdict": "unclear",
+          "score": 0,
+          "reason": "fetchHtml failed: Hostname/IP does not match certificate's altnames: Host: xn--malmmuseum-hcb.se. is not in the cert's altnames: DNS:02.se, DNS:www.02.se",
+          "duration": 203,
+          "htmlBytes": 0
+        },
+        "c3": {
+          "universalEventsFound": 0,
+          "universalMethodsUsed": [
+            "universal-extractor"
+          ],
+          "universalMethodBreakdown": {},
+          "duration": 0
+        },
+        "extract": {
+          "eventsFound": 0,
+          "duration": 0,
+          "htmlSize": 0,
+          "extractedEvents": []
+        },
+        "trace": {
+          "sourceId": "malmo-museum",
+          "sourceUrl": "https://malmömuseum.se/",
+          "round": 1,
+          "c0Candidates": 0,
+          "c0WinnerUrl": null,
+          "c0WinnerDensity": 0,
+          "c0RuleSource": "none",
+          "c0RulePathsTested": [],
+          "c0RuleWinnerPath": null,
+          "effectiveUrl": "https://malmömuseum.se/",
+          "effectiveUrlReason": "url-variant",
+          "c1Verdict": "unfetchable",
+          "c1LikelyJsRendered": false,
+          "c1TimeTagCount": 0,
+          "c1DateCount": 0,
+          "c1HtmlBytes": 0,
+          "c1Fetchable": false,
+          "c1FetchError": "Hostname/IP does not match certificate's altnames: Host: xn--malmmuseum-hcb.se. is not in the cert's altnames: DNS:02.se, DNS:www.02.se",
+          "c1BestSubpageFound": null,
+          "c1SubpagesTested": [],
+          "c2Verdict": "unclear",
+          "c2Score": 0,
+          "c2Reason": "fetchHtml failed: Hostname/IP does not match certificate's altnames: Host: xn--malmmuseum-hcb.se. is not in the cert's altnames: DNS:02.se, DNS:www.02.se",
+          "c2HtmlBytes": 0,
+          "c3EventsFound": 0,
+          "c3MethodsUsed": [
+            "universal-extractor"
+          ],
+          "c3MethodBreakdown": {},
+          "eventsFound": 0,
+          "outcomeType": "fail",
+          "routeSuggestion": "manual-review",
+          "exitReason": "FETCH_ERROR",
+          "exitReasonDetail": "fetch failed: Hostname/IP does not match certificate's altnames: Host: xn--malmmuseum-hcb.se. is not in the cert's altnames: DNS:02.se, DNS:www.02.se",
+          "winningStage": "C3",
+          "success": false,
+          "derivedRuleApplied": false
+        }
+      }
+    },
+    {
+      "source": {
+        "sourceId": "goteborgs-stadsbibliotek",
+        "url": "https://goteborgsstad.se/bibliotek",
+        "roundsParticipated": 0,
+        "diversifiers": [
+          "has_404s",
+          "failures_11",
+          "path_jsonld"
+        ],
+        "queueReason": "toolB(preB): [breadth] unclear (0 likely, 0 possible) — Inga tydliga API:er hittades. 0 404s, 18 fel. Fler mönster kan finnas.. But: API structure attempted (18 errors) but no usable endpoints found. GotEvent lesson: API structure ≠ usable event data. Routing to HTML.",
+        "enrichedData": {
+          "lastPathUsed": "jsonld",
+          "lastEventsFound": 0,
+          "consecutiveFailures": 11,
+          "triageResult": null
+        }
+      },
+      "decision": "postTestC-manual-review",
+      "result": {
+        "sourceId": "goteborgs-stadsbibliotek",
+        "sourceUrl": "https://goteborgsstad.se/bibliotek",
+        "winningStage": "C3",
+        "outcomeType": "fail",
+        "routeSuggestion": "manual-review",
+        "evidence": "fetch error: Hostname/IP does not match certificate's altnames: Host: goteborgsstad.se. is not in the cert's altnames: DNS:goteborg.se, DNS:*.goteborg.se",
+        "roundNumber": 1,
+        "success": false,
+        "exitReason": "FETCH_ERROR",
+        "exitReasonDetail": "fetch failed: Hostname/IP does not match certificate's altnames: Host: goteborgsstad.se. is not in the cert's altnames: DNS:goteborg.se, DNS:*.goteborg.se",
+        "effectiveProcessingUrl": "https://goteborgsstad.se/bibliotek",
+        "effectiveProcessingUrlReason": "url-variant",
+        "c0": {
+          "candidates": 0,
+          "winnerUrl": null,
+          "winnerDensity": 0,
+          "duration": 188,
+          "rootFallback": false,
+          "ruleAppliedSource": "none",
+          "ruleAppliedPaths": [],
+          "ruleWinnerPath": null
+        },
+        "c1": {
+          "verdict": "unfetchable",
+          "likelyJsRendered": false,
+          "timeTagCount": 0,
+          "dateCount": 0,
+          "duration": 157,
+          "htmlBytes": 0,
+          "fetchable": false,
+          "fetchError": "Hostname/IP does not match certificate's altnames: Host: goteborgsstad.se. is not in the cert's altnames: DNS:goteborg.se, DNS:*.goteborg.se",
+          "bestSubpageFound": null,
+          "subpagesTested": []
+        },
+        "c2": {
+          "verdict": "unclear",
+          "score": 0,
+          "reason": "fetchHtml failed: Hostname/IP does not match certificate's altnames: Host: goteborgsstad.se. is not in the cert's altnames: DNS:goteborg.se, DNS:*.goteborg.se",
+          "duration": 228,
+          "htmlBytes": 0
+        },
+        "c3": {
+          "universalEventsFound": 0,
+          "universalMethodsUsed": [
+            "universal-extractor"
+          ],
+          "universalMethodBreakdown": {},
+          "duration": 0
+        },
+        "extract": {
+          "eventsFound": 0,
+          "duration": 0,
+          "htmlSize": 0,
+          "extractedEvents": []
+        },
+        "trace": {
+          "sourceId": "goteborgs-stadsbibliotek",
+          "sourceUrl": "https://goteborgsstad.se/bibliotek",
+          "round": 1,
+          "c0Candidates": 0,
+          "c0WinnerUrl": null,
+          "c0WinnerDensity": 0,
+          "c0RuleSource": "none",
+          "c0RulePathsTested": [],
+          "c0RuleWinnerPath": null,
+          "effectiveUrl": "https://goteborgsstad.se/bibliotek",
+          "effectiveUrlReason": "url-variant",
+          "c1Verdict": "unfetchable",
+          "c1LikelyJsRendered": false,
+          "c1TimeTagCount": 0,
+          "c1DateCount": 0,
+          "c1HtmlBytes": 0,
+          "c1Fetchable": false,
+          "c1FetchError": "Hostname/IP does not match certificate's altnames: Host: goteborgsstad.se. is not in the cert's altnames: DNS:goteborg.se, DNS:*.goteborg.se",
+          "c1BestSubpageFound": null,
+          "c1SubpagesTested": [],
+          "c2Verdict": "unclear",
+          "c2Score": 0,
+          "c2Reason": "fetchHtml failed: Hostname/IP does not match certificate's altnames: Host: goteborgsstad.se. is not in the cert's altnames: DNS:goteborg.se, DNS:*.goteborg.se",
+          "c2HtmlBytes": 0,
+          "c3EventsFound": 0,
+          "c3MethodsUsed": [
+            "universal-extractor"
+          ],
+          "c3MethodBreakdown": {},
+          "eventsFound": 0,
+          "outcomeType": "fail",
+          "routeSuggestion": "manual-review",
+          "exitReason": "FETCH_ERROR",
+          "exitReasonDetail": "fetch failed: Hostname/IP does not match certificate's altnames: Host: goteborgsstad.se. is not in the cert's altnames: DNS:goteborg.se, DNS:*.goteborg.se",
+          "winningStage": "C3",
+          "success": false,
+          "derivedRuleApplied": false
+        }
+      }
+    },
+    {
+      "source": {
+        "sourceId": "falun-stadsteatern",
+        "url": "https://falu.se/stadsteatern",
+        "roundsParticipated": 0,
+        "diversifiers": [
+          "has_404s",
+          "failures_11",
+          "path_jsonld"
+        ],
+        "queueReason": "toolB(preB): [breadth] unclear (0 likely, 0 possible) — Inga tydliga API:er hittades. 0 404s, 18 fel. Fler mönster kan finnas.. But: API structure attempted (18 errors) but no usable endpoints found. GotEvent lesson: API structure ≠ usable event data. Routing to HTML.",
+        "enrichedData": {
+          "lastPathUsed": "jsonld",
+          "lastEventsFound": 0,
+          "consecutiveFailures": 11,
+          "triageResult": null
+        }
+      },
+      "decision": "postTestC-manual-review",
+      "result": {
+        "sourceId": "falun-stadsteatern",
+        "sourceUrl": "https://falu.se/stadsteatern",
+        "winningStage": "C3",
+        "outcomeType": "fail",
+        "routeSuggestion": "manual-review",
+        "evidence": "fetch error: unable to verify the first certificate; if the root CA is installed locally, try running Node.js with --use-system-ca",
+        "roundNumber": 1,
+        "success": false,
+        "exitReason": "FETCH_ERROR",
+        "exitReasonDetail": "fetch failed: unable to verify the first certificate; if the root CA is installed locally, try running Node.js with --use-system-ca",
+        "effectiveProcessingUrl": "https://falu.se/stadsteatern",
+        "effectiveProcessingUrlReason": "url-variant",
+        "c0": {
+          "candidates": 0,
+          "winnerUrl": null,
+          "winnerDensity": 0,
+          "duration": 255,
+          "rootFallback": false,
+          "ruleAppliedSource": "none",
+          "ruleAppliedPaths": [],
+          "ruleWinnerPath": null
+        },
+        "c1": {
+          "verdict": "unfetchable",
+          "likelyJsRendered": false,
+          "timeTagCount": 0,
+          "dateCount": 0,
+          "duration": 264,
+          "htmlBytes": 0,
+          "fetchable": false,
+          "fetchError": "unable to verify the first certificate; if the root CA is installed locally, try running Node.js with --use-system-ca",
+          "bestSubpageFound": null,
+          "subpagesTested": []
+        },
+        "c2": {
+          "verdict": "unclear",
+          "score": 0,
+          "reason": "fetchHtml failed: unable to verify the first certificate; if the root CA is installed locally, try running Node.js with --use-system-ca",
+          "duration": 324,
+          "htmlBytes": 0
+        },
+        "c3": {
+          "universalEventsFound": 0,
+          "universalMethodsUsed": [
+            "universal-extractor"
+          ],
+          "universalMethodBreakdown": {},
+          "duration": 0
+        },
+        "extract": {
+          "eventsFound": 0,
+          "duration": 0,
+          "htmlSize": 0,
+          "extractedEvents": []
+        },
+        "trace": {
+          "sourceId": "falun-stadsteatern",
+          "sourceUrl": "https://falu.se/stadsteatern",
+          "round": 1,
+          "c0Candidates": 0,
+          "c0WinnerUrl": null,
+          "c0WinnerDensity": 0,
+          "c0RuleSource": "none",
+          "c0RulePathsTested": [],
+          "c0RuleWinnerPath": null,
+          "effectiveUrl": "https://falu.se/stadsteatern",
+          "effectiveUrlReason": "url-variant",
+          "c1Verdict": "unfetchable",
+          "c1LikelyJsRendered": false,
+          "c1TimeTagCount": 0,
+          "c1DateCount": 0,
+          "c1HtmlBytes": 0,
+          "c1Fetchable": false,
+          "c1FetchError": "unable to verify the first certificate; if the root CA is installed locally, try running Node.js with --use-system-ca",
+          "c1BestSubpageFound": null,
+          "c1SubpagesTested": [],
+          "c2Verdict": "unclear",
+          "c2Score": 0,
+          "c2Reason": "fetchHtml failed: unable to verify the first certificate; if the root CA is installed locally, try running Node.js with --use-system-ca",
+          "c2HtmlBytes": 0,
+          "c3EventsFound": 0,
+          "c3MethodsUsed": [
+            "universal-extractor"
+          ],
+          "c3MethodBreakdown": {},
+          "eventsFound": 0,
+          "outcomeType": "fail",
+          "routeSuggestion": "manual-review",
+          "exitReason": "FETCH_ERROR",
+          "exitReasonDetail": "fetch failed: unable to verify the first certificate; if the root CA is installed locally, try running Node.js with --use-system-ca",
+          "winningStage": "C3",
+          "success": false,
+          "derivedRuleApplied": false
+        }
+      }
+    },
+    {
+      "source": {
+        "sourceId": "visit-gothenburg",
+        "url": "https://visitgothenburg.se/",
+        "roundsParticipated": 0,
+        "diversifiers": [
+          "has_404s",
+          "failures_9",
+          "path_jsonld"
+        ],
+        "queueReason": "toolB(preB): [breadth] unclear (0 likely, 0 possible) — Inga tydliga API:er hittades. 0 404s, 18 fel. Fler mönster kan finnas.. But: API structure attempted (18 errors) but no usable endpoints found. GotEvent lesson: API structure ≠ usable event data. Routing to HTML.",
+        "enrichedData": {
+          "lastPathUsed": "jsonld",
+          "lastEventsFound": 0,
+          "consecutiveFailures": 9,
+          "triageResult": null
+        }
+      },
+      "decision": "postTestC-manual-review",
+      "result": {
+        "sourceId": "visit-gothenburg",
+        "sourceUrl": "https://visitgothenburg.se/",
+        "winningStage": "C3",
+        "outcomeType": "fail",
+        "routeSuggestion": "manual-review",
+        "evidence": "fetch error: getaddrinfo ENOTFOUND visitgothenburg.se",
+        "roundNumber": 1,
+        "success": false,
+        "exitReason": "FETCH_ERROR",
+        "exitReasonDetail": "fetch failed: getaddrinfo ENOTFOUND visitgothenburg.se",
+        "effectiveProcessingUrl": "https://visitgothenburg.se/",
+        "effectiveProcessingUrlReason": "url-variant",
+        "c0": {
+          "candidates": 0,
+          "winnerUrl": null,
+          "winnerDensity": 0,
+          "duration": 366,
+          "rootFallback": false,
+          "ruleAppliedSource": "none",
+          "ruleAppliedPaths": [],
+          "ruleWinnerPath": null
+        },
+        "c1": {
+          "verdict": "unfetchable",
+          "likelyJsRendered": false,
+          "timeTagCount": 0,
+          "dateCount": 0,
+          "duration": 4,
+          "htmlBytes": 0,
+          "fetchable": false,
+          "fetchError": "getaddrinfo ENOTFOUND visitgothenburg.se",
+          "bestSubpageFound": null,
+          "subpagesTested": []
+        },
+        "c2": {
+          "verdict": "unclear",
+          "score": 0,
+          "reason": "fetchHtml failed: getaddrinfo ENOTFOUND visitgothenburg.se",
+          "duration": 3,
+          "htmlBytes": 0
+        },
+        "c3": {
+          "universalEventsFound": 0,
+          "universalMethodsUsed": [
+            "universal-extractor"
+          ],
+          "universalMethodBreakdown": {},
+          "duration": 0
+        },
+        "extract": {
+          "eventsFound": 0,
+          "duration": 0,
+          "htmlSize": 0,
+          "extractedEvents": []
+        },
+        "trace": {
+          "sourceId": "visit-gothenburg",
+          "sourceUrl": "https://visitgothenburg.se/",
+          "round": 1,
+          "c0Candidates": 0,
+          "c0WinnerUrl": null,
+          "c0WinnerDensity": 0,
+          "c0RuleSource": "none",
+          "c0RulePathsTested": [],
+          "c0RuleWinnerPath": null,
+          "effectiveUrl": "https://visitgothenburg.se/",
+          "effectiveUrlReason": "url-variant",
+          "c1Verdict": "unfetchable",
+          "c1LikelyJsRendered": false,
+          "c1TimeTagCount": 0,
+          "c1DateCount": 0,
+          "c1HtmlBytes": 0,
+          "c1Fetchable": false,
+          "c1FetchError": "getaddrinfo ENOTFOUND visitgothenburg.se",
+          "c1BestSubpageFound": null,
+          "c1SubpagesTested": [],
+          "c2Verdict": "unclear",
+          "c2Score": 0,
+          "c2Reason": "fetchHtml failed: getaddrinfo ENOTFOUND visitgothenburg.se",
+          "c2HtmlBytes": 0,
+          "c3EventsFound": 0,
+          "c3MethodsUsed": [
+            "universal-extractor"
+          ],
+          "c3MethodBreakdown": {},
+          "eventsFound": 0,
+          "outcomeType": "fail",
+          "routeSuggestion": "manual-review",
+          "exitReason": "FETCH_ERROR",
+          "exitReasonDetail": "fetch failed: getaddrinfo ENOTFOUND visitgothenburg.se",
+          "winningStage": "C3",
+          "success": false,
+          "derivedRuleApplied": false
+        }
+      }
+    },
+    {
+      "source": {
+        "sourceId": "karlstad-konserthus",
+        "url": "https://karlstad.se/konserthus",
+        "roundsParticipated": 0,
+        "diversifiers": [
+          "has_404s",
+          "errors_17",
+          "failures_11",
+          "path_jsonld"
+        ],
+        "queueReason": "toolB(preB): [breadth] unclear (0 likely, 0 possible) — Inga tydliga API:er hittades. 17 404s, 17 fel. Fler mönster kan finnas.. But: No network/API signals detected. GotEvent lesson: API structure ≠ usable event data. Routing to HTML.",
+        "enrichedData": {
+          "lastPathUsed": "jsonld",
+          "lastEventsFound": 0,
+          "consecutiveFailures": 11,
+          "triageResult": null
+        }
+      },
+      "decision": "postTestC-manual-review",
+      "result": {
+        "sourceId": "karlstad-konserthus",
+        "sourceUrl": "https://karlstad.se/konserthus",
+        "winningStage": "C3",
+        "outcomeType": "fail",
+        "routeSuggestion": "manual-review",
+        "evidence": "fetch error: HTTP 404",
+        "roundNumber": 1,
+        "success": false,
+        "exitReason": "FETCH_ERROR",
+        "exitReasonDetail": "fetch failed: HTTP 404",
+        "effectiveProcessingUrl": "https://karlstad.se/konserthus",
+        "effectiveProcessingUrlReason": "url-variant",
+        "c0": {
+          "candidates": 0,
+          "winnerUrl": null,
+          "winnerDensity": 0,
+          "duration": 424,
+          "rootFallback": false,
+          "ruleAppliedSource": "none",
+          "ruleAppliedPaths": [],
+          "ruleWinnerPath": null
+        },
+        "c1": {
+          "verdict": "unfetchable",
+          "likelyJsRendered": false,
+          "timeTagCount": 0,
+          "dateCount": 0,
+          "duration": 135,
+          "htmlBytes": 0,
+          "fetchable": false,
+          "fetchError": "HTTP 404",
+          "bestSubpageFound": null,
+          "subpagesTested": []
+        },
+        "c2": {
+          "verdict": "unclear",
+          "score": 0,
+          "reason": "fetchHtml failed: HTTP 404",
+          "duration": 121,
+          "htmlBytes": 0
+        },
+        "c3": {
+          "universalEventsFound": 0,
+          "universalMethodsUsed": [
+            "universal-extractor"
+          ],
+          "universalMethodBreakdown": {},
+          "duration": 0
+        },
+        "extract": {
+          "eventsFound": 0,
+          "duration": 0,
+          "htmlSize": 0,
+          "extractedEvents": []
+        },
+        "trace": {
+          "sourceId": "karlstad-konserthus",
+          "sourceUrl": "https://karlstad.se/konserthus",
+          "round": 1,
+          "c0Candidates": 0,
+          "c0WinnerUrl": null,
+          "c0WinnerDensity": 0,
+          "c0RuleSource": "none",
+          "c0RulePathsTested": [],
+          "c0RuleWinnerPath": null,
+          "effectiveUrl": "https://karlstad.se/konserthus",
+          "effectiveUrlReason": "url-variant",
+          "c1Verdict": "unfetchable",
+          "c1LikelyJsRendered": false,
+          "c1TimeTagCount": 0,
+          "c1DateCount": 0,
+          "c1HtmlBytes": 0,
+          "c1Fetchable": false,
+          "c1FetchError": "HTTP 404",
+          "c1BestSubpageFound": null,
+          "c1SubpagesTested": [],
+          "c2Verdict": "unclear",
+          "c2Score": 0,
+          "c2Reason": "fetchHtml failed: HTTP 404",
+          "c2HtmlBytes": 0,
+          "c3EventsFound": 0,
+          "c3MethodsUsed": [
+            "universal-extractor"
+          ],
+          "c3MethodBreakdown": {},
+          "eventsFound": 0,
+          "outcomeType": "fail",
+          "routeSuggestion": "manual-review",
+          "exitReason": "FETCH_ERROR",
+          "exitReasonDetail": "fetch failed: HTTP 404",
+          "winningStage": "C3",
+          "success": false,
+          "derivedRuleApplied": false
+        }
+      }
+    },
+    {
+      "source": {
+        "sourceId": "jazz-i-lund",
+        "url": "https://jazzilund.se/",
+        "roundsParticipated": 0,
+        "diversifiers": [
+          "has_404s",
+          "failures_11",
+          "path_jsonld"
+        ],
+        "queueReason": "toolB(preB): [breadth] unclear (0 likely, 0 possible) — Inga tydliga API:er hittades. 0 404s, 18 fel. Fler mönster kan finnas.. But: API structure attempted (18 errors) but no usable endpoints found. GotEvent lesson: API structure ≠ usable event data. Routing to HTML.",
+        "enrichedData": {
+          "lastPathUsed": "jsonld",
+          "lastEventsFound": 0,
+          "consecutiveFailures": 11,
+          "triageResult": null
+        }
+      },
+      "decision": "postTestC-manual-review",
+      "result": {
+        "sourceId": "jazz-i-lund",
+        "sourceUrl": "https://jazzilund.se/",
+        "winningStage": "C3",
+        "outcomeType": "fail",
+        "routeSuggestion": "manual-review",
+        "evidence": "fetch error: timeout of 15000ms exceeded",
+        "roundNumber": 1,
+        "success": false,
+        "exitReason": "FETCH_ERROR",
+        "exitReasonDetail": "fetch failed: timeout of 15000ms exceeded",
+        "effectiveProcessingUrl": "https://jazzilund.se/",
+        "effectiveProcessingUrlReason": "url-variant",
+        "c0": {
+          "candidates": 0,
+          "winnerUrl": null,
+          "winnerDensity": 0,
+          "duration": 5006,
+          "rootFallback": false,
+          "ruleAppliedSource": "none",
+          "ruleAppliedPaths": [],
+          "ruleWinnerPath": null
+        },
+        "c1": {
+          "verdict": "unfetchable",
+          "likelyJsRendered": false,
+          "timeTagCount": 0,
+          "dateCount": 0,
+          "duration": 5005,
+          "htmlBytes": 0,
+          "fetchable": false,
+          "fetchError": "timeout of 15000ms exceeded",
+          "bestSubpageFound": null,
+          "subpagesTested": []
+        },
+        "c2": {
+          "verdict": "unclear",
+          "score": 0,
+          "reason": "fetchHtml failed: timeout of 20000ms exceeded",
+          "duration": 5005,
+          "htmlBytes": 0
+        },
+        "c3": {
+          "universalEventsFound": 0,
+          "universalMethodsUsed": [
+            "universal-extractor"
+          ],
+          "universalMethodBreakdown": {},
+          "duration": 0
+        },
+        "extract": {
+          "eventsFound": 0,
+          "duration": 0,
+          "htmlSize": 0,
+          "extractedEvents": []
+        },
+        "trace": {
+          "sourceId": "jazz-i-lund",
+          "sourceUrl": "https://jazzilund.se/",
+          "round": 1,
+          "c0Candidates": 0,
+          "c0WinnerUrl": null,
+          "c0WinnerDensity": 0,
+          "c0RuleSource": "none",
+          "c0RulePathsTested": [],
+          "c0RuleWinnerPath": null,
+          "effectiveUrl": "https://jazzilund.se/",
+          "effectiveUrlReason": "url-variant",
+          "c1Verdict": "unfetchable",
+          "c1LikelyJsRendered": false,
+          "c1TimeTagCount": 0,
+          "c1DateCount": 0,
+          "c1HtmlBytes": 0,
+          "c1Fetchable": false,
+          "c1FetchError": "timeout of 15000ms exceeded",
+          "c1BestSubpageFound": null,
+          "c1SubpagesTested": [],
+          "c2Verdict": "unclear",
+          "c2Score": 0,
+          "c2Reason": "fetchHtml failed: timeout of 20000ms exceeded",
+          "c2HtmlBytes": 0,
+          "c3EventsFound": 0,
+          "c3MethodsUsed": [
+            "universal-extractor"
+          ],
+          "c3MethodBreakdown": {},
+          "eventsFound": 0,
+          "outcomeType": "fail",
+          "routeSuggestion": "manual-review",
+          "exitReason": "FETCH_ERROR",
+          "exitReasonDetail": "fetch failed: timeout of 15000ms exceeded",
+          "winningStage": "C3",
+          "success": false,
+          "derivedRuleApplied": false
+        }
+      }
+    },
+    {
+      "source": {
+        "sourceId": "mittuniversitetet",
+        "url": "https://miun.se/evenemang",
+        "roundsParticipated": 0,
+        "diversifiers": [
+          "has_404s",
+          "errors_18",
+          "failures_9",
+          "path_jsonld"
+        ],
+        "queueReason": "toolB(preB): [breadth] unclear (0 likely, 0 possible) — Inga tydliga API:er hittades. 18 404s, 18 fel. Fler mönster kan finnas.. But: No network/API signals detected. GotEvent lesson: API structure ≠ usable event data. Routing to HTML.",
+        "enrichedData": {
+          "lastPathUsed": "jsonld",
+          "lastEventsFound": 0,
+          "consecutiveFailures": 9,
+          "triageResult": null
+        }
+      },
+      "decision": "postTestC-manual-review",
+      "result": {
+        "sourceId": "mittuniversitetet",
+        "sourceUrl": "https://miun.se/evenemang",
+        "winningStage": "C3",
+        "outcomeType": "fail",
+        "routeSuggestion": "manual-review",
+        "evidence": "fetch error: Exceeded 3 redirects",
+        "roundNumber": 1,
+        "success": false,
+        "exitReason": "FETCH_ERROR",
+        "exitReasonDetail": "fetch failed: Exceeded 3 redirects",
+        "effectiveProcessingUrl": "https://miun.se/evenemang",
+        "effectiveProcessingUrlReason": "url-variant",
+        "c0": {
+          "candidates": 0,
+          "winnerUrl": null,
+          "winnerDensity": 0,
+          "duration": 689,
+          "rootFallback": false,
+          "ruleAppliedSource": "none",
+          "ruleAppliedPaths": [],
+          "ruleWinnerPath": null
+        },
+        "c1": {
+          "verdict": "unfetchable",
+          "likelyJsRendered": false,
+          "timeTagCount": 0,
+          "dateCount": 0,
+          "duration": 1705,
+          "htmlBytes": 0,
+          "fetchable": false,
+          "fetchError": "Exceeded 3 redirects",
+          "bestSubpageFound": null,
+          "subpagesTested": [
+            "https://miun.se/events",
+            "https://miun.se/program",
+            "https://miun.se/kalender",
+            "https://miun.se/schema"
+          ]
+        },
+        "c2": {
+          "verdict": "unclear",
+          "score": 0,
+          "reason": "fetchHtml failed: Exceeded 3 redirects",
+          "duration": 164,
+          "htmlBytes": 0
+        },
+        "c3": {
+          "universalEventsFound": 0,
+          "universalMethodsUsed": [
+            "universal-extractor"
+          ],
+          "universalMethodBreakdown": {},
+          "duration": 0
+        },
+        "extract": {
+          "eventsFound": 0,
+          "duration": 0,
+          "htmlSize": 0,
+          "extractedEvents": []
+        },
+        "trace": {
+          "sourceId": "mittuniversitetet",
+          "sourceUrl": "https://miun.se/evenemang",
+          "round": 1,
+          "c0Candidates": 0,
+          "c0WinnerUrl": null,
+          "c0WinnerDensity": 0,
+          "c0RuleSource": "none",
+          "c0RulePathsTested": [],
+          "c0RuleWinnerPath": null,
+          "effectiveUrl": "https://miun.se/evenemang",
+          "effectiveUrlReason": "url-variant",
+          "c1Verdict": "unfetchable",
+          "c1LikelyJsRendered": false,
+          "c1TimeTagCount": 0,
+          "c1DateCount": 0,
+          "c1HtmlBytes": 0,
+          "c1Fetchable": false,
+          "c1FetchError": "Exceeded 3 redirects",
+          "c1BestSubpageFound": null,
+          "c1SubpagesTested": [
+            "https://miun.se/events",
+            "https://miun.se/program",
+            "https://miun.se/kalender",
+            "https://miun.se/schema"
+          ],
+          "c2Verdict": "unclear",
+          "c2Score": 0,
+          "c2Reason": "fetchHtml failed: Exceeded 3 redirects",
+          "c2HtmlBytes": 0,
+          "c3EventsFound": 0,
+          "c3MethodsUsed": [
+            "universal-extractor"
+          ],
+          "c3MethodBreakdown": {},
+          "eventsFound": 0,
+          "outcomeType": "fail",
+          "routeSuggestion": "manual-review",
+          "exitReason": "FETCH_ERROR",
+          "exitReasonDetail": "fetch failed: Exceeded 3 redirects",
+          "winningStage": "C3",
+          "success": false,
+          "derivedRuleApplied": false
+        }
+      }
+    },
+    {
+      "source": {
+        "sourceId": "arkitekturgalleriet",
+        "url": "https://arkitekturgalleriet.se/",
+        "roundsParticipated": 0,
+        "diversifiers": [
+          "has_404s",
+          "failures_11",
+          "path_jsonld"
+        ],
+        "queueReason": "toolB(preB): [breadth] unclear (0 likely, 0 possible) — Inga tydliga API:er hittades. 0 404s, 18 fel. Fler mönster kan finnas.. But: API structure attempted (18 errors) but no usable endpoints found. GotEvent lesson: API structure ≠ usable event data. Routing to HTML.",
+        "enrichedData": {
+          "lastPathUsed": "jsonld",
+          "lastEventsFound": 0,
+          "consecutiveFailures": 11,
+          "triageResult": null
+        }
+      },
+      "decision": "postTestC-manual-review",
+      "result": {
+        "sourceId": "arkitekturgalleriet",
+        "sourceUrl": "https://arkitekturgalleriet.se/",
+        "winningStage": "C3",
+        "outcomeType": "fail",
+        "routeSuggestion": "manual-review",
+        "evidence": "fetch error: Hostname/IP does not match certificate's altnames: Host: arkitekturgalleriet.se. is not in the cert's altnames: DNS:da201.sajthotellet.com",
+        "roundNumber": 1,
+        "success": false,
+        "exitReason": "FETCH_ERROR",
+        "exitReasonDetail": "fetch failed: Hostname/IP does not match certificate's altnames: Host: arkitekturgalleriet.se. is not in the cert's altnames: DNS:da201.sajthotellet.com",
+        "effectiveProcessingUrl": "https://arkitekturgalleriet.se/",
+        "effectiveProcessingUrlReason": "url-variant",
+        "c0": {
+          "candidates": 0,
+          "winnerUrl": null,
+          "winnerDensity": 0,
+          "duration": 139,
+          "rootFallback": false,
+          "ruleAppliedSource": "none",
+          "ruleAppliedPaths": [],
+          "ruleWinnerPath": null
+        },
+        "c1": {
+          "verdict": "unfetchable",
+          "likelyJsRendered": false,
+          "timeTagCount": 0,
+          "dateCount": 0,
+          "duration": 135,
+          "htmlBytes": 0,
+          "fetchable": false,
+          "fetchError": "Hostname/IP does not match certificate's altnames: Host: arkitekturgalleriet.se. is not in the cert's altnames: DNS:da201.sajthotellet.com",
+          "bestSubpageFound": null,
+          "subpagesTested": []
+        },
+        "c2": {
+          "verdict": "unclear",
+          "score": 0,
+          "reason": "fetchHtml failed: Hostname/IP does not match certificate's altnames: Host: arkitekturgalleriet.se. is not in the cert's altnames: DNS:da201.sajthotellet.com",
+          "duration": 106,
+          "htmlBytes": 0
+        },
+        "c3": {
+          "universalEventsFound": 0,
+          "universalMethodsUsed": [
+            "universal-extractor"
+          ],
+          "universalMethodBreakdown": {},
+          "duration": 0
+        },
+        "extract": {
+          "eventsFound": 0,
+          "duration": 0,
+          "htmlSize": 0,
+          "extractedEvents": []
+        },
+        "trace": {
+          "sourceId": "arkitekturgalleriet",
+          "sourceUrl": "https://arkitekturgalleriet.se/",
+          "round": 1,
+          "c0Candidates": 0,
+          "c0WinnerUrl": null,
+          "c0WinnerDensity": 0,
+          "c0RuleSource": "none",
+          "c0RulePathsTested": [],
+          "c0RuleWinnerPath": null,
+          "effectiveUrl": "https://arkitekturgalleriet.se/",
+          "effectiveUrlReason": "url-variant",
+          "c1Verdict": "unfetchable",
+          "c1LikelyJsRendered": false,
+          "c1TimeTagCount": 0,
+          "c1DateCount": 0,
+          "c1HtmlBytes": 0,
+          "c1Fetchable": false,
+          "c1FetchError": "Hostname/IP does not match certificate's altnames: Host: arkitekturgalleriet.se. is not in the cert's altnames: DNS:da201.sajthotellet.com",
+          "c1BestSubpageFound": null,
+          "c1SubpagesTested": [],
+          "c2Verdict": "unclear",
+          "c2Score": 0,
+          "c2Reason": "fetchHtml failed: Hostname/IP does not match certificate's altnames: Host: arkitekturgalleriet.se. is not in the cert's altnames: DNS:da201.sajthotellet.com",
+          "c2HtmlBytes": 0,
+          "c3EventsFound": 0,
+          "c3MethodsUsed": [
+            "universal-extractor"
+          ],
+          "c3MethodBreakdown": {},
+          "eventsFound": 0,
+          "outcomeType": "fail",
+          "routeSuggestion": "manual-review",
+          "exitReason": "FETCH_ERROR",
+          "exitReasonDetail": "fetch failed: Hostname/IP does not match certificate's altnames: Host: arkitekturgalleriet.se. is not in the cert's altnames: DNS:da201.sajthotellet.com",
+          "winningStage": "C3",
+          "success": false,
+          "derivedRuleApplied": false
+        }
+      }
+    },
+    {
+      "source": {
+        "sourceId": "vasteras-stadsteatern",
+        "url": "https://vasteras.se/stadsteatern",
+        "roundsParticipated": 0,
+        "diversifiers": [
+          "has_404s",
+          "errors_17",
+          "failures_9",
+          "path_jsonld"
+        ],
+        "queueReason": "toolB(preB): [breadth] unclear (0 likely, 0 possible) — Inga tydliga API:er hittades. 17 404s, 17 fel. Fler mönster kan finnas.. But: No network/API signals detected. GotEvent lesson: API structure ≠ usable event data. Routing to HTML.",
+        "enrichedData": {
+          "lastPathUsed": "jsonld",
+          "lastEventsFound": 0,
+          "consecutiveFailures": 9,
+          "triageResult": null
+        }
+      },
+      "decision": "postTestC-manual-review",
+      "result": {
+        "sourceId": "vasteras-stadsteatern",
+        "sourceUrl": "https://vasteras.se/stadsteatern",
+        "winningStage": "C3",
+        "outcomeType": "fail",
+        "routeSuggestion": "manual-review",
+        "evidence": "fetch error: HTTP 404",
+        "roundNumber": 1,
+        "success": false,
+        "exitReason": "FETCH_ERROR",
+        "exitReasonDetail": "fetch failed: HTTP 404",
+        "effectiveProcessingUrl": "https://vasteras.se/stadsteatern",
+        "effectiveProcessingUrlReason": "url-variant",
+        "c0": {
+          "candidates": 0,
+          "winnerUrl": null,
+          "winnerDensity": 0,
+          "duration": 414,
+          "rootFallback": false,
+          "ruleAppliedSource": "none",
+          "ruleAppliedPaths": [],
+          "ruleWinnerPath": null
+        },
+        "c1": {
+          "verdict": "unfetchable",
+          "likelyJsRendered": false,
+          "timeTagCount": 0,
+          "dateCount": 0,
+          "duration": 121,
+          "htmlBytes": 0,
+          "fetchable": false,
+          "fetchError": "HTTP 404",
+          "bestSubpageFound": null,
+          "subpagesTested": []
+        },
+        "c2": {
+          "verdict": "unclear",
+          "score": 0,
+          "reason": "fetchHtml failed: HTTP 404",
+          "duration": 114,
+          "htmlBytes": 0
+        },
+        "c3": {
+          "universalEventsFound": 0,
+          "universalMethodsUsed": [
+            "universal-extractor"
+          ],
+          "universalMethodBreakdown": {},
+          "duration": 0
+        },
+        "extract": {
+          "eventsFound": 0,
+          "duration": 0,
+          "htmlSize": 0,
+          "extractedEvents": []
+        },
+        "trace": {
+          "sourceId": "vasteras-stadsteatern",
+          "sourceUrl": "https://vasteras.se/stadsteatern",
+          "round": 1,
+          "c0Candidates": 0,
+          "c0WinnerUrl": null,
+          "c0WinnerDensity": 0,
+          "c0RuleSource": "none",
+          "c0RulePathsTested": [],
+          "c0RuleWinnerPath": null,
+          "effectiveUrl": "https://vasteras.se/stadsteatern",
+          "effectiveUrlReason": "url-variant",
+          "c1Verdict": "unfetchable",
+          "c1LikelyJsRendered": false,
+          "c1TimeTagCount": 0,
+          "c1DateCount": 0,
+          "c1HtmlBytes": 0,
+          "c1Fetchable": false,
+          "c1FetchError": "HTTP 404",
+          "c1BestSubpageFound": null,
+          "c1SubpagesTested": [],
+          "c2Verdict": "unclear",
+          "c2Score": 0,
+          "c2Reason": "fetchHtml failed: HTTP 404",
+          "c2HtmlBytes": 0,
+          "c3EventsFound": 0,
+          "c3MethodsUsed": [
+            "universal-extractor"
+          ],
+          "c3MethodBreakdown": {},
+          "eventsFound": 0,
+          "outcomeType": "fail",
+          "routeSuggestion": "manual-review",
+          "exitReason": "FETCH_ERROR",
+          "exitReasonDetail": "fetch failed: HTTP 404",
+          "winningStage": "C3",
+          "success": false,
+          "derivedRuleApplied": false
+        }
+      }
+    },
+    {
+      "source": {
+        "sourceId": "folkets-hus",
+        "url": "https://folketshus.se/",
+        "roundsParticipated": 0,
+        "diversifiers": [
+          "has_404s",
+          "failures_11",
+          "path_jsonld"
+        ],
+        "queueReason": "toolB(preB): [breadth] unclear (0 likely, 0 possible) — Inga tydliga API:er hittades. 0 404s, 18 fel. Fler mönster kan finnas.. But: API structure attempted (18 errors) but no usable endpoints found. GotEvent lesson: API structure ≠ usable event data. Routing to HTML.",
+        "enrichedData": {
+          "lastPathUsed": "jsonld",
+          "lastEventsFound": 0,
+          "consecutiveFailures": 11,
+          "triageResult": null
+        }
+      },
+      "decision": "postTestC-manual-review",
+      "result": {
+        "sourceId": "folkets-hus",
+        "sourceUrl": "https://folketshus.se/",
+        "winningStage": "C3",
+        "outcomeType": "fail",
+        "routeSuggestion": "manual-review",
+        "evidence": "fetch error: timeout of 15000ms exceeded",
+        "roundNumber": 1,
+        "success": false,
+        "exitReason": "FETCH_ERROR",
+        "exitReasonDetail": "fetch failed: timeout of 15000ms exceeded",
+        "effectiveProcessingUrl": "https://folketshus.se/",
+        "effectiveProcessingUrlReason": "url-variant",
+        "c0": {
+          "candidates": 0,
+          "winnerUrl": null,
+          "winnerDensity": 0,
+          "duration": 5059,
+          "rootFallback": false,
+          "ruleAppliedSource": "none",
+          "ruleAppliedPaths": [],
+          "ruleWinnerPath": null
+        },
+        "c1": {
+          "verdict": "unfetchable",
+          "likelyJsRendered": false,
+          "timeTagCount": 0,
+          "dateCount": 0,
+          "duration": 5007,
+          "htmlBytes": 0,
+          "fetchable": false,
+          "fetchError": "timeout of 15000ms exceeded",
+          "bestSubpageFound": null,
+          "subpagesTested": []
+        },
+        "c2": {
+          "verdict": "unclear",
+          "score": 0,
+          "reason": "fetchHtml failed: timeout of 20000ms exceeded",
+          "duration": 5006,
+          "htmlBytes": 0
+        },
+        "c3": {
+          "universalEventsFound": 0,
+          "universalMethodsUsed": [
+            "universal-extractor"
+          ],
+          "universalMethodBreakdown": {},
+          "duration": 0
+        },
+        "extract": {
+          "eventsFound": 0,
+          "duration": 0,
+          "htmlSize": 0,
+          "extractedEvents": []
+        },
+        "trace": {
+          "sourceId": "folkets-hus",
+          "sourceUrl": "https://folketshus.se/",
+          "round": 1,
+          "c0Candidates": 0,
+          "c0WinnerUrl": null,
+          "c0WinnerDensity": 0,
+          "c0RuleSource": "none",
+          "c0RulePathsTested": [],
+          "c0RuleWinnerPath": null,
+          "effectiveUrl": "https://folketshus.se/",
+          "effectiveUrlReason": "url-variant",
+          "c1Verdict": "unfetchable",
+          "c1LikelyJsRendered": false,
+          "c1TimeTagCount": 0,
+          "c1DateCount": 0,
+          "c1HtmlBytes": 0,
+          "c1Fetchable": false,
+          "c1FetchError": "timeout of 15000ms exceeded",
+          "c1BestSubpageFound": null,
+          "c1SubpagesTested": [],
+          "c2Verdict": "unclear",
+          "c2Score": 0,
+          "c2Reason": "fetchHtml failed: timeout of 20000ms exceeded",
+          "c2HtmlBytes": 0,
+          "c3EventsFound": 0,
+          "c3MethodsUsed": [
+            "universal-extractor"
+          ],
+          "c3MethodBreakdown": {},
+          "eventsFound": 0,
+          "outcomeType": "fail",
+          "routeSuggestion": "manual-review",
+          "exitReason": "FETCH_ERROR",
+          "exitReasonDetail": "fetch failed: timeout of 15000ms exceeded",
+          "winningStage": "C3",
+          "success": false,
+          "derivedRuleApplied": false
+        }
+      }
+    },
+    {
+      "source": {
+        "sourceId": "g-teborgs-universitet",
+        "url": "https://gu.se/evenemang",
+        "roundsParticipated": 0,
+        "diversifiers": [
+          "has_404s",
+          "errors_18",
+          "failures_11",
+          "path_jsonld"
+        ],
+        "queueReason": "toolB(preB): [breadth] unclear (0 likely, 0 possible) — Inga tydliga API:er hittades. 18 404s, 18 fel. Fler mönster kan finnas.. But: No network/API signals detected. GotEvent lesson: API structure ≠ usable event data. Routing to HTML.",
+        "enrichedData": {
+          "lastPathUsed": "jsonld",
+          "lastEventsFound": 0,
+          "consecutiveFailures": 11,
+          "triageResult": null
+        }
+      },
+      "decision": "postTestC-manual-review",
+      "result": {
+        "sourceId": "g-teborgs-universitet",
+        "sourceUrl": "https://gu.se/evenemang",
+        "winningStage": "C3",
+        "outcomeType": "fail",
+        "routeSuggestion": "manual-review",
+        "evidence": "fetch error: Exceeded 3 redirects",
+        "roundNumber": 1,
+        "success": false,
+        "exitReason": "FETCH_ERROR",
+        "exitReasonDetail": "fetch failed: Exceeded 3 redirects",
+        "effectiveProcessingUrl": "https://gu.se/evenemang",
+        "effectiveProcessingUrlReason": "url-variant",
+        "c0": {
+          "candidates": 0,
+          "winnerUrl": null,
+          "winnerDensity": 0,
+          "duration": 466,
+          "rootFallback": false,
+          "ruleAppliedSource": "none",
+          "ruleAppliedPaths": [],
+          "ruleWinnerPath": null
+        },
+        "c1": {
+          "verdict": "unfetchable",
+          "likelyJsRendered": false,
+          "timeTagCount": 0,
+          "dateCount": 0,
+          "duration": 76,
+          "htmlBytes": 0,
+          "fetchable": false,
+          "fetchError": "Exceeded 3 redirects",
+          "bestSubpageFound": null,
+          "subpagesTested": []
+        },
+        "c2": {
+          "verdict": "unclear",
+          "score": 0,
+          "reason": "fetchHtml failed: Exceeded 3 redirects",
+          "duration": 108,
+          "htmlBytes": 0
+        },
+        "c3": {
+          "universalEventsFound": 0,
+          "universalMethodsUsed": [
+            "universal-extractor"
+          ],
+          "universalMethodBreakdown": {},
+          "duration": 0
+        },
+        "extract": {
+          "eventsFound": 0,
+          "duration": 0,
+          "htmlSize": 0,
+          "extractedEvents": []
+        },
+        "trace": {
+          "sourceId": "g-teborgs-universitet",
+          "sourceUrl": "https://gu.se/evenemang",
+          "round": 1,
+          "c0Candidates": 0,
+          "c0WinnerUrl": null,
+          "c0WinnerDensity": 0,
+          "c0RuleSource": "none",
+          "c0RulePathsTested": [],
+          "c0RuleWinnerPath": null,
+          "effectiveUrl": "https://gu.se/evenemang",
+          "effectiveUrlReason": "url-variant",
+          "c1Verdict": "unfetchable",
+          "c1LikelyJsRendered": false,
+          "c1TimeTagCount": 0,
+          "c1DateCount": 0,
+          "c1HtmlBytes": 0,
+          "c1Fetchable": false,
+          "c1FetchError": "Exceeded 3 redirects",
+          "c1BestSubpageFound": null,
+          "c1SubpagesTested": [],
+          "c2Verdict": "unclear",
+          "c2Score": 0,
+          "c2Reason": "fetchHtml failed: Exceeded 3 redirects",
+          "c2HtmlBytes": 0,
+          "c3EventsFound": 0,
+          "c3MethodsUsed": [
+            "universal-extractor"
+          ],
+          "c3MethodBreakdown": {},
+          "eventsFound": 0,
+          "outcomeType": "fail",
+          "routeSuggestion": "manual-review",
+          "exitReason": "FETCH_ERROR",
+          "exitReasonDetail": "fetch failed: Exceeded 3 redirects",
+          "winningStage": "C3",
+          "success": false,
+          "derivedRuleApplied": false
+        }
+      }
+    },
+    {
+      "source": {
+        "sourceId": "djurgardens-if",
+        "url": "https://dif.se/",
+        "roundsParticipated": 0,
+        "diversifiers": [
+          "has_404s",
+          "errors_18",
+          "failures_11",
+          "path_jsonld"
+        ],
+        "queueReason": "toolB(preB): [breadth] unclear (0 likely, 0 possible) — Inga tydliga API:er hittades. 18 404s, 18 fel. Fler mönster kan finnas.. But: No network/API signals detected. GotEvent lesson: API structure ≠ usable event data. Routing to HTML.",
+        "enrichedData": {
+          "lastPathUsed": "jsonld",
+          "lastEventsFound": 0,
+          "consecutiveFailures": 11,
+          "triageResult": null
+        }
+      },
+      "decision": "postTestC-manual-review",
+      "result": {
+        "sourceId": "djurgardens-if",
+        "sourceUrl": "https://dif.se/",
+        "winningStage": "C3",
+        "outcomeType": "fail",
+        "routeSuggestion": "Fail",
+        "evidence": "",
+        "roundNumber": 1,
+        "success": false,
+        "exitReason": "FETCH_ERROR",
+        "exitReasonDetail": "Assignment to constant variable.",
+        "effectiveProcessingUrl": "https://dif.se/",
+        "effectiveProcessingUrlReason": "url-variant:original",
+        "c0": {
+          "candidates": 4,
+          "winnerUrl": "https://dif.se/biljetter/ga-pa-match",
+          "winnerDensity": 2,
+          "duration": 2081,
+          "rootFallback": false,
+          "ruleAppliedSource": "link-discovery",
+          "ruleAppliedPaths": [],
+          "ruleWinnerPath": "/biljetter/ga-pa-match"
+        },
+        "c1": {
+          "verdict": "unknown",
+          "likelyJsRendered": false,
+          "timeTagCount": 0,
+          "dateCount": 0,
+          "duration": 0,
+          "htmlBytes": 0,
+          "fetchable": false,
+          "bestSubpageFound": null,
+          "subpagesTested": []
+        },
+        "c2": {
+          "verdict": "unknown",
+          "score": 0,
+          "reason": "",
+          "duration": 0,
+          "htmlBytes": 0
+        },
+        "c3": {
+          "universalEventsFound": 0,
+          "universalMethodsUsed": [],
+          "universalMethodBreakdown": {},
+          "duration": 0
+        },
+        "extract": {
+          "eventsFound": 0,
+          "duration": 0,
+          "htmlSize": 0
+        },
+        "trace": {
+          "sourceId": "djurgardens-if",
+          "sourceUrl": "https://dif.se/",
+          "round": 1,
+          "c0Candidates": 4,
+          "c0WinnerUrl": "https://dif.se/biljetter/ga-pa-match",
+          "c0WinnerDensity": 2,
+          "c0RuleSource": "link-discovery",
+          "c0RulePathsTested": [],
+          "c0RuleWinnerPath": "/biljetter/ga-pa-match",
+          "effectiveUrl": "https://dif.se/",
+          "effectiveUrlReason": "url-variant:original",
+          "c1Verdict": "unknown",
+          "c1LikelyJsRendered": false,
+          "c1TimeTagCount": 0,
+          "c1DateCount": 0,
+          "c1HtmlBytes": 0,
+          "c1Fetchable": false,
+          "c1BestSubpageFound": null,
+          "c1SubpagesTested": [],
+          "c2Verdict": "unknown",
+          "c2Score": 0,
+          "c2Reason": "",
+          "c2HtmlBytes": 0,
+          "c3EventsFound": 0,
+          "c3MethodsUsed": [],
+          "c3MethodBreakdown": {},
+          "eventsFound": 0,
+          "outcomeType": "fail",
+          "routeSuggestion": "Fail",
+          "exitReason": "FETCH_ERROR",
+          "exitReasonDetail": "Assignment to constant variable.",
+          "winningStage": "C3",
+          "success": false,
+          "derivedRuleApplied": false,
+          "error": "Assignment to constant variable."
+        },
+        "error": "Assignment to constant variable."
+      }
+    }
+  ],
+  "allExitedIds": [
+    "uppsala-reggae-festival",
+    "centuri",
+    "friidrottsf-rbundet",
+    "eventbrite",
+    "uppsala-teatern",
+    "vasteras-konstmuseum",
+    "mobilia",
+    "uppsala-museum",
+    "swedish-food",
+    "orebro-vinterfest",
+    "mora-ik",
+    "test-write-verify",
+    "vaxjo-alcazar",
+    "kth",
+    "fyrfaderna",
+    "dalarna",
+    "masthuggskyrkan",
+    "trollhattan",
+    "malmo-massan",
+    "norrkoping-art",
+    "kungstradgarden",
+    "brommapojkarna",
+    "kumla",
+    "open-air",
+    "observatoriet",
+    "h-gskolan-i-sk-vde",
+    "vega",
+    "malm-konserthus",
+    "goteborgs-kulturfestival",
+    "we-are-sarajevo",
+    "malmo-museum",
+    "goteborgs-stadsbibliotek",
+    "falun-stadsteatern",
+    "visit-gothenburg",
+    "karlstad-konserthus",
+    "jazz-i-lund",
+    "mittuniversitetet",
+    "arkitekturgalleriet",
+    "vasteras-stadsteatern",
+    "folkets-hus",
+    "g-teborgs-universitet",
+    "djurgardens-if"
+  ],
+  "lastSaved": "2026-04-19T12:32:17.405Z"
+}

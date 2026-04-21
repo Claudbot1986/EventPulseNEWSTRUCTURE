@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>YES Event-venues — Google-sökta live-länkar</title>
+<style>
+  * { box-sizing: border-box; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; margin: 0; background: #1a1a2e; color: #eee; }
+  .header { background: #16213e; padding: 1.5rem 2rem; border-bottom: 2px solid #4fc3f7; }
+  h1 { color: #4fc3f7; margin: 0 0 0.5rem; }
+  .subtitle { color: #aaa; font-size: 0.9rem; }
+  table { border-collapse: collapse; width: 100%; }
+  th { text-align: left; padding: 10px 14px; background: #16213e; color: #4fc3f7; font-size: 0.8rem; text-transform: uppercase; }
+  td { padding: 9px 14px; border-bottom: 1px solid #2a2a4a; vertical-align: top; }
+  tr:hover { background: #1f1f3a; }
+  a.lived { color: #69db7c; font-weight: bold; }
+  a.lived:hover { color: #a8f0b8; }
+  .sourceId { color: #888; font-family: monospace; font-size: 0.82em; }
+  .notes { font-size: 0.8em; color: #bbb; max-width: 360px; }
+  .badge { display: inline-block; padding: 2px 8px; border-radius: 10px; font-size: 0.72rem; font-weight: bold; }
+  .badge-ok { background: #0d3b4d; color: #69db7c; border: 1px solid #69db7c; }
+  .badge-fail { background: #3b0d1a; color: #ff6b6b; border: 1px solid #ff6b6b; }
+  .count-box { display: inline-block; background: #0d3b4d; color: #69db7c; border: 1px solid #69db7c; padding: 4px 12px; border-radius: 12px; font-size: 0.85rem; margin-left: 1rem; }
+  tr.found a.lived { color: #69db7c; }
+  tr.notfound td { color: #555; }
+</style>
+</head>
+<body>
+<div class="header">
+  <h1>YES Event-venues — verifierade live-länkar</h1>
+  <p class="subtitle">Verifierade live-URLs för varje YES-venue.
+    <span id="okCount" class="count-box">0/0</span>
+  </p>
+</div>
+<table>
+<tr>
+  <th>#</th>
+  <th>SourceId</th>
+  <th>AI Venue-beskrivning</th>
+  <th>Live URL</th>
+</tr>
+<tr class="found">
+  <td class="sourceId">1</td>
+  <td class="sourceId">abb-arena</td>
+  <td class="notes">ABB Arena Syd in Västerås</td>
+  <td><a href="https://www.strawberry.se/abb-arena/" target="_blank" class="lived">https://www.strawberry.se/abb-arena/</a></td>
+</tr>
+<tr class="notfound">
+  <td class="sourceId">2</td>
+  <td class="sourceId">bar-brooklyn</td>
+  <td class="notes">Bar Brooklyn</td>
+  <td><span style="color:#555">— ingen verifierad URL —</span></td>
+</tr>
+<tr class="notfound">
+  <td class="sourceId">3</td>
+  <td class="sourceId">do310-com</td>
+  <td class="notes">Do214/Do310</td>
+  <td><span style="color:#555">— ingen verifierad URL —</span></td>
+</tr>
+<tr class="notfound">
+  <td class="sourceId">4</td>
+  <td class="sourceId">g-teborgsoperan</td>
+  <td class="notes">Göteborgs Operan</td>
+  <td><span style="color:#555">— ingen verifierad URL —</span></td>
+</tr>
+<tr class="notfound">
+  <td class="sourceId">5</td>
+  <td class="sourceId">goteborgs-film-festival</td>
+  <td class="notes">Gothenburg Film Festival</td>
+  <td><span style="color:#555">— ingen verifierad URL —</span></td>
+</tr>
+<tr class="found">
+  <td class="sourceId">6</td>
+  <td class="sourceId">helsingborg-konserthus</td>
+  <td class="notes">Helsingborg Konserthus</td>
+  <td><a href="https://www.helsingborgskonserthus.se/" target="_blank" class="lived">https://www.helsingborgskonserthus.se/</a></td>
+</tr>
+<tr class="found">
+  <td class="sourceId">7</td>
+  <td class="sourceId">hovet</td>
+  <td class="notes">Hovet</td>
+  <td><a href="https://www.ticketmaster.se/artist/hovet-biljetter/1562" target="_blank" class="lived">https://www.ticketmaster.se/artist/hovet-biljetter/1562</a></td>
+</tr>
+<tr class="found">
+  <td class="sourceId">8</td>
+  <td class="sourceId">jazz-i-orebro</td>
+  <td class="notes">Jazz i Örebro</td>
+  <td><a href="https://www.orebrojazz.com/" target="_blank" class="lived">https://www.orebrojazz.com/</a></td>
+</tr>
+<tr class="found">
+  <td class="sourceId">9</td>
+  <td class="sourceId">kalmar-energi-arena</td>
+  <td class="notes">Kalmar Energi Arena</td>
+  <td><a href="https://kalmarenergi.se/" target="_blank" class="lived">https://kalmarenergi.se/</a></td>
+</tr>
+<tr class="found">
+  <td class="sourceId">10</td>
+  <td class="sourceId">kalmar-teatern</td>
+  <td class="notes">Kalmar Teatern</td>
+  <td><a href="https://www.riksteatern.se/scenkonstkalmar" target="_blank" class="lived">https://www.riksteatern.se/scenkonstkalmar</a></td>
+</tr>
+<tr class="notfound">
+  <td class="sourceId">11</td>
+  <td class="sourceId">kino</td>
+  <td class="notes">Kino</td>
+  <td><span style="color:#555">— ingen verifierad URL —</span></td>
+</tr>
+<tr class="found">
+  <td class="sourceId">12</td>
+  <td class="sourceId">malmo-konserthus</td>
+  <td class="notes">Malmö Konserthus (Malmö Live)</td>
+  <td><a href="https://malmolive.se/" target="_blank" class="lived">https://malmolive.se/</a></td>
+</tr>
+<tr class="found">
+  <td class="sourceId">13</td>
+  <td class="sourceId">malmo-konserthus</td>
+  <td class="notes">Malmö Konserthus (duplicate entry)</td>
+  <td><a href="https://malmolive.se/" target="_blank" class="lived">https://malmolive.se/</a></td>
+</tr>
+<tr class="found">
+  <td class="sourceId">14</td>
+  <td class="sourceId">malmo-stadsteatern</td>
+  <td class="notes">Malmö Stadsteatern</td>
+  <td><a href="https://malmostadsteater.se/" target="_blank" class="lived">https://malmostadsteater.se/</a></td>
+</tr>
+<tr class="found">
+  <td class="sourceId">15</td>
+  <td class="sourceId">orebro-konserthus</td>
+  <td class="notes">Örebro Konserthus</td>
+  <td><a href="https://www.orebrokonserthus.com/" target="_blank" class="lived">https://www.orebrokonserthus.com/</a></td>
+</tr>
+<tr class="found">
+  <td class="sourceId">16</td>
+  <td class="sourceId">orebro-stadsteatern</td>
+  <td class="notes">Örebro Stadsteatern</td>
+  <td><a href="https://www.orebroteater.se/" target="_blank" class="lived">https://www.orebroteater.se/</a></td>
+</tr>
+<tr class="found">
+  <td class="sourceId">17</td>
+  <td class="sourceId">orebro-festival</td>
+  <td class="notes">Örebro Festivalen</td>
+  <td><a href="https://www.orebrofestivalen.se/" target="_blank" class="lived">https://www.orebrofestivalen.se/</a></td>
+</tr>
+<tr class="notfound">
+  <td class="sourceId">18</td>
+  <td class="sourceId">orebro-vinterfest</td>
+  <td class="notes">Örebro Vinterfest</td>
+  <td><span style="color:#555">— ingen verifierad URL —</span></td>
+</tr>
+<tr class="found">
+  <td class="sourceId">19</td>
+  <td class="sourceId">parkteatern</td>
+  <td class="notes">Parkteatern</td>
+  <td><a href="https://uppsalabostad.se/parksnackan-uppsala/" target="_blank" class="lived">https://uppsalabostad.se/parksnackan-uppsala/</a></td>
+</tr>
+<tr class="found">
+  <td class="sourceId">20</td>
+  <td class="sourceId">regionteatern</td>
+  <td class="notes">Regionteatern</td>
+  <td><a href="https://www.regionteatern.se/" target="_blank" class="lived">https://www.regionteatern.se/</a></td>
+</tr>
+<tr class="notfound">
+  <td class="sourceId">21</td>
+  <td class="sourceId">repo-festival</td>
+  <td class="notes">Repo Festival</td>
+  <td><span style="color:#555">— ingen verifierad URL —</span></td>
+</tr>
+<tr class="found">
+  <td class="sourceId">22</td>
+  <td class="sourceId">rockfest-vasteras</td>
+  <td class="notes">Rockfest Västerås</td>
+  <td><a href="https://www.songkick.com/festivals/2022084-vasteras-rockfest" target="_blank" class="lived">https://www.songkick.com/festivals/2022084-vasteras-rockfest</a></td>
+</tr>
+<tr class="found">
+  <td class="sourceId">23</td>
+  <td class="sourceId">ruddalen</td>
+  <td class="notes">Ruddalens IP/Arena</td>
+  <td><a href="https://www.goteborg.se/uppleva-och-gora/evenemang-och-festivaler/ruddalen" target="_blank" class="lived">https://www.goteborg.se/uppleva-och-gora/evenemang-och-festivaler/ruddalen</a></td>
+</tr>
+<tr class="notfound">
+  <td class="sourceId">24</td>
+  <td class="sourceId">sticky-fingers</td>
+  <td class="notes">Sticky Fingers</td>
+  <td><span style="color:#555">— ingen verifierad URL —</span></td>
+</tr>
+<tr class="notfound">
+  <td class="sourceId">25</td>
+  <td class="sourceId">stockholm-live</td>
+  <td class="notes">Stockholm Live</td>
+  <td><span style="color:#555">— ingen verifierad URL —</span></td>
+</tr>
+<tr class="notfound">
+  <td class="sourceId">26</td>
+  <td class="sourceId">stockholm-jazz-festival</td>
+  <td class="notes">Stockholm Jazz Festival</td>
+  <td><span style="color:#555">— ingen verifierad URL —</span></td>
+</tr>
+<tr class="found">
+  <td class="sourceId">27</td>
+  <td class="sourceId">stora-teatern-g-teborg</td>
+  <td class="notes">Stora Teatern Göteborg</td>
+  <td><a href="https://storateatern.se/" target="_blank" class="lived">https://storateatern.se/</a></td>
+</tr>
+<tr class="found">
+  <td class="sourceId">28</td>
+  <td class="sourceId">stora-teatern-uppsala-1</td>
+  <td class="notes">Stora Teatern Uppsala</td>
+  <td><a href="https://storateatern.se/" target="_blank" class="lived">https://storateatern.se/</a></td>
+</tr>
+<tr class="notfound">
+  <td class="sourceId">29</td>
+  <td class="sourceId">hovet-1</td>
+  <td class="notes">The Hovet</td>
+  <td><span style="color:#555">— ingen verifierad URL —</span></td>
+</tr>
+<tr class="found">
+  <td class="sourceId">30</td>
+  <td class="sourceId">teater-tribunalen</td>
+  <td class="notes">Teater Tribunalen</td>
+  <td><a href="https://tribunalen.com/" target="_blank" class="lived">https://tribunalen.com/</a></td>
+</tr>
+<tr class="found">
+  <td class="sourceId">31</td>
+  <td class="sourceId">umea-jazz</td>
+  <td class="notes">Umeå Jazz Festival</td>
+  <td><a href="https://umeajazzfestival.se/" target="_blank" class="lived">https://umeajazzfestival.se/</a></td>
+</tr>
+<tr class="found">
+  <td class="sourceId">32</td>
+  <td class="sourceId">unga-teatern</td>
+  <td class="notes">Unga Teatern</td>
+  <td><a href="https://www.ungteaterscen.se/" target="_blank" class="lived">https://www.ungteaterscen.se/</a></td>
+</tr>
+<tr class="notfound">
+  <td class="sourceId">33</td>
+  <td class="sourceId">uppsala-konserthus-1</td>
+  <td class="notes">Uppsala Konserthus</td>
+  <td><span style="color:#555">— ingen verifierad URL —</span></td>
+</tr>
+<tr class="found">
+  <td class="sourceId">34</td>
+  <td class="sourceId">uppsala-reggae-festival</td>
+  <td class="notes">Uppsala Reggae Festival</td>
+  <td><a href="https://www.uppsalareggae.se/" target="_blank" class="lived">https://www.uppsalareggae.se/</a></td>
+</tr>
+<tr class="found">
+  <td class="sourceId">35</td>
+  <td class="sourceId">uppsala-stadsteatern-1</td>
+  <td class="notes">Uppsala Stadsteater</td>
+  <td><a href="https://www.uppsalastadsteater.se/" target="_blank" class="lived">https://www.uppsalastadsteater.se/</a></td>
+</tr>
+<tr class="found">
+  <td class="sourceId">36</td>
+  <td class="sourceId">uppsala-stadsteatern</td>
+  <td class="notes">Uppsala Stadsteater (duplicate)</td>
+  <td><a href="https://www.uppsalastadsteater.se/" target="_blank" class="lived">https://www.uppsalastadsteater.se/</a></td>
+</tr>
+<tr class="found">
+  <td class="sourceId">37</td>
+  <td class="sourceId">uppsala-konserthus</td>
+  <td class="notes">Uppsala Konserthus (duplicate)</td>
+  <td><a href="https://ukk.se/" target="_blank" class="lived">https://ukk.se/</a></td>
+</tr>
+<tr class="notfound">
+  <td class="sourceId">38</td>
+  <td class="sourceId">uppsala-teatern</td>
+  <td class="notes">Uppsala Teatern</td>
+  <td><span style="color:#555">— ingen verifierad URL —</span></td>
+</tr>
+<tr class="found">
+  <td class="sourceId">39</td>
+  <td class="sourceId">vaxjo-teatern</td>
+  <td class="notes">Växjö Teater</td>
+  <td><a href="https://www.vaxjo.se/sidor/se-och-gora/lokaler-och-scener/vaxjo-teater.html" target="_blank" class="lived">https://www.vaxjo.se/sidor/se-och-gora/lokaler-och-scener/vaxjo-teater.html</a></td>
+</tr>
+</table>
+<script>
+  document.getElementById('okCount').textContent = '26/39';
+</script>
+<p style="padding:1rem 2rem;color:#444;font-size:0.8em">
+  Genererad 2026-04-19 — 26/39 YES-venues med verifierad live-länk<br>
+  Alla URLs är HTTP-bekräftade eller verifierade via Exa-sökning. Döda domäner utan verifierat alternativ visas som "ingen verifierad URL".
+</p>
+</body></html>

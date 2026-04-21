@@ -1,0 +1,23 @@
+{
+  "expo": {
+    "name": "EventPulse",
+    "slug": "EventPulse",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "dark",
+    "splash": {
+      "resizeMode": "contain",
+      "backgroundColor": "#000000"
+    },
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.eventpulse.app"
+    },
+    "android": {
+      "package": "com.eventpulse.app",
+      "adaptiveIcon": {
+        "backgroundColor": "#000000"
+      }
+    }
+  }
+}

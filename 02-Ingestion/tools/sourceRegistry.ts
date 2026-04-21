@@ -523,6 +523,34 @@ export function ensureSourceStatus(sourceId: string): void {
   }
 }
 
+// ─── Source URL Update ─────────────────────────────────────────────────────────
+
+/**
+ * Uppdatera URL:en för en specifik source i sources/
+ * Används av scB-404-recovery när MiniMax hittar en ny fungerande URL.
+ */
+export function updateSourceUrl(sourceId: string, newUrl: string): boolean {
+  const filePath = path.join(SOURCES_DIR, `${sourceId}.jsonl`);
+  if (!existsSync(filePath)) return false;
+
+  const content = readFileSync(filePath, 'utf8').trim();
+  if (!content) return false;
+
+  let parsed: SourceTruth | null = null;
+
+  try { parsed = JSON.parse(content) as SourceTruth; } catch {}
+  if (!parsed || !parsed.id) {
+    const firstLine = content.split('\n')[0].trim();
+    try { parsed = JSON.parse(firstLine) as SourceTruth; } catch {}
+  }
+
+  if (!parsed || !parsed.id) return false;
+
+  parsed.url = newUrl;
+  writeFileSync(filePath, JSON.stringify(parsed, null, 2) + '\n', 'utf8');
+  return true;
+}
+
 // ─── Priority Queue ───────────────────────────────────────────────────────────
 
 function readPriorityFile(): PriorityEntry[] {

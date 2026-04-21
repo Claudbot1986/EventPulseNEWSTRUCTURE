@@ -1,0 +1,3227 @@
+{
+  "generatedAt": "2026-03-18T18:11:22.844Z",
+  "focus": "stockholm",
+  "stats": {
+    "totalVenues": 444,
+    "stockholmVenues": 198,
+    "stockholmVenuesPercent": 45,
+    "totalEvents": 26,
+    "stockholmEvents": 26,
+    "stockholmEventsPercent": 100
+  },
+  "venues": [
+    {
+      "id": "Z198xZq2ZAv1",
+      "name": "Cirkus",
+      "normalizedName": "cirkus",
+      "city": "stockholm",
+      "coordinates": {
+        "lat": "59.32457",
+        "lng": "18.09969"
+      },
+      "upcomingEvents": 103,
+      "category": null,
+      "provenance": [
+        "ticketmaster_venues",
+        "ticketmaster_events"
+      ],
+      "type": "api",
+      "url": null,
+      "rankScore": 1150
+    },
+    {
+      "id": "Z198xZq2Za6e",
+      "name": "Göta Lejon",
+      "normalizedName": "götlejon",
+      "city": "stockholm",
+      "coordinates": {
+        "lat": "59.31378",
+        "lng": "18.07384"
+      },
+      "upcomingEvents": 101,
+      "category": null,
+      "provenance": [
+        "ticketmaster_venues",
+        "ticketmaster_events"
+      ],
+      "type": "api",
+      "url": null,
+      "rankScore": 1130
+    },
+    {
+      "id": "Z698xZq2ZadxS",
+      "name": "Tyrol",
+      "normalizedName": "tyrol",
+      "city": "stockholm",
+      "coordinates": {
+        "lat": "59.324127",
+        "lng": "18.096259"
+      },
+      "upcomingEvents": 100,
+      "category": null,
+      "provenance": [
+        "ticketmaster_events"
+      ],
+      "type": "api",
+      "url": null,
+      "rankScore": 1070
+    },
+    {
+      "id": "Z698xZq2ZaAN5",
+      "name": "Clarion Hotel Sign",
+      "normalizedName": "clarion hotel sign",
+      "city": "stockholm",
+      "coordinates": {
+        "lat": "59.99333",
+        "lng": "18.89062"
+      },
+      "upcomingEvents": 60,
+      "category": null,
+      "provenance": [
+        "ticketmaster_venues"
+      ],
+      "type": "api",
+      "url": null,
+      "rankScore": 690
+    },
+    {
+      "id": "Z598xZq2Za7e1",
+      "name": "Strawberry Arena",
+      "normalizedName": "strawberry arena",
+      "city": "stockholm",
+      "coordinates": {
+        "lat": "59.37254",
+        "lng": "18.00041"
+      },
+      "upcomingEvents": 23,
+      "category": null,
+      "provenance": [
+        "ticketmaster_venues",
+        "ticketmaster_events"
+      ],
+      "type": "api",
+      "url": null,
+      "rankScore": 350
+    },
+    {
+      "id": "Z198xZq2ZAae",
+      "name": "Dansens Hus - stora scen",
+      "normalizedName": "dansens hus storscen",
+      "city": "stockholm",
+      "coordinates": {
+        "lat": "59.33623",
+        "lng": "18.05644"
+      },
+      "upcomingEvents": 19,
+      "category": null,
+      "provenance": [
+        "ticketmaster_venues"
+      ],
+      "type": "api",
+      "url": null,
+      "rankScore": 280
+    },
+    {
+      "id": "Z698xZq2Za7i4",
+      "name": "Fållan",
+      "normalizedName": "fållan",
+      "city": "johanneshov",
+      "coordinates": {
+        "lat": "59.29172",
+        "lng": "18.07638"
+      },
+      "upcomingEvents": 18,
+      "category": null,
+      "provenance": [
+        "ticketmaster_venues",
+        "ticketmaster_events"
+      ],
+      "type": "api",
+      "url": null,
+      "rankScore": 275
+    },
+    {
+      "id": "Z698xZq2ZaA4E",
+      "name": "La Botanica",
+      "normalizedName": "lbotanica",
+      "city": "stockholm",
+      "coordinates": {
+        "lat": "59.36898",
+        "lng": "18.00585"
+      },
+      "upcomingEvents": 16,
+      "category": null,
+      "provenance": [
+        "ticketmaster_venues"
+      ],
+      "type": "api",
+      "url": null,
+      "rankScore": 250
+    },
+    {
+      "id": "Z698xZq2ZaA-_",
+      "name": "Dansens Hus Studioscen",
+      "normalizedName": "dansens hus studioscen",
+      "city": "stockholm",
+      "coordinates": {
+        "lat": "59.33623",
+        "lng": "18.05644"
+      },
+      "upcomingEvents": 12,
+      "category": null,
+      "provenance": [
+        "ticketmaster_venues",
+        "ticketmaster_events"
+      ],
+      "type": "api",
+      "url": null,
+      "rankScore": 240
+    },
+    {
+      "id": "Z698xZq2Za7DK",
+      "name": "Filadelfia Convention Center",
+      "normalizedName": "filadelficonvention center",
+      "city": "stockholm",
+      "coordinates": {
+        "lat": "59.33948",
+        "lng": "18.03484"
+      },
+      "upcomingEvents": 13,
+      "category": null,
+      "provenance": [
+        "ticketmaster_venues"
+      ],
+      "type": "api",
+      "url": null,
+      "rankScore": 220
+    },
+    {
+      "id": "Z698xZq2ZaAIh",
+      "name": "Filadelfia Garderob",
+      "normalizedName": "filadelfigarderob",
+      "city": "stockholm",
+      "coordinates": {
+        "lat": "59.33948",
+        "lng": "18.03484"
+      },
+      "upcomingEvents": 13,
+      "category": null,
+      "provenance": [
+        "ticketmaster_venues"
+      ],
+      "type": "api",
+      "url": null,
+      "rankScore": 220
+    },
+    {
+      "id": "Z598xZq2ZAFek",
+      "name": "Dansens Hus Blackbox",
+      "normalizedName": "dansens hus blackbox",
+      "city": "stockholm",
+      "coordinates": {
+        "lat": "59.33233",
+        "lng": "18.06293"
+      },
+      "upcomingEvents": 10,
+      "category": null,
+      "provenance": [
+        "ticketmaster_venues"
+      ],
+      "type": "api",
+      "url": null,
+      "rankScore": 190
+    },
+    {
+      "id": "Z698xZq2ZaAPd",
+      "name": "Debaser Nova",
+      "normalizedName": "debaser nova",
+      "city": "stockholm",
+      "coordinates": {
+        "lat": "59.31455",
+        "lng": "18.03242"
+      },
+      "upcomingEvents": 7,
+      "category": null,
+      "provenance": [
+        "ticketmaster_venues",
+        "ticketmaster_events"
+      ],
+      "type": "api",
+      "url": null,
+      "rankScore": 190
+    },
+    {
+      "id": "Z698xZq2ZaA8h",
+      "name": "B-K",
+      "normalizedName": "b k",
+      "city": "stockholm",
+      "coordinates": {
+        "lat": "59.3417",
+        "lng": "18.11862"
+      },
+      "upcomingEvents": 9,
+      "category": null,
+      "provenance": [
+        "ticketmaster_venues"
+      ],
+      "type": "api",
+      "url": null,
+      "rankScore": 180
+    },
+    {
+      "id": "Z598xZq2Z66kF",
+      "name": "Stockholm Waterfront",
+      "normalizedName": "stockholm waterfront",
+      "city": "stockholm",
+      "coordinates": {
+        "lat": "59.32982",
+        "lng": "18.05621"
+      },
+      "upcomingEvents": 5,
+      "category": null,
+      "provenance": [
+        "ticketmaster_venues",
+        "ticketmaster_events"
+      ],
+      "type": "api",
+      "url": null,
+      "rankScore": 170
+    },
+    {
+      "id": "Z698xZq2ZaA0y",
+      "name": "Sofia Common",
+      "normalizedName": "soficommon",
+      "city": "stockholm",
+      "coordinates": {
+        "lat": "59.31387",
+        "lng": "18.09131"
+      },
+      "upcomingEvents": 8,
+      "category": null,
+      "provenance": [
+        "ticketmaster_venues"
+      ],
+      "type": "api",
+      "url": null,
+      "rankScore": 170
+    },
+    {
+      "id": "Z598xZq2ZkA1k",
+      "name": "Berns",
+      "normalizedName": "berns",
+      "city": "stockholm",
+      "coordinates": {
+        "lat": "59.33226",
+        "lng": "18.07509"
+      },
+      "upcomingEvents": 3,
+      "category": null,
+      "provenance": [
+        "ticketmaster_venues",
+        "ticketmaster_events",
+        "category_expansion"
+      ],
+      "type": "api",
+      "url": null,
+      "rankScore": 150
+    },
+    {
+      "id": "Z698xZq2Za7Yu",
+      "name": "3Arena",
+      "normalizedName": "3arena",
+      "city": "stockholm",
+      "coordinates": {
+        "lat": "59.29045",
+        "lng": "18.08558"
+      },
+      "upcomingEvents": 3,
+      "category": null,
+      "provenance": [
+        "ticketmaster_venues",
+        "ticketmaster_events"
+      ],
+      "type": "api",
+      "url": null,
+      "rankScore": 150
+    },
+    {
+      "id": "Z698xZq2ZaA1u",
+      "name": "Bio Skandia",
+      "normalizedName": "bio skandia",
+      "city": "stockholm",
+      "coordinates": {
+        "lat": "59.33544",
+        "lng": "18.05998"
+      },
+      "upcomingEvents": 2,
+      "category": null,
+      "provenance": [
+        "ticketmaster_venues",
+        "ticketmaster_events"
+      ],
+      "type": "api",
+      "url": null,
+      "rankScore": 140
+    },
+    {
+      "id": "Z698xZq2ZaAIA",
+      "name": "Deglabbet",
+      "normalizedName": "deglabbet",
+      "city": "stockholm",
+      "coordinates": {
+        "lat": "59.33053",
+        "lng": "18.03644"
+      },
+      "upcomingEvents": 5,
+      "category": null,
+      "provenance": [
+        "ticketmaster_venues"
+      ],
+      "type": "api",
+      "url": null,
+      "rankScore": 140
+    },
+    {
+      "id": "Z698xZq2Za7wK",
+      "name": "Hovet",
+      "normalizedName": "hovet",
+      "city": "stockholm",
+      "coordinates": {
+        "lat": "59.33233",
+        "lng": "18.06293"
+      },
+      "upcomingEvents": 1,
+      "category": null,
+      "provenance": [
+        "ticketmaster_venues",
+        "ticketmaster_events",
+        "category_expansion"
+      ],
+      "type": "api",
+      "url": null,
+      "rankScore": 130
+    },
+    {
+      "id": "Z698xZq2ZaA82",
+      "name": "The Laugh House på Scandic Klara",
+      "normalizedName": "laugh house på scandic klara",
+      "city": "stockholm",
+      "coordinates": {
+        "lat": "59.33397",
+        "lng": "18.06195"
+      },
+      "upcomingEvents": 4,
+      "category": null,
+      "provenance": [
+        "ticketmaster_venues"
+      ],
+      "type": "api",
+      "url": null,
+      "rankScore": 130
+    },
+    {
+      "id": "Z698xZq2ZaAEg",
+      "name": "Banan-Kompaniet",
+      "normalizedName": "bankompaniet",
+      "city": "stockholm",
+      "coordinates": {
+        "lat": "59.34133",
+        "lng": "18.11993"
+      },
+      "upcomingEvents": 1,
+      "category": null,
+      "provenance": [
+        "ticketmaster_venues",
+        "ticketmaster_events"
+      ],
+      "type": "api",
+      "url": null,
+      "rankScore": 130
+    },
+    {
+      "id": "Z698xZq2ZaAI2",
+      "name": "Portlands - Frihamnen",
+      "normalizedName": "portlands frihamnen",
+      "city": "stockholm",
+      "coordinates": {
+        "lat": "59.34153",
+        "lng": "18.11903"
+      },
+      "upcomingEvents": 1,
+      "category": null,
+      "provenance": [
+        "ticketmaster_venues",
+        "ticketmaster_events"
+      ],
+      "type": "api",
+      "url": null,
+      "rankScore": 130
+    },
+    {
+      "id": "Z698xZq2ZaANu",
+      "name": "Förbindelsehallen",
+      "normalizedName": "förbindelsehallen",
+      "city": "stockholm",
+      "coordinates": {
+        "lat": "59.29283",
+        "lng": "18.07864"
+      },
+      "upcomingEvents": 3,
+      "category": null,
+      "provenance": [
+        "ticketmaster_venues"
+      ],
+      "type": "api",
+      "url": null,
+      "rankScore": 120
+    },
+    {
+      "id": "Z698xZq2ZaAhL",
+      "name": "Butik Labyrint",
+      "normalizedName": "butik labyrint",
+      "city": "stockholm",
+      "coordinates": {
+        "lat": "59.34264",
+        "lng": "18.03544"
+      },
+      "upcomingEvents": 3,
+      "category": null,
+      "provenance": [
+        "ticketmaster_venues"
+      ],
+      "type": "api",
+      "url": null,
+      "rankScore": 120
+    },
+    {
+      "id": "Z698xZq2ZaAFM",
+      "name": "Förbindelsehallen",
+      "normalizedName": "förbindelsehallen",
+      "city": "johanneshov",
+      "coordinates": {
+        "lat": "59.29316",
+        "lng": "18.07768"
+      },
+      "upcomingEvents": 2,
+      "category": null,
+      "provenance": [
+        "ticketmaster_venues",
+        "ticketmaster_events"
+      ],
+      "type": "api",
+      "url": null,
+      "rankScore": 115
+    },
+    {
+      "id": "Z598xZq2Zdk7F",
+      "name": "Spy Bar",
+      "normalizedName": "spy bar",
+      "city": "stockholm",
+      "coordinates": {
+        "lat": "59.33655",
+        "lng": "18.07209"
+      },
+      "upcomingEvents": 2,
+      "category": null,
+      "provenance": [
+        "ticketmaster_venues"
+      ],
+      "type": "api",
+      "url": null,
+      "rankScore": 110
+    },
+    {
+      "id": "Z598xZq2Z766k",
+      "name": "Berns, The Ballroom",
+      "normalizedName": "berns ballroom",
+      "city": "stockholm",
+      "coordinates": {
+        "lat": "59.33226",
+        "lng": "18.07509"
+      },
+      "upcomingEvents": 1,
+      "category": null,
+      "provenance": [
+        "ticketmaster_venues"
+      ],
+      "type": "api",
+      "url": null,
+      "rankScore": 100
+    },
+    {
+      "id": "Z598xZq2Z7Ae7",
+      "name": "Stockholms Stadion",
+      "normalizedName": "stockholms stadion",
+      "city": "stockholm",
+      "coordinates": {
+        "lat": "59.34677",
+        "lng": "18.08075"
+      },
+      "upcomingEvents": 1,
+      "category": null,
+      "provenance": [
+        "ticketmaster_venues"
+      ],
+      "type": "api",
+      "url": null,
+      "rankScore": 100
+    },
+    {
+      "id": "Z598xZq2ZkvFe",
+      "name": "Katarina Kyrka",
+      "normalizedName": "katarinkyrka",
+      "city": "stockholm",
+      "coordinates": {
+        "lat": "59.33233",
+        "lng": "18.06293"
+      },
+      "upcomingEvents": 1,
+      "category": null,
+      "provenance": [
+        "ticketmaster_venues"
+      ],
+      "type": "api",
+      "url": null,
+      "rankScore": 100
+    },
+    {
+      "id": "Z698xZq2Za7kq",
+      "name": "Hörsalen, Kulturhuset",
+      "normalizedName": "hörsalen kulturhuset",
+      "city": "stockholm",
+      "coordinates": {
+        "lat": "59.33274",
+        "lng": "18.06493"
+      },
+      "upcomingEvents": 1,
+      "category": null,
+      "provenance": [
+        "ticketmaster_venues"
+      ],
+      "type": "api",
+      "url": null,
+      "rankScore": 100
+    },
+    {
+      "id": "Z698xZq2ZaA-o",
+      "name": "Hotel At Six AB",
+      "normalizedName": "hotel at six ab",
+      "city": "stockholm",
+      "coordinates": {
+        "lat": "59.33106",
+        "lng": "18.067"
+      },
+      "upcomingEvents": 1,
+      "category": null,
+      "provenance": [
+        "ticketmaster_venues"
+      ],
+      "type": "api",
+      "url": null,
+      "rankScore": 100
+    },
+    {
+      "id": "Z698xZq2ZaA0h",
+      "name": "Hobo Hotel",
+      "normalizedName": "hobo hotel",
+      "city": "stockholm",
+      "coordinates": {
+        "lat": "59.3309",
+        "lng": "18.06683"
+      },
+      "upcomingEvents": 1,
+      "category": null,
+      "provenance": [
+        "ticketmaster_venues"
+      ],
+      "type": "api",
+      "url": null,
+      "rankScore": 100
+    },
+    {
+      "id": "Z698xZq2ZaAJc",
+      "name": "Atrium",
+      "normalizedName": "atrium",
+      "city": "stockholm",
+      "coordinates": {
+        "lat": "59.33648",
+        "lng": "18.0739"
+      },
+      "upcomingEvents": 1,
+      "category": null,
+      "provenance": [
+        "ticketmaster_venues"
+      ],
+      "type": "api",
+      "url": null,
+      "rankScore": 100
+    },
+    {
+      "id": "Z698xZq2ZaAJo",
+      "name": "House of Q",
+      "normalizedName": "house of q",
+      "city": "stockholm",
+      "coordinates": {
+        "lat": "59.34749",
+        "lng": "18.11076"
+      },
+      "upcomingEvents": 1,
+      "category": null,
+      "provenance": [
+        "ticketmaster_venues"
+      ],
+      "type": "api",
+      "url": null,
+      "rankScore": 100
+    },
+    {
+      "id": "Z698xZq2ZaANW",
+      "name": "Ekermanska Malmgården",
+      "normalizedName": "ekermanskmalmgården",
+      "city": "stockholm",
+      "coordinates": {
+        "lat": "59.3121",
+        "lng": "18.05206"
+      },
+      "upcomingEvents": 1,
+      "category": null,
+      "provenance": [
+        "ticketmaster_venues"
+      ],
+      "type": "api",
+      "url": null,
+      "rankScore": 100
+    },
+    {
+      "id": "Z698xZq2Zaeno",
+      "name": "Fryshuset",
+      "normalizedName": "fryshuset",
+      "city": "stockholm",
+      "coordinates": {
+        "lat": "59.33233",
+        "lng": "18.06293"
+      },
+      "upcomingEvents": 3,
+      "category": null,
+      "provenance": [
+        "ticketmaster_events"
+      ],
+      "type": "api",
+      "url": null,
+      "rankScore": 100
+    },
+    {
+      "id": "Z698xZq2ZaeDT",
+      "name": "Sollidenscenen, Skansen",
+      "normalizedName": "sollidenscenen skansen",
+      "city": "stockholm",
+      "coordinates": {
+        "lat": "59.32438",
+        "lng": "18.10617"
+      },
+      "upcomingEvents": 1,
+      "category": null,
+      "provenance": [
+        "ticketmaster_events"
+      ],
+      "type": "api",
+      "url": null,
+      "rankScore": 80
+    },
+    {
+      "id": "Z698xZb_Zakf2",
+      "name": "Teater KASKAD",
+      "normalizedName": "teater kaskad",
+      "city": "bromma",
+      "coordinates": {
+        "lat": "59.34745",
+        "lng": "17.88343"
+      },
+      "upcomingEvents": 1,
+      "category": null,
+      "provenance": [
+        "ticketmaster_venues"
+      ],
+      "type": "api",
+      "url": null,
+      "rankScore": 75
+    },
+    {
+      "id": "Z698xZq2Za7Qc",
+      "name": "Dieselverkstaden",
+      "normalizedName": "dieselverkstaden",
+      "city": "nacka",
+      "coordinates": {
+        "lat": "59.30456",
+        "lng": "18.12144"
+      },
+      "upcomingEvents": 1,
+      "category": null,
+      "provenance": [
+        "ticketmaster_venues"
+      ],
+      "type": "api",
+      "url": null,
+      "rankScore": 75
+    },
+    {
+      "id": "Z698xZq2Za7ml",
+      "name": "Årsta Folkets Hus",
+      "normalizedName": "årstfolkets hus",
+      "city": "årsta",
+      "coordinates": {
+        "lat": "59.2973",
+        "lng": "18.05154"
+      },
+      "upcomingEvents": 1,
+      "category": null,
+      "provenance": [
+        "ticketmaster_venues"
+      ],
+      "type": "api",
+      "url": null,
+      "rankScore": 75
+    },
+    {
+      "id": null,
+      "name": "stockholmlive",
+      "normalizedName": "stockholmlive",
+      "city": "stockholm",
+      "coordinates": null,
+      "upcomingEvents": 0,
+      "category": null,
+      "provenance": [
+        "existing_proposals"
+      ],
+      "type": "known",
+      "url": null,
+      "rankScore": 45
+    },
+    {
+      "id": null,
+      "name": "Konserthuset Stockholm",
+      "normalizedName": "konserthuset stockholm",
+      "city": "stockholm",
+      "coordinates": null,
+      "upcomingEvents": 0,
+      "category": "concert_halls",
+      "provenance": [
+        "category_expansion"
+      ],
+      "type": "generated",
+      "url": null,
+      "rankScore": 40
+    },
+    {
+      "id": null,
+      "name": "Café Opera",
+      "normalizedName": "café opera",
+      "city": "stockholm",
+      "coordinates": null,
+      "upcomingEvents": 0,
+      "category": "concert_halls",
+      "provenance": [
+        "category_expansion"
+      ],
+      "type": "generated",
+      "url": null,
+      "rankScore": 40
+    },
+    {
+      "id": null,
+      "name": "Folkets Hus Stockholm",
+      "normalizedName": "folkets hus stockholm",
+      "city": "stockholm",
+      "coordinates": null,
+      "upcomingEvents": 0,
+      "category": "concert_halls",
+      "provenance": [
+        "category_expansion"
+      ],
+      "type": "generated",
+      "url": null,
+      "rankScore": 40
+    },
+    {
+      "id": null,
+      "name": "Fazer",
+      "normalizedName": "fazer",
+      "city": "stockholm",
+      "coordinates": null,
+      "upcomingEvents": 0,
+      "category": "concert_halls",
+      "provenance": [
+        "category_expansion"
+      ],
+      "type": "generated",
+      "url": null,
+      "rankScore": 40
+    },
+    {
+      "id": null,
+      "name": "Oscar Theatre",
+      "normalizedName": "oscar theatre",
+      "city": "stockholm",
+      "coordinates": null,
+      "upcomingEvents": 0,
+      "category": "concert_halls",
+      "provenance": [
+        "category_expansion"
+      ],
+      "type": "generated",
+      "url": null,
+      "rankScore": 40
+    },
+    {
+      "id": null,
+      "name": "China Theatre",
+      "normalizedName": "chintheatre",
+      "city": "stockholm",
+      "coordinates": null,
+      "upcomingEvents": 0,
+      "category": "concert_halls",
+      "provenance": [
+        "category_expansion"
+      ],
+      "type": "generated",
+      "url": null,
+      "rankScore": 40
+    },
+    {
+      "id": null,
+      "name": "Maxim Theatre",
+      "normalizedName": "maxim theatre",
+      "city": "stockholm",
+      "coordinates": null,
+      "upcomingEvents": 0,
+      "category": "concert_halls",
+      "provenance": [
+        "category_expansion"
+      ],
+      "type": "generated",
+      "url": null,
+      "rankScore": 40
+    },
+    {
+      "id": null,
+      "name": "Kulturhuset",
+      "normalizedName": "kulturhuset",
+      "city": "stockholm",
+      "coordinates": null,
+      "upcomingEvents": 0,
+      "category": "concert_halls",
+      "provenance": [
+        "category_expansion"
+      ],
+      "type": "generated",
+      "url": null,
+      "rankScore": 40
+    },
+    {
+      "id": null,
+      "name": "Södra Teatern",
+      "normalizedName": "södrteatern",
+      "city": "stockholm",
+      "coordinates": null,
+      "upcomingEvents": 0,
+      "category": "concert_halls",
+      "provenance": [
+        "category_expansion"
+      ],
+      "type": "generated",
+      "url": null,
+      "rankScore": 40
+    },
+    {
+      "id": null,
+      "name": "Mötesplatsen",
+      "normalizedName": "mötesplatsen",
+      "city": "stockholm",
+      "coordinates": null,
+      "upcomingEvents": 0,
+      "category": "concert_halls",
+      "provenance": [
+        "category_expansion"
+      ],
+      "type": "generated",
+      "url": null,
+      "rankScore": 40
+    },
+    {
+      "id": null,
+      "name": " Debaser",
+      "normalizedName": "debaser",
+      "city": "stockholm",
+      "coordinates": null,
+      "upcomingEvents": 0,
+      "category": "concert_halls",
+      "provenance": [
+        "category_expansion"
+      ],
+      "type": "generated",
+      "url": null,
+      "rankScore": 40
+    },
+    {
+      "id": null,
+      "name": "Stadshuskällaren",
+      "normalizedName": "stadshuskällaren",
+      "city": "stockholm",
+      "coordinates": null,
+      "upcomingEvents": 0,
+      "category": "concert_halls",
+      "provenance": [
+        "category_expansion"
+      ],
+      "type": "generated",
+      "url": null,
+      "rankScore": 40
+    },
+    {
+      "id": null,
+      "name": "Mosebacke",
+      "normalizedName": "mosebacke",
+      "city": "stockholm",
+      "coordinates": null,
+      "upcomingEvents": 0,
+      "category": "concert_halls",
+      "provenance": [
+        "category_expansion"
+      ],
+      "type": "generated",
+      "url": null,
+      "rankScore": 40
+    },
+    {
+      "id": null,
+      "name": "Trädgården",
+      "normalizedName": "trädgården",
+      "city": "stockholm",
+      "coordinates": null,
+      "upcomingEvents": 0,
+      "category": "concert_halls",
+      "provenance": [
+        "category_expansion"
+      ],
+      "type": "generated",
+      "url": null,
+      "rankScore": 40
+    },
+    {
+      "id": null,
+      "name": "Globen",
+      "normalizedName": "globen",
+      "city": "stockholm",
+      "coordinates": null,
+      "upcomingEvents": 0,
+      "category": "arenas",
+      "provenance": [
+        "category_expansion"
+      ],
+      "type": "generated",
+      "url": null,
+      "rankScore": 40
+    },
+    {
+      "id": null,
+      "name": "Avicii Arena",
+      "normalizedName": "avicii arena",
+      "city": "stockholm",
+      "coordinates": null,
+      "upcomingEvents": 0,
+      "category": "arenas",
+      "provenance": [
+        "category_expansion"
+      ],
+      "type": "generated",
+      "url": null,
+      "rankScore": 40
+    },
+    {
+      "id": null,
+      "name": "Friends Arena",
+      "normalizedName": "friends arena",
+      "city": "stockholm",
+      "coordinates": null,
+      "upcomingEvents": 0,
+      "category": "arenas",
+      "provenance": [
+        "category_expansion"
+      ],
+      "type": "generated",
+      "url": null,
+      "rankScore": 40
+    },
+    {
+      "id": null,
+      "name": "Tele2 Arena",
+      "normalizedName": "tele2 arena",
+      "city": "stockholm",
+      "coordinates": null,
+      "upcomingEvents": 0,
+      "category": "arenas",
+      "provenance": [
+        "category_expansion"
+      ],
+      "type": "generated",
+      "url": null,
+      "rankScore": 40
+    },
+    {
+      "id": null,
+      "name": "Stora Mossen",
+      "normalizedName": "stormossen",
+      "city": "stockholm",
+      "coordinates": null,
+      "upcomingEvents": 0,
+      "category": "arenas",
+      "provenance": [
+        "category_expansion"
+      ],
+      "type": "generated",
+      "url": null,
+      "rankScore": 40
+    },
+    {
+      "id": null,
+      "name": "Åhléns Arena",
+      "normalizedName": "åhléns arena",
+      "city": "stockholm",
+      "coordinates": null,
+      "upcomingEvents": 0,
+      "category": "arenas",
+      "provenance": [
+        "category_expansion"
+      ],
+      "type": "generated",
+      "url": null,
+      "rankScore": 40
+    },
+    {
+      "id": null,
+      "name": "Dramaten",
+      "normalizedName": "dramaten",
+      "city": "stockholm",
+      "coordinates": null,
+      "upcomingEvents": 0,
+      "category": "theatres",
+      "provenance": [
+        "category_expansion"
+      ],
+      "type": "generated",
+      "url": null,
+      "rankScore": 37
+    },
+    {
+      "id": null,
+      "name": "Stockholms Stadsteater",
+      "normalizedName": "stockholms stadsteater",
+      "city": "stockholm",
+      "coordinates": null,
+      "upcomingEvents": 0,
+      "category": "theatres",
+      "provenance": [
+        "category_expansion"
+      ],
+      "type": "generated",
+      "url": null,
+      "rankScore": 37
+    },
+    {
+      "id": null,
+      "name": "Unga Teatern",
+      "normalizedName": "ungteatern",
+      "city": "stockholm",
+      "coordinates": null,
+      "upcomingEvents": 0,
+      "category": "theatres",
+      "provenance": [
+        "category_expansion"
+      ],
+      "type": "generated",
+      "url": null,
+      "rankScore": 37
+    },
+    {
+      "id": null,
+      "name": "Strindbergs Intima Teater",
+      "normalizedName": "strindbergs intimteater",
+      "city": "stockholm",
+      "coordinates": null,
+      "upcomingEvents": 0,
+      "category": "theatres",
+      "provenance": [
+        "category_expansion"
+      ],
+      "type": "generated",
+      "url": null,
+      "rankScore": 37
+    },
+    {
+      "id": null,
+      "name": "Teater Giljotin",
+      "normalizedName": "teater giljotin",
+      "city": "stockholm",
+      "coordinates": null,
+      "upcomingEvents": 0,
+      "category": "theatres",
+      "provenance": [
+        "category_expansion"
+      ],
+      "type": "generated",
+      "url": null,
+      "rankScore": 37
+    },
+    {
+      "id": null,
+      "name": "Teater Tribunalen",
+      "normalizedName": "teater tribunalen",
+      "city": "stockholm",
+      "coordinates": null,
+      "upcomingEvents": 0,
+      "category": "theatres",
+      "provenance": [
+        "category_expansion"
+      ],
+      "type": "generated",
+      "url": null,
+      "rankScore": 37
+    },
+    {
+      "id": null,
+      "name": "Unicorn Theatre",
+      "normalizedName": "unicorn theatre",
+      "city": "stockholm",
+      "coordinates": null,
+      "upcomingEvents": 0,
+      "category": "theatres",
+      "provenance": [
+        "category_expansion"
+      ],
+      "type": "generated",
+      "url": null,
+      "rankScore": 37
+    },
+    {
+      "id": null,
+      "name": "Botkyrka Teater",
+      "normalizedName": "botkyrkteater",
+      "city": "stockholm",
+      "coordinates": null,
+      "upcomingEvents": 0,
+      "category": "theatres",
+      "provenance": [
+        "category_expansion"
+      ],
+      "type": "generated",
+      "url": null,
+      "rankScore": 37
+    },
+    {
+      "id": null,
+      "name": "Kista Teater",
+      "normalizedName": "kistteater",
+      "city": "stockholm",
+      "coordinates": null,
+      "upcomingEvents": 0,
+      "category": "theatres",
+      "provenance": [
+        "category_expansion"
+      ],
+      "type": "generated",
+      "url": null,
+      "rankScore": 37
+    },
+    {
+      "id": null,
+      "name": "Mörby Centrum Teater",
+      "normalizedName": "mörby centrum teater",
+      "city": "stockholm",
+      "coordinates": null,
+      "upcomingEvents": 0,
+      "category": "theatres",
+      "provenance": [
+        "category_expansion"
+      ],
+      "type": "generated",
+      "url": null,
+      "rankScore": 37
+    },
+    {
+      "id": null,
+      "name": "Scalateatern",
+      "normalizedName": "scalateatern",
+      "city": "stockholm",
+      "coordinates": null,
+      "upcomingEvents": 0,
+      "category": "theatres",
+      "provenance": [
+        "category_expansion"
+      ],
+      "type": "generated",
+      "url": null,
+      "rankScore": 37
+    },
+    {
+      "id": null,
+      "name": "Chinateatern",
+      "normalizedName": "chinateatern",
+      "city": "stockholm",
+      "coordinates": null,
+      "upcomingEvents": 0,
+      "category": "theatres",
+      "provenance": [
+        "category_expansion"
+      ],
+      "type": "generated",
+      "url": null,
+      "rankScore": 37
+    },
+    {
+      "id": null,
+      "name": "Jazzclub Fasching",
+      "normalizedName": "jazzclub fasching",
+      "city": "stockholm",
+      "coordinates": null,
+      "upcomingEvents": 0,
+      "category": "jazz_clubs",
+      "provenance": [
+        "category_expansion"
+      ],
+      "type": "generated",
+      "url": null,
+      "rankScore": 35
+    },
+    {
+      "id": null,
+      "name": "Snälla Kaninen",
+      "normalizedName": "snällkaninen",
+      "city": "stockholm",
+      "coordinates": null,
+      "upcomingEvents": 0,
+      "category": "jazz_clubs",
+      "provenance": [
+        "category_expansion"
+      ],
+      "type": "generated",
+      "url": null,
+      "rankScore": 35
+    },
+    {
+      "id": null,
+      "name": "Sjöfartshotellet",
+      "normalizedName": "sjöfartshotellet",
+      "city": "stockholm",
+      "coordinates": null,
+      "upcomingEvents": 0,
+      "category": "jazz_clubs",
+      "provenance": [
+        "category_expansion"
+      ],
+      "type": "generated",
+      "url": null,
+      "rankScore": 35
+    },
+    {
+      "id": null,
+      "name": "Pub Anchor",
+      "normalizedName": "pub anchor",
+      "city": "stockholm",
+      "coordinates": null,
+      "upcomingEvents": 0,
+      "category": "jazz_clubs",
+      "provenance": [
+        "category_expansion"
+      ],
+      "type": "generated",
+      "url": null,
+      "rankScore": 35
+    },
+    {
+      "id": null,
+      "name": "The Blue Bird",
+      "normalizedName": "blue bird",
+      "city": "stockholm",
+      "coordinates": null,
+      "upcomingEvents": 0,
+      "category": "jazz_clubs",
+      "provenance": [
+        "category_expansion"
+      ],
+      "type": "generated",
+      "url": null,
+      "rankScore": 35
+    },
+    {
+      "id": null,
+      "name": "Nationalmuseum",
+      "normalizedName": "nationalmuseum",
+      "city": "stockholm",
+      "coordinates": null,
+      "upcomingEvents": 0,
+      "category": "museums",
+      "provenance": [
+        "category_expansion"
+      ],
+      "type": "generated",
+      "url": null,
+      "rankScore": 33
+    },
+    {
+      "id": null,
+      "name": "Moderna Museet",
+      "normalizedName": "modernmuseet",
+      "city": "stockholm",
+      "coordinates": null,
+      "upcomingEvents": 0,
+      "category": "museums",
+      "provenance": [
+        "category_expansion"
+      ],
+      "type": "generated",
+      "url": null,
+      "rankScore": 33
+    },
+    {
+      "id": null,
+      "name": "Historiska Museet",
+      "normalizedName": "historiskmuseet",
+      "city": "stockholm",
+      "coordinates": null,
+      "upcomingEvents": 0,
+      "category": "museums",
+      "provenance": [
+        "category_expansion"
+      ],
+      "type": "generated",
+      "url": null,
+      "rankScore": 33
+    },
+    {
+      "id": null,
+      "name": "Skansen",
+      "normalizedName": "skansen",
+      "city": "stockholm",
+      "coordinates": null,
+      "upcomingEvents": 0,
+      "category": "museums",
+      "provenance": [
+        "category_expansion"
+      ],
+      "type": "generated",
+      "url": null,
+      "rankScore": 33
+    },
+    {
+      "id": null,
+      "name": "Vasamuseet",
+      "normalizedName": "vasamuseet",
+      "city": "stockholm",
+      "coordinates": null,
+      "upcomingEvents": 0,
+      "category": "museums",
+      "provenance": [
+        "category_expansion"
+      ],
+      "type": "generated",
+      "url": null,
+      "rankScore": 33
+    },
+    {
+      "id": null,
+      "name": "Nordiska Museet",
+      "normalizedName": "nordiskmuseet",
+      "city": "stockholm",
+      "coordinates": null,
+      "upcomingEvents": 0,
+      "category": "museums",
+      "provenance": [
+        "category_expansion"
+      ],
+      "type": "generated",
+      "url": null,
+      "rankScore": 33
+    },
+    {
+      "id": null,
+      "name": "Livrustkammaren",
+      "normalizedName": "livrustkammaren",
+      "city": "stockholm",
+      "coordinates": null,
+      "upcomingEvents": 0,
+      "category": "museums",
+      "provenance": [
+        "category_expansion"
+      ],
+      "type": "generated",
+      "url": null,
+      "rankScore": 33
+    },
+    {
+      "id": null,
+      "name": "ArkDes",
+      "normalizedName": "arkdes",
+      "city": "stockholm",
+      "coordinates": null,
+      "upcomingEvents": 0,
+      "category": "museums",
+      "provenance": [
+        "category_expansion"
+      ],
+      "type": "generated",
+      "url": null,
+      "rankScore": 33
+    },
+    {
+      "id": null,
+      "name": "Fotografiska",
+      "normalizedName": "fotografiska",
+      "city": "stockholm",
+      "coordinates": null,
+      "upcomingEvents": 0,
+      "category": "museums",
+      "provenance": [
+        "category_expansion"
+      ],
+      "type": "generated",
+      "url": null,
+      "rankScore": 33
+    },
+    {
+      "id": null,
+      "name": "Spritmuseum",
+      "normalizedName": "spritmuseum",
+      "city": "stockholm",
+      "coordinates": null,
+      "upcomingEvents": 0,
+      "category": "museums",
+      "provenance": [
+        "category_expansion"
+      ],
+      "type": "generated",
+      "url": null,
+      "rankScore": 33
+    },
+    {
+      "id": null,
+      "name": "ABBA Museum",
+      "normalizedName": "abbmuseum",
+      "city": "stockholm",
+      "coordinates": null,
+      "upcomingEvents": 0,
+      "category": "museums",
+      "provenance": [
+        "category_expansion"
+      ],
+      "type": "generated",
+      "url": null,
+      "rankScore": 33
+    },
+    {
+      "id": null,
+      "name": "Tekniska Museet",
+      "normalizedName": "tekniskmuseet",
+      "city": "stockholm",
+      "coordinates": null,
+      "upcomingEvents": 0,
+      "category": "museums",
+      "provenance": [
+        "category_expansion"
+      ],
+      "type": "generated",
+      "url": null,
+      "rankScore": 33
+    },
+    {
+      "id": null,
+      "name": "Naturhistoriska Riksmuseet",
+      "normalizedName": "naturhistoriskriksmuseet",
+      "city": "stockholm",
+      "coordinates": null,
+      "upcomingEvents": 0,
+      "category": "museums",
+      "provenance": [
+        "category_expansion"
+      ],
+      "type": "generated",
+      "url": null,
+      "rankScore": 33
+    },
+    {
+      "id": null,
+      "name": "Maritime Museum",
+      "normalizedName": "maritime museum",
+      "city": "stockholm",
+      "coordinates": null,
+      "upcomingEvents": 0,
+      "category": "museums",
+      "provenance": [
+        "category_expansion"
+      ],
+      "type": "generated",
+      "url": null,
+      "rankScore": 33
+    },
+    {
+      "id": null,
+      "name": "Jewish Museum",
+      "normalizedName": "jewish museum",
+      "city": "stockholm",
+      "coordinates": null,
+      "upcomingEvents": 0,
+      "category": "museums",
+      "provenance": [
+        "category_expansion"
+      ],
+      "type": "generated",
+      "url": null,
+      "rankScore": 33
+    },
+    {
+      "id": null,
+      "name": "Urban Deli",
+      "normalizedName": "urbdeli",
+      "city": "stockholm",
+      "coordinates": null,
+      "upcomingEvents": 0,
+      "category": "clubs",
+      "provenance": [
+        "category_expansion"
+      ],
+      "type": "generated",
+      "url": null,
+      "rankScore": 30
+    },
+    {
+      "id": null,
+      "name": "Nybrokajen 11",
+      "normalizedName": "nybrokajen 11",
+      "city": "stockholm",
+      "coordinates": null,
+      "upcomingEvents": 0,
+      "category": "clubs",
+      "provenance": [
+        "category_expansion"
+      ],
+      "type": "generated",
+      "url": null,
+      "rankScore": 30
+    },
+    {
+      "id": null,
+      "name": "Bash",
+      "normalizedName": "bash",
+      "city": "stockholm",
+      "coordinates": null,
+      "upcomingEvents": 0,
+      "category": "clubs",
+      "provenance": [
+        "category_expansion"
+      ],
+      "type": "generated",
+      "url": null,
+      "rankScore": 30
+    },
+    {
+      "id": null,
+      "name": "Kåken",
+      "normalizedName": "kåken",
+      "city": "stockholm",
+      "coordinates": null,
+      "upcomingEvents": 0,
+      "category": "clubs",
+      "provenance": [
+        "category_expansion"
+      ],
+      "type": "generated",
+      "url": null,
+      "rankScore": 30
+    },
+    {
+      "id": null,
+      "name": "Münster",
+      "normalizedName": "münster",
+      "city": "stockholm",
+      "coordinates": null,
+      "upcomingEvents": 0,
+      "category": "clubs",
+      "provenance": [
+        "category_expansion"
+      ],
+      "type": "generated",
+      "url": null,
+      "rankScore": 30
+    },
+    {
+      "id": null,
+      "name": "Punsch",
+      "normalizedName": "punsch",
+      "city": "stockholm",
+      "coordinates": null,
+      "upcomingEvents": 0,
+      "category": "clubs",
+      "provenance": [
+        "category_expansion"
+      ],
+      "type": "generated",
+      "url": null,
+      "rankScore": 30
+    },
+    {
+      "id": null,
+      "name": "Rinkeby",
+      "normalizedName": "rinkeby",
+      "city": "stockholm",
+      "coordinates": null,
+      "upcomingEvents": 0,
+      "category": "clubs",
+      "provenance": [
+        "category_expansion"
+      ],
+      "type": "generated",
+      "url": null,
+      "rankScore": 30
+    },
+    {
+      "id": null,
+      "name": "Plan B",
+      "normalizedName": "plb",
+      "city": "stockholm",
+      "coordinates": null,
+      "upcomingEvents": 0,
+      "category": "clubs",
+      "provenance": [
+        "category_expansion"
+      ],
+      "type": "generated",
+      "url": null,
+      "rankScore": 30
+    },
+    {
+      "id": null,
+      "name": "Underbar",
+      "normalizedName": "underbar",
+      "city": "stockholm",
+      "coordinates": null,
+      "upcomingEvents": 0,
+      "category": "clubs",
+      "provenance": [
+        "category_expansion"
+      ],
+      "type": "generated",
+      "url": null,
+      "rankScore": 30
+    },
+    {
+      "id": null,
+      "name": "Folkoperan",
+      "normalizedName": "folkoperan",
+      "city": "stockholm",
+      "coordinates": null,
+      "upcomingEvents": 0,
+      "category": "clubs",
+      "provenance": [
+        "category_expansion"
+      ],
+      "type": "generated",
+      "url": null,
+      "rankScore": 30
+    },
+    {
+      "id": null,
+      "name": "Folkets Hus",
+      "normalizedName": "folkets hus",
+      "city": "stockholm",
+      "coordinates": null,
+      "upcomingEvents": 0,
+      "category": "cultural_centers",
+      "provenance": [
+        "category_expansion"
+      ],
+      "type": "generated",
+      "url": null,
+      "rankScore": 25
+    },
+    {
+      "id": null,
+      "name": "Kulturrådet",
+      "normalizedName": "kulturrådet",
+      "city": "stockholm",
+      "coordinates": null,
+      "upcomingEvents": 0,
+      "category": "cultural_centers",
+      "provenance": [
+        "category_expansion"
+      ],
+      "type": "generated",
+      "url": null,
+      "rankScore": 25
+    },
+    {
+      "id": "Z698xZq2Za7YE",
+      "name": "Unknown",
+      "city": "Stockholm",
+      "source": "ticketmaster_event",
+      "eventCount": 14,
+      "upcomingEvents": 0,
+      "coordinates": null,
+      "url": null,
+      "promoters": [
+        "12231"
+      ],
+      "attractions": [
+        "K8vZ9179SV7",
+        "K8vZ917uFU7",
+        "K8vZ9175Ho0",
+        "K8vZ9175sq7",
+        "K8vZ917GkEV",
+        "K8vZ9171Fof",
+        "K8vZ917CHaf",
+        "K8vZ91751-V",
+        "K8vZ9171CZV",
+        "K8vZ917Gi6V",
+        "K8vZ91796iV",
+        "K8vZ917184V"
+      ],
+      "rankScore": 167
+    },
+    {
+      "id": "Z698xZq2ZadQ6",
+      "name": "Unknown",
+      "city": "Stockholm",
+      "source": "ticketmaster_event",
+      "eventCount": 3,
+      "upcomingEvents": 0,
+      "coordinates": null,
+      "url": null,
+      "promoters": [
+        "903"
+      ],
+      "attractions": [
+        "K8vZ917rBp0",
+        "K8vZ917Q5i7",
+        "K8vZ917hgQV",
+        "K8vZ91787c7"
+      ],
+      "rankScore": 41
+    },
+    {
+      "id": "Z598xZq2ZaekF",
+      "name": "Unknown",
+      "city": "Stockholm",
+      "source": "ticketmaster_event",
+      "eventCount": 2,
+      "upcomingEvents": 0,
+      "coordinates": null,
+      "url": null,
+      "promoters": [
+        "909",
+        "7817"
+      ],
+      "attractions": [
+        "K8vZ9179zm7",
+        "K8vZ917b0Lf"
+      ],
+      "rankScore": 30
+    },
+    {
+      "id": "Z698xZq2Za7j6",
+      "name": "Unknown",
+      "city": "Stockholm",
+      "source": "ticketmaster_event",
+      "eventCount": 2,
+      "upcomingEvents": 0,
+      "coordinates": null,
+      "url": null,
+      "promoters": [
+        "7817"
+      ],
+      "attractions": [
+        "K8vZ9173jj7",
+        "K8vZ917b5c7"
+      ],
+      "rankScore": 27
+    },
+    {
+      "id": "Z698xZq2ZaeWu",
+      "name": "Engelbrektskyrka",
+      "city": "Stockholm",
+      "source": "ticketmaster_api",
+      "eventCount": 0,
+      "upcomingEvents": 5,
+      "coordinates": {
+        "lat": "59.34429",
+        "lng": "18.06766"
+      },
+      "url": "https://www.ticketmaster.se/venue/engelbrektskyrka-stockholm-biljetter/en9/640",
+      "promoters": [],
+      "attractions": [],
+      "rankScore": 25
+    },
+    {
+      "id": "Z598xZq2Z6eFk",
+      "name": "Unknown",
+      "city": "Stockholm",
+      "source": "ticketmaster_event",
+      "eventCount": 1,
+      "upcomingEvents": 0,
+      "coordinates": null,
+      "url": null,
+      "promoters": [
+        "13199"
+      ],
+      "attractions": [
+        "K8vZ917Lpef",
+        "K8vZ9174Zo7",
+        "K8vZ9179ref",
+        "K8vZ917jp6V",
+        "K8vZ917rwC0"
+      ],
+      "rankScore": 23
+    },
+    {
+      "id": "Z698xZq2ZaejP",
+      "name": "Ticketmaster",
+      "city": "Stockholm",
+      "source": "ticketmaster_api",
+      "eventCount": 1,
+      "upcomingEvents": 1,
+      "coordinates": {
+        "lat": "59.33353",
+        "lng": "18.0572"
+      },
+      "url": "https://www.ticketmaster.se/venue/ticketmaster-stockholm-biljetter/tonum444/444",
+      "promoters": [
+        "9671"
+      ],
+      "attractions": [],
+      "rankScore": 18
+    },
+    {
+      "id": "Z598xZq2Z1dk7",
+      "name": "Unknown",
+      "city": "Stockholm",
+      "source": "ticketmaster_event",
+      "eventCount": 1,
+      "upcomingEvents": 0,
+      "coordinates": null,
+      "url": null,
+      "promoters": [
+        "12871"
+      ],
+      "attractions": [
+        "K8vZ917qScV"
+      ],
+      "rankScore": 15
+    },
+    {
+      "id": "Z698xZq2Za7N_",
+      "name": "Unknown",
+      "city": "Stockholm",
+      "source": "ticketmaster_event",
+      "eventCount": 1,
+      "upcomingEvents": 0,
+      "coordinates": null,
+      "url": null,
+      "promoters": [],
+      "attractions": [
+        "K8vZ917rRGf"
+      ],
+      "rankScore": 12
+    },
+    {
+      "id": "Z698xZq2ZaA6l",
+      "name": "Debaser Nova",
+      "city": "Stockholm",
+      "source": "ticketmaster_api",
+      "eventCount": 0,
+      "upcomingEvents": 1,
+      "coordinates": {
+        "lat": "59.31366",
+        "lng": "18.03503"
+      },
+      "url": "https://www.ticketmaster.se/venue/debaser-nova-stockholm-biljetter/db1/596",
+      "promoters": [],
+      "attractions": [],
+      "rankScore": 5
+    },
+    {
+      "id": "Z698xZq2ZaAx2",
+      "name": "Stockholm under stjärnorna",
+      "city": "Stockholm",
+      "source": "ticketmaster_api",
+      "eventCount": 0,
+      "upcomingEvents": 1,
+      "coordinates": {
+        "lat": "59.33115",
+        "lng": "18.0638"
+      },
+      "url": "https://www.ticketmaster.se/venue/stockholm-under-stjarnorna-stockholm-biljetter/sus/632",
+      "promoters": [],
+      "attractions": [],
+      "rankScore": 5
+    },
+    {
+      "id": "Z698xZq2Zad8v",
+      "name": "Katarina Kyrka",
+      "city": "Stockholm",
+      "source": "ticketmaster_api",
+      "eventCount": 0,
+      "upcomingEvents": 1,
+      "coordinates": {
+        "lat": "59.33233",
+        "lng": "18.06293"
+      },
+      "url": "https://www.ticketmaster.se/venue/katarina-kyrka-stockholm-biljetter/kyn/632",
+      "promoters": [],
+      "attractions": [],
+      "rankScore": 5
+    },
+    {
+      "id": "Z698xZq2ZaeR6",
+      "name": "Dansens Hus Foajé",
+      "city": "Stockholm",
+      "source": "ticketmaster_api",
+      "eventCount": 0,
+      "upcomingEvents": 1,
+      "coordinates": {
+        "lat": "59.33606",
+        "lng": "18.05574"
+      },
+      "url": "https://www.ticketmaster.se/venue/dansens-hus-foaje-stockholm-biljetter/dhe/450",
+      "promoters": [],
+      "attractions": [],
+      "rankScore": 5
+    },
+    {
+      "id": "Z698xZq2ZaeXA",
+      "name": "Grand Hotel",
+      "city": "Stockholm",
+      "source": "ticketmaster_api",
+      "eventCount": 0,
+      "upcomingEvents": 1,
+      "coordinates": {
+        "lat": "59.330854",
+        "lng": "18.076456"
+      },
+      "url": "https://www.ticketmaster.se/venue/grand-hotel-stockholm-biljetter/ghd/632",
+      "promoters": [],
+      "attractions": [],
+      "rankScore": 5
+    },
+    {
+      "id": "KovZ91770M7",
+      "name": "Gärdets sports fields",
+      "city": "Stockholm",
+      "source": "ticketmaster_api",
+      "eventCount": 0,
+      "upcomingEvents": 0,
+      "coordinates": {
+        "lat": "18.10675885",
+        "lng": "59.34165890"
+      },
+      "url": "https://www.ticketmaster.co.uk/Gardets-sports-fields-tickets-Stockholm/venue/435746",
+      "promoters": [],
+      "attractions": [],
+      "rankScore": 0
+    },
+    {
+      "id": "KovZ9177NZ0",
+      "name": "Fryhuset",
+      "city": "Stockholm",
+      "source": "ticketmaster_api",
+      "eventCount": 0,
+      "upcomingEvents": 0,
+      "coordinates": {
+        "lat": "59.30109500",
+        "lng": "18.08883450"
+      },
+      "url": "http://www.ticketmaster.eu/venue/435195",
+      "promoters": [],
+      "attractions": [],
+      "rankScore": 0
+    },
+    {
+      "id": "KovZ917A7K7",
+      "name": "XXX6",
+      "city": "Stockholm",
+      "source": "ticketmaster_api",
+      "eventCount": 0,
+      "upcomingEvents": 0,
+      "coordinates": null,
+      "url": "http://www.ticketmaster.eu/venue/425990",
+      "promoters": [],
+      "attractions": [],
+      "rankScore": 0
+    },
+    {
+      "id": "KovZ917Adl7",
+      "name": "GLOBEN",
+      "city": "Stockholm",
+      "source": "ticketmaster_api",
+      "eventCount": 0,
+      "upcomingEvents": 0,
+      "coordinates": null,
+      "url": "http://www.ticketmaster.eu/venue/425989",
+      "promoters": [],
+      "attractions": [],
+      "rankScore": 0
+    },
+    {
+      "id": "KovZ917Adn0",
+      "name": "KUNGLIGA OPERAN",
+      "city": "Stockholm",
+      "source": "ticketmaster_api",
+      "eventCount": 0,
+      "upcomingEvents": 0,
+      "coordinates": null,
+      "url": "http://www.ticketmaster.eu/venue/425988",
+      "promoters": [],
+      "attractions": [],
+      "rankScore": 0
+    },
+    {
+      "id": "Z198xZG2ZF6F",
+      "name": "SWEDEN",
+      "city": "STOCKHOLM",
+      "source": "ticketmaster_api",
+      "eventCount": 0,
+      "upcomingEvents": 0,
+      "coordinates": {
+        "lat": "59.326959",
+        "lng": "18.093762"
+      },
+      "url": "https://www.ticketmaster.be/venue/sweden-stockholm-tickets/sto/101",
+      "promoters": [],
+      "attractions": [],
+      "rankScore": 0
+    },
+    {
+      "id": "Z198xZq2Z1e7",
+      "name": "Guldfoajén, Kungliga Operan",
+      "city": "Stockholm",
+      "source": "ticketmaster_api",
+      "eventCount": 0,
+      "upcomingEvents": 0,
+      "coordinates": {
+        "lat": "59.33233",
+        "lng": "18.06293"
+      },
+      "url": "https://www.ticketmaster.se/venue/guldfoajen-kungliga-operan-stockholm-biljetter/gul/440",
+      "promoters": [],
+      "attractions": [],
+      "rankScore": 0
+    },
+    {
+      "id": "Z198xZq2ZevF",
+      "name": "The Swedish Centre for Architect",
+      "city": "Stockholm",
+      "source": "ticketmaster_api",
+      "eventCount": 0,
+      "upcomingEvents": 0,
+      "coordinates": {
+        "lat": "59.33233",
+        "lng": "18.06293"
+      },
+      "url": "https://www.ticketmaster.se/venue/arkitektur-och-designcentrum-stockholm-biljetter/arm/405",
+      "promoters": [],
+      "attractions": [],
+      "rankScore": 0
+    },
+    {
+      "id": "Z598xZq2Z1d61",
+      "name": "Hörsalen, Kulturhuset",
+      "city": "Stockholm",
+      "source": "ticketmaster_api",
+      "eventCount": 0,
+      "upcomingEvents": 0,
+      "coordinates": {
+        "lat": "59.33233",
+        "lng": "18.06293"
+      },
+      "url": "https://www.ticketmaster.se/venue/horsalen-kulturhuset-stockholm-biljetter/ku3/583",
+      "promoters": [],
+      "attractions": [],
+      "rankScore": 0
+    },
+    {
+      "id": "Z598xZq2Z7A67",
+      "name": "Annexet",
+      "city": "Stockholm",
+      "source": "ticketmaster_api",
+      "eventCount": 0,
+      "upcomingEvents": 0,
+      "coordinates": {
+        "lat": "59.29416",
+        "lng": "18.08081"
+      },
+      "url": "https://www.ticketmaster.se/venue/annexet-stockholm-biljetter/anx/407",
+      "promoters": [],
+      "attractions": [],
+      "rankScore": 0
+    },
+    {
+      "id": "Z598xZq2Z7edF",
+      "name": "Hotel Rival",
+      "city": "Stockholm",
+      "source": "ticketmaster_api",
+      "eventCount": 0,
+      "upcomingEvents": 0,
+      "coordinates": {
+        "lat": "59.31816",
+        "lng": "18.06364"
+      },
+      "url": "https://www.ticketmaster.se/venue/hotel-rival-stockholm-biljetter/hri/433",
+      "promoters": [],
+      "attractions": [],
+      "rankScore": 0
+    },
+    {
+      "id": "Z598xZq2ZFevF",
+      "name": "Söderstadion",
+      "city": "Stockholm-Globen",
+      "source": "ticketmaster_api",
+      "eventCount": 0,
+      "upcomingEvents": 0,
+      "coordinates": {
+        "lat": "59.29256",
+        "lng": "18.0843"
+      },
+      "url": "https://www.ticketmaster.se/venue/soderstadion-stockholm-globen-biljetter/sos407/407",
+      "promoters": [],
+      "attractions": [],
+      "rankScore": 0
+    },
+    {
+      "id": "Z598xZq2Zdke7",
+      "name": "Globe Arenas Open Air",
+      "city": "Stockholm",
+      "source": "ticketmaster_api",
+      "eventCount": 0,
+      "upcomingEvents": 0,
+      "coordinates": {
+        "lat": "59.33233",
+        "lng": "18.06293"
+      },
+      "url": "https://www.ticketmaster.se/venue/globe-arenas-open-air-stockholm-biljetter/sos/407",
+      "promoters": [],
+      "attractions": [],
+      "rankScore": 0
+    },
+    {
+      "id": "Z598xZq2Ze17F",
+      "name": "Gustav III Kafé, Kungliga Operan",
+      "city": "Stockholm",
+      "source": "ticketmaster_api",
+      "eventCount": 0,
+      "upcomingEvents": 0,
+      "coordinates": {
+        "lat": "59.32932",
+        "lng": "18.06858"
+      },
+      "url": "https://www.ticketmaster.se/venue/gustav-iii-kafe-kungliga-operan-stockholm-biljetter/opso/440",
+      "promoters": [],
+      "attractions": [],
+      "rankScore": 0
+    },
+    {
+      "id": "Z598xZq2Ze17e",
+      "name": "Kungliga Operan",
+      "city": "Stockholm",
+      "source": "ticketmaster_api",
+      "eventCount": 0,
+      "upcomingEvents": 0,
+      "coordinates": {
+        "lat": "59.32923",
+        "lng": "18.06895"
+      },
+      "url": "https://www.ticketmaster.se/venue/kungliga-operan-stockholm-biljetter/ops/440",
+      "promoters": [],
+      "attractions": [],
+      "rankScore": 0
+    },
+    {
+      "id": "Z598xZq2Ze1d7",
+      "name": "Gustav III Kafé, Kungliga Operan",
+      "city": "Stockholm",
+      "source": "ticketmaster_api",
+      "eventCount": 0,
+      "upcomingEvents": 0,
+      "coordinates": {
+        "lat": "59.33233",
+        "lng": "18.06293"
+      },
+      "url": "https://www.ticketmaster.se/venue/gustav-iii-kafe-kungliga-operan-stockholm-biljetter/opk/440",
+      "promoters": [],
+      "attractions": [],
+      "rankScore": 0
+    },
+    {
+      "id": "Z598xZq2Ze7FF",
+      "name": "Kulturhuset",
+      "city": "Stockholm",
+      "source": "ticketmaster_api",
+      "eventCount": 0,
+      "upcomingEvents": 0,
+      "coordinates": {
+        "lat": "59.3323",
+        "lng": "18.064"
+      },
+      "url": "https://www.ticketmaster.se/venue/kulturhuset-stockholm-biljetter/krt/405",
+      "promoters": [],
+      "attractions": [],
+      "rankScore": 0
+    },
+    {
+      "id": "Z598xZq2ZevA1",
+      "name": "Hovet",
+      "city": "Stockholm",
+      "source": "ticketmaster_api",
+      "eventCount": 0,
+      "upcomingEvents": 0,
+      "coordinates": {
+        "lat": "59.33233",
+        "lng": "18.06293"
+      },
+      "url": "https://www.ticketmaster.se/venue/hovet-stockholm-biljetter/hov/407",
+      "promoters": [],
+      "attractions": [],
+      "rankScore": 0
+    },
+    {
+      "id": "Z598xZq2Zevk7",
+      "name": "Hovet",
+      "city": "Stockholm",
+      "source": "ticketmaster_api",
+      "eventCount": 0,
+      "upcomingEvents": 0,
+      "coordinates": {
+        "lat": "59.29416",
+        "lng": "18.08081"
+      },
+      "url": "https://www.ticketmaster.se/venue/hovet-stockholm-biljetter/hov1/515",
+      "promoters": [],
+      "attractions": [],
+      "rankScore": 0
+    },
+    {
+      "id": "Z598xZq2Zke7e",
+      "name": "Fryshuset, Klubben",
+      "city": "Stockholm",
+      "source": "ticketmaster_api",
+      "eventCount": 0,
+      "upcomingEvents": 0,
+      "coordinates": {
+        "lat": "59.30092",
+        "lng": "18.09017"
+      },
+      "url": "https://www.ticketmaster.se/venue/fryshuset-klubben-stockholm-biljetter/kfy/583",
+      "promoters": [],
+      "attractions": [],
+      "rankScore": 0
+    },
+    {
+      "id": "Z598xZq2Zked1",
+      "name": "Fryshuset, Arenan",
+      "city": "Stockholm",
+      "source": "ticketmaster_api",
+      "eventCount": 0,
+      "upcomingEvents": 0,
+      "coordinates": {
+        "lat": "59.30092",
+        "lng": "18.09017"
+      },
+      "url": "https://www.ticketmaster.se/venue/fryshuset-arenan-stockholm-biljetter/arf/583",
+      "promoters": [],
+      "attractions": [],
+      "rankScore": 0
+    },
+    {
+      "id": "Z698xZq2Za7-R",
+      "name": "Merförsäljning",
+      "city": "Stockholm",
+      "source": "ticketmaster_api",
+      "eventCount": 0,
+      "upcomingEvents": 0,
+      "coordinates": {
+        "lat": "59.32982",
+        "lng": "18.05622"
+      },
+      "url": "https://www.ticketmaster.se/venue/merforsaljning-stockholm-biljetter/uppostlug/596",
+      "promoters": [],
+      "attractions": [],
+      "rankScore": 0
+    },
+    {
+      "id": "Z698xZq2Za77S",
+      "name": "TM Testvenue",
+      "city": "Stockholm",
+      "source": "ticketmaster_api",
+      "eventCount": 0,
+      "upcomingEvents": 0,
+      "coordinates": {
+        "lat": "59.32923",
+        "lng": "18.06895"
+      },
+      "url": "https://www.ticketmaster.se/venue/testarenan-stockholm-biljetter/op8/405",
+      "promoters": [],
+      "attractions": [],
+      "rankScore": 0
+    },
+    {
+      "id": "Z698xZq2Za7I4",
+      "name": "Tyska Kyrkan 1",
+      "city": "Stockholm",
+      "source": "ticketmaster_api",
+      "eventCount": 0,
+      "upcomingEvents": 0,
+      "coordinates": {
+        "lat": "59.32422",
+        "lng": "18.07174"
+      },
+      "url": "https://www.ticketmaster.se/venue/tyska-kyrkan-1-stockholm-biljetter/tysk/640",
+      "promoters": [],
+      "attractions": [],
+      "rankScore": 0
+    },
+    {
+      "id": "Z698xZq2Za7yg",
+      "name": "Templet",
+      "city": "Stockholm",
+      "source": "ticketmaster_api",
+      "eventCount": 0,
+      "upcomingEvents": 0,
+      "coordinates": {
+        "lat": "59.34123",
+        "lng": "18.08146"
+      },
+      "url": "https://www.ticketmaster.se/venue/templet-stockholm-biljetter/t3m/640",
+      "promoters": [],
+      "attractions": [],
+      "rankScore": 0
+    },
+    {
+      "id": "Z698xZq2ZaA2l",
+      "name": "Brygghuset",
+      "city": "Stockholm",
+      "source": "ticketmaster_api",
+      "eventCount": 0,
+      "upcomingEvents": 0,
+      "coordinates": {
+        "lat": "59.34503",
+        "lng": "18.04915"
+      },
+      "url": "https://www.ticketmaster.se/venue/brygghuset-stockholm-biljetter/brgy/583",
+      "promoters": [],
+      "attractions": [],
+      "rankScore": 0
+    },
+    {
+      "id": "Z698xZq2ZaA2y",
+      "name": "Gustaf Adolf's Church",
+      "city": "Stockholm",
+      "source": "ticketmaster_api",
+      "eventCount": 0,
+      "upcomingEvents": 0,
+      "coordinates": {
+        "lat": "59.3372",
+        "lng": "18.09789"
+      },
+      "url": "https://www.ticketmaster.se/venue/gustaf-adolfs-church-stockholm-biljetter/gado/632",
+      "promoters": [],
+      "attractions": [],
+      "rankScore": 0
+    },
+    {
+      "id": "Z698xZq2ZaA3T",
+      "name": "Oscars Teater",
+      "city": "Stockholm",
+      "source": "ticketmaster_api",
+      "eventCount": 0,
+      "upcomingEvents": 0,
+      "coordinates": {
+        "lat": "59.33422",
+        "lng": "18.05717"
+      },
+      "url": "https://www.ticketmaster.se/venue/oscars-teater-stockholm-biljetter/osc1/632",
+      "promoters": [],
+      "attractions": [],
+      "rankScore": 0
+    },
+    {
+      "id": "Z698xZq2ZaA3g",
+      "name": "Birkaterminalen",
+      "city": "Stockholm",
+      "source": "ticketmaster_api",
+      "eventCount": 0,
+      "upcomingEvents": 0,
+      "coordinates": {
+        "lat": "59.3193",
+        "lng": "18.07889"
+      },
+      "url": "https://www.ticketmaster.se/venue/birkaterminalen-stockholm-biljetter/bt/632",
+      "promoters": [],
+      "attractions": [],
+      "rankScore": 0
+    },
+    {
+      "id": "Z698xZq2ZaA4L",
+      "name": "Skansen, Skogaholms Herrgård",
+      "city": "Stockholm",
+      "source": "ticketmaster_api",
+      "eventCount": 0,
+      "upcomingEvents": 0,
+      "coordinates": {
+        "lat": "59.32706",
+        "lng": "18.10369"
+      },
+      "url": "https://www.ticketmaster.se/venue/skansen-skogaholms-herrgard-stockholm-biljetter/s1a/640",
+      "promoters": [],
+      "attractions": [],
+      "rankScore": 0
+    },
+    {
+      "id": "Z698xZq2ZaA5K",
+      "name": "Münchenbryggeriet, Magasinet",
+      "city": "Stockholm",
+      "source": "ticketmaster_api",
+      "eventCount": 0,
+      "upcomingEvents": 0,
+      "coordinates": {
+        "lat": "59.32103",
+        "lng": "18.05537"
+      },
+      "url": "https://www.ticketmaster.se/venue/munchenbryggeriet-magasinet-stockholm-biljetter/mch/583",
+      "promoters": [],
+      "attractions": [],
+      "rankScore": 0
+    },
+    {
+      "id": "Z698xZq2ZaA9K",
+      "name": "Blå Porten",
+      "city": "Stockholm",
+      "source": "ticketmaster_api",
+      "eventCount": 0,
+      "upcomingEvents": 0,
+      "coordinates": {
+        "lat": "59.32536",
+        "lng": "18.09658"
+      },
+      "url": "https://www.ticketmaster.se/venue/bla-porten-stockholm-biljetter/bbpp/545",
+      "promoters": [],
+      "attractions": [],
+      "rankScore": 0
+    },
+    {
+      "id": "Z698xZq2ZaA9P",
+      "name": "Teater Giljotin",
+      "city": "Stockholm",
+      "source": "ticketmaster_api",
+      "eventCount": 0,
+      "upcomingEvents": 0,
+      "coordinates": {
+        "lat": "59.34055",
+        "lng": "18.03808"
+      },
+      "url": "https://www.ticketmaster.se/venue/teater-giljotin-stockholm-biljetter/tgt/632",
+      "promoters": [],
+      "attractions": [],
+      "rankScore": 0
+    },
+    {
+      "id": "Z698xZq2ZaA9y",
+      "name": "Kulturhuset Foajé 3",
+      "city": "Stockholm",
+      "source": "ticketmaster_api",
+      "eventCount": 0,
+      "upcomingEvents": 0,
+      "coordinates": {
+        "lat": "59.33215",
+        "lng": "18.06501"
+      },
+      "url": "https://www.ticketmaster.se/venue/kulturhuset-foaje-3-stockholm-biljetter/k73/632",
+      "promoters": [],
+      "attractions": [],
+      "rankScore": 0
+    },
+    {
+      "id": "Z698xZq2ZaACT",
+      "name": "Bonden bar",
+      "city": "Stockholm",
+      "source": "ticketmaster_api",
+      "eventCount": 0,
+      "upcomingEvents": 0,
+      "coordinates": {
+        "lat": "59.31511",
+        "lng": "18.0738"
+      },
+      "url": "https://www.ticketmaster.se/venue/bonden-bar-stockholm-biljetter/bon1/632",
+      "promoters": [],
+      "attractions": [],
+      "rankScore": 0
+    },
+    {
+      "id": "Z698xZq2ZaAI4",
+      "name": "Presens Impro",
+      "city": "Stockholm",
+      "source": "ticketmaster_api",
+      "eventCount": 0,
+      "upcomingEvents": 0,
+      "coordinates": {
+        "lat": "59.34838",
+        "lng": "18.04917"
+      },
+      "url": "https://www.ticketmaster.se/venue/presens-impro-stockholm-biljetter/pim/632",
+      "promoters": [],
+      "attractions": [],
+      "rankScore": 0
+    },
+    {
+      "id": "Z698xZq2ZaAI5",
+      "name": "Eden",
+      "city": "Stockholm",
+      "source": "ticketmaster_api",
+      "eventCount": 0,
+      "upcomingEvents": 0,
+      "coordinates": {
+        "lat": "59.32555",
+        "lng": "18.02367"
+      },
+      "url": "https://www.ticketmaster.se/venue/eden-stockholm-biljetter/edn/647",
+      "promoters": [],
+      "attractions": [],
+      "rankScore": 0
+    },
+    {
+      "id": "Z698xZq2ZaAIK",
+      "name": "Cirkus, Garderob",
+      "city": "Stockholm",
+      "source": "ticketmaster_api",
+      "eventCount": 0,
+      "upcomingEvents": 0,
+      "coordinates": {
+        "lat": "59.33233",
+        "lng": "18.06293"
+      },
+      "url": "https://www.ticketmaster.se/venue/cirkus-garderob-stockholm-biljetter/ups580ga/580",
+      "promoters": [],
+      "attractions": [],
+      "rankScore": 0
+    },
+    {
+      "id": "Z698xZq2ZaAIa",
+      "name": "Kollektivet Livet",
+      "city": "Stockholm",
+      "source": "ticketmaster_api",
+      "eventCount": 0,
+      "upcomingEvents": 0,
+      "coordinates": {
+        "lat": "59.31897",
+        "lng": "18.0799"
+      },
+      "url": "https://www.ticketmaster.se/venue/kollektivet-livet-stockholm-biljetter/koll/647",
+      "promoters": [],
+      "attractions": [],
+      "rankScore": 0
+    },
+    {
+      "id": "Z698xZq2ZaAJT",
+      "name": "Musikvalvet Baggen",
+      "city": "Stockholm",
+      "source": "ticketmaster_api",
+      "eventCount": 0,
+      "upcomingEvents": 0,
+      "coordinates": {
+        "lat": "59.32372",
+        "lng": "18.07317"
+      },
+      "url": "https://www.ticketmaster.se/venue/musikvalvet-baggen-stockholm-biljetter/mvb1/632",
+      "promoters": [],
+      "attractions": [],
+      "rankScore": 0
+    },
+    {
+      "id": "Z698xZq2ZaAJW",
+      "name": "V*****",
+      "city": "Stockholm",
+      "source": "ticketmaster_api",
+      "eventCount": 0,
+      "upcomingEvents": 0,
+      "coordinates": {
+        "lat": "59.33658",
+        "lng": "18.07353"
+      },
+      "url": "https://www.ticketmaster.se/venue/v-stockholm-biljetter/ventr/647",
+      "promoters": [],
+      "attractions": [],
+      "rankScore": 0
+    },
+    {
+      "id": "Z698xZq2ZaAK6",
+      "name": "Secret Location",
+      "city": "Stockholm",
+      "source": "ticketmaster_api",
+      "eventCount": 0,
+      "upcomingEvents": 0,
+      "coordinates": {
+        "lat": "62.36155",
+        "lng": "19.15355"
+      },
+      "url": "https://www.ticketmaster.se/venue/secret-location-stockholm-biljetter/fsl1/632",
+      "promoters": [],
+      "attractions": [],
+      "rankScore": 0
+    },
+    {
+      "id": "Z698xZq2ZaAKP",
+      "name": "Elite Hotel Stockholm Plaza",
+      "city": "Stockholm",
+      "source": "ticketmaster_api",
+      "eventCount": 0,
+      "upcomingEvents": 0,
+      "coordinates": {
+        "lat": "59.33753",
+        "lng": "18.07035"
+      },
+      "url": "https://www.ticketmaster.se/venue/elite-hotel-stockholm-plaza-stockholm-biljetter/ehsp/632",
+      "promoters": [],
+      "attractions": [],
+      "rankScore": 0
+    },
+    {
+      "id": "Z698xZq2ZaAK_",
+      "name": "Münchenbryggeriet",
+      "city": "Stockholm",
+      "source": "ticketmaster_api",
+      "eventCount": 0,
+      "upcomingEvents": 0,
+      "coordinates": {
+        "lat": "59.32103",
+        "lng": "18.05537"
+      },
+      "url": "https://www.ticketmaster.se/venue/munchenbryggeriet-stockholm-biljetter/mch/596",
+      "promoters": [],
+      "attractions": [],
+      "rankScore": 0
+    },
+    {
+      "id": "Z698xZq2ZaAKc",
+      "name": "Operaterassen",
+      "city": "Stockholm",
+      "source": "ticketmaster_api",
+      "eventCount": 0,
+      "upcomingEvents": 0,
+      "coordinates": {
+        "lat": "59.3299",
+        "lng": "18.07142"
+      },
+      "url": "https://www.ticketmaster.se/venue/operaterassen-stockholm-biljetter/op6/632",
+      "promoters": [],
+      "attractions": [],
+      "rankScore": 0
+    },
+    {
+      "id": "Z698xZq2ZaALT",
+      "name": "Fabrikören",
+      "city": "Stockholm",
+      "source": "ticketmaster_api",
+      "eventCount": 0,
+      "upcomingEvents": 0,
+      "coordinates": {
+        "lat": "59.31789",
+        "lng": "18.15522"
+      },
+      "url": "https://www.ticketmaster.se/venue/fabrikoren-stockholm-biljetter/fab1/632",
+      "promoters": [],
+      "attractions": [],
+      "rankScore": 0
+    },
+    {
+      "id": "Z698xZq2ZaALg",
+      "name": "Snickeriet",
+      "city": "Stockholm",
+      "source": "ticketmaster_api",
+      "eventCount": 0,
+      "upcomingEvents": 0,
+      "coordinates": {
+        "lat": "59.54867",
+        "lng": "17.99571"
+      },
+      "url": "https://www.ticketmaster.se/venue/snickeriet-stockholm-biljetter/snk1/545",
+      "promoters": [],
+      "attractions": [],
+      "rankScore": 0
+    },
+    {
+      "id": "Z698xZq2ZaAQW",
+      "name": "EVENEW Arena",
+      "city": "Stockholm",
+      "source": "ticketmaster_api",
+      "eventCount": 0,
+      "upcomingEvents": 0,
+      "coordinates": {
+        "lat": "59.36118",
+        "lng": "18.06538"
+      },
+      "url": "https://www.ticketmaster.se/venue/evenew-arena-stockholm-biljetter/evea/632",
+      "promoters": [],
+      "attractions": [],
+      "rankScore": 0
+    },
+    {
+      "id": "Z698xZq2ZaA_D",
+      "name": "Dansens Hus C/O Accelerator",
+      "city": "Stockholm",
+      "source": "ticketmaster_api",
+      "eventCount": 0,
+      "upcomingEvents": 0,
+      "coordinates": {
+        "lat": "59.36696",
+        "lng": "18.05576"
+      },
+      "url": "https://www.ticketmaster.se/venue/dansens-hus-c-o-accelerator-stockholm-biljetter/dacc/450",
+      "promoters": [],
+      "attractions": [],
+      "rankScore": 0
+    },
+    {
+      "id": "Z698xZq2ZaA_W",
+      "name": "Dansens Hus C/O Confidencen",
+      "city": "Stockholm",
+      "source": "ticketmaster_api",
+      "eventCount": 0,
+      "upcomingEvents": 0,
+      "coordinates": {
+        "lat": "59.38656",
+        "lng": "18.0177"
+      },
+      "url": "https://www.ticketmaster.se/venue/dansens-hus-c-o-confidencen-stockholm-biljetter/dcoi/450",
+      "promoters": [],
+      "attractions": [],
+      "rankScore": 0
+    },
+    {
+      "id": "Z698xZq2ZaAbP",
+      "name": "Kärrtorp - Tobbe Trollkarl",
+      "city": "Stockholm",
+      "source": "ticketmaster_api",
+      "eventCount": 0,
+      "upcomingEvents": 0,
+      "coordinates": {
+        "lat": "59.28489",
+        "lng": "18.11203"
+      },
+      "url": "https://www.ticketmaster.se/venue/karrtorp-tobbe-trollkarl-stockholm-biljetter/ttka/632",
+      "promoters": [],
+      "attractions": [],
+      "rankScore": 0
+    },
+    {
+      "id": "Z698xZq2ZaAba",
+      "name": "Kasai",
+      "city": "Stockholm",
+      "source": "ticketmaster_api",
+      "eventCount": 0,
+      "upcomingEvents": 0,
+      "coordinates": {
+        "lat": "59.33758",
+        "lng": "18.07807"
+      },
+      "url": "https://www.ticketmaster.se/venue/kasai-stockholm-biljetter/kasa/632",
+      "promoters": [],
+      "attractions": [],
+      "rankScore": 0
+    },
+    {
+      "id": "Z698xZq2ZaAbt",
+      "name": "Gärdet - Tobbe Trollkarl",
+      "city": "Stockholm",
+      "source": "ticketmaster_api",
+      "eventCount": 0,
+      "upcomingEvents": 0,
+      "coordinates": {
+        "lat": "59.33978",
+        "lng": "18.11302"
+      },
+      "url": "https://www.ticketmaster.se/venue/gardet-tobbe-trollkarl-stockholm-biljetter/ttga/632",
+      "promoters": [],
+      "attractions": [],
+      "rankScore": 0
+    },
+    {
+      "id": "Z698xZq2ZaAfR",
+      "name": "Sergel Hub",
+      "city": "Stockholm",
+      "source": "ticketmaster_api",
+      "eventCount": 0,
+      "upcomingEvents": 0,
+      "coordinates": {
+        "lat": "59.33357",
+        "lng": "18.06565"
+      },
+      "url": "https://www.ticketmaster.se/venue/sergel-hub-stockholm-biljetter/sghb/632",
+      "promoters": [],
+      "attractions": [],
+      "rankScore": 0
+    },
+    {
+      "id": "Z698xZq2ZaAfu",
+      "name": "Galleri Cupido",
+      "city": "Stockholm",
+      "source": "ticketmaster_api",
+      "eventCount": 0,
+      "upcomingEvents": 0,
+      "coordinates": {
+        "lat": "59.32357",
+        "lng": "18.07313"
+      },
+      "url": "https://www.ticketmaster.se/venue/galleri-cupido-stockholm-biljetter/gcc/632",
+      "promoters": [],
+      "attractions": [],
+      "rankScore": 0
+    },
+    {
+      "id": "Z698xZq2ZaAo9",
+      "name": "Vinterträdgården på Grand Hôtel",
+      "city": "Stockholm",
+      "source": "ticketmaster_api",
+      "eventCount": 0,
+      "upcomingEvents": 0,
+      "coordinates": {
+        "lat": "59.33067",
+        "lng": "18.07639"
+      },
+      "url": "https://www.ticketmaster.se/venue/vintertradgarden-pa-grand-hotel-stockholm-biljetter/vgh/632",
+      "promoters": [],
+      "attractions": [],
+      "rankScore": 0
+    },
+    {
+      "id": "Z698xZq2ZaAoE",
+      "name": "Stora Skuggans Amfiteater",
+      "city": "Stockholm",
+      "source": "ticketmaster_api",
+      "eventCount": 0,
+      "upcomingEvents": 0,
+      "coordinates": {
+        "lat": "59.36406",
+        "lng": "18.0733"
+      },
+      "url": "https://www.ticketmaster.se/venue/stora-skuggans-amfiteater-stockholm-biljetter/s9a/632",
+      "promoters": [],
+      "attractions": [],
+      "rankScore": 0
+    },
+    {
+      "id": "Z698xZq2ZaApK",
+      "name": "Hotel Kung Carl",
+      "city": "Stockholm",
+      "source": "ticketmaster_api",
+      "eventCount": 0,
+      "upcomingEvents": 0,
+      "coordinates": {
+        "lat": "59.33638",
+        "lng": "18.07163"
+      },
+      "url": "https://www.ticketmaster.se/venue/hotel-kung-carl-stockholm-biljetter/hkc1/632",
+      "promoters": [],
+      "attractions": [],
+      "rankScore": 0
+    },
+    {
+      "id": "Z698xZq2ZaApL",
+      "name": "La Cucaracha",
+      "city": "Stockholm",
+      "source": "ticketmaster_api",
+      "eventCount": 0,
+      "upcomingEvents": 0,
+      "coordinates": {
+        "lat": "59.31237",
+        "lng": "18.07539"
+      },
+      "url": "https://www.ticketmaster.se/venue/la-cucaracha-stockholm-biljetter/lacu/632",
+      "promoters": [],
+      "attractions": [],
+      "rankScore": 0
+    },
+    {
+      "id": "Z698xZq2ZaAra",
+      "name": "STHLM Fields, Gärdet",
+      "city": "Stockholm",
+      "source": "ticketmaster_api",
+      "eventCount": 0,
+      "upcomingEvents": 0,
+      "coordinates": {
+        "lat": "59.33387",
+        "lng": "18.11495"
+      },
+      "url": "https://www.ticketmaster.se/venue/sthlm-fields-gardet-stockholm-biljetter/gsth/583",
+      "promoters": [],
+      "attractions": [],
+      "rankScore": 0
+    },
+    {
+      "id": "Z698xZq2ZaAuA",
+      "name": "Teaterbrasseriet",
+      "city": "Stockholm",
+      "source": "ticketmaster_api",
+      "eventCount": 0,
+      "upcomingEvents": 0,
+      "coordinates": {
+        "lat": "59.33381",
+        "lng": "18.05594"
+      },
+      "url": "https://www.ticketmaster.se/venue/teaterbrasseriet-stockholm-biljetter/sgc/640",
+      "promoters": [],
+      "attractions": [],
+      "rankScore": 0
+    },
+    {
+      "id": "Z698xZq2ZadL6",
+      "name": "Kägelbanan, Södra Teatern",
+      "city": "Stockholm",
+      "source": "ticketmaster_api",
+      "eventCount": 0,
+      "upcomingEvents": 0,
+      "coordinates": {
+        "lat": "59.31832",
+        "lng": "18.07431"
+      },
+      "url": "https://www.ticketmaster.se/venue/kagelbanan-sodra-teatern-stockholm-biljetter/kg5/632",
+      "promoters": [],
+      "attractions": [],
+      "rankScore": 0
+    },
+    {
+      "id": "Z698xZq2Zadnc",
+      "name": "Gärdet - Stockholm",
+      "city": "Stockholm",
+      "source": "ticketmaster_api",
+      "eventCount": 0,
+      "upcomingEvents": 0,
+      "coordinates": {
+        "lat": "59.34358",
+        "lng": "18.09669"
+      },
+      "url": "https://www.ticketmaster.se/venue/gardet-stockholm-stockholm-biljetter/gd6/583",
+      "promoters": [],
+      "attractions": [],
+      "rankScore": 0
+    },
+    {
+      "id": "Z698xZq2ZadoW",
+      "name": "Scalateatern",
+      "city": "Stockholm",
+      "source": "ticketmaster_api",
+      "eventCount": 0,
+      "upcomingEvents": 0,
+      "coordinates": {
+        "lat": "59.33633",
+        "lng": "18.05399"
+      },
+      "url": "https://www.ticketmaster.se/venue/scalateatern-stockholm-biljetter/s33/416",
+      "promoters": [],
+      "attractions": [],
+      "rankScore": 0
+    },
+    {
+      "id": "Z698xZq2Zadxa",
+      "name": "Dansens Hus Blackbox",
+      "city": "Stockholm",
+      "source": "ticketmaster_api",
+      "eventCount": 0,
+      "upcomingEvents": 0,
+      "coordinates": {
+        "lat": "59.33233",
+        "lng": "18.06293"
+      },
+      "url": "https://www.ticketmaster.se/venue/dansens-hus-blackbox-stockholm-biljetter/capa/450",
+      "promoters": [],
+      "attractions": [],
+      "rankScore": 0
+    },
+    {
+      "id": "Z698xZq2ZaeVP",
+      "name": "Gärdet",
+      "city": "Stockholm",
+      "source": "ticketmaster_api",
+      "eventCount": 0,
+      "upcomingEvents": 0,
+      "coordinates": {
+        "lat": "59.34358",
+        "lng": "18.09669"
+      },
+      "url": "https://www.ticketmaster.se/venue/gardet-stockholm-biljetter/ga9/583",
+      "promoters": [],
+      "attractions": [],
+      "rankScore": 0
+    },
+    {
+      "id": "Z698xZq2Zaem-",
+      "name": "Dansens Hus / Bonniers Konsthall",
+      "city": "Stockholm",
+      "source": "ticketmaster_api",
+      "eventCount": 0,
+      "upcomingEvents": 0,
+      "coordinates": {
+        "lat": "59.33469",
+        "lng": "18.06281"
+      },
+      "url": "https://www.ticketmaster.se/venue/dansens-hus-bonniers-konsthall-stockholm-biljetter/dh3/450",
+      "promoters": [],
+      "attractions": [],
+      "rankScore": 0
+    },
+    {
+      "id": "Z698xZq2Zaemy",
+      "name": "UPS442",
+      "city": "Stockholm",
+      "source": "ticketmaster_api",
+      "eventCount": 0,
+      "upcomingEvents": 0,
+      "coordinates": null,
+      "url": "https://www.ticketmaster.se/venue/ups442-stockholm-biljetter/ups442/442",
+      "promoters": [],
+      "attractions": [],
+      "rankScore": 0
+    },
+    {
+      "id": "Z7r9jZa7z0",
+      "name": "Annexet - Stockholm",
+      "city": "Stockholm",
+      "source": "ticketmaster_api",
+      "eventCount": 0,
+      "upcomingEvents": 0,
+      "coordinates": {
+        "lat": "0",
+        "lng": "0"
+      },
+      "promoters": [],
+      "attractions": [],
+      "rankScore": 0
+    },
+    {
+      "id": "Z7r9jZaA6X",
+      "name": "Avicii Arena",
+      "city": "Stockholm",
+      "source": "ticketmaster_api",
+      "eventCount": 0,
+      "upcomingEvents": 0,
+      "coordinates": {
+        "lat": "0",
+        "lng": "0"
+      },
+      "promoters": [],
+      "attractions": [],
+      "rankScore": 0
+    },
+    {
+      "id": "Z7r9jZadF5",
+      "name": "Grona Lund",
+      "city": "Stockholm",
+      "source": "ticketmaster_api",
+      "eventCount": 0,
+      "upcomingEvents": 0,
+      "coordinates": {
+        "lat": "0",
+        "lng": "0"
+      },
+      "promoters": [],
+      "attractions": [],
+      "rankScore": 0
+    },
+    {
+      "id": "Z7r9jZaey1",
+      "name": "Fryshuset",
+      "city": "Stockholm",
+      "source": "ticketmaster_api",
+      "eventCount": 0,
+      "upcomingEvents": 0,
+      "coordinates": {
+        "lat": "0",
+        "lng": "0"
+      },
+      "promoters": [],
+      "attractions": [],
+      "rankScore": 0
+    },
+    {
+      "id": "ZFr9jZ1aav",
+      "name": "STHLM Fields",
+      "city": "Stockholm",
+      "source": "ticketmaster_api",
+      "eventCount": 0,
+      "upcomingEvents": 0,
+      "coordinates": {
+        "lat": "0",
+        "lng": "0"
+      },
+      "promoters": [],
+      "attractions": [],
+      "rankScore": 0
+    },
+    {
+      "id": "ZFr9jZ1kFk",
+      "name": "Hovet",
+      "city": "Stockholm",
+      "source": "ticketmaster_api",
+      "eventCount": 0,
+      "upcomingEvents": 0,
+      "coordinates": {
+        "lat": "0",
+        "lng": "0"
+      },
+      "promoters": [],
+      "attractions": [],
+      "rankScore": 0
+    },
+    {
+      "id": "ZFr9jZk7Fk",
+      "name": "Ericsson Globe",
+      "city": "Stockholm",
+      "source": "ticketmaster_api",
+      "eventCount": 0,
+      "upcomingEvents": 0,
+      "coordinates": {
+        "lat": "0",
+        "lng": "0"
+      },
+      "promoters": [],
+      "attractions": [],
+      "rankScore": 0
+    },
+    {
+      "id": "Za98xZq2Z1e",
+      "name": "Globearenas Annexet unnumbered",
+      "city": "Stockholm",
+      "source": "ticketmaster_api",
+      "eventCount": 0,
+      "upcomingEvents": 0,
+      "coordinates": {
+        "lat": "59.33233",
+        "lng": "18.06293"
+      },
+      "url": "https://www.ticketmaster.se/venue/arenan-stockholm-biljetter/anx7/442",
+      "promoters": [],
+      "attractions": [],
+      "rankScore": 0
+    },
+    {
+      "id": "Za98xZq2Za1",
+      "name": "Annexet (Globen)",
+      "city": "Stockholm",
+      "source": "ticketmaster_api",
+      "eventCount": 0,
+      "upcomingEvents": 0,
+      "coordinates": {
+        "lat": "59.29416",
+        "lng": "18.08081"
+      },
+      "url": "https://www.ticketmaster.se/venue/annexet-globen--stockholm-biljetter/anx7/407",
+      "promoters": [],
+      "attractions": [],
+      "rankScore": 0
+    }
+  ],
+  "events": []
+}

@@ -1,0 +1,55 @@
+{"ts": "2026-04-17T16:52:09.007360Z", "action": "MOVE-ALL", "detail": "425 källor: preA → postA"}
+{"ts": "2026-04-17T16:52:18.459116Z", "action": "MOVE-ALL", "detail": "425 källor: postA → preA"}
+{"ts": "2026-04-17T17:20:32.397082Z", "action": "MOVE-ALL", "detail": "425 källor: preA → postA"}
+{"ts": "2026-04-17T17:23:08.998254Z", "action": "MOVE-ALL", "detail": "425 källor: postA → preA"}
+{"ts": "2026-04-17T17:49:36.768143Z", "action": "MOVE-ALL", "detail": "425 källor: preA → postA"}
+{"ts": "2026-04-17T17:51:14.119547Z", "action": "MOVE-ALL", "detail": "425 källor: postA → preA"}
+{"ts": "2026-04-18T04:22:32.489122Z", "action": "MOVE-ALL", "detail": "4 källor: postTestC-UI → postB-preC"}
+{"ts": "2026-04-18T04:25:51.773661Z", "action": "MOVE-ALL", "detail": "86 källor: postTestC-man → postB-preC"}
+{"ts": "2026-04-18T05:02:02.977836Z", "action": "MOVE-ALL", "detail": "1 källor: postA → preA"}
+{"ts": "2026-04-18T05:02:03.015262Z", "action": "MOVE-ALL", "detail": "67 källor: postB → preA"}
+{"ts": "2026-04-18T05:02:03.048240Z", "action": "MOVE-ALL", "detail": "249 källor: postB-preC → preA"}
+{"ts": "2026-04-18T05:02:03.081405Z", "action": "MOVE-ALL", "detail": "8 källor: postTestC-D → preA"}
+{"ts": "2026-04-18T05:20:28.251985Z", "action": "MOVE-ALL", "detail": "32 källor: preB → preA"}
+{"ts": "2026-04-18T05:20:36.777958Z", "action": "MOVE-ALL", "detail": "1 källor: postA → preA"}
+{"ts": "2026-04-18T05:34:19.619631Z", "action": "MOVE-ALL", "detail": "424 källor: preB → preA"}
+{"ts": "2026-04-18T05:34:29.524798Z", "action": "MOVE-ALL", "detail": "1 källor: postA → preA"}
+{"ts": "2026-04-18T05:40:24.278064Z", "action": "MOVE-ALL", "detail": "1 källor: postA → preA"}
+{"ts": "2026-04-18T05:40:28.541193Z", "action": "MOVE-ALL", "detail": "424 källor: preB → preA"}
+{"ts": "2026-04-18T05:41:57.218871Z", "action": "MOVE-ALL", "detail": "1 källor: postA → preA"}
+{"ts": "2026-04-18T05:42:00.663011Z", "action": "MOVE-ALL", "detail": "424 källor: preB → preA"}
+{"ts": "2026-04-18T05:49:52.875000Z", "action": "MOVE-ALL", "detail": "1 källor: postA → preA"}
+{"ts": "2026-04-18T05:49:55.928163Z", "action": "MOVE-ALL", "detail": "424 källor: preB → preA"}
+{"ts": "2026-04-18T06:00:40.228875Z", "action": "MOVE-ALL", "detail": "1 källor: postA → preUI"}
+{"ts": "2026-04-18T06:00:59.424858Z", "action": "MOVE-ALL", "detail": "66 källor: postB → preA"}
+{"ts": "2026-04-18T06:04:10.619640Z", "action": "MOVE-ALL", "detail": "66 källor: preA → preUI"}
+{"ts": "2026-04-18T06:18:36.261101Z", "action": "MOVE-ALL", "detail": "67 källor: preUI → preA"}
+{"ts": "2026-04-18T07:16:43.439367Z", "action": "MOVE-ALL", "detail": "49 källor: preA → preUI"}
+{"ts": "2026-04-18T07:17:10.332077Z", "action": "MOVE-ALL", "detail": "1 källor: postA → preUI"}
+{"ts": "2026-04-18T07:17:23.891282Z", "action": "MOVE-ALL", "detail": "17 källor: preB → preUI"}
+{"ts": "2026-04-18T09:29:22.500828Z", "action": "MOVE-ALL", "detail": "358 källor: postB-preC → preA"}
+{"ts": "2026-04-18T09:29:47.490971Z", "action": "MOVE-ALL", "detail": "66 källor: preUI → preA"}
+{"ts": "2026-04-18T09:32:22.931783Z", "action": "MOVE-ALL", "detail": "4 källor: EVENTPULSE-APP → preA"}
+{"ts": "2026-04-18T09:52:49.433296Z", "action": "MOVE-ALL", "detail": "400 källor: preB → preA"}
+{"ts": "2026-04-18T10:01:58.439012Z", "action": "MOVE-ALL", "detail": "1 källor: postA → preA"}
+{"ts": "2026-04-18T10:05:53.683487Z", "action": "MOVE", "detail": "aik: preA → preUI"}
+{"ts": "2026-04-18T10:08:40.673157Z", "action": "MOVE-ALL", "detail": "1 källor: preUI → preA"}
+{"ts": "2026-04-18T10:12:47.810459Z", "action": "MOVE-ALL", "detail": "1 källor: postA → preUI"}
+{"ts": "2026-04-18T12:13:23.735397Z", "action": "MOVE-ALL", "detail": "64 källor: postB → preUI"}
+{"ts": "2026-04-18T14:04:30.500542Z", "action": "MOVE-ALL", "detail": "290 källor: postTestC-man → postB-preC"}
+{"ts": "2026-04-19T11:59:41.233671Z", "action": "MOVE-ALL", "detail": "288 källor: postTestC-Out → preA"}
+{"ts": "2026-04-19T12:53:20.056125Z", "action": "MOVE-ALL", "detail": "229 källor: postTestC-man → postB-preC"}
+{"ts": "2026-04-19T13:09:34.913770Z", "action": "MOVE-ALL", "detail": "287 källor: postTestC-man → postB-preC"}
+{"ts": "2026-04-19T15:06:29.315998Z", "action": "MOVE-ALL", "detail": "260 källor: postTestC-man → postB-preC"}
+{"ts": "2026-04-19T15:18:46.343063Z", "action": "MOVE-ALL", "detail": "258 källor: postTestC-man → postB-preC"}
+{"ts": "2026-04-19T15:39:03.181194Z", "action": "MOVE-ALL", "detail": "100 källor: postTestC-man → postB-preC"}
+{"ts": "2026-04-19T15:55:41.869540Z", "action": "MOVE-ALL", "detail": "257 källor: postTestC-man → postB-preC"}
+{"ts": "2026-04-19T15:57:46.102976Z", "action": "MOVE-ALL", "detail": "100 källor: postTestC-man → postB-preC"}
+{"ts": "2026-04-19T16:38:12.987075Z", "action": "AUTO-DEDUP", "detail": "11 dupes removed, 425 unique in queues"}
+{"ts": "2026-04-19T16:38:23.181926Z", "action": "MOVE-ALL", "detail": "248 källor: postTestC-man → postB-preC"}
+{"ts": "2026-04-19T16:41:34.274646Z", "action": "MOVE-ALL", "detail": "248 källor: postB-preC → postTestC-man"}
+{"ts": "2026-04-19T18:51:57.599089Z", "action": "AUTO-DEDUP", "detail": "248 dupes removed, 425 unique in queues (EVENTPULSE-APP preserved)"}
+{"ts": "2026-04-19T19:29:50.084293Z", "action": "AUTO-DEDUP", "detail": "248 dupes removed, 425 unique in queues (EVENTPULSE-APP preserved)"}
+{"ts": "2026-04-19T20:22:25.198492Z", "action": "AUTO-DEDUP", "detail": "12 dupes removed, 425 unique in queues (EVENTPULSE-APP preserved)"}
+{"ts": "2026-04-19T20:37:43.224361Z", "action": "MOVE-ALL", "detail": "190 källor: postTestC-out → preA"}
+{"ts": "2026-04-19T21:41:58.538928Z", "action": "AUTO-DEDUP", "detail": "0 dupes removed, 425 unique in queues (EVENTPULSE-APP preserved)"}

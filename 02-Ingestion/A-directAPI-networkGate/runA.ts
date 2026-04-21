@@ -22,7 +22,7 @@
 import * as dotenv from 'dotenv';
 import path from 'path';
 import { fileURLToPath } from 'url';
-import { readFileSync, writeFileSync, existsSync, mkdirSync } from 'fs';
+import { readFileSync, writeFileSync, existsSync, mkdirSync, appendFileSync } from 'fs';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 dotenv.config({ path: path.resolve(process.cwd(), '.env'), override: true });
@@ -34,11 +34,23 @@ import { extractFromJsonLd } from '../F-eventExtraction/extractor';
 // ─── Queue File Paths ─────────────────────────────────────────────────────────
 
 const RUNTIME_DIR = path.resolve(__dirname, '../../runtime');
+const LOGS_DIR = path.resolve(RUNTIME_DIR, 'logs');
+const RUN_LOG = path.resolve(LOGS_DIR, `runA-${new Date().toISOString().replace(/[:.]/g, '-')}.log`);
 const PREA_QUEUE_FILE = path.resolve(RUNTIME_DIR, 'preA-queue.jsonl');
 const PREUI_QUEUE_FILE = path.resolve(RUNTIME_DIR, 'preUI-queue.jsonl');
 const PREB_QUEUE_FILE = path.resolve(RUNTIME_DIR, 'preB-queue.jsonl');
 const POSTA_QUEUE_FILE = path.resolve(RUNTIME_DIR, 'postA-queue.jsonl');
 const EXTRACTED_DIR = path.resolve(__dirname, '../../03-Queue/03-extractedevents');
+
+// --- Log helper — terminal + per-run file ---
+
+function log(...args: unknown[]) {
+  const ts = new Date().toISOString();
+  const msg = args.map(a => String(a)).join(' ');
+  const line = `${ts}  ${msg}`;
+  console.log(line);
+  appendFileSync(RUN_LOG, line + '\n', 'utf8');
+}
 
 // ─── Shared Queue Entry Interface ──────────────────────────────────────────────
 
@@ -407,19 +419,22 @@ async function main() {
   const batch = getNextABatch(limit);
 
   if (batch.length === 0) {
-    console.log('[A-runner] Both preA-queue and sources-main are empty. Nothing to run.');
+    log('[A-runner] Both preA-queue and sources-main are empty. Nothing to run.');
     return;
   }
 
-  console.log(`═══ A-RUNNER ═══`);
-  console.log(`preA-queue: ${batch.filter(b => b.queueOrigin === 'preA').length} entries`);
-  console.log(`sources-main: ${batch.filter(b => b.queueOrigin === 'sources-main').length} entries`);
-  console.log(`total: ${batch.length} sources\n`);
+  mkdirSync(LOGS_DIR, { recursive: true });
+  writeFileSync(RUN_LOG, '', 'utf8');
+
+  log(`═══ A-RUNNER ═══`);
+  log(`preA-queue: ${batch.filter(b => b.queueOrigin === 'preA').length} entries`);
+  log(`sources-main: ${batch.filter(b => b.queueOrigin === 'sources-main').length} entries`);
+  log(`total: ${batch.length} sources`);
 
   if (dry) {
-    console.log('DRY RUN — inga sources körs:\n');
+    log('DRY RUN — inga sources körs:');
     for (const item of batch) {
-      console.log(`  [${item.queueOrigin}] ${item.sourceId}: ${item.source?.url ?? 'N/A'}`);
+      log(`  [${item.queueOrigin}] ${item.sourceId}: ${item.source?.url ?? 'N/A'}`);
     }
     return;
   }
@@ -443,13 +458,13 @@ async function main() {
         results.push(result);
         finalizeSource(item, result);
         const icon = result.success ? '✅' : '❌';
-        console.log(`  ${icon} ${item.sourceId}: ${result.success ? `${result.eventsFound} events` : result.error}`);
+        log(`  ${icon} ${item.sourceId}: ${result.success ? `${result.eventsFound} events` : result.error}`);
       }
-      console.log(`  ── chunk ${i / concurrency + 1} klart (${chunk.length} källor)`);
+      log(`  ── chunk ${Math.floor(i / concurrency) + 1} klart (${chunk.length} källor)`);
     }
   }
 
-  console.log(`Kör ${batch.length} sources med ${CONCURRENCY} parallella workers...\n`);
+  log(`Kör ${batch.length} sources med ${CONCURRENCY} parallella workers...`);
   await runWithConcurrency(batch, CONCURRENCY);
 
   // ── Summary ──────────────────────────────────────────────────────────────
@@ -457,15 +472,16 @@ async function main() {
   const fail = results.filter(r => !r.success).length;
   const totalEvents = results.reduce((s, r) => s + r.eventsFound, 0);
 
-  console.log(`\n═══ A-RUNNER SUMMARY ═══`);
-  console.log(`  Total:  ${batch.length}`);
-  console.log(`  ✅ success: ${success}`);
-  console.log(`  ❌ fail:   ${fail}`);
-  console.log(`  Events: ${totalEvents}`);
+  log('');
+  log('═══ A-RUNNER SUMMARY ═══');
+  log(`  Total:  ${batch.length}`);
+  log(`  ✅ success: ${success}`);
+  log(`  ❌ fail:   ${fail}`);
+  log(`  Events: ${totalEvents}`);
 
   if (success === 0 && fail > 0) {
-    console.log(`\n⚠️  Alla ${fail} sources misslyckades.`);
-    console.log(`   Nästa steg: kör verktyg B (network/API) på misslyckade sources.`);
+    log(`⚠️  Alla ${fail} sources misslyckades.`);
+    log(`   Nästa steg: kör verktyg B (network/API) på misslyckade sources.`);
   }
 }
 

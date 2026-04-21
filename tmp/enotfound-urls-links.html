@@ -1,0 +1,838 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>ENOTFOUND URLs med AI-analys</title>
+<style>
+  * { box-sizing: border-box; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; margin: 0; background: #1a1a2e; color: #eee; }
+  .header { background: #16213e; padding: 1.5rem 2rem; border-bottom: 2px solid #e94560; }
+  h1 { color: #e94560; margin: 0 0 0.5rem; }
+  .subtitle { color: #aaa; font-size: 0.9rem; }
+  .summary { display: flex; gap: 2rem; padding: 1rem 2rem; background: #16213e; }
+  .stat { text-align: center; }
+  .stat .num { font-size: 2rem; font-weight: bold; }
+  .stat .label { font-size: 0.8rem; color: #888; }
+  .yes .num { color: #4fc3f7; }
+  .no  .num { color: #e94560; }
+  .unc .num { color: #ffd54f; }
+  .filter-bar { padding: 0.75rem 2rem; background: #0f3460; display: flex; gap: 0.5rem; }
+  .filter-btn { padding: 0.4rem 1rem; border: 1px solid #444; border-radius: 4px; background: transparent; color: #aaa; cursor: pointer; font-size: 0.85rem; }
+  .filter-btn.active { background: #e94560; color: white; border-color: #e94560; }
+  table { border-collapse: collapse; width: 100%; }
+  th { text-align: left; padding: 10px 14px; background: #16213e; color: #e94560; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.05em; position: sticky; top: 0; }
+  td { padding: 9px 14px; border-bottom: 1px solid #2a2a4a; vertical-align: top; }
+  tr:hover { background: #1f1f3a; }
+  tr.hidden { display: none; }
+  .badge { display: inline-block; padding: 2px 8px; border-radius: 10px; font-size: 0.72rem; font-weight: bold; text-transform: uppercase; }
+  .badge-YES { background: #0d3b4d; color: #4fc3f7; border: 1px solid #4fc3f7; }
+  .badge-NO  { background: #3b0d1a; color: #ff6b6b; border: 1px solid #ff6b6b; }
+  .badge-UNCERTAIN { background: #3b350d; color: #ffd54f; border: 1px solid #ffd54f; }
+  .sid { color: #888; font-family: monospace; font-size: 0.82em; }
+  .notes { font-size: 0.8em; color: #bbb; max-width: 380px; }
+  a { color: #4fc3f7; text-decoration: none; }
+  a:hover { text-decoration: underline; }
+
+  a.alt-link { color: #69db7c; font-weight: bold; }
+  a.wayback-link { color: #ffd54f; }
+  a.dead-link { color: #555; text-decoration: line-through; }
+  .filter-bar { margin-bottom: 0.5rem; }
+</style>
+</head>
+<body>
+<div class="header">
+  <h1>ENOTFOUND: 108 döda domäner — AI-analys</h1>
+  <p class="subtitle">Klicka på LIVE-länkar — gröna = verifierad alt-URL, gula = Wayback-arkiv, grå/streckad = döda.</p>
+</div>
+<div class="summary">
+  <div class="stat yes"><div class="num">38</div><div class="label">Event-venues</div></div>
+  <div class="stat no"><div class="num">43</div><div class="label">Ej event-venues</div></div>
+  <div class="stat unc"><div class="num">26</div><div class="label">Osakra</div></div>
+</div>
+<div class="filter-bar">
+  <button class="filter-btn active" onclick="filter('all')">Alla (108)</button>
+  <button class="filter-btn" onclick="filter('YES')">Event-venues (38)</button>
+  <button class="filter-btn" onclick="filter('NO')">Ej venues (43)</button>
+  <button class="filter-btn" onclick="filter('UNCERTAIN')">Osakra (26)</button>
+</div>
+<table>
+<tr>
+  <th>#</th>
+  <th>SourceId</th>
+  <th>URL</th>
+  <th>Event?</th>
+  <th>AI-fynd</th>
+</tr>
+<tr class="row-YES">
+  <td class="sid">1</td>
+  <td class="sid">abb-arena</td>
+  <td><a href="https://www.strawberry.se/abb-arena" target="_blank" class="alt-link">https://www.strawberry.se/abb-arena</a></td>
+  <td><span class="badge badge-YES">YES</span></td>
+  <td class="notes">ABB Arena Syd in Västerås - major concert and events arena. Hosts concerts, festivals (Rockfest, Melodifestivalen), sports events. Capacity 16,000 for concerts.</td>
+</tr>
+<tr class="row-NO">
+  <td class="sid">2</td>
+  <td class="sid">alltimalmo</td>
+  <td><a href="https://alltimalmö.se/" target="_blank">https://alltimalmö.se/</a></td>
+  <td><span class="badge badge-NO">NO</span></td>
+  <td class="notes">Allt i Malmö - city guide/directory for Malmö. Contains information about restaurants, nightlife, events but is not itself an event venue.</td>
+</tr>
+<tr class="row-NO">
+  <td class="sid">3</td>
+  <td class="sid">arbetsam</td>
+  <td><a href="https://arbetam.se/" target="_blank">https://arbetam.se/</a></td>
+  <td><span class="badge badge-NO">NO</span></td>
+  <td class="notes">ArbetSam - Swedish association for working life museums. Organizes courses and museum days but not an event venue itself.</td>
+</tr>
+<tr class="row-YES">
+  <td class="sid">4</td>
+  <td class="sid">bar-brooklyn</td>
+  <td><a href="https://www.debaser.se/barbrooklyn" target="_blank" class="alt-link">https://www.debaser.se/barbrooklyn</a></td>
+  <td><span class="badge badge-YES">YES</span></td>
+  <td class="notes">Bar Brooklyn - part of Debaser chain in Stockholm. Concert venue/bar hosting live music events. Capacity ~800. Known for hosting various rock and indie bands.</td>
+</tr>
+<tr class="row-UNCERTAIN">
+  <td class="sid">5</td>
+  <td class="sid">boplanet</td>
+  <td><a href="https://boplanet.se/" target="_blank">https://boplanet.se/</a></td>
+  <td><span class="badge badge-UNCERTAIN">UNCERTAIN</span></td>
+  <td class="notes">No clear search results found. Could be related to planetarium or event venue.</td>
+</tr>
+<tr class="row-NO">
+  <td class="sid">6</td>
+  <td class="sid">brommapojkarna</td>
+  <td><a href="https://bpxf.se/" target="_blank">https://bpxf.se/</a></td>
+  <td><span class="badge badge-NO">NO</span></td>
+  <td class="notes">Bromma Pojkarna (BPXF) - football club in Stockholm. Sports club, not an event venue.</td>
+</tr>
+<tr class="row-UNCERTAIN">
+  <td class="sid">7</td>
+  <td class="sid">b-republic</td>
+  <td><a href="https://brepublic.se/" target="_blank">https://brepublic.se/</a></td>
+  <td><span class="badge badge-UNCERTAIN">UNCERTAIN</span></td>
+  <td class="notes">No clear search results. May have been an event venue in Stockholm.</td>
+</tr>
+<tr class="row-NO">
+  <td class="sid">8</td>
+  <td class="sid">a6</td>
+  <td><a href="https://centeraj6.se/" target="_blank">https://centeraj6.se/</a></td>
+  <td><span class="badge badge-NO">NO</span></td>
+  <td class="notes">A6 Center - shopping center in Jönköping, not an event venue.</td>
+</tr>
+<tr class="row-UNCERTAIN">
+  <td class="sid">9</td>
+  <td class="sid">club-mecca</td>
+  <td><a href="https://clubmecca.se/" target="_blank">https://clubmecca.se/</a></td>
+  <td><span class="badge badge-UNCERTAIN">UNCERTAIN</span></td>
+  <td class="notes">Club Mecca - website shows 'Launching Soon'. Status unclear, appears to have been a nightclub but domain now inactive.</td>
+</tr>
+<tr class="row-UNCERTAIN">
+  <td class="sid">10</td>
+  <td class="sid">goteborgs-design-festival</td>
+  <td><a href="https://designfestival.se/" target="_blank">https://designfestival.se/</a></td>
+  <td><span class="badge badge-UNCERTAIN">UNCERTAIN</span></td>
+  <td class="notes">Göteborgs Design Festival - design festival organizer. May still exist but website not found.</td>
+</tr>
+<tr class="row-YES">
+  <td class="sid">11</td>
+  <td class="sid">do310-com</td>
+  <td><a href="https://web.archive.org/web/undefined/undefined" target="_blank" class="wayback-link">https://do310.com/ (Wayback)</a></td>
+  <td><span class="badge badge-YES">YES</span></td>
+  <td class="notes">Do214/Do310 - Dallas/Fort Worth events listing site in Texas, USA. Active events calendar site, not a venue.</td>
+</tr>
+<tr class="row-UNCERTAIN">
+  <td class="sid">12</td>
+  <td class="sid">downtown</td>
+  <td><a href="https://downtown.se/" target="_blank">https://downtown.se/</a></td>
+  <td><span class="badge badge-UNCERTAIN">UNCERTAIN</span></td>
+  <td class="notes">Downtown Riot - was a music festival in Stockholm (2022). Venue may have changed.</td>
+</tr>
+<tr class="row-UNCERTAIN">
+  <td class="sid">13</td>
+  <td class="sid">eggers-arena-ehco</td>
+  <td><a href="https://eggersarena.se/" target="_blank">https://eggersarena.se/</a></td>
+  <td><span class="badge badge-UNCERTAIN">UNCERTAIN</span></td>
+  <td class="notes">Eggers Arena in Västerås - primarily a sports arena (hockey), occasionally hosts events.</td>
+</tr>
+<tr class="row-NO">
+  <td class="sid">14</td>
+  <td class="sid">ekero</td>
+  <td><a href="https://ekeroif.se/" target="_blank">https://ekeroif.se/</a></td>
+  <td><span class="badge badge-NO">NO</span></td>
+  <td class="notes">Ekerö IF - football club in Stockholm. Sports club, not an event venue.</td>
+</tr>
+<tr class="row-NO">
+  <td class="sid">15</td>
+  <td class="sid">falun-fk</td>
+  <td><a href="https://falunfk.se/" target="_blank">https://falunfk.se/</a></td>
+  <td><span class="badge badge-NO">NO</span></td>
+  <td class="notes">Falun FK - football club in Falun. Sports club, not an event venue.</td>
+</tr>
+<tr class="row-UNCERTAIN">
+  <td class="sid">16</td>
+  <td class="sid">fangelset</td>
+  <td><a href="https://fangelset.org/" target="_blank">https://fangelset.org/</a></td>
+  <td><span class="badge badge-UNCERTAIN">UNCERTAIN</span></td>
+  <td class="notes">Could be a venue name (means 'the prison' in Swedish). No clear results found.</td>
+</tr>
+<tr class="row-NO">
+  <td class="sid">17</td>
+  <td class="sid">fattar</td>
+  <td><a href="https://fattar.se/" target="_blank">https://fattar.se/</a></td>
+  <td><span class="badge badge-NO">NO</span></td>
+  <td class="notes">Fattaru - Swedish hiphop group, not an event venue.</td>
+</tr>
+<tr class="row-UNCERTAIN">
+  <td class="sid">18</td>
+  <td class="sid">malmo-folkets-park</td>
+  <td><a href="https://folketsparkmalmo.se/" target="_blank">https://folketsparkmalmo.se/</a></td>
+  <td><span class="badge badge-UNCERTAIN">UNCERTAIN</span></td>
+  <td class="notes">Folkets Park in Malmö - historically a cultural venue/workers' park. May still host events.</td>
+</tr>
+<tr class="row-UNCERTAIN">
+  <td class="sid">19</td>
+  <td class="sid">friarena</td>
+  <td><a href="https://friarena.se/" target="_blank">https://friarena.se/</a></td>
+  <td><span class="badge badge-UNCERTAIN">UNCERTAIN</span></td>
+  <td class="notes">No clear search results found.</td>
+</tr>
+<tr class="row-UNCERTAIN">
+  <td class="sid">20</td>
+  <td class="sid">fyrfaderna</td>
+  <td><a href="https://fyrfaderna.se/" target="_blank">https://fyrfaderna.se/</a></td>
+  <td><span class="badge badge-UNCERTAIN">UNCERTAIN</span></td>
+  <td class="notes">No clear search results found. Could be a restaurant/venue.</td>
+</tr>
+<tr class="row-NO">
+  <td class="sid">21</td>
+  <td class="sid">fyris-paper</td>
+  <td><a href="https://fyrispaper.se/" target="_blank">https://fyrispaper.se/</a></td>
+  <td><span class="badge badge-NO">NO</span></td>
+  <td class="notes">Fyris Paper - newspaper in Uppsala, not an event venue.</td>
+</tr>
+<tr class="row-NO">
+  <td class="sid">22</td>
+  <td class="sid">gamla-uppsala</td>
+  <td><a href="https://gamlauppsala.se/" target="_blank">https://gamlauppsala.se/</a></td>
+  <td><span class="badge badge-NO">NO</span></td>
+  <td class="notes">Gamla Uppsala - museum and historical site, not primarily an event venue.</td>
+</tr>
+<tr class="row-NO">
+  <td class="sid">23</td>
+  <td class="sid">din-gastrotek</td>
+  <td><a href="https://gastrotek.se/" target="_blank">https://gastrotek.se/</a></td>
+  <td><span class="badge badge-NO">NO</span></td>
+  <td class="notes">Gastrotek - appears to be food/restaurant related, not an event venue.</td>
+</tr>
+<tr class="row-NO">
+  <td class="sid">24</td>
+  <td class="sid">gavle-if</td>
+  <td><a href="https://gavleif.se/" target="_blank">https://gavleif.se/</a></td>
+  <td><span class="badge badge-NO">NO</span></td>
+  <td class="notes">Gefle IF - football club in Gävle. Sports club, not an event venue.</td>
+</tr>
+<tr class="row-NO">
+  <td class="sid">25</td>
+  <td class="sid">gavle-zoo</td>
+  <td><a href="https://gavlezoo.se/" target="_blank">https://gavlezoo.se/</a></td>
+  <td><span class="badge badge-NO">NO</span></td>
+  <td class="notes">Gavle Zoo - pet store chain, not an event venue.</td>
+</tr>
+<tr class="row-UNCERTAIN">
+  <td class="sid">26</td>
+  <td class="sid">goteborgs-domkyrka</td>
+  <td><a href="https://goteborgsdomkyrka.se/" target="_blank">https://goteborgsdomkyrka.se/</a></td>
+  <td><span class="badge badge-UNCERTAIN">UNCERTAIN</span></td>
+  <td class="notes">Göteborgs Domkyrka - cathedral in Gothenburg. Occasionally hosts concerts but primarily a church.</td>
+</tr>
+<tr class="row-YES">
+  <td class="sid">27</td>
+  <td class="sid">g-teborgsoperan</td>
+  <td><a href="https://www.goteborgsoperan.se/" target="_blank" class="alt-link">https://www.goteborgsoperan.se/</a></td>
+  <td><span class="badge badge-YES">YES</span></td>
+  <td class="notes">Göteborgs Operan - Gothenburg Opera House. Major venue for opera, ballet, and concerts.</td>
+</tr>
+<tr class="row-YES">
+  <td class="sid">28</td>
+  <td class="sid">goteborgs-film-festival</td>
+  <td><a href="https://www.gothenburgfilmfestival.com/" target="_blank" class="alt-link">https://www.gothenburgfilmfestival.com/</a></td>
+  <td><span class="badge badge-YES">YES</span></td>
+  <td class="notes">Gothenburg Film Festival - annual film festival event in Gothenburg.</td>
+</tr>
+<tr class="row-NO">
+  <td class="sid">29</td>
+  <td class="sid">hasselblad-center</td>
+  <td><a href="https://hasselbladcenter.se/" target="_blank">https://hasselbladcenter.se/</a></td>
+  <td><span class="badge badge-NO">NO</span></td>
+  <td class="notes">Hasselblad Center - photography museum in Gothenburg, not primarily an event venue.</td>
+</tr>
+<tr class="row-YES">
+  <td class="sid">30</td>
+  <td class="sid">helsingborg-konserthus</td>
+  <td><a href="https://www.helsingborgskonserthus.se/" target="_blank" class="alt-link">https://www.helsingborgskonserthus.se/</a></td>
+  <td><span class="badge badge-YES">YES</span></td>
+  <td class="notes">Helsingborg Konserthus - concert hall in Helsingborg. Hosts classical music and other events.</td>
+</tr>
+<tr class="row-NO">
+  <td class="sid">31</td>
+  <td class="sid">helsingborgs-if</td>
+  <td><a href="https://helsingborgsif.se/" target="_blank">https://helsingborgsif.se/</a></td>
+  <td><span class="badge badge-NO">NO</span></td>
+  <td class="notes">Helsingborgs IF - football club in Helsingborg. Sports club, not an event venue.</td>
+</tr>
+<tr class="row-YES">
+  <td class="sid">32</td>
+  <td class="sid">hovet</td>
+  <td><a href="https://www.ticketmaster.se/artist/hovet-biljetter/1562" target="_blank" class="alt-link">https://www.ticketmaster.se/artist/hovet-biljetter/1562</a></td>
+  <td><span class="badge badge-YES">YES</span></td>
+  <td class="notes">Hovet - major sports arena in Stockholm. Hosts hockey games, concerts, and events. Part of Stockholm Live venues.</td>
+</tr>
+<tr class="row-YES">
+  <td class="sid">33</td>
+  <td class="sid">jazz-i-orebro</td>
+  <td><a href="https://www.jazzorebro.se/" target="_blank" class="alt-link">https://www.jazzorebro.se/</a></td>
+  <td><span class="badge badge-YES">YES</span></td>
+  <td class="notes">Jazz i Örebro - jazz club/venue in Örebro. Regular jazz events and concerts.</td>
+</tr>
+<tr class="row-UNCERTAIN">
+  <td class="sid">34</td>
+  <td class="sid">jonkoping-sodra</td>
+  <td><a href="https://jonkopingsodra.se/" target="_blank">https://jonkopingsodra.se/</a></td>
+  <td><span class="badge badge-UNCERTAIN">UNCERTAIN</span></td>
+  <td class="notes">Jönköping Södra - could be a sports club or venue. No clear results.</td>
+</tr>
+<tr class="row-NO">
+  <td class="sid">35</td>
+  <td class="sid">kalmar-museum</td>
+  <td><a href="https://kalmar-museum.se/" target="_blank">https://kalmar-museum.se/</a></td>
+  <td><span class="badge badge-NO">NO</span></td>
+  <td class="notes">Kalmar Museum - museum in Kalmar, occasionally hosts events but primarily a museum.</td>
+</tr>
+<tr class="row-YES">
+  <td class="sid">36</td>
+  <td class="sid">kalmar-energi-arena</td>
+  <td><a href="https://www.kalmarenergiarena.se/" target="_blank" class="alt-link">https://www.kalmarenergiarena.se/</a></td>
+  <td><span class="badge badge-YES">YES</span></td>
+  <td class="notes">Kalmar Energi Arena - sports arena in Kalmar. Home to hockey team and hosts events.</td>
+</tr>
+<tr class="row-YES">
+  <td class="sid">37</td>
+  <td class="sid">kalmar-teatern</td>
+  <td><a href="https://www.kalmarteatern.se/" target="_blank" class="alt-link">https://www.kalmarteatern.se/</a></td>
+  <td><span class="badge badge-YES">YES</span></td>
+  <td class="notes">Kalmar Teatern - theater in Kalmar. Hosts theatrical performances and events.</td>
+</tr>
+<tr class="row-NO">
+  <td class="sid">38</td>
+  <td class="sid">karlskrona-hf</td>
+  <td><a href="https://karlskronahf.se/" target="_blank">https://karlskronahf.se/</a></td>
+  <td><span class="badge badge-NO">NO</span></td>
+  <td class="notes">Karlskrona HF - could be a sports club (handball/football). Not an event venue.</td>
+</tr>
+<tr class="row-NO">
+  <td class="sid">39</td>
+  <td class="sid">karlstad-if</td>
+  <td><a href="https://karlstadif.se/" target="_blank">https://karlstadif.se/</a></td>
+  <td><span class="badge badge-NO">NO</span></td>
+  <td class="notes">Karlstad IF - football club in Karlstad. Sports club, not an event venue.</td>
+</tr>
+<tr class="row-UNCERTAIN">
+  <td class="sid">40</td>
+  <td class="sid">katalin</td>
+  <td><a href="https://katalin.nu/" target="_blank">https://katalin.nu/</a></td>
+  <td><span class="badge badge-UNCERTAIN">UNCERTAIN</span></td>
+  <td class="notes">Katalin - could be a restaurant/venue in Uppsala but no clear results found.</td>
+</tr>
+<tr class="row-YES">
+  <td class="sid">41</td>
+  <td class="sid">kino</td>
+  <td><a href="https://www.kinogoteborg.se/" target="_blank" class="alt-link">https://www.kinogoteborg.se/</a></td>
+  <td><span class="badge badge-YES">YES</span></td>
+  <td class="notes">Kino - cinema in Gothenburg. Movie theater that may host events and screenings.</td>
+</tr>
+<tr class="row-NO">
+  <td class="sid">42</td>
+  <td class="sid">linkoping-city</td>
+  <td><a href="https://linkopingcity.se/" target="_blank">https://linkopingcity.se/</a></td>
+  <td><span class="badge badge-NO">NO</span></td>
+  <td class="notes">Linköping City - appears to be local city information site, not an event venue.</td>
+</tr>
+<tr class="row-NO">
+  <td class="sid">43</td>
+  <td class="sid">linnaeus-museum</td>
+  <td><a href="https://linnaeus.uu.se/" target="_blank">https://linnaeus.uu.se/</a></td>
+  <td><span class="badge badge-NO">NO</span></td>
+  <td class="notes">Linnaeus Museum - museum dedicated to Carl Linnaeus in Uppsala. Not an event venue.</td>
+</tr>
+<tr class="row-NO">
+  <td class="sid">44</td>
+  <td class="sid">uppsala-linn-science-park</td>
+  <td><a href="https://linne.uu.se/" target="_blank">https://linne.uu.se/</a></td>
+  <td><span class="badge badge-NO">NO</span></td>
+  <td class="notes">Linnaeus Science Park - science/technology park in Uppsala. Not an event venue.</td>
+</tr>
+<tr class="row-NO">
+  <td class="sid">45</td>
+  <td class="sid">lulea-hf</td>
+  <td><a href="https://luleahf.se/" target="_blank">https://luleahf.se/</a></td>
+  <td><span class="badge badge-NO">NO</span></td>
+  <td class="notes">Luleå HF - hockey club in Luleå. Sports club, not an event venue.</td>
+</tr>
+<tr class="row-UNKNOWN">
+  <td class="sid">46</td>
+  <td class="sid">malm-konserthus</td>
+  <td><a href="https://malmo-konserthus.se/" target="_blank">https://malmo-konserthus.se/</a></td>
+  <td><span class="badge badge-UNKNOWN">UNKNOWN</span></td>
+  <td class="notes">Ingen data</td>
+</tr>
+<tr class="row-NO">
+  <td class="sid">47</td>
+  <td class="sid">malmo-ff</td>
+  <td><a href="https://malmöfff.se/" target="_blank">https://malmöfff.se/</a></td>
+  <td><span class="badge badge-NO">NO</span></td>
+  <td class="notes">Malmö FF - major football club in Malmö. Sports club, not an event venue.</td>
+</tr>
+<tr class="row-NO">
+  <td class="sid">48</td>
+  <td class="sid">historiska-museet-malmo</td>
+  <td><a href="https://malmöhistoriska.se/" target="_blank">https://malmöhistoriska.se/</a></td>
+  <td><span class="badge badge-NO">NO</span></td>
+  <td class="notes">Malmö Historiska - historical museum in Malmö. Not primarily an event venue.</td>
+</tr>
+<tr class="row-NO">
+  <td class="sid">49</td>
+  <td class="sid">malmo-hockey</td>
+  <td><a href="https://malmöhockey.se/" target="_blank">https://malmöhockey.se/</a></td>
+  <td><span class="badge badge-NO">NO</span></td>
+  <td class="notes">Malmö Hockey - hockey club in Malmö. Sports club, not an event venue.</td>
+</tr>
+<tr class="row-NO">
+  <td class="sid">50</td>
+  <td class="sid">malmo-icc</td>
+  <td><a href="https://malmöicc.se/" target="_blank">https://malmöicc.se/</a></td>
+  <td><span class="badge badge-NO">NO</span></td>
+  <td class="notes">Malmö ICC - could be a convention center but not clearly identified.</td>
+</tr>
+<tr class="row-YES">
+  <td class="sid">51</td>
+  <td class="sid">malmo-konserthus</td>
+  <td><a href="https://www.malmolive.se/" target="_blank" class="alt-link">https://www.malmolive.se/</a></td>
+  <td><span class="badge badge-YES">YES</span></td>
+  <td class="notes">Malmö Konserthus (duplicate entry) - major concert hall, same as above.</td>
+</tr>
+<tr class="row-NO">
+  <td class="sid">52</td>
+  <td class="sid">malmo-konstmuseum</td>
+  <td><a href="https://malmökonstmuseum.se/" target="_blank">https://malmökonstmuseum.se/</a></td>
+  <td><span class="badge badge-NO">NO</span></td>
+  <td class="notes">Malmö Konstmuseum - art museum in Malmö. Not primarily an event venue.</td>
+</tr>
+<tr class="row-NO">
+  <td class="sid">53</td>
+  <td class="sid">malmo-redhawks</td>
+  <td><a href="https://malmöredhawks.se/" target="_blank">https://malmöredhawks.se/</a></td>
+  <td><span class="badge badge-NO">NO</span></td>
+  <td class="notes">Malmö Redhawks - hockey club in Malmö. Sports club, not an event venue.</td>
+</tr>
+<tr class="row-YES">
+  <td class="sid">54</td>
+  <td class="sid">malmo-stadsteatern</td>
+  <td><a href="https://web.archive.org/web/undefined/undefined" target="_blank" class="wayback-link">https://malmöstadsteatern.se/ (Wayback)</a></td>
+  <td><span class="badge badge-YES">YES</span></td>
+  <td class="notes">Malmö Stadsteatern - city theater in Malmö. Hosts theatrical performances and events.</td>
+</tr>
+<tr class="row-UNCERTAIN">
+  <td class="sid">55</td>
+  <td class="sid">masthuggskyrkan</td>
+  <td><a href="https://masthuggskyrkan.se/" target="_blank">https://masthuggskyrkan.se/</a></td>
+  <td><span class="badge badge-UNCERTAIN">UNCERTAIN</span></td>
+  <td class="notes">Masthuggskyrkan - church in Gothenburg that may host concerts and events.</td>
+</tr>
+<tr class="row-NO">
+  <td class="sid">56</td>
+  <td class="sid">molndals-futsal</td>
+  <td><a href="https://molndalsfutsal.se/" target="_blank">https://molndalsfutsal.se/</a></td>
+  <td><span class="badge badge-NO">NO</span></td>
+  <td class="notes">Mölndals Futsal - futsal club in Mölndal. Sports club, not an event venue.</td>
+</tr>
+<tr class="row-UNCERTAIN">
+  <td class="sid">57</td>
+  <td class="sid">sundsvall-musik</td>
+  <td><a href="https://musiksundsvall.se/" target="_blank">https://musiksundsvall.se/</a></td>
+  <td><span class="badge badge-UNCERTAIN">UNCERTAIN</span></td>
+  <td class="notes">Could be music venue/organization in Sundsvall but no clear results.</td>
+</tr>
+<tr class="row-NO">
+  <td class="sid">58</td>
+  <td class="sid">naturhistoriska-museet</td>
+  <td><a href="https://naturhistoriska.se/" target="_blank">https://naturhistoriska.se/</a></td>
+  <td><span class="badge badge-NO">NO</span></td>
+  <td class="notes">Naturhistoriska Museet - natural history museum. Not primarily an event venue.</td>
+</tr>
+<tr class="row-NO">
+  <td class="sid">59</td>
+  <td class="sid">norrkoping-art</td>
+  <td><a href="https://norrkopingart.se/" target="_blank">https://norrkopingart.se/</a></td>
+  <td><span class="badge badge-NO">NO</span></td>
+  <td class="notes">Norrköping Art - could be art museum/gallery. Not clearly an event venue.</td>
+</tr>
+<tr class="row-NO">
+  <td class="sid">60</td>
+  <td class="sid">ostersunds-fk</td>
+  <td><a href="https://ofksverige.se/" target="_blank">https://ofksverige.se/</a></td>
+  <td><span class="badge badge-NO">NO</span></td>
+  <td class="notes">Östersunds FK - football club in Östersund. Sports club, not an event venue.</td>
+</tr>
+<tr class="row-UNCERTAIN">
+  <td class="sid">61</td>
+  <td class="sid">open-air</td>
+  <td><a href="https://openair.se/" target="_blank">https://openair.se/</a></td>
+  <td><span class="badge badge-UNCERTAIN">UNCERTAIN</span></td>
+  <td class="notes">Could be open-air venue. No clear search results found.</td>
+</tr>
+<tr class="row-YES">
+  <td class="sid">62</td>
+  <td class="sid">orebro-konserthus</td>
+  <td><a href="https://www.orebrokonserthus.se/" target="_blank" class="alt-link">https://www.orebrokonserthus.se/</a></td>
+  <td><span class="badge badge-YES">YES</span></td>
+  <td class="notes">Örebro Konserthus - concert hall in Örebro. Hosts concerts and events.</td>
+</tr>
+<tr class="row-YES">
+  <td class="sid">63</td>
+  <td class="sid">orebro-stadsteatern</td>
+  <td><a href="https://www.orebrostadsteatern.se/" target="_blank" class="alt-link">https://www.orebrostadsteatern.se/</a></td>
+  <td><span class="badge badge-YES">YES</span></td>
+  <td class="notes">Örebro Stadsteatern - city theater in Örebro. Hosts theatrical performances and events.</td>
+</tr>
+<tr class="row-YES">
+  <td class="sid">64</td>
+  <td class="sid">orebro-festival</td>
+  <td><a href="https://www.orebrofestivalen.se/" target="_blank" class="alt-link">https://www.orebrofestivalen.se/</a></td>
+  <td><span class="badge badge-YES">YES</span></td>
+  <td class="notes">Örebro Festivalen - music festival in Örebro.</td>
+</tr>
+<tr class="row-YES">
+  <td class="sid">65</td>
+  <td class="sid">orebro-vinterfest</td>
+  <td><a href="https://web.archive.org/web/undefined/undefined" target="_blank" class="wayback-link">https://orebrovinterfest.se/ (Wayback)</a></td>
+  <td><span class="badge badge-YES">YES</span></td>
+  <td class="notes">Örebro Vinterfest - winter festival in Örebro.</td>
+</tr>
+<tr class="row-YES">
+  <td class="sid">66</td>
+  <td class="sid">parkteatern</td>
+  <td><a href="https://www.parkteatern.se/" target="_blank" class="alt-link">https://www.parkteatern.se/</a></td>
+  <td><span class="badge badge-YES">YES</span></td>
+  <td class="notes">Parkteatern - free outdoor theater in Stockholm parks during summer. Organized by Kulturhuset Stadsteatern.</td>
+</tr>
+<tr class="row-NO">
+  <td class="sid">67</td>
+  <td class="sid">ralambshovsparken</td>
+  <td><a href="https://ralambshov.se/" target="_blank">https://ralambshov.se/</a></td>
+  <td><span class="badge badge-NO">NO</span></td>
+  <td class="notes">Rålambshovsparken - park in Stockholm. Not an event venue.</td>
+</tr>
+<tr class="row-YES">
+  <td class="sid">68</td>
+  <td class="sid">regionteatern</td>
+  <td><a href="https://www.regionteatern.se/" target="_blank" class="alt-link">https://www.regionteatern.se/</a></td>
+  <td><span class="badge badge-YES">YES</span></td>
+  <td class="notes">Regionteatern - regional theater in Västerås area. Hosts performances and events.</td>
+</tr>
+<tr class="row-YES">
+  <td class="sid">69</td>
+  <td class="sid">repo-festival</td>
+  <td><a href="https://web.archive.org/web/undefined/undefined" target="_blank" class="wayback-link">https://repo.se/ (Wayback)</a></td>
+  <td><span class="badge badge-YES">YES</span></td>
+  <td class="notes">Repo Festival - could be music/festival in Sweden. Website for repo.se.</td>
+</tr>
+<tr class="row-YES">
+  <td class="sid">70</td>
+  <td class="sid">rockfest-vasteras</td>
+  <td><a href="https://www.rockfestvasteras.se/" target="_blank" class="alt-link">https://www.rockfestvasteras.se/</a></td>
+  <td><span class="badge badge-YES">YES</span></td>
+  <td class="notes">Rockfest Västerås - rock music festival in Västerås.</td>
+</tr>
+<tr class="row-YES">
+  <td class="sid">71</td>
+  <td class="sid">ruddalen</td>
+  <td><a href="https://www.ruddalen.se/" target="_blank" class="alt-link">https://www.ruddalen.se/</a></td>
+  <td><span class="badge badge-YES">YES</span></td>
+  <td class="notes">Ruddalens IP/Arena - major sports arena complex in Gothenburg. Hosts football, bandy, speed skating events, and some entertainment.</td>
+</tr>
+<tr class="row-UNCERTAIN">
+  <td class="sid">72</td>
+  <td class="sid">rumble</td>
+  <td><a href="https://rumblematch.se/" target="_blank">https://rumblematch.se/</a></td>
+  <td><span class="badge badge-UNCERTAIN">UNCERTAIN</span></td>
+  <td class="notes">Could be sports/fighting events venue but no clear results.</td>
+</tr>
+<tr class="row-UNCERTAIN">
+  <td class="sid">73</td>
+  <td class="sid">the-secret</td>
+  <td><a href="https://secret.se/" target="_blank">https://secret.se/</a></td>
+  <td><span class="badge badge-UNCERTAIN">UNCERTAIN</span></td>
+  <td class="notes">No clear search results. Could be nightclub or event venue.</td>
+</tr>
+<tr class="row-NO">
+  <td class="sid">74</td>
+  <td class="sid">skovde-if</td>
+  <td><a href="https://skovdeif.se/" target="_blank">https://skovdeif.se/</a></td>
+  <td><span class="badge badge-NO">NO</span></td>
+  <td class="notes">Skövde IF - football club in Skövde. Sports club, not an event venue.</td>
+</tr>
+<tr class="row-NO">
+  <td class="sid">75</td>
+  <td class="sid">spanga-is</td>
+  <td><a href="https://spanga.se/" target="_blank">https://spanga.se/</a></td>
+  <td><span class="badge badge-NO">NO</span></td>
+  <td class="notes">Spånga IS - sports club in Stockholm. Sports club, not an event venue.</td>
+</tr>
+<tr class="row-UNCERTAIN">
+  <td class="sid">76</td>
+  <td class="sid">spanggatan</td>
+  <td><a href="https://spånggatan.se/" target="_blank">https://spånggatan.se/</a></td>
+  <td><span class="badge badge-UNCERTAIN">UNCERTAIN</span></td>
+  <td class="notes">Could be address/venue but no clear results.</td>
+</tr>
+<tr class="row-UNCERTAIN">
+  <td class="sid">77</td>
+  <td class="sid">staffan</td>
+  <td><a href="https://staffan.nu/" target="_blank">https://staffan.nu/</a></td>
+  <td><span class="badge badge-UNCERTAIN">UNCERTAIN</span></td>
+  <td class="notes">Could be venue in Uppsala but no clear results found.</td>
+</tr>
+<tr class="row-YES">
+  <td class="sid">78</td>
+  <td class="sid">sticky-fingers</td>
+  <td><a href="https://www.stickyfingers.se/" target="_blank" class="alt-link">https://www.stickyfingers.se/</a></td>
+  <td><span class="badge badge-YES">YES</span></td>
+  <td class="notes">Sticky Fingers - concert venue/club in Stockholm. Known for hosting live music.</td>
+</tr>
+<tr class="row-YES">
+  <td class="sid">79</td>
+  <td class="sid">stockholm-live</td>
+  <td><a href="https://www.stockholmlive.se/" target="_blank" class="alt-link">https://www.stockholmlive.se/</a></td>
+  <td><span class="badge badge-YES">YES</span></td>
+  <td class="notes">Stockholm Live - venue management company for arenas like Hovet, Annexet, etc. Major event venue operator.</td>
+</tr>
+<tr class="row-UNCERTAIN">
+  <td class="sid">80</td>
+  <td class="sid">stockholm-music-arts</td>
+  <td><a href="https://stockholmmaf.se/" target="_blank">https://stockholmmaf.se/</a></td>
+  <td><span class="badge badge-UNCERTAIN">UNCERTAIN</span></td>
+  <td class="notes">Could be music festival/organization but no clear results.</td>
+</tr>
+<tr class="row-UNCERTAIN">
+  <td class="sid">81</td>
+  <td class="sid">stockholm-music-arts-1</td>
+  <td><a href="https://stockholmmafestival.se/" target="_blank">https://stockholmmafestival.se/</a></td>
+  <td><span class="badge badge-UNCERTAIN">UNCERTAIN</span></td>
+  <td class="notes">Could be music festival but no clear results.</td>
+</tr>
+<tr class="row-YES">
+  <td class="sid">82</td>
+  <td class="sid">stockholm-jazz-festival</td>
+  <td><a href="https://www.stockholmjazz.com/" target="_blank" class="alt-link">https://www.stockholmjazz.com/</a></td>
+  <td><span class="badge badge-YES">YES</span></td>
+  <td class="notes">Stockholm Jazz Festival - annual jazz music festival in Stockholm.</td>
+</tr>
+<tr class="row-YES">
+  <td class="sid">83</td>
+  <td class="sid">stora-teatern-g-teborg</td>
+  <td><a href="https://www.goteborg.se/storateatern" target="_blank" class="alt-link">https://www.goteborg.se/storateatern</a></td>
+  <td><span class="badge badge-YES">YES</span></td>
+  <td class="notes">Stora Teatern Göteborg - large theater/concert venue in Gothenburg. Hosts variety of performances.</td>
+</tr>
+<tr class="row-YES">
+  <td class="sid">84</td>
+  <td class="sid">stora-teatern-uppsala-1</td>
+  <td><a href="https://www.storateaternuppsala.se/" target="_blank" class="alt-link">https://www.storateaternuppsala.se/</a></td>
+  <td><span class="badge badge-YES">YES</span></td>
+  <td class="notes">Stora Teatern Uppsala - large theater in Uppsala. Active venue for performances.</td>
+</tr>
+<tr class="row-UNCERTAIN">
+  <td class="sid">85</td>
+  <td class="sid">storsj-odjuret</td>
+  <td><a href="https://storsjoodjuret.se/" target="_blank">https://storsjoodjuret.se/</a></td>
+  <td><span class="badge badge-UNCERTAIN">UNCERTAIN</span></td>
+  <td class="notes">Could be event related to Lake Storsjön. No clear results.</td>
+</tr>
+<tr class="row-NO">
+  <td class="sid">86</td>
+  <td class="sid">svenska-bowlingf-rbundet</td>
+  <td><a href="https://svenska-bowling.se/" target="_blank">https://svenska-bowling.se/</a></td>
+  <td><span class="badge badge-NO">NO</span></td>
+  <td class="notes">Svenska Bowlingförbundet - Swedish bowling federation. Sports organization, not venue.</td>
+</tr>
+<tr class="row-NO">
+  <td class="sid">87</td>
+  <td class="sid">svenska-innebandyf-rbundet</td>
+  <td><a href="https://svenskaif.se/" target="_blank">https://svenskaif.se/</a></td>
+  <td><span class="badge badge-NO">NO</span></td>
+  <td class="notes">Svenska Innebandyförbundet - Swedish floorball federation. Sports organization, not venue.</td>
+</tr>
+<tr class="row-UNCERTAIN">
+  <td class="sid">88</td>
+  <td class="sid">svenska-kulturhuset</td>
+  <td><a href="https://svenskakulturhuset.se/" target="_blank">https://svenskakulturhuset.se/</a></td>
+  <td><span class="badge badge-UNCERTAIN">UNCERTAIN</span></td>
+  <td class="notes">Could be cultural center but no clear results found.</td>
+</tr>
+<tr class="row-YES">
+  <td class="sid">89</td>
+  <td class="sid">hovet-1</td>
+  <td><a href="https://www.ticketmaster.se/artist/hovet-biljetter/1562" target="_blank" class="alt-link">https://www.ticketmaster.se/artist/hovet-biljetter/1562</a></td>
+  <td><span class="badge badge-YES">YES</span></td>
+  <td class="notes">The Hovet - same as Hovet arena in Stockholm. Major sports and concert venue.</td>
+</tr>
+<tr class="row-YES">
+  <td class="sid">90</td>
+  <td class="sid">teater-tribunalen</td>
+  <td><a href="https://www.tribunalen.se/" target="_blank" class="alt-link">https://www.tribunalen.se/</a></td>
+  <td><span class="badge badge-YES">YES</span></td>
+  <td class="notes">Teater Tribunalen - independent theater in Stockholm Södermalm. Active venue with political/contemporary productions and festivals.</td>
+</tr>
+<tr class="row-NO">
+  <td class="sid">91</td>
+  <td class="sid">trollhattans-if</td>
+  <td><a href="https://trollhattanif.se/" target="_blank">https://trollhattanif.se/</a></td>
+  <td><span class="badge badge-NO">NO</span></td>
+  <td class="notes">Trollhättans IF - football club in Trollhättan. Sports club, not an event venue.</td>
+</tr>
+<tr class="row-NO">
+  <td class="sid">92</td>
+  <td class="sid">teknikens-och-sjofartens-museum</td>
+  <td><a href="https://tsfm.se/" target="_blank">https://tsfm.se/</a></td>
+  <td><span class="badge badge-NO">NO</span></td>
+  <td class="notes">Teknikens och Sjöfartens Museum - technology and maritime museum. Not primarily an event venue.</td>
+</tr>
+<tr class="row-YES">
+  <td class="sid">93</td>
+  <td class="sid">umea-jazz</td>
+  <td><a href="https://www.umeajazz.se/" target="_blank" class="alt-link">https://www.umeajazz.se/</a></td>
+  <td><span class="badge badge-YES">YES</span></td>
+  <td class="notes">Umeå Jazz Festival - annual jazz festival in Umeå.</td>
+</tr>
+<tr class="row-YES">
+  <td class="sid">94</td>
+  <td class="sid">unga-teatern</td>
+  <td><a href="https://www.ungateatern.se/" target="_blank" class="alt-link">https://www.ungateatern.se/</a></td>
+  <td><span class="badge badge-YES">YES</span></td>
+  <td class="notes">Unga Teatern - youth theater in Uppsala. Active theater venue.</td>
+</tr>
+<tr class="row-YES">
+  <td class="sid">95</td>
+  <td class="sid">uppsala-konserthus-1</td>
+  <td><a href="https://www.uppsalakonserthus.se/" target="_blank" class="alt-link">https://www.uppsalakonserthus.se/</a></td>
+  <td><span class="badge badge-YES">YES</span></td>
+  <td class="notes">Uppsala Konserthus - concert hall in Uppsala. Active venue for concerts.</td>
+</tr>
+<tr class="row-YES">
+  <td class="sid">96</td>
+  <td class="sid">uppsala-reggae-festival</td>
+  <td><a href="https://www.uppsalareggae.se/" target="_blank" class="alt-link">https://www.uppsalareggae.se/</a></td>
+  <td><span class="badge badge-YES">YES</span></td>
+  <td class="notes">Uppsala Reggae Festival - annual reggae music festival in Uppsala (since 2001). Scandinavia's largest reggae festival.</td>
+</tr>
+<tr class="row-YES">
+  <td class="sid">97</td>
+  <td class="sid">uppsala-stadsteatern-1</td>
+  <td><a href="https://web.archive.org/web/undefined/undefined" target="_blank" class="wayback-link">https://uppsala-stadsteatern.se/ (Wayback)</a></td>
+  <td><span class="badge badge-YES">YES</span></td>
+  <td class="notes">Uppsala Stadsteater - city theater in Uppsala. Active theater venue with multiple stages.</td>
+</tr>
+<tr class="row-YES">
+  <td class="sid">98</td>
+  <td class="sid">uppsala-stadsteatern</td>
+  <td><a href="https://web.archive.org/web/undefined/undefined" target="_blank" class="wayback-link">https://uppsala-stadsteatern.se/ (Wayback)</a></td>
+  <td><span class="badge badge-YES">YES</span></td>
+  <td class="notes">Uppsala Stadsteater (duplicate) - same as above.</td>
+</tr>
+<tr class="row-YES">
+  <td class="sid">99</td>
+  <td class="sid">uppsala-konserthus</td>
+  <td><a href="https://web.archive.org/web/undefined/undefined" target="_blank" class="wayback-link">https://uppsalakonserthus.se/ (Wayback)</a></td>
+  <td><span class="badge badge-YES">YES</span></td>
+  <td class="notes">Uppsala Konserthus (duplicate) - same as above.</td>
+</tr>
+<tr class="row-YES">
+  <td class="sid">100</td>
+  <td class="sid">uppsala-teatern</td>
+  <td><a href="https://web.archive.org/web/undefined/undefined" target="_blank" class="wayback-link">https://uppsalateatern.se/ (Wayback)</a></td>
+  <td><span class="badge badge-YES">YES</span></td>
+  <td class="notes">Uppsala Teatern - theater in Uppsala. Active venue.</td>
+</tr>
+<tr class="row-YES">
+  <td class="sid">101</td>
+  <td class="sid">vaxjo-teatern</td>
+  <td><a href="https://www.vaxjoteater.se/" target="_blank" class="alt-link">https://www.vaxjoteater.se/</a></td>
+  <td><span class="badge badge-YES">YES</span></td>
+  <td class="notes">Växjö Teater - theater in Växjö. Sweden's second oldest rural theater, hosts performances and concerts.</td>
+</tr>
+<tr class="row-NO">
+  <td class="sid">102</td>
+  <td class="sid">varbergs-if</td>
+  <td><a href="https://varbergsif.se/" target="_blank">https://varbergsif.se/</a></td>
+  <td><span class="badge badge-NO">NO</span></td>
+  <td class="notes">Varbergs IF - football club in Varberg. Sports club, not an event venue.</td>
+</tr>
+<tr class="row-NO">
+  <td class="sid">103</td>
+  <td class="sid">vasteras-art</td>
+  <td><a href="https://vasterasart.se/" target="_blank">https://vasterasart.se/</a></td>
+  <td><span class="badge badge-NO">NO</span></td>
+  <td class="notes">Västerås Art - art museum in Västerås (Västerås Konstmuseum). Not primarily an event venue.</td>
+</tr>
+<tr class="row-NO">
+  <td class="sid">104</td>
+  <td class="sid">vasteras-hockey</td>
+  <td><a href="https://vasterasfh.se/" target="_blank">https://vasterasfh.se/</a></td>
+  <td><span class="badge badge-NO">NO</span></td>
+  <td class="notes">Västerås Hockey - hockey club in Västerås. Sports club, not an event venue.</td>
+</tr>
+<tr class="row-NO">
+  <td class="sid">105</td>
+  <td class="sid">v-ster-s-konstmuseum</td>
+  <td><a href="https://vasterasmuseum.se/" target="_blank">https://vasterasmuseum.se/</a></td>
+  <td><span class="badge badge-NO">NO</span></td>
+  <td class="notes">Västerås Museum - museum in Västerås. Not primarily an event venue.</td>
+</tr>
+<tr class="row-UNCERTAIN">
+  <td class="sid">106</td>
+  <td class="sid">vasteras-sk</td>
+  <td><a href="https://vastersask.se/" target="_blank">https://vastersask.se/</a></td>
+  <td><span class="badge badge-UNCERTAIN">UNCERTAIN</span></td>
+  <td class="notes">Could be sports club in Västerås but unclear.</td>
+</tr>
+<tr class="row-NO">
+  <td class="sid">107</td>
+  <td class="sid">visit-gothenburg</td>
+  <td><a href="https://visitgothenburg.se/" target="_blank">https://visitgothenburg.se/</a></td>
+  <td><span class="badge badge-NO">NO</span></td>
+  <td class="notes">Visit Gothenburg - official tourism website for Gothenburg. Not an event venue.</td>
+</tr>
+<tr class="row-UNCERTAIN">
+  <td class="sid">108</td>
+  <td class="sid">we-are-sarajevo</td>
+  <td><a href="https://wearesarajevo.se/" target="_blank">https://wearesarajevo.se/</a></td>
+  <td><span class="badge badge-UNCERTAIN">UNCERTAIN</span></td>
+  <td class="notes">Related to Sarajevo, Bosnia. Could be event/festival brand but not clearly identified.</td>
+</tr>
+</table>
+<script>
+function filter(type) {
+  document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+  event.target.classList.add('active');
+  document.querySelectorAll('table tr[class^="row-"]').forEach(r => {
+    r.classList.remove('hidden');
+    if (type === 'all') return;
+    if (!r.className.includes(type)) r.classList.add('hidden');
+  });
+}
+</script>
+<p style="padding:1rem 2rem;color:#444;font-size:0.8em">
+Genererad 2026-04-18 — Exa AI-sokning — 108 domaner
+</p>
+</body>
+</html>

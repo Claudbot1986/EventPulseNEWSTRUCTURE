@@ -1,0 +1,5490 @@
+{
+  "poolRoundNumber": 1,
+  "activePool": [
+    {
+      "sourceId": "kulturhuset-orebro",
+      "url": "https://kulturhusetorebro.se/",
+      "roundsParticipated": 1,
+      "diversifiers": [
+        "failures_10",
+        "path_jsonld"
+      ],
+      "queueReason": "[IMP-001-FIX] Orphaned: forced STAY via STEP3-CHAIN in round 1, loop terminated before exit",
+      "enrichedData": {
+        "lastPathUsed": "jsonld",
+        "lastEventsFound": 0,
+        "consecutiveFailures": 10,
+        "triageResult": null
+      }
+    },
+    {
+      "sourceId": "hammarby",
+      "url": "https://hammarbyfotboll.se/",
+      "roundsParticipated": 1,
+      "diversifiers": [
+        "failures_10",
+        "path_jsonld"
+      ],
+      "queueReason": "[IMP-001-FIX] Orphaned: forced STAY via STEP3-CHAIN in round 1, loop terminated before exit",
+      "enrichedData": {
+        "lastPathUsed": "jsonld",
+        "lastEventsFound": 0,
+        "consecutiveFailures": 10,
+        "triageResult": null
+      }
+    },
+    {
+      "sourceId": "push",
+      "url": "https://push.se/",
+      "roundsParticipated": 1,
+      "diversifiers": [
+        "failures_8",
+        "path_jsonld"
+      ],
+      "queueReason": "[IMP-001-FIX] Orphaned: forced STAY via STEP3-CHAIN in round 1, loop terminated before exit",
+      "enrichedData": {
+        "lastPathUsed": "jsonld",
+        "lastEventsFound": 0,
+        "consecutiveFailures": 8,
+        "triageResult": null
+      }
+    },
+    {
+      "sourceId": "bor-s-zoo-animagic",
+      "url": "https://animagic.se/",
+      "roundsParticipated": 1,
+      "diversifiers": [
+        "failures_10",
+        "path_jsonld"
+      ],
+      "queueReason": "fetch error: HTTP 429",
+      "enrichedData": {
+        "lastPathUsed": "jsonld",
+        "lastEventsFound": 0,
+        "consecutiveFailures": 10,
+        "triageResult": null
+      }
+    },
+    {
+      "sourceId": "neon",
+      "url": "https://neon.se/",
+      "roundsParticipated": 1,
+      "diversifiers": [
+        "failures_8",
+        "path_jsonld"
+      ],
+      "queueReason": "[IMP-001-FIX] Orphaned: forced STAY via STEP3-CHAIN in round 1, loop terminated before exit",
+      "enrichedData": {
+        "lastPathUsed": "jsonld",
+        "lastEventsFound": 0,
+        "consecutiveFailures": 8,
+        "triageResult": null
+      }
+    }
+  ],
+  "exited": [
+    {
+      "source": {
+        "sourceId": "jazz-i-orebro",
+        "url": "https://jazzorebro.se/",
+        "roundsParticipated": 0,
+        "diversifiers": [
+          "failures_10",
+          "path_jsonld"
+        ],
+        "queueReason": "fetch error: getaddrinfo ENOTFOUND jazzorebro.se",
+        "enrichedData": {
+          "lastPathUsed": "jsonld",
+          "lastEventsFound": 0,
+          "consecutiveFailures": 10,
+          "triageResult": null
+        }
+      },
+      "decision": "postTestC-manual-review",
+      "result": {
+        "sourceId": "jazz-i-orebro",
+        "sourceUrl": "https://jazzorebro.se/",
+        "winningStage": "C3",
+        "outcomeType": "fail",
+        "routeSuggestion": "manual-review",
+        "evidence": "fetch error: getaddrinfo ENOTFOUND jazzorebro.se",
+        "roundNumber": 1,
+        "success": false,
+        "exitReason": "FETCH_ERROR",
+        "exitReasonDetail": "fetch failed: getaddrinfo ENOTFOUND jazzorebro.se",
+        "effectiveProcessingUrl": "https://jazzorebro.se/",
+        "effectiveProcessingUrlReason": "url-variant",
+        "c0": {
+          "candidates": 0,
+          "winnerUrl": null,
+          "winnerDensity": 0,
+          "duration": 81,
+          "rootFallback": false,
+          "ruleAppliedSource": "none",
+          "ruleAppliedPaths": [],
+          "ruleWinnerPath": null
+        },
+        "c1": {
+          "verdict": "unfetchable",
+          "likelyJsRendered": false,
+          "timeTagCount": 0,
+          "dateCount": 0,
+          "duration": 78,
+          "htmlBytes": 0,
+          "fetchable": false,
+          "fetchError": "getaddrinfo ENOTFOUND jazzorebro.se",
+          "bestSubpageFound": null,
+          "subpagesTested": []
+        },
+        "c2": {
+          "verdict": "unclear",
+          "score": 0,
+          "reason": "fetchHtml failed: getaddrinfo ENOTFOUND jazzorebro.se",
+          "duration": 3,
+          "htmlBytes": 0
+        },
+        "c3": {
+          "universalEventsFound": 0,
+          "universalMethodsUsed": [
+            "universal-extractor"
+          ],
+          "universalMethodBreakdown": {},
+          "duration": 0
+        },
+        "extract": {
+          "eventsFound": 0,
+          "duration": 0,
+          "htmlSize": 0,
+          "extractedEvents": []
+        },
+        "trace": {
+          "sourceId": "jazz-i-orebro",
+          "sourceUrl": "https://jazzorebro.se/",
+          "round": 1,
+          "c0Candidates": 0,
+          "c0WinnerUrl": null,
+          "c0WinnerDensity": 0,
+          "c0RuleSource": "none",
+          "c0RulePathsTested": [],
+          "c0RuleWinnerPath": null,
+          "effectiveUrl": "https://jazzorebro.se/",
+          "effectiveUrlReason": "url-variant",
+          "c1Verdict": "unfetchable",
+          "c1LikelyJsRendered": false,
+          "c1TimeTagCount": 0,
+          "c1DateCount": 0,
+          "c1HtmlBytes": 0,
+          "c1Fetchable": false,
+          "c1FetchError": "getaddrinfo ENOTFOUND jazzorebro.se",
+          "c1BestSubpageFound": null,
+          "c1SubpagesTested": [],
+          "c2Verdict": "unclear",
+          "c2Score": 0,
+          "c2Reason": "fetchHtml failed: getaddrinfo ENOTFOUND jazzorebro.se",
+          "c2HtmlBytes": 0,
+          "c3EventsFound": 0,
+          "c3MethodsUsed": [
+            "universal-extractor"
+          ],
+          "c3MethodBreakdown": {},
+          "eventsFound": 0,
+          "outcomeType": "fail",
+          "routeSuggestion": "manual-review",
+          "exitReason": "FETCH_ERROR",
+          "exitReasonDetail": "fetch failed: getaddrinfo ENOTFOUND jazzorebro.se",
+          "winningStage": "C3",
+          "success": false,
+          "derivedRuleApplied": false
+        }
+      }
+    },
+    {
+      "source": {
+        "sourceId": "storsj-odjuret",
+        "url": "https://storsjoodjuret.se/",
+        "roundsParticipated": 0,
+        "diversifiers": [
+          "failures_8",
+          "path_jsonld"
+        ],
+        "queueReason": "fetch error: getaddrinfo ENOTFOUND storsjoodjuret.se",
+        "enrichedData": {
+          "lastPathUsed": "jsonld",
+          "lastEventsFound": 0,
+          "consecutiveFailures": 8,
+          "triageResult": null
+        }
+      },
+      "decision": "postTestC-manual-review",
+      "result": {
+        "sourceId": "storsj-odjuret",
+        "sourceUrl": "https://storsjoodjuret.se/",
+        "winningStage": "C3",
+        "outcomeType": "fail",
+        "routeSuggestion": "manual-review",
+        "evidence": "fetch error: getaddrinfo ENOTFOUND storsjoodjuret.se",
+        "roundNumber": 1,
+        "success": false,
+        "exitReason": "FETCH_ERROR",
+        "exitReasonDetail": "fetch failed: getaddrinfo ENOTFOUND storsjoodjuret.se",
+        "effectiveProcessingUrl": "https://storsjoodjuret.se/",
+        "effectiveProcessingUrlReason": "url-variant",
+        "c0": {
+          "candidates": 0,
+          "winnerUrl": null,
+          "winnerDensity": 0,
+          "duration": 71,
+          "rootFallback": false,
+          "ruleAppliedSource": "none",
+          "ruleAppliedPaths": [],
+          "ruleWinnerPath": null
+        },
+        "c1": {
+          "verdict": "unfetchable",
+          "likelyJsRendered": false,
+          "timeTagCount": 0,
+          "dateCount": 0,
+          "duration": 78,
+          "htmlBytes": 0,
+          "fetchable": false,
+          "fetchError": "getaddrinfo ENOTFOUND storsjoodjuret.se",
+          "bestSubpageFound": null,
+          "subpagesTested": []
+        },
+        "c2": {
+          "verdict": "unclear",
+          "score": 0,
+          "reason": "fetchHtml failed: getaddrinfo ENOTFOUND storsjoodjuret.se",
+          "duration": 3,
+          "htmlBytes": 0
+        },
+        "c3": {
+          "universalEventsFound": 0,
+          "universalMethodsUsed": [
+            "universal-extractor"
+          ],
+          "universalMethodBreakdown": {},
+          "duration": 0
+        },
+        "extract": {
+          "eventsFound": 0,
+          "duration": 0,
+          "htmlSize": 0,
+          "extractedEvents": []
+        },
+        "trace": {
+          "sourceId": "storsj-odjuret",
+          "sourceUrl": "https://storsjoodjuret.se/",
+          "round": 1,
+          "c0Candidates": 0,
+          "c0WinnerUrl": null,
+          "c0WinnerDensity": 0,
+          "c0RuleSource": "none",
+          "c0RulePathsTested": [],
+          "c0RuleWinnerPath": null,
+          "effectiveUrl": "https://storsjoodjuret.se/",
+          "effectiveUrlReason": "url-variant",
+          "c1Verdict": "unfetchable",
+          "c1LikelyJsRendered": false,
+          "c1TimeTagCount": 0,
+          "c1DateCount": 0,
+          "c1HtmlBytes": 0,
+          "c1Fetchable": false,
+          "c1FetchError": "getaddrinfo ENOTFOUND storsjoodjuret.se",
+          "c1BestSubpageFound": null,
+          "c1SubpagesTested": [],
+          "c2Verdict": "unclear",
+          "c2Score": 0,
+          "c2Reason": "fetchHtml failed: getaddrinfo ENOTFOUND storsjoodjuret.se",
+          "c2HtmlBytes": 0,
+          "c3EventsFound": 0,
+          "c3MethodsUsed": [
+            "universal-extractor"
+          ],
+          "c3MethodBreakdown": {},
+          "eventsFound": 0,
+          "outcomeType": "fail",
+          "routeSuggestion": "manual-review",
+          "exitReason": "FETCH_ERROR",
+          "exitReasonDetail": "fetch failed: getaddrinfo ENOTFOUND storsjoodjuret.se",
+          "winningStage": "C3",
+          "success": false,
+          "derivedRuleApplied": false
+        }
+      }
+    },
+    {
+      "source": {
+        "sourceId": "jazzfestivalen-goteborg",
+        "url": "https://jazzfestivalen.se/",
+        "roundsParticipated": 0,
+        "diversifiers": [
+          "failures_11",
+          "path_jsonld"
+        ],
+        "queueReason": "fetch error: timeout of 15000ms exceeded",
+        "enrichedData": {
+          "lastPathUsed": "jsonld",
+          "lastEventsFound": 0,
+          "consecutiveFailures": 11,
+          "triageResult": null
+        }
+      },
+      "decision": "postTestC-manual-review",
+      "result": {
+        "sourceId": "jazzfestivalen-goteborg",
+        "sourceUrl": "https://jazzfestivalen.se/",
+        "winningStage": "C3",
+        "outcomeType": "fail",
+        "routeSuggestion": "manual-review",
+        "evidence": "fetch error: timeout of 15000ms exceeded",
+        "roundNumber": 1,
+        "success": false,
+        "exitReason": "FETCH_ERROR",
+        "exitReasonDetail": "fetch failed: timeout of 15000ms exceeded",
+        "effectiveProcessingUrl": "https://jazzfestivalen.se/",
+        "effectiveProcessingUrlReason": "url-variant",
+        "c0": {
+          "candidates": 0,
+          "winnerUrl": null,
+          "winnerDensity": 0,
+          "duration": 5147,
+          "rootFallback": false,
+          "ruleAppliedSource": "none",
+          "ruleAppliedPaths": [],
+          "ruleWinnerPath": null
+        },
+        "c1": {
+          "verdict": "unfetchable",
+          "likelyJsRendered": false,
+          "timeTagCount": 0,
+          "dateCount": 0,
+          "duration": 5006,
+          "htmlBytes": 0,
+          "fetchable": false,
+          "fetchError": "timeout of 15000ms exceeded",
+          "bestSubpageFound": null,
+          "subpagesTested": []
+        },
+        "c2": {
+          "verdict": "unclear",
+          "score": 0,
+          "reason": "fetchHtml failed: timeout of 20000ms exceeded",
+          "duration": 5006,
+          "htmlBytes": 0
+        },
+        "c3": {
+          "universalEventsFound": 0,
+          "universalMethodsUsed": [
+            "universal-extractor"
+          ],
+          "universalMethodBreakdown": {},
+          "duration": 0
+        },
+        "extract": {
+          "eventsFound": 0,
+          "duration": 0,
+          "htmlSize": 0,
+          "extractedEvents": []
+        },
+        "trace": {
+          "sourceId": "jazzfestivalen-goteborg",
+          "sourceUrl": "https://jazzfestivalen.se/",
+          "round": 1,
+          "c0Candidates": 0,
+          "c0WinnerUrl": null,
+          "c0WinnerDensity": 0,
+          "c0RuleSource": "none",
+          "c0RulePathsTested": [],
+          "c0RuleWinnerPath": null,
+          "effectiveUrl": "https://jazzfestivalen.se/",
+          "effectiveUrlReason": "url-variant",
+          "c1Verdict": "unfetchable",
+          "c1LikelyJsRendered": false,
+          "c1TimeTagCount": 0,
+          "c1DateCount": 0,
+          "c1HtmlBytes": 0,
+          "c1Fetchable": false,
+          "c1FetchError": "timeout of 15000ms exceeded",
+          "c1BestSubpageFound": null,
+          "c1SubpagesTested": [],
+          "c2Verdict": "unclear",
+          "c2Score": 0,
+          "c2Reason": "fetchHtml failed: timeout of 20000ms exceeded",
+          "c2HtmlBytes": 0,
+          "c3EventsFound": 0,
+          "c3MethodsUsed": [
+            "universal-extractor"
+          ],
+          "c3MethodBreakdown": {},
+          "eventsFound": 0,
+          "outcomeType": "fail",
+          "routeSuggestion": "manual-review",
+          "exitReason": "FETCH_ERROR",
+          "exitReasonDetail": "fetch failed: timeout of 15000ms exceeded",
+          "winningStage": "C3",
+          "success": false,
+          "derivedRuleApplied": false
+        }
+      }
+    },
+    {
+      "source": {
+        "sourceId": "a6",
+        "url": "https://centeraj6.se/",
+        "roundsParticipated": 0,
+        "diversifiers": [
+          "failures_12",
+          "path_jsonld"
+        ],
+        "queueReason": "fetch error: getaddrinfo ENOTFOUND centeraj6.se",
+        "enrichedData": {
+          "lastPathUsed": "jsonld",
+          "lastEventsFound": 0,
+          "consecutiveFailures": 12,
+          "triageResult": null
+        }
+      },
+      "decision": "postTestC-manual-review",
+      "result": {
+        "sourceId": "a6",
+        "sourceUrl": "https://centeraj6.se/",
+        "winningStage": "C3",
+        "outcomeType": "fail",
+        "routeSuggestion": "manual-review",
+        "evidence": "fetch error: getaddrinfo ENOTFOUND centeraj6.se",
+        "roundNumber": 1,
+        "success": false,
+        "exitReason": "FETCH_ERROR",
+        "exitReasonDetail": "fetch failed: getaddrinfo ENOTFOUND centeraj6.se",
+        "effectiveProcessingUrl": "https://centeraj6.se/",
+        "effectiveProcessingUrlReason": "url-variant",
+        "c0": {
+          "candidates": 0,
+          "winnerUrl": null,
+          "winnerDensity": 0,
+          "duration": 145,
+          "rootFallback": false,
+          "ruleAppliedSource": "none",
+          "ruleAppliedPaths": [],
+          "ruleWinnerPath": null
+        },
+        "c1": {
+          "verdict": "unfetchable",
+          "likelyJsRendered": false,
+          "timeTagCount": 0,
+          "dateCount": 0,
+          "duration": 3,
+          "htmlBytes": 0,
+          "fetchable": false,
+          "fetchError": "getaddrinfo ENOTFOUND centeraj6.se",
+          "bestSubpageFound": null,
+          "subpagesTested": []
+        },
+        "c2": {
+          "verdict": "unclear",
+          "score": 0,
+          "reason": "fetchHtml failed: getaddrinfo ENOTFOUND centeraj6.se",
+          "duration": 3,
+          "htmlBytes": 0
+        },
+        "c3": {
+          "universalEventsFound": 0,
+          "universalMethodsUsed": [
+            "universal-extractor"
+          ],
+          "universalMethodBreakdown": {},
+          "duration": 0
+        },
+        "extract": {
+          "eventsFound": 0,
+          "duration": 0,
+          "htmlSize": 0,
+          "extractedEvents": []
+        },
+        "trace": {
+          "sourceId": "a6",
+          "sourceUrl": "https://centeraj6.se/",
+          "round": 1,
+          "c0Candidates": 0,
+          "c0WinnerUrl": null,
+          "c0WinnerDensity": 0,
+          "c0RuleSource": "none",
+          "c0RulePathsTested": [],
+          "c0RuleWinnerPath": null,
+          "effectiveUrl": "https://centeraj6.se/",
+          "effectiveUrlReason": "url-variant",
+          "c1Verdict": "unfetchable",
+          "c1LikelyJsRendered": false,
+          "c1TimeTagCount": 0,
+          "c1DateCount": 0,
+          "c1HtmlBytes": 0,
+          "c1Fetchable": false,
+          "c1FetchError": "getaddrinfo ENOTFOUND centeraj6.se",
+          "c1BestSubpageFound": null,
+          "c1SubpagesTested": [],
+          "c2Verdict": "unclear",
+          "c2Score": 0,
+          "c2Reason": "fetchHtml failed: getaddrinfo ENOTFOUND centeraj6.se",
+          "c2HtmlBytes": 0,
+          "c3EventsFound": 0,
+          "c3MethodsUsed": [
+            "universal-extractor"
+          ],
+          "c3MethodBreakdown": {},
+          "eventsFound": 0,
+          "outcomeType": "fail",
+          "routeSuggestion": "manual-review",
+          "exitReason": "FETCH_ERROR",
+          "exitReasonDetail": "fetch failed: getaddrinfo ENOTFOUND centeraj6.se",
+          "winningStage": "C3",
+          "success": false,
+          "derivedRuleApplied": false
+        }
+      }
+    },
+    {
+      "source": {
+        "sourceId": "svenska-schackf-rbundet",
+        "url": "https://schack.se/evenemang",
+        "roundsParticipated": 0,
+        "diversifiers": [
+          "failures_9",
+          "path_jsonld"
+        ],
+        "queueReason": "fetch error: Redirect loop detected: https://schack.se/evenemang",
+        "enrichedData": {
+          "lastPathUsed": "jsonld",
+          "lastEventsFound": 0,
+          "consecutiveFailures": 9,
+          "triageResult": null
+        }
+      },
+      "decision": "postTestC-manual-review",
+      "result": {
+        "sourceId": "svenska-schackf-rbundet",
+        "sourceUrl": "https://schack.se/evenemang",
+        "winningStage": "C3",
+        "outcomeType": "fail",
+        "routeSuggestion": "manual-review",
+        "evidence": "fetch error: Redirect loop detected: https://schack.se/evenemang",
+        "roundNumber": 1,
+        "success": false,
+        "exitReason": "FETCH_ERROR",
+        "exitReasonDetail": "fetch failed: Redirect loop detected: https://schack.se/evenemang",
+        "effectiveProcessingUrl": "https://schack.se/evenemang",
+        "effectiveProcessingUrlReason": "url-variant",
+        "c0": {
+          "candidates": 0,
+          "winnerUrl": null,
+          "winnerDensity": 0,
+          "duration": 740,
+          "rootFallback": false,
+          "ruleAppliedSource": "none",
+          "ruleAppliedPaths": [],
+          "ruleWinnerPath": null
+        },
+        "c1": {
+          "verdict": "unfetchable",
+          "likelyJsRendered": false,
+          "timeTagCount": 0,
+          "dateCount": 0,
+          "duration": 60,
+          "htmlBytes": 0,
+          "fetchable": false,
+          "fetchError": "Redirect loop detected: https://schack.se/evenemang",
+          "bestSubpageFound": null,
+          "subpagesTested": []
+        },
+        "c2": {
+          "verdict": "unclear",
+          "score": 0,
+          "reason": "fetchHtml failed: Redirect loop detected: https://schack.se/evenemang",
+          "duration": 104,
+          "htmlBytes": 0
+        },
+        "c3": {
+          "universalEventsFound": 0,
+          "universalMethodsUsed": [
+            "universal-extractor"
+          ],
+          "universalMethodBreakdown": {},
+          "duration": 0
+        },
+        "extract": {
+          "eventsFound": 0,
+          "duration": 0,
+          "htmlSize": 0,
+          "extractedEvents": []
+        },
+        "trace": {
+          "sourceId": "svenska-schackf-rbundet",
+          "sourceUrl": "https://schack.se/evenemang",
+          "round": 1,
+          "c0Candidates": 0,
+          "c0WinnerUrl": null,
+          "c0WinnerDensity": 0,
+          "c0RuleSource": "none",
+          "c0RulePathsTested": [],
+          "c0RuleWinnerPath": null,
+          "effectiveUrl": "https://schack.se/evenemang",
+          "effectiveUrlReason": "url-variant",
+          "c1Verdict": "unfetchable",
+          "c1LikelyJsRendered": false,
+          "c1TimeTagCount": 0,
+          "c1DateCount": 0,
+          "c1HtmlBytes": 0,
+          "c1Fetchable": false,
+          "c1FetchError": "Redirect loop detected: https://schack.se/evenemang",
+          "c1BestSubpageFound": null,
+          "c1SubpagesTested": [],
+          "c2Verdict": "unclear",
+          "c2Score": 0,
+          "c2Reason": "fetchHtml failed: Redirect loop detected: https://schack.se/evenemang",
+          "c2HtmlBytes": 0,
+          "c3EventsFound": 0,
+          "c3MethodsUsed": [
+            "universal-extractor"
+          ],
+          "c3MethodBreakdown": {},
+          "eventsFound": 0,
+          "outcomeType": "fail",
+          "routeSuggestion": "manual-review",
+          "exitReason": "FETCH_ERROR",
+          "exitReasonDetail": "fetch failed: Redirect loop detected: https://schack.se/evenemang",
+          "winningStage": "C3",
+          "success": false,
+          "derivedRuleApplied": false
+        }
+      }
+    },
+    {
+      "source": {
+        "sourceId": "summerburst",
+        "url": "https://summerburst.se/",
+        "roundsParticipated": 0,
+        "diversifiers": [
+          "failures_8",
+          "path_jsonld"
+        ],
+        "queueReason": "fetch error: connect ECONNREFUSED 172.105.93.38:443",
+        "enrichedData": {
+          "lastPathUsed": "jsonld",
+          "lastEventsFound": 0,
+          "consecutiveFailures": 8,
+          "triageResult": null
+        }
+      },
+      "decision": "postTestC-manual-review",
+      "result": {
+        "sourceId": "summerburst",
+        "sourceUrl": "https://summerburst.se/",
+        "winningStage": "C3",
+        "outcomeType": "fail",
+        "routeSuggestion": "manual-review",
+        "evidence": "fetch error: connect ECONNREFUSED 172.105.93.38:443",
+        "roundNumber": 1,
+        "success": false,
+        "exitReason": "FETCH_ERROR",
+        "exitReasonDetail": "fetch failed: connect ECONNREFUSED 172.105.93.38:443",
+        "effectiveProcessingUrl": "https://summerburst.se/",
+        "effectiveProcessingUrlReason": "url-variant",
+        "c0": {
+          "candidates": 0,
+          "winnerUrl": null,
+          "winnerDensity": 0,
+          "duration": 151,
+          "rootFallback": false,
+          "ruleAppliedSource": "none",
+          "ruleAppliedPaths": [],
+          "ruleWinnerPath": null
+        },
+        "c1": {
+          "verdict": "unfetchable",
+          "likelyJsRendered": false,
+          "timeTagCount": 0,
+          "dateCount": 0,
+          "duration": 90,
+          "htmlBytes": 0,
+          "fetchable": false,
+          "fetchError": "connect ECONNREFUSED 172.105.93.38:443",
+          "bestSubpageFound": null,
+          "subpagesTested": []
+        },
+        "c2": {
+          "verdict": "unclear",
+          "score": 0,
+          "reason": "fetchHtml failed: connect ECONNREFUSED 172.105.93.38:443",
+          "duration": 77,
+          "htmlBytes": 0
+        },
+        "c3": {
+          "universalEventsFound": 0,
+          "universalMethodsUsed": [
+            "universal-extractor"
+          ],
+          "universalMethodBreakdown": {},
+          "duration": 0
+        },
+        "extract": {
+          "eventsFound": 0,
+          "duration": 0,
+          "htmlSize": 0,
+          "extractedEvents": []
+        },
+        "trace": {
+          "sourceId": "summerburst",
+          "sourceUrl": "https://summerburst.se/",
+          "round": 1,
+          "c0Candidates": 0,
+          "c0WinnerUrl": null,
+          "c0WinnerDensity": 0,
+          "c0RuleSource": "none",
+          "c0RulePathsTested": [],
+          "c0RuleWinnerPath": null,
+          "effectiveUrl": "https://summerburst.se/",
+          "effectiveUrlReason": "url-variant",
+          "c1Verdict": "unfetchable",
+          "c1LikelyJsRendered": false,
+          "c1TimeTagCount": 0,
+          "c1DateCount": 0,
+          "c1HtmlBytes": 0,
+          "c1Fetchable": false,
+          "c1FetchError": "connect ECONNREFUSED 172.105.93.38:443",
+          "c1BestSubpageFound": null,
+          "c1SubpagesTested": [],
+          "c2Verdict": "unclear",
+          "c2Score": 0,
+          "c2Reason": "fetchHtml failed: connect ECONNREFUSED 172.105.93.38:443",
+          "c2HtmlBytes": 0,
+          "c3EventsFound": 0,
+          "c3MethodsUsed": [
+            "universal-extractor"
+          ],
+          "c3MethodBreakdown": {},
+          "eventsFound": 0,
+          "outcomeType": "fail",
+          "routeSuggestion": "manual-review",
+          "exitReason": "FETCH_ERROR",
+          "exitReasonDetail": "fetch failed: connect ECONNREFUSED 172.105.93.38:443",
+          "winningStage": "C3",
+          "success": false,
+          "derivedRuleApplied": false
+        }
+      }
+    },
+    {
+      "source": {
+        "sourceId": "melodifestivalen-svt",
+        "url": "https://svt.se/melodifestivalen",
+        "roundsParticipated": 0,
+        "diversifiers": [
+          "failures_8",
+          "path_jsonld"
+        ],
+        "queueReason": "fetch error: HTTP 404",
+        "enrichedData": {
+          "lastPathUsed": "jsonld",
+          "lastEventsFound": 0,
+          "consecutiveFailures": 8,
+          "triageResult": null
+        }
+      },
+      "decision": "postTestC-manual-review",
+      "result": {
+        "sourceId": "melodifestivalen-svt",
+        "sourceUrl": "https://svt.se/melodifestivalen",
+        "winningStage": "C3",
+        "outcomeType": "fail",
+        "routeSuggestion": "manual-review",
+        "evidence": "fetch error: HTTP 404",
+        "roundNumber": 1,
+        "success": false,
+        "exitReason": "FETCH_ERROR",
+        "exitReasonDetail": "fetch failed: HTTP 404",
+        "effectiveProcessingUrl": "https://svt.se/melodifestivalen",
+        "effectiveProcessingUrlReason": "url-variant",
+        "c0": {
+          "candidates": 0,
+          "winnerUrl": null,
+          "winnerDensity": 0,
+          "duration": 757,
+          "rootFallback": false,
+          "ruleAppliedSource": "none",
+          "ruleAppliedPaths": [],
+          "ruleWinnerPath": null
+        },
+        "c1": {
+          "verdict": "unfetchable",
+          "likelyJsRendered": false,
+          "timeTagCount": 0,
+          "dateCount": 0,
+          "duration": 193,
+          "htmlBytes": 0,
+          "fetchable": false,
+          "fetchError": "HTTP 404",
+          "bestSubpageFound": null,
+          "subpagesTested": []
+        },
+        "c2": {
+          "verdict": "unclear",
+          "score": 0,
+          "reason": "fetchHtml failed: HTTP 404",
+          "duration": 168,
+          "htmlBytes": 0
+        },
+        "c3": {
+          "universalEventsFound": 0,
+          "universalMethodsUsed": [
+            "universal-extractor"
+          ],
+          "universalMethodBreakdown": {},
+          "duration": 0
+        },
+        "extract": {
+          "eventsFound": 0,
+          "duration": 0,
+          "htmlSize": 0,
+          "extractedEvents": []
+        },
+        "trace": {
+          "sourceId": "melodifestivalen-svt",
+          "sourceUrl": "https://svt.se/melodifestivalen",
+          "round": 1,
+          "c0Candidates": 0,
+          "c0WinnerUrl": null,
+          "c0WinnerDensity": 0,
+          "c0RuleSource": "none",
+          "c0RulePathsTested": [],
+          "c0RuleWinnerPath": null,
+          "effectiveUrl": "https://svt.se/melodifestivalen",
+          "effectiveUrlReason": "url-variant",
+          "c1Verdict": "unfetchable",
+          "c1LikelyJsRendered": false,
+          "c1TimeTagCount": 0,
+          "c1DateCount": 0,
+          "c1HtmlBytes": 0,
+          "c1Fetchable": false,
+          "c1FetchError": "HTTP 404",
+          "c1BestSubpageFound": null,
+          "c1SubpagesTested": [],
+          "c2Verdict": "unclear",
+          "c2Score": 0,
+          "c2Reason": "fetchHtml failed: HTTP 404",
+          "c2HtmlBytes": 0,
+          "c3EventsFound": 0,
+          "c3MethodsUsed": [
+            "universal-extractor"
+          ],
+          "c3MethodBreakdown": {},
+          "eventsFound": 0,
+          "outcomeType": "fail",
+          "routeSuggestion": "manual-review",
+          "exitReason": "FETCH_ERROR",
+          "exitReasonDetail": "fetch failed: HTTP 404",
+          "winningStage": "C3",
+          "success": false,
+          "derivedRuleApplied": false
+        }
+      }
+    },
+    {
+      "source": {
+        "sourceId": "uppsala-stadsteatern-1",
+        "url": "https://uppsala-stadsteatern.se/",
+        "roundsParticipated": 0,
+        "diversifiers": [
+          "failures_8",
+          "path_jsonld"
+        ],
+        "queueReason": "fetch error: getaddrinfo ENOTFOUND uppsala-stadsteatern.se",
+        "enrichedData": {
+          "lastPathUsed": "jsonld",
+          "lastEventsFound": 0,
+          "consecutiveFailures": 8,
+          "triageResult": null
+        }
+      },
+      "decision": "postTestC-manual-review",
+      "result": {
+        "sourceId": "uppsala-stadsteatern-1",
+        "sourceUrl": "https://uppsala-stadsteatern.se/",
+        "winningStage": "C3",
+        "outcomeType": "fail",
+        "routeSuggestion": "manual-review",
+        "evidence": "fetch error: getaddrinfo ENOTFOUND uppsala-stadsteatern.se",
+        "roundNumber": 1,
+        "success": false,
+        "exitReason": "FETCH_ERROR",
+        "exitReasonDetail": "fetch failed: getaddrinfo ENOTFOUND uppsala-stadsteatern.se",
+        "effectiveProcessingUrl": "https://uppsala-stadsteatern.se/",
+        "effectiveProcessingUrlReason": "url-variant",
+        "c0": {
+          "candidates": 0,
+          "winnerUrl": null,
+          "winnerDensity": 0,
+          "duration": 135,
+          "rootFallback": false,
+          "ruleAppliedSource": "none",
+          "ruleAppliedPaths": [],
+          "ruleWinnerPath": null
+        },
+        "c1": {
+          "verdict": "unfetchable",
+          "likelyJsRendered": false,
+          "timeTagCount": 0,
+          "dateCount": 0,
+          "duration": 3,
+          "htmlBytes": 0,
+          "fetchable": false,
+          "fetchError": "getaddrinfo ENOTFOUND uppsala-stadsteatern.se",
+          "bestSubpageFound": null,
+          "subpagesTested": []
+        },
+        "c2": {
+          "verdict": "unclear",
+          "score": 0,
+          "reason": "fetchHtml failed: getaddrinfo ENOTFOUND uppsala-stadsteatern.se",
+          "duration": 4,
+          "htmlBytes": 0
+        },
+        "c3": {
+          "universalEventsFound": 0,
+          "universalMethodsUsed": [
+            "universal-extractor"
+          ],
+          "universalMethodBreakdown": {},
+          "duration": 0
+        },
+        "extract": {
+          "eventsFound": 0,
+          "duration": 0,
+          "htmlSize": 0,
+          "extractedEvents": []
+        },
+        "trace": {
+          "sourceId": "uppsala-stadsteatern-1",
+          "sourceUrl": "https://uppsala-stadsteatern.se/",
+          "round": 1,
+          "c0Candidates": 0,
+          "c0WinnerUrl": null,
+          "c0WinnerDensity": 0,
+          "c0RuleSource": "none",
+          "c0RulePathsTested": [],
+          "c0RuleWinnerPath": null,
+          "effectiveUrl": "https://uppsala-stadsteatern.se/",
+          "effectiveUrlReason": "url-variant",
+          "c1Verdict": "unfetchable",
+          "c1LikelyJsRendered": false,
+          "c1TimeTagCount": 0,
+          "c1DateCount": 0,
+          "c1HtmlBytes": 0,
+          "c1Fetchable": false,
+          "c1FetchError": "getaddrinfo ENOTFOUND uppsala-stadsteatern.se",
+          "c1BestSubpageFound": null,
+          "c1SubpagesTested": [],
+          "c2Verdict": "unclear",
+          "c2Score": 0,
+          "c2Reason": "fetchHtml failed: getaddrinfo ENOTFOUND uppsala-stadsteatern.se",
+          "c2HtmlBytes": 0,
+          "c3EventsFound": 0,
+          "c3MethodsUsed": [
+            "universal-extractor"
+          ],
+          "c3MethodBreakdown": {},
+          "eventsFound": 0,
+          "outcomeType": "fail",
+          "routeSuggestion": "manual-review",
+          "exitReason": "FETCH_ERROR",
+          "exitReasonDetail": "fetch failed: getaddrinfo ENOTFOUND uppsala-stadsteatern.se",
+          "winningStage": "C3",
+          "success": false,
+          "derivedRuleApplied": false
+        }
+      }
+    },
+    {
+      "source": {
+        "sourceId": "orebro-hockey",
+        "url": "https://orebrohockey.se/",
+        "roundsParticipated": 0,
+        "diversifiers": [
+          "failures_8",
+          "path_jsonld"
+        ],
+        "queueReason": "fetch error: timeout of 15000ms exceeded",
+        "enrichedData": {
+          "lastPathUsed": "jsonld",
+          "lastEventsFound": 0,
+          "consecutiveFailures": 8,
+          "triageResult": null
+        }
+      },
+      "decision": "postTestC-manual-review",
+      "result": {
+        "sourceId": "orebro-hockey",
+        "sourceUrl": "https://orebrohockey.se/",
+        "winningStage": "C3",
+        "outcomeType": "fail",
+        "routeSuggestion": "manual-review",
+        "evidence": "fetch error: timeout of 15000ms exceeded",
+        "roundNumber": 1,
+        "success": false,
+        "exitReason": "FETCH_ERROR",
+        "exitReasonDetail": "fetch failed: timeout of 15000ms exceeded",
+        "effectiveProcessingUrl": "https://orebrohockey.se/",
+        "effectiveProcessingUrlReason": "url-variant",
+        "c0": {
+          "candidates": 0,
+          "winnerUrl": null,
+          "winnerDensity": 0,
+          "duration": 5106,
+          "rootFallback": false,
+          "ruleAppliedSource": "none",
+          "ruleAppliedPaths": [],
+          "ruleWinnerPath": null
+        },
+        "c1": {
+          "verdict": "unfetchable",
+          "likelyJsRendered": false,
+          "timeTagCount": 0,
+          "dateCount": 0,
+          "duration": 5005,
+          "htmlBytes": 0,
+          "fetchable": false,
+          "fetchError": "timeout of 15000ms exceeded",
+          "bestSubpageFound": null,
+          "subpagesTested": []
+        },
+        "c2": {
+          "verdict": "unclear",
+          "score": 0,
+          "reason": "fetchHtml failed: timeout of 20000ms exceeded",
+          "duration": 5005,
+          "htmlBytes": 0
+        },
+        "c3": {
+          "universalEventsFound": 0,
+          "universalMethodsUsed": [
+            "universal-extractor"
+          ],
+          "universalMethodBreakdown": {},
+          "duration": 0
+        },
+        "extract": {
+          "eventsFound": 0,
+          "duration": 0,
+          "htmlSize": 0,
+          "extractedEvents": []
+        },
+        "trace": {
+          "sourceId": "orebro-hockey",
+          "sourceUrl": "https://orebrohockey.se/",
+          "round": 1,
+          "c0Candidates": 0,
+          "c0WinnerUrl": null,
+          "c0WinnerDensity": 0,
+          "c0RuleSource": "none",
+          "c0RulePathsTested": [],
+          "c0RuleWinnerPath": null,
+          "effectiveUrl": "https://orebrohockey.se/",
+          "effectiveUrlReason": "url-variant",
+          "c1Verdict": "unfetchable",
+          "c1LikelyJsRendered": false,
+          "c1TimeTagCount": 0,
+          "c1DateCount": 0,
+          "c1HtmlBytes": 0,
+          "c1Fetchable": false,
+          "c1FetchError": "timeout of 15000ms exceeded",
+          "c1BestSubpageFound": null,
+          "c1SubpagesTested": [],
+          "c2Verdict": "unclear",
+          "c2Score": 0,
+          "c2Reason": "fetchHtml failed: timeout of 20000ms exceeded",
+          "c2HtmlBytes": 0,
+          "c3EventsFound": 0,
+          "c3MethodsUsed": [
+            "universal-extractor"
+          ],
+          "c3MethodBreakdown": {},
+          "eventsFound": 0,
+          "outcomeType": "fail",
+          "routeSuggestion": "manual-review",
+          "exitReason": "FETCH_ERROR",
+          "exitReasonDetail": "fetch failed: timeout of 15000ms exceeded",
+          "winningStage": "C3",
+          "success": false,
+          "derivedRuleApplied": false
+        }
+      }
+    },
+    {
+      "source": {
+        "sourceId": "hasselblad-center",
+        "url": "https://hasselbladcenter.se/",
+        "roundsParticipated": 0,
+        "diversifiers": [
+          "failures_10",
+          "path_jsonld"
+        ],
+        "queueReason": "fetch error: getaddrinfo ENOTFOUND hasselbladcenter.se",
+        "enrichedData": {
+          "lastPathUsed": "jsonld",
+          "lastEventsFound": 0,
+          "consecutiveFailures": 10,
+          "triageResult": null
+        }
+      },
+      "decision": "postTestC-manual-review",
+      "result": {
+        "sourceId": "hasselblad-center",
+        "sourceUrl": "https://hasselbladcenter.se/",
+        "winningStage": "C3",
+        "outcomeType": "fail",
+        "routeSuggestion": "manual-review",
+        "evidence": "fetch error: getaddrinfo ENOTFOUND hasselbladcenter.se",
+        "roundNumber": 1,
+        "success": false,
+        "exitReason": "FETCH_ERROR",
+        "exitReasonDetail": "fetch failed: getaddrinfo ENOTFOUND hasselbladcenter.se",
+        "effectiveProcessingUrl": "https://hasselbladcenter.se/",
+        "effectiveProcessingUrlReason": "url-variant",
+        "c0": {
+          "candidates": 0,
+          "winnerUrl": null,
+          "winnerDensity": 0,
+          "duration": 44,
+          "rootFallback": false,
+          "ruleAppliedSource": "none",
+          "ruleAppliedPaths": [],
+          "ruleWinnerPath": null
+        },
+        "c1": {
+          "verdict": "unfetchable",
+          "likelyJsRendered": false,
+          "timeTagCount": 0,
+          "dateCount": 0,
+          "duration": 3,
+          "htmlBytes": 0,
+          "fetchable": false,
+          "fetchError": "getaddrinfo ENOTFOUND hasselbladcenter.se",
+          "bestSubpageFound": null,
+          "subpagesTested": []
+        },
+        "c2": {
+          "verdict": "unclear",
+          "score": 0,
+          "reason": "fetchHtml failed: getaddrinfo ENOTFOUND hasselbladcenter.se",
+          "duration": 3,
+          "htmlBytes": 0
+        },
+        "c3": {
+          "universalEventsFound": 0,
+          "universalMethodsUsed": [
+            "universal-extractor"
+          ],
+          "universalMethodBreakdown": {},
+          "duration": 0
+        },
+        "extract": {
+          "eventsFound": 0,
+          "duration": 0,
+          "htmlSize": 0,
+          "extractedEvents": []
+        },
+        "trace": {
+          "sourceId": "hasselblad-center",
+          "sourceUrl": "https://hasselbladcenter.se/",
+          "round": 1,
+          "c0Candidates": 0,
+          "c0WinnerUrl": null,
+          "c0WinnerDensity": 0,
+          "c0RuleSource": "none",
+          "c0RulePathsTested": [],
+          "c0RuleWinnerPath": null,
+          "effectiveUrl": "https://hasselbladcenter.se/",
+          "effectiveUrlReason": "url-variant",
+          "c1Verdict": "unfetchable",
+          "c1LikelyJsRendered": false,
+          "c1TimeTagCount": 0,
+          "c1DateCount": 0,
+          "c1HtmlBytes": 0,
+          "c1Fetchable": false,
+          "c1FetchError": "getaddrinfo ENOTFOUND hasselbladcenter.se",
+          "c1BestSubpageFound": null,
+          "c1SubpagesTested": [],
+          "c2Verdict": "unclear",
+          "c2Score": 0,
+          "c2Reason": "fetchHtml failed: getaddrinfo ENOTFOUND hasselbladcenter.se",
+          "c2HtmlBytes": 0,
+          "c3EventsFound": 0,
+          "c3MethodsUsed": [
+            "universal-extractor"
+          ],
+          "c3MethodBreakdown": {},
+          "eventsFound": 0,
+          "outcomeType": "fail",
+          "routeSuggestion": "manual-review",
+          "exitReason": "FETCH_ERROR",
+          "exitReasonDetail": "fetch failed: getaddrinfo ENOTFOUND hasselbladcenter.se",
+          "winningStage": "C3",
+          "success": false,
+          "derivedRuleApplied": false
+        }
+      }
+    },
+    {
+      "source": {
+        "sourceId": "folkuniversitetet",
+        "url": "https://folkuniversitetet.se/",
+        "roundsParticipated": 0,
+        "diversifiers": [
+          "failures_10",
+          "path_jsonld"
+        ],
+        "queueReason": "[IMP-001-FIX] Orphaned: forced STAY via STEP3-CHAIN in round 1, loop terminated before exit",
+        "enrichedData": {
+          "lastPathUsed": "jsonld",
+          "lastEventsFound": 0,
+          "consecutiveFailures": 10,
+          "triageResult": null
+        }
+      },
+      "decision": "postTestC-UI",
+      "result": {
+        "sourceId": "folkuniversitetet",
+        "sourceUrl": "https://folkuniversitetet.se/",
+        "winningStage": "C3",
+        "outcomeType": "extract_success",
+        "routeSuggestion": "UI",
+        "evidence": "2 events via [universal-extractor]",
+        "roundNumber": 1,
+        "success": true,
+        "exitReason": "EXTRACT_SUCCESS",
+        "exitReasonDetail": "2 events found",
+        "effectiveProcessingUrl": "https://folkuniversitetet.se/",
+        "effectiveProcessingUrlReason": "url-variant",
+        "c0": {
+          "candidates": 0,
+          "winnerUrl": null,
+          "winnerDensity": 0,
+          "duration": 16431,
+          "rootFallback": false,
+          "ruleAppliedSource": "none",
+          "ruleAppliedPaths": [
+            "/events",
+            "/program",
+            "/kalender",
+            "/schema",
+            "/evenemang",
+            "/kalendarium",
+            "/aktiviteter",
+            "/utställningar",
+            "/exhibition",
+            "/exhibitions",
+            "/exhibits",
+            "/visa",
+            "/scen",
+            "/teater",
+            "/repertoar",
+            "/forestillinger",
+            "/forestilling",
+            "/shown",
+            "/matcher",
+            "/tickets",
+            "/biljetter",
+            "/arena",
+            "/hall",
+            "/kultur",
+            "/fritid",
+            "/besok",
+            "/planera",
+            "/oppet",
+            "/konserter",
+            "/konsert",
+            "/aterkommande-event",
+            "/arrangemang",
+            "/planditt",
+            "/hitta-pa",
+            "/vad-hander"
+          ],
+          "ruleWinnerPath": null
+        },
+        "c1": {
+          "verdict": "weak",
+          "likelyJsRendered": false,
+          "timeTagCount": 0,
+          "dateCount": 0,
+          "duration": 1401,
+          "htmlBytes": 80352,
+          "fetchable": true,
+          "bestSubpageFound": null,
+          "subpagesTested": [
+            "https://folkuniversitetet.se/events",
+            "https://folkuniversitetet.se/program",
+            "https://folkuniversitetet.se/kalender",
+            "https://folkuniversitetet.se/schema",
+            "https://folkuniversitetet.se/evenemang",
+            "https://folkuniversitetet.se/kalendarium"
+          ]
+        },
+        "c2": {
+          "verdict": "promising",
+          "score": 293,
+          "reason": "[breadth_nojsonld] score=293(adj) >= 6? promising pg=venue-marker",
+          "duration": 246,
+          "htmlBytes": 80352
+        },
+        "c3": {
+          "universalEventsFound": 2,
+          "universalMethodsUsed": [
+            "universal-extractor"
+          ],
+          "universalMethodBreakdown": {},
+          "duration": 106
+        },
+        "extract": {
+          "eventsFound": 2,
+          "duration": 106,
+          "htmlSize": 80352,
+          "extractedEvents": [
+            {
+              "title": "Du behövs",
+              "date": "2026-04-18",
+              "description": "Yrkeshögskolan ger jobb. Starta din YH-resa idag!",
+              "category": "culture",
+              "imageUrl": "https://folkuniversitetet.se/contentassets/8bc60c7f135a4d2481886b5d87bec7cc/folkuniversitetet_aldre_kille.jpg?preset=teaser343",
+              "source": "folkuniversitetet",
+              "sourceUrl": "https://folkuniversitetet.se/",
+              "confidence": {
+                "score": 0.72,
+                "hasTitle": true,
+                "hasDate": true,
+                "hasVenue": false,
+                "hasUrl": false,
+                "hasDescription": true,
+                "hasTicketInfo": false,
+                "signals": [
+                  "html-rich-card"
+                ]
+              }
+            },
+            {
+              "title": "Du behövs Yrkeshögskolan ger jobb. Starta din YH-resa idag!",
+              "date": "2026-04-18",
+              "url": "https://folkuniversitetet.se/vara-skolor/yh-utbildningar/",
+              "source": "folkuniversitetet",
+              "sourceUrl": "https://folkuniversitetet.se/vara-skolor/yh-utbildningar/",
+              "confidence": {
+                "score": 0.6,
+                "hasTitle": true,
+                "hasDate": true,
+                "hasVenue": false,
+                "hasUrl": true,
+                "hasDescription": false,
+                "hasTicketInfo": false,
+                "signals": [
+                  "html-swedish-relative-date"
+                ]
+              }
+            }
+          ]
+        },
+        "trace": {
+          "sourceId": "folkuniversitetet",
+          "sourceUrl": "https://folkuniversitetet.se/",
+          "round": 1,
+          "c0Candidates": 0,
+          "c0WinnerUrl": null,
+          "c0WinnerDensity": 0,
+          "c0RuleSource": "none",
+          "c0RulePathsTested": [
+            "/events",
+            "/program",
+            "/kalender",
+            "/schema",
+            "/evenemang",
+            "/kalendarium",
+            "/aktiviteter",
+            "/utställningar",
+            "/exhibition",
+            "/exhibitions",
+            "/exhibits",
+            "/visa",
+            "/scen",
+            "/teater",
+            "/repertoar",
+            "/forestillinger",
+            "/forestilling",
+            "/shown",
+            "/matcher",
+            "/tickets",
+            "/biljetter",
+            "/arena",
+            "/hall",
+            "/kultur",
+            "/fritid",
+            "/besok",
+            "/planera",
+            "/oppet",
+            "/konserter",
+            "/konsert",
+            "/aterkommande-event",
+            "/arrangemang",
+            "/planditt",
+            "/hitta-pa",
+            "/vad-hander"
+          ],
+          "c0RuleWinnerPath": null,
+          "effectiveUrl": "https://folkuniversitetet.se/",
+          "effectiveUrlReason": "url-variant",
+          "c1Verdict": "weak",
+          "c1LikelyJsRendered": false,
+          "c1TimeTagCount": 0,
+          "c1DateCount": 0,
+          "c1HtmlBytes": 80352,
+          "c1Fetchable": true,
+          "c1BestSubpageFound": null,
+          "c1SubpagesTested": [
+            "https://folkuniversitetet.se/events",
+            "https://folkuniversitetet.se/program",
+            "https://folkuniversitetet.se/kalender",
+            "https://folkuniversitetet.se/schema",
+            "https://folkuniversitetet.se/evenemang",
+            "https://folkuniversitetet.se/kalendarium"
+          ],
+          "c2Verdict": "promising",
+          "c2Score": 293,
+          "c2Reason": "[breadth_nojsonld] score=293(adj) >= 6? promising pg=venue-marker",
+          "c2HtmlBytes": 80352,
+          "c3EventsFound": 2,
+          "c3MethodsUsed": [
+            "universal-extractor"
+          ],
+          "c3MethodBreakdown": {},
+          "eventsFound": 2,
+          "outcomeType": "extract_success",
+          "routeSuggestion": "UI",
+          "exitReason": "EXTRACT_SUCCESS",
+          "exitReasonDetail": "2 events found",
+          "winningStage": "C3",
+          "success": true,
+          "derivedRuleApplied": false
+        }
+      }
+    },
+    {
+      "source": {
+        "sourceId": "uppsala-linn-science-park",
+        "url": "https://linne.uu.se/",
+        "roundsParticipated": 0,
+        "diversifiers": [
+          "failures_8",
+          "path_jsonld"
+        ],
+        "queueReason": "fetch error: getaddrinfo ENOTFOUND linne.uu.se",
+        "enrichedData": {
+          "lastPathUsed": "jsonld",
+          "lastEventsFound": 0,
+          "consecutiveFailures": 8,
+          "triageResult": null
+        }
+      },
+      "decision": "postTestC-manual-review",
+      "result": {
+        "sourceId": "uppsala-linn-science-park",
+        "sourceUrl": "https://linne.uu.se/",
+        "winningStage": "C3",
+        "outcomeType": "fail",
+        "routeSuggestion": "manual-review",
+        "evidence": "fetch error: getaddrinfo ENOTFOUND linne.uu.se",
+        "roundNumber": 1,
+        "success": false,
+        "exitReason": "FETCH_ERROR",
+        "exitReasonDetail": "fetch failed: getaddrinfo ENOTFOUND linne.uu.se",
+        "effectiveProcessingUrl": "https://linne.uu.se/",
+        "effectiveProcessingUrlReason": "url-variant",
+        "c0": {
+          "candidates": 0,
+          "winnerUrl": null,
+          "winnerDensity": 0,
+          "duration": 50,
+          "rootFallback": false,
+          "ruleAppliedSource": "none",
+          "ruleAppliedPaths": [],
+          "ruleWinnerPath": null
+        },
+        "c1": {
+          "verdict": "unfetchable",
+          "likelyJsRendered": false,
+          "timeTagCount": 0,
+          "dateCount": 0,
+          "duration": 13,
+          "htmlBytes": 0,
+          "fetchable": false,
+          "fetchError": "getaddrinfo ENOTFOUND linne.uu.se",
+          "bestSubpageFound": null,
+          "subpagesTested": []
+        },
+        "c2": {
+          "verdict": "unclear",
+          "score": 0,
+          "reason": "fetchHtml failed: getaddrinfo ENOTFOUND linne.uu.se",
+          "duration": 3,
+          "htmlBytes": 0
+        },
+        "c3": {
+          "universalEventsFound": 0,
+          "universalMethodsUsed": [
+            "universal-extractor"
+          ],
+          "universalMethodBreakdown": {},
+          "duration": 0
+        },
+        "extract": {
+          "eventsFound": 0,
+          "duration": 0,
+          "htmlSize": 0,
+          "extractedEvents": []
+        },
+        "trace": {
+          "sourceId": "uppsala-linn-science-park",
+          "sourceUrl": "https://linne.uu.se/",
+          "round": 1,
+          "c0Candidates": 0,
+          "c0WinnerUrl": null,
+          "c0WinnerDensity": 0,
+          "c0RuleSource": "none",
+          "c0RulePathsTested": [],
+          "c0RuleWinnerPath": null,
+          "effectiveUrl": "https://linne.uu.se/",
+          "effectiveUrlReason": "url-variant",
+          "c1Verdict": "unfetchable",
+          "c1LikelyJsRendered": false,
+          "c1TimeTagCount": 0,
+          "c1DateCount": 0,
+          "c1HtmlBytes": 0,
+          "c1Fetchable": false,
+          "c1FetchError": "getaddrinfo ENOTFOUND linne.uu.se",
+          "c1BestSubpageFound": null,
+          "c1SubpagesTested": [],
+          "c2Verdict": "unclear",
+          "c2Score": 0,
+          "c2Reason": "fetchHtml failed: getaddrinfo ENOTFOUND linne.uu.se",
+          "c2HtmlBytes": 0,
+          "c3EventsFound": 0,
+          "c3MethodsUsed": [
+            "universal-extractor"
+          ],
+          "c3MethodBreakdown": {},
+          "eventsFound": 0,
+          "outcomeType": "fail",
+          "routeSuggestion": "manual-review",
+          "exitReason": "FETCH_ERROR",
+          "exitReasonDetail": "fetch failed: getaddrinfo ENOTFOUND linne.uu.se",
+          "winningStage": "C3",
+          "success": false,
+          "derivedRuleApplied": false
+        }
+      }
+    },
+    {
+      "source": {
+        "sourceId": "slagthuset",
+        "url": "https://slagthuset.se/",
+        "roundsParticipated": 0,
+        "diversifiers": [
+          "failures_8",
+          "path_jsonld"
+        ],
+        "queueReason": "[IMP-001-FIX] Orphaned: forced STAY via STEP3-CHAIN in round 1, loop terminated before exit",
+        "enrichedData": {
+          "lastPathUsed": "jsonld",
+          "lastEventsFound": 0,
+          "consecutiveFailures": 8,
+          "triageResult": null
+        }
+      },
+      "decision": "postTestC-manual-review",
+      "result": {
+        "sourceId": "slagthuset",
+        "sourceUrl": "https://slagthuset.se/",
+        "winningStage": "C3",
+        "outcomeType": "fail",
+        "routeSuggestion": "Fail",
+        "evidence": "",
+        "roundNumber": 1,
+        "success": false,
+        "exitReason": "FETCH_ERROR",
+        "exitReasonDetail": "Assignment to constant variable.",
+        "effectiveProcessingUrl": "https://slagthuset.se/",
+        "effectiveProcessingUrlReason": "url-variant:original",
+        "c0": {
+          "candidates": 10,
+          "winnerUrl": "https://slagthuset.se/events/jack-white",
+          "winnerDensity": 7,
+          "duration": 6866,
+          "rootFallback": false,
+          "ruleAppliedSource": "link-discovery",
+          "ruleAppliedPaths": [],
+          "ruleWinnerPath": "/events/jack-white"
+        },
+        "c1": {
+          "verdict": "unknown",
+          "likelyJsRendered": false,
+          "timeTagCount": 0,
+          "dateCount": 0,
+          "duration": 0,
+          "htmlBytes": 0,
+          "fetchable": false,
+          "bestSubpageFound": null,
+          "subpagesTested": []
+        },
+        "c2": {
+          "verdict": "unknown",
+          "score": 0,
+          "reason": "",
+          "duration": 0,
+          "htmlBytes": 0
+        },
+        "c3": {
+          "universalEventsFound": 0,
+          "universalMethodsUsed": [],
+          "universalMethodBreakdown": {},
+          "duration": 0
+        },
+        "extract": {
+          "eventsFound": 0,
+          "duration": 0,
+          "htmlSize": 0
+        },
+        "trace": {
+          "sourceId": "slagthuset",
+          "sourceUrl": "https://slagthuset.se/",
+          "round": 1,
+          "c0Candidates": 10,
+          "c0WinnerUrl": "https://slagthuset.se/events/jack-white",
+          "c0WinnerDensity": 7,
+          "c0RuleSource": "link-discovery",
+          "c0RulePathsTested": [],
+          "c0RuleWinnerPath": "/events/jack-white",
+          "effectiveUrl": "https://slagthuset.se/",
+          "effectiveUrlReason": "url-variant:original",
+          "c1Verdict": "unknown",
+          "c1LikelyJsRendered": false,
+          "c1TimeTagCount": 0,
+          "c1DateCount": 0,
+          "c1HtmlBytes": 0,
+          "c1Fetchable": false,
+          "c1BestSubpageFound": null,
+          "c1SubpagesTested": [],
+          "c2Verdict": "unknown",
+          "c2Score": 0,
+          "c2Reason": "",
+          "c2HtmlBytes": 0,
+          "c3EventsFound": 0,
+          "c3MethodsUsed": [],
+          "c3MethodBreakdown": {},
+          "eventsFound": 0,
+          "outcomeType": "fail",
+          "routeSuggestion": "Fail",
+          "exitReason": "FETCH_ERROR",
+          "exitReasonDetail": "Assignment to constant variable.",
+          "winningStage": "C3",
+          "success": false,
+          "derivedRuleApplied": false,
+          "error": "Assignment to constant variable."
+        },
+        "error": "Assignment to constant variable."
+      }
+    },
+    {
+      "source": {
+        "sourceId": "regionteatern",
+        "url": "https://regionteater.se/",
+        "roundsParticipated": 0,
+        "diversifiers": [
+          "failures_8",
+          "path_jsonld"
+        ],
+        "queueReason": "fetch error: getaddrinfo ENOTFOUND regionteater.se",
+        "enrichedData": {
+          "lastPathUsed": "jsonld",
+          "lastEventsFound": 0,
+          "consecutiveFailures": 8,
+          "triageResult": null
+        }
+      },
+      "decision": "postTestC-manual-review",
+      "result": {
+        "sourceId": "regionteatern",
+        "sourceUrl": "https://regionteater.se/",
+        "winningStage": "C3",
+        "outcomeType": "fail",
+        "routeSuggestion": "manual-review",
+        "evidence": "fetch error: getaddrinfo ENOTFOUND regionteater.se",
+        "roundNumber": 1,
+        "success": false,
+        "exitReason": "FETCH_ERROR",
+        "exitReasonDetail": "fetch failed: getaddrinfo ENOTFOUND regionteater.se",
+        "effectiveProcessingUrl": "https://regionteater.se/",
+        "effectiveProcessingUrlReason": "url-variant",
+        "c0": {
+          "candidates": 0,
+          "winnerUrl": null,
+          "winnerDensity": 0,
+          "duration": 45,
+          "rootFallback": false,
+          "ruleAppliedSource": "none",
+          "ruleAppliedPaths": [],
+          "ruleWinnerPath": null
+        },
+        "c1": {
+          "verdict": "unfetchable",
+          "likelyJsRendered": false,
+          "timeTagCount": 0,
+          "dateCount": 0,
+          "duration": 3,
+          "htmlBytes": 0,
+          "fetchable": false,
+          "fetchError": "getaddrinfo ENOTFOUND regionteater.se",
+          "bestSubpageFound": null,
+          "subpagesTested": []
+        },
+        "c2": {
+          "verdict": "unclear",
+          "score": 0,
+          "reason": "fetchHtml failed: getaddrinfo ENOTFOUND regionteater.se",
+          "duration": 2,
+          "htmlBytes": 0
+        },
+        "c3": {
+          "universalEventsFound": 0,
+          "universalMethodsUsed": [
+            "universal-extractor"
+          ],
+          "universalMethodBreakdown": {},
+          "duration": 0
+        },
+        "extract": {
+          "eventsFound": 0,
+          "duration": 0,
+          "htmlSize": 0,
+          "extractedEvents": []
+        },
+        "trace": {
+          "sourceId": "regionteatern",
+          "sourceUrl": "https://regionteater.se/",
+          "round": 1,
+          "c0Candidates": 0,
+          "c0WinnerUrl": null,
+          "c0WinnerDensity": 0,
+          "c0RuleSource": "none",
+          "c0RulePathsTested": [],
+          "c0RuleWinnerPath": null,
+          "effectiveUrl": "https://regionteater.se/",
+          "effectiveUrlReason": "url-variant",
+          "c1Verdict": "unfetchable",
+          "c1LikelyJsRendered": false,
+          "c1TimeTagCount": 0,
+          "c1DateCount": 0,
+          "c1HtmlBytes": 0,
+          "c1Fetchable": false,
+          "c1FetchError": "getaddrinfo ENOTFOUND regionteater.se",
+          "c1BestSubpageFound": null,
+          "c1SubpagesTested": [],
+          "c2Verdict": "unclear",
+          "c2Score": 0,
+          "c2Reason": "fetchHtml failed: getaddrinfo ENOTFOUND regionteater.se",
+          "c2HtmlBytes": 0,
+          "c3EventsFound": 0,
+          "c3MethodsUsed": [
+            "universal-extractor"
+          ],
+          "c3MethodBreakdown": {},
+          "eventsFound": 0,
+          "outcomeType": "fail",
+          "routeSuggestion": "manual-review",
+          "exitReason": "FETCH_ERROR",
+          "exitReasonDetail": "fetch failed: getaddrinfo ENOTFOUND regionteater.se",
+          "winningStage": "C3",
+          "success": false,
+          "derivedRuleApplied": false
+        }
+      }
+    },
+    {
+      "source": {
+        "sourceId": "malmo-folkets-park",
+        "url": "https://folketsparkmalmo.se/",
+        "roundsParticipated": 0,
+        "diversifiers": [
+          "failures_8",
+          "path_jsonld"
+        ],
+        "queueReason": "fetch error: getaddrinfo ENOTFOUND folketsparkmalmo.se",
+        "enrichedData": {
+          "lastPathUsed": "jsonld",
+          "lastEventsFound": 0,
+          "consecutiveFailures": 8,
+          "triageResult": null
+        }
+      },
+      "decision": "postTestC-manual-review",
+      "result": {
+        "sourceId": "malmo-folkets-park",
+        "sourceUrl": "https://folketsparkmalmo.se/",
+        "winningStage": "C3",
+        "outcomeType": "fail",
+        "routeSuggestion": "manual-review",
+        "evidence": "fetch error: getaddrinfo ENOTFOUND folketsparkmalmo.se",
+        "roundNumber": 1,
+        "success": false,
+        "exitReason": "FETCH_ERROR",
+        "exitReasonDetail": "fetch failed: getaddrinfo ENOTFOUND folketsparkmalmo.se",
+        "effectiveProcessingUrl": "https://folketsparkmalmo.se/",
+        "effectiveProcessingUrlReason": "url-variant",
+        "c0": {
+          "candidates": 0,
+          "winnerUrl": null,
+          "winnerDensity": 0,
+          "duration": 40,
+          "rootFallback": false,
+          "ruleAppliedSource": "none",
+          "ruleAppliedPaths": [],
+          "ruleWinnerPath": null
+        },
+        "c1": {
+          "verdict": "unfetchable",
+          "likelyJsRendered": false,
+          "timeTagCount": 0,
+          "dateCount": 0,
+          "duration": 4,
+          "htmlBytes": 0,
+          "fetchable": false,
+          "fetchError": "getaddrinfo ENOTFOUND folketsparkmalmo.se",
+          "bestSubpageFound": null,
+          "subpagesTested": []
+        },
+        "c2": {
+          "verdict": "unclear",
+          "score": 0,
+          "reason": "fetchHtml failed: getaddrinfo ENOTFOUND folketsparkmalmo.se",
+          "duration": 2,
+          "htmlBytes": 0
+        },
+        "c3": {
+          "universalEventsFound": 0,
+          "universalMethodsUsed": [
+            "universal-extractor"
+          ],
+          "universalMethodBreakdown": {},
+          "duration": 0
+        },
+        "extract": {
+          "eventsFound": 0,
+          "duration": 0,
+          "htmlSize": 0,
+          "extractedEvents": []
+        },
+        "trace": {
+          "sourceId": "malmo-folkets-park",
+          "sourceUrl": "https://folketsparkmalmo.se/",
+          "round": 1,
+          "c0Candidates": 0,
+          "c0WinnerUrl": null,
+          "c0WinnerDensity": 0,
+          "c0RuleSource": "none",
+          "c0RulePathsTested": [],
+          "c0RuleWinnerPath": null,
+          "effectiveUrl": "https://folketsparkmalmo.se/",
+          "effectiveUrlReason": "url-variant",
+          "c1Verdict": "unfetchable",
+          "c1LikelyJsRendered": false,
+          "c1TimeTagCount": 0,
+          "c1DateCount": 0,
+          "c1HtmlBytes": 0,
+          "c1Fetchable": false,
+          "c1FetchError": "getaddrinfo ENOTFOUND folketsparkmalmo.se",
+          "c1BestSubpageFound": null,
+          "c1SubpagesTested": [],
+          "c2Verdict": "unclear",
+          "c2Score": 0,
+          "c2Reason": "fetchHtml failed: getaddrinfo ENOTFOUND folketsparkmalmo.se",
+          "c2HtmlBytes": 0,
+          "c3EventsFound": 0,
+          "c3MethodsUsed": [
+            "universal-extractor"
+          ],
+          "c3MethodBreakdown": {},
+          "eventsFound": 0,
+          "outcomeType": "fail",
+          "routeSuggestion": "manual-review",
+          "exitReason": "FETCH_ERROR",
+          "exitReasonDetail": "fetch failed: getaddrinfo ENOTFOUND folketsparkmalmo.se",
+          "winningStage": "C3",
+          "success": false,
+          "derivedRuleApplied": false
+        }
+      }
+    },
+    {
+      "source": {
+        "sourceId": "stockholm-music-arts-1",
+        "url": "https://stockholmmafestival.se/",
+        "roundsParticipated": 0,
+        "diversifiers": [
+          "failures_8",
+          "path_jsonld"
+        ],
+        "queueReason": "fetch error: getaddrinfo ENOTFOUND stockholmmafestival.se",
+        "enrichedData": {
+          "lastPathUsed": "jsonld",
+          "lastEventsFound": 0,
+          "consecutiveFailures": 8,
+          "triageResult": null
+        }
+      },
+      "decision": "postTestC-manual-review",
+      "result": {
+        "sourceId": "stockholm-music-arts-1",
+        "sourceUrl": "https://stockholmmafestival.se/",
+        "winningStage": "C3",
+        "outcomeType": "fail",
+        "routeSuggestion": "manual-review",
+        "evidence": "fetch error: getaddrinfo ENOTFOUND stockholmmafestival.se",
+        "roundNumber": 1,
+        "success": false,
+        "exitReason": "FETCH_ERROR",
+        "exitReasonDetail": "fetch failed: getaddrinfo ENOTFOUND stockholmmafestival.se",
+        "effectiveProcessingUrl": "https://stockholmmafestival.se/",
+        "effectiveProcessingUrlReason": "url-variant",
+        "c0": {
+          "candidates": 0,
+          "winnerUrl": null,
+          "winnerDensity": 0,
+          "duration": 39,
+          "rootFallback": false,
+          "ruleAppliedSource": "none",
+          "ruleAppliedPaths": [],
+          "ruleWinnerPath": null
+        },
+        "c1": {
+          "verdict": "unfetchable",
+          "likelyJsRendered": false,
+          "timeTagCount": 0,
+          "dateCount": 0,
+          "duration": 2,
+          "htmlBytes": 0,
+          "fetchable": false,
+          "fetchError": "getaddrinfo ENOTFOUND stockholmmafestival.se",
+          "bestSubpageFound": null,
+          "subpagesTested": []
+        },
+        "c2": {
+          "verdict": "unclear",
+          "score": 0,
+          "reason": "fetchHtml failed: getaddrinfo ENOTFOUND stockholmmafestival.se",
+          "duration": 1,
+          "htmlBytes": 0
+        },
+        "c3": {
+          "universalEventsFound": 0,
+          "universalMethodsUsed": [
+            "universal-extractor"
+          ],
+          "universalMethodBreakdown": {},
+          "duration": 0
+        },
+        "extract": {
+          "eventsFound": 0,
+          "duration": 0,
+          "htmlSize": 0,
+          "extractedEvents": []
+        },
+        "trace": {
+          "sourceId": "stockholm-music-arts-1",
+          "sourceUrl": "https://stockholmmafestival.se/",
+          "round": 1,
+          "c0Candidates": 0,
+          "c0WinnerUrl": null,
+          "c0WinnerDensity": 0,
+          "c0RuleSource": "none",
+          "c0RulePathsTested": [],
+          "c0RuleWinnerPath": null,
+          "effectiveUrl": "https://stockholmmafestival.se/",
+          "effectiveUrlReason": "url-variant",
+          "c1Verdict": "unfetchable",
+          "c1LikelyJsRendered": false,
+          "c1TimeTagCount": 0,
+          "c1DateCount": 0,
+          "c1HtmlBytes": 0,
+          "c1Fetchable": false,
+          "c1FetchError": "getaddrinfo ENOTFOUND stockholmmafestival.se",
+          "c1BestSubpageFound": null,
+          "c1SubpagesTested": [],
+          "c2Verdict": "unclear",
+          "c2Score": 0,
+          "c2Reason": "fetchHtml failed: getaddrinfo ENOTFOUND stockholmmafestival.se",
+          "c2HtmlBytes": 0,
+          "c3EventsFound": 0,
+          "c3MethodsUsed": [
+            "universal-extractor"
+          ],
+          "c3MethodBreakdown": {},
+          "eventsFound": 0,
+          "outcomeType": "fail",
+          "routeSuggestion": "manual-review",
+          "exitReason": "FETCH_ERROR",
+          "exitReasonDetail": "fetch failed: getaddrinfo ENOTFOUND stockholmmafestival.se",
+          "winningStage": "C3",
+          "success": false,
+          "derivedRuleApplied": false
+        }
+      }
+    },
+    {
+      "source": {
+        "sourceId": "af",
+        "url": "https://af.lu.se/",
+        "roundsParticipated": 0,
+        "diversifiers": [
+          "failures_12",
+          "path_jsonld"
+        ],
+        "queueReason": "[IMP-001-FIX] Orphaned: forced STAY via STEP3-CHAIN in round 1, loop terminated before exit",
+        "enrichedData": {
+          "lastPathUsed": "jsonld",
+          "lastEventsFound": 0,
+          "consecutiveFailures": 12,
+          "triageResult": null
+        }
+      },
+      "decision": "postTestC-manual-review",
+      "result": {
+        "sourceId": "af",
+        "sourceUrl": "https://af.lu.se/",
+        "winningStage": "C3",
+        "outcomeType": "fail",
+        "routeSuggestion": "Fail",
+        "evidence": "",
+        "roundNumber": 1,
+        "success": false,
+        "exitReason": "FETCH_ERROR",
+        "exitReasonDetail": "Assignment to constant variable.",
+        "effectiveProcessingUrl": "https://af.lu.se/",
+        "effectiveProcessingUrlReason": "url-variant:original",
+        "c0": {
+          "candidates": 3,
+          "winnerUrl": "https://af.lu.se/sv-scenverksamhet",
+          "winnerDensity": 11,
+          "duration": 2036,
+          "rootFallback": false,
+          "ruleAppliedSource": "link-discovery",
+          "ruleAppliedPaths": [],
+          "ruleWinnerPath": "/sv-scenverksamhet"
+        },
+        "c1": {
+          "verdict": "unknown",
+          "likelyJsRendered": false,
+          "timeTagCount": 0,
+          "dateCount": 0,
+          "duration": 0,
+          "htmlBytes": 0,
+          "fetchable": false,
+          "bestSubpageFound": null,
+          "subpagesTested": []
+        },
+        "c2": {
+          "verdict": "unknown",
+          "score": 0,
+          "reason": "",
+          "duration": 0,
+          "htmlBytes": 0
+        },
+        "c3": {
+          "universalEventsFound": 0,
+          "universalMethodsUsed": [],
+          "universalMethodBreakdown": {},
+          "duration": 0
+        },
+        "extract": {
+          "eventsFound": 0,
+          "duration": 0,
+          "htmlSize": 0
+        },
+        "trace": {
+          "sourceId": "af",
+          "sourceUrl": "https://af.lu.se/",
+          "round": 1,
+          "c0Candidates": 3,
+          "c0WinnerUrl": "https://af.lu.se/sv-scenverksamhet",
+          "c0WinnerDensity": 11,
+          "c0RuleSource": "link-discovery",
+          "c0RulePathsTested": [],
+          "c0RuleWinnerPath": "/sv-scenverksamhet",
+          "effectiveUrl": "https://af.lu.se/",
+          "effectiveUrlReason": "url-variant:original",
+          "c1Verdict": "unknown",
+          "c1LikelyJsRendered": false,
+          "c1TimeTagCount": 0,
+          "c1DateCount": 0,
+          "c1HtmlBytes": 0,
+          "c1Fetchable": false,
+          "c1BestSubpageFound": null,
+          "c1SubpagesTested": [],
+          "c2Verdict": "unknown",
+          "c2Score": 0,
+          "c2Reason": "",
+          "c2HtmlBytes": 0,
+          "c3EventsFound": 0,
+          "c3MethodsUsed": [],
+          "c3MethodBreakdown": {},
+          "eventsFound": 0,
+          "outcomeType": "fail",
+          "routeSuggestion": "Fail",
+          "exitReason": "FETCH_ERROR",
+          "exitReasonDetail": "Assignment to constant variable.",
+          "winningStage": "C3",
+          "success": false,
+          "derivedRuleApplied": false,
+          "error": "Assignment to constant variable."
+        },
+        "error": "Assignment to constant variable."
+      }
+    },
+    {
+      "source": {
+        "sourceId": "sundsvall-musik",
+        "url": "https://musiksundsvall.se/",
+        "roundsParticipated": 0,
+        "diversifiers": [
+          "failures_8",
+          "path_jsonld"
+        ],
+        "queueReason": "fetch error: getaddrinfo ENOTFOUND musiksundsvall.se",
+        "enrichedData": {
+          "lastPathUsed": "jsonld",
+          "lastEventsFound": 0,
+          "consecutiveFailures": 8,
+          "triageResult": null
+        }
+      },
+      "decision": "postTestC-manual-review",
+      "result": {
+        "sourceId": "sundsvall-musik",
+        "sourceUrl": "https://musiksundsvall.se/",
+        "winningStage": "C3",
+        "outcomeType": "fail",
+        "routeSuggestion": "manual-review",
+        "evidence": "fetch error: getaddrinfo ENOTFOUND musiksundsvall.se",
+        "roundNumber": 1,
+        "success": false,
+        "exitReason": "FETCH_ERROR",
+        "exitReasonDetail": "fetch failed: getaddrinfo ENOTFOUND musiksundsvall.se",
+        "effectiveProcessingUrl": "https://musiksundsvall.se/",
+        "effectiveProcessingUrlReason": "url-variant",
+        "c0": {
+          "candidates": 0,
+          "winnerUrl": null,
+          "winnerDensity": 0,
+          "duration": 54,
+          "rootFallback": false,
+          "ruleAppliedSource": "none",
+          "ruleAppliedPaths": [],
+          "ruleWinnerPath": null
+        },
+        "c1": {
+          "verdict": "unfetchable",
+          "likelyJsRendered": false,
+          "timeTagCount": 0,
+          "dateCount": 0,
+          "duration": 3,
+          "htmlBytes": 0,
+          "fetchable": false,
+          "fetchError": "getaddrinfo ENOTFOUND musiksundsvall.se",
+          "bestSubpageFound": null,
+          "subpagesTested": []
+        },
+        "c2": {
+          "verdict": "unclear",
+          "score": 0,
+          "reason": "fetchHtml failed: getaddrinfo ENOTFOUND musiksundsvall.se",
+          "duration": 2,
+          "htmlBytes": 0
+        },
+        "c3": {
+          "universalEventsFound": 0,
+          "universalMethodsUsed": [
+            "universal-extractor"
+          ],
+          "universalMethodBreakdown": {},
+          "duration": 0
+        },
+        "extract": {
+          "eventsFound": 0,
+          "duration": 0,
+          "htmlSize": 0,
+          "extractedEvents": []
+        },
+        "trace": {
+          "sourceId": "sundsvall-musik",
+          "sourceUrl": "https://musiksundsvall.se/",
+          "round": 1,
+          "c0Candidates": 0,
+          "c0WinnerUrl": null,
+          "c0WinnerDensity": 0,
+          "c0RuleSource": "none",
+          "c0RulePathsTested": [],
+          "c0RuleWinnerPath": null,
+          "effectiveUrl": "https://musiksundsvall.se/",
+          "effectiveUrlReason": "url-variant",
+          "c1Verdict": "unfetchable",
+          "c1LikelyJsRendered": false,
+          "c1TimeTagCount": 0,
+          "c1DateCount": 0,
+          "c1HtmlBytes": 0,
+          "c1Fetchable": false,
+          "c1FetchError": "getaddrinfo ENOTFOUND musiksundsvall.se",
+          "c1BestSubpageFound": null,
+          "c1SubpagesTested": [],
+          "c2Verdict": "unclear",
+          "c2Score": 0,
+          "c2Reason": "fetchHtml failed: getaddrinfo ENOTFOUND musiksundsvall.se",
+          "c2HtmlBytes": 0,
+          "c3EventsFound": 0,
+          "c3MethodsUsed": [
+            "universal-extractor"
+          ],
+          "c3MethodBreakdown": {},
+          "eventsFound": 0,
+          "outcomeType": "fail",
+          "routeSuggestion": "manual-review",
+          "exitReason": "FETCH_ERROR",
+          "exitReasonDetail": "fetch failed: getaddrinfo ENOTFOUND musiksundsvall.se",
+          "winningStage": "C3",
+          "success": false,
+          "derivedRuleApplied": false
+        }
+      }
+    },
+    {
+      "source": {
+        "sourceId": "teater-galeasen",
+        "url": "https://galeasen.se/",
+        "roundsParticipated": 0,
+        "diversifiers": [
+          "failures_8",
+          "path_jsonld"
+        ],
+        "queueReason": "fetch error: HTTP 429",
+        "enrichedData": {
+          "lastPathUsed": "jsonld",
+          "lastEventsFound": 0,
+          "consecutiveFailures": 8,
+          "triageResult": null
+        }
+      },
+      "decision": "postTestC-manual-review",
+      "result": {
+        "sourceId": "teater-galeasen",
+        "sourceUrl": "https://galeasen.se/",
+        "winningStage": "C3",
+        "outcomeType": "fail",
+        "routeSuggestion": "manual-review",
+        "evidence": "fetch error: HTTP 429",
+        "roundNumber": 1,
+        "success": false,
+        "exitReason": "FETCH_ERROR",
+        "exitReasonDetail": "fetch failed: HTTP 429",
+        "effectiveProcessingUrl": "https://galeasen.se/",
+        "effectiveProcessingUrlReason": "url-variant",
+        "c0": {
+          "candidates": 0,
+          "winnerUrl": null,
+          "winnerDensity": 0,
+          "duration": 8272,
+          "rootFallback": false,
+          "ruleAppliedSource": "none",
+          "ruleAppliedPaths": [
+            "/events",
+            "/program",
+            "/kalender",
+            "/schema",
+            "/evenemang",
+            "/kalendarium",
+            "/aktiviteter",
+            "/utställningar",
+            "/exhibition",
+            "/exhibitions",
+            "/exhibits",
+            "/visa",
+            "/scen",
+            "/teater",
+            "/repertoar",
+            "/forestillinger",
+            "/forestilling",
+            "/shown",
+            "/matcher",
+            "/tickets",
+            "/biljetter",
+            "/arena",
+            "/hall",
+            "/kultur",
+            "/fritid",
+            "/besok",
+            "/planera",
+            "/oppet",
+            "/konserter",
+            "/konsert",
+            "/aterkommande-event",
+            "/arrangemang",
+            "/planditt",
+            "/hitta-pa",
+            "/vad-hander"
+          ],
+          "ruleWinnerPath": null
+        },
+        "c1": {
+          "verdict": "unfetchable",
+          "likelyJsRendered": false,
+          "timeTagCount": 0,
+          "dateCount": 0,
+          "duration": 37,
+          "htmlBytes": 0,
+          "fetchable": false,
+          "fetchError": "HTTP 429",
+          "bestSubpageFound": null,
+          "subpagesTested": []
+        },
+        "c2": {
+          "verdict": "unclear",
+          "score": 2,
+          "reason": "[breadth_nojsonld] score=2(adj) >= 6? unclear pg=event-heading",
+          "duration": 149,
+          "htmlBytes": 31925
+        },
+        "c3": {
+          "universalEventsFound": 0,
+          "universalMethodsUsed": [
+            "universal-extractor"
+          ],
+          "universalMethodBreakdown": {},
+          "duration": 21
+        },
+        "extract": {
+          "eventsFound": 0,
+          "duration": 21,
+          "htmlSize": 31925,
+          "extractedEvents": []
+        },
+        "trace": {
+          "sourceId": "teater-galeasen",
+          "sourceUrl": "https://galeasen.se/",
+          "round": 1,
+          "c0Candidates": 0,
+          "c0WinnerUrl": null,
+          "c0WinnerDensity": 0,
+          "c0RuleSource": "none",
+          "c0RulePathsTested": [
+            "/events",
+            "/program",
+            "/kalender",
+            "/schema",
+            "/evenemang",
+            "/kalendarium",
+            "/aktiviteter",
+            "/utställningar",
+            "/exhibition",
+            "/exhibitions",
+            "/exhibits",
+            "/visa",
+            "/scen",
+            "/teater",
+            "/repertoar",
+            "/forestillinger",
+            "/forestilling",
+            "/shown",
+            "/matcher",
+            "/tickets",
+            "/biljetter",
+            "/arena",
+            "/hall",
+            "/kultur",
+            "/fritid",
+            "/besok",
+            "/planera",
+            "/oppet",
+            "/konserter",
+            "/konsert",
+            "/aterkommande-event",
+            "/arrangemang",
+            "/planditt",
+            "/hitta-pa",
+            "/vad-hander"
+          ],
+          "c0RuleWinnerPath": null,
+          "effectiveUrl": "https://galeasen.se/",
+          "effectiveUrlReason": "url-variant",
+          "c1Verdict": "unfetchable",
+          "c1LikelyJsRendered": false,
+          "c1TimeTagCount": 0,
+          "c1DateCount": 0,
+          "c1HtmlBytes": 0,
+          "c1Fetchable": false,
+          "c1FetchError": "HTTP 429",
+          "c1BestSubpageFound": null,
+          "c1SubpagesTested": [],
+          "c2Verdict": "unclear",
+          "c2Score": 2,
+          "c2Reason": "[breadth_nojsonld] score=2(adj) >= 6? unclear pg=event-heading",
+          "c2HtmlBytes": 31925,
+          "c3EventsFound": 0,
+          "c3MethodsUsed": [
+            "universal-extractor"
+          ],
+          "c3MethodBreakdown": {},
+          "eventsFound": 0,
+          "outcomeType": "fail",
+          "routeSuggestion": "manual-review",
+          "exitReason": "FETCH_ERROR",
+          "exitReasonDetail": "fetch failed: HTTP 429",
+          "winningStage": "C3",
+          "success": false,
+          "derivedRuleApplied": false
+        }
+      }
+    },
+    {
+      "source": {
+        "sourceId": "lulea-konserthus",
+        "url": "https://lulea.se/konserthus",
+        "roundsParticipated": 0,
+        "diversifiers": [
+          "failures_8",
+          "path_jsonld"
+        ],
+        "queueReason": "fetch error: HTTP 404",
+        "enrichedData": {
+          "lastPathUsed": "jsonld",
+          "lastEventsFound": 0,
+          "consecutiveFailures": 8,
+          "triageResult": null
+        }
+      },
+      "decision": "postTestC-manual-review",
+      "result": {
+        "sourceId": "lulea-konserthus",
+        "sourceUrl": "https://lulea.se/konserthus",
+        "winningStage": "C3",
+        "outcomeType": "fail",
+        "routeSuggestion": "manual-review",
+        "evidence": "fetch error: HTTP 404",
+        "roundNumber": 1,
+        "success": false,
+        "exitReason": "FETCH_ERROR",
+        "exitReasonDetail": "fetch failed: HTTP 404",
+        "effectiveProcessingUrl": "https://lulea.se/konserthus",
+        "effectiveProcessingUrlReason": "url-variant",
+        "c0": {
+          "candidates": 0,
+          "winnerUrl": null,
+          "winnerDensity": 0,
+          "duration": 1064,
+          "rootFallback": false,
+          "ruleAppliedSource": "none",
+          "ruleAppliedPaths": [],
+          "ruleWinnerPath": null
+        },
+        "c1": {
+          "verdict": "unfetchable",
+          "likelyJsRendered": false,
+          "timeTagCount": 0,
+          "dateCount": 0,
+          "duration": 604,
+          "htmlBytes": 0,
+          "fetchable": false,
+          "fetchError": "HTTP 404",
+          "bestSubpageFound": null,
+          "subpagesTested": [
+            "https://lulea.sehttps://lulea.se",
+            "https://lulea.sehttps://lulea.se/kalender",
+            "https://lulea.sehttps://lulea.se/evenemang"
+          ]
+        },
+        "c2": {
+          "verdict": "unclear",
+          "score": 0,
+          "reason": "fetchHtml failed: HTTP 404",
+          "duration": 354,
+          "htmlBytes": 0
+        },
+        "c3": {
+          "universalEventsFound": 0,
+          "universalMethodsUsed": [
+            "universal-extractor"
+          ],
+          "universalMethodBreakdown": {},
+          "duration": 0
+        },
+        "extract": {
+          "eventsFound": 0,
+          "duration": 0,
+          "htmlSize": 0,
+          "extractedEvents": []
+        },
+        "trace": {
+          "sourceId": "lulea-konserthus",
+          "sourceUrl": "https://lulea.se/konserthus",
+          "round": 1,
+          "c0Candidates": 0,
+          "c0WinnerUrl": null,
+          "c0WinnerDensity": 0,
+          "c0RuleSource": "none",
+          "c0RulePathsTested": [],
+          "c0RuleWinnerPath": null,
+          "effectiveUrl": "https://lulea.se/konserthus",
+          "effectiveUrlReason": "url-variant",
+          "c1Verdict": "unfetchable",
+          "c1LikelyJsRendered": false,
+          "c1TimeTagCount": 0,
+          "c1DateCount": 0,
+          "c1HtmlBytes": 0,
+          "c1Fetchable": false,
+          "c1FetchError": "HTTP 404",
+          "c1BestSubpageFound": null,
+          "c1SubpagesTested": [
+            "https://lulea.sehttps://lulea.se",
+            "https://lulea.sehttps://lulea.se/kalender",
+            "https://lulea.sehttps://lulea.se/evenemang"
+          ],
+          "c2Verdict": "unclear",
+          "c2Score": 0,
+          "c2Reason": "fetchHtml failed: HTTP 404",
+          "c2HtmlBytes": 0,
+          "c3EventsFound": 0,
+          "c3MethodsUsed": [
+            "universal-extractor"
+          ],
+          "c3MethodBreakdown": {},
+          "eventsFound": 0,
+          "outcomeType": "fail",
+          "routeSuggestion": "manual-review",
+          "exitReason": "FETCH_ERROR",
+          "exitReasonDetail": "fetch failed: HTTP 404",
+          "winningStage": "C3",
+          "success": false,
+          "derivedRuleApplied": false
+        }
+      }
+    },
+    {
+      "source": {
+        "sourceId": "gavle-zoo",
+        "url": "https://gavlezoo.se/",
+        "roundsParticipated": 0,
+        "diversifiers": [
+          "failures_10",
+          "path_jsonld"
+        ],
+        "queueReason": "fetch error: getaddrinfo ENOTFOUND gavlezoo.se",
+        "enrichedData": {
+          "lastPathUsed": "jsonld",
+          "lastEventsFound": 0,
+          "consecutiveFailures": 10,
+          "triageResult": null
+        }
+      },
+      "decision": "postTestC-manual-review",
+      "result": {
+        "sourceId": "gavle-zoo",
+        "sourceUrl": "https://gavlezoo.se/",
+        "winningStage": "C3",
+        "outcomeType": "fail",
+        "routeSuggestion": "manual-review",
+        "evidence": "fetch error: getaddrinfo ENOTFOUND gavlezoo.se",
+        "roundNumber": 1,
+        "success": false,
+        "exitReason": "FETCH_ERROR",
+        "exitReasonDetail": "fetch failed: getaddrinfo ENOTFOUND gavlezoo.se",
+        "effectiveProcessingUrl": "https://gavlezoo.se/",
+        "effectiveProcessingUrlReason": "url-variant",
+        "c0": {
+          "candidates": 0,
+          "winnerUrl": null,
+          "winnerDensity": 0,
+          "duration": 48,
+          "rootFallback": false,
+          "ruleAppliedSource": "none",
+          "ruleAppliedPaths": [],
+          "ruleWinnerPath": null
+        },
+        "c1": {
+          "verdict": "unfetchable",
+          "likelyJsRendered": false,
+          "timeTagCount": 0,
+          "dateCount": 0,
+          "duration": 4,
+          "htmlBytes": 0,
+          "fetchable": false,
+          "fetchError": "getaddrinfo ENOTFOUND gavlezoo.se",
+          "bestSubpageFound": null,
+          "subpagesTested": []
+        },
+        "c2": {
+          "verdict": "unclear",
+          "score": 0,
+          "reason": "fetchHtml failed: getaddrinfo ENOTFOUND gavlezoo.se",
+          "duration": 4,
+          "htmlBytes": 0
+        },
+        "c3": {
+          "universalEventsFound": 0,
+          "universalMethodsUsed": [
+            "universal-extractor"
+          ],
+          "universalMethodBreakdown": {},
+          "duration": 0
+        },
+        "extract": {
+          "eventsFound": 0,
+          "duration": 0,
+          "htmlSize": 0,
+          "extractedEvents": []
+        },
+        "trace": {
+          "sourceId": "gavle-zoo",
+          "sourceUrl": "https://gavlezoo.se/",
+          "round": 1,
+          "c0Candidates": 0,
+          "c0WinnerUrl": null,
+          "c0WinnerDensity": 0,
+          "c0RuleSource": "none",
+          "c0RulePathsTested": [],
+          "c0RuleWinnerPath": null,
+          "effectiveUrl": "https://gavlezoo.se/",
+          "effectiveUrlReason": "url-variant",
+          "c1Verdict": "unfetchable",
+          "c1LikelyJsRendered": false,
+          "c1TimeTagCount": 0,
+          "c1DateCount": 0,
+          "c1HtmlBytes": 0,
+          "c1Fetchable": false,
+          "c1FetchError": "getaddrinfo ENOTFOUND gavlezoo.se",
+          "c1BestSubpageFound": null,
+          "c1SubpagesTested": [],
+          "c2Verdict": "unclear",
+          "c2Score": 0,
+          "c2Reason": "fetchHtml failed: getaddrinfo ENOTFOUND gavlezoo.se",
+          "c2HtmlBytes": 0,
+          "c3EventsFound": 0,
+          "c3MethodsUsed": [
+            "universal-extractor"
+          ],
+          "c3MethodBreakdown": {},
+          "eventsFound": 0,
+          "outcomeType": "fail",
+          "routeSuggestion": "manual-review",
+          "exitReason": "FETCH_ERROR",
+          "exitReasonDetail": "fetch failed: getaddrinfo ENOTFOUND gavlezoo.se",
+          "winningStage": "C3",
+          "success": false,
+          "derivedRuleApplied": false
+        }
+      }
+    },
+    {
+      "source": {
+        "sourceId": "malmo-icc",
+        "url": "https://malmöicc.se/",
+        "roundsParticipated": 0,
+        "diversifiers": [
+          "failures_8",
+          "path_jsonld"
+        ],
+        "queueReason": "fetch error: getaddrinfo ENOTFOUND xn--malmicc-d1a.se",
+        "enrichedData": {
+          "lastPathUsed": "jsonld",
+          "lastEventsFound": 0,
+          "consecutiveFailures": 8,
+          "triageResult": null
+        }
+      },
+      "decision": "postTestC-manual-review",
+      "result": {
+        "sourceId": "malmo-icc",
+        "sourceUrl": "https://malmöicc.se/",
+        "winningStage": "C3",
+        "outcomeType": "fail",
+        "routeSuggestion": "manual-review",
+        "evidence": "fetch error: getaddrinfo ENOTFOUND xn--malmicc-d1a.se",
+        "roundNumber": 1,
+        "success": false,
+        "exitReason": "FETCH_ERROR",
+        "exitReasonDetail": "fetch failed: getaddrinfo ENOTFOUND xn--malmicc-d1a.se",
+        "effectiveProcessingUrl": "https://malmöicc.se/",
+        "effectiveProcessingUrlReason": "url-variant",
+        "c0": {
+          "candidates": 0,
+          "winnerUrl": null,
+          "winnerDensity": 0,
+          "duration": 59,
+          "rootFallback": false,
+          "ruleAppliedSource": "none",
+          "ruleAppliedPaths": [],
+          "ruleWinnerPath": null
+        },
+        "c1": {
+          "verdict": "unfetchable",
+          "likelyJsRendered": false,
+          "timeTagCount": 0,
+          "dateCount": 0,
+          "duration": 3,
+          "htmlBytes": 0,
+          "fetchable": false,
+          "fetchError": "getaddrinfo ENOTFOUND xn--malmicc-d1a.se",
+          "bestSubpageFound": null,
+          "subpagesTested": []
+        },
+        "c2": {
+          "verdict": "unclear",
+          "score": 0,
+          "reason": "fetchHtml failed: getaddrinfo ENOTFOUND xn--malmicc-d1a.se",
+          "duration": 4,
+          "htmlBytes": 0
+        },
+        "c3": {
+          "universalEventsFound": 0,
+          "universalMethodsUsed": [
+            "universal-extractor"
+          ],
+          "universalMethodBreakdown": {},
+          "duration": 0
+        },
+        "extract": {
+          "eventsFound": 0,
+          "duration": 0,
+          "htmlSize": 0,
+          "extractedEvents": []
+        },
+        "trace": {
+          "sourceId": "malmo-icc",
+          "sourceUrl": "https://malmöicc.se/",
+          "round": 1,
+          "c0Candidates": 0,
+          "c0WinnerUrl": null,
+          "c0WinnerDensity": 0,
+          "c0RuleSource": "none",
+          "c0RulePathsTested": [],
+          "c0RuleWinnerPath": null,
+          "effectiveUrl": "https://malmöicc.se/",
+          "effectiveUrlReason": "url-variant",
+          "c1Verdict": "unfetchable",
+          "c1LikelyJsRendered": false,
+          "c1TimeTagCount": 0,
+          "c1DateCount": 0,
+          "c1HtmlBytes": 0,
+          "c1Fetchable": false,
+          "c1FetchError": "getaddrinfo ENOTFOUND xn--malmicc-d1a.se",
+          "c1BestSubpageFound": null,
+          "c1SubpagesTested": [],
+          "c2Verdict": "unclear",
+          "c2Score": 0,
+          "c2Reason": "fetchHtml failed: getaddrinfo ENOTFOUND xn--malmicc-d1a.se",
+          "c2HtmlBytes": 0,
+          "c3EventsFound": 0,
+          "c3MethodsUsed": [
+            "universal-extractor"
+          ],
+          "c3MethodBreakdown": {},
+          "eventsFound": 0,
+          "outcomeType": "fail",
+          "routeSuggestion": "manual-review",
+          "exitReason": "FETCH_ERROR",
+          "exitReasonDetail": "fetch failed: getaddrinfo ENOTFOUND xn--malmicc-d1a.se",
+          "winningStage": "C3",
+          "success": false,
+          "derivedRuleApplied": false
+        }
+      }
+    },
+    {
+      "source": {
+        "sourceId": "polismuseum",
+        "url": "https://polismuseum.se/",
+        "roundsParticipated": 0,
+        "diversifiers": [
+          "failures_8",
+          "path_jsonld"
+        ],
+        "queueReason": "fetch error: timeout of 15000ms exceeded",
+        "enrichedData": {
+          "lastPathUsed": "jsonld",
+          "lastEventsFound": 0,
+          "consecutiveFailures": 8,
+          "triageResult": null
+        }
+      },
+      "decision": "postTestC-manual-review",
+      "result": {
+        "sourceId": "polismuseum",
+        "sourceUrl": "https://polismuseum.se/",
+        "winningStage": "C3",
+        "outcomeType": "fail",
+        "routeSuggestion": "manual-review",
+        "evidence": "fetch error: timeout of 15000ms exceeded",
+        "roundNumber": 1,
+        "success": false,
+        "exitReason": "FETCH_ERROR",
+        "exitReasonDetail": "fetch failed: timeout of 15000ms exceeded",
+        "effectiveProcessingUrl": "https://polismuseum.se/",
+        "effectiveProcessingUrlReason": "url-variant",
+        "c0": {
+          "candidates": 0,
+          "winnerUrl": null,
+          "winnerDensity": 0,
+          "duration": 5059,
+          "rootFallback": false,
+          "ruleAppliedSource": "none",
+          "ruleAppliedPaths": [],
+          "ruleWinnerPath": null
+        },
+        "c1": {
+          "verdict": "unfetchable",
+          "likelyJsRendered": false,
+          "timeTagCount": 0,
+          "dateCount": 0,
+          "duration": 5006,
+          "htmlBytes": 0,
+          "fetchable": false,
+          "fetchError": "timeout of 15000ms exceeded",
+          "bestSubpageFound": null,
+          "subpagesTested": []
+        },
+        "c2": {
+          "verdict": "unclear",
+          "score": 0,
+          "reason": "fetchHtml failed: timeout of 20000ms exceeded",
+          "duration": 5007,
+          "htmlBytes": 0
+        },
+        "c3": {
+          "universalEventsFound": 0,
+          "universalMethodsUsed": [
+            "universal-extractor"
+          ],
+          "universalMethodBreakdown": {},
+          "duration": 0
+        },
+        "extract": {
+          "eventsFound": 0,
+          "duration": 0,
+          "htmlSize": 0,
+          "extractedEvents": []
+        },
+        "trace": {
+          "sourceId": "polismuseum",
+          "sourceUrl": "https://polismuseum.se/",
+          "round": 1,
+          "c0Candidates": 0,
+          "c0WinnerUrl": null,
+          "c0WinnerDensity": 0,
+          "c0RuleSource": "none",
+          "c0RulePathsTested": [],
+          "c0RuleWinnerPath": null,
+          "effectiveUrl": "https://polismuseum.se/",
+          "effectiveUrlReason": "url-variant",
+          "c1Verdict": "unfetchable",
+          "c1LikelyJsRendered": false,
+          "c1TimeTagCount": 0,
+          "c1DateCount": 0,
+          "c1HtmlBytes": 0,
+          "c1Fetchable": false,
+          "c1FetchError": "timeout of 15000ms exceeded",
+          "c1BestSubpageFound": null,
+          "c1SubpagesTested": [],
+          "c2Verdict": "unclear",
+          "c2Score": 0,
+          "c2Reason": "fetchHtml failed: timeout of 20000ms exceeded",
+          "c2HtmlBytes": 0,
+          "c3EventsFound": 0,
+          "c3MethodsUsed": [
+            "universal-extractor"
+          ],
+          "c3MethodBreakdown": {},
+          "eventsFound": 0,
+          "outcomeType": "fail",
+          "routeSuggestion": "manual-review",
+          "exitReason": "FETCH_ERROR",
+          "exitReasonDetail": "fetch failed: timeout of 15000ms exceeded",
+          "winningStage": "C3",
+          "success": false,
+          "derivedRuleApplied": false
+        }
+      }
+    },
+    {
+      "source": {
+        "sourceId": "ekero",
+        "url": "https://ekeroif.se/",
+        "roundsParticipated": 0,
+        "diversifiers": [
+          "failures_10",
+          "path_jsonld"
+        ],
+        "queueReason": "fetch error: getaddrinfo ENOTFOUND ekeroif.se",
+        "enrichedData": {
+          "lastPathUsed": "jsonld",
+          "lastEventsFound": 0,
+          "consecutiveFailures": 10,
+          "triageResult": null
+        }
+      },
+      "decision": "postTestC-manual-review",
+      "result": {
+        "sourceId": "ekero",
+        "sourceUrl": "https://ekeroif.se/",
+        "winningStage": "C3",
+        "outcomeType": "fail",
+        "routeSuggestion": "manual-review",
+        "evidence": "fetch error: getaddrinfo ENOTFOUND ekeroif.se",
+        "roundNumber": 1,
+        "success": false,
+        "exitReason": "FETCH_ERROR",
+        "exitReasonDetail": "fetch failed: getaddrinfo ENOTFOUND ekeroif.se",
+        "effectiveProcessingUrl": "https://ekeroif.se/",
+        "effectiveProcessingUrlReason": "url-variant",
+        "c0": {
+          "candidates": 0,
+          "winnerUrl": null,
+          "winnerDensity": 0,
+          "duration": 36,
+          "rootFallback": false,
+          "ruleAppliedSource": "none",
+          "ruleAppliedPaths": [],
+          "ruleWinnerPath": null
+        },
+        "c1": {
+          "verdict": "unfetchable",
+          "likelyJsRendered": false,
+          "timeTagCount": 0,
+          "dateCount": 0,
+          "duration": 2,
+          "htmlBytes": 0,
+          "fetchable": false,
+          "fetchError": "getaddrinfo ENOTFOUND ekeroif.se",
+          "bestSubpageFound": null,
+          "subpagesTested": []
+        },
+        "c2": {
+          "verdict": "unclear",
+          "score": 0,
+          "reason": "fetchHtml failed: getaddrinfo ENOTFOUND ekeroif.se",
+          "duration": 2,
+          "htmlBytes": 0
+        },
+        "c3": {
+          "universalEventsFound": 0,
+          "universalMethodsUsed": [
+            "universal-extractor"
+          ],
+          "universalMethodBreakdown": {},
+          "duration": 0
+        },
+        "extract": {
+          "eventsFound": 0,
+          "duration": 0,
+          "htmlSize": 0,
+          "extractedEvents": []
+        },
+        "trace": {
+          "sourceId": "ekero",
+          "sourceUrl": "https://ekeroif.se/",
+          "round": 1,
+          "c0Candidates": 0,
+          "c0WinnerUrl": null,
+          "c0WinnerDensity": 0,
+          "c0RuleSource": "none",
+          "c0RulePathsTested": [],
+          "c0RuleWinnerPath": null,
+          "effectiveUrl": "https://ekeroif.se/",
+          "effectiveUrlReason": "url-variant",
+          "c1Verdict": "unfetchable",
+          "c1LikelyJsRendered": false,
+          "c1TimeTagCount": 0,
+          "c1DateCount": 0,
+          "c1HtmlBytes": 0,
+          "c1Fetchable": false,
+          "c1FetchError": "getaddrinfo ENOTFOUND ekeroif.se",
+          "c1BestSubpageFound": null,
+          "c1SubpagesTested": [],
+          "c2Verdict": "unclear",
+          "c2Score": 0,
+          "c2Reason": "fetchHtml failed: getaddrinfo ENOTFOUND ekeroif.se",
+          "c2HtmlBytes": 0,
+          "c3EventsFound": 0,
+          "c3MethodsUsed": [
+            "universal-extractor"
+          ],
+          "c3MethodBreakdown": {},
+          "eventsFound": 0,
+          "outcomeType": "fail",
+          "routeSuggestion": "manual-review",
+          "exitReason": "FETCH_ERROR",
+          "exitReasonDetail": "fetch failed: getaddrinfo ENOTFOUND ekeroif.se",
+          "winningStage": "C3",
+          "success": false,
+          "derivedRuleApplied": false
+        }
+      }
+    },
+    {
+      "source": {
+        "sourceId": "kalmar-teatern",
+        "url": "https://kalmarteatern.se/",
+        "roundsParticipated": 0,
+        "diversifiers": [
+          "failures_10",
+          "path_jsonld"
+        ],
+        "queueReason": "fetch error: getaddrinfo ENOTFOUND kalmarteatern.se",
+        "enrichedData": {
+          "lastPathUsed": "jsonld",
+          "lastEventsFound": 0,
+          "consecutiveFailures": 10,
+          "triageResult": null
+        }
+      },
+      "decision": "postTestC-manual-review",
+      "result": {
+        "sourceId": "kalmar-teatern",
+        "sourceUrl": "https://kalmarteatern.se/",
+        "winningStage": "C3",
+        "outcomeType": "fail",
+        "routeSuggestion": "manual-review",
+        "evidence": "fetch error: getaddrinfo ENOTFOUND kalmarteatern.se",
+        "roundNumber": 1,
+        "success": false,
+        "exitReason": "FETCH_ERROR",
+        "exitReasonDetail": "fetch failed: getaddrinfo ENOTFOUND kalmarteatern.se",
+        "effectiveProcessingUrl": "https://kalmarteatern.se/",
+        "effectiveProcessingUrlReason": "url-variant",
+        "c0": {
+          "candidates": 0,
+          "winnerUrl": null,
+          "winnerDensity": 0,
+          "duration": 1,
+          "rootFallback": false,
+          "ruleAppliedSource": "none",
+          "ruleAppliedPaths": [],
+          "ruleWinnerPath": null
+        },
+        "c1": {
+          "verdict": "unfetchable",
+          "likelyJsRendered": false,
+          "timeTagCount": 0,
+          "dateCount": 0,
+          "duration": 2,
+          "htmlBytes": 0,
+          "fetchable": false,
+          "fetchError": "getaddrinfo ENOTFOUND kalmarteatern.se",
+          "bestSubpageFound": null,
+          "subpagesTested": []
+        },
+        "c2": {
+          "verdict": "unclear",
+          "score": 0,
+          "reason": "fetchHtml failed: getaddrinfo ENOTFOUND kalmarteatern.se",
+          "duration": 2,
+          "htmlBytes": 0
+        },
+        "c3": {
+          "universalEventsFound": 0,
+          "universalMethodsUsed": [
+            "universal-extractor"
+          ],
+          "universalMethodBreakdown": {},
+          "duration": 0
+        },
+        "extract": {
+          "eventsFound": 0,
+          "duration": 0,
+          "htmlSize": 0,
+          "extractedEvents": []
+        },
+        "trace": {
+          "sourceId": "kalmar-teatern",
+          "sourceUrl": "https://kalmarteatern.se/",
+          "round": 1,
+          "c0Candidates": 0,
+          "c0WinnerUrl": null,
+          "c0WinnerDensity": 0,
+          "c0RuleSource": "none",
+          "c0RulePathsTested": [],
+          "c0RuleWinnerPath": null,
+          "effectiveUrl": "https://kalmarteatern.se/",
+          "effectiveUrlReason": "url-variant",
+          "c1Verdict": "unfetchable",
+          "c1LikelyJsRendered": false,
+          "c1TimeTagCount": 0,
+          "c1DateCount": 0,
+          "c1HtmlBytes": 0,
+          "c1Fetchable": false,
+          "c1FetchError": "getaddrinfo ENOTFOUND kalmarteatern.se",
+          "c1BestSubpageFound": null,
+          "c1SubpagesTested": [],
+          "c2Verdict": "unclear",
+          "c2Score": 0,
+          "c2Reason": "fetchHtml failed: getaddrinfo ENOTFOUND kalmarteatern.se",
+          "c2HtmlBytes": 0,
+          "c3EventsFound": 0,
+          "c3MethodsUsed": [
+            "universal-extractor"
+          ],
+          "c3MethodBreakdown": {},
+          "eventsFound": 0,
+          "outcomeType": "fail",
+          "routeSuggestion": "manual-review",
+          "exitReason": "FETCH_ERROR",
+          "exitReasonDetail": "fetch failed: getaddrinfo ENOTFOUND kalmarteatern.se",
+          "winningStage": "C3",
+          "success": false,
+          "derivedRuleApplied": false
+        }
+      }
+    },
+    {
+      "source": {
+        "sourceId": "andra-langgatan",
+        "url": "https://andra.se/",
+        "roundsParticipated": 0,
+        "diversifiers": [
+          "failures_12",
+          "path_jsonld"
+        ],
+        "queueReason": "fetch error: timeout of 15000ms exceeded",
+        "enrichedData": {
+          "lastPathUsed": "jsonld",
+          "lastEventsFound": 0,
+          "consecutiveFailures": 12,
+          "triageResult": null
+        }
+      },
+      "decision": "postTestC-manual-review",
+      "result": {
+        "sourceId": "andra-langgatan",
+        "sourceUrl": "https://andra.se/",
+        "winningStage": "C3",
+        "outcomeType": "fail",
+        "routeSuggestion": "manual-review",
+        "evidence": "fetch error: timeout of 15000ms exceeded",
+        "roundNumber": 1,
+        "success": false,
+        "exitReason": "FETCH_ERROR",
+        "exitReasonDetail": "fetch failed: timeout of 15000ms exceeded",
+        "effectiveProcessingUrl": "https://andra.se/",
+        "effectiveProcessingUrlReason": "url-variant",
+        "c0": {
+          "candidates": 0,
+          "winnerUrl": null,
+          "winnerDensity": 0,
+          "duration": 5089,
+          "rootFallback": false,
+          "ruleAppliedSource": "none",
+          "ruleAppliedPaths": [],
+          "ruleWinnerPath": null
+        },
+        "c1": {
+          "verdict": "unfetchable",
+          "likelyJsRendered": false,
+          "timeTagCount": 0,
+          "dateCount": 0,
+          "duration": 5005,
+          "htmlBytes": 0,
+          "fetchable": false,
+          "fetchError": "timeout of 15000ms exceeded",
+          "bestSubpageFound": null,
+          "subpagesTested": []
+        },
+        "c2": {
+          "verdict": "unclear",
+          "score": 0,
+          "reason": "fetchHtml failed: timeout of 20000ms exceeded",
+          "duration": 5005,
+          "htmlBytes": 0
+        },
+        "c3": {
+          "universalEventsFound": 0,
+          "universalMethodsUsed": [
+            "universal-extractor"
+          ],
+          "universalMethodBreakdown": {},
+          "duration": 0
+        },
+        "extract": {
+          "eventsFound": 0,
+          "duration": 0,
+          "htmlSize": 0,
+          "extractedEvents": []
+        },
+        "trace": {
+          "sourceId": "andra-langgatan",
+          "sourceUrl": "https://andra.se/",
+          "round": 1,
+          "c0Candidates": 0,
+          "c0WinnerUrl": null,
+          "c0WinnerDensity": 0,
+          "c0RuleSource": "none",
+          "c0RulePathsTested": [],
+          "c0RuleWinnerPath": null,
+          "effectiveUrl": "https://andra.se/",
+          "effectiveUrlReason": "url-variant",
+          "c1Verdict": "unfetchable",
+          "c1LikelyJsRendered": false,
+          "c1TimeTagCount": 0,
+          "c1DateCount": 0,
+          "c1HtmlBytes": 0,
+          "c1Fetchable": false,
+          "c1FetchError": "timeout of 15000ms exceeded",
+          "c1BestSubpageFound": null,
+          "c1SubpagesTested": [],
+          "c2Verdict": "unclear",
+          "c2Score": 0,
+          "c2Reason": "fetchHtml failed: timeout of 20000ms exceeded",
+          "c2HtmlBytes": 0,
+          "c3EventsFound": 0,
+          "c3MethodsUsed": [
+            "universal-extractor"
+          ],
+          "c3MethodBreakdown": {},
+          "eventsFound": 0,
+          "outcomeType": "fail",
+          "routeSuggestion": "manual-review",
+          "exitReason": "FETCH_ERROR",
+          "exitReasonDetail": "fetch failed: timeout of 15000ms exceeded",
+          "winningStage": "C3",
+          "success": false,
+          "derivedRuleApplied": false
+        }
+      }
+    },
+    {
+      "source": {
+        "sourceId": "lunds-konserthus",
+        "url": "https://lund.se/konserthus",
+        "roundsParticipated": 0,
+        "diversifiers": [
+          "failures_8",
+          "path_jsonld"
+        ],
+        "queueReason": "fetch error: HTTP 404",
+        "enrichedData": {
+          "lastPathUsed": "jsonld",
+          "lastEventsFound": 0,
+          "consecutiveFailures": 8,
+          "triageResult": null
+        }
+      },
+      "decision": "postTestC-manual-review",
+      "result": {
+        "sourceId": "lunds-konserthus",
+        "sourceUrl": "https://lund.se/konserthus",
+        "winningStage": "C3",
+        "outcomeType": "fail",
+        "routeSuggestion": "manual-review",
+        "evidence": "fetch error: HTTP 404",
+        "roundNumber": 1,
+        "success": false,
+        "exitReason": "FETCH_ERROR",
+        "exitReasonDetail": "fetch failed: HTTP 404",
+        "effectiveProcessingUrl": "https://lund.se/konserthus",
+        "effectiveProcessingUrlReason": "url-variant",
+        "c0": {
+          "candidates": 0,
+          "winnerUrl": null,
+          "winnerDensity": 0,
+          "duration": 310,
+          "rootFallback": false,
+          "ruleAppliedSource": "none",
+          "ruleAppliedPaths": [],
+          "ruleWinnerPath": null
+        },
+        "c1": {
+          "verdict": "unfetchable",
+          "likelyJsRendered": false,
+          "timeTagCount": 0,
+          "dateCount": 0,
+          "duration": 115,
+          "htmlBytes": 0,
+          "fetchable": false,
+          "fetchError": "HTTP 404",
+          "bestSubpageFound": null,
+          "subpagesTested": []
+        },
+        "c2": {
+          "verdict": "unclear",
+          "score": 0,
+          "reason": "fetchHtml failed: HTTP 404",
+          "duration": 108,
+          "htmlBytes": 0
+        },
+        "c3": {
+          "universalEventsFound": 0,
+          "universalMethodsUsed": [
+            "universal-extractor"
+          ],
+          "universalMethodBreakdown": {},
+          "duration": 0
+        },
+        "extract": {
+          "eventsFound": 0,
+          "duration": 0,
+          "htmlSize": 0,
+          "extractedEvents": []
+        },
+        "trace": {
+          "sourceId": "lunds-konserthus",
+          "sourceUrl": "https://lund.se/konserthus",
+          "round": 1,
+          "c0Candidates": 0,
+          "c0WinnerUrl": null,
+          "c0WinnerDensity": 0,
+          "c0RuleSource": "none",
+          "c0RulePathsTested": [],
+          "c0RuleWinnerPath": null,
+          "effectiveUrl": "https://lund.se/konserthus",
+          "effectiveUrlReason": "url-variant",
+          "c1Verdict": "unfetchable",
+          "c1LikelyJsRendered": false,
+          "c1TimeTagCount": 0,
+          "c1DateCount": 0,
+          "c1HtmlBytes": 0,
+          "c1Fetchable": false,
+          "c1FetchError": "HTTP 404",
+          "c1BestSubpageFound": null,
+          "c1SubpagesTested": [],
+          "c2Verdict": "unclear",
+          "c2Score": 0,
+          "c2Reason": "fetchHtml failed: HTTP 404",
+          "c2HtmlBytes": 0,
+          "c3EventsFound": 0,
+          "c3MethodsUsed": [
+            "universal-extractor"
+          ],
+          "c3MethodBreakdown": {},
+          "eventsFound": 0,
+          "outcomeType": "fail",
+          "routeSuggestion": "manual-review",
+          "exitReason": "FETCH_ERROR",
+          "exitReasonDetail": "fetch failed: HTTP 404",
+          "winningStage": "C3",
+          "success": false,
+          "derivedRuleApplied": false
+        }
+      }
+    },
+    {
+      "source": {
+        "sourceId": "svenska-hockeyligan-shl",
+        "url": "https://shl.se/",
+        "roundsParticipated": 0,
+        "diversifiers": [
+          "failures_8",
+          "path_jsonld"
+        ],
+        "queueReason": "[IMP-001-FIX] Orphaned: forced STAY via STEP3-CHAIN in round 1, loop terminated before exit",
+        "enrichedData": {
+          "lastPathUsed": "jsonld",
+          "lastEventsFound": 0,
+          "consecutiveFailures": 8,
+          "triageResult": null
+        }
+      },
+      "decision": "postTestC-manual-review",
+      "result": {
+        "sourceId": "svenska-hockeyligan-shl",
+        "sourceUrl": "https://shl.se/",
+        "winningStage": "C3",
+        "outcomeType": "fail",
+        "routeSuggestion": "Fail",
+        "evidence": "",
+        "roundNumber": 1,
+        "success": false,
+        "exitReason": "FETCH_ERROR",
+        "exitReasonDetail": "Assignment to constant variable.",
+        "effectiveProcessingUrl": "https://shl.se/",
+        "effectiveProcessingUrlReason": "url-variant:original",
+        "c0": {
+          "candidates": 5,
+          "winnerUrl": "https://shl.se/biljetter",
+          "winnerDensity": 214,
+          "duration": 2776,
+          "rootFallback": false,
+          "ruleAppliedSource": "link-discovery",
+          "ruleAppliedPaths": [],
+          "ruleWinnerPath": "/biljetter"
+        },
+        "c1": {
+          "verdict": "unknown",
+          "likelyJsRendered": false,
+          "timeTagCount": 0,
+          "dateCount": 0,
+          "duration": 0,
+          "htmlBytes": 0,
+          "fetchable": false,
+          "bestSubpageFound": null,
+          "subpagesTested": []
+        },
+        "c2": {
+          "verdict": "unknown",
+          "score": 0,
+          "reason": "",
+          "duration": 0,
+          "htmlBytes": 0
+        },
+        "c3": {
+          "universalEventsFound": 0,
+          "universalMethodsUsed": [],
+          "universalMethodBreakdown": {},
+          "duration": 0
+        },
+        "extract": {
+          "eventsFound": 0,
+          "duration": 0,
+          "htmlSize": 0
+        },
+        "trace": {
+          "sourceId": "svenska-hockeyligan-shl",
+          "sourceUrl": "https://shl.se/",
+          "round": 1,
+          "c0Candidates": 5,
+          "c0WinnerUrl": "https://shl.se/biljetter",
+          "c0WinnerDensity": 214,
+          "c0RuleSource": "link-discovery",
+          "c0RulePathsTested": [],
+          "c0RuleWinnerPath": "/biljetter",
+          "effectiveUrl": "https://shl.se/",
+          "effectiveUrlReason": "url-variant:original",
+          "c1Verdict": "unknown",
+          "c1LikelyJsRendered": false,
+          "c1TimeTagCount": 0,
+          "c1DateCount": 0,
+          "c1HtmlBytes": 0,
+          "c1Fetchable": false,
+          "c1BestSubpageFound": null,
+          "c1SubpagesTested": [],
+          "c2Verdict": "unknown",
+          "c2Score": 0,
+          "c2Reason": "",
+          "c2HtmlBytes": 0,
+          "c3EventsFound": 0,
+          "c3MethodsUsed": [],
+          "c3MethodBreakdown": {},
+          "eventsFound": 0,
+          "outcomeType": "fail",
+          "routeSuggestion": "Fail",
+          "exitReason": "FETCH_ERROR",
+          "exitReasonDetail": "Assignment to constant variable.",
+          "winningStage": "C3",
+          "success": false,
+          "derivedRuleApplied": false,
+          "error": "Assignment to constant variable."
+        },
+        "error": "Assignment to constant variable."
+      }
+    },
+    {
+      "source": {
+        "sourceId": "fotografiska-1",
+        "url": "https://fotografiska.se/",
+        "roundsParticipated": 0,
+        "diversifiers": [
+          "failures_10",
+          "path_jsonld"
+        ],
+        "queueReason": "fetch error: Exceeded 3 redirects",
+        "enrichedData": {
+          "lastPathUsed": "jsonld",
+          "lastEventsFound": 0,
+          "consecutiveFailures": 10,
+          "triageResult": null
+        }
+      },
+      "decision": "postTestC-manual-review",
+      "result": {
+        "sourceId": "fotografiska-1",
+        "sourceUrl": "https://fotografiska.se/",
+        "winningStage": "C3",
+        "outcomeType": "fail",
+        "routeSuggestion": "manual-review",
+        "evidence": "fetch error: Exceeded 3 redirects",
+        "roundNumber": 1,
+        "success": false,
+        "exitReason": "FETCH_ERROR",
+        "exitReasonDetail": "fetch failed: Exceeded 3 redirects",
+        "effectiveProcessingUrl": "https://fotografiska.se/",
+        "effectiveProcessingUrlReason": "url-variant",
+        "c0": {
+          "candidates": 0,
+          "winnerUrl": null,
+          "winnerDensity": 0,
+          "duration": 720,
+          "rootFallback": false,
+          "ruleAppliedSource": "none",
+          "ruleAppliedPaths": [],
+          "ruleWinnerPath": null
+        },
+        "c1": {
+          "verdict": "unfetchable",
+          "likelyJsRendered": false,
+          "timeTagCount": 0,
+          "dateCount": 0,
+          "duration": 401,
+          "htmlBytes": 0,
+          "fetchable": false,
+          "fetchError": "Exceeded 3 redirects",
+          "bestSubpageFound": null,
+          "subpagesTested": []
+        },
+        "c2": {
+          "verdict": "unclear",
+          "score": 0,
+          "reason": "fetchHtml failed: Exceeded 3 redirects",
+          "duration": 319,
+          "htmlBytes": 0
+        },
+        "c3": {
+          "universalEventsFound": 0,
+          "universalMethodsUsed": [
+            "universal-extractor"
+          ],
+          "universalMethodBreakdown": {},
+          "duration": 0
+        },
+        "extract": {
+          "eventsFound": 0,
+          "duration": 0,
+          "htmlSize": 0,
+          "extractedEvents": []
+        },
+        "trace": {
+          "sourceId": "fotografiska-1",
+          "sourceUrl": "https://fotografiska.se/",
+          "round": 1,
+          "c0Candidates": 0,
+          "c0WinnerUrl": null,
+          "c0WinnerDensity": 0,
+          "c0RuleSource": "none",
+          "c0RulePathsTested": [],
+          "c0RuleWinnerPath": null,
+          "effectiveUrl": "https://fotografiska.se/",
+          "effectiveUrlReason": "url-variant",
+          "c1Verdict": "unfetchable",
+          "c1LikelyJsRendered": false,
+          "c1TimeTagCount": 0,
+          "c1DateCount": 0,
+          "c1HtmlBytes": 0,
+          "c1Fetchable": false,
+          "c1FetchError": "Exceeded 3 redirects",
+          "c1BestSubpageFound": null,
+          "c1SubpagesTested": [],
+          "c2Verdict": "unclear",
+          "c2Score": 0,
+          "c2Reason": "fetchHtml failed: Exceeded 3 redirects",
+          "c2HtmlBytes": 0,
+          "c3EventsFound": 0,
+          "c3MethodsUsed": [
+            "universal-extractor"
+          ],
+          "c3MethodBreakdown": {},
+          "eventsFound": 0,
+          "outcomeType": "fail",
+          "routeSuggestion": "manual-review",
+          "exitReason": "FETCH_ERROR",
+          "exitReasonDetail": "fetch failed: Exceeded 3 redirects",
+          "winningStage": "C3",
+          "success": false,
+          "derivedRuleApplied": false
+        }
+      }
+    },
+    {
+      "source": {
+        "sourceId": "varberg-arena",
+        "url": "https://varberg.se/arena",
+        "roundsParticipated": 0,
+        "diversifiers": [
+          "failures_8",
+          "path_jsonld"
+        ],
+        "queueReason": "fetch error: HTTP 404",
+        "enrichedData": {
+          "lastPathUsed": "jsonld",
+          "lastEventsFound": 0,
+          "consecutiveFailures": 8,
+          "triageResult": null
+        }
+      },
+      "decision": "postTestC-manual-review",
+      "result": {
+        "sourceId": "varberg-arena",
+        "sourceUrl": "https://varberg.se/arena",
+        "winningStage": "C3",
+        "outcomeType": "fail",
+        "routeSuggestion": "manual-review",
+        "evidence": "fetch error: HTTP 404",
+        "roundNumber": 1,
+        "success": false,
+        "exitReason": "FETCH_ERROR",
+        "exitReasonDetail": "fetch failed: HTTP 404",
+        "effectiveProcessingUrl": "https://varberg.se/arena",
+        "effectiveProcessingUrlReason": "url-variant",
+        "c0": {
+          "candidates": 0,
+          "winnerUrl": null,
+          "winnerDensity": 0,
+          "duration": 361,
+          "rootFallback": false,
+          "ruleAppliedSource": "none",
+          "ruleAppliedPaths": [],
+          "ruleWinnerPath": null
+        },
+        "c1": {
+          "verdict": "unfetchable",
+          "likelyJsRendered": false,
+          "timeTagCount": 0,
+          "dateCount": 0,
+          "duration": 106,
+          "htmlBytes": 0,
+          "fetchable": false,
+          "fetchError": "HTTP 404",
+          "bestSubpageFound": null,
+          "subpagesTested": []
+        },
+        "c2": {
+          "verdict": "unclear",
+          "score": 0,
+          "reason": "fetchHtml failed: HTTP 404",
+          "duration": 95,
+          "htmlBytes": 0
+        },
+        "c3": {
+          "universalEventsFound": 0,
+          "universalMethodsUsed": [
+            "universal-extractor"
+          ],
+          "universalMethodBreakdown": {},
+          "duration": 0
+        },
+        "extract": {
+          "eventsFound": 0,
+          "duration": 0,
+          "htmlSize": 0,
+          "extractedEvents": []
+        },
+        "trace": {
+          "sourceId": "varberg-arena",
+          "sourceUrl": "https://varberg.se/arena",
+          "round": 1,
+          "c0Candidates": 0,
+          "c0WinnerUrl": null,
+          "c0WinnerDensity": 0,
+          "c0RuleSource": "none",
+          "c0RulePathsTested": [],
+          "c0RuleWinnerPath": null,
+          "effectiveUrl": "https://varberg.se/arena",
+          "effectiveUrlReason": "url-variant",
+          "c1Verdict": "unfetchable",
+          "c1LikelyJsRendered": false,
+          "c1TimeTagCount": 0,
+          "c1DateCount": 0,
+          "c1HtmlBytes": 0,
+          "c1Fetchable": false,
+          "c1FetchError": "HTTP 404",
+          "c1BestSubpageFound": null,
+          "c1SubpagesTested": [],
+          "c2Verdict": "unclear",
+          "c2Score": 0,
+          "c2Reason": "fetchHtml failed: HTTP 404",
+          "c2HtmlBytes": 0,
+          "c3EventsFound": 0,
+          "c3MethodsUsed": [
+            "universal-extractor"
+          ],
+          "c3MethodBreakdown": {},
+          "eventsFound": 0,
+          "outcomeType": "fail",
+          "routeSuggestion": "manual-review",
+          "exitReason": "FETCH_ERROR",
+          "exitReasonDetail": "fetch failed: HTTP 404",
+          "winningStage": "C3",
+          "success": false,
+          "derivedRuleApplied": false
+        }
+      }
+    },
+    {
+      "source": {
+        "sourceId": "norrk-pings-tidningar",
+        "url": "https://nt.se/evenemang",
+        "roundsParticipated": 0,
+        "diversifiers": [
+          "failures_8",
+          "path_jsonld"
+        ],
+        "queueReason": "fetch error: HTTP 404",
+        "enrichedData": {
+          "lastPathUsed": "jsonld",
+          "lastEventsFound": 0,
+          "consecutiveFailures": 8,
+          "triageResult": null
+        }
+      },
+      "decision": "postTestC-manual-review",
+      "result": {
+        "sourceId": "norrk-pings-tidningar",
+        "sourceUrl": "https://nt.se/evenemang",
+        "winningStage": "C3",
+        "outcomeType": "fail",
+        "routeSuggestion": "manual-review",
+        "evidence": "fetch error: HTTP 404",
+        "roundNumber": 1,
+        "success": false,
+        "exitReason": "FETCH_ERROR",
+        "exitReasonDetail": "fetch failed: HTTP 404",
+        "effectiveProcessingUrl": "https://nt.se/evenemang",
+        "effectiveProcessingUrlReason": "url-variant",
+        "c0": {
+          "candidates": 0,
+          "winnerUrl": null,
+          "winnerDensity": 0,
+          "duration": 694,
+          "rootFallback": false,
+          "ruleAppliedSource": "none",
+          "ruleAppliedPaths": [],
+          "ruleWinnerPath": null
+        },
+        "c1": {
+          "verdict": "unfetchable",
+          "likelyJsRendered": false,
+          "timeTagCount": 0,
+          "dateCount": 0,
+          "duration": 643,
+          "htmlBytes": 0,
+          "fetchable": false,
+          "fetchError": "HTTP 404",
+          "bestSubpageFound": null,
+          "subpagesTested": []
+        },
+        "c2": {
+          "verdict": "unclear",
+          "score": 0,
+          "reason": "fetchHtml failed: HTTP 404",
+          "duration": 290,
+          "htmlBytes": 0
+        },
+        "c3": {
+          "universalEventsFound": 0,
+          "universalMethodsUsed": [
+            "universal-extractor"
+          ],
+          "universalMethodBreakdown": {},
+          "duration": 0
+        },
+        "extract": {
+          "eventsFound": 0,
+          "duration": 0,
+          "htmlSize": 0,
+          "extractedEvents": []
+        },
+        "trace": {
+          "sourceId": "norrk-pings-tidningar",
+          "sourceUrl": "https://nt.se/evenemang",
+          "round": 1,
+          "c0Candidates": 0,
+          "c0WinnerUrl": null,
+          "c0WinnerDensity": 0,
+          "c0RuleSource": "none",
+          "c0RulePathsTested": [],
+          "c0RuleWinnerPath": null,
+          "effectiveUrl": "https://nt.se/evenemang",
+          "effectiveUrlReason": "url-variant",
+          "c1Verdict": "unfetchable",
+          "c1LikelyJsRendered": false,
+          "c1TimeTagCount": 0,
+          "c1DateCount": 0,
+          "c1HtmlBytes": 0,
+          "c1Fetchable": false,
+          "c1FetchError": "HTTP 404",
+          "c1BestSubpageFound": null,
+          "c1SubpagesTested": [],
+          "c2Verdict": "unclear",
+          "c2Score": 0,
+          "c2Reason": "fetchHtml failed: HTTP 404",
+          "c2HtmlBytes": 0,
+          "c3EventsFound": 0,
+          "c3MethodsUsed": [
+            "universal-extractor"
+          ],
+          "c3MethodBreakdown": {},
+          "eventsFound": 0,
+          "outcomeType": "fail",
+          "routeSuggestion": "manual-review",
+          "exitReason": "FETCH_ERROR",
+          "exitReasonDetail": "fetch failed: HTTP 404",
+          "winningStage": "C3",
+          "success": false,
+          "derivedRuleApplied": false
+        }
+      }
+    },
+    {
+      "source": {
+        "sourceId": "rumble",
+        "url": "https://rumblematch.se/",
+        "roundsParticipated": 0,
+        "diversifiers": [
+          "failures_8",
+          "path_jsonld"
+        ],
+        "queueReason": "fetch error: getaddrinfo ENOTFOUND rumblematch.se",
+        "enrichedData": {
+          "lastPathUsed": "jsonld",
+          "lastEventsFound": 0,
+          "consecutiveFailures": 8,
+          "triageResult": null
+        }
+      },
+      "decision": "postTestC-manual-review",
+      "result": {
+        "sourceId": "rumble",
+        "sourceUrl": "https://rumblematch.se/",
+        "winningStage": "C3",
+        "outcomeType": "fail",
+        "routeSuggestion": "manual-review",
+        "evidence": "fetch error: getaddrinfo ENOTFOUND rumblematch.se",
+        "roundNumber": 1,
+        "success": false,
+        "exitReason": "FETCH_ERROR",
+        "exitReasonDetail": "fetch failed: getaddrinfo ENOTFOUND rumblematch.se",
+        "effectiveProcessingUrl": "https://rumblematch.se/",
+        "effectiveProcessingUrlReason": "url-variant",
+        "c0": {
+          "candidates": 0,
+          "winnerUrl": null,
+          "winnerDensity": 0,
+          "duration": 88,
+          "rootFallback": false,
+          "ruleAppliedSource": "none",
+          "ruleAppliedPaths": [],
+          "ruleWinnerPath": null
+        },
+        "c1": {
+          "verdict": "unfetchable",
+          "likelyJsRendered": false,
+          "timeTagCount": 0,
+          "dateCount": 0,
+          "duration": 3,
+          "htmlBytes": 0,
+          "fetchable": false,
+          "fetchError": "getaddrinfo ENOTFOUND rumblematch.se",
+          "bestSubpageFound": null,
+          "subpagesTested": []
+        },
+        "c2": {
+          "verdict": "unclear",
+          "score": 0,
+          "reason": "fetchHtml failed: getaddrinfo ENOTFOUND rumblematch.se",
+          "duration": 1,
+          "htmlBytes": 0
+        },
+        "c3": {
+          "universalEventsFound": 0,
+          "universalMethodsUsed": [
+            "universal-extractor"
+          ],
+          "universalMethodBreakdown": {},
+          "duration": 0
+        },
+        "extract": {
+          "eventsFound": 0,
+          "duration": 0,
+          "htmlSize": 0,
+          "extractedEvents": []
+        },
+        "trace": {
+          "sourceId": "rumble",
+          "sourceUrl": "https://rumblematch.se/",
+          "round": 1,
+          "c0Candidates": 0,
+          "c0WinnerUrl": null,
+          "c0WinnerDensity": 0,
+          "c0RuleSource": "none",
+          "c0RulePathsTested": [],
+          "c0RuleWinnerPath": null,
+          "effectiveUrl": "https://rumblematch.se/",
+          "effectiveUrlReason": "url-variant",
+          "c1Verdict": "unfetchable",
+          "c1LikelyJsRendered": false,
+          "c1TimeTagCount": 0,
+          "c1DateCount": 0,
+          "c1HtmlBytes": 0,
+          "c1Fetchable": false,
+          "c1FetchError": "getaddrinfo ENOTFOUND rumblematch.se",
+          "c1BestSubpageFound": null,
+          "c1SubpagesTested": [],
+          "c2Verdict": "unclear",
+          "c2Score": 0,
+          "c2Reason": "fetchHtml failed: getaddrinfo ENOTFOUND rumblematch.se",
+          "c2HtmlBytes": 0,
+          "c3EventsFound": 0,
+          "c3MethodsUsed": [
+            "universal-extractor"
+          ],
+          "c3MethodBreakdown": {},
+          "eventsFound": 0,
+          "outcomeType": "fail",
+          "routeSuggestion": "manual-review",
+          "exitReason": "FETCH_ERROR",
+          "exitReasonDetail": "fetch failed: getaddrinfo ENOTFOUND rumblematch.se",
+          "winningStage": "C3",
+          "success": false,
+          "derivedRuleApplied": false
+        }
+      }
+    },
+    {
+      "source": {
+        "sourceId": "malmo-arena",
+        "url": "https://malmöarena.se/",
+        "roundsParticipated": 0,
+        "diversifiers": [
+          "failures_8",
+          "path_jsonld"
+        ],
+        "queueReason": "fetch error: timeout of 15000ms exceeded",
+        "enrichedData": {
+          "lastPathUsed": "jsonld",
+          "lastEventsFound": 0,
+          "consecutiveFailures": 8,
+          "triageResult": null
+        }
+      },
+      "decision": "postTestC-manual-review",
+      "result": {
+        "sourceId": "malmo-arena",
+        "sourceUrl": "https://malmöarena.se/",
+        "winningStage": "C3",
+        "outcomeType": "fail",
+        "routeSuggestion": "manual-review",
+        "evidence": "fetch error: timeout of 15000ms exceeded",
+        "roundNumber": 1,
+        "success": false,
+        "exitReason": "FETCH_ERROR",
+        "exitReasonDetail": "fetch failed: timeout of 15000ms exceeded",
+        "effectiveProcessingUrl": "https://malmöarena.se/",
+        "effectiveProcessingUrlReason": "url-variant",
+        "c0": {
+          "candidates": 0,
+          "winnerUrl": null,
+          "winnerDensity": 0,
+          "duration": 5067,
+          "rootFallback": false,
+          "ruleAppliedSource": "none",
+          "ruleAppliedPaths": [],
+          "ruleWinnerPath": null
+        },
+        "c1": {
+          "verdict": "unfetchable",
+          "likelyJsRendered": false,
+          "timeTagCount": 0,
+          "dateCount": 0,
+          "duration": 5005,
+          "htmlBytes": 0,
+          "fetchable": false,
+          "fetchError": "timeout of 15000ms exceeded",
+          "bestSubpageFound": null,
+          "subpagesTested": []
+        },
+        "c2": {
+          "verdict": "unclear",
+          "score": 0,
+          "reason": "fetchHtml failed: timeout of 20000ms exceeded",
+          "duration": 5006,
+          "htmlBytes": 0
+        },
+        "c3": {
+          "universalEventsFound": 0,
+          "universalMethodsUsed": [
+            "universal-extractor"
+          ],
+          "universalMethodBreakdown": {},
+          "duration": 0
+        },
+        "extract": {
+          "eventsFound": 0,
+          "duration": 0,
+          "htmlSize": 0,
+          "extractedEvents": []
+        },
+        "trace": {
+          "sourceId": "malmo-arena",
+          "sourceUrl": "https://malmöarena.se/",
+          "round": 1,
+          "c0Candidates": 0,
+          "c0WinnerUrl": null,
+          "c0WinnerDensity": 0,
+          "c0RuleSource": "none",
+          "c0RulePathsTested": [],
+          "c0RuleWinnerPath": null,
+          "effectiveUrl": "https://malmöarena.se/",
+          "effectiveUrlReason": "url-variant",
+          "c1Verdict": "unfetchable",
+          "c1LikelyJsRendered": false,
+          "c1TimeTagCount": 0,
+          "c1DateCount": 0,
+          "c1HtmlBytes": 0,
+          "c1Fetchable": false,
+          "c1FetchError": "timeout of 15000ms exceeded",
+          "c1BestSubpageFound": null,
+          "c1SubpagesTested": [],
+          "c2Verdict": "unclear",
+          "c2Score": 0,
+          "c2Reason": "fetchHtml failed: timeout of 20000ms exceeded",
+          "c2HtmlBytes": 0,
+          "c3EventsFound": 0,
+          "c3MethodsUsed": [
+            "universal-extractor"
+          ],
+          "c3MethodBreakdown": {},
+          "eventsFound": 0,
+          "outcomeType": "fail",
+          "routeSuggestion": "manual-review",
+          "exitReason": "FETCH_ERROR",
+          "exitReasonDetail": "fetch failed: timeout of 15000ms exceeded",
+          "winningStage": "C3",
+          "success": false,
+          "derivedRuleApplied": false
+        }
+      }
+    },
+    {
+      "source": {
+        "sourceId": "skovde-if",
+        "url": "https://skovdeif.se/",
+        "roundsParticipated": 0,
+        "diversifiers": [
+          "failures_8",
+          "path_jsonld"
+        ],
+        "queueReason": "fetch error: getaddrinfo ENOTFOUND skovdeif.se",
+        "enrichedData": {
+          "lastPathUsed": "jsonld",
+          "lastEventsFound": 0,
+          "consecutiveFailures": 8,
+          "triageResult": null
+        }
+      },
+      "decision": "postTestC-manual-review",
+      "result": {
+        "sourceId": "skovde-if",
+        "sourceUrl": "https://skovdeif.se/",
+        "winningStage": "C3",
+        "outcomeType": "fail",
+        "routeSuggestion": "manual-review",
+        "evidence": "fetch error: getaddrinfo ENOTFOUND skovdeif.se",
+        "roundNumber": 1,
+        "success": false,
+        "exitReason": "FETCH_ERROR",
+        "exitReasonDetail": "fetch failed: getaddrinfo ENOTFOUND skovdeif.se",
+        "effectiveProcessingUrl": "https://skovdeif.se/",
+        "effectiveProcessingUrlReason": "url-variant",
+        "c0": {
+          "candidates": 0,
+          "winnerUrl": null,
+          "winnerDensity": 0,
+          "duration": 169,
+          "rootFallback": false,
+          "ruleAppliedSource": "none",
+          "ruleAppliedPaths": [],
+          "ruleWinnerPath": null
+        },
+        "c1": {
+          "verdict": "unfetchable",
+          "likelyJsRendered": false,
+          "timeTagCount": 0,
+          "dateCount": 0,
+          "duration": 3,
+          "htmlBytes": 0,
+          "fetchable": false,
+          "fetchError": "getaddrinfo ENOTFOUND skovdeif.se",
+          "bestSubpageFound": null,
+          "subpagesTested": []
+        },
+        "c2": {
+          "verdict": "unclear",
+          "score": 0,
+          "reason": "fetchHtml failed: getaddrinfo ENOTFOUND skovdeif.se",
+          "duration": 2,
+          "htmlBytes": 0
+        },
+        "c3": {
+          "universalEventsFound": 0,
+          "universalMethodsUsed": [
+            "universal-extractor"
+          ],
+          "universalMethodBreakdown": {},
+          "duration": 0
+        },
+        "extract": {
+          "eventsFound": 0,
+          "duration": 0,
+          "htmlSize": 0,
+          "extractedEvents": []
+        },
+        "trace": {
+          "sourceId": "skovde-if",
+          "sourceUrl": "https://skovdeif.se/",
+          "round": 1,
+          "c0Candidates": 0,
+          "c0WinnerUrl": null,
+          "c0WinnerDensity": 0,
+          "c0RuleSource": "none",
+          "c0RulePathsTested": [],
+          "c0RuleWinnerPath": null,
+          "effectiveUrl": "https://skovdeif.se/",
+          "effectiveUrlReason": "url-variant",
+          "c1Verdict": "unfetchable",
+          "c1LikelyJsRendered": false,
+          "c1TimeTagCount": 0,
+          "c1DateCount": 0,
+          "c1HtmlBytes": 0,
+          "c1Fetchable": false,
+          "c1FetchError": "getaddrinfo ENOTFOUND skovdeif.se",
+          "c1BestSubpageFound": null,
+          "c1SubpagesTested": [],
+          "c2Verdict": "unclear",
+          "c2Score": 0,
+          "c2Reason": "fetchHtml failed: getaddrinfo ENOTFOUND skovdeif.se",
+          "c2HtmlBytes": 0,
+          "c3EventsFound": 0,
+          "c3MethodsUsed": [
+            "universal-extractor"
+          ],
+          "c3MethodBreakdown": {},
+          "eventsFound": 0,
+          "outcomeType": "fail",
+          "routeSuggestion": "manual-review",
+          "exitReason": "FETCH_ERROR",
+          "exitReasonDetail": "fetch failed: getaddrinfo ENOTFOUND skovdeif.se",
+          "winningStage": "C3",
+          "success": false,
+          "derivedRuleApplied": false
+        }
+      }
+    },
+    {
+      "source": {
+        "sourceId": "studio-acusticum",
+        "url": "https://studioacusticum.se/",
+        "roundsParticipated": 0,
+        "diversifiers": [
+          "failures_8",
+          "path_jsonld"
+        ],
+        "queueReason": "[IMP-001-FIX] Orphaned: forced STAY via STEP3-CHAIN in round 1, loop terminated before exit",
+        "enrichedData": {
+          "lastPathUsed": "jsonld",
+          "lastEventsFound": 0,
+          "consecutiveFailures": 8,
+          "triageResult": null
+        }
+      },
+      "decision": "postTestC-manual-review",
+      "result": {
+        "sourceId": "studio-acusticum",
+        "sourceUrl": "https://studioacusticum.se/",
+        "winningStage": "C3",
+        "outcomeType": "fail",
+        "routeSuggestion": "Fail",
+        "evidence": "",
+        "roundNumber": 1,
+        "success": false,
+        "exitReason": "FETCH_ERROR",
+        "exitReasonDetail": "Assignment to constant variable.",
+        "effectiveProcessingUrl": "https://studioacusticum.se/",
+        "effectiveProcessingUrlReason": "url-variant:original",
+        "c0": {
+          "candidates": 6,
+          "winnerUrl": "https://studioacusticum.se/evenemang/",
+          "winnerDensity": 0,
+          "duration": 1212,
+          "rootFallback": false,
+          "ruleAppliedSource": "link-discovery",
+          "ruleAppliedPaths": [],
+          "ruleWinnerPath": "https://studioacusticum.se/evenemang/"
+        },
+        "c1": {
+          "verdict": "unknown",
+          "likelyJsRendered": false,
+          "timeTagCount": 0,
+          "dateCount": 0,
+          "duration": 0,
+          "htmlBytes": 0,
+          "fetchable": false,
+          "bestSubpageFound": null,
+          "subpagesTested": []
+        },
+        "c2": {
+          "verdict": "unknown",
+          "score": 0,
+          "reason": "",
+          "duration": 0,
+          "htmlBytes": 0
+        },
+        "c3": {
+          "universalEventsFound": 0,
+          "universalMethodsUsed": [],
+          "universalMethodBreakdown": {},
+          "duration": 0
+        },
+        "extract": {
+          "eventsFound": 0,
+          "duration": 0,
+          "htmlSize": 0
+        },
+        "trace": {
+          "sourceId": "studio-acusticum",
+          "sourceUrl": "https://studioacusticum.se/",
+          "round": 1,
+          "c0Candidates": 6,
+          "c0WinnerUrl": "https://studioacusticum.se/evenemang/",
+          "c0WinnerDensity": 0,
+          "c0RuleSource": "link-discovery",
+          "c0RulePathsTested": [],
+          "c0RuleWinnerPath": "https://studioacusticum.se/evenemang/",
+          "effectiveUrl": "https://studioacusticum.se/",
+          "effectiveUrlReason": "url-variant:original",
+          "c1Verdict": "unknown",
+          "c1LikelyJsRendered": false,
+          "c1TimeTagCount": 0,
+          "c1DateCount": 0,
+          "c1HtmlBytes": 0,
+          "c1Fetchable": false,
+          "c1BestSubpageFound": null,
+          "c1SubpagesTested": [],
+          "c2Verdict": "unknown",
+          "c2Score": 0,
+          "c2Reason": "",
+          "c2HtmlBytes": 0,
+          "c3EventsFound": 0,
+          "c3MethodsUsed": [],
+          "c3MethodBreakdown": {},
+          "eventsFound": 0,
+          "outcomeType": "fail",
+          "routeSuggestion": "Fail",
+          "exitReason": "FETCH_ERROR",
+          "exitReasonDetail": "Assignment to constant variable.",
+          "winningStage": "C3",
+          "success": false,
+          "derivedRuleApplied": false,
+          "error": "Assignment to constant variable."
+        },
+        "error": "Assignment to constant variable."
+      }
+    },
+    {
+      "source": {
+        "sourceId": "kino",
+        "url": "https://kinogoteborg.se/",
+        "roundsParticipated": 0,
+        "diversifiers": [
+          "failures_10",
+          "path_jsonld"
+        ],
+        "queueReason": "fetch error: getaddrinfo ENOTFOUND kinogoteborg.se",
+        "enrichedData": {
+          "lastPathUsed": "jsonld",
+          "lastEventsFound": 0,
+          "consecutiveFailures": 10,
+          "triageResult": null
+        }
+      },
+      "decision": "postTestC-manual-review",
+      "result": {
+        "sourceId": "kino",
+        "sourceUrl": "https://kinogoteborg.se/",
+        "winningStage": "C3",
+        "outcomeType": "fail",
+        "routeSuggestion": "manual-review",
+        "evidence": "fetch error: getaddrinfo ENOTFOUND kinogoteborg.se",
+        "roundNumber": 1,
+        "success": false,
+        "exitReason": "FETCH_ERROR",
+        "exitReasonDetail": "fetch failed: getaddrinfo ENOTFOUND kinogoteborg.se",
+        "effectiveProcessingUrl": "https://kinogoteborg.se/",
+        "effectiveProcessingUrlReason": "url-variant",
+        "c0": {
+          "candidates": 0,
+          "winnerUrl": null,
+          "winnerDensity": 0,
+          "duration": 37,
+          "rootFallback": false,
+          "ruleAppliedSource": "none",
+          "ruleAppliedPaths": [],
+          "ruleWinnerPath": null
+        },
+        "c1": {
+          "verdict": "unfetchable",
+          "likelyJsRendered": false,
+          "timeTagCount": 0,
+          "dateCount": 0,
+          "duration": 3,
+          "htmlBytes": 0,
+          "fetchable": false,
+          "fetchError": "getaddrinfo ENOTFOUND kinogoteborg.se",
+          "bestSubpageFound": null,
+          "subpagesTested": []
+        },
+        "c2": {
+          "verdict": "unclear",
+          "score": 0,
+          "reason": "fetchHtml failed: getaddrinfo ENOTFOUND kinogoteborg.se",
+          "duration": 2,
+          "htmlBytes": 0
+        },
+        "c3": {
+          "universalEventsFound": 0,
+          "universalMethodsUsed": [
+            "universal-extractor"
+          ],
+          "universalMethodBreakdown": {},
+          "duration": 0
+        },
+        "extract": {
+          "eventsFound": 0,
+          "duration": 0,
+          "htmlSize": 0,
+          "extractedEvents": []
+        },
+        "trace": {
+          "sourceId": "kino",
+          "sourceUrl": "https://kinogoteborg.se/",
+          "round": 1,
+          "c0Candidates": 0,
+          "c0WinnerUrl": null,
+          "c0WinnerDensity": 0,
+          "c0RuleSource": "none",
+          "c0RulePathsTested": [],
+          "c0RuleWinnerPath": null,
+          "effectiveUrl": "https://kinogoteborg.se/",
+          "effectiveUrlReason": "url-variant",
+          "c1Verdict": "unfetchable",
+          "c1LikelyJsRendered": false,
+          "c1TimeTagCount": 0,
+          "c1DateCount": 0,
+          "c1HtmlBytes": 0,
+          "c1Fetchable": false,
+          "c1FetchError": "getaddrinfo ENOTFOUND kinogoteborg.se",
+          "c1BestSubpageFound": null,
+          "c1SubpagesTested": [],
+          "c2Verdict": "unclear",
+          "c2Score": 0,
+          "c2Reason": "fetchHtml failed: getaddrinfo ENOTFOUND kinogoteborg.se",
+          "c2HtmlBytes": 0,
+          "c3EventsFound": 0,
+          "c3MethodsUsed": [
+            "universal-extractor"
+          ],
+          "c3MethodBreakdown": {},
+          "eventsFound": 0,
+          "outcomeType": "fail",
+          "routeSuggestion": "manual-review",
+          "exitReason": "FETCH_ERROR",
+          "exitReasonDetail": "fetch failed: getaddrinfo ENOTFOUND kinogoteborg.se",
+          "winningStage": "C3",
+          "success": false,
+          "derivedRuleApplied": false
+        }
+      }
+    },
+    {
+      "source": {
+        "sourceId": "b-republic",
+        "url": "https://brepublic.se/",
+        "roundsParticipated": 0,
+        "diversifiers": [
+          "failures_11",
+          "path_jsonld"
+        ],
+        "queueReason": "fetch error: getaddrinfo ENOTFOUND brepublic.se",
+        "enrichedData": {
+          "lastPathUsed": "jsonld",
+          "lastEventsFound": 0,
+          "consecutiveFailures": 11,
+          "triageResult": null
+        }
+      },
+      "decision": "postTestC-manual-review",
+      "result": {
+        "sourceId": "b-republic",
+        "sourceUrl": "https://brepublic.se/",
+        "winningStage": "C3",
+        "outcomeType": "fail",
+        "routeSuggestion": "manual-review",
+        "evidence": "fetch error: getaddrinfo ENOTFOUND brepublic.se",
+        "roundNumber": 1,
+        "success": false,
+        "exitReason": "FETCH_ERROR",
+        "exitReasonDetail": "fetch failed: getaddrinfo ENOTFOUND brepublic.se",
+        "effectiveProcessingUrl": "https://brepublic.se/",
+        "effectiveProcessingUrlReason": "url-variant",
+        "c0": {
+          "candidates": 0,
+          "winnerUrl": null,
+          "winnerDensity": 0,
+          "duration": 74,
+          "rootFallback": false,
+          "ruleAppliedSource": "none",
+          "ruleAppliedPaths": [],
+          "ruleWinnerPath": null
+        },
+        "c1": {
+          "verdict": "unfetchable",
+          "likelyJsRendered": false,
+          "timeTagCount": 0,
+          "dateCount": 0,
+          "duration": 3,
+          "htmlBytes": 0,
+          "fetchable": false,
+          "fetchError": "getaddrinfo ENOTFOUND brepublic.se",
+          "bestSubpageFound": null,
+          "subpagesTested": []
+        },
+        "c2": {
+          "verdict": "unclear",
+          "score": 0,
+          "reason": "fetchHtml failed: getaddrinfo ENOTFOUND brepublic.se",
+          "duration": 2,
+          "htmlBytes": 0
+        },
+        "c3": {
+          "universalEventsFound": 0,
+          "universalMethodsUsed": [
+            "universal-extractor"
+          ],
+          "universalMethodBreakdown": {},
+          "duration": 1
+        },
+        "extract": {
+          "eventsFound": 0,
+          "duration": 1,
+          "htmlSize": 0,
+          "extractedEvents": []
+        },
+        "trace": {
+          "sourceId": "b-republic",
+          "sourceUrl": "https://brepublic.se/",
+          "round": 1,
+          "c0Candidates": 0,
+          "c0WinnerUrl": null,
+          "c0WinnerDensity": 0,
+          "c0RuleSource": "none",
+          "c0RulePathsTested": [],
+          "c0RuleWinnerPath": null,
+          "effectiveUrl": "https://brepublic.se/",
+          "effectiveUrlReason": "url-variant",
+          "c1Verdict": "unfetchable",
+          "c1LikelyJsRendered": false,
+          "c1TimeTagCount": 0,
+          "c1DateCount": 0,
+          "c1HtmlBytes": 0,
+          "c1Fetchable": false,
+          "c1FetchError": "getaddrinfo ENOTFOUND brepublic.se",
+          "c1BestSubpageFound": null,
+          "c1SubpagesTested": [],
+          "c2Verdict": "unclear",
+          "c2Score": 0,
+          "c2Reason": "fetchHtml failed: getaddrinfo ENOTFOUND brepublic.se",
+          "c2HtmlBytes": 0,
+          "c3EventsFound": 0,
+          "c3MethodsUsed": [
+            "universal-extractor"
+          ],
+          "c3MethodBreakdown": {},
+          "eventsFound": 0,
+          "outcomeType": "fail",
+          "routeSuggestion": "manual-review",
+          "exitReason": "FETCH_ERROR",
+          "exitReasonDetail": "fetch failed: getaddrinfo ENOTFOUND brepublic.se",
+          "winningStage": "C3",
+          "success": false,
+          "derivedRuleApplied": false
+        }
+      }
+    },
+    {
+      "source": {
+        "sourceId": "paddan",
+        "url": "https://paddan.se/",
+        "roundsParticipated": 0,
+        "diversifiers": [
+          "failures_8",
+          "path_jsonld"
+        ],
+        "queueReason": "fetch error: timeout of 15000ms exceeded",
+        "enrichedData": {
+          "lastPathUsed": "jsonld",
+          "lastEventsFound": 0,
+          "consecutiveFailures": 8,
+          "triageResult": null
+        }
+      },
+      "decision": "postTestC-manual-review",
+      "result": {
+        "sourceId": "paddan",
+        "sourceUrl": "https://paddan.se/",
+        "winningStage": "C3",
+        "outcomeType": "fail",
+        "routeSuggestion": "manual-review",
+        "evidence": "fetch error: timeout of 15000ms exceeded",
+        "roundNumber": 1,
+        "success": false,
+        "exitReason": "FETCH_ERROR",
+        "exitReasonDetail": "fetch failed: timeout of 15000ms exceeded",
+        "effectiveProcessingUrl": "https://paddan.se/",
+        "effectiveProcessingUrlReason": "url-variant",
+        "c0": {
+          "candidates": 0,
+          "winnerUrl": null,
+          "winnerDensity": 0,
+          "duration": 5058,
+          "rootFallback": false,
+          "ruleAppliedSource": "none",
+          "ruleAppliedPaths": [],
+          "ruleWinnerPath": null
+        },
+        "c1": {
+          "verdict": "unfetchable",
+          "likelyJsRendered": false,
+          "timeTagCount": 0,
+          "dateCount": 0,
+          "duration": 5005,
+          "htmlBytes": 0,
+          "fetchable": false,
+          "fetchError": "timeout of 15000ms exceeded",
+          "bestSubpageFound": null,
+          "subpagesTested": []
+        },
+        "c2": {
+          "verdict": "unclear",
+          "score": 0,
+          "reason": "fetchHtml failed: timeout of 20000ms exceeded",
+          "duration": 5004,
+          "htmlBytes": 0
+        },
+        "c3": {
+          "universalEventsFound": 0,
+          "universalMethodsUsed": [
+            "universal-extractor"
+          ],
+          "universalMethodBreakdown": {},
+          "duration": 0
+        },
+        "extract": {
+          "eventsFound": 0,
+          "duration": 0,
+          "htmlSize": 0,
+          "extractedEvents": []
+        },
+        "trace": {
+          "sourceId": "paddan",
+          "sourceUrl": "https://paddan.se/",
+          "round": 1,
+          "c0Candidates": 0,
+          "c0WinnerUrl": null,
+          "c0WinnerDensity": 0,
+          "c0RuleSource": "none",
+          "c0RulePathsTested": [],
+          "c0RuleWinnerPath": null,
+          "effectiveUrl": "https://paddan.se/",
+          "effectiveUrlReason": "url-variant",
+          "c1Verdict": "unfetchable",
+          "c1LikelyJsRendered": false,
+          "c1TimeTagCount": 0,
+          "c1DateCount": 0,
+          "c1HtmlBytes": 0,
+          "c1Fetchable": false,
+          "c1FetchError": "timeout of 15000ms exceeded",
+          "c1BestSubpageFound": null,
+          "c1SubpagesTested": [],
+          "c2Verdict": "unclear",
+          "c2Score": 0,
+          "c2Reason": "fetchHtml failed: timeout of 20000ms exceeded",
+          "c2HtmlBytes": 0,
+          "c3EventsFound": 0,
+          "c3MethodsUsed": [
+            "universal-extractor"
+          ],
+          "c3MethodBreakdown": {},
+          "eventsFound": 0,
+          "outcomeType": "fail",
+          "routeSuggestion": "manual-review",
+          "exitReason": "FETCH_ERROR",
+          "exitReasonDetail": "fetch failed: timeout of 15000ms exceeded",
+          "winningStage": "C3",
+          "success": false,
+          "derivedRuleApplied": false
+        }
+      }
+    },
+    {
+      "source": {
+        "sourceId": "lunds-universitet",
+        "url": "https://lu.se/evenemang",
+        "roundsParticipated": 0,
+        "diversifiers": [
+          "failures_8",
+          "path_jsonld"
+        ],
+        "queueReason": "fetch error: Exceeded 3 redirects",
+        "enrichedData": {
+          "lastPathUsed": "jsonld",
+          "lastEventsFound": 0,
+          "consecutiveFailures": 8,
+          "triageResult": null
+        }
+      },
+      "decision": "postTestC-manual-review",
+      "result": {
+        "sourceId": "lunds-universitet",
+        "sourceUrl": "https://lu.se/evenemang",
+        "winningStage": "C3",
+        "outcomeType": "fail",
+        "routeSuggestion": "manual-review",
+        "evidence": "fetch error: Exceeded 3 redirects",
+        "roundNumber": 1,
+        "success": false,
+        "exitReason": "FETCH_ERROR",
+        "exitReasonDetail": "fetch failed: Exceeded 3 redirects",
+        "effectiveProcessingUrl": "https://lu.se/evenemang",
+        "effectiveProcessingUrlReason": "url-variant",
+        "c0": {
+          "candidates": 0,
+          "winnerUrl": null,
+          "winnerDensity": 0,
+          "duration": 592,
+          "rootFallback": false,
+          "ruleAppliedSource": "none",
+          "ruleAppliedPaths": [],
+          "ruleWinnerPath": null
+        },
+        "c1": {
+          "verdict": "unfetchable",
+          "likelyJsRendered": false,
+          "timeTagCount": 0,
+          "dateCount": 0,
+          "duration": 119,
+          "htmlBytes": 0,
+          "fetchable": false,
+          "fetchError": "Exceeded 3 redirects",
+          "bestSubpageFound": null,
+          "subpagesTested": []
+        },
+        "c2": {
+          "verdict": "unclear",
+          "score": 0,
+          "reason": "fetchHtml failed: Exceeded 3 redirects",
+          "duration": 159,
+          "htmlBytes": 0
+        },
+        "c3": {
+          "universalEventsFound": 0,
+          "universalMethodsUsed": [
+            "universal-extractor"
+          ],
+          "universalMethodBreakdown": {},
+          "duration": 0
+        },
+        "extract": {
+          "eventsFound": 0,
+          "duration": 0,
+          "htmlSize": 0,
+          "extractedEvents": []
+        },
+        "trace": {
+          "sourceId": "lunds-universitet",
+          "sourceUrl": "https://lu.se/evenemang",
+          "round": 1,
+          "c0Candidates": 0,
+          "c0WinnerUrl": null,
+          "c0WinnerDensity": 0,
+          "c0RuleSource": "none",
+          "c0RulePathsTested": [],
+          "c0RuleWinnerPath": null,
+          "effectiveUrl": "https://lu.se/evenemang",
+          "effectiveUrlReason": "url-variant",
+          "c1Verdict": "unfetchable",
+          "c1LikelyJsRendered": false,
+          "c1TimeTagCount": 0,
+          "c1DateCount": 0,
+          "c1HtmlBytes": 0,
+          "c1Fetchable": false,
+          "c1FetchError": "Exceeded 3 redirects",
+          "c1BestSubpageFound": null,
+          "c1SubpagesTested": [],
+          "c2Verdict": "unclear",
+          "c2Score": 0,
+          "c2Reason": "fetchHtml failed: Exceeded 3 redirects",
+          "c2HtmlBytes": 0,
+          "c3EventsFound": 0,
+          "c3MethodsUsed": [
+            "universal-extractor"
+          ],
+          "c3MethodBreakdown": {},
+          "eventsFound": 0,
+          "outcomeType": "fail",
+          "routeSuggestion": "manual-review",
+          "exitReason": "FETCH_ERROR",
+          "exitReasonDetail": "fetch failed: Exceeded 3 redirects",
+          "winningStage": "C3",
+          "success": false,
+          "derivedRuleApplied": false
+        }
+      }
+    },
+    {
+      "source": {
+        "sourceId": "rockfest-vasteras",
+        "url": "https://rockfestvasteras.se/",
+        "roundsParticipated": 0,
+        "diversifiers": [
+          "failures_8",
+          "path_jsonld"
+        ],
+        "queueReason": "fetch error: getaddrinfo ENOTFOUND rockfestvasteras.se",
+        "enrichedData": {
+          "lastPathUsed": "jsonld",
+          "lastEventsFound": 0,
+          "consecutiveFailures": 8,
+          "triageResult": null
+        }
+      },
+      "decision": "postTestC-manual-review",
+      "result": {
+        "sourceId": "rockfest-vasteras",
+        "sourceUrl": "https://rockfestvasteras.se/",
+        "winningStage": "C3",
+        "outcomeType": "fail",
+        "routeSuggestion": "manual-review",
+        "evidence": "fetch error: getaddrinfo ENOTFOUND rockfestvasteras.se",
+        "roundNumber": 1,
+        "success": false,
+        "exitReason": "FETCH_ERROR",
+        "exitReasonDetail": "fetch failed: getaddrinfo ENOTFOUND rockfestvasteras.se",
+        "effectiveProcessingUrl": "https://rockfestvasteras.se/",
+        "effectiveProcessingUrlReason": "url-variant",
+        "c0": {
+          "candidates": 0,
+          "winnerUrl": null,
+          "winnerDensity": 0,
+          "duration": 38,
+          "rootFallback": false,
+          "ruleAppliedSource": "none",
+          "ruleAppliedPaths": [],
+          "ruleWinnerPath": null
+        },
+        "c1": {
+          "verdict": "unfetchable",
+          "likelyJsRendered": false,
+          "timeTagCount": 0,
+          "dateCount": 0,
+          "duration": 3,
+          "htmlBytes": 0,
+          "fetchable": false,
+          "fetchError": "getaddrinfo ENOTFOUND rockfestvasteras.se",
+          "bestSubpageFound": null,
+          "subpagesTested": []
+        },
+        "c2": {
+          "verdict": "unclear",
+          "score": 0,
+          "reason": "fetchHtml failed: getaddrinfo ENOTFOUND rockfestvasteras.se",
+          "duration": 2,
+          "htmlBytes": 0
+        },
+        "c3": {
+          "universalEventsFound": 0,
+          "universalMethodsUsed": [
+            "universal-extractor"
+          ],
+          "universalMethodBreakdown": {},
+          "duration": 0
+        },
+        "extract": {
+          "eventsFound": 0,
+          "duration": 0,
+          "htmlSize": 0,
+          "extractedEvents": []
+        },
+        "trace": {
+          "sourceId": "rockfest-vasteras",
+          "sourceUrl": "https://rockfestvasteras.se/",
+          "round": 1,
+          "c0Candidates": 0,
+          "c0WinnerUrl": null,
+          "c0WinnerDensity": 0,
+          "c0RuleSource": "none",
+          "c0RulePathsTested": [],
+          "c0RuleWinnerPath": null,
+          "effectiveUrl": "https://rockfestvasteras.se/",
+          "effectiveUrlReason": "url-variant",
+          "c1Verdict": "unfetchable",
+          "c1LikelyJsRendered": false,
+          "c1TimeTagCount": 0,
+          "c1DateCount": 0,
+          "c1HtmlBytes": 0,
+          "c1Fetchable": false,
+          "c1FetchError": "getaddrinfo ENOTFOUND rockfestvasteras.se",
+          "c1BestSubpageFound": null,
+          "c1SubpagesTested": [],
+          "c2Verdict": "unclear",
+          "c2Score": 0,
+          "c2Reason": "fetchHtml failed: getaddrinfo ENOTFOUND rockfestvasteras.se",
+          "c2HtmlBytes": 0,
+          "c3EventsFound": 0,
+          "c3MethodsUsed": [
+            "universal-extractor"
+          ],
+          "c3MethodBreakdown": {},
+          "eventsFound": 0,
+          "outcomeType": "fail",
+          "routeSuggestion": "manual-review",
+          "exitReason": "FETCH_ERROR",
+          "exitReasonDetail": "fetch failed: getaddrinfo ENOTFOUND rockfestvasteras.se",
+          "winningStage": "C3",
+          "success": false,
+          "derivedRuleApplied": false
+        }
+      }
+    },
+    {
+      "source": {
+        "sourceId": "svenska-fotbollf-rbundet",
+        "url": "https://svenskfotboll.se/",
+        "roundsParticipated": 0,
+        "diversifiers": [
+          "failures_8",
+          "path_jsonld"
+        ],
+        "queueReason": "[IMP-001-FIX] Orphaned: forced STAY via STEP3-CHAIN in round 1, loop terminated before exit",
+        "enrichedData": {
+          "lastPathUsed": "jsonld",
+          "lastEventsFound": 0,
+          "consecutiveFailures": 8,
+          "triageResult": null
+        }
+      },
+      "decision": "postTestC-manual-review",
+      "result": {
+        "sourceId": "svenska-fotbollf-rbundet",
+        "sourceUrl": "https://svenskfotboll.se/",
+        "winningStage": "C3",
+        "outcomeType": "fail",
+        "routeSuggestion": "Fail",
+        "evidence": "",
+        "roundNumber": 1,
+        "success": false,
+        "exitReason": "FETCH_ERROR",
+        "exitReasonDetail": "Assignment to constant variable.",
+        "effectiveProcessingUrl": "https://svenskfotboll.se/",
+        "effectiveProcessingUrlReason": "url-variant:original",
+        "c0": {
+          "candidates": 1,
+          "winnerUrl": "https://svenskfotboll.se/biljett/",
+          "winnerDensity": 7,
+          "duration": 1037,
+          "rootFallback": false,
+          "ruleAppliedSource": "link-discovery",
+          "ruleAppliedPaths": [],
+          "ruleWinnerPath": "/biljett/"
+        },
+        "c1": {
+          "verdict": "unknown",
+          "likelyJsRendered": false,
+          "timeTagCount": 0,
+          "dateCount": 0,
+          "duration": 0,
+          "htmlBytes": 0,
+          "fetchable": false,
+          "bestSubpageFound": null,
+          "subpagesTested": []
+        },
+        "c2": {
+          "verdict": "unknown",
+          "score": 0,
+          "reason": "",
+          "duration": 0,
+          "htmlBytes": 0
+        },
+        "c3": {
+          "universalEventsFound": 0,
+          "universalMethodsUsed": [],
+          "universalMethodBreakdown": {},
+          "duration": 0
+        },
+        "extract": {
+          "eventsFound": 0,
+          "duration": 0,
+          "htmlSize": 0
+        },
+        "trace": {
+          "sourceId": "svenska-fotbollf-rbundet",
+          "sourceUrl": "https://svenskfotboll.se/",
+          "round": 1,
+          "c0Candidates": 1,
+          "c0WinnerUrl": "https://svenskfotboll.se/biljett/",
+          "c0WinnerDensity": 7,
+          "c0RuleSource": "link-discovery",
+          "c0RulePathsTested": [],
+          "c0RuleWinnerPath": "/biljett/",
+          "effectiveUrl": "https://svenskfotboll.se/",
+          "effectiveUrlReason": "url-variant:original",
+          "c1Verdict": "unknown",
+          "c1LikelyJsRendered": false,
+          "c1TimeTagCount": 0,
+          "c1DateCount": 0,
+          "c1HtmlBytes": 0,
+          "c1Fetchable": false,
+          "c1BestSubpageFound": null,
+          "c1SubpagesTested": [],
+          "c2Verdict": "unknown",
+          "c2Score": 0,
+          "c2Reason": "",
+          "c2HtmlBytes": 0,
+          "c3EventsFound": 0,
+          "c3MethodsUsed": [],
+          "c3MethodBreakdown": {},
+          "eventsFound": 0,
+          "outcomeType": "fail",
+          "routeSuggestion": "Fail",
+          "exitReason": "FETCH_ERROR",
+          "exitReasonDetail": "Assignment to constant variable.",
+          "winningStage": "C3",
+          "success": false,
+          "derivedRuleApplied": false,
+          "error": "Assignment to constant variable."
+        },
+        "error": "Assignment to constant variable."
+      }
+    },
+    {
+      "source": {
+        "sourceId": "dubblett-v2-test",
+        "url": "dubblett-v2-test.se/",
+        "roundsParticipated": 0,
+        "diversifiers": [
+          "failures_10",
+          "path_jsonld"
+        ],
+        "queueReason": "fetch error: Invalid URL",
+        "enrichedData": {
+          "lastPathUsed": "jsonld",
+          "lastEventsFound": 0,
+          "consecutiveFailures": 10,
+          "triageResult": null
+        }
+      },
+      "decision": "postTestC-manual-review",
+      "result": {
+        "sourceId": "dubblett-v2-test",
+        "sourceUrl": "dubblett-v2-test.se/",
+        "winningStage": "C3",
+        "outcomeType": "fail",
+        "routeSuggestion": "manual-review",
+        "evidence": "fetch error: Invalid URL",
+        "roundNumber": 1,
+        "success": false,
+        "exitReason": "FETCH_ERROR",
+        "exitReasonDetail": "fetch failed: Invalid URL",
+        "effectiveProcessingUrl": "dubblett-v2-test.se/",
+        "effectiveProcessingUrlReason": "url-variant",
+        "c0": {
+          "candidates": 0,
+          "winnerUrl": null,
+          "winnerDensity": 0,
+          "duration": 0,
+          "rootFallback": false,
+          "ruleAppliedSource": "none",
+          "ruleAppliedPaths": [],
+          "ruleWinnerPath": null
+        },
+        "c1": {
+          "verdict": "unfetchable",
+          "likelyJsRendered": false,
+          "timeTagCount": 0,
+          "dateCount": 0,
+          "duration": 0,
+          "htmlBytes": 0,
+          "fetchable": false,
+          "fetchError": "Invalid URL",
+          "bestSubpageFound": null,
+          "subpagesTested": []
+        },
+        "c2": {
+          "verdict": "unclear",
+          "score": 0,
+          "reason": "fetchHtml failed: Invalid URL",
+          "duration": 1,
+          "htmlBytes": 0
+        },
+        "c3": {
+          "universalEventsFound": 0,
+          "universalMethodsUsed": [
+            "universal-extractor"
+          ],
+          "universalMethodBreakdown": {},
+          "duration": 0
+        },
+        "extract": {
+          "eventsFound": 0,
+          "duration": 0,
+          "htmlSize": 0,
+          "extractedEvents": []
+        },
+        "trace": {
+          "sourceId": "dubblett-v2-test",
+          "sourceUrl": "dubblett-v2-test.se/",
+          "round": 1,
+          "c0Candidates": 0,
+          "c0WinnerUrl": null,
+          "c0WinnerDensity": 0,
+          "c0RuleSource": "none",
+          "c0RulePathsTested": [],
+          "c0RuleWinnerPath": null,
+          "effectiveUrl": "dubblett-v2-test.se/",
+          "effectiveUrlReason": "url-variant",
+          "c1Verdict": "unfetchable",
+          "c1LikelyJsRendered": false,
+          "c1TimeTagCount": 0,
+          "c1DateCount": 0,
+          "c1HtmlBytes": 0,
+          "c1Fetchable": false,
+          "c1FetchError": "Invalid URL",
+          "c1BestSubpageFound": null,
+          "c1SubpagesTested": [],
+          "c2Verdict": "unclear",
+          "c2Score": 0,
+          "c2Reason": "fetchHtml failed: Invalid URL",
+          "c2HtmlBytes": 0,
+          "c3EventsFound": 0,
+          "c3MethodsUsed": [
+            "universal-extractor"
+          ],
+          "c3MethodBreakdown": {},
+          "eventsFound": 0,
+          "outcomeType": "fail",
+          "routeSuggestion": "manual-review",
+          "exitReason": "FETCH_ERROR",
+          "exitReasonDetail": "fetch failed: Invalid URL",
+          "winningStage": "C3",
+          "success": false,
+          "derivedRuleApplied": false
+        }
+      }
+    },
+    {
+      "source": {
+        "sourceId": "karlskrona-hf",
+        "url": "https://karlskronahf.se/",
+        "roundsParticipated": 0,
+        "diversifiers": [
+          "failures_10",
+          "path_jsonld"
+        ],
+        "queueReason": "fetch error: getaddrinfo ENOTFOUND karlskronahf.se",
+        "enrichedData": {
+          "lastPathUsed": "jsonld",
+          "lastEventsFound": 0,
+          "consecutiveFailures": 10,
+          "triageResult": null
+        }
+      },
+      "decision": "postTestC-manual-review",
+      "result": {
+        "sourceId": "karlskrona-hf",
+        "sourceUrl": "https://karlskronahf.se/",
+        "winningStage": "C3",
+        "outcomeType": "fail",
+        "routeSuggestion": "manual-review",
+        "evidence": "fetch error: getaddrinfo ENOTFOUND karlskronahf.se",
+        "roundNumber": 1,
+        "success": false,
+        "exitReason": "FETCH_ERROR",
+        "exitReasonDetail": "fetch failed: getaddrinfo ENOTFOUND karlskronahf.se",
+        "effectiveProcessingUrl": "https://karlskronahf.se/",
+        "effectiveProcessingUrlReason": "url-variant",
+        "c0": {
+          "candidates": 0,
+          "winnerUrl": null,
+          "winnerDensity": 0,
+          "duration": 58,
+          "rootFallback": false,
+          "ruleAppliedSource": "none",
+          "ruleAppliedPaths": [],
+          "ruleWinnerPath": null
+        },
+        "c1": {
+          "verdict": "unfetchable",
+          "likelyJsRendered": false,
+          "timeTagCount": 0,
+          "dateCount": 0,
+          "duration": 2,
+          "htmlBytes": 0,
+          "fetchable": false,
+          "fetchError": "getaddrinfo ENOTFOUND karlskronahf.se",
+          "bestSubpageFound": null,
+          "subpagesTested": []
+        },
+        "c2": {
+          "verdict": "unclear",
+          "score": 0,
+          "reason": "fetchHtml failed: getaddrinfo ENOTFOUND karlskronahf.se",
+          "duration": 2,
+          "htmlBytes": 0
+        },
+        "c3": {
+          "universalEventsFound": 0,
+          "universalMethodsUsed": [
+            "universal-extractor"
+          ],
+          "universalMethodBreakdown": {},
+          "duration": 0
+        },
+        "extract": {
+          "eventsFound": 0,
+          "duration": 0,
+          "htmlSize": 0,
+          "extractedEvents": []
+        },
+        "trace": {
+          "sourceId": "karlskrona-hf",
+          "sourceUrl": "https://karlskronahf.se/",
+          "round": 1,
+          "c0Candidates": 0,
+          "c0WinnerUrl": null,
+          "c0WinnerDensity": 0,
+          "c0RuleSource": "none",
+          "c0RulePathsTested": [],
+          "c0RuleWinnerPath": null,
+          "effectiveUrl": "https://karlskronahf.se/",
+          "effectiveUrlReason": "url-variant",
+          "c1Verdict": "unfetchable",
+          "c1LikelyJsRendered": false,
+          "c1TimeTagCount": 0,
+          "c1DateCount": 0,
+          "c1HtmlBytes": 0,
+          "c1Fetchable": false,
+          "c1FetchError": "getaddrinfo ENOTFOUND karlskronahf.se",
+          "c1BestSubpageFound": null,
+          "c1SubpagesTested": [],
+          "c2Verdict": "unclear",
+          "c2Score": 0,
+          "c2Reason": "fetchHtml failed: getaddrinfo ENOTFOUND karlskronahf.se",
+          "c2HtmlBytes": 0,
+          "c3EventsFound": 0,
+          "c3MethodsUsed": [
+            "universal-extractor"
+          ],
+          "c3MethodBreakdown": {},
+          "eventsFound": 0,
+          "outcomeType": "fail",
+          "routeSuggestion": "manual-review",
+          "exitReason": "FETCH_ERROR",
+          "exitReasonDetail": "fetch failed: getaddrinfo ENOTFOUND karlskronahf.se",
+          "winningStage": "C3",
+          "success": false,
+          "derivedRuleApplied": false
+        }
+      }
+    },
+    {
+      "source": {
+        "sourceId": "v-ster-s-konstmuseum",
+        "url": "https://vasterasmuseum.se/",
+        "roundsParticipated": 0,
+        "diversifiers": [
+          "failures_8",
+          "path_jsonld"
+        ],
+        "queueReason": "fetch error: getaddrinfo ENOTFOUND vasterasmuseum.se",
+        "enrichedData": {
+          "lastPathUsed": "jsonld",
+          "lastEventsFound": 0,
+          "consecutiveFailures": 8,
+          "triageResult": null
+        }
+      },
+      "decision": "postTestC-manual-review",
+      "result": {
+        "sourceId": "v-ster-s-konstmuseum",
+        "sourceUrl": "https://vasterasmuseum.se/",
+        "winningStage": "C3",
+        "outcomeType": "fail",
+        "routeSuggestion": "manual-review",
+        "evidence": "fetch error: getaddrinfo ENOTFOUND vasterasmuseum.se",
+        "roundNumber": 1,
+        "success": false,
+        "exitReason": "FETCH_ERROR",
+        "exitReasonDetail": "fetch failed: getaddrinfo ENOTFOUND vasterasmuseum.se",
+        "effectiveProcessingUrl": "https://vasterasmuseum.se/",
+        "effectiveProcessingUrlReason": "url-variant",
+        "c0": {
+          "candidates": 0,
+          "winnerUrl": null,
+          "winnerDensity": 0,
+          "duration": 59,
+          "rootFallback": false,
+          "ruleAppliedSource": "none",
+          "ruleAppliedPaths": [],
+          "ruleWinnerPath": null
+        },
+        "c1": {
+          "verdict": "unfetchable",
+          "likelyJsRendered": false,
+          "timeTagCount": 0,
+          "dateCount": 0,
+          "duration": 2,
+          "htmlBytes": 0,
+          "fetchable": false,
+          "fetchError": "getaddrinfo ENOTFOUND vasterasmuseum.se",
+          "bestSubpageFound": null,
+          "subpagesTested": []
+        },
+        "c2": {
+          "verdict": "unclear",
+          "score": 0,
+          "reason": "fetchHtml failed: getaddrinfo ENOTFOUND vasterasmuseum.se",
+          "duration": 2,
+          "htmlBytes": 0
+        },
+        "c3": {
+          "universalEventsFound": 0,
+          "universalMethodsUsed": [
+            "universal-extractor"
+          ],
+          "universalMethodBreakdown": {},
+          "duration": 0
+        },
+        "extract": {
+          "eventsFound": 0,
+          "duration": 0,
+          "htmlSize": 0,
+          "extractedEvents": []
+        },
+        "trace": {
+          "sourceId": "v-ster-s-konstmuseum",
+          "sourceUrl": "https://vasterasmuseum.se/",
+          "round": 1,
+          "c0Candidates": 0,
+          "c0WinnerUrl": null,
+          "c0WinnerDensity": 0,
+          "c0RuleSource": "none",
+          "c0RulePathsTested": [],
+          "c0RuleWinnerPath": null,
+          "effectiveUrl": "https://vasterasmuseum.se/",
+          "effectiveUrlReason": "url-variant",
+          "c1Verdict": "unfetchable",
+          "c1LikelyJsRendered": false,
+          "c1TimeTagCount": 0,
+          "c1DateCount": 0,
+          "c1HtmlBytes": 0,
+          "c1Fetchable": false,
+          "c1FetchError": "getaddrinfo ENOTFOUND vasterasmuseum.se",
+          "c1BestSubpageFound": null,
+          "c1SubpagesTested": [],
+          "c2Verdict": "unclear",
+          "c2Score": 0,
+          "c2Reason": "fetchHtml failed: getaddrinfo ENOTFOUND vasterasmuseum.se",
+          "c2HtmlBytes": 0,
+          "c3EventsFound": 0,
+          "c3MethodsUsed": [
+            "universal-extractor"
+          ],
+          "c3MethodBreakdown": {},
+          "eventsFound": 0,
+          "outcomeType": "fail",
+          "routeSuggestion": "manual-review",
+          "exitReason": "FETCH_ERROR",
+          "exitReasonDetail": "fetch failed: getaddrinfo ENOTFOUND vasterasmuseum.se",
+          "winningStage": "C3",
+          "success": false,
+          "derivedRuleApplied": false
+        }
+      }
+    },
+    {
+      "source": {
+        "sourceId": "fyrfaderna",
+        "url": "https://fyrfaderna.se/",
+        "roundsParticipated": 0,
+        "diversifiers": [
+          "failures_10",
+          "path_jsonld"
+        ],
+        "queueReason": "fetch error: getaddrinfo ENOTFOUND fyrfaderna.se",
+        "enrichedData": {
+          "lastPathUsed": "jsonld",
+          "lastEventsFound": 0,
+          "consecutiveFailures": 10,
+          "triageResult": null
+        }
+      },
+      "decision": "postTestC-manual-review",
+      "result": {
+        "sourceId": "fyrfaderna",
+        "sourceUrl": "https://fyrfaderna.se/",
+        "winningStage": "C3",
+        "outcomeType": "fail",
+        "routeSuggestion": "manual-review",
+        "evidence": "fetch error: getaddrinfo ENOTFOUND fyrfaderna.se",
+        "roundNumber": 1,
+        "success": false,
+        "exitReason": "FETCH_ERROR",
+        "exitReasonDetail": "fetch failed: getaddrinfo ENOTFOUND fyrfaderna.se",
+        "effectiveProcessingUrl": "https://fyrfaderna.se/",
+        "effectiveProcessingUrlReason": "url-variant",
+        "c0": {
+          "candidates": 0,
+          "winnerUrl": null,
+          "winnerDensity": 0,
+          "duration": 45,
+          "rootFallback": false,
+          "ruleAppliedSource": "none",
+          "ruleAppliedPaths": [],
+          "ruleWinnerPath": null
+        },
+        "c1": {
+          "verdict": "unfetchable",
+          "likelyJsRendered": false,
+          "timeTagCount": 0,
+          "dateCount": 0,
+          "duration": 3,
+          "htmlBytes": 0,
+          "fetchable": false,
+          "fetchError": "getaddrinfo ENOTFOUND fyrfaderna.se",
+          "bestSubpageFound": null,
+          "subpagesTested": []
+        },
+        "c2": {
+          "verdict": "unclear",
+          "score": 0,
+          "reason": "fetchHtml failed: getaddrinfo ENOTFOUND fyrfaderna.se",
+          "duration": 2,
+          "htmlBytes": 0
+        },
+        "c3": {
+          "universalEventsFound": 0,
+          "universalMethodsUsed": [
+            "universal-extractor"
+          ],
+          "universalMethodBreakdown": {},
+          "duration": 0
+        },
+        "extract": {
+          "eventsFound": 0,
+          "duration": 0,
+          "htmlSize": 0,
+          "extractedEvents": []
+        },
+        "trace": {
+          "sourceId": "fyrfaderna",
+          "sourceUrl": "https://fyrfaderna.se/",
+          "round": 1,
+          "c0Candidates": 0,
+          "c0WinnerUrl": null,
+          "c0WinnerDensity": 0,
+          "c0RuleSource": "none",
+          "c0RulePathsTested": [],
+          "c0RuleWinnerPath": null,
+          "effectiveUrl": "https://fyrfaderna.se/",
+          "effectiveUrlReason": "url-variant",
+          "c1Verdict": "unfetchable",
+          "c1LikelyJsRendered": false,
+          "c1TimeTagCount": 0,
+          "c1DateCount": 0,
+          "c1HtmlBytes": 0,
+          "c1Fetchable": false,
+          "c1FetchError": "getaddrinfo ENOTFOUND fyrfaderna.se",
+          "c1BestSubpageFound": null,
+          "c1SubpagesTested": [],
+          "c2Verdict": "unclear",
+          "c2Score": 0,
+          "c2Reason": "fetchHtml failed: getaddrinfo ENOTFOUND fyrfaderna.se",
+          "c2HtmlBytes": 0,
+          "c3EventsFound": 0,
+          "c3MethodsUsed": [
+            "universal-extractor"
+          ],
+          "c3MethodBreakdown": {},
+          "eventsFound": 0,
+          "outcomeType": "fail",
+          "routeSuggestion": "manual-review",
+          "exitReason": "FETCH_ERROR",
+          "exitReasonDetail": "fetch failed: getaddrinfo ENOTFOUND fyrfaderna.se",
+          "winningStage": "C3",
+          "success": false,
+          "derivedRuleApplied": false
+        }
+      }
+    }
+  ],
+  "allExitedIds": [
+    "jazz-i-orebro",
+    "storsj-odjuret",
+    "jazzfestivalen-goteborg",
+    "a6",
+    "svenska-schackf-rbundet",
+    "summerburst",
+    "melodifestivalen-svt",
+    "uppsala-stadsteatern-1",
+    "orebro-hockey",
+    "hasselblad-center",
+    "folkuniversitetet",
+    "uppsala-linn-science-park",
+    "slagthuset",
+    "regionteatern",
+    "malmo-folkets-park",
+    "stockholm-music-arts-1",
+    "af",
+    "sundsvall-musik",
+    "teater-galeasen",
+    "lulea-konserthus",
+    "gavle-zoo",
+    "malmo-icc",
+    "polismuseum",
+    "ekero",
+    "kalmar-teatern",
+    "andra-langgatan",
+    "lunds-konserthus",
+    "svenska-hockeyligan-shl",
+    "fotografiska-1",
+    "varberg-arena",
+    "norrk-pings-tidningar",
+    "rumble",
+    "malmo-arena",
+    "skovde-if",
+    "studio-acusticum",
+    "kino",
+    "b-republic",
+    "paddan",
+    "lunds-universitet",
+    "rockfest-vasteras",
+    "svenska-fotbollf-rbundet",
+    "dubblett-v2-test",
+    "karlskrona-hf",
+    "v-ster-s-konstmuseum",
+    "fyrfaderna"
+  ],
+  "lastSaved": "2026-04-18T14:07:19.827Z"
+}

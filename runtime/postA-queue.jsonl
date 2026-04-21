@@ -1,0 +1,4 @@
+{"sourceId":"stockholm-live","queueName":"postA","queuedAt":"2026-04-19T20:37:59.541Z","priority":1,"attempt":1,"queueReason":"toolA(preA): 29 events","workerNotes":"A: 29 events"}
+{"sourceId":"medborgarhuset","queueName":"postA","queuedAt":"2026-04-19T20:38:04.258Z","priority":1,"attempt":1,"queueReason":"toolA(preA): 1 events","workerNotes":"A: 1 events"}
+{"sourceId":"kungstradgarden","queueName":"postA","queuedAt":"2026-04-19T20:38:10.627Z","priority":1,"attempt":1,"queueReason":"toolA(preA): 2 events","workerNotes":"A: 2 events"}
+{"sourceId":"stenpiren","queueName":"postA","queuedAt":"2026-04-19T20:38:13.420Z","priority":1,"attempt":1,"queueReason":"toolA(preA): 1 events","workerNotes":"A: 1 events"}

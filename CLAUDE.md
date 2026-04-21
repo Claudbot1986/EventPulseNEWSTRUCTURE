@@ -5,7 +5,10 @@
 This repository uses an Obsidian vault as structured project memory.
 
 Vault root:
-`/Users/claudgashi/EventPulse-ObsidianVault/EventPulse`
+`/Users/claudgashi/Desktop/MyVault/TomorGashi`
+
+Vault inbox:
+`/Users/claudgashi/Desktop/MyVault/TomorGashi/00-Inbox`
 
 ### Mandatory first read
 Always read these first if they exist:
@@ -13,6 +16,7 @@ Always read these first if they exist:
 - `00-Core/08-Verification-Principles.md`
 - `02-Operations/02-Current-Task.md`
 - `02-Operations/05-Verification-Status.md`
+- `02-Operations/03-Session-Log.md` ← session history, learnings
 
 ### Task-driven note discovery
 After the mandatory files:
@@ -58,6 +62,11 @@ Prefer a small high-relevance note set over a large vague note set.
 ### Write-back discipline
 If a change is actually verified, update the most relevant operations/status note in the vault.
 Do not write back guesses, unverified interpretations, or speculative conclusions.
+
+**Always mark entries with confidence level:**
+- `[VERIFIED]` = testat, körning bevisat
+- `[CLAIMED]` = baserat på loggar/data, ej bevisat
+- `[UNVERIFIED]` = hypotes, spekulation
 
 Om du verifierar något viktigt ska du uppdatera rätt Obsidian-fil efteråt.
 
@@ -264,6 +273,26 @@ If you changed files:
 - list changed files
 - keep changes small and focused
 - make a clear git commit when task is complete and verified
+
+---
+
+## Automatic Skill Routing
+
+Automatically invoke skills based on task type:
+
+| Task Type | Skill to Use |
+|-----------|--------------|
+| Bug fix, new feature | `tdd-guide` — write tests first |
+| Complex feature, refactor | `planner` — plan before coding |
+| Code change | `code-reviewer` — quality check |
+| Security-sensitive code | `security-reviewer` — vulnerability check |
+| Build errors | `build-error-resolver` — fix incrementally |
+| Git/PR issues | `github-ops` — GitHub workflow |
+| Need verification | `verify` — verify end-to-end |
+| Web research needed | `deep-research` — comprehensive research |
+| Database changes | `database-reviewer` — SQL best practices |
+
+Use skills PROACTIVELY — don't wait to be asked.
 
 ---
 

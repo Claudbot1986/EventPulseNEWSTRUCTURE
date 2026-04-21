@@ -91,6 +91,18 @@ const RUNTIME_DIR = join(PROJECT_ROOT, 'runtime');
 const SOURCES_DIR = join(PROJECT_ROOT, 'sources');
 const REPORTS_DIR = join(__dirname, 'reports');
 const C_EXTRACTED_DIR = join(PROJECT_ROOT, '03-Queue', '03-extractedevents', 'C');
+const LOGS_DIR = join(RUNTIME_DIR, 'logs');
+const RUN_LOG = join(LOGS_DIR, `runC-dynamic-pool-${new Date().toISOString().replace(/[:.]/g, '-')}.log`);
+
+// --- Log helper — terminal + per-run file ---
+
+function log(...args: unknown[]) {
+  const ts = new Date().toISOString();
+  const msg = args.map(a => String(a)).join(' ');
+  const line = `${ts}  ${msg}`;
+  console.log(line);
+  appendFileSync(RUN_LOG, line + '\n', 'utf8');
+}
 
 const QUEUES = {
   PREC: join(RUNTIME_DIR, 'postB-preC-queue.jsonl'),
@@ -2199,13 +2211,12 @@ async function main() {
   const TARGET_IMPROVEMENT: string | null = (rawBatchState as any)?.targetImprovement ?? null;
   const VERIFICATION_SOURCES: string[] = (rawBatchState as any)?.verificationSources ?? [];
 
-  console.log('='.repeat(60));
-  console.log('DYNAMIC TEST POOL RUNNER — EXPERIMENTAL');
-  console.log('STATUS: RUNNER_EXECUTES | FLOW_PARTIALLY_VERIFIED');
-  console.log('STATUS: C4_AI_INTEGRATED | NOT_CANONICAL_YET');
-  console.log('='.repeat(60));
-  console.log(`Batch number: ${BATCH_NUM}`);
-  console.log(`Batch type: ${BATCH_TYPE}${BATCH_TYPE === 'verification' ? ` (improvement: ${TARGET_IMPROVEMENT})` : ''}`);
+  mkdirSync(LOGS_DIR, { recursive: true });
+  writeFileSync(RUN_LOG, '', 'utf8');
+
+  log('DYNAMIC TEST POOL RUNNER — EXPERIMENTAL');
+  log(`Batch number: ${BATCH_NUM}`);
+  log(`Batch type: ${BATCH_TYPE}${BATCH_TYPE === 'verification' ? ` (improvement: ${TARGET_IMPROVEMENT})` : ''}`);
 
   // Step 0: ENSURE BATCH DIRECTORY EXISTS before any file writes
   // This prevents ENOENT errors when C4 or other components try to write
