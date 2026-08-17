@@ -1,8 +1,14 @@
 # CLAUDE.md
 
+## Product (read this first)
+
+EventPulse is a **personal event agent**. The Expo app is the interface. Canonical plan: `docs/MASTERPLAN.md`. Build order: `docs/BACKLOG.md`. Do not implement items in DO NOT BUILD YET. Do not treat ingestion success, queue drain, or a public event API as the product.
+
 ## EventPulse Obsidian vault workflow
 
 This repository uses an Obsidian vault as structured project memory.
+
+**Vault is on the Desktop, not in git.**
 
 Vault root:
 `/Users/claudgashi/Desktop/MyVault/TomorGashi`
@@ -10,13 +16,20 @@ Vault root:
 Vault inbox:
 `/Users/claudgashi/Desktop/MyVault/TomorGashi/00-Inbox`
 
+EventPulse strategy/ops notes live under the project subtree (there is no vault-root `00-Core/`):
+`/Users/claudgashi/Desktop/MyVault/TomorGashi/01-Projects/EventPulse/`
+
 ### Mandatory first read
 Always read these first if they exist:
-- `00-Core/03-Canonical-Truths.md`
-- `00-Core/08-Verification-Principles.md`
-- `02-Operations/02-Current-Task.md`
-- `02-Operations/05-Verification-Status.md`
-- `02-Operations/03-Session-Log.md` ← session history, learnings
+- Repo: `docs/MASTERPLAN.md` and `docs/BACKLOG.md`
+- `01-Projects/EventPulse/00-Core/03-Canonical-Truths.md`
+- `01-Projects/EventPulse/00-Core/08-Verification-Principles.md`
+- `01-Projects/EventPulse/00-Core/02-North-Star.md`
+- `01-Projects/EventPulse/02-Operations/03-Current-Task.md`
+- `01-Projects/EventPulse/02-Operations/06-Verification-Status.md`
+- Session history at vault-root `02-Operations/03-Session-Log/` (`00-Index.md`, `YYYY-MM-DD.md` per day)
+
+Paths except `docs/` are relative to `/Users/claudgashi/Desktop/MyVault/TomorGashi`.
 
 ### Task-driven note discovery
 After the mandatory files:
@@ -36,22 +49,23 @@ After the mandatory files:
 Use these hints for note discovery:
 
 - If task relates to `C-htmlGate`, `C0`, `C1`, `C2`, `C3`, `postB-preC`, `manual-review`, `D-renderGate`, `batch`, `123`, `derived rules`, `swedish patterns`, `extraction`:
-  prioritize:
+  prioritize under `01-Projects/EventPulse/`:
   - `01-Architecture/*C-htmlGate*`
   - `03-Patterns/*`
   - `05-Canvas/*123*`
   - relevant `02-Operations/*`
 
 - If task relates to `sources`, `provider`, `canonical identity`, `rawSources`, `onboarding`:
-  prioritize:
+  prioritize under `01-Projects/EventPulse/`:
   - `04-Sources/*`
   - relevant `01-Architecture/*`
   - relevant `02-Operations/*`
 
-- If task relates to `frontend`, `UI`, `fetchEvents`, `Supabase`, `end-to-end`:
+- If task relates to `frontend`, `UI`, `agent`, `fetchEvents`, `Supabase`, `end-to-end`:
   prioritize:
-  - `01-Architecture/*`
-  - `00-Core/15-Provider-Onboarding-Definition-of-Done.md`
+  - repo `docs/MASTERPLAN.md`
+  - `01-Projects/EventPulse/01-Architecture/*`
+  - `01-Projects/EventPulse/00-Core/15-Provider-Onboarding-Definition-of-Done.md`
   - relevant `02-Operations/*`
 
 ### Discipline
@@ -72,8 +86,10 @@ Om du verifierar något viktigt ska du uppdatera rätt Obsidian-fil efteråt.
 
 ## EventPulse
 
-You are working on EventPulse, a real city event discovery system.
-Not a demo, not mock data, not speculative architecture.
+You are working on EventPulse, a personal event agent for Stockholm (Expo is the interface).
+Not a demo, not mock data, not a public event API, not a national scraping factory.
+
+Canonical plan: `docs/MASTERPLAN.md`. Build `docs/BACKLOG.md` NOW only.
 
 Your job is to improve the system safely, concretely, and verifiably.
 
@@ -83,11 +99,11 @@ Your job is to improve the system safely, concretely, and verifiably.
 
 Before doing any work:
 
-1. Read `README.md`
+1. Read `README.md` and `docs/MASTERPLAN.md`
 2. Identify the owning domain
 3. Read the matching rules file
 4. Read the matching workflow file
-5. Read `current-task.md`
+5. Read `docs/BACKLOG.md` NOW items, then vault `01-Projects/EventPulse/02-Operations/03-Current-Task.md`
 6. If the task is HTML Path related, also read:
    - `html-discovery.md`
    - `ai-routing.md`
@@ -105,7 +121,8 @@ STOP. Do not guess.
 - `services/api/` → API layer
 - `packages/shared/` → shared types/helpers
 - `supabase/` → database truth
-- `docs/` → verified documentation
+- `docs/` → product masterplan (`docs/MASTERPLAN.md`) and backlog
+- `08-Agent/` → private agent API (Phase 0 — create when implementing NOW)
 - `.ai/` or `AI/` → prompts, rules, workflows, reports
 
 Do not cross domains casually.
@@ -148,6 +165,14 @@ Always use:
 - One task at a time
 - Reports must reflect reality
 
+### Operator tools: no simulated extraction
+
+Anything shipped as a **real operator tool** (dashboard buttons, `db.py` tools, production CLIs used to move queues forward) **must not** invent or synthesize extraction outcomes: no placeholder `eventsFound`, no “synthetic” API/network results, no fake events passed off as measured truth.
+
+- **Allowed:** dry-run / explicitly named **test-only** entrypoints, fixtures, or code paths clearly labeled **simulation** in UX and docs — never mixed into “klara” verktyg.
+- **Required:** counts, paths, and events must come from **the same real code paths** as the ingestion stack (actual fetches, real extractors, real persistence where that tool claims to extract).
+- **Alltools-E2E (verktyg 17/18):** must invoke **real** Tool A/B/C/D (`runA`, `runB-parallel`, `runC-one-time-only`, `runD-scrapingbee`) on project `runtime/` — no synthetic extraction. See `Alltools-E2E/e2e.py` and `.cursor/rules/no-simulated-production-ingestion.mdc`.
+
 ---
 
 ## Execution standard
@@ -165,7 +190,11 @@ Do not fix multiple unrelated problems in one loop.
 
 ---
 
-## Current strategic direction for HTML Path
+## Current strategic direction
+
+**Product:** personal event agent (see `docs/MASTERPLAN.md`). Ingestion exists to feed a Stockholm Event Graph the agent can trust. Do not optimize for Sweden-wide coverage or a public API.
+
+HTML Path remains valid **inside ingestion**, subordinated to Stockholm density for the agent:
 
 For no-jsonld sources without viable open Network Path:
 
@@ -176,7 +205,7 @@ For no-jsonld sources without viable open Network Path:
 5. only then consider render fallback if HTML discovery clearly fails
 
 Important:
-The current bottleneck is often page discovery, not extraction quality.
+Page discovery is often the bottleneck, not extraction quality. Do not make C2→C3 the company P1; that work is NOW only if the Stockholm graph is too thin for the magic query.
 
 ---
 

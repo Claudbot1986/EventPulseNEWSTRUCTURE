@@ -1,6 +1,14 @@
 # EventPulse — NEWSTRUCTURE
 
-EventPulse är ett verkligt city event discovery-system. Inte en demo, inte mock-data, inte en spekulativ arkitektur.
+EventPulse is a **personal event agent**. The Expo app is its interface. The job is *“Vad ska jag faktiskt göra?”* — not a public event aggregator and not a public event-data API.
+
+Canonical plan: [`docs/MASTERPLAN.md`](docs/MASTERPLAN.md)  
+Execution order: [`docs/BACKLOG.md`](docs/BACKLOG.md)  
+Source-ops only: [`RebuildPlan.md`](RebuildPlan.md)
+
+First city: Stockholm. First magic slice: user describes intent → 3–5 grounded recs → tap to tickets.
+
+Ingestion (A–D), queues, normalizer, and Supabase remain the Event Graph factory. They are not the product.
 
 ## Mappstruktur
 
@@ -11,35 +19,30 @@ NEWSTRUCTURE/
 ├── 03-Queue/         → Job-orkestrering (BullMQ, Redis)
 ├── 04-Normalizer/    → Data-transformation (venue, dedup, category, field-mapping)
 ├── 05-Supabase/      → Databas-lagring (events, venues, categories)
-├── 06-UI/            → Presentation (components, app, services)
-├── 07-Discovery/      → Intelliqens-lager (venue graph, expansion, ranking)
-├── AI/               → Sammanfattande AI-regler (se AI/AI.md)
+├── 06-UI/            → Agent interface (Expo). Browse is secondary.
+├── 07-Discovery/      → Venue graph substrate (not the product surface)
+├── 08-Agent/         → Private agent API + tools (Phase 0 — create next)
+├── docs/             → MASTERPLAN.md + BACKLOG.md
+├── AI/               → Ingestion/operator AI rules (se AI/AI.md)
 ├── README.md         ← Du är här
 └── CLAUDE.md         → AI-startpunkt
 ```
 
-## Dataflöde (01 → 07)
+## Dataflöde
 
 ```
-01-Sources
-    ↓ (råa URLs/källor)
-02-Ingestion
-    ↓ (strukturerade events, A→H pipeline)
-03-Queue
-    ↓ (BullMQ-jobs)
-04-Normalizer
-    ↓ (venue resolution, dedup, category)
-05-Supabase
-    ↓ (persistent lagring)
-06-UI ←─────── 07-Discovery
-  (display)    (intelligence/graph)
+01-Sources → 02-Ingestion A–D → 03-Queue → 04-Normalizer → 05-Supabase Event Graph
+                                                                      ↓
+User intent → 08-Agent (private tools) → rank 3–5 → 06-UI agent home → deep link
 ```
+
+07-Discovery venue-graph is substrate for entity resolution, not a consumer feature.
 
 ## Var man startar
 
-**För människor:** Läs denna fil. Gå sedan vidare till respektive mapp.
+**För människor:** Läs `docs/MASTERPLAN.md` och `docs/BACKLOG.md`. Denna fil är kartan.
 
-**För AI:** Läs `CLAUDE.md` först. Den pekar dig till rätt mapp baserat på uppgift.
+**För AI:** Läs `CLAUDE.md`, sedan `docs/MASTERPLAN.md`. Implementera `docs/BACKLOG.md` NOW — inget från DO NOT BUILD YET.
 
 ## Ingestions-pipeline (02-Ingestion)
 
@@ -71,7 +74,9 @@ Phase 3: Smoke    (3 events/venue, --mode=smoke)
 
 Varje ändring ska verifieras genom verklig körning, inte antas.
 
-E2E betyder: källa → 02-Ingestion → 03-Queue → 04-Normalizer → 05-Supabase → 06-UI.
+E2E för **produkten** betyder: intention → agent tools → Event Graph → 3–5 recs → action in Expo.
+
+E2E för **ingestion** betyder: källa → 02-Ingestion → 03-Queue → 04-Normalizer → 05-Supabase. Ingestion E2E is necessary but not sufficient.
 
 ## Mappansvar
 
@@ -82,5 +87,7 @@ E2E betyder: källa → 02-Ingestion → 03-Queue → 04-Normalizer → 05-Supab
 | `03-Queue` | BullMQ, Redis, job-orkestrering |
 | `04-Normalizer` | Venue resolution, deduplication, category mapping |
 | `05-Supabase` | Schema, migrationer, queries |
-| `06-UI` | Components, screens, API client |
-| `07-Discovery` | Venue graph, expansion, ranking, enrichment |
+| `06-UI` | Agent interface (Expo). Not a public data browser. |
+| `07-Discovery` | Venue graph substrate |
+| `08-Agent` | Private agent API, tools, prompts, eval |
+| `docs/` | Product masterplan and backlog |

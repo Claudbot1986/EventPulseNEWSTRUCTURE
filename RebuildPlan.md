@@ -1,5 +1,12 @@
 # SOURCE REBUILD PLAN
 
+> **Subordinate plan.** This document is **source-ops only** (canonical sources, thin queues, tools A–D). It is not the company product plan.
+>
+> Product thesis, agent architecture, API strategy, and Phase 0–5 roadmap: [`docs/MASTERPLAN.md`](docs/MASTERPLAN.md)  
+> What to build now: [`docs/BACKLOG.md`](docs/BACKLOG.md)
+>
+> Do not use this file to justify Sweden-wide scraping, public APIs, or browse-first product work.
+
 ## 1. Syfte
 
 Syftet med denna ombyggnad är att skapa en tydlig, robust och verifierbar source-arkitektur för EventPulse där:
