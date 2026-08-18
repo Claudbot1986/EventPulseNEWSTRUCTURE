@@ -105,4 +105,46 @@ export async function getAgentHealth() {
   }
 }
 
+/**
+ * Record a user interaction for one event card (Phase 1 success tracking).
+ *
+ * Best-effort: never throws. The server returns 202 with a warning if the
+ * write is rejected (e.g. unknown interaction). We swallow that to keep the
+ * UI flow uninterrupted.
+ */
+export async function recordEventInteraction({
+  eventId,
+  interaction, // 'click' | 'outbound' | 'save' | 'dismiss' | 'feedback_positive' | 'feedback_negative'
+  sessionId,
+  queryText,
+  timeoutMs = 4_000,
+}) {
+  if (!eventId || !interaction) return { ok: false, warning: 'missing fields' };
+  const client_user_id = getOrCreateAnonUserId();
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), timeoutMs);
+  try {
+    const response = await fetch(`${AGENT_BASE_URL}/agent/feedback`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        client_user_id,
+        session_id: sessionId,
+        event_id: eventId,
+        interaction,
+        query_text: queryText,
+      }),
+      signal: controller.signal,
+    });
+    if (!response.ok && response.status !== 202) {
+      return { ok: false, warning: `agent ${response.status}` };
+    }
+    return await response.json().catch(() => ({ ok: true }));
+  } catch (_err) {
+    return { ok: false, warning: 'network' };
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
 export { AGENT_BASE_URL, getOrCreateAnonUserId };

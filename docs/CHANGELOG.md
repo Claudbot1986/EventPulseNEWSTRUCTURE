@@ -125,6 +125,43 @@ First concrete cut of the agent-first product pivot described in
 - `konsert ikväll solo` → 0 frågor, kör Phase 1 LLM path direkt
 - Vitest: 67/67 gröna (55 Phase 0+1 + 12 nya find_gaps).
 
+## 2026-08-18 — Metrics: CTR / funnel tracking (Phase 1 success)
+
+### What changed
+- `08-Agent/server.ts` — `POST /agent/feedback` route: validates
+  `client_user_id` (uuid), `event_id` (uuid), `interaction` (enum), and
+  silently drops malformed `session_id` (DB column is uuid — we drop
+  rather than fail the request). Calls `recordFeedback` and returns 202
+  with a warning if the insert fails.
+- `08-Agent/server.ts` — `GET /agent/metrics` route: counts of
+  `impression` / `click` / `outbound` / `save`, plus CTR
+  (`outbounds / impressions`). Phase 1 success criterion baseline.
+- `08-Agent/tools/record_feedback.ts` — interaction write (unchanged
+  contract; now exercised by both impression-loop and feedback route).
+- `08-Agent/types.ts` — extended `RecordFeedbackInput.interaction` to
+  include `'outbound'` (was already exported but unused).
+- `05-Supabase/migrations/20260818-0003-user-interaction-outbound.sql`
+  (NEW) — adds `'outbound'` to `user_interactions_interaction_check`
+  (CHECK constraint was missing it; every outbound write failed
+  silently). Applied live via Supabase Management API.
+- `08-Agent/tests/record_feedback.test.ts` (NEW) — 4 tests:
+  insert-success, insert-failure (warning, not throw),
+  missing-fields short-circuit, payload-pass-through.
+- `06-UI/services/agentClient.js` — added `recordEventInteraction()`:
+  POST to `/agent/feedback` with timeout + best-effort swallow
+  (never throws to the UI).
+- `06-UI/app/AgentScreen.js` — `EventRow.onPress` now fires
+  `click` immediately and `outbound` after `Linking.openURL`
+  resolves. State carries `sessionId` + `lastQuery` for context.
+
+### Verified end-to-end (live Supabase)
+- POST click → metrics: `clicks` +=1
+- POST outbound → metrics: `outbounds` +=1, CTR recomputes
+- POST save → metrics: `saves` +=1
+- Vitest: 71/71 gröna (67 + 4 nya record_feedback).
+- Baseline snapshot after dogfood probe: `impressions=55, clicks=2,
+  outbounds=2, saves=2, ctr=0.0364`.
+
 
 ## Earlier history
 
