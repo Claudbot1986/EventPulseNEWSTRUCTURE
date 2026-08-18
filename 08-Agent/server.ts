@@ -69,6 +69,19 @@ export function buildApp(opts: { supabase?: SupabaseClient } = {}): express.Expr
       res.status(403).json({ error: 'origin not allowed' });
       return;
     }
+    if (origin) {
+      res.header('Access-Control-Allow-Origin', origin);
+      res.header('Vary', 'Origin');
+      res.header('Access-Control-Allow-Methods', 'GET,POST,OPTIONS');
+      res.header(
+        'Access-Control-Allow-Headers',
+        'Content-Type, Authorization, Origin'
+      );
+    }
+    if (req.method === 'OPTIONS') {
+      res.status(204).end();
+      return;
+    }
     next();
   });
 
