@@ -1,0 +1,206 @@
+[
+  {
+    "id": "Q01",
+    "query": "konsert ikväll",
+    "expected_language": "sv",
+    "expected_time_of_day": "evening",
+    "expected_city": "Stockholm",
+    "expected_categories": ["music"],
+    "expected_min_results": 0
+  },
+  {
+    "id": "Q02",
+    "query": "free jazz tonight",
+    "expected_language": "en",
+    "expected_budget": "free",
+    "expected_time_of_day": "evening",
+    "expected_categories": ["music"]
+  },
+  {
+    "id": "Q03",
+    "query": "teater på lördag",
+    "expected_language": "sv",
+    "expected_categories": ["theater"]
+  },
+  {
+    "id": "Q04",
+    "query": "dans ikväll",
+    "expected_language": "sv",
+    "expected_time_of_day": "evening",
+    "expected_categories": ["dance"]
+  },
+  {
+    "id": "Q05",
+    "query": "film bio ikväll",
+    "expected_language": "sv",
+    "expected_categories": ["film"]
+  },
+  {
+    "id": "Q06",
+    "query": "konst utställning helgen",
+    "expected_language": "sv",
+    "expected_categories": ["art"]
+  },
+  {
+    "id": "Q07",
+    "query": "familj aktivitet lördag",
+    "expected_language": "sv",
+    "expected_party": "family"
+  },
+  {
+    "id": "Q08",
+    "query": "dejt ikväll restaurang",
+    "expected_language": "sv",
+    "expected_party": "couple"
+  },
+  {
+    "id": "Q09",
+    "query": "lecture talk english",
+    "expected_language": "en",
+    "expected_categories": ["lecture"]
+  },
+  {
+    "id": "Q10",
+    "query": "matfestival ikväll",
+    "expected_language": "sv",
+    "expected_categories": ["food"]
+  },
+  {
+    "id": "Q11",
+    "query": "gratis barn aktivitet",
+    "expected_language": "sv",
+    "expected_budget": "free",
+    "expected_party": "family",
+    "expected_categories": ["family"]
+  },
+  {
+    "id": "Q12",
+    "query": "konsert men inte musik",
+    "expected_language": "sv",
+    "expected_categories": ["music"],
+    "expected_exclude_categories": ["music"]
+  },
+  {
+    "id": "Q13",
+    "query": "nästa vecka",
+    "expected_language": "sv",
+    "expected_date_range": "next_week"
+  },
+  {
+    "id": "Q14",
+    "query": "denna helg",
+    "expected_language": "sv",
+    "expected_date_range": "this_weekend"
+  },
+  {
+    "id": "Q15",
+    "query": "ikväll",
+    "expected_language": "sv",
+    "expected_time_of_day": "evening",
+    "expected_date_range": "today"
+  },
+  {
+    "id": "Q16",
+    "query": "classical concert this weekend",
+    "expected_language": "en",
+    "expected_categories": ["music"]
+  },
+  {
+    "id": "Q17",
+    "query": "vad händer i Stockholm?",
+    "expected_language": "sv",
+    "expected_city": "Stockholm",
+    "expected_min_results": 0
+  },
+  {
+    "id": "Q18",
+    "query": "festival gratis helgen",
+    "expected_language": "sv",
+    "expected_budget": "free"
+  },
+  {
+    "id": "Q19",
+    "query": "kids show saturday",
+    "expected_language": "en",
+    "expected_party": "family"
+  },
+  {
+    "id": "Q20",
+    "query": "stökig konsert ikväll",
+    "expected_language": "sv",
+    "expected_categories": ["music"],
+    "expected_time_of_day": "evening"
+  },
+  {
+    "id": "Q21",
+    "query": "konsert ikväll",
+    "expected_language": "sv",
+    "expected_time_of_day": "evening",
+    "expected_categories": ["music"],
+    "expected_min_results": 1,
+    "expected_reasons_must_contain": ["time_fit", "category_match"]
+  },
+  {
+    "id": "Q22",
+    "query": "gratis",
+    "expected_language": "sv",
+    "expected_budget": "free",
+    "expected_min_results": 1,
+    "expected_reasons_must_contain": ["under_budget"]
+  },
+  {
+    "id": "Q23",
+    "query": "konsert",
+    "expected_language": "sv",
+    "expected_categories": ["music"],
+    "expected_min_results": 1,
+    "expected_reasons_must_contain": ["category_match"],
+    "expected_reasons_must_not_contain": ["time_fit"]
+  },
+  {
+    "id": "Q24",
+    "query": "teater ikväll",
+    "expected_language": "sv",
+    "expected_time_of_day": "evening",
+    "expected_categories": ["theater"],
+    "expected_min_results": 1,
+    "expected_reasons_must_contain": ["time_fit", "category_match"]
+  },
+  {
+    "id": "Q25",
+    "query": "jazz ikväll",
+    "expected_language": "sv",
+    "expected_time_of_day": "evening",
+    "expected_categories": ["music"],
+    "expected_min_results": 1,
+    "expected_reasons_must_contain": ["time_fit", "category_match"]
+  },
+  {
+    "id": "Q26",
+    "query": "matfestival ikväll",
+    "expected_language": "sv",
+    "expected_time_of_day": "evening",
+    "expected_categories": ["food"],
+    "expected_min_results": 1,
+    "expected_reasons_must_contain": ["category_match"]
+  },
+  {
+    "id": "Q27",
+    "query": "denna helg familj",
+    "expected_language": "sv",
+    "expected_party": "family",
+    "expected_date_range": "this_weekend",
+    "expected_min_results": 1,
+    "expected_reasons_must_contain": ["category_match"]
+  },
+  {
+    "id": "Q28",
+    "query": "ikväll",
+    "expected_language": "sv",
+    "expected_time_of_day": "evening",
+    "expected_date_range": "today",
+    "expected_min_results": 1,
+    "expected_reasons_must_contain": ["time_fit"],
+    "expected_reasons_must_not_contain": ["category_match"]
+  }
+]
