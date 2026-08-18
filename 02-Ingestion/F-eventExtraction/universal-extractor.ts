@@ -1117,6 +1117,42 @@ function extractSwedishRelativeDates($: cheerio.CheerioAPI, source: string, base
   return events;
 }
 
+// ─── Open Graph Image Fallback ───────────────────────────────────────────────
+// Strategy A (MASTERPLAN §13: "+10 image present" confidence). HTML pages that
+// lack JSON-LD `image` (A1) or embedded JS image data (B1–B6) often still
+// publish og:image / twitter:image as page-level meta tags. These are a cheap
+// fallback for Tier-1 Stockholm sources. The fallback is per-page (meta tags
+// describe the page, not individual events on a listing page).
+//
+// Order matches observed priority on Swedish event sites — og:image first.
+function extractPageOgImage($: cheerio.CheerioAPI): string | undefined {
+  const candidates: Array<string | undefined> = [
+    $('meta[property="og:image"]').attr('content'),
+    $('meta[property="og:image:url"]').attr('content'),
+    $('meta[name="og:image"]').attr('content'),
+    $('meta[name="twitter:image"]').attr('content'),
+    $('meta[property="twitter:image"]').attr('content'),
+    $('meta[name="twitter:image:src"]').attr('content'),
+    $('link[rel="image_src"]').attr('href'),
+  ];
+  for (const raw of candidates) {
+    if (raw && typeof raw === 'string' && raw.trim().length > 0) {
+      return raw.trim();
+    }
+  }
+  return undefined;
+}
+
+/** Resolve relative URL against base. Returns raw input if it is already absolute or invalid. */
+function absolutizeUrl(raw: string, baseUrl: string): string {
+  if (/^https?:\/\//i.test(raw)) return raw;
+  try {
+    return new URL(raw, baseUrl).toString();
+  } catch {
+    return raw;
+  }
+}
+
 // ─── MAIN EXPORT ─────────────────────────────────────────────────────────────
 
 export function extractEvents(html: string, source: string, baseUrl: string): ExtractResult {
@@ -1154,15 +1190,25 @@ export function extractEvents(html: string, source: string, baseUrl: string): Ex
   addEvents(extractTimeAnchors($, source, baseUrl), 'C2');
   addEvents(extractSwedishRelativeDates($, source, baseUrl), 'C3');
 
+  // Strategy A fallback — page-level og:image / twitter:image for events that
+  // did not pick up an image from any of A1–C3. Per-page only (meta tags
+  // describe the page, not individual events). JSON-LD / microdata wins.
+  const pageOgImage = extractPageOgImage($);
+  const enrichedEvents: ParsedEvent[] = pageOgImage
+    ? allEvents.map((evt) =>
+        evt.imageUrl ? evt : { ...evt, imageUrl: absolutizeUrl(pageOgImage, baseUrl) }
+      )
+    : allEvents;
+
   const methodsUsed = Object.keys(methodBreakdown);
 
-  if (allEvents.length > 0) {
-    console.log(`[UniversalExtractor v2] ${allEvents.length} events via ${methodsUsed.join('+')} | ${Object.entries(methodBreakdown).map(([k,v]) => `${k}:${v}`).join(', ')}`);
+  if (enrichedEvents.length > 0) {
+    console.log(`[UniversalExtractor v2] ${enrichedEvents.length} events via ${methodsUsed.join('+')} | ${Object.entries(methodBreakdown).map(([k,v]) => `${k}:${v}`).join(', ')}${pageOgImage ? ' | og-image-fallback applied' : ''}`);
   }
 
   return {
-    events: allEvents,
-    rawCount: allEvents.length,
+    events: enrichedEvents,
+    rawCount: enrichedEvents.length,
     parseErrors: errors,
     sourceUrl: baseUrl,
     methodsUsed,
