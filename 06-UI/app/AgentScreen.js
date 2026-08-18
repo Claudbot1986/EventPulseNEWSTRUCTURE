@@ -14,7 +14,9 @@ import React, { useCallback, useState } from 'react';
 import {
   ActivityIndicator,
   FlatList,
+  KeyboardAvoidingView,
   Linking,
+  Platform,
   StyleSheet,
   Text,
   TextInput,
@@ -85,7 +87,7 @@ export default function AgentScreen() {
       setReply(res.reply);
       setCards(res.cards);
       setWarnings(res.warnings);
-      setQuestions(res.clarifying_questions ?? []);
+      setQuestions(res.clarifyingQuestions ?? []);
       setHistory((h) => [...h, { role: 'assistant', text: res.reply, cards: res.cards }]);
       setMessage('');
     } catch (err) {
@@ -96,7 +98,11 @@ export default function AgentScreen() {
   }, [message, loading]);
 
   return (
-    <View style={styles.root}>
+    <KeyboardAvoidingView
+      style={styles.root}
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 24}
+    >
       <Text style={styles.heading}>EventPulse Agent</Text>
 
       <FlatList
@@ -164,7 +170,7 @@ export default function AgentScreen() {
           <Text style={styles.sendText}>Skicka</Text>
         </TouchableOpacity>
       </View>
-    </View>
+    </KeyboardAvoidingView>
   );
 }
 
