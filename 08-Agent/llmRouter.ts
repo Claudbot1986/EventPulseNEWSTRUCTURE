@@ -78,11 +78,11 @@ export async function composeReply(input: ComposeInput): Promise<ComposeResult> 
     const parsed = parseReplyJson(text);
     if (!parsed) return { ...fallback, usedLlm: false };
 
-    const allowedIds = new Set(input.cards.map((c) => c.id));
-    const highlightedIds = (parsed.highlightedIds ?? [])
-      .filter((id): id is string => typeof id === 'string')
-      .filter((id) => allowedIds.has(id))
-      .slice(0, MAX_HIGHLIGHTS);
+    const highlightedIds = filterHighlightedIds(
+      parsed.highlightedIds,
+      input.cards,
+      MAX_HIGHLIGHTS
+    );
 
     return {
       reply: parsed.reply ?? fallback.reply,
@@ -92,6 +92,42 @@ export async function composeReply(input: ComposeInput): Promise<ComposeResult> 
   } catch {
     return { ...fallback, usedLlm: false };
   }
+}
+
+/**
+ * Anti-hallucination filter — keep only highlighted ids that match a card
+ * the deterministic pipeline actually returned. Drop everything else.
+ *
+ * This is the *only* mechanism that prevents a model from injecting
+ * fabricated event ids into the response. Even if the model hallucinates,
+ * any id not in `inputCards` is silently dropped here.
+ *
+ * Exported as a pure helper so the contract is unit-testable without
+ * mocking the Anthropic SDK.
+ *
+ * Rules:
+ *   - Each kept id must be a non-empty string AND appear in inputCards.
+ *   - Result is capped at `max` entries (preserves input order).
+ *   - Non-string entries (numbers, null, objects) are filtered out.
+ *   - inputCards is read-only — we never mutate it.
+ */
+export function filterHighlightedIds(
+  parsedIds: unknown,
+  inputCards: ReadonlyArray<{ id: string }>,
+  max: number
+): string[] {
+  if (!Array.isArray(parsedIds) || inputCards.length === 0 || max <= 0) {
+    return [];
+  }
+  const allowedIds = new Set(inputCards.map((c) => c.id));
+  const out: string[] = [];
+  for (const id of parsedIds) {
+    if (out.length >= max) break;
+    if (typeof id !== 'string' || id.length === 0) continue;
+    if (!allowedIds.has(id)) continue;
+    out.push(id);
+  }
+  return out;
 }
 
 // ─── internals ──────────────────────────────────────────────────────────────
