@@ -23,6 +23,7 @@ import { parseIntent } from './tools/parse_intent';
 import { searchEvents } from './tools/search_events';
 import { rankEvents } from './tools/rank_events';
 import { recordFeedback } from './tools/record_feedback';
+import { findGaps } from './tools/find_gaps';
 import { composeReply } from './llmRouter';
 import type {
   AgentChatRequest,
@@ -94,6 +95,27 @@ export function buildApp(opts: { supabase?: SupabaseClient } = {}): express.Expr
 
     try {
       const intent = await parseIntent(body.message);
+
+      // Cold-start gate: if critical intent slots are missing, ask the user
+      // instead of guessing. The deterministic pipeline never runs with a
+      // thin intent — we either have enough signal to search or we ask.
+      const gaps = findGaps(intent);
+      if (gaps.length > 0) {
+        const leadIn =
+          intent.language === 'sv'
+            ? 'Jag vill gärna hjälpa dig — berätta lite mer:'
+            : "I'd love to help — tell me a bit more:";
+        const out: AgentChatResponse = {
+          session_id: body.session_id ?? 'pending',
+          reply: leadIn,
+          cards: [],
+          warnings: [],
+          clarifying_questions: gaps,
+        };
+        res.json(out);
+        return;
+      }
+
       const search = await searchEvents(client, {
         city: intent.city,
         date_from: intent.date_from,

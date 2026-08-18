@@ -94,6 +94,37 @@ First concrete cut of the agent-first product pivot described in
   (max), alla highlight-ids är subset av input-kort.
 - Vitest: 55/55 gröna (45 Phase 0 + 9 nya llmRouter + 1 helper).
 
+## 2026-08-18 — Cold-start frågor (BACKLOG Phase 1)
+
+### What changed
+- `08-Agent/tools/find_gaps.ts` (NEW) — given an `IntentBrief`, returns
+  up to 3 short clarifying questions for missing critical slots in
+  priority order: category → time_of_day → party. Chip option values
+  are regex triggers that `parse_intent` understands, so a chip-tap
+  round-trip resolves back into the same intent.
+- `08-Agent/types.ts` — new `ClarifyingQuestion` interface and
+  `AgentChatResponse.clarifying_questions?: ClarifyingQuestion[]`
+  (optional, additive — no existing caller breaks).
+- `08-Agent/server.ts` — cold-start gate before search: if
+  `findGaps(intent)` is non-empty, the handler returns immediately
+  with empty `cards` and the questions, instead of guessing. The
+  deterministic pipeline never runs with a thin intent.
+- `08-Agent/tools/parse_intent.ts` — extended `SV_STOPWORDS` regex
+  with `hej|tack|vad finns|hittar|hjälp` so trivial Swedish greetings
+  are no longer misclassified as English.
+- `08-Agent/tests/find_gaps.test.ts` (NEW) — 12 tests covering empty
+  intent, single-gap, multi-gap, English output, prioritisation, and
+  the regex-trigger round-trip guarantee.
+- `06-UI/app/AgentScreen.js` — renders `clarifying_questions` as
+  quick-tap chips; tapping a chip sends its `value` as a new message.
+
+### Verified end-to-end (live Supabase + live Anthropic API)
+- `hej` → 3 svenska frågor (category, time_of_day, party)
+- `konsert ikväll` → 1 fråga (party) — category + time är redan ifyllda
+- `konsert` → 2 frågor (time_of_day, party) — category är ifylld
+- `konsert ikväll solo` → 0 frågor, kör Phase 1 LLM path direkt
+- Vitest: 67/67 gröna (55 Phase 0+1 + 12 nya find_gaps).
+
 
 ## Earlier history
 
