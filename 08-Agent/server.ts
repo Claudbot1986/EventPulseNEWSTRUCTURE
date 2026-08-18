@@ -106,6 +106,13 @@ export function buildApp(opts: { supabase?: SupabaseClient } = {}): express.Expr
 
     const client = sb ?? getSupabase();
 
+    // session_id is optional; if present it must be a uuid (DB column is uuid).
+    // Silently drop malformed session_ids rather than failing the chat request.
+    const chatSessionId: string | undefined =
+      typeof body.session_id === 'string' && UUID_RE.test(body.session_id)
+        ? body.session_id
+        : undefined;
+
     try {
       const intent = await parseIntent(body.message);
 
@@ -147,7 +154,7 @@ export function buildApp(opts: { supabase?: SupabaseClient } = {}): express.Expr
       for (let i = 0; i < cards.length; i++) {
         await recordFeedback(client, {
           client_user_id: body.client_user_id,
-          session_id: body.session_id,
+          session_id: chatSessionId,
           event_id: cards[i].id,
           interaction: 'impression',
           query_text: body.message,
@@ -169,6 +176,91 @@ export function buildApp(opts: { supabase?: SupabaseClient } = {}): express.Expr
         warnings: search.warnings,
       };
       res.json(out);
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'unknown error';
+      res.status(500).json({ error: msg });
+    }
+  });
+
+  app.post('/agent/feedback', async (req: Request, res: Response) => {
+    const body = req.body as Partial<{
+      client_user_id: string;
+      session_id?: string;
+      event_id: string;
+      interaction: string;
+      query_text?: string;
+      metadata?: Record<string, unknown>;
+    }>;
+    if (!body || typeof body !== 'object') {
+      res.status(400).json({ error: 'invalid body' });
+      return;
+    }
+    if (!body.client_user_id || !UUID_RE.test(body.client_user_id)) {
+      res.status(400).json({ error: 'client_user_id must be a uuid' });
+      return;
+    }
+    if (!body.event_id || !UUID_RE.test(body.event_id)) {
+      res.status(400).json({ error: 'event_id must be a uuid' });
+      return;
+    }
+    // session_id is optional, but if present it MUST be a uuid (DB column is uuid).
+    // Silently drop malformed session_ids rather than failing the whole feedback.
+    const sessionId: string | undefined =
+      typeof body.session_id === 'string' && UUID_RE.test(body.session_id)
+        ? body.session_id
+        : undefined;
+    const ALLOWED = new Set([
+      'impression', 'click', 'outbound', 'save',
+      'dismiss', 'feedback_positive', 'feedback_negative',
+    ]);
+    if (!body.interaction || !ALLOWED.has(body.interaction)) {
+      res.status(400).json({ error: `interaction must be one of: ${[...ALLOWED].join(', ')}` });
+      return;
+    }
+
+    const client = sb ?? getSupabase();
+    const result = await recordFeedback(client, {
+      client_user_id: body.client_user_id,
+      session_id:     sessionId,
+      event_id:       body.event_id,
+      interaction:    body.interaction as 'impression' | 'click' | 'outbound' | 'save' | 'dismiss' | 'feedback_positive' | 'feedback_negative',
+      query_text:     body.query_text,
+      metadata:       body.metadata,
+    });
+
+    if (!result.ok) {
+      res.status(202).json({ ok: false, warning: result.warning ?? 'unknown' });
+      return;
+    }
+    res.json({ ok: true });
+  });
+
+  app.get('/agent/metrics', async (_req: Request, res: Response) => {
+    const client = sb ?? getSupabase();
+    try {
+      const { data, error } = await client
+        .from('user_interactions')
+        .select('interaction');
+      if (error) {
+        res.status(500).json({ error: error.message });
+        return;
+      }
+      const counts: Record<string, number> = {};
+      for (const row of data ?? []) {
+        counts[row.interaction] = (counts[row.interaction] ?? 0) + 1;
+      }
+      const impressions = counts.impression ?? 0;
+      const clicks      = counts.click ?? 0;
+      const outbounds   = counts.outbound ?? 0;
+      const ctr         = impressions > 0 ? outbounds / impressions : 0;
+      res.json({
+        impressions,
+        clicks,
+        outbounds,
+        saves:       counts.save ?? 0,
+        ctr:         Number(ctr.toFixed(4)),
+        total_rows:  (data ?? []).length,
+      });
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : 'unknown error';
       res.status(500).json({ error: msg });

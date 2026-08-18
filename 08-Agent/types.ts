@@ -83,7 +83,7 @@ export interface RecordFeedbackInput {
   client_user_id: string;
   session_id?: string;
   event_id: string;
-  interaction: 'click' | 'save' | 'dismiss' | 'feedback_positive' | 'feedback_negative';
+  interaction: 'impression' | 'click' | 'outbound' | 'save' | 'dismiss' | 'feedback_positive' | 'feedback_negative';
   query_text?: string;
   rank_position?: number;
   reasons?: RankReason[];

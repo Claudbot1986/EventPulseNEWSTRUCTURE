@@ -24,7 +24,7 @@ import {
   View,
 } from 'react-native';
 
-import { chatWithAgent } from '../services/agentClient';
+import { chatWithAgent, recordEventInteraction } from '../services/agentClient';
 
 const SUGGESTIONS = [
   'Konsert ikväll',
@@ -46,9 +46,15 @@ function formatTime(iso) {
   });
 }
 
-function EventRow({ card }) {
+function EventRow({ card, onInteraction }) {
   const onPress = () => {
-    if (card.ticket_url) Linking.openURL(card.ticket_url).catch(() => {});
+    // Best-effort metrics: every tap = click; opening ticket_url = outbound.
+    onInteraction?.(card.id, 'click');
+    if (card.ticket_url) {
+      Linking.openURL(card.ticket_url)
+        .then(() => onInteraction?.(card.id, 'outbound'))
+        .catch(() => {});
+    }
   };
   return (
     <TouchableOpacity onPress={onPress} style={styles.card}>
@@ -74,6 +80,8 @@ export default function AgentScreen() {
   const [warnings, setWarnings] = useState([]);
   const [history, setHistory]   = useState([]);
   const [questions, setQuestions] = useState([]);
+  const [sessionId, setSessionId] = useState(null);
+  const [lastQuery, setLastQuery] = useState('');
 
   const send = useCallback(async (text) => {
     const m = (text ?? message).trim();
@@ -88,6 +96,8 @@ export default function AgentScreen() {
       setCards(res.cards);
       setWarnings(res.warnings);
       setQuestions(res.clarifyingQuestions ?? []);
+      setSessionId(res.sessionId);
+      setLastQuery(m);
       setHistory((h) => [...h, { role: 'assistant', text: res.reply, cards: res.cards }]);
       setMessage('');
     } catch (err) {
@@ -96,6 +106,16 @@ export default function AgentScreen() {
       setLoading(false);
     }
   }, [message, loading]);
+
+  // Best-effort interaction tracking. Never throws; server 202 → silent.
+  const onInteraction = useCallback((eventId, interaction) => {
+    recordEventInteraction({
+      eventId,
+      interaction,
+      sessionId,
+      queryText: lastQuery,
+    }).catch(() => {});
+  }, [sessionId, lastQuery]);
 
   return (
     <KeyboardAvoidingView
@@ -108,7 +128,7 @@ export default function AgentScreen() {
       <FlatList
         data={cards}
         keyExtractor={(item) => item.id}
-        renderItem={({ item }) => <EventRow card={item} />}
+        renderItem={({ item }) => <EventRow card={item} onInteraction={onInteraction} />}
         ListHeaderComponent={
           <View>
             {reply ? <Text style={styles.reply}>{reply}</Text> : null}
