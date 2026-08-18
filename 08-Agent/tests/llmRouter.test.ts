@@ -12,6 +12,7 @@ import {
   deterministicReply,
   parseReplyJson,
   buildUserMessage,
+  filterHighlightedIds,
 } from '../llmRouter';
 import type { EventCard, IntentBrief } from '../types';
 
@@ -149,5 +150,99 @@ describe('composeReply (LLM disabled path)', () => {
     const r = await composeReply({ intent: baseIntent, cards: [], warnings: [] });
     expect(r.reply).toMatch(/inget som matchar/);
     expect(r.highlightedIds).toEqual([]);
+  });
+});
+
+/**
+ * Anti-hallucination contract — `filterHighlightedIds` is the SOLE mechanism
+ * preventing the model from injecting fabricated event ids into the wire
+ * response. See MASTERPLAN §16 risk + llmRouter.ts header.
+ *
+ * These tests prove:
+ *   - ids not present in the deterministic input cards are silently dropped
+ *   - the deterministic pipeline (not the LLM) is the only source of card ids
+ *     that ever reaches the wire format
+ */
+describe('filterHighlightedIds (anti-hallucination)', () => {
+  const cards = [
+    { id: 'card-a' },
+    { id: 'card-b' },
+    { id: 'card-c' },
+    { id: 'card-d' },
+  ];
+
+  it('drops ids not in inputCards (model fabrication)', () => {
+    const result = filterHighlightedIds(
+      ['card-a', 'fabricated-id-1', 'card-b', 'totally-fake-uuid'],
+      cards,
+      3
+    );
+    expect(result).toEqual(['card-a', 'card-b']);
+  });
+
+  it('preserves input order of allowed ids', () => {
+    const result = filterHighlightedIds(
+      ['card-c', 'card-a', 'card-d'],
+      cards,
+      3
+    );
+    expect(result).toEqual(['card-c', 'card-a', 'card-d']);
+  });
+
+  it('caps output at max even when more allowed ids are valid', () => {
+    const result = filterHighlightedIds(
+      ['card-a', 'card-b', 'card-c', 'card-d'],
+      cards,
+      2
+    );
+    expect(result).toEqual(['card-a', 'card-b']);
+  });
+
+  it('drops non-string entries (numbers, null, objects, booleans)', () => {
+    const result = filterHighlightedIds(
+      ['card-a', 42, null, { id: 'card-b' }, 'card-c', undefined, true],
+      cards,
+      5
+    );
+    // Objects are NOT unwrapped — only top-level string ids are validated.
+    expect(result).toEqual(['card-a', 'card-c']);
+  });
+
+  it('drops empty-string ids', () => {
+    const result = filterHighlightedIds(['', 'card-a'], cards, 5);
+    expect(result).toEqual(['card-a']);
+  });
+
+  it('returns empty array when inputCards is empty', () => {
+    const result = filterHighlightedIds(['card-a', 'card-b'], [], 3);
+    expect(result).toEqual([]);
+  });
+
+  it('returns empty array when max <= 0', () => {
+    expect(filterHighlightedIds(['card-a'], cards, 0)).toEqual([]);
+    expect(filterHighlightedIds(['card-a'], cards, -1)).toEqual([]);
+  });
+
+  it('returns empty array when parsedIds is not an array', () => {
+    expect(filterHighlightedIds(null, cards, 3)).toEqual([]);
+    expect(filterHighlightedIds(undefined, cards, 3)).toEqual([]);
+    expect(filterHighlightedIds('card-a', cards, 3)).toEqual([]);
+    expect(filterHighlightedIds({ ids: ['card-a'] }, cards, 3)).toEqual([]);
+  });
+
+  it('returns empty array when parsedIds is empty', () => {
+    expect(filterHighlightedIds([], cards, 3)).toEqual([]);
+  });
+
+  it('drops every id when all inputs are fabricated (worst-case model failure)', () => {
+    // Belt-and-suspenders: this is the proof that the deterministic pipeline,
+    // not the model, is the sole source of card ids in the wire response.
+    const result = filterHighlightedIds(
+      ['evt-fake-1', 'evt-fake-2', 'evt-fake-3'],
+      cards,
+      3
+    );
+    expect(result).toEqual([]);
+    expect(result.some((id) => !cards.some((c) => c.id === id))).toBe(false);
   });
 });
