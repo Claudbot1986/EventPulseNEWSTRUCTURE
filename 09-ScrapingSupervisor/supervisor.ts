@@ -32,6 +32,7 @@ import {
   type WriteReportsOptions,
   type WriteReportsResult,
 } from './tools/write_reports';
+import { ensureDashboardRunning, type DashboardLifecycleResult } from './tools/dashboard_lifecycle';
 
 // ─── Public types ────────────────────────────────────────────────────────────
 
@@ -64,6 +65,8 @@ export interface SupervisorRunResult {
   finishedAt: string;
   /** Non-null if any step threw. Reports/vault/repo may still be partial. */
   error: string | null;
+  /** Result of dashboard ensure-run (may be null if no spawn attempted). */
+  dashboard: DashboardLifecycleResult | null;
 }
 
 // ─── Main entry ──────────────────────────────────────────────────────────────
@@ -100,12 +103,14 @@ export async function runSupervisor(opts: SupervisorOptions): Promise<Supervisor
       ? previewAutoApplySafeFixes(state.deadSources, applyOpts)
       : autoApplySafeFixes(state.deadSources, applyOpts);
     const reports = writeReports(state, analysis, apply, writeOpts);
+    const dashboard = dryRun ? null : ensureDashboardRunning(opts.projectRoot);
     const finishedAt = new Date();
     return {
       state,
       analysis,
       apply,
       reports,
+      dashboard,
       dryRun,
       durationMs: finishedAt.getTime() - startedAt.getTime(),
       startedAt: startedAt.toISOString(),
@@ -120,6 +125,7 @@ export async function runSupervisor(opts: SupervisorOptions): Promise<Supervisor
       analysis: emptyAnalysis(),
       apply: { applied: [], skipped: [], archiveDir: '', dryRun },
       reports: emptyReports(),
+      dashboard: null,
       dryRun,
       durationMs: finishedAt.getTime() - startedAt.getTime(),
       startedAt: startedAt.toISOString(),
@@ -171,6 +177,9 @@ export async function main(argv: string[] = process.argv.slice(2)): Promise<numb
       `  repo:  ${result.reports.repoDocPath ?? '(skipped)'}`,
       `  duration: ${result.durationMs}ms`,
       `  LLM: ${result.analysis.usedLlm ? result.analysis.modelVersion : 'deterministic fallback'}`,
+      ...(result.dashboard
+        ? [`  dashboard: ${result.dashboard.wasRunning ? 'already running' : result.dashboard.spawned ? `spawned pid=${result.dashboard.pid}` : `failed: ${result.dashboard.error}`}`]
+        : []),
     ].join('\n')
   );
   return 0;

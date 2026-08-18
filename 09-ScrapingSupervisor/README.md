@@ -7,7 +7,7 @@ auto-retires a narrow class of confirmed-dead sources.
 ## Pipeline
 
 ```
-collect_state → analyze_with_llm → auto_apply_safe_fixes → write_reports
+collect_state → analyze_with_llm → auto_apply_safe_fixes → write_reports → ensureDashboardRunning
 ```
 
 | Tool | Role |
@@ -16,6 +16,8 @@ collect_state → analyze_with_llm → auto_apply_safe_fixes → write_reports
 | `tools/analyze_with_llm.ts` | Batch-level pattern synthesis. Uses Claude Haiku 4.5 if `ANTHROPIC_API_KEY` is set; deterministic fallback otherwise. |
 | `tools/auto_apply_safe_fixes.ts` | Bounded deterministic rule. Retires ENOTFOUND + persistent-404 sources to `sources/_archive/dead-{date}/`. |
 | `tools/write_reports.ts` | Writes vault note + repo doc + suggested-fixes JSONL. |
+| `tools/dashboard_lifecycle.ts` | Starts/restarts the dashboard subprocess if `/health` doesn't respond. |
+| `dashboard/server.ts` | Tiny HTTP server (port 7777) serving the dashboard UI + `/api/status` JSON. |
 | `supervisor.ts` | Orchestrator + CLI entry (`runSupervisor`, `main`). |
 
 ## Outputs
@@ -81,18 +83,48 @@ launchctl list | grep supervisor
 launchctl unload ~/Library/LaunchAgents/com.eventpulse.supervisor.plist
 ```
 
+## Dashboard
+
+The supervisor dashboard is a tiny HTTP server that reads runtime state and
+shows totals, dead sources, schema-drift signals, and suggested fixes. Auto-
+refresh every 30s. View at <http://localhost:7777>.
+
+**Auto-start:** Every supervisor run (incl. the daily launchd one at 04:30)
+checks if the dashboard responds on `/health`. If not, it spawns the server
+as a detached background process and writes its PID to
+`runtime/scraping-supervisor/dashboard.pid`. This means the dashboard is
+restarted every day even if it crashes.
+
+**Manual start** (if you want it running right now without waiting for the
+next supervisor run):
+
+```bash
+npx tsx 09-ScrapingSupervisor/dashboard/server.ts
+```
+
+Open <http://localhost:7777>. Logs at
+`runtime/scraping-supervisor/dashboard.stdout.log` / `dashboard.stderr.log`.
+
+**Note on launchd for the dashboard:** a dedicated dashboard launchd plist
+exists at `cron/com.eventpulse.dashboard.plist` for systems where it works,
+but on macOS Sequoia the `com.apple.provenance` xattr set when copying the
+plist from an external volume causes `launchctl bootstrap` to fail with
+`EX_CONFIG (78)`. The supervisor-spawns-dashboard approach above avoids
+that entirely.
+
 ## Tests
 
 ```bash
 npx vitest run 09-ScrapingSupervisor/tests
 ```
 
-Five test files, 129 tests total:
+Six test files, 135 tests total:
 
 - `tests/collect_state.test.ts`
 - `tests/analyze_with_llm.test.ts`
 - `tests/auto_apply_safe_fixes.test.ts`
 - `tests/write_reports.test.ts`
+- `tests/dashboard_lifecycle.test.ts`
 - `tests/supervisor.test.ts` (end-to-end integration with synthetic fixtures)
 
 ## Idempotency

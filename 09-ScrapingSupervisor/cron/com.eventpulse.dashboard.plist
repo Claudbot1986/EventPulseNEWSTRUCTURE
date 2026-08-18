@@ -4,30 +4,34 @@
 <plist version="1.0">
 <dict>
   <key>Label</key>
-  <string>com.eventpulse.supervisor</string>
+  <string>com.eventpulse.dashboard</string>
   <key>ProgramArguments</key>
   <array>
     <string>/opt/homebrew/bin/node</string>
     <string>/Volumes/2TB filer/NEWSTRUCTURE-COPY/node_modules/tsx/dist/cli.mjs</string>
-    <string>/Volumes/2TB filer/NEWSTRUCTURE-COPY/09-ScrapingSupervisor/supervisor.ts</string>
+    <string>/Volumes/2TB filer/NEWSTRUCTURE-COPY/09-ScrapingSupervisor/dashboard/server.ts</string>
   </array>
-  <key>StartCalendarInterval</key>
+  <key>KeepAlive</key>
   <dict>
-    <key>Hour</key>
-    <integer>4</integer>
-    <key>Minute</key>
-    <integer>30</integer>
+    <key>SuccessfulExit</key>
+    <false/>
+    <key>NetworkState</key>
+    <true/>
   </dict>
+  <key>RunAtLoad</key>
+  <true/>
   <key>StandardOutPath</key>
-  <string>/Volumes/2TB filer/NEWSTRUCTURE-COPY/runtime/scraping-supervisor/stdout.log</string>
+  <string>/Volumes/2TB filer/NEWSTRUCTURE-COPY/runtime/scraping-supervisor/dashboard.stdout.log</string>
   <key>StandardErrorPath</key>
-  <string>/Volumes/2TB filer/NEWSTRUCTURE-COPY/runtime/scraping-supervisor/stderr.log</string>
+  <string>/Volumes/2TB filer/NEWSTRUCTURE-COPY/runtime/scraping-supervisor/dashboard.stderr.log</string>
   <key>EnvironmentVariables</key>
   <dict>
     <key>EVENTPULSE_PROJECT_ROOT</key>
     <string>/Volumes/2TB filer/NEWSTRUCTURE-COPY</string>
     <key>EVENTPULSE_VAULT_ROOT</key>
     <string>/Users/claudgashi/Desktop/MyVault/TomorGashi</string>
+    <key>PORT</key>
+    <string>7777</string>
   </dict>
   <key>WorkingDirectory</key>
   <string>/Volumes/2TB filer/NEWSTRUCTURE-COPY</string>

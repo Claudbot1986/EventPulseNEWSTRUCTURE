@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta http-equiv="refresh" content="30">
+  <title>Scraping Supervisor — Dashboard</title>
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+  <header>
+    <h1>Scraping Supervisor Dashboard</h1>
+    <p class="subtitle">EventPulse · auto-refresh every 30s</p>
+  </header>
+
+  <main>
+    <section class="card" id="run-info">
+      <h2>Run schedule</h2>
+      <dl>
+        <dt>Last run</dt><dd id="last-run">—</dd>
+        <dt>Next run</dt><dd id="next-run">—</dd>
+        <dt>Auto-refresh</dt><dd>30s</dd>
+      </dl>
+    </section>
+
+    <section class="card" id="sources">
+      <h2>Sources (live)</h2>
+      <table>
+        <thead><tr><th>Status</th><th>Count</th></tr></thead>
+        <tbody>
+          <tr><td>Working</td><td id="working">—</td></tr>
+          <tr><td>Dead (status=fail)</td><td id="dead">—</td></tr>
+          <tr><td>Untouched</td><td id="untouched">—</td></tr>
+          <tr class="total"><td>Total</td><td id="total">—</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section class="card" id="applied">
+      <h2>Applied today</h2>
+      <p class="big" id="applied-today">—</p>
+      <details>
+        <summary>Recent log entries</summary>
+        <ul id="applied-recent"><li class="empty">none</li></ul>
+      </details>
+    </section>
+
+    <section class="card" id="drift">
+      <h2>Schema drift (last 5 batches)</h2>
+      <table>
+        <thead><tr><th>Exit reason</th><th>Count</th></tr></thead>
+        <tbody id="drift-body"><tr><td colspan="2" class="empty">loading…</td></tr></tbody>
+      </table>
+    </section>
+
+    <section class="card" id="dead-list">
+      <h2>Top dead sources (cf ≥ 5)</h2>
+      <table>
+        <thead><tr><th>Source</th><th>cf</th><th>Reason</th></tr></thead>
+        <tbody id="dead-body"><tr><td colspan="3" class="empty">loading…</td></tr></tbody>
+      </table>
+    </section>
+
+    <section class="card" id="untouched-list">
+      <h2>Top untouched sources (cf ≥ 10)</h2>
+      <table>
+        <thead><tr><th>Source</th><th>cf</th><th>Reason</th></tr></thead>
+        <tbody id="untouched-body"><tr><td colspan="3" class="empty">loading…</td></tr></tbody>
+      </table>
+    </section>
+
+    <section class="card" id="suggested">
+      <h2>Suggested manual actions</h2>
+      <ul id="suggested-list"><li class="empty">queue empty</li></ul>
+    </section>
+
+    <section class="card" id="links">
+      <h2>Links</h2>
+      <ul>
+        <li><a href="/api/status" target="_blank">/api/status (JSON)</a></li>
+        <li><a href="/health" target="_blank">/health</a></li>
+        <li id="vault-link-li"><a id="vault-link" href="#" target="_blank">Latest vault note</a></li>
+      </ul>
+    </section>
+  </main>
+
+  <footer>
+    <p>Generated <span id="generated-at">—</span></p>
+  </footer>
+
+  <script src="/app.js"></script>
+</body>
+</html>
