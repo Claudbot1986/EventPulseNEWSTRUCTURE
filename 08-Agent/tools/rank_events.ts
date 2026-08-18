@@ -35,11 +35,47 @@ export const CONFIDENCE_LOW = 50;
 /** Freshness older than this (ms) triggers the `stale` reason. Default 14d. */
 export const STALE_AFTER_MS = 14 * 24 * 3600_000;
 
+/**
+ * Default timezone used to bucket events into morning/afternoon/evening/night.
+ * Product is Stockholm-only (MASTERPLAN §2), so we bucket by Stockholm
+ * wall-clock hour — not the server's runtime timezone.
+ *
+ * Override via `RankOptions.timeZone` for tests (rare) or future multi-city.
+ */
+export const DEFAULT_TIME_ZONE = 'Europe/Stockholm';
+
 export interface RankOptions {
   /** override default topN. Default 5. */
   topN?: number;
   /** ISO "now" — tests inject a deterministic value */
   now?: Date;
+  /** IANA timezone for bucketing events. Default Europe/Stockholm. */
+  timeZone?: string;
+}
+
+/**
+ * Wall-clock hour (0–23) of an ISO instant at the given IANA timezone.
+ *
+ * Pure function — exported so tests can pin behavior without touching the
+ * ranker. Uses `Intl.DateTimeFormat` (no external deps) to read the hour in
+ * the target timezone, which correctly handles DST (CEST/CET) shifts that a
+ * naive offset-based approach would get wrong across spring/fall.
+ *
+ * Returns NaN if the ISO is unparseable. `formatToParts` can yield `hour`
+ * as `"24"` for midnight in some locales — normalized to `0` to match the
+ * bucket logic (hour 0 is night, not a separate "24" bucket).
+ */
+export function hourInTimeZone(iso: string, timeZone: string): number {
+  const fmt = new Intl.DateTimeFormat('en-CA', {
+    timeZone,
+    hour: '2-digit',
+    hour12: false,
+  });
+  const parts = fmt.formatToParts(new Date(iso));
+  const hourPart = parts.find((p) => p.type === 'hour');
+  if (!hourPart) return NaN;
+  const h = parseInt(hourPart.value, 10);
+  return h === 24 ? 0 : h;
 }
 
 export function rankEvents(
@@ -50,6 +86,7 @@ export function rankEvents(
   const now = opts.now ?? new Date();
   const nowMs = now.getTime();
   const topN = opts.topN ?? 5;
+  const timeZone = opts.timeZone ?? DEFAULT_TIME_ZONE;
 
   const scored: RankedEvent[] = cards.map((c) => {
     const reasons: RankReason[] = [];
@@ -61,8 +98,12 @@ export function rankEvents(
       reasons.push('not_ended');
     }
 
-    // time_fit (rough hour bucket vs intent.time_of_day)
-    const hour = new Date(c.start_time).getHours();
+    // time_fit (rough hour bucket vs intent.time_of_day) — uses wall-clock
+    // hour in the product timezone, NOT the server's runtime timezone.
+    // Otherwise Q21 "konsert ikväll" passes only by accident when the server
+    // happens to run in UTC and an evening event at 22:00 local falls into
+    // the UTC evening bucket instead of the Stockholm night bucket.
+    const hour = hourInTimeZone(c.start_time, timeZone);
     if (
       (intent.time_of_day === 'morning'   && hour >= 6  && hour < 12) ||
       (intent.time_of_day === 'afternoon' && hour >= 12 && hour < 17) ||

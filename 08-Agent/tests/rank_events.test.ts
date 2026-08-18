@@ -5,7 +5,12 @@
  */
 
 import { describe, expect, it } from 'vitest';
-import { rankEvents, RANK_WEIGHTS } from '../tools/rank_events';
+import {
+  rankEvents,
+  RANK_WEIGHTS,
+  hourInTimeZone,
+  DEFAULT_TIME_ZONE,
+} from '../tools/rank_events';
 import type { EventCard, IntentBrief } from '../types';
 
 const NOW = new Date('2026-08-17T10:00:00Z');
@@ -208,5 +213,150 @@ describe('rankEvents — quality reasons (confidence + freshness)', () => {
     expect(ranked[0].card.id).toBe('fresh');
     expect(ranked[1].card.id).toBe('stale');
     expect(ranked[0].score).toBeGreaterThan(ranked[1].score);
+  });
+});
+
+/**
+ * Stockholm-time bucketing regression — the latent timezone bug.
+ *
+ * Before the fix, rank_events called `new Date(c.start_time).getHours()`
+ * which reads wall-clock hour in the SERVER's runtime timezone (e.g. UTC).
+ * DB stores UTC instants but the product is Stockholm-only — so an event at
+ * 22:00 Stockholm (= 20:00 UTC in CEST) was being stamped 'time_fit' for an
+ * "evening" intent because getHours() returned 20 (UTC), not 22 (Stockholm).
+ * Q21 "konsert ikväll" passed only by accident: m1 20:00 UTC = 22:00 Stockholm
+ * (night) leaked into the evening bucket.
+ *
+ * After the fix, hourInTimeZone(c.start_time, 'Europe/Stockholm') is used,
+ * correctly reflecting Stockholm wall-clock across DST shifts.
+ */
+describe('rankEvents — Stockholm-time bucketing (timezone bug regression)', () => {
+  it('treats 20:00 UTC on 2026-08-17 as NIGHT (22:00 Stockholm CEST), not evening', () => {
+    const event = card({
+      id: 'a',
+      start_time: '2026-08-17T20:00:00Z',
+      category_slug: 'music',
+    });
+    const ranked = rankEvents([event], { ...baseIntent, time_of_day: 'evening' }, { now: NOW });
+    expect(ranked[0].reasons).not.toContain('time_fit');
+  });
+
+  it('treats 18:00 UTC on 2026-08-17 as EVENING (20:00 Stockholm CEST)', () => {
+    const event = card({
+      id: 'a',
+      start_time: '2026-08-17T18:00:00Z',
+      category_slug: 'music',
+    });
+    const ranked = rankEvents([event], { ...baseIntent, time_of_day: 'evening' }, { now: NOW });
+    expect(ranked[0].reasons).toContain('time_fit');
+  });
+
+  it('treats 13:00 UTC on 2026-08-17 as AFTERNOON (15:00 Stockholm), not evening', () => {
+    // 13:00 UTC = 15:00 Stockholm (CEST). Bucket = afternoon [12, 17).
+    // For an evening intent, this event must NOT match — proves the ranker
+    // isn't blindly stamping 'time_fit' on the afternoon→evening boundary.
+    const event = card({
+      id: 'a',
+      start_time: '2026-08-17T13:00:00Z',
+      category_slug: 'music',
+    });
+    const ranked = rankEvents([event], { ...baseIntent, time_of_day: 'evening' }, { now: NOW });
+    expect(ranked[0].reasons).not.toContain('time_fit');
+  });
+
+  it('treats 23:00 UTC on 2026-08-17 as NIGHT (01:00 Stockholm next-day), not evening', () => {
+    // 23:00 UTC = 01:00 Stockholm on 08-18. Bucket = night.
+    const event = card({
+      id: 'a',
+      start_time: '2026-08-17T23:00:00Z',
+      category_slug: 'music',
+    });
+    const ranked = rankEvents([event], { ...baseIntent, time_of_day: 'evening' }, { now: NOW });
+    expect(ranked[0].reasons).not.toContain('time_fit');
+  });
+
+  it('handles winter CET (UTC+1): 21:00 UTC = 22:00 Stockholm = NIGHT, not evening', () => {
+    // 2026-01-15 is winter — Stockholm is on CET (+1), not CEST (+2).
+    // 21:00 UTC = 22:00 Stockholm. Evening bucket is hour ∈ [17, 22).
+    // hour=22 falls outside the bucket — must NOT match.
+    const event = card({
+      id: 'a',
+      start_time: '2026-01-15T21:00:00Z',
+      category_slug: 'music',
+    });
+    const ranked = rankEvents([event], { ...baseIntent, time_of_day: 'evening' }, { now: NOW });
+    expect(ranked[0].reasons).not.toContain('time_fit');
+  });
+
+  it('handles DST correctly — same UTC instant lands on different Stockholm hours by season', () => {
+    // 14:00 UTC on 2026-03-29 (post spring-forward) = 16:00 Stockholm (CEST +2)
+    // 14:00 UTC on 2026-10-25 (pre fall-back)        = 15:00 Stockholm (CET  +1)
+    // Both must bucket as afternoon (hour ∈ [12, 17)) — proves the helper
+    // does NOT use a naive fixed offset and instead defers to Intl, which
+    // handles DST transparently.
+    const spring = card({ id: 's', start_time: '2026-03-29T14:00:00Z', category_slug: 'music' });
+    const fall   = card({ id: 'f', start_time: '2026-10-25T14:00:00Z', category_slug: 'music' });
+    expect(
+      rankEvents([spring], { ...baseIntent, time_of_day: 'afternoon' }, { now: NOW })[0].reasons
+    ).toContain('time_fit');
+    expect(
+      rankEvents([fall],   { ...baseIntent, time_of_day: 'afternoon' }, { now: NOW })[0].reasons
+    ).toContain('time_fit');
+  });
+
+  it('uses Europe/Stockholm by default (default-export contract)', () => {
+    // The same discriminating case (20:00 UTC = night in Stockholm, evening
+    // in UTC) pins the default to Europe/Stockholm — failing this would mean
+    // someone silently changed the default and shipped the bug back.
+    expect(DEFAULT_TIME_ZONE).toBe('Europe/Stockholm');
+    const event = card({
+      id: 'a',
+      start_time: '2026-08-17T20:00:00Z',
+      category_slug: 'music',
+    });
+    const ranked = rankEvents([event], { ...baseIntent, time_of_day: 'evening' }, { now: NOW });
+    expect(ranked[0].reasons).not.toContain('time_fit');
+  });
+
+  it('honours RankOptions.timeZone override (UTC pinned test path)', () => {
+    // With timeZone='UTC', the same 20:00 UTC IS at hour 20 in UTC = evening.
+    // This proves the option actually flows through, not just defaults.
+    const event = card({
+      id: 'a',
+      start_time: '2026-08-17T20:00:00Z',
+      category_slug: 'music',
+    });
+    const ranked = rankEvents(
+      [event],
+      { ...baseIntent, time_of_day: 'evening' },
+      { now: NOW, timeZone: 'UTC' }
+    );
+    expect(ranked[0].reasons).toContain('time_fit');
+  });
+});
+
+describe('hourInTimeZone (helper)', () => {
+  it('returns Stockholm wall-clock hour from a UTC ISO in summer (CEST +2)', () => {
+    expect(hourInTimeZone('2026-08-17T18:00:00Z', 'Europe/Stockholm')).toBe(20);
+    expect(hourInTimeZone('2026-08-17T20:00:00Z', 'Europe/Stockholm')).toBe(22);
+    expect(hourInTimeZone('2026-08-17T17:00:00Z', 'Europe/Stockholm')).toBe(19);
+  });
+
+  it('returns Stockholm wall-clock hour from a UTC ISO in winter (CET +1)', () => {
+    expect(hourInTimeZone('2026-01-15T18:00:00Z', 'Europe/Stockholm')).toBe(19);
+    expect(hourInTimeZone('2026-01-15T21:00:00Z', 'Europe/Stockholm')).toBe(22);
+  });
+
+  it('returns 0 (not "24") for midnight — robust against locale quirks', () => {
+    // 2026-06-15T22:00:00Z = 00:00 Stockholm on 06-16. Some Intl implementations
+    // yield "24" for midnight in certain locale combinations; the helper
+    // normalizes that to 0 to keep rank_events purely numeric. Pin the
+    // contract across a few minutes around midnight so any future change
+    // that lets a non-zero value leak into rank_events arithmetic is caught.
+    const minutes = [0, 15, 30, 45];
+    for (const m of minutes) {
+      const iso = `2026-06-15T22:${String(m).padStart(2, '0')}:00Z`;
+      expect(hourInTimeZone(iso, 'Europe/Stockholm')).toBe(0);
+    }
   });
 });
