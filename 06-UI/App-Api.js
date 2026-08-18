@@ -12,7 +12,8 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { StatusBar } from 'expo-status-bar';
-import { StyleSheet, Text, View, FlatList, SafeAreaView, ActivityIndicator, TouchableOpacity, ScrollView, Linking, Dimensions } from 'react-native';
+import { StyleSheet, Text, View, FlatList, ActivityIndicator, TouchableOpacity, ScrollView, Linking, Dimensions } from 'react-native';
+import { SafeAreaView, SafeAreaProvider } from 'react-native-safe-area-context';
 import { fetchAllEventsViaServer, checkAPIHealth } from './services/eventServiceClient';
 
 const { width } = Dimensions.get('window');
@@ -124,6 +125,7 @@ export default function App() {
   // API not connected
   if (!apiStatus?.connected) {
     return (
+      <SafeAreaProvider>
       <SafeAreaView style={styles.container}>
         <View style={styles.header}>
           <Text style={styles.headerTitle}>🎭 EventPulse</Text>
@@ -143,10 +145,12 @@ export default function App() {
         </View>
         <StatusBar style="light" />
       </SafeAreaView>
+      </SafeAreaProvider>
     );
   }
 
   return (
+    <SafeAreaProvider>
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
         <Text style={styles.headerTitle}>🎭 EventPulse</Text>
@@ -218,6 +222,7 @@ export default function App() {
 
       <StatusBar style="light" />
     </SafeAreaView>
+    </SafeAreaProvider>
   );
 }
 
