@@ -11,16 +11,19 @@
  */
 
 import { StatusBar } from 'expo-status-bar';
-import { SafeAreaView, StyleSheet } from 'react-native';
+import { StyleSheet } from 'react-native';
+import { SafeAreaView, SafeAreaProvider } from 'react-native-safe-area-context';
 
 import AgentScreen from './app/AgentScreen';
 
 export default function App() {
   return (
-    <SafeAreaView style={styles.root}>
-      <StatusBar style="light" />
-      <AgentScreen />
-    </SafeAreaView>
+    <SafeAreaProvider>
+      <SafeAreaView style={styles.root}>
+        <StatusBar style="light" />
+        <AgentScreen />
+      </SafeAreaView>
+    </SafeAreaProvider>
   );
 }
 

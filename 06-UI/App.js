@@ -1,7 +1,43 @@
 import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { StatusBar } from 'expo-status-bar';
-import { StyleSheet, Text, View, SectionList, FlatList, SafeAreaView, ActivityIndicator, TouchableOpacity, ScrollView, Linking, Dimensions } from 'react-native';
-import { fetchEvents } from './services/eventServiceClient';
+import { StyleSheet, Text, View, SectionList, ActivityIndicator, TouchableOpacity, ScrollView, Linking, Image } from 'react-native';
+import { SafeAreaView, SafeAreaProvider } from 'react-native-safe-area-context';
+import { fetchFeed, addDays } from './services/agentClient';
+
+const TOKENS = {
+  color: {
+    appBg: '#08090D',
+    surface: '#12151D',
+    surfaceRaised: '#191D28',
+    surfaceSoft: '#202635',
+    border: '#2B3140',
+    borderStrong: '#3A4254',
+    text: '#F7F2EA',
+    textMuted: '#A9B0BE',
+    textSoft: '#727B8D',
+    accent: '#FFB454',
+    accentSoft: '#332516',
+    mint: '#72E0C5',
+    coral: '#FF6B8A',
+    danger: '#FF7597',
+    black: '#000000',
+    white: '#FFFFFF',
+  },
+  space: {
+    xs: 4,
+    sm: 8,
+    md: 12,
+    lg: 16,
+    xl: 20,
+    xxl: 28,
+  },
+  radius: {
+    sm: 10,
+    md: 16,
+    lg: 22,
+    pill: 999,
+  },
+};
 
 // Calculate end date (1 year from now)
 function getEndDate() {
@@ -61,7 +97,11 @@ const TIME_FILTERS = [
   { key: 'ikvall', label: 'Ikväll' },
   { key: 'imorgon', label: 'Imorgon' },
   { key: 'helgen', label: 'Helgen' },
-  { key: 'denna_vecka', label: 'Denna vecka' },
+  { key: 'denna_vecka', label: '7 dagar' },
+];
+
+const PRICE_FILTERS = [
+  { key: 'free', label: 'Gratis' },
 ];
 
 // Fallback provider definitions (used when API doesn't provide sources)
@@ -119,6 +159,33 @@ function getCtaText(source) {
   return ctaLabels[source] || 'Läs mer';
 }
 
+function getVenueLabel(event) {
+  return event.venue || event.venue_name || null;
+}
+
+function getAreaLabel(event) {
+  return event.area || event.city || null;
+}
+
+function formatPrice(event) {
+  if (event.isFree || event.is_free) {
+    return 'Gratis';
+  }
+
+  const min = event.priceMin ?? event.price_min;
+  const max = event.priceMax ?? event.price_max;
+
+  if (min != null && max != null && min !== max) {
+    return `${min}-${max} kr`;
+  }
+
+  if (min != null) {
+    return `${min} kr`;
+  }
+
+  return null;
+}
+
 // Format date for display in Swedish (e.g., "Lör 21 mars")
 function formatDate(dateString) {
   if (!dateString) return '';
@@ -128,13 +195,13 @@ function formatDate(dateString) {
   return `${daysSwedish[date.getDay()]} ${date.getDate()} ${monthsSwedish[date.getMonth()]}`;
 }
 
-// Format full date for details (e.g., "Friday, March 20, 2026")
+// Format full date for details (e.g., "Fredag 20 mars 2026")
 function formatFullDate(dateString) {
   if (!dateString) return '';
   const date = new Date(dateString);
-  const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
-  const months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
-  return `${days[date.getDay()]}, ${months[date.getMonth()]} ${date.getDate()}, ${date.getFullYear()}`;
+  const days = ['Söndag', 'Måndag', 'Tisdag', 'Onsdag', 'Torsdag', 'Fredag', 'Lördag'];
+  const months = ['januari', 'februari', 'mars', 'april', 'maj', 'juni', 'juli', 'augusti', 'september', 'oktober', 'november', 'december'];
+  return `${days[date.getDay()]} ${date.getDate()} ${months[date.getMonth()]} ${date.getFullYear()}`;
 }
 
 // Format time for display in 24-hour Swedish format (e.g., "19:30")
@@ -142,6 +209,11 @@ function formatTime(timeString) {
   if (!timeString) return '';
   const [hours, minutes] = timeString.split(':');
   return `${hours}:${minutes}`;
+}
+
+function formatEventTime(event) {
+  const start = formatTime(event.time);
+  return start || 'Tid ej angiven';
 }
 
 // Format day header for grouped events (Swedish)
@@ -311,56 +383,102 @@ function CategoryBadge({ category }) {
   );
 }
 
+function DateCluster({ event }) {
+  return (
+    <View style={styles.dateCluster}>
+      <Text style={styles.dateClusterDay}>{formatDate(event.date) || 'Datum saknas'}</Text>
+      <Text style={styles.dateClusterTime}>{formatEventTime(event)}</Text>
+    </View>
+  );
+}
+
 function EventItem({ event, onPress }) {
+  const venue = getVenueLabel(event);
+  const area = getAreaLabel(event);
+  const price = formatPrice(event);
+
   return (
     <TouchableOpacity style={styles.eventCard} onPress={onPress} activeOpacity={0.7}>
-      <View style={styles.eventHeader}>
+      {event.imageUrl ? (
+        <Image source={{ uri: event.imageUrl }} style={styles.eventImage} />
+      ) : (
+        <View style={styles.eventImageFallback}>
+          <Text style={styles.eventImageFallbackText}>Ingen bild från källan</Text>
+        </View>
+      )}
+      <View style={styles.eventCardBody}>
+        <View style={styles.eventHeader}>
+          <DateCluster event={event} />
+          <CategoryBadge category={event.category} />
+        </View>
         <Text style={styles.eventTitle} numberOfLines={2}>{event.title}</Text>
-        <CategoryBadge category={event.category} />
-      </View>
-      <View style={styles.eventInfo}>
-        <View style={styles.eventDateTime}>
-          <Text style={styles.eventDate}>{formatDate(event.date)}</Text>
-          <Text style={styles.eventSeparator}>•</Text>
-          <Text style={styles.eventTime}>{formatTime(event.time)}</Text>
+        <View style={styles.eventMetaRow}>
+          <Text style={styles.eventVenue} numberOfLines={1}>{venue || 'Plats ej angiven'}</Text>
+          {area && <Text style={styles.eventArea} numberOfLines={1}> · {area}</Text>}
         </View>
-        <View style={styles.eventLocation}>
-          <Text style={styles.eventVenue}>{event.venue}</Text>
-          <Text style={styles.eventArea}>• {event.area}</Text>
+        <View style={styles.eventFooter}>
+          {price && <Text style={styles.eventPrice}>{price}</Text>}
+          <View style={styles.eventActionRow}>
+            {event.hasExternalLink && (
+              <Text style={styles.externalLinkChip} numberOfLines={1}>
+                {event.externalLinkChipLabel || 'Extern länk'}
+              </Text>
+            )}
+            <Text style={styles.eventOpenText}>Visa event</Text>
+          </View>
         </View>
-      </View>
-      <View style={styles.eventArrow}>
-        <Text style={styles.eventArrowText}>→</Text>
       </View>
     </TouchableOpacity>
   );
 }
 
 function GroupedEventItem({ groupedEvent, onEventPress }) {
+  const firstEvent = groupedEvent.events[0] || groupedEvent;
+  const venue = getVenueLabel(firstEvent);
+  const area = getAreaLabel(firstEvent);
+
   return (
     <TouchableOpacity style={styles.eventCard} onPress={() => onEventPress(groupedEvent.events[0])} activeOpacity={0.7}>
-      <View style={styles.eventHeader}>
+      {firstEvent.imageUrl ? (
+        <Image source={{ uri: firstEvent.imageUrl }} style={styles.eventImage} />
+      ) : (
+        <View style={styles.eventImageFallback}>
+          <Text style={styles.eventImageFallbackText}>Ingen bild från källan</Text>
+        </View>
+      )}
+      <View style={styles.eventCardBody}>
+        <View style={styles.eventHeader}>
+          <DateCluster event={firstEvent} />
+          <CategoryBadge category={groupedEvent.category} />
+        </View>
         <Text style={styles.eventTitle} numberOfLines={2}>{groupedEvent.title}</Text>
-        <CategoryBadge category={groupedEvent.category} />
-      </View>
-      <View style={styles.groupedTimesContainer}>
-        {groupedEvent.events.map((event, index) => (
-          <TouchableOpacity 
-            key={`${event.id || event.start_time || index}`} 
-            style={styles.groupedRowContainer}
-            onPress={() => onEventPress(event)}
-            activeOpacity={0.7}
-          >
-            <View style={styles.groupedTimeRow}>
+        <View style={styles.eventMetaRow}>
+          <Text style={styles.eventVenue} numberOfLines={1}>{venue || 'Plats ej angiven'}</Text>
+          {area && <Text style={styles.eventArea} numberOfLines={1}> · {area}</Text>}
+        </View>
+        <View style={styles.groupedSummaryRow}>
+          <Text style={styles.groupedCount}>{groupedEvent.events.length} tider tillgängliga</Text>
+          {firstEvent.hasExternalLink && (
+            <Text style={styles.externalLinkChip} numberOfLines={1}>
+              {firstEvent.externalLinkChipLabel || 'Extern länk'}
+            </Text>
+          )}
+        </View>
+        <View style={styles.groupedTimesContainer}>
+          {groupedEvent.events.map((event, index) => (
+            <TouchableOpacity
+              key={`${event.id || event.start_time || index}`}
+              style={styles.groupedRowContainer}
+              onPress={() => onEventPress(event)}
+              activeOpacity={0.7}
+            >
               <Text style={styles.groupedDateText}>
-                {formatDate(event.date)} • {formatTime(event.time)}
+                {formatDate(event.date)} · {formatEventTime(event)}
               </Text>
-            </View>
-            <View style={styles.groupedRowArrow}>
-              <Text style={styles.groupedRowArrowText}>→</Text>
-            </View>
-          </TouchableOpacity>
-        ))}
+              <Text style={styles.groupedRowArrowText}>Visa</Text>
+            </TouchableOpacity>
+          ))}
+        </View>
       </View>
     </TouchableOpacity>
   );
@@ -369,188 +487,169 @@ function GroupedEventItem({ groupedEvent, onEventPress }) {
 function LoadingMore() {
   return (
     <View style={styles.loadingMore}>
-      <ActivityIndicator size="small" color="#BB86FC" />
-      <Text style={styles.loadingMoreText}>Loading more...</Text>
+      <ActivityIndicator size="small" color={TOKENS.color.accent} />
+      <Text style={styles.loadingMoreText}>Hämtar fler event...</Text>
+    </View>
+  );
+}
+
+function LoadingSkeleton() {
+  return (
+    <SafeAreaView style={styles.homeContainer}>
+      <View style={styles.header}>
+        <Text style={styles.appKicker}>City discovery</Text>
+        <Text style={styles.appTitle}>EventPulse</Text>
+        <Text style={styles.appSubtitle}>Hämtar riktiga event nära dig.</Text>
+      </View>
+      <View style={styles.skeletonList}>
+        {[0, 1, 2].map(item => (
+          <View key={item} style={styles.skeletonCard}>
+            <View style={styles.skeletonImage} />
+            <View style={styles.skeletonLineWide} />
+            <View style={styles.skeletonLineShort} />
+          </View>
+        ))}
+      </View>
+    </SafeAreaView>
+  );
+}
+
+function StateView({ title, detail, actionLabel, onAction }) {
+  return (
+    <View style={styles.stateContainer}>
+      <Text style={styles.stateTitle}>{title}</Text>
+      {detail && <Text style={styles.stateDetail}>{detail}</Text>}
+      {actionLabel && onAction && (
+        <TouchableOpacity style={styles.stateButton} onPress={onAction} activeOpacity={0.8}>
+          <Text style={styles.stateButtonText}>{actionLabel}</Text>
+        </TouchableOpacity>
+      )}
     </View>
   );
 }
 
 function HomeScreen({ onEventPress, scrollPositionRef }) {
   const [events, setEvents] = useState([]);
-  const [availableSources, setAvailableSources] = useState([]);
   const [loading, setLoading] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
   const [error, setError] = useState(null);
-  const [page, setPage] = useState(0);
   const [timeFilter, setTimeFilter] = useState(null);
   const [selectedCategories, setSelectedCategories] = useState([]);
-  const [selectedProvider, setSelectedProvider] = useState(null);
-  const [showProviderDropdown, setShowProviderDropdown] = useState(false);
+  const [priceFilter, setPriceFilter] = useState(null);
+  // Pagination: `weekStart` advances by 7 days on each scroll-end load.
+  const [weekStart, setWeekStart] = useState(() => new Date().toISOString().slice(0, 10));
+  const [hasMore, setHasMore] = useState(true);
   const sectionListRef = useRef(null);
   const scrollPositionRefLocal = useRef(0);
-  // Track if a fetch is already in progress to prevent double fetches
   const isFetchingRef = useRef(false);
 
-  const loadEvents = useCallback(async (pageNum = 0, isLoadMore = false) => {
-    // Prevent double fetches - if already fetching, skip
-    if (isFetchingRef.current) {
-      return;
-    }
+  /**
+   * Load events for the current `weekStart`.
+   * - On initial mount, if the page is empty (e.g. a quiet Sunday), advance
+   *   `weekStart` by 1 day and retry, up to 7 attempts.
+   * - On scroll-end (loadMore=true), append the next 7-day window without
+   *   retry semantics — caller already chose to advance.
+   */
+  const loadEvents = useCallback(async (opts = {}) => {
+    const { append = false, fromOverride = null } = opts;
+    if (isFetchingRef.current) return;
+
     isFetchingRef.current = true;
-    
-    if (isLoadMore) {
-      setLoadingMore(true);
-    } else {
-      setLoading(true);
-    }
-    
+    if (append) setLoadingMore(true); else setLoading(true);
+    setError(null);
+
     try {
-      // Fetch events from Supabase (production only)
-      const result = await fetchEvents();
-      const data = result.events || [];
-      const sources = result.sources || [];
-      
-      // ALWAYS deduplicate incoming data to prevent duplicates
-      const uniqueData = deduplicateEvents(data);
-      
-      if (isLoadMore) {
-        // Deduplicate against existing events before appending
-        setEvents(prev => {
-          const combined = [...prev, ...uniqueData];
-          return deduplicateEvents(combined);
-        });
-      } else {
-        setEvents(uniqueData);
-        setAvailableSources(sources);
+      let from = fromOverride ?? weekStart;
+      let attempts = 0;
+      let page;
+
+      while (attempts < 7) {
+        page = await fetchFeed({ from, days: 7 });
+        if (page.events.length > 0 || append) break;
+        // Empty page on initial load → try next day (handles quiet Sundays).
+        attempts += 1;
+        from = addDays(from, 1);
       }
-      setPage(pageNum);
+
+      if (!append) setWeekStart(from);
+
+      setEvents((prev) => {
+        const next = append ? [...prev, ...page.events] : page.events;
+        return deduplicateEvents(next);
+      });
+      setHasMore(page.has_more);
     } catch (err) {
-      setError(err.message);
+      setError(err.message || 'Kunde inte hämta event');
       console.error('Failed to load events:', err);
     } finally {
       setLoading(false);
       setLoadingMore(false);
       isFetchingRef.current = false;
     }
-  }, []);
+  }, [weekStart]);
 
   useEffect(() => {
-    loadEvents(0);
-  }, [loadEvents]);
-
-  const handleLoadMore = useCallback(() => {
-    // Only allow loading more when NO filters are active
-    // This prevents API calls when user scrolls to end of filtered list
-    // NOTE: When filters are active, we show a subset of the full dataset
-    // so pagination is not needed - the full data is already loaded
-    if (!loadingMore && !loading && !timeFilter && selectedCategories.length === 0 && !selectedProvider) {
-      loadEvents(page + 1, true);
-    }
-  }, [loadingMore, loading, loadEvents, page, timeFilter, selectedCategories, selectedProvider]);
+    loadEvents();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const handleTimeFilterPress = useCallback((filterKey) => {
     setTimeFilter(prev => prev === filterKey ? null : filterKey);
   }, []);
 
   const handleCategoryFilterPress = useCallback((categoryKey) => {
-    setSelectedCategories(prev => {
-      if (prev.includes(categoryKey)) {
-        return prev.filter(c => c !== categoryKey);
-      } else {
-        return [...prev, categoryKey];
-      }
-    });
+    setSelectedCategories(prev => (
+      prev.includes(categoryKey)
+        ? prev.filter(c => c !== categoryKey)
+        : [...prev, categoryKey]
+    ));
   }, []);
 
-  // Apply filters to events - memoized to prevent unnecessary recalculations
+  const clearFilters = useCallback(() => {
+    setTimeFilter(null);
+    setSelectedCategories([]);
+    setPriceFilter(null);
+  }, []);
+
   const filteredEvents = useMemo(() => {
     let result = events;
     
-    // First filter by category
     if (selectedCategories.length > 0) {
       result = result.filter(event => selectedCategories.includes(event.category));
     }
     
-    // Then filter by time
     if (timeFilter) {
-      const now = new Date();
-      const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-      
-      result = result.filter(event => {
-        if (!event.date) return false;
-        
-        const eventDate = new Date(event.date + 'T' + (event.time || '00:00'));
-        const eventDay = new Date(eventDate.getFullYear(), eventDate.getMonth(), eventDate.getDate());
-        
-        switch (timeFilter) {
-          case 'ikvall': {
-            const isToday = eventDay.getTime() === today.getTime();
-            return isToday && eventDate > now;
-          }
-          case 'imorgon': {
-            const tomorrow = new Date(today);
-            tomorrow.setDate(tomorrow.getDate() + 1);
-            return eventDay.getTime() === tomorrow.getTime();
-          }
-          case 'helgen': {
-            const dayOfWeek = eventDay.getDay();
-            return dayOfWeek === 0 || dayOfWeek === 6;
-          }
-          case 'denna_vecka': {
-            const nextWeek = new Date(today);
-            nextWeek.setDate(nextWeek.getDate() + 7);
-            return eventDay >= today && eventDay <= nextWeek;
-          }
-          default:
-            return true;
-        }
-      });
+      result = filterEventsByTime(result, timeFilter);
     }
-    
-    // Finally filter by provider
-    if (selectedProvider) {
-      result = result.filter(event => event.source === selectedProvider);
+
+    if (priceFilter === 'free') {
+      result = result.filter(event => event.isFree || event.is_free);
     }
     
     return result;
-  }, [events, timeFilter, selectedCategories, selectedProvider]);
+  }, [events, timeFilter, selectedCategories, priceFilter]);
 
-  // Group filtered events by day
-  const groupedEvents = useMemo(() => {
-    return groupEventsByDay(filteredEvents);
-  }, [filteredEvents]);
-
-  // Build PROVIDERS dynamically from available sources
-  const PROVIDERS = useMemo(() => {
-    return buildProviders(availableSources);
-  }, [availableSources]);
+  const groupedEvents = useMemo(() => groupEventsByDay(filteredEvents), [filteredEvents]);
+  const hasActiveFilters = Boolean(timeFilter || selectedCategories.length > 0 || priceFilter);
 
   if (loading) {
-    return (
-      <SafeAreaView style={styles.homeContainer}>
-        <View style={styles.header}>
-          <Text style={styles.appTitle}>EventPulse</Text>
-          <Text style={styles.appSubtitle}>Events in Sweden</Text>
-        </View>
-        <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color="#BB86FC" />
-          <Text style={styles.loadingText}>Loading events...</Text>
-        </View>
-      </SafeAreaView>
-    );
+    return <LoadingSkeleton />;
   }
 
   if (error) {
     return (
       <SafeAreaView style={styles.homeContainer}>
         <View style={styles.header}>
+          <Text style={styles.appKicker}>City discovery</Text>
           <Text style={styles.appTitle}>EventPulse</Text>
-          <Text style={styles.appSubtitle}>Events in Sweden</Text>
+          <Text style={styles.appSubtitle}>Riktiga event från verifierade källor.</Text>
         </View>
-        <View style={styles.errorContainer}>
-          <Text style={styles.errorText}>Failed to load events</Text>
-          <Text style={styles.errorDetail}>{error}</Text>
-        </View>
+        <StateView
+          title="Vi kunde inte hämta event just nu"
+          detail={error}
+          actionLabel="Försök igen"
+          onAction={loadEvents}
+        />
       </SafeAreaView>
     );
   }
@@ -558,115 +657,87 @@ function HomeScreen({ onEventPress, scrollPositionRef }) {
   return (
     <SafeAreaView style={styles.homeContainer}>
       <View style={styles.header}>
-        <Text style={styles.appTitle}>EventPulse</Text>
-        <Text style={styles.appSubtitle}>Events in Sweden</Text>
+        <Text style={styles.appKicker}>City discovery</Text>
+        <Text style={styles.appTitle}>Vad händer i stan?</Text>
+        <Text style={styles.appSubtitle}>
+          {events.length} riktiga event att upptäcka. Börja browsa, filtrera när du vill.
+        </Text>
       </View>
-      
-      {/* Time Filter Row */}
-      <View style={styles.filterRow}>
-        {TIME_FILTERS.map(filter => (
-          <TouchableOpacity
-            key={filter.key}
-            style={[
-              styles.filterButton,
-              timeFilter === filter.key && styles.filterButtonActive
-            ]}
-            onPress={() => handleTimeFilterPress(filter.key)}
-          >
-            <Text style={[
-              styles.filterButtonText,
-              timeFilter === filter.key && styles.filterButtonTextActive
-            ]}>
-              {filter.label}
-            </Text>
-          </TouchableOpacity>
-        ))}
-      </View>
-      
-      {/* Category Filter Row */}
-      <View style={styles.filterRow}>
-        {CATEGORY_FILTERS.map(filter => (
-          <TouchableOpacity
-            key={filter.key}
-            style={[
-              styles.filterButton,
-              selectedCategories.includes(filter.key) && styles.filterButtonActive
-            ]}
-            onPress={() => handleCategoryFilterPress(filter.key)}
-          >
-            <Text style={[
-              styles.filterButtonText,
-              selectedCategories.includes(filter.key) && styles.filterButtonTextActive
-            ]}>
-              {filter.label}
-            </Text>
-          </TouchableOpacity>
-        ))}
-      </View>
-      
-      {/* Provider Filter Row */}
-      <View style={styles.filterRow}>
-        <TouchableOpacity
-          style={[
-            styles.filterButton,
-            styles.providerFilterButton,
-            selectedProvider && styles.filterButtonActive
-          ]}
-          onPress={() => setShowProviderDropdown(!showProviderDropdown)}
-        >
-          <Text style={[
-            styles.filterButtonText,
-            selectedProvider && styles.filterButtonTextActive
-          ]}>
-            {selectedProvider ? PROVIDERS.find(p => p.key === selectedProvider)?.label || 'Arrangör' : 'Arrangör'}
-          </Text>
-          <Text style={styles.dropdownArrow}> ▼</Text>
-        </TouchableOpacity>
-      </View>
-      
-      {/* Provider Dropdown */}
-      {showProviderDropdown && (
-        <View style={styles.providerDropdown}>
-          <TouchableOpacity
-            style={styles.providerDropdownOverlay}
-            onPress={() => setShowProviderDropdown(false)}
-            activeOpacity={1}
-          />
-          <View style={styles.providerDropdownContent}>
-            <ScrollView 
-              style={styles.providerScrollView}
-              showsVerticalScrollIndicator={true}
-              bounces={true}
+
+      <View style={styles.filtersPanel}>
+        <Text style={styles.filterLabel}>När</Text>
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.filterRow}>
+          {TIME_FILTERS.map(filter => (
+            <TouchableOpacity
+              key={filter.key}
+              style={[
+                styles.filterButton,
+                timeFilter === filter.key && styles.filterButtonActive
+              ]}
+              onPress={() => handleTimeFilterPress(filter.key)}
             >
-              {PROVIDERS.map(provider => (
-                <TouchableOpacity
-                  key={provider.key}
-                  style={[
-                    styles.providerOption,
-                    selectedProvider === provider.key && styles.providerOptionActive
-                  ]}
-                  onPress={() => {
-                    setSelectedProvider(provider.key === 'all' ? null : provider.key);
-                    setShowProviderDropdown(false);
-                  }}
-                >
-                  <Text style={[
-                    styles.providerOptionText,
-                    selectedProvider === provider.key && styles.providerOptionTextActive
-                  ]}>
-                    {provider.label}
-                  </Text>
-                </TouchableOpacity>
-              ))}
-            </ScrollView>
-          </View>
-        </View>
-      )}
+              <Text style={[
+                styles.filterButtonText,
+                timeFilter === filter.key && styles.filterButtonTextActive
+              ]}>
+                {filter.label}
+              </Text>
+            </TouchableOpacity>
+          ))}
+          {PRICE_FILTERS.map(filter => (
+            <TouchableOpacity
+              key={filter.key}
+              style={[
+                styles.filterButton,
+                priceFilter === filter.key && styles.filterButtonActive
+              ]}
+              onPress={() => setPriceFilter(prev => prev === filter.key ? null : filter.key)}
+            >
+              <Text style={[
+                styles.filterButtonText,
+                priceFilter === filter.key && styles.filterButtonTextActive
+              ]}>
+                {filter.label}
+              </Text>
+            </TouchableOpacity>
+          ))}
+        </ScrollView>
+
+        <Text style={styles.filterLabel}>Kategori</Text>
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.filterRow}>
+          {CATEGORY_FILTERS.map(filter => (
+            <TouchableOpacity
+              key={filter.key}
+              style={[
+                styles.filterButton,
+                selectedCategories.includes(filter.key) && styles.filterButtonActive
+              ]}
+              onPress={() => handleCategoryFilterPress(filter.key)}
+            >
+              <Text style={[
+                styles.filterButtonText,
+                selectedCategories.includes(filter.key) && styles.filterButtonTextActive
+              ]}>
+                {filter.label}
+              </Text>
+            </TouchableOpacity>
+          ))}
+        </ScrollView>
+
+        {hasActiveFilters && (
+          <TouchableOpacity style={styles.clearFiltersButton} onPress={clearFilters}>
+            <Text style={styles.clearFiltersText}>Rensa filter</Text>
+          </TouchableOpacity>
+        )}
+      </View>
       
       {groupedEvents.length === 0 ? (
-        <View style={styles.emptyContainer}>
-          <Text style={styles.emptyText}>No events found</Text>
-        </View>
+        <StateView
+          title={hasActiveFilters ? 'Inga event matchar filtren' : 'Inga event hittades'}
+          detail={hasActiveFilters ? 'Testa att rensa filtren eller bredda datumet.' : 'När nya publicerade event finns visas de här.'}
+          actionLabel={hasActiveFilters ? 'Rensa filter' : 'Hämta igen'}
+          onAction={hasActiveFilters ? clearFilters : loadEvents}
+        />
       ) : (
         <SectionList
           ref={sectionListRef}
@@ -675,23 +746,21 @@ function HomeScreen({ onEventPress, scrollPositionRef }) {
             data: group.events,
           }))}
           keyExtractor={(item, index) => {
-            // Use stable key: id for events, title+date for grouped items
             if (item.isGrouped) {
               return `grouped-${item.title}-${item.date}`;
             }
-            // For regular events, use id or stable composite key
-            return item.id ? `event-${item.id}` : `event-${item.source || 'unknown'}-${item.title}-${item.date || ''}`;
+            return item.id ? `event-${item.id}` : `event-${item.source || 'unknown'}-${item.title}-${item.date || index}`;
           }}
           renderItem={({ item }) => (
             item.isGrouped ? (
-              <GroupedEventItem 
-                groupedEvent={item} 
-                onEventPress={onEventPress} 
+              <GroupedEventItem
+                groupedEvent={item}
+                onEventPress={onEventPress}
               />
             ) : (
-              <EventItem 
-                event={item} 
-                onPress={() => onEventPress(item)} 
+              <EventItem
+                event={item}
+                onPress={() => onEventPress(item)}
               />
             )
           )}
@@ -702,10 +771,20 @@ function HomeScreen({ onEventPress, scrollPositionRef }) {
           )}
           contentContainerStyle={styles.listContent}
           showsVerticalScrollIndicator={false}
-          onEndReached={handleLoadMore}
-          onEndReachedThreshold={0.5}
-          ListFooterComponent={loadingMore ? <LoadingMore /> : null}
+          ListFooterComponent={loadingMore ? <LoadingMore /> : (!hasMore && events.length > 0 ? (
+            <View style={styles.endOfList}>
+              <Text style={styles.endOfListText}>Det var allt vi har just nu.</Text>
+            </View>
+          ) : null)}
           stickySectionHeadersEnabled={false}
+          onEndReached={() => {
+            if (!loadingMore && hasMore) {
+              const next = addDays(weekStart, 7);
+              setWeekStart(next);
+              loadEvents({ append: true, fromOverride: next });
+            }
+          }}
+          onEndReachedThreshold={0.5}
           onScroll={(event) => {
             scrollPositionRefLocal.current = event.nativeEvent.contentOffset.y;
             if (scrollPositionRef) {
@@ -720,58 +799,92 @@ function HomeScreen({ onEventPress, scrollPositionRef }) {
 }
 
 function DetailsScreen({ event, onBack }) {
-  const handleOpenUrl = () => {
-    if (event.url) {
-      Linking.openURL(event.url);
+  const [ctaError, setCtaError] = useState(null);
+
+  const handleOpenUrl = async () => {
+    if (!event.url) {
+      return;
+    }
+
+    try {
+      const canOpen = await Linking.canOpenURL(event.url);
+      if (!canOpen) {
+        setCtaError('Länken kunde inte öppnas på den här enheten.');
+        return;
+      }
+
+      await Linking.openURL(event.url);
+      setCtaError(null);
+    } catch {
+      setCtaError('Länken kunde inte öppnas just nu.');
     }
   };
+  const venue = getVenueLabel(event);
+  const area = getAreaLabel(event);
+  const price = formatPrice(event);
 
   return (
     <SafeAreaView style={styles.detailsContainer}>
       <View style={styles.detailsHeader}>
         <TouchableOpacity style={styles.backButton} onPress={onBack}>
-          <Text style={styles.backButtonText}>← Back</Text>
+          <Text style={styles.backButtonText}>Tillbaka</Text>
         </TouchableOpacity>
       </View>
       <ScrollView style={styles.detailsContent} showsVerticalScrollIndicator={false}>
-        <CategoryBadge category={event.category} />
+        {event.imageUrl ? (
+          <Image source={{ uri: event.imageUrl }} style={styles.detailsImage} />
+        ) : (
+          <View style={styles.detailsImageFallback}>
+            <Text style={styles.eventImageFallbackText}>Ingen bild från källan</Text>
+          </View>
+        )}
         
-        <Text style={styles.detailsTitle}>{event.title}</Text>
-        
-        <View style={styles.detailsSection}>
-          <Text style={styles.detailsLabel}>Date & Time</Text>
-          <Text style={styles.detailsValue}>
-            {formatFullDate(event.date)}
-            {event.time && ` at ${formatTime(event.time)}`}
-          </Text>
+        <View style={styles.detailsIntro}>
+          <CategoryBadge category={event.category} />
+          <Text style={styles.detailsTitle}>{event.title}</Text>
+          {price && <Text style={styles.detailsPrice}>{price}</Text>}
+          {event.hasExternalLink ? (
+            <>
+              <TouchableOpacity
+                style={styles.detailsPrimaryCta}
+                onPress={handleOpenUrl}
+                activeOpacity={0.8}
+              >
+                <Text style={styles.ctaButtonText}>{event.externalLinkLabel || getCtaText(event.source)}</Text>
+              </TouchableOpacity>
+              {ctaError && <Text style={styles.ctaErrorText}>{ctaError}</Text>}
+            </>
+          ) : (
+            <View style={styles.detailsPrimaryCtaUnavailable}>
+              <Text style={styles.ctaUnavailableText}>Ingen extern eventlänk finns i datan ännu.</Text>
+            </View>
+          )}
         </View>
         
         <View style={styles.detailsSection}>
-          <Text style={styles.detailsLabel}>Venue</Text>
-          <Text style={styles.detailsValue}>{event.venue}</Text>
-          {event.area && <Text style={styles.detailsSubvalue}>{event.area}</Text>}
+          <Text style={styles.detailsLabel}>När</Text>
+          <Text style={styles.detailsValue}>
+            {event.date ? formatFullDate(event.date) : 'Datum ej angivet'}
+          </Text>
+          <Text style={styles.detailsSubvalue}>{formatEventTime(event)}</Text>
+        </View>
+        
+        <View style={styles.detailsSection}>
+          <Text style={styles.detailsLabel}>Var</Text>
+          <Text style={styles.detailsValue}>{venue || 'Plats ej angiven'}</Text>
+          {area && <Text style={styles.detailsSubvalue}>{area}</Text>}
           {event.address && <Text style={styles.detailsSubvalue}>{event.address}</Text>}
         </View>
         
         {event.description && (
           <View style={styles.detailsSection}>
-            <Text style={styles.detailsLabel}>About</Text>
+            <Text style={styles.detailsLabel}>Om eventet</Text>
             <Text style={styles.detailsDescription}>{event.description}</Text>
           </View>
         )}
         
-        {event.url && (
-          <TouchableOpacity 
-            style={styles.ctaButton}
-            onPress={handleOpenUrl}
-            activeOpacity={0.8}
-          >
-            <Text style={styles.ctaButtonText}>{getCtaText(event.source)}</Text>
-          </TouchableOpacity>
-        )}
-        
         <View style={styles.detailsFooter}>
-          <Text style={styles.detailsSource}>Source: {event.source}</Text>
+          <Text style={styles.detailsSource}>Källa: {formatProviderLabel(event.source || 'okänd')}</Text>
         </View>
       </ScrollView>
     </SafeAreaView>
@@ -800,401 +913,531 @@ export default function App() {
   };
 
   return (
-    <View style={styles.container}>
-      {showSplash ? (
-        <SplashScreen />
-      ) : selectedEvent ? (
-        <DetailsScreen event={selectedEvent} onBack={handleBack} />
-      ) : (
-        <HomeScreen onEventPress={handleEventPress} scrollPositionRef={scrollPositionRef} />
-      )}
-      <StatusBar style="light" />
-    </View>
+    <SafeAreaProvider>
+      <View style={styles.container}>
+        {showSplash ? (
+          <SplashScreen />
+        ) : selectedEvent ? (
+          <DetailsScreen event={selectedEvent} onBack={handleBack} />
+        ) : (
+          <HomeScreen onEventPress={handleEventPress} scrollPositionRef={scrollPositionRef} />
+        )}
+        <StatusBar style="light" />
+      </View>
+    </SafeAreaProvider>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#000000',
+    backgroundColor: TOKENS.color.appBg,
   },
   splashContainer: {
     flex: 1,
-    backgroundColor: '#000000',
+    backgroundColor: TOKENS.color.appBg,
     alignItems: 'center',
     justifyContent: 'center',
   },
   splashText: {
-    color: '#ffffff',
-    fontSize: 32,
-    fontWeight: 'bold',
+    color: TOKENS.color.text,
+    fontSize: 34,
+    fontWeight: '800',
+    letterSpacing: -1,
   },
   homeContainer: {
     flex: 1,
-    backgroundColor: '#121212',
+    backgroundColor: TOKENS.color.appBg,
   },
   header: {
-    paddingHorizontal: 20,
-    paddingTop: 16,
-    paddingBottom: 20,
-    borderBottomWidth: 1,
-    borderBottomColor: '#2A2A2A',
+    paddingHorizontal: TOKENS.space.xl,
+    paddingTop: TOKENS.space.xl,
+    paddingBottom: TOKENS.space.lg,
   },
-  // Filter styles
-  filterRow: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    paddingHorizontal: 16,
-    paddingVertical: 10,
-    gap: 8,
-  },
-  // Day header styles
-  dayHeader: {
-    paddingHorizontal: 4,
-    paddingVertical: 12,
-    marginBottom: 8,
-  },
-  dayHeaderText: {
-    color: '#BB86FC',
-    fontSize: 16,
-    fontWeight: '600',
-  },
-  filterButton: {
-    paddingHorizontal: 14,
-    paddingVertical: 8,
-    borderRadius: 16,
-    backgroundColor: '#2A2A2A',
-    borderWidth: 1,
-    borderColor: '#3A3A3A',
-  },
-  filterButtonActive: {
-    backgroundColor: '#BB86FC',
-    borderColor: '#BB86FC',
-  },
-  filterButtonText: {
-    color: '#888888',
-    fontSize: 13,
-    fontWeight: '500',
-  },
-  filterButtonTextActive: {
-    color: '#000000',
-    fontWeight: '600',
+  appKicker: {
+    color: TOKENS.color.accent,
+    fontSize: 12,
+    fontWeight: '800',
+    letterSpacing: 1.6,
+    textTransform: 'uppercase',
+    marginBottom: TOKENS.space.sm,
   },
   appTitle: {
-    color: '#FFFFFF',
-    fontSize: 32,
-    fontWeight: 'bold',
-    letterSpacing: -0.5,
+    color: TOKENS.color.text,
+    fontSize: 34,
+    fontWeight: '900',
+    letterSpacing: -1.2,
+    lineHeight: 38,
   },
   appSubtitle: {
-    color: '#888888',
-    fontSize: 16,
-    marginTop: 4,
+    color: TOKENS.color.textMuted,
+    fontSize: 15,
+    lineHeight: 22,
+    marginTop: TOKENS.space.sm,
+  },
+  filtersPanel: {
+    paddingBottom: TOKENS.space.md,
+    borderBottomWidth: 1,
+    borderBottomColor: TOKENS.color.border,
+  },
+  filterLabel: {
+    color: TOKENS.color.textSoft,
+    fontSize: 11,
+    fontWeight: '800',
+    letterSpacing: 1.2,
+    textTransform: 'uppercase',
+    paddingHorizontal: TOKENS.space.xl,
+    marginTop: TOKENS.space.sm,
+    marginBottom: TOKENS.space.sm,
+  },
+  filterRow: {
+    flexDirection: 'row',
+    gap: TOKENS.space.sm,
+    paddingHorizontal: TOKENS.space.xl,
+    paddingBottom: TOKENS.space.sm,
+  },
+  filterButton: {
+    paddingHorizontal: TOKENS.space.lg,
+    paddingVertical: TOKENS.space.sm,
+    borderRadius: TOKENS.radius.pill,
+    backgroundColor: TOKENS.color.surface,
+    borderWidth: 1,
+    borderColor: TOKENS.color.border,
+  },
+  filterButtonActive: {
+    backgroundColor: TOKENS.color.accent,
+    borderColor: TOKENS.color.accent,
+  },
+  filterButtonText: {
+    color: TOKENS.color.textMuted,
+    fontSize: 13,
+    fontWeight: '700',
+  },
+  filterButtonTextActive: {
+    color: TOKENS.color.black,
+    fontWeight: '900',
+  },
+  clearFiltersButton: {
+    alignSelf: 'flex-start',
+    marginHorizontal: TOKENS.space.xl,
+    marginTop: TOKENS.space.xs,
+    paddingVertical: TOKENS.space.sm,
+  },
+  clearFiltersText: {
+    color: TOKENS.color.accent,
+    fontSize: 13,
+    fontWeight: '800',
   },
   listContent: {
-    padding: 16,
+    padding: TOKENS.space.lg,
+    paddingBottom: TOKENS.space.xxl,
+  },
+  dayHeader: {
+    paddingTop: TOKENS.space.lg,
+    paddingBottom: TOKENS.space.sm,
+  },
+  dayHeaderText: {
+    color: TOKENS.color.accent,
+    fontSize: 17,
+    fontWeight: '900',
+    letterSpacing: -0.2,
   },
   eventCard: {
-    backgroundColor: '#1A1A1A',
-    borderRadius: 16,
-    padding: 16,
-    marginBottom: 16,
+    backgroundColor: TOKENS.color.surfaceRaised,
+    borderRadius: TOKENS.radius.lg,
+    borderWidth: 1,
+    borderColor: TOKENS.color.border,
+    marginBottom: TOKENS.space.lg,
+    overflow: 'hidden',
+  },
+  eventImage: {
+    width: '100%',
+    height: 154,
+    backgroundColor: TOKENS.color.surfaceSoft,
+  },
+  eventImageFallback: {
+    height: 126,
+    backgroundColor: TOKENS.color.surfaceSoft,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderBottomWidth: 1,
+    borderBottomColor: TOKENS.color.border,
+  },
+  eventImageFallbackText: {
+    color: TOKENS.color.textSoft,
+    fontSize: 12,
+    fontWeight: '800',
+    letterSpacing: 1,
+    textTransform: 'uppercase',
+  },
+  eventCardBody: {
+    padding: TOKENS.space.lg,
   },
   eventHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'flex-start',
-    marginBottom: 12,
+    gap: TOKENS.space.md,
+    marginBottom: TOKENS.space.md,
+  },
+  dateCluster: {
+    backgroundColor: TOKENS.color.accentSoft,
+    borderRadius: TOKENS.radius.md,
+    paddingHorizontal: TOKENS.space.md,
+    paddingVertical: TOKENS.space.sm,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 180, 84, 0.28)',
+  },
+  dateClusterDay: {
+    color: TOKENS.color.accent,
+    fontSize: 13,
+    fontWeight: '900',
+  },
+  dateClusterTime: {
+    color: TOKENS.color.textMuted,
+    fontSize: 12,
+    marginTop: 2,
   },
   eventTitle: {
-    flex: 1,
-    color: '#FFFFFF',
-    fontSize: 18,
-    fontWeight: '600',
-    marginRight: 12,
-    lineHeight: 24,
+    color: TOKENS.color.text,
+    fontSize: 21,
+    fontWeight: '900',
+    lineHeight: 27,
+    letterSpacing: -0.4,
   },
   categoryBadge: {
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 12,
+    paddingHorizontal: TOKENS.space.md,
+    paddingVertical: 6,
+    borderRadius: TOKENS.radius.pill,
   },
   categoryText: {
-    fontSize: 11,
-    fontWeight: '600',
+    fontSize: 10,
+    fontWeight: '900',
     textTransform: 'uppercase',
-    letterSpacing: 0.5,
+    letterSpacing: 0.6,
   },
-  eventInfo: {
-    gap: 6,
-  },
-  eventDateTime: {
+  eventMetaRow: {
     flexDirection: 'row',
     alignItems: 'center',
-  },
-  eventDate: {
-    color: '#BB86FC',
-    fontSize: 14,
-    fontWeight: '500',
-  },
-  eventSeparator: {
-    color: '#555555',
-    marginHorizontal: 8,
-  },
-  eventTime: {
-    color: '#BB86FC',
-    fontSize: 14,
-    fontWeight: '500',
-  },
-  eventLocation: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    marginTop: TOKENS.space.md,
   },
   eventVenue: {
-    color: '#AAAAAA',
+    color: TOKENS.color.textMuted,
     fontSize: 14,
+    fontWeight: '700',
+    maxWidth: '70%',
   },
   eventArea: {
-    color: '#666666',
+    color: TOKENS.color.textSoft,
     fontSize: 14,
+    flexShrink: 1,
   },
-  eventArrow: {
-    position: 'absolute',
-    bottom: 16,
-    right: 16,
+  eventFooter: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginTop: TOKENS.space.lg,
+    gap: TOKENS.space.md,
   },
-  eventArrowText: {
-    color: '#555555',
-    fontSize: 16,
-    fontWeight: '300',
+  eventPrice: {
+    color: TOKENS.color.mint,
+    fontSize: 13,
+    fontWeight: '900',
+    flexShrink: 1,
+  },
+  eventActionRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: TOKENS.space.sm,
+    flexShrink: 1,
+    justifyContent: 'flex-end',
+  },
+  externalLinkChip: {
+    color: TOKENS.color.mint,
+    backgroundColor: 'rgba(114, 224, 197, 0.12)',
+    borderColor: 'rgba(114, 224, 197, 0.28)',
+    borderWidth: 1,
+    borderRadius: TOKENS.radius.pill,
+    paddingHorizontal: TOKENS.space.sm,
+    paddingVertical: 4,
+    fontSize: 11,
+    fontWeight: '900',
+    overflow: 'hidden',
+    maxWidth: 110,
+  },
+  eventOpenText: {
+    color: TOKENS.color.accent,
+    fontSize: 13,
+    fontWeight: '900',
+  },
+  groupedSummaryRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    gap: TOKENS.space.md,
+    marginTop: TOKENS.space.sm,
+  },
+  groupedCount: {
+    color: TOKENS.color.textSoft,
+    fontSize: 13,
+    fontWeight: '700',
+    flexShrink: 1,
   },
   groupedTimesContainer: {
-    marginTop: 4,
-    gap: 4,
+    marginTop: TOKENS.space.md,
+    gap: TOKENS.space.sm,
   },
   groupedRowContainer: {
     flexDirection: 'row',
+    justifyContent: 'space-between',
     alignItems: 'center',
-    paddingVertical: 8,
-    paddingRight: 8,
-  },
-  groupedTimeRow: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
+    backgroundColor: TOKENS.color.surface,
+    borderRadius: TOKENS.radius.md,
+    paddingVertical: TOKENS.space.md,
+    paddingHorizontal: TOKENS.space.md,
+    borderWidth: 1,
+    borderColor: TOKENS.color.border,
   },
   groupedDateText: {
-    color: '#BB86FC',
+    color: TOKENS.color.textMuted,
     fontSize: 14,
-    fontWeight: '500',
-  },
-  groupedRowArrow: {
-    marginLeft: 8,
+    fontWeight: '800',
   },
   groupedRowArrowText: {
-    color: '#555555',
-    fontSize: 14,
-    fontWeight: '300',
+    color: TOKENS.color.accent,
+    fontSize: 13,
+    fontWeight: '900',
   },
-  // Loading state
-  loadingContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  loadingText: {
-    color: '#888888',
-    marginTop: 12,
-    fontSize: 16,
-  },
-  // Error state
-  errorContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: 20,
-  },
-  errorText: {
-    color: '#FF7597',
-    fontSize: 16,
-    fontWeight: '600',
-  },
-  errorDetail: {
-    color: '#666666',
-    fontSize: 14,
-    marginTop: 8,
-    textAlign: 'center',
-  },
-  // Empty state
-  emptyContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  emptyText: {
-    color: '#888888',
-    fontSize: 16,
-  },
-  // Loading more
   loadingMore: {
     flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center',
-    padding: 16,
+    padding: TOKENS.space.lg,
   },
   loadingMoreText: {
-    color: '#888888',
-    marginLeft: 8,
+    color: TOKENS.color.textMuted,
+    marginLeft: TOKENS.space.sm,
     fontSize: 14,
   },
-  // Details screen
-  detailsContainer: {
-    flex: 1,
-    backgroundColor: '#121212',
-  },
-  detailsHeader: {
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: '#2A2A2A',
-  },
-  backButton: {
-    flexDirection: 'row',
+  endOfList: {
+    paddingVertical: TOKENS.space.xl,
     alignItems: 'center',
   },
+  endOfListText: {
+    color: TOKENS.color.textSoft,
+    fontSize: 13,
+    fontStyle: 'italic',
+  },
+  skeletonList: {
+    padding: TOKENS.space.lg,
+    gap: TOKENS.space.lg,
+  },
+  skeletonCard: {
+    backgroundColor: TOKENS.color.surfaceRaised,
+    borderRadius: TOKENS.radius.lg,
+    padding: TOKENS.space.lg,
+    borderWidth: 1,
+    borderColor: TOKENS.color.border,
+  },
+  skeletonImage: {
+    height: 120,
+    borderRadius: TOKENS.radius.md,
+    backgroundColor: TOKENS.color.surfaceSoft,
+    marginBottom: TOKENS.space.lg,
+  },
+  skeletonLineWide: {
+    height: 18,
+    width: '82%',
+    borderRadius: TOKENS.radius.pill,
+    backgroundColor: TOKENS.color.surfaceSoft,
+    marginBottom: TOKENS.space.md,
+  },
+  skeletonLineShort: {
+    height: 14,
+    width: '48%',
+    borderRadius: TOKENS.radius.pill,
+    backgroundColor: TOKENS.color.surfaceSoft,
+  },
+  stateContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: TOKENS.space.xxl,
+  },
+  stateTitle: {
+    color: TOKENS.color.text,
+    fontSize: 22,
+    fontWeight: '900',
+    textAlign: 'center',
+    lineHeight: 28,
+  },
+  stateDetail: {
+    color: TOKENS.color.textMuted,
+    fontSize: 15,
+    lineHeight: 22,
+    textAlign: 'center',
+    marginTop: TOKENS.space.md,
+  },
+  stateButton: {
+    backgroundColor: TOKENS.color.accent,
+    borderRadius: TOKENS.radius.pill,
+    paddingHorizontal: TOKENS.space.xl,
+    paddingVertical: TOKENS.space.md,
+    marginTop: TOKENS.space.xl,
+  },
+  stateButtonText: {
+    color: TOKENS.color.black,
+    fontSize: 14,
+    fontWeight: '900',
+  },
+  detailsContainer: {
+    flex: 1,
+    backgroundColor: TOKENS.color.appBg,
+  },
+  detailsHeader: {
+    paddingHorizontal: TOKENS.space.lg,
+    paddingVertical: TOKENS.space.md,
+    borderBottomWidth: 1,
+    borderBottomColor: TOKENS.color.border,
+  },
+  backButton: {
+    alignSelf: 'flex-start',
+    paddingVertical: TOKENS.space.sm,
+    paddingRight: TOKENS.space.lg,
+  },
   backButtonText: {
-    color: '#BB86FC',
-    fontSize: 16,
-    fontWeight: '500',
+    color: TOKENS.color.accent,
+    fontSize: 15,
+    fontWeight: '900',
   },
   detailsContent: {
     flex: 1,
-    padding: 20,
+  },
+  detailsImage: {
+    width: '100%',
+    height: 240,
+    backgroundColor: TOKENS.color.surfaceSoft,
+  },
+  detailsImageFallback: {
+    height: 210,
+    backgroundColor: TOKENS.color.surfaceSoft,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderBottomWidth: 1,
+    borderBottomColor: TOKENS.color.border,
+  },
+  detailsIntro: {
+    padding: TOKENS.space.xl,
   },
   detailsTitle: {
-    color: '#FFFFFF',
-    fontSize: 28,
-    fontWeight: 'bold',
-    marginTop: 16,
-    marginBottom: 24,
-    lineHeight: 36,
+    color: TOKENS.color.text,
+    fontSize: 32,
+    fontWeight: '900',
+    marginTop: TOKENS.space.lg,
+    lineHeight: 38,
+    letterSpacing: -0.8,
+  },
+  detailsPrice: {
+    color: TOKENS.color.mint,
+    fontSize: 15,
+    fontWeight: '900',
+    marginTop: TOKENS.space.md,
+  },
+  detailsPrimaryCta: {
+    backgroundColor: TOKENS.color.coral,
+    borderRadius: TOKENS.radius.lg,
+    paddingVertical: TOKENS.space.lg,
+    alignItems: 'center',
+    marginTop: TOKENS.space.xl,
+  },
+  detailsPrimaryCtaUnavailable: {
+    backgroundColor: TOKENS.color.surface,
+    borderRadius: TOKENS.radius.lg,
+    borderWidth: 1,
+    borderColor: TOKENS.color.border,
+    padding: TOKENS.space.lg,
+    marginTop: TOKENS.space.xl,
   },
   detailsSection: {
-    marginBottom: 24,
+    backgroundColor: TOKENS.color.surface,
+    borderRadius: TOKENS.radius.lg,
+    borderWidth: 1,
+    borderColor: TOKENS.color.border,
+    marginHorizontal: TOKENS.space.xl,
+    marginBottom: TOKENS.space.md,
+    padding: TOKENS.space.lg,
   },
   detailsLabel: {
-    color: '#888888',
-    fontSize: 12,
-    fontWeight: '600',
+    color: TOKENS.color.accent,
+    fontSize: 11,
+    fontWeight: '900',
     textTransform: 'uppercase',
-    letterSpacing: 0.5,
-    marginBottom: 8,
+    letterSpacing: 1.2,
+    marginBottom: TOKENS.space.sm,
   },
   detailsValue: {
-    color: '#FFFFFF',
+    color: TOKENS.color.text,
     fontSize: 18,
+    fontWeight: '800',
     lineHeight: 26,
   },
   detailsSubvalue: {
-    color: '#AAAAAA',
-    fontSize: 16,
-    marginTop: 4,
+    color: TOKENS.color.textMuted,
+    fontSize: 15,
+    marginTop: TOKENS.space.xs,
+    lineHeight: 22,
   },
   detailsDescription: {
-    color: '#B0B0B0',
+    color: TOKENS.color.textMuted,
     fontSize: 16,
     lineHeight: 24,
   },
-  detailsLinkButton: {
-    backgroundColor: '#BB86FC',
-    borderRadius: 12,
-    paddingVertical: 16,
-    alignItems: 'center',
-    marginTop: 8,
-    marginBottom: 24,
-  },
-  detailsLinkText: {
-    color: '#000000',
-    fontSize: 16,
-    fontWeight: '600',
-  },
-  // CTA Button - Large pink button for event URL
   ctaButton: {
-    backgroundColor: '#FF7597',
-    borderRadius: 12,
-    paddingVertical: 18,
+    backgroundColor: TOKENS.color.coral,
+    borderRadius: TOKENS.radius.lg,
+    paddingVertical: TOKENS.space.lg,
     alignItems: 'center',
-    marginTop: 16,
-    marginBottom: 24,
+    marginHorizontal: TOKENS.space.xl,
+    marginTop: TOKENS.space.sm,
+    marginBottom: TOKENS.space.lg,
   },
   ctaButtonText: {
-    color: '#FFFFFF',
-    fontSize: 18,
-    fontWeight: '700',
+    color: TOKENS.color.white,
+    fontSize: 17,
+    fontWeight: '900',
   },
-  detailsFooter: {
-    paddingVertical: 20,
-    borderTopWidth: 1,
-    borderTopColor: '#2A2A2A',
+  ctaErrorText: {
+    color: TOKENS.color.danger,
+    fontSize: 13,
+    lineHeight: 19,
+    textAlign: 'center',
+    marginTop: TOKENS.space.sm,
   },
-  detailsSource: {
-    color: '#666666',
-    fontSize: 12,
+  ctaUnavailable: {
+    backgroundColor: TOKENS.color.surface,
+    borderRadius: TOKENS.radius.lg,
+    borderWidth: 1,
+    borderColor: TOKENS.color.border,
+    padding: TOKENS.space.lg,
+    marginHorizontal: TOKENS.space.xl,
+    marginTop: TOKENS.space.sm,
+    marginBottom: TOKENS.space.lg,
+  },
+  ctaUnavailableText: {
+    color: TOKENS.color.textMuted,
+    fontSize: 14,
+    lineHeight: 21,
     textAlign: 'center',
   },
-  providerFilterButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
+  detailsFooter: {
+    paddingVertical: TOKENS.space.xl,
+    marginHorizontal: TOKENS.space.xl,
+    borderTopWidth: 1,
+    borderTopColor: TOKENS.color.border,
   },
-  dropdownArrow: {
-    color: '#888888',
-    fontSize: 10,
-    marginLeft: 4,
-  },
-  providerDropdown: {
-    position: 'relative',
-    zIndex: 1000,
-  },
-  providerDropdownOverlay: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    backgroundColor: 'transparent',
-  },
-  providerDropdownContent: {
-    position: 'absolute',
-    top: 48,
-    left: 16,
-    right: 16,
-    marginTop: 4,
-    backgroundColor: '#2A2A2A',
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: '#3A3A3A',
-    overflow: 'hidden',
-    zIndex: 1001,
-    maxHeight: 280,
-  },
-  providerScrollView: {
-    maxHeight: 250,
-  },
-  providerOption: {
-    paddingVertical: 12,
-    paddingHorizontal: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: '#3A3A3A',
-  },
-  providerOptionActive: {
-    backgroundColor: '#BB86FC',
-  },
-  providerOptionText: {
-    color: '#B0B0B0',
-    fontSize: 14,
-  },
-  providerOptionTextActive: {
-    color: '#000000',
-    fontWeight: '600',
+  detailsSource: {
+    color: TOKENS.color.textSoft,
+    fontSize: 12,
+    textAlign: 'center',
   },
 });

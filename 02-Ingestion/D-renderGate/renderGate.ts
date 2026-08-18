@@ -8,6 +8,7 @@
  */
 
 import puppeteer from 'puppeteer';
+import axios from 'axios';
 import { fetchHtml } from '../tools/fetchTools.js';
 
 export interface RenderResult {
@@ -35,7 +36,56 @@ export interface RenderOptions {
 export async function renderPage(url: string, options: RenderOptions = {}): Promise<RenderResult> {
   const timeout = options.timeout || 15000;
   const startTime = Date.now();
-  
+  const scrapingBeeKey = process.env.SCRAPINGBEE_API_KEY;
+
+  // Primary path: ScrapingBee JS render (as requested for Tool D).
+  if (scrapingBeeKey) {
+    try {
+      const response = await axios.get('https://app.scrapingbee.com/api/v1/', {
+        params: {
+          api_key: scrapingBeeKey,
+          url,
+          render_js: 'true',
+          block_resources: 'true',
+          premium_proxy: 'true',
+          country_code: 'se',
+          wait: '2500',
+        },
+        timeout,
+        responseType: 'text',
+        validateStatus: (s) => s < 500,
+      });
+
+      if (response.status >= 400) {
+        return {
+          url,
+          success: false,
+          error: `ScrapingBee HTTP ${response.status}`,
+          metrics: {
+            renderTimeMs: Date.now() - startTime,
+            htmlLength: 0,
+            hasEventContent: false
+          }
+        };
+      }
+
+      const html = String(response.data || '');
+      return {
+        url,
+        success: true,
+        html,
+        metrics: {
+          renderTimeMs: Date.now() - startTime,
+          htmlLength: html.length,
+          hasEventContent: checkForEventContent(html)
+        }
+      };
+    } catch {
+      // Fall through to Puppeteer fallback below.
+    }
+  }
+
+  // Fallback path: local Puppeteer.
   let browser = null;
   
   try {
@@ -56,22 +106,17 @@ export async function renderPage(url: string, options: RenderOptions = {}): Prom
     // Set user agent to avoid detection
     await page.setUserAgent('Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36');
     
-    // Block unnecessary resources to speed up
+    // Block only heavy resources; allow document/scripts/XHR so JS apps can render.
     await page.setRequestInterception(true);
     page.on('request', (request) => {
       const resourceType = request.resourceType();
-      // Allow HTML, XHTML, XML
-      if (['html', 'xhtml', 'xml'].includes(resourceType)) {
-        request.continue();
-      } else {
-        // Block images, fonts, media, etc. for speed
-        request.abort();
-      }
+      if (['image', 'media', 'font'].includes(resourceType)) return request.abort();
+      return request.continue();
     });
     
     // Navigate to URL
     const response = await page.goto(url, {
-      waitUntil: 'networkidle0',
+      waitUntil: 'networkidle2',
       timeout: timeout
     });
     

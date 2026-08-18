@@ -9,7 +9,7 @@
  * for this source, C0 will also test the suggestedPaths before giving up.
  */
 
-import { fetchHtml } from '../../tools/fetchTools';
+import { fetchHtml, normalizeFetchUrl } from '../../tools/fetchTools';
 import { load } from 'cheerio';
 import type { DerivedRulesStore } from '../c4-derived-rules';
 import { FailCategory } from '../C4-ai-analysis';
@@ -208,7 +208,7 @@ function classifyRegion($el: any): 'nav' | 'header' | 'submenu' | 'content' | 's
   return 'content';
 }
 
-function collectLinks($: any, baseUrl: string): DiscoveredLink[] {
+export function collectLinks($: any, baseUrl: string): DiscoveredLink[] {
   const links: DiscoveredLink[] = [];
   const seen = new Set<string>();
   
@@ -232,8 +232,15 @@ function collectLinks($: any, baseUrl: string): DiscoveredLink[] {
       return;
     }
     
-    const urlObj = new URL(fullUrl);
-    if (urlObj.origin !== new URL(baseUrl).origin) return;
+    let urlObj: URL;
+    let baseUrlObj: URL;
+    try {
+      urlObj = new URL(fullUrl);
+      baseUrlObj = new URL(baseUrl);
+    } catch {
+      return;
+    }
+    if (urlObj.origin !== baseUrlObj.origin) return;
     if (seen.has(fullUrl)) return;
     seen.add(fullUrl);
     
@@ -303,9 +310,10 @@ export async function discoverEventCandidates(
   derivedRules?: DerivedRulesStore,
   sourceId?: string,
 ): Promise<FrontierDiscoveryResult> {
-  const baseUrl = getBaseUrl(rootUrl);
+  const normalizedRootUrl = normalizeFetchUrl(rootUrl);
+  const baseUrl = getBaseUrl(normalizedRootUrl);
   
-  const rootFetch = await fetchHtml(rootUrl, { timeout: 15000 });
+  const rootFetch = await fetchHtml(normalizedRootUrl, { timeout: 15000 });
   
   if (!rootFetch.success || !rootFetch.html) {
     // Distinguish between fetch errors and empty discovery
@@ -391,7 +399,7 @@ export async function discoverEventCandidates(
     console.log(`[C0] ${sourceId || rootUrl}: no candidates from link discovery — testing ${SWEDISH_EVENT_PATTERNS.length} Swedish event path patterns`);
     for (const pattern of SWEDISH_EVENT_PATTERNS) {
       pathsTested.push(pattern);
-      const candidateUrl = new URL(pattern, rootUrl).href;
+      const candidateUrl = new URL(pattern, normalizedRootUrl).href;
       try {
         const metrics = await measureEventDensity(candidateUrl);
         const densityScore =
@@ -421,7 +429,6 @@ export async function discoverEventCandidates(
     // Also test domain-base Swedish pattern as last resort (for sites like lund.se/stadsteatern
     // where the event calendar lives at lund.se/evenemang, not lund.se/stadsteatern/evenemang)
     if (!subpageFallback) {
-      const baseUrl = getBaseUrl(rootUrl);
       for (const pattern of SWEDISH_EVENT_PATTERNS) {
         const candidateUrl = `${baseUrl}${pattern}`;
         try {
@@ -456,7 +463,7 @@ export async function discoverEventCandidates(
     }
   }
 
-  const rootMetrics = await measureEventDensity(rootUrl);
+  const rootMetrics = await measureEventDensity(normalizedRootUrl);
   const rootDensityScore = 
     rootMetrics.dateMentions * 2 +
     rootMetrics.timeTagCount * 3 +

@@ -6,6 +6,18 @@
  */
 
 import { describe, it, expect } from 'vitest';
+import { readFileSync } from 'fs';
+import path from 'path';
+import { fileURLToPath } from 'url';
+import {
+  deriveCliBatchNumber,
+  deriveCompletedBatchToReconcile,
+  hasUnfinalizedCompletedActivePool,
+  parseBatchNumberFromId,
+} from './run-dynamic-pool.js';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 // ---------------------------------------------------------------------------
 // Pure logic extracted from run-dynamic-pool.ts
@@ -143,6 +155,45 @@ describe('bucketize', () => {
   it('returns 3 for 18+ errors', () => {
     expect(bucketize(18)).toBe(3);
     expect(bucketize(100)).toBe(3);
+  });
+});
+
+describe('effective URL mutation guard', () => {
+  it('keeps effectiveUrl mutable because C0/C1 can replace the processing URL', () => {
+    const source = readFileSync(path.join(__dirname, 'run-dynamic-pool.ts'), 'utf8');
+    expect(source).toContain('let effectiveUrl = urlVariant.url');
+    expect(source).not.toContain('const effectiveUrl = urlVariant.url');
+  });
+
+});
+
+describe('CLI batch-state helpers', () => {
+  it('parses strict batch ids only', () => {
+    expect(parseBatchNumberFromId('batch-42')).toBe(42);
+    expect(parseBatchNumberFromId('batch-nope')).toBeNull();
+    expect(parseBatchNumberFromId('42')).toBeNull();
+    expect(parseBatchNumberFromId(null)).toBeNull();
+  });
+
+  it('advances after a run-completion entry without relying on source text assertions', () => {
+    expect(deriveCliBatchNumber({ currentBatch: 17, type: 'run-completion' }, null)).toBe(18);
+    expect(deriveCliBatchNumber({ batchId: 'batch-17', type: 'run-completion' }, null)).toBe(18);
+    expect(deriveCliBatchNumber({ currentBatch: 17, type: 'batch-start' }, null)).toBe(17);
+    expect(deriveCliBatchNumber({ currentBatch: 17, type: 'run-completion' }, 99)).toBe(99);
+  });
+
+  it('detects completed saved states that still need active-pool finalization', () => {
+    expect(hasUnfinalizedCompletedActivePool({ poolRoundNumber: 3, activePool: [{}] }, 3)).toBe(true);
+    expect(hasUnfinalizedCompletedActivePool({ poolRoundNumber: 2, activePool: [{}] }, 3)).toBe(false);
+    expect(hasUnfinalizedCompletedActivePool({ poolRoundNumber: 3, activePool: [] }, 3)).toBe(false);
+    expect(hasUnfinalizedCompletedActivePool(null, 3)).toBe(false);
+  });
+
+  it('selects the completed batch for recovery before advancing to the next batch', () => {
+    expect(deriveCompletedBatchToReconcile({ currentBatch: 17, type: 'run-completion' }, null)).toBe(17);
+    expect(deriveCompletedBatchToReconcile({ batchId: 'batch-17', type: 'run-completion' }, null)).toBe(17);
+    expect(deriveCompletedBatchToReconcile({ currentBatch: 17, type: 'batch-start' }, null)).toBeNull();
+    expect(deriveCompletedBatchToReconcile({ currentBatch: 17, type: 'run-completion' }, 99)).toBeNull();
   });
 });
 

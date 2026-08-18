@@ -27,6 +27,7 @@ import requests
 from pathlib import Path
 from datetime import datetime, timezone
 from urllib.parse import urlparse
+from typing import Optional
 
 # ── Env ───────────────────────────────────────────────────────────────────────
 from dotenv import load_dotenv
@@ -42,7 +43,7 @@ RUN_LOG       = LOGS_DIR / f"scb-500-AI-{datetime.now().isoformat().replace(':',
 RAW_SOURCES  = Path(__file__).parent.parent / "01-Sources" / "RawSources"
 SOURCES_DIR  = Path(__file__).parent.parent / "sources"
 MAN_Q        = RUNTIME_DIR / "postTestC-error500.jsonl"
-SUCCESS_Q    = RUNTIME_DIR / "preA.jsonl"
+SUCCESS_Q    = RUNTIME_DIR / "preA-queue.jsonl"
 FAIL_Q       = RUNTIME_DIR / "postTestC-404.jsonl"
 PROMPT_DIR   = Path(__file__).parent / "jobs" / "scb-500-AI"
 PROMPT_DIR.mkdir(exist_ok=True, parents=True)
@@ -121,6 +122,33 @@ def write_man_queue(entries: list[dict]):
         )
     elif MAN_Q.exists():
         MAN_Q.unlink(missing_ok=True)
+
+def remove_source_from_man_queue(source_id: str) -> int:
+    """Remove a processed source from postTestC-error500 immediately."""
+    if not MAN_Q.exists():
+        return 0
+
+    kept = []
+    removed = 0
+    for line in MAN_Q.read_text(encoding="utf-8").splitlines():
+        raw = line.strip()
+        if not raw:
+            continue
+        try:
+            entry = json.loads(raw)
+        except json.JSONDecodeError:
+            kept.append(raw)
+            continue
+        if str(entry.get("sourceId") or "") == source_id:
+            removed += 1
+            continue
+        kept.append(json.dumps(entry, ensure_ascii=False))
+
+    if kept:
+        MAN_Q.write_text("\n".join(kept) + "\n", encoding="utf-8")
+    else:
+        MAN_Q.unlink(missing_ok=True)
+    return removed
 
 def read_out_queue() -> set[str]:
     """Read already-done sourceIds from both preA and FAIL_Q to avoid duplicates."""
@@ -547,8 +575,8 @@ Ursprunglig domän (som gav 500): https://{orig_domain}
 3. För ACCEPT-resultat: HTTP-verify med curl att URL fungerar (200, 301, 302)
 
 4. Logga ALLA resultat:
-   [REJECT] {url} domain=0.0 reason=AGG_DOMAIN
-   [ACCEPT] {url} combined=2.8 scores: domain=2.00, event_sig=0.50, http=1.00, listing=0.30, freshness=0.00
+   [REJECT] {{url}} domain=0.0 reason=AGG_DOMAIN
+   [ACCEPT] {{url}} combined=2.8 scores: domain=2.00, event_sig=0.50, http=1.00, listing=0.30, freshness=0.00
 
 ────────────── FAS 2: DEEP-LIST (om ≤1 event) ──────────────
 5. Om en ACCEPT-URL returnerar ≤1 event:
@@ -614,13 +642,13 @@ _genererad: {ts} av scb-500-AI.py_
 7. Appenda till {out_q} med JSON på EN rad:
 {{"sourceId": "{source_id}", "queueName": "preA", "verifiedUrl": "[URL]", "httpStatus": [STATUS], "combinedScore": [SCORE], "eventsFound": [ANTAL], "phase2DeepList": [true/false], "foundVia": "claude-ai-search", "retryAttempts": {retry_attempts}}}
 
-8. Skriv "DONE:{source_id}:{verified_url}:{status}:{score}:{events}:{phase2}" till {done_marker}
+8. Skriv "DONE:{source_id}:{{verified_url}}:{{status}}:{{score}}:{{events}}:{{phase2}}" till {done_marker}
 
 Om ingen ACCEPT-URL hittas, skriv "FAIL:{source_id}" till {done_marker}.
 """
 
 # ── Run Claude in new terminal ─────────────────────────────────────────────────
-def run_claude_for_source(source_id: str, venue_name: str, retry_attempts: int = 3) -> Path | None:
+def run_claude_for_source(source_id: str, venue_name: str, retry_attempts: int = 3) -> Optional[Path]:
     """
     Opens a new Terminal window and runs claude --print with MiniMax/ollama.
     Returns path to done marker on success, None on failure.
@@ -647,7 +675,7 @@ def run_claude_for_source(source_id: str, venue_name: str, retry_attempts: int =
     prompt_file = PROMPT_DIR / f"prompt-{source_id}.txt"
     prompt_file.write_text(prompt, encoding="utf-8")
 
-    project_path = "/Users/claudgashi/EventPulse-recovery/clawdbot2/project/00EVENTPULSEFINALDESTINATION/NEWSTRUCTURE"
+    project_path = "/Volumes/2TB filer/NEWSTRUCTURE"
     log_file = PROMPT_DIR / f"log-{source_id}.txt"
 
     # Build osascript to run claude in Terminal
@@ -678,6 +706,22 @@ def wait_for_marker(marker: Path, timeout: int = 120) -> str:
                 return content
         time.sleep(3)
     return ""
+
+
+def parse_done_marker(result: str, expected_source_id: str) -> dict:
+    """Parse DONE markers without splitting the https:// URL scheme."""
+    prefix = f"DONE:{expected_source_id}:"
+    if not result.startswith(prefix):
+        raise ValueError(f"unexpected DONE marker source: {result[:80]}")
+
+    verified_url, status, score, events, phase2 = result[len(prefix):].rstrip("\n").rsplit(":", 4)
+    return {
+        "verified_url": verified_url,
+        "status_code": int(status) if status.isdigit() else 200,
+        "combined_score": float(score) if score else 0.0,
+        "events_found": int(events) if events else 0,
+        "phase2": phase2.strip().lower() == "true",
+    }
 
 
 # ── Main ──────────────────────────────────────────────────────────────────────
@@ -753,6 +797,7 @@ def main():
             append_preA(entry_out)
             update_source_truth(source_id, retry_url, retry_status,
                               found_via="retry", retry_attempts=retry_attempts)
+            remove_source_from_man_queue(source_id)
             recovered_via_retry += 1
             time.sleep(0.5)
             continue
@@ -772,13 +817,12 @@ def main():
         log_file = PROMPT_DIR / f"log-{source_id}.txt"
 
         if result.startswith("DONE:"):
-            parts = result.rstrip("\n").split(":")
-            verified_url = parts[1] if len(parts) > 1 else ""
-            status_code = int(parts[2]) if len(parts) > 2 and parts[2].isdigit() else 200
-            combined_score = float(parts[3]) if len(parts) > 3 and parts[3] else 0.0
-            events_found = int(parts[4]) if len(parts) > 4 and parts[4] else 0
-            phase2_str = parts[5] if len(parts) > 5 else "false"
-            phase2 = phase2_str.strip().lower() == "true"
+            parsed = parse_done_marker(result, source_id)
+            verified_url = parsed["verified_url"]
+            status_code = parsed["status_code"]
+            combined_score = parsed["combined_score"]
+            events_found = parsed["events_found"]
+            phase2 = parsed["phase2"]
 
             is_listing = any(s in verified_url.lower() for s in LISTING_PATH_SIGNALS)
             _, breakdown, _ = score_result(verified_url, "", "", source_id, is_listing=is_listing)
@@ -815,6 +859,7 @@ def main():
             update_source_truth(source_id, verified_url, status_code,
                               found_via="claude-ai-search",
                               retry_attempts=len(RETRY_DELAYS))
+            remove_source_from_man_queue(source_id)
             recovered_via_search += 1
 
         elif result.startswith("FAIL:"):
@@ -824,7 +869,7 @@ def main():
             entry_out["foundVia"] = "failed-retry"
             entry_out["retryAttempts"] = len(RETRY_DELAYS)
             append_fail(entry_out)
-            remaining.append(entry)
+            remove_source_from_man_queue(source_id)
             failed += 1
 
         else:

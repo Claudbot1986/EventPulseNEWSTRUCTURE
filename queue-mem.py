@@ -7,7 +7,8 @@ Flytta källor mellan köer, återställ, sammanfoga.
 Usage:
   python3 queue-mem.py status                    # Visa alla köer + antal
   python3 queue-mem.py reconcile                 # Visa diskrepans: sources/ vs köer
-  python3 queue-mem.py reconcile --force          # Återställ SAMTLIGA köer → preA
+  python3 queue-mem.py reconcile --force          # Återställ → preA om köer saknar källor (guard)
+  python3 queue-mem.py sync-prea                  # sources/ → preA + id/sourceId i filer + status/priority sync
   python3 queue-mem.py list <queue>              # Lista källor i en kö
   python3 queue-mem.py find <sourceId>            # Var finns källan?
   python3 queue-mem.py move <sourceId> <queue>  # Flytta en källa till annan kö
@@ -24,15 +25,18 @@ Usage:
   python3 queue-mem.py log                       # Visa journal
 
 Queues: preA, postA, preB, postB, postB-preC, preUI, postTestC-A, postTestC-B,
-        postTestC-D, postTestC-UI, postTestC-man, postTestC-Fail
+        postTestC-D, postTestC-UI, post10-UI, postTestC-man, postTestC-man1, postD-UI, postD-man1, postD-man, postTestC-Fail
 """
 
 import sys
 import json
 import shutil
+import subprocess
 from pathlib import Path
 from datetime import datetime
+from typing import Any, Dict, Optional, Tuple
 
+PROJECT_ROOT = Path(__file__).parent.resolve()
 RUNTIME = Path(__file__).parent / "runtime"
 JOURNAL = RUNTIME / "queue-mem-log.jsonl"
 SNAPSHOT_DIR = RUNTIME / "queue-mem-snapshots"
@@ -49,13 +53,19 @@ QUEUE_FILES = {
     "postTestC-B":    "postTestC-B.jsonl",
     "postTestC-D":    "postTestC-D.jsonl",
     "postTestC-UI":   "postTestC-UI.jsonl",
+    "post10-UI":      "post10-UI.jsonl",
     "postTestC-man":  "postTestC-manual-review.jsonl",
+    "postTestC-man1": "postTestC-man1.jsonl",
     "postTestC-serverdown": "postTestC-serverdown.jsonl",
     "postTestC-404":        "postTestC-404.jsonl",
     "postTestC-error500":   "postTestC-error500.jsonl",
     "postTestC-timeout":    "postTestC-timeout.jsonl",
     "postTestC-blocked":    "postTestC-blocked.jsonl",
     "postTestC-out":        "postTestC-out.jsonl",
+    "postD-UI":             "postD-UI.jsonl",
+    "postD-man1":           "postD-man1.jsonl",
+    "postD-man":            "postD-man.jsonl",
+    "post-man":             "post-man.jsonl",
     "postTestC-Fail":      "postTestC-Fail.jsonl",
 }
 
@@ -104,6 +114,64 @@ def journal(action, detail):
     }
     with open(JOURNAL, "a") as f:
         f.write(json.dumps(entry, ensure_ascii=False) + "\n")
+
+
+def _load_source_json_obj(path: Path) -> Optional[Dict[str, Any]]:
+    raw = path.read_text(encoding="utf-8").strip()
+    if not raw:
+        return None
+    try:
+        return json.loads(raw)
+    except Exception:
+        try:
+            return json.loads(raw.splitlines()[0])
+        except Exception:
+            return None
+
+
+def repair_source_files() -> Tuple[int, int]:
+    """
+    Sätt id + sourceId = filnamn (stem), behåll url. Returnerar (antal filer uppdaterade, antal utan url).
+    """
+    sources_dir = PROJECT_ROOT / "sources"
+    fixed = 0
+    no_url = 0
+    for p in sorted(sources_dir.glob("*.jsonl")):
+        stem = p.stem
+        obj = _load_source_json_obj(p)
+        if obj is None:
+            continue
+        url = str(obj.get("url", "") or "").strip()
+        if not url:
+            no_url += 1
+            print(f"  ⚠  {stem}.jsonl saknar url — ej uppdaterad")
+            continue
+        changed = False
+        if str(obj.get("id", "")).strip() != stem:
+            obj["id"] = stem
+            changed = True
+        if str(obj.get("sourceId", "")).strip() != stem:
+            obj["sourceId"] = stem
+            changed = True
+        if changed:
+            p.write_text(json.dumps(obj, ensure_ascii=False) + "\n", encoding="utf-8")
+            fixed += 1
+    return fixed, no_url
+
+
+def run_sync_runtime_from_sources() -> int:
+    """Kör TS: rensa orphan status + bygg prioritetskö för alla källor."""
+    r = subprocess.run(
+        ["npx", "tsx", "02-Ingestion/tools/syncRuntimeFromSources.ts"],
+        cwd=str(PROJECT_ROOT),
+        capture_output=True,
+        text=True,
+    )
+    if r.stdout:
+        print(r.stdout.rstrip())
+    if r.stderr and r.returncode != 0:
+        print(r.stderr.rstrip())
+    return r.returncode
 
 
 def cmd_status():
@@ -532,6 +600,82 @@ def cmd_reconcile_force():
     cmd_status()
 
 
+def cmd_sync_sources_to_preA():
+    """
+    En källa per rad i preA för varje sources/*.jsonl.
+    Tömmer alla andra köer (förutom EVENTPULSE-APP som lämnas orörd).
+    Kö-rader utan motsvarande källfil försvinner (orphans).
+    Reparerar id/sourceId i källfiler, synkar sources_status + prioritetskön.
+    """
+    SOURCES_DIR = PROJECT_ROOT / "sources"
+    n_fixed, n_no_url = repair_source_files()
+    if n_fixed:
+        print(f"\n  🔧 Källfiler uppdaterade (id/sourceId): {n_fixed}")
+    if n_no_url:
+        print(f"  ⚠  Källfiler utan url: {n_no_url}")
+
+    source_ids = sorted(f.stem for f in SOURCES_DIR.glob("*.jsonl"))
+    total = len(source_ids)
+    now = datetime.utcnow().isoformat() + "Z"
+    PRESERVE = frozenset({"EVENTPULSE-APP"})
+
+    preA_before = len(load_queue("preA"))
+
+    in_any_before: set = set()
+    for qname, fname in QUEUE_FILES.items():
+        path = RUNTIME / fname
+        if not path.exists():
+            continue
+        for line in path.read_text().splitlines():
+            if line.strip():
+                try:
+                    sid = json.loads(line).get("sourceId", "")
+                    if sid:
+                        in_any_before.add(sid)
+                except Exception:
+                    pass
+
+    orphans = in_any_before - set(source_ids)
+
+    for qname in QUEUE_FILES:
+        if qname == "preA":
+            continue
+        if qname in PRESERVE:
+            continue
+        save_queue(qname, {})
+
+    preA_entries = {}
+    for sid in source_ids:
+        path = SOURCES_DIR / f"{sid}.jsonl"
+        obj = _load_source_json_obj(path) if path.exists() else None
+        url = str(obj.get("url", "") or "").strip() if obj else ""
+        preA_entries[sid] = {
+            "sourceId": sid,
+            "url": url,
+            "queueName": "preA",
+            "queuedAt": now,
+            "priority": 1,
+            "attempt": 1,
+            "queueReason": "sync-prea: sources-truth",
+        }
+    save_queue("preA", preA_entries)
+
+    rc = run_sync_runtime_from_sources()
+    if rc != 0:
+        print(f"  ⚠  syncRuntimeFromSources avslutades med kod {rc} (kör manuellt: npx tsx 02-Ingestion/tools/syncRuntimeFromSources.ts)")
+
+    journal(
+        "SYNC-PREA",
+        f"{total} källor → preA (preA före {preA_before}); orphans bort: {len(orphans)}; källfix: {n_fixed}",
+    )
+    print()
+    print(f"  ✅ sync-prea: {total} källor i preA (en rad per källfil, sourceId + url).")
+    if orphans:
+        print(f"  🧹 Tog bort {len(orphans)} orphan sourceId ur köer (saknade sources/{{id}}.jsonl).")
+    print(f"  📌 EVENTPULSE-APP oförändrad (om den fanns).")
+    cmd_status()
+
+
 def main():
     if len(sys.argv) < 2:
         print(__doc__)
@@ -611,6 +755,8 @@ def main():
             cmd_reconcile_force()
         else:
             cmd_reconcile()
+    elif cmd == "sync-prea":
+        cmd_sync_sources_to_preA()
     else:
         print(f"  Okänt kommando: {cmd}")
         print(__doc__)

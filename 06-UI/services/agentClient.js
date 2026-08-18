@@ -148,3 +148,95 @@ export async function recordEventInteraction({
 }
 
 export { AGENT_BASE_URL, getOrCreateAnonUserId };
+
+/**
+ * Browse feed: GET /agent/feed?from=YYYY-MM-DD&days=7
+ *
+ * Returns the events_public slice in [from, from+days), sorted ascending by
+ * start_time. Used by the default browse-first UI; pagination advances
+ * `from` by 7 days per scroll-end.
+ *
+ * Maps EventCard → the legacy shape App.js expects (date/time split out
+ * from start_time, url aliased to ticket_url, etc.) so the existing UI
+ * code doesn't need to change.
+ */
+export async function fetchFeed({ from, days = 7, signal, timeoutMs = 12_000 } = {}) {
+  const url = new URL(`${AGENT_BASE_URL}/agent/feed`);
+  url.searchParams.set('from', from);
+  url.searchParams.set('days', String(days));
+
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), timeoutMs);
+  if (signal) {
+    if (signal.aborted) controller.abort();
+    else signal.addEventListener('abort', () => controller.abort(), { once: true });
+  }
+
+  let response;
+  try {
+    response = await fetch(url.toString(), { signal: controller.signal });
+  } finally {
+    clearTimeout(timer);
+  }
+
+  if (!response.ok) {
+    throw new Error(`feed ${response.status}: ${response.statusText}`);
+  }
+
+  const data = await response.json();
+  const rawEvents = Array.isArray(data.events) ? data.events : [];
+
+  // EventCard → legacy shape so App.js HomeScreen keeps working.
+  // Use local-time date/time components, not UTC slices, so Stockholm
+  // events display at their local clock time (not UTC).
+  const events = rawEvents.map((e) => {
+    const start = e.start_time ? new Date(e.start_time) : null;
+    const pad = (n) => String(n).padStart(2, '0');
+    const date = start && !Number.isNaN(start.getTime())
+      ? `${start.getFullYear()}-${pad(start.getMonth() + 1)}-${pad(start.getDate())}`
+      : null;
+    const time = start && !Number.isNaN(start.getTime())
+      ? `${pad(start.getHours())}:${pad(start.getMinutes())}`
+      : null;
+    return {
+      id: e.id,
+      title: e.title || 'Untitled',
+      date,
+      time,
+      start_time: e.start_time,
+      venue: e.venue_name || '',
+      venue_name: e.venue_name || '',
+      area: e.city || 'Stockholm',
+      city: e.city || 'Stockholm',
+      category: e.category_slug || '',
+      category_slug: e.category_slug || '',
+      isFree: !!e.is_free,
+      is_free: !!e.is_free,
+      priceMin: e.price_min_sek ?? null,
+      price_min_sek: e.price_min_sek ?? null,
+      priceMax: e.price_max_sek ?? null,
+      price_max_sek: e.price_max_sek ?? null,
+      url: e.ticket_url || null,
+      ticket_url: e.ticket_url || null,
+      imageUrl: e.image_url || null,
+      image_url: e.image_url || null,
+      source: 'agent',
+    };
+  });
+
+  return {
+    events,
+    from: data.from,
+    to: data.to,
+    has_more: !!data.has_more,
+    next_from: data.next_from,
+  };
+}
+
+/** YYYY-MM-DD `days` days after `from` (UTC, mirrors server-side addDays). */
+export function addDays(from, days) {
+  const d = new Date(`${from}T00:00:00.000Z`);
+  if (Number.isNaN(d.getTime())) return from;
+  d.setUTCDate(d.getUTCDate() + days);
+  return d.toISOString().slice(0, 10);
+}

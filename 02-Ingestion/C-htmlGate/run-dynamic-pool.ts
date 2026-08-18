@@ -48,15 +48,17 @@ import { runC4Analysis, type C4InputSource, type C4RoundAnalysis, FailCategory }
 import { c4DeepAnalyze, verifyProposals, type C4PipelineResult, type C4DeepAnalysisResult } from './c4-deep-analysis';
 import { saveRoundDerivedRules, loadAllDerivedRules, isImprovementEnabled, proposeCandidateRulesAsImprovements, type DerivedRulesStore } from './c4-derived-rules';
 import type { HtmlVerdict } from './C2-htmlGate/C2-htmlGate';
-import { readFileSync, writeFileSync, mkdirSync, appendFileSync, readdirSync, unlinkSync } from 'fs';
+import { readFileSync, writeFileSync, mkdirSync, appendFileSync, readdirSync, unlinkSync, rmdirSync } from 'fs';
 import { join, dirname } from 'path';
-import { fileURLToPath } from 'url';
+import { fileURLToPath, pathToFileURL } from 'url';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
 // Project root: two levels up from C-htmlGate/
-const PROJECT_ROOT = join(__dirname, '..', '..');
+const PROJECT_ROOT = process.env.EVENTPULSE_SANDBOX_ROOT
+  ? process.env.EVENTPULSE_SANDBOX_ROOT
+  : join(__dirname, '..', '..');
 
 // CLI flags (set in main(), used throughout)
 let SKIP_C4 = false;
@@ -89,7 +91,9 @@ function ensureBatchDir(batchNum: number): string {
 
 const RUNTIME_DIR = join(PROJECT_ROOT, 'runtime');
 const SOURCES_DIR = join(PROJECT_ROOT, 'sources');
-const REPORTS_DIR = join(__dirname, 'reports');
+const REPORTS_DIR = process.env.EVENTPULSE_SANDBOX_ROOT
+  ? join(PROJECT_ROOT, '07-Discovery', 'testResults', 'source-candidates', 'c-htmlGate')
+  : join(__dirname, 'reports');
 const C_EXTRACTED_DIR = join(PROJECT_ROOT, '03-Queue', '03-extractedevents', 'C');
 const LOGS_DIR = join(RUNTIME_DIR, 'logs');
 const RUN_LOG = join(LOGS_DIR, `runC-dynamic-pool-${new Date().toISOString().replace(/[:.]/g, '-')}.log`);
@@ -393,6 +397,101 @@ function readBatchState(): { currentBatch: number; status: string } | null {
 function writeBatchStateEntry(entry: Record<string, unknown>): void {
   const path = join(REPORTS_DIR, 'batch-state.jsonl');
   appendFileSync(path, JSON.stringify(entry) + '\n');
+}
+
+const RUN_LOCK_DIR = join(REPORTS_DIR, '.run-dynamic-pool.lock');
+let releaseActiveRunLock: (() => void) | null = null;
+let handleActiveSigint: (() => void) | null = null;
+
+function acquireRunLock(): () => void {
+  mkdirSync(REPORTS_DIR, { recursive: true });
+  try {
+    mkdirSync(RUN_LOCK_DIR);
+    writeFileSync(join(RUN_LOCK_DIR, 'owner.json'), JSON.stringify({
+      pid: process.pid,
+      startedAt: new Date().toISOString(),
+    }) + '\n');
+  } catch {
+    throw new Error(`Another run-dynamic-pool process is already active (${RUN_LOCK_DIR}). Refusing overlapping queue drain.`);
+  }
+
+  let released = false;
+  return () => {
+    if (released) return;
+    released = true;
+    try { unlinkSync(join(RUN_LOCK_DIR, 'owner.json')); } catch {}
+    try { rmdirSync(RUN_LOCK_DIR); } catch {}
+  };
+}
+
+export function parseBatchNumberFromId(batchId: unknown): number | null {
+  if (typeof batchId !== 'string') return null;
+  const match = batchId.match(/^batch-(\d+)$/);
+  if (!match) return null;
+  const parsed = parseInt(match[1], 10);
+  return Number.isFinite(parsed) ? parsed : null;
+}
+
+export function deriveCliBatchNumber(rawBatchState: any, cliBatchNum: number | null, fallback = 13): number {
+  if (cliBatchNum !== null && Number.isFinite(cliBatchNum)) return cliBatchNum;
+  const fromCurrent = typeof rawBatchState?.currentBatch === 'number' && Number.isFinite(rawBatchState.currentBatch)
+    ? rawBatchState.currentBatch
+    : null;
+  const fromId = parseBatchNumberFromId(rawBatchState?.batchId);
+  const raw = fromCurrent ?? fromId ?? fallback;
+  return rawBatchState?.type === 'run-completion' ? raw + 1 : raw;
+}
+
+export function deriveCompletedBatchToReconcile(rawBatchState: any, cliBatchNum: number | null): number | null {
+  if (cliBatchNum !== null && Number.isFinite(cliBatchNum)) return null;
+  if (rawBatchState?.type !== 'run-completion') return null;
+  const fromCurrent = typeof rawBatchState?.currentBatch === 'number' && Number.isFinite(rawBatchState.currentBatch)
+    ? rawBatchState.currentBatch
+    : null;
+  return fromCurrent ?? parseBatchNumberFromId(rawBatchState?.batchId);
+}
+
+export function hasUnfinalizedCompletedActivePool(
+  savedState: { poolRoundNumber: number; activePool: unknown[] } | null,
+  maxRounds: number,
+): boolean {
+  if (!savedState) return false;
+  return savedState.poolRoundNumber >= maxRounds && savedState.activePool.length > 0;
+}
+
+function reconcileUnfinalizedActivePool(savedState: PoolState, batchNum: number): PoolState {
+  if (savedState.activePool.length === 0) return savedState;
+  console.log(`[Recovery] Finalizing ${savedState.activePool.length} active sources left in completed batch-${batchNum}`);
+  const finalizedExits = savedState.activePool.map(src => {
+    const queueEntry = {
+      sourceId: src.sourceId,
+      queueName: 'postTestC-manual-review',
+      queuedAt: new Date().toISOString(),
+      priority: 1,
+      attempt: 1,
+      queueReason: '[RECOVERY] completed pool-state had active source after max rounds',
+      workerNotes: `Recovered from batch-${batchNum} pool-state before advancing`,
+      roundNumber: savedState.poolRoundNumber,
+      roundsParticipated: src.roundsParticipated,
+      queueOrigin: 'run-dynamic-pool-recovery',
+    };
+    appendToManualReview(queueEntry);
+    return { source: src, decision: 'postTestC-manual-review', result: null };
+  });
+
+  const reconciled: PoolState = {
+    ...savedState,
+    activePool: [],
+    exited: [...savedState.exited, ...finalizedExits],
+    failed: [],
+    newlyRefilled: [],
+    allExitedIds: Array.from(new Set([
+      ...savedState.allExitedIds,
+      ...savedState.activePool.map(src => src.sourceId),
+    ])),
+  };
+  savePoolState(reconciled, batchNum);
+  return reconciled;
 }
 
 // ---------------------------------------------------------------------------
@@ -923,7 +1022,7 @@ async function runSourceOnPool(
 
   // ── URL variant normalization: try https/www/http prefixes ─────────────────
   const urlVariant = await tryUrlVariants(source.url);
-  const effectiveUrl = urlVariant.url;
+  let effectiveUrl = urlVariant.url;
   if (urlVariant.reason !== 'original') {
     console.log(`[UrlVariant] ${source.url} → ${effectiveUrl} (${urlVariant.reason})`);
   }
@@ -2204,12 +2303,14 @@ async function main() {
 
   // Read batch number and type from batch-state.jsonl
   const rawBatchState = readBatchState();
-  // Extract batch number: CLI override > currentBatch > batchId parsing > 13
-  const BATCH_NUM_FROM_ID = (rawBatchState as any)?.batchId ? parseInt((rawBatchState as any).batchId.replace('batch-', ''), 10) : null;
-  const BATCH_NUM = CLI_BATCH_NUM ?? rawBatchState?.currentBatch ?? BATCH_NUM_FROM_ID ?? 13;
+  // Extract batch number: CLI override > currentBatch > batchId parsing > 13.
+  // A run-completion entry means the previous C batch is done; the next CLI run
+  // must start a fresh batch instead of resuming the completed pool-state.
+  const BATCH_NUM = deriveCliBatchNumber(rawBatchState, CLI_BATCH_NUM, 13);
   const BATCH_TYPE: 'normal' | 'verification' = (rawBatchState as any)?.batchType ?? 'normal';
   const TARGET_IMPROVEMENT: string | null = (rawBatchState as any)?.targetImprovement ?? null;
   const VERIFICATION_SOURCES: string[] = (rawBatchState as any)?.verificationSources ?? [];
+  const COMPLETED_BATCH_TO_RECONCILE = deriveCompletedBatchToReconcile(rawBatchState, CLI_BATCH_NUM);
 
   mkdirSync(LOGS_DIR, { recursive: true });
   writeFileSync(RUN_LOG, '', 'utf8');
@@ -2223,6 +2324,13 @@ async function main() {
   // to batch-specific report files (e.g., c4-ai-analysis-round-X.md)
   const BATCH_DIR = ensureBatchDir(BATCH_NUM);
   console.log(`[Init] Batch directory ready: ${BATCH_DIR}`);
+
+  if (COMPLETED_BATCH_TO_RECONCILE !== null && COMPLETED_BATCH_TO_RECONCILE !== BATCH_NUM) {
+    const completedState = loadPoolState(COMPLETED_BATCH_TO_RECONCILE);
+    if (hasUnfinalizedCompletedActivePool(completedState, MAX_ROUNDS)) {
+      reconcileUnfinalizedActivePool(completedState!, COMPLETED_BATCH_TO_RECONCILE);
+    }
+  }
 
   // Step 1: Check for existing pool state (resume scenario)
   // If batch-state.jsonl's last entry is a FRESH batch-start (not a completion),
@@ -2241,13 +2349,13 @@ async function main() {
     console.log('\n[Step 1] Fresh batch-start detected — cleared any stale pool-state.json');
   }
 
-  const savedState = loadPoolState(BATCH_NUM);
+  let savedState = loadPoolState(BATCH_NUM);
   let state: PoolState;
   let roundResults: { results: CResult[]; exits: { source: PoolSource; decision: string; result: CResult }[]; fails: PoolSource[] }[] = [];
   let c4AllResults: C4RoundAnalysis[] = [];
 
   // SIGINT handler — Ctrl+C writes in-flight sources back to postB-preC so nothing is lost
-  process.once('SIGINT', () => {
+  handleActiveSigint = () => {
     console.log('\n[SIGINT] Ctrl+C — sparar pågående källor tillbaka till postB-preC...');
     try {
       const inFlight = state?.activePool ?? [];
@@ -2268,11 +2376,16 @@ async function main() {
     } catch (e: any) {
       console.error('[SIGINT] Fel vid sparning:', e.message);
     }
+    releaseActiveRunLock?.();
     process.exit(0);
-  });
+  };
 
   // If the loaded pool is already complete (round 3 or pool exhausted), advance to next batch
   // This fixes the "batch re-runs same completed batch" bug
+  if (hasUnfinalizedCompletedActivePool(savedState, MAX_ROUNDS)) {
+    savedState = reconcileUnfinalizedActivePool(savedState!, BATCH_NUM);
+  }
+
   const batchAlreadyComplete = savedState && (
     savedState.poolRoundNumber >= 3 ||
     (savedState.poolRoundNumber > 0 && savedState.activePool.length === 0) ||
@@ -2752,7 +2865,28 @@ async function main() {
   console.log('\nDone.');
 }
 
-main().then(() => process.exit(0)).catch(err => {
-  console.error('Fatal error:', err);
-  process.exit(1);
-});
+if (import.meta.url === pathToFileURL(process.argv[1] ?? '').href) {
+  const releaseRunLock = acquireRunLock();
+  releaseActiveRunLock = releaseRunLock;
+  handleActiveSigint = () => {
+    releaseRunLock();
+    process.exit(130);
+  };
+  process.once('SIGINT', () => {
+    handleActiveSigint?.();
+  });
+  main()
+    .then(() => {
+      releaseRunLock();
+      releaseActiveRunLock = null;
+      handleActiveSigint = null;
+      process.exit(0);
+    })
+    .catch(err => {
+      releaseRunLock();
+      releaseActiveRunLock = null;
+      handleActiveSigint = null;
+      console.error('Fatal error:', err);
+      process.exit(1);
+    });
+}

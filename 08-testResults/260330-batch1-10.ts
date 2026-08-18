@@ -13,7 +13,7 @@
 
 // Inline dotenv — avoids npm dependency at runtime (sync, no import needed)
 import { readFileSync, existsSync } from 'fs';
-const envPath = '/Users/claudgashi/EventPulse-recovery/clawdbot2/project/00EVENTPULSEFINALDESTINATION/.env';
+const envPath = '/Volumes/2TB filer/.env';
 if (existsSync(envPath)) {
   const envContent = readFileSync(envPath, 'utf-8');
   for (const line of envContent.split('\n')) {
@@ -106,8 +106,8 @@ interface SourceE2EResult {
 
 // ─── Run diagnoseUrl as subprocess ───────────────────────────────────────────
 // Uses the LOCAL jsonLdDiagnostic in NEWSTRUCTURE/01-Sources/diagnostics/
-const NEWSTRUCTURE_ROOT = '/Users/claudgashi/EventPulse-recovery/clawdbot2/project/00EVENTPULSEFINALDESTINATION/NEWSTRUCTURE';
-const INGESTION_ROOT = '/Users/claudgashi/EventPulse-recovery/clawdbot2/project/00EVENTPULSEFINALDESTINATION/temp/services/ingestion';
+const NEWSTRUCTURE_ROOT = '/Volumes/2TB filer/NEWSTRUCTURE';
+const INGESTION_ROOT = '/Volumes/2TB filer/temp/services/ingestion';
 
 async function diagnoseUrlSubprocess(url: string): Promise<{ diagnosis: string; reason: string; eventsExtracted: number; foundTypes: string[] }> {
   return new Promise((resolve) => {

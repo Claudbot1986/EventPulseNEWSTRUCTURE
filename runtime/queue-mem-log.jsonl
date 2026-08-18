@@ -53,3 +53,56 @@
 {"ts": "2026-04-19T20:22:25.198492Z", "action": "AUTO-DEDUP", "detail": "12 dupes removed, 425 unique in queues (EVENTPULSE-APP preserved)"}
 {"ts": "2026-04-19T20:37:43.224361Z", "action": "MOVE-ALL", "detail": "190 källor: postTestC-out → preA"}
 {"ts": "2026-04-19T21:41:58.538928Z", "action": "AUTO-DEDUP", "detail": "0 dupes removed, 425 unique in queues (EVENTPULSE-APP preserved)"}
+{"ts": "2026-04-25T15:59:29.973416Z", "action": "MOVE-ALL", "detail": "40 källor: postD-man → postTestC-D"}
+{"ts": "2026-04-25T18:18:19.265931Z", "action": "AUTO-DEDUP", "detail": "11 dupes removed, 400 unique in queues (EVENTPULSE-APP preserved)"}
+{"ts": "2026-04-25T18:18:21.448360Z", "action": "MOVE-ALL", "detail": "16 källor: postD-man → postTestC-D"}
+{"ts": "2026-04-25T18:26:08.516305Z", "action": "MOVE-ALL", "detail": "16 källor: postD-man → postTestC-D"}
+{"ts": "2026-04-25T19:43:01.126552Z", "action": "AUTO-DEDUP", "detail": "0 dupes removed, 400 unique in queues (EVENTPULSE-APP preserved)"}
+{"ts": "2026-04-26T05:49:24.538094Z", "action": "MOVE-ALL", "detail": "4 källor: postA → preA"}
+{"ts": "2026-04-26T05:49:24.619678Z", "action": "MOVE-ALL", "detail": "38 källor: postB → preA"}
+{"ts": "2026-04-26T05:49:24.791274Z", "action": "MOVE-ALL", "detail": "44 källor: postTestC-UI → preA"}
+{"ts": "2026-04-26T05:49:24.827480Z", "action": "MOVE-ALL", "detail": "88 källor: postTestC-man → preA"}
+{"ts": "2026-04-26T05:49:24.900864Z", "action": "MOVE-ALL", "detail": "1 källor: postTestC-serverdown → preA"}
+{"ts": "2026-04-26T05:49:24.983122Z", "action": "MOVE-ALL", "detail": "50 källor: postTestC-error500 → preA"}
+{"ts": "2026-04-26T05:49:25.028538Z", "action": "MOVE-ALL", "detail": "5 källor: postTestC-timeout → preA"}
+{"ts": "2026-04-26T05:49:25.062508Z", "action": "MOVE-ALL", "detail": "2 källor: postTestC-blocked → preA"}
+{"ts": "2026-04-26T05:49:25.133567Z", "action": "MOVE-ALL", "detail": "23 källor: postD-UI → preA"}
+{"ts": "2026-04-26T05:49:25.169803Z", "action": "MOVE-ALL", "detail": "1 källor: postD-man1 → preA"}
+{"ts": "2026-04-26T05:49:25.215490Z", "action": "MOVE-ALL", "detail": "14 källor: postD-man → preA"}
+{"ts": "2026-04-26T05:49:25.473173Z", "action": "MOVE-ALL", "detail": "66 källor: preUI → preA"}
+{"ts": "2026-04-26T05:49:25.558701Z", "action": "MOVE-ALL", "detail": "72 källor: EVENTPULSE-APP → preA"}
+{"ts": "2026-04-26T08:03:05.308930Z", "action": "AUTO-DEDUP", "detail": "0 dupes removed, 382 unique in queues (EVENTPULSE-APP preserved)"}
+{"ts": "2026-04-26T08:06:27.747776Z", "action": "MOVE-ALL", "detail": "4 källor: postD-man → preA"}
+{"ts": "2026-04-26T08:06:27.785617Z", "action": "MOVE-ALL", "detail": "3 källor: post-man → preA"}
+{"ts": "2026-04-26T08:06:27.853892Z", "action": "MOVE-ALL", "detail": "3 källor: preUI → preA"}
+{"ts": "2026-04-26T08:17:23.257457Z", "action": "AUTO-DEDUP", "detail": "0 dupes removed, 382 unique in queues (EVENTPULSE-APP preserved)"}
+{"ts": "2026-04-26T08:28:46.424617Z", "action": "SYNC-PREA", "detail": "382 källor → preA (preA före 405); orphans bort: 33"}
+{"ts": "2026-04-26T08:30:29.854913Z", "action": "SYNC-PREA", "detail": "382 källor → preA (preA före 382); orphans bort: 0; källfix: 382"}
+{"ts": "2026-04-26T09:39:39.439190Z", "action": "MOVE-ALL", "detail": "244 källor: preUI → preA"}
+{"ts": "2026-04-26T09:40:32.485555Z", "action": "MOVE-ALL", "detail": "110 källor: postD-man → preA"}
+{"ts": "2026-04-26T09:40:32.533367Z", "action": "MOVE-ALL", "detail": "28 källor: post-man → preA"}
+{"ts": "2026-04-26T09:40:32.603953Z", "action": "MOVE-ALL", "detail": "10 källor: preUI → preA"}
+{"ts": "2026-04-26T13:00:51.293928Z", "action": "MOVE-ALL", "detail": "104 källor: postD-man → preA"}
+{"ts": "2026-04-26T13:00:51.341530Z", "action": "MOVE-ALL", "detail": "3 källor: post-man → preA"}
+{"ts": "2026-04-26T13:00:51.426294Z", "action": "MOVE-ALL", "detail": "233 källor: preUI → preA"}
+{"ts": "2026-04-26T18:24:47.823415Z", "action": "MOVE-ALL", "detail": "2 källor: postD-man → preA"}
+{"ts": "2026-04-26T18:25:50.352339Z", "action": "MOVE-ALL", "detail": "245 källor: postTestC-man → preA"}
+{"ts": "2026-04-26T18:26:01.499382Z", "action": "MOVE-ALL", "detail": "101 källor: postB → preA"}
+{"ts": "2026-04-26T18:26:27.378179Z", "action": "MOVE-ALL", "detail": "1 källor: postTestC-out → preA"}
+{"ts": "2026-04-26T21:05:44.208353Z", "action": "SNAPSHOT", "detail": "before-c0-effectiveurl-reset @ 20260426-210544"}
+{"ts": "2026-04-26T23:03:20.480665Z", "action": "SNAPSHOT", "detail": "before-error500-retry-20260427-0103 @ 20260426-230320"}
+{"ts": "2026-04-26T23:03:20.521642Z", "action": "MOVE-ALL", "detail": "89 källor: postTestC-error500 → preA"}
+{"ts": "2026-04-26T23:32:12.380142Z", "action": "SNAPSHOT", "detail": "before-error500-retry2-20260427-0132 @ 20260426-233212"}
+{"ts": "2026-04-26T23:32:12.428289Z", "action": "MOVE-ALL", "detail": "80 källor: postTestC-error500 → preA"}
+{"ts": "2026-04-26T23:59:37.392979Z", "action": "SNAPSHOT", "detail": "before-error500-retry3-20260427-0158 @ 20260426-235937"}
+{"ts": "2026-04-26T23:59:37.426598Z", "action": "MOVE-ALL", "detail": "10 källor: postTestC-error500 → preA"}
+{"ts": "2026-04-27T03:36:18.447236Z", "action": "MOVE-ALL", "detail": "10 källor: preB → preA"}
+{"ts": "2026-04-27T16:38:28.097800Z", "action": "MOVE-ALL", "detail": "4 källor: postA → EVENTPULSE-APP"}
+{"ts": "2026-04-27T16:38:28.132759Z", "action": "MOVE-ALL", "detail": "101 källor: postB → EVENTPULSE-APP"}
+{"ts": "2026-04-27T16:38:28.164819Z", "action": "MOVE-ALL", "detail": "9 källor: postTestC-UI → EVENTPULSE-APP"}
+{"ts": "2026-04-27T16:38:28.197936Z", "action": "MOVE-ALL", "detail": "22 källor: postD-UI → EVENTPULSE-APP"}
+{"ts": "2026-04-27T16:38:28.230374Z", "action": "MOVE-ALL", "detail": "3 källor: preUI → EVENTPULSE-APP"}
+{"ts": "2026-04-27T16:46:21.273302Z", "action": "MOVE-ALL", "detail": "88 källor: post10-UI → EVENTPULSE-APP"}
+{"ts": "2026-04-27T18:09:09.733831Z", "action": "AUTO-DEDUP", "detail": "0 dupes removed, 529 unique in queues (EVENTPULSE-APP preserved)"}
+{"ts": "2026-04-27T18:12:59.864882Z", "action": "SNAPSHOT", "detail": "before-app-dedupe-20260427-2012 @ 20260427-181259"}
+{"ts": "2026-04-27T18:12:59.934955Z", "action": "AUTO-DEDUP", "detail": "0 dupes removed, 529 unique in queues (EVENTPULSE-APP preserved)"}

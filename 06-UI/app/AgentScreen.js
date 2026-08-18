@@ -25,6 +25,7 @@ import {
 } from 'react-native';
 
 import { chatWithAgent, recordEventInteraction } from '../services/agentClient';
+import { resolveReasons } from '../utils/rankReasonLabels';
 
 const SUGGESTIONS = [
   'Konsert ikväll',
@@ -46,6 +47,52 @@ function formatTime(iso) {
   });
 }
 
+const REASONS_VISIBLE_DEFAULT = 3;
+
+/**
+ * Inline reason chips for one card. Per vault 40-UX-Research-Decisions:
+ *   - icon + short label, max 2-3 visible, "visa mer" if more.
+ *   - Never free text. Tap on a chip is a no-op (no hidden critical info).
+ *
+ * Resolved labels come from utils/rankReasonLabels — never inline strings.
+ */
+function ReasonChips({ reasons }) {
+  const [expanded, setExpanded] = useState(false);
+  // Phase 0 is sv-only; explicit 'sv' keeps the helper honest.
+  const resolved = resolveReasons(reasons, 'sv');
+  if (resolved.length === 0) return null;
+
+  const visible = expanded ? resolved : resolved.slice(0, REASONS_VISIBLE_DEFAULT);
+  const hidden = resolved.length - visible.length;
+
+  return (
+    <View style={styles.reasonRow}>
+      {visible.map((r) => (
+        <View key={r.key} style={styles.reasonChip} accessibilityLabel={r.fullLabel}>
+          <Text style={styles.reasonChipText}>{r.icon} {r.label}</Text>
+        </View>
+      ))}
+      {hidden > 0 ? (
+        <TouchableOpacity
+          onPress={() => setExpanded(true)}
+          style={styles.reasonMore}
+          accessibilityRole="button"
+        >
+          <Text style={styles.reasonMoreText}>+{hidden} visa mer</Text>
+        </TouchableOpacity>
+      ) : expanded && resolved.length > REASONS_VISIBLE_DEFAULT ? (
+        <TouchableOpacity
+          onPress={() => setExpanded(false)}
+          style={styles.reasonMore}
+          accessibilityRole="button"
+        >
+          <Text style={styles.reasonMoreText}>visa mindre</Text>
+        </TouchableOpacity>
+      ) : null}
+    </View>
+  );
+}
+
 function EventRow({ card, onInteraction }) {
   const onPress = () => {
     // Best-effort metrics: every tap = click; opening ticket_url = outbound.
@@ -64,6 +111,7 @@ function EventRow({ card, onInteraction }) {
       <Text style={styles.cardMeta}>
         {formatTime(card.start_time)} · {card.venue_name || card.city || 'Stockholm'}
       </Text>
+      <ReasonChips reasons={card.reasons} />
       <Text style={styles.cardFooter}>
         {card.is_free ? 'Gratis' : `${card.price_min_sek ?? '?'}–${card.price_max_sek ?? '?'} SEK`}
       </Text>
@@ -211,6 +259,26 @@ const styles = StyleSheet.create({
   cardTitle: { color: '#fff', fontSize: 16, fontWeight: '500' },
   cardMeta:  { color: '#aaa', fontSize: 13, marginTop: 4 },
   cardFooter:{ color: '#888', fontSize: 12, marginTop: 4 },
+  reasonRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    marginTop: 6,
+  },
+  reasonChip: {
+    backgroundColor: '#252525',
+    borderRadius: 12,
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    marginRight: 4,
+    marginBottom: 4,
+  },
+  reasonChipText: { color: '#ccc', fontSize: 11 },
+  reasonMore: {
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    marginBottom: 4,
+  },
+  reasonMoreText: { color: '#7aa2f7', fontSize: 11 },
   suggestionBox: { marginVertical: 12, flexDirection: 'row', flexWrap: 'wrap' },
   questionBlock: { marginVertical: 8 },
   questionText:  { color: '#ccc', fontSize: 14, marginBottom: 6 },

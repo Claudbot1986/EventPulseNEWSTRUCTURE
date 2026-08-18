@@ -1,14 +1,12 @@
 /**
  * RawSources Importer — Tool "0" (pre-A entry point)
  *
- * Läser källor från 01-Sources/RawSources/*.md och importerar dem till preA-queue.jsonl.
- * För varje RawSources-rad: kontrollera om source redan finns i sources/ (sourceRegistry).
- * Om ny → lägg till i preA-queue.jsonl för att köras av verktyg A.
+ * Läser källor från 01-Sources/RawSources/*.md och skapar sources/{sourceId}.jsonl + preA-queue.jsonl.
+ * Canonical URL (ingen dublett-URL); unikt id (slug, vid fil-/slug-krock slug-2, slug-3, …).
  *
  * Flöde:
  *   RawSources (*.md)
- *     → kontrollera om source finns i sourceRegistry
- *     → om ny: lägg i preA-queue.jsonl
+ *     → om ny URL: skapa sources/{id}.jsonl + lägg i preA-queue.jsonl
  *     → A-runner (runA.ts) kör source
  *     → Utfall A:
  *         - events hittas → postA-UI (via preUI-queue.jsonl)
@@ -28,19 +26,26 @@
 import * as dotenv from 'dotenv';
 import path from 'path';
 import { fileURLToPath } from 'url';
-import { readFileSync, writeFileSync, existsSync, readdirSync } from 'fs';
+import { readFileSync, writeFileSync, existsSync, readdirSync, mkdirSync } from 'fs';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 dotenv.config({ path: path.resolve(process.cwd(), '.env'), override: true });
 
-import { getAllSources, getSource, getSourceStatus } from './tools/sourceRegistry';
+import { getAllSources, getSource, type SourceTruth } from './tools/sourceRegistry';
 
 // ─── Paths ────────────────────────────────────────────────────────────────────────
 
 const PROJECT_ROOT = path.resolve(__dirname, '..');
 const RAWSOURCES_DIR = path.resolve(PROJECT_ROOT, '01-Sources/RawSources');
+const SOURCES_DIR = path.resolve(PROJECT_ROOT, 'sources');
 const RUNTIME_DIR = path.resolve(PROJECT_ROOT, 'runtime');
 const PREA_QUEUE_FILE = path.resolve(RUNTIME_DIR, 'preA-queue.jsonl');
+
+/** Delad karta under en CLI-körning så flera RawSources-filer ser samma nya URL:er/id:n. */
+export interface ImportSessionState {
+  canonicalByUrl: Map<string, string>;
+  reservedIds: Set<string>;
+}
 
 // ─── RawSource Entry (from markdown table) ──────────────────────────────────
 
@@ -143,36 +148,124 @@ function addToPreAQueue(sourceId: string, reason: string): void {
   writeFileSync(PREA_QUEUE_FILE, queue.map(e => JSON.stringify(e)).join('\n') + '\n', 'utf8');
 }
 
-function isInSourceRegistry(sourceId: string): boolean {
-  const source = getSource(sourceId);
-  return source !== null;
-}
-
-function isNeverRun(sourceId: string): boolean {
-  const status = getSourceStatus(sourceId);
-  return status.status === 'never_run';
-}
-
 // ─── Import Single File ──────────────────────────────────────────────────────
 
 interface ImportResult {
   file: string;
   totalRows: number;
   newToRegistry: number;
+  sourceFilesWritten: number;
   alreadyInRegistry: number;
   addedToQueue: number;
   alreadyInQueue: number;
+  blockedByCanonicalUrl: number;
+  invalidUrls: number;
   errors: string[];
 }
 
-function importFile(filePath: string, dry: boolean): ImportResult {
+function normalizeUrlForIdentity(url: string): string | null {
+  const trimmed = url.trim();
+  if (!trimmed) return null;
+  try {
+    const parsed = new URL(trimmed);
+    const protocol = parsed.protocol.toLowerCase();
+    const host = parsed.hostname.toLowerCase().replace(/^www\./, '');
+    let pathname = parsed.pathname || '/';
+    pathname = pathname.replace(/\/{2,}/g, '/');
+    if (pathname !== '/') pathname = pathname.replace(/\/+$/, '');
+    const search = parsed.search || '';
+    return `${protocol}//${host}${pathname}${search}`;
+  } catch {
+    return null;
+  }
+}
+
+function buildInitialCanonicalMap(): Map<string, string> {
+  const canonicalByUrl = new Map<string, string>();
+  for (const source of getAllSources()) {
+    const norm = normalizeUrlForIdentity(source.url);
+    if (!norm) continue;
+    if (!canonicalByUrl.has(norm)) {
+      canonicalByUrl.set(norm, source.id);
+    }
+  }
+  return canonicalByUrl;
+}
+
+function sourceJsonlPath(sourceId: string): string {
+  return path.join(SOURCES_DIR, `${sourceId}.jsonl`);
+}
+
+/**
+ * Välj ett ledigt id: börja med baseSlug; om filen finns med annan URL → slug-2, slug-3, …
+ * Om filen redan har samma canonical URL → returnera det id:t (ingen ny källa).
+ */
+function allocateSourceIdForUrl(
+  baseSlug: string,
+  normalizedIncomingUrl: string,
+  reservedIds: Set<string>
+): { kind: 'new'; id: string } | { kind: 'same_url_existing'; id: string } {
+  let suffix = 2;
+  let candidate = baseSlug;
+
+  for (;;) {
+    if (reservedIds.has(candidate)) {
+      candidate = `${baseSlug}-${suffix}`;
+      suffix++;
+      continue;
+    }
+
+    const p = sourceJsonlPath(candidate);
+    if (!existsSync(p)) {
+      return { kind: 'new', id: candidate };
+    }
+
+    const existing = getSource(candidate);
+    const existingNorm = existing ? normalizeUrlForIdentity(existing.url) : null;
+    if (existing && existingNorm === normalizedIncomingUrl) {
+      return { kind: 'same_url_existing', id: candidate };
+    }
+
+    // Upptagen av annan URL, eller trasig fil — prova nästa suffix.
+    candidate = `${baseSlug}-${suffix}`;
+    suffix++;
+    if (suffix > 1000) {
+      throw new Error(`Kunde inte allokera sourceId för bas "${baseSlug}" (för många krockar)`);
+    }
+  }
+}
+
+function writeMinimalSourceFile(sourceId: string, entry: RawSourceEntry): void {
+  mkdirSync(SOURCES_DIR, { recursive: true });
+  const row: SourceTruth = {
+    id: sourceId,
+    url: entry.url.trim(),
+    name: entry.name,
+    type: entry.category?.trim() || 'unknown',
+    city: entry.city?.trim() || undefined,
+    discoveredAt: new Date().toISOString(),
+    discoveredBy: 'source_import',
+    preferredPath: 'unknown',
+    preferredPathReason: 'Tool 0 RawSources import',
+    metadata: {
+      rawSourcesCollectedAt: entry.collectedAt,
+      ...(entry.notes?.trim() ? { rawSourcesNotes: entry.notes.trim() } : {}),
+    },
+  };
+  writeFileSync(sourceJsonlPath(sourceId), JSON.stringify(row) + '\n', 'utf8');
+}
+
+function importFile(filePath: string, dry: boolean, session: ImportSessionState): ImportResult {
   const result: ImportResult = {
     file: path.basename(filePath),
     totalRows: 0,
     newToRegistry: 0,
+    sourceFilesWritten: 0,
     alreadyInRegistry: 0,
     addedToQueue: 0,
     alreadyInQueue: 0,
+    blockedByCanonicalUrl: 0,
+    invalidUrls: 0,
     errors: [],
   };
 
@@ -187,24 +280,56 @@ function importFile(filePath: string, dry: boolean): ImportResult {
 
   const preAQueue = readPreAQueue();
   const preAIds = new Set(preAQueue.map(e => e.sourceId));
+  const { canonicalByUrl, reservedIds } = session;
 
   for (const entry of entries) {
-    const { sourceId, name, url, city } = entry;
+    const { sourceId: baseSlug, name, url, city } = entry;
 
-    if (isInSourceRegistry(sourceId)) {
+    const normalizedIncomingUrl = normalizeUrlForIdentity(url);
+    if (!normalizedIncomingUrl) {
+      result.invalidUrls++;
+      result.errors.push(`Ogiltig URL för ${baseSlug}: ${url}`);
+      continue;
+    }
+
+    const urlOwner = canonicalByUrl.get(normalizedIncomingUrl);
+    if (urlOwner) {
+      result.alreadyInRegistry++;
+      if (urlOwner !== baseSlug) {
+        result.blockedByCanonicalUrl++;
+        result.errors.push(
+          `URL redan registrerad som "${urlOwner}" (rad slug ${baseSlug}): ${url}`
+        );
+      }
+      continue;
+    }
+
+    const allocated = allocateSourceIdForUrl(baseSlug, normalizedIncomingUrl, reservedIds);
+    if (allocated.kind === 'same_url_existing') {
+      canonicalByUrl.set(normalizedIncomingUrl, allocated.id);
       result.alreadyInRegistry++;
       continue;
     }
 
-    result.newToRegistry++;
+    const finalId = allocated.id;
+    canonicalByUrl.set(normalizedIncomingUrl, finalId);
+    reservedIds.add(finalId);
 
-    if (preAIds.has(sourceId)) {
+    if (preAIds.has(finalId)) {
       result.alreadyInQueue++;
+      result.sourceFilesWritten++;
+      if (!dry) {
+        writeMinimalSourceFile(finalId, entry);
+      }
       continue;
     }
 
+    result.newToRegistry++;
+    result.sourceFilesWritten++;
+
     if (!dry) {
-      addToPreAQueue(sourceId, `imported from RawSources: ${name} (${city})`);
+      writeMinimalSourceFile(finalId, entry);
+      addToPreAQueue(finalId, `imported from RawSources: ${name} (${city}) [id=${finalId}]`);
     }
 
     result.addedToQueue++;
@@ -220,18 +345,27 @@ interface RawSourcesStatus {
   totalRows: number;
   newToRegistry: number;
   alreadyInRegistry: number;
+  blockedByCanonicalUrl: number;
+  invalidUrls: number;
   preAQueueSize: number;
 }
 
 function getStatus(): RawSourcesStatus {
-  const files = readdirSync(RAWSOURCES_DIR).filter(f => f.endsWith('.md') || f.endsWith('.txt'));
+  const files = readdirSync(RAWSOURCES_DIR)
+    .filter(f => f.endsWith('.md') || f.endsWith('.txt'))
+    .sort();
   const status: RawSourcesStatus = {
     files: [],
     totalRows: 0,
     newToRegistry: 0,
     alreadyInRegistry: 0,
+    blockedByCanonicalUrl: 0,
+    invalidUrls: 0,
     preAQueueSize: readPreAQueue().length,
   };
+
+  const canonicalByUrl = buildInitialCanonicalMap();
+  const reservedIds = new Set<string>();
 
   for (const file of files) {
     const content = readFileSync(path.join(RAWSOURCES_DIR, file), 'utf8');
@@ -240,11 +374,33 @@ function getStatus(): RawSourcesStatus {
     status.totalRows += entries.length;
 
     for (const entry of entries) {
-      if (isInSourceRegistry(entry.sourceId)) {
-        status.alreadyInRegistry++;
-      } else {
-        status.newToRegistry++;
+      const baseSlug = entry.sourceId;
+      const normalizedIncomingUrl = normalizeUrlForIdentity(entry.url);
+      if (!normalizedIncomingUrl) {
+        status.invalidUrls++;
+        continue;
       }
+
+      const urlOwner = canonicalByUrl.get(normalizedIncomingUrl);
+      if (urlOwner) {
+        status.alreadyInRegistry++;
+        if (urlOwner !== baseSlug) {
+          status.blockedByCanonicalUrl++;
+        }
+        continue;
+      }
+
+      const allocated = allocateSourceIdForUrl(baseSlug, normalizedIncomingUrl, reservedIds);
+      if (allocated.kind === 'same_url_existing') {
+        canonicalByUrl.set(normalizedIncomingUrl, allocated.id);
+        status.alreadyInRegistry++;
+        continue;
+      }
+
+      const finalId = allocated.id;
+      canonicalByUrl.set(normalizedIncomingUrl, finalId);
+      reservedIds.add(finalId);
+      status.newToRegistry++;
     }
   }
 
@@ -276,6 +432,8 @@ async function main() {
     console.log(`\nTotal rader: ${s.totalRows}`);
     console.log(`Nya till registry: ${s.newToRegistry}`);
     console.log(`Redan i registry: ${s.alreadyInRegistry}`);
+    console.log(`Blockerade av canonical URL-krock: ${s.blockedByCanonicalUrl}`);
+    console.log(`Ogiltiga URL-rader: ${s.invalidUrls}`);
     console.log(`preA-queue: ${s.preAQueueSize}`);
     return;
   }
@@ -289,6 +447,7 @@ async function main() {
     ? [path.isAbsolute(args[fileIdx + 1]) ? args[fileIdx + 1] : path.join(RAWSOURCES_DIR, args[fileIdx + 1])]
     : readdirSync(RAWSOURCES_DIR)
         .filter(f => f.endsWith('.md') || f.endsWith('.txt'))
+        .sort()
         .map(f => path.join(RAWSOURCES_DIR, f));
 
   if (targetFiles.length === 0 || (fileIdx !== -1 && !existsSync(targetFiles[0]))) {
@@ -296,9 +455,14 @@ async function main() {
     return;
   }
 
+  const session: ImportSessionState = {
+    canonicalByUrl: buildInitialCanonicalMap(),
+    reservedIds: new Set<string>(),
+  };
+
   const allResults: ImportResult[] = [];
   for (const file of targetFiles) {
-    const result = importFile(file, dry);
+    const result = importFile(file, dry, session);
     allResults.push(result);
   }
 
@@ -308,6 +472,8 @@ async function main() {
     console.log(`  Rader: ${r.totalRows}`);
     console.log(`  Nya till registry: ${r.newToRegistry}`);
     console.log(`  Redan i registry: ${r.alreadyInRegistry}`);
+    console.log(`  Blockerade av canonical URL-krock: ${r.blockedByCanonicalUrl}`);
+    console.log(`  Ogiltiga URL-rader: ${r.invalidUrls}`);
     if (dry) {
       console.log(`  SKULLE läggas i preA-queue: ${r.addedToQueue}`);
       console.log(`  Redan i preA-queue: ${r.alreadyInQueue}`);
@@ -322,14 +488,24 @@ async function main() {
 
   // ── Summary ────────────────────────────────────────────────────────────
   const totalNew = allResults.reduce((s, r) => s + r.newToRegistry, 0);
+  const totalSourceFilesWritten = allResults.reduce((s, r) => s + r.sourceFilesWritten, 0);
   const totalAdded = allResults.reduce((s, r) => s + r.addedToQueue, 0);
   const totalAlready = allResults.reduce((s, r) => s + r.alreadyInRegistry, 0);
   const totalAlreadyQueue = allResults.reduce((s, r) => s + r.alreadyInQueue, 0);
+  const totalBlockedCanonical = allResults.reduce((s, r) => s + r.blockedByCanonicalUrl, 0);
+  const totalInvalidUrls = allResults.reduce((s, r) => s + r.invalidUrls, 0);
 
   console.log(`\n═══ IMPORT SUMMARY ═══`);
   console.log(`  Filer: ${allResults.length}`);
   console.log(`  Nya till registry: ${totalNew}`);
+  if (dry) {
+    console.log(`  SKULLE skriva källfiler under sources/: ${totalSourceFilesWritten}`);
+  } else {
+    console.log(`  Källfiler skrivna under sources/: ${totalSourceFilesWritten}`);
+  }
   console.log(`  Redan i registry: ${totalAlready}`);
+  console.log(`  Blockerade av canonical URL-krock: ${totalBlockedCanonical}`);
+  console.log(`  Ogiltiga URL-rader: ${totalInvalidUrls}`);
   if (dry) {
     console.log(`  SKULLE läggas i preA-queue: ${totalAdded}`);
     console.log(`  Redan i preA-queue: ${totalAlreadyQueue}`);

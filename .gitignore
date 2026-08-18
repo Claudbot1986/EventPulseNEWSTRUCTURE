@@ -24,3 +24,19 @@ build/
 
 # Temp directory
 TEMP/
+
+# Local source data (keep out of Git)
+/sources/
+/rawSources/
+/RawSources/
+/rawsources/
+/01-Sources/RawSources/
+/01-Sources/ALL_SOURCES.md
+
+# Runtime queues, generated reports, extracted events, and local agent data
+/runtime/
+/Alltools-E2E/runtime/
+**/reports/
+/02-Ingestion/C-htmlGate/reports/
+/03-Queue/03-extractedevents/
+/conversations/

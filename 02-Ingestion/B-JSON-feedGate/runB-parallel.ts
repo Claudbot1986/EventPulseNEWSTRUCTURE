@@ -45,7 +45,10 @@ import type { RawEventInput } from '@eventpulse/shared';
 
 // ─── Queue File Paths ─────────────────────────────────────────────────────────
 
-const RUNTIME_DIR = path.resolve(__dirname, '../../runtime');
+const DATA_ROOT = process.env.EVENTPULSE_SANDBOX_ROOT
+  ? path.resolve(process.env.EVENTPULSE_SANDBOX_ROOT)
+  : path.resolve(__dirname, '../..');
+const RUNTIME_DIR = path.resolve(DATA_ROOT, 'runtime');
 const LOGS_DIR = path.resolve(RUNTIME_DIR, 'logs');
 const RUN_LOG = path.resolve(LOGS_DIR, `runB-parallel-${new Date().toISOString().replace(/[:.]/g, '-')}.log`);
 const PREB_QUEUE_FILE    = path.resolve(RUNTIME_DIR, 'preB-queue.jsonl');
@@ -53,7 +56,7 @@ const PREUI_QUEUE_FILE    = path.resolve(RUNTIME_DIR, 'preUI-queue.jsonl');
 const POSTB_QUEUE_FILE    = path.resolve(RUNTIME_DIR, 'postB-queue.jsonl');
 const POSTB_PREC_FILE     = path.resolve(RUNTIME_DIR, 'postB-preC-queue.jsonl');
 const SOURCES_STATUS_FILE = path.resolve(RUNTIME_DIR, 'sources_status.jsonl');
-const EXTRACTED_DIR       = path.resolve(__dirname, '../../03-Queue/03-extractedevents');
+const EXTRACTED_DIR       = path.resolve(DATA_ROOT, '03-Queue/03-extractedevents');
 
 // --- Log helper — terminal + per-run file ---
 

@@ -1,0 +1,31 @@
+---
+description: Production ingestion tools must use real extraction, never synthetic outcomes
+alwaysApply: true
+---
+
+# No simulated production ingestion
+
+## Hard rule
+
+For **production** EventPulse work (operator dashboard tools, queue orchestration exposed as “real” runs, anything that updates `runtime/*.jsonl` or reports as operational truth):
+
+- **Never** implement or ship **simulated** extraction: no invented `eventsFound`, no “synthetic” API/network placeholders, no fake events presented as if they were extracted from sources.
+- **Never** present heuristic URL-only guesses as equivalent to Tool B / network gate / `extractFromApi` unless explicitly labeled **non-production simulation**.
+
+## Where this applies
+
+- `db.py` tool entries and any script they invoke for **live** queue processing.
+- `Alltools-E2E/e2e.py` and **verktyg 17/18** until they call the **same** TypeScript/Python extractors as Tools A–D (or are clearly moved to test-only).
+
+## Allowed exceptions (must be explicit)
+
+- **Test-only** commands, fixtures, or files with names/paths that make simulation obvious (`*test*`, `*fixture*`, `dry-run`, CI harness).
+- **Documentation** that states “simulation only” and is not wired to dashboard production buttons.
+
+## If the user asks for “E2E” or batch preview
+
+Prefer: **delegate to real tools** (`runA`, `runB-parallel`, `runC`, `runD`, etc.) or **shared libraries** extracted from those tools — not parallel fake logic in Python.
+
+## Violation response
+
+If code violates this rule: **stop**, flag it, and fix or quarantine the tool — do not extend the simulation.

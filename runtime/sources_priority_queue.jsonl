@@ -1,95 +1,382 @@
-{"sourceId": "folkoperan", "priority": 1, "reason": "needs_recheck", "addedAt": "2026-04-03T10:18:49.536Z", "runsSinceAdd": 0}
-{"sourceId": "fotografiska", "priority": 1, "reason": "needs_recheck", "addedAt": "2026-04-03T10:18:49.536Z", "runsSinceAdd": 0}
-{"sourceId": "friends-arena", "priority": 1, "reason": "needs_recheck", "addedAt": "2026-04-03T10:18:49.536Z", "runsSinceAdd": 0}
-{"sourceId": "friidrottsf-rbundet", "priority": 1, "reason": "needs_recheck", "addedAt": "2026-04-03T10:18:49.536Z", "runsSinceAdd": 0}
-{"sourceId": "g-teborgs-jazz-festival", "priority": 1, "reason": "needs_recheck", "addedAt": "2026-04-03T10:18:49.536Z", "runsSinceAdd": 0}
-{"sourceId": "g-teborgs-posten", "priority": 1, "reason": "needs_recheck", "addedAt": "2026-04-03T10:18:49.536Z", "runsSinceAdd": 0}
-{"sourceId": "g-teborgs-universitet", "priority": 1, "reason": "needs_recheck", "addedAt": "2026-04-03T10:18:49.536Z", "runsSinceAdd": 0}
-{"sourceId": "g-teborgsoperan", "priority": 1, "reason": "needs_recheck", "addedAt": "2026-04-03T10:18:49.536Z", "runsSinceAdd": 0}
-{"sourceId": "get-lost", "priority": 1, "reason": "needs_recheck", "addedAt": "2026-04-03T10:18:49.536Z", "runsSinceAdd": 0}
-{"sourceId": "gr-na-lund-n-je", "priority": 1, "reason": "needs_recheck", "addedAt": "2026-04-03T10:18:49.536Z", "runsSinceAdd": 0}
-{"sourceId": "gr-na-lund", "priority": 1, "reason": "needs_recheck", "addedAt": "2026-04-03T10:18:49.536Z", "runsSinceAdd": 0}
-{"sourceId": "gso", "priority": 1, "reason": "needs_recheck", "addedAt": "2026-04-03T10:18:49.536Z", "runsSinceAdd": 0}
-{"sourceId": "h-gskolan-i-sk-vde", "priority": 1, "reason": "needs_recheck", "addedAt": "2026-04-03T10:18:49.536Z", "runsSinceAdd": 0}
-{"sourceId": "helsingborgs-dagblad", "priority": 1, "reason": "needs_recheck", "addedAt": "2026-04-03T10:18:49.536Z", "runsSinceAdd": 0}
-{"sourceId": "helsingborgs-konserthus", "priority": 1, "reason": "needs_recheck", "addedAt": "2026-04-03T10:18:49.536Z", "runsSinceAdd": 0}
-{"sourceId": "hovet", "priority": 1, "reason": "needs_recheck", "addedAt": "2026-04-03T10:18:49.536Z", "runsSinceAdd": 0}
-{"sourceId": "ifk-g-teborg", "priority": 1, "reason": "needs_recheck", "addedAt": "2026-04-03T10:18:49.536Z", "runsSinceAdd": 0}
-{"sourceId": "junibacken", "priority": 1, "reason": "needs_recheck", "addedAt": "2026-04-03T10:18:49.536Z", "runsSinceAdd": 0}
-{"sourceId": "karolinska-institutet", "priority": 1, "reason": "needs_recheck", "addedAt": "2026-04-03T10:18:49.536Z", "runsSinceAdd": 0}
-{"sourceId": "kth", "priority": 1, "reason": "needs_recheck", "addedAt": "2026-04-03T10:18:49.536Z", "runsSinceAdd": 0}
-{"sourceId": "kungliga-operan", "priority": 1, "reason": "needs_recheck", "addedAt": "2026-04-03T10:18:49.536Z", "runsSinceAdd": 0}
-{"sourceId": "liseberg-n-je", "priority": 1, "reason": "needs_recheck", "addedAt": "2026-04-03T10:18:49.536Z", "runsSinceAdd": 0}
-{"sourceId": "liseberg", "priority": 1, "reason": "needs_recheck", "addedAt": "2026-04-03T10:18:49.536Z", "runsSinceAdd": 0}
-{"sourceId": "livrustkammaren", "priority": 1, "reason": "needs_recheck", "addedAt": "2026-04-03T10:18:49.536Z", "runsSinceAdd": 0}
-{"sourceId": "lunds-universitet", "priority": 1, "reason": "needs_recheck", "addedAt": "2026-04-03T10:18:49.536Z", "runsSinceAdd": 0}
-{"sourceId": "malm-arena-ishockey", "priority": 1, "reason": "needs_recheck", "addedAt": "2026-04-03T10:18:49.536Z", "runsSinceAdd": 0}
-{"sourceId": "malm-arena", "priority": 1, "reason": "needs_recheck", "addedAt": "2026-04-03T10:18:49.536Z", "runsSinceAdd": 0}
-{"sourceId": "malm-konserthus", "priority": 1, "reason": "needs_recheck", "addedAt": "2026-04-03T10:18:49.536Z", "runsSinceAdd": 0}
-{"sourceId": "malm-live", "priority": 1, "reason": "needs_recheck", "addedAt": "2026-04-03T10:18:49.536Z", "runsSinceAdd": 0}
-{"sourceId": "malm-opera", "priority": 1, "reason": "needs_recheck", "addedAt": "2026-04-03T10:18:49.536Z", "runsSinceAdd": 0}
-{"sourceId": "malm-universitet", "priority": 1, "reason": "needs_recheck", "addedAt": "2026-04-03T10:18:49.536Z", "runsSinceAdd": 0}
-{"sourceId": "melodifestivalen-svt", "priority": 1, "reason": "needs_recheck", "addedAt": "2026-04-03T10:18:49.536Z", "runsSinceAdd": 0}
-{"sourceId": "millesg-rden", "priority": 1, "reason": "needs_recheck", "addedAt": "2026-04-03T10:18:49.536Z", "runsSinceAdd": 0}
-{"sourceId": "mittuniversitetet", "priority": 1, "reason": "needs_recheck", "addedAt": "2026-04-03T10:18:49.536Z", "runsSinceAdd": 0}
-{"sourceId": "moderna-museet", "priority": 1, "reason": "needs_recheck", "addedAt": "2026-04-03T10:18:49.536Z", "runsSinceAdd": 0}
-{"sourceId": "nationalmuseum", "priority": 1, "reason": "needs_recheck", "addedAt": "2026-04-03T10:18:49.536Z", "runsSinceAdd": 0}
-{"sourceId": "naturhistoriska-riksmuseet", "priority": 1, "reason": "needs_recheck", "addedAt": "2026-04-03T10:18:49.536Z", "runsSinceAdd": 0}
-{"sourceId": "nobelmuseet", "priority": 1, "reason": "needs_recheck", "addedAt": "2026-04-03T10:18:49.536Z", "runsSinceAdd": 0}
-{"sourceId": "nordiska-museet", "priority": 1, "reason": "needs_recheck", "addedAt": "2026-04-03T10:18:49.536Z", "runsSinceAdd": 0}
-{"sourceId": "norrk-pings-tidningar", "priority": 1, "reason": "needs_recheck", "addedAt": "2026-04-03T10:18:49.536Z", "runsSinceAdd": 0}
-{"sourceId": "oscar-teatern", "priority": 1, "reason": "needs_recheck", "addedAt": "2026-04-03T10:18:49.536Z", "runsSinceAdd": 0}
-{"sourceId": "polismuseum", "priority": 1, "reason": "needs_recheck", "addedAt": "2026-04-03T10:18:49.536Z", "runsSinceAdd": 0}
-{"sourceId": "r-hsska-museet", "priority": 1, "reason": "needs_recheck", "addedAt": "2026-04-03T10:18:49.536Z", "runsSinceAdd": 0}
-{"sourceId": "ridsportf-rbundet", "priority": 1, "reason": "needs_recheck", "addedAt": "2026-04-03T10:18:49.536Z", "runsSinceAdd": 0}
-{"sourceId": "scandinavium", "priority": 1, "reason": "needs_recheck", "addedAt": "2026-04-03T10:18:49.536Z", "runsSinceAdd": 0}
-{"sourceId": "skansen", "priority": 1, "reason": "needs_recheck", "addedAt": "2026-04-03T10:18:49.536Z", "runsSinceAdd": 0}
-{"sourceId": "slakthuset", "priority": 1, "reason": "needs_recheck", "addedAt": "2026-04-03T10:18:49.536Z", "runsSinceAdd": 0}
-{"sourceId": "slu", "priority": 1, "reason": "needs_recheck", "addedAt": "2026-04-03T10:18:49.536Z", "runsSinceAdd": 0}
-{"sourceId": "stersund-festival", "priority": 1, "reason": "needs_recheck", "addedAt": "2026-04-03T10:18:49.536Z", "runsSinceAdd": 0}
-{"sourceId": "stockholm-jazz-festival", "priority": 1, "reason": "needs_recheck", "addedAt": "2026-04-03T10:18:49.536Z", "runsSinceAdd": 0}
-{"sourceId": "stockholm-music-arts", "priority": 1, "reason": "needs_recheck", "addedAt": "2026-04-03T10:18:49.537Z", "runsSinceAdd": 0}
-{"sourceId": "stockholms-universitet", "priority": 1, "reason": "needs_recheck", "addedAt": "2026-04-03T10:18:49.537Z", "runsSinceAdd": 0}
-{"sourceId": "stora-teatern-g-teborg", "priority": 1, "reason": "needs_recheck", "addedAt": "2026-04-03T10:18:49.537Z", "runsSinceAdd": 0}
-{"sourceId": "stora-teatern-uppsala", "priority": 1, "reason": "needs_recheck", "addedAt": "2026-04-03T10:18:49.537Z", "runsSinceAdd": 0}
-{"sourceId": "storsj-odjuret", "priority": 1, "reason": "needs_recheck", "addedAt": "2026-04-03T10:18:49.537Z", "runsSinceAdd": 0}
-{"sourceId": "summerburst", "priority": 1, "reason": "needs_recheck", "addedAt": "2026-04-03T10:18:49.537Z", "runsSinceAdd": 0}
-{"sourceId": "svenska-baskethallsf-rbundet", "priority": 1, "reason": "needs_recheck", "addedAt": "2026-04-03T10:18:49.537Z", "runsSinceAdd": 0}
-{"sourceId": "svenska-bowlingf-rbundet", "priority": 1, "reason": "needs_recheck", "addedAt": "2026-04-03T10:18:49.537Z", "runsSinceAdd": 0}
-{"sourceId": "svenska-fotbollf-rbundet", "priority": 1, "reason": "needs_recheck", "addedAt": "2026-04-03T10:18:49.537Z", "runsSinceAdd": 0}
-{"sourceId": "svenska-hockeyligan-shl", "priority": 1, "reason": "needs_recheck", "addedAt": "2026-04-03T10:18:49.537Z", "runsSinceAdd": 0}
-{"sourceId": "svenska-innebandyf-rbundet", "priority": 1, "reason": "needs_recheck", "addedAt": "2026-04-03T10:18:49.537Z", "runsSinceAdd": 0}
-{"sourceId": "svenska-schackf-rbundet", "priority": 1, "reason": "needs_recheck", "addedAt": "2026-04-03T10:18:49.537Z", "runsSinceAdd": 0}
-{"sourceId": "svenska-tennisf-rbundet", "priority": 1, "reason": "needs_recheck", "addedAt": "2026-04-03T10:18:49.537Z", "runsSinceAdd": 0}
-{"sourceId": "swedish-food", "priority": 1, "reason": "needs_recheck", "addedAt": "2026-04-03T10:18:49.537Z", "runsSinceAdd": 0}
-{"sourceId": "sydsvenskan", "priority": 1, "reason": "needs_recheck", "addedAt": "2026-04-03T10:18:49.537Z", "runsSinceAdd": 0}
-{"sourceId": "tekniska-museet", "priority": 1, "reason": "needs_recheck", "addedAt": "2026-04-03T10:18:49.537Z", "runsSinceAdd": 0}
-{"sourceId": "tele2-arena", "priority": 1, "reason": "needs_recheck", "addedAt": "2026-04-03T10:18:49.537Z", "runsSinceAdd": 0}
-{"sourceId": "textilmus-et", "priority": 1, "reason": "needs_recheck", "addedAt": "2026-04-03T10:18:49.537Z", "runsSinceAdd": 0}
-{"sourceId": "unga-teatern", "priority": 1, "reason": "needs_recheck", "addedAt": "2026-04-03T10:18:49.537Z", "runsSinceAdd": 0}
-{"sourceId": "unt-uppsala", "priority": 1, "reason": "needs_recheck", "addedAt": "2026-04-03T10:18:49.537Z", "runsSinceAdd": 0}
-{"sourceId": "uppsala-konserthus", "priority": 1, "reason": "needs_recheck", "addedAt": "2026-04-03T10:18:49.537Z", "runsSinceAdd": 0}
-{"sourceId": "uppsala-linn-science-park", "priority": 1, "reason": "needs_recheck", "addedAt": "2026-04-03T10:18:49.537Z", "runsSinceAdd": 0}
-{"sourceId": "uppsala-reggae-festival", "priority": 1, "reason": "needs_recheck", "addedAt": "2026-04-03T10:18:49.537Z", "runsSinceAdd": 0}
-{"sourceId": "uppsala-universitet", "priority": 1, "reason": "needs_recheck", "addedAt": "2026-04-03T10:18:49.537Z", "runsSinceAdd": 0}
-{"sourceId": "v-ster-s-konstmuseum", "priority": 1, "reason": "needs_recheck", "addedAt": "2026-04-03T10:18:49.537Z", "runsSinceAdd": 0}
-{"sourceId": "v-sterbottens-kuriren", "priority": 1, "reason": "needs_recheck", "addedAt": "2026-04-03T10:18:49.537Z", "runsSinceAdd": 0}
-{"sourceId": "vasamuseet", "priority": 1, "reason": "needs_recheck", "addedAt": "2026-04-03T10:18:49.537Z", "runsSinceAdd": 0}
-{"sourceId": "waldemarsudde", "priority": 1, "reason": "needs_recheck", "addedAt": "2026-04-03T10:18:49.537Z", "runsSinceAdd": 0}
-{"sourceId": "way-out-west", "priority": 1, "reason": "needs_recheck", "addedAt": "2026-04-03T10:18:49.537Z", "runsSinceAdd": 0}
-{"sourceId": "white-guide", "priority": 1, "reason": "needs_recheck", "addedAt": "2026-04-03T10:18:49.537Z", "runsSinceAdd": 0}
-{"sourceId": "berwaldhallen", "priority": 2, "reason": "never_run", "addedAt": "2026-04-03T10:18:49.536Z", "runsSinceAdd": 0}
-{"sourceId": "eventbrite", "priority": 2, "reason": "never_run", "addedAt": "2026-04-03T10:18:49.536Z", "runsSinceAdd": 0}
-{"sourceId": "fryshuset", "priority": 2, "reason": "never_run", "addedAt": "2026-04-03T10:18:49.536Z", "runsSinceAdd": 0}
-{"sourceId": "konserthuset", "priority": 2, "reason": "never_run", "addedAt": "2026-04-03T10:18:49.536Z", "runsSinceAdd": 0}
-{"sourceId": "kulturhuset", "priority": 2, "reason": "never_run", "addedAt": "2026-04-03T10:18:49.536Z", "runsSinceAdd": 0}
-{"sourceId": "ticketmaster", "priority": 2, "reason": "never_run", "addedAt": "2026-04-03T10:18:49.537Z", "runsSinceAdd": 0}
-{"sourceId": "abf-conflict-1", "priority": 4, "reason": "stage_B", "addedAt": "2026-04-07T04:21:24.533Z", "runsSinceAdd": 1}
-{"sourceId": "a6", "priority": 4, "reason": "failed", "addedAt": "2026-04-08T18:04:57.244175Z", "runsSinceAdd": 1}
-{"sourceId": "abb-arena", "priority": 4, "reason": "failed", "addedAt": "2026-04-08T18:04:57.244422Z", "runsSinceAdd": 1}
-{"sourceId": "abf", "priority": 4, "reason": "stage_B", "addedAt": "2026-04-08T18:04:57.244423Z", "runsSinceAdd": 1}
-{"sourceId": "af", "priority": 4, "reason": "stage_B", "addedAt": "2026-04-08T18:04:57.244424Z", "runsSinceAdd": 1}
-{"sourceId": "akersberga", "priority": 4, "reason": "failed", "addedAt": "2026-04-08T18:04:57.244426Z", "runsSinceAdd": 1}
-{"sourceId": "allt-om-mat", "priority": 4, "reason": "stage_B", "addedAt": "2026-04-08T18:04:57.244426Z", "runsSinceAdd": 1}
-{"sourceId": "alltimalmo", "priority": 4, "reason": "stage_B", "addedAt": "2026-04-08T18:04:57.244427Z", "runsSinceAdd": 1}
-{"sourceId": "andra-langgatan", "priority": 4, "reason": "stage_B", "addedAt": "2026-04-08T18:04:57.244428Z", "runsSinceAdd": 1}
+{"sourceId":"abb-arena","priority":1,"reason":"needs_recheck","addedAt":"2026-04-26T08:30:29.841Z","runsSinceAdd":0}
+{"sourceId":"abf-conflict-1","priority":1,"reason":"needs_recheck","addedAt":"2026-04-26T08:30:29.841Z","runsSinceAdd":0}
+{"sourceId":"abf","priority":1,"reason":"needs_recheck","addedAt":"2026-04-26T08:30:29.841Z","runsSinceAdd":0}
+{"sourceId":"af","priority":1,"reason":"needs_recheck","addedAt":"2026-04-26T08:30:29.841Z","runsSinceAdd":0}
+{"sourceId":"aik","priority":1,"reason":"needs_recheck","addedAt":"2026-04-26T08:30:29.841Z","runsSinceAdd":0}
+{"sourceId":"akersberga","priority":1,"reason":"needs_recheck","addedAt":"2026-04-26T08:30:29.841Z","runsSinceAdd":0}
+{"sourceId":"allt-om-mat","priority":1,"reason":"needs_recheck","addedAt":"2026-04-26T08:30:29.841Z","runsSinceAdd":0}
+{"sourceId":"antikmassan","priority":1,"reason":"needs_recheck","addedAt":"2026-04-26T08:30:29.841Z","runsSinceAdd":0}
+{"sourceId":"arbetets-museum","priority":1,"reason":"needs_recheck","addedAt":"2026-04-26T08:30:29.841Z","runsSinceAdd":0}
+{"sourceId":"arkdes","priority":1,"reason":"needs_recheck","addedAt":"2026-04-26T08:30:29.842Z","runsSinceAdd":0}
+{"sourceId":"artipelag","priority":1,"reason":"needs_recheck","addedAt":"2026-04-26T08:30:29.842Z","runsSinceAdd":0}
+{"sourceId":"astronomiska-huddinge","priority":1,"reason":"needs_recheck","addedAt":"2026-04-26T08:30:29.842Z","runsSinceAdd":0}
+{"sourceId":"avicii-arena","priority":1,"reason":"needs_recheck","addedAt":"2026-04-26T08:30:29.842Z","runsSinceAdd":0}
+{"sourceId":"bang","priority":1,"reason":"needs_recheck","addedAt":"2026-04-26T08:30:29.842Z","runsSinceAdd":0}
+{"sourceId":"bar-brooklyn","priority":1,"reason":"needs_recheck","addedAt":"2026-04-26T08:30:29.842Z","runsSinceAdd":0}
+{"sourceId":"barnens-o","priority":1,"reason":"needs_recheck","addedAt":"2026-04-26T08:30:29.842Z","runsSinceAdd":0}
+{"sourceId":"billetto-aggregator","priority":1,"reason":"needs_recheck","addedAt":"2026-04-26T08:30:29.842Z","runsSinceAdd":0}
+{"sourceId":"blekholmen","priority":1,"reason":"needs_recheck","addedAt":"2026-04-26T08:30:29.842Z","runsSinceAdd":0}
+{"sourceId":"bokmassan","priority":1,"reason":"needs_recheck","addedAt":"2026-04-26T08:30:29.842Z","runsSinceAdd":0}
+{"sourceId":"bor-s-zoo-animagic","priority":1,"reason":"needs_recheck","addedAt":"2026-04-26T08:30:29.842Z","runsSinceAdd":0}
+{"sourceId":"borlange-kommun","priority":1,"reason":"needs_recheck","addedAt":"2026-04-26T08:30:29.842Z","runsSinceAdd":0}
+{"sourceId":"botaniska-tradgarden","priority":1,"reason":"needs_recheck","addedAt":"2026-04-26T08:30:29.842Z","runsSinceAdd":0}
+{"sourceId":"caf-opera","priority":1,"reason":"needs_recheck","addedAt":"2026-04-26T08:30:29.842Z","runsSinceAdd":0}
+{"sourceId":"centuri","priority":1,"reason":"needs_recheck","addedAt":"2026-04-26T08:30:29.842Z","runsSinceAdd":0}
+{"sourceId":"chalmers","priority":1,"reason":"needs_recheck","addedAt":"2026-04-26T08:30:29.842Z","runsSinceAdd":0}
+{"sourceId":"china-teatern","priority":1,"reason":"needs_recheck","addedAt":"2026-04-26T08:30:29.842Z","runsSinceAdd":0}
+{"sourceId":"cirkus","priority":1,"reason":"needs_recheck","addedAt":"2026-04-26T08:30:29.842Z","runsSinceAdd":0}
+{"sourceId":"debaser","priority":1,"reason":"needs_recheck","addedAt":"2026-04-26T08:30:29.842Z","runsSinceAdd":0}
+{"sourceId":"djurgarden","priority":1,"reason":"needs_recheck","addedAt":"2026-04-26T08:30:29.842Z","runsSinceAdd":0}
+{"sourceId":"djurgardens-if","priority":1,"reason":"needs_recheck","addedAt":"2026-04-26T08:30:29.842Z","runsSinceAdd":0}
+{"sourceId":"do310-com","priority":1,"reason":"needs_recheck","addedAt":"2026-04-26T08:30:29.842Z","runsSinceAdd":0}
+{"sourceId":"downtown","priority":1,"reason":"needs_recheck","addedAt":"2026-04-26T08:30:29.842Z","runsSinceAdd":0}
+{"sourceId":"dramaten","priority":1,"reason":"needs_recheck","addedAt":"2026-04-26T08:30:29.842Z","runsSinceAdd":0}
+{"sourceId":"dunkers","priority":1,"reason":"needs_recheck","addedAt":"2026-04-26T08:30:29.842Z","runsSinceAdd":0}
+{"sourceId":"elmia","priority":1,"reason":"needs_recheck","addedAt":"2026-04-26T08:30:29.842Z","runsSinceAdd":0}
+{"sourceId":"emporia","priority":1,"reason":"needs_recheck","addedAt":"2026-04-26T08:30:29.842Z","runsSinceAdd":0}
+{"sourceId":"engelbrekt","priority":1,"reason":"needs_recheck","addedAt":"2026-04-26T08:30:29.842Z","runsSinceAdd":0}
+{"sourceId":"eskilstuna-united","priority":1,"reason":"needs_recheck","addedAt":"2026-04-26T08:30:29.842Z","runsSinceAdd":0}
+{"sourceId":"eskilstuna","priority":1,"reason":"needs_recheck","addedAt":"2026-04-26T08:30:29.842Z","runsSinceAdd":0}
+{"sourceId":"faith","priority":1,"reason":"needs_recheck","addedAt":"2026-04-26T08:30:29.842Z","runsSinceAdd":0}
+{"sourceId":"fc-roseng-rd","priority":1,"reason":"needs_recheck","addedAt":"2026-04-26T08:30:29.842Z","runsSinceAdd":0}
+{"sourceId":"filborna","priority":1,"reason":"needs_recheck","addedAt":"2026-04-26T08:30:29.842Z","runsSinceAdd":0}
+{"sourceId":"folkets-hus","priority":1,"reason":"needs_recheck","addedAt":"2026-04-26T08:30:29.842Z","runsSinceAdd":0}
+{"sourceId":"folkoperan","priority":1,"reason":"needs_recheck","addedAt":"2026-04-26T08:30:29.842Z","runsSinceAdd":0}
+{"sourceId":"folkteatern","priority":1,"reason":"needs_recheck","addedAt":"2026-04-26T08:30:29.842Z","runsSinceAdd":0}
+{"sourceId":"folkuniversitetet","priority":1,"reason":"needs_recheck","addedAt":"2026-04-26T08:30:29.842Z","runsSinceAdd":0}
+{"sourceId":"formex","priority":1,"reason":"needs_recheck","addedAt":"2026-04-26T08:30:29.842Z","runsSinceAdd":0}
+{"sourceId":"fotografiska-1","priority":1,"reason":"needs_recheck","addedAt":"2026-04-26T08:30:29.842Z","runsSinceAdd":0}
+{"sourceId":"fotografiska","priority":1,"reason":"needs_recheck","addedAt":"2026-04-26T08:30:29.842Z","runsSinceAdd":0}
+{"sourceId":"friends-arena","priority":1,"reason":"needs_recheck","addedAt":"2026-04-26T08:30:29.842Z","runsSinceAdd":0}
+{"sourceId":"friidrottsf-rbundet","priority":1,"reason":"needs_recheck","addedAt":"2026-04-26T08:30:29.842Z","runsSinceAdd":0}
+{"sourceId":"fyrfaderna","priority":1,"reason":"needs_recheck","addedAt":"2026-04-26T08:30:29.842Z","runsSinceAdd":0}
+{"sourceId":"g-teborgs-jazz-festival","priority":1,"reason":"needs_recheck","addedAt":"2026-04-26T08:30:29.842Z","runsSinceAdd":0}
+{"sourceId":"g-teborgs-universitet","priority":1,"reason":"needs_recheck","addedAt":"2026-04-26T08:30:29.842Z","runsSinceAdd":0}
+{"sourceId":"g-teborgsoperan","priority":1,"reason":"needs_recheck","addedAt":"2026-04-26T08:30:29.842Z","runsSinceAdd":0}
+{"sourceId":"gais","priority":1,"reason":"needs_recheck","addedAt":"2026-04-26T08:30:29.842Z","runsSinceAdd":0}
+{"sourceId":"gamla-uppsala","priority":1,"reason":"needs_recheck","addedAt":"2026-04-26T08:30:29.842Z","runsSinceAdd":0}
+{"sourceId":"gavle-if","priority":1,"reason":"needs_recheck","addedAt":"2026-04-26T08:30:29.842Z","runsSinceAdd":0}
+{"sourceId":"gavle-konserthus","priority":1,"reason":"needs_recheck","addedAt":"2026-04-26T08:30:29.842Z","runsSinceAdd":0}
+{"sourceId":"gavle-konstmuseum","priority":1,"reason":"needs_recheck","addedAt":"2026-04-26T08:30:29.842Z","runsSinceAdd":0}
+{"sourceId":"gavle-stadsteatern","priority":1,"reason":"needs_recheck","addedAt":"2026-04-26T08:30:29.842Z","runsSinceAdd":0}
+{"sourceId":"globen","priority":1,"reason":"needs_recheck","addedAt":"2026-04-26T08:30:29.842Z","runsSinceAdd":0}
+{"sourceId":"goteborgs-film-festival","priority":1,"reason":"needs_recheck","addedAt":"2026-04-26T08:30:29.842Z","runsSinceAdd":0}
+{"sourceId":"goteborgs-konstmuseum","priority":1,"reason":"needs_recheck","addedAt":"2026-04-26T08:30:29.842Z","runsSinceAdd":0}
+{"sourceId":"goteborgsoperan","priority":1,"reason":"needs_recheck","addedAt":"2026-04-26T08:30:29.842Z","runsSinceAdd":0}
+{"sourceId":"gr-na-lund","priority":1,"reason":"needs_recheck","addedAt":"2026-04-26T08:30:29.842Z","runsSinceAdd":0}
+{"sourceId":"grand","priority":1,"reason":"needs_recheck","addedAt":"2026-04-26T08:30:29.842Z","runsSinceAdd":0}
+{"sourceId":"grona-lund","priority":1,"reason":"needs_recheck","addedAt":"2026-04-26T08:30:29.842Z","runsSinceAdd":0}
+{"sourceId":"gso","priority":1,"reason":"needs_recheck","addedAt":"2026-04-26T08:30:29.842Z","runsSinceAdd":0}
+{"sourceId":"halland","priority":1,"reason":"needs_recheck","addedAt":"2026-04-26T08:30:29.842Z","runsSinceAdd":0}
+{"sourceId":"hallsberg","priority":1,"reason":"needs_recheck","addedAt":"2026-04-26T08:30:29.842Z","runsSinceAdd":0}
+{"sourceId":"halmstad-konserthus","priority":1,"reason":"needs_recheck","addedAt":"2026-04-26T08:30:29.842Z","runsSinceAdd":0}
+{"sourceId":"halmstad-stadsteatern","priority":1,"reason":"needs_recheck","addedAt":"2026-04-26T08:30:29.842Z","runsSinceAdd":0}
+{"sourceId":"halmstads-bk","priority":1,"reason":"needs_recheck","addedAt":"2026-04-26T08:30:29.842Z","runsSinceAdd":0}
+{"sourceId":"hammarby","priority":1,"reason":"needs_recheck","addedAt":"2026-04-26T08:30:29.842Z","runsSinceAdd":0}
+{"sourceId":"hammarkullen","priority":1,"reason":"needs_recheck","addedAt":"2026-04-26T08:30:29.842Z","runsSinceAdd":0}
+{"sourceId":"helsingborg-konserthus","priority":1,"reason":"needs_recheck","addedAt":"2026-04-26T08:30:29.842Z","runsSinceAdd":0}
+{"sourceId":"helsingborg","priority":1,"reason":"needs_recheck","addedAt":"2026-04-26T08:30:29.842Z","runsSinceAdd":0}
+{"sourceId":"helsingborgs-konserthus","priority":1,"reason":"needs_recheck","addedAt":"2026-04-26T08:30:29.842Z","runsSinceAdd":0}
+{"sourceId":"historiska-museet","priority":1,"reason":"needs_recheck","addedAt":"2026-04-26T08:30:29.842Z","runsSinceAdd":0}
+{"sourceId":"hovet","priority":1,"reason":"needs_recheck","addedAt":"2026-04-26T08:30:29.842Z","runsSinceAdd":0}
+{"sourceId":"ifk-g-teborg","priority":1,"reason":"needs_recheck","addedAt":"2026-04-26T08:30:29.842Z","runsSinceAdd":0}
+{"sourceId":"ifk-norrkoping","priority":1,"reason":"needs_recheck","addedAt":"2026-04-26T08:30:29.842Z","runsSinceAdd":0}
+{"sourceId":"ifk-stockholm","priority":1,"reason":"needs_recheck","addedAt":"2026-04-26T08:30:29.842Z","runsSinceAdd":0}
+{"sourceId":"ifk-uppsala","priority":1,"reason":"needs_recheck","addedAt":"2026-04-26T08:30:29.842Z","runsSinceAdd":0}
+{"sourceId":"intiman","priority":1,"reason":"needs_recheck","addedAt":"2026-04-26T08:30:29.842Z","runsSinceAdd":0}
+{"sourceId":"iogt-nto","priority":1,"reason":"needs_recheck","addedAt":"2026-04-26T08:30:29.842Z","runsSinceAdd":0}
+{"sourceId":"jarfalla","priority":1,"reason":"needs_recheck","addedAt":"2026-04-26T08:30:29.842Z","runsSinceAdd":0}
+{"sourceId":"jazz-i-orebro","priority":1,"reason":"needs_recheck","addedAt":"2026-04-26T08:30:29.842Z","runsSinceAdd":0}
+{"sourceId":"jonkoping-university","priority":1,"reason":"needs_recheck","addedAt":"2026-04-26T08:30:29.842Z","runsSinceAdd":0}
+{"sourceId":"jonkoping","priority":1,"reason":"needs_recheck","addedAt":"2026-04-26T08:30:29.842Z","runsSinceAdd":0}
+{"sourceId":"junibacken","priority":1,"reason":"needs_recheck","addedAt":"2026-04-26T08:30:29.842Z","runsSinceAdd":0}
+{"sourceId":"kalmar-energi-arena","priority":1,"reason":"needs_recheck","addedAt":"2026-04-26T08:30:29.842Z","runsSinceAdd":0}
+{"sourceId":"kalmar-ff","priority":1,"reason":"needs_recheck","addedAt":"2026-04-26T08:30:29.842Z","runsSinceAdd":0}
+{"sourceId":"kalmar-kommun","priority":1,"reason":"needs_recheck","addedAt":"2026-04-26T08:30:29.842Z","runsSinceAdd":0}
+{"sourceId":"kalmar-teatern","priority":1,"reason":"needs_recheck","addedAt":"2026-04-26T08:30:29.842Z","runsSinceAdd":0}
+{"sourceId":"karlskoga","priority":1,"reason":"needs_recheck","addedAt":"2026-04-26T08:30:29.842Z","runsSinceAdd":0}
+{"sourceId":"karlskrona","priority":1,"reason":"needs_recheck","addedAt":"2026-04-26T08:30:29.842Z","runsSinceAdd":0}
+{"sourceId":"karlstad-stadsteatern","priority":1,"reason":"needs_recheck","addedAt":"2026-04-26T08:30:29.842Z","runsSinceAdd":0}
+{"sourceId":"katrineholm","priority":1,"reason":"needs_recheck","addedAt":"2026-04-26T08:30:29.842Z","runsSinceAdd":0}
+{"sourceId":"kb18","priority":1,"reason":"needs_recheck","addedAt":"2026-04-26T08:30:29.842Z","runsSinceAdd":0}
+{"sourceId":"kulturen","priority":1,"reason":"needs_recheck","addedAt":"2026-04-26T08:30:29.842Z","runsSinceAdd":0}
+{"sourceId":"kulturhuset-orebro","priority":1,"reason":"needs_recheck","addedAt":"2026-04-26T08:30:29.842Z","runsSinceAdd":0}
+{"sourceId":"kumla","priority":1,"reason":"needs_recheck","addedAt":"2026-04-26T08:30:29.842Z","runsSinceAdd":0}
+{"sourceId":"kungliga-musikhogskolan","priority":1,"reason":"needs_recheck","addedAt":"2026-04-26T08:30:29.842Z","runsSinceAdd":0}
+{"sourceId":"kungliga-operan","priority":1,"reason":"needs_recheck","addedAt":"2026-04-26T08:30:29.842Z","runsSinceAdd":0}
+{"sourceId":"kungsbacka","priority":1,"reason":"needs_recheck","addedAt":"2026-04-26T08:30:29.842Z","runsSinceAdd":0}
+{"sourceId":"ladan","priority":1,"reason":"needs_recheck","addedAt":"2026-04-26T08:30:29.842Z","runsSinceAdd":0}
+{"sourceId":"liljevalchs","priority":1,"reason":"needs_recheck","addedAt":"2026-04-26T08:30:29.842Z","runsSinceAdd":0}
+{"sourceId":"lindesberg","priority":1,"reason":"needs_recheck","addedAt":"2026-04-26T08:30:29.842Z","runsSinceAdd":0}
+{"sourceId":"linkopings-universitet","priority":1,"reason":"needs_recheck","addedAt":"2026-04-26T08:30:29.842Z","runsSinceAdd":0}
+{"sourceId":"linnaeus-museum","priority":1,"reason":"needs_recheck","addedAt":"2026-04-26T08:30:29.842Z","runsSinceAdd":0}
+{"sourceId":"liseberg","priority":1,"reason":"needs_recheck","addedAt":"2026-04-26T08:30:29.842Z","runsSinceAdd":0}
+{"sourceId":"livrustkammaren","priority":1,"reason":"needs_recheck","addedAt":"2026-04-26T08:30:29.842Z","runsSinceAdd":0}
+{"sourceId":"lth","priority":1,"reason":"needs_recheck","addedAt":"2026-04-26T08:30:29.842Z","runsSinceAdd":0}
+{"sourceId":"lulea-hf","priority":1,"reason":"needs_recheck","addedAt":"2026-04-26T08:30:29.842Z","runsSinceAdd":0}
+{"sourceId":"lulea-konserthus","priority":1,"reason":"needs_recheck","addedAt":"2026-04-26T08:30:29.842Z","runsSinceAdd":0}
+{"sourceId":"lulea-tekniska-universitet","priority":1,"reason":"needs_recheck","addedAt":"2026-04-26T08:30:29.842Z","runsSinceAdd":0}
+{"sourceId":"lunds-bk","priority":1,"reason":"needs_recheck","addedAt":"2026-04-26T08:30:29.842Z","runsSinceAdd":0}
+{"sourceId":"lunds-universitet","priority":1,"reason":"needs_recheck","addedAt":"2026-04-26T08:30:29.842Z","runsSinceAdd":0}
+{"sourceId":"lysekil","priority":1,"reason":"needs_recheck","addedAt":"2026-04-26T08:30:29.842Z","runsSinceAdd":0}
+{"sourceId":"malarenergi-arena","priority":1,"reason":"needs_recheck","addedAt":"2026-04-26T08:30:29.842Z","runsSinceAdd":0}
+{"sourceId":"malm-arena","priority":1,"reason":"needs_recheck","addedAt":"2026-04-26T08:30:29.842Z","runsSinceAdd":0}
+{"sourceId":"malm-live","priority":1,"reason":"needs_recheck","addedAt":"2026-04-26T08:30:29.842Z","runsSinceAdd":0}
+{"sourceId":"malm-opera","priority":1,"reason":"needs_recheck","addedAt":"2026-04-26T08:30:29.842Z","runsSinceAdd":0}
+{"sourceId":"malm-universitet","priority":1,"reason":"needs_recheck","addedAt":"2026-04-26T08:30:29.842Z","runsSinceAdd":0}
+{"sourceId":"malmo-bulldogs","priority":1,"reason":"needs_recheck","addedAt":"2026-04-26T08:30:29.842Z","runsSinceAdd":0}
+{"sourceId":"malmo-hockey","priority":1,"reason":"needs_recheck","addedAt":"2026-04-26T08:30:29.842Z","runsSinceAdd":0}
+{"sourceId":"malmo-hogskola","priority":1,"reason":"needs_recheck","addedAt":"2026-04-26T08:30:29.842Z","runsSinceAdd":0}
+{"sourceId":"malmo-icc","priority":1,"reason":"needs_recheck","addedAt":"2026-04-26T08:30:29.842Z","runsSinceAdd":0}
+{"sourceId":"malmo-konsthall","priority":1,"reason":"needs_recheck","addedAt":"2026-04-26T08:30:29.842Z","runsSinceAdd":0}
+{"sourceId":"malmo-museum","priority":1,"reason":"needs_recheck","addedAt":"2026-04-26T08:30:29.842Z","runsSinceAdd":0}
+{"sourceId":"malmo-opera","priority":1,"reason":"needs_recheck","addedAt":"2026-04-26T08:30:29.842Z","runsSinceAdd":0}
+{"sourceId":"malmo-redhawks","priority":1,"reason":"needs_recheck","addedAt":"2026-04-26T08:30:29.842Z","runsSinceAdd":0}
+{"sourceId":"malmo-stad","priority":1,"reason":"needs_recheck","addedAt":"2026-04-26T08:30:29.842Z","runsSinceAdd":0}
+{"sourceId":"malmo-stadsbibliotek","priority":1,"reason":"needs_recheck","addedAt":"2026-04-26T08:30:29.842Z","runsSinceAdd":0}
+{"sourceId":"malmo-stadsteatern","priority":1,"reason":"needs_recheck","addedAt":"2026-04-26T08:30:29.842Z","runsSinceAdd":0}
+{"sourceId":"mariestad","priority":1,"reason":"needs_recheck","addedAt":"2026-04-26T08:30:29.842Z","runsSinceAdd":0}
+{"sourceId":"medeltidsmuseet","priority":1,"reason":"needs_recheck","addedAt":"2026-04-26T08:30:29.842Z","runsSinceAdd":0}
+{"sourceId":"mejeriet","priority":1,"reason":"needs_recheck","addedAt":"2026-04-26T08:30:29.842Z","runsSinceAdd":0}
+{"sourceId":"millesg-rden","priority":1,"reason":"needs_recheck","addedAt":"2026-04-26T08:30:29.842Z","runsSinceAdd":0}
+{"sourceId":"mittuniversitetet","priority":1,"reason":"needs_recheck","addedAt":"2026-04-26T08:30:29.842Z","runsSinceAdd":0}
+{"sourceId":"mjolby","priority":1,"reason":"needs_recheck","addedAt":"2026-04-26T08:30:29.842Z","runsSinceAdd":0}
+{"sourceId":"mobilia","priority":1,"reason":"needs_recheck","addedAt":"2026-04-26T08:30:29.842Z","runsSinceAdd":0}
+{"sourceId":"moderna-museet-malmo","priority":1,"reason":"needs_recheck","addedAt":"2026-04-26T08:30:29.842Z","runsSinceAdd":0}
+{"sourceId":"moderna-museet","priority":1,"reason":"needs_recheck","addedAt":"2026-04-26T08:30:29.842Z","runsSinceAdd":0}
+{"sourceId":"molndals","priority":1,"reason":"needs_recheck","addedAt":"2026-04-26T08:30:29.842Z","runsSinceAdd":0}
+{"sourceId":"mora-kommun","priority":1,"reason":"needs_recheck","addedAt":"2026-04-26T08:30:29.842Z","runsSinceAdd":0}
+{"sourceId":"motala","priority":1,"reason":"needs_recheck","addedAt":"2026-04-26T08:30:29.842Z","runsSinceAdd":0}
+{"sourceId":"nationalmuseum","priority":1,"reason":"needs_recheck","addedAt":"2026-04-26T08:30:29.842Z","runsSinceAdd":0}
+{"sourceId":"naturhistoriska-riksmuseet","priority":1,"reason":"needs_recheck","addedAt":"2026-04-26T08:30:29.842Z","runsSinceAdd":0}
+{"sourceId":"neon","priority":1,"reason":"needs_recheck","addedAt":"2026-04-26T08:30:29.842Z","runsSinceAdd":0}
+{"sourceId":"nordiska-museet","priority":1,"reason":"needs_recheck","addedAt":"2026-04-26T08:30:29.842Z","runsSinceAdd":0}
+{"sourceId":"nykoping","priority":1,"reason":"needs_recheck","addedAt":"2026-04-26T08:30:29.842Z","runsSinceAdd":0}
+{"sourceId":"nykopings-bis","priority":1,"reason":"needs_recheck","addedAt":"2026-04-26T08:30:29.842Z","runsSinceAdd":0}
+{"sourceId":"oceanen","priority":1,"reason":"needs_recheck","addedAt":"2026-04-26T08:30:29.842Z","runsSinceAdd":0}
+{"sourceId":"ois","priority":1,"reason":"needs_recheck","addedAt":"2026-04-26T08:30:29.842Z","runsSinceAdd":0}
+{"sourceId":"oland","priority":1,"reason":"needs_recheck","addedAt":"2026-04-26T08:30:29.842Z","runsSinceAdd":0}
+{"sourceId":"open-air","priority":1,"reason":"needs_recheck","addedAt":"2026-04-26T08:30:29.842Z","runsSinceAdd":0}
+{"sourceId":"open-art","priority":1,"reason":"needs_recheck","addedAt":"2026-04-26T08:30:29.842Z","runsSinceAdd":0}
+{"sourceId":"orebro-lan","priority":1,"reason":"needs_recheck","addedAt":"2026-04-26T08:30:29.842Z","runsSinceAdd":0}
+{"sourceId":"orebro-sk","priority":1,"reason":"needs_recheck","addedAt":"2026-04-26T08:30:29.842Z","runsSinceAdd":0}
+{"sourceId":"orebro-stadsteatern","priority":1,"reason":"needs_recheck","addedAt":"2026-04-26T08:30:29.842Z","runsSinceAdd":0}
+{"sourceId":"orebro-universitet","priority":1,"reason":"needs_recheck","addedAt":"2026-04-26T08:30:29.842Z","runsSinceAdd":0}
+{"sourceId":"ornskoldsvik","priority":1,"reason":"needs_recheck","addedAt":"2026-04-26T08:30:29.842Z","runsSinceAdd":0}
+{"sourceId":"oscar-teatern","priority":1,"reason":"needs_recheck","addedAt":"2026-04-26T08:30:29.842Z","runsSinceAdd":0}
+{"sourceId":"parkteatern","priority":1,"reason":"needs_recheck","addedAt":"2026-04-26T08:30:29.842Z","runsSinceAdd":0}
+{"sourceId":"partille-arena","priority":1,"reason":"needs_recheck","addedAt":"2026-04-26T08:30:29.842Z","runsSinceAdd":0}
+{"sourceId":"partille","priority":1,"reason":"needs_recheck","addedAt":"2026-04-26T08:30:29.842Z","runsSinceAdd":0}
+{"sourceId":"pingstkyrkan","priority":1,"reason":"needs_recheck","addedAt":"2026-04-26T08:30:29.842Z","runsSinceAdd":0}
+{"sourceId":"polismuseet","priority":1,"reason":"needs_recheck","addedAt":"2026-04-26T08:30:29.842Z","runsSinceAdd":0}
+{"sourceId":"postmuseum","priority":1,"reason":"needs_recheck","addedAt":"2026-04-26T08:30:29.842Z","runsSinceAdd":0}
+{"sourceId":"push","priority":1,"reason":"needs_recheck","addedAt":"2026-04-26T08:30:29.842Z","runsSinceAdd":0}
+{"sourceId":"pustervik","priority":1,"reason":"needs_recheck","addedAt":"2026-04-26T08:30:29.842Z","runsSinceAdd":0}
+{"sourceId":"r-hsska-museet","priority":1,"reason":"needs_recheck","addedAt":"2026-04-26T08:30:29.842Z","runsSinceAdd":0}
+{"sourceId":"ramlosa","priority":1,"reason":"needs_recheck","addedAt":"2026-04-26T08:30:29.842Z","runsSinceAdd":0}
+{"sourceId":"repo-festival","priority":1,"reason":"needs_recheck","addedAt":"2026-04-26T08:30:29.842Z","runsSinceAdd":0}
+{"sourceId":"ridsportf-rbundet","priority":1,"reason":"needs_recheck","addedAt":"2026-04-26T08:30:29.842Z","runsSinceAdd":0}
+{"sourceId":"rival","priority":1,"reason":"needs_recheck","addedAt":"2026-04-26T08:30:29.842Z","runsSinceAdd":0}
+{"sourceId":"roda-kvarn","priority":1,"reason":"needs_recheck","addedAt":"2026-04-26T08:30:29.842Z","runsSinceAdd":0}
+{"sourceId":"rohsska-museet","priority":1,"reason":"needs_recheck","addedAt":"2026-04-26T08:30:29.842Z","runsSinceAdd":0}
+{"sourceId":"ronn","priority":1,"reason":"needs_recheck","addedAt":"2026-04-26T08:30:29.842Z","runsSinceAdd":0}
+{"sourceId":"scandinavium","priority":1,"reason":"needs_recheck","addedAt":"2026-04-26T08:30:29.842Z","runsSinceAdd":0}
+{"sourceId":"science-park","priority":1,"reason":"needs_recheck","addedAt":"2026-04-26T08:30:29.842Z","runsSinceAdd":0}
+{"sourceId":"sensus","priority":1,"reason":"needs_recheck","addedAt":"2026-04-26T08:30:29.842Z","runsSinceAdd":0}
+{"sourceId":"skansen","priority":1,"reason":"needs_recheck","addedAt":"2026-04-26T08:30:29.842Z","runsSinceAdd":0}
+{"sourceId":"skovde-konserthus","priority":1,"reason":"needs_recheck","addedAt":"2026-04-26T08:30:29.842Z","runsSinceAdd":0}
+{"sourceId":"slagthuset","priority":1,"reason":"needs_recheck","addedAt":"2026-04-26T08:30:29.842Z","runsSinceAdd":0}
+{"sourceId":"slottsskogen","priority":1,"reason":"needs_recheck","addedAt":"2026-04-26T08:30:29.842Z","runsSinceAdd":0}
+{"sourceId":"slu","priority":1,"reason":"needs_recheck","addedAt":"2026-04-26T08:30:29.842Z","runsSinceAdd":0}
+{"sourceId":"smalandsposten","priority":1,"reason":"needs_recheck","addedAt":"2026-04-26T08:30:29.842Z","runsSinceAdd":0}
+{"sourceId":"sofiero","priority":1,"reason":"needs_recheck","addedAt":"2026-04-26T08:30:29.842Z","runsSinceAdd":0}
+{"sourceId":"songkick","priority":1,"reason":"needs_recheck","addedAt":"2026-04-26T08:30:29.842Z","runsSinceAdd":0}
+{"sourceId":"spanga-is","priority":1,"reason":"needs_recheck","addedAt":"2026-04-26T08:30:29.842Z","runsSinceAdd":0}
+{"sourceId":"sparvag-city","priority":1,"reason":"needs_recheck","addedAt":"2026-04-26T08:30:29.842Z","runsSinceAdd":0}
+{"sourceId":"stenungsund","priority":1,"reason":"needs_recheck","addedAt":"2026-04-26T08:30:29.842Z","runsSinceAdd":0}
+{"sourceId":"stockholm-furniture","priority":1,"reason":"needs_recheck","addedAt":"2026-04-26T08:30:29.842Z","runsSinceAdd":0}
+{"sourceId":"stockholm-jazz-festival-1","priority":1,"reason":"needs_recheck","addedAt":"2026-04-26T08:30:29.842Z","runsSinceAdd":0}
+{"sourceId":"stockholm-kulturfestival","priority":1,"reason":"needs_recheck","addedAt":"2026-04-26T08:30:29.842Z","runsSinceAdd":0}
+{"sourceId":"stockholms-stadsteater","priority":1,"reason":"needs_recheck","addedAt":"2026-04-26T08:30:29.842Z","runsSinceAdd":0}
+{"sourceId":"stockholms-universitet","priority":1,"reason":"needs_recheck","addedAt":"2026-04-26T08:30:29.842Z","runsSinceAdd":0}
+{"sourceId":"stromma","priority":1,"reason":"needs_recheck","addedAt":"2026-04-26T08:30:29.842Z","runsSinceAdd":0}
+{"sourceId":"stromstad","priority":1,"reason":"needs_recheck","addedAt":"2026-04-26T08:30:29.842Z","runsSinceAdd":0}
+{"sourceId":"studieframjandet","priority":1,"reason":"needs_recheck","addedAt":"2026-04-26T08:30:29.842Z","runsSinceAdd":0}
+{"sourceId":"studio-acusticum","priority":1,"reason":"needs_recheck","addedAt":"2026-04-26T08:30:29.842Z","runsSinceAdd":0}
+{"sourceId":"sturecompagniet","priority":1,"reason":"needs_recheck","addedAt":"2026-04-26T08:30:29.842Z","runsSinceAdd":0}
+{"sourceId":"sundsvall-musik","priority":1,"reason":"needs_recheck","addedAt":"2026-04-26T08:30:29.842Z","runsSinceAdd":0}
+{"sourceId":"sundsvall","priority":1,"reason":"needs_recheck","addedAt":"2026-04-26T08:30:29.842Z","runsSinceAdd":0}
+{"sourceId":"svenska-baskethallsf-rbundet","priority":1,"reason":"needs_recheck","addedAt":"2026-04-26T08:30:29.842Z","runsSinceAdd":0}
+{"sourceId":"svenska-fotbollf-rbundet","priority":1,"reason":"needs_recheck","addedAt":"2026-04-26T08:30:29.842Z","runsSinceAdd":0}
+{"sourceId":"svenska-hockeyligan-shl","priority":1,"reason":"needs_recheck","addedAt":"2026-04-26T08:30:29.842Z","runsSinceAdd":0}
+{"sourceId":"svenska-innebandyf-rbundet","priority":1,"reason":"needs_recheck","addedAt":"2026-04-26T08:30:29.842Z","runsSinceAdd":0}
+{"sourceId":"svenska-schackf-rbundet","priority":1,"reason":"needs_recheck","addedAt":"2026-04-26T08:30:29.842Z","runsSinceAdd":0}
+{"sourceId":"svenska-tennisf-rbundet","priority":1,"reason":"needs_recheck","addedAt":"2026-04-26T08:30:29.842Z","runsSinceAdd":0}
+{"sourceId":"swedish-food","priority":1,"reason":"needs_recheck","addedAt":"2026-04-26T08:30:29.842Z","runsSinceAdd":0}
+{"sourceId":"swedish-match","priority":1,"reason":"needs_recheck","addedAt":"2026-04-26T08:30:29.842Z","runsSinceAdd":0}
+{"sourceId":"sydsvenskan","priority":1,"reason":"needs_recheck","addedAt":"2026-04-26T08:30:29.842Z","runsSinceAdd":0}
+{"sourceId":"teater-galeasen","priority":1,"reason":"needs_recheck","addedAt":"2026-04-26T08:30:29.842Z","runsSinceAdd":0}
+{"sourceId":"tekniska-museet-1","priority":1,"reason":"needs_recheck","addedAt":"2026-04-26T08:30:29.842Z","runsSinceAdd":0}
+{"sourceId":"tele2-arena","priority":1,"reason":"needs_recheck","addedAt":"2026-04-26T08:30:29.842Z","runsSinceAdd":0}
+{"sourceId":"textilmus-et","priority":1,"reason":"needs_recheck","addedAt":"2026-04-26T08:30:29.842Z","runsSinceAdd":0}
+{"sourceId":"tradgardsforeningen","priority":1,"reason":"needs_recheck","addedAt":"2026-04-26T08:30:29.842Z","runsSinceAdd":0}
+{"sourceId":"trelleborg","priority":1,"reason":"needs_recheck","addedAt":"2026-04-26T08:30:29.842Z","runsSinceAdd":0}
+{"sourceId":"trelleborgs-ff","priority":1,"reason":"needs_recheck","addedAt":"2026-04-26T08:30:29.842Z","runsSinceAdd":0}
+{"sourceId":"triangeln","priority":1,"reason":"needs_recheck","addedAt":"2026-04-26T08:30:29.842Z","runsSinceAdd":0}
+{"sourceId":"trollhattan","priority":1,"reason":"needs_recheck","addedAt":"2026-04-26T08:30:29.842Z","runsSinceAdd":0}
+{"sourceId":"uddevalla-kommun","priority":1,"reason":"needs_recheck","addedAt":"2026-04-26T08:30:29.842Z","runsSinceAdd":0}
+{"sourceId":"umea-ik","priority":1,"reason":"needs_recheck","addedAt":"2026-04-26T08:30:29.842Z","runsSinceAdd":0}
+{"sourceId":"umea-universitet","priority":1,"reason":"needs_recheck","addedAt":"2026-04-26T08:30:29.842Z","runsSinceAdd":0}
+{"sourceId":"universeum","priority":1,"reason":"needs_recheck","addedAt":"2026-04-26T08:30:29.842Z","runsSinceAdd":0}
+{"sourceId":"uppsala-basket","priority":1,"reason":"needs_recheck","addedAt":"2026-04-26T08:30:29.842Z","runsSinceAdd":0}
+{"sourceId":"uppsala-kommun","priority":1,"reason":"needs_recheck","addedAt":"2026-04-26T08:30:29.842Z","runsSinceAdd":0}
+{"sourceId":"uppsala-konserthus-1","priority":1,"reason":"needs_recheck","addedAt":"2026-04-26T08:30:29.842Z","runsSinceAdd":0}
+{"sourceId":"uppsala-konserthus","priority":1,"reason":"needs_recheck","addedAt":"2026-04-26T08:30:29.842Z","runsSinceAdd":0}
+{"sourceId":"uppsala-linn-science-park","priority":1,"reason":"needs_recheck","addedAt":"2026-04-26T08:30:29.842Z","runsSinceAdd":0}
+{"sourceId":"uppsala-museum","priority":1,"reason":"needs_recheck","addedAt":"2026-04-26T08:30:29.842Z","runsSinceAdd":0}
+{"sourceId":"uppsala-teatern","priority":1,"reason":"needs_recheck","addedAt":"2026-04-26T08:30:29.842Z","runsSinceAdd":0}
+{"sourceId":"uppsala-universitet","priority":1,"reason":"needs_recheck","addedAt":"2026-04-26T08:30:29.842Z","runsSinceAdd":0}
+{"sourceId":"v-sterbottens-kuriren","priority":1,"reason":"needs_recheck","addedAt":"2026-04-26T08:30:29.842Z","runsSinceAdd":0}
+{"sourceId":"varmland","priority":1,"reason":"needs_recheck","addedAt":"2026-04-26T08:30:29.842Z","runsSinceAdd":0}
+{"sourceId":"vasamuseet","priority":1,"reason":"needs_recheck","addedAt":"2026-04-26T08:30:29.842Z","runsSinceAdd":0}
+{"sourceId":"vasteras-stad","priority":1,"reason":"needs_recheck","addedAt":"2026-04-26T08:30:29.842Z","runsSinceAdd":0}
+{"sourceId":"vasterbottens-museum","priority":1,"reason":"needs_recheck","addedAt":"2026-04-26T08:30:29.842Z","runsSinceAdd":0}
+{"sourceId":"vaxjo-konserthus","priority":1,"reason":"needs_recheck","addedAt":"2026-04-26T08:30:29.842Z","runsSinceAdd":0}
+{"sourceId":"vaxjo-teatern","priority":1,"reason":"needs_recheck","addedAt":"2026-04-26T08:30:29.842Z","runsSinceAdd":0}
+{"sourceId":"vega","priority":1,"reason":"needs_recheck","addedAt":"2026-04-26T08:30:29.842Z","runsSinceAdd":0}
+{"sourceId":"visit-gothenburg","priority":1,"reason":"needs_recheck","addedAt":"2026-04-26T08:30:29.842Z","runsSinceAdd":0}
+{"sourceId":"visit-malmo","priority":1,"reason":"needs_recheck","addedAt":"2026-04-26T08:30:29.842Z","runsSinceAdd":0}
+{"sourceId":"visit-stockholm","priority":1,"reason":"needs_recheck","addedAt":"2026-04-26T08:30:29.842Z","runsSinceAdd":0}
+{"sourceId":"visit-sweden","priority":1,"reason":"needs_recheck","addedAt":"2026-04-26T08:30:29.842Z","runsSinceAdd":0}
+{"sourceId":"visit-uppsala","priority":1,"reason":"needs_recheck","addedAt":"2026-04-26T08:30:29.842Z","runsSinceAdd":0}
+{"sourceId":"visit-vasteras","priority":1,"reason":"needs_recheck","addedAt":"2026-04-26T08:30:29.842Z","runsSinceAdd":0}
+{"sourceId":"visithelsingborg","priority":1,"reason":"needs_recheck","addedAt":"2026-04-26T08:30:29.842Z","runsSinceAdd":0}
+{"sourceId":"visualiseringscenter","priority":1,"reason":"needs_recheck","addedAt":"2026-04-26T08:30:29.842Z","runsSinceAdd":0}
+{"sourceId":"volvo-museum","priority":1,"reason":"needs_recheck","addedAt":"2026-04-26T08:30:29.842Z","runsSinceAdd":0}
+{"sourceId":"waldemarsudde","priority":1,"reason":"needs_recheck","addedAt":"2026-04-26T08:30:29.842Z","runsSinceAdd":0}
+{"sourceId":"way-out-west","priority":1,"reason":"needs_recheck","addedAt":"2026-04-26T08:30:29.842Z","runsSinceAdd":0}
+{"sourceId":"ystad","priority":1,"reason":"needs_recheck","addedAt":"2026-04-26T08:30:29.842Z","runsSinceAdd":0}
+{"sourceId":"berwaldhallen","priority":5,"reason":"revalidation_due","addedAt":"2026-04-26T08:30:29.842Z","runsSinceAdd":0}
+{"sourceId":"konserthuset","priority":5,"reason":"revalidation_due","addedAt":"2026-04-26T08:30:29.842Z","runsSinceAdd":0}
+{"sourceId":"kulturhuset","priority":5,"reason":"revalidation_due","addedAt":"2026-04-26T08:30:29.842Z","runsSinceAdd":0}
+{"sourceId":"alltimalmo","priority":7,"reason":"registry_backfill","addedAt":"2026-04-26T08:30:29.841Z","runsSinceAdd":0}
+{"sourceId":"andra-langgatan","priority":7,"reason":"registry_backfill","addedAt":"2026-04-26T08:30:29.841Z","runsSinceAdd":0}
+{"sourceId":"arbetsam","priority":7,"reason":"registry_backfill","addedAt":"2026-04-26T08:30:29.842Z","runsSinceAdd":0}
+{"sourceId":"arkitekturgalleriet","priority":7,"reason":"registry_backfill","addedAt":"2026-04-26T08:30:29.842Z","runsSinceAdd":0}
+{"sourceId":"b-republic","priority":7,"reason":"registry_backfill","addedAt":"2026-04-26T08:30:29.842Z","runsSinceAdd":0}
+{"sourceId":"bk-hacken","priority":7,"reason":"registry_backfill","addedAt":"2026-04-26T08:30:29.842Z","runsSinceAdd":0}
+{"sourceId":"brommapojkarna","priority":7,"reason":"registry_backfill","addedAt":"2026-04-26T08:30:29.842Z","runsSinceAdd":0}
+{"sourceId":"club-mecca","priority":7,"reason":"registry_backfill","addedAt":"2026-04-26T08:30:29.842Z","runsSinceAdd":0}
+{"sourceId":"dalarna","priority":7,"reason":"registry_backfill","addedAt":"2026-04-26T08:30:29.842Z","runsSinceAdd":0}
+{"sourceId":"eggers-arena-ehco","priority":7,"reason":"registry_backfill","addedAt":"2026-04-26T08:30:29.842Z","runsSinceAdd":0}
+{"sourceId":"ekero","priority":7,"reason":"registry_backfill","addedAt":"2026-04-26T08:30:29.842Z","runsSinceAdd":0}
+{"sourceId":"eventbrite","priority":7,"reason":"registry_backfill","addedAt":"2026-04-26T08:30:29.842Z","runsSinceAdd":0}
+{"sourceId":"falun-konserthus","priority":7,"reason":"registry_backfill","addedAt":"2026-04-26T08:30:29.842Z","runsSinceAdd":0}
+{"sourceId":"falun-stadsteatern","priority":7,"reason":"registry_backfill","addedAt":"2026-04-26T08:30:29.842Z","runsSinceAdd":0}
+{"sourceId":"fangelset","priority":7,"reason":"registry_backfill","addedAt":"2026-04-26T08:30:29.842Z","runsSinceAdd":0}
+{"sourceId":"fattar","priority":7,"reason":"registry_backfill","addedAt":"2026-04-26T08:30:29.842Z","runsSinceAdd":0}
+{"sourceId":"form-design-museum","priority":7,"reason":"registry_backfill","addedAt":"2026-04-26T08:30:29.842Z","runsSinceAdd":0}
+{"sourceId":"frolunda-hc","priority":7,"reason":"registry_backfill","addedAt":"2026-04-26T08:30:29.842Z","runsSinceAdd":0}
+{"sourceId":"fryshuset","priority":7,"reason":"registry_backfill","addedAt":"2026-04-26T08:30:29.842Z","runsSinceAdd":0}
+{"sourceId":"g-teborgs-posten","priority":7,"reason":"registry_backfill","addedAt":"2026-04-26T08:30:29.842Z","runsSinceAdd":0}
+{"sourceId":"gavle-zoo","priority":7,"reason":"registry_backfill","addedAt":"2026-04-26T08:30:29.842Z","runsSinceAdd":0}
+{"sourceId":"get-lost","priority":7,"reason":"registry_backfill","addedAt":"2026-04-26T08:30:29.842Z","runsSinceAdd":0}
+{"sourceId":"goteborgs-arkitekturgalleri","priority":7,"reason":"registry_backfill","addedAt":"2026-04-26T08:30:29.842Z","runsSinceAdd":0}
+{"sourceId":"goteborgs-design-festival","priority":7,"reason":"registry_backfill","addedAt":"2026-04-26T08:30:29.842Z","runsSinceAdd":0}
+{"sourceId":"goteborgs-domkyrka","priority":7,"reason":"registry_backfill","addedAt":"2026-04-26T08:30:29.842Z","runsSinceAdd":0}
+{"sourceId":"goteborgs-kulturfestival","priority":7,"reason":"registry_backfill","addedAt":"2026-04-26T08:30:29.842Z","runsSinceAdd":0}
+{"sourceId":"goteborgs-litteraturhus","priority":7,"reason":"registry_backfill","addedAt":"2026-04-26T08:30:29.842Z","runsSinceAdd":0}
+{"sourceId":"goteborgs-stadsbibliotek","priority":7,"reason":"registry_backfill","addedAt":"2026-04-26T08:30:29.842Z","runsSinceAdd":0}
+{"sourceId":"h-gskolan-i-sk-vde","priority":7,"reason":"registry_backfill","addedAt":"2026-04-26T08:30:29.842Z","runsSinceAdd":0}
+{"sourceId":"hasselblad-center","priority":7,"reason":"registry_backfill","addedAt":"2026-04-26T08:30:29.842Z","runsSinceAdd":0}
+{"sourceId":"helsingborg-arena","priority":7,"reason":"registry_backfill","addedAt":"2026-04-26T08:30:29.842Z","runsSinceAdd":0}
+{"sourceId":"helsingborgs-if","priority":7,"reason":"registry_backfill","addedAt":"2026-04-26T08:30:29.842Z","runsSinceAdd":0}
+{"sourceId":"historiska-museet-malmo","priority":7,"reason":"registry_backfill","addedAt":"2026-04-26T08:30:29.842Z","runsSinceAdd":0}
+{"sourceId":"hovet-1","priority":7,"reason":"registry_backfill","addedAt":"2026-04-26T08:30:29.842Z","runsSinceAdd":0}
+{"sourceId":"hv71","priority":7,"reason":"registry_backfill","addedAt":"2026-04-26T08:30:29.842Z","runsSinceAdd":0}
+{"sourceId":"ik-sirius","priority":7,"reason":"registry_backfill","addedAt":"2026-04-26T08:30:29.842Z","runsSinceAdd":0}
+{"sourceId":"inkonst","priority":7,"reason":"registry_backfill","addedAt":"2026-04-26T08:30:29.842Z","runsSinceAdd":0}
+{"sourceId":"jazz-i-lund","priority":7,"reason":"registry_backfill","addedAt":"2026-04-26T08:30:29.842Z","runsSinceAdd":0}
+{"sourceId":"jazzfestivalen-goteborg","priority":7,"reason":"registry_backfill","addedAt":"2026-04-26T08:30:29.842Z","runsSinceAdd":0}
+{"sourceId":"jonkoping-konserthus","priority":7,"reason":"registry_backfill","addedAt":"2026-04-26T08:30:29.842Z","runsSinceAdd":0}
+{"sourceId":"jonkoping-sodra","priority":7,"reason":"registry_backfill","addedAt":"2026-04-26T08:30:29.842Z","runsSinceAdd":0}
+{"sourceId":"kalmar-museum","priority":7,"reason":"registry_backfill","addedAt":"2026-04-26T08:30:29.842Z","runsSinceAdd":0}
+{"sourceId":"karlskrona-hf","priority":7,"reason":"registry_backfill","addedAt":"2026-04-26T08:30:29.842Z","runsSinceAdd":0}
+{"sourceId":"karlstad-if","priority":7,"reason":"registry_backfill","addedAt":"2026-04-26T08:30:29.842Z","runsSinceAdd":0}
+{"sourceId":"karolinska-institutet","priority":7,"reason":"registry_backfill","addedAt":"2026-04-26T08:30:29.842Z","runsSinceAdd":0}
+{"sourceId":"katalin","priority":7,"reason":"registry_backfill","addedAt":"2026-04-26T08:30:29.842Z","runsSinceAdd":0}
+{"sourceId":"konstfack","priority":7,"reason":"registry_backfill","addedAt":"2026-04-26T08:30:29.842Z","runsSinceAdd":0}
+{"sourceId":"konstmassan","priority":7,"reason":"registry_backfill","addedAt":"2026-04-26T08:30:29.842Z","runsSinceAdd":0}
+{"sourceId":"kth","priority":7,"reason":"registry_backfill","addedAt":"2026-04-26T08:30:29.842Z","runsSinceAdd":0}
+{"sourceId":"kungstradgarden","priority":7,"reason":"registry_backfill","addedAt":"2026-04-26T08:30:29.842Z","runsSinceAdd":0}
+{"sourceId":"lunds-konserthus","priority":7,"reason":"registry_backfill","addedAt":"2026-04-26T08:30:29.842Z","runsSinceAdd":0}
+{"sourceId":"lunds-stadsteatern","priority":7,"reason":"registry_backfill","addedAt":"2026-04-26T08:30:29.842Z","runsSinceAdd":0}
+{"sourceId":"mall-of-scandinavia","priority":7,"reason":"registry_backfill","addedAt":"2026-04-26T08:30:29.842Z","runsSinceAdd":0}
+{"sourceId":"malm-konserthus","priority":7,"reason":"registry_backfill","addedAt":"2026-04-26T08:30:29.842Z","runsSinceAdd":0}
+{"sourceId":"malmo-ff","priority":7,"reason":"registry_backfill","addedAt":"2026-04-26T08:30:29.842Z","runsSinceAdd":0}
+{"sourceId":"malmo-folkets-park","priority":7,"reason":"registry_backfill","addedAt":"2026-04-26T08:30:29.842Z","runsSinceAdd":0}
+{"sourceId":"malmo-konstmuseum","priority":7,"reason":"registry_backfill","addedAt":"2026-04-26T08:30:29.842Z","runsSinceAdd":0}
+{"sourceId":"malmo-massan","priority":7,"reason":"registry_backfill","addedAt":"2026-04-26T08:30:29.842Z","runsSinceAdd":0}
+{"sourceId":"masthuggskyrkan","priority":7,"reason":"registry_backfill","addedAt":"2026-04-26T08:30:29.842Z","runsSinceAdd":0}
+{"sourceId":"medborgarhuset","priority":7,"reason":"registry_backfill","addedAt":"2026-04-26T08:30:29.842Z","runsSinceAdd":0}
+{"sourceId":"molndals-futsal","priority":7,"reason":"registry_backfill","addedAt":"2026-04-26T08:30:29.842Z","runsSinceAdd":0}
+{"sourceId":"mora-ik","priority":7,"reason":"registry_backfill","addedAt":"2026-04-26T08:30:29.842Z","runsSinceAdd":0}
+{"sourceId":"mosebacke","priority":7,"reason":"registry_backfill","addedAt":"2026-04-26T08:30:29.842Z","runsSinceAdd":0}
+{"sourceId":"naturhistoriska-museet","priority":7,"reason":"registry_backfill","addedAt":"2026-04-26T08:30:29.842Z","runsSinceAdd":0}
+{"sourceId":"nobelmuseet","priority":7,"reason":"registry_backfill","addedAt":"2026-04-26T08:30:29.842Z","runsSinceAdd":0}
+{"sourceId":"norrkoping-konserthus","priority":7,"reason":"registry_backfill","addedAt":"2026-04-26T08:30:29.842Z","runsSinceAdd":0}
+{"sourceId":"norrkoping-stadsteatern","priority":7,"reason":"registry_backfill","addedAt":"2026-04-26T08:30:29.842Z","runsSinceAdd":0}
+{"sourceId":"observatoriet","priority":7,"reason":"registry_backfill","addedAt":"2026-04-26T08:30:29.842Z","runsSinceAdd":0}
+{"sourceId":"orebro-hockey","priority":7,"reason":"registry_backfill","addedAt":"2026-04-26T08:30:29.842Z","runsSinceAdd":0}
+{"sourceId":"orebro-konserthus","priority":7,"reason":"registry_backfill","addedAt":"2026-04-26T08:30:29.842Z","runsSinceAdd":0}
+{"sourceId":"ostersunds-fk","priority":7,"reason":"registry_backfill","addedAt":"2026-04-26T08:30:29.842Z","runsSinceAdd":0}
+{"sourceId":"paddan","priority":7,"reason":"registry_backfill","addedAt":"2026-04-26T08:30:29.842Z","runsSinceAdd":0}
+{"sourceId":"polismuseum","priority":7,"reason":"registry_backfill","addedAt":"2026-04-26T08:30:29.842Z","runsSinceAdd":0}
+{"sourceId":"ralambshovsparken","priority":7,"reason":"registry_backfill","addedAt":"2026-04-26T08:30:29.842Z","runsSinceAdd":0}
+{"sourceId":"regionteatern","priority":7,"reason":"registry_backfill","addedAt":"2026-04-26T08:30:29.842Z","runsSinceAdd":0}
+{"sourceId":"rockfest-vasteras","priority":7,"reason":"registry_backfill","addedAt":"2026-04-26T08:30:29.842Z","runsSinceAdd":0}
+{"sourceId":"rumble","priority":7,"reason":"registry_backfill","addedAt":"2026-04-26T08:30:29.842Z","runsSinceAdd":0}
+{"sourceId":"skovde-if","priority":7,"reason":"registry_backfill","addedAt":"2026-04-26T08:30:29.842Z","runsSinceAdd":0}
+{"sourceId":"slaktaren","priority":7,"reason":"registry_backfill","addedAt":"2026-04-26T08:30:29.842Z","runsSinceAdd":0}
+{"sourceId":"slakthuset","priority":7,"reason":"registry_backfill","addedAt":"2026-04-26T08:30:29.842Z","runsSinceAdd":0}
+{"sourceId":"spanggatan","priority":7,"reason":"registry_backfill","addedAt":"2026-04-26T08:30:29.842Z","runsSinceAdd":0}
+{"sourceId":"staffan","priority":7,"reason":"registry_backfill","addedAt":"2026-04-26T08:30:29.842Z","runsSinceAdd":0}
+{"sourceId":"stangebrofestivalen","priority":7,"reason":"registry_backfill","addedAt":"2026-04-26T08:30:29.842Z","runsSinceAdd":0}
+{"sourceId":"stenpiren","priority":7,"reason":"registry_backfill","addedAt":"2026-04-26T08:30:29.842Z","runsSinceAdd":0}
+{"sourceId":"stersund-festival","priority":7,"reason":"registry_backfill","addedAt":"2026-04-26T08:30:29.842Z","runsSinceAdd":0}
+{"sourceId":"sticky-fingers","priority":7,"reason":"registry_backfill","addedAt":"2026-04-26T08:30:29.842Z","runsSinceAdd":0}
+{"sourceId":"stockholm-jazz-festival","priority":7,"reason":"registry_backfill","addedAt":"2026-04-26T08:30:29.842Z","runsSinceAdd":0}
+{"sourceId":"stockholm-live","priority":7,"reason":"registry_backfill","addedAt":"2026-04-26T08:30:29.842Z","runsSinceAdd":0}
+{"sourceId":"stora-teatern-g-teborg","priority":7,"reason":"registry_backfill","addedAt":"2026-04-26T08:30:29.842Z","runsSinceAdd":0}
+{"sourceId":"stora-teatern-uppsala-1","priority":7,"reason":"registry_backfill","addedAt":"2026-04-26T08:30:29.842Z","runsSinceAdd":0}
+{"sourceId":"storkyrkan","priority":7,"reason":"registry_backfill","addedAt":"2026-04-26T08:30:29.842Z","runsSinceAdd":0}
+{"sourceId":"storsj-odjuret","priority":7,"reason":"registry_backfill","addedAt":"2026-04-26T08:30:29.842Z","runsSinceAdd":0}
+{"sourceId":"summerburst","priority":7,"reason":"registry_backfill","addedAt":"2026-04-26T08:30:29.842Z","runsSinceAdd":0}
+{"sourceId":"svenska-bowlingf-rbundet","priority":7,"reason":"registry_backfill","addedAt":"2026-04-26T08:30:29.842Z","runsSinceAdd":0}
+{"sourceId":"svenska-kulturhuset","priority":7,"reason":"registry_backfill","addedAt":"2026-04-26T08:30:29.842Z","runsSinceAdd":0}
+{"sourceId":"teater-tribunalen","priority":7,"reason":"registry_backfill","addedAt":"2026-04-26T08:30:29.842Z","runsSinceAdd":0}
+{"sourceId":"teknikens-och-sjofartens-museum","priority":7,"reason":"registry_backfill","addedAt":"2026-04-26T08:30:29.842Z","runsSinceAdd":0}
+{"sourceId":"tekniska-museet","priority":7,"reason":"registry_backfill","addedAt":"2026-04-26T08:30:29.842Z","runsSinceAdd":0}
+{"sourceId":"test-write-verify","priority":7,"reason":"registry_backfill","addedAt":"2026-04-26T08:30:29.842Z","runsSinceAdd":0}
+{"sourceId":"the-secret","priority":7,"reason":"registry_backfill","addedAt":"2026-04-26T08:30:29.842Z","runsSinceAdd":0}
+{"sourceId":"ticketmaster","priority":7,"reason":"registry_backfill","addedAt":"2026-04-26T08:30:29.842Z","runsSinceAdd":0}
+{"sourceId":"trollhattans-if","priority":7,"reason":"registry_backfill","addedAt":"2026-04-26T08:30:29.842Z","runsSinceAdd":0}
+{"sourceId":"umea-jazz","priority":7,"reason":"registry_backfill","addedAt":"2026-04-26T08:30:29.842Z","runsSinceAdd":0}
+{"sourceId":"unga-teatern","priority":7,"reason":"registry_backfill","addedAt":"2026-04-26T08:30:29.842Z","runsSinceAdd":0}
+{"sourceId":"unt-uppsala","priority":7,"reason":"registry_backfill","addedAt":"2026-04-26T08:30:29.842Z","runsSinceAdd":0}
+{"sourceId":"uppsala-domkyrka","priority":7,"reason":"registry_backfill","addedAt":"2026-04-26T08:30:29.842Z","runsSinceAdd":0}
+{"sourceId":"uppsala-reggae-festival","priority":7,"reason":"registry_backfill","addedAt":"2026-04-26T08:30:29.842Z","runsSinceAdd":0}
+{"sourceId":"uppsala-stadsteatern-1","priority":7,"reason":"registry_backfill","addedAt":"2026-04-26T08:30:29.842Z","runsSinceAdd":0}
+{"sourceId":"uppsala-stadsteatern","priority":7,"reason":"registry_backfill","addedAt":"2026-04-26T08:30:29.842Z","runsSinceAdd":0}
+{"sourceId":"v-ster-s-konstmuseum","priority":7,"reason":"registry_backfill","addedAt":"2026-04-26T08:30:29.842Z","runsSinceAdd":0}
+{"sourceId":"varberg-arena","priority":7,"reason":"registry_backfill","addedAt":"2026-04-26T08:30:29.842Z","runsSinceAdd":0}
+{"sourceId":"varbergs-if","priority":7,"reason":"registry_backfill","addedAt":"2026-04-26T08:30:29.842Z","runsSinceAdd":0}
+{"sourceId":"vasalund","priority":7,"reason":"registry_backfill","addedAt":"2026-04-26T08:30:29.842Z","runsSinceAdd":0}
+{"sourceId":"vasteras-art","priority":7,"reason":"registry_backfill","addedAt":"2026-04-26T08:30:29.842Z","runsSinceAdd":0}
+{"sourceId":"vasteras-hockey","priority":7,"reason":"registry_backfill","addedAt":"2026-04-26T08:30:29.842Z","runsSinceAdd":0}
+{"sourceId":"vasteras-konserthus","priority":7,"reason":"registry_backfill","addedAt":"2026-04-26T08:30:29.842Z","runsSinceAdd":0}
+{"sourceId":"vasteras-konstmuseum","priority":7,"reason":"registry_backfill","addedAt":"2026-04-26T08:30:29.842Z","runsSinceAdd":0}
+{"sourceId":"vasteras-sk","priority":7,"reason":"registry_backfill","addedAt":"2026-04-26T08:30:29.842Z","runsSinceAdd":0}
+{"sourceId":"vasteras-stadsteatern","priority":7,"reason":"registry_backfill","addedAt":"2026-04-26T08:30:29.842Z","runsSinceAdd":0}
+{"sourceId":"vaxjo-lakers","priority":7,"reason":"registry_backfill","addedAt":"2026-04-26T08:30:29.842Z","runsSinceAdd":0}
+{"sourceId":"white-guide","priority":7,"reason":"registry_backfill","addedAt":"2026-04-26T08:30:29.842Z","runsSinceAdd":0}

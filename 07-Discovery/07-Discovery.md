@@ -129,17 +129,33 @@ When modifying discovery:
 
 ## Current Status
 
-**Status: Under uppbyggnad**
+**Status: Venue Graph v0 implementerad, apply-körning ej verifierad**
 
-Discovery code exists in `services/ingestion/src/discovery/`:
-- `multiHopDiscovery.ts` — venue graph + BFS
-- `expansionQueue.ts` — priority scoring + queue management
-- `expansionWorker.ts` — processes queued candidates
-- `stockholmSeeding.ts` — Stockholm seeding
+Discovery code now exists in `07-Discovery/src/venueGraph/`:
+- `types.ts` — graph/repository contract for nodes, edges, observations, candidates, runs, expansion tasks
+- `graphBuilder.ts` — deterministic dry-run/apply Venue Graph builder from stored `events` and `venues`
+- `scoring.ts` — explainable confidence/priority scoring with risk flags
+- `expansionRunner.ts` — measured expansion runner that writes no simulated result summaries
+- `supabaseRepository.ts` — Supabase adapter for real graph tables
+- `runVenueGraph.ts` — CLI entrypoint for dry-run/apply runs
 
-The `discovery_expansion_queue` and `discovery_expansion_results` tables are referenced but schema may not be fully migrated.
+Schema is defined in `05-Supabase/migrations/20260427-0001-venue-graph.sql`:
+- `venue_graph_nodes`
+- `venue_graph_edges`
+- `venue_graph_observations`
+- `venue_candidates`
+- `source_candidates`
+- `venue_graph_expansion_queue`
+- `venue_graph_expansion_results`
+- `venue_graph_runs`
 
-Expansion worker currently produces simulated results. Real BFS traversal is bounded but not fully producing new venues yet.
+The old `06-UI/services/ingestion/src/discovery/expansionWorker.ts` now delegates to the measured Venue Graph expansion runner. It no longer writes “Simulated expansion” summaries.
+
+Remaining verification:
+- apply the migration to a real Supabase environment
+- dry-run beyond the first verified sample
+- run a small `npm run venue-graph:apply -- --limit=...` only after schema is applied
+- verify persisted `venue_graph_runs`, nodes, edges, observations, candidates, and measured expansion results
 
 ## Subfolders
 
@@ -152,10 +168,12 @@ Expansion worker currently produces simulated results. Real BFS traversal is bou
 
 | File | Role |
 |------|------|
-| `services/ingestion/src/discovery/multiHopDiscovery.ts` | Venue graph, BFS, quality scoring |
-| `services/ingestion/src/discovery/expansionQueue.ts` | Queue management, priority scoring |
-| `services/ingestion/src/discovery/expansionWorker.ts` | Worker that processes candidates |
-| `services/ingestion/src/discovery/stockholmSeeding.ts` | Seeding from Stockholm source |
+| `07-Discovery/src/venueGraph/graphBuilder.ts` | Venue Graph v0 from stored events/venues |
+| `07-Discovery/src/venueGraph/scoring.ts` | Explainable candidate scoring |
+| `07-Discovery/src/venueGraph/expansionRunner.ts` | Measured expansion runner |
+| `07-Discovery/src/venueGraph/supabaseRepository.ts` | Supabase persistence adapter |
+| `07-Discovery/src/venueGraph/runVenueGraph.ts` | CLI entrypoint |
+| `06-UI/services/ingestion/src/discovery/expansionWorker.ts` | Legacy ingestion adapter to measured expansion runner |
 
 ## AI-regler som gäller här
 

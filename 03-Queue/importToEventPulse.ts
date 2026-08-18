@@ -15,12 +15,11 @@
 
 import * as dotenv from 'dotenv';
 import path from 'path';
-import { fileURLToPath } from 'url';
+import { fileURLToPath, pathToFileURL } from 'url';
 import fs from 'fs';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-dotenv.config({ path: path.resolve(__dirname, '../../.env'), override: true });
 
 // ── Paths ────────────────────────────────────────────────────────────────────
 
@@ -28,6 +27,10 @@ const RUNTIME_DIR     = path.resolve(__dirname, '..');
 const PREUI_Q         = path.join(RUNTIME_DIR, 'runtime', 'preUI-queue.jsonl');
 const EVENTPULSE_Q    = path.join(RUNTIME_DIR, 'runtime', 'EVENTPULSE-APP-queue.jsonl');
 const EXTRACTED_DIR   = path.resolve(__dirname, '03-extractedevents');
+
+function loadCliEnv(): void {
+  dotenv.config({ path: path.resolve(__dirname, '../../.env'), override: true });
+}
 
 // ── BullMQ ───────────────────────────────────────────────────────────────────
 
@@ -144,8 +147,10 @@ interface ExtractedEvent {
   price_min_sek?: number | null;
   price_max_sek?: number | null;
   ticket_url?: string | null;
+  ticketUrl?: string | null;
   url?: string | null;
   image_url?: string | null;
+  imageUrl?: string | null;
   source_id?: string | null;
   detected_language?: 'sv' | 'en' | 'other' | null;
   raw_payload?: Record<string, unknown>;
@@ -212,7 +217,7 @@ function readExtractedEvents(sourceId: string): ExtractedEvent[] {
     .filter(e => e !== null);
 }
 
-function toRawEvent(sourceId: string, ev: ExtractedEvent): RawEventInput {
+export function toRawEvent(sourceId: string, ev: ExtractedEvent): RawEventInput {
   return {
     title:          extractTitle(ev),
     description:    extractDescription(ev),
@@ -226,8 +231,8 @@ function toRawEvent(sourceId: string, ev: ExtractedEvent): RawEventInput {
     is_free:        ev.is_free ?? false,
     price_min_sek:  ev.price_min_sek ?? null,
     price_max_sek:  ev.price_max_sek ?? null,
-    ticket_url:     ev.ticket_url ?? ev.url ?? null,
-    image_url:      ev.image_url ?? null,
+    ticket_url:     ev.ticket_url ?? ev.ticketUrl ?? ev.url ?? null,
+    image_url:      ev.image_url ?? ev.imageUrl ?? null,
     source:         sourceId,
     source_id:      ev.source_id ?? null,
     detected_language: ev.detected_language ?? null,
@@ -326,7 +331,10 @@ async function main() {
   process.exit(totalErrors > 0 ? 1 : 0);
 }
 
-main().catch(err => {
-  console.error('[import] Fatalt fel:', err);
-  process.exit(1);
-});
+if (import.meta.url === pathToFileURL(process.argv[1] ?? '').href) {
+  loadCliEnv();
+  main().catch(err => {
+    console.error('[import] Fatalt fel:', err);
+    process.exit(1);
+  });
+}

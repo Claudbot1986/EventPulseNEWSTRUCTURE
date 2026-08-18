@@ -1,0 +1,27 @@
+[
+  {
+    "title": "Analysera Kulturhuset drop-off",
+    "notes": "API: 1296, DB: 61 - 95% f\u00f6rsvinner",
+    "status": "done"
+  },
+  {
+    "title": "Identifiera filtreringspunkt",
+    "notes": "Limit=50 i sourceRunner.ts, ingen pagination",
+    "status": "done"
+  },
+  {
+    "title": "Justera filter/normalisering",
+    "notes": "\u00d6kat limit och lagt till fetchAll+pagination",
+    "status": "done"
+  },
+  {
+    "title": "Testa och verifiera",
+    "notes": "TypeScript kompilerar",
+    "status": "done"
+  },
+  {
+    "title": "Git commit",
+    "notes": "Commit a59679db",
+    "status": "done"
+  }
+]

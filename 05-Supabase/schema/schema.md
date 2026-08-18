@@ -66,12 +66,128 @@ Per-source ingestion audit log.
 - `action` — 'inserted' or 'updated'
 - `timestamp` — ISO timestamp
 
+## Discovery / Venue Graph Tables
+
+These tables are owned by `07-Discovery` and augment canonical `events` and `venues`.
+They do not replace `venues`; uncertain venue identities stay as candidates until verified.
+
+### venue_graph_nodes
+
+Canonical graph nodes for discovery:
+- `node_type` — `venue`, `event`, `source`, `promoter`, or `attraction`
+- `canonical_key` — deterministic unique key for idempotent graph builds
+- `display_name`, `city`
+- `source_table`, `source_id` — provenance back to stored data
+- `confidence_score` — 0-100
+- `status` — `observed`, `candidate`, `verified`, `rejected`, `manual_review`
+- `metadata` — JSONB evidence details
+
+### venue_graph_edges
+
+Typed relationships between graph nodes:
+- `edge_type` — e.g. `event_hosted_at_venue`, `event_from_source`, `event_promoted_by`, `source_mentions_venue`
+- `from_node_key`, `to_node_key` — references `venue_graph_nodes.canonical_key`
+- `evidence_type`, `evidence_id` — traceability to event/raw payload/graph/manual review
+- `confidence_score` and `metadata`
+
+### venue_graph_observations
+
+Raw evidence rows behind graph decisions:
+- `observation_type`
+- `display_name`
+- `canonical_key`
+- `evidence_type`, `evidence_id`
+- `source`
+- `status`
+- `rejection_reason` for rejected observations
+
+### venue_candidates
+
+Proposed venues that are not yet canonical `venues` rows:
+- `canonical_key`, `display_name`, `city`
+- `status` — `candidate`, `verified`, `rejected`, `manual_review`
+- `origin_event_id`, `origin_path`
+- `confidence_score`, `priority_score`
+- `risk_flags`, `explanation`
+
+### source_candidates
+
+Candidate source URLs/providers produced by graph expansion:
+- `candidate_url`, `source_name`
+- `origin_candidate_id`, `origin_path`
+- `confidence_score`, `priority_score`
+- `status`
+- `evidence_refs`
+
+### venue_graph_expansion_queue
+
+Executable discovery follow-up tasks:
+- `task_type` — `verify_venue`, `find_source_for_venue`, `test_source_candidate`, `manual_review`
+- `candidate_id`, `candidate_canonical_key`, `candidate_name`
+- `priority_score`
+- `status` — `pending`, `processing`, `expanded`, `failed`, `manual_review`
+- `attempt_count`, `last_error`, `locked_at`, `expanded_at`
+
+Tasks are claimed through `claim_venue_graph_expansion_tasks(task_limit)` using `FOR UPDATE SKIP LOCKED` so concurrent workers do not process the same pending task.
+
+### venue_graph_expansion_results
+
+Measured expansion outputs only. Simulated summaries must not be written here:
+- `task_id`
+- `measured`
+- `result_summary`
+- `new_nodes_count`, `new_edges_count`, `new_venue_candidates_count`, `new_source_candidates_count`
+- `evidence_refs`
+
+Only actually inserted source candidates should increment `new_source_candidates_count`.
+
+### venue_graph_runs
+
+Immutable run summaries:
+- `mode` — `dry-run` or `apply`
+- `target_city`
+- input/output counts
+- `verification_status` — `dry_run_only` or `local_verified`
+
+### source_candidate_test_queue
+
+Source candidate tests before canonical promotion:
+- `source_candidate_id`, `candidate_url`, `candidate_name`
+- `origin_path`
+- `phase` — `sanity`, `breadth`, or `smoke`
+- `status` — `pending`, `processing`, `passed`, `failed`, or `manual_review`
+- `priority_score`, `attempt_count`, `locked_at`, `last_error`
+
+Tests are claimed through `claim_source_candidate_test_queue(task_limit, target_phase)` using `FOR UPDATE SKIP LOCKED`.
+
+### source_candidate_test_runs
+
+Measured A/B/C/D test evidence:
+- `source_candidate_id`, `phase`, `sandbox_source_id`
+- `commands_run`
+- `tool_a`, `tool_b`, `tool_c`, `tool_d` summaries
+- `events_found_total`, `events_after_normalization`, `events_persisted`
+- `winning_path`
+- `report_path`, `errors`, `risk_flags`, `report_complete`
+
+### source_candidate_test_decisions
+
+Auditable promote/reject/manual-review decisions:
+- `source_candidate_id`
+- `decision` — `promote`, `reject`, or `manual_review`
+- `reason`, `confidence_score`
+- `evidence_run_id`
+- `promoted_source_id`
+
 ## Relationships
 
 ```
 events ──M:1──► venues (venue_id)
 events ──M:M──► categories (event_categories join table)
 events ──1:M──► ingestion_logs (via source field)
+events/venues ──► venue_graph_nodes ──► venue_graph_edges
+venue_graph_nodes ──► venue_candidates ──► venue_graph_expansion_queue
+source_candidates ──► source_candidate_test_queue ──► source_candidate_test_runs ──► source_candidate_test_decisions
 ```
 
 ## What belongs here

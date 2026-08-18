@@ -149,6 +149,65 @@ LISTING_PATH_SIGNALS = [
     "/forestillingar", "/exhibition", "/utstallningar",
 ]
 
+GENERIC_SUBDOMAIN_PREFIXES = {"www", "m", "app", "beta", "stage", "staging"}
+GENERIC_MULTI_PART_TLDS = {"co.uk", "com.au", "org.uk"}
+GENERIC_TLD_SUFFIXES = {
+    "se", "nu", "com", "org", "net", "io", "co", "dk", "no", "fi", "de",
+}
+
+
+def domain_core(host: str) -> str:
+    """
+    Normalize host into a comparable core key.
+    Handles www/app prefixes and common TLD variants (.se/.nu/.com/etc).
+    """
+    host = (host or "").lower().strip()
+    if not host:
+        return ""
+    if ":" in host:
+        host = host.split(":", 1)[0]
+    parts = [p for p in host.split(".") if p]
+    if not parts:
+        return ""
+    while len(parts) > 2 and parts[0] in GENERIC_SUBDOMAIN_PREFIXES:
+        parts = parts[1:]
+    if len(parts) >= 3 and ".".join(parts[-2:]) in GENERIC_MULTI_PART_TLDS:
+        core_parts = parts[:-2]
+    elif len(parts) >= 2 and parts[-1] in GENERIC_TLD_SUFFIXES:
+        core_parts = parts[:-1]
+    else:
+        core_parts = parts
+    if not core_parts:
+        core_parts = parts[:1]
+    return "".join(core_parts)
+
+
+def slug_core(source_id: str) -> str:
+    return re.sub(r"[^a-z0-9]", "", (source_id or "").lower())
+
+
+def overlap_ratio(a: str, b: str) -> float:
+    if not a or not b:
+        return 0.0
+    aset = set(a)
+    bset = set(b)
+    inter = len(aset & bset)
+    denom = max(len(aset), len(bset), 1)
+    return inter / denom
+
+
+def ngram_jaccard(a: str, b: str, n: int = 3) -> float:
+    if not a or not b:
+        return 0.0
+    if len(a) < n or len(b) < n:
+        return 0.0
+    ag = {a[i:i+n] for i in range(len(a) - n + 1)}
+    bg = {b[i:i+n] for i in range(len(b) - n + 1)}
+    union = ag | bg
+    if not union:
+        return 0.0
+    return len(ag & bg) / len(union)
+
 
 def is_event_like(url: str, title: str, highlights: str) -> bool:
     text = f"{title} {highlights} {url}".lower()
@@ -169,6 +228,8 @@ def get_domain_similarity(url: str, source_id: str, existing_ids: set) -> float:
     """
     parsed = urlparse(url)
     found_domain = parsed.netloc.lower().replace("www.", "")
+    core = domain_core(found_domain)
+    source_core = slug_core(source_id)
 
     # Hard reject: aggregator domain
     for agg in AGGREGATOR_DOMAINS:
@@ -180,14 +241,15 @@ def get_domain_similarity(url: str, source_id: str, existing_ids: set) -> float:
         return 0.0
 
     # Rebuild expected original domain
-    orig_domain = source_id.replace("-", "").replace("_", "").lower()
-
-    # Exact same domain as original source_id
-    if orig_domain in found_domain and found_domain.replace(orig_domain, "") == "":
+    if core == source_core and core:
         return 0.1
 
-    # Same root domain (e.g., globen.se vs globenarena.se)
-    if orig_domain in found_domain:
+    # Same root domain family (www/.se/.nu variants)
+    if source_core and (core.startswith(source_core) or source_core.startswith(core)) and min(len(core), len(source_core)) >= 6:
+        return 1.5
+
+    # Fuzzy overlap fallback (n-gram similarity + charset guard)
+    if ngram_jaccard(core, source_core) >= 0.50 and overlap_ratio(core, source_core) >= 0.70:
         return 1.5
 
     # New domain

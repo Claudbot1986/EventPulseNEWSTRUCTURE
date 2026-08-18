@@ -143,6 +143,24 @@ export function determineTriageOutcome(preGateResult: PreGateResult): TriageResu
   return 'still_unknown';
 }
 
+export function resolveSuggestedSubpageUrl(baseUrl: string, suggestedPath: string): string | null {
+  const trimmedPath = suggestedPath.trim();
+  if ((trimmedPath.match(/https?:\/\//gi) ?? []).length > 1) {
+    return null;
+  }
+
+  try {
+    const baseOrigin = new URL(baseUrl).origin;
+    const resolvedUrl = new URL(trimmedPath, `${baseOrigin}/`);
+    if (resolvedUrl.protocol !== 'http:' && resolvedUrl.protocol !== 'https:') {
+      return null;
+    }
+    return resolvedUrl.href;
+  } catch {
+    return null;
+  }
+}
+
 /**
  * Quick screening pass — no scoring, no thresholds, no routing decision.
  */
@@ -310,10 +328,12 @@ export async function screenUrlWithDerivedRules(
 
   // Steg 4: Bygg candidate URLs och testa dem
   const testedSubpages: string[] = [];
-  const baseOrigin = new URL(baseUrl).origin;
 
   for (const suggestedPath of subpagePaths) {
-    const candidateUrl = `${baseOrigin}${suggestedPath}`;
+    const candidateUrl = resolveSuggestedSubpageUrl(baseUrl, suggestedPath);
+    if (!candidateUrl) {
+      continue;
+    }
     testedSubpages.push(candidateUrl);
 
     const candidateResult = await screenUrl(candidateUrl);

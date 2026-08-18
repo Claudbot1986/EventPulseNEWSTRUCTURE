@@ -1,0 +1,37 @@
+---
+description: Interpret standalone 123 as vault memory-save command
+alwaysApply: true
+---
+
+# 123 Memory Trigger
+
+When the user sends a message that is exactly `123` on its own line, treat it as a command to save session memory to the Obsidian vault.
+
+## Required Behavior
+
+- Create or update a concise session memory note in the vault.
+- Keep memory compact: prefer short bullet points over long prose.
+- Only store claims that are explicitly marked with confidence tags:
+  - `[VERIFIED]` = tested and proven
+  - `[CLAIMED]` = supported by logs/data but not fully proven
+  - `[UNVERIFIED]` = hypothesis/speculation
+- Never present `[CLAIMED]` or `[UNVERIFIED]` as verified truth.
+
+## Write Targets
+
+- Primary session log lives in a **folder** (one file per day):
+  - Index: `/Users/claudgashi/Desktop/MyVault/TomorGashi/02-Operations/03-Session-Log/00-Index.md`
+  - Append the session to: `/Users/claudgashi/Desktop/MyVault/TomorGashi/02-Operations/03-Session-Log/YYYY-MM-DD.md` using **today's date** (from user context when available).
+- If `YYYY-MM-DD.md` does not exist, create it with a `# Session Log — YYYY-MM-DD` heading, then append bullets. Add a wikilink line for that date under `## Poster per datum` in `00-Index.md` if it is missing.
+- If important verified outcomes exist, also update the most relevant EventPulse operations note (for example current task, verification status, or decision log).
+
+## Link Discipline
+
+- Add a `## Länkar` section with links to existing, relevant `.md` files only.
+- Prefer concrete file links, not folder links.
+- Keep links focused (typically 5-10).
+
+## Safety Rules
+
+- If vault path or target note is missing, report clearly and do not invent paths.
+- Do not write guesses as facts.

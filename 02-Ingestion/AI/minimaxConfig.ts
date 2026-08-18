@@ -6,7 +6,7 @@
 
 // Load .env from project root (simple approach)
 import * as dotenv from 'dotenv';
-dotenv.config({ path: '/Users/claudgashi/EventPulse-recovery/clawdbot2/project/00EVENTPULSEFINALDESTINATION/.env', override: true });
+dotenv.config({ path: '/Volumes/2TB filer/.env', override: true });
 
 export const AI_CONFIG = {
   provider: 'ollama' as const,

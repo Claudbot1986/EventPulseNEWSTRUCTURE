@@ -11,6 +11,7 @@ import sys
 import subprocess
 import time
 import threading
+import json
 from pathlib import Path
 
 RUNTIME_DIR = Path(__file__).parent / "runtime"
@@ -30,12 +31,19 @@ QUEUES = [
     ("postTestC-D",   "postTestC-D.jsonl"),
     ("postTestC-UI",  "postTestC-UI.jsonl"),
     ("postTestC-man",       "postTestC-manual-review.jsonl"),
+    ("postTestC-man1",      "postTestC-man1.jsonl"),
     ("postTestC-serverdown", "postTestC-serverdown.jsonl"),
     ("postTestC-404",        "postTestC-404.jsonl"),
     ("postTestC-error500",  "postTestC-error500.jsonl"),
     ("postTestC-timeout",    "postTestC-timeout.jsonl"),
     ("postTestC-blocked",    "postTestC-blocked.jsonl"),
     ("postTestC-out",        "postTestC-out.jsonl"),
+    ("post10-UI",            "post10-UI.jsonl"),
+    ("post10-man",           "post10-man.jsonl"),
+    ("postD-UI",             "postD-UI.jsonl"),
+    ("postD-man1",           "postD-man1.jsonl"),
+    ("postD-man",            "postD-man.jsonl"),
+    ("post-man",             "post-man.jsonl"),
     ("postTestC-Fail","postTestC-Fail.jsonl"),
     ("preUI",         "preUI-queue.jsonl"),
     ("EVENTPULSE-APP","EVENTPULSE-APP-queue.jsonl"),
@@ -65,6 +73,9 @@ TOOL_CATEGORIES = [
             {"id": "11", "label": "🔬 Why extraction fails? from -man → -404, serverdown, blocked", "cmd": ["npx", "tsx", "02-Ingestion/C-htmlGate/tools/scB-diagnostic.ts", "--batch"], "drain": None},
             {"id": "12", "label": "🔍 ScB 404-exa — Exa API fix + requeue",          "cmd": ["python3", "03-Queue/gl-fix-404.py"], "drain": None},
             {"id": "13", "label": "🤖 ScB 404-AI — Claude Code fix (ollama)",       "cmd": ["python3", "03-Queue/scb-404-AI.py"], "drain": None},
+            {"id": "14", "label": "🎭 Tool D — JS render gate (postTestC-D -> postD-UI/postD-man1/postD-man)", "cmd": ["npx", "tsx", "02-Ingestion/D-renderGate/runD-scrapingbee.ts", "--workers=4", "--max-pages=8"], "drain": "postTestC-D.jsonl"},
+            {"id": "15", "label": "🧠 Tool D-AI — per-site AI+ScB (postD-man -> postD-UI/postD-man1/postD-man)", "cmd": ["npx", "tsx", "02-Ingestion/D-renderGate/runD-ai-scrapingbee.ts", "--input=postD-man.jsonl", "--workers=4", "--max-pages=8"], "drain": "postD-man.jsonl"},
+            {"id": "16", "label": "🧹 Source URL dedupe (safe apply, backup first)", "cmd": ["python3", "scripts/dedupe-sources-by-url.py", "--apply"], "drain": None},
         ],
     },
     {
@@ -87,6 +98,24 @@ TOOL_CATEGORIES = [
             {"id": "ex", "label": "📱 Expo Go — Starta app i separat fönster (tunnel)",   "cmd": None, "dir": "06-UI", "drain": None},
         ],
     },
+    {
+        "name": "ALLTOOLS-E2E",
+        "tools": [
+            {
+                "id": "17",
+                "label": "🧭 Alltools-E2E — riktig A→B→C→D (preA-batch, rapport under Alltools-E2E/runtime/reports/)",
+                "cmd": ["python3", "Alltools-E2E/e2e.py", "--limit", "10", "--apply", "--sync-legacy"],
+                "drain": None,
+            },
+            {
+                "id": "18",
+                "label": "🧭 Alltools-E2E — töm preA (batch 10, rapporter per batch tills tomt)",
+                "special": "e2e_drain_prea",
+                "cmd": ["python3", "Alltools-E2E/e2e_drain_prea.py"],
+                "drain": None,
+            },
+        ],
+    },
 ]
 
 # Flat list for backward-compatible command lookup
@@ -102,7 +131,7 @@ MEM_CMDS = [
     {"id": "g",  "label": "merge <k1,k2> <t>",   "desc": "Merge queues"},
     {"id": "d",  "label": "diff <A> <B>",         "desc": "Compare queues"},
     {"id": "s",  "label": "missing <queue>",      "desc": "Missing from queue?"},
-    {"id": "R",  "label": "R — fill preA",       "desc": "Fill preA with missing"},
+    {"id": "R",  "label": "R — sync-prea",       "desc": "sources/ → preA, töm övriga köer"},
     {"id": "X",  "label": "reset-all <queue>",    "desc": "Move all to preA"},
     {"id": "S",  "label": "snapshot <name>",      "desc": "Save backup"},
     {"id": "Y",  "label": "restore-snap <n>",     "desc": "Restore from backup"},
@@ -113,8 +142,144 @@ MEM_CMDS = [
     {"id": "u",  "label": "u — db.py i tmate",    "desc": "db.py i ny tmate-win"},
 ]
 
+PIPELINE_COLUMNS = [
+    "stage",
+    "input_queue",
+    "processor",
+    "success_queue",
+    "fail_queue",
+    "retry_queue",
+    "enabled",
+    "mode",
+    "sla_sec",
+    "last_run",
+    "in_count",
+    "out_success",
+    "out_fail",
+]
+
+PIPELINE_LABELS = {
+    "stage": "Steg",
+    "input_queue": "In-kö",
+    "processor": "Processor",
+    "success_queue": "Lyckad -> kö",
+    "fail_queue": "Fel -> kö",
+    "retry_queue": "Retry-kö",
+    "enabled": "Aktiv",
+    "mode": "Läge",
+    "sla_sec": "SLA (sek)",
+    "last_run": "Senast körd",
+    "in_count": "In",
+    "out_success": "Lyckade",
+    "out_fail": "Fel",
+}
+
+PIPELINE_STAGES = [
+    {
+        "stage": "INGEST_RAW",
+        "input_queue": "rawsources",
+        "processor": "import_raw",
+        "success_queue": "preA",
+        "fail_queue": "post-man",
+        "retry_queue": "rawsources",
+        "enabled": True,
+        "mode": "manual",
+        "sla_sec": 120,
+        "last_run": "-",
+    },
+    {
+        "stage": "A_GATE",
+        "input_queue": "preA",
+        "processor": "run_a",
+        "success_queue": "postA/preUI",
+        "fail_queue": "preB",
+        "retry_queue": "preA",
+        "enabled": True,
+        "mode": "manual",
+        "sla_sec": 300,
+        "last_run": "-",
+    },
+    {
+        "stage": "B_GATE",
+        "input_queue": "preB",
+        "processor": "run_b",
+        "success_queue": "postB/preUI",
+        "fail_queue": "postB-preC",
+        "retry_queue": "preB",
+        "enabled": True,
+        "mode": "manual",
+        "sla_sec": 300,
+        "last_run": "-",
+    },
+    {
+        "stage": "C_HTML",
+        "input_queue": "postB-preC",
+        "processor": "run_c",
+        "success_queue": "postTestC-UI/preUI",
+        "fail_queue": "postTestC-man",
+        "retry_queue": "postB-preC",
+        "enabled": True,
+        "mode": "manual",
+        "sla_sec": 480,
+        "last_run": "-",
+    },
+    {
+        "stage": "SCB_DEEP",
+        "input_queue": "postB-preC",
+        "processor": "run_scb_deep",
+        "success_queue": "postTestC-UI/preUI",
+        "fail_queue": "postTestC-man",
+        "retry_queue": "postTestC-man1",
+        "enabled": True,
+        "mode": "manual",
+        "sla_sec": 900,
+        "last_run": "-",
+    },
+    {
+        "stage": "LOW_EVENT_REVIEW",
+        "input_queue": "postTestC-man1",
+        "processor": "man1_diag",
+        "success_queue": "preUI",
+        "fail_queue": "post-man",
+        "retry_queue": "postTestC-man1",
+        "enabled": True,
+        "mode": "manual",
+        "sla_sec": 600,
+        "last_run": "-",
+    },
+    {
+        "stage": "D_JS_RENDER",
+        "input_queue": "postTestC-D",
+        "processor": "run_d",
+        "success_queue": "postD-UI",
+        "fail_queue": "postD-man1/postD-man",
+        "retry_queue": "postTestC-D",
+        "enabled": False,
+        "mode": "manual",
+        "sla_sec": 900,
+        "last_run": "-",
+    },
+]
+
+STAGE_TOOL_MAP = {
+    "INGEST_RAW": "0",
+    "A_GATE": "1",
+    "B_GATE": "2",
+    "C_HTML": "3",
+    "SCB_DEEP": "10",
+    "D_JS_RENDER": "14",
+    # LOW_EVENT_REVIEW currently manual analysis stage (no bound tool yet)
+}
+
+PIPELINE_STATE_FILE = RUNTIME_DIR / "pipeline-e2e-state.json"
+
 
 # ── Helpers ───────────────────────────────────────────────────────────────────
+
+def count_pre_a_queue():
+    """Antal rader med sourceId i preA-queue.jsonl."""
+    return count_queue("preA-queue.jsonl")
+
 
 def count_queue(fname):
     if not fname:
@@ -149,6 +314,252 @@ def get_total_sources():
         return 0
 
 
+# e2eEventsPath (verktyg 17/18) — samma nycklar som Alltools-E2E/e2e.py
+E2E_EVENTS_PATH_ORDER = [
+    ("api", "E2E api (A)"),
+    ("network", "E2E network (B)"),
+    ("html", "E2E html (C)"),
+    ("render", "E2E render (D)"),
+    ("pending", "pending"),
+    ("unset", "unset / äldre kö"),
+]
+
+
+def _normalize_e2e_events_path(raw):
+    valid = {k for k, _ in E2E_EVENTS_PATH_ORDER}
+    if raw is None:
+        return "unset"
+    s = str(raw).strip().lower()
+    if not s:
+        return "unset"
+    return s if s in valid else "unset"
+
+
+def _lines_nonempty(fpath: Path) -> int:
+    if not fpath.is_file():
+        return 0
+    n = 0
+    for line in fpath.read_text(encoding="utf-8").splitlines():
+        if line.strip():
+            n += 1
+    return n
+
+
+def _load_sources_status_events() -> dict:
+    out = {}
+    p = RUNTIME_DIR / "sources_status.jsonl"
+    if not p.is_file():
+        return out
+    try:
+        for line in p.read_text(encoding="utf-8").splitlines():
+            raw = line.strip()
+            if not raw:
+                continue
+            try:
+                o = json.loads(raw)
+                sid = str(o.get("sourceId") or "").strip()
+                if not sid:
+                    continue
+                out[sid] = max(0, int(o.get("eventsFound", 0) or 0))
+            except Exception:
+                continue
+    except Exception:
+        pass
+    return out
+
+
+def _sid_home_from_runtime() -> dict:
+    sid_home = {}
+    for qlabel, fname in QUEUES:
+        fpath = RUNTIME_DIR / fname
+        if not fpath.is_file():
+            continue
+        try:
+            for line in fpath.read_text(encoding="utf-8").splitlines():
+                raw = line.strip()
+                if not raw:
+                    continue
+                try:
+                    o = json.loads(raw)
+                    sid = str(o.get("sourceId") or "").strip()
+                    if sid and sid not in sid_home:
+                        sid_home[sid] = qlabel
+                except Exception:
+                    continue
+        except Exception:
+            continue
+    return sid_home
+
+
+def _infer_e2e_path_runtime(sid: str, home: str) -> str:
+    ext = PROJECT_ROOT / "03-Queue" / "03-extractedevents"
+    if _lines_nonempty(ext / "D" / f"{sid}.jsonl") > 0:
+        return "render"
+    if _lines_nonempty(ext / "C" / f"{sid}.jsonl") > 0:
+        return "html"
+    if _lines_nonempty(ext / f"{sid}.jsonl") > 0:
+        if home == "postB":
+            return "network"
+        return "api"
+    if home == "postA":
+        return "api"
+    if home == "postB":
+        return "network"
+    if home in ("postTestC-UI", "postTestC-man1", "preUI"):
+        return "html"
+    if home == "post10-UI":
+        return "html"
+    if home == "post10-man":
+        return "pending"
+    if home in ("postD-UI", "postD-man1", "postD-man"):
+        return "render"
+    if home in ("postB-preC", "postTestC-D", "preB", "preA"):
+        return "pending"
+    return "unset"
+
+
+def _events_from_extracted_files(sid: str) -> int:
+    ext = PROJECT_ROOT / "03-Queue" / "03-extractedevents"
+    return (
+        _lines_nonempty(ext / f"{sid}.jsonl")
+        + _lines_nonempty(ext / "C" / f"{sid}.jsonl")
+        + _lines_nonempty(ext / "D" / f"{sid}.jsonl")
+    )
+
+
+def _preui_file_aggregates():
+    events_by_id = {}
+    path_by_id = {}
+    pre_path = RUNTIME_DIR / "preUI-queue.jsonl"
+    if not pre_path.is_file():
+        return events_by_id, path_by_id
+    try:
+        for line in pre_path.read_text(encoding="utf-8").splitlines():
+            line = line.strip()
+            if not line:
+                continue
+            try:
+                o = json.loads(line)
+            except Exception:
+                continue
+            sid = o.get("sourceId")
+            if not sid:
+                continue
+            sid = str(sid)
+            try:
+                n = int(o.get("eventsFound", 0) or 0)
+            except (TypeError, ValueError):
+                n = 0
+            n = max(0, n)
+            path_norm = _normalize_e2e_events_path(o.get("e2eEventsPath"))
+            if sid not in events_by_id:
+                events_by_id[sid] = n
+                path_by_id[sid] = path_norm
+            else:
+                prev = events_by_id[sid]
+                if n > prev:
+                    events_by_id[sid] = n
+                    path_by_id[sid] = path_norm
+                elif n == prev:
+                    path_by_id[sid] = path_norm
+    except Exception:
+        pass
+    return events_by_id, path_by_id
+
+
+def load_runtime_e2e_aggregates():
+    status_ev = _load_sources_status_events()
+    homes = _sid_home_from_runtime()
+    events_by_id = {}
+    path_by_id = {}
+    for sid, home in homes.items():
+        path_by_id[sid] = _normalize_e2e_events_path(_infer_e2e_path_runtime(sid, home))
+        n_status = status_ev.get(sid, 0)
+        n_files = _events_from_extracted_files(sid)
+        events_by_id[sid] = max(n_status, n_files)
+    return events_by_id, path_by_id, homes
+
+
+def load_pre_ui_aggregates():
+    """
+    Per sourceId: max(events) och e2eEventsPath.
+    Kombinerar runtime-köer + extractedevents (A–D) med preUI-raders annotering.
+    """
+    ev_p, path_p = _preui_file_aggregates()
+    ev_r, path_r, homes = load_runtime_e2e_aggregates()
+    all_ids = set(ev_p) | set(ev_r) | set(path_p) | set(path_r)
+    events_out = {}
+    path_out = {}
+    for sid in all_ids:
+        n = max(ev_p.get(sid, 0), ev_r.get(sid, 0))
+        if sid in homes:
+            pth = path_r.get(sid, "unset")
+        else:
+            pth = path_p.get(sid, "unset")
+        events_out[sid] = n
+        path_out[sid] = _normalize_e2e_events_path(pth)
+    return events_out, path_out
+
+
+def load_pre_ui_sources():
+    """Bakåtkompatibel: endast events_by_id (max eventsFound per sourceId)."""
+    events_by_id, _ = load_pre_ui_aggregates()
+    return events_by_id
+
+
+def pre_ui_e2e_path_counts():
+    """Runtime-köer + extractedevents (+ preUI-metadata) → fördelning av e2eEventsPath."""
+    _, path_by_id = load_pre_ui_aggregates()
+    counts = {k: 0 for k, _ in E2E_EVENTS_PATH_ORDER}
+    for sid in path_by_id:
+        key = path_by_id.get(sid, "unset")
+        counts[key] = counts.get(key, 0) + 1
+    return counts, len(path_by_id)
+
+
+# Intervall för preUI eventsFound (0/1 egna; sedan 2-5 … 2001+)
+PREUI_EVENT_BUCKETS = [
+    (0, 0, "0 events"),
+    (1, 1, "1 event"),
+    (2, 5, "2-5 events"),
+    (6, 10, "6-10 events"),
+    (11, 20, "11-20 events"),
+    (21, 30, "21-30 events"),
+    (31, 100, "31-100 events"),
+    (101, 200, "101-200 events"),
+    (201, 500, "201-500 events"),
+    (501, 2000, "501-2000 events"),
+    (2001, None, "2001+ events"),
+]
+
+
+def _bucket_index_preui_events(ev):
+    try:
+        n = max(0, int(ev))
+    except (TypeError, ValueError):
+        n = 0
+    for i, (lo, hi, _) in enumerate(PREUI_EVENT_BUCKETS):
+        if hi is None:
+            if n >= lo:
+                return i
+        elif lo <= n <= hi:
+            return i
+    return len(PREUI_EVENT_BUCKETS) - 1
+
+
+def events_per_source_histogram():
+    """Aggregerat events per källa (load_pre_ui_sources / alla köer + extraktioner)."""
+    events_by_id = load_pre_ui_sources()
+    counts = [0] * len(PREUI_EVENT_BUCKETS)
+    for sid, ev in events_by_id.items():
+        counts[_bucket_index_preui_events(ev)] += 1
+    out = []
+    for i, (_, _, label) in enumerate(PREUI_EVENT_BUCKETS):
+        if counts[i] > 0:
+            out.append((label, counts[i]))
+    return out
+
+
 def queue_counts():
     counts = {}
     for name, fname in QUEUES:
@@ -157,6 +568,107 @@ def queue_counts():
         else:
             counts[name] = count_queue(fname)
     return counts
+
+
+def load_pipeline_state():
+    if not PIPELINE_STATE_FILE.exists():
+        return {}
+    try:
+        return json.loads(PIPELINE_STATE_FILE.read_text(encoding="utf-8"))
+    except Exception:
+        return {}
+
+
+def save_pipeline_state(state):
+    PIPELINE_STATE_FILE.write_text(json.dumps(state, ensure_ascii=False, indent=2), encoding="utf-8")
+
+
+def update_pipeline_state(stage, in_count, out_success, out_fail):
+    state = load_pipeline_state()
+    now_iso = time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
+    state[stage] = {
+        "last_run": now_iso,
+        "in_count": in_count,
+        "out_success": out_success,
+        "out_fail": out_fail,
+    }
+    save_pipeline_state(state)
+
+
+def run_tool_by_id(tool_id):
+    tool = next((t for t in TOOLS if t["id"] == tool_id), None)
+    if not tool:
+        print(f"  ⚠ Tool saknas för id={tool_id}")
+        return 1
+    if tool.get("special") == "e2e_drain_prea":
+        return run_e2e_drain_prea_interactive(tool)
+    drain_until_empty(tool)
+    return 0
+
+
+def run_pipeline_stage(stage_name):
+    row = next((r for r in PIPELINE_STAGES if r["stage"] == stage_name), None)
+    if not row:
+        print(f"  Okänt stage: {stage_name}")
+        return 1
+    if not row.get("enabled", False):
+        print(f"  Stage {stage_name} är avstängd (enabled=false)")
+        return 1
+    in_before = queue_counts()
+    def resolve_from(d, queue_name):
+        for q in str(queue_name).split("/"):
+            q = q.strip()
+            if q in d:
+                return d.get(q, 0)
+        return 0
+    in_count = 0
+    in_count = resolve_from(in_before, row["input_queue"])
+
+    print(f"\n  ▶ E2E stage: {stage_name} ({row['processor']})")
+    tool_id = STAGE_TOOL_MAP.get(stage_name)
+    if tool_id:
+        run_tool_by_id(tool_id)
+    else:
+        print("  ℹ Ingen automatisk processor bunden än (manuell stage).")
+
+    after = queue_counts()
+    succ_before = resolve_from(in_before, row["success_queue"])
+    succ_after = resolve_from(after, row["success_queue"])
+    fail_before = resolve_from(in_before, row["fail_queue"])
+    fail_after = resolve_from(after, row["fail_queue"])
+    out_success = max(0, succ_after - succ_before)
+    out_fail = max(0, fail_after - fail_before)
+    update_pipeline_state(stage_name, in_count, out_success, out_fail)
+    return 0
+
+
+def run_alltools_e2e(limit=10):
+    """Kör riktig A→B→C→D mot projektets runtime/ (preA-batch)."""
+    script = PROJECT_ROOT / "Alltools-E2E" / "e2e.py"
+    if not script.is_file():
+        print(f"  ⚠ Saknas: {script}")
+        return 1
+    print(
+        f"\n  ▶ Alltools-E2E: python3 {script.name} --limit {limit} --apply --sync-legacy --from-preA"
+    )
+    return subprocess.run(
+        [
+            "python3",
+            str(script),
+            "--limit",
+            str(int(limit)),
+            "--apply",
+            "--sync-legacy",
+            "--from-preA",
+        ],
+        cwd=str(PROJECT_ROOT),
+    ).returncode
+
+
+def run_pipeline_auto():
+    """Kör Alltools-E2E: riktig A–D på projekt-runtime (preA krävs)."""
+    print("\n  ⏩ e2e-run → Alltools-E2E (riktig A→B→C→D, preA-batch)")
+    run_alltools_e2e(10)
 
 
 def ask_queue_num(prompt="Välj queue (nr): "):
@@ -193,6 +705,7 @@ def red(t):    return f"\033[91m{t}\033[0m"
 
 def show_dashboard(running_id=None, done_id=None):
     counts = queue_counts()
+    pipeline_state = load_pipeline_state()
     total = get_total_sources()
     now = time.strftime("%H:%M:%S")
 
@@ -206,16 +719,38 @@ def show_dashboard(running_id=None, done_id=None):
     postTestC_D    = counts.get("postTestC-D", 0)
     postTestC_UI   = counts.get("postTestC-UI", 0)
     postTestC_man       = counts.get("postTestC-man", 0)
+    postTestC_man1      = counts.get("postTestC-man1", 0)
     postTestC_serverdown= counts.get("postTestC-serverdown", 0)
     postTestC_404       = counts.get("postTestC-404", 0)
     postTestC_error500  = counts.get("postTestC-error500", 0)
     postTestC_timeout   = counts.get("postTestC-timeout", 0)
     postTestC_blocked   = counts.get("postTestC-blocked", 0)
     postTestC_out       = counts.get("postTestC-out", 0)
+    postD_UI            = counts.get("postD-UI", 0)
+    postD_man1          = counts.get("postD-man1", 0)
+    postD_man           = counts.get("postD-man", 0)
+    post_man            = counts.get("post-man", 0)
     postTestC_Out       = counts.get("postTestC-Out", 0)  # kept for compatibility
     postTestC_Fail = counts.get("postTestC-Fail", 0)
     preUI          = counts.get("preUI", 0)
     EVENTPULSE_APP = counts.get("EVENTPULSE-APP", 0)
+
+    def resolve_count(queue_name):
+        if not queue_name:
+            return 0
+        for part in str(queue_name).split("/"):
+            key = part.strip()
+            if key in counts:
+                return counts.get(key, 0)
+        return 0
+
+    def shorten(text, max_len):
+        s = str(text or "")
+        if len(s) <= max_len:
+            return s
+        if max_len <= 1:
+            return s[:max_len]
+        return s[:max_len - 1] + "…"
 
     print()
     # Top border — 160 chars wide
@@ -238,12 +773,17 @@ def show_dashboard(running_id=None, done_id=None):
         ("postTestC-D",   postTestC_D,   "◀"),
         ("postTestC-UI",  postTestC_UI,  "◀"),
         ("postTestC-man",       postTestC_man,       ""),
+        ("postTestC-man1",      postTestC_man1,      ""),
         ("postTestC-serverdown",postTestC_serverdown,""),
         ("postTestC-404",       postTestC_404,       ""),
         ("postTestC-error500",  postTestC_error500,  ""),
         ("postTestC-timeout",   postTestC_timeout,   ""),
         ("postTestC-blocked",   postTestC_blocked,   ""),
         ("postTestC-out",       postTestC_out,       ""),
+        ("postD-UI",            postD_UI,            "◀"),
+        ("postD-man1",          postD_man1,          ""),
+        ("postD-man",           postD_man,           ""),
+        ("post-man",            post_man,            ""),
         ("postTestC-Fail",postTestC_Fail,""),
         ("preUI",         preUI,         ""),
         ("EVENTPULSE-APP",EVENTPULSE_APP,"◀"),
@@ -292,6 +832,73 @@ def show_dashboard(running_id=None, done_id=None):
         line  = f"║  {'':25}{'':>4}   {right:<{R_WIDTH}}║"
         print(line)
 
+    print("╠" + "═" * 158 + "╣")
+
+    # ── E2E dashboard (simplified) ───────────────────────────────────────────
+    print("║  E2E-FLÖDE (ENKLARE VY)                                                     ║")
+    print("║  ────────────────────────────────────────────────────────────────────────── ║")
+    print("║  [A] FLOW-KARTA (KONFIG)                                                    ║")
+    print("║  Steg          Aktiv  In-kö         Processor      Lyckad -> kö      Fel -> kö          Retry        ║")
+    print("║  " + "·" * 154 + "║")
+    for row in PIPELINE_STAGES:
+        flow_line = (
+            f"{shorten(row['stage'], 12):<12}  "
+            f"{('ja' if row['enabled'] else 'nej'):<5}  "
+            f"{shorten(row['input_queue'], 13):<13}  "
+            f"{shorten(row['processor'], 13):<13}  "
+            f"{shorten(row['success_queue'], 16):<16}  "
+            f"{shorten(row['fail_queue'], 16):<16}  "
+            f"{shorten(row['retry_queue'], 12):<12}"
+        )
+        print(f"║  {flow_line[:154]:<154}║")
+
+    print("║  ────────────────────────────────────────────────────────────────────────── ║")
+    print("║  [B] SENASTE KÖRNINGAR (FAKTISK HISTORIK)                                   ║")
+    print("║  Steg          Senast (UTC)          In   Lyckade   Fel   SLA   Läge         ║")
+    print("║  " + "·" * 154 + "║")
+    for row in PIPELINE_STAGES:
+        state_row = pipeline_state.get(row["stage"], {})
+        in_count = state_row.get("in_count", 0)
+        out_success = state_row.get("out_success", 0)
+        out_fail = state_row.get("out_fail", 0)
+        last_run = state_row.get("last_run", "-")
+        run_line = (
+            f"{shorten(row['stage'], 12):<12}  "
+            f"{shorten(last_run, 20):<20}  "
+            f"{str(in_count):>4}  "
+            f"{str(out_success):>7}  "
+            f"{str(out_fail):>4}  "
+            f"{str(row['sla_sec']):>4}  "
+            f"{shorten(row['mode'], 10):<10}"
+        )
+        print(f"║  {run_line[:154]:<154}║")
+
+    print("║  ────────────────────────────────────────────────────────────────────────── ║")
+    print("║  Tolkning: Flow-karta = hur stegen är konfigurerade. Senaste körningar = vad som faktiskt hände sist.  ║")
+    total_fail = counts.get("postTestC-man", 0) + counts.get("postTestC-man1", 0) + counts.get("postD-man1", 0) + counts.get("postD-man", 0) + counts.get("post-man", 0)
+    conversion = (preUI / total * 100.0) if total > 0 else 0.0
+    fail_rate = (total_fail / total * 100.0) if total > 0 else 0.0
+    stuck = counts.get("postB-preC", 0) + counts.get("postTestC-man", 0) + counts.get("postTestC-man1", 0)
+    print(f"║  KPI: conversion->preUI {conversion:5.1f}% | fail-rate {fail_rate:5.1f}% | stuck-sources {stuck:<5}                           ║")
+    print("║  ────────────────────────────────────────────────────────────────────────── ║")
+    sp_counts, sp_total = pre_ui_e2e_path_counts()
+    print("║  runtime · e2ePath (17/18, riktig A–D)  api | network | html | render | pending | unset                 ║")
+    for key, label in E2E_EVENTS_PATH_ORDER:
+        c = sp_counts.get(key, 0)
+        inner = f"     {label:<42} {c:>5}"
+        print(f"║  {inner:<154}║")
+    inner_total = f"     {'TOTAL källor':<42} {sp_total:>5}"
+    print(f"║  {inner_total:<154}║")
+    print("║  ────────────────────────────────────────────────────────────────────────── ║")
+    print("║  EVENTS/KÄLLA — runtime intervall (eventsFound: 0,1,2-5,…,2001+)             ║")
+    ev_hist = events_per_source_histogram()
+    if not ev_hist:
+        print("║     (ingen data)                                                            ║")
+    else:
+        for label, nsrc in ev_hist:
+            inner = f"     {nsrc:>5} källor  {label}"
+            print(f"║  {inner:<154}║")
+    print("║  Kommandon: legacy-run <tool-id> | 17=E2E batch | 18=E2E töm preA | e2e-run | e2e-step <stage>            ║")
     print("╠" + "═" * 158 + "╣")
 
     # ── VERKTYG section ────────────────────────────────────────────────────
@@ -343,6 +950,96 @@ def show_dashboard(running_id=None, done_id=None):
 
 
 # ── Tool runner ──────────────────────────────────────────────────────────────
+
+def run_e2e_drain_prea_interactive(tool):
+    """
+    Verktyg 18: samma batchar som e2e_drain_prea.py men uppdaterar dashboard efter varje lyckad batch.
+    """
+    e2e_main = PROJECT_ROOT / "Alltools-E2E" / "e2e.py"
+    if not e2e_main.is_file():
+        print(f"  ⚠ Saknas: {e2e_main}")
+        return 2
+
+    logs_dir = RUNTIME_DIR / "logs"
+    logs_dir.mkdir(exist_ok=True)
+    ts = time.strftime("%Y%m%d-%H%M%S")
+    log_path = logs_dir / f"run-{tool['id']}-{ts}.log"
+    batch_cap = 10
+
+    print()
+    print(f"  ┌──────────────────────────────────────────┐")
+    print(f"  │  KÖR: {tool['label'][:36]:<36}│")
+    print(f"  │  LOG: {str(log_path)[:36]:<36}│")
+    print(f"  └──────────────────────────────────────────┘")
+    print()
+    sys.stdout.flush()
+
+    batch_no = 0
+    final_rc = 0
+    with open(log_path, "w", encoding="utf-8") as log_file:
+        while True:
+            n = count_pre_a_queue()
+            if n == 0:
+                done_msg = "\n[E2E-18] preA är tom — alla batchar klara.\n"
+                print(done_msg)
+                log_file.write(done_msg)
+                break
+
+            lim = min(batch_cap, n)
+            batch_no += 1
+            hdr = f"\n[E2E-18] ─── Batch {batch_no} ─── preA kvar: {n} → limit={lim}\n"
+            print(hdr)
+            log_file.write(hdr)
+            log_file.flush()
+
+            proc = subprocess.Popen(
+                [
+                    sys.executable,
+                    str(e2e_main),
+                    "--limit",
+                    str(lim),
+                    "--apply",
+                    "--sync-legacy",
+                    "--from-preA",
+                ],
+                cwd=str(PROJECT_ROOT),
+                stdin=subprocess.DEVNULL,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.STDOUT,
+            )
+            stdout = proc.stdout
+            if stdout is None:
+                rc = proc.wait()
+            else:
+                while True:
+                    line = stdout.readline()
+                    if not line:
+                        break
+                    decoded = line.decode("utf-8", errors="replace")
+                    print(decoded, end="")
+                    log_file.write(decoded)
+                    log_file.flush()
+                    sys.stdout.flush()
+                rc = proc.wait()
+            if rc != 0:
+                err = f"\n[E2E-18] Batch {batch_no} misslyckades (exit {rc}). Stoppar.\n"
+                print(red(err))
+                log_file.write(err)
+                final_rc = rc
+                break
+
+            dash_note = f"\n  📊 Dashboard uppdaterad efter batch {batch_no} (preA kvar: {count_pre_a_queue()})\n"
+            print(dash_note)
+            log_file.write(dash_note)
+            log_file.flush()
+            show_dashboard(running_id="18")
+
+    sys.stdout.flush()
+    label = green("✓ KLAR!") if final_rc == 0 else red("✗ KLAR!")
+    print(f"\n  {label} Exit code: {final_rc}  |  Log: {log_path}")
+    sys.stdout.flush()
+    return final_rc
+
 
 def run_with_spinner(tool):
     logs_dir = RUNTIME_DIR / "logs"
@@ -571,7 +1268,7 @@ def handle_mem_cmd(choice, arg=""):
 
     # ── R: fill preA from sources ────────────────────────────────────────────
     elif cmd_id == "R":
-        subprocess.run(["python3", "queue-mem.py", "reconcile", "--force"])
+        subprocess.run(["python3", "queue-mem.py", "sync-prea"])
         show_dashboard()
         input("  Tryck Enter...")
         return
@@ -831,12 +1528,39 @@ def main():
             if tool.get("special") == "monster":
                 monster_run()
                 input("  Tryck Enter...")
+            elif tool.get("special") == "e2e_drain_prea":
+                run_e2e_drain_prea_interactive(tool)
+                input("  Tryck Enter...")
             else:
                 drain_until_empty(tool)
             time.sleep(1)
 
         elif cmd_raw in [m["id"] for m in MEM_CMDS]:
             handle_mem_cmd(cmd_raw, arg)
+
+        elif choice in ("legacy-run", "lr"):
+            tool_id = arg.strip()
+            # Be tolerant if user accidentally types:
+            # "legacy-run legacy-run <tool-id>"
+            if tool_id.lower().startswith("legacy-run "):
+                tool_id = tool_id.split(None, 1)[1].strip()
+            if not tool_id:
+                tool_id = input("  Tool-id (legacy): ").strip()
+            if tool_id:
+                run_tool_by_id(tool_id)
+            time.sleep(1)
+
+        elif choice == "e2e-step":
+            stage_name = arg.strip()
+            if not stage_name:
+                stage_name = input("  Stage-namn: ").strip()
+            if stage_name:
+                run_pipeline_stage(stage_name)
+            time.sleep(1)
+
+        elif choice == "e2e-run":
+            run_pipeline_auto()
+            time.sleep(1)
 
         else:
             print(f"  Okänt val: {choice}")

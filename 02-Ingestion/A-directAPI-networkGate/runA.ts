@@ -33,14 +33,17 @@ import { extractFromJsonLd } from '../F-eventExtraction/extractor';
 
 // ─── Queue File Paths ─────────────────────────────────────────────────────────
 
-const RUNTIME_DIR = path.resolve(__dirname, '../../runtime');
+const DATA_ROOT = process.env.EVENTPULSE_SANDBOX_ROOT
+  ? path.resolve(process.env.EVENTPULSE_SANDBOX_ROOT)
+  : path.resolve(__dirname, '../..');
+const RUNTIME_DIR = path.resolve(DATA_ROOT, 'runtime');
 const LOGS_DIR = path.resolve(RUNTIME_DIR, 'logs');
 const RUN_LOG = path.resolve(LOGS_DIR, `runA-${new Date().toISOString().replace(/[:.]/g, '-')}.log`);
 const PREA_QUEUE_FILE = path.resolve(RUNTIME_DIR, 'preA-queue.jsonl');
 const PREUI_QUEUE_FILE = path.resolve(RUNTIME_DIR, 'preUI-queue.jsonl');
 const PREB_QUEUE_FILE = path.resolve(RUNTIME_DIR, 'preB-queue.jsonl');
 const POSTA_QUEUE_FILE = path.resolve(RUNTIME_DIR, 'postA-queue.jsonl');
-const EXTRACTED_DIR = path.resolve(__dirname, '../../03-Queue/03-extractedevents');
+const EXTRACTED_DIR = path.resolve(DATA_ROOT, '03-Queue/03-extractedevents');
 
 // --- Log helper — terminal + per-run file ---
 
