@@ -74,6 +74,33 @@
       <ul id="suggested-list"><li class="empty">queue empty</li></ul>
     </section>
 
+    <section class="card" id="freshness">
+      <h2>Freshness (median)</h2>
+      <p class="big" id="freshness-value">—</p>
+      <p class="caption">Median age of event files</p>
+      <div class="sparkline" id="spark-freshness" aria-label="Freshness trend (last 14 days)"></div>
+    </section>
+
+    <section class="card" id="field-coverage">
+      <h2>Field coverage</h2>
+      <ul class="bars" id="coverage-bars"></ul>
+      <div class="sparklines-row">
+        <div class="sparkline" id="spark-coverage-title" aria-label="Title coverage trend"></div>
+        <div class="sparkline" id="spark-coverage-date" aria-label="Date coverage trend"></div>
+      </div>
+    </section>
+
+    <section class="card" id="batch-success">
+      <h2>Batch success (last 5)</h2>
+      <dl>
+        <dt>Attempts</dt><dd id="batches-attempts">—</dd>
+        <dt>Transport OK</dt><dd id="batches-transport">—</dd>
+        <dt>Data OK</dt><dd id="batches-data">—</dd>
+        <dt>Decoy</dt><dd id="batches-decoy">—</dd>
+      </dl>
+      <div class="sparkline" id="spark-batches" aria-label="Batch success trend"></div>
+    </section>
+
     <section class="card" id="links">
       <h2>Links</h2>
       <ul>

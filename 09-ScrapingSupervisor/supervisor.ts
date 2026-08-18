@@ -33,6 +33,8 @@ import {
   type WriteReportsResult,
 } from './tools/write_reports';
 import { ensureDashboardRunning, type DashboardLifecycleResult } from './tools/dashboard_lifecycle';
+import { computeAll as computeAllMetrics } from './tools/freshness_metrics';
+import { snapshotForToday, type MetricsSnapshot } from './tools/metrics_history';
 
 // ─── Public types ────────────────────────────────────────────────────────────
 
@@ -67,6 +69,8 @@ export interface SupervisorRunResult {
   error: string | null;
   /** Result of dashboard ensure-run (may be null if no spawn attempted). */
   dashboard: DashboardLifecycleResult | null;
+  /** Today's metrics snapshot (written to metrics-history.jsonl). Null on dry-run. */
+  metricsSnapshot: MetricsSnapshot | null;
 }
 
 // ─── Main entry ──────────────────────────────────────────────────────────────
@@ -104,6 +108,9 @@ export async function runSupervisor(opts: SupervisorOptions): Promise<Supervisor
       : autoApplySafeFixes(state.deadSources, applyOpts);
     const reports = writeReports(state, analysis, apply, writeOpts);
     const dashboard = dryRun ? null : ensureDashboardRunning(opts.projectRoot);
+    const metricsSnapshot = dryRun
+      ? null
+      : writeMetricsSnapshot(opts.projectRoot, state.totals);
     const finishedAt = new Date();
     return {
       state,
@@ -111,6 +118,7 @@ export async function runSupervisor(opts: SupervisorOptions): Promise<Supervisor
       apply,
       reports,
       dashboard,
+      metricsSnapshot,
       dryRun,
       durationMs: finishedAt.getTime() - startedAt.getTime(),
       startedAt: startedAt.toISOString(),
@@ -126,6 +134,7 @@ export async function runSupervisor(opts: SupervisorOptions): Promise<Supervisor
       apply: { applied: [], skipped: [], archiveDir: '', dryRun },
       reports: emptyReports(),
       dashboard: null,
+      metricsSnapshot: null,
       dryRun,
       durationMs: finishedAt.getTime() - startedAt.getTime(),
       startedAt: startedAt.toISOString(),
@@ -180,6 +189,9 @@ export async function main(argv: string[] = process.argv.slice(2)): Promise<numb
       ...(result.dashboard
         ? [`  dashboard: ${result.dashboard.wasRunning ? 'already running' : result.dashboard.spawned ? `spawned pid=${result.dashboard.pid}` : `failed: ${result.dashboard.error}`}`]
         : []),
+      ...(result.metricsSnapshot
+        ? [`  metrics: freshness=${result.metricsSnapshot.freshnessMedianHours !== null ? `${result.metricsSnapshot.freshnessMedianHours.toFixed(1)}h` : 'n/a'} field-coverage(title)=${(result.metricsSnapshot.fieldCoverage.title * 100).toFixed(0)}% batch-success=${result.metricsSnapshot.batches.success}/${result.metricsSnapshot.batches.attempts} decoy=${result.metricsSnapshot.batches.decoy}`]
+        : []),
     ].join('\n')
   );
   return 0;
@@ -187,6 +199,32 @@ export async function main(argv: string[] = process.argv.slice(2)): Promise<numb
 
 function countBy<T extends { reason: string }>(items: T[], reason: string): number {
   return items.filter((i) => i.reason === reason).length;
+}
+
+/**
+ * Compute today's metrics and append to history.jsonl. Errors-as-data:
+ * if compute fails we return null rather than failing the whole run.
+ */
+function writeMetricsSnapshot(
+  projectRoot: string,
+  totals: { sources: number; working: number; dead: number; untouched: number },
+): MetricsSnapshot | null {
+  try {
+    const computed = computeAllMetrics(projectRoot, { recentBatches: 5 });
+    return snapshotForToday(projectRoot, {
+      sources: {
+        total: totals.sources,
+        working: totals.working,
+        dead: totals.dead,
+        untouched: totals.untouched,
+      },
+      batches: computed.batchMetrics,
+      freshnessMedianHours: computed.freshnessMedianHours,
+      fieldCoverage: computed.fieldCoverage,
+    });
+  } catch {
+    return null;
+  }
 }
 
 // ─── Empty fallbacks (errors-as-data) ────────────────────────────────────────

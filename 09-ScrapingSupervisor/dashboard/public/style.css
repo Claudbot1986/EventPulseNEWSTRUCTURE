@@ -100,3 +100,57 @@ a:hover { text-decoration: underline; }
 .badge.ok { background: rgba(63, 185, 80, 0.15); color: var(--ok); }
 .badge.warn { background: rgba(240, 136, 62, 0.15); color: var(--warn); }
 .badge.bad { background: rgba(248, 81, 73, 0.15); color: var(--bad); }
+
+.caption { margin: 0; font-size: 12px; color: var(--muted); }
+.muted { color: var(--muted); }
+
+.big.ok { color: var(--ok); }
+.big.warn { color: var(--warn); }
+.big.bad { color: var(--bad); }
+
+ul.bars {
+  list-style: none;
+  margin: 0 0 12px;
+  padding: 0;
+  font-size: 12px;
+}
+ul.bars li {
+  display: grid;
+  grid-template-columns: 80px 1fr 40px;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+.bar-label { color: var(--muted); text-transform: capitalize; }
+.bar-track {
+  height: 8px;
+  background: rgba(110, 118, 129, 0.15);
+  border-radius: 4px;
+  overflow: hidden;
+}
+.bar-fill {
+  height: 100%;
+  transition: width 0.3s;
+}
+.bar-fill.ok { background: var(--ok); }
+.bar-fill.warn { background: var(--warn); }
+.bar-fill.bad { background: var(--bad); }
+.bar-value {
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+  font-weight: 600;
+}
+
+.sparkline {
+  margin-top: 12px;
+  min-height: 36px;
+  color: var(--muted);
+  font-size: 12px;
+}
+.sparkline svg { display: block; }
+
+.sparklines-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}

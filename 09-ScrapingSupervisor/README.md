@@ -118,13 +118,15 @@ that entirely.
 npx vitest run 09-ScrapingSupervisor/tests
 ```
 
-Six test files, 135 tests total:
+Eight test files, 158 tests total:
 
 - `tests/collect_state.test.ts`
 - `tests/analyze_with_llm.test.ts`
 - `tests/auto_apply_safe_fixes.test.ts`
 - `tests/write_reports.test.ts`
 - `tests/dashboard_lifecycle.test.ts`
+- `tests/metrics_history.test.ts`
+- `tests/freshness_metrics.test.ts`
 - `tests/supervisor.test.ts` (end-to-end integration with synthetic fixtures)
 
 ## Idempotency

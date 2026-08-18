@@ -13,6 +13,12 @@ import { createServer, IncomingMessage, ServerResponse } from 'http';
 import { readFileSync, readdirSync, statSync, existsSync } from 'fs';
 import { dirname, join, resolve } from 'path';
 import { fileURLToPath } from 'url';
+import {
+  computeFreshnessMedianHours,
+  computeFieldCoverage,
+  computeBatchMetrics,
+} from '../tools/freshness_metrics';
+import { readHistory, type MetricsSnapshot } from '../tools/metrics_history';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -53,6 +59,10 @@ export interface DashboardData {
   schemaDrift: Array<{ reason: string; count: number }>;
   suggestedActions: Array<{ sourceId: string; kind: string; rationale: string }>;
   vaultNotePath: string | null;
+  freshnessMedianHours: number | null;
+  fieldCoverage: { date: number; venue: number; title: number; description: number };
+  batchMetrics: { attempts: number; success: number; decoy: number; transportOk: number; dataOk: number };
+  metricsHistory: MetricsSnapshot[];
 }
 
 function readJsonl<T>(path: string): T[] {
@@ -156,6 +166,10 @@ export function collect(): DashboardData {
     schemaDrift,
     suggestedActions,
     vaultNotePath,
+    freshnessMedianHours: computeFreshnessMedianHours(PROJECT_ROOT),
+    fieldCoverage: computeFieldCoverage(PROJECT_ROOT),
+    batchMetrics: computeBatchMetrics(PROJECT_ROOT, { recentBatches: 5 }),
+    metricsHistory: readHistory(PROJECT_ROOT, { keepDays: 14 }),
   };
 }
 
