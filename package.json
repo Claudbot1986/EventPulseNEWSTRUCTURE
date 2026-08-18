@@ -8,9 +8,14 @@
     "type-check": "tsc --noEmit",
     "batch": "tsx 08-testResults/260330-batch1-10.ts",
     "worker": "tsx 03-Queue/startWorker.ts",
-    "import:sources": "tsx 00-Sources/00A-ImportRawSources-Tool/import-raw-sources.ts --all --output runtime/import-preview.jsonl --apply-new"
+    "import:sources": "tsx 00-Sources/00A-ImportRawSources-Tool/import-raw-sources.ts --all --output runtime/import-preview.jsonl --apply-new",
+    "dashboard:live": "tsx dashboard-live.ts",
+    "venue-graph:dry-run": "tsx 07-Discovery/src/venueGraph/runVenueGraph.ts",
+    "venue-graph:apply": "tsx 07-Discovery/src/venueGraph/runVenueGraph.ts --apply",
+    "source-candidates:test": "tsx 07-Discovery/src/sourceTesting/runSourceCandidateTests.ts"
   },
   "dependencies": {
+    "@anthropic-ai/sdk": "^0.117.1",
     "@eventpulse/shared": "file:./packages/shared",
     "@supabase/supabase-js": "^2.43.0",
     "axios": "^1.6.0",
@@ -19,6 +24,7 @@
     "date-fns": "^3.6.0",
     "date-fns-tz": "^3.1.0",
     "dotenv": "^17.3.1",
+    "express": "^5.2.1",
     "ioredis": "^5.3.0",
     "meilisearch": "^0.40.0",
     "node-cron": "^3.0.0",
@@ -27,6 +33,7 @@
     "zod": "^3.23.0"
   },
   "devDependencies": {
+    "@types/express": "^5.0.6",
     "@types/node": "^20.0.0",
     "@types/node-cron": "^3.0.0",
     "@types/uuid": "^9.0.8",
