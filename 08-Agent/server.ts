@@ -24,6 +24,7 @@ import { searchEvents } from './tools/search_events';
 import { rankEvents } from './tools/rank_events';
 import { recordFeedback } from './tools/record_feedback';
 import { findGaps } from './tools/find_gaps';
+import { feedEvents, todayIso, addDays } from './tools/feed_events';
 import { composeReply } from './llmRouter';
 import type {
   AgentChatRequest,
@@ -89,6 +90,45 @@ export function buildApp(opts: { supabase?: SupabaseClient } = {}): express.Expr
     res.json({ ok: true, phase: 0 });
   });
 
+  /**
+   * GET /agent/feed?from=YYYY-MM-DD&days=7&category=music&city=Stockholm
+   *
+   * Browse-window reader for the default-browse UI. Defaults to "today + 7 days".
+   * Returns the events_public slice in [from, from+days), plus echo of the
+   * window and a `has_more` flag so the client can advance by 7-day chunks.
+   *
+   * Same lockdown as /agent/chat: origin allowlist + service_role only.
+   */
+  app.get('/agent/feed', async (req: Request, res: Response) => {
+    const client = sb ?? getSupabase();
+    const from = typeof req.query.from === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(req.query.from)
+      ? req.query.from
+      : todayIso();
+    const days = typeof req.query.days === 'string'
+      ? Math.min(Math.max(parseInt(req.query.days, 10) || 7, 1), 30)
+      : 7;
+    const category = typeof req.query.category === 'string' && req.query.category
+      ? req.query.category
+      : null;
+    const city = typeof req.query.city === 'string' && req.query.city
+      ? req.query.city
+      : 'Stockholm';
+
+    try {
+      const result = await feedEvents(client, { from, days, category, city });
+      res.json({
+        events: result.events,
+        from: result.from,
+        to: result.to,
+        has_more: result.has_more,
+        next_from: addDays(result.from, days),
+      });
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'unknown error';
+      res.status(500).json({ error: msg });
+    }
+  });
+
   app.post('/agent/chat', async (req: Request, res: Response) => {
     const body = req.body as Partial<AgentChatRequest>;
     if (!body || typeof body !== 'object') {
@@ -148,7 +188,11 @@ export function buildApp(opts: { supabase?: SupabaseClient } = {}): express.Expr
 
       const ranked = rankEvents(search.events, intent, { topN: 5 });
 
-      const cards: EventCard[] = ranked.map((r) => r.card);
+      const cards: EventCard[] = ranked.map((r) => ({
+        ...r.card,
+        reasons: r.reasons,
+        score: r.score,
+      }));
 
       // Log an "impression" per result. Best-effort, never throw.
       for (let i = 0; i < cards.length; i++) {

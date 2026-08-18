@@ -30,6 +30,17 @@ export interface IntentBrief {
 }
 
 // ─── Card output for Phase 1 ────────────────────────────────────────────────
+export type RankReason =
+  | 'time_fit'
+  | 'under_budget'
+  | 'over_budget'
+  | 'category_match'
+  | 'exclude_match'
+  | 'not_ended'
+  | 'high_confidence'
+  | 'low_confidence'
+  | 'stale';
+
 export interface EventCard {
   id: string;
   title: string;
@@ -43,6 +54,17 @@ export interface EventCard {
   is_free: boolean;
   ticket_url?: string | null;
   image_url?: string | null;
+  /** 0–100 confidence from the ingestion stack. Optional: not all rows have it. */
+  confidence_score?: number | null;
+  /** ISO timestamp of last ingestion. Drives the `stale` ranker reason. */
+  freshness_at?: string | null;
+  /**
+   * Deterministic ranker reasons (enum only, never free text).
+   * Populated by /agent/chat so the UI can render grounded "why" copy.
+   */
+  reasons?: RankReason[];
+  /** Deterministic ranker score (sum of weighted features). */
+  score?: number;
 }
 
 export interface EventDetail extends EventCard {
@@ -60,17 +82,6 @@ export interface EventDetail extends EventCard {
     confidence: number;
   }>;
 }
-
-export type RankReason =
-  | 'time_fit'
-  | 'under_budget'
-  | 'over_budget'
-  | 'category_match'
-  | 'exclude_match'
-  | 'not_ended'
-  | 'high_confidence'
-  | 'low_confidence'
-  | 'stale';
 
 export interface RankedEvent {
   card: EventCard;
