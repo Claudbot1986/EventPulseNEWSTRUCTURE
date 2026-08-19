@@ -25,6 +25,7 @@ import { rankEvents } from './tools/rank_events';
 import { recordFeedback } from './tools/record_feedback';
 import { findGaps } from './tools/find_gaps';
 import { feedEvents, todayIso, addDays } from './tools/feed_events';
+import { buildUserSignal } from './tools/personalize';
 import { composeReply } from './llmRouter';
 import type {
   AgentChatRequest,
@@ -186,7 +187,12 @@ export function buildApp(opts: { supabase?: SupabaseClient } = {}): express.Expr
         limit: 25,
       });
 
-      const ranked = rankEvents(search.events, intent, { topN: 5 });
+      // Count-based personalization priors (research-backed; see personalize.ts).
+      // Best-effort: buildUserSignal returns a "cold" signal on failure and
+      // never throws into the chat path.
+      const personalization = await buildUserSignal(client, body.client_user_id);
+
+      const ranked = rankEvents(search.events, intent, { topN: 5, personalization });
 
       const cards: EventCard[] = ranked.map((r) => ({
         ...r.card,

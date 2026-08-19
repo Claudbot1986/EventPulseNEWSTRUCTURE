@@ -39,7 +39,9 @@ export type RankReason =
   | 'not_ended'
   | 'high_confidence'
   | 'low_confidence'
-  | 'stale';
+  | 'stale'
+  | 'category_personalization'
+  | 'venue_personalization_penalty';
 
 export interface EventCard {
   id: string;

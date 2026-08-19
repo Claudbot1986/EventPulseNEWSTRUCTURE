@@ -15,6 +15,15 @@ import type {
   RankedEvent,
   RankReason,
 } from '../types';
+import {
+  type UserSignal,
+  CATEGORY_BOOST_BETA,
+  VENUE_PENALTY_GAMMA,
+  MIN_SAVES,
+  MIN_WEIGHTED_REJECTS,
+  BOOST_CAP_FRACTION,
+  PENALTY_CAP_ABS,
+} from './personalize';
 
 export const RANK_WEIGHTS = {
   time_fit:           25,
@@ -51,6 +60,16 @@ export interface RankOptions {
   now?: Date;
   /** IANA timezone for bucketing events. Default Europe/Stockholm. */
   timeZone?: string;
+  /**
+   * Per-user signal bundle from `buildUserSignal`. When provided AND the
+   * user has enough history (≥ MIN_SAVES weighted saves OR ≥
+   * MIN_WEIGHTED_REJECTS weighted rejects), count-based priors are
+   * applied: category boost and venue badness penalty, both capped to
+   * prevent filter-bubble pathology.
+   *
+   * See 08-Agent/tools/personalize.ts for the math + research citations.
+   */
+  personalization?: UserSignal;
 }
 
 /**
@@ -152,6 +171,37 @@ export function rankEvents(
       if (Number.isFinite(freshMs) && nowMs - freshMs > STALE_AFTER_MS) {
         score += RANK_WEIGHTS.stale;
         reasons.push('stale');
+      }
+    }
+
+    // Personalization priors (count-based, research-backed; see personalize.ts).
+    // Applied AFTER all base features so the prior can only nudge, never
+    // dominate. Both priors are subject to min-N gates and magnitude caps.
+    if (opts.personalization) {
+      const p = opts.personalization;
+
+      // Category boost: Bayesian posterior of "liked this category",
+      // log-compressed and capped to bound the filter-bubble effect.
+      if (p.totalSaves >= MIN_SAVES && p.categoryPosterior[c.category_slug] !== undefined) {
+        const posterior = p.categoryPosterior[c.category_slug];
+        const raw = CATEGORY_BOOST_BETA * Math.log(1 + p.totalSaves * posterior);
+        const cap = CATEGORY_BOOST_BETA * Math.log(1 + BOOST_CAP_FRACTION * p.totalSaves);
+        const boost = Math.max(0, Math.min(raw, cap));
+        if (boost > 0) {
+          score += boost;
+          reasons.push('category_personalization');
+        }
+      }
+
+      // Venue penalty: Wilson lower bound of "this venue was rejected",
+      // capped to a small absolute bound.
+      if (p.weightedRejects >= MIN_WEIGHTED_REJECTS && p.venueBadness[c.venue_name] !== undefined) {
+        const badness = p.venueBadness[c.venue_name];
+        const penalty = -Math.min(VENUE_PENALTY_GAMMA * badness, PENALTY_CAP_ABS);
+        if (penalty < 0) {
+          score += penalty;
+          reasons.push('venue_personalization_penalty');
+        }
       }
     }
 
