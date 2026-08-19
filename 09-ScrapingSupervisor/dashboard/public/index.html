@@ -335,7 +335,7 @@
       </details>
     </section>
 
-    <section class="card" id="unsynced" data-info="Compares 03-Queue/03-extractedevents/ against events_public using ticket_url as the identity (cross-source). Matched = same url present in DB under any source. Missing = local but not yet persisted. crossSourceMatched = local source differs from DB source — typical for aggregator re-imports (e.g. sthlmlist re-importing kulturhuset events). missingRows shows up to 100 most-recent missing rows. ok=false means Supabase was unreachable on this poll.">
+    <section class="card" id="unsynced" data-info="Compares 03-Queue/03-extractedevents/ against events_public using ticket_url as the identity (cross-source). Matched = same url present in DB under any source. Missing = local but not yet persisted. crossSourceMatched = local source differs from DB source — typical for aggregator re-imports (e.g. sthlmlist re-importing kulturhuset events). nullSourceMatched = URL exists in DB but with source=null (legacy imports from dropped sources — data-hygiene drift, not missing). missingRows shows up to 100 most-recent missing rows. ok=false means Supabase was unreachable on this poll.">
       <h2>Osyncade mot Supabase<button type="button" class="info-btn" data-info-target="unsynced" aria-label="help">i</button></h2>
       <p class="caption">Local events (03-Queue/03-extractedevents) not yet visible in events_public. Identity = ticket_url (cross-source).</p>
       <div class="unsynced-summary" id="unsynced-summary"><span class="muted">loading…</span></div>

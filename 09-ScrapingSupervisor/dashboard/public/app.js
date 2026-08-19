@@ -1069,10 +1069,13 @@ function renderUnsynced(U) {
       const crossNote = U.crossSourceMatched
         ? ` · ${U.crossSourceMatched.toLocaleString()} matched cross-source (aggregator)`
         : '';
+      const nullNote = U.nullSourceMatched
+        ? ` · ${U.nullSourceMatched.toLocaleString()} matched via dropped source (null)`
+        : '';
       summary.innerHTML = `
         <div class="unsynced-summary-stats">
           <span class="big ${tone}">${U.missing.toLocaleString()}</span>
-          <span class="muted">missing of ${total.toLocaleString()} local rows · ${U.matched.toLocaleString()} matched · ${dbRows} rows / ${dbDistinct} distinct urls in DB${crossNote}</span>
+          <span class="muted">missing of ${total.toLocaleString()} local rows · ${U.matched.toLocaleString()} matched · ${dbRows} rows / ${dbDistinct} distinct urls in DB${crossNote}${nullNote}</span>
         </div>
         <p class="caption">${pct}% unsynced · identity = ticket_url (cross-source) · checked ${new Date(U.fetchedAt).toLocaleTimeString()}</p>
       `;
@@ -1087,12 +1090,14 @@ function renderUnsynced(U) {
       perSource.innerHTML = U.perSource.slice(0, 30).map((r) => {
         const pct = r.local ? Math.round((r.missing / r.local) * 100) : 0;
         const cross = r.crossSourceMatched ? ` · ${r.crossSourceMatched} cross` : '';
-        return `<div class="db-source-row" style="grid-template-columns: 1fr 60px 60px 50px 60px;">
+        const nullNote = r.nullSourceMatched ? ` · ${r.nullSourceMatched} ∅` : '';
+        return `<div class="db-source-row" style="grid-template-columns: 1fr 60px 60px 50px 50px 50px;">
           <span class="src-name" title="${escapeHtml(r.source)}">${escapeHtml(r.source)}</span>
           <span class="num muted">local ${r.local}</span>
           <span class="num bad">missing ${r.missing}</span>
           <span class="num">${pct}%</span>
           <span class="num muted">${r.crossSourceMatched || 0}↔</span>
+          <span class="num muted">${r.nullSourceMatched || 0}∅</span>
         </div>`;
       }).join('');
     }

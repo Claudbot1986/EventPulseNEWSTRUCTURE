@@ -371,6 +371,13 @@ export interface PerSourceEntry {
   missing: number;
   /** Matched in DB but under a different source (aggregator re-imports). */
   crossSourceMatched: number;
+  /**
+   * Matched in DB but the DB row has `source = null` (legacy imports from
+   * dropped sources). These are NOT truly missing — they exist — but the
+   * dashboard surfaces the count because it indicates data-hygiene drift
+   * (URLs that lost their source attribution) worth investigating.
+   */
+  nullSourceMatched: number;
 }
 
 export interface UnsyncedReport {
@@ -384,6 +391,12 @@ export interface UnsyncedReport {
   missing: number;
   /** Subset of `matched` where local source differs from DB source. */
   crossSourceMatched: number;
+  /**
+   * Subset of `matched` where DB row has `source = null` (legacy imports
+   * from dropped sources). Surfaces as a separate counter so operators can
+   * spot data-hygiene drift (URLs that lost source attribution).
+   */
+  nullSourceMatched: number;
   missingRows: UnsyncedRow[]; // capped to first 100
   perSource: PerSourceEntry[];
   fetchedAt: string;
@@ -418,7 +431,7 @@ export async function collectUnsynced(projectRoot: string): Promise<UnsyncedRepo
   const empty: UnsyncedReport = {
     ok: false, error: 'uninitialized',
     totalLocal: 0, totalInSupabaseRows: 0, totalInSupabaseDistinctUrls: 0,
-    matched: 0, missing: 0, crossSourceMatched: 0,
+    matched: 0, missing: 0, crossSourceMatched: 0, nullSourceMatched: 0,
     missingRows: [], perSource: [], fetchedAt: new Date().toISOString(),
   };
   const sb = db();
@@ -494,7 +507,10 @@ export async function collectUnsynced(projectRoot: string): Promise<UnsyncedRepo
   }
 
   // Build the cross-source membership map: url → DB source (first writer).
-  const urlToDbSource = new Map<string, string>();
+  // Value is `string | null` because legacy imports may have source=null
+  // (dropped-source rows from old aggregator runs). Membership check is
+  // `has(url)` — null is a valid matched value, not "missing".
+  const urlToDbSource = new Map<string, string | null>();
   for (const r of supRows) {
     if (!urlToDbSource.has(r.ticket_url)) urlToDbSource.set(r.ticket_url, r.source);
   }
@@ -507,22 +523,32 @@ export async function collectUnsynced(projectRoot: string): Promise<UnsyncedRepo
   let matched = 0;
   let missing = 0;
   let crossSourceMatched = 0;
+  let nullSourceMatched = 0;
   const perSourceMissing: Record<string, number> = {};
   const perSourceCrossMatched: Record<string, number> = {};
+  const perSourceNullMatched: Record<string, number> = {};
   for (const r of localRows) {
-    const dbSource = urlToDbSource.get(r.url);
-    if (dbSource != null) {
-      matched++;
-      if (dbSource !== r.source) {
-        crossSourceMatched++;
-        perSourceCrossMatched[r.source] = (perSourceCrossMatched[r.source] ?? 0) + 1;
-      }
-    } else {
+    // Membership check: `has()` returns true iff the URL is in DB at all.
+    // `get()` returns `string | null | undefined`; null is a valid match
+    // (legacy import), undefined means truly missing.
+    if (!urlToDbSource.has(r.url)) {
       missing++;
       perSourceMissing[r.source] = (perSourceMissing[r.source] ?? 0) + 1;
       if (missingRows.length < 100) {
         missingRows.push({ source: r.source, url: r.url, title: r.title, date: r.date });
       }
+      continue;
+    }
+    const dbSource = urlToDbSource.get(r.url);
+    matched++;
+    if (dbSource == null) {
+      // URL exists in DB but source was dropped (legacy import). Not
+      // missing — surface as a separate category for data-hygiene review.
+      nullSourceMatched++;
+      perSourceNullMatched[r.source] = (perSourceNullMatched[r.source] ?? 0) + 1;
+    } else if (dbSource !== r.source) {
+      crossSourceMatched++;
+      perSourceCrossMatched[r.source] = (perSourceCrossMatched[r.source] ?? 0) + 1;
     }
   }
 
@@ -532,6 +558,7 @@ export async function collectUnsynced(projectRoot: string): Promise<UnsyncedRepo
       local: perSourceLocal[source],
       missing: perSourceMissing[source] ?? 0,
       crossSourceMatched: perSourceCrossMatched[source] ?? 0,
+      nullSourceMatched: perSourceNullMatched[source] ?? 0,
     }))
     .sort((a, b) => b.missing - a.missing || b.local - a.local);
 
@@ -543,6 +570,7 @@ export async function collectUnsynced(projectRoot: string): Promise<UnsyncedRepo
     matched,
     missing,
     crossSourceMatched,
+    nullSourceMatched,
     missingRows,
     perSource,
     fetchedAt: new Date().toISOString(),
