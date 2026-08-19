@@ -4,6 +4,7 @@
  * Kör hela kedjan automatiskt:
  *   1.  runA.ts            — skrapa källor från preUI-queue
  *   1b. runB-parallel.ts   — JSON/JSON-LD feeds från preB-queue
+ *   1c. runA-dai-hook.ts   — D-AI auto-genererar adapters för no-jsonld-fail
  *   2.  runA-extract.ts    — extrahera events till extractedevents/
  *   3.  importToEventPulse — skicka events till BullMQ → Supabase
  *
@@ -11,6 +12,7 @@
  *   npx tsx 09-ScrapingSupervisor/ingestionPipeline.ts                # kör hela kedjan
  *   npx tsx 09-ScrapingSupervisor/ingestionPipeline.ts --skip-a       # hoppa över steg 1
  *   npx tsx 09-ScrapingSupervisor/ingestionPipeline.ts --skip-b       # hoppa över steg 1b
+ *   npx tsx 09-ScrapingSupervisor/ingestionPipeline.ts --skip-dai     # hoppa över steg 1c
  *   npx tsx 09-ScrapingSupervisor/ingestionPipeline.ts --skip-extract # hoppa över steg 2
  *   npx tsx 09-ScrapingSupervisor/ingestionPipeline.ts --skip-import  # hoppa över steg 3
  *   npx tsx 09-ScrapingSupervisor/ingestionPipeline.ts --limit N      # max N sources
@@ -40,6 +42,7 @@ const TSX_BIN = path.join(PROJECT_ROOT, 'node_modules', '.bin', 'tsx');
 
 const RUN_A_PATH = path.join(PROJECT_ROOT, '02-Ingestion/A-directAPI-networkGate/runA.ts');
 const RUN_B_PATH = path.join(PROJECT_ROOT, '02-Ingestion/B-JSON-feedGate/runB-parallel.ts');
+const RUN_DAI_HOOK_PATH = path.join(PROJECT_ROOT, '02-Ingestion/A-directAPI-networkGate/runA-dai-hook.ts');
 const RUN_A_EXTRACT_PATH = path.join(PROJECT_ROOT, '02-Ingestion/A-directAPI-networkGate/runA-extract.ts');
 const IMPORT_PATH = path.join(PROJECT_ROOT, '03-Queue/importToEventPulse.ts');
 
@@ -136,6 +139,7 @@ function runStep(name: string, scriptPath: string, args: string[], fileLog: stri
 interface CliOptions {
   skipA: boolean;
   skipB: boolean;
+  skipDai: boolean;
   skipExtract: boolean;
   skipImport: boolean;
   dryRun: boolean;
@@ -146,6 +150,7 @@ function parseArgs(argv: string[]): CliOptions {
   return {
     skipA: argv.includes('--skip-a'),
     skipB: argv.includes('--skip-b'),
+    skipDai: argv.includes('--skip-dai'),
     skipExtract: argv.includes('--skip-extract'),
     skipImport: argv.includes('--skip-import'),
     dryRun: argv.includes('--dry-run'),
@@ -165,7 +170,7 @@ async function main(): Promise<number> {
   log(`═══════════════════════════════════════════════════════════`, fileLog);
   log(`  EventPulse ingestionPipeline  │  ${opts.dryRun ? 'DRY-RUN' : 'LIVE'}`, fileLog);
   log(`═══════════════════════════════════════════════════════════`, fileLog);
-  log(`  skip-a=${opts.skipA} skip-b=${opts.skipB} skip-extract=${opts.skipExtract} skip-import=${opts.skipImport} limit=${opts.limit ?? '∞'}`, fileLog);
+  log(`  skip-a=${opts.skipA} skip-b=${opts.skipB} skip-dai=${opts.skipDai} skip-extract=${opts.skipExtract} skip-import=${opts.skipImport} limit=${opts.limit ?? '∞'}`, fileLog);
 
   const startedAt = Date.now();
   const results: StepResult[] = [];
@@ -190,6 +195,17 @@ async function main(): Promise<number> {
     if (opts.dryRun) args.push('--dry');
     if (opts.limit !== null) args.push('--limit', String(opts.limit));
     results.push(await runStep('runB', RUN_B_PATH, args, fileLog));
+  }
+
+  // Steg 1c: D-AI hook — kör constrained agent på källor som A failade med no-jsonld
+  // Processar max 5 källor per pipeline-körning (kostnadskontroll).
+  // Idempotent: skippar källor som redan har en adapter.
+  if (opts.skipDai) {
+    log(`[step:runA-dai-hook] SKIPPED (--skip-dai)`, fileLog);
+    results.push({ step: 'runA-dai-hook', exitCode: 0, durationMs: 0, skipped: true, stdoutTail: '', stderrTail: '' });
+  } else {
+    const args = ['--cap', '5'];
+    results.push(await runStep('runA-dai-hook', RUN_DAI_HOOK_PATH, args, fileLog));
   }
 
   // Steg 2: runA-extract
