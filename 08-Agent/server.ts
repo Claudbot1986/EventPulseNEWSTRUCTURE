@@ -22,6 +22,7 @@ import { createClient, type SupabaseClient } from '@supabase/supabase-js';
 import { parseIntent } from './tools/parse_intent';
 import { searchEvents } from './tools/search_events';
 import { rankEvents } from './tools/rank_events';
+import { mmrRerank } from './tools/diversify';
 import { recordFeedback } from './tools/record_feedback';
 import { findGaps } from './tools/find_gaps';
 import { feedEvents, todayIso, addDays } from './tools/feed_events';
@@ -31,6 +32,7 @@ import type {
   AgentChatRequest,
   AgentChatResponse,
   EventCard,
+  RankedEvent,
 } from './types';
 
 const UUID_RE =
@@ -192,15 +194,26 @@ export function buildApp(opts: { supabase?: SupabaseClient } = {}): express.Expr
       // never throws into the chat path.
       const personalization = await buildUserSignal(client, body.client_user_id);
 
-      const ranked = rankEvents(search.events, intent, { topN: 5, personalization });
+      // Two-stage retrieval→re-rank:
+      //   1. rank_events returns the top 25 most relevant (deterministic
+      //      feature scoring + count-based personalization priors).
+      //   2. mmrRerank re-picks the final top 5 to maximize relevance×diversity
+      //      (Carbonell & Goldstein 1998, λ=0.7 default — see diversify.ts).
+      // MMR is the standard defense against filter-bubble pathology once the
+      // personalization priors are applied.
+      const ranked = rankEvents(search.events, intent, { topN: 25, personalization });
+      const reranked: RankedEvent[] = mmrRerank(ranked, { lambda: 0.7, topN: 5 });
 
-      const cards: EventCard[] = ranked.map((r) => ({
+      const cards: EventCard[] = reranked.map((r) => ({
         ...r.card,
         reasons: r.reasons,
         score: r.score,
       }));
 
       // Log an "impression" per result. Best-effort, never throw.
+      // Rank position reflects the ORDER THE USER ACTUALLY SEES (post-MMR),
+      // not the upstream ranker order — that's the unit of evidence for
+      // downstream CTR analysis.
       for (let i = 0; i < cards.length; i++) {
         await recordFeedback(client, {
           client_user_id: body.client_user_id,
@@ -209,7 +222,7 @@ export function buildApp(opts: { supabase?: SupabaseClient } = {}): express.Expr
           interaction: 'impression',
           query_text: body.message,
           rank_position: i,
-          reasons: ranked[i].reasons,
+          reasons: reranked[i].reasons,
         });
       }
 
