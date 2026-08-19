@@ -144,7 +144,7 @@
     "expected_exclude_categories": ["arena"],
     "expected_budget": "medium",
     "expected_party": "couple",
-    "notes": "MAGIC SLICE — verbatim from masterplan §1. The acceptance experience for Phase 1. Anti-hallucination must hold: no invented prices/times/venues. KNOWN GAP: parse_intent does not yet extract 'max 400 kr' as budget=medium or 'arena' as exclude; tracked separately."
+    "notes": "MAGIC SLICE — verbatim from masterplan §1. The acceptance experience for Phase 1. Anti-hallucination must hold: no invented prices/times/venues."
   },
   {
     "id": "Q22",
@@ -161,6 +161,6 @@
     "expected_time_of_day": "evening",
     "expected_party": "friends",
     "expected_city": "Stockholm",
-    "notes": "Group context ('kollegor' → friends). Central Stockholm coord filter not in Phase 1. KNOWN GAP: parse_intent does not yet extract 'kollegor' as party=friends; tracked separately."
+    "notes": "Group context ('kollegor' → friends). Central Stockholm coord filter not in Phase 1."
   }
 ]
