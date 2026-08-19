@@ -3,14 +3,14 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta http-equiv="refresh" content="30">
+  <meta http-equiv="refresh" content="900">
   <title>Scraping Supervisor — Dashboard</title>
   <link rel="stylesheet" href="/style.css">
 </head>
 <body>
   <header>
     <h1>Scraping Supervisor Dashboard</h1>
-    <p class="subtitle">EventPulse · auto-refresh every 30s · <button type="button" id="info-help" class="info-btn info-btn--inline" aria-label="Show dashboard help">ℹ️ What does this page show?</button> · <button type="button" id="btn-review-adapters" class="review-btn" aria-label="Review D-AI adapters">Review D-AI adapters (<span id="review-adapters-count">0</span>)</button> · <button type="button" id="btn-review-discovery" class="review-btn" aria-label="Review discovery candidates">Review discovery candidates (<span id="review-discovery-count">0</span>)</button></p>
+    <p class="subtitle">EventPulse · auto-refresh every 15 min · <button type="button" id="info-help" class="info-btn info-btn--inline" aria-label="Show dashboard help">ℹ️ What does this page show?</button> · <button type="button" id="btn-review-adapters" class="review-btn" aria-label="Review D-AI adapters">Review D-AI adapters (<span id="review-adapters-count">0</span>)</button> · <button type="button" id="btn-review-discovery" class="review-btn" aria-label="Review discovery candidates">Review discovery candidates (<span id="review-discovery-count">0</span>)</button></p>
   </header>
 
   <section class="kpi-strip" aria-label="Project KPIs">
@@ -42,12 +42,12 @@
   </section>
 
   <main>
-    <section class="card" id="run-info" data-info="When the supervisor last woke up and when it will next. Driven by the launchd job / cron that re-runs the supervisor loop. The page itself auto-refreshes every 30s via a meta-refresh tag.">
+    <section class="card" id="run-info" data-info="When the supervisor last woke up and when it will next. Driven by the launchd job / cron that re-runs the supervisor loop. The page itself auto-refreshes every 15 min via a meta-refresh tag — for live SNMP-like inspection during a run, hit the browser refresh button manually.">
       <h2>Run schedule<button type="button" class="info-btn" data-info-target="run-info" aria-label="help">i</button></h2>
       <dl>
         <dt>Last run</dt><dd id="last-run">—</dd>
         <dt>Next run</dt><dd id="next-run">—</dd>
-        <dt>Auto-refresh</dt><dd>30s</dd>
+        <dt>Auto-refresh</dt><dd>15 min</dd>
       </dl>
     </section>
 

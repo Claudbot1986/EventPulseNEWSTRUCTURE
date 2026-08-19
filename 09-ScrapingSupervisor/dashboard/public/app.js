@@ -907,7 +907,7 @@ function renderLiveTiles(data) {
         'Click any ℹ️ for what a specific tile means and where the data ' +
         'comes from. Hover any chart point for the exact value.';
       openPopover(helpBtn, 'Scraping Supervisor Dashboard', body,
-        'Read-only · auto-refresh 30s · driven by runtime/ files + Supabase');
+        'Read-only · auto-refresh 15 min · driven by runtime/ files + Supabase');
     });
   }
 })();
