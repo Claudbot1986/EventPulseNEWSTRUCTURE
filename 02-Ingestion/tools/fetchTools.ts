@@ -99,15 +99,16 @@ export async function fetchHtml(url: string, options: {
         // Continue to the next URL, record the cross-domain hop in redirectChain.
         const currentUrlObj = new URL(currentUrl);
         const nextUrlObj = new URL(nextUrl);
-        redirectChain.push(`XDOMAIN:${currentUrlObj.hostname}→${nextUrlObj.hostname}`);
+        if (currentUrlObj.hostname !== nextUrlObj.hostname) {
+          redirectChain.push(`XDOMAIN:${currentUrlObj.hostname}→${nextUrlObj.hostname}`);
+        }
+        // Keep the redirect target's actual trailing-slash form. Some servers
+        // (e.g. Eventbrite) 301 /events → /events/ and would oscillate forever
+        // if we stripped the slash and re-normalized on each iteration.
+        // MAX_REDIRECTS still bounds real oscillation loops.
         currentUrl = nextUrl;
 
-        // Normalize trailing slashes before loop detection and before next iteration.
-        // /events/ and /events are the same URL — prevents /path ↔ /path/ oscillation.
-        const normalizedNext = nextUrl.replace(/\/+$/, '') || '/';
-
-        redirectChain.push(`${response.status}:${normalizedNext}`);
-        currentUrl = normalizedNext;
+        redirectChain.push(`${response.status}:${currentUrl}`);
 
         if (redirectChain.length >= MAX_REDIRECTS) {
           return {
