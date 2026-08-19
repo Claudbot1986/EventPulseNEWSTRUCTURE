@@ -53,26 +53,8 @@
       }
     }
 
-    // Sources (DB-fed) — top 5 by future-event count
-    const dbSrcList = document.getElementById('db-sources-list');
-    if (dbSrcList) {
-      const rows = (data.dbSources || []).slice(0, 5);
-      if (rows.length === 0) {
-        dbSrcList.innerHTML = '<span class="empty muted">no DB-fed sources</span>';
-      } else {
-        dbSrcList.innerHTML = rows.map((r) => {
-          const freshClass = r.fresh7d > 0 ? 'fresh' : 'zero';
-          return `<div class="db-source-row">
-            <span class="src-name" title="${escapeHtml(r.source)}">${escapeHtml(r.source)}</span>
-            <span class="num ${freshClass}">${r.fresh7d}</span>
-            <span class="num">${r.events}</span>
-          </div>`;
-        }).join('') +
-        '<div class="db-source-row" style="border-bottom:0; color: var(--muted); font-size: 11px;">' +
-          '<span>fresh(7d) / total</span><span></span><span></span>' +
-        '</div>';
-      }
-    }
+    // Sources (DB-fed) — full list with adapter badge + search/filter
+    renderDbSources(data.dbSources || []);
 
     document.getElementById('applied-today').textContent = data.appliedToday;
     const recent = document.getElementById('applied-recent');
@@ -193,6 +175,12 @@
 
     // ── Live state tiles (Phase 5) — BullMQ + 08-Agent ───────────────────
     renderLiveTiles(data);
+
+    // ── Extraction overview (Task 3a) ──────────────────────────────────
+    renderExtractionOverview(data.extractionOverview || null);
+
+    // ── Unsynced vs Supabase (Task 3b) ─────────────────────────────────
+    renderUnsynced(data.unsynced || null);
   } catch (err) {
     document.querySelector('main').innerHTML =
       `<div class="card"><h2>Error</h2><p>Failed to fetch /api/status: ${String(err)}</p></div>`;
@@ -204,6 +192,117 @@ function escapeHtml(s) {
   return String(s ?? '').replace(/[&<>"']/g, (c) => ({
     '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
   }[c]));
+}
+
+// ─── DB-fed sources list (scrollable, filterable, adapter badge) ───────────
+
+/** Module-level state for the DB-fed sources card. Held so that filter /
+ *  search input changes can re-render without a full page refresh. */
+const dbSourcesState = { rows: [], filter: 'all', search: '' };
+
+/**
+ * Render the full list of DB-fed sources with filter + search.
+ *
+ * Reads `dbSourcesState` and re-renders the rows that match. The toolbar
+ * (search input + filter buttons) is wired once by `wireDbSourcesToolbar`;
+ * subsequent renderings just re-paint the list rows and the count badges.
+ *
+ * Filter semantics:
+ *   - all:    every row
+ *   - adapter: rows whose hasAdapter === true (site-specific adapter exists)
+ *   - generic: rows whose hasAdapter === false (generic C-layer path)
+ * Search: case-insensitive substring match against the source id.
+ */
+function renderDbSourcesList() {
+  const el = document.getElementById('db-sources-list');
+  if (!el) return;
+  const { rows, filter, search } = dbSourcesState;
+  const needle = search.trim().toLowerCase();
+  const filtered = rows.filter((r) => {
+    if (filter === 'adapter' && !r.hasAdapter) return false;
+    if (filter === 'generic' && r.hasAdapter) return false;
+    if (needle && !r.source.toLowerCase().includes(needle)) return false;
+    return true;
+  });
+  if (filtered.length === 0) {
+    el.innerHTML = '<span class="empty muted">no sources match current filter</span>';
+  } else {
+    el.innerHTML = filtered.map((r) => {
+      const freshClass = r.fresh7d > 0 ? 'fresh' : 'zero';
+      const badge = r.hasAdapter
+        ? '<span class="src-badge adapter" title="site-specific adapter at 02-Ingestion/F-eventExtraction/adapters/' + escapeHtml(r.source) + '.ts">adapter</span>'
+        : '<span class="src-badge generic" title="generic C-layer / universal-extractor">generic</span>';
+      return '<div class="db-source-row">' +
+        badge +
+        '<span class="src-name" title="' + escapeHtml(r.source) + '">' + escapeHtml(r.source) + '</span>' +
+        '<span class="num ' + freshClass + '">' + r.fresh7d + '</span>' +
+        '<span class="num">' + r.events + '</span>' +
+      '</div>';
+    }).join('');
+  }
+  // Update count badges (always reflect totals, not filtered count).
+  const total = rows.length;
+  const adapter = rows.filter((r) => r.hasAdapter).length;
+  const generic = total - adapter;
+  const setCount = (id, n) => {
+    const c = document.getElementById(id);
+    if (c) c.textContent = String(n);
+  };
+  setCount('db-sources-count-all', total);
+  setCount('db-sources-count-adapter', adapter);
+  setCount('db-sources-count-generic', generic);
+}
+
+/** One-time wiring of toolbar events. Called once per page load. */
+function wireDbSourcesToolbar() {
+  const search = document.getElementById('db-sources-search');
+  if (search) {
+    search.addEventListener('input', (e) => {
+      dbSourcesState.search = (e.target.value || '');
+      renderDbSourcesList();
+    });
+  }
+  const filters = document.querySelectorAll('.db-sources-filters button');
+  filters.forEach((btn) => {
+    btn.addEventListener('click', () => {
+      const f = btn.getAttribute('data-filter');
+      if (!f) return;
+      dbSourcesState.filter = f;
+      filters.forEach((b) => b.classList.toggle('active', b === btn));
+      renderDbSourcesList();
+    });
+  });
+  // Full-page toggle: expands #db-sources to span the whole dashboard and
+  // removes the inner scroll cap. Click again to collapse. The toggle is
+  // wired once — state lives on the DOM via aria-pressed + a class so a
+  // page meta-refresh resets it back to the default compact view.
+  const expand = document.getElementById('db-sources-expand');
+  if (expand && !expand.dataset.wired) {
+    expand.dataset.wired = '1';
+    expand.addEventListener('click', () => {
+      const card = document.getElementById('db-sources');
+      if (!card) return;
+      const on = !card.classList.contains('db-sources-fullpage');
+      card.classList.toggle('db-sources-fullpage', on);
+      expand.setAttribute('aria-pressed', on ? 'true' : 'false');
+      const labelEl = expand.querySelector('.db-sources-expand-label');
+      const iconEl = expand.querySelector('.db-sources-expand-icon');
+      if (labelEl) labelEl.textContent = on ? 'Collapse' : 'Full page';
+      if (iconEl) iconEl.textContent = on ? '⤡' : '⤢';
+      expand.title = on
+        ? 'Collapse back to default layout'
+        : 'Expand the sources list to full page width and remove the inner scroll cap';
+    });
+  }
+}
+
+/** Entry point called by the IIFE on each /api/status response. */
+function renderDbSources(rows) {
+  dbSourcesState.rows = rows;
+  // First call also wires the toolbar (idempotent — guards not needed since
+  // we replace innerHTML on the list, but button handlers survive).
+  wireDbSourcesToolbar();
+  renderDbSourcesList();
 }
 
 /**
@@ -602,6 +701,413 @@ function renderLiveTiles(data) {
       aNote.textContent = parts.join(' · ') || 'live';
     } else {
       aNote.textContent = ag.error || 'agent server unreachable';
+    }
+  }
+}
+
+// ── Hover-tooltip info popovers (Task 1) ───────────────────────────────────
+//
+// Lightweight, no-dependency popover system. Reads `data-info="..."` from any
+// element and injects an ℹ️ button next to it. Clicking the button (or
+// hovering on touch devices) toggles a single shared popover anchored near
+// the button. Press Escape or click outside to dismiss. Pure DOM, no
+// frameworks — runs once after DOMContentLoaded.
+
+(function setupInfoPopovers() {
+  const POPOVER_ID = 'info-popover';
+
+  function getPopover() {
+    return document.getElementById(POPOVER_ID);
+  }
+
+  function closePopover() {
+    const p = getPopover();
+    if (!p) return;
+    p.hidden = true;
+    p.innerHTML = '';
+    document.querySelectorAll('.info-btn[aria-expanded="true"]').forEach((b) => {
+      b.setAttribute('aria-expanded', 'false');
+    });
+  }
+
+  function placePopover(btn, pop) {
+    // Anchor below the button, clamped to viewport.
+    const r = btn.getBoundingClientRect();
+    pop.style.visibility = 'hidden';
+    pop.hidden = false;
+    // Measure after making visible (no transition yet since hidden was removed)
+    const pr = pop.getBoundingClientRect();
+    let left = r.left;
+    let top = r.bottom + 8;
+    // Clamp horizontally
+    const margin = 8;
+    if (left + pr.width > window.innerWidth - margin) {
+      left = Math.max(margin, window.innerWidth - pr.width - margin);
+    }
+    if (left < margin) left = margin;
+    // If no room below, place above
+    if (top + pr.height > window.innerHeight - margin && r.top - pr.height - 8 > margin) {
+      top = r.top - pr.height - 8;
+    }
+    pop.style.left = left + 'px';
+    pop.style.top = top + 'px';
+    pop.style.visibility = 'visible';
+  }
+
+  function openPopover(btn, title, body, meta) {
+    const pop = getPopover();
+    if (!pop) return;
+    // Toggle if same button re-clicked
+    if (btn.getAttribute('aria-expanded') === 'true') {
+      closePopover();
+      return;
+    }
+    closePopover();
+    pop.innerHTML = '';
+    if (title) {
+      const h = document.createElement('strong');
+      h.textContent = title;
+      pop.appendChild(h);
+    }
+    const p = document.createElement('div');
+    p.textContent = body;
+    pop.appendChild(p);
+    if (meta) {
+      const m = document.createElement('span');
+      m.className = 'info-popover-meta';
+      m.textContent = meta;
+      pop.appendChild(m);
+    }
+    btn.setAttribute('aria-expanded', 'true');
+    placePopover(btn, pop);
+  }
+
+  function titleFor(el) {
+    // Prefer nearest preceding h2 text inside a card, or .layer-name text,
+    // or the kpi-label text. Falls back to element id or 'info'.
+    const card = el.closest('.card, .kpi-tile, .layer-tile');
+    if (card) {
+      const h = card.querySelector('h2, .kpi-label, .layer-name');
+      if (h) {
+        // Strip any existing info button text from the title
+        return h.textContent.replace(/ℹ️|ⓘ/g, '').trim();
+      }
+    }
+    return el.id || 'info';
+  }
+
+  function wireAnchor(el) {
+    if (el.dataset.infoWired === '1') return;
+    const text = el.getAttribute('data-info');
+    if (!text) return;
+    el.dataset.infoWired = '1';
+    // If the element already contains an inline info button (added by hand),
+    // wire that one instead of injecting a duplicate.
+    let btn = el.querySelector(':scope > .info-btn, :scope .info-btn');
+    if (btn) {
+      // Make sure the existing button is properly classed and labeled.
+      if (!btn.classList.contains('info-btn')) btn.classList.add('info-btn');
+      if (!btn.getAttribute('aria-expanded')) btn.setAttribute('aria-expanded', 'false');
+      if (!btn.getAttribute('aria-label')) btn.setAttribute('aria-label', 'Show explanation');
+      btn.title = 'Click for explanation';
+    } else {
+      btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'info-btn';
+      btn.setAttribute('aria-label', 'Show explanation');
+      btn.textContent = 'ℹ️';
+      btn.setAttribute('aria-expanded', 'false');
+      btn.title = 'Click for explanation';
+      el.appendChild(btn);
+    }
+    btn.addEventListener('click', (ev) => {
+      ev.stopPropagation();
+      openPopover(btn, titleFor(el), text, el.dataset.infoMeta || '');
+    });
+    btn.addEventListener('mouseenter', () => {
+      btn.title = text.length > 200 ? text.slice(0, 197) + '...' : text;
+    });
+  }
+
+  function scan() {
+    document.querySelectorAll('[data-info]').forEach(wireAnchor);
+  }
+
+  // Run after DOMContentLoaded so all cards exist. The main IIFE that
+  // populates /api/status re-runs after every page load via meta-refresh, so
+  // we also rescan whenever a fetch finishes — but since meta-refresh
+  // actually replaces the whole document, we only need to scan once per
+  // load here.
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', scan);
+  } else {
+    scan();
+  }
+
+  // Dismiss on outside click / Escape.
+  document.addEventListener('click', (ev) => {
+    if (ev.target.closest('.info-btn')) return;
+    if (ev.target.closest('.info-popover')) return;
+    closePopover();
+  });
+  document.addEventListener('keydown', (ev) => {
+    if (ev.key === 'Escape') closePopover();
+  });
+  // Reposition on resize/scroll so popovers don't drift.
+  window.addEventListener('resize', closePopover);
+  window.addEventListener('scroll', closePopover, true);
+
+  // Wire the header help button with a full-page overview.
+  const helpBtn = document.getElementById('info-help');
+  if (helpBtn) {
+    helpBtn.addEventListener('click', (ev) => {
+      ev.stopPropagation();
+      const body =
+        'Live view of every layer in the EventPulse ingestion stack: ' +
+        'project-level KPIs (top strip), DB-fed sources list, time-series ' +
+        'charts with day/week/month toggles, per-layer health tiles ' +
+        '(A/B/C/D/F/G/H/AI/push), live state tiles (BullMQ, 08-Agent), ' +
+        'batch success, freshness, schema drift, and operator suggestions. ' +
+        'Click any ℹ️ for what a specific tile means and where the data ' +
+        'comes from. Hover any chart point for the exact value.';
+      openPopover(helpBtn, 'Scraping Supervisor Dashboard', body,
+        'Read-only · auto-refresh 30s · driven by runtime/ files + Supabase');
+    });
+  }
+})();
+
+// ── Task 3a: per-layer extraction overview (historical totals + latest) ─────
+
+/**
+ * Render the per-layer extraction overview table.
+ *
+ * Reads `data.extractionOverview` (collected by `collectExtractionOverview`
+ * in db.ts). Each row shows the layer's historical total on the left and
+ * the timestamp of the layer's most recent activity on the right.
+ *
+ * The F (extractor) layer gets a `<details>` expandable breakdown listing
+ * every per-source file with its event count and mtime, so the operator
+ * can spot stale per-source caches at a glance.
+ */
+function renderExtractionOverview(O) {
+  const body = document.getElementById('extraction-overview-body');
+  if (!body) return;
+
+  const fmtIso = (iso) => {
+    if (!iso) return '—';
+    const d = new Date(iso);
+    if (isNaN(d.getTime())) return iso;
+    return d.toLocaleString();
+  };
+
+  const ageDays = (iso) => {
+    if (!iso) return null;
+    const d = new Date(iso);
+    if (isNaN(d.getTime())) return null;
+    return Math.floor((Date.now() - d.getTime()) / 86400000);
+  };
+
+  const cell = (v) => v === null || v === undefined ? '—' : (typeof v === 'number' ? v.toLocaleString() : escapeHtml(String(v)));
+
+  const rows = [];
+
+  // A: source-status jsonl
+  if (O.A) {
+    const ad = ageDays(O.A.latestSuccessIso);
+    const tone = ad === null ? 'muted' : ad <= 1 ? 'ok' : ad <= 7 ? 'warn' : 'bad';
+    rows.push(`<tr>
+      <td><code>A</code> direct network</td>
+      <td>${cell(O.A.totalSuccesses)} / ${cell(O.A.totalAttempts)} success/attempts</td>
+      <td class="${tone}">${fmtIso(O.A.latestSuccessIso)}</td>
+      <td>${ad === null ? '—' : ad + 'd ago'}</td>
+    </tr>`);
+  }
+
+  // B: postB queue
+  if (O.B) {
+    const bd = ageDays(O.B.latestIso);
+    const tone = O.B.queueDepth === 0 ? 'ok' : 'warn';
+    rows.push(`<tr>
+      <td><code>B</code> JSON feed gate</td>
+      <td>${cell(O.B.queueDepth)} in queue</td>
+      <td>${fmtIso(O.B.latestIso)}</td>
+      <td>${bd === null ? '—' : bd + 'd ago'}</td>
+    </tr>`);
+  }
+
+  // C: batches meta
+  if (O.C) {
+    const cd = ageDays(O.C.latestIso);
+    rows.push(`<tr>
+      <td><code>C</code> HTML 123-loop</td>
+      <td>${cell(O.C.batchesTotal)} batches</td>
+      <td>${fmtIso(O.C.latestIso)}</td>
+      <td>${cd === null ? '—' : cd + 'd ago'}</td>
+    </tr>`);
+  }
+
+  // D: render queue
+  if (O.D) {
+    const dd = ageDays(O.D.latestIso);
+    const tone = O.D.pendingCount === 0 ? 'ok' : 'warn';
+    rows.push(`<tr>
+      <td><code>D</code> render gate</td>
+      <td>${cell(O.D.pendingCount)} pending</td>
+      <td>${fmtIso(O.D.latestIso)}</td>
+      <td>${dd === null ? '—' : dd + 'd ago'}</td>
+    </tr>`);
+  }
+
+  // F: extracted events (with details)
+  if (O.F) {
+    const fd = ageDays(O.F.latestIso);
+    rows.push(`<tr>
+      <td><code>F</code> event extractor</td>
+      <td>${cell(O.F.eventsTotal)} events · ${cell(O.F.sources)} sources</td>
+      <td>${fmtIso(O.F.latestIso)}</td>
+      <td>${fd === null ? '—' : fd + 'd ago'}</td>
+    </tr>`);
+  }
+
+  // G: scout
+  if (O.G) {
+    const gd = ageDays(O.G.latestIso);
+    rows.push(`<tr>
+      <td><code>G</code> universal scout</td>
+      <td>${O.G.available ? 'results present' : 'no results yet'}</td>
+      <td>${fmtIso(O.G.latestIso)}</td>
+      <td>${gd === null ? '—' : gd + 'd ago'}</td>
+    </tr>`);
+  }
+
+  // H: manual review
+  if (O.H) {
+    const hd = ageDays(O.H.latestIso);
+    rows.push(`<tr>
+      <td><code>H</code> manual review</td>
+      <td>${cell(O.H.backlogSize)} backlog</td>
+      <td>${fmtIso(O.H.latestIso)}</td>
+      <td>${hd === null ? '—' : hd + 'd ago'}</td>
+    </tr>`);
+  }
+
+  // AI: deeptrace
+  if (O.AI) {
+    const ad2 = ageDays(O.AI.latestIso);
+    rows.push(`<tr>
+      <td><code>AI</code> AI-assisted</td>
+      <td>${cell(O.AI.logFiles)} log files</td>
+      <td>${fmtIso(O.AI.latestIso)}</td>
+      <td>${ad2 === null ? '—' : ad2 + 'd ago'}</td>
+    </tr>`);
+  }
+
+  // Push
+  if (O.Push) {
+    const pd = ageDays(O.Push.lastJobIso);
+    rows.push(`<tr>
+      <td><code>↦</code> push scripts</td>
+      <td>${cell(O.Push.totalJobs)} jobs · ${cell(O.Push.last7d)} last 7d</td>
+      <td>${fmtIso(O.Push.lastJobIso)}</td>
+      <td>${pd === null ? '—' : pd + 'd ago'}</td>
+    </tr>`);
+  }
+
+  if (rows.length === 0) {
+    body.innerHTML = '<tr><td colspan="4" class="empty">no layer data yet</td></tr>';
+  } else {
+    body.innerHTML = rows.join('');
+  }
+
+  // F per-source detail
+  const fList = document.getElementById('extraction-overview-f-list');
+  if (fList) {
+    const perSource = (O.F && O.F.perSourceLatest) || [];
+    if (perSource.length === 0) {
+      fList.innerHTML = '<span class="empty muted">no extracted-events files</span>';
+    } else {
+      const max = perSource[0]?.events || 1;
+      fList.innerHTML = perSource.slice(0, 50).map((s) => {
+        const w = Math.max(6, Math.round((s.events / max) * 80));
+        const ago = s.latestIso ? Math.floor((Date.now() - new Date(s.latestIso).getTime()) / 86400000) + 'd' : '?';
+        return `<div class="db-source-row" style="grid-template-columns: 1fr 50px 50px;">
+          <span class="src-name" title="${escapeHtml(s.source)}">${escapeHtml(s.source)}</span>
+          <span class="num" style="background:rgba(88,166,255,${Math.min(0.8, 0.15 + (s.events / max) * 0.5)});height:${Math.max(8, w * 0.4)}px;border-radius:2px;">${s.events}</span>
+          <span class="num muted">${ago}</span>
+        </div>`;
+      }).join('');
+    }
+  }
+}
+
+// ── Task 3b: Unsynced rows detector ───────────────────────────────────────
+
+/**
+ * Render the unsynced rows summary + per-source breakdown + sample rows.
+ *
+ * Reads `data.unsynced` (collected by `collectUnsynced` in db.ts).
+ *
+ * - ok=false: show a muted "unavailable" state with the error message.
+ * - ok=true: show matched/missing counts + per-source breakdown + sample
+ *   rows. Both `<details>` blocks are open by default so the operator can
+ *   scan the gaps immediately.
+ */
+function renderUnsynced(U) {
+  const summary = document.getElementById('unsynced-summary');
+  const perSource = document.getElementById('unsynced-per-source');
+  const rows = document.getElementById('unsynced-rows');
+
+  if (summary) {
+    if (!U.ok) {
+      summary.innerHTML = `<span class="muted">unavailable: ${escapeHtml(U.error || 'unknown')}</span>`;
+    } else {
+      const total = U.matched + U.missing;
+      const pct = total ? Math.round((U.missing / total) * 100) : 0;
+      const tone = pct === 0 ? 'ok' : pct <= 5 ? 'warn' : 'bad';
+      const dbRows = (U.totalInSupabaseRows || 0).toLocaleString();
+      const dbDistinct = (U.totalInSupabaseDistinctUrls || 0).toLocaleString();
+      const crossNote = U.crossSourceMatched
+        ? ` · ${U.crossSourceMatched.toLocaleString()} matched cross-source (aggregator)`
+        : '';
+      summary.innerHTML = `
+        <div class="unsynced-summary-stats">
+          <span class="big ${tone}">${U.missing.toLocaleString()}</span>
+          <span class="muted">missing of ${total.toLocaleString()} local rows · ${U.matched.toLocaleString()} matched · ${dbRows} rows / ${dbDistinct} distinct urls in DB${crossNote}</span>
+        </div>
+        <p class="caption">${pct}% unsynced · identity = ticket_url (cross-source) · checked ${new Date(U.fetchedAt).toLocaleTimeString()}</p>
+      `;
+    }
+  }
+
+  if (perSource) {
+    if (!U.ok || !U.perSource || U.perSource.length === 0) {
+      perSource.innerHTML = '<span class="empty muted">no data</span>';
+    } else {
+      const max = Math.max(1, U.perSource[0]?.missing || 0);
+      perSource.innerHTML = U.perSource.slice(0, 30).map((r) => {
+        const pct = r.local ? Math.round((r.missing / r.local) * 100) : 0;
+        const cross = r.crossSourceMatched ? ` · ${r.crossSourceMatched} cross` : '';
+        return `<div class="db-source-row" style="grid-template-columns: 1fr 60px 60px 50px 60px;">
+          <span class="src-name" title="${escapeHtml(r.source)}">${escapeHtml(r.source)}</span>
+          <span class="num muted">local ${r.local}</span>
+          <span class="num bad">missing ${r.missing}</span>
+          <span class="num">${pct}%</span>
+          <span class="num muted">${r.crossSourceMatched || 0}↔</span>
+        </div>`;
+      }).join('');
+    }
+  }
+
+  if (rows) {
+    if (!U.ok || !U.missingRows || U.missingRows.length === 0) {
+      rows.innerHTML = '<li class="empty muted">no missing rows</li>';
+    } else {
+      rows.innerHTML = U.missingRows.map((r) => `<li>
+        <code>${escapeHtml(r.source)}</code>
+        <span class="muted">${escapeHtml(r.date)}</span>
+        — ${escapeHtml(r.title || '(no title)')}
+        <a href="${escapeHtml(r.url)}" target="_blank" rel="noopener" class="muted">↗</a>
+      </li>`).join('');
     }
   }
 }

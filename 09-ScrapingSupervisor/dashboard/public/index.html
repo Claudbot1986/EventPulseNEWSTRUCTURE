@@ -10,40 +10,40 @@
 <body>
   <header>
     <h1>Scraping Supervisor Dashboard</h1>
-    <p class="subtitle">EventPulse · auto-refresh every 30s</p>
+    <p class="subtitle">EventPulse · auto-refresh every 30s · <button type="button" id="info-help" class="info-btn info-btn--inline" aria-label="Show dashboard help">ℹ️ What does this page show?</button></p>
   </header>
 
   <section class="kpi-strip" aria-label="Project KPIs">
-    <div class="kpi-tile">
-      <div class="kpi-label">Future events</div>
+    <div class="kpi-tile" data-info="Count of all rows in events_public with start_time greater than the current moment. Includes any past-test events still in the table. Tells you how much 'live future graph' the agent has access to right now.">
+      <div class="kpi-label">Future events<button type="button" class="info-btn" data-info-target="kpi-future" aria-label="help">i</button></div>
       <div class="kpi-value" id="kpi-future">—</div>
       <div class="kpi-caption">events_public where start_time &gt; now</div>
     </div>
-    <div class="kpi-tile">
-      <div class="kpi-label">Next 7 days</div>
+    <div class="kpi-tile" data-info="Subset of future events whose start_time falls in the next 7 days. Used as the headline density metric for the Stockholm Event Graph — anything below ~500 means the graph is too thin for the agent's cold-start queries.">
+      <div class="kpi-label">Next 7 days<button type="button" class="info-btn" data-info-target="kpi-next7" aria-label="help">i</button></div>
       <div class="kpi-value" id="kpi-next7">—</div>
       <div class="kpi-caption">events_public within 7d window</div>
     </div>
-    <div class="kpi-tile">
-      <div class="kpi-label">Active sources (7d)</div>
+    <div class="kpi-tile" data-info="Number of distinct source values in events_public whose freshness_at timestamp is within the last 7 days. 'Freshness' means any update happened to that source's rows recently — it does NOT mean the rows themselves are recent events. A high number here with a low 'Next 7 days' number usually means many sources but each with very few future events.">
+      <div class="kpi-label">Active sources (7d)<button type="button" class="info-btn" data-info-target="kpi-active-sources" aria-label="help">i</button></div>
       <div class="kpi-value" id="kpi-active-sources">—</div>
       <div class="kpi-caption">unique source with freshness_at &gt; now-7d</div>
     </div>
-    <div class="kpi-tile">
-      <div class="kpi-label">DB total rows</div>
+    <div class="kpi-tile" data-info="Total count of all rows in the events table (NOT events_public). This includes expired and test rows. If this grows much faster than 'Future events', the table is accumulating stale rows that the normalizer may not be pruning.">
+      <div class="kpi-label">DB total rows<button type="button" class="info-btn" data-info-target="kpi-total-rows" aria-label="help">i</button></div>
       <div class="kpi-value" id="kpi-total-rows">—</div>
       <div class="kpi-caption">count of events table</div>
     </div>
-    <div class="kpi-tile">
-      <div class="kpi-label">Last Tool A success</div>
+    <div class="kpi-tile" data-info="Newest lastSuccess timestamp across all entries in runtime/sources_status.jsonl. Colored green if within 24h, yellow if within 7d, red if older. A red value here usually means Tool A is stalled or all its sources are dead.">
+      <div class="kpi-label">Last Tool A success<button type="button" class="info-btn" data-info-target="kpi-last-toola" aria-label="help">i</button></div>
       <div class="kpi-value" id="kpi-last-toola">—</div>
       <div class="kpi-caption">newest lastSuccess in sources_status.jsonl</div>
     </div>
   </section>
 
   <main>
-    <section class="card" id="run-info">
-      <h2>Run schedule</h2>
+    <section class="card" id="run-info" data-info="When the supervisor last woke up and when it will next. Driven by the launchd job / cron that re-runs the supervisor loop. The page itself auto-refreshes every 30s via a meta-refresh tag.">
+      <h2>Run schedule<button type="button" class="info-btn" data-info-target="run-info" aria-label="help">i</button></h2>
       <dl>
         <dt>Last run</dt><dd id="last-run">—</dd>
         <dt>Next run</dt><dd id="next-run">—</dd>
@@ -51,8 +51,8 @@
       </dl>
     </section>
 
-    <section class="card" id="sources">
-      <h2>Sources (Tool A — direct network/JSON-LD)</h2>
+    <section class="card" id="sources" data-info="Aggregated counts of sources in runtime/sources_status.jsonl. 'Working' = last Tool A scrape returned a usable payload. 'Dead' = consecutive failures recorded. 'Untouched' = never attempted by Tool A. NOTE: events_public may contain rows from sources not represented here — those arrived via Tool B/C/D/push. For the full DB-side picture see 'Sources (DB-fed)'.">
+      <h2>Sources (Tool A — direct network/JSON-LD)<button type="button" class="info-btn" data-info-target="sources" aria-label="help">i</button></h2>
       <p class="caption">Counts from <code>sources_status.jsonl</code>. Working = Tool A scrape success. DB may also hold events from Tool B/C/D/push paths — see Sources (DB-fed) below.</p>
       <table>
         <thead><tr><th>Status</th><th>Count</th></tr></thead>
@@ -65,15 +65,27 @@
       </table>
     </section>
 
-    <section class="card" id="db-sources">
-      <h2>Sources (DB-fed)</h2>
-      <p class="caption">Top sources by future-event count in <code>events_public</code>. Fresh (7d) = rows with freshness_at within last 7 days.</p>
-      <div id="db-sources-list"><span class="empty muted">loading…</span></div>
+    <section class="card" id="db-sources" data-info="Every distinct source value currently in events_public, with the number of fresh (last-7-days) and total events for each. 'Adapter' = site-specific hand-tuned extractor in 02-Ingestion/F-eventExtraction/adapters/. 'Generic' = universal-extractor (no per-site tuning). The Adapter badge means a human wrote extraction rules for that site; Generic means we trusted the auto-extractor. Use the filter to focus on one class.">
+      <h2>Sources (DB-fed)<button type="button" class="info-btn" data-info-target="db-sources" aria-label="help">i</button></h2>
+      <p class="caption">All sources by future-event count in <code>events_public</code>. Fresh (7d) = rows with freshness_at within last 7 days. "Adapter" badge = site-specific hand-tuned adapter in <code>02-Ingestion/F-eventExtraction/adapters/</code>; otherwise routed via the generic C-layer / universal-extractor.</p>
+      <div class="db-sources-toolbar">
+        <input type="search" id="db-sources-search" placeholder="filter by source id…" autocomplete="off">
+        <div class="db-sources-filters" role="tablist">
+          <button data-filter="all" class="active" role="tab">All <span class="num-badge" id="db-sources-count-all">0</span></button>
+          <button data-filter="adapter" role="tab">Adapter <span class="num-badge" id="db-sources-count-adapter">0</span></button>
+          <button data-filter="generic" role="tab">Generic <span class="num-badge" id="db-sources-count-generic">0</span></button>
+        </div>
+        <button type="button" id="db-sources-expand" class="db-sources-expand" aria-pressed="false" title="Expand the sources list to full page width and remove the inner scroll cap (useful when scanning the whole list at once)">
+          <span class="db-sources-expand-icon" aria-hidden="true">⤢</span>
+          <span class="db-sources-expand-label">Full page</span>
+        </button>
+      </div>
+      <div class="db-sources-scrollable" id="db-sources-list"><span class="empty muted">loading…</span></div>
     </section>
 
-    <section class="card chart-card" id="chart-events-ingested">
+    <section class="card chart-card" id="chart-events-ingested" data-info="Daily count of rows in events_public grouped by freshness_at date. Use it to spot ingestion bursts (a successful Tool C batch will show as a tall spike). Hover any point to see date and value. Toggle Day/Week/Month to change bucket size — server only sends raw daily data, the client re-buckets.">
       <div class="chart-header">
-        <h2>Events ingested (DB)</h2>
+        <h2>Events ingested (DB)<button type="button" class="info-btn" data-info-target="chart-events-ingested" aria-label="help">i</button></h2>
         <div class="resolution-toggle" data-chart="chart-events-ingested">
           <button data-res="day" class="active">Day</button>
           <button data-res="week">Week</button>
@@ -84,9 +96,9 @@
       <p class="caption"><span id="chart-events-ingested-hint">From events_public.freshness_at</span></p>
     </section>
 
-    <section class="card chart-card" id="chart-active-sources">
+    <section class="card chart-card" id="chart-active-sources" data-info="Number of distinct source values per day that have at least one freshness_at row. 'Distinct per day' is intentional — a single source that got updated 50 times counts as 1. Use it to gauge how broadly ingestion is touching the source pool on a given day.">
       <div class="chart-header">
-        <h2>Active sources (DB)</h2>
+        <h2>Active sources (DB)<button type="button" class="info-btn" data-info-target="chart-active-sources" aria-label="help">i</button></h2>
         <div class="resolution-toggle" data-chart="chart-active-sources">
           <button data-res="day" class="active">Day</button>
           <button data-res="week">Week</button>
@@ -97,9 +109,9 @@
       <p class="caption"><span id="chart-active-sources-hint">Unique source per day with freshness_at set</span></p>
     </section>
 
-    <section class="card chart-card" id="chart-toola-attempts">
+    <section class="card chart-card" id="chart-toola-attempts" data-info="Green = Tool A scrapes that succeeded on that day. Red = Tool A scrapes that failed. Computed from sources_status.jsonl lastRun dates — a source that attempted twice on the same day counts twice. Use to see whether failure rate is climbing.">
       <div class="chart-header">
-        <h2>Tool A scrape attempts</h2>
+        <h2>Tool A scrape attempts<button type="button" class="info-btn" data-info-target="chart-toola-attempts" aria-label="help">i</button></h2>
         <div class="resolution-toggle" data-chart="chart-toola-attempts">
           <button data-res="day" class="active">Day</button>
           <button data-res="week">Week</button>
@@ -114,9 +126,9 @@
       <p class="caption"><span id="chart-toola-attempts-hint">From sources_status.jsonl lastRun dates</span></p>
     </section>
 
-    <section class="card chart-card" id="chart-toola-working">
+    <section class="card chart-card" id="chart-toola-working" data-info="Number of sources whose lastSuccess landed on that day. Drops over time mean Tool A is losing sources (or the loop isn't running). Spikes mean a big chunk just got a fresh successful scrape.">
       <div class="chart-header">
-        <h2>Tool A working sources</h2>
+        <h2>Tool A working sources<button type="button" class="info-btn" data-info-target="chart-toola-working" aria-label="help">i</button></h2>
         <div class="resolution-toggle" data-chart="chart-toola-working">
           <button data-res="day" class="active">Day</button>
           <button data-res="week">Week</button>
@@ -127,9 +139,9 @@
       <p class="caption"><span id="chart-toola-working-hint">Sources with lastSuccess on a given day</span></p>
     </section>
 
-    <section class="card chart-card" id="chart-batch-rate">
+    <section class="card chart-card" id="chart-batch-rate" data-info="Success rate per day, derived from C-htmlGate reports/batch-NNN/batch-traces.jsonl. Success = transportOk AND dataOk AND NOT decoy. Rate is successes / attempts for that day's batch dirs (grouped by mtime). A flat zero means batches ran but none passed; a flat one means everything passed.">
       <div class="chart-header">
-        <h2>Batch success rate</h2>
+        <h2>Batch success rate<button type="button" class="info-btn" data-info-target="chart-batch-rate" aria-label="help">i</button></h2>
         <div class="resolution-toggle" data-chart="chart-batch-rate">
           <button data-res="day" class="active">Day</button>
           <button data-res="week">Week</button>
@@ -140,13 +152,13 @@
       <p class="caption"><span id="chart-batch-rate-hint">From reports/batch-NNN/batch-traces.jsonl (success/attempts per batch dir mtime day)</span></p>
     </section>
 
-    <section class="card layers-card" id="layers">
-      <h2>Extraction layers</h2>
+    <section class="card layers-card" id="layers" data-info="Per-layer health from the ingestion pipeline. Each tile reads from a different file: A=sources_status.jsonl, B=postB-queue.jsonl, C=C-candidates-batches-meta.jsonl, D=pending_render_queue.jsonl, F=03-Queue/03-extractedevents/, G=universalScout results, H=H-queue backlog, AI=deeptrace-d logs, Push=EVENTPULSE-APP-queue.jsonl. The Live state tiles (BullMQ, 08-Agent) are polled at /api/status time with short timeouts so the page never hangs if a dependency is down.">
+      <h2>Extraction layers<button type="button" class="info-btn" data-info-target="layers" aria-label="help">i</button></h2>
       <p class="caption">Per-layer health and pipeline depth — Tool A through push scripts. Each tile shows that layer's primary metrics from its own JSONL/log source.</p>
       <h3 class="subhead">Live state (Redis + agent server)</h3>
       <div class="layers-grid">
-        <div class="layer-tile" data-layer="bullmq">
-          <div class="layer-name"><span class="layer-badge">⚡</span>BullMQ queues (live)</div>
+        <div class="layer-tile" data-layer="bullmq" data-info="Live state of the three BullMQ queues used by the ingestion stack: raw_events (incoming scrape jobs), ingestion_smoke (smoke tests), search_sync (Supabase sync). waiting = not yet started. failed = exhausted retries. Read via getJobCounts() against Redis on each page load.">
+          <div class="layer-name"><span class="layer-badge">⚡</span>BullMQ queues (live)<button type="button" class="info-btn" data-info-target="layer-bullmq" aria-label="help">i</button></div>
           <div class="layer-desc">Redis · 03-Queue/queue.ts</div>
           <div class="stats" id="bullmq-stats">
             <div class="stat"><span class="num muted" id="bullmq-status">—</span><span class="label">status</span></div>
@@ -154,8 +166,8 @@
           <div id="bullmq-rows"><span class="muted">loading…</span></div>
         </div>
 
-        <div class="layer-tile" data-layer="agent">
-          <div class="layer-name"><span class="layer-badge">🧠</span>08-Agent metrics</div>
+        <div class="layer-tile" data-layer="agent" data-info="Live counters from the 08-Agent server (proxied from :8787/agent/metrics with a 25s server-side cache). impressions = total agent answers served. clicks = user clicks on outbound event links. outbounds = outbound links offered. CTR = clicks / impressions — the headline funnel metric. saves = bookmarks the agent created.">
+          <div class="layer-name"><span class="layer-badge">🧠</span>08-Agent metrics<button type="button" class="info-btn" data-info-target="layer-agent" aria-label="help">i</button></div>
           <div class="layer-desc">:8787/agent/metrics (proxied, 25s cache)</div>
           <div class="stats" id="agent-stats">
             <div class="stat"><span class="num muted" id="agent-status">—</span><span class="label">status</span></div>
@@ -169,8 +181,8 @@
       </div>
       <h3 class="subhead">Static per-layer snapshot (JSONL / log sources)</h3>
       <div class="layers-grid">
-        <div class="layer-tile" data-layer="A">
-          <div class="layer-name"><span class="layer-badge">A</span>Direct network / JSON-LD</div>
+        <div class="layer-tile" data-layer="A" data-info="Direct network / JSON-LD scraper. Reads runtime/sources_status.jsonl. Working = last scrape succeeded. Dead = last scrape failed (status=fail). NOTE: this is just Tool A — see other layer tiles for B/C/D etc.">
+          <div class="layer-name"><span class="layer-badge">A</span>Direct network / JSON-LD<button type="button" class="info-btn" data-info-target="layer-A" aria-label="help">i</button></div>
           <div class="layer-desc">sources_status.jsonl</div>
           <div class="stats">
             <div class="stat"><span class="num ok" id="layer-A-working">—</span><span class="label">working</span></div>
@@ -179,8 +191,8 @@
           </div>
         </div>
 
-        <div class="layer-tile" data-layer="B">
-          <div class="layer-name"><span class="layer-badge">B</span>JSON feed gate</div>
+        <div class="layer-tile" data-layer="B" data-info="JSON feed gate. Reads runtime/postB-queue.jsonl. queue depth = number of B-pending entries still waiting for downstream consumption. 'note' summarizes the most recent verification outcome.">
+          <div class="layer-name"><span class="layer-badge">B</span>JSON feed gate<button type="button" class="info-btn" data-info-target="layer-B" aria-label="help">i</button></div>
           <div class="layer-desc">runtime/postB-queue.jsonl</div>
           <div class="stats">
             <div class="stat"><span class="num" id="layer-B-depth">—</span><span class="label">queue depth</span></div>
@@ -188,8 +200,8 @@
           <div class="layer-note" id="layer-B-note">—</div>
         </div>
 
-        <div class="layer-tile" data-layer="C">
-          <div class="layer-name"><span class="layer-badge">C</span>HTML 123-loop</div>
+        <div class="layer-tile" data-layer="C" data-info="HTML 123-loop (C0 frontier → C1 pre-html → C2 html → C3 AI extract → C4 AI analysis). Reads C-htmlGate/C-candidates-batches-meta.jsonl. batches = total batch directories. last batch = newest batch id. byStatus note counts statuses across recent batches.">
+          <div class="layer-name"><span class="layer-badge">C</span>HTML 123-loop<button type="button" class="info-btn" data-info-target="layer-C" aria-label="help">i</button></div>
           <div class="layer-desc">C-candidates-batches-meta.jsonl</div>
           <div class="stats">
             <div class="stat"><span class="num" id="layer-C-total">—</span><span class="label">batches</span></div>
@@ -198,8 +210,8 @@
           <div class="layer-note" id="layer-C-note">—</div>
         </div>
 
-        <div class="layer-tile" data-layer="D">
-          <div class="layer-name"><span class="layer-badge">D</span>Render gate (Scrapingbee)</div>
+        <div class="layer-tile" data-layer="D" data-info="Render gate (Scrapingbee). Reads runtime/pending_render_queue.jsonl. pending = number of URLs still waiting for a JS-render pass. If this climbs persistently, Scrapingbee credit usage may be the bottleneck.">
+          <div class="layer-name"><span class="layer-badge">D</span>Render gate (Scrapingbee)<button type="button" class="info-btn" data-info-target="layer-D" aria-label="help">i</button></div>
           <div class="layer-desc">runtime/pending_render_queue.jsonl</div>
           <div class="stats">
             <div class="stat"><span class="num" id="layer-D-pending">—</span><span class="label">pending</span></div>
@@ -207,8 +219,8 @@
           <div class="layer-note" id="layer-D-note">—</div>
         </div>
 
-        <div class="layer-tile" data-layer="F">
-          <div class="layer-name"><span class="layer-badge">F</span>Event extractor</div>
+        <div class="layer-tile" data-layer="F" data-info="Event extractor. Reads 03-Queue/03-extractedevents/. sources = number of per-source JSONL files. events (~) = approximate total event rows across those files — a quick read of line counts, not a full parse.">
+          <div class="layer-name"><span class="layer-badge">F</span>Event extractor<button type="button" class="info-btn" data-info-target="layer-F" aria-label="help">i</button></div>
           <div class="layer-desc">03-Queue/03-extractedevents/</div>
           <div class="stats">
             <div class="stat"><span class="num ok" id="layer-F-sources">—</span><span class="label">sources</span></div>
@@ -216,8 +228,8 @@
           </div>
         </div>
 
-        <div class="layer-tile" data-layer="G">
-          <div class="layer-name"><span class="layer-badge">G</span>Universal scout</div>
+        <div class="layer-tile" data-layer="G" data-info="Universal scout (02-Ingestion/G-universalScout/). Yes/no = whether scout has produced a results.jsonl. The note summarizes the last scout run outcome.">
+          <div class="layer-name"><span class="layer-badge">G</span>Universal scout<button type="button" class="info-btn" data-info-target="layer-G" aria-label="help">i</button></div>
           <div class="layer-desc">02-Ingestion/G-universalScout/</div>
           <div class="stats">
             <div class="stat"><span class="num muted" id="layer-G-status">—</span><span class="label">results</span></div>
@@ -225,8 +237,8 @@
           <div class="layer-note" id="layer-G-note">—</div>
         </div>
 
-        <div class="layer-tile" data-layer="H">
-          <div class="layer-name"><span class="layer-badge">H</span>Manual review</div>
+        <div class="layer-tile" data-layer="H" data-info="Manual review queue. Reads 02-Ingestion/H-manualReview/H-queue/ + runtime/postTestC-manual-review.jsonl. backlog = items awaiting a human decision. Usually zero unless a new source needs a reviewer.">
+          <div class="layer-name"><span class="layer-badge">H</span>Manual review<button type="button" class="info-btn" data-info-target="layer-H" aria-label="help">i</button></div>
           <div class="layer-desc">02-Ingestion/H-manualReview/H-queue/</div>
           <div class="stats">
             <div class="stat"><span class="num" id="layer-H-backlog">—</span><span class="label">backlog</span></div>
@@ -234,8 +246,8 @@
           <div class="layer-note" id="layer-H-note">—</div>
         </div>
 
-        <div class="layer-tile" data-layer="AI">
-          <div class="layer-name"><span class="layer-badge">AI</span>AI-assisted</div>
+        <div class="layer-tile" data-layer="AI" data-info="AI-assisted extraction calls. Reads runtime/logs/deeptrace-d-*.json. log files = number of deeptrace logs. latest calls = rough count from the newest log. Token cost is best-effort and not shown numerically — open the log to see actual numbers.">
+          <div class="layer-name"><span class="layer-badge">AI</span>AI-assisted<button type="button" class="info-btn" data-info-target="layer-AI" aria-label="help">i</button></div>
           <div class="layer-desc">runtime/logs/deeptrace-d-*.json</div>
           <div class="stats">
             <div class="stat"><span class="num" id="layer-AI-logs">—</span><span class="label">log files</span></div>
@@ -244,8 +256,8 @@
           <div class="layer-note" id="layer-AI-note">—</div>
         </div>
 
-        <div class="layer-tile" data-layer="Push">
-          <div class="layer-name"><span class="layer-badge">↦</span>Push scripts</div>
+        <div class="layer-tile" data-layer="Push" data-info="Push scripts that re-enqueue already-extracted events into the EVENTPULSE-APP queue (one-off scripts for sites the pipeline can't auto-handle). Reads runtime/EVENTPULSE-APP-queue.jsonl filtered to queueReason:importToEventPulse. total = all-time, last 7d = recent activity.">
+          <div class="layer-name"><span class="layer-badge">↦</span>Push scripts<button type="button" class="info-btn" data-info-target="layer-Push" aria-label="help">i</button></div>
           <div class="layer-desc">runtime/EVENTPULSE-APP-queue.jsonl</div>
           <div class="stats">
             <div class="stat"><span class="num" id="layer-Push-total">—</span><span class="label">total jobs</span></div>
@@ -256,8 +268,8 @@
       </div>
     </section>
 
-    <section class="card" id="applied">
-      <h2>Applied today</h2>
+    <section class="card" id="applied" data-info="Count of supervisor-applied config / rule fixes applied since midnight, plus the last 10 entries. An 'entry' is one sourceId+reason pair from runtime/supervisor-decisions.jsonl. Use this to confirm the supervisor is actually doing work, not just polling.">
+      <h2>Applied today<button type="button" class="info-btn" data-info-target="applied" aria-label="help">i</button></h2>
       <p class="big" id="applied-today">—</p>
       <details>
         <summary>Recent log entries</summary>
@@ -265,44 +277,44 @@
       </details>
     </section>
 
-    <section class="card" id="drift">
-      <h2>Schema drift (last 5 batches)</h2>
+    <section class="card" id="drift" data-info="Frequency of each exit reason across the last 5 batch reports. The supervisor uses these counts to spot when one particular failure mode starts dominating — e.g. a sudden spike in 'httpTimeout' would tell you to look at network config rather than extraction rules.">
+      <h2>Schema drift (last 5 batches)<button type="button" class="info-btn" data-info-target="drift" aria-label="help">i</button></h2>
       <table>
         <thead><tr><th>Exit reason</th><th>Count</th></tr></thead>
         <tbody id="drift-body"><tr><td colspan="2" class="empty">loading…</td></tr></tbody>
       </table>
     </section>
 
-    <section class="card" id="dead-list">
-      <h2>Top dead sources (cf ≥ 5)</h2>
+    <section class="card" id="dead-list" data-info="Top 10 sources with consecutive_failures ≥ 5 in sources_status.jsonl. Reason is the latest recorded lastRoutingReason. Recommended action: investigate the URL manually before downgrading — many 'dead' sites are actually reachable but block Tool A's user-agent.">
+      <h2>Top dead sources (cf ≥ 5)<button type="button" class="info-btn" data-info-target="dead-list" aria-label="help">i</button></h2>
       <table>
         <thead><tr><th>Source</th><th>cf</th><th>Reason</th></tr></thead>
         <tbody id="dead-body"><tr><td colspan="3" class="empty">loading…</td></tr></tbody>
       </table>
     </section>
 
-    <section class="card" id="untouched-list">
-      <h2>Top untouched sources (cf ≥ 10)</h2>
+    <section class="card" id="untouched-list" data-info="Top 10 sources the supervisor has flagged as 'untouched' (cf ≥ 10 with no successful scrape). These are likely candidates for either a manual run via Alltools-E2E or for being added to an ignore list if they consistently block scraping.">
+      <h2>Top untouched sources (cf ≥ 10)<button type="button" class="info-btn" data-info-target="untouched-list" aria-label="help">i</button></h2>
       <table>
         <thead><tr><th>Source</th><th>cf</th><th>Reason</th></tr></thead>
         <tbody id="untouched-body"><tr><td colspan="3" class="empty">loading…</td></tr></tbody>
       </table>
     </section>
 
-    <section class="card" id="suggested">
-      <h2>Suggested manual actions</h2>
+    <section class="card" id="suggested" data-info="Operator-facing suggestions emitted by the supervisor (e.g. 'consider downgrading source X', 'route source Y to Tool C'). Treat each as a hint to investigate, not an autonomous action — nothing is applied without a human OK.">
+      <h2>Suggested manual actions<button type="button" class="info-btn" data-info-target="suggested" aria-label="help">i</button></h2>
       <ul id="suggested-list"><li class="empty">queue empty</li></ul>
     </section>
 
-    <section class="card" id="freshness">
-      <h2>Freshness (median)</h2>
+    <section class="card" id="freshness" data-info="Median age (in hours) of the event files in 03-Queue/03-extractedevents/ measured by file mtime. Green ≤ 24h, yellow ≤ 72h, red > 72h. The sparkline below shows the last 14 days of history. A climbing trend here means the extraction pipeline is falling behind.">
+      <h2>Freshness (median)<button type="button" class="info-btn" data-info-target="freshness" aria-label="help">i</button></h2>
       <p class="big" id="freshness-value">—</p>
       <p class="caption">Median age of event files</p>
       <div class="sparkline" id="spark-freshness" aria-label="Freshness trend (last 14 days)"></div>
     </section>
 
-    <section class="card" id="field-coverage">
-      <h2>Field coverage</h2>
+    <section class="card" id="field-coverage" data-info="Fraction of rows in 03-Queue/03-extractedevents/ that contain a non-empty value for each field. 'title' and 'date' are the most critical — if either drops below ~80%, the agent will start getting unsearchable events. The sparklines show the 14-day trend per field.">
+      <h2>Field coverage<button type="button" class="info-btn" data-info-target="field-coverage" aria-label="help">i</button></h2>
       <ul class="bars" id="coverage-bars"></ul>
       <div class="sparklines-row">
         <div class="sparkline" id="spark-coverage-title" aria-label="Title coverage trend"></div>
@@ -310,8 +322,35 @@
       </div>
     </section>
 
-    <section class="card" id="batch-success">
-      <h2>Batch success (last 5)</h2>
+    <section class="card" id="extraction-overview" data-info="Per-layer historical totals + the timestamp of each layer's most recent activity. Use to spot layers that have gone quiet. A layer with a non-null latestIso in the recent past is alive; null means no data yet or the file is missing. The per-source F breakdown shows where the bulk of extracted events live.">
+      <h2>Extraction overview<button type="button" class="info-btn" data-info-target="extraction-overview" aria-label="help">i</button></h2>
+      <p class="caption">Historical totals + most-recent activity per layer (live counts below; per-layer live state tiles still drive day-to-day ops).</p>
+      <table class="overview-table">
+        <thead><tr><th>Layer</th><th>Total</th><th>Latest activity</th><th>Note</th></tr></thead>
+        <tbody id="extraction-overview-body"><tr><td colspan="4" class="empty">loading…</td></tr></tbody>
+      </table>
+      <details id="extraction-overview-f-detail">
+        <summary>Per-source extraction breakdown (F layer)</summary>
+        <div class="db-sources-scrollable" id="extraction-overview-f-list"><span class="empty muted">loading…</span></div>
+      </details>
+    </section>
+
+    <section class="card" id="unsynced" data-info="Compares 03-Queue/03-extractedevents/ against events_public using ticket_url as the identity (cross-source). Matched = same url present in DB under any source. Missing = local but not yet persisted. crossSourceMatched = local source differs from DB source — typical for aggregator re-imports (e.g. sthlmlist re-importing kulturhuset events). missingRows shows up to 100 most-recent missing rows. ok=false means Supabase was unreachable on this poll.">
+      <h2>Osyncade mot Supabase<button type="button" class="info-btn" data-info-target="unsynced" aria-label="help">i</button></h2>
+      <p class="caption">Local events (03-Queue/03-extractedevents) not yet visible in events_public. Identity = ticket_url (cross-source).</p>
+      <div class="unsynced-summary" id="unsynced-summary"><span class="muted">loading…</span></div>
+      <details id="unsynced-per-source-detail" open>
+        <summary>Per-source missing counts</summary>
+        <div class="db-sources-scrollable" id="unsynced-per-source"><span class="empty muted">no data</span></div>
+      </details>
+      <details id="unsynced-rows-detail">
+        <summary>Missing rows (most recent first, capped at 100)</summary>
+        <ul class="unsynced-rows" id="unsynced-rows"><li class="empty muted">no data</li></ul>
+      </details>
+    </section>
+
+    <section class="card" id="batch-success" data-info="Counts from the last 5 C-htmlGate batch reports. Transport OK = HTTP 2xx and parseable HTML. Data OK = page actually contained candidate events. Decoy = page looked like an event listing but turned out to be empty/cached/test. The sparkline shows the success rate over the last 14 days.">
+      <h2>Batch success (last 5)<button type="button" class="info-btn" data-info-target="batch-success" aria-label="help">i</button></h2>
       <dl>
         <dt>Attempts</dt><dd id="batches-attempts">—</dd>
         <dt>Transport OK</dt><dd id="batches-transport">—</dd>
@@ -334,6 +373,8 @@
   <footer>
     <p>Generated <span id="generated-at">—</span></p>
   </footer>
+
+  <div id="info-popover" class="info-popover" role="tooltip" aria-live="polite" hidden></div>
 
   <script src="/app.js"></script>
 </body>
