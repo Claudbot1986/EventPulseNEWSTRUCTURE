@@ -2,13 +2,15 @@
  * ingestionPipeline.ts — Daglig ingestion-pipeline
  *
  * Kör hela kedjan automatiskt:
- *   1. runA.ts            — skrapa källor från preUI-queue
- *   2. runA-extract.ts    — extrahera events till extractedevents/
- *   3. importToEventPulse — skicka events till BullMQ → Supabase
+ *   1.  runA.ts            — skrapa källor från preUI-queue
+ *   1b. runB-parallel.ts   — JSON/JSON-LD feeds från preB-queue
+ *   2.  runA-extract.ts    — extrahera events till extractedevents/
+ *   3.  importToEventPulse — skicka events till BullMQ → Supabase
  *
  * Användning:
  *   npx tsx 09-ScrapingSupervisor/ingestionPipeline.ts                # kör hela kedjan
  *   npx tsx 09-ScrapingSupervisor/ingestionPipeline.ts --skip-a       # hoppa över steg 1
+ *   npx tsx 09-ScrapingSupervisor/ingestionPipeline.ts --skip-b       # hoppa över steg 1b
  *   npx tsx 09-ScrapingSupervisor/ingestionPipeline.ts --skip-extract # hoppa över steg 2
  *   npx tsx 09-ScrapingSupervisor/ingestionPipeline.ts --skip-import  # hoppa över steg 3
  *   npx tsx 09-ScrapingSupervisor/ingestionPipeline.ts --limit N      # max N sources
@@ -37,6 +39,7 @@ const LOG_DIR = path.join(PROJECT_ROOT, 'runtime', 'scraping-supervisor');
 const TSX_BIN = path.join(PROJECT_ROOT, 'node_modules', '.bin', 'tsx');
 
 const RUN_A_PATH = path.join(PROJECT_ROOT, '02-Ingestion/A-directAPI-networkGate/runA.ts');
+const RUN_B_PATH = path.join(PROJECT_ROOT, '02-Ingestion/B-JSON-feedGate/runB-parallel.ts');
 const RUN_A_EXTRACT_PATH = path.join(PROJECT_ROOT, '02-Ingestion/A-directAPI-networkGate/runA-extract.ts');
 const IMPORT_PATH = path.join(PROJECT_ROOT, '03-Queue/importToEventPulse.ts');
 
@@ -132,6 +135,7 @@ function runStep(name: string, scriptPath: string, args: string[], fileLog: stri
 
 interface CliOptions {
   skipA: boolean;
+  skipB: boolean;
   skipExtract: boolean;
   skipImport: boolean;
   dryRun: boolean;
@@ -141,6 +145,7 @@ interface CliOptions {
 function parseArgs(argv: string[]): CliOptions {
   return {
     skipA: argv.includes('--skip-a'),
+    skipB: argv.includes('--skip-b'),
     skipExtract: argv.includes('--skip-extract'),
     skipImport: argv.includes('--skip-import'),
     dryRun: argv.includes('--dry-run'),
@@ -160,7 +165,7 @@ async function main(): Promise<number> {
   log(`═══════════════════════════════════════════════════════════`, fileLog);
   log(`  EventPulse ingestionPipeline  │  ${opts.dryRun ? 'DRY-RUN' : 'LIVE'}`, fileLog);
   log(`═══════════════════════════════════════════════════════════`, fileLog);
-  log(`  skip-a=${opts.skipA} skip-extract=${opts.skipExtract} skip-import=${opts.skipImport} limit=${opts.limit ?? '∞'}`, fileLog);
+  log(`  skip-a=${opts.skipA} skip-b=${opts.skipB} skip-extract=${opts.skipExtract} skip-import=${opts.skipImport} limit=${opts.limit ?? '∞'}`, fileLog);
 
   const startedAt = Date.now();
   const results: StepResult[] = [];
@@ -174,6 +179,17 @@ async function main(): Promise<number> {
     if (opts.dryRun) args.push('--dry');
     if (opts.limit !== null) args.push('--limit', String(opts.limit));
     results.push(await runStep('runA', RUN_A_PATH, args, fileLog));
+  }
+
+  // Steg 1b: runB (JSON feeds) — för källor som exponerar schema.org/JSON-LD feeds
+  if (opts.skipB) {
+    log(`[step:runB] SKIPPED (--skip-b)`, fileLog);
+    results.push({ step: 'runB', exitCode: 0, durationMs: 0, skipped: true, stdoutTail: '', stderrTail: '' });
+  } else {
+    const args = ['--workers', '20'];
+    if (opts.dryRun) args.push('--dry');
+    if (opts.limit !== null) args.push('--limit', String(opts.limit));
+    results.push(await runStep('runB', RUN_B_PATH, args, fileLog));
   }
 
   // Steg 2: runA-extract
