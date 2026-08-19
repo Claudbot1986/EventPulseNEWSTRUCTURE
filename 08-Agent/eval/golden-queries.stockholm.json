@@ -1,0 +1,166 @@
+[
+  {
+    "id": "Q01",
+    "query": "konsert ikväll",
+    "expected_language": "sv",
+    "expected_time_of_day": "evening",
+    "expected_city": "Stockholm",
+    "expected_categories": ["music"],
+    "expected_min_results": 0,
+    "notes": "Baseline music query."
+  },
+  {
+    "id": "Q02",
+    "query": "free jazz tonight",
+    "expected_language": "en",
+    "expected_budget": "free",
+    "expected_time_of_day": "evening",
+    "expected_categories": ["music"],
+    "notes": "English + budget filter."
+  },
+  {
+    "id": "Q03",
+    "query": "teater på lördag",
+    "expected_language": "sv",
+    "expected_categories": ["theater"]
+  },
+  {
+    "id": "Q04",
+    "query": "dans ikväll",
+    "expected_language": "sv",
+    "expected_time_of_day": "evening",
+    "expected_categories": ["dance"]
+  },
+  {
+    "id": "Q05",
+    "query": "film bio ikväll",
+    "expected_language": "sv",
+    "expected_categories": ["film"]
+  },
+  {
+    "id": "Q06",
+    "query": "konst utställning helgen",
+    "expected_language": "sv",
+    "expected_categories": ["art"]
+  },
+  {
+    "id": "Q07",
+    "query": "familj aktivitet lördag",
+    "expected_language": "sv",
+    "expected_party": "family"
+  },
+  {
+    "id": "Q08",
+    "query": "dejt ikväll restaurang",
+    "expected_language": "sv",
+    "expected_party": "couple"
+  },
+  {
+    "id": "Q09",
+    "query": "lecture talk english",
+    "expected_language": "en",
+    "expected_categories": ["lecture"]
+  },
+  {
+    "id": "Q10",
+    "query": "matfestival ikväll",
+    "expected_language": "sv",
+    "expected_categories": ["food"]
+  },
+  {
+    "id": "Q11",
+    "query": "gratis barn aktivitet",
+    "expected_language": "sv",
+    "expected_budget": "free",
+    "expected_party": "family",
+    "expected_categories": ["family"]
+  },
+  {
+    "id": "Q12",
+    "query": "konsert men inte musik",
+    "expected_language": "sv",
+    "expected_categories": ["music"],
+    "expected_exclude_categories": ["music"],
+    "notes": "Self-contradicting — should yield 0 results, no fabrication."
+  },
+  {
+    "id": "Q13",
+    "query": "nästa vecka",
+    "expected_language": "sv",
+    "expected_date_range": "next_week"
+  },
+  {
+    "id": "Q14",
+    "query": "denna helg",
+    "expected_language": "sv",
+    "expected_date_range": "this_weekend"
+  },
+  {
+    "id": "Q15",
+    "query": "ikväll",
+    "expected_language": "sv",
+    "expected_time_of_day": "evening",
+    "expected_date_range": "today"
+  },
+  {
+    "id": "Q16",
+    "query": "classical concert this weekend",
+    "expected_language": "en",
+    "expected_categories": ["music"]
+  },
+  {
+    "id": "Q17",
+    "query": "vad händer i Stockholm?",
+    "expected_language": "sv",
+    "expected_city": "Stockholm",
+    "expected_min_results": 0
+  },
+  {
+    "id": "Q18",
+    "query": "festival gratis helgen",
+    "expected_language": "sv",
+    "expected_budget": "free"
+  },
+  {
+    "id": "Q19",
+    "query": "kids show saturday",
+    "expected_language": "en",
+    "expected_party": "family"
+  },
+  {
+    "id": "Q20",
+    "query": "stökig konsert ikväll",
+    "expected_language": "sv",
+    "expected_categories": ["music"],
+    "expected_time_of_day": "evening"
+  },
+  {
+    "id": "Q21",
+    "query": "Jag är i Stockholm på fredag kväll, sugen på live musik men inte arena, max 400 kr, gärna med en vän",
+    "expected_language": "sv",
+    "expected_time_of_day": "evening",
+    "expected_city": "Stockholm",
+    "expected_categories": ["music"],
+    "expected_exclude_categories": ["arena"],
+    "expected_budget": "medium",
+    "expected_party": "couple",
+    "notes": "MAGIC SLICE — verbatim from masterplan §1. The acceptance experience for Phase 1. Anti-hallucination must hold: no invented prices/times/venues. KNOWN GAP: parse_intent does not yet extract 'max 400 kr' as budget=medium or 'arena' as exclude; tracked separately."
+  },
+  {
+    "id": "Q22",
+    "query": "något lugnt på söndag eftermiddag, gratis",
+    "expected_language": "sv",
+    "expected_time_of_day": "afternoon",
+    "expected_budget": "free",
+    "notes": "Tests time_of_day=afternoon + free + Stockholm default."
+  },
+  {
+    "id": "Q23",
+    "query": "afterwork med kollegor ikväll centralt",
+    "expected_language": "sv",
+    "expected_time_of_day": "evening",
+    "expected_party": "friends",
+    "expected_city": "Stockholm",
+    "notes": "Group context ('kollegor' → friends). Central Stockholm coord filter not in Phase 1. KNOWN GAP: parse_intent does not yet extract 'kollegor' as party=friends; tracked separately."
+  }
+]
