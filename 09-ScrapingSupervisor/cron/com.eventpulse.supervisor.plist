@@ -7,9 +7,8 @@
   <string>com.eventpulse.supervisor</string>
   <key>ProgramArguments</key>
   <array>
-    <string>/opt/homebrew/bin/node</string>
-    <string>/Volumes/2TB filer/NEWSTRUCTURE-COPY/node_modules/tsx/dist/cli.mjs</string>
-    <string>/Volumes/2TB filer/NEWSTRUCTURE-COPY/09-ScrapingSupervisor/supervisor.ts</string>
+    <string>/bin/bash</string>
+    <string>/Volumes/2TB filer/NEWSTRUCTURE-COPY/09-ScrapingSupervisor/cron/runDaily.sh</string>
   </array>
   <key>StartCalendarInterval</key>
   <dict>
