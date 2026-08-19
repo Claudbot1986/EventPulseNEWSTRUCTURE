@@ -35,6 +35,21 @@ import {
 import { ensureDashboardRunning, type DashboardLifecycleResult } from './tools/dashboard_lifecycle';
 import { computeAll as computeAllMetrics } from './tools/freshness_metrics';
 import { snapshotForToday, type MetricsSnapshot } from './tools/metrics_history';
+import {
+  reviewSources,
+  proposalsToChanges,
+  type ReviewResult,
+} from './tools/source_ai_review';
+import {
+  autoApplySourceFixes,
+  previewAutoApplySourceFixes,
+  type ApplyResult as SourceApplyResult,
+} from './tools/auto_apply_source_fixes';
+import {
+  generateSourceHealthReport,
+  appendOrReplaceSourceReviewSection,
+} from './tools/source_health_report';
+import { appendChange } from './tools/source_changes';
 
 // ─── Public types ────────────────────────────────────────────────────────────
 
@@ -71,6 +86,10 @@ export interface SupervisorRunResult {
   dashboard: DashboardLifecycleResult | null;
   /** Today's metrics snapshot (written to metrics-history.jsonl). Null on dry-run. */
   metricsSnapshot: MetricsSnapshot | null;
+  /** AI source-review proposals (audit log entries created). Null on dry-run. */
+  review: ReviewResult | null;
+  /** Source-fix auto-apply result (archive-dead + update-preferred-path). Null on dry-run. */
+  sourceApply: SourceApplyResult | null;
 }
 
 // ─── Main entry ──────────────────────────────────────────────────────────────
@@ -107,6 +126,7 @@ export async function runSupervisor(opts: SupervisorOptions): Promise<Supervisor
       ? previewAutoApplySafeFixes(state.deadSources, applyOpts)
       : autoApplySafeFixes(state.deadSources, applyOpts);
     const reports = writeReports(state, analysis, apply, writeOpts);
+    const reviewResult = await runSourceReviewPipeline(state, reports, dryRun, opts);
     const dashboard = dryRun ? null : ensureDashboardRunning(opts.projectRoot);
     const metricsSnapshot = dryRun
       ? null
@@ -119,6 +139,8 @@ export async function runSupervisor(opts: SupervisorOptions): Promise<Supervisor
       reports,
       dashboard,
       metricsSnapshot,
+      review: reviewResult.review,
+      sourceApply: reviewResult.sourceApply,
       dryRun,
       durationMs: finishedAt.getTime() - startedAt.getTime(),
       startedAt: startedAt.toISOString(),
@@ -135,12 +157,70 @@ export async function runSupervisor(opts: SupervisorOptions): Promise<Supervisor
       reports: emptyReports(),
       dashboard: null,
       metricsSnapshot: null,
+      review: null,
+      sourceApply: null,
       dryRun,
       durationMs: finishedAt.getTime() - startedAt.getTime(),
       startedAt: startedAt.toISOString(),
       finishedAt: finishedAt.toISOString(),
       error: e instanceof Error ? e.message : String(e),
     };
+  }
+}
+
+/**
+ * AI source-review pipeline: deterministic rules + (optional) LLM-assisted
+ * proposals → bounded auto-apply (audit-logged) → vault report section.
+ *
+ * Errors-as-data: any failure inside this step is swallowed and surfaced via
+ * the structured result so the supervisor's main `try` is not polluted.
+ *
+ * Audit log invariants (per `feedback_ai_source_review_audit.md`):
+ *   - appendChange is called BEFORE any file mutation
+ *   - auto-applied + pending review both produce the same shape
+ *   - dryRun=true short-circuits all writes (no audit log, no file moves)
+ */
+async function runSourceReviewPipeline(
+  state: SupervisorState,
+  reports: WriteReportsResult,
+  dryRun: boolean,
+  opts: SupervisorOptions,
+): Promise<{ review: ReviewResult | null; sourceApply: SourceApplyResult | null }> {
+  try {
+    // 1. Build proposals from dead sources.
+    const review = await reviewSources({
+      projectRoot: opts.projectRoot,
+      sources: state.deadSources,
+    });
+
+    // 2. Apply the bounded auto-apply rule (only on non-dry-run).
+    const sourceApply = dryRun
+      ? previewAutoApplySourceFixes(review.proposals, { projectRoot: opts.projectRoot })
+      : autoApplySourceFixes(review.proposals, { projectRoot: opts.projectRoot });
+
+    // 3. Audit log: every proposal → SourceChange entry.
+    //    Auto-applied ones are logged with `auto-applied`; the rest with
+    //    `pending-review`. The audit log is ALWAYS written (even on dry-run)
+    //    because it's the source of truth for what was proposed.
+    if (!dryRun) {
+      for (const p of review.proposals) {
+        const decision = sourceApply.applied.some((a) => a.proposal.sourceId === p.sourceId)
+          ? 'auto-apply'
+          : 'queue-review';
+        const change = proposalsToChanges([p], decision)[0];
+        if (change) appendChange(opts.projectRoot, change);
+      }
+    }
+
+    // 4. Generate the vault report section and append/replace in the daily note.
+    if (!dryRun && reports.vaultPath) {
+      const r = generateSourceHealthReport({ projectRoot: opts.projectRoot });
+      appendOrReplaceSourceReviewSection(reports.vaultPath, r.markdown);
+    }
+
+    return { review: dryRun ? null : review, sourceApply: dryRun ? null : sourceApply };
+  } catch {
+    return { review: null, sourceApply: null };
   }
 }
 
@@ -186,6 +266,9 @@ export async function main(argv: string[] = process.argv.slice(2)): Promise<numb
       `  repo:  ${result.reports.repoDocPath ?? '(skipped)'}`,
       `  duration: ${result.durationMs}ms`,
       `  LLM: ${result.analysis.usedLlm ? result.analysis.modelVersion : 'deterministic fallback'}`,
+      ...(result.review
+        ? [`  source-review: ${result.review.proposals.length} proposals (llm=${result.review.llmProposalsCount}) applied=${result.sourceApply?.applied.length ?? 0} queued=${result.sourceApply?.skipped.length ?? 0}`]
+        : []),
       ...(result.dashboard
         ? [`  dashboard: ${result.dashboard.wasRunning ? 'already running' : result.dashboard.spawned ? `spawned pid=${result.dashboard.pid}` : `failed: ${result.dashboard.error}`}`]
         : []),
