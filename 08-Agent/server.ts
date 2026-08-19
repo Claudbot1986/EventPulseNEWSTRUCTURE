@@ -34,6 +34,7 @@ import {
   MIN_SAMPLE_PER_VARIANT,
 } from './tools/experiments';
 import { composeReply } from './llmRouter';
+import { fetchEventImage } from './tools/fetch_event_image';
 import type {
   AgentChatRequest,
   AgentChatResponse,
@@ -235,6 +236,41 @@ export function buildApp(opts: { supabase?: SupabaseClient } = {}): express.Expr
         reasons: r.reasons,
         score: r.score,
       }));
+
+      // ─── Phase 1.7: og:image / JSON-LD fallback enrichment ──────────
+      // Many events in events_public have NULL image_url (the organizer
+      // page is the only place a hero image lives). For the magic-slice
+      // UI cards, an image dramatically increases engagement. We fire
+      // fetchEventImage in parallel for cards missing image_url, with a
+      // tight per-call timeout so /agent/chat stays bounded. Failures
+      // collapse silently — never throw into the chat path. After this
+      // block, `cards` reflects what the user will actually see.
+      //
+      // ticket_url is the best source proxy we have without a schema
+      // change — most venues serve tickets on their own domain where the
+      // og:image is reliable. We accept the rare wrong-domain case
+      // (Ticketmaster / Eventbrite hosting) since those still embed the
+      // event's own image in the ticket page.
+      const IMAGE_FALLBACK_TIMEOUT_MS = 1500;
+      const cardsNeedingImage = cards
+        .map((card, idx) => ({ card, idx }))
+        .filter(({ card }) => !card.image_url && !!card.ticket_url);
+      if (cardsNeedingImage.length > 0) {
+        const settled = await Promise.allSettled(
+          cardsNeedingImage.map(({ card }) =>
+            fetchEventImage(card.ticket_url as string, {
+              timeoutMs: IMAGE_FALLBACK_TIMEOUT_MS,
+            })
+          )
+        );
+        for (let i = 0; i < cardsNeedingImage.length; i++) {
+          const r = settled[i];
+          if (r.status === 'fulfilled' && r.value) {
+            const idx = cardsNeedingImage[i].idx;
+            cards[idx] = { ...cards[idx], image_url: r.value };
+          }
+        }
+      }
 
       // Log an "impression" per result. Best-effort, never throw.
       // Rank position reflects the ORDER THE USER ACTUALLY SEES (post-MMR),
