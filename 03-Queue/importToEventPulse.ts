@@ -130,6 +130,7 @@ function appendToEventPulseApp(sourceId: string, eventsEnqueued: number): void {
 // ── Extracted event reading ─────────────────────────────────────────────────
 
 interface ExtractedEvent {
+  id?: string;
   title?: string | { rendered: string };
   name?: string;
   description?: string | null;
@@ -218,6 +219,11 @@ function readExtractedEvents(sourceId: string): ExtractedEvent[] {
 }
 
 export function toRawEvent(sourceId: string, ev: ExtractedEvent): RawEventInput {
+  // source_id-fallback: många adapters (t.ex. berwaldhallen) använder `id` istället
+  // för `source_id`. Utan fallback skulle jobId kollidera vid dubletter (samma
+  // titel → samma jobId → BullMQ dedupe → bara första raden processas).
+  const effectiveSourceId = ev.source_id ?? ev.id ?? null;
+
   return {
     title:          extractTitle(ev),
     description:    extractDescription(ev),
@@ -229,12 +235,12 @@ export function toRawEvent(sourceId: string, ev: ExtractedEvent): RawEventInput 
     lng:            ev.lng ?? null,
     categories:     ev.categories ?? (ev.category ? [ev.category] : []),
     is_free:        ev.is_free ?? false,
-    price_min_sek:  ev.price_min_sek ?? null,
-    price_max_sek:  ev.price_max_sek ?? null,
+    price_min_sek:  ev.price_min_sek ?? (ev.price && typeof ev.price === 'object' ? ev.price.min ?? null : null),
+    price_max_sek:  ev.price_max_sek ?? (ev.price && typeof ev.price === 'object' ? ev.price.max ?? null : null),
     ticket_url:     ev.ticket_url ?? ev.ticketUrl ?? ev.url ?? null,
     image_url:      ev.image_url ?? ev.imageUrl ?? null,
     source:         sourceId,
-    source_id:      ev.source_id ?? null,
+    source_id:      effectiveSourceId,
     detected_language: ev.detected_language ?? null,
     raw_payload:    ev.raw_payload ?? {},
   };
@@ -287,6 +293,11 @@ async function main() {
   const limit = limitIdx !== -1 && args[limitIdx + 1]
     ? parseInt(args[limitIdx + 1], 10)
     : Infinity;
+  // --source <id[,id2,...> importerar bara specifika källor.
+  const sourceIdx = args.indexOf('--source');
+  const onlySources = sourceIdx !== -1 && args[sourceIdx + 1]
+    ? new Set(args[sourceIdx + 1].split(',').map((s) => s.trim()).filter(Boolean))
+    : null;
 
   console.log();
   console.log('═══════════════════════════════════════════════════════════');
@@ -302,10 +313,15 @@ async function main() {
   const sourceFiles = fs.readdirSync(EXTRACTED_DIR)
     .filter(f => f.endsWith('.jsonl'))
     .map(f => f.replace(/\.jsonl$/, ''))
+    .filter(id => onlySources == null || onlySources.has(id))
     .slice(0, limit);
 
   if (sourceFiles.length === 0) {
-    console.log('\n  Inga extracted events hittade.');
+    if (onlySources) {
+      console.log(`\n  Inga extracted events hittade för: ${[...onlySources].join(', ')}`);
+    } else {
+      console.log('\n  Inga extracted events hittade.');
+    }
     process.exit(0);
   }
 
