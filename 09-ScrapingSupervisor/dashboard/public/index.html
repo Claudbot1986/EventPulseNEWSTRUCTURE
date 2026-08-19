@@ -13,6 +13,34 @@
     <p class="subtitle">EventPulse · auto-refresh every 30s</p>
   </header>
 
+  <section class="kpi-strip" aria-label="Project KPIs">
+    <div class="kpi-tile">
+      <div class="kpi-label">Future events</div>
+      <div class="kpi-value" id="kpi-future">—</div>
+      <div class="kpi-caption">events_public where start_time &gt; now</div>
+    </div>
+    <div class="kpi-tile">
+      <div class="kpi-label">Next 7 days</div>
+      <div class="kpi-value" id="kpi-next7">—</div>
+      <div class="kpi-caption">events_public within 7d window</div>
+    </div>
+    <div class="kpi-tile">
+      <div class="kpi-label">Active sources (7d)</div>
+      <div class="kpi-value" id="kpi-active-sources">—</div>
+      <div class="kpi-caption">unique source with freshness_at &gt; now-7d</div>
+    </div>
+    <div class="kpi-tile">
+      <div class="kpi-label">DB total rows</div>
+      <div class="kpi-value" id="kpi-total-rows">—</div>
+      <div class="kpi-caption">count of events table</div>
+    </div>
+    <div class="kpi-tile">
+      <div class="kpi-label">Last Tool A success</div>
+      <div class="kpi-value" id="kpi-last-toola">—</div>
+      <div class="kpi-caption">newest lastSuccess in sources_status.jsonl</div>
+    </div>
+  </section>
+
   <main>
     <section class="card" id="run-info">
       <h2>Run schedule</h2>
@@ -24,7 +52,8 @@
     </section>
 
     <section class="card" id="sources">
-      <h2>Sources (live)</h2>
+      <h2>Sources (Tool A — direct network/JSON-LD)</h2>
+      <p class="caption">Counts from <code>sources_status.jsonl</code>. Working = Tool A scrape success. DB may also hold events from Tool B/C/D/push paths — see Sources (DB-fed) below.</p>
       <table>
         <thead><tr><th>Status</th><th>Count</th></tr></thead>
         <tbody>
@@ -34,6 +63,197 @@
           <tr class="total"><td>Total</td><td id="total">—</td></tr>
         </tbody>
       </table>
+    </section>
+
+    <section class="card" id="db-sources">
+      <h2>Sources (DB-fed)</h2>
+      <p class="caption">Top sources by future-event count in <code>events_public</code>. Fresh (7d) = rows with freshness_at within last 7 days.</p>
+      <div id="db-sources-list"><span class="empty muted">loading…</span></div>
+    </section>
+
+    <section class="card chart-card" id="chart-events-ingested">
+      <div class="chart-header">
+        <h2>Events ingested (DB)</h2>
+        <div class="resolution-toggle" data-chart="chart-events-ingested">
+          <button data-res="day" class="active">Day</button>
+          <button data-res="week">Week</button>
+          <button data-res="month">Month</button>
+        </div>
+      </div>
+      <div class="chart-body" id="chart-events-ingested-body"><span class="muted">loading…</span></div>
+      <p class="caption"><span id="chart-events-ingested-hint">From events_public.freshness_at</span></p>
+    </section>
+
+    <section class="card chart-card" id="chart-active-sources">
+      <div class="chart-header">
+        <h2>Active sources (DB)</h2>
+        <div class="resolution-toggle" data-chart="chart-active-sources">
+          <button data-res="day" class="active">Day</button>
+          <button data-res="week">Week</button>
+          <button data-res="month">Month</button>
+        </div>
+      </div>
+      <div class="chart-body" id="chart-active-sources-body"><span class="muted">loading…</span></div>
+      <p class="caption"><span id="chart-active-sources-hint">Unique source per day with freshness_at set</span></p>
+    </section>
+
+    <section class="card chart-card" id="chart-toola-attempts">
+      <div class="chart-header">
+        <h2>Tool A scrape attempts</h2>
+        <div class="resolution-toggle" data-chart="chart-toola-attempts">
+          <button data-res="day" class="active">Day</button>
+          <button data-res="week">Week</button>
+          <button data-res="month">Month</button>
+        </div>
+      </div>
+      <div class="chart-body" id="chart-toola-attempts-body"><span class="muted">loading…</span></div>
+      <div class="chart-legend" id="chart-toola-attempts-legend">
+        <span class="key"><span class="swatch" style="background:#3fb950"></span>success</span>
+        <span class="key"><span class="swatch" style="background:#f85149"></span>fail</span>
+      </div>
+      <p class="caption"><span id="chart-toola-attempts-hint">From sources_status.jsonl lastRun dates</span></p>
+    </section>
+
+    <section class="card chart-card" id="chart-toola-working">
+      <div class="chart-header">
+        <h2>Tool A working sources</h2>
+        <div class="resolution-toggle" data-chart="chart-toola-working">
+          <button data-res="day" class="active">Day</button>
+          <button data-res="week">Week</button>
+          <button data-res="month">Month</button>
+        </div>
+      </div>
+      <div class="chart-body" id="chart-toola-working-body"><span class="muted">loading…</span></div>
+      <p class="caption"><span id="chart-toola-working-hint">Sources with lastSuccess on a given day</span></p>
+    </section>
+
+    <section class="card chart-card" id="chart-batch-rate">
+      <div class="chart-header">
+        <h2>Batch success rate</h2>
+        <div class="resolution-toggle" data-chart="chart-batch-rate">
+          <button data-res="day" class="active">Day</button>
+          <button data-res="week">Week</button>
+          <button data-res="month">Month</button>
+        </div>
+      </div>
+      <div class="chart-body" id="chart-batch-rate-body"><span class="muted">loading…</span></div>
+      <p class="caption"><span id="chart-batch-rate-hint">From reports/batch-NNN/batch-traces.jsonl (success/attempts per batch dir mtime day)</span></p>
+    </section>
+
+    <section class="card layers-card" id="layers">
+      <h2>Extraction layers</h2>
+      <p class="caption">Per-layer health and pipeline depth — Tool A through push scripts. Each tile shows that layer's primary metrics from its own JSONL/log source.</p>
+      <h3 class="subhead">Live state (Redis + agent server)</h3>
+      <div class="layers-grid">
+        <div class="layer-tile" data-layer="bullmq">
+          <div class="layer-name"><span class="layer-badge">⚡</span>BullMQ queues (live)</div>
+          <div class="layer-desc">Redis · 03-Queue/queue.ts</div>
+          <div class="stats" id="bullmq-stats">
+            <div class="stat"><span class="num muted" id="bullmq-status">—</span><span class="label">status</span></div>
+          </div>
+          <div id="bullmq-rows"><span class="muted">loading…</span></div>
+        </div>
+
+        <div class="layer-tile" data-layer="agent">
+          <div class="layer-name"><span class="layer-badge">🧠</span>08-Agent metrics</div>
+          <div class="layer-desc">:8787/agent/metrics (proxied, 25s cache)</div>
+          <div class="stats" id="agent-stats">
+            <div class="stat"><span class="num muted" id="agent-status">—</span><span class="label">status</span></div>
+            <div class="stat"><span class="num" id="agent-impressions">—</span><span class="label">impressions</span></div>
+            <div class="stat"><span class="num" id="agent-clicks">—</span><span class="label">clicks</span></div>
+            <div class="stat"><span class="num ok" id="agent-outbounds">—</span><span class="label">outbounds</span></div>
+            <div class="stat"><span class="num warn" id="agent-ctr">—</span><span class="label">CTR</span></div>
+          </div>
+          <div class="layer-note" id="agent-note">—</div>
+        </div>
+      </div>
+      <h3 class="subhead">Static per-layer snapshot (JSONL / log sources)</h3>
+      <div class="layers-grid">
+        <div class="layer-tile" data-layer="A">
+          <div class="layer-name"><span class="layer-badge">A</span>Direct network / JSON-LD</div>
+          <div class="layer-desc">sources_status.jsonl</div>
+          <div class="stats">
+            <div class="stat"><span class="num ok" id="layer-A-working">—</span><span class="label">working</span></div>
+            <div class="stat"><span class="num bad" id="layer-A-dead">—</span><span class="label">dead</span></div>
+            <div class="stat"><span class="num" id="layer-A-total">—</span><span class="label">total</span></div>
+          </div>
+        </div>
+
+        <div class="layer-tile" data-layer="B">
+          <div class="layer-name"><span class="layer-badge">B</span>JSON feed gate</div>
+          <div class="layer-desc">runtime/postB-queue.jsonl</div>
+          <div class="stats">
+            <div class="stat"><span class="num" id="layer-B-depth">—</span><span class="label">queue depth</span></div>
+          </div>
+          <div class="layer-note" id="layer-B-note">—</div>
+        </div>
+
+        <div class="layer-tile" data-layer="C">
+          <div class="layer-name"><span class="layer-badge">C</span>HTML 123-loop</div>
+          <div class="layer-desc">C-candidates-batches-meta.jsonl</div>
+          <div class="stats">
+            <div class="stat"><span class="num" id="layer-C-total">—</span><span class="label">batches</span></div>
+            <div class="stat"><span class="num muted" id="layer-C-last">—</span><span class="label">last batch</span></div>
+          </div>
+          <div class="layer-note" id="layer-C-note">—</div>
+        </div>
+
+        <div class="layer-tile" data-layer="D">
+          <div class="layer-name"><span class="layer-badge">D</span>Render gate (Scrapingbee)</div>
+          <div class="layer-desc">runtime/pending_render_queue.jsonl</div>
+          <div class="stats">
+            <div class="stat"><span class="num" id="layer-D-pending">—</span><span class="label">pending</span></div>
+          </div>
+          <div class="layer-note" id="layer-D-note">—</div>
+        </div>
+
+        <div class="layer-tile" data-layer="F">
+          <div class="layer-name"><span class="layer-badge">F</span>Event extractor</div>
+          <div class="layer-desc">03-Queue/03-extractedevents/</div>
+          <div class="stats">
+            <div class="stat"><span class="num ok" id="layer-F-sources">—</span><span class="label">sources</span></div>
+            <div class="stat"><span class="num muted" id="layer-F-events">—</span><span class="label">events (~)</span></div>
+          </div>
+        </div>
+
+        <div class="layer-tile" data-layer="G">
+          <div class="layer-name"><span class="layer-badge">G</span>Universal scout</div>
+          <div class="layer-desc">02-Ingestion/G-universalScout/</div>
+          <div class="stats">
+            <div class="stat"><span class="num muted" id="layer-G-status">—</span><span class="label">results</span></div>
+          </div>
+          <div class="layer-note" id="layer-G-note">—</div>
+        </div>
+
+        <div class="layer-tile" data-layer="H">
+          <div class="layer-name"><span class="layer-badge">H</span>Manual review</div>
+          <div class="layer-desc">02-Ingestion/H-manualReview/H-queue/</div>
+          <div class="stats">
+            <div class="stat"><span class="num" id="layer-H-backlog">—</span><span class="label">backlog</span></div>
+          </div>
+          <div class="layer-note" id="layer-H-note">—</div>
+        </div>
+
+        <div class="layer-tile" data-layer="AI">
+          <div class="layer-name"><span class="layer-badge">AI</span>AI-assisted</div>
+          <div class="layer-desc">runtime/logs/deeptrace-d-*.json</div>
+          <div class="stats">
+            <div class="stat"><span class="num" id="layer-AI-logs">—</span><span class="label">log files</span></div>
+            <div class="stat"><span class="num muted" id="layer-AI-latest">—</span><span class="label">latest calls</span></div>
+          </div>
+          <div class="layer-note" id="layer-AI-note">—</div>
+        </div>
+
+        <div class="layer-tile" data-layer="Push">
+          <div class="layer-name"><span class="layer-badge">↦</span>Push scripts</div>
+          <div class="layer-desc">runtime/EVENTPULSE-APP-queue.jsonl</div>
+          <div class="stats">
+            <div class="stat"><span class="num" id="layer-Push-total">—</span><span class="label">total jobs</span></div>
+            <div class="stat"><span class="num warn" id="layer-Push-7d">—</span><span class="label">last 7d</span></div>
+          </div>
+          <div class="top-sources" id="layer-Push-top">—</div>
+        </div>
+      </div>
     </section>
 
     <section class="card" id="applied">

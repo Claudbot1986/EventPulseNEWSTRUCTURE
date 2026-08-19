@@ -12,13 +12,21 @@
 import { createServer, IncomingMessage, ServerResponse } from 'http';
 import { readFileSync, readdirSync, statSync, existsSync } from 'fs';
 import { dirname, join, resolve } from 'path';
-import { fileURLToPath } from 'url';
+import { fileURLToPath, pathToFileURL } from 'url';
 import {
   computeFreshnessMedianHours,
   computeFieldCoverage,
   computeBatchMetrics,
 } from '../tools/freshness_metrics';
 import { readHistory, type MetricsSnapshot } from '../tools/metrics_history';
+import {
+  collectKpis,
+  collectDbSources,
+  collectTimeSeries,
+  type Kpis,
+  type DbSourceRow,
+  type TimeSeries,
+} from './db';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -63,6 +71,56 @@ export interface DashboardData {
   fieldCoverage: { date: number; venue: number; title: number; description: number };
   batchMetrics: { attempts: number; success: number; decoy: number; transportOk: number; dataOk: number };
   metricsHistory: MetricsSnapshot[];
+  // New: KPI strip + DB-fed sources + time-series (Phase 1+3 of dashboard extension)
+  kpis: Kpis;
+  dbSources: DbSourceRow[];
+  timeSeries: TimeSeries;
+  // Per-layer time-series (from JSONL — no Supabase needed) for Group 3 charts
+  toolATimeSeries: {
+    attemptsPerDay: Array<{ date: string; success: number; fail: number }>;
+    workingPerDay: Array<{ date: string; value: number }>;
+  };
+  batchTimeSeries: Array<{ date: string; attempts: number; success: number; rate: number }>;
+  // Per-layer extraction funnel summary (Phase 4)
+  layers: LayerSummary;
+  // Live state (Phase 5): BullMQ + 08-Agent
+  bullmq: BullmqSummary;
+  agent: AgentMetrics;
+}
+
+export interface LayerSummary {
+  A: { working: number; dead: number; total: number; untouched: number };
+  B: { queueDepth: number; note: string };
+  C: { batchesTotal: number; byStatus: Record<string, number>; lastBatch: string | null; lastStatus: string | null };
+  D: { pendingCount: number; note: string };
+  F: { sourceCount: number; eventsTotalApprox: number };
+  G: { available: boolean; note: string };
+  H: { backlogSize: number; note: string };
+  AI: { logFilesTotal: number; latestIso: string | null; callsLatest: number };
+  Push: { totalJobs: number; last7dJobs: number; topSources: Array<{ sourceId: string; count: number }> };
+}
+
+// BullMQ queue counts — fetched with 1.5s timeout; null on failure.
+export interface BullmqSummary {
+  ok: boolean;
+  error?: string;
+  raw_events?: { waiting?: number; active?: number; completed?: number; failed?: number; delayed?: number };
+  ingestion_smoke?: { waiting?: number; active?: number; completed?: number; failed?: number; delayed?: number };
+  search_sync?: { waiting?: number; active?: number; completed?: number; failed?: number; delayed?: number };
+  fetchedAt?: string;
+}
+
+// 08-Agent metrics — proxied from agent server with 2s timeout + 25s cache.
+export interface AgentMetrics {
+  ok: boolean;
+  error?: string;
+  impressions?: number;
+  clicks?: number;
+  outbounds?: number;
+  saves?: number;
+  ctr?: number;
+  totalRows?: number;
+  fetchedAt?: string;
 }
 
 function readJsonl<T>(path: string): T[] {
@@ -77,13 +135,16 @@ function readDirListing(dir: string, suffix: string): string[] {
   return readdirSync(dir).filter((f) => f.endsWith(suffix));
 }
 
-export function collect(): DashboardData {
+export async function collect(): Promise<DashboardData> {
   const statusRows = readJsonl<SourceRow>(join(PROJECT_ROOT, 'runtime/sources_status.jsonl'));
+  // Status field uses 'success' (not 'ok') in sources_status.jsonl — match both
+  // defensively in case legacy rows used a different convention.
+  const isWorking = (s: string | null | undefined) => s === 'ok' || s === 'success';
   const sources = {
     total: statusRows.length,
-    working: statusRows.filter((r) => r.status === 'ok').length,
+    working: statusRows.filter((r) => isWorking(r.status)).length,
     dead: statusRows.filter((r) => r.status === 'fail').length,
-    untouched: statusRows.filter((r) => r.status !== 'ok' && r.status !== 'fail').length,
+    untouched: statusRows.filter((r) => !isWorking(r.status) && r.status !== 'fail').length,
   };
 
   let lastRunIso: string | null = null;
@@ -122,7 +183,7 @@ export function collect(): DashboardData {
       reason: (r.lastRoutingReason ?? 'unknown').slice(0, 60),
     }));
   const topUntouched = statusRows
-    .filter((r) => r.status !== 'ok' && r.status !== 'fail' && r.consecutiveFailures >= 10)
+    .filter((r) => !isWorking(r.status) && r.status !== 'fail' && r.consecutiveFailures >= 10)
     .sort((a, b) => b.consecutiveFailures - a.consecutiveFailures)
     .slice(0, 5)
     .map((r) => ({
@@ -154,6 +215,27 @@ export function collect(): DashboardData {
   next.setHours(4, 30, 0, 0);
   if (next <= now) next.setDate(next.getDate() + 1);
 
+  // ── New: per-day time-series from JSONL (Tool A + batch) ──
+  const toolATimeSeries = buildToolATimeSeries(statusRows);
+  const batchTimeSeries = buildBatchTimeSeries(reportsDir);
+
+  // ── New: Supabase KPIs + DB sources + DB time-series (Phase 1) ──
+  const [kpis, dbSources, timeSeries] = await Promise.all([
+    collectKpis(),
+    collectDbSources(),
+    collectTimeSeries(120),
+  ]);
+
+  // Fill the one field that lives in JSONL not DB
+  let lastSuccessIso: string | null = null;
+  for (const r of statusRows) {
+    if (r.status === 'success' && (r as { lastSuccess?: string }).lastSuccess) {
+      const ls = (r as { lastSuccess?: string }).lastSuccess!;
+      if (!lastSuccessIso || ls > lastSuccessIso) lastSuccessIso = ls;
+    }
+  }
+  kpis.lastToolASuccessIso = lastSuccessIso;
+
   return {
     generatedAt: now.toISOString(),
     lastRunIso,
@@ -170,7 +252,250 @@ export function collect(): DashboardData {
     fieldCoverage: computeFieldCoverage(PROJECT_ROOT),
     batchMetrics: computeBatchMetrics(PROJECT_ROOT, { recentBatches: 5 }),
     metricsHistory: readHistory(PROJECT_ROOT, { keepDays: 14 }),
+    kpis,
+    dbSources,
+    timeSeries,
+    toolATimeSeries,
+    batchTimeSeries,
+    layers: collectLayers(PROJECT_ROOT, sources),
+    bullmq: await collectBullmq(),
+    agent: await collectAgent(),
   };
+}
+
+// ── Time-series builders (Phase 1, no Supabase) ─────────────────────────────
+
+interface ToolARow { lastRun?: string; lastSuccess?: string; status?: string }
+function buildToolATimeSeries(rows: ToolARow[]): {
+  attemptsPerDay: Array<{ date: string; success: number; fail: number }>;
+  workingPerDay: Array<{ date: string; value: number }>;
+} {
+  const attempts: Record<string, { success: number; fail: number }> = {};
+  const working: Record<string, Set<string>> = {};
+  for (const r of rows) {
+    if (r.lastRun) {
+      const d = r.lastRun.slice(0, 10);
+      if (!attempts[d]) attempts[d] = { success: 0, fail: 0 };
+      if (r.status === 'success') attempts[d].success++;
+      else attempts[d].fail++;
+    }
+    if (r.lastSuccess) {
+      const d = r.lastSuccess.slice(0, 10);
+      if (!working[d]) working[d] = new Set();
+      working[d].add((r as { sourceId?: string }).sourceId ?? '?');
+    }
+  }
+  return {
+    attemptsPerDay: Object.keys(attempts).sort().map((d) => ({
+      date: d,
+      success: attempts[d].success,
+      fail: attempts[d].fail,
+    })),
+    workingPerDay: Object.keys(working).sort().map((d) => ({ date: d, value: working[d].size })),
+  };
+}
+
+function buildBatchTimeSeries(reportsDir: string): Array<{
+  date: string; attempts: number; success: number; rate: number;
+}> {
+  if (!existsSync(reportsDir)) return [];
+  const dayMap: Record<string, { attempts: number; success: number }> = {};
+  for (const batch of readdirSync(reportsDir).filter((d) => /^batch-\d+$/.test(d))) {
+    const tracePath = join(reportsDir, batch, 'batch-traces.jsonl');
+    if (!existsSync(tracePath)) continue;
+    let day: string;
+    try {
+      day = statSync(tracePath).mtime.toISOString().slice(0, 10);
+    } catch { continue; }
+    if (!dayMap[day]) dayMap[day] = { attempts: 0, success: 0 };
+    const traces = readJsonl<{ success: boolean }>(tracePath);
+    for (const t of traces) {
+      dayMap[day].attempts++;
+      if (t.success) dayMap[day].success++;
+    }
+  }
+  return Object.keys(dayMap).sort().map((d) => {
+    const { attempts, success } = dayMap[d];
+    return { date: d, attempts, success, rate: attempts ? success / attempts : 0 };
+  });
+}
+
+// ── Per-layer extraction funnel (Phase 4) ──────────────────────────────────
+
+function collectLayers(root: string, sources: { working: number; dead: number; untouched: number; total: number }): LayerSummary {
+  // Tool A — already computed by `sources`
+  const A = { working: sources.working, dead: sources.dead, untouched: sources.untouched, total: sources.total };
+
+  // Tool B — queue depth from runtime/postB-queue.jsonl
+  const toolBQueue = readJsonl<unknown>(join(root, 'runtime/postB-queue.jsonl'));
+  const B = { queueDepth: toolBQueue.length, note: toolBQueue.length === 0 ? 'queue empty' : 'depth' };
+
+  // Tool C — batches meta
+  const toolCMeta = readJsonl<{ batch?: number; name?: string; status?: string; count?: number }>(
+    join(root, '02-Ingestion/C-candidates-batches-meta.jsonl')
+  );
+  const byStatus: Record<string, number> = {};
+  for (const b of toolCMeta) {
+    const s = b.status ?? 'unknown';
+    byStatus[s] = (byStatus[s] ?? 0) + 1;
+  }
+  const lastC = toolCMeta[toolCMeta.length - 1] ?? null;
+  const C = {
+    batchesTotal: toolCMeta.length,
+    byStatus,
+    lastBatch: lastC?.name ?? null,
+    lastStatus: lastC?.status ?? null,
+  };
+
+  // Tool D — pending render queue
+  const toolDPending = readJsonl<unknown>(join(root, 'runtime/pending_render_queue.jsonl'));
+  const D = { pendingCount: toolDPending.length, note: toolDPending.length === 0 ? 'queue empty' : 'pending' };
+
+  // Tool F — extracted events directory
+  const fDir = join(root, '03-Queue/03-extractedevents');
+  let fCount = 0, fSizeBytes = 0;
+  if (existsSync(fDir)) {
+    for (const f of readdirSync(fDir).filter((n) => n.endsWith('.jsonl'))) {
+      try {
+        const st = statSync(join(fDir, f));
+        fCount++;
+        fSizeBytes += st.size;
+      } catch { /* skip */ }
+    }
+  }
+  // ~250 bytes per row avg → rough estimate (file size / 250).
+  const F = { sourceCount: fCount, eventsTotalApprox: fSizeBytes ? Math.round(fSizeBytes / 250) : 0 };
+
+  // Tool G — universal scout (no results.jsonl yet; report availability only)
+  const gDir = join(root, '02-Ingestion/G-universalScout');
+  const gResultsPath = join(gDir, 'results.jsonl');
+  const G = existsSync(gResultsPath)
+    ? { available: true, note: 'results.jsonl present (read separately if needed)' }
+    : { available: false, note: 'no results.jsonl yet' };
+
+  // Tool H — manual review backlog
+  const hDir = join(root, '02-Ingestion/H-manualReview/H-queue');
+  let hCount = 0;
+  if (existsSync(hDir)) {
+    try { hCount = readdirSync(hDir).length; } catch { hCount = 0; }
+  }
+  const H = { backlogSize: hCount, note: hCount === 0 ? 'queue empty' : `${hCount} pending` };
+
+  // AI — deeptrace-d-*.json logs
+  const logsDir = join(root, 'runtime/logs');
+  let aiLogs: string[] = [];
+  if (existsSync(logsDir)) {
+    aiLogs = readdirSync(logsDir).filter((f) => /^deeptrace-d-.*\.json$/.test(f)).sort();
+  }
+  let aiLatestIso: string | null = null;
+  let aiLatestCalls = 0;
+  if (aiLogs.length > 0) {
+    const latestFile = aiLogs[aiLogs.length - 1];
+    const latestPath = join(logsDir, latestFile);
+    try {
+      const st = statSync(latestPath);
+      aiLatestIso = st.mtime.toISOString();
+    } catch { /* ignore */ }
+    // Parse the file's `results[].status` length and `totalCandidates`
+    try {
+      const text = readFileSync(latestPath, 'utf-8');
+      const parsed = JSON.parse(text) as { totalCandidates?: number; results?: unknown[] };
+      aiLatestCalls = (parsed.results?.length ?? 0) + (parsed.totalCandidates ?? 0);
+    } catch { /* ignore */ }
+  }
+  const AI = {
+    logFilesTotal: aiLogs.length,
+    latestIso: aiLatestIso,
+    callsLatest: aiLatestCalls,
+  };
+
+  // Push — EVENTPULSE-APP-queue.jsonl grouped by sourceId
+  const pushRows = readJsonl<{ sourceId?: string; queuedAt?: string; queueReason?: string }>(
+    join(root, 'runtime/EVENTPULSE-APP-queue.jsonl')
+  );
+  const sourceCounts: Record<string, number> = {};
+  let last7d = 0;
+  const sevenDaysAgo = Date.now() - 7 * 86400000;
+  for (const r of pushRows) {
+    const id = r.sourceId ?? 'unknown';
+    sourceCounts[id] = (sourceCounts[id] ?? 0) + 1;
+    if (r.queuedAt && new Date(r.queuedAt).getTime() >= sevenDaysAgo) last7d++;
+  }
+  const topSources = Object.entries(sourceCounts)
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 5)
+    .map(([sourceId, count]) => ({ sourceId, count }));
+  const Push = { totalJobs: pushRows.length, last7dJobs: last7d, topSources };
+
+  return { A, B, C, D, F, G, H, AI, Push };
+}
+
+// ── Live state collectors (Phase 5) ────────────────────────────────────────
+
+async function collectBullmq(): Promise<BullmqSummary> {
+  // Dynamic import via file URL — keeps BullMQ out of cold-start path if Redis is down.
+  // Use absolute path to dodge tsx relative-path quirks with hyphen/space in cwd.
+  try {
+    const queueUrl = pathToFileURL(join(PROJECT_ROOT, '03-Queue/queue.ts')).href;
+    const mod: any = await import(queueUrl);
+    const { rawEventsQueue, smokeTestQueue, searchSyncQueue } = mod;
+    const withTimeout = <T,>(p: Promise<T>): Promise<T> =>
+      Promise.race([p, new Promise<T>((_, rej) => setTimeout(() => rej(new Error('timeout')), 1500))]);
+    const [raw, smoke, search] = await Promise.all([
+      withTimeout(rawEventsQueue.getJobCounts()),
+      withTimeout(smokeTestQueue.getJobCounts()),
+      withTimeout(searchSyncQueue.getJobCounts()),
+    ]);
+    return {
+      ok: true,
+      raw_events: raw,
+      ingestion_smoke: smoke,
+      search_sync: search,
+      fetchedAt: new Date().toISOString(),
+    };
+  } catch (err) {
+    return { ok: false, error: String((err as Error)?.message ?? err) };
+  }
+}
+
+// 25s in-process cache so 30s page refresh doesn't hammer the agent server.
+let _agentCache: { data: AgentMetrics; ts: number } | null = null;
+async function collectAgent(): Promise<AgentMetrics> {
+  const now = Date.now();
+  if (_agentCache && now - _agentCache.ts < 25_000) return _agentCache.data;
+  const url = process.env.AGENT_METRICS_URL ?? 'http://localhost:8787/agent/metrics';
+  try {
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), 2000);
+    let res: Response;
+    try {
+      res = await fetch(url, { signal: controller.signal });
+    } finally {
+      clearTimeout(timer);
+    }
+    if (!res.ok) {
+      const data: AgentMetrics = { ok: false, error: `agent ${res.status}`, fetchedAt: new Date().toISOString() };
+      _agentCache = { data, ts: now };
+      return data;
+    }
+    const j = (await res.json()) as Partial<AgentMetrics>;
+    const data: AgentMetrics = {
+      ok: true,
+      impressions: j.impressions ?? 0,
+      clicks: j.clicks ?? 0,
+      outbounds: j.outbounds ?? 0,
+      saves: j.saves ?? 0,
+      ctr: j.ctr ?? 0,
+      totalRows: (j as any).totalRows ?? (j as any).total_rows ?? 0,
+      fetchedAt: new Date().toISOString(),
+    };
+    _agentCache = { data, ts: now };
+    return data;
+  } catch (err) {
+    const data: AgentMetrics = { ok: false, error: String((err as Error)?.message ?? err), fetchedAt: new Date().toISOString() };
+    _agentCache = { data, ts: now };
+    return data;
+  }
 }
 
 // ─── HTTP handlers ───────────────────────────────────────────────────────────
@@ -202,11 +527,11 @@ function serveStatic(req: IncomingMessage, res: ServerResponse): boolean {
   return true;
 }
 
-function serveJson(req: IncomingMessage, res: ServerResponse): boolean {
+async function serveJson(req: IncomingMessage, res: ServerResponse): Promise<boolean> {
   const url = req.url ?? '/';
   if (url === '/api/status') {
     try {
-      const data = collect();
+      const data = await collect();
       res.writeHead(200, {
         'Content-Type': 'application/json; charset=utf-8',
         'Cache-Control': 'no-cache',
@@ -226,9 +551,9 @@ function serveJson(req: IncomingMessage, res: ServerResponse): boolean {
   return false;
 }
 
-const server = createServer((req, res) => {
+const server = createServer(async (req, res) => {
   if (serveStatic(req, res)) return;
-  if (serveJson(req, res)) return;
+  if (await serveJson(req, res)) return;
   res.writeHead(404);
   res.end('Not found');
 });
