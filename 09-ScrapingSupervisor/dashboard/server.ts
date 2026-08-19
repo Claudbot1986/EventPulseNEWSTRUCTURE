@@ -752,7 +752,122 @@ async function serveJson(req: IncomingMessage, res: ServerResponse): Promise<boo
     }
     return true;
   }
+  if (url === '/api/review/adapters') {
+    try {
+      const data = collectAdaptersForReview(PROJECT_ROOT);
+      res.writeHead(200, {
+        'Content-Type': 'application/json; charset=utf-8',
+        'Cache-Control': 'no-cache',
+      });
+      res.end(JSON.stringify(data));
+    } catch (err) {
+      res.writeHead(500, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ error: String(err) }));
+    }
+    return true;
+  }
+  if (url === '/api/review/discovery-candidates') {
+    try {
+      const data = collectDiscoveryCandidates(PROJECT_ROOT);
+      res.writeHead(200, {
+        'Content-Type': 'application/json; charset=utf-8',
+        'Cache-Control': 'no-cache',
+      });
+      res.end(JSON.stringify(data));
+    } catch (err) {
+      res.writeHead(500, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ error: String(err) }));
+    }
+    return true;
+  }
   return false;
+}
+
+// ─── Review endpoints (adapters + discovery candidates) ────────────────────
+
+interface AdapterReviewRow {
+  sourceId: string;
+  type: string;
+  seedUrl: string;
+  validationPassed: boolean;
+  aiConfidence: number;
+  generatedAt: string;
+  validatedAt: string;
+  validationNotes: string;
+  path: string; // runtime-relative path for the "open file" hint
+}
+
+interface DiscoveryCandidateRow {
+  sourceId: string;
+  candidateUrl: string;
+  score: number;
+  productivity: number;
+  stability: number;
+  discoveredAt: string;
+  reason: string;
+  evidence: Record<string, unknown> | undefined;
+}
+
+function collectAdaptersForReview(root: string): { count: number; rows: AdapterReviewRow[] } {
+  const adaptersDir = join(root, 'runtime/adapters');
+  if (!existsSync(adaptersDir)) return { count: 0, rows: [] };
+  const files = readdirSync(adaptersDir).filter((f) => f.endsWith('.json') && f !== '_manifest.jsonl');
+  const rows: AdapterReviewRow[] = [];
+  for (const f of files) {
+    try {
+      const raw = JSON.parse(readFileSync(join(adaptersDir, f), 'utf-8')) as Record<string, unknown>;
+      rows.push({
+        sourceId: String(raw.sourceId ?? f.replace(/\.json$/, '')),
+        type: String(raw.type ?? 'unknown'),
+        seedUrl: String(raw.seedUrl ?? ''),
+        validationPassed: raw.validationPassed === true,
+        aiConfidence: Number(raw.aiConfidence ?? 0),
+        generatedAt: String(raw.generatedAt ?? ''),
+        validatedAt: String(raw.validatedAt ?? ''),
+        validationNotes: String(raw.validationNotes ?? ''),
+        path: `runtime/adapters/${f}`,
+      });
+    } catch {
+      // skip malformed file
+    }
+  }
+  // sort: failed validation first, then lowest confidence
+  rows.sort((a, b) => {
+    if (a.validationPassed !== b.validationPassed) return a.validationPassed ? 1 : -1;
+    return a.aiConfidence - b.aiConfidence;
+  });
+  return { count: rows.length, rows };
+}
+
+function collectDiscoveryCandidates(root: string): { count: number; rows: DiscoveryCandidateRow[] } {
+  const path = join(root, 'runtime/discovery-candidates.jsonl');
+  if (!existsSync(path)) return { count: 0, rows: [] };
+  const text = readFileSync(path, 'utf-8').trim();
+  if (!text) return { count: 0, rows: [] };
+  const rows: DiscoveryCandidateRow[] = text
+    .split('\n')
+    .filter(Boolean)
+    .map((line) => {
+      try {
+        const o = JSON.parse(line) as Record<string, unknown>;
+        return {
+          sourceId: String(o.sourceId ?? ''),
+          candidateUrl: String(o.candidateUrl ?? ''),
+          score: Number(o.score ?? 0),
+          productivity: Number(o.productivity ?? 0),
+          stability: Number(o.stability ?? 0),
+          discoveredAt: String(o.discoveredAt ?? ''),
+          reason: String(o.reason ?? ''),
+          evidence: (o.evidence as Record<string, unknown> | undefined) ?? undefined,
+        };
+      } catch {
+        return null;
+      }
+    })
+    .filter((r): r is DiscoveryCandidateRow => r !== null);
+  // sort: highest score first
+  rows.sort((a, b) => b.score - a.score);
+  return { count: rows.length, rows };
 }
 
 const server = createServer(async (req, res) => {

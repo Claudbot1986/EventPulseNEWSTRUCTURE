@@ -10,7 +10,7 @@
 <body>
   <header>
     <h1>Scraping Supervisor Dashboard</h1>
-    <p class="subtitle">EventPulse · auto-refresh every 30s · <button type="button" id="info-help" class="info-btn info-btn--inline" aria-label="Show dashboard help">ℹ️ What does this page show?</button></p>
+    <p class="subtitle">EventPulse · auto-refresh every 30s · <button type="button" id="info-help" class="info-btn info-btn--inline" aria-label="Show dashboard help">ℹ️ What does this page show?</button> · <button type="button" id="btn-review-adapters" class="review-btn" aria-label="Review D-AI adapters">Review D-AI adapters (<span id="review-adapters-count">0</span>)</button> · <button type="button" id="btn-review-discovery" class="review-btn" aria-label="Review discovery candidates">Review discovery candidates (<span id="review-discovery-count">0</span>)</button></p>
   </header>
 
   <section class="kpi-strip" aria-label="Project KPIs">
@@ -442,6 +442,18 @@
   </footer>
 
   <div id="info-popover" class="info-popover" role="tooltip" aria-live="polite" hidden></div>
+
+  <!-- Review modal: D-AI adapters + discovery candidates -->
+  <div id="review-modal" class="review-modal" hidden>
+    <div class="review-modal-backdrop" data-review-close></div>
+    <div class="review-modal-panel" role="dialog" aria-modal="true" aria-labelledby="review-modal-title">
+      <header class="review-modal-header">
+        <h2 id="review-modal-title">Review</h2>
+        <button type="button" class="review-modal-close" data-review-close aria-label="Close">×</button>
+      </header>
+      <div id="review-modal-body" class="review-modal-body"></div>
+    </div>
+  </div>
 
   <script src="/app.js"></script>
 </body>

@@ -199,6 +199,28 @@
     const ec = document.getElementById('sh-errorcats');
     if (ec) ec.innerHTML = '';
   }
+
+  // ── Review counts (D-AI adapters + discovery candidates) ────────────
+  // Independent fetches; failures stay silent and the buttons default to 0.
+  try {
+    const aRes = await fetch('/api/review/adapters', { cache: 'no-store' });
+    if (aRes.ok) {
+      const aData = await aRes.json();
+      const el = document.getElementById('review-adapters-count');
+      if (el) el.textContent = String(aData.count ?? 0);
+    }
+  } catch { /* silent */ }
+  try {
+    const dRes = await fetch('/api/review/discovery-candidates', { cache: 'no-store' });
+    if (dRes.ok) {
+      const dData = await dRes.json();
+      const el = document.getElementById('review-discovery-count');
+      if (el) el.textContent = String(dData.count ?? 0);
+    }
+  } catch { /* silent */ }
+
+  // Wire review buttons (after DOM is ready, once)
+  wireReviewButtons();
 })();
 
 /** Minimal HTML escaper for DB-fed source names rendered into innerHTML. */
@@ -1358,4 +1380,139 @@ function wireShSorting() {
       renderShTable();
     });
   });
+}
+
+// ─── Review modal (D-AI adapters + discovery candidates) ────────────────────
+
+let reviewModalCache = { adapters: null, discovery: null };
+
+function wireReviewButtons() {
+  const a = document.getElementById('btn-review-adapters');
+  const d = document.getElementById('btn-review-discovery');
+  if (a && !a.dataset.wired) {
+    a.dataset.wired = '1';
+    a.addEventListener('click', () => openReviewModal('adapters'));
+  }
+  if (d && !d.dataset.wired) {
+    d.dataset.wired = '1';
+    d.addEventListener('click', () => openReviewModal('discovery'));
+  }
+  // Close handlers (X button + backdrop click)
+  document.querySelectorAll('[data-review-close]').forEach((el) => {
+    if (el.dataset.wired) return;
+    el.dataset.wired = '1';
+    el.addEventListener('click', closeReviewModal);
+  });
+  // Esc key closes
+  document.addEventListener('keydown', (ev) => {
+    const m = document.getElementById('review-modal');
+    if (ev.key === 'Escape' && m && !m.hidden) closeReviewModal();
+  });
+}
+
+function closeReviewModal() {
+  const m = document.getElementById('review-modal');
+  if (m) m.hidden = true;
+}
+
+async function openReviewModal(kind) {
+  const m = document.getElementById('review-modal');
+  const title = document.getElementById('review-modal-title');
+  const body = document.getElementById('review-modal-body');
+  if (!m || !body || !title) return;
+
+  title.textContent = kind === 'adapters'
+    ? 'Review D-AI adapters (runtime/adapters/*.json)'
+    : 'Review discovery candidates (runtime/discovery-candidates.jsonl)';
+  body.innerHTML = '<p class="empty">Loading…</p>';
+  m.hidden = false;
+
+  try {
+    if (kind === 'adapters') {
+      if (!reviewModalCache.adapters) {
+        const r = await fetch('/api/review/adapters', { cache: 'no-store' });
+        if (!r.ok) throw new Error(`HTTP ${r.status}`);
+        reviewModalCache.adapters = await r.json();
+      }
+      renderAdaptersReview(body, reviewModalCache.adapters);
+    } else {
+      if (!reviewModalCache.discovery) {
+        const r = await fetch('/api/review/discovery-candidates', { cache: 'no-store' });
+        if (!r.ok) throw new Error(`HTTP ${r.status}`);
+        reviewModalCache.discovery = await r.json();
+      }
+      renderDiscoveryReview(body, reviewModalCache.discovery);
+    }
+  } catch (err) {
+    body.innerHTML = `<p class="empty">Failed to load: ${escapeHtml(String(err))}</p>`;
+  }
+}
+
+function renderAdaptersReview(container, data) {
+  if (!data || data.count === 0) {
+    container.innerHTML = '<p class="empty">Inga adapters ännu. Kör <code>npx tsx 02-Ingestion/D-renderGate/runD-constrained-agent.ts --source-id &lt;id&gt;</code> för att generera en adapter.</p>';
+    return;
+  }
+  const rows = data.rows.map((r) => {
+    const passed = r.validationPassed;
+    const conf = Number(r.aiConfidence ?? 0);
+    const confPct = (conf * 100).toFixed(0) + '%';
+    const status = passed
+      ? (conf < 0.4 ? '<span class="sh-cat sh-cat-parse">granska</span>' : '<span class="sh-cat sh-cat-success">OK</span>')
+      : '<span class="sh-cat sh-cat-500">FAIL</span>';
+    return `<tr>
+      <td><code>${escapeHtml(r.sourceId)}</code></td>
+      <td>${escapeHtml(r.type)}</td>
+      <td><a href="${escapeHtml(r.seedUrl)}" target="_blank" rel="noopener">${escapeHtml(truncate(r.seedUrl, 40))}</a></td>
+      <td>${status}</td>
+      <td>${confPct}</td>
+      <td>${escapeHtml(r.validationNotes || '—')}</td>
+      <td class="muted">${escapeHtml(r.path)}</td>
+    </tr>`;
+  }).join('');
+  container.innerHTML = `
+    <p class="review-intro">${data.count} adapter${data.count === 1 ? '' : 's'} i <code>runtime/adapters/</code>. Failed validation och låg AI-confidence visas överst. Granska JSON-filen manuellt innan den körs skarpt.</p>
+    <table class="review-table">
+      <thead>
+        <tr>
+          <th>Source</th><th>Type</th><th>Seed URL</th><th>Status</th><th>AI conf</th><th>Notes</th><th>Path</th>
+        </tr>
+      </thead>
+      <tbody>${rows}</tbody>
+    </table>`;
+}
+
+function renderDiscoveryReview(container, data) {
+  if (!data || data.count === 0) {
+    container.innerHTML = '<p class="empty">Inga discovery-kandidater ännu. Kör <code>npx tsx 02-Ingestion/G-universalScout/runDiscovery.ts --limit 10</code>.</p>';
+    return;
+  }
+  const rows = data.rows.map((r) => {
+    const score = Number(r.score ?? 0);
+    const scorePct = (score * 100).toFixed(0);
+    const cls = score >= 0.5 ? 'sh-cat-parse' : score >= 0.2 ? 'sh-cat-redirect' : 'sh-cat-404';
+    return `<tr>
+      <td><code>${escapeHtml(r.sourceId)}</code></td>
+      <td><a href="${escapeHtml(r.candidateUrl)}" target="_blank" rel="noopener">${escapeHtml(truncate(r.candidateUrl, 50))}</a></td>
+      <td><span class="sh-cat ${cls}">${scorePct}%</span></td>
+      <td>${r.productivity}</td>
+      <td>${r.stability}</td>
+      <td>${escapeHtml(r.reason || '—')}</td>
+    </tr>`;
+  }).join('');
+  container.innerHTML = `
+    <p class="review-intro">${data.count} kandidat-URL${data.count === 1 ? '' : 'er'} från URLBank-discovery. Högst score först. Manuell granskning krävs — auto-promo är DO NOT BUILD YET enligt BACKLOG.</p>
+    <table class="review-table">
+      <thead>
+        <tr>
+          <th>Source</th><th>Candidate URL</th><th>Score</th><th>Prod</th><th>Stab</th><th>Reason</th>
+        </tr>
+      </thead>
+      <tbody>${rows}</tbody>
+    </table>`;
+}
+
+function truncate(s, n) {
+  if (!s) return '';
+  return s.length > n ? s.slice(0, n - 1) + '…' : s;
 }
