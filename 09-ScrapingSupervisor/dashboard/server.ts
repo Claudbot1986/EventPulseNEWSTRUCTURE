@@ -23,9 +23,13 @@ import {
   collectKpis,
   collectDbSources,
   collectTimeSeries,
+  collectExtractionOverview,
+  collectUnsynced,
   type Kpis,
   type DbSourceRow,
   type TimeSeries,
+  type LayerExtractionOverview,
+  type UnsyncedReport,
 } from './db';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -83,6 +87,10 @@ export interface DashboardData {
   batchTimeSeries: Array<{ date: string; attempts: number; success: number; rate: number }>;
   // Per-layer extraction funnel summary (Phase 4)
   layers: LayerSummary;
+  // Per-layer extraction overview (Task 3a): historical total + latest run
+  extractionOverview: LayerExtractionOverview;
+  // Unsynced vs Supabase (Task 3b)
+  unsynced: UnsyncedReport;
   // Live state (Phase 5): BullMQ + 08-Agent
   bullmq: BullmqSummary;
   agent: AgentMetrics;
@@ -133,6 +141,20 @@ function readJsonl<T>(path: string): T[] {
 function readDirListing(dir: string, suffix: string): string[] {
   if (!existsSync(dir)) return [];
   return readdirSync(dir).filter((f) => f.endsWith(suffix));
+}
+
+// Set of sourceIds that have a hand-tuned adapter under
+// `02-Ingestion/F-eventExtraction/adapters/`. Drives the "site-specific"
+// badge on the DB-fed sources list. Empty set if the dir is missing or
+// has no .ts files (e.g. partial checkout).
+function buildAdapterSet(root: string): Set<string> {
+  const adapterDir = join(root, '02-Ingestion/F-eventExtraction/adapters');
+  if (!existsSync(adapterDir)) return new Set();
+  return new Set(
+    readdirSync(adapterDir)
+      .filter((f) => f.endsWith('.ts') && f !== 'index.ts' && !f.endsWith('.test.ts'))
+      .map((f) => f.slice(0, -3))
+  );
 }
 
 export async function collect(): Promise<DashboardData> {
@@ -226,6 +248,10 @@ export async function collect(): Promise<DashboardData> {
     collectTimeSeries(120),
   ]);
 
+  // Annotate DB-fed sources with site-specific flag from the adapter dir.
+  const adapterSet = buildAdapterSet(PROJECT_ROOT);
+  for (const row of dbSources) row.hasAdapter = adapterSet.has(row.source);
+
   // Fill the one field that lives in JSONL not DB
   let lastSuccessIso: string | null = null;
   for (const r of statusRows) {
@@ -258,6 +284,8 @@ export async function collect(): Promise<DashboardData> {
     toolATimeSeries,
     batchTimeSeries,
     layers: collectLayers(PROJECT_ROOT, sources),
+    extractionOverview: collectExtractionOverview(PROJECT_ROOT),
+    unsynced: await collectUnsynced(PROJECT_ROOT),
     bullmq: await collectBullmq(),
     agent: await collectAgent(),
   };
@@ -498,6 +526,168 @@ async function collectAgent(): Promise<AgentMetrics> {
   }
 }
 
+// ─── Per-source health diagnostics (Phase 1) ────────────────────────────────
+
+export type ErrorCategory = 'timeout' | '404' | '500' | 'redirect' | 'antibot' | 'parse' | 'other' | null;
+export type SourceHealthStatus = 'healthy' | 'irregular' | 'failed';
+
+export interface SourceHealthRow {
+  id: string;
+  status: SourceHealthStatus;
+  lastSuccess: string | null;
+  lastFail: string | null;
+  lastErrorCategory: ErrorCategory;
+  lastError: string | null;
+  successRate: number; // lifetime proxy: (attempts - consecutiveFailures) / attempts
+  consecutiveFailures: number;
+  attempts: number;
+  preferredPath: string | null;
+  lastPathUsed: string | null;
+}
+
+export interface SourceHealthReport {
+  summary: {
+    total: number;
+    healthy: number;
+    irregular: number;
+    failed: number;
+    lastRunAt: string | null;
+  };
+  sources: SourceHealthRow[];
+  errorCategories: Record<string, number>;
+  generatedAt: string;
+}
+
+/**
+ * Categorize a free-form routing-reason string into a small, stable set of
+ * error buckets. Order matters: more specific patterns (antibot, parse)
+ * come before generic network/timeout so they aren't mis-classified.
+ *
+ * Categories:
+ *   timeout    — request timed out (ETIMEDOUT, AbortError, httpTimeout)
+ *   antibot    — Cloudflare / Datadome / Just a moment / Captcha / 403
+ *   parse      — JSON-LD missing, schema mismatch, empty feed
+ *   redirect   — 3xx redirect loop or unexpected redirect chain
+ *   404        — resource not found / DNS failure / connection refused
+ *   500        — server-side HTTP error (5xx)
+ *   other      — anything else (incl. "Unknown", generic fetch failures)
+ *   null       — no lastError recorded (source never attempted OR last run ok)
+ */
+export function categorizeError(reason: string | null | undefined): ErrorCategory {
+  if (!reason) return null;
+  const r = reason.toLowerCase();
+  if (/timeout|timed out|etimedout|aborted|http[s]?timeout/.test(r)) return 'timeout';
+  if (/antibot|cloudflare|datadome|just a moment|captcha|access denied|forbidden|\b403\b/.test(r)) return 'antibot';
+  if (/no-jsonld|no-events|schema|parse|invalid json|empty feed|0 events/.test(r)) return 'parse';
+  if (/301|302|308|redirect|too many redirects|redirection/.test(r)) return 'redirect';
+  if (/404|not found|enotfound|getaddrinfo|econnrefused/.test(r)) return '404';
+  if (/\b5\d\d\b/.test(r) || /server error|bad gateway|service unavailable/.test(r)) return '500';
+  return 'other';
+}
+
+/**
+ * Compute a single source's health bucket.
+ *
+ * Thresholds (see MASTERPLAN Phase 1 dashboard):
+ *   healthy   — lastSuccess within 24h AND proxy successRate >= 0.8
+ *   failed    — proxy successRate < 0.1 (catastrophic), OR
+ *               lastSuccess older than 7d, OR proxy rate < 0.3
+ *   irregular — the middle band (lastSuccess 1–7d, rate 0.3–0.8)
+ *
+ * NOTE: We don't have a true sliding 7d/30d success rate (no per-attempt
+ * history), so we use a lifetime proxy:
+ *   proxy = max(0, attempts - consecutiveFailures) / attempts
+ * This counts the trailing run as one attempt; historical successes equal
+ * the difference between total attempts and the trailing consecutive-failure
+ * streak. Good enough to bucket sources; not good enough to time-bound.
+ */
+function classifyHealth(
+  lastSuccessIso: string | null,
+  successRate: number,
+  attempts: number,
+  now: number,
+): SourceHealthStatus {
+  const ageH = lastSuccessIso
+    ? (now - new Date(lastSuccessIso).getTime()) / 3600000
+    : Infinity;
+  if (attempts > 0 && successRate < 0.1) return 'failed';
+  if (ageH <= 24 && successRate >= 0.8) return 'healthy';
+  if (ageH > 24 * 7 || successRate < 0.3) return 'failed';
+  return 'irregular';
+}
+
+export function collectSourceHealth(root: string): SourceHealthReport {
+  const rows = readJsonl<{
+    sourceId?: string;
+    status?: string;
+    lastSuccess?: string;
+    lastRun?: string;
+    lastRoutingReason?: string;
+    consecutiveFailures?: number;
+    attempts?: number;
+    preferredPath?: string;
+    lastPathUsed?: string;
+  }>(join(root, 'runtime/sources_status.jsonl'));
+
+  const now = Date.now();
+  const sources: SourceHealthRow[] = [];
+  const errorCategories: Record<string, number> = {};
+  let healthy = 0, irregular = 0, failed = 0;
+  let lastRunAt: string | null = null;
+
+  for (const r of rows) {
+    const id = r.sourceId ?? '?';
+    const lastSuccess = r.lastSuccess ?? null;
+    const lastRun = r.lastRun ?? null;
+    if (lastRun && (!lastRunAt || lastRun > lastRunAt)) lastRunAt = lastRun;
+
+    const attempts = Math.max(0, r.attempts ?? 0);
+    const cf = Math.max(0, r.consecutiveFailures ?? 0);
+    // Proxy success rate: assume the trailing streak reflects current state,
+    // so historical successes ≈ attempts - trailing consecutiveFailures.
+    // Clamped to [0, 1]. attempts == 0 → rate = 0 (unknown -> irregular via
+    // classifyHealth fallthrough).
+    const proxySuccess = attempts > 0 ? Math.max(0, attempts - cf) / attempts : 0;
+    const lastError = r.lastRoutingReason ?? null;
+    const lastErrorCategory = categorizeError(lastError);
+    if (lastErrorCategory) {
+      errorCategories[lastErrorCategory] = (errorCategories[lastErrorCategory] ?? 0) + 1;
+    }
+
+    const status = classifyHealth(lastSuccess, proxySuccess, attempts, now);
+    if (status === 'healthy') healthy++;
+    else if (status === 'irregular') irregular++;
+    else failed++;
+
+    sources.push({
+      id,
+      status,
+      lastSuccess,
+      lastFail: lastRun,
+      lastErrorCategory,
+      lastError,
+      successRate: Number(proxySuccess.toFixed(3)),
+      consecutiveFailures: cf,
+      attempts,
+      preferredPath: r.preferredPath ?? null,
+      lastPathUsed: r.lastPathUsed ?? null,
+    });
+  }
+
+  return {
+    summary: {
+      total: sources.length,
+      healthy,
+      irregular,
+      failed,
+      lastRunAt,
+    },
+    sources,
+    errorCategories,
+    generatedAt: new Date().toISOString(),
+  };
+}
+
 // ─── HTTP handlers ───────────────────────────────────────────────────────────
 
 function serveStatic(req: IncomingMessage, res: ServerResponse): boolean {
@@ -546,6 +736,20 @@ async function serveJson(req: IncomingMessage, res: ServerResponse): Promise<boo
   if (url === '/health') {
     res.writeHead(200, { 'Content-Type': 'text/plain' });
     res.end('ok');
+    return true;
+  }
+  if (url === '/api/source-health') {
+    try {
+      const data = collectSourceHealth(PROJECT_ROOT);
+      res.writeHead(200, {
+        'Content-Type': 'application/json; charset=utf-8',
+        'Cache-Control': 'no-cache',
+      });
+      res.end(JSON.stringify(data));
+    } catch (err) {
+      res.writeHead(500, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ error: String(err) }));
+    }
     return true;
   }
   return false;

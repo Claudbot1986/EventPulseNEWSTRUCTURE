@@ -152,6 +152,72 @@
       <p class="caption"><span id="chart-batch-rate-hint">From reports/batch-NNN/batch-traces.jsonl (success/attempts per batch dir mtime day)</span></p>
     </section>
 
+    <section class="card source-health-card" id="source-health" data-info="Per-source health diagnostics derived from runtime/sources_status.jsonl. Status buckets: healthy = last success within 24h AND proxy success rate >= 0.8; irregular = last success 1-7d ago OR rate 0.3-0.8; failed = last success >7d OR rate < 0.3 OR catastrophic (rate < 0.1). Error category is classified from lastRoutingReason (timeout/404/500/redirect/antibot/parse/other). The proxy success rate is lifetime (attempts - consecutiveFailures) / attempts - we don't keep per-attempt history, so true sliding 7d/30d windows aren't available yet. Use this to spot what is failing and why; click a row to see the last error message.">
+      <h2>Source Health<button type="button" class="info-btn" data-info-target="source-health" aria-label="help">i</button></h2>
+      <p class="caption">Per-source health from <code>sources_status.jsonl</code>. Filter by error category; click a row for the last error message. Pattern: RudderStack Health Dashboard + CDP Sync Health Dashboard.</p>
+      <div class="kpi-strip kpi-strip--inline">
+        <div class="kpi-tile">
+          <div class="kpi-label">Total</div>
+          <div class="kpi-value" id="sh-total">-</div>
+          <div class="kpi-caption">sources in sources_status.jsonl</div>
+        </div>
+        <div class="kpi-tile">
+          <div class="kpi-label">Healthy</div>
+          <div class="kpi-value ok" id="sh-healthy">-</div>
+          <div class="kpi-caption">lastSuccess &lt;24h &middot; rate &ge;0.8</div>
+        </div>
+        <div class="kpi-tile">
+          <div class="kpi-label">Irregular</div>
+          <div class="kpi-value warn" id="sh-irregular">-</div>
+          <div class="kpi-caption">lastSuccess 1-7d OR rate 0.3-0.8</div>
+        </div>
+        <div class="kpi-tile">
+          <div class="kpi-label">Failed</div>
+          <div class="kpi-value bad" id="sh-failed">-</div>
+          <div class="kpi-caption">lastSuccess &gt;7d OR rate &lt;0.3</div>
+        </div>
+      </div>
+      <div class="source-health-toolbar">
+        <input type="search" id="sh-search" placeholder="filter by source id&hellip;" autocomplete="off">
+        <select id="sh-cat-filter" aria-label="filter by error category">
+          <option value="all">all error categories</option>
+          <option value="timeout">timeout</option>
+          <option value="404">404 / network</option>
+          <option value="500">500 / server error</option>
+          <option value="redirect">redirect</option>
+          <option value="antibot">antibot / 403</option>
+          <option value="parse">parse / no-jsonld</option>
+          <option value="other">other</option>
+          <option value="null">no error recorded</option>
+        </select>
+        <select id="sh-status-filter" aria-label="filter by health status">
+          <option value="all">all statuses</option>
+          <option value="failed">failed only</option>
+          <option value="irregular">irregular only</option>
+          <option value="healthy">healthy only</option>
+        </select>
+        <span class="sh-count muted" id="sh-count"></span>
+      </div>
+      <div class="source-health-errorcats" id="sh-errorcats"></div>
+      <div class="source-health-scrollable">
+        <table class="source-health-table" id="sh-table">
+          <thead>
+            <tr>
+              <th data-sort="status">Status</th>
+              <th data-sort="id">Source</th>
+              <th data-sort="lastSuccess">Last success</th>
+              <th data-sort="successRate">Rate</th>
+              <th data-sort="attempts">Attempts</th>
+              <th data-sort="cf">CF</th>
+              <th data-sort="lastErrorCategory">Error cat.</th>
+              <th>Last error</th>
+            </tr>
+          </thead>
+          <tbody id="sh-tbody"><tr><td colspan="8" class="empty">loading&hellip;</td></tr></tbody>
+        </table>
+      </div>
+    </section>
+
     <section class="card layers-card" id="layers" data-info="Per-layer health from the ingestion pipeline. Each tile reads from a different file: A=sources_status.jsonl, B=postB-queue.jsonl, C=C-candidates-batches-meta.jsonl, D=pending_render_queue.jsonl, F=03-Queue/03-extractedevents/, G=universalScout results, H=H-queue backlog, AI=deeptrace-d logs, Push=EVENTPULSE-APP-queue.jsonl. The Live state tiles (BullMQ, 08-Agent) are polled at /api/status time with short timeouts so the page never hangs if a dependency is down.">
       <h2>Extraction layers<button type="button" class="info-btn" data-info-target="layers" aria-label="help">i</button></h2>
       <p class="caption">Per-layer health and pipeline depth — Tool A through push scripts. Each tile shows that layer's primary metrics from its own JSONL/log source.</p>
@@ -364,6 +430,7 @@
       <h2>Links</h2>
       <ul>
         <li><a href="/api/status" target="_blank">/api/status (JSON)</a></li>
+        <li><a href="/api/source-health" target="_blank">/api/source-health (JSON)</a></li>
         <li><a href="/health" target="_blank">/health</a></li>
         <li id="vault-link-li"><a id="vault-link" href="#" target="_blank">Latest vault note</a></li>
       </ul>

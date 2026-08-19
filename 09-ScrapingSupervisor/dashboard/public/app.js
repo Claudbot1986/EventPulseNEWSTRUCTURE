@@ -185,6 +185,20 @@
     document.querySelector('main').innerHTML =
       `<div class="card"><h2>Error</h2><p>Failed to fetch /api/status: ${String(err)}</p></div>`;
   }
+
+  // ── Source Health (Phase 1 — independent fetch so /api/status failure
+  //    doesn't take this card down). Fails silently to a muted empty state.
+  try {
+    const shRes = await fetch('/api/source-health', { cache: 'no-store' });
+    if (!shRes.ok) throw new Error(`HTTP ${shRes.status}`);
+    const shData = await shRes.json();
+    initSourceHealth(shData);
+  } catch (err) {
+    const body = document.getElementById('sh-tbody');
+    if (body) body.innerHTML = `<tr><td colspan="8" class="empty">unavailable: ${escapeHtml(String(err))}</td></tr>`;
+    const ec = document.getElementById('sh-errorcats');
+    if (ec) ec.innerHTML = '';
+  }
 })();
 
 /** Minimal HTML escaper for DB-fed source names rendered into innerHTML. */
@@ -1115,4 +1129,233 @@ function renderUnsynced(U) {
       </li>`).join('');
     }
   }
+}
+
+// ── Source Health (Phase 1 — per-source diagnostics) ────────────────────────
+//
+// Driven by GET /api/source-health. Renders:
+//   - 4 KPI tiles (total / healthy / irregular / failed)
+//   - Horizontal bar of error category counts (acts as a simple "pie chart")
+//   - Sortable, filterable table of every source row
+//   - Click a row → toggle a drill-down with the last error message
+//
+// All state (sort key, sort dir, search, category filter, status filter,
+// expanded rows) lives in `shState`. Re-rendering just re-paints the table
+// from state.
+
+const shState = {
+  rows: [],
+  summary: null,
+  search: '',
+  catFilter: 'all',
+  statusFilter: 'all',
+  sortKey: 'status',   // 'status'|'id'|'lastSuccess'|'successRate'|'attempts'|'cf'|'lastErrorCategory'
+  sortDir: 'asc',
+  expanded: new Set(), // sourceIds whose drill-down is open
+};
+
+function initSourceHealth(data) {
+  shState.rows = data.sources || [];
+  shState.summary = data.summary || null;
+  renderShKpis();
+  renderShErrorCats(data.errorCategories || {});
+  renderShTable();
+  wireShToolbar();
+  wireShSorting();
+}
+
+function renderShKpis() {
+  const s = shState.summary;
+  if (!s) return;
+  setText('sh-total', s.total);
+  setText('sh-healthy', s.healthy);
+  setText('sh-irregular', s.irregular);
+  setText('sh-failed', s.failed);
+}
+
+const CAT_LABELS = {
+  timeout: 'timeout',
+  '404': '404 / network',
+  '500': '500 / server',
+  redirect: 'redirect',
+  antibot: 'antibot / 403',
+  parse: 'parse / no-jsonld',
+  other: 'other',
+  null: 'no error',
+};
+const CAT_COLORS = {
+  timeout: '#f0883e',
+  '404': '#d29922',
+  '500': '#f85149',
+  redirect: '#a371f7',
+  antibot: '#ff7b72',
+  parse: '#58a6ff',
+  other: '#8b949e',
+  null: '#3fb950',
+};
+const CAT_ORDER = ['timeout', '500', '404', 'antibot', 'redirect', 'parse', 'other', 'null'];
+
+function renderShErrorCats(cats) {
+  const el = document.getElementById('sh-errorcats');
+  if (!el) return;
+  const entries = CAT_ORDER
+    .map((k) => [k, cats[k] || 0])
+    .filter(([, n]) => n > 0);
+  const total = entries.reduce((a, [, n]) => a + n, 0);
+  if (total === 0) {
+    el.innerHTML = '<span class="muted">no error categories recorded</span>';
+    return;
+  }
+  el.innerHTML = '<div class="sh-bars">' + entries.map(([k, n]) => {
+    const pct = total ? (n / total) * 100 : 0;
+    return `<div class="sh-bar-row" title="${escapeHtml(CAT_LABELS[k])}: ${n} (${pct.toFixed(1)}%)">
+      <span class="sh-bar-label">${escapeHtml(CAT_LABELS[k])}</span>
+      <div class="sh-bar-track"><div class="sh-bar-fill" style="width:${pct.toFixed(1)}%;background:${CAT_COLORS[k]}"></div></div>
+      <span class="sh-bar-count">${n}</span>
+    </div>`;
+  }).join('') + '</div>';
+}
+
+function statusRank(s) {
+  // failed < irregular < healthy — "asc" sort shows worst first
+  return s === 'failed' ? 0 : s === 'irregular' ? 1 : 2;
+}
+
+function sortShRows(rows) {
+  const k = shState.sortKey;
+  const dir = shState.sortDir === 'asc' ? 1 : -1;
+  const sorted = rows.slice().sort((a, b) => {
+    let av, bv;
+    if (k === 'status') { av = statusRank(a.status); bv = statusRank(b.status); }
+    else if (k === 'id') { av = a.id; bv = b.id; }
+    else if (k === 'lastSuccess') { av = a.lastSuccess || ''; bv = b.lastSuccess || ''; }
+    else if (k === 'successRate') { av = a.successRate; bv = b.successRate; }
+    else if (k === 'attempts') { av = a.attempts; bv = b.attempts; }
+    else if (k === 'cf') { av = a.consecutiveFailures; bv = b.consecutiveFailures; }
+    else if (k === 'lastErrorCategory') {
+      av = a.lastErrorCategory || 'zzz'; // null sorts last on asc
+      bv = b.lastErrorCategory || 'zzz';
+    }
+    else { return 0; }
+    if (av < bv) return -1 * dir;
+    if (av > bv) return 1 * dir;
+    return 0;
+  });
+  return sorted;
+}
+
+function renderShTable() {
+  const body = document.getElementById('sh-tbody');
+  const counter = document.getElementById('sh-count');
+  if (!body) return;
+  const needle = shState.search.trim().toLowerCase();
+  const filtered = shState.rows.filter((r) => {
+    if (shState.statusFilter !== 'all' && r.status !== shState.statusFilter) return false;
+    if (shState.catFilter !== 'all') {
+      if (shState.catFilter === 'null') {
+        if (r.lastErrorCategory !== null) return false;
+      } else if (r.lastErrorCategory !== shState.catFilter) return false;
+    }
+    if (needle && !r.id.toLowerCase().includes(needle)) return false;
+    return true;
+  });
+  const sorted = sortShRows(filtered);
+  if (sorted.length === 0) {
+    body.innerHTML = '<tr><td colspan="8" class="empty">no sources match current filter</td></tr>';
+  } else {
+    body.innerHTML = sorted.map((r) => {
+      const statusBadge = `<span class="badge ${r.status === 'healthy' ? 'ok' : r.status === 'irregular' ? 'warn' : 'bad'}">${escapeHtml(r.status)}</span>`;
+      const cat = r.lastErrorCategory === null ? '<span class="muted">none</span>' : `<span class="sh-cat sh-cat-${escapeHtml(r.lastErrorCategory || 'null')}">${escapeHtml(CAT_LABELS[r.lastErrorCategory] || r.lastErrorCategory)}</span>`;
+      const lastOk = r.lastSuccess ? new Date(r.lastSuccess).toLocaleDateString() : '<span class="muted">never</span>';
+      const rate = r.successRate === 0 ? '0%' : Math.round(r.successRate * 100) + '%';
+      const isExp = shState.expanded.has(r.id);
+      const errShort = r.lastError
+        ? escapeHtml(r.lastError.slice(0, 80)) + (r.lastError.length > 80 ? '…' : '')
+        : '<span class="muted">—</span>';
+      const row = `<tr class="sh-row${isExp ? ' sh-expanded' : ''}" data-sid="${escapeHtml(r.id)}">
+        <td>${statusBadge}</td>
+        <td><code>${escapeHtml(r.id)}</code></td>
+        <td class="muted">${lastOk}</td>
+        <td>${rate}</td>
+        <td class="muted">${r.attempts}</td>
+        <td class="muted">${r.consecutiveFailures}</td>
+        <td>${cat}</td>
+        <td>${errShort}</td>
+      </tr>`;
+      const detail = isExp ? `<tr class="sh-detail"><td colspan="8"><div class="sh-detail-body">
+        <strong>Last error:</strong> <code>${escapeHtml(r.lastError || '(none)')}</code><br>
+        <strong>Last run:</strong> ${r.lastFail ? new Date(r.lastFail).toLocaleString() : '<span class="muted">never</span>'}
+        &middot; <strong>Preferred path:</strong> ${escapeHtml(r.preferredPath || '—')}
+        &middot; <strong>Last path:</strong> ${escapeHtml(r.lastPathUsed || '—')}
+      </div></td></tr>` : '';
+      return row + detail;
+    }).join('');
+  }
+  if (counter) {
+    counter.textContent = `${sorted.length.toLocaleString()} of ${shState.rows.length.toLocaleString()} sources`;
+  }
+  // Reflect current sort on headers (arrow indicator)
+  document.querySelectorAll('#sh-table th[data-sort]').forEach((th) => {
+    th.classList.toggle('sh-sort-active', th.dataset.sort === shState.sortKey);
+    th.classList.toggle('sh-sort-desc', th.dataset.sort === shState.sortKey && shState.sortDir === 'desc');
+  });
+}
+
+function wireShToolbar() {
+  const search = document.getElementById('sh-search');
+  if (search && !search.dataset.wired) {
+    search.dataset.wired = '1';
+    search.addEventListener('input', (e) => {
+      shState.search = e.target.value || '';
+      renderShTable();
+    });
+  }
+  const cat = document.getElementById('sh-cat-filter');
+  if (cat && !cat.dataset.wired) {
+    cat.dataset.wired = '1';
+    cat.addEventListener('change', (e) => {
+      shState.catFilter = e.target.value;
+      renderShTable();
+    });
+  }
+  const status = document.getElementById('sh-status-filter');
+  if (status && !status.dataset.wired) {
+    status.dataset.wired = '1';
+    status.addEventListener('change', (e) => {
+      shState.statusFilter = e.target.value;
+      renderShTable();
+    });
+  }
+  // Row click → toggle drill-down
+  const body = document.getElementById('sh-tbody');
+  if (body && !body.dataset.wired) {
+    body.dataset.wired = '1';
+    body.addEventListener('click', (ev) => {
+      const tr = ev.target.closest('tr.sh-row');
+      if (!tr) return;
+      const sid = tr.dataset.sid;
+      if (!sid) return;
+      if (shState.expanded.has(sid)) shState.expanded.delete(sid);
+      else shState.expanded.add(sid);
+      renderShTable();
+    });
+  }
+}
+
+function wireShSorting() {
+  document.querySelectorAll('#sh-table th[data-sort]').forEach((th) => {
+    if (th.dataset.sortWired) return;
+    th.dataset.sortWired = '1';
+    th.style.cursor = 'pointer';
+    th.addEventListener('click', () => {
+      const key = th.dataset.sort;
+      if (shState.sortKey === key) {
+        shState.sortDir = shState.sortDir === 'asc' ? 'desc' : 'asc';
+      } else {
+        shState.sortKey = key;
+        shState.sortDir = (key === 'id' || key === 'lastErrorCategory') ? 'asc' : 'desc';
+      }
+      renderShTable();
+    });
+  });
 }
