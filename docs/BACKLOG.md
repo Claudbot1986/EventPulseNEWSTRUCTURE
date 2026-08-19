@@ -45,6 +45,11 @@ Success for NOW: `search_events` returns real future Stockholm events from DB.
 
 ## NEXT — Phase 1 (weeks 3–8)
 
+- **Stockholm Density Plan — Layer 1: aggregator listings** (see MASTERPLAN §10.5)
+  - Add `sources/billetto-stockholm.jsonl`, `sources/eventbrite-stockholm.jsonl` (type: aggregator-listing)
+  - Run B-gate where JSON feed exists; C-gate with strict rate-limit (1 req / 3s, `EventPulse-Bot/1.0` UA, respect robots.txt) otherwise
+  - Verify: `select count(*) from events where source in ('billetto-aggregator','eventbrite-aggregator') and start_time > now()`
+  - Expected yield: 1 500–3 000 events / week
 - `parse_intent` with schema validation (`IntentBrief`)
 - `get_event_details`
 - `rank_events` heuristic (time, price, category, exclude, confidence, freshness)

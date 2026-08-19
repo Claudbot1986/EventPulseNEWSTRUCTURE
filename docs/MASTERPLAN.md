@@ -317,6 +317,46 @@ Readiness scanner + human outreach + partner feed. Only after consumer conversio
 
 Second city, other agents as **channels** (controlled), organizer self-serve. Not now.
 
+### Stockholm Density Plan — within Phase 0–1 (added 2026-08-19)
+
+**Goal:** 60–70% of "fredag kväll i Stockholm" events visible in the Event Graph by end of Phase 1. **80%+** requires Phase 4 organizer relationships and is explicitly **out of scope** for this plan.
+
+**Constraint:** Only Ticketmaster Discovery API is available as a partner API. Billetto, Eventbrite, and similar aggregators have declined API access. The strategy therefore relies on **public listing pages + AI-driven discovery**, not partner integrations.
+
+**Four layers, in priority order:**
+
+1. **Public aggregator listings** — highest yield, lowest risk
+   - `sources/billetto-stockholm.jsonl` (type: aggregator-listing)
+   - `sources/eventbrite-stockholm.jsonl`
+   - `sources/visit-stockholm.jsonl` (already exists)
+   - `sources/kulturkalender.jsonl` (if available)
+   - Run B-gate where a JSON feed exists; C-gate with strict rate-limit (1 req / 3s, identify as `EventPulse-Bot/1.0`, respect robots.txt) otherwise
+   - **Expected yield:** 1 500–3 000 new events / week
+
+2. **AI-driven subpage discovery** — fix the 287 dead `NO_JSONLD` sources
+   - `09-ScrapingSupervisor` LLM path proposes `/events`, `/program`, `/kalender`, `/calendar` based on `c0Candidates` + site title
+   - URL-variant test for transport errors (www/non-www, http/https, trailing slash)
+   - **Expected effect:** drop dead count from 287 to ~50
+
+3. **Venue graph expansion** (`07-Discovery`) — find new venues from existing data
+   - BFS from working venues → promoters → unknown venues
+   - Human verification before auto-register (anti-bias)
+
+4. **Auto-detect new sources** — handle "new sites appear suddenly"
+   - Nightly crawl of the public listings above
+   - Diff event URLs against known `sources/` patterns
+   - New patterns → push to `runtime/sources_priority_queue.jsonl`
+   - `09-ScrapingSupervisor` tests + auto-promotes only when `cf=0` and ≥3 events observed
+
+**Do not:**
+- Request API access from aggregators that have declined (Billetto, Eventbrite confirmed)
+- Google Events / search scraping (ToS + scope creep)
+- Facebook Events (no API since 2019)
+- Sweden-wide expansion
+- Auto-register venues without verified events
+
+**Out of scope for Stockholm Density Plan:** anything above 70%. The remaining 20–30% lives in Phase 4 (organizer relationships, direct feeds, B2B readiness that earns partner status).
+
 ---
 
 ## 11. 90-day execution plan
