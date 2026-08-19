@@ -27,6 +27,12 @@ import { recordFeedback } from './tools/record_feedback';
 import { findGaps } from './tools/find_gaps';
 import { feedEvents, todayIso, addDays } from './tools/feed_events';
 import { buildUserSignal } from './tools/personalize';
+import {
+  assignVariant,
+  computeLift,
+  type VariantStats,
+  MIN_SAMPLE_PER_VARIANT,
+} from './tools/experiments';
 import { composeReply } from './llmRouter';
 import type {
   AgentChatRequest,
@@ -37,6 +43,11 @@ import type {
 
 const UUID_RE =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+/** Phase 2 A/B experiment ID. Sticky per client_user_id. Salt lives in
+ *  experiments.ts (DEFAULT_ASSIGNMENT_SALT) — change the salt to
+ *  re-randomize without rotating user IDs. */
+const PERSONALIZATION_PRIORS_EXP = 'PERSONALIZATION_PRIORS';
 
 function getAllowedOrigins(): string[] {
   const raw = process.env.AGENT_ALLOWED_ORIGINS ?? '';
@@ -189,10 +200,25 @@ export function buildApp(opts: { supabase?: SupabaseClient } = {}): express.Expr
         limit: 25,
       });
 
+      // ─── A/B test: personalization priors ON vs OFF ────────────────────
+      // 50/50 sticky assignment per client_user_id (see experiments.ts).
+      // Treatment: priors enabled. Control: priors disabled (cold baseline).
+      // Both branches are otherwise identical — same parse, same search,
+      // same MMR, same impression logging. Only the priors toggle differs.
+      //
+      // Why this matters: Phase 2 success criterion is "measurable lift vs
+      // unpersonalized rank on repeat sessions" (masterplan §10). Without
+      // this split we cannot prove the priors actually help — we'd just be
+      // shipping a feature and hoping.
+      const variant = assignVariant(body.client_user_id, PERSONALIZATION_PRIORS_EXP);
+
       // Count-based personalization priors (research-backed; see personalize.ts).
       // Best-effort: buildUserSignal returns a "cold" signal on failure and
-      // never throws into the chat path.
-      const personalization = await buildUserSignal(client, body.client_user_id);
+      // never throws into the chat path. Control variant SKIPS the call to
+      // keep the variants truly isolated (no DB read in control).
+      const personalization = variant === 'treatment'
+        ? await buildUserSignal(client, body.client_user_id)
+        : null;
 
       // Two-stage retrieval→re-rank:
       //   1. rank_events returns the top 25 most relevant (deterministic
@@ -213,7 +239,12 @@ export function buildApp(opts: { supabase?: SupabaseClient } = {}): express.Expr
       // Log an "impression" per result. Best-effort, never throw.
       // Rank position reflects the ORDER THE USER ACTUALLY SEES (post-MMR),
       // not the upstream ranker order — that's the unit of evidence for
-      // downstream CTR analysis.
+      // downstream CTR analysis. Metadata tags every row with the A/B
+      // variant so the lift endpoint can aggregate per-variant CTR.
+      const experimentMetadata = {
+        experiment_id: PERSONALIZATION_PRIORS_EXP,
+        experiment_variant: variant,
+      };
       for (let i = 0; i < cards.length; i++) {
         await recordFeedback(client, {
           client_user_id: body.client_user_id,
@@ -223,6 +254,7 @@ export function buildApp(opts: { supabase?: SupabaseClient } = {}): express.Expr
           query_text: body.message,
           rank_position: i,
           reasons: reranked[i].reasons,
+          metadata: experimentMetadata,
         });
       }
 
@@ -323,6 +355,80 @@ export function buildApp(opts: { supabase?: SupabaseClient } = {}): express.Expr
         saves:       counts.save ?? 0,
         ctr:         Number(ctr.toFixed(4)),
         total_rows:  (data ?? []).length,
+      });
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'unknown error';
+      res.status(500).json({ error: msg });
+    }
+  });
+
+  /**
+   * GET /agent/experiments/personalization
+   *
+   * Reads user_interactions rows tagged with experiment_id =
+   * PERSONALIZATION_PRIORS and computes the per-variant CTR lift. The OEC
+   * is outbound/impression — Kohavi (2009) recommends one Overall Evaluation
+   * Criterion per experiment; we don't mix CTR with saves here.
+   *
+   * Response shape:
+   *   {
+   *     experiment_id, min_sample_per_variant,
+   *     treatment: { impressions, outbounds, ctr },
+   *     control:    { impressions, outbounds, ctr },
+   *     lift:       { absolute, relative, p_value, ci95, verdict, samples }
+   *   }
+   *
+   * Verdict is INCONCLUSIVE while either side is below MIN_SAMPLE_PER_VARIANT.
+   * That's by design — Kohavi §4 warns that premature peeking yields
+   * false positives. Wait for the samples to accumulate before deciding.
+   */
+  app.get('/agent/experiments/personalization', async (_req: Request, res: Response) => {
+    const client = sb ?? getSupabase();
+    try {
+      // Pull only the rows tagged with this experiment. We use metadata
+      // JSONB →> 'experiment_id' which is supported in Supabase/Postgres.
+      const { data, error } = await client
+        .from('user_interactions')
+        .select('interaction, metadata')
+        .eq('metadata->>experiment_id', PERSONALIZATION_PRIORS_EXP);
+      if (error) {
+        res.status(500).json({ error: error.message });
+        return;
+      }
+
+      // Aggregate per variant + per interaction. CTR = outbound / impression.
+      const buckets: Record<'treatment' | 'control', { impressions: number; outbounds: number }> = {
+        treatment: { impressions: 0, outbounds: 0 },
+        control:    { impressions: 0, outbounds: 0 },
+      };
+      for (const row of data ?? []) {
+        const variant = row.metadata?.experiment_variant as 'treatment' | 'control' | undefined;
+        if (variant !== 'treatment' && variant !== 'control') continue;
+        if (row.interaction === 'impression') buckets[variant].impressions++;
+        else if (row.interaction === 'outbound') buckets[variant].outbounds++;
+      }
+
+      const treatment: VariantStats = { variant: 'treatment', ...buckets.treatment };
+      const control:    VariantStats = { variant: 'control',    ...buckets.control };
+      const lift = computeLift(treatment, control);
+
+      const ctr = (s: VariantStats) => s.impressions > 0 ? s.outbounds / s.impressions : 0;
+      res.json({
+        experiment_id: PERSONALIZATION_PRIORS_EXP,
+        min_sample_per_variant: MIN_SAMPLE_PER_VARIANT,
+        treatment: { impressions: treatment.impressions, outbounds: treatment.outbounds, ctr: Number(ctr(treatment).toFixed(4)) },
+        control:    { impressions: control.impressions,    outbounds: control.outbounds,    ctr: Number(ctr(control).toFixed(4)) },
+        lift: {
+          absolute: Number(lift.absoluteLift.toFixed(4)),
+          relative: lift.relativeLift === null ? null : Number(lift.relativeLift.toFixed(4)),
+          p_value:  Number(lift.pValue.toFixed(4)),
+          ci95: {
+            low:  Number(lift.ci95.low.toFixed(4)),
+            high: Number(lift.ci95.high.toFixed(4)),
+          },
+          verdict: lift.verdict,
+          samples: lift.samples,
+        },
       });
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : 'unknown error';

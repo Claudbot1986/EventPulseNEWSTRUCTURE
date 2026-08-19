@@ -100,6 +100,10 @@ export interface RecordFeedbackInput {
   query_text?: string;
   rank_position?: number;
   reasons?: RankReason[];
+  /** Free-form metadata blob. Persisted to user_interactions.metadata JSONB.
+   *  Used by the experiment layer to tag rows with experiment_id + variant
+   *  (see 08-Agent/tools/experiments.ts). */
+  metadata?: Record<string, unknown>;
 }
 
 // ─── User profile (read-only stub for Phase 0) ──────────────────────────────

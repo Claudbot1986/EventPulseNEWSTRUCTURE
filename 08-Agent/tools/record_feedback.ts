@@ -23,7 +23,7 @@ export async function recordFeedback(
     query_text:     input.query_text ?? null,
     rank_position:  input.rank_position ?? null,
     reasons:        input.reasons ?? [],
-    metadata:       {},
+    metadata:       input.metadata ?? {},
   };
 
   const { error } = await supabase.from('user_interactions').insert(row);
