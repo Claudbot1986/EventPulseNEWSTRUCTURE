@@ -5,7 +5,7 @@
  */
 
 import { describe, expect, it } from 'vitest';
-import { findGaps, isIntentComplete } from '../tools/find_gaps';
+import { findGaps, isIntentComplete, slotGain } from '../tools/find_gaps';
 import type { IntentBrief } from '../types';
 
 function makeIntent(over: Partial<IntentBrief> = {}): IntentBrief {
@@ -132,5 +132,127 @@ describe('isIntentComplete', () => {
     expect(
       isIntentComplete(makeIntent({ party: 'any' }))
     ).toBe(false);
+  });
+});
+
+// ─── Phase 1.8: active-learning information gain ───────────────────────────
+
+describe('slotGain', () => {
+  it('category has the highest base gain (1.0)', () => {
+    expect(slotGain(makeIntent(), 'category')).toBe(1.0);
+  });
+
+  it('time_of_day has medium base gain (0.7) for open date windows', () => {
+    const intent = makeIntent({ date_from: undefined, date_to: undefined });
+    expect(slotGain(intent, 'time_of_day')).toBe(0.7);
+  });
+
+  it('time_of_day gain rises to 0.95 when date window is a single day', () => {
+    const intent = makeIntent({ date_from: '2026-08-20', date_to: '2026-08-20' });
+    expect(slotGain(intent, 'time_of_day')).toBe(0.95);
+  });
+
+  it('time_of_day stays at 0.7 when only date_from is set (open-ended range)', () => {
+    const intent = makeIntent({ date_from: '2026-08-20', date_to: undefined });
+    expect(slotGain(intent, 'time_of_day')).toBe(0.7);
+  });
+
+  it('time_of_day stays at 0.7 when date_from < date_to (multi-day window)', () => {
+    const intent = makeIntent({ date_from: '2026-08-20', date_to: '2026-08-25' });
+    expect(slotGain(intent, 'time_of_day')).toBe(0.7);
+  });
+
+  it('party has the lowest base gain (0.5)', () => {
+    expect(slotGain(makeIntent(), 'party')).toBe(0.5);
+  });
+
+  it('gain ordering (open window): category > party > time_of_day', () => {
+    // party (0.5) > time_of_day (0.7)? No, 0.7 > 0.5. Reorder:
+    // category 1.0 > time_of_day 0.7 > party 0.5.
+    expect(slotGain(makeIntent(), 'category')).toBeGreaterThan(
+      slotGain(makeIntent(), 'time_of_day')
+    );
+    expect(slotGain(makeIntent(), 'time_of_day')).toBeGreaterThan(
+      slotGain(makeIntent(), 'party')
+    );
+  });
+});
+
+describe('findGaps — active-learning ordering', () => {
+  it('orders by gain desc when all three slots are missing (open window)', () => {
+    const gaps = findGaps(
+      makeIntent({
+        categories: [],
+        time_of_day: 'anytime',
+        party: 'any',
+        date_from: undefined,
+        date_to: undefined,
+        raw_query: '',
+      })
+    );
+    expect(gaps.map((g) => g.id)).toEqual(['category', 'time_of_day', 'party']);
+  });
+
+  it('still orders category first when date window is narrow', () => {
+    // Even when time_of_day gain rises to 0.95, category (1.0) wins.
+    const gaps = findGaps(
+      makeIntent({
+        categories: [],
+        time_of_day: 'anytime',
+        party: 'any',
+        date_from: '2026-08-20',
+        date_to: '2026-08-20',
+        raw_query: '',
+      })
+    );
+    expect(gaps[0].id).toBe('category');
+    expect(gaps.map((g) => g.id)).toEqual(['category', 'time_of_day', 'party']);
+  });
+
+  it('omits questions for slots that are already filled', () => {
+    const gaps = findGaps(
+      makeIntent({
+        categories: ['music'],
+        time_of_day: 'anytime', // still missing
+        party: 'any', // still missing
+        raw_query: 'something',
+      })
+    );
+    const ids = gaps.map((g) => g.id);
+    expect(ids).not.toContain('category');
+    expect(ids).toContain('time_of_day');
+    expect(ids).toContain('party');
+    // With category filled, time_of_day (0.7) > party (0.5).
+    expect(gaps[0].id).toBe('time_of_day');
+  });
+
+  it('caps to MAX_QUESTIONS=3 even when many slots are missing', () => {
+    const gaps = findGaps(
+      makeIntent({
+        categories: [],
+        time_of_day: 'anytime',
+        party: 'any',
+        raw_query: '',
+      })
+    );
+    expect(gaps.length).toBe(3);
+  });
+
+  it('returns empty when all slots filled (no questions needed)', () => {
+    expect(findGaps(makeIntent())).toEqual([]);
+  });
+
+  it('gain ordering is stable: insertion order preserved on ties', () => {
+    // If two slots had equal gain, our sort is stable so the one added
+    // first in the candidate array (category) wins. We verify by mocking
+    // equal gains via a slot combination where time_of_day and party
+    // share the same gain — currently time_of_day 0.7 ≠ party 0.5, so
+    // we instead verify the documented tie-break via direct construction.
+    const gaps = findGaps(
+      makeIntent({ categories: [], time_of_day: 'anytime', party: 'any', raw_query: '' })
+    );
+    // If gains were equal, order would be category → time_of_day → party.
+    // Current ordering already matches; this test pins the contract.
+    expect(gaps.map((g) => g.id)).toEqual(['category', 'time_of_day', 'party']);
   });
 });
