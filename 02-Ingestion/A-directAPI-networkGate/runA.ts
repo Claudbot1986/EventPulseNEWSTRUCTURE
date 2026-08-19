@@ -17,6 +17,7 @@
  *   npx tsx 02-Ingestion/A-directAPI-networkGate/runA.ts --limit N   # max N sources
  *   npx tsx 02-Ingestion/A-directAPI-networkGate/runA.ts --workers N # N parallella workers (default 50)
  *   npx tsx 02-Ingestion/A-directAPI-networkGate/runA.ts --status    # visa köstatus
+ *   npx tsx 02-Ingestion/A-directAPI-networkGate/runA.ts --auto-dai  # kör D-AI auto-hook på misslyckade
  */
 
 import * as dotenv from 'dotenv';
@@ -30,6 +31,7 @@ dotenv.config({ path: path.resolve(process.cwd(), '.env'), override: true });
 import { getAllSources, getSourceStatus, updateSourceStatus, getSource } from '../tools/sourceRegistry';
 import { fetchHtml, queueEvents } from '../tools/fetchTools';
 import { extractFromJsonLd } from '../F-eventExtraction/extractor';
+import { enqueueDAI, dequeueDAI, runDaiForQueue } from './daiHook';
 
 // ─── Queue File Paths ─────────────────────────────────────────────────────────
 
@@ -343,9 +345,15 @@ function finalizeSource(item: SourceWithOrigin, result: AResult): void {
   if (result.success && result.eventsFound > 0) {
     // A success → postA
     addToPostAQueue(sourceId, result.eventsFound, `toolA(${queueOrigin}): ${result.eventsFound} events`);
+    // Hook: om A plötsligt fungerar behöver vi inte D-AI för denna källa
+    dequeueDAI(sourceId);
   } else {
     // ej A / fail → preB
     addToPreBQueue(sourceId, `toolA(${queueOrigin}): ${result.error ?? 'no events'}`);
+    // Hook: om sidan parsas men saknar JSON-LD → D-AI kan hitta strukturen
+    if (result.error === 'no-jsonld-or-no-events' && item.source?.url) {
+      enqueueDAI(sourceId, item.source.url, 'no-jsonld-or-no-events', 'runA');
+    }
   }
 
   // Ta bort från preA-queue om det kom därifrån
@@ -366,6 +374,7 @@ async function main() {
     console.log('  npx tsx 02-Ingestion/A-directAPI-networkGate/runA.ts --limit N # max N sources');
     console.log('  npx tsx 02-Ingestion/A-directAPI-networkGate/runA.ts --status  # visa köstatus');
     console.log('  npx tsx 02-Ingestion/A-directAPI-networkGate/runA.ts --add SOURCE_ID REASON # lägg till i preA');
+    console.log('  npx tsx 02-Ingestion/A-directAPI-networkGate/runA.ts --auto-dai # kör D-AI auto-hook på misslyckade');
     console.log('');
     console.log('Queue priority:');
     console.log('  1. preA-queue.jsonl (högst prioritet)');
@@ -469,6 +478,14 @@ async function main() {
 
   log(`Kör ${batch.length} sources med ${CONCURRENCY} parallella workers...`);
   await runWithConcurrency(batch, CONCURRENCY);
+
+  // ── Hook: auto-D-AI för källor utan JSON-LD ─────────────────────────────
+  if (args.includes('--auto-dai')) {
+    log('');
+    log('─── Auto-D-AI hook: processar queue (cap=5) ───');
+    const daiResults = await runDaiForQueue({ cap: 5 });
+    log(`[hook] D-AI körningar: ${daiResults.length} (ok=${daiResults.filter(r => r.validationPassed).length})`);
+  }
 
   // ── Summary ──────────────────────────────────────────────────────────────
   const success = results.filter(r => r.success).length;
