@@ -63,10 +63,9 @@ COPY --chown=node:node 08-Agent ./08-Agent
 # the Dockerfile installs `tsx` from devDependencies as a build-only
 # dep and ships the bundled CLI in the runner stage.
 
-# Install tsx in the runner (small). This is the minimum cost of producing
-# a runnable production image before adding a real `start` script.
-# If a future commit adds `npm run start:agent`, replace ENTRYPOINT.
-RUN npm install --omit=dev --no-save tsx@4.21.0
+# tsx is now a runtime dependency (used by the ENTRYPOINT), so the
+# `npm ci --omit=dev` in Stage 1 already brings it into the runner image.
+# Nothing to install here.
 
 USER node
 
