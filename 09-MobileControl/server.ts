@@ -45,6 +45,7 @@ import { dirname, join } from 'node:path';
 import {
   readSnapshot,
   readActivity,
+  readIters,
   loopLogPath,
   projectRoot,
   activityStreamPath,
@@ -249,6 +250,12 @@ function buildApp(): express.Application {
   app.get('/api/activity', (req: Request, res: Response) => {
     const n = Math.min(Number(req.query.limit ?? 50), 200);
     res.json({ entries: readActivity(n) });
+  });
+
+  app.get('/api/iters', (req: Request, res: Response) => {
+    const requested = Number(req.query.limit ?? 5);
+    const n = Math.max(1, Math.min(Number.isFinite(requested) ? requested : 5, 20));
+    res.json({ iters: readIters(n) });
   });
 
   app.get('/api/logs', (req: Request, res: Response) => {

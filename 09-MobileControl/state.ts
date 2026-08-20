@@ -78,6 +78,17 @@ export interface AgentState {
   status: 'running' | 'completed' | 'failed';
 }
 
+export interface IterDetail {
+  iter: number;
+  stop_reason: string;
+  is_error: boolean;
+  num_turns: number;
+  total_cost_usd: number;
+  duration_ms: number | null;
+  result: string;
+  captured_at: string;
+}
+
 export interface StateSnapshot {
   wrapper: WrapperState;
   tasks: Task[];
@@ -390,6 +401,80 @@ export function parseLastIterSummary(): IterSummary | null {
     result_preview: result.slice(0, 240),
     captured_at: new Date().toISOString(),
   };
+}
+
+/**
+ * Read the N most recent iterations with their full `result` text.
+ * Used by the dashboard's "Claude's Last Answer" card so the user can read
+ * what each iter actually said. Applies the same started_at cutoff as
+ * parseLastIterSummary so we never surface iter files from a previous
+ * wrapper invocation.
+ *
+ * Returns newest-first. If a result is missing (malformed file), it is
+ * skipped rather than returning a placeholder — we'd rather show fewer
+ * entries than fake one.
+ */
+export function readIters(n = 5): IterDetail[] {
+  const dir = iterOutputDir();
+  if (!existsSync(dir)) return [];
+
+  let cutoffMs = 0;
+  try {
+    const stateFile = readJsonSafe<{ started_at?: string }>(wrapperStatePath(), {});
+    if (stateFile?.started_at) {
+      const parsed = Date.parse(stateFile.started_at);
+      if (Number.isFinite(parsed)) cutoffMs = parsed;
+    }
+  } catch {
+    /* fall through */
+  }
+
+  const candidates: Array<{ n: number; path: string; mtime: number }> = [];
+  try {
+    for (const name of readdirSync(dir)) {
+      const m = name.match(/^iter-(\d+)\.json$/);
+      if (!m) continue;
+      const num = Number.parseInt(m[1], 10);
+      if (!Number.isFinite(num)) continue;
+      const fullPath = join(dir, name);
+      if (cutoffMs > 0) {
+        try {
+          const st = statSync(fullPath);
+          if (st.mtimeMs < cutoffMs) continue;
+          candidates.push({ n: num, path: fullPath, mtime: st.mtimeMs });
+        } catch {
+          continue;
+        }
+      } else {
+        candidates.push({ n: num, path: fullPath, mtime: 0 });
+      }
+    }
+  } catch {
+    return [];
+  }
+
+  candidates.sort((a, b) => b.n - a.n);
+
+  const out: IterDetail[] = [];
+  for (const c of candidates) {
+    if (out.length >= n) break;
+    const data = readJsonSafe<Record<string, unknown>>(c.path, {});
+    if (!data || typeof data !== 'object') continue;
+    if (typeof data.result !== 'string') continue;
+    out.push({
+      iter: c.n,
+      stop_reason: typeof data.stop_reason === 'string' ? data.stop_reason : 'unknown',
+      is_error: data.is_error === true,
+      num_turns: typeof data.num_turns === 'number' ? data.num_turns : 0,
+      total_cost_usd:
+        typeof data.total_cost_usd === 'number' ? data.total_cost_usd : 0,
+      duration_ms:
+        typeof data.duration_ms === 'number' ? data.duration_ms : null,
+      result: data.result,
+      captured_at: new Date().toISOString(),
+    });
+  }
+  return out;
 }
 
 /**
