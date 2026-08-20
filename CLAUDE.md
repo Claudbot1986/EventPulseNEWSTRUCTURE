@@ -68,21 +68,144 @@ Use these hints for note discovery:
   - `01-Projects/EventPulse/00-Core/15-Provider-Onboarding-Definition-of-Done.md`
   - relevant `02-Operations/*`
 
-### Discipline
+### Vault Memory Protocol
+
+The Obsidian vault is the project's persistent long-term memory.
+You are responsible not only for reading it but for keeping it accurate as the project evolves.
+
+The vault follows the project. The project does not follow stale vault documentation.
+Never blindly follow information in the vault when newer evidence shows it is outdated.
+
+#### Authority hierarchy
+
+When information conflicts, determine truth using this priority:
+
+1. Explicit instructions from the user in the current session
+2. Explicit decisions made or confirmed by the user
+3. Current verified implementation and actual project state
+4. Decisions established during the current work/session
+5. Current project vault
+6. Historical notes, plans, conversations, and archived material
+
+A newer explicit user decision always overrides an older vault entry.
+Never preserve outdated documentation merely to maintain consistency.
+
+#### Distinguish decisions from discussion
+
+Not everything discussed becomes project truth.
+
+- **Exploration** — ideas, brainstorming, possibilities, questions, alternatives, speculative discussion. Do NOT auto-store.
+- **Decision** — explicitly selected, approved, implemented, or clearly established as the new direction. SHOULD update project memory.
+
+If strategically important information appears ambiguous, preserve the existing strategy rather than silently changing it.
+
+#### Special protection for strategic truth
+
+AI may autonomously synchronize **factual** project state:
+feature completed, API changed, architecture changed through implementation, dependency replaced, milestone completed, bug discovered, roadmap item completed.
+
+AI may NOT autonomously invent or change **strategic** truth:
+- North Star
+- fundamental product direction
+- target customer
+- core business model
+- major strategic objectives
+
+These require an explicit user decision or clear user approval.
+
+#### Current truth vs historical truth
+
+Core documents describe **current truth** (North-Star, Current-State, Architecture, Principles, Active-Roadmap). Keep these concise and current.
+
+For significant decisions, create or update a decision record containing:
+date, previous state, decision, reasoning, consequences, what it supersedes.
+Example: `Decisions/2026-08-20-agent-first-strategy.md`.
+
+Move obsolete plans and documentation to `Archive/` when historical context may still be valuable. Do not leave obsolete information mixed with authoritative current-state information.
+
+#### Current-State is the project's save game
+
+Treat `Current-State.md` as a compact reconstruction point.
+A completely new AI session should be able to read the core memory and reconstruct the project's current situation without depending on previous conversation history.
+
+#### Memory reconciliation (silent, before completing substantial work)
+
+Ask:
+- What changed?
+- What did we learn?
+- What was decided?
+- What was implemented?
+- What previously documented information is no longer true?
+- Did any assumption become invalid?
+- Which vault documents are affected?
+- Does Current State still describe reality?
+- Does the roadmap still reflect priorities?
+- Are there contradictions elsewhere in the vault?
+
+If persistent project truth changed, update the appropriate vault documents before completing the task. Do not wait for a separate documentation request.
+
+#### Multi-agent behavior
+
+Every agent or subagent working on the project treats the vault as shared persistent memory.
+Agents must NOT assume another agent's conversational context is available.
+
+Before making substantial architectural, strategic, or product decisions:
+1. Consult relevant project memory.
+2. Inspect relevant actual project state.
+3. Perform the assigned work.
+4. Reconcile persistent memory afterward when project truth changed.
+
+Important discoveries made by one agent must become available to future agents through project memory when they have lasting relevance.
+
+#### Prevent memory pollution
+
+Do NOT store everything. Avoid filling the vault with:
+- routine execution logs
+- trivial implementation details
+- temporary debugging observations
+- speculative ideas presented as facts
+- redundant summaries
+- information easily derivable from code
+- verbose AI-generated explanations without lasting value
+
+Prefer small amounts of high-value, authoritative information over large amounts of low-value documentation.
+
+#### Never fabricate memory
+
+Never write something into authoritative project memory merely because it seems likely.
+If uncertain: verify against code, verify against project state, search existing decisions, or mark the information as uncertain.
+Never convert an assumption into project truth.
+
+#### Git and vault relationship
+
+- **Code** = implementation truth
+- **Vault** = product, architectural and project truth
+- **Git** = implementation history
+- **Decision records** = reasoning history
+
+When documentation and implementation disagree, investigate rather than automatically assuming either one is correct.
+
+### Read discipline
 Do not read large parts of the vault by default.
 Do not treat broad note collection as progress.
 Prefer a small high-relevance note set over a large vague note set.
 
-### Write-back discipline
+### Confidence levels (always mark)
 If a change is actually verified, update the most relevant operations/status note in the vault.
 Do not write back guesses, unverified interpretations, or speculative conclusions.
 
-**Always mark entries with confidence level:**
 - `[VERIFIED]` = testat, körning bevisat
 - `[CLAIMED]` = baserat på loggar/data, ej bevisat
 - `[UNVERIFIED]` = hypotes, spekulation
 
 Om du verifierar något viktigt ska du uppdatera rätt Obsidian-fil efteråt.
+
+### Definition of done (vault)
+For substantial tasks, work is not fully complete until both are true:
+A. The requested work is complete.
+B. Persistent project memory accurately represents the resulting project state.
+
+Vault maintenance is part of normal project execution, not a separate documentation task.
 
 ## EventPulse
 
