@@ -28,23 +28,38 @@ export type EventType =
   | 'autonomous_run_started'
   | 'autonomous_run_paused'
   | 'autonomous_run_resumed'
+  | 'autonomous_run_stopped'
+  // wrapper lifecycle (emitted by scripts/autonomous-loop.sh)
+  | 'iteration_started'
+  | 'claude_spawned'
+  | 'claude_completed'
+  | 'iteration_timeout'
+  | 'iteration_failed'
+  | 'loop_terminated'
+  // task lifecycle
   | 'task_selected'
   | 'task_delegated'
   | 'task_completed'
   | 'task_blocked'
   | 'task_added'
+  // sub-agent lifecycle (emitted by Claude Code hooks when EP_AUTONOMOUS=1)
   | 'agent_started'
   | 'agent_completed'
+  // lead tool activity (aggregated — never per Bash token)
+  | 'lead_action'
+  // tests + commits + reconciliation
   | 'test_started'
   | 'test_passed'
   | 'test_failed'
   | 'commit_created'
   | 'vault_reconciled'
+  // meta
   | 'decision_recorded'
   | 'recovery_occurred'
   | 'next_task_selected'
   | 'user_instruction_received'
-  | 'instruction_queued';
+  | 'instruction_queued'
+  | 'instruction_consumed';
 
 export interface ActivityPayload {
   type: EventType;

@@ -16,7 +16,7 @@
  * return an honest empty/zero value.
  */
 
-import { existsSync, readFileSync } from 'node:fs';
+import { existsSync, readFileSync, readdirSync } from 'node:fs';
 import { execSync } from 'node:child_process';
 import { join } from 'node:path';
 
@@ -56,16 +56,40 @@ export interface ActivityEntry {
   ts: string;
   type: string;
   detail: string;
+  meta?: Record<string, unknown>;
+}
+
+export interface IterSummary {
+  iter: number;
+  stop_reason: string;
+  is_error: boolean;
+  num_turns: number;
+  total_cost_usd: number;
+  duration_ms: number | null;
+  result_preview: string;
+  captured_at: string;
+}
+
+export interface AgentState {
+  role: 'lead' | 'work' | 'vault-sync';
+  task: string;
+  started_at: string;
+  last_heartbeat: string;
+  status: 'running' | 'completed' | 'failed';
 }
 
 export interface StateSnapshot {
   wrapper: WrapperState;
   tasks: Task[];
   blocked: Task[];
+  currently_active_task: string | null;
   recent_commits: Commit[];
   recent_activity: ActivityEntry[];
   decisions_count: number;
   discovered_count: number;
+  agents: AgentState[];
+  last_iter_summary: IterSummary | null;
+  last_event_at: string | null;
   captured_at: string;
 }
 
@@ -110,6 +134,14 @@ export function discoveredWorkPath(): string {
 
 export function activityStreamPath(): string {
   return join(projectRoot(), '09-MobileControl/runtime/activity.jsonl');
+}
+
+export function agentStatePath(): string {
+  return join(projectRoot(), 'runtime/agents/state.json');
+}
+
+export function iterOutputDir(): string {
+  return join(projectRoot(), 'runtime/autonomous-loop');
 }
 
 function readJsonSafe<T>(path: string, fallback: T): T {
@@ -286,6 +318,89 @@ export function readDecisionsCount(): number {
   return countSectionBullets(md, '## Aktiva beslut');
 }
 
+/**
+ * Read the most recent iteration's summary from iter-N.json.
+ * `claude --print --output-format json` produces a flat result object (no
+ * messages array), so we surface what we actually have:
+ * stop_reason, num_turns, total_cost_usd, result preview.
+ */
+export function parseLastIterSummary(): IterSummary | null {
+  const dir = iterOutputDir();
+  if (!existsSync(dir)) return null;
+
+  let highestIter = 0;
+  let highestPath: string | null = null;
+  try {
+    const entries = readdirSync(dir);
+    for (const name of entries) {
+      const m = name.match(/^iter-(\d+)\.json$/);
+      if (!m) continue;
+      const n = Number.parseInt(m[1], 10);
+      if (Number.isFinite(n) && n > highestIter) {
+        highestIter = n;
+        highestPath = join(dir, name);
+      }
+    }
+  } catch {
+    return null;
+  }
+  if (!highestPath) return null;
+
+  const data = readJsonSafe<Record<string, unknown>>(highestPath, {});
+  if (!data || typeof data !== 'object') return null;
+
+  const result = typeof data.result === 'string' ? data.result : '';
+  return {
+    iter: highestIter,
+    stop_reason: typeof data.stop_reason === 'string' ? data.stop_reason : 'unknown',
+    is_error: data.is_error === true,
+    num_turns: typeof data.num_turns === 'number' ? data.num_turns : 0,
+    total_cost_usd:
+      typeof data.total_cost_usd === 'number' ? data.total_cost_usd : 0,
+    duration_ms:
+      typeof data.duration_ms === 'number' ? data.duration_ms : null,
+    result_preview: result.slice(0, 240),
+    captured_at: new Date().toISOString(),
+  };
+}
+
+/**
+ * Read per-agent liveness from runtime/agents/state.json.
+ * Written by Claude Code PostToolUse hooks when EP_AUTONOMOUS=1.
+ * Returns empty array if no agents are active or file is missing.
+ */
+export function readActiveAgents(): AgentState[] {
+  const path = agentStatePath();
+  if (!existsSync(path)) return [];
+  const data = readJsonSafe<{ agents?: AgentState[] }>(path, {});
+  if (!data?.agents) return [];
+  // Only surface agents updated in the last 30 min as "active"
+  const cutoff = Date.now() - 30 * 60 * 1000;
+  return data.agents.filter((a) => {
+    const t = new Date(a.last_heartbeat).getTime();
+    return Number.isFinite(t) && t > cutoff;
+  });
+}
+
+/**
+ * Read the timestamp of the most recent activity.jsonl entry.
+ * Null if the file is empty or missing.
+ */
+export function readLastEventAt(): string | null {
+  const path = activityStreamPath();
+  if (!existsSync(path)) return null;
+  try {
+    const text = readFileSync(path, 'utf-8').trim();
+    if (!text) return null;
+    const lines = text.split('\n');
+    const last = lines[lines.length - 1];
+    const parsed = JSON.parse(last) as { ts?: string };
+    return parsed.ts ?? null;
+  } catch {
+    return null;
+  }
+}
+
 export function readDiscoveredCount(): number {
   const md = readTextSafe(discoveredWorkPath());
   return countSectionBullets(md, '## Discovered');
@@ -324,6 +439,9 @@ export function readSnapshot(): StateSnapshot {
     recent_activity: readActivity(50),
     decisions_count: readDecisionsCount(),
     discovered_count: readDiscoveredCount(),
+    agents: readActiveAgents(),
+    last_iter_summary: parseLastIterSummary(),
+    last_event_at: readLastEventAt(),
     captured_at: new Date().toISOString(),
   };
 }
