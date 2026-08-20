@@ -147,7 +147,9 @@ for i in $(seq 1 "$MAX_RESTARTS"); do
 
   # Single-shot Claude invocation. /resume reads vault state, picks next
   # task, executes one meaningful unit, commits, exits.
-  timeout "${ITERATION_TIMEOUT_MIN}m" claude --print \
+  # Use perl for portable timeout (GNU `timeout` is not on macOS by default).
+  timeout_sec=$((ITERATION_TIMEOUT_MIN * 60))
+  perl -e 'alarm shift; exec @ARGV' "$timeout_sec" claude --print \
     --max-budget-usd "$MAX_BUDGET_PER_ITER" \
     --output-format json \
     "/resume" > "$LOG_DIR/iter-$i.json" 2> "$LOG_DIR/iter-$i.err"
