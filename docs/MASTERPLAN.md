@@ -652,3 +652,54 @@ Do this next, in order. Do not start Phase 1 UI polish first.
 6. Stop shipping product reads through anon-key `events` select.
 
 Success for Phase 0 is step 3 returning real future Stockholm events.
+
+---
+
+## 18. MVP Hardening Plan (2026-08-20)
+
+Rollback point: git tag `pre-mvp-hardening-2026-08-20` @ `01807e0`.
+
+### 18.1 Evidence
+
+Database state is **not** the blocker: 11 308 rows total, ~8 600 future events (source: `localhost:7777/api/status`, dashboard is source of truth). Everything user-facing is.
+
+| # | Defect | Location | Effect |
+|---|--------|----------|--------|
+| D1 | `isIntentComplete()` requires `party !== 'any'`, and `party` defaults to `'any'` | `08-Agent/tools/find_gaps.ts` | Nearly every query is "incomplete" → agent asks questions instead of searching. Magic query never returns cards. |
+| D2 | Swedish temporal parsing missing "på fredag", "imorgon", "i helgen", bare weekdays; uses server-local `new Date()` and UTC `toISOString()` | `08-Agent/tools/parse_intent.ts` | Wrong or empty date windows; off-by-one at Stockholm DST boundaries. |
+| D3 | `venue_name: ''` hardcoded; city filter is a no-op stub | `08-Agent/tools/search_events.ts` (≈130, ≈81-85) | Cards have no venue. MMR venue-penalty in `diversify.ts:88` is dead code. |
+| D4 | Expo entry points at legacy browse app; anon id regenerates every cold start; agent URL is a home LAN IP | `06-UI/index.js:3`, `06-UI/services/agentClient.js:32-49`, `06-UI/.env.local:3` | Agent screen unreachable; personalization never accumulates; app cannot run off the dev network. |
+
+### 18.2 Design decisions and their basis
+
+1. **Results before questions (mixed initiative).** Show cards first, ask at most one clarifying question alongside them. Basis: Radlinski & Craswell (2017) theoretical framework for conversational search; Aliannejadi et al. (2019, SIGIR/Qulac) and Zamani et al. (2020, WWW) show clarification is valuable but only when it does not replace the result set. Blocking on three questions is the anti-pattern.
+2. **One question maximum, chosen by information gain.** Keep the existing active-learning ranking (Settles 2009; Schein 2002) but cap `MAX_QUESTIONS` at 1 and never gate search on it.
+3. **Future-biased date resolution.** Bare weekdays and "på fredag" resolve to the next occurrence, matching `dateparser`'s `PREFER_DATES_FROM: future` and Duckling's future grain bias.
+4. **All time arithmetic anchored to `Europe/Stockholm`** via `Intl.DateTimeFormat`, as already done correctly in `rank_events.ts:87-98`.
+5. **Zero-result broadening instead of empty state.** On zero hits, widen the date window then relax category, and label the relaxation in the response.
+
+### 18.3 Workstreams (exclusive file ownership, no collisions)
+
+| WS | Goal | Owns (exclusive) |
+|----|------|------------------|
+| A | Swedish temporal + party parsing, Stockholm TZ anchor | `08-Agent/tools/parse_intent.ts`, `08-Agent/tools/temporal_sv.ts` (new), `08-Agent/tests/parse_intent.test.ts`, `08-Agent/tests/temporal_sv.test.ts` (new) |
+| B | Real `venue_name`, working city filter, zero-result broadening | `08-Agent/tools/search_events.ts`, `08-Agent/tests/search_events.test.ts` |
+| C | Mixed-initiative orchestration (results first) | `08-Agent/tools/find_gaps.ts`, `08-Agent/server.ts`, `08-Agent/types.ts`, `08-Agent/tests/find_gaps.test.ts`, `08-Agent/tests/agent_chat_wire.test.ts` |
+| D | Expo entry, durable identity, error/retry UX | `06-UI/index.js`, `06-UI/app/AgentScreen.js`, `06-UI/services/agentClient.js`, `06-UI/services/storage.js` (new), `06-UI/package.json`, `06-UI/app.json` |
+| E | Hostable backend + secret hygiene | `Dockerfile`, `.dockerignore`, `fly.toml`, `.env.example`, `docs/DEPLOY.md` (all new) |
+| F | Per-organizer outbound attribution | `05-Supabase/migrations/20260820-0001-outbound-attribution.sql` (new), `08-Agent/tools/attribution.ts` (new), `08-Agent/tests/attribution.test.ts` (new) |
+
+A, B, D, E, F run in parallel. C runs after A and B because it integrates their outputs through `server.ts`.
+
+### 18.4 Definition of done
+
+1. The magic query returns ≥3 real cards, each with a non-empty `venue_name`.
+2. At most one clarifying question, and never in place of results.
+3. "på fredag" / "imorgon" / "i helgen" resolve to correct future Stockholm dates.
+4. `npm run type-check` clean; 08-Agent tests green.
+5. Expo boots into `AgentScreen`; anon id survives a cold restart.
+6. Agent API reachable from a config value, not a hardcoded LAN IP.
+
+### 18.5 Out of scope
+
+Payments, push notifications, App Store submission, Sweden-wide coverage, public event API, C2→C3 discovery work.
