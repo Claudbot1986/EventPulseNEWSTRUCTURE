@@ -48,7 +48,8 @@ fly secrets set \
   SUPABASE_URL="https://your-project-ref.supabase.co" \
   SUPABASE_SERVICE_ROLE_KEY="sb_service_role_xxx" \
   ANTHROPIC_API_KEY="sk-ant-xxx" \
-  AGENT_ALLOWED_ORIGINS="https://your-app-name.fly.dev,https://your-app.expo.app"
+  AGENT_ALLOWED_ORIGINS="https://your-app-name.fly.dev,https://your-app.expo.app" \
+  AGENT_ADMIN_TOKEN="$(openssl rand -hex 32)"
 ```
 
 Notes:
@@ -142,31 +143,37 @@ or `http://localhost:8787` for emulator-only dev.
 
 ## 8. What is NOT yet handled
 
-The MVP hardening plan (Workstream E) ships deploy scaffolding only. The
-following are deliberately out of scope and must be addressed before any
-non-developer user touches the deployed endpoint:
+The MVP hardening plan (Workstream E) ships deploy scaffolding plus
+follow-up hardening (token-bucket rate limit, Bearer admin auth, app
+icons, attribution migration). The following remain out of scope and
+must be addressed before any non-developer user touches the deployed
+endpoint at scale:
 
-1. **Authentication.** `/agent/chat` currently accepts an opaque
-   `client_user_id` UUID with no proof of identity. A single global
-   attacker who discovers the URL can send feedback and impressions
-   under arbitrary user ids. Phase 2 auth (still unscheduled) gates
-   this.
-2. **Rate limiting.** No per-IP or per-client_user_id limit. A bad
-   client (or a hostile one) can run up Anthropic costs. Add a
-   token-bucket middleware before exposing beyond the developer's
-   phone.
+1. **Authentication for `/agent/chat`.** A Bearer-token admin guard
+   now protects the operator endpoints (`/agent/metrics`,
+   `/agent/experiments/personalization`). `/agent/chat` still
+   accepts an opaque `client_user_id` UUID with no proof of identity.
+   A global attacker who discovers the URL can still send feedback
+   and impressions under arbitrary user ids; the rate limiter
+   (item 2) bounds the damage, but real auth (Phase 2) is still
+   unscheduled.
+2. **Rate limiting.** Shipped as `08-Agent/middleware/rateLimit.ts`
+   (token-bucket, in-memory). `/agent/chat`, `/agent/feedback`, and
+   `/agent/outbound` are limited per `client_user_id` (5 rps, burst
+   20). `/agent/feed`, `/agent/metrics`, and
+   `/agent/experiments/personalization` are limited per IP (10 rps,
+   burst 40). `/agent/health` is unlimited (liveness probes must
+   not 429). In-memory means multi-instance scale-out would need a
+   shared store (Redis/Upstash) — explicitly listed as out of scope.
 3. **Monitoring / alerting.** Boot logs are visible via `fly logs`,
    but there is no uptime check, no error-rate metric, no PagerDuty
-   integration.
+   integration. The 429 counter is not exported.
 4. **CI / deploy-on-merge.** `fly deploy` is manual. No GitHub Actions
    integration is set up to deploy on merge to `main`.
-5. **`package.json` start script for the agent.** The Dockerfile
-   invokes `npx tsx 08-Agent/server.ts` directly. Root `package.json`
-   has no `start:agent` script. Add one (something like
-   `"start:agent": "tsx 08-Agent/server.ts"`) once a reviewer can
-   confirm the script does not pull in puppeteer or any other
-   scraping-only dependency. Until then, this Dockerfile bakes
-   `tsx` directly into the runner stage.
+5. **`package.json` start script for the agent.** **Done** in
+   `package.json:16` as `"start:agent": "tsx 08-Agent/server.ts"`.
+   Verified not to transitively import `puppeteer` or
+   `@resvg/resvg-js` from the agent graph.
 6. **Puppeteer / Chromium in the dependency tree.** `puppeteer` is
    listed at the repo root but the agent's import graph does not
    reach it (verified — `grep -r puppeteer 08-Agent packages/shared`

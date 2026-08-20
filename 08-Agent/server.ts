@@ -36,6 +36,8 @@ import {
 } from './tools/experiments';
 import { composeReply } from './llmRouter';
 import { fetchEventImage } from './tools/fetch_event_image';
+import { createRateLimiter, ipKeyFn } from './middleware/rateLimit';
+import { createAdminAuth } from './middleware/adminAuth';
 import type {
   AgentChatRequest,
   AgentChatResponse,
@@ -80,6 +82,25 @@ export function buildApp(opts: { supabase?: SupabaseClient } = {}): express.Expr
   const allowedOrigins = getAllowedOrigins();
   const sb = opts.supabase ?? null;
 
+  // Rate limiting (Workstream E follow-up, MVP Hardening §18.4 DoD 5).
+  //
+  // Two buckets:
+  //   - `chatLimiter` tracks `client_user_id` from the request body and is
+  //     the tightest budget — it backs the Anthropic call. Default: 5 rps,
+  //     burst 20, idle-evict after 10 min.
+  //   - `generalLimiter` is IP-keyed and gates feed/metrics/experiments so
+  //     a single anonymous caller cannot scrape them. Same defaults.
+  //
+  // Both are in-memory (single Fly machine). Multi-instance scale-out
+  // would require a shared store; explicitly listed in docs/DEPLOY.md §8.
+  const chatLimiter = createRateLimiter({ rps: 5, burst: 20 });
+  const generalLimiter = createRateLimiter({ rps: 10, burst: 40, keyFn: ipKeyFn });
+
+  // Admin auth (Workstream E follow-up, MVP Hardening §18.4 DoD 5).
+  // Gates /agent/metrics and /agent/experiments/personalization. Reads
+  // `AGENT_ADMIN_TOKEN` from the env; if unset, all admin calls 503.
+  const requireAdmin = createAdminAuth();
+
   app.use((req, res, next) => {
     const origin = req.header('origin');
     if (origin && allowedOrigins.length > 0 && !allowedOrigins.includes(origin)) {
@@ -115,7 +136,7 @@ export function buildApp(opts: { supabase?: SupabaseClient } = {}): express.Expr
    *
    * Same lockdown as /agent/chat: origin allowlist + service_role only.
    */
-  app.get('/agent/feed', async (req: Request, res: Response) => {
+  app.get('/agent/feed', generalLimiter.middleware, async (req: Request, res: Response) => {
     const client = sb ?? getSupabase();
     const from = typeof req.query.from === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(req.query.from)
       ? req.query.from
@@ -145,7 +166,7 @@ export function buildApp(opts: { supabase?: SupabaseClient } = {}): express.Expr
     }
   });
 
-  app.post('/agent/chat', async (req: Request, res: Response) => {
+  app.post('/agent/chat', chatLimiter.middleware, async (req: Request, res: Response) => {
     const body = req.body as Partial<AgentChatRequest>;
     if (!body || typeof body !== 'object') {
       res.status(400).json({ error: 'invalid body' });
@@ -326,7 +347,7 @@ export function buildApp(opts: { supabase?: SupabaseClient } = {}): express.Expr
    * The call is best-effort: a Supabase insert failure returns
    * { ok: false, warning } with 202 so the click UX never breaks.
    */
-  app.post('/agent/outbound', async (req: Request, res: Response) => {
+  app.post('/agent/outbound', chatLimiter.middleware, async (req: Request, res: Response) => {
     const body = req.body as Partial<{
       client_user_id: string;
       session_id?: string;
@@ -401,7 +422,7 @@ export function buildApp(opts: { supabase?: SupabaseClient } = {}): express.Expr
     res.json({ ok: true });
   });
 
-  app.post('/agent/feedback', async (req: Request, res: Response) => {
+  app.post('/agent/feedback', chatLimiter.middleware, async (req: Request, res: Response) => {
     const body = req.body as Partial<{
       client_user_id: string;
       session_id?: string;
@@ -454,7 +475,7 @@ export function buildApp(opts: { supabase?: SupabaseClient } = {}): express.Expr
     res.json({ ok: true });
   });
 
-  app.get('/agent/metrics', async (_req: Request, res: Response) => {
+  app.get('/agent/metrics', requireAdmin, generalLimiter.middleware, async (_req: Request, res: Response) => {
     const client = sb ?? getSupabase();
     try {
       const { data, error } = await client
@@ -506,7 +527,7 @@ export function buildApp(opts: { supabase?: SupabaseClient } = {}): express.Expr
    * That's by design — Kohavi §4 warns that premature peeking yields
    * false positives. Wait for the samples to accumulate before deciding.
    */
-  app.get('/agent/experiments/personalization', async (_req: Request, res: Response) => {
+  app.get('/agent/experiments/personalization', requireAdmin, generalLimiter.middleware, async (_req: Request, res: Response) => {
     const client = sb ?? getSupabase();
     try {
       // Pull only the rows tagged with this experiment. We use metadata
