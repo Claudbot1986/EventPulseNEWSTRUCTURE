@@ -315,12 +315,33 @@ Do NOT autonomously:
 
 Lightweight checkpoints after meaningful units of work. A checkpoint must let a fresh agent determine: what was completed, what changed, what remains, what is currently running, what failed, what is blocked, what should happen next. Use git where appropriate. Do not commit broken intermediate states merely to create checkpoints.
 
+### Pre-emptive compaction
+
+Claude Code-sessions är bundna av context window (~200k tokens).
+Att låta context fyllas till slutet innebär brutala klipp mitt i
+ett pågående arbete. Stoppa istället tidigt:
+
+- **Trigger:** när den uppskattade context-användningen närmar sig
+  60–70% av window (eller när `/status` visar nära gränsen).
+- **Åtgärd:** committa pågående arbete som ett meningsfullt minsta
+  delmål, uppdatera `23-Active-Task-Queue.md` med status
+  `in_progress` + `last_verified_state` + `next_action`, kör
+  `/compact`, låt sedan sessionen fortsätta eller avsluta
+  rent (nästa session tar vid).
+- **Aldrig:** kompakta mitt i en commit — committa först,
+  kompakta sen.
+
+Syfte: `/resume` ska alltid kunna avgöra "vad håller agenten på
+med just nu" via queue + git, aldrig genom brottstycken av
+samtal.
+
 ### Where to find the role definitions
 
 - Lead agent (your role): `~/.claude/agents/lead.md`
 - Worker sub-agent: `~/.claude/agents/work.md`
 - Vault sync sub-agent: `~/.claude/agents/vault-sync.md`
 - Resume slash command: `.claude/commands/resume.md`
+- Autonomous-loop wrapper: `scripts/autonomous-loop.sh` (se `docs/AUTONOMOUS-LOOP.md`)
 - Persistent task queue: `00-Vault/01-Projects/EventPulse/02-Operations/23-Active-Task-Queue.md`
 
 ## EventPulse
