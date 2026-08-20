@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="theme-color" content="#0a0a0a">
+  <title>EventPulse — Mobile Control</title>
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+  <header class="app-header">
+    <h1>EventPulse</h1>
+    <span id="connection-status" class="status-pill status-unknown">connecting…</span>
+  </header>
+
+  <main class="app-main">
+    <section class="card" id="status-card">
+      <h2>Autonomous Run</h2>
+      <div class="status-grid">
+        <div>
+          <div class="label">Status</div>
+          <div class="value" id="wrapper-status">—</div>
+        </div>
+        <div>
+          <div class="label">Runtime</div>
+          <div class="value" id="wrapper-runtime">—</div>
+        </div>
+        <div>
+          <div class="label">Iteration</div>
+          <div class="value" id="wrapper-iteration">—</div>
+        </div>
+        <div>
+          <div class="label">Last</div>
+          <div class="value" id="wrapper-last">—</div>
+        </div>
+      </div>
+      <div class="tmux-row">
+        <span class="label">tmux:</span>
+        <span id="tmux-status" class="status-pill status-unknown">—</span>
+      </div>
+    </section>
+
+    <section class="card">
+      <h2>Tasks</h2>
+      <div class="tabs">
+        <button class="tab active" data-tab="active">Active</button>
+        <button class="tab" data-tab="recent">Recent</button>
+        <button class="tab" data-tab="blocked">Blocked</button>
+      </div>
+      <ul class="task-list" id="task-list"></ul>
+    </section>
+
+    <section class="card">
+      <h2>Recent Commits</h2>
+      <ul class="commit-list" id="commit-list"></ul>
+    </section>
+
+    <section class="card">
+      <h2>Activity</h2>
+      <ul class="activity-list" id="activity-list"></ul>
+    </section>
+
+    <section class="card collapsible" id="terminal-card">
+      <h2 class="collapsible-header">
+        <span>Terminal</span>
+        <span class="hint">tmux pane</span>
+      </h2>
+      <pre class="terminal-pane" id="terminal-pane">(no tmux session)</pre>
+    </section>
+  </main>
+
+  <nav class="action-bar">
+    <button class="action primary" data-action="instruct">Message Lead</button>
+    <button class="action" data-action="add-task">Add Task</button>
+    <button class="action" data-action="pause">Pause</button>
+    <button class="action" data-action="resume">Resume</button>
+    <button class="action" data-action="refresh">Refresh</button>
+  </nav>
+
+  <div class="modal-backdrop" id="modal-backdrop" hidden>
+    <div class="modal">
+      <h3 id="modal-title">Send Instruction</h3>
+      <textarea id="modal-input" rows="4" placeholder="Type your instruction for the lead agent…"></textarea>
+      <div class="modal-actions">
+        <button class="action" id="modal-cancel">Cancel</button>
+        <button class="action primary" id="modal-submit">Send</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="/dashboard.js"></script>
+</body>
+</html>

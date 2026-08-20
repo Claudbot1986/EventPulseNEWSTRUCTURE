@@ -1,0 +1,328 @@
+/* Mobile-first EventPulse control dashboard. Dark theme, thumb-reach controls. */
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  -webkit-tap-highlight-color: transparent;
+}
+
+html, body {
+  height: 100%;
+  background: #0a0a0a;
+  color: #e8e8e8;
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", sans-serif;
+  font-size: 16px;
+  line-height: 1.4;
+  -webkit-text-size-adjust: 100%;
+}
+
+.app-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 16px;
+  background: #141414;
+  border-bottom: 1px solid #2a2a2a;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+.app-header h1 {
+  font-size: 18px;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+}
+
+.status-pill {
+  display: inline-block;
+  padding: 4px 10px;
+  border-radius: 12px;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.status-running { background: #0a3d0a; color: #4ade80; }
+.status-stopped, .status-paused { background: #3d3a0a; color: #fbbf24; }
+.status-failed { background: #3d0a0a; color: #f87171; }
+.status-unknown { background: #2a2a2a; color: #888; }
+
+.app-main {
+  padding: 12px;
+  padding-bottom: 100px;
+}
+
+.card {
+  background: #141414;
+  border: 1px solid #2a2a2a;
+  border-radius: 12px;
+  padding: 14px;
+  margin-bottom: 12px;
+}
+
+.card h2 {
+  font-size: 13px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: #888;
+  margin-bottom: 10px;
+}
+
+.status-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.label {
+  font-size: 11px;
+  color: #888;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.value {
+  font-size: 18px;
+  font-weight: 600;
+  margin-top: 2px;
+  word-break: break-word;
+}
+
+.tmux-row {
+  margin-top: 10px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+}
+
+.tabs {
+  display: flex;
+  gap: 4px;
+  margin-bottom: 10px;
+  border-bottom: 1px solid #2a2a2a;
+}
+
+.tab {
+  background: none;
+  border: none;
+  color: #888;
+  font-size: 13px;
+  font-weight: 600;
+  padding: 8px 12px;
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -1px;
+}
+
+.tab.active {
+  color: #e8e8e8;
+  border-bottom-color: #4ade80;
+}
+
+.task-list, .commit-list, .activity-list {
+  list-style: none;
+}
+
+.task-item, .commit-item, .activity-item {
+  padding: 10px 0;
+  border-bottom: 1px solid #1f1f1f;
+}
+
+.task-item:last-child, .commit-item:last-child, .activity-item:last-child {
+  border-bottom: none;
+}
+
+.task-id {
+  font-family: ui-monospace, "SF Mono", monospace;
+  font-size: 11px;
+  color: #888;
+}
+
+.task-prio {
+  display: inline-block;
+  padding: 1px 6px;
+  border-radius: 4px;
+  font-size: 10px;
+  font-weight: 700;
+  margin-right: 6px;
+  background: #2a2a2a;
+  color: #ccc;
+}
+
+.task-prio.P0 { background: #3d0a0a; color: #f87171; }
+.task-prio.P1 { background: #3d2a0a; color: #fbbf24; }
+.task-prio.P2 { background: #1f1f3d; color: #818cf8; }
+.task-prio.P3 { background: #2a2a2a; color: #888; }
+
+.task-title {
+  font-size: 14px;
+  font-weight: 500;
+  margin-top: 2px;
+}
+
+.task-status {
+  display: inline-block;
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  color: #888;
+  margin-left: 6px;
+}
+
+.task-status.in_progress { color: #fbbf24; }
+.task-status.blocked { color: #f87171; }
+.task-status.done { color: #4ade80; }
+
+.commit-hash {
+  font-family: ui-monospace, "SF Mono", monospace;
+  font-size: 11px;
+  color: #4ade80;
+  margin-right: 6px;
+}
+
+.commit-subject {
+  font-size: 13px;
+  color: #ccc;
+}
+
+.commit-meta {
+  font-size: 11px;
+  color: #666;
+  margin-top: 2px;
+}
+
+.activity-item {
+  display: flex;
+  gap: 8px;
+  align-items: baseline;
+}
+
+.activity-time {
+  font-family: ui-monospace, "SF Mono", monospace;
+  font-size: 10px;
+  color: #666;
+  flex-shrink: 0;
+  width: 50px;
+}
+
+.activity-type {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: #818cf8;
+  flex-shrink: 0;
+  width: 110px;
+}
+
+.activity-detail {
+  font-size: 12px;
+  color: #ccc;
+  flex-grow: 1;
+  word-break: break-word;
+}
+
+.terminal-pane {
+  background: #050505;
+  border: 1px solid #1f1f1f;
+  border-radius: 8px;
+  padding: 10px;
+  font-family: ui-monospace, "SF Mono", monospace;
+  font-size: 11px;
+  color: #a3e635;
+  max-height: 240px;
+  overflow-y: auto;
+  white-space: pre-wrap;
+  word-break: break-all;
+}
+
+.action-bar {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  display: flex;
+  gap: 6px;
+  padding: 10px 12px;
+  background: #0a0a0a;
+  border-top: 1px solid #2a2a2a;
+  z-index: 10;
+  padding-bottom: max(10px, env(safe-area-inset-bottom));
+}
+
+.action {
+  flex: 1;
+  background: #1f1f1f;
+  color: #ccc;
+  border: 1px solid #2a2a2a;
+  border-radius: 8px;
+  padding: 10px 4px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  min-height: 44px;
+}
+
+.action.primary {
+  background: #166534;
+  border-color: #22c55e;
+  color: #fff;
+}
+
+.action:active { opacity: 0.6; }
+.action:disabled { opacity: 0.4; pointer-events: none; }
+
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 20;
+  padding: 16px;
+}
+
+.modal-backdrop[hidden] { display: none; }
+
+.modal {
+  background: #141414;
+  border: 1px solid #2a2a2a;
+  border-radius: 12px;
+  padding: 16px;
+  width: 100%;
+  max-width: 480px;
+}
+
+.modal h3 {
+  font-size: 16px;
+  margin-bottom: 12px;
+}
+
+.modal textarea {
+  width: 100%;
+  background: #0a0a0a;
+  border: 1px solid #2a2a2a;
+  border-radius: 8px;
+  color: #e8e8e8;
+  padding: 10px;
+  font-family: inherit;
+  font-size: 14px;
+  resize: vertical;
+}
+
+.modal-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+@media (min-width: 720px) {
+  .action-bar { position: static; margin-top: 12px; }
+  .app-main { padding-bottom: 12px; }
+  .status-grid { grid-template-columns: repeat(4, 1fr); }
+}
