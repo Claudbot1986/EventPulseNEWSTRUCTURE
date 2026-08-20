@@ -119,6 +119,24 @@ _None yet._
   console.log('VAULT-SYNC: Updated ' + TARGET_FILE);
 }
 
+async function emitVaultReconciled(meta) {
+  try {
+    const { appendFileSync, mkdirSync } = await import('node:fs');
+    const { dirname, join } = await import('node:path');
+    const logPath = join(PROJECT_ROOT, '09-MobileControl/runtime/activity.jsonl');
+    mkdirSync(dirname(logPath), { recursive: true });
+    const line = JSON.stringify({
+      ts: new Date().toISOString(),
+      type: 'vault_reconciled',
+      detail: `vault synced (${meta.commit_hash ?? 'unknown'})`,
+      meta,
+    });
+    appendFileSync(logPath, line + '\n');
+  } catch (err) {
+    process.stderr.write('VAULT-SYNC: activity append failed: ' + err.message + '\n');
+  }
+}
+
 async function main() {
   console.log('VAULT-SYNC: Starting session-end sync...');
   const syncTime = isoStockholmDate();
@@ -128,6 +146,14 @@ async function main() {
   const migrations = getMigrations();
   const autoFacts = buildAutoFacts({ git, tests, pkg, migrations, syncTime });
   updateCurrentState(autoFacts);
+  await emitVaultReconciled({
+    commit_hash: git.lastCommit?.hash,
+    commit_subject: git.lastCommit?.subject,
+    uncommitted: git.uncommittedCount,
+    tests_passed: tests?.passed,
+    tests_failed: tests?.failed,
+    sync_time: syncTime,
+  });
   console.log('VAULT-SYNC: Sync complete at ' + syncTime);
   process.exit(0);
 }

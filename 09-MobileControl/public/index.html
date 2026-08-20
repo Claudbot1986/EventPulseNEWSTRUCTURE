@@ -10,10 +10,34 @@
 <body>
   <header class="app-header">
     <h1>EventPulse</h1>
-    <span id="connection-status" class="status-pill status-unknown">connecting…</span>
+    <div class="header-right">
+      <span id="last-event-time" class="last-event">—</span>
+      <span id="connection-status" class="status-pill status-unknown">connecting…</span>
+    </div>
   </header>
 
   <main class="app-main">
+    <section class="card" id="now-card">
+      <h2>NOW</h2>
+      <ul class="agent-list" id="agent-list">
+        <li class="agent-row agent-empty">— no agents active —</li>
+      </ul>
+      <div class="iter-meta" id="iter-meta">
+        <div class="iter-meta-item"><span class="label">Iter</span><span class="value" id="iter-num">—</span></div>
+        <div class="iter-meta-item"><span class="label">Turns</span><span class="value" id="iter-turns">—</span></div>
+        <div class="iter-meta-item"><span class="label">Cost</span><span class="value" id="iter-cost">—</span></div>
+        <div class="iter-meta-item"><span class="label">Stop</span><span class="value" id="iter-stop">—</span></div>
+      </div>
+    </section>
+
+    <section class="card" id="activity-card">
+      <h2>
+        Live Activity
+        <span class="card-hint" id="activity-count">—</span>
+      </h2>
+      <ul class="timeline" id="activity-list"></ul>
+    </section>
+
     <section class="card" id="status-card">
       <h2>Autonomous Run</h2>
       <div class="status-grid">
@@ -53,17 +77,15 @@
       <ul class="commit-list" id="commit-list"></ul>
     </section>
 
-    <section class="card">
-      <h2>Activity</h2>
-      <ul class="activity-list" id="activity-list"></ul>
-    </section>
-
-    <section class="card collapsible" id="terminal-card">
-      <h2 class="collapsible-header">
-        <span>Terminal</span>
-        <span class="hint">tmux pane</span>
+    <section class="card" id="terminal-card">
+      <h2>
+        Terminal Live
+        <span class="card-hint">read-only · auto-refresh 5s</span>
       </h2>
       <pre class="terminal-pane" id="terminal-pane">(no tmux session)</pre>
+      <div class="terminal-actions">
+        <button class="action" id="open-interactive">Open Interactive Terminal</button>
+      </div>
     </section>
   </main>
 
@@ -82,6 +104,18 @@
       <div class="modal-actions">
         <button class="action" id="modal-cancel">Cancel</button>
         <button class="action primary" id="modal-submit">Send</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-backdrop" id="terminal-modal" hidden>
+    <div class="modal modal-wide">
+      <h3>Interactive Terminal (sends keys to tmux)</h3>
+      <pre class="terminal-pane" id="terminal-modal-pane">(no tmux session)</pre>
+      <textarea id="terminal-input" rows="2" placeholder="Keys to send (e.g. Enter, or text)…"></textarea>
+      <div class="modal-actions">
+        <button class="action" id="terminal-modal-close">Close</button>
+        <button class="action" id="terminal-modal-send">Send</button>
       </div>
     </div>
   </div>

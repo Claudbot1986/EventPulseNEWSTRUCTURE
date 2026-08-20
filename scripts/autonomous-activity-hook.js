@@ -226,6 +226,14 @@ async function main() {
   const tool = payload.tool_name;
   if (!tool) process.exit(0);
 
+  if (process.env.EP_ACTIVITY_DEBUG || existsSync(join(PROJECT_ROOT, 'runtime/agents/.debug-payload'))) {
+    try {
+      writeFileSync(join(PROJECT_ROOT, `runtime/agents/last-payload-${tool}.json`), JSON.stringify(payload, null, 2));
+    } catch {
+      /* best-effort */
+    }
+  }
+
   if (tool === 'Agent') {
     try {
       handleAgentTool(payload);
