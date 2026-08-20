@@ -56,6 +56,14 @@ export interface EventCard {
   is_free: boolean;
   ticket_url?: string | null;
   image_url?: string | null;
+  /**
+   * Source id from events.source — the ingestor that produced this row.
+   * Surfaced in the UI so the user can see which site the event came from
+   and (where a public homepage URL is registered) link to the source.
+   Not all sources have a public homepage; the UI degrades gracefully
+   (shows name, no link).
+   */
+  source?: string | null;
   /** 0–100 confidence from the ingestion stack. Optional: not all rows have it. */
   confidence_score?: number | null;
   /** ISO timestamp of last ingestion. Drives the `stale` ranker reason. */
@@ -145,8 +153,31 @@ export interface AgentChatResponse {
   cards: EventCard[];
   warnings: string[];
   /**
-   * Present iff the agent is asking the user for clarification.
-   * When non-empty, `cards` is empty and `reply` is a brief lead-in.
+   * Zero-result broadening label, surfaced by search_events. The agent
+   * reports it in the reply so the user knows why the date window or
+   * category filter was relaxed (e.g. "hittade inget pa fredag - har ar
+   * helgen istallet"). `null` when the strict query matched.
+   *
+   * Machine-readable so the LLM composer can include it in the
+   * deterministic fallback copy. See llmRouter.deterministicReply.
+   */
+  relaxed_constraint?: 'date_window' | 'category' | null;
+  /**
+   * At most ONE clarifying question, attached alongside `cards` (never in
+   * place of them). The chat handler ALWAYS runs the search pipeline; when
+   * the intent is sparse, the highest-gain question is attached so the
+   * user sees results AND a nudge to refine.
+   *
+   * `null` (or omitted) when the intent is already complete enough.
+   * `undefined` is the wire-level "no field at all" for back-compat with
+   * clients that do not yet parse this key.
+   */
+  clarifying_question?: ClarifyingQuestion | null;
+  /**
+   * Legacy array form, capped at 1 entry (MAX_QUESTIONS). Preserved for
+   * back-compat with existing clients. New clients should prefer
+   * `clarifying_question` (the single-question contract is easier to
+   * enforce on the client side).
    */
   clarifying_questions?: ClarifyingQuestion[];
 }

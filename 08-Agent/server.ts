@@ -24,7 +24,8 @@ import { searchEvents } from './tools/search_events';
 import { rankEvents } from './tools/rank_events';
 import { mmrRerank } from './tools/diversify';
 import { recordFeedback } from './tools/record_feedback';
-import { findGaps } from './tools/find_gaps';
+import { pickClarifyingQuestion } from './tools/find_gaps';
+import { recordOutboundClick } from './tools/attribution';
 import { feedEvents, todayIso, addDays } from './tools/feed_events';
 import { buildUserSignal } from './tools/personalize';
 import {
@@ -171,25 +172,14 @@ export function buildApp(opts: { supabase?: SupabaseClient } = {}): express.Expr
     try {
       const intent = await parseIntent(body.message);
 
-      // Cold-start gate: if critical intent slots are missing, ask the user
-      // instead of guessing. The deterministic pipeline never runs with a
-      // thin intent — we either have enough signal to search or we ask.
-      const gaps = findGaps(intent);
-      if (gaps.length > 0) {
-        const leadIn =
-          intent.language === 'sv'
-            ? 'Jag vill gärna hjälpa dig — berätta lite mer:'
-            : "I'd love to help — tell me a bit more:";
-        const out: AgentChatResponse = {
-          session_id: body.session_id ?? 'pending',
-          reply: leadIn,
-          cards: [],
-          warnings: [],
-          clarifying_questions: gaps,
-        };
-        res.json(out);
-        return;
-      }
+      // Mixed-initiative (Workstream C, MASTERPLAN §18.2 decision 1):
+      //   - ALWAYS run the search pipeline. Results come first.
+      //   - Attach AT MOST ONE clarifying question (highest info gain) when
+      //     the intent is sparse, alongside the results — never in place of
+      //     them. The user sees cards AND a nudge to refine.
+      // This replaces the prior cold-start gate that short-circuited with
+      // an empty cards array (D1 defect in §18.1).
+      const clarifyingQuestion = pickClarifyingQuestion(intent);
 
       const search = await searchEvents(client, {
         city: intent.city,
@@ -298,6 +288,7 @@ export function buildApp(opts: { supabase?: SupabaseClient } = {}): express.Expr
         intent,
         cards,
         warnings: search.warnings,
+        relaxed_constraint: search.relaxed_constraint,
       });
 
       const out: AgentChatResponse = {
@@ -305,12 +296,109 @@ export function buildApp(opts: { supabase?: SupabaseClient } = {}): express.Expr
         reply: replyResult.reply,
         cards,
         warnings: search.warnings,
+        // Additive: surface the relaxation label (machine-readable) so the
+        // client can also render it. The reply string already contains the
+        // human Swedish copy when the LLM composer is active.
+        relaxed_constraint: search.relaxed_constraint,
+        // Mixed-initiative: at most one clarifying question, attached
+        // alongside results. Never in place of them.
+        clarifying_question: clarifyingQuestion,
+        // Legacy array form, capped at 1 entry. Kept for back-compat.
+        clarifying_questions: clarifyingQuestion ? [clarifyingQuestion] : [],
       };
       res.json(out);
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : 'unknown error';
       res.status(500).json({ error: msg });
     }
+  });
+
+  /**
+   * POST /agent/outbound — per-organizer outbound click attribution
+   * (Workstream F, wired by Workstream C).
+   *
+   * Body shape matches the contract documented in
+   * `08-Agent/tools/attribution.ts` JSDoc. Validation mirrors the
+   * `/agent/feedback` pattern (UUID_RE + 400 on bad input) so the wire
+   * surface stays consistent. Origin allowlist is enforced by the global
+   * middleware above — this handler does NOT re-implement it.
+   *
+   * The call is best-effort: a Supabase insert failure returns
+   * { ok: false, warning } with 202 so the click UX never breaks.
+   */
+  app.post('/agent/outbound', async (req: Request, res: Response) => {
+    const body = req.body as Partial<{
+      client_user_id: string;
+      session_id?: string;
+      event_id: string;
+      organizer_id?: string | null;
+      source?: string | null;
+      ticket_url: string;
+      metadata?: Record<string, unknown>;
+    }>;
+    if (!body || typeof body !== 'object') {
+      res.status(400).json({ error: 'invalid body' });
+      return;
+    }
+    if (!body.client_user_id || !UUID_RE.test(body.client_user_id)) {
+      res.status(400).json({ error: 'client_user_id must be a uuid' });
+      return;
+    }
+    if (!body.event_id || !UUID_RE.test(body.event_id)) {
+      res.status(400).json({ error: 'event_id must be a uuid' });
+      return;
+    }
+    if (
+      body.organizer_id !== undefined &&
+      body.organizer_id !== null &&
+      typeof body.organizer_id === 'string' &&
+      !UUID_RE.test(body.organizer_id)
+    ) {
+      res.status(400).json({ error: 'organizer_id must be a uuid when provided' });
+      return;
+    }
+    if (!body.ticket_url || typeof body.ticket_url !== 'string') {
+      res.status(400).json({ error: 'ticket_url required' });
+      return;
+    }
+    // Validate ticket_url scheme up-front so bad client input is a 400 (the
+    // attribution module's Zod check returns a warning, which we treat as a
+    // transient insert failure → 202; we want the wire to distinguish).
+    try {
+      const u = new URL(body.ticket_url);
+      if (u.protocol !== 'http:' && u.protocol !== 'https:') {
+        res.status(400).json({ error: 'ticket_url must be http or https' });
+        return;
+      }
+    } catch {
+      res.status(400).json({ error: 'ticket_url must be a valid URL' });
+      return;
+    }
+    // session_id is optional, but if present it MUST be a uuid (DB column).
+    const sessionId: string | undefined =
+      typeof body.session_id === 'string' && UUID_RE.test(body.session_id)
+        ? body.session_id
+        : undefined;
+
+    const client = sb ?? getSupabase();
+    const result = await recordOutboundClick(client, {
+      client_user_id: body.client_user_id,
+      session_id:     sessionId,
+      event_id:       body.event_id,
+      organizer_id:   body.organizer_id ?? null,
+      source:         body.source ?? null,
+      ticket_url:     body.ticket_url,
+      metadata:       body.metadata,
+    });
+
+    if (!result.ok) {
+      // Best-effort: a failed insert MUST NOT break the user click flow.
+      // 202 Accepted = "we heard you, we couldn't persist it". The UI
+      // can treat this as fire-and-forget.
+      res.status(202).json({ ok: false, warning: result.warning ?? 'unknown' });
+      return;
+    }
+    res.json({ ok: true });
   });
 
   app.post('/agent/feedback', async (req: Request, res: Response) => {

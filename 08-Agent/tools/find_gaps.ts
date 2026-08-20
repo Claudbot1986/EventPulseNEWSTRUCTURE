@@ -1,60 +1,43 @@
 /**
- * find_gaps — Phase 1 cold-start with active-learning question ordering.
+ * find_gaps — Phase 1 mixed-initiative clarification (Workstream C).
  *
- * Given an IntentBrief, decide whether the agent has enough signal to search.
- * If not, return up to MAX_QUESTIONS short clarifying questions the agent
- * can ask the user. The deterministic pipeline then waits for an answer
- * instead of guessing — better to ask than to flood the user with irrelevant
- * events.
+ * The agent's contract (MASTERPLAN §18.2 decision 1):
+ *   - Results before questions. The chat handler ALWAYS runs the search
+ *     pipeline; clarifying questions, if any, are ATTACHED alongside
+ *     the cards — they never replace them.
+ *   - At most ONE clarifying question per turn (`MAX_QUESTIONS = 1`).
+ *   - Choice is driven by the same active-learning information-gain ranking
+ *     (Settles 2009; Schein 2002) used by the original findGaps — we just
+ *     cap the result at the highest-gain slot.
  *
- * ─── Research basis ────────────────────────────────────────────────────────
+ * Public API:
+ *   pickClarifyingQuestion(intent) → single ClarifyingQuestion | null
+ *   findGaps(intent)               → 0..MAX_QUESTIONS questions (legacy adapter)
+ *   isIntentComplete(intent)       → boolean soft-check (NOT a search gate)
+ *   slotGain(intent, slot)         → pure, exported for tests
  *
- * Active learning (Settles 2009, "Active Learning Literature Survey",
- * §3 Information Density): when several labels are missing, query the one
- * whose answer is most informative — measured by expected reduction in
- * uncertainty over the downstream task. For event search this means: the
- * slot whose filled value would most change which events we surface.
- *
- * Logistic regression active learning (Schein 2002): the contribution of a
- * feature to model uncertainty scales with its discriminative power — a
- * feature that splits the candidate space roughly evenly is more
- * informative than one that leaves most candidates the same.
- *
- * Heuristic mapping for v1:
- *   - category   gain = 1.0   (highest — selecting a category cuts the
- *                              candidate set ~10× in our data)
- *   - time_of_day gain = 0.7  (medium — narrows the candidate set ~2×)
- *                              Raised to 0.95 if the date window is a
- *                              single day (user said "tomorrow"): on a
- *                              one-day window, time-of-day dominates the
- *                              relevance signal.
- *   - party      gain = 0.5   (lowest — narrows the set less and overlaps
- *                              with category for "family" vs "kids")
- *
- * These weights are static for now. A future v2 can swap slotGain() for a
- * function that reads aggregate event counts from the DB (the canonical
- * "entropy over candidate space" estimator). The current implementation
- * keeps cold-start free of I/O — every chat request must respond in
- * well under a second even with cache miss.
- *
- * The chip options are designed so the user's free-text reply (or chip
- * tap) can be parsed by the existing parse_intent regex rules — chip
- * values are short Swedish/English triggers the regex already understands.
+ * Research basis — unchanged from Phase 1.7:
+ *   - Settles (2009), "Active Learning Literature Survey", §3 Information
+ *     Density: when several labels are missing, query the one whose answer
+ *     is most informative — measured by expected reduction in uncertainty.
+ *   - Schein (2002): the contribution of a feature to model uncertainty
+ *     scales with its discriminative power — a feature that splits the
+ *     candidate space roughly evenly is more informative than one that
+ *     leaves most candidates the same.
+ *   - Conditional gain: time_of_day on a single-day window dominates the
+ *     relevance signal, so its gain is bumped from 0.7 to 0.95.
  */
 
 import type { ClarifyingQuestion, IntentBrief } from '../types';
 
-const MAX_QUESTIONS = 3;
+/** Hard cap on the number of clarifying questions per turn. */
+export const MAX_QUESTIONS = 1;
 
 export type GapSlot = 'category' | 'time_of_day' | 'party';
 
 /**
  * Expected information gain for asking about a given slot, given the
  * current intent state. Higher = ask first. Pure function (no I/O).
- *
- * Settles 2009: information density. Schein 2002: most-informative
- * feature. The conditional logic on date window reflects a Settles
- * insight — informativeness of a question depends on context.
  */
 export function slotGain(intent: IntentBrief, slot: GapSlot): number {
   switch (slot) {
@@ -128,20 +111,16 @@ function partyQuestion(lang: IntentBrief['language']): ClarifyingQuestion {
   };
 }
 
-// ─── Public API ─────────────────────────────────────────────────────────────
+// ─── Internal candidate builder ────────────────────────────────────────────
+
+type Candidate = { slot: GapSlot; gain: number; question: ClarifyingQuestion };
 
 /**
- * Decide whether the intent is "searchable enough". Returns the
- * clarifying questions, ordered by expected information gain (highest
- * first). Capped at MAX_QUESTIONS.
- *
- * When this returns an empty array, isIntentComplete() is true and the
- * chat handler runs the search pipeline. Otherwise the agent asks the
- * questions instead of guessing.
+ * Collect candidate clarifying questions, ordered by information gain
+ * (highest first). Internal helper — exported only via the legacy
+ * `findGaps` adapter and the new `pickClarifyingQuestion` below.
  */
-export function findGaps(intent: IntentBrief): ClarifyingQuestion[] {
-  type Candidate = { slot: GapSlot; gain: number; question: ClarifyingQuestion };
-
+function rankCandidates(intent: IntentBrief): Candidate[] {
   const candidates: Candidate[] = [];
 
   if (intent.categories.length === 0) {
@@ -170,13 +149,48 @@ export function findGaps(intent: IntentBrief): ClarifyingQuestion[] {
   // ties (which preserves our intent: when gains are equal, the order is
   // category → time_of_day → party).
   candidates.sort((a, b) => b.gain - a.gain);
+  return candidates;
+}
+
+// ─── Public API ─────────────────────────────────────────────────────────────
+
+/**
+ * Pick the single highest-gain clarifying question for this intent, or
+ * `null` when the intent is already complete enough to search as-is.
+ *
+ * The chat handler calls this AFTER running search_events. The returned
+ * question is ATTACHED to the response envelope so the user sees results
+ * AND a nudge to refine — never one OR the other.
+ *
+ * Pure: no I/O, deterministic for a given intent.
+ */
+export function pickClarifyingQuestion(
+  intent: IntentBrief
+): ClarifyingQuestion | null {
+  const candidates = rankCandidates(intent);
+  return candidates.length > 0 ? candidates[0].question : null;
+}
+
+/**
+ * Legacy adapter. Returns up to MAX_QUESTIONS (=1) clarifying questions,
+ * ordered by information gain. Kept for backward compatibility with
+ * existing callers and any test that still wants an array.
+ *
+ * New code should prefer `pickClarifyingQuestion` — the server-side contract
+ * is "at most one question, attached alongside results", and that contract
+ * is easier to enforce with a function that returns 0 or 1.
+ */
+export function findGaps(intent: IntentBrief): ClarifyingQuestion[] {
+  const candidates = rankCandidates(intent);
   return candidates.slice(0, MAX_QUESTIONS).map((c) => c.question);
 }
 
 /**
- * True iff the intent is "searchable enough" — no missing critical slot.
- * Used as the gate: when this returns false, the agent asks instead of
- * searching.
+ * Soft completeness check. True when every critical slot is filled.
+ *
+ * The chat handler does NOT use this as a hard gate (see MASTERPLAN §18.2
+ * decision 1). It is exposed so other tools and tests can reason about
+ * intent quality without it ever blocking the search pipeline.
  */
 export function isIntentComplete(intent: IntentBrief): boolean {
   return findGaps(intent).length === 0;
