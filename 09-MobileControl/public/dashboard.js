@@ -64,30 +64,35 @@
     connEl.className = 'status-pill status-running';
   }
 
-  function renderTasks(snap, filter) {
+  function renderTasks(snap) {
     const list = $('task-list');
-    let tasks = snap.tasks || [];
-    if (filter === 'active') {
-      tasks = tasks.filter((t) => t.status === 'pending' || t.status === 'in_progress').slice(0, 8);
-    } else if (filter === 'blocked') {
-      tasks = tasks.filter((t) => t.status === 'blocked' || t.status === 'in_progress');
-    } else {
-      tasks = tasks.slice(0, 10);
-    }
+    const countEl = $('tasks-count');
+    let tasks = (snap.tasks || []).slice(0, 20);
+    const activeId = snap.currently_active_task || null;
+
+    if (countEl) countEl.textContent = `${tasks.length} of ${(snap.tasks || []).length}`;
+
     if (tasks.length === 0) {
       list.innerHTML = '<li class="task-item"><span class="task-title">— no tasks —</span></li>';
       return;
     }
+
     list.innerHTML = tasks
-      .map(
-        (t) => `
+      .map((t) => {
+        const indicatorClass =
+          t.status === 'done' ? 'done' :
+          (activeId && t.id === activeId) ? 'active' :
+          'idle';
+        return `
         <li class="task-item">
-          <span class="task-prio ${t.priority}">${t.priority}</span>
-          <span class="task-id">${t.id}</span>
-          <span class="task-status ${t.status}">${t.status}</span>
-          <div class="task-title">${escapeHtml(t.title)}</div>
-        </li>`
-      )
+          <span class="indicator ${indicatorClass}"></span>
+          <div class="task-body">
+            <span class="task-prio ${t.priority}">${t.priority}</span>
+            <span class="task-id">${t.id}</span>
+            <div class="task-title">${escapeHtml(t.title)}</div>
+          </div>
+        </li>`;
+      })
       .join('');
   }
 
@@ -184,7 +189,7 @@
       try {
         const snap = JSON.parse(e.data);
         renderStatus(snap);
-        renderTasks(snap, currentTab());
+        renderTasks(snap);
         renderCommits(snap);
         renderActivity(snap);
       } catch (err) {
@@ -198,16 +203,7 @@
     };
   }
 
-  let activeTab = 'active';
-  function currentTab() { return activeTab; }
-  document.querySelectorAll('.tab').forEach((btn) => {
-    btn.addEventListener('click', () => {
-      document.querySelectorAll('.tab').forEach((b) => b.classList.remove('active'));
-      btn.classList.add('active');
-      activeTab = btn.dataset.tab;
-      fetchStatus().then((s) => s && renderTasks(s, activeTab));
-    });
-  });
+  // (tab buttons removed — Tasks card now shows a single unified list)
 
   const modal = $('modal-backdrop');
   const modalTitle = $('modal-title');
@@ -283,7 +279,7 @@
         const s = await fetchStatus();
         if (s) {
           renderStatus(s);
-          renderTasks(s, activeTab);
+          renderTasks(s);
           renderCommits(s);
           renderActivity(s);
         }
@@ -295,7 +291,7 @@
     const s = await fetchStatus();
     if (s) {
       renderStatus(s);
-      renderTasks(s, activeTab);
+      renderTasks(s);
       renderCommits(s);
       renderActivity(s);
     }

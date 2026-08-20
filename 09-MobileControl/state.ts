@@ -293,10 +293,33 @@ export function readDiscoveredCount(): number {
 
 export function readSnapshot(): StateSnapshot {
   const tasks = readTaskQueue();
+  const wrapper = readWrapperState();
+
+  // Heuristic: which task is the lead currently working on?
+  // 1. Wrapper must be running
+  // 2. Last iter must be recent (within 10 min) — else system is idle
+  // 3. Prefer an explicit in_progress task; else first pending P0/P1 task
+  let activeId: string | null = null;
+  if (wrapper.status === 'running' && wrapper.last_iter_at) {
+    const ageMs = Date.now() - new Date(wrapper.last_iter_at).getTime();
+    if (ageMs >= 0 && ageMs < 10 * 60 * 1000) {
+      const inProg = tasks.find((t) => t.status === 'in_progress');
+      if (inProg) {
+        activeId = inProg.id;
+      } else {
+        const top = tasks.find(
+          (t) => t.status === 'pending' && (t.priority === 'P0' || t.priority === 'P1')
+        );
+        if (top) activeId = top.id;
+      }
+    }
+  }
+
   return {
-    wrapper: readWrapperState(),
+    wrapper,
     tasks,
     blocked: tasks.filter((t) => t.status === 'blocked' || t.status === 'in_progress'),
+    currently_active_task: activeId,
     recent_commits: readRecentCommits(10),
     recent_activity: readActivity(50),
     decisions_count: readDecisionsCount(),
