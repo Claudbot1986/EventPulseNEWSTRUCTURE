@@ -7,9 +7,11 @@
     "userInterfaceStyle": "dark",
     "newArchEnabled": true,
     "scheme": "eventpulse",
+    "icon": "./assets/icon.png",
     "splash": {
+      "image": "./assets/splash.png",
       "resizeMode": "contain",
-      "backgroundColor": "#000000"
+      "backgroundColor": "#0F172A"
     },
     "ios": {
       "supportsTablet": true,
@@ -26,7 +28,8 @@
       "package": "com.eventpulse.app",
       "versionCode": 1,
       "adaptiveIcon": {
-        "backgroundColor": "#000000"
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#0F172A"
       },
       "permissions": ["INTERNET"]
     },
@@ -34,6 +37,9 @@
       "eas": {
         "projectId": null
       }
+    },
+    "web": {
+      "favicon": "./assets/favicon.png"
     }
   }
 }

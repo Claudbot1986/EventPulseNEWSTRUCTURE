@@ -37,6 +37,7 @@
     "zod": "^3.23.0"
   },
   "devDependencies": {
+    "@resvg/resvg-js": "^2.6.2",
     "@types/express": "^5.0.6",
     "@types/node": "^20.0.0",
     "@types/node-cron": "^3.0.0",
