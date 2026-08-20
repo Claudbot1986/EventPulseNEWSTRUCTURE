@@ -12,7 +12,9 @@
     "dashboard:live": "tsx dashboard-live.ts",
     "venue-graph:dry-run": "tsx 07-Discovery/src/venueGraph/runVenueGraph.ts",
     "venue-graph:apply": "tsx 07-Discovery/src/venueGraph/runVenueGraph.ts --apply",
-    "source-candidates:test": "tsx 07-Discovery/src/sourceTesting/runSourceCandidateTests.ts"
+    "source-candidates:test": "tsx 07-Discovery/src/sourceTesting/runSourceCandidateTests.ts",
+    "start:agent": "tsx 08-Agent/server.ts",
+    "type-check:agent": "tsc --noEmit 08-Agent/**/*.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.117.1",
@@ -37,8 +39,10 @@
     "@types/express": "^5.0.6",
     "@types/node": "^20.0.0",
     "@types/node-cron": "^3.0.0",
+    "@types/pg": "^8.23.1",
     "@types/uuid": "^9.0.8",
     "@vitest/ui": "^4.1.4",
+    "pg": "^8.23.0",
     "tsx": "^4.21.0",
     "typescript": "^5.9.3",
     "vitest": "^4.1.4"
