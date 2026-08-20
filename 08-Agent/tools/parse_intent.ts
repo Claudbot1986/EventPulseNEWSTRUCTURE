@@ -13,6 +13,10 @@ import type {
   IntentParty,
   IntentTimeOfDay,
 } from '../types';
+import {
+  parseSwedishDateRange,
+  STOCKHOLM_TZ,
+} from './temporal_sv';
 
 export const IntentBriefSchema = z.object({
   raw_query: z.string(),
@@ -57,9 +61,15 @@ function budgetFromAmount(query: string): IntentBudget | null {
 
 const PARTY_RULES: Array<[RegExp, IntentParty]> = [
   [/\b(solo|själv|ensam)\b/i,                  'solo'],
-  [/\b(dejt|date|partner|käresta|med\s+en\s+vän|tillsammans\s+med\s+en|min\s+vän)\b/i, 'couple'],
-  [/\b(kompis|vänner|gänget|gäng|kollegor|kollega|polarna|afterwork)\b/i, 'friends'],
-  [/\b(familj|barn|unga|kids)\b/i,             'family'],
+  // couple: common Swedish phrasings for "with my partner / significant other".
+  // Conservative — no ambiguous tokens (e.g. "min fru" is fine but "fru"
+  // alone is not, so it is omitted).
+  [/\b(dejt|date|partner|käresta|sambo|flickvän|pojkvän|tjejen|killen|dejta|tillsammans\s+med\s+en|med\s+en\s+vän|min\s+vän)\b/i, 'couple'],
+  // friends: includes plural forms and common slang. "kompisarna" is the
+  // definite plural of "kompis"; "polare" is a common synonym for "kompis".
+  [/\b(kompis|kompisar|kompisarna|vänner|gänget|gäng|kollegor|kollega|polarna|polare|afterwork)\b/i, 'friends'],
+  // family: includes definite plural "barnen", "hela familjen", "med barn".
+  [/\b(familj|hela\s+familjen|barn|barnen|unga|kids|med\s+barn)\b/i, 'family'],
 ];
 
 const CATEGORY_RULES: Array<[RegExp, string]> = [
@@ -82,30 +92,11 @@ const EXCLUDE_RULES: Array<[RegExp, string]> = [
   [/\b(inte\s+arena|inte\s+arenor|no\s+arena|ej\s+arena|utan\s+arena)\b/i, 'arena'],
 ];
 
-const DATE_RANGE_RULES: Array<[RegExp, (match: RegExpMatchArray, today: Date) => { from?: string; to?: string }]> = [
-  // "denna helg" / "this weekend"
-  [/\b(denna\s+helg|this\s+weekend)\b/i, (_m, today) => {
-    const day = today.getDay(); // 0=Sun..6=Sat
-    const sat = new Date(today);
-    sat.setDate(today.getDate() + ((6 - day + 7) % 7));
-    const sun = new Date(sat); sun.setDate(sat.getDate() + 1);
-    return { from: iso(sat), to: iso(sun) };
-  }],
-  // "ikväll" / "tonight"
-  [/\b(ikväll|tonight|i\s+kväll)\b/i, (_m, today) => {
-    return { from: iso(today), to: iso(today) };
-  }],
-  // "nästa vecka" / "next week"
-  [/\b(nästa\s+vecka|next\s+week)\b/i, (_m, today) => {
-    const mon = new Date(today); mon.setDate(today.getDate() + ((1 - today.getDay() + 7) % 7 || 7));
-    const sun = new Date(mon); sun.setDate(mon.getDate() + 6);
-    return { from: iso(mon), to: iso(sun) };
-  }],
-];
-
-function iso(d: Date): string {
-  return d.toISOString().slice(0, 10);
-}
+// Date range resolution moved to ./temporal_sv — Stockholm-anchored so
+// DST and server-TZ no longer corrupt "på fredag" / "imorgon" / "i helgen".
+// See MASTERPLAN §18 (Workstream A, defect D2). All date arithmetic now
+// reads the wall-clock calendar date in Europe/Stockholm via Intl, not
+// `new Date().getDay()` (server-local) or `Date.toISOString()` (UTC).
 
 function pickFirst<T>(text: string, rules: Array<[RegExp, T]>, fallback: T): T {
   for (const [re, val] of rules) {
@@ -140,14 +131,13 @@ export function parseIntentDeterministic(query: string, today: Date = new Date()
 
   let date_from: string | undefined;
   let date_to:   string | undefined;
-  for (const [re, fn] of DATE_RANGE_RULES) {
-    const m = text.match(re);
-    if (m) {
-      const r = fn(m, today);
-      date_from = r.from;
-      date_to   = r.to;
-      break;
-    }
+  // Stockholm-anchored date range. Returns null when no date phrase is
+  // present — caller leaves date_from/date_to undefined so downstream
+  // search/rank has no date filter.
+  const dateRange = parseSwedishDateRange(text, today, STOCKHOLM_TZ);
+  if (dateRange) {
+    date_from = dateRange.from;
+    date_to   = dateRange.to;
   }
 
   return {
