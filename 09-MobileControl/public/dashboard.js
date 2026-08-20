@@ -306,7 +306,10 @@
     };
 
     // Heartbeat ticker: re-poll status on activity-tick so cards stay fresh
-    // even when the wrapper isn't producing snapshot diffs.
+    // even when the wrapper isn't producing snapshot diffs. A successful poll
+    // also restores the LIVE pill — without this, an EventSource that was
+    // briefly disconnected (browser retried) keeps the pill on DISCONNECTED
+    // forever even though the wire has recovered.
     snapshotTimer = setInterval(async () => {
       const s = await fetchStatus();
       if (s) {
@@ -315,6 +318,7 @@
         renderTasks(s);
         renderCommits(s);
         if (s.last_event_at) updateLastEventTime(s.last_event_at);
+        setConnection('live');
       }
     }, 2000);
   }
@@ -340,8 +344,8 @@
       }
     });
     es.onerror = () => {
-      // EventSource auto-reconnects; connection pill reflects this
-      setConnection('disconnected', 'activity stream lost — reconnecting…');
+      // Activity stream auto-reconnects; don't poison the connection pill
+      // because the snapshot stream is authoritative for reachability.
     };
   }
 

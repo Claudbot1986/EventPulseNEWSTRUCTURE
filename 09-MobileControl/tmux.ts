@@ -22,9 +22,12 @@
  */
 
 import { execSync, spawn } from 'node:child_process';
-import { existsSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
+import { join } from 'node:path';
 
 export const TMUX_SESSION = 'eventpulse';
+
+const DEFAULT_PROJECT_ROOT = '/Volumes/2TB filer/NEWSTRUCTURE-COPY';
 
 function hasTmux(): boolean {
   try {
@@ -49,15 +52,48 @@ export function isTmuxRunning(): boolean {
   }
 }
 
-export function capturePane(lines = 100): string {
-  if (!isTmuxRunning()) return '';
+/**
+ * The autonomous-loop wrapper logs every status line to `runtime/autonomous-loop/loop.log`
+ * via `>> "$LOG_FILE"` redirection rather than printing to the pane — its `echo "..."`
+ * lines never reach the pane's stdout, and `claude --print`'s JSON output is redirected
+ * to `iter-N.json`. The result is a pane that is empty even while the loop is actively
+ * running. To honour the user requirement ("Terminal Live reflects the actual persistent
+ * Claude/tmux execution"), we fall back to tailing loop.log when the pane has no usable
+ * content. loop.log is the wrapper's durable record of every iter start, exit code,
+ * timeout, and stop, so it accurately mirrors the loop's real state. The pane is always
+ * preferred when it has content — the fallback only kicks in for an empty/blank pane.
+ */
+function fallbackLogTail(lines: number): string {
   try {
-    return execSync(
+    const logPath = join(
+      process.env.PROJECT_ROOT ?? DEFAULT_PROJECT_ROOT,
+      'runtime/autonomous-loop/loop.log'
+    );
+    if (!existsSync(logPath)) return '';
+    const data = readFileSync(logPath, 'utf-8');
+    const allLines = data.split('\n');
+    return allLines.slice(-lines).join('\n');
+  } catch {
+    return '';
+  }
+}
+
+export function capturePane(lines = 100): string {
+  if (!isTmuxRunning()) {
+    return fallbackLogTail(lines);
+  }
+  try {
+    const pane = execSync(
       `tmux capture-pane -t ${TMUX_SESSION} -p -S -${lines}`,
       { encoding: 'utf-8' }
     );
+    // Treat a pane with only whitespace as empty and fall back to the durable log.
+    if (pane.trim().length === 0) {
+      return fallbackLogTail(lines);
+    }
+    return pane;
   } catch {
-    return '';
+    return fallbackLogTail(lines);
   }
 }
 

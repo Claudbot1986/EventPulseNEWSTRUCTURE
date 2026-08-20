@@ -323,10 +323,28 @@ export function readDecisionsCount(): number {
  * `claude --print --output-format json` produces a flat result object (no
  * messages array), so we surface what we actually have:
  * stop_reason, num_turns, total_cost_usd, result preview.
+ *
+ * When the wrapper is restarted, it overwrites `state.json` but leaves old
+ * `iter-N.json` files on disk. Without filtering, the dashboard would show
+ * the highest-N iter from a previous run. We use `state.json.started_at`
+ * to ignore iter files older than the current wrapper invocation.
  */
 export function parseLastIterSummary(): IterSummary | null {
   const dir = iterOutputDir();
   if (!existsSync(dir)) return null;
+
+  // Cutoff: only iter files with mtime >= the current wrapper started_at.
+  let cutoffMs = 0;
+  try {
+    const statePath = wrapperStatePath();
+    const stateFile = readJsonSafe<{ started_at?: string }>(statePath, {});
+    if (stateFile?.started_at) {
+      const parsed = Date.parse(stateFile.started_at);
+      if (Number.isFinite(parsed)) cutoffMs = parsed;
+    }
+  } catch {
+    /* fall through with cutoffMs=0 — accept all iters */
+  }
 
   let highestIter = 0;
   let highestPath: string | null = null;
@@ -336,9 +354,19 @@ export function parseLastIterSummary(): IterSummary | null {
       const m = name.match(/^iter-(\d+)\.json$/);
       if (!m) continue;
       const n = Number.parseInt(m[1], 10);
-      if (Number.isFinite(n) && n > highestIter) {
+      if (!Number.isFinite(n)) continue;
+      const fullPath = join(dir, name);
+      if (cutoffMs > 0) {
+        try {
+          const st = statSync(fullPath);
+          if (st.mtimeMs < cutoffMs) continue; // stale, from a previous wrapper run
+        } catch {
+          continue;
+        }
+      }
+      if (n > highestIter) {
         highestIter = n;
-        highestPath = join(dir, name);
+        highestPath = fullPath;
       }
     }
   } catch {

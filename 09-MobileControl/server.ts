@@ -220,6 +220,11 @@ function buildApp(): express.Application {
   app.use(express.json({ limit: '64kb' }));
   app.use(attachToken);
 
+  // Suppress browser favicon.ico 404 — the app has no favicon.
+  app.get('/favicon.ico', (_req: Request, res: Response) => {
+    res.status(204).end();
+  });
+
   app.get('/', (_req: Request, res: Response) => {
     res.sendFile(join(projectRoot(), '09-MobileControl/public/index.html'));
   });

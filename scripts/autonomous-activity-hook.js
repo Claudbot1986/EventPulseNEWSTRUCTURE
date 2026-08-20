@@ -97,63 +97,114 @@ function trim(s, n = 160) {
 
 /**
  * Agent-tool bookkeeping: track role + task in runtime/agents/state.json.
- * For PostToolUse, tool_response is always present; we can't tell from the
- * payload alone whether it's a tool_use start or end. We treat every Agent
- * PostToolUse as "completed" and trim stale running entries on each call.
+ *
+ * The PostToolUse payload distinguishes start from finish via
+ * tool_response.status: background agents report `async_launched` at spawn
+ * time (the agent is still running), while synchronous Agent calls only
+ * return once the sub-agent has produced its final result. tool_response
+ * .agentId is the stable identity we key state on, so a later completion
+ * updates the same entry instead of appending a duplicate.
  */
 function handleAgentTool(payload) {
   const { tool_input, tool_response } = payload;
   const role = tool_input?.subagent_type || 'work';
-  const description = trim(tool_input?.description || '', 200);
-  const taskId = trim(tool_input?.prompt?.split('\n')[0] || description, 120);
+  const task = trim(tool_input?.description || '', 200);
+  const agentId = tool_response?.agentId || null;
+  const launched = tool_response?.status === 'async_launched';
 
   const state = readAgentState();
   const stamp = now();
 
-  // Mark all currently running same-role-and-similar-task entries as completed.
-  for (const a of state.agents) {
-    if (a.status === 'running' && (a.role === role || Date.now() - new Date(a.last_heartbeat).getTime() > 5 * 60 * 1000)) {
-      a.status = 'completed';
-      a.completed_at = stamp;
-      a.last_heartbeat = stamp;
-    }
-  }
-
-  // Promote this completion into a fresh entry if we have meaningful data.
-  if (description) {
-    emit('agent_completed', `${role}: ${description}`, {
+  const idx = state.agents.findIndex((a) => agentId && a.agent_id === agentId);
+  if (launched) {
+    const entry = {
+      agent_id: agentId,
       role,
-      task: description,
-      task_id: taskId,
-    });
-    // Also emit a synthetic agent_started so the timeline shows a begin/end pair.
-    state.agents.push({
-      role,
-      task: description,
+      task,
       started_at: stamp,
+      last_heartbeat: stamp,
+      status: 'running',
+      completed_at: null,
+    };
+    if (idx >= 0) state.agents[idx] = entry;
+    else state.agents.push(entry);
+    emit('agent_started', `${role}: ${task}`, { role, task, agent_id: agentId });
+  } else {
+    const startedAt = idx >= 0 ? state.agents[idx].started_at : stamp;
+    const entry = {
+      agent_id: agentId,
+      role,
+      task,
+      started_at: startedAt,
       last_heartbeat: stamp,
       status: 'completed',
       completed_at: stamp,
+    };
+    if (idx >= 0) state.agents[idx] = entry;
+    else state.agents.push(entry);
+    const durationSec = Math.max(
+      0,
+      Math.round((Date.parse(stamp) - Date.parse(startedAt)) / 1000)
+    );
+    emit('agent_completed', `${role}: ${task}`, {
+      role,
+      task,
+      agent_id: agentId,
+      duration_sec: durationSec,
     });
   }
+
+  // Reap entries that have been "running" for over 30 minutes with no update;
+  // the spawning session is gone and they will never report completion.
+  const staleCutoff = Date.now() - 30 * 60 * 1000;
+  for (const a of state.agents) {
+    if (a.status === 'running' && Date.parse(a.last_heartbeat) < staleCutoff) {
+      a.status = 'completed';
+      a.completed_at = stamp;
+    }
+  }
   writeAgentState(state);
+}
+
+/**
+ * The Bash tool_response carries {stdout, stderr, interrupted, isImage,
+ * noOutputExpected} — there is no exit code. Test pass/fail is therefore
+ * derived from the runner's own summary line in the captured output, which
+ * is real measured output, not an inferred status.
+ */
+function testOutcome(output) {
+  if (/Tests?\s+.*\b\d+\s+failed/i.test(output) || /\bFAIL\b/.test(output)) {
+    return 'failed';
+  }
+  if (/Tests?\s+.*\b\d+\s+passed/i.test(output)) return 'passed';
+  return null;
 }
 
 function handleBash(payload) {
   const cmd = String(payload.tool_input?.command || '');
   const first = trim(cmd.split('\n')[0], 160);
-  const exitCode = payload.tool_response?.exitCode ?? payload.tool_response?.exit_code ?? null;
+  const resp = payload.tool_response ?? {};
+  const output = `${resp.stdout ?? ''}\n${resp.stderr ?? ''}`;
+  const interrupted = resp.interrupted === true || resp.interrupted === 'true';
 
   if (/\b(vitest|jest|npm\s+test|npx\s+vitest|npx\s+jest)\b/.test(cmd)) {
     emit('test_started', first, { command: trim(cmd, 400) });
-    if (exitCode === 0) {
-      emit('test_passed', first, { command: trim(cmd, 400) });
-    } else if (exitCode !== null) {
-      emit('test_failed', first, { command: trim(cmd, 400), exit_code: exitCode });
+    const outcome = interrupted ? 'failed' : testOutcome(output);
+    if (outcome === 'passed') {
+      emit('test_passed', trim(output.match(/Tests?\s+[^\n]*/i)?.[0] || first, 160), {
+        command: trim(cmd, 400),
+      });
+    } else if (outcome === 'failed') {
+      emit('test_failed', trim(output.match(/Tests?\s+[^\n]*/i)?.[0] || first, 160), {
+        command: trim(cmd, 400),
+        interrupted,
+      });
     }
     return;
   }
-  if (/scripts\/vault-sync-session-end\.js/.test(cmd)) {
+  // Require an actual invocation — a `git diff` or `cat` that merely mentions
+  // the script path must not be reported as a completed vault sync.
+  if (/(?:^|[|&;]\s*)(?:node|npx\s+tsx?)\s+\S*scripts\/vault-sync-session-end\.js/.test(cmd)) {
     emit('vault_reconciled', first, { command: trim(cmd, 400) });
     return;
   }
@@ -164,7 +215,7 @@ function handleBash(payload) {
     return;
   }
   if (first.length === 0) return;
-  emit('lead_action', `Bash: ${first}`, { exit_code: exitCode });
+  emit('lead_action', `Bash: ${first}`, interrupted ? { interrupted: true } : {});
 }
 
 function handleFileEdit(payload) {
@@ -225,14 +276,6 @@ async function main() {
 
   const tool = payload.tool_name;
   if (!tool) process.exit(0);
-
-  if (process.env.EP_ACTIVITY_DEBUG || existsSync(join(PROJECT_ROOT, 'runtime/agents/.debug-payload'))) {
-    try {
-      writeFileSync(join(PROJECT_ROOT, `runtime/agents/last-payload-${tool}.json`), JSON.stringify(payload, null, 2));
-    } catch {
-      /* best-effort */
-    }
-  }
 
   if (tool === 'Agent') {
     try {
