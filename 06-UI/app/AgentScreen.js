@@ -106,6 +106,8 @@ function EventRow({ card, onInteraction }) {
         .catch(() => {});
     }
   };
+  const onSave = () => onInteraction?.(card.id, 'save');
+  const onDismiss = () => onInteraction?.(card.id, 'dismiss');
   return (
     <TouchableOpacity onPress={onPress} style={styles.card}>
       <Text style={styles.cardTitle} numberOfLines={2}>
@@ -123,6 +125,14 @@ function EventRow({ card, onInteraction }) {
           🔗 {linkLabel}
         </Text>
       ) : null}
+      <View style={styles.cardActions}>
+        <TouchableOpacity onPress={onSave} style={styles.actionBtn} accessibilityRole="button" accessibilityLabel="Spara">
+          <Text style={styles.actionBtnText}>💾 Spara</Text>
+        </TouchableOpacity>
+        <TouchableOpacity onPress={onDismiss} style={styles.actionBtn} accessibilityRole="button" accessibilityLabel="Vill inte">
+          <Text style={styles.actionBtnText}>✕</Text>
+        </TouchableOpacity>
+      </View>
     </TouchableOpacity>
   );
 }
@@ -376,6 +386,14 @@ const styles = StyleSheet.create({
   cardMeta:  { color: '#aaa', fontSize: 13, marginTop: 4 },
   cardFooter:{ color: '#888', fontSize: 12, marginTop: 4 },
   cardSource: { color: '#7aa2f7', fontSize: 12, marginTop: 6, fontStyle: 'italic' },
+  cardActions: { flexDirection: 'row', marginTop: 8, gap: 8 },
+  actionBtn: {
+    backgroundColor: '#252525',
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+  },
+  actionBtnText: { color: '#ccc', fontSize: 13 },
   reasonRow: {
     flexDirection: 'row',
     flexWrap: 'wrap',
