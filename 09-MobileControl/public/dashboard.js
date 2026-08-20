@@ -441,12 +441,21 @@
   const modal = $('modal-backdrop');
   const modalTitle = $('modal-title');
   const modalInput = $('modal-input');
+  const modalAttachmentsEl = $('modal-attachments');
+  const modalAttachmentsListEl = $('modal-attachments-list');
+  const modalAttachHint = $('modal-attach-hint');
+  const modalFileInput = $('modal-file-input');
   let modalAction = null;
+  // Per-modal attachments. Reset on openModal(). Each item: {filename, mimeType, data, dataUrl}
+  // `data` is the raw base64 string (no data: prefix) sent to the server.
+  let modalAttachments = [];
 
   function openModal(title, action, placeholder) {
     modalTitle.textContent = title;
     modalInput.placeholder = placeholder || '';
     modalInput.value = '';
+    modalAttachments = [];
+    renderAttachments();
     modalAction = action;
     modal.hidden = false;
     modalInput.focus();
@@ -454,14 +463,119 @@
   function closeModal() {
     modal.hidden = true;
     modalAction = null;
+    modalAttachments = [];
+    if (modalFileInput) modalFileInput.value = '';
   }
+
+  function readFileAsBase64(file) {
+    return new Promise((resolve, reject) => {
+      const r = new FileReader();
+      r.onload = () => {
+        const result = String(r.result || '');
+        // result is "data:<mime>;base64,<data>" — strip the prefix.
+        const comma = result.indexOf(',');
+        resolve(comma >= 0 ? result.slice(comma + 1) : result);
+      };
+      r.onerror = () => reject(r.error || new Error('read failed'));
+      r.readAsDataURL(file);
+    });
+  }
+
+  function readFileAsDataUrl(file) {
+    return new Promise((resolve, reject) => {
+      const r = new FileReader();
+      r.onload = () => resolve(String(r.result || ''));
+      r.onerror = () => reject(r.error || new Error('read failed'));
+      r.readAsDataURL(file);
+    });
+  }
+
+  async function addAttachment(file) {
+    if (!file || !file.type || !file.type.startsWith('image/')) return;
+    // Hard cap to keep total request under the server's 10mb JSON limit.
+    if (modalAttachments.length >= 5) {
+      alert('Max 5 attachments per message.');
+      return;
+    }
+    try {
+      const data = await readFileAsBase64(file);
+      const dataUrl = await readFileAsDataUrl(file);
+      const filename = file.name || `pasted-${Date.now()}.${(file.type.split('/')[1] || 'png')}`;
+      modalAttachments.push({ filename, mimeType: file.type, data, dataUrl });
+      renderAttachments();
+    } catch (err) {
+      alert('Could not read image: ' + err.message);
+    }
+  }
+
+  function removeAttachment(idx) {
+    modalAttachments.splice(idx, 1);
+    renderAttachments();
+  }
+
+  function renderAttachments() {
+    if (!modalAttachmentsEl || !modalAttachmentsListEl) return;
+    if (modalAttachments.length === 0) {
+      modalAttachmentsEl.hidden = true;
+      modalAttachmentsListEl.innerHTML = '';
+      if (modalAttachHint) modalAttachHint.textContent = 'or paste an image';
+      return;
+    }
+    modalAttachmentsEl.hidden = false;
+    if (modalAttachHint) modalAttachHint.textContent = `${modalAttachments.length} attached`;
+    modalAttachmentsListEl.innerHTML = modalAttachments
+      .map(
+        (a, i) => `
+        <div class="attachment-thumb">
+          <img src="${escapeHtml(a.dataUrl)}" alt="">
+          <button class="attachment-remove" data-idx="${i}" type="button">×</button>
+          <div class="attachment-name">${escapeHtml(a.filename)}</div>
+        </div>`
+      )
+      .join('');
+    modalAttachmentsListEl.querySelectorAll('.attachment-remove').forEach((btn) => {
+      btn.addEventListener('click', () => removeAttachment(Number(btn.dataset.idx)));
+    });
+  }
+
+  // Paste an image directly into the textarea — iOS Safari exposes the
+  // image as a file via clipboardData.items[i].getAsFile().
+  modalInput.addEventListener('paste', async (e) => {
+    const items = e.clipboardData && e.clipboardData.items;
+    if (!items || items.length === 0) return;
+    const files = [];
+    for (const it of items) {
+      if (it.kind === 'file' && it.type && it.type.startsWith('image/')) {
+        const f = it.getAsFile();
+        if (f) files.push(f);
+      }
+    }
+    if (files.length === 0) return;
+    e.preventDefault();
+    for (const f of files) {
+      await addAttachment(f);
+    }
+  });
+
+  // File-picker fallback (paperclip "+ image" button)
+  if (modalFileInput) {
+    modalFileInput.addEventListener('change', async (e) => {
+      const files = Array.from((e.target).files || []);
+      for (const f of files) {
+        await addAttachment(f);
+      }
+      // Reset so picking the same file again still triggers change.
+      e.target.value = '';
+    });
+  }
+
   $('modal-cancel').addEventListener('click', closeModal);
   $('modal-submit').addEventListener('click', async () => {
     if (!modalAction) return;
     const value = modalInput.value.trim();
-    if (!value) { closeModal(); return; }
+    if (!value && modalAttachments.length === 0) { closeModal(); return; }
     try {
-      await modalAction(value);
+      await modalAction(value, modalAttachments.slice());
     } catch (err) {
       alert('Error: ' + err.message);
     }
@@ -533,8 +647,12 @@
       if (a === 'instruct') {
         openModal(
           'Send Instruction',
-          async (msg) => postJson('/api/instruct', { message: msg }),
-          'Type your instruction for the lead agent…'
+          async (msg, attachments) =>
+            postJson('/api/instruct', {
+              message: msg,
+              attachments: attachments && attachments.length ? attachments : undefined,
+            }),
+          'Type your instruction for the lead agent… (paste images too)'
         );
       } else if (a === 'add-task') {
         openModal(

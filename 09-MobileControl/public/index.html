@@ -112,7 +112,18 @@
   <div class="modal-backdrop" id="modal-backdrop" hidden>
     <div class="modal">
       <h3 id="modal-title">Send Instruction</h3>
-      <textarea id="modal-input" rows="4" placeholder="Type your instruction for the lead agent…"></textarea>
+      <textarea id="modal-input" rows="4" placeholder="Type your instruction for the lead agent… (you can also paste images)"></textarea>
+      <div class="modal-attachments" id="modal-attachments" hidden>
+        <div class="modal-attachments-label">Attachments</div>
+        <div class="modal-attachments-list" id="modal-attachments-list"></div>
+      </div>
+      <div class="modal-attach-row">
+        <label class="action" for="modal-file-input">
+          <span>+ image</span>
+        </label>
+        <input type="file" id="modal-file-input" accept="image/*" multiple hidden>
+        <span class="modal-attach-hint" id="modal-attach-hint">or paste an image</span>
+      </div>
       <div class="modal-actions">
         <button class="action" id="modal-cancel">Cancel</button>
         <button class="action primary" id="modal-submit">Send</button>

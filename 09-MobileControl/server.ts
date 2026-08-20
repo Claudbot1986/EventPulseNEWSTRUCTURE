@@ -71,6 +71,41 @@ function instructionsPath(): string {
   return join(projectRoot(), 'runtime/instructions/pending.md');
 }
 
+function attachmentsDir(): string {
+  return join(projectRoot(), 'runtime/instructions/incoming');
+}
+
+/**
+ * Decode base64 attachments to disk. Returns the list of saved paths in
+ * input order. Path traversal is blocked — we strip directory components
+ * from the filename and prepend our own timestamp+index.
+ */
+function decodeAndSaveAttachments(
+  attachments: Array<{ filename?: string; mimeType?: string; data?: string }>
+): string[] {
+  if (!Array.isArray(attachments) || attachments.length === 0) return [];
+  const dir = attachmentsDir();
+  if (!existsSync(dir)) mkdirSync(dir, { recursive: true });
+  const ts = new Date().toISOString().replace(/[:.]/g, '-');
+  const saved: string[] = [];
+  attachments.forEach((a, idx) => {
+    if (!a || typeof a.data !== 'string' || a.data.length === 0) return;
+    // Strip directory components and limit length; preserve extension if present.
+    const rawName = String(a.filename ?? `attachment-${idx}`).replace(/[\\/]/g, '_').slice(0, 80);
+    const filename = `${ts}-${String(idx).padStart(2, '0')}-${rawName}`;
+    const fullPath = join(dir, filename);
+    try {
+      const buf = Buffer.from(a.data, 'base64');
+      writeFileSync(fullPath, buf);
+      saved.push(fullPath);
+    } catch (err) {
+      // best-effort: skip this attachment, keep going
+      process.stderr.write(`[instruct] failed to save ${filename}: ${(err as Error).message}\n`);
+    }
+  });
+  return saved;
+}
+
 function stopFilePath(): string {
   return join(projectRoot(), 'runtime/autonomous-loop/STOP');
 }
@@ -218,7 +253,10 @@ function ensureActivityWatcher(): void {
 
 function buildApp(): express.Application {
   const app = express();
-  app.use(express.json({ limit: '64kb' }));
+  // 10mb to accommodate mobile camera images posted as base64 in /api/instruct.
+  // A typical 4 MB JPEG inflates to ~5.4 MB in base64; 10 MB leaves headroom
+  // for the message body + a couple of images per request.
+  app.use(express.json({ limit: '10mb' }));
   app.use(attachToken);
 
   // Suppress browser favicon.ico 404 — the app has no favicon.
@@ -286,24 +324,43 @@ function buildApp(): express.Application {
 
   app.post('/api/instruct', (req: Request, res: Response) => {
     const message = String(req.body?.message ?? '').trim();
-    if (!message) {
-      res.status(400).json({ error: 'message required' });
+    const attachments = Array.isArray(req.body?.attachments) ? req.body.attachments : [];
+    if (!message && attachments.length === 0) {
+      res.status(400).json({ error: 'message or attachment required' });
       return;
     }
     const path = instructionsPath();
     if (!existsSync(dirname(path))) mkdirSync(dirname(path), { recursive: true });
     const stamp = new Date().toISOString();
-    appendFileSync(path, `\n## ${stamp} (from mobile)\n\n${message}\n`);
+    const savedPaths = decodeAndSaveAttachments(attachments);
+    let block = `\n## ${stamp} (from mobile)\n\n`;
+    if (message) block += `${message}\n`;
+    if (savedPaths.length > 0) {
+      block += `\n### Attached files\n\n`;
+      for (const p of savedPaths) {
+        block += `- ${p}\n`;
+      }
+      block += `\n(Use the Read tool to view each file.)\n`;
+    }
+    appendFileSync(path, block);
     recordEvent({
       type: 'user_instruction_received',
-      detail: `queued via mobile dashboard (${message.slice(0, 80)})`,
+      detail: `queued via mobile dashboard (${message.slice(0, 80)}${
+        savedPaths.length ? `, ${savedPaths.length} attachment(s)` : ''
+      })`,
+      meta: { attachments: savedPaths },
     });
     recordEvent({
       type: 'instruction_queued',
       detail: `written to ${path}`,
-      meta: { path },
+      meta: { path, attachments: savedPaths },
     });
-    res.json({ ok: true, queued_to: path, length: message.length });
+    res.json({
+      ok: true,
+      queued_to: path,
+      length: message.length,
+      attachments: savedPaths,
+    });
   });
 
   app.post('/api/tasks', (req: Request, res: Response) => {
