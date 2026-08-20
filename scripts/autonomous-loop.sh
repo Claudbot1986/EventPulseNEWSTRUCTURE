@@ -135,6 +135,36 @@ for i in $(seq 1 "$MAX_RESTARTS"); do
     exit 0
   fi
 
+  # Consume any remote instruction left by mobile-control POST /api/instruct.
+  # Atomically: move pending.md → consumed.md so the instruction is preserved
+  # for audit, then log an acknowledgment to activity.jsonl. claude --print
+  # reads consumed.md via CLAUDE.md "instructions protocol" section — but
+  # for now we at least record + expose the instruction in iteration logs.
+  INSTRUCTIONS_DIR="$PROJECT_ROOT/runtime/instructions"
+  PENDING_FILE="$INSTRUCTIONS_DIR/pending.md"
+  CONSUMED_FILE="$INSTRUCTIONS_DIR/consumed-$(date -u +%Y%m%dT%H%M%S)-iter-$i.md"
+  ACTIVITY_LOG="$PROJECT_ROOT/09-MobileControl/runtime/activity.jsonl"
+  if [ -f "$PENDING_FILE" ] && [ -s "$PENDING_FILE" ]; then
+    # Atomic move — guarantees exactly-once consumption even if we crash here.
+    if mv "$PENDING_FILE" "$CONSUMED_FILE" 2>/dev/null; then
+      echo "$(date) iter=$i consumed remote instruction → $CONSUMED_FILE" >> "$LOG_FILE"
+      mkdir -p "$(dirname "$ACTIVITY_LOG")" 2>/dev/null || true
+      INSTR_PREVIEW=$(head -c 200 "$CONSUMED_FILE" | tr '\n' ' ')
+      printf '{"ts":"%s","type":"instruction_consumed","detail":"iter=%d consumed remote instruction","meta":{"consumed_file":"%s","preview":"%s"}}\n' \
+        "$(date -u +%Y-%m-%dT%H:%M:%SZ)" "$i" "$CONSUMED_FILE" "${INSTR_PREVIEW//\"/\\\"}" \
+        >> "$ACTIVITY_LOG"
+      # Append instruction file path to the iter-N input so claude sees it.
+      ITER_INPUT_FILE="$LOG_DIR/iter-$i.input.md"
+      {
+        echo "## Remote instruction consumed at iter=$i"
+        echo
+        echo "Source: $CONSUMED_FILE"
+        echo
+        cat "$CONSUMED_FILE"
+      } > "$ITER_INPUT_FILE"
+    fi
+  fi
+
   # Total-runtime check.
   NOW_TS=$(date +%s)
   ELAPSED_HOURS=$(( (NOW_TS - START_TS) / 3600 ))
@@ -148,11 +178,33 @@ for i in $(seq 1 "$MAX_RESTARTS"); do
   # Single-shot Claude invocation. /resume reads vault state, picks next
   # task, executes one meaningful unit, commits, exits.
   # Use perl for portable timeout (GNU `timeout` is not on macOS by default).
+  # Fork + wait pattern: parent perl holds the alarm so SIGALRM survives
+  # the exec boundary (a plain `alarm; exec` discards the signal handler).
   timeout_sec=$((ITERATION_TIMEOUT_MIN * 60))
-  perl -e 'alarm shift; exec @ARGV' "$timeout_sec" claude --print \
+
+  # Compose claude prompt. If a remote instruction was consumed this iter,
+  # include it in the prompt so the lead sees it.
+  ITER_INPUT_FILE="$LOG_DIR/iter-$i.input.md"
+  if [ -f "$ITER_INPUT_FILE" ]; then
+    CLAUDE_PROMPT="$(cat "$ITER_INPUT_FILE") /resume"
+  else
+    CLAUDE_PROMPT="/resume"
+  fi
+
+  perl -e '
+    $SIG{ALRM} = sub { kill TERM => $pid; sleep 2; kill KILL => $pid; exit 124 };
+    alarm shift @ARGV;
+    $pid = fork();
+    die "fork failed: $!" unless defined $pid;
+    if ($pid == 0) {
+      exec(@ARGV) or die "exec failed: $!";
+    }
+    waitpid($pid, 0);
+    exit($? >> 8);
+  ' "$timeout_sec" claude --print \
     --max-budget-usd "$MAX_BUDGET_PER_ITER" \
     --output-format json \
-    "/resume" > "$LOG_DIR/iter-$i.json" 2> "$LOG_DIR/iter-$i.err"
+    "$CLAUDE_PROMPT" > "$LOG_DIR/iter-$i.json" 2> "$LOG_DIR/iter-$i.err"
   rc=$?
 
   echo "$(date) iter=$i exit=$rc" >> "$LOG_FILE"
