@@ -22,6 +22,7 @@ import {
   type ParsedEvent,
   type ExtractionConfidence,
 } from './schema';
+import { runAdapters } from './adapters/index.js';
 
 export interface ExtractResult {
   events: ParsedEvent[];
@@ -533,6 +534,23 @@ function generateEventId(source: string, title: string, date: string): string {
  * @returns ExtractResult with parsed events
  */
 export function extractFromHtml(html: string, source: string, baseUrl?: string): ExtractResult {
+  // Priority step: run site-specific adapters first
+  const adapterResult = runAdapters(html, baseUrl || '', source);
+  if (adapterResult && adapterResult.events.length > 0) {
+    // Adapter succeeded — use its events (with source attribution)
+    const events: ParsedEvent[] = adapterResult.events.map(e => ({
+      ...e,
+      source,
+      sourceUrl: e.sourceUrl || baseUrl,
+    }));
+    return {
+      events,
+      rawCount: events.length,
+      parseErrors: [],
+      sourceUrl: baseUrl || 'unknown',
+    };
+  }
+
   const events: ParsedEvent[] = [];
   const parseErrors: string[] = [];
   const seenKeys = new Set<string>();
