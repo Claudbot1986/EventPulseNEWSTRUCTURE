@@ -40,3 +40,7 @@ TEMP/
 /02-Ingestion/C-htmlGate/reports/
 /03-Queue/03-extractedevents/
 /conversations/
+
+# Obsidian vault (persistent project memory, not implementation)
+# Per CLAUDE.md Vault Memory Protocol — vault follows project, not git.
+/00-Vault/

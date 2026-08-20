@@ -8,20 +8,35 @@ EventPulse is a **personal event agent**. The Expo app is the interface. Canonic
 
 This repository uses an Obsidian vault as structured project memory.
 
-**Vault is on the Desktop, not in git.**
+**Vault lives inside the project, in `00-Vault/`, not in git.**
 
 Vault root:
-`/Users/claudgashi/Desktop/MyVault/TomorGashi`
+`<project>/00-Vault/`
+
+This is a *copy* of the original Desktop vault (`/Users/claudgashi/Desktop/MyVault/TomorGashi/`). The Desktop copy stays as a manual fallback; the `00-Vault/` copy is the one Claude Code and the `vault-sync` sub-agent read and write. `00-Vault/` is in `.gitignore` per the protocol.
 
 Vault inbox:
-`/Users/claudgashi/Desktop/MyVault/TomorGashi/00-Inbox`
+`<project>/00-Vault/00-Inbox`
 
 EventPulse strategy/ops notes live under the project subtree (there is no vault-root `00-Core/`):
-`/Users/claudgashi/Desktop/MyVault/TomorGashi/01-Projects/EventPulse/`
+`<project>/00-Vault/01-Projects/EventPulse/`
+
+### vault-sync sub-agent
+
+A focused sub-agent (`vault-sync` in `~/.claude/agents/`) maintains `01-Current-State.md`. Spawn it at the end of substantial work per the Memory Reconciliation step below. The agent:
+
+- Reads project state (`git log`, `vitest --reporter=json`, `package.json`, recent migrations).
+- Writes the `## Auto-facts (machine-synced)` section of `01-Current-State.md` directly.
+- Writes a narrative proposal to `01-Current-State.proposed.md` — never the main file's narrative.
+- Logs three `VAULT-SYNC:` lines to stdout.
+- Does not invent strategic truth, does not commit, does not modify files outside the vault.
+
+The agent inherits the same model as the main session (no external API). The user reviews `.proposed.md` and applies narrative changes by hand.
 
 ### Mandatory first read
 Always read these first if they exist:
 - Repo: `docs/MASTERPLAN.md` and `docs/BACKLOG.md`
+- `01-Projects/EventPulse/00-Core/01-Current-State.md` (the agent-maintained save game)
 - `01-Projects/EventPulse/00-Core/03-Canonical-Truths.md`
 - `01-Projects/EventPulse/00-Core/08-Verification-Principles.md`
 - `01-Projects/EventPulse/00-Core/02-North-Star.md`
@@ -29,7 +44,7 @@ Always read these first if they exist:
 - `01-Projects/EventPulse/02-Operations/06-Verification-Status.md`
 - Session history at vault-root `02-Operations/03-Session-Log/` (`00-Index.md`, `YYYY-MM-DD.md` per day)
 
-Paths except `docs/` are relative to `/Users/claudgashi/Desktop/MyVault/TomorGashi`.
+Paths except `docs/` are relative to `<project>/00-Vault/`.
 
 ### Task-driven note discovery
 After the mandatory files:
