@@ -30,9 +30,15 @@ import {
   appendFileSync,
   existsSync,
   mkdirSync,
+  openSync,
   readFileSync,
+  readSync,
+  closeSync,
+  statSync,
   unlinkSync,
+  watch,
   writeFileSync,
+  type FSWatcher,
 } from 'node:fs';
 import { dirname, join } from 'node:path';
 
@@ -41,7 +47,10 @@ import {
   readActivity,
   loopLogPath,
   projectRoot,
+  activityStreamPath,
+  agentStatePath,
   type StateSnapshot,
+  type ActivityEntry,
 } from './state.ts';
 import { recordEvent } from './activity.ts';
 import { requireToken, attachToken } from './auth.ts';
@@ -119,6 +128,91 @@ function appendTaskToQueue(opts: {
     existing.slice(0, insertAt) + '\n' + block + existing.slice(insertAt);
   writeFileSync(queuePath, newContent);
   return { id };
+}
+
+// --- activity SSE wiring ---------------------------------------------------
+// Module-level state for live activity streaming. Clients connect to
+// /api/stream/activity and get the last N events on connect, then receive
+// deltas pushed whenever activity.jsonl is appended to (via fs.watch).
+// The watcher also sends a tiny `:` heartbeat comment frame on every active
+// SSE so reverse proxies / mobile carriers don't idle-out the connection.
+const activityClients = new Set<Response>();
+let activityWatcher: FSWatcher | null = null;
+let lastActivityByteOffset = 0;
+
+function currentActivitySize(): number {
+  try {
+    return statSync(activityStreamPath()).size;
+  } catch {
+    return 0;
+  }
+}
+
+function readActivitySince(offset: number, maxLines = 200): {
+  events: ActivityEntry[];
+  nextOffset: number;
+} {
+  const path = activityStreamPath();
+  if (!existsSync(path)) return { events: [], nextOffset: offset };
+  let text: string;
+  try {
+    const size = currentActivitySize();
+    const fd = openSync(path, 'r');
+    try {
+      const buf = Buffer.alloc(Math.max(0, size - offset));
+      if (buf.length > 0) readSync(fd, buf, 0, buf.length, offset);
+      text = buf.toString('utf-8');
+    } finally {
+      closeSync(fd);
+    }
+  } catch {
+    return { events: [], nextOffset: offset };
+  }
+  const lines = text.split('\n').filter(Boolean);
+  const events: ActivityEntry[] = [];
+  for (const line of lines) {
+    try {
+      events.push(JSON.parse(line) as ActivityEntry);
+    } catch {
+      /* skip malformed */
+    }
+  }
+  const trimmed = events.slice(-maxLines);
+  return { events: trimmed, nextOffset: currentActivitySize() };
+}
+
+function ensureActivityWatcher(): void {
+  if (activityWatcher) return;
+  const path = activityStreamPath();
+  if (!existsSync(path)) {
+    // Create empty file so fs.watch can attach
+    try {
+      mkdirSync(dirname(path), { recursive: true });
+      writeFileSync(path, '');
+    } catch {
+      /* best-effort */
+    }
+  }
+  lastActivityByteOffset = currentActivitySize();
+  try {
+    activityWatcher = watch(path, { persistent: false }, () => {
+      // Send heartbeat comment on every active SSE so clients know something
+      // changed. /api/stream/activity reads its own offset and pushes events;
+      // /api/stream re-runs readSnapshot() on heartbeat.
+      for (const res of activityClients) {
+        try {
+          res.write(`: activity-tick ${Date.now()}\n\n`);
+        } catch {
+          /* dead socket */
+        }
+      }
+    });
+    activityWatcher.on('error', () => {
+      activityWatcher = null;
+    });
+  } catch {
+    activityWatcher = null;
+  }
 }
 
 function buildApp(): express.Application {
@@ -291,6 +385,99 @@ function buildApp(): express.Application {
     });
   });
 
+  // SSE: live activity stream. On connect, replays the last N events so a
+  // reconnecting client fills its timeline; then pushes new lines as
+  // activity.jsonl grows. The fs.watch heartbeat (set up in main()) also
+  // triggers immediate pushes.
+  app.get('/api/stream/activity', (req: Request, res: Response) => {
+    res.writeHead(200, {
+      'Content-Type': 'text/event-stream',
+      'Cache-Control': 'no-cache',
+      Connection: 'keep-alive',
+      'X-Accel-Buffering': 'no',
+    });
+    activityClients.add(res);
+    let offset = currentActivitySize();
+    const replay = readActivitySince(Math.max(0, offset - 50_000), 200);
+    try {
+      res.write(
+        `event: history\ndata: ${JSON.stringify({ events: replay.events })}\n\n`
+      );
+    } catch {
+      /* dead socket */
+    }
+
+    const push = () => {
+      try {
+        const { events, nextOffset } = readActivitySince(offset, 200);
+        offset = nextOffset;
+        for (const ev of events) {
+          res.write(`event: activity\ndata: ${JSON.stringify(ev)}\n\n`);
+        }
+        if (events.length === 0) {
+          res.write(`: idle ${Date.now()}\n\n`);
+        }
+      } catch {
+        /* best-effort */
+      }
+    };
+    push();
+    const tick = setInterval(push, 2000);
+    req.on('close', () => {
+      clearInterval(tick);
+      activityClients.delete(res);
+    });
+  });
+
+  // Lightweight internal endpoint: sub-agents and the wrapper can self-
+  // report their state here. The hook writes to runtime/agents/state.json
+  // directly; this endpoint is for callers that prefer HTTP.
+  app.post('/api/agent/state', (req: Request, res: Response) => {
+    const role = String(req.body?.role ?? '');
+    const task = String(req.body?.task ?? '');
+    const status = String(req.body?.status ?? 'running');
+    if (!role || !task) {
+      res.status(400).json({ error: 'role and task required' });
+      return;
+    }
+    const path = agentStatePath();
+    let state: { agents: Array<Record<string, unknown>> } = { agents: [] };
+    if (existsSync(path)) {
+      try {
+        state = JSON.parse(readFileSync(path, 'utf-8'));
+      } catch {
+        state = { agents: [] };
+      }
+    }
+    const stamp = new Date().toISOString();
+    const idx = state.agents.findIndex(
+      (a) => a.role === role && a.task === task
+    );
+    const entry = {
+      role,
+      task,
+      started_at: idx >= 0 ? state.agents[idx].started_at : stamp,
+      last_heartbeat: stamp,
+      status,
+      completed_at: status === 'completed' ? stamp : null,
+    };
+    if (idx >= 0) state.agents[idx] = entry;
+    else state.agents.push(entry);
+    try {
+      mkdirSync(dirname(path), { recursive: true });
+      writeFileSync(path, JSON.stringify(state, null, 2));
+    } catch (err) {
+      res.status(500).json({ error: (err as Error).message });
+      return;
+    }
+    recordEvent({
+      type: status === 'completed' ? 'agent_completed' : 'agent_started',
+      detail: `${role}: ${task}`,
+      meta: { role, task, status },
+    });
+    res.json({ ok: true });
+  });
+
   app.get('/health', (_req: Request, res: Response) => {
     res.json({
       ok: true,
@@ -304,6 +491,7 @@ function buildApp(): express.Application {
 
 function main(): void {
   ensureRuntimeDirs();
+  ensureActivityWatcher();
 
   const t = process.env.MOBILE_CONTROL_TOKEN;
   if (!t || t.length < 16) {
