@@ -178,12 +178,6 @@ check(
   `${afterPush.count} -> ${online.count} items`
 );
 
-check(
-  '17. no unexpected console errors (favicon/offline filtered)',
-  realConsoleErrors.length === 0,
-  realConsoleErrors.slice(0, 3).join(' ; ')
-);
-
 // Count only real console errors. Browser noise that we explicitly allow:
 //   - favicon.ico 404s (no favicon is configured)
 //   - ERR_INTERNET_DISCONNECTED, triggered deliberately by setOfflineMode(true)
@@ -191,18 +185,23 @@ check(
 //   - the browser's bare "Failed to load resource: ... 404" message that pairs
 //     with the favicon (the URL is captured separately via the response handler,
 //     so we know it's just favicon)
+//   - setOfflineMode(true) abruptly terminates in-flight chunked SSE responses,
+//     which Chromium flags as ERR_INCOMPLETE_CHUNKED_ENCODING. The SSE auto-
+//     reconnects when the network comes back; this is expected browser noise.
 const seenFavicon = consoleErrors.some((e) => /favicon\.ico/.test(e));
 const realConsoleErrors = consoleErrors.filter((e) => {
   if (/favicon/i.test(e)) return false;
   if (/ERR_INTERNET_DISCONNECTED/.test(e)) return false;
   if (/requestfailed:.*ERR_INTERNET_DISCONNECTED/.test(e)) return false;
   if (seenFavicon && /Failed to load resource.*404/.test(e)) return false;
-  // setOfflineMode(true) abruptly terminates in-flight chunked SSE responses,
-  // which Chromium flags as ERR_INCOMPLETE_CHUNKED_ENCODING. The SSE auto-
-  // reconnects when the network comes back; this is expected browser noise.
   if (/ERR_INCOMPLETE_CHUNKED_ENCODING/.test(e)) return false;
   return true;
 });
+check(
+  '17. no unexpected console errors (favicon/offline filtered)',
+  realConsoleErrors.length === 0,
+  realConsoleErrors.slice(0, 3).join(' ; ')
+);
 check(
   '17b. unexpected console errors only',
   realConsoleErrors.length === 0,
