@@ -558,6 +558,82 @@ html, body {
   min-height: 32px;
 }
 
+/* --- Claude's Last Answer card --------------------------------------- */
+.claude-answer-pane {
+  background: #050505;
+  border: 1px solid #1f1f1f;
+  border-radius: 8px;
+  padding: 10px;
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", sans-serif;
+  font-size: 13px;
+  color: #e8e8e8;
+  line-height: 1.5;
+  max-height: 320px;
+  overflow-y: auto;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+.claude-answer-meta {
+  margin-top: 6px;
+  font-size: 10px;
+  color: #666;
+  font-family: ui-monospace, "SF Mono", monospace;
+}
+.iter-list-wrap {
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid #1f1f1f;
+}
+.iter-list-label {
+  font-size: 10px;
+  color: #888;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 6px;
+}
+.iter-list {
+  list-style: none;
+  /* Show up to 5 rows (~30px each) by default; scroll for the rest. */
+  max-height: 150px;
+  overflow-y: auto;
+}
+.iter-list-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 10px;
+  border: 1px solid #1f1f1f;
+  border-radius: 6px;
+  margin-bottom: 4px;
+  background: #0a0a0a;
+  cursor: pointer;
+  font-size: 12px;
+  color: #ccc;
+  transition: background 0.1s;
+}
+.iter-list-item:last-child { margin-bottom: 0; }
+.iter-list-item:hover { background: #1f1f1f; }
+.iter-list-item.active {
+  background: #166534;
+  border-color: #22c55e;
+  color: #fff;
+}
+.iter-list-item.iter-error {
+  border-color: #7f1d1d;
+  color: #fca5a5;
+}
+.iter-num {
+  font-family: ui-monospace, "SF Mono", monospace;
+  font-weight: 700;
+  color: #4ade80;
+}
+.iter-list-item.iter-error .iter-num { color: #f87171; }
+.iter-cost {
+  font-family: ui-monospace, "SF Mono", monospace;
+  font-size: 10px;
+  color: #888;
+}
+
 .modal-wide {
   max-width: 720px;
 }

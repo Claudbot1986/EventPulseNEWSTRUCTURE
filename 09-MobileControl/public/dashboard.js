@@ -195,6 +195,93 @@
       .join('');
   }
 
+  // --- Claude's Last Answer (latest iter + scrollable past iters) ------
+
+  // Cache of fetched iters. Refreshed every few seconds; clicking a past iter
+  // swaps the displayed `result` without a refetch.
+  let itersCache = [];
+  let selectedIterN = null; // number of currently displayed iter, null = latest
+
+  async function refreshIters() {
+    try {
+      const r = await fetch('/api/iters?limit=20', { headers: HEADERS });
+      if (!r.ok) return;
+      const j = await r.json();
+      itersCache = Array.isArray(j.iters) ? j.iters : [];
+      renderIterList();
+      // Show the latest iter in the main pane unless the user has explicitly
+      // picked another one. If their selection no longer exists, fall back.
+      if (itersCache.length === 0) {
+        renderClaudeAnswer(null);
+        return;
+      }
+      const sel = itersCache.find((it) => it.iter === selectedIterN);
+      if (!sel) {
+        selectedIterN = null;
+        renderClaudeAnswer(itersCache[0]);
+      } else {
+        renderClaudeAnswer(sel);
+      }
+    } catch (err) {
+      // Silent: card stays at last known state
+    }
+  }
+
+  function renderClaudeAnswer(iter) {
+    const pane = $('claude-answer-pane');
+    const meta = $('claude-answer-meta');
+    if (!pane || !meta) return;
+    if (!iter) {
+      pane.textContent = '(no iters yet)';
+      meta.textContent = '—';
+      return;
+    }
+    pane.textContent = iter.result || '(empty result)';
+    const cost = typeof iter.total_cost_usd === 'number' ? `$${iter.total_cost_usd.toFixed(2)}` : '—';
+    const turns = iter.num_turns ?? '—';
+    const reason = iter.stop_reason || '—';
+    meta.textContent = `iter ${iter.iter} · ${turns} turns · ${cost} · ${reason}`;
+    // Update active highlight in the list
+    const items = document.querySelectorAll('.iter-list-item');
+    items.forEach((el) => {
+      const n = Number(el.dataset.iter);
+      el.classList.toggle('active', n === iter.iter);
+    });
+  }
+
+  function renderIterList() {
+    const list = $('iter-list');
+    if (!list) return;
+    if (itersCache.length === 0) {
+      list.innerHTML = '<li class="iter-list-item" style="cursor:default;color:#666;">— no iters yet —</li>';
+      return;
+    }
+    list.innerHTML = itersCache
+      .map((it) => {
+        const cls = it.is_error ? 'iter-list-item iter-error' : 'iter-list-item';
+        const cost = typeof it.total_cost_usd === 'number' ? `$${it.total_cost_usd.toFixed(2)}` : '—';
+        return `
+        <li class="${cls}" data-iter="${it.iter}">
+          <span class="iter-num">iter ${it.iter}</span>
+          <span class="iter-cost">${cost} · ${it.num_turns ?? '—'} turns</span>
+        </li>`;
+      })
+      .join('');
+    // Wire click handlers
+    list.querySelectorAll('.iter-list-item[data-iter]').forEach((el) => {
+      el.addEventListener('click', () => {
+        const n = Number(el.dataset.iter);
+        const found = itersCache.find((it) => it.iter === n);
+        if (!found) return;
+        selectedIterN = n;
+        renderClaudeAnswer(found);
+        // Scroll the main pane to the top so the user sees the start of the response
+        const pane = $('claude-answer-pane');
+        if (pane) pane.scrollTop = 0;
+      });
+    });
+  }
+
   // --- Live Activity (timeline) ------------------------------------------
 
   function prependActivity(ev) {
@@ -492,9 +579,11 @@
       if (s.last_event_at) updateLastEventTime(s.last_event_at);
     }
     await refreshTerminal();
+    await refreshIters();
     startSnapshotSSE();
     startActivitySSE();
     setInterval(refreshTerminal, 5000);
+    setInterval(refreshIters, 5000);
     setInterval(() => {
       const el = $('last-event-time');
       if (el && lastEventAt) el.textContent = `last event: ${fmtRelative(lastEventAt)}`;
