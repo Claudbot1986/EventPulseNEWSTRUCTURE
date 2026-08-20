@@ -4,6 +4,7 @@ import { createClient } from '@supabase/supabase-js';
 import type { Job } from 'bullmq';
 import type { RawEventInput, NormalizedEvent } from '@eventpulse/shared';
 import { searchSyncQueue } from '../03-Queue/queue';
+import { computeConfidenceV1 } from './confidence_v1';
 
 const supabase = createClient(
   process.env.SUPABASE_URL!,
@@ -335,6 +336,8 @@ export async function processRawEvent(job: Job<RawEventInput>): Promise<void> {
 
   console.log(`[normalizer] venue_id=${venue_id ?? 'null'}, category_slug=${category_slug}`);
 
+  const observedAt = new Date().toISOString();
+
   const normalized: Partial<NormalizedEvent> & Record<string, unknown> = {
     title_en: raw.detected_language === 'en' ? raw.title : raw.title ?? null,
     title_sv: raw.detected_language === 'sv' ? raw.title : raw.title,
@@ -358,15 +361,35 @@ export async function processRawEvent(job: Job<RawEventInput>): Promise<void> {
     category_slug,  // Denormalized for direct filtering
     status: 'published',
     raw_data: raw.raw_payload,
+    // Agent Event Graph columns (MASTERPLAN §13). Seed on every parse so
+    // ranking/freshness stay meaningful; confidence mirrors the SQL migration
+    // 20260818-0002-confidence-v1.sql.
+    freshness_at: observedAt,
+    last_seen_at: observedAt,
+    confidence_score: computeConfidenceV1({
+      venue_id,
+      start_time: raw.start_time,
+      price_min_sek: raw.price_min_sek ?? null,
+      price_max_sek: raw.price_max_sek ?? null,
+      is_free: raw.is_free ?? null,
+      image_url: raw.image_url ?? null,
+      freshness_at: observedAt,
+      source: raw.source,
+    }),
   };
 
   let event_id: string;
 
   if (existing) {
-    // Update existing event
+    // Update existing event: refresh last_seen_at + confidence, preserve
+    // freshness_at (the row is being re-seen, not freshened).
     const { data: updated, error: updateError } = await supabase
       .from('events')
-      .update({ ...normalized, updated_at: new Date().toISOString() })
+      .update({
+        ...normalized,
+        freshness_at: undefined, // keep prior freshness on update
+        updated_at: observedAt,
+      })
       .eq('id', existing.id)
       .select('id')
       .single();
