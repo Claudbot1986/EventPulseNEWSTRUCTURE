@@ -13,46 +13,37 @@
  *   { id, title, start_time, end_time, venue_name, city,
  *     category_slug, price_min_sek, price_max_sek, is_free,
  *     ticket_url, image_url }
+ *
+ * Identity (Phase 1 §18 D4): `client_user_id` is loaded from AsyncStorage via
+ * ./storage so it survives cold restarts. Reads are awaited so the same
+ * identity is used on the first request, not raced.
+ *
+ * Base URL (Phase 1 §18 D4): comes exclusively from `EXPO_PUBLIC_AGENT_URL`.
+ * No localhost fallback — unset means a loud configuration error rather than
+ * a silent "looks like it works" loopback.
  */
 
-const AGENT_BASE_URL =
-  process.env.EXPO_PUBLIC_AGENT_URL || 'http://localhost:8787';
+import { getOrCreateAnonUserId } from './storage';
+
+const AGENT_BASE_URL = process.env.EXPO_PUBLIC_AGENT_URL;
+
+function requireAgentBaseUrl() {
+  if (!AGENT_BASE_URL || typeof AGENT_BASE_URL !== 'string' || AGENT_BASE_URL.trim() === '') {
+    const err = new Error('EXPO_PUBLIC_AGENT_URL is not set. The agent API base URL must be configured before the app can send requests.');
+    err.code = 'AGENT_URL_MISSING';
+    throw err;
+  }
+  return AGENT_BASE_URL.replace(/\/+$/, '');
+}
 
 const DEFAULT_TIMEOUT_MS = 12_000;
-
-function uuidv4() {
-  // RFC4122-ish. Sufficient for anon client_user_id.
-  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
-    const r = (Math.random() * 16) | 0;
-    const v = c === 'x' ? r : (r & 0x3) | 0x8;
-    return v.toString(16);
-  });
-}
-
-function getOrCreateAnonUserId() {
-  const KEY = 'eventpulse.anon_user_id';
-  let id = null;
-  try {
-    // globalThis.localStorage works in Expo Web; AsyncStorage is recommended
-    // for native — we accept the web fallback here for Phase 0.
-    if (typeof globalThis !== 'undefined' && globalThis.localStorage) {
-      id = globalThis.localStorage.getItem(KEY);
-      if (!id) {
-        id = uuidv4();
-        globalThis.localStorage.setItem(KEY, id);
-      }
-    }
-  } catch (_err) {
-    // Storage unavailable — generate ephemeral id.
-  }
-  return id ?? uuidv4();
-}
 
 export async function chatWithAgent({ message, sessionId, origin, signal, timeoutMs = DEFAULT_TIMEOUT_MS }) {
   if (!message || typeof message !== 'string') {
     throw new Error('message is required');
   }
-  const client_user_id = getOrCreateAnonUserId();
+  const baseUrl = requireAgentBaseUrl();
+  const client_user_id = await getOrCreateAnonUserId();
 
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), timeoutMs);
@@ -64,7 +55,7 @@ export async function chatWithAgent({ message, sessionId, origin, signal, timeou
 
   let response;
   try {
-    response = await fetch(`${AGENT_BASE_URL}/agent/chat`, {
+    response = await fetch(`${baseUrl}/agent/chat`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -81,7 +72,10 @@ export async function chatWithAgent({ message, sessionId, origin, signal, timeou
 
   if (!response.ok) {
     const text = await response.text().catch(() => '');
-    throw new Error(`agent ${response.status}: ${text || response.statusText}`);
+    const err = new Error(`agent ${response.status}: ${text || response.statusText}`);
+    err.code = 'AGENT_SERVER_ERROR';
+    err.status = response.status;
+    throw err;
   }
 
   const data = await response.json();
@@ -98,9 +92,10 @@ export async function chatWithAgent({ message, sessionId, origin, signal, timeou
 
 export async function getAgentHealth() {
   try {
-    const response = await fetch(`${AGENT_BASE_URL}/agent/health`);
+    const baseUrl = requireAgentBaseUrl();
+    const response = await fetch(`${baseUrl}/agent/health`);
     return response.ok;
-  } catch {
+  } catch (_err) {
     return false;
   }
 }
@@ -120,11 +115,17 @@ export async function recordEventInteraction({
   timeoutMs = 4_000,
 }) {
   if (!eventId || !interaction) return { ok: false, warning: 'missing fields' };
-  const client_user_id = getOrCreateAnonUserId();
+  let baseUrl;
+  try {
+    baseUrl = requireAgentBaseUrl();
+  } catch (_err) {
+    return { ok: false, warning: 'config' };
+  }
+  const client_user_id = await getOrCreateAnonUserId();
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), timeoutMs);
   try {
-    const response = await fetch(`${AGENT_BASE_URL}/agent/feedback`, {
+    const response = await fetch(`${baseUrl}/agent/feedback`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -147,7 +148,8 @@ export async function recordEventInteraction({
   }
 }
 
-export { AGENT_BASE_URL, getOrCreateAnonUserId };
+// Re-exported for callers that want to await identity without poking storage directly.
+export { getOrCreateAnonUserId };
 
 /**
  * Browse feed: GET /agent/feed?from=YYYY-MM-DD&days=7
@@ -161,7 +163,8 @@ export { AGENT_BASE_URL, getOrCreateAnonUserId };
  * code doesn't need to change.
  */
 export async function fetchFeed({ from, days = 7, signal, timeoutMs = 12_000 } = {}) {
-  const url = new URL(`${AGENT_BASE_URL}/agent/feed`);
+  const baseUrl = requireAgentBaseUrl();
+  const url = new URL(`${baseUrl}/agent/feed`);
   url.searchParams.set('from', from);
   url.searchParams.set('days', String(days));
 
