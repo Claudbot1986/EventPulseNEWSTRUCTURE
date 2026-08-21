@@ -90,6 +90,10 @@ async function refreshStats() {
  * T0097 — fetch and render top-strip KPIs.
  * Endpoint: GET /api/metrics/top-strip  (admin, bearer)
  * Returns: { dau, wau, mau, stickiness, save_rate, last_seen, window_events }
+ *
+ * T0090 — stickiness and save_rate now come from the server pre-guarded
+ * against tiny N (server returns null when wau<10 or views<10). The client
+ * just renders null → "n/a" — no need to recompute thresholds here.
  */
 async function refreshTopStrip() {
   const r = await adminFetch('/api/metrics/top-strip');
@@ -97,15 +101,64 @@ async function refreshTopStrip() {
   $('kpi-dau').textContent = (m.dau ?? 0).toLocaleString();
   $('kpi-wau').textContent = (m.wau ?? 0).toLocaleString();
   $('kpi-mau').textContent = (m.mau ?? 0).toLocaleString();
-  $('kpi-stickiness').textContent = m.wau > 0
-    ? `${((m.dau / m.wau) * 100).toFixed(0)}%`
-    : '—';
-  if (m.save_rate === null || m.save_rate === undefined) {
-    $('kpi-save-rate').textContent = 'n/a';
-  } else {
-    $('kpi-save-rate').textContent = `${(m.save_rate * 100).toFixed(1)}%`;
-  }
+  $('kpi-stickiness').textContent = m.stickiness === null || m.stickiness === undefined
+    ? 'n/a'
+    : `${(m.stickiness * 100).toFixed(0)}%`;
+  $('kpi-save-rate').textContent = m.save_rate === null || m.save_rate === undefined
+    ? 'n/a'
+    : `${(m.save_rate * 100).toFixed(1)}%`;
   $('kpi-last-seen').textContent = m.last_seen ? fmtRelative(m.last_seen) : '—';
+}
+
+/**
+ * T0090 — fetch and render the trend sparklines (DAU + event volume
+ * over the configured window). Inline SVG, no chart library.
+ * Endpoint: GET /api/metrics/trends?days=14
+ * Returns: { window_days, series: [{date, dau, events}] }
+ */
+async function refreshTrends() {
+  const days = Number(localStorage.getItem('analytics_trend_days') || '14');
+  const r = await adminFetch(`/api/metrics/trends?days=${days}`);
+  const data = r.data || r;
+  const series = data.series || [];
+  const wrap = $('trends-wrap');
+  const label = $('trends-window-label');
+  if (label) label.textContent = `${data.window_days ?? days} dagar`;
+  if (!wrap) return;
+  if (series.length === 0) {
+    wrap.innerHTML = '<div class="hint">— inga händelser ännu —</div>';
+    return;
+  }
+  wrap.innerHTML =
+    renderSparkline(series.map((d) => d.dau), '#7dd3fc', 'DAU') +
+    renderSparkline(series.map((d) => d.events), '#a78bfa', 'Events');
+}
+
+/** Build a single inline-SVG sparkline. `data` is an array of numbers. */
+function renderSparkline(data, stroke, label) {
+  const W = 320;
+  const H = 36;
+  const PAD = 2;
+  const max = Math.max(...data, 1);
+  const min = 0;
+  const stepX = (W - PAD * 2) / Math.max(data.length - 1, 1);
+  const points = data.map((v, i) => {
+    const x = PAD + i * stepX;
+    const y = H - PAD - ((v - min) / (max - min || 1)) * (H - PAD * 2);
+    return `${x.toFixed(1)},${y.toFixed(1)}`;
+  });
+  const last = data[data.length - 1] ?? 0;
+  const path = `M${points.join(' L')}`;
+  const fillPath = `${path} L${(PAD + (data.length - 1) * stepX).toFixed(1)},${H - PAD} L${PAD},${H - PAD} Z`;
+  return `
+    <div class="sparkline-row">
+      <span class="sparkline-label">${label}</span>
+      <svg class="sparkline" viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" aria-label="${label} trend, last value ${last}">
+        <path d="${fillPath}" fill="${stroke}" fill-opacity="0.12" />
+        <path d="${path}" fill="none" stroke="${stroke}" stroke-width="1.4" stroke-linejoin="round" stroke-linecap="round" />
+      </svg>
+      <span class="sparkline-current">${last.toLocaleString()}</span>
+    </div>`;
 }
 
 /**
@@ -188,7 +241,7 @@ async function refreshEvents() {
 }
 
 async function refreshAll() {
-  const results = await Promise.allSettled([refreshStats(), refreshEvents(), refreshTopStrip(), refreshInsights()]);
+  const results = await Promise.allSettled([refreshStats(), refreshEvents(), refreshTopStrip(), refreshInsights(), refreshTrends()]);
   const first = results.find((r) => r.status === 'rejected');
   if (first) {
     const msg = first.reason?.message || String(first.reason);

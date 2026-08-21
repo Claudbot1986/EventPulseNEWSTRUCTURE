@@ -334,3 +334,47 @@ main {
 .error-banner:not(:empty) {
   display: block;
 }
+
+/* Trends card — inline SVG sparklines (DAU + events over window) */
+.trends-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.trends-wrap .hint {
+  color: var(--muted);
+  font-size: 12px;
+  padding: 12px 0;
+  text-align: center;
+}
+
+.sparkline-row {
+  display: grid;
+  grid-template-columns: 60px 1fr 80px;
+  align-items: center;
+  gap: 12px;
+  padding: 6px 0;
+}
+
+.sparkline-label {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--muted);
+  font-weight: 600;
+}
+
+.sparkline {
+  width: 100%;
+  height: 36px;
+  display: block;
+}
+
+.sparkline-current {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+  font-size: 13px;
+  color: var(--text);
+}

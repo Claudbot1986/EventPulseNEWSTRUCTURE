@@ -267,14 +267,21 @@ app.get('/api/metrics/top-strip', requireBearer, async (_req: Request, res: Resp
     const stickiness = wau.size > 0 ? dau.size / wau.size : 0;
     const saveRate = views > 0 ? saves / views : null;
 
+    // T0090 — small-sample guard. Ratios from tiny N are noise, so the
+    // dashboard renders them as null and the JS shows "n/a". Threshold is
+    // intentionally generous (10) — a 9-user sample for a 7-day stickiness
+    // ratio is not actionable.
+    const STICKINESS_MIN_WAU = 10;
+    const SAVERATE_MIN_VIEWS = 10;
+
     res.json({
       success: true,
       data: {
         dau: dau.size,
         wau: wau.size,
         mau: mau.size,
-        stickiness: Number(stickiness.toFixed(3)),
-        save_rate: saveRate === null ? null : Number(saveRate.toFixed(3)),
+        stickiness: wau.size >= STICKINESS_MIN_WAU ? Number(stickiness.toFixed(3)) : null,
+        save_rate: views >= SAVERATE_MIN_VIEWS && saveRate !== null ? Number(saveRate.toFixed(3)) : null,
         last_seen: lastSeen || null,
         window_events: events.filter((e) => e.ts >= weekCutoff).length,
       },
@@ -379,6 +386,59 @@ app.get('/api/metrics/insights', requireBearer, async (_req: Request, res: Respo
   } catch (err) {
     const message = err instanceof Error ? err.message : 'unknown error';
     res.status(500).json({ error: 'insights_failed', message });
+  }
+});
+
+/**
+ * GET /api/metrics/trends?days=14
+ * Admin. Daily DAU + event count for the last `days` days. Powers the
+ * sparkline row on the analytics dashboard. Empty days are returned as
+ * zeros so the chart is contiguous even if no events landed on a date.
+ */
+app.get('/api/metrics/trends', requireBearer, async (req: Request, res: Response) => {
+  try {
+    const days = Math.min(Math.max(Number(req.query.days ?? 14) || 14, 1), 60);
+    const events = await readEvents({});
+    const now = Date.now();
+    const dayMs = 86_400_000;
+
+    // Bucket by UTC date string (YYYY-MM-DD).
+    const dauByDay = new Map<string, Set<string>>();
+    const eventsByDay = new Map<string, number>();
+    const today = new Date(now).toISOString().slice(0, 10);
+    const oldest = new Date(now - (days - 1) * dayMs).toISOString().slice(0, 10);
+
+    for (const ev of events) {
+      const dateKey = ev.ts.slice(0, 10);
+      if (dateKey < oldest || dateKey > today) continue;
+      if (ev.device_id_hash) {
+        if (!dauByDay.has(dateKey)) dauByDay.set(dateKey, new Set());
+        dauByDay.get(dateKey)!.add(ev.device_id_hash);
+      }
+      eventsByDay.set(dateKey, (eventsByDay.get(dateKey) ?? 0) + 1);
+    }
+
+    // Fill missing days with zeros so the chart is contiguous.
+    const series: { date: string; dau: number; events: number }[] = [];
+    for (let i = days - 1; i >= 0; i--) {
+      const d = new Date(now - i * dayMs).toISOString().slice(0, 10);
+      series.push({
+        date: d,
+        dau: dauByDay.get(d)?.size ?? 0,
+        events: eventsByDay.get(d) ?? 0,
+      });
+    }
+
+    res.json({
+      success: true,
+      data: {
+        window_days: days,
+        series,
+      },
+    });
+  } catch (err) {
+    const message = err instanceof Error ? err.message : 'unknown error';
+    res.status(500).json({ error: 'trends_failed', message });
   }
 });
 
