@@ -6,8 +6,8 @@ import { fetchFeed, addDays } from './services/agentClient';
 
 const TOKENS = {
   color: {
-    appBg: '#08090D',
-    surface: '#12151D',
+    appBg: '#050507',
+    surface: '#0E0E12',
     surfaceRaised: '#191D28',
     surfaceSoft: '#202635',
     border: '#2B3140',
@@ -1052,11 +1052,11 @@ const styles = StyleSheet.create({
   },
   eventImage: {
     width: '100%',
-    height: 154,
+    height: 220,
     backgroundColor: TOKENS.color.surfaceSoft,
   },
   eventImageFallback: {
-    height: 126,
+    height: 180,
     backgroundColor: TOKENS.color.surfaceSoft,
     alignItems: 'center',
     justifyContent: 'center',
@@ -1090,20 +1090,20 @@ const styles = StyleSheet.create({
   },
   dateClusterDay: {
     color: TOKENS.color.accent,
-    fontSize: 13,
-    fontWeight: '900',
+    fontSize: 11,
+    fontWeight: '800',
   },
   dateClusterTime: {
     color: TOKENS.color.textMuted,
-    fontSize: 12,
+    fontSize: 10,
     marginTop: 2,
   },
   eventTitle: {
     color: TOKENS.color.text,
-    fontSize: 21,
-    fontWeight: '900',
-    lineHeight: 27,
-    letterSpacing: -0.4,
+    fontSize: 17,
+    fontWeight: '700',
+    lineHeight: 22,
+    letterSpacing: -0.2,
   },
   categoryBadge: {
     paddingHorizontal: TOKENS.space.md,
@@ -1123,13 +1123,13 @@ const styles = StyleSheet.create({
   },
   eventVenue: {
     color: TOKENS.color.textMuted,
-    fontSize: 14,
-    fontWeight: '700',
+    fontSize: 12,
+    fontWeight: '500',
     maxWidth: '70%',
   },
   eventArea: {
     color: TOKENS.color.textSoft,
-    fontSize: 14,
+    fontSize: 12,
     flexShrink: 1,
   },
   eventFooter: {
@@ -1141,8 +1141,8 @@ const styles = StyleSheet.create({
   },
   eventPrice: {
     color: TOKENS.color.mint,
-    fontSize: 13,
-    fontWeight: '900',
+    fontSize: 12,
+    fontWeight: '700',
     flexShrink: 1,
   },
   eventActionRow: {
