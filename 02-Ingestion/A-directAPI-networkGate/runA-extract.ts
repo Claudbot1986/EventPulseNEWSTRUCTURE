@@ -67,6 +67,76 @@ function loadDaiAdapter(sourceId: string): DaiAdapter | null {
   }
 }
 
+// ── Swedish date parser (T0041) ────────────────────────────────────────────────
+// Handles formats observed on konstkalendern etc:
+//   "torsdag 21 maj"                          → 2026-05-21
+//   "torsdag 21 maj–söndag 27 sep"            → start 2026-05-21, end 2026-09-27
+//   "5 sep kl. 13-17"                         → 2026-09-05
+//   "21 maj–söndag 27 sep"                    → start 2026-05-21, end 2026-09-27
+//   "2026-05-27" (ISO)                        → 2026-05-27
+// Falls back to ISO regex if Swedish format fails.
+
+const SWEDISH_MONTHS: Record<string, number> = {
+  jan: 1, januari: 1,
+  feb: 2, februari: 2,
+  mar: 3, mars: 3,
+  apr: 4, april: 4,
+  maj: 5,
+  jun: 6, juni: 6,
+  jul: 7, juli: 7,
+  aug: 8, augusti: 8,
+  sep: 9, september: 9, sept: 9,
+  okt: 10, oktober: 10,
+  nov: 11, november: 11,
+  dec: 12, december: 12,
+};
+
+interface ParsedDateRange {
+  start: string;  // YYYY-MM-DD
+  end: string;    // YYYY-MM-DD (same as start if no range)
+}
+
+function parseSwedishDate(text: string, now: Date = new Date()): ParsedDateRange | null {
+  if (!text) return null;
+  const currentYear = now.getFullYear();
+
+  // Try ISO first
+  const isoMatch = text.match(/(\d{4})-(\d{2})-(\d{2})/);
+  if (isoMatch) return { start: text.match(/(\d{4})-(\d{2})-(\d{2})/)![0], end: text.match(/(\d{4})-(\d{2})-(\d{2})/)![0] };
+
+  // Swedish: extract (day, monthName) pairs in order
+  // \d{1,2}\s+(month)
+  const tokens: { day: number; month: number }[] = [];
+  const re = /(\d{1,2})\s+([a-zåäöé]+)/gi;
+  let m: RegExpExecArray | null;
+  while ((m = re.exec(text)) !== null) {
+    const day = parseInt(m[1], 10);
+    const monthName = m[2].toLowerCase();
+    const month = SWEDISH_MONTHS[monthName];
+    if (month) tokens.push({ day, month });
+  }
+  if (tokens.length === 0) return null;
+
+  const toIso = (day: number, month: number, year: number): string =>
+    `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+
+  const startTok = tokens[0];
+  let startYear = currentYear;
+  // If start date is in the past, roll to next year
+  const startDate = new Date(startYear, startTok.month - 1, startTok.day);
+  if (startDate < now) startYear = currentYear + 1;
+  const start = toIso(startTok.day, startTok.month, startYear);
+
+  if (tokens.length === 1) return { start, end: start };
+
+  // Range
+  const endTok = tokens[1];
+  let endYear = startYear;
+  if (endTok.month < startTok.month) endYear = startYear + 1;  // crosses Dec→Jan
+  const end = toIso(endTok.day, endTok.month, endYear);
+  return { start, end };
+}
+
 // ── Extract using D-AI adapter selectors ───────────────────────────────────────
 
 function extractWithDaiAdapter(html: string, adapter: DaiAdapter): ParsedEvent[] {
@@ -85,11 +155,12 @@ function extractWithDaiAdapter(html: string, adapter: DaiAdapter): ParsedEvent[]
     const title = titleSel ? $el.find(titleSel).first().text().trim() : $el.find('h2, h3, a').first().text().trim();
     if (!title || title.length < 3) return;
 
-    // Date
+    // Date — try Swedish date parser first, fall back to ISO (T0041)
     const dateSel = adapter.selectors.date;
     const dateText = dateSel ? $el.find(dateSel).first().text().trim() : '';
-    const dateMatch = dateText.match(/(\d{4})-(\d{2})-(\d{2})/);
-    const date = dateMatch ? `${dateMatch[1]}-${dateMatch[2]}-${dateMatch[3]}` : '';
+    const parsedRange = parseSwedishDate(dateText);
+    const date = parsedRange ? parsedRange.start : '';
+    const dateEnd = parsedRange ? parsedRange.end : '';
 
     // Venue
     const venueSel = adapter.selectors.venue;
