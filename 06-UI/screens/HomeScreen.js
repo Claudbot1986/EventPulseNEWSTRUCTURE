@@ -41,7 +41,7 @@ import {
   Image,
 } from 'react-native';
 
-import { fetchFeed, fetchSavedEvents } from '../services/agentClient';
+import { fetchFeed, fetchSavedEvents, fetchRecommendedEvents } from '../services/agentClient';
 
 const TOKENS = {
   color: {
@@ -309,16 +309,50 @@ function FreeSection({ onCardPress }) {
   );
 }
 
-function RecommendedPlaceholder() {
+// ─── Recommended section (T0056) ─────────────────────────────────────────────
+
+function useRecommendedSection() {
+  const [state, setState] = useState({ status: 'loading', events: [], error: null });
+
+  const load = useCallback(async () => {
+    setState({ status: 'loading', events: [], error: null });
+    try {
+      const result = await fetchRecommendedEvents({ limit: SECTION_LIMIT });
+      setState({ status: 'ready', events: result.events ?? [], error: null });
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : 'unknown';
+      setState({ status: 'error', events: [], error: msg });
+    }
+  }, []);
+
+  useEffect(() => {
+    load();
+  }, [load]);
+
+  return { ...state, retry: load };
+}
+
+function RecommendedSection({ onCardPress }) {
+  const { status, events, error, retry } = useRecommendedSection();
   return (
     <Section eyebrow="REKOMMENDERAT" title="För dig">
-      <View style={styles.recommendedPlaceholder}>
-        <Text style={styles.recommendedEyebrow}>SNART TILLGÄNGLIGT</Text>
-        <Text style={styles.recommendedBody}>
-          Personlig feed baserad på dina sparningar och kategorier — landar i en
-          uppdatering när AI-rankeraren är på plats (uppgift #73).
-        </Text>
-      </View>
+      {status === 'loading' && (
+        <View style={styles.loadingRow}><ActivityIndicator color={TOKENS.color.accent} /></View>
+      )}
+      {status === 'error' && (
+        <View style={styles.emptyRow}>
+          <Text style={styles.errorText}>Kunde inte hämta: {error}</Text>
+          <Pressable onPress={retry} style={styles.retryButton}><Text style={styles.retryText}>Försök igen</Text></Pressable>
+        </View>
+      )}
+      {status === 'ready' && events.length === 0 && <EmptyRow />}
+      {status === 'ready' && events.length > 0 && (
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.cardScroll}>
+          {events.map((ev) => (
+            <EventCardCompact key={ev.id} event={ev} onPress={onCardPress} />
+          ))}
+        </ScrollView>
+      )}
     </Section>
   );
 }
@@ -401,6 +435,7 @@ export default function HomeScreen() {
         <TonightSection onCardPress={handleCardPress} />
         <WeekendSection onCardPress={handleCardPress} />
         <FreeSection onCardPress={handleCardPress} />
+        <RecommendedSection onCardPress={handleCardPress} />
         <SavedSection onCardPress={handleCardPress} />
 
         <View style={{ height: 96 }} />

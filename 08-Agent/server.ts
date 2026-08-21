@@ -826,6 +826,88 @@ export function buildApp(opts: { supabase?: SupabaseClient } = {}): express.Expr
     });
   });
 
+  /**
+   * GET /agent/recommended?client_user_id=<uuid>&limit=<int>
+   *
+   * T0056 / MVP-gap §77: AI-preference section in HomeScreen.
+   * Returns top N future Stockholm events ranked by the user's declared and
+   * behavioral priors (followed venues, followed artists, onboarding categories,
+   * recency), with rank reasons so the card renderer can explain why.
+   *
+   * Pipeline: searchEvents(no filters → all future Stockholm events)
+   *   → rankEvents(all personalization signals)
+   *   → mmrRerank (diversity, λ=0.7)
+   *   → top N cards with reasons
+   *
+   * Same lockdown as /agent/saved: origin allowlist + service_role only.
+   */
+  app.get('/agent/recommended', generalLimiter.middleware, async (req: Request, res: Response) => {
+    const raw = typeof req.query.client_user_id === 'string' ? req.query.client_user_id : '';
+    if (!UUID_RE.test(raw)) {
+      res.status(400).json({ error: 'client_user_id must be a uuid' });
+      return;
+    }
+    const limit = typeof req.query.limit === 'string'
+      ? Math.min(Math.max(parseInt(req.query.limit, 10) || 10, 1), 20)
+      : 10;
+
+    const client = sb ?? getSupabase();
+
+    try {
+      // Fetch all personalization signals in parallel.
+      const [personalization, statedCategories, followed, followedArtists] = await Promise.all([
+        buildUserSignal(client, raw),
+        loadStatedPreferences(client, raw),
+        loadFollowedVenues(client, raw),
+        loadFollowedArtists(client, raw),
+      ]);
+
+      // Search: no date filter (all future), no category filter, Stockholm only.
+      // Cap at 50 to bound query time; ranker picks the top N from these.
+      const search = await searchEvents(client, {
+        city: 'Stockholm',
+        limit: 50,
+      });
+
+      // Rank with all personalization signals.
+      // /agent/recommended has no parsed intent — the recommendation is
+      // driven entirely by the personalization signals. Build a minimal but
+      // well-formed IntentBrief (rankEvents requires categories, time_of_day,
+      // budget, party, language, exclude_categories, raw_query).
+      const recommendedIntent: IntentBrief = {
+        raw_query: 'recommended',
+        time_of_day: 'anytime',
+        budget: 'any',
+        party: 'any',
+        categories: [],
+        city: 'Stockholm',
+        language: 'sv',
+        exclude_categories: [],
+      };
+      const ranked = rankEvents(search.events, recommendedIntent, {
+        topN: limit * 2,
+        personalization,
+        statedCategories: statedCategories ?? undefined,
+        followedVenueIds: followed.venue_ids.length > 0 ? followed.venue_ids : undefined,
+        followedArtistSlugs: followedArtists.artist_slugs.length > 0 ? followedArtists.artist_slugs : undefined,
+      });
+
+      // MMR diversify.
+      const reranked: RankedEvent[] = mmrRerank(ranked, { lambda: 0.7, topN: limit });
+
+      const cards: EventCard[] = reranked.map((r) => ({
+        ...r.card,
+        reasons: r.reasons,
+        score: r.score,
+      }));
+
+      res.json({ events: cards });
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'unknown error';
+      res.status(500).json({ error: msg });
+    }
+  });
+
   app.get('/agent/metrics', requireAdmin, generalLimiter.middleware, async (_req: Request, res: Response) => {
     const client = sb ?? getSupabase();
     try {
