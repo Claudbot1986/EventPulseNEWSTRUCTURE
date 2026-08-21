@@ -86,6 +86,28 @@ async function refreshStats() {
   $('kpi-phase').textContent = s.phase ?? '—';
 }
 
+/**
+ * T0097 — fetch and render top-strip KPIs.
+ * Endpoint: GET /api/metrics/top-strip  (admin, bearer)
+ * Returns: { dau, wau, mau, stickiness, save_rate, last_seen, window_events }
+ */
+async function refreshTopStrip() {
+  const r = await adminFetch('/api/metrics/top-strip');
+  const m = r.data || r;
+  $('kpi-dau').textContent = (m.dau ?? 0).toLocaleString();
+  $('kpi-wau').textContent = (m.wau ?? 0).toLocaleString();
+  $('kpi-mau').textContent = (m.mau ?? 0).toLocaleString();
+  $('kpi-stickiness').textContent = m.wau > 0
+    ? `${((m.dau / m.wau) * 100).toFixed(0)}%`
+    : '—';
+  if (m.save_rate === null || m.save_rate === undefined) {
+    $('kpi-save-rate').textContent = 'n/a';
+  } else {
+    $('kpi-save-rate').textContent = `${(m.save_rate * 100).toFixed(1)}%`;
+  }
+  $('kpi-last-seen').textContent = m.last_seen ? fmtRelative(m.last_seen) : '—';
+}
+
 async function refreshEvents() {
   const r = await adminFetch('/api/events?limit=50');
   const events = r.data || r.events || [];
@@ -112,7 +134,7 @@ async function refreshEvents() {
 }
 
 async function refreshAll() {
-  const results = await Promise.allSettled([refreshStats(), refreshEvents()]);
+  const results = await Promise.allSettled([refreshStats(), refreshEvents(), refreshTopStrip()]);
   const first = results.find((r) => r.status === 'rejected');
   if (first) {
     const msg = first.reason?.message || String(first.reason);

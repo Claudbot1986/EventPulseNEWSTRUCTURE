@@ -17,6 +17,18 @@
 
   <main>
     <div id="last-error" class="error-banner"></div>
+    <section class="card top-strip" id="top-strip">
+      <h2>Top strip <span class="muted">— last 24h / 7d / 30d</span></h2>
+      <div class="kpis">
+        <div class="kpi"><div class="kpi-label">DAU</div><div class="kpi-value" id="kpi-dau">—</div></div>
+        <div class="kpi"><div class="kpi-label">WAU</div><div class="kpi-value" id="kpi-wau">—</div></div>
+        <div class="kpi"><div class="kpi-label">MAU</div><div class="kpi-value" id="kpi-mau">—</div></div>
+        <div class="kpi"><div class="kpi-label">Stickiness</div><div class="kpi-value" id="kpi-stickiness">—</div><div class="kpi-sub muted" id="kpi-stickiness-sub">DAU/WAU</div></div>
+        <div class="kpi"><div class="kpi-label">Save rate</div><div class="kpi-value" id="kpi-save-rate">—</div><div class="kpi-sub muted" id="kpi-save-rate-sub">7d</div></div>
+        <div class="kpi"><div class="kpi-label">Last seen</div><div class="kpi-value" id="kpi-last-seen">—</div><div class="kpi-sub muted" id="kpi-last-seen-sub">most recent event</div></div>
+      </div>
+    </section>
+
     <section class="card">
       <h2>Overview</h2>
       <div class="kpis" id="kpis">

@@ -212,6 +212,79 @@ app.get('/api/stats', requireBearer, async (_req: Request, res: Response) => {
   }
 });
 
+/**
+ * GET /api/metrics/top-strip
+ * Admin. Returns aggregate KPIs for the dashboard top-strip:
+ *   - dau: unique devices in last 24h
+ *   - wau: unique devices in last 7d
+ *   - mau: unique devices in last 30d
+ *   - stickiness: dau/wau ratio (0-1)
+ *   - save_rate: event_save / event_view over last 7d
+ *   - last_seen: ISO timestamp of most recent event
+ *
+ * Reads ALL events from JSONL once; small dataset (Phase 1). Phase 2
+ * switches to SQL aggregates.
+ */
+app.get('/api/metrics/top-strip', requireBearer, async (_req: Request, res: Response) => {
+  try {
+    const events = await readEvents({});
+    if (events.length === 0) {
+      res.json({
+        success: true,
+        data: {
+          dau: 0, wau: 0, mau: 0,
+          stickiness: 0,
+          save_rate: null,
+          last_seen: null,
+          window_events: 0,
+        },
+      });
+      return;
+    }
+    const now = Date.now();
+    const day = 86_400_000;
+    const dayCutoff = new Date(now - 1 * day).toISOString();
+    const weekCutoff = new Date(now - 7 * day).toISOString();
+    const monthCutoff = new Date(now - 30 * day).toISOString();
+
+    const dau = new Set<string>();
+    const wau = new Set<string>();
+    const mau = new Set<string>();
+    let saves = 0;
+    let views = 0;
+    let lastSeen = '';
+    for (const ev of events) {
+      if (!ev.device_id_hash) continue;
+      if (ev.ts >= dayCutoff) dau.add(ev.device_id_hash);
+      if (ev.ts >= weekCutoff) {
+        wau.add(ev.device_id_hash);
+        if (ev.event_type === 'event_save') saves++;
+        if (ev.event_type === 'event_view') views++;
+      }
+      if (ev.ts >= monthCutoff) mau.add(ev.device_id_hash);
+      if (!lastSeen || ev.ts > lastSeen) lastSeen = ev.ts;
+    }
+    const stickiness = wau.size > 0 ? dau.size / wau.size : 0;
+    const saveRate = views > 0 ? saves / views : null;
+
+    res.json({
+      success: true,
+      data: {
+        dau: dau.size,
+        wau: wau.size,
+        mau: mau.size,
+        stickiness: Number(stickiness.toFixed(3)),
+        save_rate: saveRate === null ? null : Number(saveRate.toFixed(3)),
+        last_seen: lastSeen || null,
+        window_events: events.filter((e) => e.ts >= weekCutoff).length,
+      },
+    });
+  } catch (err) {
+    const message = err instanceof Error ? err.message : 'unknown error';
+    res.status(500).json({ error: 'metrics_failed', message });
+  }
+});
+
 // ---------------------------------------------------------------------------
 // Public dashboard + health
 // ---------------------------------------------------------------------------
