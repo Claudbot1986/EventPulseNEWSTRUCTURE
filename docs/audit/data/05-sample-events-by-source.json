@@ -1,0 +1,72 @@
+[
+  {
+    "source": "berwaldhallen",
+    "id": "1538e1e3-6238-4c69-9261-b3cd0295d06f",
+    "title_en": "Till minnet av en gud - Wilsons Shango Memory",
+    "image_url": "",
+    "start_time": "2027-06-05T13:00:00+00:00"
+  },
+  {
+    "source": "evensos-stockholm",
+    "id": "1cf2c8f0-bd38-4b07-9fa8-eac62b5cbde2",
+    "title_en": "Laura Pausini - YO CANTO WORLD TOUR",
+    "image_url": "https://s1.ticketm.net/dam/e/0c4/f81170d9-e654-465a-8f1e-a4bf0931e0c4_RETINA_PORTRAIT_16_9.jpg",
+    "start_time": "2027-11-21T18:30:00+00:00"
+  },
+  {
+    "source": "debaser",
+    "id": "99417341-5402-4781-b3ea-bac631df70f5",
+    "title_en": "Kyle Alessandro",
+    "image_url": "",
+    "start_time": "2026-11-12T16:00:00+00:00"
+  },
+  {
+    "source": "berwaldhallen-tixly",
+    "id": "8c045441-aad9-457d-b9b6-13cede10ee60",
+    "title_en": "Till minnet av en gud - Wilsons Shango Memory",
+    "image_url": null,
+    "start_time": "2027-06-04T19:00:00+00:00"
+  },
+  {
+    "source": "allevents-in",
+    "id": "c2acdb55-b17b-4eea-85ed-1a70228b5251",
+    "title_en": "Lee Rocker | Debaser Strand",
+    "image_url": "https://cdn-ip.allevents.in/s/rs:fill:500:250/g:sm/sh:100/aHR0cHM6Ly9jZG4tYXouYWxsZXZlbnRzLmluL2V2ZW50czMvYmFubmVycy81NWIzZDY4ODQ5YzVjMzQ4YTdiOTAzNGY5NWY2M2EwMTVjZTIwMGQ5YWY1Y2JmY2VmMTQ5NjY3MGY1NjNlODZiLXJpbWctdzEyMDAtaDYyOC1kYzE4MTgxOC1nbWlyP3Y9MTc4NjA0NzQwMQ.avif",
+    "start_time": "2027-02-27T17:00:00+00:00"
+  },
+  {
+    "source": "aviciiarena",
+    "id": "7c5cccc1-15ca-4f2c-9d23-9fbc86e42961",
+    "title_en": "Il Volo",
+    "image_url": "",
+    "start_time": "2027-11-07T16:30:00+00:00"
+  },
+  {
+    "source": "china-teatern",
+    "id": "3f8b6dbd-b3d7-47db-8e25-1aa3ff15a37e",
+    "title_en": "Lena från Vetlanda",
+    "image_url": "https://cdn.sanity.io/images/3553xkck/production/8aaa050bd51694a289036408bedec591fd510317-1200x626.jpg",
+    "start_time": "2027-02-18T17:30:00+00:00"
+  },
+  {
+    "source": "aik",
+    "id": "1bc471d3-c86a-4b32-8174-dfc165e874ff",
+    "title_en": "Match: AIK Innebandy &#8211; Alunda IBF (Allsvenskan Damer Norra) // Dam &#8211; AIK Innebandy",
+    "image_url": "",
+    "start_time": "2027-03-29T12:00:00+00:00"
+  },
+  {
+    "source": "biorio",
+    "id": "9065cd62-6bc6-471a-9efa-4f183f79a251",
+    "title_en": "Minioner & Monster",
+    "image_url": "https://rio.ams3.digitaloceanspaces.com/biorio/movies/movies/5930/posters/1781103869981-e6gcwg.avif",
+    "start_time": "2026-08-23T11:10:00+00:00"
+  },
+  {
+    "source": "{\"name\":\"kulturhuset\",\"requiresQueue\":false}",
+    "id": "e0ca66c0-7c7b-4934-91bc-075b7c114da6",
+    "title_en": "Unruly Sundays",
+    "image_url": null,
+    "start_time": "2026-04-05T15:00:00+00:00"
+  }
+]

@@ -1,0 +1,37 @@
+[
+  {
+    "id": "df86d057-c340-4b21-a3c2-e40db3b7379b",
+    "title_en": "Totalförsvarsmässan",
+    "source": "stockholmsmassan",
+    "image_url": "https://stockholmsmassan.se/wp-content/uploads/2026/01/TFM_2026_Digitala-paketet-egna-kanaler_SM_Kalender_1920x850px.jpg",
+    "start_time": "2032-10-18T23:00:00+00:00"
+  },
+  {
+    "id": "d2d66384-ff83-43ed-b149-8f418279e332",
+    "title_en": "Skydd",
+    "source": "stockholmsmassan",
+    "image_url": "https://stockholmsmassan.se/wp-content/uploads/2026/01/SKYDD_Digitala-paketet-egna-kanaler-2026_kalenderbild3.jpg",
+    "start_time": "2032-10-18T23:00:00+00:00"
+  },
+  {
+    "id": "03274d24-7f7a-49be-b8d7-a4229fb27024",
+    "title_en": "Skydd",
+    "source": "stockholmsmassan",
+    "image_url": "https://stockholmsmassan.se/wp-content/uploads/2026/01/SKYDD_Digitala-paketet-egna-kanaler-2026_kalenderbild3.jpg",
+    "start_time": "2030-10-21T23:00:00+00:00"
+  },
+  {
+    "id": "669f5526-6cb7-4d05-9634-4858859b0ccd",
+    "title_en": "Totalförsvarsmässan",
+    "source": "stockholmsmassan",
+    "image_url": "https://stockholmsmassan.se/wp-content/uploads/2026/01/TFM_2026_Digitala-paketet-egna-kanaler_SM_Kalender_1920x850px.jpg",
+    "start_time": "2030-10-21T23:00:00+00:00"
+  },
+  {
+    "id": "7a4c7273-d271-42bb-bf16-3529937c813a",
+    "title_en": "Gymnasiemässan",
+    "source": "stockholmsmassan",
+    "image_url": "https://stockholmsmassan.se/wp-content/uploads/2025/05/GM_Sabrin-Harun.png",
+    "start_time": "2028-11-21T00:00:00+00:00"
+  }
+]
