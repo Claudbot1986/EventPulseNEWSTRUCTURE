@@ -448,7 +448,18 @@ function GroupedEventItem({ groupedEvent, onEventPress }) {
       )}
       <View style={styles.eventCardBody}>
         <View style={styles.eventHeader}>
-          <DateCluster event={firstEvent} />
+          <View style={styles.dateClustersRow}>
+            {groupedEvent.events.map((event, index) => (
+              <TouchableOpacity
+                key={`${event.id || event.start_time || index}`}
+                style={styles.timeClusterWrap}
+                onPress={() => onEventPress(event)}
+                activeOpacity={0.7}
+              >
+                <DateCluster event={event} />
+              </TouchableOpacity>
+            ))}
+          </View>
           <CategoryBadge category={groupedEvent.category} />
         </View>
         <Text style={styles.eventTitle} numberOfLines={2}>{groupedEvent.title}</Text>
@@ -463,18 +474,6 @@ function GroupedEventItem({ groupedEvent, onEventPress }) {
               {firstEvent.externalLinkChipLabel || 'Extern länk'}
             </Text>
           )}
-        </View>
-        <View style={styles.groupedTimesContainer}>
-          {groupedEvent.events.map((event, index) => (
-            <TouchableOpacity
-              key={`${event.id || event.start_time || index}`}
-              style={styles.timeClusterWrap}
-              onPress={() => onEventPress(event)}
-              activeOpacity={0.7}
-            >
-              <DateCluster event={event} />
-            </TouchableOpacity>
-          ))}
         </View>
       </View>
     </TouchableOpacity>
@@ -1074,8 +1073,15 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'flex-start',
-    gap: TOKENS.space.md,
+    gap: TOKENS.space.sm,
     marginBottom: TOKENS.space.sm,
+    flexWrap: 'wrap',
+  },
+  dateClustersRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: TOKENS.space.xs,
+    flexShrink: 1,
   },
   dateCluster: {
     backgroundColor: TOKENS.color.accentSoft,
@@ -1179,12 +1185,6 @@ const styles = StyleSheet.create({
     fontSize: 13,
     fontWeight: '700',
     flexShrink: 1,
-  },
-  groupedTimesContainer: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: TOKENS.space.xs,
-    marginTop: TOKENS.space.sm,
   },
   timeClusterWrap: {
     borderRadius: TOKENS.radius.md,
