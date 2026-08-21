@@ -4,14 +4,14 @@
 #
 # Defaults can be overridden via env:
 #   PROJECT_ROOT         default = /Volumes/2TB filer/NEWSTRUCTURE-COPY
-#   MAX_TOTAL_HOURS      default = 24
+#   MAX_TOTAL_HOURS      default = 168 (7 days)
 #   MAX_BUDGET_PER_ITER  default = 5
 #   MAX_RESTARTS         default = 1000
 
 set -eu
 
 PROJECT_ROOT="${PROJECT_ROOT:-/Volumes/2TB filer/NEWSTRUCTURE-COPY}"
-MAX_TOTAL_HOURS="${MAX_TOTAL_HOURS:-24}"
+MAX_TOTAL_HOURS="${MAX_TOTAL_HOURS:-168}"
 MAX_BUDGET_PER_ITER="${MAX_BUDGET_PER_ITER:-5}"
 MAX_RESTARTS="${MAX_RESTARTS:-1000}"
 

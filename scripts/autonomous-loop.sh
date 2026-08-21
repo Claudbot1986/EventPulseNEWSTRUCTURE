@@ -13,7 +13,7 @@
 # sync". The user can start this and walk away for hours.
 #
 # Safety caps (all env-overridable):
-#   MAX_TOTAL_HOURS=24         Hard wall-clock cap (only thing that stops the loop).
+#   MAX_TOTAL_HOURS=168        Hard wall-clock cap (default 7 days = 168 h; only thing that stops the loop).
 #   MAX_BUDGET_PER_ITER=5      USD per claude --print call.
 #   ITERATION_TIMEOUT_MIN=30   Hard kill if claude hangs.
 #   RESTART_DELAY=3            Seconds between iterations.
@@ -41,7 +41,7 @@ PID_FILE="$LOG_DIR/wrapper.pid"
 STOP_FILE="$LOG_DIR/STOP"
 ACTIVITY_LOG="$PROJECT_ROOT/09-MobileControl/runtime/activity.jsonl"
 
-MAX_TOTAL_HOURS="${MAX_TOTAL_HOURS:-24}"
+MAX_TOTAL_HOURS="${MAX_TOTAL_HOURS:-168}"
 MAX_BUDGET_PER_ITER="${MAX_BUDGET_PER_ITER:-5}"
 ITERATION_TIMEOUT_MIN="${ITERATION_TIMEOUT_MIN:-30}"
 RESTART_DELAY="${RESTART_DELAY:-3}"
