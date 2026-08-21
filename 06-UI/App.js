@@ -7,7 +7,7 @@ import { fetchFeed, addDays } from './services/agentClient';
 const TOKENS = {
   color: {
     appBg: '#000000',
-    surface: '#0E0E12',
+    surface: '#15151B',
     surfaceRaised: '#191D28',
     surfaceSoft: '#202635',
     border: '#2B3140',
