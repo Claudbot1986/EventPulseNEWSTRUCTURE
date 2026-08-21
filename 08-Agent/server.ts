@@ -31,6 +31,7 @@ import { getSavedEvents } from './tools/get_saved_events';
 import { getEventForCalendar } from './tools/get_event_for_calendar';
 import { generateIcs } from './tools/ical';
 import { buildUserSignal, loadStatedPreferences } from './tools/personalize';
+import { buildShareInsert } from './tools/share_session';
 import {
   assignVariant,
   computeLift,
@@ -1368,6 +1369,138 @@ export function buildApp(opts: { supabase?: SupabaseClient } = {}): express.Expr
     res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
     res.setHeader('Cache-Control', 'private, max-age=3600');
     res.send(ics);
+  });
+
+  /**
+   * POST /agent/share
+   *
+   * T0061 / MVP-gap §78: create a shareable deep-link for a session.
+   *
+   * Body:
+   *   client_user_id  : uuid — anon UUID of the recommendor
+   *   session_id      : uuid? — optional agent-session id
+   *   query           : string — natural-language query (1..500 chars)
+   *   event_ids       : string[]? — event UUIDs to surface (max 12)
+   *   ttl_hours       : number? — optional 1..2160, default 720 (30d)
+   *
+   * Returns 200 { id, url, expires_at } on success.
+   *
+   * Validation:
+   *   - 400 missing/invalid client_user_id
+   *   - 400 query empty or > 500 chars
+   *   - 400 any event_id not a uuid
+   *   - 500 server error
+   */
+  app.post('/agent/share', chatLimiter.middleware, async (req: Request, res: Response) => {
+    const body = req.body ?? {};
+    const rawUserId = typeof body.client_user_id === 'string' ? body.client_user_id : '';
+    if (!UUID_RE.test(rawUserId)) {
+      res.status(400).json({ error: 'client_user_id must be a uuid' });
+      return;
+    }
+
+    const sessionId = typeof body.session_id === 'string' && UUID_RE.test(body.session_id)
+      ? body.session_id : undefined;
+    const query = typeof body.query === 'string' ? body.query : '';
+    const eventIds = Array.isArray(body.event_ids) ? body.event_ids.map(String) : [];
+    const ttlHours = typeof body.ttl_hours === 'number' ? body.ttl_hours : undefined;
+
+    const built = buildShareInsert({ sessionId, query, eventIds, ttlHours });
+    if (!built.ok) {
+      res.status(400).json({ error: built.warning });
+      return;
+    }
+
+    const client = sb ?? getSupabase();
+    const { data, error } = await client
+      .from('shared_sessions')
+      .insert(built.row)
+      .select('id, query, event_ids, expires_at, created_at, view_count')
+      .single();
+
+    if (error || !data) {
+      const msg = error?.message ?? 'failed to persist share';
+      res.status(500).json({ error: msg });
+      return;
+    }
+
+    const url = `eventpulse://s/${data.id}`;
+    res.status(200).json({
+      id: data.id,
+      url,
+      expires_at: data.expires_at,
+      query: data.query,
+      event_ids: data.event_ids,
+      view_count: data.view_count ?? 0,
+    });
+  });
+
+  /**
+   * GET /s/:hash
+   *
+   * Public deep-link handler. Increments view_count on every successful
+   * read (anal-only increment; no PII leaks into the response).
+   *
+   * The handler accepts the hash *and* the optional `t` query string for
+   * cache busting in share-screen UIs; the response is Cache-Control:
+   * no-store so a hot-link never serves stale view_count.
+   *
+   * Params:
+   *   hash  : 6-char base32 short hash from `eventpulse://s/{hash}`
+   *
+   * Returns 200 { query, event_ids, created_at, view_count }
+   *         404 hash not found or expired
+   *         400 hash malformed
+   */
+  const HASH_RE = new RegExp(`^[${'0123456789abcdefghijklmnopqrstuvwxyz'}]{6,12}$`);
+  app.get('/s/:hash', generalLimiter.middleware, async (req: Request, res: Response) => {
+    const { hash } = req.params;
+    if (!hash || !HASH_RE.test(hash)) {
+      res.status(400).json({ error: 'hash must be 6-12 chars in 0-9a-z' });
+      return;
+    }
+
+    const client = sb ?? getSupabase();
+    const { data, error } = await client
+      .from('shared_sessions')
+      .select('id, query, event_ids, expires_at, created_at, view_count')
+      .eq('id', hash)
+      .maybeSingle();
+
+    if (error) {
+      res.status(500).json({ error: error.message });
+      return;
+    }
+    if (!data) {
+      res.status(404).json({ error: 'share not found or expired' });
+      return;
+    }
+
+    // Reject expired shares even if the row still exists in storage.
+    // (No row-level expirer runs yet — T0071.)
+    if (new Date(data.expires_at).getTime() < Date.now()) {
+      res.status(404).json({ error: 'share expired' });
+      return;
+    }
+
+    // Best-effort view_count increment. We don't roll back on increment
+    // failure — share is still readable; counter just lags.
+    await client
+      .from('shared_sessions')
+      .update({ view_count: (data.view_count ?? 0) + 1 })
+      .eq('id', hash)
+      .then((r: { error: { message: string } | null }) => {
+        if (r.error) console.warn('[share] view_count increment failed:', r.error.message);
+      });
+
+    res.setHeader('Cache-Control', 'no-store');
+    res.status(200).json({
+      id: data.id,
+      query: data.query,
+      event_ids: data.event_ids ?? [],
+      created_at: data.created_at,
+      view_count: (data.view_count ?? 0) + 1,
+    });
   });
 
   return app;
