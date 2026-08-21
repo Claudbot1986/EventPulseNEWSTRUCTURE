@@ -1,8 +1,10 @@
 import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { StatusBar } from 'expo-status-bar';
-import { StyleSheet, Text, View, SectionList, ActivityIndicator, TouchableOpacity, ScrollView, Linking, Image } from 'react-native';
+import { StyleSheet, Text, View, SectionList, ActivityIndicator, TouchableOpacity, ScrollView, Linking, Image, Platform } from 'react-native';
 import { SafeAreaView, SafeAreaProvider } from 'react-native-safe-area-context';
 import { fetchFeed, addDays } from './services/agentClient';
+import { analyticsClient } from './services/analyticsClient';
+import UserPickerScreen from './screens/UserPickerScreen';
 
 const TOKENS = {
   color: {
@@ -796,10 +798,15 @@ function HomeScreen({ onEventPress, scrollPositionRef }) {
 
 function DetailsScreen({ event, onBack }) {
   const [ctaError, setCtaError] = useState(null);
+  const [saved, setSaved] = useState(false);
+  const [dismissed, setDismissed] = useState(false);
 
   const handleOpenUrl = async () => {
     if (!event.url) {
       return;
+    }
+    if (event?.id) {
+      void analyticsClient.eventClick(event.id, 'external');
     }
 
     try {
@@ -815,6 +822,22 @@ function DetailsScreen({ event, onBack }) {
       setCtaError('Länken kunde inte öppnas just nu.');
     }
   };
+
+  const handleToggleSave = () => {
+    if (!event?.id) return;
+    const next = !saved;
+    setSaved(next);
+    void analyticsClient.eventSave(event.id, next ? 'save' : 'unsave');
+  };
+
+  const handleDismiss = () => {
+    if (!event?.id || dismissed) return;
+    setDismissed(true);
+    void analyticsClient.eventDismiss(event.id);
+    // Tiny delay so the analytics request fires before the screen unmounts.
+    setTimeout(() => onBack(), 250);
+  };
+
   const venue = getVenueLabel(event);
   const area = getAreaLabel(event);
   const price = formatPrice(event);
@@ -845,6 +868,8 @@ function DetailsScreen({ event, onBack }) {
                 style={styles.detailsPrimaryCta}
                 onPress={handleOpenUrl}
                 activeOpacity={0.8}
+                accessibilityRole="button"
+                accessibilityLabel={event.externalLinkLabel || getCtaText(event.source)}
               >
                 <Text style={styles.ctaButtonText}>{event.externalLinkLabel || getCtaText(event.source)}</Text>
               </TouchableOpacity>
@@ -855,6 +880,33 @@ function DetailsScreen({ event, onBack }) {
               <Text style={styles.ctaUnavailableText}>Ingen extern eventlänk finns i datan ännu.</Text>
             </View>
           )}
+
+          <View style={styles.detailsActionRow}>
+            <TouchableOpacity
+              style={[styles.detailsActionButton, saved && styles.detailsActionButtonActive]}
+              onPress={handleToggleSave}
+              activeOpacity={0.7}
+              accessibilityRole="button"
+              accessibilityState={{ selected: saved }}
+              accessibilityLabel={saved ? 'Ta bort från sparade' : 'Spara event'}
+            >
+              <Text style={[styles.detailsActionText, saved && styles.detailsActionTextActive]}>
+                {saved ? '✓ Sparad' : 'Spara'}
+              </Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[styles.detailsActionButton, styles.detailsActionButtonDismiss]}
+              onPress={handleDismiss}
+              activeOpacity={0.7}
+              disabled={dismissed}
+              accessibilityRole="button"
+              accessibilityLabel="Dölj detta event"
+            >
+              <Text style={[styles.detailsActionText, styles.detailsActionTextDismiss]}>
+                {dismissed ? 'Dold' : 'Dölj'}
+              </Text>
+            </TouchableOpacity>
+          </View>
         </View>
         
         <View style={styles.detailsSection}>
@@ -890,17 +942,68 @@ function DetailsScreen({ event, onBack }) {
 export default function App() {
   const [showSplash, setShowSplash] = useState(true);
   const [selectedEvent, setSelectedEvent] = useState(null);
+  const [activeUser, setActiveUser] = useState(null);
+  const [appReady, setAppReady] = useState(false);
   const scrollPositionRef = useRef(0);
 
   useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const existing = await analyticsClient.getActiveUser();
+        if (!cancelled && existing) {
+          setActiveUser(existing);
+          try {
+            await analyticsClient.sessionStart(Platform.OS);
+            analyticsClient.startFlushLoop();
+          } catch (err) {
+            console.warn('[App] analytics restore failed:', err?.message || err);
+          }
+        }
+      } catch (err) {
+        console.warn('[App] AsyncStorage restore failed:', err?.message || err);
+      } finally {
+        if (!cancelled) setAppReady(true);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!appReady) return undefined;
     const timer = setTimeout(() => {
       setShowSplash(false);
     }, 3000);
     return () => clearTimeout(timer);
+  }, [appReady]);
+
+  // Fire a "home" section impression every time the user lands back on
+  // the feed after splash + consent. Skipped while a details screen or the
+  // splash is showing so we don't double-count.
+  useEffect(() => {
+    if (!appReady || showSplash || !activeUser || selectedEvent) return;
+    void analyticsClient.sectionImpression('home');
+  }, [appReady, showSplash, activeUser, selectedEvent]);
+
+  // Drain the analytics queue when the App component unmounts so we
+  // don't lose buffered events on Fast Refresh.
+  useEffect(() => {
+    return () => {
+      analyticsClient.stopFlushLoop();
+    };
+  }, []);
+
+  const handleUserPicked = useCallback((userId) => {
+    setActiveUser(userId);
   }, []);
 
   const handleEventPress = (event) => {
     setSelectedEvent(event);
+    if (event?.id) {
+      void analyticsClient.eventView(event.id, event.source, event.category);
+    }
   };
 
   const handleBack = () => {
@@ -908,16 +1011,22 @@ export default function App() {
     // Scroll position is automatically preserved because we don't unmount HomeScreen
   };
 
+  const renderMain = () => {
+    if (!appReady) return null;
+    if (showSplash) return <SplashScreen />;
+    if (!activeUser) {
+      return <UserPickerScreen onUserPicked={handleUserPicked} />;
+    }
+    if (selectedEvent) {
+      return <DetailsScreen event={selectedEvent} onBack={handleBack} />;
+    }
+    return <HomeScreen onEventPress={handleEventPress} scrollPositionRef={scrollPositionRef} />;
+  };
+
   return (
     <SafeAreaProvider>
       <View style={styles.container}>
-        {showSplash ? (
-          <SplashScreen />
-        ) : selectedEvent ? (
-          <DetailsScreen event={selectedEvent} onBack={handleBack} />
-        ) : (
-          <HomeScreen onEventPress={handleEventPress} scrollPositionRef={scrollPositionRef} />
-        )}
+        {renderMain()}
         <StatusBar style="light" />
       </View>
     </SafeAreaProvider>
@@ -1359,6 +1468,39 @@ const styles = StyleSheet.create({
     borderColor: TOKENS.color.border,
     padding: TOKENS.space.lg,
     marginTop: TOKENS.space.xl,
+  },
+  detailsActionRow: {
+    flexDirection: 'row',
+    gap: TOKENS.space.md,
+    marginTop: TOKENS.space.md,
+  },
+  detailsActionButton: {
+    flex: 1,
+    backgroundColor: TOKENS.color.surface,
+    borderWidth: 1,
+    borderColor: TOKENS.color.border,
+    borderRadius: TOKENS.radius.pill,
+    paddingVertical: TOKENS.space.md,
+    alignItems: 'center',
+  },
+  detailsActionButtonActive: {
+    backgroundColor: TOKENS.color.accentSoft,
+    borderColor: TOKENS.color.accent,
+  },
+  detailsActionButtonDismiss: {
+    backgroundColor: TOKENS.color.surface,
+  },
+  detailsActionText: {
+    color: TOKENS.color.textMuted,
+    fontSize: 13,
+    fontWeight: '800',
+    letterSpacing: 0.4,
+  },
+  detailsActionTextActive: {
+    color: TOKENS.color.accent,
+  },
+  detailsActionTextDismiss: {
+    color: TOKENS.color.textSoft,
   },
   detailsSection: {
     backgroundColor: TOKENS.color.surface,
