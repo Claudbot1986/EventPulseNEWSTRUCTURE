@@ -123,7 +123,13 @@ export function spawnSession(projectRoot: string): boolean {
         'autonomous',
         '-c',
         projectRoot,
-        `${projectRoot}/scripts/autonomous-loop.sh`,
+        // Pre-quote the script path with single quotes. `tmux new-session`
+        // joins all positional args with spaces and passes the result to
+        // `sh -c`. projectRoot can contain a space (e.g. "/Volumes/2TB
+        // filer/..."), and without quoting sh sees two tokens and tries
+        // to exec "/Volumes/2TB" which fails immediately, killing the
+        // wrapper. Wrapping in `bash '...'` gives sh one atomic argument.
+        `bash '${projectRoot}/scripts/autonomous-loop.sh'`,
       ],
       { detached: true, stdio: 'ignore' }
     );
