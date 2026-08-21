@@ -109,7 +109,9 @@ function extractWithDaiAdapter(html: string, adapter: DaiAdapter): ParsedEvent[]
       title,
       date,
       venue: venue || adapter.sourceId,
-      url: linkHref.startsWith('http') ? linkHref : adapter.seedUrl.replace(/\/$/, '') + linkHref,
+      url: linkHref.startsWith('http')
+        ? linkHref
+        : adapter.seedUrl.replace(/\/$/, '') + (linkHref.startsWith('/') ? linkHref : '/' + linkHref),
       category: 'culture',
       source: adapter.sourceId,
       sourceUrl: adapter.seedUrl,
@@ -266,7 +268,7 @@ async function main() {
 
   const batch = preUIEntries.slice(0, limit);
   fs.mkdirSync(LOGS_DIR, { recursive: true });
-  writeFileSync(RUN_LOG, '', 'utf8');
+  fs.writeFileSync(RUN_LOG, '', 'utf8');
 
   log(`═══ runA-extract ═══`);
   log(`preUI: ${batch.length} källor att extrahera`);
