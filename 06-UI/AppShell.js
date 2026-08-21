@@ -3,10 +3,10 @@
  *
  * Wraps the existing App.js (which contains splash → details → homeScreen
  * for the "Utforska" tab) and adds a BottomTabBar with 4 destinations:
- *   - Hem         → placeholder (full impl in #72)
+ *   - Hem         → HomeScreen (live data sections)
  *   - Utforska    → App.js (current behavior, default)
- *   - Notiser     → placeholder (empty state)
- *   - Profil      → placeholder (saved + settings)
+ *   - Notiser     → NotificationsScreen (empty state)
+ *   - Profil      → ProfileScreen (saved + settings)
  *
  * The bar is absolutely positioned at the bottom, floating over the
  * content. The content (App.js's feed, placeholders) renders behind it
@@ -25,9 +25,18 @@
  * numbers into it via callbacks (e.g. HomeScreen calls
  * `onNotificationsCount(3)` when the agent surfaces 3 new matches).
  * For now badges are zero because no screen pushes them yet.
+ *
+ * Onboarding gate (#71):
+ *   - First cold start after splash shows OnboardingScreen (multi-choice
+ *     category preferences) until the user completes or skips.
+ *   - Completion flag persisted via services/storage.js. Once set, the
+ *     user is not shown the onboarding screen again unless storage is
+ *     cleared.
+ *   - Renders before any tab so tabs aren't visible during onboarding;
+ *     tabs mount only after `onboardingComplete === true`.
  */
 
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { View, StyleSheet } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 
@@ -35,18 +44,56 @@ import BottomTabBar from './components/BottomTabBar';
 import HomeScreen from './screens/HomeScreen';
 import NotificationsScreen from './screens/NotificationsScreen';
 import ProfileScreen from './screens/ProfileScreen';
+import OnboardingScreen from './screens/OnboardingScreen';
 import App from './App';
+import { getItem } from './services/storage';
 
 const TABS = ['home', 'explore', 'notifications', 'profile'];
+const ONBOARDING_COMPLETE_KEY = 'eventpulse.onboarding_complete';
 
 export default function AppShell() {
   const [activeTab, setActiveTab] = useState('explore');
   const [badges, setBadges] = useState({});
+  const [onboardingState, setOnboardingState] = useState('loading'); // 'loading' | 'needs' | 'done'
+
+  useEffect(() => {
+    let alive = true;
+    getItem(ONBOARDING_COMPLETE_KEY)
+      .then((value) => {
+        if (!alive) return;
+        setOnboardingState(value === '1' ? 'done' : 'needs');
+      })
+      .catch(() => {
+        if (!alive) return;
+        setOnboardingState('needs');
+      });
+    return () => {
+      alive = false;
+    };
+  }, []);
 
   const handleTabChange = (tabId) => {
     if (!TABS.includes(tabId)) return;
     setActiveTab(tabId);
   };
+
+  const handleOnboardingComplete = () => {
+    setOnboardingState('done');
+  };
+
+  if (onboardingState !== 'done') {
+    return (
+      <SafeAreaProvider>
+        <View style={styles.container}>
+          {onboardingState === 'loading' ? (
+            <View style={styles.splashPlaceholder} />
+          ) : (
+            <OnboardingScreen onComplete={handleOnboardingComplete} />
+          )}
+        </View>
+      </SafeAreaProvider>
+    );
+  }
 
   return (
     <SafeAreaProvider>
@@ -82,5 +129,9 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     bottom: 0,
+  },
+  splashPlaceholder: {
+    flex: 1,
+    backgroundColor: '#000000',
   },
 });
