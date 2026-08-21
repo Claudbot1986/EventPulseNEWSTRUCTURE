@@ -8,7 +8,7 @@ const TOKENS = {
   color: {
     appBg: '#000000',
     surface: '#15151B',
-    surfaceRaised: '#191D28',
+    surfaceRaised: '#15151B',
     surfaceSoft: '#202635',
     border: '#2B3140',
     borderStrong: '#3A4254',
