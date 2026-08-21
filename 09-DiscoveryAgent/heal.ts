@@ -217,7 +217,7 @@ async function healTier1Transport(
 }
 
 /** Count <script type="application/ld+json"> with @type Event. */
-function countJsonLdEvents(html: string): number {
+export function countJsonLdEvents(html: string): number {
   let count = 0;
   try {
     const $ = load(html);
@@ -236,7 +236,7 @@ function countJsonLdEvents(html: string): number {
   return count;
 }
 
-function collectEventNodes(node: unknown): number {
+export function collectEventNodes(node: unknown): number {
   if (!node || typeof node !== 'object') return 0;
   if (Array.isArray(node)) {
     return node.reduce((acc, n) => acc + collectEventNodes(n), 0);
