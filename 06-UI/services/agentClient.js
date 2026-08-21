@@ -201,6 +201,10 @@ export async function fetchFeed({ from, days = 7, signal, timeoutMs = 12_000 } =
     const time = start && !Number.isNaN(start.getTime())
       ? `${pad(start.getHours())}:${pad(start.getMinutes())}`
       : null;
+    // The agent API already enforces "specific event URL only" upstream
+    // (see 02-Ingestion/F-eventExtraction/extractor.ts pickEventUrl), so
+    // any non-null ticket_url here is safe to surface as an external link.
+    const ticketUrl = e.ticket_url || null;
     return {
       id: e.id,
       title: e.title || 'Untitled',
@@ -219,11 +223,22 @@ export async function fetchFeed({ from, days = 7, signal, timeoutMs = 12_000 } =
       price_min_sek: e.price_min_sek ?? null,
       priceMax: e.price_max_sek ?? null,
       price_max_sek: e.price_max_sek ?? null,
-      url: e.ticket_url || null,
-      ticket_url: e.ticket_url || null,
+      url: ticketUrl,
+      ticket_url: ticketUrl,
       imageUrl: e.image_url || null,
       image_url: e.image_url || null,
-      source: 'agent',
+      // Surface the actual upstream source (ticketmaster, kulturhuset, …)
+      // instead of the hardcoded "agent" so App.js getCtaText(source)
+      // can pick a venue-specific CTA like "Köp biljett via Ticketmaster".
+      // Falls back to 'agent' when the upstream omits it.
+      source: e.source || 'agent',
+      // Drive the UI's external-link affordances. Without these flags the
+      // card chip ("Extern länk") and the details-screen CTA ("Läs mer")
+      // are hidden even when a valid ticket_url is present, which is the
+      // "events saknar klickbara länkar" bug.
+      hasExternalLink: Boolean(ticketUrl),
+      externalLinkChipLabel: ticketUrl ? 'Extern länk' : undefined,
+      externalLinkLabel: ticketUrl ? 'Läs mer' : undefined,
     };
   });
 
