@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>EventPulse Analytics</title>
+  <link rel="stylesheet" href="/dashboard/style.css">
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">EventPulse Analytics</div>
+    <div class="status">
+      <span id="conn" class="pill pill-disconnected">DISCONNECTED</span>
+      <span id="last-event" class="muted">no events yet</span>
+    </div>
+  </header>
+
+  <main>
+    <section class="card">
+      <h2>Overview</h2>
+      <div class="kpis" id="kpis">
+        <div class="kpi"><div class="kpi-label">Total events</div><div class="kpi-value" id="kpi-total">—</div></div>
+        <div class="kpi"><div class="kpi-label">Last 24h</div><div class="kpi-value" id="kpi-24h">—</div></div>
+        <div class="kpi"><div class="kpi-label">Unique devices</div><div class="kpi-value" id="kpi-devices">—</div></div>
+        <div class="kpi"><div class="kpi-label">Retention (days)</div><div class="kpi-value" id="kpi-retention">—</div></div>
+      </div>
+    </section>
+
+    <section class="card">
+      <h2>Top events</h2>
+      <table class="data-table" id="top-table">
+        <thead><tr><th>Type</th><th class="num">Count</th></tr></thead>
+        <tbody></tbody>
+      </table>
+    </section>
+
+    <section class="card">
+      <h2>Funnel — view → save</h2>
+      <div class="funnel" id="funnel">
+        <div class="funnel-step" data-step="view"><span class="funnel-label">view</span><span class="funnel-bar"><span class="fill" style="width:0%"></span></span><span class="funnel-count">0</span></div>
+        <div class="funnel-step" data-step="hover"><span class="funnel-label">hover</span><span class="funnel-bar"><span class="fill" style="width:0%"></span></span><span class="funnel-count">0</span></div>
+        <div class="funnel-step" data-step="click"><span class="funnel-label">click</span><span class="funnel-bar"><span class="fill" style="width:0%"></span></span><span class="funnel-count">0</span></div>
+        <div class="funnel-step" data-step="save"><span class="funnel-label">save</span><span class="funnel-bar"><span class="fill" style="width:0%"></span></span><span class="funnel-count">0</span></div>
+        <div class="funnel-step" data-step="dismiss"><span class="funnel-label">dismiss</span><span class="funnel-bar"><span class="fill" style="width:0%"></span></span><span class="funnel-count">0</span></div>
+      </div>
+    </section>
+
+    <section class="card">
+      <h2>Devices — most recent first</h2>
+      <table class="data-table" id="devices-table">
+        <thead><tr><th>device_id_hash</th><th class="num">events</th><th>last seen</th></tr></thead>
+        <tbody></tbody>
+      </table>
+    </section>
+
+    <section class="card">
+      <h2>Storage</h2>
+      <div class="storage">
+        <div><span class="muted">File:</span> <code id="storage-file">—</code></div>
+        <div><span class="muted">Size:</span> <span id="storage-bytes">—</span> bytes</div>
+        <div><span class="muted">Events on disk:</span> <span id="storage-events">—</span></div>
+      </div>
+    </section>
+
+    <section class="card">
+      <h2>GDPR tools</h2>
+      <div class="gdpr">
+        <label for="gdpr-hash">device_id_hash (64 hex)</label>
+        <input id="gdpr-hash" type="text" placeholder="<device-id-hash>">
+        <div class="gdpr-actions">
+          <button id="gdpr-export">Export</button>
+          <button id="gdpr-erase" class="danger">Erase</button>
+        </div>
+        <pre id="gdpr-output"></pre>
+      </div>
+    </section>
+  </main>
+
+  <script src="/dashboard/dashboard.js"></script>
+</body>
+</html>
