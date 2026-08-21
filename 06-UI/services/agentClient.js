@@ -432,3 +432,81 @@ export function addDays(from, days) {
   d.setUTCDate(d.getUTCDate() + days);
   return d.toISOString().slice(0, 10);
 }
+
+/**
+ * Fetch the user's saved events — T0054 / Phase 1 retention.
+ *
+ * GET /agent/saved?client_user_id=<uuid>&limit=<int>
+ *
+ * Returns EventCard[] sorted by saved_at DESC (most recently saved first).
+ * Reuses the same EventCard → legacy-shape mapping as fetchFeed so the
+ * HomeScreen card renderer stays uniform across sections.
+ */
+export async function fetchSavedEvents({ limit = 50, signal, timeoutMs = 12_000 } = {}) {
+  const baseUrl = requireAgentBaseUrl();
+  const url = new URL(`${baseUrl}/agent/saved`);
+  url.searchParams.set('limit', String(limit));
+
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), timeoutMs);
+  if (signal) {
+    if (signal.aborted) controller.abort();
+    else signal.addEventListener('abort', () => controller.abort(), { once: true });
+  }
+
+  let response;
+  try {
+    response = await fetch(url.toString(), { signal: controller.signal });
+  } finally {
+    clearTimeout(timer);
+  }
+
+  if (!response.ok) {
+    throw new Error(`saved ${response.status}: ${response.statusText}`);
+  }
+
+  const data = await response.json();
+  const rawEvents = Array.isArray(data.events) ? data.events : [];
+
+  // Identical EventCard → legacy shape mapping as fetchFeed for card uniformity.
+  const events = rawEvents.map((e) => {
+    const start = e.start_time ? new Date(e.start_time) : null;
+    const pad = (n) => String(n).padStart(2, '0');
+    const date = start && !Number.isNaN(start.getTime())
+      ? `${start.getFullYear()}-${pad(start.getMonth() + 1)}-${pad(start.getDate())}`
+      : null;
+    const time = start && !Number.isNaN(start.getTime())
+      ? `${pad(start.getHours())}:${pad(start.getMinutes())}`
+      : null;
+    const ticketUrl = e.ticket_url || null;
+    return {
+      id: e.id,
+      title: e.title || 'Untitled',
+      date,
+      time,
+      start_time: e.start_time,
+      venue: e.venue_name || '',
+      venue_name: e.venue_name || '',
+      area: e.city || 'Stockholm',
+      city: e.city || 'Stockholm',
+      category: e.category_slug || '',
+      category_slug: e.category_slug || '',
+      isFree: !!e.is_free,
+      is_free: !!e.is_free,
+      priceMin: e.price_min_sek ?? null,
+      price_min_sek: e.price_min_sek ?? null,
+      priceMax: e.price_max_sek ?? null,
+      price_max_sek: e.price_max_sek ?? null,
+      url: ticketUrl,
+      ticket_url: ticketUrl,
+      imageUrl: e.image_url || null,
+      image_url: e.image_url || null,
+      source: e.source || 'agent',
+      hasExternalLink: Boolean(ticketUrl),
+      externalLinkChipLabel: ticketUrl ? 'Extern länk' : undefined,
+      externalLinkLabel: ticketUrl ? 'Läs mer' : undefined,
+    };
+  });
+
+  return { events };
+}

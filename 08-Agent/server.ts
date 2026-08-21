@@ -27,6 +27,7 @@ import { recordFeedback } from './tools/record_feedback';
 import { pickClarifyingQuestion } from './tools/find_gaps';
 import { recordOutboundClick } from './tools/attribution';
 import { feedEvents, todayIso, addDays } from './tools/feed_events';
+import { getSavedEvents } from './tools/get_saved_events';
 import { buildUserSignal, loadStatedPreferences } from './tools/personalize';
 import {
   assignVariant,
@@ -693,6 +694,34 @@ export function buildApp(opts: { supabase?: SupabaseClient } = {}): express.Expr
         total: venues.venue_ids.length + artists.artist_slugs.length,
       },
     });
+  });
+
+  /**
+   * GET /agent/saved?client_user_id=<uuid>&limit=<int>
+   *
+   * T0054 / MVP-gap §77 (Phase 1 retention): saved events section in HomeScreen.
+   * Returns events the current client_user_id has saved (user_interactions
+   * with interaction='save'), enriched with full event details, sorted
+   * newest-first by saved_at (created_at on the interaction row).
+   *
+   * Lockdown mirrors /agent/follow: origin allowlist + service_role only.
+   * client_user_id is the same anon UUID the UI already sends.
+   *
+   * Response shape:
+   *   { events: EventCard[] }
+   */
+  app.get('/agent/saved', generalLimiter.middleware, async (req: Request, res: Response) => {
+    const raw = typeof req.query.client_user_id === 'string' ? req.query.client_user_id : '';
+    if (!UUID_RE.test(raw)) {
+      res.status(400).json({ error: 'client_user_id must be a uuid' });
+      return;
+    }
+    const limit = typeof req.query.limit === 'string'
+      ? Math.min(Math.max(parseInt(req.query.limit, 10) || 50, 1), 100)
+      : 50;
+    const client = sb ?? getSupabase();
+    const result = await getSavedEvents(client, { client_user_id: raw, limit });
+    res.json({ events: result.events });
   });
 
   /**

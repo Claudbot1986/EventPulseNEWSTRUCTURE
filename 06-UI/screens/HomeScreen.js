@@ -41,7 +41,7 @@ import {
   Image,
 } from 'react-native';
 
-import { fetchFeed } from '../services/agentClient';
+import { fetchFeed, fetchSavedEvents } from '../services/agentClient';
 
 const TOKENS = {
   color: {
@@ -323,6 +323,58 @@ function RecommendedPlaceholder() {
   );
 }
 
+// ─── Saved section (T0054) ────────────────────────────────────────────────────
+
+function useSavedSection() {
+  const [state, setState] = useState({ status: 'loading', events: [], error: null });
+
+  const load = useCallback(async () => {
+    setState({ status: 'loading', events: [], error: null });
+    try {
+      const result = await fetchSavedEvents({ limit: SECTION_LIMIT });
+      setState({ status: 'ready', events: result.events ?? [], error: null });
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : 'unknown';
+      setState({ status: 'error', events: [], error: msg });
+    }
+  }, []);
+
+  useEffect(() => {
+    load();
+  }, [load]);
+
+  return { ...state, retry: load };
+}
+
+function SavedSection({ onCardPress }) {
+  const { status, events, error, retry } = useSavedSection();
+  return (
+    <Section eyebrow="SPARRADE" title=" Dina sparade evenemang">
+      {status === 'loading' && (
+        <View style={styles.loadingRow}><ActivityIndicator color={TOKENS.color.accent} /></View>
+      )}
+      {status === 'error' && (
+        <View style={styles.emptyRow}>
+          <Text style={styles.errorText}>Kunde inte hämta: {error}</Text>
+          <Pressable onPress={retry} style={styles.retryButton}><Text style={styles.retryText}>Försök igen</Text></Pressable>
+        </View>
+      )}
+      {status === 'ready' && events.length === 0 && (
+        <View style={styles.emptyRow}>
+          <Text style={styles.emptyRowText}>— inga sparade evenemang ännu —</Text>
+        </View>
+      )}
+      {status === 'ready' && events.length > 0 && (
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.cardScroll}>
+          {events.map((ev) => (
+            <EventCardCompact key={ev.id} event={ev} onPress={onCardPress} />
+          ))}
+        </ScrollView>
+      )}
+    </Section>
+  );
+}
+
 // ─── Top-level screen ────────────────────────────────────────────────────────
 
 export default function HomeScreen() {
@@ -349,7 +401,7 @@ export default function HomeScreen() {
         <TonightSection onCardPress={handleCardPress} />
         <WeekendSection onCardPress={handleCardPress} />
         <FreeSection onCardPress={handleCardPress} />
-        <RecommendedPlaceholder />
+        <SavedSection onCardPress={handleCardPress} />
 
         <View style={{ height: 96 }} />
       </ScrollView>
