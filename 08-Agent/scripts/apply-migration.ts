@@ -1,19 +1,22 @@
 /**
- * apply-migration.ts — apply 20260818-0001-agent-event-graph.sql to live Supabase.
+ * apply-migration.ts — apply a SQL migration file to live Supabase.
  *
  * Reads DATABASE_URL from .env (pg connection string), connects, runs the SQL
  * file. Idempotent — uses CREATE TABLE IF NOT EXISTS / ADD COLUMN IF NOT EXISTS
  * / CREATE OR REPLACE VIEW / REVOKE / GRANT.
  *
- * Run with:  npx tsx 08-Agent/scripts/apply-migration.ts
+ * Run with:  npx tsx 08-Agent/scripts/apply-migration.ts <path/to/migration.sql>
+ * Default:   /Volumes/2TB filer/NEWSTRUCTURE-COPY/05-Supabase/migrations/20260818-0001-agent-event-graph.sql
  */
 
 import 'dotenv/config';
 import { readFileSync } from 'fs';
+import { resolve } from 'path';
 import { Client } from 'pg';
 
-const MIGRATION_PATH =
-  '/Volumes/2TB filer/NEWSTRUCTURE/05-Supabase/migrations/20260818-0001-agent-event-graph.sql';
+const DEFAULT_MIGRATION =
+  '/Volumes/2TB filer/NEWSTRUCTURE-COPY/05-Supabase/migrations/20260818-0001-agent-event-graph.sql';
+const MIGRATION_PATH = resolve(process.argv[2] ?? DEFAULT_MIGRATION);
 
 async function main(): Promise<void> {
   const url = process.env.DATABASE_URL;
