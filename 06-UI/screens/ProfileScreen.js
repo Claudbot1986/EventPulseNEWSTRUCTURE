@@ -1,5 +1,5 @@
 /**
- * ProfileScreen — sparade events, kategorier och notis-inställningar.
+ * ProfileScreen — sparade events, kategorier, följer och notis-inställningar.
  *
  * Phase 1 retention-spec (2026-08-21):
  *   - Sparade events (redan persisterade via /agent/feedback interaction='save')
@@ -8,13 +8,18 @@
  *     follow_push_enabled till user_preferences.preferences via
  *     POST /agent/push-token
  *
+ * T0072 / MVP-gap §79 (2026-08-22): "Följer"-sektion som visar vad användaren
+ * följer (venues + artister), lång-tryck → action sheet "Sluta följ".
+ * Bygger på agentClient.getFollowedEntities() + followEntity() som shippades
+ * i T0050. Optimistisk UI: chip tas bort direkt, server bekräftar i bakgrunden.
+ *
  * Phase 2 = wire `expo-notifications` för riktig push-leverans;
  * togglen idag lagrar enbart opt-in-flaggan (Phase 1 retention-spec).
  *
  * Pure-black canvas enligt `docs/UI-DESIGN.md`.
  */
 
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import {
   View,
   Text,
@@ -23,10 +28,17 @@ import {
   Pressable,
   Alert,
   ActivityIndicator,
+  ScrollView,
+  Platform,
+  ActionSheetIOS,
 } from 'react-native';
 
 import { getItem, setItem } from '../services/storage';
-import { registerPushToken } from '../services/agentClient';
+import {
+  registerPushToken,
+  getFollowedEntities,
+  followEntity,
+} from '../services/agentClient';
 
 const FOLLOW_PUSH_ENABLED_KEY = 'eventpulse.follow_push_enabled';
 
@@ -62,10 +74,80 @@ async function saveFollowPushEnabledLocal(enabled) {
   }
 }
 
+/**
+ * T0072 — render a horizontal row of follow chips for one entity type
+ * (venue or artist). The API only returns IDs/slugs, so we show a short
+ * truncated form for now — a future task (T0073?) can hydrate display
+ * names from a venue/artist lookup endpoint.
+ *
+ * Long-press on a chip opens the OS action sheet "Sluta följ" via the
+ * parent callback. The chip itself is also Pressable so VoiceOver/TalkBack
+ * users reach the affordance through a regular long-press.
+ */
+function FollowedRow({ entityType, items, busyKey, onLongPressItem }) {
+  if (!items || items.length === 0) {
+    return (
+      <Text style={styles.placeholder}>
+        {entityType === 'venue'
+          ? 'Inga följda platser än.'
+          : 'Inga följda artister än.'}
+      </Text>
+    );
+  }
+  return (
+    <View style={styles.chipsRow}>
+      {items.map((id) => {
+        const key = `${entityType}:${id}`;
+        const busy = busyKey === key;
+        return (
+          <Pressable
+            key={key}
+            onLongPress={() => onLongPressItem?.(entityType, id, formatChipLabel(entityType, id))}
+            delayLongPress={350}
+            disabled={busy}
+            style={({ pressed }) => [
+              styles.chip,
+              (pressed || busy) && styles.chipBusy,
+            ]}
+            accessibilityRole="button"
+            accessibilityLabel={`Följer ${entityType === 'venue' ? 'plats' : 'artist'} ${formatChipLabel(entityType, id)} — lång-tryck för att sluta följa`}
+            accessibilityHint="Lång-tryck för att sluta följa"
+            testID={`followed-chip-${entityType}-${id}`}
+          >
+            <Text style={styles.chipText} numberOfLines={1}>
+              {formatChipLabel(entityType, id)}
+            </Text>
+          </Pressable>
+        );
+      })}
+    </View>
+  );
+}
+
+function formatChipLabel(entityType, id) {
+  if (!id) return entityType === 'venue' ? 'Plats' : 'Artist';
+  // API returns opaque IDs (uuid for venues, slug for artists). Show a
+  // humanised slice until a name-lookup endpoint exists. Truncate from the
+  // front so the leading chars (most identifying for uuids) stay readable.
+  const trimmed = String(id);
+  const tail = trimmed.length > 8 ? trimmed.slice(0, 8) : trimmed;
+  const prefix = entityType === 'venue' ? 'Plats ' : 'Artist ';
+  return `${prefix}${tail}…`;
+}
+
 export default function ProfileScreen() {
   const [followPushEnabled, setFollowPushEnabled] = useState(false);
   const [followPushLoaded, setFollowPushLoaded] = useState(false);
   const [followPushBusy, setFollowPushBusy] = useState(false);
+
+  // T0072 — followed venues/artists state. Refreshed on mount; long-press
+  // on a chip opens the OS action sheet with "Sluta följ". Optimistic UI:
+  // chip vanishes immediately, server confirms in the background and rolls
+  // back on failure.
+  const [followedVenues, setFollowedVenues] = useState([]);
+  const [followedArtists, setFollowedArtists] = useState([]);
+  const [followedLoaded, setFollowedLoaded] = useState(false);
+  const [followedBusyKey, setFollowedBusyKey] = useState(null);
 
   useEffect(() => {
     let alive = true;
@@ -78,6 +160,112 @@ export default function ProfileScreen() {
       alive = false;
     };
   }, []);
+
+  // aliveRef tracks component mounted state across async refresh callbacks
+  // without re-running the useEffect. (Cheaper than adding `mounted` to deps.)
+  const aliveRef = useRef(true);
+
+  const refreshFollowed = useCallback(async () => {
+    try {
+      const res = await getFollowedEntities({ timeoutMs: 4_000 });
+      if (!aliveRef.current) return;
+      if (res && res.ok) {
+        setFollowedVenues(Array.isArray(res.venueIds) ? res.venueIds : []);
+        setFollowedArtists(Array.isArray(res.artistSlugs) ? res.artistSlugs : []);
+      }
+      // Silent on failure — empty lists render the "Du följer inget än" hint.
+    } catch (_err) {
+      // Never throw into the profile render path.
+    } finally {
+      if (aliveRef.current) setFollowedLoaded(true);
+    }
+  }, []);
+
+  useEffect(() => {
+    aliveRef.current = true;
+    refreshFollowed();
+    return () => {
+      aliveRef.current = false;
+    };
+  }, [refreshFollowed]);
+
+  const handleUnfollow = useCallback(
+    async (entityType, entityId) => {
+      // Optimistic UI: remove the chip first, then sync to server. Roll back
+      // if the server rejects (e.g. network down) so the user can retry.
+      const key = `${entityType}:${entityId}`;
+      setFollowedBusyKey(key);
+      const prevVenues = followedVenues;
+      const prevArtists = followedArtists;
+      if (entityType === 'venue') {
+        setFollowedVenues((cur) => cur.filter((id) => id !== entityId));
+      } else if (entityType === 'artist') {
+        setFollowedArtists((cur) => cur.filter((slug) => slug !== entityId));
+      }
+      try {
+        const res = await followEntity({
+          entityType,
+          entityId,
+          action: 'unfollow',
+        });
+        if (!res || res.ok !== true) {
+          // Roll back.
+          setFollowedVenues(prevVenues);
+          setFollowedArtists(prevArtists);
+          const warning = res?.warning ?? 'okänt fel';
+          Alert.alert('Kunde inte sluta följa', warning);
+        }
+      } catch (_err) {
+        setFollowedVenues(prevVenues);
+        setFollowedArtists(prevArtists);
+        Alert.alert('Kunde inte sluta följa', 'nätverksfel');
+      } finally {
+        setFollowedBusyKey(null);
+      }
+    },
+    [followedVenues, followedArtists]
+  );
+
+  const showUnfollowSheet = useCallback(
+    (entityType, entityId, displayName) => {
+      const title = displayName || (entityType === 'venue' ? 'Plats' : 'Artist');
+      const message =
+        entityType === 'venue'
+          ? 'Sluta följa den här platsen? Events från den prioriteras inte längre.'
+          : 'Sluta följa den här artisten? Events från den prioriteras inte längre.';
+      const confirmLabel = 'Sluta följ';
+      const cancelLabel = 'Avbryt';
+      // iOS: native ActionSheet (Phase 0 UI). Android: Alert fallback so the
+      // affordance is reachable on both platforms without a third-party lib.
+      // (Mirrors the long-press pattern already shipped in AgentScreen.)
+      if (Platform.OS === 'ios') {
+        ActionSheetIOS.showActionSheetWithOptions(
+          {
+            title,
+            message,
+            options: [cancelLabel, confirmLabel],
+            cancelButtonIndex: 0,
+            destructiveButtonIndex: 1,
+          },
+          (idx) => {
+            if (idx === 1) {
+              handleUnfollow(entityType, entityId);
+            }
+          }
+        );
+      } else {
+        Alert.alert(title, message, [
+          { text: cancelLabel, style: 'cancel' },
+          {
+            text: confirmLabel,
+            style: 'destructive',
+            onPress: () => handleUnfollow(entityType, entityId),
+          },
+        ]);
+      }
+    },
+    [handleUnfollow]
+  );
 
   const handleToggleFollowPush = useCallback(
     async (next) => {
@@ -100,13 +288,55 @@ export default function ProfileScreen() {
     []
   );
 
+  const totalFollowed = followedVenues.length + followedArtists.length;
+
   return (
-    <View style={styles.container}>
+    <ScrollView
+      style={styles.container}
+      contentContainerStyle={styles.scrollContent}
+      keyboardShouldPersistTaps="handled"
+    >
       <Text style={styles.eyebrow}>PROFIL</Text>
       <Text style={styles.title}>Sparade & inställningar</Text>
       <Text style={styles.subtitle}>
         Dina sparade events, kategorival och notis-inställningar hamnar här.
       </Text>
+
+      <View style={styles.section}>
+        <Text style={styles.sectionTitle}>Följer</Text>
+        <Text style={styles.sectionDescription}>
+          Här är det du följer just nu. Lång-tryck på en chip för att sluta följa.
+        </Text>
+        {followedLoaded ? (
+          totalFollowed === 0 ? (
+            <Text style={styles.placeholder}>
+              Du följer inga platser eller artister än. Längst ner på ett
+              event-kort finns ★-knappen — lång-tryck för att följa en plats.
+            </Text>
+          ) : (
+            <>
+              <Text style={styles.subsectionLabel}>Platser ({followedVenues.length})</Text>
+              <FollowedRow
+                entityType="venue"
+                items={followedVenues}
+                busyKey={followedBusyKey}
+                onLongPressItem={showUnfollowSheet}
+              />
+              <Text style={[styles.subsectionLabel, styles.subsectionLabelSpaced]}>
+                Artister ({followedArtists.length})
+              </Text>
+              <FollowedRow
+                entityType="artist"
+                items={followedArtists}
+                busyKey={followedBusyKey}
+                onLongPressItem={showUnfollowSheet}
+              />
+            </>
+          )
+        ) : (
+          <ActivityIndicator color={TOKENS.color.accent} style={styles.loadingSpinner} />
+        )}
+      </View>
 
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>Notifieringar</Text>
@@ -153,7 +383,7 @@ export default function ProfileScreen() {
       >
         <Text style={styles.linkButtonText}>Om EventPulse</Text>
       </Pressable>
-    </View>
+    </ScrollView>
   );
 }
 
@@ -161,8 +391,11 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: TOKENS.color.appBg,
+  },
+  scrollContent: {
     paddingHorizontal: TOKENS.space.lg,
     paddingTop: TOKENS.space.lg,
+    paddingBottom: TOKENS.space.xxl,
   },
   eyebrow: {
     color: TOKENS.color.accent,
@@ -239,5 +472,46 @@ const styles = StyleSheet.create({
     color: TOKENS.color.accent,
     fontSize: TOKENS.fontSize.md,
     fontWeight: '600',
+  },
+  // T0072 — Följer-sektionens chips-rad.
+  sectionDescription: {
+    color: TOKENS.color.textSoft,
+    fontSize: TOKENS.fontSize.sm,
+    lineHeight: 18,
+    marginBottom: TOKENS.space.md,
+  },
+  subsectionLabel: {
+    color: TOKENS.color.textMuted,
+    fontSize: TOKENS.fontSize.sm,
+    fontWeight: '600',
+    letterSpacing: 0.6,
+    marginBottom: TOKENS.space.sm,
+  },
+  subsectionLabelSpaced: {
+    marginTop: TOKENS.space.md,
+  },
+  chipsRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: TOKENS.space.sm,
+  },
+  chip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: TOKENS.color.border,
+    borderRadius: 999,
+    paddingHorizontal: TOKENS.space.md,
+    paddingVertical: TOKENS.space.xs + 2,
+  },
+  chipText: {
+    color: TOKENS.color.text,
+    fontSize: TOKENS.fontSize.sm,
+    fontWeight: '600',
+  },
+  chipBusy: {
+    opacity: 0.5,
+  },
+  loadingSpinner: {
+    marginTop: TOKENS.space.sm,
   },
 });
