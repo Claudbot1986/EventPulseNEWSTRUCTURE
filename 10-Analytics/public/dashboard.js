@@ -12,17 +12,29 @@ function getToken() {
   const url = new URL(window.location.href);
   const fromUrl = url.searchParams.get('token');
   if (fromUrl) {
-    localStorage.setItem(TOKEN_KEY, fromUrl);
+    try {
+      localStorage.setItem(TOKEN_KEY, fromUrl);
+    } catch {
+      // localStorage might be blocked — proceed with in-memory token only.
+    }
     return fromUrl;
   }
-  return localStorage.getItem(TOKEN_KEY) || '';
+  try {
+    return localStorage.getItem(TOKEN_KEY) || '';
+  } catch {
+    return '';
+  }
 }
 
 async function adminFetch(path) {
+  const token = getToken();
   const r = await fetch(path, {
-    headers: { Authorization: `Bearer ${getToken()}` },
+    headers: token ? { Authorization: `Bearer ${token}` } : {},
   });
-  if (!r.ok) throw new Error(`${r.status}`);
+  if (!r.ok) {
+    const body = await r.text();
+    throw new Error(`${r.status} ${path}: ${body.slice(0, 120)}`);
+  }
   return r.json();
 }
 
@@ -31,6 +43,7 @@ function $(id) {
 }
 
 function fmtBytes(n) {
+  if (typeof n !== 'number') return '—';
   if (n < 1024) return `${n} B`;
   if (n < 1024 * 1024) return `${(n / 1024).toFixed(1)} KB`;
   return `${(n / (1024 * 1024)).toFixed(2)} MB`;
@@ -46,14 +59,21 @@ function fmtRelative(iso) {
   return new Date(iso).toLocaleString();
 }
 
-function setConn(state) {
+function setConn(state, err) {
   const pill = $('conn');
+  const label = $('conn-label');
   if (state === 'connected') {
-    pill.textContent = 'LIVE';
+    label.textContent = 'LIVE';
     pill.className = 'pill pill-connected';
-  } else {
-    pill.textContent = 'DISCONNECTED';
+    pill.title = 'polling /api/stats every 5s';
+  } else if (state === 'connecting') {
+    label.textContent = 'CONNECTING';
     pill.className = 'pill pill-disconnected';
+    pill.title = 'connecting...';
+  } else {
+    label.textContent = 'NO CONNECTION';
+    pill.className = 'pill pill-disconnected';
+    pill.title = err || 'no connection';
   }
 }
 
@@ -86,16 +106,24 @@ async function refreshEvents() {
   if (events.length > 0) {
     const lastTs = events[events.length - 1].received_at || events[events.length - 1].ts;
     $('last-event').textContent = `last event ${fmtRelative(lastTs)}`;
+  } else {
+    $('last-event').textContent = 'no events yet';
   }
 }
 
 async function refreshAll() {
-  try {
-    await Promise.all([refreshStats(), refreshEvents()]);
+  const results = await Promise.allSettled([refreshStats(), refreshEvents()]);
+  const first = results.find((r) => r.status === 'rejected');
+  if (first) {
+    const msg = first.reason?.message || String(first.reason);
+    setConn('disconnected', msg);
+    const errEl = $('last-error');
+    if (errEl) errEl.textContent = msg;
+    console.error('refresh failed', first.reason);
+  } else {
     setConn('connected');
-  } catch (err) {
-    console.error('refresh failed', err);
-    setConn('disconnected');
+    const errEl = $('last-error');
+    if (errEl) errEl.textContent = '';
   }
 }
 
@@ -157,10 +185,12 @@ async function gdprOptOut() {
 }
 
 document.addEventListener('DOMContentLoaded', () => {
-  if (!getToken()) {
+  const token = getToken();
+  if (!token) {
     document.body.innerHTML = '<div style="padding:40px;font-family:system-ui">Missing token. Open this dashboard with <code>?token=&lt;bearer&gt;</code> in the URL.</div>';
     return;
   }
+  setConn('connecting');
   $('gdpr-export').addEventListener('click', gdprExport);
   $('gdpr-erase').addEventListener('click', gdprErase);
   $('gdpr-opt-out').addEventListener('click', gdprOptOut);

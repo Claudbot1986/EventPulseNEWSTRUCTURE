@@ -275,3 +275,19 @@ main {
   word-break: break-all;
   margin: 0;
 }
+
+.error-banner {
+  background: rgba(248, 113, 113, 0.12);
+  border: 1px solid rgba(248, 113, 113, 0.4);
+  border-radius: 6px;
+  padding: 10px 14px;
+  color: var(--bad);
+  font-family: ui-monospace, 'SF Mono', monospace;
+  font-size: 12px;
+  display: none;
+  word-break: break-all;
+}
+
+.error-banner:not(:empty) {
+  display: block;
+}

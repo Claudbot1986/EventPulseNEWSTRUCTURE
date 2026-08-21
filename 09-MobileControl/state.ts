@@ -519,8 +519,35 @@ export function readDiscoveredCount(): number {
   return countSectionBullets(md, '## Discovered');
 }
 
+/**
+ * Order tasks for dashboard display: in_progress first, then pending/blocked,
+ * then done/cancelled. Within each group, preserve original order (priority
+ * + appearance order from the markdown source).
+ *
+ * User spec: ongoing tasks always on top, idle/not-done in the middle,
+ * completed at the bottom. Stable, total order — no two tasks share a rank.
+ */
+function sortTasksForDisplay(tasks: Task[]): Task[] {
+  const rank: Record<Task['status'], number> = {
+    in_progress: 0,
+    pending: 1,
+    blocked: 1,
+    done: 2,
+    cancelled: 2,
+  };
+  return tasks
+    .map((t, idx) => ({ t, idx }))
+    .sort((a, b) => {
+      const ra = rank[a.t.status];
+      const rb = rank[b.t.status];
+      if (ra !== rb) return ra - rb;
+      return a.idx - b.idx;
+    })
+    .map((x) => x.t);
+}
+
 export function readSnapshot(): StateSnapshot {
-  const tasks = readTaskQueue();
+  const tasks = sortTasksForDisplay(readTaskQueue());
   const wrapper = readWrapperState();
 
   // Heuristic: which task is the lead currently working on?

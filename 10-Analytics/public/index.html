@@ -10,12 +10,13 @@
   <header class="topbar">
     <div class="brand">EventPulse Analytics</div>
     <div class="status">
-      <span id="conn" class="pill pill-disconnected">DISCONNECTED</span>
+      <span id="conn" class="pill pill-disconnected"><span id="conn-label">CONNECTING</span></span>
       <span id="last-event" class="muted">no events yet</span>
     </div>
   </header>
 
   <main>
+    <div id="last-error" class="error-banner"></div>
     <section class="card">
       <h2>Overview</h2>
       <div class="kpis" id="kpis">
