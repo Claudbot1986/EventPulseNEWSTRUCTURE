@@ -173,6 +173,40 @@ html, body {
   padding: 8px 0;
 }
 
+/* Status-group separator inside the tasks card. Sits between buckets,
+   distinguishable from items via reduced padding + uppercase letter-spacing.
+   data-status on the element lets per-status tweaks land later if needed. */
+.task-group-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 0 4px;
+  margin-top: 4px;
+  border-top: 1px solid #1f1f1f;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.6px;
+  text-transform: uppercase;
+  color: #888;
+}
+.task-group-header:first-child {
+  border-top: none;
+  margin-top: 0;
+  padding-top: 2px;
+}
+.task-group-icon { font-size: 11px; line-height: 1; }
+.task-group-label { flex-grow: 1; }
+.task-group-count {
+  background: rgba(255, 255, 255, 0.06);
+  border-radius: 9px;
+  padding: 1px 7px;
+  font-size: 10px;
+  font-weight: 700;
+  color: #bbb;
+  letter-spacing: 0;
+  text-transform: none;
+}
+
 .task-body {
   flex-grow: 1;
   min-width: 0;

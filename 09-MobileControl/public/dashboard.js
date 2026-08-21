@@ -143,26 +143,58 @@
     }
   }
 
+  // Group ordering: in_progress → pending → blocked → done → cancelled.
+// Anything not in this list falls to the end (defensive — keeps the
+// dashboard rendering if a new status is added server-side).
+  const STATUS_ORDER = ['in_progress', 'pending', 'blocked', 'done', 'cancelled'];
+  const STATUS_META = {
+    in_progress: { icon: '🟢', label: 'In Progress' },
+    pending:     { icon: '⏳', label: 'Pending' },
+    blocked:     { icon: '🔒', label: 'Blocked' },
+    done:        { icon: '✓',  label: 'Completed' },
+    cancelled:   { icon: '✗',  label: 'Cancelled' },
+  };
+
   function renderTasks(snap) {
     const list = $('task-list');
     const countEl = $('tasks-count');
-    let tasks = (snap.tasks || []).slice(0, 20);
+    const allTasks = snap.tasks || [];
     const activeId = snap.currently_active_task || null;
 
-    if (countEl) countEl.textContent = `${tasks.length} of ${(snap.tasks || []).length}`;
+    if (countEl) countEl.textContent = `${allTasks.length} total`;
 
-    if (tasks.length === 0) {
+    if (allTasks.length === 0) {
       list.innerHTML = '<li class="task-item"><span class="task-title">— no tasks —</span></li>';
       return;
     }
 
-    list.innerHTML = tasks
-      .map((t) => {
+    // Bucket by status. Preserve original order within each bucket — the
+    // server already returns tasks sorted by priority/age.
+    const buckets = new Map();
+    for (const t of allTasks) {
+      const k = t.status || 'pending';
+      if (!buckets.has(k)) buckets.set(k, []);
+      buckets.get(k).push(t);
+    }
+
+    const html = [];
+    // Render known statuses first in STATUS_ORDER, then any unknown bucket last.
+    const ordered = [...STATUS_ORDER, ...[...buckets.keys()].filter((k) => !STATUS_ORDER.includes(k))];
+    for (const status of ordered) {
+      const bucket = buckets.get(status);
+      if (!bucket || bucket.length === 0) continue;
+      const meta = STATUS_META[status] || { icon: '•', label: status };
+      html.push(`<li class="task-group-header" data-status="${escapeHtml(status)}">
+        <span class="task-group-icon">${meta.icon}</span>
+        <span class="task-group-label">${escapeHtml(meta.label)}</span>
+        <span class="task-group-count">${bucket.length}</span>
+      </li>`);
+      for (const t of bucket) {
         const indicatorClass =
           t.status === 'done' ? 'done' :
           (activeId && t.id === activeId) ? 'active' :
           'idle';
-        return `
+        html.push(`
         <li class="task-item">
           <span class="indicator ${indicatorClass}"></span>
           <div class="task-body">
@@ -170,9 +202,10 @@
             <span class="task-id">${t.id}</span>
             <div class="task-title">${escapeHtml(t.title)}</div>
           </div>
-        </li>`;
-      })
-      .join('');
+        </li>`);
+      }
+    }
+    list.innerHTML = html.join('');
   }
 
   function renderCommits(snap) {
