@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN"
+  "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!--
+  com.eventpulse.discovery.plist — launchd job for T0095 autonomous discovery agent.
+
+  Runs daily at 04:30 (alongside supervisor; they share runtime/sources_status.jsonl
+  safely because the supervisor reads read-only from there).
+
+  Install with:
+    cp 09-DiscoveryAgent/cron/com.eventpulse.discovery.plist ~/Library/LaunchAgents/
+    launchctl load ~/Library/LaunchAgents/com.eventpulse.discovery.plist
+
+  Or via the helper:
+    bash 09-DiscoveryAgent/install.sh
+
+  Uninstall:
+    launchctl unload ~/Library/LaunchAgents/com.eventpulse.discovery.plist
+    rm ~/Library/LaunchAgents/com.eventpulse.discovery.plist
+-->
+<plist version="1.0">
+<dict>
+  <key>Label</key>
+  <string>com.eventpulse.discovery</string>
+
+  <key>ProgramArguments</key>
+  <array>
+    <string>/bin/bash</string>
+    <string>/Volumes/2TB filer/NEWSTRUCTURE-COPY/09-DiscoveryAgent/cron/runDaily.sh</string>
+  </array>
+
+  <key>WorkingDirectory</key>
+  <string>/Volumes/2TB filer/NEWSTRUCTURE-COPY</string>
+
+  <key>StartCalendarInterval</key>
+  <dict>
+    <key>Hour</key>
+    <integer>4</integer>
+    <key>Minute</key>
+    <integer>30</integer>
+  </dict>
+
+  <key>StandardOutPath</key>
+  <string>/Volumes/2TB filer/NEWSTRUCTURE-COPY/runtime/discovery-agent/launchd.out.log</string>
+  <key>StandardErrorPath</key>
+  <string>/Volumes/2TB filer/NEWSTRUCTURE-COPY/runtime/discovery-agent/launchd.err.log</string>
+
+  <key>EnvironmentVariables</key>
+  <dict>
+    <key>PROJECT_ROOT</key>
+    <string>/Volumes/2TB filer/NEWSTRUCTURE-COPY</string>
+    <key>MAX</key>
+    <string>5</string>
+    <key>DRY_RUN</key>
+    <string>0</string>
+    <key>PATH</key>
+    <string>/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:/Users/claudgashi/.local/bin</string>
+  </dict>
+</dict>
+</plist>
