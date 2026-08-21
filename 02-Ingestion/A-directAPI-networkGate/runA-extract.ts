@@ -26,7 +26,7 @@ import { fetchHtml } from '../tools/fetchTools';
 import { extractFromJsonLd } from '../F-eventExtraction/extractor';
 import * as cheerio from 'cheerio';
 import type { ParsedEvent } from '../F-eventExtraction/schema';
-import { renderPage, needsRendering } from '../D-renderGate/renderGate';
+import { renderPage, needsRendering, type RenderOptions } from '../D-renderGate/renderGate';
 
 // ── Paths ────────────────────────────────────────────────────────────────────
 
@@ -362,7 +362,19 @@ async function extractFromSource(sourceId: string): Promise<ExtractResult> {
     if (adapterNeedsRender || (await needsRendering(source.url))) {
       log(`  [render-gate] ${sourceId}: ${adapterNeedsRender ? 'adapter flagged' : 'needsRendering()=true'} — invoking D-renderGate`);
       try {
-        const rendered = await renderPage(source.url, { timeout: 20000 });
+        // T0047 — wait for the adapter's eventContainer to appear before capturing HTML.
+        // Without this, ScrapingBee returns at wait=2500 which is before React SPAs
+        // (medborgarhuset, storkyrkan) have rendered their lazy-loaded event cards.
+        // Only use wait_for if the selector is specific enough (has a class, attribute,
+        // or pseudo). Bare tag selectors like `li` would fire on the first nav menu
+        // item and return before content loads.
+        const renderOpts: RenderOptions = { timeout: 20000 };
+        const containerSel = adapter?.selectors?.eventContainer;
+        const selectorIsSpecific = containerSel && /[.\[#:>+~]/.test(containerSel);
+        if (selectorIsSpecific) {
+          renderOpts.waitForSelector = containerSel;
+        }
+        const rendered = await renderPage(source.url, renderOpts);
         if (rendered.success && rendered.html && rendered.html.length > fetchResult.html.length) {
           // Re-run JSON-LD on rendered HTML
           const renderedJsonLd = extractFromJsonLd(rendered.html, sourceId, source.url);
