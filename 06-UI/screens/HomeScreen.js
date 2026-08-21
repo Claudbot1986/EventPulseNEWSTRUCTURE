@@ -41,7 +41,7 @@ import {
   Image,
 } from 'react-native';
 
-import { fetchFeed, fetchSavedEvents, fetchRecommendedEvents, fetchSuggestedPrompts } from '../services/agentClient';
+import { fetchFeed, fetchSavedEvents, fetchRecommendedEvents, fetchSuggestedPrompts, fetchCachedRecommendations } from '../services/agentClient';
 
 const TOKENS = {
   color: {
@@ -431,6 +431,101 @@ function SuggestedPromptsSection({ onChipPress }) {
   );
 }
 
+// ─── Agent suggestions section (T0060) ───────────────────────────────────────
+
+const AGENT_SUGGESTIONS_LIMIT = 3;
+
+function useAgentSuggestions() {
+  const [state, setState] = useState({ status: 'loading', slots: [], error: null });
+
+  const load = useCallback(async () => {
+    setState({ status: 'loading', slots: [], error: null });
+    try {
+      const result = await fetchCachedRecommendations({ limit: AGENT_SUGGESTIONS_LIMIT });
+      setState({ status: 'ready', slots: result.slots ?? [], error: null });
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : 'unknown';
+      setState({ status: 'error', slots: [], error: msg });
+    }
+  }, []);
+
+  useEffect(() => {
+    load();
+  }, [load]);
+
+  return { ...state, retry: load };
+}
+
+function IntentCardCompact({ event, onPress }) {
+  const time = event.time || '';
+  const venue = event.venue_name || event.venue || 'Plats ej angiven';
+  return (
+    <Pressable
+      style={({ pressed }) => [styles.intentCard, pressed && styles.cardPressed]}
+      onPress={() => onPress?.(event)}
+      accessibilityRole="button"
+      accessibilityLabel={`${event.title} ${time ? 'klockan ' + time : ''} på ${venue}`}
+    >
+      <Text style={styles.cardTime}>{time || '—'}</Text>
+      <Text style={styles.intentCardTitle} numberOfLines={2}>{event.title}</Text>
+      <Text style={styles.cardVenue} numberOfLines={1}>{venue}</Text>
+    </Pressable>
+  );
+}
+
+function IntentSlotSkeleton() {
+  return (
+    <View style={styles.intentSlot} accessibilityLabel="Laddar agentförslag">
+      <View style={styles.intentSlotTitleSkeleton} />
+      <View style={styles.intentCardRow}>
+        <View style={styles.intentCardSkeleton} />
+        <View style={styles.intentCardSkeleton} />
+      </View>
+    </View>
+  );
+}
+
+function IntentSlotRow({ slot, onCardPress }) {
+  return (
+    <View style={styles.intentSlot}>
+      <Text style={styles.intentSlotTitle} numberOfLines={1}>{slot.title}</Text>
+      {slot.cards.length === 0 ? (
+        <Text style={styles.intentSlotEmpty}>— inga matchningar ännu —</Text>
+      ) : (
+        <View style={styles.intentCardRow}>
+          {slot.cards.slice(0, 2).map((ev) => (
+            <IntentCardCompact key={ev.id} event={ev} onPress={onCardPress} />
+          ))}
+        </View>
+      )}
+    </View>
+  );
+}
+
+function AgentSuggestionsSection({ onCardPress }) {
+  const { status, slots } = useAgentSuggestions();
+  // T0060 spec: hide section entirely if no cached data (new users, errors).
+  // We render skeletons during loading to avoid layout shift, then drop to null
+  // once we know the data is empty.
+  if (status === 'ready' && slots.length === 0) return null;
+
+  return (
+    <View style={styles.section}>
+      <View style={styles.sectionHeader}>
+        <Text style={styles.sectionEyebrow}>AGENT</Text>
+        <Text style={styles.sectionTitle}>Förslag från din agent</Text>
+      </View>
+      <View style={styles.intentSlotList}>
+        {status === 'loading'
+          ? Array.from({ length: AGENT_SUGGESTIONS_LIMIT }).map((_, i) => <IntentSlotSkeleton key={`s-${i}`} />)
+          : slots.map((slot, i) => (
+              <IntentSlotRow key={`slot-${i}`} slot={slot} onCardPress={onCardPress} />
+            ))}
+      </View>
+    </View>
+  );
+}
+
 // ─── Saved section (T0054) ────────────────────────────────────────────────────
 
 function useSavedSection() {
@@ -516,6 +611,7 @@ export default function HomeScreen({ onChipPress }) {
         <WeekendSection onCardPress={handleCardPress} />
         <FreeSection onCardPress={handleCardPress} />
         <RecommendedSection onCardPress={handleCardPress} />
+        <AgentSuggestionsSection onCardPress={handleCardPress} />
         <SavedSection onCardPress={handleCardPress} />
 
         <View style={{ height: 96 }} />
@@ -770,5 +866,66 @@ const styles = StyleSheet.create({
     minWidth: 180,
     height: 60,
     opacity: 0.6,
+  },
+
+  // Agent suggestions (T0060)
+  intentSlotList: {
+    paddingHorizontal: TOKENS.space.lg,
+    gap: TOKENS.space.md,
+  },
+  intentSlot: {
+    backgroundColor: TOKENS.color.surface,
+    borderWidth: 1,
+    borderColor: TOKENS.color.border,
+    borderRadius: TOKENS.radius.md,
+    paddingVertical: TOKENS.space.md,
+    paddingHorizontal: TOKENS.space.md,
+  },
+  intentSlotTitle: {
+    color: TOKENS.color.accent,
+    fontSize: TOKENS.fontSize.md,
+    fontWeight: '700',
+    marginBottom: TOKENS.space.sm,
+  },
+  intentSlotTitleSkeleton: {
+    backgroundColor: TOKENS.color.border,
+    borderRadius: 4,
+    height: 14,
+    width: '60%',
+    marginBottom: TOKENS.space.sm,
+    opacity: 0.6,
+  },
+  intentSlotEmpty: {
+    color: TOKENS.color.textSoft,
+    fontSize: TOKENS.fontSize.sm,
+    fontStyle: 'italic',
+    paddingVertical: TOKENS.space.xs,
+  },
+  intentCardRow: {
+    flexDirection: 'row',
+    gap: TOKENS.space.sm,
+  },
+  intentCard: {
+    flex: 1,
+    backgroundColor: 'transparent',
+    borderRadius: TOKENS.radius.md,
+    borderWidth: 1,
+    borderColor: TOKENS.color.border,
+    paddingVertical: TOKENS.space.sm,
+    paddingHorizontal: TOKENS.space.sm,
+  },
+  intentCardTitle: {
+    color: TOKENS.color.text,
+    fontSize: TOKENS.fontSize.md,
+    fontWeight: '600',
+    lineHeight: 20,
+    marginBottom: 2,
+  },
+  intentCardSkeleton: {
+    flex: 1,
+    height: 60,
+    backgroundColor: TOKENS.color.border,
+    borderRadius: TOKENS.radius.md,
+    opacity: 0.5,
   },
 });
