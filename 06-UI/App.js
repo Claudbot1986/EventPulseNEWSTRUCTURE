@@ -6,7 +6,7 @@ import { fetchFeed, addDays } from './services/agentClient';
 
 const TOKENS = {
   color: {
-    appBg: '#050507',
+    appBg: '#000000',
     surface: '#0E0E12',
     surfaceRaised: '#191D28',
     surfaceSoft: '#202635',
@@ -1052,11 +1052,11 @@ const styles = StyleSheet.create({
   },
   eventImage: {
     width: '100%',
-    height: 220,
+    height: 280,
     backgroundColor: TOKENS.color.surfaceSoft,
   },
   eventImageFallback: {
-    height: 180,
+    height: 230,
     backgroundColor: TOKENS.color.surfaceSoft,
     alignItems: 'center',
     justifyContent: 'center',
