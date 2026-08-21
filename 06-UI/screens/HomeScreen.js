@@ -41,7 +41,7 @@ import {
   Image,
 } from 'react-native';
 
-import { fetchFeed, fetchSavedEvents, fetchRecommendedEvents, fetchSuggestedPrompts, fetchCachedRecommendations } from '../services/agentClient';
+import { fetchFeed, fetchSavedEvents, fetchRecommendedEvents, fetchSuggestedPrompts, fetchCachedRecommendations, fetchRecentQueries } from '../services/agentClient';
 
 const TOKENS = {
   color: {
@@ -431,6 +431,82 @@ function SuggestedPromptsSection({ onChipPress }) {
   );
 }
 
+// ─── Recent searches section (T0071 — recent chat queries) ───────────────────
+
+const RECENT_SEARCHES_LIMIT = 5;
+
+function useRecentSearches() {
+  const [state, setState] = useState({ status: 'loading', queries: [], error: null });
+
+  const load = useCallback(async () => {
+    setState({ status: 'loading', queries: [], error: null });
+    try {
+      const result = await fetchRecentQueries({ limit: RECENT_SEARCHES_LIMIT });
+      setState({ status: 'ready', queries: result.queries ?? [], error: null });
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : 'unknown';
+      setState({ status: 'error', queries: [], error: msg });
+    }
+  }, []);
+
+  useEffect(() => {
+    load();
+  }, [load]);
+
+  return { ...state, retry: load };
+}
+
+function RecentSearchChip({ query, onPress }) {
+  return (
+    <Pressable
+      style={({ pressed }) => [styles.promptChip, pressed && styles.promptChipPressed]}
+      onPress={() => onPress?.(query)}
+      accessibilityRole="button"
+      accessibilityLabel={`Upprepa sökning: ${query.query_text}`}
+    >
+      <Text style={styles.promptChipText} numberOfLines={2}>{query.query_text}</Text>
+    </Pressable>
+  );
+}
+
+function RecentSearchesSection({ onChipPress }) {
+  const { status, queries } = useRecentSearches();
+  // T0071 spec: hide the section entirely when there are no recent queries
+  // (cold start / brand-new user). The error/loading path also collapses to
+  // null so the home surface stays clean.
+  const visibleQueries = status === 'ready' ? queries : [];
+  if (status === 'ready' && visibleQueries.length === 0) return null;
+
+  // Forward each recent query as a `{prompt_text}` object so AppShell's
+  // existing PENDING_AGENT_MESSAGE_KEY handler (T0063) can reuse the
+  // exact same chip-tap plumbing without any branching.
+  const handleChipPress = (query) => {
+    if (typeof onChipPress === 'function' && query && typeof query.query_text === 'string') {
+      onChipPress({ prompt_text: query.query_text });
+    }
+  };
+
+  return (
+    <View style={styles.section}>
+      <View style={styles.sectionHeader}>
+        <Text style={styles.sectionEyebrow}>SENASTE</Text>
+        <Text style={styles.sectionTitle}>Dina senaste sökningar</Text>
+      </View>
+      <ScrollView
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        contentContainerStyle={styles.promptChipRow}
+      >
+        {status === 'loading'
+          ? Array.from({ length: RECENT_SEARCHES_LIMIT }).map((_, i) => <ChipSkeleton key={`s-${i}`} />)
+          : visibleQueries.map((q) => (
+              <RecentSearchChip key={q.id} query={q} onPress={handleChipPress} />
+            ))}
+      </ScrollView>
+    </View>
+  );
+}
+
 // ─── Agent suggestions section (T0060) ───────────────────────────────────────
 
 const AGENT_SUGGESTIONS_LIMIT = 3;
@@ -606,6 +682,7 @@ export default function HomeScreen({ onChipPress }) {
         </View>
 
         <SuggestedPromptsSection onChipPress={handlePromptPress} />
+        <RecentSearchesSection onChipPress={handlePromptPress} />
 
         <TonightSection onCardPress={handleCardPress} />
         <WeekendSection onCardPress={handleCardPress} />

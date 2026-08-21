@@ -36,7 +36,7 @@
  *     tabs mount only after `onboardingComplete === true`.
  */
 
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { View, StyleSheet } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 
@@ -45,8 +45,10 @@ import HomeScreen from './screens/HomeScreen';
 import NotificationsScreen from './screens/NotificationsScreen';
 import ProfileScreen from './screens/ProfileScreen';
 import OnboardingScreen from './screens/OnboardingScreen';
+import NetworkBanner from './components/NetworkBanner';
 import App from './App';
 import { getItem, setItem } from './services/storage';
+import { NetworkProvider, setMarkOnline } from './services/networkContext';
 
 const TABS = ['home', 'explore', 'notifications', 'profile'];
 const ONBOARDING_COMPLETE_KEY = 'eventpulse.onboarding_complete';
@@ -82,6 +84,14 @@ export default function AppShell() {
     setOnboardingState('done');
   };
 
+  // T0073 — expose markOnline from context to the module-level singleton
+  // so any successful API call in agentClient.js can call markOnline() to
+  // dismiss the offline banner without needing a React context reference.
+  const { markOnline } = useNetworkContext();
+  useEffect(() => {
+    setMarkOnline(markOnline);
+  }, [markOnline]);
+
   // T0063 — chip tap: persist the prompt and jump to the explore tab so
   // App.js can read it on focus and surface the chosen prompt to the user.
   // AsyncStorage write is fire-and-forget; the activeTab state change is
@@ -111,22 +121,25 @@ export default function AppShell() {
   }
 
   return (
-    <SafeAreaProvider>
-      <View style={styles.container}>
-        {activeTab === 'explore' && <App />}
-        {activeTab === 'home' && <HomeScreen onChipPress={handleChipPress} />}
-        {activeTab === 'notifications' && <NotificationsScreen />}
-        {activeTab === 'profile' && <ProfileScreen />}
+    <NetworkProvider>
+      <SafeAreaProvider>
+        <View style={styles.container}>
+          <NetworkBanner />
+          {activeTab === 'explore' && <App />}
+          {activeTab === 'home' && <HomeScreen onChipPress={handleChipPress} />}
+          {activeTab === 'notifications' && <NotificationsScreen />}
+          {activeTab === 'profile' && <ProfileScreen />}
 
-        <View style={styles.barWrapper} pointerEvents="box-none">
-          <BottomTabBar
-            activeTab={activeTab}
-            onChange={handleTabChange}
-            badges={badges}
-          />
+          <View style={styles.barWrapper} pointerEvents="box-none">
+            <BottomTabBar
+              activeTab={activeTab}
+              onChange={handleTabChange}
+              badges={badges}
+            />
+          </View>
         </View>
-      </View>
-    </SafeAreaProvider>
+      </SafeAreaProvider>
+    </NetworkProvider>
   );
 }
 

@@ -24,6 +24,7 @@
  */
 
 import { getOrCreateAnonUserId } from './storage';
+import { markOnline } from './networkContext';
 
 const AGENT_BASE_URL = process.env.EXPO_PUBLIC_AGENT_URL;
 
@@ -79,6 +80,7 @@ export async function chatWithAgent({ message, sessionId, origin, signal, timeou
   }
 
   const data = await response.json();
+  markOnline();
   return {
     sessionId: data.session_id ?? sessionId ?? null,
     reply: data.reply ?? '',
@@ -361,6 +363,7 @@ export async function fetchFeed({ from, days = 7, signal, timeoutMs = 12_000 } =
   }
 
   const data = await response.json();
+  markOnline();
   const rawEvents = Array.isArray(data.events) ? data.events : [];
 
   // EventCard → legacy shape so App.js HomeScreen keeps working.
@@ -459,6 +462,7 @@ export async function fetchRecommendedEvents({ limit = 10, signal, timeoutMs = 1
   }
 
   const data = await response.json();
+  markOnline();
   const rawEvents = Array.isArray(data.events) ? data.events : [];
 
   // Identical EventCard → legacy shape mapping as fetchFeed for card uniformity.
@@ -920,6 +924,60 @@ export async function fetchCachedRecommendations({
 }
 
 /**
+ * Fetch the user's distinct recent chat queries — T0071 / Phase 1 retention.
+ *
+ * GET /agent/recent-queries?client_user_id=<uuid>&limit=<int>
+ *
+ * Returns an array of { id, query_text, last_used_at } for the "Dina senaste
+ * sökningar" section on HomeScreen. Mirrors the fetchCachedRecommendations
+ * pattern: 404 / network error → empty array so the section hides itself.
+ *
+ * @returns {Promise<{ queries: Array<{ id: string, query_text: string, last_used_at: string }> }>}
+ */
+export async function fetchRecentQueries({
+  limit = 5,
+  signal,
+  timeoutMs = 12_000,
+} = {}) {
+  const { getOrCreateAnonUserId } = await import('./storage');
+  const baseUrl = requireAgentBaseUrl();
+  const url = new URL(`${baseUrl}/agent/recent-queries`);
+  const clientUserId = await getOrCreateAnonUserId();
+  url.searchParams.set('client_user_id', clientUserId);
+  url.searchParams.set('limit', String(limit));
+
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), timeoutMs);
+  if (signal) {
+    if (signal.aborted) controller.abort();
+    else signal.addEventListener('abort', () => controller.abort(), { once: true });
+  }
+
+  let response;
+  try {
+    response = await fetch(url.toString(), { signal: controller.signal });
+  } catch (_err) {
+    clearTimeout(timer);
+    // Network error → return empty so the section hides itself.
+    return { queries: [] };
+  }
+  clearTimeout(timer);
+
+  // 404 = no chat history for this user yet. Treat as empty.
+  if (response.status === 404) {
+    return { queries: [] };
+  }
+  if (!response.ok) {
+    throw new Error(`recent-queries ${response.status}: ${response.statusText}`);
+  }
+
+  const data = await response.json();
+  const queries = Array.isArray(data.queries) ? data.queries : [];
+
+  return { queries };
+}
+
+/**
  * Fetch the user's saved events — T0054 / Phase 1 retention.
  *
  * GET /agent/saved?client_user_id=<uuid>&limit=<int>
@@ -952,6 +1010,7 @@ export async function fetchSavedEvents({ limit = 50, signal, timeoutMs = 12_000 
   }
 
   const data = await response.json();
+  markOnline();
   const rawEvents = Array.isArray(data.events) ? data.events : [];
 
   // Identical EventCard → legacy shape mapping as fetchFeed for card uniformity.

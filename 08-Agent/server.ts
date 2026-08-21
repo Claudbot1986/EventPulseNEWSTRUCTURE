@@ -1213,6 +1213,47 @@ export function buildApp(opts: { supabase?: SupabaseClient } = {}): express.Expr
     }
   });
 
+  /**
+   * GET /agent/recent-queries?client_user_id=<uuid>&limit=<int>
+   *
+   * T0071 / MVP-gap §79 (Phase 1 retention). Returns the user's distinct
+   * recent chat queries from `user_interactions` (interaction='impression'
+   * carries the raw `query_text` from every chat turn — see chat handler
+   * `query_text: body.message`). The HomeScreen "Dina senaste sökningar"
+   * section renders these as resume chips: tap → forwards the query to
+   * AgentScreen via PENDING_AGENT_MESSAGE_KEY.
+   *
+   * Lockdown mirrors the other read endpoints: origin allowlist (set in
+   * global middleware above) + service_role Supabase read.
+   *
+   * 404 is intentionally NOT used here: a new user with no chat history
+   * is the common cold-start case. We return `{queries: []}` instead so
+   * the UI can simply hide the section.
+   */
+  app.get('/agent/recent-queries', generalLimiter.middleware, async (req: Request, res: Response) => {
+    const raw = typeof req.query.client_user_id === 'string' ? req.query.client_user_id : '';
+    if (!UUID_RE.test(raw)) {
+      res.status(400).json({ error: 'client_user_id must be a uuid' });
+      return;
+    }
+    const limit = typeof req.query.limit === 'string'
+      ? Math.min(Math.max(parseInt(req.query.limit, 10) || 5, 1), 20)
+      : 5;
+    const client = sb ?? getSupabase();
+    try {
+      const { getRecentQueries } = await import('./tools/get_recent_queries.js');
+      const result = await getRecentQueries({
+        supabase: client,
+        client_user_id: raw,
+        limit,
+      });
+      res.json({ queries: result.queries });
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'unknown error';
+      res.status(500).json({ error: msg });
+    }
+  });
+
   app.get('/agent/metrics', requireAdmin, generalLimiter.middleware, async (_req: Request, res: Response) => {
     const client = sb ?? getSupabase();
     try {
