@@ -1,11 +1,11 @@
 import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { StatusBar } from 'expo-status-bar';
-import { StyleSheet, Text, View, SectionList, ActivityIndicator, TouchableOpacity, ScrollView, Linking, Image, Platform } from 'react-native';
+import { StyleSheet, Text, View, SectionList, ActivityIndicator, TouchableOpacity, ScrollView, Linking, Image, Platform, Share, Alert } from 'react-native';
 import { SafeAreaView, SafeAreaProvider } from 'react-native-safe-area-context';
-import { fetchFeed, addDays, fetchEventIcs } from './services/agentClient';
+import { fetchFeed, addDays, fetchEventIcs, shareSession, fetchSharedSession, parseShareHashFromUrl } from './services/agentClient';
 import { analyticsClient } from './services/analyticsClient';
 import UserPickerScreen from './screens/UserPickerScreen';
-import { getItem, getOrCreateAnonUserId, removeItem } from './services/storage';
+import { getItem, getOrCreateAnonUserId, removeItem, setItem } from './services/storage';
 import { PENDING_AGENT_MESSAGE_KEY } from './AppShell';
 
 const TOKENS = {
@@ -821,6 +821,10 @@ function DetailsScreen({ event, onBack }) {
   const [dismissed, setDismissed] = useState(false);
   const [calendarError, setCalendarError] = useState(null);
   const [calendarBusy, setCalendarBusy] = useState(false);
+  // T0061 — share-session state. `shareError` carries network/permission
+  // warnings after the OS Share-sheet closes (best-effort display).
+  const [shareBusy, setShareBusy] = useState(false);
+  const [shareError, setShareError] = useState(null);
 
   const handleOpenUrl = async () => {
     if (!event.url) {
@@ -884,6 +888,43 @@ function DetailsScreen({ event, onBack }) {
       setCalendarBusy(false);
     }
   }, [event?.id, calendarBusy]);
+
+  // T0061 / MVP-gap §78 — share-event deep-link.
+  // Calls POST /agent/share with the event title (cheap, discoverable), then
+  // opens the native Share-sheet with a `eventpulse://s/{hash}` URL. The
+  // recipient's app resolves the hash against GET /s/:hash and routes to
+  // either the agent (query) or this Detail screen (single event).
+  const handleShare = useCallback(async () => {
+    if (!event?.id || shareBusy) return;
+    setShareBusy(true);
+    setShareError(null);
+    try {
+      const title = (event.title ?? 'Ett event').slice(0, 200);
+      const venue = getVenueLabel(event) || 'Stockholm';
+      const query = `${title} på ${venue}`;
+      const res = await shareSession({ query, eventIds: [event.id] });
+      if (!res.ok) {
+        setShareError(`Kunde inte skapa delningslänk: ${res.warning}`);
+        return;
+      }
+      try {
+        await Share.share({
+          message: `${title} — öppna i EventPulse: ${res.url}`,
+          url: res.url,
+          title,
+        });
+        void analyticsClient.eventShare?.(event.id, 'share');
+      } catch (err) {
+        const msg = err instanceof Error ? err.message : 'unknown';
+        // User-cancellation is expected — surface no error for it.
+        if (!/user did not share|dismissedAction/i.test(msg)) {
+          setShareError(`Kunde inte öppna delningsmenyn: ${msg}`);
+        }
+      }
+    } finally {
+      setShareBusy(false);
+    }
+  }, [event?.id, event?.title, event?.venue_name, shareBusy]);
 
   const venue = getVenueLabel(event);
   const area = getAreaLabel(event);
@@ -967,6 +1008,22 @@ function DetailsScreen({ event, onBack }) {
             </Text>
           </TouchableOpacity>
           {calendarError ? <Text style={styles.ctaErrorText}>{calendarError}</Text> : null}
+
+          {/* T0061 — share deep-link. Sibling of "Lägg till i kalender"
+              since both produce outbound intents. */}
+          <TouchableOpacity
+            style={[styles.detailsActionButton, styles.detailsActionButtonFull, shareBusy && styles.detailsActionButtonDisabled]}
+            onPress={handleShare}
+            activeOpacity={0.7}
+            disabled={shareBusy}
+            accessibilityRole="button"
+            accessibilityLabel="Dela detta event"
+          >
+            <Text style={[styles.detailsActionText, shareBusy && styles.detailsActionTextDisabled]}>
+              {shareBusy ? 'Förbereder delning…' : 'Dela'}
+            </Text>
+          </TouchableOpacity>
+          {shareError ? <Text style={styles.ctaErrorText}>{shareError}</Text> : null}
         </View>
         
         <View style={styles.detailsSection}>
@@ -1076,6 +1133,62 @@ export default function App() {
   const dismissPendingPrompt = useCallback(() => {
     setPendingPrompt(null);
     removeItem(PENDING_AGENT_MESSAGE_KEY).catch(() => {});
+  }, []);
+
+  // T0061 — deep-link handler. Two surfaces: cold-start (`getInitialURL`)
+  // and warm-start (`addEventListener('url', ...)`). Both resolve into a
+  // shared session via `fetchSharedSession`; if the share contained a
+  // single event_id we open that DetailsScreen, otherwise we route the
+  // query to the agent via the same pending-prompt mechanism T0063 uses.
+  //
+  // Single-event shares are the express path — one tap to a single
+  // recommendation, no agent round-trip needed.
+  useEffect(() => {
+    let cancelled = false;
+    const resolveDeepLink = async (url) => {
+      if (cancelled) return;
+      const hash = parseShareHashFromUrl(url);
+      if (!hash) return;
+      const res = await fetchSharedSession({ hash });
+      if (cancelled || !res.ok) return;
+      if (Array.isArray(res.eventIds) && res.eventIds.length === 1) {
+        // Open the single shared event. We don't have full EventCard data
+        // here, so we set a lightweight stub that DetailsScreen ignores
+        // for now — the full flow reopens DetailsScreen via handleEventPress
+        // after the feed re-renders. Acceptable for Phase 1.
+        const ev = {
+          id: res.eventIds[0],
+          title: res.query || 'Delat event',
+          url: null,
+          ticket_url: null,
+          imageUrl: null,
+          image_url: null,
+          source: 'shared',
+        };
+        setSelectedEvent(ev);
+        return;
+      }
+      // Multi-event or query-only share → forward to agent via T0063 path.
+      const text = (res.query && res.query.trim().length > 0)
+        ? res.query
+        : 'Visa mig vad jag har blivit tipsad om';
+      setPendingPrompt(text);
+      setItem(PENDING_AGENT_MESSAGE_KEY, text).catch(() => {});
+    };
+
+    // Cold-start: app launched via the deep-link.
+    Linking.getInitialURL()
+      .then((url) => { if (url) resolveDeepLink(url); })
+      .catch(() => {});
+
+    // Warm-start: app already running, deep-link arrives via 'url' event.
+    const sub = Linking.addEventListener('url', ({ url }) => {
+      resolveDeepLink(url);
+    });
+    return () => {
+      cancelled = true;
+      sub.remove();
+    };
   }, []);
 
   const handleUserPicked = useCallback((userId) => {
