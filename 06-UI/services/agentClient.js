@@ -106,12 +106,18 @@ export async function getAgentHealth() {
  * Best-effort: never throws. The server returns 202 with a warning if the
  * write is rejected (e.g. unknown interaction). We swallow that to keep the
  * UI flow uninterrupted.
+ *
+ * `rejectReason` is forwarded for the `reject` (and `dismiss` /
+ * `feedback_negative`) interactions so the personalization layer can
+ * bucket venues by *why* the user rejected, not just *that* they did.
+ * The server defaults it to 'not_interested' when omitted.
  */
 export async function recordEventInteraction({
   eventId,
-  interaction, // 'click' | 'outbound' | 'save' | 'dismiss' | 'feedback_positive' | 'feedback_negative'
+  interaction, // 'click' | 'outbound' | 'save' | 'reject' | 'dismiss' | 'feedback_positive' | 'feedback_negative'
   sessionId,
   queryText,
+  rejectReason,
   timeoutMs = 4_000,
 }) {
   if (!eventId || !interaction) return { ok: false, warning: 'missing fields' };
@@ -133,6 +139,7 @@ export async function recordEventInteraction({
         session_id: sessionId,
         event_id: eventId,
         interaction,
+        reject_reason: rejectReason,
         query_text: queryText,
       }),
       signal: controller.signal,

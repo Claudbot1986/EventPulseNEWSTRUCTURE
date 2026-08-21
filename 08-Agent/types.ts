@@ -100,17 +100,66 @@ export interface RankedEvent {
 }
 
 // ─── Feedback ───────────────────────────────────────────────────────────────
+
+/**
+ * The full set of interaction types the agent server records. The string
+ * union is the single source of truth for the `user_interactions.interaction`
+ * CHECK constraint (see 05-Supabase/migrations/20260821-0001-…). Keep these
+ * in sync with the migration's CHECK list when adding a new interaction.
+ *
+ * Phase 1 funnel:
+ *   impression  — card rendered to the user (rank-aware)
+ *   click       — user tapped the card (no URL open)
+ *   outbound    — user opened the ticket URL (click + outbound = bouncer)
+ *   save        — user saved the event (positive signal)
+ *   reject      — user explicitly dismissed the event (negative signal)
+ *   dismiss     — legacy alias of `reject` (kept for back-compat with
+ *                 personalize.ts, which reads both)
+ *   feedback_positive / feedback_negative — explicit thumbs up/down copy
+ *     from the UI (Phase 1.5+); semantically alias to save / reject today.
+ */
+export type FeedbackInteraction =
+  | 'impression'
+  | 'click'
+  | 'outbound'
+  | 'save'
+  | 'reject'
+  | 'dismiss'
+  | 'feedback_positive'
+  | 'feedback_negative';
+
+/** Stable, machine-readable categorization of a `reject` interaction. Maps
+ *  to `user_interactions.metadata->>reject_reason` so the personalization
+ *  layer can weight venue priors by *why* the user rejected. */
+export type RejectReason =
+  | 'not_interested'    // generic dismiss, no specific reason
+  | 'wrong_category'    // category mismatch
+  | 'too_far'           // venue too far / wrong city
+  | 'too_expensive'     // price > budget
+  | 'already_seen'      // event has happened or the user knows it
+  | 'other';            // catch-all; never null so metrics can count
+
 export interface RecordFeedbackInput {
   client_user_id: string;
   session_id?: string;
   event_id: string;
-  interaction: 'impression' | 'click' | 'outbound' | 'save' | 'dismiss' | 'feedback_positive' | 'feedback_negative';
+  interaction: FeedbackInteraction;
   query_text?: string;
   rank_position?: number;
   reasons?: RankReason[];
+  /**
+   * Optional structured rejection reason. Only meaningful when `interaction`
+   * is 'reject' (or 'dismiss'). Persisted to user_interactions.metadata as
+   * `{ reject_reason: <value> }` so the personalization layer can bucket
+   * them. Defaults to 'not_interested' server-side when omitted.
+   */
+  reject_reason?: RejectReason;
   /** Free-form metadata blob. Persisted to user_interactions.metadata JSONB.
    *  Used by the experiment layer to tag rows with experiment_id + variant
-   *  (see 08-Agent/tools/experiments.ts). */
+   *  (see 08-Agent/tools/experiments.ts).
+   *
+   *  NOTE: when `reject_reason` is set, the tool merges it into this blob
+   *  under `reject_reason` so callers don't need to repeat themselves. */
   metadata?: Record<string, unknown>;
 }
 

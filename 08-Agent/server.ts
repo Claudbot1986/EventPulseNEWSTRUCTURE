@@ -428,51 +428,48 @@ export function buildApp(opts: { supabase?: SupabaseClient } = {}): express.Expr
       session_id?: string;
       event_id: string;
       interaction: string;
+      reject_reason?: string;
       query_text?: string;
+      rank_position?: number;
       metadata?: Record<string, unknown>;
     }>;
-    if (!body || typeof body !== 'object') {
-      res.status(400).json({ error: 'invalid body' });
-      return;
-    }
-    if (!body.client_user_id || !UUID_RE.test(body.client_user_id)) {
-      res.status(400).json({ error: 'client_user_id must be a uuid' });
-      return;
-    }
-    if (!body.event_id || !UUID_RE.test(body.event_id)) {
-      res.status(400).json({ error: 'event_id must be a uuid' });
-      return;
-    }
-    // session_id is optional, but if present it MUST be a uuid (DB column is uuid).
-    // Silently drop malformed session_ids rather than failing the whole feedback.
-    const sessionId: string | undefined =
-      typeof body.session_id === 'string' && UUID_RE.test(body.session_id)
-        ? body.session_id
-        : undefined;
-    const ALLOWED = new Set([
-      'impression', 'click', 'outbound', 'save',
-      'dismiss', 'feedback_positive', 'feedback_negative',
-    ]);
-    if (!body.interaction || !ALLOWED.has(body.interaction)) {
-      res.status(400).json({ error: `interaction must be one of: ${[...ALLOWED].join(', ')}` });
+    // Delegate validation to the tool's pure validator so the wire contract
+    // and tool contract cannot drift. `validateFeedbackInput` returns the
+    // first failed check (or null). A 400 is correct for any malformed
+    // payload — the agent UI treats it as a code bug, not a network blip.
+    const validationError = validateFeedbackInput(body);
+    if (validationError) {
+      res.status(400).json({ error: validationError });
       return;
     }
 
     const client = sb ?? getSupabase();
     const result = await recordFeedback(client, {
-      client_user_id: body.client_user_id,
-      session_id:     sessionId,
-      event_id:       body.event_id,
-      interaction:    body.interaction as 'impression' | 'click' | 'outbound' | 'save' | 'dismiss' | 'feedback_positive' | 'feedback_negative',
+      client_user_id: body.client_user_id as string,
+      // session_id is optional; the validator accepts undefined / null, so
+      // we forward as-is and the tool normalizes to null.
+      session_id:     body.session_id,
+      event_id:       body.event_id as string,
+      interaction:    body.interaction as 'impression' | 'click' | 'outbound' | 'save' | 'reject' | 'dismiss' | 'feedback_positive' | 'feedback_negative',
+      reject_reason:  body.reject_reason as 'not_interested' | 'wrong_category' | 'too_far' | 'too_expensive' | 'already_seen' | 'other' | undefined,
       query_text:     body.query_text,
+      rank_position:  body.rank_position,
       metadata:       body.metadata,
     });
 
     if (!result.ok) {
+      // Best-effort endpoint: a failed Supabase insert MUST NOT trip the UI.
+      // 202 = "we heard you, we couldn't persist it". The client code
+      // (agentClient.js) already treats 202 as silent and continues.
       res.status(202).json({ ok: false, warning: result.warning ?? 'unknown' });
       return;
     }
-    res.json({ ok: true });
+    // Echo the resolved values so the agent UI can log / reconcile locally.
+    res.json({
+      ok: true,
+      interaction: result.interaction,
+      reject_reason: result.reject_reason ?? null,
+    });
   });
 
   app.get('/agent/metrics', requireAdmin, generalLimiter.middleware, async (_req: Request, res: Response) => {
