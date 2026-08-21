@@ -28,6 +28,8 @@ import { pickClarifyingQuestion } from './tools/find_gaps';
 import { recordOutboundClick } from './tools/attribution';
 import { feedEvents, todayIso, addDays } from './tools/feed_events';
 import { getSavedEvents } from './tools/get_saved_events';
+import { getEventForCalendar } from './tools/get_event_for_calendar';
+import { generateIcs } from './tools/ical';
 import { buildUserSignal, loadStatedPreferences } from './tools/personalize';
 import {
   assignVariant,
@@ -1042,6 +1044,58 @@ export function buildApp(opts: { supabase?: SupabaseClient } = {}): express.Expr
       const msg = err instanceof Error ? err.message : 'unknown error';
       res.status(500).json({ error: msg });
     }
+  });
+
+  /**
+   * GET /agent/events/:id/calendar.ics
+   *
+   * T0058 / Phase 1 retention: calendar export for saved events.
+   * Returns a one-event RFC-5545 VCALENDAR (.ics download).
+   *
+   * Ownership check: the requesting client_user_id must have at least one
+   * interaction row (save/click/impression) for this event. This prevents
+   * arbitrary event export without any app engagement.
+   *
+   * Params:
+   *   id              — event UUID
+   *   client_user_id  — query param, UUID
+   *
+   * Response: 200 text/calendar (ics file download)
+   *           400 missing/invalid client_user_id
+   *           404 event not found or no interaction
+   *           500 server error
+   */
+  app.get('/agent/events/:id/calendar.ics', async (req: Request, res: Response) => {
+    const rawUserId = typeof req.query.client_user_id === 'string' ? req.query.client_user_id : '';
+    if (!UUID_RE.test(rawUserId)) {
+      res.status(400).json({ error: 'client_user_id must be a uuid' });
+      return;
+    }
+    const { id } = req.params;
+    if (!id || !UUID_RE.test(id)) {
+      res.status(400).json({ error: 'event id must be a uuid' });
+      return;
+    }
+
+    const client = sb ?? getSupabase();
+    const { event, warnings } = await getEventForCalendar(client, id, rawUserId);
+
+    if (!event) {
+      res.status(404).json({ error: 'event not found or not accessible' });
+      return;
+    }
+
+    // Surface warnings in response headers for debugging, but don't fail the download.
+    for (const w of warnings) {
+      res.setHeader('X-Debug-Warning', w);
+    }
+
+    const ics = generateIcs(event, 2);
+    const filename = `${event.title.replace(/[^a-z0-9]/gi, '_').toLowerCase()}.ics`;
+    res.setHeader('Content-Type', 'text/calendar; charset=utf-8');
+    res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+    res.setHeader('Cache-Control', 'private, max-age=3600');
+    res.send(ics);
   });
 
   return app;
