@@ -38,6 +38,11 @@ import { composeReply } from './llmRouter';
 import { fetchEventImage } from './tools/fetch_event_image';
 import { createRateLimiter, ipKeyFn } from './middleware/rateLimit';
 import { createAdminAuth } from './middleware/adminAuth';
+import {
+  listNotifications,
+  markNotificationRead,
+  generateRemindersForUser,
+} from './tools/notification_center';
 import type {
   AgentChatRequest,
   AgentChatResponse,
@@ -534,6 +539,108 @@ export function buildApp(opts: { supabase?: SupabaseClient } = {}): express.Expr
       return;
     }
     res.json({ ok: true });
+  });
+
+  /**
+   * GET /agent/notifications?client_user_id=<uuid>&limit=<int>
+   *
+   * T0048 / MVP-gap §77: read-side of the notification center. Returns
+   * the user's notifications newest-first. The UI uses this to render
+   * the three grouping buckets ("Påminnelse" / "Ny matchning" / "Svar")
+   * per NotificationsScreen.js.
+   *
+   * Lockdown mirrors /agent/chat: origin allowlist + service_role only.
+   * client_user_id is the same anon UUID the UI already sends — there
+   * is no login flow yet.
+   *
+   * Best-effort: never throws. A Supabase failure returns 500 with the
+   * underlying message; the client treats that as "feed temporarily
+   * unavailable" and falls back to its empty-state copy.
+   */
+  app.get('/agent/notifications', generalLimiter.middleware, async (req: Request, res: Response) => {
+    const raw = typeof req.query.client_user_id === 'string' ? req.query.client_user_id : '';
+    if (!UUID_RE.test(raw)) {
+      res.status(400).json({ error: 'client_user_id must be a uuid' });
+      return;
+    }
+    const limit = typeof req.query.limit === 'string'
+      ? Math.min(Math.max(parseInt(req.query.limit, 10) || 50, 1), 200)
+      : 50;
+    const client = sb ?? getSupabase();
+    const result = await listNotifications(client, raw, { limit });
+    if (!result.ok) {
+      res.status(500).json({ error: result.warning ?? 'unknown error' });
+      return;
+    }
+    res.json({ notifications: result.notifications });
+  });
+
+  /**
+   * POST /agent/notifications/read
+   *
+   * Body: { client_user_id: uuid, notification_id: uuid }
+   * Marks a single notification as read. Idempotent — calling it twice
+   * is the same as calling it once. Same rate limiter as /agent/feedback
+   * because this is user-driven and could be batched by a future UI.
+   */
+  app.post('/agent/notifications/read', chatLimiter.middleware, async (req: Request, res: Response) => {
+    const body = req.body as Partial<{ client_user_id: string; notification_id: string }>;
+    if (!body || typeof body !== 'object') {
+      res.status(400).json({ error: 'invalid body' });
+      return;
+    }
+    if (!body.client_user_id || !UUID_RE.test(body.client_user_id)) {
+      res.status(400).json({ error: 'client_user_id must be a uuid' });
+      return;
+    }
+    if (!body.notification_id || !UUID_RE.test(body.notification_id)) {
+      res.status(400).json({ error: 'notification_id must be a uuid' });
+      return;
+    }
+    const client = sb ?? getSupabase();
+    const result = await markNotificationRead(client, body.client_user_id, body.notification_id);
+    if (!result.ok) {
+      res.status(202).json({ ok: false, warning: result.warning ?? 'unknown' });
+      return;
+    }
+    res.json({ ok: true });
+  });
+
+  /**
+   * POST /agent/notifications/scan
+   *
+   * Admin endpoint: forces an immediate reminder-generation pass for
+   * one user. Used by the verify path (the task brief: "spara ett
+   * event med start_time inom 2h → notification dyker upp inom 15 min")
+   * so we don't have to wait for the cron to fire during testing.
+   *
+   * Body: { client_user_id: uuid }
+   * Gates: same admin token as /agent/metrics and /agent/experiments.
+   */
+  app.post('/agent/notifications/scan', requireAdmin, generalLimiter.middleware, async (req: Request, res: Response) => {
+    const body = req.body as Partial<{ client_user_id: string }>;
+    if (!body || typeof body !== 'object') {
+      res.status(400).json({ error: 'invalid body' });
+      return;
+    }
+    if (!body.client_user_id || !UUID_RE.test(body.client_user_id)) {
+      res.status(400).json({ error: 'client_user_id must be a uuid' });
+      return;
+    }
+    const client = sb ?? getSupabase();
+    const result = await generateRemindersForUser(client, {
+      client_user_id: body.client_user_id,
+    });
+    if (!result.ok) {
+      res.status(500).json({ ok: false, warning: result.warning ?? 'unknown' });
+      return;
+    }
+    res.json({
+      ok: true,
+      inserted: result.inserted,
+      skipped: result.skipped,
+      eligible: result.eligible,
+    });
   });
 
   app.get('/agent/metrics', requireAdmin, generalLimiter.middleware, async (_req: Request, res: Response) => {
