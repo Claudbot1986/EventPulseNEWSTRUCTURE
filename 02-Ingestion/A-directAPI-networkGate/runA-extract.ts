@@ -252,16 +252,38 @@ async function extractFromSource(sourceId: string): Promise<ExtractResult> {
 
   console.log(`[extract] ${sourceId} — ${source.url}`);
 
-  const fetchResult = await fetchHtml(source.url, { timeout: 20000 });
+  let fetchResult = await fetchHtml(source.url, { timeout: 20000 });
   if (!fetchResult.success || !fetchResult.html) {
-    updateSourceStatus(sourceId, {
-      success: false,
-      eventsFound: 0,
-      pathUsed: 'jsonld',
-      ingestionStage: 'failed',
-      lastRoutingReason: `runA-extract: Fetch failed: ${fetchResult.error}`,
-    });
-    return { sourceId, success: false, eventsFound: 0, error: `Fetch failed: ${fetchResult.error}` };
+    // T0098 — TLS/SSL/cert failures (mosebacke, nobel-prize-museum, observatoriet)
+    // fall back to ScrapingBee render path which handles TLS via premium proxy.
+    const errMsg = fetchResult.error || '';
+    const isTlsError = /EPROTO|Hostname\/IP does not match certificate|self signed|unable to verify|certificate|SSL|TLS/i.test(errMsg);
+    if (isTlsError) {
+      log(`  [tls-fallback] ${sourceId}: direct fetch TLS error — routing through ScrapingBee`);
+      const rendered = await renderPage(source.url, { timeout: 25000 });
+      if (rendered.success && rendered.html) {
+        log(`  [tls-fallback] ${sourceId}: ScrapingBee returned ${rendered.html.length}b — retrying extraction`);
+        fetchResult = {
+          success: true,
+          html: rendered.html,
+          statusCode: 200,
+          finalUrl: source.url,
+          redirectChain: [`tls-fallback:scrapingbee`],
+        };
+      } else {
+        log(`  [tls-fallback] ${sourceId}: ScrapingBee also failed: ${rendered.error ?? 'unknown'}`);
+      }
+    }
+    if (!fetchResult.success || !fetchResult.html) {
+      updateSourceStatus(sourceId, {
+        success: false,
+        eventsFound: 0,
+        pathUsed: 'jsonld',
+        ingestionStage: 'failed',
+        lastRoutingReason: `runA-extract: Fetch failed: ${fetchResult.error}`,
+      });
+      return { sourceId, success: false, eventsFound: 0, error: `Fetch failed: ${fetchResult.error}` };
+    }
   }
 
   const extractResult = extractFromJsonLd(fetchResult.html, sourceId, source.url);
