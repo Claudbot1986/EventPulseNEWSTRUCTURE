@@ -1,15 +1,14 @@
 /**
  * 09-DiscoveryAgent/tests/eval.test.ts — Tier-selection unit tests.
  *
- * Uses node:test (built-in, no extra deps). Run with:
- *   npx tsx --test 09-DiscoveryAgent/tests/eval.test.ts
+ * Uses vitest (matches the rest of the project test suite). Run with:
+ *   npx vitest run 09-DiscoveryAgent/tests/eval.test.ts
  *
  * Coverage: pickHealTier logic across all routing-reason patterns + edge cases.
  * Does NOT cover appendRun (audit logs) — those are integration-level.
  */
 
-import { test } from 'node:test';
-import assert from 'node:assert/strict';
+import { test, expect } from 'vitest';
 
 import { pickHealTier, type SourceStatus } from '../eval.js';
 
@@ -33,7 +32,7 @@ test('pickHealTier → tier 3 when 5+ fails and old lastSuccess', () => {
     lastSuccess: '2024-01-01T00:00:00.000Z',
     lastRoutingReason: 'no-jsonld',
   });
-  assert.equal(pickHealTier(s), 3);
+  expect(pickHealTier(s)).toBe(3);
 });
 
 test('pickHealTier → tier 3 when 5+ fails and lastSuccess=null', () => {
@@ -42,7 +41,7 @@ test('pickHealTier → tier 3 when 5+ fails and lastSuccess=null', () => {
     lastSuccess: null,
     lastRoutingReason: 'no-jsonld',
   });
-  assert.equal(pickHealTier(s), 3);
+  expect(pickHealTier(s)).toBe(3);
 });
 
 test('pickHealTier → tier 2 for no-jsonld reason with 3 fails', () => {
@@ -51,7 +50,7 @@ test('pickHealTier → tier 2 for no-jsonld reason with 3 fails', () => {
     lastSuccess: null,
     lastRoutingReason: 'T0096: jsonld stuck (3 attempts, 0 events)',
   });
-  assert.equal(pickHealTier(s), 2);
+  expect(pickHealTier(s)).toBe(2);
 });
 
 test('pickHealTier → tier 1 for Fetch failed reason', () => {
@@ -60,7 +59,7 @@ test('pickHealTier → tier 1 for Fetch failed reason', () => {
     lastSuccess: null,
     lastRoutingReason: 'toolA(preA): Fetch failed: ENOTFOUND',
   });
-  assert.equal(pickHealTier(s), 1);
+  expect(pickHealTier(s)).toBe(1);
 });
 
 test('pickHealTier → tier 1 for ECONNRESET', () => {
@@ -69,7 +68,7 @@ test('pickHealTier → tier 1 for ECONNRESET', () => {
     lastSuccess: null,
     lastRoutingReason: 'ECONNRESET from upstream',
   });
-  assert.equal(pickHealTier(s), 1);
+  expect(pickHealTier(s)).toBe(1);
 });
 
 test('pickHealTier → tier 1 for network/SSL', () => {
@@ -78,7 +77,7 @@ test('pickHealTier → tier 1 for network/SSL', () => {
     lastSuccess: null,
     lastRoutingReason: 'SSL handshake failed',
   });
-  assert.equal(pickHealTier(s), 1);
+  expect(pickHealTier(s)).toBe(1);
 });
 
 test('pickHealTier → tier 2 when reason contains "0 events"', () => {
@@ -87,7 +86,7 @@ test('pickHealTier → tier 2 when reason contains "0 events"', () => {
     lastSuccess: null,
     lastRoutingReason: 'runA-extract: 0 events',
   });
-  assert.equal(pickHealTier(s), 2);
+  expect(pickHealTier(s)).toBe(2);
 });
 
 test('pickHealTier → null when no lastRoutingReason', () => {
@@ -96,7 +95,7 @@ test('pickHealTier → null when no lastRoutingReason', () => {
     lastSuccess: null,
     lastRoutingReason: undefined,
   });
-  assert.equal(pickHealTier(s), null);
+  expect(pickHealTier(s)).toBe(null);
 });
 
 test('pickHealTier → tier 2 when recent success overrides retire', () => {
@@ -105,7 +104,7 @@ test('pickHealTier → tier 2 when recent success overrides retire', () => {
     lastSuccess: new Date().toISOString(),
     lastRoutingReason: 'no-jsonld',
   });
-  assert.equal(pickHealTier(s), 2);
+  expect(pickHealTier(s)).toBe(2);
 });
 
 test('pickHealTier → respects retireDays override', () => {
@@ -116,9 +115,9 @@ test('pickHealTier → respects retireDays override', () => {
     lastRoutingReason: 'no-jsonld',
   });
   // Default retireDays=30 → 100-day-old success is "old" but consecutiveFailures<5 → not retire
-  assert.equal(pickHealTier(s), 2);
+  expect(pickHealTier(s)).toBe(2);
   // With retireDays=200 → 100 days is recent → not retired yet (still tier 2)
-  assert.equal(pickHealTier(s, { retireDays: 200 }), 2);
+  expect(pickHealTier(s, { retireDays: 200 })).toBe(2);
   // With retireAfter=2 AND a really old success (500 days) → retire (tier 3)
   const veryOld = new Date(Date.now() - 500 * 24 * 60 * 60 * 1000).toISOString();
   const s2 = status({
@@ -126,7 +125,7 @@ test('pickHealTier → respects retireDays override', () => {
     lastSuccess: veryOld,
     lastRoutingReason: 'no-jsonld',
   });
-  assert.equal(pickHealTier(s2, { retireAfter: 2, retireDays: 200 }), 3);
+  expect(pickHealTier(s2, { retireAfter: 2, retireDays: 200 })).toBe(3);
 });
 
 test('pickHealTier → defaults to tier 2 for unrecognized reason', () => {
@@ -135,5 +134,5 @@ test('pickHealTier → defaults to tier 2 for unrecognized reason', () => {
     lastSuccess: null,
     lastRoutingReason: 'something completely new',
   });
-  assert.equal(pickHealTier(s), 2);
+  expect(pickHealTier(s)).toBe(2);
 });
