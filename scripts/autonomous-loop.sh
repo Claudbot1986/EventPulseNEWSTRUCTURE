@@ -343,7 +343,12 @@ queue is empty, until the user explicitly disables it.
     fi
   fi
 
-  if [ "$rc" -eq 0 ] || [ "$json_error" = false ]; then
+  # Determine real exit status. error_max_budget_usd means the iteration
+  # burned budget without completing meaningful work — treat as failure so
+  # the loop backs off instead of spinning uselessly.
+  if [ "$json_subtype" = "error_max_budget_usd" ]; then
+    final_rc=1
+  elif [ "$rc" -eq 0 ] || [ "$json_error" = false ]; then
     final_rc=0
   else
     final_rc=$rc
