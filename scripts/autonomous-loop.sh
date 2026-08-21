@@ -14,7 +14,7 @@
 #
 # Safety caps (all env-overridable):
 #   MAX_TOTAL_HOURS=168        Hard wall-clock cap (default 7 days = 168 h; only thing that stops the loop).
-#   MAX_BUDGET_PER_ITER=5      USD per claude --print call.
+#   MAX_BUDGET_PER_ITER=15     USD per claude --print call (default $15; lower values risk budget-exhaustion on vault-heavy context).
 #   ITERATION_TIMEOUT_MIN=30   Hard kill if claude hangs.
 #   RESTART_DELAY=3            Seconds between iterations.
 #
