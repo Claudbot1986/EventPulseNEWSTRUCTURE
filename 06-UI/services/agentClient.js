@@ -600,6 +600,78 @@ export function fetchEventIcs(eventId, clientUserId) {
 }
 
 /**
+ * Persist the Expo push token and follow-push opt-in flag — T0059.
+ *
+ * POST /agent/push-token
+ *   body: { client_user_id, push_token?: string | null,
+ *           follow_push_enabled?: boolean }
+ *
+ * Backend (08-Agent/server.ts) writes to
+ * `user_preferences.preferences.{push_token,follow_push_enabled}` via
+ * read-modify-write, preserving existing keys like `categories` and
+ * `followed_venue_ids`. Phase 1 = storage only (NotificationsScreen polls
+ * `/agent/notifications` on next open). Phase 2 will add an Expo Push API
+ * fan-out from the server side.
+ *
+ * Best-effort: never throws. Returns { ok: boolean, warning?: string } so
+ * the ProfileScreen toggle can stay silent on transient errors.
+ *
+ * `pushToken` may be:
+ *   - string (the Expo push token to store, or `''`/whitespace to clear)
+ *   - null  (explicit clear)
+ *   - undefined (omit; leaves prior value untouched)
+ */
+export async function registerPushToken({
+  pushToken,
+  followPushEnabled,
+  signal,
+  timeoutMs = 4_000,
+} = {}) {
+  let baseUrl;
+  try {
+    baseUrl = requireAgentBaseUrl();
+  } catch (_err) {
+    return { ok: false, warning: 'config' };
+  }
+  const client_user_id = await getOrCreateAnonUserId();
+  const body = { client_user_id };
+  if (pushToken !== undefined) {
+    body.push_token =
+      pushToken === null || (typeof pushToken === 'string' && pushToken.trim() === '')
+        ? null
+        : String(pushToken);
+  }
+  if (typeof followPushEnabled === 'boolean') {
+    body.follow_push_enabled = followPushEnabled;
+  }
+  if (!('push_token' in body) && !('follow_push_enabled' in body)) {
+    return { ok: false, warning: 'no fields' };
+  }
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), timeoutMs);
+  if (signal) {
+    if (signal.aborted) controller.abort();
+    else signal.addEventListener('abort', () => controller.abort(), { once: true });
+  }
+  try {
+    const response = await fetch(`${baseUrl}/agent/push-token`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+      signal: controller.signal,
+    });
+    if (!response.ok && response.status !== 202) {
+      return { ok: false, warning: `agent ${response.status}` };
+    }
+    return await response.json().catch(() => ({ ok: true }));
+  } catch (_err) {
+    return { ok: false, warning: 'network' };
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
+/**
  * Fetch the user's saved events — T0054 / Phase 1 retention.
  *
  * GET /agent/saved?client_user_id=<uuid>&limit=<int>
