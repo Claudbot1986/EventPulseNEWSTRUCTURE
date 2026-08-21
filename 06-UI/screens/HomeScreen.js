@@ -41,7 +41,7 @@ import {
   Image,
 } from 'react-native';
 
-import { fetchFeed, fetchSavedEvents, fetchRecommendedEvents } from '../services/agentClient';
+import { fetchFeed, fetchSavedEvents, fetchRecommendedEvents, fetchSuggestedPrompts } from '../services/agentClient';
 
 const TOKENS = {
   color: {
@@ -357,6 +357,80 @@ function RecommendedSection({ onCardPress }) {
   );
 }
 
+// ─── Suggested prompts section (T0063 — T0057 backend wire) ──────────────────
+
+const SUGGESTED_PROMPTS_LIMIT = 5;
+
+function useSuggestedPrompts() {
+  const [state, setState] = useState({ status: 'loading', prompts: [], error: null });
+
+  const load = useCallback(async () => {
+    setState({ status: 'loading', prompts: [], error: null });
+    try {
+      const result = await fetchSuggestedPrompts({ limit: SUGGESTED_PROMPTS_LIMIT });
+      setState({ status: 'ready', prompts: result.prompts ?? [], error: null });
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : 'unknown';
+      setState({ status: 'error', prompts: [], error: msg });
+    }
+  }, []);
+
+  useEffect(() => {
+    load();
+  }, [load]);
+
+  return { ...state, retry: load };
+}
+
+function ChipSkeleton() {
+  return (
+    <View style={styles.chipSkeleton} accessibilityLabel="Laddar förslag" />
+  );
+}
+
+function PromptChip({ prompt, onPress }) {
+  return (
+    <Pressable
+      style={({ pressed }) => [styles.promptChip, pressed && styles.promptChipPressed]}
+      onPress={() => onPress?.(prompt)}
+      accessibilityRole="button"
+      accessibilityLabel={prompt.reason ? `${prompt.prompt_text}. ${prompt.reason}` : prompt.prompt_text}
+    >
+      <Text style={styles.promptChipText} numberOfLines={2}>{prompt.prompt_text}</Text>
+      {prompt.reason ? (
+        <Text style={styles.promptChipReason} numberOfLines={1}>{prompt.reason}</Text>
+      ) : null}
+    </Pressable>
+  );
+}
+
+function SuggestedPromptsSection({ onChipPress }) {
+  const { status, prompts } = useSuggestedPrompts();
+  // Hide section on error / empty (T0063 spec) — failure mode is "no chips" not "red error".
+  const visiblePrompts = status === 'ready' ? prompts : [];
+  if (status === 'ready' && visiblePrompts.length === 0) return null;
+
+  return (
+    <View style={styles.section}>
+      <View style={styles.sectionHeader}>
+        <Text style={styles.sectionEyebrow}>FÖRSLAG</Text>
+        <Text style={styles.sectionTitle}>Vad vill du göra?</Text>
+      </View>
+      <ScrollView
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        contentContainerStyle={styles.promptChipRow}
+      >
+        {status === 'loading'
+          ? Array.from({ length: SUGGESTED_PROMPTS_LIMIT }).map((_, i) => <ChipSkeleton key={`s-${i}`} />)
+          : visiblePrompts.map((p) => (
+              <PromptChip key={p.id} prompt={p} onPress={onChipPress} />
+            ))}
+      </ScrollView>
+    </View>
+  );
+}
+
 // ─── Saved section (T0054) ────────────────────────────────────────────────────
 
 function useSavedSection() {
@@ -411,12 +485,16 @@ function SavedSection({ onCardPress }) {
 
 // ─── Top-level screen ────────────────────────────────────────────────────────
 
-export default function HomeScreen() {
+export default function HomeScreen({ onChipPress }) {
   const handleCardPress = useCallback((event) => {
     // The browse tab owns external-link handling via sourceLinks.js.
     // HomeScreen stays declarative until a details screen lands (Phase 2 retention).
     void event;
   }, []);
+
+  const handlePromptPress = useCallback((prompt) => {
+    if (typeof onChipPress === 'function') onChipPress(prompt);
+  }, [onChipPress]);
 
   return (
     <View style={styles.container}>
@@ -431,6 +509,8 @@ export default function HomeScreen() {
             Personlig feed — uppdaterad just nu från live data.
           </Text>
         </View>
+
+        <SuggestedPromptsSection onChipPress={handlePromptPress} />
 
         <TonightSection onCardPress={handleCardPress} />
         <WeekendSection onCardPress={handleCardPress} />
@@ -652,5 +732,43 @@ const styles = StyleSheet.create({
     color: TOKENS.color.textMuted,
     fontSize: TOKENS.fontSize.md,
     lineHeight: 22,
+  },
+
+  // Suggested prompts chips (T0063 — T0057 backend wire)
+  promptChipRow: {
+    paddingHorizontal: TOKENS.space.lg,
+    gap: TOKENS.space.sm,
+  },
+  promptChip: {
+    backgroundColor: TOKENS.color.surface,
+    borderWidth: 1,
+    borderColor: TOKENS.color.border,
+    borderRadius: TOKENS.radius.lg,
+    paddingVertical: TOKENS.space.md,
+    paddingHorizontal: TOKENS.space.md,
+    minWidth: 180,
+    maxWidth: 260,
+  },
+  promptChipPressed: {
+    opacity: 0.7,
+    borderColor: TOKENS.color.accent,
+  },
+  promptChipText: {
+    color: TOKENS.color.text,
+    fontSize: TOKENS.fontSize.md,
+    fontWeight: '600',
+    lineHeight: 20,
+    marginBottom: 2,
+  },
+  promptChipReason: {
+    color: TOKENS.color.textSoft,
+    fontSize: TOKENS.fontSize.sm,
+  },
+  chipSkeleton: {
+    backgroundColor: TOKENS.color.surface,
+    borderRadius: TOKENS.radius.lg,
+    minWidth: 180,
+    height: 60,
+    opacity: 0.6,
   },
 });

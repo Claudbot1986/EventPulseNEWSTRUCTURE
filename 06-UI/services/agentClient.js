@@ -513,6 +513,66 @@ export function addDays(from, days) {
 }
 
 /**
+ * Fetch time-aware suggested prompt chips — T0057 / Phase 1 retention.
+ *
+ * GET /agent/suggested-prompts?client_user_id=<uuid>
+ *
+ * Returns 3–5 contextual prompt chips:
+ *   { prompts: [{ id, prompt_text, reason, category? }] }
+ *
+ * Chips are generated server-side from time-of-day, weekend flag, stated
+ * onboarding categories, and followed artists/venues. The client renders
+ * the chips verbatim — no transformation needed.
+ *
+ * @param {{ limit?: number, signal?: AbortSignal, timeoutMs?: number }} opts
+ * @returns {Promise<{ prompts: SuggestedPrompt[] }>}
+ */
+export async function fetchSuggestedPrompts({
+  limit = 5,
+  signal,
+  timeoutMs = 12_000,
+} = {}) {
+  const { getOrCreateAnonUserId } = await import('./storage');
+  const baseUrl = requireAgentBaseUrl();
+  const url = new URL(`${baseUrl}/agent/suggested-prompts`);
+  const clientUserId = await getOrCreateAnonUserId();
+  url.searchParams.set('client_user_id', clientUserId);
+  url.searchParams.set('limit', String(limit));
+
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), timeoutMs);
+  if (signal) {
+    if (signal.aborted) controller.abort();
+    else signal.addEventListener('abort', () => controller.abort(), { once: true });
+  }
+
+  let response;
+  try {
+    response = await fetch(url.toString(), { signal: controller.signal });
+  } finally {
+    clearTimeout(timer);
+  }
+
+  if (!response.ok) {
+    throw new Error(`suggested-prompts ${response.status}: ${response.statusText}`);
+  }
+
+  const data = await response.json();
+  const rawPrompts = Array.isArray(data.prompts) ? data.prompts : [];
+  const prompts = rawPrompts
+    .filter((p) => p && typeof p.prompt_text === 'string' && p.prompt_text.length > 0)
+    .slice(0, limit)
+    .map((p) => ({
+      id: String(p.id ?? p.prompt_text),
+      prompt_text: p.prompt_text,
+      reason: typeof p.reason === 'string' ? p.reason : '',
+      category: typeof p.category === 'string' && p.category.length > 0 ? p.category : undefined,
+    }));
+
+  return { prompts };
+}
+
+/**
  * Fetch the user's saved events — T0054 / Phase 1 retention.
  *
  * GET /agent/saved?client_user_id=<uuid>&limit=<int>
