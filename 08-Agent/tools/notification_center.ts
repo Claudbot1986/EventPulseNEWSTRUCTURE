@@ -32,8 +32,23 @@ export const REMINDER_WINDOW_MS = 2 * 60 * 60 * 1000;
 export type NotificationStatus = 'unread' | 'read';
 
 /** Notification kinds surfaced in the UI. Keep in sync with the docstring
- *  on NotificationsScreen.js and the grouping logic there. */
-export type NotificationKind = 'reminder' | 'match' | 'response';
+ *  on NotificationsScreen.js, the grouping logic there, and the CHECK
+ *  constraint on the `notifications` table (see
+ *  05-Supabase/migrations/20260822-0001-notifications-kind-follow-drop.sql).
+ *
+ *  - reminder   : 2h before a saved event starts (T0048).
+ *  - match      : personalized agent reply (Phase 2).
+ *  - response   : agent answer to a queue item (Phase 2).
+ *  - follow_drop: a venue the user follows published a new event (T0059).
+ *  - artist_drop: an artist the user follows published a new event (Phase 2,
+ *                 reserved — schema ready but event_artists join not yet wired).
+ */
+export type NotificationKind =
+  | 'reminder'
+  | 'match'
+  | 'response'
+  | 'follow_drop'
+  | 'artist_drop';
 
 /** Persisted + serialized notification row. */
 export interface NotificationRow {
