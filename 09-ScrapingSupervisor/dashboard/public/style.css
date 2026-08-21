@@ -1014,6 +1014,26 @@ ul.bars li {
 .review-btn:hover { background: rgba(88, 166, 255, 0.2); }
 .review-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
 
+/* ── Analytics link button (orange, opens 10-Analytics in new window) ──── */
+.analytics-btn {
+  display: inline-block;
+  background: #f97316;
+  color: #ffffff;
+  border: 1px solid #ea580c;
+  border-radius: 8px;
+  padding: 2px 10px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: inherit;
+  letter-spacing: 0.02em;
+  text-decoration: none;
+  transition: background 0.15s, border-color 0.15s, transform 0.05s;
+}
+.analytics-btn:hover { background: #ea580c; border-color: #c2410c; text-decoration: none; }
+.analytics-btn:active { transform: translateY(1px); }
+.analytics-btn:focus-visible { outline: 2px solid #fb923c; outline-offset: 1px; }
+
 .review-modal[hidden] { display: none; }
 .review-modal {
   position: fixed; inset: 0; z-index: 1000;
