@@ -16,6 +16,7 @@
  */
 
 import { describe, expect, it } from 'vitest';
+import { deterministicReply } from '../llmRouter';
 import golden from './golden-eval.json';
 import { parseIntentDeterministic } from '../tools/parse_intent';
 import { rankEvents } from '../tools/rank_events';
@@ -194,3 +195,42 @@ describe('filterByIntent date range (regression: date filter must be enforced)',
     }
   });
 });
+describe('deterministicReply relaxation copy (T0049 — zero-result broaden)', () => {
+  // The golden-eval fixture covers the parse→rank pipeline. This section
+  // tests that the composer correctly labels the relaxation in the reply
+  // when relaxed_constraint is set (MASTERPLAN §18.2 decision 4).
+  const intent = { language: 'sv' as const, raw_query: 'test', city: 'Stockholm',
+    time_of_day: undefined, party: undefined, budget: undefined,
+    categories: [], date_from: '2026-08-17', date_to: '2026-08-17' };
+
+  it('adds date_window suffix when relaxed_constraint=date_window', () => {
+    const result = deterministicReply({ intent, cards: [{ id: 'x', title: 'Test' } as any], warnings: [], relaxed_constraint: 'date_window' });
+    expect(result.reply).toMatch(/bredare urval/);
+    expect(result.reply).toMatch(/Hittade inget/);
+  });
+
+  it('adds category suffix when relaxed_constraint=category', () => {
+    const result = deterministicReply({ intent, cards: [{ id: 'x', title: 'Test' } as any], warnings: [], relaxed_constraint: 'category' });
+    expect(result.reply).toMatch(/kategorin/);
+    expect(result.reply).toMatch(/andra förslag/);
+  });
+
+  it('adds no suffix when relaxed_constraint=null', () => {
+    const result = deterministicReply({ intent, cards: [{ id: 'x', title: 'Test' } as any], warnings: [], relaxed_constraint: null });
+    expect(result.reply).not.toMatch(/bredare|andra|inget/);
+  });
+
+  it('adds date_window suffix in English when language=en', () => {
+    const enIntent = { ...intent, language: 'en' as const };
+    const result = deterministicReply({ intent: enIntent, cards: [{ id: 'x', title: 'Test' } as any], warnings: [], relaxed_constraint: 'date_window' });
+    expect(result.reply).toMatch(/wider selection/);
+  });
+
+  it('returns honest empty-state reply with suffix when cards=[] and date_window relaxed', () => {
+    const result = deterministicReply({ intent, cards: [], warnings: [], relaxed_constraint: 'date_window' });
+    expect(result.reply).toMatch(/Hittade inget/);
+    expect(result.reply).toMatch(/bredare urval/);
+    expect(result.highlightedIds).toEqual([]);
+  });
+});
+
