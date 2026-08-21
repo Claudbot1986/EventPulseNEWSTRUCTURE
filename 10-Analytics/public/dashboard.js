@@ -108,6 +108,60 @@ async function refreshTopStrip() {
   $('kpi-last-seen').textContent = m.last_seen ? fmtRelative(m.last_seen) : '—';
 }
 
+/**
+ * T0094 — fetch and render content affinity + quality guardrails.
+ * Endpoint: GET /api/metrics/insights
+ * Returns: { content_affinity: { top_categories: [{category, views, saves, save_rate}] },
+ *            quality_guardrails: { ingestion_gap_minutes, dau_24h, dau_delta_pct, alerts: [{level, message}] } }
+ */
+async function refreshInsights() {
+  const r = await adminFetch('/api/metrics/insights');
+  const data = r.data || r;
+  // Content affinity table
+  const cats = data.content_affinity?.top_categories ?? [];
+  const empty = $('content-affinity-empty');
+  const table = $('affinity-table');
+  const tbody = table.querySelector('tbody');
+  tbody.innerHTML = '';
+  if (cats.length === 0) {
+    empty.style.display = '';
+    table.style.display = 'none';
+  } else {
+    empty.style.display = 'none';
+    table.style.display = '';
+    for (const c of cats) {
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td><code>${c.category}</code></td>
+        <td class="num">${c.views.toLocaleString()}</td>
+        <td class="num">${c.saves.toLocaleString()}</td>
+        <td class="num">${c.save_rate === null ? 'n/a' : (c.save_rate * 100).toFixed(1) + '%'}</td>
+      `;
+      tbody.appendChild(tr);
+    }
+  }
+  // Quality guardrails
+  const gr = data.quality_guardrails ?? {};
+  $('gr-gap').textContent = gr.ingestion_gap_minutes === null ? '—' : `${gr.ingestion_gap_minutes}m`;
+  $('gr-dau').textContent = (gr.dau_24h ?? 0).toLocaleString();
+  const delta = gr.dau_delta_pct;
+  if (delta === null || delta === undefined) {
+    $('gr-dau-delta').textContent = 'vs 7d avg —';
+  } else {
+    const sign = delta >= 0 ? '+' : '';
+    $('gr-dau-delta').textContent = `vs 7d avg ${sign}${delta}%`;
+  }
+  $('gr-events').textContent = (gr.events_last_24h ?? 0).toLocaleString();
+  const alertsEl = $('gr-alerts');
+  alertsEl.innerHTML = '';
+  for (const a of (gr.alerts ?? [])) {
+    const div = document.createElement('div');
+    div.className = `alert alert-${a.level}`;
+    div.textContent = `[${a.level.toUpperCase()}] ${a.message}`;
+    alertsEl.appendChild(div);
+  }
+}
+
 async function refreshEvents() {
   const r = await adminFetch('/api/events?limit=50');
   const events = r.data || r.events || [];
@@ -134,7 +188,7 @@ async function refreshEvents() {
 }
 
 async function refreshAll() {
-  const results = await Promise.allSettled([refreshStats(), refreshEvents(), refreshTopStrip()]);
+  const results = await Promise.allSettled([refreshStats(), refreshEvents(), refreshTopStrip(), refreshInsights()]);
   const first = results.find((r) => r.status === 'rejected');
   if (first) {
     const msg = first.reason?.message || String(first.reason);

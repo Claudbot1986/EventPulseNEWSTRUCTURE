@@ -48,6 +48,27 @@
     </section>
 
     <section class="card">
+      <h2>Content affinity <span class="muted">— top categories by views (7d)</span></h2>
+      <div id="content-affinity-empty" class="muted">no event_view with category_slug in last 7d</div>
+      <table class="data-table" id="affinity-table" style="display:none">
+        <thead><tr><th>Category</th><th class="num">Views</th><th class="num">Saves</th><th class="num">Save rate</th></tr></thead>
+        <tbody></tbody>
+      </table>
+    </section>
+
+    <section class="card">
+      <h2>Quality guardrails</h2>
+      <div class="guardrails" id="guardrails">
+        <div class="kpis">
+          <div class="kpi"><div class="kpi-label">Ingestion gap</div><div class="kpi-value" id="gr-gap">—</div><div class="kpi-sub muted">minutes since last event</div></div>
+          <div class="kpi"><div class="kpi-label">DAU 24h</div><div class="kpi-value" id="gr-dau">—</div><div class="kpi-sub muted" id="gr-dau-delta">vs 7d avg</div></div>
+          <div class="kpi"><div class="kpi-label">Events 24h</div><div class="kpi-value" id="gr-events">—</div><div class="kpi-sub muted">last 24h</div></div>
+        </div>
+        <div id="gr-alerts"></div>
+      </div>
+    </section>
+
+    <section class="card">
       <h2>Funnel — view → save</h2>
       <div class="funnel" id="funnel">
         <div class="funnel-step" data-step="view"><span class="funnel-label">view</span><span class="funnel-bar"><span class="fill" style="width:0%"></span></span><span class="funnel-count">0</span></div>

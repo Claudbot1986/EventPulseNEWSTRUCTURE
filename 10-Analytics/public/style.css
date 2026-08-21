@@ -139,6 +139,34 @@ main {
   color: var(--accent);
 }
 
+/* Quality guardrails — alerts */
+.guardrails { display: flex; flex-direction: column; gap: 12px; }
+#gr-alerts:empty { display: none; }
+.alert {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  border-radius: 6px;
+  font-size: 13px;
+  margin-top: 4px;
+}
+.alert-warn {
+  background: rgba(251, 191, 36, 0.1);
+  border: 1px solid rgba(251, 191, 36, 0.3);
+  color: var(--warn);
+}
+.alert-crit {
+  background: rgba(248, 113, 113, 0.1);
+  border: 1px solid rgba(248, 113, 113, 0.3);
+  color: var(--bad);
+}
+.alert-info {
+  background: rgba(74, 222, 128, 0.1);
+  border: 1px solid rgba(74, 222, 128, 0.3);
+  color: var(--good);
+}
+
 .data-table {
   width: 100%;
   border-collapse: collapse;

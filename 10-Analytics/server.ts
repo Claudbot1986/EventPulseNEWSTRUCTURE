@@ -285,6 +285,103 @@ app.get('/api/metrics/top-strip', requireBearer, async (_req: Request, res: Resp
   }
 });
 
+/**
+ * GET /api/metrics/insights — T0094
+ * Admin. Two things in one round-trip:
+ *   - content_affinity: top categories by views / saves / save-rate (7d window)
+ *   - quality_guardrails: ingestion gap, 24h-vs-7d DAU delta, save-rate alert
+ *
+ * Sparse-data friendly: returns [] / null where no signal exists, never throws.
+ */
+app.get('/api/metrics/insights', requireBearer, async (_req: Request, res: Response) => {
+  try {
+    const events = await readEvents({});
+    const now = Date.now();
+    const day = 86_400_000;
+    const dayCutoff = new Date(now - 1 * day).toISOString();
+    const weekCutoff = new Date(now - 7 * day).toISOString();
+
+    // ── Content affinity ─────────────────────────────────────────────────
+    const viewsByCat = new Map<string, number>();
+    const savesByCat = new Map<string, number>();
+    for (const ev of events) {
+      if (ev.ts < weekCutoff) continue;
+      const cat = (ev.payload as Record<string, unknown>)?.category_slug;
+      const catKey = typeof cat === 'string' && cat.length > 0 ? cat : 'uncategorized';
+      if (ev.event_type === 'event_view') {
+        viewsByCat.set(catKey, (viewsByCat.get(catKey) ?? 0) + 1);
+      } else if (ev.event_type === 'event_save') {
+        savesByCat.set(catKey, (savesByCat.get(catKey) ?? 0) + 1);
+      }
+    }
+    const topCategories = [...viewsByCat.entries()]
+      .map(([category, views]) => {
+        const saves = savesByCat.get(category) ?? 0;
+        return {
+          category,
+          views,
+          saves,
+          save_rate: views > 0 ? Number((saves / views).toFixed(3)) : null,
+        };
+      })
+      .sort((a, b) => b.views - a.views)
+      .slice(0, 8);
+
+    // ── Quality guardrails ───────────────────────────────────────────────
+    const lastTs = events.reduce((m, e) => (e.ts > m ? e.ts : m), '');
+    const ingestionGapMinutes = lastTs
+      ? Math.round((now - new Date(lastTs).getTime()) / 60_000)
+      : null;
+
+    const dau24 = new Set<string>();
+    const dau7 = new Set<string>();
+    for (const ev of events) {
+      if (!ev.device_id_hash) continue;
+      if (ev.ts >= dayCutoff) dau24.add(ev.device_id_hash);
+      if (ev.ts >= weekCutoff) dau7.add(ev.device_id_hash);
+    }
+    // 7d daily average ≈ WAU / 7; compare today vs avg
+    const avgDau7 = dau7.size / 7;
+    const dauDeltaPct = avgDau7 > 0
+      ? Number((((dau24.size - avgDau7) / avgDau7) * 100).toFixed(1))
+      : null;
+
+    const last24hEvents = events.filter((e) => e.ts >= dayCutoff).length;
+    const alerts: { level: 'info' | 'warn' | 'crit'; message: string }[] = [];
+    if (ingestionGapMinutes !== null && ingestionGapMinutes > 60) {
+      alerts.push({ level: 'warn', message: `No events for ${ingestionGapMinutes}m (last seen ${lastTs})` });
+    }
+    if (dauDeltaPct !== null && dauDeltaPct < -50) {
+      alerts.push({ level: 'warn', message: `DAU down ${Math.abs(dauDeltaPct)}% vs 7d-avg` });
+    }
+    if (last24hEvents === 0 && events.length > 0) {
+      alerts.push({ level: 'crit', message: 'Zero events in last 24h despite historical activity' });
+    }
+
+    res.json({
+      success: true,
+      data: {
+        content_affinity: {
+          window: '7d',
+          top_categories: topCategories,
+        },
+        quality_guardrails: {
+          ingestion_gap_minutes: ingestionGapMinutes,
+          last_seen: lastTs || null,
+          dau_24h: dau24.size,
+          dau_7d_avg: Number(avgDau7.toFixed(2)),
+          dau_delta_pct: dauDeltaPct,
+          events_last_24h: last24hEvents,
+          alerts,
+        },
+      },
+    });
+  } catch (err) {
+    const message = err instanceof Error ? err.message : 'unknown error';
+    res.status(500).json({ error: 'insights_failed', message });
+  }
+});
+
 // ---------------------------------------------------------------------------
 // Public dashboard + health
 // ---------------------------------------------------------------------------
