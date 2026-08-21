@@ -309,8 +309,8 @@ async function saveVenueConnections(events: any[]): Promise<void> {
   }
 }
 
-export async function scrapeTicketmaster(): Promise<string> {
-  console.log('[ticketmaster] Starting scrape...');
+export async function fetchTicketmaster(): Promise<string> {
+  console.log('[ticketmaster] Starting fetch (Discovery API, not HTML scrape)...');
 
   // Debug: log masked API key presence
   const url = `${BASE_URL}/events.json`;
@@ -487,7 +487,7 @@ async function saveVenueCandidates(events: any[]): Promise<string> {
 import { fileURLToPath } from 'url';
 const __filename = fileURLToPath(import.meta.url);
 if (process.argv[1] === __filename) {
-  scrapeTicketmaster()
+  fetchTicketmaster()
     .then(r => { console.log('[ticketmaster] Exit:', r); process.exit(0); })
     .catch(e => { console.error('[ticketmaster] Fatal:', e); process.exit(1); });
 }
