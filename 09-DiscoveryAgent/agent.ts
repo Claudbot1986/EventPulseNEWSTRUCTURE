@@ -226,7 +226,13 @@ async function main(): Promise<void> {
 
 const invokedDirectly = (() => {
   try {
-    return import.meta.url === `file://${process.argv[1]}`;
+    // tsx passes a relative argv[1] while import.meta.url is absolute —
+    // match by suffix instead of strict equality. This way `tsx path/to/agent.ts`
+    // and `cd dir && tsx agent.ts` both trigger main().
+    const argv1 = process.argv[1] ?? '';
+    if (!argv1) return false;
+    const urlPath = new URL(import.meta.url).pathname;
+    return urlPath.endsWith(argv1) || argv1.endsWith(urlPath.split('/').pop() ?? '');
   } catch {
     return false;
   }
