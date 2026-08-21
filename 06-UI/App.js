@@ -468,11 +468,11 @@ function GroupedEventItem({ groupedEvent, onEventPress }) {
           {groupedEvent.events.map((event, index) => (
             <TouchableOpacity
               key={`${event.id || event.start_time || index}`}
-              style={styles.timePill}
+              style={styles.timeClusterWrap}
               onPress={() => onEventPress(event)}
               activeOpacity={0.7}
             >
-              <Text style={styles.timePillText}>{formatEventTime(event)}</Text>
+              <DateCluster event={event} />
             </TouchableOpacity>
           ))}
         </View>
@@ -1186,19 +1186,8 @@ const styles = StyleSheet.create({
     gap: TOKENS.space.xs,
     marginTop: TOKENS.space.sm,
   },
-  timePill: {
-    backgroundColor: TOKENS.color.accentSoft,
-    borderRadius: TOKENS.radius.pill,
-    paddingVertical: TOKENS.space.xs,
-    paddingHorizontal: TOKENS.space.md,
-    borderWidth: 1,
-    borderColor: 'rgba(255, 180, 84, 0.28)',
-  },
-  timePillText: {
-    color: TOKENS.color.accent,
-    fontSize: 12,
-    fontWeight: '800',
-    letterSpacing: 0.4,
+  timeClusterWrap: {
+    borderRadius: TOKENS.radius.md,
   },
   groupedRowContainer: {
     flexDirection: 'row',
