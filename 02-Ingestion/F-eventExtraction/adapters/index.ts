@@ -16,6 +16,7 @@ import * as intiman from './intiman';
 import * as arkdes from './arkdes';
 import * as folkoperan from './folkoperan';
 import * as chinaTeatern from './china-teatern';
+import * as eventbriteStockholm from './eventbriteStockholm';
 import type { ParsedEvent } from '../schema';
 
 export interface SiteAdapter {
@@ -48,6 +49,11 @@ export const ADAPTERS: SiteAdapter[] = [
     name: 'china-teatern',
     matches: chinaTeatern.matches,
     extract: chinaTeatern.extract,
+  },
+  {
+    name: 'eventbriteStockholm',
+    matches: eventbriteStockholm.matches,
+    extract: eventbriteStockholm.extract,
   },
 ];
 
