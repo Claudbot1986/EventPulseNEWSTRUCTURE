@@ -199,6 +199,133 @@ export async function savePreferencesToServer({ categories }, { signal, timeoutM
 export { getOrCreateAnonUserId };
 
 /**
+ * Follow or unfollow an entity (venue or artist) — T0050 / MVP-gap §77.
+ *
+ * Body shape (POST /agent/follow):
+ *   { client_user_id, entity_type: 'venue' | 'artist',
+ *     entity_id, action: 'follow' | 'unfollow' }
+ *
+ * The backend persists to `user_preferences.preferences.followed_venue_ids`
+ * (uuid[]) or `followed_artist_slugs` (text[]). The chat handler reads these
+ * lists and applies a `followed_venue_match` (20) / `followed_artist_match`
+ * ranker boost, so the action also re-shapes the next chat turn's results.
+ *
+ * Back-compat: callers that only send `venue_id` (no entity_type) still work
+ * — the backend defaults `entity_type = 'venue'` when `artist_slug` is unset.
+ *
+ * Best-effort: never throws. Returns { ok, warning } so the UI's long-press
+ * action sheet can auto-dismiss on either path.
+ */
+export async function followEntity({
+  entityType,
+  entityId,
+  action,
+  venueId,
+  artistSlug,
+  signal,
+  timeoutMs = 4_000,
+}) {
+  if (!entityId && !venueId && !artistSlug) {
+    return { ok: false, warning: 'entity_id (or venue_id/artist_slug) is required' };
+  }
+  if (action !== 'follow' && action !== 'unfollow') {
+    return { ok: false, warning: "action must be 'follow' or 'unfollow'" };
+  }
+  let baseUrl;
+  try {
+    baseUrl = requireAgentBaseUrl();
+  } catch (_err) {
+    return { ok: false, warning: 'config' };
+  }
+  const client_user_id = await getOrCreateAnonUserId();
+  const body = {
+    client_user_id,
+    entity_type: entityType,
+    action,
+  };
+  if (entityId) body.entity_id = entityId;
+  else if (venueId) body.venue_id = venueId;
+  else if (artistSlug) body.artist_slug = artistSlug;
+
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), timeoutMs);
+  if (signal) {
+    if (signal.aborted) controller.abort();
+    else signal.addEventListener('abort', () => controller.abort(), { once: true });
+  }
+  try {
+    const response = await fetch(`${baseUrl}/agent/follow`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+      signal: controller.signal,
+    });
+    if (!response.ok && response.status !== 202) {
+      return { ok: false, warning: `agent ${response.status}` };
+    }
+    return await response.json().catch(() => ({ ok: true }));
+  } catch (_err) {
+    return { ok: false, warning: 'network' };
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
+/**
+ * Read the user's currently-followed venues and artists — T0050.
+ *
+ * GET /agent/follow?client_user_id=<uuid>
+ *
+ * Response shape:
+ *   {
+ *     ok: true,
+ *     venue_ids: string[],
+ *     artist_slugs: string[],
+ *     counts: { venues, artists, total }
+ *   }
+ *
+ * Best-effort: never throws. A failure returns an empty list so the long-
+ * press action sheet shows the optimistic "Följ" default. The caller can
+ * inspect `warning` to surface a transient error banner if desired.
+ */
+export async function getFollowedEntities({ signal, timeoutMs = 4_000 } = {}) {
+  let baseUrl;
+  try {
+    baseUrl = requireAgentBaseUrl();
+  } catch (_err) {
+    return { ok: false, venueIds: [], artistSlugs: [], count: 0, warning: 'config' };
+  }
+  const client_user_id = await getOrCreateAnonUserId();
+  const url = new URL(`${baseUrl}/agent/follow`);
+  url.searchParams.set('client_user_id', client_user_id);
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), timeoutMs);
+  if (signal) {
+    if (signal.aborted) controller.abort();
+    else signal.addEventListener('abort', () => controller.abort(), { once: true });
+  }
+  try {
+    const response = await fetch(url.toString(), { signal: controller.signal });
+    if (!response.ok) {
+      return { ok: false, venueIds: [], artistSlugs: [], count: 0, warning: `agent ${response.status}` };
+    }
+    const data = await response.json();
+    const venueIds = Array.isArray(data.venue_ids) ? data.venue_ids : [];
+    const artistSlugs = Array.isArray(data.artist_slugs) ? data.artist_slugs : [];
+    return {
+      ok: true,
+      venueIds,
+      artistSlugs,
+      count: venueIds.length + artistSlugs.length,
+    };
+  } catch (_err) {
+    return { ok: false, venueIds: [], artistSlugs: [], count: 0, warning: 'network' };
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
+/**
  * Browse feed: GET /agent/feed?from=YYYY-MM-DD&days=7
  *
  * Returns the events_public slice in [from, from+days), sorted ascending by

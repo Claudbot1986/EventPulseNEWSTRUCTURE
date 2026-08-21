@@ -10,9 +10,11 @@
  * - Loading/error/empty states are explicit (per UI rules).
  */
 
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import {
+  ActionSheetIOS,
   ActivityIndicator,
+  Alert,
   FlatList,
   Image,
   KeyboardAvoidingView,
@@ -25,7 +27,12 @@ import {
   View,
 } from 'react-native';
 
-import { chatWithAgent, recordEventInteraction } from '../services/agentClient';
+import {
+  chatWithAgent,
+  recordEventInteraction,
+  followEntity,
+  getFollowedEntities,
+} from '../services/agentClient';
 import { resolveReasons } from '../utils/rankReasonLabels';
 
 const SUGGESTIONS = [
@@ -94,7 +101,7 @@ function ReasonChips({ reasons }) {
   );
 }
 
-function EventRow({ card, onInteraction }) {
+function EventRow({ card, onInteraction, onVenueLongPress, isFollowingVenue }) {
   const onPress = () => {
     // Best-effort metrics: every tap = click; opening ticket_url = outbound.
     onInteraction?.(card.id, 'click');
@@ -104,6 +111,11 @@ function EventRow({ card, onInteraction }) {
         .catch(() => {});
     }
   };
+  // The venue line is its own TouchableOpacity so a long-press reaches
+  // onVenueLongPress WITHOUT triggering the card-level onPress (which would
+  // open ticket_url). `hitSlop` enlarges the tap area to the meta line so a
+  // long-press near the venue label is still registered.
+  const showFollowStar = isFollowingVenue && !!card.venue_id;
   return (
     <TouchableOpacity onPress={onPress} style={styles.card}>
       {card.image_url ? (
@@ -126,9 +138,29 @@ function EventRow({ card, onInteraction }) {
         <Text style={styles.cardTitle} numberOfLines={2}>
           {card.title || 'Untitled'}
         </Text>
-        <Text style={styles.cardMeta}>
-          {formatTime(card.start_time)} · {card.venue_name || card.city || 'Stockholm'}
-        </Text>
+        <View style={styles.cardMetaRow}>
+          <Text style={styles.cardMeta}>
+            {formatTime(card.start_time)} · {card.venue_name || card.city || 'Stockholm'}
+          </Text>
+          <TouchableOpacity
+            onPress={() => onVenueLongPress?.(card)}
+            onLongPress={() => onVenueLongPress?.(card)}
+            delayLongPress={350}
+            hitSlop={{ top: 6, bottom: 6, left: 6, right: 6 }}
+            accessibilityRole="button"
+            accessibilityLabel={
+              card.venue_id
+                ? (showFollowStar ? 'Sluta följ ' + card.venue_name : 'Följ ' + card.venue_name)
+                : card.venue_name || 'Plats'
+            }
+            disabled={!card.venue_id}
+            style={styles.followTap}
+          >
+            <Text style={styles.followStar}>
+              {showFollowStar ? '★' : (card.venue_id ? '☆' : '')}
+            </Text>
+          </TouchableOpacity>
+        </View>
         <ReasonChips reasons={card.reasons} />
         <Text style={styles.cardFooter}>
           {card.is_free ? 'Gratis' : `${card.price_min_sek ?? '?'}–${card.price_max_sek ?? '?'} SEK`}
@@ -149,6 +181,105 @@ export default function AgentScreen() {
   const [questions, setQuestions] = useState([]);
   const [sessionId, setSessionId] = useState(null);
   const [lastQuery, setLastQuery] = useState('');
+  // T0050 — followed venues. Refreshed on mount and after every toggle so
+  // the long-press action sheet always knows whether to show "Följ" or
+  // "Sluta följ". Stored as a Set for O(1) lookup inside FlatList render.
+  const [followedVenueIds, setFollowedVenueIds] = useState(() => new Set());
+
+  const refreshFollowed = useCallback(async () => {
+    try {
+      const res = await getFollowedEntities({ timeoutMs: 4_000 });
+      if (res && res.ok) {
+        setFollowedVenueIds(new Set(res.venueIds));
+      }
+      // Silent on failure — long-press defaults to "Följ" until proven otherwise.
+    } catch (_err) {
+      // Never throw into the chat path.
+    }
+  }, []);
+
+  // Refresh on mount; cheap (single GET, cached on the server for 5 min).
+  useEffect(() => {
+    refreshFollowed();
+  }, [refreshFollowed]);
+
+  const onVenueLongPress = useCallback((card) => {
+    if (!card || !card.venue_id) return;
+    const venueId = card.venue_id;
+    const venueName = card.venue_name || 'Plats';
+    const isFollowing = followedVenueIds.has(venueId);
+    const followLabel = isFollowing ? 'Sluta följ' : 'Följ';
+    const confirmLabel = isFollowing ? 'Sluta följa' : 'Följ';
+    const cancelLabel = 'Avbryt';
+    const destructive = isFollowing;
+    // iOS: native ActionSheet (Phase 0 UI). Android: Alert fallback so the
+    // affordance is reachable on both platforms without a third-party lib.
+    if (Platform.OS === 'ios') {
+      ActionSheetIOS.showActionSheetWithOptions(
+        {
+          title: venueName,
+          message: isFollowing
+            ? 'Du följer den här platsen. Fler events från den prioriteras i sökresultaten.'
+            : 'Fler events från den här platsen prioriteras i sökresultaten.',
+          options: [cancelLabel, confirmLabel],
+          cancelButtonIndex: 0,
+          destructiveButtonIndex: destructive ? 1 : -1,
+        },
+        async (idx) => {
+          if (idx === 1) {
+            const action = isFollowing ? 'unfollow' : 'follow';
+            const res = await followEntity({
+              entityType: 'venue',
+              entityId: venueId,
+              action,
+            });
+            if (res && res.ok) {
+              setFollowedVenueIds((prev) => {
+                const next = new Set(prev);
+                if (action === 'follow') next.add(venueId);
+                else next.delete(venueId);
+                return next;
+              });
+            } else if (res && res.warning) {
+              Alert.alert('Kunde inte spara', res.warning);
+            }
+          }
+        }
+      );
+    } else {
+      Alert.alert(
+        venueName,
+        isFollowing
+          ? 'Du följer den här platsen. Vill du sluta följa?'
+          : 'Vill du följa den här platsen? Fler events prioriteras i sökresultaten.',
+        [
+          { text: cancelLabel, style: 'cancel' },
+          {
+            text: confirmLabel,
+            style: destructive ? 'destructive' : 'default',
+            onPress: async () => {
+              const action = isFollowing ? 'unfollow' : 'follow';
+              const res = await followEntity({
+                entityType: 'venue',
+                entityId: venueId,
+                action,
+              });
+              if (res && res.ok) {
+                setFollowedVenueIds((prev) => {
+                  const next = new Set(prev);
+                  if (action === 'follow') next.add(venueId);
+                  else next.delete(venueId);
+                  return next;
+                });
+              } else if (res && res.warning) {
+                Alert.alert('Kunde inte spara', res.warning);
+              }
+            },
+          },
+        ]
+      );
+    }
+  }, [followedVenueIds]);
 
   const send = useCallback(async (text) => {
     const m = (text ?? message).trim();
@@ -195,7 +326,14 @@ export default function AgentScreen() {
       <FlatList
         data={cards}
         keyExtractor={(item) => item.id}
-        renderItem={({ item }) => <EventRow card={item} onInteraction={onInteraction} />}
+        renderItem={({ item }) => (
+          <EventRow
+            card={item}
+            onInteraction={onInteraction}
+            onVenueLongPress={onVenueLongPress}
+            isFollowingVenue={!!item.venue_id && followedVenueIds.has(item.venue_id)}
+          />
+        )}
         ListHeaderComponent={
           <View>
             {reply ? <Text style={styles.reply}>{reply}</Text> : null}
@@ -305,6 +443,20 @@ const styles = StyleSheet.create({
   },
   cardTitle: { color: '#fff', fontSize: 16, fontWeight: '500' },
   cardMeta:  { color: '#aaa', fontSize: 13, marginTop: 4 },
+  cardMetaRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 4,
+  },
+  followTap: {
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    marginLeft: 4,
+  },
+  followStar: {
+    color: '#f5a524',
+    fontSize: 14,
+  },
   cardFooter:{ color: '#888', fontSize: 12, marginTop: 4 },
   reasonRow: {
     flexDirection: 'row',

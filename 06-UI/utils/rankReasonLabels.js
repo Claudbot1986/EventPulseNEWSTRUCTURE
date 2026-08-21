@@ -59,6 +59,26 @@ const SV = {
     label: 'Gammal data',
     fullLabel: 'Data kan vara gammal',
   },
+  category_personalization: {
+    icon: '🎯',
+    label: 'Rätt kategori',
+    fullLabel: 'Matchar dina favoriter',
+  },
+  venue_personalization_penalty: {
+    icon: '📍',
+    label: 'Fel område',
+    fullLabel: 'Brukar inte gilla den här platsen',
+  },
+  followed_venue: {
+    icon: '⭐',
+    label: 'Följer',
+    fullLabel: 'Du följer den här platsen',
+  },
+  followed_artist: {
+    icon: '🎤',
+    label: 'Favoritartist',
+    fullLabel: 'Du följer en av artisterna',
+  },
 };
 
 const EN = {
@@ -106,6 +126,26 @@ const EN = {
     icon: '🕰️',
     label: 'Stale data',
     fullLabel: 'Data may be out of date',
+  },
+  category_personalization: {
+    icon: '🎯',
+    label: 'Favorite category',
+    fullLabel: 'Matches your favorites',
+  },
+  venue_personalization_penalty: {
+    icon: '📍',
+    label: 'Wrong area',
+    fullLabel: 'You usually dislike this venue',
+  },
+  followed_venue: {
+    icon: '⭐',
+    label: 'Following',
+    fullLabel: 'You follow this venue',
+  },
+  followed_artist: {
+    icon: '🎤',
+    label: 'Favorite artist',
+    fullLabel: 'You follow one of the artists',
   },
 };
 
