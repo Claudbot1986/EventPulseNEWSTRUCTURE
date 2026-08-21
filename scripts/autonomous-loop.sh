@@ -308,10 +308,29 @@ queue is empty, until the user explicitly disables it.
     "$CLAUDE_PROMPT" > "$LOG_DIR/iter-$i.json" 2> "$LOG_DIR/iter-$i.err"
   rc=$?
 
-  echo "$(date) iter=$i exit=$rc" >> "$LOG_FILE"
+  # Work around: claude --print --output-format json returns exit=1 even on
+  # successful runs (is_error=false). Treat JSON is_error field as source of truth.
+  iter_json="$LOG_DIR/iter-$i.json"
+  json_error=false
+  if [ -f "$iter_json" ] && [ -s "$iter_json" ]; then
+    is_err=$(tail -c 200 "$iter_json" | grep -o '"is_error":[^,}]*' | head -1 | sed 's/.*://')
+    case "$is_err" in
+      *false*) json_error=false ;;
+      *true*)  json_error=true ;;
+      *)       json_error=false ;;
+    esac
+  fi
 
-  emit_event "claude_completed" "iter=$i rc=$rc" \
-    "{\"iter\":$i,\"rc\":$rc}"
+  if [ "$rc" -eq 0 ] || [ "$json_error" = false ]; then
+    final_rc=0
+  else
+    final_rc=$rc
+  fi
+
+  echo "$(date) iter=$i exit=$rc json_is_error=$json_error final=$final_rc" >> "$LOG_FILE"
+
+  emit_event "claude_completed" "iter=$i rc=$rc json_is_error=$json_error" \
+    "{\"iter\":$i,\"rc\":$rc,\"json_is_error\":$json_error}"
 
   # Update state atomically. Read prior started_at so it survives across iters.
   PRIOR_STARTED=$(grep -o '"started_at": *"[^"]*"' "$STATE_FILE" 2>/dev/null | head -1 | sed 's/.*: *"//;s/"//')
@@ -321,8 +340,9 @@ queue is empty, until the user explicitly disables it.
 {
   "started_at": "$PRIOR_STARTED",
   "iteration": $i,
-  "last_status": "$([ $rc -eq 0 ] && echo ok || echo failed)",
+  "last_status": "$([ $final_rc -eq 0 ] && echo ok || echo failed)",
   "last_exit_code": $rc,
+  "last_json_is_error": $json_error,
   "last_iter_at": "$(date -u +%Y-%m-%dT%H:%M:%SZ)",
   "elapsed_hours": $ELAPSED_HOURS
 }
@@ -332,9 +352,9 @@ EOF
   if [ "$rc" -eq 124 ]; then
     echo "$(date) iter=$i timed out — pre-emptive restart" >> "$LOG_FILE"
     emit_event "iteration_timeout" "iter=$i" "{\"iter\":$i,\"timeout_min\":$ITERATION_TIMEOUT_MIN}"
-  elif [ "$rc" -ne 0 ]; then
-    echo "$(date) iter=$i failed (rc=$rc) — pausing 30s before retry" >> "$LOG_FILE"
-    emit_event "iteration_failed" "iter=$i rc=$rc" "{\"iter\":$i,\"rc\":$rc}"
+  elif [ "$final_rc" -ne 0 ]; then
+    echo "$(date) iter=$i failed (rc=$rc json_is_error=$json_error) — pausing 30s before retry" >> "$LOG_FILE"
+    emit_event "iteration_failed" "iter=$i rc=$rc json_is_error=$json_error" "{\"iter\":$i,\"rc\":$rc,\"json_is_error\":$json_error}"
     sleep 30
   fi
 
