@@ -26,7 +26,6 @@ import {
 
 import { chatWithAgent, recordEventInteraction } from '../services/agentClient';
 import { resolveReasons } from '../utils/rankReasonLabels';
-import { cardLink, cardLinkLabel } from '../utils/sourceLinks';
 
 const SUGGESTIONS = [
   'Konsert ikväll',
@@ -95,19 +94,15 @@ function ReasonChips({ reasons }) {
 }
 
 function EventRow({ card, onInteraction }) {
-  const linkUrl = cardLink(card);
-  const linkLabel = cardLinkLabel(card);
   const onPress = () => {
-    // Best-effort metrics: every tap = click; opening the link = outbound.
+    // Best-effort metrics: every tap = click; opening ticket_url = outbound.
     onInteraction?.(card.id, 'click');
-    if (linkUrl) {
-      Linking.openURL(linkUrl)
+    if (card.ticket_url) {
+      Linking.openURL(card.ticket_url)
         .then(() => onInteraction?.(card.id, 'outbound'))
         .catch(() => {});
     }
   };
-  const onSave = () => onInteraction?.(card.id, 'save');
-  const onDismiss = () => onInteraction?.(card.id, 'dismiss');
   return (
     <TouchableOpacity onPress={onPress} style={styles.card}>
       <Text style={styles.cardTitle} numberOfLines={2}>
@@ -120,90 +115,27 @@ function EventRow({ card, onInteraction }) {
       <Text style={styles.cardFooter}>
         {card.is_free ? 'Gratis' : `${card.price_min_sek ?? '?'}–${card.price_max_sek ?? '?'} SEK`}
       </Text>
-      {linkUrl ? (
-        <Text style={styles.cardSource} numberOfLines={1}>
-          🔗 {linkLabel}
-        </Text>
-      ) : null}
-      <View style={styles.cardActions}>
-        <TouchableOpacity onPress={onSave} style={styles.actionBtn} accessibilityRole="button" accessibilityLabel="Spara">
-          <Text style={styles.actionBtnText}>💾 Spara</Text>
-        </TouchableOpacity>
-        <TouchableOpacity onPress={onDismiss} style={styles.actionBtn} accessibilityRole="button" accessibilityLabel="Vill inte">
-          <Text style={styles.actionBtnText}>✕</Text>
-        </TouchableOpacity>
-      </View>
     </TouchableOpacity>
   );
 }
 
 export default function AgentScreen() {
-  const [message, setMessage]       = useState('');
-  const [loading, setLoading]       = useState(false);
-  const [error, setError]           = useState(null);
-  const [reply, setReply]           = useState('');
-  const [cards, setCards]           = useState([]);
-  const [warnings, setWarnings]     = useState([]);
-  const [history, setHistory]       = useState([]);
-  const [questions, setQuestions]   = useState([]);
-  const [sessionId, setSessionId]   = useState(null);
-  const [lastQuery, setLastQuery]   = useState('');
-  const [bootConfigError, setBootConfigError] = useState(null);
-
-  /**
-   * Map low-level errors to Swedish user-facing copy + a stable kind tag
-   * so the UI can render distinct affordances per failure family.
-   *
-   *   kind: 'config'    — server URL is not configured. Cannot be fixed by
-   *                       retry; show a static help line.
-   *   kind: 'network'   — server unreachable / DNS / connection refused.
-   *   kind: 'timeout'   — request aborted after timeoutMs.
-   *   kind: 'server'    — HTTP non-2xx from the agent.
-   *   kind: 'unknown'   — anything else; retry is still safe.
-   */
-  function classifyError(err) {
-    if (err && err.code === 'AGENT_URL_MISSING') {
-      return {
-        kind: 'config',
-        title: 'Agent-URL saknas',
-        body: 'EXPO_PUBLIC_AGENT_URL är inte satt. Konfigurera miljövariabeln och starta om appen.',
-      };
-    }
-    if (err && err.code === 'AGENT_SERVER_ERROR') {
-      return {
-        kind: 'server',
-        title: `Servern svarade med fel (${err.status ?? 'okänd'})`,
-        body: 'Försök igen om en stund. Om felet kvarstår är det problem hos agenten.',
-      };
-    }
-    if (err && (err.name === 'AbortError' || err.code === 'ABORT_ERR')) {
-      return {
-        kind: 'timeout',
-        title: 'Begäran tog för lång tid',
-        body: 'Servern svarade inte i tid. Kontrollera nätverket och försök igen.',
-      };
-    }
-    // fetch network failures throw TypeError in RN/Web with no .code.
-    if (err && (err.message === 'Network request failed' || err.name === 'TypeError')) {
-      return {
-        kind: 'network',
-        title: 'Kan inte nå agenten',
-        body: 'Kontrollera att du är uppkopplad och att agent-API:et är igång.',
-      };
-    }
-    return {
-      kind: 'unknown',
-      title: 'Något gick fel',
-      body: 'Försök igen. Om felet kvarstår — starta om appen.',
-    };
-  }
+  const [message, setMessage] = useState('');
+  const [loading, setLoading]   = useState(false);
+  const [error, setError]       = useState(null);
+  const [reply, setReply]       = useState('');
+  const [cards, setCards]       = useState([]);
+  const [warnings, setWarnings] = useState([]);
+  const [history, setHistory]   = useState([]);
+  const [questions, setQuestions] = useState([]);
+  const [sessionId, setSessionId] = useState(null);
+  const [lastQuery, setLastQuery] = useState('');
 
   const send = useCallback(async (text) => {
     const m = (text ?? message).trim();
     if (!m || loading) return;
     setLoading(true);
     setError(null);
-    setBootConfigError(null);
     setQuestions([]);
     setHistory((h) => [...h, { role: 'user', text: m }]);
     try {
@@ -217,22 +149,11 @@ export default function AgentScreen() {
       setHistory((h) => [...h, { role: 'assistant', text: res.reply, cards: res.cards }]);
       setMessage('');
     } catch (err) {
-      const friendly = classifyError(err);
-      setError(friendly);
-      if (friendly.kind === 'config') {
-        // Config errors cannot be recovered by retry — surface once at boot.
-        setBootConfigError(friendly);
-      }
+      setError(err && err.message ? err.message : 'unknown error');
     } finally {
       setLoading(false);
     }
   }, [message, loading]);
-
-  const retry = useCallback(() => {
-    if (lastQuery) {
-      send(lastQuery);
-    }
-  }, [lastQuery, send]);
 
   // Best-effort interaction tracking. Never throws; server 202 → silent.
   const onInteraction = useCallback((eventId, interaction) => {
@@ -249,16 +170,8 @@ export default function AgentScreen() {
       style={styles.root}
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
       keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 24}
-      testID="agent-screen"
     >
       <Text style={styles.heading}>EventPulse Agent</Text>
-
-      {bootConfigError ? (
-        <View style={styles.errorBanner} accessibilityRole="alert">
-          <Text style={styles.errorTitle}>{bootConfigError.title}</Text>
-          <Text style={styles.errorBody}>{bootConfigError.body}</Text>
-        </View>
-      ) : null}
 
       <FlatList
         data={cards}
@@ -290,30 +203,15 @@ export default function AgentScreen() {
                 </View>
               </View>
             ))}
-            {error && error.kind !== 'config' ? (
-              <View style={styles.errorBanner} accessibilityRole="alert">
-                <Text style={styles.errorTitle}>{error.title}</Text>
-                <Text style={styles.errorBody}>{error.body}</Text>
-                {lastQuery && error.kind !== 'config' ? (
-                  <TouchableOpacity onPress={retry} style={styles.retryBtn} accessibilityRole="button">
-                    <Text style={styles.retryText}>Försök igen</Text>
-                  </TouchableOpacity>
-                ) : null}
-              </View>
-            ) : null}
-            {loading ? (
-              <View style={styles.loadingBlock} accessibilityRole="progressbar">
-                <ActivityIndicator size="small" color="#7aa2f7" />
-                <Text style={styles.loadingText}>Agenten tänker…</Text>
-              </View>
-            ) : null}
+            {error ? <Text style={styles.error}>{error}</Text> : null}
+            {loading ? <ActivityIndicator style={{ marginVertical: 12 }} /> : null}
             {!loading && !error && cards.length === 0 && reply && questions.length === 0 ? (
               <Text style={styles.empty}>Inga förslag just nu.</Text>
             ) : null}
           </View>
         }
         ListEmptyComponent={
-          !loading && !reply && !error ? (
+          !loading && !reply ? (
             <View style={styles.suggestionBox}>
               <Text style={styles.subtle}>Förslag:</Text>
               {SUGGESTIONS.map((s) => (
@@ -350,31 +248,7 @@ const styles = StyleSheet.create({
   reply: { color: '#ddd', marginVertical: 8 },
   warning: { color: '#f5a524', fontSize: 12, marginVertical: 1 },
   warnings: { marginVertical: 6 },
-  errorBanner: {
-    backgroundColor: '#2a1518',
-    borderColor: '#ff6b6b',
-    borderWidth: 1,
-    borderRadius: 8,
-    padding: 10,
-    marginVertical: 8,
-  },
-  errorTitle: { color: '#ff8a8a', fontSize: 14, fontWeight: '600', marginBottom: 4 },
-  errorBody:  { color: '#f1c4c4', fontSize: 13 },
-  retryBtn: {
-    marginTop: 8,
-    alignSelf: 'flex-start',
-    backgroundColor: '#4f46e5',
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 6,
-  },
-  retryText: { color: '#fff', fontWeight: '600', fontSize: 13 },
-  loadingBlock: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginVertical: 12,
-  },
-  loadingText: { color: '#aaa', marginLeft: 8, fontSize: 13 },
+  error: { color: '#ff6b6b', marginVertical: 8 },
   empty: { color: '#888', marginVertical: 12, textAlign: 'center' },
   card: {
     backgroundColor: '#1a1a1a',
@@ -385,15 +259,6 @@ const styles = StyleSheet.create({
   cardTitle: { color: '#fff', fontSize: 16, fontWeight: '500' },
   cardMeta:  { color: '#aaa', fontSize: 13, marginTop: 4 },
   cardFooter:{ color: '#888', fontSize: 12, marginTop: 4 },
-  cardSource: { color: '#7aa2f7', fontSize: 12, marginTop: 6, fontStyle: 'italic' },
-  cardActions: { flexDirection: 'row', marginTop: 8, gap: 8 },
-  actionBtn: {
-    backgroundColor: '#252525',
-    borderRadius: 8,
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-  },
-  actionBtnText: { color: '#ccc', fontSize: 13 },
   reasonRow: {
     flexDirection: 'row',
     flexWrap: 'wrap',
