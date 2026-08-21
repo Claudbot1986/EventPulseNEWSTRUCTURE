@@ -24,6 +24,8 @@ dotenv.config({ path: path.resolve(__dirname, '../../.env'), override: true });
 import { getAllSources, getSourceStatus, updateSourceStatus } from '../tools/sourceRegistry';
 import { fetchHtml } from '../tools/fetchTools';
 import { extractFromJsonLd } from '../F-eventExtraction/extractor';
+import * as cheerio from 'cheerio';
+import type { ParsedEvent } from '../F-eventExtraction/schema';
 
 // ── Paths ────────────────────────────────────────────────────────────────────
 
@@ -32,6 +34,100 @@ const LOGS_DIR = path.resolve(RUNTIME_DIR, 'logs');
 const RUN_LOG = path.resolve(LOGS_DIR, `runA-extract-${new Date().toISOString().replace(/[:.]/g, '-')}.log`);
 const PREUI_Q       = path.join(RUNTIME_DIR, 'preUI-queue.jsonl');
 const EXTRACTED_DIR  = path.resolve(__dirname, '../../03-Queue/03-extractedevents');
+const ADAPTERS_DIR   = path.join(RUNTIME_DIR, 'adapters');
+
+// ── D-AI adapter loader ─────────────────────────────────────────────────────────
+
+interface DaiAdapter {
+  sourceId: string;
+  seedUrl: string;
+  candidateUrls: string[];
+  selectors: {
+    eventContainer?: string;
+    title?: string;
+    date?: string;
+    venue?: string;
+    description?: string;
+    link?: string;
+  };
+  rateLimitMs: number;
+  aiConfidence: number;
+  validationPassed: boolean;
+  validationNotes?: string;
+}
+
+function loadDaiAdapter(sourceId: string): DaiAdapter | null {
+  const adapterPath = path.join(ADAPTERS_DIR, `${sourceId}.json`);
+  if (!fs.existsSync(adapterPath)) return null;
+  try {
+    const raw = fs.readFileSync(adapterPath, 'utf-8');
+    return JSON.parse(raw) as DaiAdapter;
+  } catch {
+    return null;
+  }
+}
+
+// ── Extract using D-AI adapter selectors ───────────────────────────────────────
+
+function extractWithDaiAdapter(html: string, adapter: DaiAdapter): ParsedEvent[] {
+  const $ = cheerio.load(html);
+  const events: ParsedEvent[] = [];
+  const seenKeys = new Set<string>();
+
+  const containerSelector = adapter.selectors.eventContainer;
+  if (!containerSelector) return events;
+
+  $(containerSelector).each((_: any, el: any) => {
+    const $el = $(el);
+
+    // Title
+    const titleSel = adapter.selectors.title;
+    const title = titleSel ? $el.find(titleSel).first().text().trim() : $el.find('h2, h3, a').first().text().trim();
+    if (!title || title.length < 3) return;
+
+    // Date
+    const dateSel = adapter.selectors.date;
+    const dateText = dateSel ? $el.find(dateSel).first().text().trim() : '';
+    const dateMatch = dateText.match(/(\d{4})-(\d{2})-(\d{2})/);
+    const date = dateMatch ? `${dateMatch[1]}-${dateMatch[2]}-${dateMatch[3]}` : '';
+
+    // Venue
+    const venueSel = adapter.selectors.venue;
+    const venue = venueSel ? $el.find(venueSel).first().text().trim() : '';
+
+    // Link
+    const linkSel = adapter.selectors.link;
+    const linkEl = linkSel ? $el.find(linkSel).first() : $el.find('a').first();
+    const linkHref = linkEl.attr('href') || '';
+
+    // Dedupe
+    const key = `${title}|${date}|${linkHref}`;
+    if (seenKeys.has(key)) return;
+    seenKeys.add(key);
+
+    events.push({
+      title,
+      date,
+      venue: venue || adapter.sourceId,
+      url: linkHref.startsWith('http') ? linkHref : adapter.seedUrl.replace(/\/$/, '') + linkHref,
+      category: 'culture',
+      source: adapter.sourceId,
+      sourceUrl: adapter.seedUrl,
+      confidence: {
+        score: adapter.aiConfidence,
+        hasTitle: true,
+        hasDate: Boolean(date),
+        hasVenue: Boolean(venue),
+        hasUrl: Boolean(linkHref),
+        hasDescription: false,
+        hasTicketInfo: false,
+        signals: ['d-ai-adapter', `confidence-${adapter.aiConfidence}`],
+      },
+    });
+  });
+
+  return events;
+}
 
 // --- Log helper — terminal + per-run file ---
 
@@ -95,6 +191,27 @@ async function extractFromSource(sourceId: string): Promise<ExtractResult> {
   const events = extractResult.events;
 
   if (events.length === 0) {
+    // Fallback: check if a validated D-AI adapter exists for this source
+    const adapter = loadDaiAdapter(sourceId);
+    if (adapter && adapter.validationPassed) {
+      log(`  [d-ai-fallback] ${sourceId}: JSON-LD zero — trying D-AI adapter`);
+      const adapterEvents = extractWithDaiAdapter(fetchResult.html, adapter);
+      if (adapterEvents.length > 0) {
+        log(`  [d-ai-fallback] ${sourceId}: ${adapterEvents.length} events via D-AI adapter selectors`);
+        const outFile = path.join(EXTRACTED_DIR, `${sourceId}.jsonl`);
+        fs.mkdirSync(EXTRACTED_DIR, { recursive: true });
+        const lines = adapterEvents.map(e => JSON.stringify(e)).join('\n') + '\n';
+        fs.writeFileSync(outFile, lines, 'utf-8');
+        updateSourceStatus(sourceId, {
+          success: true,
+          eventsFound: adapterEvents.length,
+          pathUsed: 'd-ai-adapter',
+          ingestionStage: 'completed',
+          lastRoutingReason: `runA-extract: ${adapterEvents.length} events via D-AI adapter`,
+        });
+        return { sourceId, success: true, eventsFound: adapterEvents.length };
+      }
+    }
     updateSourceStatus(sourceId, {
       success: false,
       eventsFound: 0,
