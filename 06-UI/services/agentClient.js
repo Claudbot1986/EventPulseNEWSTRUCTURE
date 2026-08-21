@@ -672,6 +672,123 @@ export async function registerPushToken({
 }
 
 /**
+ * Fetch pre-rendered agent intent slots for the HomeScreen "Förslag från din
+ * agent" section — T0060 / Phase 1 retention.
+ *
+ * GET /agent/cached-recommendations?client_user_id=<uuid>&limit=<int>
+ *
+ * Returns up to `limit` slots, each pre-resolved with up to 2 EventCards:
+ *   {
+ *     slots: [{ title, card_1: EventCard|null, card_2: EventCard|null }, ...],
+ *     generated_at: string|null
+ *   }
+ *
+ * The slot title is rendered verbatim (Swedish, server-generated). Cards reuse
+ * the same EventCard → legacy-shape mapping as fetchFeed so the existing card
+ * renderer stays uniform across sections.
+ *
+ * 404 from the server (no cached data yet for this user — new/anon users) is
+ * treated as an empty result so the section can simply hide itself without
+ * surfacing an error.
+ *
+ * @param {{ limit?: number, signal?: AbortSignal, timeoutMs?: number }} opts
+ * @returns {Promise<{ slots: Array<{ title: string, cards: Array<LegacyEvent> }>, generated_at: string|null }>}
+ */
+export async function fetchCachedRecommendations({
+  limit = 3,
+  signal,
+  timeoutMs = 12_000,
+} = {}) {
+  const { getOrCreateAnonUserId } = await import('./storage');
+  const baseUrl = requireAgentBaseUrl();
+  const url = new URL(`${baseUrl}/agent/cached-recommendations`);
+  const clientUserId = await getOrCreateAnonUserId();
+  url.searchParams.set('client_user_id', clientUserId);
+  url.searchParams.set('limit', String(limit));
+
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), timeoutMs);
+  if (signal) {
+    if (signal.aborted) controller.abort();
+    else signal.addEventListener('abort', () => controller.abort(), { once: true });
+  }
+
+  let response;
+  try {
+    response = await fetch(url.toString(), { signal: controller.signal });
+  } catch (_err) {
+    clearTimeout(timer);
+    // Network error → return empty so the section hides itself.
+    return { slots: [], generated_at: null };
+  }
+  clearTimeout(timer);
+
+  // 404 = no cached data for this user. Treat as "empty" so the section hides.
+  if (response.status === 404) {
+    return { slots: [], generated_at: null };
+  }
+  if (!response.ok) {
+    throw new Error(`cached-recommendations ${response.status}: ${response.statusText}`);
+  }
+
+  const data = await response.json();
+  const rawSlots = Array.isArray(data.slots) ? data.slots : [];
+
+  // EventCard → legacy shape mapping (mirrors fetchFeed/fetchRecommendedEvents).
+  const mapCard = (e) => {
+    if (!e) return null;
+    const start = e.start_time ? new Date(e.start_time) : null;
+    const pad = (n) => String(n).padStart(2, '0');
+    const date = start && !Number.isNaN(start.getTime())
+      ? `${start.getFullYear()}-${pad(start.getMonth() + 1)}-${pad(start.getDate())}`
+      : null;
+    const time = start && !Number.isNaN(start.getTime())
+      ? `${pad(start.getHours())}:${pad(start.getMinutes())}`
+      : null;
+    const ticketUrl = e.ticket_url || null;
+    return {
+      id: e.id,
+      title: e.title || 'Untitled',
+      date,
+      time,
+      start_time: e.start_time,
+      venue: e.venue_name || '',
+      venue_name: e.venue_name || '',
+      area: e.city || 'Stockholm',
+      city: e.city || 'Stockholm',
+      category: e.category_slug || '',
+      category_slug: e.category_slug || '',
+      isFree: !!e.is_free,
+      is_free: !!e.is_free,
+      priceMin: e.price_min_sek ?? null,
+      price_min_sek: e.price_min_sek ?? null,
+      priceMax: e.price_max_sek ?? null,
+      price_max_sek: e.price_max_sek ?? null,
+      url: ticketUrl,
+      ticket_url: ticketUrl,
+      imageUrl: e.image_url || null,
+      image_url: e.image_url || null,
+      source: e.source || 'agent',
+      hasExternalLink: Boolean(ticketUrl),
+      externalLinkChipLabel: ticketUrl ? 'Extern länk' : undefined,
+      externalLinkLabel: ticketUrl ? 'Läs mer' : undefined,
+    };
+  };
+
+  const slots = rawSlots
+    .slice(0, limit)
+    .map((s) => {
+      const title = typeof s?.title === 'string' && s.title.length > 0 ? s.title : '';
+      const cards = [mapCard(s?.card_1), mapCard(s?.card_2)].filter(Boolean);
+      return { title, cards };
+    })
+    // Drop slots with no title AND no cards — they're useless.
+    .filter((s) => s.title.length > 0 || s.cards.length > 0);
+
+  return { slots, generated_at: typeof data.generated_at === 'string' ? data.generated_at : null };
+}
+
+/**
  * Fetch the user's saved events — T0054 / Phase 1 retention.
  *
  * GET /agent/saved?client_user_id=<uuid>&limit=<int>
