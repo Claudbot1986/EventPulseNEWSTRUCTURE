@@ -238,12 +238,20 @@ export function readTaskQueue(): Task[] {
 
     const taskMatch = line.match(/^_(T\d+)_\s+—\s+\*\*(.+?)\*\*(?:\s+—\s+(.+))?$/);
     if (taskMatch) {
-      const [, id, title] = taskMatch;
+      const [, id, title, bulletDescription] = taskMatch;
       let status: Task['status'] = 'pending';
       let source = '';
       let verify = '';
 
-      for (let j = i + 1; j < Math.min(i + 8, lines.length); j++) {
+      // Bullet-line signals: group 3 may contain `**DONE 2026-...**`
+      // (e.g. T0042, T0050, T0054) and titles may start with BLOCKED/CANCELLED.
+      if (bulletDescription && /\*\*DONE\s+2026-/.test(bulletDescription)) status = 'done';
+      if (/^\s*BLOCKED\b/i.test(title)) status = 'blocked';
+
+      // Wider window: 8 lines missed real blocks at 9-12 lines
+      // (T0048, T0050, T0051, T0052). 30 is still bounded — the parser breaks
+      // on the next `_T…` bullet or `###` header, so this is safe.
+      for (let j = i + 1; j < Math.min(i + 30, lines.length); j++) {
         const next = lines[j];
         if (next.startsWith('_T') || next.startsWith('###')) break;
         const vMatch = next.match(/\*Verify:\*\s*(.+)/);
@@ -255,7 +263,8 @@ export function readTaskQueue(): Task[] {
         if (oMatch) ownerHints.set(id, oMatch[1].trim());
         if (lvMatch) lvHints.set(id, lvMatch[1].trim());
         if (next.includes('**DONE') || next.includes('DONE 2026-')) status = 'done';
-        const sm = next.match(/\*Status:\*\s*`?(\w+)`?/);
+        // Allow hyphenated statuses like `done-phase4` / `needs_user_decision`.
+        const sm = next.match(/\*Status:\*\s*`?(\w+(?:-\w+)*)`?/);
         if (sm) status = sm[1] as Task['status'];
       }
 

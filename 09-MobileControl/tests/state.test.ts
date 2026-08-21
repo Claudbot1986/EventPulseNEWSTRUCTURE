@@ -58,6 +58,34 @@ describe('state.ts — readTaskQueue', () => {
       expect(t.title.length).toBeGreaterThan(0);
     }
   });
+
+  // Regression: prior parser had an 8-line window which missed DONE markers
+  // at 9-12 lines (T0048, T0050, T0051, T0052) and discarded bullet-line
+  // DONE signals. Dashboard showed these as pending even though they were
+  // done in vault. Verify the wider window + bullet-line scan catches them.
+  it('parses tasks whose *Status:* is beyond line 8', () => {
+    const tasks = readTaskQueue();
+    const byId = new Map(tasks.map((t) => [t.id, t]));
+    expect(byId.get('T0048')?.status).toBe('done');
+    expect(byId.get('T0050')?.status).toBe('done');
+    expect(byId.get('T0052')?.status).toBe('done');
+  });
+
+  it('captures DONE 2026 marker on the bullet line itself', () => {
+    const tasks = readTaskQueue();
+    const byId = new Map(tasks.map((t) => [t.id, t]));
+    // T0042 has **DONE 2026-08-21 → ...** on its bullet line.
+    expect(byId.get('T0042')?.status).toBe('done');
+    // T0054 has **DONE 2026-08-21 → ...** on its bullet line.
+    expect(byId.get('T0054')?.status).toBe('done');
+  });
+
+  it('parses hyphenated statuses (done-phase4, needs_user_decision)', () => {
+    const tasks = readTaskQueue();
+    const byId = new Map(tasks.map((t) => [t.id, t]));
+    expect(byId.get('T0053')?.status).toBe('done-phase4');
+    expect(byId.get('T0055')?.status).toBe('needs_user_decision');
+  });
 });
 
 describe('state.ts — readSnapshot composition', () => {

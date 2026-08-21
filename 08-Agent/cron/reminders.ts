@@ -61,6 +61,9 @@ export interface CronRunOptions {
   budgetMs?: number;
   /** Maximum users to process in this run. Useful for staged rollouts. */
   maxUsers?: number;
+  /** Override the time provider for the budget check. Defaults to Date.now.
+   *  Allows tests to simulate elapsed time without waiting real milliseconds. */
+  timeProvider?: () => number;
 }
 
 export interface CronRunSummary {
@@ -146,6 +149,7 @@ export async function runReminderPass(
   const budgetMs = opts.budgetMs ?? DEFAULT_RUN_BUDGET_MS;
   const windowMs = opts.windowMs ?? REMINDER_WINDOW_MS;
   const supabase = opts.supabase ?? getSupabaseClient();
+  const timeProvider = opts.timeProvider ?? (() => Date.now());
 
   const summary: CronRunSummary = {
     ok: true,
@@ -164,13 +168,13 @@ export async function runReminderPass(
   if (!scan.ok) {
     summary.ok = false;
     summary.warning = scan.warning;
-    summary.duration_ms = Date.now() - t0;
+    summary.duration_ms = timeProvider() - t0;
     return summary;
   }
   summary.users_scanned = scan.userIds.length;
 
   for (const userId of scan.userIds) {
-    if (Date.now() - t0 > budgetMs) {
+    if (timeProvider() - t0 > budgetMs) {
       summary.warning = `budget exceeded after ${summary.users_scanned - summary.errors} users`;
       summary.ok = false;
       break;
@@ -195,7 +199,7 @@ export async function runReminderPass(
     }
   }
 
-  summary.duration_ms = Date.now() - t0;
+  summary.duration_ms = timeProvider() - t0;
   return summary;
 }
 

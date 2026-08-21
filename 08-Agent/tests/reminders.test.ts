@@ -33,7 +33,10 @@ function chainFor(state: { data: any; error: any | null }) {
     lte: vi.fn().mockReturnThis(),
     order: vi.fn().mockReturnThis(),
     limit: vi.fn().mockReturnThis(),
-    then: (resolve: (v: any) => void) => Promise.resolve(state).then(resolve),
+    // Mirrors feed_events.test.ts pattern: then resolves to state directly.
+    // JavaScript calls this as: new Thenable(state).then(resolve) → resolve(state).
+    then: (resolve: (v: { data: any; error: any | null }) => void) =>
+      Promise.resolve(state).then(resolve),
   };
   return chain;
 }
@@ -127,46 +130,45 @@ describe('runReminderPass', () => {
   });
 
   it('walks all distinct users and aggregates inserted + skipped', async () => {
-    let notificationsInserts = 0;
-    const from = vi.fn().mockImplementation((table: string) => {
-      if (table === 'user_interactions') {
-        return chainFor({
-          data: [
-            { client_user_id: USER_A, event_id: EVENT_X },
-            { client_user_id: USER_A, event_id: EVENT_X },
-            { client_user_id: USER_B, event_id: EVENT_X },
-          ],
-          error: null,
-        });
-      }
-      if (table === 'events_public') {
-        return chainFor({
-          data: [{
-            id: EVENT_X,
-            title_sv: 'Konsert',
-            title_en: null,
-            start_time: '2026-08-21T21:00:00.000Z',
-            ticket_url: null,
-            venues: null,
-          }],
-          error: null,
-        });
-      }
-      if (table === 'notifications') {
-        // The production code first calls select().in(...) for the
-        // existing-id check (returns data: []), then insert(fresh) for
-        // the new rows. We need the chain to support both. Track insert
-        // calls so the test can verify the per-user insert path ran.
-        const baseChain = chainFor({ data: [], error: null });
-        baseChain.insert = vi.fn().mockImplementation(() => {
-          notificationsInserts += 1;
-          return Promise.resolve({ data: null, error: null });
-        });
-        return baseChain;
-      }
-      return chainFor({ data: [], error: null });
+    // Use mockSb for the user_interactions scan (like all other tests).
+    // Per-user mocks are set up individually for events_public and notifications.
+    const eventsPublicChain = chainFor({
+      data: [{
+        id: EVENT_X,
+        title_sv: 'Konsert',
+        title_en: null,
+        start_time: '2026-08-21T21:00:00.000Z',
+        ticket_url: null,
+        venues: null,
+      }],
+      error: null,
     });
-    const sb = { from } as unknown as SupabaseClient;
+    let notificationsInserts = 0;
+    const notificationsChain = chainFor({ data: [], error: null });
+    notificationsChain.insert = vi.fn().mockImplementation(() => {
+      notificationsInserts += 1;
+      return Promise.resolve({ data: null, error: null });
+    });
+    // mockSb covers user_interactions (scan returns distinct users).
+    // Per-user saves and events/notification chains are set up via per-table mocks.
+    const sb: any = {
+      from: vi.fn().mockImplementation((table: string) => {
+        if (table === 'user_interactions') {
+          // Scan: two distinct users each with EVENT_X saved.
+          return chainFor({
+            data: [
+              { client_user_id: USER_A, event_id: EVENT_X },
+              { client_user_id: USER_A, event_id: EVENT_X },
+              { client_user_id: USER_B, event_id: EVENT_X },
+            ],
+            error: null,
+          });
+        }
+        if (table === 'events_public') return eventsPublicChain;
+        if (table === 'notifications') return notificationsChain;
+        return chainFor({ data: [], error: null });
+      }),
+    };
     const summary = await runReminderPass({ supabase: sb, now: NOW });
     expect(summary.ok).toBe(true);
     // User A and User B are distinct — both scanned.
@@ -215,14 +217,15 @@ describe('runReminderPass', () => {
       user_interactions: { data: manyUsers, error: null },
       events_public: { data: [], error: null },
     });
-    // `now` set 10s in the past so real `Date.now() - t0` is guaranteed
-    // to exceed any small `budgetMs` value (the cron module uses real
-    // wall-clock for the budget check, not the injected `now`).
+    // Use timeProvider so the budget check uses real elapsed time.
+    // pastNow sets the mock clock for query determinism; timeProvider
+    // drives the budget check so it fires as real time accumulates.
     const pastNow = new Date(Date.now() - 10_000);
     const summary = await runReminderPass({
       supabase: sb,
       now: pastNow,
       budgetMs: 1,
+      timeProvider: () => Date.now(),
     });
     expect(summary.users_scanned).toBe(100);
     expect(summary.warning ?? '').toMatch(/budget|exceeded|users/);
