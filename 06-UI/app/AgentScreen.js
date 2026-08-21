@@ -14,6 +14,7 @@ import React, { useCallback, useState } from 'react';
 import {
   ActivityIndicator,
   FlatList,
+  Image,
   KeyboardAvoidingView,
   Linking,
   Platform,
@@ -105,16 +106,25 @@ function EventRow({ card, onInteraction }) {
   };
   return (
     <TouchableOpacity onPress={onPress} style={styles.card}>
-      <Text style={styles.cardTitle} numberOfLines={2}>
-        {card.title || 'Untitled'}
-      </Text>
-      <Text style={styles.cardMeta}>
-        {formatTime(card.start_time)} · {card.venue_name || card.city || 'Stockholm'}
-      </Text>
-      <ReasonChips reasons={card.reasons} />
-      <Text style={styles.cardFooter}>
-        {card.is_free ? 'Gratis' : `${card.price_min_sek ?? '?'}–${card.price_max_sek ?? '?'} SEK`}
-      </Text>
+      {card.image_url ? (
+        <Image
+          source={{ uri: card.image_url }}
+          style={styles.cardImage}
+          accessibilityLabel={card.title}
+        />
+      ) : null}
+      <View style={styles.cardBody}>
+        <Text style={styles.cardTitle} numberOfLines={2}>
+          {card.title || 'Untitled'}
+        </Text>
+        <Text style={styles.cardMeta}>
+          {formatTime(card.start_time)} · {card.venue_name || card.city || 'Stockholm'}
+        </Text>
+        <ReasonChips reasons={card.reasons} />
+        <Text style={styles.cardFooter}>
+          {card.is_free ? 'Gratis' : `${card.price_min_sek ?? '?'}–${card.price_max_sek ?? '?'} SEK`}
+        </Text>
+      </View>
     </TouchableOpacity>
   );
 }
@@ -252,9 +262,19 @@ const styles = StyleSheet.create({
   empty: { color: '#888', marginVertical: 12, textAlign: 'center' },
   card: {
     backgroundColor: '#1a1a1a',
-    padding: 12,
     borderRadius: 10,
     marginVertical: 6,
+    overflow: 'hidden',
+  },
+  cardImage: {
+    width: '100%',
+    height: 160,
+    borderTopLeftRadius: 10,
+    borderTopRightRadius: 10,
+    backgroundColor: '#252525',
+  },
+  cardBody: {
+    padding: 12,
   },
   cardTitle: { color: '#fff', fontSize: 16, fontWeight: '500' },
   cardMeta:  { color: '#aaa', fontSize: 13, marginTop: 4 },
