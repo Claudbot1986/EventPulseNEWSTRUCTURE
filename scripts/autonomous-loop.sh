@@ -13,11 +13,15 @@
 # sync". The user can start this and walk away for hours.
 #
 # Safety caps (all env-overridable):
-#   MAX_RESTARTS=1000          Max iterations before stopping.
-#   MAX_TOTAL_HOURS=24         Max wall-clock runtime.
+#   MAX_TOTAL_HOURS=24         Hard wall-clock cap (only thing that stops the loop).
 #   MAX_BUDGET_PER_ITER=5      USD per claude --print call.
 #   ITERATION_TIMEOUT_MIN=30   Hard kill if claude hangs.
 #   RESTART_DELAY=3            Seconds between iterations.
+#
+# Iteration count is intentionally NOT capped — the loop runs until wall-clock
+# limit, STOP file, or signal. The wrapper resets its iter counter on each
+# invocation (state.json.started_at anchors the dashboard's "current run"
+# view); a wrapper that ran 10k iters across a week is normal.
 #
 # Logs: $LOG_DIR/loop.log, $LOG_DIR/iter-N.json, $LOG_DIR/iter-N.err.
 # State: $LOG_DIR/state.json (JSON, last-iteration summary).
@@ -37,7 +41,6 @@ PID_FILE="$LOG_DIR/wrapper.pid"
 STOP_FILE="$LOG_DIR/STOP"
 ACTIVITY_LOG="$PROJECT_ROOT/09-MobileControl/runtime/activity.jsonl"
 
-MAX_RESTARTS="${MAX_RESTARTS:-1000}"
 MAX_TOTAL_HOURS="${MAX_TOTAL_HOURS:-24}"
 MAX_BUDGET_PER_ITER="${MAX_BUDGET_PER_ITER:-5}"
 ITERATION_TIMEOUT_MIN="${ITERATION_TIMEOUT_MIN:-30}"
@@ -138,7 +141,6 @@ if [ ! -f "$STATE_FILE" ]; then
   "started_at": "$(date -u +%Y-%m-%dT%H:%M:%SZ)",
   "iteration": 0,
   "last_status": "starting",
-  "max_restarts": $MAX_RESTARTS,
   "max_total_hours": $MAX_TOTAL_HOURS
 }
 EOF
@@ -164,11 +166,15 @@ export EP_AUTONOMOUS_PID=$$
 export EP_AUTONOMOUS_ROOT="$PROJECT_ROOT"
 
 emit_event "autonomous_run_started" "wrapper started pid=$$" \
-  "{\"pid\":$$,\"max_restarts\":$MAX_RESTARTS,\"max_hours\":$MAX_TOTAL_HOURS,\"budget_usd\":$MAX_BUDGET_PER_ITER}"
+  "{\"pid\":$$,\"max_hours\":$MAX_TOTAL_HOURS,\"budget_usd\":$MAX_BUDGET_PER_ITER}"
 
-echo "$(date) autonomous-loop start — project=$PROJECT_ROOT max_restarts=$MAX_RESTARTS max_hours=$MAX_TOTAL_HOURS budget_per_iter=\$$MAX_BUDGET_PER_ITER timeout=${ITERATION_TIMEOUT_MIN}m" >> "$LOG_FILE"
+echo "$(date) autonomous-loop start — project=$PROJECT_ROOT max_hours=$MAX_TOTAL_HOURS budget_per_iter=\$$MAX_BUDGET_PER_ITER timeout=${ITERATION_TIMEOUT_MIN}m" >> "$LOG_FILE"
 
-for i in $(seq 1 "$MAX_RESTARTS"); do
+# Iteration counter resets each invocation. The loop runs until wall-clock cap,
+# STOP file, or signal — never on iter count alone.
+i=0
+while :; do
+  i=$((i + 1))
   # Stop-flag check.
   if [ -f "$STOP_FILE" ]; then
     echo "$(date) STOP file detected — exiting cleanly" >> "$LOG_FILE"
@@ -285,7 +291,7 @@ EOF
   sleep "$RESTART_DELAY"
 done
 
-echo "$(date) autonomous-loop end (max_restarts=$MAX_RESTARTS or max_hours=$MAX_TOTAL_HOURS reached)" >> "$LOG_FILE"
-emit_event "loop_terminated" "max iterations reached" '{"reason":"max_restarts"}'
+echo "$(date) autonomous-loop end (max_hours=$MAX_TOTAL_HOURS reached)" >> "$LOG_FILE"
+emit_event "loop_terminated" "max wall-clock hours reached" '{"reason":"max_hours"}'
 rm -f "$PID_FILE"
 exit 0
