@@ -155,6 +155,9 @@ function extractWithDaiAdapter(html: string, adapter: DaiAdapter): ParsedEvent[]
     const title = titleSel ? $el.find(titleSel).first().text().trim() : $el.find('h2, h3, a').first().text().trim();
     if (!title || title.length < 3) return;
 
+    // T0043: tiqets-stockholm category card filter — "24 experiences", "8 experiences" etc.
+    if (adapter.sourceId === 'tiqets-stockholm' && /^\d+ experiences$/i.test(title)) return;
+
     // Date — try Swedish date parser first, fall back to ISO (T0041)
     const dateSel = adapter.selectors.date;
     const dateText = dateSel ? $el.find(dateSel).first().text().trim() : '';
