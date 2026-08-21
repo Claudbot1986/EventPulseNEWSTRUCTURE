@@ -504,6 +504,137 @@ export async function fetchRecommendedEvents({ limit = 10, signal, timeoutMs = 1
   return { events };
 }
 
+/**
+ * T0061 / MVP-gap §78 — share a session as a short-hash deep-link.
+ *
+ * Calls POST /agent/share, returning a `eventpulse://s/{hash}` URL that
+ * the caller feeds to React Native's `Share.share()`.
+ *
+ * @param {{ query: string, sessionId?: string, eventIds?: string[], ttlHours?: number, signal?: AbortSignal, timeoutMs?: number }} opts
+ * @returns {Promise<{ ok: true, id: string, url: string, expires_at: string } | { ok: false, warning: string }>}
+ */
+export async function shareSession({
+  query,
+  sessionId,
+  eventIds,
+  ttlHours,
+  signal,
+  timeoutMs = 6_000,
+} = {}) {
+  let baseUrl;
+  try {
+    baseUrl = requireAgentBaseUrl();
+  } catch (_err) {
+    return { ok: false, warning: 'config' };
+  }
+  const client_user_id = await getOrCreateAnonUserId();
+  const body = {
+    client_user_id,
+    query: typeof query === 'string' ? query : '',
+  };
+  if (sessionId) body.session_id = sessionId;
+  if (Array.isArray(eventIds)) body.event_ids = eventIds;
+  if (typeof ttlHours === 'number') body.ttl_hours = ttlHours;
+
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), timeoutMs);
+  if (signal) {
+    if (signal.aborted) controller.abort();
+    else signal.addEventListener('abort', () => controller.abort(), { once: true });
+  }
+
+  let response;
+  try {
+    response = await fetch(`${baseUrl}/agent/share`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+      signal: controller.signal,
+    });
+  } catch (_err) {
+    clearTimeout(timer);
+    return { ok: false, warning: 'network' };
+  }
+  clearTimeout(timer);
+
+  if (!response.ok) {
+    let payload = {};
+    try { payload = await response.json(); } catch (_e) { /* fall through */ }
+    return {
+      ok: false,
+      warning: payload?.error ?? `share ${response.status}: ${response.statusText}`,
+    };
+  }
+
+  const data = await response.json();
+  return {
+    ok: true,
+    id: data.id,
+    url: data.url,
+    expires_at: data.expires_at,
+  };
+}
+
+/**
+ * T0061 — fetch a shared session by hash (the public GET /s/:hash endpoint).
+ *
+ * Returns `{ok: true, query, eventIds, createdAt, viewCount}` on success
+ * and `{ok: false, warning}` on network/404/5xx. 404 = "not found or
+ * expired" — soft failure (recipient hit a typo'd or stale share).
+ */
+export async function fetchSharedSession({ hash, signal, timeoutMs = 6_000 } = {}) {
+  let baseUrl;
+  try {
+    baseUrl = requireAgentBaseUrl();
+  } catch (_err) {
+    return { ok: false, warning: 'config' };
+  }
+  const cleanHash = String(hash ?? '').toLowerCase();
+  if (!/^[0-9a-z]{6,12}$/.test(cleanHash)) {
+    return { ok: false, warning: 'invalid hash' };
+  }
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), timeoutMs);
+  if (signal) {
+    if (signal.aborted) controller.abort();
+    else signal.addEventListener('abort', () => controller.abort(), { once: true });
+  }
+
+  let response;
+  try {
+    response = await fetch(`${baseUrl}/s/${cleanHash}`, { signal: controller.signal });
+  } catch (_err) {
+    clearTimeout(timer);
+    return { ok: false, warning: 'network' };
+  }
+  clearTimeout(timer);
+
+  if (response.status === 404) {
+    return { ok: false, warning: 'not found or expired' };
+  }
+  if (!response.ok) {
+    return { ok: false, warning: `share ${response.status}` };
+  }
+
+  const data = await response.json();
+  return {
+    ok: true,
+    query: data.query ?? '',
+    eventIds: Array.isArray(data.event_ids) ? data.event_ids : [],
+    createdAt: data.created_at ?? null,
+    viewCount: data.view_count ?? 0,
+  };
+}
+
+/**
+ * T0061 — extract the hash from an eventpulse://s/{hash} URL.
+ * Returns the lowercased hash string or null if the URL doesn't match.
+ */
+export function parseShareHashFromUrl(url) {
+  if (typeof url !== 'string') return null;
+  const m = url.match(/^eventpulse:\/\/s\/([0-9a-z]{6,12})/i);
+  return m ? m[1].toLowerCase() : null;
+}
 /** YYYY-MM-DD `days` days after `from` (UTC, mirrors server-side addDays). */
 export function addDays(from, days) {
   const d = new Date(`${from}T00:00:00.000Z`);
