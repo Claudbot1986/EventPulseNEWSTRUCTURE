@@ -35,6 +35,8 @@ export type EventType =
   | 'claude_completed'
   | 'iteration_timeout'
   | 'iteration_failed'
+  | 'iteration_budget_exhausted'
+  | 'mvp_gap_analysis_triggered'
   | 'loop_terminated'
   // task lifecycle
   | 'task_selected'

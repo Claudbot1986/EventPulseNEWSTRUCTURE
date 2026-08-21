@@ -308,17 +308,39 @@ queue is empty, until the user explicitly disables it.
     "$CLAUDE_PROMPT" > "$LOG_DIR/iter-$i.json" 2> "$LOG_DIR/iter-$i.err"
   rc=$?
 
-  # Work around: claude --print --output-format json returns exit=1 even on
-  # successful runs (is_error=false). Treat JSON is_error field as source of truth.
+  # Parse the JSON output to determine real status. claude --print --output-format
+  # json often returns exit=1 even on success; the top-level is_error field is
+  # authoritative. Use jq for proper JSON parsing — the previous tail/grep
+  # approach broke because is_error lives near the start of the JSON, not the
+  # end, so tail -c 200 missed it and every budget-exceeded iter was
+  # misclassified as a success (causing the loop to keep spinning).
   iter_json="$LOG_DIR/iter-$i.json"
   json_error=false
+  json_subtype=""
+  json_num_turns=0
+  json_cost_usd=0
+  json_result_text=""
   if [ -f "$iter_json" ] && [ -s "$iter_json" ]; then
-    is_err=$(tail -c 200 "$iter_json" | grep -o '"is_error":[^,}]*' | head -1 | sed 's/.*://')
-    case "$is_err" in
-      *false*) json_error=false ;;
-      *true*)  json_error=true ;;
-      *)       json_error=false ;;
-    esac
+    if command -v jq >/dev/null 2>&1; then
+      json_error=$(jq -r 'if .is_error == true then "true" else "false" end' "$iter_json" 2>/dev/null || echo "false")
+      json_subtype=$(jq -r '.subtype // ""' "$iter_json" 2>/dev/null || echo "")
+      json_num_turns=$(jq -r '.num_turns // 0' "$iter_json" 2>/dev/null || echo 0)
+      json_cost_usd=$(jq -r '.total_cost_usd // .cost_usd // 0' "$iter_json" 2>/dev/null || echo 0)
+      # Capture last assistant text for the activity log (truncated)
+      json_result_text=$(jq -r '
+        if (.result | type) == "string" then .result
+        elif (.result | type) == "object" then (.result.content // "" | tostring)
+        else "" end
+      ' "$iter_json" 2>/dev/null | head -c 280 || echo "")
+    else
+      # Fallback if jq is missing (should not happen on macOS): read from start
+      is_err=$(head -c 2000 "$iter_json" | grep -o '"is_error":[^,}]*' | head -1 | sed 's/.*://')
+      case "$is_err" in
+        *false*) json_error=false ;;
+        *true*)  json_error=true ;;
+        *)       json_error=false ;;
+      esac
+    fi
   fi
 
   if [ "$rc" -eq 0 ] || [ "$json_error" = false ]; then
@@ -327,10 +349,20 @@ queue is empty, until the user explicitly disables it.
     final_rc=$rc
   fi
 
-  echo "$(date) iter=$i exit=$rc json_is_error=$json_error final=$final_rc" >> "$LOG_FILE"
+  # Detect budget-exceeded iters: agent was making progress (turns>0) but
+  # ran out of money before producing a final result. These are not failures
+  # to retry blindly — the next iter will resume the same context and likely
+  # burn another full budget. The loop should back off and let the user
+  # review whether the budget cap or task scope needs adjustment.
+  BUDGET_EXCEEDED=false
+  if [ "$json_subtype" = "error_max_budget_usd" ]; then
+    BUDGET_EXCEEDED=true
+  fi
 
-  emit_event "claude_completed" "iter=$i rc=$rc json_is_error=$json_error" \
-    "{\"iter\":$i,\"rc\":$rc,\"json_is_error\":$json_error}"
+  echo "$(date) iter=$i exit=$rc json_is_error=$json_error subtype='$json_subtype' turns=$json_num_turns cost=\$$json_cost_usd budget_exceeded=$BUDGET_EXCEEDED final=$final_rc" >> "$LOG_FILE"
+
+  emit_event "claude_completed" "iter=$i rc=$rc json_is_error=$json_error subtype='$json_subtype' turns=$json_num_turns cost=\$$json_cost_usd" \
+    "{\"iter\":$i,\"rc\":$rc,\"json_is_error\":$json_error,\"subtype\":\"$json_subtype\",\"turns\":$json_num_turns,\"cost_usd\":$json_cost_usd,\"budget_exceeded\":$BUDGET_EXCEEDED}"
 
   # Update state atomically. Read prior started_at so it survives across iters.
   PRIOR_STARTED=$(grep -o '"started_at": *"[^"]*"' "$STATE_FILE" 2>/dev/null | head -1 | sed 's/.*: *"//;s/"//')
@@ -352,6 +384,15 @@ EOF
   if [ "$rc" -eq 124 ]; then
     echo "$(date) iter=$i timed out — pre-emptive restart" >> "$LOG_FILE"
     emit_event "iteration_timeout" "iter=$i" "{\"iter\":$i,\"timeout_min\":$ITERATION_TIMEOUT_MIN}"
+  elif [ "$BUDGET_EXCEEDED" = true ]; then
+    # Budget was exhausted mid-iter. Backing off 5 minutes so we don't burn
+    # another full budget on the same resumed context. If this keeps happening,
+    # the user should raise MAX_BUDGET_PER_ITER or shrink task scope.
+    BACKOFF_SEC=300
+    echo "$(date) iter=$i budget exhausted (turns=$json_num_turns cost=\$$json_cost_usd subtype='$json_subtype') — backing off ${BACKOFF_SEC}s" >> "$LOG_FILE"
+    emit_event "iteration_budget_exhausted" "iter=$i turns=$json_num_turns cost=\$$json_cost_usd" \
+      "{\"iter\":$i,\"turns\":$json_num_turns,\"cost_usd\":$json_cost_usd,\"subtype\":\"$json_subtype\",\"backoff_sec\":$BACKOFF_SEC}"
+    sleep "$BACKOFF_SEC"
   elif [ "$final_rc" -ne 0 ]; then
     echo "$(date) iter=$i failed (rc=$rc json_is_error=$json_error) — pausing 30s before retry" >> "$LOG_FILE"
     emit_event "iteration_failed" "iter=$i rc=$rc json_is_error=$json_error" "{\"iter\":$i,\"rc\":$rc,\"json_is_error\":$json_error}"
