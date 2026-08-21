@@ -567,6 +567,128 @@ export function buildApp(opts: { supabase?: SupabaseClient } = {}): express.Expr
   });
 
   /**
+   * POST /agent/push-token — T0059 / MVP-gap §77.
+   *
+   * Persists the user's Expo push token and opt-in flags onto
+   * `user_preferences.preferences`. Read-modify-write so existing keys
+   * (`categories`, `followed_venue_ids`, `followed_artist_slugs`) are
+   * preserved — never clobbered.
+   *
+   * Body:
+   *   {
+   *     client_user_id: uuid,
+   *     push_token?:    string,  // Expo push token, or null to clear
+   *     follow_push_enabled?: boolean,
+   *   }
+   *
+   * Both fields are optional so the client can update either one
+   * independently (e.g. toggle follow_push_enabled without re-sending the
+   * token). At least one of `push_token`, `follow_push_enabled` MUST be
+   * present, otherwise the call is a no-op and returns 400.
+   *
+   * Phase 1 = storage only. The cron materializes follow_drop
+   * notifications into the `notifications` table regardless of push
+   * delivery (the app polls /agent/notifications on next open). Phase 2
+   * will add an Expo Push API call here that fans out the notification
+   * payload when `follow_push_enabled` is true and a `push_token` exists.
+   *
+   * Best-effort: validation errors are 400; Supabase failures are 202 with
+   * a warning — same convention as the preferences + follow endpoints.
+   */
+  app.post('/agent/push-token', chatLimiter.middleware, async (req: Request, res: Response) => {
+    const body = req.body as Partial<{
+      client_user_id: string;
+      push_token: unknown;
+      follow_push_enabled: unknown;
+    }>;
+    if (!body || typeof body !== 'object') {
+      res.status(400).json({ error: 'invalid body' });
+      return;
+    }
+    if (!body.client_user_id || !UUID_RE.test(body.client_user_id)) {
+      res.status(400).json({ error: 'client_user_id must be a uuid' });
+      return;
+    }
+    const hasTokenField = Object.prototype.hasOwnProperty.call(body, 'push_token');
+    const hasEnabledField = Object.prototype.hasOwnProperty.call(
+      body,
+      'follow_push_enabled'
+    );
+    if (!hasTokenField && !hasEnabledField) {
+      res.status(400).json({
+        error: 'push_token or follow_push_enabled is required',
+      });
+      return;
+    }
+    // push_token must be string-or-null. Empty string treated as null (clear).
+    let pushToken: string | null | undefined;
+    if (hasTokenField) {
+      if (body.push_token === null) {
+        pushToken = null;
+      } else if (typeof body.push_token === 'string') {
+        pushToken = body.push_token.trim() === '' ? null : body.push_token;
+      } else {
+        res.status(400).json({ error: 'push_token must be a string or null' });
+        return;
+      }
+    }
+    // follow_push_enabled must be a boolean when present.
+    let followPushEnabled: boolean | undefined;
+    if (hasEnabledField) {
+      if (typeof body.follow_push_enabled !== 'boolean') {
+        res.status(400).json({ error: 'follow_push_enabled must be a boolean' });
+        return;
+      }
+      followPushEnabled = body.follow_push_enabled;
+    }
+
+    const client = sb ?? getSupabase();
+    // Read-modify-write: preserve all existing jsonb keys (categories,
+    // followed_venue_ids, followed_artist_slugs, …).
+    const { data: existing, error: readErr } = await client
+      .from('user_preferences')
+      .select('preferences')
+      .eq('client_user_id', body.client_user_id)
+      .maybeSingle();
+    if (readErr) {
+      res.status(202).json({ ok: false, warning: readErr.message });
+      return;
+    }
+    const basePrefs =
+      existing &&
+      typeof existing.preferences === 'object' &&
+      existing.preferences !== null
+        ? (existing.preferences as Record<string, unknown>)
+        : {};
+    const next: Record<string, unknown> = { ...basePrefs };
+    if (hasTokenField) next.push_token = pushToken;
+    if (hasEnabledField) next.follow_push_enabled = followPushEnabled;
+    next.updated_at_kind = 'push-token';
+
+    const { error: writeErr } = await client
+      .from('user_preferences')
+      .upsert(
+        {
+          client_user_id: body.client_user_id,
+          preferences: next,
+          updated_at: new Date().toISOString(),
+        },
+        { onConflict: 'client_user_id' }
+      );
+    if (writeErr) {
+      res.status(202).json({ ok: false, warning: writeErr.message });
+      return;
+    }
+    res.json({
+      ok: true,
+      stored: {
+        has_push_token: next.push_token !== null && next.push_token !== undefined,
+        follow_push_enabled: next.follow_push_enabled === true,
+      },
+    });
+  });
+
+  /**
    * POST /agent/follow
    *
    * T0050 / MVP-gap §77. Follow or unfollow a venue. Body:
