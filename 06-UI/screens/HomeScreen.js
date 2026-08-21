@@ -124,17 +124,30 @@ function useSection({ from, days, filter }) {
 
 // ─── Card components ─────────────────────────────────────────────────────────
 
-function CardImage({ uri }) {
+function CardImage({ uri, imageLicense, imageAttribution }) {
   if (!uri) {
     return <View style={styles.cardImageFallback}><Text style={styles.cardImageFallbackText}>—</Text></View>;
   }
+  // T0052 — show attribution overlay only when license actually requires it.
+  // 'pressbild' / 'cc0' / null / 'unknown' → suppress badge (no attribution needed or unclassified).
+  const showBadge = imageLicense === 'cc-by' || imageLicense === 'copyright-with-attribution';
+  const badgeText = imageAttribution || (imageLicense === 'cc-by' ? 'CC BY' : 'Photo');
   return (
-    <Image
-      source={{ uri }}
-      style={styles.cardImage}
-      resizeMode="cover"
-      accessibilityIgnoresInvertColors
-    />
+    <View style={styles.cardImageWrap}>
+      <Image
+        source={{ uri }}
+        style={styles.cardImage}
+        resizeMode="cover"
+        accessibilityIgnoresInvertColors
+      />
+      {showBadge ? (
+        <View style={styles.imageAttribution}>
+          <Text style={styles.imageAttributionText} numberOfLines={1}>
+            {badgeText}
+          </Text>
+        </View>
+      ) : null}
+    </View>
   );
 }
 
@@ -159,7 +172,11 @@ function EventCardCompact({ event, onPress }) {
       accessibilityRole="button"
       accessibilityLabel={`${event.title} ${time ? 'klockan ' + time : ''} på ${venue}`}
     >
-      <CardImage uri={event.image_url || event.imageUrl} />
+      <CardImage
+        uri={event.image_url || event.imageUrl}
+        imageLicense={event.image_license}
+        imageAttribution={event.image_attribution}
+      />
       <View style={styles.cardBody}>
         <Text style={styles.cardTime}>{time || '—'}</Text>
         <Text style={styles.cardTitle} numberOfLines={2}>{event.title}</Text>
@@ -423,6 +440,28 @@ const styles = StyleSheet.create({
     backgroundColor: TOKENS.color.surface,
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  // T0052 — wrapper so the attribution overlay can sit absolutely on top
+  // of the image. The image retains its own width/height so layout is stable.
+  cardImageWrap: {
+    position: 'relative',
+    width: CARD_WIDTH,
+    height: 130,
+  },
+  imageAttribution: {
+    position: 'absolute',
+    bottom: 6,
+    right: 6,
+    backgroundColor: 'rgba(0,0,0,0.6)',
+    paddingHorizontal: 6,
+    paddingVertical: 3,
+    borderRadius: 4,
+    maxWidth: '70%',
+  },
+  imageAttributionText: {
+    color: TOKENS.color.text,
+    fontSize: TOKENS.fontSize.sm,
+    fontWeight: '500',
   },
   cardImageFallbackText: {
     color: TOKENS.color.textSoft,

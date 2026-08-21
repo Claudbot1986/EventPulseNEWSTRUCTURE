@@ -57,6 +57,18 @@ export interface EventCard {
   ticket_url?: string | null;
   image_url?: string | null;
   /**
+   * License class for the image served via `image_url`. T0052 surface.
+   *   - 'cc-by' / 'cc0' / 'copyright-with-attribution' require UI attribution badge.
+   *   - 'pressbild' = Swedish press-image exception (no attribution required).
+   *   - 'unknown' / NULL = not yet classified (UI suppresses badge for safety).
+   * See 22-Image-Rights-Policy.md in vault.
+   */
+  image_license?: string | null;
+  /** Human-readable attribution string. UI shows when license requires it. */
+  image_attribution?: string | null;
+  /** Original image URL when runtime serves via proxy/cache. */
+  image_source_url?: string | null;
+  /**
    * Source id from events.source — the ingestor that produced this row.
    * Surfaced in the UI so the user can see which site the event came from
    and (where a public homepage URL is registered) link to the source.

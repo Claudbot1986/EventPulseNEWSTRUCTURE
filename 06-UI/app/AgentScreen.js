@@ -107,11 +107,20 @@ function EventRow({ card, onInteraction }) {
   return (
     <TouchableOpacity onPress={onPress} style={styles.card}>
       {card.image_url ? (
-        <Image
-          source={{ uri: card.image_url }}
-          style={styles.cardImage}
-          accessibilityLabel={card.title}
-        />
+        <View style={styles.cardImageWrap}>
+          <Image
+            source={{ uri: card.image_url }}
+            style={styles.cardImage}
+            accessibilityLabel={card.title}
+          />
+          {card.image_license && card.image_license !== 'pressbild' && card.image_license !== 'unknown' ? (
+            <View style={styles.imageAttribution}>
+              <Text style={styles.imageAttributionText} numberOfLines={1}>
+                {card.image_attribution || (card.image_license === 'cc-by' ? 'CC BY' : 'Photo')}
+              </Text>
+            </View>
+          ) : null}
+        </View>
       ) : null}
       <View style={styles.cardBody}>
         <Text style={styles.cardTitle} numberOfLines={2}>
@@ -272,6 +281,24 @@ const styles = StyleSheet.create({
     borderTopLeftRadius: 10,
     borderTopRightRadius: 10,
     backgroundColor: '#252525',
+  },
+  cardImageWrap: {
+    position: 'relative',
+  },
+  imageAttribution: {
+    position: 'absolute',
+    bottom: 6,
+    right: 6,
+    backgroundColor: 'rgba(0,0,0,0.6)',
+    paddingHorizontal: 6,
+    paddingVertical: 3,
+    borderRadius: 4,
+    maxWidth: '70%',
+  },
+  imageAttributionText: {
+    color: '#fff',
+    fontSize: 10,
+    fontWeight: '500',
   },
   cardBody: {
     padding: 12,

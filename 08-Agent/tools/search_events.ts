@@ -105,6 +105,9 @@ export interface EventRow {
   price_max_sek: number | null;
   ticket_url: string | null;
   image_url: string | null;
+  image_license: string | null;
+  image_attribution: string | null;
+  image_source_url: string | null;
   category_slug: string | null;
   source: string | null;
   confidence_score: number | null;
@@ -125,6 +128,7 @@ export interface VenueRow {
 const EVENT_SELECT_COLUMNS =
   'id, title_en, title_sv, description_en, description_sv, start_time, end_time, ' +
   'venue_id, is_free, price_min_sek, price_max_sek, ticket_url, image_url, ' +
+  'image_license, image_attribution, image_source_url, ' +
   'category_slug, source, confidence_score, freshness_at, status_expanded';
 
 const VENUE_SELECT_COLUMNS = 'id, name, city, address';
@@ -277,6 +281,9 @@ function toCard(
     is_free: !!r.is_free,
     ticket_url: r.ticket_url ?? null,
     image_url: r.image_url ?? null,
+    image_license: r.image_license ?? null,
+    image_attribution: r.image_attribution ?? null,
+    image_source_url: r.image_source_url ?? null,
     source: r.source ?? null,
     confidence_score: r.confidence_score ?? null,
     freshness_at: r.freshness_at ?? null,
