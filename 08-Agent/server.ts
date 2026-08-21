@@ -69,6 +69,44 @@ const UUID_RE =
  *  re-randomize without rotating user IDs. */
 const PERSONALIZATION_PRIORS_EXP = 'PERSONALIZATION_PRIORS';
 
+/**
+ * Lightweight card payload stored inside cached_recommendations slot
+ * jsonb columns. The cron (08-Agent/cron/pre_render_recommendations.ts)
+ * writes these on each refresh; the GET /agent/cached-recommendations
+ * endpoint parses them and server-side-joins back to events_public.
+ *
+ * `event_id` is the canonical events_public.id UUID — when present the
+ * endpoint replaces this payload with the live row from events_public
+ * so the wire format stays consistent with /agent/feed.
+ */
+interface CachedCardPayload {
+  event_id: string;
+  title: string;
+  start_time: string;
+  venue_name: string;
+  image_url?: string | null;
+  rank_reason?: string;
+}
+
+function parseCachedCardPayload(raw: unknown): CachedCardPayload | null {
+  if (!raw || typeof raw !== 'object') return null;
+  const o = raw as Record<string, unknown>;
+  if (typeof o.event_id !== 'string' || !UUID_RE.test(o.event_id)) return null;
+  if (typeof o.title !== 'string' || o.title.length === 0) return null;
+  if (typeof o.start_time !== 'string' || o.start_time.length === 0) return null;
+  if (typeof o.venue_name !== 'string') return null;
+  const imageUrl = typeof o.image_url === 'string' ? o.image_url : null;
+  const rankReason = typeof o.rank_reason === 'string' ? o.rank_reason : 'cached';
+  return {
+    event_id: o.event_id,
+    title: o.title,
+    start_time: o.start_time,
+    venue_name: o.venue_name,
+    image_url: imageUrl,
+    rank_reason: rankReason,
+  };
+}
+
 function getAllowedOrigins(): string[] {
   const raw = process.env.AGENT_ALLOWED_ORIGINS ?? '';
   return raw.split(',').map((s) => s.trim()).filter(Boolean);
@@ -1056,6 +1094,118 @@ export function buildApp(opts: { supabase?: SupabaseClient } = {}): express.Expr
         client_user_id: raw,
       });
       res.json(result);
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'unknown error';
+      res.status(500).json({ error: msg });
+    }
+  });
+
+  /**
+   * GET /agent/cached-recommendations?client_user_id=<uuid>&limit=<int>
+   *
+   * T0060 / MVP-gap §77 (Phase 1 retention). Returns the 3 pre-rendered
+   * slots the daily cron wrote into `cached_recommendations`. The HomeScreen
+   * "Förslag från din agent" section renders these verbatim — zero LLM
+   * cost, zero search round-trip, instant render.
+   *
+   * The flat-table row format (slot_1_title / slot_1_card_1 / ...) gets
+   * re-shaped into the wire format the agentClient.js expects:
+   *   { slots: [{ title, card_1, card_2 }, …], generated_at }
+   *
+   * Cards are stored as lightweight jsonb payloads (event_id, title,
+   * start_time, venue_name, image_url, rank_reason) so the cron can
+   * write them in one upsert without server-side joins. The endpoint
+   * server-side-joins to events_public on event_id (extracted from the
+   * jsonb payload) to return full EventCards that match the wire format
+   * used by /agent/feed and /agent/recommended.
+   *
+   * 404 = no cached row for this user (first-time / very-low-engagement).
+   * Treated as "no slots" by the client; the section hides itself.
+   */
+  app.get('/agent/cached-recommendations', generalLimiter.middleware, async (req: Request, res: Response) => {
+    const raw = typeof req.query.client_user_id === 'string' ? req.query.client_user_id : '';
+    if (!UUID_RE.test(raw)) {
+      res.status(400).json({ error: 'client_user_id must be a uuid' });
+      return;
+    }
+    const limit = typeof req.query.limit === 'string'
+      ? Math.min(Math.max(parseInt(req.query.limit, 10) || 3, 1), 3)
+      : 3;
+
+    const client = sb ?? getSupabase();
+    try {
+      const { data: row, error: rowErr } = await client
+        .from('cached_recommendations')
+        .select('slot_1_title, slot_1_card_1, slot_1_card_2, slot_2_title, slot_2_card_1, slot_2_card_2, slot_3_title, slot_3_card_1, slot_3_card_2, generated_at')
+        .eq('client_user_id', raw)
+        .maybeSingle();
+
+      if (rowErr) {
+        res.status(500).json({ error: rowErr.message });
+        return;
+      }
+      if (!row) {
+        res.status(404).json({ error: 'no cached recommendations for this user' });
+        return;
+      }
+
+      // Helper: shape a slot slot from the flat table columns.
+      const slotFromColumns = (
+        title: unknown,
+        card1Col: unknown,
+        card2Col: unknown
+      ): { title: string; card_1: EventCard | null; card_2: EventCard | null } => {
+        const safeTitle = typeof title === 'string' ? title : '';
+        const card1 = parseCachedCardPayload(card1Col);
+        const card2 = parseCachedCardPayload(card2Col);
+        return { title: safeTitle, card_1: card1, card_2: card2 };
+      };
+
+      const rawSlots: Array<{ title: string; card_1: EventCard | null; card_2: EventCard | null }> = [
+        slotFromColumns(row.slot_1_title, row.slot_1_card_1, row.slot_1_card_2),
+        slotFromColumns(row.slot_2_title, row.slot_2_card_1, row.slot_2_card_2),
+        slotFromColumns(row.slot_3_title, row.slot_3_card_1, row.slot_3_card_2),
+      ];
+
+      // Server-side enrich: when the jsonb payload references an event,
+      // join events_public for full EventCard fields. We do this in two
+      // queries (one per card slot) since PostgREST doesn't support
+      // cross-table joins at this level.
+      const eventIds: string[] = [];
+      for (const s of rawSlots) {
+        if (s.card_1?.event_id) eventIds.push(s.card_1.event_id);
+        if (s.card_2?.event_id) eventIds.push(s.card_2.event_id);
+      }
+      const uniqueIds = Array.from(new Set(eventIds));
+
+      const eventMap = new Map<string, EventCard>();
+      if (uniqueIds.length > 0) {
+        const { data: events, error: eventsErr } = await client
+          .from('events_public')
+          .select('id, title, start_time, end_time, venue_name, venue_id, city, category_slug, price_min_sek, price_max_sek, is_free, ticket_url, image_url, source')
+          .in('id', uniqueIds);
+        if (!eventsErr && events) {
+          for (const e of events) eventMap.set(String(e.id), e as EventCard);
+        }
+      }
+
+      // Replace the lightweight payload with the full EventCard where found;
+      // keep the lightweight payload as-is when the event has been deleted
+      // or the join failed (the UI hides image-less fallback cards gracefully).
+      const slots = rawSlots
+        .slice(0, limit)
+        .map((s) => ({
+          title: s.title,
+          card_1: s.card_1 ? eventMap.get(s.card_1.event_id) ?? s.card_1 : null,
+          card_2: s.card_2 ? eventMap.get(s.card_2.event_id) ?? s.card_2 : null,
+        }))
+        // Drop empty slots — title + both cards empty is useless.
+        .filter((s) => s.title.length > 0 || s.card_1 !== null || s.card_2 !== null);
+
+      res.json({
+        slots,
+        generated_at: typeof row.generated_at === 'string' ? row.generated_at : null,
+      });
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : 'unknown error';
       res.status(500).json({ error: msg });
