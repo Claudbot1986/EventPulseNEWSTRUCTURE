@@ -4,7 +4,7 @@ dotenv.config({ override: true }); // override inherited env vars
 import cron from 'node-cron';
 import { createNormalizerWorker } from './queue';
 import { processRawEvent } from './normalizer';
-import { scrapeTicketmaster } from './sources/ticketmaster';
+import { fetchTicketmaster } from './sources/ticketmaster';
 import { scrapeEventbrite } from './sources/eventbrite';
 import { scrapeBilletto } from './sources/billetto';
 import { scrapeStockholm, generateStockholmSamples } from './sources/stockholm';
@@ -27,7 +27,7 @@ async function runSources() {
   const sources = [
     { name: 'stockholm', fn: scrapeStockholm, priority: 1 },
     { name: 'kulturhuset', fn: runKulturhusetSource, priority: 2 },
-    { name: 'ticketmaster', fn: scrapeTicketmaster, priority: 3 },
+    { name: 'ticketmaster', fn: fetchTicketmaster, priority: 3 },
     { name: 'eventbrite', fn: scrapeEventbrite, priority: 4 },
     { name: 'billetto', fn: scrapeBilletto, priority: 5 },
   ];
