@@ -368,7 +368,7 @@ export function updateSourceStatus(
   result: {
     success: boolean;
     eventsFound: number;
-    pathUsed?: 'jsonld' | 'html' | 'network' | 'render';
+    pathUsed?: 'jsonld' | 'html' | 'network' | 'render' | 'd-ai-adapter' | 'render-gate';
     ingestionStage?: 'pending' | 'A' | 'B' | 'C' | 'D' | 'completed' | 'failed';
     error?: string;
     // Routingminne

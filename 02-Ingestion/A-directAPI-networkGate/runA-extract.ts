@@ -26,6 +26,7 @@ import { fetchHtml } from '../tools/fetchTools';
 import { extractFromJsonLd } from '../F-eventExtraction/extractor';
 import * as cheerio from 'cheerio';
 import type { ParsedEvent } from '../F-eventExtraction/schema';
+import { renderPage, needsRendering } from '../D-renderGate/renderGate';
 
 // ── Paths ────────────────────────────────────────────────────────────────────
 
@@ -288,6 +289,51 @@ async function extractFromSource(sourceId: string): Promise<ExtractResult> {
         return { sourceId, success: true, eventsFound: adapterEvents.length };
       }
     }
+
+    // T0046 — render-gate fallback for JS-heavy sources
+    // Triggers when:
+    //   (a) D-AI adapter exists with validationNotes mentioning "render gate" or "SPA", OR
+    //   (b) quick check on raw HTML suggests it (small body, JS framework markers)
+    const adapterNeedsRender = adapter
+      && !adapter.validationPassed
+      && adapter.validationNotes
+      && /render.gate|SPA|JS.rendered|JS-rendered/i.test(adapter.validationNotes);
+    if (adapterNeedsRender || (await needsRendering(source.url))) {
+      log(`  [render-gate] ${sourceId}: ${adapterNeedsRender ? 'adapter flagged' : 'needsRendering()=true'} — invoking D-renderGate`);
+      try {
+        const rendered = await renderPage(source.url, { timeout: 20000 });
+        if (rendered.success && rendered.html && rendered.html.length > fetchResult.html.length) {
+          // Re-run JSON-LD on rendered HTML
+          const renderedJsonLd = extractFromJsonLd(rendered.html, sourceId, source.url);
+          // Re-run D-AI adapter (if any) on rendered HTML
+          const renderedDai = adapter
+            ? extractWithDaiAdapter(rendered.html, adapter)
+            : [];
+          const merged = [...renderedJsonLd.events, ...renderedDai];
+          if (merged.length > 0) {
+            log(`  [render-gate] ${sourceId}: ${merged.length} events after JS render (jsonld=${renderedJsonLd.events.length}, d-ai=${renderedDai.length})`);
+            const outFile = path.join(EXTRACTED_DIR, `${sourceId}.jsonl`);
+            fs.mkdirSync(EXTRACTED_DIR, { recursive: true });
+            const lines = merged.map(e => JSON.stringify(e)).join('\n') + '\n';
+            fs.writeFileSync(outFile, lines, 'utf-8');
+            updateSourceStatus(sourceId, {
+              success: true,
+              eventsFound: merged.length,
+              pathUsed: 'render-gate',
+              ingestionStage: 'completed',
+              lastRoutingReason: `runA-extract: ${merged.length} events via render-gate (jsonld=${renderedJsonLd.events.length}, d-ai=${renderedDai.length})`,
+            });
+            return { sourceId, success: true, eventsFound: merged.length };
+          }
+          log(`  [render-gate] ${sourceId}: rendered HTML (${rendered.html.length}b) still produced 0 events`);
+        } else {
+          log(`  [render-gate] ${sourceId}: render failed or no size gain (${rendered.error ?? 'unknown'})`);
+        }
+      } catch (err: any) {
+        log(`  [render-gate] ${sourceId}: exception ${err.message ?? err}`);
+      }
+    }
+
     updateSourceStatus(sourceId, {
       success: false,
       eventsFound: 0,
