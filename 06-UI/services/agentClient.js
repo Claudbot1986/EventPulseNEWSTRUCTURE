@@ -573,6 +573,33 @@ export async function fetchSuggestedPrompts({
 }
 
 /**
+ * Build the URL for an event's RFC-5545 calendar export — T0058 / Phase 1 retention.
+ *
+ * GET /agent/events/:id/calendar.ics?client_user_id=<uuid>
+ *
+ * Returns the URL the caller should pass to Linking.openURL. We deliberately
+ * do NOT fetch the .ics body here — iOS/Android handle the URL directly,
+ * which avoids loading the full .ics text into the JS bundle. Apple Wallet
+ * .pkpass is deferred to T0066 (needs signing certs).
+ *
+ * @param {string} eventId
+ * @param {string} clientUserId
+ * @returns {{ url: string }}
+ */
+export function fetchEventIcs(eventId, clientUserId) {
+  if (typeof eventId !== 'string' || eventId.length === 0) {
+    return Promise.reject(new Error('eventId is required'));
+  }
+  if (typeof clientUserId !== 'string' || clientUserId.length === 0) {
+    return Promise.reject(new Error('clientUserId is required'));
+  }
+  const baseUrl = requireAgentBaseUrl();
+  const url = new URL(`${baseUrl}/agent/events/${encodeURIComponent(eventId)}/calendar.ics`);
+  url.searchParams.set('client_user_id', clientUserId);
+  return Promise.resolve({ url: url.toString() });
+}
+
+/**
  * Fetch the user's saved events — T0054 / Phase 1 retention.
  *
  * GET /agent/saved?client_user_id=<uuid>&limit=<int>

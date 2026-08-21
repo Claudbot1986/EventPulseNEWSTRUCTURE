@@ -2,10 +2,10 @@ import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { StatusBar } from 'expo-status-bar';
 import { StyleSheet, Text, View, SectionList, ActivityIndicator, TouchableOpacity, ScrollView, Linking, Image, Platform } from 'react-native';
 import { SafeAreaView, SafeAreaProvider } from 'react-native-safe-area-context';
-import { fetchFeed, addDays } from './services/agentClient';
+import { fetchFeed, addDays, fetchEventIcs } from './services/agentClient';
 import { analyticsClient } from './services/analyticsClient';
 import UserPickerScreen from './screens/UserPickerScreen';
-import { getItem, removeItem } from './services/storage';
+import { getItem, getOrCreateAnonUserId, removeItem } from './services/storage';
 import { PENDING_AGENT_MESSAGE_KEY } from './AppShell';
 
 const TOKENS = {
@@ -819,6 +819,8 @@ function DetailsScreen({ event, onBack }) {
   const [ctaError, setCtaError] = useState(null);
   const [saved, setSaved] = useState(false);
   const [dismissed, setDismissed] = useState(false);
+  const [calendarError, setCalendarError] = useState(null);
+  const [calendarBusy, setCalendarBusy] = useState(false);
 
   const handleOpenUrl = async () => {
     if (!event.url) {
@@ -856,6 +858,32 @@ function DetailsScreen({ event, onBack }) {
     // Tiny delay so the analytics request fires before the screen unmounts.
     setTimeout(() => onBack(), 250);
   };
+
+  // T0058 — calendar export. Phase 1 minimum viable: fetch the .ics from
+  // the agent and open it via Linking so the OS prompts the user. iOS
+  // Safari offers "Add to Calendar" on .ics downloads; on Android the user
+  // can pick a calendar app. Apple Wallet .pkpass is deferred (T0066) —
+  // requires signing certs beyond MVP scope.
+  const handleAddToCalendar = useCallback(async () => {
+    if (!event?.id || calendarBusy) return;
+    setCalendarBusy(true);
+    setCalendarError(null);
+    try {
+      const userId = await getOrCreateAnonUserId();
+      const { url } = await fetchEventIcs(event.id, userId);
+      const canOpen = await Linking.canOpenURL(url);
+      if (!canOpen) {
+        setCalendarError('Kan inte öppna kalenderfilen på den här enheten.');
+        return;
+      }
+      await Linking.openURL(url);
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : 'unknown';
+      setCalendarError(`Kunde inte hämta kalenderfil: ${msg}`);
+    } finally {
+      setCalendarBusy(false);
+    }
+  }, [event?.id, calendarBusy]);
 
   const venue = getVenueLabel(event);
   const area = getAreaLabel(event);
@@ -926,6 +954,19 @@ function DetailsScreen({ event, onBack }) {
               </Text>
             </TouchableOpacity>
           </View>
+          <TouchableOpacity
+            style={[styles.detailsActionButton, styles.detailsActionButtonFull, calendarBusy && styles.detailsActionButtonDisabled]}
+            onPress={handleAddToCalendar}
+            activeOpacity={0.7}
+            disabled={calendarBusy}
+            accessibilityRole="button"
+            accessibilityLabel="Lägg till i kalender"
+          >
+            <Text style={[styles.detailsActionText, calendarBusy && styles.detailsActionTextDisabled]}>
+              {calendarBusy ? 'Hämtar kalenderfil…' : 'Lägg till i kalender'}
+            </Text>
+          </TouchableOpacity>
+          {calendarError ? <Text style={styles.ctaErrorText}>{calendarError}</Text> : null}
         </View>
         
         <View style={styles.detailsSection}>
@@ -1570,6 +1611,12 @@ const styles = StyleSheet.create({
   detailsActionButtonDismiss: {
     backgroundColor: TOKENS.color.surface,
   },
+  detailsActionButtonFull: {
+    marginTop: TOKENS.space.sm,
+  },
+  detailsActionButtonDisabled: {
+    opacity: 0.5,
+  },
   detailsActionText: {
     color: TOKENS.color.textMuted,
     fontSize: 13,
@@ -1580,6 +1627,9 @@ const styles = StyleSheet.create({
     color: TOKENS.color.accent,
   },
   detailsActionTextDismiss: {
+    color: TOKENS.color.textSoft,
+  },
+  detailsActionTextDisabled: {
     color: TOKENS.color.textSoft,
   },
   detailsSection: {
