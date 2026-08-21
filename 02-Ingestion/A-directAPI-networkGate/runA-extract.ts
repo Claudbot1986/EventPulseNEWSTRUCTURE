@@ -252,6 +252,45 @@ async function extractFromSource(sourceId: string): Promise<ExtractResult> {
 
   console.log(`[extract] ${sourceId} — ${source.url}`);
 
+  // T0099 — API-source dispatch (Ticketmaster, Billetto, etc.)
+  // Sources with preferredPath='api' use their adapter instead of HTML fetch.
+  if ((source as any).preferredPath === 'api') {
+    const adapterName = (source as any).metadata?.sourceAdapter as string | undefined;
+    if (adapterName === 'ticketmaster') {
+      log(`  [api-dispatch] ${sourceId}: routing to Ticketmaster adapter`);
+      try {
+        const { fetchTicketmaster } = await import('./adapters/ticketmaster');
+        const adapterStatus = await fetchTicketmaster();
+        const success = adapterStatus === 'completed';
+        updateSourceStatus(sourceId, {
+          success,
+          eventsFound: success ? 1 : 0,  // adapter queues directly to rawEventsQueue; we report 1 as heartbeat
+          pathUsed: 'api',
+          ingestionStage: success ? 'completed' : 'failed',
+          lastRoutingReason: `runA-extract: Ticketmaster API → ${adapterStatus}`,
+        });
+        return {
+          sourceId,
+          success,
+          eventsFound: success ? 1 : 0,
+          error: success ? undefined : `ticketmaster adapter returned: ${adapterStatus}`,
+        };
+      } catch (err: any) {
+        log(`  [api-dispatch] ${sourceId}: Ticketmaster adapter threw: ${err.message ?? err}`);
+        updateSourceStatus(sourceId, {
+          success: false,
+          eventsFound: 0,
+          pathUsed: 'api',
+          ingestionStage: 'failed',
+          lastRoutingReason: `runA-extract: Ticketmaster API threw: ${err.message ?? err}`,
+        });
+        return { sourceId, success: false, eventsFound: 0, error: `ticketmaster: ${err.message ?? err}` };
+      }
+    }
+    // Future: billetto, eventbrite, kulturhuset adapters can be added here.
+    log(`  [api-dispatch] ${sourceId}: no adapter registered for sourceAdapter='${adapterName}' — falling through to HTML path`);
+  }
+
   let fetchResult = await fetchHtml(source.url, { timeout: 20000 });
   if (!fetchResult.success || !fetchResult.html) {
     // T0098 — TLS/SSL/cert failures (mosebacke, nobel-prize-museum, observatoriet)
