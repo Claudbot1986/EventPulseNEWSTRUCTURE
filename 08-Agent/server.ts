@@ -908,6 +908,36 @@ export function buildApp(opts: { supabase?: SupabaseClient } = {}): express.Expr
     }
   });
 
+  /**
+   * GET /agent/suggested-prompts?client_user_id=<uuid>
+   *
+   * T0057 / MVP-gap §77: time-aware suggested prompts in HomeScreen.
+   * Returns 3–5 contextual intent chips with prompt_text + reason.
+   * Chips are generated from: time-of-day, stated categories, followed
+   * venues/artists, and interaction history.
+   *
+   * Same lockdown as /agent/saved: origin allowlist + service_role only.
+   */
+  app.get('/agent/suggested-prompts', generalLimiter.middleware, async (req: Request, res: Response) => {
+    const raw = typeof req.query.client_user_id === 'string' ? req.query.client_user_id : '';
+    if (!UUID_RE.test(raw)) {
+      res.status(400).json({ error: 'client_user_id must be a uuid' });
+      return;
+    }
+    const client = sb ?? getSupabase();
+    try {
+      const { getSuggestedPrompts } = await import('./tools/get_suggested_prompts.js');
+      const result = await getSuggestedPrompts({
+        supabase: client,
+        client_user_id: raw,
+      });
+      res.json(result);
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'unknown error';
+      res.status(500).json({ error: msg });
+    }
+  });
+
   app.get('/agent/metrics', requireAdmin, generalLimiter.middleware, async (_req: Request, res: Response) => {
     const client = sb ?? getSupabase();
     try {
