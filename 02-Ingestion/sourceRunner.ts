@@ -1,8 +1,19 @@
 /**
- * MERGED Source Runner
- * Combines PROTOTYPE (TypeScript) and ENDTOEND (JavaScript) sources
- * PROTOTYPE: API-based sources with queue/pipeline integration
- * ENDTOEND: Scraping-based sources with HTML/JSON parsing
+ * @deprecated 2026-08-21 — This file is dead code. It imports 7 files from
+ * `./sources/*` (stockholm, eventbrite, billetto, kulturhuset, debaser,
+ * kulturhusetBarnUng, berwaldhallenTixly) that no longer exist (moved to
+ * `02-Ingestion/A-directAPI-networkGate/adapters/`). `npx tsc --noEmit` reports
+ * 7 TS2307 module-not-found errors. No code in the repo imports this module.
+ *
+ * Active sourceRunner: `06-UI/services/ingestion/src/sources/sourceRunner.ts`
+ * (imported by `06-UI/services/ingestion/src/index.ts:11`).
+ *
+ * Tracked as T0045. Delete this file or replace with a one-line redirect once
+ * any future "merged source runner" work supersedes it. See vault:
+ * `00-Vault/01-Projects/EventPulse/02-Operations/23-Active-Task-Queue.md`.
+ *
+ * Original intent (kept for reference): MERGED Source Runner combining
+ * PROTOTYPE (API/queue) and ENDTOEND (scraping) sources.
  */
 
 import { fetchTicketmaster } from './A-directAPI-networkGate/adapters/ticketmaster';
