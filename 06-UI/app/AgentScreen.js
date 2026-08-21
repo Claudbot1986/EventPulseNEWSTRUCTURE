@@ -20,6 +20,7 @@ import {
   KeyboardAvoidingView,
   Linking,
   Platform,
+  Share,
   StyleSheet,
   Text,
   TextInput,
@@ -32,6 +33,7 @@ import {
   recordEventInteraction,
   followEntity,
   getFollowedEntities,
+  shareSession,
 } from '../services/agentClient';
 import { resolveReasons } from '../utils/rankReasonLabels';
 
@@ -181,6 +183,10 @@ export default function AgentScreen() {
   const [questions, setQuestions] = useState([]);
   const [sessionId, setSessionId] = useState(null);
   const [lastQuery, setLastQuery] = useState('');
+  // T0061 — share-session state. We let the user share the current agent
+  // session even when there are no visible cards (queries without events
+  // are still shareable as "what my agent has been looking at").
+  const [shareBusy, setShareBusy] = useState(false);
   // T0050 — followed venues. Refreshed on mount and after every toggle so
   // the long-press action sheet always knows whether to show "Följ" or
   // "Sluta följ". Stored as a Set for O(1) lookup inside FlatList render.
@@ -315,13 +321,59 @@ export default function AgentScreen() {
     }).catch(() => {});
   }, [sessionId, lastQuery]);
 
+  // T0061 — share-session: persists the most recent chat exchange as a
+  // `eventpulse://s/{hash}` URL, then opens the OS Share-sheet. Disabled
+  // until the user has actually sent at least one message (lastQuery
+  // non-empty) so we don't share empty placeholder sessions.
+  const handleShareSession = useCallback(async () => {
+    if (shareBusy) return;
+    const query = lastQuery.trim();
+    if (!query) return;
+    const eventIds = Array.isArray(cards) ? cards.map((c) => c.id).filter(Boolean) : [];
+    setShareBusy(true);
+    try {
+      const res = await shareSession({ query, sessionId, eventIds });
+      if (!res.ok) {
+        Alert.alert('Kunde inte skapa delningslänk', res.warning || 'okänt fel');
+        return;
+      }
+      try {
+        await Share.share({
+          message: `${query} — öppna i EventPulse: ${res.url}`,
+          url: res.url,
+          title: 'EventPulse',
+        });
+      } catch (err) {
+        const msg = err instanceof Error ? err.message : '';
+        if (!/user did not share|dismissedAction/i.test(msg)) {
+          Alert.alert('Kunde inte öppna delningsmenyn', msg || 'okänt fel');
+        }
+      }
+    } finally {
+      setShareBusy(false);
+    }
+  }, [shareBusy, lastQuery, sessionId, cards]);
+
   return (
     <KeyboardAvoidingView
       style={styles.root}
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
       keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 24}
     >
-      <Text style={styles.heading}>EventPulse Agent</Text>
+      <View style={styles.headerRow}>
+        <Text style={styles.heading}>EventPulse Agent</Text>
+        <TouchableOpacity
+          onPress={handleShareSession}
+          style={[styles.shareHeaderBtn, (!lastQuery.trim() || shareBusy) && styles.shareHeaderBtnDisabled]}
+          accessibilityRole="button"
+          accessibilityLabel="Dela session"
+          accessibilityState={{ disabled: !lastQuery.trim() || shareBusy, busy: shareBusy }}
+          disabled={!lastQuery.trim() || shareBusy}
+          activeOpacity={0.7}
+        >
+          <Text style={styles.shareHeaderBtnText}>{shareBusy ? '…' : 'Dela'}</Text>
+        </TouchableOpacity>
+      </View>
 
       <FlatList
         data={cards}
@@ -402,6 +454,27 @@ export default function AgentScreen() {
 const styles = StyleSheet.create({
   root: { flex: 1, backgroundColor: '#000', padding: 12 },
   heading: { color: '#fff', fontSize: 20, fontWeight: '600', marginVertical: 8 },
+  // T0061 — header layout puts the share button at the end of the row
+  // (right on iOS, mirrored on Android via flexDirection:'row').
+  headerRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  shareHeaderBtn: {
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    borderRadius: 8,
+    backgroundColor: '#4f46e5',
+  },
+  shareHeaderBtnDisabled: {
+    opacity: 0.4,
+  },
+  shareHeaderBtnText: {
+    color: '#fff',
+    fontSize: 14,
+    fontWeight: '600',
+  },
   reply: { color: '#ddd', marginVertical: 8 },
   warning: { color: '#f5a524', fontSize: 12, marginVertical: 1 },
   warnings: { marginVertical: 6 },
