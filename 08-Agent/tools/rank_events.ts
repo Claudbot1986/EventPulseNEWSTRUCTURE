@@ -36,6 +36,8 @@ export const RANK_WEIGHTS = {
   low_confidence:    -10,
   stale:             -15,
   stated_category_match: 0.3,
+  followed_venue_match: 20,
+  followed_artist_match: 15,
 } as const;
 
 /** Confidence threshold for the `high_confidence` ranker reason. */
@@ -83,6 +85,34 @@ export interface RankOptions {
    * — users with both signals get both.
    */
   statedCategories?: ReadonlyArray<string>;
+  /**
+   * User-declared venue follows from `user_preferences.followed_venue_ids`
+   * (read by `loadFollowedVenues`). When the array contains the card's
+   * `venue_id`, the card receives a `followed_venue_match` boost
+   * (`RANK_WEIGHTS.followed_venue_match`, default 20). The boost is
+   * intentionally below `category_match` (30) and `time_fit` (25) so the
+   * user's explicit intent still dominates declared prefs — same magnitude
+   * discipline as `stated_category_match` (0.3). Empty / missing array
+   * means no boost, no cost.
+   *
+   * T0050 / MVP-gap §77. Phase 1 declared pref; Phase 2 will add a
+   * learned-personalization lift on top (Bayesian posterior on follows).
+   */
+  followedVenueIds?: ReadonlyArray<string>;
+  /**
+   * User-declared artist follows from `user_preferences.followed_artist_slugs`
+   * (read by `loadFollowedArtists`). When the array contains any of the card's
+   * `artist_slugs` (populated by `search_events.ts` via the `event_artists`
+   * join), the card receives a `followed_artist_match` boost
+   * (`RANK_WEIGHTS.followed_artist_match`, default 15). Lower than the venue
+   * boost because artists are inherently weaker signal than venues for "I'll
+   * go tonight" — a venue implies the user is geographically anchored; an
+   * artist often plays in cities the user won't travel to. Empty / missing
+   * array means no boost, no cost.
+   *
+   * T0050 / MVP-gap §77. Phase 1 declared pref.
+   */
+  followedArtistSlugs?: ReadonlyArray<string>;
 }
 
 /**
@@ -229,6 +259,53 @@ export function rankEvents(
         && opts.statedCategories.includes(c.category_slug)) {
       score += RANK_WEIGHTS.stated_category_match;
       reasons.push('stated_category_match');
+    }
+
+    // Followed-venue boost (T0050 / MVP-gap §77). Triggered when the user
+    // has explicitly followed this venue via `POST /agent/follow` and the
+    // venue UUID matches `EventCard.venue_id`. The boost (20) sits between
+    // `under_budget` (20) and `category_match` (30) so a followed venue
+    // surfaces near the top when the user intent is generic but stays
+    // below a strong category match when the intent is specific.
+    //
+    // Gated on:
+    //   - non-empty `followedVenueIds` (zero cost when user follows nothing)
+    //   - non-null `card.venue_id` (orphan events without venue are skipped)
+    //   - UUID equality (string compare; UUIDs are normalized by supabase)
+    if (opts.followedVenueIds && opts.followedVenueIds.length > 0
+        && c.venue_id && opts.followedVenueIds.includes(c.venue_id)) {
+      score += RANK_WEIGHTS.followed_venue_match;
+      reasons.push('followed_venue');
+    }
+
+    // Followed-artist boost (T0050 / MVP-gap §77). Triggered when the user
+    // has explicitly followed at least one artist on this event via
+    // `POST /agent/follow`. The card must expose `artist_slugs` (populated
+    // by search_events.ts via the event_artists join). The boost (15) sits
+    // below `followed_venue_match` (20) because artists are inherently
+    // weaker "I'll go tonight" signal — a venue implies geographic anchor,
+    // an artist often plays in cities the user won't travel to.
+    //
+    // Case-insensitive comparison guards against case drift between the
+    // storage slug (lowercased in follow_entity.ts) and any future join
+    // that might emit mixed case.
+    if (opts.followedArtistSlugs && opts.followedArtistSlugs.length > 0
+        && c.artist_slugs && c.artist_slugs.length > 0) {
+      const followed = opts.followedArtistSlugs;
+      const cardSlugs = c.artist_slugs;
+      let matchedArtist = false;
+      for (const a of cardSlugs) {
+        if (!a) continue;
+        const lc = a.toLowerCase();
+        if (followed.includes(lc)) {
+          matchedArtist = true;
+          break;
+        }
+      }
+      if (matchedArtist) {
+        score += RANK_WEIGHTS.followed_artist_match;
+        reasons.push('followed_artist');
+      }
     }
 
     return { card: c, score, reasons };

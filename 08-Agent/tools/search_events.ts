@@ -188,6 +188,43 @@ export function filterByCity<E extends { venue_id: string | null }>(
 }
 
 /**
+ * Fetch the artist slug set per event id. T0050 wires this into the
+ * search hot-path so the ranker can apply `followed_artist_match`.
+ *
+ * One round-trip with `event_id IN (...)` then `artists(slug)` embedded.
+ * `events_public` (the read surface for chat) is a view that
+ * intentionally does NOT include `event_artists`, so we read from the
+ * base `event_artists` table directly — same RLS posture (service_role
+ * only) so no new permissions are needed.
+ *
+ * The map is `event_id → Set<string>` of slugs. Empty sets are valid
+ * ("no artists catalogued yet") and the ranker treats them as a no-op,
+ * never a penalty. No fabricated slugs — slugs come from the artists
+ * table only.
+ */
+export async function fetchArtistSlugsByEventIds(
+  supabase: SupabaseClient,
+  eventIds: ReadonlyArray<string>,
+): Promise<Map<string, Set<string>>> {
+  const out = new Map<string, Set<string>>();
+  if (eventIds.length === 0) return out;
+  // Dedupe; Supabase .in handles up to ~hundreds cleanly.
+  const ids = Array.from(new Set(eventIds)).filter((x): x is string => !!x);
+  const { data, error } = await supabase
+    .from('event_artists')
+    .select('event_id, artists:artist_id(slug)')
+    .in('event_id', ids);
+  if (error || !data) return out;
+  for (const row of data as Array<{ event_id: string; artists: { slug: string } | null }>) {
+    const slug = row.artists?.slug;
+    if (!slug) continue;
+    if (!out.has(row.event_id)) out.set(row.event_id, new Set<string>());
+    out.get(row.event_id)!.add(slug.toLowerCase());
+  }
+  return out;
+}
+
+/**
  * Build the events query (without date/category - those are layered in by
  * the caller so the broadening ladder can mutate them). Pure-with-IO:
  * returns the supabase chain; the chain still needs `.then(...)` to execute.
@@ -261,11 +298,16 @@ export function computeWarnings(rows: ReadonlyArray<EventRow>): string[] {
   return warnings;
 }
 
-/** Map an EventRow + (optional) VenueRow to an EventCard. Pure. */
+/** Map an EventRow + (optional) VenueRow + (optional) artist-slug set to
+ *  an EventCard. Pure. T0050 — the artist set comes from
+ *  fetchArtistSlugsByEventIds and powers the `followed_artist_match`
+ *  ranker reason. Stored on the card so the ranker sees it without an
+ *  extra hop. */
 function toCard(
   r: EventRow,
   venue: VenueRow | undefined,
   fallbackCity: string,
+  artistSlugs?: Set<string>,
 ): EventCard {
   return {
     id: r.id,
@@ -274,6 +316,7 @@ function toCard(
     start_time: r.start_time,
     end_time: r.end_time ?? null,
     venue_name: venue?.name ?? '',
+    venue_id: r.venue_id ?? null,
     city: venue?.city ?? fallbackCity,
     category_slug: r.category_slug ?? '',
     price_min_sek: r.price_min_sek ?? null,
@@ -284,6 +327,7 @@ function toCard(
     image_license: r.image_license ?? null,
     image_attribution: r.image_attribution ?? null,
     image_source_url: r.image_source_url ?? null,
+    artist_slugs: artistSlugs ? Array.from(artistSlugs) : undefined,
     source: r.source ?? null,
     confidence_score: r.confidence_score ?? null,
     freshness_at: r.freshness_at ?? null,
@@ -372,8 +416,17 @@ export async function searchEvents(
 
   warnings.push(...computeWarnings(filteredByCity));
 
+  // ─── T0050 — Artist hop: populate EventCard.artist_slugs ─────────────
+  // Parallel with the (already done) venue hop above. Single round-trip,
+  // same RLS posture, no schema change. The ranker reads `artist_slugs`
+  // from the card and matches it against the user's followed_artist_slugs.
+  // If the join fails (table missing in some envs) we degrade silently —
+  // the ranker treats empty `artist_slugs` as zero-cost, never a penalty.
+  const eventIds = filteredByCity.map((r) => r.id);
+  const artistMap = await fetchArtistSlugsByEventIds(supabase, eventIds);
+
   const events: EventCard[] = filteredByCity.map((r) =>
-    toCard(r, r.venue_id ? venues.get(r.venue_id) : undefined, fallbackCity),
+    toCard(r, r.venue_id ? venues.get(r.venue_id) : undefined, fallbackCity, artistMap.get(r.id)),
   );
 
   return { events, warnings, relaxed_constraint: relaxed };

@@ -23,6 +23,7 @@ function card(over: Partial<EventCard> & { id: string; start_time: string }): Ev
     start_time: over.start_time,
     end_time: over.end_time ?? null,
     venue_name: over.venue_name ?? 'Konserthuset',
+    venue_id: over.venue_id ?? null,
     city: over.city ?? 'Stockholm',
     category_slug: over.category_slug ?? 'music',
     price_min_sek: over.price_min_sek ?? null,
@@ -396,6 +397,170 @@ describe('rankEvents — Stockholm-time bucketing (timezone bug regression)', ()
       { now: NOW, timeZone: 'UTC' }
     );
     expect(ranked[0].reasons).toContain('time_fit');
+  });
+
+  it('boosts events whose venue_id is in followedVenueIds (T0050)', () => {
+    const FOLLOWED = '11111111-1111-1111-1111-111111111111';
+    const OTHER    = '22222222-2222-2222-2222-222222222222';
+    const followedVenue = card({
+      id: 'f',
+      start_time: '2026-08-17T20:00:00Z',
+      venue_id: FOLLOWED,
+    });
+    const otherVenue = card({
+      id: 'o',
+      start_time: '2026-08-17T20:00:00Z',
+      venue_id: OTHER,
+    });
+    const ranked = rankEvents([otherVenue, followedVenue], baseIntent, {
+      now: NOW,
+      followedVenueIds: [FOLLOWED],
+    });
+    expect(ranked[0].card.id).toBe('f');
+    expect(ranked[0].reasons).toContain('followed_venue');
+    expect(ranked[1].reasons).not.toContain('followed_venue');
+  });
+
+  it('does not boost events with venue_id null even if the array contains garbage', () => {
+    const orphan = card({
+      id: 'x',
+      start_time: '2026-08-17T20:00:00Z',
+      venue_id: null,
+    });
+    const ranked = rankEvents([orphan], baseIntent, {
+      now: NOW,
+      followedVenueIds: ['11111111-1111-1111-1111-111111111111'],
+    });
+    expect(ranked[0].reasons).not.toContain('followed_venue');
+  });
+
+  it('does nothing when followedVenueIds is undefined or empty', () => {
+    const event = card({ id: 'a', start_time: '2026-08-17T20:00:00Z', venue_id: '11111111-1111-1111-1111-111111111111' });
+    const noOpts   = rankEvents([event], baseIntent, { now: NOW });
+    const emptyOpt = rankEvents([event], baseIntent, { now: NOW, followedVenueIds: [] });
+    expect(noOpts[0].reasons).not.toContain('followed_venue');
+    expect(emptyOpt[0].reasons).not.toContain('followed_venue');
+  });
+
+  it('followed_venue weight is below category_match so explicit intent still dominates', () => {
+    const FOLLOWED = '11111111-1111-1111-1111-111111111111';
+    const OTHER    = '22222222-2222-2222-2222-222222222222';
+    const followedVenue = card({
+      id: 'f',
+      start_time: '2026-08-17T20:00:00Z',
+      venue_id: FOLLOWED,
+      category_slug: 'music',
+    });
+    const otherVenue = card({
+      id: 'o',
+      start_time: '2026-08-17T20:00:00Z',
+      venue_id: OTHER,
+      category_slug: 'theater',
+    });
+    const ranked = rankEvents([followedVenue, otherVenue], {
+      ...baseIntent,
+      categories: ['theater'],
+    }, {
+      now: NOW,
+      followedVenueIds: [FOLLOWED],
+    });
+    expect(ranked[0].card.id).toBe('o'); // theater wins over music+follow
+    expect(ranked[1].reasons).toContain('followed_venue');
+  });
+});
+
+describe('rankEvents — followed artist (T0050)', () => {
+  it('boosts events whose artist_slugs include a followed artist', () => {
+    const matchArtist = card({
+      id: 'm',
+      start_time: '2026-08-17T20:00:00Z',
+      artist_slugs: ['kent', 'unknown-band'],
+    });
+    const noMatch = card({
+      id: 'n',
+      start_time: '2026-08-17T20:00:00Z',
+      artist_slugs: ['abba'],
+    });
+    const ranked = rankEvents([noMatch, matchArtist], baseIntent, {
+      now: NOW,
+      followedArtistSlugs: ['kent'],
+    });
+    expect(ranked[0].card.id).toBe('m');
+    expect(ranked[0].reasons).toContain('followed_artist');
+    expect(ranked[1].reasons).not.toContain('followed_artist');
+  });
+
+  it('matches followed_artist case-insensitively (storage slug is lowercase, joins may not be)', () => {
+    const event = card({
+      id: 'e',
+      start_time: '2026-08-17T20:00:00Z',
+      artist_slugs: ['Kent'],  // mixed case in the card — still matches lowercase 'kent'
+    });
+    const ranked = rankEvents([event], baseIntent, {
+      now: NOW,
+      followedArtistSlugs: ['kent'],
+    });
+    expect(ranked[0].reasons).toContain('followed_artist');
+  });
+
+  it('does not boost events with empty or missing artist_slugs', () => {
+    const noArtists = card({ id: 'x', start_time: '2026-08-17T20:00:00Z' }); // artist_slugs undefined
+    const emptyArtists = card({ id: 'y', start_time: '2026-08-17T20:00:00Z', artist_slugs: [] });
+    const ranked = rankEvents([noArtists, emptyArtists], baseIntent, {
+      now: NOW,
+      followedArtistSlugs: ['kent'],
+    });
+    expect(ranked[0].reasons).not.toContain('followed_artist');
+    expect(ranked[1].reasons).not.toContain('followed_artist');
+  });
+
+  it('does nothing when followedArtistSlugs is undefined or empty', () => {
+    const event = card({
+      id: 'a',
+      start_time: '2026-08-17T20:00:00Z',
+      artist_slugs: ['kent'],
+    });
+    const noOpts   = rankEvents([event], baseIntent, { now: NOW });
+    const emptyOpt = rankEvents([event], baseIntent, { now: NOW, followedArtistSlugs: [] });
+    expect(noOpts[0].reasons).not.toContain('followed_artist');
+    expect(emptyOpt[0].reasons).not.toContain('followed_artist');
+  });
+
+  it('followed_artist weight (15) sits below followed_venue (20) so venue is the stronger signal', () => {
+    // Same intent, same time, same category. Card "fav" is at the followed
+    // venue AND features a followed artist. Card "favv" is at the followed
+    // venue but lists an unfollowed artist. Card "fava" is at an unfollowed
+    // venue but features a followed artist. The pure-venue card should win
+    // over the pure-artist card; the venue+artist card should win both.
+    const followedVenueId = '11111111-1111-1111-1111-111111111111';
+    const favv = card({
+      id: 'favv',
+      start_time: '2026-08-17T20:00:00Z',
+      venue_id: followedVenueId,
+      artist_slugs: ['abba'],
+    });
+    const fava = card({
+      id: 'fava',
+      start_time: '2026-08-17T20:00:00Z',
+      venue_id: '22222222-2222-2222-2222-222222222222',
+      artist_slugs: ['kent'],
+    });
+    const fav = card({
+      id: 'fav',
+      start_time: '2026-08-17T20:00:00Z',
+      venue_id: followedVenueId,
+      artist_slugs: ['kent'],
+    });
+    const ranked = rankEvents([fava, favv, fav], baseIntent, {
+      now: NOW,
+      followedVenueIds: [followedVenueId],
+      followedArtistSlugs: ['kent'],
+    });
+    expect(ranked[0].card.id).toBe('fav'); // venue+artist (35 points)
+    expect(ranked[0].reasons).toContain('followed_venue');
+    expect(ranked[0].reasons).toContain('followed_artist');
+    expect(ranked[1].card.id).toBe('favv'); // venue only (20)
+    expect(ranked[2].card.id).toBe('fava'); // artist only (15)
   });
 });
 

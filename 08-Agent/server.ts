@@ -43,6 +43,14 @@ import {
   markNotificationRead,
   generateRemindersForUser,
 } from './tools/notification_center';
+import {
+  followVenue,
+  unfollowVenue,
+  followArtist,
+  unfollowArtist,
+  loadFollowedVenues,
+  loadFollowedArtists,
+} from './tools/follow_entity';
 import type {
   AgentChatRequest,
   AgentChatResponse,
@@ -243,6 +251,18 @@ export function buildApp(opts: { supabase?: SupabaseClient } = {}): express.Expr
       // correctly by rankEvents (null = no stated boost; [] = no stated boost).
       const statedCategories = await loadStatedPreferences(client, body.client_user_id);
 
+      // Followed-venue preferences from user_preferences.followed_venue_ids
+      // (T0050 / MVP-gap §77). `loadFollowedVenues` returns `{ venue_ids: [] }`
+      // when the user has no follows or no preferences row — empty array is
+      // the correct "no lift" signal and rankEvents treats it as zero-cost.
+      // Best-effort: never throws; same cache TTL as loadStatedPreferences.
+      const followed = await loadFollowedVenues(client, body.client_user_id);
+
+      // Followed-artist preferences from user_preferences.followed_artist_slugs
+      // (T0050 — Phase 1 declared pref). Parallel cache to venues; ranker
+      // gates on a non-empty array so users with no follows incur zero cost.
+      const followedArtists = await loadFollowedArtists(client, body.client_user_id);
+
       // Two-stage retrieval→re-rank:
       //   1. rank_events returns the top 25 most relevant (deterministic
       //      feature scoring + count-based personalization priors + stated prefs).
@@ -254,6 +274,8 @@ export function buildApp(opts: { supabase?: SupabaseClient } = {}): express.Expr
         topN: 25,
         personalization,
         statedCategories: statedCategories ?? undefined,
+        followedVenueIds: followed.venue_ids.length > 0 ? followed.venue_ids : undefined,
+        followedArtistSlugs: followedArtists.artist_slugs.length > 0 ? followedArtists.artist_slugs : undefined,
       });
       const reranked: RankedEvent[] = mmrRerank(ranked, { lambda: 0.7, topN: 5 });
 
@@ -539,6 +561,138 @@ export function buildApp(opts: { supabase?: SupabaseClient } = {}): express.Expr
       return;
     }
     res.json({ ok: true });
+  });
+
+  /**
+   * POST /agent/follow
+   *
+   * T0050 / MVP-gap §77. Follow or unfollow a venue. Body:
+   *   { client_user_id: uuid, venue_id: uuid, action: 'follow' | 'unfollow' }
+   *
+   * Persists to `user_preferences.preferences.followed_venue_ids` (jsonb,
+   * additive key — `categories` is preserved through read-modify-write in
+   * `follow_entity.ts`). The chat handler reads this list via
+   * `loadFollowedVenues` and passes it as `RankOptions.followedVenueIds`
+   * so followed venues receive a `followed_venue_match` boost (default 20)
+   * in the ranker. UI binds the long-press action sheet on
+   * `EventCard.venue_name` to this endpoint.
+   *
+   * Idempotent: calling `follow` twice for the same venue returns
+   * `added:false` and the original count. Calling `unfollow` for an
+   * un-followed venue returns `removed:false`. The DB row is always
+   * bumped on a state-changing call so caches re-fetch.
+   *
+   * Best-effort: validation errors are 400 (code bug), Supabase failures
+   * are 202 with a warning (the UI never blocks on a follow — the long-
+   * press action sheet auto-dismisses either way).
+   */
+  app.post('/agent/follow', chatLimiter.middleware, async (req: Request, res: Response) => {
+    // T0050 — entity_type discriminator routes to venue or artist follow.
+    // Back-compat: callers that omit entity_type + send venue_id fall through
+    // to the original venue-only path so the existing UI keeps working.
+    const body = req.body as Partial<{
+      client_user_id: string;
+      entity_type?: string;
+      venue_id?: string;
+      entity_id?: string;
+      artist_slug?: string;
+      action: string;
+    }>;
+    if (!body || typeof body !== 'object') {
+      res.status(400).json({ error: 'invalid body' });
+      return;
+    }
+    if (!body.client_user_id || !UUID_RE.test(body.client_user_id)) {
+      res.status(400).json({ error: 'client_user_id must be a uuid' });
+      return;
+    }
+    if (body.action !== 'follow' && body.action !== 'unfollow') {
+      res.status(400).json({ error: "action must be 'follow' or 'unfollow'" });
+      return;
+    }
+
+    // Resolve entity_type — default 'venue' for callers that only send venue_id.
+    const entity_type = (body.entity_type === 'artist' || body.entity_type === 'venue')
+      ? body.entity_type
+      : (body.artist_slug ? 'artist' : 'venue');
+
+    const client = sb ?? getSupabase();
+    let result: { ok: boolean; count: number; warning?: string; added?: boolean; removed?: boolean };
+    if (entity_type === 'artist') {
+      // entity_id is the preferred name; artist_slug kept for back-compat.
+      const slug = (body.entity_id ?? body.artist_slug ?? '').trim().toLowerCase();
+      if (!slug) {
+        res.status(400).json({ error: 'entity_id (or artist_slug) is required for entity_type=artist' });
+        return;
+      }
+      result = body.action === 'follow'
+        ? await followArtist(client, { client_user_id: body.client_user_id, artist_slug: slug })
+        : await unfollowArtist(client, { client_user_id: body.client_user_id, artist_slug: slug });
+    } else {
+      // venue — prefer entity_id, fall back to legacy venue_id.
+      const venue_id = body.entity_id ?? body.venue_id ?? '';
+      if (!UUID_RE.test(venue_id)) {
+        res.status(400).json({ error: 'venue_id (or entity_id) must be a uuid for entity_type=venue' });
+        return;
+      }
+      result = body.action === 'follow'
+        ? await followVenue(client, { client_user_id: body.client_user_id, venue_id })
+        : await unfollowVenue(client, { client_user_id: body.client_user_id, venue_id });
+    }
+
+    if (!result.ok) {
+      res.status(202).json({
+        ok: false,
+        entity_type,
+        action: body.action,
+        warning: result.warning ?? 'unknown',
+      });
+      return;
+    }
+    res.json({
+      ok: true,
+      entity_type,
+      action: body.action,
+      added:   'added'   in result ? (result as { added: boolean }).added   : false,
+      removed: 'removed' in result ? (result as { removed: boolean }).removed : false,
+      count:   result.count,
+    });
+  });
+
+  /**
+   * GET /agent/follow?client_user_id=<uuid>
+   *
+   * T0050 read-side. Returns the user's currently-followed venue ids.
+   * The UI calls this on mount so the long-press action sheet knows
+   * whether to show "Följ" or "Sluta följ" for a given venue.
+   *
+   * Best-effort: never throws. A Supabase failure returns 500 with the
+   * underlying message; the UI treats that as "follows temporarily
+   * unavailable" and shows the optimistic "Följ" default.
+   */
+  app.get('/agent/follow', generalLimiter.middleware, async (req: Request, res: Response) => {
+    const raw = typeof req.query.client_user_id === 'string' ? req.query.client_user_id : '';
+    if (!UUID_RE.test(raw)) {
+      res.status(400).json({ error: 'client_user_id must be a uuid' });
+      return;
+    }
+    const client = sb ?? getSupabase();
+    // Parallel read — both helpers hit the same row but cache independently
+    // and run their cached-path in O(1) on hot path.
+    const [venues, artists] = await Promise.all([
+      loadFollowedVenues(client, raw),
+      loadFollowedArtists(client, raw),
+    ]);
+    res.json({
+      ok: true,
+      venue_ids: venues.venue_ids,
+      artist_slugs: artists.artist_slugs,
+      counts: {
+        venues: venues.venue_ids.length,
+        artists: artists.artist_slugs.length,
+        total: venues.venue_ids.length + artists.artist_slugs.length,
+      },
+    });
   });
 
   /**

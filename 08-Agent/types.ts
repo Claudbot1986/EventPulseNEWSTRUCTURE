@@ -41,7 +41,9 @@ export type RankReason =
   | 'low_confidence'
   | 'stale'
   | 'category_personalization'
-  | 'venue_personalization_penalty';
+  | 'venue_personalization_penalty'
+  | 'followed_venue'
+  | 'followed_artist';
 
 export interface EventCard {
   id: string;
@@ -49,6 +51,14 @@ export interface EventCard {
   start_time: string;
   end_time?: string | null;
   venue_name: string;
+  /**
+   * Venue UUID from `events_public.venue_id`. Surfaced so the ranker can
+   * apply the T0050 follow-venue lift and so the UI can wire long-press
+   * "Följ / Sluta följ" to a stable identifier (venue_name collisions
+   * exist — e.g. two Folkets Hus venues in different cities).
+   * `null` when the event has no venue (orphan row).
+   */
+  venue_id?: string | null;
   city: string;
   category_slug: string;
   price_min_sek?: number | null;
@@ -68,6 +78,13 @@ export interface EventCard {
   image_attribution?: string | null;
   /** Original image URL when runtime serves via proxy/cache. */
   image_source_url?: string | null;
+  /**
+   * Artist slugs on this event (T0050). Populated by `search_events.ts` via
+   * a JOIN on `event_artists → artists`. Used by the ranker for the
+   * `followed_artist_match` boost. Empty / undefined means "no artists
+   * catalogued yet" — the ranker treats it as a no-op, never a penalty.
+   */
+  artist_slugs?: string[];
   /**
    * Source id from events.source — the ingestor that produced this row.
    * Surfaced in the UI so the user can see which site the event came from

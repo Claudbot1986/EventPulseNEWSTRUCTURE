@@ -115,6 +115,7 @@ export async function feedEvents(
     start_time: r.start_time,
     end_time: r.end_time ?? null,
     venue_name: r.venues?.name ?? '',
+    venue_id: r.venue_id ?? null,
     city: r.venues?.city ?? input.city ?? 'Stockholm',
     category_slug: r.category_slug ?? '',
     price_min_sek: r.price_min_sek ?? null,
