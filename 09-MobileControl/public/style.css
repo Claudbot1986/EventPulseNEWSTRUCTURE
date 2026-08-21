@@ -324,16 +324,19 @@ html, body {
 
 .action-bar {
   position: fixed;
-  bottom: 0;
-  left: 0;
-  right: 0;
+  bottom: max(12px, env(safe-area-inset-bottom));
+  left: 12px;
+  right: 12px;
   display: flex;
   gap: 6px;
-  padding: 10px 12px;
-  background: #0a0a0a;
-  border-top: 1px solid #2a2a2a;
-  z-index: 10;
-  padding-bottom: max(10px, env(safe-area-inset-bottom));
+  padding: 8px 10px;
+  background: rgba(10, 10, 10, 0.92);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid #2a2a2a;
+  border-radius: 14px;
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.6), 0 1px 0 rgba(255, 255, 255, 0.04) inset;
+  z-index: 100;
 }
 
 .action {
@@ -577,7 +580,7 @@ html, body {
 
 .timeline {
   list-style: none;
-  max-height: 480px;
+  max-height: 180px;
   overflow-y: auto;
 }
 .timeline-item {

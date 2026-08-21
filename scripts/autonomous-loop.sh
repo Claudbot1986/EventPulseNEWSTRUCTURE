@@ -239,6 +239,56 @@ while :; do
     CLAUDE_PROMPT="/resume"
   fi
 
+  # MVP-gap-analysis mode: when the persistent queue has ≤1 pending task,
+  # the system has run out of pre-defined work. Inject an explicit instruction
+  # forcing the lead to step back from incremental task work and instead
+  # analyse the app's MVP gap against external research (similar apps, NN-g
+  # retention studies, Apple HIG). The lead should then generate new tasks
+  # with priorities and surface anything that needs user decision.
+  #
+  # Decided 2026-08-21 — see 02-Operations/19-Decision-Log.md.
+  QUEUE_FILE="$PROJECT_ROOT/00-Vault/01-Projects/EventPulse/02-Operations/23-Active-Task-Queue.md"
+  TOTAL_PENDING=$(grep -cE '^_T[0-9]+_[[:space:]]+—' "$QUEUE_FILE" 2>/dev/null | head -1)
+  TOTAL_PENDING=${TOTAL_PENDING:-0}
+  OPEN_COUNT=$(grep -cE '^[[:space:]]*\*Status:\*[[:space:]]*(done|cancelled)' "$QUEUE_FILE" 2>/dev/null | head -1)
+  OPEN_COUNT=${OPEN_COUNT:-0}
+  REMAINING=$((TOTAL_PENDING - OPEN_COUNT))
+  if [ "$REMAINING" -le 1 ]; then
+    MVP_FRAGMENT='
+
+---
+## MVP-gap-analysis mode (injected by autonomous-loop)
+
+The persistent task queue has **≤1 pending task** remaining. Stop incremental
+task-pulling and run an MVP-gap-analysis pass:
+
+1. Read the North Star (`02-North-Star.md`), Current State (`01-Current-State.md`),
+   `docs/BACKLOG.md`, and `docs/MASTERPLAN.md` to ground yourself in current truth.
+2. Identify the 5–8 apps most similar to EventPulse (Meetup, Eventbrite,
+   Resident Advisor, Bandsintown, Kombo, AllEvents, Ticketmaster, etc.) and
+   the 3–5 most relevant UX / retention studies (NN-g, Apple HIG, Material 3).
+3. Spawn a `work` sub-agent(s) to do the external research in parallel where
+   useful; otherwise do it inline.
+4. Determine the gap between EventPulse today and a credible MVP. Generate
+   5–15 new tasks with priorities. **Maps are explicitly approved** by the
+   user.
+5. For anything that requires a human decision (manual goals, licensing,
+   paid integrations, focus choices), create a `needs_user_decision` task
+   in `23-Active-Task-Queue.md` so the user sees it on the next dashboard
+   refresh.
+6. Foundation your generated tasks on **real evidence** (study citations,
+   document references) — not assumptions.
+7. Commit + sync vault + continue the loop.
+
+This mode is intended to keep the system driving toward MVP even when the
+queue is empty, until the user explicitly disables it.
+---'
+    CLAUDE_PROMPT="${CLAUDE_PROMPT}${MVP_FRAGMENT}"
+    echo "$(date) iter=$i MVP-gap-analysis mode ON (remaining=$REMAINING)" >> "$LOG_FILE"
+    emit_event "mvp_gap_analysis_triggered" "iter=$i remaining=$REMAINING" \
+      "{\"iter\":$i,\"remaining_pending\":$REMAINING}"
+  fi
+
   emit_event "claude_spawned" "iter=$i budget=\$$MAX_BUDGET_PER_ITER" \
     "{\"iter\":$i,\"budget_usd\":$MAX_BUDGET_PER_ITER,\"timeout_min\":$ITERATION_TIMEOUT_MIN}"
 
