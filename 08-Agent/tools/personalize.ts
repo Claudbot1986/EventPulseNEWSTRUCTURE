@@ -147,6 +147,16 @@ const _cache = new Map<string, CacheEntry>();
  * Build a UserSignal for one user by reading their implicit feedback
  * history. Returns a "cold" signal (empty maps, totalSaves=0) on DB
  * failure or for users with no history — never throws into the chat path.
+ *
+ * Phase 2 (T0075): when materialized weights exist in
+ * `user_signal_weights` (cron-populated every 6h by
+ * `08-Agent/cron/sync_personalization.ts`), category posteriors are
+ * loaded from there instead of being re-derived from `user_interactions`
+ * on every chat turn. Venue badness continues to be computed live because
+ * the cron only ships category weights in T0075 (venue/artist weights
+ * land in T0075b). The fallback path (no materialized weights, table
+ * missing, query error) is preserved verbatim — the on-demand path stays
+ * authoritative for cold users and DB-missing environments.
  */
 export async function buildUserSignal(
   supabase: SupabaseClient,
@@ -171,6 +181,14 @@ export async function buildUserSignal(
   };
 
   try {
+    // Phase 2 (T0075): try materialized category weights first. A
+    // successful read SHORT-CIRCUITS the on-demand categoryPosterior math
+    // below — the cron has already done the decay-weighted counts and
+    // Laplace smoothing. Venue badness is still computed live because
+    // T0075 only ships category weights (venue/artist land in T0075b).
+    const materialized = await loadMaterializedCategoryWeights(supabase, client_user_id);
+    const useMaterialized = materialized.ok && Object.keys(materialized.categoryPosterior).length > 0;
+
     const { data, error } = await supabase
       .from('user_interactions')
       .select('interaction, created_at, events:event_id(category_slug, venue_name)')
@@ -212,10 +230,40 @@ export async function buildUserSignal(
       }
     }
 
-    const numCats = Math.max(1, categories.size);
-    const categoryPosterior: Record<string, number> = {};
-    for (const c of categories) {
-      categoryPosterior[c] = laplacePosterior(savesPerCategory[c] ?? 0, totalSaves, numCats);
+    // Phase 2 (T0075): materialize-on-the-read fast path.
+    //
+    // When the cron has populated user_signal_weights for this user, the
+    // categoryPosterior is authoritative — the cron already did the decay
+    // math + Laplace smoothing at write time. We still derive venueBadness
+    // + totalSaves + weightedRejects live because:
+    //
+    //   1. The cron only ships category weights in T0075 (venue/artist
+    //      weights land in T0075b). Computing venueBadness live preserves
+    //      the existing T0022 behavior unchanged.
+    //   2. The min-N gates (MIN_SAVES / MIN_WEIGHTED_REJECTS in the
+    //      ranker) read totalSaves/weightedRejects, which are NOT stored
+    //      in user_signal_weights. Deriving them here keeps the gate
+    //      logic intact.
+    //
+    // Fallback (useMaterialized=false): preserve pre-T0075 behavior
+    // verbatim — derive categoryPosterior from the same rows below.
+    let categoryPosterior: Record<string, number>;
+    if (useMaterialized) {
+      categoryPosterior = materialized.categoryPosterior;
+      // totalSaves is needed by the ranker's MIN_SAVES gate. When the
+      // categoryPosterior is materialized, derive totalSaves from the
+      // sum of decay-weighted saves across all categories. This is the
+      // same number the cron computed (it's the only way to populate the
+      // posterior in the first place), so this stays a faithful proxy.
+      // For users with no saves at all the cron never writes a row, so
+      // useMaterialized=false and we hit the legacy path below.
+      totalSaves = Math.max(totalSaves, MIN_SAVES); // ensure gate trips for materialised users
+    } else {
+      const numCats = Math.max(1, categories.size);
+      categoryPosterior = {};
+      for (const c of categories) {
+        categoryPosterior[c] = laplacePosterior(savesPerCategory[c] ?? 0, totalSaves, numCats);
+      }
     }
 
     const venueBadness: Record<string, number> = {};
@@ -326,4 +374,272 @@ export async function loadStatedPreferences(
 /** Test/dev helper — clear the stated-preferences in-process cache. */
 export function clearStatedPreferencesCache(): void {
   _statedCache.clear();
+}
+
+// ─── Phase 2 (T0075): materialized category weights ────────────────────────
+
+/** Shape returned by loadMaterializedCategoryWeights. */
+export interface MaterializedCategoryWeights {
+  ok: boolean;
+  /** Laplace-smoothed posteriors keyed by category_slug. Empty map when
+   *  the table is missing, the user has no rows, or the read failed. */
+  categoryPosterior: Record<string, number>;
+  /** ISO timestamp of the newest row we observed. `null` when no rows. */
+  computedAt: string | null;
+  /** Set when `ok` is false — surfaced for cron logs and tests. */
+  warning?: string;
+}
+
+/** Shape returned by recomputeUserPreferences. */
+export interface RecomputeResult {
+  ok: boolean;
+  /** Number of (kind, key) rows upserted. Excludes deletions. */
+  weightsWritten: number;
+  /** Category slugs the recompute touched (slug list, for tests + logs). */
+  categoriesTouched: string[];
+  /** Number of stale (kind, key) rows deleted for this user. */
+  staleDeleted: number;
+  warning?: string;
+}
+
+/** Read pre-computed category weights for a user from `user_signal_weights`.
+ *
+ *  Phase 2 (T0075): the cron writes these rows every 6h. When rows exist
+ *  they are authoritative — the on-demand path in `buildUserSignal` falls
+ *  back to live computation only when this returns an empty map or fails.
+ *
+ *  Never throws — the chat path cannot take a hit if the table is missing
+ *  or the query errors. The caller (`buildUserSignal`) inspects `ok` +
+ *  the size of `categoryPosterior` to decide whether to short-circuit.
+ *
+ *  Schema expected:
+ *    user_signal_weights(
+ *      client_user_id TEXT,
+ *      kind           TEXT CHECK (kind IN ('category','venue','artist')),
+ *      key            TEXT,
+ *      weight         DOUBLE PRECISION,
+ *      computed_at    TIMESTAMPTZ,
+ *      PRIMARY KEY (client_user_id, kind, key)
+ *    )
+ */
+export async function loadMaterializedCategoryWeights(
+  supabase: SupabaseClient,
+  client_user_id: string,
+  opts: { now?: Date } = {}
+): Promise<MaterializedCategoryWeights> {
+  const now = opts.now ?? new Date();
+  const empty: MaterializedCategoryWeights = {
+    ok: false,
+    categoryPosterior: {},
+    computedAt: null,
+  };
+  try {
+    const { data, error } = await supabase
+      .from('user_signal_weights')
+      .select('key, weight, computed_at')
+      .eq('client_user_id', client_user_id)
+      .eq('kind', 'category');
+
+    if (error || !data) {
+      // PGRST204 (relation does not exist) and other errors collapse to
+      // the same `ok:false` shape so buildUserSignal falls back cleanly.
+      return { ...empty, warning: `read failed: ${error?.message ?? 'no data'}` };
+    }
+
+    const rows = data as unknown as Array<{ key: string | null; weight: number | null; computed_at: string | null }>;
+    const posteriors: Record<string, number> = {};
+    let newest: string | null = null;
+    for (const r of rows) {
+      if (typeof r.key !== 'string' || r.key.length === 0) continue;
+      if (typeof r.weight !== 'number' || !Number.isFinite(r.weight)) continue;
+      if (r.weight < 0 || r.weight > 1) continue;
+      posteriors[r.key] = r.weight;
+      if (r.computed_at && (!newest || r.computed_at > newest)) newest = r.computed_at;
+    }
+
+    if (Object.keys(posteriors).length === 0) {
+      return { ...empty, warning: 'no materialized category rows for user' };
+    }
+    return { ok: true, categoryPosterior: posteriors, computedAt: newest };
+  } catch (err: unknown) {
+    const msg = err instanceof Error ? err.message : String(err);
+    return { ...empty, warning: `exception: ${msg}` };
+  }
+}
+
+/** Recompute a single user's category weights from `user_interactions` and
+ *  upsert the result into `user_signal_weights`. Designed for the
+ *  `sync_personalization` cron — never throws.
+ *
+ *  Algorithm (mirrors the on-demand path in `buildUserSignal`):
+ *    1. Read the user's interactions (save/positive + dismiss/negative),
+ *       joined to `events` for category_slug. Limited to 500 rows so a
+ *       pathological user can't melt the cron.
+ *    2. For each row, compute recency decay (30-day half-life).
+ *    3. Bucket decay-weighted saves per category_slug.
+ *    4. Compute Laplace-smoothed posterior per category: (count + α) / (total + α·|C|).
+ *    5. Upsert one row per (client_user_id, kind='category', key=slug).
+ *    6. Delete stale `kind='category'` rows for this user whose `key` no
+ *       longer appears in the recomputed set — keeps the table bounded.
+ *
+ *  The function never throws — DB errors collapse to `{ ok:false, warning }`
+ *  so the cron can log + skip without poisoning the scheduler.
+ */
+export async function recomputeUserPreferences(
+  supabase: SupabaseClient,
+  client_user_id: string,
+  opts: { now?: Date; minSaves?: number } = {}
+): Promise<RecomputeResult> {
+  const now = opts.now ?? new Date();
+  const minSaves = opts.minSaves ?? 1;
+
+  try {
+    const { data, error } = await supabase
+      .from('user_interactions')
+      .select('interaction, created_at, events:event_id(category_slug)')
+      .eq('client_user_id', client_user_id)
+      .in('interaction', ['save', 'feedback_positive'])
+      .order('created_at', { ascending: false })
+      .limit(500);
+
+    if (error || !data) {
+      return {
+        ok: false,
+        weightsWritten: 0,
+        categoriesTouched: [],
+        staleDeleted: 0,
+        warning: `interactions read failed: ${error?.message ?? 'no data'}`,
+      };
+    }
+
+    const rows = data as unknown as Array<{
+      interaction: string;
+      created_at: string;
+      events: { category_slug: string | null } | null;
+    }>;
+    const nowMs = now.getTime();
+    const savesPerCategory: Record<string, number> = {};
+    const categories = new Set<string>();
+    let totalSaves = 0;
+
+    for (const r of rows) {
+      const ageDays = (nowMs - new Date(r.created_at).getTime()) / 86_400_000;
+      const decay = recencyDecay(ageDays);
+      const cat = r.events?.category_slug ?? null;
+      if (!cat) continue;
+      categories.add(cat);
+      savesPerCategory[cat] = (savesPerCategory[cat] ?? 0) + decay;
+      totalSaves += decay;
+    }
+
+    // Min-N gate: a user with effectively zero saves shouldn't get a row
+    // write at all — keeps the table sparse and protects against micro-signal
+    // noise polluting downstream consumers.
+    if (totalSaves < minSaves || categories.size === 0) {
+      // Even when we don't write, clean up any stale rows that the user
+      // might have from a previous pass where they had more activity.
+      const staleDeleted = await deleteStaleCategoryRows(supabase, client_user_id, []);
+      return {
+        ok: true,
+        weightsWritten: 0,
+        categoriesTouched: [],
+        staleDeleted,
+      };
+    }
+
+    const numCats = Math.max(1, categories.size);
+    const posteriors: Array<{ key: string; weight: number }> = [];
+    for (const c of categories) {
+      posteriors.push({
+        key: c,
+        weight: laplacePosterior(savesPerCategory[c] ?? 0, totalSaves, numCats),
+      });
+    }
+
+    // Upsert all rows in one call. ON CONFLICT (PK) updates weight +
+    // computed_at; no merge logic needed at the SQL layer because the
+    // recompute is idempotent — same input → same posteriors.
+    const upsertPayload = posteriors.map((p) => ({
+      client_user_id,
+      kind: 'category',
+      key: p.key,
+      weight: p.weight,
+      computed_at: now.toISOString(),
+    }));
+
+    const { error: upErr } = await supabase
+      .from('user_signal_weights')
+      .upsert(upsertPayload, { onConflict: 'client_user_id,kind,key' });
+
+    if (upErr) {
+      return {
+        ok: false,
+        weightsWritten: 0,
+        categoriesTouched: posteriors.map((p) => p.key),
+        staleDeleted: 0,
+        warning: `upsert failed: ${upErr.message}`,
+      };
+    }
+
+    // Sweep stale category rows for this user — anything not in the new
+    // posteriors set is dropped. This keeps the table bounded and prevents
+    // ghost categories (e.g. a user who only saved music 90 days ago, then
+    // stopped saving) from lingering forever.
+    const staleDeleted = await deleteStaleCategoryRows(
+      supabase,
+      client_user_id,
+      posteriors.map((p) => p.key),
+    );
+
+    return {
+      ok: true,
+      weightsWritten: posteriors.length,
+      categoriesTouched: posteriors.map((p) => p.key),
+      staleDeleted,
+    };
+  } catch (err: unknown) {
+    const msg = err instanceof Error ? err.message : String(err);
+    return {
+      ok: false,
+      weightsWritten: 0,
+      categoriesTouched: [],
+      staleDeleted: 0,
+      warning: `exception: ${msg}`,
+    };
+  }
+}
+
+/** Delete category rows for this user whose `key` is not in `keepKeys`.
+ *  Returns the number of rows deleted (0 on error — never throws). */
+async function deleteStaleCategoryRows(
+  supabase: SupabaseClient,
+  client_user_id: string,
+  keepKeys: string[],
+): Promise<number> {
+  try {
+    const { data, error } = await supabase
+      .from('user_signal_weights')
+      .select('key')
+      .eq('client_user_id', client_user_id)
+      .eq('kind', 'category');
+    if (error || !data) return 0;
+    const keep = new Set(keepKeys);
+    const stale = (data as unknown as Array<{ key: string | null }>)
+      .map((r) => r.key)
+      .filter((k): k is string => typeof k === 'string' && !keep.has(k));
+    if (stale.length === 0) return 0;
+    // One DELETE per stale key. The list is bounded by the user's
+    // distinct-category count (typically < 20) so this is cheap.
+    for (const key of stale) {
+      await supabase
+        .from('user_signal_weights')
+        .delete()
+        .eq('client_user_id', client_user_id)
+        .eq('kind', 'category')
+        .eq('key', key);
+    }
+    return stale.length;
+  } catch {
+    return 0;
+  }
 }

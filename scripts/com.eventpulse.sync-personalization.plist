@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!--
+  com.eventpulse.sync-personalization.plist — launchd job for the EventPulse personalization-sync cron.
+
+  Keeps 08-Agent/cron/sync_personalization.ts alive across sleep, machine restart,
+  and tmux-session exit. Runs the cron in --loop mode (6-hour interval) to
+  materialize user_signal_weights rows from user_interactions. Mirrors
+  com.eventpulse.reminders.plist and com.eventpulse.followdrops.plist but at
+  the longest cadence of the three — personalization weights change slowly.
+
+  Install with:
+    cp scripts/com.eventpulse.sync-personalization.plist ~/Library/LaunchAgents/
+    launchctl load ~/Library/LaunchAgents/com.eventpulse.sync-personalization.plist
+
+  Uninstall:
+    launchctl unload ~/Library/LaunchAgents/com.eventpulse.sync-personalization.plist
+    rm ~/Library/LaunchAgents/com.eventpulse.sync-personalization.plist
+-->
+<plist version="1.0">
+<dict>
+  <key>Label</key>
+  <string>com.eventpulse.sync-personalization</string>
+
+  <key>ProgramArguments</key>
+  <array>
+    <string>/bin/bash</string>
+    <string>/Volumes/2TB filer/NEWSTRUCTURE-COPY/scripts/start-sync-personalization.sh</string>
+  </array>
+
+  <key>WorkingDirectory</key>
+  <string>/Volumes/2TB filer/NEWSTRUCTURE-COPY</string>
+
+  <key>RunAtLoad</key>
+  <true/>
+
+  <!-- Restart on crash (ThrottleInterval=60 mirrors reminders.plist). -->
+  <key>KeepAlive</key>
+  <dict>
+    <key>SuccessfulExit</key>
+    <false/>
+    <key>Crashed</key>
+    <true/>
+  </dict>
+
+  <key>ThrottleInterval</key>
+  <integer>60</integer>
+
+  <key>StandardOutPath</key>
+  <string>/tmp/com.eventpulse.sync-personalization.out.log</string>
+  <key>StandardErrorPath</key>
+  <string>/tmp/com.eventpulse.sync-personalization.err.log</string>
+</dict>
+</plist>
