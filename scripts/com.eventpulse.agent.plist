@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!--
+  com.eventpulse.agent.plist — keep 08-Agent dev-server alive so Expo and the
+  scrapers always have a live /agent/* surface to talk to.
+
+  Runs `npx tsx 08-Agent/server.ts` from project root. KeepAlive=true so the
+  server restarts automatically on crash. RunAtLoad=true so it starts at
+  login.
+
+  Why this exists (T0065 / T0062):
+    launchd KeepAlive only catches crashes. A wrapper that is alive but
+    stuck (e.g. cwd-ENOENT after project rename) looks healthy to launchd.
+    See T0062 — root cause was stale process.cwd() after NEWSTRUCTURE ->
+    NEWSTRUCTURE-COPY rename. launchd cannot detect this; a periodic
+    curl /agent/health health check would.
+
+  Install:
+    bash scripts/install-agent.sh
+
+  Uninstall:
+    bash scripts/install-agent.sh --uninstall
+-->
+<plist version="1.0">
+<dict>
+  <key>Label</key>
+  <string>com.eventpulse.agent</string>
+
+  <key>ProgramArguments</key>
+  <array>
+    <string>/bin/bash</string>
+    <string>/Users/claudgashi/bin/run-agent.sh</string>
+  </array>
+
+  <!-- The wrapper script lives at ~/bin/run-agent.sh because macOS launchd
+       cannot execute scripts on /Volumes mounts (sandbox/TCC block).
+       Same constraint as com.eventpulse.metro.plist and
+       com.eventpulse.watchdog.plist. -->
+
+  <key>RunAtLoad</key>
+  <true/>
+
+  <key>WorkingDirectory</key>
+  <string>/Users/claudgashi</string>
+
+  <!-- Keep the agent server alive across crashes. launchd restarts within 10s. -->
+  <key>KeepAlive</key>
+  <dict>
+    <key>SuccessfulExit</key>
+    <false/>
+    <key>Crashed</key>
+    <true/>
+  </dict>
+
+  <key>ThrottleInterval</key>
+  <integer>10</integer>
+
+  <key>StandardOutPath</key>
+  <string>/tmp/com.eventpulse.agent.out.log</string>
+  <key>StandardErrorPath</key>
+  <string>/tmp/com.eventpulse.agent.err.log</string>
+
+  <key>EnvironmentVariables</key>
+  <dict>
+    <key>PATH</key>
+    <string>/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:/Users/claudgashi/.local/bin</string>
+  </dict>
+</dict>
+</plist>
