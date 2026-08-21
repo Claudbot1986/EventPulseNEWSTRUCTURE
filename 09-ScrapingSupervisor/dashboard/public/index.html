@@ -9,8 +9,19 @@
 </head>
 <body>
   <header>
-    <h1>Scraping Supervisor Dashboard</h1>
-    <p class="subtitle">EventPulse · auto-refresh every 15 min · <button type="button" id="info-help" class="info-btn info-btn--inline" aria-label="Show dashboard help">ℹ️ What does this page show?</button> · <button type="button" id="btn-review-adapters" class="review-btn" aria-label="Review D-AI adapters">Review D-AI adapters (<span id="review-adapters-count">0</span>)</button> · <button type="button" id="btn-review-discovery" class="review-btn" aria-label="Review discovery candidates">Review discovery candidates (<span id="review-discovery-count">0</span>)</button> · <button type="button" id="btn-analytics" class="analytics-btn" aria-label="Open analytics dashboard">📊 Analytics</button></p>
+    <div class="header-row">
+      <div class="header-text">
+        <h1>Scraping Supervisor Dashboard</h1>
+        <p class="subtitle">EventPulse · auto-refresh every 15 min · <button type="button" id="info-help" class="info-btn info-btn--inline" aria-label="Show dashboard help">ℹ️ What does this page show?</button> · <button type="button" id="btn-review-adapters" class="review-btn" aria-label="Review D-AI adapters">Review D-AI adapters (<span id="review-adapters-count">0</span>)</button> · <button type="button" id="btn-review-discovery" class="review-btn" aria-label="Review discovery candidates">Review discovery candidates (<span id="review-discovery-count">0</span>)</button></p>
+      </div>
+      <a href="http://localhost:7778/dashboard" id="btn-analytics" class="analytics-box" aria-label="Open 10-Analytics dashboard in a new browser window" role="button">
+        <span class="analytics-box-icon" aria-hidden="true">📊</span>
+        <span class="analytics-box-text">
+          <span class="analytics-box-title">Analytics</span>
+          <span class="analytics-box-sub">10-Analytics · open in new window ↗</span>
+        </span>
+      </a>
+    </div>
   </header>
 
   <section class="kpi-strip" aria-label="Project KPIs">

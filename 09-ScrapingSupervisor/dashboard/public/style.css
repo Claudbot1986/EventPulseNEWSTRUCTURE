@@ -29,6 +29,18 @@ header {
 header h1 { margin: 0; font-size: 22px; font-weight: 600; }
 .subtitle { margin: 4px 0 0; color: var(--muted); font-size: 13px; }
 
+.header-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  flex-wrap: wrap;
+}
+.header-text {
+  flex: 1 1 480px;
+  min-width: 0;
+}
+
 main {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
@@ -1014,7 +1026,7 @@ ul.bars li {
 .review-btn:hover { background: rgba(88, 166, 255, 0.2); }
 .review-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
 
-/* ── Analytics link button (orange, opens 10-Analytics in new window) ──── */
+/* ── Analytics link box (orange, opens 10-Analytics in new window) ──────── */
 .analytics-btn {
   display: inline-block;
   background: #f97316;
@@ -1033,6 +1045,58 @@ ul.bars li {
 .analytics-btn:hover { background: #ea580c; border-color: #c2410c; text-decoration: none; }
 .analytics-btn:active { transform: translateY(1px); }
 .analytics-btn:focus-visible { outline: 2px solid #fb923c; outline-offset: 1px; }
+
+.analytics-box {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  background: #f97316;
+  color: #ffffff;
+  border: 1px solid #ea580c;
+  border-radius: 10px;
+  padding: 10px 16px;
+  font-family: inherit;
+  text-decoration: none;
+  cursor: pointer;
+  flex: 0 0 auto;
+  box-shadow: 0 2px 6px rgba(234, 88, 12, 0.25);
+  transition: background 0.15s, border-color 0.15s, box-shadow 0.15s, transform 0.05s;
+}
+.analytics-box:hover {
+  background: #ea580c;
+  border-color: #c2410c;
+  text-decoration: none;
+  box-shadow: 0 4px 12px rgba(234, 88, 12, 0.35);
+}
+.analytics-box:active { transform: translateY(1px); }
+.analytics-box:focus-visible {
+  outline: 2px solid #fb923c;
+  outline-offset: 2px;
+}
+.analytics-box-icon {
+  font-size: 22px;
+  line-height: 1;
+}
+.analytics-box-text {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  line-height: 1.2;
+}
+.analytics-box-title {
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+.analytics-box-sub {
+  font-size: 11px;
+  opacity: 0.9;
+  margin-top: 2px;
+}
+@media (max-width: 720px) {
+  .header-row { flex-direction: column; align-items: stretch; }
+  .analytics-box { align-self: flex-start; }
+}
 
 .review-modal[hidden] { display: none; }
 .review-modal {

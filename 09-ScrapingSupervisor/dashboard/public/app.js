@@ -3,12 +3,14 @@
  * No frameworks. Runs once per page load (page auto-refreshes via meta tag).
  */
 
-// Orange Analytics button — open the 10-Analytics dashboard in a new browser
-// window (not a tab) with explicit dimensions, per spec.
+// Orange Analytics box — open the 10-Analytics dashboard in a new browser
+// window (not a tab) with explicit dimensions, per spec. preventDefault() keeps
+// the current tab on this page even if the popup is blocked by the browser.
 (function bindAnalyticsButton() {
-  const btn = document.getElementById('btn-analytics');
-  if (!btn) return;
-  btn.addEventListener('click', () => {
+  const el = document.getElementById('btn-analytics');
+  if (!el) return;
+  el.addEventListener('click', (e) => {
+    e.preventDefault();
     window.open('http://localhost:7778/dashboard', 'analytics', 'width=1200,height=800');
   });
 })();
