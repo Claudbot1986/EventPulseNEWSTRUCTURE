@@ -80,37 +80,72 @@ app.use((req, res, next) => {
  * (pseudonymous). No bearer token required — this is the fire-and-forget
  * client path.
  *
- * Body must validate against eventSchema in analytics.ts.
- * Returns 204 on success, 400 on schema failure, 500 on storage failure.
+ * Accepts either:
+ *   - A single event:        { event_type, page, payload, device_id_hash, session_id }
+ *   - A batch of events:     { events: [...] }
+ *
+ * Returns 204 on success (all events persisted), 207 if some failed,
+ * 400 on total schema failure, 500 on storage failure.
  */
 app.post('/api/events', async (req: Request, res: Response) => {
-  const parsed = eventSchema.safeParse(req.body);
-  if (!parsed.success) {
-    res.status(400).json({
-      error: 'invalid_event',
-      issues: parsed.error.issues.map((i) => ({
-        path: i.path.join('.'),
-        message: i.message,
-      })),
-    });
+  const body = req.body;
+
+  // Normalize to array.
+  let rawEvents: unknown[];
+  if (Array.isArray(body)) {
+    rawEvents = body;
+  } else if (body && typeof body === 'object' && Array.isArray((body as Record<string, unknown>).events)) {
+    rawEvents = (body as { events: unknown[] }).events;
+  } else {
+    // Treat as a single event.
+    rawEvents = [body];
+  }
+
+  if (!Array.isArray(rawEvents) || rawEvents.length === 0) {
+    res.status(400).json({ error: 'invalid_body', message: 'expected event or { events: [...] }' });
     return;
   }
 
   const now = new Date().toISOString();
-  const event: StoredEvent = {
-    ...parsed.data,
-    ts: now,
-    received_at: now,
-  };
+  const results: { index: number; ok: boolean; error?: string }[] = [];
+  let storageFailed = false;
 
-  try {
-    await persistEvent(event);
-    res.status(204).end();
-  } catch (err) {
-    const message = err instanceof Error ? err.message : 'unknown error';
-    console.error('[analytics] persistEvent failed:', message);
-    res.status(500).json({ error: 'persist_failed' });
+  for (let i = 0; i < rawEvents.length; i++) {
+    const parsed = eventSchema.safeParse(rawEvents[i]);
+    if (!parsed.success) {
+      results.push({
+        index: i,
+        ok: false,
+        error: parsed.error.issues.map((issue) => `${issue.path.join('.')}: ${issue.message}`).join('; '),
+      });
+      continue;
+    }
+    const event: StoredEvent = { ...parsed.data, ts: now, received_at: now };
+    try {
+      await persistEvent(event);
+      results.push({ index: i, ok: true });
+    } catch (err) {
+      storageFailed = true;
+      results.push({
+        index: i,
+        ok: false,
+        error: err instanceof Error ? err.message : 'unknown error',
+      });
+    }
   }
+
+  const failures = results.filter((r) => !r.ok);
+  if (failures.length === results.length) {
+    // Total failure — 400 so the client knows to retry the whole batch.
+    res.status(400).json({ error: 'invalid_event', failures });
+    return;
+  }
+  if (failures.length > 0) {
+    // Partial failure — 207 so the client can reconcile.
+    res.status(207).json({ error: 'partial_failure', results });
+    return;
+  }
+  res.status(204).end();
 });
 
 // ---------------------------------------------------------------------------
@@ -182,14 +217,9 @@ app.get('/api/stats', requireBearer, async (_req: Request, res: Response) => {
 // ---------------------------------------------------------------------------
 
 /**
- * Static assets under /dashboard (dashboard.js, style.css, etc.) are
- * served from ./public. The exact-match /dashboard route below returns
- * the HTML index.
- */
-app.use('/dashboard', express.static(PUBLIC_DIR));
-
-/**
  * GET /dashboard — serves the analytics dashboard UI.
+ * Registered before the static mount so the exact path is handled
+ * without an express.static directory redirect.
  * Falls back to an inline minimal HTML if public/index.html is absent.
  */
 app.get('/dashboard', (_req: Request, res: Response) => {
@@ -200,6 +230,12 @@ app.get('/dashboard', (_req: Request, res: Response) => {
   }
   res.type('html').send(INLINE_DASHBOARD_HTML);
 });
+
+/**
+ * Static assets under /dashboard (dashboard.js, style.css, etc.) served
+ * from ./public.
+ */
+app.use('/dashboard', express.static(PUBLIC_DIR));
 
 /**
  * GET /api/health — liveness probe. No auth.
