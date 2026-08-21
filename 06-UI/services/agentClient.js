@@ -155,6 +155,46 @@ export async function recordEventInteraction({
   }
 }
 
+/**
+ * Persist the user's category preferences to the agent backend.
+ * Called after onboarding (or when user updates preferences in Profile).
+ * Best-effort: never throws. Silences errors so onboarding cannot block.
+ *
+ * @param {{ categories: string[] }} preferences — object with `categories` key
+ * @param {{ signal?: AbortSignal, timeoutMs?: number }} [opts]
+ * @returns {Promise<{ ok: boolean }>}
+ */
+export async function savePreferencesToServer({ categories }, { signal, timeoutMs = 5000 } = {}) {
+  let baseUrl;
+  try {
+    baseUrl = requireAgentBaseUrl();
+  } catch (_err) {
+    return { ok: false };
+  }
+  const client_user_id = await getOrCreateAnonUserId();
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), timeoutMs);
+  const cleanup = () => clearTimeout(timer);
+  if (signal) {
+    if (signal.aborted) { controller.abort(); }
+    else signal.addEventListener('abort', () => controller.abort(), { once: true });
+  }
+  try {
+    const response = await fetch(`${baseUrl}/agent/preferences`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ client_user_id, categories }),
+      signal: controller.signal,
+    });
+    if (!response.ok) return { ok: false };
+    return { ok: true };
+  } catch (_err) {
+    return { ok: false };
+  } finally {
+    cleanup();
+  }
+}
+
 // Re-exported for callers that want to await identity without poking storage directly.
 export { getOrCreateAnonUserId };
 

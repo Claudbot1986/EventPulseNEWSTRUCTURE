@@ -12,6 +12,7 @@ import {
   DEFAULT_TIME_ZONE,
 } from '../tools/rank_events';
 import type { EventCard, IntentBrief } from '../types';
+import type { UserSignal } from '../tools/personalize';
 
 const NOW = new Date('2026-08-17T10:00:00Z');
 
@@ -230,6 +231,69 @@ describe('rankEvents — quality reasons (confidence + freshness)', () => {
  * After the fix, hourInTimeZone(c.start_time, 'Europe/Stockholm') is used,
  * correctly reflecting Stockholm wall-clock across DST shifts.
  */
+describe('rankEvents — stated category preferences', () => {
+  const m1 = card({ id: 'm1', start_time: '2026-08-17T20:00:00Z', category_slug: 'music' });
+  const t1 = card({ id: 't1', start_time: '2026-08-17T20:00:00Z', category_slug: 'theater' });
+  const a1 = card({ id: 'a1', start_time: '2026-08-17T20:00:00Z', category_slug: 'art' });
+
+  it('adds stated_category_match reason when event category is in statedCategories', () => {
+    const ranked = rankEvents([m1, t1], baseIntent, {
+      now: NOW,
+      statedCategories: ['music', 'theater'],
+    });
+    const musicCard = ranked.find((r) => r.card.id === 'm1')!;
+    const theaterCard = ranked.find((r) => r.card.id === 't1')!;
+    expect(musicCard.reasons).toContain('stated_category_match');
+    expect(theaterCard.reasons).toContain('stated_category_match');
+    expect(musicCard.score).toBeGreaterThan(
+      rankEvents([m1], baseIntent, { now: NOW }).find((r) => r.card.id === 'm1')!.score
+    );
+  });
+
+  it('does NOT fire when statedCategories is empty', () => {
+    const ranked = rankEvents([m1], baseIntent, { now: NOW, statedCategories: [] });
+    expect(ranked[0].reasons).not.toContain('stated_category_match');
+  });
+
+  it('does NOT fire when event category is not in statedCategories', () => {
+    const ranked = rankEvents([a1], baseIntent, { now: NOW, statedCategories: ['music', 'theater'] });
+    expect(ranked[0].reasons).not.toContain('stated_category_match');
+  });
+
+  it('does NOT fire when statedCategories is undefined (backwards-compatible)', () => {
+    const ranked = rankEvents([m1], baseIntent, { now: NOW });
+    expect(ranked[0].reasons).not.toContain('stated_category_match');
+  });
+
+  it('stacks with behavioral personalization — user with both signals gets both boosts', () => {
+    const behavioralSignal: UserSignal = {
+      client_user_id: 'u-hot',
+      categoryPosterior: { music: 1.0 },
+      venueBadness: {},
+      totalSaves: 10,
+      weightedRejects: 0,
+      fetchedAt: NOW.toISOString(),
+    };
+    const ranked = rankEvents([m1], baseIntent, {
+      now: NOW,
+      personalization: behavioralSignal,
+      statedCategories: ['music'],
+    });
+    expect(ranked[0].reasons).toContain('stated_category_match');
+    expect(ranked[0].reasons).toContain('category_personalization');
+  });
+
+  it('boost is small constant — does not dominate category_match (30) or time_fit (25)', () => {
+    const baseScore = rankEvents([m1], baseIntent, { now: NOW }).find((r) => r.card.id === 'm1')!.score;
+    const boostedScore = rankEvents([m1], baseIntent, {
+      now: NOW,
+      statedCategories: ['music'],
+    }).find((r) => r.card.id === 'm1')!.score;
+    const delta = boostedScore - baseScore;
+    expect(delta).toBeCloseTo(RANK_WEIGHTS.stated_category_match, 5);
+  });
+});
+
 describe('rankEvents — Stockholm-time bucketing (timezone bug regression)', () => {
   it('treats 20:00 UTC on 2026-08-17 as NIGHT (22:00 Stockholm CEST), not evening', () => {
     const event = card({

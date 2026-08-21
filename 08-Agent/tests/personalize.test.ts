@@ -16,6 +16,9 @@ import {
   wilsonLowerBound,
   buildUserSignal,
   clearPersonalizationCache,
+  clearStatedPreferencesCache,
+  loadStatedPreferences,
+  CACHE_TTL_SECONDS,
   CATEGORY_BOOST_BETA,
   VENUE_PENALTY_GAMMA,
   MIN_SAVES,
@@ -29,7 +32,10 @@ import type { EventCard, IntentBrief } from '../types';
 
 const NOW = new Date('2026-08-17T10:00:00Z');
 
-afterEach(() => clearPersonalizationCache());
+afterEach(() => {
+  clearPersonalizationCache();
+  clearStatedPreferencesCache();
+});
 
 describe('laplacePosterior', () => {
   it('returns (count+α)/(total+α·|C|) with α=1 (add-one smoothing)', () => {
@@ -183,6 +189,148 @@ describe('buildUserSignal — happy path with synthetic data', () => {
     // gate is enforced by the *ranker*, not here. We just assert computation.
     expect(sig.weightedRejects).toBeGreaterThan(0);
     expect(sig.venueBadness.BadKlubb).toBeGreaterThan(0);
+  });
+});
+
+// ── loadStatedPreferences ────────────────────────────────────────────────
+
+describe('loadStatedPreferences', () => {
+  const userId = '00000000-0000-0000-0000-000000000010';
+
+  it('returns null when no row exists for the user', async () => {
+    const sb: any = {
+      from() {
+        return {
+          select() { return this; },
+          eq() { return this; },
+          single() {
+            return Promise.resolve({
+              data: null,
+              error: { code: 'PGRST116', message: 'No rows' },
+            });
+          },
+        };
+      },
+    };
+    const result = await loadStatedPreferences(sb, userId, { skipCache: true });
+    expect(result).toBeNull();
+  });
+
+  it('returns null on a real DB error (collapses to null, not thrown)', async () => {
+    const sb: any = {
+      from() {
+        return {
+          select() { return this; },
+          eq() { return this; },
+          single() {
+            return Promise.resolve({
+              data: null,
+              error: { code: 'PGRST204', message: 'Relation does not exist' },
+            });
+          },
+        };
+      },
+    };
+    const result = await loadStatedPreferences(sb, userId, { skipCache: true });
+    expect(result).toBeNull();
+  });
+
+  it('returns the categories array when user has declared preferences', async () => {
+    const sb: any = {
+      from() {
+        return {
+          select() { return this; },
+          eq() { return this; },
+          single() {
+            return Promise.resolve({
+              data: { preferences: { categories: ['music', 'art'] } },
+              error: null,
+            });
+          },
+        };
+      },
+    };
+    const result = await loadStatedPreferences(sb, userId, { skipCache: true });
+    expect(result).toEqual(['music', 'art']);
+  });
+
+  it('returns an empty array when user explicitly cleared preferences', async () => {
+    const sb: any = {
+      from() {
+        return {
+          select() { return this; },
+          eq() { return this; },
+          single() {
+            return Promise.resolve({
+              data: { preferences: { categories: [] } },
+              error: null,
+            });
+          },
+        };
+      },
+    };
+    const result = await loadStatedPreferences(sb, userId, { skipCache: true });
+    expect(result).toEqual([]);
+  });
+
+  it('filters out non-string category values', async () => {
+    const sb: any = {
+      from() {
+        return {
+          select() { return this; },
+          eq() { return this; },
+          single() {
+            return Promise.resolve({
+              data: { preferences: { categories: ['music', null, 42, 'art', false] } },
+              error: null,
+            });
+          },
+        };
+      },
+    };
+    const result = await loadStatedPreferences(sb, userId, { skipCache: true });
+    expect(result).toEqual(['music', 'art']);
+  });
+
+  it('caches null results for CACHE_TTL_SECONDS', async () => {
+    let calls = 0;
+    const sb: any = {
+      from() {
+        calls++;
+        return {
+          select() { return this; },
+          eq() { return this; },
+          single() {
+            return Promise.resolve({ data: null, error: { code: 'PGRST116' } });
+          },
+        };
+      },
+    };
+    await loadStatedPreferences(sb, userId, { skipCache: true });
+    await loadStatedPreferences(sb, userId);
+    expect(calls).toBe(1);
+  });
+
+  it('does not use stale cache when entry has expired', async () => {
+    let calls = 0;
+    const sb: any = {
+      from() {
+        calls++;
+        return {
+          select() { return this; },
+          eq() { return this; },
+          single() {
+            return Promise.resolve({ data: { preferences: { categories: ['theater'] } }, error: null });
+          },
+        };
+      },
+    };
+    // First call populates cache
+    await loadStatedPreferences(sb, userId, { skipCache: true });
+    // Advance time past cache TTL and call again (simulated by using skipCache again)
+    const fakeNow = new Date(Date.now() + (CACHE_TTL_SECONDS + 1) * 1000);
+    await loadStatedPreferences(sb, userId, { now: fakeNow });
+    expect(calls).toBe(2);
   });
 });
 

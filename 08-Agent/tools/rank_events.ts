@@ -35,6 +35,7 @@ export const RANK_WEIGHTS = {
   high_confidence:    15,
   low_confidence:    -10,
   stale:             -15,
+  stated_category_match: 0.3,
 } as const;
 
 /** Confidence threshold for the `high_confidence` ranker reason. */
@@ -70,6 +71,18 @@ export interface RankOptions {
    * See 08-Agent/tools/personalize.ts for the math + research citations.
    */
   personalization?: UserSignal;
+  /**
+   * User-declared category preferences from `user_preferences.categories`
+   * (read by `loadStatedPreferences`). When the array is non-empty, every
+   * event whose `category_slug` is in this set receives a small additive
+   * boost (`RANK_WEIGHTS.stated_category_match`, default 0.3). The boost
+   * is intentionally small — same magnitude discipline as `BOOST_CAP_FRACTION` —
+   * so it nudges the ranking without dominating other features (notably
+   * `category_match: 30` from the intent, and `time_fit: 25`). The
+   * behavioral `personalization.categoryPosterior` boost remains additive
+   * — users with both signals get both.
+   */
+  statedCategories?: ReadonlyArray<string>;
 }
 
 /**
@@ -203,6 +216,19 @@ export function rankEvents(
           reasons.push('venue_personalization_penalty');
         }
       }
+    }
+
+    // Stated-category boost (T0023). Distinct from the count-based
+    // behavioral prior above: this is the user's EXPLICIT declaration from
+    // `user_preferences.categories`, not an inference from saves/rejects.
+    // Small constant weight (0.3) keeps it as a nudge — it cannot displace
+    // `category_match` (30) or `time_fit` (25). Gated on a non-empty array
+    // so users with no stated prefs incur zero cost. The two boosts stack
+    // for users who have both signals.
+    if (opts.statedCategories && opts.statedCategories.length > 0
+        && opts.statedCategories.includes(c.category_slug)) {
+      score += RANK_WEIGHTS.stated_category_match;
+      reasons.push('stated_category_match');
     }
 
     return { card: c, score, reasons };

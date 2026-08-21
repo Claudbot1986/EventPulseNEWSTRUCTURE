@@ -27,7 +27,7 @@ import { recordFeedback } from './tools/record_feedback';
 import { pickClarifyingQuestion } from './tools/find_gaps';
 import { recordOutboundClick } from './tools/attribution';
 import { feedEvents, todayIso, addDays } from './tools/feed_events';
-import { buildUserSignal } from './tools/personalize';
+import { buildUserSignal, loadStatedPreferences } from './tools/personalize';
 import {
   assignVariant,
   computeLift,
@@ -232,14 +232,24 @@ export function buildApp(opts: { supabase?: SupabaseClient } = {}): express.Expr
         ? await buildUserSignal(client, body.client_user_id)
         : null;
 
+      // Stated-user-category preferences from user_preferences (T0023).
+      // loadStatedPreferences returns null when no row exists yet, and []
+      // when the user explicitly cleared their preferences — both are handled
+      // correctly by rankEvents (null = no stated boost; [] = no stated boost).
+      const statedCategories = await loadStatedPreferences(client, body.client_user_id);
+
       // Two-stage retrieval→re-rank:
       //   1. rank_events returns the top 25 most relevant (deterministic
-      //      feature scoring + count-based personalization priors).
+      //      feature scoring + count-based personalization priors + stated prefs).
       //   2. mmrRerank re-picks the final top 5 to maximize relevance×diversity
       //      (Carbonell & Goldstein 1998, λ=0.7 default — see diversify.ts).
       // MMR is the standard defense against filter-bubble pathology once the
       // personalization priors are applied.
-      const ranked = rankEvents(search.events, intent, { topN: 25, personalization });
+      const ranked = rankEvents(search.events, intent, {
+        topN: 25,
+        personalization,
+        statedCategories: statedCategories ?? undefined,
+      });
       const reranked: RankedEvent[] = mmrRerank(ranked, { lambda: 0.7, topN: 5 });
 
       const cards: EventCard[] = reranked.map((r) => ({
@@ -470,6 +480,60 @@ export function buildApp(opts: { supabase?: SupabaseClient } = {}): express.Expr
       interaction: result.interaction,
       reject_reason: result.reject_reason ?? null,
     });
+  });
+
+  /**
+   * POST /agent/preferences — upsert stated user category preferences
+   * (Workstream gating the T0023 stated-categories personalization path).
+   *
+   * Body: { client_user_id: uuid, categories: string[] }
+   * Persists to `user_preferences` keyed by client_user_id (PK). The
+   * preferences jsonb column stores `{ categories: string[] }` so the
+   * personalization tool can read it back without a schema change.
+   *
+   * Best-effort: if the Supabase upsert fails we return 202 so the
+   * onboarding UI never breaks. Validation errors are 400 (code bug,
+   * not a network blip). Same rate limiter as `/agent/feedback` —
+   * category prefs are set rarely from the onboarding step but we
+   * want the same per-user budget because the endpoint is gated by
+   * the same client_user_id key.
+   */
+  app.post('/agent/preferences', chatLimiter.middleware, async (req: Request, res: Response) => {
+    const body = req.body as Partial<{
+      client_user_id: string;
+      categories: unknown;
+    }>;
+    if (!body || typeof body !== 'object') {
+      res.status(400).json({ error: 'invalid body' });
+      return;
+    }
+    if (!body.client_user_id || !UUID_RE.test(body.client_user_id)) {
+      res.status(400).json({ error: 'client_user_id must be a uuid' });
+      return;
+    }
+    if (!Array.isArray(body.categories)) {
+      res.status(400).json({ error: 'categories must be an array' });
+      return;
+    }
+    const categories = body.categories.filter((x): x is string => typeof x === 'string');
+
+    const client = sb ?? getSupabase();
+    const { error } = await client
+      .from('user_preferences')
+      .upsert(
+        {
+          client_user_id: body.client_user_id,
+          preferences: { categories },
+          updated_at: new Date().toISOString(),
+        },
+        { onConflict: 'client_user_id' }
+      );
+
+    if (error) {
+      res.status(202).json({ ok: false, warning: error.message });
+      return;
+    }
+    res.json({ ok: true });
   });
 
   app.get('/agent/metrics', requireAdmin, generalLimiter.middleware, async (_req: Request, res: Response) => {

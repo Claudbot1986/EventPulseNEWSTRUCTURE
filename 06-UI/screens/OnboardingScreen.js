@@ -34,6 +34,7 @@ import {
 } from 'react-native';
 
 import { getItem, setItem } from '../services/storage';
+import { chatWithAgent, savePreferencesToServer } from '../services/agentClient';
 
 const ONBOARDING_COMPLETE_KEY = 'eventpulse.onboarding_complete';
 const PREFERENCES_KEY = 'eventpulse.preferences.categories';
@@ -108,6 +109,8 @@ export default function OnboardingScreen({ onComplete }) {
 
   const complete = useCallback(async () => {
     await savePreferences(selected);
+    // Also persist to server (best-effort — don't block onboarding completion)
+    savePreferencesToServer({ categories: selected }).catch(() => {});
     onComplete?.(selected);
   }, [selected, onComplete]);
 

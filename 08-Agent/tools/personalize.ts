@@ -245,3 +245,85 @@ export async function buildUserSignal(
 export function clearPersonalizationCache(): void {
   _cache.clear();
 }
+
+// ─── Stated preferences (explicit user-declared categories) ──────────────────
+
+interface RawStatedPreferenceRow {
+  preferences: { categories?: unknown } | null;
+}
+
+interface StatedPreferencesCacheEntry {
+  data: string[] | null;
+  expiresAt: number;
+}
+
+/**
+ * In-process cache for `loadStatedPreferences`. Separate map from the
+ * implicit-signal cache because the two signals have different update
+ * cadences (stated prefs change rarely; implicit signals decay continuously).
+ * We share `CACHE_TTL_SECONDS` (5 min) — same default as the implicit cache.
+ */
+const _statedCache = new Map<string, StatedPreferencesCacheEntry>();
+
+/**
+ * Read the user-declared category preferences from `user_preferences`.
+ *
+ * Stated preferences are the user's explicit category interests (set in
+ * the onboarding flow or preferences screen). They are NOT the same as
+ * the count-based priors in `buildUserSignal` — stated prefs are direct
+ * declarations, the priors are inferred from saves/rejects.
+ *
+ * Return shape:
+ *   - `string[]`  — declared categories (may be empty if user cleared them)
+ *   - `null`      — no row in `user_preferences` for this user yet
+ *
+ * The function never throws into the chat path — DB errors collapse to
+ * `null`. The chat handler decides whether to apply the boost based on
+ * truthiness, exactly like the implicit priors.
+ */
+export async function loadStatedPreferences(
+  supabase: SupabaseClient,
+  client_user_id: string,
+  opts: { now?: Date; skipCache?: boolean } = {}
+): Promise<string[] | null> {
+  const now = opts.now ?? new Date();
+  const nowMs = now.getTime();
+
+  if (!opts.skipCache) {
+    const hit = _statedCache.get(client_user_id);
+    if (hit && hit.expiresAt > nowMs) return hit.data;
+  }
+
+  try {
+    const { data, error } = await supabase
+      .from('user_preferences')
+      .select('preferences')
+      .eq('client_user_id', client_user_id)
+      .single();
+
+    if (error || !data) {
+      // PGRST116 (no rows) and real errors collapse to the same cached `null`
+      // so the chat path can distinguish "no prefs yet" from
+      // "prefs declared with empty list" (which is `[]`, not `null`).
+      _statedCache.set(client_user_id, { data: null, expiresAt: nowMs + CACHE_TTL_SECONDS * 1000 });
+      return null;
+    }
+
+    const row = data as unknown as RawStatedPreferenceRow;
+    const raw = row.preferences?.categories;
+    const categories: string[] = Array.isArray(raw)
+      ? raw.filter((x): x is string => typeof x === 'string')
+      : [];
+
+    _statedCache.set(client_user_id, { data: categories, expiresAt: nowMs + CACHE_TTL_SECONDS * 1000 });
+    return categories;
+  } catch {
+    _statedCache.set(client_user_id, { data: null, expiresAt: nowMs + CACHE_TTL_SECONDS * 1000 });
+    return null;
+  }
+}
+
+/** Test/dev helper — clear the stated-preferences in-process cache. */
+export function clearStatedPreferencesCache(): void {
+  _statedCache.clear();
+}
