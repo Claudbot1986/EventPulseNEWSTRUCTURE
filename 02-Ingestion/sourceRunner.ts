@@ -5,7 +5,7 @@
  * ENDTOEND: Scraping-based sources with HTML/JSON parsing
  */
 
-import { scrapeTicketmaster } from './sources/ticketmaster';
+import { fetchTicketmaster } from './A-directAPI-networkGate/adapters/ticketmaster';
 import { scrapeStockholm, generateStockholmSamples } from './sources/stockholm';
 import { scrapeEventbrite } from './sources/eventbrite';
 import { scrapeBilletto } from './sources/billetto';
@@ -121,7 +121,7 @@ export async function runPrototypeSources(): Promise<SourceResult[]> {
   // Ticketmaster - PROTOTYPE version
   if (process.env.TICKETMASTER_API_KEY) {
     try {
-      const events = await scrapeTicketmaster();
+      const events = await fetchTicketmaster();
       const queued = await queueEvents(events, 'ticketmaster');
       results.push({
         source: 'ticketmaster',
