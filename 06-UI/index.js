@@ -1,7 +1,8 @@
 import { registerRootComponent } from 'expo';
 
-// Agent-first product (Phase 1). The legacy browse-first App.js is
-// retained on disk but no longer the boot entry. See MASTERPLAN §1, §18.
-import App from './App-agent';
+// Reverted 2026-08-21: back to browse-first App.js per user request
+// (image-list of events, scroll down to see more). The agent-first
+// App-agent.js + AgentScreen.js remain on disk for later use.
+import App from './App';
 
 registerRootComponent(App);
