@@ -10,7 +10,7 @@ const TOKENS = {
     surface: '#15151B',
     surfaceRaised: 'transparent',
     surfaceSoft: '#202635',
-    border: '#2B3140',
+    border: '#1A1A1A',
     borderStrong: '#3A4254',
     text: '#F7F2EA',
     textMuted: '#A9B0BE',
@@ -1029,16 +1029,16 @@ const styles = StyleSheet.create({
     fontWeight: '800',
   },
   listContent: {
-    padding: TOKENS.space.lg,
+    padding: TOKENS.space.md,
     paddingBottom: TOKENS.space.xxl,
   },
   dayHeader: {
-    paddingTop: TOKENS.space.lg,
-    paddingBottom: TOKENS.space.sm,
+    paddingTop: TOKENS.space.md,
+    paddingBottom: TOKENS.space.xs,
   },
   dayHeaderText: {
     color: TOKENS.color.accent,
-    fontSize: 17,
+    fontSize: 15,
     fontWeight: '900',
     letterSpacing: -0.2,
   },
@@ -1047,7 +1047,7 @@ const styles = StyleSheet.create({
     borderRadius: TOKENS.radius.lg,
     borderWidth: 1,
     borderColor: TOKENS.color.border,
-    marginBottom: TOKENS.space.lg,
+    marginBottom: TOKENS.space.md,
     overflow: 'hidden',
   },
   eventImage: {
@@ -1071,14 +1071,14 @@ const styles = StyleSheet.create({
     textTransform: 'uppercase',
   },
   eventCardBody: {
-    padding: TOKENS.space.lg,
+    padding: TOKENS.space.md,
   },
   eventHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'flex-start',
     gap: TOKENS.space.md,
-    marginBottom: TOKENS.space.md,
+    marginBottom: TOKENS.space.sm,
   },
   dateCluster: {
     backgroundColor: TOKENS.color.accentSoft,
@@ -1119,7 +1119,7 @@ const styles = StyleSheet.create({
   eventMetaRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginTop: TOKENS.space.md,
+    marginTop: TOKENS.space.sm,
   },
   eventVenue: {
     color: TOKENS.color.textMuted,
@@ -1136,7 +1136,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginTop: TOKENS.space.lg,
+    marginTop: TOKENS.space.md,
     gap: TOKENS.space.md,
   },
   eventPrice: {
