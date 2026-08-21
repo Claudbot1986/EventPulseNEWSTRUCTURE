@@ -160,6 +160,44 @@ function extractSingleEvent(data: any, source: string): JsonLdEvent | null {
   return null;
 }
 
+// ─── URL Helpers ──────────────────────────────────────────────────────────────
+
+/**
+ * Pick the most specific event URL from a JSON-LD Event.
+ *
+ * JSON-LD event pages routinely put the canonical event URL in `@id` (the
+ * IRI identifier) instead of `url`. Both are valid per schema.org; we
+ * prefer `@id` because sites that bother to set both usually keep them in
+ * sync, and `@id` is the spec-blessed identifier for the entity.
+ *
+ * CRITICAL: We never fall back to `sourceUrl` (the page we scraped). The
+ * source URL points to a listing of many events, not the specific event
+ * itself. Returning it would produce a UI link that takes the user to a
+ * list of unrelated events instead of the event they tapped on — the bug
+ * we are explicitly guarding against here.
+ *
+ * Returns `undefined` if no specific event URL is present. The downstream
+ * queue (toRawEventInput) maps undefined → null on ticket_url, so the
+ * mobile UI hides the external-link chip and CTA for those events rather
+ * than misleading users with a link to a listing page.
+ */
+export function pickEventUrl(event: JsonLdEvent): string | undefined {
+  // `@id` first — spec-blessed IRI identifier.
+  // Accept only when it looks like a URL/IRI; some sites put non-URL
+  // identifiers (e.g. "evt_123") in `@id`.
+  const idCandidate = event['@id'];
+  if (typeof idCandidate === 'string' && /^https?:\/\//i.test(idCandidate)) {
+    return idCandidate;
+  }
+
+  // `url` second — also valid per schema.org. Allow http(s) only.
+  if (typeof event.url === 'string' && /^https?:\/\//i.test(event.url)) {
+    return event.url;
+  }
+
+  return undefined;
+}
+
 // ─── Confidence Scoring ─────────────────────────────────────────────────────
 
 /**
@@ -194,7 +232,7 @@ function scoreConfidence(event: JsonLdEvent): ExtractionConfidence {
     signals.push('has_address');
   }
 
-  if (event.url) {
+  if (pickEventUrl(event)) {
     score += 0.05;
     signals.push('has_url');
   }
@@ -238,7 +276,7 @@ function scoreConfidence(event: JsonLdEvent): ExtractionConfidence {
     hasTitle: Boolean(event.name && event.name.length > 5),
     hasDate: Boolean(event.startDate && event.startDate.length >= 10),
     hasVenue: Boolean(event.location && typeof event.location === 'object' && 'name' in event.location),
-    hasUrl: Boolean(event.url),
+    hasUrl: Boolean(pickEventUrl(event)),
     hasDescription: Boolean(event.description && event.description.length > 50),
     hasTicketInfo: Boolean(event.offers),
     eventStatus: event.eventStatus,
@@ -335,7 +373,8 @@ function normalizeEvent(event: JsonLdEvent, source: string, sourceUrl?: string):
     address,
     city,
     description: event.description || undefined,
-    url: event.url || sourceUrl,
+    // Specific event URL only — never the listing page. See pickEventUrl.
+    url: pickEventUrl(event),
     ticketUrl,
     organizer: organizer || undefined,
     performers: performers.length > 0 ? performers : undefined,
