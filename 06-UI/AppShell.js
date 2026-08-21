@@ -46,10 +46,11 @@ import NotificationsScreen from './screens/NotificationsScreen';
 import ProfileScreen from './screens/ProfileScreen';
 import OnboardingScreen from './screens/OnboardingScreen';
 import App from './App';
-import { getItem } from './services/storage';
+import { getItem, setItem } from './services/storage';
 
 const TABS = ['home', 'explore', 'notifications', 'profile'];
 const ONBOARDING_COMPLETE_KEY = 'eventpulse.onboarding_complete';
+export const PENDING_AGENT_MESSAGE_KEY = 'eventpulse.pending_agent_message';
 
 export default function AppShell() {
   const [activeTab, setActiveTab] = useState('explore');
@@ -81,6 +82,20 @@ export default function AppShell() {
     setOnboardingState('done');
   };
 
+  // T0063 — chip tap: persist the prompt and jump to the explore tab so
+  // App.js can read it on focus and surface the chosen prompt to the user.
+  // AsyncStorage write is fire-and-forget; the activeTab state change is
+  // synchronous and drives the actual UI navigation.
+  const handleChipPress = (prompt) => {
+    const text = prompt?.prompt_text;
+    if (typeof text !== 'string' || text.length === 0) return;
+    setItem(PENDING_AGENT_MESSAGE_KEY, text).catch(() => {
+      // Storage failure is non-fatal — the tab still switches and the
+      // user can still browse manually.
+    });
+    setActiveTab('explore');
+  };
+
   if (onboardingState !== 'done') {
     return (
       <SafeAreaProvider>
@@ -99,7 +114,7 @@ export default function AppShell() {
     <SafeAreaProvider>
       <View style={styles.container}>
         {activeTab === 'explore' && <App />}
-        {activeTab === 'home' && <HomeScreen />}
+        {activeTab === 'home' && <HomeScreen onChipPress={handleChipPress} />}
         {activeTab === 'notifications' && <NotificationsScreen />}
         {activeTab === 'profile' && <ProfileScreen />}
 

@@ -5,6 +5,8 @@ import { SafeAreaView, SafeAreaProvider } from 'react-native-safe-area-context';
 import { fetchFeed, addDays } from './services/agentClient';
 import { analyticsClient } from './services/analyticsClient';
 import UserPickerScreen from './screens/UserPickerScreen';
+import { getItem, removeItem } from './services/storage';
+import { PENDING_AGENT_MESSAGE_KEY } from './AppShell';
 
 const TOKENS = {
   color: {
@@ -526,7 +528,7 @@ function StateView({ title, detail, actionLabel, onAction }) {
   );
 }
 
-function HomeScreen({ onEventPress, scrollPositionRef }) {
+function HomeScreen({ onEventPress, scrollPositionRef, pendingPrompt, dismissPendingPrompt }) {
   const [events, setEvents] = useState([]);
   const [loading, setLoading] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
@@ -661,6 +663,23 @@ function HomeScreen({ onEventPress, scrollPositionRef }) {
           {events.length} riktiga event att upptäcka. Börja browsa, filtrera när du vill.
         </Text>
       </View>
+
+      {pendingPrompt ? (
+        <View style={styles.pendingPromptBanner} accessibilityRole="text">
+          <Text style={styles.pendingPromptEyebrow}>DU FRÅGADE</Text>
+          <Text style={styles.pendingPromptText} numberOfLines={3}>
+            {pendingPrompt}
+          </Text>
+          <TouchableOpacity
+            style={styles.pendingPromptDismiss}
+            onPress={dismissPendingPrompt}
+            accessibilityRole="button"
+            accessibilityLabel="Stäng"
+          >
+            <Text style={styles.pendingPromptDismissText}>Stäng</Text>
+          </TouchableOpacity>
+        </View>
+      ) : null}
 
       <View style={styles.filtersPanel}>
         <Text style={styles.filterLabel}>När</Text>
@@ -995,6 +1014,29 @@ export default function App() {
     };
   }, []);
 
+  // T0063 — drain the pending agent prompt set by HomeScreen chip tap.
+  // AppShell writes `eventpulse.pending_agent_message` and switches to the
+  // explore tab; App.js reads it here, surfaces a banner for context, and
+  // clears the key on dismiss so it doesn't reappear on next mount.
+  const [pendingPrompt, setPendingPrompt] = useState(null);
+  useEffect(() => {
+    let cancelled = false;
+    getItem(PENDING_AGENT_MESSAGE_KEY)
+      .then((value) => {
+        if (cancelled || !value) return;
+        setPendingPrompt(value);
+        removeItem(PENDING_AGENT_MESSAGE_KEY).catch(() => {});
+      })
+      .catch(() => {});
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+  const dismissPendingPrompt = useCallback(() => {
+    setPendingPrompt(null);
+    removeItem(PENDING_AGENT_MESSAGE_KEY).catch(() => {});
+  }, []);
+
   const handleUserPicked = useCallback((userId) => {
     setActiveUser(userId);
   }, []);
@@ -1020,7 +1062,7 @@ export default function App() {
     if (selectedEvent) {
       return <DetailsScreen event={selectedEvent} onBack={handleBack} />;
     }
-    return <HomeScreen onEventPress={handleEventPress} scrollPositionRef={scrollPositionRef} />;
+    return <HomeScreen onEventPress={handleEventPress} scrollPositionRef={scrollPositionRef} pendingPrompt={pendingPrompt} dismissPendingPrompt={dismissPendingPrompt} />;
   };
 
   return (
@@ -1053,6 +1095,44 @@ const styles = StyleSheet.create({
   homeContainer: {
     flex: 1,
     backgroundColor: TOKENS.color.appBg,
+  },
+
+  // T0063 — pending prompt banner (chip tap → explore tab).
+  pendingPromptBanner: {
+    marginHorizontal: TOKENS.space.xl,
+    marginBottom: TOKENS.space.md,
+    padding: TOKENS.space.md,
+    borderRadius: TOKENS.radius.md,
+    borderWidth: 1,
+    borderColor: TOKENS.color.accent,
+    backgroundColor: TOKENS.color.accentSoft,
+  },
+  pendingPromptEyebrow: {
+    color: TOKENS.color.accent,
+    fontSize: 11,
+    fontWeight: '700',
+    letterSpacing: 1.4,
+    marginBottom: 4,
+  },
+  pendingPromptText: {
+    color: TOKENS.color.text,
+    fontSize: 15,
+    fontWeight: '500',
+    lineHeight: 20,
+    marginBottom: TOKENS.space.sm,
+  },
+  pendingPromptDismiss: {
+    alignSelf: 'flex-start',
+    paddingHorizontal: TOKENS.space.md,
+    paddingVertical: 6,
+    borderRadius: TOKENS.radius.sm,
+    borderWidth: 1,
+    borderColor: TOKENS.color.borderStrong,
+  },
+  pendingPromptDismissText: {
+    color: TOKENS.color.textMuted,
+    fontSize: 12,
+    fontWeight: '600',
   },
   header: {
     paddingHorizontal: TOKENS.space.xl,
