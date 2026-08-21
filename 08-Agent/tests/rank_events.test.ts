@@ -31,6 +31,11 @@ function card(over: Partial<EventCard> & { id: string; start_time: string }): Ev
     is_free: over.is_free ?? false,
     ticket_url: over.ticket_url ?? null,
     image_url: over.image_url ?? null,
+    image_license: over.image_license ?? null,
+    image_attribution: over.image_attribution ?? null,
+    image_source_url: over.image_source_url ?? null,
+    artist_slugs: over.artist_slugs ?? undefined,
+    source: over.source ?? null,
     confidence_score: over.confidence_score ?? null,
     freshness_at: over.freshness_at ?? null,
   };
