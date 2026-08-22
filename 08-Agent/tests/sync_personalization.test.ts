@@ -161,7 +161,7 @@ describe('runPersonalizationPass', () => {
         error: null,
       },
     });
-    const summary = await runPersonalizationPass({ supabase: sb, now: NOW, recompute });
+    const summary = await runPersonalizationPass({ supabase: sb, now: NOW, recompute, timeProvider: () => NOW.getTime() });
     expect(summary.ok).toBe(true);
     expect(summary.users_scanned).toBe(2);
     expect(summary.weights_written).toBe(5); // 3 + 2
@@ -196,7 +196,7 @@ describe('runPersonalizationPass', () => {
         error: null,
       },
     });
-    const summary = await runPersonalizationPass({ supabase: sb, now: NOW, recompute });
+    const summary = await runPersonalizationPass({ supabase: sb, now: NOW, recompute, timeProvider: () => NOW.getTime() });
     expect(summary.users_scanned).toBe(2);
     expect(summary.errors).toBe(1);
     expect(summary.weights_written).toBe(1);
