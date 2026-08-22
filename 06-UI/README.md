@@ -130,12 +130,45 @@ npm run dev
 
 ---
 
-### Starta app (Expo)
+### Starta API-wrapper (canonical events, port 7777)
+
+```bash
+cd 06-UI
+npm run api
+```
+
+`GET http://localhost:7777/supabase-events` — samma data som appen läser (Supabase canonical).
+
+### Starta app (Expo Go)
+
+**Standard = tunnel över internet (ingen LAN krävs):**
+
+```bash
+cd 06-UI
 npm start
+```
+
+Vänta tills terminalen visar **"Tunnel ready"**, skanna sedan QR-koden i Expo Go.
+QR-URL ska innehålla `.exp.direct` — inte `localhost` eller `192.168.x.x`.
+
+Om inbyggd tunnel failar:
+
+```bash
+# Gratis ngrok-konto: https://dashboard.ngrok.com/signup
+NGROK_AUTHTOKEN=din_token npm run start:tunnel:custom
+```
+
+**Endast om du uttryckligen vill köra LAN/Tailscale:**
+
+```bash
+npm run start:lan
+```
 
 VIKTIGT:
-- använd LAN (inte tunnel)
-- mobil måste nå din dator via IP
+- Wrapper `:7777`, Supabase och appen delar samma canonical read (`eventsCanonical.cjs`)
+- Appen visar `total_published_events` i headern — samma siffra som wrapper `/health`
+- `npm run api` startar wrappern; appen behöver inte wrappern om den läser samma Supabase-query direkt
+- `npm start` = tunnel för Expo Go
 
 ---
 

@@ -1,7 +1,11 @@
 import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { StatusBar } from 'expo-status-bar';
 import { StyleSheet, Text, View, SectionList, FlatList, SafeAreaView, ActivityIndicator, TouchableOpacity, ScrollView, Linking, Dimensions } from 'react-native';
-import { fetchEvents } from './services/eventServiceClient';
+import { fetchEvents, PAGE_SIZE } from './services/eventServiceClient';
+import { EventTotalProvider, usePublishedEventTotal, formatPublishedEventTotal } from './context/EventTotalContext';
+import ExploreScreen from './screens/ExploreScreen';
+import PlaceholderScreen from './screens/PlaceholderScreen';
+import TabBar from './components/TabBar';
 
 // Calculate end date (1 year from now)
 function getEndDate() {
@@ -376,6 +380,7 @@ function LoadingMore() {
 }
 
 function HomeScreen({ onEventPress, scrollPositionRef }) {
+  const { total: totalPublishedEvents } = usePublishedEventTotal();
   const [events, setEvents] = useState([]);
   const [availableSources, setAvailableSources] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -405,8 +410,7 @@ function HomeScreen({ onEventPress, scrollPositionRef }) {
     }
     
     try {
-      // Fetch events from Supabase (production only)
-      const result = await fetchEvents();
+      const result = await fetchEvents({ page: pageNum, limit: PAGE_SIZE });
       const data = result.events || [];
       const sources = result.sources || [];
       
@@ -439,14 +443,20 @@ function HomeScreen({ onEventPress, scrollPositionRef }) {
   }, [loadEvents]);
 
   const handleLoadMore = useCallback(() => {
-    // Only allow loading more when NO filters are active
-    // This prevents API calls when user scrolls to end of filtered list
-    // NOTE: When filters are active, we show a subset of the full dataset
-    // so pagination is not needed - the full data is already loaded
-    if (!loadingMore && !loading && !timeFilter && selectedCategories.length === 0 && !selectedProvider) {
+    const loadedCount = events.length;
+    const hasMore = totalPublishedEvents == null || loadedCount < totalPublishedEvents;
+
+    if (
+      !loadingMore &&
+      !loading &&
+      hasMore &&
+      !timeFilter &&
+      selectedCategories.length === 0 &&
+      !selectedProvider
+    ) {
       loadEvents(page + 1, true);
     }
-  }, [loadingMore, loading, loadEvents, page, timeFilter, selectedCategories, selectedProvider]);
+  }, [loadingMore, loading, loadEvents, page, timeFilter, selectedCategories, selectedProvider, events.length, totalPublishedEvents]);
 
   const handleTimeFilterPress = useCallback((filterKey) => {
     setTimeFilter(prev => prev === filterKey ? null : filterKey);
@@ -530,7 +540,11 @@ function HomeScreen({ onEventPress, scrollPositionRef }) {
       <SafeAreaView style={styles.homeContainer}>
         <View style={styles.header}>
           <Text style={styles.appTitle}>EventPulse</Text>
-          <Text style={styles.appSubtitle}>Events in Sweden</Text>
+          <Text style={styles.appSubtitle}>
+            {formatPublishedEventTotal(totalPublishedEvents)
+              ? `${formatPublishedEventTotal(totalPublishedEvents)} riktiga event`
+              : 'Event i Sverige'}
+          </Text>
         </View>
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color="#BB86FC" />
@@ -545,7 +559,11 @@ function HomeScreen({ onEventPress, scrollPositionRef }) {
       <SafeAreaView style={styles.homeContainer}>
         <View style={styles.header}>
           <Text style={styles.appTitle}>EventPulse</Text>
-          <Text style={styles.appSubtitle}>Events in Sweden</Text>
+          <Text style={styles.appSubtitle}>
+            {formatPublishedEventTotal(totalPublishedEvents)
+              ? `${formatPublishedEventTotal(totalPublishedEvents)} riktiga event`
+              : 'Event i Sverige'}
+          </Text>
         </View>
         <View style={styles.errorContainer}>
           <Text style={styles.errorText}>Failed to load events</Text>
@@ -559,7 +577,11 @@ function HomeScreen({ onEventPress, scrollPositionRef }) {
     <SafeAreaView style={styles.homeContainer}>
       <View style={styles.header}>
         <Text style={styles.appTitle}>EventPulse</Text>
-        <Text style={styles.appSubtitle}>Events in Sweden</Text>
+        <Text style={styles.appSubtitle}>
+          {formatPublishedEventTotal(totalPublishedEvents)
+            ? `${formatPublishedEventTotal(totalPublishedEvents)} riktiga event`
+            : 'Event i Sverige'}
+        </Text>
       </View>
       
       {/* Time Filter Row */}
@@ -781,6 +803,7 @@ function DetailsScreen({ event, onBack }) {
 export default function App() {
   const [showSplash, setShowSplash] = useState(true);
   const [selectedEvent, setSelectedEvent] = useState(null);
+  const [activeTab, setActiveTab] = useState('utforska');
   const scrollPositionRef = useRef(0);
 
   useEffect(() => {
@@ -796,20 +819,40 @@ export default function App() {
 
   const handleBack = () => {
     setSelectedEvent(null);
-    // Scroll position is automatically preserved because we don't unmount HomeScreen
+  };
+
+  const renderMainScreen = () => {
+    switch (activeTab) {
+      case 'utforska':
+        return <ExploreScreen onEventPress={handleEventPress} />;
+      case 'notiser':
+        return <PlaceholderScreen title="Notiser" />;
+      case 'profil':
+        return <PlaceholderScreen title="Profil" />;
+      case 'hem':
+      default:
+        return (
+          <HomeScreen onEventPress={handleEventPress} scrollPositionRef={scrollPositionRef} />
+        );
+    }
   };
 
   return (
-    <View style={styles.container}>
-      {showSplash ? (
-        <SplashScreen />
-      ) : selectedEvent ? (
-        <DetailsScreen event={selectedEvent} onBack={handleBack} />
-      ) : (
-        <HomeScreen onEventPress={handleEventPress} scrollPositionRef={scrollPositionRef} />
-      )}
-      <StatusBar style="light" />
-    </View>
+    <EventTotalProvider>
+      <View style={styles.container}>
+        {showSplash ? (
+          <SplashScreen />
+        ) : selectedEvent ? (
+          <DetailsScreen event={selectedEvent} onBack={handleBack} />
+        ) : (
+          <View style={styles.mainShell}>
+            <View style={styles.mainContent}>{renderMainScreen()}</View>
+            <TabBar activeTab={activeTab} onTabChange={setActiveTab} />
+          </View>
+        )}
+        <StatusBar style="light" />
+      </View>
+    </EventTotalProvider>
   );
 }
 
@@ -817,6 +860,12 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#000000',
+  },
+  mainShell: {
+    flex: 1,
+  },
+  mainContent: {
+    flex: 1,
   },
   splashContainer: {
     flex: 1,
