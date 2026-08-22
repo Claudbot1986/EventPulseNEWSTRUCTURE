@@ -215,6 +215,7 @@ export function buildApp(opts: { supabase?: SupabaseClient } = {}): express.Expr
         from: result.from,
         to: result.to,
         has_more: result.has_more,
+        total: result.total,
         next_from: addDays(result.from, days),
       });
     } catch (err: unknown) {

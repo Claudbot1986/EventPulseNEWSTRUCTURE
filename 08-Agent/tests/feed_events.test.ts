@@ -1,8 +1,9 @@
 /**
  * Tests for feed_events — browse-window reader for the default-browse UI.
  *
- * Mocks the Supabase client. Validates date arithmetic, window bounds, and
- * the +1 sentinel for has_more detection.
+ * Mocks the Supabase client. Validates date arithmetic, window bounds, the
+ * +1 sentinel for has_more detection, and the canonical `total` count that
+ * the UI header binds to.
  */
 
 import { describe, expect, it, vi } from 'vitest';
@@ -24,9 +25,39 @@ function makeChain(rows: any[]) {
   return chain;
 }
 
-function mockSupabaseWithRows(rows: any[]): SupabaseClient {
-  const from = vi.fn().mockReturnValue(makeChain(rows));
+function makeCountChain(count: number) {
+  const chain: any = {
+    select: vi.fn().mockReturnThis(),
+    gt: vi.fn().mockReturnThis(),
+    gte: vi.fn().mockReturnThis(),
+    then: (resolve: (v: { count: number; data: null; error: null }) => void) =>
+      Promise.resolve({ count, data: null, error: null }).then(resolve),
+  };
+  return chain;
+}
+
+/**
+ * Two-call mock: feed_events issues a data query first, then a count query
+ * (`head: true`). The first .from() call returns the data chain, the second
+ * returns the count chain.
+ */
+function mockSupabase(rows: any[], totalCount: number): SupabaseClient {
+  let call = 0;
+  const from = vi.fn().mockImplementation(() => {
+    call += 1;
+    return call === 1 ? makeChain(rows) : makeCountChain(totalCount);
+  });
   return { from } as unknown as SupabaseClient;
+}
+
+/**
+ * Backward-compat shim: existing tests that don't care about the count can
+ * keep using `mockSupabaseWithRows(rows)`. The count defaults to 0 so a test
+ * that also asserts `result.total === 0` will pass; new tests that need a
+ * specific count should call `mockSupabase(rows, totalCount)` directly.
+ */
+function mockSupabaseWithRows(rows: any[]): SupabaseClient {
+  return mockSupabase(rows, 0);
 }
 
 describe('addDays', () => {
@@ -126,5 +157,57 @@ describe('feedEvents', () => {
     const result = await feedEvents(sb, { from: '2026-08-18', days: 7 });
     expect(result.events[0].title).toBe('På svenska');
     expect(result.events[1].title).toBe('English only');
+  });
+
+  it('returns canonical total from supabase, independent of page size', async () => {
+    // 51 rows in the page, but the count query (head: true) reports 7943.
+    // The header must bind to the count, not the page length — otherwise the
+    // UI's "X riktiga event att upptäcka" drifts up as the user scrolls.
+    const rows = Array.from({ length: 51 }, () => baseRow());
+    const sb = mockSupabase(rows, 7943);
+    const result = await feedEvents(sb, { from: '2026-08-18', days: 7, limit: 50 });
+    expect(result.events).toHaveLength(50);
+    expect(result.has_more).toBe(true);
+    expect(result.total).toBe(7943);
+  });
+
+  it('returns total even when window has no rows', async () => {
+    const sb = mockSupabase([], 0);
+    const result = await feedEvents(sb, { from: '2026-08-18', days: 7 });
+    expect(result.events).toEqual([]);
+    expect(result.total).toBe(0);
+    expect(result.has_more).toBe(false);
+  });
+
+  it('total matches page length when page fits within limit', async () => {
+    const rows = Array.from({ length: 30 }, () => baseRow());
+    const sb = mockSupabase(rows, 30);
+    const result = await feedEvents(sb, { from: '2026-08-18', days: 7, limit: 50 });
+    expect(result.events).toHaveLength(30);
+    expect(result.has_more).toBe(false);
+    expect(result.total).toBe(30);
+  });
+
+  it('throws on count query error so a missing count does not silently pass as 0', async () => {
+    let call = 0;
+    const sb = {
+      from: vi.fn().mockImplementation(() => {
+        call += 1;
+        if (call === 1) {
+          // Data query succeeds.
+          return makeChain([baseRow()]);
+        }
+        // Count query fails.
+        const chain: any = {
+          select: vi.fn().mockReturnThis(),
+          gt: vi.fn().mockReturnThis(),
+          gte: vi.fn().mockReturnThis(),
+          then: (resolve: (v: { count: null; data: null; error: { message: string } }) => void) =>
+            Promise.resolve({ count: null, data: null, error: { message: 'count failed' } }).then(resolve),
+        };
+        return chain;
+      }),
+    } as unknown as SupabaseClient;
+    await expect(feedEvents(sb, { from: '2026-08-18', days: 7 })).rejects.toThrow(/feed_events_count: count failed/);
   });
 });

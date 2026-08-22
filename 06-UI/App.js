@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { StatusBar } from 'expo-status-bar';
-import { StyleSheet, Text, View, SectionList, ActivityIndicator, TouchableOpacity, ScrollView, Linking, Image, Platform, Share, Alert } from 'react-native';
+import { StyleSheet, Text, View, SectionList, ActivityIndicator, TouchableOpacity, ScrollView, Linking, Image, Platform, Share, Alert, AppState } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { fetchFeed, addDays, fetchEventIcs, shareSession, fetchSharedSession, parseShareHashFromUrl } from './services/agentClient';
 import { analyticsClient } from './services/analyticsClient';
@@ -539,6 +539,9 @@ function HomeScreen({ onEventPress, scrollPositionRef, pendingPrompt, dismissPen
   // Pagination: `weekStart` advances by 7 days on each scroll-end load.
   const [weekStart, setWeekStart] = useState(() => new Date().toISOString().slice(0, 10));
   const [hasMore, setHasMore] = useState(true);
+  // Canonical count from /agent/feed (Supabase). Header binds this so the
+  // displayed total tracks the DB, not the locally-paginated window.
+  const [totalCount, setTotalCount] = useState(0);
   const sectionListRef = useRef(null);
   const scrollPositionRefLocal = useRef(0);
   const isFetchingRef = useRef(false);
@@ -578,6 +581,10 @@ function HomeScreen({ onEventPress, scrollPositionRef, pendingPrompt, dismissPen
         return deduplicateEvents(next);
       });
       setHasMore(page.has_more);
+      // Refresh the canonical total on the initial load. Scroll-end appends
+      // don't refetch the total — the page-level call already returned the
+      // full DB count, so we trust it across windows.
+      if (!append) setTotalCount(page.total ?? 0);
     } catch (err) {
       setError(err.message || 'Kunde inte hämta event');
       console.error('Failed to load events:', err);
@@ -590,6 +597,23 @@ function HomeScreen({ onEventPress, scrollPositionRef, pendingPrompt, dismissPen
 
   useEffect(() => {
     loadEvents();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Refresh the canonical count when the app returns to the foreground so the
+  // header tracks Supabase after the user has been away (data may have changed
+  // server-side). Always do a non-append reset so totalCount + events come
+  // back from a clean weekStart.
+  useEffect(() => {
+    const sub = AppState.addEventListener('change', (nextState) => {
+      if (nextState !== 'active') return;
+      const freshToday = new Date().toISOString().slice(0, 10);
+      setWeekStart(freshToday);
+      loadEvents({ append: false, fromOverride: freshToday });
+    });
+    return () => sub.remove();
+    // loadEvents identity changes when weekStart changes; we only care about
+    // AppState events, so the missing dep is intentional.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -660,7 +684,7 @@ function HomeScreen({ onEventPress, scrollPositionRef, pendingPrompt, dismissPen
         <Text style={styles.appKicker}>City discovery</Text>
         <Text style={styles.appTitle}>Vad händer i stan?</Text>
         <Text style={styles.appSubtitle}>
-          {events.length} riktiga event att upptäcka. Börja browsa, filtrera när du vill.
+          {totalCount} riktiga event att upptäcka. Börja browsa, filtrera när du vill.
         </Text>
       </View>
 

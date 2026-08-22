@@ -34,6 +34,14 @@ export interface FeedEventsResult {
   to: string;
   /** True when the window has more rows than the limit (caller should paginate). */
   has_more: boolean;
+  /**
+   * Canonical count of all future events from `from` onward in `events_public`,
+   * independent of the page size. The UI displays this as "X riktiga event att
+   * upptäcka" so the count reflects what's actually in Supabase right now —
+   * not just the locally-paginated window. Refresh on AppState 'active' so the
+   * header tracks Supabase when the user returns to the app.
+   */
+  total: number;
 }
 
 export const FEED_EVENTS_TABLE: 'events_public' = 'events_public';
@@ -107,6 +115,19 @@ export async function feedEvents(
   const has_more = rows.length > limit;
   const trimmed = has_more ? rows.slice(0, limit) : rows;
 
+  // Canonical count of all future events from `from` onward — used by the UI
+  // header so the displayed count tracks Supabase, not the local page. Uses
+  // `head: true` so PostgREST returns only the count, no row bodies.
+  const { count: totalRaw, error: countError } = await supabase
+    .from(FEED_EVENTS_TABLE)
+    .select('id', { count: 'exact', head: true })
+    .gt('start_time', new Date().toISOString())
+    .gte('start_time', expandDateFloor(fromIso));
+  if (countError) {
+    throw new Error(`feed_events_count: ${countError.message}`);
+  }
+  const total = typeof totalRaw === 'number' ? totalRaw : 0;
+
   // Optional post-filter on venue.city when caller passed a city.
   const cityFiltered = input.city
     ? trimmed.filter((r: any) => r.venues?.city === input.city)
@@ -132,5 +153,5 @@ export async function feedEvents(
     source: r.source ?? null,
   }));
 
-  return { events, from: fromIso, to: toIso, has_more };
+  return { events, from: fromIso, to: toIso, has_more, total };
 }

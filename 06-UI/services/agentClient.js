@@ -583,6 +583,11 @@ export async function fetchFeed({ from, days = 7, signal, timeoutMs = 12_000 } =
     to: data.to,
     has_more: !!data.has_more,
     next_from: data.next_from,
+    // Canonical count of all future events from `from` onward, independent of
+    // the local page. The HomeScreen header binds this so the displayed count
+    // tracks Supabase, not the locally-paginated window. Defaults to the page
+    // length so older agents (pre-2026-08-22) still render a sane number.
+    total: typeof data.total === 'number' ? data.total : events.length,
   };
 }
 
