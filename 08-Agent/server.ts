@@ -27,6 +27,7 @@ import { recordFeedback } from './tools/record_feedback';
 import { pickClarifyingQuestion } from './tools/find_gaps';
 import { recordOutboundClick } from './tools/attribution';
 import { feedEvents, todayIso, addDays } from './tools/feed_events';
+import { liveEvents, LIVE_NOW_MAX_EVENTS } from './tools/live_now';
 import { getSavedEvents } from './tools/get_saved_events';
 import { getEventForCalendar } from './tools/get_event_for_calendar';
 import { generateIcs } from './tools/ical';
@@ -214,6 +215,45 @@ export function buildApp(opts: { supabase?: SupabaseClient } = {}): express.Expr
         to: result.to,
         has_more: result.has_more,
         next_from: addDays(result.from, days),
+      });
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'unknown error';
+      res.status(500).json({ error: msg });
+    }
+  });
+
+  /**
+   * GET /agent/live-now?limit=<1..3>
+   *
+   * T0083 / MVP-gap §77 (Phase 1 retention): "Happening now" surface.
+   * Returns up to 3 events that are currently in progress
+   * (start_time <= now <= end_time, with a 30-minute grace past end_time),
+   * sorted by start_time ASC.
+   *
+   * The client calls this on HomeScreen mount between 18:00–02:00 Stockholm
+   * time (gated client-side) and renders a top strip of LIVE cards with a
+   * pulsing red dot. Outside that window the client does not call this
+   * endpoint at all — no point spending a round-trip.
+   *
+   * Lockdown mirrors /agent/feed: origin allowlist + service_role only.
+   * No client_user_id is required (the result is not personalized).
+   *
+   * Response shape:
+   *   { events: EventCard[], warnings: string[], computed_at, grace_minutes }
+   */
+  app.get('/agent/live-now', generalLimiter.middleware, async (req: Request, res: Response) => {
+    const limit = typeof req.query.limit === 'string'
+      ? Math.min(Math.max(parseInt(req.query.limit, 10) || LIVE_NOW_MAX_EVENTS, 1), LIVE_NOW_MAX_EVENTS)
+      : LIVE_NOW_MAX_EVENTS;
+
+    const client = sb ?? getSupabase();
+    try {
+      const result = await liveEvents(client, { limit });
+      res.json({
+        events: result.events,
+        warnings: result.warnings,
+        computed_at: result.computed_at,
+        grace_minutes: result.grace_minutes,
       });
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : 'unknown error';

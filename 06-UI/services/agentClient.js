@@ -509,6 +509,111 @@ export async function fetchRecommendedEvents({ limit = 10, signal, timeoutMs = 1
 }
 
 /**
+ * T0083 / MVP-gap §77 (Phase 1 retention): "Happening now" surface.
+ *
+ * GET /agent/live-now?limit=<1..3>
+ *
+ * Returns up to 3 events currently in progress
+ * (start_time <= now <= end_time, with a 30-min grace past end_time),
+ * sorted by start_time ASC. The HomeScreen top strip renders these as
+ * LIVE cards with a pulsing red dot.
+ *
+ * Best-effort: network/5xx returns `{events: []}` so the section hides
+ * itself silently. Never throws.
+ *
+ * Mapping is identical to fetchFeed/fetchRecommendedEvents so the existing
+ * EventCard renderer stays uniform across sections.
+ *
+ * @param {{ limit?: number, signal?: AbortSignal, timeoutMs?: number }} [opts]
+ * @returns {Promise<{ events: Array<LegacyEvent>, computed_at: string|null, grace_minutes: number }>}
+ */
+export async function fetchLiveEvents({
+  limit = 3,
+  signal,
+  timeoutMs = 8_000,
+} = {}) {
+  let baseUrl;
+  try {
+    baseUrl = requireAgentBaseUrl();
+  } catch (_err) {
+    return { events: [], computed_at: null, grace_minutes: 0 };
+  }
+  const url = new URL(`${baseUrl}/agent/live-now`);
+  url.searchParams.set('limit', String(limit));
+
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), timeoutMs);
+  if (signal) {
+    if (signal.aborted) controller.abort();
+    else signal.addEventListener('abort', () => controller.abort(), { once: true });
+  }
+
+  let response;
+  try {
+    response = await fetch(url.toString(), { signal: controller.signal });
+  } catch (_err) {
+    clearTimeout(timer);
+    return { events: [], computed_at: null, grace_minutes: 0 };
+  }
+  clearTimeout(timer);
+
+  if (!response.ok) {
+    return { events: [], computed_at: null, grace_minutes: 0 };
+  }
+
+  const data = await response.json();
+  markOnline();
+  const rawEvents = Array.isArray(data.events) ? data.events : [];
+
+  // Identical EventCard -> legacy shape mapping as fetchFeed for card uniformity.
+  const events = rawEvents.map((e) => {
+    const start = e.start_time ? new Date(e.start_time) : null;
+    const pad = (n) => String(n).padStart(2, '0');
+    const date = start && !Number.isNaN(start.getTime())
+      ? `${start.getFullYear()}-${pad(start.getMonth() + 1)}-${pad(start.getDate())}`
+      : null;
+    const time = start && !Number.isNaN(start.getTime())
+      ? `${pad(start.getHours())}:${pad(start.getMinutes())}`
+      : null;
+    const ticketUrl = e.ticket_url || null;
+    return {
+      id: e.id,
+      title: e.title || 'Untitled',
+      date,
+      time,
+      start_time: e.start_time,
+      end_time: e.end_time || null,
+      venue: e.venue_name || '',
+      venue_name: e.venue_name || '',
+      area: e.city || 'Stockholm',
+      city: e.city || 'Stockholm',
+      category: e.category_slug || '',
+      category_slug: e.category_slug || '',
+      isFree: !!e.is_free,
+      is_free: !!e.is_free,
+      priceMin: e.price_min_sek ?? null,
+      price_min_sek: e.price_min_sek ?? null,
+      priceMax: e.price_max_sek ?? null,
+      price_max_sek: e.price_max_sek ?? null,
+      url: ticketUrl,
+      ticket_url: ticketUrl,
+      imageUrl: e.image_url || null,
+      image_url: e.image_url || null,
+      source: e.source || 'agent',
+      hasExternalLink: Boolean(ticketUrl),
+      externalLinkChipLabel: ticketUrl ? 'Extern länk' : undefined,
+      externalLinkLabel: ticketUrl ? 'Läs mer' : undefined,
+    };
+  });
+
+  return {
+    events,
+    computed_at: typeof data.computed_at === 'string' ? data.computed_at : null,
+    grace_minutes: typeof data.grace_minutes === 'number' ? data.grace_minutes : 0,
+  };
+}
+
+/**
  * T0061 / MVP-gap §78 — share a session as a short-hash deep-link.
  *
  * Calls POST /agent/share, returning a `eventpulse://s/{hash}` URL that

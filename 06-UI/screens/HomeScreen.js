@@ -41,7 +41,7 @@ import {
   Image,
 } from 'react-native';
 
-import { fetchFeed, fetchSavedEvents, fetchRecommendedEvents, fetchSuggestedPrompts, fetchCachedRecommendations, fetchRecentQueries } from '../services/agentClient';
+import { fetchFeed, fetchSavedEvents, fetchRecommendedEvents, fetchSuggestedPrompts, fetchCachedRecommendations, fetchRecentQueries, fetchLiveEvents } from '../services/agentClient';
 
 const TOKENS = {
   color: {
@@ -227,6 +227,190 @@ function Section({ eyebrow, title, children }) {
     <View style={styles.section}>
       <SectionHeader eyebrow={eyebrow} title={title} />
       {children}
+    </View>
+  );
+}
+
+// ─── Live now strip (T0083 / MVP-gap §77) ───────────────────────────────────
+//
+// Shows up to 3 LIVE cards with a pulsing red dot when events are currently
+// in progress (start_time <= now <= end_time, with a 30-min grace past
+// end_time). The strip is only rendered between 18:00 and 02:00 Stockholm
+// time — outside that window there is no point hitting the agent backend.
+//
+// Why the 18:00–02:00 window: Stockholm nightlife runs 18:00 → past
+// midnight; live events between 02:00 and 18:00 are essentially zero in
+// the event graph (a Tuesday 10:00 yoga class is in progress but it's
+// not "live now" in the nightlife sense the user expects). The 02:00
+// boundary gives late-night events a grace tail.
+//
+// React Native `Animated` drives the pulse: opacity oscillates 1.0 → 0.4
+// → 1.0 on a 1.2-second loop. We use `useNativeDriver: true` so the
+// animation runs on the UI thread and does not block the JS bridge.
+
+const LIVE_WINDOW_START_HOUR = 18; // 18:00 local
+const LIVE_WINDOW_END_HOUR   = 2;  // 02:00 local (next day)
+const LIVE_NOW_LIMIT = 3;
+
+/**
+ * Return the Stockholm-local hour for the given date. Europe/Stockholm is
+ * fixed at UTC+1 (CET) / UTC+2 (CEST); we compute the offset using
+ * Intl.DateTimeFormat so DST is handled correctly without shipping
+ * date-fns-tz to the client bundle.
+ */
+function stockholmHour(d) {
+  // Intl gives us the named-timezone hour directly. Falls back to local
+  // device hour if the runtime cannot resolve 'Europe/Stockholm' (older
+  // Android emulators sometimes can't), keeping the strip functional on
+  // every device.
+  try {
+    const parts = new Intl.DateTimeFormat('sv-SE', {
+      hour: '2-digit',
+      hour12: false,
+      timeZone: 'Europe/Stockholm',
+    }).formatToParts(d);
+    const hourPart = parts.find((p) => p.type === 'hour');
+    const h = hourPart ? parseInt(hourPart.value, 10) : NaN;
+    if (!Number.isNaN(h)) return h;
+  } catch (_e) {
+    // fall through
+  }
+  return d.getHours();
+}
+
+/** True when the strip should render. 18:00–02:00 wraps midnight. */
+function isLiveWindowOpen(d) {
+  const h = stockholmHour(d);
+  if (h >= LIVE_WINDOW_START_HOUR) return true;  // 18..23
+  if (h < LIVE_WINDOW_END_HOUR)   return true;  // 0..1
+  return false;                                  // 2..17
+}
+
+function useLiveEvents() {
+  const [state, setState] = useState({ status: 'idle', events: [], error: null });
+
+  const load = useCallback(async () => {
+    // Gate client-side: outside the window, do not even hit the network.
+    if (!isLiveWindowOpen(new Date())) {
+      setState({ status: 'ready', events: [], error: null });
+      return;
+    }
+    setState({ status: 'loading', events: [], error: null });
+    try {
+      const result = await fetchLiveEvents({ limit: LIVE_NOW_LIMIT });
+      setState({ status: 'ready', events: result.events ?? [], error: null });
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : 'unknown';
+      setState({ status: 'error', events: [], error: msg });
+    }
+  }, []);
+
+  useEffect(() => {
+    load();
+  }, [load]);
+
+  return { ...state, retry: load };
+}
+
+function LiveBadge() {
+  // Pulsing red dot + "LIVE" label. Animated opacity 1.0 → 0.4 → 1.0 on a
+  // 1.2s loop. Uses native driver — never touches the JS bridge during
+  // the animation.
+  const opacity = React.useRef(new Animated.Value(1)).current;
+  useEffect(() => {
+    const loop = Animated.loop(
+      Animated.sequence([
+        Animated.timing(opacity, { toValue: 0.35, duration: 600, useNativeDriver: true }),
+        Animated.timing(opacity, { toValue: 1.0,  duration: 600, useNativeDriver: true }),
+      ]),
+    );
+    loop.start();
+    return () => loop.stop();
+  }, [opacity]);
+
+  return (
+    <View style={styles.liveBadge}>
+      <Animated.View style={[styles.liveDot, { opacity }]} />
+      <Text style={styles.liveBadgeText}>LIVE</Text>
+    </View>
+  );
+}
+
+function LiveEventCard({ event, onPress }) {
+  const time = event.time || '';
+  const venue = event.venue_name || event.venue || 'Plats ej angiven';
+  return (
+    <Pressable
+      style={({ pressed }) => [styles.liveCard, pressed && styles.cardPressed]}
+      onPress={() => onPress?.(event)}
+      accessibilityRole="button"
+      accessibilityLabel={`Pågår nu: ${event.title} ${time ? 'klockan ' + time : ''} på ${venue}`}
+    >
+      <CardImage
+        uri={event.image_url || event.imageUrl}
+        imageLicense={event.image_license}
+        imageAttribution={event.image_attribution}
+      />
+      <View style={styles.liveCardBody}>
+        <View style={styles.liveCardTopRow}>
+          <Text style={styles.liveCardTime}>{time || '—'}</Text>
+          <LiveBadge />
+        </View>
+        <Text style={styles.liveCardTitle} numberOfLines={2}>{event.title}</Text>
+        <Text style={styles.liveCardVenue} numberOfLines={1}>{venue}</Text>
+      </View>
+    </Pressable>
+  );
+}
+
+function LiveNowStrip({ onCardPress }) {
+  const { status, events, error, retry } = useLiveEvents();
+
+  // Window closed: do not render at all. The user is not going to see
+  // "happening now" events between 02:00 and 18:00 anyway, and the
+  // backend is gated to match.
+  if (!isLiveWindowOpen(new Date())) return null;
+
+  // Error / loading: render a minimal placeholder strip with skeleton
+  // cards so the section "exists" but does not commit to content.
+  const isLoading = status === 'loading' || status === 'idle';
+  const hasError = status === 'error';
+  const visible = status === 'ready' ? events : [];
+
+  if (status === 'ready' && visible.length === 0) return null;
+
+  return (
+    <View style={styles.section}>
+      <View style={styles.sectionHeader}>
+        <Text style={styles.sectionEyebrow}>PÅGÅR NU</Text>
+        <Text style={styles.sectionTitle}>Händer just nu</Text>
+      </View>
+      {hasError ? (
+        <Pressable
+          onPress={retry}
+          style={styles.liveErrorRow}
+          accessibilityRole="button"
+          accessibilityLabel="Kunde inte ladda händelser. Tryck för att försöka igen."
+        >
+          <Text style={styles.liveErrorText}>
+            Kunde inte ladda — tryck för att försöka igen
+          </Text>
+        </Pressable>
+      ) : (
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={styles.liveCardRow}
+        >
+          {isLoading
+            ? Array.from({ length: LIVE_NOW_LIMIT }).map((_, i) => (
+                <View key={`live-skel-${i}`} style={styles.liveCardSkeleton} />
+              ))
+            : visible.map((e) => (
+                <LiveEventCard key={e.id} event={e} onPress={onCardPress} />
+              ))}
+        </ScrollView>
+      )}
     </View>
   );
 }
@@ -696,6 +880,7 @@ export default function HomeScreen({ onChipPress }) {
 
         <SuggestedPromptsSection onChipPress={handlePromptPress} />
         <RecentSearchesSection onChipPress={handlePromptPress} />
+        <LiveNowStrip onCardPress={handleCardPress} />
 
         <TonightSection onCardPress={handleCardPress} />
         <WeekendSection onCardPress={handleCardPress} />
@@ -964,6 +1149,84 @@ const styles = StyleSheet.create({
     minWidth: 180,
     height: 60,
     opacity: 0.6,
+  },
+
+  // Live now strip (T0083)
+  liveCardRow: {
+    paddingHorizontal: TOKENS.space.lg,
+    gap: TOKENS.space.md,
+  },
+  liveCard: {
+    width: 240,
+    backgroundColor: TOKENS.color.surface,
+    borderWidth: 1,
+    borderColor: TOKENS.color.border,
+    borderLeftWidth: 3,
+    borderLeftColor: TOKENS.color.accent,
+    borderRadius: TOKENS.radius.md,
+    overflow: 'hidden',
+  },
+  liveCardSkeleton: {
+    width: 240,
+    height: 200,
+    backgroundColor: TOKENS.color.surface,
+    borderRadius: TOKENS.radius.md,
+    opacity: 0.6,
+  },
+  liveCardBody: {
+    padding: TOKENS.space.md,
+  },
+  liveCardTopRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: TOKENS.space.sm,
+  },
+  liveCardTime: {
+    color: TOKENS.color.text,
+    fontSize: TOKENS.fontSize.lg,
+    fontWeight: '700',
+  },
+  liveCardTitle: {
+    color: TOKENS.color.text,
+    fontSize: TOKENS.fontSize.md,
+    fontWeight: '600',
+    lineHeight: 20,
+    marginBottom: 4,
+  },
+  liveCardVenue: {
+    color: TOKENS.color.textSoft,
+    fontSize: TOKENS.fontSize.sm,
+    lineHeight: 16,
+  },
+  liveBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#FF3B30',
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: TOKENS.radius.sm,
+    gap: 6,
+  },
+  liveDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: '#FFFFFF',
+  },
+  liveBadgeText: {
+    color: '#FFFFFF',
+    fontSize: TOKENS.fontSize.xs,
+    fontWeight: '800',
+    letterSpacing: 0.5,
+  },
+  liveErrorRow: {
+    paddingHorizontal: TOKENS.space.lg,
+    paddingVertical: TOKENS.space.md,
+  },
+  liveErrorText: {
+    color: TOKENS.color.textSoft,
+    fontSize: TOKENS.fontSize.sm,
   },
 
   // Agent suggestions (T0060)
