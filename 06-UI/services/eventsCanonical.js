@@ -3,6 +3,8 @@
  * Metro-compatible ESM (no node:module / createRequire).
  */
 
+import { createClient } from '@supabase/supabase-js';
+
 const DEFAULT_SUPABASE_URL = 'https://bsllkpvkowwndhhxtlln.supabase.co';
 const DEFAULT_SERVICE_KEY =
   'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJzbGxrcHZrb3d3bmRoaHh0bGxuIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3MzMwMDQzNCwiZXhwIjoyMDg4ODc2NDM0fQ.2BJFgNoS0iP53WuPS_lyjNlHjy11_VLjKmcrhf5Dyis';
@@ -18,6 +20,16 @@ export function getSupabaseConfig() {
       process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY ||
       DEFAULT_SERVICE_KEY,
   };
+}
+
+let supabaseClient = null;
+
+function getSupabaseClient() {
+  if (!supabaseClient) {
+    const { url, key } = getSupabaseConfig();
+    supabaseClient = createClient(url, key);
+  }
+  return supabaseClient;
 }
 
 function supabaseHeaders(extra = {}) {
@@ -97,6 +109,26 @@ function buildFilterQuery({ source = null }) {
 }
 
 export async function countPublishedEvents(filters = {}) {
+  // supabase-js works in React Native where content-range headers are often hidden
+  try {
+    const supabase = getSupabaseClient();
+    let query = supabase
+      .from('events')
+      .select('id', { count: 'exact', head: true })
+      .eq('status', 'published');
+
+    if (filters.source) {
+      query = query.eq('source', filters.source);
+    }
+
+    const { count, error } = await query;
+    if (!error && typeof count === 'number') {
+      return count;
+    }
+  } catch (error) {
+    console.warn('[eventsCanonical] supabase-js count failed:', error.message);
+  }
+
   const { url } = getSupabaseConfig();
   const params = buildFilterQuery(filters);
   params.set('select', 'id');
@@ -140,7 +172,13 @@ async function fetchSourceCounts(filters = {}) {
 
 /** Same bundle shape as GET /supabase-events on wrapper :7777 */
 export async function fetchCanonicalEvents(options = {}) {
-  const { limit = 200, offset = 0, source = null, city = 'Stockholm' } = options;
+  const {
+    limit = 200,
+    offset = 0,
+    source = null,
+    city = 'Stockholm',
+    skipTotalCount = false,
+  } = options;
   const filters = { source };
   const { url } = getSupabaseConfig();
   const params = buildFilterQuery(filters);
@@ -148,11 +186,11 @@ export async function fetchCanonicalEvents(options = {}) {
   params.set('offset', String(offset));
 
   const [totalPublished, eventsResponse, sourceCounts] = await Promise.all([
-    countPublishedEvents(filters),
+    skipTotalCount ? Promise.resolve(null) : countPublishedEvents(filters),
     fetch(`${url}/rest/v1/events?${params.toString()}`, {
       headers: supabaseHeaders(),
     }),
-    fetchSourceCounts(filters),
+    offset === 0 ? fetchSourceCounts(filters) : Promise.resolve(null),
   ]);
 
   if (!eventsResponse.ok) {
@@ -167,9 +205,9 @@ export async function fetchCanonicalEvents(options = {}) {
     data_source: 'supabase',
     fallback_used: false,
     timestamp: new Date().toISOString(),
-    total_published_events: totalPublished,
-    source_counts: sourceCounts,
-    sources: Object.keys(sourceCounts).sort(),
+    total_published_events: totalPublished ?? undefined,
+    source_counts: sourceCounts || {},
+    sources: Object.keys(sourceCounts || {}).sort(),
     events,
     count: events.length,
     query_params: { city, limit, offset, source },

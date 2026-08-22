@@ -2,7 +2,7 @@
  * Event Service Client — same read path as wrapper :7777 / eventsCanonical.js
  */
 
-import { fetchCanonicalEvents } from './eventsCanonical.js';
+import { fetchCanonicalEvents, countPublishedEvents } from './eventsCanonical.js';
 
 export const PAGE_SIZE = 200;
 
@@ -10,6 +10,28 @@ const EVENTS_API_URL =
   process.env.EXPO_PUBLIC_EVENTS_API_URL ||
   process.env.EXPO_PUBLIC_WRAPPER_URL ||
   '';
+
+/** Fetch total published count once — not tied to pagination */
+export async function fetchPublishedEventTotal() {
+  const base = EVENTS_API_URL.replace(/\/$/, '');
+  if (base) {
+    try {
+      const response = await fetch(`${base}/health`, {
+        headers: { Accept: 'application/json' },
+      });
+      if (response.ok) {
+        const data = await response.json();
+        if (typeof data.total_published_events === 'number' && data.total_published_events > 0) {
+          return data.total_published_events;
+        }
+      }
+    } catch (error) {
+      console.warn('[EventService] wrapper health failed:', error.message);
+    }
+  }
+
+  return countPublishedEvents();
+}
 
 async function fetchFromWrapper({ limit, offset, source, city }) {
   const params = new URLSearchParams({
@@ -32,7 +54,13 @@ async function fetchFromWrapper({ limit, offset, source, city }) {
 }
 
 export async function fetchEvents(options = {}) {
-  const { page = 0, limit = PAGE_SIZE, source = null, city = 'Stockholm' } = options;
+  const {
+    page = 0,
+    limit = PAGE_SIZE,
+    source = null,
+    city = 'Stockholm',
+    skipTotalCount = page > 0,
+  } = options;
   const offset = page * limit;
 
   try {
@@ -41,13 +69,16 @@ export async function fetchEvents(options = {}) {
     if (EVENTS_API_URL) {
       try {
         result = await fetchFromWrapper({ limit, offset, source, city });
+        if (skipTotalCount) {
+          delete result.total_published_events;
+        }
       } catch (wrapperError) {
         console.warn('[EventService] Wrapper failed, using Supabase:', wrapperError.message);
-        result = await fetchCanonicalEvents({ limit, offset, source, city });
+        result = await fetchCanonicalEvents({ limit, offset, source, city, skipTotalCount });
         result.metadata = { fallback_used: true, wrapper_error: wrapperError.message };
       }
     } else {
-      result = await fetchCanonicalEvents({ limit, offset, source, city });
+      result = await fetchCanonicalEvents({ limit, offset, source, city, skipTotalCount });
     }
 
     return {
@@ -55,7 +86,7 @@ export async function fetchEvents(options = {}) {
       sources: result.sources || [],
       source_counts: result.source_counts || {},
       count: result.count || 0,
-      total_published_events: result.total_published_events ?? 0,
+      total_published_events: result.total_published_events,
       metadata: result.metadata || {},
     };
   } catch (error) {
