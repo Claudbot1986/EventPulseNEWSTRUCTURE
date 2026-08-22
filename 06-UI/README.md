@@ -130,12 +130,33 @@ npm run dev
 
 ---
 
-### Starta app (Expo)
+### Starta app (Expo Go)
+
+```bash
+cd 06-UI
 npm start
+```
+
+Skriptet sätter automatiskt `REACT_NATIVE_PACKAGER_HOSTNAME` till ditt Tailscale-IP (`100.x.x.x`) om Tailscale körs, annars LAN-IP.
+
+**Med Tailscale (rekommenderat):**
+1. Tailscale aktiv på både Mac och telefon
+2. `npm start` i `06-UI`
+3. Skanna QR i Expo Go — URL ska vara `exp://100.x.x.x:8083`, inte `localhost`
+
+**Fallback utan Tailscale:**
+- Samma WiFi + `npm start` (LAN)
+- Eller `npm run start:tunnel` (ngrok, långsammare)
+
+**Felsökning:**
+- Brandvägg: tillåt inkommande på port **8083** (TCP) för Node
+- Uppdatera Expo Go i App Store (kräver SDK 54)
+- Om QR visar `localhost` → kör `REACT_NATIVE_PACKAGER_HOSTNAME=$(tailscale ip -4) npm start`
+- Tunnel-läge: `npm run start:tunnel`
 
 VIKTIGT:
-- använd LAN (inte tunnel)
-- mobil måste nå din dator via IP
+- Använd LAN/Tailscale (inte tunnel) när Tailscale finns
+- Appen hämtar events direkt från Supabase — ingen lokal API-server krävs för UI
 
 ---
 

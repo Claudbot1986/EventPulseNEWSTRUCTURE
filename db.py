@@ -84,7 +84,7 @@ TOOL_CATEGORIES = [
         "tools": [
             {"id": "aa", "label": "🔧 Tool A-A — runA-extract (preUI → extractedevents/)", "cmd": ["npx", "tsx", "02-Ingestion/A-directAPI-networkGate/runA-extract.ts"], "drain": "preUI-queue.jsonl"},
             {"id": "ab", "label": "🔧 Tool A-B — importToEventPulse (extractedevents→Supabase)", "cmd": ["npx", "tsx", "03-Queue/importToEventPulse.ts"], "drain": None},
-            {"id": "ex", "label": "📱 Expo Go — Starta app i separat fönster (tunnel)",   "cmd": None, "dir": "06-UI", "drain": None},
+            {"id": "ex", "label": "📱 Expo Go — Starta app (Tailscale/LAN, port 8083)", "cmd": None, "dir": "06-UI", "drain": None},
         ],
     },
 ]
@@ -365,12 +365,13 @@ def run_with_spinner(tool):
         cmd = f'''
             tell application "Terminal"
                 activate
-                do script "cd {expo_dir} && npx expo start --tunnel --port 8083"
+                do script "cd {expo_dir} && npm start"
             end tell
         '''
         subprocess.run(["osascript", "-e", cmd])
-        print(f"\n  ✓ Expo tunnel startad i separat fönster!")
-        print(f"  Öppna appen i Expo Go och skanna QR-koden.")
+        print(f"\n  ✓ Expo startad i separat fönster (Tailscale/LAN, port 8083)!")
+        print(f"  Kontrollera att Tailscale är aktiv på telefon + dator.")
+        print(f"  Öppna Expo Go och skanna QR-koden.")
         rc = 0
     else:
         # Stream output to both terminal AND log file (real-time visibility)

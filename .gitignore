@@ -22,5 +22,8 @@ build/
 *.bak
 *.swp
 
+# Expo local state
+.expo/
+
 # Temp directory
 TEMP/
