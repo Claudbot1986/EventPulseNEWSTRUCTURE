@@ -19,6 +19,7 @@ import { fileURLToPath } from 'node:url';
 const projectRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 
 const DEFAULT_PORT = '8083';
+const TUNNEL_PORT = '8081'; // Expo tunnel requires 8081 for @expo/ws-tunnel fallback + ngrok compat
 
 function run(command, args) {
   const result = spawnSync(command, args, { encoding: 'utf8' });
@@ -92,6 +93,7 @@ function parseArgs(argv) {
 
     if (arg === '--tunnel') {
       mode = 'tunnel';
+      port = TUNNEL_PORT;
       passthrough.push(arg);
       continue;
     }
@@ -119,6 +121,12 @@ function parseArgs(argv) {
 
   if (!passthrough.some((arg) => arg === '--port' || arg.startsWith('--port='))) {
     passthrough.push('--port', port);
+  } else {
+    // Sync parsed port if --port was passed through explicitly.
+    const portIdx = passthrough.findIndex((arg) => arg === '--port');
+    if (portIdx >= 0 && passthrough[portIdx + 1]) {
+      port = passthrough[portIdx + 1];
+    }
   }
 
   return { passthrough, port, mode };
@@ -138,7 +146,11 @@ const env = {
   ...process.env,
 };
 
-if (mode === 'lan' && hostname) {
+if (mode === 'tunnel') {
+  // Tunnel must not inherit LAN/Tailscale hostname — Expo uses ngrok URL instead.
+  delete env.REACT_NATIVE_PACKAGER_HOSTNAME;
+  delete env.EXPO_PACKAGER_PROXY_URL;
+} else if (mode === 'lan' && hostname) {
   env.REACT_NATIVE_PACKAGER_HOSTNAME = hostname;
   // Ensure dev server binds on all interfaces (required for Tailscale).
   env.EXPO_DEVTOOLS_LISTEN_ADDRESS = '0.0.0.0';
@@ -146,7 +158,17 @@ if (mode === 'lan' && hostname) {
 
 console.log('\n📱 EventPulse Expo');
 console.log(`   Mode: ${mode}`);
-if (mode === 'lan' && hostname) {
+if (mode === 'tunnel') {
+  console.log('   Tunnel-läge (ngrok via exp.direct) — port 8081');
+  console.log('   Vänta tills du ser "Tunnel ready" innan du skannar QR');
+  console.log('   QR-URL ska innehålla ".exp.direct" — inte localhost');
+  console.log('');
+  console.log('   Om tunnel failar:');
+  console.log('   1. Döda gamla processer: pkill -f "expo start"');
+  console.log('   2. Rensa cache: npx expo start --tunnel --port 8081 --clear');
+  console.log('   3. Kontrollera: https://status.ngrok.com/');
+  console.log('   4. Prova egen ngrok-token: NGROK_AUTHTOKEN=xxx npm run start:tunnel:custom\n');
+} else if (mode === 'lan' && hostname) {
   console.log(`   Host: ${hostname}:${port}`);
   console.log(`   QR / manuell URL: exp://${hostname}:${port}`);
   console.log(`   Test i telefonens Safari: http://${hostname}:${port}/status`);
@@ -158,7 +180,7 @@ if (mode === 'lan' && hostname) {
   console.log('   3. I Expo Go: "Enter URL manually" → klistra in exp://-URL ovan');
   console.log('   4. Kör: npm run check:expo (medan Metro körs)\n');
 } else {
-  console.log('   Tunnel-läge (ngrok) — långsammare men fungerar utan delat nät.\n');
+  console.log('   Okänt läge.\n');
 }
 
 const expoArgs = ['expo', 'start', ...passthrough];

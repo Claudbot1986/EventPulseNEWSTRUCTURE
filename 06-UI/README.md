@@ -132,30 +132,35 @@ npm run dev
 
 ### Starta app (Expo Go)
 
+**Tunnel (rekommenderat — fungerar överallt):**
+
 ```bash
 cd 06-UI
-npm start
+npm run start:tunnel
 ```
 
-Skriptet sätter automatiskt `REACT_NATIVE_PACKAGER_HOSTNAME` till ditt Tailscale-IP (`100.x.x.x`) om Tailscale körs, annars LAN-IP.
+Vänta tills terminalen visar **"Tunnel ready"**, skanna sedan QR-koden i Expo Go.
+QR-URL ska börja med `exp://` och innehålla `.exp.direct` — inte `localhost`.
 
-**Med Tailscale (rekommenderat):**
-1. Tailscale aktiv på både Mac och telefon (grön "Connected")
-2. Mac Tailscale-IP: `tailscale ip -4` (t.ex. `100.64.107.37`)
-3. `npm start` i `06-UI`
-4. Terminalen ska visa: `exp://100.x.x.x:8083` — **inte** `localhost`
-5. Testa i telefonens **Safari**: `http://100.x.x.x:8083/status` → ska visa `packager-status:running`
-6. Anslut i Expo Go (QR eller "Enter URL manually")
+Projektet använder Expos inbyggda tunnel (ngrok/exp.direct) på **port 8081**.
 
-**Om Expo Go fastnar på "Opening project...":**
-- Safari-testet failar → **macOS brandvägg** blockerar Node på port 8083
-  - Systeminställningar → Nätverk → Brandvägg → tillåt inkommande för **Node**
-  - Starta om Expo efter brandväggsändring
-- Safari-testet fungerar men Expo Go inte → ange URL manuellt: `exp://100.x.x.x:8083`
-- Kör diagnostik: `npm run check:expo` (medan Metro körs i annat terminalfönster)
+Om inbyggd tunnel failar (vanligt sedan ngrok v2 API stängdes 2026):
+
+```bash
+# Gratis ngrok-konto: https://dashboard.ngrok.com/signup
+NGROK_AUTHTOKEN=din_token npm run start:tunnel:custom
+```
+
+**LAN / Tailscale (snabbare, kräver nätverksåtkomst):**
+
+```bash
+npm run start:lan
+# eller: npm start
+```
 
 VIKTIGT:
-- Använd LAN/Tailscale (inte tunnel) när Tailscale finns
+- Tunnel: `npm run start:tunnel` (fungerar utan LAN/Tailscale)
+- LAN/Tailscale: `npm start` (snabbare, kräver brandväggsåtkomst)
 - Appen hämtar events direkt från Supabase — ingen lokal API-server krävs för UI
 
 ---
