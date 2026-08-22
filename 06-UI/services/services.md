@@ -74,7 +74,7 @@ Response shape:
 
 ## API Server Location
 
-The backend API server is at `services/api-server.cjs` and runs on port 8080.
+The backend API server is at `services/api-server.cjs` and runs on port **7777** (env: `EVENTPULSE_API_PORT`).
 It connects to Supabase directly and serves the unified event shape.
 
 ## What does NOT belong here

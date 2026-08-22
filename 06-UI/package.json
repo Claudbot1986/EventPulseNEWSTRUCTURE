@@ -9,6 +9,7 @@
     "start:tunnel": "node scripts/start-expo.mjs --tunnel",
     "start:tunnel:custom": "node scripts/start-expo-tunnel-custom.mjs",
     "check:expo": "node scripts/check-expo-connectivity.mjs",
+    "api": "node services/api-server.cjs",
     "android": "node scripts/start-expo.mjs --android",
     "ios": "node scripts/start-expo.mjs --ios",
     "verify-providers": "node scripts/verifyProviders.js"

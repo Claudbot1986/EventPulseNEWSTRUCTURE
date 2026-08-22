@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { StatusBar } from 'expo-status-bar';
 import { StyleSheet, Text, View, SectionList, FlatList, SafeAreaView, ActivityIndicator, TouchableOpacity, ScrollView, Linking, Dimensions } from 'react-native';
-import { fetchEvents } from './services/eventServiceClient';
+import { fetchEvents, PAGE_SIZE } from './services/eventServiceClient';
 
 // Calculate end date (1 year from now)
 function getEndDate() {
@@ -378,6 +378,7 @@ function LoadingMore() {
 function HomeScreen({ onEventPress, scrollPositionRef }) {
   const [events, setEvents] = useState([]);
   const [availableSources, setAvailableSources] = useState([]);
+  const [totalPublishedEvents, setTotalPublishedEvents] = useState(null);
   const [loading, setLoading] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
   const [error, setError] = useState(null);
@@ -405,10 +406,13 @@ function HomeScreen({ onEventPress, scrollPositionRef }) {
     }
     
     try {
-      // Fetch events from Supabase (production only)
-      const result = await fetchEvents();
+      const result = await fetchEvents({ page: pageNum, limit: PAGE_SIZE });
       const data = result.events || [];
       const sources = result.sources || [];
+
+      if (typeof result.total_published_events === 'number') {
+        setTotalPublishedEvents(result.total_published_events);
+      }
       
       // ALWAYS deduplicate incoming data to prevent duplicates
       const uniqueData = deduplicateEvents(data);
@@ -439,14 +443,20 @@ function HomeScreen({ onEventPress, scrollPositionRef }) {
   }, [loadEvents]);
 
   const handleLoadMore = useCallback(() => {
-    // Only allow loading more when NO filters are active
-    // This prevents API calls when user scrolls to end of filtered list
-    // NOTE: When filters are active, we show a subset of the full dataset
-    // so pagination is not needed - the full data is already loaded
-    if (!loadingMore && !loading && !timeFilter && selectedCategories.length === 0 && !selectedProvider) {
+    const loadedCount = events.length;
+    const hasMore = totalPublishedEvents == null || loadedCount < totalPublishedEvents;
+
+    if (
+      !loadingMore &&
+      !loading &&
+      hasMore &&
+      !timeFilter &&
+      selectedCategories.length === 0 &&
+      !selectedProvider
+    ) {
       loadEvents(page + 1, true);
     }
-  }, [loadingMore, loading, loadEvents, page, timeFilter, selectedCategories, selectedProvider]);
+  }, [loadingMore, loading, loadEvents, page, timeFilter, selectedCategories, selectedProvider, events.length, totalPublishedEvents]);
 
   const handleTimeFilterPress = useCallback((filterKey) => {
     setTimeFilter(prev => prev === filterKey ? null : filterKey);
@@ -530,7 +540,11 @@ function HomeScreen({ onEventPress, scrollPositionRef }) {
       <SafeAreaView style={styles.homeContainer}>
         <View style={styles.header}>
           <Text style={styles.appTitle}>EventPulse</Text>
-          <Text style={styles.appSubtitle}>Events in Sweden</Text>
+          <Text style={styles.appSubtitle}>
+            {totalPublishedEvents != null
+              ? `${totalPublishedEvents.toLocaleString('sv-SE')} events`
+              : 'Events in Sweden'}
+          </Text>
         </View>
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color="#BB86FC" />
@@ -545,7 +559,11 @@ function HomeScreen({ onEventPress, scrollPositionRef }) {
       <SafeAreaView style={styles.homeContainer}>
         <View style={styles.header}>
           <Text style={styles.appTitle}>EventPulse</Text>
-          <Text style={styles.appSubtitle}>Events in Sweden</Text>
+          <Text style={styles.appSubtitle}>
+            {totalPublishedEvents != null
+              ? `${totalPublishedEvents.toLocaleString('sv-SE')} events`
+              : 'Events in Sweden'}
+          </Text>
         </View>
         <View style={styles.errorContainer}>
           <Text style={styles.errorText}>Failed to load events</Text>
