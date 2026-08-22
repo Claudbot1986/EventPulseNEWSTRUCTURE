@@ -87,10 +87,17 @@ function localHourFromIso(iso) {
 
 function greeting() {
   const h = new Date().getHours();
-  if (h < 5) return 'God natt';
-  if (h < 11) return 'God morgon';
-  if (h < 18) return 'God eftermiddag';
-  return 'God kväll';
+  if (h < 5) return 'God natt, Stockholm';
+  if (h < 11) return 'God morgon, Stockholm';
+  if (h < 18) return 'God eftermiddag, Stockholm';
+  return 'God kväll, Stockholm';
+}
+
+function subtitleForHour(h) {
+  if (h < 5) return 'Nu är det lugnt — kolla in helgens händelser.';
+  if (h < 11) return 'Vad vill du göra i Stockholm idag?';
+  if (h < 18) return 'Har du några planer för kvällen?';
+  return 'Stockholm har massor på gång ikväll.';
 }
 
 // ─── Section data hook ───────────────────────────────────────────────────────
@@ -941,10 +948,10 @@ export default function HomeScreen({ onChipPress }) {
         showsVerticalScrollIndicator={false}
       >
         <View style={styles.header}>
-          <Text style={styles.headerEyebrow}>HEM</Text>
+          <Text style={styles.headerEyebrow}>STOCKHOLM</Text>
           <Text style={styles.headerTitle}>{greeting()}</Text>
           <Text style={styles.headerSubtitle}>
-            Personlig feed — uppdaterad just nu från live data.
+            {subtitleForHour(new Date().getHours())}
           </Text>
         </View>
 
