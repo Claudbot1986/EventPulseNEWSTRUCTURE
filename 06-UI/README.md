@@ -130,6 +130,15 @@ npm run dev
 
 ---
 
+### Starta API-wrapper (canonical events, port 7777)
+
+```bash
+cd 06-UI
+npm run api
+```
+
+`GET http://localhost:7777/supabase-events` — samma data som appen läser (Supabase canonical).
+
 ### Starta app (Expo Go)
 
 **Standard = tunnel över internet (ingen LAN krävs):**
@@ -156,8 +165,10 @@ npm run start:lan
 ```
 
 VIKTIGT:
-- `npm start` = tunnel (telefonen behöver inte samma WiFi/Tailscale)
-- Appen hämtar events direkt från Supabase — ingen lokal API-server krävs för UI
+- Wrapper `:7777`, Supabase och appen delar samma canonical read (`eventsCanonical.cjs`)
+- Appen visar `total_published_events` i headern — samma siffra som wrapper `/health`
+- `npm run api` startar wrappern; appen behöver inte wrappern om den läser samma Supabase-query direkt
+- `npm start` = tunnel för Expo Go
 
 ---
 
