@@ -30,6 +30,14 @@ export interface SearchEventsInput {
   is_free?: boolean | null;
   price_max_sek?: number | null;
   limit?: number;
+  /**
+   * T0081 — Filter by venue id. When set, the query constrains `venue_id`
+   * exactly to this value (after the future-only filter and ordering).
+   * Used by GET /agent/venues/:venue_id/events for the per-venue browse
+   * surface. Honored alongside date/category filters; the broadening
+   * ladder still fires on zero results.
+   */
+  venue_id?: string;
 }
 
 export type RelaxedConstraint = 'date_window' | 'category';
@@ -254,6 +262,11 @@ export function applyEventFilters(
     isFree?: boolean | null;
     priceMaxSek?: number | null;
     categories?: ReadonlyArray<string>;
+    /**
+     * T0081 — exact-match venue id filter. Applied to events_public.venue_id
+     * (uuid column). Empty / undefined skips the clause.
+     */
+    venueId?: string;
   },
 ): ReturnType<typeof buildEventQuery> {
   let out = q;
@@ -267,6 +280,7 @@ export function applyEventFilters(
   if (filters.categories && filters.categories.length > 0) {
     out = out.in('category_slug', [...filters.categories]);
   }
+  if (filters.venueId) out = out.eq('venue_id', filters.venueId);
   return out;
 }
 
@@ -355,6 +369,7 @@ export async function searchEvents(
     isFree: input.is_free,
     priceMaxSek: input.price_max_sek,
     categories: input.categories,
+    venueId: input.venue_id,
   });
   let { data: rows, error } = await runQuery<EventRow>(q);
   if (error) {
@@ -373,6 +388,7 @@ export async function searchEvents(
       isFree: input.is_free,
       priceMaxSek: input.price_max_sek,
       categories: input.categories,
+      venueId: input.venue_id,
     });
     const widenedResult = await runQuery<EventRow>(q);
     if (widenedResult.error) {
@@ -390,6 +406,7 @@ export async function searchEvents(
       isFree: input.is_free,
       priceMaxSek: input.price_max_sek,
       // categories intentionally omitted
+      venueId: input.venue_id,
     });
     const relaxedResult = await runQuery<EventRow>(q);
     if (relaxedResult.error) {

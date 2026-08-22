@@ -221,6 +221,77 @@ export function buildApp(opts: { supabase?: SupabaseClient } = {}): express.Expr
     }
   });
 
+  /**
+   * GET /agent/venues/:venueId/events?limit=<int>&date_from=<YYYY-MM-DD>
+   *
+   * T0081 — per-venue browse surface. Returns upcoming events at one
+   * venue (future-only, since the underlying searchEvents tool already
+   * filters out past events). Used by VenueScreen to render the event
+   * list below the venue header.
+   *
+   * Lockdown mirrors /agent/feed: origin allowlist (global middleware) +
+   * service_role Supabase read. client_user_id is parsed from the query
+   * for auth parity with the other read endpoints, but this endpoint does
+   * not require any per-user interaction state — every authenticated
+   * caller can browse any venue.
+   *
+   * Response shape: { events: EventCard[], warnings: string[] }
+   *
+   * Errors:
+   *   400 invalid venueId (non-UUID), invalid client_user_id, or bad limit
+   *   500 supabase / unexpected error
+   */
+  app.get('/agent/venues/:venueId/events', generalLimiter.middleware, async (req: Request, res: Response) => {
+    const { venueId } = req.params;
+    if (!venueId || !UUID_RE.test(venueId)) {
+      res.status(400).json({ error: 'venueId must be a uuid' });
+      return;
+    }
+
+    // client_user_id is required by the surface contract even though the
+    // endpoint does not personalize the response. Same auth pattern as
+    // /agent/saved and /agent/recommended.
+    const rawUserId = typeof req.query.client_user_id === 'string' ? req.query.client_user_id : '';
+    if (!UUID_RE.test(rawUserId)) {
+      res.status(400).json({ error: 'client_user_id must be a uuid' });
+      return;
+    }
+
+    // limit default 20, max 50. Bound matches SEARCH_EVENTS_MAX_LIMIT so
+    // callers cannot request more than the tool is willing to return.
+    const limit = typeof req.query.limit === 'string'
+      ? Math.min(Math.max(parseInt(req.query.limit, 10) || 20, 1), 50)
+      : 20;
+
+    // date_from is optional. Accept either date-only (YYYY-MM-DD) or full
+    // ISO timestamps; the tool's expandDateFloor handles both. Reject
+    // obviously malformed strings so the caller learns the contract.
+    let dateFrom: string | undefined;
+    if (typeof req.query.date_from === 'string' && req.query.date_from.length > 0) {
+      const candidate = req.query.date_from;
+      const isDateOnly = /^\d{4}-\d{2}-\d{2}$/.test(candidate);
+      const isFullIso  = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(?::\d{2})?(?:\.\d+)?(?:Z|[+-]\d{2}:?\d{2})$/.test(candidate);
+      if (!isDateOnly && !isFullIso) {
+        res.status(400).json({ error: 'date_from must be YYYY-MM-DD or a full ISO timestamp' });
+        return;
+      }
+      dateFrom = candidate;
+    }
+
+    const client = sb ?? getSupabase();
+    try {
+      const result = await searchEvents(client, {
+        venue_id: venueId,
+        limit,
+        date_from: dateFrom,
+      });
+      res.json({ events: result.events, warnings: result.warnings });
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'unknown error';
+      res.status(500).json({ error: msg });
+    }
+  });
+
   app.post('/agent/chat', chatLimiter.middleware, async (req: Request, res: Response) => {
     const body = req.body as Partial<AgentChatRequest>;
     if (!body || typeof body !== 'object') {
