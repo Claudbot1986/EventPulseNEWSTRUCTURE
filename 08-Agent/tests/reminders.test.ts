@@ -169,7 +169,7 @@ describe('runReminderPass', () => {
         return chainFor({ data: [], error: null });
       }),
     };
-    const summary = await runReminderPass({ supabase: sb, now: NOW });
+    const summary = await runReminderPass({ supabase: sb, now: NOW, timeProvider: () => NOW.getTime() });
     expect(summary.ok).toBe(true);
     // User A and User B are distinct — both scanned.
     expect(summary.users_scanned).toBe(2);
@@ -203,7 +203,7 @@ describe('runReminderPass', () => {
       return chainFor({ data: [], error: null });
     });
     const sb = { from } as unknown as SupabaseClient;
-    const summary = await runReminderPass({ supabase: sb, now: NOW });
+    const summary = await runReminderPass({ supabase: sb, now: NOW, timeProvider: () => NOW.getTime() });
     expect(summary.users_scanned).toBe(2);
     expect(summary.errors).toBe(2);
     expect(summary.inserted).toBe(0);
