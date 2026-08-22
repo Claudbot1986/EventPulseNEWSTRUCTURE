@@ -30,7 +30,7 @@ export function NetworkProvider({ children }) {
         const ok = await getAgentHealth();
         if (ok) setIsConnected(true);
         else setIsConnected(false);
-      } catch () {
+      } catch {
         setIsConnected(false);
       }
     };
