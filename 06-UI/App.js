@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { StatusBar } from 'expo-status-bar';
 import { StyleSheet, Text, View, SectionList, FlatList, SafeAreaView, ActivityIndicator, TouchableOpacity, ScrollView, Linking, Dimensions } from 'react-native';
-import { fetchEvents, PAGE_SIZE } from './services/eventServiceClient';
+import { fetchEvents, fetchPublishedEventTotal, PAGE_SIZE } from './services/eventServiceClient';
 
 // Calculate end date (1 year from now)
 function getEndDate() {
@@ -409,10 +409,6 @@ function HomeScreen({ onEventPress, scrollPositionRef }) {
       const result = await fetchEvents({ page: pageNum, limit: PAGE_SIZE });
       const data = result.events || [];
       const sources = result.sources || [];
-
-      if (typeof result.total_published_events === 'number') {
-        setTotalPublishedEvents(result.total_published_events);
-      }
       
       // ALWAYS deduplicate incoming data to prevent duplicates
       const uniqueData = deduplicateEvents(data);
@@ -436,6 +432,24 @@ function HomeScreen({ onEventPress, scrollPositionRef }) {
       setLoadingMore(false);
       isFetchingRef.current = false;
     }
+  }, []);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    fetchPublishedEventTotal()
+      .then((total) => {
+        if (!cancelled && typeof total === 'number' && total > 0) {
+          setTotalPublishedEvents(total);
+        }
+      })
+      .catch((err) => {
+        console.warn('[HomeScreen] failed to fetch total event count:', err.message);
+      });
+
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   useEffect(() => {
