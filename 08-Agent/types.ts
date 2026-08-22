@@ -43,7 +43,9 @@ export type RankReason =
   | 'category_personalization'
   | 'venue_personalization_penalty'
   | 'followed_venue'
-  | 'followed_artist';
+  | 'followed_artist'
+  | 'near'
+  | 'far';
 
 export interface EventCard {
   id: string;
@@ -93,6 +95,20 @@ export interface EventCard {
    (shows name, no link).
    */
   source?: string | null;
+  /**
+   * Venue latitude (decimal degrees, WGS84). Populated when the venue row
+   * has a known coordinate; `null` / undefined means the ranker cannot
+   * compute distance for this card. Both `venue_lat` AND `venue_lng` must
+   * be present and finite for the geo feature to fire — see
+   * `08-Agent/utils/haversine.ts`. Surfaced in the wire so the UI can
+   * plot on a map (Phase 2).
+   */
+  venue_lat?: number | null;
+  /**
+   * Venue longitude (decimal degrees, WGS84). See `venue_lat` for the
+   * "must be present together" rule.
+   */
+  venue_lng?: number | null;
   /** 0–100 confidence from the ingestion stack. Optional: not all rows have it. */
   confidence_score?: number | null;
   /** ISO timestamp of last ingestion. Drives the `stale` ranker reason. */
@@ -126,6 +142,13 @@ export interface RankedEvent {
   card: EventCard;
   score: number;
   reasons: RankReason[];
+  /**
+   * Great-circle distance in km from the user's current location to the
+   * venue. `undefined` when the request did not include `userLocation`,
+   * or when the card has no `venue_lat`/`venue_lng`. Surfaced in the
+   * wire so the UI can render "2.3 km" copy.
+   */
+  distance_km?: number;
 }
 
 // ─── Feedback ───────────────────────────────────────────────────────────────

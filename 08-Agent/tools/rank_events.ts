@@ -24,6 +24,7 @@ import {
   BOOST_CAP_FRACTION,
   PENALTY_CAP_ABS,
 } from './personalize';
+import { haversineKm, type LatLng } from '../utils/haversine';
 
 export const RANK_WEIGHTS = {
   time_fit:           25,
@@ -38,6 +39,12 @@ export const RANK_WEIGHTS = {
   stated_category_match: 0.3,
   followed_venue_match: 20,
   followed_artist_match: 15,
+  // T0079 — geo-aware distance sort. `near` and `far` are both intentionally
+  // small absolute deltas (≤ 0.3) so the geo feature NUDGES ranking without
+  // overriding the dominant signals (category_match: 30, time_fit: 25).
+  // Events without venue coordinates skip the feature entirely (no penalty).
+  near:                0.1,
+  far:                -0.3,
 } as const;
 
 /** Confidence threshold for the `high_confidence` ranker reason. */
@@ -55,6 +62,23 @@ export const STALE_AFTER_MS = 14 * 24 * 3600_000;
  * Override via `RankOptions.timeZone` for tests (rare) or future multi-city.
  */
 export const DEFAULT_TIME_ZONE = 'Europe/Stockholm';
+
+/**
+ * T0079 — distance thresholds for the geo feature.
+ *
+ *  - Events within `NEAR_KM` get the `near` boost (+0.1). A 3 km radius
+ *    matches a typical "walkable / short transit" Stockholm neighbourhood.
+ *  - Events beyond `FAR_START_KM` start losing relevance, linearly
+ *    decreasing to the full `far` penalty (-0.3) at `FAR_FLOOR_KM`
+ *    and beyond. 10–50 km is the gradient zone: Södertälje, Uppsala,
+ *    Nacka — places Stockholmers will sometimes go, but at a cost.
+ *  - Events with no `venue_lat`/`venue_lng` skip the feature entirely
+ *    so legacy rows without venue coords never get an unjustified
+ *    penalty. See `08-Agent/utils/haversine.ts`.
+ */
+export const NEAR_KM = 3;
+export const FAR_START_KM = 10;
+export const FAR_FLOOR_KM = 50;
 
 export interface RankOptions {
   /** override default topN. Default 5. */
@@ -113,6 +137,20 @@ export interface RankOptions {
    * T0050 / MVP-gap §77. Phase 1 declared pref.
    */
   followedArtistSlugs?: ReadonlyArray<string>;
+  /**
+   * T0079 — user's current location as (lat, lng). When provided AND the
+   * card has valid `venue_lat`/`venue_lng`, the ranker computes great-circle
+   * distance and applies a nudge:
+   *   - ≤ 3 km  → +0.1 boost, reason 'near'
+   *   - 10–50 km → linear penalty down to -0.3, reason 'far'
+   *   - > 50 km  → full -0.3 penalty
+   *   - no coords on card → feature skipped entirely (no penalty)
+   *
+   * The nudge is intentionally small so it cannot override dominant signals
+   * (category_match: 30, time_fit: 25). Without this field the geo
+   * feature is entirely inactive (backwards-compatible for all callers).
+   */
+  userLocation?: LatLng;
 }
 
 /**
@@ -308,7 +346,34 @@ export function rankEvents(
       }
     }
 
-    return { card: c, score, reasons };
+    // T0079 — geo-aware distance nudge. Computed once per card, applied
+    // before the return so the distance_km value is available in the output
+    // for the UI to render (e.g. "2.3 km" on the card). The nudge is
+    // intentionally tiny (max ±0.3) so it cannot override category/time
+    // signals — it can only nudge within a tied score band.
+    let distance_km: number | undefined;
+    if (opts.userLocation && typeof c.venue_lat === 'number' && typeof c.venue_lng === 'number') {
+      const d = haversineKm(
+        opts.userLocation.lat,
+        opts.userLocation.lng,
+        c.venue_lat,
+        c.venue_lng,
+      );
+      if (Number.isFinite(d)) {
+        distance_km = d;
+        if (d <= NEAR_KM) {
+          score += RANK_WEIGHTS.near;
+          reasons.push('near');
+        } else if (d >= FAR_START_KM) {
+          // Linear penalty from 0 (at FAR_START_KM) to -0.3 (at FAR_FLOOR_KM).
+          const t = Math.min(1, (d - FAR_START_KM) / (FAR_FLOOR_KM - FAR_START_KM));
+          score += RANK_WEIGHTS.far * t;
+          reasons.push('far');
+        }
+      }
+    }
+
+    return { card: c, score, reasons, distance_km };
   });
 
   // Stable sort: score desc, then earliest start_time, then id.
