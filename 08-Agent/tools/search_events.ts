@@ -136,7 +136,6 @@ export interface VenueRow {
 const EVENT_SELECT_COLUMNS =
   'id, title_en, title_sv, description_en, description_sv, start_time, end_time, ' +
   'venue_id, is_free, price_min_sek, price_max_sek, ticket_url, image_url, ' +
-  'image_license, image_attribution, image_source_url, ' +
   'category_slug, source, confidence_score, freshness_at, status_expanded';
 
 const VENUE_SELECT_COLUMNS = 'id, name, city, address';

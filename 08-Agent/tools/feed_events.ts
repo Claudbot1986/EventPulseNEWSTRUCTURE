@@ -81,9 +81,12 @@ export async function feedEvents(
   let query = supabase
     .from(FEED_EVENTS_TABLE)
     .select(
+      // Live events_public has not applied 20260821-0004 (image_license).
+      // Selecting those columns returns Postgres 42703; do not add them back
+      // until that migration is on the live view.
       'id, title_sv, title_en, start_time, end_time, venue_id, ' +
       'category_slug, is_free, price_min_sek, price_max_sek, ticket_url, image_url, ' +
-      'image_license, image_attribution, image_source_url, source, ' +
+      'source, ' +
       'venues:venue_id(name, city)'
     )
     .gt('start_time', new Date().toISOString())
@@ -97,7 +100,7 @@ export async function feedEvents(
 
   const { data, error } = await query;
   if (error) {
-    return { events: [], from: fromIso, to: toIso, has_more: false };
+    throw new Error(`feed_events: ${error.message}`);
   }
 
   const rows = data ?? [];
@@ -123,9 +126,9 @@ export async function feedEvents(
     is_free: !!r.is_free,
     ticket_url: r.ticket_url ?? null,
     image_url: r.image_url ?? null,
-    image_license: r.image_license ?? null,
-    image_attribution: r.image_attribution ?? null,
-    image_source_url: r.image_source_url ?? null,
+    image_license: null,
+    image_attribution: null,
+    image_source_url: null,
     source: r.source ?? null,
   }));
 

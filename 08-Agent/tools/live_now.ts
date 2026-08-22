@@ -73,7 +73,7 @@ export const LIVE_NOW_DEFAULT_LIMIT = LIVE_NOW_MAX_EVENTS;
 const LIVE_NOW_SELECT_COLUMNS =
   'id, title_sv, title_en, start_time, end_time, venue_id, ' +
   'category_slug, is_free, price_min_sek, price_max_sek, ticket_url, image_url, ' +
-  'image_license, image_attribution, image_source_url, source, ' +
+  'source, ' +
   'venues:venue_id(name, city)';
 
 interface LiveRow {

@@ -62,9 +62,6 @@ export async function getSavedEvents(
         price_max_sek,
         ticket_url,
         image_url,
-        image_license,
-        image_attribution,
-        image_source_url,
         source,
         venues:venue_id(name, city)
       )

@@ -38,6 +38,7 @@ TEMP/
 /runtime/
 /Alltools-E2E/runtime/
 /09-MobileControl/runtime/
+/AUTONOMOUS-QUARANTINE/09-MobileControl/runtime/
 **/reports/
 /02-Ingestion/C-htmlGate/reports/
 /03-Queue/03-extractedevents/

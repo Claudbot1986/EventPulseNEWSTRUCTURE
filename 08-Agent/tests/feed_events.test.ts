@@ -90,7 +90,7 @@ describe('feedEvents', () => {
     expect(result.has_more).toBe(false);
   });
 
-  it('returns empty result on supabase error without throwing', async () => {
+  it('throws on supabase error so a schema miss cannot look like an empty city', async () => {
     const chain: any = {
       select: vi.fn().mockReturnThis(),
       gt: vi.fn().mockReturnThis(),
@@ -103,9 +103,7 @@ describe('feedEvents', () => {
         Promise.resolve({ data: null, error: { message: 'mock error' } }).then(resolve),
     };
     const sb = { from: vi.fn().mockReturnValue(chain) } as unknown as SupabaseClient;
-    const result = await feedEvents(sb, { from: '2026-08-18', days: 7 });
-    expect(result.events).toEqual([]);
-    expect(result.has_more).toBe(false);
+    await expect(feedEvents(sb, { from: '2026-08-18', days: 7 })).rejects.toThrow(/feed_events: mock error/);
   });
 
   it('filters out rows whose venue city is null when caller passed a city', async () => {
