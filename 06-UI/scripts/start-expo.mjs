@@ -140,14 +140,23 @@ const env = {
 
 if (mode === 'lan' && hostname) {
   env.REACT_NATIVE_PACKAGER_HOSTNAME = hostname;
+  // Ensure dev server binds on all interfaces (required for Tailscale).
+  env.EXPO_DEVTOOLS_LISTEN_ADDRESS = '0.0.0.0';
 }
 
 console.log('\n📱 EventPulse Expo');
 console.log(`   Mode: ${mode}`);
 if (mode === 'lan' && hostname) {
   console.log(`   Host: ${hostname}:${port}`);
-  console.log('   Anslut i Expo Go via QR eller exp://' + hostname + ':' + port);
-  console.log('   Kräver att telefonen når denna IP (Tailscale/LAN + brandvägg).\n');
+  console.log(`   QR / manuell URL: exp://${hostname}:${port}`);
+  console.log(`   Test i telefonens Safari: http://${hostname}:${port}/status`);
+  console.log('   (ska visa "packager-status:running" när Metro körs)');
+  console.log('');
+  console.log('   Om Expo Go fastnar på "Opening project...":');
+  console.log('   1. Testa Safari-URL ovan — om den failar → brandvägg/Tailscale');
+  console.log('   2. macOS Brandvägg → tillåt inkommande för Node');
+  console.log('   3. I Expo Go: "Enter URL manually" → klistra in exp://-URL ovan');
+  console.log('   4. Kör: npm run check:expo (medan Metro körs)\n');
 } else {
   console.log('   Tunnel-läge (ngrok) — långsammare men fungerar utan delat nät.\n');
 }

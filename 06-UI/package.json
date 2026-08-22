@@ -7,6 +7,7 @@
     "start": "node scripts/start-expo.mjs",
     "start:lan": "node scripts/start-expo.mjs --lan",
     "start:tunnel": "node scripts/start-expo.mjs --tunnel",
+    "check:expo": "node scripts/check-expo-connectivity.mjs",
     "android": "node scripts/start-expo.mjs --android",
     "ios": "node scripts/start-expo.mjs --ios",
     "verify-providers": "node scripts/verifyProviders.js"

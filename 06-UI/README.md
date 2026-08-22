@@ -140,19 +140,19 @@ npm start
 Skriptet sätter automatiskt `REACT_NATIVE_PACKAGER_HOSTNAME` till ditt Tailscale-IP (`100.x.x.x`) om Tailscale körs, annars LAN-IP.
 
 **Med Tailscale (rekommenderat):**
-1. Tailscale aktiv på både Mac och telefon
-2. `npm start` i `06-UI`
-3. Skanna QR i Expo Go — URL ska vara `exp://100.x.x.x:8083`, inte `localhost`
+1. Tailscale aktiv på både Mac och telefon (grön "Connected")
+2. Mac Tailscale-IP: `tailscale ip -4` (t.ex. `100.64.107.37`)
+3. `npm start` i `06-UI`
+4. Terminalen ska visa: `exp://100.x.x.x:8083` — **inte** `localhost`
+5. Testa i telefonens **Safari**: `http://100.x.x.x:8083/status` → ska visa `packager-status:running`
+6. Anslut i Expo Go (QR eller "Enter URL manually")
 
-**Fallback utan Tailscale:**
-- Samma WiFi + `npm start` (LAN)
-- Eller `npm run start:tunnel` (ngrok, långsammare)
-
-**Felsökning:**
-- Brandvägg: tillåt inkommande på port **8083** (TCP) för Node
-- Uppdatera Expo Go i App Store (kräver SDK 54)
-- Om QR visar `localhost` → kör `REACT_NATIVE_PACKAGER_HOSTNAME=$(tailscale ip -4) npm start`
-- Tunnel-läge: `npm run start:tunnel`
+**Om Expo Go fastnar på "Opening project...":**
+- Safari-testet failar → **macOS brandvägg** blockerar Node på port 8083
+  - Systeminställningar → Nätverk → Brandvägg → tillåt inkommande för **Node**
+  - Starta om Expo efter brandväggsändring
+- Safari-testet fungerar men Expo Go inte → ange URL manuellt: `exp://100.x.x.x:8083`
+- Kör diagnostik: `npm run check:expo` (medan Metro körs i annat terminalfönster)
 
 VIKTIGT:
 - Använd LAN/Tailscale (inte tunnel) när Tailscale finns
