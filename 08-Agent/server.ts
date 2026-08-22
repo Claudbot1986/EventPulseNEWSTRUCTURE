@@ -839,6 +839,84 @@ export function buildApp(opts: { supabase?: SupabaseClient } = {}): express.Expr
     });
   });
 
+
+  /**
+   * POST /agent/notification-prefs
+   *
+   * T0087 — MVP-gap. Per-entity notification granularity.
+   * Stores notification_prefs JSONB on user_preferences.preferences:
+   *   { "venue:<id>": "all"|"new_only"|"off", "artist:<slug>": "all"|"new_only"|"off" }
+   *
+   * Body:
+   *   { client_user_id: uuid, entity_type: 'venue'|'artist', entity_id: string, level: 'all'|'new_only'|'off' }
+   *
+   * Read-modify-write on preferences — preserves all other keys.
+   */
+  app.post('/agent/notification-prefs', chatLimiter.middleware, async (req: Request, res: Response) => {
+    const body = req.body as Partial<{
+      client_user_id: string;
+      entity_type: unknown;
+      entity_id: unknown;
+      level: unknown;
+    }>;
+    if (!body || typeof body !== 'object') { res.status(400).json({ error: 'invalid body' }); return; }
+    if (!body.client_user_id || !UUID_RE.test(body.client_user_id)) { res.status(400).json({ error: 'client_user_id must be a uuid' }); return; }
+    if (body.entity_type !== 'venue' && body.entity_type !== 'artist') { res.status(400).json({ error: 'entity_type must be venue or artist' }); return; }
+    if (typeof body.entity_id !== 'string' || body.entity_id.trim() === '') { res.status(400).json({ error: 'entity_id is required' }); return; }
+    if (!['all','new_only','off'].includes(body.level as string)) { res.status(400).json({ error: 'level must be all, new_only, or off' }); return; }
+
+    const key = `${body.entity_type}:${body.entity_id}`;
+    const level = body.level as 'all' | 'new_only' | 'off';
+
+    const { data: existing } = await client
+      .from('user_preferences')
+      .select('preferences')
+      .eq('client_user_id', body.client_user_id)
+      .single();
+
+    const basePrefs = existing?.preferences && typeof existing.preferences === 'object'
+      ? { ...(existing.preferences as Record<string, unknown>) }
+      : {};
+    const notifPrefs = basePrefs.notification_prefs && typeof basePrefs.notification_prefs === 'object'
+      ? { ...(basePrefs.notification_prefs as Record<string, string>) }
+      : {};
+    notifPrefs[key] = level;
+    const next = { ...basePrefs, notification_prefs: notifPrefs, updated_at_kind: 'notification-prefs' };
+
+    const { error: writeErr } = await client
+      .from('user_preferences')
+      .upsert({ client_user_id: body.client_user_id, preferences: next }, { onConflict: 'client_user_id' });
+    if (writeErr) {
+      res.status(202).json({ ok: false, warning: writeErr.message });
+      return;
+    }
+    res.json({ ok: true });
+  });
+
+  /**
+   * GET /agent/notification-prefs
+   *
+   * T0087 — Returns the current notification_prefs JSONB from
+   * user_preferences.preferences for the given client_user_id.
+   *
+   * Returns: { notification_prefs: Record<string, 'all'|'new_only'|'off'> }
+   */
+  app.get('/agent/notification-prefs', chatLimiter.middleware, async (req: Request, res: Response) => {
+    const client_user_id = (req.query as Record<string, string>).client_user_id;
+    if (!client_user_id || !UUID_RE.test(client_user_id)) {
+      res.status(400).json({ error: 'client_user_id must be a uuid' });
+      return;
+    }
+    const { data } = await client
+      .from('user_preferences')
+      .select('preferences')
+      .eq('client_user_id', client_user_id)
+      .single();
+    const notifPrefs = data?.preferences?.notification_prefs ?? {};
+    res.json({ notification_prefs: notifPrefs });
+  });
+
+
   /**
    * POST /agent/follow
    *

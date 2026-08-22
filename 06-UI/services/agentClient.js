@@ -1017,7 +1017,90 @@ export async function registerPushToken({
   } finally {
     clearTimeout(timer);
   }
+
+/**
+ * T0087 — Per-entity notification granularity.
+ *
+ * Stores notification_prefs JSONB on user_preferences:
+ *   { "venue:<id>": "all"|"new_only"|"off", "artist:<slug>": "all"|"new_only"|"off" }
+ *
+ * @param {{ entityType: 'venue'|'artist', entityId: string, level: 'all'|'new_only'|'off', signal?, timeoutMs?: number }} opts
+ * Returns { ok: boolean, warning?: string }
+ */
+export async function setNotificationPrefs({
+  entityType,
+  entityId,
+  level,
+  signal,
+  timeoutMs = 4_000,
+}) {
+  let baseUrl;
+  try {
+    baseUrl = requireAgentBaseUrl();
+  } catch (_err) {
+    return { ok: false, warning: 'config' };
+  }
+  const client_user_id = await getOrCreateAnonUserId();
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), timeoutMs);
+  if (signal) {
+    if (signal.aborted) controller.abort();
+    else signal.addEventListener('abort', () => controller.abort(), { once: true });
+  }
+  try {
+    const response = await fetch(`${baseUrl}/agent/notification-prefs`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ client_user_id, entity_type: entityType, entity_id: entityId, level }),
+      signal: controller.signal,
+    });
+    if (!response.ok) {
+      return { ok: false, warning: `agent ${response.status}` };
+    }
+    return await response.json().catch(() => ({ ok: true }));
+  } catch (_err) {
+    return { ok: false, warning: 'network' };
+  } finally {
+    clearTimeout(timer);
+  }
 }
+
+}
+
+/**
+ * T0087 — Fetch current notification_prefs from the server.
+ * @returns {{ notification_prefs: Record<string, 'all'|'new_only'|'off'> }}
+ */
+export async function getNotificationPrefs({ signal, timeoutMs = 4_000 } = {}) {
+  let baseUrl;
+  try {
+    baseUrl = requireAgentBaseUrl();
+  } catch (_err) {
+    return { notification_prefs: {} };
+  }
+  const client_user_id = await getOrCreateAnonUserId();
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), timeoutMs);
+  if (signal) {
+    if (signal.aborted) controller.abort();
+    else signal.addEventListener('abort', () => controller.abort(), { once: true });
+  }
+  try {
+    const response = await fetch(
+      `${baseUrl}/agent/notification-prefs?client_user_id=${encodeURIComponent(client_user_id)}`,
+      { signal: controller.signal }
+    );
+    if (!response.ok) {
+      return { notification_prefs: {} };
+    }
+    return await response.json().catch(() => ({ notification_prefs: {} }));
+  } catch (_err) {
+    return { notification_prefs: {} };
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
 
 /**
  * Fetch pre-rendered agent intent slots for the HomeScreen "Förslag från din

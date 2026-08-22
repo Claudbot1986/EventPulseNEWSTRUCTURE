@@ -38,6 +38,8 @@ import {
   registerPushToken,
   getFollowedEntities,
   followEntity,
+  getNotificationPrefs,
+  setNotificationPrefs,
 } from '../services/agentClient';
 
 const FOLLOW_PUSH_ENABLED_KEY = 'eventpulse.follow_push_enabled';
@@ -147,6 +149,8 @@ export default function ProfileScreen() {
   const [followedVenues, setFollowedVenues] = useState([]);
   const [followedArtists, setFollowedArtists] = useState([]);
   const [followedLoaded, setFollowedLoaded] = useState(false);
+  // T0087 — per-entity notification granularity
+  const [notificationPrefs, setNotificationPrefsState] = useState({});
   const [followedBusyKey, setFollowedBusyKey] = useState(null);
 
   useEffect(() => {
@@ -167,11 +171,17 @@ export default function ProfileScreen() {
 
   const refreshFollowed = useCallback(async () => {
     try {
-      const res = await getFollowedEntities({ timeoutMs: 4_000 });
+      const [entitiesRes, prefsRes] = await Promise.all([
+        getFollowedEntities({ timeoutMs: 4_000 }),
+        getNotificationPrefs({ timeoutMs: 4_000 }),
+      ]);
       if (!aliveRef.current) return;
-      if (res && res.ok) {
-        setFollowedVenues(Array.isArray(res.venueIds) ? res.venueIds : []);
-        setFollowedArtists(Array.isArray(res.artistSlugs) ? res.artistSlugs : []);
+      if (entitiesRes && entitiesRes.ok) {
+        setFollowedVenues(Array.isArray(entitiesRes.venueIds) ? entitiesRes.venueIds : []);
+        setFollowedArtists(Array.isArray(entitiesRes.artistSlugs) ? entitiesRes.artistSlugs : []);
+      }
+      if (prefsRes && prefsRes.notification_prefs) {
+        setNotificationPrefsState(prefsRes.notification_prefs);
       }
       // Silent on failure — empty lists render the "Du följer inget än" hint.
     } catch (_err) {
@@ -226,45 +236,66 @@ export default function ProfileScreen() {
     [followedVenues, followedArtists]
   );
 
+  // T0087 — update per-entity notification level (optimistic UI)
+  const handleSetNotifLevel = useCallback(
+    async (entityType, entityId, level) => {
+      const key = `${entityType}:${entityId}`;
+      // Optimistic update — reflect the change immediately
+      setNotificationPrefsState((cur) => ({ ...cur, [key]: level }));
+      const res = await setNotificationPrefs({ entityType, entityId, level });
+      if (!res || res.ok !== true) {
+        // Roll back on server rejection
+        setNotificationPrefsState((cur) => {
+          const next = { ...cur };
+          delete next[key];
+          return next;
+        });
+        const warning = res?.warning ?? 'nätverksfel';
+        Alert.alert('Kunde inte spara notis-inställningen', warning);
+      }
+    },
+    []
+  );
+
+  // T0087 — derive notification level label for display
+  const levelLabel = (lvl) => ({ all: 'Alla notiser', new_only: 'Nya händelser', off: 'Av' }[lvl] ?? 'Alla notiser');
+
   const showUnfollowSheet = useCallback(
     (entityType, entityId, displayName) => {
       const title = displayName || (entityType === 'venue' ? 'Plats' : 'Artist');
-      const message =
-        entityType === 'venue'
-          ? 'Sluta följa den här platsen? Events från den prioriteras inte längre.'
-          : 'Sluta följa den här artisten? Events från den prioriteras inte längre.';
-      const confirmLabel = 'Sluta följ';
+      const key = `${entityType}:${entityId}`;
+      const currentLevel = notificationPrefs[key] ?? 'all';
       const cancelLabel = 'Avbryt';
-      // iOS: native ActionSheet (Phase 0 UI). Android: Alert fallback so the
-      // affordance is reachable on both platforms without a third-party lib.
-      // (Mirrors the long-press pattern already shipped in AgentScreen.)
+      const unfollowLabel = 'Sluta följ';
+      const iosOptions = ['Alla notiser', 'Nya händelser', 'Av', unfollowLabel, cancelLabel];
+      const iosHandlers = [
+        () => handleSetNotifLevel(entityType, entityId, 'all'),
+        () => handleSetNotifLevel(entityType, entityId, 'new_only'),
+        () => handleSetNotifLevel(entityType, entityId, 'off'),
+        () => handleUnfollow(entityType, entityId),
+        () => {},
+      ];
       if (Platform.OS === 'ios') {
         ActionSheetIOS.showActionSheetWithOptions(
           {
             title,
-            message,
-            options: [cancelLabel, confirmLabel],
-            cancelButtonIndex: 0,
-            destructiveButtonIndex: 1,
+            options: iosOptions,
+            cancelButtonIndex: iosOptions.indexOf(cancelLabel),
+            destructiveButtonIndex: iosOptions.indexOf(unfollowLabel),
           },
-          (idx) => {
-            if (idx === 1) {
-              handleUnfollow(entityType, entityId);
-            }
-          }
+          (idx) => { if (iosHandlers[idx]) iosHandlers[idx](); }
         );
       } else {
-        Alert.alert(title, message, [
+        Alert.alert(title, undefined, [
+          { text: 'Alla notiser', onPress: () => handleSetNotifLevel(entityType, entityId, 'all') },
+          { text: 'Nya händelser', onPress: () => handleSetNotifLevel(entityType, entityId, 'new_only') },
+          { text: 'Av', onPress: () => handleSetNotifLevel(entityType, entityId, 'off') },
+          { text: unfollowLabel, style: 'destructive', onPress: () => handleUnfollow(entityType, entityId) },
           { text: cancelLabel, style: 'cancel' },
-          {
-            text: confirmLabel,
-            style: 'destructive',
-            onPress: () => handleUnfollow(entityType, entityId),
-          },
         ]);
       }
     },
-    [handleUnfollow]
+    [handleUnfollow, notificationPrefs]
   );
 
   const handleToggleFollowPush = useCallback(
