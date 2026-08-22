@@ -21,7 +21,8 @@
         "NSAppTransportSecurity": {
           "NSAllowsArbitraryLoads": false
         },
-        "ITSAppUsesNonExemptEncryption": false
+        "ITSAppUsesNonExemptEncryption": false,
+        "NSLocationWhenInUseUsageDescription": "EventPulse använder din plats för att visa kartan och event nära dig."
       }
     },
     "android": {

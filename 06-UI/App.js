@@ -5,6 +5,8 @@ import { SafeAreaView, SafeAreaProvider } from 'react-native-safe-area-context';
 import { fetchFeed, addDays, fetchEventIcs, shareSession, fetchSharedSession, parseShareHashFromUrl } from './services/agentClient';
 import { analyticsClient } from './services/analyticsClient';
 import UserPickerScreen from './screens/UserPickerScreen';
+import MapScreen from './screens/MapScreen';
+import ProfileScreen from './screens/ProfileScreen';
 import { getItem, getOrCreateAnonUserId, removeItem, setItem } from './services/storage';
 import { PENDING_AGENT_MESSAGE_KEY } from './AppShell';
 
@@ -1117,6 +1119,8 @@ export default function App() {
   // explore tab; App.js reads it here, surfaces a banner for context, and
   // clears the key on dismiss so it doesn't reappear on next mount.
   const [pendingPrompt, setPendingPrompt] = useState(null);
+  // T0078 — tab navigation. 'home' | 'map' | 'saved' | 'notifications' | 'profile'
+  const [activeTab, setActiveTab] = useState('home');
   useEffect(() => {
     let cancelled = false;
     getItem(PENDING_AGENT_MESSAGE_KEY)
@@ -1216,13 +1220,47 @@ export default function App() {
     if (selectedEvent) {
       return <DetailsScreen event={selectedEvent} onBack={handleBack} />;
     }
+    // T0078 — tab routing: home | map | profile
+    if (activeTab === 'map') {
+      return <MapScreen onEventPress={handleEventPress} />;
+    }
+    if (activeTab === 'profile') {
+      return <ProfileScreen />;
+    }
     return <HomeScreen onEventPress={handleEventPress} scrollPositionRef={scrollPositionRef} pendingPrompt={pendingPrompt} dismissPendingPrompt={dismissPendingPrompt} />;
   };
+
+  const showTabBar = appReady && !showSplash && activeUser && !selectedEvent;
 
   return (
     <SafeAreaProvider>
       <View style={styles.container}>
         {renderMain()}
+        {showTabBar ? (
+          <View style={styles.tabBar} accessibilityRole="tabbar">
+            {[
+              { key: 'home',    label: 'Hem',     icon: '●' },
+              { key: 'map',     label: 'Karta',   icon: '◆' },
+              { key: 'profile', label: 'Profil',  icon: '◉' },
+            ].map(({ key, label, icon }) => (
+              <TouchableOpacity
+                key={key}
+                style={styles.tabItem}
+                onPress={() => setActiveTab(key)}
+                accessibilityRole="tab"
+                accessibilityState={{ selected: activeTab === key }}
+                accessibilityLabel={label}
+              >
+                <Text style={[styles.tabIcon, activeTab === key && styles.tabIconActive]}>
+                  {icon}
+                </Text>
+                <Text style={[styles.tabLabel, activeTab === key && styles.tabLabelActive]}>
+                  {label}
+                </Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+        ) : null}
         <StatusBar style="light" />
       </View>
     </SafeAreaProvider>
@@ -1826,5 +1864,36 @@ const styles = StyleSheet.create({
     color: TOKENS.color.textSoft,
     fontSize: 12,
     textAlign: 'center',
+  },
+
+  // T0078 — bottom tab bar
+  tabBar: {
+    flexDirection: 'row',
+    borderTopWidth: 1,
+    borderTopColor: TOKENS.color.border,
+    backgroundColor: TOKENS.color.surface,
+    paddingBottom: Platform.OS === 'ios' ? 0 : TOKENS.space.sm,
+  },
+  tabItem: {
+    flex: 1,
+    alignItems: 'center',
+    paddingVertical: TOKENS.space.md,
+    gap: 3,
+  },
+  tabIcon: {
+    fontSize: 18,
+    color: TOKENS.color.textSoft,
+  },
+  tabIconActive: {
+    color: TOKENS.color.accent,
+  },
+  tabLabel: {
+    fontSize: 10,
+    fontWeight: '700',
+    color: TOKENS.color.textSoft,
+    letterSpacing: 0.4,
+  },
+  tabLabelActive: {
+    color: TOKENS.color.accent,
   },
 });
