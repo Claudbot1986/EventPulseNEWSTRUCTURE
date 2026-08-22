@@ -39,6 +39,7 @@ import {
   ActivityIndicator,
   Pressable,
   Image,
+  Animated,
 } from 'react-native';
 
 import { fetchFeed, fetchSavedEvents, fetchRecommendedEvents, fetchSuggestedPrompts, fetchCachedRecommendations, fetchRecentQueries, fetchCuratedCollections, fetchLiveEvents } from '../services/agentClient';
