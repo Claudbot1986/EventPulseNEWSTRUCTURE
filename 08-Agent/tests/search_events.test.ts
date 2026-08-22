@@ -47,13 +47,15 @@ function makeChain(rows: unknown[]): Chain {
  * Mock supabase that returns `eventRows` from the first table queried
  * (events_public) and `venueRows` from the second table queried (venues).
  * Tracks `from()` calls so tests can assert table access order.
+ * T0080: optionally accepts `offerRows` for the `event_offers` availability hop.
  */
-function mockSupabase(eventRows: unknown[], venueRows: unknown[] = []) {
+function mockSupabase(eventRows: unknown[], venueRows: unknown[] = [], offerRows: unknown[] = []) {
   const calls: string[] = [];
   const handlers: Record<string, Chain> = {};
   handlers['events_public'] = makeChain(eventRows);
   handlers['events'] = makeChain(eventRows);
   handlers['venues'] = makeChain(venueRows);
+  handlers['event_offers'] = makeChain(offerRows);
   return {
     from(table: string) {
       calls.push(table);
@@ -332,5 +334,42 @@ describe('searchEvents — zero-result broadening (D3 / §18.2.5)', () => {
     const sb = mockSupabase([baseRow]);
     const result = await searchEvents(sb as any, { limit: 10 });
     expect(result.relaxed_constraint).toBeNull();
+  });
+});
+
+describe('searchEvents — availability_badge (T0080)', () => {
+  it('maps sold_out primary offer to badge', async () => {
+    const eventRows = [{ ...baseRow, id: 'e-sold' }];
+    const offerRows = [{ event_id: 'e-sold', availability: 'sold_out' }];
+    const sb = mockSupabase(eventRows, [], offerRows);
+    const { events } = await searchEvents(sb as any, { limit: 10 });
+    expect(events).toHaveLength(1);
+    expect(events[0].availability_badge).toBe('sold_out');
+  });
+
+  it('maps limited primary offer to few_left badge', async () => {
+    const eventRows = [{ ...baseRow, id: 'e-limited' }];
+    const offerRows = [{ event_id: 'e-limited', availability: 'limited' }];
+    const sb = mockSupabase(eventRows, [], offerRows);
+    const { events } = await searchEvents(sb as any, { limit: 10 });
+    expect(events).toHaveLength(1);
+    expect(events[0].availability_badge).toBe('few_left');
+  });
+
+  it('maps available primary offer to undefined (no badge)', async () => {
+    const eventRows = [{ ...baseRow, id: 'e-avail' }];
+    const offerRows = [{ event_id: 'e-avail', availability: 'available' }];
+    const sb = mockSupabase(eventRows, [], offerRows);
+    const { events } = await searchEvents(sb as any, { limit: 10 });
+    expect(events).toHaveLength(1);
+    expect(events[0].availability_badge).toBeUndefined();
+  });
+
+  it('returns undefined badge when no offer row exists', async () => {
+    const eventRows = [{ ...baseRow, id: 'e-nooffer' }];
+    const sb = mockSupabase(eventRows, [], []);
+    const { events } = await searchEvents(sb as any, { limit: 10 });
+    expect(events).toHaveLength(1);
+    expect(events[0].availability_badge).toBeUndefined();
   });
 });

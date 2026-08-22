@@ -151,6 +151,18 @@ function CardImage({ uri, imageLicense, imageAttribution }) {
   );
 }
 
+function AvailabilityChip({ event }) {
+  const badge = event.availability_badge;
+  if (!badge) return null;
+  if (badge === 'sold_out') {
+    return <Text style={[styles.cardChip, styles.cardChipSoldOut]}>Slutsåld</Text>;
+  }
+  if (badge === 'few_left') {
+    return <Text style={[styles.cardChip, styles.cardChipFewLeft]}>Få kvar</Text>;
+  }
+  return null;
+}
+
 function PriceChip({ event }) {
   if (event.is_free || event.isFree) {
     return <Text style={[styles.cardChip, styles.cardChipFree]}>Gratis</Text>;
@@ -182,6 +194,7 @@ function EventCardCompact({ event, onPress }) {
         <Text style={styles.cardTitle} numberOfLines={2}>{event.title}</Text>
         <Text style={styles.cardVenue} numberOfLines={1}>{venue}</Text>
         <View style={styles.cardChipRow}>
+          <AvailabilityChip event={event} />
           <PriceChip event={event} />
           {event.category_slug ? (
             <Text style={[styles.cardChip, styles.cardChipCategory]}>{event.category_slug}</Text>
@@ -847,6 +860,14 @@ const styles = StyleSheet.create({
   cardChipFree: {
     color: TOKENS.color.positive,
     borderColor: TOKENS.color.positive,
+  },
+  cardChipSoldOut: {
+    color: '#FF6B6B',
+    borderColor: '#FF6B6B',
+  },
+  cardChipFewLeft: {
+    color: '#FFB347',
+    borderColor: '#FFB347',
   },
   cardChipCategory: {
     color: TOKENS.color.textMuted,

@@ -141,6 +141,37 @@ const EVENT_SELECT_COLUMNS =
 
 const VENUE_SELECT_COLUMNS = 'id, name, city, address';
 
+/**
+ * T0080 — Fetch primary-offer availability per event.
+ * Single round-trip using .in() — same RLS posture as venue/artist hops.
+ * Maps to badge-friendly values: 'sold_out'|'limited' → shown; 'available'|'unknown' → null.
+ */
+export type AvailabilityBadge = 'sold_out' | 'few_left' | 'available';
+
+export async function fetchPrimaryOfferAvailability(
+  supabase: SupabaseClient,
+  eventIds: ReadonlyArray<string>,
+): Promise<Map<string, AvailabilityBadge | null>> {
+  const out = new Map<string, AvailabilityBadge | null>();
+  if (eventIds.length === 0) return out;
+  const ids = Array.from(new Set(eventIds)).filter((x): x is string => !!x);
+  const { data, error } = await supabase
+    .from('event_offers')
+    .select('event_id, availability')
+    .in('event_id', ids)
+    .eq('is_primary', true);
+  if (error || !data) return out;
+  for (const row of data as Array<{ event_id: string; availability: string }>) {
+    // Only surface scarce states as badges; 'available' is the expected default.
+    const badge: AvailabilityBadge | null =
+      row.availability === 'sold_out' ? 'sold_out'
+      : row.availability === 'limited'  ? 'few_left'
+      : null;
+    out.set(row.event_id, badge);
+  }
+  return out;
+}
+
 /** Normalize a city string for comparison. Trims + lowercases. */
 function normalizeCity(city: string | undefined | null): string {
   return (city ?? '').trim().toLowerCase();
@@ -322,6 +353,7 @@ function toCard(
   venue: VenueRow | undefined,
   fallbackCity: string,
   artistSlugs?: Set<string>,
+  availability?: AvailabilityBadge | null,
 ): EventCard {
   return {
     id: r.id,
@@ -342,6 +374,7 @@ function toCard(
     image_attribution: r.image_attribution ?? null,
     image_source_url: r.image_source_url ?? null,
     artist_slugs: artistSlugs ? Array.from(artistSlugs) : undefined,
+    availability_badge: availability ?? undefined,
     source: r.source ?? null,
     confidence_score: r.confidence_score ?? null,
     freshness_at: r.freshness_at ?? null,
@@ -442,8 +475,19 @@ export async function searchEvents(
   const eventIds = filteredByCity.map((r) => r.id);
   const artistMap = await fetchArtistSlugsByEventIds(supabase, eventIds);
 
+  // ─── T0080 — Availability hop: populate EventCard.availability_badge ──────
+  // Parallel with artist hop. Fetches primary-offer availability per event
+  // and maps 'sold_out'/'limited' to badge strings; 'available'/'unknown' → null.
+  const availabilityMap = await fetchPrimaryOfferAvailability(supabase, eventIds);
+
   const events: EventCard[] = filteredByCity.map((r) =>
-    toCard(r, r.venue_id ? venues.get(r.venue_id) : undefined, fallbackCity, artistMap.get(r.id)),
+    toCard(
+      r,
+      r.venue_id ? venues.get(r.venue_id) : undefined,
+      fallbackCity,
+      artistMap.get(r.id),
+      availabilityMap.get(r.id),
+    ),
   );
 
   return { events, warnings, relaxed_constraint: relaxed };

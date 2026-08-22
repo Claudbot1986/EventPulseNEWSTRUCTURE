@@ -120,6 +120,15 @@ export interface EventCard {
   reasons?: RankReason[];
   /** Deterministic ranker score (sum of weighted features). */
   score?: number;
+  /**
+   * T0080 — Ticket availability badge derived from `event_offers.availability`.
+   * Renders as a colored chip on event cards:
+   *   - 'sold_out'  : red chip — event is sold out
+   *   - 'few_left'  : amber chip — limited inventory (valid_until < 7d)
+   *   - 'available' : green chip — appears only for explicitly scarce events
+   *   - 'unknown'   : no chip rendered (null/undefined)
+   */
+  availability_badge?: 'sold_out' | 'few_left' | 'available' | null;
 }
 
 export interface EventDetail extends EventCard {
