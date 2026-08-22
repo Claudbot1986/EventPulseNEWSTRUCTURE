@@ -202,5 +202,101 @@
     "expected_min_results": 1,
     "expected_reasons_must_contain": ["time_fit"],
     "expected_reasons_must_not_contain": ["category_match"]
+  },
+  {
+    "id": "CC01",
+    "curated_id": "klassiskt-ikvall",
+    "query": "Klassisk konsert ikväll i Stockholm?",
+    "expected_language": "sv",
+    "expected_time_of_day": "evening",
+    "expected_categories": ["music"],
+    "expected_min_results": 0,
+    "expected_reasons_must_contain": ["category_match"]
+  },
+  {
+    "id": "CC02",
+    "curated_id": "jazz-i-stan",
+    "query": "Jazz ikväll i Stockholm?",
+    "expected_language": "sv",
+    "expected_time_of_day": "evening",
+    "expected_categories": ["music"],
+    "expected_min_results": 0,
+    "expected_reasons_must_contain": ["category_match"]
+  },
+  {
+    "id": "CC03",
+    "curated_id": "morgonens-lugna-toner",
+    "query": "Musik på morgonen i Stockholm?",
+    "expected_language": "sv",
+    "expected_categories": ["music"],
+    "expected_min_results": 0,
+    "expected_reasons_must_contain": ["category_match"]
+  },
+  {
+    "id": "CC04",
+    "curated_id": "gratis-pa-lordag",
+    "query": "Gratis evenemang i Stockholm på lördag?",
+    "expected_language": "sv",
+    "expected_budget": "free",
+    "expected_min_results": 0,
+    "expected_reasons_must_contain": ["under_budget"]
+  },
+  {
+    "id": "CC05",
+    "curated_id": "gratis-pa-sondag",
+    "query": "Gratis evenemang i Stockholm på söndag?",
+    "expected_language": "sv",
+    "expected_budget": "free",
+    "expected_min_results": 0,
+    "expected_reasons_must_contain": ["under_budget"]
+  },
+  {
+    "id": "CC06",
+    "curated_id": "gratis-i-helgen",
+    "query": "Gratis evenemang i Stockholm i helgen?",
+    "expected_language": "sv",
+    "expected_budget": "free",
+    "expected_min_results": 0,
+    "expected_reasons_must_contain": ["under_budget"]
+  },
+  {
+    "id": "CC07",
+    "curated_id": "konsert-under-200",
+    "query": "Konsert under 200 kronor Stockholm?",
+    "expected_language": "sv",
+    "expected_budget": "low",
+    "expected_categories": ["music"],
+    "expected_min_results": 0,
+    "expected_reasons_must_contain": ["category_match"]
+  },
+  {
+    "id": "CC08",
+    "curated_id": "metal-under-200",
+    "query": "Konsert under 200 kronor Stockholm?",
+    "expected_language": "sv",
+    "expected_budget": "low",
+    "expected_categories": ["music"],
+    "expected_min_results": 0,
+    "expected_reasons_must_contain": ["category_match"]
+  },
+  {
+    "id": "CC09",
+    "curated_id": "barnens-helg",
+    "query": "Familj evenemang i Stockholm i helgen?",
+    "expected_language": "sv",
+    "expected_party": "family",
+    "expected_date_range": "this_weekend",
+    "expected_min_results": 0,
+    "expected_reasons_must_contain": ["category_match"]
+  },
+  {
+    "id": "CC10",
+    "curated_id": "utstallningar-i-helgen",
+    "query": "Konst i Stockholm öppen i helgen?",
+    "expected_language": "sv",
+    "expected_categories": ["art"],
+    "expected_date_range": "this_weekend",
+    "expected_min_results": 0,
+    "expected_reasons_must_contain": ["category_match"]
   }
 ]

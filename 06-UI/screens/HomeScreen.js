@@ -41,7 +41,7 @@ import {
   Image,
 } from 'react-native';
 
-import { fetchFeed, fetchSavedEvents, fetchRecommendedEvents, fetchSuggestedPrompts, fetchCachedRecommendations, fetchRecentQueries, fetchLiveEvents } from '../services/agentClient';
+import { fetchFeed, fetchSavedEvents, fetchRecommendedEvents, fetchSuggestedPrompts, fetchCachedRecommendations, fetchRecentQueries, fetchCuratedCollections, fetchLiveEvents } from '../services/agentClient';
 
 const TOKENS = {
   color: {
@@ -601,6 +601,76 @@ function PromptChip({ prompt, onPress }) {
   );
 }
 
+// ─── Curated collections (T0084 — hand-curated "Kuratorens val" lists) ───────
+
+const CURATED_COLLECTIONS_LIMIT = 3;
+
+function useCuratedCollections() {
+  const [state, setState] = useState({ status: 'loading', collections: [], error: null });
+
+  const load = useCallback(async () => {
+    setState({ status: 'loading', collections: [], error: null });
+    try {
+      const result = await fetchCuratedCollections({ limit: CURATED_COLLECTIONS_LIMIT });
+      setState({
+        status: 'ready',
+        collections: Array.isArray(result.collections) ? result.collections : [],
+        error: null,
+      });
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : 'unknown';
+      setState({ status: 'error', collections: [], error: msg });
+    }
+  }, []);
+
+  useEffect(() => {
+    load();
+  }, [load]);
+
+  return { ...state, retry: load };
+}
+
+function CuratedChip({ collection, onPress }) {
+  return (
+    <Pressable
+      style={({ pressed }) => [styles.curatedChip, pressed && styles.curatedChipPressed]}
+      onPress={() => onPress?.({ prompt_text: collection.prompt_text, curated_id: collection.id })}
+      accessibilityRole="button"
+      accessibilityLabel={`Kuratorens val: ${collection.name}`}
+    >
+      <Text style={styles.curatedChipName} numberOfLines={1}>{collection.name}</Text>
+      <Text style={styles.curatedChipReason} numberOfLines={2}>{collection.reason}</Text>
+    </Pressable>
+  );
+}
+
+function CuratedCollectionsSection({ onChipPress }) {
+  const { status, collections } = useCuratedCollections();
+  // Hide the section entirely when the curator has nothing to suggest or the
+  // fetch failed (T0084 spec — best-effort, never red).
+  if (status === 'ready' && collections.length === 0) return null;
+
+  return (
+    <View style={styles.section}>
+      <View style={styles.sectionHeader}>
+        <Text style={styles.sectionEyebrow}>KURATORENS VAL</Text>
+        <Text style={styles.sectionTitle}>Handplockade listor</Text>
+      </View>
+      <ScrollView
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        contentContainerStyle={styles.curatedChipRow}
+      >
+        {status === 'loading'
+          ? Array.from({ length: CURATED_COLLECTIONS_LIMIT }).map((_, i) => <ChipSkeleton key={`c-${i}`} />)
+          : collections.map((c) => (
+              <CuratedChip key={c.id} collection={c} onPress={onChipPress} />
+            ))}
+      </ScrollView>
+    </View>
+  );
+}
+
 function SuggestedPromptsSection({ onChipPress }) {
   const { status, prompts } = useSuggestedPrompts();
   // Hide section on error / empty (T0063 spec) — failure mode is "no chips" not "red error".
@@ -879,6 +949,7 @@ export default function HomeScreen({ onChipPress }) {
         </View>
 
         <SuggestedPromptsSection onChipPress={handlePromptPress} />
+        <CuratedCollectionsSection onChipPress={handlePromptPress} />
         <RecentSearchesSection onChipPress={handlePromptPress} />
         <LiveNowStrip onCardPress={handleCardPress} />
 
@@ -1149,6 +1220,37 @@ const styles = StyleSheet.create({
     minWidth: 180,
     height: 60,
     opacity: 0.6,
+  },
+
+  // Curated collections (T0084)
+  curatedChipRow: {
+    paddingHorizontal: TOKENS.space.lg,
+    gap: TOKENS.space.md,
+  },
+  curatedChip: {
+    minWidth: 200,
+    maxWidth: 240,
+    backgroundColor: TOKENS.color.surface,
+    borderRadius: TOKENS.radius.lg,
+    paddingVertical: TOKENS.space.md,
+    paddingHorizontal: TOKENS.space.md,
+    borderWidth: 1,
+    borderColor: TOKENS.color.border,
+    borderLeftWidth: 3,
+    borderLeftColor: TOKENS.color.accent,
+  },
+  curatedChipPressed: {
+    opacity: 0.7,
+  },
+  curatedChipName: {
+    color: TOKENS.color.text,
+    fontSize: TOKENS.fontSize.md,
+    fontWeight: '700',
+    marginBottom: 4,
+  },
+  curatedChipReason: {
+    color: TOKENS.color.textSoft,
+    fontSize: TOKENS.fontSize.sm,
   },
 
   // Live now strip (T0083)
