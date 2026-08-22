@@ -1,7 +1,11 @@
 import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { StatusBar } from 'expo-status-bar';
 import { StyleSheet, Text, View, SectionList, FlatList, SafeAreaView, ActivityIndicator, TouchableOpacity, ScrollView, Linking, Dimensions } from 'react-native';
-import { fetchEvents, fetchPublishedEventTotal, PAGE_SIZE } from './services/eventServiceClient';
+import { fetchEvents, PAGE_SIZE } from './services/eventServiceClient';
+import { EventTotalProvider, usePublishedEventTotal, formatPublishedEventTotal } from './context/EventTotalContext';
+import ExploreScreen from './screens/ExploreScreen';
+import PlaceholderScreen from './screens/PlaceholderScreen';
+import TabBar from './components/TabBar';
 
 // Calculate end date (1 year from now)
 function getEndDate() {
@@ -376,9 +380,9 @@ function LoadingMore() {
 }
 
 function HomeScreen({ onEventPress, scrollPositionRef }) {
+  const { total: totalPublishedEvents } = usePublishedEventTotal();
   const [events, setEvents] = useState([]);
   const [availableSources, setAvailableSources] = useState([]);
-  const [totalPublishedEvents, setTotalPublishedEvents] = useState(null);
   const [loading, setLoading] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
   const [error, setError] = useState(null);
@@ -432,24 +436,6 @@ function HomeScreen({ onEventPress, scrollPositionRef }) {
       setLoadingMore(false);
       isFetchingRef.current = false;
     }
-  }, []);
-
-  useEffect(() => {
-    let cancelled = false;
-
-    fetchPublishedEventTotal()
-      .then((total) => {
-        if (!cancelled && typeof total === 'number' && total > 0) {
-          setTotalPublishedEvents(total);
-        }
-      })
-      .catch((err) => {
-        console.warn('[HomeScreen] failed to fetch total event count:', err.message);
-      });
-
-    return () => {
-      cancelled = true;
-    };
   }, []);
 
   useEffect(() => {
@@ -555,8 +541,8 @@ function HomeScreen({ onEventPress, scrollPositionRef }) {
         <View style={styles.header}>
           <Text style={styles.appTitle}>EventPulse</Text>
           <Text style={styles.appSubtitle}>
-            {totalPublishedEvents != null
-              ? `${totalPublishedEvents.toLocaleString('sv-SE')} riktiga event`
+            {formatPublishedEventTotal(totalPublishedEvents)
+              ? `${formatPublishedEventTotal(totalPublishedEvents)} riktiga event`
               : 'Event i Sverige'}
           </Text>
         </View>
@@ -574,8 +560,8 @@ function HomeScreen({ onEventPress, scrollPositionRef }) {
         <View style={styles.header}>
           <Text style={styles.appTitle}>EventPulse</Text>
           <Text style={styles.appSubtitle}>
-            {totalPublishedEvents != null
-              ? `${totalPublishedEvents.toLocaleString('sv-SE')} riktiga event`
+            {formatPublishedEventTotal(totalPublishedEvents)
+              ? `${formatPublishedEventTotal(totalPublishedEvents)} riktiga event`
               : 'Event i Sverige'}
           </Text>
         </View>
@@ -592,8 +578,8 @@ function HomeScreen({ onEventPress, scrollPositionRef }) {
       <View style={styles.header}>
         <Text style={styles.appTitle}>EventPulse</Text>
         <Text style={styles.appSubtitle}>
-          {totalPublishedEvents != null
-            ? `${totalPublishedEvents.toLocaleString('sv-SE')} riktiga event`
+          {formatPublishedEventTotal(totalPublishedEvents)
+            ? `${formatPublishedEventTotal(totalPublishedEvents)} riktiga event`
             : 'Event i Sverige'}
         </Text>
       </View>
@@ -817,6 +803,7 @@ function DetailsScreen({ event, onBack }) {
 export default function App() {
   const [showSplash, setShowSplash] = useState(true);
   const [selectedEvent, setSelectedEvent] = useState(null);
+  const [activeTab, setActiveTab] = useState('utforska');
   const scrollPositionRef = useRef(0);
 
   useEffect(() => {
@@ -832,20 +819,40 @@ export default function App() {
 
   const handleBack = () => {
     setSelectedEvent(null);
-    // Scroll position is automatically preserved because we don't unmount HomeScreen
+  };
+
+  const renderMainScreen = () => {
+    switch (activeTab) {
+      case 'utforska':
+        return <ExploreScreen onEventPress={handleEventPress} />;
+      case 'notiser':
+        return <PlaceholderScreen title="Notiser" />;
+      case 'profil':
+        return <PlaceholderScreen title="Profil" />;
+      case 'hem':
+      default:
+        return (
+          <HomeScreen onEventPress={handleEventPress} scrollPositionRef={scrollPositionRef} />
+        );
+    }
   };
 
   return (
-    <View style={styles.container}>
-      {showSplash ? (
-        <SplashScreen />
-      ) : selectedEvent ? (
-        <DetailsScreen event={selectedEvent} onBack={handleBack} />
-      ) : (
-        <HomeScreen onEventPress={handleEventPress} scrollPositionRef={scrollPositionRef} />
-      )}
-      <StatusBar style="light" />
-    </View>
+    <EventTotalProvider>
+      <View style={styles.container}>
+        {showSplash ? (
+          <SplashScreen />
+        ) : selectedEvent ? (
+          <DetailsScreen event={selectedEvent} onBack={handleBack} />
+        ) : (
+          <View style={styles.mainShell}>
+            <View style={styles.mainContent}>{renderMainScreen()}</View>
+            <TabBar activeTab={activeTab} onTabChange={setActiveTab} />
+          </View>
+        )}
+        <StatusBar style="light" />
+      </View>
+    </EventTotalProvider>
   );
 }
 
@@ -853,6 +860,12 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#000000',
+  },
+  mainShell: {
+    flex: 1,
+  },
+  mainContent: {
+    flex: 1,
   },
   splashContainer: {
     flex: 1,
