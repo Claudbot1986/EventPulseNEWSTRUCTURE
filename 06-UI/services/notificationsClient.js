@@ -197,3 +197,64 @@ export function deepLinkFor(notification) {
   }
   return null;
 }
+
+/**
+ * GET /agent/attendance — T0082.
+ *
+ * Returns past saved events that the user has not yet rated. The UI
+ * renders these in the "Attended" section of NotificationsScreen so the
+ * user can leave feedback even if the attendance_prompt cron has not
+ * fired yet.
+ *
+ * Wire: `{ events: Array<{ id, title, venue_name, start_time }> }`
+ *
+ * Best-effort: never throws. Returns `{ ok: false, warning: 'config' }`
+ * if the agent URL is missing, or `'network'` on a network error.
+ *
+ * @param {{ limit?: number, signal?: AbortSignal, timeoutMs?: number }} [opts]
+ * @returns {Promise<{ ok: true, events: Array } | { ok: false, warning: string }>}
+ */
+export async function fetchUnratedSavedEvents({ limit = DEFAULT_LIMIT, signal, timeoutMs = DEFAULT_TIMEOUT_MS } = {}) {
+  let baseUrl;
+  try {
+    baseUrl = requireAgentBaseUrl();
+  } catch (_err) {
+    return { ok: false, warning: 'config' };
+  }
+  const safeLimit = Math.min(Math.max(parseInt(String(limit), 10) || DEFAULT_LIMIT, 1), MAX_LIMIT);
+  const client_user_id = await getOrCreateAnonUserId();
+
+  const url = new URL(`${baseUrl}/agent/attendance`);
+  url.searchParams.set('client_user_id', client_user_id);
+  url.searchParams.set('limit', String(safeLimit));
+
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), timeoutMs);
+  if (signal) {
+    if (signal.aborted) controller.abort();
+    else signal.addEventListener('abort', () => controller.abort(), { once: true });
+  }
+
+  try {
+    const response = await fetch(url.toString(), { signal: controller.signal });
+    if (!response.ok) {
+      return { ok: false, warning: `agent ${response.status}` };
+    }
+    const data = await response.json();
+    const raw = Array.isArray(data.events) ? data.events : [];
+    // Defensive sanitize — drop rows missing required fields.
+    const events = raw
+      .filter((row) => row && typeof row === 'object' && typeof row.id === 'string' && row.id.length > 0)
+      .map((row) => ({
+        id: row.id,
+        title: typeof row.title === 'string' ? row.title : 'Sparat event',
+        venue_name: typeof row.venue_name === 'string' ? row.venue_name : null,
+        start_time: typeof row.start_time === 'string' ? row.start_time : '',
+      }));
+    return { ok: true, events };
+  } catch (_err) {
+    return { ok: false, warning: 'network' };
+  } finally {
+    clearTimeout(timer);
+  }
+}

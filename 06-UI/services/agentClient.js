@@ -197,6 +197,114 @@ export async function savePreferencesToServer({ categories }, { signal, timeoutM
   }
 }
 
+/**
+ * T0082 / MVP-gap §77: mark a saved event as attended.
+ *
+ * Best-effort: never throws. The server returns 202 with a warning if the
+ * write is rejected (e.g. unknown interaction). We swallow that to keep the
+ * UI flow uninterrupted — the rating step right after is the user-visible
+ * signal that "we got your feedback".
+ *
+ * @param {{ eventId: string, signal?: AbortSignal, timeoutMs?: number }} input
+ * @returns {Promise<{ ok: boolean, warning?: string }>}
+ */
+export async function recordAttendance({ eventId, signal, timeoutMs = 4_000 }) {
+  if (!eventId || typeof eventId !== 'string') {
+    return { ok: false, warning: 'missing eventId' };
+  }
+  let baseUrl;
+  try {
+    baseUrl = requireAgentBaseUrl();
+  } catch (_err) {
+    return { ok: false, warning: 'config' };
+  }
+  const client_user_id = await getOrCreateAnonUserId();
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), timeoutMs);
+  if (signal) {
+    if (signal.aborted) controller.abort();
+    else signal.addEventListener('abort', () => controller.abort(), { once: true });
+  }
+  try {
+    const response = await fetch(`${baseUrl}/agent/attendance`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ client_user_id, event_id: eventId }),
+      signal: controller.signal,
+    });
+    if (!response.ok && response.status !== 202) {
+      return { ok: false, warning: `agent ${response.status}` };
+    }
+    return await response.json().catch(() => ({ ok: true }));
+  } catch (_err) {
+    return { ok: false, warning: 'network' };
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
+/**
+ * T0082 / MVP-gap §77: submit a 1–5 star rating plus an optional short note.
+ *
+ * The server caps `note` at 140 chars and validates `rating` is an integer
+ * in [1, 5]. The client trims and re-validates before sending so the user
+ * gets instant feedback rather than waiting for the round-trip. No PII
+ * scrubbing is performed server-side — the UI is responsible for hinting
+ * the user (input placeholder "Hur var det? Inga personuppgifter tack.")
+ * and the policy lives in the readme / onboarding copy.
+ *
+ * Best-effort: never throws.
+ *
+ * @param {{ eventId: string, rating: number, note?: string, signal?: AbortSignal, timeoutMs?: number }} input
+ * @returns {Promise<{ ok: boolean, warning?: string }>}
+ */
+export async function recordRating({ eventId, rating, note, signal, timeoutMs = 4_000 }) {
+  if (!eventId || typeof eventId !== 'string') {
+    return { ok: false, warning: 'missing eventId' };
+  }
+  if (!Number.isInteger(rating) || rating < 1 || rating > 5) {
+    return { ok: false, warning: 'rating must be 1..5' };
+  }
+  // Server caps at 140 chars; trim ahead of time so the UI shows the
+  // count down to 140 honestly (the input maxLength already enforces it
+  // but defensive trim protects against programmatic callers).
+  const trimmedNote = typeof note === 'string' ? note.trim().slice(0, 140) : undefined;
+  let baseUrl;
+  try {
+    baseUrl = requireAgentBaseUrl();
+  } catch (_err) {
+    return { ok: false, warning: 'config' };
+  }
+  const client_user_id = await getOrCreateAnonUserId();
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), timeoutMs);
+  if (signal) {
+    if (signal.aborted) controller.abort();
+    else signal.addEventListener('abort', () => controller.abort(), { once: true });
+  }
+  try {
+    const response = await fetch(`${baseUrl}/agent/rating`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        client_user_id,
+        event_id: eventId,
+        rating,
+        note: trimmedNote && trimmedNote.length > 0 ? trimmedNote : undefined,
+      }),
+      signal: controller.signal,
+    });
+    if (!response.ok && response.status !== 202) {
+      return { ok: false, warning: `agent ${response.status}` };
+    }
+    return await response.json().catch(() => ({ ok: true }));
+  } catch (_err) {
+    return { ok: false, warning: 'network' };
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
 // Re-exported for callers that want to await identity without poking storage directly.
 export { getOrCreateAnonUserId };
 
@@ -1026,6 +1134,102 @@ export async function fetchCachedRecommendations({
     .filter((s) => s.title.length > 0 || s.cards.length > 0);
 
   return { slots, generated_at: typeof data.generated_at === 'string' ? data.generated_at : null };
+}
+
+/**
+ * Fetch the hand-curated editorial "Kuratorens val" lists — T0084 / MVP-gap §77.
+ *
+ * GET /agent/curated-collections?locale=sv|en&limit=<int>
+ *
+ * Returns 2–3 collections like "Klassiskt ikväll" / "Gratis på lördag" /
+ * "Metal under 200 kr" with their prompt text + up to 3 example event ids.
+ * The user-facing chip text comes from the catalog on the server side; the
+ * client just renders what arrives.
+ *
+ * Best-effort: network / 5xx / parse failure returns an empty collection
+ * list so HomeScreen can hide the section silently. This is the same
+ * fetchRecentQueries pattern.
+ *
+ * @returns {Promise<{
+ *   collections: Array<{
+ *     id: string,
+ *     name: string,
+ *     reason: string,
+ *     prompt_text: string,
+ *     category_slug?: string,
+ *     time_of_day?: 'morning'|'afternoon'|'evening'|'night',
+ *     budget?: 'free'|'low'|'medium'|'high'|'any',
+ *     day_filter?: 'weekday'|'friday'|'weekend'|'saturday'|'sunday'|'today',
+ *     locale: 'sv'|'en',
+ *     event_ids: string[],
+ *   }>,
+ *   generated_at: string|null,
+ *   warnings: string[],
+ * }>}
+ */
+export async function fetchCuratedCollections({
+  locale = 'sv',
+  limit = 3,
+  signal,
+  timeoutMs = 12_000,
+} = {}) {
+  let baseUrl;
+  try {
+    baseUrl = requireAgentBaseUrl();
+  } catch (_err) {
+    return { collections: [], generated_at: null, warnings: ['config'] };
+  }
+
+  const url = new URL(`${baseUrl}/agent/curated-collections`);
+  url.searchParams.set('locale', locale);
+  url.searchParams.set('limit', String(limit));
+
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), timeoutMs);
+  if (signal) {
+    if (signal.aborted) controller.abort();
+    else signal.addEventListener('abort', () => controller.abort(), { once: true });
+  }
+
+  let response;
+  try {
+    response = await fetch(url.toString(), { signal: controller.signal });
+  } catch (_err) {
+    clearTimeout(timer);
+    return { collections: [], generated_at: null, warnings: ['network'] };
+  }
+  clearTimeout(timer);
+
+  if (!response.ok) {
+    return { collections: [], generated_at: null, warnings: [`agent ${response.status}`] };
+  }
+
+  let data;
+  try {
+    data = await response.json();
+  } catch (_err) {
+    return { collections: [], generated_at: null, warnings: ['parse'] };
+  }
+
+  const rawList = Array.isArray(data?.collections) ? data.collections : [];
+  const collections = rawList.map((c) => ({
+    id: typeof c?.id === 'string' ? c.id : '',
+    name: typeof c?.name === 'string' ? c.name : '',
+    reason: typeof c?.reason === 'string' ? c.reason : '',
+    prompt_text: typeof c?.prompt_text === 'string' ? c.prompt_text : '',
+    ...(typeof c?.category_slug === 'string' ? { category_slug: c.category_slug } : {}),
+    ...(typeof c?.time_of_day === 'string' ? { time_of_day: c.time_of_day } : {}),
+    ...(typeof c?.budget === 'string' ? { budget: c.budget } : {}),
+    ...(typeof c?.day_filter === 'string' ? { day_filter: c.day_filter } : {}),
+    locale: c?.locale === 'en' ? 'en' : 'sv',
+    event_ids: Array.isArray(c?.event_ids) ? c.event_ids.filter((id) => typeof id === 'string') : [],
+  }));
+
+  return {
+    collections,
+    generated_at: typeof data?.generated_at === 'string' ? data.generated_at : null,
+    warnings: Array.isArray(data?.warnings) ? data.warnings : [],
+  };
 }
 
 /**

@@ -47,6 +47,7 @@ import {
   listNotifications,
   markNotificationRead,
   generateRemindersForUser,
+  listUnratedSavedEvents,
 } from './tools/notification_center';
 import {
   followVenue,
@@ -1101,6 +1102,146 @@ export function buildApp(opts: { supabase?: SupabaseClient } = {}): express.Expr
   });
 
   /**
+   * GET /agent/attendance?client_user_id=<uuid>
+   *
+   * T0082 / MVP-gap §77: read-side of the post-event feedback loop.
+   * Returns saved events whose start_time has passed and that the user
+   * has not yet recorded an attendance / rating interaction for. The
+   * UI renders these in the "Attended" section of NotificationsScreen so
+   * the user can rate a show even if the cron has not fired yet.
+   *
+   * Wire: `{ events: Array<{ id, title, venue_name, start_time }> }`
+   */
+  app.get('/agent/attendance', generalLimiter.middleware, async (req: Request, res: Response) => {
+    const raw = typeof req.query.client_user_id === 'string' ? req.query.client_user_id : '';
+    if (!UUID_RE.test(raw)) {
+      res.status(400).json({ error: 'client_user_id must be a uuid' });
+      return;
+    }
+    const limit = typeof req.query.limit === 'string'
+      ? Math.min(Math.max(parseInt(req.query.limit, 10) || 50, 1), 200)
+      : 50;
+    const client = sb ?? getSupabase();
+    const result = await listUnratedSavedEvents(client, raw, { limit });
+    if (!result.ok) {
+      res.status(500).json({ error: result.warning ?? 'unknown error' });
+      return;
+    }
+    res.json({ events: result.events });
+  });
+
+  /**
+   * POST /agent/attendance
+   *
+   * T0082 / MVP-gap §77: user marks a saved event as attended. Persists
+   * a `user_interactions` row with `interaction='attendance'`. Repeated
+   * POSTs write fresh rows (the table has no UNIQUE constraint) but
+   * `listUnratedSavedEvents` excludes any event with an existing
+   * attendance/rating row, so the user is not pestered again.
+   *
+   * Body: { client_user_id: uuid, event_id: uuid }
+   */
+  app.post('/agent/attendance', chatLimiter.middleware, async (req: Request, res: Response) => {
+    const body = req.body as Partial<{ client_user_id: string; event_id: string }>;
+    if (!body || typeof body !== 'object') {
+      res.status(400).json({ error: 'invalid body' });
+      return;
+    }
+    if (!body.client_user_id || !UUID_RE.test(body.client_user_id)) {
+      res.status(400).json({ error: 'client_user_id must be a uuid' });
+      return;
+    }
+    if (!body.event_id || !UUID_RE.test(body.event_id)) {
+      res.status(400).json({ error: 'event_id must be a uuid' });
+      return;
+    }
+    const client = sb ?? getSupabase();
+    const result = await client
+      .from('user_interactions')
+      .insert({
+        client_user_id: body.client_user_id,
+        event_id: body.event_id,
+        interaction: 'attendance',
+        metadata: {},
+      });
+    if (result.error) {
+      // 202 = "we heard you, we couldn't persist it". The UI treats it
+      // as silent best-effort (same pattern as /agent/feedback).
+      res.status(202).json({ ok: false, warning: result.error.message });
+      return;
+    }
+    res.json({ ok: true, interaction: 'attendance' });
+  });
+
+  /**
+   * POST /agent/rating
+   *
+   * T0082 / MVP-gap §77: user assigns a 1–5 star score to a saved event
+   * plus an optional short note (capped at 140 chars; the UI enforces
+   * this client-side, the server re-validates as a guardrail). Persists
+   * a `user_interactions` row with `interaction='rating'` and stores
+   * `{ rating, note }` in metadata. The note is the user's free text —
+   * the client is expected to scrub obvious PII before sending.
+   *
+   * Body: { client_user_id: uuid, event_id: uuid, rating: 1..5, note?: string }
+   */
+  app.post('/agent/rating', chatLimiter.middleware, async (req: Request, res: Response) => {
+    const body = req.body as Partial<{
+      client_user_id: string;
+      event_id: string;
+      rating: number;
+      note: string;
+    }>;
+    if (!body || typeof body !== 'object') {
+      res.status(400).json({ error: 'invalid body' });
+      return;
+    }
+    if (!body.client_user_id || !UUID_RE.test(body.client_user_id)) {
+      res.status(400).json({ error: 'client_user_id must be a uuid' });
+      return;
+    }
+    if (!body.event_id || !UUID_RE.test(body.event_id)) {
+      res.status(400).json({ error: 'event_id must be a uuid' });
+      return;
+    }
+    const rating = typeof body.rating === 'number' ? Math.trunc(body.rating) : NaN;
+    if (!Number.isInteger(rating) || rating < 1 || rating > 5) {
+      res.status(400).json({ error: 'rating must be an integer in [1, 5]' });
+      return;
+    }
+    let note: string | null = null;
+    if (typeof body.note === 'string') {
+      const trimmed = body.note.trim();
+      if (trimmed.length > 0) {
+        if (trimmed.length > 140) {
+          res.status(400).json({ error: 'note must be at most 140 characters' });
+          return;
+        }
+        note = trimmed;
+      }
+    } else if (body.note !== undefined && body.note !== null) {
+      res.status(400).json({ error: 'note must be a string when provided' });
+      return;
+    }
+    const client = sb ?? getSupabase();
+    const metadata: Record<string, unknown> = { rating };
+    if (note !== null) metadata.note = note;
+    const result = await client
+      .from('user_interactions')
+      .insert({
+        client_user_id: body.client_user_id,
+        event_id: body.event_id,
+        interaction: 'rating',
+        metadata,
+      });
+    if (result.error) {
+      res.status(202).json({ ok: false, warning: result.error.message });
+      return;
+    }
+    res.json({ ok: true, interaction: 'rating', rating, note });
+  });
+
+  /**
    * GET /agent/recommended?client_user_id=<uuid>&limit=<int>
    *
    * T0056 / MVP-gap §77: AI-preference section in HomeScreen.
@@ -1204,6 +1345,45 @@ export function buildApp(opts: { supabase?: SupabaseClient } = {}): express.Expr
       const result = await getSuggestedPrompts({
         supabase: client,
         client_user_id: raw,
+      });
+      res.json(result);
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'unknown error';
+      res.status(500).json({ error: msg });
+    }
+  });
+
+  /**
+   * GET /agent/curated-collections?locale=sv|en&limit=<int>
+   *
+   * T0084 / MVP-gap §77 (Phase 1 retention). Returns 2–3 hand-curated
+   * "Kuratorens val" lists (e.g. "Klassiskt ikväll", "Gratis på lördag",
+   * "Metal under 200 kr") with up to 3 event_id previews each. The
+   * HomeScreen renders these as chips under the "Rekommenderat" section;
+   * tapping a chip fires /agent/chat with the collection's prompt_text.
+   *
+   * No client_user_id required: the curator knows nothing about the
+   * individual user, only time-of-day + day-of-week. Locale is optional
+   * and defaults to 'sv'. Limit is clamped to [1, 3].
+   */
+  app.get('/agent/curated-collections', generalLimiter.middleware, async (req: Request, res: Response) => {
+    const localeRaw = typeof req.query.locale === 'string' ? req.query.locale : 'sv';
+    if (localeRaw !== 'sv' && localeRaw !== 'en') {
+      res.status(400).json({ error: "locale must be 'sv' or 'en'" });
+      return;
+    }
+    const locale = localeRaw;
+    const limit = typeof req.query.limit === 'string'
+      ? Math.min(Math.max(parseInt(req.query.limit, 10) || 3, 1), 3)
+      : 3;
+
+    const client = sb ?? getSupabase();
+    try {
+      const { getCuratedCollections } = await import('./tools/curated_collections.js');
+      const result = await getCuratedCollections({
+        supabase: client,
+        locale,
+        limit,
       });
       res.json(result);
     } catch (err: unknown) {

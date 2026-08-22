@@ -32,6 +32,8 @@ import {
   Pressable,
   ActivityIndicator,
   RefreshControl,
+  TextInput,
+  Alert,
 } from 'react-native';
 
 import {
@@ -39,7 +41,12 @@ import {
   markNotificationRead,
   groupNotifications,
   deepLinkFor,
+  fetchUnratedSavedEvents,
 } from '../services/notificationsClient';
+import {
+  recordAttendance,
+  recordRating,
+} from '../services/agentClient';
 
 const TOKENS = {
   color: {
@@ -102,25 +109,49 @@ export default function NotificationsScreen({ onOpenEvent }) {
   const lastFetchedRef = useRef(0);
   const aliveRef = useRef(true);
 
+  // ─── T0082 attended-events state ─────────────────────────────────────────
+  const [attendedEvents, setAttendedEvents] = useState([]);
+  const [attendedLoading, setAttendedLoading] = useState(false);
+  // Per-event rating draft. Keys are event ids; values are { rating, note }.
+  // Local to the screen so navigating away doesn't lose the in-progress input.
+  const [ratingDrafts, setRatingDrafts] = useState({});
+  // eventId currently being submitted. null when nothing is in flight.
+  const [submittingId, setSubmittingId] = useState(null);
+
+  const loadAttended = useCallback(async () => {
+    setAttendedLoading(true);
+    const result = await fetchUnratedSavedEvents({ limit: 25 });
+    if (!aliveRef.current) return;
+    if (result.ok) {
+      setAttendedEvents(result.events);
+    }
+    // Best-effort: silently swallow non-ok results — the section just
+    // renders empty. The agent URL being misconfigured shows up elsewhere.
+    setAttendedLoading(false);
+  }, []);
+
   const load = useCallback(async ({ force = false } = {}) => {
     const since = Date.now() - lastFetchedRef.current;
     if (!force && lastFetchedRef.current > 0 && since < REFRESH_TTL_MS) {
       return;
     }
     if (force) setRefreshing(true);
-    const result = await fetchNotifications({ limit: 50 });
+    const [notifResult] = await Promise.all([
+      fetchNotifications({ limit: 50 }),
+      loadAttended(),
+    ]);
     if (!aliveRef.current) return;
-    if (result.ok) {
-      setNotifications(result.notifications);
+    if (notifResult.ok) {
+      setNotifications(notifResult.notifications);
       setError(null);
     } else {
-      setError(result.warning ?? 'unknown');
+      setError(notifResult.warning ?? 'unknown');
     }
     lastFetchedRef.current = Date.now();
     setNowMs(Date.now());
     setLoading(false);
     setRefreshing(false);
-  }, []);
+  }, [loadAttended]);
 
   useEffect(() => {
     aliveRef.current = true;
@@ -156,6 +187,61 @@ export default function NotificationsScreen({ onOpenEvent }) {
       console.log('[NotificationsScreen] would deep-link to', link);
     }
   }, [onOpenEvent]);
+
+  // ─── T0082 attended-section helpers ──────────────────────────────────────
+  const setDraft = useCallback((eventId, patch) => {
+    setRatingDrafts((prev) => {
+      const current = prev[eventId] || { rating: 0, note: '' };
+      return { ...prev, [eventId]: { ...current, ...patch } };
+    });
+  }, []);
+
+  const handleSubmitRating = useCallback(async (event) => {
+    if (!event || !event.id) return;
+    const draft = ratingDrafts[event.id] || { rating: 0, note: '' };
+    if (!Number.isInteger(draft.rating) || draft.rating < 1 || draft.rating > 5) {
+      Alert.alert('Välj ett betyg', 'Tryck på en stjärna för att betygsätta.');
+      return;
+    }
+    const trimmedNote = (draft.note || '').trim();
+    if (trimmedNote.length > 140) {
+      // Should never happen because the TextInput caps at 140, but defend
+      // server-side as a guardrail — better than crashing.
+      Alert.alert('För långt', 'Anteckningen får vara max 140 tecken.');
+      return;
+    }
+    setSubmittingId(event.id);
+    // Step 1: mark attendance. Best-effort — failure does not block the
+    // rating submission, the two interactions are independent signals.
+    try {
+      await recordAttendance({ eventId: event.id });
+    } catch (_err) {
+      // Swallow — recordRating below is the user-visible signal.
+    }
+    // Step 2: persist the rating + note.
+    const ratingResult = await recordRating({
+      eventId: event.id,
+      rating: draft.rating,
+      note: trimmedNote.length > 0 ? trimmedNote : undefined,
+    });
+    if (!aliveRef.current) return;
+    setSubmittingId(null);
+    if (ratingResult.ok) {
+      // Optimistic removal from the unrated list — the next refresh will
+      // confirm by not returning this event.
+      setAttendedEvents((prev) => prev.filter((e) => e.id !== event.id));
+      setRatingDrafts((prev) => {
+        const next = { ...prev };
+        delete next[event.id];
+        return next;
+      });
+    } else {
+      Alert.alert(
+        'Kunde inte skicka betyg',
+        ratingResult.warning ?? 'Prova igen om en stund.'
+      );
+    }
+  }, [ratingDrafts]);
 
   const renderRow = useCallback((notification) => {
     const unread = notification.status !== 'read';
@@ -206,6 +292,121 @@ export default function NotificationsScreen({ onOpenEvent }) {
     );
   }, [renderRow]);
 
+  // ─── T0082 attended-section render ───────────────────────────────────────
+  const renderAttendedSection = useCallback(() => {
+    if (attendedLoading && attendedEvents.length === 0) {
+      return (
+        <View style={styles.section}>
+          <View style={styles.sectionHeader}>
+            <Text style={styles.sectionEyebrow}>DELTAGIT</Text>
+          </View>
+          <View style={styles.cardList}>
+            <View style={styles.attendedLoadingBlock}>
+              <ActivityIndicator color={TOKENS.color.accent} />
+            </View>
+          </View>
+        </View>
+      );
+    }
+    if (attendedEvents.length === 0) return null;
+    return (
+      <View style={styles.section}>
+        <View style={styles.sectionHeader}>
+          <Text style={styles.sectionEyebrow}>DELTAGIT</Text>
+          <Text style={styles.sectionCount}>{attendedEvents.length}</Text>
+        </View>
+        <View style={styles.cardList}>
+          {attendedEvents.map((event) => {
+            const draft = ratingDrafts[event.id] || { rating: 0, note: '' };
+            const isSubmitting = submittingId === event.id;
+            return (
+              <View key={event.id} style={styles.attendedCard}>
+                <Text style={styles.attendedTitle} numberOfLines={2}>
+                  {event.title || '—'}
+                </Text>
+                <Text style={styles.attendedMeta} numberOfLines={1}>
+                  {[
+                    event.venue_name,
+                    event.start_time ? relativeLabel(event.start_time, nowMs) : null,
+                  ].filter(Boolean).join(' · ')}
+                </Text>
+                {/* 5-star widget — tappable, single-row. */}
+                <View style={styles.starRow}>
+                  {[1, 2, 3, 4, 5].map((star) => {
+                    const filled = star <= draft.rating;
+                    return (
+                      <Pressable
+                        key={star}
+                        accessibilityRole="button"
+                        accessibilityLabel={`${star} ${star === 1 ? 'stjärna' : 'stjärnor'}`}
+                        hitSlop={8}
+                        disabled={isSubmitting}
+                        onPress={() => setDraft(event.id, { rating: star })}
+                        style={({ pressed }) => [
+                          styles.starButton,
+                          pressed && !isSubmitting ? styles.starButtonPressed : null,
+                        ]}
+                      >
+                        <Text style={[styles.starGlyph, filled ? styles.starGlyphFilled : null]}>
+                          {filled ? '★' : '☆'}
+                        </Text>
+                      </Pressable>
+                    );
+                  })}
+                  <Text style={styles.starHint}>
+                    {draft.rating > 0
+                      ? `${draft.rating}/5`
+                      : 'Tryck för att betygsätta'}
+                  </Text>
+                </View>
+                <TextInput
+                  style={styles.noteInput}
+                  value={draft.note}
+                  editable={!isSubmitting}
+                  maxLength={140}
+                  placeholder="Skriv en kort anteckning (max 140 tecken, inga personuppgifter)"
+                  placeholderTextColor={TOKENS.color.textSoft}
+                  multiline
+                  onChangeText={(text) => setDraft(event.id, { note: text })}
+                />
+                <View style={styles.attendedFooter}>
+                  <Text style={styles.charCount}>
+                    {(draft.note || '').length}/140
+                  </Text>
+                  <Pressable
+                    accessibilityRole="button"
+                    accessibilityLabel="Skicka betyg"
+                    disabled={isSubmitting || draft.rating < 1}
+                    onPress={() => handleSubmitRating(event)}
+                    style={({ pressed }) => [
+                      styles.submitButton,
+                      (isSubmitting || draft.rating < 1) ? styles.submitButtonDisabled : null,
+                      pressed && draft.rating >= 1 && !isSubmitting ? styles.submitButtonPressed : null,
+                    ]}
+                  >
+                    {isSubmitting ? (
+                      <ActivityIndicator color={TOKENS.color.appBg} />
+                    ) : (
+                      <Text style={styles.submitButtonText}>Skicka betyg</Text>
+                    )}
+                  </Pressable>
+                </View>
+              </View>
+            );
+          })}
+        </View>
+      </View>
+    );
+  }, [
+    attendedLoading,
+    attendedEvents,
+    ratingDrafts,
+    submittingId,
+    nowMs,
+    setDraft,
+    handleSubmitRating,
+  ]);
+
   return (
     <View style={styles.container}>
       <ScrollView
@@ -244,6 +445,7 @@ export default function NotificationsScreen({ onOpenEvent }) {
             {renderSection('reminder', groups.reminders)}
             {renderSection('match', groups.matches)}
             {renderSection('response', groups.responses)}
+            {renderAttendedSection()}
 
             {isEmpty ? (
               <View style={styles.emptyBlock}>
@@ -396,5 +598,98 @@ const styles = StyleSheet.create({
     color: TOKENS.color.textMuted,
     fontSize: TOKENS.fontSize.md,
     lineHeight: 22,
+  },
+  // ─── T0082 attended-section styles ──────────────────────────────────────
+  attendedLoadingBlock: {
+    paddingVertical: TOKENS.space.lg,
+    alignItems: 'center',
+  },
+  attendedCard: {
+    padding: TOKENS.space.md,
+    borderBottomWidth: 1,
+    borderBottomColor: TOKENS.color.border,
+    backgroundColor: 'transparent',
+  },
+  attendedTitle: {
+    color: TOKENS.color.text,
+    fontSize: TOKENS.fontSize.md,
+    fontWeight: '600',
+    marginBottom: TOKENS.space.xs,
+  },
+  attendedMeta: {
+    color: TOKENS.color.textSoft,
+    fontSize: TOKENS.fontSize.sm,
+    marginBottom: TOKENS.space.sm,
+  },
+  starRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: TOKENS.space.sm,
+  },
+  starButton: {
+    paddingHorizontal: TOKENS.space.xs,
+    paddingVertical: TOKENS.space.xs,
+  },
+  starButtonPressed: {
+    opacity: 0.6,
+  },
+  starGlyph: {
+    color: TOKENS.color.textSoft,
+    fontSize: 24,
+    lineHeight: 28,
+  },
+  starGlyphFilled: {
+    color: TOKENS.color.accent,
+  },
+  starHint: {
+    color: TOKENS.color.textSoft,
+    fontSize: TOKENS.fontSize.sm,
+    marginLeft: TOKENS.space.sm,
+  },
+  noteInput: {
+    backgroundColor: TOKENS.color.appBg,
+    borderWidth: 1,
+    borderColor: TOKENS.color.border,
+    borderRadius: TOKENS.radius.md,
+    color: TOKENS.color.text,
+    fontSize: TOKENS.fontSize.md,
+    lineHeight: 20,
+    paddingHorizontal: TOKENS.space.md,
+    paddingVertical: TOKENS.space.sm,
+    minHeight: 60,
+    maxHeight: 120,
+    textAlignVertical: 'top',
+    marginBottom: TOKENS.space.sm,
+  },
+  attendedFooter: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginTop: TOKENS.space.xs,
+  },
+  charCount: {
+    color: TOKENS.color.textSoft,
+    fontSize: TOKENS.fontSize.sm,
+    fontVariant: ['tabular-nums'],
+  },
+  submitButton: {
+    paddingHorizontal: TOKENS.space.lg,
+    paddingVertical: TOKENS.space.sm,
+    borderRadius: TOKENS.radius.md,
+    backgroundColor: TOKENS.color.accent,
+    minWidth: 110,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  submitButtonPressed: {
+    opacity: 0.7,
+  },
+  submitButtonDisabled: {
+    backgroundColor: TOKENS.color.border,
+  },
+  submitButtonText: {
+    color: TOKENS.color.appBg,
+    fontSize: TOKENS.fontSize.md,
+    fontWeight: '700',
   },
 });
