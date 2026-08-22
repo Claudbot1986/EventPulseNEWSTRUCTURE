@@ -542,8 +542,8 @@ function HomeScreen({ onEventPress, scrollPositionRef }) {
           <Text style={styles.appTitle}>EventPulse</Text>
           <Text style={styles.appSubtitle}>
             {totalPublishedEvents != null
-              ? `${totalPublishedEvents.toLocaleString('sv-SE')} events`
-              : 'Events in Sweden'}
+              ? `${totalPublishedEvents.toLocaleString('sv-SE')} riktiga event`
+              : 'Event i Sverige'}
           </Text>
         </View>
         <View style={styles.loadingContainer}>
@@ -561,8 +561,8 @@ function HomeScreen({ onEventPress, scrollPositionRef }) {
           <Text style={styles.appTitle}>EventPulse</Text>
           <Text style={styles.appSubtitle}>
             {totalPublishedEvents != null
-              ? `${totalPublishedEvents.toLocaleString('sv-SE')} events`
-              : 'Events in Sweden'}
+              ? `${totalPublishedEvents.toLocaleString('sv-SE')} riktiga event`
+              : 'Event i Sverige'}
           </Text>
         </View>
         <View style={styles.errorContainer}>
@@ -577,7 +577,11 @@ function HomeScreen({ onEventPress, scrollPositionRef }) {
     <SafeAreaView style={styles.homeContainer}>
       <View style={styles.header}>
         <Text style={styles.appTitle}>EventPulse</Text>
-        <Text style={styles.appSubtitle}>Events in Sweden</Text>
+        <Text style={styles.appSubtitle}>
+          {totalPublishedEvents != null
+            ? `${totalPublishedEvents.toLocaleString('sv-SE')} riktiga event`
+            : 'Event i Sverige'}
+        </Text>
       </View>
       
       {/* Time Filter Row */}

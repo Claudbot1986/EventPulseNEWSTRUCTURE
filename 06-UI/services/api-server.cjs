@@ -3,7 +3,7 @@
  * EventPulse API wrapper — canonical read path for UI and tools.
  * Port 7777 (override with EVENTPULSE_API_PORT).
  *
- * GET /supabase-events?limit=200&offset=0&days=365&source=
+ * GET /supabase-events?limit=200&offset=0&source=
  * GET /health
  */
 
@@ -35,11 +35,10 @@ function sendJson(res, status, body) {
 async function handleSupabaseEvents(url) {
   const limit = Math.min(Number(url.searchParams.get('limit') || 200), 1000);
   const offset = Number(url.searchParams.get('offset') || 0);
-  const days = Number(url.searchParams.get('days') || 365);
   const source = url.searchParams.get('source') || null;
   const city = url.searchParams.get('city') || 'Stockholm';
 
-  const result = await fetchCanonicalEvents({ limit, offset, days, source, city });
+  const result = await fetchCanonicalEvents({ limit, offset, source, city });
   return result;
 }
 

@@ -1,6 +1,6 @@
 /**
- * Canonical event read path — Node wrapper (:7777).
- * Same query as eventsCanonical.js (all published, no date filter).
+ * Canonical event read path — shared by wrapper (:7777) and Expo app.
+ * Metro-compatible ESM (no node:module / createRequire).
  */
 
 const DEFAULT_SUPABASE_URL = 'https://bsllkpvkowwndhhxtlln.supabase.co';
@@ -10,15 +10,18 @@ const DEFAULT_SERVICE_KEY =
 const EVENT_SELECT =
   'id,source,source_id,title_sv,title_en,description_sv,description_en,start_time,end_time,venue_id,lat,lng,is_free,price_min_sek,price_max_sek,ticket_url,image_url,status,category_slug,venues(name,address,city)';
 
-function getConfig() {
+export function getSupabaseConfig() {
   return {
-    url: (process.env.SUPABASE_URL || DEFAULT_SUPABASE_URL).replace(/\/$/, ''),
-    key: process.env.SUPABASE_SERVICE_ROLE_KEY || DEFAULT_SERVICE_KEY,
+    url: (process.env.SUPABASE_URL || process.env.EXPO_PUBLIC_SUPABASE_URL || DEFAULT_SUPABASE_URL).replace(/\/$/, ''),
+    key:
+      process.env.SUPABASE_SERVICE_ROLE_KEY ||
+      process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY ||
+      DEFAULT_SERVICE_KEY,
   };
 }
 
 function supabaseHeaders(extra = {}) {
-  const { key } = getConfig();
+  const { key } = getSupabaseConfig();
   return {
     apikey: key,
     Authorization: `Bearer ${key}`,
@@ -38,7 +41,7 @@ function formatTime(iso) {
   return iso.split('T')[1].slice(0, 5);
 }
 
-function transformEvent(row) {
+export function transformEvent(row) {
   const venue = row.venues || {};
   const title = row.title_sv || row.title_en || 'Untitled';
   const venueName = venue.name || '';
@@ -93,8 +96,8 @@ function buildFilterQuery({ source = null }) {
   return params;
 }
 
-async function countPublishedEvents(filters = {}) {
-  const { url } = getConfig();
+export async function countPublishedEvents(filters = {}) {
+  const { url } = getSupabaseConfig();
   const params = buildFilterQuery(filters);
   params.set('select', 'id');
 
@@ -113,7 +116,7 @@ async function countPublishedEvents(filters = {}) {
 }
 
 async function fetchSourceCounts(filters = {}) {
-  const { url } = getConfig();
+  const { url } = getSupabaseConfig();
   const params = buildFilterQuery(filters);
   params.set('select', 'source');
   params.set('limit', '50000');
@@ -135,10 +138,11 @@ async function fetchSourceCounts(filters = {}) {
   return counts;
 }
 
-async function fetchCanonicalEvents(options = {}) {
+/** Same bundle shape as GET /supabase-events on wrapper :7777 */
+export async function fetchCanonicalEvents(options = {}) {
   const { limit = 200, offset = 0, source = null, city = 'Stockholm' } = options;
   const filters = { source };
-  const { url } = getConfig();
+  const { url } = getSupabaseConfig();
   const params = buildFilterQuery(filters);
   params.set('limit', String(limit));
   params.set('offset', String(offset));
@@ -176,9 +180,3 @@ async function fetchCanonicalEvents(options = {}) {
     },
   };
 }
-
-module.exports = {
-  fetchCanonicalEvents,
-  transformEvent,
-  countPublishedEvents,
-};
