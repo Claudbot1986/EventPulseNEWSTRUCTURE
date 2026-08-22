@@ -365,12 +365,13 @@ def run_with_spinner(tool):
         cmd = f'''
             tell application "Terminal"
                 activate
-                do script "cd {expo_dir} && npm run start:tunnel"
+                do script "cd {expo_dir} && npm start"
             end tell
         '''
         subprocess.run(["osascript", "-e", cmd])
-        print(f"\n  ✓ Expo tunnel startad i separat fönster!")
+        print(f"\n  ✓ Expo tunnel startad i separat fönster (port 8081)!")
         print(f"  Vänta tills 'Tunnel ready' visas, skanna sedan QR i Expo Go.")
+        print(f"  Om tunnel failar: NGROK_AUTHTOKEN=xxx npm run start:tunnel:custom")
         rc = 0
     else:
         # Stream output to both terminal AND log file (real-time visibility)
