@@ -12,7 +12,7 @@
 import React from 'react';
 import { View, Text, StyleSheet, Platform } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { useNetworkContext } from '../services/networkContext';
+import * as networkContext from '../services/networkContext';
 
 const TOKENS = {
   color: {
@@ -32,7 +32,11 @@ const TOKENS = {
 };
 
 export default function NetworkBanner() {
-  const { isConnected } = useNetworkContext();
+  // Namespace import so a leftover require-cycle cannot TDZ-crash Expo Go
+  // with "Property 'useNetworkContext' doesn't exist".
+  const hook = networkContext.useNetworkContext;
+  const ctx = typeof hook === 'function' ? hook() : { isConnected: true };
+  const isConnected = ctx?.isConnected !== false;
 
   if (isConnected) return null;
 

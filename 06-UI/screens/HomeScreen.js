@@ -73,8 +73,13 @@ function todayLocalIso() {
 function nextSaturdayIso() {
   const d = new Date();
   const day = d.getDay(); // 0=Sun, 6=Sat
-  const daysUntilSat = (6 - day + 7) % 7 || 7;
-  d.setDate(d.getDate() + daysUntilSat);
+  if (day === 0) {
+    // Sunday → this week's Saturday (yesterday), not next week.
+    d.setDate(d.getDate() - 1);
+  } else if (day !== 6) {
+    d.setDate(d.getDate() + (6 - day));
+  }
+  // Saturday: keep today so Helgen shows this weekend.
   const pad = (n) => String(n).padStart(2, '0');
   return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
 }

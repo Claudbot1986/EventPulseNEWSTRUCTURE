@@ -47,12 +47,12 @@ import ProfileScreen from './screens/ProfileScreen';
 import OnboardingScreen from './screens/OnboardingScreen';
 import NetworkBanner from './components/NetworkBanner';
 import App from './App';
-import { getItem, setItem } from './services/storage';
-import { NetworkProvider, setMarkOnline } from './services/networkContext';
+import { getItem, setItem, PENDING_AGENT_MESSAGE_KEY } from './services/storage';
+import { NetworkProvider } from './services/networkContext';
 
 const TABS = ['home', 'explore', 'notifications', 'profile'];
 const ONBOARDING_COMPLETE_KEY = 'eventpulse.onboarding_complete';
-export const PENDING_AGENT_MESSAGE_KEY = 'eventpulse.pending_agent_message';
+export { PENDING_AGENT_MESSAGE_KEY };
 
 export default function AppShell() {
   const [activeTab, setActiveTab] = useState('explore');
@@ -83,14 +83,6 @@ export default function AppShell() {
   const handleOnboardingComplete = () => {
     setOnboardingState('done');
   };
-
-  // T0073 — expose markOnline from context to the module-level singleton
-  // so any successful API call in agentClient.js can call markOnline() to
-  // dismiss the offline banner without needing a React context reference.
-  const { markOnline } = useNetworkContext();
-  useEffect(() => {
-    setMarkOnline(markOnline);
-  }, [markOnline]);
 
   // T0063 — chip tap: persist the prompt and jump to the explore tab so
   // App.js can read it on focus and surface the chosen prompt to the user.

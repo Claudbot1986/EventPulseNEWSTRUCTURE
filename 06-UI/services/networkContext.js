@@ -10,7 +10,6 @@
  */
 
 import React, { createContext, useContext, useEffect, useRef, useState } from 'react';
-import { getAgentHealth } from './agentClient';
 
 const NetworkContext = createContext({
   isConnected: true,
@@ -24,9 +23,19 @@ export function NetworkProvider({ children }) {
   const markOnline = () => setIsConnected(true);
 
   useEffect(() => {
+    setMarkOnline(() => setIsConnected(true));
+    return () => setMarkOnline(() => {});
+  }, []);
+
+  useEffect(() => {
     // Poll every 30 seconds.
+    // Dynamic import: agentClient.js imports markOnline from this file.
+    // A static import here creates a require cycle that leaves
+    // `useNetworkContext` uninitialized on Expo Go (Hermes
+    // "Property 'useNetworkContext' doesn't exist" → red screen).
     const check = async () => {
       try {
+        const { getAgentHealth } = await import('./agentClient');
         const ok = await getAgentHealth();
         if (ok) setIsConnected(true);
         else setIsConnected(false);

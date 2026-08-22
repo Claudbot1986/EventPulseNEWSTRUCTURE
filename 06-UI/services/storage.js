@@ -33,6 +33,10 @@ const backend =
     : memoryFallback;
 
 export const ANON_USER_ID_KEY = 'eventpulse.anon_user_id';
+/** HomeScreen chip tap → App.js explore prompt. Lives here so App.js
+ *  does not import AppShell (that cycle left AppShell exports
+ *  uninitialized on Expo Go). */
+export const PENDING_AGENT_MESSAGE_KEY = 'eventpulse.pending_agent_message';
 
 /**
  * @param {string} key

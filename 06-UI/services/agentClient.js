@@ -24,7 +24,14 @@
  */
 
 import { getOrCreateAnonUserId } from './storage';
-import { markOnline } from './networkContext';
+import { markOnline as notifyNetworkOnline } from './networkContext';
+
+/** Never let connectivity bookkeeping fail a successful fetch. */
+function markOnline() {
+  if (typeof notifyNetworkOnline === 'function') {
+    notifyNetworkOnline();
+  }
+}
 
 const AGENT_BASE_URL = process.env.EXPO_PUBLIC_AGENT_URL;
 
@@ -1017,6 +1024,7 @@ export async function registerPushToken({
   } finally {
     clearTimeout(timer);
   }
+}
 
 /**
  * T0087 — Per-entity notification granularity.
@@ -1063,8 +1071,6 @@ export async function setNotificationPrefs({
   } finally {
     clearTimeout(timer);
   }
-}
-
 }
 
 /**

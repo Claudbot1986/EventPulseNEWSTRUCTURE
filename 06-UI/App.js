@@ -5,10 +5,8 @@ import { SafeAreaView, SafeAreaProvider } from 'react-native-safe-area-context';
 import { fetchFeed, addDays, fetchEventIcs, shareSession, fetchSharedSession, parseShareHashFromUrl } from './services/agentClient';
 import { analyticsClient } from './services/analyticsClient';
 import UserPickerScreen from './screens/UserPickerScreen';
-import MapScreen from './screens/MapScreen';
 import ProfileScreen from './screens/ProfileScreen';
-import { getItem, getOrCreateAnonUserId, removeItem, setItem } from './services/storage';
-import { PENDING_AGENT_MESSAGE_KEY } from './AppShell';
+import { getItem, getOrCreateAnonUserId, removeItem, setItem, PENDING_AGENT_MESSAGE_KEY } from './services/storage';
 
 const TOKENS = {
   color: {
@@ -1220,8 +1218,10 @@ export default function App() {
     if (selectedEvent) {
       return <DetailsScreen event={selectedEvent} onBack={handleBack} />;
     }
-    // T0078 — tab routing: home | map | profile
+    // T0078 — tab routing: home | map | profile.
+    // Lazy require so react-native-maps is not loaded on every Expo Go boot.
     if (activeTab === 'map') {
+      const MapScreen = require('./screens/MapScreen').default;
       return <MapScreen onEventPress={handleEventPress} />;
     }
     if (activeTab === 'profile') {
