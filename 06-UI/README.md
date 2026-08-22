@@ -132,35 +132,31 @@ npm run dev
 
 ### Starta app (Expo Go)
 
-**Tunnel (rekommenderat — fungerar överallt):**
+**Standard = tunnel över internet (ingen LAN krävs):**
 
 ```bash
 cd 06-UI
-npm run start:tunnel
+npm start
 ```
 
 Vänta tills terminalen visar **"Tunnel ready"**, skanna sedan QR-koden i Expo Go.
-QR-URL ska börja med `exp://` och innehålla `.exp.direct` — inte `localhost`.
+QR-URL ska innehålla `.exp.direct` — inte `localhost` eller `192.168.x.x`.
 
-Projektet använder Expos inbyggda tunnel (ngrok/exp.direct) på **port 8081**.
-
-Om inbyggd tunnel failar (vanligt sedan ngrok v2 API stängdes 2026):
+Om inbyggd tunnel failar:
 
 ```bash
 # Gratis ngrok-konto: https://dashboard.ngrok.com/signup
 NGROK_AUTHTOKEN=din_token npm run start:tunnel:custom
 ```
 
-**LAN / Tailscale (snabbare, kräver nätverksåtkomst):**
+**Endast om du uttryckligen vill köra LAN/Tailscale:**
 
 ```bash
 npm run start:lan
-# eller: npm start
 ```
 
 VIKTIGT:
-- Tunnel: `npm run start:tunnel` (fungerar utan LAN/Tailscale)
-- LAN/Tailscale: `npm start` (snabbare, kräver brandväggsåtkomst)
+- `npm start` = tunnel (telefonen behöver inte samma WiFi/Tailscale)
 - Appen hämtar events direkt från Supabase — ingen lokal API-server krävs för UI
 
 ---

@@ -1,14 +1,7 @@
 #!/usr/bin/env node
 /**
- * Start Expo dev server with the correct hostname for remote devices.
- *
- * Priority:
- * 1. REACT_NATIVE_PACKAGER_HOSTNAME (if already set)
- * 2. Tailscale IPv4 (`tailscale ip -4`)
- * 3. First non-internal IPv4 from network interfaces
- *
- * With Tailscale, prefer LAN mode over tunnel — both devices share the
- * 100.x.x.x network and tunnel (ngrok) is slower and often unnecessary.
+ * Start Expo dev server. Default: tunnel (works over the internet, no LAN).
+ * Use --lan only for local network / Tailscale development.
  */
 
 import { spawn, spawnSync } from 'node:child_process';
@@ -85,8 +78,8 @@ function resolveHostname() {
 
 function parseArgs(argv) {
   const passthrough = [];
-  let port = process.env.EXPO_PORT || DEFAULT_PORT;
-  let mode = 'lan';
+  let mode = 'tunnel';
+  let port = process.env.EXPO_PORT || TUNNEL_PORT;
 
   for (let i = 0; i < argv.length; i += 1) {
     const arg = argv[i];
@@ -100,6 +93,7 @@ function parseArgs(argv) {
 
     if (arg === '--lan') {
       mode = 'lan';
+      port = process.env.EXPO_PORT || DEFAULT_PORT;
       continue;
     }
 
@@ -117,6 +111,10 @@ function parseArgs(argv) {
     }
 
     passthrough.push(arg);
+  }
+
+  if (mode === 'tunnel' && !passthrough.includes('--tunnel')) {
+    passthrough.push('--tunnel');
   }
 
   if (!passthrough.some((arg) => arg === '--port' || arg.startsWith('--port='))) {
@@ -137,8 +135,7 @@ const hostname = resolveHostname();
 
 if (mode === 'lan' && !hostname) {
   console.error('\n❌ Kunde inte hitta ett nätverks-IP.');
-  console.error('   Sätt manuellt: REACT_NATIVE_PACKAGER_HOSTNAME=100.x.x.x npm start');
-  console.error('   Eller prova tunnel: npm run start:tunnel\n');
+  console.error('   Sätt manuellt: REACT_NATIVE_PACKAGER_HOSTNAME=100.x.x.x npm run start:lan\n');
   process.exit(1);
 }
 
