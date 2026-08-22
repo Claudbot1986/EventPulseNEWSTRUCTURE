@@ -34,14 +34,57 @@ function markOnline() {
 }
 
 const AGENT_BASE_URL = process.env.EXPO_PUBLIC_AGENT_URL;
+const AGENT_LAN_URL = process.env.EXPO_PUBLIC_AGENT_URL_LAN;
+
+function agentBaseUrls() {
+  const urls = [];
+  for (const raw of [AGENT_BASE_URL, AGENT_LAN_URL]) {
+    if (typeof raw === 'string' && raw.trim()) {
+      const u = raw.replace(/\/+$/, '');
+      if (!urls.includes(u)) urls.push(u);
+    }
+  }
+  return urls;
+}
+
+/** Last health-check winner so Tailscale and LAN can both work. */
+let cachedAgentBase = null;
 
 function requireAgentBaseUrl() {
-  if (!AGENT_BASE_URL || typeof AGENT_BASE_URL !== 'string' || AGENT_BASE_URL.trim() === '') {
+  if (cachedAgentBase) return cachedAgentBase;
+  const urls = agentBaseUrls();
+  if (urls.length === 0) {
     const err = new Error('EXPO_PUBLIC_AGENT_URL is not set. The agent API base URL must be configured before the app can send requests.');
     err.code = 'AGENT_URL_MISSING';
     throw err;
   }
-  return AGENT_BASE_URL.replace(/\/+$/, '');
+  return urls[0];
+}
+
+async function pickReachableAgentBase(timeoutMs = 2500) {
+  if (cachedAgentBase) return cachedAgentBase;
+  const urls = agentBaseUrls();
+  if (urls.length === 0) {
+    const err = new Error('EXPO_PUBLIC_AGENT_URL is not set. The agent API base URL must be configured before the app can send requests.');
+    err.code = 'AGENT_URL_MISSING';
+    throw err;
+  }
+  for (const base of urls) {
+    try {
+      const controller = new AbortController();
+      const timer = setTimeout(() => controller.abort(), timeoutMs);
+      const response = await fetch(`${base}/agent/health`, { signal: controller.signal });
+      clearTimeout(timer);
+      if (response.ok) {
+        cachedAgentBase = base;
+        return base;
+      }
+    } catch {
+      // try next candidate (Tailscale, then LAN)
+    }
+  }
+  cachedAgentBase = urls[0];
+  return cachedAgentBase;
 }
 
 const DEFAULT_TIMEOUT_MS = 12_000;
@@ -101,7 +144,7 @@ export async function chatWithAgent({ message, sessionId, origin, signal, timeou
 
 export async function getAgentHealth() {
   try {
-    const baseUrl = requireAgentBaseUrl();
+    const baseUrl = await pickReachableAgentBase();
     const response = await fetch(`${baseUrl}/agent/health`);
     return response.ok;
   } catch (_err) {
@@ -454,7 +497,7 @@ export async function getFollowedEntities({ signal, timeoutMs = 4_000 } = {}) {
  * code doesn't need to change.
  */
 export async function fetchFeed({ from, days = 7, signal, timeoutMs = 12_000 } = {}) {
-  const baseUrl = requireAgentBaseUrl();
+  const baseUrl = await pickReachableAgentBase();
   const url = new URL(`${baseUrl}/agent/feed`);
   url.searchParams.set('from', from);
   url.searchParams.set('days', String(days));

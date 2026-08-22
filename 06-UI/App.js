@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { StatusBar } from 'expo-status-bar';
 import { StyleSheet, Text, View, SectionList, ActivityIndicator, TouchableOpacity, ScrollView, Linking, Image, Platform, Share, Alert } from 'react-native';
-import { SafeAreaView, SafeAreaProvider } from 'react-native-safe-area-context';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { fetchFeed, addDays, fetchEventIcs, shareSession, fetchSharedSession, parseShareHashFromUrl } from './services/agentClient';
 import { analyticsClient } from './services/analyticsClient';
 import UserPickerScreen from './screens/UserPickerScreen';
@@ -1065,6 +1065,9 @@ export default function App() {
 
   useEffect(() => {
     let cancelled = false;
+    const budget = setTimeout(() => {
+      if (!cancelled) setAppReady(true);
+    }, 800);
     (async () => {
       try {
         const existing = await analyticsClient.getActiveUser();
@@ -1081,10 +1084,12 @@ export default function App() {
         console.warn('[App] AsyncStorage restore failed:', err?.message || err);
       } finally {
         if (!cancelled) setAppReady(true);
+        clearTimeout(budget);
       }
     })();
     return () => {
       cancelled = true;
+      clearTimeout(budget);
     };
   }, []);
 
@@ -1092,7 +1097,7 @@ export default function App() {
     if (!appReady) return undefined;
     const timer = setTimeout(() => {
       setShowSplash(false);
-    }, 3000);
+    }, 400);
     return () => clearTimeout(timer);
   }, [appReady]);
 
@@ -1210,8 +1215,7 @@ export default function App() {
   };
 
   const renderMain = () => {
-    if (!appReady) return null;
-    if (showSplash) return <SplashScreen />;
+    if (!appReady || showSplash) return <SplashScreen />;
     if (!activeUser) {
       return <UserPickerScreen onUserPicked={handleUserPicked} />;
     }
@@ -1233,10 +1237,9 @@ export default function App() {
   const showTabBar = appReady && !showSplash && activeUser && !selectedEvent;
 
   return (
-    <SafeAreaProvider>
-      <View style={styles.container}>
-        {renderMain()}
-        {showTabBar ? (
+    <View style={styles.container}>
+      {renderMain()}
+      {showTabBar ? (
           <View style={styles.tabBar} accessibilityRole="tabbar">
             {[
               { key: 'home',    label: 'Hem',     icon: '●' },
@@ -1261,9 +1264,8 @@ export default function App() {
             ))}
           </View>
         ) : null}
-        <StatusBar style="light" />
-      </View>
-    </SafeAreaProvider>
+      <StatusBar style="light" />
+    </View>
   );
 }
 
