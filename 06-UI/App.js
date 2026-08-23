@@ -545,6 +545,17 @@ function HomeScreen({ onEventPress, scrollPositionRef, pendingPrompt, dismissPen
   const sectionListRef = useRef(null);
   const scrollPositionRefLocal = useRef(0);
   const isFetchingRef = useRef(false);
+  // Track the latest loadEvents so the AppState listener below doesn't
+  // capture a stale closure. loadEvents identity changes whenever weekStart
+  // changes; the listener only fires on foreground transitions but should
+  // always call the current version.
+  const loadEventsRef = useRef(null);
+  loadEventsRef.current = loadEvents;
+  // Debounce AppState 'active' so cold-start + resume within 5s don't pile
+  // up duplicate fetches. Initialized to Date.now() so the iOS
+  // immediate-on-mount 'change' event (not a real foreground transition)
+  // is also debounced away.
+  const lastForegroundFetchRef = useRef(Date.now());
 
   /**
    * Load events for the current `weekStart`.
@@ -602,19 +613,21 @@ function HomeScreen({ onEventPress, scrollPositionRef, pendingPrompt, dismissPen
 
   // Refresh the canonical count when the app returns to the foreground so the
   // header tracks Supabase after the user has been away (data may have changed
-  // server-side). Always do a non-append reset so totalCount + events come
-  // back from a clean weekStart.
+  // server-side). Uses a ref for `loadEvents` so we always call the current
+  // version, and debounces duplicate 'active' events from iOS cold-start.
   useEffect(() => {
     const sub = AppState.addEventListener('change', (nextState) => {
       if (nextState !== 'active') return;
+      const now = Date.now();
+      if (now - lastForegroundFetchRef.current < 5000) return;
+      lastForegroundFetchRef.current = now;
       const freshToday = new Date().toISOString().slice(0, 10);
-      setWeekStart(freshToday);
-      loadEvents({ append: false, fromOverride: freshToday });
+      // loadEvents internally sets weekStart to from, so we don't need to
+      // call setWeekStart here — that caused a redundant state transition
+      // on every foreground event.
+      loadEventsRef.current?.({ append: false, fromOverride: freshToday });
     });
     return () => sub.remove();
-    // loadEvents identity changes when weekStart changes; we only care about
-    // AppState events, so the missing dep is intentional.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const handleTimeFilterPress = useCallback((filterKey) => {
