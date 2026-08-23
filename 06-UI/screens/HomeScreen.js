@@ -432,13 +432,18 @@ function LiveNowStrip({ onCardPress }) {
 
 function TonightSection({ onCardPress }) {
   const from = useMemo(() => todayLocalIso(), []);
+  // T0088 — filter must be stable across renders. An inline arrow gives
+  // useSection's useCallback a new dep each render → new `load` ref →
+  // useEffect([load]) re-fires → setState → re-render → new filter → loop.
+  // React guards against this with "Maximum update depth exceeded".
+  const tonightFilter = useCallback((e) => {
+    const h = localHourFromIso(e.start_time);
+    return h != null && h >= 18;
+  }, []);
   const { status, events, error, retry } = useSection({
     from,
     days: 1,
-    filter: (e) => {
-      const h = localHourFromIso(e.start_time);
-      return h != null && h >= 18;
-    },
+    filter: tonightFilter,
   });
   return (
     <Section eyebrow="IKVÄLL" title="Händer ikväll">
@@ -491,10 +496,12 @@ function WeekendSection({ onCardPress }) {
 
 function FreeSection({ onCardPress }) {
   const from = useMemo(() => todayLocalIso(), []);
+  // T0088 — see TonightSection. Inline filter → infinite update loop.
+  const freeFilter = useCallback((e) => e.is_free || e.isFree, []);
   const { status, events, error, retry } = useSection({
     from,
     days: 7,
-    filter: (e) => e.is_free || e.isFree,
+    filter: freeFilter,
   });
   return (
     <Section eyebrow="GRATIS" title="Gratis evenemang">
