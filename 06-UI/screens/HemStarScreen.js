@@ -59,8 +59,8 @@ const AUTOGEN_URL = `http://${AUTOGEN_HOST}:7790`;
 const CACHE_BUST = `?v=${Date.now()}`;
 
 // Säkerhetsgräns — även om autoGenServer defaultar till limit=20 vill vi visa
-// exakt 10 (UI-design-spec).
-const MAX_EVENTS = 10;
+// exakt 20 (UI-design-spec — samma ordning som utforska-sektionen).
+const MAX_EVENTS = 20;
 
 // ─── TOKENS — mirrored from docs/UI-DESIGN.md (samma palett som HomeScreen) ─
 const TOKENS = {

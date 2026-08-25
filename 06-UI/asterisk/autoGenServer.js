@@ -124,6 +124,8 @@ const CATEGORY_SCENES = {
   konst:             'a bright art gallery interior with paintings and sculptures on white walls under soft skylight',
   utställning:       'a bright art gallery interior with paintings and sculptures on white walls under soft skylight',
   galleri:           'a bright art gallery interior with paintings and sculptures on white walls under soft skylight',
+  art:               'a bright art gallery interior with paintings and sculptures on white walls under soft skylight',
+  arts:              'a bright art gallery interior with paintings and sculptures on white walls under soft skylight',
   // ── Music / concert
   music:    'a concert stage with musicians performing under dramatic stage lights, instruments visible, audience in silhouette',
   konsert:  'a concert stage with musicians performing under dramatic stage lights, instruments visible, audience in silhouette',
@@ -132,9 +134,9 @@ const CATEGORY_SCENES = {
   teater:   'a theater stage with dramatic lighting, performers mid-scene, ornate curtain in background',
   föreställning: 'a theater stage with dramatic lighting, performers mid-scene, ornate curtain in background',
   // ── Family
-  family: 'a bright family-friendly outdoor scene, kids playing in a sunny park, warm and colorful atmosphere',
-  barn:   'a bright family-friendly outdoor scene, kids playing in a sunny park, warm and colorful atmosphere',
-  kids:   'a bright family-friendly outdoor scene, kids playing in a sunny park, warm and colorful atmosphere',
+  family: 'a bright family-friendly indoor scene, colorful workshop with creative materials, warm atmosphere',
+  barn:   'a bright family-friendly indoor scene, colorful workshop with creative materials, warm atmosphere',
+  kids:   'a bright family-friendly indoor scene, colorful workshop with creative materials, warm atmosphere',
   // ── Nightlife
   nightlife: 'a nightclub interior with colored stage lights, DJ booth, dance floor with movement, energetic atmosphere',
   nattliv:   'a nightclub interior with colored stage lights, DJ booth, dance floor with movement, energetic atmosphere',
@@ -145,11 +147,40 @@ const CATEGORY_SCENES = {
   // ── Festival
   festival: 'an outdoor summer festival with stage and crowd, colorful flags and tents, sunny sky',
   // ── Produktionsdata-fallbacks (verifierat från Supabase 2026-08-24)
-  community: 'a public outdoor gathering in a city square, civic atmosphere, daytime',
+  // community kunde INTE vara "outdoor gathering in city square" — tre av tio
+  // bilder blev då "människor utomhus bland byggnader" oavsett eventets
+  // verkliga innehåll. Bytt till abstraherad inomhus-komposition 2026-08-25.
+  community: 'an abstract editorial composition with soft atmospheric lighting, no specific setting, no people',
   culture:   'a cultural venue interior with artistic atmosphere, soft museum-style lighting',
   // ── Default
-  default: 'an editorial event photograph with attendees in an atmospheric setting',
+  default: 'an abstract editorial composition with soft atmospheric lighting, no specific setting, no people',
 };
+
+// ── Venue-specifika scener (PRIORITY över category_slug) ────────────────────
+// Användaren bad 2026-08-25 om att "huvudfokus ska styra bilden":
+//   - Textilmuseet → textil/textilkonst (INTE generiskt museum)
+//   - Nationalmuseum → museum + design-fokus (utställning "Design for Life")
+//   - Moderna Museet → modernistiskt konstmuseum
+//   - Liljevalchs → samtidskonstgalleri
+//   - Cecilia Hillström Gallery → litet galleri
+// Dessa matchas mot venue_name.lowercase() och vinner över category.
+const VENUE_SCENES = [
+  { match: /textil/i, scene: 'a textile museum interior with woven fabrics, threads, looms, fabric swatches and textile art on display, soft warm lighting' },
+  { match: /nationalmuseum/i, scene: 'a national museum interior with curated design objects, mid-century furniture, sketches, design process materials and craft pieces, elegant gallery lighting' },
+  { match: /moderna museet/i, scene: 'a modernist art museum interior with bold contemporary paintings and sculptures, dramatic skylights, clean white walls' },
+  { match: /liljevalchs/i, scene: 'a contemporary art gallery interior with large-scale paintings, vivid colors, modern exhibition lighting' },
+  { match: /cecilia hillstr/i, scene: 'a small intimate art gallery interior with carefully arranged paintings on neutral walls, focused spotlights' },
+  { match: /ois\b|\u00f6is\b|\u00f6rgryte/i, scene: 'a football match scene on a green grass pitch, players in action, dramatic stadium atmosphere' },
+];
+
+function getVenueScene(venueName) {
+  if (!venueName || typeof venueName !== 'string') return null;
+  const v = venueName.toLowerCase();
+  for (const { match, scene } of VENUE_SCENES) {
+    if (match.test(v)) return scene;
+  }
+  return null;
+}
 
 /**
  * Venue-aware hint: ger kort kontextuell fras baserat på venue-namn.
@@ -178,14 +209,16 @@ function getVenueHint(venueName) {
 function extractCategoryFallback(title) {
   if (!title || typeof title !== 'string') return null;
   const t = title.toLowerCase();
-  if (/idrott|fotboll|sport|match/.test(t))                          return 'sports';
-  if (/utställning|konst|galleri|museum|exhibition|surrealism/.test(t)) return 'exhibition';
-  if (/konsert|concert|musik|music/.test(t))                         return 'music';
-  if (/teater|theater|föreställning|pjäs/.test(t))                   return 'theater';
-  if (/barn|family|kids/.test(t))                                    return 'family';
-  if (/nattliv|night|club/.test(t))                                  return 'nightlife';
-  if (/mat|food|restaurang/.test(t))                                 return 'food';
-  if (/festival/.test(t))                                            return 'festival';
+  // Word-boundaries för att undvika falska positiva (t.ex. "desinformation"
+  // innehåller "mat" → felaktig food-matchning utan \b).
+  if (/\b(idrott|fotboll|sport|match)\b/.test(t))                          return 'sports';
+  if (/\b(utställning|utstallning|konst|galleri|museum|exhibition|surrealism|design)\b/.test(t)) return 'exhibition';
+  if (/\b(konsert|concert|musik|music)\b/.test(t))                         return 'music';
+  if (/\b(teater|theater|föreställning|forestallning|pjäs|pjas)\b/.test(t)) return 'theater';
+  if (/\b(barn|family|kids)\b/.test(t))                                    return 'family';
+  if (/\b(nattliv|night|club)\b/.test(t))                                  return 'nightlife';
+  if (/\b(mat|food|restaurang)\b/.test(t))                                 return 'food';
+  if (/\bfestival\b/.test(t))                                              return 'festival';
   return null;
 }
 
@@ -213,16 +246,20 @@ function buildAutoPrompt(event) {
   const venueName = event?.venues?.name || event?.venue_name || '';
   const venueHint = getVenueHint(venueName);
 
-  // Primär kategori: category_slug
-  let category = (event?.category_slug || '').toLowerCase();
+  // 1. Venue-specifik scene vinner över category_slug (PRIORITY)
+  //    Textilmuseet → textil, Nationalmuseum → design, etc.
+  let scene = getVenueScene(venueName);
 
-  // Fallback: om generisk/saknas, sök i titeln
-  if (!category || GENERIC_CATEGORIES.has(category)) {
-    const titleFallback = extractCategoryFallback(title);
-    if (titleFallback) category = titleFallback;
+  // 2. Annars: category_slug
+  if (!scene) {
+    let category = (event?.category_slug || '').toLowerCase();
+    // Fallback: om generisk/saknas, sök i titeln
+    if (!category || GENERIC_CATEGORIES.has(category)) {
+      const titleFallback = extractCategoryFallback(title);
+      if (titleFallback) category = titleFallback;
+    }
+    scene = CATEGORY_SCENES[category] || CATEGORY_SCENES.default;
   }
-
-  const scene = CATEGORY_SCENES[category] || CATEGORY_SCENES.default;
 
   return (
     `${venueHint}Editorial photograph of ${scene}. ` +
@@ -234,6 +271,8 @@ function buildAutoPrompt(event) {
     `Even partial fragments of letters, half-formed words, or stylized text marks are forbidden. ` +
     `No recognizable brand names, no trademarks, no logos, no symbols. ` +
     `No recognizable architecture or identifiable landmarks (no Stockholm City Hall, no Globen, no specific buildings). ` +
+    `NEVER show people outdoors among buildings, plazas, or city streets — this is a recurring problem. ` +
+    `Prefer indoor, abstract, or close-up subject-focused compositions. ` +
     `If people appear they must be small in frame, full-body, in action, or in silhouette — never close-up portraits of faces. ` +
     `Clean, text-free, logo-free, abstract editorial photograph only. `
   );
