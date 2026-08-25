@@ -3,7 +3,7 @@ import { createHash } from 'crypto';
 import { createClient } from '@supabase/supabase-js';
 import type { Job } from 'bullmq';
 import type { RawEventInput, NormalizedEvent } from '@eventpulse/shared';
-import { searchSyncQueue } from '../03-Queue/queue';
+import { searchSyncQueue, imageGenerationQueue } from '../03-Queue/queue';
 
 const supabase = createClient(
   process.env.SUPABASE_URL!,
@@ -409,6 +409,21 @@ export async function processRawEvent(job: Job<RawEventInput>): Promise<void> {
 
   // Enqueue Meilisearch sync
   await searchSyncQueue.add('sync', { event_id, action: 'upsert' });
+
+  // Trigger AI image generation if event has no source image_url.
+  // Worker (imageGenerationWorker) is idempotent — checks image_url before generating.
+  // Dedup by event_id so re-processing same event doesn't double-fire.
+  if (!normalized.image_url) {
+    try {
+      await imageGenerationQueue.add(
+        'gen',
+        { event_id },
+        { jobId: `img-${event_id}` }
+      );
+    } catch (err) {
+      console.warn(`[normalizer] Failed to enqueue image gen for ${event_id}:`, (err as Error).message);
+    }
+  }
 }
 
 /** Log ingestion statistics per source */

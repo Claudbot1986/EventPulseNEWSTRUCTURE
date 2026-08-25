@@ -407,9 +407,12 @@ export async function generateForEvent(event: EventInput): Promise<ImageGenResul
  * Batch-generate for the first N published events.
  * Dedups by (title::venue) — recurring events share one image.
  */
-export async function generateBatch(limit: number, options: { onlyMissing?: boolean } = {}): Promise<BatchResult> {
+export async function generateBatch(
+  limit: number,
+  options: { onlyMissing?: boolean; concurrency?: number; onProgress?: (done: number, total: number, last: ImageGenResult | null) => void } = {}
+): Promise<BatchResult> {
   const supabase = getSupabaseClient();
-  const { onlyMissing = true } = options;
+  const { onlyMissing = true, concurrency = 3, onProgress } = options;
 
   let query = supabase
     .from('events')
@@ -451,26 +454,43 @@ export async function generateBatch(limit: number, options: { onlyMissing?: bool
 
   const results: ImageGenResult[] = [];
   const errors: Array<{ eventIds: string[]; error: string }> = [];
+  let done = 0;
+  const total = groups.length;
 
-  for (const g of groups) {
-    const ev = g.representative;
-    try {
-      const prompt = buildAutoPrompt(ev);
-      const { b64, mime, seed } = await generateFluxImage(prompt);
-      const storagePath = dedupPath(g.ids.length > 0 ? dedupKey(ev) : `${ev.id}`);
-      const imageUrl = await uploadAndPersist(g.ids, b64, mime, storagePath, prompt, seed);
-      results.push({
-        eventId: ev.id,
-        imageUrl,
-        storagePath,
-        prompt,
-        seed,
-        costCents: FLUX_COST_CENTS,
-      });
-    } catch (err) {
-      errors.push({ eventIds: g.ids, error: (err as Error).message });
-    }
+  // Process with limited concurrency (BFL rate-limit friendly)
+  const queue = [...groups];
+  const workers: Promise<void>[] = [];
+  for (let w = 0; w < concurrency; w++) {
+    workers.push((async () => {
+      while (queue.length > 0) {
+        const g = queue.shift();
+        if (!g) break;
+        const ev = g.representative;
+        try {
+          const prompt = buildAutoPrompt(ev);
+          const { b64, mime, seed } = await generateFluxImage(prompt);
+          const storagePath = dedupPath(dedupKey(ev));
+          const imageUrl = await uploadAndPersist(g.ids, b64, mime, storagePath, prompt, seed);
+          const result: ImageGenResult = {
+            eventId: ev.id,
+            imageUrl,
+            storagePath,
+            prompt,
+            seed,
+            costCents: FLUX_COST_CENTS,
+          };
+          results.push(result);
+          done++;
+          if (onProgress) onProgress(done, total, result);
+        } catch (err) {
+          errors.push({ eventIds: g.ids, error: (err as Error).message });
+          done++;
+          if (onProgress) onProgress(done, total, null);
+        }
+      }
+    })());
   }
+  await Promise.all(workers);
 
   return {
     totalFetched: rows.length,

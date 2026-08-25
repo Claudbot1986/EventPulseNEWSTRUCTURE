@@ -37,6 +37,7 @@ interface CliArgs {
   source?: string;
   dryRun: boolean;
   force: boolean;
+  concurrency: number;
 }
 
 function parseArgs(argv: string[]): CliArgs {
@@ -44,6 +45,7 @@ function parseArgs(argv: string[]): CliArgs {
     limit: Infinity,
     dryRun: false,
     force: false,
+    concurrency: 4,
   };
 
   for (let i = 0; i < argv.length; i++) {
@@ -58,6 +60,9 @@ function parseArgs(argv: string[]): CliArgs {
       args.dryRun = true;
     } else if (a === '--force' || a === '--include-existing') {
       args.force = true;
+    } else if (a === '--concurrency' && argv[i + 1]) {
+      args.concurrency = Math.max(1, Math.min(8, parseInt(argv[i + 1], 10) || 4));
+      i++;
     } else if (a === '--help' || a === '-h') {
       printHelp();
       process.exit(0);
@@ -80,6 +85,7 @@ Usage:
 Options:
   --limit N            Cap antal events att processera (default: alla)
   --source <id>        Filtrera per source (t.ex. 'ticketmaster')
+  --concurrency N      Parallella BFL-anrop (1-8, default 4)
   --dry-run            Hämta events men anropa INTE BFL API
   --force              Regenerera även events som redan har image_url
   --include-existing   Alias för --force
@@ -152,13 +158,21 @@ async function main(): Promise<void> {
   // generateBatch i imageGen.ts stöder bara onlyMissing idag (filter image_url IS NULL).
   // --force är en framtida utökning — för nu loggar vi en varning.
   if (args.force) {
-    console.log('  �️  --force: regenererar events som redan har image_url är INTE implementerat ännu.');
+    console.log('  WARNING: --force regenererar events som redan har image_url är INTE implementerat ännu.');
     console.log('     Just nu processeras bara events där image_url IS NULL.');
     console.log('     (För full force-regenerate, rensa image_url i Supabase först.)\n');
   }
 
   const t0 = Date.now();
-  const result = await generateBatch(effectiveLimit, { onlyMissing: !args.force });
+  const result = await generateBatch(effectiveLimit, {
+    onlyMissing: !args.force,
+    concurrency: args.concurrency,
+    onProgress: (done, total) => {
+      const pct = ((done / total) * 100).toFixed(1);
+      process.stdout.write(`\r  [${done}/${total}] ${pct}% klar`);
+    },
+  });
+  process.stdout.write('\n');
   const elapsed = ((Date.now() - t0) / 1000).toFixed(1);
 
   console.log();

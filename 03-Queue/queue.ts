@@ -54,6 +54,22 @@ export const searchSyncQueue = new Queue<{ event_id: string; action: 'upsert' | 
   { connection: { getConnection }, prefix: 'bull' }
 );
 
+// AI image generation queue — fired by normalizer after each upsert when
+// image_url is null. Processed by imageGenerationWorker.
+export const imageGenerationQueue = new Queue<{ event_id: string }>(
+  'image_generation',
+  {
+    connection: { getConnection },
+    prefix: 'bull',
+    defaultJobOptions: {
+      attempts: 3,
+      backoff: { type: 'exponential', delay: 10_000 },
+      removeOnComplete: 500,
+      removeOnFail: 500,
+    },
+  }
+);
+
 export function createNormalizerWorker(
   processor: (job: Job<RawEventInput>) => Promise<void>,
   queueName: string = 'raw_events'
@@ -81,6 +97,20 @@ export function createSmokeTestWorker(
   });
 
   return worker;
+}
+
+/**
+ * Create an image-generation worker.
+ * Concurrency kept low (BFL rate-limit friendly).
+ */
+export function createImageGenerationWorker(
+  processor: (job: Job<{ event_id: string }>) => Promise<void>
+) {
+  return new Worker<{ event_id: string }>('image_generation', processor, {
+    connection: { getConnection },
+    prefix: 'bull',
+    concurrency: 2,
+  });
 }
 
 /**
