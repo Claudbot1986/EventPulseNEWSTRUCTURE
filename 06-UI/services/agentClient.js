@@ -359,6 +359,123 @@ export async function recordRating({ eventId, rating, note, signal, timeoutMs = 
 export { getOrCreateAnonUserId };
 
 /**
+ * Step A smoketest — fetch the AI-generated image library (T-AI-IMG).
+ *
+ * GET /agent/feed-ai-images?limit=<int>
+ *
+ * Returns up to `limit` events whose images have been AI-generated
+ * (gpt-image-1) and watermarked per EU AI Act Article 50. The agent
+ * server serves this only when AI_SMOKETEST_ENABLED=1; otherwise the
+ * endpoint returns 404 and we treat it as an empty result so the
+ * HomeScreen section silently hides itself.
+ *
+ * Wire shape mirrors the existing EventCard (legacy) format so the
+ * existing card renderer can be reused — only the image URL is
+ * overwritten to point at the static handler.
+ */
+export async function fetchAiImageSmoketest({
+  limit = 10,
+  provider = null,
+  signal,
+  timeoutMs = 8_000,
+} = {}) {
+  let baseUrl;
+  try {
+    baseUrl = await pickReachableAgentBase();
+  } catch (_err) {
+    return { events: [], warnings: ['config'] };
+  }
+
+  const url = new URL(`${baseUrl}/agent/feed-ai-images`);
+  url.searchParams.set('limit', String(limit));
+  if (provider) url.searchParams.set('provider', String(provider));
+
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), timeoutMs);
+  if (signal) {
+    if (signal.aborted) controller.abort();
+    else signal.addEventListener('abort', () => controller.abort(), { once: true });
+  }
+
+  let response;
+  try {
+    response = await fetch(url.toString(), { signal: controller.signal });
+  } catch (_err) {
+    clearTimeout(timer);
+    return { events: [], warnings: ['network'] };
+  }
+  clearTimeout(timer);
+
+  // 404 = smoketest disabled on the server side. Treat as empty so the
+  // HomeScreen section hides silently — same pattern as fetchLiveEvents.
+  if (response.status === 404) {
+    return { events: [], warnings: ['disabled'] };
+  }
+  if (!response.ok) {
+    return { events: [], warnings: [`agent ${response.status}`] };
+  }
+
+  let data;
+  try {
+    data = await response.json();
+  } catch (_err) {
+    return { events: [], warnings: ['parse'] };
+  }
+
+  const rawEvents = Array.isArray(data?.events) ? data.events : [];
+  const pad = (n) => String(n).padStart(2, '0');
+  const events = rawEvents.slice(0, limit).map((e) => {
+    const start = e.start_time ? new Date(e.start_time) : null;
+    const date = start && !Number.isNaN(start.getTime())
+      ? `${start.getFullYear()}-${pad(start.getMonth() + 1)}-${pad(start.getDate())}`
+      : null;
+    const time = start && !Number.isNaN(start.getTime())
+      ? `${pad(start.getHours())}:${pad(start.getMinutes())}`
+      : null;
+    // The server returns relative path `/agent/ai-image/<id>.png`. We
+    // prefix with the chosen baseUrl so the app can hit either Tailscale
+    // or LAN as usual — pickReachableAgentBase already chose the right
+    // base.
+    const relativeImage = typeof e.image_url === 'string' ? e.image_url : '';
+    const imageUrl = relativeImage.startsWith('http')
+      ? relativeImage
+      : `${baseUrl}${relativeImage}`;
+    return {
+      id: e.id,
+      title: e.title || 'Untitled',
+      start_time: e.start_time,
+      venue_name: e.venue_name || '',
+      venue: e.venue_name || '',
+      date,
+      time,
+      image_url: imageUrl,
+      imageUrl,
+      source: 'eventpulse-ai',
+      prompt_hash: e.prompt_hash,
+      generated_at: e.generated_at,
+      model: e.model || 'unknown',
+      watermark: 'AI-genererad',
+      hasExternalLink: false,
+    };
+  });
+
+  return { events, warnings: Array.isArray(data?.warnings) ? data.warnings : [] };
+}
+
+/**
+ * Build the absolute URL for an AI-generated image — exposed so the
+ * smoketest section can reuse it for individual events that arrived via
+ * the regular /agent/feed (the agent server also serves /agent/ai-image/
+ * for any eventId that was generated).
+ */
+export function buildAiImageUrl(eventId) {
+  if (typeof eventId !== 'string' || eventId.length === 0) return null;
+  const baseUrl = cachedAgentBase || (agentBaseUrls()[0] ?? null);
+  if (!baseUrl) return null;
+  return `${baseUrl}/agent/ai-image/${encodeURIComponent(eventId)}.png`;
+}
+
+/**
  * Follow or unfollow an entity (venue or artist) — T0050 / MVP-gap §77.
  *
  * Body shape (POST /agent/follow):

@@ -81,6 +81,7 @@ const TABS = [
   { id: 'explore',       icon: 'compass-outline',      iconActive: 'compass',        label: 'Utforska' },
   { id: 'notifications', icon: 'notifications-outline', iconActive: 'notifications', label: 'Notiser' },
   { id: 'profile',       icon: 'person-circle-outline', iconActive: 'person-circle', label: 'Profil' },
+  { id: 'hem-star',      icon: 'star-outline',         iconActive: 'star',           label: 'hem*' },
 ];
 
 function TabBarButton({ tab, isActive, badge, onPress }) {

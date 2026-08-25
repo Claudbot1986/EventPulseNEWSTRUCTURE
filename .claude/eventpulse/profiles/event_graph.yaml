@@ -1,0 +1,17 @@
+# event_graph.yaml — verification profile for Event Graph work (plan §13.2)
+profile: event_graph
+description: Canonical events, dedup, entities, venue graph, schema migrations (dry-run only).
+gates:
+  - typecheck
+  - schema_diff
+  - venue_graph_dry_run
+  - dedup_test
+acceptance_criteria:
+  - "Migration (if authored) is BEGIN/COMMIT-bounded and dry-runnable."
+  - "schema_diff cleanly diffs the candidate migration vs 05-Supabase/schema/schema.md."
+  - "venue_graph_dry_run completes via `npm run venue-graph:dry-run`."
+  - "dedup_test passes via `npx vitest run 04-Normalizer 07-Discovery/src/venueGraph`."
+constraints:
+  - "Author-only on prod migrations; apply only against `supabase start` local instance; prod apply needs explicit human approval + human_review_required: true."
+  - "Do not modify docs/MASTERPLAN.md or docs/BACKLOG.md."
+  - "Venue-graph scoring weights require cross-site evidence (Generalization Protection Rule)."

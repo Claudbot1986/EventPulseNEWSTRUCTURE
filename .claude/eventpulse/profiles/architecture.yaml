@@ -1,0 +1,19 @@
+# architecture.yaml — verification profile for architecture / cross-system work (plan §13.6)
+profile: architecture
+description: Cross-system changes touching MASTERPLAN, BACKLOG, runtime policy, or schema. Always human-reviewed.
+gates:
+  - typecheck
+  - docs_cross_check
+  - policy_validate
+  - human_review
+acceptance_criteria:
+  - "typecheck passes via `npm run type-check` (root)."
+  - "docs_cross_check confirms proposed changes do not silently rewrite docs/MASTERPLAN.md, docs/BACKLOG.md, or .claude/eventpulse/policy.md."
+  - "policy_validate passes via `npx tsx .claude/eventpulse/mission-validator.ts --strict` against any mission artifact produced."
+  - "human_review is satisfied: explicit user approval recorded before TaskCompleted."
+constraints:
+  - "Never auto-`TaskCompleted`. Surface to user for explicit approval."
+  - "Do not modify docs/MASTERPLAN.md or docs/BACKLOG.md without explicit human_review_required: true + user confirmation in the same session."
+  - "Do not mutate .claude/eventpulse/policy.md — runtime invariant core."
+  - "Architecture-grade changes require the lead role; non-lead agents must escalate."
+  - "Routing matrix (complexity x risk) for architecture work defaults to `lead + architect + qa + reviewer`; `escalate to user` when risk == critical."

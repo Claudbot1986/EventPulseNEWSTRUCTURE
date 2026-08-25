@@ -1,0 +1,52 @@
+mission_id: EP-2026-08-25-ee7182c9-064
+original_prompt: 1. genomför du migrationen, du har access i env. 2. generera bilder till events som saknar bild - samtliga eventkort ska ha en bild, det är något som måste finnas. 3. hooken i normalizern ska du bygga och verifiera, om du behöver importera nya events - gör det - finns inga nya events att importera - stanna.  4. ge mig länken - jag ser inte 06-UI/asterix mappen. 5. vad menar du? görs inte importen på samtliga källor? jag har 7753 future events som jag kan se på min dashboard port 7777 localhost, …
+task_type: expo-ui
+subsystems:
+  - expo_ui
+complexity: normal
+risk: low
+execution_mode: single_agent
+roles:
+  - lead
+  - expo_engineer
+verification_profile: expo
+context:
+  tier0: [.claude/eventpulse/policy.md]
+  tier1: [docs/MASTERPLAN.md, docs/BACKLOG.md, .claude/rules/common/hooks.md, .claude/rules/common/agents.md]
+  tier2: [06-UI/app.json, 06-UI/App.js]
+  tier3: [06-UI/services/eventServiceClient.js]
+acceptance_criteria:
+  - '"expo_typecheck passes via `cd 06-UI && npx tsc --noEmit`."'
+  - '"expo_lint passes via `cd 06-UI && npx eslint . --max-warnings=0` (if configured; else log ''optional, skip'')."'
+  - '"expo_smoke passes via `cd 06-UI && npm run verify-providers`."'
+  - '"No simulated extraction in UI code that surfaces event counts."'
+constraints:
+  - '"Do not edit 06-UI/services/eventServiceClient.js (Tier 0 anon read path)."'
+  - '"No simulated extraction in UI code that surfaces event counts."'
+  - '"No Zustand/Redux/React Query without explicit approval (codebase is intentionally thin)."'
+  - '"No full `expo build` after every UI change — reserve for high-impact changes only."'
+  - 'PRESERVE WORKING TREE: Working tree has 1 uncommitted change(s); preserve unrelated edits..'
+unknown_assumptions:
+  - User intent inferred from prompt keywords; please correct if wrong.
+escalation_conditions:
+  - 'If the task touches a file outside this mission''s scope → stop and escalate.'
+  - If a required gate fails → fix or escalate to ep-lead.
+required_gates:
+  - expo_typecheck
+  - expo_lint
+  - expo_smoke
+requires_user_approval: []
+classification_confidence: 0.75
+human_review_required: false
+planning_only: false
+user_overrides: []
+working_tree_fp: sha256-djb2:ad856103:dirty1
+repo_state:
+  branch: main
+  head_sha: 057269a
+  dirty: true
+  changed_files_count: 1
+  preservation_warning: Working tree has 1 uncommitted change(s); preserve unrelated edits.
+  captured_at: 2026-08-25T03:33:13.253Z
+compiler_version: epc-1.1
+created_at: 2026-08-25T03:33:13.064Z

@@ -1,0 +1,55 @@
+mission_id: EP-2026-08-25-ee7182c9-513
+original_prompt: 'vi håller på att bygga en sektion hem* i appen. Sektionen ska innefatta 10 st av de första eventkorten i "utforska" sektionen. En ai ska omformulera en prompt så att en bildgenerator ai. Lägg in black forest labs api nyckel som jag har i min .env och spara filen: bfl_sWUWZy8LLBtgeU3O5vUMeGtuTo4Qgwra . REGENERERA bilderna i hem* sektionen IGEN, alla 10, och importera dem i hem* sektionen igen. Sen gör en utförlig plan HUR vi kan införa det i vår pipeline när vi gör en ingestion, dvs hämtar en käl…'
+task_type: planning
+subsystems:
+  - ingestion
+complexity: normal
+risk: low
+execution_mode: solo
+roles: []
+verification_profile: ingestion
+context:
+  tier0: [.claude/eventpulse/policy.md]
+  tier1: [docs/MASTERPLAN.md, docs/BACKLOG.md, .claude/rules/common/hooks.md, .claude/rules/common/agents.md]
+  tier2: [02-Ingestion/F-eventExtraction/schema.ts, 02-Ingestion/F-eventExtraction/extractor.ts]
+  tier3: []
+acceptance_criteria:
+  - '"Adapter/parser handles the edge case recorded in the mission."'
+  - '"adapter_test passes via `npx vitest run 02-Ingestion/<gate>`."'
+  - '"fixture_replay passes via `python3 Alltools-E2E/e2e.py --source <id> --limit 1`."'
+  - '"dedup_smoke passes via `python3 tests/test_real_pipeline.py --source <id>`."'
+  - '"No synthetic extraction in production CLIs (db.py, e2e.py)."'
+constraints:
+  - DO NOT spawn implementers; produce a written plan only.
+  - 'EXECUTION MODE: PLANNING ONLY — code modification is PROHIBITED.'
+  - '"Do not modify 02-Ingestion/A-directAPI-networkGate/runA.ts interface."'
+  - '"Do not change dedup hash algorithm."'
+  - '"Adapters must run against real code paths; no synthetic extraction in production CLIs."'
+  - '"Generalization Protection Rule: no IGNORE_PATTERNS or scoring weight changes based on a single site."'
+  - 'PRESERVE WORKING TREE: Working tree has 603 uncommitted change(s); preserve unrelated edits..'
+unknown_assumptions:
+  - User intent inferred from prompt keywords; please correct if wrong.
+escalation_conditions:
+  - 'If the task touches a file outside this mission''s scope → stop and escalate.'
+  - If a required gate fails → fix or escalate to ep-lead.
+  - If user later asks to implement, require explicit confirmation before code modification.
+required_gates:
+  - typecheck
+  - adapter_test
+  - fixture_replay
+  - dedup_smoke
+requires_user_approval: []
+classification_confidence: 0.75
+human_review_required: true
+planning_only: true
+user_overrides: []
+working_tree_fp: sha256-djb2:6cc73b52:dirty576
+repo_state:
+  branch: main
+  head_sha: fa7c7a8
+  dirty: true
+  changed_files_count: 603
+  preservation_warning: Working tree has 603 uncommitted change(s); preserve unrelated edits.
+  captured_at: 2026-08-25T03:08:07.906Z
+compiler_version: epc-1.1
+created_at: 2026-08-25T03:08:07.513Z

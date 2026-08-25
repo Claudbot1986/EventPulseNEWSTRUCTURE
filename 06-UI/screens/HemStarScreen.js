@@ -153,7 +153,13 @@ export default function HemStarScreen({ onEventPress }) {
                 <Image
                   source={{ uri: `${imageUri}${CACHE_BUST}` }}
                   style={styles.cardImage}
-                  resizeMode="cover"
+                  // contain (inte cover) — cover croppar topp+botten av den
+                  // kvadratiska bilden i den avlga viewn (height:280) och
+                  // gömer SE-hörnet där AI-stämpeln sitter. contain visar
+                  // hela bilden med svart space på sidorna — stämpeln syns
+                  // alltid, vilket krävs för EU AI Act Art. 50 "easily
+                  // visible".
+                  resizeMode="contain"
                 />
               ) : (
                 <View style={[styles.cardImage, styles.cardImagePlaceholder]}>
@@ -295,7 +301,13 @@ const styles = StyleSheet.create({
   },
   cardImage: {
     width: '100%',
-    height: 280,
+    // Kvadratisk view (aspectRatio:1) istället för fast höjd 280. Den
+    // avlåga 750×280-viewn tvingade antingen crop (cover) eller svart
+    // space på sidorna (contain) — båda dåliga. Med aspectRatio:1 är
+    // viewn lika bred som bilden är square, så hela bilden fyller hela
+    // viewn UTAN crop, UTAN space, UTAN distortion. Stämpeln i SE-hörnet
+    // syns alltid.
+    aspectRatio: 1,
     backgroundColor: TOKENS.color.surfaceSoft,
   },
   cardImagePlaceholder: {

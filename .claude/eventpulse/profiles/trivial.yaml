@@ -1,0 +1,10 @@
+# trivial.yaml — verification profile for trivial prompts (plan §13.7)
+profile: trivial
+description: Single-line or < 40 char prompts. No specialist, no QA.
+gates:
+  - typecheck
+acceptance_criteria:
+  - "Single-line edit completes; typecheck exits 0."
+constraints:
+  - "Single-line edits preferred; no scope drift."
+  - "Tier 1 (docs/MASTERPLAN.md, docs/BACKLOG.md) omitted — trivial work doesn't need them."

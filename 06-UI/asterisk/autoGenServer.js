@@ -22,6 +22,7 @@ import { readFileSync } from 'node:fs';
 import { resolve, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { createClient } from '@supabase/supabase-js';
+import sharp from 'sharp';
 
 // ── Load root .env (server-side) ────────────────────────────────────────────
 const __filename = fileURLToPath(import.meta.url);
@@ -280,6 +281,111 @@ function buildAutoPrompt(event) {
 
 const GENERIC_CATEGORIES = new Set(['community', 'culture', 'event', 'default', '']);
 
+// ── EU AI Act §50 compliance ─────────────────────────────────────────────────
+// Synlig stämpel + maskinläsbar XMP-metadata. Båda krävs formellt; vi gör
+// båda för att täcka "synlig märkning" OCH "machine-readable format".
+//
+// Stämpeln: 240×64 px "● AI-generated"-pill i nedre höger hörn. Storleken
+// (~15 % av en 1024-bild) gör den "easily visible" enligt EU AI Act Art. 50.
+// Bottenplatta: 82% opacitet svart med orange kantlinje (matchar
+// EventPulse-färgschema: accent #FFB454). Synlig men inte i vägen för motivet.
+
+const AI_STAMP_SVG = `<svg width="240" height="64" viewBox="0 0 240 64" xmlns="http://www.w3.org/2000/svg">
+  <rect x="2" y="2" width="236" height="60" rx="30" ry="30"
+        fill="rgba(15,15,18,0.82)"
+        stroke="rgba(255,180,84,0.65)" stroke-width="1.5"/>
+  <circle cx="34" cy="32" r="8" fill="#FFB454"/>
+  <text x="56" y="40" font-family="Arial, sans-serif" font-size="22"
+        font-weight="bold" fill="#FFFFFF" letter-spacing="0.5">AI-generated</text>
+</svg>`;
+
+const AI_STAMP_BUFFER = Buffer.from(AI_STAMP_SVG);
+
+/**
+ * Bygger XMP-paket med AI-generering-markering. Maskinläsbar — alla
+ * vanliga metadata-läsare (exiftool, Photoshop, Adobe Bridge) ser fälten.
+ *
+ * Fält:
+ *   dc:rights        → "AI-generated image (EU AI Act Art. 50)"
+ *   dc:creator       → "EventPulse/flux-dev"
+ *   xmp:CreatorTool  → "EventPulse/autoGenServer"
+ *   xmp:CreateDate   → ISO nu
+ *   EventPulse:AIGenerated   → "true"
+ *   EventPulse:Model         → "flux-dev"
+ *   EventPulse:Policy        → "EU-AI-Act-Art-50"
+ *   EventPulse:GeneratedAt   → ISO nu
+ */
+function buildAiXmp({ model, prompt }) {
+  const now = new Date().toISOString();
+  const safePrompt = (prompt || '').replace(/[<&>]/g, '').slice(0, 500);
+  return `<?xpacket begin="" id="W5M0MpCehiHzreSzNTczkc9d"?>
+<x:xmpmeta xmlns:x="adobe:ns:meta/" x:xmptk="EventPulse/1.0">
+  <rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
+    <rdf:Description xmlns:dc="http://purl.org/dc/elements/1.1/"
+                     xmlns:xmp="http://ns.adobe.com/xap/1.0/"
+                     xmlns:EventPulse="eventpulse:meta/1.0/"
+                     xmp:CreatorTool="EventPulse/autoGenServer"
+                     xmp:CreateDate="${now}"
+                     xmp:MetadataDate="${now}">
+      <dc:rights>
+        <rdf:Alt>
+          <rdf:li xml:lang="x-default">AI-generated image (EU AI Act Art. 50)</rdf:li>
+        </rdf:Alt>
+      </dc:rights>
+      <dc:creator>
+        <rdf:Seq>
+          <rdf:li>EventPulse/${model}</rdf:li>
+        </rdf:Seq>
+      </dc:creator>
+      <EventPulse:AIGenerated>true</EventPulse:AIGenerated>
+      <EventPulse:Model>${model}</EventPulse:Model>
+      <EventPulse:Policy>EU-AI-Act-Art-50</EventPulse:Policy>
+      <EventPulse:GeneratedAt>${now}</EventPulse:GeneratedAt>
+      <EventPulse:Prompt>${safePrompt}</EventPulse:Prompt>
+    </rdf:Description>
+  </rdf:RDF>
+</x:xmpmeta>
+<?xpacket end="w"?>`;
+}
+
+/**
+ * Applicerar EU AI Act §50-compliance på en bildbuffer:
+ *   1. Synlig AI-stämpel i nedre höger hörn (24px inset)
+ *   2. XMP-metadata-injection (maskinläsbar)
+ *
+ * Returnerar NY PNG-buffer. Original-rörs inte.
+ *
+ * Ren lokal compute, ~10-50ms per bild, ingen API-kostnad.
+ */
+async function applyAiCompliance(buffer, { prompt, model = 'flux-dev' } = {}) {
+  const xmp = buildAiXmp({ model, prompt });
+  // Stämpelposition: 24 px inset från SE-kanten (1024×1024). Använd
+  // explicit left/top istället för gravity — Sharp's gravity+offset-
+  // semantik placerar input UTANFÖR bilden när inset>0 (offset
+  // adderas till gravity-ankaret som redan ÄR kanten).
+  const W = 1024;
+  const H = 1024;
+  const inset = 24;
+  const stampW = 240;
+  const stampH = 64;
+  const left = W - inset - stampW;
+  const top = H - inset - stampH;
+  return sharp(buffer)
+    .composite([
+      {
+        input: AI_STAMP_BUFFER,
+        left,
+        top,
+      },
+    ])
+    .withMetadata({
+      exif: {},
+      xmp,
+    })
+    .png()
+    .toBuffer();
+}
+
 /**
  * Dedup-nyckel: samma event-koncept (titel + venue) får samma bild.
  * Normaliserar: trim, lower-case, kollapsa whitespace.
@@ -364,38 +470,54 @@ async function generateFluxSchnell(prompt) {
 
 /**
  * Laddar upp base64-bild till Storage och uppdaterar ALLA event-rader
- * i `eventIds` med samma image_url. Idempotent (upsert).
+ * i `eventIds` med samma image_url + AI-compliance-metadata. Idempotent (upsert).
  *
  * Path: `events/{storagePath}.png` där storagePath = dedupPath(dedupKey)
  * → samma event-koncept får samma fil, inga dubletter.
+ *
+ * Pipeline:
+ *   1. applyAiCompliance (Sharp: stamp + XMP)
+ *   2. Upload till Storage
+ *   3. Update events med image_url + 5 image-tracking-kolumner
  */
-async function uploadAndPersistAll(eventIds, b64, mime, storagePath) {
+async function uploadAndPersistAll(eventIds, b64, mime, storagePath, prompt, model = 'flux-dev') {
   if (!Array.isArray(eventIds) || eventIds.length === 0) {
     throw new Error('uploadAndPersistAll: eventIds is empty');
   }
-  const buffer = Buffer.from(b64, 'base64');
+  const originalBuffer = Buffer.from(b64, 'base64');
   const ext = mime === 'image/png' ? 'png' : 'jpg';
   const path = `events/${storagePath}.${ext}`;
 
-  // 1. Upload to Storage (upsert — idempotent)
+  // 1. EU AI Act §50 — synlig stämpel + XMP-metadata (lokal Sharp, ~10-50ms)
+  const compliantBuffer = await applyAiCompliance(originalBuffer, { prompt, model });
+
+  // 2. Upload to Storage (upsert — idempotent)
   const { error: uploadErr } = await supabase.storage
     .from(STORAGE_BUCKET)
-    .upload(path, buffer, {
+    .upload(path, compliantBuffer, {
       contentType: mime,
       upsert: true,
       cacheControl: '31536000', // 1 year
     });
   if (uploadErr) throw new Error(`Storage upload failed: ${uploadErr.message}`);
 
-  // 2. Get public URL
+  // 3. Get public URL
   const { data: pub } = supabase.storage.from(STORAGE_BUCKET).getPublicUrl(path);
   const imageUrl = pub?.publicUrl;
   if (!imageUrl) throw new Error('No public URL returned for uploaded image');
 
-  // 3. Update ALLA event-rader i gruppen
+  // 4. Update ALLA event-rader med image_url + compliance-tracking
+  const generatedAt = new Date().toISOString();
   const { error: updateErr } = await supabase
     .from('events')
-    .update({ image_url: imageUrl })
+    .update({
+      image_url: imageUrl,
+      image_ai_generated: true,
+      image_prompt: prompt,
+      image_model: model,
+      image_generated_at: generatedAt,
+      image_generation_status: 'completed',
+    })
     .in('id', eventIds);
   if (updateErr) throw new Error(`events update failed: ${updateErr.message}`);
 
@@ -494,7 +616,7 @@ const server = http.createServer(async (req, res) => {
       const { b64, mime, seed } = await generateFluxSchnell(prompt);
       const key = dedupKey(event);
       const storagePath = dedupPath(key);
-      const imageUrl = await uploadAndPersistAll([event.id], b64, mime, storagePath);
+      const imageUrl = await uploadAndPersistAll([event.id], b64, mime, storagePath, prompt);
       console.log(`[autoGen] event=${event.id} done url=${imageUrl}`);
       return sendJson(res, 200, {
         ok: true,
@@ -565,7 +687,7 @@ const server = http.createServer(async (req, res) => {
           console.log(`[autoGen]   prompt=${prompt.slice(0, 120)}...`);
           const { b64, mime } = await generateFluxSchnell(prompt);
           const storagePath = dedupPath(g.key);
-          const imageUrl = await uploadAndPersistAll(g.ids, b64, mime, storagePath);
+          const imageUrl = await uploadAndPersistAll(g.ids, b64, mime, storagePath, prompt);
           console.log(`[autoGen]   done url=${imageUrl}`);
           results.push({
             ok: true,

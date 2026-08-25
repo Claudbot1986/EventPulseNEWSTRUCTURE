@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="theme-color" content="#0a0a0a">
+  <title>EventPulse — Mobile Control</title>
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+  <header class="app-header">
+    <h1>EventPulse</h1>
+    <div class="header-right">
+      <span id="last-event-time" class="last-event">—</span>
+      <span id="connection-status" class="status-pill status-unknown">connecting…</span>
+    </div>
+  </header>
+
+  <main class="app-main">
+    <section class="card" id="tasks-card">
+      <h2>
+        Tasks
+        <span class="card-hint" id="tasks-count">—</span>
+      </h2>
+      <ul class="task-list" id="task-list"></ul>
+    </section>
+
+    <section class="card" id="now-card">
+      <h2>NOW</h2>
+      <ul class="agent-list" id="agent-list">
+        <li class="agent-row agent-empty">— no agents active —</li>
+      </ul>
+      <div class="iter-meta" id="iter-meta">
+        <div class="iter-meta-item"><span class="label">Iter</span><span class="value" id="iter-num">—</span></div>
+        <div class="iter-meta-item"><span class="label">Turns</span><span class="value" id="iter-turns">—</span></div>
+        <div class="iter-meta-item"><span class="label">Cost</span><span class="value" id="iter-cost">—</span></div>
+        <div class="iter-meta-item"><span class="label">Stop</span><span class="value" id="iter-stop">—</span></div>
+      </div>
+    </section>
+
+    <section class="card" id="activity-card">
+      <h2>
+        Live Activity
+        <span class="card-hint" id="activity-count">—</span>
+      </h2>
+      <ul class="timeline" id="activity-list"></ul>
+    </section>
+
+    <section class="card" id="claude-answer-card">
+      <h2>
+        Claude's Last Answer
+        <span class="card-hint" id="claude-answer-meta">—</span>
+      </h2>
+      <pre class="claude-answer-pane" id="claude-answer-pane">(loading…)</pre>
+      <div class="iter-list-wrap">
+        <div class="iter-list-label">Past iters (scrollable)</div>
+        <ul class="iter-list" id="iter-list"></ul>
+      </div>
+    </section>
+
+    <section class="card" id="status-card">
+      <h2>Autonomous Run</h2>
+      <div class="status-grid">
+        <div>
+          <div class="label">Status</div>
+          <div class="value" id="wrapper-status">—</div>
+        </div>
+        <div>
+          <div class="label">Runtime</div>
+          <div class="value" id="wrapper-runtime">—</div>
+        </div>
+        <div>
+          <div class="label">Iteration</div>
+          <div class="value" id="wrapper-iteration">—</div>
+        </div>
+        <div>
+          <div class="label">Last</div>
+          <div class="value" id="wrapper-last">—</div>
+        </div>
+      </div>
+      <div class="tmux-row">
+        <span class="label">tmux:</span>
+        <span id="tmux-status" class="status-pill status-unknown">—</span>
+      </div>
+    </section>
+
+    <section class="card">
+      <h2>Recent Commits</h2>
+      <ul class="commit-list" id="commit-list"></ul>
+    </section>
+
+    <section class="card" id="terminal-card">
+      <h2>
+        Terminal Live
+        <span class="card-hint">read-only · auto-refresh 5s</span>
+      </h2>
+      <pre class="terminal-pane" id="terminal-pane">(no tmux session)</pre>
+      <div class="terminal-actions">
+        <button class="action" id="open-interactive">Open Interactive Terminal</button>
+      </div>
+    </section>
+  </main>
+
+  <nav class="action-bar">
+    <button class="action primary" data-action="instruct">Message Lead</button>
+    <button class="action" data-action="add-task">Add Task</button>
+    <button class="action" data-action="pause">Pause</button>
+    <button class="action" data-action="resume">Resume</button>
+    <button class="action" data-action="refresh">Refresh</button>
+  </nav>
+
+  <div class="modal-backdrop" id="modal-backdrop" hidden>
+    <div class="modal">
+      <h3 id="modal-title">Send Instruction</h3>
+      <textarea id="modal-input" rows="4" placeholder="Type your instruction for the lead agent… (you can also paste images)"></textarea>
+      <div class="modal-attachments" id="modal-attachments" hidden>
+        <div class="modal-attachments-label">Attachments</div>
+        <div class="modal-attachments-list" id="modal-attachments-list"></div>
+      </div>
+      <div class="modal-attach-row">
+        <label class="action" for="modal-file-input">
+          <span>+ image</span>
+        </label>
+        <input type="file" id="modal-file-input" accept="image/*" multiple hidden>
+        <span class="modal-attach-hint" id="modal-attach-hint">or paste an image</span>
+      </div>
+      <div class="modal-actions">
+        <button class="action" id="modal-cancel">Cancel</button>
+        <button class="action primary" id="modal-submit">Send</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-backdrop" id="terminal-modal" hidden>
+    <div class="modal modal-wide">
+      <h3>Interactive Terminal (sends keys to tmux)</h3>
+      <pre class="terminal-pane" id="terminal-modal-pane">(no tmux session)</pre>
+      <textarea id="terminal-input" rows="2" placeholder="Keys to send (e.g. Enter, or text)…"></textarea>
+      <div class="modal-actions">
+        <button class="action" id="terminal-modal-close">Close</button>
+        <button class="action" id="terminal-modal-send">Send</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="/dashboard.js"></script>
+</body>
+</html>

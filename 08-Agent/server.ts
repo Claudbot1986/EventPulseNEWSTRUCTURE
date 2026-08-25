@@ -43,6 +43,7 @@ import { composeReply } from './llmRouter';
 import { fetchEventImage } from './tools/fetch_event_image';
 import { createRateLimiter, ipKeyFn } from './middleware/rateLimit';
 import { createAdminAuth } from './middleware/adminAuth';
+import { createAiImageRouter } from './middleware/ai_image_static';
 import {
   listNotifications,
   markNotificationRead,
@@ -183,6 +184,14 @@ export function buildApp(opts: { supabase?: SupabaseClient } = {}): express.Expr
   app.get('/agent/health', (_req, res) => {
     res.json({ ok: true, phase: 0 });
   });
+
+  // ─── AI image smoketest (Step A) ────────────────────────────────────
+  // Mounted BEFORE the per-route generalLimiter so the router itself
+  // can decide what to expose (the middleware is gated by env flag and
+  // returns 404 when AI_SMOKETEST_ENABLED is unset). When the flag IS
+  // on, the routes fall under the standard origin allowlist + JSON
+  // middleware stack set up above.
+  app.use('/agent', createAiImageRouter());
 
   /**
    * GET /agent/feed?from=YYYY-MM-DD&days=7&category=music&city=Stockholm
