@@ -23,7 +23,7 @@ export default function AsteriskApp() {
     let cancelled = false;
     (async () => {
       try {
-        const res = await fetch(`${AUTOGEN_SERVER}/events-first?limit=3`);
+        const res = await fetch(`${AUTOGEN_SERVER}/events-first?limit=10`);
         const data = await res.json();
         if (!res.ok || !data.ok) {
           throw new Error(data?.error || `HTTP ${res.status}`);

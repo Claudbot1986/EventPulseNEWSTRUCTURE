@@ -412,7 +412,7 @@ const server = http.createServer(async (req, res) => {
   // Supabase directly because RLS blocks anon SELECT on `events`).
   // Default N=3 (användaren bad om 3 den 2026-08-24).
   if (req.method === 'GET' && url.pathname === '/events-first') {
-    const limit = Math.max(1, Math.min(20, Number(url.searchParams.get('limit')) || 3));
+    const limit = Math.max(1, Math.min(20, Number(url.searchParams.get('limit')) || 10));
     try {
       const { data: rows, error: fetchErr } = await supabase
         .from('events')
@@ -477,7 +477,7 @@ const server = http.createServer(async (req, res) => {
 
   // ── Batch-endpoint: hämta första N events, dedup-gruppera, generera per grupp ──
   if (req.method === 'POST' && url.pathname === '/generate-for-first') {
-    const limit = Math.max(1, Math.min(20, Number(url.searchParams.get('limit')) || 3));
+    const limit = Math.max(1, Math.min(20, Number(url.searchParams.get('limit')) || 10));
     console.log(`[autoGen] /generate-for-first?limit=${limit} start`);
     try {
       // 1. Hämta första N events från Supabase
