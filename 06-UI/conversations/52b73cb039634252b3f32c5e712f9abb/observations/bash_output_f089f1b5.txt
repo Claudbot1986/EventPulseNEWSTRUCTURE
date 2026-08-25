@@ -1,0 +1,406 @@
+cd /workspace/services/ingestion && cat > test_ingestion.ts << 'EOF'
+import * as dotenv from 'dotenv';
+dotenv.config({ override: true });
+import { createNormalizerWorker, rawEventsQueue } from './src/queue';
+import { processRawEvent } from './src/normalizer';
+import { runKulturhusetSource } from './src/sources/sourceRunner';
+async function main() {
+  console.log('=== EventPulse Ingestion Test ===');
+
+  // 1. Start normalizer worker
+  const worker = createNormalizerWorker(processRawEvent);
+  worker.on('completed', (job) => {
+    // Silent completion
+  });
+  worker.on('failed', (job, err) => {
+    console.error(`[normalizer] Job ${job?.id} failed:`, err.message);
+  });
+  console.log('[✓] Normalizer worker started');
+  // 2. Clear old Kulturhuset jobs from queue to avoid duplicates
+  console.log('[...] Clearing old Kulturhuset jobs...');
+  // Note: We don't clear ticketmaster/malmo-live as they're working fine
+  // 3. Run Kulturhuset source (this will queue 1296 events)
+  console.log('\n=== Running Kulturhuset source ===');
+  const result = await runKulturhusetSource();
+  console.log(`Kulturhuset: found=${result.eventsFound}, queued=${result.eventsQueued}, errors=${result.errors.length}`);
+  // 4. Wait for queue to process
+  console.log('\n[...] Waiting for queue to process (30 seconds)...');
+  await new Promise(resolve => setTimeout(resolve, 30000));
+  // 5. Check queue stats
+  const counts = await rawEventsQueue.getJobCounts();
+  console.log('\n=== Queue Stats ===');
+  console.log(`Active: ${counts.active}, Completed: ${counts.completed}, Failed: ${counts.failed}, Waiting: ${counts.waiting}`);
+
+  // Clean up
+  await worker.close();
+  console.log('\n[✓] Done');
+}
+main().catch(err => {
+  console.error('Fatal error:', err);
+  process.exit(1);
+});
+EOF
+
+
+npx tsx test_ingestion.ts 2>&1
+clear
+[dotenv@17.3.1] injecting env (16) from .env -- tip: ⚙️  load multiple .env files with { path: ['.env.local', '.env'] }
+[queue] Using Redis URL: redis://localhost:6379
+[dotenv@17.3.1] injecting env (16) from .env -- tip: ⚙️  suppress all logs with { quiet: true }
+=== EventPulse Ingestion Test ===
+[✓] Normalizer worker started
+[...] Clearing old Kulturhuset jobs...
+
+=== Running Kulturhuset source ===
+[sources] Running source: kulturhuset
+[kulturhuset] Fetched 1296 total events across 13 pages
+[normalizer] Processing kulturhuset:kh-114657 "Upptäcktsfärd på Kulturhuset"
+[normalizer] Processing kulturhuset:kh-119725 "Skolbesök Celsingvandring"
+[normalizer] Processing kulturhuset:kh-120489 "Rum för Minnen"
+[normalizer] Processing kulturhuset:kh-123066 "Artist’s Books Södra Latin"
+[normalizer] Processing kulturhuset:kh-116830 "The Devil – A Life av Nick Cave"
+Kulturhuset: found=1296, queued=1296, errors=0
+
+[...] Waiting for queue to process (30 seconds)...
+[normalizer] Updating existing event: 07c128cb-049d-4224-987d-e5960a85af29
+[normalizer] Updating existing event: 71cadcce-0c99-4d86-bb90-9bf198538e0f
+[normalizer] Updating existing event: e672aa9c-528b-4266-ad3e-0285169930e2
+[normalizer] Updating existing event: 26f53495-1e15-4a62-99d1-11d495086c0c
+[normalizer] Updating existing event: d3e98d7f-91a4-4ad2-b86b-538ece135fbe
+[normalizer] Venue matched by name: "Sergels torg" -> a60924cb-016a-4e2e-9423-6d24a5ac0dd2
+[normalizer] Venue matched by name: "Sergels torg" -> a60924cb-016a-4e2e-9423-6d24a5ac0dd2
+[normalizer] Venue matched by name: "Sergels torg" -> a60924cb-016a-4e2e-9423-6d24a5ac0dd2
+[normalizer] Venue matched by name: "Skärholmen" -> ac7a043c-d566-4772-9966-73359956f1be
+[normalizer] Venue matched by name: "Sergels torg" -> a60924cb-016a-4e2e-9423-6d24a5ac0dd2
+[normalizer] venue_id=a60924cb-016a-4e2e-9423-6d24a5ac0dd2, category_slug=culture
+[normalizer] venue_id=a60924cb-016a-4e2e-9423-6d24a5ac0dd2, category_slug=culture
+[normalizer] venue_id=a60924cb-016a-4e2e-9423-6d24a5ac0dd2, category_slug=barn
+[normalizer] venue_id=ac7a043c-d566-4772-9966-73359956f1be, category_slug=culture
+[normalizer] venue_id=a60924cb-016a-4e2e-9423-6d24a5ac0dd2, category_slug=culture
+[normalizer] ✅ Updated: event_id=26f53495-1e15-4a62-99d1-11d495086c0c
+[normalizer] ✅ Updated: event_id=71cadcce-0c99-4d86-bb90-9bf198538e0f
+[normalizer] ✅ Updated: event_id=e672aa9c-528b-4266-ad3e-0285169930e2
+[normalizer] ✅ Updated: event_id=07c128cb-049d-4224-987d-e5960a85af29
+[normalizer] ✅ Updated: event_id=d3e98d7f-91a4-4ad2-b86b-538ece135fbe
+[normalizer] Processing kulturhuset:kh-122219 "Barnvagnsbio: Mecenaten"
+[normalizer] Processing kulturhuset:kh-117834 "Kargt och blåsigt"
+[normalizer] Processing kulturhuset:kh-120819 "Konstverkstan"
+[normalizer] Processing kulturhuset:kh-111907 "Les Misérables"
+[normalizer] Processing kulturhuset:kh-120820 "Konstverkstan"
+[normalizer] Updating existing event: 72258189-d5d7-49ca-8494-524d84eafb38
+[normalizer] Updating existing event: 99e7049a-c331-4d4b-99d4-283f9b630655
+[normalizer] Updating existing event: d5a4bbc4-dc08-4b60-a5e8-e9951b2cb1ad
+[normalizer] Updating existing event: 1b6b451f-ba19-4924-8e9a-03203a774ea8
+[normalizer] Updating existing event: 1b72a3f7-98df-48ce-b556-70e1d63b02ed
+[normalizer] Venue matched by name: "Sergels torg" -> a60924cb-016a-4e2e-9423-6d24a5ac0dd2
+[normalizer] Venue matched by name: "Sergels torg" -> a60924cb-016a-4e2e-9423-6d24a5ac0dd2
+[normalizer] Venue matched by name: "Sergels torg" -> a60924cb-016a-4e2e-9423-6d24a5ac0dd2
+[normalizer] Venue matched by name: "Vällingby" -> 3bcb617a-aa0b-4887-845a-6d9f7dd1fd61
+[normalizer] Venue matched by name: "Sergels torg" -> a60924cb-016a-4e2e-9423-6d24a5ac0dd2
+[normalizer] venue_id=a60924cb-016a-4e2e-9423-6d24a5ac0dd2, category_slug=culture
+[normalizer] venue_id=a60924cb-016a-4e2e-9423-6d24a5ac0dd2, category_slug=barn
+[normalizer] venue_id=a60924cb-016a-4e2e-9423-6d24a5ac0dd2, category_slug=culture
+[normalizer] venue_id=3bcb617a-aa0b-4887-845a-6d9f7dd1fd61, category_slug=culture
+[normalizer] venue_id=a60924cb-016a-4e2e-9423-6d24a5ac0dd2, category_slug=barn
+[normalizer] ✅ Updated: event_id=d5a4bbc4-dc08-4b60-a5e8-e9951b2cb1ad
+[normalizer] ✅ Updated: event_id=99e7049a-c331-4d4b-99d4-283f9b630655
+[normalizer] ✅ Updated: event_id=1b6b451f-ba19-4924-8e9a-03203a774ea8
+[normalizer] ✅ Updated: event_id=72258189-d5d7-49ca-8494-524d84eafb38
+[normalizer] ✅ Updated: event_id=1b72a3f7-98df-48ce-b556-70e1d63b02ed
+[normalizer] Processing kulturhuset:kh-120961 "Turner & Constable"
+[normalizer] Processing kulturhuset:kh-123856 "Slututställning ISO23"
+[normalizer] Processing kulturhuset:kh-117289 "Säg inget till mamma"
+[normalizer] Processing kulturhuset:kh-120821 "Konstverkstan"
+[normalizer] Processing kulturhuset:kh-115567 "Husdjursföreställningen"
+[normalizer] Updating existing event: 8f1c6c78-0696-47ac-95eb-fd227a0d14d9
+[normalizer] Updating existing event: ba214ff6-49d4-412b-b74b-a024fe49761f
+[normalizer] Updating existing event: 0d555a84-c349-4a93-8c35-182282c1bded
+[normalizer] Updating existing event: 5f151089-9299-4b49-bcbc-a6a2037be6c7
+[normalizer] Venue matched by name: "Sergels torg" -> a60924cb-016a-4e2e-9423-6d24a5ac0dd2
+[normalizer] Venue matched by name: "Skärholmen" -> ac7a043c-d566-4772-9966-73359956f1be
+[normalizer] Updating existing event: e43cad15-1d26-43f2-99f5-f3e348a1ebfb
+[normalizer] Venue matched by name: "Sergels torg" -> a60924cb-016a-4e2e-9423-6d24a5ac0dd2
+[normalizer] Venue matched by name: "Sergels torg" -> a60924cb-016a-4e2e-9423-6d24a5ac0dd2
+[normalizer] venue_id=ac7a043c-d566-4772-9966-73359956f1be, category_slug=culture
+[normalizer] Venue matched by name: "Sergels torg" -> a60924cb-016a-4e2e-9423-6d24a5ac0dd2
+[normalizer] venue_id=a60924cb-016a-4e2e-9423-6d24a5ac0dd2, category_slug=culture
+[normalizer] venue_id=a60924cb-016a-4e2e-9423-6d24a5ac0dd2, category_slug=barn
+[normalizer] venue_id=a60924cb-016a-4e2e-9423-6d24a5ac0dd2, category_slug=culture
+[normalizer] ✅ Updated: event_id=8f1c6c78-0696-47ac-95eb-fd227a0d14d9
+[normalizer] ✅ Updated: event_id=5f151089-9299-4b49-bcbc-a6a2037be6c7
+[normalizer] venue_id=a60924cb-016a-4e2e-9423-6d24a5ac0dd2, category_slug=barn
+[normalizer] ✅ Updated: event_id=ba214ff6-49d4-412b-b74b-a024fe49761f
+[normalizer] Processing kulturhuset:kh-122222 "Mecenaten"
+[normalizer] ✅ Updated: event_id=0d555a84-c349-4a93-8c35-182282c1bded
+[normalizer] Processing kulturhuset:kh-115566 "Husdjursföreställningen"
+[normalizer] ✅ Updated: event_id=e43cad15-1d26-43f2-99f5-f3e348a1ebfb
+[normalizer] Updating existing event: 0577a98b-985e-4bfd-919e-a86f0a190388
+cd /workspace/services/ingestion && npx tsx test_ingestion.ts 2>&1
+[normalizer] Processing kulturhuset:kh-122495 "Filosofikvällar på Lava"
+[normalizer] Processing kulturhuset:kh-111189 "Frankenstein "
+[normalizer] Updating existing event: 1c4178a3-89c0-438b-923a-112a7dfa42e5
+[normalizer] Processing kulturhuset:kh-117886 "Fastighetsskötaren "
+[normalizer] Venue matched by name: "Sergels torg" -> a60924cb-016a-4e2e-9423-6d24a5ac0dd2
+[normalizer] Updating existing event: e1b26636-0d7e-4204-a0f8-3379f7393fbc
+[normalizer] Updating existing event: 2d07db85-96c1-4a80-9709-b634c8a09aa6
+[normalizer] Updating existing event: 2f5ce468-9ce4-4650-b846-6e371cb63bd1
+[normalizer] Venue matched by name: "Sergels torg" -> a60924cb-016a-4e2e-9423-6d24a5ac0dd2
+[normalizer] venue_id=a60924cb-016a-4e2e-9423-6d24a5ac0dd2, category_slug=culture
+[normalizer] Venue matched by name: "Sergels torg" -> a60924cb-016a-4e2e-9423-6d24a5ac0dd2
+[normalizer] Venue matched by name: "Sergels torg" -> a60924cb-016a-4e2e-9423-6d24a5ac0dd2
+[normalizer] venue_id=a60924cb-016a-4e2e-9423-6d24a5ac0dd2, category_slug=barn
+[normalizer] Venue matched by name: "Sergels torg" -> a60924cb-016a-4e2e-9423-6d24a5ac0dd2
+[normalizer] ✅ Updated: event_id=0577a98b-985e-4bfd-919e-a86f0a190388
+[normalizer] venue_id=a60924cb-016a-4e2e-9423-6d24a5ac0dd2, category_slug=culture
+[normalizer] venue_id=a60924cb-016a-4e2e-9423-6d24a5ac0dd2, category_slug=culture
+[normalizer] venue_id=a60924cb-016a-4e2e-9423-6d24a5ac0dd2, category_slug=culture
+[normalizer] ✅ Updated: event_id=1c4178a3-89c0-438b-923a-112a7dfa42e5
+[normalizer] Processing kulturhuset:kh-122505 "Under the Volcano (Kinoteka 2026)"
+[normalizer] ✅ Updated: event_id=e1b26636-0d7e-4204-a0f8-3379f7393fbc
+[normalizer] ✅ Updated: event_id=2d07db85-96c1-4a80-9709-b634c8a09aa6
+[normalizer] ✅ Updated: event_id=2f5ce468-9ce4-4650-b846-6e371cb63bd1
+[normalizer] Processing kulturhuset:kh-116796 "Skitarg"
+[normalizer] Updating existing event: 297058ba-8b87-4ed0-b55c-1eff35d7fdee
+[normalizer] Processing kulturhuset:kh-113993 "Jakob Hellman"
+[normalizer] Processing kulturhuset:kh-114784 "Upptäcktsfärd på Kulturhuset"
+[normalizer] Processing kulturhuset:kh-120490 "Rum för Minnen"
+[normalizer] Updating existing event: 6277b283-998f-41e5-89c2-b4a3ba4586c9
+[normalizer] Venue matched by name: "Sergels torg" -> a60924cb-016a-4e2e-9423-6d24a5ac0dd2
+[normalizer] Updating existing event: b9de9170-8d58-42e5-8973-264eee91e52a
+[normalizer] Updating existing event: 51640b5c-ad36-4318-805d-3984f9654b90
+[normalizer] Updating existing event: ac616abb-dcfa-479a-a859-f3f0ebff1cd6
+[normalizer] Venue matched by name: "Sergels torg" -> a60924cb-016a-4e2e-9423-6d24a5ac0dd2
+[normalizer] venue_id=a60924cb-016a-4e2e-9423-6d24a5ac0dd2, category_slug=culture
+[normalizer] Venue matched by name: "Skärholmen" -> ac7a043c-d566-4772-9966-73359956f1be
+[normalizer] Venue matched by name: "Sergels torg" -> a60924cb-016a-4e2e-9423-6d24a5ac0dd2
+[normalizer] venue_id=a60924cb-016a-4e2e-9423-6d24a5ac0dd2, category_slug=culture
+[normalizer] Venue matched by name: "Sergels torg" -> a60924cb-016a-4e2e-9423-6d24a5ac0dd2
+[normalizer] ✅ Updated: event_id=297058ba-8b87-4ed0-b55c-1eff35d7fdee
+[normalizer] venue_id=ac7a043c-d566-4772-9966-73359956f1be, category_slug=culture
+[normalizer] venue_id=a60924cb-016a-4e2e-9423-6d24a5ac0dd2, category_slug=culture
+[normalizer] ✅ Updated: event_id=6277b283-998f-41e5-89c2-b4a3ba4586c9
+[normalizer] venue_id=a60924cb-016a-4e2e-9423-6d24a5ac0dd2, category_slug=culture
+[normalizer] Processing kulturhuset:kh-123065 "Artist’s Books Södra Latin"
+[normalizer] ✅ Updated: event_id=b9de9170-8d58-42e5-8973-264eee91e52a
+[normalizer] ✅ Updated: event_id=51640b5c-ad36-4318-805d-3984f9654b90
+[normalizer] ✅ Updated: event_id=ac616abb-dcfa-479a-a859-f3f0ebff1cd6
+[normalizer] Updating existing event: c96bb3a0-c6f7-44d0-88b6-3f3811b3b871
+[normalizer] Processing kulturhuset:kh-116897 "The Devil – A Life av Nick Cave"
+[normalizer] Processing kulturhuset:kh-123857 "Slututställning ISO23"
+[normalizer] Processing kulturhuset:kh-120822 "Konstverkstan"
+[normalizer] Processing kulturhuset:kh-105109 "Tristan och Isolde"
+[normalizer] Updating existing event: 81d68461-9563-4406-854b-5eaa33b31c33
+[normalizer] Updating existing event: 75404f83-1a25-4b10-a557-67eba34e5cb7
+[normalizer] Venue matched by name: "Sergels torg" -> a60924cb-016a-4e2e-9423-6d24a5ac0dd2
+[normalizer] Updating existing event: bf6516ae-964f-4b51-af20-5ca5e504239e
+[normalizer] Updating existing event: fe4b5e55-4680-40c7-8755-2aa072a333ec
+[normalizer] Venue matched by name: "Sergels torg" -> a60924cb-016a-4e2e-9423-6d24a5ac0dd2
+[normalizer] venue_id=a60924cb-016a-4e2e-9423-6d24a5ac0dd2, category_slug=culture
+[normalizer] Venue matched by name: "Sergels torg" -> a60924cb-016a-4e2e-9423-6d24a5ac0dd2
+[normalizer] Venue matched by name: "Sergels torg" -> a60924cb-016a-4e2e-9423-6d24a5ac0dd2
+[normalizer] Venue matched by name: "Sergels torg" -> a60924cb-016a-4e2e-9423-6d24a5ac0dd2
+[normalizer] venue_id=a60924cb-016a-4e2e-9423-6d24a5ac0dd2, category_slug=culture
+[normalizer] venue_id=a60924cb-016a-4e2e-9423-6d24a5ac0dd2, category_slug=culture
+[normalizer] ✅ Updated: event_id=c96bb3a0-c6f7-44d0-88b6-3f3811b3b871
+[normalizer] venue_id=a60924cb-016a-4e2e-9423-6d24a5ac0dd2, category_slug=barn
+[normalizer] venue_id=a60924cb-016a-4e2e-9423-6d24a5ac0dd2, category_slug=culture
+[normalizer] ✅ Updated: event_id=75404f83-1a25-4b10-a557-67eba34e5cb7
+[normalizer] ✅ Updated: event_id=81d68461-9563-4406-854b-5eaa33b31c33
+[normalizer] ✅ Updated: event_id=bf6516ae-964f-4b51-af20-5ca5e504239e
+[normalizer] Processing kulturhuset:kh-117833 "Kargt och blåsigt"
+[normalizer] ✅ Updated: event_id=fe4b5e55-4680-40c7-8755-2aa072a333ec
+[normalizer] Processing kulturhuset:kh-120823 "Konstverkstan"
+[normalizer] Processing kulturhuset:kh-115568 "Husdjursföreställningen"
+[normalizer] Processing kulturhuset:kh-112061 "Lång dags färd mot natt"
+[normalizer] Updating existing event: 91b4d9ea-81cc-4556-a971-9d15ca5c62de
+[normalizer] Processing kulturhuset:kh-120824 "Konstverkstan"
+[normalizer] Venue matched by name: "Sergels torg" -> a60924cb-016a-4e2e-9423-6d24a5ac0dd2
+[normalizer] Updating existing event: e9e125b7-d35b-43ec-a4ec-c930ebd5518c
+[normalizer] Updating existing event: 489431fa-cfcd-42a3-ab2a-d7db29432271
+[normalizer] Updating existing event: a5f052e8-6441-4102-9508-ca8c956c4d82
+[normalizer] Updating existing event: 76519ea2-150d-4961-bac7-459b2b429945
+[normalizer] Venue matched by name: "Sergels torg" -> a60924cb-016a-4e2e-9423-6d24a5ac0dd2
+[nor<response clipped><NOTE>Due to the max output limit, only part of the full response has been shown to you.</NOTE>pi Långstrump"
+[normalizer] Venue matched by name: "Husby" -> 74baf656-ad68-478e-a4c9-2eba01ddeb57
+[normalizer] Venue matched by name: "Sergels torg" -> a60924cb-016a-4e2e-9423-6d24a5ac0dd2
+[normalizer] ✅ Inserted: event_id=8365146e-8917-4715-8d0b-9f4ededc9dc9
+[normalizer] venue_id=74baf656-ad68-478e-a4c9-2eba01ddeb57, category_slug=culture
+[normalizer] Inserting new event (hash: ef030f2dd3de994628258b4e2086cdff6760ba5fb1e5004394c0937382911653)...
+[normalizer] Venue matched by name: "Sergels torg" -> a60924cb-016a-4e2e-9423-6d24a5ac0dd2
+[normalizer] venue_id=a60924cb-016a-4e2e-9423-6d24a5ac0dd2, category_slug=culture
+[normalizer] Inserting new event (hash: 3dd66ed68de640e15572c15c2d9aed4f5d9dab813da49e6c298e6ab93b30c398)...
+[normalizer] Processing kulturhuset:kh-121996 "Husdjursföreställningen"
+[normalizer] Venue matched by name: "Husby" -> 74baf656-ad68-478e-a4c9-2eba01ddeb57
+[normalizer] venue_id=a60924cb-016a-4e2e-9423-6d24a5ac0dd2, category_slug=culture
+[normalizer] Inserting new event (hash: f57919ed99cdf922d1cc2866e23fa86e3407c3ba930065d73f6b62f9db3c0856)...
+[normalizer] ✅ Inserted: event_id=49bb96d4-7f25-4ab4-be73-75709d6bbe46
+[normalizer] ✅ Inserted: event_id=a0d0a858-d09d-408e-a0bf-1369fcc55a86
+[normalizer] venue_id=74baf656-ad68-478e-a4c9-2eba01ddeb57, category_slug=culture
+[normalizer] Inserting new event (hash: 2d79a234ac7aba357a1b9d4c8c7769a65f22c7f485523e4bc215997a588da890)...
+[normalizer] Processing kulturhuset:kh-123185 "Unga Poeters Sällskap – öppen scen för unga poeter"
+[normalizer] ✅ Inserted: event_id=0b0c03cc-ce1f-4278-9c56-14f2175e674d
+[normalizer] Venue matched by name: "Sergels torg" -> a60924cb-016a-4e2e-9423-6d24a5ac0dd2
+[normalizer] ✅ Inserted: event_id=3e38b2e8-12bc-4482-9765-e0992ce79831
+[normalizer] Processing kulturhuset:kh-122163 "Säg inget till mamma"
+[normalizer] venue_id=a60924cb-016a-4e2e-9423-6d24a5ac0dd2, category_slug=barn
+[normalizer] Inserting new event (hash: 8208731c548387a2836005ab4b9a53bb4fab6599472f92c1cc1fd023e1cf103b)...
+[normalizer] Processing kulturhuset:kh-120902 "Vannaminne"
+[normalizer] Processing kulturhuset:kh-120585 "En poet"
+[normalizer] Venue matched by name: "Sergels torg" -> a60924cb-016a-4e2e-9423-6d24a5ac0dd2
+[normalizer] ✅ Inserted: event_id=de5ba75b-7617-4823-b1f2-44599bffdfdb
+[normalizer] venue_id=a60924cb-016a-4e2e-9423-6d24a5ac0dd2, category_slug=culture
+[normalizer] Inserting new event (hash: 2b341d5b616a2c922f73da70f52d38b5b2e0bc170b90790e90f1a41b882b1449)...
+[normalizer] Venue matched by name: "Sergels torg" -> a60924cb-016a-4e2e-9423-6d24a5ac0dd2
+[normalizer] Venue matched by name: "Sergels torg" -> a60924cb-016a-4e2e-9423-6d24a5ac0dd2
+[normalizer] Venue matched by name: "Skärholmen" -> ac7a043c-d566-4772-9966-73359956f1be
+[normalizer] Processing kulturhuset:kh-111928 "Les Misérables"
+[normalizer] venue_id=a60924cb-016a-4e2e-9423-6d24a5ac0dd2, category_slug=culture
+[normalizer] Inserting new event (hash: 0e955f3f0648524c4c547773c54fcd683ef1b208ce844c4efd56da92dc0a9b7e)...
+[normalizer] ✅ Inserted: event_id=6f6f2be3-5752-45b4-95b2-12f492b35cf2
+[normalizer] venue_id=ac7a043c-d566-4772-9966-73359956f1be, category_slug=culture
+[normalizer] Inserting new event (hash: ac88b664d57a494160342c4d0796779b8ba820e3d40248aa74b40910d1477216)...
+[normalizer] venue_id=a60924cb-016a-4e2e-9423-6d24a5ac0dd2, category_slug=culture
+[normalizer] Inserting new event (hash: ac272bbc95a6da992640c063ac14c21a048a051baefc19c4e643f05edf5bbfc8)...
+[normalizer] Venue matched by name: "Vällingby" -> 3bcb617a-aa0b-4887-845a-6d9f7dd1fd61
+[normalizer] ✅ Inserted: event_id=5ad59b6c-b5a8-4499-b527-5d8cb58aac5d
+[normalizer] ✅ Inserted: event_id=97ec36bc-1fd5-4a0c-8eb8-432ef5c2b65e
+[normalizer] Processing kulturhuset:kh-123755 "Eftermingel Litteraturmässan"
+[normalizer] ✅ Inserted: event_id=aa5c79bd-b0dd-4801-8d22-8c061247e8b0
+[normalizer] Processing kulturhuset:kh-123243 "Work in progress"
+[normalizer] Processing kulturhuset:kh-120582 "Franz K."
+[normalizer] Processing kulturhuset:kh-122575 "Skvallerdrottningen"
+[normalizer] venue_id=3bcb617a-aa0b-4887-845a-6d9f7dd1fd61, category_slug=culture
+[normalizer] Inserting new event (hash: 01840a2e64d1155e697f0538edb879a9523acad26d54d2544d1c0fcbb147dcd1)...
+[normalizer] Venue matched by name: "Sergels torg" -> a60924cb-016a-4e2e-9423-6d24a5ac0dd2
+[normalizer] ✅ Inserted: event_id=45c1c33f-b8f7-4a7c-935c-b41601fd4d07
+[normalizer] venue_id=a60924cb-016a-4e2e-9423-6d24a5ac0dd2, category_slug=culture
+[normalizer] Inserting new event (hash: 69fd900f261ef1329d194bd49b70511e20eb22dbb58d4899cb2739d946d42c22)...
+[normalizer] Venue matched by name: "Sergels torg" -> a60924cb-016a-4e2e-9423-6d24a5ac0dd2
+[normalizer] Venue matched by name: "Sergels torg" -> a60924cb-016a-4e2e-9423-6d24a5ac0dd2
+[normalizer] Processing kulturhuset:kh-122266 "Scream 7"
+[normalizer] Venue matched by name: "Husby" -> 74baf656-ad68-478e-a4c9-2eba01ddeb57
+[normalizer] venue_id=74baf656-ad68-478e-a4c9-2eba01ddeb57, category_slug=culture
+[normalizer] Inserting new event (hash: f64081a2ef4ed6ca33fddaea7a77634ac3186771413bb234eeb62f2921dbde0e)...
+[normalizer] ✅ Inserted: event_id=7a7f1f17-a920-42da-b8ba-dc71bfe03732
+[normalizer] venue_id=a60924cb-016a-4e2e-9423-6d24a5ac0dd2, category_slug=culture
+[normalizer] Inserting new event (hash: 01d119370d58a6520296389a8eb7c311d58e9192c739d64227dc9ee853d6def2)...
+[normalizer] venue_id=a60924cb-016a-4e2e-9423-6d24a5ac0dd2, category_slug=culture
+[normalizer] Inserting new event (hash: afb186fb94450b703dbd60c7a4082f7b315ccc576110351d41ca3646f426d2a6)...
+[normalizer] Venue matched by name: "Skärholmen" -> ac7a043c-d566-4772-9966-73359956f1be
+[normalizer] ✅ Inserted: event_id=8766264f-72e8-4d0f-aae4-b422155f9e4e
+[normalizer] ✅ Inserted: event_id=52e523e6-9ab7-415a-9248-6f01ee67031a
+[normalizer] Processing kulturhuset:kh-117243 "Bön för idioter"
+[normalizer] ✅ Inserted: event_id=f88d1ee6-88ad-4cc8-b5e7-ab027ac18aa5
+[normalizer] venue_id=ac7a043c-d566-4772-9966-73359956f1be, category_slug=culture
+[normalizer] Inserting new event (hash: db5d70399775b6eb2c653402ae11e880b05bf75bbd7db9d60bba8c746b61fc67)...
+[normalizer] Processing kulturhuset:kh-119680 "Lastkaj 14"
+[normalizer] Processing kulturhuset:kh-113100 "Lonely Together"
+[normalizer] Processing kulturhuset:kh-119589 "Skapandeverkstaden"
+[normalizer] Venue matched by name: "Sergels torg" -> a60924cb-016a-4e2e-9423-6d24a5ac0dd2
+[normalizer] ✅ Inserted: event_id=8e78aa93-3432-4482-997f-a404a0813d95
+[normalizer] Venue matched by name: "Sergels torg" -> a60924cb-016a-4e2e-9423-6d24a5ac0dd2
+[normalizer] Venue matched by name: "Sergels torg" -> a60924cb-016a-4e2e-9423-6d24a5ac0dd2
+[normalizer] venue_id=a60924cb-016a-4e2e-9423-6d24a5ac0dd2, category_slug=culture
+[normalizer] Inserting new event (hash: 52a9eb902142cd5a17afc379d8c47385b3bae54a3fd94e8bfa2e5f070cf20a27)...
+[normalizer] Venue matched by name: "Skärholmen" -> ac7a043c-d566-4772-9966-73359956f1be
+[normalizer] Processing kulturhuset:kh-120502 "Rum för Minnen"
+[normalizer] venue_id=a60924cb-016a-4e2e-9423-6d24a5ac0dd2, category_slug=culture
+[normalizer] Inserting new event (hash: ab6369e3572c2823c35958f5f897923c055423c43036ebdecfe818ca40c0357d)...
+[normalizer] venue_id=a60924cb-016a-4e2e-9423-6d24a5ac0dd2, category_slug=culture
+[normalizer] Inserting new event (hash: 3a35399b553b308c31266b2d40e8e2a3074f68f14005bf683381151b3c1daba6)...
+[normalizer] ✅ Inserted: event_id=3924de43-3344-4dd9-b2e1-277febdc2890
+[normalizer] venue_id=ac7a043c-d566-4772-9966-73359956f1be, category_slug=barn
+[normalizer] Inserting new event (hash: 0283720eea79aba12abef5a72836f178d3420e5af9d8501c7a8b5960951b82b7)...
+[normalizer] ✅ Inserted: event_id=45dcd751-65c1-4c5f-a124-7383d8c87445
+[normalizer] Processing kulturhuset:kh-116894 "The Devil – A Life av Nick Cave"
+[normalizer] ✅ Inserted: event_id=bdaf6b64-a8ce-446e-9bec-dcc8ab4de7b3
+[normalizer] ✅ Inserted: event_id=4707def5-162c-4b64-9fd6-38783a7b71d8
+[normalizer] Venue matched by name: "Sergels torg" -> a60924cb-016a-4e2e-9423-6d24a5ac0dd2
+[normalizer] Processing kulturhuset:kh-123144 "Konstverkstan"
+[normalizer] Processing kulturhuset:kh-119446 "Lek med Alfons Åberg"
+[normalizer] Processing kulturhuset:kh-123832 "Husby Konstsalong 5 år!"
+[normalizer] venue_id=a60924cb-016a-4e2e-9423-6d24a5ac0dd2, category_slug=culture
+[normalizer] Inserting new event (hash: 1a401e1aa96f1c8332e24753e9a0d613c470f2669902a2300661af7cdf037ab3)...
+[normalizer] Venue matched by name: "Sergels torg" -> a60924cb-016a-4e2e-9423-6d24a5ac0dd2
+[normalizer] ✅ Inserted: event_id=7bdb1af0-fada-4ce5-b270-3ac840b4e036
+[normalizer] venue_id=a60924cb-016a-4e2e-9423-6d24a5ac0dd2, category_slug=culture
+[normalizer] Inserting new event (hash: 9e17f9336cf8e6bd113853d7121c4b6ab4c72c50a951a0c497a1127feec83d16)...
+[normalizer] Venue matched by name: "Husby" -> 74baf656-ad68-478e-a4c9-2eba01ddeb57
+[normalizer] Venue matched by name: "Sergels torg" -> a60924cb-016a-4e2e-9423-6d24a5ac0dd2
+[normalizer] Venue matched by name: "Skärholmen" -> ac7a043c-d566-4772-9966-73359956f1be
+[normalizer] Processing kulturhuset:kh-120906 "Vannaminne"
+[normalizer] ✅ Inserted: event_id=efc06a88-a994-4ac2-a915-359fb69bca23
+[normalizer] venue_id=74baf656-ad68-478e-a4c9-2eba01ddeb57, category_slug=culture
+[normalizer] Inserting new event (hash: 40c9352a7b30158486f8a51264502c27c74adb6fe14c80377a10b103b5d4c923)...
+[normalizer] venue_id=a60924cb-016a-4e2e-9423-6d24a5ac0dd2, category_slug=barn
+[normalizer] Inserting new event (hash: 3adcebaf8c75b528bf1872b8c2a7d4969ad858fe04f2cc0e94b5e2142e704773)...
+[normalizer] venue_id=ac7a043c-d566-4772-9966-73359956f1be, category_slug=culture
+[normalizer] Inserting new event (hash: 3ec593fb1e85ed17611a2f52cb233a260ce79f217340c11069e81c59c6b1bd7e)...
+[normalizer] ✅ Inserted: event_id=429f42d9-39d1-4572-82c1-6553f562ec89
+[normalizer] ✅ Inserted: event_id=1ebbb3ed-637a-4470-8138-13805d12a416
+[normalizer] Processing kulturhuset:kh-117036 "Lek med Alfons Åberg"
+[normalizer] ✅ Inserted: event_id=0f74efa7-9781-46f7-be8e-494c89a63a4c
+[normalizer] Venue matched by name: "Sergels torg" -> a60924cb-016a-4e2e-9423-6d24a5ac0dd2
+[normalizer] Processing kulturhuset:kh-123143 "Konstverkstan"
+[normalizer] Processing kulturhuset:kh-120002 "Söndagsteater i Husby"
+[normalizer] Processing kulturhuset:kh-119961 "Frankenstein "
+[normalizer] venue_id=a60924cb-016a-4e2e-9423-6d24a5ac0dd2, category_slug=culture
+[normalizer] Inserting new event (hash: eedc26a8de09474237bbe097058aba0e7af09861117ef44ddb2d43e11dc4c4e3)...
+[normalizer] Venue matched by name: "Sergels torg" -> a60924cb-016a-4e2e-9423-6d24a5ac0dd2
+[normalizer] ✅ Inserted: event_id=366ecbda-e0f0-4ed7-b476-9a0578373b53
+[normalizer] venue_id=a60924cb-016a-4e2e-9423-6d24a5ac0dd2, category_slug=culture
+[normalizer] Inserting new event (hash: 8aed98e87b7d6d8b0579ba9b1892b97640dfa58ff7308c348a8adef1a3969f9b)...
+[normalizer] Venue matched by name: "Sergels torg" -> a60924cb-016a-4e2e-9423-6d24a5ac0dd2
+[normalizer] Venue matched by name: "Husby" -> 74baf656-ad68-478e-a4c9-2eba01ddeb57
+[normalizer] Venue matched by name: "Sergels torg" -> a60924cb-016a-4e2e-9423-6d24a5ac0dd2
+[normalizer] venue_id=74baf656-ad68-478e-a4c9-2eba01ddeb57, category_slug=barn
+[normalizer] Inserting new event (hash: 62a692372e89ad2ba01b32fd6dbe62e08e20f6e99180716f5df69aef30ba81ff)...
+[normalizer] ✅ Inserted: event_id=e574d9c6-e60c-4045-be84-b0b3cfaefb72
+[normalizer] venue_id=a60924cb-016a-4e2e-9423-6d24a5ac0dd2, category_slug=barn
+[normalizer] Inserting new event (hash: 3036daebfba0d7f4a242dd1bf438ce7c2d82fd6ada829a13355413ebad40014a)...
+[normalizer] Processing kulturhuset:kh-121332 "Bamse och havets hemlighet"
+[normalizer] venue_id=a60924cb-016a-4e2e-9423-6d24a5ac0dd2, category_slug=culture
+[normalizer] Inserting new event (hash: 9327328a57a33ee01fd1c4dec26545b405cdad9ecd26f9242f886710ea364c63)...
+[normalizer] ✅ Inserted: event_id=d6f3bb96-f147-4cf3-aab3-22e5c3948c95
+[normalizer] Processing kulturhuset:kh-121038 "Stickbio: Father Mother Sister Brother"
+[normalizer] ✅ Inserted: event_id=68a55e04-e33a-476a-ae05-7b23ad3da077
+[normalizer] ✅ Inserted: event_id=03e7eb33-df08-4635-970b-2ff5c7cbd7f8
+[normalizer] Venue matched by name: "Skärholmen" -> ac7a043c-d566-4772-9966-73359956f1be
+[normalizer] Processing kulturhuset:kh-123142 "Konstverkstan"
+[normalizer] Processing kulturhuset:kh-122576 "Skvallerdrottningen"
+[normalizer] Processing kulturhuset:kh-123141 "Konstverkstan"
+[normalizer] Venue matched by name: "Sergels torg" -> a60924cb-016a-4e2e-9423-6d24a5ac0dd2
+[normalizer] venue_id=ac7a043c-d566-4772-9966-73359956f1be, category_slug=culture
+[normalizer] Inserting new event (hash: 2ce56cde5913657d72e0e76a210bf8438f694b1ab5949f2348916ffa67b091f5)...
+[normalizer] Venue matched by name: "Sergels torg" -> a60924cb-016a-4e2e-9423-6d24a5ac0dd2
+[normalizer] Venue matched by name: "Sergels torg" -> a60924cb-016a-4e2e-9423-6d24a5ac0dd2
+[normalizer] venue_id=a60924cb-016a-4e2e-9423-6d24a5ac0dd2, category_slug=culture
+[normalizer] Inserting new event (hash: d96d978f35c7e7c53c6c9851a124fbf6ebeca5e658d0d52f3618ee3d26471f87)...
+[normalizer] ✅ Inserted: event_id=1399e0d4-f0be-4c23-a062-dc27faf3b5d5
+[normalizer] Venue matched by name: "Sergels torg" -> a60924cb-016a-4e2e-9423-6d24a5ac0dd2
+[normalizer] venue_id=a60924cb-016a-4e2e-9423-6d24a5ac0dd2, category_slug=culture
+[normalizer] Inserting new event (hash: ebf187e2af403c972cb694f20566554dd125187b63fe1021b6dc4ac5943960b7)...
+[normalizer] venue_id=a60924cb-016a-4e2e-9423-6d24a5ac0dd2, category_slug=barn
+[normalizer] Inserting new event (hash: c82f5cb0d067153f2449f0cc2da4b1abe1b76fc581dcb866958c39a5554285d8)...
+[normalizer] Processing kulturhuset:kh-117240 "Bön för idioter"
+[normalizer] ✅ Inserted: event_id=df9929f1-883e-4c3c-b47b-dd57d18efffc
+[normalizer] venue_id=a60924cb-016a-4e2e-9423-6d24a5ac0dd2, category_slug=barn
+[normalizer] Inserting new event (hash: e8a2d73c19add504b80b995a60975a8153031e47535c67a71843c5e307068f4e)...
+[normalizer] Processing kulturhuset:kh-122584 "Scarlet"
+[normalizer] ✅ Inserted: event_id=e2967669-fc76-4fef-b232-8034ee462a5d
+[normalizer] ✅ Inserted: event_id=b04b5fee-3a39-4ad0-9cf7-375b6198bb4a
+[normalizer] ✅ Inserted: event_id=64f53200-bb4f-4e78-b7f2-e5904bffd636
+
+=== Queue Stats ===
+Active: 5, Completed: 100, Failed: 0, Waiting: 1026
+[normalizer] Venue matched by name: "Sergels torg" -> a60924cb-016a-4e2e-9423-6d24a5ac0dd2
+[normalizer] Venue matched by name: "Skärholmen" -> ac7a043c-d566-4772-9966-73359956f1be
+[normalizer] venue_id=a60924cb-016a-4e2e-9423-6d24a5ac0dd2, category_slug=culture
+[normalizer] Inserting new event (hash: c2271cf10448e3f9c70d7f75582f77eb8ca9cb0df9fbe5f83bb4a27b32d95fe1)...
+[normalizer] ✅ Inserted: event_id=1d42f57e-a58b-4ac5-82a6-322ad8c00e1b
+[normalizer] venue_id=ac7a043c-d566-4772-9966-73359956f1be, category_slug=culture
+[normalizer] Inserting new event (hash: 9fba00a34412c7318f93f27193a516764c5c25528afd99ae37f1e79dce2e19be)...
+[normalizer] ✅ Inserted: event_id=61b6b05d-aa5b-4432-8884-2978bf36d59d
+
+[✓] Done
+[The command timed out after 120.0 seconds. You may wait longer to see additional output by sending empty command '', send other commands to interact with the current process, send keys ("C-c", "C-z", "C-d") to interrupt/kill the previous command before sending your new command, or use the timeout parameter in terminal for future commands.]

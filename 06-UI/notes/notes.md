@@ -6,6 +6,9 @@ Contains design notes, UX decisions, and documentation about the EventPulse UI l
 
 ## Design Principles
 
+Practical design brief:
+- Start with `getdesign.md` for EventPulse-specific visual direction, component rules, reference workflow, and AI agent instructions.
+
 From `AI/rules/ui.md`:
 - UI must be fast, clear, minimal, predictable
 - Avoid over-design and complexity

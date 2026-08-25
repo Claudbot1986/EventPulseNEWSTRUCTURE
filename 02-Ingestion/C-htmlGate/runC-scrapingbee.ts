@@ -51,7 +51,9 @@ const POSTUI_FILE       = path.resolve(RUNTIME_DIR, 'preUI-queue.jsonl');
 const POSTTESTC_UI_FILE  = path.resolve(RUNTIME_DIR, 'postTestC-UI.jsonl');
 const POSTTESTC_D_FILE   = path.resolve(RUNTIME_DIR, 'postTestC-D.jsonl');
 const POSTTESTC_MAN_FILE = path.resolve(RUNTIME_DIR, 'postTestC-manual-review.jsonl');
+const POSTTESTC_MAN1_FILE = path.resolve(RUNTIME_DIR, 'postTestC-man1.jsonl');
 const EXTRACTED_DIR      = path.resolve(__dirname, '../../../03-Queue/03-extractedevents');
+const KPI_LOG_FILE       = path.resolve(LOGS_DIR, 'runC-scrapingbee-kpi.jsonl');
 
 // --- Log helper — terminal + per-run file ---
 
@@ -79,7 +81,7 @@ interface ScBResult {
   sourceId: string;
   success: boolean;
   eventsFound: number;
-  exitReason: 'ui' | 'd' | 'manual-review';
+  exitReason: 'ui' | 'd' | 'manual-review' | 'man1-low-events';
   error?: string;
   methodsUsed?: string[];
 }
@@ -96,6 +98,7 @@ const SCRAPINGBEE_BASE = 'https://app.scrapingbee.com/api/v1/';
 const DEFAULT_WORKERS = 12;
 const DEFAULT_LIMIT = 100;
 const DEFAULT_MODE: CrawlMode = 'shallow';
+const MIN_EVENTS_FOR_UI = 2;
 
 // ─── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -126,6 +129,11 @@ function writeExtractedEvents(sourceId: string, events: ParsedEvent[]): void {
   const lines = events.map(e => JSON.stringify(e)).join('\n') + '\n';
   const file = path.join(EXTRACTED_DIR, `${sourceId}.jsonl`);
   writeFileSync(file, lines, 'utf8');
+}
+
+function appendKpiLog(entry: Record<string, unknown>): void {
+  mkdirSync(LOGS_DIR, { recursive: true });
+  appendFileSync(KPI_LOG_FILE, JSON.stringify(entry) + '\n', 'utf8');
 }
 
 async function fetchWithScrapingBee(url: string): Promise<{ html: string; error?: string; statusCode: number }> {
@@ -200,10 +208,22 @@ async function processSource(entry: QueueEntry, mode: CrawlMode): Promise<ScBRes
 
   const result = await deepCrawl(sourceId, mode, { onProgress });
 
-  if (result.exitReason === 'ui' && result.eventsFound > 0) {
+  if (result.exitReason === 'ui' && result.eventsFound >= MIN_EVENTS_FOR_UI) {
     writeExtractedEvents(sourceId, result.events);
     console.log(`  [ScB] ${sourceId} → ${result.eventsFound} events via ${result.method} (${result.creditsUsed} credits)`);
     return { sourceId, success: true, eventsFound: result.eventsFound, exitReason: 'ui', methodsUsed: [result.method] };
+  }
+
+  if (result.exitReason === 'ui' && result.eventsFound === 1) {
+    console.log(`  [ScB] ${sourceId} → 1 event → man1-low-events`);
+    return {
+      sourceId,
+      success: false,
+      eventsFound: result.eventsFound,
+      exitReason: 'man1-low-events',
+      error: `low-event-count:${result.eventsFound}`,
+      methodsUsed: [result.method],
+    };
   }
 
   if (result.exitReason === 'd') {
@@ -222,10 +242,11 @@ async function processSource(entry: QueueEntry, mode: CrawlMode): Promise<ScBRes
 function finalizeBatch(
   entries: QueueEntry[],
   results: ScBResult[],
-): { newPostUI: QueueEntry[], newPostD: QueueEntry[], newPostMan: QueueEntry[] } {
+): { newPostUI: QueueEntry[], newPostD: QueueEntry[], newPostMan: QueueEntry[], newPostMan1: QueueEntry[] } {
   const newPostUI: QueueEntry[] = [];
   const newPostD: QueueEntry[] = [];
   const newPostMan: QueueEntry[] = [];
+  const newPostMan1: QueueEntry[] = [];
 
   for (let i = 0; i < entries.length; i++) {
     const entry = entries[i];
@@ -250,6 +271,16 @@ function finalizeBatch(
         attempt: entry.attempt + 1,
         queueReason: `toolScB: JS-render signal from ScrapingBee — route to D-stage`,
       });
+    } else if (result.exitReason === 'man1-low-events') {
+      newPostMan1.push({
+        sourceId: entry.sourceId,
+        queueName: 'postTestC-man1',
+        queuedAt: new Date().toISOString(),
+        priority: entry.priority,
+        attempt: entry.attempt + 1,
+        queueReason: `toolScB: low-event-count (${result.eventsFound}) — inspect subpages/discovery`,
+        workerNotes: result.methodsUsed?.join(', '),
+      });
     } else {
       newPostMan.push({
         sourceId: entry.sourceId,
@@ -262,7 +293,7 @@ function finalizeBatch(
     }
   }
 
-  return { newPostUI, newPostD, newPostMan };
+  return { newPostUI, newPostD, newPostMan, newPostMan1 };
 }
 
 // ─── Main ─────────────────────────────────────────────────────────────────────
@@ -310,6 +341,7 @@ async function main() {
   const allPostUI = readQueue(POSTUI_FILE);
   const allPostD = readQueue(POSTTESTC_D_FILE);
   const allPostMan = readQueue(POSTTESTC_MAN_FILE);
+  const allPostMan1 = readQueue(POSTTESTC_MAN1_FILE);
 
   // Deduplicate
   const seen = new Set<string>();
@@ -348,13 +380,39 @@ async function main() {
   const results = await runParallel(batch, (entry) => processSource(entry, mode), workers);
 
   // Finalize
-  const { newPostUI, newPostD, newPostMan } = finalizeBatch(batch, results);
+  const { newPostUI, newPostD, newPostMan, newPostMan1 } = finalizeBatch(batch, results);
 
   // Write queues
   writeQueue(POSTB_PREC_FILE, remaining);
   appendQueue(POSTUI_FILE, newPostUI);
   appendQueue(POSTTESTC_D_FILE, newPostD);
   appendQueue(POSTTESTC_MAN_FILE, newPostMan);
+  appendQueue(POSTTESTC_MAN1_FILE, newPostMan1);
+
+  const totalEventsExtracted = results.reduce((sum, r) => sum + (r.eventsFound || 0), 0);
+  appendKpiLog({
+    ts: new Date().toISOString(),
+    tool: 'runC-scrapingbee',
+    mode,
+    workers,
+    limit,
+    batchSize: batch.length,
+    fromQueue: 'postB-preC',
+    toUI: newPostUI.length,
+    toD: newPostD.length,
+    toMan: newPostMan.length,
+    toMan1: newPostMan1.length,
+    totalEventsExtracted,
+    minEventsForUi: MIN_EVENTS_FOR_UI,
+    queueDepths: {
+      postBPreCRemaining: remaining.length,
+      preUI: allPostUI.length + newPostUI.length,
+      postTestCUI: readQueue(POSTTESTC_UI_FILE).length,
+      postTestCD: allPostD.length + newPostD.length,
+      postTestCMan: allPostMan.length + newPostMan.length,
+      postTestCMan1: allPostMan1.length + newPostMan1.length,
+    },
+  });
 
   // Summary
   console.log();
@@ -363,6 +421,7 @@ async function main() {
   console.log(`  postTestC-UI: ${newPostUI.length} (events)`);
   console.log(`  postTestC-D:  ${newPostD.length} (JS-render)`);
   console.log(`  postTestC-man: ${newPostMan.length} (manual review)`);
+  console.log(`  postTestC-man1: ${newPostMan1.length} (low-event-count)`);
   console.log(`  postB-preC kvar: ${remaining.length}`);
   console.log('═══════════════════════════════════════════════════════════════════');
 

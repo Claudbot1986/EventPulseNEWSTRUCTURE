@@ -1,0 +1,27 @@
+[
+  {
+    "title": "Redis installation and startup",
+    "notes": "\u2713 Redis installed and running (PONG)",
+    "status": "done"
+  },
+  {
+    "title": "Verify queue configuration",
+    "notes": "\u2713 REDIS_URL=redis://localhost:6379, BullMQ connected successfully",
+    "status": "done"
+  },
+  {
+    "title": "Test queue events from Kulturhuset source",
+    "notes": "Test sourceRunner queues events correctly",
+    "status": "in_progress"
+  },
+  {
+    "title": "Verify worker processes jobs",
+    "notes": "Start normalizer worker and check job processing",
+    "status": "todo"
+  },
+  {
+    "title": "Verify events in Supabase via queue",
+    "notes": "Confirm events inserted through normalizer, not direct insert",
+    "status": "todo"
+  }
+]

@@ -26,12 +26,20 @@ export interface FetchResult {
  */
 const MAX_REDIRECTS = 3;
 
+export function normalizeFetchUrl(url: string): string {
+  const trimmed = url.trim().replace(/\/+$/, '') || '/';
+  if (/^https?:\/\//i.test(trimmed) || trimmed.startsWith('/')) {
+    return trimmed;
+  }
+  return `https://${trimmed}`;
+}
+
 export async function fetchHtml(url: string, options: {
   headers?: Record<string, string>;
   timeout?: number;
   signal?: AbortSignal;
 } = {}): Promise<FetchResult> {
-  let currentUrl = url.replace(/\/+$/, '') || '/';
+  let currentUrl = normalizeFetchUrl(url);
   const redirectChain: string[] = [];
   const seenUrls = new Set<string>();
 

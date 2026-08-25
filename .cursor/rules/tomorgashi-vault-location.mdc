@@ -1,0 +1,10 @@
+---
+description: Canonical vault path is TomorGashi
+alwaysApply: true
+---
+
+# TomorGashi Vault Path
+
+- The canonical Obsidian vault path is `/Users/claudgashi/Desktop/MyVault/TomorGashi`.
+- Treat this as the default vault root in this project unless the user explicitly overrides it.
+- Prefer vault note reads/writes under this path and avoid guessing alternate vault roots.

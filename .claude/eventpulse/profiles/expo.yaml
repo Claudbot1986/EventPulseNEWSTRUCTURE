@@ -1,0 +1,17 @@
+# expo.yaml — verification profile for Expo / mobile UI work (plan §13.4)
+profile: expo
+description: 06-UI/** Expo/React Native work. Tier 0 protects the anon read path.
+gates:
+  - expo_typecheck
+  - expo_lint
+  - expo_smoke
+acceptance_criteria:
+  - "expo_typecheck passes via `cd 06-UI && npx tsc --noEmit`."
+  - "expo_lint passes via `cd 06-UI && npx eslint . --max-warnings=0` (if configured; else log 'optional, skip')."
+  - "expo_smoke passes via `cd 06-UI && npm run verify-providers`."
+  - "No simulated extraction in UI code that surfaces event counts."
+constraints:
+  - "Do not edit 06-UI/services/eventServiceClient.js (Tier 0 anon read path)."
+  - "No simulated extraction in UI code that surfaces event counts."
+  - "No Zustand/Redux/React Query without explicit approval (codebase is intentionally thin)."
+  - "No full `expo build` after every UI change — reserve for high-impact changes only."

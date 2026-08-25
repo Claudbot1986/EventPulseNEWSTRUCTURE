@@ -6,14 +6,16 @@ Operational notes for the discovery layer: known limitations, current state of e
 
 ## Known Limitations
 
-### Expansion produces simulated results
-Current `expansionWorker.ts` inserts into `discovery_expansion_results` but the result_summary is simulated. Real BFS traversal is not yet fully connected.
+### Expansion simulation removed from legacy worker
+`06-UI/services/ingestion/src/discovery/expansionWorker.ts` now delegates to `07-Discovery/src/venueGraph/expansionRunner.ts`, which writes measured expansion results via `venue_graph_expansion_results`.
 
-### Discovery tables may not exist
-`discovery_expansion_queue` and `discovery_expansion_results` are referenced in code but may not have migrations in `05-Supabase/`.
+Status: locally verified by focused tests/type-check and real Supabase dry-run; full ingestion package type-check still has unrelated pre-existing errors outside this worker path.
 
-### Multi-hop BFS is bounded but not fully producing
-`MAX_HOPS = 3` is set in `multiHopDiscovery.ts`. Venue graph connections are tracked but new venue creation from expansion is limited.
+### Venue Graph tables require migration apply
+`05-Supabase/migrations/20260427-0001-venue-graph.sql` defines the Venue Graph schema, but a real Supabase migration/apply run still needs verification.
+
+### Multi-hop remains intentionally conservative
+Venue Graph v0 builds deterministic nodes, edges, observations, and candidates from stored events/venues. Broader multi-hop should wait until dry-run/apply reports show useful hop-1 precision.
 
 ## What belongs here
 
@@ -28,6 +30,6 @@ Current `expansionWorker.ts` inserts into `discovery_expansion_results` but the 
 
 ## Status
 
-**Status: Under uppbyggnad**
+**Status: Venue Graph v0 locally verified**
 
-Update as discovery matures.
+Update after real Supabase migration, dry-run, and small apply verification.

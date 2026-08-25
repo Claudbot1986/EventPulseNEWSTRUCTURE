@@ -1,0 +1,1 @@
+{"id":"33b5cdb7-b2da-458b-8be0-7c4f7636e13f","timestamp":"2026-03-26T13:46:34.480309","source":"environment","key":"security_analyzer","value":{"kind":"LLMSecurityAnalyzer"},"kind":"ConversationStateUpdateEvent"}

@@ -1,0 +1,17 @@
+# database.yaml — verification profile for database / schema work (plan §13.5)
+profile: database
+description: 05-Supabase/migrations/** schema changes. Author-only on prod.
+gates:
+  - schema_validate
+  - migration_safety
+  - apply_test_db_only
+acceptance_criteria:
+  - "Migration is BEGIN/COMMIT-bounded and dry-runnable against `supabase start` local instance."
+  - "schema_validate confirms SQL parses cleanly (`psql --dry-run` or supabase-cli equivalent)."
+  - "migration_safety confirms migration contains no DROP TABLE on a non-temp table without IF EXISTS + a documented backup step."
+  - "apply_test_db_only confirms migration was applied to local Supabase (not prod)."
+constraints:
+  - "Author-only on prod migrations; apply only against `supabase start` local instance; prod apply needs explicit human approval + human_review_required: true."
+  - "Do not modify docs/MASTERPLAN.md or docs/BACKLOG.md."
+  - "Do not invent or rename canonical event fields outside the Event Graph schema (canonical_event_id, confidence_score, freshness_at, last_seen_at)."
+  - "Migrations must reference schema documented in 05-Supabase/schema/schema.md."

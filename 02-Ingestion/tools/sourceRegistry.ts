@@ -21,8 +21,11 @@ const __dirname = path.dirname(__filename);
 // This ensures sources/ and runtime/ are always resolved from the project root,
 // regardless of where the user runs the script from.
 const PROJECT_ROOT = path.resolve(__dirname, '../../');
-const SOURCES_DIR = path.resolve(PROJECT_ROOT, 'sources');
-const RUNTIME_DIR = path.resolve(PROJECT_ROOT, 'runtime');
+const DATA_ROOT = process.env.EVENTPULSE_SANDBOX_ROOT
+  ? path.resolve(process.env.EVENTPULSE_SANDBOX_ROOT)
+  : PROJECT_ROOT;
+const SOURCES_DIR = path.resolve(DATA_ROOT, 'sources');
+const RUNTIME_DIR = path.resolve(DATA_ROOT, 'runtime');
 const STATUS_FILE = path.resolve(RUNTIME_DIR, 'sources_status.jsonl');
 const PRIORITY_FILE = path.resolve(RUNTIME_DIR, 'sources_priority_queue.jsonl');
 
@@ -614,6 +617,25 @@ export function removeFromQueue(sourceId: string): void {
 }
 
 /**
+ * Ta bort statusrader för sourceId som inte längre har sources/{id}.jsonl.
+ */
+export function pruneOrphanStatuses(): number {
+  const ids = new Set(getAllSources().map(s => s.id));
+  const statuses = readStatusFile();
+  let removed = 0;
+  for (const k of [...statuses.keys()]) {
+    if (!ids.has(k)) {
+      statuses.delete(k);
+      removed++;
+    }
+  }
+  if (removed > 0) {
+    writeStatusFile(statuses);
+  }
+  return removed;
+}
+
+/**
  * Fyller prioritetskön baserat på statusar (för nyinitiering)
  */
 export function rebuildPriorityQueue(): void {
@@ -670,7 +692,8 @@ export function rebuildPriorityQueue(): void {
       priority = 6;
       reason = 'stale_data';
     } else {
-      continue; // Inte intressant just nu
+      priority = 7;
+      reason = 'registry_backfill';
     }
     
     queue.push({

@@ -1,7 +1,7 @@
 {
   "name": "eventpulse",
   "version": "1.0.0",
-  "main": "index.js",
+  "main": "./asterisk/index.js",
   "type": "module",
   "scripts": {
     "start": "expo start",
@@ -14,6 +14,8 @@
     "@supabase/supabase-js": "^2.100.0",
     "axios": "^1.13.6",
     "expo": "~54.0.2",
+    "expo-constants": "~18.0.14",
+    "expo-file-system": "~19.0.24",
     "expo-status-bar": "~3.0.0",
     "react": "19.1.0",
     "react-dom": "19.1.0",

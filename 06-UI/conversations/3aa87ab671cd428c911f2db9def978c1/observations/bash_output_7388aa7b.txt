@@ -1,0 +1,364 @@
+cd /workspace/services/ingestion && cat > test_pipeline.ts << 'EOF'
+import * as dotenv from 'dotenv';
+dotenv.config({ override: true });
+import { runKulturhusetSource } from './src/sources/sourceRunner';
+import { rawEventsQueue } from './src/queue';
+async function test() {
+  console.log('[pipeline] Testing Kulturhuset → Queue pipeline...\n');
+
+  // Clear any existing Kulturhuset jobs from previous test
+  console.log('[pipeline] Clearing existing jobs...');
+  const countsBefore = await rawEventsQueue.getJobCounts();
+  console.log('[pipeline] Queue counts before:', countsBefore);
+
+  // Run Kulturhuset source
+  console.log('\n[pipeline] Running Kulturhuset source...');
+  const result = await runKulturhusetSource();
+  console.log('\n[pipeline] Source result:', JSON.stringify(result, null, 2));
+
+  // Check queue
+  const countsAfter = await rawEventsQueue.getJobCounts();
+  console.log('\n[pipeline] Queue counts after:', countsAfter);
+
+  if (countsAfter.waiting > 0) {
+    console.log('\n[pipeline] ✅ SUCCESS: Jobs are queued!');
+  } else {
+    console.log('\n[pipeline] ❌ FAIL: No jobs in queue');
+  }
+}
+test().catch(err => {
+  console.error('[pipeline] Error:', err.message);
+  process.exit(1);
+});
+EOF
+
+
+npx tsx test_pipeline.ts 2>&1
+clear
+[dotenv@17.3.1] injecting env (16) from .env -- tip: 🛡️ auth for agents: https://vestauth.com
+[queue] Using Redis URL: redis://localhost:6379
+[dotenv@17.3.1] injecting env (16) from .env -- tip: ⚙️  enable debug logging with { debug: true }
+[pipeline] Testing Kulturhuset → Queue pipeline...
+
+[pipeline] Clearing existing jobs...
+[pipeline] Queue counts before: {
+  active: 0,
+  completed: 0,
+  delayed: 0,
+  failed: 0,
+  paused: 0,
+  prioritized: 0,
+  waiting: 0,
+  'waiting-children': 0
+}
+
+[pipeline] Running Kulturhuset source...
+[sources] Running source: kulturhuset
+[kulturhuset] Failed to queue event kh-117890: Error: Custom Id cannot contain :
+    at Job.validateOptions (/workspace/services/ingestion/node_modules/bullmq/src/classes/job.ts:1593:15)
+    at Job.addJob (/workspace/services/ingestion/node_modules/bullmq/src/classes/job.ts:1523:10)
+    at Function.create (/workspace/services/ingestion/node_modules/bullmq/src/classes/job.ts:285:24)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async Queue.addJob (/workspace/services/ingestion/node_modules/bullmq/src/classes/queue.ts:378:19)
+    at async <anonymous> (/workspace/services/ingestion/node_modules/bullmq/src/classes/queue.ts:332:21)
+[kulturhuset] Failed to queue event kh-120144: Error: Custom Id cannot contain :
+    at Job.validateOptions (/workspace/services/ingestion/node_modules/bullmq/src/classes/job.ts:1593:15)
+    at Job.addJob (/workspace/services/ingestion/node_modules/bullmq/src/classes/job.ts:1523:10)
+    at Function.create (/workspace/services/ingestion/node_modules/bullmq/src/classes/job.ts:285:24)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async Queue.addJob (/workspace/services/ingestion/node_modules/bullmq/src/classes/queue.ts:378:19)
+    at async <anonymous> (/workspace/services/ingestion/node_modules/bullmq/src/classes/queue.ts:332:21)
+[kulturhuset] Failed to queue event kh-113097: Error: Custom Id cannot contain :
+    at Job.validateOptions (/workspace/services/ingestion/node_modules/bullmq/src/classes/job.ts:1593:15)
+    at Job.addJob (/workspace/services/ingestion/node_modules/bullmq/src/classes/job.ts:1523:10)
+    at Function.create (/workspace/services/ingestion/node_modules/bullmq/src/classes/job.ts:285:24)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async Queue.addJob (/workspace/services/ingestion/node_modules/bullmq/src/classes/queue.ts:378:19)
+    at async <anonymous> (/workspace/services/ingestion/node_modules/bullmq/src/classes/queue.ts:332:21)
+[kulturhuset] Failed to queue event kh-114657: Error: Custom Id cannot contain :
+    at Job.validateOptions (/workspace/services/ingestion/node_modules/bullmq/src/classes/job.ts:1593:15)
+    at Job.addJob (/workspace/services/ingestion/node_modules/bullmq/src/classes/job.ts:1523:10)
+    at Function.create (/workspace/services/ingestion/node_modules/bullmq/src/classes/job.ts:285:24)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async Queue.addJob (/workspace/services/ingestion/node_modules/bullmq/src/classes/queue.ts:378:19)
+    at async <anonymous> (/workspace/services/ingestion/node_modules/bullmq/src/classes/queue.ts:332:21)
+[kulturhuset] Failed to queue event kh-119725: Error: Custom Id cannot contain :
+    at Job.validateOptions (/workspace/services/ingestion/node_modules/bullmq/src/classes/job.ts:1593:15)
+    at Job.addJob (/workspace/services/ingestion/node_modules/bullmq/src/classes/job.ts:1523:10)
+    at Function.create (/workspace/services/ingestion/node_modules/bullmq/src/classes/job.ts:285:24)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async Queue.addJob (/workspace/services/ingestion/node_modules/bullmq/src/classes/queue.ts:378:19)
+    at async <anonymous> (/workspace/services/ingestion/node_modules/bullmq/src/classes/queue.ts:332:21)
+[kulturhuset] Failed to queue event kh-116830: Error: Custom Id cannot contain :
+    at Job.validateOptions (/workspace/services/ingestion/node_modules/bullmq/src/classes/job.ts:1593:15)
+    at Job.addJob (/workspace/services/ingestion/node_modules/bullmq/src/classes/job.ts:1523:10)
+    at Function.create (/workspace/services/ingestion/node_modules/bullmq/src/classes/job.ts:285:24)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async Queue.addJob (/workspace/services/ingestion/node_modules/bullmq/src/classes/queue.ts:378:19)
+    at async <anonymous> (/workspace/services/ingestion/node_modules/bullmq/src/classes/queue.ts:332:21)
+[kulturhuset] Failed to queue event kh-120489: Error: Custom Id cannot contain :
+    at Job.validateOptions (/workspace/services/ingestion/node_modules/bullmq/src/classes/job.ts:1593:15)
+    at Job.addJob (/workspace/services/ingestion/node_modules/bullmq/src/classes/job.ts:1523:10)
+    at Function.create (/workspace/services/ingestion/node_modules/bullmq/src/classes/job.ts:285:24)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async Queue.addJob (/workspace/services/ingestion/node_modules/bullmq/src/classes/queue.ts:378:19)
+    at async <anonymous> (/workspace/services/ingestion/node_modules/bullmq/src/classes/queue.ts:332:21)
+[kulturhuset] Failed to queue event kh-123066: Error: Custom Id cannot contain :
+    at Job.validateOptions (/workspace/services/ingestion/node_modules/bullmq/src/classes/job.ts:1593:15)
+    at Job.addJob (/workspace/services/ingestion/node_modules/bullmq/src/classes/job.ts:1523:10)
+    at Function.create (/workspace/services/ingestion/node_modules/bullmq/src/classes/job.ts:285:24)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async Queue.addJob (/workspace/services/ingestion/node_modules/bullmq/src/classes/queue.ts:378:19)
+    at async <anonymous> (/workspace/services/ingestion/node_modules/bullmq/src/classes/queue.ts:332:21)
+[kulturhuset] Failed to queue event kh-122219: Error: Custom Id cannot contain :
+    at Job.validateOptions (/workspace/services/ingestion/node_modules/bullmq/src/classes/job.ts:1593:15)
+    at Job.addJob (/workspace/services/ingestion/node_modules/bullmq/src/classes/job.ts:1523:10)
+    at Function.create (/workspace/services/ingestion/node_modules/bullmq/src/classes/job.ts:285:24)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async Queue.addJob (/workspace/services/ingestion/node_modules/bullmq/src/classes/queue.ts:378:19)
+    at async <anonymous> (/workspace/services/ingestion/node_modules/bullmq/src/classes/queue.ts:332:21)
+[kulturhuset] Failed to queue event kh-117834: Error: Custom Id cannot contain :
+    at Job.validateOptions (/workspace/services/ingestion/node_modules/bullmq/src/classes/job.ts:1593:15)
+    at Job.addJob (/workspace/services/ingestion/node_modules/bullmq/src/classes/job.ts:1523:10)
+    at Function.create (/workspace/services/ingestion/node_modules/bullmq/src/classes/job.ts:285:24)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async Queue.addJob (/workspace/services/ingestion/node_modules/bullmq/src/classes/queue.ts:378:19)
+    at async <anonymous> (/workspace/services/ingestion/node_modules/bullmq/src/classes/queue.ts:332:21)
+[kulturhuset] Failed to queue event kh-120819: Error: Custom Id cannot contain :
+    at Job.validateOptions (/workspace/services/ingestion/node_modules/bullmq/src/classes/job.ts:1593:15)
+    at Job.addJob (/workspace/services/ingestion/node_modules/bullmq/src/classes/job.ts:1523:10)
+    at Function.create (/workspace/services/ingestion/node_modules/bullmq/src/classes/job.ts:285:24)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async Queue.addJob (/workspace/services/ingestion/node_modules/bullmq/src/classes/queue.ts:378:19)
+    at async <anonymous> (/workspace/services/ingestion/node_modules/bullmq/src/classes/queue.ts:332:21)
+[kulturhuset] Failed to queue event kh-111907: Error: Custom Id cannot contain :
+    at Job.validateOptions (/workspace/services/ingestion/node_modules/bullmq/src/classes/job.ts:1593:15)
+    at Job.addJob (/workspace/services/ingestion/node_modules/bullmq/src/classes/job.ts:1523:10)
+    at Function.create (/workspace/services/ingestion/node_modules/bullmq/src/classes/job.ts:285:24)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async Queue.addJob (/workspace/services/ingestion/node_modules/bullmq/src/classes/queue.ts:378:19)
+    at async <anonymous> (/workspace/services/ingestion/node_modules/bullmq/src/classes/queue.ts:332:21)
+[kulturhuset] Failed to queue event kh-120820: Error: Custom Id cannot contain :
+    at Job.validateOptions (/workspace/services/ingestion/node_modules/bullmq/src/classes/job.ts:1593:15)
+    at Job.addJob (/workspace/services/ingestion/node_modules/bullmq/src/classes/job.ts:1523:10)
+    at Function.create (/workspace/services/ingestion/node_modules/bullmq/src/classes/job.ts:285:24)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async Queue.addJob (/workspace/services/ingestion/node_modules/bullmq/src/classes/queue.ts:378:19)
+    at async <anonymous> (/workspace/services/ingestion/node_modules/bullmq/src/classes/queue.ts:332:21)
+[kulturhuset] Failed to queue event kh-120961: Error: Custom Id cannot contain :
+    at Job.validateOptions (/workspace/services/ingestion/node_modules/bullmq/src/classes/job.ts:1593:15)
+    at Job.addJob (/workspace/services/ingestion/node_modules/bullmq/src/classes/job.ts:1523:10)
+    at Function.create (/workspace/services/ingestion/node_modules/bullmq/src/classes/job.ts:285:24)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async Queue.addJob (/workspace/services/ingestion/node_modules/bullmq/src/classes/queue.ts:378:19)
+    at async <anonymous> (/workspace/services/ingestion/node_modules/bullmq/src/classes/queue.ts:332:21)
+[kulturhuset] Failed to queue event kh-123856: Error: Custom Id cannot contain :
+    at Job.validateOptions (/workspace/services/ingestion/node_modules/bullmq/src/classes/job.ts:1593:15)
+    at Job.addJob (/workspace/services/ingestion/node_modules/bullmq/src/classes/job.ts:1523:10)
+    at Function.create (/workspace/services/ingestion/node_modules/bullmq/src/classes/job.ts:285:24)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async Queue.addJob (/workspace/services/ingestion/node_modules/bullmq/src/classes/queue.ts:378:19)
+    at async <anonymous> (/workspace/services/ingestion/node_modules/bullmq/src/classes/queue.ts:332:21)
+[kulturhuset] Failed to queue event kh-117289: Error: Custom Id cannot contain :
+    at Job.validateOptions (/workspace/services/ingestion/node_modules/bullmq/src/classes/job.ts:1593:15)
+    at Job.addJob (/workspace/services/ingestion/node_modules/bullmq/src/classes/job.ts:1523:10)
+    at Function.create (/workspace/services/ingestion/node_modules/bullmq/src/classes/job.ts:285:24)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async Queue.addJob (/workspace/services/ingestion/node_modules/bullmq/src/classes/queue.ts:378:19)
+    at async <anonymous> (/workspace/services/ingestion/node_modules/bullmq/src/classes/queue.ts:332:21)
+[kulturhuset] Failed to queue event kh-120821: Error: Custom Id cannot contain :
+    at Job.validateOptions (/workspace/services/ingestion/node_modules/bullmq/src/classes/job.ts:1593:15)
+    at Job.addJob (/workspace/services/ingestion/node_modules/bullmq/src/classes/job.ts:1523:10)
+    at Function.create (/workspace/services/ingestion/node_modules/bullmq/src/classes/job.ts:285:24)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async Queue.addJob (/workspace/services/ingestion/node_modules/bullmq/src/classes/queue.ts:378:19)
+    at async <anonymous> (/workspace/services/ingestion/node_modules/bullmq/src/classes/queue.ts:332:21)
+[kulturhuset] Failed to queue event kh-115567: Error: Custom Id cannot contain :
+    at Job.validateOptions (/workspace/services/ingestion/node_modules/bullmq/src/classes/job.ts:1593:15)
+    at Job.addJob (/workspace/services/ingestion/node_modules/bullmq/src/classes/job.ts:1523:10)
+    at Function.create (/workspace/services/ingestion/node_modules/bullmq/src/classes/job.ts:285:24)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async Queue.addJob (/workspace/services/ingestion/node_modules/bullmq/src/classes/queue.ts:378:19)
+    at async <anonymous> (/workspace/services/ingestion/node_modules/bullmq/src/classes/queue.ts:332:21)
+[kulturhuset] Failed to queue event kh-122222: Error: Custom Id cannot contain :
+    at Job.validateOptions (/workspace/services/ingestion/node_modules/bullmq/src/classes/job.ts:1593:15)
+    at Job.addJob (/workspace/services/ingestion/node_modules/bullmq/src/classes/job.ts:1523:10)
+    at Function.create (/workspace/services/ingestion/node_modules/bullmq/src/classes/job.ts:285:24)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async Queue.addJob (/workspace/services/ingestion/node_modules/bullmq/src/classes/queue.ts:378:19)
+    at async <anonymous> (/workspace/services/ingestion/node_modules/bullmq/src/classes/queue.ts:332:21)
+[kulturhuset] Failed to queue event kh-115566: Error: Custom Id cannot contain :
+    at Job.validateOptions (/workspace/services/ingestion/node_modules/bullmq/src/classes/job.ts:1593:15)
+    at Job.addJob (/workspace/servi<response clipped><NOTE>Due to the max output limit, only part of the full response has been shown to you.</NOTE>ess.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async Queue.addJob (/workspace/services/ingestion/node_modules/bullmq/src/classes/queue.ts:378:19)
+    at async <anonymous> (/workspace/services/ingestion/node_modules/bullmq/src/classes/queue.ts:332:21)
+[kulturhuset] Failed to queue event kh-123065: Error: Custom Id cannot contain :
+    at Job.validateOptions (/workspace/services/ingestion/node_modules/bullmq/src/classes/job.ts:1593:15)
+    at Job.addJob (/workspace/services/ingestion/node_modules/bullmq/src/classes/job.ts:1523:10)
+    at Function.create (/workspace/services/ingestion/node_modules/bullmq/src/classes/job.ts:285:24)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async Queue.addJob (/workspace/services/ingestion/node_modules/bullmq/src/classes/queue.ts:378:19)
+    at async <anonymous> (/workspace/services/ingestion/node_modules/bullmq/src/classes/queue.ts:332:21)
+[kulturhuset] Failed to queue event kh-123857: Error: Custom Id cannot contain :
+    at Job.validateOptions (/workspace/services/ingestion/node_modules/bullmq/src/classes/job.ts:1593:15)
+    at Job.addJob (/workspace/services/ingestion/node_modules/bullmq/src/classes/job.ts:1523:10)
+    at Function.create (/workspace/services/ingestion/node_modules/bullmq/src/classes/job.ts:285:24)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async Queue.addJob (/workspace/services/ingestion/node_modules/bullmq/src/classes/queue.ts:378:19)
+    at async <anonymous> (/workspace/services/ingestion/node_modules/bullmq/src/classes/queue.ts:332:21)
+[kulturhuset] Failed to queue event kh-120822: Error: Custom Id cannot contain :
+    at Job.validateOptions (/workspace/services/ingestion/node_modules/bullmq/src/classes/job.ts:1593:15)
+    at Job.addJob (/workspace/services/ingestion/node_modules/bullmq/src/classes/job.ts:1523:10)
+    at Function.create (/workspace/services/ingestion/node_modules/bullmq/src/classes/job.ts:285:24)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async Queue.addJob (/workspace/services/ingestion/node_modules/bullmq/src/classes/queue.ts:378:19)
+    at async <anonymous> (/workspace/services/ingestion/node_modules/bullmq/src/classes/queue.ts:332:21)
+[kulturhuset] Failed to queue event kh-105109: Error: Custom Id cannot contain :
+    at Job.validateOptions (/workspace/services/ingestion/node_modules/bullmq/src/classes/job.ts:1593:15)
+    at Job.addJob (/workspace/services/ingestion/node_modules/bullmq/src/classes/job.ts:1523:10)
+    at Function.create (/workspace/services/ingestion/node_modules/bullmq/src/classes/job.ts:285:24)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async Queue.addJob (/workspace/services/ingestion/node_modules/bullmq/src/classes/queue.ts:378:19)
+    at async <anonymous> (/workspace/services/ingestion/node_modules/bullmq/src/classes/queue.ts:332:21)
+[kulturhuset] Failed to queue event kh-117833: Error: Custom Id cannot contain :
+    at Job.validateOptions (/workspace/services/ingestion/node_modules/bullmq/src/classes/job.ts:1593:15)
+    at Job.addJob (/workspace/services/ingestion/node_modules/bullmq/src/classes/job.ts:1523:10)
+    at Function.create (/workspace/services/ingestion/node_modules/bullmq/src/classes/job.ts:285:24)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async Queue.addJob (/workspace/services/ingestion/node_modules/bullmq/src/classes/queue.ts:378:19)
+    at async <anonymous> (/workspace/services/ingestion/node_modules/bullmq/src/classes/queue.ts:332:21)
+[kulturhuset] Failed to queue event kh-120823: Error: Custom Id cannot contain :
+    at Job.validateOptions (/workspace/services/ingestion/node_modules/bullmq/src/classes/job.ts:1593:15)
+    at Job.addJob (/workspace/services/ingestion/node_modules/bullmq/src/classes/job.ts:1523:10)
+    at Function.create (/workspace/services/ingestion/node_modules/bullmq/src/classes/job.ts:285:24)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async Queue.addJob (/workspace/services/ingestion/node_modules/bullmq/src/classes/queue.ts:378:19)
+    at async <anonymous> (/workspace/services/ingestion/node_modules/bullmq/src/classes/queue.ts:332:21)
+[kulturhuset] Failed to queue event kh-115568: Error: Custom Id cannot contain :
+    at Job.validateOptions (/workspace/services/ingestion/node_modules/bullmq/src/classes/job.ts:1593:15)
+    at Job.addJob (/workspace/services/ingestion/node_modules/bullmq/src/classes/job.ts:1523:10)
+    at Function.create (/workspace/services/ingestion/node_modules/bullmq/src/classes/job.ts:285:24)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async Queue.addJob (/workspace/services/ingestion/node_modules/bullmq/src/classes/queue.ts:378:19)
+    at async <anonymous> (/workspace/services/ingestion/node_modules/bullmq/src/classes/queue.ts:332:21)
+[kulturhuset] Failed to queue event kh-112061: Error: Custom Id cannot contain :
+    at Job.validateOptions (/workspace/services/ingestion/node_modules/bullmq/src/classes/job.ts:1593:15)
+    at Job.addJob (/workspace/services/ingestion/node_modules/bullmq/src/classes/job.ts:1523:10)
+    at Function.create (/workspace/services/ingestion/node_modules/bullmq/src/classes/job.ts:285:24)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async Queue.addJob (/workspace/services/ingestion/node_modules/bullmq/src/classes/queue.ts:378:19)
+    at async <anonymous> (/workspace/services/ingestion/node_modules/bullmq/src/classes/queue.ts:332:21)
+[kulturhuset] Failed to queue event kh-120824: Error: Custom Id cannot contain :
+    at Job.validateOptions (/workspace/services/ingestion/node_modules/bullmq/src/classes/job.ts:1593:15)
+    at Job.addJob (/workspace/services/ingestion/node_modules/bullmq/src/classes/job.ts:1523:10)
+    at Function.create (/workspace/services/ingestion/node_modules/bullmq/src/classes/job.ts:285:24)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async Queue.addJob (/workspace/services/ingestion/node_modules/bullmq/src/classes/queue.ts:378:19)
+    at async <anonymous> (/workspace/services/ingestion/node_modules/bullmq/src/classes/queue.ts:332:21)
+[kulturhuset] Failed to queue event kh-117918: Error: Custom Id cannot contain :
+    at Job.validateOptions (/workspace/services/ingestion/node_modules/bullmq/src/classes/job.ts:1593:15)
+    at Job.addJob (/workspace/services/ingestion/node_modules/bullmq/src/classes/job.ts:1523:10)
+    at Function.create (/workspace/services/ingestion/node_modules/bullmq/src/classes/job.ts:285:24)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async Queue.addJob (/workspace/services/ingestion/node_modules/bullmq/src/classes/queue.ts:378:19)
+    at async <anonymous> (/workspace/services/ingestion/node_modules/bullmq/src/classes/queue.ts:332:21)
+[kulturhuset] Failed to queue event kh-115569: Error: Custom Id cannot contain :
+    at Job.validateOptions (/workspace/services/ingestion/node_modules/bullmq/src/classes/job.ts:1593:15)
+    at Job.addJob (/workspace/services/ingestion/node_modules/bullmq/src/classes/job.ts:1523:10)
+    at Function.create (/workspace/services/ingestion/node_modules/bullmq/src/classes/job.ts:285:24)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async Queue.addJob (/workspace/services/ingestion/node_modules/bullmq/src/classes/queue.ts:378:19)
+    at async <anonymous> (/workspace/services/ingestion/node_modules/bullmq/src/classes/queue.ts:332:21)
+[kulturhuset] Failed to queue event kh-122162: Error: Custom Id cannot contain :
+    at Job.validateOptions (/workspace/services/ingestion/node_modules/bullmq/src/classes/job.ts:1593:15)
+    at Job.addJob (/workspace/services/ingestion/node_modules/bullmq/src/classes/job.ts:1523:10)
+    at Function.create (/workspace/services/ingestion/node_modules/bullmq/src/classes/job.ts:285:24)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async Queue.addJob (/workspace/services/ingestion/node_modules/bullmq/src/classes/queue.ts:378:19)
+    at async <anonymous> (/workspace/services/ingestion/node_modules/bullmq/src/classes/queue.ts:332:21)
+[kulturhuset] Failed to queue event kh-117832: Error: Custom Id cannot contain :
+    at Job.validateOptions (/workspace/services/ingestion/node_modules/bullmq/src/classes/job.ts:1593:15)
+    at Job.addJob (/workspace/services/ingestion/node_modules/bullmq/src/classes/job.ts:1523:10)
+    at Function.create (/workspace/services/ingestion/node_modules/bullmq/src/classes/job.ts:285:24)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async Queue.addJob (/workspace/services/ingestion/node_modules/bullmq/src/classes/queue.ts:378:19)
+    at async <anonymous> (/workspace/services/ingestion/node_modules/bullmq/src/classes/queue.ts:332:21)
+[kulturhuset] Failed to queue event kh-120825: Error: Custom Id cannot contain :
+    at Job.validateOptions (/workspace/services/ingestion/node_modules/bullmq/src/classes/job.ts:1593:15)
+    at Job.addJob (/workspace/services/ingestion/node_modules/bullmq/src/classes/job.ts:1523:10)
+    at Function.create (/workspace/services/ingestion/node_modules/bullmq/src/classes/job.ts:285:24)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async Queue.addJob (/workspace/services/ingestion/node_modules/bullmq/src/classes/queue.ts:378:19)
+    at async <anonymous> (/workspace/services/ingestion/node_modules/bullmq/src/classes/queue.ts:332:21)
+[kulturhuset] Failed to queue event kh-111926: Error: Custom Id cannot contain :
+    at Job.validateOptions (/workspace/services/ingestion/node_modules/bullmq/src/classes/job.ts:1593:15)
+    at Job.addJob (/workspace/services/ingestion/node_modules/bullmq/src/classes/job.ts:1523:10)
+    at Function.create (/workspace/services/ingestion/node_modules/bullmq/src/classes/job.ts:285:24)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async Queue.addJob (/workspace/services/ingestion/node_modules/bullmq/src/classes/queue.ts:378:19)
+    at async <anonymous> (/workspace/services/ingestion/node_modules/bullmq/src/classes/queue.ts:332:21)
+[kulturhuset] Failed to queue event kh-122574: Error: Custom Id cannot contain :
+    at Job.validateOptions (/workspace/services/ingestion/node_modules/bullmq/src/classes/job.ts:1593:15)
+    at Job.addJob (/workspace/services/ingestion/node_modules/bullmq/src/classes/job.ts:1523:10)
+    at Function.create (/workspace/services/ingestion/node_modules/bullmq/src/classes/job.ts:285:24)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async Queue.addJob (/workspace/services/ingestion/node_modules/bullmq/src/classes/queue.ts:378:19)
+    at async <anonymous> (/workspace/services/ingestion/node_modules/bullmq/src/classes/queue.ts:332:21)
+[kulturhuset] Failed to queue event kh-120977: Error: Custom Id cannot contain :
+    at Job.validateOptions (/workspace/services/ingestion/node_modules/bullmq/src/classes/job.ts:1593:15)
+    at Job.addJob (/workspace/services/ingestion/node_modules/bullmq/src/classes/job.ts:1523:10)
+    at Function.create (/workspace/services/ingestion/node_modules/bullmq/src/classes/job.ts:285:24)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async Queue.addJob (/workspace/services/ingestion/node_modules/bullmq/src/classes/queue.ts:378:19)
+    at async <anonymous> (/workspace/services/ingestion/node_modules/bullmq/src/classes/queue.ts:332:21)
+[kulturhuset] Failed to queue event kh-121502: Error: Custom Id cannot contain :
+    at Job.validateOptions (/workspace/services/ingestion/node_modules/bullmq/src/classes/job.ts:1593:15)
+    at Job.addJob (/workspace/services/ingestion/node_modules/bullmq/src/classes/job.ts:1523:10)
+    at Function.create (/workspace/services/ingestion/node_modules/bullmq/src/classes/job.ts:285:24)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async Queue.addJob (/workspace/services/ingestion/node_modules/bullmq/src/classes/queue.ts:378:19)
+    at async <anonymous> (/workspace/services/ingestion/node_modules/bullmq/src/classes/queue.ts:332:21)
+[kulturhuset] Failed to queue event kh-122506: Error: Custom Id cannot contain :
+    at Job.validateOptions (/workspace/services/ingestion/node_modules/bullmq/src/classes/job.ts:1593:15)
+    at Job.addJob (/workspace/services/ingestion/node_modules/bullmq/src/classes/job.ts:1523:10)
+    at Function.create (/workspace/services/ingestion/node_modules/bullmq/src/classes/job.ts:285:24)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async Queue.addJob (/workspace/services/ingestion/node_modules/bullmq/src/classes/queue.ts:378:19)
+    at async <anonymous> (/workspace/services/ingestion/node_modules/bullmq/src/classes/queue.ts:332:21)
+[kulturhuset] Failed to queue event kh-117891: Error: Custom Id cannot contain :
+    at Job.validateOptions (/workspace/services/ingestion/node_modules/bullmq/src/classes/job.ts:1593:15)
+    at Job.addJob (/workspace/services/ingestion/node_modules/bullmq/src/classes/job.ts:1523:10)
+    at Function.create (/workspace/services/ingestion/node_modules/bullmq/src/classes/job.ts:285:24)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async Queue.addJob (/workspace/services/ingestion/node_modules/bullmq/src/classes/queue.ts:378:19)
+    at async <anonymous> (/workspace/services/ingestion/node_modules/bullmq/src/classes/queue.ts:332:21)
+[kulturhuset] Failed to queue event kh-117812: Error: Custom Id cannot contain :
+    at Job.validateOptions (/workspace/services/ingestion/node_modules/bullmq/src/classes/job.ts:1593:15)
+    at Job.addJob (/workspace/services/ingestion/node_modules/bullmq/src/classes/job.ts:1523:10)
+    at Function.create (/workspace/services/ingestion/node_modules/bullmq/src/classes/job.ts:285:24)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async Queue.addJob (/workspace/services/ingestion/node_modules/bullmq/src/classes/queue.ts:378:19)
+    at async <anonymous> (/workspace/services/ingestion/node_modules/bullmq/src/classes/queue.ts:332:21)
+
+[pipeline] Source result: {
+  "source": "kulturhuset",
+  "eventsQueued": 0,
+  "eventsFound": 50,
+  "errors": [],
+  "status": "partial"
+}
+
+[pipeline] Queue counts after: {
+  active: 0,
+  completed: 0,
+  delayed: 0,
+  failed: 0,
+  paused: 0,
+  prioritized: 0,
+  waiting: 0,
+  'waiting-children': 0
+}
+
+[pipeline] ❌ FAIL: No jobs in queue
+cd /workspace/services/ingestion && npx tsx test_pipeline.ts 2>&1
+[The command timed out after 120.0 seconds. You may wait longer to see additional output by sending empty command '', send other commands to interact with the current process, send keys ("C-c", "C-z", "C-d") to interrupt/kill the previous command before sending your new command, or use the timeout parameter in terminal for future commands.]

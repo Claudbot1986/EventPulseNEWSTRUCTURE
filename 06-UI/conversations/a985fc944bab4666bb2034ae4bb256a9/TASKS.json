@@ -1,0 +1,37 @@
+[
+  {
+    "title": "1. Feature flag for Supabase-only in frontend",
+    "notes": "USE_DIRECT_API_FALLBACK=false, fetchEventsFromSupabase = fetchEventsSupabaseOnly",
+    "status": "done"
+  },
+  {
+    "title": "2. Rename /events to /debug-direct-events",
+    "notes": "/events redirects to /debug-direct-events with 301 warning header",
+    "status": "done"
+  },
+  {
+    "title": "3. Add metadata to /supabase-events",
+    "notes": "data_source, fallback_used, ingestion_stats, total_published_events",
+    "status": "done"
+  },
+  {
+    "title": "4. Add ingestion freshness to health",
+    "notes": "last_ingestion_run, events_last_24h, active_sources, latest_runs",
+    "status": "done"
+  },
+  {
+    "title": "5. Add source verification logging",
+    "notes": "Ingestion logs tracked in Supabase, shown in health endpoint",
+    "status": "done"
+  },
+  {
+    "title": "6. Move source canonicalization to ingestion",
+    "notes": "Documented - canonicalization happens in normalizer.ts, not api-server",
+    "status": "done"
+  },
+  {
+    "title": "7. Unify event shape",
+    "notes": "UNIFIED_EVENT_SHAPE with canonical field names + legacy aliases",
+    "status": "done"
+  }
+]

@@ -1,0 +1,17 @@
+# agent_ranking.yaml — verification profile for agent API work (plan §13.3)
+profile: agent_ranking
+description: 08-Agent/** tools, ranking algo, grounding, hallucination resistance.
+gates:
+  - typecheck
+  - grounding_eval
+  - no_fabricated_events
+acceptance_criteria:
+  - "search_events returns only events whose canonical_event_id exists in Supabase."
+  - "rank_events ranks by real features (recency, venue proximity, category match); never hallucinated scores."
+  - "grounding_eval passes (or, if script not yet authored, log 'grounding eval not yet implemented' and require manual review)."
+  - "no_fabricated_events grep check: every event in agent responses has a real canonical_event_id; no UUID invented in the agent process."
+constraints:
+  - "`search_events` MUST return only events with real canonical_event_id from Supabase; no UUID invented in the agent process."
+  - "`rank_events` MUST rank by real features; never hallucinated scores."
+  - "`search_external_web` MUST be off by default in Phase 0."
+  - "record_feedback MUST persist through real Supabase writes for tests; prod writes require explicit human approval."

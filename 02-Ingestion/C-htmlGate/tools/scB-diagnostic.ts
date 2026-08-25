@@ -19,7 +19,7 @@ import { getSource } from '../../tools/sourceRegistry';
 import { detectJsRender } from './scrapingBeeDeep';
 import * as dotenv from 'dotenv';
 import path from 'path';
-import { fileURLToPath } from 'url';
+import { fileURLToPath, pathToFileURL } from 'url';
 import { writeFileSync, mkdirSync, existsSync, readFileSync, appendFileSync } from 'fs';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -91,6 +91,7 @@ type Hypothesis =
   | 'cloudflare_or_similar_cdn'
   | 'timeout_slow_server'
   | 'url_not_found'
+  | 'diagnostic_no_actionable_fetch_error'
   | 'unknown_500_error';
 
 type Recommendation =
@@ -191,7 +192,7 @@ function analyzeHeaders(headers: Record<string, string> | undefined): HeadersRes
   };
 }
 
-function determineHypothesis(tests: DiagnosticResult['tests']): Hypothesis {
+export function determineHypothesis(tests: DiagnosticResult['tests']): Hypothesis {
   const { directHttp, scbNoJs, scbWithJs, headers } = tests;
 
   if (directHttp.error || (directHttp.statusCode && directHttp.statusCode >= 500)) {
@@ -229,7 +230,7 @@ function determineHypothesis(tests: DiagnosticResult['tests']): Hypothesis {
     return 'requires_js_to_serve_content';
   }
 
-  return 'unknown_500_error';
+  return 'diagnostic_no_actionable_fetch_error';
 }
 
 function getRecommendation(hypothesis: Hypothesis): Recommendation {
@@ -336,6 +337,7 @@ function printResult(result: DiagnosticResult) {
     cloudflare_or_similar_cdn: '🟠',
     timeout_slow_server: '🟡',
     url_not_found: '🔴',
+    diagnostic_no_actionable_fetch_error: '👀',
     unknown_500_error: '⚪',
   };
 
@@ -409,10 +411,11 @@ async function main() {
 }
 
 // Map hypothesis → queue file key
-function hypothesisToQueueKey(h: string): string {
+export function hypothesisToQueueKey(h: string): string {
   switch (h) {
     case 'server_down_or_unreachable': return 'serverdown';
     case 'url_not_found': return '404';
+    case 'diagnostic_no_actionable_fetch_error': return 'manual';
     case 'unknown_500_error': return 'error500';
     case 'timeout_slow_server': return 'timeout';
     case 'origin_blocks_scb_ip':
@@ -478,6 +481,7 @@ async function runBatchDiagnostic(args: string[]) {
     cloudflare_or_similar_cdn: 'Cloudflare/CDN blockerar',
     timeout_slow_server: 'Timeout - långsam server',
     url_not_found: 'URL finns inte (404)',
+    diagnostic_no_actionable_fetch_error: 'Ingen diagnostiserbar fetch-blocker',
     unknown_500_error: 'Okänt 500-fel',
   };
 
@@ -501,10 +505,12 @@ async function runBatchDiagnostic(args: string[]) {
         : 'server_down_or_unreachable';
 
       const queueKey = hypothesisToQueueKey(hypothesis);
-      appendToQueue(OUT_QUEUES[queueKey as keyof typeof OUT_QUEUES], entry);
+      if (queueKey !== 'manual') {
+        appendToQueue(OUT_QUEUES[queueKey as keyof typeof OUT_QUEUES], entry);
+      }
 
-      // Remove from MAN_FILE after successful routing
-      if (existsSync(MAN_FILE)) {
+      // Remove from MAN_FILE after successful routing to a terminal non-manual queue.
+      if (queueKey !== 'manual' && existsSync(MAN_FILE)) {
         const manContent = readFileSync(MAN_FILE, 'utf8');
         const manLines = manContent.split('\n').filter(l => {
           if (!l.trim()) return false;
@@ -546,10 +552,12 @@ async function runBatchDiagnostic(args: string[]) {
 
     const hypothesis = determineHypothesis(tests);
     const queueKey = hypothesisToQueueKey(hypothesis);
-    appendToQueue(OUT_QUEUES[queueKey as keyof typeof OUT_QUEUES], entry);
+    if (queueKey !== 'manual') {
+      appendToQueue(OUT_QUEUES[queueKey as keyof typeof OUT_QUEUES], entry);
+    }
 
-    // Remove from MAN_FILE after successful routing
-    if (existsSync(MAN_FILE)) {
+    // Remove from MAN_FILE after successful routing to a terminal non-manual queue.
+    if (queueKey !== 'manual' && existsSync(MAN_FILE)) {
       const manContent = readFileSync(MAN_FILE, 'utf8');
       const manLines = manContent.split('\n').filter(l => {
         if (!l.trim()) return false;
@@ -586,7 +594,12 @@ async function runBatchDiagnostic(args: string[]) {
     const count = existsSync(qf) ? (readFileSync(qf, 'utf8').split('\n').filter(l => l.trim()).length) : 0;
     log(`    ${qk}: ${count} sources`);
   }
+  const manualCount = existsSync(MAN_FILE) ? readFileSync(MAN_FILE, 'utf8').split('\n').filter(l => l.trim()).length : 0;
+  log(`    manual: ${manualCount} sources`);
   log('═══════════════════════════════════════════════════════════════════════');
 }
 
-main().catch(console.error);
+const invokedPath = process.argv[1] ? pathToFileURL(process.argv[1]).href : '';
+if (import.meta.url === invokedPath) {
+  main().catch(console.error);
+}
