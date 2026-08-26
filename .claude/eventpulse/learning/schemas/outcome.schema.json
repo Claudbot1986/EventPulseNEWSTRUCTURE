@@ -1,0 +1,35 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://eventpulse.local/schemas/outcome.schema.json",
+  "title": "EventPulse Outcome Label",
+  "type": "object",
+  "additionalProperties": true,
+  "required": ["episode_id", "label_source", "label_at", "fields"],
+  "properties": {
+    "episode_id": { "type": "string" },
+    "label_source": {
+      "type": "string",
+      "enum": ["observed", "derived", "human_labeled", "unknown"]
+    },
+    "label_at": { "type": "string", "format": "date-time" },
+    "fields": {
+      "type": "object",
+      "properties": {
+        "task_success": {
+          "type": "object",
+          "properties": {
+            "value": { "type": ["boolean", "null"] },
+            "source": { "type": "string" }
+          }
+        },
+        "first_attempt_passed": {
+          "type": "object",
+          "properties": {
+            "value": { "type": ["boolean", "null"] },
+            "source": { "type": "string" }
+          }
+        }
+      }
+    }
+  }
+}
