@@ -201,13 +201,30 @@ export function filterByAllowlist<T>(obj: T): {
       const out: any = {};
       for (const [k, v] of Object.entries(value)) {
         const childPath = pathPrefix ? `${pathPrefix}.${k}` : k;
-        // First check exact path
-        const exact = isFieldAllowed(childPath);
-        if (exact.allowed) {
-          out[k] = typeof v === "string" ? redactString(v) : walk(v, childPath);
+        // Two-step filter: (1) check exact leaf path; (2) recurse into nested objects
+        // regardless of whether the parent path is allowed (parent containers are
+        // transparent — only leaf paths must be in the allowlist).
+        if (v !== null && typeof v === "object" && !Array.isArray(v)) {
+          // Recurse into nested object — children may have allowed leaves
+          const recursed = walk(v, childPath);
+          if (recursed && Object.keys(recursed).length > 0) {
+            out[k] = recursed;
+          } else {
+            dropped.push(childPath);
+          }
+        } else if (Array.isArray(v)) {
+          // Arrays always recurse — child elements may be allowed
+          const recursed = walk(v, childPath);
+          if (recursed !== undefined) out[k] = recursed;
+          else dropped.push(childPath);
         } else {
-          // Drop field (don't recurse — fields not in allowlist are excluded entirely)
-          dropped.push(childPath);
+          // Primitive leaf — must match allowlist
+          const exact = isFieldAllowed(childPath);
+          if (exact.allowed) {
+            out[k] = typeof v === "string" ? redactString(v) : v;
+          } else {
+            dropped.push(childPath);
+          }
         }
       }
       return out;
