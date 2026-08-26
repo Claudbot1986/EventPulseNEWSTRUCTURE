@@ -399,8 +399,24 @@ async function main(): Promise<void> {
   process.exit(0);
 }
 
-main().catch((err: unknown) => {
-  const msg = err instanceof Error ? err.message : String(err);
-  process.stderr.write(`[finalize-episode] ERROR (fail-open): ${msg}\n`);
-  process.exit(0);
-});
+// Only invoke main() when run directly (not when imported as a module).
+import { fileURLToPath } from "node:url";
+const isMain = (() => {
+  try {
+    if (typeof import.meta.url !== "string" || typeof process.argv[1] !== "string") return false;
+    const scriptPath = fileURLToPath(import.meta.url);
+    const argvPath = process.argv[1];
+    const argvReal = fs.existsSync(argvPath) ? fs.realpathSync(argvPath) : argvPath;
+    const scriptReal = fs.existsSync(scriptPath) ? fs.realpathSync(scriptPath) : scriptPath;
+    return argvReal === scriptReal;
+  } catch {
+    return false;
+  }
+})();
+if (isMain) {
+  main().catch((err: unknown) => {
+    const msg = err instanceof Error ? err.message : String(err);
+    process.stderr.write(`[finalize-episode] ERROR (fail-open): ${msg}\n`);
+    process.exit(0);
+  });
+}
