@@ -373,7 +373,11 @@ export async function fetchTicketmaster(): Promise<string> {
       price_min_sek: ev.priceRanges?.[0]?.currency === 'SEK' ? Math.round(ev.priceRanges[0].min) : null,
       price_max_sek: ev.priceRanges?.[0]?.currency === 'SEK' ? Math.round(ev.priceRanges[0].max) : null,
       ticket_url: ev.url ?? null,
-      image_url: ev.images?.[0]?.url ?? null,
+      // ── AI-bilder är obligatoriskt. Ticketmaster-bilder är källbilder
+      // (upphovsrättsligt osäkra) → vi sätter NULL. AI-workern genererar
+      // den slutliga bilden och skriver image_url efter EU AI Act Art. 50-
+      // stämpling.
+      image_url: null,
       source: 'ticketmaster',
       source_id: ev.id,
       detected_language: null,

@@ -269,7 +269,8 @@ async function runSource(source: SourceTruth, options: { recheck?: boolean } = {
             start_time: (e as any).startTime ? new Date((e as any).startTime).toISOString() : new Date().toISOString(),
             end_time: (e as any).endTime ? new Date((e as any).endTime).toISOString() : null,
             url: (e as any).url || '',
-            image_url: (e as any).imageUrl || '',
+            // ── AI-bilder är obligatoriskt → NULL. Workern genererar.
+            image_url: null,
             venue_name: (e as any).venue || '',
             venue_address: '',
             lat: null,

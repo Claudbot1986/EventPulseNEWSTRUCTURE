@@ -539,7 +539,10 @@ export function toRawEventInput(event: ParsedEvent): RawEventInput {
     price_min_sek: event.priceMin || null,
     price_max_sek: event.priceMax || null,
     ticket_url: event.ticketUrl || event.url || null,
-    image_url: event.imageUrl || null,
+    // ── AI-bilder är obligatoriskt. Universal-extractor fångar ofta
+    // scrape-original från JSON-LD og:image (upphovsrättsligt osäkra).
+    // → NULL. AI-workern genererar.
+    image_url: null,
     source: event.source,
     source_id: generateEventId(event.source, event.title, event.date),
     detected_language: 'sv',

@@ -119,11 +119,24 @@ export default function AiImageScreen({ onEventPress }) {
             accessibilityRole="button"
             accessibilityLabel={`${ev.title || 'AI-genererat event'} (AI-genererad bild)`}
           >
-            <Image
-              source={{ uri: ev.image_url || ev.imageUrl }}
-              style={styles.cardImage}
-              resizeMode="cover"
-            />
+            {ev.image_url || ev.imageUrl ? (
+              <Image
+                source={{ uri: ev.image_url || ev.imageUrl }}
+                style={styles.cardImage}
+                resizeMode="cover"
+              />
+            ) : (
+              <View style={[styles.cardImage, styles.cardImagePlaceholder]}>
+                {/* Användaren bad 2026-08-25 om "no credits BFL - recharge"-
+                    text när BFL-kredit är slut (status='no_credits').
+                    Visar samma placeholder-yta som annars saknar bild. */}
+                <Text style={styles.placeholderText}>
+                  {ev.image_generation_status === 'no_credits'
+                    ? 'no credits BFL - recharge'
+                    : 'ingen AI-bild'}
+                </Text>
+              </View>
+            )}
             <View style={styles.cardBody}>
               <Text style={styles.cardTime}>{formatTime(ev.start_time)}</Text>
               <Text style={styles.cardTitle} numberOfLines={2}>
@@ -243,6 +256,19 @@ const styles = StyleSheet.create({
     width: '100%',
     height: 280,
     backgroundColor: TOKENS.color.surfaceSoft,
+  },
+  // Användaren bad 2026-08-25 om "no credits BFL - recharge"-text vid BFL-
+  // kredit slut. Samma placeholder-yta som HemStarScreen.
+  cardImagePlaceholder: {
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  placeholderText: {
+    color: TOKENS.color.accent,
+    fontSize: 13,
+    fontWeight: '600',
+    textAlign: 'center',
+    paddingHorizontal: TOKENS.space.md,
   },
   cardBody: {
     padding: TOKENS.space.md + 2,

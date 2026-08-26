@@ -5,6 +5,10 @@ import type { Job } from 'bullmq';
 import type { RawEventInput, NormalizedEvent } from '@eventpulse/shared';
 import { searchSyncQueue } from '../03-Queue/queue';
 import { computeConfidenceV1 } from './confidence_v1';
+import { aiImageQueue, startAiImageWorker } from '../08-Agent/workers/aiImageWorker';
+
+// Starta AI-bild-worker i samma process (no-op om AI_IMAGE_PIPELINE_ENABLED=0).
+startAiImageWorker();
 
 const supabase = createClient(
   process.env.SUPABASE_URL!,
@@ -356,11 +360,21 @@ export async function processRawEvent(job: Job<RawEventInput>): Promise<void> {
     price_min_sek: raw.price_min_sek,
     price_max_sek: raw.price_max_sek,
     ticket_url: raw.url || raw.ticket_url || null,
-    image_url: raw.image_url,
+    // ── AI-bilder är obligatoriskt. Adapters sätter image_url=null.
+    // autoGenServer/autoGen-batch skriver den slutliga URL:n efter AI-generering.
+    // Direkt-uppsättning av image_url här skulle kringgå EU AI Act Art. 50-
+    // stämplingen och AI-tracking-kolumnerna.
+    image_url: null,
     dedup_hash: dedupHash,
     category_slug,  // Denormalized for direct filtering
     status: 'published',
     raw_data: raw.raw_payload,
+    // AI-bild-pipeline-markörer. Workern sätter dessa till 'completed' /
+    // image_ai_generated=true efter generering. 'pending' = köad, workern
+    // plockar upp via BullMQ-kön `ai-image-generation`.
+    image_ai_generated: false,
+    image_generation_status: 'pending',
+    image_generation_attempts: 0,
     // Agent Event Graph columns (MASTERPLAN §13). Seed on every parse so
     // ranking/freshness stay meaningful; confidence mirrors the SQL migration
     // 20260818-0002-confidence-v1.sql.
@@ -372,7 +386,10 @@ export async function processRawEvent(job: Job<RawEventInput>): Promise<void> {
       price_min_sek: raw.price_min_sek ?? null,
       price_max_sek: raw.price_max_sek ?? null,
       is_free: raw.is_free ?? null,
-      image_url: raw.image_url ?? null,
+      // image_url är null vid insert — confidence får inte +10 för AI-bild
+      // förrän bilden faktiskt är genererad och klar. Vi ger +10 retroaktivt
+      // via re-rank i worker när status→completed.
+      image_url: null,
       freshness_at: observedAt,
       source: raw.source,
     }),
@@ -432,6 +449,18 @@ export async function processRawEvent(job: Job<RawEventInput>): Promise<void> {
 
   // Enqueue Meilisearch sync
   await searchSyncQueue.add('sync', { event_id, action: 'upsert' });
+
+  // Enqueue AI-bild-generering (workern konsumerar asynkront).
+  // Skippa om AI-pipelinen är avstängd (AI_IMAGE_PIPELINE_ENABLED=0) — då
+  // förblir image_url NULL och UI visar fallback-placeholder.
+  if ((process.env.AI_IMAGE_PIPELINE_ENABLED ?? '1') !== '0') {
+    await aiImageQueue.add(
+      'generate',
+      { event_id, enqueued_at: new Date().toISOString() },
+      { jobId: `ai-img-${event_id}` }, // dedup-id så vi inte köar samma event flera gånger
+    );
+    console.log(`[normalizer] 📸 AI-bild-jobb köat: ${event_id}`);
+  }
 }
 
 /** Log ingestion statistics per source */

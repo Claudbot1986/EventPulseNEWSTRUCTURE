@@ -18,13 +18,17 @@
  *
  * Design choices for EventPulse:
  *  - Pure parsing function in event_image.ts (testable, no I/O).
- *  - Fetch + caching in fetch_event_image.ts (caller-facing).
  *  - Priority order: og:image > og:image:url > twitter:image > JSON-LD Event.image.
  *    og:image wins because it's the most universal signal.
  *  - Resolve relative URLs against the page URL (organizers sometimes use
  *    /img/foo.jpg instead of full URLs).
  *  - Reject URLs that don't look like images (file extension or og:type=image).
  *  - Never throw — return null on parse failure. /agent/chat must not break.
+ *
+ * Status 2026-08-25: previously wrapped by fetch_event_image.ts for og:image
+ * runtime fallback. That wrapper is removed (källbilder är inte längre
+ * tillåtna — alla bilder är AI-genererade). This parser is kept for tests
+ * and potential future safe-by-design use (e.g. trusted internal sources).
  *
  * Out of scope (v1):
  *  - Vision-language model image selection (picks best of N images on page).

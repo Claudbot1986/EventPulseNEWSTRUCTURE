@@ -679,6 +679,11 @@ export async function fetchFeed({ from, days = 7, signal, timeoutMs = 12_000 } =
       ticket_url: ticketUrl,
       imageUrl: e.image_url || null,
       image_url: e.image_url || null,
+      // AI image rollout (Utforska, 2026-08-26) — useAiImageUrl-hook reads these
+      // to decide between pre-baked / lazy / original / empty box.
+      image_ai_generated: e.image_ai_generated ?? false,
+      image_ai_optout: e.image_ai_optout ?? false,
+      image_generation_status: e.image_generation_status || null,
       // Surface the actual upstream source (ticketmaster, kulturhuset, …)
       // instead of the hardcoded "agent" so App.js getCtaText(source)
       // can pick a venue-specific CTA like "Köp biljett via Ticketmaster".
@@ -778,6 +783,12 @@ export async function fetchRecommendedEvents({ limit = 10, signal, timeoutMs = 1
       ticket_url: ticketUrl,
       imageUrl: e.image_url || null,
       image_url: e.image_url || null,
+      // image_generation_status forwarded så UI kan visa "no credits BFL
+      // - recharge" när AI-workern har slut på BFL-kredit. User request
+      // 2026-08-25.
+      image_generation_status: e.image_generation_status || null,
+      image_ai_generated: e.image_ai_generated ?? false,
+      image_ai_optout: e.image_ai_optout ?? false,
       source: e.source || 'agent',
       hasExternalLink: Boolean(ticketUrl),
       externalLinkChipLabel: ticketUrl ? 'Extern länk' : undefined,
@@ -879,6 +890,12 @@ export async function fetchLiveEvents({
       ticket_url: ticketUrl,
       imageUrl: e.image_url || null,
       image_url: e.image_url || null,
+      // image_generation_status forwarded så UI kan visa "no credits BFL
+      // - recharge" när AI-workern har slut på BFL-kredit. User request
+      // 2026-08-25.
+      image_generation_status: e.image_generation_status || null,
+      image_ai_generated: e.image_ai_generated ?? false,
+      image_ai_optout: e.image_ai_optout ?? false,
       source: e.source || 'agent',
       hasExternalLink: Boolean(ticketUrl),
       externalLinkChipLabel: ticketUrl ? 'Extern länk' : undefined,
@@ -1370,6 +1387,12 @@ export async function fetchCachedRecommendations({
       ticket_url: ticketUrl,
       imageUrl: e.image_url || null,
       image_url: e.image_url || null,
+      // image_generation_status forwarded så UI kan visa "no credits BFL
+      // - recharge" när AI-workern har slut på BFL-kredit. User request
+      // 2026-08-25.
+      image_generation_status: e.image_generation_status || null,
+      image_ai_generated: e.image_ai_generated ?? false,
+      image_ai_optout: e.image_ai_optout ?? false,
       source: e.source || 'agent',
       hasExternalLink: Boolean(ticketUrl),
       externalLinkChipLabel: ticketUrl ? 'Extern länk' : undefined,
@@ -1609,6 +1632,12 @@ export async function fetchSavedEvents({ limit = 50, signal, timeoutMs = 12_000 
       ticket_url: ticketUrl,
       imageUrl: e.image_url || null,
       image_url: e.image_url || null,
+      // image_generation_status forwarded så UI kan visa "no credits BFL
+      // - recharge" när AI-workern har slut på BFL-kredit. User request
+      // 2026-08-25.
+      image_generation_status: e.image_generation_status || null,
+      image_ai_generated: e.image_ai_generated ?? false,
+      image_ai_optout: e.image_ai_optout ?? false,
       source: e.source || 'agent',
       hasExternalLink: Boolean(ticketUrl),
       externalLinkChipLabel: ticketUrl ? 'Extern länk' : undefined,

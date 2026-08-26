@@ -255,6 +255,10 @@ export function normalizeSupabaseEvent(event) {
     externalLinkChipLabel: hasExternalLink ? getExternalLinkChipLabel(event.source, ticketUrl) : null,
     image_url: imageUrl,
     imageUrl,
+    // image_generation_status forwarded så UI kan visa "no credits BFL
+    // - recharge" när AI-workern har slut på BFL-kredit. User request
+    // 2026-08-25.
+    image_generation_status: event.image_generation_status || null,
     url: ticketUrl,
     status: event.status,
     category,

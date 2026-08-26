@@ -44,6 +44,14 @@ try {
   console.warn('[autoGen] could not load .env from', ENV_PATH, err.message);
 }
 
+// AI-bilder lagras ALLTID i `ai-generated/` under event-posters-bucketen.
+// Mappnamnet är medvetet valt — det gör att storage-listan själv visar att
+// alla filer är AI-genererade (och EU AI Act Art. 50-stämplade). Inga
+// originalbilder får ligga här. Inga blandmappar.
+export const AI_IMAGE_FOLDER = 'ai-generated';
+export const AI_IMAGE_LICENSE = 'ai-generated';
+export const AI_IMAGE_ATTRIBUTION = 'AI-generated image (EU AI Act Art. 50)';
+
 const PORT = Number(process.env.AUTOGEN_PORT || 7790);
 const BFL_API_KEY = process.env.BFL_API_KEY;
 const SUPABASE_URL = process.env.SUPABASE_URL;
@@ -409,6 +417,35 @@ function dedupPath(key) {
 
 // ── BFL Flux schnell ───────────────────────────────────────────────────────
 
+/**
+ * Custom error som signalerar "no credits" från BFL.
+ * Användaren bad 2026-08-25 om att UI ska visa "no credits BFL - recharge"
+ * när BFL-kredit är slut. Detta error kastas av generateFluxSchnell när
+ * vi identifierar 402 / 429 med kredit-relaterad text i svaret.
+ *
+ * Workern mappar detta error → image_generation_status='no_credits' (workern
+ * pausar alla pending-jobb tills manuell re-charge).
+ */
+export class BFLNoCreditsError extends Error {
+  constructor(message, status, bodyText) {
+    super(message);
+    this.name = 'BFLNoCreditsError';
+    this.status = status;
+    this.bodyText = bodyText;
+  }
+}
+
+/**
+ * Klassificerar ett BFL-fel som credit-relaterat eller ej.
+ * BFL returnerar 402 Payment Required eller 429 med text som nämner
+ * "credit", "balance", "quota", "billing", "payment".
+ */
+function isBflCreditError(status, bodyText) {
+  if (status === 402) return true;
+  const t = (bodyText || '').toLowerCase();
+  return /credit|balance|quota|billing|payment|insufficient|exhausted/.test(t);
+}
+
 async function generateFluxSchnell(prompt) {
   // 1. Submit — BFL Flux Dev (Flux 1 Dev, bättre på negativa prompts än klein-4b)
   // Användaren bad 2026-08-24 om "INGEN TEXT" och konkret stil — flux-2-klein-4b
@@ -429,6 +466,13 @@ async function generateFluxSchnell(prompt) {
   });
   if (!submitRes.ok) {
     const errText = await submitRes.text();
+    if (isBflCreditError(submitRes.status, errText)) {
+      throw new BFLNoCreditsError(
+        `BFL no credits: ${submitRes.status} ${errText.slice(0, 200)}`,
+        submitRes.status,
+        errText,
+      );
+    }
     throw new Error(`BFL submit ${submitRes.status}: ${errText.slice(0, 200)}`);
   }
   const { id, polling_url } = await submitRes.json();
@@ -441,7 +485,17 @@ async function generateFluxSchnell(prompt) {
     const pollRes = await fetch(polling_url, {
       headers: { 'x-key': BFL_API_KEY, accept: 'application/json' },
     });
-    if (!pollRes.ok) throw new Error(`BFL poll ${pollRes.status}`);
+    if (!pollRes.ok) {
+      const pollErrText = await pollRes.text().catch(() => '');
+      if (isBflCreditError(pollRes.status, pollErrText)) {
+        throw new BFLNoCreditsError(
+          `BFL no credits (poll): ${pollRes.status} ${pollErrText.slice(0, 200)}`,
+          pollRes.status,
+          pollErrText,
+        );
+      }
+      throw new Error(`BFL poll ${pollRes.status}: ${pollErrText.slice(0, 200)}`);
+    }
     const data = await pollRes.json();
     if (data.status === 'Ready') {
       const imgRes = await fetch(data.result.sample);
@@ -459,8 +513,16 @@ async function generateFluxSchnell(prompt) {
         id,
       };
     }
-    if (data.status === 'Failed' || data.status === 'Error') {
-      throw new Error(`BFL generation failed: ${data.status}`);
+    if (data.status === 'Failed' || data.status === 'Error' || data.status === 'Rejected') {
+      const detail = JSON.stringify(data).slice(0, 300);
+      if (isBflCreditError(data.status === 'Rejected' ? 402 : 500, detail)) {
+        throw new BFLNoCreditsError(
+          `BFL no credits: status=${data.status} ${detail}`,
+          402,
+          detail,
+        );
+      }
+      throw new Error(`BFL generation failed: ${data.status} ${detail}`);
     }
   }
   throw new Error(`BFL timed out after ${TIMEOUT_MS / 1000}s`);
@@ -486,7 +548,13 @@ async function uploadAndPersistAll(eventIds, b64, mime, storagePath, prompt, mod
   }
   const originalBuffer = Buffer.from(b64, 'base64');
   const ext = mime === 'image/png' ? 'png' : 'jpg';
-  const path = `events/${storagePath}.${ext}`;
+  // AI-bilder hamnar ALLTID under ai-generated/ — samma mappnamn som
+  // AI_IMAGE_FOLDER-konstanten. Validerat vid runtime att vi inte råkar
+  // skriva till events/ (legacy-sökväg).
+  const path = `${AI_IMAGE_FOLDER}/${storagePath}.${ext}`;
+  if (!path.startsWith(`${AI_IMAGE_FOLDER}/`)) {
+    throw new Error(`Refusing to upload to non-AI path: ${path}`);
+  }
 
   // 1. EU AI Act §50 — synlig stämpel + XMP-metadata (lokal Sharp, ~10-50ms)
   const compliantBuffer = await applyAiCompliance(originalBuffer, { prompt, model });
@@ -512,6 +580,8 @@ async function uploadAndPersistAll(eventIds, b64, mime, storagePath, prompt, mod
     .from('events')
     .update({
       image_url: imageUrl,
+      image_license: AI_IMAGE_LICENSE,
+      image_attribution: AI_IMAGE_ATTRIBUTION,
       image_ai_generated: true,
       image_prompt: prompt,
       image_model: model,
@@ -729,6 +799,91 @@ const server = http.createServer(async (req, res) => {
       console.error('[autoGen] /generate-for-first FAILED:', err.message);
       return sendJson(res, 500, { ok: false, error: err.message });
     }
+  }
+
+  // ── Batch-endpoint: ta emot en lista events (från worker / backfill-script) ──
+  // Dedup-grupperar efter title_sv+venue_name, genererar EN bild per grupp,
+  // uppdaterar ALLA events i gruppen med samma image_url.
+  //
+  // Body: { events: [{ id, title_sv, title_en, description_sv, description_en,
+  //                     venues?: {name}, venue_name?, category_slug? }] }
+  // Returns: { ok, results: [{ key, eventIds, imageUrl, storagePath, prompt }],
+  //            totalGroups, okCount, failCount }
+  if (req.method === 'POST' && url.pathname === '/generate-for-batch') {
+    let body;
+    try { body = await readJsonBody(req); }
+    catch (e) { return sendJson(res, 400, { ok: false, error: e.message }); }
+
+    const events = Array.isArray(body?.events) ? body.events : [];
+    if (events.length === 0) {
+      return sendJson(res, 200, { ok: true, totalGroups: 0, results: [] });
+    }
+    // Validera obligatoriska fält
+    for (const e of events) {
+      if (!e?.id) {
+        return sendJson(res, 400, { ok: false, error: 'every event needs id' });
+      }
+    }
+
+    console.log(`[autoGen] /generate-for-batch start: ${events.length} events`);
+
+    // Dedup-gruppera efter (title_sv + venue_name)
+    const groupsMap = new Map();
+    for (const ev of events) {
+      const key = dedupKey(ev);
+      if (!groupsMap.has(key)) {
+        groupsMap.set(key, { key, ids: [], representative: ev });
+      }
+      groupsMap.get(key).ids.push(ev.id);
+    }
+    const groups = Array.from(groupsMap.values());
+    console.log(`[autoGen] dedup → ${groups.length} unika grupper (av ${events.length} events)`);
+
+    const results = [];
+    for (let i = 0; i < groups.length; i++) {
+      const g = groups[i];
+      const ev = g.representative;
+      console.log(`[autoGen] [${i + 1}/${groups.length}] group key="${g.key}" (${g.ids.length} event(s))`);
+      try {
+        const prompt = buildAutoPrompt(ev);
+        const { b64, mime } = await generateFluxSchnell(prompt);
+        const storagePath = dedupPath(g.key);
+        const imageUrl = await uploadAndPersistAll(g.ids, b64, mime, storagePath, prompt);
+        console.log(`[autoGen]   done url=${imageUrl}`);
+        results.push({
+          ok: true,
+          key: g.key,
+          eventIds: g.ids,
+          title: ev.title_sv || ev.title_en || '?',
+          venue: getVenueName(ev),
+          imageUrl,
+          storagePath: `${AI_IMAGE_FOLDER}/${storagePath}.png`,
+          prompt,
+        });
+      } catch (err) {
+        console.error(`[autoGen]   group="${g.key}" FAILED:`, err.message);
+        results.push({
+          ok: false,
+          key: g.key,
+          eventIds: g.ids,
+          title: ev.title_sv || ev.title_en || '?',
+          venue: getVenueName(ev),
+          error: err.message,
+        });
+      }
+    }
+
+    const okCount = results.filter((r) => r.ok).length;
+    const failCount = results.length - okCount;
+    console.log(`[autoGen] /generate-for-batch done: ${okCount} ok, ${failCount} failed`);
+
+    return sendJson(res, 200, {
+      ok: true,
+      totalGroups: groups.length,
+      okCount,
+      failCount,
+      results,
+    });
   }
 
   sendJson(res, 404, { ok: false, error: 'Not found' });

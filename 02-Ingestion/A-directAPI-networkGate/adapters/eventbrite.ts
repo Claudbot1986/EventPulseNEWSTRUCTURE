@@ -111,7 +111,9 @@ export async function scrapeEventbrite(): Promise<string> {
           ? Math.round(parseFloat(ev.ticket_availability.maximum_ticket_price.major_value))
           : null,
         ticket_url: ev.url,
-        image_url: ev.logo?.url ?? null,
+        // ── AI-bilder är obligatoriskt. Eventbrite-logotyper är källbilder
+        // (upphovsrättsligt osäkra) → vi sätter NULL. AI-workern genererar.
+        image_url: null,
         source: 'eventbrite',
         source_id: ev.id,
         detected_language: null,

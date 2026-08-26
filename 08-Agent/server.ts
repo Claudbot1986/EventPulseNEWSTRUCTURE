@@ -40,10 +40,13 @@ import {
   MIN_SAMPLE_PER_VARIANT,
 } from './tools/experiments';
 import { composeReply } from './llmRouter';
-import { fetchEventImage } from './tools/fetch_event_image';
+// fetchEventImage borttagen 2026-08-25 — og:image-fallback hämtade
+// upphovsrättsligt osäkra originalbilder. EventPulse använder nu ENDAST
+// AI-genererade bilder (se 08-Agent/workers/aiImageWorker.ts).
 import { createRateLimiter, ipKeyFn } from './middleware/rateLimit';
 import { createAdminAuth } from './middleware/adminAuth';
 import { createAiImageRouter } from './middleware/ai_image_static';
+import { createAiImageOptOutRouter } from './middleware/ai_image_optout';
 import {
   listNotifications,
   markNotificationRead,
@@ -192,6 +195,12 @@ export function buildApp(opts: { supabase?: SupabaseClient } = {}): express.Expr
   // on, the routes fall under the standard origin allowlist + JSON
   // middleware stack set up above.
   app.use('/agent', createAiImageRouter());
+
+  // ─── AI image per-event opt-out (admin) ─────────────────────────────
+  // POST /agent/ai-image/optout — body {event_id, optout:boolean}.
+  // Gate: requireAdmin (AGENT_ADMIN_TOKEN). Used by venues that want
+  // to keep their original pressbild. See middleware/ai_image_optout.ts.
+  app.use('/agent/ai-image', requireAdmin, createAiImageOptOutRouter(requireAdmin, sb ?? getSupabase()));
 
   /**
    * GET /agent/feed?from=YYYY-MM-DD&days=7&category=music&city=Stockholm
@@ -450,39 +459,12 @@ export function buildApp(opts: { supabase?: SupabaseClient } = {}): express.Expr
       }));
 
       // ─── Phase 1.7: og:image / JSON-LD fallback enrichment ──────────
-      // Many events in events_public have NULL image_url (the organizer
-      // page is the only place a hero image lives). For the magic-slice
-      // UI cards, an image dramatically increases engagement. We fire
-      // fetchEventImage in parallel for cards missing image_url, with a
-      // tight per-call timeout so /agent/chat stays bounded. Failures
-      // collapse silently — never throw into the chat path. After this
-      // block, `cards` reflects what the user will actually see.
-      //
-      // ticket_url is the best source proxy we have without a schema
-      // change — most venues serve tickets on their own domain where the
-      // og:image is reliable. We accept the rare wrong-domain case
-      // (Ticketmaster / Eventbrite hosting) since those still embed the
-      // event's own image in the ticket page.
-      const IMAGE_FALLBACK_TIMEOUT_MS = 1500;
-      const cardsNeedingImage = cards
-        .map((card, idx) => ({ card, idx }))
-        .filter(({ card }) => !card.image_url && !!card.ticket_url);
-      if (cardsNeedingImage.length > 0) {
-        const settled = await Promise.allSettled(
-          cardsNeedingImage.map(({ card }) =>
-            fetchEventImage(card.ticket_url as string, {
-              timeoutMs: IMAGE_FALLBACK_TIMEOUT_MS,
-            })
-          )
-        );
-        for (let i = 0; i < cardsNeedingImage.length; i++) {
-          const r = settled[i];
-          if (r.status === 'fulfilled' && r.value) {
-            const idx = cardsNeedingImage[i].idx;
-            cards[idx] = { ...cards[idx], image_url: r.value };
-          }
-        }
-      }
+      // BORTAGEN 2026-08-25: Tidigare hämtade vi og:image från källsidor
+      // för att fylla tomma cards. Detta introducerade upphovsrättsligt
+      // osäkra originalbilder i feed:n. EventPulse använder nu ENDAST
+      // AI-genererade bilder (se 08-Agent/workers/aiImageWorker.ts).
+      // Kort utan bild_url får NULL — UI visar fallback-placeholder tills
+      // workern genererat klar bild (vanligtvis ~30s efter ingestion).
 
       // Log an "impression" per result. Best-effort, never throw.
       // Rank position reflects the ORDER THE USER ACTUALLY SEES (post-MMR),

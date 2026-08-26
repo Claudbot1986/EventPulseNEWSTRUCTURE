@@ -135,7 +135,17 @@ function EventRow({ card, onInteraction, onVenueLongPress, isFollowingVenue }) {
             </View>
           ) : null}
         </View>
-      ) : null}
+      ) : (
+        // Användaren bad 2026-08-25 om "no credits BFL - recharge"-text
+        // när BFL-kredit är slut (status='no_credits').
+        <View style={[styles.cardImageWrap, styles.cardImagePlaceholder]}>
+          <Text style={styles.cardImagePlaceholderText}>
+            {card.image_generation_status === 'no_credits'
+              ? 'no credits BFL - recharge'
+              : '—'}
+          </Text>
+        </View>
+      )}
       <View style={styles.cardBody}>
         <Text style={styles.cardTitle} numberOfLines={2}>
           {card.title || 'Untitled'}
@@ -495,6 +505,23 @@ const styles = StyleSheet.create({
   },
   cardImageWrap: {
     position: 'relative',
+  },
+  // Användaren bad 2026-08-25 om "no credits BFL - recharge"-text när
+  // BFL-kredit är slut. Visas i samma yta där bilden skulle ha varit.
+  cardImagePlaceholder: {
+    height: 160,
+    backgroundColor: '#252525',
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderTopLeftRadius: 10,
+    borderTopRightRadius: 10,
+  },
+  cardImagePlaceholderText: {
+    color: '#FFB454',
+    fontSize: 12,
+    fontWeight: '600',
+    textAlign: 'center',
+    paddingHorizontal: 12,
   },
   imageAttribution: {
     position: 'absolute',

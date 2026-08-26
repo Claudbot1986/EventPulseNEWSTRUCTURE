@@ -137,8 +137,20 @@ function useSection({ from, days, filter }) {
 
 // ─── Card components ─────────────────────────────────────────────────────────
 
-function CardImage({ uri, imageLicense, imageAttribution }) {
+function CardImage({ uri, imageLicense, imageAttribution, imageGenerationStatus }) {
   if (!uri) {
+    // BFL har slut på credits — workern markerade eventet med
+    // image_generation_status='no_credits'. Visa tydlig text i stället för
+    // en generisk placeholder så användaren förstår att det inte är ett
+    // vanligt "saknar bild"-fall utan ett externt beroende som behöver
+    // laddas. (User request 2026-08-25.)
+    if (imageGenerationStatus === 'no_credits') {
+      return (
+        <View style={styles.cardImageFallback}>
+          <Text style={styles.cardImageNoCreditsText}>no credits BFL - recharge</Text>
+        </View>
+      );
+    }
     return <View style={styles.cardImageFallback}><Text style={styles.cardImageFallbackText}>—</Text></View>;
   }
   // T0052 — show attribution overlay only when license actually requires it.
@@ -201,6 +213,7 @@ function EventCardCompact({ event, onPress }) {
         uri={event.image_url || event.imageUrl}
         imageLicense={event.image_license}
         imageAttribution={event.image_attribution}
+        imageGenerationStatus={event.image_generation_status}
       />
       <View style={styles.cardBody}>
         <Text style={styles.cardTime}>{time || '—'}</Text>
@@ -363,6 +376,7 @@ function LiveEventCard({ event, onPress }) {
         uri={event.image_url || event.imageUrl}
         imageLicense={event.image_license}
         imageAttribution={event.image_attribution}
+        imageGenerationStatus={event.image_generation_status}
       />
       <View style={styles.liveCardBody}>
         <View style={styles.liveCardTopRow}>
@@ -555,7 +569,10 @@ function AiImageSmoketestSection({ onCardPress }) {
               accessibilityRole="button"
               accessibilityLabel={`${ev.title} (AI-genererad bild)`}
             >
-              <CardImage uri={ev.image_url || ev.imageUrl} />
+              <CardImage
+                uri={ev.image_url || ev.imageUrl}
+                imageGenerationStatus={ev.image_generation_status}
+              />
               <View style={styles.cardBody}>
                 <Text style={styles.cardTime}>{ev.time || '—'}</Text>
                 <Text style={styles.cardTitle} numberOfLines={2}>{ev.title}</Text>
@@ -1203,6 +1220,16 @@ const styles = StyleSheet.create({
   cardImageFallbackText: {
     color: TOKENS.color.textSoft,
     fontSize: TOKENS.fontSize.xl,
+  },
+  // Användaren bad 2026-08-25 om "no credits BFL - recharge"-text när
+  // BFL-kredit är slut. Visas i samma fallback-yta som '—' men med
+  // accent-färg och mindre font för att signalera "operatörsmeddelande".
+  cardImageNoCreditsText: {
+    color: TOKENS.color.accent,
+    fontSize: TOKENS.fontSize.sm,
+    fontWeight: '600',
+    textAlign: 'center',
+    paddingHorizontal: TOKENS.space.xs,
   },
   cardBody: {
     paddingTop: TOKENS.space.sm,

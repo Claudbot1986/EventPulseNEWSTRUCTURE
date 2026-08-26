@@ -89,11 +89,15 @@ export async function feedEvents(
   let query = supabase
     .from(FEED_EVENTS_TABLE)
     .select(
-      // Live events_public has not applied 20260821-0004 (image_license).
-      // Selecting those columns returns Postgres 42703; do not add them back
-      // until that migration is on the live view.
+      // 20260825-0001-ai-image-mandatory.sql + 20260826-0001-events-image-ai-optout.sql
+      // expose image_license, image_ai_generated, image_ai_optout, and
+      // image_generation_status through events_public. The hook
+      // 06-UI/hooks/useAiImageUrl.js reads these to decide between
+      // pre-baked / lazy / original / empty in the Utforska tab.
       'id, title_sv, title_en, start_time, end_time, venue_id, ' +
       'category_slug, is_free, price_min_sek, price_max_sek, ticket_url, image_url, ' +
+      'image_license, image_attribution, image_source_url, ' +
+      'image_ai_generated, image_ai_optout, image_generation_status, ' +
       'source, ' +
       'venues:venue_id(name, city)'
     )
@@ -147,9 +151,12 @@ export async function feedEvents(
     is_free: !!r.is_free,
     ticket_url: r.ticket_url ?? null,
     image_url: r.image_url ?? null,
-    image_license: null,
-    image_attribution: null,
-    image_source_url: null,
+    image_license: r.image_license ?? null,
+    image_attribution: r.image_attribution ?? null,
+    image_source_url: r.image_source_url ?? null,
+    image_ai_generated: r.image_ai_generated ?? false,
+    image_ai_optout: r.image_ai_optout ?? false,
+    image_generation_status: r.image_generation_status ?? null,
     source: r.source ?? null,
   }));
 

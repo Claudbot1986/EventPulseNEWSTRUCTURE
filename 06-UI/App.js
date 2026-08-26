@@ -3,6 +3,7 @@ import { StatusBar } from 'expo-status-bar';
 import { StyleSheet, Text, View, SectionList, ActivityIndicator, TouchableOpacity, ScrollView, Linking, Image, Platform, Share, Alert, AppState } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { fetchFeed, addDays, fetchEventIcs, shareSession, fetchSharedSession, parseShareHashFromUrl } from './services/agentClient';
+import { useAiImageUrl } from './hooks/useAiImageUrl';
 import { analyticsClient } from './services/analyticsClient';
 import UserPickerScreen from './screens/UserPickerScreen';
 import ProfileScreen from './screens/ProfileScreen';
@@ -400,15 +401,20 @@ function EventItem({ event, onPress }) {
   const venue = getVenueLabel(event);
   const area = getAreaLabel(event);
   const price = formatPrice(event);
+  // AI image rollout (Utforska, 2026-08-26) — useAiImageUrl returns the
+  // pre-baked/lazy URL or null. UI renders empty box when null. The 240×64
+  // SE-corner AI stamp must stay visible → resizeMode="contain" + aspectRatio:1.
+  // See 08-Agent/tools/ai_compliance.ts:applyAiCompliance.
+  const { uri } = useAiImageUrl(event);
 
   return (
     <TouchableOpacity style={styles.eventCard} onPress={onPress} activeOpacity={0.7}>
-      {event.imageUrl ? (
-        <Image source={{ uri: event.imageUrl }} style={styles.eventImage} />
+      {uri ? (
+        // AI stamp (240×64 SE corner) — resizeMode must stay 'contain'. Do not crop.
+        <Image source={{ uri }} style={styles.eventImage} resizeMode="contain" />
       ) : (
-        <View style={styles.eventImageFallback}>
-          <Text style={styles.eventImageFallbackText}>Ingen bild från källan</Text>
-        </View>
+        // Tom enhetlig box istället för text — UI ska INTE avslöja BFL-status.
+        <View style={styles.eventImageFallback} />
       )}
       <View style={styles.eventCardBody}>
         <View style={styles.eventHeader}>
@@ -440,15 +446,17 @@ function GroupedEventItem({ groupedEvent, onEventPress }) {
   const firstEvent = groupedEvent.events[0] || groupedEvent;
   const venue = getVenueLabel(firstEvent);
   const area = getAreaLabel(firstEvent);
+  // AI image rollout (Utforska, 2026-08-26) — see EventItem above.
+  const { uri } = useAiImageUrl(firstEvent);
 
   return (
     <TouchableOpacity style={styles.eventCard} onPress={() => onEventPress(groupedEvent.events[0])} activeOpacity={0.7}>
-      {firstEvent.imageUrl ? (
-        <Image source={{ uri: firstEvent.imageUrl }} style={styles.eventImage} />
+      {uri ? (
+        // AI stamp (240×64 SE corner) — resizeMode must stay 'contain'. Do not crop.
+        <Image source={{ uri }} style={styles.eventImage} resizeMode="contain" />
       ) : (
-        <View style={styles.eventImageFallback}>
-          <Text style={styles.eventImageFallbackText}>Ingen bild från källan</Text>
-        </View>
+        // Tom enhetlig box istället för text — UI ska INTE avslöja BFL-status.
+        <View style={styles.eventImageFallback} />
       )}
       <View style={styles.eventCardBody}>
         <View style={styles.eventHeader}>
@@ -862,6 +870,8 @@ function DetailsScreen({ event, onBack }) {
   // warnings after the OS Share-sheet closes (best-effort display).
   const [shareBusy, setShareBusy] = useState(false);
   const [shareError, setShareError] = useState(null);
+  // AI image rollout (Utforska, 2026-08-26) — see EventItem above.
+  const { uri } = useAiImageUrl(event);
 
   const handleOpenUrl = async () => {
     if (!event.url) {
@@ -975,12 +985,12 @@ function DetailsScreen({ event, onBack }) {
         </TouchableOpacity>
       </View>
       <ScrollView style={styles.detailsContent} showsVerticalScrollIndicator={false}>
-        {event.imageUrl ? (
-          <Image source={{ uri: event.imageUrl }} style={styles.detailsImage} />
+        {uri ? (
+          // AI stamp (240×64 SE corner) — resizeMode must stay 'contain'. Do not crop.
+          <Image source={{ uri }} style={styles.detailsImage} resizeMode="contain" />
         ) : (
-          <View style={styles.detailsImageFallback}>
-            <Text style={styles.eventImageFallbackText}>Ingen bild från källan</Text>
-          </View>
+          // Tom enhetlig box istället för text — UI ska INTE avslöja BFL-status.
+          <View style={styles.detailsImageFallback} />
         )}
         
         <View style={styles.detailsIntro}>

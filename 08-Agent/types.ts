@@ -81,6 +81,31 @@ export interface EventCard {
   /** Original image URL when runtime serves via proxy/cache. */
   image_source_url?: string | null;
   /**
+   * AI image rollout (Utforska tab, 2026-08-26). TRUE when image_url points at
+   * a BFL Flux / gpt-image-1 generated PNG with EU AI Act Art. 50 stamp.
+   * The Expo hook `06-UI/hooks/useAiImageUrl.js` reads this together with
+   * `image_ai_optout` to decide between pre-baked / lazy / original / empty.
+   * Source of truth for "is the image AI?".
+   */
+  image_ai_generated?: boolean | null;
+  /**
+   * Per-event opt-out from the AI image rollout. When TRUE the venue has
+   * requested to keep its original pressbild; the UI hook renders
+   * `image_url` as-is instead of the AI-generated image. Set via admin
+   * endpoint POST /agent/ai-image/optout.
+   */
+  image_ai_optout?: boolean | null;
+  /**
+   * AI image worker status (20260825 migration). One of:
+   *   'pending'   — queued for generation
+   *   'completed' — AI image written to events.image_url
+   *   'failed'    — last attempt failed (worker may retry)
+   *   'no_credits'— BFL credits exhausted; UI hook should show empty box
+   * Forwarded so UI can render the empty-box fallback while the worker
+   * hasn't yet generated the AI image.
+   */
+  image_generation_status?: 'pending' | 'completed' | 'failed' | 'no_credits' | null;
+  /**
    * Artist slugs on this event (T0050). Populated by `search_events.ts` via
    * a JOIN on `event_artists → artists`. Used by the ranker for the
    * `followed_artist_match` boost. Empty / undefined means "no artists

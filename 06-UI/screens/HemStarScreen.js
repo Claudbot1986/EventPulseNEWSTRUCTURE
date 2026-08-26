@@ -163,7 +163,15 @@ export default function HemStarScreen({ onEventPress }) {
                 />
               ) : (
                 <View style={[styles.cardImage, styles.cardImagePlaceholder]}>
-                  <Text style={styles.placeholderText}>ingen AI-bild</Text>
+                  {/* Användaren bad 2026-08-25 om "no credits BFL - recharge"-
+                      text när BFL-kredit är slut (status='no_credits').
+                      Visar samma placeholder-yta som "ingen AI-bild" men med
+                      operatörsmeddelande istället. */}
+                  <Text style={styles.placeholderText}>
+                    {ev.image_generation_status === 'no_credits'
+                      ? 'no credits BFL - recharge'
+                      : 'ingen AI-bild'}
+                  </Text>
                 </View>
               )}
               <View style={styles.cardBody}>
