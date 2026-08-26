@@ -42,6 +42,7 @@ const BASH_RULES: BashRule[] = [
 interface EditRule {
   match: (path: string) => boolean;
   reason: string;
+  bypassRoles?: string[]; // roles allowed to bypass this specific rule (logged only)
 }
 
 const EDIT_RULES: EditRule[] = [
@@ -62,8 +63,11 @@ const EDIT_RULES: EditRule[] = [
     reason: "prod migrations require explicit human approval — runtime blocks by default.",
   },
   {
-    match: (p) => /^\/Volumes\/.*\/.*\.md$/.test(p),
+    // Scoped to actual vault path; previous regex `/^\/Volumes\/.*\/.*\.md$/`
+    // over-matched every project .md under /Volumes/.
+    match: (p) => /\/00-Vault\//.test(p) && p.endsWith(".md"),
     reason: "Obsidian vault files belong to vault-sync role only.",
+    bypassRoles: ["vault-sync"] as string[],
   },
 ];
 
@@ -72,6 +76,11 @@ const EDIT_RULES: EditRule[] = [
 function isLead(agentName?: string): boolean {
   if (!agentName) return false;
   return agentName === "ep-lead" || agentName === "lead";
+}
+
+function isBypassedByRule(rule: EditRule, agentName?: string): boolean {
+  if (!rule.bypassRoles || !agentName) return false;
+  return rule.bypassRoles.includes(agentName);
 }
 
 function projectRootFromCwd(cwd: string): string {
@@ -148,6 +157,15 @@ async function main(): Promise<void> {
       projectRootFromCwd(cwd),
     );
     for (const rule of EDIT_RULES) {
+      // Narrow, role-scoped bypass: only the role explicitly named in the rule
+      // can write these paths. Bypass is logged (not silent) and applies ONLY
+      // to this specific rule — other rules still block.
+      if (rule.match(path) && isBypassedByRule(rule, agentName)) {
+        process.stderr.write(
+          `[ep-safety-gate] role '${agentName}' tool=${toolName} — rule bypass (role-scoped) for: ${rule.reason}. path=${path}\n`,
+        );
+        continue;
+      }
       if (rule.match(path)) {
         process.stderr.write(
           `[ep-safety-gate] BLOCKED ${toolName} for non-lead agent: ${rule.reason}. path=${path}\n`,
