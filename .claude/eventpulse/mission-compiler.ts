@@ -53,6 +53,7 @@ export interface Mission {
   repo_state: RepoState;
   compiler_version: string;
   created_at: string;
+  session_id: string;
   notes?: string[];
 }
 
@@ -350,6 +351,7 @@ export function compileMission(opts: {
     repo_state: repoState,
     compiler_version: COMPILER_VERSION,
     created_at: now.toISOString(),
+    session_id: opts.sessionId ?? "anon",
     notes: opts.selection.notes,
   };
 
@@ -428,6 +430,7 @@ function renderYaml(m: Mission): string {
   lines.push(`  captured_at: ${m.repo_state.captured_at}`);
   lines.push(`compiler_version: ${m.compiler_version}`);
   lines.push(`created_at: ${m.created_at}`);
+  lines.push(`session_id: ${m.session_id}`);
   if (m.notes && m.notes.length) {
     lines.push(`notes:`);
     for (const n of m.notes) lines.push(`  - ${yamlEscape(n)}`);

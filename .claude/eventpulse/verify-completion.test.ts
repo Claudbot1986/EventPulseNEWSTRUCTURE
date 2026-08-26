@@ -14,12 +14,12 @@ import { spawnSync } from "child_process";
 import * as fs from "fs";
 import * as path from "path";
 
-const REPO = "/Users/claudgashi/EventPulse-recovery/clawdbot2/project/00EVENTPULSEFINALDESTINATION/NEWSTRUCTURE";
+const REPO = "/Volumes/2TB filer/NEWSTRUCTURE-COPY";
 const MISSIONS = path.join(REPO, ".claude/eventpulse/missions");
 const EVIDENCE = path.join(REPO, ".claude/eventpulse/evidence/ledger.ndjson");
 const HOOK = path.join(REPO, ".claude/eventpulse/verify-completion.ts");
 
-function writeMission(id: string, profile: string, gates: string[]): void {
+function writeMission(id: string, profile: string, gates: string[], sessionId: string): void {
   const yaml = `mission_id: ${id}
 original_prompt: smoke test
 task_type: feature
@@ -43,6 +43,7 @@ ${gates.map((g) => `  - ${g}`).join("\n")}
 classification_confidence: 0.5
 human_review_required: false
 created_at: 2026-08-24T20:00:00Z
+session_id: ${sessionId}
 `;
   fs.writeFileSync(path.join(MISSIONS, `${id}.yaml`), yaml, "utf8");
 }
@@ -69,8 +70,9 @@ function writeEvidence(entries: any[]): void {
 }
 
 function run(payload: any): { exit: number; stdout: string; stderr: string } {
+  const enriched = { session_id: "smoke-test-session-001", ...payload };
   const r = spawnSync("npx", ["tsx", HOOK], {
-    input: JSON.stringify(payload),
+    input: JSON.stringify(enriched),
     encoding: "utf8",
     cwd: REPO,
   });
@@ -93,7 +95,7 @@ function check(name: string, actual: any, expected: any, reason: string) {
 // --- Test 1: trivial profile → ALLOW ---
 clearMissions();
 clearEvidence();
-writeMission("EP-2026-08-24-T1", "trivial", ["typecheck"]);
+writeMission("EP-2026-08-24-T1", "trivial", ["typecheck"], "smoke-test-session-001");
 {
   const r = run({ tool_name: "TaskCompleted", cwd: REPO });
   check("T1 trivial allow", r.exit, 0, r.stderr.slice(-120));
@@ -102,7 +104,7 @@ writeMission("EP-2026-08-24-T1", "trivial", ["typecheck"]);
 // --- Test 2: ingestion, no evidence → BLOCK ---
 clearMissions();
 clearEvidence();
-writeMission("EP-2026-08-24-T2", "ingestion", ["typecheck", "adapter_test", "fixture_replay", "dedup_smoke"]);
+writeMission("EP-2026-08-24-T2", "ingestion", ["typecheck", "adapter_test", "fixture_replay", "dedup_smoke"], "smoke-test-session-001");
 {
   const r = run({ tool_name: "TaskCompleted", cwd: REPO });
   check("T2 missing-gates block", r.exit, 2, r.stderr.slice(-200));
@@ -111,7 +113,7 @@ writeMission("EP-2026-08-24-T2", "ingestion", ["typecheck", "adapter_test", "fix
 // --- Test 3: ingestion, fresh evidence → PASS ---
 clearMissions();
 clearEvidence();
-writeMission("EP-2026-08-24-T3", "ingestion", ["typecheck", "adapter_test", "fixture_replay", "dedup_smoke"]);
+writeMission("EP-2026-08-24-T3", "ingestion", ["typecheck", "adapter_test", "fixture_replay", "dedup_smoke"], "smoke-test-session-001");
 const now = Date.now();
 writeEvidence([
   { ts: new Date(now - 30_000).toISOString(), cmd: "npm run type-check", exit_code: 0, working_tree_fp: "sha256:placeholder" },
@@ -135,7 +137,7 @@ writeEvidence([
 // --- Test 4: ingestion, stale evidence (>10 min for typecheck) → BLOCK ---
 clearMissions();
 clearEvidence();
-writeMission("EP-2026-08-24-T4", "ingestion", ["typecheck"]);
+writeMission("EP-2026-08-24-T4", "ingestion", ["typecheck"], "smoke-test-session-001");
 writeEvidence([
   { ts: new Date(now - 700_000).toISOString(), cmd: "npm run type-check", exit_code: 0, working_tree_fp: "sha256:x" },
 ]);
@@ -147,7 +149,7 @@ writeEvidence([
 // --- Test 5: ingestion, fp mismatch → BLOCK ---
 clearMissions();
 clearEvidence();
-writeMission("EP-2026-08-24-T5", "ingestion", ["typecheck"]);
+writeMission("EP-2026-08-24-T5", "ingestion", ["typecheck"], "smoke-test-session-001");
 writeEvidence([
   { ts: new Date(now - 30_000).toISOString(), cmd: "npm run type-check", exit_code: 0, working_tree_fp: "sha256:0000000000000000000000000000dead" },
 ]);
@@ -159,7 +161,7 @@ writeEvidence([
 // --- Test 6: agent_ranking unknown gates → PASS w/ warning ---
 clearMissions();
 clearEvidence();
-writeMission("EP-2026-08-24-T6", "agent_ranking", ["grounding_eval", "no_fabricated_events"]);
+writeMission("EP-2026-08-24-T6", "agent_ranking", ["grounding_eval", "no_fabricated_events"], "smoke-test-session-001");
 {
   const r = run({ tool_name: "TaskCompleted", cwd: REPO });
   check("T6 unknown-gates pass", r.exit, 0, r.stderr.slice(-200));

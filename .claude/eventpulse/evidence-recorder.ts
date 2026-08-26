@@ -10,6 +10,7 @@
 import * as fs from "fs";
 import * as path from "path";
 import { execSync } from "child_process";
+import { findMissionBySession } from "./mission-resolver";
 
 const EVIDENCE_DIR = path.join(process.cwd(), ".claude", "eventpulse", "evidence");
 const LEDGER_PATH = path.join(EVIDENCE_DIR, "ledger.ndjson");
@@ -36,19 +37,11 @@ function workingTreeFingerprint(repoRoot: string): string {
   }
 }
 
-function activeMissionIdFromMirror(repoRoot: string): string | null {
-  try {
-    const missionsDir = path.join(repoRoot, ".claude", "eventpulse", "missions");
-    const files = fs
-      .readdirSync(missionsDir)
-      .filter((f) => f.endsWith(".yaml"))
-      .map((f) => ({ f, m: fs.statSync(path.join(missionsDir, f)).mtimeMs }))
-      .sort((a, b) => b.m - a.m);
-    if (files.length === 0) return null;
-    return files[0].f.replace(/\.yaml$/, "");
-  } catch {
-    return null;
-  }
+function activeMissionIdFromSession(repoRoot: string, sessionId: string | null | undefined): string | null {
+  // Phase L-A: explicit session/mission binding — never fall back to
+  // "newest mtime" (that was a concurrency bug).
+  const ref = findMissionBySession(repoRoot, sessionId);
+  return ref?.mission_id ?? null;
 }
 
 function ensureDir(p: string): void {
@@ -80,6 +73,7 @@ async function main(): Promise<void> {
   const toolInput = payload.tool_input || {};
   const toolResponse = payload.tool_response || {};
   const agentName: string | undefined = payload.agent_name || undefined;
+  const sessionId: string | undefined = typeof payload.session_id === "string" ? payload.session_id : undefined;
   const cwd: string = payload.cwd || process.cwd();
 
   // Only record Bash for now (Edit/Write get logged via task-ledger in Phase 7).
@@ -99,7 +93,7 @@ async function main(): Promise<void> {
 
   const entry = {
     ts: new Date().toISOString(),
-    mission_id: activeMissionIdFromMirror(cwd),
+    mission_id: activeMissionIdFromSession(cwd, sessionId),
     agent: agentName ?? null,
     tool: "Bash",
     event: "PostToolUse",

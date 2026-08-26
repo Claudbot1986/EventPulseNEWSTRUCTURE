@@ -21,6 +21,8 @@
 import * as fs from "fs";
 import * as path from "path";
 import { execSync } from "child_process";
+import { recordOutcome } from "./learning/scripts/outcome-record";
+import { findMissionBySession, parseMissionSessionId, type MissionRef } from "./mission-resolver";
 
 // ---- Gate → cmd-substring fingerprints + max age (seconds) ----------------
 
@@ -46,17 +48,9 @@ const AUTO_VERIFY_GATES = new Set(Object.keys(GATE_SPECS));
 
 // ---- Helpers ---------------------------------------------------------------
 
-function readLatestMission(repoRoot: string): any | null {
-  const dir = path.join(repoRoot, ".claude", "eventpulse", "missions");
-  if (!fs.existsSync(dir)) return null;
-  const files = fs
-    .readdirSync(dir)
-    .filter((f) => f.endsWith(".yaml"))
-    .map((f) => ({ f, m: fs.statSync(path.join(dir, f)).mtimeMs }))
-    .sort((a, b) => b.m - a.m);
-  if (files.length === 0) return null;
-  const txt = fs.readFileSync(path.join(dir, files[0].f), "utf8");
-  return { mission_id: files[0].f.replace(/\.yaml$/, ""), text: txt };
+function readMissionForSession(repoRoot: string, sessionId: string | null | undefined): MissionRef | null {
+  // Phase L-A: explicit session/mission binding. Never fall back to "newest mtime".
+  return findMissionBySession(repoRoot, sessionId);
 }
 
 function parseGatesField(text: string): string[] {
@@ -138,15 +132,18 @@ async function main(): Promise<void> {
   }
 
   const toolName: string = payload.tool_name || "";
+  const sessionId: string | undefined = typeof payload.session_id === "string" ? payload.session_id : undefined;
   const cwd: string = payload.cwd || process.cwd();
 
   if (toolName !== "TaskCompleted") {
     process.exit(0);
   }
 
-  const mission = readLatestMission(cwd);
+  const mission = readMissionForSession(cwd, sessionId);
   if (!mission) {
-    process.stderr.write("[ep-verify-completion] no mission mirror found; allowing.\n");
+    process.stderr.write(
+      `[ep-verify-completion] no mission bound to session_id=${sessionId ?? "unknown"}; allowing (explicit binding required).\n`,
+    );
     process.exit(0);
   }
 
@@ -231,6 +228,25 @@ async function main(): Promise<void> {
   process.stderr.write(
     `[ep-verify-completion] PASS: mission=${mission.mission_id} gates=${requiredGates.join(",")}\n`,
   );
+  // Phase L-A: persist outcome to evidence ledger (non-blocking, fail-open).
+  const gatesFailed = [...missing, ...stale];
+  const gatesPassed = requiredGates.filter(
+    (g) => !missing.includes(g) && !stale.includes(g) && !unknown.includes(g),
+  );
+  const outcomeResult = recordOutcome(cwd, {
+    missionId: mission.mission_id,
+    verdict: "passed",
+    verificationProfile: profile,
+    gatesPassed,
+    gatesFailed,
+    gatesUnknown: unknown,
+    workingTreeFp: currentFp,
+  });
+  if (!outcomeResult.ok) {
+    process.stderr.write(
+      `[ep-verify-completion] WARN: outcome-record failed: ${outcomeResult.error ?? "unknown"}\n`,
+    );
+  }
   process.exit(0);
 }
 
