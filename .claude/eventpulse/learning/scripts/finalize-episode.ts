@@ -24,6 +24,7 @@ import * as path from "node:path";
 import { execFileSync } from "node:child_process";
 import { inferStates, isReviewEligible } from "./state-machine";
 import { readCounter, updateCounter } from "./counter";
+import { computeQualityScore } from "./quality-score";
 import type { Episode, EpisodeStateMap, EpisodeTerminalState, CounterState } from "./episode-types";
 
 const REPO_ROOT_DEFAULT = "/Volumes/2TB filer/NEWSTRUCTURE-COPY";
@@ -128,32 +129,6 @@ function findEpisodeForMission(repoRoot: string, missionId: string): string | nu
   }
   return walk(dir);
 }
-
-function computeQualityScore(episode: Partial<Episode>): number {
-  let total = 0;
-  let available = 0;
-  const fieldWeights: Record<string, number> = {
-    "metadata.working_tree_fp": 0.10,
-    "metadata.verification_profile": 0.10,
-    "outcome.task_success": 0.15,
-    "outcome.first_attempt_passed": 0.10,
-    "outcome.gates_passed": 0.10,
-    "outcome.duration_ms": 0.05,
-    "state_machine.implemented_at": 0.10,
-    "state_machine.verified_at": 0.15,
-    "state_machine.reconciled_at": 0.10,
-    "evidence_refs": 0.05,
-  };
-  for (const [path, weight] of Object.entries(fieldWeights)) {
-    total += weight;
-    const value = path.split(".").reduce((acc: any, k) => acc?.[k], episode);
-    if (value !== null && value !== undefined && !(Array.isArray(value) && value.length === 0)) {
-      available += weight;
-    }
-  }
-  return total === 0 ? 0 : available / total;
-}
-
 function nextEpisodeSeq(repoRoot: string, dateStr: string): number {
   // Räkna antal episoder för dagens datum
   const dir = path.join(episodesDir(repoRoot), dateStr.slice(0, 4), dateStr.slice(5, 7));
