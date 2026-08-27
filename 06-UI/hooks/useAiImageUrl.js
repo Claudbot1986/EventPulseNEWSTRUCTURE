@@ -12,16 +12,23 @@
  *   1. EXPO_PUBLIC_AI_IMAGE_EXPLORE_ENABLED !== 'true'  → empty (kill switch)
  *   2. event.image_ai_optout === true                    → original (explicit)
  *   3. event.image_ai_generated === true && imageUrl     → pre-baked (worker done)
- *   4. event.image_ai_generated === true && !imageUrl    → lazy (build URL)
- *   5. otherwise                                          → empty (no fallback)
+ *   4. event.image_ai_generated === false && status='library_fallback' && imageUrl
+ *                                                         → library (no AI stamp)
+ *   5. event.image_ai_generated === true && !imageUrl    → lazy (build URL)
+ *   6. otherwise                                          → empty (no fallback)
  *
  * The hook returns `{ uri, source, stampVisible }`. The UI renders either:
  *   - <Image source={{ uri }} resizeMode="contain" />  (when uri is non-null)
  *   - <View style={emptyBoxStyle} />                    (when source === 'empty')
  *
- * stampVisible === true for pre-baked and lazy sources. The 240×64 SE-corner
- * AI stamp is baked into the PNG by 08-Agent/tools/ai_compliance.ts and must
- * NOT be cropped — UI must keep `resizeMode="contain"` + aspectRatio:1.
+ * stampVisible === true only for pre-baked/lazy sources (PNG has EU AI Act
+ * stamp baked in by 08-Agent/tools/ai_compliance.ts). Library-fallback
+ * images do NOT carry the stamp — they're reused past-AI or peer-event
+ * images, and stamping every shared image would be misleading.
+ *
+ * 2026-08-27: Added library source type. Backend now assigns library URLs
+ * server-side when BFL fails (no_credits / transient error) so the user
+ * never sees an empty box while BFL credits are zero.
  */
 
 import { buildAiImageUrl } from '../services/agentClient';
@@ -29,7 +36,7 @@ import { buildAiImageUrl } from '../services/agentClient';
 /**
  * @typedef {Object} AiImageResolution
  * @property {string|null} uri          Absolute image URL or null when empty.
- * @property {'original'|'pre-baked'|'lazy'|'empty'} source
+ * @property {'original'|'pre-baked'|'lazy'|'library'|'empty'} source
  * @property {boolean} stampVisible     True for pre-baked/lazy (PNG has EU AI Act stamp).
  */
 
@@ -42,7 +49,7 @@ import { buildAiImageUrl } from '../services/agentClient';
  * @param {string|null|undefined} [event.image_url]
  * @param {boolean} [event.image_ai_generated]
  * @param {boolean} [event.image_ai_optout]
- * @param {string|null} [event.image_generation_status]   // 'completed'|'pending'|'failed'|'no_credits'|null
+ * @param {string|null} [event.image_generation_status]   // 'completed'|'pending'|'failed'|'no_credits'|'library_fallback'|null
  * @returns {AiImageResolution}
  */
 export function useAiImageUrl(event) {
@@ -69,7 +76,19 @@ export function useAiImageUrl(event) {
     return { uri: imageUrl, source: 'pre-baked', stampVisible: true };
   }
 
-  // 4. Lazy — worker flagged AI generation but URL not yet persisted.
+  // 4. Library fallback — server assigned a library image when BFL was
+  //    unavailable (no_credits / transient error). image_ai_generated=false,
+  //    status='library_fallback'. No AI-stamp in the image.
+  if (
+    event.image_ai_generated === false &&
+    event.image_generation_status === 'library_fallback' &&
+    typeof imageUrl === 'string' &&
+    imageUrl.length > 0
+  ) {
+    return { uri: imageUrl, source: 'library', stampVisible: false };
+  }
+
+  // 5. Lazy — worker flagged AI generation but URL not yet persisted.
   //    Only attempt when status is 'completed' (worker done) — pending/failed
   //    will return empty until the worker resolves them.
   if (isAiDone && event.image_generation_status === 'completed' && event.id) {
@@ -77,7 +96,7 @@ export function useAiImageUrl(event) {
     if (url) return { uri: url, source: 'lazy', stampVisible: true };
   }
 
-  // 5. Default — empty box. NO silent fallback to original images.
+  // 6. Default — empty box. NO silent fallback to original images.
   return { uri: null, source: 'empty', stampVisible: false };
 }
 

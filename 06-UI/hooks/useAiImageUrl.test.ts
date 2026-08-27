@@ -6,7 +6,8 @@
  *   - Returns 'original' for explicit opt-out events
  *   - Returns 'pre-baked' when worker has persisted AI URL
  *   - Returns 'lazy' when worker flagged done but no URL yet
- *   - Returns 'empty' for pending/failed/no_credits status (NO original fallback)
+ *   - Returns 'library' when server assigned library-fallback URL (2026-08-27)
+ *   - Returns 'empty' for pending/no_credits status (NO original fallback)
  *
  * Run:  npx vitest run 06-UI/hooks/useAiImageUrl.test.ts
  */
@@ -26,7 +27,13 @@ interface TestEvent {
   image_url?: string | null;
   image_ai_generated?: boolean;
   image_ai_optout?: boolean;
-  image_generation_status?: 'pending' | 'completed' | 'failed' | 'no_credits' | null;
+  image_generation_status?:
+    | 'pending'
+    | 'completed'
+    | 'failed'
+    | 'no_credits'
+    | 'library_fallback'
+    | null;
 }
 
 describe('useAiImageUrl', () => {
@@ -109,7 +116,39 @@ describe('useAiImageUrl', () => {
     expect(result).toEqual({ uri: null, source: 'empty', stampVisible: false });
   });
 
+  test('returns library when status is library_fallback and URL is present', () => {
+    // 2026-08-27: BFL no_credits / transient error → worker assigns library
+    // URL server-side. image_ai_generated=false, status='library_fallback'.
+    // Image carries NO AI stamp (it's a reused past-AI / peer-event image).
+    const result = useAiImageUrl({
+      id: 'lib-event',
+      image_ai_generated: false,
+      image_ai_optout: false,
+      image_generation_status: 'library_fallback',
+      imageUrl: 'https://storage.example.com/library/music-concert-123.png',
+    });
+    expect(result).toEqual({
+      uri: 'https://storage.example.com/library/music-concert-123.png',
+      source: 'library',
+      stampVisible: false,
+    });
+  });
+
+  test('returns empty for library_fallback status without URL', () => {
+    // status=library_fallback but no URL — defensivt, ska inte hända i normal
+    // flöde men vi vill inte visa trasig bild.
+    const result = useAiImageUrl({
+      id: 'lib-no-url',
+      image_ai_generated: false,
+      image_generation_status: 'library_fallback',
+      imageUrl: null,
+    });
+    expect(result).toEqual({ uri: null, source: 'empty', stampVisible: false });
+  });
+
   test('returns empty when image_generation_status is no_credits', () => {
+    // Om library-fallback FAILED efter no_credits (biblioteket tomt) — status
+    // stannar kvar som no_credits. Visa tom box, inte original-bild.
     const result = useAiImageUrl({
       id: 'no-credits-event',
       image_ai_generated: false,

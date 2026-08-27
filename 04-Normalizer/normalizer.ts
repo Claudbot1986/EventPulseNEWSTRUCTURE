@@ -7,6 +7,7 @@ import { searchSyncQueue } from '../03-Queue/queue';
 import { computeConfidenceV1 } from './confidence_v1';
 import { aiImageQueue, startAiImageWorker } from '../08-Agent/workers/aiImageWorker';
 import { appendSkipLog } from '../08-Agent/utils/skipLog';
+import { pickLibraryFallback, markEventWithLibraryFallback } from '../08-Agent/utils/imageLibrary';
 
 // Starta AI-bild-worker i samma process (no-op om AI_IMAGE_PIPELINE_ENABLED=0).
 startAiImageWorker();
@@ -462,12 +463,28 @@ export async function processRawEvent(job: Job<RawEventInput>): Promise<void> {
     const startTime = raw.start_time ?? (raw as { startTime?: string | null }).startTime ?? null;
     const isFuture = startTime !== null && new Date(startTime) > new Date();
     if (isFuture) {
-      await aiImageQueue.add(
-        'generate',
-        { event_id, enqueued_at: new Date().toISOString() },
-        { jobId: `ai-img-${event_id}` }, // dedup-id så vi inte köar samma event flera gånger
-      );
-      console.log(`[normalizer] 📸 AI-bild-jobb köat: ${event_id} (start=${startTime})`);
+      // Library-first check (2026-08-27): om biblioteket har en matchande
+      // bild för denna kategori slipper vi BFL-anrop helt. Biblioteket växer
+      // automatiskt vid varje BFL-success (se aiImageWorker.ts → addToLibrary).
+      // Om biblioteket är tomt (tidig uppstart) fortsätter vi till AI-jobbet.
+      const libMatch = await pickLibraryFallback({
+        venue_id,
+        category_slug,
+      });
+      if (libMatch.url && libMatch.library_id) {
+        await markEventWithLibraryFallback(event_id, libMatch);
+        console.log(
+          `[normalizer] 📸📚 event ${event_id} använder biblioteks-bild ` +
+            `(match_type=${libMatch.match_type}, library_id=${libMatch.library_id})`,
+        );
+      } else {
+        await aiImageQueue.add(
+          'generate',
+          { event_id, enqueued_at: new Date().toISOString() },
+          { jobId: `ai-img-${event_id}` }, // dedup-id så vi inte köar samma event flera gånger
+        );
+        console.log(`[normalizer] 📸 AI-bild-jobb köat: ${event_id} (start=${startTime})`);
+      }
     } else {
       const reason = startTime ? 'past' : 'missing_start_time';
       console.log(

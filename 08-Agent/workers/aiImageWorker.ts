@@ -27,6 +27,11 @@ import { Worker, Queue, type Job } from 'bullmq';
 import IORedis from 'ioredis';
 import { createClient } from '@supabase/supabase-js';
 import { appendSkipLog } from '../utils/skipLog';
+import {
+  addToLibrary,
+  pickLibraryFallback,
+  markEventWithLibraryFallback,
+} from '../utils/imageLibrary';
 
 // ── Env ─────────────────────────────────────────────────────────────────────
 
@@ -178,7 +183,13 @@ async function fetchGroupMembers(seedEventId: string): Promise<EventLite[]> {
   return matches as unknown as EventLite[];
 }
 
-async function markEvents(imageUrl: string, group: DedupGroup, prompt: string, model: string): Promise<void> {
+async function markEvents(
+  imageUrl: string,
+  storagePath: string | undefined,
+  group: DedupGroup,
+  prompt: string,
+  model: string,
+): Promise<void> {
   const generatedAt = new Date().toISOString();
   const { error } = await supabase
     .from('events')
@@ -196,6 +207,52 @@ async function markEvents(imageUrl: string, group: DedupGroup, prompt: string, m
     })
     .in('id', group.ids);
   if (error) throw new Error(`DB update failed: ${error.message}`);
+
+  // Library-registrering (2026-08-27): varje BFL-success växer biblioteket.
+  // Idempotent — storage_path är UNIQUE, dubbletter returnerar befintlig rad.
+  // Tyst vid fel — vi vill inte krascha ett lyckat BFL-jobb pga library-fel.
+  if (storagePath) {
+    await addToLibrary({
+      storage_path: storagePath,
+      category_slug: group.representative.category_slug ?? null,
+      source_event_id: group.ids[0] ?? null,
+      tags: ['bfl-success'],
+    });
+  }
+}
+
+/**
+ * Tilldela biblioteks-bild till en grupp events. Används vid BFL-failure
+ * (no_credits / transient error) som fallback så användaren aldrig ser en
+ * tom bild.
+ *
+ * Returnerar antal events som faktiskt fick en biblioteks-bild.
+ */
+async function assignLibraryFallbackForGroup(
+  group: DedupGroup,
+  reason: string,
+): Promise<number> {
+  const match = await pickLibraryFallback({
+    category_slug: group.representative.category_slug,
+  });
+  if (!match.url || !match.library_id) return 0;
+  let assigned = 0;
+  for (const evId of group.ids) {
+    try {
+      await markEventWithLibraryFallback(evId, match);
+      assigned++;
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'unknown';
+      console.warn(`[ai-image-worker] library fallback failed for ${evId}: ${msg}`);
+    }
+  }
+  if (assigned > 0) {
+    console.log(
+      `[ai-image-worker]   📚 ${assigned} event(s) i grupp "${group.key}" ` +
+        `fick biblioteks-bild (reason=${reason}, match_type=${match.match_type})`,
+    );
+  }
+  return assigned;
 }
 
 async function markFailed(eventIds: string[], err: Error, attempts: number): Promise<void> {
@@ -230,6 +287,8 @@ interface BatchResult {
     key: string;
     eventIds: string[];
     imageUrl?: string;
+    /** R2 storage path returned by autoGenServer — används för addToLibrary */
+    storagePath?: string;
     prompt?: string;
     error?: string;
   }>;
@@ -343,11 +402,18 @@ async function processJob(job: Job<AiImageJob>): Promise<void> {
   const batchResult = await callAutoGenBatch(group.map((g) => g.representative));
   recordSpend(batchResult.okCount * 0.025); // ~$0.025/bild
 
-  // No-credits detection
+  // No-credits detection (2026-08-27): BFL slut på credits → märk alla som
+  // no_credits OCH försök biblioteks-fallback så feeden inte blir tom.
   if (isCreditFailure(batchResult)) {
     const allIds = group.flatMap((g) => g.ids);
     console.error(`[ai-image-worker] BFL no-credits detected, marking ${allIds.length} events as no_credits`);
     await markNoCredits(allIds);
+    // Library-fallback för att inte lämna användaren utan bild.
+    let libAssigned = 0;
+    for (const grp of group) {
+      libAssigned += await assignLibraryFallbackForGroup(grp, 'no_credits');
+    }
+    console.log(`[ai-image-worker] 📚 no_credits-fallback: ${libAssigned} event(s) fick biblioteks-bild`);
     throw new Error('SKIP_NO_CREDITS'); // BullMQ skippar retries
   }
 
@@ -356,16 +422,41 @@ async function processJob(job: Job<AiImageJob>): Promise<void> {
     if (!grpResult.ok || !grpResult.imageUrl) continue;
     const grp = group.find((g) => g.key === grpResult.key);
     if (!grp) continue;
-    await markEvents(grpResult.imageUrl, grp, grpResult.prompt || '', 'flux-dev');
+    await markEvents(grpResult.imageUrl, grpResult.storagePath, grp, grpResult.prompt || '', 'flux-dev');
     console.log(`[ai-image-worker]   group "${grp.key}" → ${grp.ids.length} event(s) updated, url=${grpResult.imageUrl}`);
   }
 
   const failedGroups = batchResult.results.filter((r) => !r.ok);
   if (failedGroups.length > 0) {
     const failedIds = failedGroups.flatMap((r) => r.eventIds);
-    await markFailed(failedIds, new Error(failedGroups[0].error ?? 'unknown'), attempt);
-    // Kasta för att BullMQ retryar
-    throw new Error(`AI generation failed for ${failedGroups.length} group(s): ${failedGroups[0].error}`);
+    // Library-fallback per misslyckad grupp (per-call runtime-beslut).
+    // Användaren ska ALDRIG se en tom bild om biblioteket har en matchning.
+    let libAssigned = 0;
+    for (const r of failedGroups) {
+      const grp = group.find((g) => g.key === r.key);
+      if (!grp) continue;
+      libAssigned += await assignLibraryFallbackForGroup(grp, 'bfl_error');
+    }
+    if (libAssigned > 0) {
+      console.log(`[ai-image-worker] 📚 transient-fallback: ${libAssigned} event(s) fick biblioteks-bild istället för BFL-fel`);
+    }
+    // Om vi INTE kunde fallback-hjälpa ALLA events: märk de kvarvarande som
+    // failed för fortsatt retry. Annars är jobbet "löst" via library.
+    const libCoveredIds = new Set<string>();
+    for (const r of failedGroups) {
+      const grp = group.find((g) => g.key === r.key);
+      if (!grp) continue;
+      const match = await pickLibraryFallback({ category_slug: grp.representative.category_slug });
+      if (match.url) {
+        for (const id of grp.ids) libCoveredIds.add(id);
+      }
+    }
+    const stillFailedIds = failedIds.filter((id) => !libCoveredIds.has(id));
+    if (stillFailedIds.length > 0) {
+      await markFailed(stillFailedIds, new Error(failedGroups[0].error ?? 'unknown'), attempt);
+      // Kasta för att BullMQ retryar
+      throw new Error(`AI generation failed for ${stillFailedIds.length} event(s): ${failedGroups[0].error}`);
+    }
   }
 
   console.log(`[ai-image-worker] job=${job.id} event=${eventId} done`);

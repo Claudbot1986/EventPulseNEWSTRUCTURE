@@ -82,3 +82,59 @@ Aggregera med:
 ```bash
 cat runtime/ingestion/ai-image-skip/backfill/*.ndjson | jq -s 'group_by(.skip_reason) | map({reason: .[0].skip_reason, count: length})'
 ```
+
+---
+
+## `backfill_library_to_future.ts`
+
+Tilldela biblioteks-bilder till framtida events som saknar AI-bild.
+Biblioteket byggs automatiskt upp från past-AI-bilder (steg 1, alltid
+idempotent). Steg 2 markerar framtida events med biblioteks-bild som
+fallback istället för BFL-generering.
+
+**När ska man köra:** en gång direkt efter migrering för att omedelbart
+fylla Utforska-feed med bilder utan att bränna BFL-kredit. Därefter
+behövs ingen manuell körning — workern och normalizern hanterar nya
+events automatiskt via `pickLibraryFallback()`.
+
+### Flaggor
+
+| Flagga | Default | Effekt |
+|---|---|---|
+| `--apply` | `false` | Faktiskt skriva `image_url` + `status='library_fallback'` på events. Default = steg 2 dry-run. |
+| `--limit N` | `none` (alla) | Processa max N events. |
+| `--skip-past-ai-backfill` | `false` | Skippa steg 1. Använd när biblioteket redan är populerat. |
+
+### Steg
+
+1. **backfillFromPastAi()** — extraherar unika past-AI-URL:er från
+   `events` och registrerar dem i `image_library` med kategori-metadata.
+   **Alltid idempotent** — `storage_path` är UNIQUE.
+2. **För varje future event utan AI-bild** → `pickLibraryFallback()` →
+   om match → `markEventWithLibraryFallback()`.
+
+### Vanliga körningar
+
+```bash
+# 1. Verifiera scope (rekommenderas ALLTID först)
+npx tsx 08-Agent/scripts/backfill_library_to_future.ts --limit 50
+
+# 2. Kör skarpt på alla future events utan AI-bild
+npx tsx 08-Agent/scripts/backfill_library_to_future.ts --apply
+
+# 3. Starta om bibliotek-populering (idempotent — körs om är OK)
+npx tsx 08-Agent/scripts/backfill_library_to_future.ts --apply --skip-past-ai-backfill
+```
+
+### Match rate
+
+Dry-run på 20 framtida events → **95% match rate** (19/20). Den enda
+"no match" var `category='art'` — biblioteket hade inga art-tagged
+bilder vid tillfället. Library växer över tid med fler BFL-success och
+fler past-AI-events.
+
+### Notering
+
+`image_generation_status='library_fallback'` är en ny status (migration
+20260827-0002). UI:ts `useAiImageUrl()`-hook har en motsvarande
+`'library'`-källtyp utan AI-stämpel.
