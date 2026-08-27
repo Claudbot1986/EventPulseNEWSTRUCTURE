@@ -25,6 +25,64 @@
   });
 })();
 
+// Analytics server toggle — startar/stoppar 10-Analytics-servern (port 7778).
+// Klick → POST /api/analytics-server/toggle → uppdaterar ring-färgen efteråt.
+(function bindAnalyticsServerButton() {
+  const el = document.getElementById('btn-analytics-server');
+  if (!el) return;
+  el.addEventListener('click', async (e) => {
+    e.preventDefault();
+    el.disabled = true;
+    const titleEl = el.querySelector('.analytics-server-box-title');
+    const oldTitle = titleEl ? titleEl.textContent : '';
+    if (titleEl) titleEl.textContent = '… toggling';
+    try {
+      const res = await fetch('/api/analytics-server/toggle', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+      });
+      const j = await res.json().catch(() => ({}));
+      if (titleEl) {
+        if (j.action === 'started') titleEl.textContent = 'startar…';
+        else if (j.action === 'stopped') titleEl.textContent = 'stoppar…';
+        else titleEl.textContent = oldTitle;
+      }
+      // Vänta 1.5s så servern hinner lyssna, hämta sen /api/status direkt.
+      await new Promise((r) => setTimeout(r, 1500));
+      try {
+        const r2 = await fetch('/api/status', { cache: 'no-store' });
+        const d = await r2.json();
+        applyAnalyticsServerState(d.analyticsServer || {});
+      } catch { /* ignorera — sidan laddas om vid meta-refresh */ }
+    } catch (err) {
+      console.warn('[analytics-server] toggle failed:', err);
+      if (titleEl) titleEl.textContent = oldTitle;
+    } finally {
+      el.disabled = false;
+    }
+  });
+})();
+
+function applyAnalyticsServerState(as) {
+  const el = document.getElementById('btn-analytics-server');
+  if (!el) return;
+  el.classList.remove('analytics-server-box--ok', 'analytics-server-box--bad', 'analytics-server-box--unknown');
+  if (as.ok === true) {
+    el.classList.add('analytics-server-box--ok');
+    el.title = as.pid ? `10-Analytics kör (PID ${as.pid}, port ${as.port})` : `10-Analytics kör på port ${as.port}`;
+    const titleEl = el.querySelector('.analytics-server-box-title');
+    if (titleEl && titleEl.textContent.includes('…')) titleEl.textContent = 'Server analytics';
+  } else if (as.ok === false) {
+    el.classList.add('analytics-server-box--bad');
+    el.title = as.error ? `10-Analytics nere: ${as.error}` : '10-Analytics är stoppad';
+    const titleEl = el.querySelector('.analytics-server-box-title');
+    if (titleEl && titleEl.textContent.includes('…')) titleEl.textContent = 'Server analytics';
+  } else {
+    el.classList.add('analytics-server-box--unknown');
+    el.title = '10-Analytics status okänd';
+  }
+}
+
 (async () => {
   try {
     const res = await fetch('/api/status', { cache: 'no-store' });
@@ -756,6 +814,9 @@ function renderLiveTiles(data) {
       bflBox.title = 'BFL credits status okänd';
     }
   }
+
+  // ── 10-Analytics server toggle box (header — right of analytics) ──
+  applyAnalyticsServerState(data.analyticsServer || {});
   {
     const ctrEl = document.getElementById('agent-ctr');
     if (ctrEl) {

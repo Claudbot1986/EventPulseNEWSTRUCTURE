@@ -10,7 +10,7 @@
  */
 
 import { createServer, IncomingMessage, ServerResponse } from 'http';
-import { readFileSync, readdirSync, statSync, existsSync } from 'fs';
+import { readFileSync, readdirSync, statSync, existsSync, mkdirSync } from 'fs';
 import { dirname, join, resolve } from 'path';
 import { fileURLToPath, pathToFileURL } from 'url';
 import {
@@ -96,6 +96,8 @@ export interface DashboardData {
   agent: AgentMetrics;
   // BFL credit balance (header box — left of analytics)
   bflCredits: BflCredits;
+  // 10-Analytics server status (header box — right of analytics)
+  analyticsServer: AnalyticsServerStatus;
 }
 
 export interface LayerSummary {
@@ -139,6 +141,17 @@ export interface AgentMetrics {
 export interface BflCredits {
   ok: boolean;
   credits?: number | null;
+  error?: string;
+  fetchedAt?: string;
+}
+
+// 10-Analytics server (port 7778) status — proxied med 3s timeout + 10s cache.
+// `ok=true` betyder att /health svarar på 7778. Styr färgen på toggle-knappen
+// i headern och avgör om ett klick startar eller stoppar servern.
+export interface AnalyticsServerStatus {
+  ok: boolean;
+  pid?: number | null;
+  port?: number | null;
   error?: string;
   fetchedAt?: string;
 }
@@ -301,6 +314,7 @@ export async function collect(): Promise<DashboardData> {
     bullmq: await collectBullmq(),
     agent: await collectAgent(),
     bflCredits: await collectBflCredits(),
+    analyticsServer: await collectAnalyticsServer(),
   };
 }
 
@@ -577,6 +591,124 @@ async function collectBflCredits(): Promise<BflCredits> {
   }
 }
 
+// 10-Analytics server (port 7778) — direkt fetch mot /health, 10s cache.
+// Bestämmer färgen på toggle-knappen i headern. Använder lsof för att få PID
+// om servern körs (för visning i title-text).
+let _analyticsServerCache: { data: AnalyticsServerStatus; ts: number } | null = null;
+async function collectAnalyticsServer(): Promise<AnalyticsServerStatus> {
+  const now = Date.now();
+  if (_analyticsServerCache && now - _analyticsServerCache.ts < 10_000) {
+    return _analyticsServerCache.data;
+  }
+  const port = 7778;
+  const url = `http://localhost:${port}/health`;
+  try {
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), 3000);
+    let res: Response;
+    try {
+      res = await fetch(url, { signal: controller.signal });
+    } finally {
+      clearTimeout(timer);
+    }
+    // Vilken HTTP-status som helst betyder att servern svarar. fetch() kastar
+    // vid nätverksfel (ECONNREFUSED / timeout) → hamnar i catch nedan.
+    let pid: number | null = null;
+    try {
+      const { execSync } = await import('child_process');
+      const out = execSync(`lsof -nP -iTCP:${port} -sTCP:LISTEN -t 2>/dev/null | head -1`, {
+        encoding: 'utf8',
+        timeout: 1500,
+      }).trim();
+      pid = out ? Number(out) : null;
+    } catch { /* ignore — pid är bara kosmetiskt */ }
+    const data: AnalyticsServerStatus = {
+      ok: true,
+      pid,
+      port,
+      fetchedAt: new Date().toISOString(),
+    };
+    _analyticsServerCache = { data, ts: now };
+    return data;
+  } catch (err) {
+    const data: AnalyticsServerStatus = {
+      ok: false,
+      port,
+      error: String((err as Error)?.message ?? err),
+      fetchedAt: new Date().toISOString(),
+    };
+    _analyticsServerCache = { data, ts: now };
+    return data;
+  }
+}
+
+// Toggle endpoint — startar/stoppar 10-Analytics-servern. Dashboarden blir
+// ansvarig för processen (child process). Användaren klickar → script startas
+// eller PID dödas. Hålls enkel: inget launchd, ingen wrapper.
+//
+// Säkerhet:
+//   - Endast POST, ingen payload behövs
+//   - Hardcodade kommandon (inga shell-injections)
+//   - Cache invalideras efter toggle så UI ser ny status direkt
+async function toggleAnalyticsServer(): Promise<{
+  ok: boolean;
+  action: 'started' | 'stopped' | 'noop';
+  pid?: number | null;
+  error?: string;
+}> {
+  const port = 7778;
+  const logFile = join(PROJECT_ROOT, 'runtime/analytics-server.log');
+  const { execSync, spawn } = await import('child_process');
+
+  // 1. Är servern redan uppe?
+  let existingPid: number | null = null;
+  try {
+    const out = execSync(`lsof -nP -iTCP:${port} -sTCP:LISTEN -t 2>/dev/null | head -1`, {
+      encoding: 'utf8',
+      timeout: 1500,
+    }).trim();
+    existingPid = out ? Number(out) : null;
+  } catch { /* ignore */ }
+
+  if (existingPid) {
+    // Stoppa: SIGTERM, sedan SIGKILL efter 2s om den lever.
+    try {
+      process.kill(existingPid, 'SIGTERM');
+      await new Promise((r) => setTimeout(r, 1500));
+      try {
+        process.kill(existingPid, 0);
+        process.kill(existingPid, 'SIGKILL');
+      } catch { /* redan död */ }
+      _analyticsServerCache = null;
+      return { ok: true, action: 'stopped', pid: existingPid };
+    } catch (err) {
+      return { ok: false, action: 'noop', error: String((err as Error)?.message ?? err) };
+    }
+  }
+
+  // 2. Starta: spawn detached child som överlever dashboardens egna livscykel.
+  try {
+    mkdirSync(join(PROJECT_ROOT, 'runtime'), { recursive: true });
+    const { openSync } = await import('fs');
+    const logFd = openSync(logFile, 'a');
+    const child = spawn(
+      'npx',
+      ['tsx', '10-Analytics/server.ts'],
+      {
+        cwd: PROJECT_ROOT,
+        detached: true,
+        stdio: ['ignore', logFd, logFd],
+        env: { ...process.env },
+      },
+    );
+    child.unref();
+    _analyticsServerCache = null;
+    return { ok: true, action: 'started', pid: child.pid ?? null };
+  } catch (err) {
+    return { ok: false, action: 'noop', error: String((err as Error)?.message ?? err) };
+  }
+}
+
 // ─── Per-source health diagnostics (Phase 1) ────────────────────────────────
 
 export type ErrorCategory = 'timeout' | '404' | '500' | 'redirect' | 'antibot' | 'parse' | 'other' | null;
@@ -828,6 +960,23 @@ async function serveJson(req: IncomingMessage, res: ServerResponse): Promise<boo
     } catch (err) {
       res.writeHead(500, { 'Content-Type': 'application/json' });
       res.end(JSON.stringify({ error: String(err) }));
+    }
+    return true;
+  }
+
+  // Toggle endpoint — startar/stoppar 10-Analytics-servern (port 7778).
+  // Trycker man på knappen i headern blir denna route triggad.
+  if (req.method === 'POST' && url === '/api/analytics-server/toggle') {
+    try {
+      const result = await toggleAnalyticsServer();
+      res.writeHead(result.ok ? 200 : 500, {
+        'Content-Type': 'application/json; charset=utf-8',
+        'Cache-Control': 'no-cache',
+      });
+      res.end(JSON.stringify(result));
+    } catch (err) {
+      res.writeHead(500, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ ok: false, action: 'noop', error: String((err as Error)?.message ?? err) }));
     }
     return true;
   }

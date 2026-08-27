@@ -1166,7 +1166,81 @@ ul.bars li {
 @media (max-width: 720px) {
   .header-row { flex-direction: column; align-items: stretch; }
   .analytics-box,
-  .bfl-credits-box { align-self: flex-start; }
+  .bfl-credits-box,
+  .analytics-server-box { align-self: flex-start; }
+}
+
+/* Analytics server toggle box — sitter till HÖGER om analytics-rutan.
+   Samma höjd som analytics. Ring (grön/röd) visar om port 7778 är uppe.
+   Knappen togglar servern via /api/analytics-server/toggle.
+   States:
+     .analytics-server-box--ok       = ring grön  (server uppe)
+     .analytics-server-box--bad      = ring röd   (server nere / misslyckad toggle)
+     .analytics-server-box--unknown  = ring grå   (default innan /api/status svarat) */
+.analytics-server-box {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  background: #1f2937;
+  color: #ffffff;
+  border: 1px solid #374151;
+  border-radius: 10px;
+  padding: 10px 16px;
+  font-family: inherit;
+  text-decoration: none;
+  cursor: pointer;
+  flex: 0 0 auto;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+  transition: background 0.15s, border-color 0.15s, box-shadow 0.15s, transform 0.05s;
+}
+.analytics-server-box:hover {
+  background: #111827;
+  border-color: #4b5563;
+  text-decoration: none;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.35);
+}
+.analytics-server-box:active { transform: translateY(1px); }
+.analytics-server-box:focus-visible {
+  outline: 2px solid #fbbf24;
+  outline-offset: 2px;
+}
+.analytics-server-ring {
+  display: inline-block;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: #4b5563; /* default okänd */
+  border: 2px solid rgba(255, 255, 255, 0.15);
+  flex: 0 0 auto;
+  box-shadow: 0 0 0 0 rgba(0, 0, 0, 0);
+  transition: background 0.15s, box-shadow 0.2s;
+}
+.analytics-server-box--ok .analytics-server-ring {
+  background: #16a34a;
+  box-shadow: 0 0 0 4px rgba(22, 163, 74, 0.18);
+}
+.analytics-server-box--bad .analytics-server-ring {
+  background: #dc2626;
+  box-shadow: 0 0 0 4px rgba(220, 38, 38, 0.18);
+}
+.analytics-server-box--unknown .analytics-server-ring {
+  background: #4b5563;
+}
+.analytics-server-box-text {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  line-height: 1.2;
+}
+.analytics-server-box-title {
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+.analytics-server-box-sub {
+  font-size: 11px;
+  opacity: 0.85;
+  margin-top: 2px;
 }
 
 .review-modal[hidden] { display: none; }
