@@ -15,6 +15,16 @@
   });
 })();
 
+// BFL credits box — open Black Forest Labs website in a new window.
+(function bindBflCreditsButton() {
+  const el = document.getElementById('btn-bfl-credits');
+  if (!el) return;
+  el.addEventListener('click', (e) => {
+    e.preventDefault();
+    window.open('https://blackforestlabs.ai', 'bfl', 'width=1200,height=800');
+  });
+})();
+
 (async () => {
   try {
     const res = await fetch('/api/status', { cache: 'no-store' });
@@ -724,6 +734,28 @@ function renderLiveTiles(data) {
   setText('agent-impressions', ag.impressions);
   setText('agent-clicks', ag.clicks);
   setText('agent-outbounds', ag.outbounds);
+
+  // ── BFL credits box (header — left of analytics) ──
+  // Grön om credits > 0, röd om 0 / senaste anropet misslyckades, grå om okänt.
+  const bflBox = document.getElementById('btn-bfl-credits');
+  if (bflBox) {
+    const bc = data.bflCredits || {};
+    bflBox.classList.remove('bfl-credits-box--ok', 'bfl-credits-box--bad', 'bfl-credits-box--unknown');
+    if (bc.ok === true) {
+      bflBox.classList.add('bfl-credits-box--ok');
+      const titleEl = bflBox.querySelector('.bfl-credits-box-title');
+      if (titleEl && typeof bc.credits === 'number') {
+        titleEl.textContent = `BFL: ${bc.credits.toFixed(2)}`;
+      }
+      bflBox.title = `BFL credits OK — ${bc.credits ?? '?'} credits kvar`;
+    } else if (bc.ok === false) {
+      bflBox.classList.add('bfl-credits-box--bad');
+      bflBox.title = bc.error ? `BFL credits saknas: ${bc.error}` : 'BFL credits saknas';
+    } else {
+      bflBox.classList.add('bfl-credits-box--unknown');
+      bflBox.title = 'BFL credits status okänd';
+    }
+  }
   {
     const ctrEl = document.getElementById('agent-ctr');
     if (ctrEl) {

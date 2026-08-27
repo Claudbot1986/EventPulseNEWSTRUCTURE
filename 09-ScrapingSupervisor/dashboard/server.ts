@@ -94,6 +94,8 @@ export interface DashboardData {
   // Live state (Phase 5): BullMQ + 08-Agent
   bullmq: BullmqSummary;
   agent: AgentMetrics;
+  // BFL credit balance (header box — left of analytics)
+  bflCredits: BflCredits;
 }
 
 export interface LayerSummary {
@@ -128,6 +130,16 @@ export interface AgentMetrics {
   saves?: number;
   ctr?: number;
   totalRows?: number;
+  fetchedAt?: string;
+}
+
+// BFL credit balance — proxied from autoGenServer with 4s timeout + 60s cache.
+// `ok=true` betyder att BFL-credits är > 0 senaste kollen. Rutan i headern
+// blir grön när ok=true, röd vid ok=false. credits=null innebär "okänt".
+export interface BflCredits {
+  ok: boolean;
+  credits?: number | null;
+  error?: string;
   fetchedAt?: string;
 }
 
@@ -288,6 +300,7 @@ export async function collect(): Promise<DashboardData> {
     unsynced: await collectUnsynced(PROJECT_ROOT),
     bullmq: await collectBullmq(),
     agent: await collectAgent(),
+    bflCredits: await collectBflCredits(),
   };
 }
 
@@ -522,6 +535,44 @@ async function collectAgent(): Promise<AgentMetrics> {
   } catch (err) {
     const data: AgentMetrics = { ok: false, error: String((err as Error)?.message ?? err), fetchedAt: new Date().toISOString() };
     _agentCache = { data, ts: now };
+    return data;
+  }
+}
+
+// BFL credits — proxied from autoGenServer (port 7790). 60s in-process cache
+// så 15-min meta-refresh inte hamrar BFL API:t. autoGenServer cachar i sin tur
+// ingenting; anropet dit har 4s server-side timeout.
+let _bflCreditsCache: { data: BflCredits; ts: number } | null = null;
+async function collectBflCredits(): Promise<BflCredits> {
+  const now = Date.now();
+  if (_bflCreditsCache && now - _bflCreditsCache.ts < 60_000) return _bflCreditsCache.data;
+  const url = process.env.AUTOGEN_URL ?? 'http://localhost:7790/bfl-credits';
+  try {
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), 5000);
+    let res: Response;
+    try {
+      res = await fetch(url, { signal: controller.signal });
+    } finally {
+      clearTimeout(timer);
+    }
+    if (!res.ok) {
+      const data: BflCredits = { ok: false, error: `autoGenServer ${res.status}`, fetchedAt: new Date().toISOString() };
+      _bflCreditsCache = { data, ts: now };
+      return data;
+    }
+    const j = (await res.json()) as Partial<BflCredits>;
+    const data: BflCredits = {
+      ok: Boolean(j.ok),
+      credits: j.credits ?? null,
+      error: j.error,
+      fetchedAt: new Date().toISOString(),
+    };
+    _bflCreditsCache = { data, ts: now };
+    return data;
+  } catch (err) {
+    const data: BflCredits = { ok: false, error: String((err as Error)?.message ?? err), fetchedAt: new Date().toISOString() };
+    _bflCreditsCache = { data, ts: now };
     return data;
   }
 }

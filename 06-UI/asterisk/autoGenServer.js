@@ -639,6 +639,46 @@ const server = http.createServer(async (req, res) => {
     });
   }
 
+  // ── BFL credit balance — used by 09-ScrapingSupervisor dashboard
+  // (Box till vänster om analytics som visar om BFL-credits finns kvar.)
+  if (req.method === 'GET' && url.pathname === '/bfl-credits') {
+    try {
+      const controller = new AbortController();
+      const timer = setTimeout(() => controller.abort(), 4000);
+      let bflRes;
+      try {
+        bflRes = await fetch(`${BFL_BASE}/credits`, {
+          method: 'GET',
+          headers: { 'x-key': BFL_API_KEY, accept: 'application/json' },
+          signal: controller.signal,
+        });
+      } finally {
+        clearTimeout(timer);
+      }
+      if (!bflRes.ok) {
+        return sendJson(res, 200, {
+          ok: false,
+          error: `BFL /credits HTTP ${bflRes.status}`,
+          fetchedAt: new Date().toISOString(),
+        });
+      }
+      const j = await bflRes.json().catch(() => null);
+      const credits = j && typeof j.credits === 'number' ? j.credits : null;
+      return sendJson(res, 200, {
+        ok: credits !== null && credits > 0,
+        credits,
+        raw: j,
+        fetchedAt: new Date().toISOString(),
+      });
+    } catch (err) {
+      return sendJson(res, 200, {
+        ok: false,
+        error: err instanceof Error ? err.message : String(err),
+        fetchedAt: new Date().toISOString(),
+      });
+    }
+  }
+
   // ── Proxy: return first N published events (asterisk page can't reach
   // Supabase directly because RLS blocks anon SELECT on `events`).
   // Default N=3 (användaren bad om 3 den 2026-08-24).

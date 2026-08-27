@@ -1093,9 +1093,80 @@ ul.bars li {
   opacity: 0.9;
   margin-top: 2px;
 }
+
+/* BFL credits box — same height som analytics men 1/5 så bred.
+   Sitter till VÄNSTER om analytics-rutan. Färg styrt av state-klass:
+     .bfl-credits-box--ok       = grön  (credits > 0)
+     .bfl-credits-box--bad      = röd   (credits == 0 / senaste anropet misslyckades)
+     .bfl-credits-box--unknown  = grå   (default innan /api/status svarat) */
+.bfl-credits-box {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: #ffffff;
+  border: 1px solid transparent;
+  border-radius: 10px;
+  padding: 10px 10px;
+  font-family: inherit;
+  text-decoration: none;
+  cursor: pointer;
+  flex: 0 0 auto;
+  width: 110px; /* 1/5 av analytics-rutans bredd (≈190-220px) */
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+  transition: background 0.15s, border-color 0.15s, box-shadow 0.15s, transform 0.05s;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.bfl-credits-box--ok {
+  background: #16a34a; /* grön */
+  border-color: #15803d;
+  box-shadow: 0 2px 6px rgba(22, 163, 74, 0.3);
+}
+.bfl-credits-box--bad {
+  background: #dc2626; /* röd */
+  border-color: #b91c1c;
+  box-shadow: 0 2px 6px rgba(220, 38, 38, 0.3);
+}
+.bfl-credits-box--unknown {
+  background: #4b5563; /* grå tills /api/status svarat */
+  border-color: #374151;
+}
+.bfl-credits-box:hover {
+  filter: brightness(1.08);
+  text-decoration: none;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.35);
+}
+.bfl-credits-box:active { transform: translateY(1px); }
+.bfl-credits-box:focus-visible {
+  outline: 2px solid #fbbf24;
+  outline-offset: 2px;
+}
+.bfl-credits-box-icon {
+  font-size: 18px;
+  line-height: 1;
+}
+.bfl-credits-box-text {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  line-height: 1.2;
+  min-width: 0;
+}
+.bfl-credits-box-title {
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+.bfl-credits-box-sub {
+  font-size: 10px;
+  opacity: 0.92;
+  margin-top: 1px;
+}
 @media (max-width: 720px) {
   .header-row { flex-direction: column; align-items: stretch; }
-  .analytics-box { align-self: flex-start; }
+  .analytics-box,
+  .bfl-credits-box { align-self: flex-start; }
 }
 
 .review-modal[hidden] { display: none; }
