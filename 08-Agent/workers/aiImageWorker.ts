@@ -26,6 +26,7 @@ import 'dotenv/config';
 import { Worker, Queue, type Job } from 'bullmq';
 import IORedis from 'ioredis';
 import { createClient } from '@supabase/supabase-js';
+import { appendSkipLog } from '../utils/skipLog';
 
 // ── Env ─────────────────────────────────────────────────────────────────────
 
@@ -293,9 +294,26 @@ async function processJob(job: Job<AiImageJob>): Promise<void> {
   // Hoppa över om eventet redan är AI-genererat (race med annan worker)
   const { data: statusCheck } = await supabase
     .from('events')
-    .select('image_ai_generated, image_ai_optout, image_generation_status')
+    .select('image_ai_generated, image_ai_optout, image_generation_status, start_time, source')
     .eq('id', eventId)
     .single();
+
+  // Future-only guard (2026-08-27): UI/dashboard/agent-feed filtrerar bort
+  // events där start_time <= now(). Att generera AI-bild för past events
+  // är waste — bilden syns aldrig. Matchar dashboardens `totalFutureEvents`-
+  // query (`events_public + start_time > now()`) exakt.
+  // Return (inte throw) → BullMQ räknas som klar, ingen retry.
+  if (statusCheck?.start_time && new Date(statusCheck.start_time) <= new Date()) {
+    console.log(`[ai-image-worker] job=${job.id} event=${eventId} is in the past (${statusCheck.start_time}), skipping AI generation`);
+    appendSkipLog('worker', {
+      event_id: eventId,
+      source: statusCheck.source ?? null,
+      start_time: statusCheck.start_time,
+      skip_reason: 'past',
+    });
+    return;
+  }
+
   if (statusCheck?.image_ai_generated === true) {
     console.log(`[ai-image-worker] job=${job.id} event=${eventId} already AI-generated, skipping`);
     return;

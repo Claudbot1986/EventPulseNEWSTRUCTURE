@@ -6,6 +6,7 @@ import type { RawEventInput, NormalizedEvent } from '@eventpulse/shared';
 import { searchSyncQueue } from '../03-Queue/queue';
 import { computeConfidenceV1 } from './confidence_v1';
 import { aiImageQueue, startAiImageWorker } from '../08-Agent/workers/aiImageWorker';
+import { appendSkipLog } from '../08-Agent/utils/skipLog';
 
 // Starta AI-bild-worker i samma process (no-op om AI_IMAGE_PIPELINE_ENABLED=0).
 startAiImageWorker();
@@ -454,12 +455,32 @@ export async function processRawEvent(job: Job<RawEventInput>): Promise<void> {
   // Skippa om AI-pipelinen är avstängd (AI_IMAGE_PIPELINE_ENABLED=0) — då
   // förblir image_url NULL och UI visar fallback-placeholder.
   if ((process.env.AI_IMAGE_PIPELINE_ENABLED ?? '1') !== '0') {
-    await aiImageQueue.add(
-      'generate',
-      { event_id, enqueued_at: new Date().toISOString() },
-      { jobId: `ai-img-${event_id}` }, // dedup-id så vi inte köar samma event flera gånger
-    );
-    console.log(`[normalizer] 📸 AI-bild-jobb köat: ${event_id}`);
+    // Future-only guard (2026-08-27): matchar dashboardens totalFutureEvents
+    // och agent-feeden. Past events syns aldrig i Utforska → waste att
+    // generera. Events utan start_time saknar data för att avgöra — skippa
+    // säkert + logga för data-quality-observability.
+    const startTime = raw.start_time ?? (raw as { startTime?: string | null }).startTime ?? null;
+    const isFuture = startTime !== null && new Date(startTime) > new Date();
+    if (isFuture) {
+      await aiImageQueue.add(
+        'generate',
+        { event_id, enqueued_at: new Date().toISOString() },
+        { jobId: `ai-img-${event_id}` }, // dedup-id så vi inte köar samma event flera gånger
+      );
+      console.log(`[normalizer] 📸 AI-bild-jobb köat: ${event_id} (start=${startTime})`);
+    } else {
+      const reason = startTime ? 'past' : 'missing_start_time';
+      console.log(
+        `[normalizer] 📸⏭ event ${event_id} ${reason} ` +
+          `(start_time=${startTime ?? 'null'}), skipping AI queue`,
+      );
+      appendSkipLog('normalizer', {
+        event_id,
+        source: raw.source ?? null,
+        start_time: startTime,
+        skip_reason: reason,
+      });
+    }
   }
 }
 

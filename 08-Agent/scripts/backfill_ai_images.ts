@@ -43,6 +43,7 @@
 
 import 'dotenv/config';
 import { createClient } from '@supabase/supabase-js';
+import { appendSkipLog } from '../utils/skipLog';
 
 // ── CLI args ────────────────────────────────────────────────────────────────
 
@@ -54,6 +55,19 @@ interface CliArgs {
   failedOnly: boolean;
   noCreditsOnly: boolean;
   autogenUrl: string;
+  /**
+   * Inkludera past events (start_time <= now()) i urvalet. Default false —
+   * matchar dashboardens `totalFutureEvents`-query och agent-feeden exakt.
+   * För skarp körning krävs även `--confirm` (säkerhetsåtgärd mot
+   * oavsiktlig BFL-kredit-förbrukning).
+   */
+  includePast: boolean;
+  /**
+   * Säkerhetsgate: bekräfta att vi faktiskt vill göra BFL-anrop trots
+   * `--include-past`. Krävs vid skarp körning (ej --dry-run) om
+   * --include-past är satt.
+   */
+  confirm: boolean;
 }
 
 function parseArgs(argv: ReadonlyArray<string>): CliArgs {
@@ -65,6 +79,8 @@ function parseArgs(argv: ReadonlyArray<string>): CliArgs {
     failedOnly: false,
     noCreditsOnly: false,
     autogenUrl: process.env.AI_IMAGE_AUTOGEN_URL || 'http://localhost:7790',
+    includePast: false,
+    confirm: false,
   };
 
   for (let i = 2; i < argv.length; i++) {
@@ -101,6 +117,12 @@ function parseArgs(argv: ReadonlyArray<string>): CliArgs {
           i++;
         }
         break;
+      case '--include-past':
+        args.includePast = true;
+        break;
+      case '--confirm':
+        args.confirm = true;
+        break;
       case '--help':
       case '-h':
         printHelp();
@@ -119,6 +141,11 @@ function printHelp(): void {
   console.log(`
 backfill_ai_images — ensure all published events have AI-generated images.
 
+Default (2026-08-27+): only process events with start_time > now()
+(matches dashboard's totalFutureEvents and agent feed cutoff).
+Past events and events without start_time are skipped and logged to
+runtime/ingestion/ai-image-skip/backfill/YYYY-MM-DD.ndjson.
+
 Usage:
   npx tsx 08-Agent/scripts/backfill_ai_images.ts [flags]
 
@@ -132,6 +159,11 @@ Flags:
   --no-credits-only     Only process events with status='no_credits'
                         (use after manual BFL recharge)
   --autogen-url URL     Override AI_IMAGE_AUTOGEN_URL
+  --include-past        Include past events (start_time <= now()).
+                        REQUIRES --confirm for non-dry-run. Past-skips
+                        are still logged for audit.
+  --confirm             Required with --include-past for actual BFL calls.
+                        Safety gate against accidental credit burn.
   -h, --help            Show this help
 
 Env (read from .env):
@@ -162,6 +194,8 @@ interface EventRow {
   image_url: string | null;
   image_ai_generated: boolean | null;
   image_generation_status: string | null;
+  start_time: string | null;
+  source: string | null;
 }
 
 function venueNameOf(ev: EventRow): string {
@@ -193,7 +227,7 @@ async function fetchCandidates(args: CliArgs): Promise<EventRow[]> {
     .select(
       'id, title_sv, title_en, venues(name), category_slug, ' +
         'description_sv, description_en, image_url, image_ai_generated, ' +
-        'image_generation_status',
+        'image_generation_status, start_time, source',
     )
     .eq('status', 'published')
     .order('created_at', { ascending: true });
@@ -205,6 +239,14 @@ async function fetchCandidates(args: CliArgs): Promise<EventRow[]> {
   } else if (!args.force) {
     // Default: bara events som INTE redan är AI-genererade
     q = q.or('image_ai_generated.is.null,image_ai_generated.eq.false');
+  }
+
+  // Future-only default (2026-08-27): matchar dashboardens totalFutureEvents
+  // och agent-feeden exakt. Past events syns aldrig i Utforska — waste att
+  // generera. `--include-past` hoppar över detta filter (audit-loggning
+  // sker ändå, se logPastInclusion()).
+  if (!args.includePast) {
+    q = q.gt('start_time', new Date().toISOString());
   }
 
   if (args.limit !== null) {
@@ -301,9 +343,22 @@ async function main(): Promise<void> {
   console.log(
     `[backfill] flags: dry-run=${args.dryRun} limit=${args.limit ?? 'none'} ` +
       `force=${args.force} failed-only=${args.failedOnly} ` +
-      `no-credits-only=${args.noCreditsOnly}`,
+      `no-credits-only=${args.noCreditsOnly} include-past=${args.includePast} ` +
+      `confirm=${args.confirm}`,
   );
   console.log(`[backfill] autoGen URL: ${args.autogenUrl}`);
+
+  // ── Säkerhetsgate: --include-past kräver --confirm vid skarp körning ──
+  // Past events syns aldrig i Utforska → waste att bränna BFL-kredit på dem.
+  // --dry-run tillåts alltid (för inspektion).
+  if (args.includePast && !args.dryRun && !args.confirm) {
+    console.error(
+      `[backfill] ERROR: --include-past requires --confirm to actually run BFL calls.\n` +
+        `         Pass --confirm to acknowledge, or use --dry-run to inspect without cost.\n` +
+        `         Refusing to start to protect BFL credits.`,
+    );
+    process.exit(2);
+  }
 
   console.log('[backfill] fetching candidates…');
   const candidates = await fetchCandidates(args);
@@ -315,6 +370,44 @@ async function main(): Promise<void> {
     `[backfill] dedup → ${groups.length} unika grupper ` +
       `(av ${totalEvents} events efter dedup-kollaps)`,
   );
+
+  // ── Audit-loggning av medveten past-inklusion (--include-past) ──
+  // Loggar VARJE event som inkluderas trots att start_time <= now().
+  // Ger audit-spår utan att påverka körningen.
+  if (args.includePast) {
+    const now = Date.now();
+    let pastCount = 0;
+    let futureCount = 0;
+    let missingStartCount = 0;
+    for (const ev of candidates) {
+      if (!ev.start_time) {
+        missingStartCount++;
+        appendSkipLog('backfill', {
+          event_id: ev.id,
+          source: ev.source ?? null,
+          start_time: null,
+          skip_reason: 'missing_start_time',
+          dry_run: args.dryRun,
+        });
+      } else if (new Date(ev.start_time).getTime() <= now) {
+        pastCount++;
+        appendSkipLog('backfill', {
+          event_id: ev.id,
+          source: ev.source ?? null,
+          start_time: ev.start_time,
+          skip_reason: 'included_past',
+          dry_run: args.dryRun,
+        });
+      } else {
+        futureCount++;
+      }
+    }
+    console.log(
+      `[backfill] --include-past audit: ${pastCount} past + ` +
+        `${missingStartCount} missing-start_time included (logged), ` +
+        `${futureCount} future kept`,
+    );
+  }
 
   if (args.limit !== null) {
     // Begränsa antal grupper (inte events) till limit
@@ -334,9 +427,12 @@ async function main(): Promise<void> {
     for (const g of groups) {
       const venue = venueNameOf(g.representative);
       const status = g.representative.image_generation_status ?? 'null';
+      const startTime = g.representative.start_time ?? 'null';
+      const isFuture = startTime !== 'null' && new Date(startTime) > new Date();
+      const futureMarker = isFuture ? '✓' : (startTime === 'null' ? '?' : '⚠past');
       console.log(
-        `  - key="${g.key}" ids=${g.ids.length} status=${status} ` +
-          `venue="${venue}"`,
+        `  - ${futureMarker} key="${g.key}" ids=${g.ids.length} status=${status} ` +
+          `start=${startTime} venue="${venue}"`,
       );
       totalEstimatedCost += 0.025; // BFL flux-dev ~$0.025/bild per dedup-grupp
     }
@@ -346,6 +442,10 @@ async function main(): Promise<void> {
     console.log(`  events:        ${groups.reduce((n, g) => n + g.ids.length, 0)}`);
     console.log(`  estimated USD: $${totalEstimatedCost.toFixed(3)} (1 BFL-call per grupp)`);
     console.log(`  to run for real: remove --dry-run`);
+    if (args.includePast) {
+      console.log(`  ⚠ --include-past is set: ${groups.length} groups will trigger BFL calls`);
+      console.log(`    You MUST also pass --confirm for non-dry-run, otherwise script exits.`);
+    }
     return;
   }
 
