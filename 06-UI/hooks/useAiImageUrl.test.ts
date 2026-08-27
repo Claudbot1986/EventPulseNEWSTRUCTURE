@@ -2,17 +2,17 @@
  * 06-UI/hooks/useAiImageUrl.test.ts
  *
  * Tests for the AI-image rollout decision tree. Verifies the hook:
- *   - Falls back to empty box when kill switch is OFF
- *   - Returns 'original' for explicit opt-out events
+ *   - Returns 'original' for explicit per-source opt-out events
  *   - Returns 'pre-baked' when worker has persisted AI URL
  *   - Returns 'lazy' when worker flagged done but no URL yet
  *   - Returns 'library' when server assigned library-fallback URL (2026-08-27)
  *   - Returns 'empty' for pending/no_credits status (NO original fallback)
+ *   - Never falls back to original URL when not opted out (copyright-safe)
  *
  * Run:  npx vitest run 06-UI/hooks/useAiImageUrl.test.ts
  */
 
-import { describe, test, expect, beforeEach, vi } from 'vitest';
+import { describe, test, expect, vi } from 'vitest';
 
 // Mock agentClient so we can assert the lazy-path URL building
 vi.mock('../services/agentClient', () => ({
@@ -37,31 +37,6 @@ interface TestEvent {
 }
 
 describe('useAiImageUrl', () => {
-  beforeEach(() => {
-    // Default: kill switch ON
-    process.env.EXPO_PUBLIC_AI_IMAGE_EXPLORE_ENABLED = 'true';
-  });
-
-  test('returns empty box when kill switch is OFF', () => {
-    process.env.EXPO_PUBLIC_AI_IMAGE_EXPLORE_ENABLED = 'false';
-    const result = useAiImageUrl({
-      id: 'abc',
-      image_ai_generated: true,
-      imageUrl: 'https://x.com/img.png',
-    });
-    expect(result).toEqual({ uri: null, source: 'empty', stampVisible: false });
-  });
-
-  test('returns empty box when kill switch is unset', () => {
-    delete process.env.EXPO_PUBLIC_AI_IMAGE_EXPLORE_ENABLED;
-    const result = useAiImageUrl({
-      id: 'abc',
-      image_ai_generated: true,
-      imageUrl: 'https://x.com/img.png',
-    });
-    expect(result).toEqual({ uri: null, source: 'empty', stampVisible: false });
-  });
-
   test('returns original for explicit opt-out event', () => {
     const result = useAiImageUrl({
       id: 'abc',
@@ -158,9 +133,10 @@ describe('useAiImageUrl', () => {
     expect(result).toEqual({ uri: null, source: 'empty', stampVisible: false });
   });
 
-  test('NEVER falls back to original URL when kill switch is ON and not opted out', () => {
+  test('NEVER falls back to original URL when not opted out', () => {
     // Even if imageUrl points at a copyrighted upstream URL, the hook
     // refuses to surface it unless image_ai_optout is explicitly true.
+    // (Per-source opt-in by authorized adapters, never a global switch.)
     const result = useAiImageUrl({
       id: 'no-copyright-leak',
       image_ai_generated: false,
