@@ -255,7 +255,9 @@ const styles = StyleSheet.create({
   cardImage: {
     width: '100%',
     height: 280,
-    backgroundColor: TOKENS.color.surfaceSoft,
+    // Match app canvas (#000) — inga synliga grå marginaler under load
+    // eller om bilden letterboxar.
+    backgroundColor: TOKENS.color.appBg,
   },
   // Användaren bad 2026-08-25 om "no credits BFL - recharge"-text vid BFL-
   // kredit slut. Samma placeholder-yta som HemStarScreen.

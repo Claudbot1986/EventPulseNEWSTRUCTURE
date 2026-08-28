@@ -1479,11 +1479,13 @@ const styles = StyleSheet.create({
   eventImage: {
     width: '100%',
     height: 280,
-    backgroundColor: TOKENS.color.surfaceSoft,
+    // appBg (svart) så att contain-letterbox runt AI-bilderna inte syns som
+    // en grå "ram" — UI-DESIGN.md = pure-black canvas, transparent cards.
+    backgroundColor: TOKENS.color.appBg,
   },
   eventImageFallback: {
     height: 230,
-    backgroundColor: TOKENS.color.surfaceSoft,
+    backgroundColor: TOKENS.color.appBg,
     alignItems: 'center',
     justifyContent: 'center',
     borderBottomWidth: 1,
@@ -1748,11 +1750,13 @@ const styles = StyleSheet.create({
   detailsImage: {
     width: '100%',
     height: 240,
-    backgroundColor: TOKENS.color.surfaceSoft,
+    // appBg (svart) — ingen grå letterbox runt AI-stämpeln när contain
+    // behöver användas för att inte crop:a SE-hörn-stämpeln.
+    backgroundColor: TOKENS.color.appBg,
   },
   detailsImageFallback: {
     height: 210,
-    backgroundColor: TOKENS.color.surfaceSoft,
+    backgroundColor: TOKENS.color.appBg,
     alignItems: 'center',
     justifyContent: 'center',
     borderBottomWidth: 1,

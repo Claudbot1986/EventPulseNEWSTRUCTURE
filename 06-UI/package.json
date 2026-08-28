@@ -1,7 +1,7 @@
 {
   "name": "eventpulse",
   "version": "1.0.0",
-  "main": "./asterisk/index.js",
+  "main": "./index.js",
   "type": "module",
   "scripts": {
     "start": "expo start",

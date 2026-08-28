@@ -20,22 +20,16 @@ import ProfileScreen from './screens/ProfileScreen';
 import OnboardingScreen from './screens/OnboardingScreen';
 import NetworkBanner from './components/NetworkBanner';
 import App from './App';
-import HemStarScreen from './screens/HemStarScreen';
 import { getItem, setItem, PENDING_AGENT_MESSAGE_KEY } from './services/storage';
 import { NetworkProvider } from './services/networkContext';
 
-const TABS = ['home', 'explore', 'notifications', 'profile', 'hem-star'];
+const TABS = ['home', 'explore', 'notifications', 'profile'];
 const ONBOARDING_COMPLETE_KEY = 'eventpulse.onboarding_complete';
 const STORAGE_BUDGET_MS = 800;
 export { PENDING_AGENT_MESSAGE_KEY };
 
 export default function AppShell() {
-  // Land on hem-star: App.js's inline HomeScreen has a pre-existing TDZ bug
-  // (loadEventsRef.current = loadEvents BEFORE const loadEvents — introduced
-  // in commit a4fe1f4). Rendering <App /> via the 'explore' tab crashes
-  // immediately on landing, blanking the whole tree (including BottomTabBar).
-  // Landing on hem-star sidesteps that without touching App.js / Utforska.
-  const [activeTab, setActiveTab] = useState('hem-star');
+  const [activeTab, setActiveTab] = useState('home');
   const [onboardingState, setOnboardingState] = useState('loading'); // 'loading' | 'needs' | 'done'
 
   useEffect(() => {
@@ -96,7 +90,6 @@ export default function AppShell() {
       <>
         <NetworkBanner />
         {activeTab === 'explore' && <App />}
-        {activeTab === 'hem-star' && <HemStarScreen />}
         {activeTab === 'home' && <HomeScreen onChipPress={handleChipPress} />}
         {activeTab === 'notifications' && <NotificationsScreen />}
         {activeTab === 'profile' && <ProfileScreen />}

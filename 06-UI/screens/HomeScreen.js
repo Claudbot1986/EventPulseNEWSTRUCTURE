@@ -1186,12 +1186,14 @@ const styles = StyleSheet.create({
   cardImage: {
     width: CARD_WIDTH,
     height: 130,
-    backgroundColor: TOKENS.color.surface,
+    // Match app canvas (#000) så att ingen grå "marginal" syns runt bilden
+    // medan den laddas eller om resizeMode letterboxar i något edge-fall.
+    backgroundColor: TOKENS.color.appBg,
   },
   cardImageFallback: {
     width: CARD_WIDTH,
     height: 130,
-    backgroundColor: TOKENS.color.surface,
+    backgroundColor: TOKENS.color.appBg,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -1431,7 +1433,9 @@ const styles = StyleSheet.create({
   },
   liveCard: {
     width: 240,
-    backgroundColor: TOKENS.color.surface,
+    // Transparent så live-kortets bakgrund inte skapar en synlig grå "ram"
+    // runt bilden (UI-DESIGN.md = transparent cards på pure-black canvas).
+    backgroundColor: 'transparent',
     borderWidth: 1,
     borderColor: TOKENS.color.border,
     borderLeftWidth: 3,

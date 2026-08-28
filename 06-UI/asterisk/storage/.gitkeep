@@ -1,3 +1,0 @@
-# Reserved for runtime-generated artifacts.
-# savedImages.json is written by services/storage.js to the app's
-# documentDirectory at runtime (NOT to this folder in the bundle).
