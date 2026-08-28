@@ -10,22 +10,15 @@
 
 import * as fs from "fs";
 import * as path from "path";
+import { findMissionBySession } from "./mission-resolver";
 
 const STRICT_MODES = new Set(["architectural_review", "lead_plus_specialists"]);
 
-function readLatestMission(repoRoot: string): any | null {
-  const dir = path.join(repoRoot, ".claude", "eventpulse", "missions");
-  if (!fs.existsSync(dir)) return null;
-  const files = fs
-    .readdirSync(dir)
-    .filter((f) => f.endsWith(".yaml"))
-    .map((f) => ({ f, m: fs.statSync(path.join(dir, f)).mtimeMs }))
-    .sort((a, b) => b.m - a.m);
-  if (files.length === 0) return null;
-  return {
-    id: files[0].f.replace(/\.yaml$/, ""),
-    text: fs.readFileSync(path.join(dir, files[0].f), "utf8"),
-  };
+function missionForSession(repoRoot: string, sessionId: string | null | undefined): { id: string; text: string } | null {
+  // Phase L-A: explicit session/mission binding.
+  const ref = findMissionBySession(repoRoot, sessionId);
+  if (!ref) return null;
+  return { id: ref.mission_id, text: ref.text };
 }
 
 function grepField(text: string, key: string): string | null {
@@ -56,9 +49,12 @@ async function main(): Promise<void> {
   }
 
   const cwd: string = payload.cwd || process.cwd();
-  const mission = readLatestMission(cwd);
+  const sessionId: string | undefined = typeof payload.session_id === "string" ? payload.session_id : undefined;
+  const mission = missionForSession(cwd, sessionId);
   if (!mission) {
-    process.stderr.write("[ep-confirm-stop] no mission; allowing stop.\n");
+    process.stderr.write(
+      `[ep-confirm-stop] no mission bound to session_id=${sessionId ?? "unknown"}; allowing stop (explicit binding required).\n`,
+    );
     process.exit(0);
   }
 

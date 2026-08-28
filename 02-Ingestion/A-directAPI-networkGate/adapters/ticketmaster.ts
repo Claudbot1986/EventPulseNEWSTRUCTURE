@@ -309,8 +309,8 @@ async function saveVenueConnections(events: any[]): Promise<void> {
   }
 }
 
-export async function scrapeTicketmaster(): Promise<string> {
-  console.log('[ticketmaster] Starting scrape...');
+export async function fetchTicketmaster(): Promise<string> {
+  console.log('[ticketmaster] Starting fetch (Discovery API, not HTML scrape)...');
 
   // Debug: log masked API key presence
   const url = `${BASE_URL}/events.json`;
@@ -373,7 +373,11 @@ export async function scrapeTicketmaster(): Promise<string> {
       price_min_sek: ev.priceRanges?.[0]?.currency === 'SEK' ? Math.round(ev.priceRanges[0].min) : null,
       price_max_sek: ev.priceRanges?.[0]?.currency === 'SEK' ? Math.round(ev.priceRanges[0].max) : null,
       ticket_url: ev.url ?? null,
-      image_url: ev.images?.[0]?.url ?? null,
+      // ── AI-bilder är obligatoriskt. Ticketmaster-bilder är källbilder
+      // (upphovsrättsligt osäkra) → vi sätter NULL. AI-workern genererar
+      // den slutliga bilden och skriver image_url efter EU AI Act Art. 50-
+      // stämpling.
+      image_url: null,
       source: 'ticketmaster',
       source_id: ev.id,
       detected_language: null,
@@ -487,7 +491,7 @@ async function saveVenueCandidates(events: any[]): Promise<string> {
 import { fileURLToPath } from 'url';
 const __filename = fileURLToPath(import.meta.url);
 if (process.argv[1] === __filename) {
-  scrapeTicketmaster()
+  fetchTicketmaster()
     .then(r => { console.log('[ticketmaster] Exit:', r); process.exit(0); })
     .catch(e => { console.error('[ticketmaster] Fatal:', e); process.exit(1); });
 }

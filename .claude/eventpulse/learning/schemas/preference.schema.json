@@ -1,0 +1,16 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://eventpulse.local/schemas/preference.schema.json",
+  "title": "EventPulse Preference Pair",
+  "description": "Implicit preference-par skapad från korrektion (chosen vs rejected).",
+  "type": "object",
+  "additionalProperties": true,
+  "required": ["preference_id", "correction_id", "chosen_ref", "rejected_ref", "at"],
+  "properties": {
+    "preference_id": { "type": "string" },
+    "correction_id": { "type": "string" },
+    "chosen_ref": { "type": "string", "description": "Path eller ID för preferred output." },
+    "rejected_ref": { "type": "string", "description": "Path eller ID för det som korrigerades bort." },
+    "at": { "type": "string", "format": "date-time" }
+  }
+}

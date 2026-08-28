@@ -9,6 +9,7 @@
 
 import * as fs from "fs";
 import * as path from "path";
+import { findMissionBySession } from "./mission-resolver";
 
 const HANDOFFS_DIR = path.join(process.cwd(), ".claude", "eventpulse", "handoffs");
 
@@ -16,16 +17,10 @@ function ensureDir(p: string): void {
   if (!fs.existsSync(p)) fs.mkdirSync(p, { recursive: true });
 }
 
-function readLatestMission(repoRoot: string): string | null {
-  const dir = path.join(repoRoot, ".claude", "eventpulse", "missions");
-  if (!fs.existsSync(dir)) return null;
-  const files = fs
-    .readdirSync(dir)
-    .filter((f) => f.endsWith(".yaml"))
-    .map((f) => ({ f, m: fs.statSync(path.join(dir, f)).mtimeMs }))
-    .sort((a, b) => b.m - a.m);
-  if (files.length === 0) return null;
-  return files[0].f.replace(/\.yaml$/, "");
+function missionForSession(repoRoot: string, sessionId: string | null | undefined): string | null {
+  // Phase L-A: explicit session/mission binding.
+  const ref = findMissionBySession(repoRoot, sessionId);
+  return ref?.mission_id ?? null;
 }
 
 function readState(repoRoot: string): any | null {
@@ -60,7 +55,11 @@ async function main(): Promise<void> {
   const sessionId: string = payload.session_id || "unknown";
   const cwd: string = payload.cwd || process.cwd();
 
-  const missionId = payload.mission_id || readLatestMission(cwd) || "no-mission";
+  // Phase L-A: explicit session binding. If payload.mission_id is provided
+  // and matches a known mission, allow; otherwise resolve by session.
+  const fromPayload = typeof payload.mission_id === "string" ? payload.mission_id : null;
+  const fromSession = missionForSession(cwd, sessionId);
+  const missionId = fromPayload ?? fromSession ?? "no-mission";
   const state = readState(cwd);
 
   const ts = new Date().toISOString();

@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!--
+  com.eventpulse.pre-render.plist — launchd job for the EventPulse pre-render cron.
+
+  Keeps 08-Agent/cron/pre_render_recommendations.ts alive across sleep, machine
+  restart, and tmux-session exit. Runs the cron in --loop mode (fires at 06:00
+  + 17:00 Stockholm time per node-cron's DEFAULT_CRON_EXPR).
+
+  T0060 / MVP-gap §77: the resulting cached_recommendations rows are read by
+  GET /agent/cached-recommendations so the HomeScreen "Förslag från din agent"
+  section renders zero-LLM-cost intent slots on cold-start.
+
+  Install with:
+    cp scripts/com.eventpulse.pre-render.plist ~/Library/LaunchAgents/
+    launchctl load ~/Library/LaunchAgents/com.eventpulse.pre-render.plist
+
+  Uninstall:
+    launchctl unload ~/Library/LaunchAgents/com.eventpulse.pre-render.plist
+    rm ~/Library/LaunchAgents/com.eventpulse.pre-render.plist
+-->
+<plist version="1.0">
+<dict>
+  <key>Label</key>
+  <string>com.eventpulse.pre-render</string>
+
+  <key>ProgramArguments</key>
+  <array>
+    <string>/bin/bash</string>
+    <string>/Volumes/2TB filer/NEWSTRUCTURE-COPY/scripts/start-pre-render.sh</string>
+  </array>
+
+  <key>WorkingDirectory</key>
+  <string>/Volumes/2TB filer/NEWSTRUCTURE-COPY</string>
+
+  <key>RunAtLoad</key>
+  <true/>
+
+  <!-- Restart on crash (ThrottleInterval=10 mirrors reminders/follow_drops plists). -->
+  <key>KeepAlive</key>
+  <dict>
+    <key>SuccessfulExit</key>
+    <false/>
+    <key>Crashed</key>
+    <true/>
+  </dict>
+
+  <key>ThrottleInterval</key>
+  <integer>10</integer>
+
+  <key>StandardOutPath</key>
+  <string>/tmp/com.eventpulse.pre-render.out.log</string>
+  <key>StandardErrorPath</key>
+  <string>/tmp/com.eventpulse.pre-render.err.log</string>
+</dict>
+</plist>

@@ -1,0 +1,54 @@
+mission_id: EP-2026-08-24-smoke-fi-189
+original_prompt: Improve recommendations for families.
+task_type: agent-ranking
+subsystems:
+  - agent_api
+  - event_graph
+complexity: normal
+risk: low
+execution_mode: single_agent
+roles:
+  - lead
+  - agent_ranking_engineer
+  - event_graph_engineer
+verification_profile: agent_ranking
+context:
+  tier0: [.claude/eventpulse/policy.md]
+  tier1: [docs/MASTERPLAN.md, docs/BACKLOG.md, .claude/rules/common/hooks.md, .claude/rules/common/agents.md]
+  tier2: [08-Agent/server.ts, 05-Supabase/schema/schema.md, 04-Normalizer/normalizer.ts]
+  tier3: [08-Agent/eval/golden-queries.stockholm.json, 04-Normalizer/venue-matching.ts]
+acceptance_criteria:
+  - '"search_events returns only events whose canonical_event_id exists in Supabase."'
+  - '"rank_events ranks by real features (recency, venue proximity, category match); never hallucinated scores."'
+  - '"grounding_eval passes (or, if script not yet authored, log ''grounding eval not yet implemented'' and require manual review)."'
+  - '"no_fabricated_events grep check: every event in agent responses has a real canonical_event_id; no UUID invented in the agent process."'
+constraints:
+  - '"`search_events` MUST return only events with real canonical_event_id from Supabase; no UUID invented in the agent process."'
+  - '"`rank_events` MUST rank by real features; never hallucinated scores."'
+  - '"`search_external_web` MUST be off by default in Phase 0."'
+  - '"record_feedback MUST persist through real Supabase writes for tests; prod writes require explicit human approval."'
+  - 'PRESERVE WORKING TREE: Working tree has 603 uncommitted change(s); preserve unrelated edits..'
+unknown_assumptions:
+  - User intent inferred from prompt keywords; please correct if wrong.
+escalation_conditions:
+  - 'If the task touches a file outside this mission''s scope → stop and escalate.'
+  - If a required gate fails → fix or escalate to ep-lead.
+required_gates:
+  - typecheck
+  - grounding_eval
+  - no_fabricated_events
+requires_user_approval: []
+classification_confidence: 0.79
+human_review_required: false
+planning_only: false
+user_overrides: []
+working_tree_fp: sha256-djb2:6cc73b52:dirty576
+repo_state:
+  branch: main
+  head_sha: fa7c7a8
+  dirty: true
+  changed_files_count: 603
+  preservation_warning: Working tree has 603 uncommitted change(s); preserve unrelated edits.
+  captured_at: 2026-08-24T20:23:49.434Z
+compiler_version: epc-1.1
+created_at: 2026-08-24T20:23:49.189Z

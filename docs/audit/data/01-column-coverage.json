@@ -1,0 +1,98 @@
+{
+  "image_url": {
+    "total": 11309,
+    "notNull": 9680,
+    "nulls": 1629,
+    "pctNotNull": 85.6
+  },
+  "title_en": {
+    "total": 11309,
+    "notNull": 11309,
+    "nulls": 0,
+    "pctNotNull": 100
+  },
+  "title_sv": {
+    "total": 11309,
+    "notNull": 9609,
+    "nulls": 1700,
+    "pctNotNull": 84.97
+  },
+  "description_en": {
+    "total": 11309,
+    "notNull": 10477,
+    "nulls": 832,
+    "pctNotNull": 92.64
+  },
+  "description_sv": {
+    "total": 11309,
+    "notNull": 5112,
+    "nulls": 6197,
+    "pctNotNull": 45.2
+  },
+  "source": {
+    "total": 11309,
+    "notNull": 11093,
+    "nulls": 216,
+    "pctNotNull": 98.09
+  },
+  "source_id": {
+    "total": 11309,
+    "notNull": 10223,
+    "nulls": 1086,
+    "pctNotNull": 90.4
+  },
+  "ticket_url": {
+    "total": 11309,
+    "notNull": 11222,
+    "nulls": 87,
+    "pctNotNull": 99.23
+  },
+  "organizer_id": {
+    "total": 11309,
+    "notNull": 0,
+    "nulls": 11309,
+    "pctNotNull": 0
+  },
+  "start_time": {
+    "total": 11309,
+    "notNull": 11309,
+    "nulls": 0,
+    "pctNotNull": 100
+  },
+  "end_time": {
+    "total": 11309,
+    "notNull": 4058,
+    "nulls": 7251,
+    "pctNotNull": 35.88
+  },
+  "venue_id": {
+    "total": 11309,
+    "notNull": 10579,
+    "nulls": 730,
+    "pctNotNull": 93.54
+  },
+  "is_free": {
+    "total": 11309,
+    "notNull": 11309,
+    "nulls": 0,
+    "pctNotNull": 100
+  },
+  "price_min_sek": {
+    "total": 11309,
+    "notNull": 535,
+    "nulls": 10774,
+    "pctNotNull": 4.73
+  },
+  "price_max_sek": {
+    "total": 11309,
+    "notNull": 285,
+    "nulls": 11024,
+    "pctNotNull": 2.52
+  },
+  "confidence_score": {
+    "total": 11309,
+    "notNull": 11246,
+    "nulls": 63,
+    "pctNotNull": 99.44
+  }
+}

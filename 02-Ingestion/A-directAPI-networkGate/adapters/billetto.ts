@@ -51,7 +51,9 @@ export async function scrapeBilletto(): Promise<string> {
       price_min_sek: ev.price_from ?? null,
       price_max_sek: ev.price_to ?? null,
       ticket_url: ev.url ?? ev.link,
-      image_url: ev.image ?? ev.cover_image ?? null,
+      // ── AI-bilder är obligatoriskt. Billetto-bilder är källbilder
+      // (upphovsrättsligt osäkra) → vi sätter NULL. AI-workern genererar.
+      image_url: null,
       source: 'billetto',
       source_id: String(ev.id),
       detected_language: ev.locale?.startsWith('sv') ? 'sv' : 'en',

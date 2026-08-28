@@ -39,7 +39,7 @@ export interface SourceTruth {
   city?: string;
   discoveredAt: string;
   discoveredBy: 'manual' | 'discovery' | 'venue_graph' | '100testcandidates' | 'active' | 'source_import';
-  preferredPath: 'jsonld' | 'html' | 'network' | 'render' | 'api' | 'unknown';
+  preferredPath: 'jsonld' | 'html' | 'network' | 'render' | 'api' | 'rss' | 'unknown';
   // Spårbarhet för path-beslut
   preferredPathReason?: string;       // Varför detta path valdes
   systemVersionAtDecision?: string;  // Version av systemet när path beslutades
@@ -368,7 +368,7 @@ export function updateSourceStatus(
   result: {
     success: boolean;
     eventsFound: number;
-    pathUsed?: 'jsonld' | 'html' | 'network' | 'render';
+    pathUsed?: 'jsonld' | 'html' | 'network' | 'render' | 'd-ai-adapter' | 'render-gate' | 'api';
     ingestionStage?: 'pending' | 'A' | 'B' | 'C' | 'D' | 'completed' | 'failed';
     error?: string;
     // Routingminne

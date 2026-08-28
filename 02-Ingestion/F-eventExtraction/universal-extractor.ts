@@ -312,7 +312,10 @@ function makeEvent(data: Record<string, unknown>, method: string, source: string
       isFree: isFree || undefined,
       priceMin: parsePrice(price),
       priceMax: data.priceMax ? parsePrice(norm(data.priceMax)) : undefined,
-      imageUrl: image || undefined,
+      // ── AI-bilder är obligatoriskt → vi fångar INTE scrape-original.
+      // toRawEventInput() skickar image_url=null vidare till normalizer,
+      // som köar AI-generering. Detta undviker onödig bildfångst + filter.
+      imageUrl: undefined,
       status,
       source,
       sourceUrl: baseUrl,
@@ -891,7 +894,8 @@ function extractHtmlHeuristics($: cheerio.CheerioAPI, source: string, baseUrl: s
           description: desc || undefined,
           url: eventUrl || undefined, ticketUrl: ticketUrl || undefined,
           category, isFree: isFree || undefined, priceMin,
-          imageUrl: image || undefined,
+          // AI-bilder är obligatoriskt → skippa scrape-bild helt.
+          imageUrl: undefined,
           source, sourceUrl: baseUrl,
           confidence: {
             score: 0.72,
@@ -1010,7 +1014,8 @@ function extractTimeAnchors($: cheerio.CheerioAPI, source: string, baseUrl: stri
         description: desc || undefined,
         url: eventUrl || undefined,
         isFree: isFree || undefined, priceMin,
-        imageUrl: image || undefined,
+        // AI-bilder är obligatoriskt → skippa scrape-bild helt.
+        imageUrl: undefined,
         category, source, sourceUrl: eventUrl || baseUrl,
         confidence: {
           score: 0.75,

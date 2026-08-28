@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!--
+  com.eventpulse.reminders.plist — launchd job for the EventPulse reminders cron.
+
+  Keeps the reminder-generator running across sleep, machine restart, and
+  tmux-session exit. Runs 08-Agent/cron/reminders.ts every ~15 minutes
+  to materialize notifications for saved events starting within 2 hours.
+
+  Install with:
+    cp scripts/com.eventpulse.reminders.plist ~/Library/LaunchAgents/
+    launchctl load ~/Library/LaunchAgents/com.eventpulse.reminders.plist
+
+  Uninstall with:
+    launchctl unload ~/Library/LaunchAgents/com.eventpulse.reminders.plist
+    rm ~/Library/LaunchAgents/com.eventpulse.reminders.plist
+-->
+<plist version="1.0">
+<dict>
+  <key>Label</key>
+  <string>com.eventpulse.reminders</string>
+
+  <key>ProgramArguments</key>
+  <array>
+    <string>/bin/bash</string>
+    <string>/Volumes/2TB filer/NEWSTRUCTURE-COPY/scripts/start-reminders.sh</string>
+  </array>
+
+  <key>WorkingDirectory</key>
+  <string>/Volumes/2TB filer/NEWSTRUCTURE-COPY</string>
+
+  <key>RunAtLoad</key>
+  <true/>
+
+  <key>KeepAlive</key>
+  <dict>
+    <key>SuccessfulExit</key>
+    <false/>
+    <key>Crashed</key>
+    <true/>
+  </dict>
+
+  <key>ThrottleInterval</key>
+  <integer>60</integer>
+
+  <key>StandardOutPath</key>
+  <string>/Volumes/2TB filer/NEWSTRUCTURE-COPY/runtime/reminders/launchd.out.log</string>
+  <key>StandardErrorPath</key>
+  <string>/Volumes/2TB filer/NEWSTRUCTURE-COPY/runtime/reminders/launchd.err.log</string>
+
+  <key>EnvironmentVariables</key>
+  <dict>
+    <key>PROJECT_ROOT</key>
+    <string>/Volumes/2TB filer/NEWSTRUCTURE-COPY</string>
+    <key>PATH</key>
+    <string>/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:/Users/claudgashi/.local/bin</string>
+  </dict>
+</dict>
+</plist>

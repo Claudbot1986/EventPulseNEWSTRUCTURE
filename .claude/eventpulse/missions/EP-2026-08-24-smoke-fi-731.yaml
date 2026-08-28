@@ -1,0 +1,53 @@
+mission_id: EP-2026-08-24-smoke-fi-731
+original_prompt: Add personalized recommendations using Event Graph signals.
+task_type: event-graph
+subsystems:
+  - event_graph
+  - normalization
+complexity: normal
+risk: low
+execution_mode: single_agent
+roles:
+  - lead
+  - event_graph_engineer
+verification_profile: event_graph
+context:
+  tier0: [.claude/eventpulse/policy.md]
+  tier1: [docs/MASTERPLAN.md, docs/BACKLOG.md, .claude/rules/common/hooks.md, .claude/rules/common/agents.md]
+  tier2: [05-Supabase/schema/schema.md, 04-Normalizer/normalizer.ts]
+  tier3: [04-Normalizer/venue-matching.ts]
+acceptance_criteria:
+  - '"Migration (if authored) is BEGIN/COMMIT-bounded and dry-runnable."'
+  - '"schema_diff cleanly diffs the candidate migration vs 05-Supabase/schema/schema.md."'
+  - '"venue_graph_dry_run completes via `npm run venue-graph:dry-run`."'
+  - '"dedup_test passes via `npx vitest run 04-Normalizer 07-Discovery/src/venueGraph`."'
+constraints:
+  - '"Author-only on prod migrations; apply only against `supabase start` local instance; prod apply needs explicit human approval + human_review_required: true."'
+  - '"Do not modify docs/MASTERPLAN.md or docs/BACKLOG.md."'
+  - '"Venue-graph scoring weights require cross-site evidence (Generalization Protection Rule)."'
+  - 'PRESERVE WORKING TREE: Working tree has 603 uncommitted change(s); preserve unrelated edits..'
+unknown_assumptions:
+  - User intent inferred from prompt keywords; please correct if wrong.
+escalation_conditions:
+  - 'If the task touches a file outside this mission''s scope → stop and escalate.'
+  - If a required gate fails → fix or escalate to ep-lead.
+required_gates:
+  - typecheck
+  - schema_diff
+  - venue_graph_dry_run
+  - dedup_test
+requires_user_approval: []
+classification_confidence: 0.77
+human_review_required: false
+planning_only: false
+user_overrides: []
+working_tree_fp: sha256-djb2:6cc73b52:dirty576
+repo_state:
+  branch: main
+  head_sha: fa7c7a8
+  dirty: true
+  changed_files_count: 603
+  preservation_warning: Working tree has 603 uncommitted change(s); preserve unrelated edits.
+  captured_at: 2026-08-24T20:23:51.966Z
+compiler_version: epc-1.1
+created_at: 2026-08-24T20:23:51.731Z

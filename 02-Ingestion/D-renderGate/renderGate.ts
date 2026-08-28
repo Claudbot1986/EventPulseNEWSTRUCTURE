@@ -50,6 +50,10 @@ export async function renderPage(url: string, options: RenderOptions = {}): Prom
           premium_proxy: 'true',
           country_code: 'se',
           wait: '2500',
+          // ScrapingBee waits for the CSS selector to appear before returning.
+          // Critical for React SPAs (medborgarhuset, storkyrkan) where wait=2500
+          // alone is too short — returns before lazy-loaded event cards render.
+          ...(options.waitForSelector ? { wait_for: options.waitForSelector } : {}),
         },
         timeout,
         responseType: 'text',

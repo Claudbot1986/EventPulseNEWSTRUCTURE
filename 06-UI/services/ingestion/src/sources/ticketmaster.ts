@@ -310,8 +310,8 @@ async function saveVenueConnections(events: any[]): Promise<void> {
   }
 }
 
-export async function scrapeTicketmaster(): Promise<string> {
-  console.log('[ticketmaster] Starting scrape...');
+export async function fetchTicketmaster(): Promise<string> {
+  console.log('[ticketmaster] Starting fetch (Discovery API, not HTML scrape)...');
 
   // Debug: log masked API key presence
   const url = `${BASE_URL}/events.json`;

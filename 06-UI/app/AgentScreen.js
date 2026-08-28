@@ -10,13 +10,17 @@
  * - Loading/error/empty states are explicit (per UI rules).
  */
 
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import {
+  ActionSheetIOS,
   ActivityIndicator,
+  Alert,
   FlatList,
+  Image,
   KeyboardAvoidingView,
   Linking,
   Platform,
+  Share,
   StyleSheet,
   Text,
   TextInput,
@@ -24,7 +28,14 @@ import {
   View,
 } from 'react-native';
 
-import { chatWithAgent, recordEventInteraction } from '../services/agentClient';
+import {
+  chatWithAgent,
+  recordEventInteraction,
+  followEntity,
+  getFollowedEntities,
+  shareSession,
+} from '../services/agentClient';
+import { resolveReasons } from '../utils/rankReasonLabels';
 
 const SUGGESTIONS = [
   'Konsert ikväll',
@@ -46,7 +57,53 @@ function formatTime(iso) {
   });
 }
 
-function EventRow({ card, onInteraction }) {
+const REASONS_VISIBLE_DEFAULT = 3;
+
+/**
+ * Inline reason chips for one card. Per vault 40-UX-Research-Decisions:
+ *   - icon + short label, max 2-3 visible, "visa mer" if more.
+ *   - Never free text. Tap on a chip is a no-op (no hidden critical info).
+ *
+ * Resolved labels come from utils/rankReasonLabels — never inline strings.
+ */
+function ReasonChips({ reasons }) {
+  const [expanded, setExpanded] = useState(false);
+  // Phase 0 is sv-only; explicit 'sv' keeps the helper honest.
+  const resolved = resolveReasons(reasons, 'sv');
+  if (resolved.length === 0) return null;
+
+  const visible = expanded ? resolved : resolved.slice(0, REASONS_VISIBLE_DEFAULT);
+  const hidden = resolved.length - visible.length;
+
+  return (
+    <View style={styles.reasonRow}>
+      {visible.map((r) => (
+        <View key={r.key} style={styles.reasonChip} accessibilityLabel={r.fullLabel}>
+          <Text style={styles.reasonChipText}>{r.icon} {r.label}</Text>
+        </View>
+      ))}
+      {hidden > 0 ? (
+        <TouchableOpacity
+          onPress={() => setExpanded(true)}
+          style={styles.reasonMore}
+          accessibilityRole="button"
+        >
+          <Text style={styles.reasonMoreText}>+{hidden} visa mer</Text>
+        </TouchableOpacity>
+      ) : expanded && resolved.length > REASONS_VISIBLE_DEFAULT ? (
+        <TouchableOpacity
+          onPress={() => setExpanded(false)}
+          style={styles.reasonMore}
+          accessibilityRole="button"
+        >
+          <Text style={styles.reasonMoreText}>visa mindre</Text>
+        </TouchableOpacity>
+      ) : null}
+    </View>
+  );
+}
+
+function EventRow({ card, onInteraction, onVenueLongPress, isFollowingVenue }) {
   const onPress = () => {
     // Best-effort metrics: every tap = click; opening ticket_url = outbound.
     onInteraction?.(card.id, 'click');
@@ -56,17 +113,71 @@ function EventRow({ card, onInteraction }) {
         .catch(() => {});
     }
   };
+  // The venue line is its own TouchableOpacity so a long-press reaches
+  // onVenueLongPress WITHOUT triggering the card-level onPress (which would
+  // open ticket_url). `hitSlop` enlarges the tap area to the meta line so a
+  // long-press near the venue label is still registered.
+  const showFollowStar = isFollowingVenue && !!card.venue_id;
   return (
     <TouchableOpacity onPress={onPress} style={styles.card}>
-      <Text style={styles.cardTitle} numberOfLines={2}>
-        {card.title || 'Untitled'}
-      </Text>
-      <Text style={styles.cardMeta}>
-        {formatTime(card.start_time)} · {card.venue_name || card.city || 'Stockholm'}
-      </Text>
-      <Text style={styles.cardFooter}>
-        {card.is_free ? 'Gratis' : `${card.price_min_sek ?? '?'}–${card.price_max_sek ?? '?'} SEK`}
-      </Text>
+      {card.image_url ? (
+        <View style={styles.cardImageWrap}>
+          <Image
+            source={{ uri: card.image_url }}
+            style={styles.cardImage}
+            accessibilityLabel={card.title}
+          />
+          {card.image_license && card.image_license !== 'pressbild' && card.image_license !== 'unknown' ? (
+            <View style={styles.imageAttribution}>
+              <Text style={styles.imageAttributionText} numberOfLines={1}>
+                {card.image_attribution || (card.image_license === 'cc-by' ? 'CC BY' : 'Photo')}
+              </Text>
+            </View>
+          ) : null}
+        </View>
+      ) : (
+        // Användaren bad 2026-08-25 om "no credits BFL - recharge"-text
+        // när BFL-kredit är slut (status='no_credits').
+        <View style={[styles.cardImageWrap, styles.cardImagePlaceholder]}>
+          <Text style={styles.cardImagePlaceholderText}>
+            {card.image_generation_status === 'no_credits'
+              ? 'no credits BFL - recharge'
+              : '—'}
+          </Text>
+        </View>
+      )}
+      <View style={styles.cardBody}>
+        <Text style={styles.cardTitle} numberOfLines={2}>
+          {card.title || 'Untitled'}
+        </Text>
+        <View style={styles.cardMetaRow}>
+          <Text style={styles.cardMeta}>
+            {formatTime(card.start_time)} · {card.venue_name || card.city || 'Stockholm'}
+          </Text>
+          <TouchableOpacity
+            onPress={() => onVenueLongPress?.(card)}
+            onLongPress={() => onVenueLongPress?.(card)}
+            delayLongPress={350}
+            hitSlop={{ top: 6, bottom: 6, left: 6, right: 6 }}
+            accessibilityRole="button"
+            accessibilityLabel={
+              card.venue_id
+                ? (showFollowStar ? 'Sluta följ ' + card.venue_name : 'Följ ' + card.venue_name)
+                : card.venue_name || 'Plats'
+            }
+            disabled={!card.venue_id}
+            style={styles.followTap}
+          >
+            <Text style={styles.followStar}>
+              {showFollowStar ? '★' : (card.venue_id ? '☆' : '')}
+            </Text>
+          </TouchableOpacity>
+        </View>
+        <ReasonChips reasons={card.reasons} />
+        <Text style={styles.cardFooter}>
+          {card.is_free ? 'Gratis' : `${card.price_min_sek ?? '?'}–${card.price_max_sek ?? '?'} SEK`}
+        </Text>
+      </View>
     </TouchableOpacity>
   );
 }
@@ -82,6 +193,109 @@ export default function AgentScreen() {
   const [questions, setQuestions] = useState([]);
   const [sessionId, setSessionId] = useState(null);
   const [lastQuery, setLastQuery] = useState('');
+  // T0061 — share-session state. We let the user share the current agent
+  // session even when there are no visible cards (queries without events
+  // are still shareable as "what my agent has been looking at").
+  const [shareBusy, setShareBusy] = useState(false);
+  // T0050 — followed venues. Refreshed on mount and after every toggle so
+  // the long-press action sheet always knows whether to show "Följ" or
+  // "Sluta följ". Stored as a Set for O(1) lookup inside FlatList render.
+  const [followedVenueIds, setFollowedVenueIds] = useState(() => new Set());
+
+  const refreshFollowed = useCallback(async () => {
+    try {
+      const res = await getFollowedEntities({ timeoutMs: 4_000 });
+      if (res && res.ok) {
+        setFollowedVenueIds(new Set(res.venueIds));
+      }
+      // Silent on failure — long-press defaults to "Följ" until proven otherwise.
+    } catch (_err) {
+      // Never throw into the chat path.
+    }
+  }, []);
+
+  // Refresh on mount; cheap (single GET, cached on the server for 5 min).
+  useEffect(() => {
+    refreshFollowed();
+  }, [refreshFollowed]);
+
+  const onVenueLongPress = useCallback((card) => {
+    if (!card || !card.venue_id) return;
+    const venueId = card.venue_id;
+    const venueName = card.venue_name || 'Plats';
+    const isFollowing = followedVenueIds.has(venueId);
+    const followLabel = isFollowing ? 'Sluta följ' : 'Följ';
+    const confirmLabel = isFollowing ? 'Sluta följa' : 'Följ';
+    const cancelLabel = 'Avbryt';
+    const destructive = isFollowing;
+    // iOS: native ActionSheet (Phase 0 UI). Android: Alert fallback so the
+    // affordance is reachable on both platforms without a third-party lib.
+    if (Platform.OS === 'ios') {
+      ActionSheetIOS.showActionSheetWithOptions(
+        {
+          title: venueName,
+          message: isFollowing
+            ? 'Du följer den här platsen. Fler events från den prioriteras i sökresultaten.'
+            : 'Fler events från den här platsen prioriteras i sökresultaten.',
+          options: [cancelLabel, confirmLabel],
+          cancelButtonIndex: 0,
+          destructiveButtonIndex: destructive ? 1 : -1,
+        },
+        async (idx) => {
+          if (idx === 1) {
+            const action = isFollowing ? 'unfollow' : 'follow';
+            const res = await followEntity({
+              entityType: 'venue',
+              entityId: venueId,
+              action,
+            });
+            if (res && res.ok) {
+              setFollowedVenueIds((prev) => {
+                const next = new Set(prev);
+                if (action === 'follow') next.add(venueId);
+                else next.delete(venueId);
+                return next;
+              });
+            } else if (res && res.warning) {
+              Alert.alert('Kunde inte spara', res.warning);
+            }
+          }
+        }
+      );
+    } else {
+      Alert.alert(
+        venueName,
+        isFollowing
+          ? 'Du följer den här platsen. Vill du sluta följa?'
+          : 'Vill du följa den här platsen? Fler events prioriteras i sökresultaten.',
+        [
+          { text: cancelLabel, style: 'cancel' },
+          {
+            text: confirmLabel,
+            style: destructive ? 'destructive' : 'default',
+            onPress: async () => {
+              const action = isFollowing ? 'unfollow' : 'follow';
+              const res = await followEntity({
+                entityType: 'venue',
+                entityId: venueId,
+                action,
+              });
+              if (res && res.ok) {
+                setFollowedVenueIds((prev) => {
+                  const next = new Set(prev);
+                  if (action === 'follow') next.add(venueId);
+                  else next.delete(venueId);
+                  return next;
+                });
+              } else if (res && res.warning) {
+                Alert.alert('Kunde inte spara', res.warning);
+              }
+            },
+          },
+        ]
+      );
+    }
+  }, [followedVenueIds]);
 
   const send = useCallback(async (text) => {
     const m = (text ?? message).trim();
@@ -117,18 +331,71 @@ export default function AgentScreen() {
     }).catch(() => {});
   }, [sessionId, lastQuery]);
 
+  // T0061 — share-session: persists the most recent chat exchange as a
+  // `eventpulse://s/{hash}` URL, then opens the OS Share-sheet. Disabled
+  // until the user has actually sent at least one message (lastQuery
+  // non-empty) so we don't share empty placeholder sessions.
+  const handleShareSession = useCallback(async () => {
+    if (shareBusy) return;
+    const query = lastQuery.trim();
+    if (!query) return;
+    const eventIds = Array.isArray(cards) ? cards.map((c) => c.id).filter(Boolean) : [];
+    setShareBusy(true);
+    try {
+      const res = await shareSession({ query, sessionId, eventIds });
+      if (!res.ok) {
+        Alert.alert('Kunde inte skapa delningslänk', res.warning || 'okänt fel');
+        return;
+      }
+      try {
+        await Share.share({
+          message: `${query} — öppna i EventPulse: ${res.url}`,
+          url: res.url,
+          title: 'EventPulse',
+        });
+      } catch (err) {
+        const msg = err instanceof Error ? err.message : '';
+        if (!/user did not share|dismissedAction/i.test(msg)) {
+          Alert.alert('Kunde inte öppna delningsmenyn', msg || 'okänt fel');
+        }
+      }
+    } finally {
+      setShareBusy(false);
+    }
+  }, [shareBusy, lastQuery, sessionId, cards]);
+
   return (
     <KeyboardAvoidingView
       style={styles.root}
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
       keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 24}
     >
-      <Text style={styles.heading}>EventPulse Agent</Text>
+      <View style={styles.headerRow}>
+        <Text style={styles.heading}>EventPulse Agent</Text>
+        <TouchableOpacity
+          onPress={handleShareSession}
+          style={[styles.shareHeaderBtn, (!lastQuery.trim() || shareBusy) && styles.shareHeaderBtnDisabled]}
+          accessibilityRole="button"
+          accessibilityLabel="Dela session"
+          accessibilityState={{ disabled: !lastQuery.trim() || shareBusy, busy: shareBusy }}
+          disabled={!lastQuery.trim() || shareBusy}
+          activeOpacity={0.7}
+        >
+          <Text style={styles.shareHeaderBtnText}>{shareBusy ? '…' : 'Dela'}</Text>
+        </TouchableOpacity>
+      </View>
 
       <FlatList
         data={cards}
         keyExtractor={(item) => item.id}
-        renderItem={({ item }) => <EventRow card={item} onInteraction={onInteraction} />}
+        renderItem={({ item }) => (
+          <EventRow
+            card={item}
+            onInteraction={onInteraction}
+            onVenueLongPress={onVenueLongPress}
+            isFollowingVenue={!!item.venue_id && followedVenueIds.has(item.venue_id)}
+          />
+        )}
         ListHeaderComponent={
           <View>
             {reply ? <Text style={styles.reply}>{reply}</Text> : null}
@@ -197,6 +464,27 @@ export default function AgentScreen() {
 const styles = StyleSheet.create({
   root: { flex: 1, backgroundColor: '#000', padding: 12 },
   heading: { color: '#fff', fontSize: 20, fontWeight: '600', marginVertical: 8 },
+  // T0061 — header layout puts the share button at the end of the row
+  // (right on iOS, mirrored on Android via flexDirection:'row').
+  headerRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  shareHeaderBtn: {
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    borderRadius: 8,
+    backgroundColor: '#4f46e5',
+  },
+  shareHeaderBtnDisabled: {
+    opacity: 0.4,
+  },
+  shareHeaderBtnText: {
+    color: '#fff',
+    fontSize: 14,
+    fontWeight: '600',
+  },
   reply: { color: '#ddd', marginVertical: 8 },
   warning: { color: '#f5a524', fontSize: 12, marginVertical: 1 },
   warnings: { marginVertical: 6 },
@@ -204,13 +492,92 @@ const styles = StyleSheet.create({
   empty: { color: '#888', marginVertical: 12, textAlign: 'center' },
   card: {
     backgroundColor: '#1a1a1a',
-    padding: 12,
     borderRadius: 10,
     marginVertical: 6,
+    overflow: 'hidden',
+  },
+  cardImage: {
+    width: '100%',
+    height: 160,
+    borderTopLeftRadius: 10,
+    borderTopRightRadius: 10,
+    backgroundColor: '#252525',
+  },
+  cardImageWrap: {
+    position: 'relative',
+  },
+  // Användaren bad 2026-08-25 om "no credits BFL - recharge"-text när
+  // BFL-kredit är slut. Visas i samma yta där bilden skulle ha varit.
+  cardImagePlaceholder: {
+    height: 160,
+    backgroundColor: '#252525',
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderTopLeftRadius: 10,
+    borderTopRightRadius: 10,
+  },
+  cardImagePlaceholderText: {
+    color: '#FFB454',
+    fontSize: 12,
+    fontWeight: '600',
+    textAlign: 'center',
+    paddingHorizontal: 12,
+  },
+  imageAttribution: {
+    position: 'absolute',
+    bottom: 6,
+    right: 6,
+    backgroundColor: 'rgba(0,0,0,0.6)',
+    paddingHorizontal: 6,
+    paddingVertical: 3,
+    borderRadius: 4,
+    maxWidth: '70%',
+  },
+  imageAttributionText: {
+    color: '#fff',
+    fontSize: 10,
+    fontWeight: '500',
+  },
+  cardBody: {
+    padding: 12,
   },
   cardTitle: { color: '#fff', fontSize: 16, fontWeight: '500' },
   cardMeta:  { color: '#aaa', fontSize: 13, marginTop: 4 },
+  cardMetaRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 4,
+  },
+  followTap: {
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    marginLeft: 4,
+  },
+  followStar: {
+    color: '#f5a524',
+    fontSize: 14,
+  },
   cardFooter:{ color: '#888', fontSize: 12, marginTop: 4 },
+  reasonRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    marginTop: 6,
+  },
+  reasonChip: {
+    backgroundColor: '#252525',
+    borderRadius: 12,
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    marginRight: 4,
+    marginBottom: 4,
+  },
+  reasonChipText: { color: '#ccc', fontSize: 11 },
+  reasonMore: {
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    marginBottom: 4,
+  },
+  reasonMoreText: { color: '#7aa2f7', fontSize: 11 },
   suggestionBox: { marginVertical: 12, flexDirection: 'row', flexWrap: 'wrap' },
   questionBlock: { marginVertical: 8 },
   questionText:  { color: '#ccc', fontSize: 14, marginBottom: 6 },

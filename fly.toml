@@ -1,0 +1,80 @@
+# =============================================================================
+# EventPulse — Fly.io config for the agent API.
+#
+# Deploys only the 08-Agent Express server. The scraping supervisor, the
+# BullMQ workers, and any puppeteer-based render fallback run on developer
+# machines or a separate process — not here.
+#
+# What is configurable here:
+#   - app name / region
+#   - internal_port matches what 08-Agent/server.ts listens on (8787)
+#   - health check points at /agent/health (verified endpoint, see server.ts)
+#
+# Secrets (SUPABASE_*, ANTHROPIC_API_KEY) must NEVER be committed here.
+# Set them with: fly secrets set SUPABASE_URL=... SUPABASE_SERVICE_ROLE_KEY=...
+# =============================================================================
+
+app = "eventpulse-agent"
+primary_region = "arn"
+
+[build]
+  dockerfile = "Dockerfile"
+
+[env]
+  NODE_ENV = "production"
+  AGENT_PORT = "8787"
+  # Internal allowlist for the deployed app itself + any future admin.
+  # Add the Expo app's origin here once it is known. Multiple origins = comma list.
+  AGENT_ALLOWED_ORIGINS = "https://eventpulse-agent.fly.dev"
+
+# Run as a single small shared-cpu-1x instance. The agent is an Express server
+# calling Supabase + Anthropic; it is not compute-bound and does not need
+# more than 512 MB.
+[[vm]]
+  cpu_kind = "shared"
+  cpus = 1
+  memory_mb = 512
+
+[http_service]
+  internal_port = 8787
+  force_https = true
+  auto_stop_machines = false
+  auto_start_machines = true
+  min_machines_running = 1
+  processes = ["app"]
+
+  # Health check against the agent's real /agent/health endpoint.
+  # 08-Agent/server.ts:104 confirms GET /agent/health → { ok: true, phase: 0 }.
+  [[http_service.checks]]
+    interval = "30s"
+    timeout = "5s"
+    grace_period = "20s"
+    method = "GET"
+    path = "/agent/health"
+
+  # Public traffic. The agent's CORS layer still applies on top via
+  # AGENT_ALLOWED_ORIGINS.
+  [http_service.concurrency]
+    type = "connections"
+    hard_limit = 100
+    soft_limit = 80
+
+[deploy]
+  # Stop the old release before spinning up the new one. The agent is
+  # stateless so this is safe; if it ever becomes stateful, switch to
+  # rolling: "start_machine, then healthcheck, then stop_machine".
+  strategy = "rolling"
+
+[processes]
+  app = "npx --no-install tsx 08-Agent/server.ts"
+
+[[services]]
+  protocol = "tcp"
+  internal_port = 8787
+  [[services.ports]]
+    handlers = ["http"]
+    port = 80
+    force_redirect = true
+  [[services.ports]]
+    handlers = ["tls", "http"]
+    port = 443

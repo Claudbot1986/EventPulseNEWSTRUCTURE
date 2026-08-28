@@ -1,0 +1,52 @@
+mission_id: EP-2026-08-25-ee7182c9-558
+original_prompt: Nu finns supabase access token i .env och även BFL (nygenererad api, obs, gammal api gäller INTE)
+task_type: schema
+subsystems:
+  - database
+complexity: normal
+risk: low
+execution_mode: single_agent
+roles:
+  - lead
+  - event_graph_engineer
+verification_profile: database
+context:
+  tier0: [.claude/eventpulse/policy.md]
+  tier1: [docs/MASTERPLAN.md, docs/BACKLOG.md, .claude/rules/common/hooks.md, .claude/rules/common/agents.md]
+  tier2: [05-Supabase/schema/schema.md, 05-Supabase/migrations/]
+  tier3: [04-Normalizer/venue-matching.ts]
+acceptance_criteria:
+  - '"Migration is BEGIN/COMMIT-bounded and dry-runnable against `supabase start` local instance."'
+  - '"schema_validate confirms SQL parses cleanly (`psql --dry-run` or supabase-cli equivalent)."'
+  - '"migration_safety confirms migration contains no DROP TABLE on a non-temp table without IF EXISTS + a documented backup step."'
+  - '"apply_test_db_only confirms migration was applied to local Supabase (not prod)."'
+constraints:
+  - '"Author-only on prod migrations; apply only against `supabase start` local instance; prod apply needs explicit human approval + human_review_required: true."'
+  - '"Do not modify docs/MASTERPLAN.md or docs/BACKLOG.md."'
+  - '"Do not invent or rename canonical event fields outside the Event Graph schema (canonical_event_id, confidence_score, freshness_at, last_seen_at)."'
+  - '"Migrations must reference schema documented in 05-Supabase/schema/schema.md."'
+  - 'PRESERVE WORKING TREE: Working tree has 1 uncommitted change(s); preserve unrelated edits..'
+unknown_assumptions:
+  - User intent inferred from prompt keywords; please correct if wrong.
+escalation_conditions:
+  - 'If the task touches a file outside this mission''s scope → stop and escalate.'
+  - If a required gate fails → fix or escalate to ep-lead.
+required_gates:
+  - schema_validate
+  - migration_safety
+  - apply_test_db_only
+requires_user_approval: []
+classification_confidence: 0.75
+human_review_required: false
+planning_only: false
+user_overrides: []
+working_tree_fp: sha256-djb2:ee15720f:dirty1
+repo_state:
+  branch: main
+  head_sha: 2da5121
+  dirty: true
+  changed_files_count: 1
+  preservation_warning: Working tree has 1 uncommitted change(s); preserve unrelated edits.
+  captured_at: 2026-08-25T17:53:43.756Z
+compiler_version: epc-1.1
+created_at: 2026-08-25T17:53:43.558Z

@@ -22,6 +22,7 @@ import { readFileSync } from 'node:fs';
 import { resolve, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { createClient } from '@supabase/supabase-js';
+import sharp from 'sharp';
 
 // ── Load root .env (server-side) ────────────────────────────────────────────
 const __filename = fileURLToPath(import.meta.url);
@@ -42,6 +43,14 @@ try {
 } catch (err) {
   console.warn('[autoGen] could not load .env from', ENV_PATH, err.message);
 }
+
+// AI-bilder lagras ALLTID i `ai-generated/` under event-posters-bucketen.
+// Mappnamnet är medvetet valt — det gör att storage-listan själv visar att
+// alla filer är AI-genererade (och EU AI Act Art. 50-stämplade). Inga
+// originalbilder får ligga här. Inga blandmappar.
+export const AI_IMAGE_FOLDER = 'ai-generated';
+export const AI_IMAGE_LICENSE = 'ai-generated';
+export const AI_IMAGE_ATTRIBUTION = 'AI-generated image (EU AI Act Art. 50)';
 
 const PORT = Number(process.env.AUTOGEN_PORT || 7790);
 const BFL_API_KEY = process.env.BFL_API_KEY;
@@ -124,6 +133,8 @@ const CATEGORY_SCENES = {
   konst:             'a bright art gallery interior with paintings and sculptures on white walls under soft skylight',
   utställning:       'a bright art gallery interior with paintings and sculptures on white walls under soft skylight',
   galleri:           'a bright art gallery interior with paintings and sculptures on white walls under soft skylight',
+  art:               'a bright art gallery interior with paintings and sculptures on white walls under soft skylight',
+  arts:              'a bright art gallery interior with paintings and sculptures on white walls under soft skylight',
   // ── Music / concert
   music:    'a concert stage with musicians performing under dramatic stage lights, instruments visible, audience in silhouette',
   konsert:  'a concert stage with musicians performing under dramatic stage lights, instruments visible, audience in silhouette',
@@ -132,9 +143,9 @@ const CATEGORY_SCENES = {
   teater:   'a theater stage with dramatic lighting, performers mid-scene, ornate curtain in background',
   föreställning: 'a theater stage with dramatic lighting, performers mid-scene, ornate curtain in background',
   // ── Family
-  family: 'a bright family-friendly outdoor scene, kids playing in a sunny park, warm and colorful atmosphere',
-  barn:   'a bright family-friendly outdoor scene, kids playing in a sunny park, warm and colorful atmosphere',
-  kids:   'a bright family-friendly outdoor scene, kids playing in a sunny park, warm and colorful atmosphere',
+  family: 'a bright family-friendly indoor scene, colorful workshop with creative materials, warm atmosphere',
+  barn:   'a bright family-friendly indoor scene, colorful workshop with creative materials, warm atmosphere',
+  kids:   'a bright family-friendly indoor scene, colorful workshop with creative materials, warm atmosphere',
   // ── Nightlife
   nightlife: 'a nightclub interior with colored stage lights, DJ booth, dance floor with movement, energetic atmosphere',
   nattliv:   'a nightclub interior with colored stage lights, DJ booth, dance floor with movement, energetic atmosphere',
@@ -145,11 +156,40 @@ const CATEGORY_SCENES = {
   // ── Festival
   festival: 'an outdoor summer festival with stage and crowd, colorful flags and tents, sunny sky',
   // ── Produktionsdata-fallbacks (verifierat från Supabase 2026-08-24)
-  community: 'a public outdoor gathering in a city square, civic atmosphere, daytime',
+  // community kunde INTE vara "outdoor gathering in city square" — tre av tio
+  // bilder blev då "människor utomhus bland byggnader" oavsett eventets
+  // verkliga innehåll. Bytt till abstraherad inomhus-komposition 2026-08-25.
+  community: 'an abstract editorial composition with soft atmospheric lighting, no specific setting, no people',
   culture:   'a cultural venue interior with artistic atmosphere, soft museum-style lighting',
   // ── Default
-  default: 'an editorial event photograph with attendees in an atmospheric setting',
+  default: 'an abstract editorial composition with soft atmospheric lighting, no specific setting, no people',
 };
+
+// ── Venue-specifika scener (PRIORITY över category_slug) ────────────────────
+// Användaren bad 2026-08-25 om att "huvudfokus ska styra bilden":
+//   - Textilmuseet → textil/textilkonst (INTE generiskt museum)
+//   - Nationalmuseum → museum + design-fokus (utställning "Design for Life")
+//   - Moderna Museet → modernistiskt konstmuseum
+//   - Liljevalchs → samtidskonstgalleri
+//   - Cecilia Hillström Gallery → litet galleri
+// Dessa matchas mot venue_name.lowercase() och vinner över category.
+const VENUE_SCENES = [
+  { match: /textil/i, scene: 'a textile museum interior with woven fabrics, threads, looms, fabric swatches and textile art on display, soft warm lighting' },
+  { match: /nationalmuseum/i, scene: 'a national museum interior with curated design objects, mid-century furniture, sketches, design process materials and craft pieces, elegant gallery lighting' },
+  { match: /moderna museet/i, scene: 'a modernist art museum interior with bold contemporary paintings and sculptures, dramatic skylights, clean white walls' },
+  { match: /liljevalchs/i, scene: 'a contemporary art gallery interior with large-scale paintings, vivid colors, modern exhibition lighting' },
+  { match: /cecilia hillstr/i, scene: 'a small intimate art gallery interior with carefully arranged paintings on neutral walls, focused spotlights' },
+  { match: /ois\b|\u00f6is\b|\u00f6rgryte/i, scene: 'a football match scene on a green grass pitch, players in action, dramatic stadium atmosphere' },
+];
+
+function getVenueScene(venueName) {
+  if (!venueName || typeof venueName !== 'string') return null;
+  const v = venueName.toLowerCase();
+  for (const { match, scene } of VENUE_SCENES) {
+    if (match.test(v)) return scene;
+  }
+  return null;
+}
 
 /**
  * Venue-aware hint: ger kort kontextuell fras baserat på venue-namn.
@@ -178,14 +218,16 @@ function getVenueHint(venueName) {
 function extractCategoryFallback(title) {
   if (!title || typeof title !== 'string') return null;
   const t = title.toLowerCase();
-  if (/idrott|fotboll|sport|match/.test(t))                          return 'sports';
-  if (/utställning|konst|galleri|museum|exhibition|surrealism/.test(t)) return 'exhibition';
-  if (/konsert|concert|musik|music/.test(t))                         return 'music';
-  if (/teater|theater|föreställning|pjäs/.test(t))                   return 'theater';
-  if (/barn|family|kids/.test(t))                                    return 'family';
-  if (/nattliv|night|club/.test(t))                                  return 'nightlife';
-  if (/mat|food|restaurang/.test(t))                                 return 'food';
-  if (/festival/.test(t))                                            return 'festival';
+  // Word-boundaries för att undvika falska positiva (t.ex. "desinformation"
+  // innehåller "mat" → felaktig food-matchning utan \b).
+  if (/\b(idrott|fotboll|sport|match)\b/.test(t))                          return 'sports';
+  if (/\b(utställning|utstallning|konst|galleri|museum|exhibition|surrealism|design)\b/.test(t)) return 'exhibition';
+  if (/\b(konsert|concert|musik|music)\b/.test(t))                         return 'music';
+  if (/\b(teater|theater|föreställning|forestallning|pjäs|pjas)\b/.test(t)) return 'theater';
+  if (/\b(barn|family|kids)\b/.test(t))                                    return 'family';
+  if (/\b(nattliv|night|club)\b/.test(t))                                  return 'nightlife';
+  if (/\b(mat|food|restaurang)\b/.test(t))                                 return 'food';
+  if (/\bfestival\b/.test(t))                                              return 'festival';
   return null;
 }
 
@@ -213,16 +255,20 @@ function buildAutoPrompt(event) {
   const venueName = event?.venues?.name || event?.venue_name || '';
   const venueHint = getVenueHint(venueName);
 
-  // Primär kategori: category_slug
-  let category = (event?.category_slug || '').toLowerCase();
+  // 1. Venue-specifik scene vinner över category_slug (PRIORITY)
+  //    Textilmuseet → textil, Nationalmuseum → design, etc.
+  let scene = getVenueScene(venueName);
 
-  // Fallback: om generisk/saknas, sök i titeln
-  if (!category || GENERIC_CATEGORIES.has(category)) {
-    const titleFallback = extractCategoryFallback(title);
-    if (titleFallback) category = titleFallback;
+  // 2. Annars: category_slug
+  if (!scene) {
+    let category = (event?.category_slug || '').toLowerCase();
+    // Fallback: om generisk/saknas, sök i titeln
+    if (!category || GENERIC_CATEGORIES.has(category)) {
+      const titleFallback = extractCategoryFallback(title);
+      if (titleFallback) category = titleFallback;
+    }
+    scene = CATEGORY_SCENES[category] || CATEGORY_SCENES.default;
   }
-
-  const scene = CATEGORY_SCENES[category] || CATEGORY_SCENES.default;
 
   return (
     `${venueHint}Editorial photograph of ${scene}. ` +
@@ -234,12 +280,119 @@ function buildAutoPrompt(event) {
     `Even partial fragments of letters, half-formed words, or stylized text marks are forbidden. ` +
     `No recognizable brand names, no trademarks, no logos, no symbols. ` +
     `No recognizable architecture or identifiable landmarks (no Stockholm City Hall, no Globen, no specific buildings). ` +
+    `NEVER show people outdoors among buildings, plazas, or city streets — this is a recurring problem. ` +
+    `Prefer indoor, abstract, or close-up subject-focused compositions. ` +
     `If people appear they must be small in frame, full-body, in action, or in silhouette — never close-up portraits of faces. ` +
     `Clean, text-free, logo-free, abstract editorial photograph only. `
   );
 }
 
 const GENERIC_CATEGORIES = new Set(['community', 'culture', 'event', 'default', '']);
+
+// ── EU AI Act §50 compliance ─────────────────────────────────────────────────
+// Synlig stämpel + maskinläsbar XMP-metadata. Båda krävs formellt; vi gör
+// båda för att täcka "synlig märkning" OCH "machine-readable format".
+//
+// Stämpeln: 240×64 px "● AI-generated"-pill i nedre höger hörn. Storleken
+// (~15 % av en 1024-bild) gör den "easily visible" enligt EU AI Act Art. 50.
+// Bottenplatta: 82% opacitet svart med orange kantlinje (matchar
+// EventPulse-färgschema: accent #FFB454). Synlig men inte i vägen för motivet.
+
+const AI_STAMP_SVG = `<svg width="240" height="64" viewBox="0 0 240 64" xmlns="http://www.w3.org/2000/svg">
+  <rect x="2" y="2" width="236" height="60" rx="30" ry="30"
+        fill="rgba(15,15,18,0.82)"
+        stroke="rgba(255,180,84,0.65)" stroke-width="1.5"/>
+  <circle cx="34" cy="32" r="8" fill="#FFB454"/>
+  <text x="56" y="40" font-family="Arial, sans-serif" font-size="22"
+        font-weight="bold" fill="#FFFFFF" letter-spacing="0.5">AI-generated</text>
+</svg>`;
+
+const AI_STAMP_BUFFER = Buffer.from(AI_STAMP_SVG);
+
+/**
+ * Bygger XMP-paket med AI-generering-markering. Maskinläsbar — alla
+ * vanliga metadata-läsare (exiftool, Photoshop, Adobe Bridge) ser fälten.
+ *
+ * Fält:
+ *   dc:rights        → "AI-generated image (EU AI Act Art. 50)"
+ *   dc:creator       → "EventPulse/flux-dev"
+ *   xmp:CreatorTool  → "EventPulse/autoGenServer"
+ *   xmp:CreateDate   → ISO nu
+ *   EventPulse:AIGenerated   → "true"
+ *   EventPulse:Model         → "flux-dev"
+ *   EventPulse:Policy        → "EU-AI-Act-Art-50"
+ *   EventPulse:GeneratedAt   → ISO nu
+ */
+function buildAiXmp({ model, prompt }) {
+  const now = new Date().toISOString();
+  const safePrompt = (prompt || '').replace(/[<&>]/g, '').slice(0, 500);
+  return `<?xpacket begin="" id="W5M0MpCehiHzreSzNTczkc9d"?>
+<x:xmpmeta xmlns:x="adobe:ns:meta/" x:xmptk="EventPulse/1.0">
+  <rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
+    <rdf:Description xmlns:dc="http://purl.org/dc/elements/1.1/"
+                     xmlns:xmp="http://ns.adobe.com/xap/1.0/"
+                     xmlns:EventPulse="eventpulse:meta/1.0/"
+                     xmp:CreatorTool="EventPulse/autoGenServer"
+                     xmp:CreateDate="${now}"
+                     xmp:MetadataDate="${now}">
+      <dc:rights>
+        <rdf:Alt>
+          <rdf:li xml:lang="x-default">AI-generated image (EU AI Act Art. 50)</rdf:li>
+        </rdf:Alt>
+      </dc:rights>
+      <dc:creator>
+        <rdf:Seq>
+          <rdf:li>EventPulse/${model}</rdf:li>
+        </rdf:Seq>
+      </dc:creator>
+      <EventPulse:AIGenerated>true</EventPulse:AIGenerated>
+      <EventPulse:Model>${model}</EventPulse:Model>
+      <EventPulse:Policy>EU-AI-Act-Art-50</EventPulse:Policy>
+      <EventPulse:GeneratedAt>${now}</EventPulse:GeneratedAt>
+      <EventPulse:Prompt>${safePrompt}</EventPulse:Prompt>
+    </rdf:Description>
+  </rdf:RDF>
+</x:xmpmeta>
+<?xpacket end="w"?>`;
+}
+
+/**
+ * Applicerar EU AI Act §50-compliance på en bildbuffer:
+ *   1. Synlig AI-stämpel i nedre höger hörn (24px inset)
+ *   2. XMP-metadata-injection (maskinläsbar)
+ *
+ * Returnerar NY PNG-buffer. Original-rörs inte.
+ *
+ * Ren lokal compute, ~10-50ms per bild, ingen API-kostnad.
+ */
+async function applyAiCompliance(buffer, { prompt, model = 'flux-dev' } = {}) {
+  const xmp = buildAiXmp({ model, prompt });
+  // Stämpelposition: 24 px inset från SE-kanten (1024×1024). Använd
+  // explicit left/top istället för gravity — Sharp's gravity+offset-
+  // semantik placerar input UTANFÖR bilden när inset>0 (offset
+  // adderas till gravity-ankaret som redan ÄR kanten).
+  const W = 1024;
+  const H = 1024;
+  const inset = 24;
+  const stampW = 240;
+  const stampH = 64;
+  const left = W - inset - stampW;
+  const top = H - inset - stampH;
+  return sharp(buffer)
+    .composite([
+      {
+        input: AI_STAMP_BUFFER,
+        left,
+        top,
+      },
+    ])
+    .withMetadata({
+      exif: {},
+      xmp,
+    })
+    .png()
+    .toBuffer();
+}
 
 /**
  * Dedup-nyckel: samma event-koncept (titel + venue) får samma bild.
@@ -264,6 +417,35 @@ function dedupPath(key) {
 
 // ── BFL Flux schnell ───────────────────────────────────────────────────────
 
+/**
+ * Custom error som signalerar "no credits" från BFL.
+ * Användaren bad 2026-08-25 om att UI ska visa "no credits BFL - recharge"
+ * när BFL-kredit är slut. Detta error kastas av generateFluxSchnell när
+ * vi identifierar 402 / 429 med kredit-relaterad text i svaret.
+ *
+ * Workern mappar detta error → image_generation_status='no_credits' (workern
+ * pausar alla pending-jobb tills manuell re-charge).
+ */
+export class BFLNoCreditsError extends Error {
+  constructor(message, status, bodyText) {
+    super(message);
+    this.name = 'BFLNoCreditsError';
+    this.status = status;
+    this.bodyText = bodyText;
+  }
+}
+
+/**
+ * Klassificerar ett BFL-fel som credit-relaterat eller ej.
+ * BFL returnerar 402 Payment Required eller 429 med text som nämner
+ * "credit", "balance", "quota", "billing", "payment".
+ */
+function isBflCreditError(status, bodyText) {
+  if (status === 402) return true;
+  const t = (bodyText || '').toLowerCase();
+  return /credit|balance|quota|billing|payment|insufficient|exhausted/.test(t);
+}
+
 async function generateFluxSchnell(prompt) {
   // 1. Submit — BFL Flux Dev (Flux 1 Dev, bättre på negativa prompts än klein-4b)
   // Användaren bad 2026-08-24 om "INGEN TEXT" och konkret stil — flux-2-klein-4b
@@ -284,6 +466,13 @@ async function generateFluxSchnell(prompt) {
   });
   if (!submitRes.ok) {
     const errText = await submitRes.text();
+    if (isBflCreditError(submitRes.status, errText)) {
+      throw new BFLNoCreditsError(
+        `BFL no credits: ${submitRes.status} ${errText.slice(0, 200)}`,
+        submitRes.status,
+        errText,
+      );
+    }
     throw new Error(`BFL submit ${submitRes.status}: ${errText.slice(0, 200)}`);
   }
   const { id, polling_url } = await submitRes.json();
@@ -296,7 +485,17 @@ async function generateFluxSchnell(prompt) {
     const pollRes = await fetch(polling_url, {
       headers: { 'x-key': BFL_API_KEY, accept: 'application/json' },
     });
-    if (!pollRes.ok) throw new Error(`BFL poll ${pollRes.status}`);
+    if (!pollRes.ok) {
+      const pollErrText = await pollRes.text().catch(() => '');
+      if (isBflCreditError(pollRes.status, pollErrText)) {
+        throw new BFLNoCreditsError(
+          `BFL no credits (poll): ${pollRes.status} ${pollErrText.slice(0, 200)}`,
+          pollRes.status,
+          pollErrText,
+        );
+      }
+      throw new Error(`BFL poll ${pollRes.status}: ${pollErrText.slice(0, 200)}`);
+    }
     const data = await pollRes.json();
     if (data.status === 'Ready') {
       const imgRes = await fetch(data.result.sample);
@@ -314,8 +513,16 @@ async function generateFluxSchnell(prompt) {
         id,
       };
     }
-    if (data.status === 'Failed' || data.status === 'Error') {
-      throw new Error(`BFL generation failed: ${data.status}`);
+    if (data.status === 'Failed' || data.status === 'Error' || data.status === 'Rejected') {
+      const detail = JSON.stringify(data).slice(0, 300);
+      if (isBflCreditError(data.status === 'Rejected' ? 402 : 500, detail)) {
+        throw new BFLNoCreditsError(
+          `BFL no credits: status=${data.status} ${detail}`,
+          402,
+          detail,
+        );
+      }
+      throw new Error(`BFL generation failed: ${data.status} ${detail}`);
     }
   }
   throw new Error(`BFL timed out after ${TIMEOUT_MS / 1000}s`);
@@ -325,38 +532,62 @@ async function generateFluxSchnell(prompt) {
 
 /**
  * Laddar upp base64-bild till Storage och uppdaterar ALLA event-rader
- * i `eventIds` med samma image_url. Idempotent (upsert).
+ * i `eventIds` med samma image_url + AI-compliance-metadata. Idempotent (upsert).
  *
  * Path: `events/{storagePath}.png` där storagePath = dedupPath(dedupKey)
  * → samma event-koncept får samma fil, inga dubletter.
+ *
+ * Pipeline:
+ *   1. applyAiCompliance (Sharp: stamp + XMP)
+ *   2. Upload till Storage
+ *   3. Update events med image_url + 5 image-tracking-kolumner
  */
-async function uploadAndPersistAll(eventIds, b64, mime, storagePath) {
+async function uploadAndPersistAll(eventIds, b64, mime, storagePath, prompt, model = 'flux-dev') {
   if (!Array.isArray(eventIds) || eventIds.length === 0) {
     throw new Error('uploadAndPersistAll: eventIds is empty');
   }
-  const buffer = Buffer.from(b64, 'base64');
+  const originalBuffer = Buffer.from(b64, 'base64');
   const ext = mime === 'image/png' ? 'png' : 'jpg';
-  const path = `events/${storagePath}.${ext}`;
+  // AI-bilder hamnar ALLTID under ai-generated/ — samma mappnamn som
+  // AI_IMAGE_FOLDER-konstanten. Validerat vid runtime att vi inte råkar
+  // skriva till events/ (legacy-sökväg).
+  const path = `${AI_IMAGE_FOLDER}/${storagePath}.${ext}`;
+  if (!path.startsWith(`${AI_IMAGE_FOLDER}/`)) {
+    throw new Error(`Refusing to upload to non-AI path: ${path}`);
+  }
 
-  // 1. Upload to Storage (upsert — idempotent)
+  // 1. EU AI Act §50 — synlig stämpel + XMP-metadata (lokal Sharp, ~10-50ms)
+  const compliantBuffer = await applyAiCompliance(originalBuffer, { prompt, model });
+
+  // 2. Upload to Storage (upsert — idempotent)
   const { error: uploadErr } = await supabase.storage
     .from(STORAGE_BUCKET)
-    .upload(path, buffer, {
+    .upload(path, compliantBuffer, {
       contentType: mime,
       upsert: true,
       cacheControl: '31536000', // 1 year
     });
   if (uploadErr) throw new Error(`Storage upload failed: ${uploadErr.message}`);
 
-  // 2. Get public URL
+  // 3. Get public URL
   const { data: pub } = supabase.storage.from(STORAGE_BUCKET).getPublicUrl(path);
   const imageUrl = pub?.publicUrl;
   if (!imageUrl) throw new Error('No public URL returned for uploaded image');
 
-  // 3. Update ALLA event-rader i gruppen
+  // 4. Update ALLA event-rader med image_url + compliance-tracking
+  const generatedAt = new Date().toISOString();
   const { error: updateErr } = await supabase
     .from('events')
-    .update({ image_url: imageUrl })
+    .update({
+      image_url: imageUrl,
+      image_license: AI_IMAGE_LICENSE,
+      image_attribution: AI_IMAGE_ATTRIBUTION,
+      image_ai_generated: true,
+      image_prompt: prompt,
+      image_model: model,
+      image_generated_at: generatedAt,
+      image_generation_status: 'completed',
+    })
     .in('id', eventIds);
   if (updateErr) throw new Error(`events update failed: ${updateErr.message}`);
 
@@ -408,6 +639,46 @@ const server = http.createServer(async (req, res) => {
     });
   }
 
+  // ── BFL credit balance — used by 09-ScrapingSupervisor dashboard
+  // (Box till vänster om analytics som visar om BFL-credits finns kvar.)
+  if (req.method === 'GET' && url.pathname === '/bfl-credits') {
+    try {
+      const controller = new AbortController();
+      const timer = setTimeout(() => controller.abort(), 4000);
+      let bflRes;
+      try {
+        bflRes = await fetch(`${BFL_BASE}/credits`, {
+          method: 'GET',
+          headers: { 'x-key': BFL_API_KEY, accept: 'application/json' },
+          signal: controller.signal,
+        });
+      } finally {
+        clearTimeout(timer);
+      }
+      if (!bflRes.ok) {
+        return sendJson(res, 200, {
+          ok: false,
+          error: `BFL /credits HTTP ${bflRes.status}`,
+          fetchedAt: new Date().toISOString(),
+        });
+      }
+      const j = await bflRes.json().catch(() => null);
+      const credits = j && typeof j.credits === 'number' ? j.credits : null;
+      return sendJson(res, 200, {
+        ok: credits !== null && credits > 0,
+        credits,
+        raw: j,
+        fetchedAt: new Date().toISOString(),
+      });
+    } catch (err) {
+      return sendJson(res, 200, {
+        ok: false,
+        error: err instanceof Error ? err.message : String(err),
+        fetchedAt: new Date().toISOString(),
+      });
+    }
+  }
+
   // ── Proxy: return first N published events (asterisk page can't reach
   // Supabase directly because RLS blocks anon SELECT on `events`).
   // Default N=3 (användaren bad om 3 den 2026-08-24).
@@ -455,7 +726,7 @@ const server = http.createServer(async (req, res) => {
       const { b64, mime, seed } = await generateFluxSchnell(prompt);
       const key = dedupKey(event);
       const storagePath = dedupPath(key);
-      const imageUrl = await uploadAndPersistAll([event.id], b64, mime, storagePath);
+      const imageUrl = await uploadAndPersistAll([event.id], b64, mime, storagePath, prompt);
       console.log(`[autoGen] event=${event.id} done url=${imageUrl}`);
       return sendJson(res, 200, {
         ok: true,
@@ -526,7 +797,7 @@ const server = http.createServer(async (req, res) => {
           console.log(`[autoGen]   prompt=${prompt.slice(0, 120)}...`);
           const { b64, mime } = await generateFluxSchnell(prompt);
           const storagePath = dedupPath(g.key);
-          const imageUrl = await uploadAndPersistAll(g.ids, b64, mime, storagePath);
+          const imageUrl = await uploadAndPersistAll(g.ids, b64, mime, storagePath, prompt);
           console.log(`[autoGen]   done url=${imageUrl}`);
           results.push({
             ok: true,
@@ -568,6 +839,91 @@ const server = http.createServer(async (req, res) => {
       console.error('[autoGen] /generate-for-first FAILED:', err.message);
       return sendJson(res, 500, { ok: false, error: err.message });
     }
+  }
+
+  // ── Batch-endpoint: ta emot en lista events (från worker / backfill-script) ──
+  // Dedup-grupperar efter title_sv+venue_name, genererar EN bild per grupp,
+  // uppdaterar ALLA events i gruppen med samma image_url.
+  //
+  // Body: { events: [{ id, title_sv, title_en, description_sv, description_en,
+  //                     venues?: {name}, venue_name?, category_slug? }] }
+  // Returns: { ok, results: [{ key, eventIds, imageUrl, storagePath, prompt }],
+  //            totalGroups, okCount, failCount }
+  if (req.method === 'POST' && url.pathname === '/generate-for-batch') {
+    let body;
+    try { body = await readJsonBody(req); }
+    catch (e) { return sendJson(res, 400, { ok: false, error: e.message }); }
+
+    const events = Array.isArray(body?.events) ? body.events : [];
+    if (events.length === 0) {
+      return sendJson(res, 200, { ok: true, totalGroups: 0, results: [] });
+    }
+    // Validera obligatoriska fält
+    for (const e of events) {
+      if (!e?.id) {
+        return sendJson(res, 400, { ok: false, error: 'every event needs id' });
+      }
+    }
+
+    console.log(`[autoGen] /generate-for-batch start: ${events.length} events`);
+
+    // Dedup-gruppera efter (title_sv + venue_name)
+    const groupsMap = new Map();
+    for (const ev of events) {
+      const key = dedupKey(ev);
+      if (!groupsMap.has(key)) {
+        groupsMap.set(key, { key, ids: [], representative: ev });
+      }
+      groupsMap.get(key).ids.push(ev.id);
+    }
+    const groups = Array.from(groupsMap.values());
+    console.log(`[autoGen] dedup → ${groups.length} unika grupper (av ${events.length} events)`);
+
+    const results = [];
+    for (let i = 0; i < groups.length; i++) {
+      const g = groups[i];
+      const ev = g.representative;
+      console.log(`[autoGen] [${i + 1}/${groups.length}] group key="${g.key}" (${g.ids.length} event(s))`);
+      try {
+        const prompt = buildAutoPrompt(ev);
+        const { b64, mime } = await generateFluxSchnell(prompt);
+        const storagePath = dedupPath(g.key);
+        const imageUrl = await uploadAndPersistAll(g.ids, b64, mime, storagePath, prompt);
+        console.log(`[autoGen]   done url=${imageUrl}`);
+        results.push({
+          ok: true,
+          key: g.key,
+          eventIds: g.ids,
+          title: ev.title_sv || ev.title_en || '?',
+          venue: getVenueName(ev),
+          imageUrl,
+          storagePath: `${AI_IMAGE_FOLDER}/${storagePath}.png`,
+          prompt,
+        });
+      } catch (err) {
+        console.error(`[autoGen]   group="${g.key}" FAILED:`, err.message);
+        results.push({
+          ok: false,
+          key: g.key,
+          eventIds: g.ids,
+          title: ev.title_sv || ev.title_en || '?',
+          venue: getVenueName(ev),
+          error: err.message,
+        });
+      }
+    }
+
+    const okCount = results.filter((r) => r.ok).length;
+    const failCount = results.length - okCount;
+    console.log(`[autoGen] /generate-for-batch done: ${okCount} ok, ${failCount} failed`);
+
+    return sendJson(res, 200, {
+      ok: true,
+      totalGroups: groups.length,
+      okCount,
+      failCount,
+      results,
+    });
   }
 
   sendJson(res, 404, { ok: false, error: 'Not found' });

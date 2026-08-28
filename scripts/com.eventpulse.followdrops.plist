@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!--
+  com.eventpulse.followdrops.plist — launchd job for the EventPulse follow-drop cron.
+
+  Keeps 08-Agent/cron/follow_drops.ts alive across sleep, machine restart,
+  and tmux-session exit. Runs the cron in --loop mode (30-minute interval)
+  to materialize follow_drop notifications for events from venues the user
+  follows. Mirrors com.eventpulse.reminders.plist but at a sparser cadence
+  (venue drops are slower-moving than 2h reminders).
+
+  Install with:
+    cp scripts/com.eventpulse.followdrops.plist ~/Library/LaunchAgents/
+    launchctl load ~/Library/LaunchAgents/com.eventpulse.followdrops.plist
+
+  Uninstall:
+    launchctl unload ~/Library/LaunchAgents/com.eventpulse.followdrops.plist
+    rm ~/Library/LaunchAgents/com.eventpulse.followdrops.plist
+-->
+<plist version="1.0">
+<dict>
+  <key>Label</key>
+  <string>com.eventpulse.followdrops</string>
+
+  <key>ProgramArguments</key>
+  <array>
+    <string>/bin/bash</string>
+    <string>/Volumes/2TB filer/NEWSTRUCTURE-COPY/scripts/start-follow-drops.sh</string>
+  </array>
+
+  <key>WorkingDirectory</key>
+  <string>/Volumes/2TB filer/NEWSTRUCTURE-COPY</string>
+
+  <key>RunAtLoad</key>
+  <true/>
+
+  <!-- Restart on crash (ThrottleInterval=10 mirrors reminders.plist). -->
+  <key>KeepAlive</key>
+  <dict>
+    <key>SuccessfulExit</key>
+    <false/>
+    <key>Crashed</key>
+    <true/>
+  </dict>
+
+  <key>ThrottleInterval</key>
+  <integer>10</integer>
+
+  <key>StandardOutPath</key>
+  <string>/tmp/com.eventpulse.followdrops.out.log</string>
+  <key>StandardErrorPath</key>
+  <string>/tmp/com.eventpulse.followdrops.err.log</string>
+</dict>
+</plist>

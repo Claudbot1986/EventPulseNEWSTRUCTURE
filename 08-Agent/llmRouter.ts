@@ -34,6 +34,15 @@ export interface ComposeInput {
   intent: IntentBrief;
   cards: EventCard[];
   warnings: string[];
+  /**
+   * Optional: which constraint, if any, search_events had to relax to
+   * surface these results. The composer surfaces it as honest Swedish
+   * copy so the user knows why the date window or category filter was
+   * widened. See MASTERPLAN §18.2 decision 4.
+   *
+   * `undefined` when the strict query matched.
+   */
+  relaxed_constraint?: 'date_window' | 'category' | null;
 }
 
 export interface ComposeResult {
@@ -138,7 +147,7 @@ interface ParsedReply {
 }
 
 export function buildUserMessage(input: ComposeInput): string {
-  const { intent, cards, warnings } = input;
+  const { intent, cards, warnings, relaxed_constraint } = input;
   const cardSummary = cards.map((c) => ({
     id: c.id,
     title: c.title,
@@ -163,10 +172,15 @@ export function buildUserMessage(input: ComposeInput): string {
     card_count: cards.length,
     cards: cardSummary,
     warnings,
+    // Machine-readable relaxation label. The LLM should mirror the
+    // deterministic copy when this is set — see deterministicReply.
+    relaxed_constraint: relaxed_constraint ?? null,
     instruction:
       'Reply in the user\'s language. Return JSON: {"reply": "<text>", "highlightedIds": ["<id>", ...]}. ' +
       `Highlight at most ${MAX_HIGHLIGHTS} cards, by id, that best answer the user's query. ` +
-      'If warnings exist, mention them in one short sentence. Do NOT invent events.',
+      'If warnings exist, mention them in one short sentence. ' +
+      'If relaxed_constraint is "date_window" or "category", mention in ONE short sentence that ' +
+      'the search was widened (do not invent the original constraint). Do NOT invent events.',
   });
 }
 
@@ -207,20 +221,34 @@ export function parseReplyJson(text: string): ParsedReply | null {
 }
 
 export function deterministicReply(input: ComposeInput): Omit<ComposeResult, 'usedLlm'> {
-  const { intent, cards, warnings } = input;
+  const { intent, cards, warnings, relaxed_constraint } = input;
   const lang = intent.language;
+  // Honest relaxation copy (MASTERPLAN §18.2 decision 4). The LLM
+  // composer mirrors this; we keep the deterministic fallback in sync
+  // so off-LLM responses tell the user what really happened.
+  const relaxationSuffix =
+    relaxed_constraint === 'date_window'
+      ? (lang === 'sv'
+          ? ' Hittade inget på just den dagen — här är ett bredare urval.'
+          : " Couldn't find anything on that exact day — here's a wider selection.")
+      : relaxed_constraint === 'category'
+      ? (lang === 'sv'
+          ? ' Hittade inget i den kategorin — här är andra förslag.'
+          : " Nothing in that category — here are other picks.")
+      : '';
+
   if (cards.length === 0) {
     const reply =
-      lang === 'sv'
-        ? 'Jag hittar inget som matchar i Stockholm just nu. Vill du utöka sökningen?'
-        : "I can't find a match in Stockholm right now. Want me to widen the search?";
+      (lang === 'sv'
+        ? 'Jag hittar inget som matchar i Stockholm just nu.'
+        : "I can't find a match in Stockholm right now.") + relaxationSuffix;
     return { reply, highlightedIds: [] };
   }
   const top = cards[0];
   const reply =
-    lang === 'sv'
+    (lang === 'sv'
       ? `Här är ${cards.length} förslag i Stockholm. Toppvalet är ${top.title}.`
-      : `Here are ${cards.length} picks in Stockholm. Top pick: ${top.title}.`;
+      : `Here are ${cards.length} picks in Stockholm. Top pick: ${top.title}.`) + relaxationSuffix;
   // We don't surface warnings inline in the deterministic fallback —
   // the wire format already includes them as a separate field.
   void warnings;

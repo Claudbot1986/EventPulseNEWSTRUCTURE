@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!--
+  com.eventpulse.metro.plist — keep Metro dev-server alive for Expo Go dogfood.
+
+  Runs `npx expo start --host lan --port 8081` from 06-UI/. KeepAlive=true so
+  the server restarts automatically on crash. RunAtLoad=true so it starts at
+  login.
+
+  Why this exists (T0062 / T0064):
+    launchd KeepAlive only catches crashes. A wrapper that is alive but
+    stuck (e.g. cwd-ENOENT after project rename) looks healthy to launchd.
+    See T0062 — root cause was stale process.cwd() after NEWSTRUCTURE ->
+    NEWSTRUCTURE-COPY rename. launchd cannot detect this; a periodic curl
+    /node_modules/expo/AppEntry.bundle health check would.
+
+  Install:
+    bash scripts/install-metro.sh
+
+  Uninstall:
+    bash scripts/install-metro.sh --uninstall
+-->
+<plist version="1.0">
+<dict>
+  <key>Label</key>
+  <string>com.eventpulse.metro</string>
+
+  <key>ProgramArguments</key>
+  <array>
+    <string>/bin/bash</string>
+    <string>/Users/claudgashi/bin/run-metro.sh</string>
+  </array>
+
+  <!-- The wrapper script lives at ~/bin/run-metro.sh because macOS launchd
+       cannot execute scripts on /Volumes mounts (sandbox/TCC block).
+       Same constraint as com.eventpulse.watchdog.plist. -->
+
+  <key>RunAtLoad</key>
+  <true/>
+
+  <key>WorkingDirectory</key>
+  <string>/Users/claudgashi</string>
+
+  <!-- Keep Metro alive across crashes. launchd restarts within 10s. -->
+  <key>KeepAlive</key>
+  <dict>
+    <key>SuccessfulExit</key>
+    <false/>
+    <key>Crashed</key>
+    <true/>
+  </dict>
+
+  <key>ThrottleInterval</key>
+  <integer>10</integer>
+
+  <key>StandardOutPath</key>
+  <string>/tmp/com.eventpulse.metro.out.log</string>
+  <key>StandardErrorPath</key>
+  <string>/tmp/com.eventpulse.metro.err.log</string>
+
+  <key>EnvironmentVariables</key>
+  <dict>
+    <key>PATH</key>
+    <string>/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:/Users/claudgashi/.local/bin</string>
+  </dict>
+</dict>
+</plist>

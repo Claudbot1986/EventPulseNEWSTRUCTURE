@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!--
+  com.eventpulse.optimizer.plist — EventPulse Optimizer LaunchAgent
+  Phase L-F (per master-prompt §46)
+
+  Per K3: event-driven, no StartInterval polling.
+  KeepAlive: restarts supervisor on crash.
+  RunAtLoad: starts immediately when loaded.
+  WatchPaths: triggers on queue.ndjson changes (event-driven dequeue).
+
+  Install:
+    bash .claude/eventpulse/learning/optimizer/scripts/install-optimizer.sh
+  Uninstall:
+    bash .claude/eventpulse/learning/optimizer/scripts/launchd-helpers.sh uninstall
+-->
+<plist version="1.0">
+<dict>
+  <key>Label</key>
+  <string>com.eventpulse.optimizer</string>
+
+  <key>ProgramArguments</key>
+  <array>
+    <string>/bin/bash</string>
+    <string>/Volumes/2TB filer/NEWSTRUCTURE-COPY/.claude/eventpulse/learning/optimizer/scripts/optimizer-supervisor.sh</string>
+  </array>
+
+  <key>WorkingDirectory</key>
+  <string>/Volumes/2TB filer/NEWSTRUCTURE-COPY</string>
+
+  <key>EnvironmentVariables</key>
+  <dict>
+    <key>EP_REPO_ROOT</key>
+    <string>/Volumes/2TB filer/NEWSTRUCTURE-COPY</string>
+    <key>EP_OPT_TMUX_SESSION</key>
+    <string>ep-optimizer</string>
+    <key>EP_OPT_LOG_DIR</key>
+    <string>/Users/claudgashi/Library/Logs/eventpulse-optimizer</string>
+    <key>EP_OPT_WORKTREE_DIR</key>
+    <string>/tmp/ep-optimizer-worktree</string>
+    <key>PATH</key>
+    <string>/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin</string>
+  </dict>
+
+  <!-- KeepAlive: restart on crash (SuccessfulExit=false means exit 0 keeps it alive too; Crashed=true restarts on signal crash) -->
+  <key>KeepAlive</key>
+  <dict>
+    <key>SuccessfulExit</key>
+    <false/>
+    <key>Crashed</key>
+    <true/>
+  </dict>
+
+  <!-- RunAtLoad: start immediately on launchctl load -->
+  <key>RunAtLoad</key>
+  <true/>
+
+  <!-- ThrottleInterval: minimum 30s between restarts (avoid tight crash loops) -->
+  <key>ThrottleInterval</key>
+  <integer>30</integer>
+
+  <!-- WatchPaths: trigger supervisor when queue.ndjson changes (event-driven dequeue) -->
+  <key>WatchPaths</key>
+  <array>
+    <string>/Volumes/2TB filer/NEWSTRUCTURE-COPY/.claude/eventpulse/learning/optimizer/queue.ndjson</string>
+  </array>
+
+  <key>StandardOutPath</key>
+  <string>/Users/claudgashi/Library/Logs/eventpulse-optimizer/out.log</string>
+
+  <key>StandardErrorPath</key>
+  <string>/Users/claudgashi/Library/Logs/eventpulse-optimizer/err.log</string>
+
+  <key>ProcessType</key>
+  <string>Background</string>
+
+  <key>Nice</key>
+  <integer>5</integer>
+</dict>
+</plist>

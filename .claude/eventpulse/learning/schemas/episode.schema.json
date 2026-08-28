@@ -1,0 +1,115 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://eventpulse.local/schemas/episode.schema.json",
+  "title": "EventPulse Episode",
+  "description": "Strukturerad episode-loggring per master-prompt §4. Skapas av finalize-episode.ts efter att en mission nár terminal-state.",
+  "type": "object",
+  "additionalProperties": true,
+  "required": ["episode_id", "schema_version", "created_at", "mission_id", "session_id", "terminal_state", "cohort", "state_machine"],
+  "properties": {
+    "episode_id": {
+      "type": "string",
+      "pattern": "^EP-EPISODE-[0-9]{4}-[0-9]{2}-[0-9]{2}-[0-9]{3,6}$",
+      "description": "Unik episode-id i format EP-EPISODE-YYYY-MM-DD-NNN."
+    },
+    "schema_version": {
+      "type": "string",
+      "pattern": "^ep-episode-[0-9]+\\.[0-9]+$"
+    },
+    "created_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "mission_id": {
+      "type": "string"
+    },
+    "session_id": {
+      "type": "string"
+    },
+    "terminal_state": {
+      "type": "string",
+      "enum": ["completed", "failed", "blocked", "aborted", "skipped"]
+    },
+    "state_machine": {
+      "type": "object",
+      "description": "Per-K3 state machine (active → implemented → verified → reconciled → finalized).",
+      "required": ["active_at", "finalized_at"],
+      "properties": {
+        "active_at": { "type": "string", "format": "date-time" },
+        "implemented_at": { "type": ["string", "null"], "format": "date-time" },
+        "verified_at": { "type": ["string", "null"], "format": "date-time" },
+        "reconciled_at": { "type": ["string", "null"], "format": "date-time" },
+        "finalized_at": { "type": "string", "format": "date-time" }
+      }
+    },
+    "cohort": {
+      "type": "string",
+      "enum": ["live_instrumented", "historical_backfill"],
+      "description": "Per-K3: separera historiska backfill från live-instrumenterade episoder."
+    },
+    "review_eligible": {
+      "type": "boolean",
+      "description": "true om episode kvalificerar för counter + review-window."
+    },
+    "learning_quality_score": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 1,
+      "description": "Per §19 — viktar tillgängliga fält. Under 0.40 markeras excluded."
+    },
+    "metadata": {
+      "type": "object",
+      "properties": {
+        "agent": { "type": ["string", "null"] },
+        "verification_profile": { "type": ["string", "null"] },
+        "working_tree_fp": { "type": ["string", "null"] },
+        "head_sha": { "type": ["string", "null"] }
+      }
+    },
+    "outcome": {
+      "type": "object",
+      "properties": {
+        "task_success": { "type": ["boolean", "null"] },
+        "first_attempt_passed": { "type": ["boolean", "null"] },
+        "duration_ms": { "type": ["integer", "null"] },
+        "tokens_input": { "type": ["integer", "null"] },
+        "tokens_output": { "type": ["integer", "null"] },
+        "cost_usd": { "type": ["number", "null"] },
+        "gates_passed": { "type": "array", "items": { "type": "string" } },
+        "gates_failed": { "type": "array", "items": { "type": "string" } },
+        "gates_unknown": { "type": "array", "items": { "type": "string" } }
+      }
+    },
+    "corrections": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["correction_id", "type", "before_ref", "after_ref", "at"],
+        "properties": {
+          "correction_id": { "type": "string" },
+          "type": { "type": "string", "enum": ["edit", "rollback", "redo", "human_override", "agent_overrule"] },
+          "before_ref": { "type": "string" },
+          "after_ref": { "type": "string" },
+          "reason": { "type": "string" },
+          "at": { "type": "string", "format": "date-time" }
+        }
+      }
+    },
+    "evidence_refs": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "Paths till ledger-rader eller andra artefakter (path/ID/hash)."
+    },
+    "redaction_policy": {
+      "type": "string",
+      "enum": ["applied", "skipped", "not_applicable"]
+    },
+    "historical_backfill": {
+      "type": "boolean"
+    },
+    "optimizer_eligibility": {
+      "type": "string",
+      "enum": ["none", "replay_only", "ab_test_candidate", "auto_promote_eligible"]
+    }
+  }
+}

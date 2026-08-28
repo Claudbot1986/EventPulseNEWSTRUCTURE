@@ -1,0 +1,20 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://eventpulse.local/schemas/correction.schema.json",
+  "title": "EventPulse Correction Record",
+  "type": "object",
+  "additionalProperties": true,
+  "required": ["correction_id", "episode_id", "type", "before_ref", "after_ref", "at"],
+  "properties": {
+    "correction_id": { "type": "string" },
+    "episode_id": { "type": "string" },
+    "type": {
+      "type": "string",
+      "enum": ["edit", "rollback", "redo", "human_override", "agent_overrule"]
+    },
+    "before_ref": { "type": "string" },
+    "after_ref": { "type": "string" },
+    "reason": { "type": "string" },
+    "at": { "type": "string", "format": "date-time" }
+  }
+}

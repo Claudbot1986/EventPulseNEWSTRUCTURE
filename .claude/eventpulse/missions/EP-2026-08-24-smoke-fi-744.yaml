@@ -1,0 +1,44 @@
+mission_id: EP-2026-08-24-smoke-fi-744
+original_prompt: Make it better.
+task_type: trivial
+subsystems: []
+complexity: trivial
+risk: low
+execution_mode: solo
+roles: []
+verification_profile: trivial
+context:
+  tier0: [.claude/eventpulse/policy.md]
+  tier1: []
+  tier2: []
+  tier3: []
+acceptance_criteria:
+  - '"Single-line edit completes; typecheck exits 0."'
+constraints:
+  - '"Single-line edits preferred; no scope drift."'
+  - '"Tier 1 (docs/MASTERPLAN.md, docs/BACKLOG.md) omitted — trivial work doesn''t need them."'
+  - 'PRESERVE WORKING TREE: Working tree has 603 uncommitted change(s); preserve unrelated edits..'
+unknown_assumptions:
+  - User intent inferred from prompt keywords; please correct if wrong.
+escalation_conditions:
+  - 'If the task touches a file outside this mission''s scope → stop and escalate.'
+  - If a required gate fails → fix or escalate to ep-lead.
+required_gates:
+  - typecheck
+requires_user_approval: []
+classification_confidence: 0.6
+human_review_required: false
+planning_only: false
+user_overrides: []
+working_tree_fp: sha256-djb2:6cc73b52:dirty576
+repo_state:
+  branch: main
+  head_sha: fa7c7a8
+  dirty: true
+  changed_files_count: 603
+  preservation_warning: Working tree has 603 uncommitted change(s); preserve unrelated edits.
+  captured_at: 2026-08-24T20:23:32.990Z
+compiler_version: epc-1.1
+created_at: 2026-08-24T20:23:32.744Z
+notes:
+  - tier1 omitted (trivial)

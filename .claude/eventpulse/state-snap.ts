@@ -10,6 +10,7 @@
 
 import * as fs from "fs";
 import * as path from "path";
+import { findMissionBySession } from "./mission-resolver";
 
 const STATE_DIR = path.join(process.cwd(), ".claude", "eventpulse", "state");
 const STATE_PATH = path.join(STATE_DIR, "agent-state.json");
@@ -18,16 +19,11 @@ function ensureDir(p: string): void {
   if (!fs.existsSync(p)) fs.mkdirSync(p, { recursive: true });
 }
 
-function readLatestMission(repoRoot: string): any | null {
-  const dir = path.join(repoRoot, ".claude", "eventpulse", "missions");
-  if (!fs.existsSync(dir)) return null;
-  const files = fs
-    .readdirSync(dir)
-    .filter((f) => f.endsWith(".yaml"))
-    .map((f) => ({ f, m: fs.statSync(path.join(dir, f)).mtimeMs }))
-    .sort((a, b) => b.m - a.m);
-  if (files.length === 0) return null;
-  return { mission_id: files[0].f.replace(/\.yaml$/, ""), file: path.join(dir, files[0].f) };
+function missionForSession(repoRoot: string, sessionId: string | null | undefined): { mission_id: string; file: string } | null {
+  // Phase L-A: explicit session/mission binding.
+  const ref = findMissionBySession(repoRoot, sessionId);
+  if (!ref) return null;
+  return { mission_id: ref.mission_id, file: ref.file };
 }
 
 function readRecentEvidence(repoRoot: string, limit = 20): any[] {
@@ -68,7 +64,7 @@ async function main(): Promise<void> {
   const sessionId: string = payload.session_id || "unknown";
   const cwd: string = payload.cwd || process.cwd();
 
-  const mission = readLatestMission(cwd);
+  const mission = missionForSession(cwd, sessionId);
   const recentEvidence = readRecentEvidence(cwd);
 
   const recentCommands = recentEvidence.slice(-5).map((e) => e.cmd).filter(Boolean);

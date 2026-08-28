@@ -3,7 +3,14 @@ import { createHash } from 'crypto';
 import { createClient } from '@supabase/supabase-js';
 import type { Job } from 'bullmq';
 import type { RawEventInput, NormalizedEvent } from '@eventpulse/shared';
-import { searchSyncQueue, imageGenerationQueue } from '../03-Queue/queue';
+import { searchSyncQueue } from '../03-Queue/queue';
+import { computeConfidenceV1 } from './confidence_v1';
+import { aiImageQueue, startAiImageWorker } from '../08-Agent/workers/aiImageWorker';
+import { appendSkipLog } from '../08-Agent/utils/skipLog';
+import { pickLibraryFallback, markEventWithLibraryFallback } from '../08-Agent/utils/imageLibrary';
+
+// Starta AI-bild-worker i samma process (no-op om AI_IMAGE_PIPELINE_ENABLED=0).
+startAiImageWorker();
 
 const supabase = createClient(
   process.env.SUPABASE_URL!,
@@ -335,6 +342,8 @@ export async function processRawEvent(job: Job<RawEventInput>): Promise<void> {
 
   console.log(`[normalizer] venue_id=${venue_id ?? 'null'}, category_slug=${category_slug}`);
 
+  const observedAt = new Date().toISOString();
+
   const normalized: Partial<NormalizedEvent> & Record<string, unknown> = {
     title_en: raw.detected_language === 'en' ? raw.title : raw.title ?? null,
     title_sv: raw.detected_language === 'sv' ? raw.title : raw.title,
@@ -353,20 +362,53 @@ export async function processRawEvent(job: Job<RawEventInput>): Promise<void> {
     price_min_sek: raw.price_min_sek,
     price_max_sek: raw.price_max_sek,
     ticket_url: raw.url || raw.ticket_url || null,
-    image_url: raw.image_url,
+    // ── AI-bilder är obligatoriskt. Adapters sätter image_url=null.
+    // autoGenServer/autoGen-batch skriver den slutliga URL:n efter AI-generering.
+    // Direkt-uppsättning av image_url här skulle kringgå EU AI Act Art. 50-
+    // stämplingen och AI-tracking-kolumnerna.
+    image_url: null,
     dedup_hash: dedupHash,
     category_slug,  // Denormalized for direct filtering
     status: 'published',
     raw_data: raw.raw_payload,
+    // AI-bild-pipeline-markörer. Workern sätter dessa till 'completed' /
+    // image_ai_generated=true efter generering. 'pending' = köad, workern
+    // plockar upp via BullMQ-kön `ai-image-generation`.
+    image_ai_generated: false,
+    image_generation_status: 'pending',
+    image_generation_attempts: 0,
+    // Agent Event Graph columns (MASTERPLAN §13). Seed on every parse so
+    // ranking/freshness stay meaningful; confidence mirrors the SQL migration
+    // 20260818-0002-confidence-v1.sql.
+    freshness_at: observedAt,
+    last_seen_at: observedAt,
+    confidence_score: computeConfidenceV1({
+      venue_id,
+      start_time: raw.start_time,
+      price_min_sek: raw.price_min_sek ?? null,
+      price_max_sek: raw.price_max_sek ?? null,
+      is_free: raw.is_free ?? null,
+      // image_url är null vid insert — confidence får inte +10 för AI-bild
+      // förrän bilden faktiskt är genererad och klar. Vi ger +10 retroaktivt
+      // via re-rank i worker när status→completed.
+      image_url: null,
+      freshness_at: observedAt,
+      source: raw.source,
+    }),
   };
 
   let event_id: string;
 
   if (existing) {
-    // Update existing event
+    // Update existing event: refresh last_seen_at + confidence, preserve
+    // freshness_at (the row is being re-seen, not freshened).
     const { data: updated, error: updateError } = await supabase
       .from('events')
-      .update({ ...normalized, updated_at: new Date().toISOString() })
+      .update({
+        ...normalized,
+        freshness_at: undefined, // keep prior freshness on update
+        updated_at: observedAt,
+      })
       .eq('id', existing.id)
       .select('id')
       .single();
@@ -410,18 +452,51 @@ export async function processRawEvent(job: Job<RawEventInput>): Promise<void> {
   // Enqueue Meilisearch sync
   await searchSyncQueue.add('sync', { event_id, action: 'upsert' });
 
-  // Trigger AI image generation if event has no source image_url.
-  // Worker (imageGenerationWorker) is idempotent — checks image_url before generating.
-  // Dedup by event_id so re-processing same event doesn't double-fire.
-  if (!normalized.image_url) {
-    try {
-      await imageGenerationQueue.add(
-        'gen',
-        { event_id },
-        { jobId: `img-${event_id}` }
+  // Enqueue AI-bild-generering (workern konsumerar asynkront).
+  // Skippa om AI-pipelinen är avstängd (AI_IMAGE_PIPELINE_ENABLED=0) — då
+  // förblir image_url NULL och UI visar fallback-placeholder.
+  if ((process.env.AI_IMAGE_PIPELINE_ENABLED ?? '1') !== '0') {
+    // Future-only guard (2026-08-27): matchar dashboardens totalFutureEvents
+    // och agent-feeden. Past events syns aldrig i Utforska → waste att
+    // generera. Events utan start_time saknar data för att avgöra — skippa
+    // säkert + logga för data-quality-observability.
+    const startTime = raw.start_time ?? (raw as { startTime?: string | null }).startTime ?? null;
+    const isFuture = startTime !== null && new Date(startTime) > new Date();
+    if (isFuture) {
+      // Library-first check (2026-08-27): om biblioteket har en matchande
+      // bild för denna kategori slipper vi BFL-anrop helt. Biblioteket växer
+      // automatiskt vid varje BFL-success (se aiImageWorker.ts → addToLibrary).
+      // Om biblioteket är tomt (tidig uppstart) fortsätter vi till AI-jobbet.
+      const libMatch = await pickLibraryFallback({
+        venue_id,
+        category_slug,
+      });
+      if (libMatch.url && libMatch.library_id) {
+        await markEventWithLibraryFallback(event_id, libMatch);
+        console.log(
+          `[normalizer] 📸📚 event ${event_id} använder biblioteks-bild ` +
+            `(match_type=${libMatch.match_type}, library_id=${libMatch.library_id})`,
+        );
+      } else {
+        await aiImageQueue.add(
+          'generate',
+          { event_id, enqueued_at: new Date().toISOString() },
+          { jobId: `ai-img-${event_id}` }, // dedup-id så vi inte köar samma event flera gånger
+        );
+        console.log(`[normalizer] 📸 AI-bild-jobb köat: ${event_id} (start=${startTime})`);
+      }
+    } else {
+      const reason = startTime ? 'past' : 'missing_start_time';
+      console.log(
+        `[normalizer] 📸⏭ event ${event_id} ${reason} ` +
+          `(start_time=${startTime ?? 'null'}), skipping AI queue`,
       );
-    } catch (err) {
-      console.warn(`[normalizer] Failed to enqueue image gen for ${event_id}:`, (err as Error).message);
+      appendSkipLog('normalizer', {
+        event_id,
+        source: raw.source ?? null,
+        start_time: startTime,
+        skip_reason: reason,
+      });
     }
   }
 }

@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN"
+  "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!--
+  com.eventpulse.mobilecontrol.plist — launchd job for 09-MobileControl.
+
+  Keeps the mobile control server alive across sleep, tmux-parent-exit,
+  and accidental terminal close. Bound to Tailscale IP via the BIND env
+  var, so the dashboard is reachable on the phone without re-running
+  start-mobile-control.sh every time.
+
+  Install with:
+    cp scripts/com.eventpulse.mobilecontrol.plist ~/Library/LaunchAgents/
+    launchctl load ~/Library/LaunchAgents/com.eventpulse.mobilecontrol.plist
+
+  Uninstall:
+    launchctl unload ~/Library/LaunchAgents/com.eventpulse.mobilecontrol.plist
+    rm ~/Library/LaunchAgents/com.eventpulse.mobilecontrol.plist
+-->
+<plist version="1.0">
+<dict>
+  <key>Label</key>
+  <string>com.eventpulse.mobilecontrol</string>
+
+  <key>ProgramArguments</key>
+  <array>
+    <string>/bin/bash</string>
+    <string>/Volumes/2TB filer/NEWSTRUCTURE-COPY/scripts/start-mobile-control.sh</string>
+  </array>
+
+  <key>WorkingDirectory</key>
+  <string>/Volumes/2TB filer/NEWSTRUCTURE-COPY</string>
+
+  <key>KeepAlive</key>
+  <dict>
+    <key>SuccessfulExit</key>
+    <false/>
+    <key>Crashed</key>
+    <true/>
+    <key>NetworkState</key>
+    <true/>
+  </dict>
+
+  <key>RunAtLoad</key>
+  <true/>
+
+  <key>ThrottleInterval</key>
+  <integer>10</integer>
+
+  <key>StandardOutPath</key>
+  <string>/Volumes/2TB filer/NEWSTRUCTURE-COPY/runtime/mobilecontrol/launchd.out.log</string>
+  <key>StandardErrorPath</key>
+  <string>/Volumes/2TB filer/NEWSTRUCTURE-COPY/runtime/mobilecontrol/launchd.err.log</string>
+
+  <key>EnvironmentVariables</key>
+  <dict>
+    <key>PROJECT_ROOT</key>
+    <string>/Volumes/2TB filer/NEWSTRUCTURE-COPY</string>
+    <key>MOBILE_CONTROL_BIND</key>
+    <string>100.64.107.37</string>
+    <key>MOBILE_CONTROL_PORT</key>
+    <string>8788</string>
+    <key>PATH</key>
+    <string>/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:/Users/claudgashi/.local/bin</string>
+  </dict>
+</dict>
+</plist>

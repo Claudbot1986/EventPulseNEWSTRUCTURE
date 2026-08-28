@@ -13,7 +13,7 @@
 import * as dotenv from 'dotenv';
 dotenv.config({ override: true });
 
-import { scrapeTicketmaster } from './sources/ticketmaster';
+import { fetchTicketmaster } from './sources/ticketmaster';
 import { scrapeEventbrite } from './sources/eventbrite';
 import { scrapeBilletto } from './sources/billetto';
 import { fetchKulturhusetEvents } from './sources/kulturhuset';
@@ -190,7 +190,7 @@ export async function runSmokeTest(): Promise<SmokeTestResult[]> {
   
   // Define all sources to run (ALL sources, no exceptions)
   const sources = [
-    { name: 'ticketmaster', fn: () => scrapeTicketmaster() },
+    { name: 'ticketmaster', fn: () => fetchTicketmaster() },
     { name: 'kulturhuset', fn: () => fetchKulturhusetEvents({ page: 0, limit: 100 }) },
     { name: 'debaser', fn: () => fetchDebaserEvents({ limit: 50 }) },
     { name: 'kulturhuset-barn-ung', fn: () => fetchKulturhusetBarnUngEvents({ limit: 50 }) },

@@ -5,7 +5,7 @@
  * ENDTOEND: Scraping-based sources with HTML/JSON parsing
  */
 
-import { scrapeTicketmaster } from './ticketmaster';
+import { fetchTicketmaster } from './ticketmaster';
 import { scrapeStockholm, generateStockholmSamples } from './stockholm';
 import { scrapeEventbrite } from './eventbrite';
 import { scrapeBilletto } from './billetto';
@@ -121,16 +121,20 @@ export async function runPrototypeSources(): Promise<SourceResult[]> {
   const results: SourceResult[] = [];
 
   // Ticketmaster - PROTOTYPE version (proven to work)
+  // Note: fetchTicketmaster() returns a status string ('completed' | 'failed')
+  // and queues events internally via rawEventsQueue.add('ticketmaster:<id>', raw).
+  // We MUST NOT call queueEvents() here — that would double-queue or crash on
+  // string-vs-array. Reported counts are 0 because the adapter self-queues.
   if (process.env.TICKETMASTER_API_KEY) {
     try {
-      const events = await scrapeTicketmaster();
-      const queued = await queueEvents(events, 'ticketmaster');
+      const result = await fetchTicketmaster();
+      const ok = result === 'completed';
       results.push({
         source: 'ticketmaster',
-        eventsQueued: queued,
-        eventsFound: events.length,
-        errors: [],
-        status: queued > 0 ? 'success' : 'fail',
+        eventsQueued: 0,
+        eventsFound: 0,
+        errors: ok ? [] : [result],
+        status: ok ? 'success' : 'fail',
       });
     } catch (err: any) {
       results.push({

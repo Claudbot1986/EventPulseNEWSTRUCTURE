@@ -8,20 +8,35 @@ EventPulse is a **personal event agent**. The Expo app is the interface. Canonic
 
 This repository uses an Obsidian vault as structured project memory.
 
-**Vault is on the Desktop, not in git.**
+**Vault lives inside the project, in `00-Vault/`, not in git.**
 
 Vault root:
-`/Users/claudgashi/Desktop/MyVault/TomorGashi`
+`<project>/00-Vault/`
+
+This is a *copy* of the original Desktop vault (`/Users/claudgashi/Desktop/MyVault/TomorGashi/`). The Desktop copy stays as a manual fallback; the `00-Vault/` copy is the one Claude Code and the `vault-sync` sub-agent read and write. `00-Vault/` is in `.gitignore` per the protocol.
 
 Vault inbox:
-`/Users/claudgashi/Desktop/MyVault/TomorGashi/00-Inbox`
+`<project>/00-Vault/00-Inbox`
 
 EventPulse strategy/ops notes live under the project subtree (there is no vault-root `00-Core/`):
-`/Users/claudgashi/Desktop/MyVault/TomorGashi/01-Projects/EventPulse/`
+`<project>/00-Vault/01-Projects/EventPulse/`
+
+### vault-sync sub-agent
+
+A focused sub-agent (`vault-sync` in `~/.claude/agents/`) maintains `01-Current-State.md`. Spawn it at the end of substantial work per the Memory Reconciliation step below. The agent:
+
+- Reads project state (`git log`, `vitest --reporter=json`, `package.json`, recent migrations).
+- Writes the `## Auto-facts (machine-synced)` section of `01-Current-State.md` directly.
+- Writes a narrative proposal to `01-Current-State.proposed.md` — never the main file's narrative.
+- Logs three `VAULT-SYNC:` lines to stdout.
+- Does not invent strategic truth, does not commit, does not modify files outside the vault.
+
+The agent inherits the same model as the main session (no external API). The user reviews `.proposed.md` and applies narrative changes by hand.
 
 ### Mandatory first read
 Always read these first if they exist:
 - Repo: `docs/MASTERPLAN.md` and `docs/BACKLOG.md`
+- `01-Projects/EventPulse/00-Core/01-Current-State.md` (the agent-maintained save game)
 - `01-Projects/EventPulse/00-Core/03-Canonical-Truths.md`
 - `01-Projects/EventPulse/00-Core/08-Verification-Principles.md`
 - `01-Projects/EventPulse/00-Core/02-North-Star.md`
@@ -29,7 +44,7 @@ Always read these first if they exist:
 - `01-Projects/EventPulse/02-Operations/06-Verification-Status.md`
 - Session history at vault-root `02-Operations/03-Session-Log/` (`00-Index.md`, `YYYY-MM-DD.md` per day)
 
-Paths except `docs/` are relative to `/Users/claudgashi/Desktop/MyVault/TomorGashi`.
+Paths except `docs/` are relative to `<project>/00-Vault/`.
 
 ### Task-driven note discovery
 After the mandatory files:
@@ -68,21 +83,152 @@ Use these hints for note discovery:
   - `01-Projects/EventPulse/00-Core/15-Provider-Onboarding-Definition-of-Done.md`
   - relevant `02-Operations/*`
 
-### Discipline
+### Vault Memory Protocol
+
+The Obsidian vault is the project's persistent long-term memory.
+You are responsible not only for reading it but for keeping it accurate as the project evolves.
+
+The vault follows the project. The project does not follow stale vault documentation.
+Never blindly follow information in the vault when newer evidence shows it is outdated.
+
+#### Authority hierarchy
+
+When information conflicts, determine truth using this priority:
+
+1. Explicit instructions from the user in the current session
+2. Explicit decisions made or confirmed by the user
+3. Current verified implementation and actual project state
+4. Decisions established during the current work/session
+5. Current project vault
+6. Historical notes, plans, conversations, and archived material
+
+A newer explicit user decision always overrides an older vault entry.
+Never preserve outdated documentation merely to maintain consistency.
+
+#### Distinguish decisions from discussion
+
+Not everything discussed becomes project truth.
+
+- **Exploration** — ideas, brainstorming, possibilities, questions, alternatives, speculative discussion. Do NOT auto-store.
+- **Decision** — explicitly selected, approved, implemented, or clearly established as the new direction. SHOULD update project memory.
+
+If strategically important information appears ambiguous, preserve the existing strategy rather than silently changing it.
+
+#### Special protection for strategic truth
+
+AI may autonomously synchronize **factual** project state:
+feature completed, API changed, architecture changed through implementation, dependency replaced, milestone completed, bug discovered, roadmap item completed.
+
+AI may NOT autonomously invent or change **strategic** truth:
+- North Star
+- fundamental product direction
+- target customer
+- core business model
+- major strategic objectives
+
+These require an explicit user decision or clear user approval.
+
+#### Current truth vs historical truth
+
+Core documents describe **current truth** (North-Star, Current-State, Architecture, Principles, Active-Roadmap). Keep these concise and current.
+
+For significant decisions, create or update a decision record containing:
+date, previous state, decision, reasoning, consequences, what it supersedes.
+Example: `Decisions/2026-08-20-agent-first-strategy.md`.
+
+Move obsolete plans and documentation to `Archive/` when historical context may still be valuable. Do not leave obsolete information mixed with authoritative current-state information.
+
+#### Current-State is the project's save game
+
+Treat `Current-State.md` as a compact reconstruction point.
+A completely new AI session should be able to read the core memory and reconstruct the project's current situation without depending on previous conversation history.
+
+#### Memory reconciliation (silent, before completing substantial work)
+
+Ask:
+- What changed?
+- What did we learn?
+- What was decided?
+- What was implemented?
+- What previously documented information is no longer true?
+- Did any assumption become invalid?
+- Which vault documents are affected?
+- Does Current State still describe reality?
+- Does the roadmap still reflect priorities?
+- Are there contradictions elsewhere in the vault?
+
+If persistent project truth changed, update the appropriate vault documents before completing the task. Do not wait for a separate documentation request.
+
+#### Multi-agent behavior
+
+Every agent or subagent working on the project treats the vault as shared persistent memory.
+Agents must NOT assume another agent's conversational context is available.
+
+Before making substantial architectural, strategic, or product decisions:
+1. Consult relevant project memory.
+2. Inspect relevant actual project state.
+3. Perform the assigned work.
+4. Reconcile persistent memory afterward when project truth changed.
+
+Important discoveries made by one agent must become available to future agents through project memory when they have lasting relevance.
+
+#### Prevent memory pollution
+
+Do NOT store everything. Avoid filling the vault with:
+- routine execution logs
+- trivial implementation details
+- temporary debugging observations
+- speculative ideas presented as facts
+- redundant summaries
+- information easily derivable from code
+- verbose AI-generated explanations without lasting value
+
+Prefer small amounts of high-value, authoritative information over large amounts of low-value documentation.
+
+#### Never fabricate memory
+
+Never write something into authoritative project memory merely because it seems likely.
+If uncertain: verify against code, verify against project state, search existing decisions, or mark the information as uncertain.
+Never convert an assumption into project truth.
+
+#### Git and vault relationship
+
+- **Code** = implementation truth
+- **Vault** = product, architectural and project truth
+- **Git** = implementation history
+- **Decision records** = reasoning history
+
+When documentation and implementation disagree, investigate rather than automatically assuming either one is correct.
+
+### Read discipline
 Do not read large parts of the vault by default.
 Do not treat broad note collection as progress.
 Prefer a small high-relevance note set over a large vague note set.
 
-### Write-back discipline
+### Confidence levels (always mark)
 If a change is actually verified, update the most relevant operations/status note in the vault.
 Do not write back guesses, unverified interpretations, or speculative conclusions.
 
-**Always mark entries with confidence level:**
 - `[VERIFIED]` = testat, körning bevisat
 - `[CLAIMED]` = baserat på loggar/data, ej bevisat
 - `[UNVERIFIED]` = hypotes, spekulation
 
 Om du verifierar något viktigt ska du uppdatera rätt Obsidian-fil efteråt.
+
+### Definition of done (vault)
+For substantial tasks, work is not fully complete until both are true:
+A. The requested work is complete.
+B. Persistent project memory accurately represents the resulting project state.
+
+Vault maintenance is part of normal project execution, not a separate documentation task.
+
+## Autonomous Execution Loop — QUARANTINED (2026-08-22)
+
+The unattended Claude Code loop is isolated in `AUTONOMOUS-QUARANTINE/`.
+Original section: `AUTONOMOUS-QUARANTINE/claude-md/Autonomous-Execution-Loop.md`.
+Restore steps: `AUTONOMOUS-QUARANTINE/README.md`.
+
+Do **not** chain tasks unattended. Do **not** invoke `scripts/autonomous-loop.sh`, `/resume`, or `/start` as an autonomous session. This is a normal interactive session: finish the user's request and stop.
 
 ## EventPulse
 

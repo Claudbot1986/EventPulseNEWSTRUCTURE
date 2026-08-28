@@ -12,7 +12,9 @@
     "dashboard:live": "tsx dashboard-live.ts",
     "venue-graph:dry-run": "tsx 07-Discovery/src/venueGraph/runVenueGraph.ts",
     "venue-graph:apply": "tsx 07-Discovery/src/venueGraph/runVenueGraph.ts --apply",
-    "source-candidates:test": "tsx 07-Discovery/src/sourceTesting/runSourceCandidateTests.ts"
+    "source-candidates:test": "tsx 07-Discovery/src/sourceTesting/runSourceCandidateTests.ts",
+    "start:agent": "tsx 08-Agent/server.ts",
+    "type-check:agent": "tsc --noEmit 08-Agent/**/*.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.117.1",
@@ -25,20 +27,26 @@
     "date-fns-tz": "^3.1.0",
     "dotenv": "^17.3.1",
     "express": "^5.2.1",
+    "fast-xml-parser": "^5.11.0",
     "ioredis": "^5.3.0",
     "meilisearch": "^0.40.0",
     "node-cron": "^3.0.0",
+    "openai": "^7.5.0",
     "puppeteer": "^24.40.0",
+    "sharp": "^0.35.3",
+    "tsx": "^4.21.0",
     "uuid": "^9.0.1",
     "zod": "^3.23.0"
   },
   "devDependencies": {
+    "@resvg/resvg-js": "^2.6.2",
     "@types/express": "^5.0.6",
     "@types/node": "^20.0.0",
     "@types/node-cron": "^3.0.0",
+    "@types/pg": "^8.23.1",
     "@types/uuid": "^9.0.8",
     "@vitest/ui": "^4.1.4",
-    "tsx": "^4.21.0",
+    "pg": "^8.23.0",
     "typescript": "^5.9.3",
     "vitest": "^4.1.4"
   }

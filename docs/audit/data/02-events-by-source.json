@@ -1,0 +1,82 @@
+[
+  {
+    "source": "berwaldhallen",
+    "count": 351
+  },
+  {
+    "source": "evensos-stockholm",
+    "count": 221
+  },
+  {
+    "source": "debaser",
+    "count": 100
+  },
+  {
+    "source": "berwaldhallen-tixly",
+    "count": 71
+  },
+  {
+    "source": "allevents-in",
+    "count": 65
+  },
+  {
+    "source": "aviciiarena",
+    "count": 41
+  },
+  {
+    "source": "china-teatern",
+    "count": 28
+  },
+  {
+    "source": "aik",
+    "count": 27
+  },
+  {
+    "source": "biorio",
+    "count": 20
+  },
+  {
+    "source": "{\"name\":\"kulturhuset\",\"requiresQueue\":false}",
+    "count": 19
+  },
+  {
+    "source": "annexet",
+    "count": 18
+  },
+  {
+    "source": "arkdes",
+    "count": 12
+  },
+  {
+    "source": "abf",
+    "count": 9
+  },
+  {
+    "source": "{\"name\":\"kulturhuset-barn-ung\",\"requiresQueue\":false}",
+    "count": 6
+  },
+  {
+    "source": "3arena",
+    "count": 4
+  },
+  {
+    "source": "abb-arena",
+    "count": 2
+  },
+  {
+    "source": "bar-brooklyn",
+    "count": 2
+  },
+  {
+    "source": "do310-com",
+    "count": 2
+  },
+  {
+    "source": "borlange",
+    "count": 1
+  },
+  {
+    "source": "dramaten",
+    "count": 1
+  }
+]

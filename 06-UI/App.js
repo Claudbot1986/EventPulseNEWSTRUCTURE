@@ -1,15 +1,21 @@
 import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { StatusBar } from 'expo-status-bar';
-import { StyleSheet, Text, View, SectionList, SafeAreaView, ActivityIndicator, TouchableOpacity, ScrollView, Linking, Image } from 'react-native';
-import { fetchEvents } from './services/eventServiceClient';
+import { StyleSheet, Text, View, SectionList, ActivityIndicator, TouchableOpacity, ScrollView, Linking, Image, Platform, Share, Alert, AppState } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { fetchFeed, addDays, fetchEventIcs, shareSession, fetchSharedSession, parseShareHashFromUrl } from './services/agentClient';
+import { useAiImageUrl } from './hooks/useAiImageUrl';
+import { analyticsClient } from './services/analyticsClient';
+import UserPickerScreen from './screens/UserPickerScreen';
+import ProfileScreen from './screens/ProfileScreen';
+import { getItem, getOrCreateAnonUserId, removeItem, setItem, PENDING_AGENT_MESSAGE_KEY } from './services/storage';
 
 const TOKENS = {
   color: {
-    appBg: '#08090D',
-    surface: '#12151D',
-    surfaceRaised: '#191D28',
+    appBg: '#000000',
+    surface: '#15151B',
+    surfaceRaised: 'transparent',
     surfaceSoft: '#202635',
-    border: '#2B3140',
+    border: '#1A1A1A',
     borderStrong: '#3A4254',
     text: '#F7F2EA',
     textMuted: '#A9B0BE',
@@ -395,15 +401,20 @@ function EventItem({ event, onPress }) {
   const venue = getVenueLabel(event);
   const area = getAreaLabel(event);
   const price = formatPrice(event);
+  // AI image rollout (Utforska, 2026-08-26) — useAiImageUrl returns the
+  // pre-baked/lazy URL or null. UI renders empty box when null. The 240×64
+  // SE-corner AI stamp must stay visible → resizeMode="contain" + aspectRatio:1.
+  // See 08-Agent/tools/ai_compliance.ts:applyAiCompliance.
+  const { uri } = useAiImageUrl(event);
 
   return (
     <TouchableOpacity style={styles.eventCard} onPress={onPress} activeOpacity={0.7}>
-      {event.imageUrl ? (
-        <Image source={{ uri: event.imageUrl }} style={styles.eventImage} />
+      {uri ? (
+        // AI stamp (240×64 SE corner) — resizeMode must stay 'contain'. Do not crop.
+        <Image source={{ uri }} style={styles.eventImage} resizeMode="contain" />
       ) : (
-        <View style={styles.eventImageFallback}>
-          <Text style={styles.eventImageFallbackText}>Ingen bild från källan</Text>
-        </View>
+        // Tom enhetlig box istället för text — UI ska INTE avslöja BFL-status.
+        <View style={styles.eventImageFallback} />
       )}
       <View style={styles.eventCardBody}>
         <View style={styles.eventHeader}>
@@ -435,19 +446,32 @@ function GroupedEventItem({ groupedEvent, onEventPress }) {
   const firstEvent = groupedEvent.events[0] || groupedEvent;
   const venue = getVenueLabel(firstEvent);
   const area = getAreaLabel(firstEvent);
+  // AI image rollout (Utforska, 2026-08-26) — see EventItem above.
+  const { uri } = useAiImageUrl(firstEvent);
 
   return (
     <TouchableOpacity style={styles.eventCard} onPress={() => onEventPress(groupedEvent.events[0])} activeOpacity={0.7}>
-      {firstEvent.imageUrl ? (
-        <Image source={{ uri: firstEvent.imageUrl }} style={styles.eventImage} />
+      {uri ? (
+        // AI stamp (240×64 SE corner) — resizeMode must stay 'contain'. Do not crop.
+        <Image source={{ uri }} style={styles.eventImage} resizeMode="contain" />
       ) : (
-        <View style={styles.eventImageFallback}>
-          <Text style={styles.eventImageFallbackText}>Ingen bild från källan</Text>
-        </View>
+        // Tom enhetlig box istället för text — UI ska INTE avslöja BFL-status.
+        <View style={styles.eventImageFallback} />
       )}
       <View style={styles.eventCardBody}>
         <View style={styles.eventHeader}>
-          <DateCluster event={firstEvent} />
+          <View style={styles.dateClustersRow}>
+            {groupedEvent.events.map((event, index) => (
+              <TouchableOpacity
+                key={`${event.id || event.start_time || index}`}
+                style={styles.timeClusterWrap}
+                onPress={() => onEventPress(event)}
+                activeOpacity={0.7}
+              >
+                <DateCluster event={event} />
+              </TouchableOpacity>
+            ))}
+          </View>
           <CategoryBadge category={groupedEvent.category} />
         </View>
         <Text style={styles.eventTitle} numberOfLines={2}>{groupedEvent.title}</Text>
@@ -462,21 +486,6 @@ function GroupedEventItem({ groupedEvent, onEventPress }) {
               {firstEvent.externalLinkChipLabel || 'Extern länk'}
             </Text>
           )}
-        </View>
-        <View style={styles.groupedTimesContainer}>
-          {groupedEvent.events.map((event, index) => (
-            <TouchableOpacity
-              key={`${event.id || event.start_time || index}`}
-              style={styles.groupedRowContainer}
-              onPress={() => onEventPress(event)}
-              activeOpacity={0.7}
-            >
-              <Text style={styles.groupedDateText}>
-                {formatDate(event.date)} · {formatEventTime(event)}
-              </Text>
-              <Text style={styles.groupedRowArrowText}>Visa</Text>
-            </TouchableOpacity>
-          ))}
         </View>
       </View>
     </TouchableOpacity>
@@ -527,7 +536,7 @@ function StateView({ title, detail, actionLabel, onAction }) {
   );
 }
 
-function HomeScreen({ onEventPress, scrollPositionRef }) {
+function HomeScreen({ onEventPress, scrollPositionRef, pendingPrompt, dismissPendingPrompt }) {
   const [events, setEvents] = useState([]);
   const [loading, setLoading] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
@@ -535,23 +544,66 @@ function HomeScreen({ onEventPress, scrollPositionRef }) {
   const [timeFilter, setTimeFilter] = useState(null);
   const [selectedCategories, setSelectedCategories] = useState([]);
   const [priceFilter, setPriceFilter] = useState(null);
+  // Pagination: `weekStart` advances by 7 days on each scroll-end load.
+  const [weekStart, setWeekStart] = useState(() => new Date().toISOString().slice(0, 10));
+  const [hasMore, setHasMore] = useState(true);
+  // Canonical count from /agent/feed (Supabase). Header binds this so the
+  // displayed total tracks the DB, not the locally-paginated window.
+  const [totalCount, setTotalCount] = useState(0);
   const sectionListRef = useRef(null);
   const scrollPositionRefLocal = useRef(0);
   const isFetchingRef = useRef(false);
+  // Track the latest loadEvents so the AppState listener below doesn't
+  // capture a stale closure. loadEvents identity changes whenever weekStart
+  // changes; the listener only fires on foreground transitions but should
+  // always call the current version.
+  const loadEventsRef = useRef(null);
+  loadEventsRef.current = loadEvents;
+  // Debounce AppState 'active' so cold-start + resume within 5s don't pile
+  // up duplicate fetches. Initialized to Date.now() so the iOS
+  // immediate-on-mount 'change' event (not a real foreground transition)
+  // is also debounced away.
+  const lastForegroundFetchRef = useRef(Date.now());
 
-  const loadEvents = useCallback(async () => {
-    if (isFetchingRef.current) {
-      return;
-    }
+  /**
+   * Load events for the current `weekStart`.
+   * - On initial mount, if the page is empty (e.g. a quiet Sunday), advance
+   *   `weekStart` by 1 day and retry, up to 7 attempts.
+   * - On scroll-end (loadMore=true), append the next 7-day window without
+   *   retry semantics — caller already chose to advance.
+   */
+  const loadEvents = useCallback(async (opts = {}) => {
+    const { append = false, fromOverride = null } = opts;
+    if (isFetchingRef.current) return;
 
     isFetchingRef.current = true;
-    setLoading(true);
+    if (append) setLoadingMore(true); else setLoading(true);
     setError(null);
 
     try {
-      const result = await fetchEvents();
-      const data = result.events || [];
-      setEvents(deduplicateEvents(data));
+      let from = fromOverride ?? weekStart;
+      let attempts = 0;
+      let page;
+
+      while (attempts < 7) {
+        page = await fetchFeed({ from, days: 7 });
+        if (page.events.length > 0 || append) break;
+        // Empty page on initial load → try next day (handles quiet Sundays).
+        attempts += 1;
+        from = addDays(from, 1);
+      }
+
+      if (!append) setWeekStart(from);
+
+      setEvents((prev) => {
+        const next = append ? [...prev, ...page.events] : page.events;
+        return deduplicateEvents(next);
+      });
+      setHasMore(page.has_more);
+      // Refresh the canonical total on the initial load. Scroll-end appends
+      // don't refetch the total — the page-level call already returned the
+      // full DB count, so we trust it across windows.
+      if (!append) setTotalCount(page.total ?? 0);
     } catch (err) {
       setError(err.message || 'Kunde inte hämta event');
       console.error('Failed to load events:', err);
@@ -560,11 +612,31 @@ function HomeScreen({ onEventPress, scrollPositionRef }) {
       setLoadingMore(false);
       isFetchingRef.current = false;
     }
-  }, []);
+  }, [weekStart]);
 
   useEffect(() => {
     loadEvents();
-  }, [loadEvents]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Refresh the canonical count when the app returns to the foreground so the
+  // header tracks Supabase after the user has been away (data may have changed
+  // server-side). Uses a ref for `loadEvents` so we always call the current
+  // version, and debounces duplicate 'active' events from iOS cold-start.
+  useEffect(() => {
+    const sub = AppState.addEventListener('change', (nextState) => {
+      if (nextState !== 'active') return;
+      const now = Date.now();
+      if (now - lastForegroundFetchRef.current < 5000) return;
+      lastForegroundFetchRef.current = now;
+      const freshToday = new Date().toISOString().slice(0, 10);
+      // loadEvents internally sets weekStart to from, so we don't need to
+      // call setWeekStart here — that caused a redundant state transition
+      // on every foreground event.
+      loadEventsRef.current?.({ append: false, fromOverride: freshToday });
+    });
+    return () => sub.remove();
+  }, []);
 
   const handleTimeFilterPress = useCallback((filterKey) => {
     setTimeFilter(prev => prev === filterKey ? null : filterKey);
@@ -633,9 +705,26 @@ function HomeScreen({ onEventPress, scrollPositionRef }) {
         <Text style={styles.appKicker}>City discovery</Text>
         <Text style={styles.appTitle}>Vad händer i stan?</Text>
         <Text style={styles.appSubtitle}>
-          {events.length} riktiga event att upptäcka. Börja browsa, filtrera när du vill.
+          {totalCount} riktiga event att upptäcka. Börja browsa, filtrera när du vill.
         </Text>
       </View>
+
+      {pendingPrompt ? (
+        <View style={styles.pendingPromptBanner} accessibilityRole="text">
+          <Text style={styles.pendingPromptEyebrow}>DU FRÅGADE</Text>
+          <Text style={styles.pendingPromptText} numberOfLines={3}>
+            {pendingPrompt}
+          </Text>
+          <TouchableOpacity
+            style={styles.pendingPromptDismiss}
+            onPress={dismissPendingPrompt}
+            accessibilityRole="button"
+            accessibilityLabel="Stäng"
+          >
+            <Text style={styles.pendingPromptDismissText}>Stäng</Text>
+          </TouchableOpacity>
+        </View>
+      ) : null}
 
       <View style={styles.filtersPanel}>
         <Text style={styles.filterLabel}>När</Text>
@@ -726,14 +815,14 @@ function HomeScreen({ onEventPress, scrollPositionRef }) {
           }}
           renderItem={({ item }) => (
             item.isGrouped ? (
-              <GroupedEventItem 
-                groupedEvent={item} 
-                onEventPress={onEventPress} 
+              <GroupedEventItem
+                groupedEvent={item}
+                onEventPress={onEventPress}
               />
             ) : (
-              <EventItem 
-                event={item} 
-                onPress={() => onEventPress(item)} 
+              <EventItem
+                event={item}
+                onPress={() => onEventPress(item)}
               />
             )
           )}
@@ -744,8 +833,20 @@ function HomeScreen({ onEventPress, scrollPositionRef }) {
           )}
           contentContainerStyle={styles.listContent}
           showsVerticalScrollIndicator={false}
-          ListFooterComponent={loadingMore ? <LoadingMore /> : null}
+          ListFooterComponent={loadingMore ? <LoadingMore /> : (!hasMore && events.length > 0 ? (
+            <View style={styles.endOfList}>
+              <Text style={styles.endOfListText}>Det var allt vi har just nu.</Text>
+            </View>
+          ) : null)}
           stickySectionHeadersEnabled={false}
+          onEndReached={() => {
+            if (!loadingMore && hasMore) {
+              const next = addDays(weekStart, 7);
+              setWeekStart(next);
+              loadEvents({ append: true, fromOverride: next });
+            }
+          }}
+          onEndReachedThreshold={0.5}
           onScroll={(event) => {
             scrollPositionRefLocal.current = event.nativeEvent.contentOffset.y;
             if (scrollPositionRef) {
@@ -761,10 +862,23 @@ function HomeScreen({ onEventPress, scrollPositionRef }) {
 
 function DetailsScreen({ event, onBack }) {
   const [ctaError, setCtaError] = useState(null);
+  const [saved, setSaved] = useState(false);
+  const [dismissed, setDismissed] = useState(false);
+  const [calendarError, setCalendarError] = useState(null);
+  const [calendarBusy, setCalendarBusy] = useState(false);
+  // T0061 — share-session state. `shareError` carries network/permission
+  // warnings after the OS Share-sheet closes (best-effort display).
+  const [shareBusy, setShareBusy] = useState(false);
+  const [shareError, setShareError] = useState(null);
+  // AI image rollout (Utforska, 2026-08-26) — see EventItem above.
+  const { uri } = useAiImageUrl(event);
 
   const handleOpenUrl = async () => {
     if (!event.url) {
       return;
+    }
+    if (event?.id) {
+      void analyticsClient.eventClick(event.id, 'external');
     }
 
     try {
@@ -780,6 +894,85 @@ function DetailsScreen({ event, onBack }) {
       setCtaError('Länken kunde inte öppnas just nu.');
     }
   };
+
+  const handleToggleSave = () => {
+    if (!event?.id) return;
+    const next = !saved;
+    setSaved(next);
+    void analyticsClient.eventSave(event.id, next ? 'save' : 'unsave');
+  };
+
+  const handleDismiss = () => {
+    if (!event?.id || dismissed) return;
+    setDismissed(true);
+    void analyticsClient.eventDismiss(event.id);
+    // Tiny delay so the analytics request fires before the screen unmounts.
+    setTimeout(() => onBack(), 250);
+  };
+
+  // T0058 — calendar export. Phase 1 minimum viable: fetch the .ics from
+  // the agent and open it via Linking so the OS prompts the user. iOS
+  // Safari offers "Add to Calendar" on .ics downloads; on Android the user
+  // can pick a calendar app. Apple Wallet .pkpass is deferred (T0066) —
+  // requires signing certs beyond MVP scope.
+  const handleAddToCalendar = useCallback(async () => {
+    if (!event?.id || calendarBusy) return;
+    setCalendarBusy(true);
+    setCalendarError(null);
+    try {
+      const userId = await getOrCreateAnonUserId();
+      const { url } = await fetchEventIcs(event.id, userId);
+      const canOpen = await Linking.canOpenURL(url);
+      if (!canOpen) {
+        setCalendarError('Kan inte öppna kalenderfilen på den här enheten.');
+        return;
+      }
+      await Linking.openURL(url);
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : 'unknown';
+      setCalendarError(`Kunde inte hämta kalenderfil: ${msg}`);
+    } finally {
+      setCalendarBusy(false);
+    }
+  }, [event?.id, calendarBusy]);
+
+  // T0061 / MVP-gap §78 — share-event deep-link.
+  // Calls POST /agent/share with the event title (cheap, discoverable), then
+  // opens the native Share-sheet with a `eventpulse://s/{hash}` URL. The
+  // recipient's app resolves the hash against GET /s/:hash and routes to
+  // either the agent (query) or this Detail screen (single event).
+  const handleShare = useCallback(async () => {
+    if (!event?.id || shareBusy) return;
+    setShareBusy(true);
+    setShareError(null);
+    try {
+      const title = (event.title ?? 'Ett event').slice(0, 200);
+      const venue = getVenueLabel(event) || 'Stockholm';
+      const query = `${title} på ${venue}`;
+      const res = await shareSession({ query, eventIds: [event.id] });
+      if (!res.ok) {
+        setShareError(`Kunde inte skapa delningslänk: ${res.warning}`);
+        return;
+      }
+      try {
+        await Share.share({
+          message: `${title} — öppna i EventPulse: ${res.url}`,
+          url: res.url,
+          title,
+        });
+        void analyticsClient.eventShare?.(event.id, 'share');
+      } catch (err) {
+        const msg = err instanceof Error ? err.message : 'unknown';
+        // User-cancellation is expected — surface no error for it.
+        if (!/user did not share|dismissedAction/i.test(msg)) {
+          setShareError(`Kunde inte öppna delningsmenyn: ${msg}`);
+        }
+      }
+    } finally {
+      setShareBusy(false);
+    }
+  }, [event?.id, event?.title, event?.venue_name, shareBusy]);
+
   const venue = getVenueLabel(event);
   const area = getAreaLabel(event);
   const price = formatPrice(event);
@@ -792,12 +985,12 @@ function DetailsScreen({ event, onBack }) {
         </TouchableOpacity>
       </View>
       <ScrollView style={styles.detailsContent} showsVerticalScrollIndicator={false}>
-        {event.imageUrl ? (
-          <Image source={{ uri: event.imageUrl }} style={styles.detailsImage} />
+        {uri ? (
+          // AI stamp (240×64 SE corner) — resizeMode must stay 'contain'. Do not crop.
+          <Image source={{ uri }} style={styles.detailsImage} resizeMode="contain" />
         ) : (
-          <View style={styles.detailsImageFallback}>
-            <Text style={styles.eventImageFallbackText}>Ingen bild från källan</Text>
-          </View>
+          // Tom enhetlig box istället för text — UI ska INTE avslöja BFL-status.
+          <View style={styles.detailsImageFallback} />
         )}
         
         <View style={styles.detailsIntro}>
@@ -810,6 +1003,8 @@ function DetailsScreen({ event, onBack }) {
                 style={styles.detailsPrimaryCta}
                 onPress={handleOpenUrl}
                 activeOpacity={0.8}
+                accessibilityRole="button"
+                accessibilityLabel={event.externalLinkLabel || getCtaText(event.source)}
               >
                 <Text style={styles.ctaButtonText}>{event.externalLinkLabel || getCtaText(event.source)}</Text>
               </TouchableOpacity>
@@ -820,6 +1015,62 @@ function DetailsScreen({ event, onBack }) {
               <Text style={styles.ctaUnavailableText}>Ingen extern eventlänk finns i datan ännu.</Text>
             </View>
           )}
+
+          <View style={styles.detailsActionRow}>
+            <TouchableOpacity
+              style={[styles.detailsActionButton, saved && styles.detailsActionButtonActive]}
+              onPress={handleToggleSave}
+              activeOpacity={0.7}
+              accessibilityRole="button"
+              accessibilityState={{ selected: saved }}
+              accessibilityLabel={saved ? 'Ta bort från sparade' : 'Spara event'}
+            >
+              <Text style={[styles.detailsActionText, saved && styles.detailsActionTextActive]}>
+                {saved ? '✓ Sparad' : 'Spara'}
+              </Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[styles.detailsActionButton, styles.detailsActionButtonDismiss]}
+              onPress={handleDismiss}
+              activeOpacity={0.7}
+              disabled={dismissed}
+              accessibilityRole="button"
+              accessibilityLabel="Dölj detta event"
+            >
+              <Text style={[styles.detailsActionText, styles.detailsActionTextDismiss]}>
+                {dismissed ? 'Dold' : 'Dölj'}
+              </Text>
+            </TouchableOpacity>
+          </View>
+          <TouchableOpacity
+            style={[styles.detailsActionButton, styles.detailsActionButtonFull, calendarBusy && styles.detailsActionButtonDisabled]}
+            onPress={handleAddToCalendar}
+            activeOpacity={0.7}
+            disabled={calendarBusy}
+            accessibilityRole="button"
+            accessibilityLabel="Lägg till i kalender"
+          >
+            <Text style={[styles.detailsActionText, calendarBusy && styles.detailsActionTextDisabled]}>
+              {calendarBusy ? 'Hämtar kalenderfil…' : 'Lägg till i kalender'}
+            </Text>
+          </TouchableOpacity>
+          {calendarError ? <Text style={styles.ctaErrorText}>{calendarError}</Text> : null}
+
+          {/* T0061 — share deep-link. Sibling of "Lägg till i kalender"
+              since both produce outbound intents. */}
+          <TouchableOpacity
+            style={[styles.detailsActionButton, styles.detailsActionButtonFull, shareBusy && styles.detailsActionButtonDisabled]}
+            onPress={handleShare}
+            activeOpacity={0.7}
+            disabled={shareBusy}
+            accessibilityRole="button"
+            accessibilityLabel="Dela detta event"
+          >
+            <Text style={[styles.detailsActionText, shareBusy && styles.detailsActionTextDisabled]}>
+              {shareBusy ? 'Förbereder delning…' : 'Dela'}
+            </Text>
+          </TouchableOpacity>
+          {shareError ? <Text style={styles.ctaErrorText}>{shareError}</Text> : null}
         </View>
         
         <View style={styles.detailsSection}>
@@ -855,17 +1106,154 @@ function DetailsScreen({ event, onBack }) {
 export default function App() {
   const [showSplash, setShowSplash] = useState(true);
   const [selectedEvent, setSelectedEvent] = useState(null);
+  const [activeUser, setActiveUser] = useState(null);
+  const [appReady, setAppReady] = useState(false);
   const scrollPositionRef = useRef(0);
 
   useEffect(() => {
+    let cancelled = false;
+    const budget = setTimeout(() => {
+      if (!cancelled) setAppReady(true);
+    }, 800);
+    (async () => {
+      try {
+        const existing = await analyticsClient.getActiveUser();
+        if (!cancelled && existing) {
+          setActiveUser(existing);
+          try {
+            await analyticsClient.sessionStart(Platform.OS);
+            analyticsClient.startFlushLoop();
+          } catch (err) {
+            console.warn('[App] analytics restore failed:', err?.message || err);
+          }
+        }
+      } catch (err) {
+        console.warn('[App] AsyncStorage restore failed:', err?.message || err);
+      } finally {
+        if (!cancelled) setAppReady(true);
+        clearTimeout(budget);
+      }
+    })();
+    return () => {
+      cancelled = true;
+      clearTimeout(budget);
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!appReady) return undefined;
     const timer = setTimeout(() => {
       setShowSplash(false);
-    }, 3000);
+    }, 400);
     return () => clearTimeout(timer);
+  }, [appReady]);
+
+  // Fire a "home" section impression every time the user lands back on
+  // the feed after splash + consent. Skipped while a details screen or the
+  // splash is showing so we don't double-count.
+  useEffect(() => {
+    if (!appReady || showSplash || !activeUser || selectedEvent) return;
+    void analyticsClient.sectionImpression('home');
+  }, [appReady, showSplash, activeUser, selectedEvent]);
+
+  // Drain the analytics queue when the App component unmounts so we
+  // don't lose buffered events on Fast Refresh.
+  useEffect(() => {
+    return () => {
+      analyticsClient.stopFlushLoop();
+    };
+  }, []);
+
+  // T0063 — drain the pending agent prompt set by HomeScreen chip tap.
+  // AppShell writes `eventpulse.pending_agent_message` and switches to the
+  // explore tab; App.js reads it here, surfaces a banner for context, and
+  // clears the key on dismiss so it doesn't reappear on next mount.
+  const [pendingPrompt, setPendingPrompt] = useState(null);
+  // T0078 — tab navigation. 'home' | 'map' | 'saved' | 'notifications' | 'profile'
+  const [activeTab, setActiveTab] = useState('home');
+  useEffect(() => {
+    let cancelled = false;
+    getItem(PENDING_AGENT_MESSAGE_KEY)
+      .then((value) => {
+        if (cancelled || !value) return;
+        setPendingPrompt(value);
+        removeItem(PENDING_AGENT_MESSAGE_KEY).catch(() => {});
+      })
+      .catch(() => {});
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+  const dismissPendingPrompt = useCallback(() => {
+    setPendingPrompt(null);
+    removeItem(PENDING_AGENT_MESSAGE_KEY).catch(() => {});
+  }, []);
+
+  // T0061 — deep-link handler. Two surfaces: cold-start (`getInitialURL`)
+  // and warm-start (`addEventListener('url', ...)`). Both resolve into a
+  // shared session via `fetchSharedSession`; if the share contained a
+  // single event_id we open that DetailsScreen, otherwise we route the
+  // query to the agent via the same pending-prompt mechanism T0063 uses.
+  //
+  // Single-event shares are the express path — one tap to a single
+  // recommendation, no agent round-trip needed.
+  useEffect(() => {
+    let cancelled = false;
+    const resolveDeepLink = async (url) => {
+      if (cancelled) return;
+      const hash = parseShareHashFromUrl(url);
+      if (!hash) return;
+      const res = await fetchSharedSession({ hash });
+      if (cancelled || !res.ok) return;
+      if (Array.isArray(res.eventIds) && res.eventIds.length === 1) {
+        // Open the single shared event. We don't have full EventCard data
+        // here, so we set a lightweight stub that DetailsScreen ignores
+        // for now — the full flow reopens DetailsScreen via handleEventPress
+        // after the feed re-renders. Acceptable for Phase 1.
+        const ev = {
+          id: res.eventIds[0],
+          title: res.query || 'Delat event',
+          url: null,
+          ticket_url: null,
+          imageUrl: null,
+          image_url: null,
+          source: 'shared',
+        };
+        setSelectedEvent(ev);
+        return;
+      }
+      // Multi-event or query-only share → forward to agent via T0063 path.
+      const text = (res.query && res.query.trim().length > 0)
+        ? res.query
+        : 'Visa mig vad jag har blivit tipsad om';
+      setPendingPrompt(text);
+      setItem(PENDING_AGENT_MESSAGE_KEY, text).catch(() => {});
+    };
+
+    // Cold-start: app launched via the deep-link.
+    Linking.getInitialURL()
+      .then((url) => { if (url) resolveDeepLink(url); })
+      .catch(() => {});
+
+    // Warm-start: app already running, deep-link arrives via 'url' event.
+    const sub = Linking.addEventListener('url', ({ url }) => {
+      resolveDeepLink(url);
+    });
+    return () => {
+      cancelled = true;
+      sub.remove();
+    };
+  }, []);
+
+  const handleUserPicked = useCallback((userId) => {
+    setActiveUser(userId);
   }, []);
 
   const handleEventPress = (event) => {
     setSelectedEvent(event);
+    if (event?.id) {
+      void analyticsClient.eventView(event.id, event.source, event.category);
+    }
   };
 
   const handleBack = () => {
@@ -873,15 +1261,56 @@ export default function App() {
     // Scroll position is automatically preserved because we don't unmount HomeScreen
   };
 
+  const renderMain = () => {
+    if (!appReady || showSplash) return <SplashScreen />;
+    if (!activeUser) {
+      return <UserPickerScreen onUserPicked={handleUserPicked} />;
+    }
+    if (selectedEvent) {
+      return <DetailsScreen event={selectedEvent} onBack={handleBack} />;
+    }
+    // T0078 — tab routing: home | map | profile.
+    // Lazy require so react-native-maps is not loaded on every Expo Go boot.
+    if (activeTab === 'map') {
+      const MapScreen = require('./screens/MapScreen').default;
+      return <MapScreen onEventPress={handleEventPress} />;
+    }
+    if (activeTab === 'profile') {
+      return <ProfileScreen />;
+    }
+    return <HomeScreen onEventPress={handleEventPress} scrollPositionRef={scrollPositionRef} pendingPrompt={pendingPrompt} dismissPendingPrompt={dismissPendingPrompt} />;
+  };
+
+  const showTabBar = appReady && !showSplash && activeUser && !selectedEvent;
+
   return (
     <View style={styles.container}>
-      {showSplash ? (
-        <SplashScreen />
-      ) : selectedEvent ? (
-        <DetailsScreen event={selectedEvent} onBack={handleBack} />
-      ) : (
-        <HomeScreen onEventPress={handleEventPress} scrollPositionRef={scrollPositionRef} />
-      )}
+      {renderMain()}
+      {showTabBar ? (
+          <View style={styles.tabBar} accessibilityRole="tabbar">
+            {[
+              { key: 'home',    label: 'Hem',     icon: '●' },
+              { key: 'map',     label: 'Karta',   icon: '◆' },
+              { key: 'profile', label: 'Profil',  icon: '◉' },
+            ].map(({ key, label, icon }) => (
+              <TouchableOpacity
+                key={key}
+                style={styles.tabItem}
+                onPress={() => setActiveTab(key)}
+                accessibilityRole="tab"
+                accessibilityState={{ selected: activeTab === key }}
+                accessibilityLabel={label}
+              >
+                <Text style={[styles.tabIcon, activeTab === key && styles.tabIconActive]}>
+                  {icon}
+                </Text>
+                <Text style={[styles.tabLabel, activeTab === key && styles.tabLabelActive]}>
+                  {label}
+                </Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+        ) : null}
       <StatusBar style="light" />
     </View>
   );
@@ -907,6 +1336,44 @@ const styles = StyleSheet.create({
   homeContainer: {
     flex: 1,
     backgroundColor: TOKENS.color.appBg,
+  },
+
+  // T0063 — pending prompt banner (chip tap → explore tab).
+  pendingPromptBanner: {
+    marginHorizontal: TOKENS.space.xl,
+    marginBottom: TOKENS.space.md,
+    padding: TOKENS.space.md,
+    borderRadius: TOKENS.radius.md,
+    borderWidth: 1,
+    borderColor: TOKENS.color.accent,
+    backgroundColor: TOKENS.color.accentSoft,
+  },
+  pendingPromptEyebrow: {
+    color: TOKENS.color.accent,
+    fontSize: 11,
+    fontWeight: '700',
+    letterSpacing: 1.4,
+    marginBottom: 4,
+  },
+  pendingPromptText: {
+    color: TOKENS.color.text,
+    fontSize: 15,
+    fontWeight: '500',
+    lineHeight: 20,
+    marginBottom: TOKENS.space.sm,
+  },
+  pendingPromptDismiss: {
+    alignSelf: 'flex-start',
+    paddingHorizontal: TOKENS.space.md,
+    paddingVertical: 6,
+    borderRadius: TOKENS.radius.sm,
+    borderWidth: 1,
+    borderColor: TOKENS.color.borderStrong,
+  },
+  pendingPromptDismissText: {
+    color: TOKENS.color.textMuted,
+    fontSize: 12,
+    fontWeight: '600',
   },
   header: {
     paddingHorizontal: TOKENS.space.xl,
@@ -988,16 +1455,16 @@ const styles = StyleSheet.create({
     fontWeight: '800',
   },
   listContent: {
-    padding: TOKENS.space.lg,
+    padding: TOKENS.space.md,
     paddingBottom: TOKENS.space.xxl,
   },
   dayHeader: {
-    paddingTop: TOKENS.space.lg,
-    paddingBottom: TOKENS.space.sm,
+    paddingTop: TOKENS.space.md,
+    paddingBottom: TOKENS.space.xs,
   },
   dayHeaderText: {
     color: TOKENS.color.accent,
-    fontSize: 17,
+    fontSize: 15,
     fontWeight: '900',
     letterSpacing: -0.2,
   },
@@ -1006,16 +1473,16 @@ const styles = StyleSheet.create({
     borderRadius: TOKENS.radius.lg,
     borderWidth: 1,
     borderColor: TOKENS.color.border,
-    marginBottom: TOKENS.space.lg,
+    marginBottom: TOKENS.space.md,
     overflow: 'hidden',
   },
   eventImage: {
     width: '100%',
-    height: 154,
+    height: 280,
     backgroundColor: TOKENS.color.surfaceSoft,
   },
   eventImageFallback: {
-    height: 126,
+    height: 230,
     backgroundColor: TOKENS.color.surfaceSoft,
     alignItems: 'center',
     justifyContent: 'center',
@@ -1030,14 +1497,21 @@ const styles = StyleSheet.create({
     textTransform: 'uppercase',
   },
   eventCardBody: {
-    padding: TOKENS.space.lg,
+    padding: TOKENS.space.md,
   },
   eventHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'flex-start',
-    gap: TOKENS.space.md,
-    marginBottom: TOKENS.space.md,
+    gap: TOKENS.space.sm,
+    marginBottom: TOKENS.space.sm,
+    flexWrap: 'wrap',
+  },
+  dateClustersRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: TOKENS.space.xs,
+    flexShrink: 1,
   },
   dateCluster: {
     backgroundColor: TOKENS.color.accentSoft,
@@ -1049,20 +1523,20 @@ const styles = StyleSheet.create({
   },
   dateClusterDay: {
     color: TOKENS.color.accent,
-    fontSize: 13,
-    fontWeight: '900',
+    fontSize: 11,
+    fontWeight: '800',
   },
   dateClusterTime: {
     color: TOKENS.color.textMuted,
-    fontSize: 12,
+    fontSize: 10,
     marginTop: 2,
   },
   eventTitle: {
     color: TOKENS.color.text,
-    fontSize: 21,
-    fontWeight: '900',
-    lineHeight: 27,
-    letterSpacing: -0.4,
+    fontSize: 17,
+    fontWeight: '700',
+    lineHeight: 22,
+    letterSpacing: -0.2,
   },
   categoryBadge: {
     paddingHorizontal: TOKENS.space.md,
@@ -1078,30 +1552,30 @@ const styles = StyleSheet.create({
   eventMetaRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginTop: TOKENS.space.md,
+    marginTop: TOKENS.space.sm,
   },
   eventVenue: {
     color: TOKENS.color.textMuted,
-    fontSize: 14,
-    fontWeight: '700',
+    fontSize: 12,
+    fontWeight: '500',
     maxWidth: '70%',
   },
   eventArea: {
     color: TOKENS.color.textSoft,
-    fontSize: 14,
+    fontSize: 12,
     flexShrink: 1,
   },
   eventFooter: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginTop: TOKENS.space.lg,
+    marginTop: TOKENS.space.md,
     gap: TOKENS.space.md,
   },
   eventPrice: {
     color: TOKENS.color.mint,
-    fontSize: 13,
-    fontWeight: '900',
+    fontSize: 12,
+    fontWeight: '700',
     flexShrink: 1,
   },
   eventActionRow: {
@@ -1142,9 +1616,8 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     flexShrink: 1,
   },
-  groupedTimesContainer: {
-    marginTop: TOKENS.space.md,
-    gap: TOKENS.space.sm,
+  timeClusterWrap: {
+    borderRadius: TOKENS.radius.md,
   },
   groupedRowContainer: {
     flexDirection: 'row',
@@ -1177,6 +1650,15 @@ const styles = StyleSheet.create({
     color: TOKENS.color.textMuted,
     marginLeft: TOKENS.space.sm,
     fontSize: 14,
+  },
+  endOfList: {
+    paddingVertical: TOKENS.space.xl,
+    alignItems: 'center',
+  },
+  endOfListText: {
+    color: TOKENS.color.textSoft,
+    fontSize: 13,
+    fontStyle: 'italic',
   },
   skeletonList: {
     padding: TOKENS.space.lg,
@@ -1308,6 +1790,48 @@ const styles = StyleSheet.create({
     padding: TOKENS.space.lg,
     marginTop: TOKENS.space.xl,
   },
+  detailsActionRow: {
+    flexDirection: 'row',
+    gap: TOKENS.space.md,
+    marginTop: TOKENS.space.md,
+  },
+  detailsActionButton: {
+    flex: 1,
+    backgroundColor: TOKENS.color.surface,
+    borderWidth: 1,
+    borderColor: TOKENS.color.border,
+    borderRadius: TOKENS.radius.pill,
+    paddingVertical: TOKENS.space.md,
+    alignItems: 'center',
+  },
+  detailsActionButtonActive: {
+    backgroundColor: TOKENS.color.accentSoft,
+    borderColor: TOKENS.color.accent,
+  },
+  detailsActionButtonDismiss: {
+    backgroundColor: TOKENS.color.surface,
+  },
+  detailsActionButtonFull: {
+    marginTop: TOKENS.space.sm,
+  },
+  detailsActionButtonDisabled: {
+    opacity: 0.5,
+  },
+  detailsActionText: {
+    color: TOKENS.color.textMuted,
+    fontSize: 13,
+    fontWeight: '800',
+    letterSpacing: 0.4,
+  },
+  detailsActionTextActive: {
+    color: TOKENS.color.accent,
+  },
+  detailsActionTextDismiss: {
+    color: TOKENS.color.textSoft,
+  },
+  detailsActionTextDisabled: {
+    color: TOKENS.color.textSoft,
+  },
   detailsSection: {
     backgroundColor: TOKENS.color.surface,
     borderRadius: TOKENS.radius.lg,
@@ -1389,5 +1913,36 @@ const styles = StyleSheet.create({
     color: TOKENS.color.textSoft,
     fontSize: 12,
     textAlign: 'center',
+  },
+
+  // T0078 — bottom tab bar
+  tabBar: {
+    flexDirection: 'row',
+    borderTopWidth: 1,
+    borderTopColor: TOKENS.color.border,
+    backgroundColor: TOKENS.color.surface,
+    paddingBottom: Platform.OS === 'ios' ? 0 : TOKENS.space.sm,
+  },
+  tabItem: {
+    flex: 1,
+    alignItems: 'center',
+    paddingVertical: TOKENS.space.md,
+    gap: 3,
+  },
+  tabIcon: {
+    fontSize: 18,
+    color: TOKENS.color.textSoft,
+  },
+  tabIconActive: {
+    color: TOKENS.color.accent,
+  },
+  tabLabel: {
+    fontSize: 10,
+    fontWeight: '700',
+    color: TOKENS.color.textSoft,
+    letterSpacing: 0.4,
+  },
+  tabLabelActive: {
+    color: TOKENS.color.accent,
   },
 });

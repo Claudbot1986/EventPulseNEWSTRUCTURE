@@ -675,7 +675,7 @@ def run_claude_for_source(source_id: str, venue_name: str, retry_attempts: int =
     prompt_file = PROMPT_DIR / f"prompt-{source_id}.txt"
     prompt_file.write_text(prompt, encoding="utf-8")
 
-    project_path = "/Users/claudgashi/EventPulse-recovery/clawdbot2/project/00EVENTPULSEFINALDESTINATION/NEWSTRUCTURE"
+    project_path = "/Volumes/2TB filer/NEWSTRUCTURE"
     log_file = PROMPT_DIR / f"log-{source_id}.txt"
 
     # Build osascript to run claude in Terminal

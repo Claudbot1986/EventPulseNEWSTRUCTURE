@@ -1,0 +1,30 @@
+{
+  "schema_version": "ep-runtime-config-1.0",
+  "project_root": "/Volumes/2TB filer/NEWSTRUCTURE-COPY",
+  "repo_marker": ".claude/eventpulse/policy.md",
+  "repo_identity_check": {
+    "expected_path_suffix": "/Volumes/2TB filer/NEWSTRUCTURE-COPY",
+    "marker_file": ".claude/eventpulse/policy.md"
+  },
+  "optimizer": {
+    "max_concurrent_jobs": 1,
+    "max_candidate_iterations_per_job": 5,
+    "max_wall_clock_seconds_per_job": 1800,
+    "max_cost_usd_per_job": 1.0,
+    "keep_artifacts_on_completion": true,
+    "auto_promote_enabled": false,
+    "tmux_session_name": "ep-optimizer",
+    "worktree_dir": "/tmp/ep-optimizer-worktree"
+  },
+  "launchd": {
+    "label": "com.eventpulse.optimizer",
+    "plist_filename": "com.eventpulse.optimizer.plist",
+    "keep_alive": true,
+    "run_at_load": true,
+    "log_dir": "/Users/claudgashi/Library/Logs/eventpulse-optimizer"
+  },
+  "telemetry": {
+    "review_every_n_episodes": 20,
+    "review_format": "ep-review-1.0"
+  }
+}

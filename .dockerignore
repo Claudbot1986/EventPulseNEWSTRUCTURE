@@ -1,0 +1,77 @@
+# Secrets and local config — never bake into the image
+.env
+.env.*
+!.env.example
+
+# Dependencies — re-installed in the build stage
+node_modules/
+
+# VCS
+.git/
+.gitignore
+
+# Runtime artifacts and queues — large, often local-only, never needed
+# by the agent image. Verified to exist (agent uses none of these):
+runtime/
+03-Queue/
+
+# Ingestion-related large dirs (the agent doesn't import any of these,
+# but they bloat the build context):
+02-Ingestion/
+04-Normalizer/
+05-Supabase/
+07-Discovery/
+09-ScrapingSupervisor/
+
+# UI app (Expo) — separate surface, not part of the agent image
+06-UI/
+
+# Test scratch / debugging scripts
+08-testResults/
+tests/
+tmp/
+tmp_*
+test-*.ts
+test-*.mjs
+test-*.js
+debug_*.ts
+debug_*.cjs
+phase1-*.jsonl
+phase1-*.json
+
+# Test infra and helpers
+Alltools-E2E/
+WeaveMind/
+everything-claude-code/
+
+# Build output
+dist/
+build/
+coverage/
+
+# Temp / backup / scratch files
+*.tmp
+*.bak
+*.swp
+TEMP/
+*.log
+
+# OS
+.DS_Store
+
+# Editor / IDE
+.vscode/
+.idea/
+
+# The agent's own tests (kept out of the prod image)
+08-Agent/tests/
+
+# Scripts the agent runtime does not execute
+scripts/
+
+# Bundled source datasets and snapshots
+sources/
+rawSources/
+reports/
+conversations/
+hallsberg-test/

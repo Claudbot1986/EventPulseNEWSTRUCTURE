@@ -1,23 +1,46 @@
 {
   "expo": {
     "name": "EventPulse",
-    "slug": "EventPulse",
+    "slug": "eventpulse",
     "version": "1.0.0",
     "orientation": "portrait",
     "userInterfaceStyle": "dark",
+    "newArchEnabled": true,
+    "scheme": "eventpulse",
+    "icon": "./assets/icon.png",
     "splash": {
+      "image": "./assets/splash.png",
       "resizeMode": "contain",
-      "backgroundColor": "#000000"
+      "backgroundColor": "#0F172A"
     },
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.eventpulse.app"
+      "bundleIdentifier": "com.eventpulse.app",
+      "buildNumber": "1",
+      "infoPlist": {
+        "NSAppTransportSecurity": {
+          "NSAllowsArbitraryLoads": false
+        },
+        "ITSAppUsesNonExemptEncryption": false,
+        "NSLocationWhenInUseUsageDescription": "EventPulse använder din plats för att visa kartan och event nära dig."
+      }
     },
     "android": {
       "package": "com.eventpulse.app",
+      "versionCode": 1,
       "adaptiveIcon": {
-        "backgroundColor": "#000000"
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#0F172A"
+      },
+      "permissions": ["INTERNET"]
+    },
+    "extra": {
+      "eas": {
+        "projectId": null
       }
+    },
+    "web": {
+      "favicon": "./assets/favicon.png"
     }
   }
 }

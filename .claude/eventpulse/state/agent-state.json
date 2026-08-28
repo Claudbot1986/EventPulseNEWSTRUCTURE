@@ -1,0 +1,25 @@
+{
+  "schema_version": 1,
+  "session_id": "ee7182c9-3861-4a3b-bc74-086a83698da7",
+  "updated_at": "2026-08-25T03:37:41.826Z",
+  "reason": "PreCompact",
+  "active_missions": [
+    {
+      "mission_id": "EP-2026-08-25-ee7182c9-064",
+      "file": "/Users/claudgashi/EventPulse-recovery/clawdbot2/project/00EVENTPULSEFINALDESTINATION/NEWSTRUCTURE/.claude/eventpulse/missions/EP-2026-08-25-ee7182c9-064.yaml",
+      "status": "in_progress"
+    }
+  ],
+  "completed_tasks": [],
+  "recent_commands": [
+    "cat > /Users/claudgashi/EventPulse-recovery/clawdbot2/project/00EVENTPULSEFINALDESTINATION/NEWSTRUCTURE/.tmp_test1_skip.mts <<'EOF'\nimport * as dotenv from 'dotenv';\nimport path from 'path';\nimport { fileURLToPath } from 'url';\nimport { Queue } from 'bullmq';\nimport IORedis from 'ioredis';\n\nconst __dirname = path.dirname(fileURLToPath(import.meta.url));\ndotenv.config({ path: path.resolve(__dirname, '.env'), override: true });\n\nconst connection = new IORedis(process.env.REDIS_URL || 'redis://loca",
+    "sleep 3 && tail -20 /tmp/eventpulse-imgworker.log",
+    "cat > /Users/claudgashi/EventPulse-recovery/clawdbot2/project/00EVENTPULSEFINALDESTINATION/NEWSTRUCTURE/.tmp_test2_generate.mts <<'EOF'\nimport * as dotenv from 'dotenv';\nimport path from 'path';\nimport { fileURLToPath } from 'url';\nimport { createClient } from '@supabase/supabase-js';\nimport { Queue } from 'bullmq';\nimport IORedis from 'ioredis';\n\nconst __dirname = path.dirname(fileURLToPath(import.meta.url));\ndotenv.config({ path: path.resolve(__dirname, '.env'), override: true });\n\nconst event",
+    "sleep 20 && tail -10 /tmp/eventpulse-imgworker.log",
+    "cat > /Users/claudgashi/EventPulse-recovery/clawdbot2/project/00EVENTPULSEFINALDESTINATION/NEWSTRUCTURE/.tmp_verify.mts <<'EOF'\nimport * as dotenv from 'dotenv';\nimport path from 'path';\nimport { fileURLToPath } from 'url';\nimport { createClient } from '@supabase/supabase-js';\n\nconst __dirname = path.dirname(fileURLToPath(import.meta.url));\ndotenv.config({ path: path.resolve(__dirname, '.env'), override: true });\n\nconst supabase = createClient(\n  process.env.SUPABASE_URL!,\n  process.env.SUPABASE"
+  ],
+  "recent_agents": [],
+  "key_decisions": [],
+  "blockers": [],
+  "next_actions": []
+}

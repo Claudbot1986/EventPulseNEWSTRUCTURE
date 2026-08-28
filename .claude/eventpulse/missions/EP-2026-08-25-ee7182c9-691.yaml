@@ -1,0 +1,53 @@
+mission_id: EP-2026-08-25-ee7182c9-691
+original_prompt: gör en git push först. Lägg i bfl nyckeln i .env som jag sa och kör a och b
+task_type: feature
+subsystems: []
+complexity: normal
+risk: medium
+execution_mode: small_team
+roles:
+  - lead
+  - qa
+verification_profile: ingestion
+context:
+  tier0: [.claude/eventpulse/policy.md]
+  tier1: [docs/MASTERPLAN.md, docs/BACKLOG.md, .claude/rules/common/hooks.md, .claude/rules/common/agents.md]
+  tier2: []
+  tier3: [Alltools-E2E/e2e.py]
+acceptance_criteria:
+  - '"Adapter/parser handles the edge case recorded in the mission."'
+  - '"adapter_test passes via `npx vitest run 02-Ingestion/<gate>`."'
+  - '"fixture_replay passes via `python3 Alltools-E2E/e2e.py --source <id> --limit 1`."'
+  - '"dedup_smoke passes via `python3 tests/test_real_pipeline.py --source <id>`."'
+  - '"No synthetic extraction in production CLIs (db.py, e2e.py)."'
+constraints:
+  - '"Do not modify 02-Ingestion/A-directAPI-networkGate/runA.ts interface."'
+  - '"Do not change dedup hash algorithm."'
+  - '"Adapters must run against real code paths; no synthetic extraction in production CLIs."'
+  - '"Generalization Protection Rule: no IGNORE_PATTERNS or scoring weight changes based on a single site."'
+  - 'PRESERVE WORKING TREE: Working tree has 603 uncommitted change(s); preserve unrelated edits..'
+unknown_assumptions:
+  - User intent inferred from prompt keywords; please correct if wrong.
+escalation_conditions:
+  - 'If the task touches a file outside this mission''s scope → stop and escalate.'
+  - If a required gate fails → fix or escalate to ep-lead.
+required_gates:
+  - typecheck
+  - adapter_test
+  - fixture_replay
+  - dedup_smoke
+requires_user_approval: []
+classification_confidence: 0.35
+human_review_required: false
+planning_only: false
+user_overrides: []
+working_tree_fp: sha256-djb2:6cc73b52:dirty576
+repo_state:
+  branch: main
+  head_sha: fa7c7a8
+  dirty: true
+  changed_files_count: 603
+  preservation_warning: Working tree has 603 uncommitted change(s); preserve unrelated edits.
+  captured_at: 2026-08-25T03:13:02.067Z
+compiler_version: epc-1.1
+created_at: 2026-08-25T03:13:01.691Z
