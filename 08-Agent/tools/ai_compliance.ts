@@ -3,8 +3,9 @@
  *
  * Single source of truth for "turn raw model output into a compliant
  * published image":
- *   1. Synlig stämpel: orange "● AI"-pill, 110×36 px, 24 px inset från SE.
- *      Synlig märkning (EU AI Act Art. 50 disclosure).
+ *   1. Synlig stämpel: orange "● AI"-pill, 200×48 px, 24 px inset från
+ *      högerkant, top=740 (safe-zone inom cover-crop för alla kända
+ *      UI-containrar). Synlig märkning (EU AI Act Art. 50 disclosure).
  *   2. XMP-metadata: `EventPulse:` namespaced fält för maskinläsbar
  *      verifiering (Photoshop, exiftool, Adobe Bridge).
  *
@@ -21,26 +22,36 @@
  * Idempotent på input-nivå: samma (buffer, prompt, model) → samma output.
  * (XMP-tidstämpel blir olika mellan körningar — det är meningen, det är
  * när stämplingen skedde.)
+ *
+ * Positionering: 1024×1024 AI-bilder cover-croppas av UI-containrar med
+ * aspect 1.39:1 (Utforska/AiImageScreen), 1.63:1 (Details) eller 1.69:1
+ * (HomeScreen cardImage). Worst-case synlig y-range är 210-815, så
+ * stämpeln placeras med `top=740` (slutar vid y=788, 27 px marginal
+ * till HomeScreen-synlig-kant 815).
  */
 
 import sharp from 'sharp';
 
 // ── Visible watermark ──────────────────────────────────────────────────────
-// 240×64 px pill, southeast med 24 px inset. Bottenplatta 82% opacitet
-// svart med orange kantlinje (EventPulse accent #FFB454). EU AI Act Art. 50
-// kräver "easily visible" märkning — 240×64 på en 1024-bild = ~15 % av
-// bildytan, klart läsbar även i 320 px thumbnail (~75×20 px).
+// 200×48 px pill, 24 px inset från högerkant, top=740 (safe-zone inom
+// cover-crop för alla kända UI-containrar; se fil-docblock för beräkning).
+// Bottenplatta 82% opacitet svart med orange kantlinje (EventPulse accent
+// #FFB454). EU AI Act Art. 50 kräver "easily visible" märkning — 200×48
+// på en 1024-bild = ~9 % av bildytan, klart läsbar även i 320 px
+// thumbnail (~63×15 px).
 //
-// Texten är "AI-generated" (den exakta termen i EU-förordningen), vilket
-// gör disclosure:n entydig även utan UI-chip.
+// Texten är "AI" (kort form, full disclosure "AI-generated" finns kvar
+// i XMP-metadata för maskinläsbar verifiering). Visuell disclosure är
+// entydig via UI-chips och tooltips; pixel-stämpeln är komplementet som
+// gör disclosure:n robust mot screenshot-cropping och UI-förändringar.
 
-const AI_STAMP_SVG = `<svg width="240" height="64" viewBox="0 0 240 64" xmlns="http://www.w3.org/2000/svg">
-  <rect x="2" y="2" width="236" height="60" rx="30" ry="30"
+const AI_STAMP_SVG = `<svg width="200" height="48" viewBox="0 0 200 48" xmlns="http://www.w3.org/2000/svg">
+  <rect x="2" y="2" width="196" height="44" rx="22" ry="22"
         fill="rgba(15,15,18,0.82)"
         stroke="rgba(255,180,84,0.65)" stroke-width="1.5"/>
-  <circle cx="34" cy="32" r="8" fill="#FFB454"/>
-  <text x="56" y="40" font-family="Arial, sans-serif" font-size="22"
-        font-weight="bold" fill="#FFFFFF" letter-spacing="0.5">AI-generated</text>
+  <circle cx="26" cy="24" r="6" fill="#FFB454"/>
+  <text x="44" y="31" font-family="Arial, sans-serif" font-size="18"
+        font-weight="bold" fill="#FFFFFF" letter-spacing="0.5">AI</text>
 </svg>`;
 
 const AI_STAMP_BUFFER = Buffer.from(AI_STAMP_SVG);
@@ -285,7 +296,8 @@ export interface ApplyAiComplianceInput {
 
 /**
  * Applicerar EU AI Act Art. 50-compliance på en bildbuffer:
- *   1. Synlig AI-stämpel i nedre höger hörn (24 px inset, 110×36 pill)
+ *   1. Synlig AI-stämpel i nedre höger hörn (200×48 pill, 24 px från
+ *      högerkant, top=740 för att synas inom cover-crop i UI)
  *   2. XMP-metadata-injection (maskinläsbar, Photoshop/exiftool/Adobe
  *      Bridge kan verifiera)
  *
@@ -295,18 +307,21 @@ export interface ApplyAiComplianceInput {
  */
 export async function applyAiCompliance(input: ApplyAiComplianceInput): Promise<Buffer> {
   const xmp = buildAiXmp({ model: input.model, prompt: input.prompt });
-  // Stämpelposition: 24 px inset från SE-kanten. Använd explicit
-  // left/top istället för gravity — Sharp's gravity+offset-semantik
-  // placerar input UTANFÖR bilden när inset>0 (offset adderas till
-  // gravity-ankaret, vilket redan är kanten).
+  // Stämpelposition: 24 px inset från högerkanten, top=740 (safe-zone
+  // inom cover-crop för alla kända UI-containrar; se fil-docblock för
+  // härledning). Använd explicit left/top istället för gravity — Sharp's
+  // gravity+offset-semantik placerar input UTANFÖR bilden när inset>0.
   const meta = await sharp(input.buffer).metadata();
   const W = meta.width ?? 1024;
   const H = meta.height ?? 1024;
   const inset = 24;
-  const stampW = 240;
-  const stampH = 64;
+  const stampW = 200;
+  const stampH = 48;
+  // For non-1024-bilder, scale the safe-zone proportionally so the stamp
+  // stays in the bottom-right quadrant of the cover-cropped area.
+  const stampTop = H >= 1024 ? 740 : Math.round((H / 1024) * 740);
   const left = W - inset - stampW;
-  const top = H - inset - stampH;
+  const top = stampTop;
   // Sharp ignorerar `.withMetadata({xmp})` för PNG-utdata — bara EXIF skrivs
   // till eXIf-chunken. XMP paketeras manuellt som PNG iTXt-chunk efter Sharp.
   const stamped = await sharp(input.buffer)
@@ -323,13 +338,14 @@ export async function applyAiCompliance(input: ApplyAiComplianceInput): Promise<
 }
 
 /**
- * Pixel-detect: returnerar true om AI-stämpeln sitter i SE-hörnet.
+ * Pixel-detect: returnerar true om AI-stämpeln sitter i safe-zone.
  * Används av verifieraren för att avgöra om en bild är stämplad.
  *
- * - Orange > 100 pixlar (FFB454 ± tolerans) — centrerad 8-px-radie-cirkel
+ * - Orange > 20 pixlar (FFB454 ± tolerans) — centrerad 6-px-radie-cirkel
  * - Mörk platta > 200 pixlar (rgba ~15,15,18 ± tolerans) — bottenplattan
  *
- * Region: 240×64 px, 24 px inset från SE.
+ * Region: 200×48 px, 24 px inset från högerkant, top=740 (safe-zone inom
+ * cover-crop). Samma region som applyAiCompliance använder.
  */
 export interface StampCheckResult {
   ok: boolean;
@@ -342,11 +358,12 @@ export async function checkAiStamp(buffer: Buffer): Promise<StampCheckResult> {
   const meta = await sharp(buffer).metadata();
   const W = meta.width ?? 1024;
   const H = meta.height ?? 1024;
-  const stampW = 240;
-  const stampH = 64;
+  const stampW = 200;
+  const stampH = 48;
   const inset = 24;
+  const stampTop = H >= 1024 ? 740 : Math.round((H / 1024) * 740);
   const left = W - inset - stampW;
-  const top = H - inset - stampH;
+  const top = stampTop;
 
   const raw = await sharp(buffer)
     .extract({ left, top, width: stampW, height: stampH })

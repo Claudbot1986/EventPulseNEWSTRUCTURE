@@ -402,16 +402,17 @@ function EventItem({ event, onPress }) {
   const area = getAreaLabel(event);
   const price = formatPrice(event);
   // AI image rollout (Utforska, 2026-08-26) — useAiImageUrl returns the
-  // pre-baked/lazy URL or null. UI renders empty box when null. The 240×64
-  // SE-corner AI stamp must stay visible → resizeMode="contain" + aspectRatio:1.
-  // See 08-Agent/tools/ai_compliance.ts:applyAiCompliance.
+  // pre-baked/lazy URL or null. UI renders empty box when null. AI stamp
+  // (200×48 pill) is now positioned at top=740 (safe-zone inom cover-crop
+  // för alla kända UI-containrar) → resizeMode="cover" ger bild-i-ram utan
+  // svart letterbox och stämpeln syns. See 08-Agent/tools/ai_compliance.ts.
   const { uri } = useAiImageUrl(event);
 
   return (
     <TouchableOpacity style={styles.eventCard} onPress={onPress} activeOpacity={0.7}>
       {uri ? (
-        // AI stamp (240×64 SE corner) — resizeMode must stay 'contain'. Do not crop.
-        <Image source={{ uri }} style={styles.eventImage} resizeMode="contain" />
+        // AI stamp (200×48 at top=740) lives inside cover-crop frame.
+        <Image source={{ uri }} style={styles.eventImage} resizeMode="cover" />
       ) : (
         // Tom enhetlig box istället för text — UI ska INTE avslöja BFL-status.
         <View style={styles.eventImageFallback} />
@@ -452,8 +453,8 @@ function GroupedEventItem({ groupedEvent, onEventPress }) {
   return (
     <TouchableOpacity style={styles.eventCard} onPress={() => onEventPress(groupedEvent.events[0])} activeOpacity={0.7}>
       {uri ? (
-        // AI stamp (240×64 SE corner) — resizeMode must stay 'contain'. Do not crop.
-        <Image source={{ uri }} style={styles.eventImage} resizeMode="contain" />
+        // AI stamp (200×48 at top=740) lives inside cover-crop frame.
+        <Image source={{ uri }} style={styles.eventImage} resizeMode="cover" />
       ) : (
         // Tom enhetlig box istället för text — UI ska INTE avslöja BFL-status.
         <View style={styles.eventImageFallback} />
@@ -986,8 +987,8 @@ function DetailsScreen({ event, onBack }) {
       </View>
       <ScrollView style={styles.detailsContent} showsVerticalScrollIndicator={false}>
         {uri ? (
-          // AI stamp (240×64 SE corner) — resizeMode must stay 'contain'. Do not crop.
-          <Image source={{ uri }} style={styles.detailsImage} resizeMode="contain" />
+          // AI stamp (200×48 at top=740) lives inside cover-crop frame.
+          <Image source={{ uri }} style={styles.detailsImage} resizeMode="cover" />
         ) : (
           // Tom enhetlig box istället för text — UI ska INTE avslöja BFL-status.
           <View style={styles.detailsImageFallback} />
