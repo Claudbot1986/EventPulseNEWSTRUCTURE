@@ -76,12 +76,19 @@ const TOKENS = {
 // TABS — single source of truth. Order here = visual order in the bar.
 // `icon` is an Ionicons name. `label` is short Swedish/English mix
 // matching the rest of the UI.
+//
+// Dev-only: om EXPO_PUBLIC_EXPLORE_STAR_ENABLED=true läggs en 5:e tab
+// "Utforska*" till för visuell verifiering av AI-stämpel. MÅSTE vara FALSE
+// i prod.
 const TABS = [
   { id: 'home',          icon: 'home-outline',         iconActive: 'home',           label: 'Hem' },
   { id: 'explore',       icon: 'compass-outline',      iconActive: 'compass',        label: 'Utforska' },
   { id: 'notifications', icon: 'notifications-outline', iconActive: 'notifications', label: 'Notiser' },
   { id: 'profile',       icon: 'person-circle-outline', iconActive: 'person-circle', label: 'Profil' },
 ];
+if (process.env.EXPO_PUBLIC_EXPLORE_STAR_ENABLED === 'true') {
+  TABS.push({ id: 'explore-star', icon: 'star-outline', iconActive: 'star', label: 'Utforska*' });
+}
 
 function TabBarButton({ tab, isActive, badge, onPress }) {
   const color = isActive ? TOKENS.color.text : TOKENS.color.textMuted;

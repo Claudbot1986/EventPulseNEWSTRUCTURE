@@ -1479,9 +1479,13 @@ const styles = StyleSheet.create({
   },
   eventImage: {
     width: '100%',
+    maxWidth: 420,
     height: 280,
     // appBg (svart) så att contain-letterbox runt AI-bilderna inte syns som
     // en grå "ram" — UI-DESIGN.md = pure-black canvas, transparent cards.
+    // maxWidth 420 håller aspect ≤ 1.5:1 på web/desktop så AI-stämpeln
+    // (1024-bild x=800-1000, y=740-788) inte croppas bort horisontellt av
+    // resizeMode="cover". På smal mobil (<420) ignoreras maxWidth.
     backgroundColor: TOKENS.color.appBg,
   },
   eventImageFallback: {

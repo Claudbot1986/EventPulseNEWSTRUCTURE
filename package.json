@@ -14,7 +14,10 @@
     "venue-graph:apply": "tsx 07-Discovery/src/venueGraph/runVenueGraph.ts --apply",
     "source-candidates:test": "tsx 07-Discovery/src/sourceTesting/runSourceCandidateTests.ts",
     "start:agent": "tsx 08-Agent/server.ts",
-    "type-check:agent": "tsc --noEmit 08-Agent/**/*.ts"
+    "type-check:agent": "tsc --noEmit 08-Agent/**/*.ts",
+    "restamp:one": "tsx --env-file=.env 08-Agent/scripts/restamp_aigenerated_one.ts",
+    "restamp:all": "tsx --env-file=.env 08-Agent/scripts/restamp_all_event_posters.ts",
+    "verify:ai-stamp": "tsx --env-file=.env 08-Agent/scripts/verify_ai_compliance.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.117.1",

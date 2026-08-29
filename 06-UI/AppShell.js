@@ -18,12 +18,19 @@ import HomeScreen from './screens/HomeScreen';
 import NotificationsScreen from './screens/NotificationsScreen';
 import ProfileScreen from './screens/ProfileScreen';
 import OnboardingScreen from './screens/OnboardingScreen';
+import UtforskaStarScreen from './screens/UtforskaStarScreen';
 import NetworkBanner from './components/NetworkBanner';
 import App from './App';
 import { getItem, setItem, PENDING_AGENT_MESSAGE_KEY } from './services/storage';
 import { NetworkProvider } from './services/networkContext';
 
+// Dev-only feature flag: när TRUE lägger vi till 5:e tab "Utforska*" som
+// visar de 10 första AI-bilderna i en kontrollerad vy för visuell
+// verifiering av EU AI Act Art. 50-stämpeln. MÅSTE vara FALSE i prod.
+const EXPLORE_STAR_ENABLED = process.env.EXPO_PUBLIC_EXPLORE_STAR_ENABLED === 'true';
+
 const TABS = ['home', 'explore', 'notifications', 'profile'];
+if (EXPLORE_STAR_ENABLED) TABS.push('explore-star');
 const ONBOARDING_COMPLETE_KEY = 'eventpulse.onboarding_complete';
 const STORAGE_BUDGET_MS = 800;
 export { PENDING_AGENT_MESSAGE_KEY };
@@ -93,6 +100,7 @@ export default function AppShell() {
         {activeTab === 'home' && <HomeScreen onChipPress={handleChipPress} />}
         {activeTab === 'notifications' && <NotificationsScreen />}
         {activeTab === 'profile' && <ProfileScreen />}
+        {activeTab === 'explore-star' && EXPLORE_STAR_ENABLED && <UtforskaStarScreen />}
         <View style={styles.barWrapper} pointerEvents="box-none">
           <BottomTabBar
             activeTab={activeTab}
