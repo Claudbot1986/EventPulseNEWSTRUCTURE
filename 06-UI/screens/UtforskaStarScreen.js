@@ -5,7 +5,8 @@
  * Bakgrund (2026-08-29): Efter 3 dagars felsökning visade det sig att
  * `eventImage` i App.js saknade aspect-lock → på bred web croppades
  * stämpeln (x=800-1000) bort horisontellt. Denna skärm har:
- *   - aspectRatio: 1 wrapper (1:1 cover-crop) — stämpeln syns alltid
+ *   - samma wrapper-storlek som prod-Utforska (maxWidth: 420, height: 280)
+ *     så 1:1-jämförelse är möjlig
  *   - hårdkodade URL:er till de 10 första restamplade bilderna
  *   - dev-banner som tydligt visar att det är en dev-only-sektion
  *
@@ -68,36 +69,22 @@ export default function UtforskaStarScreen() {
           </Text>
         </View>
 
-        <Text style={styles.sectionLabel}>Inzoomad vy (1:1, ingen marginal)</Text>
+        <Text style={styles.sectionLabel}>Samma vy som prod-Utforska (width 100%, maxWidth 420, height 280)</Text>
+        <Text style={styles.sectionSub}>
+          maxWidth 420 → aspect ≤ 1.5:1 → stämpeln (1024-bild x=800-1000, y=740-788) syns.
+        </Text>
         {FIRST_TEN.map((item) => (
           <View key={item.file} style={styles.card} testID={`star-card-${item.label}`}>
-            <View style={styles.imageWrap}>
-              <Image
-                source={{ uri: imageUrl(item.file) }}
-                style={styles.image}
-                resizeMode="cover"
-                testID={`star-img-${item.label}`}
-              />
-            </View>
+            <Image
+              source={{ uri: imageUrl(item.file) }}
+              style={styles.imageProd}
+              resizeMode="cover"
+              testID={`star-img-${item.label}`}
+            />
             <View style={styles.cardBody}>
               <Text style={styles.cardLabel}>{item.label}</Text>
               <Text style={styles.cardFile} numberOfLines={1}>{item.file}</Text>
             </View>
-          </View>
-        ))}
-
-        <Text style={styles.sectionLabel}>Normaliserad vy (motsvarande prod-Utforska, 1.5:1)</Text>
-        <Text style={styles.sectionSub}>
-          Med maxWidth=420 håller prod-Utforska aspect ≤ 1.5:1 — stämpeln syns.
-        </Text>
-        {FIRST_TEN.slice(0, 3).map((item) => (
-          <View key={`narrow-${item.file}`} style={styles.cardNarrow}>
-            <Image
-              source={{ uri: imageUrl(item.file) }}
-              style={styles.imageNarrow}
-              resizeMode="cover"
-            />
-            <Text style={styles.cardLabel}>{item.label}</Text>
           </View>
         ))}
 
@@ -173,14 +160,15 @@ const styles = StyleSheet.create({
     marginBottom: 16,
     overflow: 'hidden',
   },
-  imageWrap: {
-    aspectRatio: 1, // 1:1 cover-crop → hela bilden synlig, stämpel i SE-hörn syns
+  imageProd: {
+    // Identisk med prod-Utforska `eventImage` (06-UI/App.js:1480):
+    //   width: '100%', maxWidth: 420, height: 280, backgroundColor: appBg
+    // Håller aspect ≤ 1.5:1 så stämpeln (x=800-1000) inte croppas bort
+    // av resizeMode="cover" på bred web/desktop.
     width: '100%',
+    maxWidth: 420,
+    height: 280,
     backgroundColor: TOKENS.appBg,
-  },
-  image: {
-    width: '100%',
-    height: '100%',
   },
   cardBody: {
     padding: 12,
@@ -195,19 +183,5 @@ const styles = StyleSheet.create({
   cardFile: {
     color: TOKENS.textMuted,
     fontSize: 12,
-  },
-  cardNarrow: {
-    backgroundColor: TOKENS.surface,
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: TOKENS.border,
-    marginBottom: 12,
-    overflow: 'hidden',
-  },
-  imageNarrow: {
-    width: '100%',
-    height: 280,
-    maxWidth: 420,
-    backgroundColor: TOKENS.appBg,
   },
 });
