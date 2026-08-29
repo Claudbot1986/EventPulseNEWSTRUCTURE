@@ -13,6 +13,7 @@
  *   EVENTPULSE_PROMPT_MAX_TOKENS  number       default: 1500  (cap on injected mission text)
  *   EVENTPULSE_PROMPT_RUNTIME_DIR path          default: .eventpulse-agent/runtime
  *   EVENTPULSE_PROMPT_ACTIVE      0|1          internal recursive-hook guard (set by router)
+ *   EVENTPULSE_PROMPT_HUMAN_PLAN    0|1          default: 1  (hpr-1.0; set 0 to skip Swedish human-plan rendering)
  *
  * Defaults favor safety and reliability: deterministic only, fail-open, no LLM call,
  * bounded latency. Per mission §51.
@@ -30,6 +31,7 @@ export interface Config {
   runtimeDir: string;
   active: boolean;
   logLevel: 'quiet' | 'normal' | 'debug';
+  humanPlanEnabled: boolean; // hpr-1.0
 }
 
 function envBool(name: string, fallback: boolean): boolean {
@@ -71,6 +73,7 @@ export function loadConfig(): Config {
     runtimeDir: (process.env.EVENTPULSE_PROMPT_RUNTIME_DIR ?? '.eventpulse-agent/runtime').trim() || '.eventpulse-agent/runtime',
     active: envBool('EVENTPULSE_PROMPT_ACTIVE', false),
     logLevel: debug ? 'debug' : 'normal',
+    humanPlanEnabled: envBool('EVENTPULSE_PROMPT_HUMAN_PLAN', true),
   };
   return cached;
 }

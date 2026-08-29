@@ -29,6 +29,11 @@ import {
 } from './mission-compiler';
 import { validateMission, type ValidationResult } from './mission-validator';
 import { writeRuntimeArtifacts } from './runtime-writer';
+import { renderHumanPlan, extractProjection } from './human-plan-renderer';
+import { validateRenderedHumanPlan } from './human-plan-consistency';
+import * as fs from 'node:fs';
+import * as path from 'node:path';
+import { createHash } from 'node:crypto';
 
 interface UserPromptSubmitInput {
   prompt: string;
@@ -174,6 +179,30 @@ async function main(): Promise<void> {
   };
   process.stdout.write(JSON.stringify(out));
 
+  // hpr-1.0: human plan rendering. Optional, fail-open, never blocks the hook.
+  if (config.humanPlanEnabled) {
+    try {
+      const projection = extractProjection(mission);
+      const rendered = renderHumanPlan(mission, { maxWidth: 60, projection });
+      const consistency = validateRenderedHumanPlan(mission, projection, rendered);
+      if (consistency.ok) {
+        process.stderr.write('\n' + rendered + '\n');
+      } else {
+        process.stderr.write(
+          `[ep-router] human plan unavailable: projection consistency validation failed: ${consistency.errors.join('; ')}\n`,
+        );
+      }
+      if (consistency.warnings.length) {
+        process.stderr.write(
+          `[ep-router] human plan warnings: ${consistency.warnings.join('; ')}\n`,
+        );
+      }
+      appendHumanPlanMetadata(repoRoot, mission, projection, rendered, consistency);
+    } catch (err) {
+      process.stderr.write(`[ep-router] human plan render failed (non-fatal): ${String(err)}\n`);
+    }
+  }
+
   const dur = Date.now() - t0;
   process.stderr.write(
     `[ep-router] mission=${mission.mission_id} task=${classification.task_type} complexity=${classification.complexity} risk=${classification.risk} mode=${mission.execution_mode} profile=${mission.verification_profile} ctx=t0:${selection.tier0.length},t1:${selection.tier1.length},t2:${selection.tier2.length},t3:${selection.tier3.length} planning_only=${mission.planning_only} confidence=${classification.classification_confidence} duration_ms=${dur}\n`,
@@ -205,3 +234,39 @@ main().catch((err) => {
   process.stderr.write(`[ep-router] top-level error (continuing without enrichment): ${String(err)}\n`);
   process.exit(0);
 });
+
+// ---------------------------------------------------------------------------
+// hpr-1.0: Human Plan telemetry (metadata only — never the rendered body).
+// ---------------------------------------------------------------------------
+
+function appendHumanPlanMetadata(
+  repoRoot: string,
+  mission: Mission,
+  projection: ReturnType<typeof extractProjection>,
+  rendered: string,
+  consistency: ReturnType<typeof validateRenderedHumanPlan>,
+): void {
+  try {
+    const evidenceDir = path.join(repoRoot, '.claude', 'eventpulse', 'evidence');
+    fs.mkdirSync(evidenceDir, { recursive: true });
+    const ledgerPath = path.join(evidenceDir, 'ledger.ndjson');
+    const hash = createHash('sha256').update(rendered).digest('hex').slice(0, 16);
+    const entry = {
+      ts: new Date().toISOString(),
+      event: 'human_plan.rendered',
+      mission_id: mission.mission_id,
+      renderer_version: 'hpr-1.0',
+      complexity: mission.complexity,
+      risk: mission.risk,
+      sections_rendered: projection.sections_rendered,
+      render_hash: hash,
+      consistency_ok: consistency.ok,
+      consistency_errors: consistency.errors.length,
+      consistency_warnings: consistency.warnings.length,
+      at: new Date().toISOString(),
+    };
+    fs.appendFileSync(ledgerPath, JSON.stringify(entry) + '\n', 'utf8');
+  } catch {
+    /* fail-open; metadata append must never block the hook */
+  }
+}
