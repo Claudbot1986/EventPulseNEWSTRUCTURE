@@ -45,13 +45,13 @@ import sharp from 'sharp';
 // entydig via UI-chips och tooltips; pixel-stämpeln är komplementet som
 // gör disclosure:n robust mot screenshot-cropping och UI-förändringar.
 
-const AI_STAMP_SVG = `<svg width="200" height="48" viewBox="0 0 200 48" xmlns="http://www.w3.org/2000/svg">
-  <rect x="2" y="2" width="196" height="44" rx="22" ry="22"
+const AI_STAMP_SVG = `<svg width="280" height="48" viewBox="0 0 280 48" xmlns="http://www.w3.org/2000/svg">
+  <rect x="2" y="2" width="276" height="44" rx="22" ry="22"
         fill="rgba(15,15,18,0.82)"
         stroke="rgba(255,180,84,0.65)" stroke-width="1.5"/>
   <circle cx="26" cy="24" r="6" fill="#FFB454"/>
   <text x="44" y="31" font-family="Arial, sans-serif" font-size="18"
-        font-weight="bold" fill="#FFFFFF" letter-spacing="0.5">AI</text>
+        font-weight="bold" fill="#FFFFFF" letter-spacing="0.5">AI-genererad</text>
 </svg>`;
 
 const AI_STAMP_BUFFER = Buffer.from(AI_STAMP_SVG);
@@ -315,7 +315,7 @@ export async function applyAiCompliance(input: ApplyAiComplianceInput): Promise<
   const W = meta.width ?? 1024;
   const H = meta.height ?? 1024;
   const inset = 24;
-  const stampW = 200;
+  const stampW = 280;   // "AI-genererad" text är bredare än "AI"
   const stampH = 48;
   // For non-1024-bilder, scale the safe-zone proportionally so the stamp
   // stays in the bottom-right quadrant of the cover-cropped area.
@@ -358,7 +358,7 @@ export async function checkAiStamp(buffer: Buffer): Promise<StampCheckResult> {
   const meta = await sharp(buffer).metadata();
   const W = meta.width ?? 1024;
   const H = meta.height ?? 1024;
-  const stampW = 200;
+  const stampW = 280;   // matchar applyAiCompliance — "AI-genererad"-bredd
   const stampH = 48;
   const inset = 24;
   const stampTop = H >= 1024 ? 740 : Math.round((H / 1024) * 740);
