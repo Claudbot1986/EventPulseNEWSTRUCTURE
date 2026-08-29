@@ -48,3 +48,7 @@ TEMP/
 # Per CLAUDE.md Vault Memory Protocol — vault follows project, not git.
 /00-Vault/
 10-Analytics/runtime/
+
+# EventPulse Agent Runtime — local mission mirrors + runtime cache (regenerate on demand)
+/.claude/eventpulse/missions/
+/.eventpulse-agent/
