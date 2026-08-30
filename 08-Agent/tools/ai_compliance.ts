@@ -45,13 +45,36 @@ import sharp from 'sharp';
 // entydig via UI-chips och tooltips; pixel-stämpeln är komplementet som
 // gör disclosure:n robust mot screenshot-cropping och UI-förändringar.
 
-const AI_STAMP_SVG = `<svg width="280" height="48" viewBox="0 0 280 48" xmlns="http://www.w3.org/2000/svg">
-  <rect x="2" y="2" width="276" height="44" rx="22" ry="22"
-        fill="rgba(15,15,18,0.82)"
-        stroke="rgba(255,180,84,0.65)" stroke-width="1.5"/>
-  <circle cx="26" cy="24" r="6" fill="#FFB454"/>
+// Genomgående transparens (2026-08-30): platta, kantlinje, prick och text
+// har alla alpha < 1. Textskuggan finns kvar och gör den halvgenomskinliga
+// texten läsbar även mot ljusa motiv — utan den försvinner den i vitt.
+//
+// Tight pill (2026-08-30): rect-bredd 199 px är exakt text-bredd (115 px
+// uppmätt via librsvg-render) + 2×42 px marginal. Tidigare 280 px lämnade
+// ~120 px dött utrymme efter sista bokstaven, vilket gjorde pill smalare
+// i själva verket än texten den innehöll.
+const AI_STAMP_SVG = `<svg width="202" height="48" viewBox="0 0 202 48" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <filter id="textShadow" x="-10%" y="-10%" width="120%" height="120%">
+      <feGaussianBlur in="SourceAlpha" stdDeviation="1.2"/>
+      <feOffset dx="0" dy="1" result="offsetblur"/>
+      <feComponentTransfer>
+        <feFuncA type="linear" slope="0.55"/>
+      </feComponentTransfer>
+      <feMerge>
+        <feMergeNode/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+  <rect x="2" y="2" width="199" height="44" rx="22" ry="22"
+        fill="rgba(15,15,18,0.20)"
+        stroke="rgba(255,180,84,0.45)" stroke-width="1.5"/>
+  <circle cx="26" cy="24" r="6" fill="#FFB454" fill-opacity="0.60"/>
   <text x="44" y="31" font-family="Arial, sans-serif" font-size="18"
-        font-weight="bold" fill="#FFFFFF" letter-spacing="0.5">AI-genererad</text>
+        font-weight="bold" fill="#FFFFFF" fill-opacity="0.60"
+        letter-spacing="0.5"
+        filter="url(#textShadow)">AI-genererad</text>
 </svg>`;
 
 const AI_STAMP_BUFFER = Buffer.from(AI_STAMP_SVG);
@@ -285,6 +308,44 @@ function readPngXmp(buffer: Buffer): PngXmpResult {
 
 // ── Public API ────────────────────────────────────────────────────────────
 
+/**
+ * Vilket nedre hörn stämpeln placeras i.
+ *
+ * `bottom-left` är standard. Eftersom vi nu använder *rena* original i
+ * `ai-originals/` finns ingen legacy-stämpel att kollidera med — valet är
+ * en fråga om UI-säker-zon, inte om pixlar. Vänster hörn valt för att
+ * matcha Utforska*-sektionens dev-banner och för att undvika en eventuell
+ * framtida legacy-pillar i högerhörnet.
+ */
+export type StampPosition = 'bottom-right' | 'bottom-left';
+
+const STAMP_W = 202;
+const STAMP_H = 48;
+const STAMP_INSET = 24;
+
+interface StampBox {
+  left: number;
+  top: number;
+  width: number;
+  height: number;
+}
+
+/**
+ * Var stämpeln hamnar för en given bildstorlek.
+ *
+ * `top=740` är safe-zone inom cover-crop för alla kända UI-containrar
+ * (worst-case synlig y-range 210-815; se fil-docblock). För bilder som
+ * inte är 1024 px höga skalas safe-zonen proportionellt.
+ *
+ * `applyAiCompliance` och `checkAiStamp` MÅSTE använda samma funktion,
+ * annars letar verifieringen på fel ställe.
+ */
+function stampBox(W: number, H: number, position: StampPosition): StampBox {
+  const top = H >= 1024 ? 740 : Math.round((H / 1024) * 740);
+  const left = position === 'bottom-left' ? STAMP_INSET : W - STAMP_INSET - STAMP_W;
+  return { left, top, width: STAMP_W, height: STAMP_H };
+}
+
 export interface ApplyAiComplianceInput {
   /** Raw bytes from the model (PNG eller JPEG). Sharp identifierar formatet. */
   buffer: Buffer;
@@ -292,12 +353,16 @@ export interface ApplyAiComplianceInput {
   prompt: string;
   /** Modellnamn som ska hamna i EventPulse:Model + dc:creator. */
   model: string;
+  /**
+   * Hörn att placera stämpeln i. Default `bottom-left`.
+   */
+  position?: StampPosition;
 }
 
 /**
  * Applicerar EU AI Act Art. 50-compliance på en bildbuffer:
- *   1. Synlig AI-stämpel i nedre höger hörn (200×48 pill, 24 px från
- *      högerkant, top=740 för att synas inom cover-crop i UI)
+ *   1. Synlig AI-stämpel i valt nedre hörn (202×48 tight pill, 24 px inset,
+ *      top=740 för att synas inom cover-crop i UI)
  *   2. XMP-metadata-injection (maskinläsbar, Photoshop/exiftool/Adobe
  *      Bridge kan verifiera)
  *
@@ -307,69 +372,136 @@ export interface ApplyAiComplianceInput {
  */
 export async function applyAiCompliance(input: ApplyAiComplianceInput): Promise<Buffer> {
   const xmp = buildAiXmp({ model: input.model, prompt: input.prompt });
-  // Stämpelposition: 24 px inset från högerkanten, top=740 (safe-zone
-  // inom cover-crop för alla kända UI-containrar; se fil-docblock för
-  // härledning). Använd explicit left/top istället för gravity — Sharp's
-  // gravity+offset-semantik placerar input UTANFÖR bilden när inset>0.
+  // Explicit left/top istället för gravity — Sharp's gravity+offset-semantik
+  // placerar input UTANFÖR bilden när inset>0.
   const meta = await sharp(input.buffer).metadata();
   const W = meta.width ?? 1024;
   const H = meta.height ?? 1024;
-  const inset = 24;
-  const stampW = 280;   // "AI-genererad" text är bredare än "AI"
-  const stampH = 48;
-  // For non-1024-bilder, scale the safe-zone proportionally so the stamp
-  // stays in the bottom-right quadrant of the cover-cropped area.
-  const stampTop = H >= 1024 ? 740 : Math.round((H / 1024) * 740);
-  const left = W - inset - stampW;
-  const top = stampTop;
+  const position = input.position ?? 'bottom-left';
+  const { left, top } = stampBox(W, H, position);
   // Sharp ignorerar `.withMetadata({xmp})` för PNG-utdata — bara EXIF skrivs
   // till eXIf-chunken. XMP paketeras manuellt som PNG iTXt-chunk efter Sharp.
   const stamped = await sharp(input.buffer)
-    .composite([
-      {
-        input: AI_STAMP_BUFFER,
-        left,
-        top,
-      },
-    ])
+    .composite([{ input: AI_STAMP_BUFFER, left, top }])
     .png({ compressionLevel: 9 })
     .toBuffer();
   return injectXmpIntoPng(stamped, xmp);
 }
 
 /**
- * Pixel-detect: returnerar true om AI-stämpeln sitter i safe-zone.
- * Används av verifieraren för att avgöra om en bild är stämplad.
+ * Verifierar att AI-stämpeln finns i safe-zone.
  *
- * - Orange > 20 pixlar (FFB454 ± tolerans) — centrerad 6-px-radie-cirkel
- * - Mörk platta > 200 pixlar (rgba ~15,15,18 ± tolerans) — bottenplattan
+ * Två metoder, i fallande bevisstyrka:
  *
- * Region: 200×48 px, 24 px inset från högerkant, top=740 (safe-zone inom
- * cover-crop). Samma region som applyAiCompliance använder.
+ * **`diff`** — när `reference` (det ostämplade originalet) skickas med.
+ * Stämpelregionen jämförs pixel för pixel mellan original och resultat.
+ * Stämpeln täcker hela regionen med minst 0.20 alpha, så nästan varje
+ * pixel måste ha ändrats. Det bevisar att något faktiskt komponerats på
+ * rätt plats, oberoende av motiv och av stämpelns färgsättning.
+ *
+ * **`xmp`** — när originalet saknas. Då kontrolleras den maskinläsbara
+ * disclosure:n i stället.
+ *
+ * Varför inte färgdetektering: fram till 2026-08-30 letade den här
+ * funktionen efter pixlar nära `#FFB454`. Det slutade fungera när
+ * stämpelns delar gjordes genomskinliga (platta 0.20, kant 0.45, prick
+ * och text 0.60) — den alfa-blandade accenten landar var som helst mellan
+ * motivets färg och `#FFB454`. Ett bredare "varm orange"-kriterium
+ * testades och gav **9 falska positiva av 25** ostämplade original;
+ * affischer med varm scenbelysning är oskiljbara från stämpeln på färg
+ * allena. Metoden övergavs därför helt.
+ *
+ * `orangeCount` finns kvar som informativt mått men styr inte `ok`.
+ *
+ * För bevis på att stämpeln är synlig i den *renderade* vyn — vilket är
+ * en annan fråga än om den finns i filen — används
+ * `scripts/verify_utforska_star.py`.
+ *
+ * Region: 280×48 px, 24 px inset från vald kant, top=740. Samma region som
+ * applyAiCompliance använder — båda går via `stampBox`, så de kan inte
+ * glida isär.
  */
 export interface StampCheckResult {
   ok: boolean;
+  /** Vilken metod som avgjorde `ok`. */
+  method: 'diff' | 'xmp';
+  /** Andel ändrade pixlar i stämpelregionen. Endast för `diff`. */
+  changedRatio: number | null;
+  /** Informativt: pixlar med accentfärgens karaktär. Styr inte `ok`. */
   orangeCount: number;
   darkPlateCount: number;
   pixels: number;
 }
 
-export async function checkAiStamp(buffer: Buffer): Promise<StampCheckResult> {
+/**
+ * Minsta andel av stämpelns *opaka* pixlar som måste ha ändrats.
+ *
+ * Mätningen begränsas till stämpelns kant, prick och text (alpha ≥ 0.4).
+ * Bottenplattan är medvetet utesluten: vid 0.20 alpha över ett mörkt
+ * motiv ändras pixlarna med 1–2 nivåer, vilket drunknar i
+ * PNG-kvantiseringen. Ett mått som räknar hela regionen blir därför
+ * innehållsberoende — mörka affischer gav 0.19–0.31 och ljusa 0.89–0.92,
+ * med samma korrekt applicerade stämpel.
+ */
+const STAMP_CHANGED_RATIO_THRESHOLD = 0.5;
+
+/** Minsta kanalskillnad för att en pixel ska räknas som ändrad. */
+const PIXEL_DIFF_EPSILON = 6;
+
+/** Alpha-golv för vilka stämpelpixlar som ingår i differentialmätningen. */
+const STAMP_MASK_ALPHA_FLOOR = 102;   // 0.4 × 255
+
+/**
+ * Index (i RGB-triplett-steg) för stämpelns opaka pixlar. Härleds ur
+ * SVG:ns egen alfakanal, så masken följer automatiskt med när stämpelns
+ * design ändras.
+ */
+let stampMaskCache: number[] | null = null;
+
+async function getStampMask(): Promise<number[]> {
+  if (stampMaskCache) return stampMaskCache;
+  const { data, info } = await sharp(AI_STAMP_BUFFER)
+    .ensureAlpha()
+    .raw()
+    .toBuffer({ resolveWithObject: true });
+  const mask: number[] = [];
+  const channels = info.channels;
+  for (let p = 0; p < info.width * info.height; p++) {
+    const alpha = data[p * channels + (channels - 1)];
+    if (alpha >= STAMP_MASK_ALPHA_FLOOR) mask.push(p * 3);
+  }
+  stampMaskCache = mask;
+  return mask;
+}
+
+/** Informativt mått: bär pixeln accentfärgens karaktär? */
+function isAccentOrange(r: number, g: number, b: number): boolean {
+  return r > 120 && r - b >= 45 && r - g >= 15 && r >= g && g >= b;
+}
+
+async function extractStampRegion(
+  buffer: Buffer,
+  position: StampPosition,
+): Promise<{ raw: Buffer; width: number; height: number }> {
   const meta = await sharp(buffer).metadata();
   const W = meta.width ?? 1024;
   const H = meta.height ?? 1024;
-  const stampW = 280;   // matchar applyAiCompliance — "AI-genererad"-bredd
-  const stampH = 48;
-  const inset = 24;
-  const stampTop = H >= 1024 ? 740 : Math.round((H / 1024) * 740);
-  const left = W - inset - stampW;
-  const top = stampTop;
-
+  const { left, top, width, height } = stampBox(W, H, position);
   const raw = await sharp(buffer)
-    .extract({ left, top, width: stampW, height: stampH })
+    .extract({ left, top, width, height })
     .removeAlpha()
     .raw()
     .toBuffer();
+  return { raw, width, height };
+}
+
+export async function checkAiStamp(
+  buffer: Buffer,
+  position: StampPosition = 'bottom-right',
+  reference?: Buffer,
+): Promise<StampCheckResult> {
+  const { raw, width, height } = await extractStampRegion(buffer, position);
+  const pixels = width * height;
 
   let orangeCount = 0;
   let darkPlateCount = 0;
@@ -377,17 +509,48 @@ export async function checkAiStamp(buffer: Buffer): Promise<StampCheckResult> {
     const r = raw[i];
     const g = raw[i + 1];
     const b = raw[i + 2];
-    if (Math.abs(r - 255) <= 20 && Math.abs(g - 180) <= 25 && Math.abs(b - 84) <= 30) {
-      orangeCount += 1;
-    }
-    if (r < 30 && g < 30 && b < 30) {
-      darkPlateCount += 1;
-    }
+    if (isAccentOrange(r, g, b)) orangeCount += 1;
+    if (r < 30 && g < 30 && b < 30) darkPlateCount += 1;
   }
-  // Synlig stämpel = orange "●"-prick syns. darkPlate är bara informativ
-  // (vissa scener är ljusa → dark kan vara 0 även med stämpel).
-  const ok = orangeCount > 20;
-  return { ok, orangeCount, darkPlateCount, pixels: stampW * stampH };
+
+  if (reference) {
+    const ref = await extractStampRegion(reference, position);
+    if (ref.raw.length !== raw.length) {
+      throw new Error(
+        `reference stamp region size mismatch: ${ref.raw.length} vs ${raw.length}`,
+      );
+    }
+    let changed = 0;
+    const mask = await getStampMask();
+    for (const i of mask) {
+      if (
+        Math.abs(raw[i] - ref.raw[i]) > PIXEL_DIFF_EPSILON ||
+        Math.abs(raw[i + 1] - ref.raw[i + 1]) > PIXEL_DIFF_EPSILON ||
+        Math.abs(raw[i + 2] - ref.raw[i + 2]) > PIXEL_DIFF_EPSILON
+      ) {
+        changed += 1;
+      }
+    }
+    const changedRatio = mask.length > 0 ? changed / mask.length : 0;
+    return {
+      ok: changedRatio > STAMP_CHANGED_RATIO_THRESHOLD,
+      method: 'diff',
+      changedRatio,
+      orangeCount,
+      darkPlateCount,
+      pixels,
+    };
+  }
+
+  const xmp = parseXmp(buffer);
+  return {
+    ok: xmp.found && xmp.hasAiGenerated,
+    method: 'xmp',
+    changedRatio: null,
+    orangeCount,
+    darkPlateCount,
+    pixels,
+  };
 }
 
 /**

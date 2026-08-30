@@ -17,7 +17,11 @@
     "type-check:agent": "tsc --noEmit 08-Agent/**/*.ts",
     "restamp:one": "tsx --env-file=.env 08-Agent/scripts/restamp_aigenerated_one.ts",
     "restamp:all": "tsx --env-file=.env 08-Agent/scripts/restamp_all_event_posters.ts",
-    "verify:ai-stamp": "tsx --env-file=.env 08-Agent/scripts/verify_ai_compliance.ts"
+    "verify:ai-stamp": "tsx --env-file=.env 08-Agent/scripts/verify_ai_compliance.ts",
+    "stamp:seed-originals": "tsx --env-file=.env 08-Agent/scripts/seed_ai_originals.ts",
+    "stamp:build": "tsx --env-file=.env 08-Agent/scripts/build_ai_stamped.ts",
+    "stamp:scan-legacy": "tsx --env-file=.env 08-Agent/scripts/scan_legacy_xmp.ts",
+    "stamp:quarantine": "tsx --env-file=.env 08-Agent/scripts/quarantine_legacy_stamps.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.117.1",
