@@ -8,6 +8,10 @@
  *   - No real venue/artist/brand names (anonymized in prompt)
  *   - No text/typography/logos in image
  *   - Prompt + model + timestamp stored on event row (image_prompt, image_model)
+ *   - Synlig AI-stämpel + XMP-metadata inbakad i pixel-filen innan uppladdning
+ *     (se applyAiCompliance i 08-Agent/tools/ai_compliance.ts). Utan detta
+ *     skulle UI-hooken useAiImageUrl anta att stämpeln finns men filen vara
+ *     raw modell-output → EU AI Act-brist.
  *
  * Idempotency:
  *   - dedupKey(title::venue) → same image for recurring events
@@ -26,6 +30,8 @@ import { createClient, type SupabaseClient } from '@supabase/supabase-js';
 import { readFileSync } from 'node:fs';
 import { resolve, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
+
+import { applyAiCompliance, checkAiStamp } from '../tools/ai_compliance.js';
 
 // ── Env loading ──────────────────────────────────────────────────────────────
 const __filename = fileURLToPath(import.meta.url);
@@ -332,9 +338,24 @@ async function uploadAndPersist(
     throw new Error('uploadAndPersist: eventIds is empty');
   }
   const supabase = getSupabaseClient();
-  const buffer = Buffer.from(b64, 'base64');
+  const rawBuffer = Buffer.from(b64, 'base64');
   const ext = mime === 'image/png' ? 'png' : 'jpg';
   const path = `events/${storagePath}.${ext}`;
+
+  // ── EU AI Act Art. 50: stämpla INNAN uppladdning ─────────────────
+  // applyAiCompliance är idempotent på input-nivå och kostar ~10–50 ms.
+  // JPEG (vissa providers) lämnas rå — hooken useAiImageUrl kommer då
+  // inte att hävda stampVisible (om vi vill ha fullständig compliance för
+  // JPEG måste vi konvertera JPEG→PNG efter stämpling, men det ändrar
+  // URL och kräver DB-uppdatering — separat uppgift).
+  const buffer = mime === 'image/png'
+    ? await applyAiCompliance({
+        buffer: rawBuffer,
+        prompt,
+        model: 'flux-dev',
+        position: 'bottom-left',
+      })
+    : rawBuffer;
 
   const { error: uploadErr } = await supabase.storage
     .from(STORAGE_BUCKET)
@@ -344,6 +365,32 @@ async function uploadAndPersist(
       cacheControl: '31536000',
     });
   if (uploadErr) throw new Error(`Storage upload failed: ${uploadErr.message}`);
+
+  // ── Post-upload verifiering: ladda ner den uppladdade bilden och kör
+  // checkAiStamp mot den vi just skickade upp. Om changedRatio < 0.5
+  // har något gått fel i transport/compression — kasta så ingestion
+  // backoffar istället för att publicera ostämplad.
+  if (mime === 'image/png') {
+    try {
+      const dl = await fetch(
+        `${process.env.SUPABASE_URL}/storage/v1/object/public/${STORAGE_BUCKET}/${path}`,
+      );
+      if (!dl.ok) {
+        console.warn(`[imageGen] post-upload verify: fetch ${dl.status} (path=${path})`);
+      } else {
+        const dlBuf = Buffer.from(await dl.arrayBuffer());
+        const check = await checkAiStamp(dlBuf, 'bottom-left', buffer);
+        if (!check.ok) {
+          throw new Error(
+            `post-upload verify failed: changedRatio=${(check.changedRatio ?? 0).toFixed(3)}`,
+          );
+        }
+      }
+    } catch (verifyErr: unknown) {
+      const msg = verifyErr instanceof Error ? verifyErr.message : String(verifyErr);
+      throw new Error(`post-upload verify failed: ${msg}`);
+    }
+  }
 
   const { data: pub } = supabase.storage.from(STORAGE_BUCKET).getPublicUrl(path);
   const imageUrl = pub?.publicUrl;

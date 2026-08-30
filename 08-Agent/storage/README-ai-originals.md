@@ -44,6 +44,34 @@ dubbelstämpel när nya vänsterstämplar läggs på av build-steget.
 
 Kvar i `ai-originals/`: 908 rena original.
 
+## Tio RUINED-filer (2026-08-30)
+
+De tio alfabetiskt första filerna i den gamla `ai-generated/`-prefixen
+blev under tre designiterationer 2026-08-29 stämplade tre gånger var —
+pixlarna i nedre höger är överskrivna av tre staplade plattor med
+effektiv opacitet ~0.93. Det går inte att laga, så de seedades aldrig
+hit och **ligger kvar i `ai-generated/`** (inte `ai-quarantine/`,
+eftersom de fortfarande pekas ut av `events.image_url` för 161 events).
+
+Den nya vänsterstämpeln kan inte heller appliceras på dem, eftersom
+den då skulle komponeras ovanpå den förstörda högerstämpeln och
+ytterligare förvärra artefakten. Istället bygger
+`build_ruined_into_stamped.ts` en separat `ai-stamped/<ruined>`-fil
+med en ny transparent vänsterstämpel placerad på orörda pixlar. Den
+befintliga trasiga högerstämpeln lämnas orörd — disclosure finns
+ändå, bara i legacy-form.
+
+Körning (engångs, idempotent):
+
+```bash
+npm run stamp:build-ruined       # bygger ai-stamped/<10 ruined>
+npm run stamp:repoint-ruined     # events.image_url → ai-stamped/<ruined>
+npm run stamp:quarantine-ruined  # flyttar ruined från ai-generated/ → ai-quarantine/
+```
+
+Efter det pekar **inga events** längre på `ai-generated/<ruined>` —
+filerna är inte längre "i bruk".
+
 ## Åtkomst
 
 Prefixet ska **inte** exponeras publikt. EU AI Act Art. 50 kräver att den
@@ -57,3 +85,6 @@ publika ytan bär disclosure; `ai-stamped/` är den ytan.
 | `08-Agent/scripts/build_ai_stamped.ts` | Läser härifrån, skriver `ai-stamped/` |
 | `08-Agent/scripts/scan_legacy_xmp.ts` | Hittar filer med inbakad legacy-stämpel via XMP |
 | `08-Agent/scripts/quarantine_legacy_stamps.ts` | Flyttar legacy-filer till `ai-quarantine/` |
+| `08-Agent/scripts/build_ruined_into_stamped.ts` | Bygger `ai-stamped/<ruined>` för 10 förstörda filer |
+| `08-Agent/scripts/repoint_ruined_events.ts` | Uppdaterar events.image_url för 161 ruined-events |
+| `08-Agent/scripts/quarantine_ruined_files.ts` | Flyttar ruined-filer från `ai-generated/` till `ai-quarantine/` |

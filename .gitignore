@@ -51,4 +51,6 @@ TEMP/
 
 # EventPulse Agent Runtime — local mission mirrors + runtime cache (regenerate on demand)
 /.claude/eventpulse/missions/
+/.claude/eventpulse/handoffs/
+/.claude/eventpulse/state/
 /.eventpulse-agent/

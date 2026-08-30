@@ -21,7 +21,11 @@
     "stamp:seed-originals": "tsx --env-file=.env 08-Agent/scripts/seed_ai_originals.ts",
     "stamp:build": "tsx --env-file=.env 08-Agent/scripts/build_ai_stamped.ts",
     "stamp:scan-legacy": "tsx --env-file=.env 08-Agent/scripts/scan_legacy_xmp.ts",
-    "stamp:quarantine": "tsx --env-file=.env 08-Agent/scripts/quarantine_legacy_stamps.ts"
+    "stamp:quarantine": "tsx --env-file=.env 08-Agent/scripts/quarantine_legacy_stamps.ts",
+    "stamp:restamp-events": "tsx --env-file=.env 08-Agent/scripts/restamp_events_bucket.ts",
+    "stamp:build-ruined": "tsx --env-file=.env 08-Agent/scripts/build_ruined_into_stamped.ts",
+    "stamp:repoint-ruined": "tsx --env-file=.env 08-Agent/scripts/repoint_ruined_events.ts",
+    "stamp:quarantine-ruined": "tsx --env-file=.env 08-Agent/scripts/quarantine_ruined_files.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.117.1",

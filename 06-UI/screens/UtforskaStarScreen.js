@@ -30,23 +30,28 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 const SUPABASE_URL = 'https://bsllkpvkowwndhhxtlln.supabase.co';
 const BUCKET = 'event-posters';
-const PREFIX = 'ai-generated';
+const PREFIX = 'ai-stamped';
 
-// De 10 första bucket-bilderna (alphabetical sort, samma som
-// restamp_all_event_posters.ts --limit=10 producerade 2026-08-29).
+// De 10 första bilderna i `ai-stamped/` (alphabetical sort).
+//
 // Hårdkodade eftersom vi vill verifiera EXAKT dessa — agent API är inte
-// alltid tillgängligt och smoke-test ska vara reproducerbart.
+// alltid tillgängligt och smoke-testet ska vara reproducerbart.
+//
+// Detta är INTE samma tio som tidigare. De ursprungliga tio blev
+// trippel-stämplade under felsökningen 2026-08-29 (tre staplade plattor,
+// effektiv opacitet ~0.93) och uteslöts ur `ai-originals/`. Se
+// `08-Agent/storage/README-ai-originals.md`.
 const FIRST_TEN = [
-  { file: '-.png',                                       label: '#1' },
-  { file: '-banan-kompaniet.png',                        label: '#2' },
-  { file: '-bioskandia.png',                             label: '#3' },
-  { file: '-cirkus.png',                                 label: '#4' },
-  { file: '-mariatorget3.png',                           label: '#5' },
-  { file: '-tyrol.png',                                  label: '#6' },
-  { file: '10cc-konsertsalen.png',                       label: '#7' },
-  { file: '5secondsofsummer-everyonesastarworldtourplatinumtickets-hovet.png', label: '#8' },
-  { file: '6lackfllan-fllan.png',                        label: '#9' },
-  { file: 'aaprocky-dontbedumbworldtourplatinumtickets-.png', label: '#10' },
+  { file: 'aaprockyaviciiarena-aviciiarena.png',                                    label: '#1' },
+  { file: 'abonnentkonsertstillhetochventyr-.png',                                  label: '#2' },
+  { file: 'abonnentkonsertstillhetochventyr-medradiosymfonikernaradiokrenrssland-.png', label: '#3' },
+  { file: 'abramisbramamagbootsthehouse-thehouse.png',                              label: '#4' },
+  { file: 'abuneinchristvswarhol-sergelstorg.png',                                  label: '#5' },
+  { file: 'adamoleniuskollektivetlivet-kollektivetlivet.png',                       label: '#6' },
+  { file: 'adelsfestivalen2026adelsfestivalen2026-adelsfestivalen2026.png',         label: '#7' },
+  { file: 'admelioraencore-encore.png',                                             label: '#8' },
+  { file: 'afrorave-debaserstrand.png',                                             label: '#9' },
+  { file: 'afterworkikonstbaren-sergelstorg.png',                                   label: '#10' },
 ];
 
 function imageUrl(file) {
@@ -61,11 +66,15 @@ export default function UtforskaStarScreen() {
           <Text style={styles.bannerKicker}>DEV-SEKTION</Text>
           <Text style={styles.bannerTitle}>Utforska*</Text>
           <Text style={styles.bannerBody}>
-            10 första AI-bilder, restämplade 2026-08-29.{'\n'}
-            Aspect 1:1 — orange "● AI"-pill ska synas i nedre höger.{'\n'}
+            10 första bilderna ur `ai-stamped/`, byggda 2026-08-29.{'\n'}
+            Orange "● AI-genererad"-pill ska synas NERE TILL VÄNSTER.{'\n'}
             {'\n'}
-            Pipeline: 08-Agent/tools/ai_compliance.ts → applyAiCompliance.{'\n'}
-            Safe-zone: x=800-1000, y=740-788 (1024×1024-bild).
+            Bilderna visar TVÅ stämplar. Den vänstra är den nya (platta
+            0.20 opacitet). Den högra är en legacy-stämpel (0.82) som är
+            inbakad i originalen och inte går att ta bort.{'\n'}
+            {'\n'}
+            Pipeline: ai-originals/ → build_ai_stamped.ts → ai-stamped/.{'\n'}
+            Safe-zone: x=24-304, y=740-788 (1024×1024-bild).
           </Text>
         </View>
 

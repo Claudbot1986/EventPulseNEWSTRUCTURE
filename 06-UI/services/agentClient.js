@@ -726,6 +726,8 @@ export async function fetchFeed({ from, days = 7, signal, timeoutMs = 12_000 } =
 export async function fetchRecommendedEvents({ limit = 10, signal, timeoutMs = 12_000 } = {}) {
   const baseUrl = requireAgentBaseUrl();
   const url = new URL(`${baseUrl}/agent/recommended`);
+  const client_user_id = await getOrCreateAnonUserId();
+  url.searchParams.set('client_user_id', client_user_id);
   url.searchParams.set('limit', String(limit));
 
   const controller = new AbortController();
@@ -1575,6 +1577,8 @@ export async function fetchRecentQueries({
 export async function fetchSavedEvents({ limit = 50, signal, timeoutMs = 12_000 } = {}) {
   const baseUrl = requireAgentBaseUrl();
   const url = new URL(`${baseUrl}/agent/saved`);
+  const client_user_id = await getOrCreateAnonUserId();
+  url.searchParams.set('client_user_id', client_user_id);
   url.searchParams.set('limit', String(limit));
 
   const controller = new AbortController();
