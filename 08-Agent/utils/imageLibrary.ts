@@ -91,11 +91,48 @@ export interface FallbackResult {
  * Bump:ar times_used vid lyckad match så vi kan identifiera mest använda bilder.
  */
 export async function pickLibraryFallback(input: FallbackInput): Promise<FallbackResult> {
-  // 1. Default-bild alltid finns (om biblioteket är populerat)
+  // 0. Default-bild alltid finns (om biblioteket är populerat)
   //    Vi returnerar default som fallback om allt annat misslyckas.
   const emptyResult: FallbackResult = { url: null, library_id: null, match_type: 'none' };
 
-  // 2. Försök kategori-match först (vanligaste fallet)
+  // 1. Venue+category-match (2026-08-30): om vi har venue_name OCH det finns
+  //    biblioteksbilder med venue_pattern som är en case-insensitive substring
+  //    av venue_name, använd den. Kräver också category_slug (annars hade vi
+  //    cross-cats som inte är samma typ av scen — t.ex. teater-venue får inte
+  //    sport-bild).
+  if (input.venue_name && input.category_slug) {
+    const vnameLower = input.venue_name.toLowerCase();
+    const { data: venueRows } = await db()
+      .from('image_library')
+      .select('id, public_url, venue_pattern, times_used, rating')
+      .eq('category_slug', input.category_slug)
+      .not('venue_pattern', 'is', null);
+
+    if (venueRows && venueRows.length > 0) {
+      const venueMatch = venueRows
+        .filter((row: { venue_pattern: string | null }) =>
+          row.venue_pattern != null &&
+          vnameLower.includes(row.venue_pattern.toLowerCase()))
+        .sort((a: { rating: number | null; times_used: number | null }, b: { rating: number | null; times_used: number | null }) => {
+          // Rating DESC, times_used ASC (rotation bland like-rated)
+          const ra = a.rating ?? 0;
+          const rb = b.rating ?? 0;
+          if (rb !== ra) return rb - ra;
+          return (a.times_used ?? 0) - (b.times_used ?? 0);
+        })[0];
+
+      if (venueMatch) {
+        await bumpUsage(venueMatch.id);
+        return {
+          url: venueMatch.public_url,
+          library_id: venueMatch.id,
+          match_type: 'venue+category',
+        };
+      }
+    }
+  }
+
+  // 2. Försök kategori-match (vanligaste fallet)
   if (input.category_slug) {
     const { data: byCat } = await db()
       .from('image_library')
@@ -147,11 +184,17 @@ export interface AddToLibraryInput {
   venue_pattern?: string | null;
   tags?: string[];
   source_event_id?: string | null;
+  /** Override default rating (1–5). Default = 3 om ej satt. */
+  rating?: number | null;
 }
 
 /**
  * Registrera en ny AI-genererad bild i biblioteket.
  * Idempotent — om storage_path redan finns returneras befintlig rad.
+ *
+ * 2026-08-30: default rating=3 (mitten av 1–5-skalan) så att
+ * `pickLibraryFallback` rating-sortering fungerar även bland nya bilder.
+ * Curator kan senare justera uppåt/nedåt via UPDATE.
  */
 export async function addToLibrary(input: AddToLibraryInput): Promise<LibraryImage | null> {
   const public_url = publicUrlFor(input.storage_path);
@@ -168,6 +211,7 @@ export async function addToLibrary(input: AddToLibraryInput): Promise<LibraryIma
         venue_pattern: input.venue_pattern ?? null,
         tags: input.tags ?? [],
         source_event_id: input.source_event_id ?? null,
+        rating: input.rating ?? 3,
       },
       { onConflict: 'storage_path', ignoreDuplicates: true },
     )

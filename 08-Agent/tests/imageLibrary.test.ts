@@ -2,11 +2,13 @@
  * 08-Agent/tests/imageLibrary.test.ts
  *
  * Tests for the AI image library helper. Verifies:
+ *   - pickLibraryFallback() returns venue+category-match URL when one exists
  *   - pickLibraryFallback() returns category-match URL when one exists
  *   - pickLibraryFallback() falls back to default (NULL category) image
  *   - pickLibraryFallback() returns none when library is empty
  *   - addToLibrary() upserts idempotently via onConflict
  *   - bumpUsage() via RPC (mocked) handles errors silently
+ *   - addToLibrary() defaults rating to 3 (2026-08-30)
  *
  * Run:  npx vitest run 08-Agent/tests/imageLibrary.test.ts
  */
@@ -35,6 +37,7 @@ import {
 interface MockQuery {
   select: ReturnType<typeof vi.fn>;
   eq: ReturnType<typeof vi.fn>;
+  not: ReturnType<typeof vi.fn>;
   order: ReturnType<typeof vi.fn>;
   is: ReturnType<typeof vi.fn>;
   limit: ReturnType<typeof vi.fn>;
@@ -49,6 +52,8 @@ function makeQuery(result: { data: unknown; error: unknown }): MockQuery {
   const q: MockQuery = {
     select: vi.fn().mockReturnThis(),
     eq: vi.fn().mockReturnThis(),
+    // `.not()` avslutar venue-steget (ingen .single()) → resolve:a direkt.
+    not: vi.fn().mockResolvedValue(result),
     order: vi.fn().mockReturnThis(),
     is: vi.fn().mockReturnThis(),
     limit: vi.fn().mockReturnThis(),
@@ -73,6 +78,94 @@ beforeEach(() => {
 // ── pickLibraryFallback ────────────────────────────────────────────────────
 
 describe('pickLibraryFallback', () => {
+  test('returns venue+category match when venue_pattern matches venue_name', async () => {
+    // Steg 1 (venue+category) ger träff → returnerar direkt, inga fler queries.
+    const venueQuery = makeQuery({
+      data: [
+        {
+          id: 'lib-venue-1',
+          public_url: 'https://storage.example.com/konserthuset.png',
+          venue_pattern: 'konserthuset',
+          times_used: 5,
+          rating: 4,
+        },
+        {
+          id: 'lib-venue-2',
+          public_url: 'https://storage.example.com/other.png',
+          venue_pattern: 'other-venue',
+          times_used: 0,
+          rating: 5,
+        },
+      ],
+      error: null,
+    });
+    fromMock.mockReturnValueOnce(venueQuery);
+    rpcMock.mockResolvedValue({ error: null });
+
+    const result = await pickLibraryFallback({
+      venue_name: 'Konserthuset Stockholm',
+      category_slug: 'music',
+    });
+
+    expect(result).toEqual({
+      url: 'https://storage.example.com/konserthuset.png',
+      library_id: 'lib-venue-1',
+      match_type: 'venue+category',
+    });
+    expect(rpcMock).toHaveBeenCalledWith('image_library_bump_usage', {
+      p_id: 'lib-venue-1',
+    });
+    // Bara venue-steget kördes — kategori/default efterfrågades inte.
+    expect(fromMock).toHaveBeenCalledTimes(1);
+  });
+
+  test('falls through to category when venue_name has no matching venue_pattern', async () => {
+    // Steg 1 (venue+category) → 0 match. Steg 2 (category) → träff.
+    const venueQuery = makeQuery({
+      data: [
+        {
+          id: 'lib-venue-other',
+          public_url: 'https://storage.example.com/opera.png',
+          venue_pattern: 'opera',
+          times_used: 0,
+          rating: 5,
+        },
+      ],
+      error: null,
+    });
+    const categoryQuery = makeQuery({
+      data: { id: 'lib-1', public_url: 'https://storage.example.com/music.png' },
+      error: null,
+    });
+    fromMock
+      .mockReturnValueOnce(venueQuery)
+      .mockReturnValueOnce(categoryQuery);
+    rpcMock.mockResolvedValue({ error: null });
+
+    const result = await pickLibraryFallback({
+      venue_name: 'Konserthuset',
+      category_slug: 'music',
+    });
+
+    expect(result.match_type).toBe('category');
+    expect(result.url).toBe('https://storage.example.com/music.png');
+  });
+
+  test('skips venue step when venue_name is undefined', async () => {
+    // Bara kategori + default ska köras.
+    const categoryQuery = makeQuery({
+      data: { id: 'lib-1', public_url: 'https://storage.example.com/music.png' },
+      error: null,
+    });
+    fromMock.mockReturnValueOnce(categoryQuery);
+    rpcMock.mockResolvedValue({ error: null });
+
+    const result = await pickLibraryFallback({ category_slug: 'music' });
+
+    expect(result.match_type).toBe('category');
+    expect(fromMock).toHaveBeenCalledTimes(1);
+  });
+
   test('returns category match when one exists', async () => {
     // from() returns a query that yields the category-match image
     const categoryQuery = makeQuery({
@@ -160,6 +253,53 @@ describe('addToLibrary', () => {
     expect(result?.id).toBe('new-lib-1');
   });
 
+  test('defaults rating to 3 when not provided (2026-08-30)', async () => {
+    const upsertMock = vi.fn().mockReturnThis();
+    const query = makeQuery({
+      data: { id: 'new-lib-1', storage_path: 'event-posters/ai/x.png', rating: 3 },
+      error: null,
+    });
+    query.upsert = upsertMock;
+    query.select = vi.fn().mockReturnThis();
+    query.maybeSingle = vi.fn().mockResolvedValue({
+      data: { id: 'new-lib-1', storage_path: 'event-posters/ai/x.png', rating: 3 },
+      error: null,
+    });
+    fromMock.mockReturnValue(query);
+
+    await addToLibrary({
+      storage_path: 'event-posters/ai/x.png',
+      category_slug: 'music',
+    });
+
+    // Verifiera att upsert anropades med rating=3 i payload.
+    expect(upsertMock).toHaveBeenCalledTimes(1);
+    const upsertArg = upsertMock.mock.calls[0][0];
+    expect(upsertArg.rating).toBe(3);
+  });
+
+  test('honors explicit rating override from input', async () => {
+    const upsertMock = vi.fn().mockReturnThis();
+    const query = makeQuery({
+      data: { id: 'new-lib-1', storage_path: 'event-posters/ai/x.png', rating: 5 },
+      error: null,
+    });
+    query.upsert = upsertMock;
+    query.select = vi.fn().mockReturnThis();
+    query.maybeSingle = vi.fn().mockResolvedValue({
+      data: { id: 'new-lib-1', storage_path: 'event-posters/ai/x.png', rating: 5 },
+      error: null,
+    });
+    fromMock.mockReturnValue(query);
+
+    await addToLibrary({
+      storage_path: 'event-posters/ai/x.png',
+      rating: 5,
+    });
+
+    expect(upsertMock.mock.calls[0][0].rating).toBe(5);
+  });
+
   test('returns existing row on collision (upsert returns null)', async () => {
     // ignoreDuplicates=true → upsert returns 0 rader vid kollision.
     // addToLibrary ska då hämta befintlig rad via SELECT.
@@ -226,6 +366,25 @@ describe('markEventWithLibraryFallback', () => {
     });
 
     expect(fromMock).toHaveBeenCalledWith('events');
+  });
+
+  test('updates event with venue+category match_type attribution', async () => {
+    const query = makeQuery({ data: null, error: null });
+    query.update = vi.fn().mockReturnThis();
+    query.eq = vi.fn().mockResolvedValue({ error: null });
+    fromMock.mockReturnValue(query);
+
+    await markEventWithLibraryFallback('event-1', {
+      url: 'https://storage.example.com/konserthuset.png',
+      library_id: 'lib-venue-1',
+      match_type: 'venue+category',
+    });
+
+    expect(query.update).toHaveBeenCalledWith(
+      expect.objectContaining({
+        image_attribution: 'Library fallback (venue+category)',
+      }),
+    );
   });
 
   test('skips when match has no URL', async () => {
