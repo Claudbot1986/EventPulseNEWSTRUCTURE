@@ -73,6 +73,10 @@ beforeEach(() => {
   fromMock.mockReset();
   process.env.SUPABASE_URL = 'https://fake.supabase.co';
   process.env.SUPABASE_SERVICE_ROLE_KEY = 'fake-key';
+  // Bas-URL för storage — utan denna fallback:ar publicUrlFor till
+  // production-URL:en `storage.eventpulse.se`, vilket gör test-expects
+  // omöjliga att matcha mot fixtur-URL:er.
+  process.env.SUPABASE_STORAGE_URL = 'https://storage.example.com';
 });
 
 // ── pickLibraryFallback ────────────────────────────────────────────────────
@@ -84,14 +88,16 @@ describe('pickLibraryFallback', () => {
       data: [
         {
           id: 'lib-venue-1',
-          public_url: 'https://storage.example.com/konserthuset.png',
+          storage_path: 'import-original/konserthuset.png',
+          public_url: 'https://storage.example.com/import-original/konserthuset.png',
           venue_pattern: 'konserthuset',
           times_used: 5,
           rating: 4,
         },
         {
           id: 'lib-venue-2',
-          public_url: 'https://storage.example.com/other.png',
+          storage_path: 'import-original/other.png',
+          public_url: 'https://storage.example.com/import-original/other.png',
           venue_pattern: 'other-venue',
           times_used: 0,
           rating: 5,
@@ -108,7 +114,7 @@ describe('pickLibraryFallback', () => {
     });
 
     expect(result).toEqual({
-      url: 'https://storage.example.com/konserthuset.png',
+      url: 'https://storage.example.com/import-stamped/konserthuset.png',
       library_id: 'lib-venue-1',
       match_type: 'venue+category',
     });
@@ -125,7 +131,8 @@ describe('pickLibraryFallback', () => {
       data: [
         {
           id: 'lib-venue-other',
-          public_url: 'https://storage.example.com/opera.png',
+          storage_path: 'import-original/opera.png',
+          public_url: 'https://storage.example.com/import-original/opera.png',
           venue_pattern: 'opera',
           times_used: 0,
           rating: 5,
@@ -134,7 +141,11 @@ describe('pickLibraryFallback', () => {
       error: null,
     });
     const categoryQuery = makeQuery({
-      data: { id: 'lib-1', public_url: 'https://storage.example.com/music.png' },
+      data: {
+        id: 'lib-1',
+        storage_path: 'import-original/music.png',
+        public_url: 'https://storage.example.com/import-original/music.png',
+      },
       error: null,
     });
     fromMock
@@ -148,13 +159,17 @@ describe('pickLibraryFallback', () => {
     });
 
     expect(result.match_type).toBe('category');
-    expect(result.url).toBe('https://storage.example.com/music.png');
+    expect(result.url).toBe('https://storage.example.com/import-stamped/music.png');
   });
 
   test('skips venue step when venue_name is undefined', async () => {
     // Bara kategori + default ska köras.
     const categoryQuery = makeQuery({
-      data: { id: 'lib-1', public_url: 'https://storage.example.com/music.png' },
+      data: {
+        id: 'lib-1',
+        storage_path: 'import-original/music.png',
+        public_url: 'https://storage.example.com/import-original/music.png',
+      },
       error: null,
     });
     fromMock.mockReturnValueOnce(categoryQuery);
@@ -163,13 +178,18 @@ describe('pickLibraryFallback', () => {
     const result = await pickLibraryFallback({ category_slug: 'music' });
 
     expect(result.match_type).toBe('category');
+    expect(result.url).toBe('https://storage.example.com/import-stamped/music.png');
     expect(fromMock).toHaveBeenCalledTimes(1);
   });
 
   test('returns category match when one exists', async () => {
     // from() returns a query that yields the category-match image
     const categoryQuery = makeQuery({
-      data: { id: 'lib-1', public_url: 'https://storage.example.com/music.png' },
+      data: {
+        id: 'lib-1',
+        storage_path: 'import-original/music.png',
+        public_url: 'https://storage.example.com/import-original/music.png',
+      },
       error: null,
     });
     const defaultQuery = makeQuery({ data: null, error: null });
@@ -181,7 +201,7 @@ describe('pickLibraryFallback', () => {
     const result = await pickLibraryFallback({ category_slug: 'music' });
 
     expect(result).toEqual({
-      url: 'https://storage.example.com/music.png',
+      url: 'https://storage.example.com/import-stamped/music.png',
       library_id: 'lib-1',
       match_type: 'category',
     });
@@ -191,7 +211,11 @@ describe('pickLibraryFallback', () => {
   test('falls back to default (NULL category) when no category match', async () => {
     const categoryQuery = makeQuery({ data: null, error: null });
     const defaultQuery = makeQuery({
-      data: { id: 'lib-default', public_url: 'https://storage.example.com/default.png' },
+      data: {
+        id: 'lib-default',
+        storage_path: 'import-original/default.png',
+        public_url: 'https://storage.example.com/import-original/default.png',
+      },
       error: null,
     });
     fromMock
@@ -202,7 +226,7 @@ describe('pickLibraryFallback', () => {
     const result = await pickLibraryFallback({ category_slug: 'community' });
 
     expect(result.match_type).toBe('default');
-    expect(result.url).toBe('https://storage.example.com/default.png');
+    expect(result.url).toBe('https://storage.example.com/import-stamped/default.png');
   });
 
   test('returns none when library is empty', async () => {

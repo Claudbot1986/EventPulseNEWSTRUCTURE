@@ -37,7 +37,7 @@ function db(): SupabaseClient {
   return _supabase;
 }
 
-// ── Public URL helper ──────────────────────────────────────────────────────
+// ── Public URL helpers ─────────────────────────────────────────────────────
 // R2 publika bucket-URL. Sätts via env, fallback till worker-config.
 // I produktion: SUPABASE_STORAGE_URL pekar mot R2-public-endpoint.
 
@@ -46,6 +46,32 @@ function publicUrlFor(storagePath: string): string {
     || process.env.AI_IMAGE_PUBLIC_URL
     || 'https://storage.eventpulse.se';
   return `${base.replace(/\/$/, '')}/${storagePath.replace(/^\//, '')}`;
+}
+
+/**
+ * Mappa `image_library.storage_path` (pekar på import-original/, ostämplade
+ * original) till den stämplade UI-URL:en (import-stamped/, det UI läser).
+ *
+ * Bakgrund (2026-09-01): två-roll-bibliotek infört. UI visar alltid
+ * stämplade varianter — så `pickLibraryFallback` returnerar import-stamped/-
+ * URL även när storage_path refererar till import-original/.
+ *
+ * Substring-match utan inledande slash för att täcka båda formaten:
+ *   - `import-original/foo.png`         (nya entries från addToLibrary)
+ *   - `event-posters/import-original/foo.png` (migrerade entries)
+ *
+ * Regex `/import-original\//` ersätter BARA första förekomsten, vilket
+ * förhindrar dubbel-ersättning i patologiskt formaterade paths.
+ *
+ * Om filen saknar import-original/-segment (t.ex. legacy `events/`-rad eller
+ * QA-only `ai-originals/`-rad) returneras storage_path oförändrat.
+ */
+function stampedUrlForStoragePath(storagePath: string | null | undefined): string | null {
+  if (!storagePath) return null;
+  if (storagePath.includes('import-original/')) {
+    return publicUrlFor(storagePath.replace(/import-original\//, 'import-stamped/'));
+  }
+  return publicUrlFor(storagePath);
 }
 
 // ── Image Library row type ─────────────────────────────────────────────────
@@ -104,7 +130,7 @@ export async function pickLibraryFallback(input: FallbackInput): Promise<Fallbac
     const vnameLower = input.venue_name.toLowerCase();
     const { data: venueRows } = await db()
       .from('image_library')
-      .select('id, public_url, venue_pattern, times_used, rating')
+      .select('id, public_url, storage_path, venue_pattern, times_used, rating')
       .eq('category_slug', input.category_slug)
       .not('venue_pattern', 'is', null);
 
@@ -124,7 +150,7 @@ export async function pickLibraryFallback(input: FallbackInput): Promise<Fallbac
       if (venueMatch) {
         await bumpUsage(venueMatch.id);
         return {
-          url: venueMatch.public_url,
+          url: stampedUrlForStoragePath(venueMatch.storage_path ?? venueMatch.public_url),
           library_id: venueMatch.id,
           match_type: 'venue+category',
         };
@@ -145,14 +171,18 @@ export async function pickLibraryFallback(input: FallbackInput): Promise<Fallbac
 
     if (byCat) {
       await bumpUsage(byCat.id);
-      return { url: byCat.public_url, library_id: byCat.id, match_type: 'category' };
+      return {
+        url: stampedUrlForStoragePath(byCat.storage_path ?? byCat.public_url),
+        library_id: byCat.id,
+        match_type: 'category',
+      };
     }
   }
 
   // 3. Default-bild (alltid tillgänglig om biblioteket har något)
   const { data: def } = await db()
     .from('image_library')
-    .select('id, public_url')
+    .select('id, public_url, storage_path')
     .is('category_slug', null) // NULL = default-bild
     .order('times_used', { ascending: true })
     .limit(1)
@@ -160,7 +190,11 @@ export async function pickLibraryFallback(input: FallbackInput): Promise<Fallbac
 
   if (def) {
     await bumpUsage(def.id);
-    return { url: def.public_url, library_id: def.id, match_type: 'default' };
+    return {
+      url: stampedUrlForStoragePath(def.storage_path ?? def.public_url),
+      library_id: def.id,
+      match_type: 'default',
+    };
   }
 
   return emptyResult;
