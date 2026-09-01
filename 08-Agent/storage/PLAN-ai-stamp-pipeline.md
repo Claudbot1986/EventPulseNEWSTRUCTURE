@@ -1,6 +1,14 @@
 # Plan: AI-stämpel-pipeline för EventPulse (2026-08-30)
 
-## Vad som är klart idag
+> **STATUS (2026-09-01):** Detta dokument är HISTORISKT. Det beskriver tre-roll-designen
+> (`ai-originals/` + `ai-stamped/` + `ai-quarantine/`) som gällde 2026-08-26 → 2026-08-31.
+> Användaren beslutade 2026-09-01 att konsolidera till TVÅ rollers —
+> `import-original/` + `import-stamped/` — se plan
+> `/Users/claudgashi/.claude/plans/jaunty-puzzling-puddle.md` och
+> commit `0928c22 feat(storage): migrate event-posters/ to import-original/ + import-stamped/`.
+> Inga nya migrationer eller skript ska läsa från `ai-*`-prefix efter 2026-09-01.
+
+## Vad som var klart 2026-08-30 (nu HISTORISKT)
 
 ### 1. Source/derivative-separation i bucketen `event-posters`
 
@@ -10,6 +18,9 @@
 | `ai-stamped/` | Publik yta — derivat med stämpel + XMP | build_ai_stamped.ts | 908 PNG, alla stämplade |
 | `ai-quarantine/` | Bortplockade legacy-filer | quarantine_legacy_stamps.ts | 2 PNG med inbakad legacy-stämpel |
 | `events/` | Nya ingestion-bilder (rå output idag, borde vara stämplade) | imageGen.ts | växande |
+
+> Efter 2026-09-01: prefixen ovan är migrerade. `import-original/` +
+> `import-stamped/` är de enda aktiva. Se ny plan.
 
 ### 2. Stämpel-design (ai_compliance.ts, 2026-08-30)
 

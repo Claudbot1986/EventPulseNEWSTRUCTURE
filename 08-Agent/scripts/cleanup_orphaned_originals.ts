@@ -2,9 +2,12 @@
  * 08-Agent/scripts/cleanup_orphaned_originals.ts
  *
  * List (and optionally delete) files in the `event-posters` Supabase Storage
- * bucket that live OUTSIDE the `ai-generated/` prefix. After the 2026-08-26
- * rollout, only `ai-generated/` should remain — any other prefix is either
- *   (a) original/scrape images that violated the "no originals in supabase" rule,
+ * bucket that live OUTSIDE the active two-roll library
+ * (`import-original/` + `import-stamped/`). After the 2026-09-01
+ * consolidation, only those two prefixes should remain — any other prefix
+ * is either
+ *   (a) a legacy `ai-generated/` / `ai-stamped/` / `ai-originals/` /
+ *       `ai-quarantine/` / `events/` artifact (migration leftover),
  *   (b) test artifacts, or
  *   (c) legitimate non-AI files (rare; review carefully before --confirm).
  *
@@ -52,7 +55,7 @@ function parseArgs(argv: ReadonlyArray<string>): CliArgs {
     confirm: false,
     prefix: null,
     skipPrefix: [],
-    keepPrefixes: ['ai-generated/'],  // never touch the AI bucket
+    keepPrefixes: ['import-original/', 'import-stamped/'],  // never touch the active library
     pageSize: 1000,
   };
   for (let i = 2; i < argv.length; i++) {
