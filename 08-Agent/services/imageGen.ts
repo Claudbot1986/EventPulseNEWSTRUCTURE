@@ -340,7 +340,6 @@ async function uploadAndPersist(
   const supabase = getSupabaseClient();
   const rawBuffer = Buffer.from(b64, 'base64');
   const ext = mime === 'image/png' ? 'png' : 'jpg';
-  const path = `events/${storagePath}.${ext}`;
 
   // ── EU AI Act Art. 50: stämpla INNAN uppladdning ─────────────────
   // applyAiCompliance är idempotent på input-nivå och kostar ~10–50 ms.
@@ -357,14 +356,34 @@ async function uploadAndPersist(
       })
     : rawBuffer;
 
-  const { error: uploadErr } = await supabase.storage
+  // 2026-09-01: konsolidering till två-roll-bibliotek. BFL producerar två
+  // filer per generation:
+  //   - import-original/  ← rå BFL-output (ostämplad)
+  //   - import-stamped/   ← samma bild med EU AI Act-stämpel inbakad
+  // Detta gör att stamp_all_originals.ts kan re-stämpla utan att hämta
+  // BFL igen. storage_path i image_library pekar alltid på import-original/,
+  // och `stampedUrlForStoragePath()` mappar URL:en till import-stamped/.
+  const originalPath = `import-original/${storagePath}.${ext}`;
+  const stampedPath = `import-stamped/${storagePath}.${ext}`;
+
+  // Ladda upp BÅDA — först original, sedan stämplad kopia.
+  const { error: origErr } = await supabase.storage
     .from(STORAGE_BUCKET)
-    .upload(path, buffer, {
+    .upload(originalPath, rawBuffer, {
       contentType: mime,
       upsert: true,
       cacheControl: '31536000',
     });
-  if (uploadErr) throw new Error(`Storage upload failed: ${uploadErr.message}`);
+  if (origErr) throw new Error(`Storage upload (original) failed: ${origErr.message}`);
+
+  const { error: uploadErr } = await supabase.storage
+    .from(STORAGE_BUCKET)
+    .upload(stampedPath, buffer, {
+      contentType: mime,
+      upsert: true,
+      cacheControl: '31536000',
+    });
+  if (uploadErr) throw new Error(`Storage upload (stamped) failed: ${uploadErr.message}`);
 
   // ── Post-upload verifiering: ladda ner den uppladdade bilden och kör
   // checkAiStamp mot den vi just skickade upp. Om changedRatio < 0.5
@@ -373,10 +392,10 @@ async function uploadAndPersist(
   if (mime === 'image/png') {
     try {
       const dl = await fetch(
-        `${process.env.SUPABASE_URL}/storage/v1/object/public/${STORAGE_BUCKET}/${path}`,
+        `${process.env.SUPABASE_URL}/storage/v1/object/public/${STORAGE_BUCKET}/${stampedPath}`,
       );
       if (!dl.ok) {
-        console.warn(`[imageGen] post-upload verify: fetch ${dl.status} (path=${path})`);
+        console.warn(`[imageGen] post-upload verify: fetch ${dl.status} (path=${stampedPath})`);
       } else {
         const dlBuf = Buffer.from(await dl.arrayBuffer());
         const check = await checkAiStamp(dlBuf, 'bottom-left', buffer);
@@ -392,7 +411,7 @@ async function uploadAndPersist(
     }
   }
 
-  const { data: pub } = supabase.storage.from(STORAGE_BUCKET).getPublicUrl(path);
+  const { data: pub } = supabase.storage.from(STORAGE_BUCKET).getPublicUrl(stampedPath);
   const imageUrl = pub?.publicUrl;
   if (!imageUrl) throw new Error('No public URL returned for uploaded image');
 
