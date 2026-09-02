@@ -558,8 +558,10 @@ function HomeScreen({ onEventPress, scrollPositionRef, pendingPrompt, dismissPen
   // capture a stale closure. loadEvents identity changes whenever weekStart
   // changes; the listener only fires on foreground transitions but should
   // always call the current version.
+  // NOTE: the ref is assigned AFTER the loadEvents declaration below —
+  // reading the binding earlier throws a TDZ ReferenceError that unmounts
+  // the whole tree (white screen).
   const loadEventsRef = useRef(null);
-  loadEventsRef.current = loadEvents;
   // Debounce AppState 'active' so cold-start + resume within 5s don't pile
   // up duplicate fetches. Initialized to Date.now() so the iOS
   // immediate-on-mount 'change' event (not a real foreground transition)
@@ -614,6 +616,10 @@ function HomeScreen({ onEventPress, scrollPositionRef, pendingPrompt, dismissPen
       isFetchingRef.current = false;
     }
   }, [weekStart]);
+
+  // Keep the AppState listener's ref current (must run after the loadEvents
+  // declaration — see TDZ note above).
+  loadEventsRef.current = loadEvents;
 
   useEffect(() => {
     loadEvents();
