@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-"""vault-sync-session-end.js"""
+// vault-sync-session-end.js
 import { execSync } from 'child_process';
 import { readFileSync, writeFileSync, existsSync, readdirSync } from 'fs';
 import { join } from 'path';
@@ -23,13 +23,10 @@ function getGitState() {
   const status = exec('git status --short');
   const diffStat = exec('git diff --stat HEAD~5..HEAD');
   const branch = exec('git rev-parse --abbrev-ref HEAD').trim();
-  const statusLines = status.split('
-').filter(l => l.trim());
+  const statusLines = status.split('\n').filter(l => l.trim());
   const lastCommitMatch = log.match(/^([a-f0-9]+) (.+)$/m);
   const lastCommit = lastCommitMatch ? { hash: lastCommitMatch[1].slice(0,7), subject: lastCommitMatch[2] } : { hash: 'unknown', subject: 'unknown' };
-  const recentCommits = log.split('
-').slice(0,5).map(line => line.replace(/^[a-f0-9]+ /, '')).join('
-');
+  const recentCommits = log.split('\n').slice(0,5).map(line => line.replace(/^[a-f0-9]+ /, '')).join('\n');
   return { branch, lastCommit, uncommittedCount: statusLines.length, statusSummary: statusLines.length > 0 ? statusLines.join('; ') : 'none', recentCommits, diffStat };
 }
 
@@ -61,8 +58,7 @@ function buildAutoFacts({ git, tests, pkg, migrations, syncTime }) {
   lines.push('[VERIFIED] Uncommitted changes: ' + git.uncommittedCount + ' (' + git.statusSummary + ')');
   lines.push('');
   lines.push('[VERIFIED] Most recent 5 commits on `' + git.branch + '`:');
-  for (const c of git.recentCommits.split('
-').filter(Boolean)) lines.push('- ' + c);
+  for (const c of git.recentCommits.split('\n').filter(Boolean)) lines.push('- ' + c);
   lines.push('');
   if (tests) lines.push('[VERIFIED] Tests (vitest): ' + tests.total + ' total / ' + tests.passed + ' passed / ' + tests.failed + ' failed (' + tests.suites + ' suites)');
   if (pkg) lines.push('[VERIFIED] Package: `' + pkg.name + '` v' + pkg.version + ' (private, ESM)');
@@ -72,47 +68,25 @@ function buildAutoFacts({ git, tests, pkg, migrations, syncTime }) {
   }
   lines.push('[VERIFIED] Vault gitignored at `/00-Vault/` (per `.gitignore` rule).');
   lines.push('');
-  const statLines = git.diffStat.split('
-').filter(Boolean);
+  const statLines = git.diffStat.split('\n').filter(Boolean);
   if (statLines.length > 0) { lines.push('[VERIFIED] Diff stat for HEAD~5..HEAD:'); for (const l of statLines.slice(0,10)) lines.push('- ' + l); }
-  return lines.join('
-');
+  return lines.join('\n');
 }
 
 function updateCurrentState(autoFacts) {
   let content = readFileSync(TARGET_FILE, 'utf-8') || null;
   if (!content) {
-    content = '# EventPulse — Current State
-
-> Auto-maintained by the  SessionEnd hook.
-
-## Auto-facts (machine-synced)
-
-' + autoFacts + '
-
-## Narrative (human-maintained)
-
-_None yet._
-';
+    content = '# EventPulse — Current State\n\n> Auto-maintained by the SessionEnd hook.\n\n## Auto-facts (machine-synced)\n\n' + autoFacts + '\n\n## Narrative (human-maintained)\n\n_None yet._\n';
   } else {
     const sectionStart = content.indexOf('## Auto-facts (machine-synced)');
     if (sectionStart === -1) {
       const narrativeStart = content.indexOf('## Narrative');
-      if (narrativeStart !== -1) content = content.slice(0, narrativeStart) + '## Auto-facts (machine-synced)
-
-' + autoFacts + '
-
-' + content.slice(narrativeStart);
+      if (narrativeStart !== -1) content = content.slice(0, narrativeStart) + '## Auto-facts (machine-synced)\n\n' + autoFacts + '\n\n' + content.slice(narrativeStart);
     } else {
-      const afterStart = content.indexOf('
-', sectionStart) + 1;
+      const afterStart = content.indexOf('\n', sectionStart) + 1;
       const narrativeMatch = content.indexOf('## Narrative', afterStart);
-      if (narrativeMatch !== -1) content = content.slice(0, afterStart) + autoFacts + '
-
-' + content.slice(narrativeMatch);
-      else content = content.slice(0, afterStart) + autoFacts + '
-
-';
+      if (narrativeMatch !== -1) content = content.slice(0, afterStart) + autoFacts + '\n\n' + content.slice(narrativeMatch);
+      else content = content.slice(0, afterStart) + autoFacts + '\n\n';
     }
   }
   writeFileSync(TARGET_FILE, content, 'utf-8');
