@@ -139,6 +139,7 @@ Rendera i `eventHeader.dateClustersRow`:
 | Element | Size | Weight | Color |
 |---|---|---|---|
 | `appTitle` | 34 | 900 | text |
+| `exploreTitle` (Utforska-rubrik, skrollar med listan) | 24 | 900 | text |
 | `dayHeaderText` (SectionList) | 15 | 900 | accent |
 | `eventTitle` | 17 | 700 | text |
 | `eventVenue` | 12 | 500 | textMuted |
@@ -196,6 +197,7 @@ modifiera där, inte här.
 | `3eecfb4` | style(06-UI): replace grouped-event time rows with time pills |
 | `8d6e455` | style(06-UI): render full DateCluster box per grouped-event time slot |
 | `ff4a0ea` | style(06-UI): move grouped-event date clusters inline beside the existing one |
+| (2026-09-03) | feat(06-UI): Utforska — filter samlade i dropdown-panel under låst Filter-knapp, rubrik 24px skrollar med listan |
 
 ---
 

@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { StatusBar } from 'expo-status-bar';
-import { StyleSheet, Text, View, SectionList, ActivityIndicator, TouchableOpacity, ScrollView, Linking, Image, Platform, Share, Alert, AppState } from 'react-native';
+import { StyleSheet, Text, View, SectionList, ActivityIndicator, TouchableOpacity, ScrollView, Linking, Image, Platform, Share, Alert, AppState, Pressable } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { fetchFeed, addDays, fetchEventIcs, shareSession, fetchSharedSession, parseShareHashFromUrl } from './services/agentClient';
 import { useAiImageUrl } from './hooks/useAiImageUrl';
@@ -545,6 +545,7 @@ function HomeScreen({ onEventPress, scrollPositionRef, pendingPrompt, dismissPen
   const [timeFilter, setTimeFilter] = useState(null);
   const [selectedCategories, setSelectedCategories] = useState([]);
   const [priceFilter, setPriceFilter] = useState(null);
+  const [isFilterMenuOpen, setIsFilterMenuOpen] = useState(false);
   // Pagination: `weekStart` advances by 7 days on each scroll-end load.
   const [weekStart, setWeekStart] = useState(() => new Date().toISOString().slice(0, 10));
   const [hasMore, setHasMore] = useState(true);
@@ -683,6 +684,7 @@ function HomeScreen({ onEventPress, scrollPositionRef, pendingPrompt, dismissPen
 
   const groupedEvents = useMemo(() => groupEventsByDay(filteredEvents), [filteredEvents]);
   const hasActiveFilters = Boolean(timeFilter || selectedCategories.length > 0 || priceFilter);
+  const activeFilterCount = (timeFilter ? 1 : 0) + (priceFilter ? 1 : 0) + selectedCategories.length;
 
   if (loading) {
     return <LoadingSkeleton />;
@@ -708,107 +710,138 @@ function HomeScreen({ onEventPress, scrollPositionRef, pendingPrompt, dismissPen
 
   return (
     <SafeAreaView style={styles.homeContainer}>
-      <View style={styles.header}>
-        <Text style={styles.appKicker}>City discovery</Text>
-        <Text style={styles.appTitle}>Vad händer i stan?</Text>
-        <Text style={styles.appSubtitle}>
-          {totalCount} riktiga event att upptäcka. Börja browsa, filtrera när du vill.
-        </Text>
-      </View>
-
-      {pendingPrompt ? (
-        <View style={styles.pendingPromptBanner} accessibilityRole="text">
-          <Text style={styles.pendingPromptEyebrow}>DU FRÅGADE</Text>
-          <Text style={styles.pendingPromptText} numberOfLines={3}>
-            {pendingPrompt}
+      <View style={styles.filterBar}>
+        <TouchableOpacity
+          style={[styles.filterButton, styles.filterToggle]}
+          onPress={() => setIsFilterMenuOpen(prev => !prev)}
+          accessibilityRole="button"
+          accessibilityLabel={isFilterMenuOpen ? 'Stäng filtermenyn' : 'Öppna filtermenyn'}
+        >
+          <Text style={styles.filterButtonText}>
+            {isFilterMenuOpen ? 'Filter ▴' : 'Filter ▾'}
           </Text>
-          <TouchableOpacity
-            style={styles.pendingPromptDismiss}
-            onPress={dismissPendingPrompt}
-            accessibilityRole="button"
-            accessibilityLabel="Stäng"
-          >
-            <Text style={styles.pendingPromptDismissText}>Stäng</Text>
-          </TouchableOpacity>
-        </View>
-      ) : null}
-
-      <View style={styles.filtersPanel}>
-        <Text style={styles.filterLabel}>När</Text>
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.filterRow}>
-          {TIME_FILTERS.map(filter => (
-            <TouchableOpacity
-              key={filter.key}
-              style={[
-                styles.filterButton,
-                timeFilter === filter.key && styles.filterButtonActive
-              ]}
-              onPress={() => handleTimeFilterPress(filter.key)}
-            >
-              <Text style={[
-                styles.filterButtonText,
-                timeFilter === filter.key && styles.filterButtonTextActive
-              ]}>
-                {filter.label}
-              </Text>
-            </TouchableOpacity>
-          ))}
-          {PRICE_FILTERS.map(filter => (
-            <TouchableOpacity
-              key={filter.key}
-              style={[
-                styles.filterButton,
-                priceFilter === filter.key && styles.filterButtonActive
-              ]}
-              onPress={() => setPriceFilter(prev => prev === filter.key ? null : filter.key)}
-            >
-              <Text style={[
-                styles.filterButtonText,
-                priceFilter === filter.key && styles.filterButtonTextActive
-              ]}>
-                {filter.label}
-              </Text>
-            </TouchableOpacity>
-          ))}
-        </ScrollView>
-
-        <Text style={styles.filterLabel}>Kategori</Text>
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.filterRow}>
-          {CATEGORY_FILTERS.map(filter => (
-            <TouchableOpacity
-              key={filter.key}
-              style={[
-                styles.filterButton,
-                selectedCategories.includes(filter.key) && styles.filterButtonActive
-              ]}
-              onPress={() => handleCategoryFilterPress(filter.key)}
-            >
-              <Text style={[
-                styles.filterButtonText,
-                selectedCategories.includes(filter.key) && styles.filterButtonTextActive
-              ]}>
-                {filter.label}
-              </Text>
-            </TouchableOpacity>
-          ))}
-        </ScrollView>
-
-        {hasActiveFilters && (
-          <TouchableOpacity style={styles.clearFiltersButton} onPress={clearFilters}>
-            <Text style={styles.clearFiltersText}>Rensa filter</Text>
-          </TouchableOpacity>
+          {activeFilterCount > 0 && (
+            <View style={styles.filterBadge}>
+              <Text style={styles.filterBadgeText}>{activeFilterCount}</Text>
+            </View>
+          )}
+        </TouchableOpacity>
+        {isFilterMenuOpen && (
+          <View style={styles.filterDropdown}>
+            <Text style={styles.filterLabel}>När</Text>
+            <View style={styles.filterDropdownRow}>
+              {TIME_FILTERS.map(filter => (
+                <TouchableOpacity
+                  key={filter.key}
+                  style={[
+                    styles.filterButton,
+                    timeFilter === filter.key && styles.filterButtonActive
+                  ]}
+                  onPress={() => handleTimeFilterPress(filter.key)}
+                >
+                  <Text style={[
+                    styles.filterButtonText,
+                    timeFilter === filter.key && styles.filterButtonTextActive
+                  ]}>
+                    {filter.label}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+            <Text style={styles.filterLabel}>Pris</Text>
+            <View style={styles.filterDropdownRow}>
+              {PRICE_FILTERS.map(filter => (
+                <TouchableOpacity
+                  key={filter.key}
+                  style={[
+                    styles.filterButton,
+                    priceFilter === filter.key && styles.filterButtonActive
+                  ]}
+                  onPress={() => setPriceFilter(prev => prev === filter.key ? null : filter.key)}
+                >
+                  <Text style={[
+                    styles.filterButtonText,
+                    priceFilter === filter.key && styles.filterButtonTextActive
+                  ]}>
+                    {filter.label}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+            <Text style={styles.filterLabel}>Kategori</Text>
+            <View style={styles.filterDropdownRow}>
+              {CATEGORY_FILTERS.map(filter => (
+                <TouchableOpacity
+                  key={filter.key}
+                  style={[
+                    styles.filterButton,
+                    selectedCategories.includes(filter.key) && styles.filterButtonActive
+                  ]}
+                  onPress={() => handleCategoryFilterPress(filter.key)}
+                >
+                  <Text style={[
+                    styles.filterButtonText,
+                    selectedCategories.includes(filter.key) && styles.filterButtonTextActive
+                  ]}>
+                    {filter.label}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+            {hasActiveFilters && (
+              <TouchableOpacity style={styles.clearFiltersButton} onPress={clearFilters}>
+                <Text style={styles.clearFiltersText}>Rensa filter</Text>
+              </TouchableOpacity>
+            )}
+          </View>
         )}
       </View>
-      
-      {groupedEvents.length === 0 ? (
-        <StateView
-          title={hasActiveFilters ? 'Inga event matchar filtren' : 'Inga event hittades'}
-          detail={hasActiveFilters ? 'Testa att rensa filtren eller bredda datumet.' : 'När nya publicerade event finns visas de här.'}
-          actionLabel={hasActiveFilters ? 'Rensa filter' : 'Hämta igen'}
-          onAction={hasActiveFilters ? clearFilters : loadEvents}
+
+      {isFilterMenuOpen && (
+        <Pressable
+          style={styles.filterBackdrop}
+          onPress={() => setIsFilterMenuOpen(false)}
+          accessibilityRole="button"
+          accessibilityLabel="Stäng filtermenyn"
         />
-      ) : (
-        <SectionList
+      )}
+
+      <SectionList
+        ListHeaderComponent={
+          <>
+            <View style={styles.header}>
+              <Text style={styles.appKicker}>City discovery</Text>
+              <Text style={styles.exploreTitle}>Vad händer i stan?</Text>
+              <Text style={styles.appSubtitle}>
+                {totalCount} riktiga event att upptäcka. Börja browsa, filtrera när du vill.
+              </Text>
+            </View>
+            {pendingPrompt ? (
+              <View style={styles.pendingPromptBanner} accessibilityRole="text">
+                <Text style={styles.pendingPromptEyebrow}>DU FRÅGADE</Text>
+                <Text style={styles.pendingPromptText} numberOfLines={3}>
+                  {pendingPrompt}
+                </Text>
+                <TouchableOpacity
+                  style={styles.pendingPromptDismiss}
+                  onPress={dismissPendingPrompt}
+                  accessibilityRole="button"
+                  accessibilityLabel="Stäng"
+                >
+                  <Text style={styles.pendingPromptDismissText}>Stäng</Text>
+                </TouchableOpacity>
+              </View>
+            ) : null}
+          </>
+        }
+        ListEmptyComponent={
+          <StateView
+            title={hasActiveFilters ? 'Inga event matchar filtren' : 'Inga event hittades'}
+            detail={hasActiveFilters ? 'Testa att rensa filtren eller bredda datumet.' : 'När nya publicerade event finns visas de här.'}
+            actionLabel={hasActiveFilters ? 'Rensa filter' : 'Hämta igen'}
+            onAction={hasActiveFilters ? clearFilters : loadEvents}
+          />
+        }
           ref={sectionListRef}
           sections={groupedEvents.map(group => ({
             title: group.title,
@@ -840,13 +873,14 @@ function HomeScreen({ onEventPress, scrollPositionRef, pendingPrompt, dismissPen
           )}
           contentContainerStyle={styles.listContent}
           showsVerticalScrollIndicator={false}
-          ListFooterComponent={loadingMore ? <LoadingMore /> : (!hasMore && events.length > 0 ? (
+          ListFooterComponent={loadingMore ? <LoadingMore /> : (!hasMore && groupedEvents.length > 0 ? (
             <View style={styles.endOfList}>
               <Text style={styles.endOfListText}>Det var allt vi har just nu.</Text>
             </View>
           ) : null)}
           stickySectionHeadersEnabled={false}
           onEndReached={() => {
+            if (groupedEvents.length === 0) return;
             if (!loadingMore && hasMore) {
               const next = addDays(weekStart, 7);
               setWeekStart(next);
@@ -862,7 +896,6 @@ function HomeScreen({ onEventPress, scrollPositionRef, pendingPrompt, dismissPen
           }}
           scrollEventThrottle={16}
         />
-      )}
     </SafeAreaView>
   );
 }
@@ -1402,16 +1435,68 @@ const styles = StyleSheet.create({
     letterSpacing: -1.2,
     lineHeight: 38,
   },
+  // Utforska section heading — smaller than appTitle (splash/loading keep 34px).
+  exploreTitle: {
+    color: TOKENS.color.text,
+    fontSize: 24,
+    fontWeight: '900',
+    letterSpacing: -1,
+    lineHeight: 28,
+  },
   appSubtitle: {
     color: TOKENS.color.textMuted,
     fontSize: 15,
     lineHeight: 22,
     marginTop: TOKENS.space.sm,
   },
-  filtersPanel: {
-    paddingBottom: TOKENS.space.md,
+  filterBar: {
+    paddingHorizontal: TOKENS.space.xl,
+    paddingVertical: TOKENS.space.sm,
     borderBottomWidth: 1,
     borderBottomColor: TOKENS.color.border,
+    backgroundColor: TOKENS.color.appBg,
+    zIndex: 30,
+    elevation: 30,
+  },
+  filterToggle: {
+    alignSelf: 'flex-start',
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  filterBadge: {
+    minWidth: 18,
+    height: 18,
+    borderRadius: TOKENS.radius.pill,
+    backgroundColor: TOKENS.color.accent,
+    paddingHorizontal: TOKENS.space.xs,
+    marginLeft: TOKENS.space.sm,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  filterBadgeText: {
+    color: TOKENS.color.black,
+    fontSize: 11,
+    fontWeight: '900',
+  },
+  filterBackdrop: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'rgba(0,0,0,0.6)',
+    zIndex: 20,
+    elevation: 20,
+  },
+  filterDropdown: {
+    position: 'absolute',
+    top: '100%',
+    left: TOKENS.space.md,
+    right: TOKENS.space.md,
+    backgroundColor: TOKENS.color.surface,
+    borderWidth: 1,
+    borderColor: TOKENS.color.borderStrong,
+    borderRadius: TOKENS.radius.md,
+    padding: TOKENS.space.md,
+    maxHeight: 440,
+    zIndex: 30,
+    elevation: 30,
   },
   filterLabel: {
     color: TOKENS.color.textSoft,
@@ -1423,8 +1508,9 @@ const styles = StyleSheet.create({
     marginTop: TOKENS.space.sm,
     marginBottom: TOKENS.space.sm,
   },
-  filterRow: {
+  filterDropdownRow: {
     flexDirection: 'row',
+    flexWrap: 'wrap',
     gap: TOKENS.space.sm,
     paddingHorizontal: TOKENS.space.xl,
     paddingBottom: TOKENS.space.sm,
