@@ -1,4 +1,4 @@
-import { mkdtempSync, readFileSync, rmSync, writeFileSync } from 'fs';
+import { existsSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'fs';
 import { tmpdir } from 'os';
 import * as path from 'path';
 import { execFileSync } from 'child_process';
@@ -7,18 +7,30 @@ import { afterEach, describe, expect, it } from 'vitest';
 const projectRoot = path.resolve(__dirname, '..');
 const preAQueue = path.join(projectRoot, 'runtime', 'preA-queue.jsonl');
 
-let originalPreA: string | null = null;
+/**
+ * preA-queue.jsonl är gitignored runtime-state och kan saknas på disk.
+ * Testet skapar i så fall filen själv; afterEach återställer exakt
+ * ursprungligt läge: befintligt innehåll skrivs tillbaka, en av testet
+ * skapad fil raderas.
+ */
+let preARestore: { existed: boolean; content: string | null } | null = null;
 
 afterEach(() => {
-  if (originalPreA !== null) {
-    writeFileSync(preAQueue, originalPreA, 'utf8');
-    originalPreA = null;
+  if (preARestore) {
+    if (preARestore.existed && preARestore.content !== null) {
+      writeFileSync(preAQueue, preARestore.content, 'utf8');
+    } else if (!preARestore.existed && existsSync(preAQueue)) {
+      rmSync(preAQueue);
+    }
+    preARestore = null;
   }
 });
 
 describe('importRawSources accounting', () => {
   it('does not count a new registry source as new when it is already queued in preA', () => {
-    originalPreA = readFileSync(preAQueue, 'utf8');
+    const preAExisted = existsSync(preAQueue);
+    const originalContent = preAExisted ? readFileSync(preAQueue, 'utf8') : null;
+    preARestore = { existed: preAExisted, content: originalContent };
     const sourceId = `zz-prea-existing-${Date.now()}`;
     const sourceUrl = `https://example.invalid/${sourceId}`;
     const queuedRow = {
@@ -28,7 +40,8 @@ describe('importRawSources accounting', () => {
       reason: 'test fixture',
       attempts: 0,
     };
-    writeFileSync(preAQueue, `${originalPreA.trimEnd()}\n${JSON.stringify(queuedRow)}\n`, 'utf8');
+    const baseQueue = originalContent !== null ? `${originalContent.trimEnd()}\n` : '';
+    writeFileSync(preAQueue, `${baseQueue}${JSON.stringify(queuedRow)}\n`, 'utf8');
 
     const dir = mkdtempSync(path.join(tmpdir(), 'eventpulse-rawsources-'));
     const file = path.join(dir, 'rawsources.md');

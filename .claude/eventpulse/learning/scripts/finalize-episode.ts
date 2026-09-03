@@ -176,8 +176,10 @@ export async function finalizeOne(args: FinalizeArgs): Promise<{
   const ledger = readLedger(repoRoot);
   const missionEntries = ledger.filter((e: any) => e.mission_id === missionId);
   const stateMap: EpisodeStateMap = inferStates(missionEntries);
-  // Sätt finalized_at som vi själva gör nu
-  const finalizeTs = new Date().toISOString();
+  // Använd terminalTs (episodens slutpunkt), INTE new Date() — annars
+  // härleds episodeId + datumkatalog (episodes/YYYY/MM) från när finalize
+  // råkar köras, inte från episodens faktiska slut (bröt vid månadsskiftet).
+  const finalizeTs = terminalTs;
   stateMap.finalized_at = finalizeTs;
 
   const missionYaml = readMissionYaml(repoRoot, missionId) ?? "";

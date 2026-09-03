@@ -312,10 +312,12 @@ function makeEvent(data: Record<string, unknown>, method: string, source: string
       isFree: isFree || undefined,
       priceMin: parsePrice(price),
       priceMax: data.priceMax ? parsePrice(norm(data.priceMax)) : undefined,
-      // ── AI-bilder är obligatoriskt → vi fångar INTE scrape-original.
-      // toRawEventInput() skickar image_url=null vidare till normalizer,
-      // som köar AI-generering. Detta undviker onödig bildfångst + filter.
-      imageUrl: undefined,
+      // ── AI-bilder är obligatoriskt i pipelinen: toRawEventInput() mappar
+      // image_url → null oavsett (normalizern köar AI-generering). Här i
+      // extraktionslagret behåller vi per-event-bild från strukturerad data
+      // så att Strategy A-og:image bara fyller events helt utan bild
+      // (prioritet: JSON-LD/microdata > og:image, se universal-extractor.test.ts).
+      imageUrl: image || undefined,
       status,
       source,
       sourceUrl: baseUrl,
