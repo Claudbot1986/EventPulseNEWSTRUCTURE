@@ -1,8 +1,8 @@
 {
   "compilerOptions": {
     "target": "ES2020",
-    "module": "NodeNext",
-    "moduleResolution": "NodeNext",
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
     "outDir": "./dist",
     "rootDir": "./",
     "strict": true,
@@ -16,5 +16,5 @@
     }
   },
   "include": ["."],
-  "exclude": ["dist", "node_modules", "packages/shared/dist"]
+  "exclude": ["dist", "node_modules", "packages/shared/dist", "tmp", "claude-test-empty", "runtime", "AUTONOMOUS-QUARANTINE"]
 }

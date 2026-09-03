@@ -53,4 +53,9 @@ TEMP/
 /.claude/eventpulse/missions/
 /.claude/eventpulse/handoffs/
 /.claude/eventpulse/state/
+/.claude/eventpulse/evidence/
 /.eventpulse-agent/
+
+# Local scratch / debug dumps (excluded from tsconfig)
+/tmp/
+/claude-test-empty/
