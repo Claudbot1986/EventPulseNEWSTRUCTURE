@@ -45,6 +45,22 @@ interface EditRule {
   bypassRoles?: string[]; // roles allowed to bypass this specific rule (logged only)
 }
 
+// Vault files that are machine-synced (vault-sync sub-agent protocol, CLAUDE.md).
+// These MAY be edited by the main session without a role name: Claude Code's
+// real PreToolUse payloads never carry agent_name (verified empirically
+// 2026-09-04), so the vault rule's bypassRoles can never fire in production
+// and would block legitimate machine-syncs. Allowlist is exhaustive — every
+// other vault .md remains vault-sync-only.
+const VAULT_MACHINE_SYNC_FILES: string[] = [
+  "/01-Projects/EventPulse/00-Core/01-Current-State.md",
+  "/01-Projects/EventPulse/00-Core/01-Current-State.proposed.md",
+  "/01-Projects/EventPulse/02-Operations/23-Active-Task-Queue.md",
+];
+
+function isVaultMachineSyncFile(p: string): boolean {
+  return VAULT_MACHINE_SYNC_FILES.some((f) => p.endsWith(f));
+}
+
 const EDIT_RULES: EditRule[] = [
   {
     match: (p) => /\/docs\/MASTERPLAN\.md$/.test(p),
@@ -64,9 +80,10 @@ const EDIT_RULES: EditRule[] = [
   },
   {
     // Scoped to actual vault path; previous regex `/^\/Volumes\/.*\/.*\.md$/`
-    // over-matched every project .md under /Volumes/.
-    match: (p) => /\/00-Vault\//.test(p) && p.endsWith(".md"),
-    reason: "Obsidian vault files belong to vault-sync role only.",
+    // over-matched every project .md under /Volumes/. Machine-synced files
+    // (VAULT_MACHINE_SYNC_FILES) are excepted — see comment above.
+    match: (p) => /\/00-Vault\//.test(p) && p.endsWith(".md") && !isVaultMachineSyncFile(p),
+    reason: "Obsidian vault files belong to vault-sync role only (machine-synced files excepted).",
     bypassRoles: ["vault-sync"] as string[],
   },
 ];

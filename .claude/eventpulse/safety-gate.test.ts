@@ -8,6 +8,7 @@
  *   4. npm test               non-lead  → ALLOW
  *   5. Edit MASTERPLAN.md     non-lead  → BLOCK
  *   6. Edit normalizer.ts     non-lead  → ALLOW
+ *   7–12. vault-regelns fil-allowlist (se VAULT_CASES nedan)
  *
  * Notera: Claude Codes riktiga PreToolUse-payload saknar agent_name —
  * därför kan roll-bypassen aldrig trigga i produktion (empiriskt
@@ -99,6 +100,127 @@ const CASES: GateCase[] = [
 
 describe("safety-gate pattern rules", () => {
   for (const c of CASES) {
+    it(c.name, () => {
+      const r = spawnSync(TSX, [HOOK], {
+        input: JSON.stringify(c.payload),
+        encoding: "utf8",
+        cwd: REPO,
+      });
+      const exitCode = r.status ?? -1;
+      expect(exitCode).toBe(c.expect === "block" ? 2 : 0);
+    });
+  }
+});
+
+// Vault-regelns fil-allowlist (Steg 2, plan 2026-09-04): de tre maskinsynkade
+// filerna tillåts UTAN agent_name (Claude Code skickar aldrig agent_name i
+// produktion), övriga vault-filer blockeras. bypassRoles-maskineriet testas
+// syntetiskt för att dokumentera design-intent om framtida payloads bär namn.
+const VAULT_CASES: GateCase[] = [
+  {
+    name: "vault-allowlist-current-state (ingen agent_name) → ALLOW",
+    payload: {
+      tool_name: "Edit",
+      tool_input: {
+        file_path: path.join(
+          REPO,
+          "00-Vault",
+          "01-Projects",
+          "EventPulse",
+          "00-Core",
+          "01-Current-State.md",
+        ),
+      },
+      cwd: REPO,
+    },
+    expect: "allow",
+  },
+  {
+    name: "vault-allowlist-current-state-proposed (ingen agent_name) → ALLOW",
+    payload: {
+      tool_name: "Write",
+      tool_input: {
+        file_path: path.join(
+          REPO,
+          "00-Vault",
+          "01-Projects",
+          "EventPulse",
+          "00-Core",
+          "01-Current-State.proposed.md",
+        ),
+      },
+      cwd: REPO,
+    },
+    expect: "allow",
+  },
+  {
+    name: "vault-allowlist-task-queue (ingen agent_name) → ALLOW",
+    payload: {
+      tool_name: "Edit",
+      tool_input: {
+        file_path: path.join(
+          REPO,
+          "00-Vault",
+          "01-Projects",
+          "EventPulse",
+          "02-Operations",
+          "23-Active-Task-Queue.md",
+        ),
+      },
+      cwd: REPO,
+    },
+    expect: "allow",
+  },
+  {
+    name: "vault-annan-fil (ingen agent_name) → BLOCK",
+    payload: {
+      tool_name: "Edit",
+      tool_input: {
+        file_path: path.join(
+          REPO,
+          "00-Vault",
+          "01-Projects",
+          "EventPulse",
+          "02-Operations",
+          "03-Current-Task.md",
+        ),
+      },
+      cwd: REPO,
+    },
+    expect: "block",
+  },
+  {
+    name: "vault-annan-fil MED agent_name vault-sync → ALLOW (design-intent)",
+    payload: {
+      tool_name: "Edit",
+      tool_input: {
+        file_path: path.join(
+          REPO,
+          "00-Vault",
+          "01-Projects",
+          "EventPulse",
+          "02-Operations",
+          "03-Current-Task.md",
+        ),
+      },
+      agent_name: "vault-sync",
+      cwd: REPO,
+    },
+    expect: "allow",
+  },
+  {
+    name: "policy.md (ingen agent_name) → BLOCK (Tier 0 skyddad)",
+    payload: {
+      tool_name: "Edit",
+      tool_input: { file_path: path.join(REPO, ".claude", "eventpulse", "policy.md") },
+      cwd: REPO,
+    },
+    expect: "block",
+  },
+];
+
+describe("safety-gate vault rule (fil-allowlist)", () => {
+  for (const c of VAULT_CASES) {
     it(c.name, () => {
       const r = spawnSync(TSX, [HOOK], {
         input: JSON.stringify(c.payload),
