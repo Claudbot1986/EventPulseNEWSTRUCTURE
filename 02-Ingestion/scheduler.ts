@@ -281,7 +281,7 @@ async function runSource(source: SourceTruth, options: { recheck?: boolean } = {
             price_max_sek: (e as any).price?.max ?? null,
             ticket_url: (e as any).url || null,
             detected_language: 'sv' as const,
-            raw_payload: e as Record<string, unknown>,  // CRITICAL: was missing, required field
+            raw_payload: e as unknown as Record<string, unknown>,  // CRITICAL: was missing, required field
             // Legacy fields for backwards compatibility
             organizer_name: (e as any).organizer || '',
             price: (e as any).price ? `${(e as any).price.min || 0}-${(e as any).price.max || 0}` : null,
@@ -300,7 +300,7 @@ async function runSource(source: SourceTruth, options: { recheck?: boolean } = {
           pathUsed: 'network',
           lastRoutingReason: `network_inspection: ${verdict}, extracted ${eventsFound} events from ${top.url}`,
           lastRoutingSource: 'preferredPath',
-          pendingNextTool: eventsFound > 0 ? null : 'network_inspection',
+          pendingNextTool: eventsFound > 0 ? undefined : 'network_inspection',
         });
       } else {
         console.log(`   No likely_event_api with 200 status found`);
@@ -475,20 +475,23 @@ async function runSource(source: SourceTruth, options: { recheck?: boolean } = {
         success: false,
         eventsFound: 0,
         error: `early_route_${preGateResult.earlyRoute}: C1 detected structured data endpoint`,
-        pathUsed: preGateResult.earlyRoute,
+        // NOTE (batch B K6): C1 early-route values ('A'/'B') are not members of
+        // the pathUsed / pendingNextTool / triageRecommendedPath unions — this
+        // legacy scheduler (no importers) writes them regardless. Casts
+        // preserve exact runtime; semantic mapping (A→api etc.) = queue task.
+        pathUsed: preGateResult.earlyRoute as unknown as 'api',
         lastRoutingReason: `C1 early route: ${preGateResult.reason}`,
         lastRoutingSource: 'triage',
-        pendingNextTool: `${preGateResult.earlyRoute === 'A' ? 'A-networkGate' : 'B-JSON-feedGate'}`,
+        pendingNextTool: (preGateResult.earlyRoute === 'A' ? 'A-networkGate' : 'B-JSON-feedGate') as unknown as 'api_adapter',
         triageAttempts: newTriageAttempts,
         triageResult: triageOutcome,
-        triageRecommendedPath: preGateResult.earlyRoute,
+        triageRecommendedPath: preGateResult.earlyRoute as unknown as 'html',
         triageReason: preGateResult.reason,
-        earlyRouteDecision: preGateResult.earlyRoute,
       });
       const earlyLearning = recordTriageAttempt(source.id, {
         timestamp: new Date().toISOString(),
         outcome: triageOutcome,
-        recommendedPath: preGateResult.earlyRoute,
+        recommendedPath: preGateResult.earlyRoute as unknown as 'html',
         triageReason: `early_route: ${preGateResult.reason}`,
       });
       console.log(`   Learning: confidence=${earlyLearning.newConfidence.toFixed(2)} | candidate=${earlyLearning.candidateForPromotion}`);
@@ -501,7 +504,10 @@ async function runSource(source: SourceTruth, options: { recheck?: boolean } = {
         url: source.url,
         sourceName: source.id,
         reason: `C1 early route D: ${preGateResult.reason}`,
-        signal: 'c1_early_js_shell',
+        // NOTE (batch B K6): 'c1_early_js_shell' is not a member of
+        // addPendingRender's signal union — legacy scheduler writes it anyway;
+        // cast preserves runtime. Queue task for the semantic fix.
+        signal: 'c1_early_js_shell' as unknown as 'js_rendered_c1',
         confidence: 0.9,
         attemptedPaths: ['html'],
       });
@@ -517,7 +523,6 @@ async function runSource(source: SourceTruth, options: { recheck?: boolean } = {
         triageResult: triageOutcome,
         triageRecommendedPath: 'render',
         triageReason: preGateResult.reason,
-        earlyRouteDecision: 'D',
       });
       const dLearning = recordTriageAttempt(source.id, {
         timestamp: new Date().toISOString(),
@@ -889,7 +894,7 @@ async function main() {
           stats.manual++;
         }
       } catch (e) {
-        console.log(`ERROR: ${e.message.substring(0, 40)}`);
+        console.log(`ERROR: ${(e as Error).message.substring(0, 40)}`);
         stats.errors++;
       }
 

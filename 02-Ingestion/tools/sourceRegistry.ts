@@ -65,7 +65,9 @@ export interface SourceStatus {
   consecutiveFailures: number;
   lastEventsFound: number;
   lastError?: string;
-  lastPathUsed?: 'jsonld' | 'html' | 'network' | 'render';
+  // Widened (batch B K6) to match the values updateSourceStatus actually
+  // writes via result.pathUsed ('d-ai-adapter' | 'render-gate' | 'api').
+  lastPathUsed?: 'jsonld' | 'html' | 'network' | 'render' | 'd-ai-adapter' | 'render-gate' | 'api';
   lastSystemVersion?: string;  // Vilken systemversion som kördes
 
   // ── Routingminne ─────────────────────────────────────────────────────────
@@ -87,6 +89,8 @@ export interface SourceStatus {
   // ── Triage-historik (runtime-only, skrivs aldrig till sources/) ───────────
   /** Alla triage-försök i kronologisk ordning */
   triageHistory?: TriageAttempt[];
+  /** Föredragen path (skrivs av updateSourceStatus / reroute-verktyg) */
+  preferredPath?: 'jsonld' | 'html' | 'network' | 'render' | 'api' | 'unknown';
   /** Konfidens för nuvarande preferredPath (0.0-1.0), runtime-only */
   preferredPathConfidence?: number;
 

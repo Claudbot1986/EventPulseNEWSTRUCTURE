@@ -100,10 +100,9 @@ function main() {
       updateSourceStatus(s.sourceId, {
         success: false,
         eventsFound: 0,
-        pathUsed: s.lastPathUsed,
+        pathUsed: s.lastPathUsed as 'jsonld' | 'html' | 'network' | 'render' | undefined,
         ingestionStage: 'pending',
         preferredPath: 'html',
-        preferredPathReason: reason,
         lastRoutingReason: reason,
         lastRoutingSource: 'triage',
       });

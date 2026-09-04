@@ -194,7 +194,7 @@ async function triageUrl(url: string, phaseMode: 1 | 2 | 3 = 2): Promise<TriageR
     found_types: r.foundTypes,
     html_bytes: r.htmlSize ?? null,
     reason: html_discovery?.reason ?? r.reason,
-    approved: next_path === 'normalizer_candidate' || (next_path === 'html-heuristics' && html_discovery?.success),
+    approved: next_path === 'normalizer_candidate' || (next_path === 'html-heuristics' && (html_discovery?.success ?? false)),
     network_gate: networkGateResult ? {
       modelStatus: networkGateResult.modelStatus,
       networkSignalsFound: networkGateResult.networkSignalsFound,
