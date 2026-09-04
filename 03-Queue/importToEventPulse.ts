@@ -56,24 +56,16 @@ interface RawEventInput {
 }
 
 async function enqueueRawEvent(raw: RawEventInput): Promise<void> {
-  const { Queue } = await import('bullmq');
-  const { getConnection } = await import('./queue.js');
-
-  const q = new Queue('raw_events', {
-    connection: { getConnection },
-    prefix: 'bull',
-    defaultJobOptions: {
-      attempts: 3,
-      backoff: { type: 'exponential', delay: 5000 },
-      removeOnComplete: 100,
-      removeOnFail: 500,
-    },
-  });
+  // Reuse the canonical 'raw_events' queue instance from queue.js — it has the
+  // same name/prefix/jobOptions this local duplicate built. The old code
+  // imported a non-exported getConnection and passed it as a BullMQ
+  // ConnectionOptions field (invalid — see the RUNTIME-PRESERVING NOTE in
+  // queue.ts). One-shot CLI: no per-add close needed, process exit cleans up.
+  const { rawEventsQueue: q } = await import('./queue.js');
 
   const safeTitle = (raw.source_id ?? raw.title).replace(/[^a-zA-Z0-9-_]/g, '_');
   const jobId = `${raw.source}--${safeTitle}`;
   await q.add(jobId, raw, { jobId });
-  await q.close();
 }
 
 // ── Queue helpers ───────────────────────────────────────────────────────────
@@ -159,7 +151,6 @@ interface ExtractedEvent {
   date?: string;
   time?: string;
   endDate?: string;
-  endTime?: string;
   venue?: string;
   address?: string;
   city?: string;
@@ -235,8 +226,8 @@ export function toRawEvent(sourceId: string, ev: ExtractedEvent): RawEventInput 
     lng:            ev.lng ?? null,
     categories:     ev.categories ?? (ev.category ? [ev.category] : []),
     is_free:        ev.is_free ?? false,
-    price_min_sek:  ev.price_min_sek ?? (ev.price && typeof ev.price === 'object' ? ev.price.min ?? null : null),
-    price_max_sek:  ev.price_max_sek ?? (ev.price && typeof ev.price === 'object' ? ev.price.max ?? null : null),
+    price_min_sek:  ev.price_min_sek ?? (ev.price && typeof ev.price === 'object' ? ((ev.price as Record<string, unknown>).min as number | null) ?? null : null),
+    price_max_sek:  ev.price_max_sek ?? (ev.price && typeof ev.price === 'object' ? ((ev.price as Record<string, unknown>).max as number | null) ?? null : null),
     ticket_url:     ev.ticket_url ?? ev.ticketUrl ?? ev.url ?? null,
     image_url:      ev.image_url ?? ev.imageUrl ?? null,
     source:         sourceId,
