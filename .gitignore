@@ -95,3 +95,6 @@ TEMP/
 /debug_cheerio2.ts
 /test-normalizer-direct.ts
 /08-testResults/260330-batch1-10.ts
+
+# Expo local dev-state (should not be tracked)
+06-UI/.expo/
