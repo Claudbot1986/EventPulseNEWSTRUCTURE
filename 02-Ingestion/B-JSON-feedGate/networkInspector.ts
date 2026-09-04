@@ -620,7 +620,7 @@ async function main() {
       if (promotable.length > 0) {
         console.log(`        → 🎯 ${promotable.length} candidate(s) eligible for E2E promotion (Network Path):`);
         for (const c of promotable) {
-          console.log(`           ${c.url} (score=${c.score}, path=${c.discoveryPath}, fields=${c.promotion.fieldCount})`);
+          console.log(`           ${c.url} (score=${c.score}, path=${c.discoveryPath}, fields=${c.promotion!.fieldCount})`);
         }
       }
     }

@@ -9,10 +9,34 @@
  */
 
 import { fetchJson } from '../tools/fetchTools';
-import type { ParsedEvent } from '../F-eventExtraction/schema';
+
+// NOTE (batch B K5): the objects built in this file use the LEGACY
+// network-event shape (id/startTime/price/lastModified), which does NOT
+// match the canonical ParsedEvent schema (required date + confidence).
+// This is a pre-existing contract break: downstream toRawEventInput reads
+// event.date/event.time that are never set here. Honest migration is a
+// separate queue task (behavior change = user decision). This alias types
+// what the code actually produces today — zero runtime change.
+export interface LegacyNetworkEvent {
+  id: string;
+  title: string;
+  description?: string;
+  startTime?: string;
+  endTime?: string;
+  url?: string;
+  imageUrl?: string;
+  venue?: string;
+  category?: string;
+  organizer?: string;
+  price?: { min: number; max: number };
+  status?: string;
+  source: string;
+  sourceUrl?: string;
+  lastModified: string;
+}
 
 export interface NetworkExtractResult {
-  events: ParsedEvent[];
+  events: LegacyNetworkEvent[];
   rawCount: number;
   parseErrors: string[];
   sourceUrl: string;
@@ -24,8 +48,8 @@ export interface NetworkExtractResult {
  * Tixly returns: { Events: [...], Productions: [...] }
  * Each event has: Name, StartDate, EndDate, MinPrice, MaxPrice, PurchaseUrl, etc.
  */
-function extractFromTixlyApi(data: any, sourceId: string): ParsedEvent[] {
-  const events: ParsedEvent[] = [];
+function extractFromTixlyApi(data: any, sourceId: string): LegacyNetworkEvent[] {
+  const events: LegacyNetworkEvent[] = [];
   
   // Tixly has both Events (individual performances) and Productions (grouped events)
   const tixlyEvents = data?.Events || [];
@@ -34,7 +58,7 @@ function extractFromTixlyApi(data: any, sourceId: string): ParsedEvent[] {
   // Process individual Events
   for (const event of tixlyEvents) {
     try {
-      const parsed: ParsedEvent = {
+      const parsed: LegacyNetworkEvent = {
         id: `${sourceId}-${event.EventId}`,
         title: event.Name || 'Untitled',
         description: event.Description || '',
@@ -72,7 +96,7 @@ function extractFromTixlyApi(data: any, sourceId: string): ParsedEvent[] {
       const eventIds = production.EventIds || [];
       
       for (let i = 0; i < dates.length; i++) {
-        const parsed: ParsedEvent = {
+        const parsed: LegacyNetworkEvent = {
           id: `${sourceId}-prod-${production.EventGroupId}-${i}`,
           title: production.Name || 'Untitled',
           description: production.Description || production.SubTitle || '',
@@ -107,7 +131,7 @@ function extractFromTixlyApi(data: any, sourceId: string): ParsedEvent[] {
 /**
  * Detect API format and extract events accordingly
  */
-function detectAndExtract(data: any, sourceId: string): ParsedEvent[] {
+function detectAndExtract(data: any, sourceId: string): LegacyNetworkEvent[] {
   // Tixly API: { Events: [...], Productions: [...] }
   if (data && (data.Events || data.Productions)) {
     return extractFromTixlyApi(data, sourceId);
@@ -132,7 +156,7 @@ function detectAndExtract(data: any, sourceId: string): ParsedEvent[] {
       source: sourceId,
       sourceUrl: '',
       lastModified: new Date().toISOString(),
-    })).filter((e: ParsedEvent) => e.title && e.title !== 'Untitled');
+    })).filter((e: LegacyNetworkEvent) => e.title && e.title !== 'Untitled');
   }
   
   // Single event object
@@ -153,7 +177,7 @@ function detectAndExtract(data: any, sourceId: string): ParsedEvent[] {
       source: sourceId,
       sourceUrl: '',
       lastModified: new Date().toISOString(),
-    })).filter((e: ParsedEvent) => e.title && e.title !== 'Untitled');
+    })).filter((e: LegacyNetworkEvent) => e.title && e.title !== 'Untitled');
   }
   
   return [];

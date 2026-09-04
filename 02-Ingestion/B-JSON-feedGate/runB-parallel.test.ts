@@ -31,7 +31,7 @@ const mockEntries = [
 describe('runParallel', () => {
   it('should process all items regardless of concurrency', async () => {
     // Import the function
-    const { runParallel } = await import('./runB-parallel.ts');
+    const { runParallel } = await import('./runB-parallel');
 
     const items = [1, 2, 3, 4, 5];
     let activeCount = 0;
@@ -52,7 +52,7 @@ describe('runParallel', () => {
   });
 
   it('should preserve order of results', async () => {
-    const { runParallel } = await import('./runB-parallel.ts');
+    const { runParallel } = await import('./runB-parallel');
 
     const items = ['a', 'b', 'c'];
     const worker = async (item: string) => {
@@ -65,7 +65,7 @@ describe('runParallel', () => {
   });
 
   it('should handle concurrency=1 (sequential)', async () => {
-    const { runParallel } = await import('./runB-parallel.ts');
+    const { runParallel } = await import('./runB-parallel');
 
     const items = [1, 2, 3];
     let lastTime = 0;
@@ -208,12 +208,12 @@ describe('CLI argument parsing', () => {
 
   it('should detect --dry flag', () => {
     expect(['--dry'].includes('--dry')).toBe(true);
-    expect([].includes('--dry')).toBe(false);
+    expect(([] as string[]).includes('--dry')).toBe(false);
   });
 
   it('should detect --status flag', () => {
     expect(['--status'].includes('--status')).toBe(true);
-    expect([].includes('--status')).toBe(false);
+    expect(([] as string[]).includes('--status')).toBe(false);
   });
 });
 

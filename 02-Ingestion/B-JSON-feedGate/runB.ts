@@ -30,6 +30,7 @@ dotenv.config({ path: path.resolve(process.cwd(), '.env'), override: true });
 import { getSource, getSourceStatus, updateSourceStatus } from '../tools/sourceRegistry';
 import { evaluateNetworkGate, summarizeNetworkGateResult } from './A-networkGate';
 import { extractFromApi } from './networkEventExtractor';
+import type { ParsedEvent } from '../F-eventExtraction/schema';
 import { inspectUrl } from './networkInspector';
 import { queueEvents } from '../tools/fetchTools';
 import { toRawEventInput } from '../F-eventExtraction';
@@ -228,7 +229,10 @@ async function runBOnSource(entry: PreBEntry): Promise<BResult> {
     try {
       const extractResult = await extractFromApi(candidate.url, sourceId);
       totalEvents += extractResult.events.length;
-      allExtractedEvents.push(...extractResult.events);
+      // NOTE (batch B K5): extractFromApi returns LegacyNetworkEvent objects
+      // (see networkEventExtractor.ts) — cast bridges to ParsedEvent here.
+      // The legacy→canonical migration itself is a separate queue task.
+      allExtractedEvents.push(...(extractResult.events as unknown as ParsedEvent[]));
       if (extractResult.events.length > 0) {
         console.log(`         extracted ${extractResult.events.length} events from ${candidate.url}`);
       }
