@@ -442,6 +442,16 @@ Be concrete. Do not hide uncertainty.
 
 ---
 
+## Svarsformat (permanent)
+
+Every response that contains technical content MUST end with a section titled **"På människospråk"** at the very bottom — a short, simple explanation in plain Swedish of what was done and why it matters, written so a non-technical reader understands it.
+
+- Technical content comes first, in normal technical language.
+- The rule applies to ALL responses: final reports, interim/status updates, follow-ups, and continuations. Never omit the section because the response is "just a status update".
+- If the response contains no technical content at all (pure conversation), the section can be omitted.
+
+---
+
 ## Git
 
 If you changed files:
