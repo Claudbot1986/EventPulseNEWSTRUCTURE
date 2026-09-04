@@ -5,7 +5,6 @@
     "version": "1.0.0",
     "orientation": "portrait",
     "userInterfaceStyle": "dark",
-    "newArchEnabled": true,
     "scheme": "eventpulse",
     "icon": "./assets/icon.png",
     "splash": {
@@ -33,11 +32,6 @@
         "backgroundColor": "#0F172A"
       },
       "permissions": ["INTERNET"]
-    },
-    "extra": {
-      "eas": {
-        "projectId": null
-      }
     },
     "web": {
       "favicon": "./assets/favicon.png"
