@@ -3,12 +3,28 @@
 
 const ELASTIC_SEARCH_URL = 'https://elastic.kulturhusetstadsteatern.se/khst-events';
 
+// Raw event shape from the Elasticsearch API (same endpoint as kulturhuset.ts)
+interface KulturhusetBarnUngHit {
+  _source: {
+    tixStartDate?: string;
+    tixVenue?: Array<{ label?: string }>;
+    drupalLocation?: Array<{ label?: string }>;
+    drupalLeadText?: Array<{ value?: string }>;
+    drupalLink?: string;
+    drupalTitle?: string;
+    tixName?: string;
+    drupalCategory?: Array<{ label?: string }>;
+    tixEventId?: string | number;
+    drupalId?: string | number;
+  };
+}
+
 /**
  * Map Kulturhuset Barn & Ung event to internal format
  * @param {Object} event - Raw event from Elasticsearch
  * @returns {Object} - Internal event format
  */
-function mapKulturhusetBarnUngEvent(event) {
+function mapKulturhusetBarnUngEvent(event: KulturhusetBarnUngHit) {
   const source = event._source;
   
   // Extract date and time
@@ -65,7 +81,9 @@ function mapKulturhusetBarnUngEvent(event) {
  * @param {Object} options - Options (limit, etc.)
  * @returns {Promise<Object[]>} - Array of events
  */
-export async function fetchKulturhusetBarnUngEvents(options = {}) {
+export async function fetchKulturhusetBarnUngEvents(
+  options: { limit?: number; page?: number } = {},
+) {
   const { limit = 20, page = 0 } = options;
   
   // Fetch all events and filter in JavaScript
@@ -106,13 +124,14 @@ export async function fetchKulturhusetBarnUngEvents(options = {}) {
     
     // Filter for Barn & ung category in JavaScript
     const barnUngLabels = ['Barn & ung', 'Barn', 'För skolan'];
-    
-    const filteredEvents = data.hits.hits
+
+    const hits = (data.hits.hits ?? []) as KulturhusetBarnUngHit[];
+    const filteredEvents = hits
       .filter(hit => {
         const source = hit._source;
         const categories = source.drupalCategory || [];
-        return categories.some(cat => 
-          barnUngLabels.some(label => 
+        return categories.some(cat =>
+          barnUngLabels.some(label =>
             cat.label && cat.label.toLowerCase() === label.toLowerCase()
           )
         );

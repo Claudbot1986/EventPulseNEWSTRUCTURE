@@ -5,7 +5,7 @@ import type { RawEventInput } from '@eventpulse/shared';
 const API_KEY = process.env.BILLETTO_API_KEY;
 const BASE_URL = 'https://api.billetto.se/v3';
 
-export async function scrapeBilletto(): Promise<string> {
+export async function scrapeBilletto(): Promise<string | undefined> {
   // Fail gracefully if API key is not configured
   if (!API_KEY) {
     console.warn('[billetto] ⏭️ Skipping: BILLETTO_API_KEY not configured');

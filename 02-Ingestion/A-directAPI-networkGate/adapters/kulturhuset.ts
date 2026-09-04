@@ -3,12 +3,28 @@
 
 const ELASTIC_SEARCH_URL = 'https://elastic.kulturhusetstadsteatern.se/khst-events';
 
+// Raw event shape from the Elasticsearch API (_source fields used below)
+interface KulturhusetHit {
+  _source: {
+    tixStartDate?: string;
+    tixVenue?: Array<{ label?: string }>;
+    drupalLocation?: Array<{ label?: string }>;
+    drupalLeadText?: Array<{ value?: string }>;
+    drupalLink?: string;
+    drupalTitle?: string;
+    tixName?: string;
+    drupalCategory?: Array<{ label?: string }>;
+    tixEventId?: string | number;
+    drupalId?: string | number;
+  };
+}
+
 /**
  * Map Kulturhuset event to internal format
  * @param {Object} event - Raw event from Elasticsearch
  * @returns {Object} - Internal event format
  */
-function mapKulturhusetEvent(event) {
+function mapKulturhusetEvent(event: KulturhusetHit) {
   const source = event._source;
   
   // Extract date and time - store as full ISO timestamp with timezone
@@ -73,8 +89,8 @@ function mapKulturhusetEvent(event) {
  * @param {string} label - Category label from Kulturhuset
  * @returns {string} - Internal category
  */
-function mapCategory(label) {
-  const categoryMap = {
+function mapCategory(label: string) {
+  const categoryMap: Record<string, string> = {
     'teater': 'culture',
     'musik': 'music',
     'konsert': 'music',

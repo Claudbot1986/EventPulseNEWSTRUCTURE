@@ -61,20 +61,7 @@ export async function fetchBerwaldhallenTixlyEvents(): Promise<any[]> {
 
   // Deduplicate by EventGroupId (take first occurrence = earliest date)
   const seen = new Set<number>();
-  const deduped: Array<{
-    EventGroupId: number;
-    EventId: number;
-    Name: string;
-    Description: string;
-    PurchaseUrl: string;
-    SoldOut: boolean;
-    SaleStatusText: string;
-    OnlineSaleStart: string;
-    StartDate: string;
-    EndDate: string;
-    MinPrice: number;
-    MaxPrice: number;
-  }> = [];
+  const deduped: TixlyEvent[] = [];
 
   for (const ev of events) {
     if (seen.has(ev.EventGroupId)) continue;
@@ -88,20 +75,24 @@ export async function fetchBerwaldhallenTixlyEvents(): Promise<any[]> {
   return deduped.map(ev => mapTixlyEvent(ev));
 }
 
-function mapTixlyEvent(ev: {
+// Shape of one occurrence as returned by the Tixly API (nested State object;
+// Description is enriched from Productions below).
+interface TixlyEvent {
   EventGroupId: number;
   EventId: number;
   Name: string;
-  Description: string;
   PurchaseUrl: string;
-  SoldOut: boolean;
-  SaleStatusText: string;
-  OnlineSaleStart: string;
+  WaitingList: boolean;
+  State: { SoldOut: boolean; SaleStatusText: string; OnlineSaleStart: string };
+  StartDateTimezone: string;
   StartDate: string;
   EndDate: string;
   MinPrice: number;
   MaxPrice: number;
-}): {
+  Description?: string;
+}
+
+function mapTixlyEvent(ev: TixlyEvent): {
   id: string;
   title: string;
   description: string;
@@ -112,7 +103,7 @@ function mapTixlyEvent(ev: {
   venue: string;
   area: string;
   address: string;
-  category: string;
+  categories: string[];
   url: string;
   image_url: null;
   price_info: string | null;
@@ -139,7 +130,7 @@ function mapTixlyEvent(ev: {
       ? `${ev.MinPrice} kr`
       : `${ev.MinPrice}–${ev.MaxPrice} kr`;
 
-  const category = inferCategory(ev.Name, ev.Description);
+  const category = inferCategory(ev.Name, ev.Description ?? '');
 
   return {
     id: `berwaldhallen-${ev.EventGroupId}-${ev.EventId}`,

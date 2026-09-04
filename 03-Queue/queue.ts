@@ -6,7 +6,7 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 dotenv.config({ path: path.resolve(__dirname, '../../../../.env'), override: true });
 
-import { Queue, Worker, type Job } from 'bullmq';
+import { Queue, Worker, type Job, type ConnectionOptions } from 'bullmq';
 import IORedis from 'ioredis';
 import type { RawEventInput } from '@eventpulse/shared';
 
@@ -26,8 +26,15 @@ function getConnection(): IORedis {
   return _connection;
 }
 
+// RUNTIME-PRESERVING NOTE (2026-09-04, batch B K2): bullmq's
+// ConnectionOptions does not accept a { getConnection } factory. At runtime
+// bullmq treats this object as plain RedisOptions (unknown key ignored) and
+// connects with its own defaults — the lazy-connection factory above is never
+// invoked by bullmq. The cast below types the queue correctly WITHOUT changing
+// runtime; honest contract cleanup is a separate queue-task (see
+// 23-Active-Task-Queue).
 export const rawEventsQueue = new Queue<RawEventInput>('raw_events', {
-  connection: { getConnection },
+  connection: { getConnection } as unknown as ConnectionOptions,
   prefix: 'bull',
   defaultJobOptions: {
     attempts: 3,
@@ -39,7 +46,7 @@ export const rawEventsQueue = new Queue<RawEventInput>('raw_events', {
 
 // Smoke test queue - uses separate queue name for isolation
 export const smokeTestQueue = new Queue<RawEventInput>('ingestion_smoke', {
-  connection: { getConnection },
+  connection: { getConnection } as unknown as ConnectionOptions,
   prefix: 'bull',
   defaultJobOptions: {
     attempts: 3,
@@ -51,7 +58,7 @@ export const smokeTestQueue = new Queue<RawEventInput>('ingestion_smoke', {
 
 export const searchSyncQueue = new Queue<{ event_id: string; action: 'upsert' | 'delete' }>(
   'search_sync',
-  { connection: { getConnection }, prefix: 'bull' }
+  { connection: { getConnection } as unknown as ConnectionOptions, prefix: 'bull' }
 );
 
 // AI image generation queue — fired by normalizer after each upsert when
@@ -59,7 +66,7 @@ export const searchSyncQueue = new Queue<{ event_id: string; action: 'upsert' | 
 export const imageGenerationQueue = new Queue<{ event_id: string }>(
   'image_generation',
   {
-    connection: { getConnection },
+    connection: { getConnection } as unknown as ConnectionOptions,
     prefix: 'bull',
     defaultJobOptions: {
       attempts: 3,
@@ -75,7 +82,7 @@ export function createNormalizerWorker(
   queueName: string = 'raw_events'
 ) {
   const worker = new Worker<RawEventInput>(queueName, processor, {
-    connection: { getConnection },
+    connection: { getConnection } as unknown as ConnectionOptions,
     prefix: 'bull',
     concurrency: 5,
   });
@@ -91,7 +98,7 @@ export function createSmokeTestWorker(
   processor: (job: Job<RawEventInput>) => Promise<void>
 ) {
   const worker = new Worker<RawEventInput>('ingestion_smoke', processor, {
-    connection: { getConnection },
+    connection: { getConnection } as unknown as ConnectionOptions,
     prefix: 'bull',
     concurrency: 3,  // Lower concurrency for smoke test
   });
@@ -107,7 +114,7 @@ export function createImageGenerationWorker(
   processor: (job: Job<{ event_id: string }>) => Promise<void>
 ) {
   return new Worker<{ event_id: string }>('image_generation', processor, {
-    connection: { getConnection },
+    connection: { getConnection } as unknown as ConnectionOptions,
     prefix: 'bull',
     concurrency: 2,
   });

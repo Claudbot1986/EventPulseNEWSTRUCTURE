@@ -75,7 +75,7 @@ vi.mock('fs', async () => {
   };
 });
 
-const daiHook = await import('./daiHook.ts');
+const daiHook = await import('./daiHook');
 
 // ─── Tests ───────────────────────────────────────────────────────────────────
 
