@@ -62,7 +62,7 @@ interface ExistingSource {
  * - sourceIdentityKey: site-level key for deduplication and matching (hostname only)
  * - canonicalUrl: the representative URL chosen for this source (with path if present)
  */
-interface ImportedSource {
+export interface ImportedSource {
   // Identity
   sourceId: string;           // authoritative sourceId (existing.id if matched, else generated)
   sourceIdentityKey: string;  // site-level key: hostname only (for deduplication)
@@ -94,7 +94,9 @@ interface ImportedSource {
   // NOTE: 'manualreview' is a review TAG (in reviewTags[]), NEVER a matchStatus value.
   // matchStatus can only be: 'new' | 'matched_existing' | 'duplicate_in_import'.
   requiresManualReview?: boolean;
-  reviewTags?: Array<'manualreview' | 'name_conflict' | 'city_conflict' | 'type_uncertain'>;
+  // 'invalid_url' and 'url_conflict' are emitted by the import matcher below
+  // (and read back at the skipped-source guard) — members added to match runtime.
+  reviewTags?: Array<'manualreview' | 'name_conflict' | 'city_conflict' | 'type_uncertain' | 'invalid_url' | 'url_conflict'>;
   manualReviewReasons?: string[];
 
   // When a hostname matches an existing source but name/city differs,
@@ -1814,6 +1816,9 @@ function main(): void {
   if (inputArg) {
     // Single file mode — original behavior + manifest
     const canonicalSourcesDir = sourcesDir ?? path.join(process.cwd(), 'sources');
+    // Same default output path as --all mode (branch above) — with no --output
+    // flag the raw `output` is null and would crash on first use.
+    const outputFile = output ?? path.join(process.cwd(), 'runtime', 'import-preview.jsonl');
 
     // ── STEP 0: Pre-import backup of sources/ ─────────────────────────────
     console.log('[00A] Step 0: Pre-import backup of sources/\n');
@@ -1882,7 +1887,7 @@ function main(): void {
       console.log(`Manifest entry: batch ${alreadyImported.importBatchId}`);
 
       // Write skipped provenance to a separate file for traceability
-      const skippedOutputPath = output.replace(/\.jsonl$/, '.skipped-provenance.jsonl');
+      const skippedOutputPath = outputFile.replace(/\.jsonl$/, '.skipped-provenance.jsonl');
       const skippedLines = skippedProvenance.map(p => JSON.stringify(p)).join('\n') + '\n';
       fs.writeFileSync(skippedOutputPath, skippedLines, 'utf-8');
       console.log(`Skipped provenance written: ${skippedOutputPath}`);
@@ -1965,8 +1970,8 @@ function main(): void {
 
     // Write output
     const lines = sources.map(s => JSON.stringify(s)).join('\n') + '\n';
-    fs.writeFileSync(output, lines, 'utf-8');
-    console.log(`Written: ${output}`);
+    fs.writeFileSync(outputFile, lines, 'utf-8');
+    console.log(`Written: ${outputFile}`);
     console.log(`  ${sources.length} sources`);
 
     // ── STEP FINAL: Append-only guardrail ───────────────────────────────────
@@ -1974,14 +1979,14 @@ function main(): void {
     // safety check to ensure no downstream code can misuse the preview.
     console.log();
     console.log('[00A] Append-only validation...');
-    validatePreviewAppendOnly(output);
+    validatePreviewAppendOnly(outputFile);
     console.log('[00A] Append-only guard: PASSED ✓');
 
     // ── STEP OPTIONAL: Write new sources to sources/ ───────────────────────
     if (applyNew) {
       console.log();
       console.log('[00A] Step apply-new: Writing new sources to sources/\n');
-      const writeResult = writeNewSourcesToSources(output, canonicalSourcesDir);
+      const writeResult = writeNewSourcesToSources(outputFile, canonicalSourcesDir);
       if (!writeResult.success) {
         console.error('FATAL: Write failed. No changes made to sources/. Restore from backup if needed:');
         console.error(`  ${writeResult.backupPath}`);
@@ -2030,7 +2035,7 @@ function main(): void {
     console.log(`    provenance (${totalAccounted}) = totalSeen (${totalSeenRows}) ? ${totalAccounted === totalSeenRows ? 'YES ✓' : 'NO ✗'} — every row has provenance`);
 
     // Write invalid row provenance to a separate file for traceability
-    const invalidProvPath = output.replace(/\.jsonl$/, '.invalid-provenance.jsonl');
+    const invalidProvPath = outputFile.replace(/\.jsonl$/, '.invalid-provenance.jsonl');
     const invalidProvLines = invalidRowProvenance.map(p => JSON.stringify(p)).join('\n') + '\n';
     fs.writeFileSync(invalidProvPath, invalidProvLines, 'utf-8');
     console.log(`Invalid provenance written: ${invalidProvPath}`);
@@ -2053,12 +2058,15 @@ function main(): void {
   } else {
     // Multi-file mode
     const canonicalSourcesDir = sourcesDir ?? path.join(process.cwd(), 'sources');
-    console.log(`Output:        ${output}`);
+    // Same default output path as --all mode (branch above) — with no --output
+    // flag the raw `output` is null and would crash on first use.
+    const outputFile = output ?? path.join(process.cwd(), 'runtime', 'import-preview.jsonl');
+    console.log(`Output:        ${outputFile}`);
     console.log(`Sources dir:   ${canonicalSourcesDir}`);
     console.log(`RawSources:   ${rawSourcesDir}\n`);
 
     const { results, totalSources, totalRowsSeen, totalInvalidRows, totalSkippedFiles, invalidRowProvenance, skippedFileProvenance, fileScanReport } =
-      runMultiFileImport(inputArg, output, canonicalSourcesDir, rawSourcesDir);
+      runMultiFileImport(inputArg, outputFile, canonicalSourcesDir, rawSourcesDir);
 
     console.log();
     console.log('=== Row-Level Provenance ===');
