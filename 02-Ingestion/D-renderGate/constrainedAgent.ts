@@ -104,6 +104,8 @@ export interface GenerationResult {
   iterations: number;
   validationPassed: boolean;
   validationNotes?: string;
+  /** Events the validator found on the seed page (T0107 fix — propagated from validateConfigOnHtml). */
+  eventsFound?: number;
 }
 
 // ─── JSON Schema (inbyggd, som fallback om AI-klient inte stöder tools) ─────
@@ -389,6 +391,7 @@ export async function runPipeline(opts: PipelineOptions): Promise<GenerationResu
   let totalPrompt = 0;
   let totalResponse = 0;
   let iterations = 0;
+  let lastEventsFound = 0;
 
   for (let i = 0; i < MAX_FIX_ITERATIONS; i++) {
     iterations++;
@@ -419,6 +422,7 @@ export async function runPipeline(opts: PipelineOptions): Promise<GenerationResu
 
     // 2. Validate
     const val = validateConfigOnHtml(config, html);
+    lastEventsFound = val.eventsFound;
     config.validatedAt = new Date().toISOString();
     config.validatorVersion = 'constrainedAgent-1.0';
     config.validationPassed = val.passed;
@@ -432,6 +436,7 @@ export async function runPipeline(opts: PipelineOptions): Promise<GenerationResu
         iterations,
         validationPassed: true,
         validationNotes: val.notes,
+        eventsFound: val.eventsFound,
       };
     }
     lastError = `Validator: ${val.notes}`;
@@ -445,6 +450,7 @@ export async function runPipeline(opts: PipelineOptions): Promise<GenerationResu
     iterations,
     validationPassed: false,
     validationNotes: lastError,
+    eventsFound: lastEventsFound,
   };
 }
 

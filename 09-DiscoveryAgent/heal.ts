@@ -195,12 +195,14 @@ async function healTier1Transport(
 
   const eventsFound = countJsonLdEvents(render.html);
   if (eventsFound > 0 && !options.dryRun) {
+    // T0107 fix: pass the result shape updateSourceStatus derives status from.
+    // The old call sent raw status fields the registry ignores — with no
+    // success/eventsFound the registry fell to the generic fail branch and
+    // marked a just-recovered source as 'fail' with consecutiveFailures++.
     updateSourceStatus(source.id, {
-      status: 'success',
-      lastPathUsed: 'render',
-      lastEventsFound: eventsFound,
-      lastSuccess: nowIso(),
-      consecutiveFailures: 0,
+      success: true,
+      eventsFound: eventsFound,
+      pathUsed: 'render',
       lastRoutingReason: `discovery-agent tier1 render: ${eventsFound} events`,
       lastRoutingSource: 'triage',
     });
@@ -311,11 +313,17 @@ async function healTier2NoJsonld(
   const eventsFound = pipelineResult.eventsFound ?? 0;
 
   if (!options.dryRun && pipelineResult.validationPassed) {
+    // T0107 fix: the registry derives status from success/error — the old call
+    // passed status:'pending_api_adapter' which is ignored, falling to the
+    // generic fail branch. The pending_api_adapter error branch below is the
+    // registry's intended way to set that status (same semantics as runA).
     updateSourceStatus(source.id, {
-      status: 'pending_api_adapter',
-      pendingNextTool: 'D-renderGate',
+      success: false,
+      eventsFound: eventsFound,
+      error: `pending_api_adapter: adapter saved (${eventsFound} events validated)`,
       lastRoutingReason: `discovery-agent tier2: adapter saved (${eventsFound} events validated)`,
       lastRoutingSource: 'triage',
+      pendingNextTool: 'D-renderGate',
     });
   }
 
