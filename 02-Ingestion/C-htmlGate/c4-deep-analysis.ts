@@ -66,7 +66,7 @@ export interface C4GroundTruth {
     title: string;
     date: string | null;
     url: string | null;
-    location: string | null;
+    location?: string | null;
   }[];
   pageType: 'static-html' | 'js-rendered' | 'api-feed' | 'json-ld' | 'mixed' | 'unknown';
   hasValidStructure: boolean;
@@ -234,8 +234,8 @@ const EVENT_TITLE_INDICATORS = [
   '<article', '<li class="event', 'data-date',
 ];
 
-function extractSwedishDateEvents(html: string, baseUrl: string): { title: string; date: string | null; url: string | null }[] {
-  const events: { title: string; date: string | null; url: string | null }[] = [];
+function extractSwedishDateEvents(html: string, baseUrl: string): C4GroundTruth['eventDetails'] {
+  const events: C4GroundTruth['eventDetails'] = [];
 
   // Find all Swedish date mentions
   const dateMatches: { date: string; index: number }[] = [];
@@ -588,13 +588,19 @@ export async function c4DeepAnalyze(
     // In real implementation: fetch URL → AI analyzes HTML → returns events
     // For now: use Swedish date pattern extraction as ground truth proxy
 
-    let c4Events: { title: string; date: string | null; url: string | null }[] = [];
+    let c4Events: C4GroundTruth['eventDetails'] = [];
     let pageType: C4GroundTruth['pageType'] = 'unknown';
     let hasValidStructure = false;
     let extractionMethod: C4GroundTruth['extractionMethod'] = 'ai-understanding';
 
     try {
       // Fetch the URL directly (bypassing C0-C3)
+      // NOTE (2026-09-04, batch B K3): 'node:fetch' is not a real module —
+      // this import always throws at runtime and lands in the catch below
+      // ("Fetch failed — marking as unknown"), i.e. the fetch branch is dead
+      // code. Left as-is (types-only pass); honest fix is a separate queue
+      // task (use the global fetch instead).
+      // @ts-expect-error node:fetch does not exist as a module
       const { default: fetch } = await import('node:fetch');
       const response = await fetch(pipeline.url, {
         headers: { 'User-Agent': 'Mozilla/5.0 (compatible; EventPulse/1.0)' },

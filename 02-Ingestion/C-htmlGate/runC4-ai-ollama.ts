@@ -165,7 +165,10 @@ interface C4Report {
     retryPoolCount: number;
     manualReviewCount: number;
     avgC2ScoreOfFailed: number | null;
-    sourcesByFailCategory: Record<string, string[]>;
+    // Optional (batch B K3): built at runtime (rad ~472) but never included in
+    // the returned summary object. Honest fix = add it to the summary literal;
+    // that is a runtime/report change → queue task, not silent typing work.
+    sourcesByFailCategory?: Record<string, string[]>;
     routingRecommendations: Record<string, number>;
     eventPageIndicatorsSummary: string[];
     htmlPatternsSummary: string[];
@@ -549,8 +552,8 @@ function buildReport(results: C4Result[], meta: C4Report['meta']): C4Report {
       description: indicatorDescription(indicator),
       frequency: data.count,
       sources: Array.from(data.sources),
-      reliability: data.count >= Math.ceil(results.length * 0.3) ? 'high'
-        : data.count >= Math.ceil(results.length * 0.1) ? 'medium' : 'low',
+      reliability: (data.count >= Math.ceil(results.length * 0.3) ? 'high'
+        : data.count >= Math.ceil(results.length * 0.1) ? 'medium' : 'low') as 'high' | 'medium' | 'low',
     }))
     .sort((a, b) => b.frequency - a.frequency);
 
@@ -644,9 +647,9 @@ function indicatorDescription(indicator: string): string {
 
 function generateOverallObservations(
   results: C4Result[],
-  rules: C4Report['candidateRulesCatalog'][],
-  eventPageStructure: C4Report['eventPageStructureCatalog'][],
-  htmlPatterns: C4Report['htmlPatternsFound'][]
+  rules: C4Report['candidateRulesCatalog'],
+  eventPageStructure: C4Report['eventPageStructureCatalog'],
+  htmlPatterns: C4Report['htmlPatternsFound']
 ): string {
   const lines: string[] = [];
   const topPatterns = htmlPatterns.slice(0, 5);

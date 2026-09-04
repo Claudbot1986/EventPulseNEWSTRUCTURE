@@ -72,6 +72,7 @@ interface TestResult {
   statusCode?: number;
   error?: string;
   responseTime?: number;
+  html?: string;
   htmlLength?: number;
   jsRenderMarkers?: boolean;
 }
@@ -426,6 +427,9 @@ export function hypothesisToQueueKey(h: string): string {
   }
 }
 
+// Queue entry from postTestC-manual-review.jsonl (batch mode)
+interface QueueEntry { sourceId: string; queueName: string; }
+
 function appendToQueue(queuePath: string, entry: QueueEntry) {
   mkdirSync(path.dirname(queuePath), { recursive: true });
 
@@ -457,7 +461,6 @@ function appendToQueue(queuePath: string, entry: QueueEntry) {
 }
 
 async function runBatchDiagnostic(args: string[]) {
-  interface QueueEntry { sourceId: string; queueName: string; }
   let entries: QueueEntry[] = [];
 
   if (existsSync(MAN_FILE)) {

@@ -46,7 +46,7 @@ export interface ImprovementCandidate {
 
 export interface GateDecision {
   decisionId: string;
-  timestamp: string;
+  timestamp?: string;
   improvementId: string;
   sourceId: string;
   decision: ImprovementDecision;
@@ -73,7 +73,7 @@ export interface GateDecision {
   
   // Post-decision
   actualOutcome?: string;
-  outcomeConfirmed: boolean;
+  outcomeConfirmed?: boolean;
 }
 
 export interface ImprovementAttempt {
@@ -108,9 +108,9 @@ export interface ImprovementAttempt {
 export interface ImprovementMemory {
   improvementId: string;
   sourceId: string;
-  status: 'proposed' | 'selected' | 'testing' | 'verified' | 'rejected' | 
-          'partial' | 'active' | 'deprecated' | 'exhausted';
-  
+  status: 'proposed' | 'selected' | 'testing' | 'verified' | 'rejected' |
+          'partial' | 'active' | 'deprecated' | 'exhausted' | 'blocked';
+
   // Iterations
   iterations: Array<{
     iterationNumber: number;
@@ -118,7 +118,7 @@ export interface ImprovementMemory {
     verificationResult?: 'passed' | 'failed' | 'partial';
     regressionResult?: 'passed' | 'failed' | 'partial';
     appliedRefinement?: string;
-    timestamp: string;
+    timestamp?: string;
   }>;
   
   // Final outcome
@@ -129,7 +129,7 @@ export interface ImprovementMemory {
   activeBlockers: BlockerType[];
   blockerHistory: Array<{
     blocker: BlockerType;
-    timestamp: string;
+    timestamp?: string;
     resolved: boolean;
     resolution?: string;
   }>;

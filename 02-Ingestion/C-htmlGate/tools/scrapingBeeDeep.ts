@@ -30,41 +30,10 @@ export type CrawlMode = 'shallow' | 'medium' | 'deep';
 export type ExitReason = 'ui' | 'd' | 'manual';
 export type MethodUsed = 'shallow' | 'sitemap+ai' | 'homepage+ai' | 'swedish-paths';
 
-// ParsedEvent from schema - inline minimal type to avoid circular deps
-interface ParsedEvent {
-  title: string;
-  date: string;
-  time?: string;
-  endDate?: string;
-  endTime?: string;
-  venue?: string;
-  address?: string;
-  city?: string;
-  description?: string;
-  url?: string;
-  ticketUrl?: string;
-  organizer?: string;
-  performers?: string[];
-  category?: string;
-  isFree?: boolean;
-  priceMin?: number;
-  priceMax?: number;
-  imageUrl?: string;
-  status?: string;
-  source: string;
-  sourceUrl?: string;
-  confidence?: {
-    score: number;
-    hasTitle: boolean;
-    hasDate: boolean;
-    hasVenue: boolean;
-    hasUrl: boolean;
-    hasDescription: boolean;
-    hasTicketInfo: boolean;
-    eventStatus?: string;
-    signals: string[];
-  };
-}
+// ParsedEvent — use the canonical F-eventExtraction type (no circular dep:
+// schema.ts imports only zod/cheerio). A previous local inline copy drifted
+// from the real schema (optional vs required confidence).
+import type { ParsedEvent } from '../../F-eventExtraction/schema';
 
 export interface CrawlResult {
   sourceId: string;
