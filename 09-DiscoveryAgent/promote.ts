@@ -224,7 +224,7 @@ function collectEventNodes(node: unknown): number {
     (Array.isArray(type) && type.includes('Event'));
   let n = isEvent ? 1 : 0;
   if (Array.isArray(obj['@graph'])) {
-    n += (obj['@graph'] as unknown[]).reduce(
+    n += (obj['@graph'] as unknown[]).reduce<number>(
       (acc, child) => acc + collectEventNodes(child),
       0,
     );

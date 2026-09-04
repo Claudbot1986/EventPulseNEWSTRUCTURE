@@ -27,6 +27,9 @@ import {
   type SourceStatus,
 } from '../02-Ingestion/tools/sourceRegistry.js';
 
+// Re-exported for agent modules and tests (import from eval.js, not sourceRegistry.js).
+export type { SourceTruth, SourceStatus };
+
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
@@ -122,7 +125,7 @@ export function nowIso(): string {
  * Append one entry to a JSONL audit file. Creates parent dir if missing.
  * Never overwrites — always appends.
  */
-function appendJsonl(filePath: string, entry: Record<string, unknown>): void {
+function appendJsonl(filePath: string, entry: object): void {
   ensureAuditDir();
   appendFileSync(filePath, JSON.stringify(entry) + '\n', 'utf-8');
 }
