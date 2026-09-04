@@ -65,6 +65,7 @@ import type {
   AgentChatRequest,
   AgentChatResponse,
   EventCard,
+  IntentBrief,
   RankedEvent,
 } from './types';
 
@@ -302,7 +303,7 @@ export function buildApp(opts: { supabase?: SupabaseClient } = {}): express.Expr
    *   500 supabase / unexpected error
    */
   app.get('/agent/venues/:venueId/events', generalLimiter.middleware, async (req: Request, res: Response) => {
-    const { venueId } = req.params;
+    const venueId = typeof req.params.venueId === 'string' ? req.params.venueId : '';
     if (!venueId || !UUID_RE.test(venueId)) {
       res.status(400).json({ error: 'venueId must be a uuid' });
       return;
@@ -445,7 +446,7 @@ export function buildApp(opts: { supabase?: SupabaseClient } = {}): express.Expr
       // personalization priors are applied.
       const ranked = rankEvents(search.events, intent, {
         topN: 25,
-        personalization,
+        personalization: personalization ?? undefined,
         statedCategories: statedCategories ?? undefined,
         followedVenueIds: followed.venue_ids.length > 0 ? followed.venue_ids : undefined,
         followedArtistSlugs: followedArtists.artist_slugs.length > 0 ? followedArtists.artist_slugs : undefined,
@@ -1518,14 +1519,14 @@ export function buildApp(opts: { supabase?: SupabaseClient } = {}): express.Expr
         title: unknown,
         card1Col: unknown,
         card2Col: unknown
-      ): { title: string; card_1: EventCard | null; card_2: EventCard | null } => {
+      ): { title: string; card_1: CachedCardPayload | null; card_2: CachedCardPayload | null } => {
         const safeTitle = typeof title === 'string' ? title : '';
         const card1 = parseCachedCardPayload(card1Col);
         const card2 = parseCachedCardPayload(card2Col);
         return { title: safeTitle, card_1: card1, card_2: card2 };
       };
 
-      const rawSlots: Array<{ title: string; card_1: EventCard | null; card_2: EventCard | null }> = [
+      const rawSlots: Array<{ title: string; card_1: CachedCardPayload | null; card_2: CachedCardPayload | null }> = [
         slotFromColumns(row.slot_1_title, row.slot_1_card_1, row.slot_1_card_2),
         slotFromColumns(row.slot_2_title, row.slot_2_card_1, row.slot_2_card_2),
         slotFromColumns(row.slot_3_title, row.slot_3_card_1, row.slot_3_card_2),
@@ -1748,7 +1749,7 @@ export function buildApp(opts: { supabase?: SupabaseClient } = {}): express.Expr
       res.status(400).json({ error: 'client_user_id must be a uuid' });
       return;
     }
-    const { id } = req.params;
+    const id = typeof req.params.id === 'string' ? req.params.id : '';
     if (!id || !UUID_RE.test(id)) {
       res.status(400).json({ error: 'event id must be a uuid' });
       return;
@@ -1858,7 +1859,7 @@ export function buildApp(opts: { supabase?: SupabaseClient } = {}): express.Expr
    */
   const HASH_RE = new RegExp(`^[${'0123456789abcdefghijklmnopqrstuvwxyz'}]{6,12}$`);
   app.get('/s/:hash', generalLimiter.middleware, async (req: Request, res: Response) => {
-    const { hash } = req.params;
+    const hash = typeof req.params.hash === 'string' ? req.params.hash : '';
     if (!hash || !HASH_RE.test(hash)) {
       res.status(400).json({ error: 'hash must be 6-12 chars in 0-9a-z' });
       return;
