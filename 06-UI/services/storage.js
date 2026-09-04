@@ -33,6 +33,10 @@ const backend =
     : memoryFallback;
 
 export const ANON_USER_ID_KEY = 'eventpulse.anon_user_id';
+/** Per-test-profile anon ids: `eventpulse.anon_user_id.v1.<profileId>`.
+ *  Swapped in as the main ANON_USER_ID_KEY at login so each test profile
+ *  keeps its own agent-side identity (follows/preferences/interactions). */
+export const ANON_USER_ID_PER_PROFILE_PREFIX = 'eventpulse.anon_user_id.v1.';
 /** HomeScreen chip tap → App.js explore prompt. Lives here so App.js
  *  does not import AppShell (that cycle left AppShell exports
  *  uninitialized on Expo Go). */
@@ -99,4 +103,24 @@ export async function getOrCreateAnonUserId(opts = {}) {
     // Storage threw — emit an ephemeral id so the request still goes through.
     return generator();
   }
+}
+
+/**
+ * Per-test-profile anon id. Reads/creates the profile's own UUID under
+ * `eventpulse.anon_user_id.v1.<profileId>`, then installs it as the main
+ * anon id so all agentClient calls use that profile's client_user_id.
+ * Only called at login — logout never touches these keys (a stray agent
+ * call between logout and next login must not mint a fresh identity).
+ *
+ * @param {string} profileId
+ * @returns {Promise<string>}
+ */
+export async function getOrCreateAnonUserIdFor(profileId) {
+  if (!profileId || typeof profileId !== 'string') {
+    return getOrCreateAnonUserId();
+  }
+  const perProfileKey = `${ANON_USER_ID_PER_PROFILE_PREFIX}${profileId}`;
+  const id = await getOrCreateAnonUserId({ key: perProfileKey });
+  await setItem(ANON_USER_ID_KEY, id);
+  return id;
 }

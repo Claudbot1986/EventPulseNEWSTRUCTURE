@@ -42,6 +42,7 @@ const STORAGE_USER_KEY = 'analytics.active_user';
 const STORAGE_HASH_KEY = 'analytics.device_id_hash';
 const STORAGE_SESSION_KEY = 'analytics.session_id';
 const STORAGE_CONSENT_KEY = 'analytics.consent';
+const STORAGE_LAST_USER_KEY = 'analytics.last_user';
 
 const TEST_USERS = [
   { id: 'tomorg1', label: 'Tomor G. — Alpha',  sub: 'Power-user, bläddrar mycket' },
@@ -133,6 +134,37 @@ async function clearActiveUser() {
     STORAGE_HASH_KEY,
     STORAGE_SESSION_KEY,
     STORAGE_CONSENT_KEY,
+  ]);
+}
+
+/**
+ * Last picked test profile (survives logout) — powers the UserPicker's
+ * "Senast använd" hint.
+ *
+ * @returns {Promise<string|null>}
+ */
+async function getLastUser() {
+  return AsyncStorage.getItem(STORAGE_LAST_USER_KEY);
+}
+
+/**
+ * Log out the active test profile (user portal). Unlike clearActiveUser()
+ * this KEEPS the GDPR consent — consent is device-level, so the picker's
+ * checkbox stays pre-checked and re-login is two taps. Queued events are
+ * drained before identity keys are cleared (each event already carries its
+ * own device_id_hash + session_id, so an in-flight POST is never affected).
+ */
+async function logout() {
+  const user = await getActiveUser();
+  await flush(); // drain the queue now — don't lose buffered events
+  stopFlushLoop(); // stop the interval; its final flush is a no-op now
+  if (user) {
+    await AsyncStorage.setItem(STORAGE_LAST_USER_KEY, user);
+  }
+  await AsyncStorage.multiRemove([
+    STORAGE_USER_KEY,
+    STORAGE_HASH_KEY,
+    STORAGE_SESSION_KEY,
   ]);
 }
 
@@ -311,6 +343,8 @@ export const analyticsClient = {
   getActiveUser,
   setActiveUser,
   clearActiveUser,
+  logout,
+  getLastUser,
   getConsent,
   setConsent,
   setOptOut,

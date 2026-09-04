@@ -875,6 +875,264 @@ export function collectSourceHealth(root: string): SourceHealthReport {
   };
 }
 
+// ─── User activity (10-Analytics runtime/events.jsonl) ──────────────────────
+//
+// The Expo app (06-UI/services/analyticsClient.js) posts user-activity events
+// to the 10-Analytics server on port 7778, which appends them to
+// runtime/events.jsonl (30-day retention, GDPR: no PII — only a
+// pseudonymous device_id_hash). This collector aggregates that file per test
+// profile across three depths (today / last 7d / last 30d) so the dashboard
+// can show what the three fictitious test users actually did.
+//
+// The 10-Analytics read API needs a bearer token (ephemeral-random when the
+// env is unset), so — like the rest of this dashboard — we read the file
+// directly instead of proxying. Windows are computed per call; the file is
+// tiny, no caching.
+
+// Test profiles mirrored from analyticsClient.js TEST_USERS.
+const UA_TEST_USERS = [
+  { id: 'tomorg1', label: 'Tomor G. — Alpha' },
+  { id: 'tomorg2', label: 'Tomor G. — Beta' },
+  { id: 'tomorg3', label: 'Tomor G. — Gamma' },
+];
+
+/** Mirror of analyticsClient.js hashToHex64 (djb2-based, deterministic 64-hex
+ *  from the seed `eventpulse-user:<userId>:v1`). NOT cryptographic — the app
+ *  uses it only as a stable pseudonymous id, and we mirror it to map hashes
+ *  back to readable profile labels. */
+function uaHashToHex64(input: string): string {
+  let h1 = 5381;
+  let h2 = 52711;
+  for (let i = 0; i < input.length; i++) {
+    const c = input.charCodeAt(i);
+    h1 = ((h1 << 5) + h1 + c) >>> 0;
+    h2 = ((h2 * 33) ^ c) >>> 0;
+  }
+  const seed = `${h1.toString(16).padStart(8, '0')}${h2.toString(16).padStart(8, '0')}`;
+  let out = '';
+  let s = seed;
+  while (out.length < 64) {
+    let acc = 0;
+    for (let i = 0; i < s.length; i++) {
+      acc = ((acc << 5) - acc + s.charCodeAt(i)) >>> 0;
+    }
+    out += acc.toString(16).padStart(8, '0');
+    s = `${acc}${s}`;
+  }
+  return out.slice(0, 64);
+}
+
+export type UaDepth = 'today' | 'd7' | 'd30';
+export const UA_DEPTHS: UaDepth[] = ['today', 'd7', 'd30'];
+
+export interface UaDepthStats {
+  events: number;
+  sessions: number; // unique session_id within the window
+  byType: Record<string, number>;
+  lastActive: string | null;
+}
+
+export interface UaProfileRow {
+  id: string;
+  label: string;
+  hash: string | null;
+  known: boolean; // false = hash not in the test-profile map
+  totalEvents: number; // all rows in the file for this profile
+  perDepth: Record<UaDepth, UaDepthStats>;
+  daily: Array<{ date: string; events: number; sessions: number }>; // last 30 days, oldest first
+}
+
+export interface UserActivityReport {
+  ok: boolean;
+  reason?: string; // populated when ok === false (file missing / unreadable)
+  generatedAt: string;
+  profiles: UaProfileRow[];
+  kpis: Record<UaDepth, { events: number; activeProfiles: number; sessions: number }>;
+}
+
+interface UaEventRow {
+  event_type?: string;
+  device_id_hash?: string;
+  session_id?: string;
+  ts?: string;
+  received_at?: string;
+}
+
+function uaEmptyDepthStats(): UaDepthStats {
+  return { events: 0, sessions: 0, byType: {}, lastActive: null };
+}
+
+function uaLocalDate(d: Date): string {
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+}
+
+export function collectUserActivity(root: string): UserActivityReport {
+  const generatedAt = new Date().toISOString();
+  const filePath = join(root, 'runtime/events.jsonl');
+  const emptyKpis: UserActivityReport['kpis'] = {
+    today: { events: 0, activeProfiles: 0, sessions: 0 },
+    d7: { events: 0, activeProfiles: 0, sessions: 0 },
+    d30: { events: 0, activeProfiles: 0, sessions: 0 },
+  };
+
+  if (!existsSync(filePath)) {
+    return {
+      ok: false,
+      reason:
+        'runtime/events.jsonl saknas — 10-Analytics (port 7778) har inte skrivit några events ännu. Starta den via headerns toggle.',
+      generatedAt,
+      profiles: [],
+      kpis: emptyKpis,
+    };
+  }
+
+  let rows: UaEventRow[];
+  try {
+    rows = readJsonl<UaEventRow>(filePath);
+  } catch (err) {
+    return {
+      ok: false,
+      reason: `kunde inte läsa events.jsonl: ${String((err as Error)?.message ?? err)}`,
+      generatedAt,
+      profiles: [],
+      kpis: emptyKpis,
+    };
+  }
+
+  const now = new Date();
+  const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
+  const d7Start = now.getTime() - 7 * 24 * 3600 * 1000;
+  const d30Start = now.getTime() - 30 * 24 * 3600 * 1000;
+  const depthStarts: Record<UaDepth, number> = {
+    today: todayStart,
+    d7: d7Start,
+    d30: d30Start,
+  };
+
+  // Last 30 local dates, oldest first.
+  const dailyDates: string[] = [];
+  for (let i = 29; i >= 0; i--) {
+    dailyDates.push(uaLocalDate(new Date(now.getFullYear(), now.getMonth(), now.getDate() - i)));
+  }
+
+  const knownHashes = new Map<string, { id: string; label: string }>();
+  for (const u of UA_TEST_USERS) {
+    knownHashes.set(uaHashToHex64(`eventpulse-user:${u.id}:v1`), u);
+  }
+
+  interface UaAcc {
+    id: string;
+    label: string;
+    hash: string | null;
+    known: boolean;
+    totalEvents: number;
+    perDepth: Record<UaDepth, UaDepthStats>;
+    sessionsByDepth: Record<UaDepth, Set<string>>;
+    dailyMap: Map<string, { events: number; sessions: Set<string> }>;
+  }
+
+  // Pre-create the three known profiles so they show even with zero events.
+  const accs = new Map<string, UaAcc>();
+  for (const u of UA_TEST_USERS) {
+    accs.set(u.id, {
+      id: u.id,
+      label: u.label,
+      hash: uaHashToHex64(`eventpulse-user:${u.id}:v1`),
+      known: true,
+      totalEvents: 0,
+      perDepth: { today: uaEmptyDepthStats(), d7: uaEmptyDepthStats(), d30: uaEmptyDepthStats() },
+      sessionsByDepth: { today: new Set(), d7: new Set(), d30: new Set() },
+      dailyMap: new Map(),
+    });
+  }
+
+  for (const r of rows) {
+    const hash = typeof r.device_id_hash === 'string' && r.device_id_hash.length > 0 ? r.device_id_hash : null;
+    const known = hash ? knownHashes.get(hash) : undefined;
+    const key = known ? known.id : `unknown:${hash ? hash.slice(0, 8) : 'nohash'}`;
+    let acc = accs.get(key);
+    if (!acc) {
+      acc = {
+        id: known ? known.id : (hash ? hash.slice(0, 8) : 'nohash'),
+        label: known ? known.label : (hash ? `Okänd enhet (${hash.slice(0, 8)}…)` : 'Okänd (utan hash)'),
+        hash,
+        known: !!known,
+        totalEvents: 0,
+        perDepth: { today: uaEmptyDepthStats(), d7: uaEmptyDepthStats(), d30: uaEmptyDepthStats() },
+        sessionsByDepth: { today: new Set(), d7: new Set(), d30: new Set() },
+        dailyMap: new Map(),
+      };
+      accs.set(key, acc);
+    }
+
+    const type = r.event_type && r.event_type.length > 0 ? r.event_type : 'unknown';
+    const sid = r.session_id ?? null;
+    const tsStr = r.received_at ?? r.ts ?? null;
+    const t = tsStr ? new Date(tsStr).getTime() : NaN;
+
+    acc.totalEvents += 1;
+
+    if (Number.isNaN(t)) continue; // untimed row: counts toward totals only
+
+    const tsIso = new Date(t).toISOString();
+    for (const depth of UA_DEPTHS) {
+      if (t < depthStarts[depth]) continue;
+      const ds = acc.perDepth[depth];
+      ds.events += 1;
+      ds.byType[type] = (ds.byType[type] ?? 0) + 1;
+      if (!ds.lastActive || tsIso > ds.lastActive) ds.lastActive = tsIso;
+      if (sid) acc.sessionsByDepth[depth].add(sid);
+    }
+
+    const dateKey = uaLocalDate(new Date(t));
+    let day = acc.dailyMap.get(dateKey);
+    if (!day) {
+      day = { events: 0, sessions: new Set() };
+      acc.dailyMap.set(dateKey, day);
+    }
+    day.events += 1;
+    if (sid) day.sessions.add(sid);
+  }
+
+  const profiles: UaProfileRow[] = [];
+  const kpis: UserActivityReport['kpis'] = {
+    today: { events: 0, activeProfiles: 0, sessions: 0 },
+    d7: { events: 0, activeProfiles: 0, sessions: 0 },
+    d30: { events: 0, activeProfiles: 0, sessions: 0 },
+  };
+
+  for (const acc of accs.values()) {
+    const perDepth: Record<UaDepth, UaDepthStats> = {
+      today: acc.perDepth.today,
+      d7: acc.perDepth.d7,
+      d30: acc.perDepth.d30,
+    };
+    for (const depth of UA_DEPTHS) {
+      perDepth[depth].sessions = acc.sessionsByDepth[depth].size;
+      kpis[depth].events += perDepth[depth].events;
+      kpis[depth].sessions += perDepth[depth].sessions;
+      if (perDepth[depth].events > 0) kpis[depth].activeProfiles += 1;
+    }
+    profiles.push({
+      id: acc.id,
+      label: acc.label,
+      hash: acc.hash,
+      known: acc.known,
+      totalEvents: acc.totalEvents,
+      perDepth,
+      daily: dailyDates.map((date) => {
+        const day = acc.dailyMap.get(date);
+        return { date, events: day ? day.events : 0, sessions: day ? day.sessions.size : 0 };
+      }),
+    });
+  }
+
+  // Zero-event known profiles contribute nothing to the KPIs — but unknown
+  // hashes with zero events can't exist, so no extra filtering needed here.
+
+  return { ok: true, generatedAt, profiles, kpis };
+}
+
 // ─── HTTP handlers ───────────────────────────────────────────────────────────
 
 function serveStatic(req: IncomingMessage, res: ServerResponse): boolean {
@@ -928,6 +1186,24 @@ async function serveJson(req: IncomingMessage, res: ServerResponse): Promise<boo
   if (url === '/api/source-health') {
     try {
       const data = collectSourceHealth(PROJECT_ROOT);
+      res.writeHead(200, {
+        'Content-Type': 'application/json; charset=utf-8',
+        'Cache-Control': 'no-cache',
+      });
+      res.end(JSON.stringify(data));
+    } catch (err) {
+      res.writeHead(500, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ error: String(err) }));
+    }
+    return true;
+  }
+  if (url === '/api/user-activity') {
+    // User-activity panel — aggregates 10-Analytics' runtime/events.jsonl
+    // per test profile across today/7d/30d depths. Returns HTTP 200 with
+    // ok:false when the file is missing so the panel can render an honest
+    // muted state instead of fabricated numbers.
+    try {
+      const data = collectUserActivity(PROJECT_ROOT);
       res.writeHead(200, {
         'Content-Type': 'application/json; charset=utf-8',
         'Cache-Control': 'no-cache',

@@ -10,7 +10,7 @@
  */
 
 import React, { useCallback, useEffect, useState } from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import { View, Text, StyleSheet, Platform } from 'react-native';
 import { SafeAreaProvider, initialWindowMetrics } from 'react-native-safe-area-context';
 
 import BottomTabBar from './components/BottomTabBar';
@@ -18,10 +18,12 @@ import HomeScreen from './screens/HomeScreen';
 import NotificationsScreen from './screens/NotificationsScreen';
 import ProfileScreen from './screens/ProfileScreen';
 import OnboardingScreen from './screens/OnboardingScreen';
+import UserPickerScreen from './screens/UserPickerScreen';
 import UtforskaStarScreen from './screens/UtforskaStarScreen';
 import NetworkBanner from './components/NetworkBanner';
 import App from './App';
 import { getItem, setItem, PENDING_AGENT_MESSAGE_KEY } from './services/storage';
+import { analyticsClient } from './services/analyticsClient';
 import { NetworkProvider } from './services/networkContext';
 
 // Dev-only feature flag: när TRUE lägger vi till 5:e tab "Utforska*" som
@@ -38,6 +40,7 @@ export { PENDING_AGENT_MESSAGE_KEY };
 export default function AppShell() {
   const [activeTab, setActiveTab] = useState('home');
   const [onboardingState, setOnboardingState] = useState('loading'); // 'loading' | 'needs' | 'done'
+  const [userState, setUserState] = useState('loading'); // 'loading' | 'logged_in' | 'logged_out'
 
   useEffect(() => {
     let alive = true;
@@ -67,6 +70,45 @@ export default function AppShell() {
     };
   }, []);
 
+  // Resolve the persisted analytics test profile once onboarding is done.
+  // The shell owns the session / flush-loop lifecycle: a restored user gets
+  // session_start + the loop here (App.js no longer starts them), and the
+  // full-screen UserPickerScreen shows whenever no profile is active.
+  useEffect(() => {
+    if (onboardingState !== 'done') return;
+    let alive = true;
+    const budget = setTimeout(() => {
+      // Same storage-hang guard as onboarding — never park on a splash.
+      if (alive) {
+        setUserState((s) => (s === 'loading' ? 'logged_out' : s));
+      }
+    }, STORAGE_BUDGET_MS);
+
+    analyticsClient
+      .getActiveUser()
+      .then(async (user) => {
+        if (!alive) return;
+        if (user) {
+          await analyticsClient.sessionStart(Platform.OS);
+          analyticsClient.startFlushLoop();
+          setUserState('logged_in');
+        } else {
+          setUserState('logged_out');
+        }
+      })
+      .catch(() => {
+        if (alive) setUserState('logged_out');
+      })
+      .finally(() => {
+        clearTimeout(budget);
+      });
+
+    return () => {
+      alive = false;
+      clearTimeout(budget);
+    };
+  }, [onboardingState]);
+
   const handleTabChange = (tabId) => {
     if (!TABS.includes(tabId)) return;
     setActiveTab(tabId);
@@ -74,6 +116,19 @@ export default function AppShell() {
 
   const handleOnboardingComplete = () => {
     setOnboardingState('done');
+  };
+
+  const handleUserPicked = () => {
+    // UserPickerScreen already ran setConsent + setActiveUser + the
+    // per-profile identity swap + sessionStart + startFlushLoop — the
+    // shell only flips the gate so no duplicate session fires.
+    setUserState('logged_in');
+  };
+
+  const handleUserLoggedOut = () => {
+    // Queue drain + key removal already happened in ProfileScreen via
+    // analyticsClient.logout(); the shell only flips the gate.
+    setUserState('logged_out');
   };
 
   const handleChipPress = (prompt) => {
@@ -92,14 +147,24 @@ export default function AppShell() {
     );
   } else if (onboardingState === 'needs') {
     body = <OnboardingScreen onComplete={handleOnboardingComplete} />;
+  } else if (userState === 'loading') {
+    body = (
+      <View style={styles.splashPlaceholder}>
+        <Text style={styles.splashText}>EventPulse</Text>
+      </View>
+    );
+  } else if (userState === 'logged_out') {
+    body = <UserPickerScreen onUserPicked={handleUserPicked} />;
   } else {
     body = (
       <>
         <NetworkBanner />
-        {activeTab === 'explore' && <App />}
+        {activeTab === 'explore' && <App onUserLoggedOut={handleUserLoggedOut} />}
         {activeTab === 'home' && <HomeScreen onChipPress={handleChipPress} />}
         {activeTab === 'notifications' && <NotificationsScreen />}
-        {activeTab === 'profile' && <ProfileScreen />}
+        {activeTab === 'profile' && (
+          <ProfileScreen onLoggedOut={handleUserLoggedOut} />
+        )}
         {activeTab === 'explore-star' && EXPLORE_STAR_ENABLED && <UtforskaStarScreen />}
         <View style={styles.barWrapper} pointerEvents="box-none">
           <BottomTabBar

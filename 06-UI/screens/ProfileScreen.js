@@ -34,6 +34,7 @@ import {
 } from 'react-native';
 
 import { getItem, setItem } from '../services/storage';
+import { analyticsClient } from '../services/analyticsClient';
 import {
   registerPushToken,
   getFollowedEntities,
@@ -137,10 +138,14 @@ function formatChipLabel(entityType, id) {
   return `${prefix}${tail}…`;
 }
 
-export default function ProfileScreen() {
+export default function ProfileScreen({ onLoggedOut }) {
   const [followPushEnabled, setFollowPushEnabled] = useState(false);
   const [followPushLoaded, setFollowPushLoaded] = useState(false);
   const [followPushBusy, setFollowPushBusy] = useState(false);
+
+  // Konto — the active analytics test profile (picked in UserPickerScreen
+  // at login). Null while loading or when no profile is active.
+  const [accountUser, setAccountUser] = useState(null);
 
   // T0072 — followed venues/artists state. Refreshed on mount; long-press
   // on a chip opens the OS action sheet with "Sluta följ". Optimistic UI:
@@ -160,6 +165,21 @@ export default function ProfileScreen() {
       setFollowPushEnabled(v);
       setFollowPushLoaded(true);
     });
+    return () => {
+      alive = false;
+    };
+  }, []);
+
+  useEffect(() => {
+    let alive = true;
+    analyticsClient
+      .getActiveUser()
+      .then((id) => {
+        if (!alive || !id) return;
+        const meta = analyticsClient.TEST_USERS.find((u) => u.id === id);
+        setAccountUser({ id, label: meta?.label ?? id });
+      })
+      .catch(() => {});
     return () => {
       alive = false;
     };
@@ -319,6 +339,19 @@ export default function ProfileScreen() {
     []
   );
 
+  // Portal logout — drains the analytics queue, stops the flush loop,
+  // remembers the profile for the picker's "Senast använd" hint, and keeps
+  // GDPR consent (device-level) so re-login is two taps. No confirmation
+  // dialog: the three test profiles are fictitious and reversible.
+  const handleLogout = useCallback(async () => {
+    try {
+      await analyticsClient.logout();
+    } catch (_err) {
+      // Storage hiccup — hand control to the shell's user gate anyway.
+    }
+    onLoggedOut?.();
+  }, [onLoggedOut]);
+
   const totalFollowed = followedVenues.length + followedArtists.length;
 
   return (
@@ -332,6 +365,26 @@ export default function ProfileScreen() {
       <Text style={styles.subtitle}>
         Dina sparade events, kategorival och notis-inställningar hamnar här.
       </Text>
+
+      {accountUser && (
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Konto</Text>
+          <View style={styles.row}>
+            <View style={styles.rowTextWrap}>
+              <Text style={styles.rowLabel}>Inloggad som {accountUser.label}</Text>
+              <Text style={styles.rowDescription}>@{accountUser.id}</Text>
+            </View>
+            <Pressable
+              style={({ pressed }) => [styles.logoutButton, pressed && styles.linkButtonPressed]}
+              onPress={handleLogout}
+              accessibilityRole="button"
+              accessibilityLabel="Logga ut"
+            >
+              <Text style={styles.logoutButtonText}>Logga ut</Text>
+            </Pressable>
+          </View>
+        </View>
+      )}
 
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>Följer</Text>
@@ -544,5 +597,18 @@ const styles = StyleSheet.create({
   },
   loadingSpinner: {
     marginTop: TOKENS.space.sm,
+  },
+  // Konto-sektionens logga ut-knapp (samma form som chips, accent-text).
+  logoutButton: {
+    borderWidth: 1,
+    borderColor: TOKENS.color.border,
+    borderRadius: 999,
+    paddingHorizontal: TOKENS.space.md,
+    paddingVertical: TOKENS.space.xs + 2,
+  },
+  logoutButtonText: {
+    color: TOKENS.color.accent,
+    fontSize: TOKENS.fontSize.sm,
+    fontWeight: '600',
   },
 });

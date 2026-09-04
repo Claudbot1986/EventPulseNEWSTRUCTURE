@@ -280,6 +280,19 @@ function applyAnalyticsServerState(as) {
     if (ec) ec.innerHTML = '';
   }
 
+  // ── User activity (per test profile, 10-Analytics) — independent fetch
+  //    so /api/status failure doesn't take this card down. Depths switch
+  //    client-side against already-fetched data (fetch-once convention).
+  try {
+    const uaRes = await fetch('/api/user-activity', { cache: 'no-store' });
+    if (!uaRes.ok) throw new Error(`HTTP ${uaRes.status}`);
+    const uaData = await uaRes.json();
+    initUserActivity(uaData);
+  } catch (err) {
+    const body = document.getElementById('ua-tbody');
+    if (body) body.innerHTML = `<tr><td colspan="7" class="empty">otillgänglig: ${escapeHtml(String(err))}</td></tr>`;
+  }
+
   // ── Review counts (D-AI adapters + discovery candidates) ────────────
   // Independent fetches; failures stay silent and the buttons default to 0.
   try {
@@ -1620,4 +1633,183 @@ function renderDiscoveryReview(container, data) {
 function truncate(s, n) {
   if (!s) return '';
   return s.length > n ? s.slice(0, n - 1) + '…' : s;
+}
+
+// ─── User activity (10-Analytics, per test profile) ─────────────────────────
+//
+// Driven by GET /api/user-activity (aggregated server-side from
+// runtime/events.jsonl). Renders:
+//   - 3 KPI tiles (events / aktiva profiler / sessioner) for the chosen depth
+//   - One row per test profile (tomorg1/2/3 = Alpha/Beta/Gamma) plus any
+//     unknown device hashes. Click a row → drill-down with per-event-type
+//     counts (mini bar rows, same visuals as source-health error cats) and a
+//     30-day daily events trend (sparkline).
+//
+// All depth data arrives in ONE fetch; switching Idag / 7 dagar / 30 dagar
+// only re-renders from uaState — no extra network round-trip. ok=false from
+// the server renders an honest muted row — never invented numbers.
+
+const uaState = {
+  data: null,           // full UserActivityReport from /api/user-activity
+  depth: 'today',       // 'today' | 'd7' | 'd30'
+  expanded: new Set(),  // profile ids whose drill-down is open
+};
+
+const UA_TYPE_LABELS = {
+  session_start: 'sessioner startade',
+  section_impression: 'sektionsvisningar',
+  event_view: 'eventvisningar',
+  event_click: 'klick',
+  event_save: 'sparade',
+  event_dismiss: 'avvisade',
+  search_query: 'sökningar',
+  filter_change: 'filterbyten',
+};
+const UA_TYPE_COLORS = {
+  session_start: '#3fb950',
+  section_impression: '#58a6ff',
+  event_view: '#a371f7',
+  event_click: '#f0883e',
+  event_save: '#d29922',
+  event_dismiss: '#ff7b72',
+  search_query: '#39c5cf',
+  filter_change: '#8b949e',
+};
+
+function uaDepthLabel(depth) {
+  return depth === 'today' ? 'idag' : depth === 'd7' ? 'senaste 7 dagarna' : 'senaste 30 dagarna';
+}
+
+function initUserActivity(data) {
+  uaState.data = data;
+  uaState.depth = 'today';
+  uaState.expanded = new Set();
+  const gen = document.getElementById('ua-generated');
+  if (gen) {
+    gen.textContent = data && data.generatedAt
+      ? `events.jsonl · läst ${new Date(data.generatedAt).toLocaleTimeString()}`
+      : '';
+  }
+  renderUserActivity();
+  wireUaToolbar();
+}
+
+function renderUserActivity() {
+  const body = document.getElementById('ua-tbody');
+  if (!body || !uaState.data) return;
+  const data = uaState.data;
+
+  if (!data.ok) {
+    // Honest muted state — analytics file missing/unreadable server-side.
+    body.innerHTML = `<tr><td colspan="7" class="empty">${escapeHtml(data.reason || 'inga analytics-events ännu')}</td></tr>`;
+    setText('ua-events', '-');
+    setText('ua-profiles', '-');
+    setText('ua-sessions', '-');
+    return;
+  }
+
+  const depth = uaState.depth;
+  const kpi = (data.kpis && data.kpis[depth]) || { events: 0, activeProfiles: 0, sessions: 0 };
+  setText('ua-events', kpi.events.toLocaleString());
+  setText('ua-profiles', kpi.activeProfiles.toLocaleString());
+  setText('ua-sessions', kpi.sessions.toLocaleString());
+
+  const profiles = Array.isArray(data.profiles) ? data.profiles : [];
+  if (profiles.length === 0) {
+    body.innerHTML = '<tr><td colspan="7" class="empty">inga profiler i events.jsonl ännu</td></tr>';
+    return;
+  }
+
+  body.innerHTML = profiles.map((p) => {
+    const ds = (p.perDepth && p.perDepth[depth]) || { events: 0, sessions: 0, byType: {}, lastActive: null };
+    const byType = ds.byType || {};
+    const views = byType.event_view || 0;
+    const clicks = byType.event_click || 0;
+    const saves = byType.event_save || 0;
+    const isExp = uaState.expanded.has(p.id);
+    const lastActive = ds.lastActive
+      ? new Date(ds.lastActive).toLocaleString()
+      : '<span class="muted">—</span>';
+    const eventsCell = ds.events > 0
+      ? `<span class="badge ${ds.events >= 10 ? 'ok' : ds.events > 0 ? 'warn' : 'bad'}">${ds.events}</span>`
+      : '<span class="muted">0</span>';
+    const nameCell = `${escapeHtml(p.label)}<br><code class="muted">@${escapeHtml(p.id)}</code>${p.known ? '' : ' <span class="muted">(okänd hash)</span>'}`;
+
+    const row = `<tr class="sh-row${isExp ? ' sh-expanded' : ''}" data-uid="${escapeHtml(p.id)}">
+      <td>${nameCell}</td>
+      <td>${eventsCell}</td>
+      <td class="muted">${ds.sessions}</td>
+      <td class="muted">${views}</td>
+      <td class="muted">${clicks}</td>
+      <td class="muted">${saves}</td>
+      <td class="muted">${lastActive}</td>
+    </tr>`;
+
+    if (!isExp) return row;
+
+    // Drill-down: per-event-type mini bars + 30-day trend sparkline.
+    const typeEntries = Object.entries(byType).sort((a, b) => b[1] - a[1]);
+    const typeTotal = typeEntries.reduce((a, [, n]) => a + n, 0);
+    const barsHtml = typeEntries.length === 0
+      ? '<span class="muted">inga events i djupet</span>'
+      : typeEntries.map(([t, n]) => {
+          const pct = typeTotal ? (n / typeTotal) * 100 : 0;
+          const label = UA_TYPE_LABELS[t] || t;
+          const color = UA_TYPE_COLORS[t] || '#8b949e';
+          return `<div class="sh-bar-row" title="${escapeHtml(label)}: ${n} (${pct.toFixed(1)}%)">
+            <span class="sh-bar-label">${escapeHtml(label)}</span>
+            <div class="sh-bar-track"><div class="sh-bar-fill" style="width:${pct.toFixed(1)}%;background:${color}"></div></div>
+            <span class="sh-bar-count">${n}</span>
+          </div>`;
+        }).join('');
+
+    const daily = Array.isArray(p.daily) ? p.daily : [];
+    const sparkValues = daily.map((d) => d.events);
+    const sparkId = `ua-spark-${p.id}`;
+
+    const detail = `<tr class="sh-detail"><td colspan="7"><div class="sh-detail-body">
+      <strong>Event per typ (${escapeHtml(uaDepthLabel(depth))}):</strong>
+      <div class="sh-bars">${barsHtml}</div>
+      <strong>Daglig trend (30 dagar, events):</strong>
+      <div class="sparkline" id="${escapeHtml(sparkId)}"></div>
+      <span class="muted caption">Totalt i filen (≤30 dagar): ${p.totalEvents} events · ${p.known ? 'testprofil' : 'okänd enhet'}${p.hash ? ` · hash ${escapeHtml(p.hash.slice(0, 8))}…` : ''}</span>
+    </div></td></tr>`;
+
+    // Sparkline must render after the detail row is in the DOM.
+    queueMicrotask(() => renderSparkline(sparkId, sparkValues));
+    return row + detail;
+  }).join('');
+}
+
+function wireUaToolbar() {
+  const toggle = document.getElementById('ua-depth-toggle');
+  if (toggle && !toggle.dataset.wired) {
+    toggle.dataset.wired = '1';
+    toggle.querySelectorAll('button[data-depth]').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        const d = btn.dataset.depth;
+        if (!d || !uaState.data || !uaState.data.ok) return;
+        uaState.depth = d;
+        toggle.querySelectorAll('button[data-depth]').forEach((b) => {
+          const active = b === btn;
+          b.classList.toggle('active', active);
+          b.setAttribute('aria-selected', active ? 'true' : 'false');
+        });
+        renderUserActivity();
+      });
+    });
+  }
+  const body = document.getElementById('ua-tbody');
+  if (body && !body.dataset.wired) {
+    body.dataset.wired = '1';
+    body.addEventListener('click', (ev) => {
+      const tr = ev.target.closest('tr.sh-row');
+      if (!tr) return;
+      const uid = tr.dataset.uid;
+      if (!uid) return;
+      if (uaState.expanded.has(uid)) uaState.expanded.delete(uid);
+      else uaState.expanded.add(uid);
+      renderUserActivity();
+    });
+  }
 }

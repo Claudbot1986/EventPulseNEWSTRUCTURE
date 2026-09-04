@@ -1288,3 +1288,16 @@ ul.bars li {
 .review-table .muted { color: var(--muted, #8b949e); font-size: 0.78rem; }
 .review-table a { color: var(--accent); text-decoration: none; }
 .review-table a:hover { text-decoration: underline; }
+
+/* ── User activity panel (per test profile, 10-Analytics) ────────────────── */
+/* Reuses .kpi-tile, .source-health-table, .sh-row/.sh-detail, .sh-bars and
+   .resolution-toggle; only the toolbar wrapper needs new styles. */
+.ua-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin: 10px 0;
+}
+.ua-toolbar .sh-count { font-size: 11px; }
+#ua-table .sparkline { max-width: 260px; margin-top: 6px; }

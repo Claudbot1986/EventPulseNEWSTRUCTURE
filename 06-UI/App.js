@@ -1143,7 +1143,7 @@ function DetailsScreen({ event, onBack }) {
   );
 }
 
-export default function App() {
+export default function App({ onUserLoggedOut }) {
   const [showSplash, setShowSplash] = useState(true);
   const [selectedEvent, setSelectedEvent] = useState(null);
   const [activeUser, setActiveUser] = useState(null);
@@ -1159,13 +1159,9 @@ export default function App() {
       try {
         const existing = await analyticsClient.getActiveUser();
         if (!cancelled && existing) {
+          // Session + flush loop are owned by AppShell now — starting them
+          // here would fire a second session_start on every Utforska remount.
           setActiveUser(existing);
-          try {
-            await analyticsClient.sessionStart(Platform.OS);
-            analyticsClient.startFlushLoop();
-          } catch (err) {
-            console.warn('[App] analytics restore failed:', err?.message || err);
-          }
         }
       } catch (err) {
         console.warn('[App] AsyncStorage restore failed:', err?.message || err);
@@ -1195,14 +1191,6 @@ export default function App() {
     if (!appReady || showSplash || !activeUser || selectedEvent) return;
     void analyticsClient.sectionImpression('home');
   }, [appReady, showSplash, activeUser, selectedEvent]);
-
-  // Drain the analytics queue when the App component unmounts so we
-  // don't lose buffered events on Fast Refresh.
-  useEffect(() => {
-    return () => {
-      analyticsClient.stopFlushLoop();
-    };
-  }, []);
 
   // T0063 — drain the pending agent prompt set by HomeScreen chip tap.
   // AppShell writes `eventpulse.pending_agent_message` and switches to the
@@ -1289,6 +1277,14 @@ export default function App() {
     setActiveUser(userId);
   }, []);
 
+  const handleLoggedOut = useCallback(() => {
+    // Cleanup already ran inside analyticsClient.logout(); AppShell's user
+    // gate unmounts this whole App. Local activeUser is intentionally left
+    // alone — clearing it here would flash the internal picker for a frame
+    // before the shell takes over.
+    onUserLoggedOut?.();
+  }, [onUserLoggedOut]);
+
   const handleEventPress = (event) => {
     setSelectedEvent(event);
     if (event?.id) {
@@ -1316,7 +1312,7 @@ export default function App() {
       return <MapScreen onEventPress={handleEventPress} />;
     }
     if (activeTab === 'profile') {
-      return <ProfileScreen />;
+      return <ProfileScreen onLoggedOut={handleLoggedOut} />;
     }
     return <HomeScreen onEventPress={handleEventPress} scrollPositionRef={scrollPositionRef} pendingPrompt={pendingPrompt} dismissPendingPrompt={dismissPendingPrompt} />;
   };

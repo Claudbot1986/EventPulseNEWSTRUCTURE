@@ -451,6 +451,52 @@
       <div class="sparkline" id="spark-batches" aria-label="Batch success trend"></div>
     </section>
 
+    <section class="card" id="user-activity" data-info="User-activity events from 10-Analytics (port 7778), read directly from runtime/events.jsonl (30-day retention, GDPR: pseudonymous device_id_hash only — no PII). Each row is one of the three fictitious test profiles from the app's user picker (tomorg1/2/3 = Alpha/Beta/Gamma), mapped by mirroring the app's deterministic hash. Depths: Idag = since local midnight, 7 dagar / 30 dagar = rolling windows. Sessions = unique session_id in the window. Click a row to expand per-event-type counts and a 30-day daily trend. ok=false (muted row) means the analytics server has not written any events — never invent numbers.">
+      <h2>Användaraktivitet<button type="button" class="info-btn" data-info-target="user-activity" aria-label="help">i</button></h2>
+      <p class="caption">Per testprofil från <code>10-Analytics</code> (<code>runtime/events.jsonl</code>, 30 dagars retention). Välj djup och klicka en rad för detaljer.</p>
+      <div class="ua-toolbar">
+        <div class="resolution-toggle ua-depth-toggle" id="ua-depth-toggle" role="tablist" aria-label="aktivitetsdjup">
+          <button data-depth="today" class="active" role="tab" aria-selected="true">Idag</button>
+          <button data-depth="d7" role="tab" aria-selected="false">7 dagar</button>
+          <button data-depth="d30" role="tab" aria-selected="false">30 dagar</button>
+        </div>
+        <span class="sh-count muted" id="ua-generated"></span>
+      </div>
+      <div class="kpi-strip kpi-strip--inline">
+        <div class="kpi-tile">
+          <div class="kpi-label">Events</div>
+          <div class="kpi-value" id="ua-events">-</div>
+          <div class="kpi-caption">i valt djup</div>
+        </div>
+        <div class="kpi-tile">
+          <div class="kpi-label">Aktiva profiler</div>
+          <div class="kpi-value" id="ua-profiles">-</div>
+          <div class="kpi-caption">med events i djupet</div>
+        </div>
+        <div class="kpi-tile">
+          <div class="kpi-label">Sessioner</div>
+          <div class="kpi-value" id="ua-sessions">-</div>
+          <div class="kpi-caption">unika session_id i djupet</div>
+        </div>
+      </div>
+      <div class="source-health-scrollable">
+        <table class="source-health-table" id="ua-table">
+          <thead>
+            <tr>
+              <th>Profil</th>
+              <th>Events</th>
+              <th>Sessioner</th>
+              <th>Visningar</th>
+              <th>Klick</th>
+              <th>Sparade</th>
+              <th>Senast aktiv</th>
+            </tr>
+          </thead>
+          <tbody id="ua-tbody"><tr><td colspan="7" class="empty">loading&hellip;</td></tr></tbody>
+        </table>
+      </div>
+    </section>
+
     <section class="card" id="links">
       <h2>Links</h2>
       <ul>

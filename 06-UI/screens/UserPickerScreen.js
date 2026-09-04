@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { StyleSheet, Text, View, TouchableOpacity, Platform, ActivityIndicator } from 'react-native';
 import { analyticsClient } from '../services/analyticsClient';
+import { getOrCreateAnonUserIdFor } from '../services/storage';
 
 const TOKENS = {
   color: {
@@ -39,6 +40,7 @@ const TOKENS = {
 export default function UserPickerScreen({ onUserPicked }) {
   const [pickedUser, setPickedUser] = useState(null);
   const [consentChecked, setConsentChecked] = useState(false);
+  const [lastUser, setLastUser] = useState(null);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState(null);
 
@@ -48,6 +50,19 @@ export default function UserPickerScreen({ onUserPicked }) {
       .then((alreadyConsented) => {
         if (cancelled) return;
         setConsentChecked(alreadyConsented);
+      })
+      .catch(() => {});
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  useEffect(() => {
+    let cancelled = false;
+    analyticsClient.getLastUser()
+      .then((last) => {
+        if (cancelled) return;
+        setLastUser(last);
       })
       .catch(() => {});
     return () => {
@@ -74,6 +89,9 @@ export default function UserPickerScreen({ onUserPicked }) {
     try {
       await analyticsClient.setConsent(true);
       await analyticsClient.setActiveUser(pickedUser);
+      // Swap the agent-side identity to this profile's persisted anon id,
+      // so follows/preferences/interactions in Supabase stay per-profile.
+      await getOrCreateAnonUserIdFor(pickedUser);
       await analyticsClient.sessionStart(Platform.OS);
       analyticsClient.startFlushLoop();
       onUserPicked(pickedUser);
@@ -119,6 +137,9 @@ export default function UserPickerScreen({ onUserPicked }) {
                 <Text style={styles.cardTitle}>{user.label}</Text>
                 <Text style={styles.cardSub}>{user.sub}</Text>
                 <Text style={styles.cardHandle}>@{user.id}</Text>
+                {lastUser === user.id && (
+                  <Text style={styles.cardLastUsed}>Senast använd</Text>
+                )}
               </View>
               <View style={[styles.radioOuter, selected && styles.radioOuterActive]}>
                 {selected && <View style={styles.radioInner} />}
@@ -260,6 +281,14 @@ const styles = StyleSheet.create({
     fontSize: 11,
     marginTop: 4,
     fontFamily: Platform.select({ ios: 'Menlo', android: 'monospace', default: 'monospace' }),
+  },
+  cardLastUsed: {
+    color: TOKENS.color.positive,
+    fontSize: 10,
+    fontWeight: '800',
+    letterSpacing: 1.2,
+    textTransform: 'uppercase',
+    marginTop: 6,
   },
   radioOuter: {
     width: 24,
