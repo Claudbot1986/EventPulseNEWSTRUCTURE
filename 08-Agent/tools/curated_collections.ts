@@ -342,7 +342,7 @@ function selectCollections(
       ? budgetEntries.find((c) => c.day_filter === 'saturday')
       : daySlot === 'sunday'
         ? budgetEntries.find((c) => c.day_filter === 'sunday')
-        : daySlot === 'friday' || daySlot === 'saturday' || daySlot === 'sunday'
+        : daySlot === 'friday'
           ? budgetEntries.find((c) => c.day_filter === 'weekend')
           : undefined;
   if (budgetPriority) {

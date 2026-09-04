@@ -253,7 +253,7 @@ export async function fetchArtistSlugsByEventIds(
     .select('event_id, artists:artist_id(slug)')
     .in('event_id', ids);
   if (error || !data) return out;
-  for (const row of data as Array<{ event_id: string; artists: { slug: string } | null }>) {
+  for (const row of data as unknown as Array<{ event_id: string; artists: { slug: string } | null }>) {
     const slug = row.artists?.slug;
     if (!slug) continue;
     if (!out.has(row.event_id)) out.set(row.event_id, new Set<string>());

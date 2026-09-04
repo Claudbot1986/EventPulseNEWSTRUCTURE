@@ -7,6 +7,25 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 import type { EventDetail } from '../types';
 
+// Row shape for the untyped supabase select below (established pattern:
+// EventRow/VenueRow in search_events.ts). Types what the query returns.
+interface EventDetailRow {
+  id: string;
+  title_sv: string | null;
+  title_en: string | null;
+  description_sv: string | null;
+  description_en: string | null;
+  start_time: string;
+  end_time: string | null;
+  venue_id: string | null;
+  is_free: boolean | null;
+  price_min_sek: number | null;
+  price_max_sek: number | null;
+  ticket_url: string | null;
+  image_url: string | null;
+  category_slug: string | null;
+}
+
 export async function getEventDetails(
   supabase: SupabaseClient,
   eventId: string
@@ -33,6 +52,7 @@ export async function getEventDetails(
   if (!ev) {
     return { event: null, warnings: [`event ${eventId} not found`] };
   }
+  const row = ev as unknown as EventDetailRow;
 
   // event_offers and event_provenance are net-new tables; only populated after
   // the migration runs. Until then, both arrays are empty.
@@ -49,19 +69,19 @@ export async function getEventDetails(
 
   return {
     event: {
-      id: ev.id,
-      title: ev.title_sv || ev.title_en || 'Untitled',
-      start_time: ev.start_time,
-      end_time: ev.end_time ?? null,
+      id: row.id,
+      title: row.title_sv || row.title_en || 'Untitled',
+      start_time: row.start_time,
+      end_time: row.end_time ?? null,
       venue_name: '',
       city: 'Stockholm',
-      category_slug: ev.category_slug ?? '',
-      price_min_sek: ev.price_min_sek ?? null,
-      price_max_sek: ev.price_max_sek ?? null,
-      is_free: !!ev.is_free,
-      ticket_url: ev.ticket_url ?? null,
-      image_url: ev.image_url ?? null,
-      description: ev.description_sv || ev.description_en || null,
+      category_slug: row.category_slug ?? '',
+      price_min_sek: row.price_min_sek ?? null,
+      price_max_sek: row.price_max_sek ?? null,
+      is_free: !!row.is_free,
+      ticket_url: row.ticket_url ?? null,
+      image_url: row.image_url ?? null,
+      description: row.description_sv || row.description_en || null,
       offers: (offers ?? []).map((o) => ({
         offer_url: o.offer_url,
         price_min: o.price_min ?? null,

@@ -41,6 +41,7 @@ export type RankReason =
   | 'low_confidence'
   | 'stale'
   | 'category_personalization'
+  | 'stated_category_match'
   | 'venue_personalization_penalty'
   | 'followed_venue'
   | 'followed_artist'
@@ -52,6 +53,8 @@ export interface EventCard {
   title: string;
   start_time: string;
   end_time?: string | null;
+  /** Optional short description. search_events already emits it (toCard). */
+  description?: string | null;
   venue_name: string;
   /**
    * Venue UUID from `events_public.venue_id`. Surfaced so the ranker can

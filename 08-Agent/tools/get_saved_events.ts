@@ -77,7 +77,7 @@ export async function getSavedEvents(
   }
 
   const events: EventCard[] = data
-    .map((row: any) => {
+    .map((row: any): EventCard | null => {
       const ev = row.events;
       if (!ev) return null;
       return {
