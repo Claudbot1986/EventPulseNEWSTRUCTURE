@@ -1,7 +1,0 @@
-{
-  "name": "@eventpulse/shared",
-  "version": "1.0.0",
-  "type": "module",
-  "main": "./src/types/ingestion.ts",
-  "types": "./src/types/ingestion.ts"
-}

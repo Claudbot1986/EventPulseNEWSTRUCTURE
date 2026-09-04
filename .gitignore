@@ -59,3 +59,9 @@ TEMP/
 # Local scratch / debug dumps (excluded from tsconfig)
 /tmp/
 /claude-test-empty/
+
+# 06-UI dead legacy copy (T0105, user decision 2026-09-04) — moved to /tmp backup.
+# The live, actively developed originals are 02-Ingestion/ and root packages/shared.
+# No code imports these; kept ignored so accidental restore attempts stay untracked.
+/06-UI/services/ingestion/
+/06-UI/packages/shared/
