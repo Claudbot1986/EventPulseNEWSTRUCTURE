@@ -67,7 +67,7 @@ interface SourceFile {
   preferredPathReason?: string;
   currentQueue?: string;
   routingConfidence?: string;
-  routingReason?: string;
+  routingReason?: string | null; // null written by the legacy reset marker below
   routedAt?: string;
   'route-history'?: unknown[];
   metadata?: Record<string, unknown>;

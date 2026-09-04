@@ -221,7 +221,9 @@ function computeVerdict(
   evidence.urlSanity = {
     reachable: true,
     normalizedUrl: sanity.normalizedUrl,
-    redirectCount: sanity.redirectCount,
+    // This branch only runs after a reachable check, which always sets
+    // redirectCount — ?? 0 is a never-fires guard for the optional result type.
+    redirectCount: sanity.redirectCount ?? 0,
     finalUrl: sanity.finalUrl,
     statusCode: sanity.statusCode,
   };

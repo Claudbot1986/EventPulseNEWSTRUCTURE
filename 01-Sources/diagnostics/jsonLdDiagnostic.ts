@@ -43,9 +43,9 @@ interface DiagnosticResult {
     eventsExtracted: number;
     parseErrors: string[];
   };
+  // Matches what diagnoseBlock actually returns — index/'@type' were declared
+  // but never produced (no consumer can rely on them).
   blockDiagnoses: Array<{
-    index: number;
-    '@type': string[];
     isEvent: boolean;
     extractorPath: string; // which extraction path was used
     blockResult: 'success' | 'skipped' | 'no-match';

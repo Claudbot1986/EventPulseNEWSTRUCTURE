@@ -35,6 +35,11 @@ export interface RawEventInput {
   source_id: string | null;
   detected_language: 'sv' | 'en' | 'other' | null;
   raw_payload: Record<string, unknown>;
+  // Optional singular-alias fields emitted by some adapters (e.g. Kulturhuset
+  // sets `category` alongside `categories` and `url` alongside `ticket_url`);
+  // the normalizer reads them as fallbacks. Additive — zero runtime impact.
+  category?: string;
+  url?: string;
 }
 
 /** Output of the normalizer worker — ready for DB insert */
