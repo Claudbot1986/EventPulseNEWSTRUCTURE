@@ -266,9 +266,10 @@ function analyzeBatchHistory(): Omit<MemoryV1,
     applicationRate: totalRulesGenerated > 0
       ? `${((totalRulesApplied / totalRulesGenerated) * 100).toFixed(1)}%`
       : '0%',
-    note: totalRulesApplied === 0
-      ? 'Learning loop never closed across all batches — rules generated but 0 applied in next round, 0 improved outcomes. See batch-14 FAIL_SET_RERUN_PROOF.'
-      : `${totalRulesApplied} rules applied, ${totalRulesImproved} improved outcomes.`,
+    // NOTE (batch B K4): this literal previously had TWO 'note' keys — the
+    // conditional one was always overwritten by this hardcoded one (last key
+    // wins), i.e. dead code. Kept the winning value to preserve exact runtime
+    // output; honest cleanup = queue task.
     note: 'Learning loop never closed across all batches — 40 rules generated, 0 applied in next round, 0 improved outcomes. See batch-14 FAIL_SET_RERUN_PROOF.',
   };
 
@@ -413,6 +414,7 @@ function analyzeBatchHistory(): Omit<MemoryV1,
   ];
 
   return {
+    version: 1,
     lastUpdated: new Date().toISOString(),
     totalBatchesAnalyzed: batchReports.length,
     totalSourcesProcessed: totalSources,
@@ -436,7 +438,7 @@ function analyzeBatchHistory(): Omit<MemoryV1,
 // Experiment Recommender
 // ---------------------------------------------------------------------------
 
-function recommendNextExperiment(base: Omit<MemoryV1, 'nextRecommendedExperiment' | 'top3CandidateImprovements'>): MemoryV1['nextRecommendedExperiment'] {
+function recommendNextExperiment(base: Omit<MemoryV1, 'nextRecommendedExperiment' | 'top3CandidateImprovements'>): MemoryV1['nextRecommendedExperiment'] & { top3CandidateImprovements: MemoryV1['top3CandidateImprovements'] } {
   // Top 3 candidate improvements ranked by ROI
   const top3: MemoryV1['top3CandidateImprovements'] = [
     {
@@ -493,8 +495,9 @@ function buildMemory(): MemoryV1 {
   // Destructure to avoid duplicating top3CandidateImprovements at root level
   const { top3CandidateImprovements, ...nextRecommendedExperiment } = experiment;
 
+  // version: 1 now comes from base (analyzeBatchHistory return value) —
+  // declaring it here too triggered TS2783 and was redundant.
   const memory: MemoryV1 = {
-    version: 1,
     ...base,
     nextRecommendedExperiment,
     top3CandidateImprovements,

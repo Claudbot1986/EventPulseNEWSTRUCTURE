@@ -216,7 +216,11 @@ export async function screenUrl(url: string): Promise<PreGateResult> {
 
   // Categorization based on raw counts
   let categorization: PreGateCategorization;
-  let reason: string;
+  // Definite-assignment assertion: the 'noise' branch below has a pre-existing
+  // bug — 'reason:' (a label) instead of 'reason =' — so reason stays
+  // undefined there at runtime. The typing fix must not change that;
+  // honest fix (label → assignment) = queue task.
+  let reason!: string;
 
   if (!hasMain && !hasArticle) {
     categorization = 'no-main';

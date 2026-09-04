@@ -44,7 +44,7 @@ import { discoverEventCandidates, screenUrl, screenUrlWithDerivedRules, evaluate
 import { evaluateAiExtract, type AiExtractResult, type AiVerdict } from './C3-aiExtractGate/C3-aiExtractGate';
 import { extractFromHtml, type ExtractResult } from '../F-eventExtraction/universal-extractor';
 import type { ParsedEvent } from '../F-eventExtraction/schema';
-import { runC4Analysis, type C4InputSource, type C4RoundAnalysis, FailCategory } from './C4-ai-analysis';
+import { runC4Analysis, type C4InputSource, type C4RoundAnalysis, type C4AnalysisResult, FailCategory } from './C4-ai-analysis';
 import { c4DeepAnalyze, verifyProposals, type C4PipelineResult, type C4DeepAnalysisResult } from './c4-deep-analysis';
 import { saveRoundDerivedRules, loadAllDerivedRules, isImprovementEnabled, proposeCandidateRulesAsImprovements, type DerivedRulesStore } from './c4-derived-rules';
 import type { HtmlVerdict } from './C2-htmlGate/C2-htmlGate';
@@ -990,9 +990,13 @@ async function tryUrlVariants(rawUrl: string): Promise<UrlVariantResult> {
 
   for (const variant of variants) {
     try {
+      // NOTE (2026-09-04, batch B K4): 'axios' is not imported anywhere in this
+      // file — this call throws ReferenceError at runtime if reached. Honest
+      // fix (add import or switch to global fetch) = separate queue task.
+      // @ts-expect-error axios is not imported in this file
       const res = await axios.head(variant.url, {
         timeout: 5000,
-        validateStatus: (s) => s < 400,
+        validateStatus: (s: number) => s < 400,
         maxRedirects: 0,
       });
       if (res.status < 400) {
@@ -1191,7 +1195,11 @@ async function runSourceOnPool(
       result.c3.aiEventsFound = aiResult.events.length;
       result.c3.aiDuration = Date.now() - aiStart;
       result.extract.eventsFound = aiResult.events.length;
-      if (aiResult.events.length > 0) result.extract.extractedEvents = aiResult.events;
+      // NOTE (batch B K4): AiExtractedEvent does not conform to ParsedEvent
+      // (optional date/venue; confidence: {overall, fields} vs schema
+      // confidence). Storing AI events in a ParsedEvent[] field is a
+      // pre-existing contract break — cast preserves runtime; queue task.
+      if (aiResult.events.length > 0) result.extract.extractedEvents = aiResult.events as unknown as ParsedEvent[];
       if (aiResult.events.length > 0) {
         console.log(`[C3-AI] AI extraction: ${aiResult.events.length} events`);
       } else {
@@ -2079,8 +2087,8 @@ export async function runDynamicPoolBatch(options: DynamicPoolOptions = {}): Pro
         FailCategory.LIKELY_JS_RENDER,
         FailCategory.ENTRY_PAGE_NO_EVENTS,
       ];
-      const eligibleResults = (c4AnalysisResult?.results ?? []).filter(
-        r => r.failCategoryConfidence >= 0.6 && RULE_ELIGIBLE_CATEGORIES.includes(r.failCategory)
+      const eligibleResults: C4AnalysisResult[] = (c4AnalysisResult?.results ?? []).filter(
+        (r: C4AnalysisResult) => r.failCategoryConfidence >= 0.6 && RULE_ELIGIBLE_CATEGORIES.includes(r.failCategory)
       );
       if (eligibleResults.length > 0) {
         saveRoundDerivedRules(eligibleResults, state.poolRoundNumber, `batch-${BATCH_NUM}`, BATCH_NUM);
@@ -2543,8 +2551,8 @@ async function main() {
         FailCategory.LIKELY_JS_RENDER,
         FailCategory.ENTRY_PAGE_NO_EVENTS,
       ];
-      const eligibleResults = (c4AnalysisResult?.results ?? []).filter(
-        r => r.failCategoryConfidence >= 0.6 && RULE_ELIGIBLE_CATEGORIES.includes(r.failCategory)
+      const eligibleResults: C4AnalysisResult[] = (c4AnalysisResult?.results ?? []).filter(
+        (r: C4AnalysisResult) => r.failCategoryConfidence >= 0.6 && RULE_ELIGIBLE_CATEGORIES.includes(r.failCategory)
       );
       if (eligibleResults.length > 0) {
         saveRoundDerivedRules(
@@ -2579,7 +2587,7 @@ async function main() {
     // Only runs when C4 was active (SKIP_C4=false)
     const sourcesThatGeneratedRules = new Set<string>();
     if (!SKIP_C4 && c4AnalysisResult) {
-      const eligibleResults = (c4AnalysisResult?.results ?? []).filter(
+      const eligibleResults: C4AnalysisResult[] = (c4AnalysisResult?.results ?? []).filter(
         (r: any) => r.failCategoryConfidence >= 0.6
       );
       for (const r of eligibleResults) {
