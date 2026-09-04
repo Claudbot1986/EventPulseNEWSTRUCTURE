@@ -199,9 +199,13 @@ describe('deterministicReply relaxation copy (T0049 — zero-result broaden)', (
   // The golden-eval fixture covers the parse→rank pipeline. This section
   // tests that the composer correctly labels the relaxation in the reply
   // when relaxed_constraint is set (MASTERPLAN §18.2 decision 4).
+  // NOTE (batch C K2): optional IntentBrief fields are intentionally left
+  // undefined — this fixture exercises the composer's zero-result path.
+  // The cast keeps runtime identical (fields stay undefined); filling in
+  // real values would change the test input (outside the typing mandate).
   const intent = { language: 'sv' as const, raw_query: 'test', city: 'Stockholm',
     time_of_day: undefined, party: undefined, budget: undefined,
-    categories: [], date_from: '2026-08-17', date_to: '2026-08-17' };
+    categories: [], date_from: '2026-08-17', date_to: '2026-08-17' } as unknown as IntentBrief;
 
   it('adds date_window suffix when relaxed_constraint=date_window', () => {
     const result = deterministicReply({ intent, cards: [{ id: 'x', title: 'Test' } as any], warnings: [], relaxed_constraint: 'date_window' });

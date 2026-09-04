@@ -34,7 +34,7 @@ function makeChain(rows: any[], opts: { selectError?: { message: string } } = {}
     eq: vi.fn().mockReturnThis(),
     order: vi.fn().mockReturnThis(),
     limit: vi.fn().mockReturnThis(),
-    then: (resolve: (v: { data: any[]; error: null | { message: string } }) => void) => {
+    then: (resolve: (v: { data: any[] | null; error: null | { message: string } }) => void) => {
       if (opts.selectError) {
         Promise.resolve({ data: null, error: opts.selectError }).then(resolve);
       } else {

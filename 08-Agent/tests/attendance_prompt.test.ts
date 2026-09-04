@@ -115,7 +115,7 @@ describe('generateAttendancePromptsForUser', () => {
     const fromFn = vi.fn().mockImplementation((table: string) => {
       if (table === 'user_interactions') {
         const callIndex = (fromFn.mock.calls as any[][]).filter(
-          ([t]: [string]) => t === 'user_interactions'
+          ([t]: string[]) => t === 'user_interactions'
         ).length;
         if (callIndex === 1) {
           return chainFor({ data: [{ event_id: EVENT_X }], error: null });
@@ -163,7 +163,7 @@ describe('generateAttendancePromptsForUser', () => {
     const fromFn = vi.fn().mockImplementation((table: string) => {
       if (table === 'user_interactions') {
         const callIndex = (fromFn.mock.calls as any[][]).filter(
-          ([t]: [string]) => t === 'user_interactions'
+          ([t]: string[]) => t === 'user_interactions'
         ).length;
         if (callIndex === 1) {
           return chainFor({ data: [{ event_id: EVENT_X }], error: null });
@@ -205,7 +205,7 @@ describe('generateAttendancePromptsForUser', () => {
     const fromFn = vi.fn().mockImplementation((table: string) => {
       if (table === 'user_interactions') {
         const callIndex = (fromFn.mock.calls as any[][]).filter(
-          ([t]: [string]) => t === 'user_interactions'
+          ([t]: string[]) => t === 'user_interactions'
         ).length;
         if (callIndex === 1) {
           return chainFor({ data: [{ event_id: EVENT_X }], error: null });
@@ -274,7 +274,7 @@ describe('listUnratedSavedEvents', () => {
     const fromFn = vi.fn().mockImplementation((table: string) => {
       if (table === 'user_interactions') {
         const callIndex = (fromFn.mock.calls as any[][]).filter(
-          ([t]: [string]) => t === 'user_interactions'
+          ([t]: string[]) => t === 'user_interactions'
         ).length;
         if (callIndex === 1) {
           return chainFor({ data: [{ event_id: EVENT_X }], error: null });

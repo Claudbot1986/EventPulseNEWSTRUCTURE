@@ -210,6 +210,6 @@ describe('GET /agent/recommended — T0056', () => {
       `http://127.0.0.1:${addr.port}/agent/recommended?client_user_id=${TEST_UUID}`
     );
     expect(res.status).toBe(500);
-    await new Promise<void>((r) => srv.close(r));
+    await new Promise<void>((r) => srv.close(() => r()));
   });
 });

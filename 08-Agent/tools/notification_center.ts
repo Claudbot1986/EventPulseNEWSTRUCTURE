@@ -114,7 +114,7 @@ const UUID_RE =
 
 /** Validate that a string is a uuid — used as the precondition for any
  *  call site that passes through user/event ids from the wire surface. */
-export function isUuid(value: string | null | undefined): value is string {
+export function isUuid(value: unknown): value is string {
   return typeof value === 'string' && UUID_RE.test(value);
 }
 

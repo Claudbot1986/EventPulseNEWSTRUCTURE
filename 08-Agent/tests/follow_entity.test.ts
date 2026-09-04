@@ -137,7 +137,7 @@ describe('followVenue', () => {
     expect(result.ok).toBe(true);
     expect(result.added).toBe(true);
     expect(result.count).toBe(2);
-    expect(state.preferences.followed_venue_ids).toEqual([VENUE_A, VENUE_B]);
+    expect(state.preferences!.followed_venue_ids).toEqual([VENUE_A, VENUE_B]);
   });
   it('preserves the existing categories key', async () => {
     const state: MockState = {
@@ -146,8 +146,8 @@ describe('followVenue', () => {
     };
     const client = makeClient(state);
     await followVenue(client, { client_user_id: USER_ID, venue_id: VENUE_B });
-    expect(state.preferences.categories).toEqual(['music']);
-    expect(state.preferences.followed_venue_ids).toEqual([VENUE_A, VENUE_B]);
+    expect(state.preferences!.categories).toEqual(['music']);
+    expect(state.preferences!.followed_venue_ids).toEqual([VENUE_A, VENUE_B]);
   });
   it('is idempotent — re-following returns added:false and no upsert', async () => {
     const state: MockState = { preferences: { followed_venue_ids: [VENUE_A] }, upserts: [] };
@@ -199,7 +199,7 @@ describe('unfollowVenue', () => {
     expect(result.ok).toBe(true);
     expect(result.removed).toBe(true);
     expect(result.count).toBe(1);
-    expect(state.preferences.followed_venue_ids).toEqual([VENUE_B]);
+    expect(state.preferences!.followed_venue_ids).toEqual([VENUE_B]);
   });
   it('is idempotent — unfollowing an unknown venue is a no-op', async () => {
     const state: MockState = { preferences: { followed_venue_ids: [VENUE_A] }, upserts: [] };
@@ -225,8 +225,8 @@ describe('unfollowVenue', () => {
     };
     const client = makeClient(state);
     await unfollowVenue(client, { client_user_id: USER_ID, venue_id: VENUE_A });
-    expect(state.preferences.categories).toEqual(['music']);
-    expect(state.preferences.followed_venue_ids).toEqual([]);
+    expect(state.preferences!.categories).toEqual(['music']);
+    expect(state.preferences!.followed_venue_ids).toEqual([]);
   });
   it('propagates upsert errors', async () => {
     const state: MockState = { preferences: { followed_venue_ids: [VENUE_A] }, upserts: [] };
@@ -401,7 +401,7 @@ describe('followArtist', () => {
     expect(result.ok).toBe(true);
     expect(result.added).toBe(true);
     expect(result.count).toBe(1);
-    expect(state.preferences.followed_artist_slugs).toEqual(['kent']); // lowercased
+    expect(state.preferences!.followed_artist_slugs).toEqual(['kent']); // lowercased
   });
   it('adds an artist slug to a fresh row', async () => {
     const state: MockState = { preferences: null, upserts: [] };
@@ -423,7 +423,7 @@ describe('followArtist', () => {
     expect(result.ok).toBe(true);
     expect(result.added).toBe(true);
     expect(result.count).toBe(2);
-    expect(state.preferences.followed_artist_slugs).toEqual([ARTIST_A, ARTIST_B]);
+    expect(state.preferences!.followed_artist_slugs).toEqual([ARTIST_A, ARTIST_B]);
   });
   it('preserves the existing categories and followed_venue_ids keys', async () => {
     const state: MockState = {
@@ -436,9 +436,9 @@ describe('followArtist', () => {
     };
     const client = makeClient(state);
     await followArtist(client, { client_user_id: USER_ID, artist_slug: ARTIST_B });
-    expect(state.preferences.categories).toEqual(['music']);
-    expect(state.preferences.followed_venue_ids).toEqual([VENUE_A]);
-    expect(state.preferences.followed_artist_slugs).toEqual([ARTIST_A, ARTIST_B]);
+    expect(state.preferences!.categories).toEqual(['music']);
+    expect(state.preferences!.followed_venue_ids).toEqual([VENUE_A]);
+    expect(state.preferences!.followed_artist_slugs).toEqual([ARTIST_A, ARTIST_B]);
   });
   it('is idempotent — re-following returns added:false and no upsert', async () => {
     const state: MockState = {
@@ -494,7 +494,7 @@ describe('unfollowArtist', () => {
     expect(result.ok).toBe(true);
     expect(result.removed).toBe(true);
     expect(result.count).toBe(1);
-    expect(state.preferences.followed_artist_slugs).toEqual([ARTIST_B]);
+    expect(state.preferences!.followed_artist_slugs).toEqual([ARTIST_B]);
   });
   it('is idempotent — unfollowing an unknown artist is a no-op', async () => {
     const state: MockState = {
@@ -527,9 +527,9 @@ describe('unfollowArtist', () => {
     };
     const client = makeClient(state);
     await unfollowArtist(client, { client_user_id: USER_ID, artist_slug: ARTIST_A });
-    expect(state.preferences.categories).toEqual(['music']);
-    expect(state.preferences.followed_venue_ids).toEqual([VENUE_A]);
-    expect(state.preferences.followed_artist_slugs).toEqual([]);
+    expect(state.preferences!.categories).toEqual(['music']);
+    expect(state.preferences!.followed_venue_ids).toEqual([VENUE_A]);
+    expect(state.preferences!.followed_artist_slugs).toEqual([]);
   });
   it('propagates upsert errors', async () => {
     const state: MockState = {

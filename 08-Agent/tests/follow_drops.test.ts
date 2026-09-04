@@ -56,7 +56,7 @@ function makeMockClient(opts: {
   /** Value of the `preferences` column on the row returned by Supabase.
    *  Pass null to simulate a missing row. The mock wraps this in
    *  `{ preferences: ... }` to match the Supabase row shape. */
-  preferencesColumn?: { followed_venue_ids?: unknown } | null;
+  preferencesColumn?: { followed_venue_ids?: unknown; categories?: unknown } | null;
 }): SupabaseClient {
   const chain: MockChain = {
     then: (resolve) => resolve({ data: null, error: null }),
