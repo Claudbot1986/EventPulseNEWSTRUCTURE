@@ -181,10 +181,15 @@ function extractDetailEvent(html: string, url: string): ParsedEvent | null {
     $('meta[property="og:description"]').attr('content')?.trim() || '';
   const ogImage = $('meta[property="og:image"]').attr('content')?.trim() || '';
 
-  if (ldEvent) {
-    const name = (ldEvent.name as string) || ogTitle;
-    const startDate = ldEvent.startDate as string | undefined;
-    const endDate = ldEvent.endDate as string | undefined;
+  // Cast-alias breaks TS's control-flow narrowing: assignments inside the
+  // jQuery .each() callback above are invisible to it, so ldEvent is narrowed
+  // to `null` here (and a plain alias would inherit that narrowing). The cast
+  // re-widens the type; zero runtime difference.
+  const ld = ldEvent as Record<string, unknown> | null;
+  if (ld) {
+    const name = (ld.name as string) || ogTitle;
+    const startDate = ld.startDate as string | undefined;
+    const endDate = ld.endDate as string | undefined;
     if (!name || !startDate) return null;
 
     const datePart = startDate.split('T')[0];
@@ -193,7 +198,7 @@ function extractDetailEvent(html: string, url: string): ParsedEvent | null {
       : undefined;
     const endDatePart = endDate?.split('T')[0];
 
-    const loc = ldEvent.location as
+    const loc = ld.location as
       | { name?: string; address?: string | { streetAddress?: string } }
       | undefined;
     const venueName = loc?.name || undefined;
@@ -202,12 +207,12 @@ function extractDetailEvent(html: string, url: string): ParsedEvent | null {
         ? loc.address
         : loc?.address?.streetAddress;
 
-    const organizer = ldEvent.organizer as { name?: string; url?: string } | undefined;
-    const offers = ldEvent.offers as { url?: string } | undefined;
+    const organizer = ld.organizer as { name?: string; url?: string } | undefined;
+    const offers = ld.offers as { url?: string } | undefined;
 
     let description = ogDescription || undefined;
-    if (!description && typeof ldEvent.description === 'string') {
-      description = (ldEvent.description as string).replace(/<[^>]+>/g, '').trim();
+    if (!description && typeof ld.description === 'string') {
+      description = (ld.description as string).replace(/<[^>]+>/g, '').trim();
     }
 
     try {

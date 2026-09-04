@@ -61,8 +61,8 @@ const SWE_MONTH_MAP: Record<string, string> = {
 
 const SWE_WEEKDAY_MAP: Record<string, string> = {
   måndag:'01',tisdag:'02',onsdag:'03',torsdag:'04',fredag:'05',
-  lördag:'06',söndag:'07',mandag:'01',tirsdag:'02',onsdag:'03',
-  torsdag:'04',fredag:'05',lordag:'06',sondag:'07',
+  lördag:'06',söndag:'07',mandag:'01',tirsdag:'02',
+  lordag:'06',sondag:'07',
 };
 
 const DATE_PATTERNS = [
@@ -782,7 +782,7 @@ function extractHtmlHeuristics($: cheerio.CheerioAPI, source: string, baseUrl: s
     for (const sel of venueSelectors) {
       const t = $card.find(sel).first().text().trim().replace(/\s+/g, ' ');
       if (t && t.length > 1 && t.length < 200) {
-        const parts = t.split(',').map(p => p.trim());
+        const parts = t.split(',').map((p: string) => p.trim());
         if (parts.length >= 2) return { venue: parts[0], city: parts[1] };
         return { venue: t, city: '' };
       }
@@ -969,7 +969,7 @@ function extractTimeAnchors($: cheerio.CheerioAPI, source: string, baseUrl: stri
     for (const sel of ['[class*="venue"]','[class*="location"]','[class*="plats"]','[class*="arena"]','[class*="scene"]','address']) {
       const t = $card.find(sel).first().text().trim().replace(/\s+/g, ' ');
       if (t && t.length > 1 && t.length < 200) {
-        const parts = t.split(',').map(p => p.trim());
+        const parts = t.split(',').map((p: string) => p.trim());
         venue = parts[0]; city = parts[1] || ''; break;
       }
     }

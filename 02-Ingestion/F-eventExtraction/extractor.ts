@@ -73,7 +73,7 @@ function extractFromItemList(data: any, source: string): JsonLdEvent[] {
 
   const { itemListElement } = parsed.data;
   for (const item of itemListElement) {
-    if (item.item?.['@type'] === 'Event') {
+    if ('item' in item && item.item?.['@type'] === 'Event') {
       const event = JsonLdEventSchema.safeParse(item.item);
       if (event.success) events.push(event.data);
     }
@@ -312,7 +312,7 @@ function normalizeEvent(event: JsonLdEvent, source: string, sourceUrl?: string):
       venue = event.location;
     } else if ('name' in event.location && event.location.name) {
       venue = event.location.name;
-      if (event.location.address) {
+      if ('address' in event.location && event.location.address) {
         if (typeof event.location.address === 'string') {
           address = event.location.address;
         } else {
