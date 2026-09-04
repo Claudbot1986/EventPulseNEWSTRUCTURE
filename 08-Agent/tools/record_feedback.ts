@@ -89,8 +89,15 @@ export interface RecordFeedbackResult {
  * the caller's job so the caller can decide what to do with a partial
  * payload.
  */
+// Wire-typed input: the HTTP layer (server.ts) receives unvalidated JSON where
+// interaction/reject_reason are plain strings — the validator checks them
+// below before they are ever cast to the literal unions. Internal callers
+// passing RecordFeedbackInput remain compatible (narrower ⊂ wire type).
 export function validateFeedbackInput(
-  input: Partial<RecordFeedbackInput>
+  input: Partial<Omit<RecordFeedbackInput, 'interaction' | 'reject_reason'>> & {
+    interaction?: string;
+    reject_reason?: string | null;
+  }
 ): string | null {
   if (!input || typeof input !== 'object') {
     return 'invalid body';

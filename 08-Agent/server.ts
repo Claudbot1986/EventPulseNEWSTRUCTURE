@@ -23,7 +23,7 @@ import { parseIntent } from './tools/parse_intent';
 import { searchEvents } from './tools/search_events';
 import { rankEvents } from './tools/rank_events';
 import { mmrRerank } from './tools/diversify';
-import { recordFeedback } from './tools/record_feedback';
+import { recordFeedback, validateFeedbackInput } from './tools/record_feedback';
 import { pickClarifyingQuestion } from './tools/find_gaps';
 import { recordOutboundClick } from './tools/attribution';
 import { feedEvents, todayIso, addDays } from './tools/feed_events';
@@ -860,6 +860,7 @@ export function buildApp(opts: { supabase?: SupabaseClient } = {}): express.Expr
     const key = `${body.entity_type}:${body.entity_id}`;
     const level = body.level as 'all' | 'new_only' | 'off';
 
+    const client = sb ?? getSupabase();
     const { data: existing } = await client
       .from('user_preferences')
       .select('preferences')
@@ -899,6 +900,7 @@ export function buildApp(opts: { supabase?: SupabaseClient } = {}): express.Expr
       res.status(400).json({ error: 'client_user_id must be a uuid' });
       return;
     }
+    const client = sb ?? getSupabase();
     const { data } = await client
       .from('user_preferences')
       .select('preferences')
