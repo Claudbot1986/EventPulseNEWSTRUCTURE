@@ -51,7 +51,7 @@ import { buildAiImageUrl } from '../services/agentClient';
 /**
  * Resolve the image URL for one event under the AI-image rollout.
  *
- * @param {Object} event
+ * @param {Object|null|undefined} event
  * @param {string} [event.id]
  * @param {string|null|undefined} [event.imageUrl]
  * @param {string|null|undefined} [event.image_url]
