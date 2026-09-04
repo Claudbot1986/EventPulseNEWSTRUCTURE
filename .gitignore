@@ -65,3 +65,33 @@ TEMP/
 # No code imports these; kept ignored so accidental restore attempts stay untracked.
 /06-UI/services/ingestion/
 /06-UI/packages/shared/
+
+# Batch D dead one-shot scripts (T0091 batch D, user decision 2026-09-04) — moved to
+# /tmp/eventpulse-batchd-deadcode-20260904 (paths preserved). Superseded by
+# 123-autonomous-loop.ts / v3 and run-dynamic-pool; broken against current model.
+/02-Ingestion/C-htmlGate/run-batch-001.ts
+/02-Ingestion/C-htmlGate/run-batch-001-baseline.ts
+/02-Ingestion/C-htmlGate/run-batch-001-baseline-remaining.ts
+/02-Ingestion/C-htmlGate/run-batch-002.ts
+/02-Ingestion/C-htmlGate/run-batch-002-inline.ts
+/02-Ingestion/C-htmlGate/run-batch-003.ts
+/02-Ingestion/C-htmlGate/run-batch-005.ts
+/02-Ingestion/C-htmlGate/run-batch-006.ts
+/02-Ingestion/C-htmlGate/run-batch-007.ts
+/02-Ingestion/C-htmlGate/run-batch-010.ts
+/02-Ingestion/C-htmlGate/run-batch-011.ts
+/02-Ingestion/C-htmlGate/run-batch-012.ts
+/02-Ingestion/C-htmlGate/run-round-1.ts
+/02-Ingestion/C-htmlGate/recover-missing-posttestc.ts
+/02-Ingestion/C-htmlGate/123-autonomous-loop-v2.ts
+/02-Ingestion/C-htmlGate/runC-ai-deep-discovery.ts
+/02-Ingestion/C-htmlGate/runC-ai-deep-discovery-minimax.ts
+/02-Ingestion/C-htmlGate/runC-ai-deep-discovery-ollama.ts
+/02-Ingestion/C-htmlGate/runC-pattern-validator.ts
+/02-Ingestion/A-directAPI-networkGate/adapters/billetto.ts
+/02-Ingestion/A-directAPI-networkGate/adapters/eventbrite.ts
+/run-batch-003.ts
+/run-batch-010-baseline.ts
+/debug_cheerio2.ts
+/test-normalizer-direct.ts
+/08-testResults/260330-batch1-10.ts
