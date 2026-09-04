@@ -1,108 +1,128 @@
 /**
- * continuity.test.ts — Phase 6 verification.
+ * continuity.test.ts — regressionstest för kontinuitetshookarna.
  *
- * Scenarios:
- *   1. state-snap    PreCompact      → writes state JSON
- *   2. agent-trace   SubagentStart   → appends to ledger
- *   3. handoff-writer SubagentStop   → writes handoff markdown
+ * Scenarier:
+ *   1. state-snap     PreCompact    → skriver state-JSON
+ *   2. agent-trace    SubagentStart → lägger till rad i ledgern
+ *   3. handoff-writer SubagentStop  → skriver handoff-markdown
+ *
+ * Hook-skripten löser sina skrivvägar från process.cwd()
+ * (state-snap.ts:15, agent-trace.ts:13, handoff-writer.ts:14) och har egna
+ * ensureDir — därför körs allt mot en temporär sandbox och levande
+ * state/ledger/handoffs i repot berörs aldrig.
+ *
+ * T0094: den tidigare versionen var ett skript (top-level-kod + process.exit)
+ * som pekade på en hårdkodad sökväg till en gammal projektkopia
+ * (/Users/claudgashi/EventPulse-recovery/…) — spawnSync fick ENOENT och
+ * filen kraschade okodat vid import under vitest.
  */
 
 import { spawnSync } from "child_process";
 import * as fs from "fs";
+import * as os from "os";
 import * as path from "path";
+import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
-const REPO = "/Users/claudgashi/EventPulse-recovery/clawdbot2/project/00EVENTPULSEFINALDESTINATION/NEWSTRUCTURE";
-const STATE_PATH = path.join(REPO, ".claude/eventpulse/state/agent-state.json");
-const EVIDENCE = path.join(REPO, ".claude/eventpulse/evidence/ledger.ndjson");
-const HANDOFF = (missionId: string, agent: string) =>
-  path.join(REPO, `.claude/eventpulse/handoffs/${missionId}-${agent}.md`);
+const REPO = path.resolve(__dirname, "..", "..");
+const TSX = path.join(REPO, "node_modules", ".bin", "tsx");
 
-function run(hook: string, payload: any): { exit: number; stdout: string; stderr: string } {
-  const r = spawnSync("npx", ["tsx", path.join(REPO, hook)], {
-    input: JSON.stringify(payload),
+let sandbox = "";
+
+beforeEach(() => {
+  sandbox = fs.mkdtempSync(path.join(os.tmpdir(), "ep-continuity-"));
+});
+
+afterEach(() => {
+  fs.rmSync(sandbox, { recursive: true, force: true });
+  sandbox = "";
+});
+
+interface RunResult {
+  exit: number;
+  stdout: string;
+  stderr: string;
+}
+
+function run(hook: string, payload: Record<string, unknown>): RunResult {
+  const script = path.join(REPO, ".claude", "eventpulse", hook);
+  const r = spawnSync(TSX, [script], {
+    input: JSON.stringify({ cwd: sandbox, ...payload }),
     encoding: "utf8",
-    cwd: REPO,
+    cwd: sandbox,
   });
-  return { exit: r.status ?? -1, stdout: (r.stdout || "").trim(), stderr: (r.stderr || "").trim() };
+  return {
+    exit: r.status ?? -1,
+    stdout: (r.stdout || "").trim(),
+    stderr: (r.stderr || "").trim(),
+  };
 }
 
-let pass = 0;
-let fail = 0;
-function check(name: string, actual: any, expected: any, hint: string) {
-  const ok = actual === expected;
-  console.log(`${ok ? "PASS" : "FAIL"} ${name}: actual=${JSON.stringify(actual)} expected=${JSON.stringify(expected)} (${hint})`);
-  ok ? pass++ : fail++;
+function ledgerLines(): string[] {
+  const p = path.join(sandbox, ".claude", "eventpulse", "evidence", "ledger.ndjson");
+  if (!fs.existsSync(p)) return [];
+  return fs.readFileSync(p, "utf8").split("\n").filter(Boolean);
 }
 
-// --- Test 1: state-snap ---
-if (fs.existsSync(STATE_PATH)) fs.unlinkSync(STATE_PATH);
-{
-  const r = run(".claude/eventpulse/state-snap.ts", {
-    session_id: "smoke-test-006",
-    cwd: REPO,
-    hook_event_name: "PreCompact",
-  });
-  check("state-snap exit", r.exit, 0, r.stderr.slice(-100));
-  const exists = fs.existsSync(STATE_PATH);
-  check("state file written", exists, true, STATE_PATH);
-  if (exists) {
-    const state = JSON.parse(fs.readFileSync(STATE_PATH, "utf8"));
-    check("state.session_id", state.session_id, "smoke-test-006", "roundtrip");
-    check("state.schema_version", state.schema_version, 1, "version constant");
-    check("state.reason", state.reason, "PreCompact", "reason passthrough");
-    check("state.active_missions is array", Array.isArray(state.active_missions), true, "type");
-  }
-}
+describe("continuity hooks", () => {
+  it("state-snap skriver state-JSON vid PreCompact", () => {
+    const r = run("state-snap.ts", {
+      session_id: "smoke-test-006",
+      hook_event_name: "PreCompact",
+    });
+    expect(r.exit).toBe(0);
 
-// --- Test 2: agent-trace ---
-const beforeLines = fs.existsSync(EVIDENCE)
-  ? fs.readFileSync(EVIDENCE, "utf8").split("\n").filter(Boolean).length
-  : 0;
-{
-  const r = run(".claude/eventpulse/agent-trace.ts", {
-    agent_name: "ep-ingestion-engineer",
-    agent_role: "ingestion_engineer",
-    parent_mission_id: "EP-2026-08-24-T3",
-    session_id: "smoke-test-006",
-    cwd: REPO,
+    const statePath = path.join(sandbox, ".claude", "eventpulse", "state", "agent-state.json");
+    expect(fs.existsSync(statePath)).toBe(true);
+    const state = JSON.parse(fs.readFileSync(statePath, "utf8"));
+    expect(state.session_id).toBe("smoke-test-006");
+    expect(state.schema_version).toBe(1);
+    expect(state.reason).toBe("PreCompact");
+    expect(Array.isArray(state.active_missions)).toBe(true);
   });
-  check("agent-trace exit", r.exit, 0, r.stderr.slice(-100));
-  const afterLines = fs.readFileSync(EVIDENCE, "utf8").split("\n").filter(Boolean).length;
-  check("ledger line appended", afterLines, beforeLines + 1, `${beforeLines} → ${afterLines}`);
-  const last = fs.readFileSync(EVIDENCE, "utf8").split("\n").filter(Boolean).pop();
-  const entry = JSON.parse(last || "{}");
-  check("entry.event", entry.event, "SubagentStart", "schema");
-  check("entry.agent", entry.agent, "ep-ingestion-engineer", "schema");
-  check("entry.role", entry.role, "ingestion_engineer", "schema");
-  check("entry.mission_id", entry.mission_id, "EP-2026-08-24-T3", "schema");
-}
 
-// --- Test 3: handoff-writer ---
-const missionId = "EP-2026-08-24-T3";
-const agent = "ep-event-graph-engineer";
-const handoffPath = HANDOFF(missionId, agent);
-if (fs.existsSync(handoffPath)) fs.unlinkSync(handoffPath);
-{
-  const r = run(".claude/eventpulse/handoff-writer.ts", {
-    agent_name: agent,
-    agent_role: "event_graph_engineer",
-    mission_id: missionId,
-    session_id: "smoke-test-006",
-    cwd: REPO,
+  it("agent-trace lägger till en SubagentStart-rad i ledgern", () => {
+    const before = ledgerLines().length;
+    const r = run("agent-trace.ts", {
+      agent_name: "ep-ingestion-engineer",
+      agent_role: "ingestion_engineer",
+      parent_mission_id: "EP-2026-08-24-T3",
+      session_id: "smoke-test-006",
+    });
+    expect(r.exit).toBe(0);
+
+    const after = ledgerLines();
+    expect(after.length).toBe(before + 1);
+    const entry = JSON.parse(after[after.length - 1] || "{}");
+    expect(entry.event).toBe("SubagentStart");
+    expect(entry.agent).toBe("ep-ingestion-engineer");
+    expect(entry.role).toBe("ingestion_engineer");
+    expect(entry.mission_id).toBe("EP-2026-08-24-T3");
   });
-  check("handoff-writer exit", r.exit, 0, r.stderr.slice(-100));
-  const exists = fs.existsSync(handoffPath);
-  check("handoff file written", exists, true, handoffPath);
-  if (exists) {
+
+  it("handoff-writer skriver handoff-markdown (≤60 rader, rätt sektioner)", () => {
+    const missionId = "EP-2026-08-24-T3";
+    const agent = "ep-event-graph-engineer";
+    const r = run("handoff-writer.ts", {
+      agent_name: agent,
+      agent_role: "event_graph_engineer",
+      mission_id: missionId,
+      session_id: "smoke-test-006",
+    });
+    expect(r.exit).toBe(0);
+
+    const handoffPath = path.join(
+      sandbox,
+      ".claude",
+      "eventpulse",
+      "handoffs",
+      `${missionId}-${agent}.md`,
+    );
+    expect(fs.existsSync(handoffPath)).toBe(true);
     const text = fs.readFileSync(handoffPath, "utf8");
-    const lineCount = text.split("\n").length;
-    check("handoff ≤ 60 lines", lineCount <= 60, true, `lineCount=${lineCount}`);
-    check("handoff H1 heading", text.startsWith(`# Handoff`), true, "starts with # Handoff");
-    check("handoff mentions mission", text.includes(missionId), true, "missionId in text");
-    check("handoff mentions agent", text.includes(agent), true, "agent in text");
-    check("handoff has 'What was done' section", text.includes("## What was done"), true, "section template");
-  }
-}
-
-console.log(`\nresult: ${pass} pass, ${fail} fail`);
-process.exit(fail === 0 ? 0 : 1);
+    expect(text.split("\n").length).toBeLessThanOrEqual(60);
+    expect(text.startsWith("# Handoff")).toBe(true);
+    expect(text).toContain(missionId);
+    expect(text).toContain(agent);
+    expect(text).toContain("## What was done");
+  });
+});
