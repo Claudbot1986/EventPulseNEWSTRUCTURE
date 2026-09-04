@@ -343,13 +343,17 @@ async function llmProposals(
   const client = getClient();
   const { system, user } = buildLlmPrompt(sources, evidence);
   try {
-    const resp = await client.messages.create({
-      model: opts.model,
-      max_tokens: 1500,
-      timeout: 8_000,
-      system,
-      messages: [{ role: 'user', content: user }],
-    });
+    const resp = await client.messages.create(
+      {
+        model: opts.model,
+        max_tokens: 1500,
+        system,
+        messages: [{ role: 'user', content: user }],
+      },
+      // T0108 fix: `timeout` is a RequestOptions field (2nd arg), not a body
+      // param — inside the body it was silently dropped, so no timeout applied.
+      { timeout: 8_000 },
+    );
     const text = resp.content
       .filter((c) => c.type === 'text')
       .map((c) => (c as { type: 'text'; text: string }).text)

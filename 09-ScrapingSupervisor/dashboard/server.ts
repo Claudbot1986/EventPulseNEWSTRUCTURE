@@ -496,11 +496,15 @@ async function collectBullmq(): Promise<BullmqSummary> {
     const { rawEventsQueue, smokeTestQueue, searchSyncQueue } = mod;
     const withTimeout = <T,>(p: Promise<T>): Promise<T> =>
       Promise.race([p, new Promise<T>((_, rej) => setTimeout(() => rej(new Error('timeout')), 1500))]);
-    const [raw, smoke, search] = await Promise.all([
+    const [raw, smoke, search] = (await Promise.all([
       withTimeout(rawEventsQueue.getJobCounts()),
       withTimeout(smokeTestQueue.getJobCounts()),
       withTimeout(searchSyncQueue.getJobCounts()),
-    ]);
+    ])) as [
+      NonNullable<BullmqSummary['raw_events']>,
+      NonNullable<BullmqSummary['ingestion_smoke']>,
+      NonNullable<BullmqSummary['search_sync']>,
+    ];
     return {
       ok: true,
       raw_events: raw,

@@ -51,8 +51,8 @@ function makeState(over: Partial<SupervisorState> = {}): SupervisorState {
     totals: { sources: 100, stockholm: 50, dead: 30, working: 5, untouched: 15 },
     failureModes: { NO_JSONLD: 20, REDIRECT_LOOP: 5 },
     batchStats: [
-      { batch: 'batch-122', successRate: 0.42, avgEventsFound: 3.1 },
-      { batch: 'batch-121', successRate: 0.5, avgEventsFound: 4.0 },
+      { batch: 'batch-122', successRate: 0.42, totalSources: 100, successes: 42, avgEventsFound: 3.1 },
+      { batch: 'batch-121', successRate: 0.5, totalSources: 10, successes: 5, avgEventsFound: 4.0 },
     ],
     schemaDriftSignals: [
       { exitReason: 'NO_JSONLD', count: 4, affectedSourceIds: ['a', 'b', 'c', 'd'] },
