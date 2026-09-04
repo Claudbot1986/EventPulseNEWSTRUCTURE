@@ -137,10 +137,6 @@ async function runHtmlDiscovery(rootUrl: string, diagnosis: string, phaseMode: 1
         ? `extracted ${eventsExtracted} events from ${targetUrl}`
         : `gate=promising but 0 events from ${targetUrl}`;
     }
-  } else if (gateResult?.verdict === 'weak') {
-    reason = `gate=weak for ${targetUrl}`;
-  } else if (gateResult?.verdict === 'blocked') {
-    reason = `gate=blocked for ${targetUrl}`;
   } else {
     reason = gateResult ? `gate=${gateResult.verdict} for ${targetUrl}` : `gate skipped for ${targetUrl}`;
   }
