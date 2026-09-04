@@ -187,7 +187,7 @@ async function main(): Promise<void> {
         rows.push({
           file,
           events: info.ids.length,
-          xmp: { found: false, hasAiGenerated: false, hasPolicy: false, hasModel: false, hasGeneratedAt: false, rightsMentionsAi: false, creatorTool: null, model: null, size: null },
+          xmp: { found: false, hasAiGenerated: false, hasPolicy: false, hasModel: false, hasGeneratedAt: false, hasPrompt: false, prompt: null, rightsMentionsAi: false, creatorTool: null, model: null, generatedAt: null, source: null },
           stamp: { orangeCount: 0, darkPlateCount: 0, ok: false },
           sha: '?',
         });

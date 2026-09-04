@@ -234,7 +234,8 @@ export interface RecordFeedbackInput {
   event_id: string;
   interaction: FeedbackInteraction;
   query_text?: string;
-  rank_position?: number;
+  /** Nullable on the wire; the validator checks it and persist does `?? null`. */
+  rank_position?: number | null;
   reasons?: RankReason[];
   /**
    * Optional structured rejection reason. Only meaningful when `interaction`
