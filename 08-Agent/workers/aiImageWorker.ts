@@ -156,7 +156,7 @@ async function fetchGroupMembers(seedEventId: string): Promise<EventLite[]> {
   // 1. Hämta seed-eventet (för att få title_sv + venue_name)
   const { data: seed, error: seedErr } = await supabase
     .from('events')
-    .select('id, title_sv, title_en, venues(name), venue_name, category_slug')
+    .select('id, title_sv, title_en, venues(name), category_slug')
     .eq('id', seedEventId)
     .single();
   if (seedErr || !seed) {
@@ -170,7 +170,7 @@ async function fetchGroupMembers(seedEventId: string): Promise<EventLite[]> {
 
   const { data: all, error: allErr } = await supabase
     .from('events')
-    .select('id, title_sv, title_en, venues(name), venue_name, category_slug')
+    .select('id, title_sv, title_en, venues(name), category_slug')
     .eq('status', 'published');
   if (allErr) throw new Error(`failed to fetch events: ${allErr.message}`);
 
@@ -502,8 +502,15 @@ export function startAiImageWorker(): Worker<AiImageJob> | null {
   return _worker;
 }
 
-// Starta worker direkt om denna fil körs (CLI-läge)
-if (require.main === module) {
+// Starta worker direkt om denna fil körs (CLI-läge). ESM-säker main-check:
+// require.main saknas i ESM-scope — jämför import.meta.url mot argv[1].
+import { fileURLToPath } from 'url';
+import { resolve } from 'path';
+
+const invokedDirectly =
+  typeof process.argv[1] === 'string' &&
+  fileURLToPath(import.meta.url) === resolve(process.argv[1]);
+if (invokedDirectly) {
   startAiImageWorker();
   console.log('[ai-image-worker] running standalone, Ctrl+C to stop');
 }
