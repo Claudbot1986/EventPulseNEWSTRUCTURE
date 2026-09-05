@@ -62,6 +62,13 @@ Success for NOW: `search_events` returns real future Stockholm events from DB.
 - Metrics: CTR, save, outbound, repeat session
 
 Success for NEXT: dogfood + 5 external users; majority prefer the 3–5 recs over browsing; outbound CTR > 0.
+### Pre-launch
+
+- **AI image generation is intentionally paused (cost decision, 2026-09-05).** Meantime the image library reuses existing 
+  AI-generated images — every event card has an image (verified 2026-09-04: 6 663/6 663 future events have image_url in 
+  Supabase). **Immediately before launch:** top up BFL credits and run 08-Agent/scripts/backfill_ai_images.ts (or
+  aiImageWorker.ts) until image_status='pending' is 0, so fresh events get event-specific images. Do not flag pending   
+  images as a blocker before that point. 
 
 ---
 
