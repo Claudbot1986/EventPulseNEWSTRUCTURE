@@ -37,6 +37,7 @@ import path from 'path';
 import * as cheerio from 'cheerio';
 import * as dotenv from 'dotenv';
 import { fetchHtml } from '../tools/fetchTools.js';
+import { callMinimaxDetailed, AI_CONFIG } from '../AI/minimaxConfig.js';
 
 const __filename = (() => {
   try { return decodeURIComponent(new URL(import.meta.url).pathname); } catch { return ''; }
@@ -50,9 +51,8 @@ const ADAPTERS_DIR = path.resolve(RUNTIME_DIR, 'adapters');
 
 dotenv.config({ path: path.resolve(PROJECT_ROOT, '.env'), override: true });
 
-const ANTHROPIC_API_KEY = process.env.ANTHROPIC_API_KEY || '';
-const ANTHROPIC_API_URL = 'https://api.anthropic.com/v1/messages';
-const DEFAULT_MODEL = 'claude-haiku-4-5-20251001';
+// LLM: MiniMax direkt-API (Anthropic utgått 2026-09-05 — kontot låst/401; se minimaxConfig).
+const DEFAULT_MODEL = AI_CONFIG.model;
 const MAX_FIX_ITERATIONS = 3;
 const DEFAULT_MAX_TOKENS = 2000;
 const HTML_TRUNCATE = 12000; // liknande runC-ai-deep-discovery
@@ -89,7 +89,7 @@ export interface CollectorConfig {
   aiConfidence: number;
   /** spårbarhet */
   generatedAt: string;
-  generatedBy: string;     // "claude-haiku-4-5" el. dyl.
+  generatedBy: string;     // modellnamn, t.ex. "MiniMax-M2.7"
   generatorVersion: string;
   validatedAt?: string;
   validatorVersion?: string;
@@ -145,51 +145,11 @@ const COLLECTOR_SCHEMA_DESCRIPTION = `
 }
 `.trim();
 
-// ─── Generator: AI call (Anthropic Messages API) ────────────────────────────
+// ─── Generator: AI call (MiniMax direkt-API, OpenAI-kompatibelt) ────────────
+// callMinimaxDetailed strippar <think>…</think>-block som MiniMax-M2.7 lägger
+// i content, så parseAiJson nedan alltid får ren JSON-text.
 
-interface AnthropicResponse {
-  content?: Array<{ text?: string }>;
-  usage?: { input_tokens?: number; output_tokens?: number };
-}
 
-async function callAnthropic(
-  prompt: string,
-  system: string,
-  maxTokens: number,
-): Promise<{ text: string; promptTokens: number; responseTokens: number }> {
-  if (!ANTHROPIC_API_KEY) {
-    throw new Error('ANTHROPIC_API_KEY not configured in .env');
-  }
-
-  const response = await fetch(ANTHROPIC_API_URL, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'x-api-key': ANTHROPIC_API_KEY,
-      'anthropic-version': '2023-06-01',
-      'anthropic-dangerous-direct-browser-access': 'true',
-    },
-    body: JSON.stringify({
-      model: DEFAULT_MODEL,
-      max_tokens: maxTokens,
-      messages: [
-        { role: 'user', content: prompt },
-      ],
-      system,
-    }),
-  });
-
-  if (!response.ok) {
-    const errText = await response.text();
-    throw new Error(`Anthropic API error ${response.status}: ${errText.slice(0, 400)}`);
-  }
-
-  const data = (await response.json()) as AnthropicResponse;
-  const text = data.content?.[0]?.text ?? '';
-  const promptTokens = data.usage?.input_tokens ?? 0;
-  const responseTokens = data.usage?.output_tokens ?? 0;
-  return { text, promptTokens, responseTokens };
-}
 
 function buildSystemPrompt(): string {
   return `Du är en constrained HTML-scraper-konfigurator. Du analyserar HTML och returnerar ENBART JSON — ingen kod, inga förklaringar, inga markdown.
@@ -396,7 +356,7 @@ export async function runPipeline(opts: PipelineOptions): Promise<GenerationResu
   for (let i = 0; i < MAX_FIX_ITERATIONS; i++) {
     iterations++;
     const prompt = buildGenerationPrompt(opts.sourceId, opts.url, html, config, lastError);
-    const { text, promptTokens, responseTokens } = await callAnthropic(prompt, system, maxTokens);
+    const { text, promptTokens, responseTokens } = await callMinimaxDetailed(prompt, { system, maxTokens });
     totalPrompt += promptTokens;
     totalResponse += responseTokens;
 

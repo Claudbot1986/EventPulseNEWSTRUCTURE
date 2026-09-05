@@ -23,17 +23,15 @@ export const AI_CONFIG = {
   temperature: 0.1, // Low temperature for consistent extraction
 };
 
-/**
- * Call MiniMax API with a prompt
- */
-export async function callMinimax(
+interface MinimaxChatResponse {
+  choices: Array<{ message: { content: string } }>;
+  usage?: { prompt_tokens?: number; completion_tokens?: number; total_tokens?: number };
+}
+
+async function minimaxChatRequest(
   prompt: string,
-  options: {
-    system?: string;
-    temperature?: number;
-    maxTokens?: number;
-  } = {}
-): Promise<string> {
+  options: { system?: string; temperature?: number; maxTokens?: number },
+): Promise<MinimaxChatResponse> {
   const { apiKey, baseUrl, maxTokens, temperature } = AI_CONFIG;
 
   if (!apiKey) {
@@ -62,9 +60,47 @@ export async function callMinimax(
     throw new Error(`MiniMax API error: ${response.status} - ${error}`);
   }
 
-  const data = await response.json() as {
-    choices: Array<{ message: { content: string } }>;
-  };
+  return (await response.json()) as MinimaxChatResponse;
+}
 
-  return data.choices[0]?.message?.content || '';
+/** MiniMax-M2.7 bäddar in resonemang i <think>…</think> före svaret i content. */
+function stripThinkBlock(content: string): string {
+  return content.replace(/<think>[\s\S]*?<\/think>/g, '').trim();
+}
+
+/**
+ * Call MiniMax API with a prompt
+ */
+export async function callMinimax(
+  prompt: string,
+  options: {
+    system?: string;
+    temperature?: number;
+    maxTokens?: number;
+  } = {}
+): Promise<string> {
+  const data = await minimaxChatRequest(prompt, options);
+  return stripThinkBlock(data.choices[0]?.message?.content || '');
+}
+
+export interface MinimaxDetailedResult {
+  text: string;
+  promptTokens: number;
+  responseTokens: number;
+}
+
+/**
+ * Som callMinimax men returnerar även token-räkning (usage-fältet).
+ * För konsumenter som loggar kostnad/iterationer (t.ex. constrainedAgent).
+ */
+export async function callMinimaxDetailed(
+  prompt: string,
+  options: { system?: string; temperature?: number; maxTokens?: number } = {},
+): Promise<MinimaxDetailedResult> {
+  const data = await minimaxChatRequest(prompt, options);
+  return {
+    text: stripThinkBlock(data.choices[0]?.message?.content || ''),
+    promptTokens: data.usage?.prompt_tokens ?? 0,
+    responseTokens: data.usage?.completion_tokens ?? 0,
+  };
 }
