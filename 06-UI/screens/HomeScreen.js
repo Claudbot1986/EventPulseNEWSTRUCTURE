@@ -6,7 +6,9 @@
  *   2. Ikväll   — events tonight (today, start_time_local >= 18:00)
  *   3. Helgen   — this weekend (Sat-Sun)
  *   4. Gratis   — free events in the next 7 days
- *   5. Rekommenderat — placeholder pending #73 (AI preference ranking)
+ *   5. Rekommenderat — server-side AI-ranked via fetchRecommendedEvents (T0056);
+ *      ranker blends followed venues/artists, stated preferences, and save/reject
+ *      priors from record_feedback (rank_events.ts MIN_SAVES / MIN_WEIGHTED_REJECTS).
  *
  * Data flow:
  *   - Each section calls fetchFeed() from services/agentClient (already used
