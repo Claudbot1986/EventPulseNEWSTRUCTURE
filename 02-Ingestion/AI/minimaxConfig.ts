@@ -1,19 +1,23 @@
 /**
- * Ollama AI Provider Configuration
- * Model: minimax-m2.7:cloud
- * Endpoint: http://127.0.0.1:11434/v1 (OpenAI-compatible)
+ * MiniMax AI Provider Configuration (direct API, no Ollama proxy)
+ * Model: MiniMax-M2.7
+ * Endpoint: https://api.minimax.io/v1 (OpenAI-compatible)
+ * Key: MINIMAX_API_KEY from project-root .env (verified 200 OK on /v1/models 2026-09-05)
  */
 
-// Load .env from project root (simple approach)
 import * as dotenv from 'dotenv';
-dotenv.config({ path: '/Volumes/2TB filer/.env', override: true });
+import * as path from 'path';
+import { fileURLToPath } from 'url';
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+dotenv.config({ path: path.resolve(__dirname, '../../.env'), override: true });
 
 export const AI_CONFIG = {
-  provider: 'ollama' as const,
-  model: 'minimax-m2.7:cloud',
-  // Ollama local endpoint (OpenAI-compatible)
-  baseUrl: 'http://127.0.0.1:11434/v1',
-  apiKey: 'ollama', // Ollama doesn't need real API key
+  provider: 'minimax' as const,
+  model: 'MiniMax-M2.7',
+  // MiniMax direct endpoint (OpenAI-compatible)
+  baseUrl: 'https://api.minimax.io/v1',
+  apiKey: process.env.MINIMAX_API_KEY,
   // Generation parameters
   maxTokens: 4096,
   temperature: 0.1, // Low temperature for consistent extraction
@@ -31,7 +35,7 @@ export async function callMinimax(
   } = {}
 ): Promise<string> {
   const { apiKey, baseUrl, maxTokens, temperature } = AI_CONFIG;
-  
+
   if (!apiKey) {
     throw new Error('MINIMAX_API_KEY not configured');
   }
