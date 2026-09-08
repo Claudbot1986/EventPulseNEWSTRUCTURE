@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!--
+  com.eventpulse.purge.plist — daglig rensning av events äldre än gårdagen.
+  One-shot jobb: körs kl 03:00 varje natt, avslutas direkt efter --apply.
+  Till skillnad från reminders/followdrops (som kör --loop) behöver vi inte
+  KeepAlive — skriptet ska avslutas efter en körning.
+
+  Spegel: scripts/purge_yesterday_events.ts
+
+  Install:
+    cp scripts/com.eventpulse.purge.plist ~/Library/LaunchAgents/
+    launchctl load ~/Library/LaunchAgents/com.eventpulse.purge.plist
+
+  Verifiera (kör nu, utan att vänta till kl 03:00):
+    launchctl start com.eventpulse.purge
+    tail -f runtime/purge.out.log
+
+  Uninstall:
+    launchctl unload ~/Library/LaunchAgents/com.eventpulse.purge.plist
+    rm ~/Library/LaunchAgents/com.eventpulse.purge.plist
+-->
+<plist version="1.0">
+<dict>
+  <key>Label</key>
+  <string>com.eventpulse.purge</string>
+
+  <key>ProgramArguments</key>
+  <array>
+    <string>/bin/bash</string>
+    <string>/Users/claudgashi/EventPulse/scripts/start-purge.sh</string>
+  </array>
+
+  <key>WorkingDirectory</key>
+  <string>/Users/claudgashi/EventPulse</string>
+
+  <!-- Kör kl 03:00 varje dag -->
+  <key>StartCalendarInterval</key>
+  <dict>
+    <key>Hour</key>
+    <integer>3</integer>
+    <key>Minute</key>
+    <integer>0</integer>
+  </dict>
+
+  <key>StandardOutPath</key>
+  <string>/Users/claudgashi/EventPulse/runtime/purge.out.log</string>
+  <key>StandardErrorPath</key>
+  <string>/Users/claudgashi/EventPulse/runtime/purge.err.log</string>
+
+  <key>EnvironmentVariables</key>
+  <dict>
+    <key>PROJECT_ROOT</key>
+    <string>/Users/claudgashi/EventPulse</string>
+    <key>PATH</key>
+    <string>/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:/Users/claudgashi/.local/bin</string>
+  </dict>
+</dict>
+</plist>
