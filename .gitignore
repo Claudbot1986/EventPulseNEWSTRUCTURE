@@ -98,3 +98,9 @@ TEMP/
 
 # Expo local dev-state (should not be tracked)
 06-UI/.expo/
+
+# Runtime-data genererat av .claude/hooks-systemet i 06-UI-subtree
+# (root-`.claude/eventpulse/{missions,evidence}/` ignoreras redan via rad 53–56).
+# Sub-dir-versionen matchas INTE av root-patternen — behöver egen rad.
+06-UI/.claude/eventpulse/evidence/
+06-UI/.claude/eventpulse/missions/
