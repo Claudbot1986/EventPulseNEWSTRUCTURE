@@ -12,6 +12,7 @@ Batch isolation:
 from __future__ import annotations
 
 import json
+import os
 import subprocess
 from dataclasses import dataclass
 from pathlib import Path
@@ -409,6 +410,49 @@ def run_real_abcd(
         )
     else:
         notes.append("runD-ai skipped (no batch rows in postD-man)")
+
+    # ─── Extended D sweep: route C-stage recovery queues through Scrapingbee ───
+    # postTestC-D already handled above. Here we re-render the recovery pools:
+    #   - manual-review: HTML-discovery was weak; JS render might succeed
+    #   - serverdown:    transient downtime; retry with premium geo-proxy
+    #   - 404:           may be geo-blocked; premium_proxy + country=se helps
+    #   - error500:      may be Cloudflare challenge; stealth bypass
+    # Failures in recovery pools go BACK to the same input queue (preserves status).
+    skip_extended_d = os.environ.get("EVENTPULSE_NO_EXTENDED_D", "0") == "1"
+    if not skip_extended_d:
+        for ext_input, ext_behavior in [
+            (RUNTIME_POSTTESTC_MAN, "auto"),
+            (RUNTIME_POSTTESTC_SERVERDOWN, "premium-only"),
+            (RUNTIME_POSTTESTC_404, "premium-only"),
+            (RUNTIME_POSTTESTC_ERROR500, "stealth"),
+        ]:
+            reorder_queue_front(runtime, ext_input, id_list)
+            n_ext = count_queue_with_ids(runtime, ext_input, bset)
+            if n_ext <= 0:
+                continue
+            rc_ext, c_ext = run_npx_tsx(
+                project_root,
+                "02-Ingestion/D-renderGate/runD-scrapingbee.ts",
+                [
+                    f"--input={ext_input}",
+                    f"--limit={n_ext}",
+                    f"--workers={workers_d}",
+                    f"--behavior={ext_behavior}",
+                ],
+                dry_run=dry_run,
+            )
+            cmds.append(c_ext)
+            if rc_ext != 0:
+                return RealPipelineResult(
+                    rc_ext,
+                    cmds,
+                    notes + [f"runD-ext({ext_input}) failed exit={rc_ext}"],
+                )
+            notes.append(
+                f"runD-ext({ext_input}) done (limit={n_ext}, behavior={ext_behavior})"
+            )
+    else:
+        notes.append("extended D sweep skipped (EVENTPULSE_NO_EXTENDED_D=1)")
 
     # Tool 10 branch: input is postTestC-man, but tool10 reads postB-preC.
     n_t10_in = _move_selected_ids(

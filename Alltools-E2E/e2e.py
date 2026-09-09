@@ -145,6 +145,11 @@ def main() -> int:
         help="No-op (compat): TS tools already write project runtime/.",
     )
     parser.add_argument(
+        "--force",
+        action="store_true",
+        help="Run even if audit reports blocking issues (e.g. intra-file duplicates).",
+    )
+    parser.add_argument(
         "--from-preA",
         dest="from_pre_a",
         action="store_true",
@@ -154,6 +159,12 @@ def main() -> int:
     parser.add_argument("--workers-b", type=int, default=8, help="runB-parallel --workers")
     parser.add_argument("--workers-c", type=int, default=5, help="runC-one-time-only --workers")
     parser.add_argument("--workers-d", type=int, default=4, help="runD --workers")
+    parser.add_argument(
+        "--no-extended-d",
+        dest="no_extended_d",
+        action="store_true",
+        help="Skip extended D-sweep over postTestC-manual-review/serverdown/404/error500 (default: enabled).",
+    )
     args = parser.parse_args()
 
     if not args.from_pre_a:
@@ -181,6 +192,14 @@ def main() -> int:
         return 2
 
     sids = [str(s["sourceId"]) for s in items]
+    scb_key = os.environ.get("SCRAPINGBEE_API_KEY", "")
+    if not scb_key:
+        scb_status = "MISSING — D-gate falls back to Puppeteer"
+    elif scb_key.startswith("sb_REPLACE_ME"):
+        scb_status = f"prefix={scb_key[:8]} (PLACEHOLDER — D-gate falls back to Puppeteer)"
+    else:
+        scb_status = f"prefix={scb_key[:8]} (active — D-gate uses ScrapingBee)"
+    print(f"[E2E] SCRAPINGBEE_API_KEY: {scb_status}")
     print(
         f"[E2E] real pipeline | preA: {prea_n} rader | batch: {len(sids)} "
         f"(limit={args.limit} → effektivt {eff_limit}) | cycled={cycled}"
@@ -190,16 +209,44 @@ def main() -> int:
     dry = not args.apply
     if args.apply:
         audit = audit_legacy_runtime(DATA_ROOT)
-        if audit["errors"]:
-            print("[E2E] ABORT: legacy-köer har dubletter eller trasiga rader:", file=sys.stderr)
+        # Warnings: cross-queue duplicates — fortsätt, logga separat.
+        if audit["warnings"]:
+            print(
+                f"[E2E] {len(audit['warnings'])} warning(s) — cross-queue duplicates "
+                f"(legacy-state, fortsätter):",
+                file=sys.stderr,
+            )
+            for w in audit["warnings"][:25]:
+                print(f"  - {w}", file=sys.stderr)
+            if len(audit["warnings"]) > 25:
+                print(f"  ... +{len(audit['warnings']) - 25} fler", file=sys.stderr)
+        # Errors: intra-file duplicates — hårt fel såvida inte --force anges.
+        if audit["blocking"] and not args.force:
+            print(
+                "[E2E] ABORT: legacy-köer har hårda fel (intra-file duplicates):",
+                file=sys.stderr,
+            )
             for err in audit["errors"][:25]:
                 print(f"  - {err}", file=sys.stderr)
             if len(audit["errors"]) > 25:
                 print(f"  ... +{len(audit['errors']) - 25} fler", file=sys.stderr)
+            print(
+                "[E2E] Tips: kör med --force för att fortsätta ändå (rekommenderas inte).",
+                file=sys.stderr,
+            )
             return 4
+        if audit["blocking"] and args.force:
+            print(
+                f"[E2E] --force angivet: fortsätter trots {len(audit['errors'])} hårda fel.",
+                file=sys.stderr,
+            )
 
     if args.sync_legacy and args.apply:
         print("[E2E] Note: --sync-legacy is a no-op; TypeScript tools write project runtime/ directly.")
+
+    if args.no_extended_d:
+        os.environ["EVENTPULSE_NO_EXTENDED_D"] = "1"
+        print("[E2E] --no-extended-d: skipping extended D-sweep over recovery queues")
 
     res = run_real_abcd(
         ROOT,

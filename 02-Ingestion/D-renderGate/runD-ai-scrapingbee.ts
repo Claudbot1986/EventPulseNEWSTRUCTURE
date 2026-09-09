@@ -240,7 +240,10 @@ async function processSource(entry: QueueEntry, maxPages: number): Promise<AiDRe
     return { sourceId: entry.sourceId, success: false, eventsFound: 0, reason: 'source not found', renderedPages: 0 };
   }
 
-  const first = await renderPage(source.url, { timeout: 45000 });
+  // Tool D-AI runs on postD-man (already failed once). Use 'stealth' explicitly
+  // — these sources failed in premium-only already, so we want the most
+  // aggressive fingerprint bypass from the start.
+  const first = await renderPage(source.url, { timeout: 45000, behavior: 'stealth' });
   if (!first.success || !first.html) {
     return {
       sourceId: entry.sourceId,
@@ -259,7 +262,7 @@ async function processSource(entry: QueueEntry, maxPages: number): Promise<AiDRe
   let renderedPages = 0;
   for (const url of targetUrls) {
     // eslint-disable-next-line no-await-in-loop
-    const rr = url === source.url ? first : await renderPage(url, { timeout: 45000 });
+    const rr = url === source.url ? first : await renderPage(url, { timeout: 45000, behavior: 'stealth' });
     renderedPages += 1;
     if (!rr.success || !rr.html) continue;
     const ext = extractFromHtml(rr.html, entry.sourceId, url);

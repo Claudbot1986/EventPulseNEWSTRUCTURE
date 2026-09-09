@@ -1,16 +1,26 @@
 /**
  * runD-scrapingbee.ts — Tool D (JS render gate)
  *
- * Input:  runtime/postTestC-D.jsonl
+ * Input:  --input=FILE.jsonl (default: runtime/postTestC-D.jsonl)
  * Output:
  * - runtime/postD-UI.jsonl (success, events >= 2)
  * - runtime/postD-man1.jsonl (exactly 1 event)
  * - runtime/postD-man.jsonl (0 events / hard fail)
+ * - if input was postTestC-manual-review / postTestC-serverdown / postTestC-404 /
+ *   postTestC-error500 and result is 0/fail: row goes back to the SAME input queue
+ *   (preserves manual-review state; does NOT promote to postD-man).
  *
  * Policy:
  * - events >= 2 => postD-UI
  * - events == 1 => postD-man1
- * - events == 0 or render/extraction fail => postD-man
+ * - events == 0 or render/extraction fail => postD-man (only when input=postTestC-D),
+ *   or back to input queue (when input is one of the recovery pools)
+ *
+ * Behavior:
+ * - --behavior=<auto|static-only|premium-only|stealth> (default: premium-only)
+ *   premium-only = current hårdkodad config (5 cr premium JS); safe default
+ *   because C-gate already detected JS-render. For non-C inputs the e2e
+ *   pipeline passes 'auto' so Scrapingbee picks the cheapest working tier.
  */
 
 import * as dotenv from 'dotenv';
@@ -26,7 +36,7 @@ dotenv.config({ path: path.resolve(process.cwd(), '.env'), override: true });
 import { getSource } from '../tools/sourceRegistry';
 import { extractFromHtml } from '../F-eventExtraction/universal-extractor';
 import type { ParsedEvent } from '../F-eventExtraction/schema';
-import { renderPage } from './renderGate';
+import { renderPage, type RenderBehavior } from './renderGate';
 
 interface QueueEntry {
   sourceId: string;
@@ -53,11 +63,23 @@ const RUNTIME_DIR = path.resolve(DATA_ROOT, 'runtime');
 const LOGS_DIR = path.resolve(RUNTIME_DIR, 'logs');
 const RUN_LOG = path.resolve(LOGS_DIR, `runD-scrapingbee-${new Date().toISOString().replace(/[:.]/g, '-')}.log`);
 
-const INPUT_FILE = path.resolve(RUNTIME_DIR, 'postTestC-D.jsonl');
+const INPUT_FILE_DEFAULT = path.resolve(RUNTIME_DIR, 'postTestC-D.jsonl');
 const OUT_UI_FILE = path.resolve(RUNTIME_DIR, 'postD-UI.jsonl');
 const OUT_MAN1_FILE = path.resolve(RUNTIME_DIR, 'postD-man1.jsonl');
 const OUT_MAN_FILE = path.resolve(RUNTIME_DIR, 'postD-man.jsonl');
 const EXTRACTED_DIR = path.resolve(DATA_ROOT, '03-Queue/03-extractedevents/D');
+
+// Queues where a 0-event / fail result goes BACK to the same input queue
+// (preserves manual-review / recovery status). postTestC-D is the only queue
+// that promotes failures to postD-man.
+const RECOVERY_INPUT_QUEUES = new Set<string>([
+  'postTestC-manual-review.jsonl',
+  'postTestC-man.jsonl',
+  'postTestC-man1.jsonl',
+  'postTestC-serverdown.jsonl',
+  'postTestC-404.jsonl',
+  'postTestC-error500.jsonl',
+]);
 
 const DEFAULT_LIMIT = 50;
 const DEFAULT_WORKERS = 2;
@@ -244,16 +266,16 @@ function timeoutResult(sourceId: string): DResult {
   };
 }
 
-async function processSource(entry: QueueEntry, maxPages: number): Promise<DResult> {
+async function processSource(entry: QueueEntry, maxPages: number, behavior: RenderBehavior): Promise<DResult> {
   const source = getSource(entry.sourceId);
   if (!source) {
     return { sourceId: entry.sourceId, success: false, eventsFound: 0, reason: 'source not found', renderedPages: 0 };
   }
 
   const targetUrls: string[] = [source.url];
-  let first = await renderPage(source.url, { timeout: 30000 });
+  let first = await renderPage(source.url, { timeout: 30000, behavior });
   if (!first.success && (first.error || '').toLowerCase().includes('timeout')) {
-    first = await renderPage(source.url, { timeout: 45000 });
+    first = await renderPage(source.url, { timeout: 45000, behavior });
   }
   if (!first.success || !first.html) {
     return {
@@ -303,16 +325,16 @@ async function processSource(entry: QueueEntry, maxPages: number): Promise<DResu
         sourceId: entry.sourceId,
         success: true,
         eventsFound: current.length,
-        reason: `events found via JS render (${renderedPages} pages)`,
+        reason: `events found via JS render (${renderedPages} pages, behavior=${behavior})`,
         renderedPages,
       };
     }
   }
 
   for (const url of targetUrls.slice(1)) {
-    let rr = await renderPage(url, { timeout: 30000 });
+    let rr = await renderPage(url, { timeout: 30000, behavior });
     if (!rr.success && (rr.error || '').toLowerCase().includes('timeout')) {
-      rr = await renderPage(url, { timeout: 45000 });
+      rr = await renderPage(url, { timeout: 45000, behavior });
     }
     renderedPages += 1;
     if (!rr.success || !rr.html) continue;
@@ -325,7 +347,7 @@ async function processSource(entry: QueueEntry, maxPages: number): Promise<DResu
         sourceId: entry.sourceId,
         success: true,
         eventsFound: current.length,
-        reason: `events found via JS render (${renderedPages} pages)`,
+        reason: `events found via JS render (${renderedPages} pages, behavior=${behavior})`,
         renderedPages,
       };
     }
@@ -338,7 +360,7 @@ async function processSource(entry: QueueEntry, maxPages: number): Promise<DResu
       sourceId: entry.sourceId,
       success: true,
       eventsFound: unique.length,
-      reason: `events found via JS render (${renderedPages} pages)`,
+      reason: `events found via JS render (${renderedPages} pages, behavior=${behavior})`,
       renderedPages,
     };
   }
@@ -359,8 +381,27 @@ async function main() {
   const workers = parseInt(args.find(a => a.startsWith('--workers='))?.split('=')[1] || String(DEFAULT_WORKERS), 10);
   const maxPages = parseInt(args.find(a => a.startsWith('--max-pages='))?.split('=')[1] || String(DEFAULT_MAX_PAGES), 10);
 
+  // --input=FILE.jsonl: which queue to drain. Default = postTestC-D.jsonl.
+  const inputArg = args.find(a => a.startsWith('--input='))?.split('=')[1];
+  const inputFilename = inputArg || 'postTestC-D.jsonl';
+  const INPUT_FILE = path.resolve(RUNTIME_DIR, inputFilename);
+
+  // --behavior=<auto|static-only|premium-only|stealth>. Default = premium-only
+  // (preserves current behavior for C-gate routed JS-SPA sources).
+  const behaviorArg = args.find(a => a.startsWith('--behavior='))?.split('=')[1] as RenderBehavior | undefined;
+  const behavior: RenderBehavior = (behaviorArg && ['auto', 'static-only', 'premium-only', 'stealth'].includes(behaviorArg))
+    ? behaviorArg
+    : 'premium-only';
+
+  const isRecoveryInput = RECOVERY_INPUT_QUEUES.has(inputFilename);
+
   mkdirSync(LOGS_DIR, { recursive: true });
   writeFileSync(RUN_LOG, '', 'utf8');
+
+  if (!existsSync(INPUT_FILE)) {
+    log(`Input queue ${inputFilename} does not exist — nothing to do.`);
+    return;
+  }
 
   const allEntries = readQueue(INPUT_FILE);
   const seen = new Set<string>();
@@ -371,23 +412,24 @@ async function main() {
   log('═══════════════════════════════════════════════════════════════════');
   log('Tool D — JS Render Gate');
   log(`Workers: ${workers} | Limit: ${limit} | MaxPages: ${maxPages} | Dry: ${dry}`);
-  log(`Input postTestC-D: ${allEntries.length} total | ${unique.length} unique | ${batch.length} this run`);
+  log(`Input: ${inputFilename} | Behavior: ${behavior} | Recovery: ${isRecoveryInput}`);
+  log(`Queue: ${allEntries.length} total | ${unique.length} unique | ${batch.length} this run`);
   log('═══════════════════════════════════════════════════════════════════');
 
   if (batch.length === 0) {
-    log('postTestC-D is empty, nothing to do.');
+    log(`${inputFilename} is empty, nothing to do.`);
     return;
   }
 
   if (dry) {
-    for (const e of batch) log(`[DRY] ${e.sourceId}`);
+    for (const e of batch) log(`[DRY] ${e.sourceId} (behavior=${behavior})`);
     return;
   }
 
   const results = await runParallel(
     batch,
     (entry) => Promise.race<DResult>([
-      processSource(entry, maxPages),
+      processSource(entry, maxPages, behavior),
       new Promise<DResult>(resolve => setTimeout(() => resolve(timeoutResult(entry.sourceId)), SOURCE_TIMEOUT_MS)),
     ]),
     workers
@@ -395,6 +437,7 @@ async function main() {
   const toUi: QueueEntry[] = [];
   const toMan1: QueueEntry[] = [];
   const toMan: QueueEntry[] = [];
+  const backToInput: QueueEntry[] = [];
 
   for (let i = 0; i < batch.length; i++) {
     const entry = batch[i];
@@ -406,7 +449,7 @@ async function main() {
         queuedAt: new Date().toISOString(),
         priority: entry.priority,
         attempt: entry.attempt + 1,
-        queueReason: `toolD: ${res.eventsFound} events found`,
+        queueReason: `toolD: ${res.eventsFound} events found (input=${inputFilename}, behavior=${behavior})`,
         workerNotes: `renderedPages=${res.renderedPages}; ${res.reason}`,
       });
       log(`[OK] ${entry.sourceId} -> postD-UI (${res.eventsFound} events)`);
@@ -417,10 +460,20 @@ async function main() {
         queuedAt: new Date().toISOString(),
         priority: entry.priority,
         attempt: entry.attempt + 1,
-        queueReason: `toolD: one event extracted (route to man1)`,
+        queueReason: `toolD: one event extracted (input=${inputFilename})`,
         workerNotes: `eventsFound=${res.eventsFound}; renderedPages=${res.renderedPages}; ${res.reason}`,
       });
       log(`[MAN1] ${entry.sourceId} -> postD-man1 (1 event)`);
+    } else if (isRecoveryInput) {
+      // Recovery queue: send failures BACK to the same input queue
+      // (preserve manual-review / recovery status; do NOT promote to postD-man).
+      backToInput.push({
+        ...entry,
+        queueName: inputFilename.replace(/\.jsonl$/, ''),
+        attempt: entry.attempt + 1,
+        workerNotes: `toolD-retry-fail: ${res.reason}`,
+      });
+      log(`[BACK] ${entry.sourceId} -> ${inputFilename} (no events; ${res.reason})`);
     } else {
       toMan.push({
         sourceId: entry.sourceId,
@@ -439,9 +492,12 @@ async function main() {
   appendQueue(OUT_UI_FILE, toUi);
   appendQueue(OUT_MAN1_FILE, toMan1);
   appendQueue(OUT_MAN_FILE, toMan);
+  if (backToInput.length > 0) {
+    appendQueue(INPUT_FILE, backToInput);
+  }
 
   log('═══════════════════════════════════════════════════════════════════');
-  log(`SUMMARY postD-UI: ${toUi.length} | postD-man1: ${toMan1.length} | postD-man: ${toMan.length} | postTestC-D remaining: ${remaining.length}`);
+  log(`SUMMARY postD-UI: ${toUi.length} | postD-man1: ${toMan1.length} | postD-man: ${toMan.length} | back-to-${inputFilename}: ${backToInput.length} | remaining: ${remaining.length}`);
   log('═══════════════════════════════════════════════════════════════════');
 }
 
