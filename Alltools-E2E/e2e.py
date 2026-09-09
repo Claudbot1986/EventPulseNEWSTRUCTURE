@@ -192,7 +192,16 @@ def main() -> int:
         return 2
 
     sids = [str(s["sourceId"]) for s in items]
+    # Scrapingbee key check: read from .env file directly (tsx loads via dotenv;
+    # this Python status check shouldn't rely on shell env vars).
     scb_key = os.environ.get("SCRAPINGBEE_API_KEY", "")
+    if not scb_key:
+        env_path = ROOT / ".env"
+        if env_path.is_file():
+            for line in env_path.read_text(encoding="utf-8").splitlines():
+                if line.startswith("SCRAPINGBEE_API_KEY="):
+                    scb_key = line.split("=", 1)[1].strip().strip('"').strip("'")
+                    break
     if not scb_key:
         scb_status = "MISSING — D-gate falls back to Puppeteer"
     elif scb_key.startswith("sb_REPLACE_ME"):
