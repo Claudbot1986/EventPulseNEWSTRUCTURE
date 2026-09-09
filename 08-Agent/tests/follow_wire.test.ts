@@ -19,6 +19,17 @@ const USER_ID = '00000000-0000-0000-0000-000000000001';
 const VENUE_A = '11111111-1111-1111-1111-111111111111';
 const VENUE_B = '22222222-2222-2222-2222-222222222222';
 
+// Phase 1 auth: identity comes from the Bearer header. The test verifier
+// resolves `test-jwt` to USER_ID; missing/wrong Bearer → 401.
+const TEST_BEARER = 'test-jwt';
+const bearerHeaders = (extra: Record<string, string> = {}): Record<string, string> => ({
+  ...extra,
+  Authorization: `Bearer ${TEST_BEARER}`,
+});
+const testVerify = async (token: string) => (token === TEST_BEARER
+  ? { id: USER_ID, email: 'test@example.com' }
+  : null);
+
 let baseUrl = '';
 let server: ReturnType<ReturnType<typeof buildApp>['listen']> | undefined;
 
@@ -47,7 +58,7 @@ function makeMockSupabase(): SupabaseClient {
 }
 
 beforeAll(async () => {
-  const app = buildApp({ supabase: makeMockSupabase() });
+  const app = buildApp({ supabase: makeMockSupabase(), verify: testVerify });
   await new Promise<void>((resolve) => {
     server = app.listen(0, '127.0.0.1', () => resolve());
   });
@@ -60,20 +71,20 @@ afterAll(async () => {
 });
 
 describe('POST /agent/follow', () => {
-  it('returns 400 on bad client_user_id', async () => {
+  it('returns 401 on missing Bearer token (Phase 1 auth gate)', async () => {
     const res = await fetch(`${baseUrl}/agent/follow`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ client_user_id: 'bad', venue_id: VENUE_A, action: 'follow' }),
+      body: JSON.stringify({ venue_id: VENUE_A, action: 'follow' }),
     });
-    expect(res.status).toBe(400);
+    expect(res.status).toBe(401);
   });
 
   it('returns 400 on bad venue_id', async () => {
     const res = await fetch(`${baseUrl}/agent/follow`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ client_user_id: USER_ID, venue_id: 'bad', action: 'follow' }),
+      headers: bearerHeaders({ 'Content-Type': 'application/json' }),
+      body: JSON.stringify({ venue_id: 'bad', action: 'follow' }),
     });
     expect(res.status).toBe(400);
   });
@@ -81,8 +92,8 @@ describe('POST /agent/follow', () => {
   it('returns 400 on unknown action', async () => {
     const res = await fetch(`${baseUrl}/agent/follow`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ client_user_id: USER_ID, venue_id: VENUE_A, action: 'like' }),
+      headers: bearerHeaders({ 'Content-Type': 'application/json' }),
+      body: JSON.stringify({ venue_id: VENUE_A, action: 'like' }),
     });
     expect(res.status).toBe(400);
   });
@@ -90,8 +101,8 @@ describe('POST /agent/follow', () => {
   it('returns 200 with added:true on first follow', async () => {
     const res = await fetch(`${baseUrl}/agent/follow`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ client_user_id: USER_ID, venue_id: VENUE_A, action: 'follow' }),
+      headers: bearerHeaders({ 'Content-Type': 'application/json' }),
+      body: JSON.stringify({ venue_id: VENUE_A, action: 'follow' }),
     });
     expect(res.status).toBe(200);
     const body = await res.json();
@@ -104,8 +115,8 @@ describe('POST /agent/follow', () => {
   it('returns 200 with added:false when the venue is already followed (idempotent)', async () => {
     const res = await fetch(`${baseUrl}/agent/follow`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ client_user_id: USER_ID, venue_id: VENUE_A, action: 'follow' }),
+      headers: bearerHeaders({ 'Content-Type': 'application/json' }),
+      body: JSON.stringify({ venue_id: VENUE_A, action: 'follow' }),
     });
     expect(res.status).toBe(200);
     const body = await res.json();
@@ -117,8 +128,8 @@ describe('POST /agent/follow', () => {
   it('returns 200 with removed:true on unfollow', async () => {
     const res = await fetch(`${baseUrl}/agent/follow`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ client_user_id: USER_ID, venue_id: VENUE_A, action: 'unfollow' }),
+      headers: bearerHeaders({ 'Content-Type': 'application/json' }),
+      body: JSON.stringify({ venue_id: VENUE_A, action: 'unfollow' }),
     });
     expect(res.status).toBe(200);
     const body = await res.json();
@@ -131,8 +142,8 @@ describe('POST /agent/follow', () => {
   it('returns 200 with removed:false when the venue is not followed (idempotent)', async () => {
     const res = await fetch(`${baseUrl}/agent/follow`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ client_user_id: USER_ID, venue_id: VENUE_B, action: 'unfollow' }),
+      headers: bearerHeaders({ 'Content-Type': 'application/json' }),
+      body: JSON.stringify({ venue_id: VENUE_B, action: 'unfollow' }),
     });
     expect(res.status).toBe(200);
     const body = await res.json();
@@ -143,28 +154,25 @@ describe('POST /agent/follow', () => {
 });
 
 describe('GET /agent/follow', () => {
-  it('returns 400 on bad client_user_id', async () => {
-    const res = await fetch(`${baseUrl}/agent/follow?client_user_id=not-a-uuid`);
-    expect(res.status).toBe(400);
-  });
-
-  it('returns 400 when client_user_id is missing', async () => {
+  it('returns 401 on missing Bearer token (Phase 1 auth gate)', async () => {
     const res = await fetch(`${baseUrl}/agent/follow`);
-    expect(res.status).toBe(400);
+    expect(res.status).toBe(401);
   });
 
   it('returns 200 with the followed venue ids', async () => {
     await fetch(`${baseUrl}/agent/follow`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ client_user_id: USER_ID, venue_id: VENUE_A, action: 'follow' }),
+      headers: bearerHeaders({ 'Content-Type': 'application/json' }),
+      body: JSON.stringify({ venue_id: VENUE_A, action: 'follow' }),
     });
     await fetch(`${baseUrl}/agent/follow`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ client_user_id: USER_ID, venue_id: VENUE_B, action: 'follow' }),
+      headers: bearerHeaders({ 'Content-Type': 'application/json' }),
+      body: JSON.stringify({ venue_id: VENUE_B, action: 'follow' }),
     });
-    const res = await fetch(`${baseUrl}/agent/follow?client_user_id=${USER_ID}`);
+    const res = await fetch(`${baseUrl}/agent/follow`, {
+      headers: bearerHeaders(),
+    });
     expect(res.status).toBe(200);
     const body = await res.json();
     expect(body.ok).toBe(true);

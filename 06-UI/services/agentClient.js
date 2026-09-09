@@ -1,12 +1,13 @@
 /**
- * EventPulse Agent Client (Phase 0)
+ * EventPulse Agent Client (Phase 1)
  *
  * Replaces the anon-key /supabase-events direct path with a private /agent/chat
  * call. The Expo app no longer needs the Supabase service key or even the anon
  * key for browsing — the agent API is the only entry point.
  *
  * Wire format (mirrors 08-Agent/types.ts):
- *   request:  { client_user_id, session_id?, message, origin? }
+ *   request:  { session_id?, message, origin? }
+ *              + Authorization: Bearer <jwt>
  *   response: { session_id, reply, cards: EventCard[], warnings: string[] }
  *
  * EventCard shape used by AgentScreen:
@@ -14,16 +15,18 @@
  *     category_slug, price_min_sek, price_max_sek, is_free,
  *     ticket_url, image_url }
  *
- * Identity (Phase 1 §18 D4): `client_user_id` is loaded from AsyncStorage via
- * ./storage so it survives cold restarts. Reads are awaited so the same
- * identity is used on the first request, not raced.
+ * Identity (Phase 1 §18 D4): identity comes from the Authorization Bearer
+ * header (JWT from the Supabase session in ./storage). User-scoped /agent/*
+ * endpoints read req.user.id server-side and ignore any legacy client_user_id
+ * the body or query might still carry. Reads are awaited so the same identity
+ * is used on the first request, not raced.
  *
  * Base URL (Phase 1 §18 D4): comes exclusively from `EXPO_PUBLIC_AGENT_URL`.
  * No localhost fallback — unset means a loud configuration error rather than
  * a silent "looks like it works" loopback.
  */
 
-import { getOrCreateAnonUserId } from './storage';
+import { getOrCreateAnonUserId, loadAuthSession } from './storage';
 import { markOnline as notifyNetworkOnline } from './networkContext';
 
 /** Never let connectivity bookkeeping fail a successful fetch. */
@@ -31,6 +34,30 @@ function markOnline() {
   if (typeof notifyNetworkOnline === 'function') {
     notifyNetworkOnline();
   }
+}
+
+/**
+ * Build the Authorization header for an authenticated request, or {} for
+ * unauthenticated callers. Phase 1 launch closes DEPLOY.md §8 — every
+ * user-scoped /agent/* endpoint requires a valid Bearer JWT, so callers
+ * that want any user-scoped data must go through this helper.
+ *
+ * Public read-only endpoints (`/agent/feed`, `/agent/live-now`,
+ * `/agent/suggested-prompts`, `/agent/curated-collections`,
+ * `/agent/venues/:id/events`) deliberately skip this — they accept
+ * anonymous traffic for cold-start UX.
+ *
+ * Returns a NEW object each call so callers can spread safely:
+ *   headers: { 'Content-Type': 'application/json', ...getAuthHeader() }
+ *
+ * @returns {Promise<Record<string, string>>}
+ */
+export async function getAuthHeader() {
+  const session = /** @type {{ access_token?: unknown } | null} */ (await loadAuthSession());
+  if (!session || typeof session.access_token !== 'string' || session.access_token.length === 0) {
+    return {};
+  }
+  return { Authorization: `Bearer ${session.access_token}` };
 }
 
 const AGENT_BASE_URL = process.env.EXPO_PUBLIC_AGENT_URL;
@@ -94,7 +121,6 @@ export async function chatWithAgent({ message, sessionId, origin, signal, timeou
     throw new Error('message is required');
   }
   const baseUrl = requireAgentBaseUrl();
-  const client_user_id = await getOrCreateAnonUserId();
 
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), timeoutMs);
@@ -106,11 +132,16 @@ export async function chatWithAgent({ message, sessionId, origin, signal, timeou
 
   let response;
   try {
+    // Phase 1: identity comes from the Authorization Bearer header, NOT
+    // from a body field. The server reads req.user.id and ignores any
+    // legacy client_user_id the body might still carry.
     response = await fetch(`${baseUrl}/agent/chat`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: {
+        'Content-Type': 'application/json',
+        ...(await getAuthHeader()),
+      },
       body: JSON.stringify({
-        client_user_id,
         session_id: sessionId,
         message,
         origin: origin ?? 'expo',
@@ -179,15 +210,16 @@ export async function recordEventInteraction({
   } catch (_err) {
     return { ok: false, warning: 'config' };
   }
-  const client_user_id = await getOrCreateAnonUserId();
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), timeoutMs);
   try {
     const response = await fetch(`${baseUrl}/agent/feedback`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: {
+        'Content-Type': 'application/json',
+        ...(await getAuthHeader()),
+      },
       body: JSON.stringify({
-        client_user_id,
         session_id: sessionId,
         event_id: eventId,
         interaction,
@@ -223,7 +255,6 @@ export async function savePreferencesToServer({ categories }, { signal, timeoutM
   } catch (_err) {
     return { ok: false };
   }
-  const client_user_id = await getOrCreateAnonUserId();
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), timeoutMs);
   const cleanup = () => clearTimeout(timer);
@@ -234,8 +265,11 @@ export async function savePreferencesToServer({ categories }, { signal, timeoutM
   try {
     const response = await fetch(`${baseUrl}/agent/preferences`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ client_user_id, categories }),
+      headers: {
+        'Content-Type': 'application/json',
+        ...(await getAuthHeader()),
+      },
+      body: JSON.stringify({ categories }),
       signal: controller.signal,
     });
     if (!response.ok) return { ok: false };
@@ -268,7 +302,6 @@ export async function recordAttendance({ eventId, signal, timeoutMs = 4_000 }) {
   } catch (_err) {
     return { ok: false, warning: 'config' };
   }
-  const client_user_id = await getOrCreateAnonUserId();
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), timeoutMs);
   if (signal) {
@@ -278,8 +311,11 @@ export async function recordAttendance({ eventId, signal, timeoutMs = 4_000 }) {
   try {
     const response = await fetch(`${baseUrl}/agent/attendance`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ client_user_id, event_id: eventId }),
+      headers: {
+        'Content-Type': 'application/json',
+        ...(await getAuthHeader()),
+      },
+      body: JSON.stringify({ event_id: eventId }),
       signal: controller.signal,
     });
     if (!response.ok && response.status !== 202) {
@@ -325,7 +361,6 @@ export async function recordRating({ eventId, rating, note, signal, timeoutMs = 
   } catch (_err) {
     return { ok: false, warning: 'config' };
   }
-  const client_user_id = await getOrCreateAnonUserId();
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), timeoutMs);
   if (signal) {
@@ -335,9 +370,11 @@ export async function recordRating({ eventId, rating, note, signal, timeoutMs = 
   try {
     const response = await fetch(`${baseUrl}/agent/rating`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: {
+        'Content-Type': 'application/json',
+        ...(await getAuthHeader()),
+      },
       body: JSON.stringify({
-        client_user_id,
         event_id: eventId,
         rating,
         note: trimmedNote && trimmedNote.length > 0 ? trimmedNote : undefined,
@@ -478,8 +515,8 @@ export function buildAiImageUrl(eventId) {
 /**
  * Follow or unfollow an entity (venue or artist) — T0050 / MVP-gap §77.
  *
- * Body shape (POST /agent/follow):
- *   { client_user_id, entity_type: 'venue' | 'artist',
+ * Body shape (POST /agent/follow, Authorization: Bearer <jwt>):
+ *   { entity_type: 'venue' | 'artist',
  *     entity_id, action: 'follow' | 'unfollow' }
  *
  * The backend persists to `user_preferences.preferences.followed_venue_ids`
@@ -514,9 +551,7 @@ export async function followEntity({
   } catch (_err) {
     return { ok: false, warning: 'config' };
   }
-  const client_user_id = await getOrCreateAnonUserId();
   const body = {
-    client_user_id,
     entity_type: entityType,
     action,
   };
@@ -533,7 +568,10 @@ export async function followEntity({
   try {
     const response = await fetch(`${baseUrl}/agent/follow`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: {
+        'Content-Type': 'application/json',
+        ...(await getAuthHeader()),
+      },
       body: JSON.stringify(body),
       signal: controller.signal,
     });
@@ -551,7 +589,7 @@ export async function followEntity({
 /**
  * Read the user's currently-followed venues and artists — T0050.
  *
- * GET /agent/follow?client_user_id=<uuid>
+ * GET /agent/follow  (Authorization: Bearer <jwt>)
  *
  * Response shape:
  *   {
@@ -572,9 +610,7 @@ export async function getFollowedEntities({ signal, timeoutMs = 4_000 } = {}) {
   } catch (_err) {
     return { ok: false, venueIds: [], artistSlugs: [], count: 0, warning: 'config' };
   }
-  const client_user_id = await getOrCreateAnonUserId();
   const url = new URL(`${baseUrl}/agent/follow`);
-  url.searchParams.set('client_user_id', client_user_id);
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), timeoutMs);
   if (signal) {
@@ -582,7 +618,10 @@ export async function getFollowedEntities({ signal, timeoutMs = 4_000 } = {}) {
     else signal.addEventListener('abort', () => controller.abort(), { once: true });
   }
   try {
-    const response = await fetch(url.toString(), { signal: controller.signal });
+    const response = await fetch(url.toString(), {
+      headers: { ...(await getAuthHeader()) },
+      signal: controller.signal,
+    });
     if (!response.ok) {
       return { ok: false, venueIds: [], artistSlugs: [], count: 0, warning: `agent ${response.status}` };
     }
@@ -716,7 +755,7 @@ export async function fetchFeed({ from, days = 7, signal, timeoutMs = 12_000 } =
 /**
  * Fetch AI-recommended events for the HomeScreen "Rekommenderat" section — T0056.
  *
- * GET /agent/recommended?client_user_id=<uuid>&limit=<int>
+ * GET /agent/recommended?limit=<int>  (Authorization: Bearer <jwt>)
  *
  * Returns EventCard[] ranked by the user's personalization signals (followed
  * venues, followed artists, onboarding categories, recency), with rank reasons.
@@ -726,8 +765,6 @@ export async function fetchFeed({ from, days = 7, signal, timeoutMs = 12_000 } =
 export async function fetchRecommendedEvents({ limit = 10, signal, timeoutMs = 12_000 } = {}) {
   const baseUrl = requireAgentBaseUrl();
   const url = new URL(`${baseUrl}/agent/recommended`);
-  const client_user_id = await getOrCreateAnonUserId();
-  url.searchParams.set('client_user_id', client_user_id);
   url.searchParams.set('limit', String(limit));
 
   const controller = new AbortController();
@@ -739,7 +776,10 @@ export async function fetchRecommendedEvents({ limit = 10, signal, timeoutMs = 1
 
   let response;
   try {
-    response = await fetch(url.toString(), { signal: controller.signal });
+    response = await fetch(url.toString(), {
+      headers: { ...(await getAuthHeader()) },
+      signal: controller.signal,
+    });
   } finally {
     clearTimeout(timer);
   }
@@ -935,9 +975,7 @@ export async function shareSession({
   } catch (_err) {
     return { ok: false, warning: 'config' };
   }
-  const client_user_id = await getOrCreateAnonUserId();
   const body = {
-    client_user_id,
     query: typeof query === 'string' ? query : '',
   };
   if (sessionId) body.session_id = sessionId;
@@ -955,7 +993,10 @@ export async function shareSession({
   try {
     response = await fetch(`${baseUrl}/agent/share`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: {
+        'Content-Type': 'application/json',
+        ...(await getAuthHeader()),
+      },
       body: JSON.stringify(body),
       signal: controller.signal,
     });
@@ -1141,8 +1182,8 @@ export function fetchEventIcs(eventId, clientUserId) {
 /**
  * Persist the Expo push token and follow-push opt-in flag — T0059.
  *
- * POST /agent/push-token
- *   body: { client_user_id, push_token?: string | null,
+ * POST /agent/push-token  (Authorization: Bearer <jwt>)
+ *   body: { push_token?: string | null,
  *           follow_push_enabled?: boolean }
  *
  * Backend (08-Agent/server.ts) writes to
@@ -1172,8 +1213,7 @@ export async function registerPushToken({
   } catch (_err) {
     return { ok: false, warning: 'config' };
   }
-  const client_user_id = await getOrCreateAnonUserId();
-  const body = { client_user_id };
+  const body = {};
   if (pushToken !== undefined) {
     body.push_token =
       pushToken === null || (typeof pushToken === 'string' && pushToken.trim() === '')
@@ -1195,7 +1235,10 @@ export async function registerPushToken({
   try {
     const response = await fetch(`${baseUrl}/agent/push-token`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: {
+        'Content-Type': 'application/json',
+        ...(await getAuthHeader()),
+      },
       body: JSON.stringify(body),
       signal: controller.signal,
     });
@@ -1232,7 +1275,6 @@ export async function setNotificationPrefs({
   } catch (_err) {
     return { ok: false, warning: 'config' };
   }
-  const client_user_id = await getOrCreateAnonUserId();
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), timeoutMs);
   if (signal) {
@@ -1242,8 +1284,11 @@ export async function setNotificationPrefs({
   try {
     const response = await fetch(`${baseUrl}/agent/notification-prefs`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ client_user_id, entity_type: entityType, entity_id: entityId, level }),
+      headers: {
+        'Content-Type': 'application/json',
+        ...(await getAuthHeader()),
+      },
+      body: JSON.stringify({ entity_type: entityType, entity_id: entityId, level }),
       signal: controller.signal,
     });
     if (!response.ok) {
@@ -1268,7 +1313,6 @@ export async function getNotificationPrefs({ signal, timeoutMs = 4_000 } = {}) {
   } catch (_err) {
     return { notification_prefs: {} };
   }
-  const client_user_id = await getOrCreateAnonUserId();
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), timeoutMs);
   if (signal) {
@@ -1277,8 +1321,11 @@ export async function getNotificationPrefs({ signal, timeoutMs = 4_000 } = {}) {
   }
   try {
     const response = await fetch(
-      `${baseUrl}/agent/notification-prefs?client_user_id=${encodeURIComponent(client_user_id)}`,
-      { signal: controller.signal }
+      `${baseUrl}/agent/notification-prefs`,
+      {
+        headers: { ...(await getAuthHeader()) },
+        signal: controller.signal,
+      }
     );
     if (!response.ok) {
       return { notification_prefs: {} };
@@ -1296,7 +1343,7 @@ export async function getNotificationPrefs({ signal, timeoutMs = 4_000 } = {}) {
  * Fetch pre-rendered agent intent slots for the HomeScreen "Förslag från din
  * agent" section — T0060 / Phase 1 retention.
  *
- * GET /agent/cached-recommendations?client_user_id=<uuid>&limit=<int>
+ * GET /agent/cached-recommendations?limit=<int>  (Authorization: Bearer <jwt>)
  *
  * Returns up to `limit` slots, each pre-resolved with up to 2 EventCards:
  *   {
@@ -1320,11 +1367,8 @@ export async function fetchCachedRecommendations({
   signal,
   timeoutMs = 12_000,
 } = {}) {
-  const { getOrCreateAnonUserId } = await import('./storage');
   const baseUrl = requireAgentBaseUrl();
   const url = new URL(`${baseUrl}/agent/cached-recommendations`);
-  const clientUserId = await getOrCreateAnonUserId();
-  url.searchParams.set('client_user_id', clientUserId);
   url.searchParams.set('limit', String(limit));
 
   const controller = new AbortController();
@@ -1336,7 +1380,10 @@ export async function fetchCachedRecommendations({
 
   let response;
   try {
-    response = await fetch(url.toString(), { signal: controller.signal });
+    response = await fetch(url.toString(), {
+      headers: { ...(await getAuthHeader()) },
+      signal: controller.signal,
+    });
   } catch (_err) {
     clearTimeout(timer);
     // Network error → return empty so the section hides itself.
@@ -1514,7 +1561,7 @@ export async function fetchCuratedCollections({
 /**
  * Fetch the user's distinct recent chat queries — T0071 / Phase 1 retention.
  *
- * GET /agent/recent-queries?client_user_id=<uuid>&limit=<int>
+ * GET /agent/recent-queries?limit=<int>  (Authorization: Bearer <jwt>)
  *
  * Returns an array of { id, query_text, last_used_at } for the "Dina senaste
  * sökningar" section on HomeScreen. Mirrors the fetchCachedRecommendations
@@ -1527,11 +1574,8 @@ export async function fetchRecentQueries({
   signal,
   timeoutMs = 12_000,
 } = {}) {
-  const { getOrCreateAnonUserId } = await import('./storage');
   const baseUrl = requireAgentBaseUrl();
   const url = new URL(`${baseUrl}/agent/recent-queries`);
-  const clientUserId = await getOrCreateAnonUserId();
-  url.searchParams.set('client_user_id', clientUserId);
   url.searchParams.set('limit', String(limit));
 
   const controller = new AbortController();
@@ -1543,7 +1587,10 @@ export async function fetchRecentQueries({
 
   let response;
   try {
-    response = await fetch(url.toString(), { signal: controller.signal });
+    response = await fetch(url.toString(), {
+      headers: { ...(await getAuthHeader()) },
+      signal: controller.signal,
+    });
   } catch (_err) {
     clearTimeout(timer);
     // Network error → return empty so the section hides itself.
@@ -1568,7 +1615,7 @@ export async function fetchRecentQueries({
 /**
  * Fetch the user's saved events — T0054 / Phase 1 retention.
  *
- * GET /agent/saved?client_user_id=<uuid>&limit=<int>
+ * GET /agent/saved?limit=<int>  (Authorization: Bearer <jwt>)
  *
  * Returns EventCard[] sorted by saved_at DESC (most recently saved first).
  * Reuses the same EventCard → legacy-shape mapping as fetchFeed so the
@@ -1577,8 +1624,6 @@ export async function fetchRecentQueries({
 export async function fetchSavedEvents({ limit = 50, signal, timeoutMs = 12_000 } = {}) {
   const baseUrl = requireAgentBaseUrl();
   const url = new URL(`${baseUrl}/agent/saved`);
-  const client_user_id = await getOrCreateAnonUserId();
-  url.searchParams.set('client_user_id', client_user_id);
   url.searchParams.set('limit', String(limit));
 
   const controller = new AbortController();
@@ -1590,7 +1635,10 @@ export async function fetchSavedEvents({ limit = 50, signal, timeoutMs = 12_000 
 
   let response;
   try {
-    response = await fetch(url.toString(), { signal: controller.signal });
+    response = await fetch(url.toString(), {
+      headers: { ...(await getAuthHeader()) },
+      signal: controller.signal,
+    });
   } finally {
     clearTimeout(timer);
   }
@@ -1650,4 +1698,72 @@ export async function fetchSavedEvents({ limit = 50, signal, timeoutMs = 12_000 
   });
 
   return { events };
+}
+
+/**
+ * GDPR / Apple §5.1.1(v) account-deletion (Fas 2.5).
+ *
+ * DELETE /agent/account  (Authorization: Bearer <jwt>)
+ *
+ * Server behavior:
+ *   - Hard-deletes the auth.users row.
+ *   - DB-level ON DELETE CASCADE foreign keys remove every user-scoped
+ *     row whose client_user_id is UUID (user_interactions, user_profiles,
+ *     agent_sessions, notifications, cached_recommendations).
+ *   - Explicit DELETE on user_preferences (TEXT-keyed, not FK-covered)
+ *     happens before the auth.users removal.
+ *
+ * Client responsibilities after a successful delete:
+ *   1. clearAuthSession() — wipe the persisted Bearer so subsequent calls
+ *      don't accidentally hit a now-gone user's data.
+ *   2. analyticsClient.logout() — drain the analytics queue and stop the
+ *      flush loop (mirrors handleLogout in ProfileScreen).
+ *   3. onLoggedOut() — flip the AppShell gate back to UserPicker.
+ *
+ * @param {{ signal?: AbortSignal, timeoutMs?: number }} [opts]
+ * @returns {Promise<{ ok: boolean, status?: number, error?: string }>}
+ */
+export async function deleteAccount({ signal, timeoutMs = 12_000 } = {}) {
+  const baseUrl = requireAgentBaseUrl();
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), timeoutMs);
+  if (signal) {
+    if (signal.aborted) controller.abort();
+    else signal.addEventListener('abort', () => controller.abort(), { once: true });
+  }
+  let response;
+  try {
+    response = await fetch(`${baseUrl}/agent/account`, {
+      method: 'DELETE',
+      headers: {
+        'Content-Type': 'application/json',
+        ...(await getAuthHeader()),
+      },
+      signal: controller.signal,
+    });
+  } catch (err) {
+    clearTimeout(timer);
+    const msg = err && typeof err === 'object' && 'message' in err
+      ? String((err).message)
+      : 'network_error';
+    return { ok: false, error: msg };
+  }
+  clearTimeout(timer);
+
+  if (response.status === 401) {
+    // No session / stale token — the user is effectively already logged out.
+    // Caller treats this as success (the account deletion is moot; we just
+    // need to clear local state).
+    return { ok: true, status: 401 };
+  }
+  if (!response.ok) {
+    let parsed = null;
+    try { parsed = await response.json(); } catch { /* ignore */ }
+    return {
+      ok: false,
+      status: response.status,
+      error: parsed?.message || parsed?.error || `delete_failed_${response.status}`,
+    };
+  }
+  return { ok: true, status: response.status };
 }

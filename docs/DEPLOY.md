@@ -149,22 +149,25 @@ icons, attribution migration). The following remain out of scope and
 must be addressed before any non-developer user touches the deployed
 endpoint at scale:
 
-1. **Authentication for `/agent/chat`.** A Bearer-token admin guard
-   now protects the operator endpoints (`/agent/metrics`,
-   `/agent/experiments/personalization`). `/agent/chat` still
-   accepts an opaque `client_user_id` UUID with no proof of identity.
-   A global attacker who discovers the URL can still send feedback
-   and impressions under arbitrary user ids; the rate limiter
-   (item 2) bounds the damage, but real auth (Phase 2) is still
-   unscheduled.
+1. **Authentication for `/agent/chat`.** **Done in Fas 1–5 (Phase 1).**
+   `/agent/chat` and every other user-scoped endpoint now require
+   `Authorization: Bearer <jwt>` resolved by `08-Agent/middleware/requireUser.ts`.
+   Public read-only endpoints (`/agent/feed`, `/agent/live-now`,
+   `/agent/suggested-prompts`, `/agent/curated-collections`,
+   `/agent/venues/:id/events`, `events/:id/calendar.ics`, `/s/:hash`)
+   deliberately stay open for cold-start UX and share-screen rendering.
+   See **§11. Authentication** below for the full provider matrix.
 2. **Rate limiting.** Shipped as `08-Agent/middleware/rateLimit.ts`
    (token-bucket, in-memory). `/agent/chat`, `/agent/feedback`, and
    `/agent/outbound` are limited per `client_user_id` (5 rps, burst
    20). `/agent/feed`, `/agent/metrics`, and
    `/agent/experiments/personalization` are limited per IP (10 rps,
    burst 40). `/agent/health` is unlimited (liveness probes must
-   not 429). In-memory means multi-instance scale-out would need a
-   shared store (Redis/Upstash) — explicitly listed as out of scope.
+   not 429). `/agent/auth/apple` uses a dedicated IP-keyed limiter
+   (10 rps, burst 30) — Apple Sign In is a cold-start path and we
+   don't want a stuck modal to feel broken. In-memory means
+   multi-instance scale-out would need a shared store (Redis/Upstash)
+   — explicitly listed as out of scope.
 3. **Monitoring / alerting.** Boot logs are visible via `fly logs`,
    but there is no uptime check, no error-rate metric, no PagerDuty
    integration. The 429 counter is not exported.
@@ -213,3 +216,76 @@ the deploy infra files and redeploy.
 | `.dockerignore`  | Build-context exclusions.                       |
 | `fly.toml`       | Fly service config (port, region, healthcheck). |
 | `.env.example`   | Full variable inventory grouped by subsystem.   |
+
+---
+
+## 11. Authentication (Phase 1 — Fas 1–5 + Fas 2.5)
+
+Phase 1 ships three auth paths. All three resolve to a Supabase
+`auth.users` row; from there on every user-scoped endpoint accepts the
+returned access_token via `Authorization: Bearer <jwt>` and the agent
+reads `req.user.id` to enforce ownership.
+
+### 11.1 Magic link (default)
+
+| Surface | Files |
+|---|---|
+| Wire | `06-UI/services/supabaseAuthClient.js` (send + verify) |
+| AppShell wiring | `06-UI/AppShell.js` (deep-link listener + `MagicLinkHandlerScreen`) |
+| Backend | Supabase's built-in `auth.signInWithOtp` + `auth.verifyOtp` |
+| Persisted session | `eventpulse.auth_session` in AsyncStorage |
+
+### 11.2 Apple Sign In (Fas 2.5, iOS-only)
+
+Apple's native Sign In sheet is exposed via `expo-apple-authentication`.
+The identity_token is forwarded to our backend, which delegates JWT
+verification + auth.users upsert to Supabase's
+`auth.signInWithIdToken({ provider: 'apple' })`. The resolved session
+comes back in the same wire shape as magic-link, so `saveAuthSession`
+handles it identically.
+
+| Surface | Files |
+|---|---|
+| Wire | `06-UI/services/supabaseAuthClient.js` (`signInWithApple`) |
+| UI | `06-UI/screens/LoginScreen.js` (Fortsätt med Apple-knappen) |
+| Backend | `POST /agent/auth/apple` in `08-Agent/server.ts` |
+| Rate limit | `appleAuthLimiter` (10 rps, burst 30, IP-keyed) |
+
+### 11.3 Account deletion (Fas 2.5 / GDPR / Apple §5.1.1(v))
+
+Apple's App Store guidelines require that any app offering login
+provide a working in-app account-deletion flow. EventPulse ships this
+via:
+
+| Surface | Files |
+|---|---|
+| Wire | `06-UI/services/agentClient.js` (`deleteAccount`) |
+| UI | `06-UI/screens/ProfileScreen.js` (Radera konto + två-stegs bekräftelse) |
+| Backend | `DELETE /agent/account` in `08-Agent/server.ts` |
+| DB cascade | `05-Supabase/migrations/20260906-0001-account-deletion-cascade.sql` |
+
+Flow: user taps **Radera konto** → `Alert.alert` confirms the user
+understands the consequences → modal opens with a `TextInput` requiring
+the literal string **RADERA** to enable the submit button → submit
+POSTs `DELETE /agent/account` with `confirmation: 'DELETE'` → server
+explicitly deletes the user's `user_preferences` row (TEXT-keyed, not
+FK-covered) and then calls `auth.admin.deleteUser(userId)` →
+DB-level `ON DELETE CASCADE` foreign keys remove every user-scoped row
+whose `client_user_id` is UUID (`user_interactions`, `user_profiles`,
+`agent_sessions` (+ `agent_messages` via session_id FK), `notifications`,
+`cached_recommendations`). The client then clears the persisted
+session and flips back to UserPicker.
+
+Server validation mirrors the client UX: `DELETE /agent/account` returns
+400 when the body's `confirmation` field is present but not the literal
+string `'DELETE'`. Both checks are belt-and-braces — neither is
+optional.
+
+### 11.4 Out of scope (Phase 2)
+
+- Apple Sign In on Android (Apple only ships native Sign In for iOS).
+- Web OAuth flows (Google, Facebook).
+- 2FA.
+- Account export (JSON-zip download of the user's data).
+- Migration of UserPicker test profiles to real auth.users rows.
+

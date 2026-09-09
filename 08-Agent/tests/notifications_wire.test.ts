@@ -19,6 +19,17 @@ import { buildApp } from '../server';
 const USER_ID = '00000000-0000-0000-0000-000000000001';
 const NOTIF_ID = '99999999-9999-9999-9999-999999999999';
 
+// Phase 1 auth: identity comes from the Bearer header. The test verifier
+// resolves `test-jwt` to USER_ID; missing/wrong Bearer → 401.
+const TEST_BEARER = 'test-jwt';
+const bearerHeaders = (extra: Record<string, string> = {}): Record<string, string> => ({
+  ...extra,
+  Authorization: `Bearer ${TEST_BEARER}`,
+});
+const testVerify = async (token: string) => (token === TEST_BEARER
+  ? { id: USER_ID, email: 'test@example.com' }
+  : null);
+
 function makeMockSupabase(): SupabaseClient {
   // Permissive fallback: every chain resolves to an empty success.
   const chain: any = {
@@ -49,7 +60,7 @@ let baseUrl = '';
 let server: ReturnType<ReturnType<typeof buildApp>['listen']> | undefined;
 
 beforeAll(async () => {
-  const app = buildApp({ supabase: makeMockSupabase() });
+  const app = buildApp({ supabase: makeMockSupabase(), verify: testVerify });
   await new Promise<void>((resolve) => {
     server = app.listen(0, '127.0.0.1', () => resolve());
   });
@@ -62,18 +73,13 @@ afterAll(async () => {
 });
 
 describe('GET /agent/notifications', () => {
-  it('returns 400 on bad client_user_id', async () => {
-    const res = await fetch(`${baseUrl}/agent/notifications?client_user_id=not-a-uuid`);
-    expect(res.status).toBe(400);
-  });
-
-  it('returns 400 when client_user_id is missing', async () => {
+  it('returns 401 on missing Bearer token (Phase 1 auth gate)', async () => {
     const res = await fetch(`${baseUrl}/agent/notifications`);
-    expect(res.status).toBe(400);
+    expect(res.status).toBe(401);
   });
 
-  it('returns 200 with empty list on valid uuid', async () => {
-    const res = await fetch(`${baseUrl}/agent/notifications?client_user_id=${USER_ID}`);
+  it('returns 200 with empty list on a valid Bearer token', async () => {
+    const res = await fetch(`${baseUrl}/agent/notifications`, { headers: bearerHeaders() });
     expect(res.status).toBe(200);
     const body = await res.json();
     expect(body.notifications).toEqual([]);
@@ -81,20 +87,20 @@ describe('GET /agent/notifications', () => {
 });
 
 describe('POST /agent/notifications/read', () => {
-  it('returns 400 on bad client_user_id', async () => {
+  it('returns 401 on missing Bearer token (Phase 1 auth gate)', async () => {
     const res = await fetch(`${baseUrl}/agent/notifications/read`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ client_user_id: 'bad', notification_id: NOTIF_ID }),
+      body: JSON.stringify({ notification_id: NOTIF_ID }),
     });
-    expect(res.status).toBe(400);
+    expect(res.status).toBe(401);
   });
 
   it('returns 400 on bad notification_id', async () => {
     const res = await fetch(`${baseUrl}/agent/notifications/read`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ client_user_id: USER_ID, notification_id: 'bad' }),
+      headers: bearerHeaders({ 'Content-Type': 'application/json' }),
+      body: JSON.stringify({ notification_id: 'bad' }),
     });
     expect(res.status).toBe(400);
   });
@@ -102,8 +108,8 @@ describe('POST /agent/notifications/read', () => {
   it('returns 200 on valid input', async () => {
     const res = await fetch(`${baseUrl}/agent/notifications/read`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ client_user_id: USER_ID, notification_id: NOTIF_ID }),
+      headers: bearerHeaders({ 'Content-Type': 'application/json' }),
+      body: JSON.stringify({ notification_id: NOTIF_ID }),
     });
     expect(res.status).toBe(200);
     const body = await res.json();

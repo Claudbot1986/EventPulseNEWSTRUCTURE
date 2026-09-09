@@ -32,6 +32,7 @@ import { resolve, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 import { applyAiCompliance, checkAiStamp } from '../tools/ai_compliance.js';
+import sharp from 'sharp';
 
 // ── Env loading ──────────────────────────────────────────────────────────────
 const __filename = fileURLToPath(import.meta.url);
@@ -412,8 +413,39 @@ async function uploadAndPersist(
   }
 
   const { data: pub } = supabase.storage.from(STORAGE_BUCKET).getPublicUrl(stampedPath);
-  const imageUrl = pub?.publicUrl;
-  if (!imageUrl) throw new Error('No public URL returned for uploaded image');
+  const pngUrl = pub?.publicUrl;
+  if (!pngUrl) throw new Error('No public URL returned for uploaded image');
+
+  // ── WebP för UI-visning (2026-09-06) ──────────────────────────────────
+  // Samma pixelinnehåll som PNG-mastern, men ~10× mindre filstorlek.
+  // UI pekar på WebP:en; PNG-mastern finns kvar i import-stamped/ som
+  // backup (behövs om vi någonsin vill regenerera icke-WebP-varianter).
+  // Skippa WebP för JPEG-input: BFL returnerar bara PNG idag, men om vi
+  // någonsin byter provider och får JPEG är det bättre att låta original-
+  // formatet stå och bara konvertera PNG → WebP.
+  let imageUrl = pngUrl;
+  if (mime === 'image/png') {
+    try {
+      const webpBuffer = await sharp(buffer).webp({ quality: 80, effort: 4 }).toBuffer();
+      const webpPath = `import-stamped/${storagePath}.webp`;
+      const { error: webpErr } = await supabase.storage
+        .from(STORAGE_BUCKET)
+        .upload(webpPath, webpBuffer, {
+          contentType: 'image/webp',
+          upsert: true,
+          cacheControl: '31536000',
+        });
+      if (webpErr) {
+        // WebP-fel är inte fatalt — UI klarar sig med PNG-mastern.
+        console.warn(`[imageGen] webp upload misslyckades, behåller PNG-url (${webpErr.message})`);
+      } else {
+        const { data: webpPub } = supabase.storage.from(STORAGE_BUCKET).getPublicUrl(webpPath);
+        if (webpPub?.publicUrl) imageUrl = webpPub.publicUrl;
+      }
+    } catch (webpFail) {
+      console.warn(`[imageGen] webp-generering misslyckades, behåller PNG-url (${(webpFail as Error).message})`);
+    }
+  }
 
   // Update ALLA event-rader. Försök först med alla fält (migration applicerad).
   // Om migrationen INTE är applicerad ännu, falla tillbaka till image_url-only.

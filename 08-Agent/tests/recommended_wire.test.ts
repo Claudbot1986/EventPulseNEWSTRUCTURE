@@ -18,6 +18,17 @@ import { buildApp } from '../server';
 
 const TEST_UUID = 'c1c2c3c4-c5c6-c7c8-c9c0-c1c2c3c4c5c6';
 
+// Phase 1 auth: identity comes from the Bearer header. The test verifier
+// resolves `test-jwt` to TEST_UUID; missing/wrong Bearer → 401.
+const TEST_BEARER = 'test-jwt';
+const bearerHeaders = (extra: Record<string, string> = {}): Record<string, string> => ({
+  ...extra,
+  Authorization: `Bearer ${TEST_BEARER}`,
+});
+const testVerify = async (token: string) => (token === TEST_BEARER
+  ? { id: TEST_UUID, email: 'test@example.com' }
+  : null);
+
 function makeMockSupabase(opts: { eventCount?: number } = {}): SupabaseClient {
   const count = opts.eventCount ?? 5;
   const futureIso = '2099-01-01T19:30:00Z';
@@ -140,7 +151,7 @@ let baseUrl = '';
 let server: ReturnType<ReturnType<typeof buildApp>['listen']> | undefined;
 
 beforeAll(async () => {
-  const app = buildApp({ supabase: makeMockSupabase() });
+  const app = buildApp({ supabase: makeMockSupabase(), verify: testVerify });
   await new Promise<void>((resolve) => {
     server = app.listen(0, '127.0.0.1', () => resolve());
   });
@@ -153,39 +164,28 @@ afterAll(async () => {
 });
 
 describe('GET /agent/recommended — T0056', () => {
-  it('returns 200 with an events array for a valid client_user_id', async () => {
-    const res = await fetch(`${baseUrl}/agent/recommended?client_user_id=${TEST_UUID}`);
+  it('returns 200 with an events array for a valid Bearer token', async () => {
+    const res = await fetch(`${baseUrl}/agent/recommended`, { headers: bearerHeaders() });
     expect(res.ok).toBe(true);
     expect(res.status).toBe(200);
     const body = await res.json();
     expect(Array.isArray(body.events)).toBe(true);
   });
 
-  it('returns 400 when client_user_id is missing', async () => {
+  it('returns 401 when the Bearer token is missing (Phase 1 auth gate)', async () => {
     const res = await fetch(`${baseUrl}/agent/recommended`);
-    expect(res.status).toBe(400);
-  });
-
-  it('returns 400 when client_user_id is not a UUID', async () => {
-    const res = await fetch(`${baseUrl}/agent/recommended?client_user_id=not-a-uuid`);
-    expect(res.status).toBe(400);
-    const body = await res.json();
-    expect(body.error).toContain('client_user_id must be a uuid');
+    expect(res.status).toBe(401);
   });
 
   it('respects the limit parameter (default 10, max 20)', async () => {
-    const res = await fetch(
-      `${baseUrl}/agent/recommended?client_user_id=${TEST_UUID}&limit=3`
-    );
+    const res = await fetch(`${baseUrl}/agent/recommended?limit=3`, { headers: bearerHeaders() });
     expect(res.ok).toBe(true);
     const body = await res.json();
     expect(body.events.length).toBeLessThanOrEqual(3);
   });
 
   it('caps limit at 20', async () => {
-    const res = await fetch(
-      `${baseUrl}/agent/recommended?client_user_id=${TEST_UUID}&limit=999`
-    );
+    const res = await fetch(`${baseUrl}/agent/recommended?limit=999`, { headers: bearerHeaders() });
     expect(res.ok).toBe(true);
     const body = await res.json();
     expect(body.events.length).toBeLessThanOrEqual(20);
@@ -200,6 +200,7 @@ describe('GET /agent/recommended — T0056', () => {
           }),
         }),
       } as unknown as SupabaseClient,
+      verify: testVerify,
     });
     const srv = await new Promise<ReturnType<ReturnType<typeof buildApp>['listen']>>((resolve, reject) => {
       const s = brokenApp.listen(0, '127.0.0.1', () => resolve(s));
@@ -207,7 +208,8 @@ describe('GET /agent/recommended — T0056', () => {
     });
     const addr = srv.address() as AddressInfo;
     const res = await fetch(
-      `http://127.0.0.1:${addr.port}/agent/recommended?client_user_id=${TEST_UUID}`
+      `http://127.0.0.1:${addr.port}/agent/recommended`,
+      { headers: bearerHeaders() }
     );
     expect(res.status).toBe(500);
     await new Promise<void>((r) => srv.close(() => r()));

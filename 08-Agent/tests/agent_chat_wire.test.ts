@@ -116,8 +116,27 @@ function makeMockSupabase(opts: { rowCount?: number } = {}): SupabaseClient {
 let baseUrl = '';
 let server: ReturnType<ReturnType<typeof buildApp>['listen']> | undefined;
 
+// Phase 1 auth: every request must carry a Bearer token. The wire tests
+// share a single test verifier — a stub `verify` that accepts any non-empty
+// token and resolves to a stable test user. Tests that exercise the
+// "rejects bad client_user_id" code path now need to set up the Bearer
+// header first; the server reads identity from req.user.id and ignores
+// any legacy body.client_user_id.
+const TEST_USER_ID = '00000000-0000-0000-0000-0000000000aa';
+const TEST_BEARER = 'test-jwt';
+const bearerHeaders = (extra: Record<string, string> = {}): Record<string, string> => ({
+  ...extra,
+  Authorization: `Bearer ${TEST_BEARER}`,
+});
+const testVerify = async (token: string) => (token === TEST_BEARER
+  ? { id: TEST_USER_ID, email: 'test@example.com' }
+  : null);
+
 beforeAll(async () => {
-  const app = buildApp({ supabase: makeMockSupabase() });
+  const app = buildApp({
+    supabase: makeMockSupabase(),
+    verify: testVerify,
+  });
   await new Promise<void>((resolve) => {
     server = app.listen(0, '127.0.0.1', () => resolve());
   });
@@ -137,9 +156,8 @@ describe('POST /agent/chat — magic query (MASTERPLAN §1 acceptance)', () => {
   it('returns ≥3 cards with non-empty venue_name for the magic query', async () => {
     const res = await fetch(`${baseUrl}/agent/chat`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: bearerHeaders({ 'Content-Type': 'application/json' }),
       body: JSON.stringify({
-        client_user_id: uuid('00000000-0000-0000-0000-000000000001'),
         // The magic slice: live musik, fredag kväll, under 400 kr, med en
         // vän, inte arena. The intent is dense, but the agent should still
         // run the pipeline and return cards.
@@ -169,11 +187,8 @@ describe('POST /agent/chat — magic query (MASTERPLAN §1 acceptance)', () => {
   it('every card has reasons[] and a finite score', async () => {
     const res = await fetch(`${baseUrl}/agent/chat`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        client_user_id: uuid('00000000-0000-0000-0000-000000000002'),
-        message: 'konsert ikväll med en kompis',
-      }),
+      headers: bearerHeaders({ 'Content-Type': 'application/json' }),
+      body: JSON.stringify({ message: 'konsert ikväll med en kompis' }),
     });
     expect(res.status).toBe(200);
     const body = (await res.json()) as {
@@ -206,11 +221,8 @@ describe('POST /agent/chat — mixed-initiative orchestration (WS-C)', () => {
     // an empty cards array (D1 defect). After WS-C it MUST return cards.
     const res = await fetch(`${baseUrl}/agent/chat`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        client_user_id: uuid('00000000-0000-0000-0000-000000000003'),
-        message: 'något i Stockholm ikväll',
-      }),
+      headers: bearerHeaders({ 'Content-Type': 'application/json' }),
+      body: JSON.stringify({ message: 'något i Stockholm ikväll' }),
     });
     expect(res.status).toBe(200);
     const body = (await res.json()) as {
@@ -228,9 +240,8 @@ describe('POST /agent/chat — mixed-initiative orchestration (WS-C)', () => {
   it('attaches at most ONE clarifying question (new clarifying_question field)', async () => {
     const res = await fetch(`${baseUrl}/agent/chat`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: bearerHeaders({ 'Content-Type': 'application/json' }),
       body: JSON.stringify({
-        client_user_id: uuid('00000000-0000-0000-0000-000000000004'),
         // Sparse intent → one question possible. We assert the shape:
         // either null or a single object (not an array).
         message: 'något på fredag',
@@ -254,11 +265,8 @@ describe('POST /agent/chat — mixed-initiative orchestration (WS-C)', () => {
   it('omits the question when the intent is already dense (music + evening + kompis)', async () => {
     const res = await fetch(`${baseUrl}/agent/chat`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        client_user_id: uuid('00000000-0000-0000-0000-000000000005'),
-        message: 'konsert ikväll med kompis',
-      }),
+      headers: bearerHeaders({ 'Content-Type': 'application/json' }),
+      body: JSON.stringify({ message: 'konsert ikväll med kompis' }),
     });
     expect(res.status).toBe(200);
     const body = (await res.json()) as {
@@ -279,9 +287,8 @@ describe('POST /agent/chat — envelope shape', () => {
   it('keeps the existing keys stable (session_id, reply, cards, warnings)', async () => {
     const res = await fetch(`${baseUrl}/agent/chat`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: bearerHeaders({ 'Content-Type': 'application/json' }),
       body: JSON.stringify({
-        client_user_id: uuid('00000000-0000-0000-0000-000000000006'),
         session_id: uuid('00000000-0000-0000-0000-0000000000aa'),
         message: 'konsert ikväll',
       }),
@@ -297,26 +304,33 @@ describe('POST /agent/chat — envelope shape', () => {
     expect(Array.isArray(body.warnings)).toBe(true);
   });
 
-  it('rejects a non-uuid client_user_id with 400', async () => {
+  it('rejects a missing Authorization header with 401', async () => {
+    // Phase 1: identity comes from the Bearer token, NOT the body.
     const res = await fetch(`${baseUrl}/agent/chat`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        client_user_id: 'not-a-uuid',
-        message: 'konsert ikväll',
-      }),
+      body: JSON.stringify({ message: 'konsert ikväll' }),
     });
-    expect(res.status).toBe(400);
+    expect(res.status).toBe(401);
+  });
+
+  it('rejects an invalid Bearer token with 401', async () => {
+    const res = await fetch(`${baseUrl}/agent/chat`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: 'Bearer wrong-jwt',
+      },
+      body: JSON.stringify({ message: 'konsert ikväll' }),
+    });
+    expect(res.status).toBe(401);
   });
 
   it('rejects an empty message with 400', async () => {
     const res = await fetch(`${baseUrl}/agent/chat`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        client_user_id: uuid('00000000-0000-0000-0000-000000000007'),
-        message: '',
-      }),
+      headers: bearerHeaders({ 'Content-Type': 'application/json' }),
+      body: JSON.stringify({ message: '' }),
     });
     expect(res.status).toBe(400);
   });
@@ -330,9 +344,8 @@ describe('POST /agent/outbound — per-organizer outbound attribution', () => {
   it('accepts a valid payload and returns ok', async () => {
     const res = await fetch(`${baseUrl}/agent/outbound`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: bearerHeaders({ 'Content-Type': 'application/json' }),
       body: JSON.stringify({
-        client_user_id: uuid('00000000-0000-0000-0000-000000000010'),
         event_id: uuid('00000000-0000-0000-0000-000000000011'),
         ticket_url: validUrl,
         source: 'konserthuset',
@@ -343,25 +356,26 @@ describe('POST /agent/outbound — per-organizer outbound attribution', () => {
     expect(body.ok).toBe(true);
   });
 
-  it('rejects a bad client_user_id with 400', async () => {
+  it('rejects a missing Bearer token with 401', async () => {
+    // client_user_id is no longer required — the server reads req.user.id.
+    // The old "bad client_user_id" case now manifests as a 401 when the
+    // Bearer header is missing or wrong.
     const res = await fetch(`${baseUrl}/agent/outbound`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        client_user_id: 'not-a-uuid',
         event_id: uuid('00000000-0000-0000-0000-000000000011'),
         ticket_url: validUrl,
       }),
     });
-    expect(res.status).toBe(400);
+    expect(res.status).toBe(401);
   });
 
   it('rejects a bad event_id with 400', async () => {
     const res = await fetch(`${baseUrl}/agent/outbound`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: bearerHeaders({ 'Content-Type': 'application/json' }),
       body: JSON.stringify({
-        client_user_id: uuid('00000000-0000-0000-0000-000000000010'),
         event_id: 'not-a-uuid',
         ticket_url: validUrl,
       }),
@@ -372,9 +386,8 @@ describe('POST /agent/outbound — per-organizer outbound attribution', () => {
   it('rejects a non-http ticket_url with 400', async () => {
     const res = await fetch(`${baseUrl}/agent/outbound`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: bearerHeaders({ 'Content-Type': 'application/json' }),
       body: JSON.stringify({
-        client_user_id: uuid('00000000-0000-0000-0000-000000000010'),
         event_id: uuid('00000000-0000-0000-0000-000000000011'),
         ticket_url: 'javascript:alert(1)',
       }),

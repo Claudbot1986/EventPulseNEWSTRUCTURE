@@ -10,12 +10,35 @@
     ]
   },
   "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 \"/Users/claudgashi/EventPulse/.claude/hooks/no-branches.py\"",
+            "statusMessage": "Branch-vakt…"
+          }
+        ]
+      }
+    ],
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 \"/Users/claudgashi/EventPulse/.claude/hooks/simple-swedish-options.py\"",
+            "statusMessage": "Alternativ-vakt…"
+          }
+        ]
+      }
+    ],
     "Stop": [
       {
         "hooks": [
           {
             "type": "command",
-            "command": "python3 \"/Volumes/2TB filer/NEWSTRUCTURE-COPY/.claude/hooks/svarsformat-guard.py\"",
+            "command": "python3 \"/Users/claudgashi/EventPulse/.claude/hooks/svarsformat-guard.py\"",
             "statusMessage": "Svarsformat-vakt…"
           }
         ]

@@ -31,9 +31,11 @@ import {
   ScrollView,
   Platform,
   ActionSheetIOS,
+  Modal,
+  TextInput,
 } from 'react-native';
 
-import { getItem, setItem } from '../services/storage';
+import { getItem, setItem, loadAuthSession, clearAuthSession } from '../services/storage';
 import { analyticsClient } from '../services/analyticsClient';
 import {
   registerPushToken,
@@ -41,6 +43,7 @@ import {
   followEntity,
   getNotificationPrefs,
   setNotificationPrefs,
+  deleteAccount,
 } from '../services/agentClient';
 
 const FOLLOW_PUSH_ENABLED_KEY = 'eventpulse.follow_push_enabled';
@@ -147,6 +150,16 @@ export default function ProfileScreen({ onLoggedOut }) {
   // at login). Null while loading or when no profile is active.
   const [accountUser, setAccountUser] = useState(null);
 
+  // Fas 2.5 — Radera konto. Only relevant for real auth sessions (magic
+  // link / Apple). UserPicker test profiles are device-scoped and never
+  // created an auth.users row, so deleting "the account" doesn't apply.
+  const [authSession, setAuthSession] = useState(null);
+  const [authSessionLoaded, setAuthSessionLoaded] = useState(false);
+  const [deleteModalVisible, setDeleteModalVisible] = useState(false);
+  const [deleteConfirmText, setDeleteConfirmText] = useState('');
+  const [deleteBusy, setDeleteBusy] = useState(false);
+  const [deleteError, setDeleteError] = useState('');
+
   // T0072 — followed venues/artists state. Refreshed on mount; long-press
   // on a chip opens the OS action sheet with "Sluta följ". Optimistic UI:
   // chip vanishes immediately, server confirms in the background and rolls
@@ -180,6 +193,26 @@ export default function ProfileScreen({ onLoggedOut }) {
         setAccountUser({ id, label: meta?.label ?? id });
       })
       .catch(() => {});
+    return () => {
+      alive = false;
+    };
+  }, []);
+
+  // Fas 2.5 — load the persisted Supabase auth session (if any). When the
+  // user signed in via magic link or Apple, this is non-null and we render
+  // the "Radera konto" button. UserPicker test profiles keep this null
+  // because their identity is device-scoped, not auth-scoped.
+  useEffect(() => {
+    let alive = true;
+    loadAuthSession()
+      .then((s) => {
+        if (!alive) return;
+        setAuthSession(s);
+        setAuthSessionLoaded(true);
+      })
+      .catch(() => {
+        if (alive) setAuthSessionLoaded(true);
+      });
     return () => {
       alive = false;
     };
@@ -352,6 +385,77 @@ export default function ProfileScreen({ onLoggedOut }) {
     onLoggedOut?.();
   }, [onLoggedOut]);
 
+  // Fas 2.5 / Apple §5.1.1(v) — Radera konto.
+  //
+  // Two-step UX: first tap → Alert.alert with confirm/cancel. On confirm
+  // we open a Modal with a TextInput where the user must type the literal
+  // string "RADERA" before the submit button enables. The Modal also
+  // sends `confirmation: 'DELETE'` on the wire, so the server enforces
+  // the same check independently.
+  //
+  // On success: clearAuthSession (wipe Bearer) → analyticsClient.logout
+  // (drain queue) → onLoggedOut (flip shell to UserPicker). The cascading
+  // DB deletes on the server have already wiped user-scoped data.
+  const openDeleteModal = useCallback(() => {
+    setDeleteConfirmText('');
+    setDeleteError('');
+    setDeleteModalVisible(true);
+  }, []);
+
+  const closeDeleteModal = useCallback(() => {
+    if (deleteBusy) return; // ignore dismiss while the request is in flight
+    setDeleteModalVisible(false);
+    setDeleteConfirmText('');
+    setDeleteError('');
+  }, [deleteBusy]);
+
+  const handleDeleteAccount = useCallback(async () => {
+    if (deleteConfirmText !== 'RADERA') return;
+    setDeleteBusy(true);
+    setDeleteError('');
+    const result = await deleteAccount();
+    setDeleteBusy(false);
+    if (!result.ok) {
+      // Keep the modal open so the user can retry. The server may have
+      // already wiped the row in some failure modes — surface a clear
+      // "the deletion may have already happened" hint if status is 401
+      // (auth.users gone) so we don't trap the user in a retry loop.
+      const baseMsg = 'Kunde inte radera kontot';
+      const detail = result.error || `okänt fel (status ${result.status ?? '?'})`;
+      setDeleteError(`${baseMsg}: ${detail}`);
+      return;
+    }
+    setDeleteModalVisible(false);
+    setDeleteConfirmText('');
+    try {
+      await clearAuthSession();
+    } catch (_err) {
+      // Wipe the in-memory state regardless so the Bearer cannot haunt
+      // a re-render. Storage hiccup is logged silently; the user is
+      // about to be sent to UserPicker anyway.
+    }
+    try {
+      await analyticsClient.logout();
+    } catch (_err) {
+      // Best-effort drain.
+    }
+    onLoggedOut?.();
+  }, [deleteConfirmText, onLoggedOut]);
+
+  const handleDeleteFirstTap = useCallback(() => {
+    Alert.alert(
+      'Radera konto?',
+      'Det här tar bort ditt konto och allt du har sparat — sparade events, ' +
+        'följda platser, notis-inställningar. Åtgärden går inte att ångra.',
+      [
+        { text: 'Avbryt', style: 'cancel' },
+        { text: 'Fortsätt', style: 'destructive', onPress: openDeleteModal },
+      ]
+    );
+  }, [openDeleteModal]);
+
+  const canSubmitDelete = deleteConfirmText === 'RADERA' && !deleteBusy;
+
   const totalFollowed = followedVenues.length + followedArtists.length;
 
   return (
@@ -383,6 +487,26 @@ export default function ProfileScreen({ onLoggedOut }) {
               <Text style={styles.logoutButtonText}>Logga ut</Text>
             </Pressable>
           </View>
+          {authSessionLoaded && authSession ? (
+            <View style={styles.deleteRow}>
+              <Text style={styles.deleteRowDescription}>
+                Tar bort kontot permanent — allt du sparat, följt och alla
+                notis-inställningar försvinner.
+              </Text>
+              <Pressable
+                style={({ pressed }) => [
+                  styles.deleteButton,
+                  pressed && styles.linkButtonPressed,
+                ]}
+                onPress={handleDeleteFirstTap}
+                accessibilityRole="button"
+                accessibilityLabel="Radera konto"
+                testID="delete-account-button"
+              >
+                <Text style={styles.deleteButtonText}>Radera konto</Text>
+              </Pressable>
+            </View>
+          ) : null}
         </View>
       )}
 
@@ -467,6 +591,69 @@ export default function ProfileScreen({ onLoggedOut }) {
       >
         <Text style={styles.linkButtonText}>Om EventPulse</Text>
       </Pressable>
+
+      <Modal
+        visible={deleteModalVisible}
+        transparent
+        animationType="fade"
+        onRequestClose={closeDeleteModal}
+      >
+        <View style={styles.modalBackdrop}>
+          <View style={styles.modalCard}>
+            <Text style={styles.modalTitle}>Radera konto permanent?</Text>
+            <Text style={styles.modalBody}>
+              Skriv RADERA med stora bokstäver för att bekräfta. Det går inte
+              att ångra — allt du sparat försvinner.
+            </Text>
+            <TextInput
+              style={styles.modalInput}
+              value={deleteConfirmText}
+              onChangeText={setDeleteConfirmText}
+              placeholder="RADERA"
+              placeholderTextColor={TOKENS.color.textSoft}
+              autoCapitalize="characters"
+              autoCorrect={false}
+              editable={!deleteBusy}
+              accessibilityLabel="Bekräftelsetecken"
+              testID="delete-account-confirm-input"
+            />
+            {deleteError ? (
+              <Text style={styles.modalError}>{deleteError}</Text>
+            ) : null}
+            <View style={styles.modalActions}>
+              <Pressable
+                style={({ pressed }) => [
+                  styles.modalSecondary,
+                  pressed && styles.linkButtonPressed,
+                ]}
+                onPress={closeDeleteModal}
+                disabled={deleteBusy}
+                accessibilityRole="button"
+              >
+                <Text style={styles.modalSecondaryLabel}>Avbryt</Text>
+              </Pressable>
+              <Pressable
+                style={({ pressed }) => [
+                  styles.modalDanger,
+                  !canSubmitDelete && styles.modalDangerDisabled,
+                  pressed && canSubmitDelete && styles.linkButtonPressed,
+                ]}
+                onPress={handleDeleteAccount}
+                disabled={!canSubmitDelete}
+                accessibilityRole="button"
+                accessibilityLabel="Bekräfta radering"
+                testID="delete-account-confirm-button"
+              >
+                {deleteBusy ? (
+                  <ActivityIndicator color="#FFFFFF" />
+                ) : (
+                  <Text style={styles.modalDangerLabel}>Radera</Text>
+                )}
+              </Pressable>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </ScrollView>
   );
 }
@@ -610,5 +797,114 @@ const styles = StyleSheet.create({
     color: TOKENS.color.accent,
     fontSize: TOKENS.fontSize.sm,
     fontWeight: '600',
+  },
+  // Fas 2.5 — Radera konto. Röd knapp för att signalera irreversibel
+  // åtgärd, separerad från Logga ut med ett tunt mellanrum.
+  deleteRow: {
+    marginTop: TOKENS.space.lg,
+    paddingTop: TOKENS.space.lg,
+    borderTopWidth: 1,
+    borderTopColor: TOKENS.color.border,
+  },
+  deleteRowDescription: {
+    color: TOKENS.color.textSoft,
+    fontSize: TOKENS.fontSize.sm,
+    lineHeight: 18,
+    marginBottom: TOKENS.space.md,
+  },
+  deleteButton: {
+    backgroundColor: '#B23A48',
+    paddingVertical: TOKENS.space.md,
+    paddingHorizontal: TOKENS.space.lg,
+    borderRadius: TOKENS.radius.md,
+    alignItems: 'center',
+  },
+  deleteButtonText: {
+    color: '#FFFFFF',
+    fontSize: TOKENS.fontSize.md,
+    fontWeight: '700',
+  },
+  // Fas 2.5 — Radera-bekräftelsemodal.
+  modalBackdrop: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.7)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: TOKENS.space.lg,
+  },
+  modalCard: {
+    width: '100%',
+    maxWidth: 420,
+    backgroundColor: TOKENS.color.surface,
+    borderColor: TOKENS.color.border,
+    borderWidth: 1,
+    borderRadius: TOKENS.radius.md,
+    padding: TOKENS.space.lg,
+  },
+  modalTitle: {
+    color: TOKENS.color.text,
+    fontSize: TOKENS.fontSize.lg,
+    fontWeight: '700',
+    marginBottom: TOKENS.space.sm,
+  },
+  modalBody: {
+    color: TOKENS.color.textMuted,
+    fontSize: TOKENS.fontSize.md,
+    lineHeight: 22,
+    marginBottom: TOKENS.space.md,
+  },
+  modalInput: {
+    backgroundColor: TOKENS.color.appBg,
+    borderColor: TOKENS.color.border,
+    borderWidth: 1,
+    borderRadius: TOKENS.radius.md,
+    paddingHorizontal: TOKENS.space.md,
+    paddingVertical: TOKENS.space.sm,
+    color: TOKENS.color.text,
+    fontSize: TOKENS.fontSize.md,
+    letterSpacing: 2,
+    marginBottom: TOKENS.space.md,
+  },
+  modalError: {
+    color: '#FF6B6B',
+    fontSize: TOKENS.fontSize.sm,
+    marginBottom: TOKENS.space.sm,
+    lineHeight: 18,
+  },
+  modalActions: {
+    flexDirection: 'row',
+    justifyContent: 'flex-end',
+    gap: TOKENS.space.sm,
+  },
+  modalSecondary: {
+    paddingVertical: TOKENS.space.sm,
+    paddingHorizontal: TOKENS.space.md,
+    borderRadius: TOKENS.radius.md,
+    borderWidth: 1,
+    borderColor: TOKENS.color.border,
+    alignItems: 'center',
+    minWidth: 88,
+  },
+  modalSecondaryLabel: {
+    color: TOKENS.color.text,
+    fontSize: TOKENS.fontSize.md,
+    fontWeight: '600',
+  },
+  modalDanger: {
+    backgroundColor: '#B23A48',
+    paddingVertical: TOKENS.space.sm,
+    paddingHorizontal: TOKENS.space.lg,
+    borderRadius: TOKENS.radius.md,
+    alignItems: 'center',
+    minWidth: 88,
+  },
+  modalDangerDisabled: {
+    backgroundColor: '#3A1E22',
+    opacity: 0.6,
+  },
+  modalDangerLabel: {
+    color: '#FFFFFF',
+    fontSize: TOKENS.fontSize.md,
+    fontWeight: '700',
   },
 });

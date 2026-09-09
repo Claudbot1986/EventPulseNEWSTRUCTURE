@@ -45,6 +45,7 @@ import { composeReply } from './llmRouter';
 // AI-genererade bilder (se 08-Agent/workers/aiImageWorker.ts).
 import { createRateLimiter, ipKeyFn } from './middleware/rateLimit';
 import { createAdminAuth } from './middleware/adminAuth';
+import { createRequireUser } from './middleware/requireUser';
 import { createAiImageRouter } from './middleware/ai_image_static';
 import { createAiImageOptOutRouter } from './middleware/ai_image_optout';
 import {
@@ -137,7 +138,14 @@ function getSupabase(): SupabaseClient {
   return supabase;
 }
 
-export function buildApp(opts: { supabase?: SupabaseClient } = {}): express.Express {
+export function buildApp(opts: {
+  supabase?: SupabaseClient;
+  /** Test-only token verifier. When omitted, falls back to Supabase
+   *  `auth.getUser(token)` against the service-role client. Mirrors the
+   *  same dependency-injection pattern as `supabase` so tests skip the
+   *  real verify round-trip. */
+  verify?: import('./middleware/requireUser').TokenVerifier;
+} = {}): express.Express {
   const app = express();
   app.use(express.json({ limit: '64kb' }));
 
@@ -147,21 +155,47 @@ export function buildApp(opts: { supabase?: SupabaseClient } = {}): express.Expr
   // Rate limiting (Workstream E follow-up, MVP Hardening §18.4 DoD 5).
   //
   // Two buckets:
-  //   - `chatLimiter` tracks `client_user_id` from the request body and is
-  //     the tightest budget — it backs the Anthropic call. Default: 5 rps,
-  //     burst 20, idle-evict after 10 min.
+  //   - `chatLimiter` keys on `req.user.id` when requireUser has run first
+  //     (Phase 1 — auth before quota, so an unauthenticated attacker
+  //     cannot burn tokens by spamming chat), else on the body-supplied
+  //     `client_user_id` (legacy wire tests), else on the IP. Default:
+  //     5 rps, burst 20, idle-evict after 10 min.
   //   - `generalLimiter` is IP-keyed and gates feed/metrics/experiments so
   //     a single anonymous caller cannot scrape them. Same defaults.
   //
   // Both are in-memory (single Fly machine). Multi-instance scale-out
   // would require a shared store; explicitly listed in docs/DEPLOY.md §8.
-  const chatLimiter = createRateLimiter({ rps: 5, burst: 20 });
+  const chatLimiterKeyFn = (req: Request): string | null => {
+    if (req.user?.id) return `user:${req.user.id}`;
+    const body = (req.body ?? {}) as { client_user_id?: unknown };
+    if (typeof body.client_user_id === 'string' && body.client_user_id.length > 0) {
+      return `user:${body.client_user_id}`;
+    }
+    const ip = req.ip ?? req.socket?.remoteAddress;
+    return ip ? `ip:${ip}` : null;
+  };
+  const chatLimiter = createRateLimiter({ rps: 5, burst: 20, keyFn: chatLimiterKeyFn });
   const generalLimiter = createRateLimiter({ rps: 10, burst: 40, keyFn: ipKeyFn });
 
   // Admin auth (Workstream E follow-up, MVP Hardening §18.4 DoD 5).
   // Gates /agent/metrics and /agent/experiments/personalization. Reads
   // `AGENT_ADMIN_TOKEN` from the env; if unset, all admin calls 503.
   const requireAdmin = createAdminAuth();
+
+  // User auth (Phase 1 launch). Gates every user-scoped endpoint below
+  // (chat, saved, recommended, follow, notifications, attendance, rating,
+  // preferences, share, feedback, outbound, push-token). Public read-only
+  // endpoints (feed, live-now, suggested-prompts, curated-collections,
+  // venues/:id/events, calendar.ics, /s/:hash) deliberately stay open
+  // for cold-start UX and to make home-scroll shareable.
+  //
+  // The verifier default-resolves to Supabase `auth.getUser(token)` using
+  // the service-role client; tests inject a custom `verify` via
+  // buildApp({ supabase, verify }).
+  const requireUser = createRequireUser({
+    supabase: sb ?? getSupabase(),
+    verify: opts.verify,
+  });
 
   app.use((req, res, next) => {
     const origin = req.header('origin');
@@ -353,20 +387,21 @@ export function buildApp(opts: { supabase?: SupabaseClient } = {}): express.Expr
     }
   });
 
-  app.post('/agent/chat', chatLimiter.middleware, async (req: Request, res: Response) => {
+  app.post('/agent/chat', requireUser, chatLimiter.middleware, async (req: Request, res: Response) => {
     const body = req.body as Partial<AgentChatRequest>;
     if (!body || typeof body !== 'object') {
       res.status(400).json({ error: 'invalid body' });
-      return;
-    }
-    if (!body.client_user_id || !UUID_RE.test(body.client_user_id)) {
-      res.status(400).json({ error: 'client_user_id must be a uuid' });
       return;
     }
     if (!body.message || typeof body.message !== 'string') {
       res.status(400).json({ error: 'message required' });
       return;
     }
+    // Phase 1: identity is the verified JWT subject (req.user.id), NOT
+    // the opaque client_user_id from the body. Back-compat: if the body
+    // still carries client_user_id we IGNORE it so a stale app cannot
+    // impersonate another user.
+    const client_user_id = req.user!.id;
 
     const client = sb ?? getSupabase();
 
@@ -409,33 +444,33 @@ export function buildApp(opts: { supabase?: SupabaseClient } = {}): express.Expr
       // unpersonalized rank on repeat sessions" (masterplan §10). Without
       // this split we cannot prove the priors actually help — we'd just be
       // shipping a feature and hoping.
-      const variant = assignVariant(body.client_user_id, PERSONALIZATION_PRIORS_EXP);
+      const variant = assignVariant(client_user_id, PERSONALIZATION_PRIORS_EXP);
 
       // Count-based personalization priors (research-backed; see personalize.ts).
       // Best-effort: buildUserSignal returns a "cold" signal on failure and
       // never throws into the chat path. Control variant SKIPS the call to
       // keep the variants truly isolated (no DB read in control).
       const personalization = variant === 'treatment'
-        ? await buildUserSignal(client, body.client_user_id)
+        ? await buildUserSignal(client, client_user_id)
         : null;
 
       // Stated-user-category preferences from user_preferences (T0023).
       // loadStatedPreferences returns null when no row exists yet, and []
       // when the user explicitly cleared their preferences — both are handled
       // correctly by rankEvents (null = no stated boost; [] = no stated boost).
-      const statedCategories = await loadStatedPreferences(client, body.client_user_id);
+      const statedCategories = await loadStatedPreferences(client, client_user_id);
 
       // Followed-venue preferences from user_preferences.followed_venue_ids
       // (T0050 / MVP-gap §77). `loadFollowedVenues` returns `{ venue_ids: [] }`
       // when the user has no follows or no preferences row — empty array is
       // the correct "no lift" signal and rankEvents treats it as zero-cost.
       // Best-effort: never throws; same cache TTL as loadStatedPreferences.
-      const followed = await loadFollowedVenues(client, body.client_user_id);
+      const followed = await loadFollowedVenues(client, client_user_id);
 
       // Followed-artist preferences from user_preferences.followed_artist_slugs
       // (T0050 — Phase 1 declared pref). Parallel cache to venues; ranker
       // gates on a non-empty array so users with no follows incur zero cost.
-      const followedArtists = await loadFollowedArtists(client, body.client_user_id);
+      const followedArtists = await loadFollowedArtists(client, client_user_id);
 
       // Two-stage retrieval→re-rank:
       //   1. rank_events returns the top 25 most relevant (deterministic
@@ -478,7 +513,7 @@ export function buildApp(opts: { supabase?: SupabaseClient } = {}): express.Expr
       };
       for (let i = 0; i < cards.length; i++) {
         await recordFeedback(client, {
-          client_user_id: body.client_user_id,
+          client_user_id: client_user_id,
           session_id: chatSessionId,
           event_id: cards[i].id,
           interaction: 'impression',
@@ -531,7 +566,7 @@ export function buildApp(opts: { supabase?: SupabaseClient } = {}): express.Expr
    * The call is best-effort: a Supabase insert failure returns
    * { ok: false, warning } with 202 so the click UX never breaks.
    */
-  app.post('/agent/outbound', chatLimiter.middleware, async (req: Request, res: Response) => {
+  app.post('/agent/outbound', requireUser, chatLimiter.middleware, async (req: Request, res: Response) => {
     const body = req.body as Partial<{
       client_user_id: string;
       session_id?: string;
@@ -543,10 +578,6 @@ export function buildApp(opts: { supabase?: SupabaseClient } = {}): express.Expr
     }>;
     if (!body || typeof body !== 'object') {
       res.status(400).json({ error: 'invalid body' });
-      return;
-    }
-    if (!body.client_user_id || !UUID_RE.test(body.client_user_id)) {
-      res.status(400).json({ error: 'client_user_id must be a uuid' });
       return;
     }
     if (!body.event_id || !UUID_RE.test(body.event_id)) {
@@ -587,7 +618,7 @@ export function buildApp(opts: { supabase?: SupabaseClient } = {}): express.Expr
 
     const client = sb ?? getSupabase();
     const result = await recordOutboundClick(client, {
-      client_user_id: body.client_user_id,
+      client_user_id: req.user!.id,
       session_id:     sessionId,
       event_id:       body.event_id,
       organizer_id:   body.organizer_id ?? null,
@@ -606,7 +637,7 @@ export function buildApp(opts: { supabase?: SupabaseClient } = {}): express.Expr
     res.json({ ok: true });
   });
 
-  app.post('/agent/feedback', chatLimiter.middleware, async (req: Request, res: Response) => {
+  app.post('/agent/feedback', requireUser, chatLimiter.middleware, async (req: Request, res: Response) => {
     const body = req.body as Partial<{
       client_user_id: string;
       session_id?: string;
@@ -617,11 +648,15 @@ export function buildApp(opts: { supabase?: SupabaseClient } = {}): express.Expr
       rank_position?: number;
       metadata?: Record<string, unknown>;
     }>;
+    // Inject the verified user id so validateFeedbackInput (which still
+    // inspects client_user_id) accepts the payload. The body field is
+    // ignored from here onward; identity is req.user.id.
+    const bodyWithUser = { ...body, client_user_id: req.user!.id };
     // Delegate validation to the tool's pure validator so the wire contract
     // and tool contract cannot drift. `validateFeedbackInput` returns the
     // first failed check (or null). A 400 is correct for any malformed
     // payload — the agent UI treats it as a code bug, not a network blip.
-    const validationError = validateFeedbackInput(body);
+    const validationError = validateFeedbackInput(bodyWithUser);
     if (validationError) {
       res.status(400).json({ error: validationError });
       return;
@@ -629,7 +664,7 @@ export function buildApp(opts: { supabase?: SupabaseClient } = {}): express.Expr
 
     const client = sb ?? getSupabase();
     const result = await recordFeedback(client, {
-      client_user_id: body.client_user_id as string,
+      client_user_id: req.user!.id,
       // session_id is optional; the validator accepts undefined / null, so
       // we forward as-is and the tool normalizes to null.
       session_id:     body.session_id,
@@ -672,17 +707,13 @@ export function buildApp(opts: { supabase?: SupabaseClient } = {}): express.Expr
    * want the same per-user budget because the endpoint is gated by
    * the same client_user_id key.
    */
-  app.post('/agent/preferences', chatLimiter.middleware, async (req: Request, res: Response) => {
+  app.post('/agent/preferences', requireUser, chatLimiter.middleware, async (req: Request, res: Response) => {
     const body = req.body as Partial<{
       client_user_id: string;
       categories: unknown;
     }>;
     if (!body || typeof body !== 'object') {
       res.status(400).json({ error: 'invalid body' });
-      return;
-    }
-    if (!body.client_user_id || !UUID_RE.test(body.client_user_id)) {
-      res.status(400).json({ error: 'client_user_id must be a uuid' });
       return;
     }
     if (!Array.isArray(body.categories)) {
@@ -696,7 +727,7 @@ export function buildApp(opts: { supabase?: SupabaseClient } = {}): express.Expr
       .from('user_preferences')
       .upsert(
         {
-          client_user_id: body.client_user_id,
+          client_user_id: req.user!.id,
           preferences: { categories },
           updated_at: new Date().toISOString(),
         },
@@ -739,7 +770,7 @@ export function buildApp(opts: { supabase?: SupabaseClient } = {}): express.Expr
    * Best-effort: validation errors are 400; Supabase failures are 202 with
    * a warning — same convention as the preferences + follow endpoints.
    */
-  app.post('/agent/push-token', chatLimiter.middleware, async (req: Request, res: Response) => {
+  app.post('/agent/push-token', requireUser, chatLimiter.middleware, async (req: Request, res: Response) => {
     const body = req.body as Partial<{
       client_user_id: string;
       push_token: unknown;
@@ -747,10 +778,6 @@ export function buildApp(opts: { supabase?: SupabaseClient } = {}): express.Expr
     }>;
     if (!body || typeof body !== 'object') {
       res.status(400).json({ error: 'invalid body' });
-      return;
-    }
-    if (!body.client_user_id || !UUID_RE.test(body.client_user_id)) {
-      res.status(400).json({ error: 'client_user_id must be a uuid' });
       return;
     }
     const hasTokenField = Object.prototype.hasOwnProperty.call(body, 'push_token');
@@ -792,7 +819,7 @@ export function buildApp(opts: { supabase?: SupabaseClient } = {}): express.Expr
     const { data: existing, error: readErr } = await client
       .from('user_preferences')
       .select('preferences')
-      .eq('client_user_id', body.client_user_id)
+      .eq('client_user_id', req.user!.id)
       .maybeSingle();
     if (readErr) {
       res.status(202).json({ ok: false, warning: readErr.message });
@@ -813,7 +840,7 @@ export function buildApp(opts: { supabase?: SupabaseClient } = {}): express.Expr
       .from('user_preferences')
       .upsert(
         {
-          client_user_id: body.client_user_id,
+          client_user_id: req.user!.id,
           preferences: next,
           updated_at: new Date().toISOString(),
         },
@@ -845,7 +872,7 @@ export function buildApp(opts: { supabase?: SupabaseClient } = {}): express.Expr
    *
    * Read-modify-write on preferences — preserves all other keys.
    */
-  app.post('/agent/notification-prefs', chatLimiter.middleware, async (req: Request, res: Response) => {
+  app.post('/agent/notification-prefs', requireUser, chatLimiter.middleware, async (req: Request, res: Response) => {
     const body = req.body as Partial<{
       client_user_id: string;
       entity_type: unknown;
@@ -853,7 +880,6 @@ export function buildApp(opts: { supabase?: SupabaseClient } = {}): express.Expr
       level: unknown;
     }>;
     if (!body || typeof body !== 'object') { res.status(400).json({ error: 'invalid body' }); return; }
-    if (!body.client_user_id || !UUID_RE.test(body.client_user_id)) { res.status(400).json({ error: 'client_user_id must be a uuid' }); return; }
     if (body.entity_type !== 'venue' && body.entity_type !== 'artist') { res.status(400).json({ error: 'entity_type must be venue or artist' }); return; }
     if (typeof body.entity_id !== 'string' || body.entity_id.trim() === '') { res.status(400).json({ error: 'entity_id is required' }); return; }
     if (!['all','new_only','off'].includes(body.level as string)) { res.status(400).json({ error: 'level must be all, new_only, or off' }); return; }
@@ -865,7 +891,7 @@ export function buildApp(opts: { supabase?: SupabaseClient } = {}): express.Expr
     const { data: existing } = await client
       .from('user_preferences')
       .select('preferences')
-      .eq('client_user_id', body.client_user_id)
+      .eq('client_user_id', req.user!.id)
       .single();
 
     const basePrefs = existing?.preferences && typeof existing.preferences === 'object'
@@ -879,7 +905,7 @@ export function buildApp(opts: { supabase?: SupabaseClient } = {}): express.Expr
 
     const { error: writeErr } = await client
       .from('user_preferences')
-      .upsert({ client_user_id: body.client_user_id, preferences: next }, { onConflict: 'client_user_id' });
+      .upsert({ client_user_id: req.user!.id, preferences: next }, { onConflict: 'client_user_id' });
     if (writeErr) {
       res.status(202).json({ ok: false, warning: writeErr.message });
       return;
@@ -895,17 +921,12 @@ export function buildApp(opts: { supabase?: SupabaseClient } = {}): express.Expr
    *
    * Returns: { notification_prefs: Record<string, 'all'|'new_only'|'off'> }
    */
-  app.get('/agent/notification-prefs', chatLimiter.middleware, async (req: Request, res: Response) => {
-    const client_user_id = (req.query as Record<string, string>).client_user_id;
-    if (!client_user_id || !UUID_RE.test(client_user_id)) {
-      res.status(400).json({ error: 'client_user_id must be a uuid' });
-      return;
-    }
+  app.get('/agent/notification-prefs', requireUser, chatLimiter.middleware, async (req: Request, res: Response) => {
     const client = sb ?? getSupabase();
     const { data } = await client
       .from('user_preferences')
       .select('preferences')
-      .eq('client_user_id', client_user_id)
+      .eq('client_user_id', req.user!.id)
       .single();
     const notifPrefs = data?.preferences?.notification_prefs ?? {};
     res.json({ notification_prefs: notifPrefs });
@@ -935,7 +956,7 @@ export function buildApp(opts: { supabase?: SupabaseClient } = {}): express.Expr
    * are 202 with a warning (the UI never blocks on a follow — the long-
    * press action sheet auto-dismisses either way).
    */
-  app.post('/agent/follow', chatLimiter.middleware, async (req: Request, res: Response) => {
+  app.post('/agent/follow', requireUser, chatLimiter.middleware, async (req: Request, res: Response) => {
     // T0050 — entity_type discriminator routes to venue or artist follow.
     // Back-compat: callers that omit entity_type + send venue_id fall through
     // to the original venue-only path so the existing UI keeps working.
@@ -949,10 +970,6 @@ export function buildApp(opts: { supabase?: SupabaseClient } = {}): express.Expr
     }>;
     if (!body || typeof body !== 'object') {
       res.status(400).json({ error: 'invalid body' });
-      return;
-    }
-    if (!body.client_user_id || !UUID_RE.test(body.client_user_id)) {
-      res.status(400).json({ error: 'client_user_id must be a uuid' });
       return;
     }
     if (body.action !== 'follow' && body.action !== 'unfollow') {
@@ -975,8 +992,8 @@ export function buildApp(opts: { supabase?: SupabaseClient } = {}): express.Expr
         return;
       }
       result = body.action === 'follow'
-        ? await followArtist(client, { client_user_id: body.client_user_id, artist_slug: slug })
-        : await unfollowArtist(client, { client_user_id: body.client_user_id, artist_slug: slug });
+        ? await followArtist(client, { client_user_id: req.user!.id, artist_slug: slug })
+        : await unfollowArtist(client, { client_user_id: req.user!.id, artist_slug: slug });
     } else {
       // venue — prefer entity_id, fall back to legacy venue_id.
       const venue_id = body.entity_id ?? body.venue_id ?? '';
@@ -985,8 +1002,8 @@ export function buildApp(opts: { supabase?: SupabaseClient } = {}): express.Expr
         return;
       }
       result = body.action === 'follow'
-        ? await followVenue(client, { client_user_id: body.client_user_id, venue_id })
-        : await unfollowVenue(client, { client_user_id: body.client_user_id, venue_id });
+        ? await followVenue(client, { client_user_id: req.user!.id, venue_id })
+        : await unfollowVenue(client, { client_user_id: req.user!.id, venue_id });
     }
 
     if (!result.ok) {
@@ -1019,18 +1036,13 @@ export function buildApp(opts: { supabase?: SupabaseClient } = {}): express.Expr
    * underlying message; the UI treats that as "follows temporarily
    * unavailable" and shows the optimistic "Följ" default.
    */
-  app.get('/agent/follow', generalLimiter.middleware, async (req: Request, res: Response) => {
-    const raw = typeof req.query.client_user_id === 'string' ? req.query.client_user_id : '';
-    if (!UUID_RE.test(raw)) {
-      res.status(400).json({ error: 'client_user_id must be a uuid' });
-      return;
-    }
+  app.get('/agent/follow', generalLimiter.middleware, requireUser, async (req: Request, res: Response) => {
     const client = sb ?? getSupabase();
     // Parallel read — both helpers hit the same row but cache independently
     // and run their cached-path in O(1) on hot path.
     const [venues, artists] = await Promise.all([
-      loadFollowedVenues(client, raw),
-      loadFollowedArtists(client, raw),
+      loadFollowedVenues(client, req.user!.id),
+      loadFollowedArtists(client, req.user!.id),
     ]);
     res.json({
       ok: true,
@@ -1058,17 +1070,12 @@ export function buildApp(opts: { supabase?: SupabaseClient } = {}): express.Expr
    * Response shape:
    *   { events: EventCard[] }
    */
-  app.get('/agent/saved', generalLimiter.middleware, async (req: Request, res: Response) => {
-    const raw = typeof req.query.client_user_id === 'string' ? req.query.client_user_id : '';
-    if (!UUID_RE.test(raw)) {
-      res.status(400).json({ error: 'client_user_id must be a uuid' });
-      return;
-    }
+  app.get('/agent/saved', generalLimiter.middleware, requireUser, async (req: Request, res: Response) => {
     const limit = typeof req.query.limit === 'string'
       ? Math.min(Math.max(parseInt(req.query.limit, 10) || 50, 1), 100)
       : 50;
     const client = sb ?? getSupabase();
-    const result = await getSavedEvents(client, { client_user_id: raw, limit });
+    const result = await getSavedEvents(client, { client_user_id: req.user!.id, limit });
     res.json({ events: result.events });
   });
 
@@ -1088,17 +1095,12 @@ export function buildApp(opts: { supabase?: SupabaseClient } = {}): express.Expr
    * underlying message; the client treats that as "feed temporarily
    * unavailable" and falls back to its empty-state copy.
    */
-  app.get('/agent/notifications', generalLimiter.middleware, async (req: Request, res: Response) => {
-    const raw = typeof req.query.client_user_id === 'string' ? req.query.client_user_id : '';
-    if (!UUID_RE.test(raw)) {
-      res.status(400).json({ error: 'client_user_id must be a uuid' });
-      return;
-    }
+  app.get('/agent/notifications', generalLimiter.middleware, requireUser, async (req: Request, res: Response) => {
     const limit = typeof req.query.limit === 'string'
       ? Math.min(Math.max(parseInt(req.query.limit, 10) || 50, 1), 200)
       : 50;
     const client = sb ?? getSupabase();
-    const result = await listNotifications(client, raw, { limit });
+    const result = await listNotifications(client, req.user!.id, { limit });
     if (!result.ok) {
       res.status(500).json({ error: result.warning ?? 'unknown error' });
       return;
@@ -1114,14 +1116,10 @@ export function buildApp(opts: { supabase?: SupabaseClient } = {}): express.Expr
    * is the same as calling it once. Same rate limiter as /agent/feedback
    * because this is user-driven and could be batched by a future UI.
    */
-  app.post('/agent/notifications/read', chatLimiter.middleware, async (req: Request, res: Response) => {
+  app.post('/agent/notifications/read', requireUser, chatLimiter.middleware, async (req: Request, res: Response) => {
     const body = req.body as Partial<{ client_user_id: string; notification_id: string }>;
     if (!body || typeof body !== 'object') {
       res.status(400).json({ error: 'invalid body' });
-      return;
-    }
-    if (!body.client_user_id || !UUID_RE.test(body.client_user_id)) {
-      res.status(400).json({ error: 'client_user_id must be a uuid' });
       return;
     }
     if (!body.notification_id || !UUID_RE.test(body.notification_id)) {
@@ -1129,7 +1127,7 @@ export function buildApp(opts: { supabase?: SupabaseClient } = {}): express.Expr
       return;
     }
     const client = sb ?? getSupabase();
-    const result = await markNotificationRead(client, body.client_user_id, body.notification_id);
+    const result = await markNotificationRead(client, req.user!.id, body.notification_id);
     if (!result.ok) {
       res.status(202).json({ ok: false, warning: result.warning ?? 'unknown' });
       return;
@@ -1185,17 +1183,12 @@ export function buildApp(opts: { supabase?: SupabaseClient } = {}): express.Expr
    *
    * Wire: `{ events: Array<{ id, title, venue_name, start_time }> }`
    */
-  app.get('/agent/attendance', generalLimiter.middleware, async (req: Request, res: Response) => {
-    const raw = typeof req.query.client_user_id === 'string' ? req.query.client_user_id : '';
-    if (!UUID_RE.test(raw)) {
-      res.status(400).json({ error: 'client_user_id must be a uuid' });
-      return;
-    }
+  app.get('/agent/attendance', generalLimiter.middleware, requireUser, async (req: Request, res: Response) => {
     const limit = typeof req.query.limit === 'string'
       ? Math.min(Math.max(parseInt(req.query.limit, 10) || 50, 1), 200)
       : 50;
     const client = sb ?? getSupabase();
-    const result = await listUnratedSavedEvents(client, raw, { limit });
+    const result = await listUnratedSavedEvents(client, req.user!.id, { limit });
     if (!result.ok) {
       res.status(500).json({ error: result.warning ?? 'unknown error' });
       return;
@@ -1214,14 +1207,10 @@ export function buildApp(opts: { supabase?: SupabaseClient } = {}): express.Expr
    *
    * Body: { client_user_id: uuid, event_id: uuid }
    */
-  app.post('/agent/attendance', chatLimiter.middleware, async (req: Request, res: Response) => {
+  app.post('/agent/attendance', requireUser, chatLimiter.middleware, async (req: Request, res: Response) => {
     const body = req.body as Partial<{ client_user_id: string; event_id: string }>;
     if (!body || typeof body !== 'object') {
       res.status(400).json({ error: 'invalid body' });
-      return;
-    }
-    if (!body.client_user_id || !UUID_RE.test(body.client_user_id)) {
-      res.status(400).json({ error: 'client_user_id must be a uuid' });
       return;
     }
     if (!body.event_id || !UUID_RE.test(body.event_id)) {
@@ -1232,7 +1221,7 @@ export function buildApp(opts: { supabase?: SupabaseClient } = {}): express.Expr
     const result = await client
       .from('user_interactions')
       .insert({
-        client_user_id: body.client_user_id,
+        client_user_id: req.user!.id,
         event_id: body.event_id,
         interaction: 'attendance',
         metadata: {},
@@ -1258,7 +1247,7 @@ export function buildApp(opts: { supabase?: SupabaseClient } = {}): express.Expr
    *
    * Body: { client_user_id: uuid, event_id: uuid, rating: 1..5, note?: string }
    */
-  app.post('/agent/rating', chatLimiter.middleware, async (req: Request, res: Response) => {
+  app.post('/agent/rating', requireUser, chatLimiter.middleware, async (req: Request, res: Response) => {
     const body = req.body as Partial<{
       client_user_id: string;
       event_id: string;
@@ -1267,10 +1256,6 @@ export function buildApp(opts: { supabase?: SupabaseClient } = {}): express.Expr
     }>;
     if (!body || typeof body !== 'object') {
       res.status(400).json({ error: 'invalid body' });
-      return;
-    }
-    if (!body.client_user_id || !UUID_RE.test(body.client_user_id)) {
-      res.status(400).json({ error: 'client_user_id must be a uuid' });
       return;
     }
     if (!body.event_id || !UUID_RE.test(body.event_id)) {
@@ -1302,7 +1287,7 @@ export function buildApp(opts: { supabase?: SupabaseClient } = {}): express.Expr
     const result = await client
       .from('user_interactions')
       .insert({
-        client_user_id: body.client_user_id,
+        client_user_id: req.user!.id,
         event_id: body.event_id,
         interaction: 'rating',
         metadata,
@@ -1329,12 +1314,7 @@ export function buildApp(opts: { supabase?: SupabaseClient } = {}): express.Expr
    *
    * Same lockdown as /agent/saved: origin allowlist + service_role only.
    */
-  app.get('/agent/recommended', generalLimiter.middleware, async (req: Request, res: Response) => {
-    const raw = typeof req.query.client_user_id === 'string' ? req.query.client_user_id : '';
-    if (!UUID_RE.test(raw)) {
-      res.status(400).json({ error: 'client_user_id must be a uuid' });
-      return;
-    }
+  app.get('/agent/recommended', generalLimiter.middleware, requireUser, async (req: Request, res: Response) => {
     const limit = typeof req.query.limit === 'string'
       ? Math.min(Math.max(parseInt(req.query.limit, 10) || 10, 1), 20)
       : 10;
@@ -1344,10 +1324,10 @@ export function buildApp(opts: { supabase?: SupabaseClient } = {}): express.Expr
     try {
       // Fetch all personalization signals in parallel.
       const [personalization, statedCategories, followed, followedArtists] = await Promise.all([
-        buildUserSignal(client, raw),
-        loadStatedPreferences(client, raw),
-        loadFollowedVenues(client, raw),
-        loadFollowedArtists(client, raw),
+        buildUserSignal(client, req.user!.id),
+        loadStatedPreferences(client, req.user!.id),
+        loadFollowedVenues(client, req.user!.id),
+        loadFollowedArtists(client, req.user!.id),
       ]);
 
       // Search: no date filter (all future), no category filter, Stockholm only.
@@ -1487,12 +1467,7 @@ export function buildApp(opts: { supabase?: SupabaseClient } = {}): express.Expr
    * 404 = no cached row for this user (first-time / very-low-engagement).
    * Treated as "no slots" by the client; the section hides itself.
    */
-  app.get('/agent/cached-recommendations', generalLimiter.middleware, async (req: Request, res: Response) => {
-    const raw = typeof req.query.client_user_id === 'string' ? req.query.client_user_id : '';
-    if (!UUID_RE.test(raw)) {
-      res.status(400).json({ error: 'client_user_id must be a uuid' });
-      return;
-    }
+  app.get('/agent/cached-recommendations', generalLimiter.middleware, requireUser, async (req: Request, res: Response) => {
     const limit = typeof req.query.limit === 'string'
       ? Math.min(Math.max(parseInt(req.query.limit, 10) || 3, 1), 3)
       : 3;
@@ -1502,7 +1477,7 @@ export function buildApp(opts: { supabase?: SupabaseClient } = {}): express.Expr
       const { data: row, error: rowErr } = await client
         .from('cached_recommendations')
         .select('slot_1_title, slot_1_card_1, slot_1_card_2, slot_2_title, slot_2_card_1, slot_2_card_2, slot_3_title, slot_3_card_1, slot_3_card_2, generated_at')
-        .eq('client_user_id', raw)
+        .eq('client_user_id', req.user!.id)
         .maybeSingle();
 
       if (rowErr) {
@@ -1594,12 +1569,7 @@ export function buildApp(opts: { supabase?: SupabaseClient } = {}): express.Expr
    * is the common cold-start case. We return `{queries: []}` instead so
    * the UI can simply hide the section.
    */
-  app.get('/agent/recent-queries', generalLimiter.middleware, async (req: Request, res: Response) => {
-    const raw = typeof req.query.client_user_id === 'string' ? req.query.client_user_id : '';
-    if (!UUID_RE.test(raw)) {
-      res.status(400).json({ error: 'client_user_id must be a uuid' });
-      return;
-    }
+  app.get('/agent/recent-queries', generalLimiter.middleware, requireUser, async (req: Request, res: Response) => {
     const limit = typeof req.query.limit === 'string'
       ? Math.min(Math.max(parseInt(req.query.limit, 10) || 5, 1), 20)
       : 5;
@@ -1608,7 +1578,7 @@ export function buildApp(opts: { supabase?: SupabaseClient } = {}): express.Expr
       const { getRecentQueries } = await import('./tools/get_recent_queries.js');
       const result = await getRecentQueries({
         supabase: client,
-        client_user_id: raw,
+        client_user_id: req.user!.id,
         limit,
       });
       res.json({ queries: result.queries });
@@ -1796,13 +1766,8 @@ export function buildApp(opts: { supabase?: SupabaseClient } = {}): express.Expr
    *   - 400 any event_id not a uuid
    *   - 500 server error
    */
-  app.post('/agent/share', chatLimiter.middleware, async (req: Request, res: Response) => {
+  app.post('/agent/share', requireUser, chatLimiter.middleware, async (req: Request, res: Response) => {
     const body = req.body ?? {};
-    const rawUserId = typeof body.client_user_id === 'string' ? body.client_user_id : '';
-    if (!UUID_RE.test(rawUserId)) {
-      res.status(400).json({ error: 'client_user_id must be a uuid' });
-      return;
-    }
 
     const sessionId = typeof body.session_id === 'string' && UUID_RE.test(body.session_id)
       ? body.session_id : undefined;
@@ -1906,6 +1871,114 @@ export function buildApp(opts: { supabase?: SupabaseClient } = {}): express.Expr
       created_at: data.created_at,
       view_count: (data.view_count ?? 0) + 1,
     });
+  });
+
+  // Apple Sign In (Fas 2.5 / App Store compliance §4.8).
+  //
+  // Public endpoint — the Apple identity_token IS the authentication
+  // credential, so requireUser does not apply. Service-role Supabase
+  // (same singleton used elsewhere) verifies Apple's identity_token
+  // against Apple's public JWKS, maps it to an auth.users row, and
+  // returns the resolved session in the same shape the magic-link flow
+  // uses (`/agent/auth/magiclink` semantics). The client persists this
+  // via saveAuthSession and from then on uses Authorization: Bearer
+  // <access_token> like every other user-scoped request.
+  //
+  // Rate limit is IP-keyed and looser than /agent/chat (10 rps burst 30)
+  // because Apple Sign In is a cold-start path and we don't want a stuck
+  // modal to feel broken — but we still cap to deter anonymous abuse.
+  const appleAuthLimiter = createRateLimiter({ rps: 10, burst: 30, keyFn: ipKeyFn });
+  app.post('/agent/auth/apple', appleAuthLimiter.middleware, async (req: Request, res: Response) => {
+    const body = (req.body ?? {}) as { identity_token?: unknown; full_name?: unknown };
+    if (typeof body.identity_token !== 'string' || body.identity_token.length === 0) {
+      res.status(400).json({ error: 'identity_token required' });
+      return;
+    }
+    const client = sb ?? getSupabase();
+    try {
+      const { data, error } = await client.auth.signInWithIdToken({
+        provider: 'apple',
+        token: body.identity_token,
+      });
+      if (error || !data?.session) {
+        const msg = error?.message ?? 'invalid identity_token';
+        res.status(401).json({ error: 'invalid_identity_token', message: msg });
+        return;
+      }
+      const s = data.session;
+      // Match the wire shape the LoginScreen's saveAuthSession expects.
+      // We intentionally drop provider-specific fields (full_name etc.) —
+      // the client only needs the JWT to authorize subsequent requests.
+      res.json({
+        access_token: s.access_token,
+        refresh_token: s.refresh_token,
+        expires_at: s.expires_at ?? 0,
+        user: s.user
+          ? { id: s.user.id, email: s.user.email ?? null }
+          : null,
+      });
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'unknown error';
+      res.status(500).json({ error: 'apple_auth_failed', message: msg });
+    }
+  });
+
+  /**
+   * DELETE /agent/account — GDPR / Apple §5.1.1(v) account-deletion.
+   *
+   * Hard-deletes the calling user's `auth.users` row. The DB-level
+   * ON DELETE CASCADE constraints (added in
+   * `20260906-0001-account-deletion-cascade.sql`) wipe every user-scoped
+   * row whose `client_user_id` is UUID:
+   *   - user_interactions
+   *   - user_profiles
+   *   - agent_sessions (+ agent_messages via session_id FK)
+   *   - notifications
+   *   - cached_recommendations
+   *
+   * `user_preferences.client_user_id` is TEXT (device-scoped anon id, not
+   * auth-scoped) so it is NOT covered by the FK cascade. We explicitly
+   * delete the matching row first to leave no orphan prefs behind.
+   *
+   * Optional body: { confirmation: 'DELETE' }. When present it must equal
+   * 'DELETE' literally — the client UI requires the user to type this
+   * string into a TextInput before the submit button enables. This is a
+   * soft server-side check on top of the client UX, in case a future API
+   * client forgets the confirmation step.
+   *
+   * Responses:
+   *   200 { ok: true }               — user-scoped data + auth.users purged
+   *   400 invalid_confirmation       — body.confirmation is present but not 'DELETE'
+   *   401 missing / bad Bearer       — requireUser gate
+   *   500 delete_failed              — admin client error / unexpected
+   */
+  app.delete('/agent/account', requireUser, chatLimiter.middleware, async (req: Request, res: Response) => {
+    const body = (req.body ?? {}) as { confirmation?: unknown };
+    if (
+      body.confirmation !== undefined &&
+      body.confirmation !== null &&
+      body.confirmation !== 'DELETE'
+    ) {
+      res.status(400).json({ error: 'invalid_confirmation', message: 'confirmation must be "DELETE"' });
+      return;
+    }
+    const client = sb ?? getSupabase();
+    const userId = req.user!.id;
+    try {
+      // user_preferences is TEXT-keyed and not covered by the FK cascade,
+      // so delete explicitly. Best-effort: a missing row is fine.
+      await client.from('user_preferences').delete().eq('client_user_id', userId);
+
+      const { error } = await client.auth.admin.deleteUser(userId);
+      if (error) {
+        res.status(500).json({ error: 'delete_failed', message: error.message });
+        return;
+      }
+      res.json({ ok: true });
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'unknown error';
+      res.status(500).json({ error: 'delete_failed', message: msg });
+    }
   });
 
   return app;

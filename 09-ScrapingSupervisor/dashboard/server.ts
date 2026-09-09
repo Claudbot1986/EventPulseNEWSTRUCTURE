@@ -702,12 +702,38 @@ async function toggleAnalyticsServer(): Promise<{
         cwd: PROJECT_ROOT,
         detached: true,
         stdio: ['ignore', logFd, logFd],
-        env: { ...process.env },
+        // PORT-isolation: dashboardens egen PORT (7777) får inte ärvas —
+        // analytics-serverns default läser process.env.PORT || 7778, så utan
+        // explicit override försöker den lyssna på 7777 och kraschar med
+        // EADDRINUSE.
+        env: { ...process.env, PORT: String(port) },
       },
     );
     child.unref();
-    _analyticsServerCache = null;
-    return { ok: true, action: 'started', pid: child.pid ?? null };
+
+    // Liveness check: vänta på att servern binder porten och svarar.
+    // Utan denna returnerade toggle "ok: true" även när barnet dog direkt
+    // (t.ex. EADDRINUSE), och UI fortsatte visa "fetch failed" eftersom vi
+    // aldrig märkte att processen försvann.
+    await new Promise((r) => setTimeout(r, 1200));
+    const controller = new AbortController();
+    const probeTimer = setTimeout(() => controller.abort(), 1500);
+    try {
+      await fetch(`http://localhost:${port}/api/health`, { signal: controller.signal });
+      _analyticsServerCache = null;
+      return { ok: true, action: 'started', pid: child.pid ?? null };
+    } catch {
+      if (child.pid) {
+        try { process.kill(child.pid, 'SIGKILL'); } catch { /* redan död */ }
+      }
+      return {
+        ok: false,
+        action: 'noop',
+        error: `server didn't respond on /api/health within 1.5s (see ${logFile})`,
+      };
+    } finally {
+      clearTimeout(probeTimer);
+    }
   } catch (err) {
     return { ok: false, action: 'noop', error: String((err as Error)?.message ?? err) };
   }

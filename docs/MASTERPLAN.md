@@ -19,9 +19,9 @@ That strategy has a fatal product risk. If we make a clean open event layer, Cha
 | Old plan | New plan |
 |---|---|
 | Product = aggregator + pipeline | Product = agent; app = UI |
-| Win = more sources / more Sweden | Win = 3–5 right recs a user acts on |
+| Win = more sources / more Sweden | Win = a scroll feed the user opens daily and trusts |
 | Fas 0 = queue/status reconciliation | Phase 0 = persisted Stockholm graph + private agent API |
-| P1 = C2→C3 gap | P1 = magic slice (intent → recs → act) |
+| P1 = C2→C3 gap | P1 = scroll-feed primacy; chat demoted to a search affordance |
 | Open-ish Supabase REST to the app | Private agent tools; do not commoditize the graph |
 | B2B absent / implied later | B2B = readiness + feeds, Phase 4 only, not a webbyrå |
 | Personalization = non-goal until data stable | Log signals from day 1; rank from Phase 1; learn from Phase 2 |
@@ -29,7 +29,7 @@ That strategy has a fatal product risk. If we make a clean open event layer, Cha
 **Locked decisions (no further strategy needed for Phase 0–1):**
 
 - First city: **Stockholm**. Not national coverage.
-- First surface: **existing Expo app**, agent as home. No Next.js consumer app.
+- First surface: **existing Expo app**, AI-ranked scroll feed as home. Chat is a deliberate, low-noise search affordance tucked into Utforska — present but not the front door. No Next.js consumer app.
 - First transaction level: **deep link only**.
 - Auth: **anonymous `client_user_id`** (AsyncStorage) in Phase 1; real auth in Phase 2.
 - LLM: **hosted tool-calling model** (Anthropic already used in ingestion). Events, times, prices, venues **only** from tools — never from model memory.
@@ -41,7 +41,7 @@ That strategy has a fatal product risk. If we make a clean open event layer, Cha
 
 ## 1. Product thesis
 
-**What EventPulse is:** A Stockholm event agent that takes a user’s intention, searches a proprietary Event Graph, ranks a short list, explains why in grounded language, and lets the user act (save / reject / open tickets). Over time it learns what that person actually does.
+**What EventPulse is:** A Stockholm event feed that opens to the user like a trusted daily paper — every row an AI-ranked future event from our proprietary Event Graph, every row grounded in real venue/time/price fields, every swipe a quiet signal that teaches the feed what to show tomorrow. A lightweight chat lives inside Utforska for users who want to ask instead of scroll, but it is a search box, not the product.
 
 **What we are not:**
 
@@ -54,13 +54,15 @@ That strategy has a fatal product risk. If we make a clean open event layer, Cha
 
 **Job to be done:** “Hjälp mig välja vad jag ska göra — med bättre eventförståelse än jag (eller en generell agent) orkar samla själv.”
 
-**First magic slice (acceptance experience):**
+**First acceptance experience (the scroll feed, not the chat):**
 
-> User: “Jag är i Stockholm på fredag kväll, sugen på live musik men inte arena, max 400 kr, gärna med en vän.”
->
-> Agent: 3–5 verified events, each with why, price/time/venue grounded in graph fields, tap to tickets.
+▎ User opens EventPulse at 17:30 on a Friday.
 
-If that loop is not better than browsing Ticketmaster or asking ChatGPT, the product has not started.
+▎ Feed shows, top to bottom: tonight's live-music events under 400 kr with venue confidence ≥ 60, sorted by a learned blend of time-fit, price-fit, distance, freshness, and prior saves. Every card shows venue, time, price, and a one-tap ticket link. No infinite scroll shock — section breaks (Ikväll / Helgen / Rekommenderat / Fler) give the feed rhythm and let the user commit to "see more" deliberately.
+
+Chat (kept, demoted): a discrete search affordance inside Utforska, labelled "Fråga EventPulse" or a magnifier icon. Same /agent/chat endpoint, same tools, same hallucination guards — but the user lands in the feed first and only opens chat when they have a question chat can answer better than scrolling. Chat is never the default surface.
+
+If the scroll feed does not surface events the user acts on more often than browsing Ticketmaster, the product has not started.
 
 ---
 
@@ -291,12 +293,19 @@ Kill automated outbound if reply rate is near zero after a bounded human-supervi
 - **Success:** `search_events` for live music Friday Stockholm returns real future events from DB, not fixtures.
 - **Do not build:** C-report learning loop, Sweden scouting, Next.js, B2B, Meilisearch product search, D-render as default, status-file rebuild as a “phase”.
 
-### Phase 1 — Useful agent (weeks 3–8)
+### Phase 1 — Scroll feed primacy (weeks 3–8)
 
-- **Goal:** Magic slice in Expo.
-- **Deliverables:** intent parse, `search_events` / `get_event_details` / `rank_events` / `record_feedback`, 3–5 cards with why, stale/confidence handling, save/reject, deep link, golden-query eval set (~20 Stockholm queries).
-- **Success:** dogfood + 5 external users: majority say the 3–5 recs beat browsing; 0 hallucinated times/prices in eval; outbound ticket CTR > 0.
-- **Do not build:** ML recs, group, purchase, public API, national coverage.
+- **Goal:** Ship an AI-ranked scroll feed as the home surface; de-risk chat to a Utforska affordance.
+- **Deliverables:**
+    - `rank_events` heuristic running server-side, blending time-fit, price-fit, distance, category, exclude, confidence, freshness, not-ended, plus save/reject priors from `record_feedback`.
+    - HomeScreen sections (Ikväll / Helgen / Gratis / Rekommenderat / Fler) driven by ranked, paginated results — never by chat completion.
+    - Lightweight chat affordance inside Utforska ("Fråga EventPulse" / magnifier icon). Same `/agent/chat`, same tools, same grounding contract — but not the default tab.
+    - `record_feedback` covers impression / click / dwell / save / reject / outbound / rating from both surfaces (feed rows + chat cards).
+    - Deep link `ticket_url` with host allowlist; outbound tap logged.
+    - Stale / ended filter; confidence copy when score is low.
+    - Golden-query eval set (~20 Stockholm intents) gated on 0 hallucinations regardless of which surface is tested.
+- **Success:** dogfood + 5 external users — feed is opened more than chat; outbound ticket CTR > 0; 0 hallucinated times/prices/venues in eval; majority of repeat sessions start in the feed, not the chat.
+- **Do not build:** ML recs, group UX, purchase flow, public API, Sweden-wide coverage, chat-as-home, magic-slice acceptance scenario as primary surface.
 
 ### Phase 2 — Personalization (weeks 9–16, starts inside 90 days)
 
@@ -648,8 +657,7 @@ Do this next, in order. Do not start Phase 1 UI polish first.
 2. Run `03-Queue/importToEventPulse.ts` against real `03-Queue/03-extractedEvents/` (Stockholm sources first). Start `03-Queue/startWorker.ts`. Count rows in `events` where `start_time` is in the future.
 3. `08-Agent/tools/search_events.ts` querying those rows. No fixtures.
 4. `POST /agent/chat` that can call `search_events` and refuse to invent events.
-5. Expo `AgentScreen` as home; browse becomes secondary.
-6. Stop shipping product reads through anon-key `events` select.
+5. Expo entry remains the existing 4-tab AppShell. Home = AI-ranked scroll feed. AgentScreen (chat) ships as a deliberately secondary affordance inside the Utforska tab — reachable, but not in the user's face. Anon REST as product read path is killed.
 
 Success for Phase 0 is step 3 returning real future Stockholm events.
 
