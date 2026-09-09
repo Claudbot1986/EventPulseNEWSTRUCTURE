@@ -27,6 +27,8 @@ const LOG_DIR = path.join(PROJECT_ROOT, 'runtime', 'scraping-supervisor');
 const TSX_BIN = path.join(PROJECT_ROOT, 'node_modules', '.bin', 'tsx');
 const SUPERVISOR_TS = path.join(PROJECT_ROOT, '09-ScrapingSupervisor/supervisor.ts');
 const PIPELINE_TS = path.join(PROJECT_ROOT, '09-ScrapingSupervisor/ingestionPipeline.ts');
+const WORKER_TS = path.join(PROJECT_ROOT, '03-Queue/startWorker.ts');
+const WORKER_DRAIN_MS = 15 * 60 * 1000; // dräneringsfönster: 15 min, sedan stopp
 
 function getRunLogPath(): string {
   const isoDate = new Date().toISOString().split('T')[0];
@@ -44,6 +46,33 @@ function log(line: string, fileLog?: string): void {
 }
 
 interface SubResult { exitCode: number; durationMs: number; }
+
+/** Som runSubprocess men dödar processen efter maxMs — för daemon-processer (t.ex. BullMQ-worker) som ska dränera kön inom ett tidsfönster. Kill vid timeout = förväntat (exitCode rapporteras som 0). */
+function runSubprocessWithTimeout(name: string, scriptPath: string, fileLog: string, maxMs: number): Promise<SubResult> {
+  const startedAt = Date.now();
+  return new Promise((resolve) => {
+    log(`[step:${name}] start (max ${Math.round(maxMs / 60000)} min)  ${path.relative(PROJECT_ROOT, scriptPath)}`, fileLog);
+    const proc = spawn(TSX_BIN, [scriptPath], {
+      cwd: PROJECT_ROOT,
+      env: { ...process.env, EVENTPULSE_PROJECT_ROOT: PROJECT_ROOT },
+      stdio: ['ignore', 'pipe', 'pipe'],
+    });
+    const killTimer = setTimeout(() => {
+      log(`[step:${name}] dräneringsfönster slut — stoppar`, fileLog);
+      proc.kill('SIGTERM');
+    }, maxMs);
+    proc.on('exit', (code, signal) => {
+      clearTimeout(killTimer);
+      const exitCode = signal === 'SIGTERM' ? 0 : (code ?? 1);
+      log(`[step:${name}] exit code=${exitCode} signal=${signal ?? '-'} duration=${Date.now() - startedAt}ms`, fileLog);
+      resolve({ exitCode, durationMs: Date.now() - startedAt });
+    });
+    proc.on('error', () => {
+      clearTimeout(killTimer);
+      resolve({ exitCode: 1, durationMs: Date.now() - startedAt });
+    });
+  });
+}
 
 function runSubprocess(name: string, scriptPath: string, fileLog: string): Promise<SubResult> {
   const startedAt = Date.now();
@@ -93,15 +122,21 @@ async function main(): Promise<number> {
   log(`[2/2] ingestionPipeline — start`, fileLog);
   const pipeline = await runSubprocess('ingestionPipeline', PIPELINE_TS, fileLog);
   if (pipeline.exitCode !== 0) {
-    log(`[2/2] ingestionPipeline — FAIL (exit=${pipeline.exitCode})`, fileLog);
-    return pipeline.exitCode;
+    log(`[2/2] ingestionPipeline — FAIL (exit=${pipeline.exitCode}) — fortsätter med dränering`, fileLog);
+  } else {
+    log(`[2/2] ingestionPipeline — OK`, fileLog);
   }
-  log(`[2/2] ingestionPipeline — OK`, fileLog);
+
+  // Steg 3: dränera BullMQ-kön till Supabase (workern är daemon — tidsbegränsad dränering)
+  log(`[3/3] startWorker — dränering`, fileLog);
+  const drain = await runSubprocessWithTimeout('startWorker-drain', WORKER_TS, fileLog, WORKER_DRAIN_MS);
+  log(`[3/3] startWorker — ${drain.exitCode === 0 ? 'OK' : `FAIL (exit=${drain.exitCode})`}`, fileLog);
 
   log(`═══════════════════════════════════════════════════════════`, fileLog);
   log(`  KLAR  │  totalDuration=${Date.now() - startedAt}ms`, fileLog);
   log(`═══════════════════════════════════════════════════════════`, fileLog);
-  return 0;
+  // Misslyckad pipeline (t.ex. bi-steg) blockerar inte dränering — speglas i exit-koden
+  return pipeline.exitCode !== 0 ? pipeline.exitCode : drain.exitCode;
 }
 
 main().then((c) => process.exit(c)).catch((e) => { console.error('fatal:', e); process.exit(1); });

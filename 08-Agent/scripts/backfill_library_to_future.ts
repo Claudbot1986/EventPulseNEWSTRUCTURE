@@ -55,6 +55,7 @@ interface CliArgs {
   apply: boolean;
   limit: number | null;
   skipPastAiBackfill: boolean;
+  onlyNullImage: boolean;
 }
 
 function parseArgs(argv: ReadonlyArray<string>): CliArgs {
@@ -62,6 +63,7 @@ function parseArgs(argv: ReadonlyArray<string>): CliArgs {
     apply: false,
     limit: null,
     skipPastAiBackfill: false,
+    onlyNullImage: false,
   };
   for (let i = 2; i < argv.length; i++) {
     const a = argv[i];
@@ -79,6 +81,9 @@ function parseArgs(argv: ReadonlyArray<string>): CliArgs {
       case '--skip-past-ai-backfill':
         args.skipPastAiBackfill = true;
         break;
+      case '--only-null-image':
+        args.onlyNullImage = true;
+        break;
       case '--help':
       case '-h':
         console.log(`
@@ -95,6 +100,9 @@ Flags:
   --limit N                 Process at most N events.
   --skip-past-ai-backfill   Skip step 1 (don't populate library from past-AI).
                             Use when library is already populated.
+  --only-null-image         Only touch events where image_url IS NULL.
+                            Without it, events with existing non-AI images are
+                            also re-picked (churn: rewrites + times_used bump).
   -h, --help                Show this help.
 
 Default workflow:
@@ -134,8 +142,11 @@ async function main(): Promise<void> {
     .select('id, title_sv, title_en, category_slug, start_time, image_url, image_ai_generated')
     .eq('status', 'published')
     .gt('start_time', new Date().toISOString())
-    .or('image_url.is.null,image_ai_generated.eq.false')
     .order('start_time', { ascending: true });
+
+  q = args.onlyNullImage
+    ? q.is('image_url', null)
+    : q.or('image_url.is.null,image_ai_generated.eq.false');
 
   if (args.limit !== null) {
     q = q.limit(args.limit);

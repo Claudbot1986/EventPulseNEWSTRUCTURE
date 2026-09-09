@@ -2,7 +2,7 @@
  * runA-dai-hook.ts — CLI for D-AI auto-trigger queue
  *
  * Process the queue of sources that runA failed on with 'no-jsonld-or-no-events'.
- * For each queued source, runs the constrained D-AI agent (Anthropic Haiku) to
+ * For each queued source, runs the constrained D-AI agent (MiniMax M2.7) to
  * generate a CollectorConfig adapter, saves it to runtime/adapters/{sourceId}.json,
  * and appends to runtime/adapters/_manifest.jsonl. Successful adapters surface
  * in the dashboard's "Review D-AI adapters" tile.

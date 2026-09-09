@@ -94,6 +94,20 @@ export interface LibraryImage {
 
 // ── pickLibraryFallback ────────────────────────────────────────────────────
 
+// Kategori-alias (2026-09-05): events och image_library har historiskt
+// använt olika slugs (events: 'art'/'theater'/'family'/'opera'/'design'/
+// 'musikaler', biblioteket: 'art-exhibitions'/'theatre-comedy'/'barn' m.fl.).
+// Utan alias fastnar dessa events utan bild trots att passande
+// biblioteksbilder finns. Alias listas i prioritetsordning.
+const CATEGORY_ALIASES: Record<string, string[]> = {
+  art: ['art-exhibitions', 'arts'],
+  theater: ['theatre-comedy'],
+  family: ['barn'],
+  opera: ['culture'],
+  design: ['culture'],
+  musikaler: ['theatre-comedy'],
+};
+
 export interface FallbackInput {
   /** Venue UUID (för framtida venue-specifika bilder) */
   venue_id?: string | null;
@@ -158,12 +172,15 @@ export async function pickLibraryFallback(input: FallbackInput): Promise<Fallbac
     }
   }
 
-  // 2. Försök kategori-match (vanligaste fallet)
-  if (input.category_slug) {
+  // 2. Försök kategori-match (vanligaste fallet) — inkl. alias-slugs
+  const catCandidates: string[] = input.category_slug
+    ? [input.category_slug, ...(CATEGORY_ALIASES[input.category_slug] ?? [])]
+    : [];
+  for (const cat of catCandidates) {
     const { data: byCat } = await db()
       .from('image_library')
       .select('id, public_url, storage_path, times_used')
-      .eq('category_slug', input.category_slug)
+      .eq('category_slug', cat)
       .order('rating', { ascending: false, nullsFirst: false })
       .order('times_used', { ascending: true }) // minst använda först (rotation)
       .limit(1)
