@@ -1301,3 +1301,172 @@ ul.bars li {
 }
 .ua-toolbar .sh-count { font-size: 11px; }
 #ua-table .sparkline { max-width: 260px; margin-top: 6px; }
+
+/* ── Layout: sidebar + main (navigation shell) ────────────────────────────── */
+/* Driven by body.sidebar-open vs body:not(.sidebar-open). State persisted in
+   localStorage('eventpulse-sidebar-open'). Toggle button is the first child of
+   the header. Default is open on desktop, closed on narrow viewports. */
+.layout {
+  display: grid;
+  grid-template-columns: 240px 1fr;
+  align-items: start;
+}
+body:not(.sidebar-open) .layout {
+  grid-template-columns: 0 1fr;
+}
+
+.sidebar {
+  position: sticky;
+  top: 0;
+  align-self: stretch;
+  height: 100vh;
+  overflow-y: auto;
+  background: var(--card);
+  border-right: 1px solid var(--border);
+  padding: 16px 8px;
+  transition: padding 0.15s, opacity 0.15s;
+}
+body:not(.sidebar-open) .sidebar {
+  border-right: 0;
+  padding: 0;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.sidebar-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.sidebar-group-label {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--muted);
+  padding: 14px 10px 6px;
+}
+.sidebar-group-label:first-child { padding-top: 4px; }
+
+.nav-link {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 7px 10px;
+  border-radius: 6px;
+  color: var(--text);
+  font-size: 13px;
+  text-decoration: none;
+  cursor: pointer;
+  border: 0;
+  background: transparent;
+  font-family: inherit;
+  width: 100%;
+  text-align: left;
+}
+.nav-link:hover {
+  background: var(--bg);
+  text-decoration: none;
+  color: var(--accent);
+}
+.nav-link.active {
+  background: rgba(88, 166, 255, 0.12);
+  color: var(--accent);
+  font-weight: 600;
+}
+.nav-icon {
+  display: inline-flex;
+  width: 18px;
+  flex-shrink: 0;
+  justify-content: center;
+  font-size: 13px;
+  color: var(--muted);
+}
+.nav-link.active .nav-icon { color: var(--accent); }
+
+.sidebar-toggle {
+  display: none;
+  width: 32px;
+  height: 32px;
+  border-radius: 6px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  color: var(--text);
+  cursor: pointer;
+  font-size: 16px;
+  padding: 0;
+  align-items: center;
+  justify-content: center;
+}
+.sidebar-toggle:hover { background: var(--bg); border-color: var(--accent); }
+
+.layout-main { min-width: 0; }
+
+/* When the sidebar is open on wide screens, the kpi-strip + main sit to the
+   right of it. When closed, the layout collapses back to a single column. */
+.kpi-strip { padding: 16px 32px 0; }
+.layout-main > main { padding: 24px 32px; }
+
+/* ── Status banner (top-of-page dependency state) ─────────────────────────── */
+/* Hidden when all dependencies are ok. Shown in muted yellow if any of
+   BullMQ / 08-Agent / 10-Analytics is unreachable. Dismissed per-page-load
+   via the close button; not persisted. */
+.status-banner {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 32px;
+  font-size: 13px;
+  border-bottom: 1px solid var(--border);
+}
+.status-banner[hidden] { display: none; }
+.status-banner--unknown { background: var(--card); color: var(--muted); }
+.status-banner--ok      { background: rgba(63, 185, 80, 0.12); color: var(--ok); border-bottom-color: rgba(63, 185, 80, 0.3); }
+.status-banner--warn    { background: rgba(240, 136, 62, 0.12); color: var(--warn); border-bottom-color: rgba(240, 136, 62, 0.3); }
+.status-banner--bad     { background: rgba(248, 81, 73, 0.12); color: var(--bad); border-bottom-color: rgba(248, 81, 73, 0.3); }
+.status-banner-icon {
+  display: inline-flex;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.25);
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  flex-shrink: 0;
+}
+.status-banner-text { flex: 1 1 auto; }
+.status-banner-close {
+  background: transparent;
+  border: 0;
+  color: inherit;
+  font-size: 16px;
+  line-height: 1;
+  cursor: pointer;
+  padding: 0 4px;
+  font-family: inherit;
+}
+.status-banner-close:hover { color: var(--text); }
+
+/* ── Responsive: collapse sidebar on narrow viewports ─────────────────────── */
+/* Below 900px the sidebar collapses to an overlay drawer. The toggle button
+   reappears and the layout switches to single-column. */
+@media (max-width: 900px) {
+  .sidebar-toggle { display: inline-flex; }
+  .layout { grid-template-columns: 1fr; }
+  body:not(.sidebar-open) .layout { grid-template-columns: 1fr; }
+  body.sidebar-open .sidebar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 240px;
+    height: 100vh;
+    z-index: 50;
+    box-shadow: 4px 0 12px rgba(0, 0, 0, 0.4);
+    opacity: 1;
+    pointer-events: auto;
+  }
+  .kpi-strip { padding: 16px 16px 0; }
+  .layout-main > main { padding: 16px; }
+  .status-banner { padding: 8px 16px; }
+}

@@ -1813,3 +1813,141 @@ function wireUaToolbar() {
     });
   }
 }
+
+/* ── Sidebar navigation (added 2026-09-09) ───────────────────────────────── */
+/* Toggle persists to localStorage; scroll-spy highlights the section currently
+   in view. The page itself still auto-refreshes every 15 min via the meta
+   refresh tag in <head> — nothing changed there. */
+(function bindSidebar() {
+  const body = document.body;
+  const btn = document.getElementById('btn-sidebar-toggle');
+  if (!btn) return;
+  const KEY = 'eventpulse-sidebar-open';
+
+  // Initial state — default open on wide viewports, closed on narrow ones.
+  const isNarrow = () => window.matchMedia('(max-width: 900px)').matches;
+  const stored = localStorage.getItem(KEY);
+  if (stored === '0' || (stored === null && isNarrow())) {
+    body.classList.remove('sidebar-open');
+  } else {
+    body.classList.add('sidebar-open');
+  }
+  btn.setAttribute('aria-expanded', body.classList.contains('sidebar-open') ? 'true' : 'false');
+
+  btn.addEventListener('click', () => {
+    const open = body.classList.toggle('sidebar-open');
+    btn.setAttribute('aria-expanded', open ? 'true' : 'false');
+    localStorage.setItem(KEY, open ? '1' : '0');
+  });
+
+  // Nav links → smooth scroll. Prevent default anchor jump; account for the
+  // sticky header offset by computing scroll-margin-top on the target.
+  const links = document.querySelectorAll('.nav-link[data-nav-target]');
+  links.forEach((a) => {
+    a.addEventListener('click', (e) => {
+      const id = a.getAttribute('data-nav-target');
+      if (!id) return;
+      const target = document.getElementById(id);
+      if (!target) return;
+      e.preventDefault();
+      target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      // Update the URL hash without jumping again.
+      history.replaceState(null, '', `#${id}`);
+      // On narrow viewports, collapse the drawer after picking an item.
+      if (isNarrow() && body.classList.contains('sidebar-open')) {
+        body.classList.remove('sidebar-open');
+        btn.setAttribute('aria-expanded', 'false');
+        localStorage.setItem(KEY, '0');
+      }
+    });
+  });
+
+  // Scroll-spy — IntersectionObserver marks the nav link matching the topmost
+  // visible card as active. Cheap because the cards are large.
+  const cards = Array.from(document.querySelectorAll('main > section.card[id]'));
+  const linkById = new Map();
+  links.forEach((a) => {
+    const id = a.getAttribute('data-nav-target');
+    if (id) linkById.set(id, a);
+  });
+  if ('IntersectionObserver' in window && cards.length > 0) {
+    const setActive = (id) => {
+      links.forEach((l) => l.classList.remove('active'));
+      const link = id ? linkById.get(id) : null;
+      if (link) link.classList.add('active');
+    };
+    let currentActive = null;
+    const obs = new IntersectionObserver(
+      (entries) => {
+        // Pick the topmost intersecting card.
+        const visible = entries
+          .filter((e) => e.isIntersecting)
+          .sort((a, b) => a.boundingClientRect.top - b.boundingClientRect.top);
+        if (visible.length > 0) {
+          const id = visible[0].target.id;
+          if (id !== currentActive) {
+            currentActive = id;
+            setActive(id);
+          }
+        }
+      },
+      { rootMargin: '-80px 0px -60% 0px', threshold: 0 },
+    );
+    cards.forEach((c) => obs.observe(c));
+  }
+})();
+
+/* ── Status banner (added 2026-09-09) ─────────────────────────────────────── */
+/* Shows a top-of-page warning when BullMQ / 08-Agent / 10-Analytics is
+   unreachable. The data already arrives in /api/status — we just render it
+   in a more discoverable place than the layer tiles. */
+(function bindStatusBanner() {
+  const banner = document.getElementById('status-banner');
+  const textEl = document.getElementById('status-banner-text');
+  const closeBtn = document.getElementById('status-banner-close');
+  if (!banner || !textEl || !closeBtn) return;
+
+  closeBtn.addEventListener('click', () => {
+    banner.hidden = true;
+  });
+
+  // Poll /api/status once on page load. Re-renders after each meta-refresh
+  // (every 15 min) by re-applying via the same fetch below.
+  const apply = (data) => {
+    const issues = [];
+    const checkOne = (label, ok, err) => {
+      if (ok === false) issues.push({ label, err: err || 'svarar inte' });
+    };
+    if (data.bullmq) checkOne('BullMQ (Redis)', data.bullmq.ok, data.bullmq.error);
+    if (data.agent) checkOne('08-Agent', data.agent.ok, data.agent.error);
+    if (data.analyticsServer) checkOne('10-Analytics-server', data.analyticsServer.ok, data.analyticsServer.error);
+
+    if (issues.length === 0) {
+      banner.hidden = true;
+      return;
+    }
+    const summary = issues
+      .map((i) => `${i.label}: ${i.err}`)
+      .join(' · ');
+    textEl.textContent = `${issues.length} beroende${issues.length > 1 ? 'n' : ''} nere — ${summary}`;
+    banner.classList.remove('status-banner--unknown', 'status-banner--ok', 'status-banner--warn', 'status-banner--bad');
+    banner.classList.add('status-banner--warn');
+    banner.hidden = false;
+  };
+
+  // Hook into the existing fetch by monkey-patching fetch for /api/status once.
+  // This avoids a second round-trip; the dashboard already fetches it.
+  const origFetch = window.fetch.bind(window);
+  window.fetch = async (input, init) => {
+    const url = typeof input === 'string' ? input : input.url;
+    const res = await origFetch(input, init);
+    if (url && url.includes('/api/status') && res.ok) {
+      try {
+        const clone = res.clone();
+        const data = await clone.json();
+        apply(data);
+      } catch { /* ignore parse errors — banner stays hidden */ }
+    }
+    return res;
+  };
+})();
