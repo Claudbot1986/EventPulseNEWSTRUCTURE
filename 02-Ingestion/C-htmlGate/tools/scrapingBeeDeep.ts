@@ -776,8 +776,28 @@ export async function deepCrawl(
   }
 
   // ── MEDIUM/DEEP MODE: sitemap-first ─────────────────────────────────────────
-  onProgress?.(`[deepCrawl] Step 1: Fetching sitemap for ${baseUrl}`);
-  const sitemapResult = await fetchSitemap(baseUrl);
+  // Steg 2 (2026-09-10): försök först fetchAllSitemaps() som också läser
+  // robots.txt Sitemap:-direktiv (utöver SITEMAP_VARIANTS). Fallback till
+  // fetchSitemap() om den nya hittar inget — bevarar gamla beteendet.
+  onProgress?.(`[deepCrawl] Step 1: Fetching sitemaps (robots.txt + variants) for ${baseUrl}`);
+  const allSitemaps = await fetchAllSitemaps(baseUrl);
+  let sitemapResult: SitemapResult;
+  if (allSitemaps.found && allSitemaps.urls.length > 0) {
+    // Map fetchAllSitemaps-shape till SitemapResult för att återanvända
+    // befintlig AI-select / ScB-fetch logik oförändrad.
+    const primarySitemapUrl = allSitemaps.sources[0] ?? '';
+    sitemapResult = {
+      urls: allSitemaps.urls,
+      found: true,
+      sitemapUrl: primarySitemapUrl,
+      attempts: allSitemaps.attempts,
+    };
+    onProgress?.(`[deepCrawl] fetchAllSitemaps: ${allSitemaps.urls.length} URLs from ${allSitemaps.sources.length} sitemaps`);
+  } else {
+    // Fallback till klassisk fetchSitemap — SITEMAP_VARIANTS-only
+    onProgress?.(`[deepCrawl] fetchAllSitemaps miss, falling back to fetchSitemap`);
+    sitemapResult = await fetchSitemap(baseUrl);
+  }
 
   if (!sitemapResult.found) {
     // No sitemap — skip to step 5 (AI homepage analysis)
