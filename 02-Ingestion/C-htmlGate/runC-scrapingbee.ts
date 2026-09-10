@@ -234,6 +234,28 @@ async function processSource(entry: QueueEntry, mode: CrawlMode): Promise<ScBRes
   // Show reason for failure to help diagnose
   const reasonStr = result.reason ? ` | ${result.reason}` : '';
   console.log(`  [ScB] ${sourceId} → 0 events via ${result.method} (${result.creditsUsed} credits)${reasonStr}`);
+
+  // P1B (2026-09-10): triagera toolScB-manual-review till D-gate om AI:n
+  // indikerar JS-render. Mönster:
+  //   - "AI found no event URLs" → AI:n såg sidan men hittade inget → trolig JS
+  //   - "No events found on any Swedish path" → svenska mönster misslyckades
+  //   - "low-event-count" i reason → bara 1 event kan vara JS-loaded
+  // Dessa signaler passar bättre i D-renderGate (JS-tung) än manual-review.
+  const jsRenderHints = [
+    'AI found no event URLs',
+    'No events found on any Swedish path',
+    'low-event-count',
+    'JS-render signal',
+    'likelyJsRendered',
+    'no event URLs',
+  ];
+  const reason = result.reason || '';
+  const isJsRenderCandidate = jsRenderHints.some((hint) => reason.includes(hint));
+  if (isJsRenderCandidate) {
+    console.log(`  [ScB] ${sourceId} → JS-render-hint detected → exitReason='d' (P1B triage)`);
+    return { sourceId, success: false, eventsFound: 0, exitReason: 'd', error: reason };
+  }
+
   return { sourceId, success: false, eventsFound: 0, exitReason: 'manual-review', error: result.reason || 'no events found' };
 }
 

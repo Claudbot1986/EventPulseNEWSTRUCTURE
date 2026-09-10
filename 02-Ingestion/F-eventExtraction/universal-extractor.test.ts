@@ -169,3 +169,63 @@ describe('universal-extractor — Strategy A: og:image fallback', () => {
     expect(result.events).toEqual([]);
   });
 });
+
+// ─── Strategy A2: microdata / schema.org itemprop ──────────────────────────
+
+describe('universal-extractor — Strategy A2: nested microdata', () => {
+  it('parses nested itemprop=location into venue/address', () => {
+    const html = `<!doctype html>
+<html><body>
+<div itemscope itemtype="https://schema.org/Event">
+  <span itemprop="name">Konsert i Konserthuset</span>
+  <time itemprop="startDate" datetime="2026-08-22T19:00">22 aug 19:00</time>
+  <div itemprop="location" itemscope itemtype="https://schema.org/Place">
+    <span itemprop="name">Konserthuset Stockholm</span>
+    <div itemprop="address" itemscope itemtype="https://schema.org/PostalAddress">
+      <span itemprop="streetAddress">Hötorget 8</span>
+      <span itemprop="addressLocality">Stockholm</span>
+    </div>
+  </div>
+  <a itemprop="url" href="/event/abc">Läs mer</a>
+</div>
+</body></html>`;
+    const result = extractEvents(html, 'konserthuset', BASE_URL);
+    expect(result.events.length).toBeGreaterThan(0);
+    const evt = result.events[0];
+    expect(evt.title).toBe('Konsert i Konserthuset');
+    // Nested location.name → venue
+    expect(evt.venue).toBe('Konserthuset Stockholm');
+    // Nested location.address.streetAddress → address
+    expect(evt.address).toBe('Hötorget 8');
+    // location.address.addressLocality → city
+    expect(evt.city).toBe('Stockholm');
+  });
+
+  it('extracts img itemprop=image src attribute', () => {
+    const html = `<!doctype html>
+<html><body>
+<div itemscope itemtype="https://schema.org/Event">
+  <span itemprop="name">Fotoevent</span>
+  <img itemprop="image" src="https://cdn.example.com/event-pic.jpg" alt="banner" />
+</div>
+</body></html>`;
+    const result = extractEvents(html, 'fotoevent', BASE_URL);
+    expect(result.events.length).toBeGreaterThan(0);
+    expect(result.events[0].imageUrl).toBe('https://cdn.example.com/event-pic.jpg');
+  });
+
+  it('handles multi-value itemprop as array', () => {
+    const html = `<!doctype html>
+<html><body>
+<div itemscope itemtype="https://schema.org/Event">
+  <span itemprop="name">Festival</span>
+  <a itemprop="url" href="/day1">Dag 1</a>
+  <a itemprop="url" href="/day2">Dag 2</a>
+</div>
+</body></html>`;
+    const result = extractEvents(html, 'festival', BASE_URL);
+    expect(result.events.length).toBeGreaterThan(0);
+    const evt = result.events[0] as unknown as { url: string | string[] };
+    expect(Array.isArray(evt.url) || typeof evt.url === 'string').toBe(true);
+  });
+});

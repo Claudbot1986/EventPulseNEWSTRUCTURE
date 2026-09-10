@@ -22,7 +22,7 @@ test('app loads without crash', async ({ page }) => {
   const errors = [];
   page.on('pageerror', (e) => errors.push(e.message));
 
-  await page.goto(BASE_URL, { waitUntil: 'domcontentloaded', timeout: 15000 });
+  await page.goto(BASE_URL, { waitUntil: 'networkidle', timeout: 15000 });
   await page.waitForTimeout(3000); // allow React to hydrate
 
   const body = await page.textContent('body');
@@ -35,7 +35,7 @@ test('app loads without crash', async ({ page }) => {
 // ─── Test 2: Tab navigation works ────────────────────────────────────────────
 
 test('tab navigation works', async ({ page }) => {
-  await page.goto(BASE_URL, { waitUntil: 'domcontentloaded', timeout: 15000 });
+  await page.goto(BASE_URL, { waitUntil: 'networkidle', timeout: 15000 });
   await page.waitForTimeout(3000);
 
   const tabs = page.locator('[role="tab"]');
@@ -65,7 +65,7 @@ test('tab navigation works', async ({ page }) => {
 // ─── Test 3: HomeScreen sections render (or empty state) ────────────────────
 
 test('HomeScreen sections render or show empty state', async ({ page }) => {
-  await page.goto(BASE_URL, { waitUntil: 'domcontentloaded', timeout: 15000 });
+  await page.goto(BASE_URL, { waitUntil: 'networkidle', timeout: 15000 });
 
   const homeTab = page.locator('[role="tab"]').filter({ hasText: 'Hem' });
   await homeTab.click();
@@ -88,7 +88,7 @@ test('HomeScreen sections render or show empty state', async ({ page }) => {
 // ─── Test 4: Konserter chip navigates to explore ─────────────────────────────
 
 test('Konserter chip triggers explore tab', async ({ page }) => {
-  await page.goto(BASE_URL, { waitUntil: 'domcontentloaded', timeout: 15000 });
+  await page.goto(BASE_URL, { waitUntil: 'networkidle', timeout: 15000 });
   await page.waitForTimeout(2000);
 
   const homeTab = page.locator('[role="tab"]').filter({ hasText: 'Hem' });
@@ -118,7 +118,7 @@ test('Konserter chip triggers explore tab', async ({ page }) => {
 // ─── Test 5: Notifications tab shows without crash ────────────────────────────
 
 test('NotificationsScreen shows without crash', async ({ page }) => {
-  await page.goto(BASE_URL, { waitUntil: 'domcontentloaded', timeout: 15000 });
+  await page.goto(BASE_URL, { waitUntil: 'networkidle', timeout: 15000 });
   await page.waitForTimeout(2000);
 
   const notiserTab = page.locator('[role="tab"]').filter({ hasText: 'Notiser' });
@@ -132,7 +132,7 @@ test('NotificationsScreen shows without crash', async ({ page }) => {
 // ─── Test 6: Profile tab shows without crash ────────────────────────────────
 
 test('ProfileScreen shows without crash', async ({ page }) => {
-  await page.goto(BASE_URL, { waitUntil: 'domcontentloaded', timeout: 15000 });
+  await page.goto(BASE_URL, { waitUntil: 'networkidle', timeout: 15000 });
   await page.waitForTimeout(2000);
 
   const profileTab = page.locator('[role="tab"]').filter({ hasText: 'Profil' });

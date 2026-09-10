@@ -227,16 +227,33 @@ function makeEvent(data: Record<string, unknown>, method: string, source: string
       time = m ? `${m[1].padStart(2,'0')}:${m[2]}` : t.slice(0,5);
     }
 
-    let venue = norm(data.venue || data.location || data.place || data.locationName || data.venueName);
-    let city = norm(data.city || data.town || data.municipality || data.addressLocality);
-    let address = norm(data.address || data.streetAddress || data.locationAddress);
+    let venue = '';
+    let city = '';
+    let address = '';
 
+    // P1D (2026-09-10): plocka nested location FÖRST (microdata location kan
+    // vara objekt med egen name/address, inte en sträng).
     if (typeof data.location === 'object' && data.location) {
-      const loc = data.location as Record<string, string>;
-      venue = venue || norm(loc.name || loc.venue);
-      city = city || norm(loc.city || loc.town || loc.addressLocality);
-      address = address || norm(loc.address || loc.street || loc.streetAddress);
+      const loc = data.location as Record<string, string | Record<string, string>>;
+      // Nested location.address kan i sin tur vara ett objekt
+      let locAddressStr = '';
+      let locCity = '';
+      const locAddr = loc.address;
+      if (typeof locAddr === 'object' && locAddr) {
+        const a = locAddr as Record<string, string>;
+        locAddressStr = a.streetAddress || '';
+        locCity = a.addressLocality || a.city || '';
+      } else if (typeof locAddr === 'string') {
+        locAddressStr = locAddr;
+      }
+      venue = norm(loc.name || loc.venue);
+      city = norm(locCity || loc.city || loc.town || loc.addressLocality);
+      address = norm(locAddressStr || loc.street || loc.streetAddress);
     }
+
+    if (!venue) venue = norm(data.venue || (typeof data.location === 'string' ? data.location : '') || data.place || data.locationName || data.venueName);
+    if (!city) city = norm(data.city || data.town || data.municipality || data.addressLocality);
+    if (!address) address = norm(data.address || data.streetAddress || data.locationAddress);
 
     let location = venue || city || address;
     if (city && venue && !venue.includes(city)) location = `${venue}, ${city}`;
@@ -412,16 +429,101 @@ function extractMicrodata($: cheerio.CheerioAPI, source: string, baseUrl: string
 
   $('[itemtype*="schema.org/Event"]').each((_, el) => {
     const data: Record<string, unknown> = {};
-    $(el).find('[itemprop]').each((__, e2) => {
-      const prop = $(e2).attr('itemprop') || '';
-      const val = $(e2).attr('content') || $(e2).attr('datetime') || $(e2).text();
-      data[prop] = val.trim();
-    });
+    // P1D (2026-09-10): hantera NESTED itemprops (location, offers, organizer
+    // har egna [itemscope][itemtype]). Tidigare plockade vi bara content/
+    // datetime/text; nu hanterar vi även URL-från href, src från img, och
+    // nested objects via rekursiv extrahering.
+    //
+    // VIKTIGT: endast DIRECT children med itemprop tillhör event-noden.
+    // Nested itemscope-träd hanteras separat och propageras INTE uppåt.
+    collectMicrodataProps($, el as unknown as Element, data);
     const evt = makeEvent(data, 'A2', source, baseUrl);
     if (evt) events.push(evt);
   });
 
   return events;
+}
+
+/**
+ * Rekursivt extrahera itemprops. Hanterar:
+ *   - content-attribute (vanligt för SEO)
+ *   - datetime-attribute (för <time itemprop>)
+ *   - href-attribute (för <a itemprop>)
+ *   - src-attribute (för <img itemprop>)
+ *   - textContent (fallback)
+ *   - nested [itemscope][itemtype] som object (Place, PostalAddress, Offer)
+ *
+ * VIKTIGT: cherryio's `find()` rekurserar ner i trädet — vi måste explicit
+ * exkludera nested itemscope-träd från vår egen scope så att location.name
+ * inte bubblar upp till event.name.
+ */
+function collectMicrodataProps(
+  $: cheerio.CheerioAPI,
+  root: Element,
+  data: Record<string, unknown>,
+): void {
+  // Exkludera ALLA element som ligger inuti en nested [itemscope] från vår
+  // egen scope. Detta görs genom att filtrera bort element vars närmaste
+  // [itemscope]-förälder INTE är root.
+
+  const isInsideNestedScope = (el: Element): boolean => {
+    // Walka uppåt; om vi hittar en [itemscope] som inte är root → vi är nested.
+    let cur: Element | null | undefined = el.parent;
+    while (cur && cur !== root) {
+      if ($(cur).is('[itemscope]')) return true;
+      cur = cur.parent;
+    }
+    return false;
+  };
+
+  // Pass 1: direct props (inte inuti nested scope, inte heller [itemscope] själva)
+  $(root).find('[itemprop]').each((_, e2) => {
+    if ($(e2).is('[itemscope]')) return; // skippa nested objects (hanteras i pass 2)
+    if (isInsideNestedScope(e2 as unknown as Element)) return; // skippa barn till nested
+
+    const prop = $(e2).attr('itemprop') || '';
+    if (!prop) return;
+
+    let val = $(e2).attr('content');
+    if (!val) val = $(e2).attr('datetime');
+    if (!val && $(e2).is('a[href]')) val = $(e2).attr('href') || undefined;
+    if (!val && $(e2).is('img[src]')) val = $(e2).attr('src') || undefined;
+    if (!val) val = $(e2).text();
+
+    val = (val || '').trim();
+    if (!val) return;
+
+    if (data[prop] !== undefined) {
+      if (Array.isArray(data[prop])) {
+        (data[prop] as unknown[]).push(val);
+      } else {
+        data[prop] = [data[prop] as string, val];
+      }
+    } else {
+      data[prop] = val;
+    }
+  });
+
+  // Pass 2: nested [itemscope]-element (Place, PostalAddress, Offer, etc.)
+  $(root).find('[itemscope][itemprop]').each((_, e2) => {
+    if (isInsideNestedScope(e2 as unknown as Element)) return; // bara direct children
+
+    const prop = $(e2).attr('itemprop') || '';
+    if (!prop) return;
+
+    const nested: Record<string, unknown> = {};
+    const nestedType = $(e2).attr('itemtype') || '';
+    if (nestedType) nested['@type'] = nestedType.split('/').pop() || nestedType;
+    collectMicrodataProps($, e2 as unknown as Element, nested);
+
+    if (Array.isArray(data[prop])) {
+      (data[prop] as unknown[]).push(nested);
+    } else if (data[prop] !== undefined) {
+      data[prop] = [data[prop], nested];
+    } else {
+      data[prop] = nested;
+    }
+  });
 }
 
 // ─── Method B2: __NEXT_DATA__ (Next.js) ──────────────────────────────────────
