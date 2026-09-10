@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN"
+  "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!--
+  com.eventpulse.ingestion.plist — launchd job for the full ingestion pipeline.
+
+  Runs daily at 02:30. Executes scripts/ingestion-cron.ts which orchestrates
+  ALL plan steps (A→B→C→D-renderGate→I-pdf→etag-refresh→D-images→P2C→P3A→P3B→P3C
+  →pattern-promoter).
+
+  Schedule:
+    Hour=2  Minute=30   (daily)
+  Order vs. other EP jobs:
+    02:30 ingestion        ← denna
+    03:00 purge            (com.eventpulse.purge)
+    04:30 supervisor       (com.eventpulse.supervisor)
+    04:30 discovery        (com.eventpulse.discovery)
+
+  Install:
+    cp scripts/cron/com.eventpulse.ingestion.plist ~/Library/LaunchAgents/
+    launchctl load ~/Library/LaunchAgents/com.eventpulse.ingestion.plist
+
+  Uninstall:
+    launchctl unload ~/Library/LaunchAgents/com.eventpulse.ingestion.plist
+    rm ~/Library/LaunchAgents/com.eventpulse.ingestion.plist
+
+  Statusfil (för dashboard 7777):
+    runtime/ingestion-cron.status.json
+
+  Säkerhet:
+    - WorkingDirectory pekar på projektets working tree (uppdatera sökvägen
+      om du flyttar repot).
+    - launchd ärver .env via shell-wrapper (runIngestion.sh) så alla hemliga
+      nycklar från .env exponeras ENBART för ingestion-processen.
+-->
+<plist version="1.0">
+<dict>
+  <key>Label</key>
+  <string>com.eventpulse.ingestion</string>
+
+  <key>ProgramArguments</key>
+  <array>
+    <string>/bin/bash</string>
+    <string>/Users/claudgashi/EventPulse/scripts/cron/runIngestion.sh</string>
+  </array>
+
+  <key>WorkingDirectory</key>
+  <string>/Users/claudgashi/EventPulse</string>
+
+  <key>StartCalendarInterval</key>
+  <dict>
+    <key>Hour</key>
+    <integer>2</integer>
+    <key>Minute</key>
+    <integer>30</integer>
+  </dict>
+
+  <key>StandardOutPath</key>
+  <string>/Users/claudgashi/EventPulse/runtime/ingestion-cron/launchd.out.log</string>
+  <key>StandardErrorPath</key>
+  <string>/Users/claudgashi/EventPulse/runtime/ingestion-cron/launchd.err.log</string>
+
+  <key>EnvironmentVariables</key>
+  <dict>
+    <key>PATH</key>
+    <string>/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:/Users/claudgashi/.local/bin</string>
+  </dict>
+
+  <key>RunAtLoad</key>
+  <false/>
+  <key>KeepAlive</key>
+  <false/>
+</dict>
+</plist>

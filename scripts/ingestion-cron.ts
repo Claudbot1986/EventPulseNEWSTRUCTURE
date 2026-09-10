@@ -83,6 +83,14 @@ function writeStatus(s: StatusFile): void {
 
 const args = process.argv.slice(2);
 const skipImages = args.includes('--skip-images');
+const skipRender = args.includes('--skip-render');
+const skipDiscovery = args.includes('--skip-discovery');
+const skipPdf = args.includes('--skip-pdf');
+const skipRss = args.includes('--skip-rss');
+const skipEtags = args.includes('--skip-etags');
+const skipGoogleCse = args.includes('--skip-google-cse');
+const skipPatternPromote = args.includes('--skip-pattern-promote');
+const skipManualReviewTriage = args.includes('--skip-manual-triage');
 const limitIdx = args.indexOf('--limit');
 const limit = limitIdx !== -1 ? parseInt(args[limitIdx + 1], 10) : 50;
 
@@ -133,6 +141,43 @@ const steps: Array<{ name: string; cmd: string; args: string[] }> = [
     cmd: 'npx',
     args: ['tsx', '02-Ingestion/C-htmlGate/run-dynamic-pool.ts', '--workers', '5', '--max-rounds', '50'],
   },
+
+  // ── P1A: D-renderGate (Scrapingbee för JS-tunga sidor) ─────────────────
+  // Konsumerar postTestC-D.jsonl som C-gate inte klarade. premium-only,
+  // 5 cr/sida — auto-escalate till stealth vid CF/DataDome-signaler.
+  // Kör EFTER C (så vi inte dubbelprocessar) och FÖRE images.
+  ...((!skipRender) ? [{
+    name: 'D-renderGate',
+    cmd: 'npx',
+    args: ['tsx', '02-Ingestion/D-renderGate/runD-scrapingbee.ts', '--behavior', 'premium-only', '--limit', String(limit)],
+  }] : []),
+
+  // ── P2A: PDF/affisch-extraktion ────────────────────────────────────────
+  // Parsar PDF:er (KB, Riksarkivet, kulturhus) via pdf-parse → universal-extractor.
+  // Kör efter D-renderGate så även JS-renderade PDF-sidor är täckta.
+  ...((!skipPdf) ? [{
+    name: 'I-pdfExtraction',
+    cmd: 'npx',
+    args: ['tsx', '02-Ingestion/I-pdfExtraction/pdfExtractor.ts', '--limit', String(limit), '--concurrency', '3'],
+  }] : []),
+
+  // ── P1B: Triagera toolScB-rester → D-gate istället för manual-review ──
+  // (toolScB-routingen är inbakad i C-gate routeResult(); detta steg tömmer
+  // manuellt kvarvarande legacy-rutor via pattern-promoter --dry-run.)
+  ...((!skipManualReviewTriage) ? [{
+    name: 'manual-review-triage',
+    cmd: 'npx',
+    args: ['tsx', '02-Ingestion/C-htmlGate/runC-pattern-promoter.ts', '--dry-run', '--limit', '20'],
+  }] : []),
+
+  // ── P2B: ETag / If-Modified-Since dedup ───────────────────────────────
+  // Uppdaterar body-hash-cache; skippar nedladdning för oförändrade sidor.
+  // Kör EFTER ingestion så vi har färsk data att hasha.
+  ...((!skipEtags) ? [{
+    name: 'etag-refresh',
+    cmd: 'npx',
+    args: ['tsx', '02-Ingestion/tools/etagRefresh.ts', '--limit', String(limit)],
+  }] : []),
 ];
 
 if (!skipImages) {
@@ -145,6 +190,55 @@ if (!skipImages) {
     // (post-launch / med riktig budget). Just nu: BFL nästan aldrig.
     cmd: 'npx',
     args: ['tsx', '--eval', `import('./08-Agent/services/imageGen.matchLibraryFirst.ts').then(m => m.matchLibraryFirst({ limit: ${limit}, onlyMissing: true, libraryConcurrency: 5, bflConcurrency: 3 })).then(r => console.log(JSON.stringify(r))).catch(e => { console.error(e); process.exit(1); })`],
+  });
+
+  // ── P2C: Active-learning closed loop ──────────────────────────────────
+  // Triggar review-flagga för låg-confidence events → record_feedback
+  // → dashboard visar dem i human-review modal.
+  steps.push({
+    name: 'P2C-active-learning',
+    cmd: 'npx',
+    args: ['tsx', '--eval', `import('./08-Agent/tools/activeLearning.ts').then(m => m.run({ threshold: 0.5, dryRun: false })).then(r => console.log(JSON.stringify(r))).catch(e => { console.error(e); process.exit(1); })`],
+  });
+}
+
+if (!skipGoogleCse) {
+  // P3A: Google Custom Search API för discovery.
+  // Kräver GOOGLE_CSE_ID + GOOGLE_API_KEY i env. Om nycklar saknas → no-op.
+  // Queries: ["events stockholm", "konsert stockholm 2026", ...] → source_candidates.
+  steps.push({
+    name: 'P3A-google-cse',
+    cmd: 'npx',
+    args: ['tsx', '07-Discovery/src/searchEngines/googleCustomSearch.ts', '--queries', '10', '--per-query', '10'],
+  });
+}
+
+if (!skipDiscovery) {
+  // P3B: Venue-graph geo-expansion.
+  // Hittar nya venues inom 500m av existerande venues via lat/lng.
+  steps.push({
+    name: 'P3B-venue-graph-geo',
+    cmd: 'npx',
+    args: ['tsx', '07-Discovery/src/venueGraph/graphBuilder.ts', '--geo-radius-m', '500', '--limit', '50'],
+  });
+}
+
+if (!skipRss) {
+  // P3C: RSS-feed discovery.
+  // Provar /feed, /rss.xml för kända venues → universal-extractor.
+  steps.push({
+    name: 'P3C-rss-discovery',
+    cmd: 'npx',
+    args: ['tsx', '07-Discovery/src/searchEngines/rssDiscovery.ts', '--limit', '100', '--concurrency', '5'],
+  });
+}
+
+if (!skipPatternPromote) {
+  // Pattern promoter: godkänn URL-mönster från C → C0/C2.
+  steps.push({
+    name: 'pattern-promoter',
+    cmd: 'npx',
+    args: ['tsx', '02-Ingestion/C-htmlGate/runC-pattern-promoter.ts', '--limit', '20'],
   });
 }
 
