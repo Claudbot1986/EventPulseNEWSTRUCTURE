@@ -222,11 +222,13 @@ if (!skipGoogleCse) {
 
 if (!skipDiscovery) {
   // P3B: Venue-graph geo-expansion.
-  // Hittar nya venues inom 500m av existerande venues via lat/lng.
+  // Hittar nya venues inom 500m av existerande venues via lat/lng och skriver
+  // geo-baserade queries till source_candidates (engine='venue_graph_geo').
+  // Dessa plockas sedan upp av P3A discoverySearch → Exa → nya venues.
   steps.push({
     name: 'P3B-venue-graph-geo',
     cmd: 'npx',
-    args: ['tsx', '07-Discovery/src/venueGraph/graphBuilder.ts', '--geo-radius-m', '500', '--limit', '50'],
+    args: ['tsx', '07-Discovery/src/venueGraph/geoExpansion.ts', '--geo-radius-m', '500', '--limit', '50', '--city', 'Stockholm'],
   });
 }
 
