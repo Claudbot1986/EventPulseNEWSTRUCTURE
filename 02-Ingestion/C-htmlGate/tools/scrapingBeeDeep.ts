@@ -189,6 +189,181 @@ export function parseXmlSitemap(xml: string): string[] {
     .filter((url): url is string => url !== null && url.length > 0);
 }
 
+// ─── Step 1b: robots.txt Sitemap directive (multi-site-verified) ────────────
+//
+// Per plan §Step 2: många sajter annonserar sin sitemap via `Sitemap:`-
+// direktivet i /robots.txt istället för (eller utöver) /sitemap.xml.
+// Läser robots.txt, extraherar Sitemap:-rader, och unionar med SITEMAP_VARIANTS.
+// Universellt applicerbar — alla sajter med sitemap följer samma konvention
+// (Google spec, robots.txt → Sitemap directive).
+//
+// Generalization Protection: General (verifierad över alla sajter som har
+// sitemap). Inga IGNORE_PATTERNS- eller scoring-ändringar — vi återanvänder
+// befintlig parseXmlSitemap + aiSelectEventUrlsFromSitemap-kod.
+
+const ROBOTS_TIMEOUT_MS = 5000;
+
+/**
+ * Per-host cache: sparar både URLs och fetch-status (så att vi inte
+ * returnerar success:true för hosts vi faktiskt misslyckades hämta).
+ * Värdet är ett objekt med { urls, success }.
+ */
+const ROBOTS_CACHE = new Map<string, { urls: string[]; success: boolean }>();
+
+/**
+ * Test-only: rensa per-host robots-cachen. Exporterad för att tester ska
+ * kunna börja från ett rent tillstånd mellan scenarios.
+ */
+export function _clearRobotsCache(): void {
+  ROBOTS_CACHE.clear();
+}
+
+/**
+ * GET /robots.txt och extrahera alla `Sitemap:`-direktiv.
+ * Returnerar tom array om robots.txt saknas, är tom, eller inte har Sitemap:.
+ *
+ * Per-host cache — undvik upprepade robots.txt-fetches inom samma körning.
+ * Om en tidigare hämtning misslyckades cachas success=false så att framtida
+ * anrop inte heller rapporterar success utan att faktiskt hämta igen.
+ */
+export async function fetchRobotsSitemaps(baseUrl: string): Promise<{ urls: string[]; robotsUrl: string; success: boolean }> {
+  let base: URL;
+  try {
+    base = new URL(baseUrl);
+  } catch {
+    return { urls: [], robotsUrl: '', success: false };
+  }
+
+  const robotsUrl = `${base.origin}/robots.txt`;
+
+  // Per-host cache (samma process, samma host = samma robots.txt)
+  const cached = ROBOTS_CACHE.get(base.origin);
+  if (cached !== undefined) {
+    return { urls: cached.urls, robotsUrl, success: cached.success };
+  }
+
+  try {
+    const result = await fetchHtml(robotsUrl, { timeout: ROBOTS_TIMEOUT_MS });
+    if (!result.success || !result.html) {
+      ROBOTS_CACHE.set(base.origin, { urls: [], success: false });
+      return { urls: [], robotsUrl, success: false };
+    }
+
+    // Extrahera Sitemap:-rader (case-insensitive, stöder både `Sitemap:` och `sitemap:`)
+    // Radformat: `Sitemap: https://example.com/sitemap.xml` (whitespace-flexibelt)
+    const sitemapUrls: string[] = [];
+    const lines = result.html.split(/\r?\n/);
+    for (const line of lines) {
+      const trimmed = line.trim();
+      if (!trimmed || trimmed.startsWith('#')) continue;
+      const match = trimmed.match(/^sitemap\s*:\s*(.+)$/i);
+      if (match) {
+        const url = match[1].trim();
+        // Validera att det är en absolut URL
+        try {
+          const u = new URL(url);
+          if (u.protocol === 'http:' || u.protocol === 'https:') {
+            sitemapUrls.push(u.href);
+          }
+        } catch { /* skippa ogiltiga URLs */ }
+      }
+    }
+
+    ROBOTS_CACHE.set(base.origin, { urls: sitemapUrls, success: true });
+    return { urls: sitemapUrls, robotsUrl, success: true };
+  } catch {
+    ROBOTS_CACHE.set(base.origin, { urls: [], success: false });
+    return { urls: [], robotsUrl, success: false };
+  }
+}
+
+/**
+ * Kombinerad sitemap-discovery: Hämta både robots.txt-Sitemap-direktiv OCH
+ * SITEMAP_VARIANTS, deduplicera, returnera union.
+ *
+ * Används som additiv utökning av fetchSitemap() — INTE ersättning.
+ * Kallande kod (deepCrawl) kan välja att använda denna istället för fetchSitemap
+ * för att få fler kandidater.
+ */
+export async function discoverSitemaps(baseUrl: string): Promise<{
+  urls: string[];          // Sitemap-URL:er att hämta (robots-directiv + standard-varianter)
+  attemptedFrom: string[]; // Varje URL vi redan försökt hämta
+  robotsSuccess: boolean;
+}> {
+  const attemptedFrom: string[] = [];
+  const base = baseUrl.replace(/\/$/, '');
+
+  // 1. robots.txt
+  const robots = await fetchRobotsSitemaps(baseUrl);
+  attemptedFrom.push(robots.robotsUrl);
+
+  // 2. Standard-varianter
+  const variants = SITEMAP_VARIANTS.map(v => base + v);
+  attemptedFrom.push(...variants);
+
+  // Union, deduplicerad
+  const seen = new Set<string>();
+  const allSitemapUrls: string[] = [];
+  for (const url of [...robots.urls, ...variants]) {
+    if (seen.has(url)) continue;
+    seen.add(url);
+    allSitemapUrls.push(url);
+  }
+
+  return { urls: allSitemapUrls, attemptedFrom, robotsSuccess: robots.success };
+}
+
+/**
+ * Hämta och parsa ALLA sitemap-URLs från en baseUrl (robots-directiv +
+ * standard-varianter), returnera union av alla <loc>-URLs som hittades.
+ *
+ * Detta är den utökade motsvarigheten till fetchSitemap() som planen
+ * rekommenderar i Step 2.
+ */
+export async function fetchAllSitemaps(baseUrl: string): Promise<{
+  urls: string[];
+  found: boolean;
+  sources: string[];  // Vilka sitemap-filer som faktiskt gav URLs
+  attempts: string[]; // Alla försök (inkl. misslyckade)
+}> {
+  const all: string[] = [];
+  const sources: string[] = [];
+  const attempts: string[] = [];
+
+  const discovered = await discoverSitemaps(baseUrl);
+  attempts.push(...discovered.attemptedFrom);
+
+  for (const sitemapUrl of discovered.urls) {
+    try {
+      const result = await fetchHtml(sitemapUrl, { timeout: 10000 });
+      if (result.success && result.html) {
+        const urls = parseXmlSitemap(result.html);
+        if (urls.length > 0) {
+          all.push(...urls);
+          sources.push(sitemapUrl);
+        }
+      }
+    } catch {
+      // continue
+    }
+  }
+
+  // Deduplicera
+  const seen = new Set<string>();
+  const unique = all.filter(u => {
+    if (seen.has(u)) return false;
+    seen.add(u);
+    return true;
+  });
+
+  return {
+    urls: unique,
+    found: unique.length > 0,
+    sources,
+    attempts,
+  };
+}
+
 // ─── Step 2: AI URL Selection ────────────────────────────────────────────────────
 
 /**
