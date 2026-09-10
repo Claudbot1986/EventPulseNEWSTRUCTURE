@@ -93,6 +93,24 @@ const skipPatternPromote = args.includes('--skip-pattern-promote');
 const skipManualReviewTriage = args.includes('--skip-manual-triage');
 const limitIdx = args.indexOf('--limit');
 const limit = limitIdx !== -1 ? parseInt(args[limitIdx + 1], 10) : 50;
+const smoke = args.includes('--smoke');
+
+/**
+ * `--smoke` (2026-09-10): kör HELA pipelinen med minimal data så vi kan verifiera
+ * att kedjan är hel utan att bränna Scrapingbee-credits eller BFL-budget.
+ *
+ * I smoke:
+ *   - effectiveLimit = 1 (default för A/B/D/I-pdf/etag-refresh)
+ *   - BFL-fallback avstängt via skipImages=true (vi riskerar inte bildgenerering)
+ *   - P3A discovery: --queries 1 --per-query 1
+ *   - P3B geo: --limit 5
+ *   - P3C rss: --limit 5 --concurrency 2 --dry-run=true (skriver inte till DB)
+ *   - pattern-promoter / manual-review-triage: --limit 5
+ *   - D-renderGate: --behavior static-only (istället för premium-only) för att
+ *     undvika Scrapingbee-credits i smoke
+ */
+const effectiveLimit = smoke ? 1 : limit;
+const effectiveDBehavior = smoke ? 'static-only' : 'premium-only';
 
 // ─── Step runner ────────────────────────────────────────────────────────────
 
@@ -129,17 +147,17 @@ const steps: Array<{ name: string; cmd: string; args: string[] }> = [
   {
     name: 'A-directAPI',
     cmd: 'npx',
-    args: ['tsx', '02-Ingestion/A-directAPI-networkGate/runA.ts', '--limit', String(limit), '--workers', '20'],
+    args: ['tsx', '02-Ingestion/A-directAPI-networkGate/runA.ts', '--limit', String(effectiveLimit), '--workers', '20'],
   },
   {
     name: 'B-network-api',
     cmd: 'npx',
-    args: ['tsx', '02-Ingestion/B-JSON-feedGate/runB.ts', '--limit', String(limit), '--workers', '20'],
+    args: ['tsx', '02-Ingestion/B-JSON-feedGate/runB.ts', '--limit', String(effectiveLimit), '--workers', '20'],
   },
   {
     name: 'C-htmlGate',
     cmd: 'npx',
-    args: ['tsx', '02-Ingestion/C-htmlGate/run-dynamic-pool.ts', '--workers', '5', '--max-rounds', '50'],
+    args: ['tsx', '02-Ingestion/C-htmlGate/run-dynamic-pool.ts', '--workers', '5', '--max-rounds', smoke ? '5' : '50'],
   },
 
   // ── P1A: D-renderGate (Scrapingbee för JS-tunga sidor) ─────────────────
@@ -149,7 +167,7 @@ const steps: Array<{ name: string; cmd: string; args: string[] }> = [
   ...((!skipRender) ? [{
     name: 'D-renderGate',
     cmd: 'npx',
-    args: ['tsx', '02-Ingestion/D-renderGate/runD-scrapingbee.ts', '--behavior', 'premium-only', '--limit', String(limit)],
+    args: ['tsx', '02-Ingestion/D-renderGate/runD-scrapingbee.ts', '--behavior', effectiveDBehavior, '--limit', String(effectiveLimit)],
   }] : []),
 
   // ── P2A: PDF/affisch-extraktion ────────────────────────────────────────
@@ -158,7 +176,7 @@ const steps: Array<{ name: string; cmd: string; args: string[] }> = [
   ...((!skipPdf) ? [{
     name: 'I-pdfExtraction',
     cmd: 'npx',
-    args: ['tsx', '02-Ingestion/I-pdfExtraction/pdfExtractor.ts', '--limit', String(limit), '--concurrency', '3'],
+    args: ['tsx', '02-Ingestion/I-pdfExtraction/pdfExtractor.ts', '--limit', String(effectiveLimit), '--concurrency', smoke ? '1' : '3'],
   }] : []),
 
   // ── P1B: Triagera toolScB-rester → D-gate istället för manual-review ──
@@ -167,7 +185,7 @@ const steps: Array<{ name: string; cmd: string; args: string[] }> = [
   ...((!skipManualReviewTriage) ? [{
     name: 'manual-review-triage',
     cmd: 'npx',
-    args: ['tsx', '02-Ingestion/C-htmlGate/runC-pattern-promoter.ts', '--dry-run', '--limit', '20'],
+    args: ['tsx', '02-Ingestion/C-htmlGate/runC-pattern-promoter.ts', '--dry-run', '--limit', smoke ? '5' : '20'],
   }] : []),
 
   // ── P2B: ETag / If-Modified-Since dedup ───────────────────────────────
@@ -176,11 +194,14 @@ const steps: Array<{ name: string; cmd: string; args: string[] }> = [
   ...((!skipEtags) ? [{
     name: 'etag-refresh',
     cmd: 'npx',
-    args: ['tsx', '02-Ingestion/tools/etagRefresh.ts', '--limit', String(limit)],
+    args: ['tsx', '02-Ingestion/tools/etagRefresh.ts', '--limit', String(effectiveLimit)],
   }] : []),
 ];
 
 if (!skipImages) {
+  // I smoke: skippa BFL-fallback via skipBflFallback=true (bibliotek-matchning
+  // är OK men vi vill inte bränna pengar om biblioteket inte har något).
+  const imageLimit = smoke ? 3 : limit;
   steps.push({
     name: 'D-images',
     // Library-first image fallback (2026-09-10): provar image_library först
@@ -189,7 +210,7 @@ if (!skipImages) {
     // Mål: 10–20 bilder per kategori/eventtyp så BFL blir sällsynt
     // (post-launch / med riktig budget). Just nu: BFL nästan aldrig.
     cmd: 'npx',
-    args: ['tsx', '--eval', `import('./08-Agent/services/imageGen.matchLibraryFirst.ts').then(m => m.matchLibraryFirst({ limit: ${limit}, onlyMissing: true, libraryConcurrency: 5, bflConcurrency: 3 })).then(r => console.log(JSON.stringify(r))).catch(e => { console.error(e); process.exit(1); })`],
+    args: ['tsx', '--eval', `import('./08-Agent/services/imageGen.matchLibraryFirst.ts').then(m => m.matchLibraryFirst({ limit: ${imageLimit}, onlyMissing: true, libraryConcurrency: 5, bflConcurrency: 3, skipBflFallback: ${smoke} })).then(r => console.log(JSON.stringify(r))).catch(e => { console.error(e); process.exit(1); })`],
   });
 
   // ── P2C: Active-learning closed loop ──────────────────────────────────
@@ -216,7 +237,7 @@ if (!skipGoogleCse) {
     // faller tillbaka till Google CSE om Exa returnerar < minExa URLs
     // eller är otillgänglig. Resultat dedupas via source_candidates upsert.
     cmd: 'npx',
-    args: ['tsx', '07-Discovery/src/searchEngines/discoverySearch.ts', '--queries', '10', '--per-query', '10', '--min-exa', '1'],
+    args: ['tsx', '07-Discovery/src/searchEngines/discoverySearch.ts', '--queries', smoke ? '1' : '10', '--per-query', smoke ? '1' : '10', '--min-exa', '1'],
   });
 }
 
@@ -228,17 +249,19 @@ if (!skipDiscovery) {
   steps.push({
     name: 'P3B-venue-graph-geo',
     cmd: 'npx',
-    args: ['tsx', '07-Discovery/src/venueGraph/geoExpansion.ts', '--geo-radius-m', '500', '--limit', '50', '--city', 'Stockholm'],
+    args: ['tsx', '07-Discovery/src/venueGraph/geoExpansion.ts', '--geo-radius-m', '500', '--limit', smoke ? '5' : '50', '--city', 'Stockholm'],
   });
 }
 
 if (!skipRss) {
   // P3C: RSS-feed discovery.
   // Provar /feed, /rss.xml för kända venues → universal-extractor.
+  // I smoke: --dry-run=true så vi inte skriver till source_candidates
+  // (testa discovery-flödet utan DB-write).
   steps.push({
     name: 'P3C-rss-discovery',
     cmd: 'npx',
-    args: ['tsx', '07-Discovery/src/searchEngines/rssDiscovery.ts', '--limit', '100', '--concurrency', '5'],
+    args: ['tsx', '07-Discovery/src/searchEngines/rssDiscovery.ts', '--limit', smoke ? '5' : '100', '--concurrency', smoke ? '2' : '5', ...(smoke ? ['--dry-run'] : [])],
   });
 }
 
@@ -247,7 +270,7 @@ if (!skipPatternPromote) {
   steps.push({
     name: 'pattern-promoter',
     cmd: 'npx',
-    args: ['tsx', '02-Ingestion/C-htmlGate/runC-pattern-promoter.ts', '--limit', '20'],
+    args: ['tsx', '02-Ingestion/C-htmlGate/runC-pattern-promoter.ts', '--limit', smoke ? '5' : '20'],
   });
 }
 

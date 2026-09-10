@@ -62,6 +62,12 @@ export interface MatchLibraryFirstOptions {
   libraryConcurrency?: number;
   /** Hur många events att processa parallellt mot BFL om biblioteket faller igenom (default 3). */
   bflConcurrency?: number;
+  /**
+   * Hoppa över BFL-fallback även om biblioteket INTE har match (default false).
+   * Events utan match blir då "unmatched" istället för att trigga BFL.
+   * Används av smoke-läget för att verifiera pipelinen utan att bränna credits.
+   */
+  skipBflFallback?: boolean;
   /** Progress callback för dashboard / cron-status. */
   onProgress?: (phase: 'library' | 'bfl', done: number, total: number) => void;
 }
@@ -105,6 +111,7 @@ export async function matchLibraryFirst(
     onlyMissing = true,
     libraryConcurrency = 5,
     bflConcurrency = 3,
+    skipBflFallback = false,
     onProgress,
   } = opts;
 
@@ -215,7 +222,12 @@ export async function matchLibraryFirst(
   let bflCallsAttempted = 0;
   let bflResult: BatchResult | null = null;
 
-  if (bflCandidates.length > 0) {
+  if (skipBflFallback) {
+    // Smoke-läge: rapportera candidates som unmatched utan att anropa BFL.
+    if (!firstError) {
+      firstError = `skipBflFallback=true: ${bflCandidates.length} candidates lämnades utan BFL-bild (avsiktligt i smoke)`;
+    }
+  } else if (bflCandidates.length > 0) {
     try {
       // generateBatch() väljer sina egna events (filter image_url IS NULL).
       // Vi kan INTE rikta den till en specifik lista — så vi accepterar att

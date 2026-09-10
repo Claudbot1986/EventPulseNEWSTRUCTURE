@@ -48,6 +48,11 @@ rm ~/Library/LaunchAgents/com.eventpulse.ingestion.plist
 # Kör hela pipelinen direkt (utan att vänta till 02:30)
 bash scripts/cron/runIngestion.sh
 
+# Smoke-läge: kör hela kedjan med minimal data, UTAN BFL-fallback
+# och utan Scrapingbee-credits (D-gate kör static-only).
+# Rekommenderas att köra efter varje ändring i pipelinen.
+bash scripts/cron/runSmoke.sh
+
 # Eller hoppa över enskilda steg för felsökning
 npx tsx scripts/ingestion-cron.ts --skip-render --skip-images --limit 10
 ```
