@@ -37,6 +37,7 @@ import { getSource } from '../tools/sourceRegistry';
 import { extractFromHtml } from '../F-eventExtraction/universal-extractor';
 import type { ParsedEvent } from '../F-eventExtraction/schema';
 import { renderPage, type RenderBehavior } from './renderGate';
+import { isSkipped } from '../lib/quarantineGuard.js';
 
 interface QueueEntry {
   sourceId: string;
@@ -54,6 +55,8 @@ interface DResult {
   eventsFound: number;
   reason: string;
   renderedPages: number;
+  /** Sum of Scrapingbee credits charged across all render attempts. */
+  creditsUsed: number;
 }
 
 const DATA_ROOT = process.env.EVENTPULSE_SANDBOX_ROOT
@@ -263,19 +266,52 @@ function timeoutResult(sourceId: string): DResult {
     eventsFound: 0,
     reason: `source-timeout>${SOURCE_TIMEOUT_MS}ms`,
     renderedPages: 0,
+    creditsUsed: 0,
   };
 }
 
 async function processSource(entry: QueueEntry, maxPages: number, behavior: RenderBehavior): Promise<DResult> {
+  // ─── Source Lifecycle: skip-check ───────────────────────────────
+  // Race-safe: läser INDEX.json från disk vid varje källanrop.
+  // Förbrukar INGA Scrapingbee-credits på quarantined/retired källor.
+  const skip = isSkipped(entry.sourceId);
+  if (skip.skip) {
+    console.log(`[D-skip] ${entry.sourceId} (${skip.reason}: ${skip.entry?.reasonCode ?? ''})`);
+    try {
+      appendFileSync(
+        path.resolve(RUNTIME_DIR, 'sources_audit.jsonl'),
+        JSON.stringify({
+          event: 'gate_skip',
+          sourceId: entry.sourceId,
+          gate: 'D',
+          reason: skip.reason,
+          reasonCode: skip.entry?.reasonCode ?? '',
+          at: new Date().toISOString(),
+        }) + '\n',
+        'utf8',
+      );
+    } catch { /* audit-log misslyckades — skip fortsätter */ }
+    return {
+      sourceId: entry.sourceId,
+      success: false,
+      eventsFound: 0,
+      reason: `skipped: ${skip.reason}`,
+      renderedPages: 0,
+      creditsUsed: 0,
+    };
+  }
+
   const source = getSource(entry.sourceId);
   if (!source) {
-    return { sourceId: entry.sourceId, success: false, eventsFound: 0, reason: 'source not found', renderedPages: 0 };
+    return { sourceId: entry.sourceId, success: false, eventsFound: 0, reason: 'source not found', renderedPages: 0, creditsUsed: 0 };
   }
 
   const targetUrls: string[] = [source.url];
   let first = await renderPage(source.url, { timeout: 30000, behavior });
+  let firstCredits = first.metrics?.creditsCharged ?? 0;
   if (!first.success && (first.error || '').toLowerCase().includes('timeout')) {
     first = await renderPage(source.url, { timeout: 45000, behavior });
+    firstCredits += first.metrics?.creditsCharged ?? 0;
   }
   if (!first.success || !first.html) {
     return {
@@ -284,6 +320,7 @@ async function processSource(entry: QueueEntry, maxPages: number, behavior: Rend
       eventsFound: 0,
       reason: first.error || 'render failed',
       renderedPages: 1,
+      creditsUsed: firstCredits,
     };
   }
 
@@ -313,6 +350,8 @@ async function processSource(entry: QueueEntry, maxPages: number, behavior: Rend
 
   const allEvents: ParsedEvent[] = [];
   let renderedPages = 1;
+  // Sum av creditsCharged över alla render-anrop (initial + retry + sidor).
+  let creditsUsed = firstCredits;
 
   // Reuse already rendered first page to avoid duplicate render.
   {
@@ -327,14 +366,17 @@ async function processSource(entry: QueueEntry, maxPages: number, behavior: Rend
         eventsFound: current.length,
         reason: `events found via JS render (${renderedPages} pages, behavior=${behavior})`,
         renderedPages,
+        creditsUsed,
       };
     }
   }
 
   for (const url of targetUrls.slice(1)) {
     let rr = await renderPage(url, { timeout: 30000, behavior });
+    creditsUsed += rr.metrics?.creditsCharged ?? 0;
     if (!rr.success && (rr.error || '').toLowerCase().includes('timeout')) {
       rr = await renderPage(url, { timeout: 45000, behavior });
+      creditsUsed += rr.metrics?.creditsCharged ?? 0;
     }
     renderedPages += 1;
     if (!rr.success || !rr.html) continue;
@@ -349,6 +391,7 @@ async function processSource(entry: QueueEntry, maxPages: number, behavior: Rend
         eventsFound: current.length,
         reason: `events found via JS render (${renderedPages} pages, behavior=${behavior})`,
         renderedPages,
+        creditsUsed,
       };
     }
   }
@@ -362,6 +405,7 @@ async function processSource(entry: QueueEntry, maxPages: number, behavior: Rend
       eventsFound: unique.length,
       reason: `events found via JS render (${renderedPages} pages, behavior=${behavior})`,
       renderedPages,
+      creditsUsed,
     };
   }
 
@@ -371,6 +415,7 @@ async function processSource(entry: QueueEntry, maxPages: number, behavior: Rend
     eventsFound: unique.length,
     reason: unique.length === 1 ? 'only one event found' : 'no events found after JS rendering',
     renderedPages,
+    creditsUsed,
   };
 }
 
@@ -439,9 +484,11 @@ async function main() {
   const toMan: QueueEntry[] = [];
   const backToInput: QueueEntry[] = [];
 
+  let totalCredits = 0;
   for (let i = 0; i < batch.length; i++) {
     const entry = batch[i];
     const res = results[i];
+    totalCredits += res.creditsUsed;
     if (res.success) {
       toUi.push({
         sourceId: entry.sourceId,
@@ -450,9 +497,9 @@ async function main() {
         priority: entry.priority,
         attempt: entry.attempt + 1,
         queueReason: `toolD: ${res.eventsFound} events found (input=${inputFilename}, behavior=${behavior})`,
-        workerNotes: `renderedPages=${res.renderedPages}; ${res.reason}`,
+        workerNotes: `renderedPages=${res.renderedPages}; creditsUsed=${res.creditsUsed}; ${res.reason}`,
       });
-      log(`[OK] ${entry.sourceId} -> postD-UI (${res.eventsFound} events)`);
+      log(`[OK] ${entry.sourceId} -> postD-UI (${res.eventsFound} events, credits=${res.creditsUsed})`);
     } else if (res.eventsFound === 1 || (res.reason || '').includes('only one event')) {
       toMan1.push({
         sourceId: entry.sourceId,
@@ -461,9 +508,9 @@ async function main() {
         priority: entry.priority,
         attempt: entry.attempt + 1,
         queueReason: `toolD: one event extracted (input=${inputFilename})`,
-        workerNotes: `eventsFound=${res.eventsFound}; renderedPages=${res.renderedPages}; ${res.reason}`,
+        workerNotes: `eventsFound=${res.eventsFound}; renderedPages=${res.renderedPages}; creditsUsed=${res.creditsUsed}; ${res.reason}`,
       });
-      log(`[MAN1] ${entry.sourceId} -> postD-man1 (1 event)`);
+      log(`[MAN1] ${entry.sourceId} -> postD-man1 (1 event, credits=${res.creditsUsed})`);
     } else if (isRecoveryInput) {
       // Recovery queue: send failures BACK to the same input queue
       // (preserve manual-review / recovery status; do NOT promote to postD-man).
@@ -471,9 +518,9 @@ async function main() {
         ...entry,
         queueName: inputFilename.replace(/\.jsonl$/, ''),
         attempt: entry.attempt + 1,
-        workerNotes: `toolD-retry-fail: ${res.reason}`,
+        workerNotes: `toolD-retry-fail: creditsUsed=${res.creditsUsed}; ${res.reason}`,
       });
-      log(`[BACK] ${entry.sourceId} -> ${inputFilename} (no events; ${res.reason})`);
+      log(`[BACK] ${entry.sourceId} -> ${inputFilename} (no events; credits=${res.creditsUsed}; ${res.reason})`);
     } else {
       toMan.push({
         sourceId: entry.sourceId,
@@ -482,9 +529,9 @@ async function main() {
         priority: entry.priority,
         attempt: entry.attempt + 1,
         queueReason: `toolD: ${res.reason}`,
-        workerNotes: `eventsFound=${res.eventsFound}; renderedPages=${res.renderedPages}`,
+        workerNotes: `eventsFound=${res.eventsFound}; renderedPages=${res.renderedPages}; creditsUsed=${res.creditsUsed}`,
       });
-      log(`[FAIL] ${entry.sourceId} -> postD-man (${res.reason})`);
+      log(`[FAIL] ${entry.sourceId} -> postD-man (credits=${res.creditsUsed}; ${res.reason})`);
     }
   }
 
@@ -497,7 +544,7 @@ async function main() {
   }
 
   log('═══════════════════════════════════════════════════════════════════');
-  log(`SUMMARY postD-UI: ${toUi.length} | postD-man1: ${toMan1.length} | postD-man: ${toMan.length} | back-to-${inputFilename}: ${backToInput.length} | remaining: ${remaining.length}`);
+  log(`SUMMARY postD-UI: ${toUi.length} | postD-man1: ${toMan1.length} | postD-man: ${toMan.length} | back-to-${inputFilename}: ${backToInput.length} | remaining: ${remaining.length} | creditsUsed=${totalCredits}`);
   log('═══════════════════════════════════════════════════════════════════');
 }
 
