@@ -234,6 +234,10 @@ export async function runGoogleCseDiscovery(opts: GoogleCseOptions = {}): Promis
 
 // ── CLI wrapper ─────────────────────────────────────────────────────────────
 
+// ── CLI wrapper — kör ENDAST om denna fil startades direkt (inte via import) ─
+
+import { fileURLToPath } from 'url';
+
 const cliArgs = process.argv.slice(2);
 const queriesIdx = cliArgs.indexOf('--queries');
 const perQueryIdx = cliArgs.indexOf('--per-query');
@@ -242,7 +246,17 @@ const dryRunFlag = cliArgs.includes('--dry-run');
 const queries = queriesIdx !== -1 ? parseInt(cliArgs[queriesIdx + 1], 10) : 10;
 const perQuery = perQueryIdx !== -1 ? parseInt(cliArgs[perQueryIdx + 1], 10) : 10;
 
-if (cliArgs.length > 0) {
+const isMainModule = (() => {
+  try {
+    const __filename = fileURLToPath(import.meta.url);
+    return process.argv[1] === __filename ||
+           process.argv[1]?.endsWith('googleCustomSearch.ts');
+  } catch {
+    return false;
+  }
+})();
+
+if (isMainModule && cliArgs.length > 0) {
   runGoogleCseDiscovery({ queries, perQuery, dryRun: dryRunFlag })
     .then((r) => {
       console.log(JSON.stringify(r, null, 2));

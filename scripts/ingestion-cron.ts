@@ -207,9 +207,13 @@ if (!skipGoogleCse) {
   // Kräver GOOGLE_CSE_ID + GOOGLE_API_KEY i env. Om nycklar saknas → no-op.
   // Queries: ["events stockholm", "konsert stockholm 2026", ...] → source_candidates.
   steps.push({
-    name: 'P3A-google-cse',
+    name: 'P3A-discovery',
+    // P3A (2026-09-10): Exa primär, Google CSE fallback.
+    // discoverySearch.ts kör Exa först (om EXA_API_KEY är riktig) och
+    // faller tillbaka till Google CSE om Exa returnerar < minExa URLs
+    // eller är otillgänglig. Resultat dedupas via source_candidates upsert.
     cmd: 'npx',
-    args: ['tsx', '07-Discovery/src/searchEngines/googleCustomSearch.ts', '--queries', '10', '--per-query', '10'],
+    args: ['tsx', '07-Discovery/src/searchEngines/discoverySearch.ts', '--queries', '10', '--per-query', '10', '--min-exa', '1'],
   });
 }
 
