@@ -138,10 +138,13 @@ const steps: Array<{ name: string; cmd: string; args: string[] }> = [
 if (!skipImages) {
   steps.push({
     name: 'D-images',
-    // Anropar imageGen-batch som genererar AI-bilder för events utan bild
-    // och applicerar AI-stämpel (EU AI Act Art. 50-compliance).
+    // Library-first image fallback (2026-09-10): provar image_library först
+    // (pickLibraryFallback → venue+category → category → default). Bara om
+    // biblioteket INTE har något match alls → fall tillbaka till BFL.
+    // Mål: 10–20 bilder per kategori/eventtyp så BFL blir sällsynt
+    // (post-launch / med riktig budget). Just nu: BFL nästan aldrig.
     cmd: 'npx',
-    args: ['tsx', '--eval', `import('./08-Agent/services/imageGen.ts').then(m => m.generateBatch(${limit}, { onlyMissing: true, concurrency: 3 })).then(r => console.log(JSON.stringify(r))).catch(e => { console.error(e); process.exit(1); })`],
+    args: ['tsx', '--eval', `import('./08-Agent/services/imageGen.matchLibraryFirst.ts').then(m => m.matchLibraryFirst({ limit: ${limit}, onlyMissing: true, libraryConcurrency: 5, bflConcurrency: 3 })).then(r => console.log(JSON.stringify(r))).catch(e => { console.error(e); process.exit(1); })`],
   });
 }
 
