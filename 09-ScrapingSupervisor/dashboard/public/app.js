@@ -83,6 +83,106 @@ function applyAnalyticsServerState(as) {
   }
 }
 
+// Nightly ingestion cron — startar ingestion-cron.ts manuellt eller visar
+// status från runtime/ingestion-cron.status.json (som launchd-jobbet skriver).
+// RÖD = running=false (eller okänd), GRÖN = running=true. Klick → POST /start.
+(function bindIngestionCronButton() {
+  const el = document.getElementById('btn-ingestion-cron');
+  if (!el) return;
+
+  let pollTimer = null;
+
+  function clearPoll() {
+    if (pollTimer) { clearInterval(pollTimer); pollTimer = null; }
+  }
+
+  function applyIngestionCronState(s) {
+    el.classList.remove('ingestion-cron-box--ok', 'ingestion-cron-box--bad', 'ingestion-cron-box--unknown');
+    const titleEl = el.querySelector('.ingestion-cron-box-title');
+    const subEl = el.querySelector('.ingestion-cron-box-sub');
+    if (s && s.running === true) {
+      el.classList.add('ingestion-cron-box--ok');
+      el.title = s.pid
+        ? `Nightly ingestion kör (PID ${s.pid}, startad ${s.startedAt || '?'})`
+        : 'Nightly ingestion kör';
+      if (titleEl) titleEl.textContent = 'Nightly ingestion';
+      if (subEl) subEl.textContent = s.pid
+        ? `kör nu · PID ${s.pid}`
+        : 'kör nu';
+    } else if (s && s.running === false) {
+      el.classList.add('ingestion-cron-box--bad');
+      const last = s.finishedAt ? `klar ${s.finishedAt}` : 'har inte körts';
+      const ev = s.totalEventsExtracted != null ? ` · ${s.totalEventsExtracted} events senaste körning` : '';
+      const err = s.lastError ? ` · FEL: ${s.lastError}` : '';
+      el.title = `Nightly ingestion inaktiv (${last}${ev}${err})`;
+      if (titleEl) titleEl.textContent = 'Nightly ingestion';
+      if (subEl) subEl.textContent = 'inaktiv · klicka för att köra';
+    } else {
+      el.classList.add('ingestion-cron-box--unknown');
+      el.title = 'Nightly ingestion status okänd (startfil saknas eller ej skriven ännu)';
+      if (titleEl) titleEl.textContent = 'Nightly ingestion';
+      if (subEl) subEl.textContent = 'status okänd';
+    }
+  }
+
+  async function pollStatus() {
+    try {
+      const res = await fetch('/api/ingestion/status', { cache: 'no-store' });
+      if (!res.ok) return;
+      const s = await res.json();
+      applyIngestionCronState(s);
+      if (s.running !== true) {
+        clearPoll();
+        el.disabled = false;
+      }
+    } catch { /* ignorera, fortsätt polla */ }
+  }
+
+  el.addEventListener('click', async (e) => {
+    e.preventDefault();
+    clearPoll();
+    el.disabled = true;
+    const titleEl = el.querySelector('.ingestion-cron-box-title');
+    const subEl = el.querySelector('.ingestion-cron-box-sub');
+    const oldTitle = titleEl ? titleEl.textContent : '';
+    const oldSub = subEl ? subEl.textContent : '';
+    if (subEl) subEl.textContent = '… startar';
+    try {
+      const res = await fetch('/api/ingestion/start', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+      });
+      const j = await res.json().catch(() => ({}));
+      if (!res.ok || j.ok === false) {
+        if (titleEl) titleEl.textContent = oldTitle;
+        if (subEl) subEl.textContent = `fel: ${j.error || res.status}`;
+        setTimeout(() => { if (subEl) subEl.textContent = oldSub; el.disabled = false; }, 3000);
+        return;
+      }
+      // Polla tills running=false (eller 5 min timeout)
+      const startedAt = Date.now();
+      const TIMEOUT_MS = 5 * 60 * 1000;
+      await pollStatus();
+      pollTimer = setInterval(pollStatus, 5000);
+      const guard = setInterval(() => {
+        if (Date.now() - startedAt > TIMEOUT_MS) {
+          clearInterval(guard);
+          clearPoll();
+          el.disabled = false;
+        }
+      }, 1000);
+    } catch (err) {
+      console.warn('[ingestion-cron] start failed:', err);
+      if (titleEl) titleEl.textContent = oldTitle;
+      if (subEl) subEl.textContent = oldSub;
+      el.disabled = false;
+    }
+  });
+
+  // Initial poll — visa rätt färg direkt vid sidladdning.
+  pollStatus();
+})();
+
 (async () => {
   try {
     const res = await fetch('/api/status', { cache: 'no-store' });

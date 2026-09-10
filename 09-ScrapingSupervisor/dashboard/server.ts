@@ -31,6 +31,17 @@ import {
   type LayerExtractionOverview,
   type UnsyncedReport,
 } from './db';
+import {
+  listPending,
+  resolvePending,
+  submitForReview,
+  type ReviewDecision,
+} from '../../02-Ingestion/C-htmlGate/manual-review/index.js';
+import {
+  loadQuarantineIndex,
+  loadRetiredIndex,
+  type LifecycleEntry,
+} from '../../02-Ingestion/lib/quarantineGuard.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -137,6 +148,15 @@ export interface ManualReviewRow {
   roundNumber: number | null;
   /** "ok" | "no-url" — only used for empty-state messaging, not displayed. */
   urlResolution: 'ok' | 'no-url';
+  /** Source of the entry: 'auto' = C-pipelinen, 'cli' = lifecycle-admin markForReview.
+   *  Frontend använder detta för att rendera 4-knapps-beslut för cli-rader. */
+  kind?: 'auto' | 'cli';
+  /** Stabilt id för cli-rader (saknas för auto-rader). Används av POST /api/review/resolve. */
+  entryId?: string;
+  /** Orsaks-kod (ReasonCode från 02-Ingestion/lib/sourceLifecycle.ts) eller fri text. */
+  reasonCode?: string;
+  /** Kort notering som hör ihop med reasonCode. */
+  note?: string;
 }
 
 export interface ManualReviewSummary {
@@ -633,7 +653,38 @@ export function collectManualReview(root: string, sourceUrlMap: Map<string, stri
     rows: [],
     fetchedAt: new Date().toISOString(),
   };
-  if (!existsSync(path)) return empty;
+  // Slå ihop CLI-pending (från 02-Ingestion/C-htmlGate/manual-review/pending.jsonl)
+  // med auto-pending (runtime/postTestC-manual-review.jsonl). CLI-rader visas
+  // först eftersom de är manuellt flaggade och viktigare.
+  const cliPending = (() => {
+    try { return listPending(root).filter(p => p.queue === 'cli-pending'); } catch { return []; }
+  })();
+  const cliRows: ManualReviewRow[] = cliPending.map(p => {
+    const url = sourceUrlMap.get(p.sourceId) ?? '';
+    return {
+      sourceId: p.sourceId,
+      url,
+      queuedAt: p.queuedAt,
+      winningStage: null,
+      workerNotes: null,
+      roundNumber: null,
+      urlResolution: url ? 'ok' : 'no-url',
+      kind: 'cli',
+      entryId: p.entryId,
+      reasonCode: String(p.reasonCode ?? ''),
+      note: String(p.note ?? ''),
+    };
+  });
+
+  if (!existsSync(path)) {
+    // Bara CLI-pending finns
+    return {
+      count: cliRows.length,
+      totalRows: cliRows.length,
+      rows: cliRows,
+      fetchedAt: new Date().toISOString(),
+    };
+  }
   let raw: Array<{
     sourceId?: string;
     queuedAt?: string;
@@ -650,12 +701,21 @@ export function collectManualReview(root: string, sourceUrlMap: Map<string, stri
       roundNumber?: number;
     }>(path);
   } catch {
-    return empty;
+    // Auto-kön trasig — returnera bara CLI-pending
+    return {
+      count: cliRows.length,
+      totalRows: cliRows.length,
+      rows: cliRows,
+      fetchedAt: new Date().toISOString(),
+    };
   }
-  const totalRows = raw.length;
+  const totalRows = raw.length + cliRows.length;
   const seen = new Set<string>();
-  const rows: ManualReviewRow[] = [];
-  // Newest first
+  const rows: ManualReviewRow[] = [...cliRows];
+  // Markera CLI-sourceIds som redan sedda
+  for (const r of cliRows) seen.add(r.sourceId);
+
+  // Newest first (auto-kön)
   const sorted = raw.slice().sort((a, b) => {
     const at = a.queuedAt ?? '';
     const bt = b.queuedAt ?? '';
@@ -680,6 +740,7 @@ export function collectManualReview(root: string, sourceUrlMap: Map<string, stri
       workerNotes: r.workerNotes ?? null,
       roundNumber: typeof r.roundNumber === 'number' ? r.roundNumber : null,
       urlResolution: url ? 'ok' : 'no-url',
+      kind: 'auto',
     });
   }
   return {
@@ -939,6 +1000,122 @@ async function toggleAnalyticsServer(): Promise<{
     }
   } catch (err) {
     return { ok: false, action: 'noop', error: String((err as Error)?.message ?? err) };
+  }
+}
+
+// ─── Ingestion cron toggle (port 7777 dashboard button) ────────────────────
+//
+// Läser runtime/ingestion-cron.status.json (skrivs av ingestion-cron.ts).
+// Startar/stoppar samma entry-point som launchd använder på natten
+// (scripts/ingestion-cron.ts). Returnerar alltid sanning från statusfilen
+// — knappen visar alltid rätt färg oavsett vilken process som startade jobbet.
+//
+// Säkerhet:
+//   - Endast POST
+//   - Hardcodade kommandon (inga shell-injections)
+//   - Detached spawn så jobbet överlever dashboardens livscykel
+//   - Sanningskontroll via statusfilen, inte PID-cache
+async function toggleIngestionCron(action: 'start' | 'stop'): Promise<{
+  ok: boolean;
+  action: 'started' | 'stopped' | 'noop';
+  status: Record<string, unknown>;
+  pid?: number | null;
+  error?: string;
+}> {
+  const statusFile = join(PROJECT_ROOT, 'runtime/ingestion-cron.status.json');
+  const logFile = join(PROJECT_ROOT, 'runtime/ingestion-cron.out.log');
+  const { spawn } = await import('child_process');
+  const { readFileSync, existsSync, writeFileSync } = await import('fs');
+
+  // Läs nuvarande status (eller default)
+  let status: Record<string, unknown> = {
+    running: false, pid: null, startedAt: null, finishedAt: null,
+    exitCode: null, durationMs: null, steps: [], totalEventsExtracted: 0, lastError: null,
+  };
+  if (existsSync(statusFile)) {
+    try { status = JSON.parse(readFileSync(statusFile, 'utf8')); } catch { /* ignore */ }
+  }
+
+  if (action === 'stop') {
+    const pid = (status as { pid?: number | null }).pid;
+    if (!status.running || !pid) {
+      return { ok: true, action: 'noop', status };
+    }
+    try {
+      process.kill(pid, 'SIGTERM');
+      await new Promise((r) => setTimeout(r, 500));
+      const updated = existsSync(statusFile)
+        ? JSON.parse(readFileSync(statusFile, 'utf8'))
+        : status;
+      return { ok: true, action: 'stopped', status: updated, pid };
+    } catch (err) {
+      return { ok: false, action: 'noop', status, error: String((err as Error)?.message ?? err) };
+    }
+  }
+
+  // action === 'start'
+  if (status.running) {
+    return { ok: true, action: 'noop', status };
+  }
+
+  // Starta: skriv running=true OMEDELBART (så dashboard ser grön även innan
+  // subprocessen hunnit skriva sin egen statusrad). Subprocessen uppdaterar
+  // filen med sitt riktiga pid och steg-för-steg-progress.
+  const newStatus = {
+    ...status,
+    running: true,
+    pid: null,
+    startedAt: new Date().toISOString(),
+    finishedAt: null,
+    lastError: null,
+  };
+  writeFileSync(statusFile, JSON.stringify(newStatus, null, 2), 'utf8');
+
+  try {
+    mkdirSync(join(PROJECT_ROOT, 'runtime'), { recursive: true });
+    const { openSync } = await import('fs');
+    const logFd = openSync(logFile, 'a');
+    const child = spawn(
+      'npx',
+      ['tsx', 'scripts/ingestion-cron.ts'],
+      {
+        cwd: PROJECT_ROOT,
+        detached: true,
+        stdio: ['ignore', logFd, logFd],
+        env: { ...process.env, PROJECT_ROOT },
+      },
+    );
+    child.unref();
+
+    // Vänta lite så subprocessen hinner skriva sitt egna pid i statusfilen
+    await new Promise((r) => setTimeout(r, 250));
+    const updated = existsSync(statusFile)
+      ? JSON.parse(readFileSync(statusFile, 'utf8'))
+      : newStatus;
+
+    return { ok: true, action: 'started', status: updated, pid: child.pid ?? null };
+  } catch (err) {
+    const failed = { ...newStatus, running: false, lastError: String((err as Error)?.message ?? err) };
+    writeFileSync(statusFile, JSON.stringify(failed, null, 2), 'utf8');
+    return { ok: false, action: 'noop', status: failed, error: String((err as Error)?.message ?? err) };
+  }
+}
+
+function readIngestionCronStatus(): Record<string, unknown> {
+  const statusFile = join(PROJECT_ROOT, 'runtime/ingestion-cron.status.json');
+  if (!existsSync(statusFile)) {
+    return {
+      running: false, pid: null, startedAt: null, finishedAt: null,
+      exitCode: null, durationMs: null, steps: [], totalEventsExtracted: 0, lastError: null,
+    };
+  }
+  try {
+    return JSON.parse(readFileSync(statusFile, 'utf8'));
+  } catch {
+    return {
+      running: false, pid: null, startedAt: null, finishedAt: null,
+      exitCode: null, durationMs: null, steps: [], totalEventsExtracted: 0, lastError: 'status-file-corrupt',
+    };
   }
 }
 
@@ -1469,6 +1646,149 @@ async function serveJson(req: IncomingMessage, res: ServerResponse): Promise<boo
     } catch (err) {
       res.writeHead(500, { 'Content-Type': 'application/json' });
       res.end(JSON.stringify({ error: String(err) }));
+    }
+    return true;
+  }
+
+  // ─── Source Lifecycle (quarantine / retired / manual review resolve) ─────
+  //
+  // GET /api/lifecycle/quarantined → sources/_quarantine/INDEX.json
+  // GET /api/lifecycle/retired     → sources/_retired/INDEX.json
+  // GET /api/lifecycle/auto-quarantined → från runtime/sources_audit.jsonl (event='auto_quarantined')
+  // POST /api/review/resolve       → resolvePending(entryId, decision, by, note)
+  // POST /api/review/submit        → submitForReview(sourceId, reasonCode, note, by)
+  if (url === '/api/lifecycle/quarantined') {
+    try {
+      const idx = loadQuarantineIndex();
+      const entries: LifecycleEntry[] = Array.from(idx.values());
+      const data = { count: entries.length, rows: entries, fetchedAt: new Date().toISOString() };
+      res.writeHead(200, {
+        'Content-Type': 'application/json; charset=utf-8',
+        'Cache-Control': 'no-cache',
+      });
+      res.end(JSON.stringify(data));
+    } catch (err) {
+      res.writeHead(500, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ error: String(err) }));
+    }
+    return true;
+  }
+  if (url === '/api/lifecycle/retired') {
+    try {
+      const idx = loadRetiredIndex();
+      const entries: LifecycleEntry[] = Array.from(idx.values());
+      const data = { count: entries.length, rows: entries, fetchedAt: new Date().toISOString() };
+      res.writeHead(200, {
+        'Content-Type': 'application/json; charset=utf-8',
+        'Cache-Control': 'no-cache',
+      });
+      res.end(JSON.stringify(data));
+    } catch (err) {
+      res.writeHead(500, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ error: String(err) }));
+    }
+    return true;
+  }
+  if (req.method === 'POST' && url === '/api/review/resolve') {
+    try {
+      // Läs body
+      const chunks: Buffer[] = [];
+      for await (const c of req) chunks.push(c as Buffer);
+      const body = JSON.parse(Buffer.concat(chunks).toString('utf8') || '{}') as {
+        entryId?: string;
+        decision?: string;
+        decidedBy?: string;
+        note?: string;
+      };
+      const entryId = String(body.entryId ?? '').trim();
+      const decision = String(body.decision ?? '').trim() as ReviewDecision;
+      const decidedBy = String(body.decidedBy ?? '').trim() || 'dashboard';
+      if (!entryId) { res.writeHead(400, { 'Content-Type': 'application/json' }); res.end(JSON.stringify({ ok: false, error: 'entryId required' })); return true; }
+      if (!['approve', 'quarantine', 'retire', 're_probe'].includes(decision)) {
+        res.writeHead(400, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ ok: false, error: `invalid decision: ${decision}` }));
+        return true;
+      }
+      const result = resolvePending(entryId, decision, decidedBy, body.note, PROJECT_ROOT);
+      const status = result.ok ? 200 : 400;
+      res.writeHead(status, { 'Content-Type': 'application/json; charset=utf-8' });
+      res.end(JSON.stringify(result));
+    } catch (err) {
+      res.writeHead(500, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ ok: false, error: String((err as Error)?.message ?? err) }));
+    }
+    return true;
+  }
+  if (req.method === 'POST' && url === '/api/review/submit') {
+    try {
+      const chunks: Buffer[] = [];
+      for await (const c of req) chunks.push(c as Buffer);
+      const body = JSON.parse(Buffer.concat(chunks).toString('utf8') || '{}') as {
+        sourceId?: string;
+        reasonCode?: string;
+        note?: string;
+        submittedBy?: string;
+      };
+      const sourceId = String(body.sourceId ?? '').trim();
+      const reasonCode = String(body.reasonCode ?? 'unknown').trim();
+      const note = String(body.note ?? '').trim();
+      const submittedBy = String(body.submittedBy ?? '').trim() || 'dashboard';
+      if (!sourceId) { res.writeHead(400, { 'Content-Type': 'application/json' }); res.end(JSON.stringify({ ok: false, error: 'sourceId required' })); return true; }
+      if (!note) { res.writeHead(400, { 'Content-Type': 'application/json' }); res.end(JSON.stringify({ ok: false, error: 'note required' })); return true; }
+      const result = submitForReview(sourceId, reasonCode, note, submittedBy, PROJECT_ROOT);
+      res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
+      res.end(JSON.stringify(result));
+    } catch (err) {
+      res.writeHead(500, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ ok: false, error: String((err as Error)?.message ?? err) }));
+    }
+    return true;
+  }
+
+  // ─── Ingestion cron endpoints ───────────────────────────────────────────────
+  //
+  // GET  /api/ingestion/status → runtime/ingestion-cron.status.json (sanning)
+  // POST /api/ingestion/start  → spawn detached ingestion-cron.ts
+  // POST /api/ingestion/stop   → SIGTERM till PID i statusfilen
+  if (url === '/api/ingestion/status') {
+    try {
+      const data = readIngestionCronStatus();
+      res.writeHead(200, {
+        'Content-Type': 'application/json; charset=utf-8',
+        'Cache-Control': 'no-cache',
+      });
+      res.end(JSON.stringify(data));
+    } catch (err) {
+      res.writeHead(500, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ error: String(err) }));
+    }
+    return true;
+  }
+  if (req.method === 'POST' && url === '/api/ingestion/start') {
+    try {
+      const result = await toggleIngestionCron('start');
+      res.writeHead(result.ok ? 200 : 500, {
+        'Content-Type': 'application/json; charset=utf-8',
+        'Cache-Control': 'no-cache',
+      });
+      res.end(JSON.stringify(result));
+    } catch (err) {
+      res.writeHead(500, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ ok: false, error: String((err as Error)?.message ?? err) }));
+    }
+    return true;
+  }
+  if (req.method === 'POST' && url === '/api/ingestion/stop') {
+    try {
+      const result = await toggleIngestionCron('stop');
+      res.writeHead(result.ok ? 200 : 500, {
+        'Content-Type': 'application/json; charset=utf-8',
+        'Cache-Control': 'no-cache',
+      });
+      res.end(JSON.stringify(result));
+    } catch (err) {
+      res.writeHead(500, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ ok: false, error: String((err as Error)?.message ?? err) }));
     }
     return true;
   }

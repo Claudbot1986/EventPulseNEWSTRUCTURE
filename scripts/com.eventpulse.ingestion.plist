@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!--
+  com.eventpulse.ingestion.plist — natlig ingestion A→B→C→bilder-flöde.
+
+  Kör kl 02:30 varje natt (undviker :00-spiken). One-shot: startar
+  ingestion-cron.ts, som kör hela kedjan och avslutar med rätt exit-code.
+
+  Spegel: scripts/ingestion-cron.ts
+
+  Status: runtime/ingestion-cron.status.json skrivs vid varje steg.
+  Dashboard 7777 läser denna fil och visar röd/grön beroende på
+  running=true/false.
+
+  Install:
+    cp scripts/com.eventpulse.ingestion.plist ~/Library/LaunchAgents/
+    launchctl load ~/Library/LaunchAgents/com.eventpulse.ingestion.plist
+
+  Verifiera (kör nu, utan att vänta till kl 02:30):
+    launchctl start com.eventpulse.ingestion
+    tail -f runtime/ingestion-cron.log
+
+  Uninstall:
+    launchctl unload ~/Library/LaunchAgents/com.eventpulse.ingestion.plist
+    rm ~/Library/LaunchAgents/com.eventpulse.ingestion.plist
+-->
+<plist version="1.0">
+<dict>
+  <key>Label</key>
+  <string>com.eventpulse.ingestion</string>
+
+  <key>ProgramArguments</key>
+  <array>
+    <string>/bin/bash</string>
+    <string>/Users/claudgashi/EventPulse/scripts/start-ingestion.sh</string>
+  </array>
+
+  <key>WorkingDirectory</key>
+  <string>/Users/claudgashi/EventPulse</string>
+
+  <!-- Kör kl 02:30 varje dag (off-peak, undviker :00-spiken) -->
+  <key>StartCalendarInterval</key>
+  <dict>
+    <key>Hour</key>
+    <integer>2</integer>
+    <key>Minute</key>
+    <integer>30</integer>
+  </dict>
+
+  <key>StandardOutPath</key>
+  <string>/Users/claudgashi/EventPulse/runtime/ingestion-cron.out.log</string>
+  <key>StandardErrorPath</key>
+  <string>/Users/claudgashi/EventPulse/runtime/ingestion-cron.err.log</string>
+
+  <key>EnvironmentVariables</key>
+  <dict>
+    <key>PROJECT_ROOT</key>
+    <string>/Users/claudgashi/EventPulse</string>
+    <key>PATH</key>
+    <string>/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:/Users/claudgashi/.local/bin</string>
+  </dict>
+</dict>
+</plist>
