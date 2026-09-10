@@ -24,7 +24,13 @@ export interface FetchResult {
  * Same-domain redirects only for security.
  * Returns content from the final non-redirect URL.
  */
-const MAX_REDIRECTS = 3;
+// Steg 3 (2026-09-10): höjd från 3 till 6 efter audit-redirect-chains.ts.
+// Audit visade 19/20 Bucket B-källor resolverar 200 inom 5 hopp; 7 av dem
+// har exakt 3 hopp (barnens-o, centuri, gr-na-lund, medborgarhuset,
+// medeltidsmuseet, moderna-museet, tekniska-museet) och dog därför på 3-cap.
+// Cross-domain redirect-loop-detektorn (rad 48) bevaras — skyddar mot
+// riktiga cykler. Cycle-detektor slår till innan MAX_REDIRECTS ändå.
+const MAX_REDIRECTS = 6;
 
 export function normalizeFetchUrl(url: string): string {
   const trimmed = url.trim().replace(/\/+$/, '') || '/';
@@ -41,6 +47,7 @@ export async function fetchHtml(url: string, options: {
 } = {}): Promise<FetchResult> {
   let currentUrl = normalizeFetchUrl(url);
   const redirectChain: string[] = [];
+  let redirectsFollowed = 0; // separat räknare — XDOMAIN-markeringar räknas inte
   const seenUrls = new Set<string>();
 
   while (true) {
@@ -96,7 +103,7 @@ export async function fetchHtml(url: string, options: {
 
         // Cross-domain redirect detected — follow it for discovery purposes.
         // Many Swedish sites use cross-domain redirects for event content (e.g. vega.nu → tobiasnygren.se).
-        // Continue to the next URL, record the cross-domain hop in redirectChain.
+        // Continue to the next URL, record the cross-domain hop in redirectChain (informativt, ej budget-räknande).
         const currentUrlObj = new URL(currentUrl);
         const nextUrlObj = new URL(nextUrl);
         if (currentUrlObj.hostname !== nextUrlObj.hostname) {
@@ -105,12 +112,13 @@ export async function fetchHtml(url: string, options: {
         // Keep the redirect target's actual trailing-slash form. Some servers
         // (e.g. Eventbrite) 301 /events → /events/ and would oscillate forever
         // if we stripped the slash and re-normalized on each iteration.
-        // MAX_REDIRECTS still bounds real oscillation loops.
+        // MAX_REDIRECTS begränsar antal faktiska HTTP-redirects (inte XDOMAIN-markeringar).
         currentUrl = nextUrl;
 
         redirectChain.push(`${response.status}:${currentUrl}`);
+        redirectsFollowed++;
 
-        if (redirectChain.length >= MAX_REDIRECTS) {
+        if (redirectsFollowed >= MAX_REDIRECTS) {
           return {
             success: false,
             error: `Exceeded ${MAX_REDIRECTS} redirects`,
