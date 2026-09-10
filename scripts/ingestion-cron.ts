@@ -198,7 +198,10 @@ if (!skipImages) {
   steps.push({
     name: 'P2C-active-learning',
     cmd: 'npx',
-    args: ['tsx', '--eval', `import('./08-Agent/tools/activeLearning.ts').then(m => m.run({ threshold: 0.5, dryRun: false })).then(r => console.log(JSON.stringify(r))).catch(e => { console.error(e); process.exit(1); })`],
+    // threshold = 50 (0–100 skala, default i activeLearning). Vi flaggar events
+    // med confidence_score < 50 för human review. Stiger tröskeln → fler events
+    // i kö för granskning; vi har inte kapacitet för >200 per natt just nu.
+    args: ['tsx', '--eval', `import('./08-Agent/tools/activeLearning.ts').then(m => m.run({ threshold: 50, dryRun: false })).then(r => console.log(JSON.stringify(r))).catch(e => { console.error(e); process.exit(1); })`],
   });
 }
 
