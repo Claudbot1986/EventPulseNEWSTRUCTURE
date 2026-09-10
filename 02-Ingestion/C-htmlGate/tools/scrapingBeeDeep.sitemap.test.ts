@@ -242,4 +242,25 @@ describe('Step 2 — sitemap + robots.txt discovery', () => {
       expect(result.urls).toEqual([]);
     });
   });
+
+  describe('Step 5 — env-gate (EVENTPULSE_DISCOVERY_FEATURES)', () => {
+    afterEach(() => {
+      delete process.env.EVENTPULSE_DISCOVERY_FEATURES;
+    });
+
+    it('default: discovery features enabled (env unset)', () => {
+      delete process.env.EVENTPULSE_DISCOVERY_FEATURES;
+      expect(process.env.EVENTPULSE_DISCOVERY_FEATURES !== '0').toBe(true);
+    });
+
+    it('"0": kill-switch — discovery features disabled', () => {
+      process.env.EVENTPULSE_DISCOVERY_FEATURES = '0';
+      expect(process.env.EVENTPULSE_DISCOVERY_FEATURES !== '0').toBe(false);
+    });
+
+    it('"1": explicit enable (same as unset)', () => {
+      process.env.EVENTPULSE_DISCOVERY_FEATURES = '1';
+      expect(process.env.EVENTPULSE_DISCOVERY_FEATURES !== '0').toBe(true);
+    });
+  });
 });

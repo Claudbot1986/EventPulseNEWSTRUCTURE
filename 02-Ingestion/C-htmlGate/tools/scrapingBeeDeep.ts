@@ -779,23 +779,29 @@ export async function deepCrawl(
   // Steg 2 (2026-09-10): försök först fetchAllSitemaps() som också läser
   // robots.txt Sitemap:-direktiv (utöver SITEMAP_VARIANTS). Fallback till
   // fetchSitemap() om den nya hittar inget — bevarar gamla beteendet.
+  //
+  // ENV-gate: EVENTPULSE_DISCOVERY_FEATURES=0 inaktiverar den nya
+  // sitemap+robots-varianten (använd fetchSitemap direkt). Default ON.
   onProgress?.(`[deepCrawl] Step 1: Fetching sitemaps (robots.txt + variants) for ${baseUrl}`);
-  const allSitemaps = await fetchAllSitemaps(baseUrl);
+  const discoveryFeaturesEnabled = process.env.EVENTPULSE_DISCOVERY_FEATURES !== '0';
   let sitemapResult: SitemapResult;
-  if (allSitemaps.found && allSitemaps.urls.length > 0) {
-    // Map fetchAllSitemaps-shape till SitemapResult för att återanvända
-    // befintlig AI-select / ScB-fetch logik oförändrad.
-    const primarySitemapUrl = allSitemaps.sources[0] ?? '';
-    sitemapResult = {
-      urls: allSitemaps.urls,
-      found: true,
-      sitemapUrl: primarySitemapUrl,
-      attempts: allSitemaps.attempts,
-    };
-    onProgress?.(`[deepCrawl] fetchAllSitemaps: ${allSitemaps.urls.length} URLs from ${allSitemaps.sources.length} sitemaps`);
+  if (discoveryFeaturesEnabled) {
+    const allSitemaps = await fetchAllSitemaps(baseUrl);
+    if (allSitemaps.found && allSitemaps.urls.length > 0) {
+      const primarySitemapUrl = allSitemaps.sources[0] ?? '';
+      sitemapResult = {
+        urls: allSitemaps.urls,
+        found: true,
+        sitemapUrl: primarySitemapUrl,
+        attempts: allSitemaps.attempts,
+      };
+      onProgress?.(`[deepCrawl] fetchAllSitemaps: ${allSitemaps.urls.length} URLs from ${allSitemaps.sources.length} sitemaps`);
+    } else {
+      onProgress?.(`[deepCrawl] fetchAllSitemaps miss, falling back to fetchSitemap`);
+      sitemapResult = await fetchSitemap(baseUrl);
+    }
   } else {
-    // Fallback till klassisk fetchSitemap — SITEMAP_VARIANTS-only
-    onProgress?.(`[deepCrawl] fetchAllSitemaps miss, falling back to fetchSitemap`);
+    onProgress?.(`[deepCrawl] EVENTPULSE_DISCOVERY_FEATURES=0 — using legacy fetchSitemap`);
     sitemapResult = await fetchSitemap(baseUrl);
   }
 
