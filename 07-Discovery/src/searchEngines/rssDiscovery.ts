@@ -41,7 +41,7 @@
 
 import { createClient, type SupabaseClient } from '@supabase/supabase-js';
 import * as dotenv from 'dotenv';
-import { existsSync, readdirSync, readFileSync } from 'fs';
+import { existsSync, readdirSync, readFileSync, writeFileSync, mkdirSync, renameSync } from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
 
@@ -80,6 +80,8 @@ export interface RssDiscoveryOptions {
 export interface DiscoveredFeed {
   sourceId: string;
   feedUrl: string;
+  /** Path-komponenten av feedUrl (t.ex. "/feed", "/nyheter/feed"). */
+  discoveredPath: string;
   format: 'rss2' | 'atom' | 'rdf';
   itemCount: number;
   sampleUrls: string[];
@@ -110,6 +112,98 @@ const FEED_PATH_PATTERNS: ReadonlyArray<string> = [
   '/kalender/feed',
   '/nyheter/feed',
 ];
+
+// ── Learned patterns (runtime/learned_patterns.json) ───────────────────────
+
+const LEARNED_PATTERNS_FILE = path.resolve(PROJECT_ROOT, 'runtime', 'learned_patterns.json');
+const LEARNED_MAX_ENTRIES = 100;
+const LEARNED_TTL_DAYS = 30;
+
+export interface LearnedPattern {
+  pattern: string;
+  hits: number;
+  firstSeen: string;
+  lastSeen: string;
+}
+
+interface LearnedPatternsFile {
+  patterns: LearnedPattern[];
+  updatedAt: string;
+}
+
+function emptyLearned(): LearnedPatternsFile {
+  return { patterns: [], updatedAt: new Date().toISOString() };
+}
+
+export function loadLearnedPatterns(): LearnedPattern[] {
+  if (!existsSync(LEARNED_PATTERNS_FILE)) return [];
+  try {
+    const raw = readFileSync(LEARNED_PATTERNS_FILE, 'utf8');
+    const parsed = JSON.parse(raw) as LearnedPatternsFile;
+    if (!Array.isArray(parsed.patterns)) return [];
+    return parsed.patterns;
+  } catch {
+    return [];
+  }
+}
+
+export function saveLearnedPatterns(patterns: LearnedPattern[]): void {
+  const dir = path.dirname(LEARNED_PATTERNS_FILE);
+  if (!existsSync(dir)) mkdirSync(dir, { recursive: true });
+  // TTL: filtrera bort entries som inte setts på 30 dagar
+  const cutoff = Date.now() - LEARNED_TTL_DAYS * 24 * 60 * 60 * 1000;
+  let kept = patterns.filter((p) => new Date(p.lastSeen).getTime() >= cutoff);
+  // Cap till MAX_ENTRIES (behåll nyaste)
+  if (kept.length > LEARNED_MAX_ENTRIES) {
+    kept.sort((a, b) => b.lastSeen.localeCompare(a.lastSeen));
+    kept = kept.slice(0, LEARNED_MAX_ENTRIES);
+  }
+  const file: LearnedPatternsFile = { patterns: kept, updatedAt: new Date().toISOString() };
+  const tmp = `${LEARNED_PATTERNS_FILE}.tmp.${process.pid}.${Date.now()}`;
+  writeFileSync(tmp, JSON.stringify(file, null, 2), 'utf8');
+  renameSync(tmp, LEARNED_PATTERNS_FILE);
+}
+
+/** Registrera en träff för ett mönster. Returnerar uppdaterad lista. */
+export function recordPatternHit(
+  pattern: string,
+  currentPatterns: LearnedPattern[] = loadLearnedPatterns(),
+): LearnedPattern[] {
+  const now = new Date().toISOString();
+  const idx = currentPatterns.findIndex((p) => p.pattern === pattern);
+  if (idx >= 0) {
+    currentPatterns[idx] = {
+      ...currentPatterns[idx],
+      hits: currentPatterns[idx].hits + 1,
+      lastSeen: now,
+    };
+  } else {
+    currentPatterns.push({ pattern, hits: 1, firstSeen: now, lastSeen: now });
+  }
+  saveLearnedPatterns(currentPatterns);
+  return currentPatterns;
+}
+
+/**
+ * Bygg prioriterad lista: först lärda mönster (sorterade efter hits DESC,
+ * last_seen DESC), sedan defaults som INTE redan är lärda.
+ *
+ * Rent och enkelt — vi normaliserar inte (case-sensitive path matchning).
+ */
+export function prioritizePatterns(
+  defaults: ReadonlyArray<string>,
+  learned: LearnedPattern[],
+): string[] {
+  const learnedSet = new Set(learned.map((l) => l.pattern));
+  const sortedLearned = [...learned]
+    .sort((a, b) => {
+      if (b.hits !== a.hits) return b.hits - a.hits;
+      return b.lastSeen.localeCompare(a.lastSeen);
+    })
+    .map((l) => l.pattern);
+  const remainingDefaults = defaults.filter((d) => !learnedSet.has(d));
+  return [...sortedLearned, ...remainingDefaults];
+}
 
 // ── Working sources ─────────────────────────────────────────────────────────
 
@@ -260,21 +354,22 @@ function isOnSameDomain(feedUrl: string, baseUrl: string): boolean {
   }
 }
 
-function feedUrlCandidates(baseUrl: string): string[] {
+function feedUrlCandidates(baseUrl: string, patterns: ReadonlyArray<string>): string[] {
   let base: URL;
   try {
     base = new URL(baseUrl);
   } catch {
     return [];
   }
-  return FEED_PATH_PATTERNS.map((p) => `${base.origin}${p}`);
+  return patterns.map((p) => `${base.origin}${p}`);
 }
 
 async function discoverForSource(
   source: SourceEntry,
   timeoutMs: number,
+  patterns: ReadonlyArray<string>,
 ): Promise<DiscoveredFeed | null> {
-  const candidates = feedUrlCandidates(source.url);
+  const candidates = feedUrlCandidates(source.url, patterns);
   for (const feedUrl of candidates) {
     if (!isOnSameDomain(feedUrl, source.url)) continue;
     const r = await headOrGet(feedUrl, timeoutMs);
@@ -291,6 +386,7 @@ async function discoverForSource(
     return {
       sourceId: source.id,
       feedUrl,
+      discoveredPath: (() => { try { return new URL(feedUrl).pathname; } catch { return ''; } })(),
       format,
       itemCount: items.length,
       sampleUrls: urls,
@@ -317,6 +413,10 @@ export async function run(opts: RssDiscoveryOptions = {}): Promise<RssDiscoveryR
     feeds: [],
   };
 
+  // Ladda lärda patterns och bygg prioriterad lista
+  const learned = loadLearnedPatterns();
+  const patterns = prioritizePatterns(FEED_PATH_PATTERNS, learned);
+
   const sources = loadWorkingSources(limit);
   result.sourcesChecked = sources.length;
   if (sources.length === 0) return result;
@@ -328,10 +428,16 @@ export async function run(opts: RssDiscoveryOptions = {}): Promise<RssDiscoveryR
       const i = idx++;
       if (i >= sources.length) break;
       try {
-        const feed = await discoverForSource(sources[i], timeoutMs);
+        const feed = await discoverForSource(sources[i], timeoutMs, patterns);
         if (feed) {
           result.feeds.push(feed);
           result.totalEvents += feed.itemCount;
+          // Registrera träff i learned_patterns (atomiskt)
+          try {
+            recordPatternHit(feed.discoveredPath, learned);
+          } catch {
+            /* pattern-record misslyckades — non-fatal */
+          }
         }
       } catch (err: unknown) {
         if (!result.firstError) {
@@ -357,6 +463,7 @@ export async function run(opts: RssDiscoveryOptions = {}): Promise<RssDiscoveryR
       format: f.format,
       item_count: f.itemCount,
       sample_urls: f.sampleUrls.slice(0, 5),
+      discovered_path: f.discoveredPath,
     },
   }));
 

@@ -8,8 +8,8 @@
  * Run: npx vitest run 07-Discovery/src/searchEngines/rssDiscovery.test.ts
  */
 
-import { describe, test, expect, beforeEach, vi } from 'vitest';
-import { existsSync, mkdirSync, writeFileSync, rmSync } from 'fs';
+import { describe, test, expect, beforeEach, afterEach, vi } from 'vitest';
+import { existsSync, mkdirSync, writeFileSync, rmSync, readFileSync } from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
 
@@ -29,7 +29,7 @@ vi.mock('@supabase/supabase-js', () => ({
   }),
 }));
 
-const { run } = await import('./rssDiscovery.js');
+const { run, loadLearnedPatterns, recordPatternHit, saveLearnedPatterns, prioritizePatterns } = await import('./rssDiscovery.js');
 
 beforeEach(() => {
   fromMock.mockReset();
@@ -48,24 +48,26 @@ beforeEach(() => {
     if (existsSync(p)) rmSync(p);
   }
 
-  // Skapa working sources a + b
+  // Skapa working sources a + b — namngivna för att sorteras FÖRST i readdir
+  // (vi kör mot 250+ working-sources, så test-filerna måste komma tidigt i
+  // läsordningen för att garanteras inkluderas i limit=100).
   if (!existsSync(SOURCES_DIR)) mkdirSync(SOURCES_DIR, { recursive: true });
   writeFileSync(
-    path.join(SOURCES_DIR, 'rss-test-a.jsonl'),
+    path.join(SOURCES_DIR, '_aaa-rss-test-a.jsonl'),
     JSON.stringify({ id: 'rss-test-a', url: 'https://example-a.com', status: 'working' }),
   );
   writeFileSync(
-    path.join(SOURCES_DIR, 'rss-test-b.jsonl'),
+    path.join(SOURCES_DIR, '_aaa-rss-test-b.jsonl'),
     JSON.stringify({ id: 'rss-test-b', url: 'https://example-b.com', status: 'working' }),
   );
   writeFileSync(
-    path.join(SOURCES_DIR, 'rss-test-c.jsonl'),
+    path.join(SOURCES_DIR, '_aaa-rss-test-c.jsonl'),
     JSON.stringify({ id: 'rss-test-c', url: 'https://example-c.com', status: 'quarantined' }),
   );
 });
 
 afterAll(() => {
-  for (const f of ['rss-test-a.jsonl', 'rss-test-b.jsonl', 'rss-test-c.jsonl']) {
+  for (const f of ['_aaa-rss-test-a.jsonl', '_aaa-rss-test-b.jsonl', '_aaa-rss-test-c.jsonl']) {
     const p = path.join(SOURCES_DIR, f);
     if (existsSync(p)) rmSync(p);
   }
@@ -246,5 +248,115 @@ describe('rssDiscovery.run', () => {
     for (const u of sampleUrls) {
       expect(u).toMatch(/^https?:\/\//);
     }
+  });
+
+  test('discoveredPath finns på DiscoveredFeed och pekar på rätt path', async () => {
+    mockFeed('example-a.com', RSS2_BODY, 'rss2');
+    const result = await run({ limit: 100, concurrency: 2, dryRun: true });
+    const rssFeed = result.feeds.find((f) => f.format === 'rss2' && f.sourceId === 'rss-test-a');
+    expect(rssFeed).toBeDefined();
+    expect(rssFeed?.discoveredPath).toBe('/feed');
+  });
+});
+
+// ── Learned patterns (P3C+) ────────────────────────────────────────────────
+
+const LEARNED_FILE = path.resolve(PROJECT_ROOT, 'runtime', 'learned_patterns.json');
+
+describe('rssDiscovery.learnedPatterns', () => {
+  let originalContent: string | null = null;
+
+  beforeEach(() => {
+    if (existsSync(LEARNED_FILE)) {
+      originalContent = readFileSync(LEARNED_FILE, 'utf8');
+    }
+    if (existsSync(LEARNED_FILE)) rmSync(LEARNED_FILE);
+  });
+
+  afterEach(() => {
+    if (existsSync(LEARNED_FILE)) rmSync(LEARNED_FILE);
+    if (originalContent !== null) {
+      writeFileSync(LEARNED_FILE, originalContent, 'utf8');
+      originalContent = null;
+    }
+  });
+
+  test('loadLearnedPatterns → [] när fil saknas', () => {
+    const patterns = loadLearnedPatterns();
+    expect(patterns).toEqual([]);
+  });
+
+  test('recordPatternHit skapar ny entry vid första träff', () => {
+    const updated = recordPatternHit('/feed', []);
+    expect(updated).toHaveLength(1);
+    expect(updated[0].pattern).toBe('/feed');
+    expect(updated[0].hits).toBe(1);
+    expect(updated[0].firstSeen).toBeTruthy();
+    expect(updated[0].lastSeen).toBeTruthy();
+    // Verifiera att filen skrevs
+    expect(existsSync(LEARNED_FILE)).toBe(true);
+  });
+
+  test('recordPatternHit ökar hits på befintlig entry', () => {
+    const after1 = recordPatternHit('/feed', []);
+    const after2 = recordPatternHit('/feed', after1);
+    expect(after2).toHaveLength(1);
+    expect(after2[0].hits).toBe(2);
+  });
+
+  test('recordPatternHit med olika mönster ger separata entries', () => {
+    const a1 = recordPatternHit('/feed', []);
+    const a2 = recordPatternHit('/rss', a1);
+    expect(a2).toHaveLength(2);
+    expect(a2.find((p) => p.pattern === '/feed')).toBeDefined();
+    expect(a2.find((p) => p.pattern === '/rss')).toBeDefined();
+  });
+
+  test('prioritizePatterns: lärda före defaults, sorterade efter hits', () => {
+    const defaults = ['/feed', '/rss', '/rss.xml'];
+    const learned = [
+      { pattern: '/rss', hits: 5, firstSeen: '2026-01-01', lastSeen: '2026-09-10' },
+      { pattern: '/feed', hits: 10, firstSeen: '2026-01-01', lastSeen: '2026-09-10' },
+    ];
+    const result = prioritizePatterns(defaults, learned);
+    expect(result).toEqual(['/feed', '/rss', '/rss.xml']);
+  });
+
+  test('prioritizePatterns: defaults som inte är lärda hamnar sist', () => {
+    const defaults = ['/feed', '/rss', '/rss.xml', '/atom.xml'];
+    const learned = [
+      { pattern: '/feed', hits: 1, firstSeen: '2026-01-01', lastSeen: '2026-09-10' },
+    ];
+    const result = prioritizePatterns(defaults, learned);
+    expect(result[0]).toBe('/feed');
+    expect(result).toContain('/rss');
+    expect(result).toContain('/rss.xml');
+    expect(result).toContain('/atom.xml');
+    expect(result.filter((p) => p === '/feed')).toHaveLength(1);
+  });
+
+  test('prioritizePatterns: tom learned → defaults ordning oförändrad', () => {
+    const defaults = ['/feed', '/rss', '/rss.xml'];
+    const result = prioritizePatterns(defaults, []);
+    expect(result).toEqual(defaults);
+  });
+
+  test('saveLearnedPatterns: cap till 100 entries, behåll nyaste', () => {
+    const many: Array<{ pattern: string; hits: number; firstSeen: string; lastSeen: string }> = [];
+    // Använd framtida datum (2026-12) för att inte trigga TTL-filter (30 dagar)
+    const baseDate = new Date('2026-12-01').getTime();
+    for (let i = 0; i < 120; i++) {
+      many.push({
+        pattern: `/test${i}`,
+        hits: i,
+        firstSeen: '2026-12-01',
+        lastSeen: new Date(baseDate + i * 60_000).toISOString(),
+      });
+    }
+    saveLearnedPatterns(many);
+    const loaded = loadLearnedPatterns();
+    expect(loaded).toHaveLength(100);
+    // Nyaste först → första entry ska vara den med senaste lastSeen
+    expect(loaded[0].pattern).toBe('/test119');
   });
 });
