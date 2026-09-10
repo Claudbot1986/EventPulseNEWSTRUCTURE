@@ -1384,6 +1384,39 @@ body:not(.sidebar-open) .sidebar {
 }
 .nav-link.active .nav-icon { color: var(--accent); }
 
+/* ── Manual-review sidebar link ──────────────────────────────────────────── */
+/* When there are zero sources awaiting manual investigation the link
+   renders muted and quiet. When count > 0 the link turns red (urgent) so
+   the operator notices from a glance. The red state uses the same
+   --bad token already defined for failed-status counters. */
+.nav-link--manual-review { transition: color 0.15s, background 0.15s; }
+.nav-link--manual-review .nav-label { color: inherit; }
+.nav-link--manual-review.nav-link--empty {
+  color: var(--muted);
+}
+.nav-link--manual-review.nav-link--empty:hover {
+  color: var(--text);
+}
+.nav-link--manual-review.nav-link--alert {
+  color: #ffffff;
+  background: var(--bad);
+  font-weight: 600;
+}
+.nav-link--manual-review.nav-link--alert:hover {
+  background: #d83a3a;
+  color: #ffffff;
+}
+.nav-link--manual-review.nav-link--alert .nav-icon {
+  color: #ffffff;
+}
+.nav-link--manual-review.nav-link--alert.active {
+  background: #b51d1d;
+  color: #ffffff;
+}
+.nav-link--manual-review.nav-link--alert.active .nav-icon {
+  color: #ffffff;
+}
+
 .sidebar-toggle {
   display: none;
   width: 32px;

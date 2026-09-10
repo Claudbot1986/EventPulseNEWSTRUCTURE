@@ -261,6 +261,9 @@ function applyAnalyticsServerState(as) {
 
     // ── Unsynced vs Supabase (Task 3b) ─────────────────────────────────
     renderUnsynced(data.unsynced || null);
+
+    // ── Manual-review sidebar tab (count + red state) ─────────────────
+    applyManualReviewState(data.manualReview || null);
   } catch (err) {
     document.querySelector('main').innerHTML =
       `<div class="card"><h2>Error</h2><p>Failed to fetch /api/status: ${String(err)}</p></div>`;
@@ -1502,7 +1505,7 @@ function wireShSorting() {
 
 // ─── Review modal (D-AI adapters + discovery candidates) ────────────────────
 
-let reviewModalCache = { adapters: null, discovery: null };
+let reviewModalCache = { adapters: null, discovery: null, manualReview: null };
 
 function wireReviewButtons() {
   const a = document.getElementById('btn-review-adapters');
@@ -1514,6 +1517,17 @@ function wireReviewButtons() {
   if (d && !d.dataset.wired) {
     d.dataset.wired = '1';
     d.addEventListener('click', () => openReviewModal('discovery'));
+  }
+  // Sidebar link — opens the manual-review modal with one Google-search
+  // link per source awaiting manual investigation. preventDefault() keeps
+  // the page from scrolling to a non-existent #manual-review anchor.
+  const mr = document.getElementById('nav-manual-review');
+  if (mr && !mr.dataset.wired) {
+    mr.dataset.wired = '1';
+    mr.addEventListener('click', (e) => {
+      e.preventDefault();
+      openReviewModal('manual-review');
+    });
   }
   // Close handlers (X button + backdrop click)
   document.querySelectorAll('[data-review-close]').forEach((el) => {
@@ -1539,9 +1553,15 @@ async function openReviewModal(kind) {
   const body = document.getElementById('review-modal-body');
   if (!m || !body || !title) return;
 
-  title.textContent = kind === 'adapters'
-    ? 'Review D-AI adapters (runtime/adapters/*.json)'
-    : 'Review discovery candidates (runtime/discovery-candidates.jsonl)';
+  if (kind === 'adapters') {
+    title.textContent = 'Review D-AI adapters (runtime/adapters/*.json)';
+  } else if (kind === 'discovery') {
+    title.textContent = 'Review discovery candidates (runtime/discovery-candidates.jsonl)';
+  } else if (kind === 'manual-review') {
+    title.textContent = 'Källor för manuell hantering';
+  } else {
+    title.textContent = 'Review';
+  }
   body.innerHTML = '<p class="empty">Loading…</p>';
   m.hidden = false;
 
@@ -1553,13 +1573,23 @@ async function openReviewModal(kind) {
         reviewModalCache.adapters = await r.json();
       }
       renderAdaptersReview(body, reviewModalCache.adapters);
-    } else {
+    } else if (kind === 'discovery') {
       if (!reviewModalCache.discovery) {
         const r = await fetch('/api/review/discovery-candidates', { cache: 'no-store' });
         if (!r.ok) throw new Error(`HTTP ${r.status}`);
         reviewModalCache.discovery = await r.json();
       }
       renderDiscoveryReview(body, reviewModalCache.discovery);
+    } else if (kind === 'manual-review') {
+      if (!reviewModalCache.manualReview) {
+        // Re-use the main /api/status payload — manualReview is included
+        // there. Avoid a second fetch; fall back to /api/status on miss.
+        const r = await fetch('/api/status', { cache: 'no-store' });
+        if (!r.ok) throw new Error(`HTTP ${r.status}`);
+        const d = await r.json();
+        reviewModalCache.manualReview = d.manualReview || { count: 0, totalRows: 0, rows: [] };
+      }
+      renderManualReview(body, reviewModalCache.manualReview);
     }
   } catch (err) {
     body.innerHTML = `<p class="empty">Failed to load: ${escapeHtml(String(err))}</p>`;
@@ -1624,6 +1654,89 @@ function renderDiscoveryReview(container, data) {
       <thead>
         <tr>
           <th>Source</th><th>Candidate URL</th><th>Score</th><th>Prod</th><th>Stab</th><th>Reason</th>
+        </tr>
+      </thead>
+      <tbody>${rows}</tbody>
+    </table>`;
+}
+
+/**
+ * Apply the manual-review count + red state to the sidebar link.
+ *
+ * Called from the main /api/status handler. Updates:
+ *   - `<span id="nav-manual-review-count">` with the distinct source count
+ *   - `.nav-link--empty` class when count is 0 (muted, not alert)
+ *   - `.nav-link--alert` class when count > 0 (red, urgent)
+ *
+ * Errors-as-data: if the payload is missing we fall back to the empty
+ * (muted) state so the link never shows a stale red badge.
+ */
+function applyManualReviewState(mr) {
+  const link = document.getElementById('nav-manual-review');
+  const countEl = document.getElementById('nav-manual-review-count');
+  if (!link || !countEl) return;
+  const count = (mr && typeof mr.count === 'number') ? mr.count : 0;
+  countEl.textContent = String(count);
+  link.classList.remove('nav-link--empty', 'nav-link--alert');
+  if (count > 0) {
+    link.classList.add('nav-link--alert');
+    link.title = `${count} källa${count === 1 ? '' : 'or'} behöver manuell handläggning — klicka för att öppna listan`;
+  } else {
+    link.classList.add('nav-link--empty');
+    link.title = 'Inga källor i manuell handläggning just nu';
+  }
+}
+
+/**
+ * Render the manual-review modal body.
+ *
+ * One row per distinct source currently in `runtime/postTestC-manual-review.jsonl`.
+ * Each row is a clickable link whose visible text is the EXACT URL the
+ * pipeline last investigated for that source (resolved server-side via
+ * the per-source JSONL's `sourceUrl`, the registry URL, or the cleanup
+ * audit). The href is a Google search for that URL so the operator can
+ * verify whether the page still exists, has moved, or is reachable.
+ *
+ * Sources without a resolved URL fall back to a Google search on the
+ * sourceId — explicitly flagged as "saknar URL" so the operator knows
+ * the search target is approximate.
+ */
+function renderManualReview(container, data) {
+  if (!data || data.count === 0 || data.rows.length === 0) {
+    container.innerHTML =
+      '<p class="empty">Inga källor i manuell handläggning just nu. Kön är tom.</p>';
+    return;
+  }
+  const rows = data.rows.map((r) => {
+    const searched = r.url && r.url.trim()
+      ? r.url
+      : `${r.sourceId} EventPulse Stockholm`;
+    const href = 'https://www.google.com/search?q=' + encodeURIComponent(searched);
+    const label = r.url && r.url.trim() ? r.url : '(saknar URL — söker på sourceId)';
+    const stage = r.winningStage ? ` · stage ${r.winningStage}` : '';
+    const round = r.roundNumber ? ` · round ${r.roundNumber}` : '';
+    const queued = r.queuedAt ? new Date(r.queuedAt).toLocaleString() : '';
+    const notes = r.workerNotes ? escapeHtml(r.workerNotes) : '';
+    return `<tr>
+      <td><code>${escapeHtml(r.sourceId)}</code></td>
+      <td><a href="${escapeHtml(href)}" target="_blank" rel="noopener noreferrer" title="Öppna Google-sökning för: ${escapeHtml(searched)}">${escapeHtml(label)}</a></td>
+      <td class="muted">${escapeHtml(queued)}${escapeHtml(stage)}${escapeHtml(round)}</td>
+      <td class="muted">${notes}</td>
+    </tr>`;
+  }).join('');
+  container.innerHTML = `
+    <p class="review-intro">
+      ${data.count} källa${data.count === 1 ? '' : 'or'} i manuell handläggning
+      (${data.totalRows} körad${data.totalRows === 1 ? '' : 'a'} totalt).
+      Klicka en rad för att öppna en Google-sökning på exakt den URL som
+      undersökts — så kan du avgöra om sidan finns kvar, har flyttat
+      eller blockerar oss.
+      Sources utan upplöst URL söker på sourceId istället.
+    </p>
+    <table class="review-table">
+      <thead>
+        <tr>
+          <th>Source</th><th>Undersökt URL (klick = Google-sökning)</th><th>Köad</th><th>Notes</th>
         </tr>
       </thead>
       <tbody>${rows}</tbody>

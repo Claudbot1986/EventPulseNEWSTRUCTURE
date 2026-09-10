@@ -91,6 +91,12 @@ export interface DashboardData {
   extractionOverview: LayerExtractionOverview;
   // Unsynced vs Supabase (Task 3b)
   unsynced: UnsyncedReport;
+  // Manual review queue (postTestC-manual-review.jsonl) — sources awaiting
+  // human investigation. Drives the red sidebar tab. URL is the exact URL
+  // last investigated (resolved from the per-source JSONL's sourceUrl, with
+  // a couple of fallbacks). Click handlers in the frontend turn each URL
+  // into a Google search.
+  manualReview: ManualReviewSummary;
   // Live state (Phase 5): BullMQ + 08-Agent
   bullmq: BullmqSummary;
   agent: AgentMetrics;
@@ -110,6 +116,37 @@ export interface LayerSummary {
   H: { backlogSize: number; note: string };
   AI: { logFilesTotal: number; latestIso: string | null; callsLatest: number };
   Push: { totalJobs: number; last7dJobs: number; topSources: Array<{ sourceId: string; count: number }> };
+}
+
+// Manual review queue summary — surfaces runtime/postTestC-manual-review.jsonl
+// so the sidebar tab can show a count + red state when items are pending.
+// Each row carries the EXACT URL that the pipeline last investigated for
+// that source (resolved from 03-Queue/03-extractedevents/<source>.jsonl's
+// `sourceUrl` field — the same field the auto-extractor wrote when it
+// produced events for that source). Frontend renders each row as a link
+// whose href is a Google search for that URL (per user spec).
+export interface ManualReviewRow {
+  sourceId: string;
+  /** Exact URL the pipeline last investigated for this source. May be
+   *  empty if we couldn't resolve one — frontend falls back to searching
+   *  on the sourceId instead. */
+  url: string;
+  queuedAt: string;
+  winningStage: string | null;
+  workerNotes: string | null;
+  roundNumber: number | null;
+  /** "ok" | "no-url" — only used for empty-state messaging, not displayed. */
+  urlResolution: 'ok' | 'no-url';
+}
+
+export interface ManualReviewSummary {
+  /** Distinct sourceIds currently in the manual review queue. */
+  count: number;
+  /** Total rows in the file (sources can appear multiple times across
+   *  rounds — sidebar shows the distinct count). */
+  totalRows: number;
+  rows: ManualReviewRow[];
+  fetchedAt: string;
 }
 
 // BullMQ queue counts — fetched with 1.5s timeout; null on failure.
@@ -277,6 +314,11 @@ export async function collect(): Promise<DashboardData> {
   const adapterSet = buildAdapterSet(PROJECT_ROOT);
   for (const row of dbSources) row.hasAdapter = adapterSet.has(row.source);
 
+  // Build the URL map once and feed both the manual-review summary and any
+  // future consumers that need per-source URLs.
+  const sourceUrlMap = buildSourceUrlMap(PROJECT_ROOT);
+  const manualReview = collectManualReview(PROJECT_ROOT, sourceUrlMap);
+
   // Fill the one field that lives in JSONL not DB
   let lastSuccessIso: string | null = null;
   for (const r of statusRows) {
@@ -311,6 +353,7 @@ export async function collect(): Promise<DashboardData> {
     layers: collectLayers(PROJECT_ROOT, sources),
     extractionOverview: collectExtractionOverview(PROJECT_ROOT),
     unsynced: await collectUnsynced(PROJECT_ROOT),
+    manualReview,
     bullmq: await collectBullmq(),
     agent: await collectAgent(),
     bflCredits: await collectBflCredits(),
@@ -486,6 +529,166 @@ function collectLayers(root: string, sources: { working: number; dead: number; u
 }
 
 // ── Live state collectors (Phase 5) ────────────────────────────────────────
+
+/**
+ * Build a per-source URL map. Three-tier fallback:
+ *   1. Per-source JSONL in 03-Queue/03-extractedevents/<sourceId>.jsonl —
+ *      the EXACT URL the extractor last fetched for that source (from the
+ *      row's `sourceUrl` field). Preferred because it reflects what the
+ *      pipeline actually worked against, which is what a human wants to
+ *      verify.
+ *   2. `sources/<sourceId>.jsonl` (sourceRegistry truth) — the registered
+ *      URL for every source. Used as fallback for sources that never
+ *      produced events (so they have no extractedevents file).
+ *   3. `runtime/audit-*-source-cleanup.jsonl` — URLs of sources that have
+ *      since been archived. The manual-review queue often contains
+ *      long-dead sources whose only surviving URL is in the cleanup audit.
+ *      SourceId without a URL still surfaces in the modal — the frontend
+ *      falls back to searching on the sourceId instead.
+ */
+export function buildSourceUrlMap(root: string): Map<string, string> {
+  const out = new Map<string, string>();
+
+  // Tier 1: per-source JSONL in 03-Queue/03-extractedevents/.
+  const extractedDir = join(root, '03-Queue/03-extractedevents');
+  if (existsSync(extractedDir)) {
+    for (const f of readdirSync(extractedDir).filter((n) => n.endsWith('.jsonl'))) {
+      const source = f.replace(/\.jsonl$/, '');
+      const path = join(extractedDir, f);
+      try {
+        const text = readFileSync(path, 'utf-8');
+        const firstLine = text.split('\n').find((l) => l.trim());
+        if (!firstLine) continue;
+        const row = JSON.parse(firstLine) as { sourceUrl?: string; url?: string };
+        const url = (row.sourceUrl ?? row.url ?? '').trim();
+        if (url) out.set(source, url);
+      } catch { /* skip unreadable file */ }
+    }
+  }
+
+  // Tier 2: source registry — every source has a `url` field here.
+  const registryDir = join(root, 'sources');
+  if (existsSync(registryDir)) {
+    for (const f of readdirSync(registryDir).filter((n) => n.endsWith('.jsonl'))) {
+      const source = f.replace(/\.jsonl$/, '');
+      if (out.has(source)) continue; // tier 1 already filled it
+      const path = join(registryDir, f);
+      try {
+        const text = readFileSync(path, 'utf-8');
+        const firstLine = text.split('\n').find((l) => l.trim());
+        if (!firstLine) continue;
+        const row = JSON.parse(firstLine) as { url?: string };
+        const url = (row.url ?? '').trim();
+        if (url) out.set(source, url);
+      } catch { /* skip unreadable file */ }
+    }
+  }
+
+  // Tier 3: cleanup audit — covers sources archived on 2026-08-19 and
+  // similar future cleanup runs. Only `*source-cleanup*.jsonl` is read
+  // (the orphan-cleanup variant doesn't carry URLs).
+  const runtimeDir = join(root, 'runtime');
+  if (existsSync(runtimeDir)) {
+    for (const f of readdirSync(runtimeDir).filter((n) => /^audit-.*source-cleanup.*\.jsonl$/.test(n))) {
+      const path = join(runtimeDir, f);
+      try {
+        const text = readFileSync(path, 'utf-8');
+        for (const line of text.split('\n')) {
+          if (!line.trim()) continue;
+          try {
+            const row = JSON.parse(line) as { sourceId?: string; url?: string };
+            const sid = (row.sourceId ?? '').trim();
+            const url = (row.url ?? '').trim();
+            if (sid && url && !out.has(sid)) out.set(sid, url);
+          } catch { /* skip malformed line */ }
+        }
+      } catch { /* skip unreadable file */ }
+    }
+  }
+
+  return out;
+}
+
+/**
+ * Collect the manual-review queue summary.
+ *
+ * Source: `runtime/postTestC-manual-review.jsonl`. Each row is one queued
+ * investigation for a source. The same sourceId may appear multiple times
+ * across rounds; the sidebar count shows the distinct count.
+ *
+ * URL resolution per source:
+ *   1. First non-empty `sourceUrl` from the per-source JSONL in
+ *      03-Queue/03-extractedevents/<sourceId>.jsonl — the exact URL the
+ *      extractor last worked against.
+ *   2. Empty (frontend falls back to Google-search on the sourceId).
+ *
+ * Sorted by queuedAt desc so the most-recent investigations are at the
+ * top. Capped at 500 rows to keep the response payload bounded.
+ */
+export function collectManualReview(root: string, sourceUrlMap: Map<string, string>): ManualReviewSummary {
+  const path = join(root, 'runtime/postTestC-manual-review.jsonl');
+  const empty: ManualReviewSummary = {
+    count: 0,
+    totalRows: 0,
+    rows: [],
+    fetchedAt: new Date().toISOString(),
+  };
+  if (!existsSync(path)) return empty;
+  let raw: Array<{
+    sourceId?: string;
+    queuedAt?: string;
+    winningStage?: string;
+    workerNotes?: string;
+    roundNumber?: number;
+  }>;
+  try {
+    raw = readJsonl<{
+      sourceId?: string;
+      queuedAt?: string;
+      winningStage?: string;
+      workerNotes?: string;
+      roundNumber?: number;
+    }>(path);
+  } catch {
+    return empty;
+  }
+  const totalRows = raw.length;
+  const seen = new Set<string>();
+  const rows: ManualReviewRow[] = [];
+  // Newest first
+  const sorted = raw.slice().sort((a, b) => {
+    const at = a.queuedAt ?? '';
+    const bt = b.queuedAt ?? '';
+    return bt.localeCompare(at);
+  });
+  // Cap applies to BOTH rows.length and the distinct-source count so the
+  // contract with the frontend (sidebar badge = count) holds even when
+  // the underlying queue has more than `MAX_ROWS` distinct sources.
+  const MAX_ROWS = 500;
+  for (const r of sorted) {
+    const sourceId = (r.sourceId ?? '').trim();
+    if (!sourceId) continue;
+    if (seen.has(sourceId)) continue;
+    if (seen.size >= MAX_ROWS) break;
+    seen.add(sourceId);
+    const url = sourceUrlMap.get(sourceId) ?? '';
+    rows.push({
+      sourceId,
+      url,
+      queuedAt: r.queuedAt ?? '',
+      winningStage: r.winningStage ?? null,
+      workerNotes: r.workerNotes ?? null,
+      roundNumber: typeof r.roundNumber === 'number' ? r.roundNumber : null,
+      urlResolution: url ? 'ok' : 'no-url',
+    });
+  }
+  return {
+    count: seen.size,
+    totalRows,
+    rows,
+    fetchedAt: new Date().toISOString(),
+  };
+}
 
 async function collectBullmq(): Promise<BullmqSummary> {
   // Dynamic import via file URL — keeps BullMQ out of cold-start path if Redis is down.
