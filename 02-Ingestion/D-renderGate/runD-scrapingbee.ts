@@ -546,6 +546,9 @@ async function main() {
   log('═══════════════════════════════════════════════════════════════════');
   log(`SUMMARY postD-UI: ${toUi.length} | postD-man1: ${toMan1.length} | postD-man: ${toMan.length} | back-to-${inputFilename}: ${backToInput.length} | remaining: ${remaining.length} | creditsUsed=${totalCredits}`);
   log('═══════════════════════════════════════════════════════════════════');
+  // Explicit exit: appendFileSync/RUN_LOG stream kan hålla event-loopen öppen,
+  // vilket gör att cron-skriptets `proc.on('exit')` aldrig fyrar. Force exit 0.
+  process.exit(0);
 }
 
 main().catch((e) => {
