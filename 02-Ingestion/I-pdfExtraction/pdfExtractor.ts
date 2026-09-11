@@ -362,7 +362,11 @@ if (isMainModule && cliArgs.length > 0) {
         totalEvents: r.totalEvents,
         firstError: r.firstError,
       }, null, 2));
-      process.exit(r.firstError && r.totalEvents === 0 ? 1 : 0);
+      // Avsluta alltid exit 0 om vi faktiskt bearbetade källor. Per-PDF-fel
+      // (404, ogiltig PDF-struktur, etc.) loggas i firstError men dödar
+      // inte hela pipelinen — cron kan fortsätta med nästa steg. exit 1
+      // reserveras för riktigt fatala fel (catch-blocket ovan).
+      process.exit(0);
     })
     .catch((e) => {
       console.error('[pdfExtractor] FATAL:', e);
