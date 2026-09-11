@@ -135,9 +135,35 @@ async function fetchPdf(url: string): Promise<{ buf: Buffer | null; oversized: b
 async function extractPdfText(buf: Buffer): Promise<string> {
   // Lazy-load pdf-parse (den läser test-filer vid import som kan vara trasigt
   // utan en default-test-PDF, så vi importerar inuti funktionen).
-  const pdfParse = (await import('pdf-parse')).default;
-  const data = await pdfParse(buf);
-  return data.text || '';
+  //
+  // pdf-parse har bytt API över tid:
+  //   - gammal: module.exports = function(buffer) { ... }
+  //   - ny:     module.exports.PDFParse = class { ... getText() { ... } }
+  // Vi stödjer båda: om PDFParse-klass finns använd getText(), annars
+  // behandla modulen som en funktion.
+  const mod = (await import('pdf-parse')) as unknown as Record<string, unknown>;
+  let text = '';
+  try {
+    if (typeof mod.PDFParse === 'function') {
+      const parser = new (mod.PDFParse as new (opts: { data: Buffer }) => { getText(): Promise<{ text?: string }> })({ data: buf });
+      const result = await parser.getText();
+      text = result.text ?? '';
+    } else if (typeof mod.default === 'function') {
+      const fn = mod.default as (b: Buffer) => Promise<{ text?: string }>;
+      const result = await fn(buf);
+      text = result.text ?? '';
+    } else if (typeof mod === 'function') {
+      const fn = mod as unknown as (b: Buffer) => Promise<{ text?: string }>;
+      const result = await fn(buf);
+      text = result.text ?? '';
+    } else {
+      throw new Error('pdf-parse: unknown export shape, no PDFParse/default/function found');
+    }
+  } catch (err: unknown) {
+    const msg = err instanceof Error ? err.message : String(err);
+    throw new Error(`pdf-parse failed: ${msg}`);
+  }
+  return text;
 }
 
 // ─── Universal extractor bridge ────────────────────────────────────────────
