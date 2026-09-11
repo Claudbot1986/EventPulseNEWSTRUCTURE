@@ -288,8 +288,6 @@ export async function run(opts: GeoExpansionOptions = {}): Promise<GeoExpansionR
 
 // ── CLI wrapper ───────────────────────────────────────────────────────────
 
-import { fileURLToPath } from 'url';
-
 const cliArgs = process.argv.slice(2);
 const radiusIdx = cliArgs.indexOf('--geo-radius-m');
 const limitIdx = cliArgs.indexOf('--limit');
