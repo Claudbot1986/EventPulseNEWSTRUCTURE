@@ -48,7 +48,17 @@ interface ValidationReport {
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
 function loadLatestValidation(): ValidationReport | null {
-  const files = readdirSync(VALIDATION_DIR).filter(f => f.startsWith('validation-') && f.endsWith('.json'));
+  // Om VALIDATION_DIR inte finns än (första körning, eller validator aldrig
+  // körts) → returnera null istället för att krascha. Smoke + skarpt ska
+  // kunna fortsätta även utan valideringsrapporter.
+  let files: string[];
+  try {
+    files = readdirSync(VALIDATION_DIR).filter(f => f.startsWith('validation-') && f.endsWith('.json'));
+  } catch (err: unknown) {
+    const code = (err as NodeJS.ErrnoException)?.code;
+    if (code === 'ENOENT') return null;
+    throw err;
+  }
   if (files.length === 0) return null;
   files.sort();
   const latest = files[files.length - 1];
@@ -167,8 +177,12 @@ function main() {
 
   const report = loadLatestValidation();
   if (!report) {
-    console.error('No validation report found. Run runC-pattern-validator.ts first.');
-    process.exit(1);
+    // Ingen validering har körts ännu — detta är inte ett fel i smoke/skarpt,
+    // det är bara "inget att göra idag". Logga info + exit 0.
+    console.log('No validation report found in reports/pattern-validation/.');
+    console.log('  (Run runC-pattern-validator.ts first to generate one.)');
+    console.log('Nothing to promote — exit 0.');
+    process.exit(0);
   }
 
   console.log(`Loaded validation: ${report.runId}`);

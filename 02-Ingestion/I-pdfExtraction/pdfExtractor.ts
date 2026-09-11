@@ -101,7 +101,7 @@ function loadSourcesWithPdfs(): SourcePdfEntry[] {
 const MAX_PDF_BYTES = 5 * 1024 * 1024; // 5 MB
 const FETCH_TIMEOUT_MS = 15_000;
 
-async function fetchPdf(url: string): Promise<{ buf: Buffer | null; oversized: boolean }> {
+async function fetchPdf(url: string): Promise<{ buf: Buffer | null; oversized: boolean; status: number | null }> {
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS);
   try {
@@ -109,15 +109,24 @@ async function fetchPdf(url: string): Promise<{ buf: Buffer | null; oversized: b
       signal: controller.signal,
       headers: { 'User-Agent': 'EventPulse/1.0 (PDF-extractor; Stockholm events)' },
     });
-    if (!res.ok) return { buf: null, oversized: false };
+    if (!res.ok) {
+      // 404/410 = URL permanently gone → tyst skip (loggas som warning, inte error).
+      // Andra fel (5xx, timeout) = tillfälligt → rapporteras som firstError så
+      // cron kan upptäcka och stanna.
+      if (res.status === 404 || res.status === 410) {
+        console.warn(`[pdfExtractor] ${url} gone (HTTP ${res.status}) — skipping`);
+        return { buf: null, oversized: false, status: res.status };
+      }
+      return { buf: null, oversized: false, status: res.status };
+    }
     const buf = Buffer.from(await res.arrayBuffer());
     if (buf.length > MAX_PDF_BYTES) {
       console.warn(`[pdfExtractor] ${url} skipped: ${buf.length} bytes > ${MAX_PDF_BYTES} limit`);
-      return { buf: null, oversized: true };
+      return { buf: null, oversized: true, status: 200 };
     }
-    return { buf, oversized: false };
+    return { buf, oversized: false, status: 200 };
   } catch {
-    return { buf: null, oversized: false };
+    return { buf: null, oversized: false, status: null };
   } finally {
     clearTimeout(timer);
   }
@@ -172,11 +181,14 @@ async function processSource(
       if (myIdx >= queue.length) break;
       const pdfUrl = queue[myIdx];
       try {
-        const { buf, oversized } = await fetchPdf(pdfUrl);
+        const { buf, oversized, status } = await fetchPdf(pdfUrl);
         if (!buf) {
-          // Oversized är tyst skip (inte ett fel); övrigt null = fetch-fel
-          if (!oversized && !result.firstError) {
-            result.firstError = `fetch failed: ${pdfUrl}`;
+          // Oversized är tyst skip (inte ett fel); 404/410 (gone) är också
+          // tyst skip. Övrigt null = transient fetch-fel → rapporteras som
+          // firstError så cron kan upptäcka.
+          const isPermanentGone = status === 404 || status === 410;
+          if (!oversized && !isPermanentGone && !result.firstError) {
+            result.firstError = `fetch failed (HTTP ${status ?? 'unknown'}): ${pdfUrl}`;
           }
           continue;
         }
