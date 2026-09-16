@@ -2,22 +2,23 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN"
   "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <!--
-  com.eventpulse.ingestion.plist — launchd job for the full ingestion pipeline.
+  com.eventpulse.ingestion.plist — THE nightly chain (enda nattjobbet).
 
-  Runs daily at 02:00. Executes scripts/ingestion-cron.ts which orchestrates
-  ALL plan steps (A→B→C→D-renderGate→I-pdf→etag-refresh→D-images→P2C→P3A→P3B→P3C
-  →pattern-promoter).
+  Runs daily at 02:00. Executes scripts/cron/runNightly.sh which runs
+  the whole night in sequence:
+    ingestion (13 steg) → purge → supervisor → discovery
+
+  Separata launchd-tider för purge/supervisor/discovery pensionerade
+  2026-09-16 (beslut: "en enda kedja"). Deras plists ligger i
+  ~/Library/LaunchAgents/_quarantine-2026-09-16/ — installera inte om dem.
 
   D-images körs med SKIP_BFL=1 (bibliotek-fallback istället för BFL-generering)
   tills BFL-credits fyllts på — beslut 2026-09-15.
 
   Schedule:
     Hour=2  Minute=0   (daily)
-  Order vs. other EP jobs:
-    02:00 ingestion        ← denna
-    03:00 purge            (com.eventpulse.purge)
-    04:30 supervisor       (com.eventpulse.supervisor)
-    05:00 discovery        (com.eventpulse.discovery)
+  Kedjan fortsätter alltid vidare även om ett steg faller; wrappern
+  avslutar med exit 1 om något steg föll (syns i launchctl list).
 
   Install:
     cp scripts/cron/com.eventpulse.ingestion.plist ~/Library/LaunchAgents/
@@ -44,7 +45,7 @@
   <key>ProgramArguments</key>
   <array>
     <string>/bin/bash</string>
-    <string>/Users/claudgashi/EventPulse/scripts/cron/runIngestion.sh</string>
+    <string>/Users/claudgashi/EventPulse/scripts/cron/runNightly.sh</string>
   </array>
 
   <key>WorkingDirectory</key>

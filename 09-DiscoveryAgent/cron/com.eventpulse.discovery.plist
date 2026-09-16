@@ -2,6 +2,10 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN"
   "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <!--
+  ERSATT 2026-09-16 av runNightly-kedjan (scripts/cron/runNightly.sh).
+  Discovery-agenten körs sist i kedjan efter ingestion+purge+supervisor.
+  Installera inte denna plist separat.
+
   com.eventpulse.discovery.plist — launchd job for T0095 autonomous discovery agent.
 
   Runs daily at 05:00 (efter supervisor 04:30 — undvik exakt samtidig start;

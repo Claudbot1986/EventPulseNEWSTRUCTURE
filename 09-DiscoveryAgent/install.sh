@@ -1,4 +1,9 @@
 #!/bin/bash
+# ERSATT 2026-09-16: com.eventpulse.discovery installeras inte längre —
+# discovery-agenten körs sist i runNightly-kedjan (scripts/cron/runNightly.sh,
+# schemalagd av com.eventpulse.ingestion kl 02:00). Filen finns kvar för
+# återställning, men kör den inte utan att först pensionera kedjetänket.
+#
 # install.sh — Idempotent loader for com.eventpulse.discovery launchd job.
 #
 # Usage:

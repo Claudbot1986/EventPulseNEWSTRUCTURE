@@ -1,8 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <!--
+  ERSATT 2026-09-16 av runNightly-kedjan (scripts/cron/runNightly.sh).
+  Purge körs inne i kedjan efter ingestion. Installera inte denna plist separat.
+
   com.eventpulse.purge.plist — daglig rensning av events äldre än gårdagen.
-  One-shot jobb: körs kl 03:00 varje natt, avslutas direkt efter --apply.
+  One-shot jobb: kördes kl 03:00 varje natt, avslutades direkt efter --apply.
   Till skillnad från reminders/followdrops (som kör --loop) behöver vi inte
   KeepAlive — skriptet ska avslutas efter en körning.
 

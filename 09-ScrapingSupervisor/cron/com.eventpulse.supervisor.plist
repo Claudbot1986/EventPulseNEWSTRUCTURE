@@ -1,6 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN"
   "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!--
+  ERSATT 2026-09-16 av runNightly-kedjan (scripts/cron/runNightly.sh).
+  Supervisor körs inne i kedjan efter ingestion+purge. Installera inte
+  denna plist separat.
+-->
 <plist version="1.0">
 <dict>
   <key>Label</key>
