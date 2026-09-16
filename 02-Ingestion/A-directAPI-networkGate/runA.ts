@@ -29,6 +29,7 @@ const __dirname = path.dirname(__filename);
 dotenv.config({ path: path.resolve(process.cwd(), '.env'), override: true });
 
 import { getAllSources, getSourceStatus, updateSourceStatus, getSource } from '../tools/sourceRegistry';
+import { isSkipped } from '../lib/quarantineGuard.js';
 import { fetchHtml, queueEvents } from '../tools/fetchTools';
 import { extractFromJsonLd } from '../F-eventExtraction/extractor';
 import { enqueueDAI, dequeueDAI, runDaiForQueue } from './daiHook';
@@ -190,6 +191,40 @@ function addToPreAQueue(sourceId: string, addedBy: string, reason: string): void
   writePreAQueue(queue);
 }
 
+// ─── Cross-Queue Dedup Helper ──────────────────────────────────────────────────
+//
+// Flytta bort sourceId från alla andra runtime-queue-filer innan den skrivs till
+// sin nya kö. Förhindrar att samma källa finns i både postA och EVENTPULSE-APP,
+// eller kvar i preB efter att den lyckats i A. EVENTPULSE-APP rörs inte
+// (historisk arkiv enligt queue-mem.py-policyn).
+
+const CROSS_QUEUE_DEDUP_FILES: readonly string[] = [
+  PREA_QUEUE_FILE,
+  PREB_QUEUE_FILE,
+  POSTA_QUEUE_FILE,
+  path.resolve(RUNTIME_DIR, 'postB-queue.jsonl'),
+  path.resolve(RUNTIME_DIR, 'postB-preC-queue.jsonl'),
+];
+
+function removeSourceFromOtherQueues(sourceId: string, exceptFile: string): void {
+  for (const file of CROSS_QUEUE_DEDUP_FILES) {
+    if (file === exceptFile) continue;
+    if (!existsSync(file)) continue;
+    let entries: unknown[];
+    try {
+      const raw = readFileSync(file, 'utf8');
+      entries = raw.split('\n').filter(l => l.trim()).map(l => JSON.parse(l));
+    } catch {
+      continue; // trasig JSON eller oläsbar fil — lämna ifred
+    }
+    const filtered = entries.filter((e: any) => e && e.sourceId !== sourceId);
+    if (filtered.length !== entries.length) {
+      const content = filtered.map(e => JSON.stringify(e)).join('\n') + '\n';
+      writeFileSync(file, content, 'utf8');
+    }
+  }
+}
+
 // ─── Sources-Main Iterator ─────────────────────────────────────────────────────
 
 interface SourceWithOrigin {
@@ -343,12 +378,14 @@ function finalizeSource(item: SourceWithOrigin, result: AResult): void {
 
   // ── Queue-hop baserat på utfall ──────────────────────────────────────────
   if (result.success && result.eventsFound > 0) {
-    // A success → postA
+    // A success → postA (rensa bort från andra köer först)
+    removeSourceFromOtherQueues(sourceId, POSTA_QUEUE_FILE);
     addToPostAQueue(sourceId, result.eventsFound, `toolA(${queueOrigin}): ${result.eventsFound} events`);
     // Hook: om A plötsligt fungerar behöver vi inte D-AI för denna källa
     dequeueDAI(sourceId);
   } else {
-    // ej A / fail → preB
+    // ej A / fail → preB (rensa bort från andra köer först)
+    removeSourceFromOtherQueues(sourceId, PREB_QUEUE_FILE);
     addToPreBQueue(sourceId, `toolA(${queueOrigin}): ${result.error ?? 'no events'}`);
     // Hook: om sidan parsas men saknar JSON-LD → D-AI kan hitta strukturen
     if (result.error === 'no-jsonld-or-no-events' && item.source?.url) {
@@ -477,7 +514,41 @@ async function main() {
   }
 
   log(`Kör ${batch.length} sources med ${CONCURRENCY} parallella workers...`);
-  await runWithConcurrency(batch, CONCURRENCY);
+
+  // ─── Source Lifecycle: skip-check ───────────────────────────────
+  // Filtrerar bort källor som är quarantined eller retired.
+  // Loggas + audit-rad, INGA fetchHttp-anrop.
+  const skippedInBatch: Array<{ sourceId: string; reason: string; reasonCode: string }> = [];
+  const filteredBatch = batch.filter(item => {
+    const skip = isSkipped(item.sourceId);
+    if (!skip.skip) return true;
+    skippedInBatch.push({
+      sourceId: item.sourceId,
+      reason: skip.reason ?? 'unknown',
+      reasonCode: skip.entry?.reasonCode ?? '',
+    });
+    log(`[A-skip] ${item.sourceId} (${skip.reason}: ${skip.entry?.reasonCode ?? ''})`);
+    try {
+      appendFileSync(
+        path.resolve(RUNTIME_DIR, 'sources_audit.jsonl'),
+        JSON.stringify({
+          event: 'gate_skip',
+          sourceId: item.sourceId,
+          gate: 'A',
+          reason: skip.reason,
+          reasonCode: skip.entry?.reasonCode ?? '',
+          at: new Date().toISOString(),
+        }) + '\n',
+        'utf8',
+      );
+    } catch { /* audit-log misslyckades */ }
+    return false;
+  });
+  if (skippedInBatch.length > 0) {
+    log(`Skip: ${skippedInBatch.length} källor (quarantined/retired) — kör ${filteredBatch.length} kvar`);
+  }
+
+  await runWithConcurrency(filteredBatch, CONCURRENCY);
 
   // ── Hook: auto-D-AI för källor utan JSON-LD ─────────────────────────────
   if (args.includes('--auto-dai')) {

@@ -57,13 +57,19 @@ function runSubprocessWithTimeout(name: string, scriptPath: string, fileLog: str
       env: { ...process.env, EVENTPULSE_PROJECT_ROOT: PROJECT_ROOT },
       stdio: ['ignore', 'pipe', 'pipe'],
     });
+    let timedOut = false;
     const killTimer = setTimeout(() => {
+      timedOut = true;
       log(`[step:${name}] dräneringsfönster slut — stoppar`, fileLog);
       proc.kill('SIGTERM');
     }, maxMs);
     proc.on('exit', (code, signal) => {
       clearTimeout(killTimer);
-      const exitCode = signal === 'SIGTERM' ? 0 : (code ?? 1);
+      // 2026-09-15: workern fångar SIGTERM själv och avslutar med numerisk kod
+      // 143 (signal=null) — då missar den gamla maskningen signal==='SIGTERM'
+      // och steget loggades som falsk FAIL varje natt. Dränerings-timeout är
+      // alltid förväntat → 0.
+      const exitCode = timedOut || signal === 'SIGTERM' ? 0 : (code ?? 1);
       log(`[step:${name}] exit code=${exitCode} signal=${signal ?? '-'} duration=${Date.now() - startedAt}ms`, fileLog);
       resolve({ exitCode, durationMs: Date.now() - startedAt });
     });

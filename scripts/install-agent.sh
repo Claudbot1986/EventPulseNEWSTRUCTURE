@@ -13,7 +13,7 @@
 
 set -eu
 
-PROJECT_ROOT="${PROJECT_ROOT:-/Volumes/2TB filer/NEWSTRUCTURE-COPY}"
+PROJECT_ROOT="${PROJECT_ROOT:-/Users/claudgashi/EventPulse}"
 PLIST_SRC="$PROJECT_ROOT/scripts/com.eventpulse.agent.plist"
 PLIST_DEST="$HOME/Library/LaunchAgents/com.eventpulse.agent.plist"
 WRAPPER_DEST="$HOME/bin/run-agent.sh"

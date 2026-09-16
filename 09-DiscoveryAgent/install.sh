@@ -9,7 +9,7 @@
 
 set -e
 
-PROJECT_ROOT="/Volumes/2TB filer/NEWSTRUCTURE-COPY"
+PROJECT_ROOT="${PROJECT_ROOT:-/Users/claudgashi/EventPulse}"
 SOURCE_PLIST="$PROJECT_ROOT/09-DiscoveryAgent/cron/com.eventpulse.discovery.plist"
 TARGET_DIR="$HOME/Library/LaunchAgents"
 TARGET_PLIST="$TARGET_DIR/com.eventpulse.discovery.plist"

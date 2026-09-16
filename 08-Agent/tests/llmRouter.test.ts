@@ -1,9 +1,9 @@
 /**
  * Tests for llmRouter — fallback behavior + JSON parsing + wire-format guards.
  *
- * Live LLM calls are not exercised here. The Anthropic SDK path is mocked
- * via env var + fallback assertion. Integration with the real API is
- * verified manually via `npx tsx 08-Agent/server.ts` + curl.
+ * Live LLM calls are not exercised here. The MiniMax fetch path is mocked
+ * via a global fetch stub that always throws. Integration with the real API
+ * is verified via the golden eval (08-Agent/eval/run-golden-eval.ts).
  */
 
 import { afterEach, describe, expect, it, vi } from 'vitest';
@@ -16,18 +16,12 @@ import {
 } from '../llmRouter';
 import type { EventCard, IntentBrief } from '../types';
 
-vi.mock('@anthropic-ai/sdk', () => {
-  return {
-    default: class BoomClient {
-      messages = { create: async () => { throw new Error('network down'); } };
-    },
-  };
-});
+vi.stubGlobal('fetch', async () => { throw new Error('network down'); });
 
-const originalKey = process.env.ANTHROPIC_API_KEY;
+const originalKey = process.env.MINIMAX_API_KEY;
 afterEach(() => {
-  if (originalKey === undefined) delete process.env.ANTHROPIC_API_KEY;
-  else process.env.ANTHROPIC_API_KEY = originalKey;
+  if (originalKey === undefined) delete process.env.MINIMAX_API_KEY;
+  else process.env.MINIMAX_API_KEY = originalKey;
 });
 
 const baseIntent: IntentBrief = {
@@ -129,16 +123,16 @@ describe('buildUserMessage', () => {
 });
 
 describe('composeReply (LLM disabled path)', () => {
-  it('falls back to deterministic when ANTHROPIC_API_KEY is unset', async () => {
-    delete process.env.ANTHROPIC_API_KEY;
+  it('falls back to deterministic when MINIMAX_API_KEY is unset', async () => {
+    delete process.env.MINIMAX_API_KEY;
     const r = await composeReply({ intent: baseIntent, cards: baseCards, warnings: [] });
     expect(r.usedLlm).toBe(false);
     expect(r.reply).toMatch(/förslag i Stockholm/);
     expect(r.highlightedIds).toEqual([baseCards[0].id]);
   });
 
-  it('falls back when ANTHROPIC_API_KEY is set but SDK fails (mocked)', async () => {
-    process.env.ANTHROPIC_API_KEY = 'sk-ant-test';
+  it('falls back when MINIMAX_API_KEY is set but the API fails (mocked)', async () => {
+    process.env.MINIMAX_API_KEY = 'mm-test';
     const r = await composeReply({ intent: baseIntent, cards: baseCards, warnings: [] });
     expect(r.usedLlm).toBe(false);
     expect(r.reply).toBeDefined();
@@ -146,7 +140,7 @@ describe('composeReply (LLM disabled path)', () => {
   });
 
   it('returns empty highlightedIds when no cards match', async () => {
-    delete process.env.ANTHROPIC_API_KEY;
+    delete process.env.MINIMAX_API_KEY;
     const r = await composeReply({ intent: baseIntent, cards: [], warnings: [] });
     expect(r.reply).toMatch(/inget som matchar/);
     expect(r.highlightedIds).toEqual([]);

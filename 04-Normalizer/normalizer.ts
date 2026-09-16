@@ -314,6 +314,16 @@ async function resolveCategoryIds(slugs: string[] | undefined): Promise<string[]
 
 export async function processRawEvent(job: Job<RawEventInput>): Promise<void> {
   const raw = job.data;
+
+  // Datumvakt (2026-09-15): gamla/odöpta events ska aldrig insertas.
+  // Primärt filter finns i importToEventPulse.importSource; detta är
+  // defense-in-depth om någon enqueue:ar direkt (t.ex. manuella verktyg).
+  const startMs = raw.start_time ? Date.parse(raw.start_time) : NaN;
+  if (!Number.isFinite(startMs) || startMs < Date.now()) {
+    console.log(`[normalizer] skip "${raw.title}" (passerat datum/saknar datum: ${raw.start_time || 'tom'})`);
+    return;
+  }
+
   const dedupHash = raw.source_id
     ? buildDedupHash(raw.source, raw.source_id)
     : buildDedupHash(raw.source, `${raw.title}::${raw.start_time}`);

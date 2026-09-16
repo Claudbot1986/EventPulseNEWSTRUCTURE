@@ -8,8 +8,8 @@
   <key>ProgramArguments</key>
   <array>
     <string>/opt/homebrew/bin/node</string>
-    <string>/Volumes/2TB filer/NEWSTRUCTURE-COPY/node_modules/tsx/dist/cli.mjs</string>
-    <string>/Volumes/2TB filer/NEWSTRUCTURE-COPY/09-ScrapingSupervisor/dashboard/server.ts</string>
+    <string>/Users/claudgashi/EventPulse/node_modules/tsx/dist/cli.mjs</string>
+    <string>/Users/claudgashi/EventPulse/09-ScrapingSupervisor/dashboard/server.ts</string>
   </array>
   <key>KeepAlive</key>
   <dict>
@@ -21,19 +21,19 @@
   <key>RunAtLoad</key>
   <true/>
   <key>StandardOutPath</key>
-  <string>/Volumes/2TB filer/NEWSTRUCTURE-COPY/runtime/scraping-supervisor/dashboard.stdout.log</string>
+  <string>/Users/claudgashi/EventPulse/runtime/scraping-supervisor/dashboard.stdout.log</string>
   <key>StandardErrorPath</key>
-  <string>/Volumes/2TB filer/NEWSTRUCTURE-COPY/runtime/scraping-supervisor/dashboard.stderr.log</string>
+  <string>/Users/claudgashi/EventPulse/runtime/scraping-supervisor/dashboard.stderr.log</string>
   <key>EnvironmentVariables</key>
   <dict>
     <key>EVENTPULSE_PROJECT_ROOT</key>
-    <string>/Volumes/2TB filer/NEWSTRUCTURE-COPY</string>
+    <string>/Users/claudgashi/EventPulse</string>
     <key>EVENTPULSE_VAULT_ROOT</key>
     <string>/Users/claudgashi/Desktop/MyVault/TomorGashi</string>
     <key>PORT</key>
     <string>7777</string>
   </dict>
   <key>WorkingDirectory</key>
-  <string>/Volumes/2TB filer/NEWSTRUCTURE-COPY</string>
+  <string>/Users/claudgashi/EventPulse</string>
 </dict>
 </plist>

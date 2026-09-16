@@ -29,7 +29,7 @@ launchctl list | grep eventpulse
 ```bash
 # Make sure the key is in your current shell.
 export ANTHROPIC_API_KEY="sk-ant-..."
-npx tsx /Volumes/2TB\ filer/NEWSTRUCTURE-COPY/09-ScrapingSupervisor/supervisor.ts \
+npx tsx 09-ScrapingSupervisor/supervisor.ts \
   --skip-repo-doc --date 2026-08-19
 ```
 

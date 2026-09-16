@@ -94,6 +94,10 @@ const skipManualReviewTriage = args.includes('--skip-manual-triage');
 const limitIdx = args.indexOf('--limit');
 const limit = limitIdx !== -1 ? parseInt(args[limitIdx + 1], 10) : 50;
 const smoke = args.includes('--smoke');
+// SKIP_BFL=1 (eller --skip-bfl): kör D-images med bibliotek-fallback istället
+// för BFL-generering. Tänkt för nattläget tills BFL-credits fyllts på
+// (beslut 2026-09-15: biblioteket är fallback — se imageGen.matchLibraryFirst).
+const skipBfl = process.env.SKIP_BFL === '1' || args.includes('--skip-bfl');
 
 /**
  * `--smoke` (2026-09-10): kör HELA pipelinen med minimal data så vi kan verifiera
@@ -164,10 +168,11 @@ const steps: Array<{ name: string; cmd: string; args: string[] }> = [
   // Konsumerar postTestC-D.jsonl som C-gate inte klarade. premium-only,
   // 5 cr/sida — auto-escalate till stealth vid CF/DataDome-signaler.
   // Kör EFTER C (så vi inte dubbelprocessar) och FÖRE images.
+  // OBS: runD-scrapingbee.ts använder --key=value-format (inte --key value).
   ...((!skipRender) ? [{
     name: 'D-renderGate',
     cmd: 'npx',
-    args: ['tsx', '02-Ingestion/D-renderGate/runD-scrapingbee.ts', '--behavior', effectiveDBehavior, '--limit', String(effectiveLimit)],
+    args: ['tsx', '02-Ingestion/D-renderGate/runD-scrapingbee.ts', `--behavior=${effectiveDBehavior}`, `--limit=${effectiveLimit}`],
   }] : []),
 
   // ── P2A: PDF/affisch-extraktion ────────────────────────────────────────
@@ -210,7 +215,7 @@ if (!skipImages) {
     // Mål: 10–20 bilder per kategori/eventtyp så BFL blir sällsynt
     // (post-launch / med riktig budget). Just nu: BFL nästan aldrig.
     cmd: 'npx',
-    args: ['tsx', '--eval', `import('./08-Agent/services/imageGen.matchLibraryFirst.ts').then(m => m.matchLibraryFirst({ limit: ${imageLimit}, onlyMissing: true, libraryConcurrency: 5, bflConcurrency: 3, skipBflFallback: ${smoke} })).then(r => console.log(JSON.stringify(r))).catch(e => { console.error(e); process.exit(1); })`],
+    args: ['tsx', '--eval', `import('./08-Agent/services/imageGen.matchLibraryFirst.ts').then(m => m.matchLibraryFirst({ limit: ${imageLimit}, onlyMissing: true, libraryConcurrency: 5, bflConcurrency: 3, skipBflFallback: ${smoke || skipBfl} })).then(r => console.log(JSON.stringify(r))).catch(e => { console.error(e); process.exit(1); })`],
   });
 
   // ── P2C: Active-learning closed loop ──────────────────────────────────

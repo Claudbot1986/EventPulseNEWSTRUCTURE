@@ -1,16 +1,16 @@
 /**
  * Source Registry — hanterar source truth, status och prioritets kö
- * 
+ *
  * Dis Trening:
  * - sources/ = source truth (en fil per källa)
- * - runtime/sources_status.jsonl = senaste körstatus per källa  
+ * - runtime/sources_status.jsonl = senaste körstatus per källa
  * - runtime/sources_priority_queue.jsonl = prioriterad kö för scheduler
- * 
+ *
  * Usage:
  *   import { getAllSources, getSourceStatus, updateSourceStatus, addToPriorityQueue } from './tools/sourceRegistry';
  */
 
-import { readFileSync, writeFileSync, existsSync, readdirSync } from 'fs';
+import { readFileSync, writeFileSync, existsSync, readdirSync, renameSync } from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
 
@@ -172,7 +172,7 @@ export function getAllSources(): SourceTruth[] {
  * Stöder både multi-line JSON och JSONL-format (samma logik som getAllSources)
  */
 export function getSource(id: string): SourceTruth | null {
-  const filePath = path.join(SOURCES_DIR, `${id}.jsonl`);
+  const filePath = path.join(resolveSourcesDir(), `${id}.jsonl`);
   if (!existsSync(filePath)) return null;
 
   const content = readFileSync(filePath, 'utf8').trim();
@@ -306,9 +306,10 @@ function deriveIngestionStage(status: SourceStatus): SourceStatus['ingestionStag
 
 function readStatusFile(): Map<string, SourceStatus> {
   const map = new Map<string, SourceStatus>();
-  if (!existsSync(STATUS_FILE)) return map;
+  const statusFile = path.join(resolveRuntimeDir(), 'sources_status.jsonl');
+  if (!existsSync(statusFile)) return map;
 
-  const content = readFileSync(STATUS_FILE, 'utf8');
+  const content = readFileSync(statusFile, 'utf8');
   const lines = content.split('\n').filter(l => l.trim());
 
   for (const line of lines) {
@@ -327,7 +328,7 @@ function readStatusFile(): Map<string, SourceStatus> {
 
 function writeStatusFile(statuses: Map<string, SourceStatus>): void {
   const lines = Array.from(statuses.values()).map(s => JSON.stringify(s));
-  writeFileSync(STATUS_FILE, lines.join('\n') + '\n', 'utf8');
+  writeFileSync(path.join(resolveRuntimeDir(), 'sources_status.jsonl'), lines.join('\n') + '\n', 'utf8');
 }
 
 /**
@@ -495,6 +496,120 @@ export function updateSourceStatus(
   current.lastPathUsed = result.pathUsed;
   statuses.set(sourceId, current);
   writeStatusFile(statuses);
+
+  // ─── Source Lifecycle: auto-quarantine-trigger ───────────────────
+  // Om consecutiveFailures >= AUTO_QUARANTINE_THRESHOLD OCH status inte
+  // redan är quarantined/retired → flytta källfilen och uppdatera INDEX.
+  // Race-safe: sker EFTER status är skrivet, så gates som läser status
+  // ser aktuell counter även om de tävlar med denna move.
+  maybeAutoQuarantine(sourceId, current.consecutiveFailures, current.lastRoutingReason ?? current.lastError);
+}
+
+/**
+ * AUTO_QUARANTINE_THRESHOLD och isReasonCode är def. i sourceLifecycle.ts.
+ * Vi re-implementerar ENDAST logiken här för att undvika cirkulär import.
+ */
+/**
+ * Resolver för sandbox-stöd. Modulens SOURCES_DIR fångas vid import, men
+ * vi vill kunna overrid:a via EVENTPULSE_SANDBOX_ROOT vid varje anrop
+ * (tester, sandboxes, framtida per-tenant-körning).
+ */
+function resolveSourcesDir(): string {
+  const root = process.env.EVENTPULSE_SANDBOX_ROOT
+    ? path.resolve(process.env.EVENTPULSE_SANDBOX_ROOT)
+    : PROJECT_ROOT;
+  return path.resolve(root, 'sources');
+}
+
+function resolveRuntimeDir(): string {
+  const root = process.env.EVENTPULSE_SANDBOX_ROOT
+    ? path.resolve(process.env.EVENTPULSE_SANDBOX_ROOT)
+    : PROJECT_ROOT;
+  return path.resolve(root, 'runtime');
+}
+
+function maybeAutoQuarantine(sourceId: string, consecutiveFailures: number, lastError: string | undefined): void {
+  const AUTO_QUARANTINE_THRESHOLD = 5;
+  const sourcesDir = resolveSourcesDir();
+  const runtimeDir = resolveRuntimeDir();
+  if (consecutiveFailures < AUTO_QUARANTINE_THRESHOLD) return;
+
+  // Läs INDEX för att se om redan hanterad
+  const indexPath = path.join(sourcesDir, '_quarantine', 'INDEX.json');
+  if (!existsSync(indexPath)) return;
+  try {
+    const idxContent = readFileSync(indexPath, 'utf8').trim();
+    if (!idxContent) return;
+    const idx = JSON.parse(idxContent);
+    if (!Array.isArray(idx)) return;
+    if (idx.some((e: { sourceId?: string }) => e?.sourceId === sourceId)) return; // redan där
+  } catch { return; /* korrupt INDEX — hoppa auto-quarantine, kräver manuell */ }
+
+  // Hämta URL för INDEX-posten
+  const source = getSource(sourceId);
+  if (!source) return; // source-filen finns inte — kan inte flytta
+
+  const sourceFile = path.join(sourcesDir, `${sourceId}.jsonl`);
+  if (!existsSync(sourceFile)) return; // redan flyttad av någon annan (race-säker)
+  const targetFile = path.join(sourcesDir, '_quarantine', `${sourceId}.jsonl`);
+  if (sourceFile === targetFile) return;
+
+  // Klassificera felet (ReasonCode eller 'unknown')
+  const reasonCode = (() => {
+    const text = (lastError ?? '').toLowerCase();
+    if (/\b403\b/.test(text) || text.includes('forbidden')) return 'http.403';
+    if (/\b404\b/.test(text)) return 'http.404';
+    if (/\b429\b/.test(text)) return 'http.429';
+    if (/\b5\d\d\b/.test(text)) return 'http.5xx';
+    if (text.includes('timeout')) return 'network.timeout';
+    if (text.includes('tls') || text.includes('ssl') || text.includes('cert') || text.includes('altname')) return 'network.ssl';
+    if (text.includes('redirect') && text.includes('exceeded')) return 'network.redirect_loop';
+    if (text.includes('no-jsonld') || text.includes('no json-ld')) return 'schema.no_events_on_entry';
+    return 'unknown';
+  })();
+
+  // Flytta filen (atomic rename)
+  try {
+    renameSync(sourceFile, targetFile);
+  } catch (err) {
+    // Om filen redan är borta (race med CLI restore el. likn.) — skippa tyst
+    if (!existsSync(sourceFile)) return;
+    throw err;
+  }
+
+  // Uppdatera INDEX (atomic write via tmp+rename)
+  try {
+    const existing = JSON.parse(readFileSync(indexPath, 'utf8').trim() || '[]');
+    if (Array.isArray(existing)) {
+      const filtered = existing.filter((e: { sourceId?: string }) => e?.sourceId !== sourceId);
+      filtered.push({
+        sourceId,
+        url: source.url ?? '',
+        movedAt: new Date().toISOString(),
+        reasonCode,
+        note: `auto-quarantine: ${consecutiveFailures} consecutive failures`,
+        lastError,
+        movedBy: 'auto',
+      });
+      const tmpPath = `${indexPath}.tmp.${process.pid}.${Date.now()}`;
+      writeFileSync(tmpPath, JSON.stringify(filtered, null, 2) + '\n', 'utf8');
+      renameSync(tmpPath, indexPath);
+    }
+  } catch { /* INDEX-write misslyckades — källan är flyttad men INDEX inte uppdaterad. Mannisklig intervention krävs för att hitta den igen. */ }
+
+  // Audit-rad
+  try {
+    const auditPath = path.join(RUNTIME_DIR, 'sources_audit.jsonl');
+    const auditEntry = JSON.stringify({
+      event: 'auto_quarantined',
+      sourceId,
+      reasonCode,
+      consecutiveFailures,
+      lastError,
+      at: new Date().toISOString(),
+    });
+    writeFileSync(auditPath, (existsSync(auditPath) ? readFileSync(auditPath, 'utf8') : '') + auditEntry + '\n', 'utf8');
+  } catch { /* audit-log misslyckades */ }
 }
 
 /**

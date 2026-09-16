@@ -16,17 +16,20 @@
  *   - The wire-format AgentChatResponse.cards is the deterministic pipeline's
  *     output, NOT the model's. The model never decides what cards to return.
  *
+ * Model: MiniMax-M3 via OpenAI-compatible endpoint (api.minimax.io/v1),
+ * self-contained fetch client (2026-09-12: replaced Anthropic Haiku 4.5).
+ *
  * Failure modes:
- *   - SDK error / timeout / unparseable JSON → fallback to the deterministic
+ *   - HTTP error / timeout / unparseable JSON → fallback to the deterministic
  *     template (same logic that Phase 0 used). The agent degrades gracefully.
  *   - Model returns no usable reply → fallback.
  */
 
-import Anthropic from '@anthropic-ai/sdk';
 import type { EventCard, IntentBrief } from './types';
 import { SYSTEM_PROMPT } from './prompts/system';
 
-export const LLM_MODEL = 'claude-haiku-4-5-20251001';
+export const LLM_MODEL = 'MiniMax-M3';
+const MINIMAX_BASE_URL = 'https://api.minimax.io/v1';
 const LLM_TIMEOUT_MS = 8_000;
 const MAX_HIGHLIGHTS = 3;
 
@@ -52,36 +55,57 @@ export interface ComposeResult {
   usedLlm: boolean;
 }
 
-let client: Anthropic | null = null;
-function getClient(): Anthropic {
-  if (client) return client;
-  const apiKey = process.env.ANTHROPIC_API_KEY;
-  if (!apiKey) throw new Error('ANTHROPIC_API_KEY not configured');
-  client = new Anthropic({ apiKey });
-  return client;
+interface MinimaxChatResponse {
+  choices?: Array<{ message?: { content?: unknown } }>;
+}
+
+/**
+ * MiniMax M3 via the OpenAI-compatible chat/completions endpoint.
+ * Self-contained fetch client — no SDK dependency — so the Docker image
+ * (agent graph only) needs no extra packages. <think>-blocks from the
+ * reasoning model are stripped before JSON parsing.
+ */
+async function callMinimax(userMsg: string): Promise<string> {
+  const apiKey = process.env.MINIMAX_API_KEY;
+  if (!apiKey) throw new Error('MINIMAX_API_KEY not configured');
+
+  const response = await fetch(`${MINIMAX_BASE_URL}/chat/completions`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${apiKey}`,
+    },
+    body: JSON.stringify({
+      model: LLM_MODEL,
+      max_tokens: 800,
+      temperature: 0.1,
+      messages: [
+        { role: 'system', content: SYSTEM_PROMPT },
+        { role: 'user', content: userMsg },
+      ],
+    }),
+    signal: AbortSignal.timeout(LLM_TIMEOUT_MS),
+  });
+
+  if (!response.ok) throw new Error(`minimax HTTP ${response.status}`);
+
+  const json = (await response.json()) as MinimaxChatResponse;
+  const content = json.choices?.[0]?.message?.content;
+  if (typeof content !== 'string') return '';
+  return content.replace(/<think>[\s\S]*?<\/think>/g, '').trim();
 }
 
 export async function composeReply(input: ComposeInput): Promise<ComposeResult> {
   const fallback = deterministicReply(input);
 
-  if (!process.env.ANTHROPIC_API_KEY) {
+  if (!process.env.MINIMAX_API_KEY) {
     return { ...fallback, usedLlm: false };
   }
 
   const userMsg = buildUserMessage(input);
 
   try {
-    const response = await withTimeout(
-      getClient().messages.create({
-        model: LLM_MODEL,
-        max_tokens: 300,
-        system: SYSTEM_PROMPT,
-        messages: [{ role: 'user', content: userMsg }],
-      }),
-      LLM_TIMEOUT_MS
-    );
-
-    const text = extractText(response);
+    const text = await callMinimax(userMsg);
     if (!text) return { ...fallback, usedLlm: false };
 
     const parsed = parseReplyJson(text);
@@ -146,6 +170,8 @@ interface ParsedReply {
   highlightedIds?: string[];
 }
 
+
+
 export function buildUserMessage(input: ComposeInput): string {
   const { intent, cards, warnings, relaxed_constraint } = input;
   const cardSummary = cards.map((c) => ({
@@ -182,24 +208,6 @@ export function buildUserMessage(input: ComposeInput): string {
       'If relaxed_constraint is "date_window" or "category", mention in ONE short sentence that ' +
       'the search was widened (do not invent the original constraint). Do NOT invent events.',
   });
-}
-
-function extractText(response: unknown): string {
-  if (
-    response &&
-    typeof response === 'object' &&
-    'content' in response &&
-    Array.isArray((response as { content: unknown[] }).content)
-  ) {
-    const blocks = (response as { content: Array<{ type?: string; text?: string }> }).content;
-    const text = blocks
-      .filter((b) => b?.type === 'text' && typeof b.text === 'string')
-      .map((b) => b.text as string)
-      .join('\n')
-      .trim();
-    return text;
-  }
-  return '';
 }
 
 export function parseReplyJson(text: string): ParsedReply | null {
@@ -253,14 +261,4 @@ export function deterministicReply(input: ComposeInput): Omit<ComposeResult, 'us
   // the wire format already includes them as a separate field.
   void warnings;
   return { reply, highlightedIds: [top.id] };
-}
-
-function withTimeout<T>(promise: Promise<T>, ms: number): Promise<T> {
-  return new Promise<T>((resolve, reject) => {
-    const t = setTimeout(() => reject(new Error('llm timeout')), ms);
-    promise.then(
-      (v) => { clearTimeout(t); resolve(v); },
-      (e) => { clearTimeout(t); reject(e); }
-    );
-  });
 }

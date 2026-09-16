@@ -28,6 +28,7 @@ const __dirname = path.dirname(__filename);
 dotenv.config({ path: path.resolve(process.cwd(), '.env'), override: true });
 
 import { getSource, getSourceStatus, updateSourceStatus } from '../tools/sourceRegistry';
+import { isSkipped } from '../lib/quarantineGuard.js';
 import { evaluateNetworkGate, summarizeNetworkGateResult } from './A-networkGate';
 import { extractFromApi } from './networkEventExtractor';
 import type { ParsedEvent } from '../F-eventExtraction/schema';
@@ -43,6 +44,36 @@ const PREB_QUEUE_FILE    = path.resolve(RUNTIME_DIR, 'preB-queue.jsonl');
 const PREUI_QUEUE_FILE   = path.resolve(RUNTIME_DIR, 'preUI-queue.jsonl');
 const POSTB_QUEUE_FILE   = path.resolve(RUNTIME_DIR, 'postB-queue.jsonl');
 const POSTB_PREC_FILE   = path.resolve(RUNTIME_DIR, 'postB-preC-queue.jsonl');
+
+// ─── Cross-Queue Dedup Helper ──────────────────────────────────────────────────
+//
+// Flytta bort sourceId från andra köer innan den skrivs till sin nya kö.
+// Förhindrar dubletter mellan postB/preB/postB-preC. EVENTPULSE-APP rörs inte.
+
+const CROSS_QUEUE_DEDUP_FILES: readonly string[] = [
+  PREB_QUEUE_FILE,
+  POSTB_QUEUE_FILE,
+  POSTB_PREC_FILE,
+];
+
+function removeSourceFromOtherQueues(sourceId: string, exceptFile: string): void {
+  for (const file of CROSS_QUEUE_DEDUP_FILES) {
+    if (file === exceptFile) continue;
+    if (!existsSync(file)) continue;
+    let entries: unknown[];
+    try {
+      const raw = readFileSync(file, 'utf8');
+      entries = raw.split('\n').filter(l => l.trim()).map(l => JSON.parse(l));
+    } catch {
+      continue;
+    }
+    const filtered = entries.filter((e: any) => e && e.sourceId !== sourceId);
+    if (filtered.length !== entries.length) {
+      const content = filtered.map(e => JSON.stringify(e)).join('\n') + '\n';
+      writeFileSync(file, content, 'utf8');
+    }
+  }
+}
 
 // ─── Queue Entry ──────────────────────────────────────────────────────────────
 
@@ -104,6 +135,7 @@ function readPostBQueue(): PreBEntry[] {
 }
 
 function addToPostBQueue(sourceId: string, reason: string, inspectorVerdict?: string): void {
+  removeSourceFromOtherQueues(sourceId, POSTB_QUEUE_FILE);
   const queue = readPostBQueue();
   if (queue.some(e => e.sourceId === sourceId)) return;
   queue.push({
@@ -126,6 +158,7 @@ function readPostBPreCQueue(): PreBEntry[] {
 }
 
 function addToPostBPreCQueue(sourceId: string, reason: string): void {
+  removeSourceFromOtherQueues(sourceId, POSTB_PREC_FILE);
   const queue = readPostBPreCQueue();
   if (queue.some(e => e.sourceId === sourceId)) return;
   queue.push({
@@ -362,7 +395,26 @@ async function main() {
   // ── Run ──────────────────────────────────────────────────────────────────
   const results: BResult[] = [];
 
-  for (const entry of batch) {
+  // ─── Source Lifecycle: skip-check ───────────────────────────────
+  // Filtrerar bort källor som är quarantined eller retired.
+  // Loggas + audit-rad, INGA nätverksanrop.
+  const skippedInBatch: Array<{ sourceId: string; reason: string; reasonCode: string }> = [];
+  const filteredBatch = batch.filter(entry => {
+    const skip = isSkipped(entry.sourceId);
+    if (!skip.skip) return true;
+    skippedInBatch.push({
+      sourceId: entry.sourceId,
+      reason: skip.reason ?? 'unknown',
+      reasonCode: skip.entry?.reasonCode ?? '',
+    });
+    console.log(`[B-skip] ${entry.sourceId} (${skip.reason}: ${skip.entry?.reasonCode ?? ''})`);
+    return false;
+  });
+  if (skippedInBatch.length > 0) {
+    console.log(`Skip: ${skippedInBatch.length} källor (quarantined/retired) — kör ${filteredBatch.length} kvar\n`);
+  }
+
+  for (const entry of filteredBatch) {
     const result = await runBOnSource(entry);
     finalizeSource(entry, result);
     results.push(result);

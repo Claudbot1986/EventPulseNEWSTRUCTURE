@@ -4,8 +4,8 @@
 <!--
   com.eventpulse.discovery.plist — launchd job for T0095 autonomous discovery agent.
 
-  Runs daily at 04:30 (alongside supervisor; they share runtime/sources_status.jsonl
-  safely because the supervisor reads read-only from there).
+  Runs daily at 05:00 (efter supervisor 04:30 — undvik exakt samtidig start;
+  de delar runtime/sources_status.jsonl säkert eftersom supervisor läser read-only).
 
   Install with:
     cp 09-DiscoveryAgent/cron/com.eventpulse.discovery.plist ~/Library/LaunchAgents/
@@ -26,29 +26,29 @@
   <key>ProgramArguments</key>
   <array>
     <string>/bin/bash</string>
-    <string>/Volumes/2TB filer/NEWSTRUCTURE-COPY/09-DiscoveryAgent/cron/runDaily.sh</string>
+    <string>/Users/claudgashi/EventPulse/09-DiscoveryAgent/cron/runDaily.sh</string>
   </array>
 
   <key>WorkingDirectory</key>
-  <string>/Volumes/2TB filer/NEWSTRUCTURE-COPY</string>
+  <string>/Users/claudgashi/EventPulse</string>
 
   <key>StartCalendarInterval</key>
   <dict>
     <key>Hour</key>
-    <integer>4</integer>
+    <integer>5</integer>
     <key>Minute</key>
-    <integer>30</integer>
+    <integer>0</integer>
   </dict>
 
   <key>StandardOutPath</key>
-  <string>/Volumes/2TB filer/NEWSTRUCTURE-COPY/runtime/discovery-agent/launchd.out.log</string>
+  <string>/Users/claudgashi/EventPulse/runtime/discovery-agent/launchd.out.log</string>
   <key>StandardErrorPath</key>
-  <string>/Volumes/2TB filer/NEWSTRUCTURE-COPY/runtime/discovery-agent/launchd.err.log</string>
+  <string>/Users/claudgashi/EventPulse/runtime/discovery-agent/launchd.err.log</string>
 
   <key>EnvironmentVariables</key>
   <dict>
     <key>PROJECT_ROOT</key>
-    <string>/Volumes/2TB filer/NEWSTRUCTURE-COPY</string>
+    <string>/Users/claudgashi/EventPulse</string>
     <key>MAX</key>
     <string>5</string>
     <key>DRY_RUN</key>

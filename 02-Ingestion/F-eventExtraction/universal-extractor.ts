@@ -32,6 +32,7 @@
  */
 
 import * as cheerio from 'cheerio';
+import type { Element } from 'domhandler';
 import { z } from 'zod';
 import {
   ParsedEventSchema,
@@ -468,10 +469,10 @@ function collectMicrodataProps(
 
   const isInsideNestedScope = (el: Element): boolean => {
     // Walka uppåt; om vi hittar en [itemscope] som inte är root → vi är nested.
-    let cur: Element | null | undefined = el.parent;
+    let cur = el.parent as Element | null;
     while (cur && cur !== root) {
       if ($(cur).is('[itemscope]')) return true;
-      cur = cur.parent;
+      cur = cur.parent as Element | null;
     }
     return false;
   };

@@ -31,4 +31,5 @@ echo "[runIngestion] PWD=$PROJECT_ROOT"
 echo "[runIngestion] ENV loaded: $(wc -l < "$PROJECT_ROOT/.env" 2>/dev/null || echo 0) keys"
 
 # Kör cronjobbet. Exit code propageras.
-exec npx tsx scripts/ingestion-cron.ts --limit 50
+# (2026-09-15: projektets lokala tsx-bin — ingen npx-upplösning under launchd.)
+exec "$PROJECT_ROOT/node_modules/.bin/tsx" scripts/ingestion-cron.ts --limit 50

@@ -175,10 +175,9 @@ export async function renderPage(url: string, options: RenderOptions = {}): Prom
     if (requestedBehavior !== 'stealth' && shouldEscalateToStealth(result)) {
       const stealthResult = await runScrapingbee(url, scrapingBeeKey, { ...options, behavior: 'stealth' }, timeout);
       if (stealthResult.success) {
-        stealthResult.metrics = {
-          ...(stealthResult.metrics ?? {}),
-          usedStealthFallback: true,
-        };
+        if (stealthResult.metrics) {
+          stealthResult.metrics = { ...stealthResult.metrics, usedStealthFallback: true };
+        }
         return stealthResult;
       }
     }

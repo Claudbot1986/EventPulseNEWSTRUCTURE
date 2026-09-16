@@ -46,6 +46,11 @@ QUEUE_FILES: Dict[str, str] = {
     "postTestC-Fail": "postTestC-Fail.jsonl",
 }
 
+# Queues that intentionally retain duplicate rows (historical archive / immutable log).
+# Cross-queue duplicates involving a PROTECTED queue are warnings, not errors.
+# Mirror of queue-mem.py policy: "EVENTPULSE-APP behåller ALLTID sina duplicerade poster — aldrig deduplicera från den".
+PROTECTED_QUEUES: set[str] = {"EVENTPULSE-APP"}
+
 # Higher = final destination wins (same source may appear in postTestC-D and preUI after D-stage)
 QUEUE_PRIORITY: Dict[str, int] = {
     "post-man": 100,
@@ -112,13 +117,19 @@ def total_entries_in_state(queues_state: Dict[str, Dict[str, dict]]) -> int:
 
 def audit_legacy_runtime(project_root: Path) -> dict:
     """
-    Rå rad-räkning + global unikhet: varje sourceId förekommer högst en gång totalt,
-    och högst en gång per fil.
+    Rå rad-räkning + klassificerad unikhet:
+      - intra-file duplicate (samma sourceId 2× i samma fil) → hårt fel (blocking).
+      - cross-queue duplicate där någon kö är i PROTECTED_QUEUES → varning.
+      - cross-queue duplicate mellan vanliga köer → varning; vinnare = högst QUEUE_PRIORITY.
+
+    Returnerar {"errors", "warnings", "blocking", "raw_total", "unique_sources_in_queues", "sid_home"}.
+    `blocking=True` betyder att e2e.py ska avbryta. `errors` innehåller de hårda intra-file-felen.
     """
     runtime = project_root / "runtime"
     raw_total = 0
     sid_home: Dict[str, str] = {}
     errors: List[str] = []
+    warnings: List[str] = []
 
     for qname, fname in QUEUE_FILES.items():
         path = runtime / fname
@@ -139,13 +150,39 @@ def audit_legacy_runtime(project_root: Path) -> dict:
                 sid = str(e.get("sourceId", "")).strip()
                 if not sid:
                     continue
+                # Intra-file duplicate — alltid hårt fel (riktig bugg, inte legacy-state).
                 if sid in seen_in_file:
                     errors.append(f"duplicate sourceId {sid} in file {qname} ({fname})")
                 seen_in_file.add(sid)
+                # Cross-queue duplicate — varning, välj vinnare via QUEUE_PRIORITY.
                 if sid in sid_home:
-                    errors.append(
-                        f"sourceId {sid} appears in both {sid_home[sid]} and {qname}"
-                    )
+                    prev_qname = sid_home[sid]
+                    if prev_qname == qname:
+                        continue
+                    prev_protected = prev_qname in PROTECTED_QUEUES
+                    curr_protected = qname in PROTECTED_QUEUES
+                    if prev_protected or curr_protected:
+                        # Skyddad kö "äger" raden — den andra är varning.
+                        if not curr_protected:
+                            sid_home[sid] = qname
+                        winner = prev_qname if prev_protected else qname
+                        warnings.append(
+                            f"sourceId {sid} appears in both {prev_qname} and {qname} "
+                            f"(protected: {prev_qname if prev_protected else qname}, winner: {winner})"
+                        )
+                    else:
+                        # Vanliga köer: vinnare = högst QUEUE_PRIORITY.
+                        prev_pri = QUEUE_PRIORITY.get(prev_qname, -1)
+                        curr_pri = QUEUE_PRIORITY.get(qname, -1)
+                        if curr_pri > prev_pri:
+                            sid_home[sid] = qname
+                            winner = qname
+                        else:
+                            winner = prev_qname
+                        warnings.append(
+                            f"sourceId {sid} appears in both {prev_qname} and {qname} "
+                            f"(winner: {winner}, lower-priority kept as-is)"
+                        )
                 else:
                     sid_home[sid] = qname
             except Exception:
@@ -155,6 +192,8 @@ def audit_legacy_runtime(project_root: Path) -> dict:
         "raw_total": raw_total,
         "unique_sources_in_queues": len(sid_home),
         "errors": errors,
+        "warnings": warnings,
+        "blocking": bool(errors),
         "sid_home": sid_home,
     }
 

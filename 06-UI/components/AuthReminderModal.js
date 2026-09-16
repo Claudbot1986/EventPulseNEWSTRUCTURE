@@ -28,8 +28,6 @@ import {
   Text,
   StyleSheet,
   Pressable,
-  CheckBox,
-  Platform,
 } from 'react-native';
 
 /**
@@ -92,28 +90,19 @@ export default function AuthReminderModal({ visible, onRegister, onDismiss }) {
           </Pressable>
 
           <View style={styles.optOutRow}>
-            {Platform.OS === 'web' ? (
-              // CheckBox from react-native-web lacks a stable label slot
-              // across versions; use a Pressable+Text row for parity.
-              <Pressable
-                onPress={() => setPermanently((v) => !v)}
-                accessibilityRole="checkbox"
-                accessibilityState={{ checked: permanently }}
-                style={styles.optOutPressable}
-              >
-                <View style={[styles.checkbox, permanently && styles.checkboxChecked]} />
-                <Text style={styles.optOutLabel}>Påminn mig inte igen</Text>
-              </Pressable>
-            ) : (
-              <CheckBox
-                value={permanently}
-                onValueChange={setPermanently}
-                style={styles.checkboxNative}
-              />
-            )}
-            {Platform.OS !== 'web' && (
+            {/* Custom Pressable row on ALL platforms — CheckBox was removed
+                from react-native core (RN 0.86: undefined component → crash
+                "Element type is invalid" when this modal first rendered).
+                2026-09-13. */}
+            <Pressable
+              onPress={() => setPermanently((v) => !v)}
+              accessibilityRole="checkbox"
+              accessibilityState={{ checked: permanently }}
+              style={styles.optOutPressable}
+            >
+              <View style={[styles.checkbox, permanently && styles.checkboxChecked]} />
               <Text style={styles.optOutLabel}>Påminn mig inte igen</Text>
-            )}
+            </Pressable>
           </View>
         </View>
       </View>
@@ -199,9 +188,5 @@ const styles = StyleSheet.create({
   checkboxChecked: {
     backgroundColor: '#F7F2EA',
     borderColor: '#F7F2EA',
-  },
-  checkboxNative: {
-    width: 18,
-    height: 18,
   },
 });

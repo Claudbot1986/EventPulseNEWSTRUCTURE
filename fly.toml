@@ -67,14 +67,3 @@ primary_region = "arn"
 
 [processes]
   app = "npx --no-install tsx 08-Agent/server.ts"
-
-[[services]]
-  protocol = "tcp"
-  internal_port = 8787
-  [[services.ports]]
-    handlers = ["http"]
-    port = 80
-    force_redirect = true
-  [[services.ports]]
-    handlers = ["tls", "http"]
-    port = 443

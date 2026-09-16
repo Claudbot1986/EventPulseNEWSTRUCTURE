@@ -47,6 +47,7 @@ import type { ParsedEvent } from '../F-eventExtraction/schema';
 import { runC4Analysis, type C4InputSource, type C4RoundAnalysis, type C4AnalysisResult, FailCategory } from './C4-ai-analysis';
 import { c4DeepAnalyze, verifyProposals, type C4PipelineResult, type C4DeepAnalysisResult } from './c4-deep-analysis';
 import { saveRoundDerivedRules, loadAllDerivedRules, isImprovementEnabled, proposeCandidateRulesAsImprovements, type DerivedRulesStore } from './c4-derived-rules';
+import { isSkipped } from '../lib/quarantineGuard.js';
 import type { HtmlVerdict } from './C2-htmlGate/C2-htmlGate';
 import { readFileSync, writeFileSync, mkdirSync, appendFileSync, readdirSync, unlinkSync, rmdirSync } from 'fs';
 import { join, dirname } from 'path';
@@ -1472,6 +1473,51 @@ async function runPoolRound(
       const i = pIdx++;
       if (i >= activePool.length) break;
       const source = activePool[i];
+
+      // ─── Source Lifecycle: skip-check ───────────────────────────────
+      // Kollar sources/_quarantine/INDEX.json + sources/_retired/INDEX.json.
+      // Race-safe: läses från disk vid varje worker-start.
+      // Loggar skip + audit-rad — aldrig tyst.
+      const skip = isSkipped(source.sourceId);
+      if (skip.skip) {
+        console.log(`  [skip] ${source.sourceId} (${skip.reason}: ${skip.entry?.reasonCode ?? ''})`);
+        try {
+          appendFileSync(
+            join(RUNTIME_DIR, 'sources_audit.jsonl'),
+            JSON.stringify({
+              event: 'gate_skip',
+              sourceId: source.sourceId,
+              gate: 'C',
+              reason: skip.reason,
+              reasonCode: skip.entry?.reasonCode ?? '',
+              at: new Date().toISOString(),
+            }) + '\n',
+            'utf8',
+          );
+        } catch { /* audit-log misslyckades — skip:ar fortsätter */ }
+        // Returnera ett minimalt no-op-resultat. Cast via unknown eftersom
+        // skip-vägen inte ska gå genom C0/C1/C2/C3 och därför inte har någon
+        // vettig PerSourceTrace att fylla. routeResult() kommer att känna
+        // igen den syntetiska error-strängen och routa korrekt (Fail).
+        pairResults[i] = {
+          source,
+          result: {
+            sourceId: source.sourceId,
+            success: false,
+            eventsFound: 0,
+            pathUsed: 'html',
+            ingestionStage: 'C',
+            error: `skipped: ${skip.reason}`,
+            exitReason: 'EXTRACTION_ZERO_PROMISING_HTML',
+            exitReasonDetail: `source is ${skip.reason} (${skip.entry?.reasonCode ?? 'unknown'}); pipeline skip`,
+            routeSuggestion: 'Fail',
+            winningStage: 'C0',
+            outcomeType: 'fail',
+          } as unknown as CResult,
+        };
+        continue;
+      }
+
       pairResults[i] = { source, result: await runSourceOnPool(source, poolRoundNumber, derivedRules) };
     }
   }

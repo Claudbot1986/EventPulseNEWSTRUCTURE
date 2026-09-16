@@ -8,7 +8,7 @@
  * Run: npx vitest run 07-Discovery/src/searchEngines/rssDiscovery.test.ts
  */
 
-import { describe, test, expect, beforeEach, afterEach, vi } from 'vitest';
+import { describe, test, expect, beforeEach, afterEach, afterAll, vi } from 'vitest';
 import { existsSync, mkdirSync, writeFileSync, rmSync, readFileSync } from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';

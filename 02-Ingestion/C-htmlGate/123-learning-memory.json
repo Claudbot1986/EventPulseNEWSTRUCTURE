@@ -1,18 +1,18 @@
 {
   "version": 1,
-  "lastUpdated": "2026-04-27T00:00:23.740Z",
-  "totalBatchesAnalyzed": 191,
-  "totalSourcesProcessed": 19437,
+  "lastUpdated": "2026-09-10T19:48:38.775Z",
+  "totalBatchesAnalyzed": 196,
+  "totalSourcesProcessed": 19781,
   "dominantBottleneck": {
     "category": "UNKNOWN",
-    "count": 800,
-    "percentage": "4.1%",
+    "count": 942,
+    "percentage": "4.8%",
     "description": "C0 hittar inga event candidates på root URL. Swedish patterns hittar candidates men C1 likelyJsRendered=true triggar D-route och hoppar över C2/C3. Extraction körs aldrig."
   },
   "failCategoryDistribution": [
     {
       "category": "UNKNOWN",
-      "count": 800,
+      "count": 942,
       "sources": [
         "naturhistoriska-riksmuseet",
         "vega",
@@ -44,7 +44,7 @@
     },
     {
       "category": "ENTRY_PAGE_NO_EVENTS",
-      "count": 142,
+      "count": 144,
       "sources": [
         "vasteras-stadsteatern",
         "grona-lund",

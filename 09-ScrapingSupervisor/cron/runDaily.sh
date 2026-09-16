@@ -6,7 +6,8 @@
 
 set -e
 
-PROJECT_ROOT="/Volumes/2TB filer/NEWSTRUCTURE-COPY"
+# Canonical repo (2026-09-15: inget dagligt jobb får köras mot extern volym).
+PROJECT_ROOT="${PROJECT_ROOT:-/Users/claudgashi/EventPulse}"
 LOG_DIR="$PROJECT_ROOT/runtime/scraping-supervisor"
 DATE_STR=$(date +%Y-%m-%d)
 DAILY_LOG="$LOG_DIR/daily-$DATE_STR.log"

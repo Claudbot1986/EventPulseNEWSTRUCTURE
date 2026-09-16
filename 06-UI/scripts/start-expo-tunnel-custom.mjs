@@ -8,6 +8,7 @@
  * Usage:
  * Uses EXPO_PACKAGER_PROXY_URL so Expo Go connects via ngrok over the internet.
  * (Expo's internal --lan flag here does NOT mean you need local LAN.)
+ */
 
 import { spawn } from 'node:child_process';
 import path from 'node:path';

@@ -1,0 +1,1 @@
+{"ts":"2026-09-15T19:05:31.478Z","event":"human_plan.rendered","mission_id":"EP-2026-09-15-11f6bda0-334","renderer_version":"hpr-1.0","complexity":"normal","risk":"low","sections_rendered":["goal","flow","agents","verification"],"render_hash":"99965d68af869410","consistency_ok":true,"consistency_errors":0,"consistency_warnings":1,"at":"2026-09-15T19:05:31.478Z"}

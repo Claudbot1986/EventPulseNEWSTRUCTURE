@@ -4,17 +4,20 @@
 <!--
   com.eventpulse.ingestion.plist — launchd job for the full ingestion pipeline.
 
-  Runs daily at 02:30. Executes scripts/ingestion-cron.ts which orchestrates
+  Runs daily at 02:00. Executes scripts/ingestion-cron.ts which orchestrates
   ALL plan steps (A→B→C→D-renderGate→I-pdf→etag-refresh→D-images→P2C→P3A→P3B→P3C
   →pattern-promoter).
 
+  D-images körs med SKIP_BFL=1 (bibliotek-fallback istället för BFL-generering)
+  tills BFL-credits fyllts på — beslut 2026-09-15.
+
   Schedule:
-    Hour=2  Minute=30   (daily)
+    Hour=2  Minute=0   (daily)
   Order vs. other EP jobs:
-    02:30 ingestion        ← denna
+    02:00 ingestion        ← denna
     03:00 purge            (com.eventpulse.purge)
     04:30 supervisor       (com.eventpulse.supervisor)
-    04:30 discovery        (com.eventpulse.discovery)
+    05:00 discovery        (com.eventpulse.discovery)
 
   Install:
     cp scripts/cron/com.eventpulse.ingestion.plist ~/Library/LaunchAgents/
@@ -52,7 +55,7 @@
     <key>Hour</key>
     <integer>2</integer>
     <key>Minute</key>
-    <integer>30</integer>
+    <integer>0</integer>
   </dict>
 
   <key>StandardOutPath</key>
@@ -64,6 +67,11 @@
   <dict>
     <key>PATH</key>
     <string>/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:/Users/claudgashi/.local/bin</string>
+    <!-- SKIP_BFL=1: D-images använder bildbiblioteket som fallback (ingen
+         BFL-generering) tills BFL-credits fyllts på. Ta bort denna key för
+         att återgå till BFL. -->
+    <key>SKIP_BFL</key>
+    <string>1</string>
   </dict>
 
   <key>RunAtLoad</key>

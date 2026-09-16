@@ -74,7 +74,7 @@ function loadSourcesWithPdfs(): SourcePdfEntry[] {
       const content = readFileSync(full, 'utf8').trim();
       if (!content) continue;
       const data = JSON.parse(content) as Record<string, unknown>;
-      const sourceId = data.id || file.replace(/\.jsonl$/, '');
+      const sourceId = typeof data.id === 'string' && data.id !== '' ? data.id : file.replace(/\.jsonl$/, '');
       const url = typeof data.url === 'string' ? data.url : '';
       const pdfUrls: string[] = [];
       if (Array.isArray(data.pdfUrls)) {

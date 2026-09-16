@@ -43,7 +43,8 @@
           "backgroundColor": "#0F172A"
         }
       ],
-      "expo-font"
+      "expo-font",
+      "expo-apple-authentication"
     ]
   }
 }
