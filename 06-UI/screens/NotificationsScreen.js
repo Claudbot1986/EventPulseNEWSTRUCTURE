@@ -16,6 +16,10 @@
  *      exists) and optimistically marks the notification read.
  *   4. Falls back to the original empty-state copy when the fetch fails
  *      or returns nothing — never renders a blank screen.
+ *   5. When the client reports warning 'auth' (no Supabase session — the
+ *      endpoints are requireUser-gated), a login prompt replaces the error
+ *      block; the optional `onOpenLogin` prop (wired by AppShell to
+ *      LoginScreen via setShowLogin) makes it actionable.
  *
  * Design: pure-black canvas per docs/UI-DESIGN.md. Cards are transparent
  * with a 1px border. Unread rows have a left-edge accent. Time labels
@@ -100,7 +104,7 @@ function relativeLabel(iso, nowMs) {
   return past ? `för ${days} d` : `om ${days} d`;
 }
 
-export default function NotificationsScreen({ onOpenEvent }) {
+export default function NotificationsScreen({ onOpenEvent, onOpenLogin }) {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [notifications, setNotifications] = useState([]);
@@ -432,7 +436,28 @@ export default function NotificationsScreen({ onOpenEvent }) {
           </View>
         ) : null}
 
-        {!loading && error ? (
+        {!loading && error === 'auth' ? (
+          <View style={styles.warningBlock}>
+            <Text style={styles.warningText}>
+              Logga in för att se dina notiser, påminnelser och betygsätta
+              events du varit på.
+            </Text>
+            {typeof onOpenLogin === 'function' ? (
+              <Pressable
+                onPress={onOpenLogin}
+                accessibilityLabel="Logga in"
+                style={({ pressed }) => [
+                  styles.loginButton,
+                  pressed ? styles.loginButtonPressed : null,
+                ]}
+              >
+                <Text style={styles.loginButtonText}>Logga in</Text>
+              </Pressable>
+            ) : null}
+          </View>
+        ) : null}
+
+        {!loading && error && error !== 'auth' ? (
           <View style={styles.warningBlock}>
             <Text style={styles.warningText}>
               Kunde inte hämta notiser just nu ({error}). Dra ner för att försöka igen.
@@ -688,6 +713,24 @@ const styles = StyleSheet.create({
     backgroundColor: TOKENS.color.border,
   },
   submitButtonText: {
+    color: TOKENS.color.appBg,
+    fontSize: TOKENS.fontSize.md,
+    fontWeight: '700',
+  },
+  loginButton: {
+    marginTop: TOKENS.space.md,
+    paddingHorizontal: TOKENS.space.lg,
+    paddingVertical: TOKENS.space.sm,
+    borderRadius: TOKENS.radius.md,
+    backgroundColor: TOKENS.color.accent,
+    alignSelf: 'flex-start',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  loginButtonPressed: {
+    opacity: 0.7,
+  },
+  loginButtonText: {
     color: TOKENS.color.appBg,
     fontSize: TOKENS.fontSize.md,
     fontWeight: '700',

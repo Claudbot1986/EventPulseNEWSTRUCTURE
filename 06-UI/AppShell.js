@@ -340,7 +340,9 @@ export default function AppShell() {
         <NetworkBanner />
         {activeTab === 'explore' && <App onUserLoggedOut={handleUserLoggedOut} />}
         {activeTab === 'home' && <HomeScreen onChipPress={handleChipPress} />}
-        {activeTab === 'notifications' && <NotificationsScreen />}
+        {activeTab === 'notifications' && (
+          <NotificationsScreen onOpenLogin={() => setShowLogin(true)} />
+        )}
         {activeTab === 'profile' && (
           <ProfileScreen onLoggedOut={handleUserLoggedOut} />
         )}

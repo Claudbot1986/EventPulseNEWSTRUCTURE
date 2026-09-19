@@ -24,10 +24,36 @@ vi.stubGlobal('fetch', fetchMock);
 
 const ANON_KEY = 'eventpulse.anon_user_id';
 const ANON_VALUE = '00000000-0000-0000-0000-000000000999';
+const AUTH_SESSION_KEY = 'eventpulse.auth_session';
 
-beforeEach(() => {
+/**
+ * The three fetch functions are gated behind Supabase auth (server-side
+ * requireUser). Tests that expect a network call must seed a session first:
+ * expires_at=0 means "no expiry tracked" → treated as valid by
+ * storage.isAuthenticated().
+ */
+async function seedAuthSession() {
+  const AsyncStorage = (await import('@react-native-async-storage/async-storage')).default;
+  await AsyncStorage.setItem(
+    AUTH_SESSION_KEY,
+    JSON.stringify({ access_token: 'test-jwt', refresh_token: null, expires_at: 0, user: { id: 'u1', email: null } })
+  );
+}
+
+async function seedAnonAndAuth() {
+  const AsyncStorage = (await import('@react-native-async-storage/async-storage')).default;
+  await AsyncStorage.setItem(ANON_KEY, ANON_VALUE);
+  await seedAuthSession();
+}
+
+beforeEach(async () => {
   fetchMock.mockReset();
   process.env.EXPO_PUBLIC_AGENT_URL = 'http://agent.test';
+  // The AsyncStorage mock map persists across tests within this file —
+  // flush the auth session so earlier seeded sessions never leak into
+  // the "without a session" assertions below.
+  const AsyncStorage = (await import('@react-native-async-storage/async-storage')).default;
+  await AsyncStorage.removeItem(AUTH_SESSION_KEY);
 });
 
 afterEach(() => {
@@ -37,9 +63,7 @@ afterEach(() => {
 describe('notificationsClient', () => {
   describe('fetchNotifications', () => {
     it('returns ok:true with sanitized rows on a 200 response', async () => {
-      // Pre-seed anon id
-      const AsyncStorage = (await import('@react-native-async-storage/async-storage')).default;
-      await AsyncStorage.setItem(ANON_KEY, ANON_VALUE);
+      await seedAnonAndAuth();
       // Re-import after seeding so storage module picks up the cached value
       vi.resetModules();
       const { fetchNotifications } = await import('./notificationsClient');
@@ -84,8 +108,7 @@ describe('notificationsClient', () => {
     });
 
     it('returns ok:false on a non-2xx response', async () => {
-      const AsyncStorage = (await import('@react-native-async-storage/async-storage')).default;
-      await AsyncStorage.setItem(ANON_KEY, ANON_VALUE);
+      await seedAnonAndAuth();
       vi.resetModules();
       const { fetchNotifications } = await import('./notificationsClient');
 
@@ -101,8 +124,7 @@ describe('notificationsClient', () => {
     });
 
     it('returns ok:false on network error', async () => {
-      const AsyncStorage = (await import('@react-native-async-storage/async-storage')).default;
-      await AsyncStorage.setItem(ANON_KEY, ANON_VALUE);
+      await seedAnonAndAuth();
       vi.resetModules();
       const { fetchNotifications } = await import('./notificationsClient');
 
@@ -114,8 +136,7 @@ describe('notificationsClient', () => {
     });
 
     it('clamps limit to [1, 200]', async () => {
-      const AsyncStorage = (await import('@react-native-async-storage/async-storage')).default;
-      await AsyncStorage.setItem(ANON_KEY, ANON_VALUE);
+      await seedAnonAndAuth();
       vi.resetModules();
       const { fetchNotifications } = await import('./notificationsClient');
 
@@ -128,12 +149,101 @@ describe('notificationsClient', () => {
       const calledUrl = fetchMock.mock.calls[0][0] as string;
       expect(calledUrl).toContain('limit=200');
     });
+
+    it('attaches Authorization: Bearer <token> from the persisted session', async () => {
+      await seedAnonAndAuth();
+      vi.resetModules();
+      const { fetchNotifications } = await import('./notificationsClient');
+
+      fetchMock.mockResolvedValueOnce({
+        ok: true,
+        status: 200,
+        json: async () => ({ notifications: [] }),
+      });
+      await fetchNotifications();
+      const [, init] = fetchMock.mock.calls[0] as [string, RequestInit];
+      expect((init?.headers as Record<string, string>)?.Authorization).toBe('Bearer test-jwt');
+    });
+  });
+
+  describe('auth gating (server requireUser)', () => {
+    it('fetchNotifications returns warning:"auth" without a session and never calls fetch', async () => {
+      const AsyncStorage = (await import('@react-native-async-storage/async-storage')).default;
+      await AsyncStorage.setItem(ANON_KEY, ANON_VALUE);
+      vi.resetModules();
+      const { fetchNotifications } = await import('./notificationsClient');
+
+      const result = await fetchNotifications();
+      expect(result.ok).toBe(false);
+      if (result.ok) return;
+      expect(result.warning).toBe('auth');
+      expect(fetchMock).not.toHaveBeenCalled();
+    });
+
+    it('markNotificationRead returns warning:"auth" without a session and never calls fetch', async () => {
+      const AsyncStorage = (await import('@react-native-async-storage/async-storage')).default;
+      await AsyncStorage.setItem(ANON_KEY, ANON_VALUE);
+      vi.resetModules();
+      const { markNotificationRead } = await import('./notificationsClient');
+
+      const result = await markNotificationRead({ notificationId: 'n1' });
+      expect(result.ok).toBe(false);
+      expect(result.warning).toBe('auth');
+      expect(fetchMock).not.toHaveBeenCalled();
+    });
+
+    it('markNotificationRead attaches the Bearer header when logged in', async () => {
+      const AsyncStorage = (await import('@react-native-async-storage/async-storage')).default;
+      await AsyncStorage.setItem(ANON_KEY, ANON_VALUE);
+      await seedAuthSession();
+      vi.resetModules();
+      const { markNotificationRead } = await import('./notificationsClient');
+
+      fetchMock.mockResolvedValueOnce({
+        ok: true,
+        status: 200,
+        json: async () => ({ ok: true }),
+      });
+      await markNotificationRead({ notificationId: 'n1' });
+      const [, init] = fetchMock.mock.calls[0] as [string, RequestInit];
+      expect((init?.headers as Record<string, string>)?.Authorization).toBe('Bearer test-jwt');
+      expect(
+        (init?.headers as Record<string, string>)?.['Content-Type']
+      ).toBe('application/json');
+    });
+
+    it('fetchUnratedSavedEvents returns warning:"auth" without a session and never calls fetch', async () => {
+      const AsyncStorage = (await import('@react-native-async-storage/async-storage')).default;
+      await AsyncStorage.setItem(ANON_KEY, ANON_VALUE);
+      vi.resetModules();
+      const { fetchUnratedSavedEvents } = await import('./notificationsClient');
+
+      const result = await fetchUnratedSavedEvents();
+      expect(result.ok).toBe(false);
+      if (result.ok) return;
+      expect(result.warning).toBe('auth');
+      expect(fetchMock).not.toHaveBeenCalled();
+    });
+
+    it('fetchUnratedSavedEvents attaches the Bearer header when logged in', async () => {
+      await seedAnonAndAuth();
+      vi.resetModules();
+      const { fetchUnratedSavedEvents } = await import('./notificationsClient');
+
+      fetchMock.mockResolvedValueOnce({
+        ok: true,
+        status: 200,
+        json: async () => ({ events: [] }),
+      });
+      await fetchUnratedSavedEvents();
+      const [, init] = fetchMock.mock.calls[0] as [string, RequestInit];
+      expect((init?.headers as Record<string, string>)?.Authorization).toBe('Bearer test-jwt');
+    });
   });
 
   describe('markNotificationRead', () => {
     it('returns ok:true on a 200', async () => {
-      const AsyncStorage = (await import('@react-native-async-storage/async-storage')).default;
-      await AsyncStorage.setItem(ANON_KEY, ANON_VALUE);
+      await seedAnonAndAuth();
       vi.resetModules();
       const { markNotificationRead } = await import('./notificationsClient');
 
@@ -165,8 +275,7 @@ describe('notificationsClient', () => {
     });
 
     it('treats 202 as a soft success (warning surfaced)', async () => {
-      const AsyncStorage = (await import('@react-native-async-storage/async-storage')).default;
-      await AsyncStorage.setItem(ANON_KEY, ANON_VALUE);
+      await seedAnonAndAuth();
       vi.resetModules();
       const { markNotificationRead } = await import('./notificationsClient');
 

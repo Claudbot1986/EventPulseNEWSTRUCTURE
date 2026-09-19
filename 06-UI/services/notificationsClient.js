@@ -23,14 +23,35 @@
  * on mount + on focus. A 60s soft TTL avoids hammering the server when
  * the screen is left open. WebSocket push is deferred to Phase 2 (push).
  *
- * Identity: same anon UUID pattern as `agentClient.js` — read once via
- * `getOrCreateAnonUserId`, cached for the lifetime of the screen.
+ * Identity: the three endpoints are `requireUser`-gated server-side
+ * (08-Agent/server.ts). Identity comes from the Supabase Bearer JWT, NOT
+ * the legacy `client_user_id` query param (which the server ignores — it
+ * is kept on the wire only for backward compatibility with old logs).
+ * When no auth session exists the functions early-return
+ * `{ ok: false, warning: 'auth' }` without issuing a request, so the
+ * screen can render a login prompt instead of a network-looking error.
  *
  * Best-effort: every function swallows network errors and returns a
  * safe default. The screen degrades to its empty-state copy on failure.
  */
 
-import { getOrCreateAnonUserId } from './storage';
+import { getOrCreateAnonUserId, isAuthenticated, loadAuthSession } from './storage';
+
+/**
+ * Local Authorization-header builder. Duplicates agentClient.getAuthHeader
+ * deliberately: importing agentClient here would drag the networkContext /
+ * React / JSX chain into this module (and into every test that exercises
+ * it). Six stable lines are cheaper than that coupling.
+ *
+ * @returns {Promise<Record<string, string>>}
+ */
+async function authHeader() {
+  const session = await loadAuthSession();
+  if (!session || typeof session.access_token !== 'string' || session.access_token.length === 0) {
+    return {};
+  }
+  return { Authorization: `Bearer ${session.access_token}` };
+}
 
 const AGENT_BASE_URL = process.env.EXPO_PUBLIC_AGENT_URL;
 
@@ -78,6 +99,9 @@ export async function fetchNotifications({ limit = DEFAULT_LIMIT, signal, timeou
   } catch (_err) {
     return { ok: false, warning: 'config' };
   }
+  if (!(await isAuthenticated())) {
+    return { ok: false, warning: 'auth' };
+  }
   const safeLimit = Math.min(Math.max(parseInt(String(limit), 10) || DEFAULT_LIMIT, 1), MAX_LIMIT);
   const client_user_id = await getOrCreateAnonUserId();
 
@@ -93,7 +117,10 @@ export async function fetchNotifications({ limit = DEFAULT_LIMIT, signal, timeou
   }
 
   try {
-    const response = await fetch(url.toString(), { signal: controller.signal });
+    const response = await fetch(url.toString(), {
+      signal: controller.signal,
+      headers: { ...(await authHeader()) },
+    });
     if (!response.ok) {
       return { ok: false, warning: `agent ${response.status}` };
     }
@@ -127,6 +154,9 @@ export async function markNotificationRead({ notificationId, signal, timeoutMs =
   } catch (_err) {
     return { ok: false, warning: 'config' };
   }
+  if (!(await isAuthenticated())) {
+    return { ok: false, warning: 'auth' };
+  }
   const client_user_id = await getOrCreateAnonUserId();
 
   const controller = new AbortController();
@@ -139,7 +169,7 @@ export async function markNotificationRead({ notificationId, signal, timeoutMs =
   try {
     const response = await fetch(`${baseUrl}/agent/notifications/read`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json', ...(await authHeader()) },
       body: JSON.stringify({ client_user_id, notification_id: notificationId }),
       signal: controller.signal,
     });
@@ -221,6 +251,9 @@ export async function fetchUnratedSavedEvents({ limit = DEFAULT_LIMIT, signal, t
   } catch (_err) {
     return { ok: false, warning: 'config' };
   }
+  if (!(await isAuthenticated())) {
+    return { ok: false, warning: 'auth' };
+  }
   const safeLimit = Math.min(Math.max(parseInt(String(limit), 10) || DEFAULT_LIMIT, 1), MAX_LIMIT);
   const client_user_id = await getOrCreateAnonUserId();
 
@@ -236,7 +269,10 @@ export async function fetchUnratedSavedEvents({ limit = DEFAULT_LIMIT, signal, t
   }
 
   try {
-    const response = await fetch(url.toString(), { signal: controller.signal });
+    const response = await fetch(url.toString(), {
+      signal: controller.signal,
+      headers: { ...(await authHeader()) },
+    });
     if (!response.ok) {
       return { ok: false, warning: `agent ${response.status}` };
     }
