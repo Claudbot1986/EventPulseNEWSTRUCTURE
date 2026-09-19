@@ -6,7 +6,6 @@ import { fetchFeed, addDays, fetchEventIcs, shareSession, fetchSharedSession, pa
 import { isAuthDeepLink } from './services/deepLinkRouter';
 import { useAiImageUrl } from './hooks/useAiImageUrl';
 import { analyticsClient } from './services/analyticsClient';
-import UserPickerScreen from './screens/UserPickerScreen';
 import ProfileScreen from './screens/ProfileScreen';
 import { getItem, getOrCreateAnonUserId, removeItem, setItem, PENDING_AGENT_MESSAGE_KEY } from './services/storage';
 
@@ -1144,37 +1143,17 @@ function DetailsScreen({ event, onBack }) {
   );
 }
 
-export default function App({ onUserLoggedOut }) {
+export default function App({ onUserLoggedOut, onOpenLogin }) {
   const [showSplash, setShowSplash] = useState(true);
   const [selectedEvent, setSelectedEvent] = useState(null);
-  const [activeUser, setActiveUser] = useState(null);
   const [appReady, setAppReady] = useState(false);
   const scrollPositionRef = useRef(0);
 
+  // Splash pacing only. Identity is owned by AppShell (guest mode: no
+  // session never blocks browsing) — nothing to restore here.
   useEffect(() => {
-    let cancelled = false;
-    const budget = setTimeout(() => {
-      if (!cancelled) setAppReady(true);
-    }, 800);
-    (async () => {
-      try {
-        const existing = await analyticsClient.getActiveUser();
-        if (!cancelled && existing) {
-          // Session + flush loop are owned by AppShell now — starting them
-          // here would fire a second session_start on every Utforska remount.
-          setActiveUser(existing);
-        }
-      } catch (err) {
-        console.warn('[App] AsyncStorage restore failed:', err?.message || err);
-      } finally {
-        if (!cancelled) setAppReady(true);
-        clearTimeout(budget);
-      }
-    })();
-    return () => {
-      cancelled = true;
-      clearTimeout(budget);
-    };
+    const timer = setTimeout(() => setAppReady(true), 800);
+    return () => clearTimeout(timer);
   }, []);
 
   useEffect(() => {
@@ -1186,12 +1165,12 @@ export default function App({ onUserLoggedOut }) {
   }, [appReady]);
 
   // Fire a "home" section impression every time the user lands back on
-  // the feed after splash + consent. Skipped while a details screen or the
+  // the feed after the splash. Skipped while a details screen or the
   // splash is showing so we don't double-count.
   useEffect(() => {
-    if (!appReady || showSplash || !activeUser || selectedEvent) return;
+    if (!appReady || showSplash || selectedEvent) return;
     void analyticsClient.sectionImpression('home');
-  }, [appReady, showSplash, activeUser, selectedEvent]);
+  }, [appReady, showSplash, selectedEvent]);
 
   // T0063 — drain the pending agent prompt set by HomeScreen chip tap.
   // AppShell writes `eventpulse.pending_agent_message` and switches to the
@@ -1282,15 +1261,9 @@ export default function App({ onUserLoggedOut }) {
     };
   }, []);
 
-  const handleUserPicked = useCallback((userId) => {
-    setActiveUser(userId);
-  }, []);
-
   const handleLoggedOut = useCallback(() => {
-    // Cleanup already ran inside analyticsClient.logout(); AppShell's user
-    // gate unmounts this whole App. Local activeUser is intentionally left
-    // alone — clearing it here would flash the internal picker for a frame
-    // before the shell takes over.
+    // Cleanup already ran inside ProfileScreen; AppShell flips to the
+    // guest surface and this tree remounts fresh on next explore visit.
     onUserLoggedOut?.();
   }, [onUserLoggedOut]);
 
@@ -1308,9 +1281,6 @@ export default function App({ onUserLoggedOut }) {
 
   const renderMain = () => {
     if (!appReady || showSplash) return <SplashScreen />;
-    if (!activeUser) {
-      return <UserPickerScreen onUserPicked={handleUserPicked} />;
-    }
     if (selectedEvent) {
       return <DetailsScreen event={selectedEvent} onBack={handleBack} />;
     }
@@ -1321,12 +1291,12 @@ export default function App({ onUserLoggedOut }) {
       return <MapScreen onEventPress={handleEventPress} />;
     }
     if (activeTab === 'profile') {
-      return <ProfileScreen onLoggedOut={handleLoggedOut} />;
+      return <ProfileScreen onLoggedOut={handleLoggedOut} onOpenLogin={onOpenLogin} />;
     }
-    return <HomeScreen onEventPress={handleEventPress} scrollPositionRef={scrollPositionRef} pendingPrompt={pendingPrompt} dismissPendingPrompt={dismissPendingPrompt} />;
+    return <HomeScreen onEventPress={handleEventPress} scrollPositionRef={scrollPositionRef} pendingPrompt={pendingPrompt} dismissPendingPrompt={dismissPendingPrompt} onOpenLogin={onOpenLogin} />;
   };
 
-  const showTabBar = appReady && !showSplash && activeUser && !selectedEvent;
+  const showTabBar = appReady && !showSplash && !selectedEvent;
 
   return (
     <View style={styles.container}>

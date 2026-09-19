@@ -1,25 +1,33 @@
 /**
- * analyticsClient.js — Expo client for the local analytics backend (port 7778).
+ * analyticsClient.js — Expo client for the optional analytics backend.
  *
- * Posts user-activity events to `http://localhost:7778/api/events`.
- * The endpoint accepts any device_id_hash matching /^[a-f0-9]{64}$/.
+ * Posts user-activity events to `$EXPO_PUBLIC_ANALYTICS_URL/api/events`
+ * (the 10-Analytics ingestion API). The endpoint accepts any
+ * device_id_hash matching /^[a-f0-9]{64}$/.
+ *
+ * Disabled-when-unset: if EXPO_PUBLIC_ANALYTICS_URL is not baked into the
+ * build (the TestFlight production profile deliberately omits it), every
+ * entry point is a no-op — no fetch, no queue growth, no retry storm
+ * against a dead localhost.
  *
  * Identity model:
- * - On first launch, the user picks one of three fictitious test accounts
- *   (tomorg1, tomorg2, tomorg3) via UserPickerScreen.
- * - The chosen username is hashed (djb2 + pad) to a 64-hex device_id_hash
- *   and stored in AsyncStorage. Same user → same hash forever.
+ * - Legacy test profiles were removed with UserPickerScreen (guest mode
+ *   2026-09-19). Whatever active_user key an older build left in storage
+ *   keeps working for identity hashing; new installs have no active user
+ *   → track() drops events until a consent + identity UI exists.
+ * - The username is hashed (djb2 + pad) to a 64-hex device_id_hash and
+ *   stored in AsyncStorage. Same user → same hash forever.
  * - session_id is a random token generated per app launch.
  *
  * GDPR consent gate:
  * - Until `setConsent(true)` is called, every track() call is dropped silently.
  *   This guarantees we never emit an event before the user has consented.
  * - `setOptOut()` flips consent off, persists an opt-out flag, and POSTs
- *   `device_id_hash` to `http://localhost:7778/api/gdpr/opt-out` so the
- *   backend can mark the device in its Phase 2 stop-list.
+ *   `device_id_hash` to /api/gdpr/opt-out so the backend can mark the
+ *   device in its Phase 2 stop-list.
  *
  * Events emitted (all conform to 10-Analytics/analytics.ts schema enums):
- *   - session_start       on consent + login (UserPickerScreen)
+ *   - session_start       on login / restored session
  *   - section_impression  when HomeScreen / DetailsScreen mount
  *   - event_view          when an event card is opened (Details screen)
  *   - event_click         when an external-link CTA is tapped
@@ -33,8 +41,7 @@
 
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-const ANALYTICS_URL =
-  process.env.EXPO_PUBLIC_ANALYTICS_URL || 'http://localhost:7778';
+const ANALYTICS_URL = process.env.EXPO_PUBLIC_ANALYTICS_URL || null;
 const ANALYTICS_EVENTS_PATH = '/api/events';
 const ANALYTICS_OPT_OUT_PATH = '/api/gdpr/opt-out';
 
@@ -42,13 +49,6 @@ const STORAGE_USER_KEY = 'analytics.active_user';
 const STORAGE_HASH_KEY = 'analytics.device_id_hash';
 const STORAGE_SESSION_KEY = 'analytics.session_id';
 const STORAGE_CONSENT_KEY = 'analytics.consent';
-const STORAGE_LAST_USER_KEY = 'analytics.last_user';
-
-const TEST_USERS = [
-  { id: 'tomorg1', label: 'Tomor G. — Alpha',  sub: 'Power-user, bläddrar mycket' },
-  { id: 'tomorg2', label: 'Tomor G. — Beta',   sub: 'Sparar ofta, kollar kvällar' },
-  { id: 'tomorg3', label: 'Tomor G. — Gamma',  sub: 'Sporadisk användare' },
-];
 
 const PAGE_LABELS = {
   app: 'app',
@@ -113,21 +113,6 @@ async function getActiveUser() {
   return AsyncStorage.getItem(STORAGE_USER_KEY);
 }
 
-async function setActiveUser(userId) {
-  if (!TEST_USERS.find((u) => u.id === userId)) {
-    throw new Error(`unknown test user: ${userId}`);
-  }
-  await AsyncStorage.setItem(STORAGE_USER_KEY, userId);
-  await AsyncStorage.setItem(STORAGE_HASH_KEY, hashToHex64(`eventpulse-user:${userId}:v1`));
-  await AsyncStorage.removeItem(STORAGE_SESSION_KEY);
-  const sid = await getOrInitSession();
-  return {
-    userId,
-    deviceIdHash: await getOrInitDeviceHash(userId),
-    sessionId: sid,
-  };
-}
-
 async function clearActiveUser() {
   await AsyncStorage.multiRemove([
     STORAGE_USER_KEY,
@@ -138,29 +123,14 @@ async function clearActiveUser() {
 }
 
 /**
- * Last picked test profile (survives logout) — powers the UserPicker's
- * "Senast använd" hint.
- *
- * @returns {Promise<string|null>}
- */
-async function getLastUser() {
-  return AsyncStorage.getItem(STORAGE_LAST_USER_KEY);
-}
-
-/**
- * Log out the active test profile (user portal). Unlike clearActiveUser()
- * this KEEPS the GDPR consent — consent is device-level, so the picker's
- * checkbox stays pre-checked and re-login is two taps. Queued events are
- * drained before identity keys are cleared (each event already carries its
- * own device_id_hash + session_id, so an in-flight POST is never affected).
+ * Log out (user portal). KEEPS the GDPR consent — consent is device-level.
+ * Queued events are drained before identity keys are cleared (each event
+ * already carries its own device_id_hash + session_id, so an in-flight
+ * POST is never affected).
  */
 async function logout() {
-  const user = await getActiveUser();
   await flush(); // drain the queue now — don't lose buffered events
   stopFlushLoop(); // stop the interval; its final flush is a no-op now
-  if (user) {
-    await AsyncStorage.setItem(STORAGE_LAST_USER_KEY, user);
-  }
   await AsyncStorage.multiRemove([
     STORAGE_USER_KEY,
     STORAGE_HASH_KEY,
@@ -191,6 +161,12 @@ const queue = [];
 let flushing = false;
 
 async function flush() {
+  if (!ANALYTICS_URL) {
+    // No backend configured in this build — drop the queue rather than
+    // buffering forever against a dead endpoint.
+    queue.length = 0;
+    return;
+  }
   if (flushing || queue.length === 0) return;
   flushing = true;
   const batch = queue.splice(0, queue.length);
@@ -211,6 +187,7 @@ async function flush() {
 }
 
 async function postOptOut(deviceIdHash) {
+  if (!ANALYTICS_URL) return;
   try {
     await fetch(`${ANALYTICS_URL}${ANALYTICS_OPT_OUT_PATH}`, {
       method: 'POST',
@@ -225,6 +202,8 @@ async function postOptOut(deviceIdHash) {
 }
 
 async function track(eventType, page, payload = {}) {
+  // No backend configured in this build → analytics disabled entirely.
+  if (!ANALYTICS_URL) return;
   // Hard GDPR gate: never emit anything before consent.
   if (!(await getConsent())) return;
   const user = await getActiveUser();
@@ -327,7 +306,6 @@ async function setOptOut() {
 }
 
 export const analyticsClient = {
-  TEST_USERS,
   SECTION_KEYS,
   CLICK_TARGETS,
   sessionStart,
@@ -340,15 +318,11 @@ export const analyticsClient = {
   filterChange,
   startFlushLoop,
   stopFlushLoop,
-  getActiveUser,
-  setActiveUser,
   clearActiveUser,
   logout,
-  getLastUser,
   getConsent,
   setConsent,
   setOptOut,
-  hashToHex64,
   // Exposed for tests / debugging — never call from app code.
   _flush: flush,
   _reset: () => {

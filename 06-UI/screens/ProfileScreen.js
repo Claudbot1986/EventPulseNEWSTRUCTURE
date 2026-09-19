@@ -141,18 +141,14 @@ function formatChipLabel(entityType, id) {
   return `${prefix}${tail}…`;
 }
 
-export default function ProfileScreen({ onLoggedOut }) {
+export default function ProfileScreen({ onLoggedOut, onOpenLogin }) {
   const [followPushEnabled, setFollowPushEnabled] = useState(false);
   const [followPushLoaded, setFollowPushLoaded] = useState(false);
   const [followPushBusy, setFollowPushBusy] = useState(false);
 
-  // Konto — the active analytics test profile (picked in UserPickerScreen
-  // at login). Null while loading or when no profile is active.
-  const [accountUser, setAccountUser] = useState(null);
-
-  // Fas 2.5 — Radera konto. Only relevant for real auth sessions (magic
-  // link / Apple). UserPicker test profiles are device-scoped and never
-  // created an auth.users row, so deleting "the account" doesn't apply.
+  // Konto — the Supabase auth session (magic link / Apple). Null means
+  // guest mode: the personalized sections below are all requireUser-gated
+  // server-side, so guests get a login nudge instead of empty/error lists.
   const [authSession, setAuthSession] = useState(null);
   const [authSessionLoaded, setAuthSessionLoaded] = useState(false);
   const [deleteModalVisible, setDeleteModalVisible] = useState(false);
@@ -183,25 +179,9 @@ export default function ProfileScreen({ onLoggedOut }) {
     };
   }, []);
 
-  useEffect(() => {
-    let alive = true;
-    analyticsClient
-      .getActiveUser()
-      .then((id) => {
-        if (!alive || !id) return;
-        const meta = analyticsClient.TEST_USERS.find((u) => u.id === id);
-        setAccountUser({ id, label: meta?.label ?? id });
-      })
-      .catch(() => {});
-    return () => {
-      alive = false;
-    };
-  }, []);
-
-  // Fas 2.5 — load the persisted Supabase auth session (if any). When the
-  // user signed in via magic link or Apple, this is non-null and we render
-  // the "Radera konto" button. UserPicker test profiles keep this null
-  // because their identity is device-scoped, not auth-scoped.
+  // Load the persisted Supabase auth session (if any). When the user
+  // signed in via magic link or Apple, this is non-null and we render the
+  // Konto section with "Logga ut" + "Radera konto".
   useEffect(() => {
     let alive = true;
     loadAuthSession()
@@ -372,15 +352,20 @@ export default function ProfileScreen({ onLoggedOut }) {
     []
   );
 
-  // Portal logout — drains the analytics queue, stops the flush loop,
-  // remembers the profile for the picker's "Senast använd" hint, and keeps
-  // GDPR consent (device-level) so re-login is two taps. No confirmation
-  // dialog: the three test profiles are fictitious and reversible.
+  // Logout — wipes the Supabase Bearer, drains the analytics queue and
+  // stops the flush loop, then hands control to the shell which drops to
+  // the guest surface. No confirmation dialog: logging back in is one tap.
   const handleLogout = useCallback(async () => {
+    try {
+      await clearAuthSession();
+    } catch (_err) {
+      // Storage hiccup — still flip the gate; the wiped in-memory tree
+      // cannot send the old Bearer anymore.
+    }
     try {
       await analyticsClient.logout();
     } catch (_err) {
-      // Storage hiccup — hand control to the shell's user gate anyway.
+      // Best-effort drain — hand control to the shell's user gate anyway.
     }
     onLoggedOut?.();
   }, [onLoggedOut]);
@@ -394,7 +379,7 @@ export default function ProfileScreen({ onLoggedOut }) {
   // the same check independently.
   //
   // On success: clearAuthSession (wipe Bearer) → analyticsClient.logout
-  // (drain queue) → onLoggedOut (flip shell to UserPicker). The cascading
+  // (drain queue) → onLoggedOut (flip shell to guest). The cascading
   // DB deletes on the server have already wiped user-scoped data.
   const openDeleteModal = useCallback(() => {
     setDeleteConfirmText('');
@@ -458,6 +443,50 @@ export default function ProfileScreen({ onLoggedOut }) {
 
   const totalFollowed = followedVenues.length + followedArtists.length;
 
+  // Guest mode: no auth session → nothing on this screen can load or save
+  // (every endpoint here is requireUser-gated), so show a login nudge and
+  // stop. Keep rendering the header so the tab feels intentional, not broken.
+  if (authSessionLoaded && !authSession) {
+    return (
+      <ScrollView
+        style={styles.container}
+        contentContainerStyle={styles.scrollContent}
+      >
+        <Text style={styles.eyebrow}>PROFIL</Text>
+        <Text style={styles.title}>Sparade & inställningar</Text>
+
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Konto</Text>
+          <Text style={[styles.placeholder, styles.guestLoginText]}>
+            Logga in för att spara events, följa platser och artister och
+            ställa in notiser. Du kan fortsätta utforska utan konto.
+          </Text>
+          {typeof onOpenLogin === 'function' ? (
+            <Pressable
+              style={({ pressed }) => [
+                styles.loginButton,
+                pressed && styles.linkButtonPressed,
+              ]}
+              onPress={onOpenLogin}
+              accessibilityRole="button"
+              accessibilityLabel="Logga in"
+            >
+              <Text style={styles.loginButtonText}>Logga in</Text>
+            </Pressable>
+          ) : null}
+        </View>
+
+        <Pressable
+          style={({ pressed }) => [styles.linkButton, pressed && styles.linkButtonPressed]}
+          accessibilityRole="link"
+          accessibilityLabel="Om EventPulse"
+        >
+          <Text style={styles.linkButtonText}>Om EventPulse</Text>
+        </Pressable>
+      </ScrollView>
+    );
+  }
+
   return (
     <ScrollView
       style={styles.container}
@@ -470,13 +499,15 @@ export default function ProfileScreen({ onLoggedOut }) {
         Dina sparade events, kategorival och notis-inställningar hamnar här.
       </Text>
 
-      {accountUser && (
+      {authSessionLoaded && authSession ? (
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Konto</Text>
           <View style={styles.row}>
             <View style={styles.rowTextWrap}>
-              <Text style={styles.rowLabel}>Inloggad som {accountUser.label}</Text>
-              <Text style={styles.rowDescription}>@{accountUser.id}</Text>
+              <Text style={styles.rowLabel}>Inloggad</Text>
+              <Text style={styles.rowDescription}>
+                {authSession.user?.email ?? 'Apple-inloggning'}
+              </Text>
             </View>
             <Pressable
               style={({ pressed }) => [styles.logoutButton, pressed && styles.linkButtonPressed]}
@@ -487,26 +518,28 @@ export default function ProfileScreen({ onLoggedOut }) {
               <Text style={styles.logoutButtonText}>Logga ut</Text>
             </Pressable>
           </View>
-          {authSessionLoaded && authSession ? (
-            <View style={styles.deleteRow}>
-              <Text style={styles.deleteRowDescription}>
-                Tar bort kontot permanent — allt du sparat, följt och alla
-                notis-inställningar försvinner.
-              </Text>
-              <Pressable
-                style={({ pressed }) => [
-                  styles.deleteButton,
-                  pressed && styles.linkButtonPressed,
-                ]}
-                onPress={handleDeleteFirstTap}
-                accessibilityRole="button"
-                accessibilityLabel="Radera konto"
-                testID="delete-account-button"
-              >
-                <Text style={styles.deleteButtonText}>Radera konto</Text>
-              </Pressable>
-            </View>
-          ) : null}
+          <View style={styles.deleteRow}>
+            <Text style={styles.deleteRowDescription}>
+              Tar bort kontot permanent — allt du sparat, följt och alla
+              notis-inställningar försvinner.
+            </Text>
+            <Pressable
+              style={({ pressed }) => [
+                styles.deleteButton,
+                pressed && styles.linkButtonPressed,
+              ]}
+              onPress={handleDeleteFirstTap}
+              accessibilityRole="button"
+              accessibilityLabel="Radera konto"
+              testID="delete-account-button"
+            >
+              <Text style={styles.deleteButtonText}>Radera konto</Text>
+            </Pressable>
+          </View>
+        </View>
+      ) : (
+        <View style={styles.section}>
+          <ActivityIndicator color={TOKENS.color.accent} />
         </View>
       )}
 
@@ -784,6 +817,22 @@ const styles = StyleSheet.create({
   },
   loadingSpinner: {
     marginTop: TOKENS.space.sm,
+  },
+  // Gäst-läge: login-knapp i Konto-kortet (accent, samma form som Radera).
+  guestLoginText: {
+    marginBottom: TOKENS.space.lg,
+  },
+  loginButton: {
+    backgroundColor: TOKENS.color.accent,
+    paddingVertical: TOKENS.space.md,
+    paddingHorizontal: TOKENS.space.lg,
+    borderRadius: TOKENS.radius.md,
+    alignItems: 'center',
+  },
+  loginButtonText: {
+    color: '#1A1206',
+    fontSize: TOKENS.fontSize.md,
+    fontWeight: '700',
   },
   // Konto-sektionens logga ut-knapp (samma form som chips, accent-text).
   logoutButton: {

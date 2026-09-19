@@ -18,7 +18,6 @@ import HomeScreen from './screens/HomeScreen';
 import NotificationsScreen from './screens/NotificationsScreen';
 import ProfileScreen from './screens/ProfileScreen';
 import OnboardingScreen from './screens/OnboardingScreen';
-import UserPickerScreen from './screens/UserPickerScreen';
 import LoginScreen from './screens/LoginScreen';
 import MagicLinkHandlerScreen from './screens/MagicLinkHandlerScreen';
 import UtforskaStarScreen from './screens/UtforskaStarScreen';
@@ -29,6 +28,7 @@ import {
   getItem,
   setItem,
   saveAuthSession,
+  isAuthenticated,
   PENDING_AGENT_MESSAGE_KEY,
   getAuthPopupDismissed,
   setAuthPopupDismissed,
@@ -46,17 +46,17 @@ const TABS = ['home', 'explore', 'notifications', 'profile'];
 if (EXPLORE_STAR_ENABLED) TABS.push('explore-star');
 const ONBOARDING_COMPLETE_KEY = 'eventpulse.onboarding_complete';
 const STORAGE_BUDGET_MS = 800;
-/** Delay before the AuthReminderModal appears for users who are still on
- *  the public anon identity (UserPicker test profile). Per launch-plan
- *  user decision 2026-09-06: 30 s — short enough for conversion, long
- *  enough not to interrupt first-impression exploration. */
+/** Delay before the AuthReminderModal appears for guests (no Supabase
+ *  session). Per launch-plan user decision 2026-09-06: 30 s — short enough
+ *  for conversion, long enough not to interrupt first-impression
+ *  exploration. */
 const AUTH_REMINDER_DELAY_MS = 30 * 1000;
 export { PENDING_AGENT_MESSAGE_KEY };
 
 export default function AppShell() {
   const [activeTab, setActiveTab] = useState('home');
   const [onboardingState, setOnboardingState] = useState('loading'); // 'loading' | 'needs' | 'done'
-  const [userState, setUserState] = useState('loading'); // 'loading' | 'logged_in' | 'logged_out'
+  const [userState, setUserState] = useState('loading'); // 'loading' | 'guest' | 'logged_in'
   const [authReminderVisible, setAuthReminderVisible] = useState(false);
   const [showLogin, setShowLogin] = useState(false);
   // Magic-link deep-link callback URL — when non-null AppShell renders
@@ -75,7 +75,7 @@ export default function AppShell() {
   //
   // Both paths set `magicLinkUrl`, which mounts MagicLinkHandlerScreen.
   // The handler either verifies and calls onSuccess(session), or surfaces
-  // an error and calls onCancel → UserPickerScreen.
+  // an error and calls onCancel → back to the guest surface.
   useEffect(() => {
     let cancelled = false;
     let sub;
@@ -169,34 +169,35 @@ export default function AppShell() {
     };
   }, []);
 
-  // Resolve the persisted analytics test profile once onboarding is done.
-  // The shell owns the session / flush-loop lifecycle: a restored user gets
-  // session_start + the loop here (App.js no longer starts them), and the
-  // full-screen UserPickerScreen shows whenever no profile is active.
+  // Resolve the persisted Supabase session once onboarding is done.
+  // Guest mode: no session never blocks — the app opens straight into the
+  // public tab tree and login is offered only where personalized data is
+  // needed. The shell owns the analytics session/flush-loop lifecycle: a
+  // restored session gets session_start + the loop here (App.js no longer
+  // starts them).
   useEffect(() => {
     if (onboardingState !== 'done') return;
     let alive = true;
     const budget = setTimeout(() => {
       // Same storage-hang guard as onboarding — never park on a splash.
       if (alive) {
-        setUserState((s) => (s === 'loading' ? 'logged_out' : s));
+        setUserState((s) => (s === 'loading' ? 'guest' : s));
       }
     }, STORAGE_BUDGET_MS);
 
-    analyticsClient
-      .getActiveUser()
-      .then(async (user) => {
+    isAuthenticated()
+      .then(async (authed) => {
         if (!alive) return;
-        if (user) {
+        if (authed) {
           await analyticsClient.sessionStart(Platform.OS);
           analyticsClient.startFlushLoop();
           setUserState('logged_in');
         } else {
-          setUserState('logged_out');
+          setUserState('guest');
         }
       })
       .catch(() => {
-        if (alive) setUserState('logged_out');
+        if (alive) setUserState('guest');
       })
       .finally(() => {
         clearTimeout(budget);
@@ -217,17 +218,11 @@ export default function AppShell() {
     setOnboardingState('done');
   };
 
-  const handleUserPicked = () => {
-    // UserPickerScreen already ran setConsent + setActiveUser + the
-    // per-profile identity swap + sessionStart + startFlushLoop — the
-    // shell only flips the gate so no duplicate session fires.
-    setUserState('logged_in');
-  };
-
   const handleUserLoggedOut = () => {
-    // Queue drain + key removal already happened in ProfileScreen via
-    // analyticsClient.logout(); the shell only flips the gate.
-    setUserState('logged_out');
+    // Session wipe + queue drain already happened in ProfileScreen; the
+    // shell only drops back to the guest surface (tabs stay visible —
+    // logout never blocks browsing).
+    setUserState('guest');
   };
 
   const handleChipPress = (prompt) => {
@@ -237,14 +232,11 @@ export default function AppShell() {
     setActiveTab('explore');
   };
 
-  // Auth-reminder popup: only show once the user has reached the
-  // public-anon surface (UserPicker test profile) AND has not
-  // previously opted out via the "Påminn mig inte igen" checkbox.
-  // Phase 2 will introduce real Supabase auth — when that lands, gate
-  // this further on "no auth_session in storage" so logged-in users
-  // never see the nudge.
+  // Auth-reminder popup: only for guests (no Supabase session) who have
+  // not previously opted out via the "Påminn mig inte igen" checkbox.
+  // Logged-in users never see the nudge.
   useEffect(() => {
-    if (userState !== 'logged_in') return undefined;
+    if (userState !== 'guest') return undefined;
 
     let alive = true;
     let dismissed = false;
@@ -315,10 +307,9 @@ export default function AppShell() {
         <Text style={styles.splashText}>EventPulse</Text>
       </View>
     );
-  } else if (userState === 'logged_out') {
-    body = <UserPickerScreen onUserPicked={handleUserPicked} />;
   } else if (showLogin) {
-    // Triggered by AuthReminderModal's "Registrera" button. Renders the
+    // Triggered by any surface's onOpenLogin (guest nudge, Notiser-auth
+    // state, AuthReminderModal "Registrera"). Renders the
     // email-link LoginScreen on top of the tab tree; when the magic link
     // is verified the deep-link handler sets a fresh Supabase session and
     // flips userState to 'logged_in', unmounting this screen automatically.
@@ -338,13 +329,23 @@ export default function AppShell() {
     body = (
       <>
         <NetworkBanner />
-        {activeTab === 'explore' && <App onUserLoggedOut={handleUserLoggedOut} />}
-        {activeTab === 'home' && <HomeScreen onChipPress={handleChipPress} />}
+        {activeTab === 'explore' && (
+          <App
+            onUserLoggedOut={handleUserLoggedOut}
+            onOpenLogin={() => setShowLogin(true)}
+          />
+        )}
+        {activeTab === 'home' && (
+          <HomeScreen onChipPress={handleChipPress} onOpenLogin={() => setShowLogin(true)} />
+        )}
         {activeTab === 'notifications' && (
           <NotificationsScreen onOpenLogin={() => setShowLogin(true)} />
         )}
         {activeTab === 'profile' && (
-          <ProfileScreen onLoggedOut={handleUserLoggedOut} />
+          <ProfileScreen
+            onLoggedOut={handleUserLoggedOut}
+            onOpenLogin={() => setShowLogin(true)}
+          />
         )}
         {activeTab === 'explore-star' && EXPLORE_STAR_ENABLED && <UtforskaStarScreen />}
         <View style={styles.barWrapper} pointerEvents="box-none">

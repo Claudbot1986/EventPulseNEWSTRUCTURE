@@ -34,7 +34,7 @@ import {
 } from 'react-native';
 
 import { getItem, setItem } from '../services/storage';
-import { chatWithAgent, savePreferencesToServer } from '../services/agentClient';
+import { savePreferencesToServer } from '../services/agentClient';
 
 const ONBOARDING_COMPLETE_KEY = 'eventpulse.onboarding_complete';
 const PREFERENCES_KEY = 'eventpulse.preferences.categories';

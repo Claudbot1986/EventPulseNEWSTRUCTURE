@@ -26,7 +26,7 @@
  * a silent "looks like it works" loopback.
  */
 
-import { getOrCreateAnonUserId, loadAuthSession } from './storage';
+import { getOrCreateAnonUserId, isAuthenticated, loadAuthSession } from './storage';
 import { markOnline as notifyNetworkOnline } from './networkContext';
 
 /** Never let connectivity bookkeeping fail a successful fetch. */
@@ -58,6 +58,21 @@ export async function getAuthHeader() {
     return {};
   }
   return { Authorization: `Bearer ${session.access_token}` };
+}
+
+/**
+ * Guest mode (UserPicker removal): every user-scoped /agent/* endpoint is
+ * requireUser-gated server-side — without a persisted Supabase session the
+ * request can only 401. Fail fast WITHOUT a network round-trip and surface
+ * the stable 'auth' signal (or an AUTH_REQUIRED throw for the throwing
+ * family) so UI surfaces land in their login-nudge path instead of showing
+ * an opaque error. Every gated export starts with this check, before even
+ * argument validation, so guests get a uniform answer.
+ */
+function authRequiredError() {
+  const err = new Error('auth required — no Supabase session');
+  err.code = 'AUTH_REQUIRED';
+  return err;
 }
 
 const AGENT_BASE_URL = process.env.EXPO_PUBLIC_AGENT_URL;
@@ -117,6 +132,7 @@ async function pickReachableAgentBase(timeoutMs = 2500) {
 const DEFAULT_TIMEOUT_MS = 12_000;
 
 export async function chatWithAgent({ message, sessionId, origin, signal, timeoutMs = DEFAULT_TIMEOUT_MS }) {
+  if (!(await isAuthenticated())) throw authRequiredError();
   if (!message || typeof message !== 'string') {
     throw new Error('message is required');
   }
@@ -203,6 +219,7 @@ export async function recordEventInteraction({
   rejectReason,
   timeoutMs = 4_000,
 }) {
+  if (!(await isAuthenticated())) return { ok: false, warning: 'auth' };
   if (!eventId || !interaction) return { ok: false, warning: 'missing fields' };
   let baseUrl;
   try {
@@ -249,6 +266,7 @@ export async function recordEventInteraction({
  * @returns {Promise<{ ok: boolean }>}
  */
 export async function savePreferencesToServer({ categories }, { signal, timeoutMs = 5000 } = {}) {
+  if (!(await isAuthenticated())) return { ok: false, warning: 'auth' };
   let baseUrl;
   try {
     baseUrl = requireAgentBaseUrl();
@@ -293,6 +311,7 @@ export async function savePreferencesToServer({ categories }, { signal, timeoutM
  * @returns {Promise<{ ok: boolean, warning?: string }>}
  */
 export async function recordAttendance({ eventId, signal, timeoutMs = 4_000 }) {
+  if (!(await isAuthenticated())) return { ok: false, warning: 'auth' };
   if (!eventId || typeof eventId !== 'string') {
     return { ok: false, warning: 'missing eventId' };
   }
@@ -345,6 +364,7 @@ export async function recordAttendance({ eventId, signal, timeoutMs = 4_000 }) {
  * @returns {Promise<{ ok: boolean, warning?: string }>}
  */
 export async function recordRating({ eventId, rating, note, signal, timeoutMs = 4_000 }) {
+  if (!(await isAuthenticated())) return { ok: false, warning: 'auth' };
   if (!eventId || typeof eventId !== 'string') {
     return { ok: false, warning: 'missing eventId' };
   }
@@ -539,6 +559,7 @@ export async function followEntity({
   signal,
   timeoutMs = 4_000,
 }) {
+  if (!(await isAuthenticated())) return { ok: false, warning: 'auth' };
   if (!entityId && !venueId && !artistSlug) {
     return { ok: false, warning: 'entity_id (or venue_id/artist_slug) is required' };
   }
@@ -604,6 +625,9 @@ export async function followEntity({
  * inspect `warning` to surface a transient error banner if desired.
  */
 export async function getFollowedEntities({ signal, timeoutMs = 4_000 } = {}) {
+  if (!(await isAuthenticated())) {
+    return { ok: false, venueIds: [], artistSlugs: [], count: 0, warning: 'auth' };
+  }
   let baseUrl;
   try {
     baseUrl = requireAgentBaseUrl();
@@ -763,6 +787,7 @@ export async function fetchFeed({ from, days = 7, signal, timeoutMs = 12_000 } =
  * HomeScreen card renderer stays uniform.
  */
 export async function fetchRecommendedEvents({ limit = 10, signal, timeoutMs = 12_000 } = {}) {
+  if (!(await isAuthenticated())) throw authRequiredError();
   const baseUrl = requireAgentBaseUrl();
   const url = new URL(`${baseUrl}/agent/recommended`);
   url.searchParams.set('limit', String(limit));
@@ -969,6 +994,7 @@ export async function shareSession({
   signal,
   timeoutMs = 6_000,
 } = {}) {
+  if (!(await isAuthenticated())) return { ok: false, warning: 'auth' };
   let baseUrl;
   try {
     baseUrl = requireAgentBaseUrl();
@@ -1207,6 +1233,7 @@ export async function registerPushToken({
   signal,
   timeoutMs = 4_000,
 } = {}) {
+  if (!(await isAuthenticated())) return { ok: false, warning: 'auth' };
   let baseUrl;
   try {
     baseUrl = requireAgentBaseUrl();
@@ -1269,6 +1296,7 @@ export async function setNotificationPrefs({
   signal,
   timeoutMs = 4_000,
 }) {
+  if (!(await isAuthenticated())) return { ok: false, warning: 'auth' };
   let baseUrl;
   try {
     baseUrl = requireAgentBaseUrl();
@@ -1307,6 +1335,7 @@ export async function setNotificationPrefs({
  * @returns {{ notification_prefs: Record<string, 'all'|'new_only'|'off'> }}
  */
 export async function getNotificationPrefs({ signal, timeoutMs = 4_000 } = {}) {
+  if (!(await isAuthenticated())) return { notification_prefs: {}, warning: 'auth' };
   let baseUrl;
   try {
     baseUrl = requireAgentBaseUrl();
@@ -1367,6 +1396,7 @@ export async function fetchCachedRecommendations({
   signal,
   timeoutMs = 12_000,
 } = {}) {
+  if (!(await isAuthenticated())) return { slots: [], generated_at: null, warning: 'auth' };
   const baseUrl = requireAgentBaseUrl();
   const url = new URL(`${baseUrl}/agent/cached-recommendations`);
   url.searchParams.set('limit', String(limit));
@@ -1574,6 +1604,7 @@ export async function fetchRecentQueries({
   signal,
   timeoutMs = 12_000,
 } = {}) {
+  if (!(await isAuthenticated())) return { queries: [], warning: 'auth' };
   const baseUrl = requireAgentBaseUrl();
   const url = new URL(`${baseUrl}/agent/recent-queries`);
   url.searchParams.set('limit', String(limit));
@@ -1622,6 +1653,7 @@ export async function fetchRecentQueries({
  * HomeScreen card renderer stays uniform across sections.
  */
 export async function fetchSavedEvents({ limit = 50, signal, timeoutMs = 12_000 } = {}) {
+  if (!(await isAuthenticated())) throw authRequiredError();
   const baseUrl = requireAgentBaseUrl();
   const url = new URL(`${baseUrl}/agent/saved`);
   url.searchParams.set('limit', String(limit));
@@ -1718,12 +1750,15 @@ export async function fetchSavedEvents({ limit = 50, signal, timeoutMs = 12_000 
  *      don't accidentally hit a now-gone user's data.
  *   2. analyticsClient.logout() — drain the analytics queue and stop the
  *      flush loop (mirrors handleLogout in ProfileScreen).
- *   3. onLoggedOut() — flip the AppShell gate back to UserPicker.
+ *   3. onLoggedOut() — flip the AppShell gate back to the guest surface.
  *
  * @param {{ signal?: AbortSignal, timeoutMs?: number }} [opts]
  * @returns {Promise<{ ok: boolean, status?: number, error?: string }>}
  */
 export async function deleteAccount({ signal, timeoutMs = 12_000 } = {}) {
+  // No session = nothing the server can attribute the delete to. Refuse
+  // locally rather than letting the caller believe the account is gone.
+  if (!(await isAuthenticated())) return { ok: false, error: 'auth' };
   const baseUrl = requireAgentBaseUrl();
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), timeoutMs);
