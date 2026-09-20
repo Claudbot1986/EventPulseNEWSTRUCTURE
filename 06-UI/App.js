@@ -7,6 +7,7 @@ import { fetchFeed, addDays, fetchEventIcs, shareSession, fetchSharedSession, pa
 import { useI18n } from './i18n';
 import { dateNamesFor } from './i18n/dateNames';
 import { isAuthDeepLink, isDinHelgDeepLink } from './services/deepLinkRouter';
+import { hasWeekendIntent } from './utils/weekendIntent';
 import { useAiImageUrl } from './hooks/useAiImageUrl';
 import Toast from './components/Toast';
 import PushPromptModal from './components/PushPromptModal';
@@ -539,6 +540,17 @@ function HomeScreen({ onEventPress, scrollPositionRef, pendingPrompt, dismissPen
   const [searchHidden, setSearchHidden] = useState(false);
   const searchLastYRef = useRef(0);
   const searchBarAnim = useRef(new Animated.Value(0)).current; // 0 = visible, 1 = hidden
+
+  // Weekend chips on Hem ("Gratis i helgen", "Vad händer i helgen?", …)
+  // previously only put up a banner over the unfiltered week list — the tap
+  // never applied the weekend filter, so users landed on imorgon/måndag.
+  // Detect weekend intent (all 10 locales, utils/weekendIntent.js) and apply
+  // the real 'helgen' time filter. Verified by utils/weekendIntent.test.ts.
+  useEffect(() => {
+    if (!pendingPrompt) return;
+    if (!hasWeekendIntent(pendingPrompt)) return;
+    setTimeFilter((prev) => (prev === 'helgen' ? prev : 'helgen'));
+  }, [pendingPrompt]);
   // Pagination: `weekStart` advances by 7 days on each scroll-end load.
   const [weekStart, setWeekStart] = useState(() => new Date().toISOString().slice(0, 10));
   const [hasMore, setHasMore] = useState(true);
