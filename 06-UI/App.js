@@ -2,12 +2,12 @@ import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { StatusBar } from 'expo-status-bar';
 import { StyleSheet, Text, View, SectionList, ActivityIndicator, TouchableOpacity, ScrollView, Linking, Image, Platform, Share, Alert, AppState, Pressable } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { fetchFeed, addDays, fetchEventIcs, shareSession, fetchSharedSession, parseShareHashFromUrl } from './services/agentClient';
+import { fetchFeed, addDays, fetchEventIcs, shareSession, fetchSharedSession, parseShareHashFromUrl, recordEventInteraction } from './services/agentClient';
 import { isAuthDeepLink } from './services/deepLinkRouter';
 import { useAiImageUrl } from './hooks/useAiImageUrl';
 import { analyticsClient } from './services/analyticsClient';
 import ProfileScreen from './screens/ProfileScreen';
-import { getItem, getOrCreateAnonUserId, removeItem, setItem, PENDING_AGENT_MESSAGE_KEY } from './services/storage';
+import { getItem, getOrCreateAnonUserId, removeItem, setItem, PENDING_AGENT_MESSAGE_KEY, PENDING_EVENT_KEY } from './services/storage';
 
 const TOKENS = {
   color: {
@@ -940,6 +940,15 @@ function DetailsScreen({ event, onBack }) {
     const next = !saved;
     setSaved(next);
     void analyticsClient.eventSave(event.id, next ? 'save' : 'unsave');
+    // NOW#2 fix: persist the save to /agent/feedback so the guest's taste
+    // (and Hem → Sparade) actually sees it. Best-effort, never throws; the
+    // 'auth' warning path is unreachable here because AppShell's bootstrap
+    // guarantees a session (anonymous counts) before this tab renders.
+    // NOTE: un-save has no server interaction yet — toggling off stays
+    // UI-local (analytics-only), tracked as a follow-up gap.
+    if (next) {
+      recordEventInteraction({ eventId: event.id, interaction: 'save' }).catch(() => {});
+    }
   };
 
   const handleDismiss = () => {
@@ -1195,6 +1204,38 @@ export default function App({ onUserLoggedOut, onOpenLogin }) {
   const dismissPendingPrompt = useCallback(() => {
     setPendingPrompt(null);
     removeItem(PENDING_AGENT_MESSAGE_KEY).catch(() => {});
+  }, []);
+
+  // NOW#2 fix — Home event-card tap. AppShell writes the tapped EventCard
+  // as JSON under PENDING_EVENT_KEY and switches to the explore tab; this
+  // tree mounts fresh, so a mount-time read is sufficient. We open the
+  // shared DetailsScreen with the card payload (same object shape the feed
+  // produces) and clear the key so a later explore visit does not reopen it.
+  // Malformed payloads clear silently and stay on the browse surface.
+  useEffect(() => {
+    let cancelled = false;
+    getItem(PENDING_EVENT_KEY)
+      .then((raw) => {
+        if (cancelled || !raw) return;
+        let event = null;
+        try {
+          const parsed = JSON.parse(raw);
+          if (parsed && typeof parsed.id === 'string' && parsed.id.length > 0) {
+            event = parsed;
+          }
+        } catch (_err) {
+          event = null;
+        }
+        removeItem(PENDING_EVENT_KEY).catch(() => {});
+        if (event) {
+          setSelectedEvent(event);
+          void analyticsClient.eventView(event.id, event.source, event.category);
+        }
+      })
+      .catch(() => {});
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   // T0061 — deep-link handler. Two surfaces: cold-start (`getInitialURL`)

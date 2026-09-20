@@ -15,9 +15,10 @@
  *     by App.js for the default browse view, so we share the wire contract).
  *   - Client-side filters where the agent API doesn't expose the dimension
  *     (time-of-day, is_free) — keeps the agent API surface unchanged.
- *   - Saved section is deferred (no GET /agent/saved endpoint yet; saves are
- *     stored via POST /agent/feedback). When a list-saves endpoint lands, it
- *     slots in here without touching other sections.
+ *   - Saved section reads GET /agent/saved (saves via POST /agent/feedback
+ *     land there for the current identity — anonymous sessions included).
+ *   - Card taps forward to AppShell → explore tab's DetailsScreen (Spara,
+ *     Kalender, Dela) via the PENDING_EVENT_KEY hand-off (App.js pattern).
  *
  * Empty state: each section renders its own "— inga evenemang —" line so the
  * user always sees that the section is wired up, not broken.
@@ -1075,12 +1076,13 @@ function SavedSection({ onCardPress }) {
 // users. Sessions self-hide when their backend has nothing for this identity
 // (RecentSearches/AgentSuggestions → null, Saved → "inga sparade ännu").
 
-export default function HomeScreen({ onChipPress }) {
+export default function HomeScreen({ onChipPress, onCardPress }) {
   const handleCardPress = useCallback((event) => {
-    // The browse tab owns external-link handling via sourceLinks.js.
-    // HomeScreen stays declarative until a details screen lands (Phase 2 retention).
-    void event;
-  }, []);
+    // NOW#2 fix: forward to AppShell, which hands the event to the explore
+    // tab's DetailsScreen (same surface as a Utforska card tap — with Spara,
+    // Kalender, Dela). Previously a deliberate no-op; read as a dead card.
+    if (typeof onCardPress === 'function') onCardPress(event);
+  }, [onCardPress]);
 
   const handlePromptPress = useCallback((prompt) => {
     if (typeof onChipPress === 'function') onChipPress(prompt);

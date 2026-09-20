@@ -37,6 +37,10 @@ export const ANON_USER_ID_KEY = 'eventpulse.anon_user_id';
  *  does not import AppShell (that cycle left AppShell exports
  *  uninitialized on Expo Go). */
 export const PENDING_AGENT_MESSAGE_KEY = 'eventpulse.pending_agent_message';
+/** HomeScreen event-card tap → App.js opens DetailsScreen for the event.
+ *  JSON-serialized EventCard, written by AppShell and consumed (read+clear)
+ *  by App.js on explore-tab mount. Same cycle-avoidance as the prompt key. */
+export const PENDING_EVENT_KEY = 'eventpulse.pending_event';
 /** User dismissed the "register your email" reminder popup with the
  *  "Påminn mig inte igen" checkbox. Stored as '1' once opted-out; absence
  *  or any other value means the reminder may still show after 30s. */

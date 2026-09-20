@@ -29,6 +29,7 @@ import {
   setItem,
   saveAuthSession,
   PENDING_AGENT_MESSAGE_KEY,
+  PENDING_EVENT_KEY,
   getAuthPopupDismissed,
   setAuthPopupDismissed,
 } from './services/storage';
@@ -238,6 +239,16 @@ export default function AppShell() {
     setActiveTab('explore');
   };
 
+  // Home-screen event card tap → hand the whole EventCard to the explore
+  // tab (App.js mounts fresh on tab switch and opens its DetailsScreen for
+  // the pending event). JSON round-trip keeps AppShell free of EventCard
+  // shape knowledge beyond the id guard.
+  const handleHomeCardPress = (event) => {
+    if (!event || typeof event.id !== 'string' || event.id.length === 0) return;
+    setItem(PENDING_EVENT_KEY, JSON.stringify(event)).catch(() => {});
+    setActiveTab('explore');
+  };
+
   // Auth-reminder popup: only for guests (anonymous Supabase session from
   // the NOW#2 bootstrap) who have not previously opted out via the
   // "Påminn mig inte igen" checkbox. Logged-in (permanent) users never see
@@ -343,7 +354,7 @@ export default function AppShell() {
           />
         )}
         {activeTab === 'home' && (
-          <HomeScreen onChipPress={handleChipPress} />
+          <HomeScreen onChipPress={handleChipPress} onCardPress={handleHomeCardPress} />
         )}
         {activeTab === 'notifications' && (
           <NotificationsScreen onOpenLogin={() => setShowLogin(true)} />
