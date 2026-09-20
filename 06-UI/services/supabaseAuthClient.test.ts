@@ -480,6 +480,29 @@ describe('NOW#3 — signInWithEmail identity linking', () => {
     expect(authMock.updateUser).not.toHaveBeenCalled();
   });
 
+  it('gäst + adress som redan är registrerad (422 email_exists) → fallback: magic link in i befintligt konto', async () => {
+    // Bevisat mot live-GoTrue 2026-09-20: updateUser mot en tagen adress
+    // svarar 422 'A user with this email address has already been registered'.
+    // Länkning är omöjlig — användarens RIKTIGA konto är det som äger
+    // adressen, så gästen ska i stället få en klassisk inloggningslänk
+    // (den anonyma identiteten överges; den bär ingenting värt att rädda
+    // jämfört med att strandning av det permanenta kontot).
+    await saveAuthSession(anonSession());
+    authMock.setSession.mockResolvedValue({ data: { session: anonSession() }, error: null });
+    authMock.updateUser.mockResolvedValue({
+      data: { user: null },
+      error: { message: 'A user with this email address has already been registered', status: 422, code: 'email_exists' },
+    });
+
+    const result = await signInWithEmail(LINK_EMAIL);
+
+    expect(result).toEqual({ error: null, mode: 'signin' });
+    expect(authMock.signInWithOtp).toHaveBeenCalledWith({
+      email: LINK_EMAIL,
+      options: { emailRedirectTo: AUTH_WEB_REDIRECT, shouldCreateUser: false },
+    });
+  });
+
   it('updateUser-fel bubblar upp som { error } med mode link', async () => {
     await saveAuthSession(anonSession());
     authMock.setSession.mockResolvedValue({ data: { session: anonSession() }, error: null });
@@ -489,6 +512,7 @@ describe('NOW#3 — signInWithEmail identity linking', () => {
 
     expect(result.mode).toBe('link');
     expect(result.error).toBe('rate limited');
+    expect(authMock.signInWithOtp).not.toHaveBeenCalled(); // bara 422 email_exists faller över till signin
   });
 
   it('setSession misslyckas i link-läge → fel sätts, updateUser anropas aldrig', async () => {

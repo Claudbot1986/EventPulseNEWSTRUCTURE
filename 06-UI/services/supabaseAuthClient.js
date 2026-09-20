@@ -412,6 +412,9 @@ function pickAgentBaseUrl() {
  *     rows (keyed on auth.uid()) follow automatically. signInWithOtp must
  *     NEVER be used here: it would mint a brand-new user and strand the
  *     accumulated taste in the anonymous account.
+ *     Exception: if GoTrue answers 422 / 'email_exists' the address already
+ *     owns a permanent account — linking is impossible, so we transparently
+ *     fall back to a magic link INTO that account (mode 'signin').
  *
  * @param {string} email
  * @param {{ timeoutMs?: number }} [opts]
@@ -450,7 +453,32 @@ export async function signInWithEmail(email, { timeoutMs = 15_000 } = {}) {
           { email },
           { emailRedirectTo: authRedirectTo() },
         );
-        if (error) return { error: error.message || 'link_failed', mode };
+        if (error) {
+          // Address already registered (live-verified 2026-09-20: GoTrue
+          // answers 422 / error_code 'email_exists'). Linking is then
+          // impossible — the permanent account owning the address IS the
+          // user's real account, so fall back to a classic magic link INTO
+          // it. shouldCreateUser stays false: we only get here because the
+          // server just told us the account exists. The anonymous identity
+          // is abandoned on purpose — the email link signs the device into
+          // the permanent account and its taste (Sparade etc.) comes back.
+          const emailTaken =
+            error?.code === 'email_exists' || error?.status === 422;
+          if (emailTaken) {
+            const { error: otpError } = await supabaseAuth.auth.signInWithOtp({
+              email,
+              options: {
+                emailRedirectTo: authRedirectTo(),
+                shouldCreateUser: false,
+              },
+            });
+            if (otpError) {
+              return { error: otpError.message || 'signin_failed', mode: 'signin' };
+            }
+            return { error: null, mode: 'signin' };
+          }
+          return { error: error.message || 'link_failed', mode };
+        }
         return { error: null, mode };
       }
       const { error } = await supabaseAuth.auth.signInWithOtp({
