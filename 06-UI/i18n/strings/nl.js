@@ -392,6 +392,11 @@ export default {
     'Ontvang elke donderdag om 17:00 een melding met uitgekozen events voor het weekend.',
   'profile.pushDinHelgSwitchA11y': 'Pushmeldingen voor Jouw weekend',
 
+  // ─── Explore search (2026-09-20) ─────────────────────────────────────────
+  'explore.searchPlaceholder': 'Zoek evenementen…',
+  'explore.searchA11y': 'Zoekveld',
+  'explore.noSearchResults': 'Geen resultaten voor \"{q}\"',
+
   // ─── Rank reasons (chips on cards + agent labels) ───────────────────────
   'reason.time_fit.label': 'Goede tijd',
   'reason.time_fit.full': 'Past binnen het tijdvenster',

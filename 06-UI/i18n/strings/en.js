@@ -396,6 +396,11 @@ export default {
     'Get a notification every Thursday at 5 pm with a curated weekend lineup.',
   'profile.pushDinHelgSwitchA11y': 'Push notifications for Your weekend',
 
+  // ─── Explore search (2026-09-20) ─────────────────────────────────────────
+  'explore.searchPlaceholder': 'Search events…',
+  'explore.searchA11y': 'Search field',
+  'explore.noSearchResults': 'No results for \"{q}\"',
+
   // ─── Rank reasons (chips on cards + agent labels) ───────────────────────
   'reason.time_fit.label': 'Good time',
   'reason.time_fit.full': 'Matches the time window',

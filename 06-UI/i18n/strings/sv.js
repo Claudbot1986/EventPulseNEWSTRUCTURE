@@ -399,6 +399,11 @@ export default {
     'Få en notis varje torsdag 17:00 med utvalda events för helgen.',
   'profile.pushDinHelgSwitchA11y': 'Push-notiser för Din helg',
 
+  // ─── Explore search (2026-09-20) ─────────────────────────────────────────
+  'explore.searchPlaceholder': 'Sök event…',
+  'explore.searchA11y': 'Sökfält',
+  'explore.noSearchResults': 'Inga träffar på \"{q}\"',
+
   // ─── Rank reasons (chips on cards + agent labels) ───────────────────────
   'reason.time_fit.label': 'Bra tid',
   'reason.time_fit.full': 'Matchar tidsfönstret',

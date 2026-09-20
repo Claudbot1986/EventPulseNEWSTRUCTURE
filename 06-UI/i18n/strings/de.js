@@ -398,6 +398,11 @@ export default {
     'Jeden Donnerstag um 17:00 Uhr eine Mitteilung mit ausgewählten Events fürs Wochenende.',
   'profile.pushDinHelgSwitchA11y': 'Push-Mitteilungen für Dein Wochenende',
 
+  // ─── Explore search (2026-09-20) ─────────────────────────────────────────
+  'explore.searchPlaceholder': 'Events suchen…',
+  'explore.searchA11y': 'Suchfeld',
+  'explore.noSearchResults': 'Keine Treffer für \"{q}\"',
+
   // ─── Rank reasons (chips on cards + agent labels) ───────────────────────
   'reason.time_fit.label': 'Gute Zeit',
   'reason.time_fit.full': 'Passt ins Zeitfenster',

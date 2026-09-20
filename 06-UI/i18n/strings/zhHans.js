@@ -391,6 +391,11 @@ export default {
   'profile.pushDinHelgDesc': '每周四 17:00 收到一条通知，内含本周末的精选活动。',
   'profile.pushDinHelgSwitchA11y': '“你的周末”推送通知',
 
+  // ─── Explore search (2026-09-20) ─────────────────────────────────────────
+  'explore.searchPlaceholder': '搜索活动…',
+  'explore.searchA11y': '搜索框',
+  'explore.noSearchResults': '没有找到“{q}”的结果',
+
   // ─── Rank reasons (chips on cards + agent labels) ───────────────────────
   'reason.time_fit.label': '时间合适',
   'reason.time_fit.full': '符合时间范围',

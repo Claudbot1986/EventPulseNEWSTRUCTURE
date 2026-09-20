@@ -393,6 +393,11 @@ export default {
     'Una notifica ogni giovedì alle 17:00 con una selezione di eventi per il weekend.',
   'profile.pushDinHelgSwitchA11y': 'Notifiche push per Il tuo weekend',
 
+  // ─── Explore search (2026-09-20) ─────────────────────────────────────────
+  'explore.searchPlaceholder': 'Cerca eventi…',
+  'explore.searchA11y': 'Campo di ricerca',
+  'explore.noSearchResults': 'Nessun risultato per \"{q}\"',
+
   // ─── Rank reasons (chips on cards + agent labels) ───────────────────────
   'reason.time_fit.label': 'Orario giusto',
   'reason.time_fit.full': 'Corrisponde alla fascia oraria',

@@ -398,6 +398,11 @@ export default {
     'Saat ilmoituksen joka torstai klo 17 valikoiduista viikonlopun tapahtumista.',
   'profile.pushDinHelgSwitchA11y': 'Push-ilmoitukset kohdalle Viikonloppusi',
 
+  // ─── Explore search (2026-09-20) ─────────────────────────────────────────
+  'explore.searchPlaceholder': 'Hae tapahtumia…',
+  'explore.searchA11y': 'Hakukenttä',
+  'explore.noSearchResults': 'Ei tuloksia haulle \"{q}\"',
+
   // ─── Rank reasons (chips on cards + agent labels) ───────────────────────
   'reason.time_fit.label': 'Hyvä aika',
   'reason.time_fit.full': 'Sopii aikaikkunaan',

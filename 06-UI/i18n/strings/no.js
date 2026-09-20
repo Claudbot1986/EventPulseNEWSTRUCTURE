@@ -398,6 +398,11 @@ export default {
     'Få et varsel hver torsdag kl. 17 med et utvalg arrangementer for helgen.',
   'profile.pushDinHelgSwitchA11y': 'Push-varsler for Helgen din',
 
+  // ─── Explore search (2026-09-20) ─────────────────────────────────────────
+  'explore.searchPlaceholder': 'Søk etter arrangementer…',
+  'explore.searchA11y': 'Søkefelt',
+  'explore.noSearchResults': 'Ingen treff på \"{q}\"',
+
   // ─── Rank reasons (chips on cards + agent labels) ───────────────────────
   'reason.time_fit.label': 'Bra tid',
   'reason.time_fit.full': 'Matcher tidsvinduet',

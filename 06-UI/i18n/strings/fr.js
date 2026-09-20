@@ -393,6 +393,11 @@ export default {
     'Une notification chaque jeudi à 17h avec une sélection d’événements pour le week-end.',
   'profile.pushDinHelgSwitchA11y': 'Notifications push pour Ton week-end',
 
+  // ─── Explore search (2026-09-20) ─────────────────────────────────────────
+  'explore.searchPlaceholder': 'Rechercher des événements…',
+  'explore.searchA11y': 'Champ de recherche',
+  'explore.noSearchResults': 'Aucun résultat pour \"{q}\"',
+
   // ─── Rank reasons (chips on cards + agent labels) ───────────────────────
   'reason.time_fit.label': 'Bon horaire',
   'reason.time_fit.full': 'Correspond au créneau horaire',
