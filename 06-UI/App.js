@@ -8,6 +8,7 @@ import { useI18n } from './i18n';
 import { dateNamesFor } from './i18n/dateNames';
 import { isAuthDeepLink, isDinHelgDeepLink } from './services/deepLinkRouter';
 import { hasWeekendIntent } from './utils/weekendIntent';
+import { localIsoOf, weekendFeedAnchorIso } from './screens/home/happeningNow';
 import { useAiImageUrl } from './hooks/useAiImageUrl';
 import Toast from './components/Toast';
 import PushPromptModal from './components/PushPromptModal';
@@ -546,11 +547,40 @@ function HomeScreen({ onEventPress, scrollPositionRef, pendingPrompt, dismissPen
   // never applied the weekend filter, so users landed on imorgon/måndag.
   // Detect weekend intent (all 10 locales, utils/weekendIntent.js) and apply
   // the real 'helgen' time filter. Verified by utils/weekendIntent.test.ts.
+  //
+  // Two companion fixes (2026-09-20, "låst läge" + empty helgen):
+  //  - /agent/feed pages are 50 events ascending from `from`, so on dense
+  //    weeks Sat/Sun rows never reach the client → re-anchor the window at
+  //    the weekend (weekendFeedAnchorIso: Sat/Sun → today, else coming Sat).
+  //  - Auto-applied filter is tracked in weekendFilterAppliedRef: a later
+  //    NON-weekend chip (or a banner dismiss) clears it, so the view is
+  //    never stuck on 'helgen' after the intent moved on. Manual pill taps
+  //    are never touched by this bookkeeping.
+  const weekendFilterAppliedRef = useRef(false);
   useEffect(() => {
     if (!pendingPrompt) return;
-    if (!hasWeekendIntent(pendingPrompt)) return;
-    setTimeFilter((prev) => (prev === 'helgen' ? prev : 'helgen'));
+    if (hasWeekendIntent(pendingPrompt)) {
+      setTimeFilter((prev) => (prev === 'helgen' ? prev : 'helgen'));
+      weekendFilterAppliedRef.current = true;
+      loadEventsRef.current?.({ append: false, fromOverride: weekendFeedAnchorIso() });
+      return;
+    }
+    if (weekendFilterAppliedRef.current) {
+      weekendFilterAppliedRef.current = false;
+      setTimeFilter((prev) => (prev === 'helgen' ? null : prev));
+      loadEventsRef.current?.({ append: false, fromOverride: localIsoOf(new Date()) });
+    }
   }, [pendingPrompt]);
+
+  // Banner dismiss unwinds only what the chip auto-applied — a helgen filter
+  // the user tapped by hand stays exactly as they left it.
+  const handleDismissPendingPrompt = useCallback(() => {
+    if (weekendFilterAppliedRef.current) {
+      weekendFilterAppliedRef.current = false;
+      setTimeFilter((prev) => (prev === 'helgen' ? null : prev));
+    }
+    dismissPendingPrompt();
+  }, [dismissPendingPrompt]);
   // Pagination: `weekStart` advances by 7 days on each scroll-end load.
   const [weekStart, setWeekStart] = useState(() => new Date().toISOString().slice(0, 10));
   const [hasMore, setHasMore] = useState(true);
@@ -560,6 +590,12 @@ function HomeScreen({ onEventPress, scrollPositionRef, pendingPrompt, dismissPen
   const sectionListRef = useRef(null);
   const scrollPositionRefLocal = useRef(0);
   const isFetchingRef = useRef(false);
+  // One-deep queue for non-append loads requested while another load is in
+  // flight (e.g. a weekend chip anchors the window at Saturday a tick after
+  // the mount-time today-load). Without this the guard below silently
+  // DROPPED the anchor fetch → 'helgen' filter applied to a today-window
+  // list and matched zero rows on dense weeks.
+  const queuedFromRef = useRef(null);
   // Track the latest loadEvents so the AppState listener below doesn't
   // capture a stale closure. loadEvents identity changes whenever weekStart
   // changes; the listener only fires on foreground transitions but should
@@ -583,7 +619,13 @@ function HomeScreen({ onEventPress, scrollPositionRef, pendingPrompt, dismissPen
    */
   const loadEvents = useCallback(async (opts = {}) => {
     const { append = false, fromOverride = null } = opts;
-    if (isFetchingRef.current) return;
+    if (isFetchingRef.current) {
+      // Non-append requests (anchor jumps, foreground refresh) must not be
+      // dropped — remember the latest one and run it when the in-flight
+      // load settles. Append calls stay droppable (scroll-end spam).
+      if (!append) queuedFromRef.current = { fromOverride };
+      return;
+    }
 
     isFetchingRef.current = true;
     if (append) setLoadingMore(true); else setLoading(true);
@@ -620,6 +662,11 @@ function HomeScreen({ onEventPress, scrollPositionRef, pendingPrompt, dismissPen
       setLoading(false);
       setLoadingMore(false);
       isFetchingRef.current = false;
+      const queued = queuedFromRef.current;
+      if (queued) {
+        queuedFromRef.current = null;
+        loadEvents({ append: false, fromOverride: queued.fromOverride });
+      }
     }
   }, [weekStart, t]);
 
@@ -889,7 +936,7 @@ function HomeScreen({ onEventPress, scrollPositionRef, pendingPrompt, dismissPen
                 </Text>
                 <TouchableOpacity
                   style={styles.pendingPromptDismiss}
-                  onPress={dismissPendingPrompt}
+                  onPress={handleDismissPendingPrompt}
                   accessibilityRole="button"
                   accessibilityLabel={t('common.close')}
                 >
@@ -1324,7 +1371,7 @@ function DetailsScreen({ event, onBack }) {
   );
 }
 
-export default function App({ onUserLoggedOut, onOpenLogin }) {
+export default function App({ onUserLoggedOut, onOpenLogin, chipNonce = 0 }) {
   const { t } = useI18n();
   const [selectedEvent, setSelectedEvent] = useState(null);
   const scrollPositionRef = useRef(0);
@@ -1349,6 +1396,12 @@ export default function App({ onUserLoggedOut, onOpenLogin }) {
   // AppShell writes `eventpulse.pending_agent_message` and switches to the
   // explore tab; App.js reads it here, surfaces a banner for context, and
   // clears the key on dismiss so it doesn't reappear on next mount.
+  //
+  // Deps [chipNonce] (2026-09-20, "låst läge" fix): with keep-alive tabs
+  // this tree mounts ONCE, so a mount-only drain never saw later chip
+  // taps. AppShell bumps chipNonce on every chip/card hand-off; each bump
+  // re-drains, and every new weekend prompt re-applies its filter via the
+  // inner view's weekend-intent effect.
   const [pendingPrompt, setPendingPrompt] = useState(null);
   // T0078 — tab navigation. 'home' | 'map' | 'saved' | 'notifications' | 'profile'
   const [activeTab, setActiveTab] = useState('home');
@@ -1364,18 +1417,21 @@ export default function App({ onUserLoggedOut, onOpenLogin }) {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [chipNonce]);
   const dismissPendingPrompt = useCallback(() => {
     setPendingPrompt(null);
     removeItem(PENDING_AGENT_MESSAGE_KEY).catch(() => {});
   }, []);
 
   // NOW#2 fix — Home event-card tap. AppShell writes the tapped EventCard
-  // as JSON under PENDING_EVENT_KEY and switches to the explore tab; this
-  // tree mounts fresh, so a mount-time read is sufficient. We open the
-  // shared DetailsScreen with the card payload (same object shape the feed
-  // produces) and clear the key so a later explore visit does not reopen it.
-  // Malformed payloads clear silently and stay on the browse surface.
+  // as JSON under PENDING_EVENT_KEY and switches to the explore tab. We open
+  // the shared DetailsScreen with the card payload (same object shape the
+  // feed produces) and clear the key so a later explore visit does not
+  // reopen it. Malformed payloads clear silently and stay on the browse
+  // surface.
+  // Deps [chipNonce]: same keep-alive fix as the prompt drain above —
+  // without it, card taps from Hem stopped working after the first explore
+  // visit because this effect never re-ran.
   useEffect(() => {
     let cancelled = false;
     getItem(PENDING_EVENT_KEY)
@@ -1400,7 +1456,7 @@ export default function App({ onUserLoggedOut, onOpenLogin }) {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [chipNonce]);
 
   // T0061 — deep-link handler. Two surfaces: cold-start (`getInitialURL`)
   // and warm-start (`addEventListener('url', ...)`). Both resolve into a
@@ -1637,6 +1693,9 @@ const styles = StyleSheet.create({
   },
   searchBoxWrap: {
     flex: 1,
+    // Let the search box yield below its content width before the Filter
+    // toggle can overflow the row (RN default flexShrink is 0).
+    minWidth: 0,
     overflow: 'hidden',
   },
   searchBox: {

@@ -286,20 +286,27 @@ export default function AppShell() {
     setUserState('guest');
   };
 
+  // Hand-off nonce (2026-09-20, "låst läge" fix): explore's <App> stays
+  // mounted via keep-alive tabs, so its AsyncStorage drains only re-run when
+  // this counter changes. Every chip/card hand-off bumps it.
+  const [chipNonce, setChipNonce] = useState(0);
+
   const handleChipPress = (prompt) => {
     const text = prompt?.prompt_text;
     if (typeof text !== 'string' || text.length === 0) return;
     setItem(PENDING_AGENT_MESSAGE_KEY, text).catch(() => {});
+    setChipNonce((n) => n + 1);
     setActiveTab('explore');
   };
 
   // Home-screen event card tap → hand the whole EventCard to the explore
-  // tab (App.js mounts fresh on tab switch and opens its DetailsScreen for
-  // the pending event). JSON round-trip keeps AppShell free of EventCard
+  // tab. App.js's drain effect (deps [chipNonce]) opens its DetailsScreen
+  // for the pending event. JSON round-trip keeps AppShell free of EventCard
   // shape knowledge beyond the id guard.
   const handleHomeCardPress = (event) => {
     if (!event || typeof event.id !== 'string' || event.id.length === 0) return;
     setItem(PENDING_EVENT_KEY, JSON.stringify(event)).catch(() => {});
+    setChipNonce((n) => n + 1);
     setActiveTab('explore');
   };
 
@@ -397,6 +404,7 @@ export default function AppShell() {
             <App
               onUserLoggedOut={handleUserLoggedOut}
               onOpenLogin={() => setShowLogin(true)}
+              chipNonce={chipNonce}
             />
           </View>
         )}
