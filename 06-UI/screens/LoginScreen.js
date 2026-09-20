@@ -157,6 +157,18 @@ export default function LoginScreen({ onCancel, onSuccess }) {
             >
               <Text style={styles.secondaryLabel}>Använd annan email</Text>
             </Pressable>
+            {/* Exit affordance: without this the sent state is a dead end —
+                the only way out was force-closing the app (discovered live
+                2026-09-20). Mirrors the Avbryt guard below. */}
+            {typeof onCancel === 'function' ? (
+              <Pressable
+                style={({ pressed }) => [styles.secondary, pressed && styles.pressed]}
+                onPress={onCancel}
+                accessibilityRole="button"
+              >
+                <Text style={styles.secondaryLabel}>Stäng</Text>
+              </Pressable>
+            ) : null}
           </View>
         ) : (
           <>
