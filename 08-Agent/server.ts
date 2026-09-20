@@ -1057,15 +1057,16 @@ export function buildApp(opts: {
   });
 
   /**
-   * GET /agent/saved?client_user_id=<uuid>&limit=<int>
+   * GET /agent/saved?limit=<int>
    *
    * T0054 / MVP-gap §77 (Phase 1 retention): saved events section in HomeScreen.
-   * Returns events the current client_user_id has saved (user_interactions
+   * Returns events the authenticated user has saved (user_interactions
    * with interaction='save'), enriched with full event details, sorted
    * newest-first by saved_at (created_at on the interaction row).
    *
-   * Lockdown mirrors /agent/follow: origin allowlist + service_role only.
-   * client_user_id is the same anon UUID the UI already sends.
+   * Lockdown mirrors /agent/follow: origin allowlist + Bearer JWT (requireUser)
+   * + service_role data access. Identity is the verified JWT's auth.users.id —
+   * any client_user_id in query/body is ignored. Anonymous sign-ins work as-is.
    *
    * Response shape:
    *   { events: EventCard[] }
@@ -1080,16 +1081,16 @@ export function buildApp(opts: {
   });
 
   /**
-   * GET /agent/notifications?client_user_id=<uuid>&limit=<int>
+   * GET /agent/notifications?limit=<int>
    *
    * T0048 / MVP-gap §77: read-side of the notification center. Returns
    * the user's notifications newest-first. The UI uses this to render
    * the three grouping buckets ("Påminnelse" / "Ny matchning" / "Svar")
    * per NotificationsScreen.js.
    *
-   * Lockdown mirrors /agent/chat: origin allowlist + service_role only.
-   * client_user_id is the same anon UUID the UI already sends — there
-   * is no login flow yet.
+   * Lockdown mirrors /agent/chat: origin allowlist + Bearer JWT (requireUser)
+   * + service_role data access. Identity is the verified JWT's auth.users.id —
+   * any client_user_id in query/body is ignored.
    *
    * Best-effort: never throws. A Supabase failure returns 500 with the
    * underlying message; the client treats that as "feed temporarily
@@ -1300,7 +1301,7 @@ export function buildApp(opts: {
   });
 
   /**
-   * GET /agent/recommended?client_user_id=<uuid>&limit=<int>
+   * GET /agent/recommended?limit=<int>
    *
    * T0056 / MVP-gap §77: AI-preference section in HomeScreen.
    * Returns top N future Stockholm events ranked by the user's declared and
@@ -1312,7 +1313,8 @@ export function buildApp(opts: {
    *   → mmrRerank (diversity, λ=0.7)
    *   → top N cards with reasons
    *
-   * Same lockdown as /agent/saved: origin allowlist + service_role only.
+   * Same lockdown as /agent/saved: origin allowlist + Bearer JWT (requireUser)
+   * + service_role data access; identity = verified JWT's auth.users.id.
    */
   app.get('/agent/recommended', generalLimiter.middleware, requireUser, async (req: Request, res: Response) => {
     const limit = typeof req.query.limit === 'string'
@@ -1446,7 +1448,9 @@ export function buildApp(opts: {
   });
 
   /**
-   * GET /agent/cached-recommendations?client_user_id=<uuid>&limit=<int>
+   * GET /agent/cached-recommendations?limit=<int>
+   *
+   * Auth: Bearer JWT (requireUser); identity = verified JWT's auth.users.id.
    *
    * T0060 / MVP-gap §77 (Phase 1 retention). Returns the 3 pre-rendered
    * slots the daily cron wrote into `cached_recommendations`. The HomeScreen
