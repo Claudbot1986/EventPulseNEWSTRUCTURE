@@ -24,6 +24,10 @@ const authMock = vi.hoisted(() => ({
   refreshSession: vi.fn(),
   updateUser: vi.fn(async (): Promise<AuthResult> => ({ data: { user: null }, error: null })),
   linkIdentity: vi.fn(async (): Promise<AuthResult> => ({ data: { session: null, user: null }, error: null })),
+  // bootstrapSession's identity-heal asks the server for the current user.
+  // Default = failure shape so pre-heal tests behave exactly as before
+  // (stale snapshot kept); the heal tests stub explicit outcomes.
+  getUser: vi.fn(async (): Promise<AuthResult> => ({ data: { user: null }, error: { message: 'not stubbed' } })),
 }));
 
 // signInWithApple (NOW#3 link branch) drives expo-apple-authentication; the
@@ -179,8 +183,10 @@ describe('AUTH_DEEP_LINK constant', () => {
 // Contract under test:
 //   1. No persisted session → signInAnonymously() once, session persisted,
 //      state 'guest' — taste can start accumulating from first launch.
-//   2. Valid persisted session → ZERO network calls, state derived from
-//      user.is_anonymous (true → 'guest', absent/false → 'logged_in').
+//   2. Valid persisted session → reused; one best-effort getUser() heals a
+//      stale is_anonymous snapshot (account converted while the device missed
+//      the deep link — the 2026-09-20 incident). Heal failure → persisted
+//      snapshot kept (offline-safe).
 //   3. Expired session + refresh_token → refreshSession() keeps the SAME
 //      user id (taste survives across days), refreshed session persisted.
 //   4. Expired + refresh rejected (revoked) → stale creds cleared, then a
@@ -233,23 +239,32 @@ describe('bootstrapSession', () => {
     expect(persisted?.user?.is_anonymous).toBe(true);
   });
 
-  it('valid anonymous session → reused as-is, zero auth calls, guest', async () => {
+  it('valid anonymous session → reused, no re-login, guest (heal is a no-op)', async () => {
     await saveAuthSession(anonSession());
+    authMock.getUser.mockResolvedValue({
+      data: { user: { id: 'u-anon-1', is_anonymous: true } },
+      error: null,
+    });
 
     const result = await bootstrapSession();
 
     expect(authMock.signInAnonymously).not.toHaveBeenCalled();
     expect(authMock.refreshSession).not.toHaveBeenCalled();
+    expect(authMock.getUser).toHaveBeenCalledWith('anon-access');
     expect(result.state).toBe('guest');
     expect(bootSessionOf(result)?.access_token).toBe('anon-access');
   });
 
-  it('valid permanent session → logged_in, zero auth calls', async () => {
+  it('valid permanent session → logged_in, no re-login', async () => {
     await saveAuthSession({
       access_token: 'perm-access',
       refresh_token: 'perm-refresh',
       expires_at: FUTURE,
       user: { id: 'u-perm', email: 'alice@example.com' },
+    });
+    authMock.getUser.mockResolvedValue({
+      data: { user: { id: 'u-perm', email: 'alice@example.com', is_anonymous: false } },
+      error: null,
     });
 
     const result = await bootstrapSession();
@@ -257,6 +272,64 @@ describe('bootstrapSession', () => {
     expect(authMock.signInAnonymously).not.toHaveBeenCalled();
     expect(result.state).toBe('logged_in');
     expect(bootSessionOf(result)?.user?.email).toBe('alice@example.com');
+  });
+
+  it('stale anon blob, server says the account converted → blob healed + state flips to logged_in', async () => {
+    // The 2026-09-20 incident: the account got its email confirmed while the
+    // device never saw the deep link (redirect died on localhost), so the
+    // persisted snapshot kept claiming is_anonymous=true forever.
+    await saveAuthSession(anonSession());
+    authMock.getUser.mockResolvedValue({
+      data: { user: { id: 'u-anon-1', email: 'alice@example.com', is_anonymous: false } },
+      error: null,
+    });
+
+    const result = await bootstrapSession();
+
+    expect(result.state).toBe('logged_in');
+    expect(authMock.signInAnonymously).not.toHaveBeenCalled();
+    const persisted = await persistedSession();
+    expect(persisted?.access_token).toBe('anon-access'); // tokens untouched
+    expect(persisted?.refresh_token).toBe('anon-refresh');
+    expect(persisted?.user?.is_anonymous).toBe(false);
+    expect(persisted?.user?.email).toBe('alice@example.com');
+  });
+
+  it('heal sees a matching snapshot → storage left byte-identical (no write churn)', async () => {
+    await saveAuthSession(anonSession());
+    const before = await loadAuthSession();
+    authMock.getUser.mockResolvedValue({
+      data: { user: { id: 'u-anon-1', is_anonymous: true } },
+      error: null,
+    });
+
+    const result = await bootstrapSession();
+
+    expect(result.state).toBe('guest');
+    expect(await loadAuthSession()).toEqual(before);
+  });
+
+  it('heal fails (offline / revoked) → stale snapshot kept, never throws', async () => {
+    await saveAuthSession(anonSession());
+    const before = await loadAuthSession();
+    authMock.getUser.mockResolvedValue({ data: { user: null }, error: { message: 'offline' } });
+
+    const result = await bootstrapSession();
+
+    expect(result.state).toBe('guest');
+    expect(bootSessionOf(result)?.access_token).toBe('anon-access');
+    expect(await loadAuthSession()).toEqual(before);
+  });
+
+  it('heal throws (socket hole) → stale snapshot kept, never throws', async () => {
+    await saveAuthSession(anonSession());
+    authMock.getUser.mockRejectedValue(new Error('socket closed'));
+
+    const result = await bootstrapSession();
+
+    expect(result.state).toBe('guest');
+    const persisted = await persistedSession();
+    expect(persisted?.user?.is_anonymous).toBe(true);
   });
 
   it('expired anonymous session → refresh keeps the SAME user id, persists', async () => {

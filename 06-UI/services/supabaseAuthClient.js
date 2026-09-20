@@ -126,10 +126,14 @@ if (typeof __DEV__ !== 'undefined' && __DEV__) {
  * NOW#2 — anonymous-first identity bootstrap.
  *
  * Call ONCE at app start (AppShell, after onboarding). Contract:
- *   1. Valid persisted session → reused as-is, ZERO network calls.
+ *   1. Valid persisted session → reused (no re-login). One best-effort
+ *      getUser() heals a stale is_anonymous snapshot — see
+ *      refreshPersistedIdentity. Any failure falls back to the persisted
+ *      snapshot, so offline launches keep the old zero-cost behaviour.
  *   2. Expired session with refresh_token → refreshSession() first, so a
  *      returning guest keeps the SAME auth.users.id and their accumulated
- *      taste (refresh rotation persists the renewed pair).
+ *      taste (refresh rotation persists the renewed pair — and the server's
+ *      fresh user object, which self-heals the snapshot on this path).
  *   3. No session, or refresh rejected (revoked) → signInAnonymously();
  *      the fresh anonymous session is persisted under the same key, so
  *      every requireUser-gated /agent/* call carries the anon Bearer JWT
@@ -142,13 +146,60 @@ if (typeof __DEV__ !== 'undefined' && __DEV__) {
  *
  * @returns {Promise<{ session: object|null, state: 'guest'|'logged_in' }>}
  */
+/**
+ * Heal a stale persisted identity snapshot against the server.
+ *
+ * The persisted blob reflects the moment saveAuthSession ran. If the account
+ * converted anonymous→permanent while this device missed the moment (an
+ * email-change confirmed while the deep link was undeliverable — the
+ * 2026-09-20 incident — manual linking on the server, or an admin change),
+ * the app would believe it is a guest FOREVER: the UI keeps offering
+ * "lägg till e-post" on an account that already has one. One cheap
+ * getUser() refreshes the snapshot; when the snapshot is already current
+ * storage is left byte-identical (no write churn on every cold start).
+ * Never throws, never blocks: offline / revoked / any error → caller keeps
+ * the stale snapshot exactly as before this heal existed.
+ *
+ * @param {object} existing - the persisted session (loadAuthSession result)
+ * @param {{ authenticated: boolean, isAnonymous: boolean }} identity
+ * @returns {Promise<{ authenticated: boolean, isAnonymous: boolean }>}
+ */
+async function refreshPersistedIdentity(existing, identity) {
+  try {
+    const { data, error } = await supabaseAuth.auth.getUser(existing.access_token);
+    const fresh = data?.user;
+    if (error || !fresh) return identity;
+    const freshAnonymous = fresh.is_anonymous === true;
+    const freshEmail =
+      typeof fresh.email === 'string' && fresh.email.length > 0 ? fresh.email : null;
+    const staleEmail = existing?.user?.email || null;
+    if (freshAnonymous === identity.isAnonymous && freshEmail === staleEmail) {
+      return identity; // snapshot already current — leave storage untouched
+    }
+    await saveAuthSession({
+      access_token: existing.access_token,
+      refresh_token: existing.refresh_token,
+      expires_at: existing.expires_at,
+      user: {
+        id: fresh.id || existing?.user?.id,
+        email: freshEmail,
+        is_anonymous: freshAnonymous,
+      },
+    });
+    return { authenticated: true, isAnonymous: freshAnonymous };
+  } catch (_err) {
+    return identity;
+  }
+}
+
 export async function bootstrapSession() {
   try {
     const existing = await loadAuthSession();
     if (existing && existing.access_token) {
       if (await isAuthenticated()) {
         const identity = await loadAuthIdentity();
-        return { session: existing, state: identity.isAnonymous ? 'guest' : 'logged_in' };
+        const healed = await refreshPersistedIdentity(existing, identity);
+        return { session: existing, state: healed.isAnonymous ? 'guest' : 'logged_in' };
       }
       // Expired — try to renew before anything else so the guest's identity
       // (and taste rows keyed on auth.users.id) survives across days.
