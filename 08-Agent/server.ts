@@ -31,6 +31,10 @@ import { liveEvents, LIVE_NOW_MAX_EVENTS } from './tools/live_now';
 import { getSavedEvents } from './tools/get_saved_events';
 import { getEventForCalendar } from './tools/get_event_for_calendar';
 import { generateIcs } from './tools/ical';
+import {
+  AUTH_CALLBACK_PATH,
+  renderAuthCallbackPage,
+} from './services/authCallbackPage';
 import { buildUserSignal, loadStatedPreferences } from './tools/personalize';
 import { buildShareInsert } from './tools/share_session';
 import {
@@ -1827,6 +1831,28 @@ export function buildApp(opts: {
    *         400 hash malformed
    */
   const HASH_RE = new RegExp(`^[${'0123456789abcdefghijklmnopqrstuvwxyz'}]{6,12}$`);
+  // ─── Email-auth landing page (2026-09-20) ─────────────────────────────
+  //
+  // Real HTTPS page Supabase verify-links redirect to. GoTrue has ALREADY
+  // verified the token when the browser arrives here; the inline script
+  // forwards the fragment tokens into the installed app via the custom
+  // scheme, and the page itself is the sane landing when the mail was
+  // opened where no app exists (desktop). Public by design: the URL is the
+  // payload of a confirmation email. Details: services/authCallbackPage.ts.
+  app.get(AUTH_CALLBACK_PATH, (_req: Request, res: Response) => {
+    res
+      .status(200)
+      .setHeader('Content-Type', 'text/html; charset=utf-8')
+      .setHeader('Cache-Control', 'no-store')
+      .setHeader('Referrer-Policy', 'no-referrer')
+      .setHeader('X-Content-Type-Options', 'nosniff')
+      .setHeader(
+        'Content-Security-Policy',
+        "default-src 'none'; style-src 'unsafe-inline'; script-src 'unsafe-inline'; base-uri 'none'"
+      )
+      .send(renderAuthCallbackPage());
+  });
+
   app.get('/s/:hash', generalLimiter.middleware, async (req: Request, res: Response) => {
     const hash = typeof req.params.hash === 'string' ? req.params.hash : '';
     if (!hash || !HASH_RE.test(hash)) {
