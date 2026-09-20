@@ -65,22 +65,36 @@ if (!SUPABASE_ANON_KEY) {
 export const AUTH_DEEP_LINK_SCHEME = 'eventpulse';
 export const AUTH_DEEP_LINK_PATH = 'auth/callback';
 export const AUTH_DEEP_LINK = `${AUTH_DEEP_LINK_SCHEME}://${AUTH_DEEP_LINK_PATH}`;
+/** HTTPS landing page for email links outside Expo Go dev. The inline
+ *  script on that page bounces the fragment tokens into the app via
+ *  AUTH_DEEP_LINK when an installed app claims the scheme. Overridable
+ *  for staging builds; the URL must stay allow-listed in Supabase. */
+export const AUTH_WEB_REDIRECT =
+  process.env.EXPO_PUBLIC_AUTH_REDIRECT_URL ||
+  'https://eventpulse-agent.fly.dev/auth/callback';
 
 /**
  * Where Supabase's verify-link redirects the user after they tap the email
  * link (NOW#3 redirect-kedja).
  *
- * Standalone / TestFlight builds claim the `eventpulse://` scheme — the
- * deep link opens the app directly. Expo Go does NOT: iOS routes a custom
- * scheme only to the app that declares it, and Expo Go declares `exp://`.
- * The documented Expo Go convention `exp://<hostUri>/--/<path>` forwards the
- * deep-link path into the running app — without it the email link dead-ends
- * in Safari (2026-09-20 incident: Supabase's empty uri_allow_list fell back
- * to site_url=localhost:3000 and the flow died on a "localhost-hemsida").
+ * Expo Go does NOT accept the custom `eventpulse://` scheme: iOS routes a
+ * custom scheme only to the app that declares it, and Expo Go declares
+ * `exp://`. The documented Expo Go convention `exp://<hostUri>/--/<path>`
+ * forwards the deep-link path into the running app — without it the email
+ * link dead-ends in Safari (2026-09-20 incident: Supabase's empty
+ * uri_allow_list fell back to site_url=localhost:3000 and the flow died
+ * on a "localhost-hemsida").
  *
  * Every redirect used must also be allow-listed in the Supabase project's
  * auth config (uri_allow_list) — otherwise Supabase silently substitutes
  * site_url into the email at send time.
+ *
+ * Standalone / TestFlight / App Store builds redirect to a REAL HTTPS page
+ * on the agent server (2026-09-20: the email must land on a working web
+ * page, not a custom scheme that is dead outside the phone). That page
+ * bounces the fragment tokens into the installed app via `eventpulse://`
+ * and shows a proper "Bekräftat" page when no app exists (desktop mail).
+ * The URL matches the /auth/callback route in 08-Agent/server.ts.
  *
  * @returns {string}
  */
@@ -95,7 +109,7 @@ export function authRedirectTo() {
       return `exp://${hostUri}/--/${AUTH_DEEP_LINK_PATH}`;
     }
   }
-  return AUTH_DEEP_LINK;
+  return AUTH_WEB_REDIRECT;
 }
 
 export const supabaseAuth = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {

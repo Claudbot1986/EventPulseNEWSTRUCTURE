@@ -36,7 +36,7 @@ import {
   ScrollView,
 } from 'react-native';
 
-import { signInWithEmail, signInWithApple, AUTH_DEEP_LINK } from '../services/supabaseAuthClient';
+import { signInWithEmail, signInWithApple, authRedirectTo } from '../services/supabaseAuthClient';
 import { saveAuthSession } from '../services/storage';
 
 /**
@@ -249,8 +249,10 @@ export default function LoginScreen({ onCancel, onSuccess }) {
               </Pressable>
             ) : null}
 
+            {/* Dev/teknisk hint: visar exakt vart mejlets länk pekar i just
+                den här miljön (exp:// i Expo Go, https-sidan i byggda appar). */}
             <Text style={styles.deepLinkHint}>
-              Länken öppnar appen via {AUTH_DEEP_LINK}
+              Länken landar på: {authRedirectTo()}
             </Text>
           </>
         )}

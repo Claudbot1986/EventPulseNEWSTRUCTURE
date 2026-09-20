@@ -70,8 +70,8 @@ vi.mock('expo-apple-authentication', () => ({
 
 // authRedirectTo() läser expo-constants (hostUri/appOwnership) för att känna
 // igen Expo Go. Standardmocken beter sig som en standalone/prod-build
-// (appOwnership null, ingen hostUri) → AUTH_DEEP_LINK väljs. Dev-tester
-// muterar de hoistade fälten direkt.
+// (appOwnership null, ingen hostUri) → AUTH_WEB_REDIRECT (den riktiga
+// HTTPS-bekräftelsesidan) väljs. Dev-tester muterar de hoistade fälten direkt.
 const constantsMock = vi.hoisted(() => ({
   appOwnership: null as string | null,
   hostUri: null as string | null,
@@ -85,7 +85,7 @@ vi.mock('expo-constants', () => ({
   },
 }));
 
-import { parseAuthDeepLink, AUTH_DEEP_LINK, bootstrapSession, signInWithEmail, signInWithApple } from './supabaseAuthClient';
+import { parseAuthDeepLink, AUTH_DEEP_LINK, AUTH_WEB_REDIRECT, bootstrapSession, signInWithEmail, signInWithApple } from './supabaseAuthClient';
 import { clearAuthSession, saveAuthSession, loadAuthSession } from './storage';
 
 describe('parseAuthDeepLink', () => {
@@ -449,7 +449,7 @@ describe('NOW#3 — signInWithEmail identity linking', () => {
     });
     expect(authMock.updateUser).toHaveBeenCalledWith(
       { email: LINK_EMAIL },
-      { emailRedirectTo: AUTH_DEEP_LINK },
+      { emailRedirectTo: AUTH_WEB_REDIRECT },
     );
     expect(authMock.signInWithOtp).not.toHaveBeenCalled();
   });
@@ -460,7 +460,7 @@ describe('NOW#3 — signInWithEmail identity linking', () => {
     expect(result).toEqual({ error: null, mode: 'signin' });
     expect(authMock.signInWithOtp).toHaveBeenCalledWith({
       email: LINK_EMAIL,
-      options: { emailRedirectTo: AUTH_DEEP_LINK, shouldCreateUser: true },
+      options: { emailRedirectTo: AUTH_WEB_REDIRECT, shouldCreateUser: true },
     });
     expect(authMock.updateUser).not.toHaveBeenCalled();
   });
@@ -522,7 +522,7 @@ describe('NOW#3 — signInWithEmail identity linking', () => {
     constantsMock.hostUri = null;
   });
 
-  it('standalone/prod: återlänken är alltid eventpulse://-auth-djurlänken', async () => {
+  it('standalone/prod: återlänken är den riktiga HTTPS-bekräftelsesidan', async () => {
     constantsMock.appOwnership = 'standalone';
     constantsMock.hostUri = null;
 
@@ -531,8 +531,11 @@ describe('NOW#3 — signInWithEmail identity linking', () => {
     expect(result.mode).toBe('signin');
     expect(authMock.signInWithOtp).toHaveBeenCalledWith({
       email: LINK_EMAIL,
-      options: { emailRedirectTo: AUTH_DEEP_LINK, shouldCreateUser: true },
+      options: { emailRedirectTo: AUTH_WEB_REDIRECT, shouldCreateUser: true },
     });
+    // Pin the default: the page lives on the agent server and is what
+    // Supabase must have allow-listed (uri_allow_list).
+    expect(AUTH_WEB_REDIRECT).toBe('https://eventpulse-agent.fly.dev/auth/callback');
 
     constantsMock.appOwnership = null;
   });
