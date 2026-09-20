@@ -353,8 +353,11 @@ export default function ProfileScreen({ onLoggedOut, onOpenLogin }) {
   );
 
   // Logout — wipes the Supabase Bearer, drains the analytics queue and
-  // stops the flush loop, then hands control to the shell which drops to
-  // the guest surface. No confirmation dialog: logging back in is one tap.
+  // stops the flush loop, drops the LOCAL session snapshot (without it the
+  // mounted screen keeps rendering the logged-in Konto section and the
+  // user perceives logout as broken — live report 2026-09-20), then hands
+  // control to the shell which drops to the guest surface. No confirmation
+  // dialog: logging back in is one tap.
   const handleLogout = useCallback(async () => {
     try {
       await clearAuthSession();
@@ -367,6 +370,7 @@ export default function ProfileScreen({ onLoggedOut, onOpenLogin }) {
     } catch (_err) {
       // Best-effort drain — hand control to the shell's user gate anyway.
     }
+    setAuthSession(null);
     onLoggedOut?.();
   }, [onLoggedOut]);
 
@@ -424,6 +428,9 @@ export default function ProfileScreen({ onLoggedOut, onOpenLogin }) {
     } catch (_err) {
       // Best-effort drain.
     }
+    // Same live-report fix as handleLogout: drop the local snapshot so the
+    // guest branch renders immediately after account deletion.
+    setAuthSession(null);
     onLoggedOut?.();
   }, [deleteConfirmText, onLoggedOut]);
 
