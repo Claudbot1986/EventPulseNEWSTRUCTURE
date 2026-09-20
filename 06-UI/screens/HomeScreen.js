@@ -1041,7 +1041,7 @@ function useSavedSection() {
 function SavedSection({ onCardPress }) {
   const { status, events, error, retry } = useSavedSection();
   return (
-    <Section eyebrow="SPARRADE" title=" Dina sparade evenemang">
+    <Section eyebrow="SPARADE" title="Dina sparade evenemang">
       {status === 'loading' && (
         <View style={styles.loadingRow}><ActivityIndicator color={TOKENS.color.accent} /></View>
       )}
