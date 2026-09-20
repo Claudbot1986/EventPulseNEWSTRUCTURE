@@ -52,6 +52,8 @@ import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, Platform } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 
+import { useI18n } from '../i18n';
+
 // TOKENS — duplicated inline so this component has zero coupling to
 // App.js's internal consts. The numbers come from `docs/UI-DESIGN.md`
 // (the locked spec). If the spec changes, change both.
@@ -74,29 +76,30 @@ const TOKENS = {
 };
 
 // TABS — single source of truth. Order here = visual order in the bar.
-// `icon` is an Ionicons name. `label` is short Swedish/English mix
-// matching the rest of the UI.
+// `icon` is an Ionicons name. Labels resolve via t(labelKey) at render time.
 //
 // Dev-only: om EXPO_PUBLIC_EXPLORE_STAR_ENABLED=true läggs en 5:e tab
 // "Utforska*" till för visuell verifiering av AI-stämpel. MÅSTE vara FALSE
-// i prod.
+// i prod. (Dev-only label — intentionally not in the dictionaries.)
 const TABS = [
-  { id: 'home',          icon: 'home-outline',         iconActive: 'home',           label: 'Hem' },
-  { id: 'explore',       icon: 'compass-outline',      iconActive: 'compass',        label: 'Utforska' },
-  { id: 'notifications', icon: 'notifications-outline', iconActive: 'notifications', label: 'Notiser' },
-  { id: 'profile',       icon: 'person-circle-outline', iconActive: 'person-circle', label: 'Profil' },
+  { id: 'home',          icon: 'home-outline',         iconActive: 'home',           labelKey: 'tabs.home' },
+  { id: 'explore',       icon: 'compass-outline',      iconActive: 'compass',        labelKey: 'tabs.explore' },
+  { id: 'notifications', icon: 'notifications-outline', iconActive: 'notifications', labelKey: 'tabs.notifications' },
+  { id: 'profile',       icon: 'person-circle-outline', iconActive: 'person-circle', labelKey: 'tabs.profile' },
 ];
 if (process.env.EXPO_PUBLIC_EXPLORE_STAR_ENABLED === 'true') {
   TABS.push({ id: 'explore-star', icon: 'star-outline', iconActive: 'star', label: 'Utforska*' });
 }
 
 function TabBarButton({ tab, isActive, badge, onPress }) {
+  const { t } = useI18n();
+  const label = tab.labelKey ? t(tab.labelKey) : tab.label;
   const color = isActive ? TOKENS.color.text : TOKENS.color.textMuted;
   return (
     <TouchableOpacity
       accessibilityRole="tab"
       accessibilityState={{ selected: isActive }}
-      accessibilityLabel={tab.label}
+      accessibilityLabel={label}
       activeOpacity={0.7}
       onPress={() => onPress(tab.id)}
       style={styles.tabButton}
@@ -114,7 +117,7 @@ function TabBarButton({ tab, isActive, badge, onPress }) {
         )}
       </View>
       <Text style={[styles.label, { color }]} numberOfLines={1}>
-        {tab.label}
+        {label}
       </Text>
       {isActive && <View style={styles.activeIndicator} />}
     </TouchableOpacity>

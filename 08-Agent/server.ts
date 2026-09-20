@@ -711,28 +711,70 @@ export function buildApp(opts: {
    * want the same per-user budget because the endpoint is gated by
    * the same client_user_id key.
    */
+  /**
+   * POST /agent/preferences — stated category preferences (+ optional locale).
+   *
+   * Body: { categories?: string[], locale?: string } — at least one required.
+   * Språkstöd 2026-09-20: the preferences jsonb is now merged
+   * (read-modify-write), never clobbered — the earlier overwrite would have
+   * wiped push_token / followed_* keys / notification_prefs on every save.
+   * An unsupported locale is ignored (warning only), never a 400: locale
+   * must never block a category save.
+   */
   app.post('/agent/preferences', requireUser, chatLimiter.middleware, async (req: Request, res: Response) => {
     const body = req.body as Partial<{
       client_user_id: string;
       categories: unknown;
+      locale: unknown;
     }>;
     if (!body || typeof body !== 'object') {
       res.status(400).json({ error: 'invalid body' });
       return;
     }
-    if (!Array.isArray(body.categories)) {
+    const hasCategories = 'categories' in body;
+    const hasLocale = typeof body.locale === 'string';
+    if (!hasCategories && !hasLocale) {
+      res.status(400).json({ error: 'categories or locale required' });
+      return;
+    }
+    if (hasCategories && !Array.isArray(body.categories)) {
       res.status(400).json({ error: 'categories must be an array' });
       return;
     }
-    const categories = body.categories.filter((x): x is string => typeof x === 'string');
+    const categories = hasCategories
+      ? (body.categories as unknown[]).filter((x): x is string => typeof x === 'string')
+      : undefined;
+
+    let localeWarning: string | null = null;
+    let locale: string | undefined;
+    if (hasLocale) {
+      const { SUPPORTED_CURATED_LOCALES } = await import('./tools/curated_collections.js');
+      if ((SUPPORTED_CURATED_LOCALES as readonly string[]).includes(body.locale as string)) {
+        locale = body.locale as string;
+      } else {
+        localeWarning = 'unsupported locale ignored';
+      }
+    }
 
     const client = sb ?? getSupabase();
+    const { data: existing } = await client
+      .from('user_preferences')
+      .select('preferences')
+      .eq('client_user_id', req.user!.id)
+      .single();
+
+    const basePrefs = existing?.preferences && typeof existing.preferences === 'object'
+      ? { ...(existing.preferences as Record<string, unknown>) }
+      : {};
+    if (categories) basePrefs.categories = categories;
+    if (locale) basePrefs.locale = locale;
+
     const { error } = await client
       .from('user_preferences')
       .upsert(
         {
           client_user_id: req.user!.id,
-          preferences: { categories },
+          preferences: basePrefs,
           updated_at: new Date().toISOString(),
         },
         { onConflict: 'client_user_id' }
@@ -742,7 +784,7 @@ export function buildApp(opts: {
       res.status(202).json({ ok: false, warning: error.message });
       return;
     }
-    res.json({ ok: true });
+    res.json(localeWarning ? { ok: true, warning: localeWarning } : { ok: true });
   });
 
   /**
@@ -779,6 +821,7 @@ export function buildApp(opts: {
       client_user_id: string;
       push_token: unknown;
       follow_push_enabled: unknown;
+      din_helg_push_enabled: unknown;
     }>;
     if (!body || typeof body !== 'object') {
       res.status(400).json({ error: 'invalid body' });
@@ -789,9 +832,17 @@ export function buildApp(opts: {
       body,
       'follow_push_enabled'
     );
-    if (!hasTokenField && !hasEnabledField) {
+    // Din helg weekly push (S5, 2026-09-20): same read-modify-write merge as
+    // follow_push_enabled — toggled from the pre-permission prompt and the
+    // Profile toggle.
+    const hasDinHelgField = Object.prototype.hasOwnProperty.call(
+      body,
+      'din_helg_push_enabled'
+    );
+    if (!hasTokenField && !hasEnabledField && !hasDinHelgField) {
       res.status(400).json({
-        error: 'push_token or follow_push_enabled is required',
+        error:
+          'push_token, follow_push_enabled or din_helg_push_enabled is required',
       });
       return;
     }
@@ -816,6 +867,17 @@ export function buildApp(opts: {
       }
       followPushEnabled = body.follow_push_enabled;
     }
+    // din_helg_push_enabled must be a boolean when present.
+    let dinHelgPushEnabled: boolean | undefined;
+    if (hasDinHelgField) {
+      if (typeof body.din_helg_push_enabled !== 'boolean') {
+        res
+          .status(400)
+          .json({ error: 'din_helg_push_enabled must be a boolean' });
+        return;
+      }
+      dinHelgPushEnabled = body.din_helg_push_enabled;
+    }
 
     const client = sb ?? getSupabase();
     // Read-modify-write: preserve all existing jsonb keys (categories,
@@ -838,6 +900,7 @@ export function buildApp(opts: {
     const next: Record<string, unknown> = { ...basePrefs };
     if (hasTokenField) next.push_token = pushToken;
     if (hasEnabledField) next.follow_push_enabled = followPushEnabled;
+    if (hasDinHelgField) next.din_helg_push_enabled = dinHelgPushEnabled;
     next.updated_at_kind = 'push-token';
 
     const { error: writeErr } = await client
@@ -859,6 +922,7 @@ export function buildApp(opts: {
       stored: {
         has_push_token: next.push_token !== null && next.push_token !== undefined,
         follow_push_enabled: next.follow_push_enabled === true,
+        din_helg_push_enabled: next.din_helg_push_enabled === true,
       },
     });
   });
@@ -1413,7 +1477,7 @@ export function buildApp(opts: {
   });
 
   /**
-   * GET /agent/curated-collections?locale=sv|en&limit=<int>
+   * GET /agent/curated-collections?locale=<locale>&limit=<int>
    *
    * T0084 / MVP-gap §77 (Phase 1 retention). Returns 2–3 hand-curated
    * "Kuratorens val" lists (e.g. "Klassiskt ikväll", "Gratis på lördag",
@@ -1422,23 +1486,24 @@ export function buildApp(opts: {
    * tapping a chip fires /agent/chat with the collection's prompt_text.
    *
    * No client_user_id required: the curator knows nothing about the
-   * individual user, only time-of-day + day-of-week. Locale is optional
-   * and defaults to 'sv'. Limit is clamped to [1, 3].
+   * individual user, only time-of-day + day-of-week. Locale is optional and
+   * defaults to 'sv'. Språkstöd 2026-09-20: all SUPPORTED_CURATED_LOCALES
+   * are accepted (copy is sv/en only — non-sv renders English); an
+   * unknown/unsupported locale falls back to 'en' instead of 400 so older
+   * or newer clients never hard-fail. Limit is clamped to [1, 3].
    */
   app.get('/agent/curated-collections', generalLimiter.middleware, async (req: Request, res: Response) => {
+    const { getCuratedCollections, SUPPORTED_CURATED_LOCALES } = await import('./tools/curated_collections.js');
     const localeRaw = typeof req.query.locale === 'string' ? req.query.locale : 'sv';
-    if (localeRaw !== 'sv' && localeRaw !== 'en') {
-      res.status(400).json({ error: "locale must be 'sv' or 'en'" });
-      return;
-    }
-    const locale = localeRaw;
+    const locale = (SUPPORTED_CURATED_LOCALES as readonly string[]).includes(localeRaw)
+      ? (localeRaw as (typeof SUPPORTED_CURATED_LOCALES)[number])
+      : 'en';
     const limit = typeof req.query.limit === 'string'
       ? Math.min(Math.max(parseInt(req.query.limit, 10) || 3, 1), 3)
       : 3;
 
     const client = sb ?? getSupabase();
     try {
-      const { getCuratedCollections } = await import('./tools/curated_collections.js');
       const result = await getCuratedCollections({
         supabase: client,
         locale,

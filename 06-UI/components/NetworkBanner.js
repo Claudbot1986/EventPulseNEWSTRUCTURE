@@ -13,6 +13,7 @@ import React from 'react';
 import { View, Text, StyleSheet, Platform } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import * as networkContext from '../services/networkContext';
+import { useI18n } from '../i18n';
 
 const TOKENS = {
   color: {
@@ -32,6 +33,7 @@ const TOKENS = {
 };
 
 export default function NetworkBanner() {
+  const { t } = useI18n();
   // Namespace import so a leftover require-cycle cannot TDZ-crash Expo Go
   // with "Property 'useNetworkContext' doesn't exist".
   const hook = networkContext.useNetworkContext;
@@ -41,7 +43,7 @@ export default function NetworkBanner() {
   if (isConnected) return null;
 
   return (
-    <View style={styles.banner} pointerEvents="none" role="alert" aria-label="Ingen nätanslutning">
+    <View style={styles.banner} pointerEvents="none" role="alert" aria-label={t('network.a11y')}>
       <Ionicons
         name="wifi-outline"
         size={14}
@@ -49,7 +51,7 @@ export default function NetworkBanner() {
         style={styles.icon}
       />
       <Text style={styles.text} numberOfLines={1}>
-        Ingen anslutning — vi visar senast cachad data
+        {t('network.text')}
       </Text>
     </View>
   );

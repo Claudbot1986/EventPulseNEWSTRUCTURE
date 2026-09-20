@@ -50,6 +50,8 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import MapView, { Marker, PROVIDER_DEFAULT } from 'react-native-maps';
 
 import { fetchFeed } from '../services/agentClient';
+import { useI18n } from '../i18n';
+import { dateNamesFor } from '../i18n/dateNames';
 
 // ─── TOKENS — mirrored from docs/UI-DESIGN.md ────────────────────────────────
 const TOKENS = {
@@ -130,13 +132,12 @@ function formatTime(timeString) {
   return String(timeString).slice(0, 5);
 }
 
-function formatDateShort(dateString) {
+function formatDateShort(dateString, language = 'sv') {
   if (!dateString) return '';
   const date = new Date(`${dateString}T00:00:00`);
   if (Number.isNaN(date.getTime())) return dateString;
-  const days = ['Sön', 'Mån', 'Tis', 'Ons', 'Tors', 'Fre', 'Lör'];
-  const months = ['jan', 'feb', 'mars', 'apr', 'maj', 'jun', 'jul', 'aug', 'sep', 'okt', 'nov', 'dec'];
-  return `${days[date.getDay()]} ${date.getDate()} ${months[date.getMonth()]}`;
+  const { daysShort, monthsShort } = dateNamesFor(language);
+  return `${daysShort[date.getDay()]} ${date.getDate()} ${monthsShort[date.getMonth()]}`;
 }
 
 // ─── Venue aggregation ───────────────────────────────────────────────────────
@@ -210,30 +211,30 @@ function clusterKeyFor(venue, zoomDelta) {
 
 // ─── Loading skeleton ───────────────────────────────────────────────────────
 function MapLoading() {
+  const { t } = useI18n();
   return (
     <View style={styles.loadingContainer}>
       <ActivityIndicator size="small" color={TOKENS.color.accent} />
-      <Text style={styles.loadingText}>Hämtar venues…</Text>
+      <Text style={styles.loadingText}>{t('map.loading')}</Text>
     </View>
   );
 }
 
 // ─── Empty state — never fabricated ──────────────────────────────────────────
 function MapEmpty({ onRetry }) {
+  const { t } = useI18n();
   return (
     <View style={styles.emptyContainer}>
-      <Text style={styles.emptyEyebrow}>KARTA</Text>
-      <Text style={styles.emptyTitle}>— inga evenemang på kartan —</Text>
-      <Text style={styles.emptyDetail}>
-        När det finns venues med koordinater visas de som pins här.
-      </Text>
+      <Text style={styles.emptyEyebrow}>{t('map.empty.eyebrow')}</Text>
+      <Text style={styles.emptyTitle}>{t('map.empty.title')}</Text>
+      <Text style={styles.emptyDetail}>{t('map.empty.detail')}</Text>
       <TouchableOpacity
         style={styles.emptyButton}
         onPress={onRetry}
         accessibilityRole="button"
-        accessibilityLabel="Hämta igen"
+        accessibilityLabel={t('common.retryFetch')}
       >
-        <Text style={styles.emptyButtonText}>Hämta igen</Text>
+        <Text style={styles.emptyButtonText}>{t('common.retryFetch')}</Text>
       </TouchableOpacity>
     </View>
   );
@@ -241,6 +242,7 @@ function MapEmpty({ onRetry }) {
 
 // ─── Bottom sheet — transparent card, accent eyebrow, "Öppna" CTA ───────────
 function VenueSheet({ venue, onEventPress, onClose }) {
+  const { t, language } = useI18n();
   if (!venue) return null;
   const upcoming = venue.events.slice(0, 5);
 
@@ -249,26 +251,26 @@ function VenueSheet({ venue, onEventPress, onClose }) {
       <View style={styles.sheetCard}>
         <View style={styles.sheetHeader}>
           <View style={{ flex: 1 }}>
-            <Text style={styles.sheetEyebrow}>VENUE</Text>
+            <Text style={styles.sheetEyebrow}>{t('map.sheet.eyebrow')}</Text>
             <Text style={styles.sheetTitle} numberOfLines={2}>{venue.venueName}</Text>
             <Text style={styles.sheetMeta}>
               {venue.upcomingCount > 0
-                ? `${venue.upcomingCount} kommande event`
-                : `${venue.events.length} event hittade`}
+                ? t('map.sheet.upcoming', { count: venue.upcomingCount })
+                : t('map.sheet.found', { count: venue.events.length })}
             </Text>
           </View>
           <TouchableOpacity
             style={styles.sheetClose}
             onPress={onClose}
             accessibilityRole="button"
-            accessibilityLabel="Stäng"
+            accessibilityLabel={t('common.close')}
           >
-            <Text style={styles.sheetCloseText}>Stäng</Text>
+            <Text style={styles.sheetCloseText}>{t('common.close')}</Text>
           </TouchableOpacity>
         </View>
 
         {upcoming.length === 0 ? (
-          <Text style={styles.sheetEmpty}>Inga kommande event för den här platsen.</Text>
+          <Text style={styles.sheetEmpty}>{t('map.sheet.empty')}</Text>
         ) : (
           upcoming.map((event, idx) => (
             <TouchableOpacity
@@ -277,17 +279,17 @@ function VenueSheet({ venue, onEventPress, onClose }) {
               activeOpacity={0.7}
               onPress={() => onEventPress(event)}
               accessibilityRole="button"
-              accessibilityLabel={`Öppna ${event.title || 'event'}`}
+              accessibilityLabel={t('map.openA11y', { title: event.title || 'event' })}
             >
               <View style={styles.sheetDateCol}>
-                <Text style={styles.sheetDateDay}>{formatDateShort(event.date)}</Text>
+                <Text style={styles.sheetDateDay}>{formatDateShort(event.date, language)}</Text>
                 <Text style={styles.sheetDateTime}>{formatTime(event.time) || '—'}</Text>
               </View>
               <View style={styles.sheetRowBody}>
                 <Text style={styles.sheetRowTitle} numberOfLines={2}>
-                  {event.title || 'Titel saknas'}
+                  {event.title || t('common.titleMissing')}
                 </Text>
-                <Text style={styles.sheetOpenCta}>Öppna →</Text>
+                <Text style={styles.sheetOpenCta}>{t('common.openArrow')}</Text>
               </View>
             </TouchableOpacity>
           ))
@@ -299,6 +301,7 @@ function VenueSheet({ venue, onEventPress, onClose }) {
 
 // ─── Main screen ────────────────────────────────────────────────────────────
 export default function MapScreen({ onEventPress, events: eventsProp }) {
+  const { t } = useI18n();
   const [internalEvents, setInternalEvents] = useState(null);
   const [error, setError] = useState(null);
   const [selectedVenue, setSelectedVenue] = useState(null);
@@ -318,10 +321,10 @@ export default function MapScreen({ onEventPress, events: eventsProp }) {
       const page = await fetchFeed({ from, days: 7 });
       setInternalEvents(page.events || []);
     } catch (err) {
-      setError(err?.message || 'Kunde inte hämta venues');
+      setError(err?.message || t('map.errorFetch'));
       setInternalEvents([]);
     }
-  }, []);
+  }, [t]);
 
   useEffect(() => {
     if (Array.isArray(eventsProp)) return; // parent controls the data
@@ -376,12 +379,12 @@ export default function MapScreen({ onEventPress, events: eventsProp }) {
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
       <View style={styles.header}>
-        <Text style={styles.appKicker}>City discovery</Text>
-        <Text style={styles.appTitle}>Karta</Text>
+        <Text style={styles.appKicker}>{t('map.eyebrow')}</Text>
+        <Text style={styles.appTitle}>{t('map.title')}</Text>
         <Text style={styles.appSubtitle}>
           {venues.length > 0
-            ? `${venues.length} venue${venues.length === 1 ? '' : 's'} med kommande event.`
-            : 'Utforska Stockholm – en pin per venue.'}
+            ? t('map.subtitleCount', { count: venues.length })
+            : t('map.subtitleEmpty')}
         </Text>
       </View>
 
@@ -402,7 +405,10 @@ export default function MapScreen({ onEventPress, events: eventsProp }) {
               coordinate={{ latitude: venue.lat, longitude: venue.lng }}
               onPress={() => setSelectedVenue(venue)}
               tracksViewChanges={false}
-              accessibilityLabel={`${venue.venueName} – ${venue.upcomingCount || venue.events.length} event`}
+              accessibilityLabel={t('map.markerA11y', {
+                name: venue.venueName,
+                count: venue.upcomingCount || venue.events.length,
+              })}
             >
               <View style={styles.pin}>
                 <Text style={styles.pinCount}>

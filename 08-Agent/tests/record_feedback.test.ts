@@ -5,10 +5,12 @@
  * Validates that bad inputs are tolerated (best-effort, never throws).
  *
  * Coverage:
- *   - All five funnel interactions persist (impression, click, save,
- *     reject, outbound)
+ *   - The funnel interactions persist (impression, click, save, reject,
+ *     outbound) plus dwell (Din-helg S4, metadata.dwell_ms)
  *   - reject_reason defaults to 'not_interested' for reject aliases
  *   - reject_reason is merged into metadata.reject_reason
+ *   - dwell_ms must be a finite non-negative number when present
+ *   - attendance/rating stay OUT of the /feedback wire contract
  *   - invalid interaction / reject_reason / uuid shapes return warnings
  *     without calling Supabase
  *   - DB insert failure returns warning instead of throwing
@@ -198,6 +200,70 @@ describe('recordFeedback', () => {
     expect(inserted.metadata?.reject_reason).toBeUndefined();
   });
 
+  // ─── dwell (Din-helg S4) ─────────────────────────────────────────────
+
+  it('persists dwell with metadata.dwell_ms', async () => {
+    const insert = vi.fn().mockReturnValue(Promise.resolve({ error: null }));
+    const from = vi.fn().mockReturnValue({ insert });
+    const sb = { from } as unknown as SupabaseClient;
+
+    const result = await recordFeedback(sb, {
+      client_user_id: USER_ID,
+      event_id: EVENT_ID,
+      interaction: 'dwell',
+      metadata: { dwell_ms: 12_500 },
+    });
+    expect(result.ok).toBe(true);
+    expect(result.interaction).toBe('dwell');
+    expect(insert).toHaveBeenCalledWith(
+      expect.objectContaining({
+        interaction: 'dwell',
+        metadata: { dwell_ms: 12_500 },
+      })
+    );
+  });
+
+  it('persists dwell without metadata (no dwell_ms required)', async () => {
+    const sb = mockSupabase({ ok: true });
+    const result = await recordFeedback(sb, {
+      client_user_id: USER_ID,
+      event_id: EVENT_ID,
+      interaction: 'dwell',
+    });
+    expect(result.ok).toBe(true);
+  });
+
+  it.each([NaN, Infinity, -1, '12345'] as const)(
+    'rejects invalid metadata.dwell_ms (%s) without calling Supabase',
+    async (dwellMs) => {
+      const sb = mockSupabase({ ok: true });
+      const fromSpy = vi.spyOn(sb, 'from');
+      const result = await recordFeedback(sb, {
+        client_user_id: USER_ID,
+        event_id: EVENT_ID,
+        interaction: 'dwell',
+        metadata: { dwell_ms: dwellMs },
+      });
+      expect(result.ok).toBe(false);
+      expect(result.warning).toMatch(/dwell_ms/);
+      expect(fromSpy).not.toHaveBeenCalled();
+    }
+  );
+
+  it('rejects non-object metadata without calling Supabase', async () => {
+    const sb = mockSupabase({ ok: true });
+    const fromSpy = vi.spyOn(sb, 'from');
+    const result = await recordFeedback(sb, {
+      client_user_id: USER_ID,
+      event_id: EVENT_ID,
+      interaction: 'click',
+      metadata: [1, 2] as unknown as Record<string, unknown>,
+    });
+    expect(result.ok).toBe(false);
+    expect(result.warning).toMatch(/metadata/);
+    expect(fromSpy).not.toHaveBeenCalled();
+  });
+
   it('still defaults reject_reason for legacy dismiss alias', async () => {
     const insert = vi.fn().mockReturnValue(Promise.resolve({ error: null }));
     const from = vi.fn().mockReturnValue({ insert });
@@ -283,10 +349,18 @@ describe('recordFeedback', () => {
 
   // ─── Constant sanity ────────────────────────────────────────────────
 
-  it('ALLOWED_INTERACTIONS includes the Phase 1 funnel set', () => {
-    for (const k of ['impression', 'click', 'save', 'reject', 'outbound']) {
+  it('ALLOWED_INTERACTIONS includes the Phase 1 funnel set plus dwell', () => {
+    for (const k of ['impression', 'click', 'save', 'reject', 'outbound', 'dwell']) {
       expect(ALLOWED_INTERACTIONS.has(k as 'impression')).toBe(true);
     }
+  });
+
+  it('ALLOWED_INTERACTIONS excludes attendance/rating (dedicated routes only)', () => {
+    // The DB CHECK (20260920-0002) allows all 11 values, but the /feedback
+    // wire contract must NOT — attendance/rating carry their own payload
+    // rules enforced by /agent/attendance and /agent/rating (T0082).
+    expect(ALLOWED_INTERACTIONS.has('attendance' as 'impression')).toBe(false);
+    expect(ALLOWED_INTERACTIONS.has('rating' as 'impression')).toBe(false);
   });
 
   it('ALLOWED_REJECT_REASONS covers the documented enum', () => {

@@ -35,18 +35,20 @@ import {
 
 import { getItem, setItem } from '../services/storage';
 import { savePreferencesToServer } from '../services/agentClient';
+import { useI18n } from '../i18n';
 
 const ONBOARDING_COMPLETE_KEY = 'eventpulse.onboarding_complete';
 const PREFERENCES_KEY = 'eventpulse.preferences.categories';
 
+// Labels resolve via t(`onboarding.category.${slug}`) at render time.
 const CATEGORIES = [
-  { slug: 'music', label: 'Konserter' },
-  { slug: 'exhibitions', label: 'Utställningar' },
-  { slug: 'sports', label: 'Sport' },
-  { slug: 'family', label: 'Barn & familj' },
-  { slug: 'free', label: 'Gratis' },
-  { slug: 'nightlife', label: 'Kvällar' },
-  { slug: 'weekend', label: 'Helger' },
+  { slug: 'music' },
+  { slug: 'exhibitions' },
+  { slug: 'sports' },
+  { slug: 'family' },
+  { slug: 'free' },
+  { slug: 'nightlife' },
+  { slug: 'weekend' },
 ];
 
 const TOKENS = {
@@ -88,6 +90,7 @@ async function savePreferences(slugs) {
 }
 
 export default function OnboardingScreen({ onComplete }) {
+  const { t } = useI18n();
   const [selected, setSelected] = useState([]);
   const [ready, setReady] = useState(false);
 
@@ -122,20 +125,17 @@ export default function OnboardingScreen({ onComplete }) {
   return (
     <View style={styles.container}>
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
-        <Text style={styles.eyebrow}>VÄLKOMMEN TILL EVENTPULSE</Text>
-        <Text style={styles.title}>Vad är du intresserad av?</Text>
-        <Text style={styles.subtitle}>
-          Välj en eller flera kategorier. Vi använder dem för att visa relevanta
-          evenemang först i din hemvy. Du kan ändra när som helst under
-          Profil.
-        </Text>
+        <Text style={styles.eyebrow}>{t('onboarding.eyebrow')}</Text>
+        <Text style={styles.title}>{t('onboarding.title')}</Text>
+        <Text style={styles.subtitle}>{t('onboarding.subtitle')}</Text>
 
         {!ready ? (
-          <Text style={styles.loadingHint}>Laddar…</Text>
+          <Text style={styles.loadingHint}>{t('common.loading')}</Text>
         ) : (
           <View style={styles.chips}>
             {CATEGORIES.map((cat) => {
               const isOn = selected.includes(cat.slug);
+              const label = t(`onboarding.category.${cat.slug}`);
               return (
                 <Pressable
                   key={cat.slug}
@@ -147,9 +147,9 @@ export default function OnboardingScreen({ onComplete }) {
                   ]}
                   accessibilityRole="checkbox"
                   accessibilityState={{ checked: isOn }}
-                  accessibilityLabel={cat.label}
+                  accessibilityLabel={label}
                 >
-                  <Text style={[styles.chipText, isOn && styles.chipTextActive]}>{cat.label}</Text>
+                  <Text style={[styles.chipText, isOn && styles.chipTextActive]}>{label}</Text>
                 </Pressable>
               );
             })}
@@ -159,7 +159,7 @@ export default function OnboardingScreen({ onComplete }) {
 
       <View style={styles.footer}>
         <Pressable onPress={skip} style={styles.skipButton} accessibilityRole="button">
-          <Text style={styles.skipText}>Hoppa över</Text>
+          <Text style={styles.skipText}>{t('common.skip')}</Text>
         </Pressable>
         <Pressable
           onPress={complete}
@@ -170,9 +170,9 @@ export default function OnboardingScreen({ onComplete }) {
             !ready && styles.continueButtonDisabled,
           ]}
           accessibilityRole="button"
-          accessibilityLabel="Fortsätt till EventPulse"
+          accessibilityLabel={t('onboarding.continueA11y')}
         >
-          <Text style={styles.continueText}>{selected.length > 0 ? 'Fortsätt' : 'Fortsätt utan val'}</Text>
+          <Text style={styles.continueText}>{selected.length > 0 ? t('common.continue') : t('common.continueNoChoice')}</Text>
         </Pressable>
       </View>
     </View>

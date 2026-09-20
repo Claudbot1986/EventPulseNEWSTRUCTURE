@@ -5,7 +5,7 @@
  * We log and return warnings instead of throwing.
  *
  * Phase 1 wiring:
- *   - Five funnel interactions are first-class: impression, click, save,
+ *   - The funnel interactions are first-class: impression, click, save,
  *     reject, outbound. The CHECK constraint is enforced by the DB; the
  *     server-side ALLOWED_INTERACTIONS set is the wire contract.
  *   - `reject` carries an optional `reject_reason` (RejectReason enum) that
@@ -14,6 +14,14 @@
  *   - Two legacy `dismiss` / `feedback_positive` / `feedback_negative`
  *     interactions are accepted for back-compat with existing rows read by
  *     personalize.ts (which still queries 'dismiss' + 'feedback_negative').
+ *   - `dwell` (Din-helg S4) measures details-view time: the client sends
+ *     metadata.dwell_ms (>= 3 s floor client-side); validated as a finite
+ *     non-negative number when present.
+ *
+ * The DB CHECK additionally allows 'attendance' and 'rating', but those are
+ * written by the dedicated /agent/attendance + /agent/rating routes (T0082)
+ * with their own payload validation — they stay OUT of the wire contract
+ * here. See 05-Supabase/migrations/20260920-0002-… for the full list.
  *
  * No LLM. No scoring. Pure I/O.
  */
@@ -26,11 +34,13 @@ import type {
 } from '../types';
 
 /**
- * The exact set of interaction strings accepted by the agent server.
- * Kept in sync with the CHECK constraint on
- *   user_interactions.interaction (see 05-Supabase/migrations/20260821-0001-…).
- * Single source of truth — the `/agent/feedback` handler uses this same
- * constant so the wire contract cannot drift from the tool contract.
+ * The exact set of interaction strings accepted via /agent/feedback.
+ * This is the wire contract — deliberately a SUBSET of the DB CHECK
+ * constraint (which additionally lists 'attendance' + 'rating', written by
+ * their own dedicated routes with separate validation; see
+ * 05-Supabase/migrations/20260920-0002-…).
+ * The `/agent/feedback` handler uses this same constant so the wire
+ * contract cannot drift from the tool contract.
  */
 export const ALLOWED_INTERACTIONS: ReadonlySet<FeedbackInteraction> = new Set<
   FeedbackInteraction
@@ -43,6 +53,7 @@ export const ALLOWED_INTERACTIONS: ReadonlySet<FeedbackInteraction> = new Set<
   'dismiss',
   'feedback_positive',
   'feedback_negative',
+  'dwell',
 ]);
 
 /** Interactions that count as a `reject` for the personalization layer.
@@ -145,6 +156,20 @@ export function validateFeedbackInput(
   if (input.rank_position !== undefined && input.rank_position !== null &&
       (input.rank_position < 0 || !Number.isInteger(input.rank_position))) {
     return 'rank_position must be a non-negative integer';
+  }
+  if (input.metadata !== undefined && input.metadata !== null &&
+      (typeof input.metadata !== 'object' || Array.isArray(input.metadata))) {
+    return 'metadata must be an object when provided';
+  }
+  // S4 dwell: metadata.dwell_ms is optional, but when present it must be a
+  // usable measurement — a finite non-negative millisecond count.
+  if (input.interaction === 'dwell' &&
+      input.metadata !== undefined && input.metadata !== null &&
+      (input.metadata as Record<string, unknown>).dwell_ms !== undefined) {
+    const dwellMs = (input.metadata as Record<string, unknown>).dwell_ms;
+    if (typeof dwellMs !== 'number' || !Number.isFinite(dwellMs) || dwellMs < 0) {
+      return 'metadata.dwell_ms must be a finite non-negative number when provided';
+    }
   }
   return null;
 }

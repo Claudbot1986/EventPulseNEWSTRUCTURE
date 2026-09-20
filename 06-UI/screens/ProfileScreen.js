@@ -45,8 +45,12 @@ import {
   setNotificationPrefs,
   deleteAccount,
 } from '../services/agentClient';
+import { enableDinHelgPush, disableDinHelgPush } from '../services/pushTokenClient';
+import { useI18n } from '../i18n';
+import { LANGUAGES } from '../i18n/languages';
 
 const FOLLOW_PUSH_ENABLED_KEY = 'eventpulse.follow_push_enabled';
+const DIN_HELG_PUSH_ENABLED_KEY = 'eventpulse.din_helg_push_enabled';
 
 /** BottomTabBar är position absolute över innehållet (AppShell barWrapper).
  *  Spegla dess mått — bar.paddingTop(8) + tabButton-icon/label(~50) +
@@ -87,6 +91,23 @@ async function saveFollowPushEnabledLocal(enabled) {
   }
 }
 
+async function loadDinHelgPushEnabled() {
+  try {
+    const v = await getItem(DIN_HELG_PUSH_ENABLED_KEY);
+    return v === '1';
+  } catch {
+    return false;
+  }
+}
+
+async function saveDinHelgPushEnabledLocal(enabled) {
+  try {
+    await setItem(DIN_HELG_PUSH_ENABLED_KEY, enabled ? '1' : '0');
+  } catch {
+    // Best-effort — server mirror is the source of truth across devices.
+  }
+}
+
 /**
  * T0072 — render a horizontal row of follow chips for one entity type
  * (venue or artist). The API only returns IDs/slugs, so we show a short
@@ -97,13 +118,13 @@ async function saveFollowPushEnabledLocal(enabled) {
  * parent callback. The chip itself is also Pressable so VoiceOver/TalkBack
  * users reach the affordance through a regular long-press.
  */
-function FollowedRow({ entityType, items, busyKey, onLongPressItem }) {
+function FollowedRow({ entityType, items, busyKey, onLongPressItem, t }) {
   if (!items || items.length === 0) {
     return (
       <Text style={styles.placeholder}>
         {entityType === 'venue'
-          ? 'Inga följda platser än.'
-          : 'Inga följda artister än.'}
+          ? t('profile.followsEmptyVenues')
+          : t('profile.followsEmptyArtists')}
       </Text>
     );
   }
@@ -115,7 +136,7 @@ function FollowedRow({ entityType, items, busyKey, onLongPressItem }) {
         return (
           <Pressable
             key={key}
-            onLongPress={() => onLongPressItem?.(entityType, id, formatChipLabel(entityType, id))}
+            onLongPress={() => onLongPressItem?.(entityType, id, formatChipLabel(entityType, id, t))}
             delayLongPress={350}
             disabled={busy}
             style={({ pressed }) => [
@@ -123,12 +144,15 @@ function FollowedRow({ entityType, items, busyKey, onLongPressItem }) {
               (pressed || busy) && styles.chipBusy,
             ]}
             accessibilityRole="button"
-            accessibilityLabel={`Följer ${entityType === 'venue' ? 'plats' : 'artist'} ${formatChipLabel(entityType, id)} — lång-tryck för att sluta följa`}
-            accessibilityHint="Lång-tryck för att sluta följa"
+            accessibilityLabel={t('profile.followChipA11y', {
+              entity: t(entityType === 'venue' ? 'profile.entity.venue' : 'profile.entity.artist'),
+              label: formatChipLabel(entityType, id, t),
+            })}
+            accessibilityHint={t('profile.longPressHint')}
             testID={`followed-chip-${entityType}-${id}`}
           >
             <Text style={styles.chipText} numberOfLines={1}>
-              {formatChipLabel(entityType, id)}
+              {formatChipLabel(entityType, id, t)}
             </Text>
           </Pressable>
         );
@@ -137,21 +161,67 @@ function FollowedRow({ entityType, items, busyKey, onLongPressItem }) {
   );
 }
 
-function formatChipLabel(entityType, id) {
-  if (!id) return entityType === 'venue' ? 'Plats' : 'Artist';
+function formatChipLabel(entityType, id, t) {
+  if (!id) return t(entityType === 'venue' ? 'profile.venueFallback' : 'profile.artistFallback');
   // API returns opaque IDs (uuid for venues, slug for artists). Show a
   // humanised slice until a name-lookup endpoint exists. Truncate from the
   // front so the leading chars (most identifying for uuids) stay readable.
   const trimmed = String(id);
   const tail = trimmed.length > 8 ? trimmed.slice(0, 8) : trimmed;
-  const prefix = entityType === 'venue' ? 'Plats ' : 'Artist ';
-  return `${prefix}${tail}…`;
+  return t(entityType === 'venue' ? 'profile.venueChip' : 'profile.artistChip', { id: tail });
+}
+
+/**
+ * Språksektion (Språkstöd 2026-09-20): the 10 data-backed languages as
+ * selectable chips, nativeName labels, active chip highlighted. Rendered in
+ * both the guest and signed-in branches — tourists are guests and must be
+ * able to switch language without an account. setLanguage persists locally
+ * + mirrors to the server best-effort inside the i18n provider.
+ */
+function LanguageSection({ t, language, setLanguage }) {
+  return (
+    <View style={styles.section} testID="language-section">
+      <Text style={styles.sectionTitle}>{t('profile.language')}</Text>
+      <Text style={styles.sectionDescription}>{t('profile.languageDesc')}</Text>
+      <View style={styles.languageGrid}>
+        {LANGUAGES.map((lang) => {
+          const active = lang.tag === language;
+          return (
+            <Pressable
+              key={lang.tag}
+              style={({ pressed }) => [
+                styles.chip,
+                active && styles.languageChipActive,
+                pressed && styles.linkButtonPressed,
+              ]}
+              onPress={() => setLanguage(lang.tag)}
+              accessibilityRole="button"
+              accessibilityLabel={lang.nativeName}
+              accessibilityState={{ selected: active }}
+              testID={`language-option-${lang.tag}`}
+            >
+              <Text style={[styles.chipText, active && styles.languageChipTextActive]}>
+                {lang.nativeName}
+              </Text>
+            </Pressable>
+          );
+        })}
+      </View>
+    </View>
+  );
 }
 
 export default function ProfileScreen({ onLoggedOut, onOpenLogin }) {
+  const { t, language, setLanguage } = useI18n();
   const [followPushEnabled, setFollowPushEnabled] = useState(false);
   const [followPushLoaded, setFollowPushLoaded] = useState(false);
   const [followPushBusy, setFollowPushBusy] = useState(false);
+  // S5 (2026-09-20): Din helg weekly push — separate toggle from the
+  // follow-venue push above. OFF → server flag only; ON → OS permission +
+  // Expo token + server flag (via enableDinHelgPush).
+  const [dinHelgPushEnabled, setDinHelgPushEnabled] = useState(false);
+  const [dinHelgPushLoaded, setDinHelgPushLoaded] = useState(false);
+  const [dinHelgPushBusy, setDinHelgPushBusy] = useState(false);
 
   // Konto — the Supabase auth session (magic link / Apple). Null OR
   // anonymous (NOW#2 bootstrap session with user.is_anonymous) means guest
@@ -180,6 +250,18 @@ export default function ProfileScreen({ onLoggedOut, onOpenLogin }) {
       if (!alive) return;
       setFollowPushEnabled(v);
       setFollowPushLoaded(true);
+    });
+    return () => {
+      alive = false;
+    };
+  }, []);
+
+  useEffect(() => {
+    let alive = true;
+    loadDinHelgPushEnabled().then((v) => {
+      if (!alive) return;
+      setDinHelgPushEnabled(v);
+      setDinHelgPushLoaded(true);
     });
     return () => {
       alive = false;
@@ -262,18 +344,18 @@ export default function ProfileScreen({ onLoggedOut, onOpenLogin }) {
           // Roll back.
           setFollowedVenues(prevVenues);
           setFollowedArtists(prevArtists);
-          const warning = res?.warning ?? 'okänt fel';
-          Alert.alert('Kunde inte sluta följa', warning);
+          const warning = res?.warning ?? t('common.unknownError');
+          Alert.alert(t('profile.unfollowFail'), warning);
         }
       } catch (_err) {
         setFollowedVenues(prevVenues);
         setFollowedArtists(prevArtists);
-        Alert.alert('Kunde inte sluta följa', 'nätverksfel');
+        Alert.alert(t('profile.unfollowFail'), t('common.networkError'));
       } finally {
         setFollowedBusyKey(null);
       }
     },
-    [followedVenues, followedArtists]
+    [followedVenues, followedArtists, t]
   );
 
   // T0087 — update per-entity notification level (optimistic UI)
@@ -290,24 +372,21 @@ export default function ProfileScreen({ onLoggedOut, onOpenLogin }) {
           delete next[key];
           return next;
         });
-        const warning = res?.warning ?? 'nätverksfel';
-        Alert.alert('Kunde inte spara notis-inställningen', warning);
+        const warning = res?.warning ?? t('common.networkError');
+        Alert.alert(t('profile.notifSaveFail'), warning);
       }
     },
-    []
+    [t]
   );
-
-  // T0087 — derive notification level label for display
-  const levelLabel = (lvl) => ({ all: 'Alla notiser', new_only: 'Nya händelser', off: 'Av' }[lvl] ?? 'Alla notiser');
 
   const showUnfollowSheet = useCallback(
     (entityType, entityId, displayName) => {
-      const title = displayName || (entityType === 'venue' ? 'Plats' : 'Artist');
+      const title = displayName || t(entityType === 'venue' ? 'profile.venueFallback' : 'profile.artistFallback');
       const key = `${entityType}:${entityId}`;
       const currentLevel = notificationPrefs[key] ?? 'all';
-      const cancelLabel = 'Avbryt';
-      const unfollowLabel = 'Sluta följ';
-      const iosOptions = ['Alla notiser', 'Nya händelser', 'Av', unfollowLabel, cancelLabel];
+      const cancelLabel = t('common.cancel');
+      const unfollowLabel = t('profile.unfollow');
+      const iosOptions = [t('profile.notif.all'), t('profile.notif.newOnly'), t('profile.notif.off'), unfollowLabel, cancelLabel];
       const iosHandlers = [
         () => handleSetNotifLevel(entityType, entityId, 'all'),
         () => handleSetNotifLevel(entityType, entityId, 'new_only'),
@@ -327,15 +406,15 @@ export default function ProfileScreen({ onLoggedOut, onOpenLogin }) {
         );
       } else {
         Alert.alert(title, undefined, [
-          { text: 'Alla notiser', onPress: () => handleSetNotifLevel(entityType, entityId, 'all') },
-          { text: 'Nya händelser', onPress: () => handleSetNotifLevel(entityType, entityId, 'new_only') },
-          { text: 'Av', onPress: () => handleSetNotifLevel(entityType, entityId, 'off') },
+          { text: t('profile.notif.all'), onPress: () => handleSetNotifLevel(entityType, entityId, 'all') },
+          { text: t('profile.notif.newOnly'), onPress: () => handleSetNotifLevel(entityType, entityId, 'new_only') },
+          { text: t('profile.notif.off'), onPress: () => handleSetNotifLevel(entityType, entityId, 'off') },
           { text: unfollowLabel, style: 'destructive', onPress: () => handleUnfollow(entityType, entityId) },
           { text: cancelLabel, style: 'cancel' },
         ]);
       }
     },
-    [handleUnfollow, notificationPrefs]
+    [handleUnfollow, notificationPrefs, t]
   );
 
   const handleToggleFollowPush = useCallback(
@@ -348,15 +427,39 @@ export default function ProfileScreen({ onLoggedOut, onOpenLogin }) {
       setFollowPushBusy(false);
       if (!result || result.ok !== true) {
         const msg = result?.warning
-          ? `Kunde inte spara notis-inställningen (${result.warning}).`
-          : 'Kunde inte spara notis-inställningen just nu.';
+          ? t('profile.notifSaveFailWarning', { warning: result.warning })
+          : t('profile.notifSaveFailNow');
         Alert.alert('EventPulse', msg);
         // Roll back optimistic flip if the server rejected it.
         setFollowPushEnabled(!next);
         await saveFollowPushEnabledLocal(!next);
       }
     },
-    []
+    [t]
+  );
+
+  // S5 (2026-09-20): Din helg weekly push toggle. ON differs from the
+  // follow-push toggle: it runs the real OS permission flow + Expo token
+  // fetch first (enableDinHelgPush), and only persists the flag when that
+  // chain succeeds. In Expo Go the runtime is unavailable — the toggle
+  // rolls back with the standard save-fail alert instead of pretending.
+  const handleToggleDinHelgPush = useCallback(
+    async (next) => {
+      setDinHelgPushEnabled(next);
+      setDinHelgPushBusy(true);
+      await saveDinHelgPushEnabledLocal(next);
+      const result = next ? await enableDinHelgPush() : await disableDinHelgPush();
+      setDinHelgPushBusy(false);
+      if (!result || result.ok !== true) {
+        const msg = result?.warning
+          ? t('profile.notifSaveFailWarning', { warning: result.warning })
+          : t('profile.notifSaveFailNow');
+        Alert.alert('EventPulse', msg);
+        setDinHelgPushEnabled(!next);
+        await saveDinHelgPushEnabledLocal(!next);
+      }
+    },
+    [t]
   );
 
   // Logout — wipes the Supabase Bearer, drains the analytics queue and
@@ -384,10 +487,11 @@ export default function ProfileScreen({ onLoggedOut, onOpenLogin }) {
   // Fas 2.5 / Apple §5.1.1(v) — Radera konto.
   //
   // Two-step UX: first tap → Alert.alert with confirm/cancel. On confirm
-  // we open a Modal with a TextInput where the user must type the literal
-  // string "RADERA" before the submit button enables. The Modal also
-  // sends `confirmation: 'DELETE'` on the wire, so the server enforces
-  // the same check independently.
+  // we open a Modal with a TextInput where the user must type the localised
+  // gate word (i18n profile.deleteGateWord, 'RADERA' in sv) before the
+  // submit button enables. The Modal also sends `confirmation: 'DELETE'`
+  // on the wire, so the server enforces the same check independently.
+  const deleteGateWord = t('profile.deleteGateWord');
   //
   // On success: clearAuthSession (wipe Bearer) → analyticsClient.logout
   // (drain queue) → onLoggedOut (flip shell to guest). The cascading
@@ -406,7 +510,7 @@ export default function ProfileScreen({ onLoggedOut, onOpenLogin }) {
   }, [deleteBusy]);
 
   const handleDeleteAccount = useCallback(async () => {
-    if (deleteConfirmText !== 'RADERA') return;
+    if (deleteConfirmText !== deleteGateWord) return;
     setDeleteBusy(true);
     setDeleteError('');
     const result = await deleteAccount();
@@ -416,9 +520,8 @@ export default function ProfileScreen({ onLoggedOut, onOpenLogin }) {
       // already wiped the row in some failure modes — surface a clear
       // "the deletion may have already happened" hint if status is 401
       // (auth.users gone) so we don't trap the user in a retry loop.
-      const baseMsg = 'Kunde inte radera kontot';
-      const detail = result.error || `okänt fel (status ${result.status ?? '?'})`;
-      setDeleteError(`${baseMsg}: ${detail}`);
+      const detail = result.error || t('profile.deleteFailedDetail', { status: result.status ?? '?' });
+      setDeleteError(t('profile.deleteFailed', { detail }));
       return;
     }
     setDeleteModalVisible(false);
@@ -439,21 +542,20 @@ export default function ProfileScreen({ onLoggedOut, onOpenLogin }) {
     // guest branch renders immediately after account deletion.
     setAuthSession(null);
     onLoggedOut?.();
-  }, [deleteConfirmText, onLoggedOut]);
+  }, [deleteConfirmText, deleteGateWord, onLoggedOut, t]);
 
   const handleDeleteFirstTap = useCallback(() => {
     Alert.alert(
-      'Radera konto?',
-      'Det här tar bort ditt konto och allt du har sparat — sparade events, ' +
-        'följda platser, notis-inställningar. Åtgärden går inte att ångra.',
+      t('profile.deleteAlertTitle'),
+      t('profile.deleteAlertBody'),
       [
-        { text: 'Avbryt', style: 'cancel' },
-        { text: 'Fortsätt', style: 'destructive', onPress: openDeleteModal },
+        { text: t('common.cancel'), style: 'cancel' },
+        { text: t('common.continue'), style: 'destructive', onPress: openDeleteModal },
       ]
     );
-  }, [openDeleteModal]);
+  }, [openDeleteModal, t]);
 
-  const canSubmitDelete = deleteConfirmText === 'RADERA' && !deleteBusy;
+  const canSubmitDelete = deleteConfirmText === deleteGateWord && !deleteBusy;
 
   const totalFollowed = followedVenues.length + followedArtists.length;
 
@@ -470,15 +572,13 @@ export default function ProfileScreen({ onLoggedOut, onOpenLogin }) {
         style={styles.container}
         contentContainerStyle={styles.scrollContent}
       >
-        <Text style={styles.eyebrow}>PROFIL</Text>
-        <Text style={styles.title}>Sparade & inställningar</Text>
+        <Text style={styles.eyebrow}>{t('profile.eyebrow')}</Text>
+        <Text style={styles.title}>{t('profile.title')}</Text>
 
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Konto</Text>
+          <Text style={styles.sectionTitle}>{t('profile.account')}</Text>
           <Text style={[styles.placeholder, styles.guestLoginText]}>
-            Din smak sparas redan i appen. Lägg till din e-post för att
-            behålla den på alla enheter — du kan fortsätta utforska utan
-            konto.
+            {t('profile.guestNudge')}
           </Text>
           {typeof onOpenLogin === 'function' ? (
             <Pressable
@@ -488,19 +588,21 @@ export default function ProfileScreen({ onLoggedOut, onOpenLogin }) {
               ]}
               onPress={onOpenLogin}
               accessibilityRole="button"
-              accessibilityLabel="Lägg till e-post"
+              accessibilityLabel={t('common.addEmail')}
             >
-              <Text style={styles.loginButtonText}>Lägg till e-post</Text>
+              <Text style={styles.loginButtonText}>{t('common.addEmail')}</Text>
             </Pressable>
           ) : null}
         </View>
 
+        <LanguageSection t={t} language={language} setLanguage={setLanguage} />
+
         <Pressable
           style={({ pressed }) => [styles.linkButton, pressed && styles.linkButtonPressed]}
           accessibilityRole="link"
-          accessibilityLabel="Om EventPulse"
+          accessibilityLabel={t('profile.about')}
         >
-          <Text style={styles.linkButtonText}>Om EventPulse</Text>
+          <Text style={styles.linkButtonText}>{t('profile.about')}</Text>
         </Pressable>
       </ScrollView>
     );
@@ -512,35 +614,34 @@ export default function ProfileScreen({ onLoggedOut, onOpenLogin }) {
       contentContainerStyle={styles.scrollContent}
       keyboardShouldPersistTaps="handled"
     >
-      <Text style={styles.eyebrow}>PROFIL</Text>
-      <Text style={styles.title}>Sparade & inställningar</Text>
+      <Text style={styles.eyebrow}>{t('profile.eyebrow')}</Text>
+      <Text style={styles.title}>{t('profile.title')}</Text>
       <Text style={styles.subtitle}>
-        Dina sparade events, kategorival och notis-inställningar hamnar här.
+        {t('profile.subtitle')}
       </Text>
 
       {authSessionLoaded && authSession ? (
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Konto</Text>
+          <Text style={styles.sectionTitle}>{t('profile.account')}</Text>
           <View style={styles.row}>
             <View style={styles.rowTextWrap}>
-              <Text style={styles.rowLabel}>Inloggad</Text>
+              <Text style={styles.rowLabel}>{t('profile.signedIn')}</Text>
               <Text style={styles.rowDescription}>
-                {authSession.user?.email ?? 'Apple-inloggning'}
+                {authSession.user?.email ?? t('profile.appleSignIn')}
               </Text>
             </View>
             <Pressable
               style={({ pressed }) => [styles.logoutButton, pressed && styles.linkButtonPressed]}
               onPress={handleLogout}
               accessibilityRole="button"
-              accessibilityLabel="Logga ut"
+              accessibilityLabel={t('common.logOut')}
             >
-              <Text style={styles.logoutButtonText}>Logga ut</Text>
+              <Text style={styles.logoutButtonText}>{t('common.logOut')}</Text>
             </Pressable>
           </View>
           <View style={styles.deleteRow}>
             <Text style={styles.deleteRowDescription}>
-              Tar bort kontot permanent — allt du sparat, följt och alla
-              notis-inställningar försvinner.
+              {t('profile.deleteDesc')}
             </Text>
             <Pressable
               style={({ pressed }) => [
@@ -549,10 +650,10 @@ export default function ProfileScreen({ onLoggedOut, onOpenLogin }) {
               ]}
               onPress={handleDeleteFirstTap}
               accessibilityRole="button"
-              accessibilityLabel="Radera konto"
+              accessibilityLabel={t('profile.delete')}
               testID="delete-account-button"
             >
-              <Text style={styles.deleteButtonText}>Radera konto</Text>
+              <Text style={styles.deleteButtonText}>{t('profile.delete')}</Text>
             </Pressable>
           </View>
         </View>
@@ -563,33 +664,34 @@ export default function ProfileScreen({ onLoggedOut, onOpenLogin }) {
       )}
 
       <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Följer</Text>
+        <Text style={styles.sectionTitle}>{t('profile.following')}</Text>
         <Text style={styles.sectionDescription}>
-          Här är det du följer just nu. Lång-tryck på en chip för att sluta följa.
+          {t('profile.followingDesc')}
         </Text>
         {followedLoaded ? (
           totalFollowed === 0 ? (
             <Text style={styles.placeholder}>
-              Du följer inga platser eller artister än. Längst ner på ett
-              event-kort finns ★-knappen — lång-tryck för att följa en plats.
+              {t('profile.noFollows')}
             </Text>
           ) : (
             <>
-              <Text style={styles.subsectionLabel}>Platser ({followedVenues.length})</Text>
+              <Text style={styles.subsectionLabel}>{t('profile.venuesCount', { count: followedVenues.length })}</Text>
               <FollowedRow
                 entityType="venue"
                 items={followedVenues}
                 busyKey={followedBusyKey}
                 onLongPressItem={showUnfollowSheet}
+                t={t}
               />
               <Text style={[styles.subsectionLabel, styles.subsectionLabelSpaced]}>
-                Artister ({followedArtists.length})
+                {t('profile.artistsCount', { count: followedArtists.length })}
               </Text>
               <FollowedRow
                 entityType="artist"
                 items={followedArtists}
                 busyKey={followedBusyKey}
                 onLongPressItem={showUnfollowSheet}
+                t={t}
               />
             </>
           )
@@ -599,14 +701,12 @@ export default function ProfileScreen({ onLoggedOut, onOpenLogin }) {
       </View>
 
       <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Notifieringar</Text>
+        <Text style={styles.sectionTitle}>{t('profile.notifications')}</Text>
         <View style={styles.row}>
           <View style={styles.rowTextWrap}>
-            <Text style={styles.rowLabel}>Push för följda venues</Text>
+            <Text style={styles.rowLabel}>{t('profile.pushVenues')}</Text>
             <Text style={styles.rowDescription}>
-              Få en notis när en venue du följer lägger till ett nytt event.
-              Dela din enhets push-token under Inställningar → Notiser →
-              EventPulse för att aktivera leverans.
+              {t('profile.pushVenuesDesc')}
             </Text>
           </View>
           {followPushLoaded ? (
@@ -616,7 +716,7 @@ export default function ProfileScreen({ onLoggedOut, onOpenLogin }) {
               disabled={followPushBusy}
               trackColor={{ false: TOKENS.color.border, true: TOKENS.color.accent }}
               thumbColor={followPushEnabled ? '#1A1206' : TOKENS.color.textMuted}
-              accessibilityLabel="Push-notiser för följda venues"
+              accessibilityLabel={t('profile.pushSwitchA11y')}
               testID="follow-push-switch"
             />
           ) : (
@@ -624,24 +724,42 @@ export default function ProfileScreen({ onLoggedOut, onOpenLogin }) {
           )}
         </View>
         {followPushBusy ? (
-          <Text style={styles.statusLine}>Sparar…</Text>
+          <Text style={styles.statusLine}>{t('profile.saving')}</Text>
+        ) : null}
+        <View style={styles.row}>
+          <View style={styles.rowTextWrap}>
+            <Text style={styles.rowLabel}>{t('profile.pushDinHelg')}</Text>
+            <Text style={styles.rowDescription}>
+              {t('profile.pushDinHelgDesc')}
+            </Text>
+          </View>
+          {dinHelgPushLoaded ? (
+            <Switch
+              value={dinHelgPushEnabled}
+              onValueChange={handleToggleDinHelgPush}
+              disabled={dinHelgPushBusy}
+              trackColor={{ false: TOKENS.color.border, true: TOKENS.color.accent }}
+              thumbColor={dinHelgPushEnabled ? '#1A1206' : TOKENS.color.textMuted}
+              accessibilityLabel={t('profile.pushDinHelgSwitchA11y')}
+              testID="din-helg-push-switch"
+            />
+          ) : (
+            <ActivityIndicator color={TOKENS.color.accent} />
+          )}
+        </View>
+        {dinHelgPushBusy ? (
+          <Text style={styles.statusLine}>{t('profile.saving')}</Text>
         ) : null}
       </View>
 
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Fler val kommer snart</Text>
-        <Text style={styles.placeholder}>
-          Sparade events, kategorier och eventuell inloggning (Google/Facebook)
-          landar här i nästa steg.
-        </Text>
-      </View>
+      <LanguageSection t={t} language={language} setLanguage={setLanguage} />
 
       <Pressable
         style={({ pressed }) => [styles.linkButton, pressed && styles.linkButtonPressed]}
         accessibilityRole="link"
-        accessibilityLabel="Om EventPulse"
+        accessibilityLabel={t('profile.about')}
       >
-        <Text style={styles.linkButtonText}>Om EventPulse</Text>
+        <Text style={styles.linkButtonText}>{t('profile.about')}</Text>
       </Pressable>
 
       <Modal
@@ -652,21 +770,20 @@ export default function ProfileScreen({ onLoggedOut, onOpenLogin }) {
       >
         <View style={styles.modalBackdrop}>
           <View style={styles.modalCard}>
-            <Text style={styles.modalTitle}>Radera konto permanent?</Text>
+            <Text style={styles.modalTitle}>{t('profile.deleteModalTitle')}</Text>
             <Text style={styles.modalBody}>
-              Skriv RADERA med stora bokstäver för att bekräfta. Det går inte
-              att ångra — allt du sparat försvinner.
+              {t('profile.deleteModalBody', { word: deleteGateWord })}
             </Text>
             <TextInput
               style={styles.modalInput}
               value={deleteConfirmText}
               onChangeText={setDeleteConfirmText}
-              placeholder="RADERA"
+              placeholder={deleteGateWord}
               placeholderTextColor={TOKENS.color.textSoft}
               autoCapitalize="characters"
               autoCorrect={false}
               editable={!deleteBusy}
-              accessibilityLabel="Bekräftelsetecken"
+              accessibilityLabel={t('profile.deleteInputA11y')}
               testID="delete-account-confirm-input"
             />
             {deleteError ? (
@@ -682,7 +799,7 @@ export default function ProfileScreen({ onLoggedOut, onOpenLogin }) {
                 disabled={deleteBusy}
                 accessibilityRole="button"
               >
-                <Text style={styles.modalSecondaryLabel}>Avbryt</Text>
+                <Text style={styles.modalSecondaryLabel}>{t('common.cancel')}</Text>
               </Pressable>
               <Pressable
                 style={({ pressed }) => [
@@ -693,13 +810,13 @@ export default function ProfileScreen({ onLoggedOut, onOpenLogin }) {
                 onPress={handleDeleteAccount}
                 disabled={!canSubmitDelete}
                 accessibilityRole="button"
-                accessibilityLabel="Bekräfta radering"
+                accessibilityLabel={t('profile.deleteConfirmA11y')}
                 testID="delete-account-confirm-button"
               >
                 {deleteBusy ? (
                   <ActivityIndicator color="#FFFFFF" />
                 ) : (
-                  <Text style={styles.modalDangerLabel}>Radera</Text>
+                  <Text style={styles.modalDangerLabel}>{t('profile.deleteConfirm')}</Text>
                 )}
               </Pressable>
             </View>
@@ -833,6 +950,18 @@ const styles = StyleSheet.create({
   },
   chipBusy: {
     opacity: 0.5,
+  },
+  // Språksektion — accent-fylld chip för det aktiva språket.
+  languageGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: TOKENS.space.sm,
+  },
+  languageChipActive: {
+    backgroundColor: TOKENS.color.accent,
+  },
+  languageChipTextActive: {
+    color: '#1A1206',
   },
   loadingSpinner: {
     marginTop: TOKENS.space.sm,

@@ -51,6 +51,7 @@ import {
   isEventPulseUrl,
   isAuthDeepLink,
   isShareDeepLink,
+  isDinHelgDeepLink,
   DEEP_LINK_PATHS,
   AUTH_URL_PREFIX,
 } from './deepLinkRouter';
@@ -153,6 +154,41 @@ describe('isEventPulseUrl', () => {
   });
 });
 
+describe('isDinHelgDeepLink (S6 weekly push payload)', () => {
+  it('matches the push payload URL verbatim', () => {
+    expect(isDinHelgDeepLink('eventpulse://home/din-helg')).toBe(true);
+  });
+
+  it('accepts trailing query / fragment (future tracking params)', () => {
+    expect(isDinHelgDeepLink('eventpulse://home/din-helg?src=push')).toBe(true);
+    expect(isDinHelgDeepLink('eventpulse://home/din-helg#top')).toBe(true);
+  });
+
+  it('rejects similar-but-wrong paths', () => {
+    expect(isDinHelgDeepLink('eventpulse://home/din-helg-extra')).toBe(false);
+    expect(isDinHelgDeepLink('eventpulse://din-helg')).toBe(false);
+    expect(isDinHelgDeepLink('https://example.com/home/din-helg')).toBe(false);
+  });
+
+  it('rejects auth + share URLs (mutual exclusivity)', () => {
+    expect(isDinHelgDeepLink('eventpulse://auth/callback?token_hash=abc')).toBe(false);
+    expect(isDinHelgDeepLink('eventpulse://s/abc1234')).toBe(false);
+  });
+
+  it('is neither auth nor share from the other classifiers view', () => {
+    const url = 'eventpulse://home/din-helg';
+    expect(isAuthDeepLink(url)).toBe(false);
+    expect(isShareDeepLink(url)).toBe(false);
+    expect(isEventPulseUrl(url)).toBe(true);
+  });
+
+  it('rejects null / undefined / non-string', () => {
+    expect(isDinHelgDeepLink(null as unknown as string)).toBe(false);
+    expect(isDinHelgDeepLink(undefined as unknown as string)).toBe(false);
+    expect(isDinHelgDeepLink('')).toBe(false);
+  });
+});
+
 describe('mutual exclusivity (routing correctness)', () => {
   it('classifies an auth callback as auth, NOT share', () => {
     const url = 'eventpulse://auth/callback?token_hash=abc&type=magiclink';
@@ -171,6 +207,7 @@ describe('exported constants', () => {
   it('exposes the auth callback path and prefix', () => {
     expect(DEEP_LINK_PATHS.AUTH).toBe('auth/callback');
     expect(DEEP_LINK_PATHS.SHARE).toBe('s');
+    expect(DEEP_LINK_PATHS.DIN_HELG).toBe('home/din-helg');
     expect(AUTH_URL_PREFIX).toBe('eventpulse://auth/callback');
   });
 });

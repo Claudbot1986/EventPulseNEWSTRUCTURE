@@ -124,6 +124,13 @@ describe('agentClient auth guard (guest mode)', () => {
       expect(fetchMock).not.toHaveBeenCalled();
     });
 
+    it('registerPushToken (dinHelgPushEnabled)', async () => {
+      const { registerPushToken } = await importClient();
+      const res = await registerPushToken({ dinHelgPushEnabled: true });
+      expect(res).toEqual({ ok: false, warning: 'auth' });
+      expect(fetchMock).not.toHaveBeenCalled();
+    });
+
     it('setNotificationPrefs', async () => {
       const { setNotificationPrefs } = await importClient();
       const res = await setNotificationPrefs({ entityType: 'venue', entityId: 'v1', level: 'all' });

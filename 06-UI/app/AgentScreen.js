@@ -36,6 +36,9 @@ import {
   shareSession,
 } from '../services/agentClient';
 import { resolveReasons } from '../utils/rankReasonLabels';
+// Dormant surface (mounted by App-agent.js only, not under LanguageProvider)
+// — reads the active UI language via the non-React channel.
+import { getUiLanguage } from '../i18n/uiText';
 
 const SUGGESTIONS = [
   'Konsert ikväll',
@@ -305,7 +308,7 @@ export default function AgentScreen() {
     setQuestions([]);
     setHistory((h) => [...h, { role: 'user', text: m }]);
     try {
-      const res = await chatWithAgent({ message: m });
+      const res = await chatWithAgent({ message: m, locale: getUiLanguage() });
       setReply(res.reply);
       setCards(res.cards);
       setWarnings(res.warnings);

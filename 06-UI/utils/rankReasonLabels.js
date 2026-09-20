@@ -8,148 +8,57 @@
  *   - Max 2-3 visible, "visa mer" if more.
  *   - Never free text. Never tooltip-only on mobile.
  *
- * If a new enum value is added on the backend, add it here — do NOT pass the
- * raw string through to the UI. Unknown values are filtered out by the caller
- * (see resolveReason).
+ * Labels/fullLabels come from the i18n dictionaries (`reason.<enum>.label` /
+ * `reason.<enum>.full`) via the shared translate() fallback chain
+ * (chosen → en → sv). Icons stay local here — they are pictographic,
+ * not translated text.
+ *
+ * If a new enum value is added on the backend, add its icon here AND its
+ * strings to i18n/strings/*.js — do NOT pass the raw string through to the
+ * UI. Unknown values are filtered out by the caller (see resolveReason).
  */
 
-const SV = {
-  time_fit: {
-    icon: '🕒',
-    label: 'Bra tid',
-    fullLabel: 'Matchar tidsfönstret',
-  },
-  under_budget: {
-    icon: '💰',
-    label: 'Under budget',
-    fullLabel: 'Inom din budget',
-  },
-  over_budget: {
-    icon: '💸',
-    label: 'Över budget',
-    fullLabel: 'Över angiven budget',
-  },
-  category_match: {
-    icon: '🎯',
-    label: 'Rätt kategori',
-    fullLabel: 'Matchar din kategori',
-  },
-  exclude_match: {
-    icon: '🚫',
-    label: 'Inte exkluderad',
-    fullLabel: 'Uppfyller dina undantag',
-  },
-  not_ended: {
-    icon: '✅',
-    label: 'Inte avslutad',
-    fullLabel: 'Eventet har inte avslutats',
-  },
-  high_confidence: {
-    icon: '✨',
-    label: 'Hög kvalitet',
-    fullLabel: 'Hög datakvalitet',
-  },
-  low_confidence: {
-    icon: '⚠️',
-    label: 'Låg kvalitet',
-    fullLabel: 'Låg datakvalitet — verifiera',
-  },
-  stale: {
-    icon: '🕰️',
-    label: 'Gammal data',
-    fullLabel: 'Data kan vara gammal',
-  },
-  category_personalization: {
-    icon: '🎯',
-    label: 'Rätt kategori',
-    fullLabel: 'Matchar dina favoriter',
-  },
-  venue_personalization_penalty: {
-    icon: '📍',
-    label: 'Fel område',
-    fullLabel: 'Brukar inte gilla den här platsen',
-  },
-  followed_venue: {
-    icon: '⭐',
-    label: 'Följer',
-    fullLabel: 'Du följer den här platsen',
-  },
-  followed_artist: {
-    icon: '🎤',
-    label: 'Favoritartist',
-    fullLabel: 'Du följer en av artisterna',
-  },
+import { translate } from '../i18n/translate';
+
+import sv from '../i18n/strings/sv';
+import en from '../i18n/strings/en';
+import de from '../i18n/strings/de';
+import no from '../i18n/strings/no';
+import fi from '../i18n/strings/fi';
+import da from '../i18n/strings/da';
+import nl from '../i18n/strings/nl';
+import fr from '../i18n/strings/fr';
+import zhHans from '../i18n/strings/zhHans';
+import it from '../i18n/strings/it';
+
+const DICTIONARIES = {
+  sv,
+  en,
+  de,
+  no,
+  fi,
+  da,
+  nl,
+  fr,
+  'zh-Hans': zhHans,
+  it,
 };
 
-const EN = {
-  time_fit: {
-    icon: '🕒',
-    label: 'Time fit',
-    fullLabel: 'Matches your time window',
-  },
-  under_budget: {
-    icon: '💰',
-    label: 'Under budget',
-    fullLabel: 'Within your budget',
-  },
-  over_budget: {
-    icon: '💸',
-    label: 'Over budget',
-    fullLabel: 'Over your budget',
-  },
-  category_match: {
-    icon: '🎯',
-    label: 'Category match',
-    fullLabel: 'Matches your category',
-  },
-  exclude_match: {
-    icon: '🚫',
-    label: 'Not excluded',
-    fullLabel: 'Meets your exclusions',
-  },
-  not_ended: {
-    icon: '✅',
-    label: 'Still on',
-    fullLabel: 'Event has not ended',
-  },
-  high_confidence: {
-    icon: '✨',
-    label: 'High quality',
-    fullLabel: 'High data quality',
-  },
-  low_confidence: {
-    icon: '⚠️',
-    label: 'Low quality',
-    fullLabel: 'Low data quality — verify',
-  },
-  stale: {
-    icon: '🕰️',
-    label: 'Stale data',
-    fullLabel: 'Data may be out of date',
-  },
-  category_personalization: {
-    icon: '🎯',
-    label: 'Favorite category',
-    fullLabel: 'Matches your favorites',
-  },
-  venue_personalization_penalty: {
-    icon: '📍',
-    label: 'Wrong area',
-    fullLabel: 'You usually dislike this venue',
-  },
-  followed_venue: {
-    icon: '⭐',
-    label: 'Following',
-    fullLabel: 'You follow this venue',
-  },
-  followed_artist: {
-    icon: '🎤',
-    label: 'Favorite artist',
-    fullLabel: 'You follow one of the artists',
-  },
+const ICONS = {
+  time_fit: '🕒',
+  under_budget: '💰',
+  over_budget: '💸',
+  category_match: '🎯',
+  exclude_match: '🚫',
+  not_ended: '✅',
+  high_confidence: '✨',
+  low_confidence: '⚠️',
+  stale: '🕰️',
+  category_personalization: '🎯',
+  venue_personalization_penalty: '📍',
+  followed_venue: '⭐',
+  followed_artist: '🎤',
 };
-
-const TABLES = { sv: SV, en: EN };
 
 /**
  * Resolve a single RankReason to a label entry. Returns null if the enum
@@ -159,9 +68,17 @@ export function resolveReason(reason, language = 'sv') {
   if (!reason || typeof reason !== 'string') {
     return null;
   }
-  const table = TABLES[language] || TABLES.sv;
-  const entry = table[reason];
-  return entry ? { key: reason, ...entry } : null;
+  // The icon table is the enum gate: a reason without an icon has no
+  // dictionary entry either and is by definition unknown.
+  if (!Object.prototype.hasOwnProperty.call(ICONS, reason)) {
+    return null;
+  }
+  return {
+    key: reason,
+    icon: ICONS[reason],
+    label: translate(DICTIONARIES, language, `reason.${reason}.label`),
+    fullLabel: translate(DICTIONARIES, language, `reason.${reason}.full`),
+  };
 }
 
 /**

@@ -9,7 +9,7 @@
     "icon": "./assets/icon.png",
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.eventpulse.app",
+      "bundleIdentifier": "com.tomorgashi.eventpulse",
       "buildNumber": "1",
       "infoPlist": {
         "NSAppTransportSecurity": {
@@ -20,7 +20,7 @@
       }
     },
     "android": {
-      "package": "com.eventpulse.app",
+      "package": "com.tomorgashi.eventpulse",
       "versionCode": 1,
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
@@ -40,11 +40,18 @@
         {
           "image": "./assets/splash.png",
           "resizeMode": "contain",
-          "backgroundColor": "#0F172A"
+          "backgroundColor": "#000000"
         }
       ],
       "expo-font",
-      "expo-apple-authentication"
-    ]
+      "expo-apple-authentication",
+      "expo-localization"
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "7a4aec0e-4527-4059-bcd5-28bcb5cfdd57"
+      }
+    },
+    "owner": "tomorgashi"
   }
 }

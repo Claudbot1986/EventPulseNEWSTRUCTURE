@@ -28,6 +28,9 @@
 
 import { getOrCreateAnonUserId, isAuthenticated, loadAuthSession } from './storage';
 import { markOnline as notifyNetworkOnline } from './networkContext';
+// UI-language text for labels baked into event objects by the mappers below
+// (chip + details CTA). i18n/uiText tracks the LanguageProvider's language.
+import { uiText } from '../i18n/uiText';
 
 /** Never let connectivity bookkeeping fail a successful fetch. */
 function markOnline() {
@@ -131,7 +134,7 @@ async function pickReachableAgentBase(timeoutMs = 2500) {
 
 const DEFAULT_TIMEOUT_MS = 12_000;
 
-export async function chatWithAgent({ message, sessionId, origin, signal, timeoutMs = DEFAULT_TIMEOUT_MS }) {
+export async function chatWithAgent({ message, sessionId, origin, locale, signal, timeoutMs = DEFAULT_TIMEOUT_MS }) {
   if (!(await isAuthenticated())) throw authRequiredError();
   if (!message || typeof message !== 'string') {
     throw new Error('message is required');
@@ -161,6 +164,10 @@ export async function chatWithAgent({ message, sessionId, origin, signal, timeou
         session_id: sessionId,
         message,
         origin: origin ?? 'expo',
+        // Språkstöd 2026-09-20: forward the active UI language. The server
+        // ignores it today (chat runs Swedish-only parsing) — sent now so a
+        // future server can honor it without an app update.
+        ...(typeof locale === 'string' && locale ? { locale } : {}),
       }),
       signal: controller.signal,
     });
@@ -210,13 +217,17 @@ export async function getAgentHealth() {
  * `feedback_negative`) interactions so the personalization layer can
  * bucket venues by *why* the user rejected, not just *that* they did.
  * The server defaults it to 'not_interested' when omitted.
+ *
+ * `metadata` (S4) is a free-form JSONB blob — the dwell timer passes
+ * `{ dwell_ms }` through it.
  */
 export async function recordEventInteraction({
   eventId,
-  interaction, // 'click' | 'outbound' | 'save' | 'reject' | 'dismiss' | 'feedback_positive' | 'feedback_negative'
+  interaction, // 'click' | 'outbound' | 'save' | 'reject' | 'dismiss' | 'feedback_positive' | 'feedback_negative' | 'dwell'
   sessionId,
   queryText,
   rejectReason,
+  metadata,
   timeoutMs = 4_000,
 }) {
   if (!(await isAuthenticated())) return { ok: false, warning: 'auth' };
@@ -242,6 +253,7 @@ export async function recordEventInteraction({
         interaction,
         reject_reason: rejectReason,
         query_text: queryText,
+        metadata,
       }),
       signal: controller.signal,
     });
@@ -257,15 +269,18 @@ export async function recordEventInteraction({
 }
 
 /**
- * Persist the user's category preferences to the agent backend.
+ * Persist user preferences to the agent backend.
  * Called after onboarding (or when user updates preferences in Profile).
+ * Språkstöd 2026-09-20: `locale` accepted alongside categories — the server
+ * merges both into user_preferences.preferences (read-modify-write).
  * Best-effort: never throws. Silences errors so onboarding cannot block.
  *
- * @param {{ categories: string[] }} preferences — object with `categories` key
+ * @param {{ categories?: string[], locale?: string }} preferences
  * @param {{ signal?: AbortSignal, timeoutMs?: number }} [opts]
  * @returns {Promise<{ ok: boolean }>}
  */
-export async function savePreferencesToServer({ categories }, { signal, timeoutMs = 5000 } = {}) {
+export async function savePreferencesToServer({ categories, locale } = {}, { signal, timeoutMs = 5000 } = {}) {
+  if (categories === undefined && locale === undefined) return { ok: false };
   if (!(await isAuthenticated())) return { ok: false, warning: 'auth' };
   let baseUrl;
   try {
@@ -280,6 +295,9 @@ export async function savePreferencesToServer({ categories }, { signal, timeoutM
     if (signal.aborted) { controller.abort(); }
     else signal.addEventListener('abort', () => controller.abort(), { once: true });
   }
+  const body = {};
+  if (categories !== undefined) body.categories = categories;
+  if (locale !== undefined) body.locale = locale;
   try {
     const response = await fetch(`${baseUrl}/agent/preferences`, {
       method: 'POST',
@@ -287,7 +305,7 @@ export async function savePreferencesToServer({ categories }, { signal, timeoutM
         'Content-Type': 'application/json',
         ...(await getAuthHeader()),
       },
-      body: JSON.stringify({ categories }),
+      body: JSON.stringify(body),
       signal: controller.signal,
     });
     if (!response.ok) return { ok: false };
@@ -757,8 +775,8 @@ export async function fetchFeed({ from, days = 7, signal, timeoutMs = 12_000 } =
       // are hidden even when a valid ticket_url is present, which is the
       // "events saknar klickbara länkar" bug.
       hasExternalLink: Boolean(ticketUrl),
-      externalLinkChipLabel: ticketUrl ? 'Extern länk' : undefined,
-      externalLinkLabel: ticketUrl ? 'Läs mer' : undefined,
+      externalLinkChipLabel: ticketUrl ? uiText('common.externalLink') : undefined,
+      externalLinkLabel: ticketUrl ? uiText('common.readMore') : undefined,
     };
   });
 
@@ -857,9 +875,14 @@ export async function fetchRecommendedEvents({ limit = 10, signal, timeoutMs = 1
       image_ai_generated: e.image_ai_generated ?? false,
       image_ai_optout: e.image_ai_optout ?? false,
       source: e.source || 'agent',
+      // Rank reasons forwarded so the card renderer can show always-visible
+      // "why" chips (Din helg, 2026-09-20). Unknown enums are filtered by
+      // resolveReasons — we never substitute a guess. Endpoints without
+      // reasons get [] and render no chips.
+      reasons: Array.isArray(e.reasons) ? e.reasons : [],
       hasExternalLink: Boolean(ticketUrl),
-      externalLinkChipLabel: ticketUrl ? 'Extern länk' : undefined,
-      externalLinkLabel: ticketUrl ? 'Läs mer' : undefined,
+      externalLinkChipLabel: ticketUrl ? uiText('common.externalLink') : undefined,
+      externalLinkLabel: ticketUrl ? uiText('common.readMore') : undefined,
     };
   });
 
@@ -964,9 +987,14 @@ export async function fetchLiveEvents({
       image_ai_generated: e.image_ai_generated ?? false,
       image_ai_optout: e.image_ai_optout ?? false,
       source: e.source || 'agent',
+      // Rank reasons forwarded so the card renderer can show always-visible
+      // "why" chips (Din helg, 2026-09-20). Unknown enums are filtered by
+      // resolveReasons — we never substitute a guess. Endpoints without
+      // reasons get [] and render no chips.
+      reasons: Array.isArray(e.reasons) ? e.reasons : [],
       hasExternalLink: Boolean(ticketUrl),
-      externalLinkChipLabel: ticketUrl ? 'Extern länk' : undefined,
-      externalLinkLabel: ticketUrl ? 'Läs mer' : undefined,
+      externalLinkChipLabel: ticketUrl ? uiText('common.externalLink') : undefined,
+      externalLinkLabel: ticketUrl ? uiText('common.readMore') : undefined,
     };
   });
 
@@ -1206,18 +1234,19 @@ export function fetchEventIcs(eventId, clientUserId) {
 }
 
 /**
- * Persist the Expo push token and follow-push opt-in flag — T0059.
+ * Persist the Expo push token and the push opt-in flags — T0059 / S5.
  *
  * POST /agent/push-token  (Authorization: Bearer <jwt>)
  *   body: { push_token?: string | null,
- *           follow_push_enabled?: boolean }
+ *           follow_push_enabled?: boolean,
+ *           din_helg_push_enabled?: boolean }
  *
  * Backend (08-Agent/server.ts) writes to
- * `user_preferences.preferences.{push_token,follow_push_enabled}` via
- * read-modify-write, preserving existing keys like `categories` and
- * `followed_venue_ids`. Phase 1 = storage only (NotificationsScreen polls
- * `/agent/notifications` on next open). Phase 2 will add an Expo Push API
- * fan-out from the server side.
+ * `user_preferences.preferences.{push_token,follow_push_enabled,din_helg_push_enabled}`
+ * via read-modify-write, preserving existing keys like `categories` and
+ * `followed_venue_ids`. Delivery happens server-side: follow drops fan out
+ * from the notifications pipeline, and the weekly Din helg push is sent by
+ * `08-Agent/cron/push_din_helg.ts` (Thursday 17:00 Europe/Stockholm).
  *
  * Best-effort: never throws. Returns { ok: boolean, warning?: string } so
  * the ProfileScreen toggle can stay silent on transient errors.
@@ -1230,6 +1259,7 @@ export function fetchEventIcs(eventId, clientUserId) {
 export async function registerPushToken({
   pushToken,
   followPushEnabled,
+  dinHelgPushEnabled,
   signal,
   timeoutMs = 4_000,
 } = {}) {
@@ -1250,7 +1280,16 @@ export async function registerPushToken({
   if (typeof followPushEnabled === 'boolean') {
     body.follow_push_enabled = followPushEnabled;
   }
-  if (!('push_token' in body) && !('follow_push_enabled' in body)) {
+  // S5 (2026-09-20): Din helg weekly push toggle — same merge semantics as
+  // follow_push_enabled.
+  if (typeof dinHelgPushEnabled === 'boolean') {
+    body.din_helg_push_enabled = dinHelgPushEnabled;
+  }
+  if (
+    !('push_token' in body) &&
+    !('follow_push_enabled' in body) &&
+    !('din_helg_push_enabled' in body)
+  ) {
     return { ok: false, warning: 'no fields' };
   }
   const controller = new AbortController();
@@ -1473,9 +1512,14 @@ export async function fetchCachedRecommendations({
       image_ai_generated: e.image_ai_generated ?? false,
       image_ai_optout: e.image_ai_optout ?? false,
       source: e.source || 'agent',
+      // Rank reasons forwarded so the card renderer can show always-visible
+      // "why" chips (Din helg, 2026-09-20). Unknown enums are filtered by
+      // resolveReasons — we never substitute a guess. Endpoints without
+      // reasons get [] and render no chips.
+      reasons: Array.isArray(e.reasons) ? e.reasons : [],
       hasExternalLink: Boolean(ticketUrl),
-      externalLinkChipLabel: ticketUrl ? 'Extern länk' : undefined,
-      externalLinkLabel: ticketUrl ? 'Läs mer' : undefined,
+      externalLinkChipLabel: ticketUrl ? uiText('common.externalLink') : undefined,
+      externalLinkLabel: ticketUrl ? uiText('common.readMore') : undefined,
     };
   };
 
@@ -1516,7 +1560,7 @@ export async function fetchCachedRecommendations({
  *     time_of_day?: 'morning'|'afternoon'|'evening'|'night',
  *     budget?: 'free'|'low'|'medium'|'high'|'any',
  *     day_filter?: 'weekday'|'friday'|'weekend'|'saturday'|'sunday'|'today',
- *     locale: 'sv'|'en',
+ *     locale: string (one of the 10 supported locales),
  *     event_ids: string[],
  *   }>,
  *   generated_at: string|null,
@@ -1577,7 +1621,9 @@ export async function fetchCuratedCollections({
     ...(typeof c?.time_of_day === 'string' ? { time_of_day: c.time_of_day } : {}),
     ...(typeof c?.budget === 'string' ? { budget: c.budget } : {}),
     ...(typeof c?.day_filter === 'string' ? { day_filter: c.day_filter } : {}),
-    locale: c?.locale === 'en' ? 'en' : 'sv',
+    // Språkstöd 2026-09-20: echo whatever supported locale the server
+    // returned instead of clamping to sv/en (8 more locales accepted now).
+    locale: typeof c?.locale === 'string' && c.locale ? c.locale : 'sv',
     event_ids: Array.isArray(c?.event_ids) ? c.event_ids.filter((id) => typeof id === 'string') : [],
   }));
 
@@ -1723,9 +1769,14 @@ export async function fetchSavedEvents({ limit = 50, signal, timeoutMs = 12_000 
       image_ai_generated: e.image_ai_generated ?? false,
       image_ai_optout: e.image_ai_optout ?? false,
       source: e.source || 'agent',
+      // Rank reasons forwarded so the card renderer can show always-visible
+      // "why" chips (Din helg, 2026-09-20). Unknown enums are filtered by
+      // resolveReasons — we never substitute a guess. Endpoints without
+      // reasons get [] and render no chips.
+      reasons: Array.isArray(e.reasons) ? e.reasons : [],
       hasExternalLink: Boolean(ticketUrl),
-      externalLinkChipLabel: ticketUrl ? 'Extern länk' : undefined,
-      externalLinkLabel: ticketUrl ? 'Läs mer' : undefined,
+      externalLinkChipLabel: ticketUrl ? uiText('common.externalLink') : undefined,
+      externalLinkLabel: ticketUrl ? uiText('common.readMore') : undefined,
     };
   });
 

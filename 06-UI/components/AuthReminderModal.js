@@ -31,6 +31,8 @@ import {
   Pressable,
 } from 'react-native';
 
+import { useI18n } from '../i18n';
+
 /**
  * @typedef {object} AuthReminderModalProps
  * @property {boolean} visible
@@ -46,6 +48,7 @@ import {
  * @returns {JSX.Element}
  */
 export default function AuthReminderModal({ visible, onRegister, onDismiss }) {
+  const { t } = useI18n();
   const [permanently, setPermanently] = useState(false);
 
   const handleDismiss = useCallback(() => {
@@ -66,29 +69,25 @@ export default function AuthReminderModal({ visible, onRegister, onDismiss }) {
     >
       <View style={styles.backdrop}>
         <View style={styles.card} accessibilityRole="alert">
-          <Text style={styles.title}>Behåll din smak på alla enheter</Text>
-          <Text style={styles.body}>
-            Dina sparade evenemang och personliga förslag sparas just nu
-            bara på den här enheten. Lägg till din e-post så följer allt
-            med vart du än loggar in.
-          </Text>
+          <Text style={styles.title}>{t('authReminder.title')}</Text>
+          <Text style={styles.body}>{t('authReminder.body')}</Text>
 
           <Pressable
             style={({ pressed }) => [styles.primary, pressed && styles.pressed]}
             onPress={handleRegister}
             accessibilityRole="button"
-            accessibilityLabel="Lägg till e-post"
+            accessibilityLabel={t('common.addEmail')}
           >
-            <Text style={styles.primaryLabel}>Lägg till e-post</Text>
+            <Text style={styles.primaryLabel}>{t('common.addEmail')}</Text>
           </Pressable>
 
           <Pressable
             style={({ pressed }) => [styles.secondary, pressed && styles.pressed]}
             onPress={handleDismiss}
             accessibilityRole="button"
-            accessibilityLabel="Senare"
+            accessibilityLabel={t('authReminder.later')}
           >
-            <Text style={styles.secondaryLabel}>Senare</Text>
+            <Text style={styles.secondaryLabel}>{t('authReminder.later')}</Text>
           </Pressable>
 
           <View style={styles.optOutRow}>
@@ -103,7 +102,7 @@ export default function AuthReminderModal({ visible, onRegister, onDismiss }) {
               style={styles.optOutPressable}
             >
               <View style={[styles.checkbox, permanently && styles.checkboxChecked]} />
-              <Text style={styles.optOutLabel}>Påminn mig inte igen</Text>
+              <Text style={styles.optOutLabel}>{t('authReminder.optOut')}</Text>
             </Pressable>
           </View>
         </View>

@@ -38,6 +38,7 @@ import {
 
 import { signInWithEmail, signInWithApple, authRedirectTo } from '../services/supabaseAuthClient';
 import { saveAuthSession } from '../services/storage';
+import { useI18n } from '../i18n';
 
 /**
  * Looser-than-RFC email check; Supabase does the authoritative
@@ -58,6 +59,7 @@ function looksLikeEmail(s) {
 }
 
 export default function LoginScreen({ onCancel, onSuccess, onEmailSent }) {
+  const { t } = useI18n();
   const [email, setEmail] = useState('');
   const [state, setState] = useState('idle'); // 'idle' | 'sending' | 'sent' | 'error'
   const [errorMsg, setErrorMsg] = useState('');
@@ -70,7 +72,7 @@ export default function LoginScreen({ onCancel, onSuccess, onEmailSent }) {
   const handleSend = useCallback(async () => {
     if (!looksLikeEmail(email)) {
       setState('error');
-      setErrorMsg('Ogiltig email — kontrollera stavningen.');
+      setErrorMsg(t('login.invalidEmail'));
       return;
     }
     setState('sending');
@@ -91,7 +93,7 @@ export default function LoginScreen({ onCancel, onSuccess, onEmailSent }) {
       return;
     }
     setState('sent');
-  }, [email, onEmailSent]);
+  }, [email, onEmailSent, t]);
 
   const handleChangeEmail = () => {
     setState('idle');
@@ -104,12 +106,12 @@ export default function LoginScreen({ onCancel, onSuccess, onEmailSent }) {
     const result = await signInWithApple();
     if (result.error === 'apple_sign_in_unavailable') {
       setAppleState('error');
-      setAppleErrorMsg('Apple Sign In är inte tillgängligt på den här enheten.');
+      setAppleErrorMsg(t('login.appleUnavailable'));
       return;
     }
     if (result.error === 'apple_sign_in_ios_only') {
       setAppleState('error');
-      setAppleErrorMsg('Apple Sign In fungerar bara på iOS.');
+      setAppleErrorMsg(t('login.appleIosOnly'));
       return;
     }
     if (result.user_cancelled) {
@@ -120,7 +122,7 @@ export default function LoginScreen({ onCancel, onSuccess, onEmailSent }) {
     }
     if (result.error || !result.session) {
       setAppleState('error');
-      setAppleErrorMsg(result.error || 'Kunde inte logga in med Apple.');
+      setAppleErrorMsg(result.error || t('login.appleFailed'));
       return;
     }
     try {
@@ -128,13 +130,13 @@ export default function LoginScreen({ onCancel, onSuccess, onEmailSent }) {
     } catch (_err) {
       // Persistence failed — surface a generic error and let the user retry.
       setAppleState('error');
-      setAppleErrorMsg('Kunde inte spara sessionen — försök igen.');
+      setAppleErrorMsg(t('login.sessionSaveFailed'));
       return;
     }
     if (typeof onSuccess === 'function') {
       onSuccess(result.session);
     }
-  }, [onSuccess]);
+  }, [onSuccess, t]);
 
   const showAppleButton = Platform.OS === 'ios';
 
@@ -144,26 +146,23 @@ export default function LoginScreen({ onCancel, onSuccess, onEmailSent }) {
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
     >
       <ScrollView contentContainerStyle={styles.scroll} keyboardShouldPersistTaps="handled">
-        <Text style={styles.title}>Logga in med email</Text>
-        <Text style={styles.body}>
-          Vi skickar en magisk länk till din email. Klicka på den för att
-          logga in — inget lösenord behövs.
-        </Text>
+        <Text style={styles.title}>{t('login.title')}</Text>
+        <Text style={styles.body}>{t('login.body')}</Text>
 
         {state === 'sent' ? (
           <View style={styles.sentBox}>
-            <Text style={styles.sentTitle}>Kolla din inkorg</Text>
+            <Text style={styles.sentTitle}>{t('login.sentTitle')}</Text>
             <Text style={styles.sentBody}>
               {sentMode === 'link'
-                ? `Vi har skickat en bekräftelselänk till ${email.trim()}. Öppna den på samma enhet — dina sparade event och din smak följer med.`
-                : `Vi har skickat en inloggningslänk till ${email.trim()}. Öppna länken på samma enhet för att logga in.`}
+                ? t('login.sentBodyLink', { email: email.trim() })
+                : t('login.sentBodySignin', { email: email.trim() })}
             </Text>
             <Pressable
               style={({ pressed }) => [styles.secondary, pressed && styles.pressed]}
               onPress={handleChangeEmail}
               accessibilityRole="button"
             >
-              <Text style={styles.secondaryLabel}>Använd annan email</Text>
+              <Text style={styles.secondaryLabel}>{t('login.useOtherEmail')}</Text>
             </Pressable>
             {/* Exit affordance: without this the sent state is a dead end —
                 the only way out was force-closing the app (discovered live
@@ -174,7 +173,7 @@ export default function LoginScreen({ onCancel, onSuccess, onEmailSent }) {
                 onPress={onCancel}
                 accessibilityRole="button"
               >
-                <Text style={styles.secondaryLabel}>Stäng</Text>
+                <Text style={styles.secondaryLabel}>{t('common.close')}</Text>
               </Pressable>
             ) : null}
           </View>
@@ -190,12 +189,12 @@ export default function LoginScreen({ onCancel, onSuccess, onEmailSent }) {
                   onPress={handleApple}
                   disabled={appleState === 'signing'}
                   accessibilityRole="button"
-                  accessibilityLabel="Fortsätt med Apple"
+                  accessibilityLabel={t('login.appleContinue')}
                 >
                   {appleState === 'signing' ? (
                     <ActivityIndicator color="#FFFFFF" />
                   ) : (
-                    <Text style={styles.appleLabel}>Fortsätt med Apple</Text>
+                    <Text style={styles.appleLabel}>{t('login.appleContinue')}</Text>
                   )}
                 </Pressable>
                 {appleState === 'error' && appleErrorMsg ? (
@@ -203,7 +202,7 @@ export default function LoginScreen({ onCancel, onSuccess, onEmailSent }) {
                 ) : null}
                 <View style={styles.divider}>
                   <View style={styles.dividerLine} />
-                  <Text style={styles.dividerLabel}>eller</Text>
+                  <Text style={styles.dividerLabel}>{t('login.or')}</Text>
                   <View style={styles.dividerLine} />
                 </View>
               </>
@@ -213,7 +212,7 @@ export default function LoginScreen({ onCancel, onSuccess, onEmailSent }) {
               style={styles.input}
               value={email}
               onChangeText={setEmail}
-              placeholder="din@email.com"
+              placeholder={t('login.emailPlaceholder')}
               placeholderTextColor="#8A8478"
               autoCapitalize="none"
               autoCorrect={false}
@@ -221,7 +220,7 @@ export default function LoginScreen({ onCancel, onSuccess, onEmailSent }) {
               keyboardType="email-address"
               textContentType="emailAddress"
               editable={state !== 'sending'}
-              accessibilityLabel="Email-adress"
+              accessibilityLabel={t('login.emailA11y')}
               onSubmitEditing={handleSend}
               returnKeyType="send"
             />
@@ -238,12 +237,12 @@ export default function LoginScreen({ onCancel, onSuccess, onEmailSent }) {
               onPress={handleSend}
               disabled={state === 'sending'}
               accessibilityRole="button"
-              accessibilityLabel="Skicka magic link"
+              accessibilityLabel={t('login.sendMagicLink')}
             >
               {state === 'sending' ? (
                 <ActivityIndicator color="#1A1A1A" />
               ) : (
-                <Text style={styles.primaryLabel}>Skicka magic link</Text>
+                <Text style={styles.primaryLabel}>{t('login.sendMagicLink')}</Text>
               )}
             </Pressable>
 
@@ -253,14 +252,14 @@ export default function LoginScreen({ onCancel, onSuccess, onEmailSent }) {
                 onPress={onCancel}
                 accessibilityRole="button"
               >
-                <Text style={styles.secondaryLabel}>Avbryt</Text>
+                <Text style={styles.secondaryLabel}>{t('common.cancel')}</Text>
               </Pressable>
             ) : null}
 
             {/* Dev/teknisk hint: visar exakt vart mejlets länk pekar i just
                 den här miljön (exp:// i Expo Go, https-sidan i byggda appar). */}
             <Text style={styles.deepLinkHint}>
-              Länken landar på: {authRedirectTo()}
+              {t('login.linkLandsAt', { url: authRedirectTo() })}
             </Text>
           </>
         )}

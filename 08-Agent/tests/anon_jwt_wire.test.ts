@@ -269,6 +269,54 @@ describe('anonymous JWT — NOW#1 guest endpoints', () => {
     expect(write?.opts?.onConflict).toBe('client_user_id');
   });
 
+  // Språkstöd 2026-09-20: locale persistence + preferences merge. The route
+  // previously overwrote the whole preferences jsonb with { categories } on
+  // every save — wiping push_token/followed_*/notification_prefs.
+  it('POST /agent/preferences: locale-only save merges, categories survive', async () => {
+    // Baseline: the earlier test in this file already upserted categories
+    // for GUEST_UUID — the mock serves that row back on read.
+    const writesBefore = recordedWrites.length;
+    const res = await fetch(`${baseUrl}/agent/preferences`, {
+      method: 'POST',
+      headers: bearerHeaders(ANON_BEARER, { 'Content-Type': 'application/json' }),
+      body: JSON.stringify({ locale: 'de' }),
+    });
+    expect(res.status).toBe(200);
+    const body = await res.json();
+    expect(body.ok).toBe(true);
+    expect(recordedWrites.length).toBe(writesBefore + 1);
+    const write = recordedWrites[recordedWrites.length - 1];
+    expect(write.table).toBe('user_preferences');
+    const prefs = write.row.preferences as Record<string, unknown>;
+    expect(prefs.locale).toBe('de');
+    // Merge proof: categories from the earlier upsert are still present.
+    expect(prefs.categories).toEqual(['music', 'art']);
+  });
+
+  it('POST /agent/preferences: unsupported locale is ignored, never 400', async () => {
+    const res = await fetch(`${baseUrl}/agent/preferences`, {
+      method: 'POST',
+      headers: bearerHeaders(ANON_BEARER, { 'Content-Type': 'application/json' }),
+      body: JSON.stringify({ locale: 'xx' }),
+    });
+    expect(res.status).toBe(200);
+    const body = await res.json();
+    expect(body.ok).toBe(true);
+    expect(body.warning).toBe('unsupported locale ignored');
+    const write = recordedWrites[recordedWrites.length - 1];
+    const prefs = write.row.preferences as Record<string, unknown>;
+    expect('locale' in prefs ? prefs.locale : undefined).not.toBe('xx');
+  });
+
+  it('POST /agent/preferences: empty body still 400', async () => {
+    const res = await fetch(`${baseUrl}/agent/preferences`, {
+      method: 'POST',
+      headers: bearerHeaders(ANON_BEARER, { 'Content-Type': 'application/json' }),
+      body: JSON.stringify({}),
+    });
+    expect(res.status).toBe(400);
+  });
+
   it('GET /agent/saved: guest reads back exactly their own saves', async () => {
     const res = await fetch(`${baseUrl}/agent/saved`, { headers: bearerHeaders(ANON_BEARER) });
     expect(res.status).toBe(200);

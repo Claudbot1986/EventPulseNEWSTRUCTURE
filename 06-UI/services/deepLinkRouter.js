@@ -30,6 +30,11 @@ const AUTH_URL_PREFIX = `eventpulse://${AUTH_DEEP_LINK_PATH}`;
  *  convention. Params arrive as ?query or #fragment — both accepted. */
 const EXPO_GO_AUTH_RE = /^exp:\/\/[^/]+\/--\/auth\/callback(?:[?#].*)?$/i;
 
+/** S6 (2026-09-20): weekly Din helg push payload → data.url. Routes to the
+ *  home tab where the Din helg section sits at the top. Trailing
+ *  ?query/#fragment allowed so future tracking params don't break the match. */
+const DIN_HELG_PATH_RE = /^eventpulse:\/\/home\/din-helg(?:[?#].*)?$/i;
+
 export function isEventPulseUrl(url) {
   return typeof url === 'string' && url.startsWith('eventpulse://');
 }
@@ -44,9 +49,14 @@ export function isShareDeepLink(url) {
   return typeof url === 'string' && SHARE_PATH_RE.test(url);
 }
 
+export function isDinHelgDeepLink(url) {
+  return typeof url === 'string' && DIN_HELG_PATH_RE.test(url);
+}
+
 export const DEEP_LINK_PATHS = Object.freeze({
   AUTH: AUTH_DEEP_LINK_PATH,
   SHARE: 's',
+  DIN_HELG: 'home/din-helg',
 });
 
 export { AUTH_URL_PREFIX };

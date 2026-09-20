@@ -51,6 +51,7 @@ import {
   recordAttendance,
   recordRating,
 } from '../services/agentClient';
+import { useI18n } from '../i18n';
 
 const TOKENS = {
   color: {
@@ -70,41 +71,38 @@ const TOKENS = {
 };
 
 const REFRESH_TTL_MS = 60_000;
-const KIND_LABEL = {
-  reminder: 'Påminnelse',
-  match: 'Ny matchning för dig',
-  response: 'Svar',
-};
-const KIND_EYEBROW = {
-  reminder: 'PÅMINNELSER',
-  match: 'NYA MATCHNINGAR',
-  response: 'SVAR',
-};
+// Kind → i18n key suffix under notifications.kind.* / notifications.eyebrow.*
+const KINDS = ['reminder', 'match', 'response'];
 
-/** Pure helper: turn an ISO timestamp into a Swedish relative label.
- *  Kept inside the file so the screen is fully self-contained — no
- *  locale dep needed for Phase 1. */
-function relativeLabel(iso, nowMs) {
+/** Relative time label via i18n (Språkstöd 2026-09-20). `t` comes from
+ *  useI18n(); templates live under notifications.time.* with {n}/{h}/{m}/{d}
+ *  so word order can differ per language. */
+function relativeLabel(iso, nowMs, t) {
   if (!iso) return '';
-  const t = Date.parse(iso);
-  if (Number.isNaN(t)) return '';
-  const deltaMs = t - nowMs;
+  const ts = Date.parse(iso);
+  if (Number.isNaN(ts)) return '';
+  const deltaMs = ts - nowMs;
   const absMs = Math.abs(deltaMs);
   const past = deltaMs < 0;
   const minutes = Math.round(absMs / 60_000);
-  if (minutes < 1) return past ? 'just nu' : 'nu';
-  if (minutes < 60) return past ? `för ${minutes} min` : `om ${minutes} min`;
+  if (minutes < 1) return t(past ? 'notifications.time.nowPast' : 'notifications.time.nowFuture');
+  if (minutes < 60) {
+    return t(past ? 'notifications.time.pastMin' : 'notifications.time.futureMin', { n: minutes });
+  }
   const hours = Math.floor(minutes / 60);
   const mins = minutes % 60;
   if (hours < 24) {
-    if (mins === 0) return past ? `för ${hours} h` : `om ${hours} h`;
-    return past ? `för ${hours} h ${mins} min` : `om ${hours} h ${mins} min`;
+    if (mins === 0) {
+      return t(past ? 'notifications.time.pastHours' : 'notifications.time.futureHours', { h: hours });
+    }
+    return t(past ? 'notifications.time.pastHoursMin' : 'notifications.time.futureHoursMin', { h: hours, m: mins });
   }
   const days = Math.floor(hours / 24);
-  return past ? `för ${days} d` : `om ${days} d`;
+  return t(past ? 'notifications.time.pastDays' : 'notifications.time.futureDays', { d: days });
 }
 
-export default function NotificationsScreen({ onOpenEvent, onOpenLogin }) {
+export default function NotificationsScreen({ onOpenEvent, onOpenLogin, isActive = true }) {
+  const { t } = useI18n();
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [notifications, setNotifications] = useState([]);
@@ -112,6 +110,7 @@ export default function NotificationsScreen({ onOpenEvent, onOpenLogin }) {
   const [nowMs, setNowMs] = useState(() => Date.now());
   const lastFetchedRef = useRef(0);
   const aliveRef = useRef(true);
+  const inFlightRef = useRef(false);
 
   // ─── T0082 attended-events state ─────────────────────────────────────────
   const [attendedEvents, setAttendedEvents] = useState([]);
@@ -124,7 +123,7 @@ export default function NotificationsScreen({ onOpenEvent, onOpenLogin }) {
 
   const loadAttended = useCallback(async () => {
     setAttendedLoading(true);
-    const result = await fetchUnratedSavedEvents({ limit: 25 });
+    const result = await fetchUnratedSavedEvents({ limit: 25, t });
     if (!aliveRef.current) return;
     if (result.ok) {
       setAttendedEvents(result.events);
@@ -132,29 +131,37 @@ export default function NotificationsScreen({ onOpenEvent, onOpenLogin }) {
     // Best-effort: silently swallow non-ok results — the section just
     // renders empty. The agent URL being misconfigured shows up elsewhere.
     setAttendedLoading(false);
-  }, []);
+  }, [t]);
 
   const load = useCallback(async ({ force = false } = {}) => {
     const since = Date.now() - lastFetchedRef.current;
     if (!force && lastFetchedRef.current > 0 && since < REFRESH_TTL_MS) {
       return;
     }
+    // A load already in flight (mount effect + focus edge can race at first
+    // mount, pull-to-refresh can double-tap) — never fire concurrent fetches.
+    if (inFlightRef.current) return;
+    inFlightRef.current = true;
     if (force) setRefreshing(true);
-    const [notifResult] = await Promise.all([
-      fetchNotifications({ limit: 50 }),
-      loadAttended(),
-    ]);
-    if (!aliveRef.current) return;
-    if (notifResult.ok) {
-      setNotifications(notifResult.notifications);
-      setError(null);
-    } else {
-      setError(notifResult.warning ?? 'unknown');
+    try {
+      const [notifResult] = await Promise.all([
+        fetchNotifications({ limit: 50 }),
+        loadAttended(),
+      ]);
+      if (!aliveRef.current) return;
+      if (notifResult.ok) {
+        setNotifications(notifResult.notifications);
+        setError(null);
+      } else {
+        setError(notifResult.warning ?? 'unknown');
+      }
+      lastFetchedRef.current = Date.now();
+      setNowMs(Date.now());
+      setLoading(false);
+      setRefreshing(false);
+    } finally {
+      inFlightRef.current = false;
     }
-    lastFetchedRef.current = Date.now();
-    setNowMs(Date.now());
-    setLoading(false);
-    setRefreshing(false);
   }, [loadAttended]);
 
   useEffect(() => {
@@ -166,6 +173,15 @@ export default function NotificationsScreen({ onOpenEvent, onOpenLogin }) {
       clearInterval(tick);
     };
   }, [load]);
+
+  // Keep-alive tabs (2026-09-20): AppShell keeps this screen mounted with
+  // display:none when another tab is active, so freshness no longer comes
+  // from remounting. Refetch on the focus edge instead — TTL-gated via
+  // `load()` so a quick tab hop within 60s costs no network. This finally
+  // wires the focus behavior the header comment has always documented.
+  useEffect(() => {
+    if (isActive) load();
+  }, [isActive, load]);
 
   const groups = useMemo(() => groupNotifications(notifications), [notifications]);
   const total = groups.total;
@@ -204,14 +220,14 @@ export default function NotificationsScreen({ onOpenEvent, onOpenLogin }) {
     if (!event || !event.id) return;
     const draft = ratingDrafts[event.id] || { rating: 0, note: '' };
     if (!Number.isInteger(draft.rating) || draft.rating < 1 || draft.rating > 5) {
-      Alert.alert('Välj ett betyg', 'Tryck på en stjärna för att betygsätta.');
+      Alert.alert(t('notifications.pickRating'), t('notifications.pickRatingBody'));
       return;
     }
     const trimmedNote = (draft.note || '').trim();
     if (trimmedNote.length > 140) {
       // Should never happen because the TextInput caps at 140, but defend
       // server-side as a guardrail — better than crashing.
-      Alert.alert('För långt', 'Anteckningen får vara max 140 tecken.');
+      Alert.alert(t('notifications.tooLong'), t('notifications.tooLongBody'));
       return;
     }
     setSubmittingId(event.id);
@@ -241,20 +257,23 @@ export default function NotificationsScreen({ onOpenEvent, onOpenLogin }) {
       });
     } else {
       Alert.alert(
-        'Kunde inte skicka betyg',
-        ratingResult.warning ?? 'Prova igen om en stund.'
+        t('notifications.ratingFailed'),
+        ratingResult.warning ?? t('notifications.ratingFailedBody')
       );
     }
-  }, [ratingDrafts]);
+  }, [ratingDrafts, t]);
 
   const renderRow = useCallback((notification) => {
     const unread = notification.status !== 'read';
-    const when = relativeLabel(notification.created_at, nowMs);
+    const when = relativeLabel(notification.created_at, nowMs, t);
+    const kindLabel = KINDS.includes(notification.kind)
+      ? t(`notifications.kind.${notification.kind}`)
+      : t('notifications.kind.fallback');
     return (
       <Pressable
         key={notification.id}
         accessibilityRole="button"
-        accessibilityLabel={`${KIND_LABEL[notification.kind] || 'Notis'}: ${notification.title}`}
+        accessibilityLabel={t('notifications.rowA11y', { kind: kindLabel, title: notification.title })}
         onPress={() => handleOpen(notification)}
         style={({ pressed }) => [
           styles.row,
@@ -274,19 +293,19 @@ export default function NotificationsScreen({ onOpenEvent, onOpenLogin }) {
           ) : null}
           <View style={styles.rowMeta}>
             {when ? <Text style={styles.rowWhen}>{when}</Text> : null}
-            <Text style={styles.rowCta}>Öppna</Text>
+            <Text style={styles.rowCta}>{t('common.open')}</Text>
           </View>
         </View>
       </Pressable>
     );
-  }, [handleOpen, nowMs]);
+  }, [handleOpen, nowMs, t]);
 
   const renderSection = useCallback((kind, items) => {
     if (!items || items.length === 0) return null;
     return (
       <View key={kind} style={styles.section}>
         <View style={styles.sectionHeader}>
-          <Text style={styles.sectionEyebrow}>{KIND_EYEBROW[kind]}</Text>
+          <Text style={styles.sectionEyebrow}>{t(`notifications.eyebrow.${kind}`)}</Text>
           <Text style={styles.sectionCount}>{items.length}</Text>
         </View>
         <View style={styles.cardList}>
@@ -302,7 +321,7 @@ export default function NotificationsScreen({ onOpenEvent, onOpenLogin }) {
       return (
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
-            <Text style={styles.sectionEyebrow}>DELTAGIT</Text>
+            <Text style={styles.sectionEyebrow}>{t('notifications.attended.eyebrow')}</Text>
           </View>
           <View style={styles.cardList}>
             <View style={styles.attendedLoadingBlock}>
@@ -316,7 +335,7 @@ export default function NotificationsScreen({ onOpenEvent, onOpenLogin }) {
     return (
       <View style={styles.section}>
         <View style={styles.sectionHeader}>
-          <Text style={styles.sectionEyebrow}>DELTAGIT</Text>
+          <Text style={styles.sectionEyebrow}>{t('notifications.attended.eyebrow')}</Text>
           <Text style={styles.sectionCount}>{attendedEvents.length}</Text>
         </View>
         <View style={styles.cardList}>
@@ -331,7 +350,7 @@ export default function NotificationsScreen({ onOpenEvent, onOpenLogin }) {
                 <Text style={styles.attendedMeta} numberOfLines={1}>
                   {[
                     event.venue_name,
-                    event.start_time ? relativeLabel(event.start_time, nowMs) : null,
+                    event.start_time ? relativeLabel(event.start_time, nowMs, t) : null,
                   ].filter(Boolean).join(' · ')}
                 </Text>
                 {/* 5-star widget — tappable, single-row. */}
@@ -342,7 +361,10 @@ export default function NotificationsScreen({ onOpenEvent, onOpenLogin }) {
                       <Pressable
                         key={star}
                         accessibilityRole="button"
-                        accessibilityLabel={`${star} ${star === 1 ? 'stjärna' : 'stjärnor'}`}
+                        accessibilityLabel={t('notifications.starA11y', {
+                          count: star,
+                          unit: t(star === 1 ? 'notifications.starOne' : 'notifications.starMany'),
+                        })}
                         hitSlop={8}
                         disabled={isSubmitting}
                         onPress={() => setDraft(event.id, { rating: star })}
@@ -360,7 +382,7 @@ export default function NotificationsScreen({ onOpenEvent, onOpenLogin }) {
                   <Text style={styles.starHint}>
                     {draft.rating > 0
                       ? `${draft.rating}/5`
-                      : 'Tryck för att betygsätta'}
+                      : t('notifications.rateHint')}
                   </Text>
                 </View>
                 <TextInput
@@ -368,7 +390,7 @@ export default function NotificationsScreen({ onOpenEvent, onOpenLogin }) {
                   value={draft.note}
                   editable={!isSubmitting}
                   maxLength={140}
-                  placeholder="Skriv en kort anteckning (max 140 tecken, inga personuppgifter)"
+                  placeholder={t('notifications.notePlaceholder')}
                   placeholderTextColor={TOKENS.color.textSoft}
                   multiline
                   onChangeText={(text) => setDraft(event.id, { note: text })}
@@ -379,7 +401,7 @@ export default function NotificationsScreen({ onOpenEvent, onOpenLogin }) {
                   </Text>
                   <Pressable
                     accessibilityRole="button"
-                    accessibilityLabel="Skicka betyg"
+                    accessibilityLabel={t('notifications.submitRating')}
                     disabled={isSubmitting || draft.rating < 1}
                     onPress={() => handleSubmitRating(event)}
                     style={({ pressed }) => [
@@ -391,7 +413,7 @@ export default function NotificationsScreen({ onOpenEvent, onOpenLogin }) {
                     {isSubmitting ? (
                       <ActivityIndicator color={TOKENS.color.appBg} />
                     ) : (
-                      <Text style={styles.submitButtonText}>Skicka betyg</Text>
+                      <Text style={styles.submitButtonText}>{t('notifications.submitRating')}</Text>
                     )}
                   </Pressable>
                 </View>
@@ -409,6 +431,7 @@ export default function NotificationsScreen({ onOpenEvent, onOpenLogin }) {
     nowMs,
     setDraft,
     handleSubmitRating,
+    t,
   ]);
 
   return (
@@ -423,11 +446,10 @@ export default function NotificationsScreen({ onOpenEvent, onOpenLogin }) {
           />
         }
       >
-        <Text style={styles.eyebrow}>NOTISER</Text>
-        <Text style={styles.title}>Dina påminnelser och svar</Text>
+        <Text style={styles.eyebrow}>{t('notifications.eyebrow')}</Text>
+        <Text style={styles.title}>{t('notifications.title')}</Text>
         <Text style={styles.subtitle}>
-          Så snart en ny matchning, påminnelse eller ett svar är klart dyker
-          det här. Tips: spara events för att få påminnelser 2 timmar innan.
+          {t('notifications.subtitle')}
         </Text>
 
         {loading ? (
@@ -439,19 +461,18 @@ export default function NotificationsScreen({ onOpenEvent, onOpenLogin }) {
         {!loading && error === 'auth' ? (
           <View style={styles.warningBlock}>
             <Text style={styles.warningText}>
-              Logga in för att se dina notiser, påminnelser och betygsätta
-              events du varit på.
+              {t('notifications.authBody')}
             </Text>
             {typeof onOpenLogin === 'function' ? (
               <Pressable
                 onPress={onOpenLogin}
-                accessibilityLabel="Logga in"
+                accessibilityLabel={t('common.logIn')}
                 style={({ pressed }) => [
                   styles.loginButton,
                   pressed ? styles.loginButtonPressed : null,
                 ]}
               >
-                <Text style={styles.loginButtonText}>Logga in</Text>
+                <Text style={styles.loginButtonText}>{t('common.logIn')}</Text>
               </Pressable>
             ) : null}
           </View>
@@ -460,7 +481,7 @@ export default function NotificationsScreen({ onOpenEvent, onOpenLogin }) {
         {!loading && error && error !== 'auth' ? (
           <View style={styles.warningBlock}>
             <Text style={styles.warningText}>
-              Kunde inte hämta notiser just nu ({error}). Dra ner för att försöka igen.
+              {t('notifications.fetchError', { error })}
             </Text>
           </View>
         ) : null}
@@ -475,8 +496,7 @@ export default function NotificationsScreen({ onOpenEvent, onOpenLogin }) {
             {isEmpty ? (
               <View style={styles.emptyBlock}>
                 <Text style={styles.emptyText}>
-                  Inga notiser än. Spara ett evenemang så får du en påminnelse
-                  2 timmar innan det börjar.
+                  {t('notifications.empty')}
                 </Text>
               </View>
             ) : null}

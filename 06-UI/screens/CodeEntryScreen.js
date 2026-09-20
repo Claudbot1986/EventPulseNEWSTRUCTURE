@@ -40,24 +40,26 @@ import {
   signInWithEmail,
   verifyEmailOtpCode,
 } from '../services/supabaseAuthClient';
+import { useI18n } from '../i18n';
 
 const CODE_LENGTH = 6;
 const RESEND_COOLDOWN_S = 60;
 
-function errorMessageFor(key) {
+function errorMessageFor(t, key) {
   switch (key) {
     case 'expired_or_invalid_code':
-      return 'Koden stämmer inte eller har gått ut — kontrollera och försök igen.';
+      return t('codeEntry.errInvalid');
     case 'rate_limited':
-      return 'För många försök — vänta en liten stund och testa igen.';
+      return t('codeEntry.errRateLimited');
     case 'timeout':
-      return 'Det tog för lång tid — kolla uppkopplingen och försök igen.';
+      return t('codeEntry.errTimeout');
     default:
-      return 'Något gick fel — försök igen.';
+      return t('codeEntry.errGeneric');
   }
 }
 
 export default function CodeEntryScreen({ email, mode = 'signin', onSuccess, onCancel }) {
+  const { t } = useI18n();
   const [code, setCode] = useState('');
   const [phase, setPhase] = useState('idle'); // 'idle' | 'verifying' | 'error' | 'success'
   const [errorMsg, setErrorMsg] = useState('');
@@ -101,7 +103,7 @@ export default function CodeEntryScreen({ email, mode = 'signin', onSuccess, onC
     const { session, error } = await verifyEmailOtpCode(email, normalized, currentMode);
     if (error || !session) {
       setPhase('error');
-      setErrorMsg(errorMessageFor(error));
+      setErrorMsg(errorMessageFor(t, error));
       runShake();
       setCode('');
       setPhase('idle');
@@ -111,7 +113,7 @@ export default function CodeEntryScreen({ email, mode = 'signin', onSuccess, onC
     if (typeof onSuccess === 'function') {
       onSuccess(session);
     }
-  }, [email, currentMode, onSuccess, runShake]);
+  }, [email, currentMode, onSuccess, runShake, t]);
 
   // Auto-submit as soon as the sixth digit lands.
   useEffect(() => {
@@ -134,8 +136,8 @@ export default function CodeEntryScreen({ email, mode = 'signin', onSuccess, onC
     if (error) {
       setResendState('error');
       setResendError(error === 'timeout'
-        ? 'Det tog för lång tid — försök igen.'
-        : 'Kunde inte skicka en ny kod — försök igen.');
+        ? t('codeEntry.resendTimeout')
+        : t('codeEntry.resendFailed'));
       return;
     }
     // Server may have flipped mode (e.g. address turned out to be taken) —
@@ -143,7 +145,7 @@ export default function CodeEntryScreen({ email, mode = 'signin', onSuccess, onC
     setCurrentMode(newMode);
     setResendState('idle');
     setResendIn(RESEND_COOLDOWN_S);
-  }, [resendIn, resendState, email]);
+  }, [resendIn, resendState, email, t]);
 
   const focusInput = useCallback(() => {
     if (inputRef.current) inputRef.current.focus();
@@ -177,16 +179,13 @@ export default function CodeEntryScreen({ email, mode = 'signin', onSuccess, onC
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
     >
       <View style={styles.inner}>
-        <Text style={styles.title}>Knappa in koden</Text>
+        <Text style={styles.title}>{t('codeEntry.title')}</Text>
         <Text style={styles.body}>
-          Vi har skickat en 6-siffrig kod till {email}. Skriv in den här för att
-          logga in.
-          {currentMode === 'link'
-            ? ' Dina sparade event och din smak följer med till kontot.'
-            : ''}
+          {t('codeEntry.body', { email })}
+          {currentMode === 'link' ? t('codeEntry.bodyLinkSuffix') : ''}
         </Text>
 
-        <Pressable onPress={focusInput} accessibilityLabel="Inloggningskod, 6 siffror" accessibilityRole="none">
+        <Pressable onPress={focusInput} accessibilityLabel={t('codeEntry.boxesA11y')} accessibilityRole="none">
           <Animated.View
             style={[styles.boxRow, { transform: [{ translateX: shake }] }]}
             pointerEvents="none"
@@ -205,12 +204,12 @@ export default function CodeEntryScreen({ email, mode = 'signin', onSuccess, onC
             maxLength={CODE_LENGTH}
             caretHidden
             editable={!busy && phase !== 'success'}
-            accessibilityLabel="Kodfält"
+            accessibilityLabel={t('codeEntry.inputA11y')}
           />
         </Pressable>
 
-        {busy ? <Text style={styles.status}>Verifierar…</Text> : null}
-        {phase === 'success' ? <Text style={styles.statusSuccess}>Klart — du loggas in!</Text> : null}
+        {busy ? <Text style={styles.status}>{t('codeEntry.verifying')}</Text> : null}
+        {phase === 'success' ? <Text style={styles.statusSuccess}>{t('codeEntry.success')}</Text> : null}
         {errorMsg ? <Text style={styles.errorText}>{errorMsg}</Text> : null}
 
         <Pressable
@@ -221,19 +220,19 @@ export default function CodeEntryScreen({ email, mode = 'signin', onSuccess, onC
           onPress={handleResend}
           disabled={resendIn > 0 || resendState === 'sending'}
           accessibilityRole="button"
-          accessibilityLabel="Skicka ny kod"
+          accessibilityLabel={t('codeEntry.resendA11y')}
         >
           <Text style={styles.secondaryLabel}>
             {resendState === 'sending'
-              ? 'Skickar…'
+              ? t('codeEntry.resendSending')
               : resendIn > 0
-                ? `Skicka ny kod (${resendIn}s)`
-                : 'Skicka ny kod'}
+                ? t('codeEntry.resendCooldown', { seconds: resendIn })
+                : t('codeEntry.resend')}
           </Text>
         </Pressable>
         {resendError ? <Text style={styles.errorText}>{resendError}</Text> : null}
 
-        <Text style={styles.hint}>Funkar inte koden? Öppna hellre länken i mejlet.</Text>
+        <Text style={styles.hint}>{t('codeEntry.linkHint')}</Text>
 
         {typeof onCancel === 'function' ? (
           <Pressable
@@ -241,7 +240,7 @@ export default function CodeEntryScreen({ email, mode = 'signin', onSuccess, onC
             onPress={onCancel}
             accessibilityRole="button"
           >
-            <Text style={styles.secondaryLabel}>Ändra e-postadress</Text>
+            <Text style={styles.secondaryLabel}>{t('codeEntry.changeEmail')}</Text>
           </Pressable>
         ) : null}
       </View>

@@ -241,10 +241,13 @@ export function deepLinkFor(notification) {
  * Best-effort: never throws. Returns `{ ok: false, warning: 'config' }`
  * if the agent URL is missing, or `'network'` on a network error.
  *
- * @param {{ limit?: number, signal?: AbortSignal, timeoutMs?: number }} [opts]
+ * @param {{ limit?: number, signal?: AbortSignal, timeoutMs?: number, t?: (key: string) => string }} [opts]
+ *   `t` (optional): i18n translate function for the 'Sparat event' title
+ *   fallback (`notifications.savedFallback`). When omitted the Swedish legacy
+ *   string is used so existing callers keep working unchanged.
  * @returns {Promise<{ ok: true, events: Array } | { ok: false, warning: string }>}
  */
-export async function fetchUnratedSavedEvents({ limit = DEFAULT_LIMIT, signal, timeoutMs = DEFAULT_TIMEOUT_MS } = {}) {
+export async function fetchUnratedSavedEvents({ limit = DEFAULT_LIMIT, signal, timeoutMs = DEFAULT_TIMEOUT_MS, t } = {}) {
   let baseUrl;
   try {
     baseUrl = requireAgentBaseUrl();
@@ -283,7 +286,9 @@ export async function fetchUnratedSavedEvents({ limit = DEFAULT_LIMIT, signal, t
       .filter((row) => row && typeof row === 'object' && typeof row.id === 'string' && row.id.length > 0)
       .map((row) => ({
         id: row.id,
-        title: typeof row.title === 'string' ? row.title : 'Sparat event',
+        title: typeof row.title === 'string'
+          ? row.title
+          : (typeof t === 'function' ? t('notifications.savedFallback') : 'Sparat event'),
         venue_name: typeof row.venue_name === 'string' ? row.venue_name : null,
         start_time: typeof row.start_time === 'string' ? row.start_time : '',
       }));

@@ -29,7 +29,7 @@
  *     time_of_day?: 'morning' | 'afternoon' | 'evening' | 'night'
  *     budget?: 'free' | 'low' | 'medium' | 'high' | 'any'
  *     day_filter?: 'weekday' | 'friday' | 'weekend' | 'saturday' | 'sunday' | 'today'
- *     locale: 'sv' | 'en'
+ *     locale: CuratedLocale — one of SUPPORTED_CURATED_LOCALES
  *     event_ids: string[] — up to 3 example events that match this collection
  *   }
  */
@@ -40,7 +40,28 @@ import type { EventCard } from '../types';
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
-export type CuratedLocale = 'sv' | 'en';
+/**
+ * Locales the app may request (Språkstöd 2026-09-20: the 10 languages the
+ * client i18n supports — Swedish default + the top tourist languages
+ * visiting Stockholm per SBR/Tillväxtverket 2025: USA, DE, UK, NO, FI top-5
+ * + NL/FR growth + Nordic DA + CN long-haul + IT national top-10).
+ * Collection copy only exists in sv/en, so every
+ * non-sv locale renders the English text; the requested locale is echoed
+ * back on each collection so the client knows what it asked for.
+ */
+export const SUPPORTED_CURATED_LOCALES = [
+  'sv',
+  'en',
+  'de',
+  'no',
+  'fi',
+  'da',
+  'nl',
+  'fr',
+  'zh-Hans',
+  'it',
+] as const;
+export type CuratedLocale = (typeof SUPPORTED_CURATED_LOCALES)[number];
 export type CuratedTimeOfDay = 'morning' | 'afternoon' | 'evening' | 'night';
 export type CuratedBudget = 'free' | 'low' | 'medium' | 'high' | 'any';
 export type CuratedDayFilter =
@@ -77,7 +98,9 @@ export interface CuratedCollectionsResult {
 
 export interface GetCuratedCollectionsOptions {
   supabase: SupabaseClient;
-  /** Locale drives name + prompt_text language. Default 'sv'. */
+  /** Locale drives name + prompt_text language (sv copy for 'sv', English
+   *  for every other supported locale — no other translations exist yet).
+   *  Default 'sv'. */
   locale?: CuratedLocale;
   /** Override the current time for tests. Default: now() (Stockholm). */
   now?: Date;
@@ -559,9 +582,11 @@ export async function getCuratedCollections({
 
     return {
       id: entry.id,
-      name: locale === 'en' ? entry.en_name : entry.sv_name,
-      reason: locale === 'en' ? entry.en_reason : entry.sv_reason,
-      prompt_text: locale === 'en' ? entry.en_prompt : entry.sv_prompt,
+      // Copy exists only in sv/en — 'sv' renders Swedish, every other
+      // supported locale renders English.
+      name: locale === 'sv' ? entry.sv_name : entry.en_name,
+      reason: locale === 'sv' ? entry.sv_reason : entry.en_reason,
+      prompt_text: locale === 'sv' ? entry.sv_prompt : entry.en_prompt,
       locale,
       ...(entry.category_slug ? { category_slug: entry.category_slug } : {}),
       ...(entry.time_of_day ? { time_of_day: entry.time_of_day } : {}),

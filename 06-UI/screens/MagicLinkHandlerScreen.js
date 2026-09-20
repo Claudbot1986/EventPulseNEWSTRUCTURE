@@ -30,8 +30,10 @@ import {
   verifyOtpToken,
   setSessionFromTokens,
 } from '../services/supabaseAuthClient';
+import { useI18n } from '../i18n';
 
 export default function MagicLinkHandlerScreen({ url, onSuccess, onCancel }) {
+  const { t } = useI18n();
   const [phase, setPhase] = useState('verifying'); // 'verifying' | 'error'
   const [errorMsg, setErrorMsg] = useState('');
 
@@ -39,7 +41,7 @@ export default function MagicLinkHandlerScreen({ url, onSuccess, onCancel }) {
     const parsed = parseAuthDeepLink(url);
     if (!parsed) {
       setPhase('error');
-      setErrorMsg('Ogiltig magic link — kontrollera att du öppnade den senaste länken i din email.');
+      setErrorMsg(t('magicLink.errInvalid'));
       return;
     }
 
@@ -58,19 +60,19 @@ export default function MagicLinkHandlerScreen({ url, onSuccess, onCancel }) {
         token: parsed.token,
       }));
     } else {
-      error = 'Ogiltig magic link — saknar token.';
+      error = t('magicLink.errNoToken');
     }
 
     if (error || !session) {
       setPhase('error');
-      setErrorMsg(error || 'Kunde inte verifiera magic link.');
+      setErrorMsg(error || t('magicLink.errVerify'));
       return;
     }
 
     if (typeof onSuccess === 'function') {
       onSuccess(session);
     }
-  }, [url, onSuccess]);
+  }, [url, onSuccess, t]);
 
   useEffect(() => {
     run();
@@ -81,11 +83,11 @@ export default function MagicLinkHandlerScreen({ url, onSuccess, onCancel }) {
       {phase === 'verifying' ? (
         <>
           <ActivityIndicator color="#F7F2EA" />
-          <Text style={styles.label}>Verifierar magic link…</Text>
+          <Text style={styles.label}>{t('magicLink.verifying')}</Text>
         </>
       ) : (
         <>
-          <Text style={styles.title}>Något gick fel</Text>
+          <Text style={styles.title}>{t('magicLink.errTitle')}</Text>
           <Text style={styles.body}>{errorMsg}</Text>
           {typeof onCancel === 'function' ? (
             <Pressable
@@ -93,7 +95,7 @@ export default function MagicLinkHandlerScreen({ url, onSuccess, onCancel }) {
               onPress={onCancel}
               accessibilityRole="button"
             >
-              <Text style={styles.primaryLabel}>Tillbaka till appen</Text>
+              <Text style={styles.primaryLabel}>{t('magicLink.backToApp')}</Text>
             </Pressable>
           ) : null}
         </>

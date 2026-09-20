@@ -67,3 +67,7 @@ primary_region = "arn"
 
 [processes]
   app = "npx --no-install tsx 08-Agent/server.ts"
+  # S6 (2026-09-20): Din helg weekly push. Own machine, no http_service —
+  # node-cron fires Thursdays 17:00 Europe/Stockholm and fans out Expo Push
+  # notifications to opted-in users.
+  worker = "npx --no-install tsx 08-Agent/cron/push_din_helg.ts --loop"

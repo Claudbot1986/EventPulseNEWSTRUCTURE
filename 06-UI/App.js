@@ -1,10 +1,15 @@
 import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { StatusBar } from 'expo-status-bar';
-import { StyleSheet, Text, View, SectionList, ActivityIndicator, TouchableOpacity, ScrollView, Linking, Image, Platform, Share, Alert, AppState, Pressable } from 'react-native';
+import { StyleSheet, Text, View, SectionList, ActivityIndicator, TouchableOpacity, ScrollView, Linking, Image, Platform, Share, Alert, AppState, Pressable, Animated } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { fetchFeed, addDays, fetchEventIcs, shareSession, fetchSharedSession, parseShareHashFromUrl, recordEventInteraction } from './services/agentClient';
-import { isAuthDeepLink } from './services/deepLinkRouter';
+import { useI18n } from './i18n';
+import { dateNamesFor } from './i18n/dateNames';
+import { isAuthDeepLink, isDinHelgDeepLink } from './services/deepLinkRouter';
 import { useAiImageUrl } from './hooks/useAiImageUrl';
+import Toast from './components/Toast';
+import PushPromptModal from './components/PushPromptModal';
+import { enableDinHelgPush, isPushRuntimeAvailable } from './services/pushTokenClient';
 import { analyticsClient } from './services/analyticsClient';
 import ProfileScreen from './screens/ProfileScreen';
 import { getItem, getOrCreateAnonUserId, removeItem, setItem, PENDING_AGENT_MESSAGE_KEY, PENDING_EVENT_KEY } from './services/storage';
@@ -74,94 +79,61 @@ function deduplicateEvents(events) {
   return Array.from(seen.values());
 }
 
-// Event categories with colors for visual distinction
+// Event categories with colors for visual distinction. Display labels live in
+// the i18n dictionaries (explore.badge.<key>) — resolved at render.
 const CATEGORIES = {
-  music: { label: 'MUSIK', color: '#BB86FC', bgColor: '#2D2D3A' },
-  food: { label: 'MAT & DRYCK', color: '#FF7597', bgColor: '#3A2D2D' },
-  culture: { label: 'KULTUR', color: '#4ECDC4', bgColor: '#2D3A35' },
-  nightlife: { label: 'NATTLIV', color: '#FFE66D', bgColor: '#3A3A2D' },
-  sports: { label: 'SPORT', color: '#95E1D3', bgColor: '#2D353A' },
-  tech: { label: 'TECH', color: '#74B9FF', bgColor: '#2D3140' },
-  barn: { label: 'BARN', color: '#FF9F43', bgColor: '#3A352D' },
-  theatre: { label: 'TEATER', color: '#FF6B6B', bgColor: '#3A2A2A' },
+  music: { color: '#BB86FC', bgColor: '#2D2D3A' },
+  food: { color: '#FF7597', bgColor: '#3A2D2D' },
+  culture: { color: '#4ECDC4', bgColor: '#2D3A35' },
+  nightlife: { color: '#FFE66D', bgColor: '#3A3A2D' },
+  sports: { color: '#95E1D3', bgColor: '#2D353A' },
+  tech: { color: '#74B9FF', bgColor: '#2D3140' },
+  barn: { color: '#FF9F43', bgColor: '#3A352D' },
+  theatre: { color: '#FF6B6B', bgColor: '#3A2A2A' },
 };
 
-// Category filter labels (Swedish)
+// Category filter definitions — labels resolve via i18n at render.
 const CATEGORY_FILTERS = [
-  { key: 'music', label: 'Musik' },
-  { key: 'culture', label: 'Kultur' },
-  { key: 'sports', label: 'Sport' },
-  { key: 'theatre', label: 'Teater' },
-  { key: 'food', label: 'Mat & Dryck' },
-  { key: 'nightlife', label: 'Nattliv' },
-  { key: 'barn', label: 'Barn' },
+  { key: 'music', labelKey: 'explore.filterCat.music' },
+  { key: 'culture', labelKey: 'explore.filterCat.culture' },
+  { key: 'sports', labelKey: 'explore.filterCat.sports' },
+  { key: 'theatre', labelKey: 'explore.filterCat.theatre' },
+  { key: 'food', labelKey: 'explore.filterCat.food' },
+  { key: 'nightlife', labelKey: 'explore.filterCat.nightlife' },
+  { key: 'barn', labelKey: 'explore.filterCat.barn' },
 ];
 
-// Time filter definitions
+// Time filter definitions — labels resolve via i18n at render.
 const TIME_FILTERS = [
-  { key: 'ikvall', label: 'Ikväll' },
-  { key: 'imorgon', label: 'Imorgon' },
-  { key: 'helgen', label: 'Helgen' },
-  { key: 'denna_vecka', label: '7 dagar' },
+  { key: 'ikvall', labelKey: 'explore.time.ikvall' },
+  { key: 'imorgon', labelKey: 'explore.time.imorgon' },
+  { key: 'helgen', labelKey: 'explore.time.helgen' },
+  { key: 'denna_vecka', labelKey: 'explore.time.week' },
 ];
 
 const PRICE_FILTERS = [
-  { key: 'free', label: 'Gratis' },
+  { key: 'free', labelKey: 'common.free' },
 ];
 
-// Fallback provider definitions (used when API doesn't provide sources)
-// Keys must match canonical event.source from API server
-//
-// NOTE: Only ACTIVE sources with real data are included.
-// stockholm-venues is INACTIVE (blocked by Cloudflare, no public API).
-const FALLBACK_PROVIDERS = [
-  { key: 'all', label: 'Alla arrangörer' },
-  { key: 'ticketmaster', label: 'Ticketmaster' },
-  { key: 'kulturhuset', label: 'Kulturhuset' },
-  { key: 'malmo-live', label: 'Malmö Live' },
-];
-
-// Build PROVIDERS from available sources (with 'all' option prepended)
-function buildProviders(availableSources) {
-  if (!availableSources || availableSources.length === 0) {
-    return FALLBACK_PROVIDERS;
-  }
-  
-  // Normalize sources: handle both string arrays and object arrays
-  const normalizedSources = availableSources.map(s => {
-    if (typeof s === 'string') {
-      // Source is a string (e.g., "ticketmaster", "kulturhuset")
-      return { key: s, label: formatProviderLabel(s) };
-    }
-    // Source is an object with key/label properties
-    return { key: s.key, label: s.label || formatProviderLabel(s.key) };
-  });
-  
-  // Prepend 'all' option
-  return [
-    { key: 'all', label: 'Alla arrangörer' },
-    ...normalizedSources,
-  ];
-}
-
-// Format provider key to human-readable label
-function formatProviderLabel(key) {
-  const labels = {
-    'ticketmaster': 'Ticketmaster',
-    'kulturhuset': 'Kulturhuset',
-    'malmo-live': 'Malmö Live',
+// Format provider key to human-readable label via i18n. Unknown sources keep
+// their raw key so they stay traceable.
+function formatProviderLabel(key, t) {
+  const labelKeys = {
+    'ticketmaster': 'source.ticketmaster',
+    'kulturhuset': 'source.kulturhuset',
+    'malmo-live': 'source.malmolive',
   };
-  return labels[key] || key;
+  return labelKeys[key] ? t(labelKeys[key]) : key;
 }
 
 // Get CTA button text based on source
-function getCtaText(source) {
-  const ctaLabels = {
-    'ticketmaster': 'Köp biljett via Ticketmaster',
-    'kulturhuset': 'Läs mer på Kulturhuset',
-    'malmo-live': 'Läs mer på Malmö Live',
+function getCtaText(source, t) {
+  const ctaLabelKeys = {
+    'ticketmaster': 'cta.ticketmaster',
+    'kulturhuset': 'cta.kulturhuset',
+    'malmo-live': 'cta.malmolive',
   };
-  return ctaLabels[source] || 'Läs mer';
+  return t(ctaLabelKeys[source] || 'cta.fallback');
 }
 
 function getVenueLabel(event) {
@@ -172,41 +144,40 @@ function getAreaLabel(event) {
   return event.area || event.city || null;
 }
 
-function formatPrice(event) {
+function formatPrice(event, t) {
   if (event.isFree || event.is_free) {
-    return 'Gratis';
+    return t('common.free');
   }
 
   const min = event.priceMin ?? event.price_min;
   const max = event.priceMax ?? event.price_max;
 
   if (min != null && max != null && min !== max) {
-    return `${min}-${max} kr`;
+    return t('common.priceRange', { min, max });
   }
 
   if (min != null) {
-    return `${min} kr`;
+    return t('common.priceFrom', { min });
   }
 
   return null;
 }
 
-// Format date for display in Swedish (e.g., "Lör 21 mars")
-function formatDate(dateString) {
+// Format date for display (e.g., "Lör 21 mars") — day/month names follow the
+// active language via i18n/dateNames.
+function formatDate(dateString, language) {
   if (!dateString) return '';
   const date = new Date(dateString);
-  const daysSwedish = ['Sön', 'Mån', 'Tis', 'Ons', 'Tors', 'Fre', 'Lör'];
-  const monthsSwedish = ['jan', 'feb', 'mars', 'apr', 'maj', 'jun', 'jul', 'aug', 'sep', 'okt', 'nov', 'dec'];
-  return `${daysSwedish[date.getDay()]} ${date.getDate()} ${monthsSwedish[date.getMonth()]}`;
+  const names = dateNamesFor(language);
+  return `${names.daysShort[date.getDay()]} ${date.getDate()} ${names.monthsShort[date.getMonth()]}`;
 }
 
 // Format full date for details (e.g., "Fredag 20 mars 2026")
-function formatFullDate(dateString) {
+function formatFullDate(dateString, language) {
   if (!dateString) return '';
   const date = new Date(dateString);
-  const days = ['Söndag', 'Måndag', 'Tisdag', 'Onsdag', 'Torsdag', 'Fredag', 'Lördag'];
-  const months = ['januari', 'februari', 'mars', 'april', 'maj', 'juni', 'juli', 'augusti', 'september', 'oktober', 'november', 'december'];
-  return `${days[date.getDay()]} ${date.getDate()} ${months[date.getMonth()]} ${date.getFullYear()}`;
+  const names = dateNamesFor(language);
+  return `${names.daysFull[date.getDay()]} ${date.getDate()} ${names.monthsFull[date.getMonth()]} ${date.getFullYear()}`;
 }
 
 // Format time for display in 24-hour Swedish format (e.g., "19:30")
@@ -216,41 +187,40 @@ function formatTime(timeString) {
   return `${hours}:${minutes}`;
 }
 
-function formatEventTime(event) {
+function formatEventTime(event, t) {
   const start = formatTime(event.time);
-  return start || 'Tid ej angiven';
+  return start || t('common.timeMissing');
 }
 
-// Format day header for grouped events (Swedish)
-function formatDayHeader(dateString) {
+// Format day header for grouped events (names follow the active language).
+function formatDayHeader(dateString, language, t) {
   if (!dateString) return '';
-  
+
   const date = new Date(dateString);
   const today = new Date();
   const todayDate = new Date(today.getFullYear(), today.getMonth(), today.getDate());
   const tomorrow = new Date(todayDate);
   tomorrow.setDate(tomorrow.getDate() + 1);
   const eventDate = new Date(date.getFullYear(), date.getMonth(), date.getDate());
-  
-  const daysSwedish = ['Söndag', 'Måndag', 'Tisdag', 'Onsdag', 'Torsdag', 'Fredag', 'Lördag'];
-  const monthsSwedish = ['januari', 'februari', 'mars', 'april', 'maj', 'juni', 'juli', 'augusti', 'september', 'oktober', 'november', 'december'];
-  
+
+  const names = dateNamesFor(language);
+
   // Check if today
   if (eventDate.getTime() === todayDate.getTime()) {
-    return 'Idag';
+    return t('common.today');
   }
-  
+
   // Check if tomorrow
   if (eventDate.getTime() === tomorrow.getTime()) {
-    return 'Imorgon';
+    return t('common.tomorrow');
   }
-  
+
   // Otherwise, show day and date (e.g., "Lördag 14 mars")
-  return `${daysSwedish[date.getDay()]} ${date.getDate()} ${monthsSwedish[date.getMonth()]}`;
+  return `${names.daysFull[date.getDay()]} ${date.getDate()} ${names.monthsFull[date.getMonth()]}`;
 }
 
 // Group events by day, and group same-title events together within each day
-function groupEventsByDay(events) {
+function groupEventsByDay(events, language, t) {
   const dayGroups = {};
   
   // First group by date
@@ -313,7 +283,7 @@ function groupEventsByDay(events) {
     .sort((a, b) => a.localeCompare(b))
     .map(date => ({
       date,
-      title: formatDayHeader(date),
+      title: formatDayHeader(date, language, t),
       events: dayGroups[date],
     }));
   
@@ -371,36 +341,32 @@ function filterEventsByCategory(events, selectedCategories) {
   });
 }
 
-function SplashScreen() {
-  return (
-    <View style={styles.splashContainer}>
-      <Text style={styles.splashText}>EventPulse</Text>
-    </View>
-  );
-}
-
 function CategoryBadge({ category }) {
-  const cat = CATEGORIES[category] || CATEGORIES.music;
+  const { t } = useI18n();
+  const catKey = CATEGORIES[category] ? category : 'music';
+  const cat = CATEGORIES[catKey];
   return (
     <View style={[styles.categoryBadge, { backgroundColor: cat.bgColor }]}>
-      <Text style={[styles.categoryText, { color: cat.color }]}>{cat.label}</Text>
+      <Text style={[styles.categoryText, { color: cat.color }]}>{t(`explore.badge.${catKey}`)}</Text>
     </View>
   );
 }
 
 function DateCluster({ event }) {
+  const { t, language } = useI18n();
   return (
     <View style={styles.dateCluster}>
-      <Text style={styles.dateClusterDay}>{formatDate(event.date) || 'Datum saknas'}</Text>
-      <Text style={styles.dateClusterTime}>{formatEventTime(event)}</Text>
+      <Text style={styles.dateClusterDay}>{formatDate(event.date, language) || t('common.dateMissing')}</Text>
+      <Text style={styles.dateClusterTime}>{formatEventTime(event, t)}</Text>
     </View>
   );
 }
 
 function EventItem({ event, onPress }) {
+  const { t } = useI18n();
   const venue = getVenueLabel(event);
   const area = getAreaLabel(event);
-  const price = formatPrice(event);
+  const price = formatPrice(event, t);
   // AI image rollout (Utforska, 2026-08-26) — useAiImageUrl returns the
   // pre-baked/lazy URL or null. UI renders empty box when null. AI stamp
   // (200×48 pill) is now positioned at top=740 (safe-zone inom cover-crop
@@ -424,7 +390,7 @@ function EventItem({ event, onPress }) {
         </View>
         <Text style={styles.eventTitle} numberOfLines={2}>{event.title}</Text>
         <View style={styles.eventMetaRow}>
-          <Text style={styles.eventVenue} numberOfLines={1}>{venue || 'Plats ej angiven'}</Text>
+          <Text style={styles.eventVenue} numberOfLines={1}>{venue || t('common.venueMissing')}</Text>
           {area && <Text style={styles.eventArea} numberOfLines={1}> · {area}</Text>}
         </View>
         <View style={styles.eventFooter}>
@@ -432,10 +398,10 @@ function EventItem({ event, onPress }) {
           <View style={styles.eventActionRow}>
             {event.hasExternalLink && (
               <Text style={styles.externalLinkChip} numberOfLines={1}>
-                {event.externalLinkChipLabel || 'Extern länk'}
+                {event.externalLinkChipLabel || t('common.externalLink')}
               </Text>
             )}
-            <Text style={styles.eventOpenText}>Visa event</Text>
+            <Text style={styles.eventOpenText}>{t('explore.showEvent')}</Text>
           </View>
         </View>
       </View>
@@ -444,6 +410,7 @@ function EventItem({ event, onPress }) {
 }
 
 function GroupedEventItem({ groupedEvent, onEventPress }) {
+  const { t } = useI18n();
   const firstEvent = groupedEvent.events[0] || groupedEvent;
   const venue = getVenueLabel(firstEvent);
   const area = getAreaLabel(firstEvent);
@@ -477,14 +444,14 @@ function GroupedEventItem({ groupedEvent, onEventPress }) {
         </View>
         <Text style={styles.eventTitle} numberOfLines={2}>{groupedEvent.title}</Text>
         <View style={styles.eventMetaRow}>
-          <Text style={styles.eventVenue} numberOfLines={1}>{venue || 'Plats ej angiven'}</Text>
+          <Text style={styles.eventVenue} numberOfLines={1}>{venue || t('common.venueMissing')}</Text>
           {area && <Text style={styles.eventArea} numberOfLines={1}> · {area}</Text>}
         </View>
         <View style={styles.groupedSummaryRow}>
-          <Text style={styles.groupedCount}>{groupedEvent.events.length} tider tillgängliga</Text>
+          <Text style={styles.groupedCount}>{t('explore.timesAvailable', { count: groupedEvent.events.length })}</Text>
           {firstEvent.hasExternalLink && (
             <Text style={styles.externalLinkChip} numberOfLines={1}>
-              {firstEvent.externalLinkChipLabel || 'Extern länk'}
+              {firstEvent.externalLinkChipLabel || t('common.externalLink')}
             </Text>
           )}
         </View>
@@ -494,21 +461,23 @@ function GroupedEventItem({ groupedEvent, onEventPress }) {
 }
 
 function LoadingMore() {
+  const { t } = useI18n();
   return (
     <View style={styles.loadingMore}>
       <ActivityIndicator size="small" color={TOKENS.color.accent} />
-      <Text style={styles.loadingMoreText}>Hämtar fler event...</Text>
+      <Text style={styles.loadingMoreText}>{t('explore.loadingMore')}</Text>
     </View>
   );
 }
 
 function LoadingSkeleton() {
+  const { t } = useI18n();
   return (
     <SafeAreaView style={styles.homeContainer}>
       <View style={styles.header}>
-        <Text style={styles.appKicker}>City discovery</Text>
+        <Text style={styles.appKicker}>{t('explore.eyebrow')}</Text>
         <Text style={styles.appTitle}>EventPulse</Text>
-        <Text style={styles.appSubtitle}>Hämtar riktiga event nära dig.</Text>
+        <Text style={styles.appSubtitle}>{t('explore.loadingSubtitle')}</Text>
       </View>
       <View style={styles.skeletonList}>
         {[0, 1, 2].map(item => (
@@ -538,6 +507,7 @@ function StateView({ title, detail, actionLabel, onAction }) {
 }
 
 function HomeScreen({ onEventPress, scrollPositionRef, pendingPrompt, dismissPendingPrompt }) {
+  const { t, language } = useI18n();
   const [events, setEvents] = useState([]);
   const [loading, setLoading] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
@@ -609,14 +579,14 @@ function HomeScreen({ onEventPress, scrollPositionRef, pendingPrompt, dismissPen
       // full DB count, so we trust it across windows.
       if (!append) setTotalCount(page.total ?? 0);
     } catch (err) {
-      setError(err.message || 'Kunde inte hämta event');
+      setError(err.message || t('explore.errorFallback'));
       console.error('Failed to load events:', err);
     } finally {
       setLoading(false);
       setLoadingMore(false);
       isFetchingRef.current = false;
     }
-  }, [weekStart]);
+  }, [weekStart, t]);
 
   // Keep the AppState listener's ref current (must run after the loadEvents
   // declaration — see TDZ note above).
@@ -682,7 +652,7 @@ function HomeScreen({ onEventPress, scrollPositionRef, pendingPrompt, dismissPen
     return result;
   }, [events, timeFilter, selectedCategories, priceFilter]);
 
-  const groupedEvents = useMemo(() => groupEventsByDay(filteredEvents), [filteredEvents]);
+  const groupedEvents = useMemo(() => groupEventsByDay(filteredEvents, language, t), [filteredEvents, language, t]);
   const hasActiveFilters = Boolean(timeFilter || selectedCategories.length > 0 || priceFilter);
   const activeFilterCount = (timeFilter ? 1 : 0) + (priceFilter ? 1 : 0) + selectedCategories.length;
 
@@ -694,14 +664,14 @@ function HomeScreen({ onEventPress, scrollPositionRef, pendingPrompt, dismissPen
     return (
       <SafeAreaView style={styles.homeContainer}>
         <View style={styles.header}>
-          <Text style={styles.appKicker}>City discovery</Text>
+          <Text style={styles.appKicker}>{t('explore.eyebrow')}</Text>
           <Text style={styles.appTitle}>EventPulse</Text>
-          <Text style={styles.appSubtitle}>Riktiga event från verifierade källor.</Text>
+          <Text style={styles.appSubtitle}>{t('explore.errorSubtitle')}</Text>
         </View>
         <StateView
-          title="Vi kunde inte hämta event just nu"
+          title={t('explore.errorTitle')}
           detail={error}
-          actionLabel="Försök igen"
+          actionLabel={t('common.retry')}
           onAction={loadEvents}
         />
       </SafeAreaView>
@@ -715,10 +685,10 @@ function HomeScreen({ onEventPress, scrollPositionRef, pendingPrompt, dismissPen
           style={[styles.filterButton, styles.filterToggle]}
           onPress={() => setIsFilterMenuOpen(prev => !prev)}
           accessibilityRole="button"
-          accessibilityLabel={isFilterMenuOpen ? 'Stäng filtermenyn' : 'Öppna filtermenyn'}
+          accessibilityLabel={isFilterMenuOpen ? t('explore.filter.closeA11y') : t('explore.filter.openA11y')}
         >
           <Text style={styles.filterButtonText}>
-            {isFilterMenuOpen ? 'Filter ▴' : 'Filter ▾'}
+            {isFilterMenuOpen ? t('explore.filter.toggleClose') : t('explore.filter.toggleOpen')}
           </Text>
           {activeFilterCount > 0 && (
             <View style={styles.filterBadge}>
@@ -728,7 +698,7 @@ function HomeScreen({ onEventPress, scrollPositionRef, pendingPrompt, dismissPen
         </TouchableOpacity>
         {isFilterMenuOpen && (
           <View style={styles.filterDropdown}>
-            <Text style={styles.filterLabel}>När</Text>
+            <Text style={styles.filterLabel}>{t('explore.filter.when')}</Text>
             <View style={styles.filterDropdownRow}>
               {TIME_FILTERS.map(filter => (
                 <TouchableOpacity
@@ -743,12 +713,12 @@ function HomeScreen({ onEventPress, scrollPositionRef, pendingPrompt, dismissPen
                     styles.filterButtonText,
                     timeFilter === filter.key && styles.filterButtonTextActive
                   ]}>
-                    {filter.label}
+                    {t(filter.labelKey)}
                   </Text>
                 </TouchableOpacity>
               ))}
             </View>
-            <Text style={styles.filterLabel}>Pris</Text>
+            <Text style={styles.filterLabel}>{t('explore.filter.price')}</Text>
             <View style={styles.filterDropdownRow}>
               {PRICE_FILTERS.map(filter => (
                 <TouchableOpacity
@@ -763,12 +733,12 @@ function HomeScreen({ onEventPress, scrollPositionRef, pendingPrompt, dismissPen
                     styles.filterButtonText,
                     priceFilter === filter.key && styles.filterButtonTextActive
                   ]}>
-                    {filter.label}
+                    {t(filter.labelKey)}
                   </Text>
                 </TouchableOpacity>
               ))}
             </View>
-            <Text style={styles.filterLabel}>Kategori</Text>
+            <Text style={styles.filterLabel}>{t('explore.filter.category')}</Text>
             <View style={styles.filterDropdownRow}>
               {CATEGORY_FILTERS.map(filter => (
                 <TouchableOpacity
@@ -783,14 +753,14 @@ function HomeScreen({ onEventPress, scrollPositionRef, pendingPrompt, dismissPen
                     styles.filterButtonText,
                     selectedCategories.includes(filter.key) && styles.filterButtonTextActive
                   ]}>
-                    {filter.label}
+                    {t(filter.labelKey)}
                   </Text>
                 </TouchableOpacity>
               ))}
             </View>
             {hasActiveFilters && (
               <TouchableOpacity style={styles.clearFiltersButton} onPress={clearFilters}>
-                <Text style={styles.clearFiltersText}>Rensa filter</Text>
+                <Text style={styles.clearFiltersText}>{t('explore.filter.clear')}</Text>
               </TouchableOpacity>
             )}
           </View>
@@ -802,7 +772,7 @@ function HomeScreen({ onEventPress, scrollPositionRef, pendingPrompt, dismissPen
           style={styles.filterBackdrop}
           onPress={() => setIsFilterMenuOpen(false)}
           accessibilityRole="button"
-          accessibilityLabel="Stäng filtermenyn"
+          accessibilityLabel={t('explore.filter.closeA11y')}
         />
       )}
 
@@ -810,15 +780,15 @@ function HomeScreen({ onEventPress, scrollPositionRef, pendingPrompt, dismissPen
         ListHeaderComponent={
           <>
             <View style={styles.header}>
-              <Text style={styles.appKicker}>City discovery</Text>
-              <Text style={styles.exploreTitle}>Vad händer i stan?</Text>
+              <Text style={styles.appKicker}>{t('explore.eyebrow')}</Text>
+              <Text style={styles.exploreTitle}>{t('explore.title')}</Text>
               <Text style={styles.appSubtitle}>
-                {totalCount} riktiga event att upptäcka. Börja browsa, filtrera när du vill.
+                {t('explore.subtitleCount', { count: totalCount })}
               </Text>
             </View>
             {pendingPrompt ? (
               <View style={styles.pendingPromptBanner} accessibilityRole="text">
-                <Text style={styles.pendingPromptEyebrow}>DU FRÅGADE</Text>
+                <Text style={styles.pendingPromptEyebrow}>{t('explore.youAsked')}</Text>
                 <Text style={styles.pendingPromptText} numberOfLines={3}>
                   {pendingPrompt}
                 </Text>
@@ -826,9 +796,9 @@ function HomeScreen({ onEventPress, scrollPositionRef, pendingPrompt, dismissPen
                   style={styles.pendingPromptDismiss}
                   onPress={dismissPendingPrompt}
                   accessibilityRole="button"
-                  accessibilityLabel="Stäng"
+                  accessibilityLabel={t('common.close')}
                 >
-                  <Text style={styles.pendingPromptDismissText}>Stäng</Text>
+                  <Text style={styles.pendingPromptDismissText}>{t('common.close')}</Text>
                 </TouchableOpacity>
               </View>
             ) : null}
@@ -836,9 +806,9 @@ function HomeScreen({ onEventPress, scrollPositionRef, pendingPrompt, dismissPen
         }
         ListEmptyComponent={
           <StateView
-            title={hasActiveFilters ? 'Inga event matchar filtren' : 'Inga event hittades'}
-            detail={hasActiveFilters ? 'Testa att rensa filtren eller bredda datumet.' : 'När nya publicerade event finns visas de här.'}
-            actionLabel={hasActiveFilters ? 'Rensa filter' : 'Hämta igen'}
+            title={hasActiveFilters ? t('explore.emptyFilteredTitle') : t('explore.emptyTitle')}
+            detail={hasActiveFilters ? t('explore.emptyFilteredDetail') : t('explore.emptyDetail')}
+            actionLabel={hasActiveFilters ? t('explore.filter.clear') : t('common.retryFetch')}
             onAction={hasActiveFilters ? clearFilters : loadEvents}
           />
         }
@@ -875,7 +845,7 @@ function HomeScreen({ onEventPress, scrollPositionRef, pendingPrompt, dismissPen
           showsVerticalScrollIndicator={false}
           ListFooterComponent={loadingMore ? <LoadingMore /> : (!hasMore && groupedEvents.length > 0 ? (
             <View style={styles.endOfList}>
-              <Text style={styles.endOfListText}>Det var allt vi har just nu.</Text>
+              <Text style={styles.endOfListText}>{t('explore.endOfList')}</Text>
             </View>
           ) : null)}
           stickySectionHeadersEnabled={false}
@@ -900,7 +870,14 @@ function HomeScreen({ onEventPress, scrollPositionRef, pendingPrompt, dismissPen
   );
 }
 
+/** Dwell under this floor is treated as noise and never recorded (S4). */
+const DWELL_MIN_MS = 3_000;
+
+/** One-shot per install: Din helg push pre-permission prompt (S5). */
+const DIN_HELG_PUSH_PROMPT_KEY = 'eventpulse.din_helg_push_prompt_shown';
+
 function DetailsScreen({ event, onBack }) {
+  const { t, language } = useI18n();
   const [ctaError, setCtaError] = useState(null);
   const [saved, setSaved] = useState(false);
   const [dismissed, setDismissed] = useState(false);
@@ -910,8 +887,37 @@ function DetailsScreen({ event, onBack }) {
   // warnings after the OS Share-sheet closes (best-effort display).
   const [shareBusy, setShareBusy] = useState(false);
   const [shareError, setShareError] = useState(null);
+  // S2 (2026-09-20): save bounce + toast. saveScale animates the save button;
+  // saveToast holds the message while the Toast is mounted (null = hidden).
+  const saveScale = useRef(new Animated.Value(1)).current;
+  const [saveToast, setSaveToast] = useState(null);
+  // S5 (2026-09-20): Din helg push pre-permission prompt, shown once per
+  // install after the FIRST save (research: ask in context, tease the
+  // notification, then burn the one-shot OS dialog only on accept). Hidden
+  // entirely in runtimes where push cannot work (Expo Go, simulator).
+  const [pushPromptVisible, setPushPromptVisible] = useState(false);
   // AI image rollout (Utforska, 2026-08-26) — see EventItem above.
   const { uri } = useAiImageUrl(event);
+
+  // S4 dwell: measure how long the details view stays open. The clock
+  // (re)starts on mount / event change; on unmount or back we record the
+  // elapsed time as interaction='dwell' — but only at >= DWELL_MIN_MS so
+  // accidental taps through the list don't pollute the signal. Best-effort:
+  // recordEventInteraction never throws (auth/network return warnings).
+  const dwellStartRef = useRef(Date.now());
+  useEffect(() => {
+    dwellStartRef.current = Date.now();
+    return () => {
+      const dwellMs = Date.now() - dwellStartRef.current;
+      if (event?.id && dwellMs >= DWELL_MIN_MS) {
+        recordEventInteraction({
+          eventId: event.id,
+          interaction: 'dwell',
+          metadata: { dwell_ms: dwellMs },
+        }).catch(() => {});
+      }
+    };
+  }, [event?.id]);
 
   const handleOpenUrl = async () => {
     if (!event.url) {
@@ -924,14 +930,14 @@ function DetailsScreen({ event, onBack }) {
     try {
       const canOpen = await Linking.canOpenURL(event.url);
       if (!canOpen) {
-        setCtaError('Länken kunde inte öppnas på den här enheten.');
+        setCtaError(t('details.linkErrorDevice'));
         return;
       }
 
       await Linking.openURL(event.url);
       setCtaError(null);
     } catch {
-      setCtaError('Länken kunde inte öppnas just nu.');
+      setCtaError(t('details.linkErrorNow'));
     }
   };
 
@@ -940,6 +946,15 @@ function DetailsScreen({ event, onBack }) {
     const next = !saved;
     setSaved(next);
     void analyticsClient.eventSave(event.id, next ? 'save' : 'unsave');
+    // S2 micro-feedback (2026-09-20): small bounce + taste-learning toast on
+    // SAVE — unsave stays silent (no celebratory copy for removing a save).
+    if (next) {
+      Animated.sequence([
+        Animated.timing(saveScale, { toValue: 1.12, duration: 120, useNativeDriver: true }),
+        Animated.spring(saveScale, { toValue: 1, friction: 3, useNativeDriver: true }),
+      ]).start();
+      setSaveToast(t('toast.savedTaste'));
+    }
     // NOW#2 fix: persist the save to /agent/feedback so the guest's taste
     // (and Hem → Sparade) actually sees it. Best-effort, never throws; the
     // 'auth' warning path is unreachable here because AppShell's bootstrap
@@ -948,8 +963,42 @@ function DetailsScreen({ event, onBack }) {
     // UI-local (analytics-only), tracked as a follow-up gap.
     if (next) {
       recordEventInteraction({ eventId: event.id, interaction: 'save' }).catch(() => {});
+      void maybePromptDinHelgPush();
     }
   };
+
+  // S5: after the first save, offer the weekly Din helg push — once per
+  // install, only when push can actually run in this runtime.
+  const maybePromptDinHelgPush = useCallback(async () => {
+    try {
+      const shown = await getItem(DIN_HELG_PUSH_PROMPT_KEY);
+      if (shown === '1') return;
+      if (!isPushRuntimeAvailable()) return;
+      setPushPromptVisible(true);
+    } catch (_err) {
+      // Storage hiccup — skip the prompt rather than nag on every save.
+    }
+  }, []);
+
+  const handlePushPromptAccept = useCallback(async () => {
+    setPushPromptVisible(false);
+    try {
+      await setItem(DIN_HELG_PUSH_PROMPT_KEY, '1');
+    } catch (_err) {
+      // Best-effort — worst case the prompt reappears once after reinstall.
+    }
+    // Outcome stays silent: the Profile toggle reflects the stored state.
+    await enableDinHelgPush();
+  }, []);
+
+  const handlePushPromptDecline = useCallback(async () => {
+    setPushPromptVisible(false);
+    try {
+      await setItem(DIN_HELG_PUSH_PROMPT_KEY, '1');
+    } catch (_err) {
+      // Best-effort.
+    }
+  }, []);
 
   const handleDismiss = () => {
     if (!event?.id || dismissed) return;
@@ -973,17 +1022,17 @@ function DetailsScreen({ event, onBack }) {
       const { url } = await fetchEventIcs(event.id, userId);
       const canOpen = await Linking.canOpenURL(url);
       if (!canOpen) {
-        setCalendarError('Kan inte öppna kalenderfilen på den här enheten.');
+        setCalendarError(t('details.calendarErrorDevice'));
         return;
       }
       await Linking.openURL(url);
     } catch (err) {
       const msg = err instanceof Error ? err.message : 'unknown';
-      setCalendarError(`Kunde inte hämta kalenderfil: ${msg}`);
+      setCalendarError(t('details.calendarErrorFetch', { msg }));
     } finally {
       setCalendarBusy(false);
     }
-  }, [event?.id, calendarBusy]);
+  }, [event?.id, calendarBusy, t]);
 
   // T0061 / MVP-gap §78 — share-event deep-link.
   // Calls POST /agent/share with the event title (cheap, discoverable), then
@@ -995,17 +1044,19 @@ function DetailsScreen({ event, onBack }) {
     setShareBusy(true);
     setShareError(null);
     try {
-      const title = (event.title ?? 'Ett event').slice(0, 200);
+      const title = (event.title ?? t('details.shareEventFallback')).slice(0, 200);
+      // The share `query` is wire data (an agent prompt), not UI copy — it
+      // stays Swedish regardless of UI language.
       const venue = getVenueLabel(event) || 'Stockholm';
       const query = `${title} på ${venue}`;
       const res = await shareSession({ query, eventIds: [event.id] });
       if (!res.ok) {
-        setShareError(`Kunde inte skapa delningslänk: ${res.warning}`);
+        setShareError(t('details.shareError', { warning: res.warning }));
         return;
       }
       try {
         await Share.share({
-          message: `${title} — öppna i EventPulse: ${res.url}`,
+          message: t('details.shareMessage', { title, url: res.url }),
           url: res.url,
           title,
         });
@@ -1014,23 +1065,23 @@ function DetailsScreen({ event, onBack }) {
         const msg = err instanceof Error ? err.message : 'unknown';
         // User-cancellation is expected — surface no error for it.
         if (!/user did not share|dismissedAction/i.test(msg)) {
-          setShareError(`Kunde inte öppna delningsmenyn: ${msg}`);
+          setShareError(t('details.shareErrorOpen', { msg }));
         }
       }
     } finally {
       setShareBusy(false);
     }
-  }, [event?.id, event?.title, event?.venue_name, shareBusy]);
+  }, [event?.id, event?.title, event?.venue_name, shareBusy, t]);
 
   const venue = getVenueLabel(event);
   const area = getAreaLabel(event);
-  const price = formatPrice(event);
+  const price = formatPrice(event, t);
 
   return (
     <SafeAreaView style={styles.detailsContainer}>
       <View style={styles.detailsHeader}>
         <TouchableOpacity style={styles.backButton} onPress={onBack}>
-          <Text style={styles.backButtonText}>Tillbaka</Text>
+          <Text style={styles.backButtonText}>{t('common.back')}</Text>
         </TouchableOpacity>
       </View>
       <ScrollView style={styles.detailsContent} showsVerticalScrollIndicator={false}>
@@ -1053,41 +1104,43 @@ function DetailsScreen({ event, onBack }) {
                 onPress={handleOpenUrl}
                 activeOpacity={0.8}
                 accessibilityRole="button"
-                accessibilityLabel={event.externalLinkLabel || getCtaText(event.source)}
+                accessibilityLabel={event.externalLinkLabel || getCtaText(event.source, t)}
               >
-                <Text style={styles.ctaButtonText}>{event.externalLinkLabel || getCtaText(event.source)}</Text>
+                <Text style={styles.ctaButtonText}>{event.externalLinkLabel || getCtaText(event.source, t)}</Text>
               </TouchableOpacity>
               {ctaError && <Text style={styles.ctaErrorText}>{ctaError}</Text>}
             </>
           ) : (
             <View style={styles.detailsPrimaryCtaUnavailable}>
-              <Text style={styles.ctaUnavailableText}>Ingen extern eventlänk finns i datan ännu.</Text>
+              <Text style={styles.ctaUnavailableText}>{t('details.noExternalLink')}</Text>
             </View>
           )}
 
           <View style={styles.detailsActionRow}>
-            <TouchableOpacity
-              style={[styles.detailsActionButton, saved && styles.detailsActionButtonActive]}
-              onPress={handleToggleSave}
-              activeOpacity={0.7}
-              accessibilityRole="button"
-              accessibilityState={{ selected: saved }}
-              accessibilityLabel={saved ? 'Ta bort från sparade' : 'Spara event'}
-            >
-              <Text style={[styles.detailsActionText, saved && styles.detailsActionTextActive]}>
-                {saved ? '✓ Sparad' : 'Spara'}
-              </Text>
-            </TouchableOpacity>
+            <Animated.View style={{ flex: 1, transform: [{ scale: saveScale }] }}>
+              <TouchableOpacity
+                style={[styles.detailsActionButton, saved && styles.detailsActionButtonActive]}
+                onPress={handleToggleSave}
+                activeOpacity={0.7}
+                accessibilityRole="button"
+                accessibilityState={{ selected: saved }}
+                accessibilityLabel={saved ? t('common.removeSaved') : t('common.saveEvent')}
+              >
+                <Text style={[styles.detailsActionText, saved && styles.detailsActionTextActive]}>
+                  {saved ? t('common.saved') : t('common.save')}
+                </Text>
+              </TouchableOpacity>
+            </Animated.View>
             <TouchableOpacity
               style={[styles.detailsActionButton, styles.detailsActionButtonDismiss]}
               onPress={handleDismiss}
               activeOpacity={0.7}
               disabled={dismissed}
               accessibilityRole="button"
-              accessibilityLabel="Dölj detta event"
+              accessibilityLabel={t('common.dismissEvent')}
             >
               <Text style={[styles.detailsActionText, styles.detailsActionTextDismiss]}>
-                {dismissed ? 'Dold' : 'Dölj'}
+                {dismissed ? t('common.dismissed') : t('common.dismiss')}
               </Text>
             </TouchableOpacity>
           </View>
@@ -1097,10 +1150,10 @@ function DetailsScreen({ event, onBack }) {
             activeOpacity={0.7}
             disabled={calendarBusy}
             accessibilityRole="button"
-            accessibilityLabel="Lägg till i kalender"
+            accessibilityLabel={t('details.calendarA11y')}
           >
             <Text style={[styles.detailsActionText, calendarBusy && styles.detailsActionTextDisabled]}>
-              {calendarBusy ? 'Hämtar kalenderfil…' : 'Lägg till i kalender'}
+              {calendarBusy ? t('details.calendarBusy') : t('details.calendar')}
             </Text>
           </TouchableOpacity>
           {calendarError ? <Text style={styles.ctaErrorText}>{calendarError}</Text> : null}
@@ -1113,73 +1166,71 @@ function DetailsScreen({ event, onBack }) {
             activeOpacity={0.7}
             disabled={shareBusy}
             accessibilityRole="button"
-            accessibilityLabel="Dela detta event"
+            accessibilityLabel={t('details.shareA11y')}
           >
             <Text style={[styles.detailsActionText, shareBusy && styles.detailsActionTextDisabled]}>
-              {shareBusy ? 'Förbereder delning…' : 'Dela'}
+              {shareBusy ? t('details.shareBusy') : t('details.share')}
             </Text>
           </TouchableOpacity>
           {shareError ? <Text style={styles.ctaErrorText}>{shareError}</Text> : null}
         </View>
         
         <View style={styles.detailsSection}>
-          <Text style={styles.detailsLabel}>När</Text>
+          <Text style={styles.detailsLabel}>{t('details.when')}</Text>
           <Text style={styles.detailsValue}>
-            {event.date ? formatFullDate(event.date) : 'Datum ej angivet'}
+            {event.date ? formatFullDate(event.date, language) : t('common.dateNotSet')}
           </Text>
-          <Text style={styles.detailsSubvalue}>{formatEventTime(event)}</Text>
+          <Text style={styles.detailsSubvalue}>{formatEventTime(event, t)}</Text>
         </View>
         
         <View style={styles.detailsSection}>
-          <Text style={styles.detailsLabel}>Var</Text>
-          <Text style={styles.detailsValue}>{venue || 'Plats ej angiven'}</Text>
+          <Text style={styles.detailsLabel}>{t('details.where')}</Text>
+          <Text style={styles.detailsValue}>{venue || t('common.venueMissing')}</Text>
           {area && <Text style={styles.detailsSubvalue}>{area}</Text>}
           {event.address && <Text style={styles.detailsSubvalue}>{event.address}</Text>}
         </View>
         
         {event.description && (
           <View style={styles.detailsSection}>
-            <Text style={styles.detailsLabel}>Om eventet</Text>
+            <Text style={styles.detailsLabel}>{t('details.about')}</Text>
             <Text style={styles.detailsDescription}>{event.description}</Text>
           </View>
         )}
         
         <View style={styles.detailsFooter}>
-          <Text style={styles.detailsSource}>Källa: {formatProviderLabel(event.source || 'okänd')}</Text>
+          <Text style={styles.detailsSource}>{t('source.footer', { source: event.source ? formatProviderLabel(event.source, t) : t('source.unknown') })}</Text>
         </View>
       </ScrollView>
+      {saveToast ? <Toast message={saveToast} onHide={() => setSaveToast(null)} /> : null}
+      <PushPromptModal
+        visible={pushPromptVisible}
+        onAccept={handlePushPromptAccept}
+        onDecline={handlePushPromptDecline}
+      />
     </SafeAreaView>
   );
 }
 
 export default function App({ onUserLoggedOut, onOpenLogin }) {
-  const [showSplash, setShowSplash] = useState(true);
+  const { t } = useI18n();
   const [selectedEvent, setSelectedEvent] = useState(null);
-  const [appReady, setAppReady] = useState(false);
   const scrollPositionRef = useRef(0);
+  // The mount-once deep-link effect below reads the latest t via this ref so
+  // a language switch mid-session never re-fires URL resolution.
+  const tRef = useRef(t);
+  tRef.current = t;
 
-  // Splash pacing only. Identity is owned by AppShell (guest mode: no
-  // session never blocks browsing) — nothing to restore here.
+  // Splash is owned by AppShell at the root (native splash + 3 s logo) —
+  // this component no longer paints its own splash, which previously made
+  // every tab switch into Utforska flash black (AppShell remounts App on
+  // tab change).
+  //
+  // Fire a "home" section impression every time the user lands back on the
+  // feed. Skipped while a details screen is showing so we don't double-count.
   useEffect(() => {
-    const timer = setTimeout(() => setAppReady(true), 800);
-    return () => clearTimeout(timer);
-  }, []);
-
-  useEffect(() => {
-    if (!appReady) return undefined;
-    const timer = setTimeout(() => {
-      setShowSplash(false);
-    }, 400);
-    return () => clearTimeout(timer);
-  }, [appReady]);
-
-  // Fire a "home" section impression every time the user lands back on
-  // the feed after the splash. Skipped while a details screen or the
-  // splash is showing so we don't double-count.
-  useEffect(() => {
-    if (!appReady || showSplash || selectedEvent) return;
+    if (selectedEvent) return;
     void analyticsClient.sectionImpression('home');
-  }, [appReady, showSplash, selectedEvent]);
+  }, [selectedEvent]);
 
   // T0063 — drain the pending agent prompt set by HomeScreen chip tap.
   // AppShell writes `eventpulse.pending_agent_message` and switches to the
@@ -1258,6 +1309,12 @@ export default function App({ onUserLoggedOut, onOpenLogin }) {
       // bail before the share-parser runs so the link never reaches
       // fetchSharedSession with the wrong URL shape.
       if (isAuthDeepLink(url)) return;
+      // S6: weekly Din helg push taps land on the home tab — the section
+      // sits at the top, so no scrolling is needed.
+      if (isDinHelgDeepLink(url)) {
+        setActiveTab('home');
+        return;
+      }
       const hash = parseShareHashFromUrl(url);
       if (!hash) return;
       const res = await fetchSharedSession({ hash });
@@ -1269,7 +1326,7 @@ export default function App({ onUserLoggedOut, onOpenLogin }) {
         // after the feed re-renders. Acceptable for Phase 1.
         const ev = {
           id: res.eventIds[0],
-          title: res.query || 'Delat event',
+          title: res.query || tRef.current('explore.sharedEvent'),
           url: null,
           ticket_url: null,
           imageUrl: null,
@@ -1282,7 +1339,7 @@ export default function App({ onUserLoggedOut, onOpenLogin }) {
       // Multi-event or query-only share → forward to agent via T0063 path.
       const text = (res.query && res.query.trim().length > 0)
         ? res.query
-        : 'Visa mig vad jag har blivit tipsad om';
+        : tRef.current('explore.sharedPrompt');
       setPendingPrompt(text);
       setItem(PENDING_AGENT_MESSAGE_KEY, text).catch(() => {});
     };
@@ -1321,7 +1378,6 @@ export default function App({ onUserLoggedOut, onOpenLogin }) {
   };
 
   const renderMain = () => {
-    if (!appReady || showSplash) return <SplashScreen />;
     if (selectedEvent) {
       return <DetailsScreen event={selectedEvent} onBack={handleBack} />;
     }
@@ -1337,7 +1393,7 @@ export default function App({ onUserLoggedOut, onOpenLogin }) {
     return <HomeScreen onEventPress={handleEventPress} scrollPositionRef={scrollPositionRef} pendingPrompt={pendingPrompt} dismissPendingPrompt={dismissPendingPrompt} onOpenLogin={onOpenLogin} />;
   };
 
-  const showTabBar = appReady && !showSplash && !selectedEvent;
+  const showTabBar = !selectedEvent;
 
   return (
     <View style={styles.container}>
@@ -1345,23 +1401,23 @@ export default function App({ onUserLoggedOut, onOpenLogin }) {
       {showTabBar ? (
           <View style={styles.tabBar} accessibilityRole="tabbar">
             {[
-              { key: 'home',    label: 'Hem',     icon: '●' },
-              { key: 'map',     label: 'Karta',   icon: '◆' },
-              { key: 'profile', label: 'Profil',  icon: '◉' },
-            ].map(({ key, label, icon }) => (
+              { key: 'home',    labelKey: 'tabs.home',    icon: '●' },
+              { key: 'map',     labelKey: 'tabs.map',     icon: '◆' },
+              { key: 'profile', labelKey: 'tabs.profile', icon: '◉' },
+            ].map(({ key, labelKey, icon }) => (
               <TouchableOpacity
                 key={key}
                 style={styles.tabItem}
                 onPress={() => setActiveTab(key)}
                 accessibilityRole="tab"
                 accessibilityState={{ selected: activeTab === key }}
-                accessibilityLabel={label}
+                accessibilityLabel={t(labelKey)}
               >
                 <Text style={[styles.tabIcon, activeTab === key && styles.tabIconActive]}>
                   {icon}
                 </Text>
                 <Text style={[styles.tabLabel, activeTab === key && styles.tabLabelActive]}>
-                  {label}
+                  {t(labelKey)}
                 </Text>
               </TouchableOpacity>
             ))}
@@ -1376,18 +1432,6 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: TOKENS.color.appBg,
-  },
-  splashContainer: {
-    flex: 1,
-    backgroundColor: TOKENS.color.appBg,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  splashText: {
-    color: TOKENS.color.text,
-    fontSize: 34,
-    fontWeight: '800',
-    letterSpacing: -1,
   },
   homeContainer: {
     flex: 1,

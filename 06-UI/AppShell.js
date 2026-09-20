@@ -9,8 +9,9 @@
  * (or when this shell remounts after onboarding).
  */
 
-import React, { useCallback, useEffect, useState } from 'react';
-import { View, Text, StyleSheet, Platform, Linking } from 'react-native';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
+import { View, Text, Image, StyleSheet, Platform, Linking } from 'react-native';
+import * as SplashScreen from 'expo-splash-screen';
 import { SafeAreaProvider, initialWindowMetrics } from 'react-native-safe-area-context';
 
 import BottomTabBar from './components/BottomTabBar';
@@ -37,6 +38,7 @@ import { analyticsClient } from './services/analyticsClient';
 import { NetworkProvider } from './services/networkContext';
 import { isAuthDeepLink } from './services/deepLinkRouter';
 import { useAuthReminder } from './services/useAuthReminder';
+import { LanguageProvider } from './i18n';
 
 // Dev-only feature flag: när TRUE lägger vi till 5:e tab "Utforska*" som
 // visar de 10 första AI-bilderna i en kontrollerad vy för visuell
@@ -47,6 +49,11 @@ const TABS = ['home', 'explore', 'notifications', 'profile'];
 if (EXPLORE_STAR_ENABLED) TABS.push('explore-star');
 const ONBOARDING_COMPLETE_KEY = 'eventpulse.onboarding_complete';
 const STORAGE_BUDGET_MS = 800;
+// Cold-start branding: the logo splash stays up at least this long even if
+// identity bootstrap finishes faster. Root-owned, shown exactly once per
+// process — the old per-tab App splash (which flashed black on every
+// Utforska open) is gone.
+const SPLASH_MIN_MS = 3000;
 export { PENDING_AGENT_MESSAGE_KEY };
 
 export default function AppShell() {
@@ -65,6 +72,14 @@ export default function AppShell() {
   // guest-linking flow) inside verifyEmailOtpCode.
   const [pendingEmail, setPendingEmail] = useState(null);
   const [pendingEmailMode, setPendingEmailMode] = useState('signin');
+
+  // Splash timing refs — see maybeHideSplash below.
+  const splashShownAtRef = useRef(Date.now());
+  const splashHiddenRef = useRef(false);
+  // Keep-alive tabs: a tab is mounted the first time it is activated and then
+  // kept mounted (display:none while inactive) so switching tabs never
+  // remounts/refetches. 'home' is the landing tab so it starts mounted.
+  const mountedTabsRef = useRef({ home: true });
 
   // Guest auth nudge (AuthReminderModal). Timing contract 2026-09-20: first
   // nudge ~3 min in, ongoing registration pauses it, an abandoned attempt
@@ -161,6 +176,21 @@ export default function AppShell() {
     setShowLogin(false);
   }, []);
 
+  // Splash lifecycle: the native splash was frozen at module level
+  // (index.js → preventAutoHideAsync). We hide it once onboarding+bootstrap
+  // have settled AND the minimum branding time has elapsed. Both gate points
+  // call maybeHideSplash; the first one to satisfy the constraint wins.
+  const maybeHideSplash = useCallback(() => {
+    if (splashHiddenRef.current) return;
+    const wait = SPLASH_MIN_MS - (Date.now() - splashShownAtRef.current);
+    if (wait > 0) {
+      setTimeout(maybeHideSplash, wait);
+      return;
+    }
+    splashHiddenRef.current = true;
+    SplashScreen.hideAsync().catch(() => {});
+  }, []);
+
   useEffect(() => {
     let alive = true;
     const budget = setTimeout(() => {
@@ -181,13 +211,14 @@ export default function AppShell() {
       })
       .finally(() => {
         clearTimeout(budget);
+        if (alive) maybeHideSplash();
       });
 
     return () => {
       alive = false;
       clearTimeout(budget);
     };
-  }, []);
+  }, [maybeHideSplash]);
 
   // NOW#2 bootstrap: once onboarding is done, guarantee a Supabase session
   // exists — persisted session reused, expired one refreshed, otherwise a
@@ -227,16 +258,20 @@ export default function AppShell() {
       })
       .finally(() => {
         clearTimeout(budget);
+        if (alive) maybeHideSplash();
       });
 
     return () => {
       alive = false;
       clearTimeout(budget);
     };
-  }, [onboardingState]);
+  }, [onboardingState, maybeHideSplash]);
 
   const handleTabChange = (tabId) => {
     if (!TABS.includes(tabId)) return;
+    // Lazy keep-alive: mount on first activation, keep mounted afterwards
+    // (hidden via display:none) so tab switches never remount or refetch.
+    mountedTabsRef.current[tabId] = true;
     setActiveTab(tabId);
   };
 
@@ -301,6 +336,11 @@ export default function AppShell() {
   } else if (onboardingState === 'loading') {
     body = (
       <View style={styles.splashPlaceholder}>
+        <Image
+          source={require('./assets/splash.png')}
+          style={styles.splashLogo}
+          resizeMode="contain"
+        />
         <Text style={styles.splashText}>EventPulse</Text>
       </View>
     );
@@ -309,6 +349,11 @@ export default function AppShell() {
   } else if (userState === 'loading') {
     body = (
       <View style={styles.splashPlaceholder}>
+        <Image
+          source={require('./assets/splash.png')}
+          style={styles.splashLogo}
+          resizeMode="contain"
+        />
         <Text style={styles.splashText}>EventPulse</Text>
       </View>
     );
@@ -347,25 +392,40 @@ export default function AppShell() {
     body = (
       <>
         <NetworkBanner />
-        {activeTab === 'explore' && (
-          <App
-            onUserLoggedOut={handleUserLoggedOut}
-            onOpenLogin={() => setShowLogin(true)}
-          />
+        {mountedTabsRef.current.explore && (
+          <View style={activeTab === 'explore' ? styles.tabPanel : styles.tabHidden}>
+            <App
+              onUserLoggedOut={handleUserLoggedOut}
+              onOpenLogin={() => setShowLogin(true)}
+            />
+          </View>
         )}
-        {activeTab === 'home' && (
-          <HomeScreen onChipPress={handleChipPress} onCardPress={handleHomeCardPress} />
+        {mountedTabsRef.current.home && (
+          <View style={activeTab === 'home' ? styles.tabPanel : styles.tabHidden}>
+            <HomeScreen onChipPress={handleChipPress} onCardPress={handleHomeCardPress} />
+          </View>
         )}
-        {activeTab === 'notifications' && (
-          <NotificationsScreen onOpenLogin={() => setShowLogin(true)} />
+        {mountedTabsRef.current.notifications && (
+          <View style={activeTab === 'notifications' ? styles.tabPanel : styles.tabHidden}>
+            <NotificationsScreen
+              onOpenLogin={() => setShowLogin(true)}
+              isActive={activeTab === 'notifications'}
+            />
+          </View>
         )}
-        {activeTab === 'profile' && (
-          <ProfileScreen
-            onLoggedOut={handleUserLoggedOut}
-            onOpenLogin={() => setShowLogin(true)}
-          />
+        {mountedTabsRef.current.profile && (
+          <View style={activeTab === 'profile' ? styles.tabPanel : styles.tabHidden}>
+            <ProfileScreen
+              onLoggedOut={handleUserLoggedOut}
+              onOpenLogin={() => setShowLogin(true)}
+            />
+          </View>
         )}
-        {activeTab === 'explore-star' && EXPLORE_STAR_ENABLED && <UtforskaStarScreen />}
+        {EXPLORE_STAR_ENABLED && mountedTabsRef.current['explore-star'] && (
+          <View style={activeTab === 'explore-star' ? styles.tabPanel : styles.tabHidden}>
+            <UtforskaStarScreen />
+          </View>
+        )}
         <View style={styles.barWrapper} pointerEvents="box-none">
           <BottomTabBar
             activeTab={activeTab}
@@ -383,11 +443,13 @@ export default function AppShell() {
   }
 
   return (
-    <NetworkProvider>
-      <SafeAreaProvider initialMetrics={initialWindowMetrics}>
-        <View style={styles.container}>{body}</View>
-      </SafeAreaProvider>
-    </NetworkProvider>
+    <LanguageProvider>
+      <NetworkProvider>
+        <SafeAreaProvider initialMetrics={initialWindowMetrics}>
+          <View style={styles.container}>{body}</View>
+        </SafeAreaProvider>
+      </NetworkProvider>
+    </LanguageProvider>
   );
 }
 
@@ -402,11 +464,23 @@ const styles = StyleSheet.create({
     right: 0,
     bottom: 0,
   },
+  tabPanel: {
+    flex: 1,
+  },
+  tabHidden: {
+    flex: 1,
+    display: 'none',
+  },
   splashPlaceholder: {
     flex: 1,
     backgroundColor: '#000000',
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  splashLogo: {
+    width: 180,
+    height: 180,
+    marginBottom: 24,
   },
   splashText: {
     color: '#F7F2EA',

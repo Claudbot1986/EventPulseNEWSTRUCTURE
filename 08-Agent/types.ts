@@ -206,6 +206,15 @@ export interface RankedEvent {
  *                 personalize.ts, which reads both)
  *   feedback_positive / feedback_negative — explicit thumbs up/down copy
  *     from the UI (Phase 1.5+); semantically alias to save / reject today.
+ *   dwell       — details screen stayed open >= 3 s (Din-helg S4);
+ *                 metadata.dwell_ms carries the measured milliseconds.
+ *
+ * NOTE: this union mirrors the /agent/feedback wire contract
+ * (ALLOWED_INTERACTIONS in record_feedback.ts). The DB CHECK constraint
+ * additionally contains 'attendance' and 'rating' — those are written by
+ * the dedicated /agent/attendance + /agent/rating routes (T0082), never by
+ * /agent/feedback. See 05-Supabase/migrations/20260920-0002-… for the full
+ * 11-value constraint list.
  */
 export type FeedbackInteraction =
   | 'impression'
@@ -215,7 +224,8 @@ export type FeedbackInteraction =
   | 'reject'
   | 'dismiss'
   | 'feedback_positive'
-  | 'feedback_negative';
+  | 'feedback_negative'
+  | 'dwell';
 
 /** Stable, machine-readable categorization of a `reject` interaction. Maps
  *  to `user_interactions.metadata->>reject_reason` so the personalization

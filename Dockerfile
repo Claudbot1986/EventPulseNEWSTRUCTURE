@@ -78,4 +78,8 @@ ENV SUPABASE_URL="" \
     MINIMAX_API_KEY="" \
     AGENT_ALLOWED_ORIGINS=""
 
-ENTRYPOINT ["npx", "--no-install", "tsx", "08-Agent/server.ts"]
+# CMD (not ENTRYPOINT): Fly replaces CMD with the [processes] group command.
+# With an ENTRYPOINT the group command would be APPENDED as argv instead —
+# which ran a second copy of server.ts on the worker machine (fixed
+# 2026-09-20 when the push_din_helg worker was added).
+CMD ["npx", "--no-install", "tsx", "08-Agent/server.ts"]

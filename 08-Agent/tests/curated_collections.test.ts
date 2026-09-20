@@ -23,6 +23,7 @@ import {
   _selectCollectionsForTest,
   _toSearchInputForTest,
   getCuratedCollections,
+  SUPPORTED_CURATED_LOCALES,
   type CuratedDayFilter,
   type CuratedTimeOfDay,
 } from '../tools/curated_collections';
@@ -244,6 +245,43 @@ describe('getCuratedCollections (integration)', () => {
     }
   });
 
+  // Språkstöd 2026-09-20: every supported non-sv locale renders the English
+  // copy (only sv/en translations exist) and echoes the requested locale.
+  it.each(['de', 'fr', 'zh-Hans', 'it'] as const)(
+    'renders English copy and echoes requested locale for %s',
+    async (locale) => {
+      searchEventsMock.mockResolvedValue({ events: [], warnings: [] });
+      const result = await getCuratedCollections({
+        supabase: {} as SupabaseClient,
+        locale,
+        now: makeStockholmDate(2026, 8, 21, 19),
+      });
+      expect(result.collections.length).toBeGreaterThanOrEqual(2);
+      for (const c of result.collections) {
+        expect(c.locale).toBe(locale);
+        expect(c.prompt_text).not.toContain('ikväll');
+        expect(c.prompt_text).not.toContain('Gratis');
+      }
+    },
+  );
+
+  it('lists exactly the 10 client-supported locales', () => {
+    // SBR/Tillväxtverket 2025: India fell out of the top foreign markets →
+    // hi replaced by it (national top-10, +12 %). See plan vault note.
+    expect([...SUPPORTED_CURATED_LOCALES]).toEqual([
+      'sv',
+      'en',
+      'de',
+      'no',
+      'fi',
+      'da',
+      'nl',
+      'fr',
+      'zh-Hans',
+      'it',
+    ]);
+  });
+
   it('hydrates event_ids up to 3 from search_events results', async () => {
     searchEventsMock.mockResolvedValue({
       events: [
@@ -363,7 +401,7 @@ describe('getCuratedCollections (integration)', () => {
       expect(c.reason.length).toBeGreaterThan(0);
       expect(typeof c.prompt_text).toBe('string');
       expect(c.prompt_text.length).toBeGreaterThan(0);
-      expect(['sv', 'en']).toContain(c.locale);
+      expect(SUPPORTED_CURATED_LOCALES).toContain(c.locale);
       expect(Array.isArray(c.event_ids)).toBe(true);
     }
   });

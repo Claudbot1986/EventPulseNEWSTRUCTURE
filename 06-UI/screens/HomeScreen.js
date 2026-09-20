@@ -2,9 +2,12 @@
  * HomeScreen — personalized landing surface (#72).
  *
  * Sections (in priority order, top-to-bottom):
+ *   0. Din helg — fixed weekly ritual (2026-09-20): top 3–5 of
+ *      /agent/recommended filtered to the upcoming Fri–Sun; hides the old
+ *      Helgen section while it has cards.
  *   1. Header   — time-aware greeting + subtitle
  *   2. Ikväll   — events tonight (today, start_time_local >= 18:00)
- *   3. Helgen   — this weekend (Sat-Sun)
+ *   3. Helgen   — this weekend (Sat-Sun); fallback for Din helg
  *   4. Gratis   — free events in the next 7 days
  *   5. Rekommenderat — server-side AI-ranked via fetchRecommendedEvents (T0056);
  *      ranker blends followed venues/artists, stated preferences, and save/reject
@@ -46,6 +49,9 @@ import {
 } from 'react-native';
 
 import { fetchFeed, fetchSavedEvents, fetchRecommendedEvents, fetchSuggestedPrompts, fetchCachedRecommendations, fetchRecentQueries, fetchCuratedCollections, fetchLiveEvents, fetchAiImageSmoketest } from '../services/agentClient';
+import { resolveReasons } from '../utils/rankReasonLabels';
+import { upcomingWeekendIsoSet } from './home/weekendDates';
+import { useI18n } from '../i18n';
 
 const TOKENS = {
   color: {
@@ -88,25 +94,26 @@ function nextSaturdayIso() {
   return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
 }
 
+
 function localHourFromIso(iso) {
   if (!iso) return null;
   const d = new Date(iso);
   return Number.isNaN(d.getTime()) ? null : d.getHours();
 }
 
-function greeting() {
+function greeting(t) {
   const h = new Date().getHours();
-  if (h < 5) return 'God natt, Stockholm';
-  if (h < 11) return 'God morgon, Stockholm';
-  if (h < 18) return 'God eftermiddag, Stockholm';
-  return 'God kväll, Stockholm';
+  if (h < 5) return t('home.greeting.night');
+  if (h < 11) return t('home.greeting.morning');
+  if (h < 18) return t('home.greeting.afternoon');
+  return t('home.greeting.evening');
 }
 
-function subtitleForHour(h) {
-  if (h < 5) return 'Nu är det lugnt — kolla in helgens händelser.';
-  if (h < 11) return 'Vad vill du göra i Stockholm idag?';
-  if (h < 18) return 'Har du några planer för kvällen?';
-  return 'Stockholm har massor på gång ikväll.';
+function subtitleForHour(h, t) {
+  if (h < 5) return t('home.subtitle.night');
+  if (h < 11) return t('home.subtitle.morning');
+  if (h < 18) return t('home.subtitle.afternoon');
+  return t('home.subtitle.evening');
 }
 
 // ─── Section data hook ───────────────────────────────────────────────────────
@@ -180,37 +187,49 @@ function CardImage({ uri, imageLicense, imageAttribution, imageGenerationStatus 
 }
 
 function AvailabilityChip({ event }) {
+  const { t } = useI18n();
   const badge = event.availability_badge;
   if (!badge) return null;
   if (badge === 'sold_out') {
-    return <Text style={[styles.cardChip, styles.cardChipSoldOut]}>Slutsåld</Text>;
+    return <Text style={[styles.cardChip, styles.cardChipSoldOut]}>{t('home.soldOut')}</Text>;
   }
   if (badge === 'few_left') {
-    return <Text style={[styles.cardChip, styles.cardChipFewLeft]}>Få kvar</Text>;
+    return <Text style={[styles.cardChip, styles.cardChipFewLeft]}>{t('home.fewLeft')}</Text>;
   }
   return null;
 }
 
 function PriceChip({ event }) {
+  const { t } = useI18n();
   if (event.is_free || event.isFree) {
-    return <Text style={[styles.cardChip, styles.cardChipFree]}>Gratis</Text>;
+    return <Text style={[styles.cardChip, styles.cardChipFree]}>{t('common.free')}</Text>;
   }
   const min = event.price_min_sek ?? event.priceMin;
   if (min != null) {
-    return <Text style={styles.cardChip}>{min} kr</Text>;
+    return <Text style={styles.cardChip}>{t('common.priceFrom', { min })}</Text>;
   }
   return null;
 }
 
 function EventCardCompact({ event, onPress }) {
+  const { t, language } = useI18n();
   const time = event.time || '';
-  const venue = event.venue_name || event.venue || 'Plats ej angiven';
+  // RQ5 (2026-09-20): always-visible "why" chips. Unknown enums are dropped
+  // by resolveReasons; endpoints without reasons render an empty list.
+  const reasons = useMemo(
+    () => resolveReasons(event.reasons, language).slice(0, 2),
+    [event.reasons, language],
+  );
+  const venue = event.venue_name || event.venue || t('common.venueMissing');
+  // sv-cardA11y '{title}{when} på {venue}': `when` carries its own leading
+  // space so an absent time leaves no double space.
+  const when = time ? ` ${t('common.atTime', { time })}` : '';
   return (
     <Pressable
       style={({ pressed }) => [styles.card, pressed && styles.cardPressed]}
       onPress={() => onPress?.(event)}
       accessibilityRole="button"
-      accessibilityLabel={`${event.title} ${time ? 'klockan ' + time : ''} på ${venue}`}
+      accessibilityLabel={t('home.cardA11y', { title: event.title, when, venue })}
     >
       <CardImage
         uri={event.image_url || event.imageUrl}
@@ -229,15 +248,25 @@ function EventCardCompact({ event, onPress }) {
             <Text style={[styles.cardChip, styles.cardChipCategory]}>{event.category_slug}</Text>
           ) : null}
         </View>
+        {reasons.length > 0 ? (
+          <View style={styles.cardReasonRow}>
+            {reasons.map((r) => (
+              <Text key={r.key} style={styles.cardReasonChip} numberOfLines={1}>
+                {r.icon} {r.label}
+              </Text>
+            ))}
+          </View>
+        ) : null}
       </View>
     </Pressable>
   );
 }
 
 function EmptyRow() {
+  const { t } = useI18n();
   return (
     <View style={styles.emptyRow}>
-      <Text style={styles.emptyRowText}>— inga evenemang just nu —</Text>
+      <Text style={styles.emptyRowText}>{t('home.empty')}</Text>
     </View>
   );
 }
@@ -345,6 +374,7 @@ function LiveBadge() {
   // Pulsing red dot + "LIVE" label. Animated opacity 1.0 → 0.4 → 1.0 on a
   // 1.2s loop. Uses native driver — never touches the JS bridge during
   // the animation.
+  const { t } = useI18n();
   const opacity = React.useRef(new Animated.Value(1)).current;
   useEffect(() => {
     const loop = Animated.loop(
@@ -360,20 +390,22 @@ function LiveBadge() {
   return (
     <View style={styles.liveBadge}>
       <Animated.View style={[styles.liveDot, { opacity }]} />
-      <Text style={styles.liveBadgeText}>LIVE</Text>
+      <Text style={styles.liveBadgeText}>{t('home.live.badge')}</Text>
     </View>
   );
 }
 
 function LiveEventCard({ event, onPress }) {
+  const { t } = useI18n();
   const time = event.time || '';
-  const venue = event.venue_name || event.venue || 'Plats ej angiven';
+  const venue = event.venue_name || event.venue || t('common.venueMissing');
+  const when = time ? ` ${t('common.atTime', { time })}` : '';
   return (
     <Pressable
       style={({ pressed }) => [styles.liveCard, pressed && styles.cardPressed]}
       onPress={() => onPress?.(event)}
       accessibilityRole="button"
-      accessibilityLabel={`Pågår nu: ${event.title} ${time ? 'klockan ' + time : ''} på ${venue}`}
+      accessibilityLabel={t('home.liveA11y', { title: event.title, when, venue })}
     >
       <CardImage
         uri={event.image_url || event.imageUrl}
@@ -394,6 +426,7 @@ function LiveEventCard({ event, onPress }) {
 }
 
 function LiveNowStrip({ onCardPress }) {
+  const { t } = useI18n();
   const { status, events, error, retry } = useLiveEvents();
 
   // Window closed: do not render at all. The user is not going to see
@@ -412,18 +445,18 @@ function LiveNowStrip({ onCardPress }) {
   return (
     <View style={styles.section}>
       <View style={styles.sectionHeader}>
-        <Text style={styles.sectionEyebrow}>PÅGÅR NU</Text>
-        <Text style={styles.sectionTitle}>Händer just nu</Text>
+        <Text style={styles.sectionEyebrow}>{t('home.live.eyebrow')}</Text>
+        <Text style={styles.sectionTitle}>{t('home.live.title')}</Text>
       </View>
       {hasError ? (
         <Pressable
           onPress={retry}
           style={styles.liveErrorRow}
           accessibilityRole="button"
-          accessibilityLabel="Kunde inte ladda händelser. Tryck för att försöka igen."
+          accessibilityLabel={t('home.live.errorA11y')}
         >
           <Text style={styles.liveErrorText}>
-            Kunde inte ladda — tryck för att försöka igen
+            {t('home.live.error')}
           </Text>
         </Pressable>
       ) : (
@@ -448,6 +481,7 @@ function LiveNowStrip({ onCardPress }) {
 // ─── Section bodies ──────────────────────────────────────────────────────────
 
 function TonightSection({ onCardPress }) {
+  const { t } = useI18n();
   const from = useMemo(() => todayLocalIso(), []);
   // T0088 — filter must be stable across renders. An inline arrow gives
   // useSection's useCallback a new dep each render → new `load` ref →
@@ -463,14 +497,14 @@ function TonightSection({ onCardPress }) {
     filter: tonightFilter,
   });
   return (
-    <Section eyebrow="IKVÄLL" title="Händer ikväll">
+    <Section eyebrow={t('home.tonight.eyebrow')} title={t('home.tonight.title')}>
       {status === 'loading' && (
         <View style={styles.loadingRow}><ActivityIndicator color={TOKENS.color.accent} /></View>
       )}
       {status === 'error' && (
         <View style={styles.emptyRow}>
-          <Text style={styles.errorText}>Kunde inte hämta: {error}</Text>
-          <Pressable onPress={retry} style={styles.retryButton}><Text style={styles.retryText}>Försök igen</Text></Pressable>
+          <Text style={styles.errorText}>{t('common.loadError', { error })}</Text>
+          <Pressable onPress={retry} style={styles.retryButton}><Text style={styles.retryText}>{t('common.retry')}</Text></Pressable>
         </View>
       )}
       {status === 'ready' && events.length === 0 && <EmptyRow />}
@@ -532,6 +566,7 @@ function useAiImageSmoketestEvents() {
 }
 
 function AiImageSmoketestSection({ onCardPress }) {
+  const { t } = useI18n();
   const { status, events, error, retry } = useAiImageSmoketestEvents();
 
   // Silent fallback when the agent smoketest is disabled or empty —
@@ -542,8 +577,8 @@ function AiImageSmoketestSection({ onCardPress }) {
   return (
     <View style={styles.section}>
       <View style={styles.sectionHeader}>
-        <Text style={styles.sectionEyebrow}>AI-BILDER · SMOKETEST</Text>
-        <Text style={styles.sectionTitle}>Genererade bilder från kategori + tid</Text>
+        <Text style={styles.sectionEyebrow}>{t('home.ai.eyebrow')}</Text>
+        <Text style={styles.sectionTitle}>{t('home.ai.title')}</Text>
       </View>
       {status === 'loading' && (
         <View style={styles.loadingRow}>
@@ -552,9 +587,9 @@ function AiImageSmoketestSection({ onCardPress }) {
       )}
       {status === 'error' && (
         <View style={styles.emptyRow}>
-          <Text style={styles.errorText}>Kunde inte hämta AI-bilder: {error}</Text>
+          <Text style={styles.errorText}>{t('home.ai.loadError', { error })}</Text>
           <Pressable onPress={retry} style={styles.retryButton}>
-            <Text style={styles.retryText}>Försök igen</Text>
+            <Text style={styles.retryText}>{t('common.retry')}</Text>
           </Pressable>
         </View>
       )}
@@ -570,7 +605,7 @@ function AiImageSmoketestSection({ onCardPress }) {
               style={({ pressed }) => [styles.card, pressed && styles.cardPressed]}
               onPress={() => onCardPress?.(ev)}
               accessibilityRole="button"
-              accessibilityLabel={`${ev.title} (AI-genererad bild)`}
+              accessibilityLabel={t('home.ai.cardA11y', { title: ev.title })}
             >
               <CardImage
                 uri={ev.image_url || ev.imageUrl}
@@ -580,10 +615,10 @@ function AiImageSmoketestSection({ onCardPress }) {
                 <Text style={styles.cardTime}>{ev.time || '—'}</Text>
                 <Text style={styles.cardTitle} numberOfLines={2}>{ev.title}</Text>
                 <Text style={styles.cardVenue} numberOfLines={1}>
-                  {ev.venue_name || ev.venue || 'Plats ej angiven'}
+                  {ev.venue_name || ev.venue || t('common.venueMissing')}
                 </Text>
                 <View style={styles.cardChipRow}>
-                  <Text style={styles.aiSmoketestChip}>AI-genererad</Text>
+                  <Text style={styles.aiSmoketestChip}>{t('home.ai.chip')}</Text>
                 </View>
               </View>
             </Pressable>
@@ -594,18 +629,80 @@ function AiImageSmoketestSection({ onCardPress }) {
   );
 }
 
+// ─── Din helg (fixed weekly ritual, 2026-09-20) ─────────────────────────────
+//
+// Outcome-first top section: 3–5 cards picked for the upcoming weekend from
+// /agent/recommended — the server ranking decides the order, we only filter
+// on the Fri–Sun date set (client-side filter, no server route in v1).
+// When the section has hits the old Helgen section is hidden (see HomeScreen);
+// on loading/error/empty it renders nothing and Helgen stays as fallback.
+
+const DIN_HELG_LIMIT = 5;
+// Fetch wider than the display slice — the weekend filter drops most rows.
+// The server caps the limit at 20.
+const DIN_HELG_FETCH_LIMIT = 20;
+
+function useDinHelgSection() {
+  const [state, setState] = useState({ status: 'loading', events: [], error: null });
+  const weekendDates = useMemo(() => upcomingWeekendIsoSet(), []);
+
+  const load = useCallback(async () => {
+    setState((s) => ({ status: 'loading', events: s.events, error: null }));
+    try {
+      const result = await fetchRecommendedEvents({ limit: DIN_HELG_FETCH_LIMIT });
+      const events = (result.events ?? [])
+        .filter((e) => e.date && weekendDates.has(e.date))
+        .slice(0, DIN_HELG_LIMIT);
+      setState({ status: 'ready', events, error: null });
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : 'unknown';
+      setState({ status: 'error', events: [], error: msg });
+    }
+  }, [weekendDates]);
+
+  useEffect(() => {
+    load();
+  }, [load]);
+
+  return { ...state, retry: load };
+}
+
+function DinHelgSection({ onCardPress, onResolved }) {
+  const { t } = useI18n();
+  const { status, events } = useDinHelgSection();
+  const hasHits = status === 'ready' && events.length > 0;
+
+  // Report hit status up — HomeScreen hides the old Helgen section while we
+  // have cards and restores it as soon as we don't (spec 2026-09-20).
+  useEffect(() => {
+    if (typeof onResolved === 'function') onResolved(hasHits);
+  }, [hasHits, onResolved]);
+
+  if (!hasHits) return null;
+  return (
+    <Section eyebrow={t('home.dinHelg.eyebrow')} title={t('home.dinHelg.title')}>
+      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.cardScroll}>
+        {events.map((ev) => (
+          <EventCardCompact key={ev.id} event={ev} onPress={onCardPress} />
+        ))}
+      </ScrollView>
+    </Section>
+  );
+}
+
 function WeekendSection({ onCardPress }) {
+  const { t } = useI18n();
   const from = useMemo(() => nextSaturdayIso(), []);
   const { status, events, error, retry } = useSection({ from, days: 2 });
   return (
-    <Section eyebrow="HELGEN" title="Denna helg">
+    <Section eyebrow={t('home.weekend.eyebrow')} title={t('home.weekend.title')}>
       {status === 'loading' && (
         <View style={styles.loadingRow}><ActivityIndicator color={TOKENS.color.accent} /></View>
       )}
       {status === 'error' && (
         <View style={styles.emptyRow}>
-          <Text style={styles.errorText}>Kunde inte hämta: {error}</Text>
-          <Pressable onPress={retry} style={styles.retryButton}><Text style={styles.retryText}>Försök igen</Text></Pressable>
+          <Text style={styles.errorText}>{t('common.loadError', { error })}</Text>
+          <Pressable onPress={retry} style={styles.retryButton}><Text style={styles.retryText}>{t('common.retry')}</Text></Pressable>
         </View>
       )}
       {status === 'ready' && events.length === 0 && <EmptyRow />}
@@ -621,6 +718,7 @@ function WeekendSection({ onCardPress }) {
 }
 
 function FreeSection({ onCardPress }) {
+  const { t } = useI18n();
   const from = useMemo(() => todayLocalIso(), []);
   // T0088 — see TonightSection. Inline filter → infinite update loop.
   const freeFilter = useCallback((e) => e.is_free || e.isFree, []);
@@ -630,14 +728,14 @@ function FreeSection({ onCardPress }) {
     filter: freeFilter,
   });
   return (
-    <Section eyebrow="GRATIS" title="Gratis evenemang">
+    <Section eyebrow={t('home.free.eyebrow')} title={t('home.free.title')}>
       {status === 'loading' && (
         <View style={styles.loadingRow}><ActivityIndicator color={TOKENS.color.accent} /></View>
       )}
       {status === 'error' && (
         <View style={styles.emptyRow}>
-          <Text style={styles.errorText}>Kunde inte hämta: {error}</Text>
-          <Pressable onPress={retry} style={styles.retryButton}><Text style={styles.retryText}>Försök igen</Text></Pressable>
+          <Text style={styles.errorText}>{t('common.loadError', { error })}</Text>
+          <Pressable onPress={retry} style={styles.retryButton}><Text style={styles.retryText}>{t('common.retry')}</Text></Pressable>
         </View>
       )}
       {status === 'ready' && events.length === 0 && <EmptyRow />}
@@ -676,16 +774,17 @@ function useRecommendedSection() {
 }
 
 function RecommendedSection({ onCardPress }) {
+  const { t } = useI18n();
   const { status, events, error, retry } = useRecommendedSection();
   return (
-    <Section eyebrow="REKOMMENDERAT" title="För dig">
+    <Section eyebrow={t('home.recommended.eyebrow')} title={t('home.recommended.title')}>
       {status === 'loading' && (
         <View style={styles.loadingRow}><ActivityIndicator color={TOKENS.color.accent} /></View>
       )}
       {status === 'error' && (
         <View style={styles.emptyRow}>
-          <Text style={styles.errorText}>Kunde inte hämta: {error}</Text>
-          <Pressable onPress={retry} style={styles.retryButton}><Text style={styles.retryText}>Försök igen</Text></Pressable>
+          <Text style={styles.errorText}>{t('common.loadError', { error })}</Text>
+          <Pressable onPress={retry} style={styles.retryButton}><Text style={styles.retryText}>{t('common.retry')}</Text></Pressable>
         </View>
       )}
       {status === 'ready' && events.length === 0 && <EmptyRow />}
@@ -725,19 +824,22 @@ function useSuggestedPrompts() {
   return { ...state, retry: load };
 }
 
-function ChipSkeleton() {
+function ChipSkeleton({ label }) {
   return (
-    <View style={styles.chipSkeleton} accessibilityLabel="Laddar förslag" />
+    <View style={styles.chipSkeleton} accessibilityLabel={label} />
   );
 }
 
 function PromptChip({ prompt, onPress }) {
+  const { t } = useI18n();
   return (
     <Pressable
       style={({ pressed }) => [styles.promptChip, pressed && styles.promptChipPressed]}
       onPress={() => onPress?.(prompt)}
       accessibilityRole="button"
-      accessibilityLabel={prompt.reason ? `${prompt.prompt_text}. ${prompt.reason}` : prompt.prompt_text}
+      accessibilityLabel={prompt.reason
+        ? t('home.promptChipA11yReason', { text: prompt.prompt_text, reason: prompt.reason })
+        : t('home.promptChipA11y', { text: prompt.prompt_text })}
     >
       <Text style={styles.promptChipText} numberOfLines={2}>{prompt.prompt_text}</Text>
       {prompt.reason ? (
@@ -751,13 +853,13 @@ function PromptChip({ prompt, onPress }) {
 
 const CURATED_COLLECTIONS_LIMIT = 3;
 
-function useCuratedCollections() {
+function useCuratedCollections(locale) {
   const [state, setState] = useState({ status: 'loading', collections: [], error: null });
 
   const load = useCallback(async () => {
     setState({ status: 'loading', collections: [], error: null });
     try {
-      const result = await fetchCuratedCollections({ limit: CURATED_COLLECTIONS_LIMIT });
+      const result = await fetchCuratedCollections({ limit: CURATED_COLLECTIONS_LIMIT, locale });
       setState({
         status: 'ready',
         collections: Array.isArray(result.collections) ? result.collections : [],
@@ -767,7 +869,7 @@ function useCuratedCollections() {
       const msg = err instanceof Error ? err.message : 'unknown';
       setState({ status: 'error', collections: [], error: msg });
     }
-  }, []);
+  }, [locale]);
 
   useEffect(() => {
     load();
@@ -777,12 +879,13 @@ function useCuratedCollections() {
 }
 
 function CuratedChip({ collection, onPress }) {
+  const { t } = useI18n();
   return (
     <Pressable
       style={({ pressed }) => [styles.curatedChip, pressed && styles.curatedChipPressed]}
       onPress={() => onPress?.({ prompt_text: collection.prompt_text, curated_id: collection.id })}
       accessibilityRole="button"
-      accessibilityLabel={`Kuratorens val: ${collection.name}`}
+      accessibilityLabel={t('home.curatedChipA11y', { name: collection.name })}
     >
       <Text style={styles.curatedChipName} numberOfLines={1}>{collection.name}</Text>
       <Text style={styles.curatedChipReason} numberOfLines={2}>{collection.reason}</Text>
@@ -791,7 +894,11 @@ function CuratedChip({ collection, onPress }) {
 }
 
 function CuratedCollectionsSection({ onChipPress }) {
-  const { status, collections } = useCuratedCollections();
+  const { t, language } = useI18n();
+  // Server picks copy per locale (falls back to en for non-sv until the
+  // collections themselves are translated — text selection lives in
+  // 08-Agent/tools/curated_collections.ts).
+  const { status, collections } = useCuratedCollections(language);
   // Hide the section entirely when the curator has nothing to suggest or the
   // fetch failed (T0084 spec — best-effort, never red).
   if (status === 'ready' && collections.length === 0) return null;
@@ -799,8 +906,8 @@ function CuratedCollectionsSection({ onChipPress }) {
   return (
     <View style={styles.section}>
       <View style={styles.sectionHeader}>
-        <Text style={styles.sectionEyebrow}>KURATORENS VAL</Text>
-        <Text style={styles.sectionTitle}>Handplockade listor</Text>
+        <Text style={styles.sectionEyebrow}>{t('home.curated.eyebrow')}</Text>
+        <Text style={styles.sectionTitle}>{t('home.curated.title')}</Text>
       </View>
       <ScrollView
         horizontal
@@ -808,7 +915,7 @@ function CuratedCollectionsSection({ onChipPress }) {
         contentContainerStyle={styles.curatedChipRow}
       >
         {status === 'loading'
-          ? Array.from({ length: CURATED_COLLECTIONS_LIMIT }).map((_, i) => <ChipSkeleton key={`c-${i}`} />)
+          ? Array.from({ length: CURATED_COLLECTIONS_LIMIT }).map((_, i) => <ChipSkeleton key={`c-${i}`} label={t('home.loadingForYou')} />)
           : collections.map((c) => (
               <CuratedChip key={c.id} collection={c} onPress={onChipPress} />
             ))}
@@ -818,6 +925,7 @@ function CuratedCollectionsSection({ onChipPress }) {
 }
 
 function SuggestedPromptsSection({ onChipPress }) {
+  const { t } = useI18n();
   const { status, prompts } = useSuggestedPrompts();
   // Hide section on error / empty (T0063 spec) — failure mode is "no chips" not "red error".
   const visiblePrompts = status === 'ready' ? prompts : [];
@@ -826,8 +934,8 @@ function SuggestedPromptsSection({ onChipPress }) {
   return (
     <View style={styles.section}>
       <View style={styles.sectionHeader}>
-        <Text style={styles.sectionEyebrow}>FÖRSLAG</Text>
-        <Text style={styles.sectionTitle}>Vad vill du göra?</Text>
+        <Text style={styles.sectionEyebrow}>{t('home.suggestions.eyebrow')}</Text>
+        <Text style={styles.sectionTitle}>{t('home.suggestions.title')}</Text>
       </View>
       <ScrollView
         horizontal
@@ -835,7 +943,7 @@ function SuggestedPromptsSection({ onChipPress }) {
         contentContainerStyle={styles.promptChipRow}
       >
         {status === 'loading'
-          ? Array.from({ length: SUGGESTED_PROMPTS_LIMIT }).map((_, i) => <ChipSkeleton key={`s-${i}`} />)
+          ? Array.from({ length: SUGGESTED_PROMPTS_LIMIT }).map((_, i) => <ChipSkeleton key={`s-${i}`} label={t('home.loadingForYou')} />)
           : visiblePrompts.map((p) => (
               <PromptChip key={p.id} prompt={p} onPress={onChipPress} />
             ))}
@@ -870,12 +978,13 @@ function useRecentSearches() {
 }
 
 function RecentSearchChip({ query, onPress }) {
+  const { t } = useI18n();
   return (
     <Pressable
       style={({ pressed }) => [styles.promptChip, pressed && styles.promptChipPressed]}
       onPress={() => onPress?.(query)}
       accessibilityRole="button"
-      accessibilityLabel={`Upprepa sökning: ${query.query_text}`}
+      accessibilityLabel={t('home.recentChipA11y', { query: query.query_text })}
     >
       <Text style={styles.promptChipText} numberOfLines={2}>{query.query_text}</Text>
     </Pressable>
@@ -883,6 +992,7 @@ function RecentSearchChip({ query, onPress }) {
 }
 
 function RecentSearchesSection({ onChipPress }) {
+  const { t } = useI18n();
   const { status, queries } = useRecentSearches();
   // T0071 spec: hide the section entirely when there are no recent queries
   // (cold start / brand-new user). The error/loading path also collapses to
@@ -902,8 +1012,8 @@ function RecentSearchesSection({ onChipPress }) {
   return (
     <View style={styles.section}>
       <View style={styles.sectionHeader}>
-        <Text style={styles.sectionEyebrow}>SENASTE</Text>
-        <Text style={styles.sectionTitle}>Dina senaste sökningar</Text>
+        <Text style={styles.sectionEyebrow}>{t('home.recent.eyebrow')}</Text>
+        <Text style={styles.sectionTitle}>{t('home.recent.title')}</Text>
       </View>
       <ScrollView
         horizontal
@@ -946,14 +1056,16 @@ function useAgentSuggestions() {
 }
 
 function IntentCardCompact({ event, onPress }) {
+  const { t } = useI18n();
   const time = event.time || '';
-  const venue = event.venue_name || event.venue || 'Plats ej angiven';
+  const venue = event.venue_name || event.venue || t('common.venueMissing');
+  const when = time ? ` ${t('common.atTime', { time })}` : '';
   return (
     <Pressable
       style={({ pressed }) => [styles.intentCard, pressed && styles.cardPressed]}
       onPress={() => onPress?.(event)}
       accessibilityRole="button"
-      accessibilityLabel={`${event.title} ${time ? 'klockan ' + time : ''} på ${venue}`}
+      accessibilityLabel={t('home.cardA11y', { title: event.title, when, venue })}
     >
       <Text style={styles.cardTime}>{time || '—'}</Text>
       <Text style={styles.intentCardTitle} numberOfLines={2}>{event.title}</Text>
@@ -963,8 +1075,9 @@ function IntentCardCompact({ event, onPress }) {
 }
 
 function IntentSlotSkeleton() {
+  const { t } = useI18n();
   return (
-    <View style={styles.intentSlot} accessibilityLabel="Laddar agentförslag">
+    <View style={styles.intentSlot} accessibilityLabel={t('home.intentLoading')}>
       <View style={styles.intentSlotTitleSkeleton} />
       <View style={styles.intentCardRow}>
         <View style={styles.intentCardSkeleton} />
@@ -975,11 +1088,12 @@ function IntentSlotSkeleton() {
 }
 
 function IntentSlotRow({ slot, onCardPress }) {
+  const { t } = useI18n();
   return (
     <View style={styles.intentSlot}>
       <Text style={styles.intentSlotTitle} numberOfLines={1}>{slot.title}</Text>
       {slot.cards.length === 0 ? (
-        <Text style={styles.intentSlotEmpty}>— inga matchningar ännu —</Text>
+        <Text style={styles.intentSlotEmpty}>{t('home.intentEmpty')}</Text>
       ) : (
         <View style={styles.intentCardRow}>
           {slot.cards.slice(0, 2).map((ev) => (
@@ -992,6 +1106,7 @@ function IntentSlotRow({ slot, onCardPress }) {
 }
 
 function AgentSuggestionsSection({ onCardPress }) {
+  const { t } = useI18n();
   const { status, slots } = useAgentSuggestions();
   // T0060 spec: hide section entirely if no cached data (new users, errors).
   // We render skeletons during loading to avoid layout shift, then drop to null
@@ -1001,8 +1116,8 @@ function AgentSuggestionsSection({ onCardPress }) {
   return (
     <View style={styles.section}>
       <View style={styles.sectionHeader}>
-        <Text style={styles.sectionEyebrow}>AGENT</Text>
-        <Text style={styles.sectionTitle}>Förslag från din agent</Text>
+        <Text style={styles.sectionEyebrow}>{t('home.agent.eyebrow')}</Text>
+        <Text style={styles.sectionTitle}>{t('home.agent.title')}</Text>
       </View>
       <View style={styles.intentSlotList}>
         {status === 'loading'
@@ -1039,21 +1154,22 @@ function useSavedSection() {
 }
 
 function SavedSection({ onCardPress }) {
+  const { t } = useI18n();
   const { status, events, error, retry } = useSavedSection();
   return (
-    <Section eyebrow="SPARADE" title="Dina sparade evenemang">
+    <Section eyebrow={t('home.saved.eyebrow')} title={t('home.saved.title')}>
       {status === 'loading' && (
         <View style={styles.loadingRow}><ActivityIndicator color={TOKENS.color.accent} /></View>
       )}
       {status === 'error' && (
         <View style={styles.emptyRow}>
-          <Text style={styles.errorText}>Kunde inte hämta: {error}</Text>
-          <Pressable onPress={retry} style={styles.retryButton}><Text style={styles.retryText}>Försök igen</Text></Pressable>
+          <Text style={styles.errorText}>{t('common.loadError', { error })}</Text>
+          <Pressable onPress={retry} style={styles.retryButton}><Text style={styles.retryText}>{t('common.retry')}</Text></Pressable>
         </View>
       )}
       {status === 'ready' && events.length === 0 && (
         <View style={styles.emptyRow}>
-          <Text style={styles.emptyRowText}>— inga sparade evenemang ännu —</Text>
+          <Text style={styles.emptyRowText}>{t('home.savedEmpty')}</Text>
         </View>
       )}
       {status === 'ready' && events.length > 0 && (
@@ -1077,6 +1193,10 @@ function SavedSection({ onCardPress }) {
 // (RecentSearches/AgentSuggestions → null, Saved → "inga sparade ännu").
 
 export default function HomeScreen({ onChipPress, onCardPress }) {
+  const { t } = useI18n();
+  // Din helg (2026-09-20): true while the top section has weekend cards —
+  // the old Helgen section stays hidden then and returns as fallback.
+  const [dinHelgActive, setDinHelgActive] = useState(false);
   const handleCardPress = useCallback((event) => {
     // NOW#2 fix: forward to AppShell, which hands the event to the explore
     // tab's DetailsScreen (same surface as a Utforska card tap — with Spara,
@@ -1095,13 +1215,14 @@ export default function HomeScreen({ onChipPress, onCardPress }) {
         showsVerticalScrollIndicator={false}
       >
         <View style={styles.header}>
-          <Text style={styles.headerEyebrow}>STOCKHOLM</Text>
-          <Text style={styles.headerTitle}>{greeting()}</Text>
+          <Text style={styles.headerEyebrow}>{t('home.cityEyebrow')}</Text>
+          <Text style={styles.headerTitle}>{greeting(t)}</Text>
           <Text style={styles.headerSubtitle}>
-            {subtitleForHour(new Date().getHours())}
+            {subtitleForHour(new Date().getHours(), t)}
           </Text>
         </View>
 
+        <DinHelgSection onCardPress={handleCardPress} onResolved={setDinHelgActive} />
         <SuggestedPromptsSection onChipPress={handlePromptPress} />
         <CuratedCollectionsSection onChipPress={handlePromptPress} />
         <RecentSearchesSection onChipPress={handlePromptPress} />
@@ -1110,7 +1231,7 @@ export default function HomeScreen({ onChipPress, onCardPress }) {
         <AiImageSmoketestSection onCardPress={handleCardPress} />
 
         <TonightSection onCardPress={handleCardPress} />
-        <WeekendSection onCardPress={handleCardPress} />
+        {dinHelgActive ? null : <WeekendSection onCardPress={handleCardPress} />}
         <FreeSection onCardPress={handleCardPress} />
         <RecommendedSection onCardPress={handleCardPress} />
         <AgentSuggestionsSection onCardPress={handleCardPress} />
@@ -1281,6 +1402,24 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: TOKENS.color.border,
     overflow: 'hidden',
+  },
+  // Always-visible "why" chips (RQ5) — accent-tinted, max 2 per card.
+  cardReasonRow: {
+    flexDirection: 'row',
+    flexWrap: 'nowrap',
+    gap: TOKENS.space.xs,
+    marginTop: TOKENS.space.xs,
+  },
+  cardReasonChip: {
+    color: TOKENS.color.accent,
+    fontSize: TOKENS.fontSize.sm,
+    fontWeight: '600',
+    paddingHorizontal: TOKENS.space.sm,
+    paddingVertical: 2,
+    borderRadius: 999,
+    backgroundColor: TOKENS.color.accentSoft,
+    overflow: 'hidden',
+    flexShrink: 1,
   },
   cardChipFree: {
     color: TOKENS.color.positive,
