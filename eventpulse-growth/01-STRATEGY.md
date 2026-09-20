@@ -84,7 +84,7 @@ Prioriterad utveckling:
 8. natural-language discovery
 9. explainability
 10. sharing
-11. "Hjälp oss välja"
+11. "Hjälp oss välja" **(PARKERAD 2026-09-20 — byggs inte i detta repo)**
 12. account conversion
 13. "Din helg"
 14. experiment framework
@@ -98,6 +98,8 @@ Varje event bör vara enkelt att dela.
 En starkare funktion är:
 
 ### Hjälp oss välja
+
+> **PARKERAD 2026-09-20.** Byggs inte i detta repo. Återupptas endast om post-launch share→open-mätningar (plain `/s/:hash`) visar verkligt delningsbeteende. Se `docs/BACKLOG.md` "DO NOT BUILD YET".
 
 Användaren väljer exempelvis tre events och skapar en delbar sida. Vänner kan öppna länken och rösta utan att först skapa konto.
 

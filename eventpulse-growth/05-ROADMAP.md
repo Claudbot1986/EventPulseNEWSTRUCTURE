@@ -66,11 +66,11 @@ Samma rankingmotor ska användas genom hela produkten. Undvik separata system so
 
 ## Phase 5 – Growth loop
 
-**Prompt 11–12**
+**Prompt 11** (+ Prompt 12 PARKERAD, se nedan)
 - sharing
-- Hjälp oss välja
 - deep links
 - attribution
+- Hjälp oss välja (Prompt 12): **PARKERAD 2026-09-20 — byggs inte i detta repo.** Återupptas endast efter användarbeslut när share-metrics visar verkligt delningsbeteende.
 
 ### Gate
 Det ska gå att mäta:
@@ -78,6 +78,8 @@ Det ska gå att mäta:
 ```text
 share → recipient open → interaction → continued use
 ```
+
+Denna mätning är också villkoret för att häva parkeringen av Prompt 12 — utan bevisat share→open-beteende byggs ingen omröstning.
 
 ---
 

@@ -284,6 +284,8 @@ Implementera stabila deep links och delbara eventkort. Mät `event_share` och in
 
 ## Prompt 12 – Hjälp oss välja
 
+> **PARKERAD 2026-09-20 — kör inte denna prompt.** Se `docs/BACKLOG.md` "DO NOT BUILD YET". Återupptas endast efter användarbeslut baserat på share→open-metrics.
+
 Låt användaren välja flera events, skapa en delbar sida och låta mottagare rösta utan obligatoriskt konto. Mät funnel från share till öppning/röst/fortsatt EventPulse-användning. Dokumentera som `11-group-voting.md`.
 
 ## Prompt 13 – Account conversion
