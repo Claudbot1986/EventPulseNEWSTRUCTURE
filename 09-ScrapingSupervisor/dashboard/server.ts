@@ -1906,9 +1906,19 @@ const server = createServer(async (req, res) => {
   res.end('Not found');
 });
 
-server.listen(PORT, () => {
-  console.log(`[supervisor-dashboard] listening on http://localhost:${PORT}`);
-  console.log(`[supervisor-dashboard] project root: ${PROJECT_ROOT}`);
-});
+// Auto-listen only when this file is executed directly (launchd plist,
+// tools/dashboard_lifecycle.ts spawn, or manual `npx tsx`). Importing the
+// module — as tests do — must never bind PORT: module-level listen caused
+// EADDRINUSE unhandled errors in vitest whenever the real dashboard was
+// already running (and booted a rogue second one when it wasn't).
+const isDirectRun = process.argv[1]
+  ? resolve(process.argv[1]) === fileURLToPath(import.meta.url)
+  : false;
+if (isDirectRun) {
+  server.listen(PORT, () => {
+    console.log(`[supervisor-dashboard] listening on http://localhost:${PORT}`);
+    console.log(`[supervisor-dashboard] project root: ${PROJECT_ROOT}`);
+  });
+}
 
 export { server };

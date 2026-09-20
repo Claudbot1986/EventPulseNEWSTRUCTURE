@@ -17,9 +17,19 @@ import { describe, test, expect, beforeEach, vi } from 'vitest';
 const fetchMock = vi.fn();
 vi.stubGlobal('fetch', fetchMock);
 
-// 2. Mock pdf-parse — vi returnerar kontrollerad text
+// 2. Mock pdf-parse — vi returnerar kontrollerad text.
+// pdf-parse@2 exponerar klassen PDFParse (getText()); gamla v1 hade en
+// default-funktion. Implementationen (pdfExtractor.ts) föredrar PDFParse om
+// exporten finns — därför måste mocken erbjuda båda formerna, annars kastar
+// vitest "No PDFParse export is defined on the mock" vid åtkomst.
 const pdfParseMock = vi.fn();
 vi.mock('pdf-parse', () => ({
+  PDFParse: class {
+    constructor(public opts: { data: Buffer }) {}
+    getText() {
+      return pdfParseMock(this.opts.data);
+    }
+  },
   default: (...args: unknown[]) => pdfParseMock(...args),
 }));
 
@@ -75,9 +85,11 @@ Plats: Riksarkivet Stockholm
 
 describe('pdfExtractor', () => {
   test('källlista tomt utan pdfUrls', async () => {
-    // Inga källor i sources/ har pdfUrls — vi låter mock köra mot tom filsystem.
+    // Hermetisk: explicit tom källista. (Tidigare var testet beroende av att
+    // HELA riktiga sources/-trädet saknade pdfUrls — det bröts när riktiga
+    // pdf-källor lades till. Ett enhetstest ska inte läsa produktions-FS.)
     // Resultat: totalSources=0, totalPdfs=0, totalEvents=0.
-    const result = await runPdfExtraction({ limit: 5, concurrency: 1 });
+    const result = await runPdfExtraction({ limit: 5, concurrency: 1, sources: [] });
     expect(result.totalSources).toBe(0);
     expect(result.totalPdfs).toBe(0);
     expect(result.totalEvents).toBe(0);

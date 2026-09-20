@@ -44,7 +44,15 @@ describe('ingestion-cron.ts --smoke wiring', () => {
 
   test('D-images skickar skipBflFallback=true i smoke', () => {
     const content = readFileSync(CRON, 'utf8');
-    expect(content).toContain('skipBflFallback: ${smoke}');
+    // Kontrakt utökat i a1c03a9: SKIP_BFL=1/--skip-bfl tvingar bibliotek-
+    // fallback även utanför smoke (BFL-kreditkris 2026-09-05). Smoke ska
+    // alltid skippa BFL:  smoke || skipBfl.
+    expect(content).toContain('skipBflFallback: ${smoke || skipBfl}');
+  });
+
+  test('D-images stödjer SKIP_BFL=1/--skip-bfl override', () => {
+    const content = readFileSync(CRON, 'utf8');
+    expect(content).toContain("process.env.SKIP_BFL === '1' || args.includes('--skip-bfl')");
   });
 
   test('P3A-discovery använder --queries 1 --per-query 1 i smoke', () => {

@@ -22,23 +22,23 @@ import { createClient, SupabaseClient } from '@supabase/supabase-js';
 const SUPABASE_URL = process.env.SUPABASE_URL ?? 'http://127.0.0.1:54321';
 const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY ?? '';
 
+// Miljö-gate: detta är ett engångs-integrationstest som kräver en körbar
+// Supabase-instans + service_role-nyckel. Utan nyckel hoppas hela suiten
+// över — tidigare kastade beforeAll, vilket gjorde filen "röd" i varje
+// lokal full svit. Kör explicit med nyckel för att aktivera:
+//   SUPABASE_URL=... SUPABASE_SERVICE_ROLE_KEY=... npx vitest run <denna fil>
+const HAS_SERVICE_KEY = SUPABASE_SERVICE_ROLE_KEY.length > 0;
+
 interface LockdownCheck {
   check_name: string;
   status: 'OK' | 'WARN' | 'FAIL';
   detail: string;
 }
 
-describe('events_public GDPR lockdown', () => {
+describe.skipIf(!HAS_SERVICE_KEY)('events_public GDPR lockdown', () => {
   let supabase: SupabaseClient;
 
   beforeAll(() => {
-    if (!SUPABASE_SERVICE_ROLE_KEY) {
-      throw new Error(
-        'SUPABASE_SERVICE_ROLE_KEY saknas. Detta test kräver service_role-nyckel ' +
-        'för att anropa assert_events_public_lockdown(). Sätt env-variabeln eller ' +
-        'kör mot lokal `supabase start`.',
-      );
-    }
     supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, {
       auth: { persistSession: false },
     });

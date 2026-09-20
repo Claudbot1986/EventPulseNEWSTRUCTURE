@@ -30,6 +30,16 @@ vi.mock('@supabase/supabase-js', () => ({
   }),
 }));
 
+// deepLinkRouter → supabaseAuthClient imports Platform from 'react-native'
+// (via guest-mode commit 34828f4) and expo-apple-authentication. react-native's
+// entry is Flow-typed and does not parse under vitest/rolldown; the apple module
+// pulls react-native transitively. The classifier logic under test is pure
+// URL-matching, so stub both modules minimally.
+vi.mock('react-native', () => ({
+  Platform: { OS: 'ios', select: (o: { ios?: unknown; default?: unknown }) => o?.ios ?? o?.default },
+}));
+vi.mock('expo-apple-authentication', () => ({}));
+
 import {
   isEventPulseUrl,
   isAuthDeepLink,

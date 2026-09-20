@@ -119,12 +119,22 @@ describe('POST /agent/notifications/read', () => {
 
 describe('POST /agent/notifications/scan (admin-gated)', () => {
   it('returns 503 when AGENT_ADMIN_TOKEN is unset', async () => {
-    const res = await fetch(`${baseUrl}/agent/notifications/scan`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ client_user_id: USER_ID }),
-    });
-    expect(res.status).toBe(503);
+    // server.ts imports 'dotenv/config' at module load, which injects the repo
+    // .env's AGENT_ADMIN_TOKEN into process.env for the whole test process.
+    // The premise under test is "token is unset" — enforce it hermetically
+    // instead of depending on the ambient environment.
+    const actual = process.env.AGENT_ADMIN_TOKEN;
+    delete process.env.AGENT_ADMIN_TOKEN;
+    try {
+      const res = await fetch(`${baseUrl}/agent/notifications/scan`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ client_user_id: USER_ID }),
+      });
+      expect(res.status).toBe(503);
+    } finally {
+      if (actual !== undefined) process.env.AGENT_ADMIN_TOKEN = actual;
+    }
   });
 
   it('returns 400 on bad client_user_id when admin token is set', async () => {

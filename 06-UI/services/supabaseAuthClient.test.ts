@@ -22,6 +22,15 @@ vi.mock('@supabase/supabase-js', () => ({
   }),
 }));
 
+// supabaseAuthClient imports Platform from 'react-native' (guest-mode commit
+// 34828f4) and expo-apple-authentication — react-native's entry is Flow-typed
+// and does not parse under vitest/rolldown. parseAuthDeepLink (the unit under
+// test) does not touch either module; stub minimally so the import succeeds.
+vi.mock('react-native', () => ({
+  Platform: { OS: 'ios', select: (o: { ios?: unknown; default?: unknown }) => o?.ios ?? o?.default },
+}));
+vi.mock('expo-apple-authentication', () => ({}));
+
 import { parseAuthDeepLink, AUTH_DEEP_LINK } from './supabaseAuthClient';
 
 describe('parseAuthDeepLink', () => {

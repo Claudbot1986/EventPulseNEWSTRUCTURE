@@ -98,9 +98,13 @@ function setupFixtures() {
   );
 }
 
+// NOTE: projectRoot must NEVER be '' — path.resolve('') falls back to
+// process.cwd(), which makes a full vitest run execute the supervisor against
+// the real repo and overwrite docs/scraping-supervisor/2026-08-19.md with live
+// totals. tmpRoot keeps every write inside the sandbox.
 const baseOpts = (): SupervisorOptions => ({
-  projectRoot: '',
-  vaultRoot: '',
+  projectRoot: tmpRoot,
+  vaultRoot,
   date: '2026-08-19',
 });
 
@@ -301,11 +305,11 @@ describe('runSupervisor (integration)', () => {
     expect(result.finishedAt).toMatch(/^\d{4}-\d{2}-\d{2}T/);
   });
 
-  it('error path: returns structured result when projectRoot is empty', async () => {
+  it('error path: returns structured result when projectRoot has no sources/runtime', async () => {
+    // tmpRoot is a fresh empty dir (setupFixtures not called) — the "missing
+    // structure" case stays fully sandboxed.
     const result = await runSupervisor({
       ...baseOpts(),
-      projectRoot: '',
-      vaultRoot,
       date: '2026-08-19',
     });
     expect(result.startedAt).toMatch(/^\d{4}-\d{2}-\d{2}T/);
