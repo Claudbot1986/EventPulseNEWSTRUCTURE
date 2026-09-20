@@ -41,6 +41,7 @@ import {
   loadAuthSession,
   clearAuthSession,
   isAuthenticated,
+  loadAuthIdentity,
 } from './storage';
 
 describe('auth popup dismissal flag', () => {
@@ -145,5 +146,62 @@ describe('auth session persistence', () => {
       expires_at: Math.floor(Date.now() / 1000) - 60,
     });
     expect(await isAuthenticated()).toBe(false);
+  });
+});
+
+describe('auth identity (NOW#2 — anonymous sessions)', () => {
+  beforeEach(async () => {
+    await clearAuthSession();
+  });
+
+  it('no session → authenticated:false (isAnonymous irrelevant-false)', async () => {
+    expect(await loadAuthIdentity()).toEqual({ authenticated: false, isAnonymous: false });
+  });
+
+  it('anonymous session round-trips is_anonymous=true', async () => {
+    await saveAuthSession({
+      access_token: 'a'.repeat(40),
+      refresh_token: 'r'.repeat(40),
+      expires_at: Math.floor(Date.now() / 1000) + 3600,
+      user: { id: 'u-anon', is_anonymous: true },
+    });
+    expect(await loadAuthIdentity()).toEqual({ authenticated: true, isAnonymous: true });
+  });
+
+  it('permanent session (email, no is_anonymous) → isAnonymous false', async () => {
+    await saveAuthSession({
+      access_token: 'a'.repeat(40),
+      refresh_token: 'r'.repeat(40),
+      expires_at: Math.floor(Date.now() / 1000) + 3600,
+      user: { id: 'u-1', email: 'alice@example.com' },
+    });
+    expect(await loadAuthIdentity()).toEqual({ authenticated: true, isAnonymous: false });
+  });
+
+  it('legacy session saved before is_anonymous existed → isAnonymous false', async () => {
+    // Pre-NOW#2 blobs carry user {id,email} only — field absent must not
+    // flip a magic-link user into the anonymous branch.
+    await setItem(
+      AUTH_SESSION_KEY,
+      JSON.stringify({
+        access_token: 'a'.repeat(40),
+        refresh_token: 'r'.repeat(40),
+        expires_at: Math.floor(Date.now() / 1000) + 3600,
+        user: { id: 'u-legacy', email: 'legacy@example.com' },
+      })
+    );
+    expect(await loadAuthIdentity()).toEqual({ authenticated: true, isAnonymous: false });
+  });
+
+  it('expired anonymous session → authenticated:false', async () => {
+    await saveAuthSession({
+      access_token: 'a'.repeat(40),
+      refresh_token: 'r'.repeat(40),
+      expires_at: Math.floor(Date.now() / 1000) - 60,
+      user: { id: 'u-anon', is_anonymous: true },
+    });
+    const id = await loadAuthIdentity();
+    expect(id.authenticated).toBe(false);
+    expect(id.isAnonymous).toBe(true);
   });
 });

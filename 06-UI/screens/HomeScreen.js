@@ -45,7 +45,6 @@ import {
 } from 'react-native';
 
 import { fetchFeed, fetchSavedEvents, fetchRecommendedEvents, fetchSuggestedPrompts, fetchCachedRecommendations, fetchRecentQueries, fetchCuratedCollections, fetchLiveEvents, fetchAiImageSmoketest } from '../services/agentClient';
-import { isAuthenticated } from '../services/storage';
 
 const TOKENS = {
   color: {
@@ -1067,43 +1066,16 @@ function SavedSection({ onCardPress }) {
   );
 }
 
-// ─── Guest login nudge ───────────────────────────────────────────────────────
-//
-// Guest mode (UserPicker removal): the personalized sections below —
-// Senaste sökningar, Rekommenderat, Förslag från din agent, Sparade — are
-// all backed by requireUser-gated endpoints. Without a session they could
-// only render errors, so guests see this single nudge instead; one tap opens
-// the login sheet via AppShell's onOpenLogin.
-
-function GuestLoginSection({ onOpenLogin }) {
-  return (
-    <Section eyebrow="DIN AGENT" title="Dina personliga ytor">
-      <View style={styles.guestCard}>
-        <Text style={styles.guestCardText}>
-          Logga in för att se sparade events, agentens personliga förslag och
-          dina senaste sökningar.
-        </Text>
-        {typeof onOpenLogin === 'function' ? (
-          <Pressable
-            onPress={onOpenLogin}
-            style={({ pressed }) => [
-              styles.guestLoginButton,
-              pressed && styles.guestLoginButtonPressed,
-            ]}
-            accessibilityRole="button"
-            accessibilityLabel="Logga in"
-          >
-            <Text style={styles.guestLoginButtonText}>Logga in</Text>
-          </Pressable>
-        ) : null}
-      </View>
-    </Section>
-  );
-}
-
 // ─── Top-level screen ────────────────────────────────────────────────────────
+//
+// NOW#2: no guest-gating here anymore. AppShell's bootstrapSession()
+// guarantees every user — including first-launch guests — carries an
+// anonymous Supabase session, so the personalized sections (Senaste,
+// Rekommenderat, Förslag, Sparade) work identically for guests and logged-in
+// users. Sessions self-hide when their backend has nothing for this identity
+// (RecentSearches/AgentSuggestions → null, Saved → "inga sparade ännu").
 
-export default function HomeScreen({ onChipPress, onOpenLogin }) {
+export default function HomeScreen({ onChipPress }) {
   const handleCardPress = useCallback((event) => {
     // The browse tab owns external-link handling via sourceLinks.js.
     // HomeScreen stays declarative until a details screen lands (Phase 2 retention).
@@ -1113,19 +1085,6 @@ export default function HomeScreen({ onChipPress, onOpenLogin }) {
   const handlePromptPress = useCallback((prompt) => {
     if (typeof onChipPress === 'function') onChipPress(prompt);
   }, [onChipPress]);
-
-  // null = still resolving storage; skip one frame rather than flash the
-  // wrong variant.
-  const [loggedIn, setLoggedIn] = useState(null);
-  useEffect(() => {
-    let alive = true;
-    isAuthenticated()
-      .then((v) => { if (alive) setLoggedIn(v); })
-      .catch(() => { if (alive) setLoggedIn(false); });
-    return () => {
-      alive = false;
-    };
-  }, []);
 
   return (
     <View style={styles.container}>
@@ -1143,7 +1102,7 @@ export default function HomeScreen({ onChipPress, onOpenLogin }) {
 
         <SuggestedPromptsSection onChipPress={handlePromptPress} />
         <CuratedCollectionsSection onChipPress={handlePromptPress} />
-        {loggedIn ? <RecentSearchesSection onChipPress={handlePromptPress} /> : null}
+        <RecentSearchesSection onChipPress={handlePromptPress} />
         <LiveNowStrip onCardPress={handleCardPress} />
 
         <AiImageSmoketestSection onCardPress={handleCardPress} />
@@ -1151,14 +1110,9 @@ export default function HomeScreen({ onChipPress, onOpenLogin }) {
         <TonightSection onCardPress={handleCardPress} />
         <WeekendSection onCardPress={handleCardPress} />
         <FreeSection onCardPress={handleCardPress} />
-        {loggedIn ? (
-          <>
-            <RecommendedSection onCardPress={handleCardPress} />
-            <AgentSuggestionsSection onCardPress={handleCardPress} />
-            <SavedSection onCardPress={handleCardPress} />
-          </>
-        ) : null}
-        {loggedIn === false ? <GuestLoginSection onOpenLogin={onOpenLogin} /> : null}
+        <RecommendedSection onCardPress={handleCardPress} />
+        <AgentSuggestionsSection onCardPress={handleCardPress} />
+        <SavedSection onCardPress={handleCardPress} />
 
         <View style={{ height: 96 }} />
       </ScrollView>
@@ -1208,35 +1162,6 @@ const styles = StyleSheet.create({
     marginBottom: TOKENS.space.xl,
   },
 
-  // Guest login nudge
-  guestCard: {
-    marginHorizontal: TOKENS.space.lg,
-    backgroundColor: TOKENS.color.surface,
-    borderColor: TOKENS.color.border,
-    borderWidth: 1,
-    borderRadius: TOKENS.radius.md,
-    padding: TOKENS.space.lg,
-  },
-  guestCardText: {
-    color: TOKENS.color.textMuted,
-    fontSize: TOKENS.fontSize.md,
-    lineHeight: 20,
-    marginBottom: TOKENS.space.md,
-  },
-  guestLoginButton: {
-    backgroundColor: TOKENS.color.accent,
-    borderRadius: TOKENS.radius.md,
-    paddingVertical: TOKENS.space.md,
-    alignItems: 'center',
-  },
-  guestLoginButtonPressed: {
-    opacity: 0.7,
-  },
-  guestLoginButtonText: {
-    color: '#1A1206',
-    fontSize: TOKENS.fontSize.md,
-    fontWeight: '700',
-  },
   sectionHeader: {
     paddingHorizontal: TOKENS.space.lg,
     marginBottom: TOKENS.space.md,

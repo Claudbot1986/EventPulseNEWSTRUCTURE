@@ -28,11 +28,11 @@ import {
   getItem,
   setItem,
   saveAuthSession,
-  isAuthenticated,
   PENDING_AGENT_MESSAGE_KEY,
   getAuthPopupDismissed,
   setAuthPopupDismissed,
 } from './services/storage';
+import { bootstrapSession } from './services/supabaseAuthClient';
 import { analyticsClient } from './services/analyticsClient';
 import { NetworkProvider } from './services/networkContext';
 import { isAuthDeepLink } from './services/deepLinkRouter';
@@ -46,10 +46,10 @@ const TABS = ['home', 'explore', 'notifications', 'profile'];
 if (EXPLORE_STAR_ENABLED) TABS.push('explore-star');
 const ONBOARDING_COMPLETE_KEY = 'eventpulse.onboarding_complete';
 const STORAGE_BUDGET_MS = 800;
-/** Delay before the AuthReminderModal appears for guests (no Supabase
- *  session). Per launch-plan user decision 2026-09-06: 30 s — short enough
- *  for conversion, long enough not to interrupt first-impression
- *  exploration. */
+/** Delay before the AuthReminderModal appears for guests (anonymous
+ *  Supabase session, no permanent account). Per launch-plan user decision
+ *  2026-09-06: 30 s — short enough for conversion, long enough not to
+ *  interrupt first-impression exploration. */
 const AUTH_REMINDER_DELAY_MS = 30 * 1000;
 export { PENDING_AGENT_MESSAGE_KEY };
 
@@ -169,12 +169,18 @@ export default function AppShell() {
     };
   }, []);
 
-  // Resolve the persisted Supabase session once onboarding is done.
-  // Guest mode: no session never blocks — the app opens straight into the
-  // public tab tree and login is offered only where personalized data is
-  // needed. The shell owns the analytics session/flush-loop lifecycle: a
-  // restored session gets session_start + the loop here (App.js no longer
-  // starts them).
+  // NOW#2 bootstrap: once onboarding is done, guarantee a Supabase session
+  // exists — persisted session reused, expired one refreshed, otherwise a
+  // one-time signInAnonymously(). Every guest thereby carries a real
+  // auth.users.id, so taste rows accumulate across restarts (NOW#1 server
+  // side accepts the anon JWT as-is). userState derives from the identity:
+  // anonymous → 'guest' (AuthReminderModal + Profil-login branch still
+  // apply), permanent → 'logged_in'. A bootstrap failure (offline on first
+  // launch) still opens the public tab tree; personalized sections then
+  // render their retry/empty states until a session exists.
+  // The shell owns the analytics session/flush-loop lifecycle for permanent
+  // accounts only — anonymous guests keep analytics off (user_interactions
+  // is the declared funnel source for them).
   useEffect(() => {
     if (onboardingState !== 'done') return;
     let alive = true;
@@ -185,10 +191,10 @@ export default function AppShell() {
       }
     }, STORAGE_BUDGET_MS);
 
-    isAuthenticated()
-      .then(async (authed) => {
+    bootstrapSession()
+      .then(async ({ state }) => {
         if (!alive) return;
-        if (authed) {
+        if (state === 'logged_in') {
           await analyticsClient.sessionStart(Platform.OS);
           analyticsClient.startFlushLoop();
           setUserState('logged_in');
@@ -232,9 +238,10 @@ export default function AppShell() {
     setActiveTab('explore');
   };
 
-  // Auth-reminder popup: only for guests (no Supabase session) who have
-  // not previously opted out via the "Påminn mig inte igen" checkbox.
-  // Logged-in users never see the nudge.
+  // Auth-reminder popup: only for guests (anonymous Supabase session from
+  // the NOW#2 bootstrap) who have not previously opted out via the
+  // "Påminn mig inte igen" checkbox. Logged-in (permanent) users never see
+  // the nudge.
   useEffect(() => {
     if (userState !== 'guest') return undefined;
 
@@ -336,7 +343,7 @@ export default function AppShell() {
           />
         )}
         {activeTab === 'home' && (
-          <HomeScreen onChipPress={handleChipPress} onOpenLogin={() => setShowLogin(true)} />
+          <HomeScreen onChipPress={handleChipPress} />
         )}
         {activeTab === 'notifications' && (
           <NotificationsScreen onOpenLogin={() => setShowLogin(true)} />

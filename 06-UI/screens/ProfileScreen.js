@@ -146,9 +146,9 @@ export default function ProfileScreen({ onLoggedOut, onOpenLogin }) {
   const [followPushLoaded, setFollowPushLoaded] = useState(false);
   const [followPushBusy, setFollowPushBusy] = useState(false);
 
-  // Konto — the Supabase auth session (magic link / Apple). Null means
-  // guest mode: the personalized sections below are all requireUser-gated
-  // server-side, so guests get a login nudge instead of empty/error lists.
+  // Konto — the Supabase auth session (magic link / Apple). Null OR
+  // anonymous (NOW#2 bootstrap session with user.is_anonymous) means guest
+  // mode: guests see a sync/backup nudge instead of account management.
   const [authSession, setAuthSession] = useState(null);
   const [authSessionLoaded, setAuthSessionLoaded] = useState(false);
   const [deleteModalVisible, setDeleteModalVisible] = useState(false);
@@ -443,10 +443,14 @@ export default function ProfileScreen({ onLoggedOut, onOpenLogin }) {
 
   const totalFollowed = followedVenues.length + followedArtists.length;
 
-  // Guest mode: no auth session → nothing on this screen can load or save
-  // (every endpoint here is requireUser-gated), so show a login nudge and
-  // stop. Keep rendering the header so the tab feels intentional, not broken.
-  if (authSessionLoaded && !authSession) {
+  // Guest mode: no session, or an ANONYMOUS one (NOW#2 bootstrap) → the
+  // account-management rows (Logga ut / Radera konto) are meaningless for a
+  // throwaway identity, so guests get a sync/backup nudge instead. Taste
+  // itself already accumulates server-side for anonymous sessions — the
+  // nudge sells multi-device continuity, not access. Keep rendering the
+  // header so the tab feels intentional, not broken.
+  const isGuest = !authSession || authSession.user?.is_anonymous === true;
+  if (authSessionLoaded && isGuest) {
     return (
       <ScrollView
         style={styles.container}
@@ -458,8 +462,9 @@ export default function ProfileScreen({ onLoggedOut, onOpenLogin }) {
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Konto</Text>
           <Text style={[styles.placeholder, styles.guestLoginText]}>
-            Logga in för att spara events, följa platser och artister och
-            ställa in notiser. Du kan fortsätta utforska utan konto.
+            Din smak sparas redan i appen. Lägg till din e-post för att
+            behålla den på alla enheter — du kan fortsätta utforska utan
+            konto.
           </Text>
           {typeof onOpenLogin === 'function' ? (
             <Pressable
@@ -469,9 +474,9 @@ export default function ProfileScreen({ onLoggedOut, onOpenLogin }) {
               ]}
               onPress={onOpenLogin}
               accessibilityRole="button"
-              accessibilityLabel="Logga in"
+              accessibilityLabel="Lägg till e-post"
             >
-              <Text style={styles.loginButtonText}>Logga in</Text>
+              <Text style={styles.loginButtonText}>Lägg till e-post</Text>
             </Pressable>
           ) : null}
         </View>

@@ -1,20 +1,21 @@
 /**
- * AuthReminderModal — Phase 1 retention prompt for email registration.
+ * AuthReminderModal — NOW#2 sync/backup prompt for anonymous guests.
  *
- * Shown to users who are still on the public anon identity (UserPicker
- * test profile, no Supabase auth session). Per launch-plan user decision
- * (2026-09-06): the popup surfaces after 30 s in-app so it does not
- * interrupt first-impression exploration, and offers a permanent
- * "Påminn mig inte igen" opt-out stored in AsyncStorage.
+ * Shown to guests on an anonymous Supabase session (bootstrapSession in
+ * AppShell): their taste already accumulates server-side, but it is tied
+ * to a throwaway identity on THIS device. The pitch is therefore
+ * sync/backup — "behåll din smak på alla enheter" — not access.
+ * Per launch-plan user decision (2026-09-06): the popup surfaces after
+ * 30 s in-app so it does not interrupt first-impression exploration, and
+ * offers a permanent "Påminn mig inte igen" opt-out stored in AsyncStorage.
  *
  * Visibility contract (enforced by AppShell, not by the modal itself):
- *   - User is NOT logged in via Supabase magic link.
+ *   - User is on an ANONYMOUS session (not a permanent magic-link/Apple one).
  *   - User has not previously dismissed with the checkbox.
  *
  * The modal is purely UI — it does NOT import supabaseAuthClient.
- * AppShell owns auth navigation (the LoginScreen lives in a separate
- * Phase 2 task; today the [Registrera] button calls the supplied
- * `onRegister` callback which AppShell wires to its own flow).
+ * AppShell owns auth navigation: the primary button calls the supplied
+ * `onRegister` callback which AppShell wires to its LoginScreen flow.
  *
  * Styling follows the existing EventPulse palette (warm cream
  * #F7F2EA on dark) so it lands as part of the surface, not a
@@ -65,19 +66,20 @@ export default function AuthReminderModal({ visible, onRegister, onDismiss }) {
     >
       <View style={styles.backdrop}>
         <View style={styles.card} accessibilityRole="alert">
-          <Text style={styles.title}>Få en mer personlig upplevelse</Text>
+          <Text style={styles.title}>Behåll din smak på alla enheter</Text>
           <Text style={styles.body}>
-            Registrera din email så kan vi komma ihåg dina favoriter och
-            rekommendera evenemang som passar just dig.
+            Dina sparade evenemang och personliga förslag sparas just nu
+            bara på den här enheten. Lägg till din e-post så följer allt
+            med vart du än loggar in.
           </Text>
 
           <Pressable
             style={({ pressed }) => [styles.primary, pressed && styles.pressed]}
             onPress={handleRegister}
             accessibilityRole="button"
-            accessibilityLabel="Registrera email"
+            accessibilityLabel="Lägg till e-post"
           >
-            <Text style={styles.primaryLabel}>Registrera</Text>
+            <Text style={styles.primaryLabel}>Lägg till e-post</Text>
           </Pressable>
 
           <Pressable

@@ -42,6 +42,13 @@
 import { createClient } from '@supabase/supabase-js';
 import { Platform } from 'react-native';
 import * as AppleAuthentication from 'expo-apple-authentication';
+import {
+  loadAuthSession,
+  saveAuthSession,
+  clearAuthSession,
+  isAuthenticated,
+  loadAuthIdentity,
+} from './storage';
 
 const SUPABASE_URL = process.env.EXPO_PUBLIC_SUPABASE_URL || 'https://bsllkpvkowwndhhxtlln.supabase.co';
 const SUPABASE_ANON_KEY = process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY || '';
@@ -78,6 +85,66 @@ if (typeof __DEV__ !== 'undefined' && __DEV__) {
     'signInWithIdToken=' + typeof supabaseAuth?.auth?.signInWithIdToken,
     'verifyOtp=' + typeof supabaseAuth?.auth?.verifyOtp
   );
+}
+
+/**
+ * NOW#2 — anonymous-first identity bootstrap.
+ *
+ * Call ONCE at app start (AppShell, after onboarding). Contract:
+ *   1. Valid persisted session → reused as-is, ZERO network calls.
+ *   2. Expired session with refresh_token → refreshSession() first, so a
+ *      returning guest keeps the SAME auth.users.id and their accumulated
+ *      taste (refresh rotation persists the renewed pair).
+ *   3. No session, or refresh rejected (revoked) → signInAnonymously();
+ *      the fresh anonymous session is persisted under the same key, so
+ *      every requireUser-gated /agent/* call carries the anon Bearer JWT
+ *      without client changes (server accepts it as of NOW#1).
+ *
+ * The returned `state` is the guest/logged_in split AppShell renders from:
+ * 'guest' means anonymous-or-no-session, 'logged_in' a permanent account.
+ * NEVER throws — a Supabase outage yields { session: null, state: 'guest' }
+ * so the app opens on the public surface instead of crashing on launch.
+ *
+ * @returns {Promise<{ session: object|null, state: 'guest'|'logged_in' }>}
+ */
+export async function bootstrapSession() {
+  try {
+    const existing = await loadAuthSession();
+    if (existing && existing.access_token) {
+      if (await isAuthenticated()) {
+        const identity = await loadAuthIdentity();
+        return { session: existing, state: identity.isAnonymous ? 'guest' : 'logged_in' };
+      }
+      // Expired — try to renew before anything else so the guest's identity
+      // (and taste rows keyed on auth.users.id) survives across days.
+      if (typeof existing.refresh_token === 'string' && existing.refresh_token) {
+        try {
+          const { data, error } = await supabaseAuth.auth.refreshSession({
+            refresh_token: existing.refresh_token,
+          });
+          if (!error && data?.session) {
+            await saveAuthSession(data.session);
+            const refreshedAnon = data.session.user?.is_anonymous === true;
+            return { session: data.session, state: refreshedAnon ? 'guest' : 'logged_in' };
+          }
+        } catch (_err) {
+          // Fall through — revoked/broken refresh gets a clean slate below.
+        }
+        // Stale creds are dead weight: drop them so the fresh anonymous
+        // session is the only thing persisted.
+        await clearAuthSession();
+      }
+    }
+
+    const { data, error } = await supabaseAuth.auth.signInAnonymously();
+    if (error || !data?.session) {
+      return { session: null, state: 'guest' };
+    }
+    await saveAuthSession(data.session);
+    return { session: data.session, state: 'guest' };
+  } catch (_err) {
+    return { session: null, state: 'guest' };
+  }
 }
 
 /**

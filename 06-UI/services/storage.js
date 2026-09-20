@@ -65,7 +65,14 @@ export async function saveAuthSession(session) {
     refresh_token: session.refresh_token || null,
     expires_at: session.expires_at || 0,
     user: session.user
-      ? { id: session.user.id, email: session.user.email || null }
+      ? {
+          id: session.user.id,
+          email: session.user.email || null,
+          // NOW#2: anonymous sign-ins carry is_anonymous=true — persist it so
+          // AppShell can split guest (anonymous) from logged_in (permanent)
+          // without a round-trip. Legacy blobs (field absent) read as false.
+          is_anonymous: session.user.is_anonymous === true,
+        }
       : null,
   };
   await setItem(AUTH_SESSION_KEY, JSON.stringify(normalized));
@@ -115,6 +122,25 @@ export async function isAuthenticated() {
   const expiresAtMs = session.expires_at * 1000;
   // 30s clock-skew grace so we don't bounce users right at the boundary.
   return Date.now() < expiresAtMs - 30 * 1000;
+}
+
+/**
+ * Guest/logged_in split for NOW#2: an authenticated session can still be
+ * ANONYMOUS (Supabase anonymous sign-in). Returns the pair so callers don't
+ * have to re-derive the guest branch from the raw blob.
+ *   - authenticated mirrors isAuthenticated() (valid, unexpired token)
+ *   - isAnonymous reflects the persisted user's is_anonymous flag; sessions
+ *     saved before NOW#2 lack the field and read as false (magic-link users).
+ * Never throws — storage failure reads as the anonymous-guest default.
+ *
+ * @returns {Promise<{ authenticated: boolean, isAnonymous: boolean }>}
+ */
+export async function loadAuthIdentity() {
+  const session = await loadAuthSession();
+  return {
+    authenticated: await isAuthenticated(),
+    isAnonymous: session?.user?.is_anonymous === true,
+  };
 }
 
 /**
