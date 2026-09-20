@@ -2,18 +2,14 @@ import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import {
   View,
   Text,
-  TextInput,
   StyleSheet,
   SafeAreaView,
   ScrollView,
   TouchableOpacity,
   Image,
   ActivityIndicator,
-  Animated,
 } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
 import { fetchEvents, PAGE_SIZE } from '../services/eventServiceClient';
-import { useI18n } from '../i18n';
 import {
   formatPublishedEventTotal,
   usePublishedEventTotal,
@@ -62,24 +58,6 @@ function formatCardDate(dateString, timeString) {
   const months = ['jan', 'feb', 'mar', 'apr', 'maj', 'jun', 'jul', 'aug', 'sep', 'okt', 'nov', 'dec'];
   const time = timeString ? timeString.slice(0, 5) : '';
   return `${days[date.getDay()]} ${date.getDate()} ${months[date.getMonth()]}${time ? ` ${time}` : ''}`;
-}
-
-/** Collapsible search row height: input (46) + margin (16). */
-const SEARCH_ROW_HEIGHT = 62;
-
-/** Hide/show scroll thresholds — small hysteresis so jitter near the top
- *  doesn't flicker the bar. */
-const SCROLL_HIDE_DELTA = 6;
-const SCROLL_SHOW_DELTA = -6;
-const SCROLL_HIDE_MIN_Y = 40;
-
-/** Case- and accent-insensitive match text: NÅ => na. Multilingual-friendly
- *  (sv/en/de/fi …) without any language-specific rules in the client. */
-function normalizeSearchText(value) {
-  return String(value || '')
-    .normalize('NFD')
-    .replace(/[̀-ͯ]/g, '') // combining marks U+0300..U+036F
-    .toLowerCase();
 }
 
 function isToday(dateString) {
@@ -155,7 +133,6 @@ function ExploreEventCard({ event, onPress }) {
 }
 
 export default function ExploreScreen({ onEventPress }) {
-  const { t } = useI18n();
   const { total, loading: totalLoading } = usePublishedEventTotal();
   const [events, setEvents] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -163,19 +140,7 @@ export default function ExploreScreen({ onEventPress }) {
   const [page, setPage] = useState(0);
   const [timeFilter, setTimeFilter] = useState(null);
   const [selectedCategories, setSelectedCategories] = useState([]);
-  const [query, setQuery] = useState('');
-  const [searchHidden, setSearchHidden] = useState(false);
   const isFetchingRef = useRef(false);
-  const lastScrollYRef = useRef(0);
-  const searchBarAnim = useRef(new Animated.Value(0)).current;
-
-  useEffect(() => {
-    Animated.timing(searchBarAnim, {
-      toValue: searchHidden ? 1 : 0,
-      duration: 180,
-      useNativeDriver: false,
-    }).start();
-  }, [searchHidden, searchBarAnim]);
 
   const loadEvents = useCallback(async (pageNum = 0, isLoadMore = false) => {
     if (isFetchingRef.current) return;
@@ -215,40 +180,16 @@ export default function ExploreScreen({ onEventPress }) {
     return result;
   }, [events, selectedCategories, timeFilter]);
 
-  const trimmedQuery = query.trim();
-  const searchResults = useMemo(() => {
-    if (!trimmedQuery) return [];
-    const needle = normalizeSearchText(trimmedQuery);
-    return filteredEvents.filter((event) =>
-      normalizeSearchText(`${event.title || ''} ${event.venue_name || event.venue || ''}`).includes(
-        needle
-      )
-    );
-  }, [filteredEvents, trimmedQuery]);
-
   const todayEvents = useMemo(
     () => filteredEvents.filter((event) => isToday(event.date)),
     [filteredEvents]
   );
 
-  const visibleEvents = trimmedQuery ? searchResults : todayEvents;
-
   const totalLabel = formatPublishedEventTotal(total);
 
   const handleScroll = (event) => {
     const { layoutMeasurement, contentOffset, contentSize } = event.nativeEvent;
-    const y = contentOffset.y;
-    const delta = y - lastScrollYRef.current;
-    lastScrollYRef.current = y;
-
-    // Collapse on scroll down past the header, bring back on scroll up.
-    if (!searchHidden && delta > SCROLL_HIDE_DELTA && y > SCROLL_HIDE_MIN_Y) {
-      setSearchHidden(true);
-    } else if (searchHidden && (delta < SCROLL_SHOW_DELTA || y <= SCROLL_HIDE_MIN_Y)) {
-      setSearchHidden(false);
-    }
-
-    const nearBottom = layoutMeasurement.height + y >= contentSize.height - 200;
+    const nearBottom = layoutMeasurement.height + contentOffset.y >= contentSize.height - 200;
     const hasMore = total == null || events.length < total;
     if (nearBottom && hasMore && !loadingMore && !loading) {
       loadEvents(page + 1, true);
@@ -261,8 +202,7 @@ export default function ExploreScreen({ onEventPress }) {
         style={styles.scroll}
         contentContainerStyle={styles.scrollContent}
         onScroll={handleScroll}
-        scrollEventThrottle={16}
-        keyboardShouldPersistTaps="handled"
+        scrollEventThrottle={200}
         showsVerticalScrollIndicator={false}
       >
         <Text style={styles.kicker}>CITY DISCOVERY</Text>
@@ -279,47 +219,6 @@ export default function ExploreScreen({ onEventPress }) {
             'Börja browsa, filtrera när du vill.'
           )}
         </Text>
-
-        <Animated.View
-          style={[
-            styles.searchRow,
-            {
-              height: searchBarAnim.interpolate({
-                inputRange: [0, 1],
-                outputRange: [SEARCH_ROW_HEIGHT, 0],
-              }),
-              opacity: searchBarAnim.interpolate({ inputRange: [0, 1], outputRange: [1, 0] }),
-            },
-          ]}
-          pointerEvents={searchHidden ? 'none' : 'auto'}
-        >
-          <View style={styles.searchBox}>
-            <TextInput
-              style={styles.searchInput}
-              value={query}
-              onChangeText={setQuery}
-              placeholder={t('explore.searchPlaceholder')}
-              placeholderTextColor="#888888"
-              returnKeyType="search"
-              autoCorrect={false}
-              autoCapitalize="none"
-              clearButtonMode="never"
-              accessibilityLabel={t('explore.searchA11y')}
-              testID="explore-search-input"
-            />
-            {query.length > 0 ? (
-              <TouchableOpacity
-                onPress={() => setQuery('')}
-                hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-                testID="explore-search-clear"
-                style={styles.searchClearBtn}
-              >
-                <Ionicons name="close-circle" size={18} color="#888888" />
-              </TouchableOpacity>
-            ) : null}
-            <Ionicons name="search" size={18} color="#333333" />
-          </View>
-        </Animated.View>
 
         <Text style={styles.filterHeading}>NÄR</Text>
         <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.filterRow}>
@@ -370,16 +269,14 @@ export default function ExploreScreen({ onEventPress }) {
           ))}
         </ScrollView>
 
-        {!trimmedQuery ? <Text style={styles.sectionHeading}>Idag</Text> : null}
+        <Text style={styles.sectionHeading}>Idag</Text>
 
         {loading && events.length === 0 ? (
           <ActivityIndicator color="#E8A838" style={styles.loader} />
-        ) : trimmedQuery && searchResults.length === 0 ? (
-          <Text style={styles.emptyText}>{t('explore.noSearchResults', { q: trimmedQuery })}</Text>
-        ) : !trimmedQuery && todayEvents.length === 0 ? (
+        ) : todayEvents.length === 0 ? (
           <Text style={styles.emptyText}>Inga event idag med valda filter.</Text>
         ) : (
-          visibleEvents.map((event) => (
+          todayEvents.map((event) => (
             <ExploreEventCard
               key={event.id || `${event.source}-${event.title}-${event.date}`}
               event={event}
@@ -430,27 +327,6 @@ const styles = StyleSheet.create({
   subtitleCount: {
     color: '#FFFFFF',
     fontWeight: '700',
-  },
-  searchRow: {
-    overflow: 'hidden',
-  },
-  searchBox: {
-    height: 46,
-    borderRadius: 999,
-    backgroundColor: '#FFFFFF',
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 16,
-    marginBottom: 16,
-  },
-  searchInput: {
-    flex: 1,
-    color: '#111111',
-    fontSize: 15,
-    paddingVertical: 0,
-  },
-  searchClearBtn: {
-    marginHorizontal: 6,
   },
   filterHeading: {
     color: '#666666',

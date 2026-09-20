@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { StatusBar } from 'expo-status-bar';
-import { StyleSheet, Text, View, SectionList, ActivityIndicator, TouchableOpacity, ScrollView, Linking, Image, Platform, Share, Alert, AppState, Pressable, Animated } from 'react-native';
+import { StyleSheet, Text, TextInput, View, SectionList, ActivityIndicator, TouchableOpacity, ScrollView, Linking, Image, Platform, Share, Alert, AppState, Pressable, Animated } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { fetchFeed, addDays, fetchEventIcs, shareSession, fetchSharedSession, parseShareHashFromUrl, recordEventInteraction } from './services/agentClient';
 import { useI18n } from './i18n';
@@ -290,6 +291,22 @@ function groupEventsByDay(events, language, t) {
   return result;
 }
 
+/** Case- and accent-insensitive match text for the Utforska search box:
+ *  NFD normalization + combining-mark strip, so "cafe" matches "Café"
+ *  without language-specific rules in the client (2026-09-20). */
+function normalizeSearchText(value) {
+  return String(value || '')
+    .normalize('NFD')
+    .replace(/[̀-ͯ]/g, '')
+    .toLowerCase();
+}
+
+/** Scroll thresholds for the search-box collapse — small hysteresis so the
+ *  bar doesn't flicker on jitter near the top. */
+const SEARCH_HIDE_DELTA = 6;
+const SEARCH_SHOW_DELTA = -6;
+const SEARCH_HIDE_MIN_Y = 40;
+
 // Filter events by time
 function filterEventsByTime(events, timeFilter) {
   if (!timeFilter) return events;
@@ -516,6 +533,12 @@ function HomeScreen({ onEventPress, scrollPositionRef, pendingPrompt, dismissPen
   const [selectedCategories, setSelectedCategories] = useState([]);
   const [priceFilter, setPriceFilter] = useState(null);
   const [isFilterMenuOpen, setIsFilterMenuOpen] = useState(false);
+  // Utforska search box (2026-09-20): sits next to the Filter toggle in the
+  // fixed filter bar; collapses away on scroll down, returns on scroll up.
+  const [searchQuery, setSearchQuery] = useState('');
+  const [searchHidden, setSearchHidden] = useState(false);
+  const searchLastYRef = useRef(0);
+  const searchBarAnim = useRef(new Animated.Value(0)).current; // 0 = visible, 1 = hidden
   // Pagination: `weekStart` advances by 7 days on each scroll-end load.
   const [weekStart, setWeekStart] = useState(() => new Date().toISOString().slice(0, 10));
   const [hasMore, setHasMore] = useState(true);
@@ -634,13 +657,24 @@ function HomeScreen({ onEventPress, scrollPositionRef, pendingPrompt, dismissPen
     setPriceFilter(null);
   }, []);
 
+  // Collapse/expand animation for the search box, driven by scroll direction.
+  useEffect(() => {
+    Animated.timing(searchBarAnim, {
+      toValue: searchHidden ? 1 : 0,
+      duration: 180,
+      useNativeDriver: false,
+    }).start();
+  }, [searchHidden, searchBarAnim]);
+
+  const trimmedSearch = searchQuery.trim();
+
   const filteredEvents = useMemo(() => {
     let result = events;
-    
+
     if (selectedCategories.length > 0) {
       result = result.filter(event => selectedCategories.includes(event.category));
     }
-    
+
     if (timeFilter) {
       result = filterEventsByTime(result, timeFilter);
     }
@@ -648,9 +682,16 @@ function HomeScreen({ onEventPress, scrollPositionRef, pendingPrompt, dismissPen
     if (priceFilter === 'free') {
       result = result.filter(event => event.isFree || event.is_free);
     }
-    
+
+    if (trimmedSearch) {
+      const needle = normalizeSearchText(trimmedSearch);
+      result = result.filter(event =>
+        normalizeSearchText(`${event.title || ''} ${event.venue_name || event.venue || ''}`).includes(needle)
+      );
+    }
+
     return result;
-  }, [events, timeFilter, selectedCategories, priceFilter]);
+  }, [events, timeFilter, selectedCategories, priceFilter, trimmedSearch]);
 
   const groupedEvents = useMemo(() => groupEventsByDay(filteredEvents, language, t), [filteredEvents, language, t]);
   const hasActiveFilters = Boolean(timeFilter || selectedCategories.length > 0 || priceFilter);
@@ -681,6 +722,47 @@ function HomeScreen({ onEventPress, scrollPositionRef, pendingPrompt, dismissPen
   return (
     <SafeAreaView style={styles.homeContainer}>
       <View style={styles.filterBar}>
+        <View style={styles.filterBarRow}>
+          <Animated.View
+            style={[
+              styles.searchBoxWrap,
+              {
+                maxWidth: searchBarAnim.interpolate({
+                  inputRange: [0, 1],
+                  outputRange: [600, 0],
+                }),
+                opacity: searchBarAnim.interpolate({ inputRange: [0, 1], outputRange: [1, 0] }),
+                marginRight: searchBarAnim.interpolate({ inputRange: [0, 1], outputRange: [8, 0] }),
+              },
+            ]}
+            pointerEvents={searchHidden ? 'none' : 'auto'}
+          >
+            <View style={styles.searchBox}>
+              <TextInput
+                style={styles.searchInput}
+                value={searchQuery}
+                onChangeText={setSearchQuery}
+                placeholder={t('explore.searchPlaceholder')}
+                placeholderTextColor={TOKENS.color.textMuted}
+                returnKeyType="search"
+                autoCorrect={false}
+                autoCapitalize="none"
+                accessibilityLabel={t('explore.searchA11y')}
+                testID="explore-search-input"
+              />
+              {searchQuery.length > 0 ? (
+                <TouchableOpacity
+                  onPress={() => setSearchQuery('')}
+                  hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                  testID="explore-search-clear"
+                  style={styles.searchClearBtn}
+                >
+                  <Ionicons name="close-circle" size={16} color={TOKENS.color.textMuted} />
+                </TouchableOpacity>
+              ) : null}
+              <Ionicons name="search" size={16} color="#333333" />
+            </View>
+          </Animated.View>
         <TouchableOpacity
           style={[styles.filterButton, styles.filterToggle]}
           onPress={() => setIsFilterMenuOpen(prev => !prev)}
@@ -696,6 +778,7 @@ function HomeScreen({ onEventPress, scrollPositionRef, pendingPrompt, dismissPen
             </View>
           )}
         </TouchableOpacity>
+        </View>
         {isFilterMenuOpen && (
           <View style={styles.filterDropdown}>
             <Text style={styles.filterLabel}>{t('explore.filter.when')}</Text>
@@ -805,12 +888,21 @@ function HomeScreen({ onEventPress, scrollPositionRef, pendingPrompt, dismissPen
           </>
         }
         ListEmptyComponent={
-          <StateView
-            title={hasActiveFilters ? t('explore.emptyFilteredTitle') : t('explore.emptyTitle')}
-            detail={hasActiveFilters ? t('explore.emptyFilteredDetail') : t('explore.emptyDetail')}
-            actionLabel={hasActiveFilters ? t('explore.filter.clear') : t('common.retryFetch')}
-            onAction={hasActiveFilters ? clearFilters : loadEvents}
-          />
+          trimmedSearch ? (
+            <StateView
+              title={t('explore.noSearchResults', { q: trimmedSearch })}
+              detail={null}
+              actionLabel={null}
+              onAction={null}
+            />
+          ) : (
+            <StateView
+              title={hasActiveFilters ? t('explore.emptyFilteredTitle') : t('explore.emptyTitle')}
+              detail={hasActiveFilters ? t('explore.emptyFilteredDetail') : t('explore.emptyDetail')}
+              actionLabel={hasActiveFilters ? t('explore.filter.clear') : t('common.retryFetch')}
+              onAction={hasActiveFilters ? clearFilters : loadEvents}
+            />
+          )
         }
           ref={sectionListRef}
           sections={groupedEvents.map(group => ({
@@ -859,9 +951,18 @@ function HomeScreen({ onEventPress, scrollPositionRef, pendingPrompt, dismissPen
           }}
           onEndReachedThreshold={0.5}
           onScroll={(event) => {
-            scrollPositionRefLocal.current = event.nativeEvent.contentOffset.y;
+            const y = event.nativeEvent.contentOffset.y;
+            scrollPositionRefLocal.current = y;
             if (scrollPositionRef) {
-              scrollPositionRef.current = event.nativeEvent.contentOffset.y;
+              scrollPositionRef.current = y;
+            }
+            // Search-box collapse: hide on scroll down, bring back on scroll up.
+            const delta = y - searchLastYRef.current;
+            searchLastYRef.current = y;
+            if (!searchHidden && delta > SEARCH_HIDE_DELTA && y > SEARCH_HIDE_MIN_Y) {
+              setSearchHidden(true);
+            } else if (searchHidden && (delta < SEARCH_SHOW_DELTA || y <= SEARCH_HIDE_MIN_Y)) {
+              setSearchHidden(false);
             }
           }}
           scrollEventThrottle={16}
@@ -1517,6 +1618,33 @@ const styles = StyleSheet.create({
     backgroundColor: TOKENS.color.appBg,
     zIndex: 30,
     elevation: 30,
+  },
+  filterBarRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  searchBoxWrap: {
+    flex: 1,
+    overflow: 'hidden',
+  },
+  searchBox: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#FFFFFF',
+    borderRadius: TOKENS.radius.pill,
+    paddingHorizontal: TOKENS.space.lg,
+    paddingVertical: TOKENS.space.sm,
+  },
+  searchInput: {
+    flex: 1,
+    color: '#111111',
+    fontSize: 13,
+    fontWeight: '600',
+    paddingVertical: 0,
+    marginRight: TOKENS.space.xs,
+  },
+  searchClearBtn: {
+    marginRight: TOKENS.space.xs,
   },
   filterToggle: {
     alignSelf: 'flex-start',
