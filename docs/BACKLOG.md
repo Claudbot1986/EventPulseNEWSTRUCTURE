@@ -13,24 +13,27 @@ User decisions baked in (2026-09-20): **guest taste-first är första fokus (100
 Do in this order. All items are launch blockers; nothing else enters NOW.
 
 1. **Guest taste-first, server side**
-   - `requireUser`-gated endpoints that write/read *own* data accept `anonymous_user_id` as identity: `/agent/feedback`, `/agent/preferences`, `/agent/saved`, `/agent/recommended`, `/agent/cached-recommendations`
-   - Migration: `user_interactions`, `user_preferences`, saved-events tables accept anonymous identity; `user_id` stays nullable/linkable
-   - RLS/service-role unchanged — client never gets elevated keys
-   - Verify: fresh install (no login) records a save; `buildUserSignal` for that anon UUID returns non-cold priors next session
+   - Identity = Supabase anonymous sign-in (`auth.uid()`), **not** a custom `anonymous_user_id` column. Verified 2026-09-20: `external_anonymous_users_enabled` enabled via Management API + `scripts/smoke-anon-signin.mjs` 6/6 PASS (session issued, `is_anonymous` claim in JWT, refresh keeps `sub`, PostgREST accepts the anon JWT)
+   - `requireUser`-gated endpoints that write/read *own* data accept the anonymous JWT as identity: `/agent/feedback`, `/agent/preferences`, `/agent/saved`, `/agent/recommended`, `/agent/cached-recommendations`
+   - Migration: `user_interactions`, `user_preferences`, saved-events tables keyed on `user_id = auth.uid()`; RLS per the official pattern (owner-only rows); `user_id` becomes non-null on first write
+   - Service-role stays server-only — client never gets elevated keys. CAVEAT: RLS-blocked UPDATE/DELETE are silent no-ops ("success, 0 rows") — always verify by read-back
+   - Verify: fresh install (no login) records a save; `buildUserSignal` for that `auth.uid()` returns non-cold priors next session
 
 2. **Guest taste-first, client side**
-   - Un-gate HomeScreen sections Rekommenderat/Förslag/Sparade + Senaste sökningar for guests in `AppShell`/`HomeScreen` (reverse the hiding from `34828f4`, keep the guest/logged_in state split)
+   - AppShell bootstrap: no stored session → `supabase.auth.signInAnonymously()` once, before any personalized fetch (session persists → taste accumulates across restarts)
+   - Un-gate HomeScreen sections Rekommenderat/Förslag/Sparade + Senaste sökningar for guests in `AppShell`/`HomeScreen` (reverse the hiding from `34828f4`, keep the guest/logged_in state split — guest now means `user.is_anonymous === true`)
    - Keep AuthReminderModal; reframe copy toward sync/backup (*"behåll din smak på alla enheter"*), not access
    - Verify: cold guest session shows personalized sections populated after first interactions; 60 UI tests still green
 
-3. **Anon→auth migration**
-   - Server endpoint: on first completed login, link all `anonymous_user_id` rows (interactions, preferences, saves) to `user_id`; dedupe; store id mapping so repeat logins are no-ops
-   - Client: after login, send stored anon UUID once
-   - Verify: guest saves 3 events → logs in → ProfileScreen shows same saved set, no dupes, taste priors intact
+3. **Anon→auth = identity linking (no data migration)**
+   - Official Supabase pattern: `linkIdentity` on the anonymous session keeps the **same `user.id`** — taste rows (`auth.uid()`-keyed) follow automatically. No server migration endpoint, no id-mapping table, no dedupe pass (supersedes the pre-smoke design)
+   - Client: on sign-in intent from an anonymous session, link (magic link / Apple) instead of creating a fresh user
+   - Verify: guest saves 3 events → converts → same `user.id` before/after, ProfileScreen shows same saved set, no dupes, taste priors intact
 
-4. **LLM keys for prod chat**
-   - Fix `ANTHROPIC_API_KEY`/`OPENAI_API_KEY` (401 since 2026-09-12) **or** formally switch prod chat to MiniMax and document
-   - Verify: `run-golden-eval.ts` = 0 hallucinations on actual prod model/config
+4. **LLM keys for prod chat — RESOLVED 2026-09-20 (formal MiniMax switch)**
+   - Prod chat runs MiniMax M3 (`08-Agent/llmRouter.ts`, self-contained fetch); supervisor + ingestion LLM paths run MiniMax M2.7 (`02-Ingestion/AI/minimaxConfig.ts`). `@anthropic-ai/sdk` uninstalled; full suite 1758 tests green, tsc clean
+   - Dead keys remaining in `.env` (Anthropic account locked, duplicate `OPENAI_API_KEY` line, `GOOGLE_API_KEY`, two `SUPABASE_PAT` rows) are non-blocking hygiene — clean when convenient
+   - Verify: `run-golden-eval.ts` = 0 hallucinations on actual prod model/config — NOTE: current runner is deterministic-only; live-model eval mode remains to build
 
 5. **Launch-scope decisions (one meeting, then done)**
    - Web in launch scope? If yes: fix `signInWithOtp` (web blocker). If native-only: document and move on

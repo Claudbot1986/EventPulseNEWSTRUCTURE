@@ -23,7 +23,7 @@ The agent-first pivot from 2026-08-17 is **executed, not pending**. Current trut
 - AI images: every future event has an image (library reuse; generation paused for cost, pre-launch top-up planned).
 
 **Open blockers (known 2026-09-12…20):**
-1. `ANTHROPIC_API_KEY` + `OPENAI_API_KEY` return 401 in prod — production chat runs on fallback. MiniMax/BFL/Ollama OK.
+1. ~~LLM keys~~ **Resolved 2026-09-20:** prod chat formally on MiniMax M3 (`08-Agent/llmRouter.ts`), supervisor/ingestion on MiniMax M2.7 (`02-Ingestion/AI/minimaxConfig.ts`); `@anthropic-ai/sdk` removed. Dead keys in `.env` (Anthropic, duplicate OpenAI line, Google, PAT×2) are hygiene, not blockers.
 2. Web/iPhone-Chrome Supabase auth broken (`signInWithOtp is not a function`). Native iOS unaffected.
 3. `analyticsClient` disabled in prod (`EXPO_PUBLIC_ANALYTICS_URL` unset) — funnel metrics only via `user_interactions`.
 4. Growth strategy package (`eventpulse-growth/`) written 2026-09-20 but assumes pre-personalization state; repo is ahead of ~10/15 of its prompts. Mapping done; remainder folded into Phases below.
@@ -90,11 +90,11 @@ Feed primacy shipped ahead of chat plan; mixed-initiative (results before questi
 Everything else waits. Launch blockers only:
 
 1. **Guest taste-first (the 100% focus).**
-   - Open guest access server-side for: `record_feedback`, `preferences POST/GET`, `saved`, `recommended`, `cached-recommendations` — identity = `anonymous_user_id` OR `user_id`.
+   - Open guest access server-side for: `record_feedback`, `preferences POST/GET`, `saved`, `recommended`, `cached-recommendations` — identity = Supabase anonymous sign-in (`auth.uid()`, `user.is_anonymous=true`), verified 2026-09-20 via `scripts/smoke-anon-signin.mjs` (6/6 PASS).
    - Un-hide personalized home sections (Rekommenderat/Förslag/Sparade) for guests in `AppShell`/`HomeScreen`; keep AuthReminderModal but reframe copy: *"Skapa konto för att behålla din smak på alla enheter"* (sync-framing, not access-framing).
-   - `user_interactions` / `user_preferences` / saves accept `anonymous_user_id` (migration; keep `user_id` nullable-linkable).
-   - Anon→auth migration endpoint + client hook: on first login, link all guest rows to `user_id`, dedupe, keep both ids mapped for idempotency.
-2. **LLM keys:** fix `ANTHROPIC` (or formally switch prod chat to MiniMax and document it). Verify golden eval = 0 hallucinations on the *actual prod model/config*.
+   - `user_interactions` / `user_preferences` / saves keyed on `user_id = auth.uid()` with owner-only RLS (no custom `anonymous_user_id` column).
+   - Anon→auth = `linkIdentity`: same `user.id` preserved, taste rows follow automatically — no migration endpoint, no id-mapping table.
+2. **LLM keys — RESOLVED 2026-09-20:** prod chat formally on MiniMax M3; supervisor/ingestion on M2.7. Remaining: live golden-eval mode (today's runner is deterministic-only) + `.env` hygiene for dead keys.
 3. **Web auth** (`signInWithOtp`) — decide launch scope: native-only launch makes this non-blocking; if Expo web is in scope it is a blocker.
 4. **Analytics decision:** either set `EXPO_PUBLIC_ANALYTICS_URL` (10-Analytics) or formally declare `user_interactions` the only funnel source for launch. No silent dead queues.
 5. **AI image top-up** at launch (BFL credits + backfill run) — already documented in BACKLOG; not a blocker before that point.
