@@ -85,7 +85,7 @@ vi.mock('expo-constants', () => ({
   },
 }));
 
-import { parseAuthDeepLink, AUTH_DEEP_LINK, AUTH_WEB_REDIRECT, bootstrapSession, signInWithEmail, signInWithApple } from './supabaseAuthClient';
+import { parseAuthDeepLink, AUTH_DEEP_LINK, AUTH_WEB_REDIRECT, bootstrapSession, signInWithEmail, signInWithApple, verifyEmailOtpCode, normalizeEmailCode, verifyOtpToken } from './supabaseAuthClient';
 import { clearAuthSession, saveAuthSession, loadAuthSession } from './storage';
 
 describe('parseAuthDeepLink', () => {
@@ -562,6 +562,115 @@ describe('NOW#3 — signInWithEmail identity linking', () => {
     expect(AUTH_WEB_REDIRECT).toBe('https://eventpulse-agent.fly.dev/auth/callback');
 
     constantsMock.appOwnership = null;
+  });
+});
+
+describe('Email-OTP — normalizeEmailCode + verifyEmailOtpCode', () => {
+  const OTP_SESSION = {
+    access_token: 'otp-access',
+    refresh_token: 'otp-refresh',
+    expires_at: FUTURE,
+    user: { id: 'u-otp-1' },
+  };
+
+  beforeEach(async () => {
+    vi.clearAllMocks();
+    await clearAuthSession();
+    authMock.verifyOtp.mockResolvedValue({ data: { session: OTP_SESSION }, error: null });
+  });
+
+  it('signin-läge: verifyOtp via .auth med type "email" och normaliserad kod', async () => {
+    const result = await verifyEmailOtpCode('a@example.com', '482 913', 'signin');
+
+    expect(authMock.verifyOtp).toHaveBeenCalledWith({
+      email: 'a@example.com',
+      token: '482913',
+      type: 'email',
+    });
+    expect(result).toEqual({ session: OTP_SESSION, error: null });
+  });
+
+  it('link-läge (gäst kopplar adress): type blir "email_change"', async () => {
+    const result = await verifyEmailOtpCode('a@example.com', '482913', 'link');
+
+    expect(authMock.verifyOtp).toHaveBeenCalledWith({
+      email: 'a@example.com',
+      token: '482913',
+      type: 'email_change',
+    });
+    expect(result.error).toBeNull();
+  });
+
+  it('ogiltig kod (färre än 6 siffror) kortsluter utan nätverksanrop', async () => {
+    const result = await verifyEmailOtpCode('a@example.com', '123', 'signin');
+
+    expect(result).toEqual({ session: null, error: 'invalid_code' });
+    expect(authMock.verifyOtp).not.toHaveBeenCalled();
+  });
+
+  it('saknad/email utan innehåll kortsluter utan nätverksanrop', async () => {
+    const result = await verifyEmailOtpCode('', '482913', 'signin');
+
+    expect(result).toEqual({ session: null, error: 'email_required' });
+    expect(authMock.verifyOtp).not.toHaveBeenCalled();
+  });
+
+  it('60s-resend-fönstret från GoTrue mappas till rate_limited', async () => {
+    authMock.verifyOtp.mockResolvedValue({
+      data: { session: null, user: null },
+      error: { message: 'For security purposes, you can only request this once every 60 seconds' },
+    });
+
+    const result = await verifyEmailOtpCode('a@example.com', '482913', 'signin');
+
+    expect(result.error).toBe('rate_limited');
+  });
+
+  it('utgången/felaktig kod från GoTrue mappas till expired_or_invalid_code', async () => {
+    authMock.verifyOtp.mockResolvedValue({
+      data: { session: null, user: null },
+      error: { message: 'Token has expired or is invalid' },
+    });
+
+    const result = await verifyEmailOtpCode('a@example.com', '482913', 'signin');
+
+    expect(result.error).toBe('expired_or_invalid_code');
+  });
+
+  it('svar utan session → no_session_returned', async () => {
+    authMock.verifyOtp.mockResolvedValue({ data: { session: null }, error: null });
+
+    const result = await verifyEmailOtpCode('a@example.com', '482913', 'signin');
+
+    expect(result.error).toBe('no_session_returned');
+  });
+
+  it('hängt anrop → timeout vinner racen', async () => {
+    authMock.verifyOtp.mockImplementation(() => new Promise(() => {}));
+
+    const result = await verifyEmailOtpCode('a@example.com', '482913', 'signin', { timeoutMs: 50 });
+
+    expect(result.error).toBe('timeout');
+  });
+
+  it('normalizeEmailCode: rensar icke-siffror och kapar till 6', () => {
+    expect(normalizeEmailCode('482 913')).toBe('482913');
+    expect(normalizeEmailCode('482-913')).toBe('482913');
+    expect(normalizeEmailCode('  482913  ')).toBe('482913');
+    expect(normalizeEmailCode('48291300')).toBe('482913');
+    expect(normalizeEmailCode('abc')).toBe('');
+    expect(normalizeEmailCode(null as unknown as string)).toBe('');
+  });
+
+  it('REGRESSION: verifyOtpToken anropar klientens .auth-yta (inte toppnivån)', async () => {
+    const result = await verifyOtpToken({ email: 'a@example.com', token: '482913' });
+
+    expect(authMock.verifyOtp).toHaveBeenCalledWith({
+      email: 'a@example.com',
+      token: '482913',
+      type: 'magiclink',
+    });
+    expect(result).toEqual({ session: OTP_SESSION, error: null });
   });
 });
 

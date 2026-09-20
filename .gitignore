@@ -104,3 +104,6 @@ TEMP/
 # Sub-dir-versionen matchas INTE av root-patternen — behöver egen rad.
 06-UI/.claude/eventpulse/evidence/
 06-UI/.claude/eventpulse/missions/
+
+# Supabase auth-config snapshots (innehåller SMTP-lösenord) — aldrig commita
+06-UI/scripts/email-templates/auth-config-backup-*.json

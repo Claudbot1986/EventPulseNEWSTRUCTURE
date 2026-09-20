@@ -520,12 +520,12 @@ export async function verifyOtpToken(args) {
   }
   let result;
   if (args.token_hash && args.type) {
-    result = await supabaseAuth.verifyOtp({
+    result = await supabaseAuth.auth.verifyOtp({
       token_hash: args.token_hash,
       type: args.type,
     });
   } else if (args.email && args.token) {
-    result = await supabaseAuth.verifyOtp({
+    result = await supabaseAuth.auth.verifyOtp({
       email: args.email,
       token: args.token,
       type: 'magiclink',
@@ -541,6 +541,87 @@ export async function verifyOtpToken(args) {
     return { session: null, error: 'no_session_returned' };
   }
   return { session: data.session, error: null };
+}
+
+const EMAIL_OTP_LENGTH = 6;
+
+/**
+ * Normalize a user-typed email OTP code: keep digits only, cap at 6.
+ * Handles pasted forms like "482 913" / "482-913" and iOS autofill noise.
+ *
+ * @param {string} input
+ * @returns {string}
+ */
+export function normalizeEmailCode(input) {
+  if (typeof input !== 'string') return '';
+  return input.replace(/\D/g, '').slice(0, EMAIL_OTP_LENGTH);
+}
+
+/**
+ * Verify a 6-digit email code — the primary login path (2026-09-20).
+ *
+ * Why codes over links: Hotmail/Outlook SafeLinks prefetch single-use magic
+ * links and burn the token before the user taps. A code survives mail
+ * scanners entirely — no web hop, no URL scheme juggling, identical flow in
+ * Expo Go / TestFlight / App Store. The magic link stays in the email as a
+ * secondary fallback (MagicLinkHandlerScreen keeps handling it).
+ *
+ * Mode maps to GoTrue's verify type:
+ *   - 'signin' → type 'email'       (classic signInWithOtp code)
+ *   - 'link'   → type 'email_change' (guest attaching an address, NOW#3;
+ *     the updateUser confirmation mail carries the code in its token)
+ *
+ * Same hard-timeout discipline as signInWithEmail so a hung network never
+ * strands the code-entry screen's spinner.
+ *
+ * @param {string} email
+ * @param {string} code — raw user input; normalized via normalizeEmailCode
+ * @param {'signin'|'link'} mode
+ * @param {{ timeoutMs?: number }} [opts]
+ * @returns {Promise<{ session: object|null, error: string|null }>}
+ */
+export async function verifyEmailOtpCode(email, code, mode = 'signin', { timeoutMs = 15_000 } = {}) {
+  if (typeof email !== 'string' || email.length === 0) {
+    return { session: null, error: 'email_required' };
+  }
+  const token = normalizeEmailCode(code);
+  if (token.length !== EMAIL_OTP_LENGTH) {
+    return { session: null, error: 'invalid_code' };
+  }
+  const type = mode === 'link' ? 'email_change' : 'email';
+  let timeoutHandle = null;
+  const timeout = new Promise((resolve) => {
+    timeoutHandle = setTimeout(
+      () => resolve({ session: null, error: 'timeout' }),
+      timeoutMs
+    );
+  });
+  const verifyPromise = (async () => {
+    try {
+      const { data, error } = await supabaseAuth.auth.verifyOtp({ email, token, type });
+      if (error) {
+        const msg = String(error.message || '');
+        // GoTrue's 60s-resend window fires here when a fresh code is typed
+        // before the window has elapsed on the SEND side.
+        if (/security purposes|once every|rate/i.test(msg)) {
+          return { session: null, error: 'rate_limited' };
+        }
+        return { session: null, error: 'expired_or_invalid_code' };
+      }
+      if (!data?.session) {
+        return { session: null, error: 'no_session_returned' };
+      }
+      return { session: data.session, error: null };
+    } catch (err) {
+      const msg = err && typeof err === 'object' && 'message' in err
+        ? String(err.message)
+        : 'verify_failed';
+      return { session: null, error: msg };
+    }
+  })();
+  const result = await Promise.race([verifyPromise, timeout]);
+  if (timeoutHandle) clearTimeout(timeoutHandle);
+  return result;
 }
 
 /**

@@ -57,7 +57,7 @@ function looksLikeEmail(s) {
   return true;
 }
 
-export default function LoginScreen({ onCancel, onSuccess }) {
+export default function LoginScreen({ onCancel, onSuccess, onEmailSent }) {
   const [email, setEmail] = useState('');
   const [state, setState] = useState('idle'); // 'idle' | 'sending' | 'sent' | 'error'
   const [errorMsg, setErrorMsg] = useState('');
@@ -82,8 +82,16 @@ export default function LoginScreen({ onCancel, onSuccess }) {
       return;
     }
     setSentMode(mode);
+    // Primary path (2026-09-20): hand off to the 6-digit code entry screen
+    // via AppShell — the typed code is Hotmail-SafeLinks-proof, unlike the
+    // link. The 'sent' box below stays as a defensive fallback for any host
+    // that does not pass onEmailSent.
+    if (typeof onEmailSent === 'function') {
+      onEmailSent(email.trim(), mode);
+      return;
+    }
     setState('sent');
-  }, [email]);
+  }, [email, onEmailSent]);
 
   const handleChangeEmail = () => {
     setState('idle');

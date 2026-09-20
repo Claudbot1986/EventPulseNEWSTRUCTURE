@@ -19,6 +19,7 @@ import NotificationsScreen from './screens/NotificationsScreen';
 import ProfileScreen from './screens/ProfileScreen';
 import OnboardingScreen from './screens/OnboardingScreen';
 import LoginScreen from './screens/LoginScreen';
+import CodeEntryScreen from './screens/CodeEntryScreen';
 import MagicLinkHandlerScreen from './screens/MagicLinkHandlerScreen';
 import UtforskaStarScreen from './screens/UtforskaStarScreen';
 import NetworkBanner from './components/NetworkBanner';
@@ -30,13 +31,12 @@ import {
   saveAuthSession,
   PENDING_AGENT_MESSAGE_KEY,
   PENDING_EVENT_KEY,
-  getAuthPopupDismissed,
-  setAuthPopupDismissed,
 } from './services/storage';
 import { bootstrapSession } from './services/supabaseAuthClient';
 import { analyticsClient } from './services/analyticsClient';
 import { NetworkProvider } from './services/networkContext';
 import { isAuthDeepLink } from './services/deepLinkRouter';
+import { useAuthReminder } from './services/useAuthReminder';
 
 // Dev-only feature flag: när TRUE lägger vi till 5:e tab "Utforska*" som
 // visar de 10 första AI-bilderna i en kontrollerad vy för visuell
@@ -47,24 +47,39 @@ const TABS = ['home', 'explore', 'notifications', 'profile'];
 if (EXPLORE_STAR_ENABLED) TABS.push('explore-star');
 const ONBOARDING_COMPLETE_KEY = 'eventpulse.onboarding_complete';
 const STORAGE_BUDGET_MS = 800;
-/** Delay before the AuthReminderModal appears for guests (anonymous
- *  Supabase session, no permanent account). Per launch-plan user decision
- *  2026-09-06: 30 s — short enough for conversion, long enough not to
- *  interrupt first-impression exploration. */
-const AUTH_REMINDER_DELAY_MS = 30 * 1000;
 export { PENDING_AGENT_MESSAGE_KEY };
 
 export default function AppShell() {
   const [activeTab, setActiveTab] = useState('home');
   const [onboardingState, setOnboardingState] = useState('loading'); // 'loading' | 'needs' | 'done'
   const [userState, setUserState] = useState('loading'); // 'loading' | 'guest' | 'logged_in'
-  const [authReminderVisible, setAuthReminderVisible] = useState(false);
   const [showLogin, setShowLogin] = useState(false);
   // Magic-link deep-link callback URL — when non-null AppShell renders
   // MagicLinkHandlerScreen instead of the rest of the tree. The handler
   // calls onSuccess(session) → persist + start analytics + flip gate;
   // or onCancel() to drop back to the public surface.
   const [magicLinkUrl, setMagicLinkUrl] = useState(null);
+  // Email-OTP (primary login since 2026-09-20): when non-null AppShell
+  // renders CodeEntryScreen for this address. `pendingEmailMode` decides
+  // GoTrue's verify type ('email' for signin, 'email_change' for the
+  // guest-linking flow) inside verifyEmailOtpCode.
+  const [pendingEmail, setPendingEmail] = useState(null);
+  const [pendingEmailMode, setPendingEmailMode] = useState('signin');
+
+  // Guest auth nudge (AuthReminderModal). Timing contract 2026-09-20: first
+  // nudge ~3 min in, ongoing registration pauses it, an abandoned attempt
+  // earns one 2-min retry — policy + timers live in the hook; the shell
+  // only supplies "is any auth surface on screen" and navigation.
+  const authFlowActive = showLogin || !!pendingEmail || !!magicLinkUrl;
+  const {
+    visible: authReminderVisible,
+    handleRegister: handleAuthReminderRegister,
+    handleDismiss: handleAuthReminderDismiss,
+  } = useAuthReminder({
+    isGuest: userState === 'guest',
+    authFlowActive,
+    onRegister: () => setShowLogin(true),
+  });
 
   // Magic-link deep-link routing.
   //
@@ -116,6 +131,10 @@ export default function AppShell() {
     }
     setUserState('logged_in');
     setMagicLinkUrl(null);
+    // If the session came via the email fallback link while a code entry was
+    // pending, drop the auth surfaces too so the user lands on the tab tree.
+    setPendingEmail(null);
+    setShowLogin(false);
   }, []);
 
   const handleMagicLinkCancel = useCallback(() => {
@@ -249,55 +268,23 @@ export default function AppShell() {
     setActiveTab('explore');
   };
 
-  // Auth-reminder popup: only for guests (anonymous Supabase session from
-  // the NOW#2 bootstrap) who have not previously opted out via the
-  // "Påminn mig inte igen" checkbox. Logged-in (permanent) users never see
-  // the nudge.
-  useEffect(() => {
-    if (userState !== 'guest') return undefined;
-
-    let alive = true;
-    let dismissed = false;
-    getAuthPopupDismissed()
-      .then((d) => {
-        if (!alive || d) { dismissed = true; return; }
-      })
-      .catch(() => {});
-
-    const t = setTimeout(() => {
-      if (alive && !dismissed) setAuthReminderVisible(true);
-    }, AUTH_REMINDER_DELAY_MS);
-
-    return () => {
-      alive = false;
-      clearTimeout(t);
-    };
-  }, [userState]);
-
-  const handleAuthReminderRegister = () => {
-    // Phase 1 launch: wire the popup's "Registrera" button to the real
-    // email-link LoginScreen. We close the popup and flip into login
-    // mode; the LoginScreen renders inside the same body slot so the
-    // tab bar disappears until the user completes the flow or backs out.
-    // The MagicLinkHandlerScreen (registered as the deep-link target in
-    // App.js or in this shell's Linking listener — see TODO below) flips
-    // userState to 'logged_in' after the OTP verifies, which auto-
-    // unmounts the LoginScreen.
-    setAuthReminderVisible(false);
-    setShowLogin(true);
-  };
-
-  const handleAuthReminderDismiss = (opts) => {
-    const permanently = !!(opts && opts.permanently);
-    if (permanently) {
-      setAuthPopupDismissed(true).catch(() => {});
-    }
-    setAuthReminderVisible(false);
-  };
-
   const handleLoginCancel = () => {
     setShowLogin(false);
   };
+
+  // Email-OTP handoff: LoginScreen fired a code email successfully. Swap
+  // straight to CodeEntryScreen (no flash of the login form in between).
+  const handleEmailSent = useCallback((email, mode) => {
+    setPendingEmail(email);
+    setPendingEmailMode(mode === 'link' ? 'link' : 'signin');
+    setShowLogin(false);
+  }, []);
+
+  // User backed out of code entry → return to the login form.
+  const handleCodeCancel = useCallback(() => {
+    setPendingEmail(null);
+    setShowLogin(true);
+  }, []);
 
   let body;
   // Magic-link callback is the highest-priority route — it must show
@@ -341,6 +328,19 @@ export default function AppShell() {
       <LoginScreen
         onCancel={handleLoginCancel}
         onSuccess={handleLoginSuccess}
+        onEmailSent={handleEmailSent}
+      />
+    );
+  } else if (pendingEmail) {
+    // Email-OTP code entry (primary auth path). onSuccess reuses the magic
+    // link success handler verbatim — persist + analytics + flip to
+    // logged_in — so the post-login UX is identical across paths.
+    body = (
+      <CodeEntryScreen
+        email={pendingEmail}
+        mode={pendingEmailMode}
+        onSuccess={handleMagicLinkSuccess}
+        onCancel={handleCodeCancel}
       />
     );
   } else {

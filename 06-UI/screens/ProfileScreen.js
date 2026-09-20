@@ -48,6 +48,13 @@ import {
 
 const FOLLOW_PUSH_ENABLED_KEY = 'eventpulse.follow_push_enabled';
 
+/** BottomTabBar är position absolute över innehållet (AppShell barWrapper).
+ *  Spegla dess mått — bar.paddingTop(8) + tabButton-icon/label(~50) +
+ *  iOS home-inset(24) — plus luft, så sista raden ("Om EventPulse")
+ *  scrollar fri från baren istället för att hamna under den.
+ *  Källa: components/BottomTabBar.js styles.bar. */
+const TAB_BAR_CLEARANCE = 96;
+
 const TOKENS = {
   color: {
     appBg: '#000000',
@@ -711,7 +718,7 @@ const styles = StyleSheet.create({
   scrollContent: {
     paddingHorizontal: TOKENS.space.lg,
     paddingTop: TOKENS.space.lg,
-    paddingBottom: TOKENS.space.xxl,
+    paddingBottom: TAB_BAR_CLEARANCE,
   },
   eyebrow: {
     color: TOKENS.color.accent,
