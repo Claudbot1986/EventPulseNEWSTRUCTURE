@@ -39,6 +39,13 @@ vi.mock('react-native', () => ({
   Platform: { OS: 'ios', select: (o: { ios?: unknown; default?: unknown }) => o?.ios ?? o?.default },
 }));
 vi.mock('expo-apple-authentication', () => ({}));
+// supabaseAuthClient reads expo-constants at call time (authRedirectTo's
+// Expo Go detection). Under vitest the real module pulls expo-modules-core,
+// which crashes on the missing __DEV__ global — the classifier under test
+// never calls it, so a shape-only stub suffices (standalone/prod default).
+vi.mock('expo-constants', () => ({
+  default: { appOwnership: null, expoConfig: null },
+}));
 
 import {
   isEventPulseUrl,
@@ -76,6 +83,22 @@ describe('isAuthDeepLink', () => {
   it('does NOT match an auth-like path under a different scheme', () => {
     // Same string but with myapp:// — a different scheme. Must reject.
     expect(isAuthDeepLink('myapp://auth/callback?token=abc')).toBe(false);
+  });
+
+  it('matches an Expo Go dev callback (exp:// host /--/auth/callback)', () => {
+    expect(
+      isAuthDeepLink('exp://192.168.1.9:8081/--/auth/callback?token_hash=abc&type=email_change')
+    ).toBe(true);
+  });
+
+  it('matches an Expo Go dev callback carrying tokens in the fragment', () => {
+    expect(
+      isAuthDeepLink('exp://192.168.1.9:8081/--/auth/callback#access_token=AT&refresh_token=RT')
+    ).toBe(true);
+  });
+
+  it('does NOT match an Expo Go URL pointing at the share path', () => {
+    expect(isAuthDeepLink('exp://192.168.1.9:8081/--/s/abc123')).toBe(false);
   });
 
   it('rejects null, undefined, and non-string inputs', () => {

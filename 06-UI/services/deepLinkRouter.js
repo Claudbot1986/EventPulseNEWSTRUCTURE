@@ -25,13 +25,19 @@ import { AUTH_DEEP_LINK_PATH } from './supabaseAuthClient';
  *  the routing layer doesn't need to know about agentClient's parsing. */
 const SHARE_PATH_RE = /^eventpulse:\/\/s\/([0-9a-z]{6,12})/i;
 const AUTH_URL_PREFIX = `eventpulse://${AUTH_DEEP_LINK_PATH}`;
+/** Expo Go dev form: iOS never routes the custom eventpulse:// scheme into
+ *  Expo Go, so dev email links use the documented exp://<host>/--/<path>
+ *  convention. Params arrive as ?query or #fragment — both accepted. */
+const EXPO_GO_AUTH_RE = /^exp:\/\/[^/]+\/--\/auth\/callback(?:[?#].*)?$/i;
 
 export function isEventPulseUrl(url) {
   return typeof url === 'string' && url.startsWith('eventpulse://');
 }
 
 export function isAuthDeepLink(url) {
-  return typeof url === 'string' && url.startsWith(AUTH_URL_PREFIX);
+  if (typeof url !== 'string') return false;
+  if (url.startsWith(AUTH_URL_PREFIX)) return true;
+  return EXPO_GO_AUTH_RE.test(url);
 }
 
 export function isShareDeepLink(url) {

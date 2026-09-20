@@ -64,6 +64,23 @@ vi.mock('expo-apple-authentication', () => ({
   AppleAuthenticationScope: { FULL_NAME: 2, EMAIL: 1 },
 }));
 
+// authRedirectTo() läser expo-constants (hostUri/appOwnership) för att känna
+// igen Expo Go. Standardmocken beter sig som en standalone/prod-build
+// (appOwnership null, ingen hostUri) → AUTH_DEEP_LINK väljs. Dev-tester
+// muterar de hoistade fälten direkt.
+const constantsMock = vi.hoisted(() => ({
+  appOwnership: null as string | null,
+  hostUri: null as string | null,
+}));
+vi.mock('expo-constants', () => ({
+  default: {
+    get appOwnership() { return constantsMock.appOwnership; },
+    get expoConfig() {
+      return constantsMock.hostUri ? { hostUri: constantsMock.hostUri } : null;
+    },
+  },
+}));
+
 import { parseAuthDeepLink, AUTH_DEEP_LINK, bootstrapSession, signInWithEmail, signInWithApple } from './supabaseAuthClient';
 import { clearAuthSession, saveAuthSession, loadAuthSession } from './storage';
 
@@ -124,6 +141,28 @@ describe('parseAuthDeepLink', () => {
 
   it('returns null when only an unknown param is present', () => {
     expect(parseAuthDeepLink('eventpulse://auth/callback?error=access_denied')).toBeNull();
+  });
+
+  // ─── NOW#3 redirect-kedja (fix efter localhost-incidenten 2026-09-20) ────
+
+  it('parses fragment-delimited tokens (implicit flow #access_token=…)', () => {
+    const url = 'eventpulse://auth/callback#access_token=AT&refresh_token=RT';
+    expect(parseAuthDeepLink(url)).toEqual({ access_token: 'AT', refresh_token: 'RT' });
+  });
+
+  it('parses an Expo Go dev URL (exp:// host /--/auth/callback)', () => {
+    const url = 'exp://192.168.1.9:8081/--/auth/callback?token_hash=th&type=email_change';
+    expect(parseAuthDeepLink(url)).toEqual({ token_hash: 'th', type: 'email_change' });
+  });
+
+  it('parses Expo Go dev URL with fragment tokens', () => {
+    const url = 'exp://192.168.1.9:8081/--/auth/callback#access_token=AT&refresh_token=RT';
+    expect(parseAuthDeepLink(url)).toEqual({ access_token: 'AT', refresh_token: 'RT' });
+  });
+
+  it('query params win over fragment when both are present', () => {
+    const url = 'eventpulse://auth/callback?token_hash=th&type=magiclink#access_token=IGNORED&refresh_token=IGNORED';
+    expect(parseAuthDeepLink(url)).toEqual({ token_hash: 'th', type: 'magiclink' });
   });
 });
 
@@ -388,6 +427,41 @@ describe('NOW#3 — signInWithEmail identity linking', () => {
     expect(result.mode).toBe('link');
     expect(result.error).toBe('session gone');
     expect(authMock.updateUser).not.toHaveBeenCalled();
+  });
+
+  it('Expo Go-dev: återlänken blir exp://host/--/auth/callback så telefonen öppnar appen', async () => {
+    vi.stubGlobal('__DEV__', true);
+    constantsMock.appOwnership = 'expo';
+    constantsMock.hostUri = '192.168.1.9:8081';
+    await saveAuthSession(anonSession());
+    authMock.setSession.mockResolvedValue({ data: { session: anonSession() }, error: null });
+
+    const result = await signInWithEmail(LINK_EMAIL);
+
+    expect(result.mode).toBe('link');
+    expect(authMock.updateUser).toHaveBeenCalledWith(
+      { email: LINK_EMAIL },
+      { emailRedirectTo: 'exp://192.168.1.9:8081/--/auth/callback' },
+    );
+
+    vi.unstubAllGlobals();
+    constantsMock.appOwnership = null;
+    constantsMock.hostUri = null;
+  });
+
+  it('standalone/prod: återlänken är alltid eventpulse://-auth-djurlänken', async () => {
+    constantsMock.appOwnership = 'standalone';
+    constantsMock.hostUri = null;
+
+    const result = await signInWithEmail(LINK_EMAIL);
+
+    expect(result.mode).toBe('signin');
+    expect(authMock.signInWithOtp).toHaveBeenCalledWith({
+      email: LINK_EMAIL,
+      options: { emailRedirectTo: AUTH_DEEP_LINK, shouldCreateUser: true },
+    });
+
+    constantsMock.appOwnership = null;
   });
 });
 

@@ -42,6 +42,7 @@
 import { createClient } from '@supabase/supabase-js';
 import { Platform } from 'react-native';
 import * as AppleAuthentication from 'expo-apple-authentication';
+import Constants from 'expo-constants';
 import {
   loadAuthSession,
   saveAuthSession,
@@ -64,6 +65,38 @@ if (!SUPABASE_ANON_KEY) {
 export const AUTH_DEEP_LINK_SCHEME = 'eventpulse';
 export const AUTH_DEEP_LINK_PATH = 'auth/callback';
 export const AUTH_DEEP_LINK = `${AUTH_DEEP_LINK_SCHEME}://${AUTH_DEEP_LINK_PATH}`;
+
+/**
+ * Where Supabase's verify-link redirects the user after they tap the email
+ * link (NOW#3 redirect-kedja).
+ *
+ * Standalone / TestFlight builds claim the `eventpulse://` scheme — the
+ * deep link opens the app directly. Expo Go does NOT: iOS routes a custom
+ * scheme only to the app that declares it, and Expo Go declares `exp://`.
+ * The documented Expo Go convention `exp://<hostUri>/--/<path>` forwards the
+ * deep-link path into the running app — without it the email link dead-ends
+ * in Safari (2026-09-20 incident: Supabase's empty uri_allow_list fell back
+ * to site_url=localhost:3000 and the flow died on a "localhost-hemsida").
+ *
+ * Every redirect used must also be allow-listed in the Supabase project's
+ * auth config (uri_allow_list) — otherwise Supabase silently substitutes
+ * site_url into the email at send time.
+ *
+ * @returns {string}
+ */
+export function authRedirectTo() {
+  if (
+    typeof __DEV__ !== 'undefined' &&
+    __DEV__ &&
+    Constants?.appOwnership === 'expo'
+  ) {
+    const hostUri = Constants?.expoConfig?.hostUri;
+    if (typeof hostUri === 'string' && hostUri.length > 0) {
+      return `exp://${hostUri}/--/${AUTH_DEEP_LINK_PATH}`;
+    }
+  }
+  return AUTH_DEEP_LINK;
+}
 
 export const supabaseAuth = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
   auth: {
@@ -350,7 +383,7 @@ export async function signInWithEmail(email, { timeoutMs = 15_000 } = {}) {
         }
         const { error } = await supabaseAuth.auth.updateUser(
           { email },
-          { emailRedirectTo: AUTH_DEEP_LINK },
+          { emailRedirectTo: authRedirectTo() },
         );
         if (error) return { error: error.message || 'link_failed', mode };
         return { error: null, mode };
@@ -358,7 +391,7 @@ export async function signInWithEmail(email, { timeoutMs = 15_000 } = {}) {
       const { error } = await supabaseAuth.auth.signInWithOtp({
         email,
         options: {
-          emailRedirectTo: AUTH_DEEP_LINK,
+          emailRedirectTo: authRedirectTo(),
           shouldCreateUser: true,
         },
       });
@@ -420,23 +453,34 @@ export async function verifyOtpToken(args) {
 /**
  * Parse a magic-link URL of shape
  *   eventpulse://auth/callback?token_hash=...&type=magiclink
- *   eventpulse://auth/callback?access_token=...&refresh_token=...
+ *   eventpulse://auth/callback#access_token=...&refresh_token=...
+ *   exp://<host>:<port>/--/auth/callback?token_hash=...   (Expo Go dev)
  *
  * The first shape is the modern Supabase PKCE flow (verifyOtp).
- * The second shape is the older implicit flow where Supabase hands us
- * the access/refresh tokens directly (signInWithSession).
+ * The second is the implicit flow where Supabase appends access/refresh
+ * tokens in the URL FRAGMENT ('#', not '?') after /verify redirects —
+ * including for email_change confirmations (NOW#3 link path). Expo Go dev
+ * URLs carry the same params after the /--/ path prefix. When a URL has
+ * both query and fragment, the query wins and the fragment is ignored.
  *
  * @param {string|null|undefined} url
  * @returns {{ token_hash?: string, type?: string, email?: string, token?: string, access_token?: string, refresh_token?: string }|null}
  */
 export function parseAuthDeepLink(url) {
   if (typeof url !== 'string' || url.length === 0) return null;
-  // Strip the scheme/host and split off the query.
   const qIdx = url.indexOf('?');
-  if (qIdx < 0) return null;
-  const query = url.slice(qIdx + 1);
+  const hIdx = url.indexOf('#');
+  let raw;
+  if (qIdx >= 0) {
+    // Query present — fragment (if any) is stripped from the slice end.
+    raw = url.slice(qIdx + 1, hIdx > qIdx ? hIdx : undefined);
+  } else if (hIdx >= 0) {
+    raw = url.slice(hIdx + 1);
+  } else {
+    return null;
+  }
   const params = Object.fromEntries(
-    query.split('&').filter(Boolean).map((kv) => {
+    raw.split('&').filter(Boolean).map((kv) => {
       const [k, v = ''] = kv.split('=');
       return [decodeURIComponent(k), decodeURIComponent(v)];
     })
