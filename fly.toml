@@ -10,7 +10,7 @@
 #   - internal_port matches what 08-Agent/server.ts listens on (8787)
 #   - health check points at /agent/health (verified endpoint, see server.ts)
 #
-# Secrets (SUPABASE_*, ANTHROPIC_API_KEY) must NEVER be committed here.
+# Secrets (SUPABASE_*, MINIMAX_API_KEY) must NEVER be committed here.
 # Set them with: fly secrets set SUPABASE_URL=... SUPABASE_SERVICE_ROLE_KEY=...
 # =============================================================================
 
@@ -28,7 +28,7 @@ primary_region = "arn"
   AGENT_ALLOWED_ORIGINS = "https://eventpulse-agent.fly.dev"
 
 # Run as a single small shared-cpu-1x instance. The agent is an Express server
-# calling Supabase + Anthropic; it is not compute-bound and does not need
+# calling Supabase + MiniMax; it is not compute-bound and does not need
 # more than 512 MB.
 [[vm]]
   cpu_kind = "shared"

@@ -2,7 +2,7 @@
  * Token-bucket rate limiter middleware for the 08-Agent Express server.
  *
  * Why:
- *   The /agent/chat endpoint is Anthropic-backed (Phase 1+). A hostile or
+ *   The /agent/chat endpoint is MiniMax-backed (Phase 1+). A hostile or
  *   buggy client could otherwise run up real LLM costs or overwhelm the
  *   Supabase read path. Per docs/DEPLOY.md §8 (MVP Hardening 2026-08-20,
  *   Workstream E), this is shipped as part of the deploy hardening pass.

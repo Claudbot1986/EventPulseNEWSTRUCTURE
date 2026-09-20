@@ -23,13 +23,13 @@ import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'fs';
 import { tmpdir } from 'os';
 import { resolve } from 'path';
 
-const originalKey = process.env.ANTHROPIC_API_KEY;
+const originalKey = process.env.MINIMAX_API_KEY;
 beforeEach(() => {
-  delete process.env.ANTHROPIC_API_KEY;
+  delete process.env.MINIMAX_API_KEY; // force deterministic path (live-read getter)
 });
 afterEach(() => {
-  if (originalKey === undefined) delete process.env.ANTHROPIC_API_KEY;
-  else process.env.ANTHROPIC_API_KEY = originalKey;
+  if (originalKey === undefined) delete process.env.MINIMAX_API_KEY;
+  else process.env.MINIMAX_API_KEY = originalKey;
 });
 
 let tmpRoot: string;
@@ -243,7 +243,7 @@ describe('multiple sources', () => {
 });
 
 describe('LLM path', () => {
-  it('skips LLM when ANTHROPIC_API_KEY is missing', async () => {
+  it('skips LLM when MINIMAX_API_KEY is missing', async () => {
     const r = await reviewSources({
       projectRoot: tmpRoot,
       sources: [makeSource({ sourceId: 'foo', consecutiveFailures: 2, lastRoutingReason: 'mystery' })],

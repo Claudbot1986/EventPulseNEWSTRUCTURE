@@ -47,7 +47,7 @@
 
 import { existsSync, readdirSync, readFileSync } from 'fs';
 import { resolve, join } from 'path';
-import Anthropic from '@anthropic-ai/sdk';
+import { callMinimax, AI_CONFIG } from '../../02-Ingestion/AI/minimaxConfig';
 import { makeChange, type SourceAction, type Confidence, type AppliedBy, type ReviewStatus } from './source_changes';
 import type { SourceHealth } from './collect_state';
 
@@ -77,8 +77,6 @@ export interface ReviewOptions {
   sources: SourceHealth[];
   /** Whether to call the LLM for ambiguous cases. Default: true if key set. */
   useLlm?: boolean;
-  /** Model to use for LLM-assisted proposals. */
-  model?: string;
   /** Cap on LLM calls per run (cost control). */
   maxLlmProposals?: number;
 }
@@ -322,11 +320,14 @@ function sanitizeLlmProposals(
   });
 }
 
-let cachedClient: Anthropic | null = null;
-function getClient(): Anthropic {
-  if (cachedClient) return cachedClient;
-  cachedClient = new Anthropic();
-  return cachedClient;
+function withTimeout<T>(promise: Promise<T>, ms: number): Promise<T> {
+  return new Promise<T>((resolve, reject) => {
+    const t = setTimeout(() => reject(new Error('llm timeout')), ms);
+    promise.then(
+      (v) => { clearTimeout(t); resolve(v); },
+      (e) => { clearTimeout(t); reject(e); }
+    );
+  });
 }
 
 /**
@@ -335,29 +336,17 @@ function getClient(): Anthropic {
 async function llmProposals(
   sources: SourceHealth[],
   evidence: Map<string, BatchTraceForReview>,
-  opts: { model: string; max: number },
+  opts: { max: number },
 ): Promise<SourceProposal[]> {
   if (sources.length === 0) return [];
-  if (!process.env.ANTHROPIC_API_KEY) return [];
+  if (!AI_CONFIG.apiKey) return [];
 
-  const client = getClient();
   const { system, user } = buildLlmPrompt(sources, evidence);
   try {
-    const resp = await client.messages.create(
-      {
-        model: opts.model,
-        max_tokens: 1500,
-        system,
-        messages: [{ role: 'user', content: user }],
-      },
-      // T0108 fix: `timeout` is a RequestOptions field (2nd arg), not a body
-      // param — inside the body it was silently dropped, so no timeout applied.
-      { timeout: 8_000 },
+    const text = await withTimeout(
+      callMinimax(user, { system, maxTokens: 1500, timeoutMs: 8_000 }),
+      8_000,
     );
-    const text = resp.content
-      .filter((c) => c.type === 'text')
-      .map((c) => (c as { type: 'text'; text: string }).text)
-      .join('\n');
     const allowed = new Set(sources.map((s) => s.sourceId));
     return sanitizeLlmProposals(parseReplyJson(text), allowed).slice(0, opts.max);
   } catch {
@@ -380,8 +369,8 @@ export interface ReviewResult {
  * rules via `auto_apply_source_fixes.ts`.
  */
 export async function reviewSources(opts: ReviewOptions): Promise<ReviewResult> {
-  const useLlm = opts.useLlm ?? !!process.env.ANTHROPIC_API_KEY;
-  const model = opts.model ?? 'claude-haiku-4-5-20251001';
+  const useLlm = opts.useLlm ?? !!AI_CONFIG.apiKey;
+  const model = AI_CONFIG.model;
   const maxLlm = opts.maxLlmProposals ?? 50;
 
   const evidence = gatherBatchEvidence(opts.projectRoot, 5);
@@ -395,7 +384,7 @@ export async function reviewSources(opts: ReviewOptions): Promise<ReviewResult> 
 
   if (useLlm && ambiguous.length > 0) {
     usedLlm = true;
-    llmResult = await llmProposals(ambiguous, evidence, { model, max: maxLlm });
+    llmResult = await llmProposals(ambiguous, evidence, { max: maxLlm });
   }
 
   return {

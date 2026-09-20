@@ -17,7 +17,11 @@ export const AI_CONFIG = {
   model: 'MiniMax-M2.7',
   // MiniMax direct endpoint (OpenAI-compatible)
   baseUrl: 'https://api.minimax.io/v1',
-  apiKey: process.env.MINIMAX_API_KEY,
+  // Live-read vid anrop: tester kan radera process.env.MINIMAX_API_KEY för att
+  // tvinga fram deterministisk fallback utan att modul-mockas.
+  get apiKey() {
+    return process.env.MINIMAX_API_KEY;
+  },
   // Generation parameters
   maxTokens: 4096,
   temperature: 0.1, // Low temperature for consistent extraction
@@ -30,7 +34,7 @@ interface MinimaxChatResponse {
 
 async function minimaxChatRequest(
   prompt: string,
-  options: { system?: string; temperature?: number; maxTokens?: number },
+  options: { system?: string; temperature?: number; maxTokens?: number; timeoutMs?: number },
 ): Promise<MinimaxChatResponse> {
   const { apiKey, baseUrl, maxTokens, temperature } = AI_CONFIG;
 
@@ -44,6 +48,7 @@ async function minimaxChatRequest(
       'Content-Type': 'application/json',
       'Authorization': `Bearer ${apiKey}`,
     },
+    signal: options.timeoutMs ? AbortSignal.timeout(options.timeoutMs) : undefined,
     body: JSON.stringify({
       model: AI_CONFIG.model,
       messages: [
@@ -77,6 +82,7 @@ export async function callMinimax(
     system?: string;
     temperature?: number;
     maxTokens?: number;
+    timeoutMs?: number;
   } = {}
 ): Promise<string> {
   const data = await minimaxChatRequest(prompt, options);
@@ -95,7 +101,7 @@ export interface MinimaxDetailedResult {
  */
 export async function callMinimaxDetailed(
   prompt: string,
-  options: { system?: string; temperature?: number; maxTokens?: number } = {},
+  options: { system?: string; temperature?: number; maxTokens?: number; timeoutMs?: number } = {},
 ): Promise<MinimaxDetailedResult> {
   const data = await minimaxChatRequest(prompt, options);
   return {

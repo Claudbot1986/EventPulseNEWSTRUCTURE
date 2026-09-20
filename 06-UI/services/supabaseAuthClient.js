@@ -8,7 +8,7 @@
  *       preferences) to a stable, GDPR-radiable user row.
  *     - DEPLOY.md §8 "Authentication for /agent/chat" is closed before
  *       any external user touches the deployed endpoint.
- *     - Spammers cannot burn the Anthropic-backed /agent/chat budget
+ *     - Spammers cannot burn the LLM-backed /agent/chat budget
  *       without going through the Supabase rate-limited email flow.
  *
  * Design:

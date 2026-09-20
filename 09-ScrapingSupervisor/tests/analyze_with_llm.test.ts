@@ -17,19 +17,28 @@ import {
 } from '../tools/analyze_with_llm';
 import type { SupervisorState, SourceHealth } from '../tools/collect_state';
 
-// Mock the SDK so accidental network calls fail loudly
-vi.mock('@anthropic-ai/sdk', () => {
+// Mock minimaxConfig så oavsiktliga nätverksanrop failar högljutt.
+// apiKey är en live-getter mot process.env (samma beteende som äkta modulen).
+vi.mock('../../02-Ingestion/AI/minimaxConfig', () => {
   return {
-    default: class BoomClient {
-      messages = { create: async () => { throw new Error('mock: should not reach SDK'); } };
+    AI_CONFIG: {
+      provider: 'minimax',
+      model: 'MiniMax-M2.7',
+      baseUrl: '',
+      get apiKey() {
+        return process.env.MINIMAX_API_KEY;
+      },
+      maxTokens: 4096,
+      temperature: 0.1,
     },
+    callMinimax: async () => { throw new Error('mock: should not reach network'); },
   };
 });
 
-const originalKey = process.env.ANTHROPIC_API_KEY;
+const originalKey = process.env.MINIMAX_API_KEY;
 afterEach(() => {
-  if (originalKey === undefined) delete process.env.ANTHROPIC_API_KEY;
-  else process.env.ANTHROPIC_API_KEY = originalKey;
+  if (originalKey === undefined) delete process.env.MINIMAX_API_KEY;
+  else process.env.MINIMAX_API_KEY = originalKey;
 });
 
 // ─── Fixtures ────────────────────────────────────────────────────────────────
@@ -336,7 +345,7 @@ describe('deterministicAnalysis (no LLM)', () => {
 
 describe('analyzeWithLlm — fallback path (no API key)', () => {
   it('returns usedLlm=false and modelVersion=null when key is missing', async () => {
-    delete process.env.ANTHROPIC_API_KEY;
+    delete process.env.MINIMAX_API_KEY;
     const state = makeState();
     const result = await analyzeWithLlm(state);
     expect(result.usedLlm).toBe(false);
@@ -344,7 +353,7 @@ describe('analyzeWithLlm — fallback path (no API key)', () => {
   });
 
   it('returns the deterministic output when key is missing', async () => {
-    delete process.env.ANTHROPIC_API_KEY;
+    delete process.env.MINIMAX_API_KEY;
     const state = makeState({
       schemaDriftSignals: [
         { exitReason: 'NO_JSONLD', count: 4, affectedSourceIds: ['a', 'b', 'c', 'd'] },
@@ -356,15 +365,15 @@ describe('analyzeWithLlm — fallback path (no API key)', () => {
   });
 });
 
-describe('analyzeWithLlm — SDK mocked to throw → fallback', () => {
-  it('falls back to deterministic when SDK errors', async () => {
-    process.env.ANTHROPIC_API_KEY = 'test-key';
+describe('analyzeWithLlm — LLM mocked to throw → fallback', () => {
+  it('falls back to deterministic when the LLM call errors', async () => {
+    process.env.MINIMAX_API_KEY = 'test-key';
     const state = makeState({
       schemaDriftSignals: [
         { exitReason: 'NO_JSONLD', count: 3, affectedSourceIds: ['a', 'b', 'c'] },
       ],
     });
-    // The vi.mock above makes any SDK call throw → fallback path
+    // The vi.mock above makes any LLM call throw → fallback path
     const result = await analyzeWithLlm(state);
     expect(result.usedLlm).toBe(false);
     expect(result.findings).toHaveLength(1); // from deterministicAnalysis
@@ -372,7 +381,7 @@ describe('analyzeWithLlm — SDK mocked to throw → fallback', () => {
 });
 
 describe('LLM_MODEL constant', () => {
-  it('is claude-haiku-4-5 (matches 08-Agent/llmRouter)', () => {
-    expect(LLM_MODEL).toBe('claude-haiku-4-5-20251001');
+  it('follows AI_CONFIG.model (MiniMax, from 02-Ingestion/AI/minimaxConfig)', () => {
+    expect(LLM_MODEL).toBe('MiniMax-M2.7');
   });
 });

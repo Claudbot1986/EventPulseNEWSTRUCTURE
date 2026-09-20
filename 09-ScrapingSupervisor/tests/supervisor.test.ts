@@ -19,13 +19,13 @@ import {
 import { tmpdir } from 'os';
 import { resolve } from 'path';
 
-const originalKey = process.env.ANTHROPIC_API_KEY;
+const originalKey = process.env.MINIMAX_API_KEY;
 beforeEach(() => {
-  delete process.env.ANTHROPIC_API_KEY; // deterministic fallback path
+  delete process.env.MINIMAX_API_KEY; // deterministic fallback path
 });
 afterEach(() => {
-  if (originalKey === undefined) delete process.env.ANTHROPIC_API_KEY;
-  else process.env.ANTHROPIC_API_KEY = originalKey;
+  if (originalKey === undefined) delete process.env.MINIMAX_API_KEY;
+  else process.env.MINIMAX_API_KEY = originalKey;
 });
 
 // ─── Fixture helpers ─────────────────────────────────────────────────────────
@@ -266,7 +266,7 @@ describe('runSupervisor (integration)', () => {
     expect(md).not.toContain('Top dead sources');
   });
 
-  it('uses deterministic fallback when ANTHROPIC_API_KEY is missing', async () => {
+  it('uses deterministic fallback when MINIMAX_API_KEY is missing', async () => {
     setupFixtures();
     const result = await runSupervisor({
       ...baseOpts(),

@@ -75,7 +75,7 @@ EXPOSE 8787
 # Listed so missing-secret startup errors are caught at boot, not in prod.
 ENV SUPABASE_URL="" \
     SUPABASE_SERVICE_ROLE_KEY="" \
-    ANTHROPIC_API_KEY="" \
+    MINIMAX_API_KEY="" \
     AGENT_ALLOWED_ORIGINS=""
 
 ENTRYPOINT ["npx", "--no-install", "tsx", "08-Agent/server.ts"]

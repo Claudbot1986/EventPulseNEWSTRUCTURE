@@ -33,7 +33,7 @@ and Fly's HTTPS terminator fronts it.
   - `SUPABASE_URL` (project URL, public).
   - `SUPABASE_SERVICE_ROLE_KEY` (server-only — never bundled, never
     Expo-public).
-- An Anthropic API key (`ANTHROPIC_API_KEY`) — server-only. The agent
+- A MiniMax API key (`MINIMAX_API_KEY`) — server-only. The agent
   degrades gracefully to a deterministic reply without it, but Phase 1
   composer needs it.
 - The Expo app's public origin, e.g. `https://your-app.expo.app` or the
@@ -47,7 +47,7 @@ and Fly's HTTPS terminator fronts it.
 fly secrets set \
   SUPABASE_URL="https://your-project-ref.supabase.co" \
   SUPABASE_SERVICE_ROLE_KEY="sb_service_role_xxx" \
-  ANTHROPIC_API_KEY="sk-ant-xxx" \
+  MINIMAX_API_KEY="minimax_xxx" \
   AGENT_ALLOWED_ORIGINS="https://your-app-name.fly.dev,https://your-app.expo.app" \
   AGENT_ADMIN_TOKEN="$(openssl rand -hex 32)"
 ```
@@ -122,7 +122,7 @@ npx expo start -c
 
 Remember: any `EXPO_PUBLIC_*` variable is **bundled into the JS** that the
 app ships. It is public. Never put `SUPABASE_SERVICE_ROLE_KEY` or
-`ANTHROPIC_API_KEY` in those variables.
+`MINIMAX_API_KEY` in those variables.
 
 ---
 

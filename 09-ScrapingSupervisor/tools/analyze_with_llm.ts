@@ -26,10 +26,10 @@
  *   pattern as `filterHighlightedIds` in `08-Agent/llmRouter.ts:114`.
  */
 
-import Anthropic from '@anthropic-ai/sdk';
+import { callMinimax, AI_CONFIG } from '../../02-Ingestion/AI/minimaxConfig';
 import type { SupervisorState, SourceHealth } from './collect_state';
 
-export const LLM_MODEL = 'claude-haiku-4-5-20251001';
+export const LLM_MODEL = AI_CONFIG.model;
 const LLM_TIMEOUT_MS = 8_000;
 const MAX_TOKENS = 800;
 
@@ -80,17 +80,6 @@ export interface AnalysisResult {
   modelVersion: string | null;
   /** Total input sourceIds (for observability of how many got dropped). */
   inputSourceCount: number;
-}
-
-// ─── LLM client (lazy) ───────────────────────────────────────────────────────
-
-let client: Anthropic | null = null;
-function getClient(): Anthropic {
-  if (client) return client;
-  const apiKey = process.env.ANTHROPIC_API_KEY;
-  if (!apiKey) throw new Error('ANTHROPIC_API_KEY not configured');
-  client = new Anthropic({ apiKey });
-  return client;
 }
 
 // ─── Anti-hallucination filter ───────────────────────────────────────────────
@@ -178,7 +167,7 @@ export function buildUserMessage(state: SupervisorState): string {
 
 /**
  * Always produces a useful AnalysisResult without LLM.
- * Used whenever ANTHROPIC_API_KEY is missing, the SDK errors, the JSON
+ * Used whenever MINIMAX_API_KEY is missing, the API errors, the JSON
  * doesn't parse, or the timeout fires. The output is "less colorful" than
  * the LLM but never wrong — derived directly from the state.
  */
@@ -274,7 +263,7 @@ export function deterministicAnalysis(state: SupervisorState): Omit<AnalysisResu
 export async function analyzeWithLlm(state: SupervisorState): Promise<AnalysisResult> {
   const fallback = deterministicAnalysis(state);
 
-  if (!process.env.ANTHROPIC_API_KEY) {
+  if (!AI_CONFIG.apiKey) {
     return { ...fallback, usedLlm: false, modelVersion: null };
   }
 
@@ -287,21 +276,10 @@ export async function analyzeWithLlm(state: SupervisorState): Promise<AnalysisRe
   const userMsg = buildUserMessage(state);
 
   try {
-    const response = await withTimeout(
-      getClient().messages.create({
-        model: LLM_MODEL,
-        max_tokens: MAX_TOKENS,
-        messages: [
-          {
-            role: 'user',
-            content: userMsg,
-          },
-        ],
-      }),
+    const text = await withTimeout(
+      callMinimax(userMsg, { maxTokens: MAX_TOKENS, timeoutMs: LLM_TIMEOUT_MS }),
       LLM_TIMEOUT_MS
     );
-
-    const text = extractText(response);
     if (!text) return { ...fallback, usedLlm: false, modelVersion: null };
 
     const parsed = parseAnalysisJson(text);
@@ -416,23 +394,6 @@ export function parseAnalysisJson(text: string): ParsedAnalysis | null {
     }
   }
   return null;
-}
-
-function extractText(response: unknown): string {
-  if (
-    response &&
-    typeof response === 'object' &&
-    'content' in response &&
-    Array.isArray((response as { content: unknown[] }).content)
-  ) {
-    const blocks = (response as { content: Array<{ type?: string; text?: string }> }).content;
-    return blocks
-      .filter((b) => b?.type === 'text' && typeof b.text === 'string')
-      .map((b) => b.text as string)
-      .join('\n')
-      .trim();
-  }
-  return '';
 }
 
 function withTimeout<T>(promise: Promise<T>, ms: number): Promise<T> {

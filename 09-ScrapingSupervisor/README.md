@@ -14,7 +14,7 @@ collect_state → analyze_with_llm → auto_apply_safe_fixes → write_reports
 | Tool | Role |
 |------|------|
 | `tools/collect_state.ts` | Pure read. Builds `SupervisorState` from `runtime/sources_status.jsonl` + last 5 batch-traces. |
-| `tools/analyze_with_llm.ts` | Batch-level pattern synthesis. Uses Claude Haiku 4.5 if `ANTHROPIC_API_KEY` is set; deterministic fallback otherwise. |
+| `tools/analyze_with_llm.ts` | Batch-level pattern synthesis. Uses MiniMax-M2.7 (`02-Ingestion/AI/minimaxConfig`) if `MINIMAX_API_KEY` is set; deterministic fallback otherwise. |
 | `tools/auto_apply_safe_fixes.ts` | Bounded deterministic rule. Retires ENOTFOUND + persistent-404 sources to `sources/_archive/dead-{date}/`. |
 | `tools/write_reports.ts` | Writes vault note + repo doc + suggested-fixes JSONL. |
 | `tools/source_ai_review.ts` | Per-source review (deterministic rules + optional LLM). Each `SourceProposal` carries `confidence`, `rationale`, `evidence`, `needsHumanReview`. |

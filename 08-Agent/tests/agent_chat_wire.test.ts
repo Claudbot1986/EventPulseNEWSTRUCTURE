@@ -3,7 +3,7 @@
  *
  * Wires buildApp() to a free local port with a mocked Supabase client so
  * the deterministic parse → search → rank → compose pipeline runs end-to-end.
- * No LLM call (ANTHROPIC_API_KEY is unset so composeReply falls back to the
+ * No LLM call (MINIMAX_API_KEY is unset so composeReply falls back to the
  * deterministic template).
  *
  * Run with:  npx vitest run 08-Agent/tests/agent_chat_wire.test.ts
@@ -23,7 +23,7 @@ import type { SupabaseClient } from '@supabase/supabase-js';
 import type { AddressInfo } from 'node:net';
 
 // Ensure the fallback (no-LLM) path is exercised.
-delete process.env.ANTHROPIC_API_KEY;
+delete process.env.MINIMAX_API_KEY;
 
 import { buildApp } from '../server';
 import type { EventCard } from '../types';

@@ -1,7 +1,7 @@
 /**
  * Tests for find_gaps — cold-start question generation.
  *
- * Pure unit tests; no live Supabase or Anthropic calls.
+ * Pure unit tests; no live Supabase or LLM calls.
  *
  * Phase 1.8 contract (MASTERPLAN §18.2 — Workstream C):
  *   - The server ALWAYS runs search, never gates on a clarifying question.
