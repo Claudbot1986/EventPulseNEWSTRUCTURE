@@ -83,7 +83,9 @@ if (typeof __DEV__ !== 'undefined' && __DEV__) {
     '[supabaseAuthClient] auth surface:',
     'signInWithOtp=' + typeof supabaseAuth?.auth?.signInWithOtp,
     'signInWithIdToken=' + typeof supabaseAuth?.auth?.signInWithIdToken,
-    'verifyOtp=' + typeof supabaseAuth?.auth?.verifyOtp
+    'verifyOtp=' + typeof supabaseAuth?.auth?.verifyOtp,
+    'updateUser=' + typeof supabaseAuth?.auth?.updateUser,
+    'linkIdentity=' + typeof supabaseAuth?.auth?.linkIdentity
   );
 }
 
@@ -189,6 +191,35 @@ export async function signInWithApple() {
     if (!credential.identityToken) {
       return { session: null, error: 'no_identity_token' };
     }
+    // NOW#3: a guest carrying an anonymous session must LINK the Apple
+    // identity to the same auth.users.id — the server path below is the
+    // LOGIN flow (signInWithIdToken upsert; a fresh user would orphan the
+    // guest's taste rows). linkIdentity posts the native identityToken
+    // with link_identity:true against the guest's session JWT. Requires
+    // "manual linking" enabled on the Supabase project.
+    const identity = await loadAuthIdentity();
+    if (identity.authenticated && identity.isAnonymous) {
+      // Non-null: isAnonymous can only be true when a persisted blob exists.
+      const existing = await loadAuthSession();
+      const { data: setData, error: setError } = await supabaseAuth.auth.setSession({
+        access_token: existing.access_token,
+        refresh_token: existing.refresh_token || '',
+      });
+      if (setError || !setData?.session) {
+        return { session: null, error: setError?.message || 'session_refresh_failed' };
+      }
+      const { data: linkData, error: linkError } = await supabaseAuth.auth.linkIdentity({
+        provider: 'apple',
+        token: credential.identityToken,
+      });
+      if (linkError) {
+        return { session: null, error: linkError.message || 'apple_link_failed' };
+      }
+      if (!linkData?.session) {
+        return { session: null, error: 'apple_link_no_session' };
+      }
+      return { session: linkData.session, error: null };
+    }
     const session = await postAppleAuth({
       identity_token: credential.identityToken,
       full_name: credential.fullName
@@ -270,39 +301,74 @@ function pickAgentBaseUrl() {
 }
 
 /**
- * Request a magic-link email from Supabase.
+ * Request a magic-link email from Supabase — or LINK the email to the
+ * current anonymous guest account (NOW#3).
+ *
+ * Two modes, chosen from the persisted identity (no network call):
+ *   - mode 'signin': no session / permanent session → classic
+ *     `signInWithOtp({ email, shouldCreateUser: true })`.
+ *   - mode 'link': anonymous guest → `setSession(anon pair)` hydrates the
+ *     client, then `updateUser({ email })` triggers Supabase's email-change
+ *     confirmation link (type 'email_change', handled by the same deep-link
+ *     verify path). The SAME auth.users.id survives — the guest's taste
+ *     rows (keyed on auth.uid()) follow automatically. signInWithOtp must
+ *     NEVER be used here: it would mint a brand-new user and strand the
+ *     accumulated taste in the anonymous account.
  *
  * @param {string} email
  * @param {{ timeoutMs?: number }} [opts]
- * @returns {Promise<{ error: string|null }>}
+ * @returns {Promise<{ error: string|null, mode: 'link'|'signin' }>}
  */
 export async function signInWithEmail(email, { timeoutMs = 15_000 } = {}) {
   if (typeof email !== 'string' || email.length === 0) {
-    return { error: 'email_required' };
+    return { error: 'email_required', mode: 'signin' };
   }
+  const identity = await loadAuthIdentity();
+  const linkMode = identity.authenticated && identity.isAnonymous;
   // Hard timeout — without this, a hung DNS / CORS-blocked fetch leaves the
   // "Skicka magic link" spinner running indefinitely. 15s is generous: a
   // healthy Supabase round-trip is <2s in dev.
   let timeoutHandle = null;
   const timeout = new Promise((resolve) => {
-    timeoutHandle = setTimeout(() => resolve({ error: 'timeout' }), timeoutMs);
+    timeoutHandle = setTimeout(
+      () => resolve({ error: 'timeout', mode: linkMode ? 'link' : 'signin' }),
+      timeoutMs
+    );
   });
   const sendPromise = (async () => {
+    const mode = linkMode ? 'link' : 'signin';
     try {
-      const { error } = await supabaseAuth.signInWithOtp({
+      if (linkMode) {
+        // Non-null: isAnonymous can only be true when a persisted blob exists.
+        const existing = await loadAuthSession();
+        const { data: setData, error: setError } = await supabaseAuth.auth.setSession({
+          access_token: existing.access_token,
+          refresh_token: existing.refresh_token || '',
+        });
+        if (setError || !setData?.session) {
+          return { error: setError?.message || 'session_refresh_failed', mode };
+        }
+        const { error } = await supabaseAuth.auth.updateUser(
+          { email },
+          { emailRedirectTo: AUTH_DEEP_LINK },
+        );
+        if (error) return { error: error.message || 'link_failed', mode };
+        return { error: null, mode };
+      }
+      const { error } = await supabaseAuth.auth.signInWithOtp({
         email,
         options: {
           emailRedirectTo: AUTH_DEEP_LINK,
           shouldCreateUser: true,
         },
       });
-      if (error) return { error: error.message || 'signin_failed' };
-      return { error: null };
+      if (error) return { error: error.message || 'signin_failed', mode };
+      return { error: null, mode };
     } catch (err) {
       const msg = err && typeof err === 'object' && 'message' in err
         ? String(err.message)
         : 'signin_failed';
-      return { error: msg };
+      return { error: msg, mode };
     }
   })();
   const result = await Promise.race([sendPromise, timeout]);

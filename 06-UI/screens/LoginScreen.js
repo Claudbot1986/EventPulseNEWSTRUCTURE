@@ -61,6 +61,9 @@ export default function LoginScreen({ onCancel, onSuccess }) {
   const [email, setEmail] = useState('');
   const [state, setState] = useState('idle'); // 'idle' | 'sending' | 'sent' | 'error'
   const [errorMsg, setErrorMsg] = useState('');
+  // NOW#3: 'link' = the email will be attached to the current anonymous
+  // guest account (same user.id, taste follows); 'signin' = classic login.
+  const [sentMode, setSentMode] = useState('signin');
   const [appleState, setAppleState] = useState('idle'); // 'idle' | 'signing' | 'error'
   const [appleErrorMsg, setAppleErrorMsg] = useState('');
 
@@ -72,12 +75,13 @@ export default function LoginScreen({ onCancel, onSuccess }) {
     }
     setState('sending');
     setErrorMsg('');
-    const { error } = await signInWithEmail(email.trim());
+    const { error, mode } = await signInWithEmail(email.trim());
     if (error) {
       setState('error');
       setErrorMsg(error);
       return;
     }
+    setSentMode(mode);
     setState('sent');
   }, [email]);
 
@@ -142,8 +146,9 @@ export default function LoginScreen({ onCancel, onSuccess }) {
           <View style={styles.sentBox}>
             <Text style={styles.sentTitle}>Kolla din inkorg</Text>
             <Text style={styles.sentBody}>
-              Vi har skickat en inloggningslänk till {email.trim()}. Öppna
-              länken på samma enhet för att logga in.
+              {sentMode === 'link'
+                ? `Vi har skickat en bekräftelselänk till ${email.trim()}. Öppna den på samma enhet — dina sparade event och din smak följer med.`
+                : `Vi har skickat en inloggningslänk till ${email.trim()}. Öppna länken på samma enhet för att logga in.`}
             </Text>
             <Pressable
               style={({ pressed }) => [styles.secondary, pressed && styles.pressed]}

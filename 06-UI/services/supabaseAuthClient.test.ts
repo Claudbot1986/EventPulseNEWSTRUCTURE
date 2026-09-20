@@ -14,12 +14,24 @@ import { describe, it, expect, beforeEach, vi } from 'vitest';
 // we can import the pure parser + bootstrap without touching the network.
 // The auth surface lives on a hoisted mock so individual tests can steer
 // signInAnonymously / refreshSession outcomes per case.
+type AuthResult = { data: unknown; error: unknown };
+
 const authMock = vi.hoisted(() => ({
-  signInWithOtp: vi.fn(async () => ({ data: null, error: null })),
-  verifyOtp: vi.fn(async () => ({ data: null, error: null })),
-  setSession: vi.fn(async () => ({ data: null, error: null })),
+  signInWithOtp: vi.fn(async (): Promise<AuthResult> => ({ data: null, error: null })),
+  verifyOtp: vi.fn(async (): Promise<AuthResult> => ({ data: null, error: null })),
+  setSession: vi.fn(async (): Promise<AuthResult> => ({ data: null, error: null })),
   signInAnonymously: vi.fn(),
   refreshSession: vi.fn(),
+  updateUser: vi.fn(async (): Promise<AuthResult> => ({ data: { user: null }, error: null })),
+  linkIdentity: vi.fn(async (): Promise<AuthResult> => ({ data: { session: null, user: null }, error: null })),
+}));
+
+// signInWithApple (NOW#3 link branch) drives expo-apple-authentication; the
+// hoisted shape lets individual tests steer availability, cancellation and
+// the returned identityToken. fetch is stubbed per-test for the server path.
+const appleMock = vi.hoisted(() => ({
+  isAvailableAsync: vi.fn(async () => true),
+  signInAsync: vi.fn(),
 }));
 vi.mock('@supabase/supabase-js', () => ({
   createClient: () => ({ auth: authMock }),
@@ -46,9 +58,13 @@ vi.mock('@react-native-async-storage/async-storage', () => {
 vi.mock('react-native', () => ({
   Platform: { OS: 'ios', select: (o: { ios?: unknown; default?: unknown }) => o?.ios ?? o?.default },
 }));
-vi.mock('expo-apple-authentication', () => ({}));
+vi.mock('expo-apple-authentication', () => ({
+  isAvailableAsync: appleMock.isAvailableAsync,
+  signInAsync: appleMock.signInAsync,
+  AppleAuthenticationScope: { FULL_NAME: 2, EMAIL: 1 },
+}));
 
-import { parseAuthDeepLink, AUTH_DEEP_LINK, bootstrapSession } from './supabaseAuthClient';
+import { parseAuthDeepLink, AUTH_DEEP_LINK, bootstrapSession, signInWithEmail, signInWithApple } from './supabaseAuthClient';
 import { clearAuthSession, saveAuthSession, loadAuthSession } from './storage';
 
 describe('parseAuthDeepLink', () => {
@@ -277,5 +293,184 @@ describe('bootstrapSession', () => {
 
     expect(result).toEqual({ session: null, state: 'guest' });
     expect(await loadAuthSession()).toBeNull();
+  });
+});
+
+// ─── NOW#3 — anon→auth identity linking ─────────────────────────────────────
+//
+// Contract under test (BACKLOG NOW#3: linkIdentity/updateUser på anonym
+// session — SAMMA auth.users.id före och efter, ingen data-migration):
+//
+//   E-post (guest):
+//     - signInWithEmail detekterar anonym session → hydrerar klienten med
+//       sessionen via setSession → auth.updateUser({email}) skickar
+//       bekräftelselänk → verifyOtp(type:'email_change') returnerar samma
+//       user.id med e-post kopplad. signInWithOtp får ALDRIG användas här
+//       (den skapar en NY user — smaken skulle fastna i gästkontot).
+//   E-post (icke-gäst):
+//     - Ingen/fristående permanent session → oförändrat signInWithOtp-flöde.
+//   Apple (guest):
+//     - Efter native credential: linkIdentity({provider:'apple', token})
+//       istället för serverns /agent/auth/apple (som upsertar en NY user).
+//   Apple (icke-gäst):
+//     - Oförändrat server-flöde (postAppleAuth via fetch).
+
+const LINK_EMAIL = 'ny@example.com';
+
+describe('NOW#3 — signInWithEmail identity linking', () => {
+  beforeEach(async () => {
+    vi.clearAllMocks();
+    await clearAuthSession();
+  });
+
+  it('anonym session → link-läge: setSession hydrerar, updateUser skickar länk, signInWithOtp rörs ej', async () => {
+    await saveAuthSession(anonSession());
+    authMock.setSession.mockResolvedValue({ data: { session: anonSession() }, error: null });
+    authMock.updateUser.mockResolvedValue({ data: { user: { id: 'u-anon-1' } }, error: null });
+
+    const result = await signInWithEmail(LINK_EMAIL);
+
+    expect(result).toEqual({ error: null, mode: 'link' });
+    expect(authMock.setSession).toHaveBeenCalledWith({
+      access_token: 'anon-access',
+      refresh_token: 'anon-refresh',
+    });
+    expect(authMock.updateUser).toHaveBeenCalledWith(
+      { email: LINK_EMAIL },
+      { emailRedirectTo: AUTH_DEEP_LINK },
+    );
+    expect(authMock.signInWithOtp).not.toHaveBeenCalled();
+  });
+
+  it('ingen session → signin-läge: signInWithOtp via .auth, updateUser rörs ej', async () => {
+    const result = await signInWithEmail(LINK_EMAIL);
+
+    expect(result).toEqual({ error: null, mode: 'signin' });
+    expect(authMock.signInWithOtp).toHaveBeenCalledWith({
+      email: LINK_EMAIL,
+      options: { emailRedirectTo: AUTH_DEEP_LINK, shouldCreateUser: true },
+    });
+    expect(authMock.updateUser).not.toHaveBeenCalled();
+  });
+
+  it('permanent session → signin-läge (inte link), updateUser rörs ej', async () => {
+    await saveAuthSession({
+      access_token: 'perm-access',
+      refresh_token: 'perm-refresh',
+      expires_at: FUTURE,
+      user: { id: 'u-perm', email: 'old@example.com' },
+    });
+
+    const result = await signInWithEmail(LINK_EMAIL);
+
+    expect(result.mode).toBe('signin');
+    expect(authMock.signInWithOtp).toHaveBeenCalledTimes(1);
+    expect(authMock.updateUser).not.toHaveBeenCalled();
+  });
+
+  it('updateUser-fel bubblar upp som { error } med mode link', async () => {
+    await saveAuthSession(anonSession());
+    authMock.setSession.mockResolvedValue({ data: { session: anonSession() }, error: null });
+    authMock.updateUser.mockResolvedValue({ data: { user: null }, error: { message: 'rate limited' } });
+
+    const result = await signInWithEmail(LINK_EMAIL);
+
+    expect(result.mode).toBe('link');
+    expect(result.error).toBe('rate limited');
+  });
+
+  it('setSession misslyckas i link-läge → fel sätts, updateUser anropas aldrig', async () => {
+    await saveAuthSession(anonSession());
+    authMock.setSession.mockResolvedValue({ data: { session: null }, error: { message: 'session gone' } });
+
+    const result = await signInWithEmail(LINK_EMAIL);
+
+    expect(result.mode).toBe('link');
+    expect(result.error).toBe('session gone');
+    expect(authMock.updateUser).not.toHaveBeenCalled();
+  });
+});
+
+describe('NOW#3 — signInWithApple identity linking', () => {
+  const APPLE_CRED = {
+    identityToken: 'apple-identity-jwt',
+    fullName: { givenName: 'Ada', middleName: null, familyName: 'Lovelace' },
+  };
+
+  beforeEach(async () => {
+    vi.clearAllMocks();
+    await clearAuthSession();
+    appleMock.signInAsync.mockResolvedValue(APPLE_CRED);
+  });
+
+  it('anonym session → linkIdentity(apple, token) mot SAMMA user, server-fetch rörs ej', async () => {
+    await saveAuthSession(anonSession());
+    const linkedSession = {
+      access_token: 'linked-access',
+      refresh_token: 'linked-refresh',
+      expires_at: FUTURE,
+      user: { id: 'u-anon-1', email: 'ada@privaterelay.appleid.com', is_anonymous: false },
+    };
+    authMock.setSession.mockResolvedValue({ data: { session: anonSession() }, error: null });
+    authMock.linkIdentity.mockResolvedValue({ data: { session: linkedSession, user: linkedSession.user }, error: null });
+    const fetchSpy = vi.fn();
+    vi.stubGlobal('fetch', fetchSpy);
+
+    const result = await signInWithApple();
+
+    expect(result).toEqual({ session: linkedSession, error: null });
+    expect(authMock.linkIdentity).toHaveBeenCalledWith({
+      provider: 'apple',
+      token: 'apple-identity-jwt',
+    });
+    expect(authMock.setSession).toHaveBeenCalledWith({
+      access_token: 'anon-access',
+      refresh_token: 'anon-refresh',
+    });
+    expect(fetchSpy).not.toHaveBeenCalled();
+    vi.unstubAllGlobals();
+  });
+
+  it('ingen session → oförändrat server-flöde via /agent/auth/apple, linkIdentity rörs ej', async () => {
+    const serverSession = {
+      access_token: 'server-access',
+      refresh_token: 'server-refresh',
+      expires_at: FUTURE,
+      user: { id: 'u-apple-new', email: 'ada@example.com' },
+    };
+    const fetchSpy = vi.fn(async () => ({
+      ok: true,
+      json: async () => serverSession,
+    }));
+    vi.stubGlobal('fetch', fetchSpy as unknown as typeof fetch);
+    const prevAgentUrl = process.env.EXPO_PUBLIC_AGENT_URL;
+    process.env.EXPO_PUBLIC_AGENT_URL = 'https://agent.test';
+
+    const result = await signInWithApple();
+
+    expect(result.error).toBeNull();
+    expect(authMock.linkIdentity).not.toHaveBeenCalled();
+    expect(fetchSpy).toHaveBeenCalledTimes(1);
+    const [url, init] = fetchSpy.mock.calls[0] as unknown as [string, { body: string }];
+    expect(url).toMatch(/\/agent\/auth\/apple$/);
+    expect(JSON.parse(init.body).identity_token).toBe('apple-identity-jwt');
+    vi.unstubAllGlobals();
+    if (prevAgentUrl === undefined) delete process.env.EXPO_PUBLIC_AGENT_URL;
+    else process.env.EXPO_PUBLIC_AGENT_URL = prevAgentUrl;
+  });
+
+  it('linkIdentity-fel → { session: null, error }, server-fetch rörs ej', async () => {
+    await saveAuthSession(anonSession());
+    authMock.setSession.mockResolvedValue({ data: { session: anonSession() }, error: null });
+    authMock.linkIdentity.mockResolvedValue({ data: { session: null, user: null }, error: { message: 'manual linking disabled' } });
+    const fetchSpy = vi.fn();
+    vi.stubGlobal('fetch', fetchSpy);
+
+    const result = await signInWithApple();
+
+    expect(result.session).toBeNull();
+    expect(result.error).toBe('manual linking disabled');
+    expect(fetchSpy).not.toHaveBeenCalled();
+    vi.unstubAllGlobals();
   });
 });
