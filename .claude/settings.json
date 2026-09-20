@@ -20,6 +20,50 @@
             "statusMessage": "Branch-vakt…"
           }
         ]
+      },
+      {
+        "matcher": "AskUserQuestion|ExitPlanMode",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 \"/Users/claudgashi/EventPulse/.claude/hooks/term-bg.py\" reset",
+            "statusMessage": "Din tur — återställer terminalfärg…"
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "AskUserQuestion|ExitPlanMode",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 \"/Users/claudgashi/EventPulse/.claude/hooks/term-bg.py\" green",
+            "statusMessage": "Claude jobbar — målar terminalen grön…"
+          }
+        ]
+      }
+    ],
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 \"/Users/claudgashi/EventPulse/.claude/hooks/term-bg.py\" capture",
+            "statusMessage": "Sparar terminalfärg…"
+          }
+        ]
+      }
+    ],
+    "SessionEnd": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 \"/Users/claudgashi/EventPulse/.claude/hooks/term-bg.py\" reset",
+            "statusMessage": "Återställer terminalfärg…"
+          }
+        ]
       }
     ],
     "UserPromptSubmit": [
@@ -29,6 +73,11 @@
             "type": "command",
             "command": "python3 \"/Users/claudgashi/EventPulse/.claude/hooks/simple-swedish-options.py\"",
             "statusMessage": "Alternativ-vakt…"
+          },
+          {
+            "type": "command",
+            "command": "python3 \"/Users/claudgashi/EventPulse/.claude/hooks/term-bg.py\" green",
+            "statusMessage": "Målar terminalen grön…"
           }
         ]
       }
@@ -40,6 +89,11 @@
             "type": "command",
             "command": "python3 \"/Users/claudgashi/EventPulse/.claude/hooks/svarsformat-guard.py\"",
             "statusMessage": "Svarsformat-vakt…"
+          },
+          {
+            "type": "command",
+            "command": "python3 \"/Users/claudgashi/EventPulse/.claude/hooks/term-bg.py\" reset",
+            "statusMessage": "Återställer terminalfärg…"
           }
         ]
       }
