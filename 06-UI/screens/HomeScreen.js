@@ -48,7 +48,7 @@ import {
 } from 'react-native';
 
 import { fetchFeed, fetchSavedEvents, fetchRecommendedEvents, fetchSuggestedPrompts, fetchCachedRecommendations, fetchRecentQueries, fetchCuratedCollections, fetchAiImageSmoketest } from '../services/agentClient';
-import { resolveReasons } from '../utils/rankReasonLabels';
+import { resolveConsumerReasons } from '../utils/rankReasonLabels';
 import { upcomingWeekendIsoSet } from './home/weekendDates';
 import { pickHappeningNow, happeningTitleParts } from './home/happeningNow';
 import { dateNamesFor } from '../i18n/dateNames';
@@ -215,10 +215,12 @@ function PriceChip({ event }) {
 function EventCardCompact({ event, onPress }) {
   const { t, language } = useI18n();
   const time = event.time || '';
-  // RQ5 (2026-09-20): always-visible "why" chips. Unknown enums are dropped
-  // by resolveReasons; endpoints without reasons render an empty list.
+  // RQ5 (2026-09-20): always-visible "why" chips. Consumer variant filters
+  // ops signals ("Gammal data", låg konfidens …) — those never belong on a
+  // browsing card (2026-09-21 user feedback). Unknown enums are dropped by
+  // the resolver; endpoints without reasons render an empty list.
   const reasons = useMemo(
-    () => resolveReasons(event.reasons, language).slice(0, 2),
+    () => resolveConsumerReasons(event.reasons, language).slice(0, 2),
     [event.reasons, language],
   );
   const venue = event.venue_name || event.venue || t('common.venueMissing');

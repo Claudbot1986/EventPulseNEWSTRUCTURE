@@ -92,3 +92,26 @@ export function resolveReasons(reasons, language = 'sv') {
   }
   return reasons.map((r) => resolveReason(r, language)).filter(Boolean);
 }
+
+/**
+ * Data-quality/penalty reasons are OPS signals, not consumer copy — a chip
+ * reading "Gammal data" under a concert card only signals distrust without
+ * any action the user can take (2026-09-21, user feedback). These stay
+ * available via resolveReasons for the agent "why" surface but are filtered
+ * from consumer browsing cards.
+ */
+const NON_CONSUMER_REASONS = new Set([
+  'stale',
+  'low_confidence',
+  'exclude_match',
+  'over_budget',
+  'venue_personalization_penalty',
+]);
+
+/** resolveReasons minus the ops signals — use for consumer browsing cards. */
+export function resolveConsumerReasons(reasons, language = 'sv') {
+  if (!Array.isArray(reasons)) {
+    return [];
+  }
+  return resolveReasons(reasons.filter((r) => !NON_CONSUMER_REASONS.has(r)), language);
+}
