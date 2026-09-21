@@ -79,6 +79,23 @@ describe('matchDeviceLocale', () => {
     expect(matchDeviceLocale({ languageTag: 'ar', languageCode: 'ar' })).toBe('ar');
   });
 
+  it('maps Persian/Farsi region variants (fa-IR, fa-AF) → fa', () => {
+    // 2026-09-21: 'fa' covers both Iranian Persian and Afghan Dari as one
+    // tag — user decision. Region suffixes collapse to 'fa'.
+    expect(matchDeviceLocale({ languageTag: 'fa-IR', languageCode: 'fa' })).toBe('fa');
+    expect(matchDeviceLocale({ languageTag: 'fa-AF', languageCode: 'fa' })).toBe('fa');
+    expect(matchDeviceLocale({ languageTag: 'fa', languageCode: 'fa' })).toBe('fa');
+  });
+
+  it('maps Somali, Polish, Turkish → so/pl/tr', () => {
+    expect(matchDeviceLocale({ languageTag: 'so-SO', languageCode: 'so' })).toBe('so');
+    expect(matchDeviceLocale({ languageTag: 'so-ET', languageCode: 'so' })).toBe('so');
+    expect(matchDeviceLocale({ languageTag: 'pl-PL', languageCode: 'pl' })).toBe('pl');
+    expect(matchDeviceLocale({ languageTag: 'pl', languageCode: 'pl' })).toBe('pl');
+    expect(matchDeviceLocale({ languageTag: 'tr-TR', languageCode: 'tr' })).toBe('tr');
+    expect(matchDeviceLocale({ languageTag: 'tr', languageCode: 'tr' })).toBe('tr');
+  });
+
   it('maps Simplified Chinese variants → zh-Hans', () => {
     expect(
       matchDeviceLocale({ languageTag: 'zh-Hans-CN', languageCode: 'zh', scriptCode: 'Hans' }),
@@ -103,10 +120,15 @@ describe('matchDeviceLocale', () => {
 });
 
 describe('language list', () => {
-  it('contains exactly the 11 data-backed tags in picker order', () => {
+  it('contains exactly the 15 data-backed tags in picker order', () => {
     // 2026-09-20 baseline: SBR/Tillväxtverket 2025 — India fell out of the
-    // top markets → it, not hi. 2026-09-21: + 'ar' (Arabic) — UI-only, agent
-    // API is not extended in the same PR.
+    // top markets → it, not hi.
+    // 2026-09-21 (commit 2bd0db9): + 'ar' (Arabic) — UI-only.
+    // 2026-09-21 (this commit): + 'fa' (Persian, covering Iranian Persian
+    // and Afghan Dari per user decision), 'so' (Somali), 'pl' (Polish),
+    // 'tr' (Turkish). All UI-only — agent API is not extended; event-title
+    // translations land via event_translations table (migration
+    // 20260921-0001).
     expect(LANGUAGES.map((l: { tag: string }) => l.tag)).toEqual([
       'sv',
       'en',
@@ -119,6 +141,10 @@ describe('language list', () => {
       'zh-Hans',
       'it',
       'ar',
+      'fa',
+      'so',
+      'pl',
+      'tr',
     ]);
   });
 
@@ -126,6 +152,10 @@ describe('language list', () => {
     expect(DEFAULT_LANGUAGE).toBe('sv');
     expect(isSupportedLanguage('zh-Hans')).toBe(true);
     expect(isSupportedLanguage('ar')).toBe(true);
+    expect(isSupportedLanguage('fa')).toBe(true);
+    expect(isSupportedLanguage('so')).toBe(true);
+    expect(isSupportedLanguage('pl')).toBe(true);
+    expect(isSupportedLanguage('tr')).toBe(true);
     expect(isSupportedLanguage('hi')).toBe(false);
     expect(isSupportedLanguage('sv-SE')).toBe(false);
     expect(isSupportedLanguage(undefined)).toBe(false);

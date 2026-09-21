@@ -44,6 +44,10 @@ import fr from './strings/fr';
 import zhHans from './strings/zhHans';
 import it from './strings/it';
 import ar from './strings/ar';
+import fa from './strings/fa';
+import so from './strings/so';
+import pl from './strings/pl';
+import tr from './strings/tr';
 
 const STORAGE_KEY = 'eventpulse.language';
 
@@ -59,6 +63,10 @@ const DICTIONARIES = {
   'zh-Hans': zhHans,
   it,
   ar,
+  fa,
+  so,
+  pl,
+  tr,
 };
 
 const LanguageContext = createContext(null);

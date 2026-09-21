@@ -7,18 +7,23 @@
  * China long-haul, Italy national top-10 (India fell out of the 2025 lists
  * → hi dropped in favor of it). Swedish is the default (domestic majority).
  *
- * 2026-09-21 addition: 'ar' (Arabic). Empty dictionary — locale is exposed
- * in the picker now, strings fall back to en → sv until a translator fills
- * them in. No RTL layout work in this commit (per design: held for the
- * future Arab-region launch; Stockholm-resident users select Arabic in an
- * otherwise LTR UI).
+ * 2026-09-21 additions: 'ar' (Arabic), 'fa' (Persian/Farsi — covers
+ * Iranian Persian + Afghan Dari as one tag per Stockholm-resident data),
+ * 'so' (Somali), 'pl' (Polish), 'tr' (Turkish). Empty dictionaries — locale
+ * is exposed in the picker now, strings fall back to en → sv until a
+ * translator fills them in. No RTL layout work in this PR (per design:
+ * held for the future Arab-region launch; Stockholm-resident users select
+ * these in an otherwise LTR UI).
  *
  * `tag` is the app-internal locale code. The 2026-09-20 note also required
  * sync with the server's SUPPORTED_CURATED_LOCALES
- * (08-Agent/tools/curated_collections.ts); for 'ar' we deliberately DO NOT
- * extend the server list in this PR — agent-side language coverage is a
- * separate decision (curated_collections drives agent prompts and intent
- * parsing, which is not the same surface as UI). UI-only addition.
+ * (08-Agent/tools/curated_collections.ts); for these new tags we
+ * deliberately DO NOT extend the server list in this PR — agent-side
+ * language coverage is a separate decision (curated_collections drives
+ * agent prompts and intent parsing, which is not the same surface as UI).
+ * UI-only addition. Event-title translations will live in the
+ * `event_translations` table (20260921 migration) and surface through
+ * 08-Agent's existing /agent/feed fallback chain — see plan 2026-09-21.
  *
  * `nativeName` is rendered in the Profile language picker so every visitor
  * reads their own language name.
@@ -35,6 +40,10 @@ export const LANGUAGES = [
   { tag: 'zh-Hans', nativeName: '简体中文' },
   { tag: 'it', nativeName: 'Italiano' },
   { tag: 'ar', nativeName: 'العربية' },
+  { tag: 'fa', nativeName: 'فارسی' },
+  { tag: 'so', nativeName: 'Soomaali' },
+  { tag: 'pl', nativeName: 'Polski' },
+  { tag: 'tr', nativeName: 'Türkçe' },
 ];
 
 export const DEFAULT_LANGUAGE = 'sv';

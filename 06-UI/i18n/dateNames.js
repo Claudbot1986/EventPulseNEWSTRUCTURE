@@ -120,6 +120,51 @@ const ar = {
   ],
 };
 
+// Persian/Farsi (fa, Språkstöd 2026-09-21). Covers Iranian Persian and
+// Afghan Dari as one fallback unit. Same bidi note as Arabic above.
+const fa = {
+  daysShort: ['یک', 'دو', 'سه', 'چه', 'پن', 'جم', 'شن'],
+  daysFull: ['یکشنبه', 'دوشنبه', 'سه‌شنبه', 'چهارشنبه', 'پنج‌شنبه', 'جمعه', 'شنبه'],
+  monthsShort: ['ژان', 'فور', 'مار', 'آور', 'مه', 'ژوئ', 'ژوئ', 'اوت', 'سپت', 'اکت', 'نوا', 'دسا'],
+  monthsFull: [
+    'ژانویه', 'فوریه', 'مارس', 'آوریل', 'مه', 'ژوئن',
+    'ژوئیه', 'اوت', 'سپتامبر', 'اکتبر', 'نوامبر', 'دسامبر',
+  ],
+};
+
+// Somali (so, Språkstöd 2026-09-21).
+const so = {
+  daysShort: ['Axd', 'Isn', 'Tal', 'Arb', 'Kha', 'Jim', 'Sab'],
+  daysFull: ['Axad', 'Isniin', 'Talaado', 'Arbaco', 'Khamiis', 'Jimco', 'Sabti'],
+  monthsShort: ['Kob', 'Lab', 'Sad', 'Afr', 'Sha', 'Lix', 'Tod', 'Sid', 'Sag', 'Tob', 'Nif', 'Lif'],
+  monthsFull: [
+    'Janaayo', 'Febraayo', 'Maarso', 'Abriil', 'May', 'Juun',
+    'Luulyo', 'Agoosto', 'Sebtembar', 'Oktoobar', 'Nofembar', 'Desembar',
+  ],
+};
+
+// Polish (pl, Språkstöd 2026-09-21).
+const pl = {
+  daysShort: ['Nd', 'Pn', 'Wt', 'Śr', 'Cz', 'Pt', 'So'],
+  daysFull: ['Niedziela', 'Poniedziałek', 'Wtorek', 'Środa', 'Czwartek', 'Piątek', 'Sobota'],
+  monthsShort: ['Sty', 'Lut', 'Mar', 'Kwi', 'Maj', 'Cze', 'Lip', 'Sie', 'Wrz', 'Paź', 'Lis', 'Gru'],
+  monthsFull: [
+    'Styczeń', 'Luty', 'Marzec', 'Kwiecień', 'Maj', 'Czerwiec',
+    'Lipiec', 'Sierpień', 'Wrzesień', 'Październik', 'Listopad', 'Grudzień',
+  ],
+};
+
+// Turkish (tr, Språkstöd 2026-09-21).
+const tr = {
+  daysShort: ['Paz', 'Pzt', 'Sal', 'Çar', 'Per', 'Cum', 'Cmt'],
+  daysFull: ['Pazar', 'Pazartesi', 'Salı', 'Çarşamba', 'Perşembe', 'Cuma', 'Cumartesi'],
+  monthsShort: ['Oca', 'Şub', 'Mar', 'Nis', 'May', 'Haz', 'Tem', 'Ağu', 'Eyl', 'Eki', 'Kas', 'Ara'],
+  monthsFull: [
+    'Ocak', 'Şubat', 'Mart', 'Nisan', 'Mayıs', 'Haziran',
+    'Temmuz', 'Ağustos', 'Eylül', 'Ekim', 'Kasım', 'Aralık',
+  ],
+};
+
 const DATE_NAMES = {
   sv,
   en,
@@ -132,6 +177,10 @@ const DATE_NAMES = {
   'zh-Hans': zhHans,
   it,
   ar,
+  fa,
+  so,
+  pl,
+  tr,
 };
 
 /**
