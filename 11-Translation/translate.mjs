@@ -35,6 +35,11 @@ import process from 'node:process';
 
 const MINIMAX_BASE_URL = 'https://api.minimax.io/v1';
 const LLM_TIMEOUT_MS = 12_000; // longer than chat — no live UX cost here
+// MiniMax-M3 reasons in <think> blocks that consume max_tokens before the
+// visible answer. 600 starved the JSON output (empty/truncated responses in
+// test run 2026-09-21); 2048 leaves headroom for thinking + output.
+const LLM_MAX_TOKENS = 2_048;
+const LLM_ATTEMPTS = 2; // one automatic retry on parse/protocol failure
 
 const SYSTEM_PROMPT = [
   'You are a professional translator for an event-discovery app.',
@@ -45,15 +50,17 @@ const SYSTEM_PROMPT = [
 ].join(' ');
 
 function parseArgs(argv) {
-  const out = { languages: [], limit: 25, model: 'MiniMax-M3', dryRun: false };
+  const out = { languages: [], limit: 25, model: 'MiniMax-M3', dryRun: false, concurrency: 6, withinDays: 0 };
   for (let i = 2; i < argv.length; i++) {
     const a = argv[i];
     if (a === '--languages') out.languages = (argv[++i] || '').split(',').map((s) => s.trim()).filter(Boolean);
     else if (a === '--limit') out.limit = parseInt(argv[++i], 10) || 25;
     else if (a === '--model') out.model = argv[++i] || 'MiniMax-M3';
+    else if (a === '--concurrency') out.concurrency = Math.max(1, parseInt(argv[++i], 10) || 6);
+    else if (a === '--within-days') out.withinDays = Math.max(0, parseInt(argv[++i], 10) || 0);
     else if (a === '--dry-run') out.dryRun = true;
     else if (a === '--help' || a === '-h') {
-      console.log('Usage: node translate.mjs --languages ar,fa,so [--limit N] [--model X] [--dry-run]');
+      console.log('Usage: node translate.mjs --languages ar,fa,so [--limit N] [--model X] [--concurrency N] [--within-days N] [--dry-run]');
       process.exit(0);
     } else {
       console.error(`Unknown arg: ${a}`);
@@ -67,7 +74,7 @@ function parseArgs(argv) {
   return out;
 }
 
-async function translateOne({ apiKey, model, language, title, description }) {
+async function translateOnce({ apiKey, model, language, title, description }) {
   const userMsg = JSON.stringify({
     source_language: 'sv',
     target_language: language,
@@ -83,7 +90,7 @@ async function translateOne({ apiKey, model, language, title, description }) {
     },
     body: JSON.stringify({
       model,
-      max_tokens: 600,
+      max_tokens: LLM_MAX_TOKENS,
       temperature: 0.1,
       messages: [
         { role: 'system', content: SYSTEM_PROMPT },
@@ -101,15 +108,27 @@ async function translateOne({ apiKey, model, language, title, description }) {
   // Robust JSON parse — MiniMax occasionally wraps in fences.
   const fenceMatch = text.match(/```(?:json)?\s*(\{[\s\S]*?\})\s*```/);
   if (fenceMatch) text = fenceMatch[1];
-  try {
-    const parsed = JSON.parse(text);
-    return {
-      title: typeof parsed.title === 'string' ? parsed.title : '',
-      description: typeof parsed.description === 'string' ? parsed.description : '',
-    };
-  } catch (err) {
-    throw new Error(`JSON parse failed: ${err.message}\n--- raw ---\n${text}`);
+  // Some responses drop the opening tokens of the JSON object
+  // (think-block starvation). Re-anchor on the first '{' before parsing.
+  const braceIdx = text.indexOf('{');
+  if (braceIdx > 0) text = text.slice(braceIdx);
+  const parsed = JSON.parse(text);
+  return {
+    title: typeof parsed.title === 'string' ? parsed.title : '',
+    description: typeof parsed.description === 'string' ? parsed.description : '',
+  };
+}
+
+async function translateOne(opts) {
+  let lastErr = null;
+  for (let attempt = 1; attempt <= LLM_ATTEMPTS; attempt++) {
+    try {
+      return await translateOnce(opts);
+    } catch (err) {
+      lastErr = err;
+    }
   }
+  throw lastErr;
 }
 
 async function main() {
@@ -135,69 +154,129 @@ async function main() {
   // Read future events. source = events_public (RLS-friendly view).
   // Service-role bypasses RLS — we still need the view for column ergonomics.
   const nowIso = new Date().toISOString();
-  const { data: events, error } = await sb
+  let query = sb
     .from('events_public')
     .select('id, title_sv, description_sv')
     .gt('start_time', nowIso)
-    .order('start_time', { ascending: true })
-    .limit(args.limit);
+    .order('start_time', { ascending: true });
+  if (args.withinDays > 0) {
+    const cutoff = new Date(Date.now() + args.withinDays * 24 * 60 * 60 * 1000).toISOString();
+    query = query.lt('start_time', cutoff);
+  }
+  const { data: events, error } = await query.limit(args.limit);
   if (error) {
     console.error('events fetch:', error.message);
     process.exit(1);
   }
   console.log(`[translate] fetched ${events.length} future events`);
 
+  // Skip-existing: fetch (event_id, language) pairs already translated so a
+  // re-run resumes instead of redoing work. Chunked because .in() on many
+  // UUIDs would exceed PostgREST URL limits (chunk 100 ids → max 100×N rows).
+  const existing = new Set();
+  {
+    const ids = events.map((e) => e.id);
+    const CHUNK = 100;
+    for (let i = 0; i < ids.length; i += CHUNK) {
+      const { data: rows, error: exErr } = await sb
+        .from('event_translations')
+        .select('event_id, language')
+        .in('language', args.languages)
+        .in('event_id', ids.slice(i, i + CHUNK));
+      if (exErr) {
+        console.error('existing fetch:', exErr.message);
+        process.exit(1);
+      }
+      for (const row of rows || []) existing.add(`${row.event_id}|${row.language}`);
+    }
+  }
+  console.log(`[translate] existing rows: ${existing.size} (will skip)`);
+
+  // Flat task list — pairs not already present.
+  let resumed = 0, emptySource = 0;
+  const tasks = [];
+  for (const ev of events) {
+    // Events with neither title nor description have nothing to translate —
+    // skip client-side instead of paying for an API call per language.
+    if (!ev.title_sv && !ev.description_sv) {
+      emptySource += args.languages.length;
+      continue;
+    }
+    for (const lang of args.languages) {
+      if (existing.has(`${ev.id}|${lang}`)) {
+        resumed++;
+        continue;
+      }
+      tasks.push({ ev, lang });
+    }
+  }
+
   if (args.dryRun) {
-    const total = events.length * args.languages.length;
-    console.log(`[translate] DRY-RUN — would translate ${total} rows (${events.length} events × ${args.languages.length} languages).`);
+    console.log(`[translate] DRY-RUN — would translate ${tasks.length} rows (${events.length} events × ${args.languages.length} languages − ${resumed} already done − ${emptySource} empty source).`);
     console.log(`[translate] Set --languages and --limit to control the volume. No writes performed.`);
     return;
   }
 
+  console.log(`[translate] tasks: ${tasks.length} (${resumed} already done, ${emptySource} empty source), concurrency=${args.concurrency}`);
+
   let translated = 0, skipped = 0, failed = 0;
-  for (const ev of events) {
-    for (const lang of args.languages) {
-      try {
-        const out = await translateOne({
-          apiKey,
-          model: args.model,
-          language: lang,
-          title: ev.title_sv,
-          description: ev.description_sv,
-        });
-        // Skip empty output (don't write garbage)
-        if (!out.title && !out.description) {
-          skipped++;
-          console.log(`[translate] skip empty: event=${ev.id} lang=${lang}`);
-          continue;
-        }
-        const { error: upErr } = await sb.from('event_translations').upsert(
-          {
-            event_id: ev.id,
-            language: lang,
-            title: out.title || null,
-            description: out.description || null,
-            model: args.model,
-            translated_at: new Date().toISOString(),
-          },
-          { onConflict: 'event_id,language' }
-        );
-        if (upErr) {
-          failed++;
-          console.error(`[translate] upsert failed: event=${ev.id} lang=${lang}: ${upErr.message}`);
-        } else {
-          translated++;
-          if (translated % 10 === 0) {
-            console.log(`[translate] progress: ${translated} rows written, ${failed} failed, ${skipped} skipped`);
-          }
-        }
-      } catch (err) {
-        failed++;
-        console.error(`[translate] error: event=${ev.id} lang=${lang}:`, err.message || err);
+  async function processPair({ ev, lang }) {
+    try {
+      const out = await translateOne({
+        apiKey,
+        model: args.model,
+        language: lang,
+        title: ev.title_sv,
+        description: ev.description_sv,
+      });
+      // Skip empty output (don't write garbage)
+      if (!out.title && !out.description) {
+        skipped++;
+        console.log(`[translate] skip empty: event=${ev.id} lang=${lang}`);
+        return;
       }
+      const { error: upErr } = await sb.from('event_translations').upsert(
+        {
+          event_id: ev.id,
+          language: lang,
+          title: out.title || null,
+          description: out.description || null,
+          model: args.model,
+          translated_at: new Date().toISOString(),
+        },
+        { onConflict: 'event_id,language' }
+      );
+      if (upErr) {
+        failed++;
+        console.error(`[translate] upsert failed: event=${ev.id} lang=${lang}: ${upErr.message}`);
+      } else {
+        translated++;
+        if (translated % 25 === 0) {
+          console.log(`[translate] progress: ${translated} written, ${failed} failed, ${skipped} skipped, ${tasks.length - (translated + failed + skipped)} left`);
+        }
+      }
+    } catch (err) {
+      // 429/5xx/timeout/parse errors land here — count and continue; a later
+      // re-run picks the row up via the skip-existing logic.
+      failed++;
+      console.error(`[translate] error: event=${ev.id} lang=${lang}:`, err.message || err);
     }
   }
-  console.log(`[translate] done — translated=${translated} skipped=${skipped} failed=${failed}`);
+
+  // Simple worker pool: N workers drain the shared task list. `cursor++` is
+  // safe here because nothing yields between read and increment.
+  let cursor = 0;
+  async function workerLoop() {
+    while (cursor < tasks.length) {
+      const t = tasks[cursor++];
+      await processPair(t);
+    }
+  }
+  await Promise.all(
+    Array.from({ length: Math.min(args.concurrency, tasks.length || 1) }, () => workerLoop())
+  );
+
+  console.log(`[translate] done — translated=${translated} skipped=${skipped} failed=${failed} resumed-skip=${resumed} empty-source=${emptySource}`);
 }
 
 main().catch((err) => {
