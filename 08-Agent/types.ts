@@ -279,6 +279,9 @@ export interface AgentChatRequest {
   session_id?: string;
   message: string;
   origin?: string;
+  /** Språkstöd 2026-09-21 — BCP-47 UI locale posted by 06-UI
+   *  (agentClient.js). Drives event_translations lookup in toCard. */
+  locale?: string;
 }
 
 /**

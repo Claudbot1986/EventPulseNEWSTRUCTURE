@@ -376,6 +376,32 @@ export function clearStatedPreferencesCache(): void {
   _statedCache.clear();
 }
 
+/**
+ * Språkstöd 2026-09-21 — persisted UI locale from
+ * user_preferences.preferences.locale (written by 06-UI via
+ * savePreferencesToServer's read-modify-write). Returns the BCP-47 tag or
+ * null. Separate helper because loadStatedPreferences extracts only
+ * categories into its cache shape.
+ */
+export async function loadStatedLocale(
+  supabase: SupabaseClient,
+  client_user_id: string
+): Promise<string | null> {
+  try {
+    const { data, error } = await supabase
+      .from('user_preferences')
+      .select('preferences')
+      .eq('client_user_id', client_user_id)
+      .single();
+    if (error || !data) return null;
+    const row = data as unknown as { preferences?: { locale?: unknown } };
+    const locale = row.preferences?.locale;
+    return typeof locale === 'string' && locale ? locale : null;
+  } catch {
+    return null;
+  }
+}
+
 // ─── Phase 2 (T0075): materialized category weights ────────────────────────
 
 /** Shape returned by loadMaterializedCategoryWeights. */

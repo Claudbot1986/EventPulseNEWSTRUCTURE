@@ -35,7 +35,7 @@ import {
   AUTH_CALLBACK_PATH,
   renderAuthCallbackPage,
 } from './services/authCallbackPage';
-import { buildUserSignal, loadStatedPreferences } from './tools/personalize';
+import { buildUserSignal, loadStatedLocale, loadStatedPreferences } from './tools/personalize';
 import { buildShareInsert } from './tools/share_session';
 import {
   assignVariant,
@@ -1420,19 +1420,17 @@ export function buildApp(opts: {
 
     try {
       // Fetch all personalization signals in parallel.
-      const [personalization, statedCategories, followed, followedArtists] = await Promise.all([
+      const [personalization, statedCategories, followed, followedArtists, statedLocale] = await Promise.all([
         buildUserSignal(client, req.user!.id),
         loadStatedPreferences(client, req.user!.id),
         loadFollowedVenues(client, req.user!.id),
         loadFollowedArtists(client, req.user!.id),
+        loadStatedLocale(client, req.user!.id),
       ]);
 
       // Språkstöd 2026-09-21 — locale precedence: ?locale=XX > persisted
       // user_preferences.preferences.locale > null (no translation lookup).
-      const recommendedLocale =
-        localeQuery ||
-        (typeof statedCategories?.locale === 'string' ? statedCategories.locale : null) ||
-        null;
+      const recommendedLocale = localeQuery || statedLocale || null;
 
       // Search: no date filter (all future), no category filter, Stockholm only.
       // Cap at 50 to bound query time; ranker picks the top N from these.
