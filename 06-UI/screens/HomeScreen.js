@@ -49,7 +49,7 @@ import {
 
 import { fetchFeed, fetchSavedEvents, fetchRecommendedEvents, fetchSuggestedPrompts, fetchCachedRecommendations, fetchRecentQueries, fetchCuratedCollections, fetchAiImageSmoketest } from '../services/agentClient';
 import { resolveConsumerReasons } from '../utils/rankReasonLabels';
-import { upcomingWeekendIsoSet } from './home/weekendDates';
+import { compareDayTimeAsc, dayLabelForIso, upcomingWeekendIsoSet } from './home/weekendDates';
 import { pickHappeningNow, happeningTitleParts } from './home/happeningNow';
 import { dateNamesFor } from '../i18n/dateNames';
 import { useI18n } from '../i18n';
@@ -212,9 +212,13 @@ function PriceChip({ event }) {
   return null;
 }
 
-function EventCardCompact({ event, onPress }) {
+function EventCardCompact({ event, onPress, showDay = false }) {
   const { t, language } = useI18n();
   const time = event.time || '';
+  // Weekend sections pass showDay (2026-09-21): the time line reads
+  // "Fre 18:00" so a Fri–Sun row of cards shows which day each card is.
+  const dayLabel = showDay ? dayLabelForIso(event.date, language) : '';
+  const timeText = [dayLabel, time].filter(Boolean).join(' ');
   // RQ5 (2026-09-20): always-visible "why" chips. Consumer variant filters
   // ops signals ("Gammal data", låg konfidens …) — those never belong on a
   // browsing card (2026-09-21 user feedback). Unknown enums are dropped by
@@ -225,8 +229,9 @@ function EventCardCompact({ event, onPress }) {
   );
   const venue = event.venue_name || event.venue || t('common.venueMissing');
   // sv-cardA11y '{title}{when} på {venue}': `when` carries its own leading
-  // space so an absent time leaves no double space.
-  const when = time ? ` ${t('common.atTime', { time })}` : '';
+  // space so an absent time leaves no double space. Uses the composite
+  // timeText so the spoken label includes the day on weekend cards.
+  const when = timeText ? ` ${t('common.atTime', { time: timeText })}` : '';
   return (
     <Pressable
       style={({ pressed }) => [styles.card, pressed && styles.cardPressed]}
@@ -241,7 +246,7 @@ function EventCardCompact({ event, onPress }) {
         imageGenerationStatus={event.image_generation_status}
       />
       <View style={styles.cardBody}>
-        <Text style={styles.cardTime}>{time || '—'}</Text>
+        <Text style={styles.cardTime}>{timeText || '—'}</Text>
         <Text style={styles.cardTitle} numberOfLines={2}>{event.title}</Text>
         <Text style={styles.cardVenue} numberOfLines={1}>{venue}</Text>
         <View style={styles.cardChipRow}>
@@ -521,8 +526,10 @@ function AiImageSmoketestSection({ onCardPress }) {
 // ─── Din helg (fixed weekly ritual, 2026-09-20) ─────────────────────────────
 //
 // Outcome-first top section: 3–5 cards picked for the upcoming weekend from
-// /agent/recommended — the server ranking decides the order, we only filter
-// on the Fri–Sun date set (client-side filter, no server route in v1).
+// /agent/recommended — the server ranking decides WHICH events qualify, we
+// filter on the Fri–Sun date set (client-side filter, no server route in v1)
+// and display them chronologically (Fre → Lör → Sön, user request
+// 2026-09-21, so the per-card day label reads in order).
 // When the section has hits the old Helgen section is hidden (see HomeScreen);
 // on loading/error/empty it renders nothing and Helgen stays as fallback.
 
@@ -541,6 +548,7 @@ function useDinHelgSection() {
       const result = await fetchRecommendedEvents({ limit: DIN_HELG_FETCH_LIMIT });
       const events = (result.events ?? [])
         .filter((e) => e.date && weekendDates.has(e.date))
+        .sort(compareDayTimeAsc) // Fre → Lör → Sön before the display slice
         .slice(0, DIN_HELG_LIMIT);
       setState({ status: 'ready', events, error: null });
     } catch (err) {
@@ -572,7 +580,7 @@ function DinHelgSection({ onCardPress, onResolved }) {
     <Section eyebrow={t('home.dinHelg.eyebrow')} title={t('home.dinHelg.title')}>
       <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.cardScroll}>
         {events.map((ev) => (
-          <EventCardCompact key={ev.id} event={ev} onPress={onCardPress} />
+          <EventCardCompact key={ev.id} event={ev} onPress={onCardPress} showDay />
         ))}
       </ScrollView>
     </Section>
@@ -583,6 +591,9 @@ function WeekendSection({ onCardPress }) {
   const { t } = useI18n();
   const from = useMemo(() => nextSaturdayIso(), []);
   const { status, events, error, retry } = useSection({ from, days: 2 });
+  // Chronological Lör → Sön (user request 2026-09-21) — feed order is not
+  // guaranteed across the ascending pages.
+  const sortedEvents = useMemo(() => [...events].sort(compareDayTimeAsc), [events]);
   return (
     <Section eyebrow={t('home.weekend.eyebrow')} title={t('home.weekend.title')}>
       {status === 'loading' && (
@@ -597,8 +608,8 @@ function WeekendSection({ onCardPress }) {
       {status === 'ready' && events.length === 0 && <EmptyRow />}
       {status === 'ready' && events.length > 0 && (
         <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.cardScroll}>
-          {events.map((ev) => (
-            <EventCardCompact key={ev.id} event={ev} onPress={onCardPress} />
+          {sortedEvents.map((ev) => (
+            <EventCardCompact key={ev.id} event={ev} onPress={onCardPress} showDay />
           ))}
         </ScrollView>
       )}
