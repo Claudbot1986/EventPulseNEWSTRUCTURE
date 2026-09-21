@@ -96,9 +96,12 @@ export function resolveReasons(reasons, language = 'sv') {
 /**
  * Data-quality/penalty reasons are OPS signals, not consumer copy — a chip
  * reading "Gammal data" under a concert card only signals distrust without
- * any action the user can take (2026-09-21, user feedback). These stay
- * available via resolveReasons for the agent "why" surface but are filtered
- * from consumer browsing cards.
+ * any action the user can take (2026-09-21, user feedback). 'not_ended'
+ * joins them for the opposite reason: it is trivially true on EVERY
+ * upcoming consumer row (the "Händer just nu" strip only picks not-ended
+ * events by design), so a green "✅ Inte avslutad" chip was pure noise
+ * (2026-09-21, user report). These stay available via resolveReasons for
+ * the agent "why" surface but are filtered from consumer browsing cards.
  */
 const NON_CONSUMER_REASONS = new Set([
   'stale',
@@ -106,6 +109,7 @@ const NON_CONSUMER_REASONS = new Set([
   'exclude_match',
   'over_budget',
   'venue_personalization_penalty',
+  'not_ended',
 ]);
 
 /** resolveReasons minus the ops signals — use for consumer browsing cards. */

@@ -34,7 +34,16 @@ describe('resolveConsumerReasons — home cards must never show data-quality fla
       ['not_ended', 'stale', 'low_confidence', 'time_fit', 'exclude_match', 'over_budget', 'venue_personalization_penalty'],
       'sv',
     );
-    expect(out.map((r) => r?.key)).toEqual(['not_ended', 'time_fit']);
+    expect(out.map((r) => r?.key)).toEqual(['time_fit']);
+  });
+
+  it('not_ended drops too — trivially true on every upcoming consumer row (2026-09-21)', () => {
+    // On "Händer just nu" a green "✅ Inte avslutad" chip sat on EVERY card:
+    // the section only picks not-ended events, so the chip conveyed nothing.
+    // The same holds for every browse surface (Ikväll/Helgen/Rekommenderat).
+    expect(resolveConsumerReasons(['not_ended'], 'sv')).toEqual([]);
+    expect(resolveConsumerReasons(['not_ended', 'category_match'], 'sv').map((r) => r?.key))
+      .toEqual(['category_match']);
   });
 
   it('keeps positive/affirmative reasons incl. personalization, in server order', () => {
@@ -54,6 +63,6 @@ describe('resolveConsumerReasons — home cards must never show data-quality fla
 
   it('handles garbage input like resolveReasons', () => {
     expect(resolveConsumerReasons(null)).toEqual([]);
-    expect(resolveConsumerReasons([null, 'stale', 'not_ended']).map((r) => r?.key)).toEqual(['not_ended']);
+    expect(resolveConsumerReasons([null, 'stale', 'not_ended'])).toEqual([]);
   });
 });
