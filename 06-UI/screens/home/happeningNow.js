@@ -157,3 +157,15 @@ export function weekendFeedAnchorIso(now = new Date()) {
   if (day === 0 || day === 6) return localIsoOf(now);
   return nextSaturdayIso(now);
 }
+
+/**
+ * The NEXT occurrence of a weekday (0=Sun…6=Sat) as local YYYY-MM-DD —
+ * NEVER today. Matches the server semantics for explicit weekday chips
+ * ("Gratis på lördag" tapped ON a Saturday means next Saturday; today's
+ * remaining hours are dead — see curated_collections.ts day_filter).
+ */
+export function nextLocalWeekdayIso(now = new Date(), dow) {
+  const base = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const delta = (dow - base.getDay() + 7) % 7 || 7;
+  return localIsoOf(new Date(base.getTime() + delta * MS_PER_DAY));
+}

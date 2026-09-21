@@ -7,8 +7,9 @@ import { fetchFeed, addDays, fetchEventIcs, shareSession, fetchSharedSession, pa
 import { useI18n } from './i18n';
 import { dateNamesFor } from './i18n/dateNames';
 import { isAuthDeepLink, isDinHelgDeepLink } from './services/deepLinkRouter';
-import { hasWeekendIntent } from './utils/weekendIntent';
-import { localIsoOf, weekendFeedAnchorIso } from './screens/home/happeningNow';
+import { localIsoOf, weekendFeedAnchorIso, nextLocalWeekdayIso } from './screens/home/happeningNow';
+import { applyBrowseFilters } from './utils/browseFilters';
+import { resolvePromptIntent, intentHasFilters } from './utils/promptIntent';
 import { useAiImageUrl } from './hooks/useAiImageUrl';
 import Toast from './components/Toast';
 import PushPromptModal from './components/PushPromptModal';
@@ -116,6 +117,7 @@ const TIME_FILTERS = [
 
 const PRICE_FILTERS = [
   { key: 'free', labelKey: 'common.free' },
+  { key: 'under_200', labelKey: 'explore.price.under200' },
 ];
 
 // Format provider key to human-readable label via i18n. Unknown sources keep
@@ -293,72 +295,15 @@ function groupEventsByDay(events, language, t) {
   return result;
 }
 
-/** Case- and accent-insensitive match text for the Utforska search box:
- *  NFD normalization + combining-mark strip, so "cafe" matches "Café"
- *  without language-specific rules in the client (2026-09-20). */
-function normalizeSearchText(value) {
-  return String(value || '')
-    .normalize('NFD')
-    .replace(/[̀-ͯ]/g, '')
-    .toLowerCase();
-}
-
 /** Scroll thresholds for the search-box collapse — small hysteresis so the
  *  bar doesn't flicker on jitter near the top. */
 const SEARCH_HIDE_DELTA = 6;
 const SEARCH_SHOW_DELTA = -6;
 const SEARCH_HIDE_MIN_Y = 40;
 
-// Filter events by time
-function filterEventsByTime(events, timeFilter) {
-  if (!timeFilter) return events;
-  
-  const now = new Date();
-  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-  
-  return events.filter(event => {
-    if (!event.date) return false;
-    
-    const eventDate = new Date(event.date + 'T' + (event.time || '00:00'));
-    const eventDay = new Date(eventDate.getFullYear(), eventDate.getMonth(), eventDate.getDate());
-    
-    switch (timeFilter) {
-      case 'ikvall': {
-        // Events happening today after current time
-        const isToday = eventDay.getTime() === today.getTime();
-        return isToday && eventDate > now;
-      }
-      case 'imorgon': {
-        // Events happening tomorrow
-        const tomorrow = new Date(today);
-        tomorrow.setDate(tomorrow.getDate() + 1);
-        return eventDay.getTime() === tomorrow.getTime();
-      }
-      case 'helgen': {
-        // Events happening Saturday (6) or Sunday (0)
-        const dayOfWeek = eventDay.getDay();
-        return dayOfWeek === 0 || dayOfWeek === 6;
-      }
-      case 'denna_vecka': {
-        // Events within the next 7 days
-        const nextWeek = new Date(today);
-        nextWeek.setDate(nextWeek.getDate() + 7);
-        return eventDay >= today && eventDay <= nextWeek;
-      }
-      default:
-        return true;
-    }
-  });
-}
-
-// Filter events by category
-function filterEventsByCategory(events, selectedCategories) {
-  if (!selectedCategories || selectedCategories.length === 0) return events;
-  
-  return events.filter(event => {
-    return selectedCategories.includes(event.category);
-  });
-}
+// Search normalization + the whole time/price/category/pinned/query filter
+// chain live in utils/browseFilters.js (pure module, vitest-pinned) — App.js
+// only wires state into applyBrowseFilters (2026-09-20).
 
 function CategoryBadge({ category }) {
   const { t } = useI18n();
@@ -525,7 +470,7 @@ function StateView({ title, detail, actionLabel, onAction }) {
   );
 }
 
-function HomeScreen({ onEventPress, scrollPositionRef, pendingPrompt, dismissPendingPrompt, onInitialLoadSettled }) {
+function HomeScreen({ onEventPress, scrollPositionRef, pendingIntent, dismissPendingPrompt, onInitialLoadSettled }) {
   const { t, language } = useI18n();
   const [events, setEvents] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -534,6 +479,11 @@ function HomeScreen({ onEventPress, scrollPositionRef, pendingPrompt, dismissPen
   const [timeFilter, setTimeFilter] = useState(null);
   const [selectedCategories, setSelectedCategories] = useState([]);
   const [priceFilter, setPriceFilter] = useState(null);
+  // Exact-day pin from chips like "Gratis på lördag" (resolved ISO), and the
+  // auto search-prefill union terms for genre chips (visible text lives in
+  // searchQuery; these are the actual any-match terms).
+  const [pinnedDateIso, setPinnedDateIso] = useState(null);
+  const [queryTerms, setQueryTerms] = useState(null);
   const [isFilterMenuOpen, setIsFilterMenuOpen] = useState(false);
   // Utforska search box (2026-09-20): sits next to the Filter toggle in the
   // fixed filter bar; collapses away on scroll down, returns on scroll up.
@@ -542,45 +492,87 @@ function HomeScreen({ onEventPress, scrollPositionRef, pendingPrompt, dismissPen
   const searchLastYRef = useRef(0);
   const searchBarAnim = useRef(new Animated.Value(0)).current; // 0 = visible, 1 = hidden
 
-  // Weekend chips on Hem ("Gratis i helgen", "Vad händer i helgen?", …)
-  // previously only put up a banner over the unfiltered week list — the tap
-  // never applied the weekend filter, so users landed on imorgon/måndag.
-  // Detect weekend intent (all 10 locales, utils/weekendIntent.js) and apply
-  // the real 'helgen' time filter. Verified by utils/weekendIntent.test.ts.
+  // Auto-applied chip intent (2026-09-20, "varenda knapp" fix): every Home
+  // chip carries the intent its label promises (resolved by the drain via
+  // utils/promptIntent.js — pinned in promptIntent.test.ts). This effect
+  // applies time/price/category/pinned-day/search-prefill AND re-anchors the
+  // feed window (pinned Saturday / weekend / today — the 50-event ascending
+  // feed page otherwise never reaches the promised days on dense weeks).
   //
-  // Two companion fixes (2026-09-20, "låst läge" + empty helgen):
-  //  - /agent/feed pages are 50 events ascending from `from`, so on dense
-  //    weeks Sat/Sun rows never reach the client → re-anchor the window at
-  //    the weekend (weekendFeedAnchorIso: Sat/Sun → today, else coming Sat).
-  //  - Auto-applied filter is tracked in weekendFilterAppliedRef: a later
-  //    NON-weekend chip (or a banner dismiss) clears it, so the view is
-  //    never stuck on 'helgen' after the intent moved on. Manual pill taps
-  //    are never touched by this bookkeeping.
-  const weekendFilterAppliedRef = useRef(false);
+  // Snapshot undo (autoAppliedIntentRef): dismiss / a newer chip clears only
+  // values that are STILL the auto-applied ones — pills the user tapped by
+  // hand after the chip landed are never touched.
+  const autoAppliedIntentRef = useRef(null);
+
+  // Clear every auto-applied value the user hasn't since changed. Returns the
+  // snapshot (or null) so callers can decide whether a window refetch is due.
+  const clearAutoApplied = useCallback(() => {
+    const auto = autoAppliedIntentRef.current;
+    if (!auto) return null;
+    autoAppliedIntentRef.current = null;
+    if (auto.timeFilter != null) setTimeFilter((prev) => (prev === auto.timeFilter ? null : prev));
+    if (auto.priceFilter != null) setPriceFilter((prev) => (prev === auto.priceFilter ? null : prev));
+    if (auto.categories) setSelectedCategories((prev) => (prev === auto.categories ? [] : prev));
+    if (auto.pinnedDateIso != null) setPinnedDateIso((prev) => (prev === auto.pinnedDateIso ? null : prev));
+    if (auto.queryTerms) setQueryTerms((prev) => (prev === auto.queryTerms ? null : prev));
+    if (auto.queryLabel != null) setSearchQuery((prev) => (prev === auto.queryLabel ? '' : prev));
+    return auto;
+  }, []);
+
   useEffect(() => {
-    if (!pendingPrompt) return;
-    if (hasWeekendIntent(pendingPrompt)) {
-      setTimeFilter((prev) => (prev === 'helgen' ? prev : 'helgen'));
-      weekendFilterAppliedRef.current = true;
-      loadEventsRef.current?.({ append: false, fromOverride: weekendFeedAnchorIso() });
+    if (!pendingIntent) return;
+    const prevAuto = clearAutoApplied();
+    const { intent } = pendingIntent;
+    if (!intent || (!intentHasFilters(intent) && !intent.anchor)) {
+      // Pure free-text prompt: nothing to filter — but if the PREVIOUS chip
+      // had moved the feed window, restore the today-window.
+      if (prevAuto?.anchor) {
+        loadEventsRef.current?.({ append: false, fromOverride: localIsoOf(new Date()) });
+      }
       return;
     }
-    if (weekendFilterAppliedRef.current) {
-      weekendFilterAppliedRef.current = false;
-      setTimeFilter((prev) => (prev === 'helgen' ? null : prev));
+    const auto = { anchor: intent.anchor || null };
+    if (intent.timeFilter) { setTimeFilter(intent.timeFilter); auto.timeFilter = intent.timeFilter; }
+    if (intent.priceFilter) { setPriceFilter(intent.priceFilter); auto.priceFilter = intent.priceFilter; }
+    if (intent.categories) { setSelectedCategories(intent.categories); auto.categories = intent.categories; }
+    if (intent.queryTerms) { setQueryTerms(intent.queryTerms); auto.queryTerms = intent.queryTerms; }
+    if (intent.queryLabel != null) { setSearchQuery(intent.queryLabel); auto.queryLabel = intent.queryLabel; }
+    if (intent.anchor === 'pinned' && intent.pinnedDow != null) {
+      // Server semantics: a pinned weekday is the NEXT occurrence, never
+      // today (curated_collections.ts day_filter preview counts the same).
+      const iso = nextLocalWeekdayIso(new Date(), intent.pinnedDow);
+      setPinnedDateIso(iso);
+      auto.pinnedDateIso = iso;
+    }
+    autoAppliedIntentRef.current = auto;
+    const fromIso =
+      intent.anchor === 'pinned' && auto.pinnedDateIso ? auto.pinnedDateIso
+        : intent.anchor === 'weekend' ? weekendFeedAnchorIso(new Date())
+          : intent.anchor === 'today' ? localIsoOf(new Date())
+            : null;
+    if (fromIso) loadEventsRef.current?.({ append: false, fromOverride: fromIso });
+  }, [pendingIntent, clearAutoApplied]);
+
+  // Manual typing takes over the search box from a genre prefill: the auto
+  // union terms (['klassisk','classical']) would otherwise keep filtering on
+  // text the user no longer sees. Prefill still counts as auto for dismiss.
+  const handleSearchChange = useCallback((value) => {
+    const auto = autoAppliedIntentRef.current;
+    if (auto?.queryTerms) {
+      setQueryTerms((prev) => (prev === auto.queryTerms ? null : prev));
+    }
+    setSearchQuery(value);
+  }, []);
+
+  // Banner dismiss unwinds only what the chip auto-applied — filters the
+  // user set by hand stay exactly as they left them.
+  const handleDismissPendingPrompt = useCallback(() => {
+    const auto = clearAutoApplied();
+    if (auto?.anchor) {
       loadEventsRef.current?.({ append: false, fromOverride: localIsoOf(new Date()) });
     }
-  }, [pendingPrompt]);
-
-  // Banner dismiss unwinds only what the chip auto-applied — a helgen filter
-  // the user tapped by hand stays exactly as they left it.
-  const handleDismissPendingPrompt = useCallback(() => {
-    if (weekendFilterAppliedRef.current) {
-      weekendFilterAppliedRef.current = false;
-      setTimeFilter((prev) => (prev === 'helgen' ? null : prev));
-    }
     dismissPendingPrompt();
-  }, [dismissPendingPrompt]);
+  }, [dismissPendingPrompt, clearAutoApplied]);
   // Pagination: `weekStart` advances by 7 days on each scroll-end load.
   const [weekStart, setWeekStart] = useState(() => new Date().toISOString().slice(0, 10));
   const [hasMore, setHasMore] = useState(true);
@@ -725,6 +717,17 @@ function HomeScreen({ onEventPress, scrollPositionRef, pendingPrompt, dismissPen
     setTimeFilter(null);
     setSelectedCategories([]);
     setPriceFilter(null);
+    setPinnedDateIso(null);
+    setQueryTerms(null);
+    setSearchQuery('');
+    // A pinned/weekend chip had re-anchored the feed window — restore the
+    // today-window so "Rensa" returns to the unfiltered nearby list. Drop
+    // the auto snapshot too, so a later banner dismiss doesn't refetch again.
+    const hadAnchor = Boolean(autoAppliedIntentRef.current?.anchor);
+    autoAppliedIntentRef.current = null;
+    if (hadAnchor) {
+      loadEventsRef.current?.({ append: false, fromOverride: localIsoOf(new Date()) });
+    }
   }, []);
 
   // Collapse/expand animation for the search box, driven by scroll direction.
@@ -738,34 +741,21 @@ function HomeScreen({ onEventPress, scrollPositionRef, pendingPrompt, dismissPen
 
   const trimmedSearch = searchQuery.trim();
 
-  const filteredEvents = useMemo(() => {
-    let result = events;
-
-    if (selectedCategories.length > 0) {
-      result = result.filter(event => selectedCategories.includes(event.category));
-    }
-
-    if (timeFilter) {
-      result = filterEventsByTime(result, timeFilter);
-    }
-
-    if (priceFilter === 'free') {
-      result = result.filter(event => event.isFree || event.is_free);
-    }
-
-    if (trimmedSearch) {
-      const needle = normalizeSearchText(trimmedSearch);
-      result = result.filter(event =>
-        normalizeSearchText(`${event.title || ''} ${event.venue_name || event.venue || ''}`).includes(needle)
-      );
-    }
-
-    return result;
-  }, [events, timeFilter, selectedCategories, priceFilter, trimmedSearch]);
+  // The whole filter chain (categories w/ slug groups, time, price, pinned
+  // day, search/genre terms) lives in utils/browseFilters.js so vitest can
+  // pin exactly which events survive each chip (chipSimulation.test.ts).
+  const filteredEvents = useMemo(() => applyBrowseFilters(events, {
+    timeFilter,
+    priceFilter,
+    selectedCategories,
+    pinnedDateIso,
+    queryTerms,
+    searchText: trimmedSearch,
+  }), [events, timeFilter, selectedCategories, priceFilter, pinnedDateIso, queryTerms, trimmedSearch]);
 
   const groupedEvents = useMemo(() => groupEventsByDay(filteredEvents, language, t), [filteredEvents, language, t]);
-  const hasActiveFilters = Boolean(timeFilter || selectedCategories.length > 0 || priceFilter);
-  const activeFilterCount = (timeFilter ? 1 : 0) + (priceFilter ? 1 : 0) + selectedCategories.length;
+  const hasActiveFilters = Boolean(timeFilter || selectedCategories.length > 0 || priceFilter || pinnedDateIso);
+  const activeFilterCount = (timeFilter ? 1 : 0) + (priceFilter ? 1 : 0) + selectedCategories.length + (pinnedDateIso ? 1 : 0);
 
   if (loading) {
     return <LoadingSkeleton />;
@@ -811,7 +801,7 @@ function HomeScreen({ onEventPress, scrollPositionRef, pendingPrompt, dismissPen
               <TextInput
                 style={styles.searchInput}
                 value={searchQuery}
-                onChangeText={setSearchQuery}
+                onChangeText={handleSearchChange}
                 placeholder={t('explore.searchPlaceholder')}
                 placeholderTextColor={TOKENS.color.textMuted}
                 returnKeyType="search"
@@ -822,7 +812,7 @@ function HomeScreen({ onEventPress, scrollPositionRef, pendingPrompt, dismissPen
               />
               {searchQuery.length > 0 ? (
                 <TouchableOpacity
-                  onPress={() => setSearchQuery('')}
+                  onPress={() => handleSearchChange('')}
                   hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
                   testID="explore-search-clear"
                   style={styles.searchClearBtn}
@@ -939,11 +929,11 @@ function HomeScreen({ onEventPress, scrollPositionRef, pendingPrompt, dismissPen
                 {t('explore.subtitleCount', { count: totalCount })}
               </Text>
             </View>
-            {pendingPrompt ? (
+            {pendingIntent ? (
               <View style={styles.pendingPromptBanner} accessibilityRole="text">
                 <Text style={styles.pendingPromptEyebrow}>{t('explore.youAsked')}</Text>
                 <Text style={styles.pendingPromptText} numberOfLines={3}>
-                  {pendingPrompt}
+                  {pendingIntent.text}
                 </Text>
                 <TouchableOpacity
                   style={styles.pendingPromptDismiss}
@@ -1417,7 +1407,10 @@ export default function App({ onUserLoggedOut, onOpenLogin, chipNonce = 0, onExp
   // taps. AppShell bumps chipNonce on every chip/card hand-off; each bump
   // re-drains, and every new weekend prompt re-applies its filter via the
   // inner view's weekend-intent effect.
-  const [pendingPrompt, setPendingPrompt] = useState(null);
+  // pendingIntent: { text, intent } — the chip's raw text for the banner plus
+  // the filter intent resolved from its structured hints (or text fallback),
+  // see utils/promptIntent.js. The inner explore view applies the filters.
+  const [pendingIntent, setPendingIntent] = useState(null);
   // T0078 — tab navigation. 'home' | 'map' | 'saved' | 'notifications' | 'profile'
   const [activeTab, setActiveTab] = useState('home');
   useEffect(() => {
@@ -1425,8 +1418,21 @@ export default function App({ onUserLoggedOut, onOpenLogin, chipNonce = 0, onExp
     getItem(PENDING_AGENT_MESSAGE_KEY)
       .then((value) => {
         if (cancelled || !value) return;
-        setPendingPrompt(value);
         removeItem(PENDING_AGENT_MESSAGE_KEY).catch(() => {});
+        // Wire format (2026-09-20): JSON { text, hints } when the Home chip
+        // carried structured intent; plain string otherwise (deep links,
+        // recent searches). Banner always shows `.text`, never raw JSON.
+        let text = value;
+        let hints = null;
+        try {
+          const parsed = JSON.parse(value);
+          if (parsed && typeof parsed === 'object' && typeof parsed.text === 'string' && parsed.text.length > 0) {
+            text = parsed.text;
+            hints = parsed.hints && typeof parsed.hints === 'object' ? parsed.hints : null;
+          }
+        } catch (_err) { /* plain text prompt */ }
+        if (typeof text !== 'string' || text.length === 0) return;
+        setPendingIntent({ text, intent: resolvePromptIntent({ text, ...(hints || {}) }) });
       })
       .catch(() => {});
     return () => {
@@ -1434,7 +1440,7 @@ export default function App({ onUserLoggedOut, onOpenLogin, chipNonce = 0, onExp
     };
   }, [chipNonce]);
   const dismissPendingPrompt = useCallback(() => {
-    setPendingPrompt(null);
+    setPendingIntent(null);
     removeItem(PENDING_AGENT_MESSAGE_KEY).catch(() => {});
   }, []);
 
@@ -1524,7 +1530,7 @@ export default function App({ onUserLoggedOut, onOpenLogin, chipNonce = 0, onExp
       const text = (res.query && res.query.trim().length > 0)
         ? res.query
         : tRef.current('explore.sharedPrompt');
-      setPendingPrompt(text);
+      setPendingIntent({ text, intent: resolvePromptIntent({ text }) });
       setItem(PENDING_AGENT_MESSAGE_KEY, text).catch(() => {});
     };
 
@@ -1574,7 +1580,7 @@ export default function App({ onUserLoggedOut, onOpenLogin, chipNonce = 0, onExp
     if (activeTab === 'profile') {
       return <ProfileScreen onLoggedOut={handleLoggedOut} onOpenLogin={onOpenLogin} />;
     }
-    return <HomeScreen onEventPress={handleEventPress} scrollPositionRef={scrollPositionRef} pendingPrompt={pendingPrompt} dismissPendingPrompt={dismissPendingPrompt} onOpenLogin={onOpenLogin} onInitialLoadSettled={onExploreReady} />;
+    return <HomeScreen onEventPress={handleEventPress} scrollPositionRef={scrollPositionRef} pendingIntent={pendingIntent} dismissPendingPrompt={dismissPendingPrompt} onOpenLogin={onOpenLogin} onInitialLoadSettled={onExploreReady} />;
   };
 
   const showTabBar = !selectedEvent;

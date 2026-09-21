@@ -770,7 +770,10 @@ function CuratedChip({ collection, onPress }) {
   return (
     <Pressable
       style={({ pressed }) => [styles.curatedChip, pressed && styles.curatedChipPressed]}
-      onPress={() => onPress?.({ prompt_text: collection.prompt_text, curated_id: collection.id })}
+      // Forward the FULL collection object — the structured intent fields
+      // (category_slug / budget / day_filter / time_of_day) are what let
+      // Utforska apply the filters this chip's name promises (2026-09-20).
+      onPress={() => onPress?.({ ...collection, curated_id: collection.id })}
       accessibilityRole="button"
       accessibilityLabel={t('home.curatedChipA11y', { name: collection.name })}
     >

@@ -205,6 +205,7 @@ export default {
   'explore.time.imorgon': 'Huomenna',
   'explore.time.helgen': 'Viikonloppu',
   'explore.time.week': '7 päivää',
+  'explore.price.under200': 'Alle 200 kr',
   'explore.filterCat.music': 'Musiikki',
   'explore.filterCat.culture': 'Kulttuuri',
   'explore.filterCat.sports': 'Urheilu',

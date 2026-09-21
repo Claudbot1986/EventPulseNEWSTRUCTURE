@@ -331,11 +331,25 @@ export default function AppShell() {
   // this counter changes. Every chip/card hand-off bumps it.
   const [chipNonce, setChipNonce] = useState(0);
 
+  // Home chip tap → hand the prompt to Utforska. When the chip carries
+  // structured intent (curated: category_slug/budget/day_filter/time_of_day;
+  // suggested: category) it travels as JSON { text, hints } so Utforska can
+  // apply the filters the chip label promises — plain text stays the wire
+  // format otherwise (deep links / recent searches) (2026-09-20).
   const handleChipPress = (prompt) => {
     const text = prompt?.prompt_text;
     if (typeof text !== 'string' || text.length === 0) return;
-    setItem(PENDING_AGENT_MESSAGE_KEY, text).catch(() => {});
-    setChipNonce((n) => n + 1);
+    const hints = {};
+    for (const key of ['category', 'category_slug', 'budget', 'day_filter', 'time_of_day', 'curated_id']) {
+      const value = prompt?.[key];
+      if (typeof value === 'string' && value.length > 0) hints[key] = value;
+    }
+    const payload = Object.keys(hints).length > 0 ? JSON.stringify({ text, hints }) : text;
+    // Nonce bumps only AFTER the write lands — the explore drain reads on
+    // nonce change, so bumping early could race the AsyncStorage write.
+    setItem(PENDING_AGENT_MESSAGE_KEY, payload)
+      .catch(() => {})
+      .finally(() => setChipNonce((n) => n + 1));
     setActiveTab('explore');
   };
 
@@ -345,8 +359,9 @@ export default function AppShell() {
   // shape knowledge beyond the id guard.
   const handleHomeCardPress = (event) => {
     if (!event || typeof event.id !== 'string' || event.id.length === 0) return;
-    setItem(PENDING_EVENT_KEY, JSON.stringify(event)).catch(() => {});
-    setChipNonce((n) => n + 1);
+    setItem(PENDING_EVENT_KEY, JSON.stringify(event))
+      .catch(() => {})
+      .finally(() => setChipNonce((n) => n + 1));
     setActiveTab('explore');
   };
 

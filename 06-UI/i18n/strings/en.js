@@ -204,6 +204,7 @@ export default {
   'explore.time.imorgon': 'Tomorrow',
   'explore.time.helgen': 'The weekend',
   'explore.time.week': '7 days',
+  'explore.price.under200': 'Under 200 kr',
   'explore.filterCat.music': 'Music',
   'explore.filterCat.culture': 'Culture',
   'explore.filterCat.sports': 'Sports',

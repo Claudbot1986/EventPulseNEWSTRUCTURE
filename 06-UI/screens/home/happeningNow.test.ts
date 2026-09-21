@@ -25,6 +25,7 @@ import {
   happeningTitleParts,
   nextSaturdayIso,
   weekendFeedAnchorIso,
+  nextLocalWeekdayIso,
 } from './happeningNow';
 
 /** Local Date shorthand: at(2026, 9, 20, 18, 30) = 20 Sep 2026 18:30. */
@@ -266,5 +267,26 @@ describe('weekendFeedAnchorIso — where the feed window starts on a helg chip',
 
   it('Friday → tomorrow (Saturday)', () => {
     expect(weekendFeedAnchorIso(at(2026, 9, 25, 9, 0))).toBe('2026-09-26');
+  });
+});
+
+describe('nextLocalWeekdayIso — pinned weekday, server semantics (NEVER today)', () => {
+  it('Sunday asking for Saturday → coming Saturday', () => {
+    expect(nextLocalWeekdayIso(at(2026, 9, 20, 15, 0), 6)).toBe('2026-09-26');
+  });
+
+  it('Sunday asking for Sunday → NEXT Sunday (today never counts)', () => {
+    expect(nextLocalWeekdayIso(at(2026, 9, 20, 9, 0), 0)).toBe('2026-09-27');
+  });
+
+  it('Saturday NIGHT asking for Saturday → next week\'s Saturday', () => {
+    // "Gratis på lördag" tapped 23:00 on a Saturday — the day's remaining
+    // hours are dead, so the server means next Saturday. Match it.
+    expect(nextLocalWeekdayIso(at(2026, 9, 26, 23, 0), 6)).toBe('2026-10-03');
+  });
+
+  it('crosses month boundaries', () => {
+    // Wed 30 Sep 2026 asking for Friday → 2 Oct 2026
+    expect(nextLocalWeekdayIso(at(2026, 9, 30, 12, 0), 5)).toBe('2026-10-02');
   });
 });

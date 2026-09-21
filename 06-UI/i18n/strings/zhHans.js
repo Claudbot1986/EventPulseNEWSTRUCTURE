@@ -202,6 +202,7 @@ export default {
   'explore.time.imorgon': '明天',
   'explore.time.helgen': '周末',
   'explore.time.week': '7 天',
+  'explore.price.under200': '200克朗以下',
   'explore.filterCat.music': '音乐',
   'explore.filterCat.culture': '文化',
   'explore.filterCat.sports': '体育',
