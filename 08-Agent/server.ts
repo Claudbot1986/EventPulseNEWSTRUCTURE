@@ -264,9 +264,15 @@ export function buildApp(opts: {
     const city = typeof req.query.city === 'string' && req.query.city
       ? req.query.city
       : 'Stockholm';
+    // Språkstöd 2026-09-21 — optional ?locale=XX for event_translations
+    // lookup. Missing/empty → no swap (current behavior). Invalid tag →
+    // silently ignored (event_translations table has no row → fallback).
+    const locale = typeof req.query.locale === 'string' && req.query.locale
+      ? req.query.locale
+      : null;
 
     try {
-      const result = await feedEvents(client, { from, days, category, city });
+      const result = await feedEvents(client, { from, days, category, city, locale });
       res.json({
         events: result.events,
         from: result.from,
@@ -362,6 +368,11 @@ export function buildApp(opts: {
       ? Math.min(Math.max(parseInt(req.query.limit, 10) || 20, 1), 50)
       : 20;
 
+    // Språkstöd 2026-09-21 — optional ?locale=XX forwarded to searchEvents.
+    const locale = typeof req.query.locale === 'string' && req.query.locale
+      ? req.query.locale
+      : null;
+
     // date_from is optional. Accept either date-only (YYYY-MM-DD) or full
     // ISO timestamps; the tool's expandDateFloor handles both. Reject
     // obviously malformed strings so the caller learns the contract.
@@ -383,6 +394,7 @@ export function buildApp(opts: {
         venue_id: venueId,
         limit,
         date_from: dateFrom,
+        locale,
       });
       res.json({ events: result.events, warnings: result.warnings });
     } catch (err: unknown) {
@@ -419,6 +431,12 @@ export function buildApp(opts: {
     try {
       const intent = await parseIntent(body.message);
 
+      // Språkstöd 2026-09-21 — the client already posts body.locale on
+      // /agent/chat (06-UI/services/agentClient.js:170). Forward to
+      // searchEvents so cards can be localized; missing/invalid → no-op.
+      const chatLocale =
+        typeof body.locale === 'string' && body.locale ? body.locale : null;
+
       // Mixed-initiative (Workstream C, MASTERPLAN §18.2 decision 1):
       //   - ALWAYS run the search pipeline. Results come first.
       //   - Attach AT MOST ONE clarifying question (highest info gain) when
@@ -436,6 +454,7 @@ export function buildApp(opts: {
         exclude_categories: intent.exclude_categories.length > 0 ? intent.exclude_categories : undefined,
         is_free: intent.budget === 'free' ? true : null,
         limit: 25,
+        locale: chatLocale,
       });
 
       // ─── A/B test: personalization priors ON vs OFF ────────────────────
@@ -1389,6 +1408,14 @@ export function buildApp(opts: {
       ? Math.min(Math.max(parseInt(req.query.limit, 10) || 10, 1), 20)
       : 10;
 
+    // Språkstöd 2026-09-21 — `?locale=XX` overrides the persisted
+    // preference (preview flow); falls back to the stored
+    // user_preferences.preferences.locale if not provided.
+    const localeQuery =
+      typeof req.query.locale === 'string' && req.query.locale
+        ? req.query.locale
+        : null;
+
     const client = sb ?? getSupabase();
 
     try {
@@ -1400,11 +1427,19 @@ export function buildApp(opts: {
         loadFollowedArtists(client, req.user!.id),
       ]);
 
+      // Språkstöd 2026-09-21 — locale precedence: ?locale=XX > persisted
+      // user_preferences.preferences.locale > null (no translation lookup).
+      const recommendedLocale =
+        localeQuery ||
+        (typeof statedCategories?.locale === 'string' ? statedCategories.locale : null) ||
+        null;
+
       // Search: no date filter (all future), no category filter, Stockholm only.
       // Cap at 50 to bound query time; ranker picks the top N from these.
       const search = await searchEvents(client, {
         city: 'Stockholm',
         limit: 50,
+        locale: recommendedLocale,
       });
 
       // Rank with all personalization signals.

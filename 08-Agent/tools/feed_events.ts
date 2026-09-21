@@ -25,6 +25,14 @@ export interface FeedEventsInput {
   city?: string | null;
   /** Page size. Default 50, max 100. */
   limit?: number;
+  /**
+   * Optional BCP-47 locale tag (e.g. 'ar', 'fa', 'so', 'pl', 'tr', 'fi').
+   * When provided, the card `title` is taken from event_translations where
+   * present, falling back to events.title_sv → events.title_en. Passing a
+   * tag we haven't translated yet is a no-op (rows missing → fallback).
+   * Språkstöd 2026-09-21 — event_translations table backs this lookup.
+   */
+  locale?: string | null;
 }
 
 export interface FeedEventsResult {
@@ -137,9 +145,37 @@ export async function feedEvents(
     ? trimmed.filter((r: any) => r.venues?.city === input.city)
     : trimmed;
 
+  // Språkstöd 2026-09-21: when a locale is supplied, swap the Swedish
+  // title for the matching translation row where present. Empty map =
+  // every row falls back to title_sv. service_role read on
+  // event_translations; anon never reaches the table directly (DENY
+  // policies on the table). One round trip per feed read — cheap, and
+  // callers that don't pass locale skip the SELECT entirely.
+  const translationByEvent: Map<string, { title?: string | null }> = new Map();
+  if (input.locale && cityFiltered.length > 0) {
+    const ids = cityFiltered.map((r: any) => r.id);
+    const { data: translations, error: tErr } = await supabase
+      .from('event_translations')
+      .select('event_id, title')
+      .eq('language', input.locale)
+      .in('event_id', ids);
+    if (!tErr && translations) {
+      for (const t of translations as Array<{ event_id: string; title?: string | null }>) {
+        if (t.title) translationByEvent.set(t.event_id, { title: t.title });
+      }
+    }
+  }
+
   const events: EventCard[] = cityFiltered.map((r: any) => ({
     id: r.id,
-    title: r.title_sv || r.title_en || 'Untitled',
+    // Translation > Swedish > English > 'Untitled'. Per Språkstöd plan
+    // 2026-09-21 — search/ranking intentionally remains sv-only; this
+    // only affects what the card displays client-side.
+    title:
+      translationByEvent.get(r.id)?.title ||
+      r.title_sv ||
+      r.title_en ||
+      'Untitled',
     start_time: r.start_time,
     end_time: r.end_time ?? null,
     venue_name: r.venues?.name ?? '',

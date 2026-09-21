@@ -38,6 +38,14 @@ export interface SearchEventsInput {
    * ladder still fires on zero results.
    */
   venue_id?: string;
+  /**
+   * Språkstöd 2026-09-21 — Optional BCP-47 locale tag (e.g. 'ar', 'fa',
+   * 'so', 'pl', 'tr', 'fi'). When set, toCard() swaps the Swedish title
+   * and description with the matching event_translations row where
+   * present. Missing rows fall back to title_sv → title_en. Pass null/
+   * undefined to skip the lookup and keep current behavior unchanged.
+   */
+  locale?: string | null;
 }
 
 export type RelaxedConstraint = 'date_window' | 'category';
@@ -353,11 +361,17 @@ function toCard(
   fallbackCity: string,
   artistSlugs?: Set<string>,
   availability?: AvailabilityBadge | null,
+  // Språkstöd 2026-09-21 — optional translation from event_translations.
+  // Falls back to Swedish/English silently when null/undefined.
+  translation?: { title?: string | null; description?: string | null } | null,
 ): EventCard {
+  const txTitle = translation?.title ?? null;
+  const txDesc = translation?.description ?? null;
   return {
     id: r.id,
-    title: r.title_sv || r.title_en || 'Untitled',
-    description: r.description_sv ?? r.description_en ?? null,
+    // Translation > Swedish > English > 'Untitled' (defensive).
+    title: txTitle || r.title_sv || r.title_en || 'Untitled',
+    description: txDesc ?? r.description_sv ?? r.description_en ?? null,
     start_time: r.start_time,
     end_time: r.end_time ?? null,
     venue_name: venue?.name ?? '',
@@ -479,6 +493,27 @@ export async function searchEvents(
   // and maps 'sold_out'/'limited' to badge strings; 'available'/'unknown' → null.
   const availabilityMap = await fetchPrimaryOfferAvailability(supabase, eventIds);
 
+  // Språkstöd 2026-09-21: optional event_translations lookup when locale
+  // is provided. Identical RLS posture to the events_public read above.
+  // If the table is empty/missing or the SELECT errors out we silently
+  // degrade — every row falls back to title_sv, current behavior.
+  const translationByEvent: Map<string, { title?: string | null; description?: string | null }> = new Map();
+  if (input.locale && eventIds.length > 0) {
+    const { data: translations, error: tErr } = await supabase
+      .from('event_translations')
+      .select('event_id, title, description')
+      .eq('language', input.locale)
+      .in('event_id', eventIds);
+    if (!tErr && translations) {
+      for (const t of translations as Array<{ event_id: string; title?: string | null; description?: string | null }>) {
+        translationByEvent.set(t.event_id, {
+          title: t.title ?? null,
+          description: t.description ?? null,
+        });
+      }
+    }
+  }
+
   const events: EventCard[] = filteredByCity.map((r) =>
     toCard(
       r,
@@ -486,6 +521,7 @@ export async function searchEvents(
       fallbackCity,
       artistMap.get(r.id),
       availabilityMap.get(r.id),
+      translationByEvent.get(r.id) ?? null,
     ),
   );
 
