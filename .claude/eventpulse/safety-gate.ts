@@ -17,6 +17,7 @@
  */
 
 import * as fs from 'fs';
+import * as path from 'path';
 
 // ---- Blocklist patterns ----------------------------------------------------
 
@@ -46,11 +47,11 @@ interface EditRule {
 }
 
 // Vault files that are machine-synced (vault-sync sub-agent protocol, CLAUDE.md).
-// These MAY be edited by the main session without a role name: Claude Code's
-// real PreToolUse payloads never carry agent_name (verified empirically
-// 2026-09-04), so the vault rule's bypassRoles can never fire in production
-// and would block legitimate machine-syncs. Allowlist is exhaustive — every
-// other vault .md remains vault-sync-only.
+// These MAY be edited by the main session without a role name: the allowlist
+// keeps routine machine-syncs working even when no role can be resolved.
+// Since 2026-09-20 the role logic IS live again — resolveAgentName() derives
+// the role from the calling subagent's transcript meta (see below). Allowlist
+// is exhaustive — every other vault .md remains vault-sync-only.
 const VAULT_MACHINE_SYNC_FILES: string[] = [
   "/01-Projects/EventPulse/00-Core/01-Current-State.md",
   "/01-Projects/EventPulse/00-Core/01-Current-State.proposed.md",
@@ -111,6 +112,41 @@ function normalizeEditPath(raw: string, cwd: string): string {
   return `${cwd.replace(/\/$/, "")}/${raw}`;
 }
 
+// ---- Role resolution --------------------------------------------------------
+//
+// History: 2026-09-04 verified that PreToolUse payloads never carry
+// agent_name — the role logic was dead. 2026-09-20 re-verified against
+// live payloads (see /tmp debug probe in the session): subagent tool calls
+// DO carry `agent_id` + `agent_type` directly (e.g.
+// {"agent_type":"vault-sync", ...}), while main-session calls carry
+// neither. `transcript_path` points at the MAIN session transcript even
+// for subagent calls, so the transcript-detour was abandoned.
+//
+// Resolution order (fail-closed: unresolvable → undefined → blocked):
+//   1. Explicit agent_name/agentName (legacy/synthetic payloads).
+//   2. agent_type/agentType (current Claude Code subagent payloads).
+//   3. transcript_path → sibling subagent meta.json (older runtime shape).
+function resolveAgentName(payload: any): string | undefined {
+  const explicit = payload.agent_name || payload.agentName;
+  if (typeof explicit === "string" && explicit) return explicit;
+
+  const typed = payload.agent_type || payload.agentType;
+  if (typeof typed === "string" && typed) return typed;
+
+  const tp: string = typeof payload.transcript_path === "string" ? payload.transcript_path : "";
+  const m = /\/subagents\/(agent-[^/\\]+)\.jsonl$/.exec(tp);
+  if (!m) return undefined;
+  try {
+    const metaPath = path.join(path.dirname(tp), `${m[1]}.meta.json`);
+    const meta = JSON.parse(fs.readFileSync(metaPath, "utf8"));
+    const t = meta.agentType || meta.agent_type;
+    if (typeof t === "string" && t) return t;
+  } catch {
+    // meta.json missing/unreadable → stay undefined (fail-closed).
+  }
+  return undefined;
+}
+
 // ---- Main ------------------------------------------------------------------
 
 async function main(): Promise<void> {
@@ -135,7 +171,7 @@ async function main(): Promise<void> {
 
   const toolName: string = payload.tool_name || "";
   const toolInput = payload.tool_input || {};
-  const agentName: string | undefined = payload.agent_name || undefined;
+  const agentName: string | undefined = resolveAgentName(payload);
   const cwd: string = payload.cwd || process.cwd();
 
   if (isLead(agentName)) {

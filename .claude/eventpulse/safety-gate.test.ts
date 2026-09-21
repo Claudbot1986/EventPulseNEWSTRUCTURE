@@ -10,11 +10,11 @@
  *   6. Edit normalizer.ts     non-lead  → ALLOW
  *   7–12. vault-regelns fil-allowlist (se VAULT_CASES nedan)
  *
- * Notera: Claude Codes riktiga PreToolUse-payload saknar agent_name —
- * därför kan roll-bypassen aldrig trigga i produktion (empiriskt
- * verifierat; vault-regeln har därför en fil-allowlist, se Steg 2 i
- * planen 2026-09-04). Testfallen syntetiserar agent_name för att ändå
- * testa regel-logiken inklusive bypass-design-intent.
+ * Notera: Claude Code-payloads saknar agent_name (verifierat 2026-09-04),
+ * men subagent-anrop BÄR agent_id + agent_type (verifierat 2026-09-20
+ * mot live-payloads). Äldre testfall syntetiserar agent_name; se blocket
+ * "real payload shape" för den aktuella formen. transcript_path pekar på
+ * HUVUDsessionens transcript även för subagent-anrop.
  *
  * T0094: den tidigare versionen var ett skript med hårdkodad REPO-sökväg
  * till en gammal projektkopia (/Users/claudgashi/EventPulse-recovery/…)
@@ -22,6 +22,8 @@
  */
 
 import { spawnSync } from "child_process";
+import * as fs from "fs";
+import * as os from "os";
 import * as path from "path";
 import { describe, expect, it } from "vitest";
 
@@ -229,6 +231,254 @@ describe("safety-gate vault rule (fil-allowlist)", () => {
       });
       const exitCode = r.status ?? -1;
       expect(exitCode).toBe(c.expect === "block" ? 2 : 0);
+    });
+  }
+});
+
+// ---------------------------------------------------------------------------
+// Role resolution via transcript_path → subagent meta.json (2026-09-20).
+//
+// Claude Codes riktiga PreToolUse-payload saknar agent_name, men BÄR
+// transcript_path. För verktygsanrop inne i en subagent pekar den på
+//   ~/.claude/projects/<proj>/<session>/subagents/agent-<agentId>.jsonl
+// vars sibling agent-<agentId>.meta.json innehåller {"agentType": "<role>"}.
+// Hooken löser rollen därifrån. Fail-closed: kan rollen inte lösas stannar
+// den undefined och reglerna blockerar precis som förut.
+// ---------------------------------------------------------------------------
+
+const VAULT_FILE = path.join(
+  REPO,
+  "00-Vault",
+  "01-Projects",
+  "EventPulse",
+  "02-Operations",
+  "03-Current-Task.md",
+);
+
+/** Bygg en fejkad subagent-transcript: subagents/agent-<id>.jsonl + .meta.json */
+function makeSubagentTranscript(root: string, agentId: string, agentType?: string): string {
+  const dir = path.join(root, "session-1", "subagents");
+  fs.mkdirSync(dir, { recursive: true });
+  const transcript = path.join(dir, `agent-${agentId}.jsonl`);
+  fs.writeFileSync(transcript, "{}\n");
+  if (agentType !== undefined) {
+    fs.writeFileSync(
+      path.join(dir, `agent-${agentId}.meta.json`),
+      JSON.stringify({ agentType }),
+    );
+  }
+  return transcript;
+}
+
+function roleCase(
+  name: string,
+  toolName: string,
+  toolInput: Record<string, unknown>,
+  transcriptPath: string,
+  expect: "block" | "allow",
+): GateCase {
+  return {
+    name,
+    payload: { tool_name: toolName, tool_input: toolInput, transcript_path: transcriptPath, cwd: REPO },
+    expect,
+  };
+}
+
+describe("safety-gate role resolution (transcript_path → meta.json)", () => {
+  let tmpRoot = "";
+
+  const setup = () => {
+    tmpRoot = fs.mkdtempSync(path.join(os.tmpdir(), "ep-gate-test-"));
+  };
+  const teardown = () => {
+    if (tmpRoot) fs.rmSync(tmpRoot, { recursive: true, force: true });
+    tmpRoot = "";
+  };
+
+  describe("vault-regel", () => {
+    it("vault-sync via meta.json → ALLOW", () => {
+      setup();
+      try {
+        const tp = makeSubagentTranscript(tmpRoot, "v1", "vault-sync");
+        const r = spawnSync(TSX, [HOOK], {
+          input: JSON.stringify(
+            roleCase("", "Edit", { file_path: VAULT_FILE }, tp, "allow").payload,
+          ),
+          encoding: "utf8",
+          cwd: REPO,
+        });
+        expect(r.status ?? -1).toBe(0);
+      } finally {
+        teardown();
+      }
+    });
+
+    it("annan roll (ep-qa) via meta.json → BLOCK", () => {
+      setup();
+      try {
+        const tp = makeSubagentTranscript(tmpRoot, "q1", "ep-qa");
+        const r = spawnSync(TSX, [HOOK], {
+          input: JSON.stringify(
+            roleCase("", "Edit", { file_path: VAULT_FILE }, tp, "block").payload,
+          ),
+          encoding: "utf8",
+          cwd: REPO,
+        });
+        expect(r.status ?? -1).toBe(2);
+      } finally {
+        teardown();
+      }
+    });
+
+    it("meta.json saknas → fail-closed BLOCK", () => {
+      setup();
+      try {
+        const tp = makeSubagentTranscript(tmpRoot, "nometa", undefined);
+        const r = spawnSync(TSX, [HOOK], {
+          input: JSON.stringify(
+            roleCase("", "Edit", { file_path: VAULT_FILE }, tp, "block").payload,
+          ),
+          encoding: "utf8",
+          cwd: REPO,
+        });
+        expect(r.status ?? -1).toBe(2);
+      } finally {
+        teardown();
+      }
+    });
+
+    it("transcript_path utanför subagents/ (huvudsession) → BLOCK", () => {
+      setup();
+      try {
+        const mainTranscript = path.join(tmpRoot, "session-1", "main.jsonl");
+        fs.mkdirSync(path.dirname(mainTranscript), { recursive: true });
+        fs.writeFileSync(mainTranscript, "{}\n");
+        const r = spawnSync(TSX, [HOOK], {
+          input: JSON.stringify(
+            roleCase("", "Edit", { file_path: VAULT_FILE }, mainTranscript, "block").payload,
+          ),
+          encoding: "utf8",
+          cwd: REPO,
+        });
+        expect(r.status ?? -1).toBe(2);
+      } finally {
+        teardown();
+      }
+    });
+  });
+
+  describe("bash-blocklist", () => {
+    it("lead via meta.json + force-push → ALLOW", () => {
+      setup();
+      try {
+        const tp = makeSubagentTranscript(tmpRoot, "l1", "lead");
+        const r = spawnSync(TSX, [HOOK], {
+          input: JSON.stringify(
+            roleCase("", "Bash", { command: "git push --force origin main" }, tp, "allow").payload,
+          ),
+          encoding: "utf8",
+          cwd: REPO,
+        });
+        expect(r.status ?? -1).toBe(0);
+      } finally {
+        teardown();
+      }
+    });
+
+    it("non-lead via meta.json + force-push → BLOCK", () => {
+      setup();
+      try {
+        const tp = makeSubagentTranscript(tmpRoot, "w1", "ep-qa");
+        const r = spawnSync(TSX, [HOOK], {
+          input: JSON.stringify(
+            roleCase("", "Bash", { command: "git push --force origin main" }, tp, "block").payload,
+          ),
+          encoding: "utf8",
+          cwd: REPO,
+        });
+        expect(r.status ?? -1).toBe(2);
+      } finally {
+        teardown();
+      }
+    });
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Real payload shape (verifierad mot live-payloads 2026-09-20): subagent-anrop
+// bär agent_id + agent_type; transcript_path pekar på HUVUDtranskriptet.
+// Huvudsessionens egna anrop saknar båda fälten.
+// ---------------------------------------------------------------------------
+const MAIN_TRANSCRIPT = "/Users/claudgashi/.claude/projects/-proj/session-1.jsonl";
+
+const REAL_SHAPE_CASES: GateCase[] = [
+  {
+    name: "subagent vault-sync (agent_type) + vault-fil → ALLOW",
+    payload: {
+      tool_name: "Edit",
+      tool_input: { file_path: VAULT_FILE },
+      agent_id: "a05d61430f0ab7536",
+      agent_type: "vault-sync",
+      transcript_path: MAIN_TRANSCRIPT,
+      cwd: REPO,
+    },
+    expect: "allow",
+  },
+  {
+    name: "subagent general-purpose (agent_type) + vault-fil → BLOCK",
+    payload: {
+      tool_name: "Edit",
+      tool_input: { file_path: VAULT_FILE },
+      agent_id: "af549798ad46e64f2",
+      agent_type: "general-purpose",
+      transcript_path: MAIN_TRANSCRIPT,
+      cwd: REPO,
+    },
+    expect: "block",
+  },
+  {
+    name: "huvudsession (utan agent-fält) + vault-fil → BLOCK",
+    payload: {
+      tool_name: "Edit",
+      tool_input: { file_path: VAULT_FILE },
+      transcript_path: MAIN_TRANSCRIPT,
+      cwd: REPO,
+    },
+    expect: "block",
+  },
+  {
+    name: "subagent lead (agent_type) + force-push → ALLOW",
+    payload: {
+      tool_name: "Bash",
+      tool_input: { command: "git push --force origin main" },
+      agent_id: "l123",
+      agent_type: "lead",
+      transcript_path: MAIN_TRANSCRIPT,
+      cwd: REPO,
+    },
+    expect: "allow",
+  },
+  {
+    name: "huvudsession (utan agent-fält) + force-push → BLOCK",
+    payload: {
+      tool_name: "Bash",
+      tool_input: { command: "git push --force origin main" },
+      transcript_path: MAIN_TRANSCRIPT,
+      cwd: REPO,
+    },
+    expect: "block",
+  },
+];
+
+describe("safety-gate role resolution (real payload shape: agent_type)", () => {
+  for (const c of REAL_SHAPE_CASES) {
+    it(c.name, () => {
+      const r = spawnSync(TSX, [HOOK], {
+        input: JSON.stringify(c.payload),
+        encoding: "utf8",
+        cwd: REPO,
+      });
+      expect(r.status ?? -1).toBe(c.expect === "block" ? 2 : 0);
     });
   }
 });
