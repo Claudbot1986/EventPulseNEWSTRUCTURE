@@ -163,10 +163,19 @@ async function main() {
     const cutoff = new Date(Date.now() + args.withinDays * 24 * 60 * 60 * 1000).toISOString();
     query = query.lt('start_time', cutoff);
   }
-  const { data: events, error } = await query.limit(args.limit);
-  if (error) {
-    console.error('events fetch:', error.message);
-    process.exit(1);
+  // PostgREST caps a single response at 1000 rows regardless of .limit() —
+  // page with .range() so --limit 10000 actually reaches all 5649+ events.
+  const events = [];
+  const PAGE = 1000;
+  for (let from = 0; from < args.limit; from += PAGE) {
+    const to = Math.min(from + PAGE, args.limit) - 1;
+    const { data, error } = await query.range(from, to);
+    if (error) {
+      console.error('events fetch:', error.message);
+      process.exit(1);
+    }
+    events.push(...(data || []));
+    if (!data || data.length < to - from + 1) break;
   }
   console.log(`[translate] fetched ${events.length} future events`);
 
