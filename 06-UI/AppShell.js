@@ -54,6 +54,11 @@ const STORAGE_BUDGET_MS = 800;
 // process — the old per-tab App splash (which flashed black on every
 // Utforska open) is gone.
 const SPLASH_MIN_MS = 3000;
+// Absolute ceiling for the explore-readiness gate (2026-09-20): the splash
+// waits for Utforska's first feed load, but a stalled network must never
+// park the user on a black frame. At the cap we unblock and let the tab
+// tree's own loading/error surfaces take over.
+const SPLASH_MAX_MS = 10000;
 export { PENDING_AGENT_MESSAGE_KEY };
 
 export default function AppShell() {
@@ -76,6 +81,17 @@ export default function AppShell() {
   // Splash timing refs — see maybeHideSplash below.
   const splashShownAtRef = useRef(Date.now());
   const splashHiddenRef = useRef(false);
+  // Explore-readiness gate (2026-09-20, "hängde sig" report): the splash
+  // used to drop at 3s, so a Hem chip tap could mount Utforska cold — mid
+  // fetch of every Hem section — and freeze the JS thread. Now Utforska
+  // mounts EAGERLY behind the splash and the splash holds until its first
+  // feed load settles (success or error), capped by SPLASH_MAX_MS.
+  const [exploreReady, setExploreReady] = useState(false);
+  const handleExploreReady = useCallback(() => setExploreReady(true), []);
+  // Ref mirror of "the tab tree is coming but Utforska hasn't signaled" —
+  // maybeHideSplash reads refs (never stale closures) because its callers
+  // fire synchronously right after setState.
+  const splashBlockedRef = useRef(false);
   // Keep-alive tabs: a tab is mounted the first time it is activated and then
   // kept mounted (display:none while inactive) so switching tabs never
   // remounts/refetches. 'home' is the landing tab so it starts mounted.
@@ -182,6 +198,7 @@ export default function AppShell() {
   // call maybeHideSplash; the first one to satisfy the constraint wins.
   const maybeHideSplash = useCallback(() => {
     if (splashHiddenRef.current) return;
+    if (splashBlockedRef.current) return; // Utforska hasn't signaled yet
     const wait = SPLASH_MIN_MS - (Date.now() - splashShownAtRef.current);
     if (wait > 0) {
       setTimeout(maybeHideSplash, wait);
@@ -190,6 +207,29 @@ export default function AppShell() {
     splashHiddenRef.current = true;
     SplashScreen.hideAsync().catch(() => {});
   }, []);
+
+  // Declared BEFORE the triggers below so the blocked-ref is always fresh
+  // when they call maybeHideSplash (same flush, effects run in order).
+  useEffect(() => {
+    // Gate applies only once the tab tree is on its way. Onboarding and
+    // auth deep-link surfaces render INSTEAD of the tab tree — Utforska
+    // never mounts behind them, so the gate must stay out of their way.
+    splashBlockedRef.current =
+      onboardingState === 'done' && !magicLinkUrl && !pendingEmail && !exploreReady;
+  }, [onboardingState, magicLinkUrl, pendingEmail, exploreReady]);
+
+  useEffect(() => {
+    if (exploreReady) maybeHideSplash();
+  }, [exploreReady, maybeHideSplash]);
+
+  // Hard cap — never park on the splash if the network stalls outright.
+  useEffect(() => {
+    const id = setTimeout(() => {
+      splashBlockedRef.current = false;
+      maybeHideSplash();
+    }, SPLASH_MAX_MS);
+    return () => clearTimeout(id);
+  }, [maybeHideSplash]);
 
   useEffect(() => {
     let alive = true;
@@ -399,15 +439,21 @@ export default function AppShell() {
     body = (
       <>
         <NetworkBanner />
-        {mountedTabsRef.current.explore && (
-          <View style={activeTab === 'explore' ? styles.tabPanel : styles.tabHidden}>
-            <App
-              onUserLoggedOut={handleUserLoggedOut}
-              onOpenLogin={() => setShowLogin(true)}
-              chipNonce={chipNonce}
-            />
-          </View>
-        )}
+        {/*
+          Utforska mounts EAGERLY with the tab tree — not on first visit.
+          Its initial feed load runs behind the splash gate (onExploreReady),
+          so Hem chip taps never hit a cold, still-loading explore tree
+          ("hängde sig", 2026-09-20). Hidden via tabHidden until visited.
+        */}
+        <View style={activeTab === 'explore' ? styles.tabPanel : styles.tabHidden}>
+          <App
+            onUserLoggedOut={handleUserLoggedOut}
+            onOpenLogin={() => setShowLogin(true)}
+            chipNonce={chipNonce}
+            onExploreReady={handleExploreReady}
+            isActive={activeTab === 'explore'}
+          />
+        </View>
         {mountedTabsRef.current.home && (
           <View style={activeTab === 'home' ? styles.tabPanel : styles.tabHidden}>
             <HomeScreen onChipPress={handleChipPress} onCardPress={handleHomeCardPress} />

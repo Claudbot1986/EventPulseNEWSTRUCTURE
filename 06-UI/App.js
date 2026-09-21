@@ -525,7 +525,7 @@ function StateView({ title, detail, actionLabel, onAction }) {
   );
 }
 
-function HomeScreen({ onEventPress, scrollPositionRef, pendingPrompt, dismissPendingPrompt }) {
+function HomeScreen({ onEventPress, scrollPositionRef, pendingPrompt, dismissPendingPrompt, onInitialLoadSettled }) {
   const { t, language } = useI18n();
   const [events, setEvents] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -604,6 +604,17 @@ function HomeScreen({ onEventPress, scrollPositionRef, pendingPrompt, dismissPen
   // reading the binding earlier throws a TDZ ReferenceError that unmounts
   // the whole tree (white screen).
   const loadEventsRef = useRef(null);
+  // Splash gate (2026-09-20): AppShell keeps its splash up until Utforska's
+  // INITIAL feed load settles. Fires exactly once — on success AND on
+  // error (the error surface has its own retry; a failed load must never
+  // hold the splash hostage).
+  const readySignaledRef = useRef(false);
+  useEffect(() => {
+    if (readySignaledRef.current) return;
+    if (loading) return;
+    readySignaledRef.current = true;
+    onInitialLoadSettled?.();
+  }, [loading, onInitialLoadSettled]);
   // Debounce AppState 'active' so cold-start + resume within 5s don't pile
   // up duplicate fetches. Initialized to Date.now() so the iOS
   // immediate-on-mount 'change' event (not a real foreground transition)
@@ -1371,7 +1382,7 @@ function DetailsScreen({ event, onBack }) {
   );
 }
 
-export default function App({ onUserLoggedOut, onOpenLogin, chipNonce = 0 }) {
+export default function App({ onUserLoggedOut, onOpenLogin, chipNonce = 0, onExploreReady, isActive = true }) {
   const { t } = useI18n();
   const [selectedEvent, setSelectedEvent] = useState(null);
   const scrollPositionRef = useRef(0);
@@ -1387,10 +1398,14 @@ export default function App({ onUserLoggedOut, onOpenLogin, chipNonce = 0 }) {
   //
   // Fire a "home" section impression every time the user lands back on the
   // feed. Skipped while a details screen is showing so we don't double-count.
+  // isActive gate (2026-09-21): Utforska now mounts EAGERLY behind the
+  // splash gate — without it we'd log an impression for a screen the user
+  // may never open.
   useEffect(() => {
+    if (!isActive) return;
     if (selectedEvent) return;
     void analyticsClient.sectionImpression('home');
-  }, [selectedEvent]);
+  }, [selectedEvent, isActive]);
 
   // T0063 — drain the pending agent prompt set by HomeScreen chip tap.
   // AppShell writes `eventpulse.pending_agent_message` and switches to the
@@ -1559,7 +1574,7 @@ export default function App({ onUserLoggedOut, onOpenLogin, chipNonce = 0 }) {
     if (activeTab === 'profile') {
       return <ProfileScreen onLoggedOut={handleLoggedOut} onOpenLogin={onOpenLogin} />;
     }
-    return <HomeScreen onEventPress={handleEventPress} scrollPositionRef={scrollPositionRef} pendingPrompt={pendingPrompt} dismissPendingPrompt={dismissPendingPrompt} onOpenLogin={onOpenLogin} />;
+    return <HomeScreen onEventPress={handleEventPress} scrollPositionRef={scrollPositionRef} pendingPrompt={pendingPrompt} dismissPendingPrompt={dismissPendingPrompt} onOpenLogin={onOpenLogin} onInitialLoadSettled={onExploreReady} />;
   };
 
   const showTabBar = !selectedEvent;
