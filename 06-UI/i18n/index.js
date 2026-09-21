@@ -43,6 +43,7 @@ import nl from './strings/nl';
 import fr from './strings/fr';
 import zhHans from './strings/zhHans';
 import it from './strings/it';
+import ar from './strings/ar';
 
 const STORAGE_KEY = 'eventpulse.language';
 
@@ -57,6 +58,7 @@ const DICTIONARIES = {
   fr,
   'zh-Hans': zhHans,
   it,
+  ar,
 };
 
 const LanguageContext = createContext(null);

@@ -70,6 +70,15 @@ describe('matchDeviceLocale', () => {
     expect(matchDeviceLocale({ languageTag: 'nn-NO', languageCode: 'nn' })).toBe('no');
   });
 
+  it('maps Arabic region variants (ar-SA, ar-EG, ar-AE) → ar', () => {
+    // 2026-09-21: Arabic added. Region suffixes (SA/EG/AE/MA…) all collapse
+    // to the bare 'ar' tag; we don't ship region-specific dialects yet.
+    expect(matchDeviceLocale({ languageTag: 'ar-SA', languageCode: 'ar' })).toBe('ar');
+    expect(matchDeviceLocale({ languageTag: 'ar-EG', languageCode: 'ar' })).toBe('ar');
+    expect(matchDeviceLocale({ languageTag: 'ar-AE', languageCode: 'ar' })).toBe('ar');
+    expect(matchDeviceLocale({ languageTag: 'ar', languageCode: 'ar' })).toBe('ar');
+  });
+
   it('maps Simplified Chinese variants → zh-Hans', () => {
     expect(
       matchDeviceLocale({ languageTag: 'zh-Hans-CN', languageCode: 'zh', scriptCode: 'Hans' }),
@@ -94,8 +103,10 @@ describe('matchDeviceLocale', () => {
 });
 
 describe('language list', () => {
-  it('contains exactly the 10 data-backed tags in picker order', () => {
-    // SBR/Tillväxtverket 2025 — India fell out of the top markets → it, not hi.
+  it('contains exactly the 11 data-backed tags in picker order', () => {
+    // 2026-09-20 baseline: SBR/Tillväxtverket 2025 — India fell out of the
+    // top markets → it, not hi. 2026-09-21: + 'ar' (Arabic) — UI-only, agent
+    // API is not extended in the same PR.
     expect(LANGUAGES.map((l: { tag: string }) => l.tag)).toEqual([
       'sv',
       'en',
@@ -107,12 +118,14 @@ describe('language list', () => {
       'fr',
       'zh-Hans',
       'it',
+      'ar',
     ]);
   });
 
   it('default is sv and isSupportedLanguage guards the tag set', () => {
     expect(DEFAULT_LANGUAGE).toBe('sv');
     expect(isSupportedLanguage('zh-Hans')).toBe(true);
+    expect(isSupportedLanguage('ar')).toBe(true);
     expect(isSupportedLanguage('hi')).toBe(false);
     expect(isSupportedLanguage('sv-SE')).toBe(false);
     expect(isSupportedLanguage(undefined)).toBe(false);

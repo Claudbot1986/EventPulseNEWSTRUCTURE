@@ -107,6 +107,19 @@ const it = {
   ],
 };
 
+// Arabic day names (Språkstöd 2026-09-21). UAX #9:6 RLM / LRM-free; field
+// arrays are pure data and rendered standalone, so bidi handling belongs to
+// the surrounding UI text direction, not these constants.
+const ar = {
+  daysShort: ['أحد', 'إثن', 'ثلا', 'أرب', 'خمي', 'جمع', 'سبت'],
+  daysFull: ['الأحد', 'الإثنين', 'الثلاثاء', 'الأربعاء', 'الخميس', 'الجمعة', 'السبت'],
+  monthsShort: ['ينا', 'فبر', 'مار', 'أبر', 'ماي', 'يون', 'يول', 'أغس', 'سبت', 'أكت', 'نوف', 'ديس'],
+  monthsFull: [
+    'يناير', 'فبراير', 'مارس', 'أبريل', 'مايو', 'يونيو',
+    'يوليو', 'أغسطس', 'سبتمبر', 'أكتوبر', 'نوفمبر', 'ديسمبر',
+  ],
+};
+
 const DATE_NAMES = {
   sv,
   en,
@@ -118,6 +131,7 @@ const DATE_NAMES = {
   fr,
   'zh-Hans': zhHans,
   it,
+  ar,
 };
 
 /**

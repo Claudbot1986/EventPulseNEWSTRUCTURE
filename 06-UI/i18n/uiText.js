@@ -24,6 +24,7 @@ import nl from './strings/nl';
 import fr from './strings/fr';
 import zhHans from './strings/zhHans';
 import it from './strings/it';
+import ar from './strings/ar';
 
 const DICTIONARIES = {
   sv,
@@ -36,6 +37,7 @@ const DICTIONARIES = {
   fr,
   'zh-Hans': zhHans,
   it,
+  ar,
 };
 
 let currentLanguage = DEFAULT_LANGUAGE;
