@@ -49,7 +49,8 @@ import {
 
 import { fetchFeed, fetchSavedEvents, fetchRecommendedEvents, fetchSuggestedPrompts, fetchCachedRecommendations, fetchRecentQueries, fetchCuratedCollections, fetchAiImageSmoketest } from '../services/agentClient';
 import { resolveConsumerReasons } from '../utils/rankReasonLabels';
-import { compareDayTimeAsc, dayLabelForIso, upcomingWeekendIsoSet } from './home/weekendDates';
+import { compareDayTimeAsc, upcomingWeekendIsoSet } from './home/weekendDates';
+import { dayTimeLabel } from './home/cardTimeLabel';
 import { pickHappeningNow, happeningTitleParts } from './home/happeningNow';
 import { dateNamesFor } from '../i18n/dateNames';
 import { useI18n } from '../i18n';
@@ -215,10 +216,12 @@ function PriceChip({ event }) {
 function EventCardCompact({ event, onPress, showDay = false }) {
   const { t, language } = useI18n();
   const time = event.time || '';
-  // Weekend sections pass showDay (2026-09-21): the time line reads
-  // "Fre 18:00" so a Fri–Sun row of cards shows which day each card is.
-  const dayLabel = showDay ? dayLabelForIso(event.date, language) : '';
-  const timeText = [dayLabel, time].filter(Boolean).join(' ');
+  // showDay sections (2026-09-21 — weekend + GRATIS + För dig on Hem): the
+  // time line reads "17:30 • LÖR" so the day travels with every card. The
+  // helper also returns a screen-reader variant with the full day name.
+  const dayInfo = showDay ? dayTimeLabel(event, language) : null;
+  const timeText = dayInfo ? dayInfo.display : time;
+  const spokenWhen = dayInfo ? dayInfo.spoken : time;
   // RQ5 (2026-09-20): always-visible "why" chips. Consumer variant filters
   // ops signals ("Gammal data", låg konfidens …) — those never belong on a
   // browsing card (2026-09-21 user feedback). Unknown enums are dropped by
@@ -229,9 +232,9 @@ function EventCardCompact({ event, onPress, showDay = false }) {
   );
   const venue = event.venue_name || event.venue || t('common.venueMissing');
   // sv-cardA11y '{title}{when} på {venue}': `when` carries its own leading
-  // space so an absent time leaves no double space. Uses the composite
-  // timeText so the spoken label includes the day on weekend cards.
-  const when = timeText ? ` ${t('common.atTime', { time: timeText })}` : '';
+  // space so an absent time leaves no double space. Uses the spoken variant
+  // so day cards read "…lördag 17:30" instead of the bullet glyph.
+  const when = spokenWhen ? ` ${t('common.atTime', { time: spokenWhen })}` : '';
   return (
     <Pressable
       style={({ pressed }) => [styles.card, pressed && styles.cardPressed]}
@@ -642,7 +645,7 @@ function FreeSection({ onCardPress }) {
       {status === 'ready' && events.length > 0 && (
         <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.cardScroll}>
           {events.map((ev) => (
-            <EventCardCompact key={ev.id} event={ev} onPress={onCardPress} />
+            <EventCardCompact key={ev.id} event={ev} onPress={onCardPress} showDay />
           ))}
         </ScrollView>
       )}
@@ -691,7 +694,7 @@ function RecommendedSection({ onCardPress }) {
       {status === 'ready' && events.length > 0 && (
         <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.cardScroll}>
           {events.map((ev) => (
-            <EventCardCompact key={ev.id} event={ev} onPress={onCardPress} />
+            <EventCardCompact key={ev.id} event={ev} onPress={onCardPress} showDay />
           ))}
         </ScrollView>
       )}
