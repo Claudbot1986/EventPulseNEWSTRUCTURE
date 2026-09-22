@@ -613,7 +613,7 @@ describe('hourInTimeZone (helper)', () => {
  * weaker β (DWELL_BOOST_BETA=2 < CATEGORY_BOOST_BETA=8) because a hold is
  * weaker evidence of interest than an explicit save.
  */
-describe('rankEvents — dwell personalization prior (3s card hold)', () => {
+describe('rankEvents — dwell personalization prior (card hold / list view)', () => {
   const m1 = card({ id: 'm1', start_time: '2026-08-17T20:00:00Z', category_slug: 'music' });
   const t1 = card({ id: 't1', start_time: '2026-08-17T20:00:00Z', category_slug: 'theater' });
 

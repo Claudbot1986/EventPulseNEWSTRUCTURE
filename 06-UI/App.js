@@ -344,6 +344,31 @@ function recordCardHold(eventId) {
   }).catch(() => {});
 }
 
+// Fas A.2 (2026-09-22, user decision "65-100% kör 1"): passive interest —
+// pause on a card WITHOUT touching the screen. A card that stays ≥65%
+// visible for 3 s registers a silent dwell (metadata.source='list_view'),
+// max once per event per visit. Scrolling away cancels the timer, so a
+// sweep-past never counts. Same 'dwell' interaction type server-side as
+// card_hold / details-viewing — no API or schema change.
+const LIST_VIEW_MIN_MS = 3000;
+const LIST_VIEW_CONFIG = { itemVisiblePercentThreshold: 65 };
+
+/** Event id behind a Utforska row: grouped rows show events[0], plain rows the item. */
+function eventIdOfListItem(item) {
+  if (!item) return null;
+  if (item.isGrouped) return item.events?.[0]?.id || null;
+  return item.id || null;
+}
+
+function recordListViewDwell(eventId) {
+  if (!eventId) return;
+  recordEventInteraction({
+    eventId,
+    interaction: 'dwell',
+    metadata: { source: 'list_view' },
+  }).catch(() => {});
+}
+
 function EventItem({ event, onPress }) {
   const { t } = useI18n();
   const venue = getVenueLabel(event);
@@ -642,6 +667,75 @@ function HomeScreen({ onEventPress, scrollPositionRef, pendingIntent, dismissPen
   // immediate-on-mount 'change' event (not a real foreground transition)
   // is also debounced away.
   const lastForegroundFetchRef = useRef(Date.now());
+  // Fas A.2 — passive list-view tracking state. `listViewRecordedRef` dedupes
+  // (one list_view dwell per event per visit); `listViewTimersRef` holds the
+  // pending 3s timers, cancelled when the row leaves the 65% viewable set;
+  // `listViewVisibleRef` mirrors the currently-viewable ids so tracking can
+  // RESUME for on-screen cards after a page load without new scroll events.
+  const listViewRecordedRef = useRef(new Set());
+  const listViewTimersRef = useRef(new Map());
+  const listViewVisibleRef = useRef(new Set());
+  const listLoadActiveRef = useRef(false);
+  const startListViewTimer = useCallback((eventId) => {
+    if (!eventId) return;
+    const timers = listViewTimersRef.current;
+    if (listViewRecordedRef.current.has(eventId) || timers.has(eventId)) return;
+    timers.set(eventId, setTimeout(() => {
+      timers.delete(eventId);
+      listViewRecordedRef.current.add(eventId);
+      recordListViewDwell(eventId);
+    }, LIST_VIEW_MIN_MS));
+  }, []);
+  const cancelListViewTimer = useCallback((eventId) => {
+    const timers = listViewTimersRef.current;
+    const t = timers.get(eventId);
+    if (t) {
+      clearTimeout(t);
+      timers.delete(eventId);
+    }
+  }, []);
+  // User rule (2026-09-22): while events are loading, view-tracking pauses —
+  // a pause during the loading spinner must not count, and the list can shift
+  // when new rows land. When the load finishes, tracking RESUMES for the
+  // cards already on screen (no scroll needed to re-prime the timers).
+  useEffect(() => {
+    listLoadActiveRef.current = loading || loadingMore;
+    const timers = listViewTimersRef.current;
+    if (loading || loadingMore) {
+      // Non-append loads REPLACE the list — old visible ids become invalid.
+      if (loading) listViewVisibleRef.current.clear();
+      for (const t of timers.values()) clearTimeout(t);
+      timers.clear();
+    } else {
+      for (const eventId of listViewVisibleRef.current) startListViewTimer(eventId);
+    }
+  }, [loading, loadingMore, startListViewTimer]);
+  // RN requires onViewableItemsChanged + viewabilityConfig to be STABLE
+  // across renders (identity change logs a warning and resets tracking) —
+  // hence useCallback([]) + module-level LIST_VIEW_CONFIG.
+  const handleViewableItemsChanged = useCallback(({ changed }) => {
+    const visible = listViewVisibleRef.current;
+    for (const entry of changed) {
+      const eventId = eventIdOfListItem(entry.item);
+      if (!eventId) continue;
+      if (entry.isViewable) visible.add(eventId);
+      else visible.delete(eventId);
+    }
+    if (listLoadActiveRef.current) return; // load in flight → tracking paused
+    for (const entry of changed) {
+      const eventId = eventIdOfListItem(entry.item);
+      if (!eventId) continue;
+      if (entry.isViewable) startListViewTimer(eventId);
+      else cancelListViewTimer(eventId);
+    }
+  }, [startListViewTimer, cancelListViewTimer]);
+  useEffect(() => {
+    const timers = listViewTimersRef.current;
+    return () => {
+      for (const t of timers.values()) clearTimeout(t);
+      timers.clear();
+    };
+  }, []);
 
   /**
    * Load events for the current `weekStart`.
@@ -1031,6 +1125,8 @@ function HomeScreen({ onEventPress, scrollPositionRef, pendingIntent, dismissPen
             </View>
           ) : null)}
           stickySectionHeadersEnabled={false}
+          viewabilityConfig={LIST_VIEW_CONFIG}
+          onViewableItemsChanged={handleViewableItemsChanged}
           onEndReached={() => {
             if (groupedEvents.length === 0) return;
             if (!loadingMore && hasMore) {

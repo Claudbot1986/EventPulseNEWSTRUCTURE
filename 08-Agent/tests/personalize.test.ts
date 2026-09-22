@@ -772,9 +772,9 @@ describe('T0075 verify line — rank_events + materialized weights shift order',
   });
 });
 
-// ── Fas A (2026-09-21): dwell interest signals (3s card hold) ─────────────
+// ── Fas A (2026-09-21): dwell interest signals (card hold 1s / list view 3s) ─
 
-describe('buildUserSignal — dwell interest signals (3s card hold)', () => {
+describe('buildUserSignal — dwell interest signals (card hold / list view)', () => {
   const userId = '00000000-0000-0000-0000-000000000004';
 
   function fakeDwellRow(daysAgo: number, interaction: string, cat: string | null, venue: string | null) {
