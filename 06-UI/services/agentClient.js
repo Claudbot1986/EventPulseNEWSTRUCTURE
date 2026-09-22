@@ -121,8 +121,19 @@ async function pickReachableAgentBase(timeoutMs = 2500) {
       const response = await fetch(`${base}/agent/health`, { signal: controller.signal });
       clearTimeout(timer);
       if (response.ok) {
-        cachedAgentBase = base;
-        return base;
+        // A 200 alone proves nothing on foreign networks: hotel/café captive
+        // portals answer 200 + a login page to ANY url (user 2026-09-22,
+        // phone off home wifi → poisoned base → 20s feed timeouts). Only the
+        // agent's real health body { ok: true } verifies a candidate.
+        try {
+          const body = await response.json();
+          if (body && body.ok === true) {
+            cachedAgentBase = base;
+            return base;
+          }
+        } catch (_bodyErr) {
+          // 200 with a non-JSON body (portal HTML) — not the agent, keep probing.
+        }
       }
     } catch {
       // try next candidate (Tailscale, then LAN)
@@ -694,18 +705,36 @@ export async function getFollowedEntities({ signal, timeoutMs = 4_000 } = {}) {
  * from start_time, url aliased to ticket_url, etc.) so the existing UI
  * code doesn't need to change.
  */
-export async function fetchFeed({ from, days = 7, signal, timeoutMs = 20_000 } = {}) {
-  // 20s (2026-09-22): device testing measured Fly cold starts at 5-7s warm-up
-  // and >12s during slow-network moments — the previous 12s abort produced
-  // FetchRequestCanceledException on the phone. 20s covers cold start + slow
-  // network while the loading state is still tolerable.
-  const baseUrl = await pickReachableAgentBase();
+/**
+ * Abort vs failure (2026-09-22). An aborted fetch is either
+ *   1. OUR OWN timeout — a real (slow) failure that callers should surface
+ *      (fetchFeed rethrows those as a friendly 'feed timeout' Error), or
+ *   2. an external cancel — app reload/teardown, superseding request, or a
+ *      transient device/network blip. fetchFeed silently retries case 2
+ *      ONCE (device logs 2026-09-22: mid-app FetchRequestCanceledException
+ *      repeatedly killed the helg-chip refetch and left a stale list under
+ *      an active filter). If the retry also cancels, fetchFeed rethrows the
+ *      cancel as-is and callers skip error state via this predicate.
+ * Expo native rejects with FetchRequestCanceledException; web/metro with a
+ * DOMException named AbortError. Match both shapes, and nothing else.
+ */
+export function isFetchCanceled(err) {
+  if (!err) return false;
+  if (err.name === 'AbortError') return true;
+  return /FetchRequestCanceledException/.test(String(err.message));
+}
+
+async function fetchFeedOnce({ baseUrl, from, days, signal, timeoutMs }) {
   const url = new URL(`${baseUrl}/agent/feed`);
   url.searchParams.set('from', from);
   url.searchParams.set('days', String(days));
 
   const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), timeoutMs);
+  let timedOut = false;
+  const timer = setTimeout(() => {
+    timedOut = true;
+    controller.abort();
+  }, timeoutMs);
   if (signal) {
     if (signal.aborted) controller.abort();
     else signal.addEventListener('abort', () => controller.abort(), { once: true });
@@ -714,6 +743,14 @@ export async function fetchFeed({ from, days = 7, signal, timeoutMs = 20_000 } =
   let response;
   try {
     response = await fetch(url.toString(), { signal: controller.signal });
+  } catch (err) {
+    if (timedOut) {
+      // Our own budget ran out: honest, human-readable failure — NOT the raw
+      // 'fetch failed: FetchRequestCanceledException…' noise. Never retried:
+      // 20s are already spent, another 20s would just double the wait.
+      throw new Error(`feed timeout after ${Math.round(timeoutMs / 1000)}s — agent API unreachable`);
+    }
+    throw err; // external cancel: fetchFeed's retry wrapper decides
   } finally {
     clearTimeout(timer);
   }
@@ -796,6 +833,31 @@ export async function fetchFeed({ from, days = 7, signal, timeoutMs = 20_000 } =
     // length so older agents (pre-2026-08-22) still render a sane number.
     total: typeof data.total === 'number' ? data.total : events.length,
   };
+}
+
+/**
+ * fetchFeed with one silent cancel-retry (2026-09-22). Device logs showed
+ * mid-app FetchRequestCanceledException blips repeatedly killing refetches
+ * (e.g. the helg chip's Friday window) — the stale list then emptied under
+ * the active filter and the user saw "Inga event matchar filtren" even
+ * though the DB had 43 Friday rows. Retry policy:
+ *   - native/network cancel (isFetchCanceled) → retry ONCE, silently;
+ *   - our own timeout → never retried (20s already spent — honest failure);
+ *   - caller-signal abort → never retried (the caller asked for it).
+ */
+export async function fetchFeed({ from, days = 7, signal, timeoutMs = 20_000 } = {}) {
+  // 20s (2026-09-22): device testing measured Fly cold starts at 5-7s warm-up
+  // and >12s during slow-network moments — the previous 12s abort produced
+  // FetchRequestCanceledException on the phone. 20s covers cold start + slow
+  // network while the loading state is still tolerable.
+  const baseUrl = await pickReachableAgentBase();
+  try {
+    return await fetchFeedOnce({ baseUrl, from, days, signal, timeoutMs });
+  } catch (err) {
+    if (signal?.aborted) throw err;
+    if (!isFetchCanceled(err)) throw err;
+    return await fetchFeedOnce({ baseUrl, from, days, signal, timeoutMs });
+  }
 }
 
 /**

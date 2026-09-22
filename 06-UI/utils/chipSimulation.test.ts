@@ -106,9 +106,9 @@ describe('chip simulation — curated chips keep their promises', () => {
     expect(survivors).toEqual(['sun-free-music']);
   });
 
-  it('Gratis i helgen: free events any Sat/Sun (never Friday)', () => {
+  it('Gratis i helgen: free events Fri/Sat/Sun — helgen börjar på fredag (user 2026-09-22)', () => {
     const { survivors } = simulateChip({ id: 'x', text: 'Gratis evenemang i Stockholm i helgen?', hints: { budget: 'free', day_filter: 'weekend' }, expected: {} as never });
-    expect(survivors).toEqual(['sat-free-music', 'sat-family', 'sun-free-music']);
+    expect(survivors).toEqual(['fri-free-theatre', 'sat-free-music', 'sat-family', 'sun-free-music']);
   });
 
   it('Konsert under 200 kr: music, free counts, 150≤200 keeps, 250/300 drop', () => {
@@ -137,10 +137,10 @@ describe('chip simulation — suggested prompts keep their promises', () => {
     ['Något intressant i dag?', {}, ['today-evening-classical', 'today-evening-jazz', 'today-tonight-music']],
     ['Konserter i Stockholm i helgen?', { category: 'konserter' }, ['sat-free-music', 'sat-paid-music-300', 'sat-cheap-music-150', 'sat-metal-250', 'sun-free-music']],
     ['Vad ska jag göra ikväll?', {}, ['today-evening-classical', 'today-evening-jazz', 'today-tonight-music']],
-    ['Gratis events i helgen?', {}, ['sat-free-music', 'sat-family', 'sun-free-music']],
+    ['Gratis events i helgen?', {}, ['fri-free-theatre', 'sat-free-music', 'sat-family', 'sun-free-music']],
     ['Konsert ikväll i Stockholm?', { category: 'konserter' }, ['today-evening-jazz']],
     ['Något gratis ikväll?', {}, []], // tonight + free: today's evening fixtures are all paid → honest empty
-    ['Vad händer i helgen?', {}, ['sat-free-music', 'sat-paid-music-300', 'sat-cheap-music-150', 'sat-family', 'sat-family-slug', 'sat-metal-180', 'sat-metal-250', 'sun-free-music', 'sun-art-exhib', 'sun-sport']],
+    ['Vad händer i helgen?', {}, ['fri-free-theatre', 'sat-free-music', 'sat-paid-music-300', 'sat-cheap-music-150', 'sat-family', 'sat-family-slug', 'sat-metal-180', 'sat-metal-250', 'sun-free-music', 'sun-art-exhib', 'sun-sport']],
     ['Planera för i morgon', {}, ['thu-talk']],
     ['Sport i helgen?', { category: 'sport' }, ['sun-sport']],
     ['Fotbollsmatcher i Stockholm?', { category: 'sport' }, ['sun-sport', 'mon-event']],

@@ -138,6 +138,31 @@ describe('resolvePromptIntent — Utforska-tiles (smakordsknappar, 2026-09-21)',
     expect(intent.categories).toEqual(['music']);
     expect(intent.queryTerms).toBeNull();
   });
+
+  // Helg/Imorgon tiles (2026-09-22): time tiles must do what their labels
+  // promise — weekend window and tomorrow respectively, nothing else.
+  it('Helg-tile (dayFilter hint) → weekend window, no other filters', () => {
+    const intent = resolvePromptIntent({ text: 'Helgens evenemang', dayFilter: 'weekend' });
+    expect(intent.timeFilter).toBe('helgen');
+    expect(intent.anchor).toBe('weekend');
+    expect(intent.priceFilter).toBeNull();
+    expect(intent.categories).toBeNull();
+    expect(intent.queryTerms).toBeNull();
+  });
+
+  it('Imorgon-tile → tomorrow time filter, no other filters', () => {
+    const intent = resolvePromptIntent({ text: 'Imorgon' });
+    expect(intent.timeFilter).toBe('imorgon');
+    expect(intent.anchor).toBe('today');
+    expect(intent.priceFilter).toBeNull();
+    expect(intent.categories).toBeNull();
+    expect(intent.queryTerms).toBeNull();
+  });
+
+  it('English tile prompts resolve identically (Weekend events / Tomorrow)', () => {
+    expect(resolvePromptIntent({ text: 'Weekend events', dayFilter: 'weekend' }).anchor).toBe('weekend');
+    expect(resolvePromptIntent({ text: 'Tomorrow' }).timeFilter).toBe('imorgon');
+  });
 });
 
 describe('intentHasFilters', () => {

@@ -51,7 +51,7 @@ import { fetchFeed, fetchSavedEvents, fetchRecommendedEvents, fetchSuggestedProm
 import { resolveConsumerReasons } from '../utils/rankReasonLabels';
 import { compareDayTimeAsc, upcomingWeekendIsoSet } from './home/weekendDates';
 import { dayTimeLabel } from './home/cardTimeLabel';
-import { pickHappeningNow, happeningTitleParts } from './home/happeningNow';
+import { pickHappeningNow, happeningTitleParts, weekendFeedAnchorIso } from './home/happeningNow';
 import { dateNamesFor } from '../i18n/dateNames';
 import { useI18n } from '../i18n';
 
@@ -81,21 +81,6 @@ function todayLocalIso() {
   const pad = (n) => String(n).padStart(2, '0');
   return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
 }
-
-function nextSaturdayIso() {
-  const d = new Date();
-  const day = d.getDay(); // 0=Sun, 6=Sat
-  if (day === 0) {
-    // Sunday → this week's Saturday (yesterday), not next week.
-    d.setDate(d.getDate() - 1);
-  } else if (day !== 6) {
-    d.setDate(d.getDate() + (6 - day));
-  }
-  // Saturday: keep today so Helgen shows this weekend.
-  const pad = (n) => String(n).padStart(2, '0');
-  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
-}
-
 
 function localHourFromIso(iso) {
   if (!iso) return null;
@@ -609,8 +594,22 @@ function DinHelgSection({ onCardPress, onResolved }) {
 
 function WeekendSection({ onCardPress }) {
   const { t } = useI18n();
-  const from = useMemo(() => nextSaturdayIso(), []);
-  const { status, events, error, retry } = useSection({ from, days: 2 });
+  // Helgen börjar på fredag (user 2026-09-22): anchor the fetch at the
+  // weekend's Friday and keep only Fri–Sun rows. days:3 can spill into
+  // Mon/Tue when opened mid-weekend — the weekendDates filter trims that.
+  const from = useMemo(() => weekendFeedAnchorIso(), []);
+  const weekendDates = useMemo(() => upcomingWeekendIsoSet(), []);
+  // Stable identity or useSection's load-effect loops (setState → render →
+  // new filter → new load → effect refires → "Maximum update depth exceeded").
+  const weekendFilter = useCallback(
+    (ev) => ev.date && weekendDates.has(ev.date.slice(0, 10)),
+    [weekendDates],
+  );
+  const { status, events, error, retry } = useSection({
+    from,
+    days: 3,
+    filter: weekendFilter,
+  });
   // Chronological Lör → Sön (user request 2026-09-21) — feed order is not
   // guaranteed across the ascending pages.
   const sortedEvents = useMemo(() => [...events].sort(compareDayTimeAsc), [events]);
@@ -1129,23 +1128,29 @@ function SavedSection({ onCardPress }) {
 // PENDING_AGENT_MESSAGE_KEY → App.js resolvePromptIntent). The tile must do
 // what its label promises: Gratis → budget 'free', Live → category music,
 // Skratt → 'skratt' genre search rows (standup/komedi — never other genres),
-// Stämningsfullt → banner-only until it gets an honest deterministic path.
+// Stämningsfullt → banner-only until it gets an honest deterministic path
+// (Fas D). Helg/Imorgon (2026-09-22): time tiles — Helg anchors the weekend
+// window via the dayFilter 'weekend' hint, Imorgon filters to tomorrow via
+// its prompt text (promptIntent has no structured tomorrow hint).
 function ExploreTilesSection({ onChipPress }) {
   // Hook first — the gate below must never condition hook ordering.
   const { t } = useI18n();
   if (!process.env.EXPO_PUBLIC_EXPLORE_TILES) return null;
-  const { GRATIS, LIVE, SKRATT, STAMNING } = require('../assets/exploreTiles/tiles.data.js');
+  const { GRATIS, LIVE, SKRATT, STAMNING, HELG, IMORGON } = require('../assets/exploreTiles/tiles.data.js');
   // Solid colors are dark by design so white text keeps ≥40% contrast.
-  // 4 distinct taste-profile colors: smaragd, lila, koppar, vinrött.
-  // label = tile word, prompt = Utforska banner text, hints = structured
-  // intent on the curated-chip wire (promptIntent.test.ts pins all four).
+  // 6 distinct tile colors: smaragd, lila, koppar, vinrött + petrol/marin
+  // for the two time tiles. label = tile word, prompt = Utforska banner
+  // text, hints = structured intent on the curated-chip wire
+  // (promptIntent.test.ts pins all six).
   const TILES = [
     { label: t('home.explore.gratis.label'), image: GRATIS, color: '#1E6B45', prompt: t('home.explore.gratis.prompt'), hints: { budget: 'free' } },
     { label: t('home.explore.live.label'), image: LIVE, color: '#3B1F66', prompt: t('home.explore.live.prompt'), hints: { category_slug: 'music' } },
     { label: t('home.explore.skratt.label'), image: SKRATT, color: '#6B4226', prompt: t('home.explore.skratt.prompt') },
     { label: t('home.explore.stamning.label'), image: STAMNING, color: '#5C1A2A', prompt: t('home.explore.stamning.prompt') },
+    { label: t('home.explore.helg.label'), image: HELG, color: '#0F4C5C', prompt: t('home.explore.helg.prompt'), hints: { dayFilter: 'weekend' } },
+    { label: t('home.explore.imorgon.label'), image: IMORGON, color: '#1C2E4A', prompt: t('home.explore.imorgon.prompt') },
   ];
-  const rows = [TILES.slice(0, 2), TILES.slice(2, 4)];
+  const rows = [TILES.slice(0, 2), TILES.slice(2, 4), TILES.slice(4, 6)];
   return (
     <View style={styles.exploreSection}>
       <Text style={styles.exploreSectionTitle}>{t('home.explore.title')}</Text>

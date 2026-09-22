@@ -23,7 +23,6 @@ import {
   eventEndDate,
   pickHappeningNow,
   happeningTitleParts,
-  nextSaturdayIso,
   weekendFeedAnchorIso,
   nextLocalWeekdayIso,
 } from './happeningNow';
@@ -229,30 +228,11 @@ describe('happeningTitleParts — section title label', () => {
   });
 });
 
-describe('nextSaturdayIso — weekend anchor', () => {
-  it('today IS Saturday → today', () => {
-    expect(nextSaturdayIso(at(2026, 9, 26, 10, 0))).toBe('2026-09-26');
-  });
-
-  it('Sunday → the coming Saturday', () => {
-    expect(nextSaturdayIso(at(2026, 9, 20, 10, 0))).toBe('2026-09-26');
-  });
-
-  it('Monday → the coming Saturday', () => {
-    expect(nextSaturdayIso(at(2026, 9, 21, 10, 0))).toBe('2026-09-26');
-  });
-
-  it('Friday → tomorrow', () => {
-    expect(nextSaturdayIso(at(2026, 9, 25, 23, 0))).toBe('2026-09-26');
-  });
-
-  it('crosses month boundaries correctly', () => {
-    // Wed 30 Sep 2026 → Sat 3 Oct 2026
-    expect(nextSaturdayIso(at(2026, 9, 30, 12, 0))).toBe('2026-10-03');
-  });
-});
-
 describe('weekendFeedAnchorIso — where the feed window starts on a helg chip', () => {
+  // "Helgen börjar på fredag" (user decision 2026-09-22): the window anchors
+  // at FRIDAY so Friday events are fetched AND filterable — browseFilters'
+  // 'helgen' is Friday-inclusive too. On Fri/Sat/Sun the weekend is already
+  // here → today.
   it('Sunday → TODAY (the weekend is still on)', () => {
     expect(weekendFeedAnchorIso(at(2026, 9, 20, 15, 0))).toBe(SUN);
   });
@@ -261,12 +241,12 @@ describe('weekendFeedAnchorIso — where the feed window starts on a helg chip',
     expect(weekendFeedAnchorIso(at(2026, 9, 26, 9, 0))).toBe('2026-09-26');
   });
 
-  it('Monday → coming Saturday', () => {
-    expect(weekendFeedAnchorIso(at(2026, 9, 21, 9, 0))).toBe('2026-09-26');
+  it('Friday → TODAY (the weekend starts tonight)', () => {
+    expect(weekendFeedAnchorIso(at(2026, 9, 25, 9, 0))).toBe('2026-09-25');
   });
 
-  it('Friday → tomorrow (Saturday)', () => {
-    expect(weekendFeedAnchorIso(at(2026, 9, 25, 9, 0))).toBe('2026-09-26');
+  it('Monday → the coming Friday', () => {
+    expect(weekendFeedAnchorIso(at(2026, 9, 21, 9, 0))).toBe('2026-09-25');
   });
 });
 

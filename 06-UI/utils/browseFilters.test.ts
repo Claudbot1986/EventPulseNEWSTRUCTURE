@@ -28,6 +28,7 @@ function at(y: number, m: number, d: number, hh = 0, mm = 0): Date {
 
 const SAT = '2026-09-26'; // Saturday
 const SUN = '2026-09-27'; // Sunday
+const FRI = '2026-09-25'; // Friday
 const MON = '2026-09-21'; // Monday
 
 describe('normalizeSearchText', () => {
@@ -87,6 +88,7 @@ describe('filterEventsByTime — verbatim move from App.js', () => {
     { date: '2026-09-20', time: '20:00', title: 'today-late' },
     { date: '2026-09-20', time: '10:00', title: 'today-past' },
     { date: MON, time: '10:00', title: 'monday' },
+    { date: FRI, time: '12:00', title: 'friday' },
     { date: SAT, time: '12:00', title: 'saturday' },
     { date: SUN, time: '12:00', title: 'sunday' },
     { date: '2026-10-15', time: '12:00', title: 'far-future' },
@@ -102,16 +104,16 @@ describe('filterEventsByTime — verbatim move from App.js', () => {
     expect(out.map((e: { title: string }) => e.title)).toEqual(['monday']);
   });
 
-  it('helgen: every Saturday/Sunday in the window — a Sunday "now" includes today', () => {
+  it('helgen: Friday/Saturday/Sunday — helgen börjar på fredag (user 2026-09-22)', () => {
     // 2026-09-20 IS a Sunday, so today's rows are weekend rows too.
     const out = filterEventsByTime(events, 'helgen', at(2026, 9, 20, 15, 0));
-    expect(out.map((e: { title: string }) => e.title)).toEqual(['today-late', 'today-past', 'saturday', 'sunday']);
+    expect(out.map((e: { title: string }) => e.title)).toEqual(['today-late', 'today-past', 'friday', 'saturday', 'sunday']);
   });
 
   it('denna_vecka: today through +7 days', () => {
     const out = filterEventsByTime(events, 'denna_vecka', at(2026, 9, 20, 15, 0));
     expect(out.map((e: { title: string }) => e.title)).toEqual([
-      'today-late', 'today-past', 'monday', 'saturday', 'sunday',
+      'today-late', 'today-past', 'monday', 'friday', 'saturday', 'sunday',
     ]);
   });
 

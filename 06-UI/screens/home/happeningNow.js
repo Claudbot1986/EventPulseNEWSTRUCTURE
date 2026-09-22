@@ -131,31 +131,18 @@ export function happeningTitleParts(pick, now = new Date()) {
 }
 
 /**
- * Next Saturday as local YYYY-MM-DD (today if today IS Saturday).
- * Lives here so both the weekend-intent jump (App.js) and tests share
- * one definition. Used when a "helgen" chip lands: the browse feed is a
- * 50-event ascending page, so the list must refetch anchored at Saturday
- * or weekend events never enter the window.
- */
-export function nextSaturdayIso(now = new Date()) {
-  const base = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-  const day = base.getDay();
-  const offset = day === 6 ? 0 : (6 - day + 7) % 7;
-  return localIsoOf(new Date(base.getTime() + offset * MS_PER_DAY));
-}
-
-/**
  * Feed-window anchor for weekend-intent chips (2026-09-20). /agent/feed
- * pages are 50 events ascending from `from`, so on dense weeks Saturday's
+ * pages are 50 events ascending from `from`, so on dense weeks the weekend's
  * rows never reach the client and a 'helgen' filter matched zero. Anchor:
- *   - Saturday or Sunday → today (the weekend is happening NOW; the feed
+ *   - Friday/Saturday/Sunday → today (helgen börjar på fredag, user
+ *     2026-09-22; the weekend is already here or starting tonight; the feed
  *     excludes past start times server-side, so nothing stale leaks in).
- *   - Monday–Friday → the coming Saturday.
+ *   - Monday–Thursday → the coming Friday.
  */
 export function weekendFeedAnchorIso(now = new Date()) {
   const day = now.getDay();
-  if (day === 0 || day === 6) return localIsoOf(now);
-  return nextSaturdayIso(now);
+  if (day === 0 || day === 5 || day === 6) return localIsoOf(now);
+  return nextLocalWeekdayIso(now, 5);
 }
 
 /**

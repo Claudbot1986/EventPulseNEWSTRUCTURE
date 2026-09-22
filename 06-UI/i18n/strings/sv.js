@@ -186,6 +186,10 @@ export default {
   'home.explore.skratt.prompt': 'Skratt — standup och komedi',
   'home.explore.stamning.label': 'Stämningsfullt',
   'home.explore.stamning.prompt': 'Stämningsfullt',
+  'home.explore.helg.label': 'Helg',
+  'home.explore.helg.prompt': 'Helgens evenemang',
+  'home.explore.imorgon.label': 'Imorgon',
+  'home.explore.imorgon.prompt': 'Imorgon',
 
   // ─── Explore (Utforska tab: feed, filters, list states) ─────────────────
   'explore.eyebrow': 'CITY DISCOVERY',

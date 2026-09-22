@@ -3,7 +3,7 @@ import { StatusBar } from 'expo-status-bar';
 import { StyleSheet, Text, TextInput, View, SectionList, ActivityIndicator, TouchableOpacity, ScrollView, Linking, Image, Platform, Share, Alert, AppState, Pressable, Animated } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { fetchFeed, addDays, fetchEventIcs, shareSession, fetchSharedSession, parseShareHashFromUrl, recordEventInteraction } from './services/agentClient';
+import { fetchFeed, addDays, fetchEventIcs, shareSession, fetchSharedSession, parseShareHashFromUrl, recordEventInteraction, isFetchCanceled } from './services/agentClient';
 import { useI18n } from './i18n';
 import { dateNamesFor } from './i18n/dateNames';
 import { isAuthDeepLink, isDinHelgDeepLink } from './services/deepLinkRouter';
@@ -783,8 +783,14 @@ function HomeScreen({ onEventPress, scrollPositionRef, pendingIntent, dismissPen
       // full DB count, so we trust it across windows.
       if (!append) setTotalCount(page.total ?? 0);
     } catch (err) {
-      setError(err.message || t('explore.errorFallback'));
-      console.error('Failed to load events:', err);
+      if (isFetchCanceled(err)) {
+        // External cancel (app reload/teardown) — not a load failure. The
+        // feed's own budget issues throw a friendly timeout Error instead,
+        // which lands in the else-branch and shows honest feedback.
+      } else {
+        setError(err.message || t('explore.errorFallback'));
+        console.error('Failed to load events:', err);
+      }
     } finally {
       setLoading(false);
       setLoadingMore(false);

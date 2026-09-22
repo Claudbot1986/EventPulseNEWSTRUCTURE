@@ -185,6 +185,10 @@ export default {
   'home.explore.skratt.prompt': 'Standup and comedy',
   'home.explore.stamning.label': 'Atmospheric',
   'home.explore.stamning.prompt': 'Atmospheric',
+  'home.explore.helg.label': 'Weekend',
+  'home.explore.helg.prompt': 'Weekend events',
+  'home.explore.imorgon.label': 'Tomorrow',
+  'home.explore.imorgon.prompt': 'Tomorrow',
 
   // ─── Explore (Utforska tab: feed, filters, list states) ─────────────────
   'explore.eyebrow': 'CITY DISCOVERY',

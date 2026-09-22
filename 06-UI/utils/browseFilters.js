@@ -67,9 +67,11 @@ export function filterEventsByTime(events, timeFilter, now = new Date()) {
         return eventDay.getTime() === tomorrow.getTime();
       }
       case 'helgen': {
-        // Events happening Saturday (6) or Sunday (0)
+        // Friday/Saturday/Sunday — helgen börjar på fredag (user 2026-09-22);
+        // matches weekendDates.upcomingWeekendIsoSet (Din helg) which is
+        // already Friday-inclusive.
         const dayOfWeek = eventDay.getDay();
-        return dayOfWeek === 0 || dayOfWeek === 6;
+        return dayOfWeek === 0 || dayOfWeek === 5 || dayOfWeek === 6;
       }
       case 'denna_vecka': {
         // Events within the next 7 days

@@ -63,6 +63,9 @@ async function importClient(): Promise<any> {
 beforeEach(async () => {
   fetchMock.mockReset();
   process.env.EXPO_PUBLIC_AGENT_URL = 'http://agent.test';
+  // A second candidate URL must never leak from the portal-hardening tests
+  // into tests that expect a single-candidate setup.
+  delete process.env.EXPO_PUBLIC_AGENT_URL_LAN;
   // The AsyncStorage mock map persists across tests within this file — flush
   // the auth session so earlier seeded sessions never leak into no-session tests.
   const AsyncStorage = (await import('@react-native-async-storage/async-storage')).default;
@@ -71,6 +74,7 @@ beforeEach(async () => {
 
 afterEach(() => {
   delete process.env.EXPO_PUBLIC_AGENT_URL;
+  delete process.env.EXPO_PUBLIC_AGENT_URL_LAN;
 });
 
 describe('agentClient auth guard (guest mode)', () => {
@@ -264,6 +268,230 @@ describe('agentClient auth guard (guest mode)', () => {
       expect(fetchMock).toHaveBeenCalledTimes(2);
       const calledUrl = fetchMock.mock.calls[1][0] as string;
       expect(calledUrl).toContain('/agent/feed');
+    });
+  });
+
+  describe('fetchFeed abort semantics — cancel is not a load failure (2026-09-22)', () => {
+    // Device error of the day: "fetch failed: FetchRequestCanceledException"
+    // surfaced as "Failed to load events". Aborts have two distinct causes:
+    //   1. OUR timeout  → a real (slow) failure: throw a friendly, honest
+    //      timeout Error so the error banner says something human.
+    //   2. External cancel (app reload/teardown) → not a failure at all:
+    //      rethrow the cancel as-is so callers can detect + ignore it.
+    const CANCEL_MSG =
+      'fetch failed: FetchRequestCanceledException: Fetch request has been canceled (at Expo/NativeResponse.swift:63)';
+
+    /** Expo-style fetch mock: health probe resolves; feed fetch rejects with
+     *  the native cancel exception the moment its signal aborts. */
+    function mockExpoFetch() {
+      fetchMock.mockImplementation((url: unknown, init?: unknown) => {
+        if (String(url).includes('/agent/health')) {
+          return Promise.resolve({ ok: true, status: 200 });
+        }
+        return new Promise((_resolve, reject) => {
+          const signal = (init as { signal?: AbortSignal } | undefined)?.signal;
+          if (!signal) return; // no signal: hang forever
+          if (signal.aborted) {
+            reject(new Error(CANCEL_MSG));
+            return;
+          }
+          signal.addEventListener('abort', () => reject(new Error(CANCEL_MSG)), { once: true });
+        });
+      });
+    }
+
+    it('our own timeout throws a friendly timeout Error, not the raw cancel exception', async () => {
+      const { fetchFeed } = await importClient();
+      mockExpoFetch();
+      await expect(fetchFeed({ from: '2026-09-22', days: 1, timeoutMs: 5 })).rejects.toThrow(/timeout/i);
+    });
+
+    it('external cancel rethrows the native cancel exception untouched', async () => {
+      const { fetchFeed } = await importClient();
+      mockExpoFetch();
+      const ext = new AbortController();
+      const pending = fetchFeed({ from: '2026-09-22', days: 1, signal: ext.signal, timeoutMs: 60_000 });
+      // Let fetchFeed reach the in-flight fetch, then cancel mid-flight.
+      await new Promise((resolve) => setTimeout(resolve, 0));
+      ext.abort();
+      await expect(pending).rejects.toThrow('FetchRequestCanceledException');
+    });
+
+    it('isFetchCanceled recognizes abort shapes, not plain errors', async () => {
+      const { isFetchCanceled } = await importClient();
+      const abortErr = new Error('The operation was aborted');
+      abortErr.name = 'AbortError';
+      expect(isFetchCanceled(abortErr)).toBe(true);
+      expect(isFetchCanceled(new Error(CANCEL_MSG))).toBe(true);
+      expect(isFetchCanceled(new Error('feed timeout after 20s — agent API unreachable'))).toBe(false);
+      expect(isFetchCanceled(new Error('feed 500: Internal Server Error'))).toBe(false);
+      expect(isFetchCanceled(null)).toBe(false);
+    });
+
+    it('a native cancel (network blip) is retried once and can succeed', async () => {
+      // Device reality 2026-09-22: mid-app FetchRequestCanceledException
+      // blips repeatedly killed the helg-chip refetch, leaving a stale
+      // today-window list that the 'helgen' filter emptied. One silent
+      // retry absorbs the blip without the user ever noticing.
+      const { fetchFeed } = await importClient();
+      let feedAttempts = 0;
+      fetchMock.mockImplementation((url: unknown) => {
+        if (String(url).includes('/agent/health')) {
+          return Promise.resolve({ ok: true, status: 200 });
+        }
+        feedAttempts += 1;
+        if (feedAttempts === 1) {
+          return Promise.reject(new Error(CANCEL_MSG));
+        }
+        return Promise.resolve({
+          ok: true,
+          status: 200,
+          json: async () => ({ events: [{ id: 'e1', start_time: '2026-09-25T18:00:00' }] }),
+        });
+      });
+      const res = await fetchFeed({ from: '2026-09-25', days: 1 });
+      expect(res.events).toHaveLength(1);
+      expect(feedAttempts).toBe(2);
+    });
+
+    it('a cancel that survives the retry rejects with the cancel error (teardown stays caller-silent)', async () => {
+      const { fetchFeed } = await importClient();
+      let feedAttempts = 0;
+      fetchMock.mockImplementation((url: unknown) => {
+        if (String(url).includes('/agent/health')) {
+          return Promise.resolve({ ok: true, status: 200 });
+        }
+        feedAttempts += 1;
+        return Promise.reject(new Error(CANCEL_MSG));
+      });
+      await expect(fetchFeed({ from: '2026-09-25', days: 1 })).rejects.toThrow('FetchRequestCanceledException');
+      expect(feedAttempts).toBe(2);
+    });
+
+    it('our own timeout is NOT retried — 20s already spent, fail honestly', async () => {
+      const { fetchFeed } = await importClient();
+      mockExpoFetch();
+      let feedAttempts = 0;
+      fetchMock.mockImplementation((url: unknown, init?: unknown) => {
+        if (String(url).includes('/agent/health')) {
+          return Promise.resolve({ ok: true, status: 200 });
+        }
+        feedAttempts += 1;
+        return new Promise((_resolve, reject) => {
+          const signal = (init as { signal?: AbortSignal } | undefined)?.signal;
+          if (!signal) return;
+          signal.addEventListener('abort', () => reject(new Error(CANCEL_MSG)), { once: true });
+        });
+      });
+      await expect(fetchFeed({ from: '2026-09-25', days: 1, timeoutMs: 5 })).rejects.toThrow(/timeout/i);
+      expect(feedAttempts).toBe(1);
+    });
+
+    it('a caller-signal abort is not retried — the caller asked for cancellation', async () => {
+      const { fetchFeed } = await importClient();
+      let feedAttempts = 0;
+      fetchMock.mockImplementation((url: unknown, init?: unknown) => {
+        if (String(url).includes('/agent/health')) {
+          return Promise.resolve({ ok: true, status: 200 });
+        }
+        feedAttempts += 1;
+        // Hang until the request's signal aborts — the cancel must come
+        // from the caller's abort, not from an instant mock rejection.
+        return new Promise((_resolve, reject) => {
+          const signal = (init as { signal?: AbortSignal } | undefined)?.signal;
+          if (!signal) return;
+          signal.addEventListener('abort', () => reject(new Error(CANCEL_MSG)), { once: true });
+        });
+      });
+      const ext = new AbortController();
+      const pending = fetchFeed({ from: '2026-09-25', days: 1, signal: ext.signal, timeoutMs: 60_000 });
+      await new Promise((resolve) => setTimeout(resolve, 0));
+      ext.abort();
+      await expect(pending).rejects.toThrow('FetchRequestCanceledException');
+      expect(feedAttempts).toBe(1);
+    });
+  });
+
+  describe('pickReachableAgentBase hardening — impostor probes are never cached (2026-09-22)', () => {
+    // Device reality: on a foreign network (user 2026-09-22, "jag är inte på
+    // samma wifi") hotel/café captive portals answer HTTP 200 with a login
+    // page to ANY url. Accepting any response.ok poisoned cachedAgentBase,
+    // sending every later fetch to a wrong host → 20s "agent API
+    // unreachable" timeouts. Only the agent's real health body { ok: true }
+    // proves a candidate IS the agent.
+    const HEALTH_OK = async () => ({ ok: true, phase: 0 });
+
+    it('a captive-portal impostor (200, non-JSON body) is skipped — the real agent wins', async () => {
+      process.env.EXPO_PUBLIC_AGENT_URL = 'http://portal.test';
+      process.env.EXPO_PUBLIC_AGENT_URL_LAN = 'http://real.test';
+      const { fetchFeed } = await importClient();
+      fetchMock.mockImplementation((url: unknown) => {
+        const s = String(url);
+        if (s.startsWith('http://portal.test')) {
+          // Captive portal: 200 + HTML login page (json() explodes).
+          return Promise.resolve({
+            ok: true,
+            status: 200,
+            json: async () => {
+              throw new Error('Unexpected token < in JSON');
+            },
+          });
+        }
+        if (s.startsWith('http://real.test/agent/health')) {
+          return Promise.resolve({ ok: true, status: 200, json: HEALTH_OK });
+        }
+        return Promise.resolve({
+          ok: true,
+          status: 200,
+          json: async () => ({ events: [{ id: 'e1', start_time: '2026-09-25T18:00:00' }] }),
+        });
+      });
+      const res = await fetchFeed({ from: '2026-09-25', days: 1 });
+      expect(res.events).toHaveLength(1);
+      const feedCall = fetchMock.mock.calls.find(([u]) => String(u).includes('/agent/feed'));
+      expect(String(feedCall?.[0])).toContain('http://real.test/agent/feed');
+    });
+
+    it('a 200 with an explicit not-ok body is not the agent either', async () => {
+      process.env.EXPO_PUBLIC_AGENT_URL = 'http://portal.test';
+      process.env.EXPO_PUBLIC_AGENT_URL_LAN = 'http://real.test';
+      const { fetchFeed } = await importClient();
+      fetchMock.mockImplementation((url: unknown) => {
+        const s = String(url);
+        if (s.startsWith('http://portal.test')) {
+          return Promise.resolve({ ok: true, status: 200, json: async () => ({ ok: false }) });
+        }
+        if (s.startsWith('http://real.test/agent/health')) {
+          return Promise.resolve({ ok: true, status: 200, json: HEALTH_OK });
+        }
+        return Promise.resolve({ ok: true, status: 200, json: async () => ({ events: [] }) });
+      });
+      const res = await fetchFeed({ from: '2026-09-25', days: 1 });
+      expect(res.events).toEqual([]);
+      const feedCall = fetchMock.mock.calls.find(([u]) => String(u).includes('/agent/feed'));
+      expect(String(feedCall?.[0])).toContain('http://real.test/agent/feed');
+    });
+
+    it('every candidate an impostor → honest fallback to urls[0], no verified win', async () => {
+      process.env.EXPO_PUBLIC_AGENT_URL = 'http://portal.test';
+      process.env.EXPO_PUBLIC_AGENT_URL_LAN = 'http://portal2.test';
+      const { fetchFeed } = await importClient();
+      fetchMock.mockImplementation(() =>
+        Promise.resolve({
+          ok: true,
+          status: 200,
+          json: async () => {
+            throw new Error('Unexpected token < in JSON');
+          },
+        }),
+      );
+      // The feed call still happens against urls[0] — degraded but honest,
+      // and the json failure surfaces as a real error (not a fake success).
+      await expect(fetchFeed({ from: '2026-09-25', days: 1, timeoutMs: 5 })).rejects.toThrow(
+        'Unexpected token < in JSON',
+      );
+      const feedCall = fetchMock.mock.calls.find(([u]) => String(u).includes('/agent/feed'));
+      expect(String(feedCall?.[0])).toContain('http://portal.test/agent/feed');
     });
   });
 });
