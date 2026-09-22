@@ -694,7 +694,11 @@ export async function getFollowedEntities({ signal, timeoutMs = 4_000 } = {}) {
  * from start_time, url aliased to ticket_url, etc.) so the existing UI
  * code doesn't need to change.
  */
-export async function fetchFeed({ from, days = 7, signal, timeoutMs = 12_000 } = {}) {
+export async function fetchFeed({ from, days = 7, signal, timeoutMs = 20_000 } = {}) {
+  // 20s (2026-09-22): device testing measured Fly cold starts at 5-7s warm-up
+  // and >12s during slow-network moments — the previous 12s abort produced
+  // FetchRequestCanceledException on the phone. 20s covers cold start + slow
+  // network while the loading state is still tolerable.
   const baseUrl = await pickReachableAgentBase();
   const url = new URL(`${baseUrl}/agent/feed`);
   url.searchParams.set('from', from);
