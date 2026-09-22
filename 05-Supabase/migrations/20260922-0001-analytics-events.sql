@@ -22,8 +22,12 @@
 -- pattern).
 --
 -- Idempotent: CREATE TABLE/INDEX IF NOT EXISTS + DROP POLICY IF EXISTS.
--- Run manually via psql (repo convention — no migration runner):
---   psql "$SUPABASE_DB_URL" -f 20260922-0001-analytics-events.sql
+-- Repo convention — no migration runner; apply manually. NOTE 2026-09-22:
+-- the connection string lives in root .env as DATABASE_URL, but the direct
+-- DB port is IPv6-only and unreachable from home networks. Applied via the
+-- Management API instead (POST /v1/projects/{ref}/database/query, token
+-- SB_ACCESS_TOKEN). Alternatives: Supabase dashboard → SQL editor (paste),
+-- or psql "$DATABASE_URL" -f <this file> from an IPv6-capable network.
 
 BEGIN;
 
