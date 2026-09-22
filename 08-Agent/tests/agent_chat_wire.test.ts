@@ -203,6 +203,8 @@ describe('POST /agent/chat — magic query (MASTERPLAN §1 acceptance)', () => {
         'time_fit', 'under_budget', 'over_budget', 'category_match',
         'exclude_match', 'not_ended', 'high_confidence', 'low_confidence',
         'stale', 'category_personalization', 'venue_personalization_penalty',
+        'stated_category_match', 'followed_venue', 'followed_artist',
+        'near', 'far', 'dwell_personalization',
       ]);
       for (const r of c.reasons ?? []) {
         expect(VALID.has(r)).toBe(true);

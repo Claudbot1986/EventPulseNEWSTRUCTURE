@@ -43,6 +43,7 @@ export type RankReason =
   | 'category_personalization'
   | 'stated_category_match'
   | 'venue_personalization_penalty'
+  | 'dwell_personalization'
   | 'followed_venue'
   | 'followed_artist'
   | 'near'

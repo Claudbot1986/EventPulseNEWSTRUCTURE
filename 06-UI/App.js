@@ -326,6 +326,24 @@ function DateCluster({ event }) {
   );
 }
 
+// Fas A (2026-09-21): hold on a card = silent interest signal ("dwell").
+// Reuses the existing dwell interaction type (DetailsScreen records unmount-
+// based dwell with metadata.dwell_ms; card holds are tagged source=card_hold
+// so analytics can tell them apart). 1s hold (2026-09-22, user feedback): the
+// original 3s felt like the app froze — 3s is a *viewing* threshold (kept on
+// DetailsScreen's DWELL_MIN_MS), not a hold-gesture duration; industry
+// long-press standard is 0.5-1s. Best-effort: recordEventInteraction never
+// throws (auth/network return {ok:false, warning} instead).
+const CARD_HOLD_MS = 1000;
+function recordCardHold(eventId) {
+  if (!eventId) return;
+  recordEventInteraction({
+    eventId,
+    interaction: 'dwell',
+    metadata: { source: 'card_hold' },
+  }).catch(() => {});
+}
+
 function EventItem({ event, onPress }) {
   const { t } = useI18n();
   const venue = getVenueLabel(event);
@@ -339,7 +357,13 @@ function EventItem({ event, onPress }) {
   const { uri } = useAiImageUrl(event);
 
   return (
-    <TouchableOpacity style={styles.eventCard} onPress={onPress} activeOpacity={0.7}>
+    <TouchableOpacity
+      style={styles.eventCard}
+      onPress={onPress}
+      onLongPress={() => recordCardHold(event?.id)}
+      delayLongPress={CARD_HOLD_MS}
+      activeOpacity={0.7}
+    >
       {uri ? (
         // AI stamp (200×48 at top=740) lives inside cover-crop frame.
         <Image source={{ uri }} style={styles.eventImage} resizeMode="cover" />
@@ -382,7 +406,13 @@ function GroupedEventItem({ groupedEvent, onEventPress }) {
   const { uri } = useAiImageUrl(firstEvent);
 
   return (
-    <TouchableOpacity style={styles.eventCard} onPress={() => onEventPress(groupedEvent.events[0])} activeOpacity={0.7}>
+    <TouchableOpacity
+      style={styles.eventCard}
+      onPress={() => onEventPress(groupedEvent.events[0])}
+      onLongPress={() => recordCardHold(firstEvent?.id)}
+      delayLongPress={CARD_HOLD_MS}
+      activeOpacity={0.7}
+    >
       {uri ? (
         // AI stamp (200×48 at top=740) lives inside cover-crop frame.
         <Image source={{ uri }} style={styles.eventImage} resizeMode="cover" />

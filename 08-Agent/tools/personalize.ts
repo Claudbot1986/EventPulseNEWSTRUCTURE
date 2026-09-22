@@ -24,6 +24,9 @@
  *  - venueBadness(v) = WilsonLower(pos=0, n=Σ_recent_rejects, z=1.96)
  *  - penalty(e)      = -γ · venueBadness(venue(e))
  *  - recent_reject_t = exp(-λ·(now − t) / half_life)  — 30-day half-life
+ *  - dwell_c         = Σ dwell_t · decay × DWELL_WEIGHT_FRACTION (Fas A:
+ *    3s card hold, 2026-09-21) — softer than saves, never enters the
+ *    category posterior; ranker boosts with DWELL_BOOST_BETA.
  *
  * Gotchas baked in (see RankOptions in rank_events.ts):
  *  1. Min-N gate: boost only if totalSaves ≥ MIN_SAVES, penalty only if
@@ -61,6 +64,18 @@ export const MIN_SAVES = 5;
 /** Below this, venue badness is too noisy (Wilson CI too wide). */
 export const MIN_WEIGHTED_REJECTS = 3;
 
+/** Dwell-boost weight (Fas A 2026-09-21: 3s card hold = silent interest).
+ *  Weaker than CATEGORY_BOOST_BETA=8 — a hold is weaker evidence of
+ *  interest than an explicit save. */
+export const DWELL_BOOST_BETA = 2;
+
+/** Each dwell counts as this fraction of a save-equivalent category signal.
+ *  Soft evidence: a hold shows attention, not commitment. */
+export const DWELL_WEIGHT_FRACTION = 0.25;
+
+/** Below this many decay-weighted dwells, the boost stays off (noise gate). */
+export const MIN_DWELLS = 3;
+
 /** Hard cap on |boost| as a fraction of a single feature's weight.
  *  Prevents the "user who saved 50 jazz events" filter-bubble pathology. */
 export const BOOST_CAP_FRACTION = 0.2;
@@ -85,6 +100,12 @@ export interface UserSignal {
   totalSaves: number;
   /** Total reject count, time-decayed (used for the penalty gate). */
   weightedRejects: number;
+  /** Decay-weighted 3s-hold ("dwell") counts per category,
+   *  × DWELL_WEIGHT_FRACTION. Softer than saves; never enters
+   *  categoryPosterior. */
+  dwellPerCategory: Record<string, number>;
+  /** Total dwell count, decay-weighted (no fraction) — ranker gate + cap. */
+  totalDwells: number;
   /** ISO timestamp the signal was computed at. */
   fetchedAt: string;
 }
@@ -129,7 +150,7 @@ export function wilsonLowerBound(
 // ─── Supabase query + cache ─────────────────────────────────────────────────
 
 interface RawInteractionRow {
-  interaction: 'impression' | 'click' | 'save' | 'dismiss' | 'feedback_positive' | 'feedback_negative' | 'outbound';
+  interaction: 'impression' | 'click' | 'save' | 'dismiss' | 'feedback_positive' | 'feedback_negative' | 'outbound' | 'dwell';
   created_at: string;
   events: { category_slug: string | null; venue_name: string | null } | null;
 }
@@ -177,6 +198,8 @@ export async function buildUserSignal(
     venueBadness: {},
     totalSaves: 0,
     weightedRejects: 0,
+    dwellPerCategory: {},
+    totalDwells: 0,
     fetchedAt: now.toISOString(),
   };
 
@@ -193,7 +216,7 @@ export async function buildUserSignal(
       .from('user_interactions')
       .select('interaction, created_at, events:event_id(category_slug, venue_name)')
       .eq('client_user_id', client_user_id)
-      .in('interaction', ['save', 'dismiss', 'feedback_positive', 'feedback_negative'])
+      .in('interaction', ['save', 'dismiss', 'feedback_positive', 'feedback_negative', 'dwell'])
       .order('created_at', { ascending: false })
       .limit(500);
 
@@ -207,6 +230,8 @@ export async function buildUserSignal(
     let totalSaves = 0;
     const weightedRejectsPerVenue: Record<string, number> = {};
     let weightedRejects = 0;
+    const dwellPerCategory: Record<string, number> = {};
+    let totalDwells = 0;
     const categories = new Set<string>();
     const venues = new Set<string>();
 
@@ -215,6 +240,17 @@ export async function buildUserSignal(
       const decay = recencyDecay(ageDays);
       const cat = r.events?.category_slug ?? null;
       const venue = r.events?.venue_name ?? null;
+
+      // Fas A (2026-09-21): dwell = 3s card hold — silent interest. Softer
+      // than a save: decay-weighted × DWELL_WEIGHT_FRACTION per category,
+      // and deliberately excluded from `categories`/`savesPerCategory` so
+      // the save posterior stays save-derived.
+      if (r.interaction === 'dwell') {
+        totalDwells += decay;
+        if (cat) dwellPerCategory[cat] = (dwellPerCategory[cat] ?? 0) + decay * DWELL_WEIGHT_FRACTION;
+        continue;
+      }
+
       if (cat) categories.add(cat);
       if (venue) venues.add(venue);
 
@@ -278,6 +314,8 @@ export async function buildUserSignal(
       venueBadness,
       totalSaves,
       weightedRejects,
+      dwellPerCategory,
+      totalDwells,
       fetchedAt: now.toISOString(),
     };
 

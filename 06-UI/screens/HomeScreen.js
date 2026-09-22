@@ -47,7 +47,7 @@ import {
   Image,
 } from 'react-native';
 
-import { fetchFeed, fetchSavedEvents, fetchRecommendedEvents, fetchSuggestedPrompts, fetchCachedRecommendations, fetchRecentQueries, fetchCuratedCollections, fetchAiImageSmoketest } from '../services/agentClient';
+import { fetchFeed, fetchSavedEvents, fetchRecommendedEvents, fetchSuggestedPrompts, fetchCachedRecommendations, fetchRecentQueries, fetchCuratedCollections, fetchAiImageSmoketest, recordEventInteraction } from '../services/agentClient';
 import { resolveConsumerReasons } from '../utils/rankReasonLabels';
 import { compareDayTimeAsc, upcomingWeekendIsoSet } from './home/weekendDates';
 import { dayTimeLabel } from './home/cardTimeLabel';
@@ -213,6 +213,21 @@ function PriceChip({ event }) {
   return null;
 }
 
+// Fas A (2026-09-21): hold on a card = silent interest signal ("dwell",
+// metadata.source='card_hold'). 1s (2026-09-22, user feedback — 3s felt like
+// the app froze; 3s stays as the *viewing* threshold on DetailsScreen).
+// Best-effort: recordEventInteraction never throws (auth/network return
+// {ok:false, warning} instead).
+const CARD_HOLD_MS = 1000;
+function recordCardHold(eventId) {
+  if (!eventId) return;
+  recordEventInteraction({
+    eventId,
+    interaction: 'dwell',
+    metadata: { source: 'card_hold' },
+  }).catch(() => {});
+}
+
 function EventCardCompact({ event, onPress, showDay = false }) {
   const { t, language } = useI18n();
   const time = event.time || '';
@@ -239,6 +254,8 @@ function EventCardCompact({ event, onPress, showDay = false }) {
     <Pressable
       style={({ pressed }) => [styles.card, pressed && styles.cardPressed]}
       onPress={() => onPress?.(event)}
+      onLongPress={() => recordCardHold(event?.id)}
+      delayLongPress={CARD_HOLD_MS}
       accessibilityRole="button"
       accessibilityLabel={t('home.cardA11y', { title: event.title, when, venue })}
     >

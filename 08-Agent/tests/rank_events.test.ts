@@ -12,7 +12,13 @@ import {
   DEFAULT_TIME_ZONE,
 } from '../tools/rank_events';
 import type { EventCard, IntentBrief } from '../types';
-import type { UserSignal } from '../tools/personalize';
+import {
+  DWELL_BOOST_BETA,
+  CATEGORY_BOOST_BETA,
+  BOOST_CAP_FRACTION,
+  MIN_DWELLS,
+  type UserSignal,
+} from '../tools/personalize';
 
 const NOW = new Date('2026-08-17T10:00:00Z');
 
@@ -278,6 +284,8 @@ describe('rankEvents — stated category preferences', () => {
       venueBadness: {},
       totalSaves: 10,
       weightedRejects: 0,
+      dwellPerCategory: {},
+      totalDwells: 0,
       fetchedAt: NOW.toISOString(),
     };
     const ranked = rankEvents([m1], baseIntent, {
@@ -592,5 +600,105 @@ describe('hourInTimeZone (helper)', () => {
       const iso = `2026-06-15T22:${String(m).padStart(2, '0')}:00Z`;
       expect(hourInTimeZone(iso, 'Europe/Stockholm')).toBe(0);
     }
+  });
+});
+
+/**
+ * Fas A (2026-09-21) — dwell personalization prior.
+ *
+ * A 3+ second hold on an event card records a silent `dwell` interaction.
+ * buildUserSignal aggregates decay-weighted dwells per category
+ * (× DWELL_WEIGHT_FRACTION, see personalize.ts); the ranker applies the
+ * same min-N gate + magnitude-cap discipline as the save prior, but with a
+ * weaker β (DWELL_BOOST_BETA=2 < CATEGORY_BOOST_BETA=8) because a hold is
+ * weaker evidence of interest than an explicit save.
+ */
+describe('rankEvents — dwell personalization prior (3s card hold)', () => {
+  const m1 = card({ id: 'm1', start_time: '2026-08-17T20:00:00Z', category_slug: 'music' });
+  const t1 = card({ id: 't1', start_time: '2026-08-17T20:00:00Z', category_slug: 'theater' });
+
+  const dwellCold: UserSignal = {
+    client_user_id: 'u-dwell',
+    categoryPosterior: {},
+    venueBadness: {},
+    totalSaves: 0,
+    weightedRejects: 0,
+    dwellPerCategory: {},
+    totalDwells: 0,
+    fetchedAt: NOW.toISOString(),
+  };
+
+  it('boosts only the dwelled category when totalDwells >= MIN_DWELLS', () => {
+    const sig: UserSignal = {
+      ...dwellCold,
+      totalDwells: MIN_DWELLS,
+      dwellPerCategory: { music: 0.75 },
+    };
+    const ranked = rankEvents([m1, t1], baseIntent, { now: NOW, personalization: sig });
+    expect(ranked.find((r) => r.card.id === 'm1')!.reasons).toContain('dwell_personalization');
+    expect(ranked.find((r) => r.card.id === 't1')!.reasons).not.toContain('dwell_personalization');
+  });
+
+  it('gates boost off below MIN_DWELLS (does not fire at 2)', () => {
+    const sig: UserSignal = {
+      ...dwellCold,
+      totalDwells: MIN_DWELLS - 1,
+      dwellPerCategory: { music: 0.75 },
+    };
+    const ranked = rankEvents([m1], baseIntent, { now: NOW, personalization: sig });
+    expect(ranked[0].reasons).not.toContain('dwell_personalization');
+  });
+
+  it('does not fire on a cold signal (totalDwells=0)', () => {
+    const ranked = rankEvents([m1], baseIntent, { now: NOW, personalization: dwellCold });
+    expect(ranked[0].reasons).not.toContain('dwell_personalization');
+  });
+
+  it('caps boost magnitude to prevent filter-bubble pathology', () => {
+    // raw = 2·log(1+10) ≈ 4.79; cap = 2·log(1+0.2·40) ≈ 4.39 → clipped.
+    const sig: UserSignal = {
+      ...dwellCold,
+      totalDwells: 40,
+      dwellPerCategory: { music: 10 },
+    };
+    const withPers = rankEvents([m1], baseIntent, { now: NOW, personalization: sig });
+    const withoutPers = rankEvents([m1], baseIntent, { now: NOW });
+    const delta =
+      withPers.find((r) => r.card.id === 'm1')!.score -
+      withoutPers.find((r) => r.card.id === 'm1')!.score;
+    const cap = DWELL_BOOST_BETA * Math.log(1 + BOOST_CAP_FRACTION * 40);
+    expect(delta).toBeGreaterThan(0);
+    expect(delta).toBeLessThanOrEqual(cap + 1e-9);
+  });
+
+  it('dwell weight is weaker than the save prior weight (β=2 < β=8)', () => {
+    expect(DWELL_BOOST_BETA).toBeLessThan(CATEGORY_BOOST_BETA);
+  });
+
+  it('stacks with the save-prior boost when both signals exist', () => {
+    const sig: UserSignal = {
+      ...dwellCold,
+      totalSaves: 6,
+      categoryPosterior: { music: 1.0 },
+      totalDwells: MIN_DWELLS,
+      dwellPerCategory: { music: 0.75 },
+    };
+    const ranked = rankEvents([m1], baseIntent, { now: NOW, personalization: sig });
+    expect(ranked[0].reasons).toContain('category_personalization');
+    expect(ranked[0].reasons).toContain('dwell_personalization');
+  });
+
+  it('is safe for legacy signals without dwell fields (backwards-compat)', () => {
+    const legacy = {
+      client_user_id: 'u-legacy',
+      categoryPosterior: {},
+      venueBadness: {},
+      totalSaves: 0,
+      weightedRejects: 0,
+      fetchedAt: NOW.toISOString(),
+    } as unknown as UserSignal;
+    const ranked = rankEvents([m1], baseIntent, { now: NOW, personalization: legacy });
+    expect(ranked[0].reasons).not.toContain('dwell_personalization');
+    expect(Number.isFinite(ranked[0].score)).toBe(true);
   });
 });

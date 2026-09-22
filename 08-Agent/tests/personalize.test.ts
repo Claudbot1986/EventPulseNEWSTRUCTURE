@@ -27,6 +27,9 @@ import {
   MIN_WEIGHTED_REJECTS,
   BOOST_CAP_FRACTION,
   PENALTY_CAP_ABS,
+  DWELL_BOOST_BETA,
+  DWELL_WEIGHT_FRACTION,
+  MIN_DWELLS,
   type UserSignal,
 } from '../tools/personalize';
 import { rankEvents } from '../tools/rank_events';
@@ -385,6 +388,8 @@ describe('rankEvents — personalization prior', () => {
     venueBadness: {},
     totalSaves: 0,
     weightedRejects: 0,
+    dwellPerCategory: {},
+    totalDwells: 0,
     fetchedAt: NOW.toISOString(),
   };
 
@@ -731,6 +736,8 @@ describe('T0075 verify line — rank_events + materialized weights shift order',
       venueBadness: {},
       totalSaves: 12,
       weightedRejects: 0,
+      dwellPerCategory: {},
+      totalDwells: 0,
       fetchedAt: NOW.toISOString(),
     };
     const userWithoutSaves: UserSignal = {
@@ -739,6 +746,8 @@ describe('T0075 verify line — rank_events + materialized weights shift order',
       venueBadness: {},
       totalSaves: 0,
       weightedRejects: 0,
+      dwellPerCategory: {},
+      totalDwells: 0,
       fetchedAt: NOW.toISOString(),
     };
 
@@ -760,5 +769,87 @@ describe('T0075 verify line — rank_events + materialized weights shift order',
     const musicHot  = rankedHot.find((r) => r.card.id === 'music1')!.score;
     const musicCold = rankedCold.find((r) => r.card.id === 'music1')!.score;
     expect(musicHot).toBeGreaterThan(musicCold);
+  });
+});
+
+// ── Fas A (2026-09-21): dwell interest signals (3s card hold) ─────────────
+
+describe('buildUserSignal — dwell interest signals (3s card hold)', () => {
+  const userId = '00000000-0000-0000-0000-000000000004';
+
+  function fakeDwellRow(daysAgo: number, interaction: string, cat: string | null, venue: string | null) {
+    return {
+      interaction,
+      created_at: new Date(NOW.getTime() - daysAgo * 86_400_000).toISOString(),
+      events: { category_slug: cat, venue_name: venue },
+    };
+  }
+
+  function sbReturning(rows: unknown[]) {
+    return {
+      from() {
+        return {
+          select() { return this; },
+          eq() { return this; },
+          in() { return this; },
+          order() { return this; },
+          limit() { return Promise.resolve({ data: rows, error: null }); },
+        };
+      },
+    } as any;
+  }
+
+  it('counts decay-weighted dwells per category, scaled by DWELL_WEIGHT_FRACTION', async () => {
+    // 3 fresh dwells in music → decay=1 each, × 0.25 per category.
+    const rows = [
+      fakeDwellRow(0, 'dwell', 'music', 'Konserthuset'),
+      fakeDwellRow(0, 'dwell', 'music', 'Debaser'),
+      fakeDwellRow(0, 'dwell', 'music', 'Konserthuset'),
+    ];
+    const sig = await buildUserSignal(sbReturning(rows), userId, { now: NOW, skipCache: true });
+    expect(sig.totalDwells).toBeCloseTo(3, 6);
+    expect(sig.dwellPerCategory.music).toBeCloseTo(3 * DWELL_WEIGHT_FRACTION, 6);
+  });
+
+  it('dwells do NOT inflate saves or the category posterior', async () => {
+    // 3 dwells in music + 1 save in art. The posterior must stay
+    // save-derived: music gets NO posterior entry, art gets the full one.
+    const rows = [
+      fakeDwellRow(0, 'dwell', 'music', 'Konserthuset'),
+      fakeDwellRow(0, 'dwell', 'music', 'Debaser'),
+      fakeDwellRow(0, 'dwell', 'music', 'Konserthuset'),
+      fakeDwellRow(0, 'save', 'art', 'Moderna'),
+    ];
+    const sig = await buildUserSignal(sbReturning(rows), userId, { now: NOW, skipCache: true });
+    expect(sig.totalSaves).toBeCloseTo(1, 6);
+    expect(sig.categoryPosterior.music).toBeUndefined();
+    expect(sig.categoryPosterior.art).toBeCloseTo(1, 6); // (1+1)/(1+1·1)
+  });
+
+  it('dwells decay with the same 30-day half-life as saves', async () => {
+    const rows = [
+      fakeDwellRow(0, 'dwell', 'music', 'Konserthuset'),   // decay 1
+      fakeDwellRow(30, 'dwell', 'music', 'Konserthuset'),  // decay 0.5
+    ];
+    const sig = await buildUserSignal(sbReturning(rows), userId, { now: NOW, skipCache: true });
+    expect(sig.totalDwells).toBeCloseTo(1.5, 6);
+    expect(sig.dwellPerCategory.music).toBeCloseTo(1.5 * DWELL_WEIGHT_FRACTION, 6);
+  });
+
+  it('MIN_DWELLS matches the ranker gate (3 fresh dwells clear it)', () => {
+    // Contract between personalize (producer) and rank_events (consumer):
+    // 3 fresh dwells → totalDwells=3 which must satisfy the MIN_DWELLS gate.
+    expect(3 * recencyDecay(0)).toBeGreaterThanOrEqual(MIN_DWELLS);
+  });
+
+  it('cold/error signal returns totalDwells=0 and empty dwellPerCategory', async () => {
+    const badSb: any = {
+      from() {
+        return { select() { return this; }, eq() { return this; }, in() { return this; }, order() { return this; }, limit() { return Promise.resolve({ data: null, error: { message: 'table missing' } }); } };
+      },
+    };
+    const sig = await buildUserSignal(badSb, userId, { now: NOW, skipCache: true });
+    expect(sig.totalDwells).toBe(0);
+    expect(sig.dwellPerCategory).toEqual({});
   });
 });

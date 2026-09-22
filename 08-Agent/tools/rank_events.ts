@@ -23,6 +23,8 @@ import {
   MIN_WEIGHTED_REJECTS,
   BOOST_CAP_FRACTION,
   PENALTY_CAP_ABS,
+  DWELL_BOOST_BETA,
+  MIN_DWELLS,
 } from './personalize';
 import { haversineKm, type LatLng } from '../utils/haversine';
 
@@ -282,6 +284,21 @@ export function rankEvents(
         if (penalty < 0) {
           score += penalty;
           reasons.push('venue_personalization_penalty');
+        }
+      }
+
+      // Dwell boost (Fas A 2026-09-21): the user held a card ≥3s — silent
+      // interest. Same min-N gate + magnitude-cap discipline as the save
+      // prior, but with the weaker DWELL_BOOST_BETA. Field guards keep
+      // hand-built/legacy signals (without the dwell fields) safe.
+      if (p.dwellPerCategory && p.totalDwells >= MIN_DWELLS
+          && p.dwellPerCategory[c.category_slug] !== undefined) {
+        const raw = DWELL_BOOST_BETA * Math.log(1 + p.dwellPerCategory[c.category_slug]);
+        const cap = DWELL_BOOST_BETA * Math.log(1 + BOOST_CAP_FRACTION * p.totalDwells);
+        const boost = Math.max(0, Math.min(raw, cap));
+        if (boost > 0) {
+          score += boost;
+          reasons.push('dwell_personalization');
         }
       }
     }
