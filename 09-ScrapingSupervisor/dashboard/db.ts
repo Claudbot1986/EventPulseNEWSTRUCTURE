@@ -13,14 +13,25 @@ import { join } from 'path';
 import 'dotenv/config';
 
 let _client: SupabaseClient | null = null;
+let _clientForTests: SupabaseClient | null | undefined;
 
 export function db(): SupabaseClient | null {
+  if (_clientForTests !== undefined) return _clientForTests;
   if (_client) return _client;
   const url = process.env.SUPABASE_URL;
   const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
   if (!url || !key) return null;
   _client = createClient(url, key, { auth: { persistSession: false } });
   return _client;
+}
+
+/**
+ * Test-only injection — replaces the lazy singleton so collect functions
+ * can run against a fake client (null = "unconfigured"). Never call from
+ * dashboard code.
+ */
+export function _setDbForTests(client: SupabaseClient | null | undefined): void {
+  _clientForTests = client;
 }
 
 export interface Kpis {
@@ -575,4 +586,49 @@ export async function collectUnsynced(projectRoot: string): Promise<UnsyncedRepo
     perSource,
     fetchedAt: new Date().toISOString(),
   };
+}
+
+// ---------------------------------------------------------------------------
+// Analytics stream (Fas B: EN databas — analytics_events)
+// ---------------------------------------------------------------------------
+
+/** Row shape of 10-Analytics' analytics_events (mirrors StoredEvent). */
+export interface AnalyticsEventRow {
+  event_type: string;
+  page: string;
+  payload: Record<string, unknown> | null;
+  device_id_hash: string;
+  session_id: string;
+  ts: string;
+  received_at: string;
+}
+
+/** PostgREST hard cap per request — read pages walk past it. */
+const ANALYTICS_SB_PAGE = 1000;
+
+/**
+ * The anonymous activity stream from Supabase — 10-Analytics' primary
+ * store since Fas B. Errors-as-data: [] when Supabase is unconfigured or
+ * any page fails, so callers fall back to the JSONL file. An event lives
+ * in exactly ONE store (Supabase when the insert succeeded, JSONL only
+ * on failure), so callers can concat JSONL + these rows without dedup.
+ */
+export async function collectAnalyticsEvents(): Promise<AnalyticsEventRow[]> {
+  const sb = db();
+  if (!sb) return [];
+  const out: AnalyticsEventRow[] = [];
+  try {
+    for (let from = 0; ; from += ANALYTICS_SB_PAGE) {
+      const { data, error } = await sb
+        .from('analytics_events')
+        .select('event_type,page,payload,device_id_hash,session_id,ts,received_at')
+        .order('ts', { ascending: true })
+        .range(from, from + ANALYTICS_SB_PAGE - 1);
+      if (error || !Array.isArray(data)) return [];
+      out.push(...(data as AnalyticsEventRow[]));
+      if (data.length < ANALYTICS_SB_PAGE) return out;
+    }
+  } catch {
+    return [];
+  }
 }

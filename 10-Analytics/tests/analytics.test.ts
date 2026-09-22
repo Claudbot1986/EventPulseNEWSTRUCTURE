@@ -83,3 +83,23 @@ describe('EVENT_TYPES exhaustiveness', () => {
     }
   });
 });
+
+describe('tile_tap — Utforska tile presses (Fas B, 2026-09-22)', () => {
+  it('eventSchema accepts a tile_tap event', () => {
+    const result = eventSchema.safeParse({
+      event_type: 'tile_tap',
+      page: 'home',
+      payload: { word: 'gratis' },
+      device_id_hash: 'a'.repeat(64),
+      session_id: 's1',
+    });
+    expect(result.success).toBe(true);
+  });
+
+  it('payloadSchemas.tile_tap requires a bounded non-empty word', () => {
+    expect(payloadSchemas.tile_tap.safeParse({ word: 'helg' }).success).toBe(true);
+    expect(payloadSchemas.tile_tap.safeParse({}).success).toBe(false);
+    expect(payloadSchemas.tile_tap.safeParse({ word: '' }).success).toBe(false);
+    expect(payloadSchemas.tile_tap.safeParse({ word: 'x'.repeat(33) }).success).toBe(false);
+  });
+});

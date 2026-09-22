@@ -25,6 +25,7 @@ import {
   collectTimeSeries,
   collectExtractionOverview,
   collectUnsynced,
+  collectAnalyticsEvents,
   type Kpis,
   type DbSourceRow,
   type TimeSeries,
@@ -1281,19 +1282,24 @@ export function collectSourceHealth(root: string): SourceHealthReport {
   };
 }
 
-// ─── User activity (10-Analytics runtime/events.jsonl) ──────────────────────
+// ─── User activity (10-Analytics: Supabase primary + JSONL fallback) ────────
 //
 // The Expo app (06-UI/services/analyticsClient.js) posts user-activity events
-// to the 10-Analytics server on port 7778, which appends them to
-// runtime/events.jsonl (30-day retention, GDPR: no PII — only a
-// pseudonymous device_id_hash). This collector aggregates that file per test
-// profile across three depths (today / last 7d / last 30d) so the dashboard
-// can show what the three fictitious test users actually did.
+// to the 10-Analytics server on port 7778, which persists them to the
+// Supabase `analytics_events` table (Fas B primary store) with
+// runtime/events.jsonl as the fallback (30-day retention, GDPR: no PII —
+// only a pseudonymous device_id_hash). This collector aggregates BOTH
+// sources per test profile across three depths (today / last 7d / last
+// 30d) so the dashboard can show what the three fictitious test users
+// actually did.
 //
 // The 10-Analytics read API needs a bearer token (ephemeral-random when the
-// env is unset), so — like the rest of this dashboard — we read the file
-// directly instead of proxying. Windows are computed per call; the file is
-// tiny, no caching.
+// env is unset), so — like the rest of this dashboard — we read the sources
+// directly: analytics_events via db.ts (errors-as-data: [] when
+// unconfigured/failed) and the JSONL file from disk. An event lives in
+// exactly ONE store (Supabase when its insert succeeded, JSONL only when
+// it failed), so the two row sets concat without dedup. Windows are
+// computed per call; volumes are tiny, no caching.
 
 // Test profiles mirrored from analyticsClient.js TEST_USERS.
 const UA_TEST_USERS = [
@@ -1372,7 +1378,7 @@ function uaLocalDate(d: Date): string {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
 }
 
-export function collectUserActivity(root: string): UserActivityReport {
+export async function collectUserActivity(root: string): Promise<UserActivityReport> {
   const generatedAt = new Date().toISOString();
   const filePath = join(root, 'runtime/events.jsonl');
   const emptyKpis: UserActivityReport['kpis'] = {
@@ -1381,29 +1387,49 @@ export function collectUserActivity(root: string): UserActivityReport {
     d30: { events: 0, activeProfiles: 0, sessions: 0 },
   };
 
+  // Fas B: Supabase analytics_events is the primary store; [] when
+  // unconfigured or unreadable — then the JSONL fallback must carry the
+  // report alone (and honestly say so when it can't).
+  const supabaseRows = await collectAnalyticsEvents();
+
+  let jsonlRows: UaEventRow[] = [];
+  let jsonlMissing = false;
+  let jsonlError: string | null = null;
   if (!existsSync(filePath)) {
+    jsonlMissing = true;
+  } else {
+    try {
+      jsonlRows = readJsonl<UaEventRow>(filePath);
+    } catch (err) {
+      jsonlError = `kunde inte läsa events.jsonl: ${String((err as Error)?.message ?? err)}`;
+    }
+  }
+
+  if (jsonlMissing && supabaseRows.length === 0) {
     return {
       ok: false,
       reason:
-        'runtime/events.jsonl saknas — 10-Analytics (port 7778) har inte skrivit några events ännu. Starta den via headerns toggle.',
+        'varken analytics_events (Supabase) eller runtime/events.jsonl har några events ännu. Kontrollera SUPABASE-konfigurationen eller starta 10-Analytics (port 7778) via headerns toggle.',
       generatedAt,
       profiles: [],
       kpis: emptyKpis,
     };
   }
 
-  let rows: UaEventRow[];
-  try {
-    rows = readJsonl<UaEventRow>(filePath);
-  } catch (err) {
+  if (jsonlError && supabaseRows.length === 0) {
     return {
       ok: false,
-      reason: `kunde inte läsa events.jsonl: ${String((err as Error)?.message ?? err)}`,
+      reason: jsonlError,
       generatedAt,
       profiles: [],
       kpis: emptyKpis,
     };
   }
+
+  // Disjoint by construction (an event lives in exactly ONE store — see
+  // the header comment): concat without dedup. The aggregation below is
+  // order-insensitive (counters/sets/max), so no sort is needed.
+  const rows: UaEventRow[] = [...jsonlRows, ...supabaseRows];
 
   const now = new Date();
   const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
@@ -1604,12 +1630,13 @@ async function serveJson(req: IncomingMessage, res: ServerResponse): Promise<boo
     return true;
   }
   if (url === '/api/user-activity') {
-    // User-activity panel — aggregates 10-Analytics' runtime/events.jsonl
-    // per test profile across today/7d/30d depths. Returns HTTP 200 with
-    // ok:false when the file is missing so the panel can render an honest
-    // muted state instead of fabricated numbers.
+    // User-activity panel — aggregates 10-Analytics' Supabase
+    // analytics_events (primary) + runtime/events.jsonl (fallback) per
+    // test profile across today/7d/30d depths. Returns HTTP 200 with
+    // ok:false when both sources are empty so the panel can render an
+    // honest muted state instead of fabricated numbers.
     try {
-      const data = collectUserActivity(PROJECT_ROOT);
+      const data = await collectUserActivity(PROJECT_ROOT);
       res.writeHead(200, {
         'Content-Type': 'application/json; charset=utf-8',
         'Cache-Control': 'no-cache',

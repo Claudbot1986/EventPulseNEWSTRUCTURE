@@ -285,6 +285,15 @@ async function filterChange(filter) {
   await track('filter_change', 'home', { filter: safe });
 }
 
+// Utforska tile presses (Fas B, 2026-09-22). The word is the tile's stable
+// id (never the localized label) — dashboard 7777 reports per-word taps.
+const TILE_WORDS = ['gratis', 'live', 'skratt', 'stamning', 'helg', 'imorgon'];
+
+async function tileTap(word) {
+  const safe = TILE_WORDS.includes(word) ? word : 'unknown';
+  await track('tile_tap', 'home', { word: safe });
+}
+
 /**
  * Mark the current user as opted out of analytics. Flushes the in-memory
  * queue (so already-buffered events reach the server), then POSTs the
@@ -308,6 +317,7 @@ async function setOptOut() {
 export const analyticsClient = {
   SECTION_KEYS,
   CLICK_TARGETS,
+  TILE_WORDS,
   sessionStart,
   sectionImpression,
   eventView,
@@ -316,6 +326,7 @@ export const analyticsClient = {
   eventDismiss,
   searchQuery,
   filterChange,
+  tileTap,
   startFlushLoop,
   stopFlushLoop,
   clearActiveUser,

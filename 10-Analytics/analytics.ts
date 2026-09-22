@@ -26,6 +26,7 @@ export const EVENT_TYPES = [
   'section_impression',
   'search_query',
   'filter_change',
+  'tile_tap',
 ] as const;
 
 export type EventType = (typeof EVENT_TYPES)[number];
@@ -71,6 +72,11 @@ export const payloadSchemas = {
   }),
   filter_change: z.object({
     filter: z.enum(['category', 'price', 'date']),
+  }),
+  // Utforska tile press (Fas B/E): which tile word the user tapped.
+  // Free string (not enum) so adding tiles needs no schema migration here.
+  tile_tap: z.object({
+    word: z.string().min(1).max(32),
   }),
 } as const;
 

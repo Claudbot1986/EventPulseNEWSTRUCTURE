@@ -48,6 +48,7 @@ import {
 } from 'react-native';
 
 import { fetchFeed, fetchSavedEvents, fetchRecommendedEvents, fetchSuggestedPrompts, fetchCachedRecommendations, fetchRecentQueries, fetchCuratedCollections, fetchAiImageSmoketest, recordEventInteraction } from '../services/agentClient';
+import { analyticsClient } from '../services/analyticsClient';
 import { resolveConsumerReasons } from '../utils/rankReasonLabels';
 import { compareDayTimeAsc, upcomingWeekendIsoSet } from './home/weekendDates';
 import { dayTimeLabel } from './home/cardTimeLabel';
@@ -1141,14 +1142,15 @@ function ExploreTilesSection({ onChipPress }) {
   // 6 distinct tile colors: smaragd, lila, koppar, vinrött + petrol/marin
   // for the two time tiles. label = tile word, prompt = Utforska banner
   // text, hints = structured intent on the curated-chip wire
-  // (promptIntent.test.ts pins all six).
+  // (promptIntent.test.ts pins all six). id = stable analytics key for
+  // tile_tap { word } — the localized label must never be the identifier.
   const TILES = [
-    { label: t('home.explore.gratis.label'), image: GRATIS, color: '#1E6B45', prompt: t('home.explore.gratis.prompt'), hints: { budget: 'free' } },
-    { label: t('home.explore.live.label'), image: LIVE, color: '#3B1F66', prompt: t('home.explore.live.prompt'), hints: { category_slug: 'music' } },
-    { label: t('home.explore.skratt.label'), image: SKRATT, color: '#6B4226', prompt: t('home.explore.skratt.prompt') },
-    { label: t('home.explore.stamning.label'), image: STAMNING, color: '#5C1A2A', prompt: t('home.explore.stamning.prompt') },
-    { label: t('home.explore.helg.label'), image: HELG, color: '#0F4C5C', prompt: t('home.explore.helg.prompt'), hints: { dayFilter: 'weekend' } },
-    { label: t('home.explore.imorgon.label'), image: IMORGON, color: '#1C2E4A', prompt: t('home.explore.imorgon.prompt') },
+    { id: 'gratis', label: t('home.explore.gratis.label'), image: GRATIS, color: '#1E6B45', prompt: t('home.explore.gratis.prompt'), hints: { budget: 'free' } },
+    { id: 'live', label: t('home.explore.live.label'), image: LIVE, color: '#3B1F66', prompt: t('home.explore.live.prompt'), hints: { category_slug: 'music' } },
+    { id: 'skratt', label: t('home.explore.skratt.label'), image: SKRATT, color: '#6B4226', prompt: t('home.explore.skratt.prompt') },
+    { id: 'stamning', label: t('home.explore.stamning.label'), image: STAMNING, color: '#5C1A2A', prompt: t('home.explore.stamning.prompt') },
+    { id: 'helg', label: t('home.explore.helg.label'), image: HELG, color: '#0F4C5C', prompt: t('home.explore.helg.prompt'), hints: { dayFilter: 'weekend' } },
+    { id: 'imorgon', label: t('home.explore.imorgon.label'), image: IMORGON, color: '#1C2E4A', prompt: t('home.explore.imorgon.prompt') },
   ];
   const rows = [TILES.slice(0, 2), TILES.slice(2, 4), TILES.slice(4, 6)];
   return (
@@ -1158,8 +1160,14 @@ function ExploreTilesSection({ onChipPress }) {
         <View key={`explore-row-${rowIndex}`} style={styles.exploreRow}>
           {row.map((tile) => (
             <Pressable
-              key={tile.label}
-              onPress={() => onChipPress({ prompt_text: tile.prompt, ...(tile.hints || {}) })}
+              key={tile.id}
+              onPress={() => {
+                // tile_tap (Fas B): which Utforska tile the user tapped —
+                // the per-word KPI lands in dashboard 7777 (Fas E). Best-
+                // effort: the tap must never wait on analytics.
+                analyticsClient.tileTap(tile.id);
+                onChipPress({ prompt_text: tile.prompt, ...(tile.hints || {}) });
+              }}
               style={({ pressed }) => [
                 styles.exploreTile,
                 { backgroundColor: tile.color },
