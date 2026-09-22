@@ -68,6 +68,11 @@ const GENRES = [
   { label: 'jazz', detect: ['jazz'], queryTerms: ['jazz'] },
   { label: 'klassisk', detect: ['klassisk', 'classical'], queryTerms: ['klassisk', 'classical'] },
   { label: 'metal', detect: ['metal', 'hardrock', 'hard rock'], queryTerms: ['metal', 'hardrock', 'hard rock'] },
+  // Utforska-tile "Skratt" (2026-09-21): honest search row so a standup/
+  // komedi query never drags in other genres (hårdrock får inte smyga in).
+  // Standup/komedi has no category slug of its own — sources file it under
+  // 'theater', which would over-match, so text search is the honest path.
+  { label: 'skratt', detect: ['skratt', 'standup', 'komedi', 'comedy'], queryTerms: ['standup', 'komedi', 'comedy', 'skratt'] },
 ].map((g) => ({ ...g, matches: wordMatcher(g.detect) }));
 
 /** Server category_slug → Utforska pill key (feed slugs go through

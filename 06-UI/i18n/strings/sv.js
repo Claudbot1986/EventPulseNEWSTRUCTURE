@@ -176,6 +176,17 @@ export default {
   'home.saved.title': 'Dina sparade evenemang',
   'home.savedEmpty': '— inga sparade evenemang ännu —',
 
+  // ─── Utforska-tiles (Hem, dev-gated EXPO_PUBLIC_EXPLORE_TILES) ───────────
+  'home.explore.title': 'Utforska',
+  'home.explore.gratis.label': 'Gratis',
+  'home.explore.gratis.prompt': 'Gratis evenemang',
+  'home.explore.live.label': 'Live',
+  'home.explore.live.prompt': 'Live på scen',
+  'home.explore.skratt.label': 'Skratt',
+  'home.explore.skratt.prompt': 'Skratt — standup och komedi',
+  'home.explore.stamning.label': 'Stämningsfullt',
+  'home.explore.stamning.prompt': 'Stämningsfullt',
+
   // ─── Explore (Utforska tab: feed, filters, list states) ─────────────────
   'explore.eyebrow': 'CITY DISCOVERY',
   'explore.title': 'Vad händer i stan?',

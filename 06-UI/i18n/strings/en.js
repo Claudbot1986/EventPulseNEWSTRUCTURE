@@ -173,6 +173,19 @@ export default {
   'home.saved.title': 'Your saved events',
   'home.savedEmpty': '— no saved events yet —',
 
+  // ─── Utforska-tiles (Hem, dev-gated EXPO_PUBLIC_EXPLORE_TILES) ───────────
+  // 'skratt' prompt keeps detectable genre words ('standup', 'comedy') so
+  // promptIntent resolves the honest search row in en too.
+  'home.explore.title': 'Explore',
+  'home.explore.gratis.label': 'Free',
+  'home.explore.gratis.prompt': 'Free events',
+  'home.explore.live.label': 'Live',
+  'home.explore.live.prompt': 'Live on stage',
+  'home.explore.skratt.label': 'Laughs',
+  'home.explore.skratt.prompt': 'Standup and comedy',
+  'home.explore.stamning.label': 'Atmospheric',
+  'home.explore.stamning.prompt': 'Atmospheric',
+
   // ─── Explore (Utforska tab: feed, filters, list states) ─────────────────
   'explore.eyebrow': 'CITY DISCOVERY',
   'explore.title': 'What’s happening in town?',

@@ -107,6 +107,39 @@ describe('resolvePromptIntent — general rules', () => {
   });
 });
 
+describe('resolvePromptIntent — Utforska-tiles (smakordsknappar, 2026-09-21)', () => {
+  // Tiles must do what their label promises. "Skratt" is an HONEST search
+  // row (like jazz/metal), not a category: hard rock must never sneak into
+  // a standup/komedi query (user demand 2026-09-21).
+  it('Skratt-tile → standup/komedi search rows, no category leakage', () => {
+    const intent = resolvePromptIntent({ text: 'Skratt — standup och komedi' });
+    expect(intent.queryTerms).toEqual(['standup', 'komedi', 'comedy', 'skratt']);
+    expect(intent.queryLabel).toBe('skratt');
+    expect(intent.categories).toBeNull(); // genre suppresses categories
+    expect(intent.anchor).toBe('today');
+  });
+
+  it('"hitta något roligt" must NOT trigger the skratt genre (no over-match)', () => {
+    const intent = resolvePromptIntent({ text: 'Hitta något roligt' });
+    expect(intent.queryTerms).toBeNull();
+    expect(intent.categories).toBeNull();
+    expect(intent.anchor).toBeNull();
+  });
+
+  it('Gratis-tile (budget hint) → free price filter, nothing else', () => {
+    const intent = resolvePromptIntent({ text: 'Gratis evenemang', budget: 'free' });
+    expect(intent.priceFilter).toBe('free');
+    expect(intent.categories).toBeNull();
+    expect(intent.anchor).toBe('today');
+  });
+
+  it('Live-tile (category_slug hint) → music category, text carries no category words', () => {
+    const intent = resolvePromptIntent({ text: 'Live på scen', category_slug: 'music' });
+    expect(intent.categories).toEqual(['music']);
+    expect(intent.queryTerms).toBeNull();
+  });
+});
+
 describe('intentHasFilters', () => {
   it('false for null / empty / anchor-only intents', () => {
     expect(intentHasFilters(null)).toBe(false);
