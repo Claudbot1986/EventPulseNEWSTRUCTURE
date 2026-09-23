@@ -26,6 +26,9 @@ vi.mock('@react-native-async-storage/async-storage', () => {
       removeItem: async (k: string) => {
         map.delete(k);
       },
+      multiRemove: async (keys: string[]) => {
+        for (const k of keys) map.delete(k);
+      },
     },
   };
 });
@@ -100,5 +103,27 @@ describe('tileTap (Utforska tiles → tile_tap on the wire)', () => {
     expect(analyticsClient.TILE_WORDS).toEqual([
       'gratis', 'live', 'skratt', 'stamning', 'helg', 'imorgon',
     ]);
+  });
+});
+
+describe('setActiveUser (identitetshalvan av porten, Fas B 2026-09-22)', () => {
+  it('persists the user and lets track() pass the whole consent + identity gate', async () => {
+    const { analyticsClient } = await importClient();
+    const AsyncStorage = (await import('@react-native-async-storage/async-storage')).default;
+    await analyticsClient.setActiveUser('uid-test-123');
+    expect(await AsyncStorage.getItem('analytics.active_user')).toBe('uid-test-123');
+    await analyticsClient.tileTap('helg');
+    await analyticsClient._flush();
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+  });
+
+  it('drops a previous device hash + session so a new user inherits nothing', async () => {
+    const { analyticsClient } = await importClient();
+    const AsyncStorage = (await import('@react-native-async-storage/async-storage')).default;
+    await AsyncStorage.setItem('analytics.device_id_hash', 'a'.repeat(64));
+    await AsyncStorage.setItem('analytics.session_id', 's-old');
+    await analyticsClient.setActiveUser('uid-test-456');
+    expect(await AsyncStorage.getItem('analytics.device_id_hash')).toBeNull();
+    expect(await AsyncStorage.getItem('analytics.session_id')).toBeNull();
   });
 });

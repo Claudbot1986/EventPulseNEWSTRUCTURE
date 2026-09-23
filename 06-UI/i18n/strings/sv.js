@@ -382,6 +382,11 @@ export default {
   'profile.pushVenuesDesc':
     'Få en notis när en venue du följer lägger till ett nytt event. Dela din enhets push-token under Inställningar → Notiser → EventPulse för att aktivera leverans.',
   'profile.pushSwitchA11y': 'Push-notiser för följda venues',
+  'profile.privacy': 'Integritet',
+  'profile.analyticsConsent': 'Anonym användarstatistik',
+  'profile.analyticsConsentDesc':
+    'Hjälp oss förbättra appen med anonym data om hur den används — till exempel vilka Utforska-knappar du trycker på. Ingen personlig information. Kan stängas av när som helst.',
+  'profile.analyticsSwitchA11y': 'Anonym användarstatistik på eller av',
   'profile.saving': 'Sparar…',
   'profile.language': 'Språk',
   'profile.languageDesc': 'Välj vilket språk appen visar.',

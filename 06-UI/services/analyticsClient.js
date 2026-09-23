@@ -113,6 +113,24 @@ async function getActiveUser() {
   return AsyncStorage.getItem(STORAGE_USER_KEY);
 }
 
+/**
+ * Identity half of the consent + identity gate (Fas B, 2026-09-22): track()
+ * requires BOTH GDPR consent AND an active user — the user id is the salt
+ * basis for device_id_hash. Until 2026-09-22 nothing in the app ever set
+ * this key, so every event was silently dropped even with consent granted.
+ * Wired from services/storage.saveAuthSession (all login/refresh/heal
+ * paths) and services/supabaseAuthClient.bootstrapSession (restored
+ * sessions — the no-write-churn path skips saveAuthSession by design).
+ */
+async function setActiveUser(userId) {
+  if (!userId) return;
+  await AsyncStorage.setItem(STORAGE_USER_KEY, String(userId));
+  // A different user must never inherit the previous user's device hash or
+  // session id. Both are dropped here; the hash regenerates deterministically
+  // for the same user id (same salt basis), and a session id is per launch.
+  await AsyncStorage.multiRemove([STORAGE_HASH_KEY, STORAGE_SESSION_KEY]);
+}
+
 async function clearActiveUser() {
   await AsyncStorage.multiRemove([
     STORAGE_USER_KEY,
@@ -330,6 +348,7 @@ export const analyticsClient = {
   startFlushLoop,
   stopFlushLoop,
   clearActiveUser,
+  setActiveUser,
   logout,
   getConsent,
   setConsent,

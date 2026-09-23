@@ -50,6 +50,7 @@ import {
   isAuthenticated,
   loadAuthIdentity,
 } from './storage';
+import { analyticsClient } from './analyticsClient';
 
 const SUPABASE_URL = process.env.EXPO_PUBLIC_SUPABASE_URL || 'https://bsllkpvkowwndhhxtlln.supabase.co';
 const SUPABASE_ANON_KEY = process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY || '';
@@ -213,6 +214,15 @@ export async function bootstrapSession() {
       if (await isAuthenticated()) {
         const identity = await loadAuthIdentity();
         const healed = await refreshPersistedIdentity(existing, identity);
+        // Restored sessions skip saveAuthSession when the snapshot is
+        // current (no write churn, by design) — set the analytics identity
+        // here so the consent + identity gate also opens on a cold start
+        // with an already-persisted session (Fas B, 2026-09-22).
+        try {
+          await analyticsClient.setActiveUser(existing?.user?.id || null);
+        } catch (_err) {
+          // best-effort — never block bootstrap on analytics
+        }
         return { session: existing, state: healed.isAnonymous ? 'guest' : 'logged_in' };
       }
       // Expired — try to renew before anything else so the guest's identity

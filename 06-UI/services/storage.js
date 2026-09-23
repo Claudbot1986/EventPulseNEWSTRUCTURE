@@ -13,6 +13,7 @@
  */
 
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { analyticsClient } from './analyticsClient';
 
 const memoryFallback = (() => {
   const map = new Map();
@@ -80,6 +81,14 @@ export async function saveAuthSession(session) {
       : null,
   };
   await setItem(AUTH_SESSION_KEY, JSON.stringify(normalized));
+  // Identity funnel (Fas B, 2026-09-22): every login / token-refresh / heal
+  // path flows through here — wire the analytics identity so the consent +
+  // identity gate can open. Best-effort: auth must never fail on analytics.
+  try {
+    await analyticsClient.setActiveUser(normalized.user?.id || null);
+  } catch (_err) {
+    // best-effort — see comment above
+  }
 }
 
 /**

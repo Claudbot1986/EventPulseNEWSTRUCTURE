@@ -381,6 +381,11 @@ export default {
   'profile.pushVenuesDesc':
     'Get a notification when a venue you follow adds a new event. Allow notifications for EventPulse in your device settings (Settings → Notifications) to enable delivery.',
   'profile.pushSwitchA11y': 'Push notifications for followed venues',
+  'profile.privacy': 'Privacy',
+  'profile.analyticsConsent': 'Anonymous usage statistics',
+  'profile.analyticsConsentDesc':
+    'Help us improve the app with anonymous data about how it is used — for example which Explore tiles you tap. No personal information. Can be turned off at any time.',
+  'profile.analyticsSwitchA11y': 'Anonymous usage statistics on or off',
   'profile.saving': 'Saving…',
   'profile.language': 'Language',
   'profile.languageDesc': 'Choose which language the app shows.',

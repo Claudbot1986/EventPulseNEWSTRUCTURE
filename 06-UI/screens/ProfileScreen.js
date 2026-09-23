@@ -222,6 +222,11 @@ export default function ProfileScreen({ onLoggedOut, onOpenLogin }) {
   const [dinHelgPushEnabled, setDinHelgPushEnabled] = useState(false);
   const [dinHelgPushLoaded, setDinHelgPushLoaded] = useState(false);
   const [dinHelgPushBusy, setDinHelgPushBusy] = useState(false);
+  // GDPR consent surface (Fas B, 2026-09-22): analyticsClient drops every
+  // event until setConsent(true) — this switch is the missing half of the
+  // consent gate. Without it no usage data can ever leave the app.
+  const [analyticsConsent, setAnalyticsConsentState] = useState(false);
+  const [analyticsConsentLoaded, setAnalyticsConsentLoaded] = useState(false);
 
   // Konto — the Supabase auth session (magic link / Apple). Null OR
   // anonymous (NOW#2 bootstrap session with user.is_anonymous) means guest
@@ -266,6 +271,38 @@ export default function ProfileScreen({ onLoggedOut, onOpenLogin }) {
     return () => {
       alive = false;
     };
+  }, []);
+
+  // GDPR consent — read the persisted flag on mount so the switch shows
+  // the truth before the user touches it.
+  useEffect(() => {
+    let alive = true;
+    analyticsClient.getConsent().then((granted) => {
+      if (!alive) return;
+      setAnalyticsConsentState(!!granted);
+      setAnalyticsConsentLoaded(true);
+    });
+    return () => {
+      alive = false;
+    };
+  }, []);
+
+  // ON → setConsent(true) opens the gate. OFF → the full setOptOut() so the
+  // backend records the opt-out (and any queued events are flushed first).
+  // Optimistic UI: the switch flips immediately, persistence is best-effort.
+  const handleToggleAnalyticsConsent = useCallback(async (next) => {
+    setAnalyticsConsentState(next);
+    try {
+      if (next) {
+        await analyticsClient.setConsent(true);
+      } else {
+        await analyticsClient.setOptOut();
+      }
+    } catch (err) {
+      if (typeof __DEV__ !== 'undefined' && __DEV__) {
+        console.warn('[profile] analytics consent toggle failed', err?.message || err);
+      }
+    }
   }, []);
 
   // Load the persisted Supabase auth session (if any). When the user
@@ -750,6 +787,32 @@ export default function ProfileScreen({ onLoggedOut, onOpenLogin }) {
         {dinHelgPushBusy ? (
           <Text style={styles.statusLine}>{t('profile.saving')}</Text>
         ) : null}
+      </View>
+
+      {/* GDPR consent surface (Fas B, 2026-09-22) — the analyticsClient
+          gate drops every event until this is turned on. */}
+      <View style={styles.section}>
+        <Text style={styles.sectionTitle}>{t('profile.privacy')}</Text>
+        <View style={styles.row}>
+          <View style={styles.rowTextWrap}>
+            <Text style={styles.rowLabel}>{t('profile.analyticsConsent')}</Text>
+            <Text style={styles.rowDescription}>
+              {t('profile.analyticsConsentDesc')}
+            </Text>
+          </View>
+          {analyticsConsentLoaded ? (
+            <Switch
+              value={analyticsConsent}
+              onValueChange={handleToggleAnalyticsConsent}
+              trackColor={{ false: TOKENS.color.border, true: TOKENS.color.accent }}
+              thumbColor={analyticsConsent ? '#1A1206' : TOKENS.color.textMuted}
+              accessibilityLabel={t('profile.analyticsSwitchA11y')}
+              testID="analytics-consent-switch"
+            />
+          ) : (
+            <ActivityIndicator color={TOKENS.color.accent} />
+          )}
+        </View>
       </View>
 
       <LanguageSection t={t} language={language} setLanguage={setLanguage} />
