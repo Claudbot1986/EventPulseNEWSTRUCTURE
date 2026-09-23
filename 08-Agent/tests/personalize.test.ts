@@ -30,6 +30,8 @@ import {
   DWELL_BOOST_BETA,
   DWELL_WEIGHT_FRACTION,
   MIN_DWELLS,
+  OUTBOUND_BOOST_BETA,
+  MIN_OUTBOUNDS,
   type UserSignal,
 } from '../tools/personalize';
 import { rankEvents } from '../tools/rank_events';
@@ -390,6 +392,8 @@ describe('rankEvents — personalization prior', () => {
     weightedRejects: 0,
     dwellPerCategory: {},
     totalDwells: 0,
+    outboundPerCategory: {},
+    totalOutbounds: 0,
     fetchedAt: NOW.toISOString(),
   };
 
@@ -738,6 +742,8 @@ describe('T0075 verify line — rank_events + materialized weights shift order',
       weightedRejects: 0,
       dwellPerCategory: {},
       totalDwells: 0,
+      outboundPerCategory: {},
+      totalOutbounds: 0,
       fetchedAt: NOW.toISOString(),
     };
     const userWithoutSaves: UserSignal = {
@@ -748,6 +754,8 @@ describe('T0075 verify line — rank_events + materialized weights shift order',
       weightedRejects: 0,
       dwellPerCategory: {},
       totalDwells: 0,
+      outboundPerCategory: {},
+      totalOutbounds: 0,
       fetchedAt: NOW.toISOString(),
     };
 
@@ -851,5 +859,119 @@ describe('buildUserSignal — dwell interest signals (card hold / list view)', (
     const sig = await buildUserSignal(badSb, userId, { now: NOW, skipCache: true });
     expect(sig.totalDwells).toBe(0);
     expect(sig.dwellPerCategory).toEqual({});
+  });
+});
+
+// ── Fas C.3 (2026-09-23): outbound ticket-click signals ──
+
+describe('buildUserSignal — outbound ticket-click signals (Fas C.3)', () => {
+  const userId = '00000000-0000-0000-0000-000000000005';
+
+  function fakeOutboundRow(daysAgo: number, interaction: string, cat: string | null, venue: string | null) {
+    return {
+      interaction,
+      created_at: new Date(NOW.getTime() - daysAgo * 86_400_000).toISOString(),
+      events: { category_slug: cat, venue_name: venue },
+    };
+  }
+
+  function sbReturning(rows: unknown[]) {
+    return {
+      from() {
+        return {
+          select() { return this; },
+          eq() { return this; },
+          in() { return this; },
+          order() { return this; },
+          limit() { return Promise.resolve({ data: rows, error: null }); },
+        };
+      },
+    } as any;
+  }
+
+  it('queries user_interactions with outbound in the .in() filter (wire contract)', async () => {
+    // Row-behavior mocks can't catch a missing 'outbound' in the .in() list:
+    // they hand back rows regardless. Pin the actual filter argument — if
+    // 'outbound' is missing, PostgREST never returns those rows and the
+    // signal silently stays cold. (loadMaterializedCategoryWeights runs
+    // first on user_signal_weights — no .in() there, so the captured arg
+    // can only be the user_interactions filter.)
+    let seenInArg: unknown = null;
+    const captureSb: any = {
+      from() {
+        return {
+          select() { return this; },
+          eq() { return this; },
+          in(_col: string, arg: unknown) { seenInArg = arg; return this; },
+          order() { return this; },
+          limit() { return Promise.resolve({ data: [], error: null }); },
+        };
+      },
+    };
+    await buildUserSignal(captureSb, userId, { now: NOW, skipCache: true });
+    expect(Array.isArray(seenInArg)).toBe(true);
+    expect(seenInArg).toContain('outbound');
+    expect(seenInArg).toContain('dwell');
+    expect(seenInArg).toContain('save');
+  });
+
+  it('counts decay-weighted outbounds per category at FULL weight (no soft-evidence fraction)', async () => {
+    // 3 fresh ticket clicks in music → decay=1 each. Unlike dwells (×0.25),
+    // a ticket click is strong evidence — full save-equivalent weight.
+    const rows = [
+      fakeOutboundRow(0, 'outbound', 'music', 'Konserthuset'),
+      fakeOutboundRow(0, 'outbound', 'music', 'Debaser'),
+      fakeOutboundRow(0, 'outbound', 'music', 'Konserthuset'),
+    ];
+    const sig = await buildUserSignal(sbReturning(rows), userId, { now: NOW, skipCache: true });
+    expect(sig.totalOutbounds).toBeCloseTo(3, 6);
+    expect(sig.outboundPerCategory.music).toBeCloseTo(3, 6);
+  });
+
+  it('outbounds do NOT inflate saves or the category posterior', async () => {
+    // 3 outbounds in music + 1 save in art. The posterior must stay
+    // save-derived: music gets NO posterior entry, art gets the full one.
+    const rows = [
+      fakeOutboundRow(0, 'outbound', 'music', 'Konserthuset'),
+      fakeOutboundRow(0, 'outbound', 'music', 'Debaser'),
+      fakeOutboundRow(0, 'outbound', 'music', 'Konserthuset'),
+      fakeOutboundRow(0, 'save', 'art', 'Moderna'),
+    ];
+    const sig = await buildUserSignal(sbReturning(rows), userId, { now: NOW, skipCache: true });
+    expect(sig.totalSaves).toBeCloseTo(1, 6);
+    expect(sig.categoryPosterior.music).toBeUndefined();
+    expect(sig.categoryPosterior.art).toBeCloseTo(1, 6); // (1+1)/(1+1·1)
+  });
+
+  it('outbounds decay with the same 30-day half-life as saves', async () => {
+    const rows = [
+      fakeOutboundRow(0, 'outbound', 'music', 'Konserthuset'),   // decay 1
+      fakeOutboundRow(30, 'outbound', 'music', 'Konserthuset'),  // decay 0.5
+    ];
+    const sig = await buildUserSignal(sbReturning(rows), userId, { now: NOW, skipCache: true });
+    expect(sig.totalOutbounds).toBeCloseTo(1.5, 6);
+    expect(sig.outboundPerCategory.music).toBeCloseTo(1.5, 6);
+  });
+
+  it('MIN_OUTBOUNDS matches the ranker gate (3 fresh outbounds clear it)', () => {
+    // Contract between personalize (producer) and rank_events (consumer):
+    // 3 fresh outbounds → totalOutbounds=3 which must satisfy the
+    // MIN_OUTBOUNDS gate.
+    expect(3 * recencyDecay(0)).toBeGreaterThanOrEqual(MIN_OUTBOUNDS);
+  });
+
+  it('outbound β matches the save prior weight (vikt ≈ save, 2026-09-23 decision)', () => {
+    expect(OUTBOUND_BOOST_BETA).toBe(CATEGORY_BOOST_BETA);
+  });
+
+  it('cold/error signal returns totalOutbounds=0 and empty outboundPerCategory', async () => {
+    const badSb: any = {
+      from() {
+        return { select() { return this; }, eq() { return this; }, in() { return this; }, order() { return this; }, limit() { return Promise.resolve({ data: null, error: { message: 'table missing' } }); } };
+      },
+    };
+    const sig = await buildUserSignal(badSb, userId, { now: NOW, skipCache: true });
+    expect(sig.totalOutbounds).toBe(0);
+    expect(sig.outboundPerCategory).toEqual({});
   });
 });

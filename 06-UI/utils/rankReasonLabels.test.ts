@@ -66,3 +66,16 @@ describe('resolveConsumerReasons — home cards must never show data-quality fla
     expect(resolveConsumerReasons([null, 'stale', 'not_ended'])).toEqual([]);
   });
 });
+
+describe('resolveConsumerReasons — outbound_personalization chip (Fas C.3, 2026-09-23)', () => {
+  it('resolves with icon + sv labels — visible consumer chip, never filtered', () => {
+    const out = resolveConsumerReasons(['outbound_personalization'], 'sv');
+    expect(out).toHaveLength(1);
+    expect(out[0]).toEqual({
+      key: 'outbound_personalization',
+      icon: '🎟️',
+      label: 'Dina biljettval',
+      fullLabel: expect.any(String),
+    });
+  });
+});

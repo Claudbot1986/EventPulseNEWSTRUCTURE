@@ -452,4 +452,6 @@ export default {
   'reason.followed_venue.full': 'Du följer den här platsen',
   'reason.followed_artist.label': 'Favoritartist',
   'reason.followed_artist.full': 'Du följer en av artisterna',
+  'reason.outbound_personalization.label': 'Dina biljettval',
+  'reason.outbound_personalization.full': 'Du klickar ofta vidare till biljetter för den här typen av event',
 };

@@ -431,4 +431,6 @@ export default {
   'reason.followed_venue.full': 'Du følger denne venuen',
   'reason.followed_artist.label': 'Favorittartist',
   'reason.followed_artist.full': 'Du følger en av artistene',
+  'reason.outbound_personalization.label': 'Billettvalgene dine',
+  'reason.outbound_personalization.full': 'Du klikker ofte videre til billetter for denne typen arrangement',
 };

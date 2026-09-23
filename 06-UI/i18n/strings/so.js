@@ -376,4 +376,6 @@ export default {
   'reason.followed_venue.full': 'Waxaad raacdaa meeshan',
   'reason.followed_artist.label': 'Fanaanle aad jeceshahay',
   'reason.followed_artist.full': 'Waxaad raacdaa fanaanle ka mid ah',
+  'reason.outbound_personalization.label': 'Doorashada tigidhkaaga',
+  'reason.outbound_personalization.full': 'Badbaad waxaad badhan u riixaysaa xiriiriyada tigidhada noocaas oo ah',
 };

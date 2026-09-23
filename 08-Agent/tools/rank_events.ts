@@ -25,6 +25,8 @@ import {
   PENALTY_CAP_ABS,
   DWELL_BOOST_BETA,
   MIN_DWELLS,
+  OUTBOUND_BOOST_BETA,
+  MIN_OUTBOUNDS,
 } from './personalize';
 import { haversineKm, type LatLng } from '../utils/haversine';
 
@@ -299,6 +301,23 @@ export function rankEvents(
         if (boost > 0) {
           score += boost;
           reasons.push('dwell_personalization');
+        }
+      }
+
+      // Outbound boost (Fas C.3 2026-09-23): the user clicked through to the
+      // ticket page — the action closest to real user value (WSJ/Chaslot).
+      // Same min-N gate + magnitude-cap discipline as the save prior, but
+      // with the save-strength OUTBOUND_BOOST_BETA per the 2026-09-23
+      // decision. Field guards keep hand-built/legacy signals (without the
+      // outbound fields) safe.
+      if (p.outboundPerCategory && p.totalOutbounds >= MIN_OUTBOUNDS
+          && p.outboundPerCategory[c.category_slug] !== undefined) {
+        const raw = OUTBOUND_BOOST_BETA * Math.log(1 + p.outboundPerCategory[c.category_slug]);
+        const cap = OUTBOUND_BOOST_BETA * Math.log(1 + BOOST_CAP_FRACTION * p.totalOutbounds);
+        const boost = Math.max(0, Math.min(raw, cap));
+        if (boost > 0) {
+          score += boost;
+          reasons.push('outbound_personalization');
         }
       }
     }

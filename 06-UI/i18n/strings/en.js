@@ -451,4 +451,6 @@ export default {
   'reason.followed_venue.full': 'You follow this venue',
   'reason.followed_artist.label': 'Favourite artist',
   'reason.followed_artist.full': 'You follow one of the artists',
+  'reason.outbound_personalization.label': 'Your ticket picks',
+  'reason.outbound_personalization.full': 'You often click through to tickets for this kind of event',
 };

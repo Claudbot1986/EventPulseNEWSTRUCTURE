@@ -376,4 +376,6 @@ export default {
   'reason.followed_venue.full': 'أنت تتابع هذا المكان',
   'reason.followed_artist.label': 'فنانك المفضل',
   'reason.followed_artist.full': 'أنت تتابع أحد الفنانين',
+  'reason.outbound_personalization.label': 'اختياراتك للتذاكر',
+  'reason.outbound_personalization.full': 'كثيرًا ما تضغط على روابط التذاكر لهذا النوع من الفعاليات',
 };

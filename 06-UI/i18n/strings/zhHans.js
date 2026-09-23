@@ -424,4 +424,6 @@ export default {
   'reason.followed_venue.full': '你关注了这个场馆',
   'reason.followed_artist.label': '喜欢的艺人',
   'reason.followed_artist.full': '你关注了其中一位艺人',
+  'reason.outbound_personalization.label': '门票偏好',
+  'reason.outbound_personalization.full': '你经常点开这类活动的门票',
 };

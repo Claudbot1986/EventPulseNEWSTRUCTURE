@@ -14,9 +14,11 @@ import {
 import type { EventCard, IntentBrief } from '../types';
 import {
   DWELL_BOOST_BETA,
+  OUTBOUND_BOOST_BETA,
   CATEGORY_BOOST_BETA,
   BOOST_CAP_FRACTION,
   MIN_DWELLS,
+  MIN_OUTBOUNDS,
   type UserSignal,
 } from '../tools/personalize';
 
@@ -286,6 +288,8 @@ describe('rankEvents — stated category preferences', () => {
       weightedRejects: 0,
       dwellPerCategory: {},
       totalDwells: 0,
+      outboundPerCategory: {},
+      totalOutbounds: 0,
       fetchedAt: NOW.toISOString(),
     };
     const ranked = rankEvents([m1], baseIntent, {
@@ -625,6 +629,8 @@ describe('rankEvents — dwell personalization prior (card hold / list view)', (
     weightedRejects: 0,
     dwellPerCategory: {},
     totalDwells: 0,
+    outboundPerCategory: {},
+    totalOutbounds: 0,
     fetchedAt: NOW.toISOString(),
   };
 
@@ -699,6 +705,113 @@ describe('rankEvents — dwell personalization prior (card hold / list view)', (
     } as unknown as UserSignal;
     const ranked = rankEvents([m1], baseIntent, { now: NOW, personalization: legacy });
     expect(ranked[0].reasons).not.toContain('dwell_personalization');
+    expect(Number.isFinite(ranked[0].score)).toBe(true);
+  });
+});
+
+/**
+ * Fas C.3 (2026-09-23) — outbound (ticket-click) personalization prior.
+ *
+ * A ticket-page click is the action closest to real user value (WSJ/TikTok
+ * analysis via Chaslot: watch time ≠ user value; the outbound click is).
+ * buildUserSignal aggregates decay-weighted outbounds per category at FULL
+ * weight (no soft-evidence fraction — unlike dwells); the ranker applies the
+ * same min-N gate + magnitude-cap discipline as the save prior, with
+ * OUTBOUND_BOOST_BETA = CATEGORY_BOOST_BETA (β=8) per the 2026-09-23
+ * decision ("vikt ≈ save").
+ */
+describe('rankEvents — outbound personalization prior (ticket clicks)', () => {
+  const m1 = card({ id: 'm1', start_time: '2026-08-17T20:00:00Z', category_slug: 'music' });
+  const t1 = card({ id: 't1', start_time: '2026-08-17T20:00:00Z', category_slug: 'theater' });
+
+  const outboundCold: UserSignal = {
+    client_user_id: 'u-outbound',
+    categoryPosterior: {},
+    venueBadness: {},
+    totalSaves: 0,
+    weightedRejects: 0,
+    dwellPerCategory: {},
+    totalDwells: 0,
+    outboundPerCategory: {},
+    totalOutbounds: 0,
+    fetchedAt: NOW.toISOString(),
+  };
+
+  it('boosts only the outbound category when totalOutbounds >= MIN_OUTBOUNDS', () => {
+    const sig: UserSignal = {
+      ...outboundCold,
+      totalOutbounds: MIN_OUTBOUNDS,
+      outboundPerCategory: { music: 3 },
+    };
+    const ranked = rankEvents([m1, t1], baseIntent, { now: NOW, personalization: sig });
+    expect(ranked.find((r) => r.card.id === 'm1')!.reasons).toContain('outbound_personalization');
+    expect(ranked.find((r) => r.card.id === 't1')!.reasons).not.toContain('outbound_personalization');
+    // Boost moves the music card above the identical-score theatre card.
+    expect(ranked[0].card.id).toBe('m1');
+  });
+
+  it('gates boost off below MIN_OUTBOUNDS (does not fire at 2)', () => {
+    const sig: UserSignal = {
+      ...outboundCold,
+      totalOutbounds: MIN_OUTBOUNDS - 1,
+      outboundPerCategory: { music: 2 },
+    };
+    const ranked = rankEvents([m1], baseIntent, { now: NOW, personalization: sig });
+    expect(ranked[0].reasons).not.toContain('outbound_personalization');
+  });
+
+  it('does not fire on a cold signal (totalOutbounds=0)', () => {
+    const ranked = rankEvents([m1], baseIntent, { now: NOW, personalization: outboundCold });
+    expect(ranked[0].reasons).not.toContain('outbound_personalization');
+  });
+
+  it('caps boost magnitude to prevent filter-bubble pathology', () => {
+    // raw = 8·log(1+10) ≈ 19.1; cap = 8·log(1+0.2·40) ≈ 17.5 → clipped.
+    const sig: UserSignal = {
+      ...outboundCold,
+      totalOutbounds: 40,
+      outboundPerCategory: { music: 10 },
+    };
+    const withPers = rankEvents([m1], baseIntent, { now: NOW, personalization: sig });
+    const withoutPers = rankEvents([m1], baseIntent, { now: NOW });
+    const delta =
+      withPers.find((r) => r.card.id === 'm1')!.score -
+      withoutPers.find((r) => r.card.id === 'm1')!.score;
+    const cap = OUTBOUND_BOOST_BETA * Math.log(1 + BOOST_CAP_FRACTION * 40);
+    expect(delta).toBeGreaterThan(0);
+    expect(delta).toBeLessThanOrEqual(cap + 1e-9);
+  });
+
+  it('outbound weight matches the save prior weight (β = β, 2026-09-23 decision: vikt ≈ save)', () => {
+    expect(OUTBOUND_BOOST_BETA).toBe(CATEGORY_BOOST_BETA);
+  });
+
+  it('stacks with the save-prior boost when both signals exist', () => {
+    const sig: UserSignal = {
+      ...outboundCold,
+      totalSaves: 6,
+      categoryPosterior: { music: 1.0 },
+      totalOutbounds: MIN_OUTBOUNDS,
+      outboundPerCategory: { music: 3 },
+    };
+    const ranked = rankEvents([m1], baseIntent, { now: NOW, personalization: sig });
+    expect(ranked[0].reasons).toContain('category_personalization');
+    expect(ranked[0].reasons).toContain('outbound_personalization');
+  });
+
+  it('is safe for legacy signals without outbound fields (backwards-compat)', () => {
+    const legacy = {
+      client_user_id: 'u-legacy-outbound',
+      categoryPosterior: {},
+      venueBadness: {},
+      totalSaves: 0,
+      weightedRejects: 0,
+      dwellPerCategory: {},
+      totalDwells: 0,
+      fetchedAt: NOW.toISOString(),
+    } as unknown as UserSignal;
+    const ranked = rankEvents([m1], baseIntent, { now: NOW, personalization: legacy });
+    expect(ranked[0].reasons).not.toContain('outbound_personalization');
     expect(Number.isFinite(ranked[0].score)).toBe(true);
   });
 });

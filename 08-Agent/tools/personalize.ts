@@ -27,6 +27,10 @@
  *  - dwell_c         = Σ dwell_t · decay × DWELL_WEIGHT_FRACTION (Fas A:
  *    3s card hold, 2026-09-21) — softer than saves, never enters the
  *    category posterior; ranker boosts with DWELL_BOOST_BETA.
+ *  - outbound_c      = Σ outbound_t · decay (Fas C.3: ticket-page click,
+ *    2026-09-23) — FULL weight (action closest to real user value),
+ *    never enters the category posterior; ranker boosts with
+ *    OUTBOUND_BOOST_BETA (= save β per the 2026-09-23 decision).
  *
  * Gotchas baked in (see RankOptions in rank_events.ts):
  *  1. Min-N gate: boost only if totalSaves ≥ MIN_SAVES, penalty only if
@@ -76,6 +80,18 @@ export const DWELL_WEIGHT_FRACTION = 0.25;
 /** Below this many decay-weighted dwells, the boost stays off (noise gate). */
 export const MIN_DWELLS = 3;
 
+/**
+ * Outbound-boost weight (Fas C.3 2026-09-23: ticket-page click). Matches
+ * CATEGORY_BOOST_BETA — per the 2026-09-23 decision ("vikt ≈ save") the
+ * click-through to the ticket page is the action closest to real user
+ * value (WSJ/Chaslot: watch time ≠ user value; the outbound click is), so
+ * it weighs like a save, not like a 3s hold.
+ */
+export const OUTBOUND_BOOST_BETA = 8;
+
+/** Below this many decay-weighted outbounds, the boost stays off (noise gate). */
+export const MIN_OUTBOUNDS = 3;
+
 /** Hard cap on |boost| as a fraction of a single feature's weight.
  *  Prevents the "user who saved 50 jazz events" filter-bubble pathology. */
 export const BOOST_CAP_FRACTION = 0.2;
@@ -106,6 +122,12 @@ export interface UserSignal {
   dwellPerCategory: Record<string, number>;
   /** Total dwell count, decay-weighted (no fraction) — ranker gate + cap. */
   totalDwells: number;
+  /** Decay-weighted ticket-click ("outbound") counts per category, FULL
+   *  weight (no soft-evidence fraction — a ticket click is the action
+   *  closest to real user value). Never enters categoryPosterior. */
+  outboundPerCategory: Record<string, number>;
+  /** Total outbound count, decay-weighted — ranker gate + cap. */
+  totalOutbounds: number;
   /** ISO timestamp the signal was computed at. */
   fetchedAt: string;
 }
@@ -200,6 +222,8 @@ export async function buildUserSignal(
     weightedRejects: 0,
     dwellPerCategory: {},
     totalDwells: 0,
+    outboundPerCategory: {},
+    totalOutbounds: 0,
     fetchedAt: now.toISOString(),
   };
 
@@ -216,7 +240,7 @@ export async function buildUserSignal(
       .from('user_interactions')
       .select('interaction, created_at, events:event_id(category_slug, venue_name)')
       .eq('client_user_id', client_user_id)
-      .in('interaction', ['save', 'dismiss', 'feedback_positive', 'feedback_negative', 'dwell'])
+      .in('interaction', ['save', 'dismiss', 'feedback_positive', 'feedback_negative', 'dwell', 'outbound'])
       .order('created_at', { ascending: false })
       .limit(500);
 
@@ -232,6 +256,8 @@ export async function buildUserSignal(
     let weightedRejects = 0;
     const dwellPerCategory: Record<string, number> = {};
     let totalDwells = 0;
+    const outboundPerCategory: Record<string, number> = {};
+    let totalOutbounds = 0;
     const categories = new Set<string>();
     const venues = new Set<string>();
 
@@ -248,6 +274,17 @@ export async function buildUserSignal(
       if (r.interaction === 'dwell') {
         totalDwells += decay;
         if (cat) dwellPerCategory[cat] = (dwellPerCategory[cat] ?? 0) + decay * DWELL_WEIGHT_FRACTION;
+        continue;
+      }
+
+      // Fas C.3 (2026-09-23): outbound = ticket-page click — the action
+      // closest to real user value (WSJ/Chaslot). STRONG evidence: full
+      // decay weight (no soft-evidence fraction), but still excluded from
+      // `categories`/`savesPerCategory` so the save posterior stays
+      // save-derived. The ranker boosts with OUTBOUND_BOOST_BETA.
+      if (r.interaction === 'outbound') {
+        totalOutbounds += decay;
+        if (cat) outboundPerCategory[cat] = (outboundPerCategory[cat] ?? 0) + decay;
         continue;
       }
 
@@ -316,6 +353,8 @@ export async function buildUserSignal(
       weightedRejects,
       dwellPerCategory,
       totalDwells,
+      outboundPerCategory,
+      totalOutbounds,
       fetchedAt: now.toISOString(),
     };
 

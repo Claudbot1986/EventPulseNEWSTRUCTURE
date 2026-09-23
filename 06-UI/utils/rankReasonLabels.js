@@ -58,6 +58,7 @@ const ICONS = {
   venue_personalization_penalty: '📍',
   followed_venue: '⭐',
   followed_artist: '🎤',
+  outbound_personalization: '🎟️',
 };
 
 /**

@@ -425,4 +425,6 @@ export default {
   'reason.followed_venue.full': 'Je volgt deze locatie',
   'reason.followed_artist.label': 'Favoriete artiest',
   'reason.followed_artist.full': 'Je volgt een van de artiesten',
+  'reason.outbound_personalization.label': 'Je ticketkeuzes',
+  'reason.outbound_personalization.full': 'Je klikt vaak door naar tickets voor dit soort evenementen',
 };

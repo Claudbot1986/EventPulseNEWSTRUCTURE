@@ -426,4 +426,6 @@ export default {
   'reason.followed_venue.full': 'Tu suis ce lieu',
   'reason.followed_artist.label': 'Artiste favori',
   'reason.followed_artist.full': 'Tu suis l’un des artistes',
+  'reason.outbound_personalization.label': 'Tes billets',
+  'reason.outbound_personalization.full': 'Tu cliques souvent vers les billets pour ce type d’événement',
 };

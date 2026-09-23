@@ -376,4 +376,6 @@ export default {
   'reason.followed_venue.full': 'Obserwujesz to miejsce',
   'reason.followed_artist.label': 'Ulubiony artysta',
   'reason.followed_artist.full': 'Obserwujesz jednego z artystów',
+  'reason.outbound_personalization.label': 'Twoje wybory biletów',
+  'reason.outbound_personalization.full': 'Często klikasz w bilety na tego typu wydarzenia',
 };

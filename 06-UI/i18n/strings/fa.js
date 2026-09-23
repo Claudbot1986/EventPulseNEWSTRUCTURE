@@ -376,4 +376,6 @@ export default {
   'reason.followed_venue.full': 'این مکان را دنبال می‌کنید',
   'reason.followed_artist.label': 'هنرمند مورد علاقه',
   'reason.followed_artist.full': 'یکی از هنرمندان را دنبال می‌کنید',
+  'reason.outbound_personalization.label': 'انتخاب‌های بلیت شما',
+  'reason.outbound_personalization.full': 'اغلب روی لینک‌های بلیت برای این نوع رویداد کلیک می‌کنید',
 };

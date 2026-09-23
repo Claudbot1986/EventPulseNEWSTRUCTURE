@@ -108,6 +108,18 @@ const theatreSaves = Array.from({ length: 5 }, () => ({
   events: { category_slug: 'theatre', venue_name: 'Scen X' },
 }));
 
+/**
+ * Fas C.3 (2026-09-23): three fresh ticket-page clicks on theatre events.
+ * Future created_at → recencyDecay 1.0 → totalOutbounds=3 ≥ MIN_OUTBOUNDS(3),
+ * so the outbound_personalization boost gate trips and the reason must ride
+ * the wire on the boosted theatre card.
+ */
+const theatreOutbounds = Array.from({ length: 3 }, () => ({
+  interaction: 'outbound',
+  created_at: '2099-01-01T12:00:00Z',
+  events: { category_slug: 'theatre', venue_name: 'Scen X' },
+}));
+
 // ─── Mock Supabase ──────────────────────────────────────────────────────────
 
 interface FeedMockOptions {
@@ -240,8 +252,8 @@ describe('GET /agent/feed — Fas C taste ranking', () => {
     expect(body.total).toBe(2);
   });
 
-  it('treatment variant with 5 theatre saves sees the theatre event ranked first', async () => {
-    const mock = makeFeedMockSupabase({ interactionRows: theatreSaves });
+  it('treatment variant with 5 theatre saves + 3 ticket clicks sees theatre ranked first with both reasons', async () => {
+    const mock = makeFeedMockSupabase({ interactionRows: [...theatreSaves, ...theatreOutbounds] });
     const { status, body } = await requestFeed(mock, {
       bearer: `t:${TREATMENT_USERS[0]}`,
     });
@@ -252,6 +264,9 @@ describe('GET /agent/feed — Fas C taste ranking', () => {
     ]);
     const theatre = body.events[0];
     expect(theatre.reasons).toContain('category_personalization');
+    // Fas C.3: the ticket clicks add the outbound prior on the same card —
+    // proof the server pipeline carries outbound rows end-to-end to the wire.
+    expect(theatre.reasons).toContain('outbound_personalization');
     expect(typeof theatre.score).toBe('number');
     // Extended ranker fields reach the wire (Fas C select extension).
     expect(theatre.description).toBe('En pjäs på scenen.');

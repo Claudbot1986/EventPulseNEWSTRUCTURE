@@ -431,4 +431,6 @@ export default {
   'reason.followed_venue.full': 'Seuraat tätä paikkaa',
   'reason.followed_artist.label': 'Suosikkimuusikko',
   'reason.followed_artist.full': 'Seuraat yhtä artisteista',
+  'reason.outbound_personalization.label': 'Lippuvalintasi',
+  'reason.outbound_personalization.full': 'Klikkaat usein tämäntyyppisten tapahtumien lippuihin',
 };

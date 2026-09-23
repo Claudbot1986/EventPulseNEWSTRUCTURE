@@ -376,4 +376,6 @@ export default {
   'reason.followed_venue.full': 'Bu mekânı takip ediyorsun',
   'reason.followed_artist.label': 'Favori sanatçı',
   'reason.followed_artist.full': 'Sanatçılardan birini takip ediyorsun',
+  'reason.outbound_personalization.label': 'Bilet seçimlerin',
+  'reason.outbound_personalization.full': 'Bu tür etkinliklerin biletlerine sıkça tıklıyorsun',
 };

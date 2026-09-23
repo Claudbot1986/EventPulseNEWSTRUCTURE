@@ -1218,6 +1218,16 @@ function DetailsScreen({ event, onBack }) {
     }
     if (event?.id) {
       void analyticsClient.eventClick(event.id, 'external');
+      // Fas C.3 (2026-09-23): the ticket click is the strongest taste signal
+      // (WSJ/Chaslot: the action closest to real user value) — record it as
+      // an `outbound` interaction so buildUserSignal's outbound prior can
+      // boost this category in the ranked Utforska feed. Best-effort: a
+      // failed write must never block opening the link, and guests are
+      // silently skipped client-side (auth warning, no fetch).
+      recordEventInteraction({
+        eventId: event.id,
+        interaction: 'outbound',
+      }).catch(() => {});
     }
 
     try {
