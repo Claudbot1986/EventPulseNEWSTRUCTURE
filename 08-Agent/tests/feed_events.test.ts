@@ -210,4 +210,115 @@ describe('feedEvents', () => {
     } as unknown as SupabaseClient;
     await expect(feedEvents(sb, { from: '2026-08-18', days: 7 })).rejects.toThrow(/feed_events_count: count failed/);
   });
+
+  // ── Fas C (2026-09-23): ranker fields + artist hop ──────────────────────
+
+  /**
+   * Table-aware mock: unlike the call-order mock above, this dispatches on
+   * the table name so a third read (event_artists) can coexist with the
+   * data + count queries on events_public.
+   */
+  function makeTableMock(
+    tables: Record<string, any>,
+    eventsPublicRows: any[],
+    totalCount: number
+  ): SupabaseClient {
+    let eventsPublicCalls = 0;
+    const from = vi.fn().mockImplementation((table: string) => {
+      if (table === 'events_public') {
+        eventsPublicCalls += 1;
+        return eventsPublicCalls % 2 === 1
+          ? makeChain(eventsPublicRows)
+          : makeCountChain(totalCount);
+      }
+      if (table in tables) return tables[table];
+      return makeChain([]);
+    });
+    return { from } as unknown as SupabaseClient;
+  }
+
+  it('maps ranker fields (description, confidence, freshness, venue lat/lng) onto cards', async () => {
+    const row = baseRow({
+      description_sv: 'En pjäs på scenen.',
+      description_en: 'A play on stage.',
+      confidence_score: 85,
+      freshness_at: '2026-08-19T09:00:00Z',
+      lat: 59.3294,
+      lng: 18.0686,
+    });
+    const sb = makeTableMock({}, [row], 1);
+    const result = await feedEvents(sb, { from: '2026-08-18', days: 7 });
+    const card = result.events[0];
+    expect(card.description).toBe('En pjäs på scenen.');
+    expect(card.confidence_score).toBe(85);
+    expect(card.freshness_at).toBe('2026-08-19T09:00:00Z');
+    expect(card.venue_lat).toBe(59.3294);
+    expect(card.venue_lng).toBe(18.0686);
+  });
+
+  it('falls back to English description when Swedish is null', async () => {
+    const row = baseRow({
+      description_sv: null,
+      description_en: 'English description.',
+    });
+    const sb = makeTableMock({}, [row], 1);
+    const result = await feedEvents(sb, { from: '2026-08-18', days: 7 });
+    expect(result.events[0].description).toBe('English description.');
+  });
+
+  it('skips the event_artists read when withArtistSlugs is not requested', async () => {
+    const failIfTouched: any = {
+      select: vi.fn(() => {
+        throw new Error('event_artists must not be read without withArtistSlugs');
+      }),
+    };
+    const sb = makeTableMock({ event_artists: failIfTouched }, [baseRow()], 1);
+    const result = await feedEvents(sb, { from: '2026-08-18', days: 7 });
+    expect(result.events).toHaveLength(1);
+    expect(result.events[0].artist_slugs).toBeUndefined();
+  });
+
+  it('attaches lowercased artist_slugs when withArtistSlugs is true', async () => {
+    const artistChain: any = {
+      select: vi.fn().mockReturnThis(),
+      in: vi.fn().mockReturnThis(),
+      then: (resolve: (v: { data: any[]; error: null }) => void) =>
+        Promise.resolve({
+          data: [
+            {
+              event_id: '11111111-1111-1111-1111-111111111111',
+              artists: { slug: 'First-Aid-Kit' },
+            },
+            {
+              event_id: '11111111-1111-1111-1111-111111111111',
+              artists: { slug: 'Robyn' },
+            },
+          ],
+          error: null,
+        }).then(resolve),
+    };
+    const sb = makeTableMock({ event_artists: artistChain }, [baseRow()], 1);
+    const result = await feedEvents(sb, {
+      from: '2026-08-18',
+      days: 7,
+      withArtistSlugs: true,
+    });
+    expect(result.events[0].artist_slugs).toEqual(['first-aid-kit', 'robyn']);
+  });
+
+  it('keeps artist_slugs undefined for events with no artist rows', async () => {
+    const artistChain: any = {
+      select: vi.fn().mockReturnThis(),
+      in: vi.fn().mockReturnThis(),
+      then: (resolve: (v: { data: any[]; error: null }) => void) =>
+        Promise.resolve({ data: [], error: null }).then(resolve),
+    };
+    const sb = makeTableMock({ event_artists: artistChain }, [baseRow()], 1);
+    const result = await feedEvents(sb, {
+      from: '2026-08-18',
+      days: 7,
+      withArtistSlugs: true,
+    });
+    expect(result.events[0].artist_slugs).toBeUndefined();
+  });
 });

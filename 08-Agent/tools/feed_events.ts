@@ -13,6 +13,7 @@
 
 import type { SupabaseClient } from '@supabase/supabase-js';
 import type { EventCard } from '../types';
+import { fetchArtistSlugsByEventIds } from './search_events';
 
 export interface FeedEventsInput {
   /** ISO date inclusive lower bound (YYYY-MM-DD). */
@@ -33,6 +34,14 @@ export interface FeedEventsInput {
    * Språkstöd 2026-09-21 — event_translations table backs this lookup.
    */
   locale?: string | null;
+  /**
+   * Fas C (2026-09-23): when true, one extra event_artists read attaches
+   * lowercased `artist_slugs` to every card so rank_events can apply the
+   * followed-artist boost. Off by default — the anonymous/control feed
+   * paths skip the read entirely (same isolation discipline as the chat
+   * pipeline's variant gating).
+   */
+  withArtistSlugs?: boolean;
 }
 
 export interface FeedEventsResult {
@@ -102,10 +111,17 @@ export async function feedEvents(
       // image_generation_status through events_public. The hook
       // 06-UI/hooks/useAiImageUrl.js reads these to decide between
       // pre-baked / lazy / original / empty in the Utforska tab.
-      'id, title_sv, title_en, start_time, end_time, venue_id, ' +
+      // Fas C (2026-09-23) adds description_sv/en, confidence_score,
+      // freshness_at and event-level lat/lng so rank_events' priors
+      // (confidence, staleness, geo nudge) and the upcoming mood matcher
+      // become active on the browse page. Same columns events_public
+      // already exposes for search_events (EVENT_SELECT_COLUMNS).
+      'id, title_sv, title_en, description_sv, description_en, ' +
+      'start_time, end_time, venue_id, ' +
       'category_slug, is_free, price_min_sek, price_max_sek, ticket_url, image_url, ' +
       'image_license, image_attribution, image_source_url, ' +
       'image_ai_generated, image_ai_optout, image_generation_status, ' +
+      'confidence_score, freshness_at, lat, lng, ' +
       'source, ' +
       'venues:venue_id(name, city)'
     )
@@ -166,35 +182,57 @@ export async function feedEvents(
     }
   }
 
-  const events: EventCard[] = cityFiltered.map((r: any) => ({
-    id: r.id,
-    // Translation > Swedish > English > 'Untitled'. Per Språkstöd plan
-    // 2026-09-21 — search/ranking intentionally remains sv-only; this
-    // only affects what the card displays client-side.
-    title:
-      translationByEvent.get(r.id)?.title ||
-      r.title_sv ||
-      r.title_en ||
-      'Untitled',
-    start_time: r.start_time,
-    end_time: r.end_time ?? null,
-    venue_name: r.venues?.name ?? '',
-    venue_id: r.venue_id ?? null,
-    city: r.venues?.city ?? input.city ?? 'Stockholm',
-    category_slug: r.category_slug ?? '',
-    price_min_sek: r.price_min_sek ?? null,
-    price_max_sek: r.price_max_sek ?? null,
-    is_free: !!r.is_free,
-    ticket_url: r.ticket_url ?? null,
-    image_url: r.image_url ?? null,
-    image_license: r.image_license ?? null,
-    image_attribution: r.image_attribution ?? null,
-    image_source_url: r.image_source_url ?? null,
-    image_ai_generated: r.image_ai_generated ?? false,
-    image_ai_optout: r.image_ai_optout ?? false,
-    image_generation_status: r.image_generation_status ?? null,
-    source: r.source ?? null,
-  }));
+  // Fas C: one artist_slugs hop for the treatment feed so the
+  // followed-artist boost works on the browse page. Gated behind
+  // withArtistSlugs — anonymous/control callers never pay this read.
+  const artistMap =
+    input.withArtistSlugs && cityFiltered.length > 0
+      ? await fetchArtistSlugsByEventIds(
+          supabase,
+          cityFiltered.map((r: any) => r.id).filter((id: unknown): id is string => !!id)
+        )
+      : new Map<string, Set<string>>();
+
+  const events: EventCard[] = cityFiltered.map((r: any) => {
+    const artistSlugs = artistMap.get(r.id);
+    return {
+      id: r.id,
+      // Translation > Swedish > English > 'Untitled'. Per Språkstöd plan
+      // 2026-09-21 — search/ranking intentionally remains sv-only; this
+      // only affects what the card displays client-side.
+      title:
+        translationByEvent.get(r.id)?.title ||
+        r.title_sv ||
+        r.title_en ||
+        'Untitled',
+      // Fas C: description feeds the ranker (and the mood matcher, Fas D).
+      // Same sv > en fallback as search_events so ranking stays language-stable.
+      description: r.description_sv || r.description_en || undefined,
+      start_time: r.start_time,
+      end_time: r.end_time ?? null,
+      venue_name: r.venues?.name ?? '',
+      venue_id: r.venue_id ?? null,
+      city: r.venues?.city ?? input.city ?? 'Stockholm',
+      venue_lat: typeof r.lat === 'number' ? r.lat : undefined,
+      venue_lng: typeof r.lng === 'number' ? r.lng : undefined,
+      category_slug: r.category_slug ?? '',
+      price_min_sek: r.price_min_sek ?? null,
+      price_max_sek: r.price_max_sek ?? null,
+      is_free: !!r.is_free,
+      ticket_url: r.ticket_url ?? null,
+      image_url: r.image_url ?? null,
+      image_license: r.image_license ?? null,
+      image_attribution: r.image_attribution ?? null,
+      image_source_url: r.image_source_url ?? null,
+      image_ai_generated: r.image_ai_generated ?? false,
+      image_ai_optout: r.image_ai_optout ?? false,
+      image_generation_status: r.image_generation_status ?? null,
+      confidence_score: typeof r.confidence_score === 'number' ? r.confidence_score : undefined,
+      freshness_at: r.freshness_at ?? undefined,
+      source: r.source ?? null,
+      artist_slugs: artistSlugs && artistSlugs.size > 0 ? Array.from(artistSlugs) : undefined,
+    };
+  });
 
   return { events, from: fromIso, to: toIso, has_more, total };
 }

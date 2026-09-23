@@ -50,6 +50,7 @@ import { composeReply } from './llmRouter';
 import { createRateLimiter, ipKeyFn } from './middleware/rateLimit';
 import { createAdminAuth } from './middleware/adminAuth';
 import { createRequireUser } from './middleware/requireUser';
+import { createOptionalUser } from './middleware/optionalUser';
 import { createAiImageRouter } from './middleware/ai_image_static';
 import { createAiImageOptOutRouter } from './middleware/ai_image_optout';
 import {
@@ -201,6 +202,15 @@ export function buildApp(opts: {
     verify: opts.verify,
   });
 
+  // Fas C (2026-09-23): optional identity for /agent/feed. Same verifier,
+  // opposite gate — never 401. A valid Bearer attaches req.user so the
+  // feed can taste-rank for PERSONALIZATION_PRIORS treatment users;
+  // everyone else gets the exact anonymous chronological page as before.
+  const optionalUser = createOptionalUser({
+    supabase: sb ?? getSupabase(),
+    verify: opts.verify,
+  });
+
   app.use((req, res, next) => {
     const origin = req.header('origin');
     if (origin && allowedOrigins.length > 0 && !allowedOrigins.includes(origin)) {
@@ -248,9 +258,20 @@ export function buildApp(opts: {
    * Returns the events_public slice in [from, from+days), plus echo of the
    * window and a `has_more` flag so the client can advance by 7-day chunks.
    *
-   * Same lockdown as /agent/chat: origin allowlist + service_role only.
+   * Fas C (2026-09-23) — taste ranking:
+   *   - optionalUser attaches identity when a valid Bearer is present
+   *     (never 401 — anonymous browsing keeps working exactly as before).
+   *   - Signed-in users in the PERSONALIZATION_PRIORS *treatment* variant
+   *     get the page re-ranked by their personal signals (save/dwell
+   *     priors, followed venues/artists, stated categories) via the same
+   *     rank_events as /agent/recommended — but WITHOUT MMR and strictly
+   *     WITHIN the requested page: the window/pagination contract
+   *     (from/to/has_more/total/next_from) is untouched, and control or
+   *     anonymous callers get pure chronology with zero signal reads.
+   *   - The 06-UI client groups cards by day, so ranked order manifests as
+   *     day-section ordering; within-day order is the client's time sort.
    */
-  app.get('/agent/feed', generalLimiter.middleware, async (req: Request, res: Response) => {
+  app.get('/agent/feed', generalLimiter.middleware, optionalUser, async (req: Request, res: Response) => {
     const client = sb ?? getSupabase();
     const from = typeof req.query.from === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(req.query.from)
       ? req.query.from
@@ -271,8 +292,68 @@ export function buildApp(opts: {
       ? req.query.locale
       : null;
 
+    // Fas C: rank only for a verified user in the treatment variant. The
+    // variant check is sticky per user id (experiments.ts), same experiment
+    // as the chat pipeline — one cohort, consistent experience.
+    const shouldRank = Boolean(req.user) &&
+      assignVariant(req.user!.id, PERSONALIZATION_PRIORS_EXP) === 'treatment';
+
     try {
-      const result = await feedEvents(client, { from, days, category, city, locale });
+      let result = await feedEvents(client, {
+        from,
+        days,
+        category,
+        city,
+        locale,
+        withArtistSlugs: shouldRank,
+      });
+
+      if (shouldRank) {
+        try {
+          // Same signal bundle as /agent/recommended. No MMR here — the
+          // browse page is the full page, diversity re-ranking would drop
+          // cards the user explicitly asked to see.
+          const [personalization, statedCategories, followed, followedArtists] = await Promise.all([
+            buildUserSignal(client, req.user!.id),
+            loadStatedPreferences(client, req.user!.id),
+            loadFollowedVenues(client, req.user!.id),
+            loadFollowedArtists(client, req.user!.id),
+          ]);
+
+          const feedIntent: IntentBrief = {
+            raw_query: 'feed',
+            time_of_day: 'anytime',
+            budget: 'any',
+            party: 'any',
+            categories: category ? [category] : [],
+            city,
+            language: 'sv',
+            exclude_categories: [],
+          };
+
+          const ranked = rankEvents(result.events, feedIntent, {
+            topN: result.events.length,
+            personalization,
+            statedCategories: statedCategories ?? undefined,
+            followedVenueIds: followed.venue_ids.length > 0 ? followed.venue_ids : undefined,
+            followedArtistSlugs: followedArtists.artist_slugs.length > 0 ? followedArtists.artist_slugs : undefined,
+          });
+
+          result = {
+            ...result,
+            events: ranked.map((r) => ({
+              ...r.card,
+              reasons: r.reasons,
+              score: r.score,
+            })),
+          };
+        } catch {
+          // Personalization must never break browsing: fall back to the
+          // chronological page we already fetched. (buildUserSignal already
+          // collapses read errors to a cold signal — this guards the rest.)
+        }
+      }
+
       res.json({
         events: result.events,
         from: result.from,

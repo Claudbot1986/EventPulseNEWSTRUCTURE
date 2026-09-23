@@ -56,7 +56,7 @@ declare global {
 }
 
 /** Successful verification result. */
-interface VerifiedUser {
+export interface VerifiedUser {
   id: string;
   email: string | null;
 }

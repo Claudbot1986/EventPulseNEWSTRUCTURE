@@ -729,6 +729,12 @@ async function fetchFeedOnce({ baseUrl, from, days, signal, timeoutMs }) {
   url.searchParams.set('from', from);
   url.searchParams.set('days', String(days));
 
+  // Fas C (2026-09-23): a signed-in session identifies itself so the server
+  // can taste-rank the page for treatment users. getAuthHeader() returns {}
+  // for guests — anonymous browsing keeps the exact same wire format, and a
+  // failed/expired token on the server side just means "chronological page".
+  const headers = await getAuthHeader();
+
   const controller = new AbortController();
   let timedOut = false;
   const timer = setTimeout(() => {
@@ -742,7 +748,7 @@ async function fetchFeedOnce({ baseUrl, from, days, signal, timeoutMs }) {
 
   let response;
   try {
-    response = await fetch(url.toString(), { signal: controller.signal });
+    response = await fetch(url.toString(), { headers, signal: controller.signal });
   } catch (err) {
     if (timedOut) {
       // Our own budget ran out: honest, human-readable failure — NOT the raw
