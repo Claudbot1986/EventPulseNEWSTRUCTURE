@@ -15,7 +15,8 @@
  *
  * @param {{ text?: unknown, category?: unknown, categorySlug?: unknown,
  *           category_slug?: unknown, budget?: unknown, dayFilter?: unknown,
- *           day_filter?: unknown, timeOfDay?: unknown, time_of_day?: unknown }} input
+ *           day_filter?: unknown, timeOfDay?: unknown, time_of_day?: unknown,
+ *           mood?: unknown }} input
  * @returns {{
  *   timeFilter: 'ikvall'|'imorgon'|'helgen'|null,
  *   pinnedDow: 0|1|2|3|4|5|6|null,
@@ -23,6 +24,7 @@
  *   categories: string[]|null,   // Utforska pill keys
  *   queryTerms: string[]|null,   // genre union for search prefill (any-match)
  *   queryLabel: string|null,     // display string for the search box
+ *   mood: string|null,           // Fas D: server-side mood id ('stamningsfullt')
  *   anchor: 'pinned'|'weekend'|'today'|null,
  * }}
  */
@@ -97,6 +99,14 @@ const SUGGESTED_CATEGORY_TO_PILL = {
   'barn-familj': 'barn',
 };
 
+/**
+ * Fas D (2026-09-23): server-side mood ids the client may forward on
+ * /agent/feed?mood=. Mirrors MOOD_IDS in 08-Agent/tools/moods.ts — a second
+ * mood is an explicit two-file step, never an implicit passthrough of an
+ * unknown string.
+ */
+const MOOD_HINTS = new Set(['stamningsfullt']);
+
 function asString(value) {
   return typeof value === 'string' && value.trim() ? value.trim() : null;
 }
@@ -111,6 +121,9 @@ export function resolvePromptIntent(input = {}) {
   const budget = asString(hints.budget);
   const dayFilter = asString(hints.dayFilter ?? hints.day_filter);
   const timeOfDay = asString(hints.timeOfDay ?? hints.time_of_day);
+  // Fas D: mood hint is whitelisted — an unknown id never rides the wire.
+  const rawMood = asString(hints.mood);
+  const mood = rawMood && MOOD_HINTS.has(rawMood) ? rawMood : null;
 
   /* ---- genre (from the chip's own text, or suggested category 'jazz') ---- */
   let genre = GENRES.find((g) => normText && g.matches(normText)) || null;
@@ -164,7 +177,7 @@ export function resolvePromptIntent(input = {}) {
   }
 
   const anyIntent = Boolean(
-    timeFilter || pinnedDow !== null || priceFilter || categories || genre
+    timeFilter || pinnedDow !== null || priceFilter || categories || genre || mood
   );
 
   return {
@@ -174,6 +187,9 @@ export function resolvePromptIntent(input = {}) {
     categories,
     queryTerms: genre ? genre.queryTerms : null,
     queryLabel: genre ? genre.label : null,
+    // Fas D: server-side mood filter id (e.g. 'stamningsfullt'), null when
+    // the hint is absent or unknown. Applied by the caller as a feed param.
+    mood,
     // Any resolved intent re-anchors the feed window ('today' = default
     // window start); no intent at all leaves the window untouched.
     anchor: anyIntent ? (anchor ?? 'today') : null,
@@ -187,6 +203,7 @@ export function intentHasFilters(intent) {
   return Boolean(
     intent.timeFilter || intent.pinnedDow !== null || intent.priceFilter ||
     (intent.categories && intent.categories.length > 0) ||
-    (intent.queryTerms && intent.queryTerms.length > 0)
+    (intent.queryTerms && intent.queryTerms.length > 0) ||
+    intent.mood
   );
 }

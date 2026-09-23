@@ -1129,10 +1129,12 @@ function SavedSection({ onCardPress }) {
 // PENDING_AGENT_MESSAGE_KEY → App.js resolvePromptIntent). The tile must do
 // what its label promises: Gratis → budget 'free', Live → category music,
 // Skratt → 'skratt' genre search rows (standup/komedi — never other genres),
-// Stämningsfullt → banner-only until it gets an honest deterministic path
-// (Fas D). Helg/Imorgon (2026-09-22): time tiles — Helg anchors the weekend
-// window via the dayFilter 'weekend' hint, Imorgon filters to tomorrow via
-// its prompt text (promptIntent has no structured tomorrow hint).
+// Stämningsfullt → Fas D (2026-09-23): server-side mood filter via the
+// static AI lexikon in 08-Agent/tools/moods.ts (?mood=stamningsfullt — the
+// ranked subset is then taste-ordered for treatment users). Helg/Imorgon
+// (2026-09-22): time tiles — Helg anchors the weekend window via the
+// dayFilter 'weekend' hint, Imorgon filters to tomorrow via its prompt text
+// (promptIntent has no structured tomorrow hint).
 function ExploreTilesSection({ onChipPress }) {
   // Hook first — the gate below must never condition hook ordering.
   const { t } = useI18n();
@@ -1148,7 +1150,7 @@ function ExploreTilesSection({ onChipPress }) {
     { id: 'gratis', label: t('home.explore.gratis.label'), image: GRATIS, color: '#1E6B45', prompt: t('home.explore.gratis.prompt'), hints: { budget: 'free' } },
     { id: 'live', label: t('home.explore.live.label'), image: LIVE, color: '#3B1F66', prompt: t('home.explore.live.prompt'), hints: { category_slug: 'music' } },
     { id: 'skratt', label: t('home.explore.skratt.label'), image: SKRATT, color: '#6B4226', prompt: t('home.explore.skratt.prompt') },
-    { id: 'stamning', label: t('home.explore.stamning.label'), image: STAMNING, color: '#5C1A2A', prompt: t('home.explore.stamning.prompt') },
+    { id: 'stamning', label: t('home.explore.stamning.label'), image: STAMNING, color: '#5C1A2A', prompt: t('home.explore.stamning.prompt'), hints: { mood: 'stamningsfullt' } },
     { id: 'helg', label: t('home.explore.helg.label'), image: HELG, color: '#0F4C5C', prompt: t('home.explore.helg.prompt'), hints: { dayFilter: 'weekend' } },
     { id: 'imorgon', label: t('home.explore.imorgon.label'), image: IMORGON, color: '#1C2E4A', prompt: t('home.explore.imorgon.prompt') },
   ];

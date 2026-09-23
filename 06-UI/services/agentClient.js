@@ -724,10 +724,14 @@ export function isFetchCanceled(err) {
   return /FetchRequestCanceledException/.test(String(err.message));
 }
 
-async function fetchFeedOnce({ baseUrl, from, days, signal, timeoutMs }) {
+async function fetchFeedOnce({ baseUrl, from, days, mood, signal, timeoutMs }) {
   const url = new URL(`${baseUrl}/agent/feed`);
   url.searchParams.set('from', from);
   url.searchParams.set('days', String(days));
+  // Fas D (2026-09-23): optional server-side mood filter (Utforska-tile
+  // "Stämningsfullt"). Falsy → param omitted entirely so plain browsing
+  // keeps the exact same wire format as before.
+  if (mood) url.searchParams.set('mood', mood);
 
   // Fas C (2026-09-23): a signed-in session identifies itself so the server
   // can taste-rank the page for treatment users. getAuthHeader() returns {}
@@ -859,18 +863,18 @@ async function fetchFeedOnce({ baseUrl, from, days, signal, timeoutMs }) {
  *   - our own timeout → never retried (20s already spent — honest failure);
  *   - caller-signal abort → never retried (the caller asked for it).
  */
-export async function fetchFeed({ from, days = 7, signal, timeoutMs = 20_000 } = {}) {
+export async function fetchFeed({ from, days = 7, mood = null, signal, timeoutMs = 20_000 } = {}) {
   // 20s (2026-09-22): device testing measured Fly cold starts at 5-7s warm-up
   // and >12s during slow-network moments — the previous 12s abort produced
   // FetchRequestCanceledException on the phone. 20s covers cold start + slow
   // network while the loading state is still tolerable.
   const baseUrl = await pickReachableAgentBase();
   try {
-    return await fetchFeedOnce({ baseUrl, from, days, signal, timeoutMs });
+    return await fetchFeedOnce({ baseUrl, from, days, mood, signal, timeoutMs });
   } catch (err) {
     if (signal?.aborted) throw err;
     if (!isFetchCanceled(err)) throw err;
-    return await fetchFeedOnce({ baseUrl, from, days, signal, timeoutMs });
+    return await fetchFeedOnce({ baseUrl, from, days, mood, signal, timeoutMs });
   }
 }
 

@@ -34,6 +34,8 @@ export interface ChipCase {
     budget?: string;
     day_filter?: string;
     time_of_day?: string;
+    /** Fas D: Utforska-tile mood id (e.g. 'stamningsfullt'). */
+    mood?: string;
   };
   expected: ExpectedIntent;
 }

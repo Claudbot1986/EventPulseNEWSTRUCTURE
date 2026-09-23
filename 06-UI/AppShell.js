@@ -340,7 +340,7 @@ export default function AppShell() {
     const text = prompt?.prompt_text;
     if (typeof text !== 'string' || text.length === 0) return;
     const hints = {};
-    for (const key of ['category', 'category_slug', 'budget', 'day_filter', 'time_of_day', 'curated_id']) {
+    for (const key of ['category', 'category_slug', 'budget', 'day_filter', 'time_of_day', 'curated_id', 'mood']) {
       const value = prompt?.[key];
       if (typeof value === 'string' && value.length > 0) hints[key] = value;
     }

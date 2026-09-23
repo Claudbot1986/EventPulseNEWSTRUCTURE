@@ -341,6 +341,42 @@ describe('agentClient auth guard (guest mode)', () => {
       const res = await fetchFeed({ from: '2026-09-25', days: 7 });
       expect(res.events[0].reasons).toEqual([]);
     });
+
+    // Fas D (2026-09-23): the Stämningsfullt tile sends a server-side mood
+    // filter — fetchFeed must carry it on the wire, and omit it entirely for
+    // plain browsing so the canonical feed URL stays byte-stable.
+    it('sends the mood filter as a query param when provided', async () => {
+      const { fetchFeed } = await importClient();
+      mockFeedOnce({
+        events: [],
+        from: '2026-09-25',
+        to: '2026-10-02',
+        has_more: false,
+        total: 0,
+      });
+      const res = await fetchFeed({ from: '2026-09-25', days: 7, mood: 'stamningsfullt' });
+      expect(res.events).toEqual([]);
+      const feedCall = fetchMock.mock.calls
+        .map((c: unknown[]) => String(c[0]))
+        .find((u: string) => u.includes('/agent/feed'));
+      expect(feedCall).toContain('mood=stamningsfullt');
+    });
+
+    it('omits the mood param entirely when not provided', async () => {
+      const { fetchFeed } = await importClient();
+      mockFeedOnce({
+        events: [],
+        from: '2026-09-25',
+        to: '2026-10-02',
+        has_more: false,
+        total: 0,
+      });
+      await fetchFeed({ from: '2026-09-25', days: 7 });
+      const feedCall = fetchMock.mock.calls
+        .map((c: unknown[]) => String(c[0]))
+        .find((u: string) => u.includes('/agent/feed'));
+      expect(feedCall).not.toContain('mood=');
+    });
   });
 
   describe('fetchFeed abort semantics — cancel is not a load failure (2026-09-22)', () => {

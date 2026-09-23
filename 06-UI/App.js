@@ -558,6 +558,11 @@ function HomeScreen({ onEventPress, scrollPositionRef, pendingIntent, dismissPen
   // values that are STILL the auto-applied ones — pills the user tapped by
   // hand after the chip landed are never touched.
   const autoAppliedIntentRef = useRef(null);
+  // Fas D (2026-09-23): the Stämningsfullt-tile's server-side mood filter.
+  // A ref, not state — nothing renders from it; loadEvents reads it on every
+  // fetch (refs keep the callback deps untouched), and the auto-applied
+  // unwind below clears it like any other chip filter.
+  const moodFilterRef = useRef(null);
 
   // Clear every auto-applied value the user hasn't since changed. Returns the
   // snapshot (or null) so callers can decide whether a window refetch is due.
@@ -571,6 +576,7 @@ function HomeScreen({ onEventPress, scrollPositionRef, pendingIntent, dismissPen
     if (auto.pinnedDateIso != null) setPinnedDateIso((prev) => (prev === auto.pinnedDateIso ? null : prev));
     if (auto.queryTerms) setQueryTerms((prev) => (prev === auto.queryTerms ? null : prev));
     if (auto.queryLabel != null) setSearchQuery((prev) => (prev === auto.queryLabel ? '' : prev));
+    if (auto.mood) moodFilterRef.current = null;
     return auto;
   }, []);
 
@@ -592,6 +598,9 @@ function HomeScreen({ onEventPress, scrollPositionRef, pendingIntent, dismissPen
     if (intent.categories) { setSelectedCategories(intent.categories); auto.categories = intent.categories; }
     if (intent.queryTerms) { setQueryTerms(intent.queryTerms); auto.queryTerms = intent.queryTerms; }
     if (intent.queryLabel != null) { setSearchQuery(intent.queryLabel); auto.queryLabel = intent.queryLabel; }
+    // Fas D: the ref must land BEFORE the loadEvents call below — the fetch
+    // in the same tick reads the ref, not a state update that hasn't run.
+    if (intent.mood) { moodFilterRef.current = intent.mood; auto.mood = intent.mood; }
     if (intent.anchor === 'pinned' && intent.pinnedDow != null) {
       // Server semantics: a pinned weekday is the NEXT occurrence, never
       // today (curated_collections.ts day_filter preview counts the same).
@@ -764,8 +773,10 @@ function HomeScreen({ onEventPress, scrollPositionRef, pendingIntent, dismissPen
       let page;
 
       while (attempts < 7) {
-        page = await fetchFeed({ from, days: 7 });
-        if (page.events.length > 0 || append) break;
+        page = await fetchFeed({ from, days: 7, mood: moodFilterRef.current });
+        // With a mood filter an empty page is an honest answer ("nothing
+        // atmospheric this week"), not a quiet-Sunday gap — never day-hop.
+        if (page.events.length > 0 || append || moodFilterRef.current) break;
         // Empty page on initial load → try next day (handles quiet Sundays).
         attempts += 1;
         from = addDays(from, 1);

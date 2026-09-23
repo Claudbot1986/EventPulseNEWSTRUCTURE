@@ -23,6 +23,7 @@ import { parseIntent } from './tools/parse_intent';
 import { searchEvents } from './tools/search_events';
 import { rankEvents } from './tools/rank_events';
 import { applyExploreReserve } from './tools/explore_reserve';
+import { MOOD_IDS, matchMood } from './tools/moods';
 import { mmrRerank } from './tools/diversify';
 import { recordFeedback, validateFeedbackInput } from './tools/record_feedback';
 import { pickClarifyingQuestion } from './tools/find_gaps';
@@ -271,6 +272,9 @@ export function buildApp(opts: {
    *     anonymous callers get pure chronology with zero signal reads.
    *   - The 06-UI client groups cards by day, so ranked order manifests as
    *     day-section ordering; within-day order is the client's time sort.
+   *   - Fas D (2026-09-23) — optional ?mood=stamningsfullt filters the window
+   *     against the static mood lexicon (tools/moods.ts) BEFORE ranking.
+   *     A content filter: guests included. Unknown ids → ignored.
    */
   app.get('/agent/feed', generalLimiter.middleware, optionalUser, async (req: Request, res: Response) => {
     const client = sb ?? getSupabase();
@@ -292,6 +296,12 @@ export function buildApp(opts: {
     const locale = typeof req.query.locale === 'string' && req.query.locale
       ? req.query.locale
       : null;
+    // Fas D (2026-09-23) — optional ?mood=<id> (Utforska-tile "Stämningsfullt").
+    // A CONTENT filter, not personalization: applies to guests and control
+    // users too. Unknown ids are ignored, same convention as ?locale=.
+    const mood = typeof req.query.mood === 'string' && req.query.mood
+      ? req.query.mood
+      : null;
 
     // Fas C: rank only for a verified user in the treatment variant. The
     // variant check is sticky per user id (experiments.ts), same experiment
@@ -308,6 +318,12 @@ export function buildApp(opts: {
         locale,
         withArtistSlugs: shouldRank,
       });
+
+      // Fas D: mood filter runs BEFORE any ranking — the ranked page is a
+      // re-order of the mood-matching subset, never a way around the filter.
+      if (mood && MOOD_IDS.includes(mood)) {
+        result = { ...result, events: result.events.filter((c) => matchMood(c, mood)) };
+      }
 
       if (shouldRank) {
         try {

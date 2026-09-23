@@ -13,6 +13,10 @@
  *   - Fas C.4: treatment user whose feed slot 0 is reserved for exploration
  *     keeps the chronological card at slot 0 (no reasons/score) even with a
  *     rich taste history — the reserve beats the ranker.
+ *   - Fas D: ?mood=stamningsfullt filters the window with the static mood
+ *     lexicon (title/description terms + category anchors) BEFORE any
+ *     ranking — guests included, since it is a content filter, not
+ *     personalization.
  *
  * Variant assignment is deterministic per user id (SHA-256, experiments.ts),
  * so the test scans for fixed UUIDs that hash to each variant up front. The
@@ -52,7 +56,8 @@ function findVariantUsers(count: number, variant: 'control' | 'treatment'): stri
 
 // Two users per variant: personalize.ts/follow_entity.ts keep module-level
 // per-user caches, so each test uses a fresh id to avoid cross-test staleness.
-const TREATMENT_USERS = findVariantUsers(3, 'treatment');
+// 4 treatment users: 3 ranking tests + 1 for the Fas D mood test.
+const TREATMENT_USERS = findVariantUsers(4, 'treatment');
 const CONTROL_USERS = findVariantUsers(2, 'control');
 
 /**
@@ -147,6 +152,22 @@ const theatreOutbounds = Array.from({ length: 3 }, () => ({
   events: { category_slug: 'theatre', venue_name: 'Scen X' },
 }));
 
+/**
+ * Fas D (2026-09-23): atmospheric theatre event — matches the stamningsfullt
+ * mood lexicon via its TITLE ("Stämningsfull…"), no category anchor needed.
+ * musicRow/theatreRow deliberately match no mood term (their copy is plain).
+ */
+const moodRow = {
+  ...musicRow,
+  id: 'eeeeeeee-eeee-eeee-eeee-eeeeeeeeeeee',
+  title_sv: 'Stämningsfull teaterkväll',
+  title_en: 'Atmospheric theatre evening',
+  description_sv: 'En pjäs i skymningen.',
+  description_en: 'A play at twilight.',
+  start_time: '2099-01-03T19:00:00Z',
+  category_slug: 'theatre',
+};
+
 // ─── Mock Supabase ──────────────────────────────────────────────────────────
 
 interface FeedMockOptions {
@@ -223,7 +244,7 @@ function makeFeedMockSupabase(opts: FeedMockOptions = {}) {
 /** Start an app on an ephemeral port, run the request, shut down. */
 async function requestFeed(
   mock: ReturnType<typeof makeFeedMockSupabase>,
-  opts: { bearer?: string | null } = {}
+  opts: { bearer?: string | null; mood?: string | null } = {}
 ): Promise<{ status: number; body: any }> {
   const app = buildApp({ supabase: mock.client, verify: testVerify });
   const server = await new Promise<ReturnType<ReturnType<typeof buildApp>['listen']>>(
@@ -235,9 +256,10 @@ async function requestFeed(
   const addr = server.address() as AddressInfo;
   const headers: Record<string, string> = {};
   if (opts.bearer) headers.Authorization = `Bearer ${opts.bearer}`;
+  const moodParam = opts.mood ? `&mood=${encodeURIComponent(opts.mood)}` : '';
   try {
     const res = await fetch(
-      `http://127.0.0.1:${addr.port}/agent/feed?from=2099-01-01&days=7`,
+      `http://127.0.0.1:${addr.port}/agent/feed?from=2099-01-01&days=7${moodParam}`,
       { headers }
     );
     const body = await res.json();
@@ -403,5 +425,64 @@ describe('GET /agent/feed — Fas C.4 utforskningsreserv', () => {
     // Window contract still intact after the merge.
     expect(body.total).toBe(2);
     expect(body.from).toBe('2099-01-01');
+  });
+});
+
+describe('GET /agent/feed — Fas D mood-filter (Stämningsfullt)', () => {
+  const moodPage = [musicRow, theatreRow, moodRow];
+
+  it('an anonymous caller with ?mood=stamningsfullt gets only mood-matching events, in order', async () => {
+    // The mood tile is a CONTENT filter, not personalization — it must work
+    // for guests too (no auth header, no signal reads).
+    const mock = makeFeedMockSupabase({ eventRows: moodPage });
+    const { status, body } = await requestFeed(mock, { mood: 'stamningsfullt' });
+    expect(status).toBe(200);
+    expect(body.events.map((e: any) => e.id)).toEqual([moodRow.id]);
+    // Canonical window total stays honest to the DB; the mood filter shrinks
+    // the page, not the window contract.
+    expect(body.total).toBe(3);
+    expect(body.from).toBe('2099-01-01');
+    expect(mock.tablesCalled).not.toContain('user_interactions');
+  });
+
+  it('a treatment user gets mood-filtered AND taste-ranked — AI lexicon + aktivitetssignaler', async () => {
+    // "Stämningsfullt" = AI-genererat lexikon (static) + aktivitetsbaserad
+    // rankning (Fas C): the mood filter runs BEFORE the ranker, and the
+    // surviving card still carries the user's personal reasons.
+    const mock = makeFeedMockSupabase({
+      eventRows: moodPage,
+      interactionRows: [...theatreSaves, ...theatreOutbounds],
+    });
+    const { status, body } = await requestFeed(mock, {
+      bearer: `t:${TREATMENT_USERS[3]}`,
+      mood: 'stamningsfullt',
+    });
+    expect(status).toBe(200);
+    expect(body.events.map((e: any) => e.id)).toEqual([moodRow.id]);
+    expect(body.events[0].reasons).toContain('category_personalization');
+    expect(body.events[0].reasons).toContain('outbound_personalization');
+    expect(typeof body.events[0].score).toBe('number');
+  });
+
+  it('an unknown mood value is ignored — full page, no filtering', async () => {
+    const mock = makeFeedMockSupabase({ eventRows: moodPage });
+    const { status, body } = await requestFeed(mock, { mood: 'whatever' });
+    expect(status).toBe(200);
+    expect(body.events.map((e: any) => e.id)).toEqual([
+      musicRow.id,
+      theatreRow.id,
+      moodRow.id,
+    ]);
+  });
+
+  it('a mood with zero matches returns an honest empty page', async () => {
+    // No row matches the lexikon (musicRow/theatreRow copy is plain) — the
+    // filter must not invent matches or crash.
+    const mock = makeFeedMockSupabase({ eventRows: [musicRow, theatreRow] });
+    const { status, body } = await requestFeed(mock, { mood: 'stamningsfullt' });
+    expect(status).toBe(200);
+    expect(body.events).toEqual([]);
+    expect(body.total).toBe(2);
+    expect(body.has_more).toBe(false);
   });
 });

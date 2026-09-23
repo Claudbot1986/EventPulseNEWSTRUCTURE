@@ -21,7 +21,14 @@ import {
 } from './chipCatalog.testkit';
 
 function resolveChip(chip: ChipCase) {
-  return resolvePromptIntent({ text: chip.text, ...(chip.hints || {}) });
+  const intent = resolvePromptIntent({ text: chip.text, ...(chip.hints || {}) });
+  // Fas D (2026-09-23): intent gained a `mood` field (null for every catalog
+  // chip — none carries a mood hint). The table entries pin the pre-mood
+  // contract, so strip the null default; a chip WITH a mood hint compares
+  // fully (and its entry must then pin mood explicitly).
+  if (chip.hints?.mood) return intent;
+  const { mood: _moodDefault, ...rest } = intent;
+  return rest;
 }
 
 describe('resolvePromptIntent — every curated chip (sv + en)', () => {
@@ -100,7 +107,8 @@ describe('resolvePromptIntent — general rules', () => {
   it('handles garbage input without crashing', () => {
     expect(resolvePromptIntent(null as unknown as object)).toEqual({
       timeFilter: null, pinnedDow: null, priceFilter: null,
-      categories: null, queryTerms: null, queryLabel: null, anchor: null,
+      categories: null, queryTerms: null, queryLabel: null,
+      mood: null, anchor: null,
     });
     expect(resolvePromptIntent({ text: 42 }).anchor).toBeNull();
     expect(resolvePromptIntent({ text: '' }).anchor).toBeNull();
@@ -163,6 +171,34 @@ describe('resolvePromptIntent — Utforska-tiles (smakordsknappar, 2026-09-21)',
     expect(resolvePromptIntent({ text: 'Weekend events', dayFilter: 'weekend' }).anchor).toBe('weekend');
     expect(resolvePromptIntent({ text: 'Tomorrow' }).timeFilter).toBe('imorgon');
   });
+
+  // Stämningsfullt-tile (Fas D, 2026-09-23): the tile finally does what its
+  // label promises — a server-side mood filter (the static AI lexicon in
+  // 08-Agent/tools/moods.ts), not a banner-only no-op. No other filter may
+  // fire: the text is just the mood word.
+  it('Stämningsfullt-tile (mood hint) → mood filter, no other filters, today anchor', () => {
+    const intent = resolvePromptIntent({ text: 'Stämningsfullt', mood: 'stamningsfullt' });
+    expect(intent.mood).toBe('stamningsfullt');
+    expect(intent.timeFilter).toBeNull();
+    expect(intent.priceFilter).toBeNull();
+    expect(intent.categories).toBeNull();
+    expect(intent.queryTerms).toBeNull();
+    expect(intent.anchor).toBe('today');
+  });
+
+  it('the mood hint is required — the word alone must not fake any filter', () => {
+    // The tile text alone ('Stämningsfullt') carries no category/day/price
+    // words, so without the structured hint nothing fires.
+    const intent = resolvePromptIntent({ text: 'Stämningsfullt' });
+    expect(intent.mood).toBeNull();
+    expect(intent.anchor).toBeNull();
+  });
+
+  it('English tile prompt (Atmospheric) resolves identically via the mood hint', () => {
+    const intent = resolvePromptIntent({ text: 'Atmospheric', mood: 'stamningsfullt' });
+    expect(intent.mood).toBe('stamningsfullt');
+    expect(intent.anchor).toBe('today');
+  });
 });
 
 describe('intentHasFilters', () => {
@@ -175,5 +211,6 @@ describe('intentHasFilters', () => {
     expect(intentHasFilters(resolvePromptIntent({ text: 'Gratis?' }))).toBe(true);
     expect(intentHasFilters(resolvePromptIntent({ text: 'xyzzy', category: 'konserter' }))).toBe(true);
     expect(intentHasFilters(resolvePromptIntent({ text: 'Jazz?' }))).toBe(true);
+    expect(intentHasFilters(resolvePromptIntent({ text: 'Stämningsfullt', mood: 'stamningsfullt' }))).toBe(true);
   });
 });
