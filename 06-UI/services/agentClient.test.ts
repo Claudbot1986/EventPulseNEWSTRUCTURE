@@ -271,6 +271,78 @@ describe('agentClient auth guard (guest mode)', () => {
     });
   });
 
+  describe('fetchFeed card mapping — rank reasons survive to the card (Fas C.2)', () => {
+    // Fas C (e602178): the server attaches reasons+score to feed cards for
+    // PERSONALIZATION_PRIORS-treatment users. Fas C.2: the legacy-shape mapper
+    // must forward `reasons` so EventCardCompact can render always-visible
+    // why-chips (resolveConsumerReasons). Guests/control get no reasons on the
+    // wire → [] → no chips. Wire shape mirrors feed_rank_wire.test.ts payloads.
+    const wireEvent = {
+      id: 'e1',
+      title: 'Jazz på Scen X',
+      start_time: '2026-09-25T19:30:00+02:00',
+      end_time: null,
+      venue_name: 'Scen X',
+      city: 'Stockholm',
+      category_slug: 'music',
+      is_free: true,
+      price_min_sek: null,
+      price_max_sek: null,
+      ticket_url: 'https://example.com/t',
+      image_url: null,
+      image_ai_generated: false,
+      image_ai_optout: false,
+      image_generation_status: null,
+      source: 'ticketmaster',
+    };
+
+    function mockFeedOnce(payload: Record<string, unknown>) {
+      fetchMock
+        .mockResolvedValueOnce({ ok: true, status: 200 }) // health probe
+        .mockResolvedValueOnce({ ok: true, status: 200, json: async () => payload });
+    }
+
+    it('forwards wire reasons onto the legacy card, preserving server order', async () => {
+      const { fetchFeed } = await importClient();
+      mockFeedOnce({
+        events: [{ ...wireEvent, reasons: ['followed_venue', 'category_personalization'], score: 1.25 }],
+        from: '2026-09-25',
+        to: '2026-10-02',
+        has_more: false,
+        total: 1,
+      });
+      const res = await fetchFeed({ from: '2026-09-25', days: 7 });
+      expect(res.events).toHaveLength(1);
+      expect(res.events[0].reasons).toEqual(['followed_venue', 'category_personalization']);
+    });
+
+    it('a card without wire reasons maps to [] — guests/control render no chips', async () => {
+      const { fetchFeed } = await importClient();
+      mockFeedOnce({
+        events: [{ ...wireEvent, reasons: undefined }],
+        from: '2026-09-25',
+        to: '2026-10-02',
+        has_more: false,
+        total: 1,
+      });
+      const res = await fetchFeed({ from: '2026-09-25', days: 7 });
+      expect(res.events[0].reasons).toEqual([]);
+    });
+
+    it('non-array garbage reasons collapse to [] instead of crashing the card', async () => {
+      const { fetchFeed } = await importClient();
+      mockFeedOnce({
+        events: [{ ...wireEvent, reasons: 'followed_venue' }],
+        from: '2026-09-25',
+        to: '2026-10-02',
+        has_more: false,
+        total: 1,
+      });
+      const res = await fetchFeed({ from: '2026-09-25', days: 7 });
+      expect(res.events[0].reasons).toEqual([]);
+    });
+  });
+
   describe('fetchFeed abort semantics — cancel is not a load failure (2026-09-22)', () => {
     // Device error of the day: "fetch failed: FetchRequestCanceledException"
     // surfaced as "Failed to load events". Aborts have two distinct causes:

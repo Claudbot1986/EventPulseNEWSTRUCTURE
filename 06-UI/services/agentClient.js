@@ -817,6 +817,14 @@ async function fetchFeedOnce({ baseUrl, from, days, signal, timeoutMs }) {
       // can pick a venue-specific CTA like "Köp biljett via Ticketmaster".
       // Falls back to 'agent' when the upstream omits it.
       source: e.source || 'agent',
+      // Fas C.2 (2026-09-23): forward the ranker's reasons so EventCardCompact
+      // can render always-visible why-chips (resolveConsumerReasons) for
+      // PERSONALIZATION_PRIORS-treatment users. The server only attaches
+      // reasons on the treatment feed — guests/control/anon pages omit the
+      // field, map to [], and the chip row renders nothing (see
+      // 08-Agent/tests/feed_rank_wire.test.ts for the wire-side gating).
+      // Score stays server-internal: nothing client-side renders it (YAGNI).
+      reasons: Array.isArray(e.reasons) ? e.reasons : [],
       // Drive the UI's external-link affordances. Without these flags the
       // card chip ("Extern länk") and the details-screen CTA ("Läs mer")
       // are hidden even when a valid ticket_url is present, which is the
