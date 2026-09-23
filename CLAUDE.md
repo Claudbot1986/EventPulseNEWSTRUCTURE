@@ -31,7 +31,7 @@ A focused sub-agent (`vault-sync` in `~/.claude/agents/`) maintains `01-Current-
 - Logs three `VAULT-SYNC:` lines to stdout.
 - Does not invent strategic truth, does not commit, does not modify files outside the vault.
 
-The agent inherits the same model as the main session (no external API). The user reviews `.proposed.md` and applies narrative changes by hand.
+The agent inherits the same model as the main session (no external API). The user reviews `.proposed.md` and applies narrative changes by hand, **or** approves them in-session. Approved in-session flow (decided 2026-09-23): after the user's explicit approval ("godkänn" + what is approved), the main session applies exactly the approved content to the machine-sync allowlisted files (`01-Current-State.md`, `01-Current-State.proposed.md`, `23-Active-Task-Queue.md`), and the vault-sync role applies it to other vault files. Rules that keep this safe: the content must be what the user reviewed — the applier adds no judgments of its own, keeps every [VERIFIED]/[CLAIMED]/[UNVERIFIED] marking, never touches the `## Auto-facts (machine-synced)` section, replaces (does not duplicate) outdated text, deletes the consumed `.proposed.md`, and reports what was changed. Applying narrative without an explicit user approval in the session remains forbidden.
 
 ### Mandatory first read
 Always read these first if they exist:
