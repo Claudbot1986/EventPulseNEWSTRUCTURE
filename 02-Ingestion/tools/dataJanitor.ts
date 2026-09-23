@@ -14,6 +14,17 @@
  *   D. Stale events — events äldre än 30 dagar i data/c1-events.jsonl.
  *                     Arkiveras till data/_archive/events-YYYY-MM.jsonl.
  *                     (TODO: implementeras i Fas 5b — kräver events-schema)
+ *   E. Manual review queue — runtime/postTestC-manual-review.jsonl.
+ *                     Klassificerar per Jev investigation 2026-09-23:
+ *                       - HTTP 404/403/5xx, discovery failures → soft-quarantine
+ *                       - HTTP 429, network <60d → re_probe (tillbaka till pool)
+ *                       - Network 60+dagar → soft-quarantine (EJ retire — "en grav")
+ *                       - Orphaned (ingen source-fil) → remove-from-queue
+ *                       - Low extraction → leave
+ *                     Säkerhet: source-fil flyttas ALDRIG till /dev/null — bara till
+ *                     sources/_quarantine/. INDEX.json är "graven" — vi minns men
+ *                     rör aldrig källan igen. Removed entries flyttas till
+ *                     resolved.jsonl för spårbarhet.
  *
  * Säkerhet:
  * - --dry-run är DEFAULT. Utan --apply görs INGENTING på disk.
@@ -32,10 +43,11 @@
  *   04:00 dagligen: rule A (phantom)
  *   04:05 dagligen: rule C (test fixtures)
  *   04:15 dagligen: rule B (stuck)
+ *   Varje timme:    rule E (manual review queue → soft-quarantine/re_probe)
  *   Sunday 05:00:   rule D (stale events archive)
  */
 
-import { existsSync, readFileSync, writeFileSync, renameSync, readdirSync } from 'fs';
+import { existsSync, readFileSync, writeFileSync, renameSync, readdirSync, mkdirSync } from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import {
@@ -61,6 +73,10 @@ const RUNTIME_DIR = path.resolve(DATA_ROOT, 'runtime');
 const SOURCES_DIR = path.resolve(DATA_ROOT, 'sources');
 const STATUS_PATH = path.join(RUNTIME_DIR, 'sources_status.jsonl');
 const AUDIT_PATH = path.join(RUNTIME_DIR, 'data-janitor-audit.jsonl');
+const MANUAL_REVIEW_PATH = path.join(RUNTIME_DIR, 'postTestC-manual-review.jsonl');
+const QUARANTINE_DIR_PATH = path.resolve(DATA_ROOT, 'sources/_quarantine');
+const QUARANTINE_INDEX_PATH = path.resolve(QUARANTINE_DIR_PATH, 'INDEX.json');
+const RESOLVED_PATH = path.resolve(DATA_ROOT, '02-Ingestion/C-htmlGate/manual-review/resolved.jsonl');
 
 const TEST_FIXTURE_RE = /^(test-|recovery-|classify-|src-|low-fail-|threshold-|climb-|ghost-)/;
 
@@ -90,7 +106,7 @@ interface JanitorAction {
 }
 
 interface JanitorConfig {
-  rules: Array<'A' | 'B' | 'C' | 'D'>;
+  rules: Array<'A' | 'B' | 'C' | 'D' | 'E'>;
   apply: boolean;
   threshold: number;       // för rule B
   triggeredBy: 'cli' | 'cron';
@@ -108,8 +124,8 @@ function parseArgs(argv: string[]): JanitorConfig {
     if (a === '--apply') cfg.apply = true;
     else if (a === '--rule' && argv[i + 1]) {
       const r = argv[i + 1].toUpperCase();
-      if (['A', 'B', 'C', 'D'].includes(r)) {
-        cfg.rules = [r as 'A' | 'B' | 'C' | 'D'];
+      if (['A', 'B', 'C', 'D', 'E'].includes(r)) {
+        cfg.rules = [r as 'A' | 'B' | 'C' | 'D' | 'E'];
       }
       i++;
     }
@@ -391,6 +407,288 @@ function ruleD(_cfg: JanitorConfig): { actions: JanitorAction[]; stats: { scanne
   return { actions: [], stats: { scanned: 0, wouldAct: 0, acted: 0 } };
 }
 
+// ── Regel E: Manual review queue ─────────────────────────────────────────────
+// Processerar runtime/postTestC-manual-review.jsonl — källor som fastnat i
+// manuell hanterings-kö. Per Jev investigation 2026-09-23 + användarens
+// "en grav"-princip: släng inga källor, bara flytta mellan köer eller
+// soft-quarantine via INDEX.
+//
+// Klassificering (per Jev):
+//   - HTTP 404/403/5xx, discovery failures → soft-quarantine (move + INDEX)
+//   - HTTP 429, network <60d → re_probe (tillbaka till active pool)
+//   - Network 60+dagar → soft-quarantine (användaren valde quarantine istället
+//     för retire — källan bevaras, INDEX är "graven")
+//   - Orphaned (ingen source-fil) → remove-from-queue (system-bug)
+//   - Low extraction → leave (Jev 0.94 konfidens — för komplext för batch)
+//
+// Säkerhet:
+//   - source-fil flyttas ALDRIG till /dev/null — bara till sources/_quarantine/
+//   - INDEX.json är "graven" — vi minns men rör aldrig källan igen
+//   - Removed entries flyttas till resolved.jsonl (audit trail)
+//   - Allt är idempotent: skippar redan INDEX-förda källor
+
+interface ManualReviewEntry {
+  sourceId: string;
+  queueName?: string;
+  queuedAt: string;
+  priority?: number;
+  attempt?: number;
+  queueReason?: string;
+  workerNotes?: string;
+  winningStage?: string;
+  outcomeType?: string;
+  routeSuggestion?: string;
+  roundNumber?: number;
+  roundsParticipated?: number;
+}
+
+type ManualReviewAction = 'soft-quarantine' | 're_probe' | 'remove-from-queue' | 'leave';
+
+function readManualReviewEntries(): ManualReviewEntry[] {
+  if (!existsSync(MANUAL_REVIEW_PATH)) return [];
+  const content = readFileSync(MANUAL_REVIEW_PATH, 'utf8');
+  return content.split('\n').filter(l => l.trim()).map(line => {
+    try { return JSON.parse(line) as ManualReviewEntry; } catch { return null; }
+  }).filter((e): e is ManualReviewEntry => e !== null);
+}
+
+function classifyManualReviewEntry(entry: ManualReviewEntry): { action: ManualReviewAction; reasonCode: string } {
+  const qReason = String(entry.queueReason ?? '').toLowerCase();
+  const wNotes = String(entry.workerNotes ?? '').toLowerCase();
+  const rSuggestion = String(entry.routeSuggestion ?? '').toLowerCase();
+  const oType = String(entry.outcomeType ?? '').toLowerCase();
+  const combined = `${qReason} ${wNotes} ${rSuggestion} ${oType}`;
+  const ageDays = (Date.now() - new Date(entry.queuedAt).getTime()) / (1000 * 60 * 60 * 24);
+
+  // Orphaned — ingen source-fil. Kolla FÖRST så vi inte försöker flytta filer som inte finns.
+  if (!sourceFileExists(entry.sourceId)) {
+    return { action: 'remove-from-queue', reasonCode: 'unknown' };
+  }
+  // STEP3-CHAIN — system-bug i C-pipelinen (skapar queue-entries utan anledning).
+  // Jev rekommendation: ta bort från kö + öppna bug-ticket.
+  if (combined.includes('step3-chain') || combined.includes('imp-001')
+      || combined.includes('forced stay')) {
+    return { action: 'remove-from-queue', reasonCode: 'unknown' };
+  }
+
+  // HTTP 404 — sidan finns inte längre
+  if (/\b404\b/.test(combined) || combined.includes('not found')) {
+    return { action: 'soft-quarantine', reasonCode: 'http.404' };
+  }
+  // HTTP 403 — anti-bot / kaput
+  if (/\b403\b/.test(combined) || combined.includes('forbidden') || combined.includes('access denied')) {
+    return { action: 'soft-quarantine', reasonCode: 'anti_bot.forbidden' };
+  }
+  // HTTP 429 — rate-limit (transient)
+  if (/\b429\b/.test(combined) || combined.includes('rate limit') || combined.includes('too many requests')) {
+    return { action: 're_probe', reasonCode: 'http.429' };
+  }
+  // HTTP 5xx — server error (kaput)
+  if (/\b5\d\d\b/.test(combined) || combined.includes('server error')) {
+    return { action: 'soft-quarantine', reasonCode: 'http.5xx' };
+  }
+  // Discovery failures — specifika fraser (inte c-prefix, som skulle matcha
+  // "C3: fail" i workerNotes). C2 lämnas (Jev 0.94 — låt C-pipelinen mogna).
+  if (combined.includes('no candidates')
+      || combined.includes('no main/article')
+      || combined.includes('no events') || combined.includes('no routing signal')
+      || combined.includes('no_jsonld') || combined.includes('toolscb')
+      || combined.includes('ai no urls') || combined.includes('no urls')) {
+    return { action: 'soft-quarantine', reasonCode: 'schema.no_events_on_entry' };
+  }
+  // Permanenta nätverksfel — DNS-vägran, certat-fel, aktiv vägran. Inte värt att re_proba.
+  if (combined.includes('enotfound') || combined.includes('econnrefused')
+      || combined.includes('self-signed')) {
+    return { action: 'soft-quarantine', reasonCode: 'network.unreachable' };
+  }
+  // SSL / certat / hostname — ofta persistent. Quarantine om tillräckligt gammal.
+  if (combined.includes('ssl') || combined.includes('certificate')
+      || combined.includes('hostname')) {
+    return ageDays >= 14
+      ? { action: 'soft-quarantine', reasonCode: 'network.unreachable' }
+      : { action: 're_probe', reasonCode: 'network.transient' };
+  }
+  // Transient — timeout, socket disconnect, redirect loop. Re_probe om ung, quarantine om gammal.
+  if (combined.includes('network') || combined.includes('timeout')
+      || combined.includes('econnreset') || combined.includes('etimedout')
+      || combined.includes('redirect') || combined.includes('network socket')) {
+    return ageDays >= 60
+      ? { action: 'soft-quarantine', reasonCode: 'network.unreachable' }
+      : { action: 're_probe', reasonCode: 'network.transient' };
+  }
+  // Orphaned — flyttad till TOPPEN av funktionen.
+  // Default: lämna kvar (C2 unclear, oklassificerade, väntar på bättre data)
+  return { action: 'leave', reasonCode: 'unknown' };
+}
+
+function moveSourceToQuarantine(
+  sourceId: string,
+  reasonCode: string,
+  note: string,
+  movedBy: string,
+): boolean {
+  const sourceFile = path.join(SOURCES_DIR, `${sourceId}.jsonl`);
+  if (!existsSync(sourceFile)) return false;
+
+  if (!existsSync(QUARANTINE_DIR_PATH)) {
+    mkdirSync(QUARANTINE_DIR_PATH, { recursive: true });
+  }
+
+  const targetFile = path.join(QUARANTINE_DIR_PATH, `${sourceId}.jsonl`);
+  renameSync(sourceFile, targetFile);
+
+  let url = '';
+  try {
+    const parsed = JSON.parse(readFileSync(targetFile, 'utf8').trim());
+    url = typeof parsed.url === 'string' ? parsed.url : '';
+  } catch { /* tom fil — url lämnas tom */ }
+
+  const existing = readQuarantineIndex();
+  const filtered = existing.filter(e => e.sourceId !== sourceId);
+  filtered.push({
+    sourceId,
+    url,
+    movedAt: new Date().toISOString(),
+    reasonCode,
+    note,
+    lastError: note.slice(0, 200),
+    movedBy,
+  });
+  const tmp = `${QUARANTINE_INDEX_PATH}.tmp.${process.pid}.${Date.now()}`;
+  writeFileSync(tmp, JSON.stringify(filtered, null, 2) + '\n', 'utf8');
+  renameSync(tmp, QUARANTINE_INDEX_PATH);
+
+  return true;
+}
+
+function appendResolvedEntry(
+  entry: ManualReviewEntry,
+  decision: 'quarantine' | 're_probe' | 'approve',
+  decidedBy: string,
+): void {
+  const resolvedExisting = existsSync(RESOLVED_PATH)
+    ? readFileSync(RESOLVED_PATH, 'utf8').trim().split('\n').filter(l => l.trim()).map(l => {
+        try { return JSON.parse(l); } catch { return null; }
+      }).filter((e): e is Record<string, unknown> => e !== null)
+    : [];
+  resolvedExisting.push({
+    entryId: `auto:${entry.sourceId}:${entry.queuedAt}`,
+    sourceId: entry.sourceId,
+    queue: 'auto-pending',
+    queuedAt: entry.queuedAt,
+    reasonCode: classifyError(`${entry.queueReason ?? ''} ${entry.workerNotes ?? ''}`),
+    note: entry.workerNotes ?? '',
+    decision,
+    decidedBy,
+    decidedAt: new Date().toISOString(),
+  });
+  const tmp = `${RESOLVED_PATH}.tmp.${process.pid}.${Date.now()}`;
+  writeFileSync(tmp, resolvedExisting.map(e => JSON.stringify(e)).join('\n') + '\n', 'utf8');
+  renameSync(tmp, RESOLVED_PATH);
+}
+
+function ruleE(cfg: JanitorConfig): { actions: JanitorAction[]; stats: { scanned: number; wouldAct: number; acted: number } } {
+  const entries = readManualReviewEntries();
+  if (entries.length === 0) {
+    return { actions: [], stats: { scanned: 0, wouldAct: 0, acted: 0 } };
+  }
+
+  // Dedupe — äldsta entry vinner per sourceId
+  const bySourceId = new Map<string, ManualReviewEntry>();
+  for (const e of entries) {
+    const existing = bySourceId.get(e.sourceId);
+    if (!existing || new Date(e.queuedAt) < new Date(existing.queuedAt)) {
+      bySourceId.set(e.sourceId, e);
+    }
+  }
+  const dedupedEntries = Array.from(bySourceId.values());
+
+  const actions: JanitorAction[] = [];
+  const quarantined = new Set(readQuarantineIndex().map(e => e.sourceId));
+
+  let wouldAct = 0, acted = 0;
+  const entriesToRemove = new Set<string>();
+  const decisionCount = new Map<string, number>();
+
+  for (const entry of dedupedEntries) {
+    const { action, reasonCode } = classifyManualReviewEntry(entry);
+    if (action === 'leave') continue;
+
+    const alreadyIndexed = quarantined.has(entry.sourceId);
+
+    // Idempotency: källor som redan är i INDEX behöver inte processas igen.
+    // Vi tar tyst bort dem från kön (stale entry — källan ligger i _quarantine/),
+    // men loggar inte till audit eller resolved (skulle vara redundant).
+    if (alreadyIndexed) {
+      entriesToRemove.add(entry.sourceId);
+      continue;
+    }
+
+    const noteMap: Record<ManualReviewAction, string> = {
+      'soft-quarantine': `manual review → quarantine: ${entry.workerNotes || entry.outcomeType || reasonCode}`,
+      're_probe': `manual review → re_probe: ${entry.workerNotes || entry.outcomeType || reasonCode}`,
+      'remove-from-queue': `manual review → orphaned (ingen source-fil), tas bort från kö`,
+      'leave': '',
+    };
+    const decisionMap: Record<ManualReviewAction, 'quarantine' | 're_probe' | 'approve'> = {
+      'soft-quarantine': 'quarantine',
+      're_probe': 're_probe',
+      'remove-from-queue': 'approve',
+      'leave': 'approve',
+    };
+    const note = noteMap[action];
+    const decision = decisionMap[action];
+
+    let didApply = true;
+    if (cfg.apply) {
+      if (action === 'soft-quarantine') {
+        didApply = moveSourceToQuarantine(
+          entry.sourceId, reasonCode, note,
+          `auto-janitor-ruleE-${cfg.triggeredBy}`,
+        );
+        if (didApply) quarantined.add(entry.sourceId);
+      }
+      // re_probe och remove-from-queue: bara appendResolvedEntry (audit trail)
+    }
+
+    if (didApply) {
+      entriesToRemove.add(entry.sourceId);
+      wouldAct++;
+      decisionCount.set(action, (decisionCount.get(action) || 0) + 1);
+
+      if (cfg.apply) {
+        acted++;
+        appendResolvedEntry(entry, decision, `auto-janitor-ruleE-${cfg.triggeredBy}`);
+      }
+
+      const ja: JanitorAction = {
+        rule: 'E',
+        sourceId: entry.sourceId,
+        reasonCode,
+        note,
+        applied: cfg.apply && didApply,
+        timestamp: new Date().toISOString(),
+        triggeredBy: cfg.triggeredBy,
+      };
+      actions.push(ja);
+      auditLog(ja);
+    }
+  }
+
+  // Verkställ queue cleanup
+  if (cfg.apply && entriesToRemove.size > 0) {
+    const remaining = entries.filter(e => !entriesToRemove.has(e.sourceId));
+    const tmp = `${MANUAL_REVIEW_PATH}.tmp.${process.pid}.${Date.now()}`;
+    const content = remaining.length
+      ? remaining.map(e => JSON.stringify(e)).join('\n') + '\n'
+      : '';
+    writeFileSync(tmp, content, 'utf8');
+    renameSync(tmp, MANUAL_REVIEW_PATH);
+  }
+
+  return { actions, stats: { scanned: entries.length, wouldAct, acted } };
+}
+
 // ── Main ─────────────────────────────────────────────────────────────────────
 
 const cfg = parseArgs(process.argv.slice(2));
@@ -408,6 +706,7 @@ const handlers: Record<string, () => ReturnType<typeof ruleA>> = {
   B: () => ruleB(cfg),
   C: () => ruleC(cfg),
   D: () => ruleD(cfg),
+  E: () => ruleE(cfg),
 };
 
 let totalWould = 0, totalActed = 0;
