@@ -632,3 +632,159 @@ export async function collectAnalyticsEvents(): Promise<AnalyticsEventRow[]> {
     return [];
   }
 }
+
+// ---------------------------------------------------------------------------
+// User interactions + KPI summaries (Fas E: användarstatistik i dashboarden)
+//
+// user_interactions is 08-Agent's feedback-API store: every event the app
+// reports about a user's interaction with an event (impression, click,
+// outbound, save, dismiss, dwell …). client_user_id is the anonymous UUID,
+// NOT the analytics device hash — so "aktiva användare" is a distinct-UUID
+// count, not a profile mapping.
+// ---------------------------------------------------------------------------
+
+/** Row shape of 08-Agent's user_interactions (only what the KPIs read). */
+export interface UserInteractionRow {
+  interaction: string;
+  client_user_id: string | null;
+  query_text: string | null;
+  metadata: Record<string, unknown> | null;
+  created_at: string;
+}
+
+/**
+ * The app's interaction rows from Supabase. Errors-as-data: [] when
+ * Supabase is unconfigured or any page fails — the dashboard then shows
+ * honest zeros for this block, never invented numbers.
+ */
+export async function collectUserInteractions(): Promise<UserInteractionRow[]> {
+  const sb = db();
+  if (!sb) return [];
+  const out: UserInteractionRow[] = [];
+  try {
+    for (let from = 0; ; from += ANALYTICS_SB_PAGE) {
+      const { data, error } = await sb
+        .from('user_interactions')
+        .select('interaction,client_user_id,query_text,metadata,created_at')
+        .order('created_at', { ascending: true })
+        .range(from, from + ANALYTICS_SB_PAGE - 1);
+      if (error || !Array.isArray(data)) return [];
+      out.push(...(data as UserInteractionRow[]));
+      if (data.length < ANALYTICS_SB_PAGE) return out;
+    }
+  } catch {
+    return [];
+  }
+}
+
+/** KPI summary of the interaction rows — pure, no I/O, deterministic per `now`. */
+export interface UserInteractionSummary {
+  /** All rows read, regardless of window (honest raw total). */
+  totalRows: number;
+  /** Distinct client_user_id with ≥1 interaction in the last 7 days. */
+  activeUsers7d: number;
+  /** interaction-type counts within the last 30 days. */
+  byType: Record<string, number>;
+  /** dwell rows within 30 days, grouped by metadata.source ('unset' when absent). */
+  dwellBySource: Record<string, number>;
+  /** Distinct (local day, user, query) groups from impression rows per day,
+   *  last 30 local dates, oldest first. One user asking the same thing twice
+   *  in a day counts once — the row IS the answer to that query. */
+  chatQueriesDaily: Array<{ date: string; queries: number }>;
+}
+
+function localDateKey(d: Date): string {
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+}
+
+const DAY_MS = 24 * 3600 * 1000;
+
+export function summarizeUserInteractions(
+  rows: readonly UserInteractionRow[],
+  now: Date,
+): UserInteractionSummary {
+  const d7Start = now.getTime() - 7 * DAY_MS;
+  const d30Start = now.getTime() - 30 * DAY_MS;
+
+  const users7d = new Set<string>();
+  const byType: Record<string, number> = {};
+  const dwellBySource: Record<string, number> = {};
+  const queriesByDay = new Map<string, Set<string>>();
+
+  for (const r of rows) {
+    const t = new Date(r.created_at).getTime();
+    if (Number.isNaN(t)) continue; // untimed row: counts toward totalRows only
+    const user =
+      typeof r.client_user_id === 'string' && r.client_user_id.length > 0 ? r.client_user_id : null;
+
+    if (user && t >= d7Start) users7d.add(user);
+
+    if (t >= d30Start) {
+      byType[r.interaction] = (byType[r.interaction] ?? 0) + 1;
+      if (r.interaction === 'dwell') {
+        const raw = r.metadata && typeof r.metadata.source === 'string' ? r.metadata.source : '';
+        const source = raw.length > 0 ? raw : 'unset';
+        dwellBySource[source] = (dwellBySource[source] ?? 0) + 1;
+      }
+      if (
+        r.interaction === 'impression' &&
+        user &&
+        typeof r.query_text === 'string' &&
+        r.query_text.trim().length > 0
+      ) {
+        const dayKey = localDateKey(new Date(t));
+        let groups = queriesByDay.get(dayKey);
+        if (!groups) {
+          groups = new Set<string>();
+          queriesByDay.set(dayKey, groups);
+        }
+        groups.add(`${user}\u0000${r.query_text}`);
+      }
+    }
+  }
+
+  const chatQueriesDaily: Array<{ date: string; queries: number }> = [];
+  for (let i = 29; i >= 0; i--) {
+    const date = localDateKey(new Date(now.getFullYear(), now.getMonth(), now.getDate() - i));
+    chatQueriesDaily.push({ date, queries: queriesByDay.get(date)?.size ?? 0 });
+  }
+
+  return {
+    totalRows: rows.length,
+    activeUsers7d: users7d.size,
+    byType,
+    dwellBySource,
+    chatQueriesDaily,
+  };
+}
+
+/** Loose row shape for tile-tap counting — accepts both the Supabase rows
+ *  and the JSONL rows (both carry event_type/payload/ts/received_at). */
+export interface TileTapSourceRow {
+  event_type?: string;
+  payload?: Record<string, unknown> | null;
+  ts?: string;
+  received_at?: string;
+}
+
+/**
+ * Utforska-tile-tryck per ord: counts tile_tap analytics rows by
+ * payload.word within the last 30 days (tile words are the canonical
+ * tile identifiers, not the localized labels). Pure.
+ */
+export function summarizeTileTaps(
+  rows: readonly TileTapSourceRow[],
+  now: Date,
+): Record<string, number> {
+  const d30Start = now.getTime() - 30 * DAY_MS;
+  const taps: Record<string, number> = {};
+  for (const r of rows) {
+    if (r.event_type !== 'tile_tap') continue;
+    const t = new Date(r.received_at ?? r.ts ?? '').getTime();
+    if (Number.isNaN(t) || t < d30Start) continue;
+    const word = r.payload && typeof r.payload.word === 'string' ? r.payload.word.trim() : '';
+    if (!word) continue;
+    taps[word] = (taps[word] ?? 0) + 1;
+  }
+  return taps;
+}

@@ -574,9 +574,9 @@
           <div class="sparkline" id="spark-batches" aria-label="Batch success trend"></div>
         </section>
 
-        <section class="card" id="user-activity" data-info="User-activity events from 10-Analytics (port 7778), read directly from runtime/events.jsonl (30-day retention, GDPR: pseudonymous device_id_hash only — no PII). Each row is one of the three fictitious test profiles from the app's user picker (tomorg1/2/3 = Alpha/Beta/Gamma), mapped by mirroring the app's deterministic hash. Depths: Idag = since local midnight, 7 dagar / 30 dagar = rolling windows. Sessions = unique session_id in the window. Click a row to expand per-event-type counts and a 30-day daily trend. ok=false (muted row) means the analytics server has not written any events — never invent numbers.">
+        <section class="card" id="user-activity" data-info="Two blocks. (1) Test profiles: user-activity events from 10-Analytics (port 7778), read directly from Supabase analytics_events (primary) + runtime/events.jsonl (30-day retention, GDPR: pseudonymous device_id_hash only — no PII). Each row is one of the three fictitious test profiles from the app's user picker (tomorg1/2/3 = Alpha/Beta/Gamma), mapped by mirroring the app's deterministic hash. Depths: Idag = since local midnight, 7 dagar / 30 dagar = rolling windows. Sessions = unique session_id in the window. Click a row to expand per-event-type counts and a 30-day daily trend. (2) Agentinteraktioner (Fas E): real interaction rows from 08-Agent's user_interactions table (the feedback-API store) plus tile_tap analytics rows. Aktiva användare = distinct anonymous client_user_id UUIDs in 7 days; everything else is a 30-day window. Unika frågor per day = distinct (user, query_text) groups from impression rows — one user asking the same thing twice in a day counts once. ok=false (muted row) means every source is empty — never invent numbers.">
           <h2>Användaraktivitet<button type="button" class="info-btn" data-info-target="user-activity" aria-label="help">i</button></h2>
-          <p class="caption">Per testprofil från <code>10-Analytics</code> (<code>runtime/events.jsonl</code>, 30 dagars retention). Välj djup och klicka en rad för detaljer.</p>
+          <p class="caption">Testprofiler från <code>10-Analytics</code> + agentinteraktioner från <code>08-Agent</code>. Välj djup och klicka en rad för detaljer.</p>
           <div class="ua-toolbar">
             <div class="resolution-toggle ua-depth-toggle" id="ua-depth-toggle" role="tablist" aria-label="aktivitetsdjup">
               <button data-depth="today" class="active" role="tab" aria-selected="true">Idag</button>
@@ -617,6 +617,46 @@
               </thead>
               <tbody id="ua-tbody"><tr><td colspan="7" class="empty">loading&hellip;</td></tr></tbody>
             </table>
+          </div>
+          <div class="ua-interactions" id="ua-interactions">
+            <h3>Agentinteraktioner</h3>
+            <p class="caption">Riktiga signaler från appens feedback-API (<code>user_interactions</code>): visningar, klick, sparade, biljettklick och 3s-intresse — plus Utforska-tile-tryck. Fönster: 30 dagar om inget annat anges.</p>
+            <div class="kpi-strip kpi-strip--inline">
+              <div class="kpi-tile">
+                <div class="kpi-label">Aktiva användare</div>
+                <div class="kpi-value" id="ua-int-users">-</div>
+                <div class="kpi-caption">unika användare, 7 dagar</div>
+              </div>
+              <div class="kpi-tile">
+                <div class="kpi-label">Sparade evenemang</div>
+                <div class="kpi-value" id="ua-int-saved">-</div>
+                <div class="kpi-caption">save-signaler, 30 dagar</div>
+              </div>
+              <div class="kpi-tile">
+                <div class="kpi-label">Dwell-signaler</div>
+                <div class="kpi-value" id="ua-int-dwell">-</div>
+                <div class="kpi-caption">3s+ intresse, 30 dagar</div>
+              </div>
+              <div class="kpi-tile">
+                <div class="kpi-label">Biljettklick</div>
+                <div class="kpi-value" id="ua-int-outbound">-</div>
+                <div class="kpi-caption">utgående länkar, 30 dagar</div>
+              </div>
+            </div>
+            <div class="ua-int-columns">
+              <div class="ua-int-col">
+                <strong>Interaktioner per typ (30 dagar)</strong>
+                <div class="sh-bars" id="ua-int-types"><span class="empty muted">no data</span></div>
+                <strong>Dwell per källa (30 dagar)</strong>
+                <div class="sh-bars" id="ua-int-dwell-sources"><span class="empty muted">no data</span></div>
+              </div>
+              <div class="ua-int-col">
+                <strong>Unika frågor per dag (30 dagar)</strong>
+                <div class="sparkline" id="ua-spark-int-queries" aria-label="unika frågor per dag"></div>
+                <strong>Utforska-tile-tryck per ord (30 dagar)</strong>
+                <div class="sh-bars" id="ua-int-tiles"><span class="empty muted">no data</span></div>
+              </div>
+            </div>
           </div>
         </section>
 

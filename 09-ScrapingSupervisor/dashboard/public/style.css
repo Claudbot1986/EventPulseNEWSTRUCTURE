@@ -1385,6 +1385,34 @@ ul.bars li {
 .ua-toolbar .sh-count { font-size: 11px; }
 #ua-table .sparkline { max-width: 260px; margin-top: 6px; }
 
+/* Agentinteraktioner sub-block (Fas E: user_interactions + tile_tap KPIs).
+   Reuses .kpi-tile, .sh-bars and .sparkline; only the wrapper is new. */
+.ua-interactions {
+  margin-top: 14px;
+  padding-top: 12px;
+  border-top: 1px solid var(--border);
+}
+.ua-interactions h3 {
+  margin: 0 0 4px;
+  font-size: 14px;
+}
+.ua-interactions .caption { margin: 0 0 8px; }
+.ua-int-columns {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0 28px;
+  margin-top: 10px;
+}
+.ua-int-col > strong {
+  display: block;
+  margin: 12px 0 6px;
+  font-size: 12px;
+}
+.ua-int-col .sparkline { max-width: 260px; }
+@media (max-width: 900px) {
+  .ua-int-columns { grid-template-columns: 1fr; }
+}
+
 /* ── Layout: sidebar + main (navigation shell) ────────────────────────────── */
 /* Driven by body.sidebar-open vs body:not(.sidebar-open). State persisted in
    localStorage('eventpulse-sidebar-open'). Toggle button is the first child of

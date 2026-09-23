@@ -1902,6 +1902,97 @@ const UA_TYPE_COLORS = {
   filter_change: '#8b949e',
 };
 
+/* Agentinteraktioner (Fas E): user_interactions types from 08-Agent's
+   feedback-API + dwell metadata sources + tile-tap words. */
+const UA_INTERACTION_LABELS = {
+  impression: 'visade evenemang (fråga/sökning)',
+  click: 'klick på evenemang',
+  outbound: 'biljettklick',
+  save: 'sparade evenemang',
+  dismiss: 'avvisade',
+  reject: 'reject',
+  feedback_positive: 'tumme upp',
+  feedback_negative: 'tumme ned',
+  dwell: 'dwell (3s+ intresse)',
+};
+const UA_INTERACTION_COLORS = {
+  impression: '#58a6ff',
+  click: '#f0883e',
+  outbound: '#39c5cf',
+  save: '#d29922',
+  dismiss: '#ff7b72',
+  reject: '#bf8700',
+  feedback_positive: '#3fb950',
+  feedback_negative: '#e5534b',
+  dwell: '#a371f7',
+};
+const UA_DWELL_SOURCE_LABELS = {
+  card_hold: 'håll på kort (3 s)',
+  list_view: 'dwell i listvy',
+  unset: 'ej satt',
+};
+const UA_DWELL_SOURCE_COLORS = {
+  card_hold: '#a371f7',
+  list_view: '#8957e5',
+  unset: '#8b949e',
+};
+
+/** Shared bar-list markup (same look as the profile drill-down bars). */
+function uaBarsHtml(entries, labelMap, colorMap, rawLabel) {
+  const sorted = [...entries].sort((a, b) => b[1] - a[1]);
+  const total = sorted.reduce((acc, [, n]) => acc + n, 0);
+  if (sorted.length === 0 || total === 0) return '<span class="empty muted">no data</span>';
+  const palette = ['#58a6ff', '#3fb950', '#f0883e', '#d29922', '#a371f7', '#39c5cf'];
+  return sorted.map(([key, n], i) => {
+    const pct = total ? (n / total) * 100 : 0;
+    const label = rawLabel ? key : (labelMap[key] || key);
+    const color = colorMap ? (colorMap[key] || '#8b949e') : palette[i % palette.length];
+    return `<div class="sh-bar-row" title="${escapeHtml(label)}: ${n} (${pct.toFixed(1)}%)">
+      <span class="sh-bar-label">${escapeHtml(label)}</span>
+      <div class="sh-bar-track"><div class="sh-bar-fill" style="width:${pct.toFixed(1)}%;background:${color}"></div></div>
+      <span class="sh-bar-count">${n}</span>
+    </div>`;
+  }).join('');
+}
+
+/** Agentinteraktioner block (Fas E): user_interactions + tile_tap KPIs.
+ *  inter === null → honest muted state (report ok:false — every source empty). */
+function renderUaInteractions(inter) {
+  const has = !!inter;
+  const byType = has && inter.byType ? inter.byType : {};
+  const num = (v) => (typeof v === 'number' ? v.toLocaleString() : '-');
+  setText('ua-int-users', num(has ? inter.activeUsers7d : null));
+  setText('ua-int-saved', num(has ? byType.save || 0 : null));
+  setText('ua-int-dwell', num(has ? byType.dwell || 0 : null));
+  setText('ua-int-outbound', num(has ? byType.outbound || 0 : null));
+
+  const typesEl = document.getElementById('ua-int-types');
+  if (typesEl) typesEl.innerHTML = uaBarsHtml(Object.entries(byType), UA_INTERACTION_LABELS, UA_INTERACTION_COLORS);
+
+  const dwellEl = document.getElementById('ua-int-dwell-sources');
+  if (dwellEl) {
+    const src = has && inter.dwellBySource ? inter.dwellBySource : {};
+    dwellEl.innerHTML = uaBarsHtml(Object.entries(src), UA_DWELL_SOURCE_LABELS, UA_DWELL_SOURCE_COLORS);
+  }
+
+  const tilesEl = document.getElementById('ua-int-tiles');
+  if (tilesEl) {
+    const taps = has && inter.tileTapsByWord ? inter.tileTapsByWord : {};
+    tilesEl.innerHTML = taps && Object.keys(taps).length > 0
+      ? uaBarsHtml(Object.entries(taps), null, null, true)
+      : '<span class="empty muted">inga tile-tryck ännu</span>';
+  }
+
+  const spark = document.getElementById('ua-spark-int-queries');
+  if (spark) {
+    if (has && Array.isArray(inter.chatQueriesDaily)) {
+      renderSparkline('ua-spark-int-queries', inter.chatQueriesDaily.map((d) => d.queries));
+    } else {
+      spark.innerHTML = '<span class="empty muted">no data</span>';
+    }
+  }
+}
+
 function uaDepthLabel(depth) {
   return depth === 'today' ? 'idag' : depth === 'd7' ? 'senaste 7 dagarna' : 'senaste 30 dagarna';
 }
@@ -1913,7 +2004,7 @@ function initUserActivity(data) {
   const gen = document.getElementById('ua-generated');
   if (gen) {
     gen.textContent = data && data.generatedAt
-      ? `events.jsonl · läst ${new Date(data.generatedAt).toLocaleTimeString()}`
+      ? `läst ${new Date(data.generatedAt).toLocaleTimeString()}`
       : '';
   }
   renderUserActivity();
@@ -1926,13 +2017,18 @@ function renderUserActivity() {
   const data = uaState.data;
 
   if (!data.ok) {
-    // Honest muted state — analytics file missing/unreadable server-side.
+    // Honest muted state — every source empty/unreadable server-side.
     body.innerHTML = `<tr><td colspan="7" class="empty">${escapeHtml(data.reason || 'inga analytics-events ännu')}</td></tr>`;
     setText('ua-events', '-');
     setText('ua-profiles', '-');
     setText('ua-sessions', '-');
+    renderUaInteractions(null);
     return;
   }
+
+  // Fas E: agent-interactions block — independent of the depth toggle
+  // (its windows are fixed: 7d for aktiva användare, 30d for the rest).
+  renderUaInteractions(data.interactions || null);
 
   const depth = uaState.depth;
   const kpi = (data.kpis && data.kpis[depth]) || { events: 0, activeProfiles: 0, sessions: 0 };

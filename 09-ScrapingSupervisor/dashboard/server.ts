@@ -26,11 +26,15 @@ import {
   collectExtractionOverview,
   collectUnsynced,
   collectAnalyticsEvents,
+  collectUserInteractions,
+  summarizeUserInteractions,
+  summarizeTileTaps,
   type Kpis,
   type DbSourceRow,
   type TimeSeries,
   type LayerExtractionOverview,
   type UnsyncedReport,
+  type UserInteractionSummary,
 } from './db';
 import {
   listPending,
@@ -1400,12 +1404,22 @@ export interface UserActivityReport {
   generatedAt: string;
   profiles: UaProfileRow[];
   kpis: Record<UaDepth, { events: number; activeProfiles: number; sessions: number }>;
+  /** Fas E: agent-activity KPIs from 08-Agent's user_interactions +
+   *  tile_tap analytics rows. Zeros are honest — never invented. */
+  interactions: UserActivityInteractionsBlock;
+}
+
+/** UserInteractionSummary + the tile-tap counts (from analytics rows). */
+export interface UserActivityInteractionsBlock extends UserInteractionSummary {
+  /** Utforska-tile-tryck per canonical tile word, last 30 days. */
+  tileTapsByWord: Record<string, number>;
 }
 
 interface UaEventRow {
   event_type?: string;
   device_id_hash?: string;
   session_id?: string;
+  payload?: Record<string, unknown> | null;
   ts?: string;
   received_at?: string;
 }
@@ -1426,11 +1440,27 @@ export async function collectUserActivity(root: string): Promise<UserActivityRep
     d7: { events: 0, activeProfiles: 0, sessions: 0 },
     d30: { events: 0, activeProfiles: 0, sessions: 0 },
   };
+  const emptyInteractions: UserActivityInteractionsBlock = {
+    totalRows: 0,
+    activeUsers7d: 0,
+    byType: {},
+    dwellBySource: {},
+    chatQueriesDaily: [],
+    tileTapsByWord: {},
+  };
 
   // Fas B: Supabase analytics_events is the primary store; [] when
   // unconfigured or unreadable — then the JSONL fallback must carry the
   // report alone (and honestly say so when it can't).
   const supabaseRows = await collectAnalyticsEvents();
+
+  // Fas E: 08-Agent's user_interactions — the app's real interaction
+  // signals (impressions, saves, dwell, outbound…). Independent of the
+  // analytics sources: the report is ok:true as long as ANY source has
+  // data, and this block shows honest zeros when it is empty.
+  const interactionRows = await collectUserInteractions();
+  const now = new Date();
+  const interactionSummary = summarizeUserInteractions(interactionRows, now);
 
   let jsonlRows: UaEventRow[] = [];
   let jsonlMissing = false;
@@ -1445,7 +1475,7 @@ export async function collectUserActivity(root: string): Promise<UserActivityRep
     }
   }
 
-  if (jsonlMissing && supabaseRows.length === 0) {
+  if (jsonlMissing && supabaseRows.length === 0 && interactionSummary.totalRows === 0) {
     return {
       ok: false,
       reason:
@@ -1453,16 +1483,18 @@ export async function collectUserActivity(root: string): Promise<UserActivityRep
       generatedAt,
       profiles: [],
       kpis: emptyKpis,
+      interactions: emptyInteractions,
     };
   }
 
-  if (jsonlError && supabaseRows.length === 0) {
+  if (jsonlError && supabaseRows.length === 0 && interactionSummary.totalRows === 0) {
     return {
       ok: false,
       reason: jsonlError,
       generatedAt,
       profiles: [],
       kpis: emptyKpis,
+      interactions: emptyInteractions,
     };
   }
 
@@ -1471,7 +1503,6 @@ export async function collectUserActivity(root: string): Promise<UserActivityRep
   // order-insensitive (counters/sets/max), so no sort is needed.
   const rows: UaEventRow[] = [...jsonlRows, ...supabaseRows];
 
-  const now = new Date();
   const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
   const d7Start = now.getTime() - 7 * 24 * 3600 * 1000;
   const d30Start = now.getTime() - 30 * 24 * 3600 * 1000;
@@ -1602,7 +1633,15 @@ export async function collectUserActivity(root: string): Promise<UserActivityRep
   // Zero-event known profiles contribute nothing to the KPIs — but unknown
   // hashes with zero events can't exist, so no extra filtering needed here.
 
-  return { ok: true, generatedAt, profiles, kpis };
+  // Fas E: the interactions block — user_interactions KPIs plus tile taps
+  // counted over the same concatenated analytics rows (JSONL rows carry
+  // payload too — readJsonl parses the whole stored line).
+  const interactions: UserActivityInteractionsBlock = {
+    ...interactionSummary,
+    tileTapsByWord: summarizeTileTaps(rows, now),
+  };
+
+  return { ok: true, generatedAt, profiles, kpis, interactions };
 }
 
 // ─── HTTP handlers ───────────────────────────────────────────────────────────
@@ -1672,9 +1711,12 @@ async function serveJson(req: IncomingMessage, res: ServerResponse): Promise<boo
   if (url === '/api/user-activity') {
     // User-activity panel — aggregates 10-Analytics' Supabase
     // analytics_events (primary) + runtime/events.jsonl (fallback) per
-    // test profile across today/7d/30d depths. Returns HTTP 200 with
-    // ok:false when both sources are empty so the panel can render an
-    // honest muted state instead of fabricated numbers.
+    // test profile across today/7d/30d depths, PLUS (Fas E) the
+    // interactions block from 08-Agent's user_interactions: aktiva
+    // användare 7d, interaktionstyper, dwell per källa, unika frågor/dag
+    // and Utforska-tile-tryck per ord. Returns HTTP 200 with ok:false
+    // when ALL sources are empty so the panel can render an honest muted
+    // state instead of fabricated numbers.
     try {
       const data = await collectUserActivity(PROJECT_ROOT);
       res.writeHead(200, {

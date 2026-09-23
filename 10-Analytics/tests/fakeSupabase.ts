@@ -1,11 +1,15 @@
 /**
  * fakeSupabase.ts — minimal in-memory fake of the supabase-js query
- * builder, covering only the surface 10-Analytics/storage.ts uses:
+ * builder, covering only the surface 10-Analytics/storage.ts and the
+ * dashboard db.ts reads use:
  *
  *   insert(values)                                 → { error }
  *   select(cols).gte/.order/.range(...)            → { data, error }
  *   select('id', { count:'exact', head:true })     → { count, error }
  *   delete().eq/.lt(...).select('id')              → { data, error }
+ *
+ * Tables: 'analytics_events' (StoredEvent shape) and 'user_interactions'
+ * (08-Agent feedback rows — read-only for the dashboard, loose shape).
  *
  * Not a general supabase-js mock — throws on unknown tables so a typo
  * in the table name fails loudly instead of passing silently.
@@ -16,20 +20,24 @@ import type { StoredEvent } from '../analytics.js';
 
 export type FakeRow = StoredEvent & { id?: number };
 
+/** user_interactions rows — no fixed schema on the fake's side. */
+export type FakeInteractionRow = Record<string, unknown> & { id?: number };
+
 export interface FakeSupabaseOptions {
   failInsert?: boolean;
   failSelect?: boolean;
   failDelete?: boolean;
 }
 
-type Filter = (r: FakeRow) => boolean;
+type AnyRow = Record<string, unknown>;
+type Filter = (r: AnyRow) => boolean;
 
 function makeFilter(op: string, col: string, val: unknown): Filter {
-  const get = (r: FakeRow) => String((r as unknown as Record<string, unknown>)[col] ?? '');
+  const get = (r: AnyRow) => String(r[col] ?? '');
   const target = String(val);
   switch (op) {
     case 'eq':
-      return (r) => (r as unknown as Record<string, unknown>)[col] === val;
+      return (r) => r[col] === val;
     case 'gte':
       return (r) => get(r) >= target;
     case 'lt':
@@ -39,20 +47,22 @@ function makeFilter(op: string, col: string, val: unknown): Filter {
   }
 }
 
-export interface FakeSupabaseOptions {
-  failInsert?: boolean;
-  failSelect?: boolean;
-  failDelete?: boolean;
-}
-
 /** The fake's public face (what tests keep a handle on). */
 export type FakeSupabase = ReturnType<typeof makeFakeSupabase>;
 
 export function makeFakeSupabase(opts: FakeSupabaseOptions = {}) {
   const rows: FakeRow[] = [];
+  const interactionRows: FakeInteractionRow[] = [];
   let nextId = 1;
 
-  function selectBuilder() {
+  function rowsFor(table: string): AnyRow[] {
+    if (table === 'analytics_events') return rows as unknown as AnyRow[];
+    if (table === 'user_interactions') return interactionRows;
+    throw new Error(`fakeSupabase: unknown table ${table}`);
+  }
+
+  function selectBuilder(table: string) {
+    const tableRows = rowsFor(table);
     const filters: Filter[] = [];
     let order: { col: string; asc: boolean } | null = null;
     let range: [number, number] | null = null;
@@ -80,14 +90,14 @@ export function makeFakeSupabase(opts: FakeSupabaseOptions = {}) {
       },
     };
 
-    function finish(): { data: FakeRow[] | null; error: { message: string } | null } {
+    function finish(): { data: AnyRow[] | null; error: { message: string } | null } {
       if (opts.failSelect) return { data: null, error: { message: 'select failed (fake)' } };
-      let out = rows.filter((r) => filters.every((f) => f(r)));
+      let out = tableRows.filter((r) => filters.every((f) => f(r)));
       if (order) {
         const { col, asc } = order;
         out = [...out].sort((x, y) => {
-          const a = String((x as unknown as Record<string, unknown>)[col]);
-          const c = String((y as unknown as Record<string, unknown>)[col]);
+          const a = String(x[col]);
+          const c = String(y[col]);
           if (a === c) return 0;
           if (asc) return a < c ? -1 : 1;
           return a < c ? 1 : -1;
@@ -101,7 +111,8 @@ export function makeFakeSupabase(opts: FakeSupabaseOptions = {}) {
     return b;
   }
 
-  function deleteBuilder() {
+  function deleteBuilder(table: string) {
+    const tableRows = rowsFor(table);
     const filters: Filter[] = [];
     const b = {
       eq(col: string, val: unknown) {
@@ -116,10 +127,10 @@ export function makeFakeSupabase(opts: FakeSupabaseOptions = {}) {
         if (opts.failDelete) {
           return Promise.resolve({ data: null, error: { message: 'delete failed (fake)' } });
         }
-        const removed = rows.filter((r) => filters.every((f) => f(r)));
+        const removed = tableRows.filter((r) => filters.every((f) => f(r)));
         for (const r of removed) {
-          const i = rows.indexOf(r);
-          if (i >= 0) rows.splice(i, 1);
+          const i = tableRows.indexOf(r);
+          if (i >= 0) tableRows.splice(i, 1);
         }
         return Promise.resolve({ data: removed.map((r) => ({ ...r })), error: null });
       },
@@ -130,10 +141,10 @@ export function makeFakeSupabase(opts: FakeSupabaseOptions = {}) {
   const client = {
     /** Direct access for assertions. */
     __rows: rows,
+    __interactionRows: interactionRows,
     from(table: string) {
-      if (table !== 'analytics_events') {
-        throw new Error(`fakeSupabase: unknown table ${table}`);
-      }
+      rowsFor(table); // eager validation — unknown tables fail loudly.
+      const tableRows = rowsFor(table);
       return {
         insert(values: unknown) {
           if (opts.failInsert) {
@@ -141,7 +152,7 @@ export function makeFakeSupabase(opts: FakeSupabaseOptions = {}) {
           }
           const list = Array.isArray(values) ? values : [values];
           for (const v of list) {
-            rows.push({ ...(v as Record<string, unknown>), id: nextId++ } as FakeRow);
+            tableRows.push({ ...(v as Record<string, unknown>), id: nextId++ });
           }
           return Promise.resolve({ error: null });
         },
@@ -151,16 +162,19 @@ export function makeFakeSupabase(opts: FakeSupabaseOptions = {}) {
             if (opts.failSelect) {
               return Promise.resolve({ count: null, error: { message: 'count failed (fake)' } });
             }
-            return Promise.resolve({ count: rows.length, error: null });
+            return Promise.resolve({ count: tableRows.length, error: null });
           }
-          return selectBuilder();
+          return selectBuilder(table);
         },
         delete() {
-          return deleteBuilder();
+          return deleteBuilder(table);
         },
       };
     },
   };
 
-  return client as unknown as typeof client & { __rows: FakeRow[] } & SupabaseClient;
+  return client as unknown as typeof client & {
+    __rows: FakeRow[];
+    __interactionRows: FakeInteractionRow[];
+  } & SupabaseClient;
 }
