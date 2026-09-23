@@ -10,9 +10,14 @@
  *   - Invalid Bearer → treated as anonymous (never 401), chronological
  *   - Valid Bearer + control variant → chronological, zero signal reads
  *   - Treatment variant with cold history → chronological, no crash
+ *   - Fas C.4: treatment user whose feed slot 0 is reserved for exploration
+ *     keeps the chronological card at slot 0 (no reasons/score) even with a
+ *     rich taste history — the reserve beats the ranker.
  *
  * Variant assignment is deterministic per user id (SHA-256, experiments.ts),
- * so the test scans for fixed UUIDs that hash to each variant up front.
+ * so the test scans for fixed UUIDs that hash to each variant up front. The
+ * exploration reserve is deterministic per (user, window, slot) the same way
+ * (tools/explore_reserve.ts), so a reserve user is scanned the same way.
  *
  * Run with: npx vitest run 08-Agent/tests/feed_rank_wire.test.ts
  */
@@ -23,6 +28,7 @@ import type { AddressInfo } from 'node:net';
 
 import { buildApp } from '../server';
 import { assignVariant } from '../tools/experiments';
+import { isReservedSlot } from '../tools/explore_reserve';
 
 /** Must match server.ts PERSONALIZATION_PRIORS_EXP. */
 const EXPERIMENT_ID = 'PERSONALIZATION_PRIORS';
@@ -48,6 +54,27 @@ function findVariantUsers(count: number, variant: 'control' | 'treatment'): stri
 // per-user caches, so each test uses a fresh id to avoid cross-test staleness.
 const TREATMENT_USERS = findVariantUsers(3, 'treatment');
 const CONTROL_USERS = findVariantUsers(2, 'control');
+
+/**
+ * Fas C.4: scan for a treatment user whose feed slot 0 is reserved for
+ * exploration on the test window (2099-01-01) but whose slot 1 is NOT — so
+ * the 2-card fixture page demonstrates the merge exactly: one reserved
+ * chronological card + one ranked card. Distinct from the fixed users above
+ * (fresh id → no cache staleness). Deterministic for the same reason.
+ */
+function findReserveSlot0User(): string {
+  const used = new Set([...TREATMENT_USERS, ...CONTROL_USERS]);
+  for (let i = 0; i < 50_000; i++) {
+    const id = `dddddddd-dddd-4ddd-8ddd-${String(i).padStart(12, '0')}`;
+    if (assignVariant(id, EXPERIMENT_ID) !== 'treatment') continue;
+    if (used.has(id)) continue;
+    if (isReservedSlot(id, '2099-01-01', 0) && !isReservedSlot(id, '2099-01-01', 1)) {
+      return id;
+    }
+  }
+  throw new Error('could not find a slot-0-reserve treatment user');
+}
+const RESERVE_USER = findReserveSlot0User();
 
 // ─── Fixtures ───────────────────────────────────────────────────────────────
 
@@ -225,6 +252,7 @@ const testVerify = async (token: string) => {
   const all = [
     ...TREATMENT_USERS.map((id) => ({ token: `t:${id}`, id })),
     ...CONTROL_USERS.map((id) => ({ token: `c:${id}`, id })),
+    { token: `t:${RESERVE_USER}`, id: RESERVE_USER },
   ];
   const hit = all.find((x) => x.token === token);
   return hit ? { id: hit.id, email: 'test@example.com' } : null;
@@ -331,5 +359,49 @@ describe('GET /agent/feed — Fas C taste ranking', () => {
       musicRow.id,
       theatreRow.id,
     ]);
+  });
+});
+
+describe('GET /agent/feed — Fas C.4 utforskningsreserv', () => {
+  it('the fixed variant users above have no reserved slots on the test window (preflight)', () => {
+    // If EXPLORE_RESERVE_SALT or the fraction is ever rotated, the reserve
+    // pattern may land on the fixed test users and silently change what the
+    // ranking tests above prove. This guard fails first, with a clear name.
+    for (const id of [...TREATMENT_USERS, ...CONTROL_USERS]) {
+      expect(isReservedSlot(id, '2099-01-01', 0)).toBe(false);
+      expect(isReservedSlot(id, '2099-01-01', 1)).toBe(false);
+    }
+  });
+
+  it('a reserved slot keeps its chronological card even with a rich taste history', async () => {
+    // RESERVE_USER: treatment variant, feed slot 0 reserved on 2099-01-01.
+    // Same rich theatre history as the ranking test — but the reserve wins:
+    // slot 0 keeps the chronological music card, stripped of all ranker
+    // metadata (no reasons/score → the UI shows no taste chips there).
+    const mock = makeFeedMockSupabase({
+      interactionRows: [...theatreSaves, ...theatreOutbounds],
+    });
+    const { status, body } = await requestFeed(mock, {
+      bearer: `t:${RESERVE_USER}`,
+    });
+    expect(status).toBe(200);
+    expect(body.events.map((e: any) => e.id)).toEqual([
+      musicRow.id,   // reserved slot 0: chronological, reserve beats ranker
+      theatreRow.id, // non-reserved slot 1: ranked queue's #1
+    ]);
+    const music = body.events[0];
+    // No ranker metadata on the reserved card — the same wire shape as an
+    // anonymous card (the client mapper defaults missing reasons to []).
+    expect(music.reasons).toBeUndefined();
+    expect(music.score).toBeUndefined();
+    // The non-reserved slot still carries the full taste ranking — the
+    // reserve carves out exploration slots, it does not disable ranking.
+    const theatre = body.events[1];
+    expect(theatre.reasons).toContain('category_personalization');
+    expect(theatre.reasons).toContain('outbound_personalization');
+    expect(typeof theatre.score).toBe('number');
+    // Window contract still intact after the merge.
+    expect(body.total).toBe(2);
+    expect(body.from).toBe('2099-01-01');
   });
 });

@@ -22,6 +22,7 @@ import { createClient, type SupabaseClient } from '@supabase/supabase-js';
 import { parseIntent } from './tools/parse_intent';
 import { searchEvents } from './tools/search_events';
 import { rankEvents } from './tools/rank_events';
+import { applyExploreReserve } from './tools/explore_reserve';
 import { mmrRerank } from './tools/diversify';
 import { recordFeedback, validateFeedbackInput } from './tools/record_feedback';
 import { pickClarifyingQuestion } from './tools/find_gaps';
@@ -339,14 +340,18 @@ export function buildApp(opts: {
             followedArtistSlugs: followedArtists.artist_slugs.length > 0 ? followedArtists.artist_slugs : undefined,
           });
 
-          result = {
-            ...result,
-            events: ranked.map((r) => ({
-              ...r.card,
-              reasons: r.reasons,
-              score: r.score,
-            })),
-          };
+          // Fas C.4: utforskningsreserv. A deterministic ~7 % of the page's
+          // slots (per user + window date) keep their original chronological
+          // card — untouched by the ranker, no reasons/score — so taste
+          // ranking never becomes a total filter bubble. Non-reserved slots
+          // take the ranked order. See tools/explore_reserve.ts.
+          const merged = applyExploreReserve({
+            chronological: result.events,
+            ranked,
+            userId: req.user!.id,
+            windowDate: from,
+          });
+          result = { ...result, events: merged.events };
         } catch {
           // Personalization must never break browsing: fall back to the
           // chronological page we already fetched. (buildUserSignal already
