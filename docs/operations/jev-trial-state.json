@@ -1,0 +1,19 @@
+{
+  "trial_id": "multi-mode-2026-09-23",
+  "started_at": "2026-09-23T18:15:00Z",
+  "target_calls_total": 25,
+  "target_calls_by_mode": {
+    "advisor": 18,
+    "council": 4,
+    "dual": 3
+  },
+  "calls_total": 34,
+  "calls_by_mode": {
+    "advisor": 28,
+    "council": 3,
+    "dual": 3
+  },
+  "status": "active",
+  "verdict": null,
+  "notes": "Three-mode trial: advisor (Jev), council (Karpathy 3-stage), dual (cross-validation). All calls log to docs/operations/jev-decisions.md."
+}
