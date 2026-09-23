@@ -27,7 +27,7 @@ A focused sub-agent (`vault-sync` in `~/.claude/agents/`) maintains `01-Current-
 
 - Reads project state (`git log`, `vitest --reporter=json`, `package.json`, recent migrations).
 - Writes the `## Auto-facts (machine-synced)` section of `01-Current-State.md` directly.
-- Writes a narrative proposal to `01-Current-State.proposed.md` — never the main file's narrative.
+- Writes a narrative proposal to `01-Current-State.proposed.md` — never the main file's narrative. The proposal MUST start with a `## För dig (enkel version)` section (decided 2026-09-23): 3–6 jargon-free Swedish bullets — what was built and what it means for the user, what is proven vs not proven yet, and what awaits the user's decision. The non-technical user reviews and approves based on that section alone; the technical bullets follow under `## Tekniskt (för systemet)`.
 - Logs three `VAULT-SYNC:` lines to stdout.
 - Does not invent strategic truth, does not commit, does not modify files outside the vault.
 
