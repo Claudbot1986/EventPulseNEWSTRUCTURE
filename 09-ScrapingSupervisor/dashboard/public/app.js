@@ -3,15 +3,21 @@
  * No frameworks. Runs once per page load (page auto-refreshes via meta tag).
  */
 
-// Orange Analytics box — open the 10-Analytics dashboard in a new browser
-// window (not a tab) with explicit dimensions, per spec. preventDefault() keeps
-// the current tab on this page even if the popup is blocked by the browser.
+// Orange Analytics box — scrolla till sidans egen Användaraktivitet-sektion.
+// Tidigare: popup till 7778/dashboard — där finns ingen UI, bara en
+// platshållare ("not yet provisioned"), och KPI-API:erna där kräver
+// Bearer-token som inte får exponeras i en webbläsare. All analytics-UI
+// bor på den här dashboarden; Fas E bygger ut sektionen. href="#user-activity"
+// fungerar även utan JS (nativ ankar-hopp).
 (function bindAnalyticsButton() {
   const el = document.getElementById('btn-analytics');
   if (!el) return;
-  el.addEventListener('click', (e) => {
-    e.preventDefault();
-    window.open('http://localhost:7778/dashboard', 'analytics', 'width=1200,height=800');
+  el.addEventListener('click', () => {
+    const target = document.getElementById('user-activity');
+    if (!target) return;
+    target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    target.classList.add('card--flash');
+    setTimeout(() => target.classList.remove('card--flash'), 1800);
   });
 })();
 
@@ -46,6 +52,13 @@
         if (j.action === 'started') titleEl.textContent = 'startar…';
         else if (j.action === 'stopped') titleEl.textContent = 'stoppar…';
         else titleEl.textContent = oldTitle;
+      }
+      // Ärlig felvisning: ett misslyckat toggle får sin orsak i underraden —
+      // tyst reset av rubriken dolde tidigare trasiga start-grenen helt.
+      const subEl = el.querySelector('.analytics-server-box-sub');
+      if (subEl) {
+        if (j.ok === false && j.error) subEl.textContent = `fel: ${String(j.error).slice(0, 80)}`;
+        else if (j.action === 'started' || j.action === 'stopped') subEl.textContent = 'on/off · port 7778';
       }
       // Vänta 1.5s så servern hinner lyssna, hämta sen /api/status direkt.
       await new Promise((r) => setTimeout(r, 1500));

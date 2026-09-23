@@ -929,76 +929,116 @@ async function toggleAnalyticsServer(): Promise<{
   const logFile = join(PROJECT_ROOT, 'runtime/analytics-server.log');
   const { execSync, spawn } = await import('child_process');
 
-  // 1. Är servern redan uppe?
-  let existingPid: number | null = null;
-  try {
-    const out = execSync(`lsof -nP -iTCP:${port} -sTCP:LISTEN -t 2>/dev/null | head -1`, {
-      encoding: 'utf8',
-      timeout: 1500,
-    }).trim();
-    existingPid = out ? Number(out) : null;
-  } catch { /* ignore */ }
-
-  if (existingPid) {
-    // Stoppa: SIGTERM, sedan SIGKILL efter 2s om den lever.
+  // PIDs som just nu lyssnar på porten (kan vara flera vid omstartsrace —
+  // dödar vi bara den första kan en orphan behålla porten).
+  const listenerPids = (): number[] => {
     try {
-      process.kill(existingPid, 'SIGTERM');
-      await new Promise((r) => setTimeout(r, 1500));
-      try {
-        process.kill(existingPid, 0);
-        process.kill(existingPid, 'SIGKILL');
-      } catch { /* redan död */ }
-      _analyticsServerCache = null;
-      return { ok: true, action: 'stopped', pid: existingPid };
-    } catch (err) {
-      return { ok: false, action: 'noop', error: String((err as Error)?.message ?? err) };
+      const out = execSync(`lsof -nP -iTCP:${port} -sTCP:LISTEN -t 2>/dev/null`, {
+        encoding: 'utf8',
+        timeout: 1500,
+      });
+      return out
+        .split('\n')
+        .map((line) => Number(line.trim()))
+        .filter((n) => Number.isInteger(n) && n > 0);
+    } catch {
+      return [];
     }
+  };
+
+  const existing = listenerPids();
+  if (existing.length > 0) {
+    // Stoppa: SIGTERM alla lyssnare, VERIFIERA att porten släpps, SIGKILL
+    // de som vägrar. Sanningen är lsof — inte tilltro till kill-anropet.
+    for (const pid of existing) {
+      try { process.kill(pid, 'SIGTERM'); } catch { /* redan död */ }
+    }
+    await new Promise((r) => setTimeout(r, 1500));
+    const stragglers = listenerPids();
+    for (const pid of stragglers) {
+      try { process.kill(pid, 'SIGKILL'); } catch { /* redan död */ }
+    }
+    if (stragglers.length > 0) await new Promise((r) => setTimeout(r, 500));
+    const left = listenerPids();
+    if (left.length > 0) {
+      return { ok: false, action: 'noop', error: `port ${port} släppte inte (PID kvar: ${left.join(', ')})` };
+    }
+    _analyticsServerCache = null;
+    return { ok: true, action: 'stopped', pid: existing[0] };
   }
 
-  // 2. Starta: spawn detached child som överlever dashboardens egna livscykel.
+  // Starta. Samma mönster som launchd-jobbet för den här dashboarden:
+  // node <root>/node_modules/tsx/dist/cli.mjs 10-Analytics/server.ts
+  //
+  // INTE 'npx': den här processen ärvs ofta från launchd vars PATH är
+  // minimal (/usr/bin:/bin:...), och spawn('npx', …) utan shell löser
+  // inte PATH → ENOENT som tyst dödade barnet (start-grenen var trasig).
+  // tsx-binärens shebang 'env node' kräver också PATH. process.execPath +
+  // absolut cli-sökväg eliminerar alla PATH-beroenden.
   try {
     mkdirSync(join(PROJECT_ROOT, 'runtime'), { recursive: true });
-    const { openSync } = await import('fs');
+    const tsxCli = join(PROJECT_ROOT, 'node_modules', 'tsx', 'dist', 'cli.mjs');
+    const serverEntry = join(PROJECT_ROOT, '10-Analytics', 'server.ts');
+    if (!existsSync(tsxCli) || !existsSync(serverEntry)) {
+      return { ok: false, action: 'noop', error: `saknas: ${!existsSync(tsxCli) ? tsxCli : serverEntry}` };
+    }
+    const { openSync, closeSync } = await import('fs');
     const logFd = openSync(logFile, 'a');
-    const child = spawn(
-      'npx',
-      ['tsx', '10-Analytics/server.ts'],
-      {
-        cwd: PROJECT_ROOT,
-        detached: true,
-        stdio: ['ignore', logFd, logFd],
-        // PORT-isolation: dashboardens egen PORT (7777) får inte ärvas —
-        // analytics-serverns default läser process.env.PORT || 7778, så utan
-        // explicit override försöker den lyssna på 7777 och kraschar med
-        // EADDRINUSE.
-        env: { ...process.env, PORT: String(port) },
-      },
-    );
+    let child;
+    let spawnError: string | null = null;
+    try {
+      child = spawn(
+        process.execPath,
+        [tsxCli, serverEntry],
+        {
+          cwd: PROJECT_ROOT,
+          detached: true, // egen processgrupp → hela barnkedjan dör med kill(-pid)
+          stdio: ['ignore', logFd, logFd],
+          // PORT-isolation: dashboardens egen PORT (7777) får inte ärvas —
+          // analytics-serverns default läser process.env.PORT || 7778, så utan
+          // explicit override försöker den lyssna på 7777 och kraschar med
+          // EADDRINUSE.
+          env: { ...process.env, PORT: String(port) },
+        },
+      );
+      // spawn-fel (ENOENT etc.) kommer asynkront via 'error' — utan lyssnare
+      // dog de tyst och toggle rapporterade fel hälsokoll istället för orsak.
+      child.on('error', (err: NodeJS.ErrnoException) => { spawnError = String(err?.message ?? err); });
+    } finally {
+      closeSync(logFd); // barnet har egna fd:ar — läck inte vår kopia
+    }
     child.unref();
 
-    // Liveness check: vänta på att servern binder porten och svarar.
-    // Utan denna returnerade toggle "ok: true" även när barnet dog direkt
-    // (t.ex. EADDRINUSE), och UI fortsatte visa "fetch failed" eftersom vi
-    // aldrig märkte att processen försvann.
-    await new Promise((r) => setTimeout(r, 1200));
-    const controller = new AbortController();
-    const probeTimer = setTimeout(() => controller.abort(), 1500);
-    try {
-      await fetch(`http://localhost:${port}/api/health`, { signal: controller.signal });
+    // Liveness: polla /api/health var 500 ms, max 12 s. tsx-kallstart +
+    // dotenv + supabase-init tar några sekunder (4,4 s sedda i loggen) — den
+    // gamla fasta 1,2 s + 1,5 s-proben mördade en frisk server under boot.
+    const deadline = Date.now() + 12_000;
+    let healthy = false;
+    while (Date.now() < deadline && !spawnError) {
+      await new Promise((r) => setTimeout(r, 500));
+      const controller = new AbortController();
+      const probeTimer = setTimeout(() => controller.abort(), 1200);
+      try {
+        const res = await fetch(`http://localhost:${port}/api/health`, { signal: controller.signal });
+        if (res.ok) { healthy = true; break; }
+      } catch { /* inte uppe än */ } finally { clearTimeout(probeTimer); }
+    }
+    if (healthy) {
       _analyticsServerCache = null;
       return { ok: true, action: 'started', pid: child.pid ?? null };
-    } catch {
-      if (child.pid) {
+    }
+    // Haveri — städa hela den egna processgruppen (barnet är group leader)
+    // och rapportera den verkliga orsaken, inte en gissning.
+    if (child.pid) {
+      try { process.kill(-child.pid, 'SIGKILL'); } catch {
         try { process.kill(child.pid, 'SIGKILL'); } catch { /* redan död */ }
       }
-      return {
-        ok: false,
-        action: 'noop',
-        error: `server didn't respond on /api/health within 1.5s (see ${logFile})`,
-      };
-    } finally {
-      clearTimeout(probeTimer);
     }
+    return {
+      ok: false,
+      action: 'noop',
+      error: spawnError ?? `servern svarade inte på /api/health inom 12 s (se ${logFile})`,
+    };
   } catch (err) {
     return { ok: false, action: 'noop', error: String((err as Error)?.message ?? err) };
   }
