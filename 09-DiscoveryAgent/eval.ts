@@ -213,6 +213,16 @@ export function pickHealTier(
   const reason = status.lastRoutingReason ?? '';
   if (reason.length === 0) return null;
 
+  // Tier 0 (Fas 2.1): pre-routing-API errors are NOT healable. They signal
+  // that Tool A never produced a routable response (breadth: unclear/low_value),
+  // so neither render-gate nor C0 candidate discovery can rescue them — the
+  // upstream needs the operator, not our heal pipeline. Return null so healOne
+  // logs a 'deferred' skip and preserves the daily cap for sources we can
+  // actually move. 95% of failing sources currently fall here per observation.
+  if (/postB-preC:|toolB\(preB\)/i.test(reason)) {
+    return null;
+  }
+
   if (/Fetch failed|ENOTFOUND|ETIMEDOUT|ECONNRESET|SSL|handshake|network|redirect loop|Redirect loop/i.test(reason)) {
     return 1;
   }
@@ -302,4 +312,56 @@ export function countHealthySources(): number {
 
 export function countFailingSources(minFails: number = 2): number {
   return getAllStatuses().filter((s) => s.consecutiveFailures >= minFails).length;
+}
+
+// ─── Permanent-error detection (Fas 1.2) ───────────────────────────────────
+
+/**
+ * Minimum consecutive identical-error heal attempts before we treat the source
+ * as a no-hop candidate and stop burning daily cap on it.
+ *
+ * Reads only the last `READ_TAIL` lines of runs.jsonl — the file is append-only
+ * and grows ~50 lines/day, so the tail stays well-bounded over months.
+ */
+export const REPEATABLE_ERROR_THRESHOLD = 3;
+const READ_TAIL = 200;
+const ERROR_SIGNATURE_LEN = 60;
+
+/**
+ * Return true when `sourceId` has logged the same error signature (first
+ * ERROR_SIGNATURE_LEN chars) in ≥ REPEATABLE_ERROR_THRESHOLD most-recent heal
+ * attempts in `runtime/discovery-agent/runs.jsonl`. Lets the daily cap skip
+ * sources whose heal attempts keep failing for the same reason.
+ *
+ * Conservative: only triggers when the most-recent N entries all match — one
+ * transient recovery resets the counter by virtue of having no error string.
+ */
+export function hasRepeatableError(
+  sourceId: string,
+  options: { threshold?: number; logPath?: string } = {},
+): boolean {
+  const threshold = options.threshold ?? REPEATABLE_ERROR_THRESHOLD;
+  const logPath = options.logPath ?? RUNS_LOG;
+  if (!existsSync(logPath)) return false;
+
+  const lines = readFileSync(logPath, 'utf-8')
+    .split('\n')
+    .filter((l) => l.trim().length > 0)
+    .slice(-READ_TAIL);
+
+  const sigs: string[] = [];
+  for (const line of lines) {
+    try {
+      const r = JSON.parse(line) as RunLogEntry;
+      if (r.phase === 'heal' && r.sourceId === sourceId && r.error) {
+        sigs.push(r.error.slice(0, ERROR_SIGNATURE_LEN));
+      }
+    } catch {
+      // skip malformed lines — audit-only signal, never crash
+    }
+  }
+  if (sigs.length < threshold) return false;
+
+  const tail = sigs.slice(-threshold);
+  return tail.every((s) => s === tail[0]);
 }

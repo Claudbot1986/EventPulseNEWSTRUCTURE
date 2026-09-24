@@ -136,3 +136,46 @@ test('pickHealTier → defaults to tier 2 for unrecognized reason', () => {
   });
   expect(pickHealTier(s)).toBe(2);
 });
+
+// ─── Tier 0 (Fas 2.1): pre-routing errors are not healable ────────────────
+
+test('pickHealTier → null for postB-preC: reason (pre-routing, not healable)', () => {
+  const s = status({
+    consecutiveFailures: 3,
+    lastSuccess: null,
+    lastRoutingReason: 'postB-preC: toolB(preB): [breadth] unclear/low_value',
+  });
+  expect(pickHealTier(s)).toBe(null);
+});
+
+test('pickHealTier → null for toolB(preB) reason (sub-retire-threshold failure count)', () => {
+  // 3 consecutiveFailures is below the retire threshold (5) so the tier 0
+  // filter is what determines the outcome.
+  const s = status({
+    consecutiveFailures: 3,
+    lastSuccess: null,
+    lastRoutingReason: 'toolB(preB): discovery returned no candidates',
+  });
+  expect(pickHealTier(s)).toBe(null);
+});
+
+test('pickHealTier → null for postB-preC: even when otherwise no-jsonld would trigger tier 2', () => {
+  // The 0-events substring matches tier 2 — but the postB-preC: prefix should
+  // win because pre-routing failures cannot be healed by C0/render-gate.
+  const s = status({
+    consecutiveFailures: 4,
+    lastSuccess: null,
+    lastRoutingReason: 'postB-preC: toolB(preB): 0 events from upstream',
+  });
+  expect(pickHealTier(s)).toBe(null);
+});
+
+test('pickHealTier → tier 3 retire still beats tier 0 (5+ fails + old success)', () => {
+  const s = status({
+    consecutiveFailures: 7,
+    lastSuccess: '2024-01-01T00:00:00.000Z',
+    lastRoutingReason: 'postB-preC: toolB(preB): [breadth] unclear',
+  });
+  // Retire check runs first in pickHealTier; tier 0 must NOT override retire.
+  expect(pickHealTier(s)).toBe(3);
+});
