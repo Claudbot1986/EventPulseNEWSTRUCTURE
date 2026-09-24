@@ -55,6 +55,7 @@ import { dayTimeLabel } from './home/cardTimeLabel';
 import { pickHappeningNow, happeningTitleParts, weekendFeedAnchorIso } from './home/happeningNow';
 import { dateNamesFor } from '../i18n/dateNames';
 import { useI18n } from '../i18n';
+import EventPulseCarousel from '../components/EventPulseCarousel';
 
 const TOKENS = {
   color: {
@@ -1131,6 +1132,75 @@ export default function HomeScreen({ onChipPress, onCardPress }) {
     if (typeof onChipPress === 'function') onChipPress(prompt);
   }, [onChipPress]);
 
+  // Hem-karuseller (2026-09-24): två Spotify-författarsektioner med olika
+  // innehåll. Tid direkt under Din helg (ankaret ligger kvar överst), Smak
+  // efter Pågår nu (alternativ entry-point i mitten av feeden). Bilderna
+  // kommer från 06-UI/assets/exploreTiles/tiles.data.js — samma AI-stämplade
+  // data-URLs som Utforska-tilesen. Saknade bilder (Ikväll, Denna vecka)
+  // renderas som placeholder tills nya tiles genereras.
+  const { HELG, IMORGON, GRATIS, LIVE, SKRATT, STAMNING } =
+    require('../assets/exploreTiles/tiles.data.js');
+  const tidCards = [
+    {
+      id: 'tid-helg',
+      title: t('home.carousel.tid.helg.title'),
+      subtitle: t('home.explore.helg.label'),
+      imageUrl: HELG,
+      onPress: () => handlePromptPress({ prompt_text: t('home.explore.helg.prompt'), dayFilter: 'weekend' }),
+    },
+    {
+      id: 'tid-ikvall',
+      title: t('home.carousel.tid.ikvall.title'),
+      subtitle: t('explore.time.ikvall'),
+      imageUrl: null, // placeholder — generera egen tile för Ikväll senare
+      onPress: () => handlePromptPress({ prompt_text: t('explore.time.ikvall'), dayFilter: 'today' }),
+    },
+    {
+      id: 'tid-imorgon',
+      title: t('home.carousel.tid.imorgon.title'),
+      subtitle: t('home.explore.imorgon.label'),
+      imageUrl: IMORGON,
+      onPress: () => handlePromptPress({ prompt_text: t('home.explore.imorgon.prompt') }),
+    },
+    {
+      id: 'tid-vecka',
+      title: t('home.carousel.tid.vecka.title'),
+      subtitle: t('explore.time.week'),
+      imageUrl: null, // placeholder — generera egen tile för 7-dagars senare
+      onPress: () => handlePromptPress({ prompt_text: t('explore.time.week') }),
+    },
+  ];
+  const smakCards = [
+    {
+      id: 'smak-gratis',
+      title: t('home.carousel.smak.gratis.title'),
+      subtitle: t('home.explore.gratis.label'),
+      imageUrl: GRATIS,
+      onPress: () => handlePromptPress({ prompt_text: t('home.explore.gratis.prompt'), budget: 'free' }),
+    },
+    {
+      id: 'smak-live',
+      title: t('home.carousel.smak.live.title'),
+      subtitle: t('home.explore.live.label'),
+      imageUrl: LIVE,
+      onPress: () => handlePromptPress({ prompt_text: t('home.explore.live.prompt'), category_slug: 'music' }),
+    },
+    {
+      id: 'smak-stamning',
+      title: t('home.carousel.smak.stamning.title'),
+      subtitle: t('home.explore.stamning.label'),
+      imageUrl: STAMNING,
+      onPress: () => handlePromptPress({ prompt_text: t('home.explore.stamning.prompt'), mood: 'stamningsfullt' }),
+    },
+    {
+      id: 'smak-skratt',
+      title: t('home.carousel.smak.skratt.title'),
+      subtitle: t('home.explore.skratt.label'),
+      imageUrl: SKRATT,
+      onPress: () => handlePromptPress({ prompt_text: t('home.explore.skratt.prompt') }),
+    },
+  ];
+
   return (
     <SafeAreaView edges={['top']} style={styles.container}>
       <ScrollView
@@ -1146,10 +1216,12 @@ export default function HomeScreen({ onChipPress, onCardPress }) {
         </View>
 
         <DinHelgSection onCardPress={handleCardPress} onResolved={setDinHelgActive} />
+        <EventPulseCarousel cards={tidCards} headerText={t('home.carousel.tid.header')} />
         <SuggestedPromptsSection onChipPress={handlePromptPress} />
         <CuratedCollectionsSection onChipPress={handlePromptPress} />
         <RecentSearchesSection onChipPress={handlePromptPress} />
         <HappeningNowSection onCardPress={handleCardPress} />
+        <EventPulseCarousel cards={smakCards} headerText={t('home.carousel.smak.header')} />
 
         <AiImageSmoketestSection onCardPress={handleCardPress} />
 
