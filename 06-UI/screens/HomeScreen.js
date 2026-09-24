@@ -46,6 +46,7 @@ import {
   Pressable,
   Image,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { fetchFeed, fetchSavedEvents, fetchRecommendedEvents, fetchSuggestedPrompts, fetchCachedRecommendations, fetchRecentQueries, fetchCuratedCollections, fetchAiImageSmoketest, recordEventInteraction } from '../services/agentClient';
 import { resolveConsumerReasons } from '../utils/rankReasonLabels';
@@ -1131,7 +1132,7 @@ export default function HomeScreen({ onChipPress, onCardPress }) {
   }, [onChipPress]);
 
   return (
-    <View style={styles.container}>
+    <SafeAreaView edges={['top']} style={styles.container}>
       <ScrollView
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
@@ -1161,7 +1162,7 @@ export default function HomeScreen({ onChipPress, onCardPress }) {
 
         <View style={{ height: 96 }} />
       </ScrollView>
-    </View>
+    </SafeAreaView>
   );
 }
 
