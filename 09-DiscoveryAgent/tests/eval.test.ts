@@ -9,8 +9,11 @@
  */
 
 import { test, expect } from 'vitest';
+import { mkdtempSync, writeFileSync } from 'fs';
+import { tmpdir } from 'os';
+import path from 'path';
 
-import { pickHealTier, type SourceStatus } from '../eval.js';
+import { hasRepeatableError, pickHealTier, type SourceStatus } from '../eval.js';
 
 function status(partial: Partial<SourceStatus>): SourceStatus {
   return {
@@ -178,4 +181,65 @@ test('pickHealTier → tier 3 retire still beats tier 0 (5+ fails + old success)
   });
   // Retire check runs first in pickHealTier; tier 0 must NOT override retire.
   expect(pickHealTier(s)).toBe(3);
+});
+
+// ─── hasRepeatableError (Fas 1.2) ──────────────────────────────────────────
+
+function tempLogPath(): string {
+  return path.join(mkdtempSync(path.join(tmpdir(), 'jev-rep-')), 'runs.jsonl');
+}
+
+function seedLog(filePath: string, lines: object[]): void {
+  writeFileSync(filePath, lines.map((l) => JSON.stringify(l)).join('\n') + '\n', 'utf-8');
+}
+
+test('hasRepeatableError → false when log file is missing', () => {
+  expect(hasRepeatableError('any-source', { logPath: '/nonexistent/path/runs.jsonl' })).toBe(false);
+});
+
+test('hasRepeatableError → true when last 3 heal entries for sourceId share an error signature', () => {
+  const log = tempLogPath();
+  const sig = 'C0 candidate discovery failed: No candidate pages matched (network or scoring)';
+  seedLog(log, [
+    { ts: '2026-09-23T01:00:00Z', phase: 'heal', sourceId: 's1', error: 'unrelated earlier' },
+    { ts: '2026-09-23T01:05:00Z', phase: 'heal', sourceId: 'hopeless', error: sig },
+    { ts: '2026-09-23T01:10:00Z', phase: 'heal', sourceId: 'hopeless', error: sig },
+    { ts: '2026-09-23T01:15:00Z', phase: 'heal', sourceId: 'hopeless', error: sig },
+  ]);
+  expect(hasRepeatableError('hopeless', { logPath: log })).toBe(true);
+  // Other sources in same log are NOT matched
+  expect(hasRepeatableError('s1', { logPath: log })).toBe(false);
+});
+
+test('hasRepeatableError → false when error signatures differ across recent attempts', () => {
+  const log = tempLogPath();
+  seedLog(log, [
+    { ts: '2026-09-23T01:00:00Z', phase: 'heal', sourceId: 'flaky', error: 'Fetch failed: ECONNRESET' },
+    { ts: '2026-09-23T01:05:00Z', phase: 'heal', sourceId: 'flaky', error: 'Fetch failed: ETIMEDOUT' },
+    { ts: '2026-09-23T01:10:00Z', phase: 'heal', sourceId: 'flaky', error: 'no-jsonld: 0 events' },
+  ]);
+  expect(hasRepeatableError('flaky', { logPath: log })).toBe(false);
+});
+
+test('hasRepeatableError → false when fewer than threshold entries exist for sourceId', () => {
+  const log = tempLogPath();
+  const sig = 'C0 candidate discovery failed: No candidate pages matched';
+  seedLog(log, [
+    { ts: '2026-09-23T01:00:00Z', phase: 'heal', sourceId: 'newcomer', error: sig },
+    { ts: '2026-09-23T01:05:00Z', phase: 'heal', sourceId: 'newcomer', error: sig },
+    // only 2 entries — below threshold of 3
+  ]);
+  expect(hasRepeatableError('newcomer', { logPath: log })).toBe(false);
+});
+
+test('hasRepeatableError → ignores non-heal phases and entries without errors', () => {
+  const log = tempLogPath();
+  seedLog(log, [
+    { ts: '2026-09-23T01:00:00Z', phase: 'promote', sourceId: 'mixed', error: 'noise' },
+    { ts: '2026-09-23T01:05:00Z', phase: 'heal', sourceId: 'mixed' }, // no error → transient recovery resets
+    { ts: '2026-09-23T01:10:00Z', phase: 'heal', sourceId: 'mixed', error: 'sig-A' },
+    { ts: '2026-09-23T01:15:00Z', phase: 'heal', sourceId: 'mixed', error: 'sig-A' },
+  ]);
+  // Only 2 entries with errors (last 2 heal-with-error entries) — under threshold
+  expect(hasRepeatableError('mixed', { logPath: log })).toBe(false);
 });

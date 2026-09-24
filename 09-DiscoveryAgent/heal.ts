@@ -38,6 +38,7 @@ import {
   appendRun,
   appendRetired,
   pickHealTier,
+  hasRepeatableError,
   nowIso,
   type FailingSource,
 } from './eval.js';
@@ -96,6 +97,35 @@ export async function healOne(
     consecutiveFailures: status.consecutiveFailures,
     lastRoutingReason: status.lastRoutingReason ?? '',
   };
+
+  // Fas 1.2: skip when the last ≥3 heal attempts all logged the same error
+  // signature. Preserves the daily cap for sources with a realistic recovery
+  // chance; retired audit entry is still written so the operator sees the skip.
+  if (hasRepeatableError(source.id)) {
+    const skipResult: HealResult = {
+      sourceId: source.id,
+      tier: tier ?? 2,
+      status: 'deferred',
+      durationMs: Date.now() - start,
+      before,
+      after: { events: before.events },
+      error: `permanent error: same signature in ≥${3} consecutive heal runs — skipping to preserve cap`,
+    };
+    if (!options.dryRun) {
+      appendRun({
+        ts: nowIso(),
+        phase: 'heal',
+        sourceId: source.id,
+        tier: skipResult.tier,
+        durationMs: skipResult.durationMs,
+        before,
+        after: skipResult.after,
+        error: skipResult.error,
+        dryRun: false,
+      });
+    }
+    return skipResult;
+  }
 
   if (tier === null) {
     const result: HealResult = {
