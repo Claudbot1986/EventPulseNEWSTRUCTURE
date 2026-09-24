@@ -59,6 +59,11 @@ const CARD_WIDTH = 187;
 const SKELETON_DEFAULT_COUNT = 4;
 
 function Card({ title, subtitle, imageUrl, onPress }) {
+  // 2026-09-24: RN:s <Image source={...}> MÅSTE vara objektform {uri:'…'}
+  // eller ett require()-nummer. En raw string ("https://…") renderas inte
+  // — tyst fallthrough, den svarta imageWrap-bakgrunden syns istället.
+  // sourceOf() normaliserar båda formerna (sträng-URL och require-resultat).
+  const source = sourceOf(imageUrl);
   return (
     <Pressable
       onPress={onPress}
@@ -67,8 +72,8 @@ function Card({ title, subtitle, imageUrl, onPress }) {
       accessibilityLabel={`${subtitle} — ${title}`}
     >
       <View style={styles.imageWrap}>
-        {imageUrl ? (
-          <Image source={imageUrl} style={styles.image} resizeMode="cover" />
+        {source ? (
+          <Image source={source} style={styles.image} resizeMode="cover" />
         ) : (
           <View style={styles.placeholder}>
             <Text style={styles.placeholderText}>{subtitle}</Text>
@@ -83,6 +88,16 @@ function Card({ title, subtitle, imageUrl, onPress }) {
       </Text>
     </Pressable>
   );
+}
+
+// Normaliserar imageUrl till RN:s {uri:…} — eller null om ej användbart.
+// Accepterar sträng-URL:er och require()-nummer (asset registry).
+function sourceOf(imageUrl) {
+  if (!imageUrl) return null;
+  if (typeof imageUrl === 'number') return imageUrl;          // require()-resultat
+  if (typeof imageUrl === 'string') return imageUrl.length > 0 ? { uri: imageUrl } : null;
+  if (typeof imageUrl === 'object' && imageUrl.uri) return imageUrl; // redan {uri:'…'}
+  return null;
 }
 
 function SkeletonCard() {
