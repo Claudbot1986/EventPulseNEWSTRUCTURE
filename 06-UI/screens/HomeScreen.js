@@ -1107,6 +1107,155 @@ function SavedSection({ onCardPress }) {
   );
 }
 
+// ─── Hem-karuseller (2026-09-24, REAL DATA från Supabase) ─────────────────────
+//
+// Två Spotify-författarsektioner STAPLADE på varandra. Tidigare version
+// använde statiska tile-bilder från assets/exploreTiles/tiles.data.js —
+// användarens feedback "det är ingen karusell" var korrekt: det var bara
+// tematiska prompter till Utforska, inte en karusell av riktiga events.
+//
+// Nu: varje kort ÄR ett riktigt event från /agent/feed. Tematiseringen sitter
+// i valet av event (vilken bucket det hamnar i) och i 1-ords subtiteln.
+// Bild = event.image_url om agenten levererat en, annars placeholder.
+//
+//   • Tid — 4 kort, ett per tidsbucket:
+//             Ikväll         = första eventet idag med start_hour >= 18
+//             Imorgon        = första eventet imorgon
+//             Helg           = första eventet lör/sön (inom 7 dagar)
+//             Vecka          = första eventet som inte täcks av ovan
+//   • Smak — 4 kort, ett per smak-bucket:
+//             Gratis         = event.is_free / event.isFree
+//             Live           = event.category_slug === 'music'
+//             Stämningsfullt = start_hour 18–21 (kvällscozyn händelse)
+//             Skratt         = titel matchar /standup|komedi|comedy|skratt/i
+//             (kommentar: standup saknar eget category_slug — 'theatre' är
+//              för brett. Titelsökning är ärligare.)
+//
+// Tomma buckets hoppas tyst över (EventPulseCarousel returnerar null om
+// cards.length === 0). Bildsaknas hanteras av komponentens placeholder-fallback.
+
+const HEM_TID_CARDS = 4;
+const HEM_SMAK_CARDS = 4;
+const SKRATT_REGEX = /standup|komedi|comedy|skratt/i;
+
+// Hjälpare: lokal YYYY-MM-DD utan UTC-konvertering (vi vill ha Stockholms-
+// tid, inte UTC-skiva). Används av båda karusellerna.
+function dayOfWeekIso(isoDate) {
+  if (typeof isoDate !== 'string' || isoDate.length < 10) return null;
+  const d = new Date(`${isoDate.slice(0, 10)}T12:00:00`);
+  return Number.isNaN(d.getTime()) ? null : d.getDay();
+}
+
+function bucketTidEvents(events) {
+  if (!Array.isArray(events) || events.length === 0) {
+    return { ikvall: null, imorgon: null, helg: null, vecka: null };
+  }
+  const today = todayLocalIso();
+  const tomorrowIso = new Date(Date.now() + 86400000).toISOString().slice(0, 10);
+  const sorted = [...events].sort(compareDayTimeAsc);
+  const ikvall = sorted.find(
+    (e) => e.date === today && (() => {
+      const h = localHourFromIso(e.start_time);
+      return h != null && h >= 18;
+    })(),
+  );
+  const imorgon = sorted.find((e) => e.date === tomorrowIso);
+  const helg = sorted.find((e) => {
+    if (!e.date) return false;
+    if (e.date === today || e.date === tomorrowIso) return false;
+    const dow = dayOfWeekIso(e.date);
+    return dow === 0 || dow === 6; // Sön eller Lör
+  });
+  const taken = new Set([ikvall?.id, imorgon?.id, helg?.id].filter(Boolean));
+  const vecka = sorted.find((e) => e.id && !taken.has(e.id));
+  return { ikvall, imorgon, helg, vecka };
+}
+
+function bucketSmakEvents(events) {
+  if (!Array.isArray(events) || events.length === 0) {
+    return { gratis: null, live: null, stamningsfullt: null, skratt: null };
+  }
+  const sorted = [...events].sort(compareDayTimeAsc);
+  const gratis = sorted.find((e) => e.is_free || e.isFree);
+  const live = sorted.find((e) => e.category_slug === 'music' || e.category === 'music');
+  const stamningsfullt = sorted.find((e) => {
+    const h = localHourFromIso(e.start_time);
+    return h != null && h >= 18 && h <= 21;
+  });
+  const skratt = sorted.find((e) => typeof e.title === 'string' && SKRATT_REGEX.test(e.title));
+  return { gratis, live, stamningsfullt, skratt };
+}
+
+function TidCarouselSection({ onCardPress }) {
+  const { t } = useI18n();
+  const from = useMemo(() => todayLocalIso(), []);
+  // 7-dygnsfönster utan filter — bucket-logiken sköter resten.
+  const { status, events } = useSection({ from, days: 7 });
+  const buckets = useMemo(() => bucketTidEvents(events), [events]);
+  const cards = useMemo(() => {
+    const build = (event, labelKey) => {
+      if (!event) return null;
+      return {
+        id: `tid-${event.id}`,
+        title: event.title,
+        subtitle: t(labelKey),
+        imageUrl: event.image_url || event.imageUrl || null,
+        onPress: () => onCardPress?.(event),
+      };
+    };
+    return [
+      build(buckets.ikvall, 'explore.time.ikvall'),
+      build(buckets.imorgon, 'home.explore.imorgon.label'),
+      build(buckets.helg, 'home.explore.helg.label'),
+      build(buckets.vecka, 'explore.time.week'),
+    ].filter(Boolean);
+  }, [buckets, t, onCardPress]);
+
+  return (
+    <EventPulseCarousel
+      cards={cards}
+      headerText={t('home.carousel.tid.header')}
+      loading={status === 'loading'}
+      skeletonCount={HEM_TID_CARDS}
+    />
+  );
+}
+
+function SmakCarouselSection({ onCardPress }) {
+  const { t } = useI18n();
+  const from = useMemo(() => todayLocalIso(), []);
+  // 7-dygnsfönster räcker — bucket-predikaten är inte dag-specifika.
+  const { status, events } = useSection({ from, days: 7 });
+  const buckets = useMemo(() => bucketSmakEvents(events), [events]);
+  const cards = useMemo(() => {
+    const build = (event, labelKey) => {
+      if (!event) return null;
+      return {
+        id: `smak-${event.id}`,
+        title: event.title,
+        subtitle: t(labelKey),
+        imageUrl: event.image_url || event.imageUrl || null,
+        onPress: () => onCardPress?.(event),
+      };
+    };
+    return [
+      build(buckets.gratis, 'home.explore.gratis.label'),
+      build(buckets.live, 'home.explore.live.label'),
+      build(buckets.stamningsfullt, 'home.explore.stamning.label'),
+      build(buckets.skratt, 'home.explore.skratt.label'),
+    ].filter(Boolean);
+  }, [buckets, t, onCardPress]);
+
+  return (
+    <EventPulseCarousel
+      cards={cards}
+      headerText={t('home.carousel.smak.header')}
+      loading={status === 'loading'}
+      skeletonCount={HEM_SMAK_CARDS}
+    />
+  );
+}
+
 // ─── Top-level screen ────────────────────────────────────────────────────────
 //
 // NOW#2: no guest-gating here anymore. AppShell's bootstrapSession()
@@ -1132,75 +1281,6 @@ export default function HomeScreen({ onChipPress, onCardPress }) {
     if (typeof onChipPress === 'function') onChipPress(prompt);
   }, [onChipPress]);
 
-  // Hem-karuseller (2026-09-24): två Spotify-författarsektioner med olika
-  // innehåll. Tid direkt under Din helg (ankaret ligger kvar överst), Smak
-  // efter Pågår nu (alternativ entry-point i mitten av feeden). Bilderna
-  // kommer från 06-UI/assets/exploreTiles/tiles.data.js — samma AI-stämplade
-  // data-URLs som Utforska-tilesen. Saknade bilder (Ikväll, Denna vecka)
-  // renderas som placeholder tills nya tiles genereras.
-  const { HELG, IMORGON, GRATIS, LIVE, SKRATT, STAMNING } =
-    require('../assets/exploreTiles/tiles.data.js');
-  const tidCards = [
-    {
-      id: 'tid-helg',
-      title: t('home.carousel.tid.helg.title'),
-      subtitle: t('home.explore.helg.label'),
-      imageUrl: HELG,
-      onPress: () => handlePromptPress({ prompt_text: t('home.explore.helg.prompt'), dayFilter: 'weekend' }),
-    },
-    {
-      id: 'tid-ikvall',
-      title: t('home.carousel.tid.ikvall.title'),
-      subtitle: t('explore.time.ikvall'),
-      imageUrl: null, // placeholder — generera egen tile för Ikväll senare
-      onPress: () => handlePromptPress({ prompt_text: t('explore.time.ikvall'), dayFilter: 'today' }),
-    },
-    {
-      id: 'tid-imorgon',
-      title: t('home.carousel.tid.imorgon.title'),
-      subtitle: t('home.explore.imorgon.label'),
-      imageUrl: IMORGON,
-      onPress: () => handlePromptPress({ prompt_text: t('home.explore.imorgon.prompt') }),
-    },
-    {
-      id: 'tid-vecka',
-      title: t('home.carousel.tid.vecka.title'),
-      subtitle: t('explore.time.week'),
-      imageUrl: null, // placeholder — generera egen tile för 7-dagars senare
-      onPress: () => handlePromptPress({ prompt_text: t('explore.time.week') }),
-    },
-  ];
-  const smakCards = [
-    {
-      id: 'smak-gratis',
-      title: t('home.carousel.smak.gratis.title'),
-      subtitle: t('home.explore.gratis.label'),
-      imageUrl: GRATIS,
-      onPress: () => handlePromptPress({ prompt_text: t('home.explore.gratis.prompt'), budget: 'free' }),
-    },
-    {
-      id: 'smak-live',
-      title: t('home.carousel.smak.live.title'),
-      subtitle: t('home.explore.live.label'),
-      imageUrl: LIVE,
-      onPress: () => handlePromptPress({ prompt_text: t('home.explore.live.prompt'), category_slug: 'music' }),
-    },
-    {
-      id: 'smak-stamning',
-      title: t('home.carousel.smak.stamning.title'),
-      subtitle: t('home.explore.stamning.label'),
-      imageUrl: STAMNING,
-      onPress: () => handlePromptPress({ prompt_text: t('home.explore.stamning.prompt'), mood: 'stamningsfullt' }),
-    },
-    {
-      id: 'smak-skratt',
-      title: t('home.carousel.smak.skratt.title'),
-      subtitle: t('home.explore.skratt.label'),
-      imageUrl: SKRATT,
-      onPress: () => handlePromptPress({ prompt_text: t('home.explore.skratt.prompt') }),
-    },
-  ];
-
   return (
     <SafeAreaView edges={['top']} style={styles.container}>
       <ScrollView
@@ -1216,12 +1296,12 @@ export default function HomeScreen({ onChipPress, onCardPress }) {
         </View>
 
         <DinHelgSection onCardPress={handleCardPress} onResolved={setDinHelgActive} />
-        <EventPulseCarousel cards={tidCards} headerText={t('home.carousel.tid.header')} />
+        <TidCarouselSection onCardPress={handleCardPress} />
         <SuggestedPromptsSection onChipPress={handlePromptPress} />
         <CuratedCollectionsSection onChipPress={handlePromptPress} />
         <RecentSearchesSection onChipPress={handlePromptPress} />
         <HappeningNowSection onCardPress={handleCardPress} />
-        <EventPulseCarousel cards={smakCards} headerText={t('home.carousel.smak.header')} />
+        <SmakCarouselSection onCardPress={handleCardPress} />
 
         <AiImageSmoketestSection onCardPress={handleCardPress} />
 

@@ -20,6 +20,9 @@
 // med "● AI-genererad" i nedre-vänstra hörnet (samma pipeline som prod).
 // Om imageUrl saknas renderas en placeholder (mörk View med subtitle-text).
 //
+// Loading: om `loading` är true visas `skeletonCount` (default 4) skeleton-
+// kort i samma storlek så layouten är stabil medan datan hämtas.
+//
 // i18n: titel + subtitle förväntas redan vara översatta av anroparen. Ingen
 // useI18n-hook inuti — komponenten är ren.
 //
@@ -43,10 +46,12 @@ const TOKENS = {
     text: '#F7F2EA',
     textMuted: '#9AA3B5',
     placeholder: '#3A4254',
+    skeleton: '#15151B',
   },
 };
 
 const CARD_WIDTH = 187;
+const SKELETON_DEFAULT_COUNT = 4;
 
 function Card({ title, subtitle, imageUrl, onPress }) {
   return (
@@ -75,8 +80,30 @@ function Card({ title, subtitle, imageUrl, onPress }) {
   );
 }
 
-export default function EventPulseCarousel({ cards = [], headerText = null }) {
-  if (!cards || cards.length === 0) return null;
+function SkeletonCard() {
+  return (
+    <View style={styles.card} accessibilityLabel="loading">
+      <View style={[styles.imageWrap, styles.skeletonImage]} />
+      <View style={styles.skeletonTitle} />
+      <View style={styles.skeletonSubtitle} />
+    </View>
+  );
+}
+
+export default function EventPulseCarousel({
+  cards = [],
+  headerText = null,
+  loading = false,
+  skeletonCount = SKELETON_DEFAULT_COUNT,
+}) {
+  const visibleCards = Array.isArray(cards) ? cards : [];
+
+  if (!loading && visibleCards.length === 0) return null;
+
+  // Visas bara skelett när vi faktiskt inte har något att visa — om data
+  // redan finns (refresh medan cache lever) behåller vi de riktiga korten
+  // så layouten inte hoppar.
+  const showSkeletons = loading && visibleCards.length === 0;
 
   return (
     <View style={styles.section}>
@@ -89,15 +116,19 @@ export default function EventPulseCarousel({ cards = [], headerText = null }) {
           showsHorizontalScrollIndicator={false}
           contentContainerStyle={styles.row}
         >
-          {cards.map((card) => (
-            <Card
-              key={card.id}
-              title={card.title}
-              subtitle={card.subtitle}
-              imageUrl={card.imageUrl}
-              onPress={card.onPress}
-            />
-          ))}
+          {showSkeletons
+            ? Array.from({ length: skeletonCount }).map((_, i) => (
+                <SkeletonCard key={`skeleton-${i}`} />
+              ))
+            : visibleCards.map((card) => (
+                <Card
+                  key={card.id}
+                  title={card.title}
+                  subtitle={card.subtitle}
+                  imageUrl={card.imageUrl}
+                  onPress={card.onPress}
+                />
+              ))}
         </ScrollView>
       </View>
     </View>
@@ -167,5 +198,23 @@ const styles = StyleSheet.create({
     fontSize: 13,
     fontWeight: '600',
     letterSpacing: 0.1,
+  },
+  // Skeleton (loading state) — sama geometri som riktiga kortet så layouten
+  // hoppar inte när datan landar. Färgen är `--surface` (#15151B) från
+  // HomeScreen.js TOKENS — samma som övriga skeletons i appen.
+  skeletonImage: {
+    backgroundColor: TOKENS.color.skeleton,
+  },
+  skeletonTitle: {
+    width: '85%',
+    height: 14,
+    borderRadius: 4,
+    backgroundColor: TOKENS.color.skeleton,
+  },
+  skeletonSubtitle: {
+    width: '55%',
+    height: 11,
+    borderRadius: 4,
+    backgroundColor: TOKENS.color.skeleton,
   },
 });
