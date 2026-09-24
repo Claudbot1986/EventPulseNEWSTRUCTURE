@@ -102,11 +102,32 @@ export async function runAgent(options: { cap?: number; dryRun?: boolean; forceE
   let expanded: ExpandResult | null = null;
 
   // ── Phase A: HEAL ────────────────────────────────────────────────────
+  // Fas 3 (2026-09-24): slot-accounting räknar bara actionable resultat mot
+  // cap. Tidigare åt heal-fasen hela cap=5 med "deferred"-resultat när 96%
+  // av failing sources har postB-preC-routing-reason, och promote-fasen
+  // fick noll slots. Nu: bara recovered/adapter_saved/retired kostar en
+  // slot; deferred kostar inget. Säkerhets-tak på maxHealAttempts skyddar
+  // mot runaway om healing i framtiden blir billig nog att inte begränsa
+  // sig naturligt.
+  const maxHealAttempts = Math.max(cap * 3, 15);
   const failing = readFailingSources({ minConsecutiveFailures: 2 });
-  for (const src of failing.slice(0, cap)) {
+  let slotsUsed = 0;
+  let healAttempts = 0;
+
+  for (const src of failing) {
+    if (slotsUsed >= cap) break;
+    if (healAttempts >= maxHealAttempts) break;
+    healAttempts++;
     try {
       const result = await healOne(src, { dryRun, timeoutMs: 60_000 });
       healed.push(result);
+      if (
+        result.status === 'recovered' ||
+        result.status === 'adapter_saved' ||
+        result.status === 'retired'
+      ) {
+        slotsUsed++;
+      }
     } catch (err) {
       const message = err instanceof Error ? err.message : String(err);
       healed.push({
@@ -126,7 +147,7 @@ export async function runAgent(options: { cap?: number; dryRun?: boolean; forceE
   }
 
   // ── Phase B: PROMOTE ─────────────────────────────────────────────────
-  const remaining = Math.max(0, cap - healed.length);
+  const remaining = Math.max(0, cap - slotsUsed);
   const candidates = readUnexploredCandidates();
   for (const cand of candidates.slice(0, remaining)) {
     try {
