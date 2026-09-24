@@ -1,18 +1,17 @@
 /**
  * 09-DiscoveryAgent/promote.ts — Promote unexplored discovery candidates.
  *
+ * Fas 2.2: merge promote with heal tier 2 flow.
+ *
  * For each candidate from runtime/discovery-candidates.jsonl that hasn't been
  * tested yet:
  *
- *   1. fetchHtml(candidateUrl, { timeout: 5s })
- *   2. count <script type="application/ld+json"> with @type Event
- *   3. if eventsFound >= MIN_EVENTS_TO_PROMOTE:
- *        - derive slug from URL host+path
- *        - write sources/{slug}.jsonl with discoveredBy='discovery',
- *          preferredPath='unknown', needsRecheck=true
- *        - appendPromoted({...})
- *      else:
- *        - markCandidateTested(url, eventsFound) — only audit, no source
+ *   1. discoverEventCandidates(candidateUrl, undefined, sourceId)
+ *      → if no winner → mark tested with 0 events, return below_threshold
+ *   2. runPipeline({ sourceId, url: winner.url })
+ *      → if !validationPassed OR eventsFound < MIN_EVENTS_TO_PROMOTE
+ *        → mark tested, return below_threshold
+ *      → else → derive slug, write sources/{slug}.jsonl, appendPromoted
  *
  * Slug derivation: lowercase host + alphanum path segments joined by '-'.
  * If slug collides with an existing source, suffix with -2, -3, etc.
@@ -23,9 +22,14 @@
 import { existsSync, writeFileSync } from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
-import { load } from 'cheerio';
 
-import { fetchHtml } from '../02-Ingestion/tools/fetchTools.js';
+import {
+  discoverEventCandidates,
+  type FrontierDiscoveryResult,
+} from '../02-Ingestion/C-htmlGate/C0-htmlFrontierDiscovery/C0-htmlFrontierDiscovery.js';
+import {
+  runPipeline,
+} from '../02-Ingestion/D-renderGate/constrainedAgent.js';
 
 import {
   appendPromoted,
@@ -41,18 +45,21 @@ const __dirname = path.dirname(__filename);
 const PROJECT_ROOT = path.resolve(__dirname, '..');
 const SOURCES_DIR = path.resolve(PROJECT_ROOT, 'sources');
 
-/** Minimum events to consider a candidate worth promoting. */
-export const MIN_EVENTS_TO_PROMOTE = 10;
-
-/** Hard timeout for fetchHtml during promote — keep this low (5s default). */
-const PROMOTE_FETCH_TIMEOUT_MS = 5_000;
+/**
+ * Minimum events to consider a candidate worth promoting.
+ *
+ * Fas 2.2: lowered from 10 → 3. Candidates are now adapter-generated via the
+ * C0 + constrainedAgent pipeline (the same flow heal tier 2 uses), not raw
+ * JSON-LD landings — 3 validated events is the new bar.
+ */
+export const MIN_EVENTS_TO_PROMOTE = 3;
 
 // ─── Types ─────────────────────────────────────────────────────────────────
 
 export type PromoteStatus =
   | 'promoted'        // source file written
   | 'below_threshold' // events < MIN_EVENTS_TO_PROMOTE, candidate marked
-  | 'fetch_failed'    // could not fetch HTML
+  | 'no_winner'       // C0 found no candidate page to run the pipeline on
   | 'duplicate'       // slug already exists for another URL — skip safely
   | 'error';
 
@@ -68,91 +75,35 @@ export interface PromoteResult {
 export interface PromoteOptions {
   /** Override the default min-events threshold (default MIN_EVENTS_TO_PROMOTE). */
   minEvents?: number;
-  /** Override the default fetch timeout (default 5s). */
-  fetchTimeoutMs?: number;
   /** Skip side-effects (no source write, no mark, no log). */
   dryRun?: boolean;
 }
 
 // ─── Entry point ───────────────────────────────────────────────────────────
 
+/**
+ * Promote one discovery candidate. Mirrors heal tier 2:
+ *   C0 candidate discovery → constrainedAgent pipeline → validate + count.
+ *
+ * Always returns a PromoteResult; never throws (network/parse failures land
+ * in result.status='error' with result.error set). Logs to runs.jsonl
+ * unless dryRun is true.
+ */
 export async function promoteOne(
   candidate: DiscoveryCandidate,
   options: PromoteOptions = {},
 ): Promise<PromoteResult> {
   const minEvents = options.minEvents ?? MIN_EVENTS_TO_PROMOTE;
-  const fetchTimeout = options.fetchTimeoutMs ?? PROMOTE_FETCH_TIMEOUT_MS;
   const start = Date.now();
 
+  // Step 1: C0 candidate discovery on the Exa-suggested root URL.
+  let discovery: FrontierDiscoveryResult;
   try {
-    const fetchResult = await fetchHtml(candidate.candidateUrl, {
-      timeout: fetchTimeout,
-    });
-    if (!fetchResult.success || !fetchResult.html) {
-      const result: PromoteResult = {
-        candidateUrl: candidate.candidateUrl,
-        status: 'fetch_failed',
-        eventsFound: 0,
-        durationMs: Date.now() - start,
-        error: fetchResult.error ?? 'unknown fetch error',
-      };
-      logPromoteResult(candidate, result, options.dryRun);
-      return result;
-    }
-
-    const eventsFound = countJsonLdEvents(fetchResult.html);
-
-    if (eventsFound < minEvents) {
-      if (!options.dryRun) {
-        markCandidateTested(candidate.candidateUrl, eventsFound);
-      }
-      const result: PromoteResult = {
-        candidateUrl: candidate.candidateUrl,
-        status: 'below_threshold',
-        eventsFound,
-        durationMs: Date.now() - start,
-      };
-      logPromoteResult(candidate, result, options.dryRun);
-      return result;
-    }
-
-    // Threshold met — derive slug, check for collision, write source.
-    const baseSlug = deriveSlug(candidate.candidateUrl);
-    const slug = findAvailableSlug(baseSlug);
-    if (slug === null) {
-      const result: PromoteResult = {
-        candidateUrl: candidate.candidateUrl,
-        status: 'duplicate',
-        eventsFound,
-        durationMs: Date.now() - start,
-        error: `no available slug for base "${baseSlug}"`,
-      };
-      logPromoteResult(candidate, result, options.dryRun);
-      return result;
-    }
-
-    if (!options.dryRun) {
-      writeSourceFile(slug, candidate.candidateUrl, eventsFound);
-      markCandidateTested(candidate.candidateUrl, eventsFound);
-      appendPromoted({
-        ts: nowIso(),
-        sourceId: slug,
-        url: candidate.candidateUrl,
-        eventsFound,
-        candidateOrigin: candidate.candidateOrigin ?? 'c0',
-        approvedBy: 'auto:agent',
-      });
-    }
-
-    const result: PromoteResult = {
-      candidateUrl: candidate.candidateUrl,
-      sourceId: slug,
-      status: 'promoted',
-      eventsFound,
-      durationMs: Date.now() - start,
-    };
-    logPromoteResult(candidate, result, options.dryRun);
-    return result;
+    discovery = await discoverEventCandidates(
+      candidate.candidateUrl,
+      undefined,
+      candidate.sourceId,
+    );
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
     const result: PromoteResult = {
@@ -160,11 +111,105 @@ export async function promoteOne(
       status: 'error',
       eventsFound: 0,
       durationMs: Date.now() - start,
-      error: message,
+      error: `C0 discovery failed: ${message}`,
     };
     logPromoteResult(candidate, result, options.dryRun);
     return result;
   }
+
+  const winner = discovery.winner;
+  if (!winner) {
+    if (!options.dryRun) {
+      markCandidateTested(candidate.candidateUrl, 0);
+    }
+    const result: PromoteResult = {
+      candidateUrl: candidate.candidateUrl,
+      status: 'no_winner',
+      eventsFound: 0,
+      durationMs: Date.now() - start,
+      error: `no winner: ${discovery.winnerReason ?? 'unknown'}`,
+    };
+    logPromoteResult(candidate, result, options.dryRun);
+    return result;
+  }
+
+  // Step 2: constrainedAgent pipeline on the discovered winner URL.
+  let pipelineResult;
+  try {
+    pipelineResult = await runPipeline({
+      sourceId: candidate.sourceId,
+      url: winner.url,
+      maxTokens: 1500,
+      rateLimitMs: 1500,
+    });
+  } catch (err) {
+    const message = err instanceof Error ? err.message : String(err);
+    const result: PromoteResult = {
+      candidateUrl: candidate.candidateUrl,
+      status: 'error',
+      eventsFound: 0,
+      durationMs: Date.now() - start,
+      error: `runPipeline failed: ${message}`,
+    };
+    logPromoteResult(candidate, result, options.dryRun);
+    return result;
+  }
+
+  const eventsFound = pipelineResult.eventsFound ?? 0;
+  if (!pipelineResult.validationPassed || eventsFound < minEvents) {
+    if (!options.dryRun) {
+      markCandidateTested(candidate.candidateUrl, eventsFound);
+    }
+    const result: PromoteResult = {
+      candidateUrl: candidate.candidateUrl,
+      status: 'below_threshold',
+      eventsFound,
+      durationMs: Date.now() - start,
+      error: pipelineResult.validationPassed
+        ? `events=${eventsFound} below threshold ${minEvents}`
+        : `validation: ${pipelineResult.validationNotes ?? 'unknown'}`,
+    };
+    logPromoteResult(candidate, result, options.dryRun);
+    return result;
+  }
+
+  // Threshold met — derive slug, check for collision, write source.
+  const baseSlug = deriveSlug(candidate.candidateUrl);
+  const slug = findAvailableSlug(baseSlug);
+  if (slug === null) {
+    const result: PromoteResult = {
+      candidateUrl: candidate.candidateUrl,
+      status: 'duplicate',
+      eventsFound,
+      durationMs: Date.now() - start,
+      error: `no available slug for base "${baseSlug}"`,
+    };
+    logPromoteResult(candidate, result, options.dryRun);
+    return result;
+  }
+
+  if (!options.dryRun) {
+    writeSourceFile(slug, candidate.candidateUrl, eventsFound);
+    markCandidateTested(candidate.candidateUrl, eventsFound);
+    appendPromoted({
+      ts: nowIso(),
+      sourceId: slug,
+      url: candidate.candidateUrl,
+      eventsFound,
+      candidateOrigin: candidate.candidateOrigin ?? 'c0',
+      approvedBy: 'auto:agent',
+    });
+  }
+
+  const result: PromoteResult = {
+    candidateUrl: candidate.candidateUrl,
+    sourceId: slug,
+    status: 'promoted',
+    eventsFound,
+    durationMs: Date.now() - start,
+  };
+  logPromoteResult(candidate, result, options.dryRun);
+  return result;
 }
 
 // ─── Audit ─────────────────────────────────────────────────────────────────
@@ -189,52 +234,6 @@ function logPromoteResult(
     error: result.error,
     dryRun: false,
   });
-}
-
-// ─── JSON-LD event counter (mirrors heal.ts — kept local to avoid coupling) ─
-
-function countJsonLdEvents(html: string): number {
-  let count = 0;
-  try {
-    const $ = load(html);
-    $('script[type="application/ld+json"]').each((_, el) => {
-      const text = $(el).contents().text();
-      try {
-        const parsed = JSON.parse(text);
-        count += collectEventNodes(parsed);
-      } catch {
-        // skip non-JSON blocks
-      }
-    });
-  } catch {
-    return 0;
-  }
-  return count;
-}
-
-function collectEventNodes(node: unknown): number {
-  if (!node || typeof node !== 'object') return 0;
-  if (Array.isArray(node)) {
-    return node.reduce((acc, n) => acc + collectEventNodes(n), 0);
-  }
-  const obj = node as Record<string, unknown>;
-  const type = obj['@type'];
-  const isEvent =
-    type === 'Event' ||
-    (Array.isArray(type) && type.includes('Event'));
-  let n = isEvent ? 1 : 0;
-  if (Array.isArray(obj['@graph'])) {
-    n += (obj['@graph'] as unknown[]).reduce<number>(
-      (acc, child) => acc + collectEventNodes(child),
-      0,
-    );
-  }
-  for (const value of Object.values(obj)) {
-    if (value && typeof value === 'object') {
-      n += collectEventNodes(value);
-    }
-  }
-  return n;
 }
 
 // ─── Slug + source-file helpers ────────────────────────────────────────────
@@ -277,7 +276,7 @@ function writeSourceFile(slug: string, url: string, eventsFound: number): void {
     discoveredAt: nowIso(),
     discoveredBy: 'discovery' as const,
     preferredPath: 'unknown' as const,
-    preferredPathReason: `T0095 discovery-agent promote: ${eventsFound} JSON-LD events found`,
+    preferredPathReason: `T0095 discovery-agent Fas 2.2 promote: ${eventsFound} validated events via C0+constrainedAgent`,
     systemVersionAtDecision: null,
     verifiedAt: null,
     needsRecheck: true,
