@@ -42,10 +42,15 @@ import {
 const TOKENS = {
   color: {
     bg: '#000000',
-    border: '#1A1A1A',
+    border: '#2A2A33',      // 2026-09-24 — lyft från #1A1A1A så placeholder-
+                              // kanten är synlig mot #000 canvas
     text: '#F7F2EA',
     textMuted: '#9AA3B5',
-    placeholder: '#3A4254',
+    // Placeholder-bakgrund är mörkare grå än bilden är tänkt att vara —
+    // gör det uppenbart att "här saknas bild" istället för att gissa.
+    placeholder: '#1F1F26',
+    placeholderText: '#8B92A1',  // 2026-09-24 — lyft från #3A4254 (var i stort
+                                  // sett osynlig mot #000) till läsbar grå.
     skeleton: '#15151B',
   },
 };
@@ -178,13 +183,16 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: TOKENS.color.bg,
+    backgroundColor: TOKENS.color.placeholder,
+    padding: 8,
   },
   placeholderText: {
-    color: TOKENS.color.placeholder,
-    fontSize: 13,
-    fontWeight: '900',
+    color: TOKENS.color.placeholderText,
+    fontSize: 12,
+    fontWeight: '700',
     letterSpacing: 0.4,
+    textAlign: 'center',
+    lineHeight: 16,
   },
   title: {
     color: TOKENS.color.text,

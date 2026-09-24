@@ -176,21 +176,14 @@ export default {
   'home.saved.title': 'Dina sparade evenemang',
   'home.savedEmpty': '— inga sparade evenemang ännu —',
 
-  // Hem-karuseller (2026-09-24): två Spotify-författar-sektioner under
-  // Din helg + efter Pågår nu. Format: subtitle = befintligt
-  // home.explore.<key>.label, title = ny beskrivande text (max 2 rader).
-  // Imorgon/Denna vecka/Ikväll saknar egen tile-bild → använder
-  // befintlig explore.time.<key> som subtitle.
-  'home.carousel.tid.header': 'Tid',
-  'home.carousel.tid.helg.title': 'Helgen i Stockholm — allt som händer lördag och söndag',
-  'home.carousel.tid.ikvall.title': 'Konserter, teater och barhäng ikväll i Stockholm',
-  'home.carousel.tid.imorgon.title': 'Imorgon i Stockholm — konserter, mat, kultur som väntar',
-  'home.carousel.tid.vecka.title': 'Denna vecka — Stockholms bredd i sju dagar',
-  'home.carousel.smak.header': 'Smak',
-  'home.carousel.smak.gratis.title': 'Gratis event i Stockholm denna vecka — no spend, all gain',
-  'home.carousel.smak.live.title': 'Live på scen — konserter, musikkvällar och energikickar',
-  'home.carousel.smak.stamning.title': 'Stämningsfullt — lugna konserter, afterwork och läsning',
-  'home.carousel.smak.skratt.title': 'Skratt — standup, komedi och impro i Stockholm',
+  // Hem-karuseller (2026-09-24, en rad per kategori). Fyra nya rader efter
+  // HappeningNow: varje rad ÄR en kategori, alla kort i raden delar samma
+  // filter. Spotify-explore-stil. Subtitle per kort = evenemangets egen
+  // tid (dayTimeLabel "21:00 • LÖR"), inte kategori-namnet.
+  'home.carousel.imorgon.header': 'Imorgon',
+  'home.carousel.live.header': 'Live',
+  'home.carousel.stamningsfullt.header': 'Stämningsfullt',
+  'home.carousel.skratt.header': 'Skratt',
 
   // ─── Utforska-tiles (Hem, dev-gated EXPO_PUBLIC_EXPLORE_TILES) ───────────
   'home.explore.title': 'Utforska',

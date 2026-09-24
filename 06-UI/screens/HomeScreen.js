@@ -1107,151 +1107,150 @@ function SavedSection({ onCardPress }) {
   );
 }
 
-// ─── Hem-karuseller (2026-09-24, REAL DATA från Supabase) ─────────────────────
+// ─── Hem-karuseller (2026-09-24, REAL DATA, EN RAD PER KATEGORI) ────────────
 //
-// Två Spotify-författarsektioner STAPLADE på varandra. Tidigare version
-// använde statiska tile-bilder från assets/exploreTiles/tiles.data.js —
-// användarens feedback "det är ingen karusell" var korrekt: det var bara
-// tematiska prompter till Utforska, inte en karusell av riktiga events.
+// Användarfeedback "en rad per kategori/sortering tack" kastade om hela
+// modellen. Tidigare version (commit 009ecdb) delade upp events i 4 buckets
+// och tog FÖRSTA eventet i varje bucket — så en rad "Tid" innehöll 4 olika
+// tidsperioder och en rad "Smak" innehöll 4 olika stämningar. Användaren
+// såg att innehållet i en rad skiftade från kort till kort och uppfattade
+// det inte som en karusell.
 //
-// Nu: varje kort ÄR ett riktigt event från /agent/feed. Tematiseringen sitter
-// i valet av event (vilken bucket det hamnar i) och i 1-ords subtiteln.
-// Bild = event.image_url om agenten levererat en, annars placeholder.
+// Ny design: varje karusellrad ÄR EN enda kategori. Alla kort i raden
+// uppfyller samma filter. Spotify-explore-stil.
 //
-//   • Tid — 4 kort, ett per tidsbucket:
-//             Ikväll         = första eventet idag med start_hour >= 18
-//             Imorgon        = första eventet imorgon
-//             Helg           = första eventet lör/sön (inom 7 dagar)
-//             Vecka          = första eventet som inte täcks av ovan
-//   • Smak — 4 kort, ett per smak-bucket:
-//             Gratis         = event.is_free / event.isFree
-//             Live           = event.category_slug === 'music'
-//             Stämningsfullt = start_hour 18–21 (kvällscozyn händelse)
-//             Skratt         = titel matchar /standup|komedi|comedy|skratt/i
-//             (kommentar: standup saknar eget category_slug — 'theatre' är
-//              för brett. Titelsökning är ärligare.)
+// Befintliga sektioner täcker redan sina egna kategorier (TonightSection
+// = Ikväll, DinHelgSection = Helg, FreeSection = Gratis, RecommendedSection
+// = Förslag). Vi lägger till 4 nya rader för kategorier som SAKNAR egen
+// sektion:
 //
-// Tomma buckets hoppas tyst över (EventPulseCarousel returnerar null om
-// cards.length === 0). Bildsaknas hanteras av komponentens placeholder-fallback.
+//   1. Imorgon        — events vars datum = imorgon (days:2)
+//   2. Live           — category_slug === 'music' (days:14)
+//   3. Stämningsfullt — start_hour 18–21            (days:14)
+//   4. Skratt         — titel matchar standup|komedi|comedy|skratt
+//
+// Tomma kategorier döljs tyst. Subtitle per kort = evenemangets egen tid
+// från dayTimeLabel ("21:00 • LÖR") — INTE kategori-namnet. Varje kort
+// beskriver sig självt med sin tid, så alla kort i en rad har olika
+// subtitles (Spotify-mönstret: subtitle = artist/tid per album).
 
-const HEM_TID_CARDS = 4;
-const HEM_SMAK_CARDS = 4;
 const SKRATT_REGEX = /standup|komedi|comedy|skratt/i;
+const HEM_CAROUSEL_SKELETON = 4;
 
-// Hjälpare: lokal YYYY-MM-DD utan UTC-konvertering (vi vill ha Stockholms-
-// tid, inte UTC-skiva). Används av båda karusellerna.
-function dayOfWeekIso(isoDate) {
-  if (typeof isoDate !== 'string' || isoDate.length < 10) return null;
-  const d = new Date(`${isoDate.slice(0, 10)}T12:00:00`);
-  return Number.isNaN(d.getTime()) ? null : d.getDay();
-}
-
-function bucketTidEvents(events) {
-  if (!Array.isArray(events) || events.length === 0) {
-    return { ikvall: null, imorgon: null, helg: null, vecka: null };
-  }
-  const today = todayLocalIso();
-  const tomorrowIso = new Date(Date.now() + 86400000).toISOString().slice(0, 10);
-  const sorted = [...events].sort(compareDayTimeAsc);
-  const ikvall = sorted.find(
-    (e) => e.date === today && (() => {
-      const h = localHourFromIso(e.start_time);
-      return h != null && h >= 18;
-    })(),
-  );
-  const imorgon = sorted.find((e) => e.date === tomorrowIso);
-  const helg = sorted.find((e) => {
-    if (!e.date) return false;
-    if (e.date === today || e.date === tomorrowIso) return false;
-    const dow = dayOfWeekIso(e.date);
-    return dow === 0 || dow === 6; // Sön eller Lör
-  });
-  const taken = new Set([ikvall?.id, imorgon?.id, helg?.id].filter(Boolean));
-  const vecka = sorted.find((e) => e.id && !taken.has(e.id));
-  return { ikvall, imorgon, helg, vecka };
-}
-
-function bucketSmakEvents(events) {
-  if (!Array.isArray(events) || events.length === 0) {
-    return { gratis: null, live: null, stamningsfullt: null, skratt: null };
-  }
-  const sorted = [...events].sort(compareDayTimeAsc);
-  const gratis = sorted.find((e) => e.is_free || e.isFree);
-  const live = sorted.find((e) => e.category_slug === 'music' || e.category === 'music');
-  const stamningsfullt = sorted.find((e) => {
-    const h = localHourFromIso(e.start_time);
-    return h != null && h >= 18 && h <= 21;
-  });
-  const skratt = sorted.find((e) => typeof e.title === 'string' && SKRATT_REGEX.test(e.title));
-  return { gratis, live, stamningsfullt, skratt };
-}
-
-function TidCarouselSection({ onCardPress }) {
-  const { t } = useI18n();
-  const from = useMemo(() => todayLocalIso(), []);
-  // 7-dygnsfönster utan filter — bucket-logiken sköter resten.
-  const { status, events } = useSection({ from, days: 7 });
-  const buckets = useMemo(() => bucketTidEvents(events), [events]);
-  const cards = useMemo(() => {
-    const build = (event, labelKey) => {
-      if (!event) return null;
-      return {
-        id: `tid-${event.id}`,
-        title: event.title,
-        subtitle: t(labelKey),
-        imageUrl: event.image_url || event.imageUrl || null,
-        onPress: () => onCardPress?.(event),
-      };
+// Mappar events → Spotify-karusellkort. Subtitle = tid • dag från
+// dayTimeLabel, eller venue som fallback. Indata förväntas vara sorterad
+// kronologiskt (useCategoryFeedCards sorterar före mappning).
+function eventsToCarouselCards(events, idPrefix, language, t, onCardPress) {
+  return events.map((event) => {
+    const dt = dayTimeLabel(event, language);
+    const venue = event.venue_name || event.venue;
+    const subtitle = dt.display || (typeof venue === 'string' && venue) || '';
+    return {
+      id: `${idPrefix}-${event.id}`,
+      title: event.title,
+      subtitle,
+      imageUrl: event.image_url || event.imageUrl || null,
+      onPress: () => onCardPress?.(event),
     };
-    return [
-      build(buckets.ikvall, 'explore.time.ikvall'),
-      build(buckets.imorgon, 'home.explore.imorgon.label'),
-      build(buckets.helg, 'home.explore.helg.label'),
-      build(buckets.vecka, 'explore.time.week'),
-    ].filter(Boolean);
-  }, [buckets, t, onCardPress]);
+  });
+}
 
+function useCategoryFeedCards(filter, idPrefix, days, onCardPress) {
+  const { t, language } = useI18n();
+  const from = useMemo(() => todayLocalIso(), []);
+  const { status, events } = useSection({ from, days, filter });
+  const sorted = useMemo(() => [...events].sort(compareDayTimeAsc), [events]);
+  const cards = useMemo(
+    () => eventsToCarouselCards(sorted, idPrefix, language, t, onCardPress),
+    [sorted, idPrefix, language, t, onCardPress],
+  );
+  return { status, cards };
+}
+
+function CategoryCarouselSection({ headerText, idPrefix, days, filter, onCardPress }) {
+  const { status, cards } = useCategoryFeedCards(filter, idPrefix, days, onCardPress);
+  // Dölj tyst om inga events hittades i kategorin. EventPulseCarousel gör
+  // samma sak, men vi dubbel-checkar så sektionslistan är enkel att läsa.
+  if (status === 'ready' && cards.length === 0) return null;
   return (
     <EventPulseCarousel
       cards={cards}
-      headerText={t('home.carousel.tid.header')}
+      headerText={headerText}
       loading={status === 'loading'}
-      skeletonCount={HEM_TID_CARDS}
+      skeletonCount={HEM_CAROUSEL_SKELETON}
     />
   );
 }
 
-function SmakCarouselSection({ onCardPress }) {
+function ImorgonCarouselSection({ onCardPress }) {
   const { t } = useI18n();
-  const from = useMemo(() => todayLocalIso(), []);
-  // 7-dygnsfönster räcker — bucket-predikaten är inte dag-specifika.
-  const { status, events } = useSection({ from, days: 7 });
-  const buckets = useMemo(() => bucketSmakEvents(events), [events]);
-  const cards = useMemo(() => {
-    const build = (event, labelKey) => {
-      if (!event) return null;
-      return {
-        id: `smak-${event.id}`,
-        title: event.title,
-        subtitle: t(labelKey),
-        imageUrl: event.image_url || event.imageUrl || null,
-        onPress: () => onCardPress?.(event),
-      };
-    };
-    return [
-      build(buckets.gratis, 'home.explore.gratis.label'),
-      build(buckets.live, 'home.explore.live.label'),
-      build(buckets.stamningsfullt, 'home.explore.stamning.label'),
-      build(buckets.skratt, 'home.explore.skratt.label'),
-    ].filter(Boolean);
-  }, [buckets, t, onCardPress]);
-
+  const tomorrowIso = useMemo(
+    () => new Date(Date.now() + 86_400_000).toISOString().slice(0, 10),
+    [],
+  );
+  // days:2 = idag + imorgon — filtret träffar bara imorgon.
+  const filter = useCallback((e) => e.date === tomorrowIso, [tomorrowIso]);
   return (
-    <EventPulseCarousel
-      cards={cards}
-      headerText={t('home.carousel.smak.header')}
-      loading={status === 'loading'}
-      skeletonCount={HEM_SMAK_CARDS}
+    <CategoryCarouselSection
+      headerText={t('home.carousel.imorgon.header')}
+      idPrefix="imorgon"
+      days={2}
+      filter={filter}
+      onCardPress={onCardPress}
+    />
+  );
+}
+
+function LiveCarouselSection({ onCardPress }) {
+  const { t } = useI18n();
+  const filter = useCallback(
+    (e) => e.category_slug === 'music' || e.category === 'music',
+    [],
+  );
+  return (
+    <CategoryCarouselSection
+      headerText={t('home.carousel.live.header')}
+      idPrefix="live"
+      days={14}
+      filter={filter}
+      onCardPress={onCardPress}
+    />
+  );
+}
+
+function StamningsfulltCarouselSection({ onCardPress }) {
+  const { t } = useI18n();
+  // 'Stämningsfullt' har inget category_slug — heuristik på starttimme
+  // (kvällshändelser 18–21, lugnare än sent-på-kvällen). Standup saknar
+  // också eget category_slug, så Skratt-sektionen fångar den via titel.
+  const filter = useCallback((e) => {
+    const h = localHourFromIso(e.start_time);
+    return h != null && h >= 18 && h <= 21;
+  }, []);
+  return (
+    <CategoryCarouselSection
+      headerText={t('home.carousel.stamningsfullt.header')}
+      idPrefix="stamningsfullt"
+      days={14}
+      filter={filter}
+      onCardPress={onCardPress}
+    />
+  );
+}
+
+function SkrattCarouselSection({ onCardPress }) {
+  const { t } = useI18n();
+  const filter = useCallback(
+    (e) => typeof e.title === 'string' && SKRATT_REGEX.test(e.title),
+    [],
+  );
+  return (
+    <CategoryCarouselSection
+      headerText={t('home.carousel.skratt.header')}
+      idPrefix="skratt"
+      days={14}
+      filter={filter}
+      onCardPress={onCardPress}
     />
   );
 }
@@ -1296,12 +1295,18 @@ export default function HomeScreen({ onChipPress, onCardPress }) {
         </View>
 
         <DinHelgSection onCardPress={handleCardPress} onResolved={setDinHelgActive} />
-        <TidCarouselSection onCardPress={handleCardPress} />
         <SuggestedPromptsSection onChipPress={handlePromptPress} />
         <CuratedCollectionsSection onChipPress={handlePromptPress} />
         <RecentSearchesSection onChipPress={handlePromptPress} />
         <HappeningNowSection onCardPress={handleCardPress} />
-        <SmakCarouselSection onCardPress={handleCardPress} />
+
+        {/* En rad per kategori (2026-09-24). Varje karusell fångar en specifik
+            kategori events från /agent/feed. Tomma kategorier döljs tyst —
+            användaren ser aldrig en tom rad. */}
+        <ImorgonCarouselSection onCardPress={handleCardPress} />
+        <LiveCarouselSection onCardPress={handleCardPress} />
+        <StamningsfulltCarouselSection onCardPress={handleCardPress} />
+        <SkrattCarouselSection onCardPress={handleCardPress} />
 
         <AiImageSmoketestSection onCardPress={handleCardPress} />
 
