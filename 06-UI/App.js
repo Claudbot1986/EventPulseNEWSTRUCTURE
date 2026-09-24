@@ -1141,13 +1141,6 @@ function HomeScreen({ onEventPress, scrollPositionRef, pendingIntent, dismissPen
       <SectionList
         ListHeaderComponent={
           <>
-            <View style={styles.header}>
-              <Text style={styles.appKicker}>{t('explore.eyebrow')}</Text>
-              <Text style={styles.exploreTitle}>{t('explore.title')}</Text>
-              <Text style={styles.appSubtitle}>
-                {t('explore.subtitleCount', { count: totalCount })}
-              </Text>
-            </View>
             <ExploreTilesSection onChipPress={onTilePress} />
             {pendingIntent ? (
               <View style={styles.pendingPromptBanner} accessibilityRole="text">
