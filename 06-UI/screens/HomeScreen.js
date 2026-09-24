@@ -48,7 +48,6 @@ import {
 } from 'react-native';
 
 import { fetchFeed, fetchSavedEvents, fetchRecommendedEvents, fetchSuggestedPrompts, fetchCachedRecommendations, fetchRecentQueries, fetchCuratedCollections, fetchAiImageSmoketest, recordEventInteraction } from '../services/agentClient';
-import { analyticsClient } from '../services/analyticsClient';
 import { resolveConsumerReasons } from '../utils/rankReasonLabels';
 import { compareDayTimeAsc, upcomingWeekendIsoSet } from './home/weekendDates';
 import { dayTimeLabel } from './home/cardTimeLabel';
@@ -1115,88 +1114,6 @@ function SavedSection({ onCardPress }) {
 // users. Sessions self-hide when their backend has nothing for this identity
 // (RecentSearches/AgentSuggestions → null, Saved → "inga sparade ännu").
 
-// ─── ExploreTilesSection (Spotify-smakprofiler, exploratory) ─────────────────
-// 2×2 grid of "taste profile" tiles under "Din helg" (docs/EXPLORE-TILES.md).
-// Left ~67% solid dark color + word in white (contrast well above 40%),
-// right 33% a MiniMax-generated photo with a "/"-diagonal boundary. More
-// margin against screen edges (20) than between tiles (6); width-driven
-// (flex:1) so they never exceed screen width. Photos are data URLs from
-// tiles.data.js (Metro's asset registry refused the PNGs). Gate behind
-// EXPO_PUBLIC_EXPLORE_TILES (never in App Store).
-//
-// Tap wiring (2026-09-21): each tile forwards { prompt_text, ...hints } on
-// the SAME wire as curated/suggested chips (AppShell.handleChipPress →
-// PENDING_AGENT_MESSAGE_KEY → App.js resolvePromptIntent). The tile must do
-// what its label promises: Gratis → budget 'free', Live → category music,
-// Skratt → 'skratt' genre search rows (standup/komedi — never other genres),
-// Stämningsfullt → Fas D (2026-09-23): server-side mood filter via the
-// static AI lexikon in 08-Agent/tools/moods.ts (?mood=stamningsfullt — the
-// ranked subset is then taste-ordered for treatment users). Helg/Imorgon
-// (2026-09-22): time tiles — Helg anchors the weekend window via the
-// dayFilter 'weekend' hint, Imorgon filters to tomorrow via its prompt text
-// (promptIntent has no structured tomorrow hint).
-function ExploreTilesSection({ onChipPress }) {
-  // Hook first — the gate below must never condition hook ordering.
-  const { t } = useI18n();
-  if (!process.env.EXPO_PUBLIC_EXPLORE_TILES) return null;
-  const { GRATIS, LIVE, SKRATT, STAMNING, HELG, IMORGON } = require('../assets/exploreTiles/tiles.data.js');
-  // Solid colors are dark by design so white text keeps ≥40% contrast.
-  // 6 distinct tile colors: smaragd, lila, koppar, vinrött + petrol/marin
-  // for the two time tiles. label = tile word, prompt = Utforska banner
-  // text, hints = structured intent on the curated-chip wire
-  // (promptIntent.test.ts pins all six). id = stable analytics key for
-  // tile_tap { word } — the localized label must never be the identifier.
-  const TILES = [
-    { id: 'gratis', label: t('home.explore.gratis.label'), image: GRATIS, color: '#1E6B45', prompt: t('home.explore.gratis.prompt'), hints: { budget: 'free' } },
-    { id: 'live', label: t('home.explore.live.label'), image: LIVE, color: '#3B1F66', prompt: t('home.explore.live.prompt'), hints: { category_slug: 'music' } },
-    { id: 'skratt', label: t('home.explore.skratt.label'), image: SKRATT, color: '#6B4226', prompt: t('home.explore.skratt.prompt') },
-    { id: 'stamning', label: t('home.explore.stamning.label'), image: STAMNING, color: '#5C1A2A', prompt: t('home.explore.stamning.prompt'), hints: { mood: 'stamningsfullt' } },
-    { id: 'helg', label: t('home.explore.helg.label'), image: HELG, color: '#0F4C5C', prompt: t('home.explore.helg.prompt'), hints: { dayFilter: 'weekend' } },
-    { id: 'imorgon', label: t('home.explore.imorgon.label'), image: IMORGON, color: '#1C2E4A', prompt: t('home.explore.imorgon.prompt') },
-  ];
-  const rows = [TILES.slice(0, 2), TILES.slice(2, 4), TILES.slice(4, 6)];
-  return (
-    <View style={styles.exploreSection}>
-      <Text style={styles.exploreSectionTitle}>{t('home.explore.title')}</Text>
-      {rows.map((row, rowIndex) => (
-        <View key={`explore-row-${rowIndex}`} style={styles.exploreRow}>
-          {row.map((tile) => (
-            <Pressable
-              key={tile.id}
-              onPress={() => {
-                // tile_tap (Fas B): which Utforska tile the user tapped —
-                // the per-word KPI lands in dashboard 7777 (Fas E). Best-
-                // effort: the tap must never wait on analytics.
-                analyticsClient.tileTap(tile.id);
-                onChipPress({ prompt_text: tile.prompt, ...(tile.hints || {}) });
-              }}
-              style={({ pressed }) => [
-                styles.exploreTile,
-                { backgroundColor: tile.color },
-                pressed && styles.exploreTilePressed,
-              ]}
-            >
-              {tile.image ? (
-                <>
-                  <Image
-                    source={{ uri: tile.image }}
-                    style={styles.exploreTilePhoto}
-                    resizeMode="cover"
-                  />
-                  <View
-                    style={[styles.exploreTileDiagonal, { backgroundColor: tile.color }]}
-                  />
-                </>
-              ) : null}
-              <Text style={styles.exploreTileLabel}>{tile.label}</Text>
-            </Pressable>
-          ))}
-        </View>
-      ))}
-    </View>
-  );
-}
-
 export default function HomeScreen({ onChipPress, onCardPress }) {
   const { t } = useI18n();
   // Din helg (2026-09-20): true while the top section has weekend cards —
@@ -1228,7 +1145,6 @@ export default function HomeScreen({ onChipPress, onCardPress }) {
         </View>
 
         <DinHelgSection onCardPress={handleCardPress} onResolved={setDinHelgActive} />
-        <ExploreTilesSection onChipPress={handlePromptPress} />
         <SuggestedPromptsSection onChipPress={handlePromptPress} />
         <CuratedCollectionsSection onChipPress={handlePromptPress} />
         <RecentSearchesSection onChipPress={handlePromptPress} />
@@ -1643,63 +1559,5 @@ const styles = StyleSheet.create({
     backgroundColor: TOKENS.color.border,
     borderRadius: TOKENS.radius.md,
     opacity: 0.5,
-  },
-
-  // ExploreTilesSection — Spotify-genre-tiles, 2 bredvid varandra.
-  // Mer marginal mot skärmkanterna (20) än mellan knapparna (6); svart
-  // appBg syns runtom. Breddstyrd (flex:1 + aspectRatio 7/5): knapparna
-  // kan aldrig gå ur skärmens bredd. Höger 33% = foto, vänster ~67% enfärg
-  // med vit text (mörka färger → kontrasten håller väl över 40%-kravet).
-  exploreSection: {
-    paddingHorizontal: 20,
-    marginBottom: TOKENS.space.xl,
-  },
-  exploreSectionTitle: {
-    color: TOKENS.color.text,
-    fontSize: TOKENS.fontSize.lg,
-    fontWeight: '800',
-    marginBottom: TOKENS.space.md,
-  },
-  exploreRow: {
-    flexDirection: 'row',
-    gap: 10, // mellan knapparna — ökat från 6 per användare 2026-09-21
-    marginBottom: 10, // mellanrum mellan raderna i 2×2-gridden
-  },
-  exploreTile: {
-    flex: 1,
-    aspectRatio: 5 / 2, // 7:5 var för hög — 44% kortare per användare 2026-09-21
-    borderRadius: TOKENS.radius.md,
-    overflow: 'hidden',
-  },
-  exploreTilePressed: {
-    opacity: 0.85,
-  },
-  exploreTilePhoto: {
-    position: 'absolute',
-    top: 0,
-    right: 0,
-    bottom: 0,
-    width: '40%', // bredare än synliga gränsen — diagonalmasken formar kanten
-  },
-  exploreTileDiagonal: {
-    // Solid-färgsmask med "/"-diagonal högerkant (per användare 2026-09-21).
-    // Samma färg som tile-bakgrunden — bara högerkanten syns och klipper
-    // fotots vänsterkant diagonalt (nedre-vänster → övre-höger).
-    // Roterad 14° medurs: gränsen går från ~62% (botten) till ~72% (topp).
-    position: 'absolute',
-    top: '-15%',   // sträcker sig utanför tile: rotation exponerar annars hörn
-    bottom: '-15%',
-    left: '53%',   // vänsterkanten försvinner in i den enfärgade bakgrunden
-    width: '14%',  // högerkanten landar ~62–72% (diagonalen)
-    transform: [{ rotate: '14deg' }], // "/" — samma riktning som tecknet
-  },
-  exploreTileLabel: {
-    position: 'absolute',
-    top: 14,
-    left: 16,
-    color: TOKENS.color.text,
-    fontSize: 16.2, // 19.2/1.2 + 0.2 per användare 2026-09-21 — lg (16) + lite
-    fontWeight: '800',
-    letterSpacing: -0.4,
   },
 });

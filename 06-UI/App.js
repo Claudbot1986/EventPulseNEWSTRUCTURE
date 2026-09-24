@@ -525,7 +525,85 @@ function StateView({ title, detail, actionLabel, onAction }) {
   );
 }
 
-function HomeScreen({ onEventPress, scrollPositionRef, pendingIntent, dismissPendingPrompt, onInitialLoadSettled }) {
+// ─── ExploreTilesSection (Spotify-smakprofiler, exploratory) ─────────────────
+// Moved here oförändrad från HomeScreen.js 2026-09-24 (retention per Spotify-
+// analys: namngivna+schemalagda discovery-ytor ankrar i Utforska). 2×2 grid
+// of "taste profile" tiles at the top of Utforska (was: under Din helg on
+// Hem). Left ~67% solid dark color + word in white (contrast well above
+// 40%), right 33% a MiniMax-generated photo with a "/"-diagonal boundary.
+// More margin against screen edges (20) than between tiles (6); width-driven
+// (flex:1) so they never exceed screen width. Photos are data URLs from
+// tiles.data.js (Metro's asset registry refused the PNGs). Gate behind
+// EXPO_PUBLIC_EXPLORE_TILES (never in App Store).
+//
+// Tap wiring (2026-09-21, oförändrad): each tile forwards { prompt_text,
+// ...hints } on the SAME wire as curated/suggested chips. Since the section
+// now lives inside App.js, onChipPress goes straight to setPendingIntent
+// (resolving intent inline via resolvePromptIntent) — the existing pendingIn-
+// tent useEffect in HomeScreen then applies the filters and re-fetches.
+function ExploreTilesSection({ onChipPress }) {
+  // Hook first — the gate below must never condition hook ordering.
+  const { t } = useI18n();
+  if (!process.env.EXPO_PUBLIC_EXPLORE_TILES) return null;
+  const { GRATIS, LIVE, SKRATT, STAMNING, HELG, IMORGON } = require('./assets/exploreTiles/tiles.data.js');
+  // Solid colors are dark by design so white text keeps ≥40% contrast.
+  // 6 distinct tile colors: smaragd, lila, koppar, vinrött + petrol/marin
+  // for the two time tiles. label = tile word, prompt = Utforska banner
+  // text, hints = structured intent on the curated-chip wire
+  // (promptIntent.test.ts pins all six). id = stable analytics key for
+  // tile_tap { word } — the localized label must never be the identifier.
+  const TILES = [
+    { id: 'gratis', label: t('home.explore.gratis.label'), image: GRATIS, color: '#1E6B45', prompt: t('home.explore.gratis.prompt'), hints: { budget: 'free' } },
+    { id: 'live', label: t('home.explore.live.label'), image: LIVE, color: '#3B1F66', prompt: t('home.explore.live.prompt'), hints: { category_slug: 'music' } },
+    { id: 'skratt', label: t('home.explore.skratt.label'), image: SKRATT, color: '#6B4226', prompt: t('home.explore.skratt.prompt') },
+    { id: 'stamning', label: t('home.explore.stamning.label'), image: STAMNING, color: '#5C1A2A', prompt: t('home.explore.stamning.prompt'), hints: { mood: 'stamningsfullt' } },
+    { id: 'helg', label: t('home.explore.helg.label'), image: HELG, color: '#0F4C5C', prompt: t('home.explore.helg.prompt'), hints: { dayFilter: 'weekend' } },
+    { id: 'imorgon', label: t('home.explore.imorgon.label'), image: IMORGON, color: '#1C2E4A', prompt: t('home.explore.imorgon.prompt') },
+  ];
+  const rows = [TILES.slice(0, 2), TILES.slice(2, 4), TILES.slice(4, 6)];
+  return (
+    <View style={styles.exploreSection}>
+      <Text style={styles.exploreSectionTitle}>{t('home.explore.title')}</Text>
+      {rows.map((row, rowIndex) => (
+        <View key={`explore-row-${rowIndex}`} style={styles.exploreRow}>
+          {row.map((tile) => (
+            <Pressable
+              key={tile.id}
+              onPress={() => {
+                // tile_tap (Fas B): which Utforska tile the user tapped —
+                // the per-word KPI lands in dashboard 7777 (Fas E). Best-
+                // effort: the tap must never wait on analytics.
+                analyticsClient.tileTap(tile.id);
+                onChipPress({ prompt_text: tile.prompt, ...(tile.hints || {}) });
+              }}
+              style={({ pressed }) => [
+                styles.exploreTile,
+                { backgroundColor: tile.color },
+                pressed && styles.exploreTilePressed,
+              ]}
+            >
+              {tile.image ? (
+                <>
+                  <Image
+                    source={{ uri: tile.image }}
+                    style={styles.exploreTilePhoto}
+                    resizeMode="cover"
+                  />
+                  <View
+                    style={[styles.exploreTileDiagonal, { backgroundColor: tile.color }]}
+                  />
+                </>
+              ) : null}
+              <Text style={styles.exploreTileLabel}>{tile.label}</Text>
+            </Pressable>
+          ))}
+        </View>
+      ))}
+    </View>
+  );
+}
+
+function HomeScreen({ onEventPress, scrollPositionRef, pendingIntent, dismissPendingPrompt, onInitialLoadSettled, onTilePress }) {
   const { t, language } = useI18n();
   const [events, setEvents] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -1070,6 +1148,7 @@ function HomeScreen({ onEventPress, scrollPositionRef, pendingIntent, dismissPen
                 {t('explore.subtitleCount', { count: totalCount })}
               </Text>
             </View>
+            <ExploreTilesSection onChipPress={onTilePress} />
             {pendingIntent ? (
               <View style={styles.pendingPromptBanner} accessibilityRole="text">
                 <Text style={styles.pendingPromptEyebrow}>{t('explore.youAsked')}</Text>
@@ -1708,6 +1787,16 @@ export default function App({ onUserLoggedOut, onOpenLogin, chipNonce = 0, onExp
     onUserLoggedOut?.();
   }, [onUserLoggedOut]);
 
+  // Tile press (2026-09-24): ExploreTilesSection sits at the top of Utforska
+  // — same wire as the Hem chip flow used to be (chip → JSON prompt+hints →
+  // resolvePromptIntent → pendingIntent). Since the section now lives here,
+  // skip the cross-tab indirection and apply the intent directly.
+  const handleTilePress = useCallback((payload) => {
+    const text = payload && typeof payload.prompt_text === 'string' ? payload.prompt_text : null;
+    if (!text) return;
+    setPendingIntent({ text, intent: resolvePromptIntent({ text, ...(payload.hints || {}) }) });
+  }, []);
+
   const handleEventPress = (event) => {
     setSelectedEvent(event);
     if (event?.id) {
@@ -1733,7 +1822,7 @@ export default function App({ onUserLoggedOut, onOpenLogin, chipNonce = 0, onExp
     if (activeTab === 'profile') {
       return <ProfileScreen onLoggedOut={handleLoggedOut} onOpenLogin={onOpenLogin} />;
     }
-    return <HomeScreen onEventPress={handleEventPress} scrollPositionRef={scrollPositionRef} pendingIntent={pendingIntent} dismissPendingPrompt={dismissPendingPrompt} onOpenLogin={onOpenLogin} onInitialLoadSettled={onExploreReady} />;
+    return <HomeScreen onEventPress={handleEventPress} scrollPositionRef={scrollPositionRef} pendingIntent={pendingIntent} dismissPendingPrompt={dismissPendingPrompt} onOpenLogin={onOpenLogin} onInitialLoadSettled={onExploreReady} onTilePress={handleTilePress} />;
   };
 
   const showTabBar = !selectedEvent;
@@ -2478,5 +2567,63 @@ const styles = StyleSheet.create({
   },
   tabLabelActive: {
     color: TOKENS.color.accent,
+  },
+
+  // ExploreTilesSection — Spotify-genre-tiles, 2 bredvid varandra.
+  // Mer marginal mot skärmkanterna (20) än mellan knapparna (6); svart
+  // appBg syns runtom. Breddstyrd (flex:1 + aspectRatio 7/5): knapparna
+  // kan aldrig gå ur skärmens bredd. Höger 33% = foto, vänster ~67% enfärg
+  // med vit text (mörka färger → kontrasten håller väl över 40%-kravet).
+  exploreSection: {
+    paddingHorizontal: 20,
+    marginBottom: TOKENS.space.xl,
+  },
+  exploreSectionTitle: {
+    color: TOKENS.color.text,
+    fontSize: 16, // HomeScreen.js fontSize.lg — App.js TOKENS saknar fontSize
+    fontWeight: '800',
+    marginBottom: TOKENS.space.md,
+  },
+  exploreRow: {
+    flexDirection: 'row',
+    gap: 10, // mellan knapparna — ökat från 6 per användare 2026-09-21
+    marginBottom: 10, // mellanrum mellan raderna i 2×2-gridden
+  },
+  exploreTile: {
+    flex: 1,
+    aspectRatio: 5 / 2, // 7:5 var för hög — 44% kortare per användare 2026-09-21
+    borderRadius: TOKENS.radius.md,
+    overflow: 'hidden',
+  },
+  exploreTilePressed: {
+    opacity: 0.85,
+  },
+  exploreTilePhoto: {
+    position: 'absolute',
+    top: 0,
+    right: 0,
+    bottom: 0,
+    width: '40%', // bredare än synliga gränsen — diagonalmasken formar kanten
+  },
+  exploreTileDiagonal: {
+    // Solid-färgsmask med "/"-diagonal högerkant (per användare 2026-09-21).
+    // Samma färg som tile-bakgrunden — bara högerkanten syns och klipper
+    // fotots vänsterkant diagonalt (nedre-vänster → övre-höger).
+    // Roterad 14° medurs: gränsen går från ~62% (botten) till ~72% (topp).
+    position: 'absolute',
+    top: '-15%',   // sträcker sig utanför tile: rotation exponerar annars hörn
+    bottom: '-15%',
+    left: '53%',   // vänsterkanten försvinner in i den enfärgade bakgrunden
+    width: '14%',  // högerkanten landar ~62–72% (diagonalen)
+    transform: [{ rotate: '14deg' }], // "/" — samma riktning som tecknet
+  },
+  exploreTileLabel: {
+    position: 'absolute',
+    top: 14,
+    left: 16,
+    color: TOKENS.color.text,
+    fontSize: 16.2, // 19.2/1.2 + 0.2 per användare 2026-09-21 — lg (16) + lite
+    fontWeight: '800',
+    letterSpacing: -0.4,
   },
 });
