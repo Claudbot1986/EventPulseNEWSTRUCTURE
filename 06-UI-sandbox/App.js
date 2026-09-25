@@ -1,134 +1,74 @@
-// 06-UI-sandbox/App.js — minimal stub som visar 4 tabs (Hem / Utforska /
-// Karta / Profil) med karusell-sektionen som första synliga komponent.
-// När du bygger nya UI-komponenter lägger du dem under ./components och
-// importerar dem här.
-//
-// Designprinciper för sandbox:
-//  - Inga providers, ingen auth, inga services, inga riktiga event-data.
-//  - Sektioner = helt svarta Views, så layout-buggar syns mot bakgrunden.
-//  - AI-genererade bilder (BFL/FLUX) stämplas med "● AI-genererad" via
-//    scripts/stamp-tiles.mjs. Källfilerna är numera runtime/ai-image-
-//    smoketest/images/ — tmp/explore-tiles/ används inte längre.
-//  - Ingen Zustand/Redux/React Query. Använd useState om du behöver state.
+// 06-UI-sandbox/App.js — två sidor: komponentlista + komponent-detalj.
+// Sida 1: lista med alla entries i COMPONENT_REGISTRY. Varje rad är en
+// länk som öppnar sin komponent på sida 2. Navigation: useState (sandbox-
+// konventioner: inga providers, ingen auth, ingen data-state).
 //
 // När en komponent är klar: kopiera in den i 06-UI/components/ för hand.
-// Sandboxen har INGEN build-pipeline som rör 06-UI/.
 
 import { useState } from 'react';
 import { StatusBar } from 'expo-status-bar';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import {
-  ScrollView,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  View,
-} from 'react-native';
-import EventPulseCard from './components/EventPulseCard';
+import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { COMPONENT_REGISTRY } from './components/registry';
 
-const TABS = [
-  { key: 'home', label: 'Hem' },
-  { key: 'explore', label: 'Utforska' },
-  { key: 'map', label: 'Karta' },
-  { key: 'profile', label: 'Profil' },
-];
-
-function TabBar({ active, onChange }) {
+function ComponentListItem({ item, onSelect }) {
   return (
-    <View style={styles.tabBar} accessibilityRole="tabbar">
-      {TABS.map((tab) => {
-        const isActive = active === tab.key;
-        return (
-          <TouchableOpacity
-            key={tab.key}
-            style={styles.tabItem}
-            onPress={() => onChange(tab.key)}
-            accessibilityRole="tab"
-            accessibilityState={{ selected: isActive }}
-            accessibilityLabel={tab.label}
-          >
-            <Text style={[styles.tabLabel, isActive && styles.tabLabelActive]}>
-              {tab.label}
-            </Text>
-          </TouchableOpacity>
-        );
-      })}
-    </View>
+    <Pressable
+      style={({ pressed }) => [styles.row, pressed && styles.rowPressed]}
+      onPress={() => onSelect(item.id)}
+      accessibilityRole="button"
+      accessibilityLabel={`Öppna komponent ${item.name}`}
+    >
+      <View style={styles.rowText}>
+        <Text style={styles.itemName}>{item.name}</Text>
+        <Text style={styles.itemDescription}>{item.description}</Text>
+      </View>
+      <Text style={styles.chevron}>›</Text>
+    </Pressable>
   );
 }
 
-function Screen({ tabKey }) {
-  const label = TABS.find((t) => t.key === tabKey)?.label ?? '';
-
+function ComponentDetail({ item, onBack }) {
+  const ShowcaseComponent = item.Component;
   return (
     <ScrollView contentContainerStyle={styles.screen}>
-      <Text style={styles.eyebrow}>SANDBOX</Text>
-      <Text style={styles.title}>{label}</Text>
-
-      {/* EventPulseCard showcase (fas 1 av PLAN_HEM_SECTION.md). Tre
-          instanser sida vid sida — testar require-bild, annan require-bild
-          och ingen-bild → placeholder.
-          Clip + edge-bleed (marginHorizontal: -20, height 166, overflow
-          hidden) är carousel-nivå, inte kort-nivå — fas 2 (EventPulseCarousel)
-          äger detta mönster. */}
-      <Text style={styles.eventPulseCardEyebrow}>EVENTPULSECARD</Text>
-      <View style={styles.eventPulseCardClip}>
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={styles.eventPulseCardRow}
+      <View style={styles.padX}>
+        <Pressable
+          style={({ pressed }) => [styles.backButton, pressed && styles.backButtonPressed]}
+          onPress={onBack}
+          accessibilityRole="button"
+          accessibilityLabel="Tillbaka till komponentlistan"
         >
-          <EventPulseCard
-            title="Helgens alla händelser i Stockholm"
-            subtitle="Helg"
-            imageSource={require('./assets/tile-1.png')}
-          />
-          <EventPulseCard
-            title="Konserter, teater och barhäng ikväll"
-            subtitle="Ikväll"
-            imageSource={require('./assets/tile-3.png')}
-          />
-          <EventPulseCard
-            title="Gratis event denna vecka — utforska utan att spendera"
-            subtitle="Gratis"
-          />
-        </ScrollView>
+          <Text style={styles.backText}>‹ Komponenter</Text>
+        </Pressable>
+        <Text style={styles.eyebrow}>{item.name.toUpperCase()}</Text>
+        <View style={styles.showcase}>
+          <ShowcaseComponent {...item.sampleProps} />
+        </View>
+        <Text style={styles.itemDescription}>{item.description}</Text>
       </View>
-
-      {/* Helt svarta sektioner — buggar i spacing/layout syns mot #000. */}
-      <View style={styles.blackSection} />
-      <View style={styles.blackSectionShort} />
-
-      {/* Komponent-lista (option A). Visar varje komponent i sandboxen med
-          namn, filsökväg, beskrivning och en rendered preview.
-          Driven av COMPONENT_REGISTRY — när nya komponenter läggs till i
-          components/ dyker de automatiskt upp här. */}
-      <Text style={styles.componentsEyebrow}>KOMPONENTER</Text>
-      {COMPONENT_REGISTRY.map((item) => {
-        const Preview = item.Component;
-        return (
-          <View key={item.id} style={styles.componentItem}>
-            <Text style={styles.componentName}>{item.name}</Text>
-            <Text style={styles.componentFile}>{item.file}</Text>
-            <Text style={styles.componentDescription}>{item.description}</Text>
-            <View style={styles.componentPreview}>
-              <Preview {...item.sampleProps} />
-            </View>
-          </View>
-        );
-      })}
     </ScrollView>
   );
 }
 
 export default function App() {
-  const [activeTab, setActiveTab] = useState('home');
+  const [selectedId, setSelectedId] = useState(null);
+  const selectedItem = selectedId
+    ? COMPONENT_REGISTRY.find((entry) => entry.id === selectedId)
+    : null;
 
   return (
     <SafeAreaView style={styles.root}>
-      <Screen tabKey={activeTab} />
-      <TabBar active={activeTab} onChange={setActiveTab} />
+      {selectedItem ? (
+        <ComponentDetail item={selectedItem} onBack={() => setSelectedId(null)} />
+      ) : (
+        <ScrollView contentContainerStyle={styles.screen}>
+          <Text style={[styles.eyebrow, styles.padX]}>KOMPONENTER</Text>
+          {COMPONENT_REGISTRY.map((item) => (
+            <ComponentListItem key={item.id} item={item} onSelect={setSelectedId} />
+          ))}
+        </ScrollView>
+      )}
       <StatusBar style="light" />
     </SafeAreaView>
   );
@@ -140,9 +80,14 @@ const styles = StyleSheet.create({
     backgroundColor: '#000000',
   },
   screen: {
-    padding: 20,
-    gap: 16,
+    // iPhone-status / dynamic island: 20 räcker inte — "KOMPONENTER" / "‹ Komponenter"
+    // överlappade klockan. 40 ger andrum under safe-area.
+    paddingTop: 40,
+    paddingBottom: 48,
     backgroundColor: '#000000',
+  },
+  padX: {
+    paddingHorizontal: 20,
   },
   eyebrow: {
     color: '#FFB454',
@@ -150,96 +95,55 @@ const styles = StyleSheet.create({
     fontWeight: '800',
     letterSpacing: 1.6,
     textTransform: 'uppercase',
-    marginBottom: 4,
+    marginBottom: 16,
   },
-  title: {
-    color: '#F7F2EA',
-    fontSize: 28,
-    fontWeight: '900',
-    letterSpacing: -0.8,
-    marginBottom: 8,
-  },
-  blackSection: {
-    height: 96,
-    backgroundColor: '#000000',
-    borderWidth: 1,
-    borderColor: '#0A0A0A',
-  },
-  blackSectionShort: {
-    height: 48,
-    backgroundColor: '#000000',
-  },
-  eventPulseCardEyebrow: {
-    color: '#FFB454',
-    fontSize: 11,
-    fontWeight: '800',
-    letterSpacing: 1.6,
-    textTransform: 'uppercase',
-    marginTop: 16,
-  },
-  eventPulseCardRow: {
+  row: {
+    flexDirection: 'row',
+    alignItems: 'center',
     paddingHorizontal: 20,
-    gap: 16,
-  },
-  eventPulseCardClip: {
-    marginHorizontal: -20,
-    height: 166,
-    overflow: 'hidden',
-  },
-  componentsEyebrow: {
-    color: '#FFB454',
-    fontSize: 11,
-    fontWeight: '800',
-    letterSpacing: 1.6,
-    textTransform: 'uppercase',
-    marginTop: 24,
-  },
-  componentItem: {
     paddingVertical: 16,
     borderBottomWidth: 1,
     borderBottomColor: '#1A1A1A',
   },
-  componentName: {
+  rowPressed: {
+    opacity: 0.6,
+  },
+  rowText: {
+    flex: 1,
+  },
+  itemName: {
     color: '#F7F2EA',
-    fontSize: 18,
+    fontSize: 22,
     fontWeight: '800',
-    letterSpacing: -0.2,
+    letterSpacing: -0.4,
   },
-  componentFile: {
-    color: '#727B8D',
-    fontSize: 12,
-    fontWeight: '600',
-    marginTop: 4,
-    fontFamily: 'Courier',
-  },
-  componentDescription: {
+  itemDescription: {
     color: '#9AA3B5',
     fontSize: 13,
-    fontWeight: '500',
-    marginTop: 8,
+    fontWeight: '200',
+    marginTop: 6,
     lineHeight: 18,
   },
-  componentPreview: {
-    marginTop: 12,
-  },
-  tabBar: {
-    flexDirection: 'row',
-    borderTopWidth: 1,
-    borderTopColor: '#1A1A1A',
-    backgroundColor: '#000000',
-  },
-  tabItem: {
-    flex: 1,
-    paddingVertical: 14,
-    alignItems: 'center',
-  },
-  tabLabel: {
+  chevron: {
     color: '#727B8D',
-    fontSize: 11,
-    fontWeight: '700',
-    letterSpacing: 0.4,
+    fontSize: 28,
+    marginLeft: 12,
   },
-  tabLabelActive: {
+  backButton: {
+    alignSelf: 'flex-start',
+    paddingVertical: 6,
+    marginBottom: 16,
+  },
+  backButtonPressed: {
+    opacity: 0.6,
+  },
+  backText: {
     color: '#FFB454',
+    fontSize: 14,
+    fontWeight: '700',
+  },
+  showcase: {
+    marginTop: 16,
+    marginBottom: 8,
   },
 });
