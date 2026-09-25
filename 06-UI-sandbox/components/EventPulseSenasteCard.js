@@ -39,7 +39,7 @@ const TOKENS = {
   },
 };
 
-const CARD_WIDTH = 91; // 130 * 0.7 — bildstorlek -30 % (binding 2026-09-25)
+const CARD_WIDTH = 96; // 91 * 1.05 ≈ 96 — bildstorlek +5 % (2026-09-25)
 
 // Normaliserar imageSource till ett format <Image> accepterar.
 // Samma hjälpfunktion som EventPulseCard — duplicerad här för att
