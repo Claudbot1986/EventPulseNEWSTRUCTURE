@@ -12,6 +12,7 @@ import EventPulseCard from './EventPulseCard';
 import EventPulseCarousel from './EventPulseCarousel';
 import EventPulseSenaste from './EventPulseSenaste';
 import HemScreen from './HemScreen';
+import HemSupabase from './HemSupabase';
 
 export const COMPONENT_REGISTRY = [
   {
@@ -125,5 +126,16 @@ export const COMPONENT_REGISTRY = [
         },
       ],
     },
+  },
+  {
+    id: 'hem-supabase',
+    name: 'Hem-supabase',
+    description:
+      'Sandbox-version av Hem* med RIKTIGA Supabase-data (events_public view). ' +
+      'Spegel av hur Hem* i 06-UI ska se ut — samma 5 sektioner i ordning ' +
+      'För dig → Senaste → Ikväll → Helgen → Upptäck, samma minnes-funktion. ' +
+      'Konfig: 06-UI-sandbox/.env måste ha EXPO_PUBLIC_SUPABASE_URL/ANON_KEY.',
+    Component: HemSupabase,
+    sampleProps: {},
   },
 ];
