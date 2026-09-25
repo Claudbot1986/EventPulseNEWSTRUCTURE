@@ -5,17 +5,18 @@
 // "Senaste"-rail i Hem-vyn.
 //
 // Skillnad mot EventPulseCard:
-// - Kortet är 91 px (130 * 0.7 — bildstorleken minskad 30 % 2026-09-25)
-// - Bild: aspectRatio 1.15 + cover (samma kapning som EventPulseCard —
-//   bilden kapas upptill och nedtill, vilket ger "avklippt botten"-
-//   utseendet som är binding för EventPulse-kort)
-// - Rubrik: 14pt / 800 istället för 13pt / 700 (tyngre, tydligare)
-// - Subtitle: 12pt / 500 istället för 13pt / 600 (metadata-känsla)
-// - Title numberOfLines=2 (samma som EventPulseCard), subtitle=1
+// - Kortet är 96 px (95 * 1.05 — bildstorlek +5 % 2026-09-25). I övrigt:
+//   samma kapade bild, samma rubrik- och subtitle-typografi, samma
+//   numberOfLines (rubrik=1 med ellipsis, subtitle=1).
+// - Rubrik: 13pt / 700 / -0.3 / 18 — identiskt med EventPulseCard.
+// - Subtitle: 13pt / 600 / 0.1 — identiskt med EventPulseCard.
+// - Sektionens rubrik ("Senaste") sätts av EventPulseSenaste (16pt /
+//   800 / -0.2) — identiskt med EventPulseCarousel.
 //
 // Tokens från DESIGN_SYSTEM.md (binding 2026-09-25). Spacing från
-// SPACING.md: imageToTitle=8 (på skala), titleToSubtitle=4 (på skala).
-// CARD_WIDTH=91 är off-scale — undantag för denna kort-variant.
+// SPACING.md: imageToTitle=6, titleToSubtitle=4 — identiskt med
+// EventPulseCard. CARD_WIDTH=96 är off-scale — undantag för denna
+// kort-variant.
 
 import { Image, Pressable, StyleSheet, Text, View } from 'react-native';
 
@@ -29,12 +30,15 @@ const TOKENS = {
     placeholderText: '#8B92A1',
   },
   font: {
-    title: { size: 14, weight: '800', letterSpacing: -0.2, lineHeight: 18 },
-    subtitle: { size: 12, weight: '500', letterSpacing: 0 },
+    // Identiskt med EventPulseCard (binding 2026-09-25):
+    //  - samma radhöjd (18) ger samma avstånd mellan rader
+    //  - samma letterSpacing (-0.3) ger samma teckenavstånd
+    title: { size: 13, weight: '700', letterSpacing: -0.3, lineHeight: 18 },
+    subtitle: { size: 13, weight: '600', letterSpacing: 0.1 },
     placeholder: { size: 13, weight: '900', letterSpacing: 0.4 },
   },
   space: {
-    imageToTitle: 8,
+    imageToTitle: 6, // matchar EventPulseCard (binding)
     titleToSubtitle: 4,
   },
 };
@@ -85,7 +89,7 @@ export default function EventPulseSenasteCard({
           </View>
         )}
       </View>
-      <Text style={styles.title} numberOfLines={2} ellipsizeMode="tail">
+      <Text style={styles.title} numberOfLines={1} ellipsizeMode="tail">
         {title}
       </Text>
       <Text style={styles.subtitle} numberOfLines={1} ellipsizeMode="tail">
