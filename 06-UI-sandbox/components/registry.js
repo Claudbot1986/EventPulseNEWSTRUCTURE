@@ -10,6 +10,7 @@
 
 import EventPulseCard from './EventPulseCard';
 import EventPulseCarousel from './EventPulseCarousel';
+import EventPulseSenaste from './EventPulseSenaste';
 import HemScreen from './HemScreen';
 
 export const COMPONENT_REGISTRY = [
@@ -79,6 +80,50 @@ export const COMPONENT_REGISTRY = [
     Component: HemScreen,
     sampleProps: {
       showAllStates: true,
+    },
+  },
+  {
+    id: 'event-pulse-senaste',
+    name: 'EventPulseSenaste',
+    description:
+      '"Senaste"-sektion med Spotify-stil tiles (kvadratisk 130-bild, ' +
+      '14/800 rubrik, 12/500 muted subtitle). Samma edge-bleed/skeleton/' +
+      'empty som EventPulseCarousel.',
+    Component: EventPulseSenaste,
+    sampleProps: {
+      headerText: 'Senaste',
+      cards: [
+        {
+          id: 'senaste-1',
+          title: 'Peaceful Piano',
+          subtitle: 'Spellista • Spotify',
+          imageUrl: require('../assets/tile-1.png'),
+        },
+        {
+          id: 'senaste-2',
+          title: 'Creative Flow',
+          subtitle: 'Spellista • hayes',
+          imageUrl: require('../assets/tile-2.png'),
+        },
+        {
+          id: 'senaste-3',
+          title: 'Från Victoria',
+          subtitle: 'Spellista',
+          imageUrl: require('../assets/tile-3.png'),
+        },
+        {
+          id: 'senaste-4',
+          title: 'Gillade låtar',
+          subtitle: 'Spellista • Spotify',
+          imageUrl: require('../assets/tile-4.png'),
+        },
+        {
+          id: 'senaste-5',
+          title: 'Indie Mix 2026',
+          subtitle: 'Spellista',
+          imageUrl: require('../assets/tile-5.png'),
+        },
+      ],
     },
   },
 ];
