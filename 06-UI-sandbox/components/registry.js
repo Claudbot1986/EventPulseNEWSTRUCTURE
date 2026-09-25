@@ -10,6 +10,7 @@
 
 import EventPulseCard from './EventPulseCard';
 import EventPulseCarousel from './EventPulseCarousel';
+import HemScreen from './HemScreen';
 
 export const COMPONENT_REGISTRY = [
   {
@@ -66,6 +67,18 @@ export const COMPONENT_REGISTRY = [
           imageUrl: require('../assets/tile-5.png'),
         },
       ],
+    },
+  },
+  {
+    id: 'hem-screen',
+    name: 'HemScreen',
+    description:
+      'Hem-sektion med 3 karuseller (Din helg > Smak > Ikväll). ' +
+      'States: default / loading / error / empty. paddingTop 48 (binding). ' +
+      'showAllStates=true visar alla 4 staplade i sandbox-preview.',
+    Component: HemScreen,
+    sampleProps: {
+      showAllStates: true,
     },
   },
 ];
