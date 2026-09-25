@@ -12,6 +12,7 @@ import EventPulseCard from './EventPulseCard';
 import EventPulseCarousel from './EventPulseCarousel';
 import EventPulseSenaste from './EventPulseSenaste';
 import HemScreen from './HemScreen';
+import HemStar from './HemStar';
 import HemSupabase from './HemSupabase';
 
 export const COMPONENT_REGISTRY = [
@@ -82,6 +83,18 @@ export const COMPONENT_REGISTRY = [
     sampleProps: {
       showAllStates: true,
     },
+  },
+  {
+    id: 'hem-star',
+    name: 'Hem*',
+    description:
+      'Retention-optimerad Hem-sektion byggd från grunden. ' +
+      'För dig först (användarens val 2026-09-25 — Jevs memory_first överskriven). ' +
+      'Därefter Senaste (×3 read_more / ×2 click / ×1 impression), ' +
+      'Ikväll, Helgen och Upptäck (K3 reserv). ' +
+      'Sandbox-mockat: signaler nollställs vid omladdning.',
+    Component: HemStar,
+    sampleProps: {},
   },
   {
     id: 'event-pulse-senaste',
