@@ -80,9 +80,10 @@ const styles = StyleSheet.create({
     backgroundColor: '#000000',
   },
   screen: {
-    // iPhone-status / dynamic island: 20 räcker inte — "KOMPONENTER" / "‹ Komponenter"
-    // överlappade klockan. 40 ger andrum under safe-area.
-    paddingTop: 40,
+    // Binding rule: alla nya sidor/sektioner använder paddingTop: 48.
+    // Se .claude/eventpulse/ui/SPACING.md § "Page / section top padding".
+    // iPhone dynamic island kräver andrum under status bar.
+    paddingTop: 48,
     paddingBottom: 48,
     backgroundColor: '#000000',
   },

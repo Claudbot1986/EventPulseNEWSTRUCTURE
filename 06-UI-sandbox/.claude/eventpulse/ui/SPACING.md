@@ -44,12 +44,62 @@ naming convention is:
 | Tight between icon and label | 8 | Tab item icon + text |
 | Card image → text | 8 | `EventPulseCarousel` |
 | Between carousel cards | 16 | `EventPulseCarousel` row gap |
-| Screen edge padding | 20 | Sandbox `App.js` `screen` padding |
+| Screen edge padding (horizontal) | 20 | Sandbox `App.js` `screen` padding |
 | Between cards in a vertical list | 16 | (When we add vertical lists) |
 | Between sections | 24 | Carousel → next section |
 | Inside a card | 12–16 | Padding around card content |
 | Empty state vertical | 32 | Icon → text in empty state |
 | Hero spacing | 48 | Onboarding hero |
+| **Page / section top padding (binding)** | **48** | **All new pages and sections — see rule below** |
+
+## Page / section top padding — BINDING RULE (2026-09-25)
+
+Every new page or section in EventPulse must use `paddingTop: 48` at the
+top of its root scrollable. This is not a recommendation — it is the
+binding default.
+
+**Why 48.** On iPhone with the dynamic island, anything below 48 pt gets
+visually crowded by the status bar / clock. We tried 20 (standard
+content margin) and the eyebrow "KOMPONENTER" / back button "‹ Komponenter"
+overlapped the iPhone clock. 40 was close but still tight. 48 gives
+breathing room on every device without making the content feel pushed
+down on Android / older iPhones.
+
+**Where it applies:**
+- New screens (root `ScrollView` or section component) → `paddingTop: 48`.
+- New sections inside a screen (e.g. a new `EventPulseSection` block)
+  → `paddingTop: 48` on the section root.
+- Inside an existing component (e.g. between header and row in
+  `EventPulseCarousel`) → use the existing token system, **not** this
+  rule. This rule is for the **top** of a page/section only.
+
+**Token name (when we move to `tokens.js`):**
+`space.screenTop` = 48. Or, if you prefer descriptive: `space.pageTop`.
+
+**How to apply:**
+```js
+// CORRECT — new page root
+<ScrollView contentContainerStyle={{ paddingTop: 48, paddingBottom: 48 }}>
+  ...
+</ScrollView>
+
+// CORRECT — new section root inside a screen
+<View style={{ paddingTop: 48 }}>...</View>
+
+// WRONG — 20 (overlaps clock on iPhone)
+<ScrollView contentContainerStyle={{ paddingTop: 20 }}>...</ScrollView>
+```
+
+**Sandbox binding in code:** `06-UI-sandbox/App.js` `screen` style uses
+`paddingTop: 48`. Any new component added to `components/` should mirror
+this in its root container when it's a full screen, or in its top-level
+section when it's a partial.
+
+**Don't use 48 for:**
+- Gap between sibling sections (use 24).
+- Padding inside a card (use 6/8 per card rules).
+- Vertical padding between content and screen bottom (use 48 only if
+  content is short; otherwise let the content breathe naturally).
 
 ## Forbidden values
 
