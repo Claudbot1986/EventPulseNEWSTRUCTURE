@@ -32,18 +32,7 @@
         ]
       }
     ],
-    "PostToolUse": [
-      {
-        "matcher": "AskUserQuestion|ExitPlanMode",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "python3 \"/Users/claudgashi/EventPulse/.claude/hooks/term-bg.py\" green",
-            "statusMessage": "Claude jobbar — målar terminalen grön…"
-          }
-        ]
-      }
-    ],
+    "PostToolUse": [],
     "SessionStart": [
       {
         "hooks": [
@@ -73,11 +62,6 @@
             "type": "command",
             "command": "python3 \"/Users/claudgashi/EventPulse/.claude/hooks/simple-swedish-options.py\"",
             "statusMessage": "Alternativ-vakt…"
-          },
-          {
-            "type": "command",
-            "command": "python3 \"/Users/claudgashi/EventPulse/.claude/hooks/term-bg.py\" green",
-            "statusMessage": "Målar terminalen grön…"
           }
         ]
       }

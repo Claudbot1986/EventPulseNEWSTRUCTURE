@@ -127,12 +127,41 @@ export interface PriorityEntry {
 }
 
 /**
- * Hämta alla sources från sources/
+ * Stockholm-scope filter.
+ *
+ * Produkten är dokumenterat Stockholm-fokuserad
+ * (CLAUDE.md, docs/MASTERPLAN.md). För att inte slösa heal/expand/promote-
+ * kap och manual-granskning på non-Stockholm-källor filtrerar vi bort dem
+ * som default i getAllSources(). Källfilerna flyttas inte — de finns kvar
+ * på disk som audit-data och kan hämtas via `getAllSources({ scope: 'all' })`.
+ *
+ * 117 av 198 källor (2026-09-24 baseline) är non-Stockholm och
+ * svarar för ~75% av auto-manual-kön. Filtret reducerar aktiv-poolen till
+ * 81 Stockholm-källor. Lägg till/ändra scope genom att passera options.
+ */
+export type SourceScope = 'stockholm' | 'all';
+
+export interface GetAllSourcesOptions {
+  /** 'stockholm' (default) filtrerar bort non-Stockholm; 'all' returnerar allt på disk. */
+  scope?: SourceScope;
+}
+
+export function isInScope(source: SourceTruth): boolean {
+  return (source.city ?? '').trim() === 'Stockholm';
+}
+
+/**
+ * Hämta alla sources från sources/.
+ *
+ * Default: endast Stockholm-källor (se SourceScope ovan). För admin/debug/
+ * import-verktyg som behöver se hela poolen: `getAllSources({ scope: 'all' })`.
+ *
  * Stöder två format:
  *   1. Multi-line JSON (pretty-printed) — en komplett JSON-object per fil
  *   2. JSONL — en JSON-object per rad
  */
-export function getAllSources(): SourceTruth[] {
+export function getAllSources(options: GetAllSourcesOptions = {}): SourceTruth[] {
+  const scope = options.scope ?? 'stockholm';
   if (!existsSync(SOURCES_DIR)) return [];
 
   const files = readdirSync(SOURCES_DIR).filter(f => f.endsWith('.jsonl'));
@@ -164,7 +193,7 @@ export function getAllSources(): SourceTruth[] {
     }
   }
 
-  return sources;
+  return scope === 'all' ? sources : sources.filter(isInScope);
 }
 
 /**
@@ -737,9 +766,13 @@ export function removeFromQueue(sourceId: string): void {
 
 /**
  * Ta bort statusrader för sourceId som inte längre har sources/{id}.jsonl.
+ *
+ * Använder scope: 'all' för att se non-Stockholm-källors filer också —
+ * annars skulle vi av misstag ta bort statusdata för källor som är
+ * medvetet utanför scope men vars filer finns kvar på disk som audit-data.
  */
 export function pruneOrphanStatuses(): number {
-  const ids = new Set(getAllSources().map(s => s.id));
+  const ids = new Set(getAllSources({ scope: 'all' }).map(s => s.id));
   const statuses = readStatusFile();
   let removed = 0;
   for (const k of [...statuses.keys()]) {

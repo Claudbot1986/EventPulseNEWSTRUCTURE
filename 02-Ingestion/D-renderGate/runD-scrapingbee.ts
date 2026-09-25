@@ -38,6 +38,7 @@ import { extractFromHtml } from '../F-eventExtraction/universal-extractor';
 import type { ParsedEvent } from '../F-eventExtraction/schema';
 import { renderPage, type RenderBehavior } from './renderGate';
 import { isSkipped } from '../lib/quarantineGuard.js';
+import { loadDaiAdapter, extractWithDaiAdapter } from '../A-directAPI-networkGate/daiAdapterExtractor';
 
 interface QueueEntry {
   sourceId: string;
@@ -353,9 +354,22 @@ async function processSource(entry: QueueEntry, maxPages: number, behavior: Rend
   // Sum av creditsCharged över alla render-anrop (initial + retry + sidor).
   let creditsUsed = firstCredits;
 
+  // Load D-AI adapter om källan har en — dess selectors (t.ex. ol.list--none > li
+  // för storkyrkan-2) kan hitta events som UniversalExtractor missar. Om adaptern
+  // ger ≥1 event använd den; annars falla tillbaka till UniversalExtractor.
+  // Speglar runA-extract:354-407 render-gate fallback.
+  const adapter = loadDaiAdapter(entry.sourceId);
+  const extractSmart = (html: string, sourceId: string, url: string): ParsedEvent[] => {
+    if (adapter) {
+      const adapterEvents = extractWithDaiAdapter(html, adapter);
+      if (adapterEvents.length > 0) return adapterEvents;
+    }
+    return extractFromHtml(html, sourceId, url).events || [];
+  };
+
   // Reuse already rendered first page to avoid duplicate render.
   {
-    const extracted = extractFromHtml(first.html, entry.sourceId, source.url).events || [];
+    const extracted = extractSmart(first.html, entry.sourceId, source.url);
     for (const e of extracted) allEvents.push(e);
     const current = dedupeEvents(allEvents);
     if (current.length >= MIN_EVENTS_FOR_SUCCESS) {
@@ -364,7 +378,7 @@ async function processSource(entry: QueueEntry, maxPages: number, behavior: Rend
         sourceId: entry.sourceId,
         success: true,
         eventsFound: current.length,
-        reason: `events found via JS render (${renderedPages} pages, behavior=${behavior})`,
+        reason: `events found via JS render (${renderedPages} pages, behavior=${behavior}${adapter ? ', via D-AI adapter' : ''})`,
         renderedPages,
         creditsUsed,
       };
@@ -380,7 +394,7 @@ async function processSource(entry: QueueEntry, maxPages: number, behavior: Rend
     }
     renderedPages += 1;
     if (!rr.success || !rr.html) continue;
-    const extracted = extractFromHtml(rr.html, entry.sourceId, url).events || [];
+    const extracted = extractSmart(rr.html, entry.sourceId, url);
     for (const e of extracted) allEvents.push(e);
     const current = dedupeEvents(allEvents);
     if (current.length >= MIN_EVENTS_FOR_SUCCESS) {
@@ -389,7 +403,7 @@ async function processSource(entry: QueueEntry, maxPages: number, behavior: Rend
         sourceId: entry.sourceId,
         success: true,
         eventsFound: current.length,
-        reason: `events found via JS render (${renderedPages} pages, behavior=${behavior})`,
+        reason: `events found via JS render (${renderedPages} pages, behavior=${behavior}${adapter ? ', via D-AI adapter' : ''})`,
         renderedPages,
         creditsUsed,
       };

@@ -284,3 +284,43 @@ test('healOne with consecutiveFailures=2 keeps the source in the before snapshot
   expect(result.before.events).toBe(0);
   expect(result.before.lastRoutingReason).toBe('fetch failed: ETIMEDOUT');
 });
+
+// ─── Fas 4: Exa lookup integration into tier 2 ───────────────────────────
+
+/**
+ * Tier 2 with C0 returning no winner. Without EXA_API_KEY set in this test
+ * env (we delete it explicitly), lookupSourceUrl gracefully returns empty.
+ * The result must still report exaAvailable=false so the audit log explains
+ * why we fell back to deferred instead of trying Exa.
+ *
+ * Full Exa→C0→runPipeline integration is verified end-to-end against
+ * riksarkivet.se in nightly cron; unit-mocking that chain (C0 + pipeline)
+ * is brittle and the deferred-path audit is the contract that matters here.
+ */
+test('healOne tier 2 → deferred path records exaLookup=unavailable when EXA_API_KEY missing', async () => {
+  const ORIGINAL = process.env.EXA_API_KEY;
+  delete process.env.EXA_API_KEY;
+  try {
+    const f = failing({
+      source: source({ id: 'riks-test', url: 'https://no-such-host-12345.example/evenemang', name: 'NoSuchHost' }),
+      status: status({
+        consecutiveFailures: 4,
+        lastRoutingReason: 'no-jsonld',
+      }),
+      suggestedTier: 2,
+    });
+
+    const result: HealResult = await healOne(f, { dryRun: true, timeoutMs: 200 });
+
+    expect(result.tier).toBe(2);
+    // Whether C0 timed out or returned no winner, the audit must show Exa
+    // was checked (and reported unavailable) so the operator can see why
+    // the run fell through to deferred.
+    expect(result.after.exaLookup).toBeDefined();
+    expect(result.after.exaLookup?.exaAvailable).toBe(false);
+    expect(result.after.exaLookup?.urlsFound).toBe(0);
+    expect(result.after.exaLookup?.skippedReason).toContain('EXA_API_KEY');
+  } finally {
+    if (ORIGINAL !== undefined) process.env.EXA_API_KEY = ORIGINAL;
+  }
+});

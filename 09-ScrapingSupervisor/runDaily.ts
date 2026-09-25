@@ -116,21 +116,21 @@ async function main(): Promise<number> {
   log(`═══════════════════════════════════════════════════════════`, fileLog);
 
   // Steg 1: supervisor (source health)
-  log(`[1/2] supervisor — start`, fileLog);
+  log(`[1/3] supervisor — start`, fileLog);
   const supervisor = await runSubprocess('supervisor', SUPERVISOR_TS, fileLog);
   if (supervisor.exitCode !== 0) {
-    log(`[1/2] supervisor — FAIL (exit=${supervisor.exitCode}) — fortsätter med pipeline`, fileLog);
+    log(`[1/3] supervisor — FAIL (exit=${supervisor.exitCode}) — fortsätter med pipeline`, fileLog);
   } else {
-    log(`[1/2] supervisor — OK`, fileLog);
+    log(`[1/3] supervisor — OK`, fileLog);
   }
 
-  // Steg 2: ingestionPipeline (data flow)
-  log(`[2/2] ingestionPipeline — start`, fileLog);
+  // Steg 2: ingestionPipeline (data flow — inkluderar bridge + runD-scrapingbee som steg 1d)
+  log(`[2/3] ingestionPipeline — start`, fileLog);
   const pipeline = await runSubprocess('ingestionPipeline', PIPELINE_TS, fileLog);
   if (pipeline.exitCode !== 0) {
-    log(`[2/2] ingestionPipeline — FAIL (exit=${pipeline.exitCode}) — fortsätter med dränering`, fileLog);
+    log(`[2/3] ingestionPipeline — FAIL (exit=${pipeline.exitCode}) — fortsätter med dränering`, fileLog);
   } else {
-    log(`[2/2] ingestionPipeline — OK`, fileLog);
+    log(`[2/3] ingestionPipeline — OK`, fileLog);
   }
 
   // Steg 3: dränera BullMQ-kön till Supabase (workern är daemon — tidsbegränsad dränering)

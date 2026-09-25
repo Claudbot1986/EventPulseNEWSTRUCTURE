@@ -7,10 +7,10 @@
     "council": 4,
     "dual": 3
   },
-  "calls_total": 40,
+  "calls_total": 60,
   "calls_by_mode": {
-    "advisor": 34,
-    "council": 3,
+    "advisor": 53,
+    "council": 4,
     "dual": 3
   },
   "status": "active",

@@ -5,6 +5,7 @@
  *   1.  runA.ts            — skrapa källor från preUI-queue
  *   1b. runB-parallel.ts   — JSON/JSON-LD feeds från preB-queue
  *   1c. runA-dai-hook.ts   — D-AI auto-genererar adapters för no-jsonld-fail
+ *   1d. bridge-pending-queue.ts → runD-scrapingbee.ts — render-kö → events
  *   2.  runA-extract.ts    — extrahera events till extractedevents/
  *   3.  importToEventPulse — skicka events till BullMQ → Supabase
  *
@@ -13,10 +14,17 @@
  *   npx tsx 09-ScrapingSupervisor/ingestionPipeline.ts --skip-a       # hoppa över steg 1
  *   npx tsx 09-ScrapingSupervisor/ingestionPipeline.ts --skip-b       # hoppa över steg 1b
  *   npx tsx 09-ScrapingSupervisor/ingestionPipeline.ts --skip-dai     # hoppa över steg 1c
+ *   npx tsx 09-ScrapingSupervisor/ingestionPipeline.ts --skip-d       # hoppa över steg 1d
+ *   npx tsx 09-ScrapingSupervisor/ingestionPipeline.ts --force-d      # tvinga D-render även utanför cadence
  *   npx tsx 09-ScrapingSupervisor/ingestionPipeline.ts --skip-extract # hoppa över steg 2
  *   npx tsx 09-ScrapingSupervisor/ingestionPipeline.ts --skip-import  # hoppa över steg 3
  *   npx tsx 09-ScrapingSupervisor/ingestionPipeline.ts --limit N      # max N sources
  *   npx tsx 09-ScrapingSupervisor/ingestionPipeline.ts --dry-run      # logga men kör ej
+ *
+ * D-renderGate-cadence (steg 1d): körs bara om ≥ D_RENDER_FREQUENCY_DAYS dagar
+ * sedan senaste lyckade körning (default 90, set env för att ändra).
+ * State sparas i runtime/scraping-supervisor/d-render-lastrun.json.
+ * --force-d bryter gate. --skip-d hoppar alltid över.
  *
  * Loggar till runtime/scraping-supervisor/pipeline-{ISO-date}.log
  * Skriver sammanfattning till runtime/scraping-supervisor/pipeline-summary.jsonl
@@ -43,6 +51,8 @@ const TSX_BIN = path.join(PROJECT_ROOT, 'node_modules', '.bin', 'tsx');
 const RUN_A_PATH = path.join(PROJECT_ROOT, '02-Ingestion/A-directAPI-networkGate/runA.ts');
 const RUN_B_PATH = path.join(PROJECT_ROOT, '02-Ingestion/B-JSON-feedGate/runB-parallel.ts');
 const RUN_DAI_HOOK_PATH = path.join(PROJECT_ROOT, '02-Ingestion/A-directAPI-networkGate/runA-dai-hook.ts');
+const RUN_BRIDGE_PATH = path.join(PROJECT_ROOT, '02-Ingestion/D-renderGate/bridge-pending-queue.ts');
+const RUN_D_PATH = path.join(PROJECT_ROOT, '02-Ingestion/D-renderGate/runD-scrapingbee.ts');
 const RUN_A_EXTRACT_PATH = path.join(PROJECT_ROOT, '02-Ingestion/A-directAPI-networkGate/runA-extract.ts');
 const IMPORT_PATH = path.join(PROJECT_ROOT, '03-Queue/importToEventPulse.ts');
 
@@ -140,6 +150,8 @@ interface CliOptions {
   skipA: boolean;
   skipB: boolean;
   skipDai: boolean;
+  skipD: boolean;
+  forceD: boolean;
   skipExtract: boolean;
   skipImport: boolean;
   dryRun: boolean;
@@ -151,6 +163,8 @@ function parseArgs(argv: string[]): CliOptions {
     skipA: argv.includes('--skip-a'),
     skipB: argv.includes('--skip-b'),
     skipDai: argv.includes('--skip-dai'),
+    skipD: argv.includes('--skip-d'),
+    forceD: argv.includes('--force-d'),
     skipExtract: argv.includes('--skip-extract'),
     skipImport: argv.includes('--skip-import'),
     dryRun: argv.includes('--dry-run'),
@@ -170,7 +184,7 @@ async function main(): Promise<number> {
   log(`═══════════════════════════════════════════════════════════`, fileLog);
   log(`  EventPulse ingestionPipeline  │  ${opts.dryRun ? 'DRY-RUN' : 'LIVE'}`, fileLog);
   log(`═══════════════════════════════════════════════════════════`, fileLog);
-  log(`  skip-a=${opts.skipA} skip-b=${opts.skipB} skip-dai=${opts.skipDai} skip-extract=${opts.skipExtract} skip-import=${opts.skipImport} limit=${opts.limit ?? '∞'}`, fileLog);
+  log(`  skip-a=${opts.skipA} skip-b=${opts.skipB} skip-dai=${opts.skipDai} skip-d=${opts.skipD} force-d=${opts.forceD} skip-extract=${opts.skipExtract} skip-import=${opts.skipImport} limit=${opts.limit ?? '∞'}`, fileLog);
 
   const startedAt = Date.now();
   const results: StepResult[] = [];
@@ -206,6 +220,66 @@ async function main(): Promise<number> {
   } else {
     const args = ['--cap', '5'];
     results.push(await runStep('runA-dai-hook', RUN_DAI_HOOK_PATH, args, fileLog));
+  }
+
+  // Steg 1d: bridge + runD-scrapingbee — dränera render-kön
+  // bridge flyttar scheduler-skrivna pending_render_queue-poster till postTestC-D-format
+  // runD renderar JS-sidor via Scrapingbee och skriver postD-UI/-man1/-man
+  //
+  // Cadence: som default körs D-renderGate bara var 90:e dag (~kvartalsvis) för att
+  // hålla Scrapingbee-kostnaden nere (~600 credits/körning × 4 = 2400/år).
+  // Konfigurerbart via D_RENDER_FREQUENCY_DAYS env var. --force-d bryter gate.
+  // skipD (--skip-d) har förtur — om satt hoppas steget över helt.
+  const D_RENDER_FREQUENCY_DAYS = parseInt(process.env.D_RENDER_FREQUENCY_DAYS || '90', 10);
+  const dStatePath = path.join(LOG_DIR, 'd-render-lastrun.json');
+
+  function readLastDRun(): string | null {
+    try {
+      if (!fs.existsSync(dStatePath)) return null;
+      return JSON.parse(fs.readFileSync(dStatePath, 'utf8')).lastRun || null;
+    } catch { return null; }
+  }
+  function writeLastDRun(iso: string): void {
+    fs.mkdirSync(path.dirname(dStatePath), { recursive: true });
+    fs.writeFileSync(dStatePath, JSON.stringify({ lastRun: iso }, null, 2) + '\n', 'utf8');
+  }
+
+  const lastDRun = readLastDRun();
+  const daysSinceLast = lastDRun
+    ? Math.floor((Date.now() - new Date(lastDRun).getTime()) / (1000 * 60 * 60 * 24))
+    : Infinity;
+  const isCadenceDue = opts.forceD || daysSinceLast >= D_RENDER_FREQUENCY_DAYS;
+  const cadenceReason = opts.forceD
+    ? '--force-d'
+    : lastDRun == null
+      ? 'no previous run'
+      : `${daysSinceLast} days since last run (threshold ${D_RENDER_FREQUENCY_DAYS})`;
+
+  if (opts.skipD) {
+    log(`[step:bridge-pending-queue] SKIPPED (--skip-d)`, fileLog);
+    log(`[step:runD-scrapingbee] SKIPPED (--skip-d)`, fileLog);
+    results.push({ step: 'bridge-pending-queue', exitCode: 0, durationMs: 0, skipped: true, stdoutTail: '', stderrTail: '' });
+    results.push({ step: 'runD-scrapingbee', exitCode: 0, durationMs: 0, skipped: true, stdoutTail: '', stderrTail: '' });
+  } else if (!isCadenceDue) {
+    log(`[step:D-renderGate] SKIPPED — cadence gate (${cadenceReason})`, fileLog);
+    log(`  next run in ${D_RENDER_FREQUENCY_DAYS - daysSinceLast} days`, fileLog);
+    results.push({ step: 'bridge-pending-queue', exitCode: 0, durationMs: 0, skipped: true, stdoutTail: '', stderrTail: '' });
+    results.push({ step: 'runD-scrapingbee', exitCode: 0, durationMs: 0, skipped: true, stdoutTail: '', stderrTail: '' });
+  } else {
+    log(`[step:D-renderGate] RUNNING (${cadenceReason})`, fileLog);
+    const bridgeResult = await runStep('bridge-pending-queue', RUN_BRIDGE_PATH, ['--drain'], fileLog);
+    results.push(bridgeResult);
+    // cap=5 för att inte bränna Scrapingbee-credits på en okontrollerad batch
+    const runDArgs = ['--cap', '5'];
+    const runDResult = await runStep('runD-scrapingbee', RUN_D_PATH, runDArgs, fileLog);
+    results.push(runDResult);
+    // Uppdatera last-run ENDAST om båda steg lyckades — annars försöker vi igen imorgon
+    if (bridgeResult.exitCode === 0 && runDResult.exitCode === 0) {
+      writeLastDRun(new Date().toISOString());
+      log(`[step:D-renderGate] cadence updated — next run in ${D_RENDER_FREQUENCY_DAYS} days`, fileLog);
+    } else {
+      log(`[step:D-renderGate] cadence NOT updated (bridge=${bridgeResult.exitCode} runD=${runDResult.exitCode})`, fileLog);
+    }
   }
 
   // Steg 2: runA-extract

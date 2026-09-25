@@ -201,12 +201,27 @@ function toIsoEndTime(endDate?: string, endTime?: string, startDate?: string, st
 }
 
 function readExtractedEvents(sourceId: string): ExtractedEvent[] {
-  const file = path.join(EXTRACTED_DIR, `${sourceId}.jsonl`);
-  if (!fs.existsSync(file)) return [];
-  return fs.readFileSync(file, 'utf-8')
-    .split('\n').filter(l => l.trim())
-    .map(l => JSON.parse(l) as ExtractedEvent)
-    .filter(e => e !== null);
+  // Primär sökväg: top-level (legacy A/B/C utan subdir)
+  const topLevel = path.join(EXTRACTED_DIR, `${sourceId}.jsonl`);
+  if (fs.existsSync(topLevel)) {
+    return fs.readFileSync(topLevel, 'utf-8')
+      .split('\n').filter(l => l.trim())
+      .map(l => JSON.parse(l) as ExtractedEvent)
+      .filter(e => e !== null);
+  }
+  // Fallback: gate-subdirs (A/, B/, C/, D/) — D-renderGate skriver hit.
+  // Returnerar första match — samma sourceId ska bara finnas i en gate.
+  const gateDirs = ['D', 'C', 'B', 'A'];
+  for (const gate of gateDirs) {
+    const subFile = path.join(EXTRACTED_DIR, gate, `${sourceId}.jsonl`);
+    if (fs.existsSync(subFile)) {
+      return fs.readFileSync(subFile, 'utf-8')
+        .split('\n').filter(l => l.trim())
+        .map(l => JSON.parse(l) as ExtractedEvent)
+        .filter(e => e !== null);
+    }
+  }
+  return [];
 }
 
 export function toRawEvent(sourceId: string, ev: ExtractedEvent): RawEventInput {
@@ -314,9 +329,18 @@ async function main() {
     process.exit(1);
   }
 
-  const sourceFiles = fs.readdirSync(EXTRACTED_DIR)
-    .filter(f => f.endsWith('.jsonl'))
-    .map(f => f.replace(/\.jsonl$/, ''))
+  // Samla sourceIds från både top-level (legacy) och gate-subdirs (A/B/C/D)
+  const sourceIds = new Set<string>();
+  for (const entry of fs.readdirSync(EXTRACTED_DIR, { withFileTypes: true })) {
+    if (entry.isFile() && entry.name.endsWith('.jsonl')) {
+      sourceIds.add(entry.name.replace(/\.jsonl$/, ''));
+    } else if (entry.isDirectory()) {
+      for (const f of fs.readdirSync(path.join(EXTRACTED_DIR, entry.name))) {
+        if (f.endsWith('.jsonl')) sourceIds.add(f.replace(/\.jsonl$/, ''));
+      }
+    }
+  }
+  const sourceFiles = [...sourceIds]
     .filter(id => onlySources == null || onlySources.has(id))
     .slice(0, limit);
 

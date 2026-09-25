@@ -28,7 +28,7 @@ agent has a healthier event graph.
 |---|---|---|
 | **0. Pre-routing skip** (Fas 2.1) | `lastRoutingReason` matches `postB-preC:` or `toolB(preB)` | Return `null` from `pickHealTier` → `healOne` logs `deferred` and skips the daily slot. Pre-routing API failures are not healable; the operator needs to address them upstream. |
 | **1. Transport** | `lastRoutingReason` matches `Fetch failed`, `ENOTFOUND`, `ETIMEDOUT`, `ECONNRESET` | `renderPage()` via ScrapingBee → count JSON-LD events → `updateSourceStatus({status: 'success', lastPathUsed: 'render'})` |
-| **2. No-jsonld** | `lastRoutingReason` matches `no-jsonld`, `no events`, `empty`, `0 events` | `discoverEventCandidates()` → if winner: `runPipeline({sourceId, url: winner.url})` → save adapter → mark `pendingNextTool: 'D-renderGate'` |
+| **2. No-jsonld** | `lastRoutingReason` matches `no-jsonld`, `no events`, `empty`, `0 events` | `discoverEventCandidates()` → if winner: `runPipeline({sourceId, url: winner.url})` → save adapter → mark `pendingNextTool: 'D-renderGate'`. **Fas 4:** if C0 returns no winner, falls through to per-source Exa lookup (`exaLookup.ts`) which searches for the real event-listing URL on the same domain (e.g. riksarkivet.se/evenemang → /kalendarium). If Exa surfaces a usable URL, C0 + pipeline run against it. |
 | **3. Retire** | `consecutiveFailures ≥ 5` AND `lastSuccess` > 30 days ago | Append to `retired.jsonl` (audit-only). Never deletes from `sources/`. |
 
 ## File map
@@ -39,6 +39,7 @@ agent has a healthier event graph.
 | `heal.ts` | 3-tier heal pipeline (`healOne(failing, opts)`) |
 | `promote.ts` | Promote candidate → source (`promoteOne(candidate, opts)`) |
 | `expand.ts` | Weekly Exa seed expansion (`expandSeeds({force, maxNew})`) |
+| `exaLookup.ts` | **Fas 4:** per-source Exa URL discovery (`lookupSourceUrl({id, url, name})`). Same-domain filter, graceful when key missing. Called from `healTier2NoJsonld` when C0 returns no winner. |
 | `agent.ts` | Orchestrator (`runAgent({cap, dryRun, forceExpand})`) |
 | `cron/runDaily.sh` | Bash wrapper called by launchd |
 | `cron/com.eventpulse.discovery.plist` | launchd job (Hour=4 Minute=30) |
@@ -127,3 +128,23 @@ MAX=2 npx tsx 09-DiscoveryAgent/agent.ts
 # 5. Check audit logs
 tail -f runtime/discovery-agent/runs.jsonl
 ```
+
+## Fas 4 — Per-source Exa lookup
+
+When `healTier2NoJsonld` runs C0 against the source's current URL and gets no
+winner (most common: the URL has 0 event markers — e.g. riksarkivet.se/evenemang),
+`exaLookup.lookupSourceUrl()` runs an Exa search for the source's name +
+"evenemang" and returns same-domain URLs. The first such URL is fed back into
+C0 + `runPipeline`. Audit fields on `HealResult.after.exaLookup`:
+
+- `exaAvailable` — whether EXA_API_KEY was set when the lookup ran
+- `urlsFound` — number of same-domain URLs Exa returned (≤ 3)
+- `triedUrl` — the URL the pipeline actually ran against (only when recovery happened)
+- `skippedReason` — error string when Exa was unavailable or errored
+
+Graceful: when EXA_API_KEY is missing or Exa returns an error, the tier-2
+flow continues with the original `deferred` outcome — the source keeps its
+current URL and the audit log shows why Exa was skipped.
+
+Cost: Exa is ~0.001 USD per call. One call per failing source per heal cycle
+(typically once per day before the `hasRepeatableError` short-circuit kicks in).

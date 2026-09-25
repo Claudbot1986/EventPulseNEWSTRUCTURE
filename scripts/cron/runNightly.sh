@@ -44,6 +44,7 @@ run ingestion   bash scripts/cron/runIngestion.sh
 run purge       bash scripts/start-purge.sh
 run supervisor  "$TSX_BIN" 09-ScrapingSupervisor/runDaily.ts
 run discovery   bash 09-DiscoveryAgent/cron/runDaily.sh
+run mrq-prune   "$TSX_BIN" scripts/prune-mrq.ts --commit
 
 echo "[nightly] ═══ KLAR $(date -u +%Y-%m-%dT%H:%M:%SZ) ═══  ${RES[*]}"
 

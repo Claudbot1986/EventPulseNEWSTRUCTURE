@@ -42,6 +42,7 @@ import {
   nowIso,
   type FailingSource,
 } from './eval.js';
+import { lookupSourceUrl } from './exaLookup.js';
 
 // ─── Types ─────────────────────────────────────────────────────────────────
 
@@ -67,6 +68,15 @@ export interface HealResult {
     adapterPath?: string;
     candidatesFound?: number;
     winnerUrl?: string;
+    /** Fas 4: per-source Exa lookup audit trail (only set on tier 2). */
+    exaLookup?: {
+      exaAvailable: boolean;
+      urlsFound: number;
+      /** URL from Exa that the pipeline actually ran against (if any). */
+      triedUrl?: string;
+      /** Reason Exa was skipped (no key, no queries, error). */
+      skippedReason?: string;
+    };
   };
   error?: string;
 }
@@ -296,7 +306,7 @@ export function collectEventNodes(node: unknown): number {
 // ─── Tier 2: no-jsonld ─────────────────────────────────────────────────────
 
 async function healTier2NoJsonld(
-  source: { id: string; url: string },
+  source: { id: string; url: string; name?: string },
   status: { consecutiveFailures: number; lastRoutingReason?: string },
   before: HealResult['before'],
   start: number,
@@ -313,7 +323,56 @@ async function healTier2NoJsonld(
     throw new Error(`C0 discovery failed: ${err instanceof Error ? err.message : String(err)}`);
   });
 
-  const winner = discovery.winner;
+  const initialWinner = discovery.winner;
+
+  // Fas 4: when C0 finds no winner on the source's current URL, ask Exa for
+  // the real event-listing path on the same domain (riksarkivet.se/evenemang
+  // → /kalendarium pattern). If Exa surfaces a usable URL, run C0 + pipeline
+  // against it. If not, fall through to the original 'deferred' path so the
+  // source keeps its URL and we don't waste slots.
+  let exaAudit: HealResult['after']['exaLookup'];
+  let candidateUrl: string | undefined;
+  let candidateWinnerUrl: string | undefined;
+  let candidateCandidatesFound = 0;
+
+  if (!initialWinner) {
+    const lookup = await lookupSourceUrl(
+      { id: source.id, url: source.url, name: source.name },
+      { maxUrls: 1 },
+    );
+    exaAudit = {
+      exaAvailable: lookup.exaAvailable,
+      urlsFound: lookup.urls.length,
+      skippedReason: lookup.error,
+    };
+    if (lookup.urls.length > 0) {
+      candidateUrl = lookup.urls[0];
+      try {
+        const candidateDiscovery = await Promise.race([
+          discoverEventCandidates(candidateUrl, undefined, source.id),
+          new Promise<never>((_, reject) =>
+            setTimeout(
+              () => reject(new Error('discoverEventCandidates timeout')),
+              timeout,
+            ),
+          ),
+        ]);
+        if (candidateDiscovery.winner) {
+          candidateWinnerUrl = candidateDiscovery.winner.url;
+          candidateCandidatesFound = candidateDiscovery.candidatesFound;
+        }
+      } catch {
+        // candidate C0 failed — fall through to deferred, Exa audit still recorded
+      }
+    }
+  }
+
+  const winner = initialWinner
+    ? { url: initialWinner.url, candidatesFound: discovery.candidatesFound }
+    : candidateWinnerUrl
+      ? { url: candidateWinnerUrl, candidatesFound: candidateCandidatesFound }
+      : null;
+
   if (!winner) {
     return {
       sourceId: source.id,
@@ -324,6 +383,7 @@ async function healTier2NoJsonld(
       after: {
         events: before.events,
         candidatesFound: discovery.candidatesFound,
+        exaLookup: exaAudit,
       },
       error: `no winner: ${discovery.winnerReason ?? 'unknown'}`,
     };
@@ -341,6 +401,13 @@ async function healTier2NoJsonld(
 
   const adapterPath = `runtime/adapters/${source.id}.json`;
   const eventsFound = pipelineResult.eventsFound ?? 0;
+
+  // If the winner URL came from Exa (different from source.url), record the
+  // redirect path so the audit log explains how we got there.
+  const usedExaUrl =
+    candidateUrl !== undefined && candidateWinnerUrl !== undefined
+      ? candidateUrl
+      : undefined;
 
   if (!options.dryRun && pipelineResult.validationPassed) {
     // T0107 fix: the registry derives status from success/error — the old call
@@ -366,8 +433,14 @@ async function healTier2NoJsonld(
     after: {
       events: eventsFound,
       adapterPath: pipelineResult.validationPassed ? adapterPath : undefined,
-      candidatesFound: discovery.candidatesFound,
+      candidatesFound: discovery.candidatesFound + winner.candidatesFound,
       winnerUrl: winner.url,
+      exaLookup: exaAudit
+        ? {
+            ...exaAudit,
+            triedUrl: usedExaUrl,
+          }
+        : undefined,
     },
     error: pipelineResult.validationPassed
       ? undefined
