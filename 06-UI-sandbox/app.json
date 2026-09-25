@@ -1,0 +1,28 @@
+{
+  "expo": {
+    "name": "EventPulse Sandbox",
+    "slug": "eventpulse-sandbox",
+    "version": "0.1.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "dark",
+    "scheme": "eventpulse-sandbox",
+    "icon": "./assets/icon.png",
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.tomorgashi.eventpulse.sandbox",
+      "buildNumber": "1"
+    },
+    "android": {
+      "package": "com.tomorgashi.eventpulse.sandbox",
+      "versionCode": 1,
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#000000"
+      }
+    },
+    "web": {
+      "favicon": "./assets/favicon.png"
+    },
+    "plugins": ["expo-status-bar"]
+  }
+}
