@@ -12,7 +12,7 @@
  * fallback chain: chosen → en → sv).
  */
 
-import { dateNamesFor } from '../../i18n/dateNames';
+import { dateNamesFor } from '../../../i18n/dateNames';
 
 /** Parse a YYYY-MM-DD (or datetime) string to a local Date at noon, or null. */
 function parseIsoLocal(isoDate) {

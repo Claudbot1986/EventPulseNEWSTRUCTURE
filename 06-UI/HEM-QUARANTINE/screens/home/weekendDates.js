@@ -11,7 +11,7 @@
  * chronologically (Fre → Lör → Sön) — compareDayTimeAsc + dayLabelForIso.
  */
 
-import { dateNamesFor } from '../../i18n/dateNames';
+import { dateNamesFor } from '../../../i18n/dateNames';
 
 function localIso(d) {
   const pad = (n) => String(n).padStart(2, '0');

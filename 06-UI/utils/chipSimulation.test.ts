@@ -17,7 +17,7 @@ import { describe, it, expect } from 'vitest';
 
 import { resolvePromptIntent } from './promptIntent';
 import { applyBrowseFilters } from './browseFilters';
-import { nextLocalWeekdayIso } from '../screens/home/happeningNow';
+import { nextLocalWeekdayIso } from '../HEM-QUARANTINE/screens/home/happeningNow';
 import type { ChipCase } from './chipCatalog.testkit';
 
 const NOW = new Date(2026, 8, 23, 15, 0); // Wed 23 Sep 2026 15:00
