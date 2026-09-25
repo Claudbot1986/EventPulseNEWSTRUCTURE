@@ -1,18 +1,21 @@
-// EventPulseSenasteCard — Spotify-stil kvadratisk tile.
+// EventPulseSenasteCard — Spotify-stil tile med avklippt botten.
 //
-// Används i "Senaste"-sektionen: liten kvadratisk bild + bold rubrik +
-// muted subtitle (t.ex. "Spellista • Anastasia"). Spegel av Spotifys
+// Används i "Senaste"-sektionen: avkapad bild + bold rubrik + muted
+// subtitle (t.ex. "Spellista • Anastasia"). Spegel av Spotifys
 // "Senaste"-rail i Hem-vyn.
 //
 // Skillnad mot EventPulseCard:
-// - Bild: kvadratisk (1:1) istället för 1.15
-// - Kortet är smalare (130 istället för 150)
+// - Kortet är 91 px (130 * 0.7 — bildstorleken minskad 30 % 2026-09-25)
+// - Bild: aspectRatio 1.15 + cover (samma kapning som EventPulseCard —
+//   bilden kapas upptill och nedtill, vilket ger "avklippt botten"-
+//   utseendet som är binding för EventPulse-kort)
 // - Rubrik: 14pt / 800 istället för 13pt / 700 (tyngre, tydligare)
 // - Subtitle: 12pt / 500 istället för 13pt / 600 (metadata-känsla)
 // - Title numberOfLines=2 (samma som EventPulseCard), subtitle=1
 //
 // Tokens från DESIGN_SYSTEM.md (binding 2026-09-25). Spacing från
 // SPACING.md: imageToTitle=8 (på skala), titleToSubtitle=4 (på skala).
+// CARD_WIDTH=91 är off-scale — undantag för denna kort-variant.
 
 import { Image, Pressable, StyleSheet, Text, View } from 'react-native';
 
@@ -36,7 +39,7 @@ const TOKENS = {
   },
 };
 
-const CARD_WIDTH = 130;
+const CARD_WIDTH = 91; // 130 * 0.7 — bildstorlek -30 % (binding 2026-09-25)
 
 // Normaliserar imageSource till ett format <Image> accepterar.
 // Samma hjälpfunktion som EventPulseCard — duplicerad här för att
@@ -101,7 +104,10 @@ const styles = StyleSheet.create({
   },
   imageWrap: {
     width: '100%',
-    aspectRatio: 1, // kvadratisk (Skillnad mot EventPulseCard: 1.15)
+    // Binding (DESIGN_SYSTEM.md § Canonical card anatomy): aspectRatio
+    // 1.15 + resizeMode cover kapar bilden upptill/nedtill — detta är
+    // "avklippt botten"-mönstret. Samma behandling som EventPulseCard.
+    aspectRatio: 1.15,
     overflow: 'hidden',
     backgroundColor: TOKENS.color.bg,
     borderWidth: 0.5,

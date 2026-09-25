@@ -42,7 +42,7 @@ const SKELETON_DEFAULT_COUNT = 4;
 const SCREEN_PADDING = 20;
 
 // Skelett-kort med samma geometri som EventPulseSenasteCard
-// (CARD_WIDTH=130, aspectRatio 1). Spegel av EventPulseCarousel/SkeletonCard.
+// (CARD_WIDTH=91, aspectRatio 1.15). Spegel av EventPulseCarousel/SkeletonCard.
 function SkeletonCard() {
   return (
     <View
@@ -128,12 +128,14 @@ const styles = StyleSheet.create({
 
 const skeletonStyles = StyleSheet.create({
   card: {
-    width: 130, // måste matcha EventPulseSenasteCard.CARD_WIDTH exakt
+    width: 91, // måste matcha EventPulseSenasteCard.CARD_WIDTH exakt
     gap: 8,
   },
   image: {
     width: '100%',
-    aspectRatio: 1,
+    // Måste matcha EventPulseSenasteCard imageWrap — annars hoppar
+    // layouten när datan landar.
+    aspectRatio: 1.15,
     backgroundColor: TOKENS.color.skeleton,
     borderWidth: 0.5,
     borderColor: TOKENS.color.border,
