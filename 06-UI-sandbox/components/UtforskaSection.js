@@ -36,13 +36,15 @@ const TOKENS = {
     subtitle:      { size: 13, weight: '500' },
     badge:         { size: 11, weight: '800', letterSpacing: 0.5 },
     thumbFallback: { size: 18, weight: '900', letterSpacing: 0.5 },
-    menu:          { size: 22, weight: '900' },
+    menu:          { size: 14, weight: '900' },
     eyebrow:       { size: 11, weight: '800', letterSpacing: 1.6 },
     heading:       { size: 28, weight: '900', letterSpacing: -0.8 },
     subhead:       { size: 13, weight: '500' },
   },
   space: {
-    padX: 16,
+    padX: 8,              // liten marginal på både höger och vänster
+                         // (användarens val 2026-09-27 — helt flush var
+                         // för mycket, men 16 var för mycket indrag)
     padTop: 48,           // SPACING.md binding
     padBottom: 32,
     rowGap: 0,            // separeras med rowHeight + border
@@ -51,7 +53,8 @@ const TOKENS = {
     thumbRadius: 6,
     middleGap: 12,
     subtitleGap: 4,
-    menuHit: 24,
+    menuHit: 18,          // ⋯ knappens träffyta (användarens val
+                         // 2026-09-27 — "avsevärt mindre" från 24)
   },
 };
 
@@ -293,10 +296,9 @@ export default function UtforskaSection() {
 const styles = StyleSheet.create({
   scroll: {
     paddingTop: TOKENS.space.padTop,
-    paddingHorizontal: 0,           // Spotify-stil: rubriker och rader
-                                    // flush mot vänsterkanten (användarens
-                                    // val 2026-09-26 — padX=16 var för
-                                    // mycket indrag).
+    paddingHorizontal: TOKENS.space.padX,    // liten marginal båda sidor
+                                              // (användarens val 2026-09-27
+                                              // — helt flush var för mycket)
     paddingBottom: TOKENS.space.padBottom,
     backgroundColor: TOKENS.color.bg,
   },
