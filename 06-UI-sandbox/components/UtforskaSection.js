@@ -42,9 +42,9 @@ const TOKENS = {
     subhead:       { size: 13, weight: '500' },
   },
   space: {
-    padX: 0,              // inga marginaler — listan kant-till-kant
-                         // (användarens val 2026-09-27 — återkallad
-                         // 4px-marginal, ska vara 0)
+    padX: 4,              // minimal marginal — listan nästan kant-till-kant
+                         // (användarens val 2026-09-27 — "lite mer svart"
+                         // önskas nu när sandbox-wrapper-marginalen är borta)
     padTop: 48,           // SPACING.md binding
     padBottom: 32,
     rowGap: 0,            // separeras med rowHeight + border
@@ -296,7 +296,7 @@ export default function UtforskaSection() {
 const styles = StyleSheet.create({
   scroll: {
     paddingTop: TOKENS.space.padTop,
-    paddingHorizontal: TOKENS.space.padX,    // padX=0 → listan kant-till-kant
+    paddingHorizontal: TOKENS.space.padX,    // padX=4 → 4px luft på varje sida
                                               // (användarens val 2026-09-27)
     paddingBottom: TOKENS.space.padBottom,
     backgroundColor: TOKENS.color.bg,
