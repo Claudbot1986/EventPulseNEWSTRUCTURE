@@ -188,6 +188,7 @@ export default {
   'home.subtitle.free': 'Free',
   'home.subtitle.upptack': 'Beyond your bubble',
   'home.subtitle.errorUnknown': 'unknown error',
+  'home.emptySection': 'No events in this section right now.',
 
   // ─── Utforska-tiles (Hem, dev-gated EXPO_PUBLIC_EXPLORE_TILES) ───────────
   // 'skratt' prompt keeps detectable genre words ('standup', 'comedy') so

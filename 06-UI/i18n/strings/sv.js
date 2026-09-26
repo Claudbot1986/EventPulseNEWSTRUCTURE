@@ -191,6 +191,7 @@ export default {
   'home.subtitle.free': 'Gratis',
   'home.subtitle.upptack': 'Bortom din bubbla',
   'home.subtitle.errorUnknown': 'okänt fel',
+  'home.emptySection': 'Inga events i denna sektion just nu.',
 
   // Hem-karuseller (2026-09-24, en rad per kategori). Fyra nya rader efter
   // HappeningNow: varje rad ÄR en kategori, alla kort i raden delar samma

@@ -1,111 +1,79 @@
-// EventPulseCarousel — horisontellt scrollbar kort-rad i Spotify-författar-
-// stil (kvadratisk bild + titel + subtitle, mörk bakgrund).
+// EventPulseCarousel — horisontellt scrollbar kort-rad i Spotify-stil.
 //
-// Bildformat: 187×187px kvadratisk (`aspectRatio: 1`). Korten är 187px breda
-// med 16px gap, wrappern har -20px marginal så första kortet ligger kant-i-
-// kant med skärmen (samma känsla som Spotify, Audible, etc.).
+// Använder EventPulseCard (samma komponent som återanvänds på Hem) så att
+// varje karusell-kort har identisk geometri/typografi. Skillnad mot
+// 06-UI/components/EventPulseCarousel.js: prod har en egen intern Card
+// (CARD_WIDTH=187) eftersom HomeScreen behöver en annan storlek — här
+// i sandboxen återanvänder vi EventPulseCard direkt (CARD_WIDTH=150).
 //
-// Data är en dynamisk array — komponenten äger inte innehållet. Användaren
-// av komponenten bygger listan och skickar in den:
+// Data: komponenten äger inte innehållet. Anroparen bygger listan:
 //
 //   const cards = [
 //     { id: 'helg', title: 'Helgens alla händelser', subtitle: 'Helg',
-//       imageUrl: require('../assets/exploreTiles/helg.png'),
-//       onPress: () => openUtforska({ prompt_text: 'Helgens evenemang', dayFilter: 'weekend' }) },
+//       imageUrl: require('../assets/tile-1.png'),
+//       onPress: () => {} },
 //     ...
 //   ];
 //   <EventPulseCarousel cards={cards} headerText="Tid" />
 //
-// Bildkrav: 1:1 (kvadratisk), AI-genererade bilder förväntas vara stämplade
-// med "● AI-genererad" i nedre-vänstra hörnet (samma pipeline som prod).
-// Om imageUrl saknas renderas en placeholder (mörk View med subtitle-text).
+// States:
+//   - default:   visas om `cards.length > 0` och `loading === false`
+//   - loading:   visas bara om `loading === true` OCH `cards.length === 0`
+//                (så refresh medan cache lever inte hoppar i layout)
+//   - empty:     return null — dölj hela karusellen (Hellre en sektion
+//                mindre än en tom rad)
 //
-// Loading: om `loading` är true visas `skeletonCount` (default 4) skeleton-
-// kort i samma storlek så layouten är stabil medan datan hämtas.
+// Bildkrav: kvadratisk (1.15 aspect) eller godtycklig — EventPulseCard
+// normaliserar redan sträng-URL / require-nummer / null via sourceOf().
 //
-// i18n: titel + subtitle förväntas redan vara översatta av anroparen. Ingen
-// useI18n-hook inuti — komponenten är ren.
-//
-// Format-spec från sandbox: 06-UI-sandbox/components/HorizontalCardCarousel.js
-// (skillnad: sandbox använder konstanter i CARDS/CARD_SOURCES, denna är
-// datadriven).
+// i18n: titel + subtitle förväntas vara översatta av anroparen. Ingen
+// useI18n-hook inuti.
 
 import {
-  Image,
   ScrollView,
   StyleSheet,
   Text,
   View,
-  Pressable,
 } from 'react-native';
+import EventPulseCard from './EventPulseCard';
 
+// 2026-09-25 — tokens från DESIGN_SYSTEM.md (binding). Identiska med
+// EventPulseCard förutom `header` (16pt / 800 / text) och `skeleton`.
 const TOKENS = {
   color: {
     bg: '#000000',
-    border: '#2A2A33',      // 2026-09-24 — lyft från #1A1A1A så placeholder-
-                              // kanten är synlig mot #000 canvas
+    border: '#2A2A33',
     text: '#F7F2EA',
     textMuted: '#9AA3B5',
-    // Placeholder-bakgrund är mörkare grå än bilden är tänkt att vara —
-    // gör det uppenbart att "här saknas bild" istället för att gissa.
-    placeholder: '#1F1F26',
-    placeholderText: '#8B92A1',  // 2026-09-24 — lyft från #3A4254 (var i stort
-                                  // sett osynlig mot #000) till läsbar grå.
     skeleton: '#15151B',
+  },
+  font: {
+    header: { size: 16, weight: '800', letterSpacing: -0.2 },
+  },
+  space: {
+    headerToRow: 12,
+    sectionGap: 24,
+    cardGap: 16,
   },
 };
 
-const CARD_WIDTH = 187;
 const SKELETON_DEFAULT_COUNT = 4;
+const SCREEN_PADDING = 20;
 
-function Card({ title, subtitle, imageUrl, onPress }) {
-  // 2026-09-24: RN:s <Image source={...}> MÅSTE vara objektform {uri:'…'}
-  // eller ett require()-nummer. En raw string ("https://…") renderas inte
-  // — tyst fallthrough, den svarta imageWrap-bakgrunden syns istället.
-  // sourceOf() normaliserar båda formerna (sträng-URL och require-resultat).
-  const source = sourceOf(imageUrl);
-  return (
-    <Pressable
-      onPress={onPress}
-      style={({ pressed }) => [styles.card, pressed && styles.cardPressed]}
-      accessibilityRole="button"
-      accessibilityLabel={`${subtitle} — ${title}`}
-    >
-      <View style={styles.imageWrap}>
-        {source ? (
-          <Image source={source} style={styles.image} resizeMode="cover" />
-        ) : (
-          <View style={styles.placeholder}>
-            <Text style={styles.placeholderText}>{subtitle}</Text>
-          </View>
-        )}
-      </View>
-      <Text style={styles.title} numberOfLines={2} ellipsizeMode="tail">
-        {title}
-      </Text>
-      <Text style={styles.subtitle} numberOfLines={1} ellipsizeMode="tail">
-        {subtitle}
-      </Text>
-    </Pressable>
-  );
-}
-
-// Normaliserar imageUrl till RN:s {uri:…} — eller null om ej användbart.
-// Accepterar sträng-URL:er och require()-nummer (asset registry).
-function sourceOf(imageUrl) {
-  if (!imageUrl) return null;
-  if (typeof imageUrl === 'number') return imageUrl;          // require()-resultat
-  if (typeof imageUrl === 'string') return imageUrl.length > 0 ? { uri: imageUrl } : null;
-  if (typeof imageUrl === 'object' && imageUrl.uri) return imageUrl; // redan {uri:'…'}
-  return null;
-}
-
+// Skeleton-kort med samma geometri som EventPulseCard (CARD_WIDTH=150,
+// aspectRatio 1.15) så layouten inte hoppar när datan landar. Återger
+// inte hela EventPulseCard — skeleton behöver ingen bild/text, bara
+// samma "kostym".
 function SkeletonCard() {
   return (
-    <View style={styles.card} accessibilityLabel="loading">
-      <View style={[styles.imageWrap, styles.skeletonImage]} />
-      <View style={styles.skeletonTitle} />
-      <View style={styles.skeletonSubtitle} />
+    <View
+      style={skeletonStyles.card}
+      accessibilityLabel="loading"
+      accessible
+    >
+      <View style={skeletonStyles.image} />
+      <View style={skeletonStyles.titleLine} />
+      <View style={skeletonStyles.subtitleLine} />
     </View>
   );
 }
@@ -114,19 +82,46 @@ export default function EventPulseCarousel({
   cards = [],
   headerText = null,
   loading = false,
+  emptyText = null,
   skeletonCount = SKELETON_DEFAULT_COUNT,
 }) {
   const visibleCards = Array.isArray(cards) ? cards : [];
 
-  if (!loading && visibleCards.length === 0) return null;
+  // 2026-09-26 — produkt-besked från användaren: hellre synlig section med
+  // empty-state än att hela karusellen försvinner (användaren märkte inte
+  // att sektionen fanns när den gömdes). Tidigare returnerade vi null här.
+  // Behåller headern och visar emptyText inuti. Om emptyText är null
+  // faller vi tillbaka till att dölja sektionen (beteendet innan 2026-09-26).
+  const isEmpty = !loading && visibleCards.length === 0;
+  if (isEmpty && !emptyText) return null;
 
-  // Visas bara skelett när vi faktiskt inte har något att visa — om data
-  // redan finns (refresh medan cache lever) behåller vi de riktiga korten
-  // så layouten inte hoppar.
+  // Skelett bara när vi faktiskt inte har något att visa — refresh
+  // medan cache lever behåller de riktiga korten så layouten är stabil.
   const showSkeletons = loading && visibleCards.length === 0;
 
+  if (isEmpty && emptyText) {
+    return (
+      <View
+        style={styles.section}
+        accessibilityRole="list"
+        accessibilityLabel={headerText ? `${headerText} — karusell` : 'Karusell'}
+      >
+        {headerText ? (
+          <Text style={styles.header}>{headerText}</Text>
+        ) : null}
+        <View style={styles.emptyWrapper}>
+          <Text style={styles.emptyText}>{emptyText}</Text>
+        </View>
+      </View>
+    );
+  }
+
   return (
-    <View style={styles.section}>
+    <View
+      style={styles.section}
+      accessibilityRole="list"
+      accessibilityLabel={headerText ? `${headerText} — karusell` : 'Karusell'}
+    >
       {headerText ? (
         <Text style={styles.header}>{headerText}</Text>
       ) : null}
@@ -141,11 +136,11 @@ export default function EventPulseCarousel({
                 <SkeletonCard key={`skeleton-${i}`} />
               ))
             : visibleCards.map((card) => (
-                <Card
+                <EventPulseCard
                   key={card.id}
                   title={card.title}
                   subtitle={card.subtitle}
-                  imageUrl={card.imageUrl}
+                  imageSource={card.imageUrl}
                   onPress={card.onPress}
                 />
               ))}
@@ -157,84 +152,63 @@ export default function EventPulseCarousel({
 
 const styles = StyleSheet.create({
   section: {
-    marginBottom: 24, // TOKENS.space.xl
+    marginBottom: TOKENS.space.sectionGap,
   },
   header: {
     color: TOKENS.color.text,
-    fontSize: 16,
-    fontWeight: '800',
-    letterSpacing: -0.2,
-    paddingHorizontal: 20,
-    marginBottom: 12, // TOKENS.space.md
+    fontSize: TOKENS.font.header.size,
+    fontWeight: TOKENS.font.header.weight,
+    letterSpacing: TOKENS.font.header.letterSpacing,
+    // Edge-bleed så headern ligger i linje med kortens vänsterkant.
+    // Spegel av clipWrapper-mönstret nedan — utan detta hade headern
+    // legat 20 px inåt jämfört med första kortets bild.
+    marginHorizontal: -SCREEN_PADDING,
+    paddingHorizontal: SCREEN_PADDING,
+    marginBottom: TOKENS.space.headerToRow,
   },
+  // -20/+20 edge-bleed så första kortet ligger kant-i-kant med skärmen,
+  // men texten (header) behåller 20 px padding. Standard EventPulse-mönster.
   clipWrapper: {
-    marginHorizontal: -20,
+    marginHorizontal: -SCREEN_PADDING,
     overflow: 'hidden',
   },
   row: {
-    paddingHorizontal: 20,
-    gap: 16,
+    paddingHorizontal: SCREEN_PADDING,
+    gap: TOKENS.space.cardGap,
   },
+  emptyWrapper: {
+    // Tom-wrapper utan padding-top så texten ligger i linje med första
+    // kortets vänsterkant. paddingHorizontal matchar SCREEN_PADDING så
+    // texten inte klistras mot kanten.
+    paddingHorizontal: SCREEN_PADDING,
+    paddingVertical: 8,
+  },
+  emptyText: {
+    color: TOKENS.color.textMuted,
+    fontSize: 13,
+    fontWeight: '400',
+  },
+});
+
+const skeletonStyles = StyleSheet.create({
   card: {
-    width: CARD_WIDTH,
+    width: 150, // måste matcha EventPulseCard.CARD_WIDTH exakt
     gap: 8,
-  },
-  cardPressed: {
-    opacity: 0.85,
-  },
-  imageWrap: {
-    width: '100%',
-    aspectRatio: 1,
-    overflow: 'hidden',
-    backgroundColor: TOKENS.color.bg,
-    borderWidth: 1,
-    borderColor: TOKENS.color.border,
   },
   image: {
     width: '100%',
-    height: '100%',
-  },
-  placeholder: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: TOKENS.color.placeholder,
-    padding: 8,
-  },
-  placeholderText: {
-    color: TOKENS.color.placeholderText,
-    fontSize: 12,
-    fontWeight: '700',
-    letterSpacing: 0.4,
-    textAlign: 'center',
-    lineHeight: 16,
-  },
-  title: {
-    color: TOKENS.color.text,
-    fontSize: 15,
-    fontWeight: '800',
-    letterSpacing: -0.2,
-    lineHeight: 20,
-  },
-  subtitle: {
-    color: TOKENS.color.textMuted,
-    fontSize: 13,
-    fontWeight: '600',
-    letterSpacing: 0.1,
-  },
-  // Skeleton (loading state) — sama geometri som riktiga kortet så layouten
-  // hoppar inte när datan landar. Färgen är `--surface` (#15151B) från
-  // HomeScreen.js TOKENS — samma som övriga skeletons i appen.
-  skeletonImage: {
+    aspectRatio: 1.15,
     backgroundColor: TOKENS.color.skeleton,
+    borderWidth: 0.5,
+    borderColor: TOKENS.color.border,
   },
-  skeletonTitle: {
+  titleLine: {
     width: '85%',
     height: 14,
     borderRadius: 4,
     backgroundColor: TOKENS.color.skeleton,
   },
-  skeletonSubtitle: {
+  subtitleLine: {
     width: '55%',
     height: 11,
     borderRadius: 4,

@@ -61,12 +61,34 @@ export default function EventPulseSenaste({
   cards = [],
   headerText = null,
   loading = false,
+  emptyText = null,
   skeletonCount = SKELETON_DEFAULT_COUNT,
 }) {
   const visibleCards = Array.isArray(cards) ? cards : [];
 
-  if (!loading && visibleCards.length === 0) return null;
+  // 2026-09-26 — samma empty-state-policy som EventPulseCarousel: visa
+  // headern + emptyText istället för att gömma hela sektionen. Om
+  // emptyText är null, fall tillbaka till gammalt beteende (dölj).
+  const isEmpty = !loading && visibleCards.length === 0;
+  if (isEmpty && !emptyText) return null;
   const showSkeletons = loading && visibleCards.length === 0;
+
+  if (isEmpty && emptyText) {
+    return (
+      <View
+        style={styles.section}
+        accessibilityRole="list"
+        accessibilityLabel={headerText ? `${headerText} — karusell` : 'Karusell'}
+      >
+        {headerText ? (
+          <Text style={styles.header}>{headerText}</Text>
+        ) : null}
+        <View style={styles.emptyWrapper}>
+          <Text style={styles.emptyText}>{emptyText}</Text>
+        </View>
+      </View>
+    );
+  }
 
   return (
     <View
@@ -123,6 +145,15 @@ const styles = StyleSheet.create({
   row: {
     paddingHorizontal: SCREEN_PADDING,
     gap: TOKENS.space.cardGap,
+  },
+  emptyWrapper: {
+    paddingHorizontal: SCREEN_PADDING,
+    paddingVertical: 8,
+  },
+  emptyText: {
+    color: '#9AA3B5',
+    fontSize: 13,
+    fontWeight: '400',
   },
 });
 
