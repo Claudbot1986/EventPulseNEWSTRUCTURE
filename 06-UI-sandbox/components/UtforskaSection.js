@@ -42,9 +42,9 @@ const TOKENS = {
     subhead:       { size: 13, weight: '500' },
   },
   space: {
-    padX: 8,              // liten marginal på både höger och vänster
-                         // (användarens val 2026-09-27 — helt flush var
-                         // för mycket, men 16 var för mycket indrag)
+    padX: 0,              // inga marginaler — listan ska gå kant-till-kant
+                         // (användarens val 2026-09-27 — 8px var för
+                         // mycket svart på sidorna)
     padTop: 48,           // SPACING.md binding
     padBottom: 32,
     rowGap: 0,            // separeras med rowHeight + border
@@ -296,9 +296,9 @@ export default function UtforskaSection() {
 const styles = StyleSheet.create({
   scroll: {
     paddingTop: TOKENS.space.padTop,
-    paddingHorizontal: TOKENS.space.padX,    // liten marginal båda sidor
-                                              // (användarens val 2026-09-27
-                                              // — helt flush var för mycket)
+    paddingHorizontal: TOKENS.space.padX,    // padX=0 → listan kant-till-kant
+                                              // (användarens val 2026-09-27 —
+                                              // 8px var för mycket svart)
     paddingBottom: TOKENS.space.padBottom,
     backgroundColor: TOKENS.color.bg,
   },
