@@ -52,6 +52,7 @@ import MapView, { Marker, PROVIDER_DEFAULT } from 'react-native-maps';
 import { fetchFeed } from '../services/agentClient';
 import { useI18n } from '../i18n';
 import { dateNamesFor } from '../i18n/dateNames';
+import { getStockholmParts } from '../services/localTime';
 
 // ─── TOKENS — mirrored from docs/UI-DESIGN.md ────────────────────────────────
 const TOKENS = {
@@ -132,12 +133,17 @@ function formatTime(timeString) {
   return String(timeString).slice(0, 5);
 }
 
+// 2026-09-26 — same timezone-explicit fix as App.js: route through
+// localTime so weekday/day/month reflect Europe/Stockholm for the
+// calendar day, not the device's local interpretation of UTC midnight.
 function formatDateShort(dateString, language = 'sv') {
   if (!dateString) return '';
-  const date = new Date(`${dateString}T00:00:00`);
-  if (Number.isNaN(date.getTime())) return dateString;
+  const parts = getStockholmParts(`${dateString}T12:00:00Z`);
+  if (!parts) return dateString;
   const { daysShort, monthsShort } = dateNamesFor(language);
-  return `${daysShort[date.getDay()]} ${date.getDate()} ${monthsShort[date.getMonth()]}`;
+  const WEEKDAY_INDEX = { Sunday:0, Monday:1, Tuesday:2, Wednesday:3, Thursday:4, Friday:5, Saturday:6 };
+  const idx = WEEKDAY_INDEX[parts.weekdayLong] ?? 0;
+  return `${daysShort[idx]} ${parts.day} ${monthsShort[parts.month - 1]}`;
 }
 
 // ─── Venue aggregation ───────────────────────────────────────────────────────

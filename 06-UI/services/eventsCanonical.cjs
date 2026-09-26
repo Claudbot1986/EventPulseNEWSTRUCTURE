@@ -3,6 +3,8 @@
  * Reads published events from Supabase (canonical truth).
  */
 
+const { formatLocalDate, formatLocalTime } = require('./localTime');
+
 const DEFAULT_SUPABASE_URL = 'https://bsllkpvkowwndhhxtlln.supabase.co';
 const DEFAULT_SERVICE_KEY =
   'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJzbGxrcHZrb3d3bmRoaHh0bGxuIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3MzMwMDQzNCwiZXhwIjoyMDg4ODc2NDM0fQ.2BJFgNoS0iP53WuPS_lyjNlHjy11_VLjKmcrhf5Dyis';
@@ -28,16 +30,11 @@ function supabaseHeaders(extra = {}) {
   };
 }
 
-function formatDate(iso) {
-  if (!iso) return '';
-  return iso.split('T')[0];
-}
-
-function formatTime(iso) {
-  if (!iso || !iso.includes('T')) return '';
-  const part = iso.split('T')[1];
-  return part.slice(0, 5);
-}
+// 2026-09-26 — same fix as the ESM mirror: was `iso.split('T')` which
+// returned UTC components verbatim. Stockholm users saw their 19:30
+// event as "17:30". Delegate to the shared localTime helper instead.
+const formatDate = formatLocalDate;
+const formatTime = formatLocalTime;
 
 function transformEvent(row) {
   const venue = row.venues || {};

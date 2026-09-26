@@ -11,6 +11,7 @@ import { localIsoOf, weekendFeedAnchorIso, nextLocalWeekdayIso } from './HEM-QUA
 import { applyBrowseFilters } from './utils/browseFilters';
 import { resolvePromptIntent, intentHasFilters } from './utils/promptIntent';
 import { useAiImageUrl } from './hooks/useAiImageUrl';
+import { getStockholmParts } from './services/localTime';
 import Toast from './components/Toast';
 import PushPromptModal from './components/PushPromptModal';
 import { enableDinHelgPush, isPushRuntimeAvailable } from './services/pushTokenClient';
@@ -168,21 +169,31 @@ function formatPrice(event, t) {
   return null;
 }
 
-// Format date for display (e.g., "Lör 21 mars") — day/month names follow the
-// active language via i18n/dateNames.
+// 2026-09-26 — weekday/day/month now resolved in Europe/Stockholm via
+// the shared localTime helper instead of `new Date(dateString).getDay()`
+// etc. The old version parsed YYYY-MM-DD as UTC midnight and read the
+// components back in the device's local timezone, which drifts by a day
+// for anyone west of UTC (or in some future case where a Stockholm
+// device runs in another zone). The helper handles the timezone once.
 function formatDate(dateString, language) {
   if (!dateString) return '';
-  const date = new Date(dateString);
+  // Noon UTC of the calendar day → stable weekday/month/day in Stockholm
+  // regardless of device timezone or DST.
+  const parts = getStockholmParts(`${dateString}T12:00:00Z`);
+  if (!parts) return dateString;
   const names = dateNamesFor(language);
-  return `${names.daysShort[date.getDay()]} ${date.getDate()} ${names.monthsShort[date.getMonth()]}`;
+  const idx = WEEKDAY_INDEX[parts.weekdayLong] ?? 0;
+  return `${names.daysShort[idx]} ${parts.day} ${names.monthsShort[parts.month - 1]}`;
 }
 
 // Format full date for details (e.g., "Fredag 20 mars 2026")
 function formatFullDate(dateString, language) {
   if (!dateString) return '';
-  const date = new Date(dateString);
+  const parts = getStockholmParts(`${dateString}T12:00:00Z`);
+  if (!parts) return dateString;
   const names = dateNamesFor(language);
-  return `${names.daysFull[date.getDay()]} ${date.getDate()} ${names.monthsFull[date.getMonth()]} ${date.getFullYear()}`;
+  const idx = WEEKDAY_INDEX[parts.weekdayLong] ?? 0;
+  return `${names.daysFull[idx]} ${parts.day} ${names.monthsFull[parts.month - 1]} ${parts.year}`;
 }
 
 // Format time for display in 24-hour Swedish format (e.g., "19:30")
@@ -192,36 +203,49 @@ function formatTime(timeString) {
   return `${hours}:${minutes}`;
 }
 
+// Map English long weekday names ("Monday") → JS Date.getDay() index
+// (Sun=0 … Sat=6). Used to look up Swedish names from dateNamesFor.
+const WEEKDAY_INDEX = {
+  Sunday: 0,
+  Monday: 1,
+  Tuesday: 2,
+  Wednesday: 3,
+  Thursday: 4,
+  Friday: 5,
+  Saturday: 6,
+};
+
 function formatEventTime(event, t) {
   const start = formatTime(event.time);
   return start || t('common.timeMissing');
 }
 
 // Format day header for grouped events (names follow the active language).
+// 2026-09-26 — all date math now goes through localTime so the "today" /
+// "tomorrow" comparison and weekday lookup are stable across timezones.
 function formatDayHeader(dateString, language, t) {
   if (!dateString) return '';
 
-  const date = new Date(dateString);
-  const today = new Date();
-  const todayDate = new Date(today.getFullYear(), today.getMonth(), today.getDate());
-  const tomorrow = new Date(todayDate);
-  tomorrow.setDate(tomorrow.getDate() + 1);
-  const eventDate = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+  const parts = getStockholmParts(`${dateString}T12:00:00Z`);
+  if (!parts) return dateString;
+
+  // Today/tomorrow in Europe/Stockholm (so a Swedish user sees "Idag"
+  // regardless of which timezone the device happens to claim).
+  const todayParts = getStockholmParts(new Date().toISOString());
+  const tomorrow = new Date();
+  tomorrow.setUTCDate(tomorrow.getUTCDate() + 1);
+  const tomorrowParts = getStockholmParts(tomorrow.toISOString());
 
   const names = dateNamesFor(language);
+  const idx = WEEKDAY_INDEX[parts.weekdayLong] ?? 0;
 
-  // Check if today
-  if (eventDate.getTime() === todayDate.getTime()) {
-    return t('common.today');
-  }
+  const sameDay = (a, b) =>
+    a && b && a.year === b.year && a.month === b.month && a.day === b.day;
 
-  // Check if tomorrow
-  if (eventDate.getTime() === tomorrow.getTime()) {
-    return t('common.tomorrow');
-  }
+  if (sameDay(parts, todayParts)) return t('common.today');
+  if (sameDay(parts, tomorrowParts)) return t('common.tomorrow');
 
-  // Otherwise, show day and date (e.g., "Lördag 14 mars")
-  return `${names.daysFull[date.getDay()]} ${date.getDate()} ${names.monthsFull[date.getMonth()]}`;
+  return `${names.daysFull[idx]} ${parts.day} ${names.monthsFull[parts.month - 1]}`;
 }
 
 // Group events by day, and group same-title events together within each day

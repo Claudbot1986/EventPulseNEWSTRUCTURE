@@ -4,6 +4,7 @@
  */
 
 import { createClient } from '@supabase/supabase-js';
+import { formatLocalDate, formatLocalTime } from './localTime';
 
 const DEFAULT_SUPABASE_URL = 'https://bsllkpvkowwndhhxtlln.supabase.co';
 const DEFAULT_SERVICE_KEY =
@@ -43,15 +44,12 @@ function supabaseHeaders(extra = {}) {
   };
 }
 
-function formatDate(iso) {
-  if (!iso) return '';
-  return iso.split('T')[0];
-}
-
-function formatTime(iso) {
-  if (!iso || !iso.includes('T')) return '';
-  return iso.split('T')[1].slice(0, 5);
-}
+// 2026-09-26 — was `iso.split('T')[0]` which returned the UTC calendar
+// date verbatim. That made a 19:30-CEST event look like "17:30" to the
+// user. formatLocalDate renders in Europe/Stockholm instead.
+const formatDate = formatLocalDate;
+// Same fix for the time field.
+const formatTime = formatLocalTime;
 
 export function transformEvent(row) {
   const venue = row.venues || {};
