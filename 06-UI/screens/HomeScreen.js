@@ -227,13 +227,13 @@ export default function HomeScreen({ onCardPress }) {
   const [ikvall, setIkvall] = useState({ status: 'loading', data: [], error: null });
   const [helgen, setHelgen] = useState({ status: 'loading', data: [], error: null });
   const [upptack, setUpptack] = useState({ status: 'loading', data: [], error: null });
-  // 2026-09-26 — 5 nya karuseller enligt docs/HOME-CAROUSELS-PLAN.md.
+  // 2026-09-26 — 4 nya karuseller enligt docs/HOME-CAROUSELS-PLAN.md
+  // (Online parkerad som future build — se docs/future-builds/online-carousel-2026-09-26.md).
   // Slutlig ordning i HomeScreen: För dig → Senaste → Ikväll → Imorgon →
-  // Helgen → Foodies → Gratis → Online → Nytt på Eventpulse → Upptäck.
+  // Helgen → Foodies → Gratis → Nytt på Eventpulse → Upptäck.
   const [imorgon, setImorgon] = useState({ status: 'loading', data: [], error: null });
   const [foodies, setFoodies] = useState({ status: 'loading', data: [], error: null });
   const [gratis, setGratis] = useState({ status: 'loading', data: [], error: null });
-  const [online, setOnline] = useState({ status: 'loading', data: [], error: null });
   const [nyttEventpulse, setNyttEventpulse] = useState({ status: 'loading', data: [], error: null });
 
   const unknownError = t('home.subtitle.errorUnknown');
@@ -432,25 +432,6 @@ export default function HomeScreen({ onCardPress }) {
         if (!cancelled) setGratis({ status: 'error', data: [], error: e?.message || unknownError });
       }
 
-      // ── Online (is_online=true, kräver migration) ──────────────
-      try {
-        const { data, error } = await supabase
-          .from('events_public')
-          .select('id, title_sv, title_en, description_sv, description_en, start_time, image_url, image_ai_generated, image_ai_optout, image_generation_status, ticket_url, source, category_slug, online_url')
-          .eq('is_online', true)
-          .gte('start_time', new Date().toISOString())
-          .order('start_time', { ascending: true })
-          .limit(20);
-        if (cancelled) return;
-        if (error) {
-          setOnline({ status: 'error', data: [], error: error.message });
-        } else {
-          setOnline({ status: 'ready', data: data || [], error: null });
-        }
-      } catch (e) {
-        if (!cancelled) setOnline({ status: 'error', data: [], error: e?.message || unknownError });
-      }
-
       // ── Nytt på Eventpulse (freshness_at 48h, klient-fallback 7d) ──
       // Jev 0.20 confidence på 48h-fönstret (smalt). Klient-side utökar
       // automatiskt till 7 dagar om <3 events returneras — säkrar tom-state.
@@ -576,12 +557,6 @@ export default function HomeScreen({ onCardPress }) {
         onPress: handleCardPress(e),
       }))
     : [];
-  const onlineCards = online.status === 'ready'
-    ? online.data.map((e) => ({
-        ...toCarouselCard(e, formatHelgenSubtitle(e, daysShort, t)),
-        onPress: handleCardPress(e),
-      }))
-    : [];
   const nyttEventpulseCards = nyttEventpulse.status === 'ready'
     ? nyttEventpulse.data.map((e) => ({
         ...toCarouselCard(e, formatHelgenSubtitle(e, daysShort, t)),
@@ -645,13 +620,6 @@ export default function HomeScreen({ onCardPress }) {
         headerText={t('home.sections.gratis')}
         cards={gratisCards}
         loading={gratis.status === 'loading'}
-        emptyText={t('home.emptySection')}
-      />
-
-      <EventPulseCarousel
-        headerText={t('home.sections.online')}
-        cards={onlineCards}
-        loading={online.status === 'loading'}
         emptyText={t('home.emptySection')}
       />
 

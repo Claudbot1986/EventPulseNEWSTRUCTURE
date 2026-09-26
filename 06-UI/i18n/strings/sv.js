@@ -183,13 +183,13 @@ export default {
   'home.sections.ikvall': 'Ikväll',
   'home.sections.helgen': 'Helgen',
   'home.sections.upptack': 'Upptäck',
-  // Hem-karuseller (2026-09-26): 5 nya sektioner enligt HOME-CAROUSELS-PLAN.md.
+  // Hem-karuseller (2026-09-26): 4 nya sektioner enligt HOME-CAROUSELS-PLAN.md.
   // Placering i HomeScreen: 4. Imorgon (→ efter Ikväll) / 6. Foodies (→ efter Helgen)
-  // 7. Gratis / 8. Online / 9. Nytt på Eventpulse (innan Upptäck som flyttas till #10).
+  // 7. Gratis / 8. Nytt på Eventpulse (innan Upptäck som flyttas till #9).
+  // Online parkerad som future build — se docs/future-builds/online-carousel-2026-09-26.md.
   'home.sections.gratis': 'Gratis',
   'home.sections.imorgon': 'Imorgon',
   'home.sections.foodies': 'Foodies',
-  'home.sections.online': 'Online',
   'home.sections.nyttEventpulse': 'Nytt på Eventpulse',
   'home.subtitle.today': 'i dag',
   'home.subtitle.tomorrow': 'i morgon',
