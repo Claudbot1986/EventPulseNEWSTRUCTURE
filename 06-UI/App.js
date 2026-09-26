@@ -7,7 +7,7 @@ import { fetchFeed, addDays, fetchEventIcs, shareSession, fetchSharedSession, pa
 import { useI18n } from './i18n';
 import { dateNamesFor } from './i18n/dateNames';
 import { isAuthDeepLink, isDinHelgDeepLink } from './services/deepLinkRouter';
-import { localIsoOf, weekendFeedAnchorIso, nextLocalWeekdayIso } from './screens/home/happeningNow';
+import { localIsoOf, weekendFeedAnchorIso, nextLocalWeekdayIso } from './HEM-QUARANTINE/screens/home/happeningNow';
 import { applyBrowseFilters } from './utils/browseFilters';
 import { resolvePromptIntent, intentHasFilters } from './utils/promptIntent';
 import { useAiImageUrl } from './hooks/useAiImageUrl';
