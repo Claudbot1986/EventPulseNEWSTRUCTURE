@@ -173,6 +173,22 @@ export default {
   'home.saved.title': 'Your saved events',
   'home.savedEmpty': '— no saved events yet —',
 
+  // Home supabase 5 sections (2026-09-25): For you → Latest → Tonight →
+  // Weekend → Discover. Section headers + Latest subtitles + Discover tagline.
+  'home.sections.fordig': 'For you',
+  'home.sections.senaste': 'Latest',
+  'home.sections.ikvall': 'Tonight',
+  'home.sections.helgen': 'Weekend',
+  'home.sections.upptack': 'Discover',
+  'home.subtitle.today': 'today',
+  'home.subtitle.tomorrow': 'tomorrow',
+  'home.subtitle.yesterday': 'yesterday',
+  'home.subtitle.dayBeforeYesterday': 'day before yesterday',
+  'home.subtitle.recommended': 'Recommended',
+  'home.subtitle.free': 'Free',
+  'home.subtitle.upptack': 'Beyond your bubble',
+  'home.subtitle.errorUnknown': 'unknown error',
+
   // ─── Utforska-tiles (Hem, dev-gated EXPO_PUBLIC_EXPLORE_TILES) ───────────
   // 'skratt' prompt keeps detectable genre words ('standup', 'comedy') so
   // promptIntent resolves the honest search row in en too.

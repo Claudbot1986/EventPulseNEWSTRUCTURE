@@ -1,6 +1,6 @@
 # 06-UI/HEM-QUARANTINE
 
-Hem-sektionen satt i karantän **2026-09-25**.
+Hem-trädet flyttades till karantän **2026-09-25** när home-tabben tog över Hem-supabase-logiken.
 
 ## Vad som finns här
 
@@ -25,19 +25,20 @@ HemStar-mock) tills vidare. 06-UI/Hem-sektionen pausades för att:
 - ge sandbox-teamet en ren yta utan 06-UI/provider-bloat
 - hålla App Store-byggen (Crash-free) opåverkade medan Hem* formas
 
-**Hem-tabben i BottomTabBar finns kvar** — den pekar nu på stubben i
-`06-UI/screens/HomeScreen.js` som visar en karantän-banner. Inga
-route/tab-ändringar krävs vid återställning.
+**Hem-tabben i BottomTabBar finns kvar** — den pekar nu på home-versionen
+i `06-UI/screens/HomeScreen.js` (Hem-supabase-logik med riktig Supabase-data,
+5 karuseller). Inga route/tab-ändringar krävs vid återställning.
 
 ## Vad som INTE är karantänsatt
 
-- `06-UI/AppShell.js` — oförändrad. `mountedTabsRef.current.home` lever
-  kvar och pekar på den nya stubben. `handleChipPress` /
-  `handleHomeCardPress` finns kvar men anropas inte (stubben ignorerar
-  props). Vid återställning plockas de i drift automatiskt.
+- `06-UI/screens/HomeScreen.js` — **aktiv home-version** (Hem-supabase-
+  logik, 5 karuseller, riktig Supabase-data).
+- `06-UI/services/supabaseClient.js` — minimal klient för home-tab.
+- `06-UI/components/EventPulseSenaste.js` + `EventPulseSenasteCard.js` —
+  Senaste-rail helpers (kopierade från sandbox).
+- `06-UI/AppShell.js` — pekar på nya HomeScreen med `onCardPress`.
 - `06-UI/components/BottomTabBar.js` — Hem-fliken orörd.
-- `06-UI/utils/chipSimulation.test.ts` — uppdaterad att importera från
-  `../HEM-QUARANTINE/screens/home/happeningNow` (enda externa beroende).
+- `06-UI/utils/chipSimulation.test.ts` — refererar HEM-QUARANTINE/helpers.
 - `06-UI-sandbox/` — aktiv utvecklingsyta. Hem-supabase och HemStar-mock
   byggs där, inte här.
 
@@ -45,11 +46,12 @@ route/tab-ändringar krävs vid återställning.
 
 | Yta | Vad | Status |
 |---|---|---|
-| `06-UI-sandbox/components/HemSupabase.js` | Spegel av Hem* med riktig Supabase-data (events_public) | Committad (b97e39b) |
+| `06-UI/screens/HomeScreen.js` | Home-tab med Hem-supabase-logik (5 karuseller, riktig Supabase-data) | Aktiv (2026-09-25) |
+| `06-UI-sandbox/components/HemSupabase.js` | Sandbox-spegel av home-versionen | Committad (b97e39b) |
 | `06-UI-sandbox/components/HemStar.js` | Mock-demo med ×3/×2/×1 minnes-funktion | Committad (06ab9ee) |
-| `06-UI-sandbox/components/registry.js` | Båda Hem-komponenterna listade | Committad |
+| `06-UI-sandbox/components/registry.js` | Sandbox-Hem-komponenterna listade | Committad |
 
-## Återställning
+## Återställning (Fas B — Hem* återvänder till 06-UI/)
 
 ```bash
 # Från project root:
@@ -61,11 +63,13 @@ git mv 06-UI/HEM-QUARANTINE/screens/home          06-UI/screens/home
 #   →
 # import { nextLocalWeekdayIso } from '../screens/home/happeningNow';
 
-# Radera stubben (nu ersatt av originalfilen):
-# 06-UI/screens/HomeScreen.js är ORIGINAL — ta INTE bort!
+# Hem-supabase-versionen blir då en av två mounts — välj en:
+# (a) Behåll Hem-supabase-montern, ersätt helpers i screens/home/
+# (b) Ersätt Hem-supabase-montern med original HomeScreen (chips + chipsim)
+
 rmdir 06-UI/HEM-QUARANTINE/screens
 rmdir 06-UI/HEM-QUARANTINE
 ```
 
-Inga andra kodändringar krävs — AppShell, BottomTabBar, TABS-arrayen
-är orörda och HomeScreen-originalen plockas upp av AppShell direkt.
+Inga andra kodändringar krävs för variant (a) — AppShell, BottomTabBar,
+TABS-arrayen är orörda.

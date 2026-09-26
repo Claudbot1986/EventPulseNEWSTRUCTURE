@@ -176,6 +176,22 @@ export default {
   'home.saved.title': 'Dina sparade evenemang',
   'home.savedEmpty': '— inga sparade evenemang ännu —',
 
+  // Hem-supabase 5 sektioner (2026-09-25): För dig → Senaste → Ikväll →
+  // Helgen → Upptäck. Section headers + Senaste-subtitles + Upptäck-tagline.
+  'home.sections.fordig': 'För dig',
+  'home.sections.senaste': 'Senaste',
+  'home.sections.ikvall': 'Ikväll',
+  'home.sections.helgen': 'Helgen',
+  'home.sections.upptack': 'Upptäck',
+  'home.subtitle.today': 'i dag',
+  'home.subtitle.tomorrow': 'i morgon',
+  'home.subtitle.yesterday': 'igår',
+  'home.subtitle.dayBeforeYesterday': 'i förrgår',
+  'home.subtitle.recommended': 'Rekommenderad',
+  'home.subtitle.free': 'Gratis',
+  'home.subtitle.upptack': 'Bortom din bubbla',
+  'home.subtitle.errorUnknown': 'okänt fel',
+
   // Hem-karuseller (2026-09-24, en rad per kategori). Fyra nya rader efter
   // HappeningNow: varje rad ÄR en kategori, alla kort i raden delar samma
   // filter. Spotify-explore-stil. Subtitle per kort = evenemangets egen

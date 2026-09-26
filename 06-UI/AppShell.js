@@ -471,7 +471,7 @@ export default function AppShell() {
         </View>
         {mountedTabsRef.current.home && (
           <View style={activeTab === 'home' ? styles.tabPanel : styles.tabHidden}>
-            <HomeScreen onChipPress={handleChipPress} onCardPress={handleHomeCardPress} />
+            <HomeScreen onCardPress={handleHomeCardPress} />
           </View>
         )}
         {mountedTabsRef.current.notifications && (
