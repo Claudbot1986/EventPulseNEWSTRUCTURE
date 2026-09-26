@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { StatusBar } from 'expo-status-bar';
-import { StyleSheet, Text, TextInput, View, SectionList, ActivityIndicator, TouchableOpacity, ScrollView, Linking, Image, Platform, Share, Alert, AppState, Pressable, Animated } from 'react-native';
+import { StyleSheet, Text, TextInput, View, ActivityIndicator, TouchableOpacity, ScrollView, Linking, Image, Platform, Share, Alert, AppState, Pressable, Animated } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { fetchFeed, addDays, fetchEventIcs, shareSession, fetchSharedSession, parseShareHashFromUrl, recordEventInteraction, isFetchCanceled } from './services/agentClient';
@@ -1162,110 +1162,44 @@ function HomeScreen({ onEventPress, scrollPositionRef, pendingIntent, dismissPen
         />
       )}
 
-      <SectionList
-        ListHeaderComponent={
-          <>
-            <ExploreTilesSection onChipPress={onTilePress} />
-            {pendingIntent ? (
-              <View style={styles.pendingPromptBanner} accessibilityRole="text">
-                <Text style={styles.pendingPromptEyebrow}>{t('explore.youAsked')}</Text>
-                <Text style={styles.pendingPromptText} numberOfLines={3}>
-                  {pendingIntent.text}
-                </Text>
-                <TouchableOpacity
-                  style={styles.pendingPromptDismiss}
-                  onPress={handleDismissPendingPrompt}
-                  accessibilityRole="button"
-                  accessibilityLabel={t('common.close')}
-                >
-                  <Text style={styles.pendingPromptDismissText}>{t('common.close')}</Text>
-                </TouchableOpacity>
-              </View>
-            ) : null}
-          </>
-        }
-        ListEmptyComponent={
-          trimmedSearch ? (
-            <StateView
-              title={t('explore.noSearchResults', { q: trimmedSearch })}
-              detail={null}
-              actionLabel={null}
-              onAction={null}
-            />
-          ) : (
-            <StateView
-              title={hasActiveFilters ? t('explore.emptyFilteredTitle') : t('explore.emptyTitle')}
-              detail={hasActiveFilters ? t('explore.emptyFilteredDetail') : t('explore.emptyDetail')}
-              actionLabel={hasActiveFilters ? t('explore.filter.clear') : t('common.retryFetch')}
-              onAction={hasActiveFilters ? clearFilters : loadEvents}
-            />
-          )
-        }
-          ref={sectionListRef}
-          sections={groupedEvents.map(group => ({
-            title: group.title,
-            data: group.events,
-          }))}
-          keyExtractor={(item, index) => {
-            if (item.isGrouped) {
-              return `grouped-${item.title}-${item.date}`;
-            }
-            return item.id ? `event-${item.id}` : `event-${item.source || 'unknown'}-${item.title}-${item.date || index}`;
-          }}
-          renderItem={({ item }) => (
-            item.isGrouped ? (
-              <GroupedEventItem
-                groupedEvent={item}
-                onEventPress={onEventPress}
-              />
-            ) : (
-              <EventItem
-                event={item}
-                onPress={() => onEventPress(item)}
-              />
-            )
-          )}
-          renderSectionHeader={({ section }) => (
-            <View style={styles.dayHeader}>
-              <Text style={styles.dayHeaderText}>{section.title}</Text>
-            </View>
-          )}
-          contentContainerStyle={styles.listContent}
-          showsVerticalScrollIndicator={false}
-          ListFooterComponent={loadingMore ? <LoadingMore /> : (!hasMore && groupedEvents.length > 0 ? (
-            <View style={styles.endOfList}>
-              <Text style={styles.endOfListText}>{t('explore.endOfList')}</Text>
-            </View>
-          ) : null)}
-          stickySectionHeadersEnabled={false}
-          viewabilityConfig={LIST_VIEW_CONFIG}
-          onViewableItemsChanged={handleViewableItemsChanged}
-          onEndReached={() => {
-            if (groupedEvents.length === 0) return;
-            if (!loadingMore && hasMore) {
-              const next = addDays(weekStart, 7);
-              setWeekStart(next);
-              loadEvents({ append: true, fromOverride: next });
-            }
-          }}
-          onEndReachedThreshold={0.5}
-          onScroll={(event) => {
-            const y = event.nativeEvent.contentOffset.y;
-            scrollPositionRefLocal.current = y;
-            if (scrollPositionRef) {
-              scrollPositionRef.current = y;
-            }
-            // Search-box collapse: hide on scroll down, bring back on scroll up.
-            const delta = y - searchLastYRef.current;
-            searchLastYRef.current = y;
-            if (!searchHidden && delta > SEARCH_HIDE_DELTA && y > SEARCH_HIDE_MIN_Y) {
-              setSearchHidden(true);
-            } else if (searchHidden && (delta < SEARCH_SHOW_DELTA || y <= SEARCH_HIDE_MIN_Y)) {
-              setSearchHidden(false);
-            }
-          }}
-          scrollEventThrottle={16}
-        />
+      <ScrollView
+        contentContainerStyle={styles.listContent}
+        showsVerticalScrollIndicator={false}
+        scrollEventThrottle={16}
+        onScroll={(event) => {
+          const y = event.nativeEvent.contentOffset.y;
+          scrollPositionRefLocal.current = y;
+          if (scrollPositionRef) {
+            scrollPositionRef.current = y;
+          }
+          // Search-box collapse: hide on scroll down, bring back on scroll up.
+          const delta = y - searchLastYRef.current;
+          searchLastYRef.current = y;
+          if (!searchHidden && delta > SEARCH_HIDE_DELTA && y > SEARCH_HIDE_MIN_Y) {
+            setSearchHidden(true);
+          } else if (searchHidden && (delta < SEARCH_SHOW_DELTA || y <= SEARCH_HIDE_MIN_Y)) {
+            setSearchHidden(false);
+          }
+        }}
+      >
+        <ExploreTilesSection onChipPress={onTilePress} />
+        {pendingIntent ? (
+          <View style={styles.pendingPromptBanner} accessibilityRole="text">
+            <Text style={styles.pendingPromptEyebrow}>{t('explore.youAsked')}</Text>
+            <Text style={styles.pendingPromptText} numberOfLines={3}>
+              {pendingIntent.text}
+            </Text>
+            <TouchableOpacity
+              style={styles.pendingPromptDismiss}
+              onPress={handleDismissPendingPrompt}
+              accessibilityRole="button"
+              accessibilityLabel={t('common.close')}
+            >
+              <Text style={styles.pendingPromptDismissText}>{t('common.close')}</Text>
+            </TouchableOpacity>
+          </View>
+        ) : null}
+      </ScrollView>
     </SafeAreaView>
   );
 }
