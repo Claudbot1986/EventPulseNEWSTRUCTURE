@@ -14,6 +14,7 @@ import EventPulseSenaste from './EventPulseSenaste';
 import HemScreen from './HemScreen';
 import HemStar from './HemStar';
 import HemSupabase from './HemSupabase';
+import UtforskaSection from './UtforskaSection';
 
 export const COMPONENT_REGISTRY = [
   {
@@ -149,6 +150,17 @@ export const COMPONENT_REGISTRY = [
       'För dig → Senaste → Ikväll → Helgen → Upptäck, samma minnes-funktion. ' +
       'Konfig: 06-UI-sandbox/.env måste ha EXPO_PUBLIC_SUPABASE_URL/ANON_KEY.',
     Component: HemSupabase,
+    sampleProps: {},
+  },
+  {
+    id: 'utforska-section',
+    name: 'UtforskaSection',
+    description:
+      'Sandbox-version av Utforska-flödet (dag-grupper + event-kort med ' +
+      'datumklumpar). Speglar originalets SectionList i 06-UI/App.js — ' +
+      'mock-data istället för Supabase, fristående komponent. Byggs här ' +
+      'INNAN originalet flyttas till 06-UI/utforska-section/ (karantän).',
+    Component: UtforskaSection,
     sampleProps: {},
   },
 ];
