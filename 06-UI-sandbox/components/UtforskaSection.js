@@ -195,13 +195,8 @@ function EventRow({ event, onPress, onMenuPress }) {
         </Text>
         {subtitleText ? (
           <View style={styles.subtitleRow}>
-            {event.badge ? (
-              <View style={styles.badge}>
-                <Text style={styles.badgeText}>{event.badge}</Text>
-              </View>
-            ) : null}
             <Text
-              style={[styles.subtitle, event.badge && styles.subtitleWithBadge]}
+              style={styles.subtitle}
               numberOfLines={1}
               ellipsizeMode="tail"
             >
@@ -252,8 +247,10 @@ export default function UtforskaSection() {
         testID="utforska-section-screen"
         showsVerticalScrollIndicator={false}
       >
-        <Text style={styles.eyebrow}>UTFORSKA · SANDBOX-PREVIEW</Text>
-        <Text style={styles.heading}>Utforska-flödet</Text>
+        <View style={styles.headingRow}>
+          <Text style={styles.eyebrow}>UTFORSKA · SANDBOX-PREVIEW</Text>
+          <Text style={styles.heading}>Utforska-flödet</Text>
+        </View>
         <Text style={styles.subhead}>
           Spotify-stil kompakta rader · {MOCK_EVENTS.length} mock-event · mock-data
           bytas mot riktig feed när komponenten flyttas in i 06-UI/.
@@ -295,14 +292,23 @@ const styles = StyleSheet.create({
     fontWeight: TOKENS.font.eyebrow.weight,
     letterSpacing: TOKENS.font.eyebrow.letterSpacing,
     textTransform: 'uppercase',
-    marginBottom: 4,
+  },
+  // headingRow — eyebrow + heading ligger på samma rad (användarens
+  // val 2026-09-27: "den gula delen bör ligga vid rubriken"). Baseline-
+  // alignment så det lilla eyebrow-texten sitter naturligt ihop med
+  // den stora heading-texten.
+  headingRow: {
+    flexDirection: 'row',
+    alignItems: 'baseline',
+    flexWrap: 'wrap',
+    gap: 10,
+    marginBottom: 8,
   },
   heading: {
     color: TOKENS.color.text,
     fontSize: TOKENS.font.heading.size,
     fontWeight: TOKENS.font.heading.weight,
     letterSpacing: TOKENS.font.heading.letterSpacing,
-    marginBottom: 8,
   },
   subhead: {
     color: TOKENS.color.textMuted,
@@ -364,21 +370,6 @@ const styles = StyleSheet.create({
     fontSize: TOKENS.font.subtitle.size,
     fontWeight: TOKENS.font.subtitle.weight,
     flexShrink: 1,
-  },
-  subtitleWithBadge: {
-    marginLeft: 6,
-  },
-  badge: {
-    backgroundColor: TOKENS.color.accentSoft,
-    paddingHorizontal: 6,
-    paddingVertical: 2,
-    borderRadius: 4,
-  },
-  badgeText: {
-    color: TOKENS.color.accent,
-    fontSize: TOKENS.font.badge.size,
-    fontWeight: TOKENS.font.badge.weight,
-    letterSpacing: TOKENS.font.badge.letterSpacing,
   },
   menuBtn: {
     width: TOKENS.space.menuHit,
