@@ -35,6 +35,7 @@ import EventPulseCarousel from '../components/EventPulseCarousel';
 import EventPulseSenaste from '../components/EventPulseSenaste';
 import { useI18n } from '../i18n';
 import { dateNamesFor } from '../i18n/dateNames';
+import { formatLocalTime } from '../services/localTime';
 
 const TOKENS = {
   color: {
@@ -55,6 +56,10 @@ const W_IMPRESSION = 1;
 const SENASTE_LIMIT = 5;
 const FORDIG_LIMIT = 10;
 const IKVALL_HOUR = 18;
+// 2026-09-26 — grace-period: events som startade upp till 20 minuter
+// innan "nu" räknas fortfarande som ikväll. Användaren hinner dit eller
+// kan hoppa in i pågående föreställning.
+const IKVALL_GRACE_MS = 20 * 60 * 1000;
 const UPPTACK_LIMIT = 5;
 
 function pickTitle(event) {
@@ -78,6 +83,50 @@ function toCarouselCard(event, subtitle) {
     title: pickTitle(event),
     subtitle,
     imageUrl: event.image_url || null,
+  };
+}
+
+// Normaliserar en Supabase-rad (events_public) till den shape DetailsScreen
+// (App.js) läser: event.id, event.title, event.url, event.hasExternalLink,
+// event.date, event.time, event.description, event.category, event.source,
+// event.image_url/imageUrl, event.image_ai_*. venue_name finns inte i
+// events_public (endast venue_id + lat/lng) — DetailsScreen visar då
+// "Plats ej angiven" via getVenueLabel-fallback.
+//
+// start_time är ISO-timestamp; splittas till date (YYYY-MM-DD) + time
+// (HH:MM) eftersom DetailsScreen läser dem separat via formatDate/formatTime.
+function toDetailsScreenEvent(row) {
+  if (!row || !row.id) return null;
+  const start = row.start_time ? new Date(row.start_time) : null;
+  const valid = !!start && !Number.isNaN(start.getTime());
+  // Lokala datum-komponenter — start_time är UTC (Supabase-konvention),
+  // DetailsScreen.renderar dag via date.getDay()/getDate() som är lokala.
+  // toISOString().slice(0,10) skulle ge UTC-datum → 1 dag fel för kvälls-events.
+  const date = valid
+    ? `${start.getFullYear()}-${String(start.getMonth() + 1).padStart(2, '0')}-${String(start.getDate()).padStart(2, '0')}`
+    : null;
+  const time = valid
+    ? `${String(start.getHours()).padStart(2, '0')}:${String(start.getMinutes()).padStart(2, '0')}`
+    : null;
+  const title = row.title_sv || row.title_en || 'Evenemang';
+  const description = row.description_sv || row.description_en || null;
+  const ticketUrl = row.ticket_url || null;
+  return {
+    id: row.id,
+    title,
+    url: ticketUrl,
+    hasExternalLink: Boolean(ticketUrl),
+    date,
+    time,
+    description,
+    category: row.category_slug || null,
+    source: row.source || null,
+    image_url: row.image_url || null,
+    imageUrl: row.image_url || null,
+    image_ai_generated: row.image_ai_generated === true,
+    image_ai_optout: row.image_ai_optout === true,
+    image_generation_status: row.image_generation_status || null,
+    is_free: row.is_free === true,
   };
 }
 
@@ -189,9 +238,13 @@ export default function HomeScreen({ onCardPress }) {
     async function loadAll() {
       // ── För dig ────────────────────────────────────────────────
       try {
+        // 2026-09-26 — filtrera bort redan-startade events (Chicago-musikalens
+        // 02:00-Stockholm-events har hög confidence_score och skulle annars
+        // fylla top-10). Visa bara framtida rekommendationer.
         const { data, error } = await supabase
           .from('events_public')
-          .select('id, title_sv, title_en, start_time, image_url, category_slug, is_free, confidence_score, freshness_at')
+          .select('id, title_sv, title_en, description_sv, description_en, start_time, image_url, image_ai_generated, image_ai_optout, image_generation_status, ticket_url, source, category_slug, is_free, confidence_score, freshness_at')
+          .gte('start_time', new Date().toISOString())
           .order('confidence_score', { ascending: false })
           .order('freshness_at', { ascending: false })
           .limit(FORDIG_LIMIT);
@@ -213,7 +266,7 @@ export default function HomeScreen({ onCardPress }) {
         future.setDate(today.getDate() + 21);
         const { data, error } = await supabase
           .from('events_public')
-          .select('id, title_sv, title_en, start_time, image_url, category_slug, confidence_score')
+          .select('id, title_sv, title_en, description_sv, description_en, start_time, image_url, image_ai_generated, image_ai_optout, image_generation_status, ticket_url, source, category_slug, confidence_score')
           .gte('start_time', today.toISOString())
           .lte('start_time', future.toISOString())
           .order('start_time', { ascending: false })
@@ -230,13 +283,23 @@ export default function HomeScreen({ onCardPress }) {
 
       // ── Ikväll ────────────────────────────────────────────────
       try {
-        const todayStart = startOfDay(new Date());
-        const todayEnd = new Date(todayStart);
+        // 2026-09-26 — användarens val: "visa events -20 min från nu och
+        // framåt". 20-minuters-grace fångar events som just har börjat
+        // (användaren hinner fortfarande dit / kan hoppa in i pågående
+        // föreställning). Hård `now`-gräns kändes för snäv.
+        const now = new Date();
+        const windowStart = new Date(now.getTime() - IKVALL_GRACE_MS);
+        const todayEnd = new Date();
         todayEnd.setHours(23, 59, 59, 999);
         const { data, error } = await supabase
           .from('events_public')
-          .select('id, title_sv, title_en, start_time, image_url, category_slug')
-          .gte('start_time', todayStart.toISOString())
+          .select('id, title_sv, title_en, description_sv, description_en, start_time, image_url, image_ai_generated, image_ai_optout, image_generation_status, ticket_url, source, category_slug')
+          // 2026-09-26 — tidigare .gte(todayStart) som innebar midnatt, så
+          // Chicago-events (02:00-Stockholm-tid pga ingestion-bugg) fyllde
+          // limit(40) och de riktiga ikväll-eventsen (18:00+) kom aldrig
+          // fram. .gte(windowStart) exkluderar både garbage och äkta
+          // förbi-events direkt i SQL — förutom grace-perioden på 20 min.
+          .gte('start_time', windowStart.toISOString())
           .lte('start_time', todayEnd.toISOString())
           .order('start_time', { ascending: true })
           .limit(40);
@@ -244,10 +307,13 @@ export default function HomeScreen({ onCardPress }) {
         if (error) {
           setIkvall({ status: 'error', data: [], error: error.message });
         } else {
-          // Klient-filter: ikväll = start_time med timme ≥ IKVALL_HOUR (18).
+          // Klient-filter: ikväll = start_time med Stockholm-timme ≥
+          // IKVALL_HOUR (18). formatLocalTime ger Europe/Stockholm-timme
+          // oavsett device-tidszon (getHours() var device-lokal och kunde
+          // ge fel timme om t.ex. simulator kör UTC).
           const filtered = (data || []).filter((e) => {
-            const tt = new Date(e.start_time);
-            return !Number.isNaN(tt.getTime()) && tt.getHours() >= IKVALL_HOUR;
+            const hh = Number(formatLocalTime(e.start_time).slice(0, 2));
+            return Number.isFinite(hh) && hh >= IKVALL_HOUR;
           });
           setIkvall({ status: 'ready', data: filtered, error: null });
         }
@@ -258,9 +324,13 @@ export default function HomeScreen({ onCardPress }) {
       // ── Helgen ────────────────────────────────────────────────
       try {
         const { from, to } = upcomingWeekend();
+        // 2026-09-26 — samma bugg som Ikväll: limit(40)+asc-sort fylldes av
+        // Chicago-events (02:00 Stockholm-tid) och andra redan-passrade
+        // events. .gte(now) släpper bara igenom framtida helg-events.
         const { data, error } = await supabase
           .from('events_public')
-          .select('id, title_sv, title_en, start_time, image_url, category_slug')
+          .select('id, title_sv, title_en, description_sv, description_en, start_time, image_url, image_ai_generated, image_ai_optout, image_generation_status, ticket_url, source, category_slug')
+          .gte('start_time', new Date().toISOString())
           .gte('start_time', from.toISOString())
           .lte('start_time', to.toISOString())
           .order('start_time', { ascending: true })
@@ -279,7 +349,7 @@ export default function HomeScreen({ onCardPress }) {
       try {
         const { data, error } = await supabase
           .from('events_public')
-          .select('id, title_sv, title_en, start_time, image_url, category_slug')
+          .select('id, title_sv, title_en, description_sv, description_en, start_time, image_url, image_ai_generated, image_ai_optout, image_generation_status, ticket_url, source, category_slug')
           .order('confidence_score', { ascending: true })
           .limit(UPPTACK_LIMIT);
         if (cancelled) return;
@@ -301,16 +371,21 @@ export default function HomeScreen({ onCardPress }) {
 
   // Senaste-rail: rangordna pool efter signal-score, ta topp 5.
   // Kallstart (alla scores = 0) ⇒ ursprunglig ordning (nyaste först).
+  // Behåller original-raderna (inte bara carousel-shape) så handleCardPress
+  // kan skicka hela Supabase-raden till DetailsScreen via AppShell.
   const senaste = useMemo(() => {
     if (senastePool.status !== 'ready') return [];
     const ranked = senastePool.data
       .map((event) => ({ ...event, _score: scoreFor(signals[event.id]) }))
       .sort((a, b) => b._score - a._score);
-    return ranked.slice(0, SENASTE_LIMIT).map((e) => toSenasteCard(e, daysShort));
-  }, [senastePool, signals, daysShort]);
+    return ranked.slice(0, SENASTE_LIMIT);
+  }, [senastePool, signals]);
 
   // Card-press: öka signal-score (för Senaste-omordning) + anropa
   // AppShell.handleHomeCardPress (öppnar DetailsScreen i Utforska).
+  // Skickar HELA Supabase-raden (normaliserad via toDetailsScreenEvent) så
+  // DetailsScreen får url/hasExternalLink/date/time/source/description etc.
+  // — inte bara id+title (det gjorde hela DetailsScreen tom i v1).
   // onCardPress är valfri prop — om AppShell inte skickar med den loggar
   // vi tyst (förhindrar krasch i tester / fristående demo).
   const handleCardPress = (event) => () => {
@@ -322,37 +397,38 @@ export default function HomeScreen({ onCardPress }) {
       },
     }));
     if (typeof onCardPress === 'function') {
-      onCardPress({ id: event.id, title: event.title });
+      const payload = toDetailsScreenEvent(event);
+      if (payload) onCardPress(payload);
     }
   };
 
-  const senasteWithHandlers = senaste.map((card) => ({
-    ...card,
-    onPress: handleCardPress({ id: card.id, title: card.title }),
+  const senasteWithHandlers = senaste.map((event) => ({
+    ...toSenasteCard(event, daysShort),
+    onPress: handleCardPress(event),
   }));
 
   const fordigCards = fordig.status === 'ready'
     ? fordig.data.map((e) => ({
         ...toCarouselCard(e, formatFordigSubtitle(e, t)),
-        onPress: handleCardPress({ id: e.id, title: pickTitle(e) }),
+        onPress: handleCardPress(e),
       }))
     : [];
   const ikvallCards = ikvall.status === 'ready'
     ? ikvall.data.map((e) => ({
         ...toCarouselCard(e, formatIkvallSubtitle(e, t)),
-        onPress: handleCardPress({ id: e.id, title: pickTitle(e) }),
+        onPress: handleCardPress(e),
       }))
     : [];
   const helgenCards = helgen.status === 'ready'
     ? helgen.data.map((e) => ({
         ...toCarouselCard(e, formatHelgenSubtitle(e, daysShort, t)),
-        onPress: handleCardPress({ id: e.id, title: pickTitle(e) }),
+        onPress: handleCardPress(e),
       }))
     : [];
   const upptackCards = upptack.status === 'ready'
     ? upptack.data.map((e) => ({
         ...toCarouselCard(e, t('home.subtitle.upptack')),
-        onPress: handleCardPress({ id: e.id, title: pickTitle(e) }),
+        onPress: handleCardPress(e),
       }))
     : [];
 
@@ -370,30 +446,35 @@ export default function HomeScreen({ onCardPress }) {
         headerText={t('home.sections.fordig')}
         cards={fordigCards}
         loading={fordig.status === 'loading'}
+        emptyText={t('home.emptySection')}
       />
 
       <EventPulseSenaste
         headerText={t('home.sections.senaste')}
         cards={senasteWithHandlers}
         loading={senastePool.status === 'loading'}
+        emptyText={t('home.emptySection')}
       />
 
       <EventPulseCarousel
         headerText={t('home.sections.ikvall')}
         cards={ikvallCards}
         loading={ikvall.status === 'loading'}
+        emptyText={t('home.emptySection')}
       />
 
       <EventPulseCarousel
         headerText={t('home.sections.helgen')}
         cards={helgenCards}
         loading={helgen.status === 'loading'}
+        emptyText={t('home.emptySection')}
       />
 
       <EventPulseCarousel
         headerText={t('home.sections.upptack')}
         cards={upptackCards}
         loading={upptack.status === 'loading'}
+        emptyText={t('home.emptySection')}
       />
     </ScrollView>
   );
@@ -405,6 +486,7 @@ HomeScreen.__formatSenasteSubtitle = formatSenasteSubtitle;
 HomeScreen.__formatIkvallSubtitle = formatIkvallSubtitle;
 HomeScreen.__formatHelgenSubtitle = formatHelgenSubtitle;
 HomeScreen.__upcomingWeekend = upcomingWeekend;
+HomeScreen.__toDetailsScreenEvent = toDetailsScreenEvent;
 HomeScreen.__W_READ_MORE = W_READ_MORE;
 HomeScreen.__W_CLICK = W_CLICK;
 HomeScreen.__W_IMPRESSION = W_IMPRESSION;
@@ -416,10 +498,11 @@ const styles = StyleSheet.create({
   },
   content: {
     // Padding ligger på contentContainerStyle så det skrollar med
-    // innehållet — sista sektionen har full paddingBottom och inte
-    // kapad av BottomTabBar.
+    // innehållet. paddingBottom = TAB_BAR_CLEARANCE (96) så sista
+    // karusellens titel inte skyms av BottomTabBar — samma konstant
+    // som ProfileScreen.js använder (rad 60).
     paddingTop: TOKENS.space.screenTop,
-    paddingBottom: 48,
+    paddingBottom: 96,
     paddingHorizontal: TOKENS.space.padX,
   },
 });
