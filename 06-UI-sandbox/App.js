@@ -30,9 +30,14 @@ function ComponentListItem({ item, onSelect }) {
 
 function ComponentDetail({ item, onBack }) {
   const ShowcaseComponent = item.Component;
+  const isFullWidth = Boolean(item.fullWidth);
+  // Showcase-rubrik (rubrik + ev. fullbredd-komponent) ligger alltid
+  // inne i padX:n. Om komponenten är fullbredd (t.ex. UtforskaSection
+  // som är designad kant-till-kant) bryts den UT ur padX:n så den inte
+  // får 20px sandbox-marginal på båda sidor.
   return (
     <ScrollView contentContainerStyle={styles.screen}>
-      <View style={styles.padX}>
+      <View style={isFullWidth ? undefined : styles.padX}>
         <Pressable
           style={({ pressed }) => [styles.backButton, pressed && styles.backButtonPressed]}
           onPress={onBack}
@@ -42,9 +47,15 @@ function ComponentDetail({ item, onBack }) {
           <Text style={styles.backText}>‹ Komponenter</Text>
         </Pressable>
         <Text style={styles.eyebrow}>{item.name.toUpperCase()}</Text>
+      </View>
+      {isFullWidth ? (
+        <ShowcaseComponent {...item.sampleProps} />
+      ) : (
         <View style={styles.showcase}>
           <ShowcaseComponent {...item.sampleProps} />
         </View>
+      )}
+      <View style={isFullWidth ? undefined : styles.padX}>
         <Text style={styles.itemDescription}>{item.description}</Text>
       </View>
     </ScrollView>

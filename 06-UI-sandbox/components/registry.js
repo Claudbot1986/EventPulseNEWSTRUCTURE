@@ -162,5 +162,8 @@ export const COMPONENT_REGISTRY = [
       'INNAN originalet flyttas till 06-UI/utforska-section/ (karantän).',
     Component: UtforskaSection,
     sampleProps: {},
+    // Renderas utan padX-wrapper i App.js — komponenten är redan
+    // kant-till-kant-designad och vill inte ha 20px sandbox-marginal.
+    fullWidth: true,
   },
 ];
