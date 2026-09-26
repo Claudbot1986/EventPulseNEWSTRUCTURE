@@ -258,21 +258,18 @@ export async function runCheckLinkHealth(opts: CheckOptions = {}): Promise<Check
 
   // Persist (skippa på dry-run).
   if (!dryRun) {
-    // Batch-update för att inte göra 200 enskilda UPDATE.
-    const updates = results.map((r) => ({
-      id: r.eventId,
-      link_status: r.status,
-      link_last_checked_at: new Date().toISOString(),
-    }));
-    // Supabase stöder inte bulk UPDATE via .update() — får gå rad-för-rad
-    // alternativt via en RPC. Här väljer vi rad-för-rad med små promises
-    // för enkelhetens skull; ~200 rader × ~10 ms = ~2 s, försumbart.
+    // 2026-09-26 — link-health Hybrid B (migration 0004). Använd RPC
+    // update_link_health_cf för att atomiskt uppdatera link_status +
+    // consecutive_broken_count + first_broken_at i en enda SQL-sats.
+    // RPC undviker Supabase-klientens CASE-begränsningar och ger
+    // deterministiskt resultat vid concurrent HEAD:s.
     await Promise.all(
-      updates.map(async (u) => {
-        const { error } = await client
-          .from('events')
-          .update({ link_status: u.link_status, link_last_checked_at: u.link_last_checked_at })
-          .eq('id', u.id);
+      results.map(async (r) => {
+        const { error } = await client.rpc('update_link_health_cf', {
+          p_event_id: r.eventId,
+          p_new_status: r.status,
+          p_checked_at: new Date().toISOString(),
+        });
         if (error) {
           // Logga men kasta inte — vi vill ha structured output.
           // Errors-as-data: returnera i results istället.

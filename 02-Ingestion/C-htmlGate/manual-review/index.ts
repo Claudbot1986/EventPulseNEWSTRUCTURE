@@ -319,6 +319,7 @@ export function submitForReview(
   note: string,
   submittedBy: string,
   projectRoot?: string,
+  payload?: Record<string, unknown>,
 ): { ok: boolean; entryId: string } {
   const entry: PendingEntry = {
     entryId: `cli:${sourceId}:${Date.now()}`,
@@ -327,6 +328,7 @@ export function submitForReview(
     queuedAt: new Date().toISOString(),
     reasonCode,
     note: `${note} (by ${submittedBy})`,
+    ...(payload !== undefined ? { payload } : {}),
   };
   const cliPath = projectRoot
     ? path.join(projectRoot, '02-Ingestion/C-htmlGate/manual-review/pending.jsonl')
