@@ -121,6 +121,38 @@ const PRICE_FILTERS = [
   { key: 'under_200', labelKey: 'explore.price.under200' },
 ];
 
+// Alla source/provider-adapters som finns i 06-UI/services/sources/.
+// i18n har bara labels för ticketmaster, kulturhuset och malmo-live —
+// övriga faller tillbaka till formatProviderLabel som returnerar raw key.
+// Bokstavsordning för stabilt UI-flöde.
+const SOURCE_FILTERS = [
+  { key: 'annexet', labelKey: 'source.annexet' },
+  { key: 'avicii-arena', labelKey: 'source.aviciiarena' },
+  { key: 'berwaldhallen', labelKey: 'source.berwaldhallen' },
+  { key: 'debaser', labelKey: 'source.debaser' },
+  { key: 'eventpulse', labelKey: 'source.eventpulse' },
+  { key: 'fotografiska', labelKey: 'source.fotografiska' },
+  { key: 'friends-arena', labelKey: 'source.friendsarena' },
+  { key: 'fryshuset', labelKey: 'source.fryshuset' },
+  { key: 'kulturhuset', labelKey: 'source.kulturhuset' },
+  { key: 'kulturhuset-barn-ung', labelKey: 'source.kulturhusetBarnUng' },
+  { key: 'malmo-live', labelKey: 'source.malmolive' },
+  { key: 'malmo-opera', labelKey: 'source.malmoopera' },
+  { key: 'slakthuset', labelKey: 'source.slakthuset' },
+  { key: 'sodra-teatern', labelKey: 'source.sodrateatern' },
+  { key: 'stockholmlive', labelKey: 'source.stockholmlive' },
+  { key: 'tele2-arena', labelKey: 'source.tele2arena' },
+  { key: 'ticketmaster', labelKey: 'source.ticketmaster' },
+];
+
+// status_expanded-filter. Default 'tillgangliga' = dol cancelled/postponed
+// (det beteendet de flesta vill ha). 'alla' = visa allt inkl. inställda.
+// Källa: 05-Supabase/migrations/20260818-0001-agent-event-graph.sql CHECK.
+const STATUS_FILTERS = [
+  { key: 'tillgangliga', labelKey: 'explore.status.tillgangliga' },
+  { key: 'alla', labelKey: 'explore.status.alla' },
+];
+
 // Format provider key to human-readable label via i18n. Unknown sources keep
 // their raw key so they stay traceable.
 function formatProviderLabel(key, t) {
@@ -636,6 +668,11 @@ function HomeScreen({ onEventPress, scrollPositionRef, pendingIntent, dismissPen
   const [timeFilter, setTimeFilter] = useState(null);
   const [selectedCategories, setSelectedCategories] = useState([]);
   const [priceFilter, setPriceFilter] = useState(null);
+  // Source-filter (provider): multi-select. Tom array = alla källor.
+  const [selectedSources, setSelectedSources] = useState([]);
+  // Status-filter (status_expanded): default 'tillgangliga' = dol cancelled/
+  // postponed. 'alla' = visa allt inkl. inställda.
+  const [statusFilter, setStatusFilter] = useState('tillgangliga');
   // Exact-day pin from chips like "Gratis på lördag" (resolved ISO), and the
   // auto search-prefill union terms for genre chips (visible text lives in
   // searchQuery; these are the actual any-match terms).
@@ -960,6 +997,8 @@ function HomeScreen({ onEventPress, scrollPositionRef, pendingIntent, dismissPen
     setTimeFilter(null);
     setSelectedCategories([]);
     setPriceFilter(null);
+    setSelectedSources([]);
+    setStatusFilter('tillgangliga');
     setPinnedDateIso(null);
     setQueryTerms(null);
     setSearchQuery('');
@@ -991,14 +1030,19 @@ function HomeScreen({ onEventPress, scrollPositionRef, pendingIntent, dismissPen
     timeFilter,
     priceFilter,
     selectedCategories,
+    selectedSources,
+    statusFilter,
     pinnedDateIso,
     queryTerms,
     searchText: trimmedSearch,
-  }), [events, timeFilter, selectedCategories, priceFilter, pinnedDateIso, queryTerms, trimmedSearch]);
+  }), [events, timeFilter, selectedCategories, priceFilter, selectedSources, statusFilter, pinnedDateIso, queryTerms, trimmedSearch]);
 
   const groupedEvents = useMemo(() => groupEventsByDay(filteredEvents, language, t), [filteredEvents, language, t]);
-  const hasActiveFilters = Boolean(timeFilter || selectedCategories.length > 0 || priceFilter || pinnedDateIso);
-  const activeFilterCount = (timeFilter ? 1 : 0) + (priceFilter ? 1 : 0) + selectedCategories.length + (pinnedDateIso ? 1 : 0);
+  // 'tillgangliga' är default-beteendet — räknas inte som aktivt filter.
+  // 'alla' räknas som aktivt filter (explicit val att visa inställda).
+  const statusFilterIsActive = statusFilter && statusFilter !== 'tillgangliga';
+  const hasActiveFilters = Boolean(timeFilter || selectedCategories.length > 0 || priceFilter || selectedSources.length > 0 || statusFilterIsActive || pinnedDateIso);
+  const activeFilterCount = (timeFilter ? 1 : 0) + (priceFilter ? 1 : 0) + selectedCategories.length + selectedSources.length + (statusFilterIsActive ? 1 : 0) + (pinnedDateIso ? 1 : 0);
 
   if (loading) {
     return <LoadingSkeleton />;
@@ -1138,6 +1182,50 @@ function HomeScreen({ onEventPress, scrollPositionRef, pendingIntent, dismissPen
                   <Text style={[
                     styles.filterButtonText,
                     selectedCategories.includes(filter.key) && styles.filterButtonTextActive
+                  ]}>
+                    {t(filter.labelKey)}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+            <Text style={styles.filterLabel}>{t('explore.filter.source')}</Text>
+            <View style={styles.filterDropdownRow}>
+              {SOURCE_FILTERS.map(filter => (
+                <TouchableOpacity
+                  key={filter.key}
+                  style={[
+                    styles.filterButton,
+                    selectedSources.includes(filter.key) && styles.filterButtonActive
+                  ]}
+                  onPress={() => setSelectedSources(prev =>
+                    prev.includes(filter.key)
+                      ? prev.filter(k => k !== filter.key)
+                      : [...prev, filter.key]
+                  )}
+                >
+                  <Text style={[
+                    styles.filterButtonText,
+                    selectedSources.includes(filter.key) && styles.filterButtonTextActive
+                  ]}>
+                    {t(filter.labelKey)}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+            <Text style={styles.filterLabel}>{t('explore.filter.status')}</Text>
+            <View style={styles.filterDropdownRow}>
+              {STATUS_FILTERS.map(filter => (
+                <TouchableOpacity
+                  key={filter.key}
+                  style={[
+                    styles.filterButton,
+                    statusFilter === filter.key && styles.filterButtonActive
+                  ]}
+                  onPress={() => setStatusFilter(filter.key)}
+                >
+                  <Text style={[
+                    styles.filterButtonText,
+                    statusFilter === filter.key && styles.filterButtonTextActive
                   ]}>
                     {t(filter.labelKey)}
                   </Text>
@@ -1970,7 +2058,9 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: TOKENS.color.borderStrong,
     borderRadius: TOKENS.radius.md,
-    padding: TOKENS.space.md,
+    paddingHorizontal: TOKENS.space.md,
+    paddingTop: TOKENS.space.sm,
+    paddingBottom: TOKENS.space.sm,
     maxHeight: 440,
     zIndex: 30,
     elevation: 30,
@@ -1983,12 +2073,12 @@ const styles = StyleSheet.create({
     textTransform: 'uppercase',
     paddingHorizontal: TOKENS.space.xl,
     marginTop: TOKENS.space.sm,
-    marginBottom: TOKENS.space.sm,
+    marginBottom: TOKENS.space.xs,
   },
   filterDropdownRow: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: TOKENS.space.sm,
+    gap: TOKENS.space.xs,
     paddingHorizontal: TOKENS.space.xl,
     paddingBottom: TOKENS.space.sm,
   },

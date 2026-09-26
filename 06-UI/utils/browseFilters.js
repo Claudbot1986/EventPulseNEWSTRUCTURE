@@ -6,7 +6,7 @@
  * explicitly where time matters, so tests are timezone- and run-date-proof.
  *
  * Filter chain order (applyBrowseFilters):
- *   categories → time → price → pinned date → query/search
+ *   categories → time → price → source → status → pinned date → query/search
  */
 
 /** Case- and accent-insensitive match text: NFD + combining-mark strip, so
@@ -123,6 +123,35 @@ export function matchesPinnedDate(event, isoDate) {
   return date === isoDate;
 }
 
+/** Source/provider filter — multi-select. Tom array = alla källor OK.
+ *  Källans värde kan vara både 'source' och 'provider' (alias för samma fält). */
+export function matchesSource(event, selectedSources) {
+  if (!selectedSources || selectedSources.length === 0) return true;
+  const source = event?.source ?? event?.provider;
+  if (!source) return false;
+  return selectedSources.includes(source);
+}
+
+/** status_expanded-filter.
+ *  - 'tillgangliga' (default): dol cancelled/postponed. Scheduled, sold_out,
+ *    rescheduled och NULL (pre-20260818-data) släpps igenom.
+ *  - 'alla': ingen filtrering — även cancelled/postponed visas.
+ *
+ *  status_expanded är NULL för majoriteten av events (pre-20260818-data)
+ *  och räknas som scheduled/tillgänglig.
+ *
+ *  Se 05-Supabase/migrations/20260818-0001-agent-event-graph.sql CHECK
+ *  constraint för enumet: scheduled|cancelled|postponed|rescheduled|sold_out.
+ */
+export function matchesStatus(event, statusFilter) {
+  if (!statusFilter || statusFilter === 'alla') return true;
+  const status = event?.status_expanded ?? event?.status ?? null;
+  if (statusFilter === 'tillgangliga') {
+    return status !== 'cancelled' && status !== 'postponed';
+  }
+  return true;
+}
+
 /** Any-match over title + venue against an array of terms (genre prefill:
  *  ['klassisk','classical'] matches either). Empty array → no constraint. */
 export function matchesQuery(event, queryTerms) {
@@ -136,7 +165,8 @@ export function matchesQuery(event, queryTerms) {
  *
  * @param {Array} events
  * @param {{ timeFilter?: string|null, priceFilter?: string|null,
- *           selectedCategories?: string[], pinnedDateIso?: string|null,
+ *           selectedCategories?: string[], selectedSources?: string[],
+ *           statusFilter?: string, pinnedDateIso?: string|null,
  *           queryTerms?: string[], searchText?: string }} filters
  *   queryTerms (auto-intent prefill, any-match) takes precedence over the
  *   free-text searchText — otherwise a 'klassisk' box would narrow away the
@@ -157,6 +187,14 @@ export function applyBrowseFilters(events, filters = {}, now = new Date()) {
 
   if (filters.priceFilter) {
     result = result.filter((event) => matchesPriceFilter(event, filters.priceFilter));
+  }
+
+  if (filters.selectedSources && filters.selectedSources.length > 0) {
+    result = result.filter((event) => matchesSource(event, filters.selectedSources));
+  }
+
+  if (filters.statusFilter) {
+    result = result.filter((event) => matchesStatus(event, filters.statusFilter));
   }
 
   if (filters.pinnedDateIso) {
