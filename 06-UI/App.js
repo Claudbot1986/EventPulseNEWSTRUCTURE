@@ -1337,6 +1337,10 @@ function DetailsScreen({ event, onBack }) {
       }).catch(() => {});
     }
 
+    // 2026-09-26 (link-health v2): trasiga events filtreras bort redan på
+    // server-nivå (events_public-viewn), så de når aldrig hit. Vi behöver
+    // ingen klient-side warning längre — UI:t visar bara fungerande events.
+
     try {
       const canOpen = await Linking.canOpenURL(event.url);
       if (!canOpen) {

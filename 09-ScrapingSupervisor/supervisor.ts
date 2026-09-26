@@ -50,6 +50,7 @@ import {
   appendOrReplaceSourceReviewSection,
 } from './tools/source_health_report';
 import { appendChange } from './tools/source_changes';
+import { collectLinkHealthWatchlist, type LinkHealthWatchlistResult } from './tools/link_health_watchlist';
 
 // ─── Public types ────────────────────────────────────────────────────────────
 
@@ -90,6 +91,8 @@ export interface SupervisorRunResult {
   review: ReviewResult | null;
   /** Source-fix auto-apply result (archive-dead + update-preferred-path). Null on dry-run. */
   sourceApply: SourceApplyResult | null;
+  /** 2026-09-26: källor vars event-länkar varit trasiga ≥7 dagar (frivillig watchlist). */
+  linkHealthWatchlist: LinkHealthWatchlistResult | null;
 }
 
 // ─── Main entry ──────────────────────────────────────────────────────────────
@@ -131,6 +134,16 @@ export async function runSupervisor(opts: SupervisorOptions): Promise<Supervisor
     const metricsSnapshot = dryRun
       ? null
       : writeMetricsSnapshot(opts.projectRoot, state.totals);
+    // 2026-09-26 — länkhälsa-watchlist. Errors-as-data: watchlist-felet
+    // får inte stoppa supervisor-rapporten. Wrappas därför i eget try.
+    let linkHealthWatchlist: LinkHealthWatchlistResult | null = null;
+    if (!dryRun) {
+      try {
+        linkHealthWatchlist = await collectLinkHealthWatchlist({ windowDays: 7 });
+      } catch {
+        linkHealthWatchlist = null;
+      }
+    }
     const finishedAt = new Date();
     return {
       state,
@@ -141,6 +154,7 @@ export async function runSupervisor(opts: SupervisorOptions): Promise<Supervisor
       metricsSnapshot,
       review: reviewResult.review,
       sourceApply: reviewResult.sourceApply,
+      linkHealthWatchlist,
       dryRun,
       durationMs: finishedAt.getTime() - startedAt.getTime(),
       startedAt: startedAt.toISOString(),
@@ -159,6 +173,7 @@ export async function runSupervisor(opts: SupervisorOptions): Promise<Supervisor
       metricsSnapshot: null,
       review: null,
       sourceApply: null,
+      linkHealthWatchlist: null,
       dryRun,
       durationMs: finishedAt.getTime() - startedAt.getTime(),
       startedAt: startedAt.toISOString(),
@@ -274,6 +289,9 @@ export async function main(argv: string[] = process.argv.slice(2)): Promise<numb
         : []),
       ...(result.metricsSnapshot
         ? [`  metrics: freshness=${result.metricsSnapshot.freshnessMedianHours !== null ? `${result.metricsSnapshot.freshnessMedianHours.toFixed(1)}h` : 'n/a'} field-coverage(title)=${(result.metricsSnapshot.fieldCoverage.title * 100).toFixed(0)}% batch-success=${result.metricsSnapshot.batches.success}/${result.metricsSnapshot.batches.attempts} decoy=${result.metricsSnapshot.batches.decoy}`]
+        : []),
+      ...(result.linkHealthWatchlist && result.linkHealthWatchlist.entries.length > 0
+        ? [`  link-watchlist: ${result.linkHealthWatchlist.entries.length} sources with broken links (last ${result.linkHealthWatchlist.windowDays}d)`]
         : []),
     ].join('\n')
   );

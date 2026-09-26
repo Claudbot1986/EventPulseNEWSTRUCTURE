@@ -1,5 +1,8 @@
 #!/bin/bash
-# runDaily.sh — Daglig körning: supervisor (source health) + ingestionPipeline (data flow)
+# runDaily.sh — Daglig körning:
+#   [1] supervisor (source health review + auto-apply + vault reports)
+#   [2] ingestionPipeline (data flow)
+#   [3] check_link_health (HEAD-check av event-länkar, 1 HEAD per aktiv källa)
 #
 # Används av com.eventpulse.supervisor.plist kl 04:30.
 # Loggar allt till runtime/scraping-supervisor/daily-YYYY-MM-DD.log.
@@ -25,20 +28,31 @@ log "  EventPulse daglig körning  │  $DATE_STR"
 log "═══════════════════════════════════════════════════════════"
 
 # Steg 1: supervisor (source health review + auto-apply + vault reports)
-log "[1/2] supervisor (source health) — start"
+log "[1/3] supervisor (source health) — start"
 if "$TSX_BIN" "$PROJECT_ROOT/09-ScrapingSupervisor/supervisor.ts" >> "$DAILY_LOG" 2>&1; then
-  log "[1/2] supervisor — OK"
+  log "[1/3] supervisor — OK"
 else
-  log "[1/2] supervisor — FAIL (exit=$?) — fortsätter ändå med pipeline"
+  log "[1/3] supervisor — FAIL (exit=$?) — fortsätter ändå med pipeline"
 fi
 
 # Steg 2: ingestionPipeline (data flow)
-log "[2/2] ingestionPipeline (data flow) — start"
+log "[2/3] ingestionPipeline (data flow) — start"
 if "$TSX_BIN" "$PROJECT_ROOT/09-ScrapingSupervisor/ingestionPipeline.ts" >> "$DAILY_LOG" 2>&1; then
-  log "[2/2] ingestionPipeline — OK"
+  log "[2/3] ingestionPipeline — OK"
 else
-  log "[2/2] ingestionPipeline — FAIL (exit=$?)"
+  log "[2/3] ingestionPipeline — FAIL (exit=$?)"
   exit 1
+fi
+
+# Steg 3: check_link_health (daglig HEAD-check av event-länkar)
+# Uppdaterar events.link_status + link_last_checked_at. ~200 HEAD-anrop,
+# concurrency 10, ~30-60 s wall-clock. Non-fatal: en trasig källa här
+# får inte stoppa övrig cron-pipeline.
+log "[3/3] check_link_health (HEAD-check) — start"
+if "$TSX_BIN" "$PROJECT_ROOT/09-ScrapingSupervisor/check_link_health.ts" >> "$DAILY_LOG" 2>&1; then
+  log "[3/3] check_link_health — OK"
+else
+  log "[3/3] check_link_health — FAIL (exit=$?) — fortsätter ändå"
 fi
 
 log "═══════════════════════════════════════════════════════════"
