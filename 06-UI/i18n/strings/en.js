@@ -180,6 +180,14 @@ export default {
   'home.sections.ikvall': 'Tonight',
   'home.sections.helgen': 'Weekend',
   'home.sections.upptack': 'Discover',
+  // Home carousels (2026-09-26): 5 new sections per HOME-CAROUSELS-PLAN.md.
+  // Position in HomeScreen: 4. Tomorrow (after Tonight) / 6. Foodies (after Weekend)
+  // 7. Free / 8. Online / 9. New on EventPulse (before Discover moved to #10).
+  'home.sections.gratis': 'Free',
+  'home.sections.imorgon': 'Tomorrow',
+  'home.sections.foodies': 'Foodies',
+  'home.sections.online': 'Online',
+  'home.sections.nyttEventpulse': 'New on EventPulse',
   'home.subtitle.today': 'today',
   'home.subtitle.tomorrow': 'tomorrow',
   'home.subtitle.yesterday': 'yesterday',

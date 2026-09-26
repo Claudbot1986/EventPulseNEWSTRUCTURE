@@ -227,6 +227,14 @@ export default function HomeScreen({ onCardPress }) {
   const [ikvall, setIkvall] = useState({ status: 'loading', data: [], error: null });
   const [helgen, setHelgen] = useState({ status: 'loading', data: [], error: null });
   const [upptack, setUpptack] = useState({ status: 'loading', data: [], error: null });
+  // 2026-09-26 — 5 nya karuseller enligt docs/HOME-CAROUSELS-PLAN.md.
+  // Slutlig ordning i HomeScreen: För dig → Senaste → Ikväll → Imorgon →
+  // Helgen → Foodies → Gratis → Online → Nytt på Eventpulse → Upptäck.
+  const [imorgon, setImorgon] = useState({ status: 'loading', data: [], error: null });
+  const [foodies, setFoodies] = useState({ status: 'loading', data: [], error: null });
+  const [gratis, setGratis] = useState({ status: 'loading', data: [], error: null });
+  const [online, setOnline] = useState({ status: 'loading', data: [], error: null });
+  const [nyttEventpulse, setNyttEventpulse] = useState({ status: 'loading', data: [], error: null });
 
   const unknownError = t('home.subtitle.errorUnknown');
 
@@ -361,6 +369,122 @@ export default function HomeScreen({ onCardPress }) {
       } catch (e) {
         if (!cancelled) setUpptack({ status: 'error', data: [], error: e?.message || unknownError });
       }
+
+      // ── Imorgon (start_time imorgon Stockholm) ────────────────
+      try {
+        const tomorrowStart = new Date();
+        tomorrowStart.setDate(tomorrowStart.getDate() + 1);
+        tomorrowStart.setHours(0, 0, 0, 0);
+        const tomorrowEnd = new Date(tomorrowStart);
+        tomorrowEnd.setHours(23, 59, 59, 999);
+        const { data, error } = await supabase
+          .from('events_public')
+          .select('id, title_sv, title_en, description_sv, description_en, start_time, image_url, image_ai_generated, image_ai_optout, image_generation_status, ticket_url, source, category_slug')
+          .gte('start_time', tomorrowStart.toISOString())
+          .lte('start_time', tomorrowEnd.toISOString())
+          .order('start_time', { ascending: true })
+          .limit(20);
+        if (cancelled) return;
+        if (error) {
+          setImorgon({ status: 'error', data: [], error: error.message });
+        } else {
+          setImorgon({ status: 'ready', data: data || [], error: null });
+        }
+      } catch (e) {
+        if (!cancelled) setImorgon({ status: 'error', data: [], error: e?.message || unknownError });
+      }
+
+      // ── Foodies (category_slug=food) ──────────────────────────
+      try {
+        const { data, error } = await supabase
+          .from('events_public')
+          .select('id, title_sv, title_en, description_sv, description_en, start_time, image_url, image_ai_generated, image_ai_optout, image_generation_status, ticket_url, source, category_slug')
+          .eq('category_slug', 'food')
+          .gte('start_time', new Date().toISOString())
+          .order('start_time', { ascending: true })
+          .limit(20);
+        if (cancelled) return;
+        if (error) {
+          setFoodies({ status: 'error', data: [], error: error.message });
+        } else {
+          setFoodies({ status: 'ready', data: data || [], error: null });
+        }
+      } catch (e) {
+        if (!cancelled) setFoodies({ status: 'error', data: [], error: e?.message || unknownError });
+      }
+
+      // ── Gratis (is_free=true) ─────────────────────────────────
+      try {
+        const { data, error } = await supabase
+          .from('events_public')
+          .select('id, title_sv, title_en, description_sv, description_en, start_time, image_url, image_ai_generated, image_ai_optout, image_generation_status, ticket_url, source, category_slug, is_free')
+          .eq('is_free', true)
+          .gte('start_time', new Date().toISOString())
+          .order('start_time', { ascending: true })
+          .limit(FORDIG_LIMIT);
+        if (cancelled) return;
+        if (error) {
+          setGratis({ status: 'error', data: [], error: error.message });
+        } else {
+          setGratis({ status: 'ready', data: data || [], error: null });
+        }
+      } catch (e) {
+        if (!cancelled) setGratis({ status: 'error', data: [], error: e?.message || unknownError });
+      }
+
+      // ── Online (is_online=true, kräver migration) ──────────────
+      try {
+        const { data, error } = await supabase
+          .from('events_public')
+          .select('id, title_sv, title_en, description_sv, description_en, start_time, image_url, image_ai_generated, image_ai_optout, image_generation_status, ticket_url, source, category_slug, online_url')
+          .eq('is_online', true)
+          .gte('start_time', new Date().toISOString())
+          .order('start_time', { ascending: true })
+          .limit(20);
+        if (cancelled) return;
+        if (error) {
+          setOnline({ status: 'error', data: [], error: error.message });
+        } else {
+          setOnline({ status: 'ready', data: data || [], error: null });
+        }
+      } catch (e) {
+        if (!cancelled) setOnline({ status: 'error', data: [], error: e?.message || unknownError });
+      }
+
+      // ── Nytt på Eventpulse (freshness_at 48h, klient-fallback 7d) ──
+      // Jev 0.20 confidence på 48h-fönstret (smalt). Klient-side utökar
+      // automatiskt till 7 dagar om <3 events returneras — säkrar tom-state.
+      try {
+        const fortyEightHoursAgo = new Date(Date.now() - 48 * 60 * 60 * 1000);
+        const { data, error } = await supabase
+          .from('events_public')
+          .select('id, title_sv, title_en, description_sv, description_en, start_time, image_url, image_ai_generated, image_ai_optout, image_generation_status, ticket_url, source, category_slug, freshness_at')
+          .gte('freshness_at', fortyEightHoursAgo.toISOString())
+          .gte('start_time', new Date().toISOString())
+          .order('freshness_at', { ascending: false })
+          .limit(15);
+        if (cancelled) return;
+        let finalData = data || [];
+        if (finalData.length < 3) {
+          const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+          const { data: dataWide, error: errorWide } = await supabase
+            .from('events_public')
+            .select('id, title_sv, title_en, description_sv, description_en, start_time, image_url, image_ai_generated, image_ai_optout, image_generation_status, ticket_url, source, category_slug, freshness_at')
+            .gte('freshness_at', sevenDaysAgo.toISOString())
+            .gte('start_time', new Date().toISOString())
+            .order('freshness_at', { ascending: false })
+            .limit(15);
+          if (cancelled) return;
+          if (!errorWide) finalData = dataWide || [];
+        }
+        if (error) {
+          setNyttEventpulse({ status: 'error', data: [], error: error.message });
+        } else {
+          setNyttEventpulse({ status: 'ready', data: finalData, error: null });
+        }
+      } catch (e) {
+        if (!cancelled) setNyttEventpulse({ status: 'error', data: [], error: e?.message || unknownError });
+      }
     }
 
     loadAll();
@@ -431,6 +555,39 @@ export default function HomeScreen({ onCardPress }) {
         onPress: handleCardPress(e),
       }))
     : [];
+  // 2026-09-26 — 5 nya karuseller (se HOME-CAROUSELS-PLAN.md).
+  // Gratis: subtitle = category_slug om satt, annars "Gratis"-tag.
+  // Övriga (Imorgon/Foodies/Online/Nytt): veckodag + tid (samma som Helgen).
+  const imorgonCards = imorgon.status === 'ready'
+    ? imorgon.data.map((e) => ({
+        ...toCarouselCard(e, formatHelgenSubtitle(e, daysShort, t)),
+        onPress: handleCardPress(e),
+      }))
+    : [];
+  const foodiesCards = foodies.status === 'ready'
+    ? foodies.data.map((e) => ({
+        ...toCarouselCard(e, formatHelgenSubtitle(e, daysShort, t)),
+        onPress: handleCardPress(e),
+      }))
+    : [];
+  const gratisCards = gratis.status === 'ready'
+    ? gratis.data.map((e) => ({
+        ...toCarouselCard(e, e.category_slug || t('home.subtitle.free')),
+        onPress: handleCardPress(e),
+      }))
+    : [];
+  const onlineCards = online.status === 'ready'
+    ? online.data.map((e) => ({
+        ...toCarouselCard(e, formatHelgenSubtitle(e, daysShort, t)),
+        onPress: handleCardPress(e),
+      }))
+    : [];
+  const nyttEventpulseCards = nyttEventpulse.status === 'ready'
+    ? nyttEventpulse.data.map((e) => ({
+        ...toCarouselCard(e, formatHelgenSubtitle(e, daysShort, t)),
+        onPress: handleCardPress(e),
+      }))
+    : [];
 
   return (
     <ScrollView
@@ -464,9 +621,44 @@ export default function HomeScreen({ onCardPress }) {
       />
 
       <EventPulseCarousel
+        headerText={t('home.sections.imorgon')}
+        cards={imorgonCards}
+        loading={imorgon.status === 'loading'}
+        emptyText={t('home.emptySection')}
+      />
+
+      <EventPulseCarousel
         headerText={t('home.sections.helgen')}
         cards={helgenCards}
         loading={helgen.status === 'loading'}
+        emptyText={t('home.emptySection')}
+      />
+
+      <EventPulseCarousel
+        headerText={t('home.sections.foodies')}
+        cards={foodiesCards}
+        loading={foodies.status === 'loading'}
+        emptyText={t('home.emptySection')}
+      />
+
+      <EventPulseCarousel
+        headerText={t('home.sections.gratis')}
+        cards={gratisCards}
+        loading={gratis.status === 'loading'}
+        emptyText={t('home.emptySection')}
+      />
+
+      <EventPulseCarousel
+        headerText={t('home.sections.online')}
+        cards={onlineCards}
+        loading={online.status === 'loading'}
+        emptyText={t('home.emptySection')}
+      />
+
+      <EventPulseCarousel
+        headerText={t('home.sections.nyttEventpulse')}
+        cards={nyttEventpulseCards}
+        loading={nyttEventpulse.status === 'loading'}
         emptyText={t('home.emptySection')}
       />
 
