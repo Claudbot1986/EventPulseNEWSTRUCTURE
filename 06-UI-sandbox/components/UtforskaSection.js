@@ -167,7 +167,10 @@ const MOCK_EVENTS = [
 ];
 
 function EventRow({ event, onPress, onMenuPress }) {
-  const subtitleText = event.subtitleParts.filter(Boolean).join(' · ');
+  const parts = event.subtitleParts.filter(Boolean);
+  const line1 = parts.slice(0, 2).join(' · ');   // datum · tid
+  const line2 = parts.slice(2).join(' · ');      // venue · area
+  const subtitleText = [line1, line2].filter(Boolean).join(' · ');
   return (
     <Pressable
       style={({ pressed }) => [styles.row, pressed && styles.rowPressed]}
@@ -193,15 +196,26 @@ function EventRow({ event, onPress, onMenuPress }) {
         <Text style={styles.title} numberOfLines={1} ellipsizeMode="tail">
           {event.title}
         </Text>
-        {subtitleText ? (
-          <View style={styles.subtitleRow}>
-            <Text
-              style={styles.subtitle}
-              numberOfLines={1}
-              ellipsizeMode="tail"
-            >
-              {subtitleText}
-            </Text>
+        {(line1 || line2) ? (
+          <View style={styles.subtitleColumn}>
+            {line1 ? (
+              <Text
+                style={styles.subtitle}
+                numberOfLines={1}
+                ellipsizeMode="tail"
+              >
+                {line1}
+              </Text>
+            ) : null}
+            {line2 ? (
+              <Text
+                style={styles.subtitle}
+                numberOfLines={1}
+                ellipsizeMode="tail"
+              >
+                {line2}
+              </Text>
+            ) : null}
           </View>
         ) : null}
       </View>
@@ -360,10 +374,10 @@ const styles = StyleSheet.create({
     fontWeight: TOKENS.font.title.weight,
     letterSpacing: TOKENS.font.title.letterSpacing,
   },
-  subtitleRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
+  subtitleColumn: {
+    flexDirection: 'column',
     marginTop: TOKENS.space.subtitleGap,
+    gap: 2,
   },
   subtitle: {
     color: TOKENS.color.textMuted,
