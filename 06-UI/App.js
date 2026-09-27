@@ -98,14 +98,42 @@ const CATEGORIES = {
 };
 
 // Category filter definitions — labels resolve via i18n at render.
+// Steg 4 (2026-09-27): utökat från 7 till 18 pills. De 8 musik-genrerna
+// (pop-rock, jazz, classical, electronic, hip-hop, metal, world-folk,
+// musical) visas BARA när Steg 3.5 (artist-tillägg) drar igång — tills
+// vidare är `music` den enda musik-pillen (befintlig, oförändrad). De
+// nya v2-slangs som inte längre behövs som egna pills (culture→exhibition,
+// theatre→opera/comedy/drama/dance/circus, barn→kids+family) ersätts av
+// sina konsoliderade motsvarigheter. Bakåtkompatibilitet: gamla pill-keys
+// (culture/barn/theatre) finns kvar i browseFilters.js CATEGORY_GROUPS
+// för ev. legacy state.
+// ─── Kategoribilder (MiniMax image-01, 2026-09-27) ──────────────────────────
+// 1024×1024-källor, motiv nere till höger vänt mot vänster. require() löst
+// så Metro handhar bundle-hashningen per fil.
+// 2026-09-27: inlined base64 (matchar utforska tiles.data.js). MiniMax-URL:er
+// var 24h-giltiga; require()-assets via Metro var OSäkra. Base64-data-URI:er
+// går rakt in i <Image source={{ uri }}> — ingen asset-pipeline inblandad.
+const CATEGORY_TILE_IMAGES = require('./assets/categoryTiles/categoryTiles.data.js');
+
 const CATEGORY_FILTERS = [
-  { key: 'music', labelKey: 'explore.filterCat.music' },
-  { key: 'culture', labelKey: 'explore.filterCat.culture' },
-  { key: 'sports', labelKey: 'explore.filterCat.sports' },
-  { key: 'theatre', labelKey: 'explore.filterCat.theatre' },
-  { key: 'food', labelKey: 'explore.filterCat.food' },
-  { key: 'nightlife', labelKey: 'explore.filterCat.nightlife' },
-  { key: 'barn', labelKey: 'explore.filterCat.barn' },
+  { key: 'music',          labelKey: 'explore.filterCat.music',          emoji: '🎵', color: '#BB86FC', bgColor: '#2D2D3A', image: CATEGORY_TILE_IMAGES.music },
+  { key: 'opera',          labelKey: 'explore.filterCat.opera',          emoji: '🎭', color: '#FF6B6B', bgColor: '#3A2A2A', image: CATEGORY_TILE_IMAGES.opera },
+  { key: 'theatre-comedy', labelKey: 'explore.filterCat.theatreComedy',  emoji: '😄', color: '#FF6B6B', bgColor: '#3A2A2A', image: CATEGORY_TILE_IMAGES['theatre-comedy'] },
+  { key: 'theatre-drama',  labelKey: 'explore.filterCat.theatreDrama',   emoji: '🎭', color: '#FF6B6B', bgColor: '#3A2A2A', image: CATEGORY_TILE_IMAGES['theatre-drama'] },
+  { key: 'dance',          labelKey: 'explore.filterCat.dance',          emoji: '💃', color: '#74B9FF', bgColor: '#2D3140', image: CATEGORY_TILE_IMAGES.dance },
+  { key: 'circus',         labelKey: 'explore.filterCat.circus',         emoji: '🎪', color: '#FF9F43', bgColor: '#3A352D', image: CATEGORY_TILE_IMAGES.circus },
+  { key: 'exhibition',     labelKey: 'explore.filterCat.exhibition',     emoji: '🖼️', color: '#4ECDC4', bgColor: '#2D3A35', image: CATEGORY_TILE_IMAGES.exhibition },
+  { key: 'flea-market',    labelKey: 'explore.filterCat.fleaMarket',     emoji: '🛍️', color: '#FFE66D', bgColor: '#3A3A2D', image: CATEGORY_TILE_IMAGES['flea-market'] },
+  { key: 'food',           labelKey: 'explore.filterCat.food',           emoji: '🍽️', color: '#FF7597', bgColor: '#3A2D2D', image: CATEGORY_TILE_IMAGES.food },
+  { key: 'wine-tasting',   labelKey: 'explore.filterCat.wineTasting',    emoji: '🍷', color: '#FF7597', bgColor: '#3A2D2D', image: CATEGORY_TILE_IMAGES['wine-tasting'] },
+  { key: 'kids',           labelKey: 'explore.filterCat.kids',           emoji: '🧒', color: '#FF9F43', bgColor: '#3A352D', image: CATEGORY_TILE_IMAGES.kids },
+  { key: 'family',         labelKey: 'explore.filterCat.family',         emoji: '👨‍👩‍👧', color: '#FF9F43', bgColor: '#3A352D', image: CATEGORY_TILE_IMAGES.family },
+  { key: 'film',           labelKey: 'explore.filterCat.film',           emoji: '🎬', color: '#95E1D3', bgColor: '#2D353A', image: CATEGORY_TILE_IMAGES.film },
+  { key: 'talks-lectures', labelKey: 'explore.filterCat.talksLectures',  emoji: '🎤', color: '#4ECDC4', bgColor: '#2D3A35', image: CATEGORY_TILE_IMAGES['talks-lectures'] },
+  { key: 'workshop',       labelKey: 'explore.filterCat.workshop',       emoji: '🛠️', color: '#4ECDC4', bgColor: '#2D3A35', image: CATEGORY_TILE_IMAGES.workshop },
+  { key: 'sports',         labelKey: 'explore.filterCat.sports',         emoji: '⚽', color: '#95E1D3', bgColor: '#2D353A', image: CATEGORY_TILE_IMAGES.sports },
+  { key: 'nightlife',      labelKey: 'explore.filterCat.nightlife',      emoji: '🌃', color: '#FFE66D', bgColor: '#3A3A2D', image: CATEGORY_TILE_IMAGES.nightlife },
+  { key: 'community',      labelKey: 'explore.filterCat.community',      emoji: '🤝', color: '#74B9FF', bgColor: '#2D3140', image: CATEGORY_TILE_IMAGES.community },
 ];
 
 // Time filter definitions — labels resolve via i18n at render.
@@ -659,6 +687,77 @@ function ExploreTilesSection({ onChipPress }) {
   );
 }
 
+// ─── CategoryQuickTilesSection (18 v2-kategorier, snabb-browse) ────────────
+// 2026-09-27 Steg 4: ny sektion UNDER ExploreTilesSection (gratis/live/
+// skratt/stämning/helg/imorgon) — de 18 finmaskiga v2-slugs som
+// migrationen 20260927-0001-categories-v2.sql la till. Sektionen ger
+// en-touch åtkomst till en kategori utan att öppna filtermenyn. Knappen
+// är 1,5× högre än befintliga utforska-tiles (aspectRatio 5/3 istället
+// för 5/2). Textstil (Spotify-hörnet — position absolute, top:14 left:16)
+// är identisk med utforska-tiles ovan — ingen emoji (per användare
+// 2026-09-27), bara kategorinamnet i vitt. Bakgrundsfärg (bfl) per
+// kategori kommer från CATEGORY_FILTERS. Tap = toggle selectedCategories
+// via handleCategoryFilterPress (samma logik som filter-pillsen).
+function CategoryQuickTilesSection({ selectedCategories, onCategoryPress }) {
+  const { t } = useI18n();
+  // 18 knappar i 2×9-rutnät (per användare 2026-09-27). Per användare
+  // 2026-09-27: KOPIERA utforska-tiles stil rakt av (exploreTile*). Tidigare
+  // hade vi egna categoryTile*-stilar (40%/70%-foto, 53%/25%-diagonal) som
+  // avvek från utforska — bilden blev för inzoomad. Samma utforska-stil =
+  // beprövad + visuellt samstämd mellan de två sektionerna.
+  const rows = [];
+  for (let i = 0; i < CATEGORY_FILTERS.length; i += 2) {
+    rows.push(CATEGORY_FILTERS.slice(i, i + 2));
+  }
+  return (
+    <View style={styles.exploreSection}>
+      <Text style={styles.exploreSectionTitle}>{t('home.categories.title')}</Text>
+      {rows.map((row, rowIndex) => (
+        <View key={`cat-row-${rowIndex}`} style={styles.exploreRow}>
+          {row.map((cat) => {
+            const isActive = selectedCategories.includes(cat.key);
+            return (
+              <Pressable
+                key={cat.key}
+                onPress={() => onCategoryPress(cat.key)}
+                accessibilityRole="button"
+                accessibilityState={{ selected: isActive }}
+                accessibilityLabel={t(cat.labelKey)}
+                style={({ pressed }) => [
+                  styles.exploreTile,
+                  { backgroundColor: isActive ? cat.color : cat.bgColor, aspectRatio: 5 / 3 },
+                  pressed && styles.exploreTilePressed,
+                ]}
+              >
+                <Image
+                  source={{ uri: cat.image }}
+                  style={styles.exploreTilePhoto}
+                  resizeMode="cover"
+                />
+                <View
+                  style={[
+                    styles.exploreTileDiagonal,
+                    { backgroundColor: isActive ? cat.color : cat.bgColor },
+                  ]}
+                />
+                <Text
+                  style={[
+                    styles.exploreTileLabel,
+                    isActive && styles.exploreTileLabelActive,
+                  ]}
+                  numberOfLines={1}
+                >
+                  {t(cat.labelKey)}
+                </Text>
+              </Pressable>
+            );
+          })}
+        </View>
+      ))}
+    </View>
+  );
+}
+
 function HomeScreen({ onEventPress, scrollPositionRef, pendingIntent, dismissPendingPrompt, onInitialLoadSettled, onTilePress }) {
   const { t, language } = useI18n();
   const [events, setEvents] = useState([]);
@@ -1175,10 +1274,18 @@ function HomeScreen({ onEventPress, scrollPositionRef, pendingIntent, dismissPen
                   key={filter.key}
                   style={[
                     styles.filterButton,
+                    {
+                      backgroundColor: selectedCategories.includes(filter.key)
+                        ? filter.color
+                        : filter.bgColor,
+                    },
                     selectedCategories.includes(filter.key) && styles.filterButtonActive
                   ]}
                   onPress={() => handleCategoryFilterPress(filter.key)}
                 >
+                  {filter.emoji ? (
+                    <Text style={styles.filterButtonEmoji}>{filter.emoji}</Text>
+                  ) : null}
                   <Text style={[
                     styles.filterButtonText,
                     selectedCategories.includes(filter.key) && styles.filterButtonTextActive
@@ -1271,6 +1378,10 @@ function HomeScreen({ onEventPress, scrollPositionRef, pendingIntent, dismissPen
         }}
       >
         <ExploreTilesSection onChipPress={onTilePress} />
+        <CategoryQuickTilesSection
+          selectedCategories={selectedCategories}
+          onCategoryPress={handleCategoryFilterPress}
+        />
         {pendingIntent ? (
           <View style={styles.pendingPromptBanner} accessibilityRole="text">
             <Text style={styles.pendingPromptEyebrow}>{t('explore.youAsked')}</Text>
@@ -2085,10 +2196,13 @@ const styles = StyleSheet.create({
   },
   filterButton: {
     paddingHorizontal: 9,
-    paddingVertical: 4,
+    paddingVertical: 6,
     borderRadius: 8,
     backgroundColor: TOKENS.color.surfaceRaised,
     borderWidth: 0,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
   },
   filterButtonActive: {
     backgroundColor: TOKENS.color.accent,
@@ -2098,6 +2212,10 @@ const styles = StyleSheet.create({
     color: TOKENS.color.text,
     fontSize: 12,
     fontWeight: '600',
+  },
+  filterButtonEmoji: {
+    fontSize: 12,
+    lineHeight: 14,
   },
   filterButtonTextActive: {
     color: TOKENS.color.black,
@@ -2670,5 +2788,14 @@ const styles = StyleSheet.create({
     fontSize: 16.2, // 19.2/1.2 + 0.2 per användare 2026-09-21 — lg (16) + lite
     fontWeight: '800',
     letterSpacing: -0.4,
+  },
+  // Aktiv label-state för togglebara tiles (CategoryQuickTilesSection).
+  // Utforska-tiles använder detta INTE (single-action chips), men det är
+  // samma stilobjekt som täcker båda sektionerna. Byter label-färg till svart
+  // + fontWeight 900 när kategori är vald — bakgrunden är då cat.color (ljus)
+  // och vi behöver kontrast.
+  exploreTileLabelActive: {
+    color: TOKENS.color.black,
+    fontWeight: '900',
   },
 });

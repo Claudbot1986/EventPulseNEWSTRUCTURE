@@ -25,10 +25,26 @@ export function normalizeSearchText(value) {
  * Keys not listed here pass through as themselves (music/sports/nightlife).
  */
 export const CATEGORY_GROUPS = {
+  // Legacy (konsoliderade) — bakåtkompatibla om någon state skickar dem.
   culture: ['culture', 'art', 'art-exhibitions', 'exhibition'],
   barn: ['barn', 'family', 'kids'],
-  theatre: ['theatre', 'theatre-comedy', 'theatre-drama', 'opera', 'dance', 'circus'],
+  theatre: ['theatre', 'theatre-comedy', 'theatre-drama', 'opera', 'dance', 'circus', 'musical'],
   food: ['food', 'food-drink', 'wine-tasting'],
+  // Nya v2-pills från Steg 4 (2026-09-27).
+  opera: ['opera'],
+  'theatre-comedy': ['theatre-comedy', 'comedy'],
+  'theatre-drama': ['theatre-drama', 'theater', 'musical'],
+  dance: ['dance'],
+  circus: ['circus'],
+  exhibition: ['exhibition', 'art', 'art-exhibitions', 'design'],
+  'flea-market': ['flea-market'],
+  'wine-tasting': ['wine-tasting'],
+  kids: ['kids', 'barn'],
+  family: ['family', 'barn', 'kids'],
+  film: ['film'],
+  'talks-lectures': ['talks-lectures'],
+  workshop: ['workshop'],
+  community: ['community'],
 };
 
 /** True when the event's category matches ANY selected pill key (groups applied). */

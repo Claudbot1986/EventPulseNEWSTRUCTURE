@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Utforska-knappar (preview)</title>
+  <style>
+    :root {
+      --appBg: #000000;
+      --text: #F7F2EA;
+    }
+    body {
+      margin: 0;
+      padding: 24px 16px 40px;
+      background: var(--appBg);
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+    }
+    h1 {
+      font-size: 16px;
+      letter-spacing: -0.2px;
+      margin: 0 0 6px;
+      color: #FFB454;
+    }
+    .hint {
+      font-size: 12px;
+      color: #727B8D;
+      margin: 0 0 18px;
+    }
+    .section-title {
+      font-size: 12px;
+      color: #A9B0BE;
+      margin: 18px 0 8px;
+      font-weight: 600;
+    }
+    .row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      padding: 0 20px 20px;
+    }
+    .tile {
+      position: relative;
+      aspect-ratio: 5 / 2;
+      border-radius: 16px;
+      overflow: hidden;
+      color: #F7F2EA;
+    }
+    .tile-photo {
+      position: absolute;
+      top: 0;
+      right: 0;
+      bottom: 0;
+      width: 40%;
+      background-size: cover;
+      background-position: center;
+    }
+    .tile-diagonal {
+      position: absolute;
+      top: -15%;
+      bottom: -15%;
+      left: 53%;
+      width: 14%;
+      transform: rotate(14deg);
+    }
+    .tile-label {
+      position: absolute;
+      top: 14px;
+      left: 16px;
+      color: #F7F2EA;
+      font-weight: 800;
+      font-size: 16.2px;
+      letter-spacing: -0.4px;
+      z-index: 2;
+    }
+    .cat-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      padding: 0 20px;
+    }
+    .cat-row + .cat-row {
+      margin-top: 10px;
+    }
+    .cat {
+      position: relative;
+      aspect-ratio: 5 / 3;
+      border-radius: 16px;
+      overflow: hidden;
+    }
+    .cat-photo {
+      position: absolute;
+      top: 0;
+      right: 0;
+      bottom: 0;
+      width: 40%;
+      background-size: cover;
+      background-position: center;
+    }
+    .cat-diagonal {
+      position: absolute;
+      top: -15%;
+      bottom: -15%;
+      left: 53%;
+      width: 14%;
+      transform: rotate(14deg);
+    }
+    .cat-label {
+      position: absolute;
+      top: 14px;
+      left: 16px;
+      color: #F7F2EA;
+      font-weight: 800;
+      font-size: 16.2px;
+      letter-spacing: -0.4px;
+      z-index: 2;
+    }
+    .legend {
+      margin-top: 28px;
+      padding: 10px 12px;
+      background: #15151B;
+      border-radius: 8px;
+      font-size: 11px;
+      color: #A9B0BE;
+    }
+    .legend code {
+      color: var(--text);
+      background: #202635;
+      padding: 1px 4px;
+      border-radius: 3px;
+    }
+  </style>
+</head>
+<body>
+  <h1>Utforska ▾</h1>
+  <p class="hint">6 utforska-tiles + 18 kategoriknappar (2×9). Båda nu 40% foto + diagonal — samma stil (per användare 2026-09-27).</p>
+
+  <div class="section-title">Utforska — 6 smakprofiler (40% foto, diagonal)</div>
+  <div class="row">
+    <div class="tile" style="background:#1E6B45">
+      <div class="tile-photo" style="background-image:url('https://picsum.photos/seed/gratis/400/400')"></div>
+      <div class="tile-diagonal" style="background:#1E6B45"></div>
+      <span class="tile-label">Gratis</span>
+    </div>
+    <div class="tile" style="background:#3B1F66">
+      <div class="tile-photo" style="background-image:url('https://picsum.photos/seed/live/400/400')"></div>
+      <div class="tile-diagonal" style="background:#3B1F66"></div>
+      <span class="tile-label">Live</span>
+    </div>
+    <div class="tile" style="background:#6B4226">
+      <div class="tile-photo" style="background-image:url('https://picsum.photos/seed/skratt/400/400')"></div>
+      <div class="tile-diagonal" style="background:#6B4226"></div>
+      <span class="tile-label">Skratt</span>
+    </div>
+    <div class="tile" style="background:#5C1A2A">
+      <div class="tile-photo" style="background-image:url('https://picsum.photos/seed/stamning/400/400')"></div>
+      <div class="tile-diagonal" style="background:#5C1A2A"></div>
+      <span class="tile-label">Stämnings­fullt</span>
+    </div>
+    <div class="tile" style="background:#0F4C5C">
+      <div class="tile-photo" style="background-image:url('https://picsum.photos/seed/helg/400/400')"></div>
+      <div class="tile-diagonal" style="background:#0F4C5C"></div>
+      <span class="tile-label">Helg</span>
+    </div>
+    <div class="tile" style="background:#1C2E4A">
+      <div class="tile-photo" style="background-image:url('https://picsum.photos/seed/imorgon/400/400')"></div>
+      <div class="tile-diagonal" style="background:#1C2E4A"></div>
+      <span class="tile-label">Imorgon</span>
+    </div>
+  </div>
+
+  <div class="section-title">Kategorier — 18 tiles (2×9, 40% foto, diagonal — samma stil som utforska)</div>
+  <div class="cat-row">
+    <div class="cat" style="background:#2D2D3A">
+      <div class="cat-photo" style="background-image:url('../../tmp/category-tiles/cat-music.jpg')"></div>
+      <div class="cat-diagonal" style="background:#2D2D3A"></div>
+      <span class="cat-label">Musik</span>
+    </div>
+    <div class="cat" style="background:#3A2A2A">
+      <div class="cat-photo" style="background-image:url('../../tmp/category-tiles/cat-opera.jpg')"></div>
+      <div class="cat-diagonal" style="background:#3A2A2A"></div>
+      <span class="cat-label">Opera</span>
+    </div>
+  </div>
+  <div class="cat-row">
+    <div class="cat" style="background:#3A2A2A">
+      <div class="cat-photo" style="background-image:url('../../tmp/category-tiles/cat-theatre-comedy.jpg')"></div>
+      <div class="cat-diagonal" style="background:#3A2A2A"></div>
+      <span class="cat-label">Komedi</span>
+    </div>
+    <div class="cat" style="background:#3A2A2A">
+      <div class="cat-photo" style="background-image:url('../../tmp/category-tiles/cat-theatre-drama.jpg')"></div>
+      <div class="cat-diagonal" style="background:#3A2A2A"></div>
+      <span class="cat-label">Drama</span>
+    </div>
+  </div>
+  <div class="cat-row">
+    <div class="cat" style="background:#2D3140">
+      <div class="cat-photo" style="background-image:url('../../tmp/category-tiles/cat-dance.jpg')"></div>
+      <div class="cat-diagonal" style="background:#2D3140"></div>
+      <span class="cat-label">Dans</span>
+    </div>
+    <div class="cat" style="background:#3A352D">
+      <div class="cat-photo" style="background-image:url('../../tmp/category-tiles/cat-circus.jpg')"></div>
+      <div class="cat-diagonal" style="background:#3A352D"></div>
+      <span class="cat-label">Cirkus</span>
+    </div>
+  </div>
+  <div class="cat-row">
+    <div class="cat" style="background:#2D3A35">
+      <div class="cat-photo" style="background-image:url('../../tmp/category-tiles/cat-exhibition.jpg')"></div>
+      <div class="cat-diagonal" style="background:#2D3A35"></div>
+      <span class="cat-label">Utställning</span>
+    </div>
+    <div class="cat" style="background:#3A3A2D">
+      <div class="cat-photo" style="background-image:url('../../tmp/category-tiles/cat-flea-market.jpg')"></div>
+      <div class="cat-diagonal" style="background:#3A3A2D"></div>
+      <span class="cat-label">Loppis</span>
+    </div>
+  </div>
+  <div class="cat-row">
+    <div class="cat" style="background:#3A2D2D">
+      <div class="cat-photo" style="background-image:url('../../tmp/category-tiles/cat-food.jpg')"></div>
+      <div class="cat-diagonal" style="background:#3A2D2D"></div>
+      <span class="cat-label">Mat &amp; Dryck</span>
+    </div>
+    <div class="cat" style="background:#3A2D2D">
+      <div class="cat-photo" style="background-image:url('../../tmp/category-tiles/cat-wine-tasting.jpg')"></div>
+      <div class="cat-diagonal" style="background:#3A2D2D"></div>
+      <span class="cat-label">Vintasting</span>
+    </div>
+  </div>
+  <div class="cat-row">
+    <div class="cat" style="background:#3A352D">
+      <div class="cat-photo" style="background-image:url('../../tmp/category-tiles/cat-kids.jpg')"></div>
+      <div class="cat-diagonal" style="background:#3A352D"></div>
+      <span class="cat-label">Barn</span>
+    </div>
+    <div class="cat" style="background:#3A352D">
+      <div class="cat-photo" style="background-image:url('../../tmp/category-tiles/cat-family.jpg')"></div>
+      <div class="cat-diagonal" style="background:#3A352D"></div>
+      <span class="cat-label">Familj</span>
+    </div>
+  </div>
+  <div class="cat-row">
+    <div class="cat" style="background:#2D353A">
+      <div class="cat-photo" style="background-image:url('../../tmp/category-tiles/cat-film.jpg')"></div>
+      <div class="cat-diagonal" style="background:#2D353A"></div>
+      <span class="cat-label">Film</span>
+    </div>
+    <div class="cat" style="background:#2D3A35">
+      <div class="cat-photo" style="background-image:url('../../tmp/category-tiles/cat-talks-lectures.jpg')"></div>
+      <div class="cat-diagonal" style="background:#2D3A35"></div>
+      <span class="cat-label">Föreläsningar</span>
+    </div>
+  </div>
+  <div class="cat-row">
+    <div class="cat" style="background:#2D3A35">
+      <div class="cat-photo" style="background-image:url('../../tmp/category-tiles/cat-workshop.jpg')"></div>
+      <div class="cat-diagonal" style="background:#2D3A35"></div>
+      <span class="cat-label">Workshop</span>
+    </div>
+    <div class="cat" style="background:#2D353A">
+      <div class="cat-photo" style="background-image:url('../../tmp/category-tiles/cat-sports.jpg')"></div>
+      <div class="cat-diagonal" style="background:#2D353A"></div>
+      <span class="cat-label">Sport</span>
+    </div>
+  </div>
+  <div class="cat-row">
+    <div class="cat" style="background:#3A3A2D">
+      <div class="cat-photo" style="background-image:url('../../tmp/category-tiles/cat-nightlife.jpg')"></div>
+      <div class="cat-diagonal" style="background:#3A3A2D"></div>
+      <span class="cat-label">Nattliv</span>
+    </div>
+    <div class="cat" style="background:#2D3140">
+      <div class="cat-photo" style="background-image:url('../../tmp/category-tiles/cat-community.jpg')"></div>
+      <div class="cat-diagonal" style="background:#2D3140"></div>
+      <span class="cat-label">Community</span>
+    </div>
+  </div>
+
+  <div class="legend">
+    <strong style="color:#F7F2EA">Samma stil på båda sektionerna (per användare 2026-09-27):</strong>
+    <br />Foto 40% bredd + diagonal 14° vid left:53%. Tidigare hade kategorierna 30% foto vid left:63% — "dra in den mer" → matchar utforska-tiles exakt.
+    <br /><br />
+    <strong style="color:#F7F2EA">För att se live i Expo:</strong>
+    <code>cd 06-UI && npx expo start --web</code> och öppna localhost.
+  </div>
+</body>
+</html>
