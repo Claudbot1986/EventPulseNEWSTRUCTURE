@@ -758,7 +758,7 @@ function CategoryQuickTilesSection({ selectedCategories, onCategoryPress }) {
   );
 }
 
-function HomeScreen({ onEventPress, scrollPositionRef, pendingIntent, dismissPendingPrompt, onInitialLoadSettled, onTilePress }) {
+function HomeScreen({ onEventPress, scrollPositionRef, pendingIntent, dismissPendingPrompt, onInitialLoadSettled, onTilePress, onCategoryPress }) {
   const { t, language } = useI18n();
   const [events, setEvents] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -1380,7 +1380,7 @@ function HomeScreen({ onEventPress, scrollPositionRef, pendingIntent, dismissPen
         <ExploreTilesSection onChipPress={onTilePress} />
         <CategoryQuickTilesSection
           selectedCategories={selectedCategories}
-          onCategoryPress={handleCategoryFilterPress}
+          onCategoryPress={onCategoryPress}
         />
         {pendingIntent ? (
           <View style={styles.pendingPromptBanner} accessibilityRole="text">
@@ -1758,6 +1758,28 @@ function DetailsScreen({ event, onBack }) {
   );
 }
 
+// ExploreDetailScreen (2026-09-27): tom placeholder som visas när man
+// klickar på en tile/knapp i Utforska-sektionen. INGEN filter-toggle —
+// bara en ny tom svart sida. payload är valfri diagnostik (id+label),
+// ingen visning krävs.
+function ExploreDetailScreen({ payload, onBack }) {
+  const { t } = useI18n();
+  return (
+    <SafeAreaView style={styles.detailsContainer}>
+      <View style={styles.detailsHeader}>
+        <TouchableOpacity
+          style={styles.backButton}
+          onPress={onBack}
+          accessibilityRole="button"
+          accessibilityLabel={t('common.back')}
+        >
+          <Text style={styles.backButtonText}>{t('common.back')}</Text>
+        </TouchableOpacity>
+      </View>
+    </SafeAreaView>
+  );
+}
+
 export default function App({ onUserLoggedOut, onOpenLogin, chipNonce = 0, onExploreReady, isActive = true }) {
   const { t } = useI18n();
   const [selectedEvent, setSelectedEvent] = useState(null);
@@ -1797,6 +1819,10 @@ export default function App({ onUserLoggedOut, onOpenLogin, chipNonce = 0, onExp
   // the filter intent resolved from its structured hints (or text fallback),
   // see utils/promptIntent.js. The inner explore view applies the filters.
   const [pendingIntent, setPendingIntent] = useState(null);
+  // exploreDetail (2026-09-27): payload för den tomma placeholder-sida som
+  // visas när man klickar på en tile/knapp i Utforska. Null = dolt. Tap = en
+  // ny tom svart sida, INTE filter-toggle.
+  const [exploreDetail, setExploreDetail] = useState(null);
   // T0078 — tab navigation. 'home' | 'map' | 'saved' | 'notifications' | 'profile'
   const [activeTab, setActiveTab] = useState('home');
   useEffect(() => {
@@ -1941,14 +1967,16 @@ export default function App({ onUserLoggedOut, onOpenLogin, chipNonce = 0, onExp
     onUserLoggedOut?.();
   }, [onUserLoggedOut]);
 
-  // Tile press (2026-09-24): ExploreTilesSection sits at the top of Utforska
-  // — same wire as the Hem chip flow used to be (chip → JSON prompt+hints →
-  // resolvePromptIntent → pendingIntent). Since the section now lives here,
-  // skip the cross-tab indirection and apply the intent directly.
-  const handleTilePress = useCallback((payload) => {
-    const text = payload && typeof payload.prompt_text === 'string' ? payload.prompt_text : null;
-    if (!text) return;
-    setPendingIntent({ text, intent: resolvePromptIntent({ text, ...(payload.hints || {}) }) });
+  // Tile/button press i Utforska (2026-09-27): INGEN filter-toggle, ingen
+  // pendingIntent — bara en ny tom svart sida (ExploreDetailScreen).
+  // Gäller både ExploreTilesSection (gratis/live/skratt/...) och
+  // CategoryQuickTilesSection (de 18 v2-knapparna).
+  const handleExploreDetailPress = useCallback((payload) => {
+    setExploreDetail(payload || {});
+  }, []);
+
+  const handleExploreBack = useCallback(() => {
+    setExploreDetail(null);
   }, []);
 
   const handleEventPress = (event) => {
@@ -1967,6 +1995,10 @@ export default function App({ onUserLoggedOut, onOpenLogin, chipNonce = 0, onExp
     if (selectedEvent) {
       return <DetailsScreen event={selectedEvent} onBack={handleBack} />;
     }
+    // Utforska tile/button tap (2026-09-27): ny tom svart sida, INTE filter.
+    if (exploreDetail) {
+      return <ExploreDetailScreen payload={exploreDetail} onBack={handleExploreBack} />;
+    }
     // T0078 — tab routing: home | map | profile.
     // Lazy require so react-native-maps is not loaded on every Expo Go boot.
     if (activeTab === 'map') {
@@ -1976,10 +2008,10 @@ export default function App({ onUserLoggedOut, onOpenLogin, chipNonce = 0, onExp
     if (activeTab === 'profile') {
       return <ProfileScreen onLoggedOut={handleLoggedOut} onOpenLogin={onOpenLogin} />;
     }
-    return <HomeScreen onEventPress={handleEventPress} scrollPositionRef={scrollPositionRef} pendingIntent={pendingIntent} dismissPendingPrompt={dismissPendingPrompt} onOpenLogin={onOpenLogin} onInitialLoadSettled={onExploreReady} onTilePress={handleTilePress} />;
+    return <HomeScreen onEventPress={handleEventPress} scrollPositionRef={scrollPositionRef} pendingIntent={pendingIntent} dismissPendingPrompt={dismissPendingPrompt} onOpenLogin={onOpenLogin} onInitialLoadSettled={onExploreReady} onTilePress={handleExploreDetailPress} onCategoryPress={handleExploreDetailPress} />;
   };
 
-  const showTabBar = !selectedEvent;
+  const showTabBar = !selectedEvent && !exploreDetail;
 
   return (
     <View style={styles.container}>
