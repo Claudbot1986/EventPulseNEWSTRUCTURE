@@ -159,6 +159,10 @@ export interface EventCard {
    *   - 'unknown'   : no chip rendered (null/undefined)
    */
   availability_badge?: 'sold_out' | 'few_left' | 'available' | null;
+  /** Event-level status from events.status_expanded. Drives badges for
+   *  sold-out, cancelled, and not-yet-on-sale events regardless of whether
+   *  a primary offer row exists in event_offers. */
+  status_expanded?: 'scheduled' | 'cancelled' | 'postponed' | 'rescheduled' | 'sold_out' | 'not_yet_on_sale' | null;
 }
 
 export interface EventDetail extends EventCard {

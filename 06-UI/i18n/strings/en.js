@@ -128,6 +128,8 @@ export default {
   'home.subtitle.evening': 'Stockholm has plenty going on tonight.',
   'home.soldOut': 'Sold out',
   'home.fewLeft': 'Few left',
+  'home.cancelled': 'Cancelled',
+  'home.notOnSale': 'Not on sale yet',
   'home.cardA11y': '{title}{when} at {venue}',
   'home.empty': '— no events right now —',
   'home.live.badge': 'LIVE',

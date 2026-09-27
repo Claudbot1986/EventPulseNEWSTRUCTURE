@@ -131,6 +131,8 @@ export default {
   'home.subtitle.evening': 'Stockholm har massor på gång ikväll.',
   'home.soldOut': 'Slutsåld',
   'home.fewLeft': 'Få kvar',
+  'home.cancelled': 'Inställt',
+  'home.notOnSale': 'Ej öppet för försäljning',
   'home.cardA11y': '{title}{when} på {venue}',
   'home.empty': '— inga evenemang just nu —',
   'home.live.badge': 'LIVE',

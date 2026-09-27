@@ -388,6 +388,9 @@ function toCard(
     image_source_url: r.image_source_url ?? null,
     artist_slugs: artistSlugs ? Array.from(artistSlugs) : undefined,
     availability_badge: availability ?? undefined,
+    // status_expanded from DB is a free string; cast to the strict enum
+    // (DB CHECK constraint enforces it, so this is safe).
+    status_expanded: (r.status_expanded as EventCard['status_expanded']) ?? null,
     source: r.source ?? null,
     confidence_score: r.confidence_score ?? null,
     freshness_at: r.freshness_at ?? null,

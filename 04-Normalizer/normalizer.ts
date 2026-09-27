@@ -401,6 +401,10 @@ export async function processRawEvent(job: Job<RawEventInput>): Promise<void> {
     dedup_hash: dedupHash,
     category_slug,  // Denormalized for direct filtering
     status: 'published',
+    // status_expanded (sold_out / cancelled / not_yet_on_sale / etc.) flows
+    // from adapter via RawEventInput. 'published' status above is the
+    // soft-delete flag (defaults to published for new events).
+    status_expanded: raw.status_expanded ?? null,
     raw_data: raw.raw_payload,
     // AI-bild-pipeline-markörer. Workern sätter dessa till 'completed' /
     // image_ai_generated=true efter generering. 'pending' = köad, workern

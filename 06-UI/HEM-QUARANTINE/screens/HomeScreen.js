@@ -178,7 +178,18 @@ function CardImage({ uri, imageLicense, imageAttribution, imageGenerationStatus 
 function AvailabilityChip({ event }) {
   const { t } = useI18n();
   const badge = event.availability_badge;
-  if (!badge) return null;
+  const status = event.status_expanded;
+  // status_expanded wins over availability_badge — it's the authoritative
+  // event-level signal (driven by adapter detection at extraction time).
+  if (status === 'sold_out') {
+    return <Text style={[styles.cardChip, styles.cardChipSoldOut]}>{t('home.soldOut')}</Text>;
+  }
+  if (status === 'cancelled') {
+    return <Text style={[styles.cardChip, styles.cardChipCancelled]}>{t('home.cancelled')}</Text>;
+  }
+  if (status === 'not_yet_on_sale') {
+    return <Text style={[styles.cardChip, styles.cardChipNotOnSale]}>{t('home.notOnSale')}</Text>;
+  }
   if (badge === 'sold_out') {
     return <Text style={[styles.cardChip, styles.cardChipSoldOut]}>{t('home.soldOut')}</Text>;
   }
@@ -1512,6 +1523,15 @@ const styles = StyleSheet.create({
   cardChipFewLeft: {
     color: '#FFB347',
     borderColor: '#FFB347',
+  },
+  cardChipCancelled: {
+    color: TOKENS.color.textMuted,
+    borderColor: TOKENS.color.textMuted,
+    textDecorationLine: 'line-through',
+  },
+  cardChipNotOnSale: {
+    color: TOKENS.color.textMuted,
+    borderColor: TOKENS.color.textMuted,
   },
   cardChipCategory: {
     color: TOKENS.color.textMuted,

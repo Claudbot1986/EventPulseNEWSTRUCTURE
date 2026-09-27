@@ -547,7 +547,36 @@ export function toRawEventInput(event: ParsedEvent): RawEventInput {
     source_id: generateEventId(event.source, event.title, event.date),
     detected_language: 'sv',
     raw_payload: event as Record<string, unknown>,
+    // Map ParsedEvent.status → events.status_expanded enum. Validated against
+    // the CHECK constraint in 05-Supabase/migrations/20260927-0002-*.
+    // 'available' / 'few_tickets' / 'unknown' map to NULL (default = scheduled).
+    status_expanded: toStatusExpanded(event.status),
   };
+}
+
+/** Map ParsedEvent.status (free-form string from adapters) to the strict
+ *  events.status_expanded enum. Unknown / 'available' / 'few_tickets' → NULL.
+ *  Exported for testing. */
+export function toStatusExpanded(
+  raw: string | undefined
+): 'scheduled' | 'cancelled' | 'postponed' | 'rescheduled' | 'sold_out' | 'not_yet_on_sale' | null {
+  if (!raw) return null;
+  const v = raw.toLowerCase().trim();
+  // Aliases from adapters — map to canonical enum values.
+  const ALIAS: Record<string, 'scheduled' | 'cancelled' | 'postponed' | 'rescheduled' | 'sold_out' | 'not_yet_on_sale'> = {
+    'scheduled': 'scheduled',
+    'cancelled': 'cancelled',
+    'canceled': 'cancelled',
+    'postponed': 'postponed',
+    'rescheduled': 'rescheduled',
+    'sold_out': 'sold_out',
+    'soldout': 'sold_out',
+    'slutsåld': 'sold_out',
+    'slutsalt': 'sold_out',
+    'not_yet_on_sale': 'not_yet_on_sale',
+    'ej öppet': 'not_yet_on_sale',
+  };
+  return ALIAS[v] ?? null;
 }
 
 function generateEventId(source: string, title: string, date: string): string {

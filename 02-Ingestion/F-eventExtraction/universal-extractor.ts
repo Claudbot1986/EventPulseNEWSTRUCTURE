@@ -311,6 +311,33 @@ function makeEvent(data: Record<string, unknown>, method: string, source: string
     if (data.cancelled || data.canceled) status = 'cancelled';
     else if (data.soldOut || data.bookedOut) status = 'sold_out';
 
+    // 2026-09-27 — schema.org eventStatus / offers.availability are URL enums.
+    // Detect from the canonical schema.org URLs so structured-data sources
+    // (JSON-LD) propagate sold_out / cancelled / etc. to status_expanded.
+    if (typeof data.eventStatus === 'string') {
+      const es = data.eventStatus.toLowerCase();
+      if (es.includes('eventscheduled')) status = 'scheduled';
+      else if (es.includes('eventcancelled')) status = 'cancelled';
+      else if (es.includes('eventpostponed')) status = 'postponed';
+      else if (es.includes('eventrescheduled')) status = 'rescheduled';
+    }
+    if (Array.isArray(data.offers)) {
+      for (const off of data.offers) {
+        if (typeof off?.availability === 'string') {
+          const a = off.availability.toLowerCase();
+          if (a.includes('soldout') || a.includes('outofstock') || a.includes('discontinued')) {
+            status = 'sold_out';
+            break;
+          }
+        }
+      }
+    } else if (data && typeof data === 'object' && 'offers' in data && data.offers && typeof (data.offers as Record<string, unknown>).availability === 'string') {
+      const a = ((data.offers as Record<string, unknown>).availability as string).toLowerCase();
+      if (a.includes('soldout') || a.includes('outofstock') || a.includes('discontinued')) {
+        status = 'sold_out';
+      }
+    }
+
     const confidenceScore = ['A1','A2','B1','B2','B3','B4','B5'].includes(method) ? 0.95 : 0.75;
 
     const parsed = ParsedEventSchema.parse({

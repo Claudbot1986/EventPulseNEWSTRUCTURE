@@ -40,6 +40,9 @@ export interface RawEventInput {
   // the normalizer reads them as fallbacks. Additive — zero runtime impact.
   category?: string;
   url?: string;
+  /** Event-level status — drives UI badges (sold out, cancelled, etc.).
+   *  Validated against the `events.status_expanded` CHECK constraint. */
+  status_expanded?: 'scheduled' | 'cancelled' | 'postponed' | 'rescheduled' | 'sold_out' | 'not_yet_on_sale' | null;
 }
 
 /** Output of the normalizer worker — ready for DB insert */
