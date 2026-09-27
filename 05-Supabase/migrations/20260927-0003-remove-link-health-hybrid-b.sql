@@ -51,16 +51,19 @@
 --   Återkör 20260926-0004-link-health-hybrid.sql (återställer Hybrid B-klausulen).
 --   Konvertera 'live'/'dead' tillbaka till 'ok'/'broken' om detta körs i prod.
 
-BEGIN;
+-- ─── CHECK-constraint uppdateras FÖRST — NOT VALID för att inte validera
+-- befintliga 'ok'/'broken'-rader (de konverteras i nästa steg).
+ALTER TABLE events DROP CONSTRAINT IF EXISTS events_link_status_check;
+ALTER TABLE events ADD CONSTRAINT events_link_status_check
+  CHECK (link_status IS NULL OR link_status IN ('live', 'dead', 'unknown'))
+  NOT VALID;
 
 -- ─── Datakonvertering: 'ok' → 'live', 'broken' → 'dead' ─────────────────────
 UPDATE events SET link_status = 'live' WHERE link_status = 'ok';
 UPDATE events SET link_status = 'dead' WHERE link_status = 'broken';
 
--- ─── CHECK-constraint uppdateras för att tillåta 'unknown' ──────────────────
-ALTER TABLE events DROP CONSTRAINT IF EXISTS events_link_status_check;
-ALTER TABLE events ADD CONSTRAINT events_link_status_check
-  CHECK (link_status IS NULL OR link_status IN ('live', 'dead', 'unknown'));
+-- ─── Validera constraint mot de nu-konverterade raderna (snabb FT-scan) ────
+ALTER TABLE events VALIDATE CONSTRAINT events_link_status_check;
 
 -- ─── RPC uppdateras: 'live' | 'dead' | 'unknown', 'unknown' nollställer streaken ─
 -- 'unknown' betyder "vi vet inte" — varken cf++ eller cf=0. Men streaken
