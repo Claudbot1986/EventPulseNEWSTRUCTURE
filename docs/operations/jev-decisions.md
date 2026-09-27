@@ -79,3 +79,189 @@ Format: `YYYY-MM-DD HH:MM | type | state (≤140c) | answer | action taken`.
 2026-09-25 05:21 | advisor | choice | Senaste memory weights: read_more click / card click / impression | {"decision": {"type": "choice", "choice": "\"five_three_one\"", "probabilities": {"card_click=2": 0.01, "\"two_one_one\"": 0.11, "impression=1\"": 0, "\"four_three_one\"": 0.24, "{\"three_two_one\"": 0.23, "card_click=1": 0, "impression=1\" | Use winner as default weights in useSenasteEvents hook
 2026-09-25 09:29 | advisor | choice | HemStar sandbox completion: AC steps mostly done. Pick execution order. | {"decision": {"type": "choice", "choice": "{\"polish_first\"", "probabilities": {"hitta problem": 0, "{\"polish_first\"": 0.36, "bygg om HemStar mer minimalt\"": 0, "visuell verifiering separat\"}": 0.03, "\"revert_first\"": 0, "sedan verif | Använd Jevs val som nästa steg
 2026-09-25 09:30 | advisor | choice | Sandbox Hem* biggest risk | {"decision": {"type": "choice", "choice": "{\"isolation\"", "probabilities": {"\"registry_drift\"": 0.01, "\"theme_inconsistency\"": 0, "\"state_demo\"": 0.06, "{\"isolation\"": 0.75, "\"file_size\"": 0.01, "\"hexport_drift\"": 0.13, "\"tok | Använd Jevs val som risk att mitigera först
+2026-09-26 15:24 | advisor | noul | Hem-supabase är nu Hem-tabben i 06-UI (commit 7f9bacc). sandbox-HemSupabase.js är beteendeidentisk men sandbox-only. | {"sandbox_cleanup_after_hometab": {"type": "noul", "noul": 0.65}} | Om ja → ta bort sandbox-HemSupabase.js + HemStar.js + deras registry-entries + historiska plans-fil. Om nej → lämna som historisk demo.
+2026-09-26 15:24 | advisor | noul | Senaste 2 dagarna: sandbox-HemStar → 06-UI (mock), sandbox-HemSupabase → 06-UI HomeScreen (prod). Sandbox blir alltmer 'historisk demo'. | {"sandbox_role_postmigration": {"type": "noul", "noul": 0.7}} | Om ja → föreslå exit-strategi (vilka delar bevaras som docs, vilka raderas). Om nej → motivera varför sandbox fortfarande behövs som aktiv yta.
+2026-09-26 17:11 | advisor | choice | Tid-buggar: eventsCanonical visar UTC (17:30) istället för Stockholm-tid (19:30). Kaskad genom UI:en. Användaren vill ha 100% sanning gen... | {"decision": {"type": "choice", "choice": "{\"A\"", "probabilities": {"{\"A\"": 1}, "confidence": 1}} | 
+2026-09-26 17:11 | advisor | choice | Tid-buggar: eventsCanonical visar UTC (17:30) istället för Stockholm-tid (19:30). Kaskad genom UI:en. Stockholm-användare idag, men vill ... | {"decision": {"type": "choice", "choice": "klienten visar rakt av. Kräver migration + ingestion-ändring. Robust mot TZ-resor. C", "probabilities": {"men mer kod.": 0.02, "klienten visar rakt av. Kräver migration + ingestion-ändring. Robust  | 
+2026-09-26 17:40 | advisor | choice | Hem-sektionen har 5 karuseller idag (För dig, Senaste, Ikväll, Helgen, Upptäck). Behöver välja 5 nya. | {"decision": {"type": "choice", "choice": "KRÄVER schema-migration (ny is_online-kolumn)", "probabilities": {"starkt mönster men blockerad|E": 0.01, "smal time-of-day-vinkel": 0, "signal på att vi växer|F": 0.01, "mer arbete men starkt möns | Skriv plan för de 5 valda i docs/MASTERPLAN.md-style fil. Inkludera Supabase-migration om någon kräver det.
+2026-09-26 17:40 | advisor | choice | Hemsektionen har 5 karuseller idag. Vi ska lägga till 5 till från 8 kandidater. | {"decision": {"type": "choice", "choice": "enkel query", "probabilities": {"enkel query": 0.73, "bredare än Helgen|G": 0.15, "fyller Ikväll-glappet 00-23|C": 0.01, "signalerar tillväxt|F": 0.03, "A": 0.03, "starkt Spotify/Eventbrite-mönster | Skriv detaljerad plan för de 5 valda karusellerna med Supabase-wiring.
+2026-09-26 17:40 | advisor | choice | Hemsektionen har 5 karuseller idag. Vi ska lägga till 5 till från 8 kandidater. | {"decision": {"type": "choice", "choice": "A", "probabilities": {"A": 1}, "confidence": 1}} | Skriv detaljerad plan för de 5 valda karusellerna.
+2026-09-26 17:40 | advisor | choice | Hemsektionen har 5 karuseller idag (För dig, Senaste, Ikväll, Helgen, Upptäck). Behöver prioritera NY hem-karusell #1 av 8 kandidater. | {"decision": {"type": "choice", "choice": "A", "probabilities": {"A": 1}, "confidence": 1}} | Pick #1 för home-tab. Sen kör vi igen för #2,#3,#4,#5.
+2026-09-26 17:40 | advisor | choice | Hemsektionen har 5 karuseller idag. Vi har lagt till A (Gratis). Behöver prioritera hem-karusell #2 av 7 resterande. | {"decision": {"type": "choice", "choice": "B", "probabilities": {"B": 1}, "confidence": 1}} | Pick #2 för home-tab.
+2026-09-26 17:40 | advisor | choice | Hemsektionen har 5 karuseller idag. Vi har lagt till A (Gratis), B (Imorgon). Behöver prioritera hem-karusell #3 av 6 resterande. | {"decision": {"type": "choice", "choice": "C", "probabilities": {"C": 1}, "confidence": 1}} | Pick #3 for home-tab.
+2026-09-26 17:40 | advisor | choice | Hemsektionen har 5 karuseller idag. Vi har lagt till A,B,C. Behöver prioritera hem-karusell #4 av 5 resterande. | {"decision": {"type": "choice", "choice": "D", "probabilities": {"D": 1}, "confidence": 1}} | Pick #4 for home-tab.
+2026-09-26 17:40 | advisor | choice | Hemsektionen har 5 karuseller idag. Vi har lagt till A,B,C,D. Behöver prioritera hem-karusell #5 av 4 resterande. | {"decision": {"type": "choice", "choice": "E", "probabilities": {"E": 1}, "confidence": 1}} | Pick #5 for home-tab.
+2026-09-26 17:41 | advisor | choice | C-karusellen: 12 kategorier i DB. community=176, music=173, culture=101, food=11, art-exhibitions=12. | {"decision": {"type": "choice", "choice": "smalare men stark nisch|community", "probabilities": {"bred anvandarskara|food": 0, "mest data": 0.05, "bredd|kultur": 0, "storst volym": 0.06, "mellan alternativ": 0, "music": 0.01, "smalare men s | Anvand vinnaren som category_slug-filter i HomeScreen-fragan.
+2026-09-26 17:41 | advisor | choice | D (Online events): venue_id IS NULL ar en dalig detektor. Hardenberger-konsert har null venue men ar inte online. | {"decision": {"type": "choice", "choice": "schema-migration", "probabilities": {"korrekt men kravver migration|heuristic-titel": 0.07, "ingen migration men osaker|hybrid": 0.1, "annars titel-heuristik": 0.04, "robustast": 0.04, "schema-migr | Vinnaren bestammer om vi skriver en Supabase-migration eller inte.
+2026-09-26 17:41 | advisor | choice | E (Nytt pa EventPulse): freshness_at finns, markerar nar eventet sist verifierades/syntes. Vilken tidsgrans ska vi anvanda? | {"decision": {"type": "choice", "choice": "nytt OCH framtida|senaste-ingestion", "probabilities": {"ta de senaste fresh events|upptackt-senaste-7d": 0.39, "nytt OCH framtida|senaste-ingestion": 0.41000000000000003, "smalast men freshest": 0 | Vinnaren bestammer SQL-filtret.
+2026-09-26 18:54 | advisor | score | Byta link-health v2 (per-event view-filter) till v3 (per-källa-filter + alla events in i reparationsprogrammet). Mål: tvinga operatörs-åt... | {"decision": {"type": "score", "score": 1.13, "legend": {"0": ["1", "regression"], "1": ["5", "equal-to-current"], "2": ["10", "strict-improvement"]}, "probabilities": {"0": 0.4, "1": 0.06, "2": 0.54}, "confidence": 0}} | Evaluate link-health v3 risk vs v2
+2026-09-26 18:54 | advisor | choice | Broken-link policy. v2: 1 broken event = 1 hidden, watchlist is a report. v3: 1 broken event = whole source hidden + all events in manual... | {"decision": {"type": "choice", "choice": "hybrid", "probabilities": {"v3": 0.01, "v2": 0.04, "hybrid": 0.95}, "confidence": 0.92}} | Choose link-health policy variant
+2026-09-26 19:38 | advisor | noul | 5811 ev/100 src. n=880 strat prop, Jev 7-param w 3-2-2-1-1-0-0, min-stratum 30, rule+Jev fallback. | {"decision": {"type": "noul", "noul": 0.51}} | >=0.7 kor plan; 0.5-0.7 justera vikter/sample; <0.5 fallback till Jev-per-event i cron (dyrare)
+2026-09-26 19:38 | advisor | choice | Jev sa 0.51 pa planens >=90%-agreement. Behover justera. Plan: n=880 strat prop, w 3-2-2-1-1-0-0, min-stratum 30. | {"decision": {"type": "choice", "choice": "okad-sample", "probabilities": {"lagg-llm-context": 0.05, "okad-sample": 0.32, "~25USD": 0.01, "omfordela-vikter": 0.28, "byt-strategi": 0.01, "battre precision men +70% kostnad": 0.02, "kor Jev pa | Kor vald justering i fas 1 (sample-dragning + Jev-batch)
+2026-09-26 19:45 | advisor | noul | jarfalla/3c583dd0 | {"is_online": {"type": "noul", "noul": 0.16}} | Pilot 100 event 1/100
+2026-09-26 19:45 | advisor | noul | sthlmlist/02d22c23 | {"is_online": {"type": "noul", "noul": 0.09}} | Pilot 100 event 2/100
+2026-09-26 19:45 | advisor | noul | sthlmlist/f874df26 | {"is_online": {"type": "noul", "noul": 0.11}} | Pilot 100 event 3/100
+2026-09-26 19:45 | advisor | noul | songkick-stockholm/cf71ca72 | {"is_online": {"type": "noul", "noul": 0.04}} | Pilot 100 event 4/100
+2026-09-26 19:45 | advisor | noul | spelning-se/7571e525 | {"is_online": {"type": "noul", "noul": 0.07}} | Pilot 100 event 5/100
+2026-09-26 19:45 | advisor | noul | sthlmlist/9c8f8d01 | {"is_online": {"type": "noul", "noul": 0.12}} | Pilot 100 event 6/100
+2026-09-26 19:45 | advisor | noul | sthlmlist/b09a783b | {"is_online": {"type": "noul", "noul": 0.08}} | Pilot 100 event 7/100
+2026-09-26 19:45 | advisor | noul | spelning-se/e122904d | {"is_online": {"type": "noul", "noul": 0.09}} | Pilot 100 event 8/100
+2026-09-26 19:45 | advisor | noul | halmstad-konserthu/ec882aa5 | {"is_online": {"type": "noul", "noul": 0.02}} | Pilot 100 event 9/100
+2026-09-26 19:45 | advisor | noul | thatsup-stockholm-/bbf9b9d4 | {"is_online": {"type": "noul", "noul": 0.53}} | Pilot 100 event 10/100
+2026-09-26 19:45 | advisor | noul | sthlmlist/da944734 | {"is_online": {"type": "noul", "noul": 0.1}} | Pilot 100 event 11/100
+2026-09-26 19:45 | advisor | noul | songkick-stockholm/c41c450c | {"is_online": {"type": "noul", "noul": 0.05}} | Pilot 100 event 12/100
+2026-09-26 19:45 | advisor | noul | evensos-stockholm/b944c92a | {"is_online": {"type": "noul", "noul": 0.27}} | Pilot 100 event 13/100
+2026-09-26 19:45 | advisor | noul | jarfalla/a7d519c0 | {"is_online": {"type": "noul", "noul": 0.28}} | Pilot 100 event 14/100
+2026-09-26 19:45 | advisor | noul | evensos-stockholm/f9679fc5 | {"is_online": {"type": "noul", "noul": 0.34}} | Pilot 100 event 15/100
+2026-09-26 19:45 | advisor | noul | sthlmlist/e4494af0 | {"is_online": {"type": "noul", "noul": 0.12}} | Pilot 100 event 16/100
+2026-09-26 19:45 | advisor | noul | spelning-se/edb4a8c5 | {"is_online": {"type": "noul", "noul": 0.06}} | Pilot 100 event 17/100
+2026-09-26 19:45 | advisor | noul | sthlmlist/b4d479b3 | {"is_online": {"type": "noul", "noul": 0.07}} | Pilot 100 event 18/100
+2026-09-26 19:45 | advisor | noul | spelning-se/6eb5a939 | {"is_online": {"type": "noul", "noul": 0.08}} | Pilot 100 event 19/100
+2026-09-26 19:45 | advisor | noul | sthlmlist/61609419 | {"is_online": {"type": "noul", "noul": 0.1}} | Pilot 100 event 20/100
+2026-09-26 19:45 | advisor | noul | sthlmlist/b4971032 | {"is_online": {"type": "noul", "noul": 0.1}} | Pilot 100 event 21/100
+2026-09-26 19:45 | advisor | noul | sthlmlist/33068d57 | {"is_online": {"type": "noul", "noul": 0.31}} | Pilot 100 event 22/100
+2026-09-26 19:45 | advisor | noul | sthlmlist/3ab73e58 | {"is_online": {"type": "noul", "noul": 0.14}} | Pilot 100 event 23/100
+2026-09-26 19:45 | advisor | noul | eventbrite-discove/1dfb92dc | {"is_online": {"type": "noul", "noul": 0.1}} | Pilot 100 event 24/100
+2026-09-26 19:45 | advisor | noul | evensos-stockholm/e0a13c09 | {"is_online": {"type": "noul", "noul": 0.14}} | Pilot 100 event 25/100
+2026-09-26 19:45 | advisor | noul | spelning-se/42843435 | {"is_online": {"type": "noul", "noul": 0.07}} | Pilot 100 event 26/100
+2026-09-26 19:45 | advisor | noul | malmo-live/5875d677 | {"is_online": {"type": "noul", "noul": 0.09}} | Pilot 100 event 27/100
+2026-09-26 19:45 | advisor | noul | eventbrite-stockho/d0f8b284 | {"is_online": {"type": "noul", "noul": 0.24}} | Pilot 100 event 28/100
+2026-09-26 19:45 | advisor | noul | sthlmlist/6f4232d4 | {"is_online": {"type": "noul", "noul": 0.29}} | Pilot 100 event 29/100
+2026-09-26 19:45 | advisor | noul | berwaldhallen-tixl/d663e406 | {"is_online": {"type": "noul", "noul": 0.12}} | Pilot 100 event 30/100
+2026-09-26 19:45 | advisor | noul | sthlmlist/b9987d12 | {"is_online": {"type": "noul", "noul": 0.15}} | Pilot 100 event 31/100
+2026-09-26 19:45 | advisor | noul | 3arena/d0a401d0 | {"is_online": {"type": "noul", "noul": 0.08}} | Pilot 100 event 32/100
+2026-09-26 19:45 | advisor | noul | spelning-se/94b008a7 | {"is_online": {"type": "noul", "noul": 0.14}} | Pilot 100 event 33/100
+2026-09-26 19:45 | advisor | noul | sodrateatern/c9253d19 | {"is_online": {"type": "noul", "noul": 0.17}} | Pilot 100 event 34/100
+2026-09-26 19:45 | advisor | noul | eventbrite-sthlm-c/10983e70 | {"is_online": {"type": "noul", "noul": 0.33}} | Pilot 100 event 35/100
+2026-09-26 19:45 | advisor | noul | sprakmuseet/8434f122 | {"is_online": {"type": "noul", "noul": 0.16}} | Pilot 100 event 36/100
+2026-09-26 19:45 | advisor | noul | kth-2/b74fab1b | {"is_online": {"type": "noul", "noul": 0.44}} | Pilot 100 event 37/100
+2026-09-26 19:45 | advisor | noul | sthlmlist/f5d47d8e | {"is_online": {"type": "noul", "noul": 0.09}} | Pilot 100 event 38/100
+2026-09-26 19:45 | advisor | noul | songkick-stockholm/389e1b70 | {"is_online": {"type": "noul", "noul": 0.03}} | Pilot 100 event 39/100
+2026-09-26 19:46 | advisor | noul | konstkalendern/61873072 | {"is_online": {"type": "noul", "noul": 0.23}} | Pilot 100 event 40/100
+2026-09-26 19:46 | advisor | noul | spelning-se/f04decf9 | {"is_online": {"type": "noul", "noul": 0.07}} | Pilot 100 event 41/100
+2026-09-26 19:46 | advisor | noul | folkoperan/c82394c4 | {"is_online": {"type": "noul", "noul": 0.14}} | Pilot 100 event 42/100
+2026-09-26 19:46 | advisor | noul | folkoperan/e8317284 | {"is_online": {"type": "noul", "noul": 0.11}} | Pilot 100 event 43/100
+2026-09-26 19:46 | advisor | noul | halmstad-konserthu/e9e7afc9 | {"is_online": {"type": "noul", "noul": 0.02}} | Pilot 100 event 44/100
+2026-09-26 19:46 | advisor | noul | evensos-stockholm/99fb97a9 | {"is_online": {"type": "noul", "noul": 0.32}} | Pilot 100 event 45/100
+2026-09-26 19:46 | advisor | noul | kulturhuset/7d0cf7bc | {"is_online": {"type": "noul", "noul": 0.11}} | Pilot 100 event 46/100
+2026-09-26 19:46 | advisor | noul | sthlmlist/825a1d66 | {"is_online": {"type": "noul", "noul": 0.09}} | Pilot 100 event 47/100
+2026-09-26 19:46 | advisor | noul | sthlmlist/0339dba3 | {"is_online": {"type": "noul", "noul": 0.12}} | Pilot 100 event 48/100
+2026-09-26 19:46 | advisor | noul | sthlmlist/06f8ebe4 | {"is_online": {"type": "noul", "noul": 0.11}} | Pilot 100 event 49/100
+2026-09-26 19:46 | advisor | noul | lulea-hf-2/d7e8f5e3 | {"is_online": {"type": "noul", "noul": 0.07}} | Pilot 100 event 50/100
+2026-09-26 19:46 | advisor | noul | sthlmlist/6d135e51 | {"is_online": {"type": "noul", "noul": 0.1}} | Pilot 100 event 51/100
+2026-09-26 19:46 | advisor | noul | spelning-se/09157183 | {"is_online": {"type": "noul", "noul": 0.04}} | Pilot 100 event 52/100
+2026-09-26 19:46 | advisor | noul | spelning-se/913a8d7b | {"is_online": {"type": "noul", "noul": 0.07}} | Pilot 100 event 53/100
+2026-09-26 19:46 | advisor | noul | sthlmlist/ab53635a | {"is_online": {"type": "noul", "noul": 0.19}} | Pilot 100 event 54/100
+2026-09-26 19:46 | advisor | noul | thatsup-stockholm-/43f0f6f8 | {"is_online": {"type": "noul", "noul": 0.23}} | Pilot 100 event 55/100
+2026-09-26 19:46 | advisor | noul | folkoperan/e7e04fbc | {"is_online": {"type": "noul", "noul": 0.18}} | Pilot 100 event 56/100
+2026-09-26 19:46 | advisor | noul | sthlmlist/e540a3de | {"is_online": {"type": "noul", "noul": 0.13}} | Pilot 100 event 57/100
+2026-09-26 19:46 | advisor | noul | spelning-se/1b7f1671 | {"is_online": {"type": "noul", "noul": 0.1}} | Pilot 100 event 58/100
+2026-09-26 19:46 | advisor | noul | thatsup-stockholm-/e04751ce | {"is_online": {"type": "noul", "noul": 0.27}} | Pilot 100 event 59/100
+2026-09-26 19:46 | advisor | noul | sthlmlist/08d0dcfd | {"is_online": {"type": "noul", "noul": 0.06}} | Pilot 100 event 60/100
+2026-09-26 19:46 | advisor | noul | sthlmlist/eaa04020 | {"is_online": {"type": "noul", "noul": 0.1}} | Pilot 100 event 61/100
+2026-09-26 19:46 | advisor | noul | evensos-stockholm/2ca96f9c | {"is_online": {"type": "noul", "noul": 0.34}} | Pilot 100 event 62/100
+2026-09-26 19:46 | advisor | noul | evensos-stockholm/439877bc | {"is_online": {"type": "noul", "noul": 0.21}} | Pilot 100 event 63/100
+2026-09-26 19:46 | advisor | noul | spelning-se/ff9cdcfc | {"is_online": {"type": "noul", "noul": 0.05}} | Pilot 100 event 64/100
+2026-09-26 19:46 | advisor | noul | kulturhuset/253c89fa | {"is_online": {"type": "noul", "noul": 0.08}} | Pilot 100 event 65/100
+2026-09-26 19:46 | advisor | noul | globen-3/42d7c966 | {"is_online": {"type": "noul", "noul": 0.07}} | Pilot 100 event 66/100
+2026-09-26 19:46 | advisor | noul | spelning-se/e724e9bf | {"is_online": {"type": "noul", "noul": 0.08}} | Pilot 100 event 67/100
+2026-09-26 19:46 | advisor | noul | spelning-se/5144d6d7 | {"is_online": {"type": "noul", "noul": 0.04}} | Pilot 100 event 68/100
+2026-09-26 19:46 | advisor | noul | thatsup-stockholm-/8926e74b | {"is_online": {"type": "noul", "noul": 0.08}} | Pilot 100 event 69/100
+2026-09-26 19:46 | advisor | noul | jarfalla/3c583dd0 | {"is_online": {"type": "noul", "noul": 0.2}} | Pilot 100 event 1/100
+2026-09-26 19:46 | advisor | noul | sthlmlist/02d22c23 | {"is_online": {"type": "noul", "noul": 0.08}} | Pilot 100 event 2/100
+2026-09-26 19:46 | advisor | noul | sthlmlist/f874df26 | {"is_online": {"type": "noul", "noul": 0.14}} | Pilot 100 event 3/100
+2026-09-26 19:46 | advisor | noul | songkick-stockholm/cf71ca72 | {"is_online": {"type": "noul", "noul": 0.04}} | Pilot 100 event 4/100
+2026-09-26 19:46 | advisor | noul | spelning-se/7571e525 | {"is_online": {"type": "noul", "noul": 0.06}} | Pilot 100 event 5/100
+2026-09-26 19:46 | advisor | noul | sthlmlist/9c8f8d01 | {"is_online": {"type": "noul", "noul": 0.13}} | Pilot 100 event 6/100
+2026-09-26 19:46 | advisor | noul | sthlmlist/b09a783b | {"is_online": {"type": "noul", "noul": 0.07}} | Pilot 100 event 7/100
+2026-09-26 19:46 | advisor | noul | spelning-se/e122904d | {"is_online": {"type": "noul", "noul": 0.09}} | Pilot 100 event 8/100
+2026-09-26 19:46 | advisor | noul | halmstad-konserthu/ec882aa5 | {"is_online": {"type": "noul", "noul": 0.02}} | Pilot 100 event 9/100
+2026-09-26 19:46 | advisor | noul | thatsup-stockholm-/bbf9b9d4 | {"is_online": {"type": "noul", "noul": 0.51}} | Pilot 100 event 10/100
+2026-09-26 19:46 | advisor | noul | sthlmlist/da944734 | {"is_online": {"type": "noul", "noul": 0.09}} | Pilot 100 event 11/100
+2026-09-26 19:46 | advisor | noul | songkick-stockholm/c41c450c | {"is_online": {"type": "noul", "noul": 0.05}} | Pilot 100 event 12/100
+2026-09-26 19:46 | advisor | noul | evensos-stockholm/b944c92a | {"is_online": {"type": "noul", "noul": 0.28}} | Pilot 100 event 13/100
+2026-09-26 19:46 | advisor | noul | jarfalla/a7d519c0 | {"is_online": {"type": "noul", "noul": 0.29}} | Pilot 100 event 14/100
+2026-09-26 19:46 | advisor | noul | evensos-stockholm/f9679fc5 | {"is_online": {"type": "noul", "noul": 0.35}} | Pilot 100 event 15/100
+2026-09-26 19:46 | advisor | noul | sthlmlist/e4494af0 | {"is_online": {"type": "noul", "noul": 0.12}} | Pilot 100 event 16/100
+2026-09-26 19:46 | advisor | noul | spelning-se/edb4a8c5 | {"is_online": {"type": "noul", "noul": 0.06}} | Pilot 100 event 17/100
+2026-09-26 19:46 | advisor | noul | sthlmlist/b4d479b3 | {"is_online": {"type": "noul", "noul": 0.07}} | Pilot 100 event 18/100
+2026-09-26 19:46 | advisor | noul | spelning-se/6eb5a939 | {"is_online": {"type": "noul", "noul": 0.09}} | Pilot 100 event 19/100
+2026-09-26 19:46 | advisor | noul | sthlmlist/61609419 | {"is_online": {"type": "noul", "noul": 0.1}} | Pilot 100 event 20/100
+2026-09-26 19:46 | advisor | noul | sthlmlist/b4971032 | {"is_online": {"type": "noul", "noul": 0.1}} | Pilot 100 event 21/100
+2026-09-26 19:46 | advisor | noul | sthlmlist/33068d57 | {"is_online": {"type": "noul", "noul": 0.31}} | Pilot 100 event 22/100
+2026-09-26 19:46 | advisor | noul | sthlmlist/3ab73e58 | {"is_online": {"type": "noul", "noul": 0.15}} | Pilot 100 event 23/100
+2026-09-26 19:46 | advisor | noul | eventbrite-discove/1dfb92dc | {"is_online": {"type": "noul", "noul": 0.1}} | Pilot 100 event 24/100
+2026-09-26 19:46 | advisor | noul | evensos-stockholm/e0a13c09 | {"is_online": {"type": "noul", "noul": 0.14}} | Pilot 100 event 25/100
+2026-09-26 19:46 | advisor | noul | spelning-se/42843435 | {"is_online": {"type": "noul", "noul": 0.07}} | Pilot 100 event 26/100
+2026-09-26 19:46 | advisor | noul | malmo-live/5875d677 | {"is_online": {"type": "noul", "noul": 0.09}} | Pilot 100 event 27/100
+2026-09-26 19:46 | advisor | noul | eventbrite-stockho/d0f8b284 | {"is_online": {"type": "noul", "noul": 0.24}} | Pilot 100 event 28/100
+2026-09-26 19:46 | advisor | noul | sthlmlist/6f4232d4 | {"is_online": {"type": "noul", "noul": 0.28}} | Pilot 100 event 29/100
+2026-09-26 19:46 | advisor | noul | berwaldhallen-tixl/d663e406 | {"is_online": {"type": "noul", "noul": 0.12}} | Pilot 100 event 30/100
+2026-09-26 19:46 | advisor | noul | sthlmlist/b9987d12 | {"is_online": {"type": "noul", "noul": 0.15}} | Pilot 100 event 31/100
+2026-09-26 19:46 | advisor | noul | 3arena/d0a401d0 | {"is_online": {"type": "noul", "noul": 0.07}} | Pilot 100 event 32/100
+2026-09-26 19:46 | advisor | noul | spelning-se/94b008a7 | {"is_online": {"type": "noul", "noul": 0.13}} | Pilot 100 event 33/100
+2026-09-26 19:46 | advisor | noul | sodrateatern/c9253d19 | {"is_online": {"type": "noul", "noul": 0.19}} | Pilot 100 event 34/100
+2026-09-26 19:46 | advisor | noul | eventbrite-sthlm-c/10983e70 | {"is_online": {"type": "noul", "noul": 0.32}} | Pilot 100 event 35/100
+2026-09-26 19:46 | advisor | noul | sprakmuseet/8434f122 | {"is_online": {"type": "noul", "noul": 0.15}} | Pilot 100 event 36/100
+2026-09-26 19:46 | advisor | noul | kth-2/b74fab1b | {"is_online": {"type": "noul", "noul": 0.43}} | Pilot 100 event 37/100
+2026-09-26 19:46 | advisor | noul | sthlmlist/f5d47d8e | {"is_online": {"type": "noul", "noul": 0.09}} | Pilot 100 event 38/100
+2026-09-26 19:46 | advisor | noul | songkick-stockholm/389e1b70 | {"is_online": {"type": "noul", "noul": 0.02}} | Pilot 100 event 39/100
+2026-09-26 19:46 | advisor | noul | konstkalendern/61873072 | {"is_online": {"type": "noul", "noul": 0.23}} | Pilot 100 event 40/100
+2026-09-26 19:46 | advisor | noul | spelning-se/f04decf9 | {"is_online": {"type": "noul", "noul": 0.07}} | Pilot 100 event 41/100
+2026-09-26 19:46 | advisor | noul | folkoperan/c82394c4 | {"is_online": {"type": "noul", "noul": 0.13}} | Pilot 100 event 42/100
+2026-09-26 19:46 | advisor | noul | folkoperan/e8317284 | {"is_online": {"type": "noul", "noul": 0.11}} | Pilot 100 event 43/100
+2026-09-26 19:46 | advisor | noul | halmstad-konserthu/e9e7afc9 | {"is_online": {"type": "noul", "noul": 0.02}} | Pilot 100 event 44/100
+2026-09-26 19:46 | advisor | noul | evensos-stockholm/99fb97a9 | {"is_online": {"type": "noul", "noul": 0.34}} | Pilot 100 event 45/100
+2026-09-26 19:46 | advisor | noul | kulturhuset/7d0cf7bc | {"is_online": {"type": "noul", "noul": 0.11}} | Pilot 100 event 46/100
+2026-09-26 19:46 | advisor | noul | sthlmlist/825a1d66 | {"is_online": {"type": "noul", "noul": 0.11}} | Pilot 100 event 47/100
+2026-09-26 19:46 | advisor | noul | sthlmlist/0339dba3 | {"is_online": {"type": "noul", "noul": 0.12}} | Pilot 100 event 48/100
+2026-09-26 19:46 | advisor | noul | sthlmlist/06f8ebe4 | {"is_online": {"type": "noul", "noul": 0.11}} | Pilot 100 event 49/100
+2026-09-26 19:46 | advisor | noul | lulea-hf-2/d7e8f5e3 | {"is_online": {"type": "noul", "noul": 0.08}} | Pilot 100 event 50/100
+2026-09-26 19:46 | advisor | noul | sthlmlist/6d135e51 | {"is_online": {"type": "noul", "noul": 0.09}} | Pilot 100 event 51/100
+2026-09-26 19:46 | advisor | noul | spelning-se/09157183 | {"is_online": {"type": "noul", "noul": 0.04}} | Pilot 100 event 52/100
+2026-09-26 19:46 | advisor | noul | spelning-se/913a8d7b | {"is_online": {"type": "noul", "noul": 0.07}} | Pilot 100 event 53/100
+2026-09-26 19:47 | advisor | noul | sthlmlist/ab53635a | {"is_online": {"type": "noul", "noul": 0.2}} | Pilot 100 event 54/100
+2026-09-26 19:47 | advisor | noul | thatsup-stockholm-/43f0f6f8 | {"is_online": {"type": "noul", "noul": 0.23}} | Pilot 100 event 55/100
+2026-09-26 19:47 | advisor | noul | folkoperan/e7e04fbc | {"is_online": {"type": "noul", "noul": 0.17}} | Pilot 100 event 56/100
+2026-09-26 19:47 | advisor | noul | sthlmlist/e540a3de | {"is_online": {"type": "noul", "noul": 0.12}} | Pilot 100 event 57/100
+2026-09-26 19:47 | advisor | noul | spelning-se/1b7f1671 | {"is_online": {"type": "noul", "noul": 0.09}} | Pilot 100 event 58/100
+2026-09-26 19:47 | advisor | noul | thatsup-stockholm-/e04751ce | {"is_online": {"type": "noul", "noul": 0.34}} | Pilot 100 event 59/100
+2026-09-26 19:47 | advisor | noul | sthlmlist/08d0dcfd | {"is_online": {"type": "noul", "noul": 0.07}} | Pilot 100 event 60/100
+2026-09-26 19:47 | advisor | noul | sthlmlist/eaa04020 | {"is_online": {"type": "noul", "noul": 0.09}} | Pilot 100 event 61/100
+2026-09-26 19:47 | advisor | noul | evensos-stockholm/2ca96f9c | {"is_online": {"type": "noul", "noul": 0.37}} | Pilot 100 event 62/100
+2026-09-26 19:47 | advisor | noul | evensos-stockholm/439877bc | {"is_online": {"type": "noul", "noul": 0.22}} | Pilot 100 event 63/100
+2026-09-26 19:47 | advisor | noul | spelning-se/ff9cdcfc | {"is_online": {"type": "noul", "noul": 0.05}} | Pilot 100 event 64/100
+2026-09-26 19:47 | advisor | noul | kulturhuset/253c89fa | {"is_online": {"type": "noul", "noul": 0.08}} | Pilot 100 event 65/100
+2026-09-26 19:47 | advisor | noul | globen-3/42d7c966 | {"is_online": {"type": "noul", "noul": 0.05}} | Pilot 100 event 66/100
+2026-09-26 19:47 | advisor | noul | spelning-se/e724e9bf | {"is_online": {"type": "noul", "noul": 0.08}} | Pilot 100 event 67/100
+2026-09-26 19:47 | advisor | noul | spelning-se/5144d6d7 | {"is_online": {"type": "noul", "noul": 0.05}} | Pilot 100 event 68/100
+2026-09-26 19:47 | advisor | noul | thatsup-stockholm-/8926e74b | {"is_online": {"type": "noul", "noul": 0.07}} | Pilot 100 event 69/100
+2026-09-26 19:47 | advisor | noul | evensos-stockholm/97803ac4 | {"is_online": {"type": "noul", "noul": 0.24}} | Pilot 100 event 71/100
+2026-09-26 19:47 | advisor | noul | spelning-se/3db2b0da | {"is_online": {"type": "noul", "noul": 0.12}} | Pilot 100 event 72/100
+2026-09-26 19:47 | advisor | noul | lulea-hf-2/0fb88ed4 | {"is_online": {"type": "noul", "noul": 0.07}} | Pilot 100 event 73/100
+2026-09-26 19:47 | advisor | noul | arkdes/5228967d | {"is_online": {"type": "noul", "noul": 0.49}} | Pilot 100 event 74/100
+2026-09-26 19:47 | advisor | noul | ticketmaster/483ecb06 | {"is_online": {"type": "noul", "noul": 0.05}} | Pilot 100 event 75/100
+2026-09-26 19:47 | advisor | noul | kulturhuset/0bf1b3db | {"is_online": {"type": "noul", "noul": 0.08}} | Pilot 100 event 76/100
+2026-09-26 19:47 | advisor | noul | konstkalendern/4c3457a9 | {"is_online": {"type": "noul", "noul": 0.25}} | Pilot 100 event 77/100
+2026-09-26 19:47 | advisor | noul | folkoperan/9dcd2dd9 | {"is_online": {"type": "noul", "noul": 0.15}} | Pilot 100 event 78/100
+2026-09-26 19:47 | advisor | noul | sthlmlist/28a50a6c | {"is_online": {"type": "noul", "noul": 0.12}} | Pilot 100 event 79/100
+2026-09-26 19:47 | advisor | noul | spelning-se/086999c9 | {"is_online": {"type": "noul", "noul": 0.06}} | Pilot 100 event 80/100
+2026-09-26 19:47 | advisor | noul | spelning-se/dafe72e0 | {"is_online": {"type": "noul", "noul": 0.07}} | Pilot 100 event 81/100
+2026-09-26 19:47 | advisor | noul | sthlmlist/2c0db491 | {"is_online": {"type": "noul", "noul": 0.1}} | Pilot 100 event 82/100
+2026-09-26 19:47 | advisor | noul | thatsup-stockholm-/8caf610c | {"is_online": {"type": "noul", "noul": 0.31}} | Pilot 100 event 83/100
+2026-09-26 19:47 | advisor | noul | sprakmuseet/7facbadf | {"is_online": {"type": "noul", "noul": 0.12}} | Pilot 100 event 84/100
+2026-09-26 19:47 | advisor | noul | thatsup-stockholm-/349dfb3c | {"is_online": {"type": "noul", "noul": 0.33}} | Pilot 100 event 85/100
+2026-09-26 19:47 | advisor | noul | sthlmlist/41c4f252 | {"is_online": {"type": "noul", "noul": 0.18}} | Pilot 100 event 86/100
+2026-09-26 19:47 | advisor | noul | sthlmlist/5a5f7755 | {"is_online": {"type": "noul", "noul": 0.15}} | Pilot 100 event 87/100
+2026-09-26 19:47 | advisor | noul | spelning-se/f88fe3b5 | {"is_online": {"type": "noul", "noul": 0.09}} | Pilot 100 event 88/100
+2026-09-26 19:47 | advisor | noul | spelning-se/198dbac4 | {"is_online": {"type": "noul", "noul": 0.09}} | Pilot 100 event 89/100
+2026-09-26 19:47 | advisor | noul | thatsup-stockholm-/28f4b72b | {"is_online": {"type": "noul", "noul": 0.18}} | Pilot 100 event 90/100
+2026-09-26 19:47 | advisor | noul | sodrateatern/66e45816 | {"is_online": {"type": "noul", "noul": 0.21}} | Pilot 100 event 91/100
+2026-09-26 19:47 | advisor | noul | sthlmlist/a286cbd4 | {"is_online": {"type": "noul", "noul": 0.1}} | Pilot 100 event 94/100
+2026-09-26 19:47 | advisor | noul | evensos-stockholm/53ad4969 | {"is_online": {"type": "noul", "noul": 0.21}} | Pilot 100 event 95/100
+2026-09-26 19:47 | advisor | noul | lulea-hf-2/abc1e98f | {"is_online": {"type": "noul", "noul": 0.07}} | Pilot 100 event 96/100
+2026-09-26 19:47 | advisor | noul | spelning-se/f33c11ab | {"is_online": {"type": "noul", "noul": 0.06}} | Pilot 100 event 97/100
+2026-09-26 19:47 | advisor | noul | sprakmuseet/9bee7a98 | {"is_online": {"type": "noul", "noul": 0.14}} | Pilot 100 event 98/100
+2026-09-26 19:47 | advisor | noul | kulturhuset-stadst/dc5da285 | {"is_online": {"type": "noul", "noul": 0.05}} | Pilot 100 event 99/100
+2026-09-26 19:47 | advisor | noul | sthlmlist/3c4570c6 | {"is_online": {"type": "noul", "noul": 0.1}} | Pilot 100 event 100/100
+2026-09-27 07:09 | advisor | choice | EventPulse har 5686 Stockholm-events. 87% ligger i 3 kategorier (music/community/culture). Vi vill splittra music (2452 events) i genrer.... | {"decision": {"type": "choice", "choice": "combined", "probabilities": {"combined": 0.69, "pop-separate": 0.17, "färre knappar)": 0.06, "rock-separate": 0.08}, "confidence": 0.59}} | Validerar kandidat-slugs i 04-Sources/category-candidates.md
