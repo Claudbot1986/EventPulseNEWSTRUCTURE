@@ -25,10 +25,10 @@ export function normalizeSearchText(value) {
  * Keys not listed here pass through as themselves (music/sports/nightlife).
  */
 export const CATEGORY_GROUPS = {
-  culture: ['culture', 'art', 'art-exhibitions'],
-  barn: ['barn', 'family'],
-  theatre: ['theatre', 'theatre-comedy'],
-  food: ['food', 'food-drink'],
+  culture: ['culture', 'art', 'art-exhibitions', 'exhibition'],
+  barn: ['barn', 'family', 'kids'],
+  theatre: ['theatre', 'theatre-comedy', 'theatre-drama', 'opera', 'dance', 'circus'],
+  food: ['food', 'food-drink', 'wine-tasting'],
 };
 
 /** True when the event's category matches ANY selected pill key (groups applied). */

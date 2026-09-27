@@ -78,15 +78,28 @@ const GENRES = [
 ].map((g) => ({ ...g, matches: wordMatcher(g.detect) }));
 
 /** Server category_slug → Utforska pill key (feed slugs go through
- *  CATEGORY_GROUPS in browseFilters for the actual matching). */
+ *  CATEGORY_GROUPS in browseFilters for the actual matching).
+ *  2026-09-27 Steg 3.3: 24 finmaskiga slugs från migration
+ *  20260927-0001-categories-v2.sql — grupperade till befintliga
+ *  Utforska-pills. Nya pills för flea-market/film/talks-lectures/
+ *  workshop/community kommer i Steg 4 (UI-kort). */
 const SLUG_TO_PILL = {
   music: 'music',
   art: 'culture',
   culture: 'culture',
+  exhibition: 'culture',
   family: 'barn',
   barn: 'barn',
+  kids: 'barn',
   theatre: 'theatre',
+  'theatre-comedy': 'theatre',
+  'theatre-drama': 'theatre',
+  opera: 'theatre',
+  dance: 'theatre',
+  circus: 'theatre',
   food: 'food',
+  'food-drink': 'food',
+  'wine-tasting': 'food',
   sports: 'sports',
   nightlife: 'nightlife',
 };
