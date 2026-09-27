@@ -64,25 +64,45 @@ function extractShowTitle(html: string): string {
   return '';
 }
 
-const ITEM_RX = /"item_name":\s*"([^"]+?)(\d{4}-\d{2}-\d{2}\s+\d{1,2}:\d{2}:\d{2})"/g;
+// 2026-09-27 — item_name har den RIKTIGA produktionsnamnet (t.ex. "Nietzsche
+// kontra Wagner-2026-09-27 15:00:00"), medan <title> för abonnemangspaket-sidor
+// bara är "Folkoperan". Vi vill ha per-item titel; page-titeln används bara
+// som fallback om item_name saknar datum-suffix.
+function decodeHtmlEntities(s: string): string {
+  return s
+    .replace(/&#(\d+);/g, (_, n) => String.fromCodePoint(parseInt(n, 10)))
+    .replace(/&#x([0-9a-f]+);/gi, (_, h) => String.fromCodePoint(parseInt(h, 16)))
+    .replace(/&amp;/g, '&')
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>')
+    .replace(/&quot;/g, '"')
+    .replace(/&apos;/g, "'");
+}
+
+const ITEM_RX = /"item_name":\s*"([^"]+?)-(\d{4}-\d{2}-\d{2}\s+\d{1,2}:\d{2}:\d{2})"/g;
 
 function extractPerformances(html: string): Array<{ title: string; date: string; time: string }> {
-  const baseTitle = extractShowTitle(html);
-  if (!baseTitle) return [];
+  // Page-titeln är fallback ENDAST (för säkerhet); per-item titel från item_name
+  // är auktoritativ — den funkar även för abonnemangspaket-sidor där sidans
+  // <title> är "Folkoperan" (vilket ger titel="Folkoperan" för 100+ events).
+  const fallbackTitle = extractShowTitle(html);
   const seen = new Set<string>();
   const out: Array<{ title: string; date: string; time: string }> = [];
   let m: RegExpExecArray | null;
   const rx = new RegExp(ITEM_RX.source, 'g');
   while ((m = rx.exec(html)) !== null) {
+    const itemName = decodeHtmlEntities(m[1].trim());
     const dateTime = m[2]; // YYYY-MM-DD HH:MM:SS
     const dtMatch = dateTime.match(/^(\d{4}-\d{2}-\d{2})\s+(\d{1,2}):(\d{2}):\d{2}$/);
     if (!dtMatch) continue;
     const date = dtMatch[1];
     const time = `${dtMatch[2].padStart(2, '0')}:${dtMatch[3]}`;
-    const key = `${date}|${time}`;
+    const title = itemName || fallbackTitle;
+    if (!title) continue;
+    const key = `${title}|${date}|${time}`;
     if (seen.has(key)) continue;
     seen.add(key);
-    out.push({ title: baseTitle, date, time });
+    out.push({ title, date, time });
   }
   return out;
 }
@@ -116,9 +136,10 @@ export function extract(html: string, url: string, source = SOURCE_ID): Folkoper
   if (!matches(url)) return { showUrls: [], events: [], method: 'none' };
 
   if (/biljetter\.folkoperan\.se\/sv\/buyingflow\/tickets\/\d+\/?$/.test(url)) {
-    const title = extractShowTitle(html);
-    if (!title) return { showUrls: [], events: [], method: 'none' };
+    // 2026-09-27 — använd extractPerformances() som sanning: om varken
+    // page-titel eller item_name-titlar ger något → genuint tom sida.
     const performances = extractPerformances(html);
+    if (performances.length === 0) return { showUrls: [], events: [], method: 'none' };
     const { priceMin } = extractPrice(html);
     const image = extractImage(html);
     const description = extractDescription(html);
@@ -148,7 +169,7 @@ export function extract(html: string, url: string, source = SOURCE_ID): Folkoper
             hasUrl: true,
             hasDescription: !!description,
             hasTicketInfo: priceMin !== undefined,
-            signals: ['folkoperan-buyingflow', `show:${title}`],
+            signals: ['folkoperan-buyingflow', `show:${p.title}`],
           },
         });
         events.push(evt);

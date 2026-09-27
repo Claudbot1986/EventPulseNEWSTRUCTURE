@@ -103,4 +103,75 @@ describe('folkoperan adapter', () => {
       expect(r.showUrls).toContain('https://biljetter.folkoperan.se/sv/buyingflow/tickets/28108/');
     });
   });
+
+  // 2026-09-27 regression tests — site-specific bundle page where <title> is
+  // generic ("Folkoperan") and item_name is the only source of real titles.
+  // Without per-item title extraction, all events get title="Folkoperan".
+  describe('subscription bundle page (regression: title=Folkoperan)', () => {
+    const BUNDLE_HTML = `
+<!doctype html>
+<html lang="sv">
+<head>
+  <title>Folkoperan - Folkoperan - Biljetter</title>
+  <meta property="og:title" content="Folkoperan" />
+</head>
+<body>
+  <script>
+    var items = [
+      {"item_name": "Nietzsche kontra Wagner-2026-09-27 15:00:00", "price": 210.0},
+      {"item_name": "Die Stadt ohne Juden-2026-09-29 19:00:00", "price": 210.0},
+      {"item_name": "Jag är Ulla Winblad-2026-09-30 18:00:00", "price": 210.0}
+    ];
+  </script>
+</body>
+</html>`;
+
+    it('uses per-item title from item_name, not the generic <title>', () => {
+      const r = folkoperan.extract(
+        BUNDLE_HTML,
+        'https://biljetter.folkoperan.se/sv/buyingflow/tickets/20311/'
+      );
+      expect(r.method).toBe('folkoperan-tickets');
+      expect(r.events.length).toBe(3);
+      const titles = r.events.map((e) => e.title).sort();
+      expect(titles).toEqual([
+        'Die Stadt ohne Juden',
+        'Jag är Ulla Winblad',
+        'Nietzsche kontra Wagner',
+      ]);
+      // None should have title="Folkoperan" (the page title)
+      expect(r.events.every((e) => e.title !== 'Folkoperan')).toBe(true);
+    });
+  });
+
+  describe('HTML entity decoding in item_name (regression)', () => {
+    const ENTITY_HTML = `
+<!doctype html>
+<html lang="sv">
+<head><title>Folkoperan - Test - Biljetter</title></head>
+<body>
+  <script>
+    var items = [
+      {"item_name": "Den ljusa natten &#8211; premi&#228;r-2026-11-02 19:00:00", "price": 250.0},
+      {"item_name": "Caf&#233; &amp; opera &#8211; gala-2026-11-03 18:00:00", "price": 250.0}
+    ];
+  </script>
+</body>
+</html>`;
+
+    it('decodes numeric HTML entities in item_name titles', () => {
+      const r = folkoperan.extract(
+        ENTITY_HTML,
+        'https://biljetter.folkoperan.se/sv/buyingflow/tickets/28150/'
+      );
+      expect(r.method).toBe('folkoperan-tickets');
+      expect(r.events.length).toBe(2);
+      const titles = r.events.map((e) => e.title).sort();
+      // &#8211; = en-dash, &#228; = ä, &#233; = é, &amp; = &
+      expect(titles).toEqual([
+        'Café & opera – gala',
+        'Den ljusa natten – premiär',
+      ]);
+    });
+  });
 });

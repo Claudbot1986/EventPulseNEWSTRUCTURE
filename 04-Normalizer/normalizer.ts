@@ -5,6 +5,7 @@ import type { Job } from 'bullmq';
 import type { RawEventInput, NormalizedEvent } from '@eventpulse/shared';
 import { searchSyncQueue } from '../03-Queue/queue';
 import { computeConfidenceV1 } from './confidence_v1';
+import { evaluateTitle, checkBlockB } from './title-quality-gate';
 import { aiImageQueue, startAiImageWorker } from '../08-Agent/workers/aiImageWorker';
 import { appendSkipLog } from '../08-Agent/utils/skipLog';
 import { pickLibraryFallback, markEventWithLibraryFallback } from '../08-Agent/utils/imageLibrary';
@@ -321,6 +322,26 @@ export async function processRawEvent(job: Job<RawEventInput>): Promise<void> {
   const startMs = raw.start_time ? Date.parse(raw.start_time) : NaN;
   if (!Number.isFinite(startMs) || startMs < Date.now()) {
     console.log(`[normalizer] skip "${raw.title}" (passerat datum/saknar datum: ${raw.start_time || 'tom'})`);
+    return;
+  }
+
+  // Title quality gate (2026-09-27): reject events whose title is generic enough
+  // to be useless (equals source name, placeholder text, date-only, etc.).
+  // Defense-in-depth against adapter regressions — Folkoperan produced 106
+  // events with title="Folkoperan" from a single bundle buyingflow URL.
+  // See 04-Normalizer/title-quality-gate.ts for the rule set.
+  const titleGate = evaluateTitle(raw.title, raw.source);
+  if (!titleGate.ok) {
+    console.log(`[normalizer] skip "${raw.title}" from ${raw.source} (title-gate: ${titleGate.reason})`);
+    return;
+  }
+
+  // Bulk-pollution gate (Block B): if the same source has produced many events
+  // with the same title in this worker process, suspect an adapter loop.
+  // WARN at 10+, REJECT at 50+. Process-local state, resets on worker restart.
+  const blockB = checkBlockB(raw.title, raw.source);
+  if (blockB.rejected) {
+    console.log(`[normalizer] skip "${raw.title}" from ${raw.source} (bulk-pollution: ${blockB.count}× same title this session)`);
     return;
   }
 
