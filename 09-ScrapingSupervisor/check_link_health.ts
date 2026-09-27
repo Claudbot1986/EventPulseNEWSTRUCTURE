@@ -15,6 +15,15 @@
  *   - 2xx och 3xx = 'ok'. 4xx, 5xx, network error, timeout, DNS-fel = 'broken'.
  *   - Concurrency 10 för att hålla wall-clock nere (~30-60 s för ~200 källor).
  *
+ * Designval (2026-09-27, användar-feedback "borde de kollas igen nästa dag"):
+ *   - Två-fas-prioritering i fetchEventsToCheck:
+ *     Fas 1: broken events som senast kollades för ≥1 dag sedan
+ *            (auto-recheck av källor som var nere igår).
+ *     Fas 2: oldest-unchecked (NULL) events (ursprunglig logik).
+ *   - Effekt: en trasig källa kollas igen inom 1-2 dagar istället för
+ *     att vänta på att källans alla events ska ha hunnit cyklas en gång
+ *     (vilket kan ta 30-100 dagar för stora källor).
+ *
  * Säkerhets-skydd:
  *   - Idempotent: kan köras flera gånger samma dag utan skada (samma rad
  *     uppdateras med samma värde).
@@ -94,8 +103,16 @@ interface SourceEventRow {
 }
 
 /**
- * Hämta en representativ event per aktiv källa. Väljer den event som har
- * äldst (eller aldrig) kontrollerad ticket_url. Filtrerar på:
+ * Hämta en representativ event per aktiv källa.
+ *
+ * Två-fas-strategi (2026-09-27, användar-feedback):
+ *   Fas 1: Hitta broken events som senast kollades för ≥1 dag sedan.
+ *          Dessa prioriteras så att "server låg nere igår" → "kollas
+ *          igen idag" istället för att vänta på full käll-cykel.
+ *   Fas 2: Om Fas 1 inte fyllde kvoten, ta oldest-unchecked (NULL)
+ *          events per källa — samma logik som tidigare.
+ *
+ * Filtrerar på:
  *   - status = 'published' (GDPR via events_public kräver detta)
  *   - ticket_url IS NOT NULL
  *   - start_time >= now() (vi bryr oss inte om historiska länkar)
@@ -106,27 +123,30 @@ async function fetchEventsToCheck(
   client: SupabaseClient,
   limit: number,
 ): Promise<SourceEventRow[]> {
-  // Vi frågar direkt mot `events`-tabellen (service_role har tillgång).
-  // Använder DISTINCT ON (Postgres-specifikt) via head:false + manuell
-  // post-processing om Supabase-klienten inte stöder det. Här använder vi
-  // en enklare approach: hämta alla relevanta events och dedupa i JS.
-  const { data, error } = await client
+  const seen = new Set<string>();
+  const out: SourceEventRow[] = [];
+
+  // ── Fas 1: broken events som är ≥1 dag gamla ─────────────────────────────
+  // Gränsen "1 dag" gör att vi inte dubbel-checkar ett event vi just kollade
+  // (t.ex. om cron körs två gånger samma dag).
+  const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+  const { data: brokenRows, error: brokenErr } = await client
     .from('events')
-    .select('id, source, ticket_url, start_time, link_last_checked_at')
+    .select('id, source, ticket_url')
     .eq('status', 'published')
     .not('ticket_url', 'is', null)
     .gte('start_time', new Date().toISOString())
-    .order('link_last_checked_at', { ascending: true, nullsFirst: true })
+    .eq('link_status', 'broken')
+    .lt('link_last_checked_at', oneDayAgo)
+    .order('link_last_checked_at', { ascending: true })
     .order('start_time', { ascending: true })
-    .limit(limit * 3); // säkerhetsmarginal — dedupas till ~limit nedan
+    .limit(limit * 3);
 
-  if (error) {
-    throw new Error(`Supabase fetch failed: ${error.message}`);
+  if (brokenErr) {
+    throw new Error(`Supabase fetch (broken pass) failed: ${brokenErr.message}`);
   }
 
-  const seen = new Set<string>();
-  const out: SourceEventRow[] = [];
-  for (const row of data ?? []) {
+  for (const row of brokenRows ?? []) {
     if (seen.has(row.source)) continue;
     seen.add(row.source);
     out.push({
@@ -136,6 +156,36 @@ async function fetchEventsToCheck(
     });
     if (out.length >= limit) break;
   }
+
+  // ── Fas 2: oldest-unchecked (NULL) — fyller på om Fas 1 inte räckte ─────
+  if (out.length < limit) {
+    const remaining = limit - out.length;
+    const { data: nullRows, error: nullErr } = await client
+      .from('events')
+      .select('id, source, ticket_url, start_time, link_last_checked_at')
+      .eq('status', 'published')
+      .not('ticket_url', 'is', null)
+      .gte('start_time', new Date().toISOString())
+      .is('link_last_checked_at', null)
+      .order('start_time', { ascending: true })
+      .limit(remaining * 3);
+
+    if (nullErr) {
+      throw new Error(`Supabase fetch (null pass) failed: ${nullErr.message}`);
+    }
+
+    for (const row of nullRows ?? []) {
+      if (seen.has(row.source)) continue;
+      seen.add(row.source);
+      out.push({
+        id: row.id,
+        source: row.source,
+        ticket_url: row.ticket_url,
+      });
+      if (out.length >= limit) break;
+    }
+  }
+
   return out;
 }
 

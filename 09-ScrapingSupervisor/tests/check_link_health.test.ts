@@ -53,20 +53,17 @@ function fakeClient(
   const rpcCalls = opts?.rpcCalls ?? [];
   const from = (table: string) => {
     if (table !== 'events') throw new Error(`unexpected table ${table}`);
-    const builder = {
-      select: () => builder,
-      eq: () => builder,
-      not: () => builder,
-      gte: () => builder,
-      order: () => builder,
-      limit: (n: number) => {
-        // Return fake rows respecting the limit.
-        return Promise.resolve({ data: rows.slice(0, n), error: null });
-      },
-      update: () => ({
-        eq: () => Promise.resolve({ error: null }),
-      }),
-    };
+    // 2026-09-27 — fetchEventsToCheck använder nu två queries (broken pass + null pass).
+    // Mocken returnerar samma rader oavsett filter eftersom tester bara behöver
+    // kontrollera att rätt event-id skickas till RPC.
+    const builder: Record<string, unknown> = {};
+    for (const m of ['select', 'eq', 'not', 'gte', 'gt', 'lt', 'is', 'neq', 'in', 'order']) {
+      builder[m] = () => builder;
+    }
+    builder.limit = (n: number) => Promise.resolve({ data: rows.slice(0, n), error: null });
+    builder.update = () => ({
+      eq: () => Promise.resolve({ error: null }),
+    });
     return builder;
   };
   const rpc = (fn: string, args: Record<string, unknown>) => {
@@ -220,26 +217,19 @@ describe('check_link_health — dedup and limits', () => {
 describe('check_link_health — dry-run', () => {
   it('does not call update() on dry-run', async () => {
     const updateFn = vi.fn(() => ({ eq: () => Promise.resolve({ error: null }) }));
+    const rows = [{ id: 'e1', source: 'kth', ticket_url: 'https://kth.se/x' }];
+    // 2026-09-27 — Proxy-stil för att stödja fetchEventsToCheck's filter-kedja.
+    const chainableBuilder = () => {
+      const b: Record<string, unknown> = {};
+      for (const m of ['select', 'eq', 'not', 'gte', 'gt', 'lt', 'is', 'neq', 'in', 'order']) {
+        b[m] = () => b;
+      }
+      b.limit = (n: number) => Promise.resolve({ data: rows.slice(0, n), error: null });
+      b.update = updateFn;
+      return b;
+    };
     const client = {
-      from: () => ({
-        select: () => ({
-          eq: () => ({
-            not: () => ({
-              gte: () => ({
-                order: () => ({
-                  order: () => ({
-                    limit: () => Promise.resolve({
-                      data: [{ id: 'e1', source: 'kth', ticket_url: 'https://kth.se/x' }],
-                      error: null,
-                    }),
-                  }),
-                }),
-              }),
-            }),
-          }),
-        }),
-        update: updateFn,
-      }),
+      from: () => chainableBuilder(),
     } as unknown as SupabaseClient;
 
     const result = await runCheckLinkHealth({
@@ -279,25 +269,20 @@ describe('check_link_health — Hybrid B RPC cf-uppdatering', () => {
 
   it('skickar korrekt params: p_event_id, p_new_status, p_checked_at', async () => {
     const rpcSpy = vi.fn().mockResolvedValue({ error: null });
+    const rows = [{ id: 'e1', source: 'kth', ticket_url: 'https://kth.se/x' }];
+    // 2026-09-27 — fetchEventsToCheck använder två queries (broken + null). Inline-mocken
+    // måste stödja hela filter-kedjan inkl. `.lt`, `.is`, fler `.eq`. Använd samma
+    // Proxy-stil som fakeClient ovan.
+    const chainableBuilder = () => {
+      const b: Record<string, unknown> = {};
+      for (const m of ['select', 'eq', 'not', 'gte', 'gt', 'lt', 'is', 'neq', 'in', 'order']) {
+        b[m] = () => b;
+      }
+      b.limit = (n: number) => Promise.resolve({ data: rows.slice(0, n), error: null });
+      return b;
+    };
     const client = {
-      from: () => ({
-        select: () => ({
-          eq: () => ({
-            not: () => ({
-              gte: () => ({
-                order: () => ({
-                  order: () => ({
-                    limit: () => Promise.resolve({
-                      data: [{ id: 'e1', source: 'kth', ticket_url: 'https://kth.se/x' }],
-                      error: null,
-                    }),
-                  }),
-                }),
-              }),
-            }),
-          }),
-        }),
-      }),
+      from: () => chainableBuilder(),
       rpc: rpcSpy,
     } as unknown as SupabaseClient;
 
@@ -316,25 +301,17 @@ describe('check_link_health — Hybrid B RPC cf-uppdatering', () => {
 
   it('skickar p_new_status="ok" vid 200-svar', async () => {
     const rpcSpy = vi.fn().mockResolvedValue({ error: null });
+    const rows = [{ id: 'e2', source: 'kth', ticket_url: 'https://kth.se/y' }];
+    const chainableBuilder = () => {
+      const b: Record<string, unknown> = {};
+      for (const m of ['select', 'eq', 'not', 'gte', 'gt', 'lt', 'is', 'neq', 'in', 'order']) {
+        b[m] = () => b;
+      }
+      b.limit = (n: number) => Promise.resolve({ data: rows.slice(0, n), error: null });
+      return b;
+    };
     const client = {
-      from: () => ({
-        select: () => ({
-          eq: () => ({
-            not: () => ({
-              gte: () => ({
-                order: () => ({
-                  order: () => ({
-                    limit: () => Promise.resolve({
-                      data: [{ id: 'e2', source: 'kth', ticket_url: 'https://kth.se/y' }],
-                      error: null,
-                    }),
-                  }),
-                }),
-              }),
-            }),
-          }),
-        }),
-      }),
+      from: () => chainableBuilder(),
       rpc: rpcSpy,
     } as unknown as SupabaseClient;
 
