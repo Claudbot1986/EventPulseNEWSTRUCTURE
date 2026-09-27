@@ -54,6 +54,12 @@ TEMP/
 /.claude/eventpulse/handoffs/
 /.claude/eventpulse/state/
 /.claude/eventpulse/evidence/
+# Nested .claude/ i modul-mappar (04-Normalizer, 09-ScrapingSupervisor etc.)
+# Genereras av hooks-systemet på samma sätt som root-`.claude/eventpulse/`.
+/**/.claude/eventpulse/missions/
+/**/.claude/eventpulse/handoffs/
+/**/.claude/eventpulse/state/
+/**/.claude/eventpulse/evidence/
 /.eventpulse-agent/
 
 # Local scratch / debug dumps (excluded from tsconfig)
