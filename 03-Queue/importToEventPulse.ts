@@ -224,11 +224,35 @@ function readExtractedEvents(sourceId: string): ExtractedEvent[] {
   return [];
 }
 
+/**
+ * Source-inference: mappa cross-domain URLs (t.ex. bokningssubdomäner) till
+ * deras kanoniska source-namn. Berwaldhallen är en split-domain setup där
+ * API:t ligger på www.berwaldhallen.se men Tixly-URL:erna pekar på
+ * boka.berwaldhallen.se. Om vi inte mappar om här persisteras events med
+ * source=NULL (eller fel source-nam), vilket bryter source-quality-rapporter
+ * och gör att events inte matchas mot källans kategorier.
+ *
+ * 2026-09-27: boka.berwaldhallen.se → berwaldhallen. Fler cross-domain-maps
+ * kan läggas till här allteftersom de upptäcks.
+ */
+function inferCanonicalSource(sourceId: string, ev: ExtractedEvent): string {
+  const url = ev.ticket_url ?? ev.ticketUrl ?? ev.url ?? '';
+  const sid = ev.source_id ?? ev.id ?? '';
+  if (
+    typeof url === 'string' &&
+    (url.includes('boka.berwaldhallen.se') || url.includes('www.berwaldhallen.se'))
+  ) return 'berwaldhallen';
+  if (typeof sid === 'string' && sid.startsWith('berwaldhallen-')) return 'berwaldhallen';
+  return sourceId;
+}
+
 export function toRawEvent(sourceId: string, ev: ExtractedEvent): RawEventInput {
   // source_id-fallback: många adapters (t.ex. berwaldhallen) använder `id` istället
   // för `source_id`. Utan fallback skulle jobId kollidera vid dubletter (samma
   // titel → samma jobId → BullMQ dedupe → bara första raden processas).
   const effectiveSourceId = ev.source_id ?? ev.id ?? null;
+  // Cross-domain-URL-mapping till kanonisk source (se inferCanonicalSource).
+  const canonicalSource = inferCanonicalSource(sourceId, ev);
 
   return {
     title:          extractTitle(ev),
@@ -245,7 +269,7 @@ export function toRawEvent(sourceId: string, ev: ExtractedEvent): RawEventInput 
     price_max_sek:  ev.price_max_sek ?? (ev.price && typeof ev.price === 'object' ? ((ev.price as Record<string, unknown>).max as number | null) ?? null : null),
     ticket_url:     ev.ticket_url ?? ev.ticketUrl ?? ev.url ?? null,
     image_url:      ev.image_url ?? ev.imageUrl ?? null,
-    source:         sourceId,
+    source:         canonicalSource,
     source_id:      effectiveSourceId,
     detected_language: ev.detected_language ?? null,
     raw_payload:    ev.raw_payload ?? {},
