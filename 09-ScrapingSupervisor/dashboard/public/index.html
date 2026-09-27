@@ -92,6 +92,10 @@
           <span class="nav-icon" aria-hidden="true">⚰</span>
           <span class="nav-label">Top dead sources</span>
         </a>
+        <a class="nav-link" href="#unknown-list" data-nav-target="unknown-list">
+          <span class="nav-icon" aria-hidden="true">?</span>
+          <span class="nav-label">Top unknown sources</span>
+        </a>
         <a class="nav-link" href="#untouched-list" data-nav-target="untouched-list">
           <span class="nav-icon" aria-hidden="true">·</span>
           <span class="nav-label">Top untouched</span>
@@ -505,6 +509,38 @@
             <thead><tr><th>Source</th><th>cf</th><th>Reason</th></tr></thead>
             <tbody id="dead-body"><tr><td colspan="3" class="empty">loading…</td></tr></tbody>
           </table>
+        </section>
+
+        <section class="card link-health-card" id="unknown-list" data-info="Per-source link-status från events.link_status (migration 20260927-0003, tre stater: live/dead/unknown). 'live' = URL verifierad av HEAD/GET/SB. 'dead' = URL bekräftat borta (404/410) eller body bekräftar soft 404. 'unknown' = varken HEAD/GET/SB kunde avgöra — sidan är blockerad, långsam, eller anti-bot-skyddad. NULL = aldrig kontrollerad (default synlig). 'unknown' visas med neutral färg eftersom det INTE betyder 'trasigt' utan 'vi vet inte' — kan vara ett tillfälligt nätverksfel eller en källa som kräver SB. Klicka 'Re-run' för att köra check_link_health.ts igen.">
+          <h2>Link health (per source)<button type="button" class="info-btn" data-info-target="unknown-list" aria-label="help">i</button></h2>
+          <p class="caption">Antal publicerade events per status. <code>live</code> = verifierad URL, <code>dead</code> = bekräftat borta, <code>unknown</code> = kunde inte verifieras, <code>never</code> = aldrig kontrollerad.</p>
+          <div class="kpi-strip kpi-strip--inline link-health-kpis">
+            <div class="kpi-tile">
+              <div class="kpi-label">Live</div>
+              <div class="kpi-value ok" id="lh-live">—</div>
+              <div class="kpi-caption">URL verifierad</div>
+            </div>
+            <div class="kpi-tile">
+              <div class="kpi-label">Dead</div>
+              <div class="kpi-value bad" id="lh-dead">—</div>
+              <div class="kpi-caption">bekräftat borta</div>
+            </div>
+            <div class="kpi-tile">
+              <div class="kpi-label">Unknown</div>
+              <div class="kpi-value warn" id="lh-unknown">—</div>
+              <div class="kpi-caption">vi vet inte</div>
+            </div>
+            <div class="kpi-tile">
+              <div class="kpi-label">Never checked</div>
+              <div class="kpi-value muted" id="lh-null">—</div>
+              <div class="kpi-caption">link_status = NULL</div>
+            </div>
+          </div>
+          <table>
+            <thead><tr><th>Source</th><th>Count</th><th>Last checked</th></tr></thead>
+            <tbody id="unknown-body"><tr><td colspan="3" class="empty">loading…</td></tr></tbody>
+          </table>
+          <p class="caption muted" id="lh-generated">—</p>
         </section>
 
         <section class="card" id="untouched-list" data-info="Top 10 sources the supervisor has flagged as 'untouched' (cf ≥ 10 with no successful scrape). These are likely candidates for either a manual run via Alltools-E2E or for being added to an ignore list if they consistently block scraping.">

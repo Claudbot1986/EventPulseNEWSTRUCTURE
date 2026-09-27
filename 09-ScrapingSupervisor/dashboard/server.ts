@@ -27,6 +27,7 @@ import {
   collectUnsynced,
   collectAnalyticsEvents,
   collectUserInteractions,
+  collectLinkHealth,
   summarizeUserInteractions,
   summarizeTileTaps,
   type Kpis,
@@ -35,6 +36,7 @@ import {
   type LayerExtractionOverview,
   type UnsyncedReport,
   type UserInteractionSummary,
+  type LinkHealthReport,
 } from './db';
 import {
   listPending,
@@ -120,6 +122,8 @@ export interface DashboardData {
   bflCredits: BflCredits;
   // 10-Analytics server status (header box — right of analytics)
   analyticsServer: AnalyticsServerStatus;
+  // Per-source link health (live/dead/unknown) — migration 20260927-0003.
+  linkHealth: LinkHealthReport;
 }
 
 export interface LayerSummary {
@@ -329,10 +333,11 @@ export async function collect(): Promise<DashboardData> {
   const batchTimeSeries = buildBatchTimeSeries(reportsDir);
 
   // ── New: Supabase KPIs + DB sources + DB time-series (Phase 1) ──
-  const [kpis, dbSources, timeSeries] = await Promise.all([
+  const [kpis, dbSources, timeSeries, linkHealth] = await Promise.all([
     collectKpis(),
     collectDbSources(),
     collectTimeSeries(120),
+    collectLinkHealth(),
   ]);
 
   // Annotate DB-fed sources with site-specific flag from the adapter dir.
@@ -383,6 +388,7 @@ export async function collect(): Promise<DashboardData> {
     agent: await collectAgent(),
     bflCredits: await collectBflCredits(),
     analyticsServer: await collectAnalyticsServer(),
+    linkHealth,
   };
 }
 

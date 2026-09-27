@@ -1592,6 +1592,16 @@ body:not(.sidebar-open) .sidebar {
 }
 .status-banner-close:hover { color: var(--text); }
 
+/* ── Link health card (per-source live/dead/unknown, migration 20260927-0003) ── */
+/* Neutral färg för 'unknown' eftersom det betyder 'vi vet inte', inte 'trasigt'.
+   Användaren ska INTE tolka unknown som en röd varning — det är bara "kunde
+   inte verifieras just nu, försöker igen imorgon". */
+.link-health-card .kpi-value.warn { color: #8b949e; }
+.link-health-card .kpi-value.muted { color: #8b949e; }
+.link-health-card tbody tr td code { color: #8b949e; }
+.link-health-card .caption { font-size: 12px; }
+.link-health-kpis .kpi-tile { min-width: 100px; }
+
 /* ── Responsive: collapse sidebar on narrow viewports ─────────────────────── */
 /* Below 900px the sidebar collapses to an overlay drawer. The toggle button
    reappears and the layout switches to single-column. */

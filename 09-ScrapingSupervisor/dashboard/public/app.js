@@ -277,6 +277,38 @@ function applyAnalyticsServerState(as) {
         .join('');
     }
 
+    // Link health (live/dead/unknown) — migration 20260927-0003
+    const lh = data.linkHealth;
+    if (lh && lh.ok) {
+      setText('lh-live', lh.live.count);
+      setText('lh-dead', lh.dead.count);
+      setText('lh-unknown', lh.unknown.count);
+      setText('lh-null', lh.nullCount);
+      const generated = new Date(lh.generatedAt).toLocaleString('sv-SE');
+      setText('lh-generated', `Senast uppdaterad: ${generated}`);
+      const unknownBody = document.getElementById('unknown-body');
+      if (lh.unknown.sources.length === 0) {
+        unknownBody.innerHTML = '<tr><td colspan="3" class="empty">inga oklassificerade källor 🎉</td></tr>';
+      } else {
+        unknownBody.innerHTML = lh.unknown.sources
+          .map((s) => {
+            const checked = s.lastCheckedAt
+              ? new Date(s.lastCheckedAt).toLocaleString('sv-SE')
+              : '—';
+            return `<tr><td><code>${s.source}</code></td><td>${s.count}</td><td class="muted">${checked}</td></tr>`;
+          })
+          .join('');
+      }
+    } else {
+      setText('lh-live', '—');
+      setText('lh-dead', '—');
+      setText('lh-unknown', '—');
+      setText('lh-null', '—');
+      setText('lh-generated', lh?.reason ? `kunde inte läsa: ${lh.reason}` : '—');
+      const unknownBody = document.getElementById('unknown-body');
+      unknownBody.innerHTML = '<tr><td colspan="3" class="empty">Supabase ej tillgänglig</td></tr>';
+    }
+
     const untouchedBody = document.getElementById('untouched-body');
     if (data.topUntouched.length === 0) {
       untouchedBody.innerHTML = '<tr><td colspan="3" class="empty">none</td></tr>';

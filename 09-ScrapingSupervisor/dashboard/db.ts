@@ -788,3 +788,130 @@ export function summarizeTileTaps(
   }
   return taps;
 }
+
+// ──────────────────────────────────────────────────────────────────────────
+// Link health (per-source trafikljus från check_link_health.ts)
+// ──────────────────────────────────────────────────────────────────────────
+//
+// Migration 20260927-0003 introducerade tre stater ('live' | 'dead' |
+// 'unknown') i events.link_status. Dashboarden visar top-sources per stat
+// + total-räknare för "vad vet vi om våra URL:er".
+//
+// Vyn events_public läser bara 'live' och 'unknown' (NULL = aldrig
+// kontrollerad, default synlig). 'dead' events döljs.
+
+export interface LinkHealthBucket {
+  count: number;
+  sources: Array<{ source: string; count: number; lastCheckedAt: string | null }>;
+}
+
+export interface LinkHealthReport {
+  ok: boolean;
+  reason?: string;
+  generatedAt: string;
+  live: LinkHealthBucket;
+  dead: LinkHealthBucket;
+  unknown: LinkHealthBucket;
+  /** Antal publicerade events som aldrig kontrollerats (NULL). */
+  nullCount: number;
+}
+
+/**
+ * Aggregera events.link_status per stat + top-källor per stat. Vi läser
+ * direkt från `events` (inte events_public) för att se även 'dead' som
+ * vyn döljer. `topDead` och `topUnknown` sorteras på count desc så att
+ * dashboarden kan visa var problemen är koncentrerade.
+ *
+ * Filter: status='published' så vi inte räknar legacy/test-rader.
+ *
+ * Säkerhet:
+ *   - Fel-as-data: returnerar ok=false med reason om Supabase är
+ *     okonfigurerat eller något query misslyckas.
+ *   - Capped top-N till 10 för att hålla JSON-payload rimlig.
+ */
+export async function collectLinkHealth(): Promise<LinkHealthReport> {
+  const empty: LinkHealthReport = {
+    ok: false,
+    generatedAt: new Date().toISOString(),
+    live: { count: 0, sources: [] },
+    dead: { count: 0, sources: [] },
+    unknown: { count: 0, sources: [] },
+    nullCount: 0,
+  };
+  const sb = db();
+  if (!sb) return { ...empty, reason: 'Supabase not configured' };
+
+  // Hämta alla publicerade events med link_status i de tre tillåtna
+  // värdena (eller NULL). Page genom resultatet i 1000-raders-bitar —
+  // PostgREST-default är 1000 så vi måste paginera för att inte missa
+  // rader.
+  const PAGE = 1000;
+  type Row = {
+    source: string | null;
+    link_status: 'live' | 'dead' | 'unknown' | null;
+    link_last_checked_at: string | null;
+  };
+  const rows: Row[] = [];
+  try {
+    for (let from = 0; ; from += PAGE) {
+      const { data, error } = await sb
+        .from('events')
+        .select('source, link_status, link_last_checked_at')
+        .eq('status', 'published')
+        .range(from, from + PAGE - 1);
+      if (error) return { ...empty, reason: error.message };
+      const batch = (data ?? []) as Row[];
+      rows.push(...batch);
+      if (batch.length < PAGE) break;
+    }
+  } catch (err) {
+    return { ...empty, reason: String((err as Error)?.message ?? err) };
+  }
+
+  // Räkna per (status, source) och hitta senaste check.
+  type Acc = { count: number; lastCheckedAt: string | null };
+  const tally = (rows: Row[], statusFilter: 'live' | 'dead' | 'unknown' | null): { count: number; sources: Map<string, Acc>; nullCount: number } => {
+    const sources = new Map<string, Acc>();
+    let count = 0;
+    let nullCount = 0;
+    for (const r of rows) {
+      if (statusFilter === null) {
+        if (r.link_status === null) nullCount++;
+        continue;
+      }
+      if (r.link_status !== statusFilter) continue;
+      count++;
+      const src = r.source ?? '(unknown source)';
+      let acc = sources.get(src);
+      if (!acc) { acc = { count: 0, lastCheckedAt: null }; sources.set(src, acc); }
+      acc.count++;
+      const checked = r.link_last_checked_at;
+      if (checked && (!acc.lastCheckedAt || checked > acc.lastCheckedAt)) {
+        acc.lastCheckedAt = checked;
+      }
+    }
+    return { count, sources, nullCount };
+  };
+
+  const live = tally(rows, 'live');
+  const dead = tally(rows, 'dead');
+  const unknown = tally(rows, 'unknown');
+  const nullTally = tally(rows, null);
+
+  const toBucket = (t: { count: number; sources: Map<string, Acc> }, cap = 10): LinkHealthBucket => ({
+    count: t.count,
+    sources: Array.from(t.sources.entries())
+      .map(([source, acc]) => ({ source, count: acc.count, lastCheckedAt: acc.lastCheckedAt }))
+      .sort((a, b) => b.count - a.count || (a.lastCheckedAt ?? '').localeCompare(b.lastCheckedAt ?? ''))
+      .slice(0, cap),
+  });
+
+  return {
+    ok: true,
+    generatedAt: new Date().toISOString(),
+    live: toBucket(live),
+    dead: toBucket(dead),
+    unknown: toBucket(unknown),
+    nullCount: nullTally.nullCount,
+  };
+}
