@@ -50,7 +50,9 @@ interface EventRow {
 const PAGE = 1000;
 const BATCH_SIZE = 100;
 const VAULT_DIR = join(process.cwd(), '00-Vault/01-Projects/EventPulse/04-Sources');
-const SUGGESTIONS_FILE = 'retag-suggestions-2026-09-27.jsonl';
+// Läs SUGGESTIONS_FILE från argv (default = v1). Ex: --file=retag-suggestions-v2-2026-09-27.jsonl
+const SUGGESTIONS_FILE = (process.argv.find((a) => a.startsWith('--file='))?.split('=')[1])
+  ?? 'retag-suggestions-2026-09-27.jsonl';
 
 const supabase = createClient(
   process.env.SUPABASE_URL ?? '',
