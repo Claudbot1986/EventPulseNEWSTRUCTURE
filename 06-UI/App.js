@@ -1758,12 +1758,15 @@ function DetailsScreen({ event, onBack }) {
   );
 }
 
-// ExploreDetailScreen (2026-09-27): tom placeholder som visas när man
-// klickar på en tile/knapp i Utforska-sektionen. INGEN filter-toggle —
-// bara en ny tom svart sida. payload är valfri diagnostik (id+label),
-// ingen visning krävs.
+// ExploreDetailScreen (2026-09-27): visar UtforskaSection (Spotify-stil
+// rullist) när man klickar på en tile/knapp i Utforska. UI-only — samma
+// stil som 06-UI-sandbox/components/UtforskaSection.js, med mock-data och
+// no-op actions tills riktig feed-integration landar.
 function ExploreDetailScreen({ payload, onBack }) {
   const { t } = useI18n();
+  // Lazy-require för att inte dra in komponenten (och dess bundlade
+  // PNG-tile-tillgångar) förrän användaren faktiskt navigerar hit.
+  const UtforskaSection = require('./components/UtforskaSection').default;
   return (
     <SafeAreaView style={styles.detailsContainer}>
       <View style={styles.detailsHeader}>
@@ -1776,6 +1779,7 @@ function ExploreDetailScreen({ payload, onBack }) {
           <Text style={styles.backButtonText}>{t('common.back')}</Text>
         </TouchableOpacity>
       </View>
+      <UtforskaSection />
     </SafeAreaView>
   );
 }
