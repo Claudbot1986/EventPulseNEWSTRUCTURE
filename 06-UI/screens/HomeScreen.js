@@ -42,7 +42,7 @@ const TOKENS = {
     bg: '#000000',
   },
   space: {
-    screenTop: 48,
+    screenTop: 52, // +4 vs baseline 48 (2026-09-28) — hela Hem-sidan skjuts ner 4 pt
     padX: 20,
   },
 };
