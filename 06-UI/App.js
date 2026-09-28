@@ -14,6 +14,7 @@ import { useAiImageUrl } from './hooks/useAiImageUrl';
 import { getStockholmParts } from './services/localTime';
 import Toast from './components/Toast';
 import PushPromptModal from './components/PushPromptModal';
+import UtforskaFilterDropdown from './components/UtforskaFilterDropdown';
 import { enableDinHelgPush, isPushRuntimeAvailable } from './services/pushTokenClient';
 import { analyticsClient } from './services/analyticsClient';
 import ProfileScreen from './screens/ProfileScreen';
@@ -115,6 +116,14 @@ const CATEGORIES = {
 // går rakt in i <Image source={{ uri }}> — ingen asset-pipeline inblandad.
 const CATEGORY_TILE_IMAGES = require('./assets/categoryTiles/categoryTiles.data.js');
 
+// 2026-09-29: filter-knappen (och dess dropdown/backdrop) är dolda i
+// utforska-sektionen just nu enligt användarens önskemål — "ta bort
+// funktionen nu från utforska". Filterlogiken (browseFilters.js, state,
+// handlers, UtforskaFilterDropdown-komponenten) är orörd. Sätt
+// SHOW_FILTER_TOGGLE_IN_EXPLORE = true för att återaktivera UI:t utan
+// andra kodändringar.
+const SHOW_FILTER_TOGGLE_IN_EXPLORE = false;
+
 const CATEGORY_FILTERS = [
   { key: 'music',          labelKey: 'explore.filterCat.music',          emoji: '🎵', color: '#BB86FC', bgColor: '#2D2D3A', image: CATEGORY_TILE_IMAGES.music },
   { key: 'opera',          labelKey: 'explore.filterCat.opera',          emoji: '🎭', color: '#FF6B6B', bgColor: '#3A2A2A', image: CATEGORY_TILE_IMAGES.opera },
@@ -134,51 +143,6 @@ const CATEGORY_FILTERS = [
   { key: 'sports',         labelKey: 'explore.filterCat.sports',         emoji: '⚽', color: '#95E1D3', bgColor: '#2D353A', image: CATEGORY_TILE_IMAGES.sports },
   { key: 'nightlife',      labelKey: 'explore.filterCat.nightlife',      emoji: '🌃', color: '#FFE66D', bgColor: '#3A3A2D', image: CATEGORY_TILE_IMAGES.nightlife },
   { key: 'community',      labelKey: 'explore.filterCat.community',      emoji: '🤝', color: '#74B9FF', bgColor: '#2D3140', image: CATEGORY_TILE_IMAGES.community },
-];
-
-// Time filter definitions — labels resolve via i18n at render.
-const TIME_FILTERS = [
-  { key: 'ikvall', labelKey: 'explore.time.ikvall' },
-  { key: 'imorgon', labelKey: 'explore.time.imorgon' },
-  { key: 'helgen', labelKey: 'explore.time.helgen' },
-  { key: 'denna_vecka', labelKey: 'explore.time.week' },
-];
-
-const PRICE_FILTERS = [
-  { key: 'free', labelKey: 'common.free' },
-  { key: 'under_200', labelKey: 'explore.price.under200' },
-];
-
-// Alla source/provider-adapters som finns i 06-UI/services/sources/.
-// i18n har bara labels för ticketmaster, kulturhuset och malmo-live —
-// övriga faller tillbaka till formatProviderLabel som returnerar raw key.
-// Bokstavsordning för stabilt UI-flöde.
-const SOURCE_FILTERS = [
-  { key: 'annexet', labelKey: 'source.annexet' },
-  { key: 'avicii-arena', labelKey: 'source.aviciiarena' },
-  { key: 'berwaldhallen', labelKey: 'source.berwaldhallen' },
-  { key: 'debaser', labelKey: 'source.debaser' },
-  { key: 'eventpulse', labelKey: 'source.eventpulse' },
-  { key: 'fotografiska', labelKey: 'source.fotografiska' },
-  { key: 'friends-arena', labelKey: 'source.friendsarena' },
-  { key: 'fryshuset', labelKey: 'source.fryshuset' },
-  { key: 'kulturhuset', labelKey: 'source.kulturhuset' },
-  { key: 'kulturhuset-barn-ung', labelKey: 'source.kulturhusetBarnUng' },
-  { key: 'malmo-live', labelKey: 'source.malmolive' },
-  { key: 'malmo-opera', labelKey: 'source.malmoopera' },
-  { key: 'slakthuset', labelKey: 'source.slakthuset' },
-  { key: 'sodra-teatern', labelKey: 'source.sodrateatern' },
-  { key: 'stockholmlive', labelKey: 'source.stockholmlive' },
-  { key: 'tele2-arena', labelKey: 'source.tele2arena' },
-  { key: 'ticketmaster', labelKey: 'source.ticketmaster' },
-];
-
-// status_expanded-filter. Default 'tillgangliga' = dol cancelled/postponed
-// (det beteendet de flesta vill ha). 'alla' = visa allt inkl. inställda.
-// Källa: 05-Supabase/migrations/20260818-0001-agent-event-graph.sql CHECK.
-const STATUS_FILTERS = [
-  { key: 'tillgangliga', labelKey: 'explore.status.tillgangliga' },
-  { key: 'alla', labelKey: 'explore.status.alla' },
 ];
 
 // Format provider key to human-readable label via i18n. Unknown sources keep
@@ -658,7 +622,10 @@ function ExploreTilesSection({ onChipPress }) {
                 // the per-word KPI lands in dashboard 7777 (Fas E). Best-
                 // effort: the tap must never wait on analytics.
                 analyticsClient.tileTap(tile.id);
-                onChipPress({ prompt_text: tile.prompt, ...(tile.hints || {}) });
+                // tile.id behålls i payload så ExploreDetailScreen kan avgöra
+                // om just denna tile (t.ex. 'imorgon') ska rendera riktig
+                // data istället för sandbox-mock.
+                onChipPress({ id: tile.id, prompt_text: tile.prompt, ...(tile.hints || {}) });
               }}
               style={({ pressed }) => [
                 styles.exploreTile,
@@ -696,9 +663,13 @@ function ExploreTilesSection({ onChipPress }) {
 // för 5/2). Textstil (Spotify-hörnet — position absolute, top:14 left:16)
 // är identisk med utforska-tiles ovan — ingen emoji (per användare
 // 2026-09-27), bara kategorinamnet i vitt. Bakgrundsfärg (bfl) per
-// kategori kommer från CATEGORY_FILTERS. Tap = toggle selectedCategories
-// via handleCategoryFilterPress (samma logik som filter-pillsen).
-function CategoryQuickTilesSection({ selectedCategories, onCategoryPress }) {
+// kategori kommer från CATEGORY_FILTERS.
+//
+// 2026-09-28: Tap = navigera till ExploreDetailScreen med payload.id =
+// cat.key (samma flöde som smak-tiles ovan). Filter-toggle på Hem finns
+// kvar via filter-pillsen (handleCategoryFilterPress) — kategori-knapparna
+// är en genväg in i kategori-detaljsidan, inte en toggle.
+function CategoryQuickTilesSection({ onCategoryNavigate }) {
   const { t } = useI18n();
   // 18 knappar i 2×9-rutnät (per användare 2026-09-27). Per användare
   // 2026-09-27: KOPIERA utforska-tiles stil rakt av (exploreTile*). Tidigare
@@ -714,51 +685,44 @@ function CategoryQuickTilesSection({ selectedCategories, onCategoryPress }) {
       <Text style={styles.exploreSectionTitle}>{t('home.categories.title')}</Text>
       {rows.map((row, rowIndex) => (
         <View key={`cat-row-${rowIndex}`} style={styles.exploreRow}>
-          {row.map((cat) => {
-            const isActive = selectedCategories.includes(cat.key);
-            return (
-              <Pressable
-                key={cat.key}
-                onPress={() => onCategoryPress(cat.key)}
-                accessibilityRole="button"
-                accessibilityState={{ selected: isActive }}
-                accessibilityLabel={t(cat.labelKey)}
-                style={({ pressed }) => [
-                  styles.exploreTile,
-                  { backgroundColor: isActive ? cat.color : cat.bgColor, aspectRatio: 5 / 3 },
-                  pressed && styles.exploreTilePressed,
+          {row.map((cat) => (
+            <Pressable
+              key={cat.key}
+              onPress={() => onCategoryNavigate(cat.key)}
+              accessibilityRole="button"
+              accessibilityLabel={t(cat.labelKey)}
+              style={({ pressed }) => [
+                styles.exploreTile,
+                { backgroundColor: cat.bgColor, aspectRatio: 5 / 3 },
+                pressed && styles.exploreTilePressed,
+              ]}
+            >
+              <Image
+                source={{ uri: cat.image }}
+                style={styles.exploreTilePhoto}
+                resizeMode="cover"
+              />
+              <View
+                style={[
+                  styles.exploreTileDiagonal,
+                  { backgroundColor: cat.bgColor },
                 ]}
+              />
+              <Text
+                style={styles.exploreTileLabel}
+                numberOfLines={1}
               >
-                <Image
-                  source={{ uri: cat.image }}
-                  style={styles.exploreTilePhoto}
-                  resizeMode="cover"
-                />
-                <View
-                  style={[
-                    styles.exploreTileDiagonal,
-                    { backgroundColor: isActive ? cat.color : cat.bgColor },
-                  ]}
-                />
-                <Text
-                  style={[
-                    styles.exploreTileLabel,
-                    isActive && styles.exploreTileLabelActive,
-                  ]}
-                  numberOfLines={1}
-                >
-                  {t(cat.labelKey)}
-                </Text>
-              </Pressable>
-            );
-          })}
+                {t(cat.labelKey)}
+              </Text>
+            </Pressable>
+          ))}
         </View>
       ))}
     </View>
   );
 }
 
-function HomeScreen({ onEventPress, scrollPositionRef, pendingIntent, dismissPendingPrompt, onInitialLoadSettled, onTilePress, onCategoryPress }) {
+function HomeScreen({ onEventPress, scrollPositionRef, pendingIntent, dismissPendingPrompt, onInitialLoadSettled, onTilePress, onCategoryNavigate }) {
   const { t, language } = useI18n();
   const [events, setEvents] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -767,11 +731,10 @@ function HomeScreen({ onEventPress, scrollPositionRef, pendingIntent, dismissPen
   const [timeFilter, setTimeFilter] = useState(null);
   const [selectedCategories, setSelectedCategories] = useState([]);
   const [priceFilter, setPriceFilter] = useState(null);
-  // Source-filter (provider): multi-select. Tom array = alla källor.
-  const [selectedSources, setSelectedSources] = useState([]);
-  // Status-filter (status_expanded): default 'tillgangliga' = dol cancelled/
-  // postponed. 'alla' = visa allt inkl. inställda.
-  const [statusFilter, setStatusFilter] = useState('tillgangliga');
+  // Status-filter (status_expanded): hårdkodat 'tillgangliga' sedan 2026-09-28
+  // — UI:t exponerar inte längre status-toggle (för mycket brus, nästan
+  // ingen vill se inställda events).
+  const statusFilter = 'tillgangliga';
   // Exact-day pin from chips like "Gratis på lördag" (resolved ISO), and the
   // auto search-prefill union terms for genre chips (visible text lives in
   // searchQuery; these are the actual any-match terms).
@@ -1096,8 +1059,6 @@ function HomeScreen({ onEventPress, scrollPositionRef, pendingIntent, dismissPen
     setTimeFilter(null);
     setSelectedCategories([]);
     setPriceFilter(null);
-    setSelectedSources([]);
-    setStatusFilter('tillgangliga');
     setPinnedDateIso(null);
     setQueryTerms(null);
     setSearchQuery('');
@@ -1125,23 +1086,23 @@ function HomeScreen({ onEventPress, scrollPositionRef, pendingIntent, dismissPen
   // The whole filter chain (categories w/ slug groups, time, price, pinned
   // day, search/genre terms) lives in utils/browseFilters.js so vitest can
   // pin exactly which events survive each chip (chipSimulation.test.ts).
+  // selectedSources borttagen 2026-09-28 (Källa-filter togs bort från UI:t —
+  // search_events API stödjer det inte heller).
+  // statusFilter hårdkodad till 'tillgangliga' (UI:t visar inte status-toggle).
   const filteredEvents = useMemo(() => applyBrowseFilters(events, {
     timeFilter,
     priceFilter,
     selectedCategories,
-    selectedSources,
     statusFilter,
     pinnedDateIso,
     queryTerms,
     searchText: trimmedSearch,
-  }), [events, timeFilter, selectedCategories, priceFilter, selectedSources, statusFilter, pinnedDateIso, queryTerms, trimmedSearch]);
+  }), [events, timeFilter, selectedCategories, priceFilter, statusFilter, pinnedDateIso, queryTerms, trimmedSearch]);
 
   const groupedEvents = useMemo(() => groupEventsByDay(filteredEvents, language, t), [filteredEvents, language, t]);
-  // 'tillgangliga' är default-beteendet — räknas inte som aktivt filter.
-  // 'alla' räknas som aktivt filter (explicit val att visa inställda).
-  const statusFilterIsActive = statusFilter && statusFilter !== 'tillgangliga';
-  const hasActiveFilters = Boolean(timeFilter || selectedCategories.length > 0 || priceFilter || selectedSources.length > 0 || statusFilterIsActive || pinnedDateIso);
-  const activeFilterCount = (timeFilter ? 1 : 0) + (priceFilter ? 1 : 0) + selectedCategories.length + selectedSources.length + (statusFilterIsActive ? 1 : 0) + (pinnedDateIso ? 1 : 0);
+  // statusFilter är hårdkodad — bidrar inte längre till aktiva filter.
+  const hasActiveFilters = Boolean(timeFilter || selectedCategories.length > 0 || priceFilter || pinnedDateIso);
+  const activeFilterCount = (timeFilter ? 1 : 0) + (priceFilter ? 1 : 0) + selectedCategories.length + (pinnedDateIso ? 1 : 0);
 
   if (loading) {
     return <LoadingSkeleton />;
@@ -1169,6 +1130,12 @@ function HomeScreen({ onEventPress, scrollPositionRef, pendingIntent, dismissPen
     <SafeAreaView style={styles.homeContainer}>
       <View style={styles.filterBar}>
         <View style={styles.filterBarRow}>
+          {/* 2026-09-29: filter-knappen och dess dropdown är dolda i utforska
+              just nu (per användarens önskemål). Filterlogiken i
+              browseFilters.js är orörd — toggle kan återaktiveras genom att
+              sätta SHOW_FILTER_TOGGLE_IN_EXPLORE = true. marginRight på
+              sökfältet är 0 så sökrutan fyller hela raden kant-till-kant
+              och matchar utforska-tiles paddingHorizontal (20 pt = TOKENS.xl). */}
           <Animated.View
             style={[
               styles.searchBoxWrap,
@@ -1178,7 +1145,7 @@ function HomeScreen({ onEventPress, scrollPositionRef, pendingIntent, dismissPen
                   outputRange: [600, 0],
                 }),
                 opacity: searchBarAnim.interpolate({ inputRange: [0, 1], outputRange: [1, 0] }),
-                marginRight: searchBarAnim.interpolate({ inputRange: [0, 1], outputRange: [8, 0] }),
+                marginRight: 0,
               },
             ]}
             pointerEvents={searchHidden ? 'none' : 'auto'}
@@ -1209,153 +1176,50 @@ function HomeScreen({ onEventPress, scrollPositionRef, pendingIntent, dismissPen
               <Ionicons name="search" size={16} color="#333333" />
             </View>
           </Animated.View>
-        <TouchableOpacity
-          style={[styles.filterButton, styles.filterToggle]}
-          onPress={() => setIsFilterMenuOpen(prev => !prev)}
-          accessibilityRole="button"
-          accessibilityLabel={isFilterMenuOpen ? t('explore.filter.closeA11y') : t('explore.filter.openA11y')}
-        >
-          <Text style={styles.filterButtonText}>
-            {isFilterMenuOpen ? t('explore.filter.toggleClose') : t('explore.filter.toggleOpen')}
-          </Text>
-          {activeFilterCount > 0 && (
-            <View style={styles.filterBadge}>
-              <Text style={styles.filterBadgeText}>{activeFilterCount}</Text>
-            </View>
-          )}
-        </TouchableOpacity>
-        </View>
-        {isFilterMenuOpen && (
-          <View style={styles.filterDropdown}>
-            <Text style={styles.filterLabel}>{t('explore.filter.when')}</Text>
-            <View style={styles.filterDropdownRow}>
-              {TIME_FILTERS.map(filter => (
-                <TouchableOpacity
-                  key={filter.key}
-                  style={[
-                    styles.filterButton,
-                    timeFilter === filter.key && styles.filterButtonActive
-                  ]}
-                  onPress={() => handleTimeFilterPress(filter.key)}
-                >
-                  <Text style={[
-                    styles.filterButtonText,
-                    timeFilter === filter.key && styles.filterButtonTextActive
-                  ]}>
-                    {t(filter.labelKey)}
-                  </Text>
-                </TouchableOpacity>
-              ))}
-            </View>
-            <Text style={styles.filterLabel}>{t('explore.filter.price')}</Text>
-            <View style={styles.filterDropdownRow}>
-              {PRICE_FILTERS.map(filter => (
-                <TouchableOpacity
-                  key={filter.key}
-                  style={[
-                    styles.filterButton,
-                    priceFilter === filter.key && styles.filterButtonActive
-                  ]}
-                  onPress={() => setPriceFilter(prev => prev === filter.key ? null : filter.key)}
-                >
-                  <Text style={[
-                    styles.filterButtonText,
-                    priceFilter === filter.key && styles.filterButtonTextActive
-                  ]}>
-                    {t(filter.labelKey)}
-                  </Text>
-                </TouchableOpacity>
-              ))}
-            </View>
-            <Text style={styles.filterLabel}>{t('explore.filter.category')}</Text>
-            <View style={styles.filterDropdownRow}>
-              {CATEGORY_FILTERS.map(filter => (
-                <TouchableOpacity
-                  key={filter.key}
-                  style={[
-                    styles.filterButton,
-                    {
-                      backgroundColor: selectedCategories.includes(filter.key)
-                        ? filter.color
-                        : filter.bgColor,
-                    },
-                    selectedCategories.includes(filter.key) && styles.filterButtonActive
-                  ]}
-                  onPress={() => handleCategoryFilterPress(filter.key)}
-                >
-                  {filter.emoji ? (
-                    <Text style={styles.filterButtonEmoji}>{filter.emoji}</Text>
-                  ) : null}
-                  <Text style={[
-                    styles.filterButtonText,
-                    selectedCategories.includes(filter.key) && styles.filterButtonTextActive
-                  ]}>
-                    {t(filter.labelKey)}
-                  </Text>
-                </TouchableOpacity>
-              ))}
-            </View>
-            <Text style={styles.filterLabel}>{t('explore.filter.source')}</Text>
-            <View style={styles.filterDropdownRow}>
-              {SOURCE_FILTERS.map(filter => (
-                <TouchableOpacity
-                  key={filter.key}
-                  style={[
-                    styles.filterButton,
-                    selectedSources.includes(filter.key) && styles.filterButtonActive
-                  ]}
-                  onPress={() => setSelectedSources(prev =>
-                    prev.includes(filter.key)
-                      ? prev.filter(k => k !== filter.key)
-                      : [...prev, filter.key]
-                  )}
-                >
-                  <Text style={[
-                    styles.filterButtonText,
-                    selectedSources.includes(filter.key) && styles.filterButtonTextActive
-                  ]}>
-                    {t(filter.labelKey)}
-                  </Text>
-                </TouchableOpacity>
-              ))}
-            </View>
-            <Text style={styles.filterLabel}>{t('explore.filter.status')}</Text>
-            <View style={styles.filterDropdownRow}>
-              {STATUS_FILTERS.map(filter => (
-                <TouchableOpacity
-                  key={filter.key}
-                  style={[
-                    styles.filterButton,
-                    statusFilter === filter.key && styles.filterButtonActive
-                  ]}
-                  onPress={() => setStatusFilter(filter.key)}
-                >
-                  <Text style={[
-                    styles.filterButtonText,
-                    statusFilter === filter.key && styles.filterButtonTextActive
-                  ]}>
-                    {t(filter.labelKey)}
-                  </Text>
-                </TouchableOpacity>
-              ))}
-            </View>
-            {hasActiveFilters && (
-              <TouchableOpacity style={styles.clearFiltersButton} onPress={clearFilters}>
-                <Text style={styles.clearFiltersText}>{t('explore.filter.clear')}</Text>
-              </TouchableOpacity>
+        {SHOW_FILTER_TOGGLE_IN_EXPLORE ? (
+          <TouchableOpacity
+            style={[styles.filterButton, styles.filterToggle]}
+            onPress={() => setIsFilterMenuOpen(prev => !prev)}
+            accessibilityRole="button"
+            accessibilityLabel={isFilterMenuOpen ? t('explore.filter.closeA11y') : t('explore.filter.openA11y')}
+          >
+            <Text style={styles.filterButtonText}>
+              {isFilterMenuOpen ? t('explore.filter.toggleClose') : t('explore.filter.toggleOpen')}
+            </Text>
+            {activeFilterCount > 0 && (
+              <View style={styles.filterBadge}>
+                <Text style={styles.filterBadgeText}>{activeFilterCount}</Text>
+              </View>
             )}
+          </TouchableOpacity>
+        ) : null}
+        </View>
+        {SHOW_FILTER_TOGGLE_IN_EXPLORE && isFilterMenuOpen ? (
+          <View style={styles.filterDropdown}>
+            <UtforskaFilterDropdown
+              visible
+              timeFilter={timeFilter}
+              onTimeFilterChange={handleTimeFilterPress}
+              priceFilter={priceFilter}
+              onPriceFilterChange={(key) => setPriceFilter((prev) => (prev === key ? null : key))}
+              selectedCategories={selectedCategories}
+              onToggleCategory={handleCategoryFilterPress}
+              hasActiveFilters={hasActiveFilters}
+              onClearFilters={clearFilters}
+              t={t}
+            />
           </View>
-        )}
+        ) : null}
       </View>
 
-      {isFilterMenuOpen && (
+      {SHOW_FILTER_TOGGLE_IN_EXPLORE && isFilterMenuOpen ? (
         <Pressable
           style={styles.filterBackdrop}
           onPress={() => setIsFilterMenuOpen(false)}
           accessibilityRole="button"
           accessibilityLabel={t('explore.filter.closeA11y')}
         />
-      )}
+      ) : null}
 
       <ScrollView
         contentContainerStyle={styles.listContent}
@@ -1379,8 +1243,7 @@ function HomeScreen({ onEventPress, scrollPositionRef, pendingIntent, dismissPen
       >
         <ExploreTilesSection onChipPress={onTilePress} />
         <CategoryQuickTilesSection
-          selectedCategories={selectedCategories}
-          onCategoryPress={onCategoryPress}
+          onCategoryNavigate={onCategoryNavigate}
         />
         {pendingIntent ? (
           <View style={styles.pendingPromptBanner} accessibilityRole="text">
@@ -1758,15 +1621,91 @@ function DetailsScreen({ event, onBack }) {
   );
 }
 
-// ExploreDetailScreen (2026-09-27): visar UtforskaSection (Spotify-stil
-// rullist) när man klickar på en tile/knapp i Utforska. UI-only — samma
-// stil som 06-UI-sandbox/components/UtforskaSection.js, med mock-data och
-// no-op actions tills riktig feed-integration landar.
+// ExploreDetailScreen (2026-09-28): visar UtforskaSection (Spotify-stil
+// rullist) när man klickar på en tile/knapp i Utforska.
+//
+// Iteration 2 (2026-09-28): ersätter `isImorgon`-specialfall med central
+// TILE_ROUTES-uppslag (06-UI/utils/tileRoutes.js). Samma useEffect-stomme
+// som Imorgon-grenen — fetchFeed → mapAgentEventToRow → clientFilter per
+// route. Om payload.id saknar route → MOCK_EVENTS-fallback (samma default
+// som tidigare för okända tiles).
 function ExploreDetailScreen({ payload, onBack }) {
-  const { t } = useI18n();
+  const { t, language } = useI18n();
   // Lazy-require för att inte dra in komponenten (och dess bundlade
   // PNG-tile-tillgångar) förrän användaren faktiskt navigerar hit.
   const UtforskaSection = require('./components/UtforskaSection').default;
+  const { mapAgentEventToRow } = require('./components/rowMapping');
+  const tileRoutes = require('./utils/tileRoutes');
+  // Säkerställ att 18 v2-kategorier är injicerade i route-tabellen innan
+  // vi slår upp payload.id. Idempotent — skadar inte upprepade renders.
+  tileRoutes.buildTileRoutes(CATEGORY_FILTERS);
+
+  const [realEvents, setRealEvents] = useState(null);
+  const [fetchState, setFetchState] = useState('idle'); // 'idle'|'loading'|'error'
+  const controllerRef = useRef(null);
+
+  const tileId = payload && payload.id;
+  const route = tileId ? tileRoutes.getTileRoute(tileId) : null;
+  const isRealRoute = route != null;
+
+  useEffect(() => {
+    if (!isRealRoute) {
+      setRealEvents(null);
+      setFetchState('idle');
+      return undefined;
+    }
+    const dateMode = route.dateMode || 'any';
+    const fromIso = tileRoutes.computeFromIso(dateMode, new Date());
+    const days = tileRoutes.DATE_MODE_DAYS[dateMode] || 14;
+    const controller = new AbortController();
+    controllerRef.current = controller;
+    setFetchState('loading');
+    setRealEvents([]);
+    (async () => {
+      try {
+        const page = await fetchFeed({
+          from: fromIso,
+          days,
+          ...(route.fetcherExtra || {}),
+          signal: controller.signal,
+        });
+        let rows = (page.events || [])
+          .map((e) => mapAgentEventToRow(e, language))
+          .filter(Boolean);
+        if (route.clientFilter) rows = rows.filter(route.clientFilter);
+        if (!controller.signal.aborted) {
+          setRealEvents(rows);
+          setFetchState('idle');
+        }
+      } catch (err) {
+        // Avbruten fetch (unmount / rapid-tap) — ignorera tyst.
+        if (isFetchCanceled(err) || err?.name === 'AbortError') return;
+        if (!controller.signal.aborted) {
+          setFetchState('error');
+        }
+      }
+    })();
+    return () => {
+      controller.abort();
+    };
+  }, [isRealRoute, tileId, language]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Bestäm vad UtforskaSection ska rendera.
+  let sectionEvents = null;          // null = MOCK_EVENTS (default fallback)
+  let sectionEmptyState = null;
+  let sectionEyebrow = null;
+  let sectionEmptyText = null;
+  if (isRealRoute) {
+    sectionEvents = realEvents;
+    sectionEyebrow = t(route.eyebrowKey) || tileId;
+    if (fetchState === 'loading') sectionEmptyState = 'loading';
+    else if (fetchState === 'error') sectionEmptyState = 'error';
+    else if (realEvents && realEvents.length === 0) sectionEmptyState = 'empty';
+    if (realEvents && realEvents.length === 0) {
+      sectionEmptyText = route.emptyHintKey ? t(route.emptyHintKey) : null;
+    }
+  }
+
   return (
     <SafeAreaView style={styles.detailsContainer}>
       <View style={styles.detailsHeader}>
@@ -1779,7 +1718,16 @@ function ExploreDetailScreen({ payload, onBack }) {
           <Text style={styles.backButtonText}>{t('common.back')}</Text>
         </TouchableOpacity>
       </View>
-      <UtforskaSection />
+      <UtforskaSection
+        events={sectionEvents}
+        emptyState={sectionEmptyState}
+        emptyText={sectionEmptyText}
+        eyebrowText={sectionEyebrow}
+        // Alla utforska-tiles (2026-09-28): Lyft rullisten 8 pt från nederkanten
+        // (4 + 4 efter andra designrundan) — samma mått oavsett vilken tile/knapp
+        // som öppnar utforska-vyn.
+        raisedFromBottom
+      />
     </SafeAreaView>
   );
 }
@@ -2012,7 +1960,7 @@ export default function App({ onUserLoggedOut, onOpenLogin, chipNonce = 0, onExp
     if (activeTab === 'profile') {
       return <ProfileScreen onLoggedOut={handleLoggedOut} onOpenLogin={onOpenLogin} />;
     }
-    return <HomeScreen onEventPress={handleEventPress} scrollPositionRef={scrollPositionRef} pendingIntent={pendingIntent} dismissPendingPrompt={dismissPendingPrompt} onOpenLogin={onOpenLogin} onInitialLoadSettled={onExploreReady} onTilePress={handleExploreDetailPress} onCategoryPress={handleExploreDetailPress} />;
+    return <HomeScreen onEventPress={handleEventPress} scrollPositionRef={scrollPositionRef} pendingIntent={pendingIntent} dismissPendingPrompt={dismissPendingPrompt} onOpenLogin={onOpenLogin} onInitialLoadSettled={onExploreReady} onTilePress={handleExploreDetailPress} onCategoryNavigate={handleExploreDetailPress} />;
   };
 
   const showTabBar = !selectedEvent && !exploreDetail;
@@ -2211,62 +2159,6 @@ const styles = StyleSheet.create({
     maxHeight: 480,
     zIndex: 30,
     elevation: 30,
-  },
-  // Tightare label-look (Spotify-stil): liten, normal case, ingen
-  // letter-spacing — lägre visuell vikt så chip-pillen dominerar.
-  filterLabel: {
-    color: TOKENS.color.textSoft,
-    fontSize: 10,
-    fontWeight: '700',
-    letterSpacing: 0.3,
-    paddingHorizontal: TOKENS.space.sm,
-    marginTop: TOKENS.space.sm,
-    marginBottom: 4,
-  },
-  filterDropdownRow: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 6,
-    paddingHorizontal: TOKENS.space.sm,
-    paddingBottom: TOKENS.space.xs,
-  },
-  filterButton: {
-    paddingHorizontal: 9,
-    paddingVertical: 6,
-    borderRadius: 8,
-    backgroundColor: TOKENS.color.surfaceRaised,
-    borderWidth: 0,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-  },
-  filterButtonActive: {
-    backgroundColor: TOKENS.color.accent,
-    borderWidth: 0,
-  },
-  filterButtonText: {
-    color: TOKENS.color.text,
-    fontSize: 12,
-    fontWeight: '600',
-  },
-  filterButtonEmoji: {
-    fontSize: 12,
-    lineHeight: 14,
-  },
-  filterButtonTextActive: {
-    color: TOKENS.color.black,
-    fontWeight: '800',
-  },
-  clearFiltersButton: {
-    alignSelf: 'flex-start',
-    marginHorizontal: TOKENS.space.sm,
-    marginTop: TOKENS.space.xs,
-    paddingVertical: TOKENS.space.xs,
-  },
-  clearFiltersText: {
-    color: TOKENS.color.accent,
-    fontSize: 12,
-    fontWeight: '800',
   },
   listContent: {
     padding: TOKENS.space.md,
