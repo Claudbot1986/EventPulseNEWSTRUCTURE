@@ -57,7 +57,7 @@ describe('intiman adapter', () => {
       expect(r.events[0].venue).toBe('Intiman');
       expect(r.events[0].city).toBe('Stockholm');
       expect(r.events[0].priceMin).toBe(395);
-      expect(r.events[0].category).toBe('theater');
+      expect(r.events[0].category).toBe('theatre-drama');
     });
 
     it('dedupes (time,date) pairs', () => {

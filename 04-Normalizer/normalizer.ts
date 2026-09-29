@@ -6,6 +6,8 @@ import type { RawEventInput, NormalizedEvent } from '@eventpulse/shared';
 import { searchSyncQueue } from '../03-Queue/queue';
 import { computeConfidenceV1 } from './confidence_v1';
 import { evaluateTitle, checkBlockB } from './title-quality-gate';
+import { getDefaultCategorySlugForSource } from './sourceCategoryDefaults';
+import { canonicalizeCategorySlug } from './categoryCanonicalize';
 import { aiImageQueue, startAiImageWorker } from '../08-Agent/workers/aiImageWorker';
 import { appendSkipLog } from '../08-Agent/utils/skipLog';
 import { pickLibraryFallback, markEventWithLibraryFallback } from '../08-Agent/utils/imageLibrary';
@@ -351,12 +353,37 @@ export async function processRawEvent(job: Job<RawEventInput>): Promise<void> {
 
   console.log(`[normalizer] Processing ${raw.source}:${raw.source_id ?? 'unknown'} "${raw.title}"`);
 
-  // Check for existing event (primary dedup)
-  const { data: existing } = await supabase
-    .from('events')
-    .select('id, updated_at')
-    .eq('dedup_hash', dedupHash)
-    .single();
+  // Cross-source dedup via ticket_url (2026-09-29). Rent additivt — ändrar
+  // INTE dedup_hash-algoritmen (se repo-policy "Do not change dedup hash
+  // algorithm"). Konsoliderar events där flera source-adapters skrapar
+  // samma URL — t.ex. lulea-hf-2/downtown-2/globen-3/halmstad-konserthus-2
+  // (alla biljettshop.se Chicago-musikal): 228 duplicerade rader → 57.
+  let existing: { id: string; updated_at: string } | null = null;
+  const ticketUrl = raw.url || raw.ticket_url || null;
+  if (ticketUrl) {
+    const { data: byUrl } = await supabase
+      .from('events')
+      .select('id, updated_at')
+      .eq('ticket_url', ticketUrl)
+      .limit(1)
+      .maybeSingle();
+    if (byUrl) {
+      existing = byUrl;
+      console.log(`[normalizer] 🔗 Cross-source dedup hit by ticket_url: ${byUrl.id} (source=${raw.source}, url=${ticketUrl})`);
+    }
+  }
+
+  // Check for existing event (primary dedup) — körs endast om ticket_url-
+  // matchningen ovan inte gav träff. Beteendet är oförändrat jämfört med
+  // tidigare; vi lägger bara till en extra chans att hitta en befintlig rad.
+  if (!existing) {
+    const { data: byHash } = await supabase
+      .from('events')
+      .select('id, updated_at')
+      .eq('dedup_hash', dedupHash)
+      .maybeSingle();
+    if (byHash) existing = byHash;
+  }
 
   if (existing) {
     console.log(`[normalizer] Updating existing event: ${existing.id}`);
@@ -365,11 +392,56 @@ export async function processRawEvent(job: Job<RawEventInput>): Promise<void> {
   const venue_id = await resolveVenue(raw);
 
   // Kulturhuset uses 'category' (singular), others use 'categories' (plural)
-  const categories = raw.categories ?? (raw.category ? [raw.category] : undefined);
-  const category_ids = await resolveCategoryIds(categories);
+  const rawCategories = raw.categories ?? (raw.category ? [raw.category] : undefined);
 
-  // Get primary category slug (first category from the normalized list)
-  const category_slug = categories?.[0] ?? 'community';
+  // Canonicalize (2026-09-29): mappar deprecated slugs ('culture',
+  // 'art-exhibitions', 'theater', 'musikaler', 'art', 'design',
+  // 'food-drink', 'barn', 'festivals') till sina Utforska-motsvarigheter.
+  // Detta är ENDA punkten där vi kan garantera att ALLA events — oavsett
+  // källa, adapter-regression eller LLM-batch-output — får en giltig
+  // kategori innan de persistas. Adaptrar som redan emitterar korrekt
+  // slug passerar genom oförändrat.
+  const canonicalizeFirst = rawCategories?.[0] != null
+    ? canonicalizeCategorySlug(rawCategories[0])
+    : null;
+  if (canonicalizeFirst?.changed) {
+    console.log(
+      `[normalizer] canonicalized: ${canonicalizeFirst.originalSlug} → ${canonicalizeFirst.slug} (source=${raw.source})`,
+    );
+  }
+  const categories = canonicalizeFirst
+    ? [canonicalizeFirst.slug]
+    : rawCategories;
+  let category_ids = await resolveCategoryIds(categories);
+
+  // Get primary category slug (first category from the normalized list).
+  // Source-default (2026-09-29) — known single-purpose sources (Berwaldhallen,
+  // Debaser, biljettshop.se-Chicago-adapters, etc.) får en hårdkodad kategori
+  // om adaptern inte redan satt en. Tabell i sourceCategoryDefaults.ts.
+  // Endast aktiv när adapter INTE levererat en egen kategori.
+  const sourceDefaultSlug = getDefaultCategorySlugForSource(raw.source);
+  const category_slug =
+    categories?.[0]
+    ?? sourceDefaultSlug
+    ?? 'community';
+
+  // Om source-default användes och INTE redan finns i category_ids: lägg
+  // till motsvarande UUID i M:M-joinet så eventet exponeras korrekt i
+  // UI-filter som läser event_categories (multi-label).
+  if (
+    sourceDefaultSlug
+    && !categories?.includes(sourceDefaultSlug)
+    && !category_ids.length
+  ) {
+    const sourceDefaultIds = await resolveCategoryIds([sourceDefaultSlug]);
+    if (sourceDefaultIds.length > 0) {
+      category_ids = [...category_ids, ...sourceDefaultIds];
+      console.log(
+        `[normalizer] source-default applied: ${raw.source} → ${sourceDefaultSlug} ` +
+        `(category_id=${sourceDefaultIds[0]})`,
+      );
+    }
+  }
 
   console.log(`[normalizer] venue_id=${venue_id ?? 'null'}, category_slug=${category_slug}`);
 
@@ -379,7 +451,20 @@ export async function processRawEvent(job: Job<RawEventInput>): Promise<void> {
     title_en: raw.detected_language === 'en' ? raw.title : raw.title ?? null,
     title_sv: raw.detected_language === 'sv' ? raw.title : raw.title,
     description_en: raw.description ?? null,
-    description_sv: raw.detected_language === 'sv' ? raw.description : null,
+    // Description_sv-fallback (2026-09-29): om detekterat språk INTE är 'sv'
+    // men titeln är svensk (innehåller å/ä/ö) OCH raw.description finns —
+    // använd description som description_sv också. Detta hanterar scrape-
+    // källor (biljettshop.se, kultur-stockholm, sthlmlist m.fl.) där
+    // adaptern routar beskrivningen till description_en trots att texten
+    // är på svenska. 100 % av berwaldhallen-events (125) har tom
+    // description_sv — den source:en har dock tom description i båda
+    // språken, så denna fallback hjälper inte där.
+    description_sv:
+      raw.detected_language === 'sv'
+        ? raw.description
+        : raw.description && /[åäöÅÄÖ]/.test(raw.title ?? '')
+          ? raw.description
+          : null,
     start_time: raw.start_time,
     // Only set end_time if it's a valid ISO timestamp, not just "HH:MM"
     end_time: raw.end_time && raw.end_time.includes('T') ? raw.end_time : null,

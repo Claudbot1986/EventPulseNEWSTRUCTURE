@@ -79,7 +79,7 @@ describe('arkdes adapter', () => {
       expect(r.events[0].title).toBe('Design-bar: Sjukhus, fängelser och SiS-hem');
       expect(r.events[0].venue).toBe('ArkDes – Torget');
       expect(r.events[0].city).toBe('Stockholm');
-      expect(r.events[0].category).toBe('design');
+      expect(r.events[0].category).toBe('exhibition');
     });
 
     it('parses Klockan: HH:MM–HH:MM (with colon after Klockan)', () => {

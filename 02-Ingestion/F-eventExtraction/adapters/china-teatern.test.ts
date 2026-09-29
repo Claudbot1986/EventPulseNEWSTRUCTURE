@@ -100,7 +100,7 @@ describe('china-teatern adapter', () => {
       expect(r.events[0].venue).toBe('China Teatern');
       expect(r.events[0].city).toBe('Stockholm');
       expect(r.events[0].priceMin).toBe(395);
-      expect(r.events[0].category).toBe('musikaler');
+      expect(r.events[0].category).toBe('musical');
       expect(r.events[0].ticketUrl).toBe('https://shop.showtic.se/abc123');
     });
 

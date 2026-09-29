@@ -187,7 +187,8 @@ export function extract(
           ticketUrl: p.ticketUrl,
           imageUrl: image || undefined,
           priceMin: p.priceMin,
-          category: 'musikaler',
+          // 2026-09-29: 'musical' istället för 'musikaler' (deprecated)
+          category: 'musical',
           source,
           sourceUrl: url,
           confidence: {

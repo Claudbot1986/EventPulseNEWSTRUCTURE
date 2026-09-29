@@ -90,27 +90,30 @@ function mapKulturhusetEvent(event: KulturhusetHit) {
  * @returns {string} - Internal category
  */
 function mapCategory(label: string) {
+  // 2026-09-29: använd Utforska-slugs direkt (categories-v2). Tidigare
+  // 'culture' / 'barn' / 'nightlife' deprecated — normalizerns
+  // canonicalize-lag fångar ändå, men direkt rätt här minskar logg-brus.
   const categoryMap: Record<string, string> = {
-    'teater': 'culture',
+    'teater': 'theatre-drama',
     'musik': 'music',
     'konsert': 'music',
-    'dans': 'culture',
-    'film': 'culture',
-    'litteratur': 'culture',
-    'konst': 'culture',
-    'utställning': 'culture',
-    'barn & ung': 'barn',
-    'barn': 'barn',
-    'familj': 'barn',
+    'dans': 'dance',
+    'film': 'film',
+    'litteratur': 'talks-lectures',
+    'konst': 'exhibition',
+    'utställning': 'exhibition',
+    'barn & ung': 'kids',
+    'barn': 'kids',
+    'familj': 'family',
     'sport': 'sports',
     'mat & dryck': 'food',
     'food': 'food',
     'nattliv': 'nightlife',
-    'skapa': 'culture',
-    'för skolan': 'barn',
+    'skapa': 'workshop',
+    'för skolan': 'kids',
   };
-  
-  return categoryMap[label] || 'culture';
+
+  return categoryMap[label] || 'community';
 }
 
 interface KulturhusetOptions {

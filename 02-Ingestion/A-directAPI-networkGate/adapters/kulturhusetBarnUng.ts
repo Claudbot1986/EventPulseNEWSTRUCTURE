@@ -55,8 +55,8 @@ function mapKulturhusetBarnUngEvent(event: KulturhusetBarnUngHit) {
   // Extract title
   const title = source.drupalTitle || source.tixName || 'Untitled Event';
   
-  // Map category - always 'barn' for this source
-  const category = 'barn';
+  // Map category (2026-09-29): 'kids' istället för deprecated 'barn'.
+  const category = 'kids';
   
   // Generate unique ID
   const id = `khbu-${source.tixEventId || source.drupalId || Math.random().toString(36).substr(2, 9)}`;

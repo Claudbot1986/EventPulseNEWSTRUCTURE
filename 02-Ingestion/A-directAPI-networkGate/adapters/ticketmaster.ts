@@ -17,7 +17,8 @@ const supabase = createClient(
  */
 const SEGMENT_TO_SLUG: Record<string, string> = {
   'music': 'music',
-  'arts & theatre': 'art-exhibitions',
+  // 2026-09-29: 'exhibition' istället för deprecated 'art-exhibitions'
+  'arts & theatre': 'exhibition',
   'sports': 'sports',
   'miscellaneous': 'community',
 };
@@ -33,8 +34,9 @@ const GENRE_TO_SLUG: Record<string, string> = {
   'latin': 'music',
   'comedy': 'theatre-comedy',
   'theatre': 'theatre-comedy',
-  'food & drink': 'food-drink',
-  'food': 'food-drink',
+  // 2026-09-29: 'food' istället för deprecated 'food-drink'
+  'food & drink': 'food',
+  'food': 'food',
   'family': 'family',
   'fairs & festivals': 'community',
   'other': 'community',

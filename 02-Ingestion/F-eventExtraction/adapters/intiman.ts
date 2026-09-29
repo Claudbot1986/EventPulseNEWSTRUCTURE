@@ -165,7 +165,8 @@ export function extract(html: string, url: string, source = SOURCE_ID): IntimanE
         url,
         imageUrl: image || undefined,
         priceMin,
-        category: 'theater',
+        // 2026-09-29: 'theatre-drama' istället för deprecated 'theater'.
+        category: 'theatre-drama',
         source,
         sourceUrl: url,
         confidence: {

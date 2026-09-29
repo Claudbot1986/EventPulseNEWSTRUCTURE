@@ -200,7 +200,8 @@ export function extract(html: string, url: string, source = SOURCE_ID): ArkDesEx
       description: description || undefined,
       url,
       imageUrl: image || undefined,
-      category: 'design',
+      // 2026-09-29: 'exhibition' istället för deprecated 'design'.
+      category: 'exhibition',
       source,
       sourceUrl: url,
       confidence: {
