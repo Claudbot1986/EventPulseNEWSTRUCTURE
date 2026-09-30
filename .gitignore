@@ -41,6 +41,10 @@ TEMP/
 /AUTONOMOUS-QUARANTINE/09-MobileControl/runtime/
 **/reports/
 /02-Ingestion/C-htmlGate/reports/
+# Runtime state in C-htmlGate — auto-genereras av 123-systemet / janitor
+# / kørande batcher. Append-only; ska inte persisteras i git.
+/02-Ingestion/C-htmlGate/123-learning-memory.json
+/02-Ingestion/C-htmlGate/manual-review/resolved.jsonl
 /03-Queue/03-extractedevents/
 /conversations/
 
@@ -65,6 +69,7 @@ TEMP/
 # Local scratch / debug dumps (excluded from tsconfig)
 /tmp/
 /claude-test-empty/
+/.scratch/
 
 # 06-UI dead legacy copy (T0105, user decision 2026-09-04) — moved to /tmp backup.
 # The live, actively developed originals are 02-Ingestion/ and root packages/shared.
