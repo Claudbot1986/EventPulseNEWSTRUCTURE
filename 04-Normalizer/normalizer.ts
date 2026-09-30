@@ -8,6 +8,7 @@ import { computeConfidenceV1 } from './confidence_v1';
 import { evaluateTitle, checkBlockB } from './title-quality-gate';
 import { getDefaultCategorySlugForSource } from './sourceCategoryDefaults';
 import { canonicalizeCategorySlug } from './categoryCanonicalize';
+import { extractHeadliner, resolveArtist } from './artistResolver';
 import { aiImageQueue, startAiImageWorker } from '../08-Agent/workers/aiImageWorker';
 import { appendSkipLog } from '../08-Agent/utils/skipLog';
 import { pickLibraryFallback, markEventWithLibraryFallback } from '../08-Agent/utils/imageLibrary';
@@ -391,6 +392,32 @@ export async function processRawEvent(job: Job<RawEventInput>): Promise<void> {
 
   const venue_id = await resolveVenue(raw);
 
+  // MusicBrainz + Last.fm authoritativ artist-uppslagning (2026-09-30).
+  // Om vi lyckas slå upp artisen i MusicBrainz OCH Last.fm ger entydiga
+  // taggar mot en kanonsk kategori → sätt den som category_slug.
+  // Faller gracefully tillbaka till adapter-/source-default vid null.
+  let mbResolvedCategory: string | null = null;
+  let mbResolvedConfidence = 0;
+  let mbArtistId: string | null = null;
+  const headlinerInfo = extractHeadliner(raw.title ?? '');
+  if (headlinerInfo.headliner && !headlinerInfo.extraction_hint) {
+    try {
+      const resolved = await resolveArtist(headlinerInfo.headliner, supabase);
+      if (resolved?.high_confidence_category && resolved.category_slug) {
+        mbResolvedCategory = resolved.category_slug;
+        mbResolvedConfidence = resolved.confidence;
+        mbArtistId = resolved.artist_id;
+        console.log(
+          `[normalizer] MB+Last.fm resolved: "${headlinerInfo.headliner}" → ${resolved.category_slug} ` +
+          `(conf=${resolved.confidence}, artist_id=${resolved.artist_id})`,
+        );
+      }
+    } catch (err) {
+      // resolveArtist ska aldrig kasta, men defensivt: logga och fortsätt.
+      console.warn(`[normalizer] resolveArtist misslyckades för "${headlinerInfo.headliner}": ${(err as Error).message}`);
+    }
+  }
+
   // Kulturhuset uses 'category' (singular), others use 'categories' (plural)
   const rawCategories = raw.categories ?? (raw.category ? [raw.category] : undefined);
 
@@ -415,13 +442,17 @@ export async function processRawEvent(job: Job<RawEventInput>): Promise<void> {
   let category_ids = await resolveCategoryIds(categories);
 
   // Get primary category slug (first category from the normalized list).
-  // Source-default (2026-09-29) — known single-purpose sources (Berwaldhallen,
-  // Debaser, biljettshop.se-Chicago-adapters, etc.) får en hårdkodad kategori
-  // om adaptern inte redan satt en. Tabell i sourceCategoryDefaults.ts.
-  // Endast aktiv när adapter INTE levererat en egen kategori.
+  // Prioritet (2026-09-30, MB+Last.fm = auktoritativ källa för musik):
+  //   1. Adapter-emitterad kategori (categories[0])
+  //   2. MusicBrainz + Last.fm resolved (mbResolvedCategory) — vinner över
+  //      adapter för music events eftersom MB har auktoritativ artist-data.
+  //   3. Source-default (2026-09-29) — kända single-purpose sources
+  //      (Berwaldhallen, Debaser, biljettshop.se-Chicago-adapters, etc.)
+  //   4. 'community' (fallback)
   const sourceDefaultSlug = getDefaultCategorySlugForSource(raw.source);
   const category_slug =
     categories?.[0]
+    ?? mbResolvedCategory
     ?? sourceDefaultSlug
     ?? 'community';
 
