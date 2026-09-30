@@ -1693,6 +1693,13 @@ function ExploreDetailScreen({ payload, onBack }) {
     // eftersom `rows`-parametern inne i callback:en bands till enskilda
     // element. Kalla clientFilter direkt med arrayen istället.
     if (route.clientFilter) rows = route.clientFilter(rows);
+    // 2026-10-02 (dedup safety): feed_events returnerar i teorin unika
+    // event-id:n per sida, men om två sidor overlappar (offset-skift,
+    // samma event i två källkategorier) skulle realEvents ackumulera
+    // dubletter → React "two children with the same key". Deduplicera per
+    // id inom sidan så detta inte når key-proppen i UtforskaSection.
+    const seen = new Set();
+    rows = rows.filter((r) => (seen.has(r.id) ? false : (seen.add(r.id), true)));
     return {
       rows,
       hasMore: !!page.has_more,

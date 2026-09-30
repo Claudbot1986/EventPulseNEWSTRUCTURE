@@ -109,9 +109,11 @@ export default function EventPulseSenaste({
             ? Array.from({ length: skeletonCount }).map((_, i) => (
                 <SkeletonCard key={`skeleton-${i}`} />
               ))
-            : visibleCards.map((card) => (
+            : visibleCards.map((card, idx) => (
+                // 2026-10-02 (key collision safety): index-prefix för att
+                // tåla dubletter i cards-arrayen.
                 <EventPulseSenasteCard
-                  key={card.id}
+                  key={card.id ? `${idx}-${card.id}` : `idx-${idx}`}
                   title={card.title}
                   subtitle={card.subtitle}
                   imageSource={card.imageUrl}

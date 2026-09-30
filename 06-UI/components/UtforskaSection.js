@@ -345,9 +345,13 @@ export default function UtforskaSection({
           <Text style={styles.subhead}>{emptyTextResolved}</Text>
         ) : null}
 
-        {items.map((event) => (
+        {items.map((event, idx) => (
+          // 2026-10-02 (key collision safety): även om backend returnerar
+          // dubletter av samma event-id så kan React annars varna "two
+          // children with the same key" i dev. Index-prefix garanterar
+          // unika keys även när event.id kolliderar mellan syskon-rader.
           <EventRow
-            key={event.id}
+            key={event.id ? `${idx}-${event.id}` : `idx-${idx}`}
             event={event}
             onPress={handlePress}
             onMenuPress={handleMenuPress}
