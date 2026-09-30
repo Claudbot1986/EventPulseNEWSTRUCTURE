@@ -275,7 +275,14 @@ export async function runPushDinHelgPass(
   const budgetMs = opts.budgetMs ?? DEFAULT_RUN_BUDGET_MS;
   const supabase = opts.supabase ?? getSupabaseClient();
   const fetchImpl = opts.fetchImpl ?? fetch;
-  const timeProvider = opts.timeProvider ?? (() => Date.now());
+  // 2026-10-02 (clock-budget bug): när testet injicerar `now` utan
+  // `timeProvider`, jämförde budget-checken real Date.now() mot den
+  // fejk-starttiden och såg ~547 s "förfluten" → failade ok:false.
+  // Ankra timeProvider mot real tid *vid funktionsanrop* så duration
+  // mäts i real-tid även när startedAt är fejkad. startedAt behåller
+  // sitt injicerade värde → summary.started_at stämmer fortfarande.
+  const realT0 = Date.now();
+  const timeProvider = opts.timeProvider ?? (() => startedAt.getTime() + (Date.now() - realT0));
 
   const summary: CronRunSummary = {
     ok: true,
