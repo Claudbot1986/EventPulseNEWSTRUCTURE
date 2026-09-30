@@ -37,9 +37,9 @@ describe('canonicalizeCategorySlug', () => {
       expect(r?.slug).toBe('theatre-drama');
     });
 
-    it('musikaler → musical (svensk → engelsk)', () => {
+    it('musikaler → musical-theatre (svensk → engelsk)', () => {
       const r = canonicalizeCategorySlug('musikaler');
-      expect(r?.slug).toBe('musical');
+      expect(r?.slug).toBe('musical-theatre');
     });
 
     it('art → exhibition', () => {
@@ -66,10 +66,10 @@ describe('canonicalizeCategorySlug', () => {
   describe('giltiga Utforska-slugs passerar oförändrat', () => {
     it.each([
       'music', 'pop-rock', 'jazz', 'classical', 'electronic', 'hip-hop',
-      'metal', 'world-folk', 'musical', 'opera', 'theatre-comedy',
-      'theatre-drama', 'dance', 'circus', 'exhibition', 'flea-market',
-      'food', 'wine-tasting', 'kids', 'family', 'film', 'talks-lectures',
-      'workshop', 'sports', 'community', 'nightlife',
+      'metal', 'world-folk', 'musical-theatre', 'rock', 'pop', 'opera',
+      'theatre-comedy', 'theatre-drama', 'dance', 'circus', 'exhibition',
+      'flea-market', 'food', 'wine-tasting', 'kids', 'family', 'film',
+      'talks-lectures', 'workshop', 'sports', 'community', 'nightlife',
     ])('%s → %s (unchanged)', (slug) => {
       const r = canonicalizeCategorySlug(slug);
       expect(r?.slug).toBe(slug);
@@ -185,10 +185,10 @@ describe('listCanonicalCategoryMappings', () => {
   it('target-slugs är giltiga Utforska-slugs', () => {
     const validTargets = new Set([
       'music', 'pop-rock', 'jazz', 'classical', 'electronic', 'hip-hop',
-      'metal', 'world-folk', 'musical', 'opera', 'theatre-comedy',
-      'theatre-drama', 'dance', 'circus', 'exhibition', 'flea-market',
-      'food', 'wine-tasting', 'kids', 'family', 'film', 'talks-lectures',
-      'workshop', 'sports', 'community', 'nightlife',
+      'metal', 'world-folk', 'musical-theatre', 'rock', 'pop', 'opera',
+      'theatre-comedy', 'theatre-drama', 'dance', 'circus', 'exhibition',
+      'flea-market', 'food', 'wine-tasting', 'kids', 'family', 'film',
+      'talks-lectures', 'workshop', 'sports', 'community', 'nightlife',
     ]);
     const list = listCanonicalCategoryMappings();
     for (const m of list) {

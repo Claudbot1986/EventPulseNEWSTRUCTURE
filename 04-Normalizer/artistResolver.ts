@@ -40,7 +40,7 @@
 
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { musicBrainzLookup, lastFmGetTopTags, type MusicBrainzArtist, type LastFmTag } from './musicLookup.js';
-import { mapLastFmTagsToCategory } from './tagToCategory.js';
+import { mapLastFmTagsToCategory, type MusicCategorySlug } from './tagToCategory.js';
 
 /** Auto-write threshold — same constant as apply-retag-v3 uses. */
 export const AUTO_WRITE_THRESHOLD = 0.80;
@@ -93,7 +93,7 @@ export interface ResolvedArtist {
   /** MBID, or null if no MB match. */
   mbid: string | null;
   /** Canonical category derived from Last.fm tags, or null if ambiguous. */
-  category_slug: 'classical' | 'opera' | 'musical' | null;
+  category_slug: MusicCategorySlug | null;
   /** Confidence 0.0–1.0 for the category guess. */
   confidence: number;
   /** True if confidence ≥ AUTO_WRITE_THRESHOLD — caller can persist. */

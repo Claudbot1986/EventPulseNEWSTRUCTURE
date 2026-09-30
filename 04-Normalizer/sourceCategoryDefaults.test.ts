@@ -25,24 +25,24 @@ describe('getDefaultCategoryForSource', () => {
       expect(def?.reason).toMatch(/klassisk/i);
     });
 
-    it('lulea-hf-2 → musical (biljettshop.se Chicago-musikal)', () => {
+    it('lulea-hf-2 → musical-theatre (biljettshop.se Chicago-musikal)', () => {
       const def = getDefaultCategoryForSource('lulea-hf-2');
-      expect(def?.slug).toBe('musical');
+      expect(def?.slug).toBe('musical-theatre');
     });
 
-    it('downtown-2 → musical (samma upstream)', () => {
+    it('downtown-2 → musical-theatre (samma upstream)', () => {
       const def = getDefaultCategoryForSource('downtown-2');
-      expect(def?.slug).toBe('musical');
+      expect(def?.slug).toBe('musical-theatre');
     });
 
-    it('globen-3 → musical (samma upstream)', () => {
+    it('globen-3 → musical-theatre (samma upstream)', () => {
       const def = getDefaultCategoryForSource('globen-3');
-      expect(def?.slug).toBe('musical');
+      expect(def?.slug).toBe('musical-theatre');
     });
 
-    it('halmstad-konserthus-2 → musical (samma upstream)', () => {
+    it('halmstad-konserthus-2 → musical-theatre (samma upstream)', () => {
       const def = getDefaultCategoryForSource('halmstad-konserthus-2');
-      expect(def?.slug).toBe('musical');
+      expect(def?.slug).toBe('musical-theatre');
     });
 
     it('sthlmlist → music (Stockholm music listings)', () => {
@@ -111,7 +111,7 @@ describe('getDefaultCategoryForSource', () => {
 describe('getDefaultCategorySlugForSource', () => {
   it('returnerar slug-sträng för känd källa', () => {
     expect(getDefaultCategorySlugForSource('berwaldhallen')).toBe('classical');
-    expect(getDefaultCategorySlugForSource('lulea-hf-2')).toBe('musical');
+    expect(getDefaultCategorySlugForSource('lulea-hf-2')).toBe('musical-theatre');
   });
 
   it('returnerar null för okänd källa', () => {

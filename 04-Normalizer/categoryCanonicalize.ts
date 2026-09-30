@@ -50,7 +50,7 @@
  *     (Språkmuseet Scrabble, etc).
  *   - theater (25) → theatre-drama: blandat innehåll (standup, drama,
  *     intima teater). Drama är bredaste svenska motsvarigheten.
- *   - musikaler (15) → musical: alla samples är China-teatern-musikaler.
+ *   - musikaler (15) → musical-theatre: alla samples är China-teatern-musikaler.
  *   - art (13) → exhibition: alla samples är konst-utställningar.
  *   - design (7) → exhibition: Arkdes design-events, konsoliderade enligt
  *     v2-planen.
@@ -83,7 +83,7 @@ const CANONICAL_CATEGORY_SLUGS: Readonly<Record<string, string>> = Object.freeze
   'culture':        'community',
   'art-exhibitions': 'exhibition',
   'theater':         'theatre-drama',
-  'musikaler':       'musical',
+  'musikaler':       'musical-theatre',
   'art':             'exhibition',
   'design':          'exhibition',
   'food-drink':      'food',

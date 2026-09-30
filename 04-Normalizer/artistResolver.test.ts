@@ -229,16 +229,18 @@ describe('resolveArtist — happy path', () => {
     expect(result?.high_confidence_category).toBe(false);
   });
 
-  it('returnerar ResolvedArtist med catch-all musical när bara rock/pop-taggar finns', async () => {
+  it('returnerar ResolvedArtist med specifik rock-kategori när bara rock/indie-taggar finns (v2: ingen catch-all)', async () => {
+    // v1 returnerade 'musical' med conf 0.70 (catch-all).
+    // v2 (2026-09-30): rock+indie matchar rock-bucket (multi-tag) → 'rock' med conf 0.95.
     mockFetchSequence([
       { body: { artists: [{ id: 'x', name: 'Indie Band', score: 95, type: 'Group' }] } },
       { body: { toptags: { tag: [{ name: 'rock', count: 200 }, { name: 'indie', count: 150 }] } } },
     ]);
     const { supabase } = makeSupabaseMock();
     const result = await resolveArtist('Indie Band', supabase);
-    expect(result?.category_slug).toBe('musical');
-    expect(result?.confidence).toBe(0.70);
-    expect(result?.high_confidence_category).toBe(false);
+    expect(result?.category_slug).toBe('rock');
+    expect(result?.confidence).toBe(0.95);
+    expect(result?.high_confidence_category).toBe(true);
   });
 });
 

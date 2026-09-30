@@ -63,22 +63,22 @@ const SOURCE_CATEGORY_DEFAULTS: Readonly<Record<string, SourceCategoryDefault>> 
     verifiedSince: '2026-09-29',
   },
   'lulea-hf-2': {
-    slug: 'musical',
+    slug: 'musical-theatre',
     reason: 'Source scrapar biljettshop.se Chicago-musikal på Oscarsteatern — 57/57 events är samma show.',
     verifiedSince: '2026-09-29',
   },
   'downtown-2': {
-    slug: 'musical',
+    slug: 'musical-theatre',
     reason: 'Source scrapar biljettshop.se Chicago-musikal på Oscarsteatern — 57/57 events är samma show.',
     verifiedSince: '2026-09-29',
   },
   'globen-3': {
-    slug: 'musical',
+    slug: 'musical-theatre',
     reason: 'Source scrapar biljettshop.se Chicago-musikal på Oscarsteatern — 57/57 events är samma show.',
     verifiedSince: '2026-09-29',
   },
   'halmstad-konserthus-2': {
-    slug: 'musical',
+    slug: 'musical-theatre',
     reason: 'Source scrapar biljettshop.se Chicago-musikal på Oscarsteatern — 57/57 events är samma show.',
     verifiedSince: '2026-09-29',
   },

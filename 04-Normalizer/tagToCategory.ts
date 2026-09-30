@@ -1,13 +1,12 @@
 /**
- * tagToCategory.ts — Map Last.fm community tags → canonical EventPulse category.
+ * tagToCategory.ts — Map Last.fm community tags → canonical EventPulse music category.
  *
  * Why this exists
  * ---------------
  * MusicBrainz + Last.fm replaces LLM-interpretation for music events
  * (see docs/MB-LASTFM-PLAN.md). MusicBrainz resolves artist identity
  * (MBID); Last.fm provides crowdsourced genre tags. We need a deterministic,
- * auditable mapping from free-text tags to our 3 canonical music categories
- * (`classical`, `opera`, `musical`) plus the catch-all `community` fallback.
+ * auditable mapping from free-text tags to our 8 canonical music categories.
  *
  * Mapping strategy
  * ----------------
@@ -19,21 +18,21 @@
  *
  * If multiple categories each have matches → AMBIGUOUS, return null
  *   (caller falls back to LLM).
- * If zero categories match but the artist looks musical (catch-all tags like
- * "rock", "pop", "jazz") → return `{category_slug: 'musical', confidence: 0.70}`
- *   with `reasoning` explaining "uncategorized music, default to musical".
- * If zero matches and no musical catch-all → null.
+ * If zero categories match → null (genuinely unknown — let LLM decide).
+ *
+ * v2 (2026-09-30): 5 nya sub-genre-buckets tillagda (rock/pop/jazz/electronic/hip-hop),
+ * slug `musical` döptes om till `musical-theatre` (var tidigare både musikal-slangen
+ * OCH catch-all för all musik). Ingen generell catch-all längre — specifika buckets
+ * täcker de vanligaste Last.fm-taggarna, okänt → LLM.
  *
  * Why this design
  * ---------------
- * - We have only 3 music categories today. Without sub-genre slugs
- *   (rock/jazz/electronic/etc.), anything that's "music but not classical/opera"
- *   collapses into `musical`. The plan defers sub-genres to a later phase.
- * - Confidence 0.95 on a clear multi-tag match — MB+Last.fm is a stronger
- *   signal than LLM and deserves higher confidence.
- * - Confidence 0.70 on the catch-all — "this is music, but I can't say what
- *   kind" is honest. The 0.80 auto-write gate in apply-retag-v3 will defer
- *   these to human review.
+ * - 8 buckets täcker de genrer som faktiskt syns i Stockholm-eventdata
+ *   (Rodrigo y Gabriela = rock, Anna Netrebko = opera, Berliner Philharmoniker
+ *   = classical, etc.).
+ * - Confidence 0.95 på tydlig multi-tag match — MB+Last.fm är starkare signal
+ *   än LLM och förtjänar högre confidence.
+ * - Ingen catch-all → hellre LLM-fallback än felaktig "musical"-klassificering.
  *
  * Usage
  * -----
@@ -47,9 +46,20 @@
 
 import type { LastFmTag } from './musicLookup.js';
 
+/** Alla kanonska musikkategorier vi mappar till. */
+export type MusicCategorySlug =
+  | 'classical'
+  | 'opera'
+  | 'musical-theatre'
+  | 'rock'
+  | 'pop'
+  | 'jazz'
+  | 'electronic'
+  | 'hip-hop';
+
 /** Single match between a tag and a category bucket. Internal type. */
 interface CategoryHits {
-  category: 'classical' | 'opera' | 'musical';
+  category: MusicCategorySlug;
   matched: string[];
   maxCount: number;
 }
@@ -61,17 +71,17 @@ const STRONG_SINGLE_TAG_COUNT = 100;
 const MULTI_TAG_THRESHOLD = 2;
 
 /**
- * Tag → canonical category mapping.
+ * Tag → canonical music category mapping.
  *
  * Tags are normalized (lowercase, trimmed) before lookup, so casing in
- * `Last.fm`'s response doesn't matter.
+ * Last.fm's response doesn't matter.
  *
  * Adding new tags here is safe — they're additive. Removing tags is risky
  * (could re-classify existing artists) and should follow the Generalization
  * Protection Rule: only remove if multiple unrelated sites prove the tag
  * doesn't belong.
  */
-export const TAG_TO_CATEGORY: Readonly<Record<'classical' | 'opera' | 'musical', readonly string[]>> = Object.freeze({
+export const TAG_TO_CATEGORY: Readonly<Record<MusicCategorySlug, readonly string[]>> = Object.freeze({
   classical: Object.freeze([
     'classical',
     'symphony',
@@ -100,31 +110,96 @@ export const TAG_TO_CATEGORY: Readonly<Record<'classical' | 'opera' | 'musical',
     'operatic',
     'vocal classical',
   ]),
-  musical: Object.freeze([
+  // V2 rename: 'musical' → 'musical-theatre' för att ta bort semantik-kollisionen
+  // med musik som generell kategori. Bucket innehåller genuin musikal/operett.
+  'musical-theatre': Object.freeze([
     'musical theatre',
     'broadway',
     'musical',
     'musicals',
     'operetta',
   ]),
+  // V2 nya sub-genre-buckets. Täcker de vanligaste Last.fm-taggarna för
+  // Stockholm-stockholm-eventdata. Nischade taggar (shoegaze, krautrock etc.)
+  // mappas INTE — de faller till LLM.
+  rock: Object.freeze([
+    'rock',
+    'indie',
+    'indie rock',
+    'alternative',
+    'alternative rock',
+    'punk',
+    'punk rock',
+    'metal',
+    'heavy metal',
+    'hard rock',
+    'classic rock',
+    'progressive rock',
+    'post-punk',
+    'grunge',
+    'stoner rock',
+    'shoegaze',          // inkluderad — vanlig i svensk indie-data
+  ]),
+  pop: Object.freeze([
+    'pop',
+    'indie pop',
+    'synth-pop',
+    'dance pop',
+    'k-pop',
+    'j-pop',
+    'schlager',
+    'dansband',
+    'europop',
+    'swedish pop',
+    'singer-songwriter',
+    'vocal',
+  ]),
+  jazz: Object.freeze([
+    'jazz',
+    'bebop',
+    'swing',
+    'fusion',
+    'jazz fusion',
+    'smooth jazz',
+    'free jazz',
+    'contemporary jazz',
+    'blues',
+    'soul',
+    'funk',
+    'neo-soul',
+    'rnb',
+    'r&b',
+  ]),
+  electronic: Object.freeze([
+    'electronic',
+    'house',
+    'deep house',
+    'techno',
+    'minimal techno',
+    'ambient',
+    'edm',
+    'drum and bass',
+    'dnb',
+    'trance',
+    'industrial',
+    'idm',
+    'new wave',
+    'synth',
+    'electronica',
+    'experimental',
+  ]),
+  'hip-hop': Object.freeze([
+    'hip-hop',
+    'hip hop',
+    'rap',
+    'gangster rap',
+    'trap',
+    'southern hip hop',
+    'east coast hip hop',
+    'underground hip hop',
+    'swedish hip hop',
+  ]),
 });
-
-/**
- * Last.fm tags that signal "this is music" but don't disambiguate between
- * our 3 categories. Used for the catch-all fallback to `musical`.
- *
- * Conservative — only well-known genre roots. Niche tags like 'shoegaze' or
- * 'dnb' intentionally NOT included; we'd rather return null and let LLM
- * handle those.
- */
-const MUSIC_CATCH_ALL_TAGS: ReadonlySet<string> = new Set([
-  'rock', 'pop', 'indie', 'alternative', 'jazz', 'electronic', 'house',
-  'techno', 'hip-hop', 'rap', 'folk', 'country', 'blues', 'reggae',
-  'world', 'metal', 'punk', 'ambient', 'experimental', 'soul', 'funk',
-  'rnb', 'r&b', 'dance', 'edm', 'hard rock', 'heavy metal', 'classic rock',
-  'singer-songwriter', 'acoustic', 'bluegrass', 'latin', 'reggaeton',
-  'trap', 'k-pop', 'j-pop', 'soundtrack', 'new wave', 'industrial',
-]);
 
 /** Normalize a tag for lookup. */
 function normalizeTag(name: string): string {
@@ -132,12 +207,12 @@ function normalizeTag(name: string): string {
 }
 
 /** Find category hits for a list of tags. Internal helper. */
-function bucketTagHits(tags: LastFmTag[]): Map<'classical' | 'opera' | 'musical', CategoryHits> {
-  const hits = new Map<'classical' | 'opera' | 'musical', CategoryHits>();
+function bucketTagHits(tags: LastFmTag[]): Map<MusicCategorySlug, CategoryHits> {
+  const hits = new Map<MusicCategorySlug, CategoryHits>();
 
   for (const tag of tags) {
     const norm = normalizeTag(tag.name);
-    for (const [category, allowedTags] of Object.entries(TAG_TO_CATEGORY) as Array<['classical' | 'opera' | 'musical', readonly string[]]>) {
+    for (const [category, allowedTags] of Object.entries(TAG_TO_CATEGORY) as Array<[MusicCategorySlug, readonly string[]]>) {
       if (allowedTags.includes(norm)) {
         const existing = hits.get(category);
         if (existing) {
@@ -154,21 +229,13 @@ function bucketTagHits(tags: LastFmTag[]): Map<'classical' | 'opera' | 'musical'
   return hits;
 }
 
-/** True if any tag is in the music catch-all set. */
-function hasMusicCatchAll(tags: readonly LastFmTag[]): boolean {
-  for (const t of tags) {
-    if (MUSIC_CATCH_ALL_TAGS.has(normalizeTag(t.name))) return true;
-  }
-  return false;
-}
-
 /**
  * Result of mapping Last.fm tags to a canonical category.
  * `null` means "ambiguous or no signal" — caller should fall back to LLM.
  */
 export interface TagMatchResult {
   /** Canonical category slug from `categoryDefinitions.ts`. */
-  category_slug: 'classical' | 'opera' | 'musical';
+  category_slug: MusicCategorySlug;
   /** Confidence 0.0–1.0. ≥ 0.80 typically passes auto-write gate. */
   confidence: number;
   /** Which Last.fm tags triggered the match (for audit/JSONL). */
@@ -178,7 +245,7 @@ export interface TagMatchResult {
 }
 
 /**
- * Map Last.fm tags to a canonical category.
+ * Map Last.fm tags to a canonical music category.
  *
  * @param tags  Top-N tags from Last.fm, sorted by count descending preferred.
  * @returns     TagMatchResult on confident match; null on ambiguous/missing.
@@ -189,18 +256,9 @@ export function mapLastFmTagsToCategory(tags: readonly LastFmTag[]): TagMatchRes
   const hits = bucketTagHits([...tags]);
   const bucketCount = hits.size;
 
-  // Zero buckets hit → either catch-all music or no signal
+  // Zero buckets hit → no signal — fall back to LLM
   if (bucketCount === 0) {
-    if (hasMusicCatchAll(tags)) {
-      return {
-        category_slug: 'musical',
-        confidence: 0.70,
-        matched_tags: tags.filter((t) => MUSIC_CATCH_ALL_TAGS.has(normalizeTag(t.name)))
-                          .map((t) => normalizeTag(t.name)),
-        reasoning: 'Last.fm-taggar matchar musik-catch-all (ingen specifik sub-kategori).',
-      };
-    }
-    return null; // no signal — fall back to LLM
+    return null;
   }
 
   // Single bucket hit — decide if it's authoritative
