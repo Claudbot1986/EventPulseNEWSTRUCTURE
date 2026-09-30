@@ -5,10 +5,17 @@
  *   - Reads a date window [from, from + days) from events_public.
  *   - Excludes past events (start_time > now()).
  *   - Sorted ascending by start_time.
- *   - Capped limit (default 50, max 100) — one "page" of browse content.
+ *   - Paginated via `limit` + `offset` (PostgREST .range).
+ *
+ * Cap model (2026-09-28 lift for Utforska infinite-scroll):
+ *   - DEFAULT_LIMIT = 50  (chat / browse unchanged)
+ *   - MAX_LIMIT     = 500 (was 100 — Utforska fetches full categories)
+ *   - DEFAULT_DAYS  = 7
+ *   - MAX_DAYS      = 3650 (was 30 — Utforska wants all future events)
  *
  * The browse-first UI calls this with `from = today` initially, then advances
- * `from` by 7 days on each scroll-end to load the next week.
+ * `from` by 7 days on each scroll-end to load the next week. The Utforska
+ * tiles page by `offset` within a single wide window instead.
  */
 
 import type { SupabaseClient } from '@supabase/supabase-js';
@@ -18,14 +25,16 @@ import { fetchArtistSlugsByEventIds } from './search_events';
 export interface FeedEventsInput {
   /** ISO date inclusive lower bound (YYYY-MM-DD). */
   from: string;
-  /** Window size in days. Default 7, max 30. */
+  /** Window size in days. Default 7, max 3650 (~10 years). */
   days?: number;
   /** Optional category filter. */
   category?: string | null;
   /** Optional city filter. */
   city?: string | null;
-  /** Page size. Default 50, max 100. */
+  /** Page size. Default 50, max 500. */
   limit?: number;
+  /** Row offset for pagination. Default 0. Use with `limit` for infinite scroll. */
+  offset?: number;
   /**
    * Optional BCP-47 locale tag (e.g. 'ar', 'fa', 'so', 'pl', 'tr', 'fi').
    * When provided, the card `title` is taken from event_translations where
@@ -63,9 +72,15 @@ export interface FeedEventsResult {
 
 export const FEED_EVENTS_TABLE: 'events_public' = 'events_public';
 export const FEED_EVENTS_DEFAULT_DAYS = 7;
-export const FEED_EVENTS_MAX_DAYS = 30;
+// 2026-09-28 lift: Utforska-tiles behöver kunna hämta hela kategorier som
+// "music" (~1181 events) i ett enda fönster. 3650 dagar (~10 år) täcker hela
+// spannet vi har i DB (events_public sträcker sig till 2032).
+export const FEED_EVENTS_MAX_DAYS = 3650;
+// 2026-09-28 lift: 500 rader / sida är nog för Utforska infinite scroll.
+// Början-vyn laddar 15, scroll laddar 15 åt gången — total kapacitet ~500
+// rader innan klienten behöver gå vidare.
 export const FEED_EVENTS_DEFAULT_LIMIT = 50;
-export const FEED_EVENTS_MAX_LIMIT = 100;
+export const FEED_EVENTS_MAX_LIMIT = 500;
 
 function expandDateFloor(d: string): string {
   return /T/.test(d) ? d : `${d}T00:00:00.000Z`;
@@ -99,6 +114,7 @@ export async function feedEvents(
     Math.max(input.limit ?? FEED_EVENTS_DEFAULT_LIMIT, 1),
     FEED_EVENTS_MAX_LIMIT
   );
+  const offset = Math.max(input.offset ?? 0, 0);
 
   const fromIso = input.from;
   const toIso = addDays(fromIso, days);
@@ -129,7 +145,11 @@ export async function feedEvents(
     .gte('start_time', expandDateFloor(fromIso))
     .lte('start_time', expandDateCeil(toIso))
     .order('start_time', { ascending: true })
-    .limit(limit + 1); // +1 sentinel for has_more detection
+    // PostgREST pagination: .range(start, end) is inclusive on both ends, so
+    // we ask for `limit + 1` rows beyond offset to detect has_more, then
+    // trim the sentinel row before returning. offset=0 + limit=15 yields
+    // rows 0..15 (16 fetched, 15 returned, has_more=true if more exist).
+    .range(offset, offset + limit);
 
   if (input.category) query = query.eq('category_slug', input.category);
   // events_public does not expose city; the venue-side filter is applied below.
@@ -143,14 +163,29 @@ export async function feedEvents(
   const has_more = rows.length > limit;
   const trimmed = has_more ? rows.slice(0, limit) : rows;
 
-  // Canonical count of all future events from `from` onward — used by the UI
+  // Canonical count of all future events in the active filter — used by the UI
   // header so the displayed count tracks Supabase, not the local page. Uses
   // `head: true` so PostgREST returns only the count, no row bodies.
-  const { count: totalRaw, error: countError } = await supabase
+  //
+  // 2026-10-01: Utforska-tiles behöver ett kategorispecifikt antal ("opera
+  // visar 1200 events i DB") istället för det lokala sid-fönstret. Samma
+  // kategori-filter som data-frågan så varje knapp speglar sin kategori.
+  //
+  // 2026-10-01 (iteration 3, användarens förtydligande): count-frågan ska
+  // INTE vara fönster-begränsad. Användaren vill se "samtliga framtida
+  // opera-events i DB" — inte "opera-events inom 14-dagarsfönstret". Tar
+  // bort `.lte(toIso)` så total representerar DB-antalet för hela den
+  // framtida horisonten, inte bara vad som ryms i data-frågans [from, to).
+  // Kvar: `.gt(now)` (bara framtida), `.gte(fromIso)` (knappens tidsstart
+  // — "imorgon" hoppar över dagens events), `.eq(category)` (knappens
+  // kategori när sådan finns).
+  let countQuery = supabase
     .from(FEED_EVENTS_TABLE)
     .select('id', { count: 'exact', head: true })
     .gt('start_time', new Date().toISOString())
     .gte('start_time', expandDateFloor(fromIso));
+  if (input.category) countQuery = countQuery.eq('category_slug', input.category);
+  const { count: totalRaw, error: countError } = await countQuery;
   if (countError) {
     throw new Error(`feed_events_count: ${countError.message}`);
   }

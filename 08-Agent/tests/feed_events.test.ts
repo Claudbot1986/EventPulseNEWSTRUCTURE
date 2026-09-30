@@ -18,6 +18,7 @@ function makeChain(rows: any[]) {
     lte: vi.fn().mockReturnThis(),
     order: vi.fn().mockReturnThis(),
     limit: vi.fn().mockReturnThis(),
+    range: vi.fn().mockReturnThis(),
     eq: vi.fn().mockReturnThis(),
     then: (resolve: (v: { data: any[]; error: null }) => void) =>
       Promise.resolve({ data: rows, error: null }).then(resolve),
@@ -30,6 +31,15 @@ function makeCountChain(count: number) {
     select: vi.fn().mockReturnThis(),
     gt: vi.fn().mockReturnThis(),
     gte: vi.fn().mockReturnThis(),
+    // .eq lades till count-chain 2026-10-01 när feed_events lade till
+    // kategori-filter på total-frågan. Måste returnera this så att en kedja
+    // fortfarande är awaitable.
+    eq: vi.fn().mockReturnThis(),
+    // .lte lades till count-chain 2026-10-01 (iteration 2) så count-frågan
+    // matchar data-frågans [from, to)-fönster. Utan denna övre gräns blev
+    // total = "alla events från from och framåt" (för "imorgon": 1181
+    // istället för 3).
+    lte: vi.fn().mockReturnThis(),
     then: (resolve: (v: { count: number; data: null; error: null }) => void) =>
       Promise.resolve({ count, data: null, error: null }).then(resolve),
   };
@@ -129,6 +139,7 @@ describe('feedEvents', () => {
       lte: vi.fn().mockReturnThis(),
       order: vi.fn().mockReturnThis(),
       limit: vi.fn().mockReturnThis(),
+      range: vi.fn().mockReturnThis(),
       eq: vi.fn().mockReturnThis(),
       then: (resolve: (v: { data: null; error: { message: string } }) => void) =>
         Promise.resolve({ data: null, error: { message: 'mock error' } }).then(resolve),
@@ -202,6 +213,7 @@ describe('feedEvents', () => {
           select: vi.fn().mockReturnThis(),
           gt: vi.fn().mockReturnThis(),
           gte: vi.fn().mockReturnThis(),
+          lte: vi.fn().mockReturnThis(),
           then: (resolve: (v: { count: null; data: null; error: { message: string } }) => void) =>
             Promise.resolve({ count: null, data: null, error: { message: 'count failed' } }).then(resolve),
         };
@@ -320,5 +332,180 @@ describe('feedEvents', () => {
       withArtistSlugs: true,
     });
     expect(result.events[0].artist_slugs).toBeUndefined();
+  });
+
+  // 2026-09-28: Utforska infinite scroll — offset/limit-paginering.
+  describe('offset/limit pagination', () => {
+    it('sends offset=0..limit as .range when no offset supplied', async () => {
+      const chain = makeChain([]);
+      const sb = { from: vi.fn().mockReturnValueOnce(chain).mockReturnValueOnce(makeCountChain(0)) } as unknown as SupabaseClient;
+      await feedEvents(sb, { from: '2026-08-18', days: 7, limit: 15 });
+      expect(chain.range).toHaveBeenCalledWith(0, 15);
+    });
+
+    it('uses explicit offset in .range when provided', async () => {
+      const chain = makeChain([]);
+      const sb = { from: vi.fn().mockReturnValueOnce(chain).mockReturnValueOnce(makeCountChain(0)) } as unknown as SupabaseClient;
+      await feedEvents(sb, { from: '2026-08-18', days: 7, limit: 15, offset: 30 });
+      expect(chain.range).toHaveBeenCalledWith(30, 45);
+    });
+
+    it('clamps negative offset to 0', async () => {
+      const chain = makeChain([]);
+      const sb = { from: vi.fn().mockReturnValueOnce(chain).mockReturnValueOnce(makeCountChain(0)) } as unknown as SupabaseClient;
+      await feedEvents(sb, { from: '2026-08-18', days: 7, limit: 15, offset: -5 });
+      expect(chain.range).toHaveBeenCalledWith(0, 15);
+    });
+
+    it('sets has_more when next page is still available (range returns limit+1 rows)', async () => {
+      // offset=0, limit=15 → range(0, 15) returns 16 rows. has_more=true.
+      const rows = Array.from({ length: 16 }, (_, i) => baseRow({ id: `id-${i}` }));
+      const sb = mockSupabaseWithRows(rows);
+      const result = await feedEvents(sb, { from: '2026-08-18', days: 7, limit: 15, offset: 0 });
+      expect(result.events).toHaveLength(15);
+      expect(result.has_more).toBe(true);
+    });
+
+    it('clears has_more on last page (range returns exactly limit rows)', async () => {
+      const rows = Array.from({ length: 15 }, (_, i) => baseRow({ id: `id-${i}` }));
+      const sb = mockSupabaseWithRows(rows);
+      const result = await feedEvents(sb, { from: '2026-08-18', days: 7, limit: 15, offset: 30 });
+      expect(result.events).toHaveLength(15);
+      expect(result.has_more).toBe(false);
+    });
+  });
+
+  // 2026-10-01: Utforska-tiles visar kategorispecifikt antal ("opera visar 8
+  // events i DB") istället för det lokalt renderade sidans längd. Count-frågan
+  // måste därför applicera samma kategori-filter som data-frågan — annars
+  // headern visar t.ex. 1181 events för musik när användaren klickade opera
+  // (där bara 8 finns).
+  describe('total reflects category filter', () => {
+    it('passes category filter to the count query so total matches the user-visible scope', async () => {
+      const dataChain = makeChain([]);
+      const countChain = makeCountChain(8);
+      const sb = {
+        from: vi.fn()
+          .mockReturnValueOnce(dataChain)
+          .mockReturnValueOnce(countChain),
+      } as unknown as SupabaseClient;
+      const result = await feedEvents(sb, {
+        from: '2026-08-18',
+        days: 7,
+        category: 'opera',
+      });
+      expect(result.total).toBe(8);
+      expect(countChain.eq).toHaveBeenCalledWith('category_slug', 'opera');
+    });
+
+    it('does not call .eq on the count chain when no category filter is set', async () => {
+      // HomeScreen-vyn har ingen category — count ska inte smyga in ett filter.
+      const dataChain = makeChain([]);
+      const countChain = makeCountChain(7943);
+      const sb = {
+        from: vi.fn()
+          .mockReturnValueOnce(dataChain)
+          .mockReturnValueOnce(countChain),
+      } as unknown as SupabaseClient;
+      const result = await feedEvents(sb, { from: '2026-08-18', days: 7 });
+      expect(result.total).toBe(7943);
+      expect(countChain.eq).not.toHaveBeenCalled();
+    });
+
+    it('count query stays head:true (cheap count-only, no row bodies)', async () => {
+      const dataChain = makeChain([]);
+      const countChain = makeCountChain(12);
+      const sb = {
+        from: vi.fn()
+          .mockReturnValueOnce(dataChain)
+          .mockReturnValueOnce(countChain),
+      } as unknown as SupabaseClient;
+      await feedEvents(sb, { from: '2026-08-18', days: 7, category: 'music' });
+      expect(countChain.select).toHaveBeenCalledWith('id', { count: 'exact', head: true });
+    });
+  });
+
+  // 2026-10-01 (iteration 3, användarens förtydligande): count-frågan ska INTE
+  // begränsas av `toIso`. Användaren vill se "samtliga framtida opera-events
+  // i DB" för opera-knappen, inte "opera-events inom 14-dagarsfönstret".
+  // Total = alla framtida events som matchar kategori/lower-bound, oavsett
+  // hur långt in i framtiden de ligger. Regression-skydd: om någon lägger
+  // tillbaka `.lte(toIso)` ska testet nedan fånga det.
+  describe('total is NOT window-bounded (full future DB total per category)', () => {
+    it('does NOT call .lte on the count chain so total includes all future events', async () => {
+      const dataChain = makeChain([]);
+      const countChain = makeCountChain(1200);
+      const sb = {
+        from: vi.fn()
+          .mockReturnValueOnce(dataChain)
+          .mockReturnValueOnce(countChain),
+      } as unknown as SupabaseClient;
+      // Opera-routen: from=today, days=14, category='opera'. Data-frågan
+      // returnerar 14 dagars opera-events, men total ska vara ALLA framtida
+      // opera-events i DB (1200 i detta mock-exempel) oavsett fönster.
+      const result = await feedEvents(sb, {
+        from: '2026-08-18',
+        days: 14,
+        category: 'opera',
+      });
+      expect(result.total).toBe(1200);
+      expect(countChain.lte).not.toHaveBeenCalled();
+    });
+
+    it('keeps .gt(now) so past events are excluded from the total', async () => {
+      // Regression-skydd: användaren sa "bara framtia events" — .gt(now)
+      // måste vara kvar även när övre gränsen är borta.
+      const dataChain = makeChain([]);
+      const countChain = makeCountChain(500);
+      const sb = {
+        from: vi.fn()
+          .mockReturnValueOnce(dataChain)
+          .mockReturnValueOnce(countChain),
+      } as unknown as SupabaseClient;
+      await feedEvents(sb, { from: '2026-08-18', days: 7 });
+      expect(countChain.gt).toHaveBeenCalledWith(
+        'start_time',
+        expect.any(String), // new Date().toISOString() vid test-tid
+      );
+    });
+
+    it('keeps .gte(fromIso) so "imorgon" counts from tomorrow onward (not today)', async () => {
+      // Imorgon-routen: fromIso = imorgon. Total ska vara "från imorgon och
+      // framåt" — inte dagens events som redan ligger före imorgon i tiden.
+      const dataChain = makeChain([]);
+      const countChain = makeCountChain(1181);
+      const sb = {
+        from: vi.fn()
+          .mockReturnValueOnce(dataChain)
+          .mockReturnValueOnce(countChain),
+      } as unknown as SupabaseClient;
+      const result = await feedEvents(sb, { from: '2026-08-19', days: 1 });
+      expect(result.total).toBe(1181); // alla events från 2026-08-19 och framåt
+      expect(countChain.gte).toHaveBeenCalledWith(
+        'start_time',
+        expect.stringMatching(/^2026-08-19/),
+      );
+    });
+
+    it('category routes count ALL future events in that category, not just the window slice', async () => {
+      // Användarens önskemål: opera-knappen visar "1200 EVENEMANG" för ALLA
+      // framtida opera-events, inte "47 EVENEMANG" för bara 14-dagarsfönstret.
+      const dataChain = makeChain([]);
+      const countChain = makeCountChain(1200);
+      const sb = {
+        from: vi.fn()
+          .mockReturnValueOnce(dataChain)
+          .mockReturnValueOnce(countChain),
+      } as unknown as SupabaseClient;
+      const result = await feedEvents(sb, {
+        from: '2026-08-18',
+        days: 14,
+        category: 'opera',
+      });
+      expect(result.total).toBe(1200);
+      expect(countChain.eq).toHaveBeenCalledWith('category_slug', 'opera');
+      // Säkerställ att inget lte smyger sig in — vi vill ha obegränsad framtid.
+      expect(countChain.lte).not.toHaveBeenCalled();
+    });
   });
 });

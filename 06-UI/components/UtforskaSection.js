@@ -7,7 +7,7 @@
 // 3-dot-meny, svart bakgrund, ingen dag-gruppering (datum i radens
 // subtitle istället för dag-header ovanför).
 
-import { Fragment, useState } from 'react';
+import { Fragment, useRef, useState } from 'react';
 import { Image, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import UtforskaEventActionSheet from './UtforskaEventActionSheet';
 
@@ -227,8 +227,55 @@ function EventRow({ event, onPress, onMenuPress }) {
   );
 }
 
-export default function UtforskaSection() {
+export default function UtforskaSection({
+  events = null,
+  emptyState = null,
+  emptyText = null,
+  eyebrowText = null,
+  // 2026-10-01: totalCount är antalet events i DB för aktuell route (t.ex.
+  // opera), returnerat av feed_events.total. När satt används det i eyebrow-
+  // rubriken ("8 EVENEMANG") istället för items.length — annars skulle
+  // headern visa 15 (den lokala sid-längden) även när DB har 200 events i
+  // kategorin eller 3. null = "laddar fortfarande" eller sandbox-preview.
+  totalCount = null,
+  // raisedFromBottom (2026-09-28): Lyft listan från nederkanten så den inte
+  // sitter helt plant mot skärmens botten. Används av ALLA utforska-tiles
+  // via ExploreDetailScreen (+8 pt). Default false så fristående bruk
+  // (mock-preview) behåller baseline.
+  raisedFromBottom = false,
+  // Infinite scroll (2026-09-28): ExploreDetailScreen skickar in en callback
+  // som triggas när ScrollView når slutet av innehållet. loadingMore styr
+  // om en "Laddar fler…"-rad ska visas längst ner. Default null innebär
+  // fristående bruk (mock-preview / tester) — ingen scroll-hämtning.
+  onEndReached = null,
+  loadingMore = false,
+}) {
+  // events=null innebär sandbox-default (mock). Annars riktig data från
+  // ExploreDetailScreen via mapAgentEventToRow.
+  const items = events ?? MOCK_EVENTS;
+  const isMock = events === null;
   const [sheetEvent, setSheetEvent] = useState(null);
+
+  // Infinite-scroll-detektor (2026-09-28): mäter avstånd till botten i pt
+  // via ScrollView:s onScroll-event. 200 pt (~2 rader) är tröskeln.
+  // Använder en ref-skyddad flagga så callback inte bränns av flera
+  // onScroll-händelser i rad innan föräldern hunnit uppdatera state.
+  const endReachedLockRef = useRef(false);
+  const handleScroll = (e) => {
+    if (!onEndReached || endReachedLockRef.current || !items.length) return;
+    const { contentOffset, contentSize, layoutMeasurement } = e.nativeEvent;
+    const distanceFromBottom = contentSize.height
+      - (contentOffset.y + layoutMeasurement.height);
+    if (distanceFromBottom < 200) {
+      endReachedLockRef.current = true;
+      onEndReached();
+      // Lås upp efter en kort stund så nästa page (om någon) kan trigga
+      // nästa händelse. Förälderns setLoadingMore håller redan dubbel-
+      // fetch borta via sin egen loadingMore-state, detta är bara en
+      // scroll-event-dämpare.
+      setTimeout(() => { endReachedLockRef.current = false; }, 500);
+    }
+  };
 
   const handlePress = (_event) => {
     // UI-only port från sandbox — rad-tap är en no-op tills riktig
@@ -250,23 +297,55 @@ export default function UtforskaSection() {
     void payload;
   };
 
+  // Rubrik: dynamisk när riktig data visas (t.ex. "IMORGON · 8 EVENEMANG" när
+  // 8 imorgon-events finns i DB), oförändrad sandbox-marker när mock-events
+  // används.
+  //
+  // 2026-10-01: antal i headern kommer från totalCount (DB-count från feed_events
+  // serversidan) när proppen är satt. Innan första fetch landat (totalCount
+  // === null) faller vi tillbaka till items.length så användaren aldrig ser
+  // "0 EVENEMANG" mitt i en pågående laddning. items.length som fallback är
+  // ett tillfälligt "vi vet inte ännu"-värde, inte önskat sluttilstånd.
+  const eyebrowCount = totalCount ?? items.length;
+  const eyebrow = isMock
+    ? 'UTFORSKA · SANDBOX-PREVIEW'
+    : (eyebrowText || 'UTFORSKA').toUpperCase() + ' · ' + eyebrowCount + ' EVENEMANG';
+  const heading = isMock ? 'Utforska-flödet' : (eyebrowText || 'Utforska');
+  const subhead = isMock
+    ? `Spotify-stil kompakta rader · ${MOCK_EVENTS.length} mock-event · mock-data bytas mot riktig feed i senare integrationsomgång.`
+    : null;
+  const emptyTextResolved = emptyText || (
+    emptyState === 'loading' ? 'Laddar…'
+      : emptyState === 'error' ? 'Kunde inte hämta evenemang. Försök igen.'
+        : emptyState === 'empty' ? 'Inga evenemang just nu.'
+          : null
+  );
+
   return (
     <Fragment>
       <ScrollView
-        contentContainerStyle={styles.scroll}
+        contentContainerStyle={[
+          styles.scroll,
+          raisedFromBottom && styles.scrollRaised,
+        ]}
         testID="utforska-section-screen"
         showsVerticalScrollIndicator={false}
+        onScroll={onEndReached ? handleScroll : undefined}
+        scrollEventThrottle={onEndReached ? 64 : undefined}
       >
         <View style={styles.headingRow}>
-          <Text style={styles.eyebrow}>UTFORSKA · SANDBOX-PREVIEW</Text>
-          <Text style={styles.heading}>Utforska-flödet</Text>
+          <Text style={styles.eyebrow}>{eyebrow}</Text>
+          <Text style={styles.heading}>{heading}</Text>
         </View>
-        <Text style={styles.subhead}>
-          Spotify-stil kompakta rader · {MOCK_EVENTS.length} mock-event · mock-data
-          bytas mot riktig feed i senare integrationsomgång.
-        </Text>
+        {subhead ? (
+          <Text style={styles.subhead}>{subhead}</Text>
+        ) : null}
 
-        {MOCK_EVENTS.map((event) => (
+        {items.length === 0 && emptyTextResolved ? (
+          <Text style={styles.subhead}>{emptyTextResolved}</Text>
+        ) : null}
+
+        {items.map((event) => (
           <EventRow
             key={event.id}
             event={event}
@@ -274,6 +353,10 @@ export default function UtforskaSection() {
             onMenuPress={handleMenuPress}
           />
         ))}
+
+        {loadingMore ? (
+          <Text style={styles.subhead}>Laddar fler…</Text>
+        ) : null}
       </ScrollView>
 
       <UtforskaEventActionSheet
@@ -293,6 +376,12 @@ const styles = StyleSheet.create({
                                               // (användarens val 2026-09-27)
     paddingBottom: TOKENS.space.padBottom,
     backgroundColor: TOKENS.color.bg,
+  },
+  // raisedFromBottom override (2026-09-28): +8 pt paddingBottom (4 + 4
+  // extra efter andra designrundan) så listan inte ligger helt plant mot
+  // skärmkanten. Tillämpas på ALLA utforska-tiles via ExploreDetailScreen.
+  scrollRaised: {
+    paddingBottom: TOKENS.space.padBottom + 8,
   },
   eyebrow: {
     color: TOKENS.color.accent,

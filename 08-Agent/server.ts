@@ -281,8 +281,12 @@ export function buildApp(opts: {
     const from = typeof req.query.from === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(req.query.from)
       ? req.query.from
       : todayIso();
+    // 2026-09-28 lift: Utforska-tiles behöver hela framtida fönstret för att
+    // paginera genom en kategori (music har 1181 events i DB). Lokal clamp
+    // höjs till 3650 för att matcha FEED_EVENTS_MAX_DAYS. feed_events
+    // dubbel-clamp:ar som en andra försvarslinje.
     const days = typeof req.query.days === 'string'
-      ? Math.min(Math.max(parseInt(req.query.days, 10) || 7, 1), 30)
+      ? Math.min(Math.max(parseInt(req.query.days, 10) || 7, 1), 3650)
       : 7;
     const category = typeof req.query.category === 'string' && req.query.category
       ? req.query.category
@@ -290,6 +294,14 @@ export function buildApp(opts: {
     const city = typeof req.query.city === 'string' && req.query.city
       ? req.query.city
       : 'Stockholm';
+    // 2026-09-28: Utforska infinite scroll — valfria ?limit & ?offset. Saknas
+    // → feed_events default (limit=50, offset=0). Clampas i feed_events.
+    const limit = typeof req.query.limit === 'string'
+      ? parseInt(req.query.limit, 10)
+      : undefined;
+    const offset = typeof req.query.offset === 'string'
+      ? parseInt(req.query.offset, 10)
+      : undefined;
     // Språkstöd 2026-09-21 — optional ?locale=XX for event_translations
     // lookup. Missing/empty → no swap (current behavior). Invalid tag →
     // silently ignored (event_translations table has no row → fallback).
@@ -316,6 +328,8 @@ export function buildApp(opts: {
         category,
         city,
         locale,
+        ...(limit !== undefined ? { limit } : {}),
+        ...(offset !== undefined ? { offset } : {}),
         withArtistSlugs: shouldRank,
       });
 

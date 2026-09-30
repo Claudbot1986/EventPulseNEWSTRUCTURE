@@ -688,7 +688,7 @@ function CategoryQuickTilesSection({ onCategoryNavigate }) {
           {row.map((cat) => (
             <Pressable
               key={cat.key}
-              onPress={() => onCategoryNavigate(cat.key)}
+              onPress={() => onCategoryNavigate({ id: cat.key })}
               accessibilityRole="button"
               accessibilityLabel={t(cat.labelKey)}
               style={({ pressed }) => [
@@ -1629,6 +1629,12 @@ function DetailsScreen({ event, onBack }) {
 // som Imorgon-grenen — fetchFeed → mapAgentEventToRow → clientFilter per
 // route. Om payload.id saknar route → MOCK_EVENTS-fallback (samma default
 // som tidigare för okända tiles).
+//
+// Iteration 3 (2026-09-28): infinite scroll — limit=15 + offset stegras
+// när användaren scrollar nära botten. fetch_events höjer MAX_DAYS (30→3650)
+// och MAX_LIMIT (100→500) på serversidan så hela kategorier (t.ex. music =
+// 1181 events) blir åtkomliga via scroll istället för att kapas vid 50.
+const EXPLORE_PAGE_SIZE = 15;
 function ExploreDetailScreen({ payload, onBack }) {
   const { t, language } = useI18n();
   // Lazy-require för att inte dra in komponenten (och dess bundlade
@@ -1642,39 +1648,89 @@ function ExploreDetailScreen({ payload, onBack }) {
 
   const [realEvents, setRealEvents] = useState(null);
   const [fetchState, setFetchState] = useState('idle'); // 'idle'|'loading'|'error'
+  const [hasMore, setHasMore] = useState(false);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [nextOffset, setNextOffset] = useState(0);
+  // 2026-10-01: totalt antal events i DB för aktuell route (kategori + datum).
+  // Sätts från feed_events `total` (serversidan räknar med samma filter som
+  // data-frågan, så för "opera" får vi 8 opera-events i DB, inte 1181 alla
+  // events). Propageras till UtforskaSection så eyebrow visar DB-antalet
+  // istället för antalet rader som råkar vara renderade just nu.
+  const [totalCount, setTotalCount] = useState(null);
   const controllerRef = useRef(null);
 
   const tileId = payload && payload.id;
   const route = tileId ? tileRoutes.getTileRoute(tileId) : null;
   const isRealRoute = route != null;
 
+  // fetchPage — en enda page-hämtning. Återanvänds av både initial-fetch
+  // (offset=0) och infinite-scroll-hämtning (offset=nextOffset).
+  //
+  // 2026-09-28: route.category skickas som server-side filter via
+  // ?category=<slug> så varje 15-radig-sida returnerar exakt 15 events som
+  // matchar kategorin (annars skulle clientFilter ge 1-3 events/sida för
+  // smala kategorier, vilket kräver 666 scrolls för att se 33 vinprovningar).
+  // clientFilter behålls som defense-in-depth (no-op om servern filtrerat).
+  const fetchPage = useCallback(async (offset, signal) => {
+    const dateMode = route.dateMode || 'any';
+    const fromIso = tileRoutes.computeFromIso(dateMode, new Date());
+    const days = tileRoutes.DATE_MODE_DAYS[dateMode] || 14;
+    const page = await fetchFeed({
+      from: fromIso,
+      days,
+      limit: EXPLORE_PAGE_SIZE,
+      offset,
+      ...(route.category ? { category: route.category } : {}),
+      ...(route.fetcherExtra || {}),
+      signal,
+    });
+    let rows = (page.events || [])
+      .map((e) => mapAgentEventToRow(e, language))
+      .filter(Boolean);
+    // 2026-09-29: tidigare stod det `rows.filter(route.clientFilter)` — men
+    // clientFilter har signaturen `(rows) => rows.filter(...)` (se
+    // tileRoutes.js), så det kraschade med "rows.filter is not a function"
+    // eftersom `rows`-parametern inne i callback:en bands till enskilda
+    // element. Kalla clientFilter direkt med arrayen istället.
+    if (route.clientFilter) rows = route.clientFilter(rows);
+    return {
+      rows,
+      hasMore: !!page.has_more,
+      // fetchFeed speglar feed_events.total (head:true count på servern med
+      // samma filter som data-frågan). Fallback till page-längd om äldre
+      // agent-servrar inte skickar total — då visar vi åtminstone inte 0
+      // eller fel under första paint.
+      total: typeof page.total === 'number' ? page.total : rows.length,
+    };
+  }, [route, language]);
+
+  // Initial fetch — offset=0, ny controller. tileId byter route → reset.
   useEffect(() => {
     if (!isRealRoute) {
       setRealEvents(null);
       setFetchState('idle');
+      setHasMore(false);
+      setNextOffset(0);
+      setTotalCount(null);
       return undefined;
     }
-    const dateMode = route.dateMode || 'any';
-    const fromIso = tileRoutes.computeFromIso(dateMode, new Date());
-    const days = tileRoutes.DATE_MODE_DAYS[dateMode] || 14;
     const controller = new AbortController();
     controllerRef.current = controller;
     setFetchState('loading');
     setRealEvents([]);
+    setHasMore(false);
+    setNextOffset(0);
+    setTotalCount(null);
     (async () => {
       try {
-        const page = await fetchFeed({
-          from: fromIso,
-          days,
-          ...(route.fetcherExtra || {}),
-          signal: controller.signal,
-        });
-        let rows = (page.events || [])
-          .map((e) => mapAgentEventToRow(e, language))
-          .filter(Boolean);
-        if (route.clientFilter) rows = rows.filter(route.clientFilter);
+        const { rows, hasMore: more, total } = await fetchPage(0, controller.signal);
         if (!controller.signal.aborted) {
           setRealEvents(rows);
+          setHasMore(more);
+          setNextOffset(rows.length);
+          // total är en route-egenskap (ändras inte när bladet fylls på),
+          // sätt en gång från initial-fetch — paginering uppdaterar inte.
+          setTotalCount(total);
           setFetchState('idle');
         }
       } catch (err) {
@@ -1688,7 +1744,41 @@ function ExploreDetailScreen({ payload, onBack }) {
     return () => {
       controller.abort();
     };
-  }, [isRealRoute, tileId, language]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [isRealRoute, tileId, language, fetchPage]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Infinite scroll — UtforskaSection:s ScrollView anropar
+  // handleEndReached när innehållet är nära botten. Skyddas av
+  // hasMore/loadingMore för att undvika dubbel-fetch.
+  const handleEndReached = useCallback(() => {
+    if (!isRealRoute || !hasMore || loadingMore) return;
+    if (fetchState === 'loading' || fetchState === 'error') return;
+    const controller = new AbortController();
+    controllerRef.current = controller;
+    setLoadingMore(true);
+    (async () => {
+      try {
+        const { rows, hasMore: more } = await fetchPage(nextOffset, controller.signal);
+        if (!controller.signal.aborted) {
+          setRealEvents((prev) => [...(prev || []), ...rows]);
+          setHasMore(more);
+          setNextOffset((prev) => prev + rows.length);
+          // total sätts från initial-fetch (route-egenskap, inte sid-egenskap).
+          // Behåll det värdet om pagineringen råkar returnera något annat.
+        }
+      } catch (err) {
+        if (isFetchCanceled(err) || err?.name === 'AbortError') return;
+        // Soft-fail vid pagination: behåll listan, byt inte error-state
+        // (initial-load-fel är redan hanterat).
+      } finally {
+        if (!controller.signal.aborted) {
+          setLoadingMore(false);
+        }
+      }
+    })();
+    return () => {
+      controller.abort();
+    };
+  }, [isRealRoute, hasMore, loadingMore, fetchState, fetchPage, nextOffset]);
 
   // Bestäm vad UtforskaSection ska rendera.
   let sectionEvents = null;          // null = MOCK_EVENTS (default fallback)
@@ -1723,6 +1813,14 @@ function ExploreDetailScreen({ payload, onBack }) {
         emptyState={sectionEmptyState}
         emptyText={sectionEmptyText}
         eyebrowText={sectionEyebrow}
+        // 2026-10-01: totalCount är antal events i DB för aktuell route
+        // (kategori + datum) från feed_events.total — oberoende av
+        // paginerad sid-längd. Används i eyebrow-rubriken så headern
+        // visar "8 EVENEMANG" för opera istället för de 15 som råkar vara
+        // renderade just nu. null tills initial-fetch landat.
+        totalCount={totalCount}
+        onEndReached={handleEndReached}
+        loadingMore={loadingMore}
         // Alla utforska-tiles (2026-09-28): Lyft rullisten 8 pt från nederkanten
         // (4 + 4 efter andra designrundan) — samma mått oavsett vilken tile/knapp
         // som öppnar utforska-vyn.
