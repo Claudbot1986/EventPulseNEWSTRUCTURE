@@ -12,7 +12,7 @@
  *
  * dateMode-styrning:
  *   - 'tomorrow'  → from = imorgon (addDays(today, 1)), days = 1
- *   - 'weekend'   → from = fredag (idag + 4 dagar), days = 3 (fångar lör-sön-mån)
+ *   - 'weekend'   → from = fredag (närmsta fre), days = 3 (fre–lör–sön)
  *   - 'today'     → from = idag, days = 1
  *   - 'any'       → from = idag, days = 14 (större fönster så klientfiltret
  *                   hinner hitta relevanta events)
@@ -23,13 +23,13 @@
 // Hur många dagar framåt varje tile ska hämta. 'any' har större fönster
 // eftersom kategori/budget/weekend-filter kan gallra bort mycket.
 //
-// 2026-10-01 (helg consistency): weekend = 2 (lör+sön). Tidigare 3
-// (fre+lör+sön) täckte en extra dag som inte är helg → count och
-// faktiska helg-events matchade inte.
+// 2026-10-02 (helg = fre–lör–sön): weekend = 3. Användaren vill att
+// "helg"-knappen täcker hela helgen — inte bara lör–sön. Fredag räknas
+// som helg-start (många konserter/premiärer ligger på fre-kvällar).
 export const DATE_MODE_DAYS = {
   tomorrow: 1,
   today: 1,
-  weekend: 2,
+  weekend: 3,
   any: 14,
 };
 
@@ -47,25 +47,29 @@ export function computeFromIso(dateMode, today = new Date()) {
     return today.toISOString().slice(0, 10);
   }
   if (dateMode === 'weekend') {
-    // 2026-10-01 (helg consistency): tidigare "idag + 4 dagar" fungerade
-    // bara för måndag-start (täckte då fre+lör+sön) och missade helgen
-    // helt på onsdag–söndag. Ny logik: returnera nästa lördag (eller
-    // idag om idag redan är lör/sön). DATE_MODE_DAYS.weekend = 2 så
-    // fönstret blir exakt lör+sön och count matchar data.
+    // 2026-10-02 (helg = fre–lör–sön): returnera fredagen som inleder
+    // helgen, oavsett vilken veckodag idag är. DATE_MODE_DAYS.weekend
+    // = 3 täcker fre+lör+sön. Tidigare variant stannade vid lör–sön;
+    // användaren vill att "helg" innefattar fredag också.
     const d = new Date(today);
-    const dow = d.getUTCDay(); // 0=Sun, 1=Mon, …, 6=Sat
-    if (dow === 6) {
-      // Lördag → from=today (lör+sön kvar)
+    const dow = d.getUTCDay(); // 0=Sun, 1=Mon, …, 5=Fri, 6=Sat
+    if (dow === 5) {
+      // Fredag → from=today (fre+lör+sön kvar)
       return d.toISOString().slice(0, 10);
     }
-    if (dow === 0) {
-      // Söndag → from=today-1 (lör), days=2 täcker lör+sön
+    if (dow === 6) {
+      // Lördag → from=today-1 (fre), days=3 täcker fre+lör+sön
       d.setUTCDate(d.getUTCDate() - 1);
       return d.toISOString().slice(0, 10);
     }
-    // Mån–fre → from = nästa lördag
-    const daysToSat = 6 - dow; // mån=5, tis=4, ons=3, tor=2, fre=1
-    d.setUTCDate(d.getUTCDate() + daysToSat);
+    if (dow === 0) {
+      // Söndag → from=today-2 (fre), days=3 täcker fre+lör+sön
+      d.setUTCDate(d.getUTCDate() - 2);
+      return d.toISOString().slice(0, 10);
+    }
+    // Mån–tor → from = nästa fredag (mån=4, tis=3, ons=2, tor=1)
+    const daysToFri = 5 - dow;
+    d.setUTCDate(d.getUTCDate() + daysToFri);
     return d.toISOString().slice(0, 10);
   }
   // 'any'

@@ -36,28 +36,37 @@ describe('computeFromIso (dateMode helpers)', () => {
     expect(computeFromIso('today', monday)).toBe('2026-09-28');
   });
 
-  // 2026-10-01 (helg consistency): weekend returnerar nu nästa lördag,
-  // inte "idag + 4 dagar" som tidigare missade helgen helt på onsdag–
-  // söndag. days=2 gör att fönstret blir exakt lör+sön.
-  it('weekend returns next Saturday (idag + 5 dagar för måndag)', () => {
-    // Måndag 2026-09-28 + 5 dagar = lördag 2026-10-03
-    expect(computeFromIso('weekend', monday)).toBe('2026-10-03');
+  // 2026-10-02 (helg = fre–lör–sön): weekend returnerar fredagen som
+  // inleder helgen (inte lördagen). days=3 täcker fre+lör+sön.
+  it('weekend on Monday returns next Friday (idag + 4 dagar)', () => {
+    // Måndag 2026-09-28 + 4 dagar = fredag 2026-10-02
+    expect(computeFromIso('weekend', monday)).toBe('2026-10-02');
   });
 
-  it('weekend on Saturday returns today (lör+sön kvar)', () => {
+  it('weekend on Friday returns today (fre+lör+sön kvar)', () => {
+    const friday = new Date('2026-10-02T08:00:00Z');
+    expect(computeFromIso('weekend', friday)).toBe('2026-10-02');
+  });
+
+  it('weekend on Saturday returns yesterday (fre, days=3 täcker fre+lör+sön)', () => {
     const saturday = new Date('2026-10-03T08:00:00Z');
-    expect(computeFromIso('weekend', saturday)).toBe('2026-10-03');
+    expect(computeFromIso('weekend', saturday)).toBe('2026-10-02');
   });
 
-  it('weekend on Sunday returns yesterday (lör, days=2 täcker lör+sön)', () => {
+  it('weekend on Sunday returns day-before-yesterday (fre, days=3)', () => {
     const sunday = new Date('2026-10-04T08:00:00Z');
-    expect(computeFromIso('weekend', sunday)).toBe('2026-10-03');
+    expect(computeFromIso('weekend', sunday)).toBe('2026-10-02');
   });
 
-  it('weekend on Wednesday returns next Saturday', () => {
+  it('weekend on Wednesday returns next Friday', () => {
     const wednesday = new Date('2026-09-30T08:00:00Z');
-    // Ons + 3 = lör 2026-10-03
-    expect(computeFromIso('weekend', wednesday)).toBe('2026-10-03');
+    // Ons + 2 = fre 2026-10-02
+    expect(computeFromIso('weekend', wednesday)).toBe('2026-10-02');
+  });
+
+  it('weekend on Thursday returns tomorrow (fredag)', () => {
+    const thursday = new Date('2026-10-01T08:00:00Z');
+    expect(computeFromIso('weekend', thursday)).toBe('2026-10-02');
   });
 
   it('any returns today as start', () => {
@@ -78,11 +87,9 @@ describe('DATE_MODE_DAYS', () => {
     expect(DATE_MODE_DAYS.any).toBeGreaterThan(DATE_MODE_DAYS.today);
   });
 
-  // 2026-10-01 (helg consistency): weekend = 2 (lör+sön). Tidigare 3
-  // täckte fre+lör+sön men då fredagen inte är helg → count och
-  // faktiska helg-events matchade inte.
-  it('weekend covers lör+sön (2 dagar)', () => {
-    expect(DATE_MODE_DAYS.weekend).toBe(2);
+  // 2026-10-02 (helg = fre–lör–sön): weekend = 3 (fredag, lördag, söndag).
+  it('weekend covers fre–lör–sön (3 dagar)', () => {
+    expect(DATE_MODE_DAYS.weekend).toBe(3);
   });
 });
 
@@ -215,10 +222,11 @@ describe('clientFilter — rad-påståenden', () => {
     expect(out.map(r => r.id)).toEqual(['b']);
   });
 
-  // 2026-10-01: helg-tile flyttade sitt filter till serversidan via
-  // computeFromIso('weekend') → fönster [lör, mån) + DATE_MODE_DAYS=2.
-  // clientFilter är inte längre definierad — feed_events räknar
-  // automatiskt events inom det fönstret när ingen kategori anges.
+  // 2026-10-02 (helg = fre–lör–sön): helg-tile flyttade sitt filter
+  // till serversidan via computeFromIso('weekend') → fönster [fre,
+  // mån) + DATE_MODE_DAYS=3. clientFilter är inte längre definierad
+  // — feed_events räknar automatiskt events inom det fönstret när
+  // ingen kategori anges.
   it('helg har INGEN clientFilter (filter flyttat till fönster)', () => {
     const route = getTileRoute('helg');
     expect(route.clientFilter).toBeUndefined();
