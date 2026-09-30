@@ -23,7 +23,8 @@ import { parseIntent } from './tools/parse_intent';
 import { searchEvents } from './tools/search_events';
 import { rankEvents } from './tools/rank_events';
 import { applyExploreReserve } from './tools/explore_reserve';
-import { MOOD_IDS, matchMood } from './tools/moods';
+// 2026-10-01: mood filter moved into feed_events so count and events
+// share the same gate. server.ts no longer imports MOOD/matchMood.
 import { mmrRerank } from './tools/diversify';
 import { recordFeedback, validateFeedbackInput } from './tools/record_feedback';
 import { pickClarifyingQuestion } from './tools/find_gaps';
@@ -311,9 +312,19 @@ export function buildApp(opts: {
     // Fas D (2026-09-23) — optional ?mood=<id> (Utforska-tile "Stämningsfullt").
     // A CONTENT filter, not personalization: applies to guests and control
     // users too. Unknown ids are ignored, same convention as ?locale=.
+    //
+    // 2026-10-01: forward mood to feed_events so the count also reflects
+    // the mood filter (was previously applied here AFTER feed_events which
+    // meant `total` ignored the mood and the Utforska header over-reported).
     const mood = typeof req.query.mood === 'string' && req.query.mood
       ? req.query.mood
       : null;
+    // 2026-10-01 (gratis-tile consistency): ?isFree=true → server-side
+    // .eq filter on data + count. tileRoutes.gratis sets this; absence
+    // preserves the existing behavior for callers that didn't pass it.
+    const isFree = req.query.isFree === 'true' || req.query.isFree === '1'
+      ? true
+      : (req.query.isFree === 'false' || req.query.isFree === '0' ? false : null);
 
     // Fas C: rank only for a verified user in the treatment variant. The
     // variant check is sticky per user id (experiments.ts), same experiment
@@ -330,14 +341,16 @@ export function buildApp(opts: {
         locale,
         ...(limit !== undefined ? { limit } : {}),
         ...(offset !== undefined ? { offset } : {}),
+        ...(mood ? { mood } : {}),
+        ...(isFree === true ? { isFree: true } : {}),
         withArtistSlugs: shouldRank,
       });
 
-      // Fas D: mood filter runs BEFORE any ranking — the ranked page is a
-      // re-order of the mood-matching subset, never a way around the filter.
-      if (mood && MOOD_IDS.includes(mood)) {
-        result = { ...result, events: result.events.filter((c) => matchMood(c, mood)) };
-      }
+      // 2026-10-01: mood filter moved into feed_events so the count and
+      // the events share the same gate. Previously this handler filtered
+      // events post-hoc, which left `total` reporting all rows in window
+      // and the Utforska header showing 3662 for stamning while only ~5
+      // events actually rendered.
 
       if (shouldRank) {
         try {

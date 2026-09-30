@@ -21,6 +21,7 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 import type { EventCard } from '../types';
 import { fetchArtistSlugsByEventIds } from './search_events';
+import { MOOD_IDS, matchMood } from './moods';
 
 export interface FeedEventsInput {
   /** ISO date inclusive lower bound (YYYY-MM-DD). */
@@ -51,6 +52,23 @@ export interface FeedEventsInput {
    * pipeline's variant gating).
    */
   withArtistSlugs?: boolean;
+  /**
+   * 2026-10-01 (gratis-tile consistency): when true, the query and count
+   * filter to `is_free = true`. Set by tileRoutes.gratis so the
+   * "X EVENEMANG" header in UtforskaSection matches the rows the user
+   * actually sees (was: 3662 even though only 30 of 15 events were free).
+   * Falsy/undefined → no filter (existing behavior).
+   */
+  isFree?: boolean | null;
+  /**
+   * 2026-10-01 (stamning-tile consistency): when set, the data and count
+   * pass through tools/moods.matchMood so the "X EVENEMANG" header
+   * matches the mood-filtered rows. Server.ts already passed it; moved
+   * the actual filter into feed_events so count can apply the same gate
+   * (previously count ignored mood → showed 3662 for stamning). Known
+   * mood ids: MOOD_IDS (moods.ts). Unknown / null → no filter.
+   */
+  mood?: string | null;
 }
 
 export interface FeedEventsResult {
@@ -152,6 +170,10 @@ export async function feedEvents(
     .range(offset, offset + limit);
 
   if (input.category) query = query.eq('category_slug', input.category);
+  // 2026-10-01 (gratis consistency): ?isFree=true → server-side .eq filter.
+  // tileRoutes.gratis sätter flaggan så data-queryn returnerar garanterat
+  // bara gratis-events istället för att klientfiltret gallrar bort 13/15.
+  if (input.isFree === true) query = query.eq('is_free', true);
   // events_public does not expose city; the venue-side filter is applied below.
 
   const { data, error } = await query;
@@ -163,33 +185,80 @@ export async function feedEvents(
   const has_more = rows.length > limit;
   const trimmed = has_more ? rows.slice(0, limit) : rows;
 
-  // Canonical count of all future events in the active filter — used by the UI
-  // header so the displayed count tracks Supabase, not the local page. Uses
-  // `head: true` so PostgREST returns only the count, no row bodies.
+  // Canonical count of events in the active filter — used by the UI header
+  // so the displayed count matches what the user actually sees. Two paths:
   //
-  // 2026-10-01: Utforska-tiles behöver ett kategorispecifikt antal ("opera
-  // visar 1200 events i DB") istället för det lokala sid-fönstret. Samma
-  // kategori-filter som data-frågan så varje knapp speglar sin kategori.
+  // A) mood set → fetch full rows in [from, to), filter via matchMood in-memory,
+  //    count = matches. PostgREST can't filter by mood (it's a JS lexicon over
+  //    title/description), so head:true isn't enough. Only stamning uses this
+  //    and a 14-day window is bounded, so the cost is acceptable.
   //
-  // 2026-10-01 (iteration 3, användarens förtydligande): count-frågan ska
-  // INTE vara fönster-begränsad. Användaren vill se "samtliga framtida
-  // opera-events i DB" — inte "opera-events inom 14-dagarsfönstret". Tar
-  // bort `.lte(toIso)` så total representerar DB-antalet för hela den
-  // framtida horisonten, inte bara vad som ryms i data-frågans [from, to).
-  // Kvar: `.gt(now)` (bara framtida), `.gte(fromIso)` (knappens tidsstart
-  // — "imorgon" hoppar över dagens events), `.eq(category)` (knappens
-  // kategori när sådan finns).
-  let countQuery = supabase
-    .from(FEED_EVENTS_TABLE)
-    .select('id', { count: 'exact', head: true })
-    .gt('start_time', new Date().toISOString())
-    .gte('start_time', expandDateFloor(fromIso));
-  if (input.category) countQuery = countQuery.eq('category_slug', input.category);
-  const { count: totalRaw, error: countError } = await countQuery;
-  if (countError) {
-    throw new Error(`feed_events_count: ${countError.message}`);
+  // B) no mood → PostgREST head:true count, fast + accurate. Bound the count
+  //    to [from, to) UNLESS the request is a pure category query (no isFree /
+  //    mood) — pure category queries get full-future count because the user
+  //    explicitly asked for "samtliga framtida <kategori>-events i DB" (see
+  //    iteration 3, 2026-10-01). Adding isFree on top of a category changes
+  //    the semantics to "free <kategori>-events in this window", which should
+  //    match what the user sees — so we bound the count again.
+  //
+  // 2026-10-01: count-frågan är FÖNSTER-BEGRÄNSAD by default (matchar data-
+  // frågans [from, to)) för att headern ska överensstämma med antalet events
+  // användaren faktiskt scrollar igenom. Tidigare var count obegränsad uppåt
+  // för ALLA queries — det funkade för rena kategori-routes (användaren
+  // ville ha DB-count av opera) men var fel för gratis/helg/stamning där
+  // filtret är klient-side och headern då visade ett icke-matchande antal.
+  //
+  // 2026-10-01 (undantag): rena kategori-queries (bara `category`, inga
+  // andra filter) behåller full-future count. Användaren bad uttryckligen om
+  // "samtliga framtida <kategori>-events i DB" — opera ska visa 274 även
+  // om data-frågan bara returnerar 15 rader inom en 14-dagars period.
+  let total = 0;
+  if (input.mood && MOOD_IDS.includes(input.mood)) {
+    let moodQuery = supabase
+      .from(FEED_EVENTS_TABLE)
+      .select(
+        'id, title_sv, title_en, description_sv, description_en, category_slug'
+      )
+      .gt('start_time', new Date().toISOString())
+      .gte('start_time', expandDateFloor(fromIso))
+      .lte('start_time', expandDateCeil(toIso));
+    if (input.category) moodQuery = moodQuery.eq('category_slug', input.category);
+    if (input.isFree === true) moodQuery = moodQuery.eq('is_free', true);
+    const { data: moodData, error: moodErr } = await moodQuery;
+    if (moodErr) {
+      throw new Error(`feed_events_count_mood: ${moodErr.message}`);
+    }
+    total = (moodData ?? []).filter((r: any) =>
+      matchMood(
+        {
+          title: r.title_sv || r.title_en || '',
+          description: r.description_sv || r.description_en || undefined,
+          category_slug: r.category_slug,
+        },
+        input.mood!
+      )
+    ).length;
+  } else {
+    // Pure-category requests get full-future count (no upper bound). Any
+    // request with isFree OR no category at all is window-bounded so the
+    // header tracks what the user actually scrolls through.
+    const isPureCategory = !!input.category && input.isFree !== true;
+    let countQuery = supabase
+      .from(FEED_EVENTS_TABLE)
+      .select('id', { count: 'exact', head: true })
+      .gt('start_time', new Date().toISOString())
+      .gte('start_time', expandDateFloor(fromIso));
+    if (!isPureCategory) {
+      countQuery = countQuery.lte('start_time', expandDateCeil(toIso));
+    }
+    if (input.category) countQuery = countQuery.eq('category_slug', input.category);
+    if (input.isFree === true) countQuery = countQuery.eq('is_free', true);
+    const { count: totalRaw, error: countError } = await countQuery;
+    if (countError) {
+      throw new Error(`feed_events_count: ${countError.message}`);
+    }
+    total = typeof totalRaw === 'number' ? totalRaw : 0;
   }
-  const total = typeof totalRaw === 'number' ? totalRaw : 0;
 
   // Optional post-filter on venue.city when caller passed a city.
   const cityFiltered = input.city
@@ -269,5 +338,14 @@ export async function feedEvents(
     };
   });
 
-  return { events, from: fromIso, to: toIso, has_more, total };
+  // 2026-10-01 (stamning consistency): apply mood filter on the data array
+  // so the events we return match the count above. server.ts previously
+  // applied this filter post-hoc — moved here so count and data share
+  // the same gate. Unknown moods → no-op (gated above with MOOD_IDS).
+  const filteredEvents =
+    input.mood && MOOD_IDS.includes(input.mood)
+      ? events.filter((e) => matchMood(e, input.mood!))
+      : events;
+
+  return { events: filteredEvents, from: fromIso, to: toIso, has_more, total };
 }

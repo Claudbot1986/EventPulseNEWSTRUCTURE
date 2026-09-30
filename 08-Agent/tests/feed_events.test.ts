@@ -61,6 +61,28 @@ function mockSupabase(rows: any[], totalCount: number): SupabaseClient {
 }
 
 /**
+ * Two-call mock for mood path: data + mood-count. feed_events skips the
+ * normal head:true count when input.mood is set and instead issues a
+ * row-fetching mood count. The 2nd call returns moodRows; feed_events
+ * applies matchMood internally and counts only matches.
+ *
+ * 2026-10-01 (stamning consistency): tidigare användes head:true för
+ * count, men mood-filtret är en JS-lexikon som PostgREST inte kan uttrycka
+ * i SELECT — därför krävs en faktisk row-fetch som filtreras i feed_events.
+ * Så feed_events gör 2 .from()-anrop istället för 3 när mood är satt.
+ */
+function mockSupabaseWithMood(rows: any[], moodRows: any[]): SupabaseClient {
+  let call = 0;
+  const from = vi.fn().mockImplementation(() => {
+    call += 1;
+    if (call === 1) return makeChain(rows);
+    // 2nd call: mood count (full rows, NOT head:true).
+    return makeChain(moodRows);
+  });
+  return { from } as unknown as SupabaseClient;
+}
+
+/**
  * Backward-compat shim: existing tests that don't care about the count can
  * keep using `mockSupabaseWithRows(rows)`. The count defaults to 0 so a test
  * that also asserts `result.total === 0` will pass; new tests that need a
@@ -506,6 +528,213 @@ describe('feedEvents', () => {
       expect(countChain.eq).toHaveBeenCalledWith('category_slug', 'opera');
       // Säkerställ att inget lte smyger sig in — vi vill ha obegränsad framtid.
       expect(countChain.lte).not.toHaveBeenCalled();
+    });
+  });
+
+  // 2026-10-01 (gratis-tile consistency): isFree=true lägger till
+  // .eq('is_free', true) på både data- och count-query så count matchar
+  // antalet events användaren faktiskt ser. Utan detta skulle headern
+  // visa hela fönstrets antal medan bara en bråkdel var gratis.
+  describe('isFree filter (gratis tile)', () => {
+    it('passes isFree=true to .eq on the data chain', async () => {
+      const dataChain = makeChain([]);
+      const countChain = makeCountChain(42);
+      const sb = {
+        from: vi.fn()
+          .mockReturnValueOnce(dataChain)
+          .mockReturnValueOnce(countChain),
+      } as unknown as SupabaseClient;
+      await feedEvents(sb, { from: '2026-08-18', days: 14, isFree: true });
+      expect(dataChain.eq).toHaveBeenCalledWith('is_free', true);
+    });
+
+    it('passes isFree=true to .eq on the count chain so total is filtered', async () => {
+      const dataChain = makeChain([]);
+      const countChain = makeCountChain(42);
+      const sb = {
+        from: vi.fn()
+          .mockReturnValueOnce(dataChain)
+          .mockReturnValueOnce(countChain),
+      } as unknown as SupabaseClient;
+      const result = await feedEvents(sb, {
+        from: '2026-08-18',
+        days: 14,
+        isFree: true,
+      });
+      expect(result.total).toBe(42);
+      expect(countChain.eq).toHaveBeenCalledWith('is_free', true);
+    });
+
+    it('does NOT call .eq(is_free) when isFree is undefined or false', async () => {
+      // Använd en enkel mock som returnerar samma chains oavsett antal
+      // feedEvents-anrop. Här bryr vi oss bara om eq(mock)-anrop, inte
+      // antalet from()-anrop.
+      const dataChain = makeChain([]);
+      const countChain = makeCountChain(500);
+      const sb = {
+        from: vi.fn().mockReturnValue(dataChain),
+      } as unknown as SupabaseClient;
+      // För count-chain: ersätt dataChain med countChain via mockImplementation
+      // som håller koll på samtal. Håller det enkelt: vi bryr oss bara om
+      // eq-anropen, så vi kan låta båda anrop returnera samma kedja.
+      // undefined
+      await feedEvents(sb, { from: '2026-08-18', days: 7 });
+      // false
+      await feedEvents(sb, { from: '2026-08-18', days: 7, isFree: false });
+      // Viktigt: is_free ska INTE vara med i eq-anropen. Andra eq-anrop
+      // (category etc.) är okej — vi filtrerar med toHaveBeenCalledWith.
+      const eqCalls = (dataChain.eq as any).mock.calls;
+      const isFreeEqCalls = eqCalls.filter(
+        (c: any[]) => c[0] === 'is_free' && c[1] === true,
+      );
+      expect(isFreeEqCalls).toHaveLength(0);
+    });
+  });
+
+  // 2026-10-01: count är fönster-bundet BY DEFAULT så att headern
+  // speglar data-frågans [from, to)-fönster. RENA kategori-queries
+  // (bara category, inga andra filter) behåller dock full-future count
+  // eftersom användaren bad om "samtliga framtida <kategori>-events".
+  describe('total is window-bounded by default (matches data window)', () => {
+    it('adds .lte(toIso) to count chain when no category set', async () => {
+      const dataChain = makeChain([]);
+      const countChain = makeCountChain(47);
+      const sb = {
+        from: vi.fn()
+          .mockReturnValueOnce(dataChain)
+          .mockReturnValueOnce(countChain),
+      } as unknown as SupabaseClient;
+      const result = await feedEvents(sb, { from: '2026-08-18', days: 14 });
+      expect(result.total).toBe(47);
+      expect(countChain.lte).toHaveBeenCalledWith(
+        'start_time',
+        expect.stringMatching(/^2026-09-01/), // 2026-08-18 + 14 = 2026-09-01
+      );
+    });
+
+    it('adds .lte(toIso) to count chain when isFree is set (not pure category)', async () => {
+      const dataChain = makeChain([]);
+      const countChain = makeCountChain(12);
+      const sb = {
+        from: vi.fn()
+          .mockReturnValueOnce(dataChain)
+          .mockReturnValueOnce(countChain),
+      } as unknown as SupabaseClient;
+      await feedEvents(sb, {
+        from: '2026-08-18',
+        days: 14,
+        category: 'music',
+        isFree: true,
+      });
+      // isFree=true gör att queryn inte är "ren kategori" — count måste
+      // vara window-bounded så headern visar "12 gratis musik-events i
+      // fönstret" inte "alla gratis musik-events i alla tider".
+      expect(countChain.lte).toHaveBeenCalled();
+    });
+  });
+
+  // 2026-10-01 (stamning-tile consistency): mood i feed_events flyttar
+  // både data- och count-filtret in i feed_events så de är konsekventa.
+  // PostgREST kan inte uttrycka mood-lexikonet i SQL, så count-queryn
+  // gör en 3:e fetch (inte head:true) som filtreras i JS via matchMood.
+  describe('mood filter (stamning tile) — count consistency', () => {
+    it('issues a mood-aware count query to events_public when mood is set', async () => {
+      // Stamning-routen: input.mood='stamningsfullt'. feed_events gör
+      // data + mood-count (inte head:true count eftersom mood-lexikonet
+      // inte kan uttryckas i SQL). 2 anrop totalt: data, sedan mood-count
+      // som ersätter den vanliga head:true-counten.
+      const dataChain = makeChain([]);
+      const moodChain = makeChain([]);
+      const sb = {
+        from: vi.fn()
+          .mockReturnValueOnce(dataChain)
+          .mockReturnValueOnce(moodChain),
+      } as unknown as SupabaseClient;
+      await feedEvents(sb, {
+        from: '2026-08-18',
+        days: 14,
+        mood: 'stamningsfullt',
+      });
+      expect(sb.from).toHaveBeenCalledTimes(2);
+      // Säkerställ att mood-chainen INTE använder head:true (mood-count
+      // behöver rader för matchMood, inte bara en siffra).
+      const moodSelectCalls = (moodChain.select as any).mock.calls;
+      const headSelect = moodSelectCalls.find(
+        (c: any[]) => c[1]?.head === true,
+      );
+      expect(headSelect).toBeUndefined();
+    });
+
+    it('does NOT issue the 3rd mood query when mood is unset', async () => {
+      // Regression-skydd: om någon sätter mood som default ska testet
+      // fånga att vi inte längre betalar mood-count-kostnaden för varje
+      // feed-anrop.
+      const dataChain = makeChain([]);
+      const countChain = makeCountChain(500);
+      const sb = {
+        from: vi.fn()
+          .mockReturnValueOnce(dataChain)
+          .mockReturnValueOnce(countChain),
+      } as unknown as SupabaseClient;
+      await feedEvents(sb, { from: '2026-08-18', days: 14 });
+      expect(sb.from).toHaveBeenCalledTimes(2);
+    });
+
+    it('counts only mood-matching rows when mood is set (mood-aware count path)', async () => {
+      // Stamningsfullt = "stämningsfull" / "intim" / etc. + opera/dance.
+      // Mock innehåller 5 events varav 3 matchar (opera-anchor, magisk,
+      // intim). feed_events ska returnera total=3 efter matchMood-filter.
+      const dataRows = [
+        { id: '1', title_sv: 'La Bohème', description_sv: '', category_slug: 'opera' },
+        { id: '2', title_sv: 'Magisk afton', description_sv: 'stämningsfull kväll', category_slug: 'music' },
+        { id: '3', title_sv: 'Hockeymatch', description_sv: '', category_slug: 'sports' },
+        { id: '4', title_sv: 'Ståupp', description_sv: '', category_slug: 'theatre-comedy' },
+        { id: '5', title_sv: 'Intim konsert', description_sv: '', category_slug: 'music' },
+      ];
+      const sb = mockSupabaseWithMood([], dataRows) as any;
+      const result = await feedEvents(sb, {
+        from: '2026-08-18',
+        days: 14,
+        mood: 'stamningsfullt',
+      });
+      expect(result.total).toBe(3);
+    });
+
+    it('filters events array by mood so returned events match total', async () => {
+      // Data-frågan returnerar 3 rader varav 1 matchar mood. Headern
+      // visar total = 1 (från mood-count), events-listan har 1 rad.
+      const dataRows = [
+        { id: '1', title_sv: 'La Bohème', description_sv: '', category_slug: 'opera' },
+        { id: '2', title_sv: 'Hockey', description_sv: '', category_slug: 'sports' },
+        { id: '3', title_sv: 'Ståupp', description_sv: '', category_slug: 'theatre-comedy' },
+      ];
+      // moodRows = samma som dataRows (data returneras också i mood-count)
+      const sb = mockSupabaseWithMood(dataRows, dataRows) as any;
+      const result = await feedEvents(sb, {
+        from: '2026-08-18',
+        days: 14,
+        mood: 'stamningsfullt',
+      });
+      expect(result.events).toHaveLength(1);
+      expect(result.events[0].id).toBe('1');
+      expect(result.total).toBe(1);
+    });
+
+    it('silently ignores unknown mood ids (no 3rd query, no filter)', async () => {
+      const dataChain = makeChain([]);
+      const countChain = makeCountChain(500);
+      const sb = {
+        from: vi.fn()
+          .mockReturnValueOnce(dataChain)
+          .mockReturnValueOnce(countChain),
+      } as unknown as SupabaseClient;
+      // 'made-up-mood' finns inte i MOOD_IDS → ignoreras.
+      await feedEvents(sb, {
+        from: '2026-08-18',
+        days: 14,
+        mood: 'made-up-mood',
+      });
+      expect(sb.from).toHaveBeenCalledTimes(2); // ingen 3:e
     });
   });
 });

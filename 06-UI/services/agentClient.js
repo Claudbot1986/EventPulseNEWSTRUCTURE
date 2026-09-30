@@ -724,7 +724,7 @@ export function isFetchCanceled(err) {
   return /FetchRequestCanceledException/.test(String(err.message));
 }
 
-async function fetchFeedOnce({ baseUrl, from, days, mood, limit, offset, category, signal, timeoutMs }) {
+async function fetchFeedOnce({ baseUrl, from, days, mood, limit, offset, category, isFree, signal, timeoutMs }) {
   const url = new URL(`${baseUrl}/agent/feed`);
   url.searchParams.set('from', from);
   url.searchParams.set('days', String(days));
@@ -738,6 +738,11 @@ async function fetchFeedOnce({ baseUrl, from, days, mood, limit, offset, categor
   // på serversidan istället för att klienten gallrar bort 13/15 av varje
   // 15-radig-sida. Falsy → param omitted så plain browsing är oförändrat.
   if (category) url.searchParams.set('category', category);
+  // 2026-10-01 (gratis-tile consistency): ?isFree=true when caller asks
+  // for gratis only. Skickas som query-flagga så feed_events kör
+  // .eq('is_free', true) på serversidan och count-spegeln blir korrekt.
+  // Falsy / null → param omitted (existing behavior preserved).
+  if (isFree === true) url.searchParams.set('isFree', 'true');
   // Fas D (2026-09-23): optional server-side mood filter (Utforska-tile
   // "Stämningsfullt"). Falsy → param omitted entirely so plain browsing
   // keeps the exact same wire format as before.
@@ -873,18 +878,18 @@ async function fetchFeedOnce({ baseUrl, from, days, mood, limit, offset, categor
  *   - our own timeout → never retried (20s already spent — honest failure);
  *   - caller-signal abort → never retried (the caller asked for it).
  */
-export async function fetchFeed({ from, days = 7, mood = null, limit = null, offset = null, category = null, signal, timeoutMs = 20_000 } = {}) {
+export async function fetchFeed({ from, days = 7, mood = null, limit = null, offset = null, category = null, isFree = null, signal, timeoutMs = 20_000 } = {}) {
   // 20s (2026-09-22): device testing measured Fly cold starts at 5-7s warm-up
   // and >12s during slow-network moments — the previous 12s abort produced
   // FetchRequestCanceledException on the phone. 20s covers cold start + slow
   // network while the loading state is still tolerable.
   const baseUrl = await pickReachableAgentBase();
   try {
-    return await fetchFeedOnce({ baseUrl, from, days, mood, limit, offset, category, signal, timeoutMs });
+    return await fetchFeedOnce({ baseUrl, from, days, mood, limit, offset, category, isFree, signal, timeoutMs });
   } catch (err) {
     if (signal?.aborted) throw err;
     if (!isFetchCanceled(err)) throw err;
-    return await fetchFeedOnce({ baseUrl, from, days, mood, limit, offset, category, signal, timeoutMs });
+    return await fetchFeedOnce({ baseUrl, from, days, mood, limit, offset, category, isFree, signal, timeoutMs });
   }
 }
 

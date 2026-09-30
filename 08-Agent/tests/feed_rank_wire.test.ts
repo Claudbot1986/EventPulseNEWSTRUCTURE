@@ -176,6 +176,14 @@ interface FeedMockOptions {
   artistRows?: any[];
   /** Tables that must make the read fail (chain rejects). */
   failTables?: string[];
+  /**
+   * 2026-10-01 (stamning consistency): hur 2:a .from('events_public')
+   * ska returnera. 'head' (default) = head:true-count som vanligt.
+   * 'rows' = row-fetch som feed_events gör när input.mood är satt
+   * (mood-lexikonet kan inte uttryckas i SQL, så feed_events behöver
+   * rader för att köra matchMood i minnet).
+   */
+  moodQueryMode?: 'head' | 'rows';
 }
 
 function makeChain(value: unknown): any {
@@ -188,6 +196,7 @@ function makeChain(value: unknown): any {
     in: () => chain,
     order: () => chain,
     limit: () => chain,
+    range: () => chain,
   };
   // Anti-pattern guard: then must CALL the awaiting resolver (see
   // recommended_wire.test.ts) — and pass it THIS chain's payload.
@@ -202,6 +211,12 @@ function makeFeedMockSupabase(opts: FeedMockOptions = {}) {
   const interactionRows = opts.interactionRows ?? [];
   const artistRows = opts.artistRows ?? [];
   const failTables = new Set(opts.failTables ?? []);
+  // 2026-10-01 (stamning consistency): ?mood= byter count-strategi på
+  // serversidan. feed_events hoppar över head:true och kör en row-fetch
+  // istället eftersom mood-lexikonet inte kan uttryckas i SQL. Mocken
+  // måste returnera rader på 2:a .from('events_public')-anropet när
+  // moodQueryMode='rows' så feed_events får data att filtrera.
+  const moodQueryMode = opts.moodQueryMode ?? 'head';
 
   let eventsPublicCalls = 0;
   const tablesCalled: string[] = [];
@@ -219,7 +234,10 @@ function makeFeedMockSupabase(opts: FeedMockOptions = {}) {
         // Data page query.
         return makeChain({ data: eventRows, error: null });
       }
-      // Canonical count query (head: true).
+      // Canonical count query (head: true) ELLER mood-aware row fetch.
+      if (moodQueryMode === 'rows') {
+        return makeChain({ data: eventRows, error: null });
+      }
       return makeChain({ data: null, count: eventRows.length, error: null });
     }
     if (table === 'user_interactions') {
@@ -434,13 +452,16 @@ describe('GET /agent/feed — Fas D mood-filter (Stämningsfullt)', () => {
   it('an anonymous caller with ?mood=stamningsfullt gets only mood-matching events, in order', async () => {
     // The mood tile is a CONTENT filter, not personalization — it must work
     // for guests too (no auth header, no signal reads).
-    const mock = makeFeedMockSupabase({ eventRows: moodPage });
+    // 2026-10-01: mood-aware count behöver rader (mood-lexikonet kan inte
+    // uttryckas i SQL) — mocken sätts till moodQueryMode='rows'.
+    const mock = makeFeedMockSupabase({ eventRows: moodPage, moodQueryMode: 'rows' });
     const { status, body } = await requestFeed(mock, { mood: 'stamningsfullt' });
     expect(status).toBe(200);
     expect(body.events.map((e: any) => e.id)).toEqual([moodRow.id]);
-    // Canonical window total stays honest to the DB; the mood filter shrinks
-    // the page, not the window contract.
-    expect(body.total).toBe(3);
+    // Total reflekterar antal mood-matchningar i feed_events total (efter
+    // matchMood-filter), inte hela fönstrets längd. Tidigare visade
+    // headern hela fönstrets antal (3662) → buggen som fixades 2026-10-01.
+    expect(body.total).toBe(1);
     expect(body.from).toBe('2099-01-01');
     expect(mock.tablesCalled).not.toContain('user_interactions');
   });
@@ -452,6 +473,7 @@ describe('GET /agent/feed — Fas D mood-filter (Stämningsfullt)', () => {
     const mock = makeFeedMockSupabase({
       eventRows: moodPage,
       interactionRows: [...theatreSaves, ...theatreOutbounds],
+      moodQueryMode: 'rows',
     });
     const { status, body } = await requestFeed(mock, {
       bearer: `t:${TREATMENT_USERS[3]}`,
@@ -465,7 +487,7 @@ describe('GET /agent/feed — Fas D mood-filter (Stämningsfullt)', () => {
   });
 
   it('an unknown mood value is ignored — full page, no filtering', async () => {
-    const mock = makeFeedMockSupabase({ eventRows: moodPage });
+    const mock = makeFeedMockSupabase({ eventRows: moodPage, moodQueryMode: 'rows' });
     const { status, body } = await requestFeed(mock, { mood: 'whatever' });
     expect(status).toBe(200);
     expect(body.events.map((e: any) => e.id)).toEqual([
@@ -478,11 +500,18 @@ describe('GET /agent/feed — Fas D mood-filter (Stämningsfullt)', () => {
   it('a mood with zero matches returns an honest empty page', async () => {
     // No row matches the lexikon (musicRow/theatreRow copy is plain) — the
     // filter must not invent matches or crash.
-    const mock = makeFeedMockSupabase({ eventRows: [musicRow, theatreRow] });
+    const mock = makeFeedMockSupabase({
+      eventRows: [musicRow, theatreRow],
+      moodQueryMode: 'rows',
+    });
     const { status, body } = await requestFeed(mock, { mood: 'stamningsfullt' });
     expect(status).toBe(200);
     expect(body.events).toEqual([]);
-    expect(body.total).toBe(2);
+    // 2026-10-01: total = antal mood-matchningar (0 här) istället för
+    // hela fönstrets längd. tidigare var total = 2 (hela fönstret),
+    // nu = 0 (0 matchningar) — headern stämmer överens med vad
+    // användaren ser.
+    expect(body.total).toBe(0);
     expect(body.has_more).toBe(false);
   });
 });
