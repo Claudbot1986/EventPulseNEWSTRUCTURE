@@ -161,6 +161,29 @@ const MOCK_EVENTS = [
   },
 ];
 
+// SkeletonRow (2026-10-01): spegelbild av EventRow:s layout (56×56 tumme,
+// titel-rad, undertext-rad, 18×18 ⋯-knapp). Används i loading-tillstånd
+// så rullistan visar rätt form innan data landar — samma princip som
+// LoadingSkeleton speglar HomeScreen:s utforska-layout. Bakgrundsfärg
+// matchar thumb- och text-bakgrunderna så det visuella språket är
+// konsistent.
+function SkeletonRow() {
+  return (
+    <View
+      style={styles.row}
+      accessibilityRole="none"
+      importantForAccessibility="no"
+    >
+      <View style={[styles.thumb, styles.skeletonThumb]} />
+      <View style={styles.middle}>
+        <View style={styles.skeletonTitle} />
+        <View style={styles.skeletonSubtitle} />
+      </View>
+      <View style={[styles.menuBtn, styles.skeletonMenu]} />
+    </View>
+  );
+}
+
 function EventRow({ event, onPress, onMenuPress }) {
   const parts = event.subtitleParts.filter(Boolean);
   const line1 = parts.slice(0, 2).join(' · ');   // datum · tid
@@ -232,6 +255,13 @@ export default function UtforskaSection({
   emptyState = null,
   emptyText = null,
   eyebrowText = null,
+  // 2026-10-01: Tap på en event-rad öppnar samma DetailsScreen som Hem
+  // använder (via App.js handleEventPress). Propageras från
+  // ExploreDetailScreen så ALLA rullistor i Utforska (kategori-tiles,
+  // 18 v2-knappar, mock-sandbox) får identiskt beteende — inga nya
+  // eventkort-typer skapas. Default null = sandbox-default där tap
+  // är no-op (befintligt beteende innan integration).
+  onEventPress = null,
   // 2026-10-01: totalCount är antalet events i DB för aktuell route (t.ex.
   // opera), returnerat av feed_events.total. När satt används det i eyebrow-
   // rubriken ("8 EVENEMANG") istället för items.length — annars skulle
@@ -249,6 +279,13 @@ export default function UtforskaSection({
   // fristående bruk (mock-preview / tester) — ingen scroll-hämtning.
   onEndReached = null,
   loadingMore = false,
+  // loadingSkeletonCount (2026-10-01): antal SkeletonRow-platser som
+  // visas när emptyState === 'loading' och items.length === 0. Spegelbild
+  // av EventRow:s layout (56×56 tumme + titel + undertext + ⋯). Default
+  // 6 — tillräckligt för att fylla första skärmbilden utan att kännas
+  // överväldigande. Sätts av ExploreDetailScreen för att kunna justeras
+  // per route om det behövs.
+  loadingSkeletonCount = 6,
 }) {
   // events=null innebär sandbox-default (mock). Annars riktig data från
   // ExploreDetailScreen via mapAgentEventToRow.
@@ -277,9 +314,12 @@ export default function UtforskaSection({
     }
   };
 
-  const handlePress = (_event) => {
-    // UI-only port från sandbox — rad-tap är en no-op tills riktig
-    // DetailsScreen-integration landar.
+  const handlePress = (event) => {
+    // 2026-10-01: Rad-tap öppnar samma DetailsScreen som Hem använder
+    // (App.js handleEventPress → setSelectedEvent). Föräldern ansvarar
+    // för att skicka in onEventPress; sandbox-default (null) bevarar
+    // no-op-beteendet tills integrationen är påkopplad.
+    onEventPress?.(event);
   };
   const handleMenuPress = (event) => {
     setSheetEvent(event);
@@ -341,8 +381,18 @@ export default function UtforskaSection({
           <Text style={styles.subhead}>{subhead}</Text>
         ) : null}
 
-        {items.length === 0 && emptyTextResolved ? (
-          <Text style={styles.subhead}>{emptyTextResolved}</Text>
+        {items.length === 0 ? (
+          // Loading (2026-10-01): spegelbild av EventRow:s layout istället
+          // för "Laddar…"-text — samma princip som LoadingSkeleton speglar
+          // HomeScreen:s utforska-layout. Användaren ser rätt form direkt
+          // utan layout-hop när datan landar. Error/empty behåller text.
+          emptyState === 'loading' ? (
+            Array.from({ length: loadingSkeletonCount }).map((_, idx) => (
+              <SkeletonRow key={`skel-${idx}`} />
+            ))
+          ) : emptyTextResolved ? (
+            <Text style={styles.subhead}>{emptyTextResolved}</Text>
+          ) : null
         ) : null}
 
         {items.map((event, idx) => (
@@ -487,5 +537,30 @@ const styles = StyleSheet.create({
     fontSize: TOKENS.font.menu.size,
     fontWeight: TOKENS.font.menu.weight,
     lineHeight: TOKENS.font.menu.size,
+  },
+
+  // Skeleton (2026-10-01): placeholders som ärver samma stil som sina
+  // motsvarigheter (thumb, title, subtitle, menuBtn) och bara lägger på
+  // en grå bakgrund (TOKENS.color.thumbBg). Formen (storlek/radie/
+  // marginal) matchar 1:1 så SkeletonRow ser identisk ut som en riktig
+  // EventRow fast med grå rutor istället för text/bild.
+  skeletonThumb: {
+    backgroundColor: TOKENS.color.thumbBg,
+  },
+  skeletonTitle: {
+    height: TOKENS.font.title.size, // 17 — matchar titel-radens fontSize
+    width: '70%',
+    backgroundColor: TOKENS.color.thumbBg,
+    borderRadius: 4,
+    marginBottom: TOKENS.space.subtitleGap, // 4 — matchar subtitleGap
+  },
+  skeletonSubtitle: {
+    height: TOKENS.font.subtitle.size, // 13 — matchar subtitle fontSize
+    width: '50%',
+    backgroundColor: TOKENS.color.thumbBg,
+    borderRadius: 4,
+  },
+  skeletonMenu: {
+    backgroundColor: TOKENS.color.thumbBg,
   },
 });

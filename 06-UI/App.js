@@ -537,24 +537,74 @@ function LoadingMore() {
   );
 }
 
+// LoadingSkeleton (2026-10-01): spegelbild av HomeScreen:s slutgiltiga
+// Utforska-layout (App.js:1129+) — filterBar > searchBox + ScrollView med
+// två utforskasektioner (titelrad + 3 tile-rader × 2 tiles). Inga rutor som
+// inte finns i den slutgiltiga vyn; användaren känner igen formen direkt
+// utan layout-hop när datan landar.
+//
+// Placeholders ärver samma stil som sina motsvarigheter
+// (searchBox, exploreSectionTitle, exploreTile) och lägger bara på en grå
+// bakgrund via overlay-stilar (se TOKENS-stilarna längre ner).
 function LoadingSkeleton() {
-  const { t } = useI18n();
   return (
     <SafeAreaView style={styles.homeContainer}>
-      <View style={styles.header}>
-        <Text style={styles.appKicker}>{t('explore.eyebrow')}</Text>
-        <Text style={styles.appTitle}>EventPulse</Text>
-        <Text style={styles.appSubtitle}>{t('explore.loadingSubtitle')}</Text>
-      </View>
-      <View style={styles.skeletonList}>
-        {[0, 1, 2].map(item => (
-          <View key={item} style={styles.skeletonCard}>
-            <View style={styles.skeletonImage} />
-            <View style={styles.skeletonLineWide} />
-            <View style={styles.skeletonLineShort} />
+      {/* Sökfält — samma filterBar + filterBarRow + searchBoxWrap som riktigt,
+          men searchBox-färgen ersätts med en grå skeleton-overlay. */}
+      <View style={styles.filterBar}>
+        <View style={styles.filterBarRow}>
+          <View style={styles.searchBoxWrap}>
+            <View style={[styles.searchBox, styles.skeletonSearchBox]} />
           </View>
-        ))}
+        </View>
       </View>
+
+      <ScrollView
+        contentContainerStyle={styles.listContent}
+        showsVerticalScrollIndicator={false}
+      >
+        {/* Sektion 1 — Utforska (motsvarar ExploreTilesSection: 6 tiles,
+            2×3). Tiles använder default exploreTile (5/2 aspectRatio).
+            Label-platshållare inuti (2026-10-01): samma visuella tyngd-
+            punkt som sektion 2 så ögat uppfattar höjden som identisk
+            mot den riktiga Utforska-vyn. */}
+        <View style={styles.exploreSection}>
+          <View style={styles.skeletonSectionTitle} />
+          {[0, 1, 2].map((row) => (
+            <View key={row} style={styles.exploreRow}>
+              <View style={[styles.exploreTile, styles.skeletonTile]}>
+                <View style={styles.skeletonTileLabelPlaceholder} />
+              </View>
+              <View style={[styles.exploreTile, styles.skeletonTile]}>
+                <View style={styles.skeletonTileLabelPlaceholder} />
+              </View>
+            </View>
+          ))}
+        </View>
+
+        {/* Sektion 2 — Kategorier (motsvarar CategoryQuickTilesSection: 18
+            tiles, 2×9). Tiles har aspectRatio 5/3 (1,5× högre än Utforska-
+            tiles ovan) enligt App.js:727 — samma höjd-ratio som den riktiga
+            sektionen så inget layout-hop när datan landar. Label-plat-
+            sens inre (2026-10-01): en liten grå rect på samma position som
+            den riktiga labeln (top:14, left:16) så skelett-tile:n får samma
+            visuella tyngdpunkt — annars upplevs den ihålig grå ytan som
+            "högre" än den label-fyllda riktiga tile:n, trots identiska
+            yttermått. */}
+        <View style={styles.exploreSection}>
+          <View style={styles.skeletonSectionTitle} />
+          {Array.from({ length: 9 }).map((_, row) => (
+            <View key={row} style={styles.exploreRow}>
+              <View style={[styles.exploreTile, styles.skeletonTile, styles.skeletonTileTall]}>
+                <View style={styles.skeletonTileLabelPlaceholder} />
+              </View>
+              <View style={[styles.exploreTile, styles.skeletonTile, styles.skeletonTileTall]}>
+                <View style={styles.skeletonTileLabelPlaceholder} />
+              </View>
+            </View>
+          ))}
+        </View>
+      </ScrollView>
     </SafeAreaView>
   );
 }
@@ -1635,7 +1685,7 @@ function DetailsScreen({ event, onBack }) {
 // och MAX_LIMIT (100→500) på serversidan så hela kategorier (t.ex. music =
 // 1181 events) blir åtkomliga via scroll istället för att kapas vid 50.
 const EXPLORE_PAGE_SIZE = 15;
-function ExploreDetailScreen({ payload, onBack }) {
+function ExploreDetailScreen({ payload, onBack, onEventPress }) {
   const { t, language } = useI18n();
   // Lazy-require för att inte dra in komponenten (och dess bundlade
   // PNG-tile-tillgångar) förrän användaren faktiskt navigerar hit.
@@ -1828,6 +1878,12 @@ function ExploreDetailScreen({ payload, onBack }) {
         totalCount={totalCount}
         onEndReached={handleEndReached}
         loadingMore={loadingMore}
+        // 2026-10-01: Rad-tap öppnar samma DetailsScreen som Hem använder
+        // (App.js handleEventPress → setSelectedEvent). Propagerad så
+        // ALLA rullistor i Utforska — oavsett tile/knapp som öppnade
+        // vyn — ger identiskt eventkort-beteende. Inget nytt
+        // eventkort byggs; DetailsScreen är den enda källan.
+        onEventPress={onEventPress}
         // Alla utforska-tiles (2026-09-28): Lyft rullisten 8 pt från nederkanten
         // (4 + 4 efter andra designrundan) — samma mått oavsett vilken tile/knapp
         // som öppnar utforska-vyn.
@@ -2054,7 +2110,7 @@ export default function App({ onUserLoggedOut, onOpenLogin, chipNonce = 0, onExp
     }
     // Utforska tile/button tap (2026-09-27): ny tom svart sida, INTE filter.
     if (exploreDetail) {
-      return <ExploreDetailScreen payload={exploreDetail} onBack={handleExploreBack} />;
+      return <ExploreDetailScreen payload={exploreDetail} onBack={handleExploreBack} onEventPress={handleEventPress} />;
     }
     // T0078 — tab routing: home | map | profile.
     // Lazy require so react-native-maps is not loaded on every Expo Go boot.
@@ -2477,35 +2533,57 @@ const styles = StyleSheet.create({
     fontSize: 13,
     fontStyle: 'italic',
   },
-  skeletonList: {
-    padding: TOKENS.space.lg,
-    gap: TOKENS.space.lg,
-  },
-  skeletonCard: {
-    backgroundColor: TOKENS.color.surfaceRaised,
-    borderRadius: TOKENS.radius.lg,
-    padding: TOKENS.space.lg,
-    borderWidth: 1,
-    borderColor: TOKENS.color.border,
-  },
-  skeletonImage: {
-    height: 120,
-    borderRadius: TOKENS.radius.md,
+  // Skeleton (LoadingSkeleton, 2026-10-01): placeholders som ärver samma
+  // stil som sina motsvarigheter i den riktiga HomeScreen-layouten och
+  // bara lägger på en grå bakgrund (TOKENS.color.surfaceSoft). Formen
+  // (höjd/bredd/radie/marginaler) matchar 1:1 så inget layout-hop när
+  // datan landar.
+  skeletonSearchBox: {
+    // searchBox är vit (#FFFFFF) + pill-radius + padding; vi behåller allt
+    // utom bakgrunden så sökfältet blir en grå pill med samma form och
+    // höjd som det riktiga fältet.
     backgroundColor: TOKENS.color.surfaceSoft,
-    marginBottom: TOKENS.space.lg,
+    // searchBox i riktig vy innehåller en TextInput (fontSize 13) vars
+    // implicit-höjd (~17px) + paddingVertical 8×2 = ~33px totalt. Skelettet
+    // har inget barn — utan minHeight blir rutan bara padding-höjd (16px)
+    // och upplevs påtagligt "ihålig"/för låg jämfört med sökfältet som
+    // landar. 36px täcker både iOS/Android TextInput-naturlig höjd.
+    minHeight: 36,
   },
-  skeletonLineWide: {
-    height: 18,
-    width: '82%',
-    borderRadius: TOKENS.radius.pill,
+  skeletonSectionTitle: {
+    // Motsvarar exploreSectionTitle (fontSize 16, marginBottom md).
+    height: 16,
+    width: '45%',
     backgroundColor: TOKENS.color.surfaceSoft,
+    borderRadius: TOKENS.radius.sm,
     marginBottom: TOKENS.space.md,
   },
-  skeletonLineShort: {
-    height: 14,
-    width: '48%',
-    borderRadius: TOKENS.radius.pill,
+  skeletonTile: {
+    // Överlagra exploreTile (flex:1, aspectRatio 5/2, borderRadius:md).
+    // Bild/diagonal/label ersätts av en grå rektangel med samma form.
     backgroundColor: TOKENS.color.surfaceSoft,
+  },
+  // Kategori-tiles (CategoryQuickTilesSection) har aspectRatio 5/3 — 1,5×
+  // högre än Utforska-tiles ovan. Skelettet behöver samma ratio så
+  // sektion 2 inte ser "ihoptryckt" ut jämfört med den riktiga vyn.
+  skeletonTileTall: {
+    aspectRatio: 5 / 3,
+  },
+  // Label-platshållare inuti kategori-skelett-tiles (2026-10-01). Spegel
+  // av exploreTileLabel (top:14, left:16, fontSize 16.2) — ger skelett-
+  // tile:n en mörkare rektangel på samma position som den riktiga labeln.
+  // Utan detta upplevs den enhetligt grå ytan som "högre" än den label-
+  // fyllda riktiga tile:n trots identiska yttermått (aspectRatio 5/3),
+  // eftersom ögat saknar en visuell tyngdpunkt.
+  skeletonTileLabelPlaceholder: {
+    position: 'absolute',
+    top: 14,
+    left: 16,
+    width: 60,
+    height: 14,
+    backgroundColor: TOKENS.color.thumbBg,
+    borderRadius: TOKENS.radius.sm,
+    opacity: 0.6,
   },
   stateContainer: {
     flex: 1,
