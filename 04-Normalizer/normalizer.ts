@@ -6,6 +6,9 @@ import type { RawEventInput, NormalizedEvent } from '@eventpulse/shared';
 import { searchSyncQueue } from '../03-Queue/queue';
 import { computeConfidenceV1 } from './confidence_v1';
 import { evaluateTitle, checkBlockB } from './title-quality-gate';
+// 2026-10-02 — Description routing-helper (5.2). Ren function: tar raw.description
+// + venue.country och returnerar description_sv + description_en + audit-reason.
+import { routeDescription, type VenueInfo } from './descriptionRouting';
 import { getDefaultCategorySlugForSource } from './sourceCategoryDefaults';
 import { canonicalizeCategorySlug } from './categoryCanonicalize';
 import { extractHeadliner, resolveArtist } from './artistResolver';
@@ -392,6 +395,20 @@ export async function processRawEvent(job: Job<RawEventInput>): Promise<void> {
 
   const venue_id = await resolveVenue(raw);
 
+  // 2026-10-02 — Hämta venue.country för description_sv-fallback (5.2 rule 3).
+  // Default är null om venue saknas; description_routing kommer då inte spegla
+  // description_en → description_sv (säker default = vi gissar inte).
+  let venueCountry: string | null = null;
+  if (venue_id) {
+    const { data: venueRow } = await supabase
+      .from('venues')
+      .select('country')
+      .eq('id', venue_id)
+      .limit(1)
+      .maybeSingle();
+    venueCountry = venueRow?.country ?? null;
+  }
+
   // MusicBrainz + Last.fm authoritativ artist-uppslagning (2026-09-30).
   // Om vi lyckas slå upp artisen i MusicBrainz OCH Last.fm ger entydiga
   // taggar mot en kanonsk kategori → sätt den som category_slug.
@@ -476,26 +493,37 @@ export async function processRawEvent(job: Job<RawEventInput>): Promise<void> {
 
   console.log(`[normalizer] venue_id=${venue_id ?? 'null'}, category_slug=${category_slug}`);
 
+  // Description routing (2026-10-02, plan §5.2):
+  //   rule 1: detected_language=sv → båda fält får från raw.description
+  //   rule 2: title har å/ä/ö → description_sv speglas från raw.description
+  //   rule 3 (NY): venue.country === 'SE' → description_sv speglas från
+  //                raw.description (även om title saknar å/ä/ö)
+  //
+  // Tidigare (2026-09-29): bara rule 1+2. Detta fångade INTE engelsk-titlade
+  // svenska events (t.ex. "Dexys Midnight Runners" på Göta Lejon) — title
+  // saknar å/ä/ö, så rule 2 missade dem. ~3–5 %-enheter av description-gapet
+  // beror på denna routing-bugg (Grupp C i planen).
+  const venueInfo: VenueInfo = { country: venueCountry };
+  const routedDescription = routeDescription({
+    rawDescription: raw.description,
+    detectedLanguage: raw.detected_language,
+    title: raw.title,
+    venue: venueInfo,
+  });
+  if (routedDescription.sv_rule !== 'none') {
+    console.log(
+      `[normalizer] description_sv routed via ${routedDescription.sv_rule} ` +
+      `(venue.country=${venueCountry ?? 'none'}, source=${raw.source})`,
+    );
+  }
+
   const observedAt = new Date().toISOString();
 
   const normalized: Partial<NormalizedEvent> & Record<string, unknown> = {
     title_en: raw.detected_language === 'en' ? raw.title : raw.title ?? null,
     title_sv: raw.detected_language === 'sv' ? raw.title : raw.title,
-    description_en: raw.description ?? null,
-    // Description_sv-fallback (2026-09-29): om detekterat språk INTE är 'sv'
-    // men titeln är svensk (innehåller å/ä/ö) OCH raw.description finns —
-    // använd description som description_sv också. Detta hanterar scrape-
-    // källor (biljettshop.se, kultur-stockholm, sthlmlist m.fl.) där
-    // adaptern routar beskrivningen till description_en trots att texten
-    // är på svenska. 100 % av berwaldhallen-events (125) har tom
-    // description_sv — den source:en har dock tom description i båda
-    // språken, så denna fallback hjälper inte där.
-    description_sv:
-      raw.detected_language === 'sv'
-        ? raw.description
-        : raw.description && /[åäöÅÄÖ]/.test(raw.title ?? '')
-          ? raw.description
-          : null,
+    description_en: routedDescription.description_en,
+    description_sv: routedDescription.description_sv,
     start_time: raw.start_time,
     // Only set end_time if it's a valid ISO timestamp, not just "HH:MM"
     end_time: raw.end_time && raw.end_time.includes('T') ? raw.end_time : null,
