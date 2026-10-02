@@ -75,12 +75,29 @@ function findDescriptionDeep(obj, depth = 0) {
 
 // ─── Strategy 2-4: Meta tags ────────────────────────────────────────────────
 
+// 2026-10-02 — Template-meta-filter (Round 2 lärdom). Live Nation-sajter
+// (gotalejon.se, ticketmaster, livenation.se m.fl.) använder en generic
+// template-meta istället för riktig event-beskrivning. Dessa måste INTE
+// prioriteras över body — body har den riktiga description.
+// Filter känner
+const META_TEMPLATE_RX = [
+  /^Find\s+\S+\s+tickets at[^|]+\|\s*Videos, biography, tour dates/i,
+  /^Find\s+\S+\s+tickets at/i,
+  /^Tickets?\s+for[^.]+\.\s*$/i,  // "Tickets for X." utan info
+  /tour dates, performance times/i,
+  /^Buy\s+\S+\s+tickets[^.]+\.\s*$/i,
+];
+
+function isTemplateMeta(text) {
+  return META_TEMPLATE_RX.some(rx => rx.test(text));
+}
+
 function extractFromMetaTags(html) {
   const $ = cheerio.load(html);
   const og = $('meta[property="og:description"]').attr('content');
-  if (og && og.trim().length >= 20) return og.trim();
+  if (og && og.trim().length >= 20 && !isTemplateMeta(og.trim())) return og.trim();
   const meta = $('meta[name="description"]').attr('content');
-  if (meta && meta.trim().length >= 20) return meta.trim();
+  if (meta && meta.trim().length >= 20 && !isTemplateMeta(meta.trim())) return meta.trim();
   return null;
 }
 
@@ -211,15 +228,23 @@ async function fetchEventsForSource(source) {
   const events = [];
   let from = 0;
   while (true) {
+    // 2026-10-02 — hämta events där description_sv ELLER description_en är
+    // null ELLER tom sträng (""). Tidig är inte klar filtrera bort "" —
+    // description="" är samma sak som "no description" för vårt syfte.
     const { data, error } = await supabase.from('events')
       .select('id, ticket_url, description_sv, description_en')
       .eq('source', source)
       .not('ticket_url', 'is', null)
-      .or('description_sv.is.null,description_en.is.null')
+      .or('description_sv.is.null,description_sv.eq.,description_en.is.null,description_en.eq.')
       .range(from, from + 999);
     if (error) throw error;
     if (!data || data.length === 0) break;
-    events.push(...data);
+    // Säkrar vid NULL/empty i JavaScript efter hämtning (försvar i djuplösht)
+    const filtered = data.filter(e =>
+      !e.description_sv || e.description_sv.trim().length < 10 ||
+      !e.description_en || e.description_en.trim().length < 10
+    );
+    events.push(...filtered);
     if (data.length < 1000) break;
     from += 1000;
   }
