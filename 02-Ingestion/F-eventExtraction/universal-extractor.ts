@@ -429,6 +429,42 @@ function tryParseJson(s: string): unknown {
   try { return JSON.parse(s); } catch { return null; }
 }
 
+/**
+ * 2026-10-02 — Tolerant JSON-LD parser för Webflow-sajter (Round 2 lärdom).
+ * Många svenska event-sajter (Fållan m.fl.) har trasig JSON-LD där t ex
+ *  extra `}` eller saknade inledande `{` gör att JSON.parse kraschar.
+ * Vi försöker parsa tolerant genom att:
+ *   1. Plocka ut description-fältet via regex (även om omgivande JSON är trasigt)
+ *   2. Bygga en syntetstrad {description: "..."} som wrapper
+ *
+ * Returnerar null om inget description-fält hittas.
+ */
+function parseBrokenJsonLd(content: string): Record<string, unknown> | null {
+  const m = content.match(/"description"\s*:\s*"((?:[^"\\]|\\.)*)"/);
+  if (!m) return null;
+  const desc = m[1]
+    .replace(/\\"/g, '"')
+    .replace(/\\u([0-9a-fA-F]{4})/g, (_, hex) => String.fromCodePoint(parseInt(hex, 16)))
+    .replace(/&#x([0-9a-fA-F]+);/g, (_, hex) => String.fromCodePoint(parseInt(hex, 16)))
+    .replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>')
+    .replace(/&auml;/g, 'ä').replace(/&ouml;/g, 'ö').replace(/&aring;/g, 'å')
+    .replace(/&Auml;/g, 'Ä').replace(/&Ouml;/g, 'Ö').replace(/&Aring;/g, 'Å')
+    .replace(/&quot;/g, '"').replace(/&apos;/g, "'").replace(/&nbsp;/g, ' ');
+  if (desc.length < 20) return null;
+  // Bygg syntetstrad wrapper
+  const nameMatch = content.match(/"name"\s*:\s*"((?:[^"\\]|\\.)*)"/);
+  const dateMatch = content.match(/"startDate"\s*:\s*"((?:[^"\\]|\\.)*)"/);
+  const urlMatch = content.match(/"url"\s*:\s*"((?:[^"\\]|\\.)*)"/);
+  const wrapper: Record<string, unknown> = {
+    '@type': 'Event',
+    description: desc,
+  };
+  if (nameMatch) wrapper.name = nameMatch[1].replace(/\\"/g, '"');
+  if (dateMatch) wrapper.startDate = dateMatch[1].replace(/\\"/g, '"');
+  if (urlMatch) wrapper.url = urlMatch[1].replace(/\\"/g, '"');
+  return wrapper;
+}
+
 // ─── Method A1: JSON-LD ──────────────────────────────────────────────────────
 
 function extractJsonLd($: cheerio.CheerioAPI, source: string, baseUrl: string): ParsedEvent[] {
@@ -448,13 +484,20 @@ function extractJsonLd($: cheerio.CheerioAPI, source: string, baseUrl: string): 
   const bodyDescription = extractBodyDescription($);
 
   $('script[type="application/ld+json"]').each((_, el) => {
+    const content = $(el).html() || '';
+    let data: unknown;
     try {
-      const content = $(el).html() || '';
-      const data = JSON.parse(content);
-      const rootDesc = findRootDescription(data);
-      // Inject meta-fallback på top-nivå objektet (recursivt till alla children)
-      collectJsonLdEvents(data, source, baseUrl, events, rootDesc, pageMetaDescription, bodyDescription);
-    } catch { /* skip */ }
+      data = JSON.parse(content);
+    } catch {
+      // 2026-10-02 — Round 2 lärdom: Webflow-sajter (Fållan m.fl.) har trasig
+      // JSON-LD. Försök parsa tolerant med regex för att fånga description-fältet
+      // även när omgivande JSON-syntax är bruten (saknar {/}, trasig nesting).
+      data = parseBrokenJsonLd(content);
+      if (!data) return;
+    }
+    const rootDesc = findRootDescription(data);
+    // Inject meta-fallback på top-nivå objektet (recursivt till alla children)
+    collectJsonLdEvents(data, source, baseUrl, events, rootDesc, pageMetaDescription, bodyDescription);
   });
 
   return events;

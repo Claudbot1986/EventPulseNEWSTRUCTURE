@@ -745,3 +745,67 @@ describe('universal-extractor — Round 2 utökning: page-level description enri
     expect(result.events[0].description).not.toMatch(/cookies/);
   });
 });
+
+/**
+ * 2026-10-02 — Round 2 lärdom: Webflow-sajter (Fållan m.fl.) har trasig JSON-LD.
+ * Vi behöver en tolerant parser som extraherar description via regex när
+ * JSON.parse kraschar. Detta gör att Fållan-sidor plockar description även
+ * med trasig nesting-syntax.
+ */
+describe('universal-extractor — tolerant JSON-LD parser (Webflow-sajter)', () => {
+  it('extraherar description från trasig JSON-LD (Fållan-pattern)', () => {
+    const html = `<!doctype html>
+<html>
+<head>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "MusicEvent",
+  "name": "Simple Plan",
+  "startDate": "2026-10-14",
+  "description": "Their multi-platinum debut No Pads, No Helmets Just Balls (2002) made superstars of the group. Now celebrating their 25th anniversary with tours across Europe.",
+  "url": "https://www.fallan.nu/whats-on/simple-plan"
+}
+  "location": {
+    "@type": ["EventVenue", "MusicVenue"],
+    "name": "Fallan"
+}
+</script>
+</head>
+<body>
+<h1>Simple Plan</h1>
+<time>2026-10-14</time>
+</body>
+</html>`;
+    const result = extractEvents(html, 'fallan', 'https://www.fallan.nu/whats-on/simple-plan');
+    expect(result.events.length).toBe(1);
+    expect(result.events[0].title).toBe('Simple Plan');
+    expect(result.events[0].description).toMatch(/multi-platinum/);
+    expect(result.events[0].description).toMatch(/25th anniversary/);
+  });
+
+  it('avkodar HTML-entiteter i trasig JSON-LD description', () => {
+    const html = `<!doctype html>
+<html>
+<head>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Event",
+  "name": "V&aring;r konsert",
+  "description": "En kv&auml;ll med musik f&ouml;r alla &aring;ldrar. V&auml;lkommen!"
+}
+  "extra": "trasig"
+</script>
+</head>
+<body></body>
+</html>`;
+    const result = extractEvents(html, 'test', 'https://example.com/event');
+    expect(result.events.length).toBeGreaterThan(0);
+    const evt = result.events.find(e => e.description && e.description.length > 0);
+    expect(evt).toBeTruthy();
+    expect(evt!.description).toContain('Välkommen');
+    expect(evt!.description).toContain('åldrar');
+    expect(evt!.description).toContain('för');
+  });
+});

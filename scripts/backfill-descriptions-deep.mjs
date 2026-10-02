@@ -1,0 +1,259 @@
+#!/usr/bin/env node
+/**
+ * Deep description backfill — multi-strategy (Round 2 utökning).
+ *
+ * Tidigare backfills missade många sidor pga:
+  - Trasig JSON-LD (Webflow-sajter som Fållan) → JSON.parse kraschar → 0 events
+  - H1-baserad single-event-sida (ingen article/time/microdata) → C1 hittar inget → body fallback triggas aldrig
+  - Body-fallback kräver events-detect först → om 0 events, ingen description alls
+ *
+ * Denna script gör en aggressiv multi-strategy description extraction oavsett
+ * om universal-extractor hittar events eller inte.
+ *
+ * Strategier (i ordning):
+ *   1. JSON-LD description (även om JSON är trasig — försök parsa tolerant)
+ *   3. <meta property="og:description">
+ *   4. <meta name="description">
+ *   5. Första <p> med >=100 tecken (även om universal-extractor hittar 0 events)
+ *   6. H1 + datum + första paragraf (även för single-event-sidor)
+ *
+ * Run:
+ *   npx tsx scripts/backfill-descriptions-deep.mjs [batch-arg]
+ *
+ * Batch-arg (CLI): lista på sources (default = alla gap-källor).
+ * Används för parallell exekvering med multipla workers.
+ */
+
+import * as cheerio from 'cheerio';
+import { createClient } from '@supabase/supabase-js';
+
+const SUPABASE_URL = process.env.SUPABASE_URL;
+const SUPABASE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
+if (!SUPABASE_URL || !SUPABASE_KEY) { console.error('Missing env'); process.exit(2); }
+
+const supabase = createClient(SUPABASE_URL, SUPABASE_KEY, { auth: { persistSession: false } });
+
+// ─── Strategy 1: Robust JSON-LD parsing ─────────────────────────────────────
+// Tolerate broken JSON-LD by extracting the description substring via regex.
+
+function extractFromBrokenJsonLd(html) {
+  // First try normal parse
+  const $ = cheerio.load(html);
+  let found = null;
+  $('script[type="application/ld+json"]').each((_, el) => {
+    const content = $(el).html() || '';
+    try {
+      const data = JSON.parse(content);
+      // Recursively search for description field
+      const desc = findDescriptionDeep(data);
+      if (desc && desc.length >= 10) found = desc;
+    } catch {
+      // Try regex extraction (handles broken JSON like fallan.nu)
+      const m = content.match(/"description"\s*:\s*"((?:[^"\\]|\\.)*)"/);
+      if (m && m[1].length >= 20) {
+        found = m[1]
+          .replace(/\\"/g, '"')
+          .replace(/\\u([0-9a-fA-F]{4})/g, (_, hex) => String.fromCodePoint(parseInt(hex, 16)))
+          .replace(/&#x([0-9a-fA-F]+);/g, (_, hex) => String.fromCodePoint(parseInt(hex, 16)))
+          .replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&auml;/g, 'ä').replace(/&ouml;/g, 'ö').replace(/&aring;/g, 'å').replace(/&quot;/g, '"');
+  }
+    }
+  });
+  return found;
+}
+
+function findDescriptionDeep(obj, depth = 0) {
+  if (depth > 10) return null;
+  if (!obj || typeof obj !== 'object') return null;
+  if (typeof obj.description === 'string' && obj.description.length >= 10) return obj.description;
+  for (const key of Object.keys(obj)) {
+    const found = findDescriptionDeep(obj[key], depth + 1);
+    if (found) return found;
+  }
+  return null;
+}
+
+// ─── Strategy 2-4: Meta tags ────────────────────────────────────────────────
+
+function extractFromMetaTags(html) {
+  const $ = cheerio.load(html);
+  const og = $('meta[property="og:description"]').attr('content');
+  if (og && og.trim().length >= 20) return og.trim();
+  const meta = $('meta[name="description"]').attr('content');
+  if (meta && meta.trim().length >= 20) return meta.trim();
+  return null;
+}
+
+// ─── Strategy 5-6: Body content ──────────────────────────────────────────────
+
+function extractFromBody(html) {
+  const $ = cheerio.load(html);
+
+  // Strip script/style/nav/header/footer
+  $('script, style, nav, header, footer, aside, [role="navigation"], [aria-hidden="true"]').remove();
+
+  // Prefer Swedish paragraphs (contain å/ä/ö)
+  const SWEDISH_RX = /[åäöÅÄÖ]/;
+
+  // Find paragraphs
+  const candidates = [];
+  $('p').each((_, el) => {
+    const text = $(el).text().trim().replace(/\s+/g, ' ');
+    if (text.length >= 100 && !text.includes('{') && !text.includes('function()')) {
+      candidates.push({ text, isSv: SWEDISH_RX.test(text), len: text.length });
+    }
+  });
+
+  if (candidates.length > 0) {
+    // Sort: Swedish first, then by length
+    candidates.sort((a, b) => {
+      if (a.isSv !== b.isSv) return b.isSv - a.isSv;
+      return b.len - a.len;
+    });
+    return candidates[0].text;
+  }
+
+  // Try H1 + body content as fallback for single-event pages
+  const h1 = $('h1').first().text().trim();
+  const articleText = $('main, [role="main"], article').first().text()
+    .replace(/\s+/g, ' ').trim();
+  if (articleText.length >= 100) return articleText.slice(0, 800);
+
+  // Last resort: full body text
+  const bodyText = $('body').text().replace(/\s+/g, ' ').trim();
+  if (bodyText.length >= 100) return bodyText.slice(0, 800);
+
+  return null;
+}
+
+// ─── Worker fetch ────────────────────────────────────────────────────────────
+
+async function fetchHtml(url) {
+  try {
+    const r = await fetch('https://eventpulse-fetch-worker.eventpulsefetch.workers.dev/fetch', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ url }),
+    });
+    if (!r.ok) return null;
+    return await r.text();
+  } catch {
+    return null;
+  }
+}
+
+// ─── Main strategy pipeline ──────────────────────────────────────────────────
+
+async function findDescription(html) {
+  if (!html || html.length < 200) return null;
+  // Try strategies in priority order
+  return extractFromBrokenJsonLd(html)
+      || extractFromMetaTags(html)
+      || extractFromBody(html);
+}
+
+// ─── Database operations ──────────────────────────────────────────────────────────
+
+const DEFAULT_SOURCES = [
+  'sthlmlist', 'gota-lejon', 'gratisistockholm', 'kultur-stockholm',
+  'jarfalla', 'sodrateatern', 'china-teatern', 'konstkalendern', 'intiman',
+  'medborgarhuset-2', 'fasching', 'eventbrite-discovery', 'arkdes',
+  'thatsup-stockholm-articles', 'allevents-in', 'spelning-se', 'kth-2',
+  'berwaldhallen', 'lokalhelhet-calendar', 'staffan', 'lysekil',
+  'kultur-stockholm-calendar'
+];
+
+const TARGET_SOURCES = process.argv.length > 2
+  ? process.argv.slice(2)
+  : DEFAULT_SOURCES;
+
+async function fetchEventsForSource(source) {
+  const events = [];
+  let from = 0;
+  while (true) {
+    const { data, error } = await supabase.from('events')
+      .select('id, ticket_url, description_sv, description_en')
+      .eq('source', source)
+      .not('ticket_url', 'is', null)
+      .or('description_sv.is.null,description_en.is.null')
+      .range(from, from + 999);
+    if (error) throw error;
+    if (!data || data.length === 0) break;
+    events.push(...data);
+    if (data.length < 1000) break;
+    from += 1000;
+  }
+  return events;
+}
+
+async function main() {
+  const startTime = Date.now();
+  console.log(`[backfill-deep] BEGIN ${new Date().toISOString()}`);
+  console.log(`[backfill-deep] targets: ${TARGET_SOURCES.join(', ')}`);
+
+  let totalUpdated = 0, totalNoUrl = 0, totalNoDesc = 0, totalErrored = 0;
+  const summary = [];
+
+  for (const source of TARGET_SOURCES) {
+    const sourceStart = Date.now();
+    let events;
+    try {
+      events = await fetchEventsForSource(source);
+    } catch (e) {
+      console.log(`  [${source}] fetch failed: ${e.message}`);
+      continue;
+    }
+    if (events.length === 0) {
+      summary.push({ source, total: 0, updated: 0, noDesc: 0 });
+      continue;
+    }
+
+    let sourceUpdated = 0, sourceNoDesc = 0;
+    const seen = new Set();
+    const uniqUrls = [];
+    for (const e of events) {
+      if (seen.has(e.ticket_url)) continue;
+      seen.add(e.ticket_url);
+      uniqUrls.push({ url: e.ticket_url, ids: events.filter(x => x.ticket_url === e.ticket_url).map(x => x.id) });
+    }
+    console.log(`\n[${source}] ${events.length} events / ${uniqUrls.length} unique URLs`);
+
+    for (const { url, ids } of uniqUrls) {
+      try {
+        const html = await fetchHtml(url);
+        if (!html || html.length < 200) {
+          sourceNoDesc++;
+          continue;
+        }
+        const desc = await findDescription(html);
+        if (!desc || desc.length < 20) {
+          sourceNoDesc++;
+          continue;
+        }
+        const { error } = await supabase.from('events')
+          .update({ description_sv: desc, description_en: desc })
+          .in('id', ids);
+        if (error) throw error;
+        sourceUpdated += ids.length;
+      } catch (e) {
+        sourceNoDesc++;
+      }
+    }
+
+    console.log(`  [${source}] updated ${sourceUpdated} | no-desc ${sourceNoDesc} | ${Math.round((Date.now() - sourceStart)/1000)}s`);
+    summary.push({ source, total: events.length, updated: sourceUpdated, noDesc: sourceNoDesc });
+    totalUpdated += sourceUpdated;
+    totalNoDesc += sourceNoDesc;
+  }
+
+  console.log(`\n[backfill-deep] DONE in ${Math.round((Date.now() - startTime)/1000)}s`);
+  console.log(`  Total updated: ${totalUpdated}`);
+  console.log(`  Total no-description-found: ${totalNoDesc}`);
+  console.log('\nPer source:');
+  for (const s of summary) {
+    if (s.total === 0) continue;
+    console.log(`  ${s.source.padEnd(35)} ${s.updated} av ${s.total} (no-desc: ${s.noDesc})`);
+  }
+}
+
+main().catch(e => { console.error('FATAL:', e); process.exit(1); });
