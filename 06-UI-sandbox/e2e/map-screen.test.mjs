@@ -164,6 +164,78 @@ test('viewportFromCenter: zoom-in projicerar samma lat/lng till mindre pixel-rö
   );
 });
 
+test('visibleBoundsFromAsset: default offset (0,0) = centrerad', () => {
+  const { visibleBoundsFromAsset, ZOOM_ASSETS } = projection;
+  const asset = ZOOM_ASSETS[0]; // z=11
+  const size = { width: 360, height: 454 };
+  const bounds = visibleBoundsFromAsset(asset.assetBounds, asset.assetSize, size);
+  // Default ska visa asset:t centrerat — visible center = asset center
+  const centerLng = (bounds.minLng + bounds.maxLng) / 2;
+  const centerLat = (bounds.minLat + bounds.maxLat) / 2;
+  const assetCenterLng = (asset.assetBounds.minLng + asset.assetBounds.maxLng) / 2;
+  const assetCenterLat = (asset.assetBounds.minLat + asset.assetBounds.maxLat) / 2;
+  assertStrict.ok(
+    Math.abs(centerLng - assetCenterLng) < 1e-3,
+    `centerLng ${centerLng} ska vara ≈ assetCenterLng ${assetCenterLng}`,
+  );
+  assertStrict.ok(
+    Math.abs(centerLat - assetCenterLat) < 1e-3,
+    `centerLat ${centerLat} ska vara ≈ assetCenterLat ${assetCenterLat}`,
+  );
+});
+
+test('visibleBoundsFromAsset: positiv offset = visa högra delen av asset', () => {
+  const { visibleBoundsFromAsset, ZOOM_ASSETS } = projection;
+  const asset = ZOOM_ASSETS[0];
+  const size = { width: 360, height: 454 };
+  const bounds = visibleBoundsFromAsset(asset.assetBounds, asset.assetSize, size, {
+    assetOffsetX: 200, assetOffsetY: 0,
+  });
+  // Med positiv X-offset ska centerLng flyttas österut.
+  const defaultBounds = visibleBoundsFromAsset(asset.assetBounds, asset.assetSize, size);
+  const centerLngShifted = (bounds.minLng + bounds.maxLng) / 2;
+  const centerLngDefault = (defaultBounds.minLng + defaultBounds.maxLng) / 2;
+  assertStrict.ok(
+    centerLngShifted > centerLngDefault,
+    `positiv X-offset ska flytta centerLng österut (shifted=${centerLngShifted}, default=${centerLngDefault})`,
+  );
+});
+
+test('panOffsetForCenter + visibleBoundsFromAsset är inverser', () => {
+  const { visibleBoundsFromAsset, panOffsetForCenter, ZOOM_ASSETS } = projection;
+  const asset = ZOOM_ASSETS[0];
+  const size = { width: 360, height: 454 };
+  const targetCenter = { lat: 59.40, lng: 18.10 };
+  const offset = panOffsetForCenter(asset.assetBounds, asset.assetSize, size, targetCenter);
+  const bounds = visibleBoundsFromAsset(asset.assetBounds, asset.assetSize, size, offset);
+  const centerLng = (bounds.minLng + bounds.maxLng) / 2;
+  const centerLat = (bounds.minLat + bounds.maxLat) / 2;
+  assertStrict.ok(
+    Math.abs(centerLng - targetCenter.lng) < 1e-3,
+    `centerLng ${centerLng} ska matcha target ${targetCenter.lng}`,
+  );
+  assertStrict.ok(
+    Math.abs(centerLat - targetCenter.lat) < 1e-3,
+    `centerLat ${centerLat} ska matcha target ${targetCenter.lat}`,
+  );
+});
+
+test('panOffsetForCenter: klipper till giltiga gränser', () => {
+  const { panOffsetForCenter, ZOOM_ASSETS } = projection;
+  const asset = ZOOM_ASSETS[0]; // z=11, asset 1080×1362, viewport 360×454
+  const size = { width: 360, height: 454 };
+  // Stockholm bbox är lng 17.65-18.49 — utanför asset bounds (16.81-19.33)
+  const targetCenter = { lat: 50.0, lng: 10.0 };
+  const offset = panOffsetForCenter(asset.assetBounds, asset.assetSize, size, targetCenter);
+  const initX = (asset.assetSize.width - size.width) / 2;
+  const minOffX = -initX;
+  const maxOffX = asset.assetSize.width - size.width - initX;
+  assertStrict.ok(
+    offset.assetOffsetX >= minOffX && offset.assetOffsetX <= maxOffX,
+    `assetOffsetX ${offset.assetOffsetX} ska vara inom [${minOffX}, ${maxOffX}]`,
+  );
+});
+
 test('projektion (Mercator): Stockholm centrum projiceras till medial x/y', () => {
   const { projectViewport, STOCKHOLM_FALLBACK, STOCKHOLM_VIEWPORT } = projection;
   const { x, y, visible } = projectViewport(

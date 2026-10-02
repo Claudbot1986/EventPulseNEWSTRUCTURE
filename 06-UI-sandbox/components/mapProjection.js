@@ -59,6 +59,38 @@ const STOCKHOLM_ZOOM = 11;
 const ASSET_WIDTH = 360;
 const ASSET_HEIGHT = 454;
 
+// Asset-storlek och bounds för varje z-nivå. Assets är 3× viewport-
+// storlek så vi har pan-rumner inom varje asset. assetBounds är det
+// geografiska område som hela asset:t täcker; panOffset bestämmer vilken
+// del som visas i viewport.
+export const ZOOM_ASSETS = [
+  {
+    zoom: 11,
+    assetSize: { width: 1080, height: 1362 },
+    assetBounds: { minLat: 58.511, maxLat: 60.149, minLng: 16.81, maxLng: 19.33 },
+  },
+  {
+    zoom: 13,
+    assetSize: { width: 1080, height: 1362 },
+    assetBounds: { minLat: 59.1245, maxLat: 59.5355, minLng: 17.755, maxLng: 18.385 },
+  },
+  {
+    zoom: 15,
+    assetSize: { width: 1080, height: 1362 },
+    assetBounds: { minLat: 59.2786, maxLat: 59.3814, minLng: 17.991, maxLng: 18.149 },
+  },
+];
+
+export function pickZoomAsset(targetZoom) {
+  let best = ZOOM_ASSETS[0];
+  let bestDist = Math.abs(targetZoom - best.zoom);
+  for (const a of ZOOM_ASSETS) {
+    const d = Math.abs(targetZoom - a.zoom);
+    if (d < bestDist) { best = a; bestDist = d; }
+  }
+  return best;
+}
+
 // --- Hjälpare --------------------------------------------------------------
 
 const _lngToWorldPx = (lng, zoom) => ((lng + 180) / 360) * (1 << zoom) * TILE_SIZE;
@@ -267,4 +299,73 @@ export function jitterFallback(event) {
 // Bakåtkompatibilitet: gamla anropsställen använder projectToXY.
 export function projectToXY(lat, lng, bounds, size) {
   return projectViewport(lat, lng, getViewport(bounds, size));
+}
+
+/**
+ * Härled synliga bounds inom ett större asset baserat på pan-offset.
+ * Asset:t täcker hela assetBounds; vi visar en viewport-stor window som
+ * förskjutits med assetOffsetX/Y (default = centrerad).
+ *
+ * Returnerar bounds som täcker EXAKT det samma latitud/longitud som
+ * det synliga området — så projectViewport ger rätt pin-positioner.
+ *
+ * @param {{minLat,maxLat,minLng,maxLng}} assetBounds
+ * @param {{width,height}} assetSize   hela asset:ets pixel-storlek
+ * @param {{width,height}} size        viewport-storlek
+ * @param {{assetOffsetX,assetOffsetY}} panOffset   default {0,0} = centrerad
+ * @returns {{minLat,maxLat,minLng,maxLng}}
+ */
+export function visibleBoundsFromAsset(assetBounds, assetSize, size, panOffset = { assetOffsetX: 0, assetOffsetY: 0 }) {
+  const initialX = (assetSize.width - size.width) / 2;
+  const initialY = (assetSize.height - size.height) / 2;
+  const visLeft = Math.max(0, Math.min(assetSize.width - size.width, initialX + panOffset.assetOffsetX));
+  const visTop = Math.max(0, Math.min(assetSize.height - size.height, initialY + panOffset.assetOffsetY));
+
+  const lngRange = assetBounds.maxLng - assetBounds.minLng;
+  const latRange = assetBounds.maxLat - assetBounds.minLat;
+  const minLng = assetBounds.minLng + (visLeft / assetSize.width) * lngRange;
+  const maxLng = assetBounds.minLng + ((visLeft + size.width) / assetSize.width) * lngRange;
+  const maxLat = assetBounds.maxLat - (visTop / assetSize.height) * latRange;
+  const minLat = assetBounds.maxLat - ((visTop + size.height) / assetSize.height) * latRange;
+
+  return { minLat, maxLat, minLng, maxLng };
+}
+
+/**
+ * Beräkna assetOffset (inom asset) som centrerar viewport på givet lat/lng.
+ * Användbart när användaren zoomar in till en ny z-nivå — vi vill
+ * att center-punkten ska matcha.
+ *
+ * @param {{minLat,maxLat,minLng,maxLng}} assetBounds
+ * @param {{width,height}} assetSize
+ * @param {{width,height}} size
+ * @param {{lat,lng}} targetCenter
+ * @returns {{assetOffsetX,assetOffsetY}}
+ */
+export function panOffsetForCenter(assetBounds, assetSize, size, targetCenter) {
+  const lngRange = assetBounds.maxLng - assetBounds.minLng;
+  const latRange = assetBounds.maxLat - assetBounds.minLat;
+  // Asset pixel av target-center:
+  const cx = ((targetCenter.lng - assetBounds.minLng) / lngRange) * assetSize.width;
+  const cy = ((assetBounds.maxLat - targetCenter.lat) / latRange) * assetSize.height;
+  // Vi vill att viewport-center ska visa asset pixel cx,cy:
+  // viewport-center = (size.width/2, size.height/2) i viewport
+  // viewport top-left = (visLeft, visTop) i asset
+  // viewport center = (visLeft + size.width/2, visTop + size.height/2) i asset
+  // Sätt den lika med (cx, cy):
+  const visLeft = cx - size.width / 2;
+  const visTop = cy - size.height / 2;
+  const initialX = (assetSize.width - size.width) / 2;
+  const initialY = (assetSize.height - size.height) / 2;
+  // panOffset = visLeft - initialX (assetOffsetX är hur mycket vi flyttat från centrerad)
+  let assetOffsetX = visLeft - initialX;
+  let assetOffsetY = visTop - initialY;
+  // Klipp till giltiga gränser så viewport håller sig inom asset.
+  const minVisX = 0;
+  const maxVisX = assetSize.width - size.width;
+  const minVisY = 0;
+  const maxVisY = assetSize.height - size.height;
+  assetOffsetX = Math.max(minVisX - initialX, Math.min(maxVisX - initialX, assetOffsetX));
+  assetOffsetY = Math.max(minVisY - initialY, Math.min(maxVisY - initialY, assetOffsetY));
+  return { assetOffsetX, assetOffsetY };
 }

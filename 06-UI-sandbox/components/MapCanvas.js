@@ -2,30 +2,32 @@
 // + MapPinLayer (pinnar/klustring/tooltip) ovanpå, plus pinch+pan.
 //
 // Vad detta lager gör:
-//   1. Håller dynamisk center + zoom state.
+//   1. Håller state: center (lat/lng), zoom, och panOffset
+//      (assetOffsetX/Y inom asset:t). Dessa är synkroniserade.
 //   2. Beräknar pixel-storlek (bredd från onLayout, höjd = bredd /
-//      STOCKHOLM_ASSET_ASPECT) och bygger en `viewport` från center+zoom.
-//   3. Hanterar pinch-gester (2 fingrar → zoom) och pan-gester (1 finger
-//      → pan via PanResponder; kräver ingen native build).
-//   4. Renderar MapBaseLayer (multi-zoom OSM-tiles eller grid) +
-//      MapPinLayer (pinnar/klustring/tooltip) staplade på samma yta.
+//      STOCKHOLM_ASSET_ASPECT).
+//   3. Hanterar pinch (2 fingrar → zoom + justering så focal stannar på
+//      samma pixel) och pan (1 finger → panOffset) via PanResponder.
+//   4. Renderar MapBaseLayer (multi-zoom OSM-tiles 3× storlek) +
+//      MapPinLayer (pinnar/klustring/tooltip) med samma visibleBounds.
 //
 // Vad detta lager INTE gör:
 //   - Event-hämtning (bor i MapScreen)
 //   - Filter-logik (bor i MapScreen)
-//   - Tile-nedladdning (bor i MapBaseLayer eller framtida provider)
+//   - Tile-nedladdning (bor i MapBaseLayer)
 //   - Pin-projection (bor i MapPinLayer via mapProjection.js)
 //
 // Provider-byte: byt endast `baseKind` prop eller använd en annan
 // MapBaseLayer-komponent (t.ex. WebViewLeafletBaseLayer när den finns).
-// Inget annat i kedjan berörs.
 
 import { useRef, useState } from 'react';
 import { PanResponder, StyleSheet, View } from 'react-native';
 import {
   STOCKHOLM_CENTER,
   STOCKHOLM_ASSET_ASPECT,
-  viewportFromCenter,
+  pickZoomAsset,
+  visibleBoundsFromAsset,
+  panOffsetForCenter,
 } from './mapProjection';
 import MapBaseLayer from './MapBaseLayer';
 import MapPinLayer from './MapPinLayer';
@@ -52,17 +54,19 @@ export default function MapCanvas({
   const [measuredWidth, setMeasuredWidth] = useState(0);
   const [center, setCenter] = useState({ lat: initialCenter.lat, lng: initialCenter.lng });
   const [zoom, setZoom] = useState(initialZoom);
+  const [panOffset, setPanOffset] = useState({ assetOffsetX: 0, assetOffsetY: 0 });
 
-  // Refs som alltid speglar state — så PanResponder-closure kan se
-  // senaste värden utan att vi re-skapar den varje render.
+  // Refs som speglar state för PanResponder-closure.
   const centerRef = useRef(center);
   const zoomRef = useRef(zoom);
+  const panOffsetRef = useRef(panOffset);
   const widthRef = useRef(0);
   const heightRef = useRef(0);
   centerRef.current = center;
   zoomRef.current = zoom;
+  panOffsetRef.current = panOffset;
 
-  // Gesture refs — håller initial-state per gest.
+  // Gesture refs.
   const pinchRef = useRef(null);
   const panRef = useRef(null);
 
@@ -77,15 +81,28 @@ export default function MapCanvas({
   const height = Math.round(width / STOCKHOLM_ASSET_ASPECT);
   const size = { width, height };
 
-  // Bygg viewport från aktuell center + zoom + size.
+  // Synkronisera center och panOffset — när ena ändras, uppdatera den andra.
+  const updateCenterFromPan = (newPanOffset, currentZoom) => {
+    const asset = pickZoomAsset(currentZoom);
+    const bounds = visibleBoundsFromAsset(asset.assetBounds, asset.assetSize, size, newPanOffset);
+    return {
+      lat: (bounds.minLat + bounds.maxLat) / 2,
+      lng: (bounds.minLng + bounds.maxLng) / 2,
+    };
+  };
+  const updatePanFromCenter = (newCenter, currentZoom) => {
+    const asset = pickZoomAsset(currentZoom);
+    return panOffsetForCenter(asset.assetBounds, asset.assetSize, size, newCenter);
+  };
+
+  // Bygg synliga viewport-bounds via panOffset (SINGLE SOURCE OF TRUTH).
+  const asset = pickZoomAsset(zoom);
+  const visibleBounds = visibleBoundsFromAsset(asset.assetBounds, asset.assetSize, size, panOffset);
   const viewport = viewportProp
     ? { ...viewportProp, width, height }
-    : viewportFromCenter(center.lat, center.lng, zoom, size);
+    : { width, height, bounds: visibleBounds, zoom, center };
 
   // PanResponder ---------------------------------------------------------
-  // VIKTIGT: onStartShouldSetPanResponder = false (så Pressable-pinnar
-  // får sina taps). onMoveShouldSetPanResponder = true (så PanResponder
-  // tar över så snart användaren drar).
   const panResponder = useRef(
     PanResponder.create({
       onStartShouldSetPanResponder: () => false,
@@ -104,6 +121,7 @@ export default function MapCanvas({
             initialDistance: Math.sqrt(dx * dx + dy * dy),
             initialZoom: zoomRef.current,
             initialCenter: { ...centerRef.current },
+            initialPanOffset: { ...panOffsetRef.current },
             focalX: (t0.pageX + t1.pageX) / 2,
             focalY: (t0.pageY + t1.pageY) / 2,
           };
@@ -112,7 +130,7 @@ export default function MapCanvas({
           panRef.current = {
             initialTouchX: t.pageX,
             initialTouchY: t.pageY,
-            initialCenter: { ...centerRef.current },
+            initialPanOffset: { ...panOffsetRef.current },
           };
         }
       },
@@ -123,7 +141,38 @@ export default function MapCanvas({
         const H = heightRef.current;
         if (W <= 0 || H <= 0) return;
 
-        // 2 fingers = pinch (zoom + justering så focal stannar på samma pixel).
+        // 1 finger = pan (uppdatera panOffset).
+        if (touches.length === 1 && panRef.current && !pinchRef.current) {
+          const t = touches[0];
+          // Användaren drar höger → vi vill se content till höger →
+          // viewport flyttar höger inom asset → assetOffsetX ökar.
+          // image.left = -(initialX + assetOffsetX) → om assetOffsetX
+          // ökar blir left mer negativt → bilden flyttar vänster.
+          // På skärmen: nya delar av asset syns på höger sida ✓
+          const dragDx = t.pageX - panRef.current.initialTouchX;
+          const dragDy = t.pageY - panRef.current.initialTouchY;
+          const newPan = { ...panRef.current.initialPanOffset };
+          // Klipp till giltiga offset-gränser baserat på asset-storlek.
+          const assetInfo = pickZoomAsset(zoomRef.current);
+          const initX = (assetInfo.assetSize.width - W) / 2;
+          const initY = (assetInfo.assetSize.height - H) / 2;
+          const minOffX = -initX; // viewport vid vänsterkanten av asset
+          const maxOffX = assetInfo.assetSize.width - W - initX; // viewport vid högerkanten
+          const minOffY = -initY;
+          const maxOffY = assetInfo.assetSize.height - H - initY;
+          newPan.assetOffsetX = Math.max(minOffX, Math.min(maxOffX, panRef.current.initialPanOffset.assetOffsetX + dragDx));
+          newPan.assetOffsetY = Math.max(minOffY, Math.min(maxOffY, panRef.current.initialPanOffset.assetOffsetY + dragDy));
+          // Uppdatera både panOffset och center.
+          const newCenter = updateCenterFromPan(newPan, zoomRef.current);
+          setPanOffset(newPan);
+          setCenter(newCenter);
+          if (onViewportChange) {
+            onViewportChange({ center: newCenter, zoom: zoomRef.current });
+          }
+          return;
+        }
+
+        // 2 fingers = pinch (zoom + center-shift så focal stannar på samma pixel).
         if (touches.length >= 2 && pinchRef.current) {
           const t0 = touches[0];
           const t1 = touches[1];
@@ -134,67 +183,63 @@ export default function MapCanvas({
           let newZoom = pinchRef.current.initialZoom + Math.log2(ratio);
           newZoom = Math.max(TOKENS.gesture.MIN_ZOOM,
                              Math.min(TOKENS.gesture.MAX_ZOOM, newZoom));
-          if (newZoom === zoomRef.current && pinchRef.current.initialZoom === zoomRef.current) {
-            // ingen zoom-ändring, skippa
-          }
 
-          // Focal lat/lng (vid start av pinch).
-          const initViewport = viewportFromCenter(
-            pinchRef.current.initialCenter.lat,
-            pinchRef.current.initialCenter.lng,
-            pinchRef.current.initialZoom,
-            { width: W, height: H },
+          // Focal lat/lng vid start av pinch.
+          const initAsset = pickZoomAsset(pinchRef.current.initialZoom);
+          const initBounds = visibleBoundsFromAsset(
+            initAsset.assetBounds, initAsset.assetSize, { width: W, height: H },
+            pinchRef.current.initialPanOffset,
           );
           const focalX = pinchRef.current.focalX;
           const focalY = pinchRef.current.focalY;
           const focalLng =
-            initViewport.bounds.minLng +
-            (focalX / W) * (initViewport.bounds.maxLng - initViewport.bounds.minLng);
+            initBounds.minLng +
+            (focalX / W) * (initBounds.maxLng - initBounds.minLng);
           const focalLat =
-            initViewport.bounds.maxLat -
-            (focalY / H) * (initViewport.bounds.maxLat - initViewport.bounds.minLat);
+            initBounds.maxLat -
+            (focalY / H) * (initBounds.maxLat - initBounds.minLat);
 
-          // Var hamnar focal lat/lng med newZoom + initialCenter?
-          const newViewport = viewportFromCenter(
-            pinchRef.current.initialCenter.lat,
-            pinchRef.current.initialCenter.lng,
-            newZoom,
-            { width: W, height: H },
+          // Hitta asset för newZoom och räkna ut var focal skulle hamna
+          // med newZoom + initialPanOffset.
+          const newAsset = pickZoomAsset(newZoom);
+          const newBounds = visibleBoundsFromAsset(
+            newAsset.assetBounds, newAsset.assetSize, { width: W, height: H },
+            pinchRef.current.initialPanOffset,
           );
           const newFocalX =
-            ((focalLng - newViewport.bounds.minLng) /
-              (newViewport.bounds.maxLng - newViewport.bounds.minLng)) * W;
+            ((focalLng - newBounds.minLng) /
+              (newBounds.maxLng - newBounds.minLng)) * W;
           const newFocalY =
-            ((newViewport.bounds.maxLat - focalLat) /
-              (newViewport.bounds.maxLat - newViewport.bounds.minLat)) * H;
+            ((newBounds.maxLat - focalLat) /
+              (newBounds.maxLat - newBounds.minLat)) * H;
 
-          // Skifta center så att focal stannar på samma skärmposition.
+          // Skifta panOffset så att focal stannar på samma pixel.
+          // Focal ska flytta (snässefocal - newFocal) i motsatt enhet
+          // av panOffset.
           const dX = focalX - newFocalX;
           const dY = focalY - newFocalY;
-          const degPerPxNew = 360 / (256 * (1 << newZoom));
-          const adjustedLat = pinchRef.current.initialCenter.lat - dY * degPerPxNew;
-          const adjustedLng = pinchRef.current.initialCenter.lng + dX * degPerPxNew;
+          // Använd asset pixel-to-asset-pixel-relationen (asset-storlek
+          // / visible lng/lat range).
+          const newPan = {
+            assetOffsetX: pinchRef.current.initialPanOffset.assetOffsetX + dX,
+            assetOffsetY: pinchRef.current.initialPanOffset.assetOffsetY + dY,
+          };
+          // Klipp till giltiga gränser.
+          const initX = (newAsset.assetSize.width - W) / 2;
+          const initY = (newAsset.assetSize.height - H) / 2;
+          const minOffX = -initX;
+          const maxOffX = newAsset.assetSize.width - W - initX;
+          const minOffY = -initY;
+          const maxOffY = newAsset.assetSize.height - H - initY;
+          newPan.assetOffsetX = Math.max(minOffX, Math.min(maxOffX, newPan.assetOffsetX));
+          newPan.assetOffsetY = Math.max(minOffY, Math.min(maxOffY, newPan.assetOffsetY));
 
-          setCenter({ lat: adjustedLat, lng: adjustedLng });
+          const newCenter = updateCenterFromPan(newPan, newZoom);
+          setPanOffset(newPan);
+          setCenter(newCenter);
           setZoom(newZoom);
           if (onViewportChange) {
-            onViewportChange({ center: { lat: adjustedLat, lng: adjustedLng }, zoom: newZoom });
-          }
-          return;
-        }
-
-        // 1 finger = pan.
-        if (touches.length === 1 && panRef.current) {
-          const t = touches[0];
-          const dX = t.pageX - panRef.current.initialTouchX;
-          const dY = t.pageY - panRef.current.initialTouchY;
-          // Mercator: deg/px = 360 / (256 * 2^Z).
-          const degPerPx = 360 / (256 * (1 << zoomRef.current));
-          const newLat = panRef.current.initialCenter.lat - dY * degPerPx;
-          const newLng = panRef.current.initialCenter.lng + dX * degPerPx;
-          setCenter({ lat: newLat, lng: newLng });
-          if (onViewportChange) {
-            onViewportChange({ center: { lat: newLat, lng: newLng }, zoom: zoomRef.current });
+            onViewportChange({ center: newCenter, zoom: newZoom });
           }
         }
       },
@@ -218,7 +263,12 @@ export default function MapCanvas({
       accessibilityLabel={`Karta med ${events.length} events i Stockholm-området`}
       {...panResponder.panHandlers}
     >
-      <MapBaseLayer kind={baseKind} viewport={viewport} testID={`${testID}-base`} />
+      <MapBaseLayer
+        kind={baseKind}
+        viewport={viewport}
+        panOffset={panOffset}
+        testID={`${testID}-base`}
+      />
       <MapPinLayer events={events} viewport={viewport} testID={`${testID}-pins`} />
     </View>
   );

@@ -7,7 +7,8 @@
 // komponent — pin/cluster/tooltip/filter-logiken rörs inte.
 //
 // Kontrakt för en base-layer:
-//   - Tar emot `viewport` (width, height, bounds, zoom).
+//   - Tar emot `viewport` (width, height, bounds, zoom) och
+//     `panOffset` (assetOffsetX/Y, asset-storlek).
 //   - Renderar inom exakt viewport-ets pixel-koordinater.
 //   - Synkroniserar med samma Mercator-projektion som pin-lagret.
 //
@@ -16,25 +17,22 @@
 //                          Använd för offline-test eller som fallback.
 //   StaticTilesBaseLayer — för-bakade OSM-tile-tillgångar (Mercator-
 //                          korrekt) för flera z-nivåer (11/13/15).
-//                          Användaren kan pinch:a för att växla.
-//
-// Framtida implementationer (egna filer):
-//   WebViewLeafletBaseLayer, ReactNativeMapsBaseLayer, etc.
-//   Samma kontrakt. Samma `viewport`-prop. Noll påverkan på pin-lagret.
+//                          3× större än viewport så vi har pan-rumner
+//                          inom asset. Användaren kan pinch:a för att
+//                          växla och pan:a för att röra sig.
 
 import { Image, StyleSheet, Text, View } from 'react-native';
 
 // Tillgängliga zoom-nivåer och deras asset-källor. Snap-point: om
 // viewport.zoom faller mellan två nivåer används den som är närmast.
-// När du vill lägga till fler z-nivåer: bygg en ny asset via
-// scripts/build-stockholm-tiles.mjs och lägg till här.
+// Varje asset är 3× viewport-storlek så vi har pan-rumner.
 const ZOOM_LEVELS = [
-  { zoom: 11, source: require('../assets/stockholm-tiles-z11.png'), label: 'z11 overview' },
-  { zoom: 13, source: require('../assets/stockholm-tiles-z13.png'), label: 'z13 neighborhood' },
-  { zoom: 15, source: require('../assets/stockholm-tiles-z15.png'), label: 'z15 street' },
+  { zoom: 11, source: require('../assets/stockholm-tiles-z11.png'), label: 'z11 overview', assetSize: { width: 1080, height: 1362 }, assetBounds: { minLat: 58.511, maxLat: 60.149, minLng: 16.81, maxLng: 19.33 } },
+  { zoom: 13, source: require('../assets/stockholm-tiles-z13.png'), label: 'z13 neighborhood', assetSize: { width: 1080, height: 1362 }, assetBounds: { minLat: 59.1245, maxLat: 59.5355, minLng: 17.755, maxLng: 18.385 } },
+  { zoom: 15, source: require('../assets/stockholm-tiles-z15.png'), label: 'z15 street', assetSize: { width: 1080, height: 1362 }, assetBounds: { minLat: 59.2786, maxLat: 59.3814, minLng: 17.991, maxLng: 18.149 } },
 ];
 
-// Hitta närmaste tillgängliga z-nivå för en given fractional zoom.
+// Hitta närmaste tillgänglig z-nivå för en given fractional zoom.
 function pickZoomLevel(targetZoom) {
   let best = ZOOM_LEVELS[0];
   let bestDist = Math.abs(targetZoom - best.zoom);
@@ -70,13 +68,8 @@ const TOKENS = {
 
 /**
  * GridBaseLayer — bakgrund med horisontella + vertikala grid-linjer.
- *
- * Använd för:
- *   - offline-test (inga tiles krävs)
- *   - verifiering av pin-projection utan visuell distraktion
- *   - sandbox-fallback om tiles-asset saknas
  */
-export function GridBaseLayer({ viewport, style, testID = 'map-base-grid' }) {
+export function GridBaseLayer({ viewport, panOffset, style, testID = 'map-base-grid' }) {
   const { width, height } = viewport;
   const lines = [];
   for (let i = 0; i <= TOKENS.space.gridLines; i++) {
@@ -116,22 +109,20 @@ export function GridBaseLayer({ viewport, style, testID = 'map-base-grid' }) {
 /**
  * StaticTilesBaseLayer — för-bakade OSM-tile-tillgångar (Mercator-korrekt).
  *
- * Väljer automatiskt rätt asset baserat på viewport.zoom:
- *   - z ≈ 11 → stockholm-tiles-z11.png (hela Stockholm)
- *   - z ≈ 13 → stockholm-tiles-z13.png (1/4 område)
- *   - z ≈ 15 → stockholm-tiles-z15.png (Sergels torg närbild)
- *
- * Visar en liten z-badge i hörnet så man ser vilken zoom-nivå som är
- * aktiv (särskilt viktigt under pinch när fractional zoom skiftar
- * snabbtav).
+ * Väljer automatiskt rätt asset baserat på viewport.zoom (z11/z13/z15).
+ * Varje asset är 3× viewport-storlek så vi kan pan:a inom asset via
+ * `panOffset` (assetOffsetX/Y) — bildens position förskjuts inom en
+ * overflow:hidden-wrapper så användaren ser ett annat varsellt område.
  *
  * Props:
- *   - viewport: { width, height, zoom, bounds, center? } (obligatoriskt)
+ *   - viewport: { width, height, zoom, bounds }
+ *   - panOffset: { assetOffsetX, assetOffsetY } (default 0,0 = centrerad)
  *   - resizeMode: 'cover' | 'contain' | 'stretch' | 'center' (default 'contain')
- *   - style: extra styles för wrapper
+ *   - showZoomBadge: boolean (default true)
  */
 export function StaticTilesBaseLayer({
   viewport,
+  panOffset = { assetOffsetX: 0, assetOffsetY: 0 },
   resizeMode = 'contain',
   style,
   testID = 'map-base-static-tiles',
@@ -139,6 +130,13 @@ export function StaticTilesBaseLayer({
 }) {
   const { width, height, zoom } = viewport;
   const level = pickZoomLevel(zoom);
+  const { assetSize } = level;
+  // Initial offset = halva skillnaden mellan asset och viewport → centrerad.
+  const initialX = (assetSize.width - width) / 2;
+  const initialY = (assetSize.height - height) / 2;
+  const left = -(initialX + panOffset.assetOffsetX);
+  const top = -(initialY + panOffset.assetOffsetY);
+
   return (
     <View
       testID={testID}
@@ -147,7 +145,7 @@ export function StaticTilesBaseLayer({
     >
       <Image
         source={level.source}
-        style={{ width, height }}
+        style={[styles.assetImage, { width: assetSize.width, height: assetSize.height, left, top }]}
         resizeMode={resizeMode}
         pointerEvents="none"
       />
@@ -169,10 +167,11 @@ export function StaticTilesBaseLayer({
 export default function MapBaseLayer({
   kind = 'tiles',
   viewport,
+  panOffset,
   ...rest
 }) {
-  if (kind === 'grid') return <GridBaseLayer viewport={viewport} {...rest} />;
-  return <StaticTilesBaseLayer viewport={viewport} {...rest} />;
+  if (kind === 'grid') return <GridBaseLayer viewport={viewport} panOffset={panOffset} {...rest} />;
+  return <StaticTilesBaseLayer viewport={viewport} panOffset={panOffset} {...rest} />;
 }
 
 const styles = StyleSheet.create({
@@ -181,6 +180,9 @@ const styles = StyleSheet.create({
     borderRadius: 0,
     overflow: 'hidden',
     position: 'relative',
+  },
+  assetImage: {
+    position: 'absolute',
   },
   gridLine: {
     position: 'absolute',
