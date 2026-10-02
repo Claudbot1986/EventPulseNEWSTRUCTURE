@@ -229,3 +229,223 @@ describe('universal-extractor — Strategy A2: nested microdata', () => {
     expect(Array.isArray(evt.url) || typeof evt.url === 'string').toBe(true);
   });
 });
+
+// ──────────────────────────────────────────────────────────────────────────
+// 2026-10-02 — 5.3 NewsArticle / WebPage wrapper recursion.
+//
+// Verifierar att universal-extractor plockar Event-typade objekt som är
+// nested i NewsArticle.about[] eller WebPage.mainEntity.
+//
+// Före 5.3: extractFromGraph filtrerade bort NewsArticle/WebPage items
+//           (behöll bara @type=Event), så events i about[]/mainEntity
+//           försvann. ~5-10% av description-gapet (Grupp B i planen).
+//
+// Efter 5.3: extractFromGraph rekurserar in i about[] och mainEntity
+//            och plockar Event-typade objekt.
+//
+// Cross-site-verifiering (5.3 krav — 3+ unrelated domäner eller mönster):
+//   1. thatsup.se (VERIFIED live 2026-10-02 — NewsArticle.about[] med 58
+//      events per sida). Real-world fixture.
+//   2. Wikipedia-style pattern (synthetic — WebPage.mainEntity: Event
+//      utan @graph, platt JSON-LD-blob).
+//   3. Schema.org article pattern (synthetic — Article med about: object,
+//      inte array).
+//
+// Den syntetiska fixtures testar att recursion klarar alla tre formerna
+// (om about/mainEntity är array, object, eller saknas helt). Implementat-
+// ionen är generisk och site-specifik — den enda plats accepterar är produktion-
+// kod som kör samma JSON-LD-spec.
+// ──────────────────────────────────────────────────────────────────────────
+
+function htmlWithJsonLd(jsonLd: object): string {
+  const json = JSON.stringify(jsonLd).replace(/</g, '\\u003c');
+  return `<!doctype html>
+<html lang="sv">
+<head>
+<script type="application/ld+json">${json}</script>
+</head>
+<body><h1>Test page</h1></body>
+</html>`;
+}
+
+describe('universal-extractor — Strategy A1: NewsArticle/WebPage wrapper recursion (5.3)', () => {
+  // ── Test 1: thatsup real-world pattern ───────────────────────────────────
+  it('thatsup.se: extracts Event from NewsArticle.about[] array inside @graph', () => {
+    // Real structure observed 2026-10-02 på thatsup.se/stockholm/article/-konstruktion-och-bild-pa-nacka-konsthall/
+    // NewsArticle.about[] har typiskt 39-58 nested Event-objekt med full location/address.
+    const html = htmlWithJsonLd({
+      '@context': 'https://schema.org',
+      '@graph': [
+        {
+          '@type': 'WebPage',
+          name: 'Konstruktion och bild på Nacka konsthall',
+          description:
+            'Konstruktion och bild är en utställning i Nacka konsthall av konstnären Matilda Dominique.',
+        },
+        {
+          '@type': 'NewsArticle',
+          headline: 'Konstruktion och bild på Nacka konsthall',
+          about: [
+            {
+              '@type': 'Event',
+              name: 'Konstruktion och bild — vernissage',
+              startDate: '2026-09-19T13:00',
+              endDate: '2026-11-15',
+              description: 'Vernissage den 19 september klockan 13.00.',
+              location: {
+                '@type': 'Place',
+                name: 'Nacka konsthall',
+                address: {
+                  '@type': 'PostalAddress',
+                  streetAddress: 'Nacka',
+                },
+              },
+            },
+          ],
+        },
+      ],
+    });
+    const result = extractEvents(html, 'thatsup-stockholm-articles', 'https://thatsup.se/article/test/');
+    expect(result.events.length).toBe(1);
+    expect(result.events[0].title).toBe('Konstruktion och bild — vernissage');
+    expect(result.events[0].description).toBe('Vernissage den 19 september klockan 13.00.');
+    expect(result.events[0].venue).toBe('Nacka konsthall');
+  });
+
+  it('thatsup.se: handles NewsArticle.about[] with multiple Events', () => {
+    // Same pattern but with 3 nested events — must extract ALL of them.
+    const html = htmlWithJsonLd({
+      '@context': 'https://schema.org',
+      '@graph': [
+        {
+          '@type': 'NewsArticle',
+          headline: 'Three concerts at Göta Lejon',
+          about: [
+            {
+              '@type': 'Event',
+              name: 'Concert A',
+              startDate: '2026-10-04',
+              location: { '@type': 'Place', name: 'Göta Lejon' },
+            },
+            {
+              '@type': 'Event',
+              name: 'Concert B',
+              startDate: '2026-10-05',
+              location: { '@type': 'Place', name: 'Göta Lejon' },
+            },
+            {
+              '@type': 'Event',
+              name: 'Concert C',
+              startDate: '2026-10-06',
+              location: { '@type': 'Place', name: 'Göta Lejon' },
+            },
+          ],
+        },
+      ],
+    });
+    const result = extractEvents(html, 'thatsup-multi', 'https://example.com/article/');
+    expect(result.events.length).toBe(3);
+    const titles = result.events.map((e) => e.title).sort();
+    expect(titles).toEqual(['Concert A', 'Concert B', 'Concert C']);
+  });
+
+  // ── Test 2: Wikipedia-style mainEntity pattern ───────────────────────────
+  it('Wikipedia-pattern: extracts Event from WebPage.mainEntity (object, not array)', () => {
+    // Synthetisk fixture baserad på schema.org/Wikipedia-pattern exempel.
+    // WebPage.mainEntity är ett enskilt Event-objekt (inte en array).
+    const html = htmlWithJsonLd({
+      '@context': 'https://schema.org',
+      '@type': 'WebPage',
+      name: 'Dexys Midnight Runners at Göta Lejon',
+      mainEntity: {
+        '@type': 'Event',
+        name: 'Dexys Midnight Runners',
+        startDate: '2026-10-04T20:00',
+        location: { '@type': 'Place', name: 'Göta Lejon', address: 'Götgatan 79, Stockholm' },
+        description: 'Legendary soul band returns to Stockholm',
+      },
+    });
+    const result = extractEvents(html, 'wikipedia-event', 'https://example.com/wiki/event');
+    expect(result.events.length).toBe(1);
+    expect(result.events[0].title).toBe('Dexys Midnight Runners');
+    expect(result.events[0].venue).toBe('Göta Lejon');
+  });
+
+  // ── Test 3: Schema.org Article pattern (about: object, not array) ────────
+  it('Article-pattern: extracts Event from Article.about as object (not array)', () => {
+    // Synthetisk fixture där Article har about som ett enskilt objekt.
+    const html = htmlWithJsonLd({
+      '@context': 'https://schema.org',
+      '@type': 'Article',
+      headline: 'Festival preview',
+      about: {
+        '@type': 'Event',
+        name: 'Way Down We Go Tour',
+        startDate: '2026-11-15T19:00',
+        location: { '@type': 'Place', name: 'Annexet' },
+        description: 'Special tour stop in Stockholm',
+      },
+    });
+    const result = extractEvents(html, 'article-pattern', 'https://example.com/article/festival');
+    expect(result.events.length).toBe(1);
+    expect(result.events[0].title).toBe('Way Down We Go Tour');
+  });
+
+  // ── Negative test: about[] without any Event ──────────────────────────────
+  it('does NOT extract events when about[] contains only non-Event items', () => {
+    // NewsArticle kan ha about[] med Place, Person, Organization — inte Event.
+    const html = htmlWithJsonLd({
+      '@context': 'https://schema.org',
+      '@graph': [
+        {
+          '@type': 'NewsArticle',
+          headline: 'About Stockholm',
+          about: [
+            { '@type': 'Place', name: 'Stockholm' },
+            { '@type': 'Person', name: 'Some Author' },
+          ],
+        },
+      ],
+    });
+    const result = extractEvents(html, 'no-events', 'https://example.com/article/sthlm');
+    expect(result.events.length).toBe(0);
+  });
+
+  // ── Negative test: regression — pre-existing Event extraction still works ─
+  it('does NOT regress: top-level Event JSON-LD still extracted', () => {
+    // Sanity check att 5.3 inte bryter befintlig A1-väg.
+    const html = htmlWithJsonLd({
+      '@context': 'https://schema.org',
+      '@type': 'Event',
+      name: 'Standalone Event',
+      startDate: '2026-10-04',
+      location: { '@type': 'Place', name: 'Test Venue' },
+    });
+    const result = extractEvents(html, 'standalone', 'https://example.com/event');
+    expect(result.events.length).toBe(1);
+    expect(result.events[0].title).toBe('Standalone Event');
+  });
+
+  // ── Negative test: regression — ItemList extraction still works ───────────
+  it('does NOT regress: ItemList extraction still works', () => {
+    const html = htmlWithJsonLd({
+      '@context': 'https://schema.org',
+      '@type': 'ItemList',
+      itemListElement: [
+        {
+          '@type': 'ListItem',
+          position: 1,
+          item: {
+            '@type': 'Event',
+            name: 'Itemlist Event',
+            startDate: '2026-10-04',
+            location: { '@type': 'Place', name: 'Annexet' },
+          },
+        },
+      ],
+    });
+    const result = extractEvents(html, 'itemlist', 'https://example.com/list');
+    expect(result.events.length).toBe(1);
+    expect(result.events[0].title).toBe('Itemlist Event');
+  });
+});

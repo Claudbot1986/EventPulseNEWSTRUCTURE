@@ -70,7 +70,11 @@ export const JsonLdEventSchema = z.object({
   offers: z.union([OfferSchema, z.array(OfferSchema)]).optional(),
   image: z.union([JsonLdString, JsonLdUrl]).optional(),
   inLanguage: JsonLdString.optional(),
-});
+  // 2026-10-02 — 5.3 NewsArticle wrappers. Håll koll på fält som inte är
+  // Event-specifika men som kan dyka upp i @graph items (NewsArticle.headline,
+  // WebPage.about[], etc.). z.passthrough() låter okända fält passera igenom
+  // så vi kan rekursera in i dem i extractFromGraph.
+}).passthrough();
 
 export type JsonLdEvent = z.infer<typeof JsonLdEventSchema>;
 

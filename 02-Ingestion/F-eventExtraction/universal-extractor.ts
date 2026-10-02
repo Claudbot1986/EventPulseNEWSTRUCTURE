@@ -39,6 +39,7 @@ import {
   type ParsedEvent,
   ExtractionConfidenceSchema,
 } from './schema';
+import { detectCategoryFromContainerClass } from './categoryKeywords.js';
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -441,6 +442,19 @@ function collectJsonLdEvents(data: unknown, source: string, baseUrl: string, acc
     if (Array.isArray(obj[key])) {
       for (const sub of obj[key]) collectJsonLdEvents(sub, source, baseUrl, acc);
     } else if (obj[key]) {
+      collectJsonLdEvents(obj[key], source, baseUrl, acc);
+    }
+  }
+
+  // 2026-10-02 — NewsArticle / WebPage wrappers (5.3). Schema.org article
+  // pages often wrap an Event inside NewsArticle.about[] or WebPage.mainEntity
+  // rather than emitting a top-level Event. Exempel: thatsup.se/stockholm/article/*
+  // har @graph[NewsArticle].about[] med 39-58 events per sida.
+  // Vi rekurserar in i båda fälten så extractorn plockar det nested eventet.
+  for (const key of ['about', 'mainEntity']) {
+    if (Array.isArray(obj[key])) {
+      for (const item of obj[key]) collectJsonLdEvents(item, source, baseUrl, acc);
+    } else if (obj[key] && typeof obj[key] === 'object') {
       collectJsonLdEvents(obj[key], source, baseUrl, acc);
     }
   }
@@ -961,17 +975,13 @@ function extractHtmlHeuristics($: cheerio.CheerioAPI, source: string, baseUrl: s
   }
 
   function extractCategory($card: any): string {
+    // 2026-10-01: delegate to shared detectCategoryFromContainerClass() which
+    // covers all 23 v3 categories with proper ordering + Generalization
+    // Protection Rule. The previous local regex returned deprecated slugs
+    // ('theater', 'art', 'festival', 'education', 'culture') which canonicalize
+    // → 'community' and inflated the bucket.
     const attr = ($card.attr('class') || '') + ' ' + ($card.attr('data-category') || '');
-    const catMap: Array<[RegExp, string]> = [
-      [/konsert|musik/i, 'music'], [/teater|scen|drama/i, 'theater'],
-      [/dans|dance/i, 'dance'], [/barn|familj/i, 'family'],
-      [/utställning|konst|exhibition/i, 'art'], [/sport|match/i, 'sports'],
-      [/mat|food|wine|öl/i, 'food'], [/jazz|blues/i, 'music'],
-      [/festival/i, 'festival'], [/film|movie/i, 'film'],
-      [/föreläsning|seminarium/i, 'education'],
-    ];
-    for (const [rx, cat] of catMap) { if (rx.test(attr)) return cat; }
-    return 'culture';
+    return detectCategoryFromContainerClass(attr);
   }
 
   function extractDescription($card: any): string {
@@ -1127,13 +1137,9 @@ function extractTimeAnchors($: cheerio.CheerioAPI, source: string, baseUrl: stri
       if (t && t.length > 10) { desc = t; break; }
     }
 
-    let category = 'culture';
-    const catMap: Array<[RegExp, string]> = [
-      [/konsert|musik/i,'music'], [/teater|scen/i,'theater'], [/dans|dance/i,'dance'],
-      [/barn|familj/i,'family'], [/utställning|konst/i,'art'], [/sport|match/i,'sports'],
-      [/mat|food/i,'food'], [/jazz|blues/i,'music'], [/festival/i,'festival'],
-    ];
-    for (const [rx, cat] of catMap) { if (rx.test(cardClass)) { category = cat; break; } }
+    // 2026-10-01: delegate to shared detectCategoryFromContainerClass() (same
+    // rationale as the other extractCategory above — no more deprecated slugs).
+    let category = detectCategoryFromContainerClass(cardClass);
 
     const key = `${title}|${date}|${time || ''}|${eventUrl}`;
     if (seenKeys.has(key)) return;

@@ -23,6 +23,11 @@ import {
   type ExtractionConfidence,
 } from './schema';
 import { runAdapters } from './adapters/index.js';
+import {
+  detectCategory,
+  detectCategoryFromUrl,
+  detectCategoryFromContainerClass,
+} from './categoryKeywords.js';
 
 export interface ExtractResult {
   events: ParsedEvent[];
@@ -90,6 +95,12 @@ function extractFromItemList(data: any, source: string): JsonLdEvent[] {
 /**
  * Extract events from @graph structure (berwaldhallen, stockholmlive)
  * Filter to only Event types within the graph
+ *
+ * 2026-10-02 — 5.3: NewsArticle / WebPage wrappers (schema.org).
+ * När en @graph-item är av typen NewsArticle eller WebPage och har Event
+ * nested i `about[]` eller `mainEntity`, plocka även det eventet.
+ * Exempel: thatsup.se/stockholm/article/* har NewsArticle.about[] med 39-58
+ * events per sida.
  */
 function extractFromGraph(data: any, source: string): JsonLdEvent[] {
   const events: JsonLdEvent[] = [];
@@ -102,6 +113,23 @@ function extractFromGraph(data: any, source: string): JsonLdEvent[] {
       // EventSeries has subEvent, not direct event data
       if (item['@type'] === 'Event') {
         const event = JsonLdEventSchema.safeParse(item);
+        if (event.success) events.push(event.data);
+      }
+    }
+
+    // NewsArticle / WebPage wrappers: leta Event i about[]/mainEntity.
+    // Hanterar både array (thatsup.se) och object (vissa Wikipedia-event-sidor).
+    for (const wrapperKey of ['about', 'mainEntity']) {
+      const wrapper = (item as Record<string, unknown>)[wrapperKey];
+      if (Array.isArray(wrapper)) {
+        for (const nested of wrapper) {
+          if (nested && typeof nested === 'object' && (nested as Record<string, unknown>)['@type'] === 'Event') {
+            const event = JsonLdEventSchema.safeParse(nested);
+            if (event.success) events.push(event.data);
+          }
+        }
+      } else if (wrapper && typeof wrapper === 'object' && (wrapper as Record<string, unknown>)['@type'] === 'Event') {
+        const event = JsonLdEventSchema.safeParse(wrapper);
         if (event.success) events.push(event.data);
       }
     }
@@ -286,6 +314,10 @@ function scoreConfidence(event: JsonLdEvent): ExtractionConfidence {
 
 // ─── Event Normalization ──────────────────────────────────────────────────────
 
+// detectCategory is now imported from ./categoryKeywords.js (see top of file).
+// The 2026-10-01 extraction widened coverage from 7 → 23 v3 categories and
+// switched the default fallback from 'culture' to 'community'.
+
 /**
  * Normalize a JSON-LD Event to ParsedEvent format
  */
@@ -360,7 +392,8 @@ function normalizeEvent(event: JsonLdEvent, source: string, sourceUrl?: string):
     }
   }
 
-  // Determine category from title keywords
+  // Determine category from title keywords (uses 23 v3 categories, see categoryKeywords.ts).
+  // 'community' is now the genuine fallback, not 'culture'.
   const category = detectCategory(event.name, event.description);
 
   return {
@@ -391,35 +424,18 @@ function normalizeEvent(event: JsonLdEvent, source: string, sourceUrl?: string):
 }
 
 /**
- * Simple category detection based on title/description keywords
+ * Simple category detection based on title/description keywords.
+ *
+ * Implemented in `./categoryKeywords.ts` (extracted 2026-10-01 to make the
+ * rules reusable across the ingestion pipeline and to extend coverage from
+ * 7 → 23 v3 categories). `detectCategory` is imported at the top of this file.
+ *
+ * Returns one of the canonical EventPulse category slugs (see
+ * `04-Normalizer/categoryDefinitions.ts`). Music genres (rock/pop/jazz/etc.)
+ * are intentionally returned as the broad 'music' slug — the music taxonomy
+ * v3 + MusicBrainz/Last.fm refines specific genres downstream.
  */
-function detectCategory(title: string, description?: string): string {
-  const text = `${title} ${description || ''}`.toLowerCase();
-
-  if (text.includes('jazz') || text.includes('blues') || text.includes('musik') || text.includes('konsert')) {
-    return 'music';
-  }
-  if (text.includes('standup') || text.includes('komedi') || text.includes('comed')) {
-    return 'theater';
-  }
-  if (text.includes('dans') || text.includes('dance')) {
-    return 'dance';
-  }
-  if (text.includes('barn') || text.includes('familj') || text.includes('barnteater')) {
-    return 'family';
-  }
-  if (text.includes('mat') || text.includes('wine') || text.includes('öl') || text.includes('food')) {
-    return 'food';
-  }
-  if (text.includes('utställning') || text.includes('konst') || text.includes('exhibition')) {
-    return 'art';
-  }
-  if (text.includes('sport') || text.includes('match')) {
-    return 'sports';
-  }
-
-  return 'culture';
-}
+// (function kept above; detectCategory import replaces the old local body.)
 
 // ─── Main Extraction ─────────────────────────────────────────────────────────
 
@@ -829,13 +845,10 @@ export function extractFromHtml(html: string, source: string, baseUrl?: string):
       // Try to extract venue from title context
       let venue = source;
 
-      // Detect category from URL path
-      let category = 'culture';
-      if (link.href.includes('/konsert/') || link.href.includes('/musik/')) category = 'music';
-      else if (link.href.includes('/teater/') || link.href.includes('/scen/')) category = 'theater';
-      else if (link.href.includes('/dans/')) category = 'dance';
-      else if (link.href.includes('/barn/') || link.href.includes('/familj/')) category = 'family';
-      else if (link.href.includes('/utstallning/')) category = 'art';
+      // Detect category from URL path (uses 23 v3 categories, see categoryKeywords.ts).
+      // Falls back to 'community' — not 'culture' (canonicalize 'culture' → 'community'
+      // was the previous default and caused 26 % of all events to land in community).
+      let category = detectCategoryFromUrl(link.href);
 
       const event: ParsedEvent = {
         title,
@@ -884,12 +897,17 @@ export function extractFromHtml(html: string, source: string, baseUrl?: string):
         const title = titleMatch[0].replace(/\s+/g, ' ').trim();
         if (title.length > 5) {
           seenKeys.add(key);
+          // 2026-10-01: detect category from title snippet instead of leaving it blank.
+          // Previously these events had `category: undefined` → empty `categories` in DB
+          // → eventually fell through to 'community' via the pipeline default.
+          const category = detectCategory(title);
           events.push({
             title,
             date: dateStr,
             venue: source,
             source,
             sourceUrl: baseUrl,
+            category,
             confidence: {
               score: 0.4,
               hasTitle: true,
@@ -929,12 +947,15 @@ export function extractFromHtml(html: string, source: string, baseUrl?: string):
         const title = titleMatch[0].replace(/\s+/g, ' ').trim();
         if (title.length > 5) {
           seenKeys.add(key);
+          // 2026-10-01: detect category from title snippet (see text-date strategy above).
+          const category = detectCategory(title);
           events.push({
             title,
             date: dateStr,
             venue: source,
             source,
             sourceUrl: baseUrl,
+            category,
             confidence: {
               score: 0.4,
               hasTitle: true,
@@ -987,13 +1008,18 @@ export function extractFromHtml(html: string, source: string, baseUrl?: string):
         seenKeys.add(key);
 
         const [datePart, timePart] = datetime.split('T');
+        const cleanedTitle = title.replace(/\s+/g, ' ').trim();
+        // 2026-10-01: Tribe Events items previously hardcoded 'art' regardless of content.
+        // Now we run detectCategory against the title so music/family/sports events
+        // get their real slug, not 'art'.
+        const category = detectCategory(cleanedTitle, undefined);
         events.push({
-          title: title.replace(/\s+/g, ' ').trim(),
+          title: cleanedTitle,
           date: datePart,
           time: timePart ? timePart.substring(0, 5) : '',
           venue: source,
           url: resolveUrl(href),
-          category: 'art',
+          category,
           source,
           sourceUrl: resolveUrl(href),
           confidence: {
@@ -1031,13 +1057,17 @@ export function extractFromHtml(html: string, source: string, baseUrl?: string):
           if (seenKeys.has(key)) return;
           seenKeys.add(key);
 
+          const cleanedTitle = text.replace(/\s+/g, ' ').trim();
+          // 2026-10-01: same fix as Tribe Events strategy above — detect category from
+          // title instead of hardcoding 'art'.
+          const category = detectCategory(cleanedTitle, undefined);
           events.push({
-            title: text.replace(/\s+/g, ' ').trim(),
+            title: cleanedTitle,
             date: datePart,
             time: timePart ? timePart.substring(0, 5) : '',
             venue: source,
             url: resolveUrl(href),
-            category: 'art',
+            category,
             source,
             sourceUrl: resolveUrl(href),
             confidence: {
@@ -1218,16 +1248,15 @@ export function extractFromHtml(html: string, source: string, baseUrl?: string):
       if (seenKeys.has(key)) return;
       seenKeys.add(key);
 
-      // Determine category from row container class (falls back to narrow container)
-      let category = 'culture';
+      // Determine category from row container class (falls back to narrow container).
+      // 2026-10-01: replaced inline rules with detectCategoryFromContainerClass()
+      // (23 v3 categories). Default 'culture' becomes 'community' since the
+      // canonicalize mapping 'culture' → 'community' was previously the cause
+      // of the 26 % community bucket.
       const rowClass = $rowContainer.attr('class') || '';
       const narrowClass = $narrowContainer.attr('class') || '';
       const containerClass = rowClass || narrowClass;
-      if (/match|game|sport/i.test(containerClass)) category = 'sports';
-      else if (/konsert|musik/i.test(containerClass)) category = 'music';
-      else if (/teater|scen/i.test(containerClass)) category = 'theater';
-      else if (/utstallning|konst/i.test(containerClass)) category = 'art';
-      else if (/barn|familj/i.test(containerClass)) category = 'family';
+      let category = detectCategoryFromContainerClass(containerClass);
 
       events.push({
         title: linkText,
