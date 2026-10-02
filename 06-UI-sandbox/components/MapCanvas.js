@@ -50,6 +50,7 @@ export default function MapCanvas({
   initialCenter = STOCKHOLM_CENTER,
   initialZoom = INITIAL_ZOOM,
   onViewportChange,
+  style,
 }) {
   const [measuredWidth, setMeasuredWidth] = useState(0);
   const [center, setCenter] = useState({ lat: initialCenter.lat, lng: initialCenter.lng });
