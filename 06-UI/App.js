@@ -10,6 +10,8 @@ import { isAuthDeepLink, isDinHelgDeepLink } from './services/deepLinkRouter';
 import { localIsoOf, weekendFeedAnchorIso, nextLocalWeekdayIso } from './HEM-QUARANTINE/screens/home/happeningNow';
 import { applyBrowseFilters } from './utils/browseFilters';
 import { resolvePromptIntent, intentHasFilters } from './utils/promptIntent';
+// 2026-10-02 — UI-fallback för saknade beskrivningar (5.1).
+import { getDetailsDescription, getDetailsDescriptionFallback } from './utils/descriptionFallback';
 import { useAiImageUrl } from './hooks/useAiImageUrl';
 import { getStockholmParts } from './services/localTime';
 import Toast from './components/Toast';
@@ -1677,6 +1679,14 @@ function DetailsScreen({ event, onBack }) {
   const venue = getVenueLabel(event);
   const area = getAreaLabel(event);
   const price = formatPrice(event, t);
+  // 2026-10-02 — UI-fallback (5.1): hämta description från description-,
+  // description_sv- eller description_en-fältet, eller bygg muted fallback
+  // med källans namn så "Om eventet"-sektionen aldrig försvinner tyst.
+  const detailsDescText = getDetailsDescription(event);
+  const detailsDescFallback = getDetailsDescriptionFallback(event, t, {
+    formatProviderLabel: (k) => formatProviderLabel(k, t),
+    unknownLabel: t('source.unknown'),
+  });
 
   return (
     <SafeAreaView style={styles.detailsContainer}>
@@ -1791,12 +1801,21 @@ function DetailsScreen({ event, onBack }) {
           {event.address && <Text style={styles.detailsSubvalue}>{event.address}</Text>}
         </View>
         
-        {event.description && (
-          <View style={styles.detailsSection}>
-            <Text style={styles.detailsLabel}>{t('details.about')}</Text>
-            <Text style={styles.detailsDescription}>{event.description}</Text>
-          </View>
-        )}
+        <View style={styles.detailsSection}>
+          <Text style={styles.detailsLabel}>{t('details.about')}</Text>
+          {detailsDescText ? (
+            <Text style={styles.detailsDescription}>{detailsDescText}</Text>
+          ) : (
+            // 2026-10-02 — UI-fallback (5.1). När beskrivning saknas,
+            // visa muted fallback-text med källa namngen. Användaren
+            // förstår då att det är ett dataglapp, inte en app-bugg.
+            <Text
+              style={[styles.detailsDescription, { color: TOKENS.color.textMuted }]}
+            >
+              {detailsDescFallback}
+            </Text>
+          )}
+        </View>
         
         <View style={styles.detailsFooter}>
           <Text style={styles.detailsSource}>{t('source.footer', { source: event.source ? formatProviderLabel(event.source, t) : t('source.unknown') })}</Text>

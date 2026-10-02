@@ -402,6 +402,11 @@ export default {
   'details.when': 'När',
   'details.where': 'Var',
   'details.about': 'Om eventet',
+  // 2026-10-02 — visad i DetailsScreen när event saknar beskrivning.
+  // Ärlig fallback istället för att "Om eventet"-sektionen försvinner tyst.
+  // Källa namnges så användaren kan bedöma om det är värt att klicka vidare.
+  'details.descriptionMissing': 'Ingen beskrivning finns från {source}.',
+  'details.descriptionMissingUnknown': 'Ingen beskrivning finns.',
 
   // ─── Map ─────────────────────────────────────────────────────────────────
   'map.loading': 'Hämtar venues…',

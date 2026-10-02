@@ -10,6 +10,10 @@
 import { Fragment, useRef, useState } from 'react';
 import { Image, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import UtforskaEventActionSheet from './UtforskaEventActionSheet';
+// 2026-10-02 — UI-preview för description (5.1). Använd samma helper som
+// DetailsScreen för att hålla beskrivnings-källan konsistent (description-,
+// description_sv-, description_en-fälten) och ignorera placeholder-text.
+import { getRowDescriptionPreview } from '../utils/descriptionFallback';
 
 const TOKENS = {
   color: {
@@ -189,6 +193,10 @@ function EventRow({ event, onPress, onMenuPress }) {
   const line1 = parts.slice(0, 2).join(' · ');   // datum · tid
   const line2 = parts.slice(2).join(' · ');      // venue · area
   const subtitleText = [line1, line2].filter(Boolean).join(' · ');
+  // 2026-10-02 — preview-rad (5.1): visa 2 rader av beskrivningen under
+  // subtitle om den finns. Använd getRowDescriptionPreview så samma regler
+  // för placeholders och språk-fallback som DetailsScreen gäller.
+  const preview = getRowDescriptionPreview(event);
   return (
     <Pressable
       style={({ pressed }) => [styles.row, pressed && styles.rowPressed]}
@@ -235,6 +243,18 @@ function EventRow({ event, onPress, onMenuPress }) {
               </Text>
             ) : null}
           </View>
+        ) : null}
+        {preview ? (
+          // 2026-10-02 — description-preview-rad (5.1). numberOfLines={2}
+          // ellipsizeMode="tail" så långa beskrivningar inte trycker
+          // undan resten av listan.
+          <Text
+            style={styles.preview}
+            numberOfLines={2}
+            ellipsizeMode="tail"
+          >
+            {preview}
+          </Text>
         ) : null}
       </View>
       <Pressable
@@ -520,6 +540,15 @@ const styles = StyleSheet.create({
     color: TOKENS.color.textMuted,
     fontSize: TOKENS.font.subtitle.size,
     fontWeight: TOKENS.font.subtitle.weight,
+    flexShrink: 1,
+  },
+  // 2026-10-02 — preview-rad (5.1): mjukare färg än subtitle, mindre
+  // font, några extra pixlar ovanför för separation.
+  preview: {
+    color: TOKENS.color.textSoft,
+    fontSize: TOKENS.font.subtitle.size - 1,
+    fontWeight: '400',
+    marginTop: 6,
     flexShrink: 1,
   },
   menuBtn: {

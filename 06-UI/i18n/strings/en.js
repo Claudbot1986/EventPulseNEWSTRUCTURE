@@ -392,6 +392,12 @@ export default {
   'details.when': 'When',
   'details.where': 'Where',
   'details.about': 'About the event',
+  // 2026-10-02 — shown in DetailsScreen when the event has no description.
+  // Honest fallback so the "About the event" section never silently
+  // disappears. Source is named so the user can judge whether to click
+  // through to ticket_url.
+  'details.descriptionMissing': 'No description available from {source}.',
+  'details.descriptionMissingUnknown': 'No description available.',
 
   // ─── Map ─────────────────────────────────────────────────────────────────
   'map.loading': 'Fetching venues…',
