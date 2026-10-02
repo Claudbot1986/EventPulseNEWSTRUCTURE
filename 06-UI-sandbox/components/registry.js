@@ -14,6 +14,7 @@ import EventPulseSenaste from './EventPulseSenaste';
 import HemScreen from './HemScreen';
 import HemStar from './HemStar';
 import HemSupabase from './HemSupabase';
+import MapScreen from './MapScreen';
 import UtforskaSection from './UtforskaSection';
 
 export const COMPONENT_REGISTRY = [
@@ -165,5 +166,18 @@ export const COMPONENT_REGISTRY = [
     // Renderas utan padX-wrapper i App.js — komponenten är redan
     // kant-till-kant-designad och vill inte ha 20px sandbox-marginal.
     fullWidth: true,
+  },
+  {
+    id: 'map-screen',
+    name: 'MapScreen',
+    description:
+      'Karta-sandbox (2026-10-02). Visar ALLA future Stockholm-events ' +
+      'som prickar på en SVG-fri karta med grid-klustring. Filter-knappar: ' +
+      'Idag / Helgen / Nästa helg / Alla byter tidsfönster. Klient-side ' +
+      'jitter (±0.005°) för fallback-events (lat=59.3293) förhindrar ' +
+      'pixel-krock. e2e: 06-UI-sandbox/e2e/map-screen.test.mjs verifierar ' +
+      'data + logik mot live Supabase.',
+    Component: MapScreen,
+    sampleProps: {},
   },
 ];

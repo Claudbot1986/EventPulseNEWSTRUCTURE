@@ -9,7 +9,8 @@
     "start": "expo start",
     "android": "expo start --android",
     "ios": "expo start --ios",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "test:e2e:map": "node --test e2e/map-screen.test.mjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.97.0",
