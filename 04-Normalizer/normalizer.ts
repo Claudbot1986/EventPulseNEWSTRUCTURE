@@ -24,6 +24,69 @@ const supabase = createClient(
   process.env.SUPABASE_SERVICE_ROLE_KEY!
 );
 
+// ─── Geo-coordinate prioritering (2026-10-02, geo-bug fix) ────────────────
+// BUG A: tidigare sattes events.lat/lng enbart från raw.lat, vilket lämnade
+// events med riktig venue-resolved koordinat på fallback 59.3293/18.0686 om
+// raw-data saknade lat/lng. ~261 events var drabbade (35% av alla fallback-events).
+//
+// NYTT BETEENDE:
+//   - Om venue.lat/lng är riktig geo (ej fallback) OCH raw.lat/lng är null/fallback:
+//     använd venue.lat/lng.
+//   - Annars använd raw.lat/lng (eller fallback som sistahandsalternativ).
+//
+// Stockholm Sergels torg fallback = 59.3293, 18.0686 (från migration
+// 20261002-0001-venues-country.sql rad 20 — venue_resolve skapar nya venues
+// med dessa koordinater om lat/lng saknas).
+export const GEO_FALLBACK_LAT = 59.3293;
+export const GEO_FALLBACK_LNG = 18.0686;
+export const GEO_FALLBACK_EPSILON = 1e-6;
+
+export function isGeoFallback(lat: number | null | undefined, lng: number | null | undefined): boolean {
+  return lat != null && lng != null
+    && Math.abs(lat - GEO_FALLBACK_LAT) < GEO_FALLBACK_EPSILON
+    && Math.abs(lng - GEO_FALLBACK_LNG) < GEO_FALLBACK_EPSILON;
+}
+
+/**
+ * Välj bästa lat/lng för ett event utifrån raw + venue.
+ *
+ * Prioritet:
+ *   1. raw.lat (om satt OCH inte fallback) — källan har riktig geo
+ *   2. venue.lat (om satt OCH inte fallback) — venues resolvaste koordinat
+ *   3. raw.lat (även om fallback, om venue är null) — bättre än inget
+ *   4. fallback (59.3293/18.0686) — sista utväg
+ *
+ * @returns {[lat, lng]} alltid definierat (sista fallback är Sergels torg)
+ */
+export function chooseGeoCoords(
+  rawLat: number | null | undefined,
+  rawLng: number | null | undefined,
+  venueLat: number | null | undefined,
+  venueLng: number | null | undefined,
+): { lat: number; lng: number } {
+  const rawFallback = isGeoFallback(rawLat, rawLng);
+  const venueFallback = isGeoFallback(venueLat, venueLng);
+
+  // Raw har riktig geo (ej fallback) → använd raw (auktoritativ källa)
+  if (rawLat != null && rawLng != null && !rawFallback) {
+    return { lat: rawLat, lng: rawLng };
+  }
+  // Venue har riktig geo (ej fallback) → använd venue
+  if (venueLat != null && venueLng != null && !venueFallback) {
+    return { lat: venueLat, lng: venueLng };
+  }
+  // Raw finns (även om fallback) → använd raw
+  if (rawLat != null && rawLng != null) {
+    return { lat: rawLat, lng: rawLng };
+  }
+  // Venue finns (även om fallback) → använd venue
+  if (venueLat != null && venueLng != null) {
+    return { lat: venueLat, lng: venueLng };
+  }
+  // Sista utväg: Sergels torg
+  return { lat: GEO_FALLBACK_LAT, lng: GEO_FALLBACK_LNG };
+}
+
 function buildDedupHash(source: string, sourceId: string): string {
   return createHash('sha256').update(`${source}::${sourceId}`).digest('hex');
 }
@@ -396,17 +459,23 @@ export async function processRawEvent(job: Job<RawEventInput>): Promise<void> {
   const venue_id = await resolveVenue(raw);
 
   // 2026-10-02 — Hämta venue.country för description_sv-fallback (5.2 rule 3).
-  // Default är null om venue saknas; description_routing kommer då inte spegla
-  // description_en → description_sv (säker default = vi gissar inte).
+  // 2026-10-02 (geo-bug fix) — Hämta ÄVENÄVEN venue.lat/lng så vi kan propagera
+  // venues koordinater till events om raw.lat är null/fallback. Innan fixen
+  // (2026-10-02) sattes events.lat enbart från raw.lat, vilket lämnade
+  // ~261 events med venue.name-match men lat=59.3293 fallback.
   let venueCountry: string | null = null;
+  let venueLat: number | null = null;
+  let venueLng: number | null = null;
   if (venue_id) {
     const { data: venueRow } = await supabase
       .from('venues')
-      .select('country')
+      .select('country, lat, lng')
       .eq('id', venue_id)
       .limit(1)
       .maybeSingle();
     venueCountry = venueRow?.country ?? null;
+    venueLat = venueRow?.lat ?? null;
+    venueLng = venueRow?.lng ?? null;
   }
 
   // MusicBrainz + Last.fm authoritativ artist-uppslagning (2026-09-30).
@@ -493,6 +562,22 @@ export async function processRawEvent(job: Job<RawEventInput>): Promise<void> {
 
   console.log(`[normalizer] venue_id=${venue_id ?? 'null'}, category_slug=${category_slug}`);
 
+  // Geo prioritering (2026-10-02, geo-bug fix): om raw.lat/lng är null/fallback
+  // men venue har riktig geo, använd venues koordinater. Se chooseGeoCoords().
+  const { lat: resolvedLat, lng: resolvedLng } = chooseGeoCoords(
+    raw.lat, raw.lng, venueLat, venueLng,
+  );
+  // Logga när vi propagerade venues koordinater (för observability + debugging).
+  const venueUsed = isGeoFallback(raw.lat, raw.lng) === false
+    && (raw.lat == null || isGeoFallback(raw.lat, raw.lng))
+    && venueLat != null && !isGeoFallback(venueLat, venueLng);
+  if (venueUsed) {
+    console.log(
+      `[normalizer] geo-propagated from venue (id=${venue_id?.slice(0,8)}...): ` +
+      `raw=(${raw.lat ?? 'null'},${raw.lng ?? 'null'}) → venue=(${resolvedLat},${resolvedLng})`,
+    );
+  }
+
   // Description routing (2026-10-02, plan §5.2):
   //   rule 1: detected_language=sv → båda fält får från raw.description
   //   rule 2: title har å/ä/ö → description_sv speglas från raw.description
@@ -530,9 +615,10 @@ export async function processRawEvent(job: Job<RawEventInput>): Promise<void> {
     source: raw.source,
     source_id: raw.source_id,
     venue_id,
-    lat: raw.lat ?? 59.3293,
-    lng: raw.lng ?? 18.0686,
-    location: `POINT(${raw.lng ?? 18.0686} ${raw.lat ?? 59.3293})`,
+    // 2026-10-02 geo-bug fix: propagate venues.lat/lng → events.lat/lng.
+    lat: resolvedLat,
+    lng: resolvedLng,
+    location: `POINT(${resolvedLng} ${resolvedLat})`,
     is_free: raw.is_free,
     price_min_sek: raw.price_min_sek,
     price_max_sek: raw.price_max_sek,
