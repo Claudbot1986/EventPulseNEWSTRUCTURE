@@ -93,6 +93,10 @@ function mapCategory(label: string) {
   // 2026-09-29: använd Utforska-slugs direkt (categories-v2). Tidigare
   // 'culture' / 'barn' / 'nightlife' deprecated — normalizerns
   // canonicalize-lag fångar ändå, men direkt rätt här minskar logg-brus.
+  // 2026-10-01: return null for unknown labels instead of 'community' so the
+  // pipeline (canonicalize + source-default + 'community' fallback) decides.
+  // Previously unknown labels always became 'community' — partly why the
+  // community bucket grew to 26 % of all events.
   const categoryMap: Record<string, string> = {
     'teater': 'theatre-drama',
     'musik': 'music',
@@ -113,7 +117,7 @@ function mapCategory(label: string) {
     'för skolan': 'kids',
   };
 
-  return categoryMap[label] || 'community';
+  return categoryMap[label] ?? null;
 }
 
 interface KulturhusetOptions {

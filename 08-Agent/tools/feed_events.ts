@@ -26,6 +26,25 @@ import { MOOD_IDS, matchMood } from './moods';
 export interface FeedEventsInput {
   /** ISO date inclusive lower bound (YYYY-MM-DD). */
   from: string;
+  /**
+   * Search — Utforska sök (2026-10-02): free-text sökning mot
+   * title_sv, title_en, description_sv, description_en OCH venue name.
+   * Whitespace-trimmas och splittas på whitespace — varje term måste
+   * matchas (AND-logik). Tom sträng / null → inget filter.
+   *
+   * Filter-server-side via PostgREST `.or()` med `ilike` per fält; case-
+   * insensitive. Saniteras mot citattecken / paranteser för att inte
+   * bryta PostgREST-syntax. Resultatet är identiskt med klient-side
+   * browseFilters.matchesQuery så sökresultatet matchar UI-förväntan.
+   */
+  q?: string | null;
+  /**
+   * Explicit upper-bound date (YYYY-MM-DD). När satt, ersätter `days`
+   * för den övre gränsen så UI:t kan välja ett exakt datumintervall
+   * (sök "1–14 november"). Mutually exclusive-ish med `days`: om satt
+   * används det istället för from+days.
+   */
+  dateTo?: string | null;
   /** Window size in days. Default 7, max 3650 (~10 years). */
   days?: number;
   /** Optional category filter. */
@@ -107,6 +126,50 @@ function expandDateCeil(d: string): string {
   return /T/.test(d) ? d : `${d}T23:59:59.999Z`;
 }
 
+/**
+ * 2026-10-02 (Utforska sök): bygg en PostgREST `.or()`-sträng som matchar
+ * ALLA whitespace-separerade termer mot något av title_sv/title_en/
+ * description_sv/description_en via ilike. Inom en term är logiken OR
+ * (något fält räcker); för AND över multipla termer används
+ * searchScreen:s client-side filter (matchesQuery) på resultatet.
+ *
+ * PostgREST-syntax (upptäckt 2026-10-02 efter riktig server-smoke):
+ * `.or()`-värdet är en komma-separerad lista av `column.operator.value`-
+ * uttryck UTAN egna paranteser — PostgREST wrappar innehållet med egna
+ * paranteser. Dubbel-wrap → "failed to parse logic tree". Därför
+ * plockade vi bort term-grupperingen och bygger en platt komma-lista.
+ *
+ * Sanitering: tar bort PostgREST-syntax-tecken (citationstecken,
+ * paranteser, komma) som annars kunde tolkas som filter-injection. Vi
+ * strippar också `%` och `_` så de matchas litteralt (annars blir
+ * "50%" en wildcard-match i PostgREST).
+ *
+ * Returnerar null om frågan är tom/saknas efter trim — då ingen filter-
+ * sats läggs till (befintligt beteende).
+ */
+export function buildSearchOrFilter(q: string | null | undefined): string | null {
+  if (!q || !q.trim()) return null;
+  const terms = q
+    .trim()
+    .split(/\s+/)
+    .map((t) => t.replace(/[%_'"(),]/g, '').trim())
+    .filter((t) => t.length > 0);
+  if (terms.length === 0) return null;
+  // PostgREST `.or()` tar en komma-lista av OR-villkor. Vi bygger en
+  // platt lista: varje term × 4 fält = 4 villkor per term. AND över
+  // multipla termer hanteras client-side av search-skärmen (se
+  // SearchScreen.fetchResults + browseFilters.matchesQuery).
+  const clauses: string[] = [];
+  for (const term of terms) {
+    const needle = `%${term}%`;
+    clauses.push(`title_sv.ilike.${needle}`);
+    clauses.push(`title_en.ilike.${needle}`);
+    clauses.push(`description_sv.ilike.${needle}`);
+    clauses.push(`description_en.ilike.${needle}`);
+  }
+  return clauses.join(',');
+}
+
 /** Return YYYY-MM-DD `days` days after `from` (date arithmetic only). */
 export function addDays(from: string, days: number): string {
   const d = new Date(`${from}T00:00:00.000Z`);
@@ -135,7 +198,17 @@ export async function feedEvents(
   const offset = Math.max(input.offset ?? 0, 0);
 
   const fromIso = input.from;
-  const toIso = addDays(fromIso, days);
+  // 2026-10-02: explicit dateTo vinner över days när satt (UI:t väljer
+  // ett bestämt intervall i sökningen — "1–14 november"). days:3650
+  // tillsammans med dateTo ger ett brett undre fönster + bestämt tak.
+  const toIso = input.dateTo
+    ? input.dateTo
+    : addDays(fromIso, days);
+
+  // 2026-10-02: text search filter (server-side). När q är satt returnerar
+  // buildSearchOrFilter en .or()-sträng som söker mot titel + beskrivning
+  // på både sv och en.
+  const searchOr = buildSearchOrFilter(input.q);
 
   let query = supabase
     .from(FEED_EVENTS_TABLE)
@@ -174,6 +247,10 @@ export async function feedEvents(
   // tileRoutes.gratis sätter flaggan så data-queryn returnerar garanterat
   // bara gratis-events istället för att klientfiltret gallrar bort 13/15.
   if (input.isFree === true) query = query.eq('is_free', true);
+  // 2026-10-02 (Utforska sök): server-side text search mot titel + beskrivning.
+  // PostgREST `.or()` är sista filtret i kedjan — närvaro av kategorier eller
+  // datum smalnar av som vanligt.
+  if (searchOr) query = query.or(searchOr);
   // events_public does not expose city; the venue-side filter is applied below.
 
   const { data, error } = await query;
@@ -224,11 +301,36 @@ export async function feedEvents(
       .lte('start_time', expandDateCeil(toIso));
     if (input.category) moodQuery = moodQuery.eq('category_slug', input.category);
     if (input.isFree === true) moodQuery = moodQuery.eq('is_free', true);
+    // 2026-10-02 (Utforska sök): applicera samma text-filter på count-queryn
+    // så total inte överskattar antalet events användaren faktiskt ser.
+    if (searchOr) moodQuery = moodQuery.or(searchOr);
     const { data: moodData, error: moodErr } = await moodQuery;
     if (moodErr) {
       throw new Error(`feed_events_count_mood: ${moodErr.message}`);
     }
-    total = (moodData ?? []).filter((r: any) =>
+    // 2026-10-02 (sök): klient-side fallback-filter mot text (samma
+    // semantik som data-queryn) — mood-queryn returnerar bara fält som
+    // matchar PostgREST `.or()`, men en robust klient-side sista-passning
+    // håller total konsistent även om PostgREST-syntaxen ändras.
+    const totalRows = searchOr
+      ? (moodData ?? []).filter((r: any) =>
+          searchOr
+            .split(',')
+            .map((s) => s.replace(/[()]/g, '').trim())
+            .filter(Boolean)
+            .every((term) => {
+              const needle = term
+                .match(/\.ilike\.(.+)\)$/)?.[1] ?? '';
+              const clean = needle.replace(/%/g, '').toLowerCase();
+              if (!clean) return true;
+              const hay =
+                `${r.title_sv ?? ''} ${r.title_en ?? ''} ` +
+                `${r.description_sv ?? ''} ${r.description_en ?? ''}`.toLowerCase();
+              return hay.includes(clean);
+            })
+        )
+      : moodData ?? [];
+    total = totalRows.filter((r: any) =>
       matchMood(
         {
           title: r.title_sv || r.title_en || '',
@@ -242,7 +344,13 @@ export async function feedEvents(
     // Pure-category requests get full-future count (no upper bound). Any
     // request with isFree OR no category at all is window-bounded so the
     // header tracks what the user actually scrolls through.
-    const isPureCategory = !!input.category && input.isFree !== true;
+    //
+    // 2026-10-02 (Utforska sök): en `q`-filter KVALIFICERAR count-queryn
+    // som window-bounded oavsett kategori-purity — text-frågan är ett
+    // användar-explicerat filter som inte ska släppa headern fri till
+    // "alla framtida events i kategorin". Sök = strikt.
+    const isPureCategory =
+      !!input.category && input.isFree !== true && !searchOr;
     let countQuery = supabase
       .from(FEED_EVENTS_TABLE)
       .select('id', { count: 'exact', head: true })
@@ -253,6 +361,7 @@ export async function feedEvents(
     }
     if (input.category) countQuery = countQuery.eq('category_slug', input.category);
     if (input.isFree === true) countQuery = countQuery.eq('is_free', true);
+    if (searchOr) countQuery = countQuery.or(searchOr);
     const { count: totalRaw, error: countError } = await countQuery;
     if (countError) {
       throw new Error(`feed_events_count: ${countError.message}`);

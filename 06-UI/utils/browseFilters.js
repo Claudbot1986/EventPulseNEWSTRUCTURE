@@ -168,11 +168,26 @@ export function matchesStatus(event, statusFilter) {
   return true;
 }
 
-/** Any-match over title + venue against an array of terms (genre prefill:
- *  ['klassisk','classical'] matches either). Empty array → no constraint. */
+/** Any-match over title + venue + description against an array of terms
+ *  (genre prefill: ['klassisk','classical'] matches either). Empty array →
+ *  no constraint.
+ *
+ *  2026-10-02 (Utforska sök): description lades till i sök-haystacken så
+ *  fritext-sök matchar mot event-beskrivning också (användaren frågade
+ *  uttryckligen). Fallbacks: description_sv → description_en → description
+ *  (rowMapping normaliserar oftast till ett enda `description`-fält).
+ *  Tar bort HTML-artefakter så "<p>foo</p>" inte blockerar matchningen.
+ */
 export function matchesQuery(event, queryTerms) {
   if (!queryTerms || queryTerms.length === 0) return true;
-  const haystack = normalizeSearchText(`${event?.title || ''} ${event?.venue_name || event?.venue || ''}`);
+  const description =
+    event?.description ||
+    event?.description_sv ||
+    event?.description_en ||
+    '';
+  const haystack = normalizeSearchText(
+    `${event?.title || ''} ${event?.venue_name || event?.venue || ''} ${description}`
+  );
   return queryTerms.some((term) => haystack.includes(normalizeSearchText(term)));
 }
 

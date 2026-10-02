@@ -4,6 +4,13 @@
  *
  * Discovery: networkInspector found this endpoint returning
  * {"Events":[{...}], "Productions":[{...}]} with real event data.
+ *
+ * 2026-10-01: switched the local inferCategory() from a 3-rule regex
+ * (music/family/education + 'culture' fallback) to the shared
+ * `detectCategory()` from 02-Ingestion/F-eventExtraction/categoryKeywords.ts.
+ * Berwaldhallen is overwhelmingly classical music — almost every event will
+ * land in 'music' (and the downstream tagToCategory pipeline refines classical
+ * vs other sub-genres). 'community' is the genuine semantic fallback.
  */
 
 const TIXLY_API_URL = 'https://www.berwaldhallen.se/api/services/tixly/data';
@@ -157,9 +164,10 @@ function mapTixlyEvent(ev: TixlyEvent): {
 }
 
 function inferCategory(title: string, description: string): string {
-  const text = `${title} ${description}`.toLowerCase();
-  if (text.includes('jazz') || text.includes('musik') || text.includes('konsert') || text.includes('orkester')) return 'music';
-  if (text.includes('barn') || text.includes('familj')) return 'family';
-  if (text.includes('samtal') || text.includes('föreläsning')) return 'education';
-  return 'culture';
+  // 2026-10-01: use shared detectCategory() (covers all 23 v3 categories with
+  // proper ordering + Generalization Protection Rule). Berwaldhallen will
+  // overwhelmingly land in 'music' via keywords like 'konsert'/'musik'/
+  // 'orkester'/'kammarmusik'. 'community' is the genuine semantic fallback.
+  const { detectCategory } = require('../../F-eventExtraction/categoryKeywords.js');
+  return detectCategory(title, description);
 }

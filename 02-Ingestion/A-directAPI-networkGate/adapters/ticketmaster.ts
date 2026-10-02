@@ -14,16 +14,22 @@ const supabase = createClient(
 /**
  * Maps Ticketmaster segment + genre to DB category slugs
  * Source of truth for category normalization
+ *
+ * 2026-10-01: unknown segments/genres return undefined (not 'community')
+ * so the downstream pipeline (canonicalize → source-default → 'community'
+ * fallback) decides. Previously every unknown event was force-tagged
+ * 'community' which was a big contributor to the 26 % community bucket.
  */
-const SEGMENT_TO_SLUG: Record<string, string> = {
+const SEGMENT_TO_SLUG: Record<string, string | undefined> = {
   'music': 'music',
   // 2026-09-29: 'exhibition' istället för deprecated 'art-exhibitions'
   'arts & theatre': 'exhibition',
   'sports': 'sports',
-  'miscellaneous': 'community',
+  // 2026-10-01: was 'community' — let pipeline decide for ambiguous segment
+  'miscellaneous': undefined,
 };
 
-const GENRE_TO_SLUG: Record<string, string> = {
+const GENRE_TO_SLUG: Record<string, string | undefined> = {
   'rock': 'music',
   'pop': 'music',
   'jazz': 'music',
@@ -38,8 +44,11 @@ const GENRE_TO_SLUG: Record<string, string> = {
   'food & drink': 'food',
   'food': 'food',
   'family': 'family',
-  'fairs & festivals': 'community',
-  'other': 'community',
+  // 2026-10-01: was 'community' — festival events should be analyzed by
+  // categoryDefinitions.ts LLM if they don't fit a specific bucket
+  'fairs & festivals': undefined,
+  // 2026-10-01: was 'community' — let pipeline decide
+  'other': undefined,
   'martial arts': 'sports',
 };
 
@@ -48,20 +57,23 @@ const GENRE_TO_SLUG: Record<string, string> = {
  */
 function normalizeCategory(segment: string, genre: string): string[] {
   const slugs: string[] = [];
-  
+
   // Primary category from segment
   const segmentSlug = SEGMENT_TO_SLUG[segment.toLowerCase()];
   if (segmentSlug) {
     slugs.push(segmentSlug);
   }
-  
+
   // Secondary from genre (if different)
   const genreSlug = GENRE_TO_SLUG[genre.toLowerCase()];
   if (genreSlug && !slugs.includes(genreSlug)) {
     slugs.push(genreSlug);
   }
-  
-  return slugs.length > 0 ? slugs : ['community'];
+
+  // 2026-10-01: when nothing maps, return empty array so the pipeline's
+  // canonicalize + source-default + 'community' fallback takes over.
+  // Previously this hard-returned ['community'] which bypassed those layers.
+  return slugs;
 }
 
 interface TicketmasterVenue {

@@ -571,6 +571,11 @@ export default function HomeScreen({ onCardPress }) {
       testID="home-screen"
       showsVerticalScrollIndicator={false}
     >
+      {/* 2026-10-02 (Utforska sök): Sök-knappen finns BARA i Utforska-tabben
+          (App.js:s HomeScreen-funktion), inte i Hem. Användaren får sök-
+          funktionen genom att gå till Utforska-tabben — det är en
+          utforska-funktion, inte en hem-funktion. Detta är ett medvetet
+          beslut (2026-10-02): sök hör hemma där utforskandet finns. */}
       {/* Sektioner i ordning enligt användarens val 2026-09-25 — Först =
           personlig rekommendation, sedan Senaste (memory), sedan
           Ikväll/Helgen, sist K3-reserv. Inget ovanför karusellerna. */}

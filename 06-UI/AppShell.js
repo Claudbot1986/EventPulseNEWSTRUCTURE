@@ -66,6 +66,18 @@ export default function AppShell() {
   const [onboardingState, setOnboardingState] = useState('loading'); // 'loading' | 'needs' | 'done'
   const [userState, setUserState] = useState('loading'); // 'loading' | 'guest' | 'logged_in'
   const [showLogin, setShowLogin] = useState(false);
+  // 2026-10-02 (Utforska sök): sök-overlay-state. När användaren trycker
+  // på sök-knappen — från vilken tab som helst — switchar vi till
+  // Utforska (activeTab='explore') och sätter showSearch=true. App.js
+  // mountar då SearchScreen som overlay istället för HomeScreen.
+  // Utan detta skulle SearchScreen mountas inuti Utforska-tabben som är
+  // gömd om Hem är aktiv → 0×0-display-ingen användaren ser inget.
+  const [showSearch, setShowSearch] = useState(false);
+  const openSearch = useCallback(() => {
+    setActiveTab('explore');
+    setShowSearch(true);
+  }, []);
+  const closeSearch = useCallback(() => setShowSearch(false), []);
   // Magic-link deep-link callback URL — when non-null AppShell renders
   // MagicLinkHandlerScreen instead of the rest of the tree. The handler
   // calls onSuccess(session) → persist + start analytics + flip gate;
@@ -467,6 +479,11 @@ export default function AppShell() {
             chipNonce={chipNonce}
             onExploreReady={handleExploreReady}
             isActive={activeTab === 'explore'}
+            // 2026-10-02 (Utforska sök): showSearch + callbacks så App
+            // kan rendera SearchScreen som overlay oavsett activeTab.
+            showSearch={showSearch}
+            onCloseSearch={closeSearch}
+            onOpenSearchFromHome={openSearch}
           />
         </View>
         {mountedTabsRef.current.home && (

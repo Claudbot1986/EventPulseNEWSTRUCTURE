@@ -8,7 +8,7 @@
 
 import { describe, expect, it, vi } from 'vitest';
 import type { SupabaseClient } from '@supabase/supabase-js';
-import { feedEvents, addDays, todayIso } from '../tools/feed_events';
+import { feedEvents, addDays, todayIso, buildSearchOrFilter } from '../tools/feed_events';
 
 function makeChain(rows: any[]) {
   const chain: any = {
@@ -738,3 +738,61 @@ describe('feedEvents', () => {
     });
   });
 });
+
+describe('buildSearchOrFilter (Utforska sök)', () => {
+  it('returns null for empty / whitespace / null input', () => {
+    expect(buildSearchOrFilter(null)).toBeNull();
+    expect(buildSearchOrFilter(undefined)).toBeNull();
+    expect(buildSearchOrFilter('')).toBeNull();
+    expect(buildSearchOrFilter('   ')).toBeNull();
+  });
+
+  it('builds single-term .or() filter against title + description (sv/en)', () => {
+    const f = buildSearchOrFilter('krogshow');
+    // PostgREST-syntax: platt komma-lista UTAN egna paranteser
+    // (PostgREST wrappar själv). OR inom term, AND över termer görs
+    // client-side av search-skärmen.
+    expect(f).toBe(
+      'title_sv.ilike.%krogshow%,title_en.ilike.%krogshow%,' +
+      'description_sv.ilike.%krogshow%,description_en.ilike.%krogshow%'
+    );
+  });
+
+  it('joins multi-term with comma (OR inom PostgREST, AND client-side)', () => {
+    const f = buildSearchOrFilter('krogshow lördag');
+    // Alla villkor i en platt OR-lista. AND över termer hanteras av
+    // browseFilters.matchesQuery i SearchScreen. Svenska diakritiska
+    // tecken (ö) bevaras i input.
+    expect(f).toBe(
+      'title_sv.ilike.%krogshow%,title_en.ilike.%krogshow%,' +
+      'description_sv.ilike.%krogshow%,description_en.ilike.%krogshow%,' +
+      'title_sv.ilike.%lördag%,title_en.ilike.%lördag%,' +
+      'description_sv.ilike.%lördag%,description_en.ilike.%lördag%'
+    );
+  });
+
+  it('saniterar PostgREST-syntax-tecken från input', () => {
+    // Citationstecken, paranteser, komma i input tas bort så de inte
+    // tolkas som filter-injection i PostgREST-syntaxen. Parenteserna
+    // i OUTPUT är PostgREST-syntax (nödvändiga) och får finnas kvar.
+    const f = buildSearchOrFilter('foo"bar(baz),qux');
+    // Efter sanitering blir det 'foobarbazqux' — input-tecknen är borta.
+    expect(f).toContain('foobarbazqux');
+    expect(f).not.toMatch(/foo"bar/);
+    expect(f).not.toMatch(/bar\(baz/);
+    expect(f).not.toMatch(/baz\),qux/);
+  });
+
+  it('strippar SQL-wildcards % och _ från input-termerna', () => {
+    // % och _ i input strippas innan de wrappas. Resultatet är en wrap
+    // runt sanerad term ('%50%' från input '50%', inte '%50%%').
+    const f = buildSearchOrFilter('50% off');
+    expect(f).toContain('ilike.%50%');  // wrap kring term '50'
+    expect(f).toContain('ilike.%off%'); // andra term efter split
+    // _ strippas också:
+    const f2 = buildSearchOrFilter('foo_bar');
+    expect(f2).toMatch(/ilike\.%foobar%/);
+    expect(f2).not.toMatch(/ilike\.%foo_bar%/);
+  });
+});
+

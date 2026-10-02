@@ -20,6 +20,7 @@ Vad gör skriptet:
 Användning:
   python3 scripts/verify_utforska_star.py
   BASE_URL=http://192.168.1.10:8081 python3 scripts/verify_utforska_star.py
+  python3 scripts/verify_utforska_star.py --task-id my-task-id
 """
 
 import json
@@ -35,6 +36,15 @@ from playwright.sync_api import sync_playwright, TimeoutError as PlaywrightTimeo
 BASE_URL = os.environ.get("BASE_URL", "http://localhost:8081")
 OUT_DIR = Path("/tmp/utforska-star")
 REPORT_PATH = Path("/tmp/utforska-star-report.json")
+TASK_ID = None
+for i, arg in enumerate(sys.argv[1:], 1):
+    if arg == "--task-id" and i < len(sys.argv) - 1:
+        TASK_ID = sys.argv[i + 1]
+        break
+    elif arg.startswith("--task-id="):
+        TASK_ID = arg.split("=", 1)[1]
+        break
+EVIDENCE_LOG = Path(__file__).resolve().parent.parent / "runtime" / "autonomy" / "evidence.ndjson"
 STAR_BANNER = '[data-testid="utforska-star-banner"]'
 STAR_TAB = '[aria-label="Utforska*"]'
 
@@ -180,6 +190,32 @@ def count_orange_in_se_corner(path, src):
     }
 
 
+# ── Evidence-append ──────────────────────────────────────────────────
+def _append_evidence(task_id, pass_count, total, exit_code=0):
+    """Log this verifier run to the autonomy evidence ledger (NDJSON)."""
+    try:
+        EVIDENCE_LOG.parent.mkdir(parents=True, exist_ok=True)
+        entry = {
+            "ts": time.strftime("%Y-%m-%dT%H:%M:%S%z"),
+            "mission_id": task_id,
+            "tool": "Bash",
+            "event": "PostToolUse",
+            "cmd": f"python3 scripts/verify_utforska_star.py --task-id {task_id}",
+            "exit_code": exit_code,
+            "working_tree_fp": "sha256:unknown",
+            "duration_ms": None,
+            "verifier": "verify_utforska_star.py",
+            "pass_count": pass_count,
+            "total_images": total,
+            "report_path": str(REPORT_PATH),
+        }
+        with open(EVIDENCE_LOG, "a", encoding="utf-8") as fh:
+            fh.write(json.dumps(entry) + "\n")
+        print(f"[evidence] appended to {EVIDENCE_LOG}")
+    except Exception as exc:
+        print(f"[evidence] WARN: failed to append: {exc}")
+
+
 # ── Main ─────────────────────────────────────────────────────────────
 def main():
     OUT_DIR.mkdir(parents=True, exist_ok=True)
@@ -248,9 +284,13 @@ def main():
         print(f"\n=== RESULT: {pass_count}/{len(shots)} bilder har synlig stämpel ===")
         if pass_count == len(shots):
             print("ALL GREEN ✓")
+            if TASK_ID:
+                _append_evidence(TASK_ID, pass_count, len(shots))
             sys.exit(0)
         else:
             print(f"{len(shots) - pass_count} FAIL — inspektera screenshots i {OUT_DIR}")
+            if TASK_ID:
+                _append_evidence(TASK_ID, pass_count, len(shots), exit_code=3)
             sys.exit(3)
 
 

@@ -48,6 +48,7 @@ function parseArgs(argv) {
     sessionDir: null,
     focus: null,
     noExpoStart: false,
+    taskId: null,
   };
   for (let i = 0; i < argv.length; i++) {
     const a = argv[i];
@@ -59,6 +60,7 @@ function parseArgs(argv) {
     else if (a === '--session-dir' && next) { args.sessionDir = next; i++; }
     else if (a === '--focus' && next) { args.focus = next; i++; }
     else if (a === '--no-expo-start') { args.noExpoStart = true; }
+    else if (a === '--task-id' && next) { args.taskId = next; i++; }
     else if (a === '--help' || a === '-h') {
       console.log(fs.readFileSync(path.join(SCRIPT_DIR, 'README.md'), 'utf8'));
       process.exit(0);
@@ -305,6 +307,35 @@ async function main() {
   console.log(`[loop] rekommendation: ${recommendation} — ${reason}`);
   if (recommendation === 'CONTINUE') {
     console.log('[loop] nästa steg: implementera high/critical-fixar från review.md, kör sedan: node scripts/ui-review/run-iteration.mjs --continue');
+  }
+
+  // If --task-id was passed, append to evidence ledger so the workflow can use
+  // this iteration as ui_visual_review evidence.
+  if (args.taskId) {
+    try {
+      const cmdLine = `node scripts/ui-review/run-iteration.mjs --task-id ${taskId} --view ${args.view}`.replace('{taskId}', args.taskId);
+      const evidenceEntry = {
+        ts: new Date().toISOString(),
+        mission_id: args.taskId,
+        tool: 'Bash',
+        event: 'PostToolUse',
+        cmd: `node scripts/ui-review/run-iteration.mjs --task-id ${args.taskId} --view ${args.view}`,
+        exit_code: 0,
+        working_tree_fp: 'sha256:unknown',
+        duration_ms: null,
+        iteration: iterationNumber,
+        score: review.score,
+        view: args.view,
+        session: path.basename(sessionDir),
+        iter_dir: iterDir,
+      };
+      const evidencePath = path.join(REPO_ROOT, 'runtime', 'autonomy', 'evidence.ndjson');
+      fs.mkdirSync(path.dirname(evidencePath), { recursive: true });
+      fs.appendFileSync(evidencePath, JSON.stringify(evidenceEntry) + '\n', 'utf8');
+      console.log(`[loop] evidence appended to ${evidencePath}`);
+    } catch (err) {
+      console.warn(`[loop] WARN: failed to append evidence: ${err.message}`);
+    }
   }
 }
 

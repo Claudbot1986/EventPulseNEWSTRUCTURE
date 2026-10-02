@@ -92,6 +92,19 @@ const SOURCE_CATEGORY_DEFAULTS: Readonly<Record<string, SourceCategoryDefault>> 
     reason: 'Debaser = dedikerad musikscen (Strand + Hornstull).',
     verifiedSince: '2026-09-29',
   },
+  // 2026-10-01: added after Fas F analysis of community-by-source-2026-10-01.md.
+  // Both sources are 100 % single-domain — Generalization Protection Rule
+  // allows site-specific defaults when ≥ 50 % verified AND titles are uniform.
+  'berwaldhallen-tixly': {
+    slug: 'classical',
+    reason: 'Samma arena som berwaldhallen (Sveriges Radios symfonihall). 21/33 aktuella events har titlar som Beethoven/Sibelius/Mozart/Bruckner — uteslutande klassisk konsert. inferCategory() fångar inte "Sibelius" / "Bruckner" eftersom det inte är ett keyword (generalization-skydd), så source-default behövs som sista fallback.',
+    verifiedSince: '2026-10-01',
+  },
+  konstkalendern: {
+    slug: 'exhibition',
+    reason: 'Source listar Stockholm-gallerier och museer (Konsthall 16, Nationalmuseum, Liljevalchs, Moderna Museet, Millesgården etc.). 16/16 events har galleri-/museum-namn som INTE matchar detectCategory:s utställning-keywords (t.ex. "Konsthall 16", "Prins Eugens Waldemarsudde") — source-default behövs.',
+    verifiedSince: '2026-10-01',
+  },
 });
 
 /**

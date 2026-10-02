@@ -1,9 +1,10 @@
 {
+  "_comment": "Updated 2026-10-01: project moved from /Volumes/2TB filer/NEWSTRUCTURE-COPY to /Users/claudgashi/EventPulse. Canonical-path-guard, optimizer-worker.sh, and recover-optimizer.ts still hardcode the old path as REPO_ROOT_DEFAULT (optimizer is QUARANTINED per CLAUDE.md since 2026-08-22, so this is non-blocking but worth knowing).",
   "schema_version": "ep-runtime-config-1.0",
-  "project_root": "/Volumes/2TB filer/NEWSTRUCTURE-COPY",
+  "project_root": "/Users/claudgashi/EventPulse",
   "repo_marker": ".claude/eventpulse/policy.md",
   "repo_identity_check": {
-    "expected_path_suffix": "/Volumes/2TB filer/NEWSTRUCTURE-COPY",
+    "expected_path_suffix": "/Users/claudgashi/EventPulse",
     "marker_file": ".claude/eventpulse/policy.md"
   },
   "optimizer": {

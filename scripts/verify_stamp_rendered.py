@@ -28,6 +28,7 @@ Metod (inga pixel-läsningar av bildfiler — DOM-påståenden per projektregel)
 Användning:
   python3 scripts/verify_stamp_rendered.py
   BASE_URL=http://localhost:8088 python3 scripts/verify_stamp_rendered.py
+  python3 scripts/verify_stamp_rendered.py --task-id my-task-id
 """
 
 import json
@@ -37,6 +38,16 @@ import time
 from pathlib import Path
 
 from playwright.sync_api import sync_playwright, TimeoutError as PlaywrightTimeoutError
+
+TASK_ID = None
+for i, arg in enumerate(sys.argv[1:], 1):
+    if arg == "--task-id" and i < len(sys.argv) - 1:
+        TASK_ID = sys.argv[i + 1]
+        break
+    elif arg.startswith("--task-id="):
+        TASK_ID = arg.split("=", 1)[1]
+        break
+EVIDENCE_LOG = Path(__file__).resolve().parent.parent / "runtime" / "autonomy" / "evidence.ndjson"
 
 BASE_URL = os.environ.get("BASE_URL", "http://localhost:8088")
 REPORT_PATH = Path("/tmp/stamp-rendered-report.json")
@@ -344,9 +355,38 @@ def main():
         details_fail = [d for d in detail_report if d["verdict"] != "PASS"]
         if details_fail:
             print("FAIL: details-vyn döljer stämpeln.")
+            if TASK_ID:
+                _append_evidence(TASK_ID, n_pass, n_fail + n_pass, exit_code=3)
             sys.exit(3)
         print("ALL GREEN ✓ — stämpeln verkar synlig i renderad feed.")
+        if TASK_ID:
+            _append_evidence(TASK_ID, n_pass, n_fail + n_pass)
         sys.exit(0)
+
+
+# ── Evidence-append ──────────────────────────────────────────────────
+def _append_evidence(task_id, pass_count, total, exit_code=0):
+    """Log this verifier run to the autonomy evidence ledger (NDJSON)."""
+    try:
+        EVIDENCE_LOG.parent.mkdir(parents=True, exist_ok=True)
+        entry = {
+            "ts": time.strftime("%Y-%m-%dT%H:%M:%S%z"),
+            "mission_id": task_id,
+            "tool": "Bash",
+            "event": "PostToolUse",
+            "cmd": f"python3 scripts/verify_stamp_rendered.py --task-id {task_id}",
+            "exit_code": exit_code,
+            "working_tree_fp": "sha256:unknown",
+            "duration_ms": None,
+            "verifier": "verify_stamp_rendered.py",
+            "pass_count": pass_count,
+            "total_cards": total,
+        }
+        with open(EVIDENCE_LOG, "a", encoding="utf-8") as fh:
+            fh.write(json.dumps(entry) + "\n")
+        print(f"[evidence] appended to {EVIDENCE_LOG}")
+    except Exception as exc:
+        print(f"[evidence] WARN: failed to append: {exc}")
 
 
 if __name__ == "__main__":

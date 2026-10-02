@@ -26,6 +26,7 @@ import { fetchHtml } from '../tools/fetchTools';
 import { extractFromJsonLd } from '../F-eventExtraction/extractor';
 import * as cheerio from 'cheerio';
 import type { ParsedEvent } from '../F-eventExtraction/schema';
+import { detectCategory } from '../F-eventExtraction/categoryKeywords.js';
 import { renderPage, needsRendering, type RenderOptions } from '../D-renderGate/renderGate';
 
 // ── Paths ────────────────────────────────────────────────────────────────────
@@ -187,7 +188,9 @@ function extractWithDaiAdapter(html: string, adapter: DaiAdapter): ParsedEvent[]
       url: linkHref.startsWith('http')
         ? linkHref
         : adapter.seedUrl.replace(/\/$/, '') + (linkHref.startsWith('/') ? linkHref : '/' + linkHref),
-      category: 'culture',
+      // 2026-10-01: detect category via shared keyword rules instead of
+      // hardcoding 'culture'. Falls back to 'community' (genuine semantic).
+      category: detectCategory(title),
       source: adapter.sourceId,
       sourceUrl: adapter.seedUrl,
       confidence: {

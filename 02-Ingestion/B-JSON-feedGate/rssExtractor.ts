@@ -345,18 +345,20 @@ function normalizeRssItem(item: any, source: string, sourceUrl: string): ParsedE
     signals,
   };
 
-  // Map Swedish "Typ" to category
+  // Map Swedish "Typ" to category (2026-10-01: use canonical v3 slugs — 'culture'
+  // and 'art' were deprecated and canonicalize → 'community', inflating the
+  // community bucket. 'talks-lectures' / 'exhibition' are the correct slugs.)
   let category: string | undefined;
   if (typ) {
     const t = typ.toLowerCase();
     if (t.includes('disputation') || t.includes('seminarium') || t.includes('seminarier')) {
-      category = 'culture';
+      category = 'talks-lectures';
     } else if (t.includes('föreläsning') || t.includes('lecture')) {
-      category = 'culture';
+      category = 'talks-lectures';
     } else if (t.includes('konsert') || t.includes('musik')) {
       category = 'music';
     } else if (t.includes('utställning') || t.includes('konst')) {
-      category = 'art';
+      category = 'exhibition';
     } else if (t.includes('sport') || t.includes('match')) {
       category = 'sports';
     } else if (t.includes('barn') || t.includes('student')) {

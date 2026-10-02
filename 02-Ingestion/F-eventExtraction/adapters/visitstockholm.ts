@@ -24,6 +24,7 @@
  */
 import * as cheerio from 'cheerio';
 import { ParsedEventSchema, type ParsedEvent } from '../schema';
+import { detectCategory } from '../categoryKeywords.js';
 
 const SOURCE_ID = 'visitstockholm';
 const CITY = 'Stockholm';
@@ -216,6 +217,11 @@ function extractDetailEvent(html: string, url: string): ParsedEvent | null {
     }
 
     try {
+      // 2026-10-01: detect category via shared keyword rules instead of
+      // hardcoding 'culture'. Falls back to 'community' (genuine semantic)
+      // when no keyword matches.
+      const category = detectCategory(name, description);
+
       return ParsedEventSchema.parse({
         title: name,
         date: datePart,
@@ -229,7 +235,7 @@ function extractDetailEvent(html: string, url: string): ParsedEvent | null {
         ticketUrl: offers?.url,
         organizer: organizer?.name || undefined,
         imageUrl: ogImage || undefined,
-        category: 'culture',
+        category,
         source: SOURCE_ID,
         sourceUrl: url,
         confidence: {
@@ -262,6 +268,11 @@ function extractDetailEvent(html: string, url: string): ParsedEvent | null {
   if (!title) return null;
 
   try {
+    // 2026-10-01: detect category via shared keyword rules instead of
+    // hardcoding 'culture'. Falls back to 'community' (genuine semantic)
+    // when no keyword matches.
+    const category = detectCategory(title, ogDescription || undefined);
+
     return ParsedEventSchema.parse({
       title,
       date: parsed.start,
@@ -271,7 +282,7 @@ function extractDetailEvent(html: string, url: string): ParsedEvent | null {
       description: ogDescription || undefined,
       url,
       imageUrl: ogImage || undefined,
-      category: 'culture',
+      category,
       source: SOURCE_ID,
       sourceUrl: url,
       confidence: {

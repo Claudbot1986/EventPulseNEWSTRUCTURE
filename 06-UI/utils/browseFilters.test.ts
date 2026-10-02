@@ -190,6 +190,48 @@ describe('matchesQuery — genre prefill terms', () => {
     expect(matchesQuery(ev, [])).toBe(true);
     expect(matchesQuery(ev, undefined)).toBe(true);
   });
+
+  // 2026-10-02 (Utforska sök): description lades till i sök-haystacken
+  // så fritext-sök matchar mot event-beskrivningen också.
+  it('matches against description field', () => {
+    const evWithDesc = {
+      title: 'Krogshow',
+      venue_name: 'Norra Latin',
+      description: 'En magisk kväll med standup och levande musik.',
+    };
+    expect(matchesQuery(evWithDesc, ['standup'])).toBe(true);
+    expect(matchesQuery(evWithDesc, ['magisk'])).toBe(true);
+    expect(matchesQuery(evWithDesc, ['opera'])).toBe(false);
+  });
+
+  it('falls back to description_sv / description_en when description is missing', () => {
+    const evWithSv = {
+      title: 'Krogshow',
+      venue_name: 'Norra Latin',
+      description_sv: 'Standup och levande musik.',
+    };
+    expect(matchesQuery(evWithSv, ['standup'])).toBe(true);
+    const evWithEn = {
+      title: 'Krogshow',
+      venue_name: 'Norra Latin',
+      description_en: 'Standup and live music.',
+    };
+    expect(matchesQuery(evWithEn, ['live'])).toBe(true);
+  });
+
+  it('description search is accent- and case-insensitive', () => {
+    const ev = {
+      title: 'Foo',
+      description: 'Café Spécialité',
+    };
+    expect(matchesQuery(ev, ['cafe'])).toBe(true);
+    expect(matchesQuery(ev, ['SPECIALITE'])).toBe(true);
+  });
+
+  it('still returns true when description is empty but title matches', () => {
+    const ev = { title: 'Jazzkväll', venue_name: 'Fasching' };
+    expect(matchesQuery(ev, ['jazz'])).toBe(true);
+  });
 });
 
 describe('applyBrowseFilters — the full chain', () => {

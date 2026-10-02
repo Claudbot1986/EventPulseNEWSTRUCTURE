@@ -19,18 +19,16 @@
  *   not all of Eventbrite). Per CLAUDE.md Generalization Protection Rule,
  *   site-specific quirks must not influence C0/C1/C2 — they live here.
  *
- * This adapter exists so we can:
- *   1. Use axios with maxRedirects=0 to call the listing page directly,
- *      bypassing the fetchHtml redirect-loop false positive reported in
- *      the 2026-08-19 routingReason for this source.
- *   2. Honour BACKLOG.md rate-limit (1 req / 3s) inline rather than relying
- *      on the universal extractor calling fetchHtml.
- *   3. Optionally follow the /all-events/?start_date= pagination path to
- *      harvest more than the first page.
+ * 2026-10-01 change: Category used to be hardcoded to 'community' (line 150).
+ * Now we run `detectCategory(name)` from categoryKeywords.ts on the event
+ * title so events with clear categories (musik, teater, workshop, etc.) get
+ * their real slug. Items with no detectable keyword still get 'community'
+ * via the shared module — which is the correct semantic, not a slaskhink.
  */
 import * as cheerio from 'cheerio';
 import axios from 'axios';
 import { ParsedEventSchema, type ParsedEvent } from '../schema';
+import { detectCategory } from '../categoryKeywords.js';
 
 const SOURCE_ID = 'eventbrite-stockholm-aggregator';
 const CITY = 'Stockholm';
@@ -134,6 +132,11 @@ function extractEventsFromHtml(html: string, url: string): ParsedEvent[] {
         loc?.geo?.longitude !== undefined ? parseFloat(String(loc.geo.longitude)) : null;
 
       try {
+        // 2026-10-01: detect category via shared keyword rules instead of hardcoding
+        // 'community'. Eventbrite items typically only expose title in their
+        // ItemList, so detection runs on title alone.
+        const category = detectCategory(name, undefined);
+
         const parsed = ParsedEventSchema.parse({
           title: name,
           date: datePart,
@@ -147,7 +150,7 @@ function extractEventsFromHtml(html: string, url: string): ParsedEvent[] {
           lng: !isNaN(lng as number) ? lng : undefined,
           url: ev.url || undefined,
           imageUrl: ev.image || undefined,
-          category: 'community',
+          category,
           source: SOURCE_ID,
           sourceUrl: url,
           confidence: {

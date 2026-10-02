@@ -325,6 +325,20 @@ export function buildApp(opts: {
     const isFree = req.query.isFree === 'true' || req.query.isFree === '1'
       ? true
       : (req.query.isFree === 'false' || req.query.isFree === '0' ? false : null);
+    // 2026-10-02 (Utforska sök): fri text-sökning mot titel + beskrivning.
+    // ?q="krogshow lördag" → whitespace-split, varje term måste matchas
+    // (AND-logik) mot något av title_sv/title_en/description_sv/description_en.
+    // Klippte till 200 tecken för att skydda mot oavsiktligt stora frågor.
+    const q = typeof req.query.q === 'string' && req.query.q.trim()
+      ? req.query.q.trim().slice(0, 200)
+      : null;
+    // 2026-10-02 (Utforska sök datumintervall): valfri övre gräns för
+    // browsning. När ?dateTo är satt ersätter den days för det övre
+    // fönstret så UI:t kan välja "1–14 november" exakt. Sätts alltid
+    // till max(datum-idag, from) om datumet är i förflutet.
+    const dateTo = typeof req.query.dateTo === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(req.query.dateTo)
+      ? req.query.dateTo
+      : null;
 
     // Fas C: rank only for a verified user in the treatment variant. The
     // variant check is sticky per user id (experiments.ts), same experiment
@@ -343,6 +357,10 @@ export function buildApp(opts: {
         ...(offset !== undefined ? { offset } : {}),
         ...(mood ? { mood } : {}),
         ...(isFree === true ? { isFree: true } : {}),
+        // 2026-10-02 (Utforska sök): fritext + datumintervall. dateTo här
+        // ersätter den dagars-baserade övre gränsen när det är satt.
+        ...(q ? { q } : {}),
+        ...(dateTo ? { dateTo } : {}),
         withArtistSlugs: shouldRank,
       });
 
@@ -409,6 +427,11 @@ export function buildApp(opts: {
         has_more: result.has_more,
         total: result.total,
         next_from: addDays(result.from, days),
+        // 2026-10-02 (Utforska sök): echo av sök-parametrarna så klienten
+        // kan visa "Sökresultat för '...'" och en eventuell
+        // AI-relaxation-banner vet exakt vilka filter som användes.
+        ...(q ? { q } : {}),
+        ...(dateTo ? { dateTo } : {}),
       });
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : 'unknown error';
