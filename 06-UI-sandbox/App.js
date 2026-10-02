@@ -31,10 +31,28 @@ function ComponentListItem({ item, onSelect }) {
 function ComponentDetail({ item, onBack }) {
   const ShowcaseComponent = item.Component;
   const isFullWidth = Boolean(item.fullWidth);
-  // Showcase-rubrik (rubrik + ev. fullbredd-komponent) ligger alltid
-  // inne i padX:n. Om komponenten är fullbredd (t.ex. UtforskaSection
-  // som är designad kant-till-kant) bryts den UT ur padX:n så den inte
-  // får 20px sandbox-marginal på båda sidor.
+  const isFullscreen = Boolean(item.fullscreen);
+
+  // Fullscreen-läge (t.ex. MapScreen med pinch/pan): INGEN ScrollView —
+  // sandbox-listan ska inte scroll'a under panoreringsgesten.
+  // Visar en tunnbar minimarkering för 'Tillbaka' + komponenten tar resten.
+  if (isFullscreen) {
+    return (
+      <View style={styles.fullscreen}>
+        <Pressable
+          style={({ pressed }) => [styles.backButtonAbsolute, pressed && styles.backButtonPressed]}
+          onPress={onBack}
+          accessibilityRole="button"
+          accessibilityLabel="Tillbaka till komponentlistan"
+        >
+          <Text style={styles.backText}>‹ Komponenter</Text>
+        </Pressable>
+        <ShowcaseComponent {...item.sampleProps} />
+      </View>
+    );
+  }
+
+  // Default-läge: ScrollView-wrapper för rubrik + komponent + beskrivning.
   return (
     <ScrollView contentContainerStyle={styles.screen}>
       <View style={isFullWidth ? undefined : styles.padX}>
@@ -146,6 +164,16 @@ const styles = StyleSheet.create({
     paddingVertical: 6,
     marginBottom: 16,
   },
+  backButtonAbsolute: {
+    position: 'absolute',
+    top: 36,
+    left: 12,
+    zIndex: 100,
+    paddingVertical: 6,
+    paddingHorizontal: 12,
+    backgroundColor: 'rgba(0, 0, 0, 0.55)',
+    borderRadius: 6,
+  },
   backButtonPressed: {
     opacity: 0.6,
   },
@@ -157,5 +185,10 @@ const styles = StyleSheet.create({
   showcase: {
     marginTop: 16,
     marginBottom: 8,
+  },
+  fullscreen: {
+    flex: 1,
+    backgroundColor: '#000000',
+    paddingTop: 48, // SafeArea + status-bar
   },
 });

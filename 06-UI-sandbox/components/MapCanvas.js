@@ -259,7 +259,7 @@ export default function MapCanvas({
     <View
       onLayout={onLayout}
       testID={testID}
-      style={[styles.canvas, { height }]}
+      style={[styles.canvas, style, { height }]}
       accessibilityLabel={`Karta med ${events.length} events i Stockholm-området`}
       {...panResponder.panHandlers}
     >
@@ -277,7 +277,6 @@ export default function MapCanvas({
 const styles = StyleSheet.create({
   canvas: {
     backgroundColor: '#0A0A0A',
-    marginHorizontal: TOKENS.space.padX,
     borderRadius: 8,
     overflow: 'hidden',
     position: 'relative',

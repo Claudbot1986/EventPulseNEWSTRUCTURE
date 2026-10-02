@@ -171,13 +171,14 @@ export const COMPONENT_REGISTRY = [
     id: 'map-screen',
     name: 'MapScreen',
     description:
-      'Karta-sandbox (2026-10-02). Visar ALLA future Stockholm-events ' +
-      'som prickar på en SVG-fri karta med grid-klustring. Filter-knappar: ' +
-      'Idag / Helgen / Nästa helg / Alla byter tidsfönster. Klient-side ' +
-      'jitter (±0.005°) för fallback-events (lat=59.3293) förhindrar ' +
-      'pixel-krock. e2e: 06-UI-sandbox/e2e/map-screen.test.mjs verifierar ' +
-      'data + logik mot live Supabase.',
+      'Karta-sandbox med riktiga OSM-gator. Pinch med 2 fingrar zooma, ' +
+      'dra med 1 finger panorera. Filter-knapparna under kartan byter ' +
+      'tidsfönster (Idag / Helgen / Nästa helg / Alla) och visar ' +
+      'antal events som matchar. Event-counts (TOTAL / VISIBLE) under ' +
+      'filter-baren. Fullscreen-läge — ingen scroll från sandbox-listan, ' +
+      'bara karta + filter + counts.',
     Component: MapScreen,
     sampleProps: {},
+    fullscreen: true,
   },
 ];
