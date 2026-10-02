@@ -399,26 +399,67 @@ function extractJsonLd($: cheerio.CheerioAPI, source: string, baseUrl: string): 
     try {
       const content = $(el).html() || '';
       const data = JSON.parse(content);
-      collectJsonLdEvents(data, source, baseUrl, events);
+      const rootDesc = findRootDescription(data);
+      collectJsonLdEvents(data, source, baseUrl, events, rootDesc);
     } catch { /* skip */ }
   });
 
   return events;
 }
 
-function collectJsonLdEvents(data: unknown, source: string, baseUrl: string, acc: ParsedEvent[]): void {
+function collectJsonLdEvents(
+  data: unknown,
+  source: string,
+  baseUrl: string,
+  acc: ParsedEvent[],
+  inheritedDescription: string | null = null,
+): void {
   if (!data || typeof data !== 'object') return;
 
   const obj = data as Record<string, unknown>;
   const type: string = String(obj['@type'] || '');
 
+  // 2026-10-02 — 5.3 description-arv. inheritedDescription propageras ner i
+  // rekursionen så att Event-objekt inuti NewsArticle.about[] eller
+  // WebPage.mainEntity kan ärva Parentara felande description.
+  //
+  // Exempel: thatsup.se/stockholm/article/* har @graph[WebPage] med
+  // description="Konstruktion och bild är en utställning..." och
+  // @graph[NewsArticle].about[] med 39-58 events som saknar description.
+  // Innan 5.3: Events fångades inte alls. Efter 5.3 med description-arv:
+  // Events fångas OCH får description från WebPage.
+
   if (['Event', 'EventSeries', 'EventTicket'].includes(type)) {
-    const evt = makeEvent(obj, 'A1', source, baseUrl);
+    // Om Event saknar egen description OCH vi har en inherited → använd den.
+    const eventHasOwnDescription = typeof obj.description === 'string' && obj.description.trim().length >= 10;
+    const dataForEvent = !eventHasOwnDescription && inheritedDescription
+      ? { ...obj, description: inheritedDescription }
+      : obj;
+    const evt = makeEvent(dataForEvent, 'A1', source, baseUrl);
     if (evt) acc.push(evt);
   }
 
+  // Beräkna vilken description som propageras ner till children.
+  // Prioritet:
+  //   1. Aktuell nod har egna `description` → children ärver den.
+  //   2. Annars behåll inheritedDescription (från parent context, t.ex.
+  //      WebPage-beskrivning i samma @graph).
+  //   3. Sista utväg: aktuell headline (men BARA om vi inte redan har en
+  //      inherited description — annars prioriteras den exklares beskrivning
+  //      som har rikare innehåll).
+  let childInheritedDescription: string | null;
+  if (typeof obj.description === 'string' && obj.description.trim().length >= 10) {
+    childInheritedDescription = obj.description;
+  } else if (inheritedDescription) {
+    childInheritedDescription = inheritedDescription;
+  } else if (typeof obj.headline === 'string' && obj.headline.trim().length >= 10) {
+    childInheritedDescription = obj.headline;
+  } else {
+    childInheritedDescription = null;
+  }
+
   if (Array.isArray(obj['@graph'])) {
-    for (const item of obj['@graph']) collectJsonLdEvents(item, source, baseUrl, acc);
+    for (const item of obj['@graph']) collectJsonLdEvents(item, source, baseUrl, acc, childInheritedDescription);
   }
 
   if (Array.isArray(obj.itemListElement)) {
@@ -440,9 +481,9 @@ function collectJsonLdEvents(data: unknown, source: string, baseUrl: string, acc
 
   for (const key of ['subEvent', 'subEvents', 'superEvent']) {
     if (Array.isArray(obj[key])) {
-      for (const sub of obj[key]) collectJsonLdEvents(sub, source, baseUrl, acc);
+      for (const sub of obj[key]) collectJsonLdEvents(sub, source, baseUrl, acc, childInheritedDescription);
     } else if (obj[key]) {
-      collectJsonLdEvents(obj[key], source, baseUrl, acc);
+      collectJsonLdEvents(obj[key], source, baseUrl, acc, childInheritedDescription);
     }
   }
 
@@ -451,17 +492,57 @@ function collectJsonLdEvents(data: unknown, source: string, baseUrl: string, acc
   // rather than emitting a top-level Event. Exempel: thatsup.se/stockholm/article/*
   // har @graph[NewsArticle].about[] med 39-58 events per sida.
   // Vi rekurserar in i båda fälten så extractorn plockar det nested eventet.
+  // inheritedDescription propageras ner så att nested Events utan egen
+  // description får article-beskrivningen som fallback.
   for (const key of ['about', 'mainEntity']) {
     if (Array.isArray(obj[key])) {
-      for (const item of obj[key]) collectJsonLdEvents(item, source, baseUrl, acc);
+      for (const item of obj[key]) collectJsonLdEvents(item, source, baseUrl, acc, childInheritedDescription);
     } else if (obj[key] && typeof obj[key] === 'object') {
-      collectJsonLdEvents(obj[key], source, baseUrl, acc);
+      collectJsonLdEvents(obj[key], source, baseUrl, acc, childInheritedDescription);
     }
   }
 
   if (Array.isArray(obj['@set'])) {
-    for (const item of obj['@set']) collectJsonLdEvents(item, source, baseUrl, acc);
+    for (const item of obj['@set']) collectJsonLdEvents(item, source, baseUrl, acc, childInheritedDescription);
   }
+}
+
+/**
+ * Hitta den bästa description-kandidat i ett JSON-LD-träd INNAN event-extrahering
+ * börjar. Används som root-inheritedDescription så att wrapper-objekt i @graph
+ * kan ärva description från siblings (t.ex. WebPage.description → NewsArticle.
+ * about[] → nested Event).
+ *
+ * Söker i prioritetsordning:
+ *   1. Top-level obj.description (om någon finns)
+ *   2. Top-level obj.headline (om någon finns)
+ *   3. Beskrivning från @graph items (WebPage.description prioriterat)
+ *
+ * Returnerar null om ingen lämplig description hittas.
+ */
+function findRootDescription(ctx: any): string | null {
+  if (!ctx || typeof ctx !== 'object') return null;
+
+  // Prioritet 1: top-level
+  if (typeof ctx.description === 'string' && ctx.description.trim().length >= 10) {
+    return ctx.description;
+  }
+  if (typeof ctx.headline === 'string' && ctx.headline.trim().length >= 10) {
+    return ctx.headline;
+  }
+
+  // Prioritet 2: @graph items (söker — bloggsajter som Wrappers sätter
+  // description i en sibling-nod)
+  if (Array.isArray(ctx['@graph'])) {
+    for (const item of ctx['@graph']) {
+      if (!item || typeof item !== 'object') continue;
+      if (typeof item.description === 'string' && item.description.trim().length >= 10) {
+        return item.description;
+      }
+    }
+  }
+
+  return null;
 }
 
 // ─── Method A2: Microdata ─────────────────────────────────────────────────────

@@ -448,4 +448,90 @@ describe('universal-extractor — Strategy A1: NewsArticle/WebPage wrapper recur
     expect(result.events.length).toBe(1);
     expect(result.events[0].title).toBe('Itemlist Event');
   });
+
+  // ── Description inheritance: WebPage.description → NewsArticle.about[] ──
+  it('inherits description from sibling WebPage when nested Event lacks one', () => {
+    // Real thatsup pattern: @graph[WebPage] (description) + @graph[NewsArticle]
+    // (no description) med about[] events. Barnen ska ärva WebPage.description.
+    const html = htmlWithJsonLd({
+      '@context': 'https://schema.org',
+      '@graph': [
+        {
+          '@type': 'WebPage',
+          name: 'Test article',
+          description:
+            'Konstruktion och bild är en utställning i Nacka konsthall av konstnären Matilda Dominique.',
+        },
+        {
+          '@type': 'NewsArticle',
+          headline: 'Test article',
+          about: [
+            {
+              '@type': 'Event',
+              name: 'Test Event',
+              startDate: '2026-09-19',
+              location: { '@type': 'Place', name: 'Nacka konsthall' },
+            },
+          ],
+        },
+      ],
+    });
+    const result = extractEvents(html, 'inherit-desc', 'https://example.com/article');
+    expect(result.events.length).toBe(1);
+    expect(result.events[0].description).toBe(
+      'Konstruktion och bild är en utställning i Nacka konsthall av konstnären Matilda Dominique.',
+    );
+  });
+
+  it('prefers own description over inherited one (no overwrite)', () => {
+    // Om Event har description → den vinner över arv.
+    const html = htmlWithJsonLd({
+      '@context': 'https://schema.org',
+      '@graph': [
+        {
+          '@type': 'WebPage',
+          description: 'Generic page description that is longer than ten chars',
+        },
+        {
+          '@type': 'NewsArticle',
+          headline: 'Article headline',
+          about: [
+            {
+              '@type': 'Event',
+              name: 'Event With Own Description',
+              startDate: '2026-09-19',
+              description: 'Specific description for this event only',
+              location: { '@type': 'Place', name: 'Venue' },
+            },
+          ],
+        },
+      ],
+    });
+    const result = extractEvents(html, 'no-overwrite', 'https://example.com/article');
+    expect(result.events.length).toBe(1);
+    expect(result.events[0].description).toBe('Specific description for this event only');
+  });
+
+  it('falls back to headline only when no description is available anywhere', () => {
+    // Sista utväg: om ingen description finns i trädet, använd headline.
+    const html = htmlWithJsonLd({
+      '@context': 'https://schema.org',
+      '@graph': [
+        {
+          '@type': 'NewsArticle',
+          headline: 'Article headline for description fallback',
+          about: [
+            {
+              '@type': 'Event',
+              name: 'Event Without Description',
+              startDate: '2026-09-19',
+            },
+          ],
+        },
+      ],
+    });
+    const result = extractEvents(html, 'headline-fallback', 'https://example.com/article');
+    expect(result.events.length).toBe(1);
+    expect(result.events[0].description).toBe('Article headline for description fallback');
+  });
 });
