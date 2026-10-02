@@ -68,7 +68,9 @@ export const JsonLdEventSchema = z.object({
   eventStatus: JsonLdUrl.optional(),
   eventAttendanceMode: JsonLdUrl.optional(),
   offers: z.union([OfferSchema, z.array(OfferSchema)]).optional(),
-  image: z.union([JsonLdString, JsonLdUrl]).optional(),
+  image: z
+    .union([JsonLdString, JsonLdUrl, z.array(z.union([JsonLdString, JsonLdUrl]))])
+    .optional(),
   inLanguage: JsonLdString.optional(),
   // 2026-10-02 — 5.3 NewsArticle wrappers. Håll koll på fält som inte är
   // Event-specifika men som kan dyka upp i @graph items (NewsArticle.headline,
