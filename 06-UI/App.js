@@ -795,12 +795,23 @@ function HomeScreen({ onEventPress, scrollPositionRef, pendingIntent, dismissPen
   // Utforska search box (2026-09-20): sits next to the Filter toggle in the
   // fixed filter bar; collapses away on scroll down, returns on scroll up.
   // 2026-10-02 (sök-läge UX): searchActive triggas vid ≥3 tecken OCH
-  // minst en träff i `filteredEvents` (användaren uttryckligen: "när man
-  // skrivit 3 bokstäver och inte finns i databasen så ÄNDRAS INGENTING i
-  // utforska"). Två grindar: text-längd OCH resultat. Om inga träffar
-  // hittar de som sökrutan fångar text men karusellerna förblir oförändrade.
-  // Vid sök-läge: karuseller → lista, scroll-hide aktiveras.
+  // minst en server-träff (användaren uttryckligen: "när man skrivit 3
+  // bokstäver och inte finns i databasen så ÄNDRAS INGENTING i utforska").
+  // 2026-10-02 v2 (server-side sök): `filteredEvents.length > 0` är INTE
+  // tillräckligt — `events`-arrayen innehåller bara ~50 events för den
+  // aktuella veckan. Om användaren söker på "jazz" och inga jazz-events
+  // råkar finnas i veckan säger client-filtret "inga träffar" trots att DB:n
+  // har massor. Lösning: server-side sök via fetchFeed({ q }) som returnerar
+  // ALLA events som matchar frågan oavsett datum — det är detta som driver
+  // searchResults-state.
   const [searchQuery, setSearchQuery] = useState('');
+  // `searchResults` = server-side sökresultat (separata från karusellernas
+  // `events`-array). null = "ingen sökning körs just nu", [] = "sökning kördes
+  // men inga träffar", [...] = träffar.
+  const [searchResults, setSearchResults] = useState(null);
+  const [searchLoading, setSearchLoading] = useState(false);
+  const searchSeqRef = useRef(0);
+  const searchTimerRef = useRef(null);
   // `filteredEvents` deklareras längre ner via useMemo (rad ca 1142) — vi
   // härleder `searchActive` EFTER useMemo men innan render. useMemo:s deps
   // fångar searchQuery så härledningen är konsistent.
@@ -1132,6 +1143,47 @@ function HomeScreen({ onEventPress, scrollPositionRef, pendingIntent, dismissPen
     }
   }, []);
 
+  // 2026-10-02 (sök-läge UX, server-side sök): när användaren skriver i
+  // sökrutan måste vi fråga agent-API:t med q-parametern för att hitta
+  // events UTANFÖR den aktuella veckans feed. fetchFeed({ q }) returnerar
+  // alla matchande events oavsett datum. Debounce 350 ms så varje tangent
+  // inte spam:ar servern. searchSeqRef ser till att bara det senaste svaret
+  // skriver till state (äldre fetches kan ignorera sitt svar om en nyare
+  // redan har startat). Sökningen startar vid ≥3 tecken; under detta är
+  // searchResults=null (ingen sökning körs, ingen träff kan visas).
+  useEffect(() => {
+    const q = searchQuery.trim();
+    if (q.length < 3) {
+      // Under 3 tecken: ingen sökning. Nollställ searchResults så
+      // searchActive går false och karusellerna kommer tillbaka.
+      if (searchTimerRef.current) clearTimeout(searchTimerRef.current);
+      setSearchResults(null);
+      setSearchLoading(false);
+      return;
+    }
+    if (searchTimerRef.current) clearTimeout(searchTimerRef.current);
+    searchTimerRef.current = setTimeout(async () => {
+      const seq = ++searchSeqRef.current;
+      setSearchLoading(true);
+      try {
+        const page = await fetchFeed({ q, limit: 100, offset: 0, days: 365 });
+        // Om en nyare sökning har startat, ignorera detta svar.
+        if (seq !== searchSeqRef.current) return;
+        setSearchResults(page.events || []);
+      } catch (_err) {
+        if (seq !== searchSeqRef.current) return;
+        // Nätverksfel: lämna searchResults som null (sök-läge triggar inte)
+        // — användaren kan försöka igen genom att skriva en bokstav till.
+        setSearchResults(null);
+      } finally {
+        if (seq === searchSeqRef.current) setSearchLoading(false);
+      }
+    }, 350);
+    return () => {
+      if (searchTimerRef.current) clearTimeout(searchTimerRef.current);
+    };
+  }, [searchQuery]);
+
   // Collapse/expand animation for the search box, driven by scroll direction.
   useEffect(() => {
     Animated.timing(searchBarAnim, {
@@ -1159,14 +1211,36 @@ function HomeScreen({ onEventPress, scrollPositionRef, pendingIntent, dismissPen
     searchText: trimmedSearch,
   }), [events, timeFilter, selectedCategories, priceFilter, statusFilter, pinnedDateIso, queryTerms, trimmedSearch]);
 
-  // 2026-10-02 (sök-läge UX): searchActive är härledd EFTER filteredEvents
-  // eftersom vi behöver veta om det finns träffar. Två grindar:
-  //   (a) ≥3 tecken i sök-rutan (användaren uttryckligen krav)
-  //   (b) minst en träff i databasen / loaded events (användaren uttryckligen:
-  //       "om inte finns i databasen så ÄNDRAS INGENTING i utforska")
-  // När searchActive är false ser användaren karusellerna som förut. När den
-  // är true byts innehållet till en vertikal lista över filteredEvents.
-  const searchActive = trimmedSearch.length >= 3 && filteredEvents.length > 0;
+  // 2026-10-02 (sök-läge UX): searchActive härleds efter server-side sök-
+  // resultat (searchResults), inte efter filteredEvents. Två grindar:
+  //   (a) ≥3 tecken i sök-rutan (användarens krav)
+  //   (b) minst en träff i databasen — vi frågar agent-API:t med q-parametern
+  //       och får ALLA matchningar (inte bara den aktuella veckans 50 events).
+  //       Användarens krav: "om inte finns i databasen så ÄNDRAS INGENTING
+  //       i utforska".
+  // searchResults-tillståndet sätts av useEffect-server-side-söknings-effekten
+  // (se rad ca 1130): null = ingen sökning körs, [] = sökning utan träffar,
+  // [...] = träffar. searchActive går inte true förrän servern svarat — vi
+  // vill inte visa en gammal lista medan en ny sökning laddar.
+  const searchActive =
+    trimmedSearch.length >= 3 &&
+    Array.isArray(searchResults) &&
+    searchResults.length > 0;
+
+  // Events som visas i sök-läge — server-resultat (raw events) om vi har
+  // dem, annars tomt. Mappas via mapAgentEventEventToRow till det rad-
+  // format UtforskaSection förväntar sig (subtitleParts, badge, etc.).
+  // Om ingen sökning körs (searchResults === null) eller sökningen gav 0
+  // träffar (searchResults === []) blir listan tom och sök-läget triggar
+  // inte (searchActive=false → karusellerna).
+  const searchListRaw = searchResults ?? [];
+  const searchListEvents = useMemo(() => {
+    if (searchListRaw.length === 0) return [];
+    const { mapAgentEventToRow } = require('./components/rowMapping');
+    return searchListRaw
+      .map((e) => mapAgentEventToRow(e, language))
+      .filter(Boolean);
+  }, [searchListRaw, language]);
 
   const groupedEvents = useMemo(() => groupEventsByDay(filteredEvents, language, t), [filteredEvents, language, t]);
   // statusFilter är hårdkodad — bidrar inte längre till aktiva filter.
@@ -1344,15 +1418,15 @@ function HomeScreen({ onEventPress, scrollPositionRef, pendingIntent, dismissPen
       >
         {searchActive ? (
           // 2026-10-02 (sök-läge UX): karusellerna ersätts av en vertikal
-          // lista med de träffande eventsen. Samma Utforskal-listkomponent
-          // som SearchScreen använder — samma utseende och tangent-beteende.
-          // Tomt läge hanteras inne i komponenten (renderar "no events"-text).
+          // lista med server-träffar (searchListEvents). Samma Utforskal-
+          // listkomponent som SearchScreen använde — samma utseende och
+          // tangent-beteende. Tomt läge hanteras inne i komponenten.
           <UtforskaSection
-            events={filteredEvents}
+            events={searchListEvents}
             eyebrowText={t('explore.search.resultsEyebrow', { q: trimmedSearch })}
-            totalCount={filteredEvents.length}
+            totalCount={searchListEvents.length}
             onEventPress={onEventPress}
-            loadingSkeletonCount={6}
+            loadingSkeletonCount={searchLoading ? 6 : 0}
           />
         ) : (
           <>
