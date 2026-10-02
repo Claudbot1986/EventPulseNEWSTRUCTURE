@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { StatusBar } from 'expo-status-bar';
-import { StyleSheet, Text, TextInput, View, ActivityIndicator, TouchableOpacity, ScrollView, Linking, Image, Platform, Share, Alert, AppState, Pressable, Animated } from 'react-native';
+import { StyleSheet, Text, View, ActivityIndicator, TouchableOpacity, ScrollView, Linking, Image, Platform, Share, Alert, AppState, Pressable, Animated, TextInput } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { fetchFeed, addDays, fetchEventIcs, shareSession, fetchSharedSession, parseShareHashFromUrl, recordEventInteraction, isFetchCanceled } from './services/agentClient';
@@ -15,6 +15,7 @@ import { getStockholmParts } from './services/localTime';
 import Toast from './components/Toast';
 import PushPromptModal from './components/PushPromptModal';
 import UtforskaFilterDropdown from './components/UtforskaFilterDropdown';
+import UtforskaSection from './components/UtforskaSection';
 import { enableDinHelgPush, isPushRuntimeAvailable } from './services/pushTokenClient';
 import { analyticsClient } from './services/analyticsClient';
 import ProfileScreen from './screens/ProfileScreen';
@@ -772,7 +773,7 @@ function CategoryQuickTilesSection({ onCategoryNavigate }) {
   );
 }
 
-function HomeScreen({ onEventPress, scrollPositionRef, pendingIntent, dismissPendingPrompt, onInitialLoadSettled, onTilePress, onCategoryNavigate }) {
+function HomeScreen({ onEventPress, scrollPositionRef, pendingIntent, dismissPendingPrompt, onInitialLoadSettled, onTilePress, onCategoryNavigate, onOpenSearch }) {
   const { t, language } = useI18n();
   const [events, setEvents] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -793,7 +794,16 @@ function HomeScreen({ onEventPress, scrollPositionRef, pendingIntent, dismissPen
   const [isFilterMenuOpen, setIsFilterMenuOpen] = useState(false);
   // Utforska search box (2026-09-20): sits next to the Filter toggle in the
   // fixed filter bar; collapses away on scroll down, returns on scroll up.
+  // 2026-10-02 (sök-läge UX): searchActive triggas vid ≥3 tecken OCH
+  // minst en träff i `filteredEvents` (användaren uttryckligen: "när man
+  // skrivit 3 bokstäver och inte finns i databasen så ÄNDRAS INGENTING i
+  // utforska"). Två grindar: text-längd OCH resultat. Om inga träffar
+  // hittar de som sökrutan fångar text men karusellerna förblir oförändrade.
+  // Vid sök-läge: karuseller → lista, scroll-hide aktiveras.
   const [searchQuery, setSearchQuery] = useState('');
+  // `filteredEvents` deklareras längre ner via useMemo (rad ca 1142) — vi
+  // härleder `searchActive` EFTER useMemo men innan render. useMemo:s deps
+  // fångar searchQuery så härledningen är konsistent.
   const [searchHidden, setSearchHidden] = useState(false);
   const searchLastYRef = useRef(0);
   const searchBarAnim = useRef(new Animated.Value(0)).current; // 0 = visible, 1 = hidden
@@ -1149,6 +1159,15 @@ function HomeScreen({ onEventPress, scrollPositionRef, pendingIntent, dismissPen
     searchText: trimmedSearch,
   }), [events, timeFilter, selectedCategories, priceFilter, statusFilter, pinnedDateIso, queryTerms, trimmedSearch]);
 
+  // 2026-10-02 (sök-läge UX): searchActive är härledd EFTER filteredEvents
+  // eftersom vi behöver veta om det finns träffar. Två grindar:
+  //   (a) ≥3 tecken i sök-rutan (användaren uttryckligen krav)
+  //   (b) minst en träff i databasen / loaded events (användaren uttryckligen:
+  //       "om inte finns i databasen så ÄNDRAS INGENTING i utforska")
+  // När searchActive är false ser användaren karusellerna som förut. När den
+  // är true byts innehållet till en vertikal lista över filteredEvents.
+  const searchActive = trimmedSearch.length >= 3 && filteredEvents.length > 0;
+
   const groupedEvents = useMemo(() => groupEventsByDay(filteredEvents, language, t), [filteredEvents, language, t]);
   // statusFilter är hårdkodad — bidrar inte längre till aktiva filter.
   const hasActiveFilters = Boolean(timeFilter || selectedCategories.length > 0 || priceFilter || pinnedDateIso);
@@ -1200,31 +1219,53 @@ function HomeScreen({ onEventPress, scrollPositionRef, pendingIntent, dismissPen
             ]}
             pointerEvents={searchHidden ? 'none' : 'auto'}
           >
-            <View style={styles.searchBox}>
+            {/* 2026-10-02 (Utforska sök): sökfältet är nu en tap-target som
+                öppnar dedikerad SearchScreen (text + datum + kategori).
+                Inline-TextInput togs bort så användaren får maximal filter-
+                funktionalitet på en gång istället för att successivt behöva
+                öppna flera menyer. searchQuery är kvar i state så
+                SearchScreen kan pre-fillas vid öppning. */}
+            <TouchableOpacity
+              activeOpacity={1}
+              accessibilityRole="search"
+              accessibilityLabel={t('explore.search.openLabel')}
+              testID="explore-search-input"
+              style={styles.searchBox}
+              onPress={() => {
+                // Tap in sökrutan fokuserar inputen så tangentbordet öppnas.
+                // TextInput hanterar resten — listan byts automatiskt vid 3+
+                // tecken via searchActive.
+              }}
+            >
+              <Ionicons name="search" size={16} color={TOKENS.color.textMuted} />
               <TextInput
-                style={styles.searchInput}
                 value={searchQuery}
-                onChangeText={handleSearchChange}
+                onChangeText={setSearchQuery}
                 placeholder={t('explore.searchPlaceholder')}
                 placeholderTextColor={TOKENS.color.textMuted}
-                returnKeyType="search"
+                style={styles.searchInput}
+                numberOfLines={1}
                 autoCorrect={false}
                 autoCapitalize="none"
-                accessibilityLabel={t('explore.searchA11y')}
-                testID="explore-search-input"
+                returnKeyType="search"
+                testID="explore-search-textinput"
               />
               {searchQuery.length > 0 ? (
                 <TouchableOpacity
-                  onPress={() => handleSearchChange('')}
+                  onPress={(e) => {
+                    e.stopPropagation?.();
+                    handleSearchChange('');
+                  }}
                   hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
                   testID="explore-search-clear"
                   style={styles.searchClearBtn}
                 >
                   <Ionicons name="close-circle" size={16} color={TOKENS.color.textMuted} />
                 </TouchableOpacity>
-              ) : null}
-              <Ionicons name="search" size={16} color="#333333" />
-            </View>
+              ) : (
+                <Ionicons name="chevron-forward" size={14} color={TOKENS.color.textMuted} />
+              )}
+            </TouchableOpacity>
           </Animated.View>
         {SHOW_FILTER_TOGGLE_IN_EXPLORE ? (
           <TouchableOpacity
@@ -1282,35 +1323,61 @@ function HomeScreen({ onEventPress, scrollPositionRef, pendingIntent, dismissPen
             scrollPositionRef.current = y;
           }
           // Search-box collapse: hide on scroll down, bring back on scroll up.
+          // 2026-10-02 (sök-läge UX): scroll-hide aktiveras BARA i sök-läge
+          // (searchActive). När användaren browsar karusellerna ska sök-
+          // rutan alltid synas. När hen har skrivit ≥3 tecken och listan
+          // visas kan scroll gömma/visa rutan.
           const delta = y - searchLastYRef.current;
           searchLastYRef.current = y;
-          if (!searchHidden && delta > SEARCH_HIDE_DELTA && y > SEARCH_HIDE_MIN_Y) {
+          if (!searchActive) {
+            // Tvinga synlig + nollställ delta-spåret för nästa gång vi
+            // går in i sök-läge (annars kan en gammal delta-räknare
+            // trigga en hide direkt vid första scroll).
+            if (searchHidden) setSearchHidden(false);
+            searchLastYRef.current = y;
+          } else if (!searchHidden && delta > SEARCH_HIDE_DELTA && y > SEARCH_HIDE_MIN_Y) {
             setSearchHidden(true);
           } else if (searchHidden && (delta < SEARCH_SHOW_DELTA || y <= SEARCH_HIDE_MIN_Y)) {
             setSearchHidden(false);
           }
         }}
       >
-        <ExploreTilesSection onChipPress={onTilePress} />
-        <CategoryQuickTilesSection
-          onCategoryNavigate={onCategoryNavigate}
-        />
-        {pendingIntent ? (
-          <View style={styles.pendingPromptBanner} accessibilityRole="text">
-            <Text style={styles.pendingPromptEyebrow}>{t('explore.youAsked')}</Text>
-            <Text style={styles.pendingPromptText} numberOfLines={3}>
-              {pendingIntent.text}
-            </Text>
-            <TouchableOpacity
-              style={styles.pendingPromptDismiss}
-              onPress={handleDismissPendingPrompt}
-              accessibilityRole="button"
-              accessibilityLabel={t('common.close')}
-            >
-              <Text style={styles.pendingPromptDismissText}>{t('common.close')}</Text>
-            </TouchableOpacity>
-          </View>
-        ) : null}
+        {searchActive ? (
+          // 2026-10-02 (sök-läge UX): karusellerna ersätts av en vertikal
+          // lista med de träffande eventsen. Samma Utforskal-listkomponent
+          // som SearchScreen använder — samma utseende och tangent-beteende.
+          // Tomt läge hanteras inne i komponenten (renderar "no events"-text).
+          <UtforskaSection
+            events={filteredEvents}
+            eyebrowText={t('explore.search.resultsEyebrow', { q: trimmedSearch })}
+            totalCount={filteredEvents.length}
+            onEventPress={onEventPress}
+            loadingSkeletonCount={6}
+          />
+        ) : (
+          <>
+            <ExploreTilesSection onChipPress={onTilePress} />
+            <CategoryQuickTilesSection
+              onCategoryNavigate={onCategoryNavigate}
+            />
+            {pendingIntent ? (
+              <View style={styles.pendingPromptBanner} accessibilityRole="text">
+                <Text style={styles.pendingPromptEyebrow}>{t('explore.youAsked')}</Text>
+                <Text style={styles.pendingPromptText} numberOfLines={3}>
+                  {pendingIntent.text}
+                </Text>
+                <TouchableOpacity
+                  style={styles.pendingPromptDismiss}
+                  onPress={handleDismissPendingPrompt}
+                  accessibilityRole="button"
+                  accessibilityLabel={t('common.close')}
+                >
+                  <Text style={styles.pendingPromptDismissText}>{t('common.close')}</Text>
+                </TouchableOpacity>
+              </View>
+            ) : null}
+          </>
+        )}
       </ScrollView>
     </SafeAreaView>
   );
@@ -1936,6 +2003,10 @@ export default function App({ onUserLoggedOut, onOpenLogin, chipNonce = 0, onExp
   // visas när man klickar på en tile/knapp i Utforska. Null = dolt. Tap = en
   // ny tom svart sida, INTE filter-toggle.
   const [exploreDetail, setExploreDetail] = useState(null);
+  // 2026-10-02 (Utforska sök-UX): searchActive hanteras nu inline i
+  // HomeScreen — ingen separat SearchScreen-overlay längre. Prop-kedjan
+  // `showSearchProp` / `onOpenSearchFromHomeProp` / `onCloseSearchProp`
+  // ignoreras tyst (bevarad för bakåtkompatibilitet med AppShell).
   // T0078 — tab navigation. 'home' | 'map' | 'saved' | 'notifications' | 'profile'
   const [activeTab, setActiveTab] = useState('home');
   useEffect(() => {
@@ -2092,6 +2163,11 @@ export default function App({ onUserLoggedOut, onOpenLogin, chipNonce = 0, onExp
     setExploreDetail(null);
   }, []);
 
+  // 2026-10-02 (Utforska sök-UX): handleOpenSearch / handleCloseSearch är
+  // borttagna — HomeScreen hanterar searchActive internt. Prop-kedjan
+  // showSearchProp / onOpenSearchFromHomeProp / onCloseSearchProp är
+  // accepterad för bakåtkompatibilitet men används inte längre.
+
   const handleEventPress = (event) => {
     setSelectedEvent(event);
     if (event?.id) {
@@ -2108,7 +2184,12 @@ export default function App({ onUserLoggedOut, onOpenLogin, chipNonce = 0, onExp
     if (selectedEvent) {
       return <DetailsScreen event={selectedEvent} onBack={handleBack} />;
     }
-    // Utforska tile/button tap (2026-09-27): ny tom svart sida, INTE filter.
+    // 2026-10-02 (Utforska sök-UX): searchActive hanteras nu inline i
+    // HomeScreen — sök-listan byter innehåll under samma sök-ruta istället
+    // för att öppna en dedikerad SearchScreen-overlay. SearchScreen.js
+    // finns kvar i git-historien men monteras inte längre här. showSearch-
+    // prop-kedjan (handleOpenSearch / handleCloseSearch) är bevarad men
+    // har ingen effekt längre — overlayanrop från App.js / AppShell ignoreras.
     if (exploreDetail) {
       return <ExploreDetailScreen payload={exploreDetail} onBack={handleExploreBack} onEventPress={handleEventPress} />;
     }
@@ -2124,7 +2205,10 @@ export default function App({ onUserLoggedOut, onOpenLogin, chipNonce = 0, onExp
     return <HomeScreen onEventPress={handleEventPress} scrollPositionRef={scrollPositionRef} pendingIntent={pendingIntent} dismissPendingPrompt={dismissPendingPrompt} onOpenLogin={onOpenLogin} onInitialLoadSettled={onExploreReady} onTilePress={handleExploreDetailPress} onCategoryNavigate={handleExploreDetailPress} />;
   };
 
-  const showTabBar = !selectedEvent && !exploreDetail;
+  // 2026-10-02 (Utforska sök-UX): `showSearch` är inte längre en separat
+// vy (SearchScreen-overlay är borttagen) så tab-raden behöver inte döljas
+// för sök-läge längre.
+const showTabBar = !selectedEvent && !exploreDetail;
 
   return (
     <View style={styles.container}>
