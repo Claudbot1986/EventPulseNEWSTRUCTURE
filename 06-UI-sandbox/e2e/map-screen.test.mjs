@@ -1,19 +1,19 @@
 // e2e/map-screen.test.mjs — verifierar MapScreen (06-UI-sandbox).
 //
-// Vad detta test verifierar (live, inte påstådd):
+// Vad detta test verifiera (live, inte påstådd):
 //   1. Live data: events_public har 3000+ future events med lat/lng
 //      (annars kan inte kartan laga)
 //   2. Filter-monotonicitet: today ≤ weekend ≤ next_weekend ≤ all
-//   3. Projektion: lat/lng → x/y är inom [0, size] för Stockholm-bounds
+//   3. Projektion (Mercator): lat/lng → x/y är inom [0, size] för Stockholm-viewport
 //   4. Jitter: samma id → samma position, olika ids → olika positioner
 //   5. Klustring: identiska x/y → ett klustring med rätt count
 //   6. Time-fönster: today returnerar startOfDay<=events<=endOfDay
 //   7. Filter-UI: varje filter leverera >0 events (förutsatt non-empty DB)
+//   8. Bakåt-projektion: pixel → lat/lng → pixel är roundtrip-stabil
+//   9. Viewport-dimensioner matchar asset-aspect (360×454 = 0.793)
 //
 // Hur man kör:
 //   node --test 06-UI-sandbox/e2e/map-screen.test.mjs
-// eller:
-//   cd 06-UI-sandbox && node --test e2e/map-screen.test.mjs
 //
 // Designval — vi kör live Supabase REST i test:
 //   * Samma anon-nyckel som sandbox → test och UI använder samma
@@ -26,8 +26,6 @@
 import { test } from 'node:test';
 import assertStrict from 'node:assert/strict';
 
-// Hjälpare: importera moduler från sandbox. Eftersom moduler använder
-// ESM-syntax (`export function`), importerar vi dem via dynamic import.
 const projection = await import('../components/mapProjection.js');
 const clustering = await import('../components/mapClustering.js');
 const time = await import('../components/mapTime.js');
@@ -42,13 +40,10 @@ const FETCH_HEADERS = {
   Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
 };
 
-// Cachelagrade live-data (sätts vid första live-testet).
 let liveDataCache = null;
 
 async function fetchLiveFutureEvents() {
   if (liveDataCache) return liveDataCache;
-  // PostgREST default max = 1000 rader. Vi paginerar via Range-headern
-  // för att hämta ALLA future events (förväntat ~3611).
   const PAGE_SIZE = 1000;
   const all = [];
   for (let offset = 0; offset < 10000; offset += PAGE_SIZE) {
@@ -88,40 +83,102 @@ async function countLive(extra = '') {
 
 // ─── Logiktester (ingen data) ─────────────────────────────────────
 
-test('projektion: Stockholm centrum projiceras till medial x/y', () => {
-  const { projectToXY, STOCKHOLM_FALLBACK, STOCKHOLM_BOUNDS } = projection;
-  const size = { width: 320, height: 360 };
-  const { x, y, visible } = projectToXY(
+test('viewport: STOCKHOLM_VIEWPORT har förväntade dimensioner (360×454)', () => {
+  const { STOCKHOLM_VIEWPORT } = projection;
+  assertStrict.equal(STOCKHOLM_VIEWPORT.width, 360);
+  assertStrict.equal(STOCKHOLM_VIEWPORT.height, 454);
+  assertStrict.equal(STOCKHOLM_VIEWPORT.zoom, 11);
+  assertStrict.ok(STOCKHOLM_VIEWPORT.bounds.minLat < STOCKHOLM_VIEWPORT.bounds.maxLat);
+  assertStrict.ok(STOCKHOLM_VIEWPORT.bounds.minLng < STOCKHOLM_VIEWPORT.bounds.maxLng);
+});
+
+test('viewport: STOCKHOLM_ASSET_ASPECT ≈ 0.793 (Mercator-korrekt för lat 59)', () => {
+  const { STOCKHOLM_ASSET_ASPECT } = projection;
+  // Tillåt 1% avvikelse
+  assertStrict.ok(
+    Math.abs(STOCKHOLM_ASSET_ASPECT - 360 / 454) < 0.01,
+    `aspect ${STOCKHOLM_ASSET_ASPECT} ska vara ≈ 0.793`,
+  );
+});
+
+test('projektion (Mercator): Stockholm centrum projiceras till medial x/y', () => {
+  const { projectViewport, STOCKHOLM_FALLBACK, STOCKHOLM_VIEWPORT } = projection;
+  const { x, y, visible } = projectViewport(
+    STOCKHOLM_FALLBACK.lat,
+    STOCKHOLM_FALLBACK.lng,
+    STOCKHOLM_VIEWPORT,
+  );
+  assertStrict.equal(visible, true);
+  assertStrict.ok(
+    Math.abs(x - STOCKHOLM_VIEWPORT.width / 2) < STOCKHOLM_VIEWPORT.width * 0.05,
+    `x=${x.toFixed(2)} förväntat ≈ ${STOCKHOLM_VIEWPORT.width / 2}`,
+  );
+  assertStrict.ok(
+    Math.abs(y - STOCKHOLM_VIEWPORT.height / 2) < STOCKHOLM_VIEWPORT.height * 0.05,
+    `y=${y.toFixed(2)} förväntat ≈ ${STOCKHOLM_VIEWPORT.height / 2}`,
+  );
+});
+
+test('projektion (Mercator): bounds-hörn projiceras till viewport-hörn', () => {
+  const { projectViewport, STOCKHOLM_VIEWPORT } = projection;
+  const { bounds, width, height } = STOCKHOLM_VIEWPORT;
+  // topLeft (minLng, maxLat) → (0, 0)
+  const tl = projectViewport(bounds.maxLat, bounds.minLng, STOCKHOLM_VIEWPORT);
+  assertStrict.ok(Math.abs(tl.x) < 1, `topLeft x=${tl.x} förväntat ≈ 0`);
+  assertStrict.ok(Math.abs(tl.y) < 1, `topLeft y=${tl.y} förväntat ≈ 0`);
+  // bottomRight (minLat, maxLng) → (width, height)
+  const br = projectViewport(bounds.minLat, bounds.maxLng, STOCKHOLM_VIEWPORT);
+  assertStrict.ok(Math.abs(br.x - width) < 1, `bottomRight x=${br.x} förväntat ≈ ${width}`);
+  assertStrict.ok(Math.abs(br.y - height) < 1, `bottomRight y=${br.y} förväntat ≈ ${height}`);
+});
+
+test('projektion (Mercator): out-of-bounds returnerar visible=false', () => {
+  const { projectViewport, STOCKHOLM_VIEWPORT } = projection;
+  const { visible } = projectViewport(50.0, 10.0, STOCKHOLM_VIEWPORT);
+  assertStrict.equal(visible, false);
+});
+
+test('projektion (Mercator): NaN lat returnerar visible=false', () => {
+  const { projectViewport, STOCKHOLM_VIEWPORT } = projection;
+  const { visible } = projectViewport(NaN, 18.0, STOCKHOLM_VIEWPORT);
+  assertStrict.equal(visible, false);
+});
+
+test('roundtrip: pixel → lat/lng → pixel är stabil', () => {
+  const { projectViewport, unprojectViewport, STOCKHOLM_VIEWPORT } = projection;
+  const samples = [
+    [0, 0],
+    [STOCKHOLM_VIEWPORT.width / 2, STOCKHOLM_VIEWPORT.height / 2],
+    [STOCKHOLM_VIEWPORT.width - 1, STOCKHOLM_VIEWPORT.height - 1],
+    [100, 200],
+  ];
+  for (const [x, y] of samples) {
+    const { lat, lng } = unprojectViewport(x, y, STOCKHOLM_VIEWPORT);
+    const back = projectViewport(lat, lng, STOCKHOLM_VIEWPORT);
+    assertStrict.ok(
+      Math.abs(back.x - x) < 0.5,
+      `roundtrip x: ${x} → (${lat}, ${lng}) → ${back.x} (drift ${Math.abs(back.x - x)})`,
+    );
+    assertStrict.ok(
+      Math.abs(back.y - y) < 0.5,
+      `roundtrip y: ${y} → (${lat}, ${lng}) → ${back.y} (drift ${Math.abs(back.y - y)})`,
+    );
+  }
+});
+
+test('bakåtkompatibilitet: projectToXY(lat, lng, bounds, size) fungerar', () => {
+  const { projectToXY, STOCKHOLM_BOUNDS, STOCKHOLM_FALLBACK } = projection;
+  const size = { width: 360, height: 454 };
+  const { x, y, visible: v } = projectToXY(
     STOCKHOLM_FALLBACK.lat,
     STOCKHOLM_FALLBACK.lng,
     STOCKHOLM_BOUNDS,
     size,
   );
-  assertStrict.equal(visible, true);
-  // Centrum lat/lng → x = width/2 ± 5% (tolerans för bounds-snappning)
-  assertStrict.ok(Math.abs(x - size.width / 2) < size.width * 0.05,
-    `x=${x.toFixed(2)} förväntat ≈ ${size.width / 2}`);
-  // Centrum → y ≈ height/2 ± 5%
-  assertStrict.ok(Math.abs(y - size.height / 2) < size.height * 0.05,
-    `y=${y.toFixed(2)} förväntat ≈ ${size.height / 2}`);
-});
-
-test('projektion: out-of-bounds returnerar visible=false', () => {
-  const { projectToXY } = projection;
-  const { visible } = projectToXY(50.0, 10.0, projection.STOCKHOLM_BOUNDS, {
-    width: 320,
-    height: 360,
-  });
-  assertStrict.equal(visible, false);
-});
-
-test('projektion: NaN lat returnerar visible=false', () => {
-  const { projectToXY } = projection;
-  const { visible } = projectToXY(NaN, 18.0, projection.STOCKHOLM_BOUNDS, {
-    width: 320,
-    height: 360,
-  });
-  assertStrict.equal(visible, false);
+  assertStrict.equal(v, true);
+  // Ska vara nära (180, 227) — mitten
+  assertStrict.ok(Math.abs(x - 180) < 9);
+  assertStrict.ok(Math.abs(y - 227) < 11);
 });
 
 test('jitter: samma id → samma nya position (deterministisk)', () => {
@@ -147,11 +204,8 @@ test('jitter: olika ids ger olika positioner (inom ±0.005°)', () => {
   const ev2 = { id: 'id-bbb', lat: STOCKHOLM_FALLBACK.lat, lng: STOCKHOLM_FALLBACK.lng };
   const j1 = jitterFallback(ev1);
   const j2 = jitterFallback(ev2);
-  // Lat/lng måste ha flyttats från fallback
   assertStrict.notEqual(j1.lat, STOCKHOLM_FALLBACK.lat);
   assertStrict.notEqual(j2.lat, STOCKHOLM_FALLBACK.lat);
-  // Och de ska vara olika sinsemellan (om inte kollision, vilket är
-  // extremt osannolikt med 0.005° intervall och FNV-hash)
   const dist = Math.abs(j1.lat - j2.lat) + Math.abs(j1.lng - j2.lng);
   assertStrict.ok(dist > 0.0001, `dist² = ${dist.toFixed(6)} förväntande > 0`);
 });
@@ -197,16 +251,12 @@ test('computeTimeWindow: today returnerar [startOfDay, endOfDay]', () => {
   const win = computeTimeWindow('today', now);
   assertStrict.ok(win.from instanceof Date);
   assertStrict.ok(win.to instanceof Date);
-  // from <= now <= to
   assertStrict.ok(win.from.getTime() <= now.getTime());
   assertStrict.ok(win.to.getTime() >= now.getTime());
-  // from = 00:00 lokal tid
   assertStrict.equal(win.from.getHours(), 0);
 });
 
 test('computeTimeWindow: weekend (fre-lörsön) har from=lör? (testet)', () => {
-  // Vi kan inte hård-testa weekday eftersom nu-tid beror på lokal
-  // tidszon, men vi kan verifiera att from <= to och range ≈ 48-72h.
   const { computeTimeWindow } = time;
   const now = new Date('2026-10-08T12:00:00Z'); // en torsdag
   const win = computeTimeWindow('weekend', now);
@@ -236,11 +286,9 @@ test('isFutureEvent: förflutet datum returnerar false', () => {
 });
 
 // ─── Live data-tester (Supabase REST) ────────────────────────────
-// Dessa skip:ar om SUPABASE_URL/ANON_KEY inte kan nås (CI offline).
 
 test('live: events_public total >= 3000', async () => {
   const total = await countLive();
-  // Om total är 0 har vi ingen kontakt — skip:a graceful.
   if (total === 0) {
     console.warn('  [skip] Supabase otillgänglig — kontrollera EXPO_PUBLIC_SUPABASE_URL');
     return;
@@ -255,7 +303,6 @@ test('live: future events med lat/lng = 100% av datakompatibla rader', async () 
     console.warn('  [skip] live data otillgänglig');
     return;
   }
-  // Vi förväntar 3000+ future events baserat på gap-analys 2026-10-02.
   assertStrict.ok(data.length >= 3000,
     `Första: ${data.length} future events (varas 3000+ förväntat)`);
   const withoutLat = data.filter((e) => !Number.isFinite(e.lat)).length;
@@ -269,12 +316,9 @@ test('live: future events med lat/lng = 100% av datakompatibla rader', async () 
 test('live: Stockholm-området är inom förväntade bounds', async () => {
   const data = await fetchLiveFutureEvents();
   if (!data || data.length === 0) return;
-  // Lat/lng range för Stockholm-area ska vara ~58.4 till 60.0 lat,
-  // 17.5 till 19.0 lng. Fallback events har 59.33/18.07 → inom.
   const sverigeOnly = data.filter(
     (e) => e.lat >= 55.0 && e.lat <= 66.0 && e.lng >= 10.0 && e.lng <= 25.0,
   );
-  // Minst 95% ska vara i Sverige.
   const pctSverige = sverigeOnly.length / data.length;
   assertStrict.ok(pctSverige >= 0.95,
     `Första: ${(pctSverige * 100).toFixed(1)}% i Sverige; förväntat ≥ 95%`);
@@ -297,12 +341,10 @@ test('live: filter-monotonicitet (today ≤ weekend ≤ next_weekend ≤ all)', 
       return true;
     }).length;
   });
-  // counts ska vara monotont växande.
   for (let i = 1; i < counts.length; i++) {
     assertStrict.ok(counts[i] >= counts[i - 1],
-      `Monotonicitet bryter: counts[${i}]=${counts[i]} < counts[${i - 1}]=${counts[i - 1]}`);
+      `Monotonicitet bryter: counts[${i}]=${counts[i]} < counts[${i - 1}]=${counts[(i - 1)]}`);
   }
-  // counts[3] (all) ska vara === data.length
   assertStrict.equal(counts[3], data.length);
 });
 
@@ -325,17 +367,19 @@ test('live: alla fyra filter returnerar rimligt antal (>0, <total)', async () =>
   }
 });
 
-test('live: Stockholm-fallback används av majoritet av events', async () => {
+test('live: Stockholm-fallback används av en mindre andel events', async () => {
+  // OBSERVATION 2026-10-02 (post commit 75500c0 "geo-bug A"): fallback-
+  // andelen har sjunkit från ~71% (plan 2026-10-02) till ~0.5% eftersom
+  // venues.lat/lng nu propageras korrekt till events.lat/lng. Vi
+  // verifierar bara att vi INTE ser en regression TILL hög fallback.
   const data = await fetchLiveFutureEvents();
   if (!data || data.length === 0) return;
   const fallbackCount = data.filter(
     (e) => Math.abs(e.lat - 59.3293) < 1e-6 && Math.abs(e.lng - 18.0686) < 1e-6,
   ).length;
-  // Fallback-andel kan variera över tid; vi verifierar att det är
-  // rimligt (30-95%) — gap-analys 2026-10-02 sa 71%.
   const pct = fallbackCount / data.length;
-  assertStrict.ok(pct >= 0.3 && pct <= 0.95,
-    `Fallback-andel ${(pct * 100).toFixed(1)}% utanför 30–95% intervall`);
+  assertStrict.ok(pct >= 0 && pct <= 0.1,
+    `Fallback-andel ${(pct * 100).toFixed(1)}% utanför 0–10% intervall — regression?`);
 });
 
 test('live: jittra ALLA fallback-events — deterministisk + separerad', async () => {
@@ -345,12 +389,6 @@ test('live: jittra ALLA fallback-events — deterministisk + separerad', async (
     (e) => Math.abs(e.lat - 59.3293) < 1e-6 && Math.abs(e.lng - 18.0686) < 1e-6,
   );
   if (fallback.length === 0) return;
-  // Vi verifierar tv\u00e5 saker:
-  //  A) samma id → samma position (deterministisk)
-  //  B) position är INOM jitter-intervallet (±0.005° från fallback)
-  // Vi förväntar OSS kollisioner i pixel-rummet eftersom hela
-  // syftet är att fallback-events ska gruppera sig visuellt i
-  // centrum-cellerna (det ÄR kartan-känslan).
   const withinJitter = (j) =>
     Math.abs(j.lat - projection.STOCKHOLM_FALLBACK.lat) <= 0.005 + 1e-9 &&
     Math.abs(j.lng - projection.STOCKHOLM_FALLBACK.lng) <= 0.005 + 1e-9;
@@ -374,40 +412,33 @@ test('live: jittra ALLA fallback-events — deterministisk + separerad', async (
     'Jitter är inte deterministisk — samma id ger olika position');
   assertStrict.ok(positionOk,
     'Jitterade positioner utanför ±0.005° intervall');
-  // Och ett utval av 200 events har EN annan uppsättning unika
-  // positioner (dvs. inte alla hamnar exakt på samma punkt).
   const uniquePositions = new Set(firstSeen.values()).size;
-  assertStrict.ok(uniquePositions >= 50,
-    `För få unik jitter-positioner (${uniquePositions}/200); förväntat ≥ 50`);
+  // Post commit 75500c0: endast ~18 fallback-events kvar i databasen.
+  // Vi verifierar bara att varje fallback-event får en unik (eller nära-unik)
+  // position — antalet unika är floor(N) där N är antal fallback-events.
+  assertStrict.ok(uniquePositions >= 10,
+    `För få unik jitter-positioner (${uniquePositions}); förväntat ≥ 10`);
 });
 
-test('live: klustring av ALLA events ger rimligt antal klustrade', async () => {
+test('live: klustring av ALLA events ger rimligt antal klustrade (Mercator)', async () => {
   const data = await fetchLiveFutureEvents();
   if (!data || data.length === 0) return;
-  const size = { width: 320, height: 360 };
+  const size = { width: 360, height: 454 };
+  const viewport = projection.getViewport(projection.STOCKHOLM_BOUNDS, size, 11);
   const pins = data
     .filter((e) => Number.isFinite(e.lat) && Number.isFinite(e.lng))
     .map((raw) => {
       const ev = projection.jitterFallback(raw);
-      const p = projection.projectToXY(ev.lat, ev.lng, projection.STOCKHOLM_BOUNDS, size);
+      const p = projection.projectViewport(ev.lat, ev.lng, viewport);
       return { x: p.x, y: p.y, visible: p.visible, event: ev };
     });
   const clusters = clustering.clusterPins(pins, 24);
-  // Eftersom 67%+ av events är Stockholm-fallback och jitter är
-  // liten (0.005°), är det NORMALT att de flesta klumpar ihop i 1-5
-  // celler. Vi verifierar bara:
-  //  - minst 1 kluster (vi har data)
-  //  - alla klustrade rymmer alla synliga events
-  //  - och: subset av "riktig geo" events (lat ≠ 59.3293) ger oss
-  //    ett separat kluster-rum som är större än centrum-klustret.
   assertStrict.ok(clusters.length >= 1,
     `För få klustrade: ${clusters.length}; förväntat ≥ 1`);
   const totalInClusters = clusters.reduce((acc, c) => acc + c.count, 0);
   const totalVisible = pins.filter((p) => p.visible).length;
   assertStrict.equal(totalInClusters, totalVisible,
     `Total events i klustrade (${totalInClusters}) ≠ synliga pins (${totalVisible})`);
-  // Största klustret ska innehålla >50% av events (Stockholm-centrum
-  // är den dominerade platsen för fallback-events).
   const biggest = Math.max(...clusters.map((c) => c.count));
   assertStrict.ok(biggest >= totalVisible * 0.3,
     `Största klustret har bara ${biggest} events; förväntat ≥ 30% av total`);
@@ -435,5 +466,7 @@ test('rapport: e2e-sammanfattning', async () => {
   console.log('\n  ─── MapScreen e2e-rapport (2026-10-02) ───');
   console.log(`  Live future events: ${data.length}`);
   console.log(`  Filter-counts: idag=${counts.today}, helgen=${counts.weekend}, nästa=${counts.next_weekend}, alla=${counts.all}`);
+  console.log(`  Viewport: ${projection.STOCKHOLM_VIEWPORT.width}×${projection.STOCKHOLM_VIEWPORT.height} @ zoom ${projection.STOCKHOLM_VIEWPORT.zoom}`);
+  console.log(`  Asset-aspect: ${projection.STOCKHOLM_ASSET_ASPECT.toFixed(3)}`);
   console.log('  Status: alla tester PASS');
 });

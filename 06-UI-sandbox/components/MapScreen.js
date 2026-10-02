@@ -196,9 +196,10 @@ function MapScreen() {
       <View style={styles.devBanner}>
         <Text style={styles.devBannerText}>
           SANDBOX-PREVIEW (riktig Supabase-data via events_public).
-          Kartan är SVG-fri och renderad med React Native Views (kräver
-          ingen extern tile-tjänst). Tryckertiden ska flyttas ut efter
-          sandbox-validering.
+          Bakgrund: för-bakade OSM-tiles (assets/stockholm-tiles.png,
+          360×454, Mercator-korrekt). Tryckertiden ska flyttas ut efter
+          sandbox-validering. När vi byter till react-native-maps i 06-UI/
+          ersätts ENDAST MapBaseLayer — pins/klustring/filter rörs inte.
         </Text>
       </View>
 
