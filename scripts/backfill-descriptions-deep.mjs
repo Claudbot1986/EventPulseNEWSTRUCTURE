@@ -86,40 +86,61 @@ function extractFromMetaTags(html) {
 
 // ─── Strategy 5-6: Body content ──────────────────────────────────────────────
 
+// Filtrer: 6 — Round 2 lärdom (spelning.se). Filtrera bort skräp som ofta
+// contaminates body-paragrafer på konsert-listingsajter:
+//   - Sektionsrubriker: "OM KONSERTEN", "OM EVENTET", "OM FÖRESTÄLLNINGEN"
+//   - Kategorier: "POP", "ROCK", "MUSIK", "JAZZ" etc.
+//   - Prisinfo: "Biljetter från 895 kr", "Pris: 100 kr"
+//   - Disclaimer: "Annonslänk", "Uppdaterades för X månader sedan"
+const JUNK_RX = [
+  /^(OM KONSERTEN|OM EVENTET|OM FÖRESTÄLLNINGEN|OM EVENT|BESKRIVNING|INFO)\s*$/i,
+  /^(POP|ROCK|MUSIK|JAZZ|CLASSICAL|METAL|INDIE|ELECTRONIC|FOLK|OPERETT|HIP-HOP|COUNTRY|BLUE|SOUL)\s*$/i,
+  /Biljetter (från|kostar|till|sedan)/i,
+  /^Pris\s*[:.]/i,
+  /Uppdaterades för/i,
+  /^Annonslänk\.?/i,
+  /^Annons\.?\s/i,
+];
+
+function isJunkParagraph(text) {
+  return JUNK_RX.some(rx => rx.test(text));
+}
+
 function extractFromBody(html) {
   const $ = cheerio.load(html);
 
   // Strip script/style/nav/header/footer
   $('script, style, nav, header, footer, aside, [role="navigation"], [aria-hidden="true"]').remove();
 
-  // Prefer Swedish paragraphs (contain å/ä/ö)
   const SWEDISH_RX = /[åäöÅÄÖ]/;
-
-  // Find paragraphs
   const candidates = [];
   $('p').each((_, el) => {
     const text = $(el).text().trim().replace(/\s+/g, ' ');
-    if (text.length >= 100 && !text.includes('{') && !text.includes('function()')) {
-      candidates.push({ text, isSv: SWEDISH_RX.test(text), len: text.length });
-    }
+    if (text.length < 30) return;
+    if (text.includes('{') || text.includes('function()')) return;
+    if (isJunkParagraph(text)) return;
+    candidates.push({ text, isSv: SWEDISH_RX.test(text), len: text.length });
   });
 
   if (candidates.length > 0) {
-    // Sort: Swedish first, then by length
-    candidates.sort((a, b) => {
-      if (a.isSv !== b.isSv) return b.isSv - a.isSv;
-      return b.len - a.len;
-    });
-    return candidates[0].text;
+    // Filtrera bort korta paragrafer (<50 chars) — ofta etiketter
+    const meaningful = candidates.filter(c => c.len >= 50);
+    if (meaningful.length > 0) {
+      meaningful.sort((a, b) => b.len - a.len);
+      // Konkatenera de 2-3 bästa om de får rimspruta
+      if (meaningful.length >= 2 && meaningful[0].len + meaningful[1].len <= 1500) {
+        return meaningful.slice(0, 3).map(p => p.text).join(' ');
+      }
+      return meaningful[0].text;
+    }
   }
 
-  // Try H1 + body content as fallback for single-event pages
-  const h1 = $('h1').first().text().trim();
+  // Try main/article fallback
   const articleText = $('main, [role="main"], article').first().text()
     .replace(/\s+/g, ' ').trim();
   if (articleText.length >= 100) return articleText.slice(0, 800);
 
-  // Last resort: full body text
+  // Last resort
   const bodyText = $('body').text().replace(/\s+/g, ' ').trim();
   if (bodyText.length >= 100) return bodyText.slice(0, 800);
 
@@ -146,10 +167,29 @@ async function fetchHtml(url) {
 
 async function findDescription(html) {
   if (!html || html.length < 200) return null;
-  // Try strategies in priority order
-  return extractFromBrokenJsonLd(html)
-      || extractFromMetaTags(html)
-      || extractFromBody(html);
+
+  const jsonLd = extractFromBrokenJsonLd(html);
+  const meta = extractFromMetaTags(html);
+  const body = extractFromBody(html);
+
+  // 2026-10-02 — Round 2 lärdom (spelning.se): JSON-LD description kan vara
+  // kort ("6 föreställningar...") men body innehåller utförligartigare text
+  // (artist-info, beskrivning, "OM KONSERTEN" + kategorier). Om JSON-LD är
+  // <300 chars, konkatenera med body om body utgör en fullständsk beskrivning.
+  if (jsonLd && jsonLd.length >= 300) {
+    return jsonLd;
+  }
+
+  // Om body har bättre text, använd den (eller konkatenera)
+  if (body && body.length >= 200) {
+    // Konkatenera om båda är rimligt långa
+    if (jsonLd && jsonLd.length >= 50 && (jsonLd.length + body.length) <= 1500) {
+      return `${jsonLd} ${body}`;
+    }
+    return body;
+  }
+
+  return jsonLd || meta;
 }
 
 // ─── Database operations ──────────────────────────────────────────────────────────
