@@ -179,9 +179,41 @@ function extractFromArray(data: any[], source: string): JsonLdEvent[] {
  * Extract single Event object
  * Excludes EventSeries, WebSite, WebPage, Organization etc.
  */
+/**
+ * Schema.org Event-subtyper (MusicEvent, BusinessEvent, EducationEvent,
+ * SportsEvent, etc.) — alla giltiga typer som ska plockas av
+ * extractSingleEvent. EventSeries utför NATT (hanteras separat).
+ *
+ * 2026-10-02 — Round 2 fix. Tidigare kollade koden strikt på
+ * `data['@type'] === 'Event'`, vilket missade spelning.se (MusicEvent),
+ * sodrateatern (MusicEvent), m.fl. Nu tillåts alla Event-subtyper.
+ */
+const EVENT_SUBTYPES = new Set([
+  'Event',
+  'MusicEvent',
+  'BusinessEvent',
+  'EducationEvent',
+  'SportsEvent',
+  'TheaterEvent',
+  'Festival',
+  'LiteraryEvent',
+  'SaleEvent',
+  'SocialEvent',
+  'VisualArtsEvent',
+  'ExhibitionEvent',
+  'FoodEvent',
+  'ChildrensEvent',
+  'DanceEvent',
+  'ComedyEvent',
+  'CourseInstance',
+  'ScreeningEvent',
+]);
+
 function extractSingleEvent(data: any, source: string): JsonLdEvent | null {
-  // Must explicitly be @type === 'Event' to avoid accepting EventSeries or other types
-  if (data['@type'] !== 'Event') return null;
+  // Acceptera både 'Event' och alla schema.org-subtyper (MusicEvent, etc.).
+  // EventSeries, WebSite, WebPage, Organization etc. filtreras bort.
+  const t = data['@type'];
+  if (typeof t !== 'string' || !EVENT_SUBTYPES.has(t)) return null;
 
   const event = JsonLdEventSchema.safeParse(data);
   if (event.success) return event.data;

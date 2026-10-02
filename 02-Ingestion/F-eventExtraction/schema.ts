@@ -45,7 +45,10 @@ export const PerformerSchema = z.union([
 ]);
 
 export const OfferSchema = z.object({
-  '@type': z.literal('Offer').optional(),
+  // 2026-10-02 — Round 2 schema-fix. Acceptera AggregateOffer (spelning.se)
+  // och andra Offer-subtyper. Tidigare krävde strikt 'Offer', vilket ratade
+  // MusicEvent från spelning.se pga AggregateOffer.
+  '@type': z.union([z.literal('Offer'), z.literal('AggregateOffer'), z.string()]).optional(),
   price: JsonLdString,
   priceCurrency: z.string().default('SEK'),
   availability: JsonLdUrl.optional(),

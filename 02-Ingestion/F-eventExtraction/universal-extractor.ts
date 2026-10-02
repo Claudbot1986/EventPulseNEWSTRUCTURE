@@ -270,6 +270,16 @@ function makeEvent(data: Record<string, unknown>, method: string, source: string
       const t = data.translations as Record<string, string>;
       desc = desc || t.originalDescription || t.description || '';
     }
+    // 2026-10-02 — meta-fallback (Round 2, plan §3). Om JSON-LD saknar
+    // description ELLER är för kort (<10 tecken), hämta från page-level
+    // <meta name="description"> eller <meta property="og:description">.
+    // extractJsonLd bifogar pageMetaDescription som `__meta_description`
+    // på data-objektet vid inskickning. Befintligt beteende (>=10 tecken)
+    // bevaras — vi skriver INTE över en riktig JSON-LD-beskrivning.
+    if ((!desc || desc.length < 10) && typeof data.__meta_description === 'string') {
+      const meta = norm(data.__meta_description as string);
+      if (meta.length >= 10) desc = meta;
+    }
     desc = desc.replace(/<[^>]+>/g, '').slice(0, 500);
 
     let price = '';
@@ -395,16 +405,37 @@ function tryParseJson(s: string): unknown {
 function extractJsonLd($: cheerio.CheerioAPI, source: string, baseUrl: string): ParsedEvent[] {
   const events: ParsedEvent[] = [];
 
+  // 2026-10-02 — meta-fallback (Round 2, plan §3). Hämta page description
+  // en gång per extraktys. Sätts som `__meta_description` på alla Event-
+  // objekt som saknar egen description.
+  const pageMetaDescription = extractPageDescription($);
+
   $('script[type="application/ld+json"]').each((_, el) => {
     try {
       const content = $(el).html() || '';
       const data = JSON.parse(content);
       const rootDesc = findRootDescription(data);
-      collectJsonLdEvents(data, source, baseUrl, events, rootDesc);
+      // Inject meta-fallback på top-nivå objektet (recursivt till alla children)
+      collectJsonLdEvents(data, source, baseUrl, events, rootDesc, pageMetaDescription);
     } catch { /* skip */ }
   });
 
   return events;
+}
+
+/**
+ * Hämta sidans meta description (Round 2, plan §3). Prioritet:
+ *   1. <meta property="og:description"> (oftast bättre kvalitet)
+ *   2. <meta name="description">
+ *
+ * Returnerar null om ingen finns eller är för kort (<10 tecken).
+ */
+function extractPageDescription($: cheerio.CheerioAPI): string | null {
+  const og = $('meta[property="og:description"]').attr('content');
+  if (og && og.trim().length >= 10) return og.trim();
+  const meta = $('meta[name="description"]').attr('content');
+  if (meta && meta.trim().length >= 10) return meta.trim();
+  return null;
 }
 
 function collectJsonLdEvents(
@@ -413,10 +444,17 @@ function collectJsonLdEvents(
   baseUrl: string,
   acc: ParsedEvent[],
   inheritedDescription: string | null = null,
+  pageMetaDescription: string | null = null,
 ): void {
   if (!data || typeof data !== 'object') return;
 
   const obj = data as Record<string, unknown>;
+  // 2026-10-02 — Round 2 meta-fallback. Injicera page description som
+  // `__meta_description` på objektet INN vi rekursiverar majs makeEvent.
+  // makeEvent läser fältet och använder det om JSON-LD saknar description.
+  if (pageMetaDescription && !obj.__meta_description) {
+    obj.__meta_description = pageMetaDescription;
+  }
   const type: string = String(obj['@type'] || '');
 
   // 2026-10-02 — 5.3 description-arv. inheritedDescription propageras ner i
@@ -429,7 +467,17 @@ function collectJsonLdEvents(
   // Innan 5.3: Events fångades inte alls. Efter 5.3 med description-arv:
   // Events fångas OCH får description från WebPage.
 
-  if (['Event', 'EventSeries', 'EventTicket'].includes(type)) {
+  // 2026-10-02 — Round 2. Acceptera schema.org Event-subtyper
+  // (MusicEvent, BusinessEvent, etc.) så att spelning.se m.fl. fångas.
+  // Tidigare filtrerades MusicEvent bort och spelning.se-description försvann.
+  const EVENT_SUBTYPES_LOCAL = new Set([
+    'Event', 'MusicEvent', 'BusinessEvent', 'EducationEvent',
+    'SportsEvent', 'TheaterEvent', 'Festival', 'LiteraryEvent',
+    'SaleEvent', 'SocialEvent', 'VisualArtsEvent', 'ExhibitionEvent',
+    'FoodEvent', 'ChildrensEvent', 'DanceEvent', 'ComedyEvent',
+    'CourseInstance', 'ScreeningEvent', 'EventSeries', 'EventTicket',
+  ]);
+  if (typeof type === 'string' && EVENT_SUBTYPES_LOCAL.has(type)) {
     // Om Event saknar egen description OCH vi har en inherited → använd den.
     const eventHasOwnDescription = typeof obj.description === 'string' && obj.description.trim().length >= 10;
     const dataForEvent = !eventHasOwnDescription && inheritedDescription
@@ -459,7 +507,7 @@ function collectJsonLdEvents(
   }
 
   if (Array.isArray(obj['@graph'])) {
-    for (const item of obj['@graph']) collectJsonLdEvents(item, source, baseUrl, acc, childInheritedDescription);
+    for (const item of obj['@graph']) collectJsonLdEvents(item, source, baseUrl, acc, childInheritedDescription, pageMetaDescription);
   }
 
   if (Array.isArray(obj.itemListElement)) {
@@ -470,7 +518,9 @@ function collectJsonLdEvents(
         const eventObj = i.item || i;
         if (typeof eventObj === 'object' && eventObj) {
           const et = String((eventObj as Record<string,unknown>)['@type'] || '');
-          if (['Event', 'EventSeries', 'EventTicket'].includes(et) || ['Event', 'EventSeries', 'EventTicket'].includes(itemType)) {
+          // 2026-10-02 — Round 2. Acceptera Event-subtyper (MusicEvent etc.)
+          // i itemListElement också (annexet använder MusicEvent i listor).
+          if (EVENT_SUBTYPES_LOCAL.has(et) || EVENT_SUBTYPES_LOCAL.has(itemType)) {
             const evt = makeEvent(eventObj as Record<string,unknown>, 'A1', source, baseUrl);
             if (evt) acc.push(evt);
           }
@@ -481,9 +531,9 @@ function collectJsonLdEvents(
 
   for (const key of ['subEvent', 'subEvents', 'superEvent']) {
     if (Array.isArray(obj[key])) {
-      for (const sub of obj[key]) collectJsonLdEvents(sub, source, baseUrl, acc, childInheritedDescription);
+      for (const sub of obj[key]) collectJsonLdEvents(sub, source, baseUrl, acc, childInheritedDescription, pageMetaDescription);
     } else if (obj[key]) {
-      collectJsonLdEvents(obj[key], source, baseUrl, acc, childInheritedDescription);
+      collectJsonLdEvents(obj[key], source, baseUrl, acc, childInheritedDescription, pageMetaDescription);
     }
   }
 
@@ -496,14 +546,14 @@ function collectJsonLdEvents(
   // description får article-beskrivningen som fallback.
   for (const key of ['about', 'mainEntity']) {
     if (Array.isArray(obj[key])) {
-      for (const item of obj[key]) collectJsonLdEvents(item, source, baseUrl, acc, childInheritedDescription);
+      for (const item of obj[key]) collectJsonLdEvents(item, source, baseUrl, acc, childInheritedDescription, pageMetaDescription);
     } else if (obj[key] && typeof obj[key] === 'object') {
-      collectJsonLdEvents(obj[key], source, baseUrl, acc, childInheritedDescription);
+      collectJsonLdEvents(obj[key], source, baseUrl, acc, childInheritedDescription, pageMetaDescription);
     }
   }
 
   if (Array.isArray(obj['@set'])) {
-    for (const item of obj['@set']) collectJsonLdEvents(item, source, baseUrl, acc, childInheritedDescription);
+    for (const item of obj['@set']) collectJsonLdEvents(item, source, baseUrl, acc, childInheritedDescription, pageMetaDescription);
   }
 }
 

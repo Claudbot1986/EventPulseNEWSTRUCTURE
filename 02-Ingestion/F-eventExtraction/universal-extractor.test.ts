@@ -535,3 +535,89 @@ describe('universal-extractor — Strategy A1: NewsArticle/WebPage wrapper recur
     expect(result.events[0].description).toBe('Article headline for description fallback');
   });
 });
+
+// ──────────────────────────────────────────────────────────────────────────
+// 2026-10-02 — Round 2 plan §3: meta description-fallback.
+//
+// Många källor (spelning.se, sodrateatern, kultur-stockholm, jarfalla) har
+// INGEN description i sina JSON-LD Event-block — men har riktig text i
+// <meta name="description"> / <meta property="og:description">.
+//
+// Före fix: events saknade description trots att sidan hade text.
+// Efter fix: extractEvents plockar meta description som fallback när
+// JSON-LD saknar/har för kort description.
+// ──────────────────────────────────────────────────────────────────────────
+
+function htmlWithMetaDescription(jsonLd: object, metaDesc: string): string {
+  const json = JSON.stringify(jsonLd).replace(/</g, '\\u003c');
+  return `<!doctype html>
+<html lang="sv">
+<head>
+<meta name="description" content="${metaDesc}" />
+<script type="application/ld+json">${json}</script>
+</head>
+<body><h1>Test page</h1></body>
+</html>`;
+}
+
+describe('universal-extractor — Round 2 §3: meta description-fallback', () => {
+  it('falls back to <meta name="description"> when JSON-LD Event lacks description', () => {
+    // Real spelning.se pattern: MusicEvent utan description, men meta description
+    // har 'Modern Guilt, Last days of April...'
+    const html = htmlWithMetaDescription(
+      {
+        '@context': 'https://schema.org',
+        '@type': 'MusicEvent',
+        name: 'DUNDERFEST 2026',
+        startDate: '2026-10-02',
+        location: { '@type': 'Place', name: 'Skylten' },
+      },
+      'Modern Guilt, Last days of April, Nothing works m.fl. spelar på Skylten i Linköping 2–3 oktober 2026.',
+    );
+    const result = extractEvents(html, 'spelning-se', 'https://example.com/konsert');
+    expect(result.events.length).toBe(1);
+    expect(result.events[0].description).toContain('Modern Guilt');
+  });
+
+  it('prefers JSON-LD description over meta description (no overwrite)', () => {
+    // Om JSON-LD har en riktig description → den vinner.
+    const html = htmlWithMetaDescription(
+      {
+        '@context': 'https://schema.org',
+        '@type': 'Event',
+        name: 'Real Event',
+        startDate: '2026-10-02',
+        description: 'This is the real JSON-LD description that should win',
+      },
+      'Generic page-level meta description that should NOT overwrite',
+    );
+    const result = extractEvents(html, 'test', 'https://example.com/event');
+    expect(result.events.length).toBe(1);
+    expect(result.events[0].description).toBe('This is the real JSON-LD description that should win');
+  });
+
+  it('ignores short meta descriptions (<10 chars) — placeholder filter', () => {
+    // För korta meta descriptions är troligen template-text, inte riktig.
+    const html = htmlWithMetaDescription(
+      {
+        '@context': 'https://schema.org',
+        '@type': 'Event',
+        name: 'Some Event',
+        startDate: '2026-10-02',
+      },
+      'Foo bar',
+    );
+    const result = extractEvents(html, 'test', 'https://example.com/event');
+    expect(result.events.length).toBe(1);
+    expect(result.events[0].description).toBeUndefined();
+  });
+
+  it('returns null when neither JSON-LD nor meta has a usable description', () => {
+    const html = `<!doctype html>
+<html><head>
+<meta name="description" content="Foo bar" />
+</head><body></body></html>`;
+    const result = extractEvents(html, 'test', 'https://example.com/event');
+    expect(result.events.length).toBe(0);
+  });
+});
