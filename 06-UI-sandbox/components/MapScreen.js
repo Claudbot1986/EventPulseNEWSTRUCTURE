@@ -196,10 +196,11 @@ function MapScreen() {
       <View style={styles.devBanner}>
         <Text style={styles.devBannerText}>
           SANDBOX-PREVIEW (riktig Supabase-data via events_public).
-          Bakgrund: för-bakade OSM-tiles (assets/stockholm-tiles.png,
-          360×454, Mercator-korrekt). Tryckertiden ska flyttas ut efter
-          sandbox-validering. När vi byter till react-native-maps i 06-UI/
-          ersätts ENDAST MapBaseLayer — pins/klustring/filter rörs inte.
+          Bakgrund: för-bakade OSM-tiles på 3 z-nivåer (z11/z13/z15,
+          Mercator-korrekt). PINCH med 2 fingrar för att zooma in/ut;
+          dra med 1 finger för att panorera. När vi byter till
+          react-native-maps i 06-UI/ ersätts ENDAST MapBaseLayer —
+          pins/klustring/filter/gestik rörs inte.
         </Text>
       </View>
 

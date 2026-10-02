@@ -14,14 +14,39 @@
 // Två implementationer i denna fil:
 //   GridBaseLayer        — ingen tile-provider, bara grid-rutor.
 //                          Använd för offline-test eller som fallback.
-//   StaticTilesBaseLayer — för-bakad OSM-tile-asset (Mercator-korrekt).
-//                          Dagens produktionsvisualisering i sandbox.
+//   StaticTilesBaseLayer — för-bakade OSM-tile-tillgångar (Mercator-
+//                          korrekt) för flera z-nivåer (11/13/15).
+//                          Användaren kan pinch:a för att växla.
 //
 // Framtida implementationer (egna filer):
 //   WebViewLeafletBaseLayer, ReactNativeMapsBaseLayer, etc.
 //   Samma kontrakt. Samma `viewport`-prop. Noll påverkan på pin-lagret.
 
 import { Image, StyleSheet, Text, View } from 'react-native';
+
+// Tillgängliga zoom-nivåer och deras asset-källor. Snap-point: om
+// viewport.zoom faller mellan två nivåer används den som är närmast.
+// När du vill lägga till fler z-nivåer: bygg en ny asset via
+// scripts/build-stockholm-tiles.mjs och lägg till här.
+const ZOOM_LEVELS = [
+  { zoom: 11, source: require('../assets/stockholm-tiles-z11.png'), label: 'z11 overview' },
+  { zoom: 13, source: require('../assets/stockholm-tiles-z13.png'), label: 'z13 neighborhood' },
+  { zoom: 15, source: require('../assets/stockholm-tiles-z15.png'), label: 'z15 street' },
+];
+
+// Hitta närmaste tillgängliga z-nivå för en given fractional zoom.
+function pickZoomLevel(targetZoom) {
+  let best = ZOOM_LEVELS[0];
+  let bestDist = Math.abs(targetZoom - best.zoom);
+  for (const level of ZOOM_LEVELS) {
+    const dist = Math.abs(targetZoom - level.zoom);
+    if (dist < bestDist) {
+      best = level;
+      bestDist = dist;
+    }
+  }
+  return best;
+}
 
 const TOKENS = {
   color: {
@@ -30,9 +55,12 @@ const TOKENS = {
     line: '#1A1A1A',
     centerDot: '#FFB454',
     cornerLabel: '#9AA3B5',
+    zoomBadge: '#000000',
+    zoomBadgeBg: 'rgba(255, 180, 84, 0.9)',
   },
   font: {
     cornerLabel: { size: 10, weight: '700', letterSpacing: 1.6 },
+    zoomBadge: { size: 11, weight: '800' },
   },
   space: {
     gridLines: 5,
@@ -86,35 +114,39 @@ export function GridBaseLayer({ viewport, style, testID = 'map-base-grid' }) {
 }
 
 /**
- * StaticTilesBaseLayer — för-bakad OSM-tile-asset (Mercator-korrekt).
+ * StaticTilesBaseLayer — för-bakade OSM-tile-tillgångar (Mercator-korrekt).
  *
- * Visar assets/stockholm-tiles.png (eller custom source) som bakgrund.
- * Bildens aspect-ratio MÅSTE matcha viewport-ets aspect-ratio — annars
- * blir det distortion eller tomma ytor. Använd STOCKHOLM_ASSET_ASPECT
- * från mapProjection.js för att sätta canvas-höjd = bredd / aspect.
+ * Väljer automatiskt rätt asset baserat på viewport.zoom:
+ *   - z ≈ 11 → stockholm-tiles-z11.png (hela Stockholm)
+ *   - z ≈ 13 → stockholm-tiles-z13.png (1/4 område)
+ *   - z ≈ 15 → stockholm-tiles-z15.png (Sergels torg närbild)
+ *
+ * Visar en liten z-badge i hörnet så man ser vilken zoom-nivå som är
+ * aktiv (särskilt viktigt under pinch när fractional zoom skiftar
+ * snabbtav).
  *
  * Props:
- *   - viewport: { width, height, ... } (obligatoriskt)
- *   - source: bild-source (ImageSource, optional — default = stockholm-tiles.png)
+ *   - viewport: { width, height, zoom, bounds, center? } (obligatoriskt)
  *   - resizeMode: 'cover' | 'contain' | 'stretch' | 'center' (default 'contain')
  *   - style: extra styles för wrapper
  */
 export function StaticTilesBaseLayer({
   viewport,
-  source = require('../assets/stockholm-tiles.png'),
   resizeMode = 'contain',
   style,
   testID = 'map-base-static-tiles',
+  showZoomBadge = true,
 }) {
-  const { width, height } = viewport;
+  const { width, height, zoom } = viewport;
+  const level = pickZoomLevel(zoom);
   return (
     <View
       testID={testID}
       style={[styles.canvas, { width, height }, style]}
-      accessibilityLabel="Bakgrundskarta: OSM-tiles för Stockholm"
+      accessibilityLabel={`Bakgrundskarta: OSM-tiles, ${level.label}`}
     >
       <Image
-        source={source}
+        source={level.source}
         style={{ width, height }}
         resizeMode={resizeMode}
         pointerEvents="none"
@@ -122,17 +154,17 @@ export function StaticTilesBaseLayer({
       <View style={styles.cornerTopLeft} pointerEvents="none">
         <Text style={styles.cornerLabel}>STOCKHOLM</Text>
       </View>
+      {showZoomBadge ? (
+        <View style={styles.cornerTopRight} pointerEvents="none">
+          <Text style={styles.zoomBadgeText}>z{Math.round(zoom)}</Text>
+        </View>
+      ) : null}
     </View>
   );
 }
 
 /**
- * Default export: dispatch via `kind`-prop. Bekvämt för att kunna byta
- * base-layer i App.js / tester utan att behöva importera de specifika.
- *
- * <MapBaseLayer kind="grid" viewport={viewport} />
- * <MapBaseLayer kind="tiles" viewport={viewport} />
- * <MapBaseLayer kind="tiles" viewport={viewport} source={...} />
+ * Default export: dispatch via `kind`-prop.
  */
 export default function MapBaseLayer({
   kind = 'tiles',
@@ -167,6 +199,20 @@ const styles = StyleSheet.create({
     top: TOKENS.space.cornerInset,
     left: TOKENS.space.cornerInset,
   },
+  cornerTopRight: {
+    position: 'absolute',
+    top: TOKENS.space.cornerInset,
+    right: TOKENS.space.cornerInset,
+    backgroundColor: TOKENS.color.zoomBadgeBg,
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 4,
+  },
+  zoomBadgeText: {
+    color: TOKENS.color.zoomBadge,
+    fontSize: TOKENS.font.zoomBadge.size,
+    fontWeight: TOKENS.font.zoomBadge.weight,
+  },
   cornerLabel: {
     color: TOKENS.color.cornerLabel,
     fontSize: TOKENS.font.cornerLabel.size,
@@ -176,4 +222,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export { TOKENS as MAP_BASE_LAYER_TOKENS };
+export { TOKENS as MAP_BASE_LAYER_TOKENS, ZOOM_LEVELS, pickZoomLevel };

@@ -36,17 +36,35 @@ const PROJECTION_PATH = path.join(SANDBOX_ROOT, 'components', 'mapProjection.js'
 // Importera STOCKHOLM_BOUNDS från sandbox-modulen.
 const projection = await import(`file://${PROJECTION_PATH}`);
 const STOCKHOLM_BOUNDS = projection.STOCKHOLM_BOUNDS;
+const STOCKHOLM_CENTER = projection.STOCKHOLM_CENTER;
 
 // --- Args parsing -----------------------------------------------------------
 
 function parseArgs(argv) {
-  const opts = { zoom: 11, width: 360, height: 760, output: 'stockholm-tiles.png' };
+  const opts = {
+    zoom: 11,
+    width: 360,
+    height: 760,
+    output: 'stockholm-tiles.png',
+    centerLat: STOCKHOLM_CENTER.lat,
+    centerLng: STOCKHOLM_CENTER.lng,
+    minLat: STOCKHOLM_BOUNDS.minLat,
+    maxLat: STOCKHOLM_BOUNDS.maxLat,
+    minLng: STOCKHOLM_BOUNDS.minLng,
+    maxLng: STOCKHOLM_BOUNDS.maxLng,
+  };
   for (let i = 2; i < argv.length; i++) {
     const a = argv[i];
     if (a === '--zoom') opts.zoom = Number(argv[++i]);
     else if (a === '--width') opts.width = Number(argv[++i]);
     else if (a === '--height') opts.height = Number(argv[++i]);
     else if (a === '--output') opts.output = String(argv[++i]);
+    else if (a === '--center-lat') opts.centerLat = Number(argv[++i]);
+    else if (a === '--center-lng') opts.centerLng = Number(argv[++i]);
+    else if (a === '--minlat') opts.minLat = Number(argv[++i]);
+    else if (a === '--maxlat') opts.maxLat = Number(argv[++i]);
+    else if (a === '--minlng') opts.minLng = Number(argv[++i]);
+    else if (a === '--maxlng') opts.maxLng = Number(argv[++i]);
     else if (a === '--help' || a === '-h') {
       process.stdout.write(usage());
       process.exit(0);
@@ -62,16 +80,40 @@ function parseArgs(argv) {
       !Number.isFinite(opts.height) || opts.height <= 0) {
     throw new Error(`width/height måste vara positiva nummer`);
   }
+  // Om användaren satte center men inte bounds, härled bounds från
+  // center + zoom + pixel-storlek (samma formel som viewportFromCenter).
+  const hasBounds = argv.includes('--minlat') || argv.includes('--maxlat')
+                 || argv.includes('--minlng') || argv.includes('--maxlng');
+  if (!hasBounds) {
+    const degPerPixel = 360 / (256 * (1 << opts.zoom));
+    const widthDeg = opts.width * degPerPixel;
+    const heightDegMercator = opts.height * degPerPixel;
+    const secLat = 1 / Math.max(0.01, Math.cos((opts.centerLat * Math.PI) / 180));
+    const heightDeg = heightDegMercator / secLat;
+    opts.minLng = opts.centerLng - widthDeg / 2;
+    opts.maxLng = opts.centerLng + widthDeg / 2;
+    opts.minLat = opts.centerLat - heightDeg / 2;
+    opts.maxLat = opts.centerLat + heightDeg / 2;
+  }
   return opts;
 }
 
 function usage() {
   return `build-stockholm-tiles.mjs — bygger Stockholm-tile-asset
 
-  --zoom <N>      OSM zoom-nivå (default 11, range 0-19)
-  --width <N>     slutgiltig asset-bredd i px (default 360)
-  --height <N>    slutgiltig asset-höjd i px (default 760)
-  --output <namn> filnamn under assets/ (default stockholm-tiles.png)
+  --zoom <N>          OSM zoom-nivå (default 11, range 0-19)
+  --width <N>         slutgiltig asset-bredd i px (default 360)
+  --height <N>        slutgiltig asset-höjd i px (default 760)
+  --output <namn>     filnamn under assets/ (default stockholm-tiles.png)
+  --center-lat <deg>  center.lat om bounds ej ges (default 59.3293)
+  --center-lng <deg>  center.lng om bounds ej ges (default 18.0686)
+  --minlat/--maxlat/--minlng/--maxlng <deg>  explicita bounds
+                        (ellers auto-deriverade från center + zoom + size)
+
+Exempel för 3 z-nivåer (Stockholm centrum-fokuserat):
+  node scripts/build-stockholm-tiles.mjs --zoom 11 --output stockholm-tiles-z11.png
+  node scripts/build-stockholm-tiles.mjs --zoom 13 --output stockholm-tiles-z13.png
+  node scripts/build-stockholm-tiles.mjs --zoom 15 --output stockholm-tiles-z15.png
 `;
 }
 
@@ -115,15 +157,16 @@ async function fetchTile(x, y, zoom) {
 
 async function main() {
   const opts = parseArgs(process.argv);
-  const { zoom, width, height, output: outName } = opts;
+  const { zoom, width, height, output: outName, minLat, maxLat, minLng, maxLng } = opts;
 
   console.log(`[build-stockholm-tiles] zoom=${zoom} output=${width}×${height} → ${outName}`);
+  console.log(`[build-stockholm-tiles] bounds: lat=[${minLat}..${maxLat}] lng=[${minLng}..${maxLng}]`);
 
   // 1. Räkna ut tile-range.
-  const xMinFloat = lngToTileX(STOCKHOLM_BOUNDS.minLng, zoom);
-  const xMaxFloat = lngToTileX(STOCKHOLM_BOUNDS.maxLng, zoom);
-  const yMinFloat = latToTileY(STOCKHOLM_BOUNDS.maxLat, zoom); // OBS: y ökar nedåt
-  const yMaxFloat = latToTileY(STOCKHOLM_BOUNDS.minLat, zoom);
+  const xMinFloat = lngToTileX(minLng, zoom);
+  const xMaxFloat = lngToTileX(maxLng, zoom);
+  const yMinFloat = latToTileY(maxLat, zoom); // OBS: y ökar nedåt
+  const yMaxFloat = latToTileY(minLat, zoom);
   const x0 = Math.floor(xMinFloat);
   const x1 = Math.floor(xMaxFloat);
   const y0 = Math.floor(yMinFloat);
@@ -203,7 +246,7 @@ async function main() {
   fs.writeFileSync(outPath, resized);
   const stat = fs.statSync(outPath);
   console.log(`[build-stockholm-tiles] sparad: ${outPath} (${(stat.size / 1024).toFixed(1)} KB)`);
-  console.log(`[build-stockholm-tiles] KLART. Stockholm bbox vid zoom ${zoom}: lng=${STOCKHOLM_BOUNDS.minLng}-${STOCKHOLM_BOUNDS.maxLng}, lat=${STOCKHOLM_BOUNDS.minLat}-${STOCKHOLM_BOUNDS.maxLat}.`);
+  console.log(`[build-stockholm-tiles] KLART. zoom ${zoom}: lng=${minLng}-${maxLng}, lat=${minLat}-${maxLat}.`);
 }
 
 main().catch((err) => {

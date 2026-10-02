@@ -38,6 +38,10 @@ export const STOCKHOLM_FALLBACK = {
   lng: 18.0686,
 };
 
+// Stockholm centrum (Sergels torg). Används som default-center för
+// center-baserad viewport när användaren inte har pan:at.
+export const STOCKHOLM_CENTER = STOCKHOLM_FALLBACK;
+
 // Hur mycket vi sprider fallback-events (≈550m på lat).
 const JITTER_DEGREES = 0.005;
 
@@ -86,6 +90,52 @@ export function getViewport(bounds, size, zoom = STOCKHOLM_ZOOM) {
     height: size.height,
     bounds,
     zoom,
+  };
+}
+
+/**
+ * Härled bounds + viewport från center (lat, lng) + zoom + pixel-storlek.
+ * Detta är basen för pinch-to-zoom + pan: center och zoom är state,
+ * bounds beräknas on-the-fly så vi slipper hålla bounds i state.
+ *
+ * Mercator-formeln är symmetrisk mellan lng och Mercator-lat, så för
+ * en pixel-storlek (W, H) gäller:
+ *   widthDeg  = W * 360 / (256 * 2^Z)              [lng grader]
+ *   heightDegMercator = H * 360 / (256 * 2^Z)       [Mercator-lat grader]
+ *   heightDegGeographic = heightDegMercator / sec(centerLat)
+ *
+ * @param {number} centerLat
+ * @param {number} centerLng
+ * @param {number} zoom
+ * @param {{width:number,height:number}} size
+ * @returns {{width,height,bounds,zoom,center}}
+ */
+export function viewportFromCenter(centerLat, centerLng, zoom, size) {
+  if (!Number.isFinite(centerLat) || !Number.isFinite(centerLng)) {
+    return getViewport(STOCKHOLM_BOUNDS, size, zoom);
+  }
+  const W = size.width;
+  const H = size.height;
+  const degPerPixel = 360 / (256 * (1 << zoom));
+
+  const widthDeg = W * degPerPixel;
+  const minLng = centerLng - widthDeg / 2;
+  const maxLng = centerLng + widthDeg / 2;
+
+  // Mercator-aspect: lng och Mercator-lat har samma px-skala. Konvertera
+  // tillbaka till geografisk lat via sec(centerLat).
+  const heightDegMercator = H * degPerPixel;
+  const secLat = 1 / Math.max(0.01, Math.cos((centerLat * Math.PI) / 180));
+  const heightDeg = heightDegMercator / secLat;
+  const maxLat = centerLat + heightDeg / 2;
+  const minLat = centerLat - heightDeg / 2;
+
+  return {
+    width: W,
+    height: H,
+    bounds: { minLat, maxLat, minLng, maxLng },
+    zoom,
+    center: { lat: centerLat, lng: centerLng },
   };
 }
 

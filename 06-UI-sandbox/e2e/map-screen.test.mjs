@@ -101,6 +101,69 @@ test('viewport: STOCKHOLM_ASSET_ASPECT ≈ 0.793 (Mercator-korrekt för lat 59)'
   );
 });
 
+test('viewportFromCenter: bounds krymper proportionellt vid högre zoom', () => {
+  const { viewportFromCenter, STOCKHOLM_CENTER } = projection;
+  const size = { width: 360, height: 454 };
+  const z11 = viewportFromCenter(STOCKHOLM_CENTER.lat, STOCKHOLM_CENTER.lng, 11, size);
+  const z13 = viewportFromCenter(STOCKHOLM_CENTER.lat, STOCKHOLM_CENTER.lng, 13, size);
+  const z15 = viewportFromCenter(STOCKHOLM_CENTER.lat, STOCKHOLM_CENTER.lng, 15, size);
+
+  const z11Width = z11.bounds.maxLng - z11.bounds.minLng;
+  const z13Width = z13.bounds.maxLng - z13.bounds.minLng;
+  const z15Width = z15.bounds.maxLng - z15.bounds.minLng;
+  // Varje +2 zoom halverar lng-omfånget
+  assertStrict.ok(
+    Math.abs(z11Width - z13Width * 4) / z11Width < 0.01,
+    `z11 lng width ${z11Width} ska vara 4× z13 lng width ${z13Width}`,
+  );
+  assertStrict.ok(
+    Math.abs(z13Width - z15Width * 4) / z13Width < 0.01,
+    `z13 lng width ${z13Width} ska vara 4× z15 lng width ${z15Width}`,
+  );
+
+  // Centrum-lat ska vara samma för alla (vi centrerar på Sergels torg)
+  const centerLat = (z11.bounds.minLat + z11.bounds.maxLat) / 2;
+  assertStrict.ok(
+    Math.abs(centerLat - STOCKHOLM_CENTER.lat) < 0.001,
+    `center.lat ${centerLat} ska vara ≈ STOCKHOLM_CENTER.lat`,
+  );
+});
+
+test('viewportFromCenter: bounds-shift vid pan är konsistent', () => {
+  // OBS: Mercator-funktionen är icke-linjär (sec(lat) varierar med
+  // lat). En pan på +0.01° lat ger bounds.shift som matchar inom 1e-3
+  // (sub-meter-precision). För lng är relationen exakt.
+  const { viewportFromCenter } = projection;
+  const size = { width: 360, height: 454 };
+  const base = viewportFromCenter(59.33, 18.07, 13, size);
+  const shifted = viewportFromCenter(59.34, 18.08, 13, size);
+  // Pan north: bounds.maxLat ökar med samma differens som center.lat (inom 1e-3)
+  assertStrict.ok(
+    Math.abs(shifted.bounds.maxLat - (base.bounds.maxLat + 0.01)) < 1e-3,
+    `pan north ska öka maxLat ≈ 0.01 (faktisk diff: ${(shifted.bounds.maxLat - base.bounds.maxLat).toFixed(6)})`,
+  );
+  // Pan east: bounds.maxLng ökar exakt med 0.01 (lng är linjär)
+  assertStrict.ok(
+    Math.abs(shifted.bounds.maxLng - (base.bounds.maxLng + 0.01)) < 1e-6,
+    `pan east ska öka maxLng med 0.01 (faktisk diff: ${(shifted.bounds.maxLng - base.bounds.maxLng).toFixed(6)})`,
+  );
+});
+
+test('viewportFromCenter: zoom-in projicerar samma lat/lng till mindre pixel-rörelse', () => {
+  const { projectViewport, viewportFromCenter } = projection;
+  const size = { width: 360, height: 454 };
+  const z11 = viewportFromCenter(59.33, 18.07, 11, size);
+  const z13 = viewportFromCenter(59.33, 18.07, 13, size);
+  // Sample-punkt 0.01° öster om centrum
+  const p11 = projectViewport(59.33, 18.08, z11);
+  const p13 = projectViewport(59.33, 18.08, z13);
+  // Vid högre zoom ska samma lat/lng-shift ge FLER pixlar (zoom in).
+  assertStrict.ok(
+    p13.x - 180 > p11.x - 180,
+    `zoom in ska ge större pixel-förflyttning (z13=${p13.x - 180}, z11=${p11.x - 180})`,
+  );
+});
+
 test('projektion (Mercator): Stockholm centrum projiceras till medial x/y', () => {
   const { projectViewport, STOCKHOLM_FALLBACK, STOCKHOLM_VIEWPORT } = projection;
   const { x, y, visible } = projectViewport(
