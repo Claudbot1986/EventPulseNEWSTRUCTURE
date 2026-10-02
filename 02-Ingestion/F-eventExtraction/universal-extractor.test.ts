@@ -621,3 +621,127 @@ describe('universal-extractor — Round 2 §3: meta description-fallback', () =>
     expect(result.events.length).toBe(0);
   });
 });
+
+/**
+ * 2026-10-02 — Round 2 utökning. Page-level description enrichment:
+ * när A1/A2/B/C hittar events men description saknas (sidan har text i
+ * body men varken JSON-LD description eller meta-taggar har den) →
+ * använd body-text som description. Många källor (gratisistockholm,
+ * china-teatern, arkdes, sodrateatern.com m.fl.) behöver detta.
+ */
+describe('universal-extractor — Round 2 utökning: page-level description enrichment', () => {
+  it('gratisistockholm-pattern: HTML-heuristic event får body-text description när JSON-LD/meta saknas', () => {
+    const html = `<!doctype html>
+<html lang="sv">
+<head>
+  <title>Bakluckeloppis i Kista Galleria</title>
+</head>
+<body>
+  <article>
+    <h2>Bakluckeloppis i Kista Galleria</h2>
+    <time datetime="2026-10-25T11:00">25 oktober 11:00</time>
+    <a href="/viewObject.aspx?objectId=130679">Läs mer</a>
+  </article>
+  <p>Bakluckeloppisen kommer tillbaka till Kista Galleria. Här möts säljare och fyndjägare från hela Stockholms län för att sälja och fynda bland kläder, prylar, retro, design, heminredning och mycket mer – mitt i ett av stadens mest välbesökta köpcentrum. Sälj eller fynda på stans största vinterloppis under tak! Boka plats och läs mer på loppistajm.se/kista. Lokal/plats: Kista Galleria, Östra p-garaget, Hanstavägen, 164 53 Kista.</p>
+</body>
+</html>`;
+    const result = extractEvents(html, 'gratisistockholm', 'https://www.gratisistockholm.nu/viewObject.aspx?objectId=130679');
+    expect(result.events.length).toBeGreaterThan(0);
+    const evt = result.events[0];
+    expect(evt.description).toBeTruthy();
+    expect(evt.description!.length).toBeGreaterThanOrEqual(200);
+    expect(evt.description).toMatch(/Bakluckeloppis/);
+  });
+
+  it('behåller JSON-LD description — body fallback skriver INTE över', () => {
+    const html = `<!doctype html>
+<html lang="sv">
+<head>
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Event",
+    "name": "Konsert ikväll",
+    "startDate": "2026-10-25T19:00",
+    "description": "Riktig JSON-LD beskrivning från schema.org. Detta är en unik beskrivning som inte får att bli överskriden av body-fallback."
+  }
+  </script>
+  <meta name="description" content="Generic meta description" />
+</head>
+<body>
+  <p>Detta är en helt annan body-text som INTE hör till eventet ovan. Den skoter absolut INTE JSON-LD-beskrivningen som är mycket bättre och mer specifik för eventet ifråga. Den får innehålla åäö och annan svensk text utan att det spelar roll.</p>
+</body>
+</html>`;
+    const result = extractEvents(html, 'test', 'https://example.com/event');
+    expect(result.events.length).toBe(1);
+    expect(result.events[0].description).toMatch(/Riktig JSON-LD beskrivning/);
+    expect(result.events[0].description).not.toMatch(/body-text som INTE/);
+  });
+
+  it('avkodar HTML-entiteter i JSON-LD description (aviciiarena-pattern)', () => {
+    const html = `<!doctype html>
+<html lang="sv">
+<head>
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "MusicEvent",
+    "name": "Victor Leksell",
+    "startDate": "2026-11-15T19:30",
+    "description": "V&auml;lkommen till en kv&auml;ll med Victor Leksell p&aring; Avicii Arena. Kv&auml;llen bjuder p&aring; musik och show i v&auml;rldsklass."
+  }
+  </script>
+</head>
+<body></body>
+</html>`;
+    const result = extractEvents(html, 'aviciiarena', 'https://aviciiarena.se/evenemang/victor-leksell');
+    expect(result.events.length).toBe(1);
+    expect(result.events[0].description).toContain('Välkommen');
+    expect(result.events[0].description).toContain('kväll');
+    expect(result.events[0].description).toContain('på');
+    expect(result.events[0].description).not.toContain('&auml;');
+  });
+
+  it('microdata-event får body fallback description (china-teatern-pattern)', () => {
+    const html = `<!doctype html>
+<html lang="sv">
+<head><title>Kevin Bridges</title></head>
+<body>
+  <article itemscope itemtype="https://schema.org/Event">
+    <h1 itemprop="name">Kevin Bridges: Here If You Need Me</h1>
+    <time itemprop="startDate" datetime="2026-11-20T19:30">15 nov 19:30</time>
+    <a itemprop="url" href="/shower/kevin-bridges-here-if-you-need-me">Läs mer</a>
+    <div itemprop="location" itemscope itemtype="https://schema.org/Place">
+      <span itemprop="name">China-teatern</span>
+    </div>
+  </article>
+  <p>Kevin Bridges är tillbaka med sin nya show Here If You Need Me – en kväll fylld av skarp humor, observation med en levande komiker som skoer ett fascinerande spektrum av samtida fenomen. Bridges har sålt ut hela Scandinavium tre gånger och nu kommer han äntligen till China-teatern i Stockholm för en bejublad kväll med garanterade skratt och underhållning i världsklass.</p>
+</body>
+</html>`;
+    const result = extractEvents(html, 'chinateatern', 'https://www.chinateatern.se/shower/kevin-bridges');
+    expect(result.events.length).toBeGreaterThanOrEqual(1);
+    // Hitta det event som har Kevin Bridges-titel
+    const kevt = result.events.find(e => /Kevin Bridges/.test(e.title));
+    expect(kevt).toBeTruthy();
+    expect(kevt!.description).toMatch(/Kevin Bridges/);
+    expect(kevt!.description!.length).toBeGreaterThanOrEqual(200);
+  });
+
+  it('body fallback ignorerar nav/footer/cookie-text', () => {
+    const html = `<!doctype html>
+<html lang="sv">
+<body>
+  <nav><p>Navigation menu med cookies och integritet för footer-länkar som ska filtreras bort av anbefalingen från sidan.</p></nav>
+  <article>
+    <h2>Event utan description</h2>
+    <time datetime="2026-10-25T19:00">25 okt 19:00</time>
+  </article>
+  <p>Detta är den riktiga descriptionen för eventet som är tillräckligt lång för att kvalificera som body-fallback och innehåller tillräckligt med text för att inte filtreras bort av filtren som tar bort nav- och footer-länkar och diverse reklam som ska bort från body-fallback.</p>
+</body>
+</html>`;
+    const result = extractEvents(html, 'test', 'https://example.com/event');
+    expect(result.events.length).toBeGreaterThan(0);
+    expect(result.events[0].description).toMatch(/riktiga descriptionen/);
+    expect(result.events[0].description).not.toMatch(/cookies/);
+  });
+});

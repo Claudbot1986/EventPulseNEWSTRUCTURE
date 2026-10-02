@@ -280,7 +280,36 @@ function makeEvent(data: Record<string, unknown>, method: string, source: string
       const meta = norm(data.__meta_description as string);
       if (meta.length >= 10) desc = meta;
     }
-    desc = desc.replace(/<[^>]+>/g, '').slice(0, 500);
+    // 2026-10-02 — body-fallback (Round 2 utökning). Om varken JSON-LD
+    // eller meta har en duglig description → använd body-paragraph
+    // som extractBodyDescription hittat. Trigga ENDAST om JSON-LD
+    // description är tom/short (inte skriva över riktig JSON-LD-text).
+    if ((!desc || desc.length < 10) && typeof data.__body_description === 'string') {
+      const body = norm(data.__body_description as string);
+      if (body.length >= 10) desc = body;
+    }
+    desc = desc.replace(/<[^>]+>/g, '');
+    // 2026-10-02 — avkoda HTML-entiteter (aviciiarena m.fl. har raw
+    // entities som &auml; &ouml; etc. i JSON-LD description; behöver
+    // avkodas så description inte ser konstig ut i UI).
+    desc = desc.replace(/&#(\d+);/g, (_, dec) => {
+      const codePoint = parseInt(dec, 10);
+      return codePoint < 0x10000 ? String.fromCodePoint(codePoint) : '?';
+    });
+    desc = desc.replace(/&#x([0-9a-fA-F]+);/g, (_, hex) => {
+      const codePoint = parseInt(hex, 16);
+      return codePoint < 0x10000 ? String.fromCodePoint(codePoint) : '?';
+    });
+    const NAMED_ENTITIES_DESC: Record<string, string> = {
+      amp: '&', lt: '<', gt: '>', quot: '"', apos: "'", nbsp: ' ',
+      auml: 'ä', ouml: 'ö', uuml: 'ü', aring: 'å', Auml: 'Ä', Ouml: 'Ö',
+      Uuml: 'Ü', Aring: 'Å', szlig: 'ß', euro: '€', ndash: '–', mdash: '—',
+    };
+    desc = desc.replace(/&([a-zA-Z]+);/g, (m, name) => {
+      if (name in NAMED_ENTITIES_DESC) return NAMED_ENTITIES_DESC[name];
+      return ' ';
+    });
+    desc = desc.slice(0, 500);
 
     let price = '';
     const isFree = data.isFree === true || data.isFree === 'true' || data.free === true || data.freeEntry === true;
@@ -410,13 +439,21 @@ function extractJsonLd($: cheerio.CheerioAPI, source: string, baseUrl: string): 
   // objekt som saknar egen description.
   const pageMetaDescription = extractPageDescription($);
 
+  // 2026-10-02 — body-fallback (Round 2 utökning). För källor som saknar
+  // både JSON-LD description OCH meta description (gratisistockholm,
+  // china-teatern, arkdes, sodrateatern.com, etc.) — hämta den riktiga
+  // description från sidans body-text. Heurfel väljer i största
+  // text-block som inte är nav/footer/cookie. Kräver att pageMetaDescription
+  // OCH JSON-LD description är tomma (<10) för att aktiveras.
+  const bodyDescription = extractBodyDescription($);
+
   $('script[type="application/ld+json"]').each((_, el) => {
     try {
       const content = $(el).html() || '';
       const data = JSON.parse(content);
       const rootDesc = findRootDescription(data);
       // Inject meta-fallback på top-nivå objektet (recursivt till alla children)
-      collectJsonLdEvents(data, source, baseUrl, events, rootDesc, pageMetaDescription);
+      collectJsonLdEvents(data, source, baseUrl, events, rootDesc, pageMetaDescription, bodyDescription);
     } catch { /* skip */ }
   });
 
@@ -438,6 +475,98 @@ function extractPageDescription($: cheerio.CheerioAPI): string | null {
   return null;
 }
 
+/**
+ * Body-fallback (Round 2 utökning). När varken JSON-LD eller meta-taggar
+ * har description, leta i sidans body-text efter den första paragrafen
+ * med ≥200 tecken som inte är nav/footer/cookie-reklam.
+ *
+ * Denna utökning är nödvändig för källor som:
+ *   - Saknar JSON-LD helt (gratisistockholm.nu, china-teatern.se, arkdes.se,
+ *     stadsmuseet.stockholm, etc.)
+ *   - Har generic meta description ("Ett evenemangs pa..." istället för
+ *     det riktiga innehållet)
+ *
+ * Heurfel:
+ *   1. Strippa <script>/<style>
+ *   2. Konvertera <p>, <br><br>, </div> till \n\n
+ *   3. Strippa resterande taggar
+ *   4. Avkoda entiteter via html.unescape (hanterar &#x..; etc.)
+ *   5. Hitta längsta textstycket ≥200 tecken som inte är nav/footer
+ *   6. Föredra svenska (innehåller å/ä/ö)
+ */
+function extractBodyDescription($: cheerio.CheerioAPI): string | null {
+  // Bygg ihop HTML-body utan script/style för att kunna processa texten
+  // som fristående textblock. cheerio's $.html() ger serialiserad output.
+  const html = $('body').html() || $.html();
+  if (!html) return null;
+
+  // 1. Strippa script/style (de innehåller bara JS/CSS, inte synlig text)
+  let h = html.replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, ' ');
+  h = h.replace(/<style\b[^<]*(?:(?!<\/style>)<[^<]*)*<\/style>/gi, ' ');
+
+  // 2. Konvertera paragraph-gränser till newlines
+  h = h.replace(/<p\b[^>]*>/gi, '\n\n');
+  h = h.replace(/<\/p>/gi, '\n\n');
+  h = h.replace(/<br\s*\/?>/gi, '\n');  // enskild <br> = mjuk radbrytning inom paragrafen
+  h = h.replace(/\n\n+/g, '\n\n');        // normalisera multipla radbryter
+  h = h.replace(/<\/?(div|section|article|main|header|footer|li|ul|ol|tr)\b[^>]*>/gi, '\n');
+
+  // 3. Strippa resterande taggar
+  h = h.replace(/<[^>]+>/g, ' ');
+
+  // 4. Avkoda HTML-entiteter (&#x..; och &name;)
+  h = h.replace(/&#(\d+);/g, (_, dec) => {
+    const codePoint = parseInt(dec, 10);
+    return codePoint < 0x10000 ? String.fromCodePoint(codePoint) : '?';
+  });
+  h = h.replace(/&#x([0-9a-fA-F]+);/g, (_, hex) => {
+    const codePoint = parseInt(hex, 16);
+    return codePoint < 0x10000 ? String.fromCodePoint(codePoint) : '?';
+  });
+  // Standard-namngivna entiteter — använd lookup-tabell (html.unescape
+  // gör detta men vi har redan strippat taggar; kör replace manuelt för
+  // att fånga &auml; &ouml; &aring; etc.).
+  const NAMED_ENTITIES: Record<string, string> = {
+    amp: '&', lt: '<', gt: '>', quot: '"', apos: "'", nbsp: ' ',
+    auml: 'ä', ouml: 'ö', uuml: 'ü', aring: 'å', Auml: 'Ä', Ouml: 'Ö',
+    Uuml: 'Ü', Aring: 'Å', szlig: 'ß', euro: '€', pound: '£', yen: '¥',
+    ndash: '–', mdash: '—', lsquo: '\u2018', rsquo: '\u2019',
+    ldquo: '\u201C', rdquo: '\u201D', hellip: '…',
+  };
+  h = h.replace(/&([a-zA-Z]+);/g, (m, name) => {
+    if (name in NAMED_ENTITIES) return NAMED_ENTITIES[name];
+    return ' ';
+  });
+
+  // 5. Collapse whitespace MEN bevara newlines (för paragraph-split)
+  h = h.replace(/[ \t\r\f\v]+/g, ' ');
+
+  // 6. Splitta och välj
+  const paragraphs = h.split(/\n\s*\n/).map(p => p.trim()).filter(p => p.length >= 200);
+
+  // Filtrera bort nav/footer/cookie-reklam. OBS: bara fristående signaler
+  // (ord som nästan uteslutande förekommer i reklam), inte vanliga ord
+  // som "footer" eller "integritet" — de kan finnas i riktiga beskrivningar.
+  const excludeKeywords = [
+    'använder cookies', 'använder kakor', 'cookies för att',
+    'privacy policy', 'skip to content', 'skip to main',
+  ];
+  const candidates = paragraphs.filter(p => {
+    const lower = p.toLowerCase();
+    return !excludeKeywords.some(kw => lower.includes(kw));
+  });
+
+  if (candidates.length === 0) return null;
+
+  // 7. Föredra svenska
+  const svCandidates = candidates.filter(p => /[åäöÅÄÖ]/.test(p));
+  const best = svCandidates.length > 0 ? svCandidates : candidates;
+
+  // Returnera längsta
+  const result = best.reduce((a, b) => (b.length > a.length ? b : a));
+  return result.slice(0, 1500);
+}
+
 function collectJsonLdEvents(
   data: unknown,
   source: string,
@@ -445,6 +574,7 @@ function collectJsonLdEvents(
   acc: ParsedEvent[],
   inheritedDescription: string | null = null,
   pageMetaDescription: string | null = null,
+  bodyDescription: string | null = null,
 ): void {
   if (!data || typeof data !== 'object') return;
 
@@ -454,6 +584,12 @@ function collectJsonLdEvents(
   // makeEvent läser fältet och använder det om JSON-LD saknar description.
   if (pageMetaDescription && !obj.__meta_description) {
     obj.__meta_description = pageMetaDescription;
+  }
+  // 2026-10-02 — body-fallback (Round 2 utökning). Injicera body-paragraph
+  // som `__body_description` på samma sätt. Sista fallback om JSON-LD
+  // description OCH meta description båda är tomma/för korta.
+  if (bodyDescription && !obj.__body_description) {
+    obj.__body_description = bodyDescription;
   }
   const type: string = String(obj['@type'] || '');
 
@@ -507,7 +643,7 @@ function collectJsonLdEvents(
   }
 
   if (Array.isArray(obj['@graph'])) {
-    for (const item of obj['@graph']) collectJsonLdEvents(item, source, baseUrl, acc, childInheritedDescription, pageMetaDescription);
+    for (const item of obj['@graph']) collectJsonLdEvents(item, source, baseUrl, acc, childInheritedDescription, pageMetaDescription, bodyDescription);
   }
 
   if (Array.isArray(obj.itemListElement)) {
@@ -531,9 +667,9 @@ function collectJsonLdEvents(
 
   for (const key of ['subEvent', 'subEvents', 'superEvent']) {
     if (Array.isArray(obj[key])) {
-      for (const sub of obj[key]) collectJsonLdEvents(sub, source, baseUrl, acc, childInheritedDescription, pageMetaDescription);
+      for (const sub of obj[key]) collectJsonLdEvents(sub, source, baseUrl, acc, childInheritedDescription, pageMetaDescription, bodyDescription);
     } else if (obj[key]) {
-      collectJsonLdEvents(obj[key], source, baseUrl, acc, childInheritedDescription, pageMetaDescription);
+      collectJsonLdEvents(obj[key], source, baseUrl, acc, childInheritedDescription, pageMetaDescription, bodyDescription);
     }
   }
 
@@ -546,14 +682,14 @@ function collectJsonLdEvents(
   // description får article-beskrivningen som fallback.
   for (const key of ['about', 'mainEntity']) {
     if (Array.isArray(obj[key])) {
-      for (const item of obj[key]) collectJsonLdEvents(item, source, baseUrl, acc, childInheritedDescription, pageMetaDescription);
+      for (const item of obj[key]) collectJsonLdEvents(item, source, baseUrl, acc, childInheritedDescription, pageMetaDescription, bodyDescription);
     } else if (obj[key] && typeof obj[key] === 'object') {
-      collectJsonLdEvents(obj[key], source, baseUrl, acc, childInheritedDescription, pageMetaDescription);
+      collectJsonLdEvents(obj[key], source, baseUrl, acc, childInheritedDescription, pageMetaDescription, bodyDescription);
     }
   }
 
   if (Array.isArray(obj['@set'])) {
-    for (const item of obj['@set']) collectJsonLdEvents(item, source, baseUrl, acc, childInheritedDescription, pageMetaDescription);
+    for (const item of obj['@set']) collectJsonLdEvents(item, source, baseUrl, acc, childInheritedDescription, pageMetaDescription, bodyDescription);
   }
 }
 
@@ -1468,11 +1604,37 @@ export function extractEvents(html: string, source: string, baseUrl: string): Ex
   // did not pick up an image from any of A1–C3. Per-page only (meta tags
   // describe the page, not individual events). JSON-LD / microdata wins.
   const pageOgImage = extractPageOgImage($);
-  const enrichedEvents: ParsedEvent[] = pageOgImage
+  let enrichedEvents: ParsedEvent[] = pageOgImage
     ? allEvents.map((evt) =>
         evt.imageUrl ? evt : { ...evt, imageUrl: absolutizeUrl(pageOgImage, baseUrl) }
       )
     : allEvents;
+
+  // 2026-10-02 — page-level description enrichment (Round 2 utökning).
+  // Fångar fall där A1/A2/B/C hittade events men description är tom — sidan
+  // saknar både JSON-LD description och meta description, men har text i
+  // body (gratisistockholm, china-teatern, arkdes, sodrateatern.com m.fl.).
+  // Triggar ENDAST om eventen inte redan har description (JSON-LD/Microdata/
+  // JS-embedded vinner alltid över page-level fallback).
+  //
+  // Prioritet:
+  //   1. JSON-LD/Microdata/JS description (satt i makeEvent)
+  //   2. <meta property="og:description"> / <meta name="description">
+  //   3. Body-text (första paragrafen ≥200 tecken, ej nav/footer)
+  //
+  // Notera: extractBodyDescription triggas redan inuti A1-pathen
+  // (extractJsonLd) för events som har JSON-LD. Denna enrichment fångar
+  // även events från A2/B/C som saknar description.
+  const pageMetaDescription = extractPageDescription($);
+  const bodyDescription = extractBodyDescription($);
+  if (pageMetaDescription || bodyDescription) {
+    enrichedEvents = enrichedEvents.map((evt) => {
+      if (evt.description && evt.description.length >= 10) return evt;
+      const fallback = pageMetaDescription || bodyDescription;
+      if (!fallback) return evt;
+      return { ...evt, description: fallback.slice(0, 500) };
+    });
+  }
 
   const methodsUsed = Object.keys(methodBreakdown);
 
