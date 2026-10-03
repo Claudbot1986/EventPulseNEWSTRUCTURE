@@ -15,6 +15,7 @@ import AppleMapsScreen from './AppleMapsScreen';
 import HemScreen from './HemScreen';
 import HemStar from './HemStar';
 import HemSupabase from './HemSupabase';
+import MapEventCard from './MapEventCard';
 import MapScreen from './MapScreen';
 import UtforskaSection from './UtforskaSection';
 
@@ -193,6 +194,30 @@ export const COMPONENT_REGISTRY = [
       'Samma filter (Idag / Helgen / Nästa helg / Alla) som MapScreen.',
     Component: AppleMapsScreen,
     sampleProps: {},
+    fullscreen: true,
+  },
+  {
+    id: 'map-event-card',
+    name: 'MapEventCard',
+    description:
+      'Klickbar popup-ruta som öppnas när man trycker på en event-marker. ' +
+      'Visar titel + meta-rad + ev. bild. X-knapp (top-right) stänger, ' +
+      '"Läs mer"-knapp (bottom-right) öppnar event-detalj. Klick på ' +
+      'kartan stänger också. Fristående komponent — kan previewas här ' +
+      'utan karta. I Apple-kartor: marker.onPress → kortet, MapView.onPress → stängs.',
+    Component: MapEventCard,
+    sampleProps: {
+      event: {
+        id: 'preview-1',
+        title_sv: 'Konsert i Konserthuset',
+        title_en: 'Concert at Konserthuset',
+        start_time: '2026-10-04T19:30:00Z',
+        category_slug: 'music',
+        is_free: false,
+      },
+      onClose: () => {},
+      onReadMore: () => {},
+    },
     fullscreen: true,
   },
 ];

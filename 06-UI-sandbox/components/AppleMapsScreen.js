@@ -20,6 +20,7 @@ import { PROVIDER_DEFAULT, Marker } from 'react-native-maps';
 import MapView from 'react-native-map-clustering';
 import { supabase } from '../services/supabaseClient';
 import MapFilterBar from './MapFilterBar';
+import MapEventCard from './MapEventCard';
 import {
   FILTER_MODES,
   INITIAL_REGION,
@@ -54,6 +55,7 @@ export default function AppleMapsScreen() {
   const [errorMsg, setErrorMsg] = useState(null);
   const [events, setEvents] = useState([]);
   const [activeMode, setActiveMode] = useState('weekend');
+  const [selectedEvent, setSelectedEvent] = useState(null);
 
   const load = useCallback(async () => {
     setStatus('loading');
@@ -75,6 +77,25 @@ export default function AppleMapsScreen() {
   useEffect(() => {
     load();
   }, [load]);
+
+  const handleMarkerPress = useCallback((event) => {
+    setSelectedEvent(event);
+  }, []);
+
+  const handleMapPress = useCallback(() => {
+    setSelectedEvent(null);
+  }, []);
+
+  const handleCardClose = useCallback(() => {
+    setSelectedEvent(null);
+  }, []);
+
+  const handleCardReadMore = useCallback((event) => {
+    // Sandbox: bara logga. I 06-UI/ skulle detta öppna EventDetailScreen.
+    if (typeof console !== 'undefined' && console.info) {
+      console.info('[AppleMapsScreen] Läs mer för event', event.id);
+    }
+  }, []);
 
   const counts = computeCountsByMode(events, FILTER_MODES);
   const filteredEvents = filterEventsByMode(events, activeMode);
@@ -118,28 +139,41 @@ export default function AppleMapsScreen() {
 
   return (
     <View style={styles.screen} testID="apple-maps-screen-ready">
-      <MapView
-        provider={PROVIDER_DEFAULT}
-        style={styles.map}
-        initialRegion={INITIAL_REGION}
-        showsCompass
-        showsScale
-        rotateEnabled
-        pitchEnabled
-        accessibilityLabel="Apple Maps-karta med Stockholm-events"
-        testID="apple-maps-canvas"
-        clusterColor={TOKENS.color.accent}
-        clusterTextColor={TOKENS.color.bg}
-      >
-        {filteredEvents.map((e) => (
-          <Marker
-            key={e.id}
-            coordinate={{ latitude: e.lat, longitude: e.lng }}
-            title={e.title_sv || e.title_en || 'Event'}
-            description={e.start_time}
-          />
-        ))}
-      </MapView>
+      <View style={styles.mapWrap}>
+        <MapView
+          provider={PROVIDER_DEFAULT}
+          style={StyleSheet.absoluteFill}
+          initialRegion={INITIAL_REGION}
+          showsCompass
+          showsScale
+          rotateEnabled
+          pitchEnabled
+          onPress={handleMapPress}
+          accessibilityLabel="Apple Maps-karta med Stockholm-events"
+          testID="apple-maps-canvas"
+          clusterColor={TOKENS.color.accent}
+          clusterTextColor={TOKENS.color.bg}
+        >
+          {filteredEvents.map((e) => (
+            <Marker
+              key={e.id}
+              coordinate={{ latitude: e.lat, longitude: e.lng }}
+              title={e.title_sv || e.title_en || 'Event'}
+              description={e.start_time}
+              onPress={() => handleMarkerPress(e)}
+            />
+          ))}
+        </MapView>
+        {selectedEvent ? (
+          <View style={styles.cardOverlay} pointerEvents="box-none">
+            <MapEventCard
+              event={selectedEvent}
+              onClose={handleCardClose}
+              onReadMore={handleCardReadMore}
+            />
+          </View>
+        ) : null}
+      </View>
       <MapFilterBar
         activeMode={activeMode}
         onChange={setActiveMode}
@@ -178,6 +212,16 @@ const styles = StyleSheet.create({
   },
   map: {
     flex: 1,
+  },
+  mapWrap: {
+    flex: 1,
+    position: 'relative',
+  },
+  cardOverlay: {
+    position: 'absolute',
+    left: 16,
+    right: 16,
+    bottom: 16,
   },
   status: {
     color: TOKENS.color.textMuted,
