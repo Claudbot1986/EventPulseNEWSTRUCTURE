@@ -63,6 +63,11 @@ const ASSET_HEIGHT = 454;
 // storlek så vi har pan-rumner inom varje asset. assetBounds är det
 // geografiska område som hela asset:t täcker; panOffset bestämmer vilken
 // del som visas i viewport.
+//
+// Zoom-kedja vald så att +2 zoom = 4× mindre geografisk area (matchar
+// OSM-tile-systemet). z=11 täcker hela Storstockholm, z=13 Sergels
+// torg-distriktet, z=15 kvarter, z=17 gatunamn-detalj (Sergels torg
+// mikrokvarter — gatunamn läsbara, varje pixel ≈ 2-3 m vid max zoom).
 export const ZOOM_ASSETS = [
   {
     zoom: 11,
@@ -79,6 +84,11 @@ export const ZOOM_ASSETS = [
     assetSize: { width: 1080, height: 1362 },
     assetBounds: { minLat: 59.2786, maxLat: 59.3814, minLng: 17.991, maxLng: 18.149 },
   },
+  {
+    zoom: 17,
+    assetSize: { width: 1080, height: 1362 },
+    assetBounds: { minLat: 59.317, maxLat: 59.343, minLng: 18.05, maxLng: 18.09 },
+  },
 ];
 
 export function pickZoomAsset(targetZoom) {
@@ -94,14 +104,19 @@ export function pickZoomAsset(targetZoom) {
 /**
  * Hämta asset + upscale-scale för en continuous (fractional) zoom.
  *
- * Bakgrund: vi har bara assets på z11/z13/z15 (udda). Mellan t.ex. z13
- * och z14 vill användaren ha sömlös pixel-zoom (asset-render vid scale
- * 1 → 2). Vid f=14 byts asset till z15 ("z14 öppnas") och scale = 1.
+ * Bakgrund: vi har assets på z11/z13/z15/z17. Mellan två asset-nivåer
+ * (t.ex. f=15 → f=16) vill användaren ha sömlös pixel-zoom (asset-render
+ * vid scale 1 → 4). Vid f=16 byts asset till z17 ("z16 öppnas") och
+ * scale = 1.
  *
- * Mappning (snap-intervall = [11,12), [12,14), [14,16]):
- *   f ∈ [11, 12): z11-asset, scale = 2^(f-11)        [1, 2) — pixlat
- *   f ∈ [12, 14): z13-asset, scale = 2^(f-12)        [1, 4) — pixlat
- *   f ∈ [14, 16]: z15-asset, scale = 2^(f-14)        [1, 4) — pixlat
+ * Mappning (snap-intervall, varje intervall = 2 zoom-steg):
+ *   f ∈ [11, 12): z11-asset, scale = 2^(f-11)        [1, 2) — Stockholm
+ *   f ∈ [12, 14): z13-asset, scale = 2^(f-12)        [1, 4) — distrikt
+ *   f ∈ [14, 16): z15-asset, scale = 2^(f-14)        [1, 4) — kvarter
+ *   f ∈ [16, 18]: z17-asset, scale = 2^(f-16)        [1, 4] — gatunamn-detalj
+ *
+ * Snaps vid f=12/14/16 byter asset — spans matchar (inom 2%) så övergången
+ * är nästan osynkantlig visuellt.
  *
  * Bounds-helper-funktionerna tar scale för att beräkna rätt synlig
  * lat/lng-span. Med scale=1 är funktionsfall identiskt med tidigare
@@ -116,7 +131,8 @@ export function pickAssetForFractionalZoom(f) {
   let snapStart;
   if (clamped < 12) { level = ZOOM_ASSETS[0]; snapStart = 11; }
   else if (clamped < 14) { level = ZOOM_ASSETS[1]; snapStart = 12; }
-  else { level = ZOOM_ASSETS[2]; snapStart = 14; }
+  else if (clamped < 16) { level = ZOOM_ASSETS[2]; snapStart = 14; }
+  else { level = ZOOM_ASSETS[3]; snapStart = 16; }
   const scale = Math.pow(2, clamped - snapStart);
   return { level, scale, snapStart };
 }

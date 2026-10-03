@@ -240,7 +240,7 @@ test('panOffsetForCenter: klipper till giltiga gränser', () => {
 
 test('pickAssetForFractionalZoom: mappar f till (asset, scale) vid snap-points', () => {
   const { pickAssetForFractionalZoom, ZOOM_ASSETS } = projection;
-  // Snap-intervall: [11,12), [12,14), [14,16].
+  // Snap-intervall: [11,12), [12,14), [14,16), [16,18].
   // Scale = 2^(f - snapStart), så vid starten av varje intervall = 1.
   // f=11: z11, scale 1
   assertStrict.equal(pickAssetForFractionalZoom(11).level, ZOOM_ASSETS[0]);
@@ -261,8 +261,55 @@ test('pickAssetForFractionalZoom: mappar f till (asset, scale) vid snap-points',
   const justBelow14 = pickAssetForFractionalZoom(13.999);
   assertStrict.equal(justBelow14.level, ZOOM_ASSETS[1]);
   assertStrict.ok(justBelow14.scale > 3.99 && justBelow14.scale < 4.0 + 1e-9);
+  // f=16 (snap till z17, gatunamn-detalj öppnas): z17, scale 1
+  const at16 = pickAssetForFractionalZoom(16);
+  assertStrict.equal(at16.level, ZOOM_ASSETS[3]);
+  assertStrict.equal(at16.level.zoom, 17);
+  assertStrict.ok(Math.abs(at16.scale - 1) < 1e-9);
+  // f=18 (max zoom, gatunamn-skärpa): z17, scale 4
+  const at18 = pickAssetForFractionalZoom(18);
+  assertStrict.equal(at18.level, ZOOM_ASSETS[3]);
+  assertStrict.ok(Math.abs(at18.scale - 4) < 1e-9);
   // Över max: stannar på sista asset.
-  assertStrict.equal(pickAssetForFractionalZoom(99).level, ZOOM_ASSETS[2]);
+  assertStrict.equal(pickAssetForFractionalZoom(99).level, ZOOM_ASSETS[3]);
+});
+
+test('z=17 snap-point: z15@scale=4 ≈ z17@scale=1 (osynkelig snap)', () => {
+  // Användaren ska kunna pinch:a från f=15.999 (z15@scale≈4) till f=16.001
+  // (z17@scale=1) utan att viewportens lng-span hoppar — båda visar samma
+  // Sergels-torg-mikrokvarter. Span-skillnad <5% räknas som osynkantlig.
+  const { visibleBoundsFromAsset, pickAssetForFractionalZoom } = projection;
+  const size = { width: 360, height: 454 };
+  const before = pickAssetForFractionalZoom(15.999);
+  const after = pickAssetForFractionalZoom(16.001);
+  const bb = visibleBoundsFromAsset(before.level.assetBounds, before.level.assetSize, size,
+    { assetOffsetX: 0, assetOffsetY: 0 }, before.scale);
+  const aa = visibleBoundsFromAsset(after.level.assetBounds, after.level.assetSize, size,
+    { assetOffsetX: 0, assetOffsetY: 0 }, after.scale);
+  const spanBefore = bb.maxLng - bb.minLng;
+  const spanAfter = aa.maxLng - aa.minLng;
+  const diff = Math.abs(spanBefore - spanAfter) / Math.max(spanBefore, spanAfter);
+  assertStrict.ok(diff < 0.05,
+    `snap f=15.999→16.001: span-hoppar ${(diff * 100).toFixed(2)}% (förväntat <5%)`);
+});
+
+test('z=17 max zoom (f=18): viewport ≈ 0.4 km² (gatunamn-storlek)', () => {
+  // Vid max zoom (f=18) ska viewport täcka en liten yta där gatunamn
+  // blir läsbara. Med z17-asset (0.04° lng) and scale=4 → viewport
+  // ser 0.04°/4 * 1/3 (viewport/asset) = 0.0033° lng ≈ 230 m.
+  const { visibleBoundsFromAsset, pickAssetForFractionalZoom } = projection;
+  const size = { width: 360, height: 454 };
+  const picked = pickAssetForFractionalZoom(18);
+  const bounds = visibleBoundsFromAsset(picked.level.assetBounds, picked.level.assetSize, size,
+    { assetOffsetX: 0, assetOffsetY: 0 }, picked.scale);
+  const lngSpanDeg = bounds.maxLng - bounds.minLng;
+  // Stockholm lat ~59°: 1° lng ≈ 74 km, 1° lat ≈ 111 km.
+  const lngSpanMeters = lngSpanDeg * 74000;
+  // För gatunamn-läsbar på telefon: < 1 km viewport-bredd.
+  assertStrict.ok(lngSpanMeters < 1000,
+    `viewport lng-span=${lngSpanMeters.toFixed(0)} m > 1 km (för stort för gatunamn-läsbarhet)`);
+  assertStrict.ok(lngSpanMeters > 50,
+    `viewport lng-span=${lngSpanMeters.toFixed(0)} m < 50 m (för litet, kan inte visa gatunamn)`);
 });
 
 test('visibleBoundsFromAsset: scale=2 halverar geografisk lng-span (samma center)', () => {

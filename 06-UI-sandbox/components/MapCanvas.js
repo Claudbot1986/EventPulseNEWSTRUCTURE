@@ -48,7 +48,7 @@ const TOKENS = {
   space: { padX: 20 },
   gesture: {
     MIN_ZOOM: 11,
-    MAX_ZOOM: 16,
+    MAX_ZOOM: 18,
   },
 };
 

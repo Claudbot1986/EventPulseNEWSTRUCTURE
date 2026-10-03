@@ -71,6 +71,7 @@ const ZOOM_TILES = {
   11: 'stockholm-tiles-z11.png',
   13: 'stockholm-tiles-z13.png',
   15: 'stockholm-tiles-z15.png',
+  17: 'stockholm-tiles-z17.png',
 };
 
 async function render({ zoom, panOffset = { assetOffsetX: 0, assetOffsetY: 0 }, outFile }) {
@@ -108,7 +109,7 @@ async function render({ zoom, panOffset = { assetOffsetX: 0, assetOffsetY: 0 }, 
     const p = projectViewport(j.lat, j.lng, viewport);
     if (!p.visible) return '';
     const c = hexToRgb(PALETTE[e.category_slug] || '#F7F2EA');
-    const r = zoom === 15 ? 8 : zoom === 13 ? 7 : 6;
+    const r = zoom === 17 ? 9 : zoom === 15 ? 8 : zoom === 13 ? 7 : 6;
     return `<circle cx="${p.x.toFixed(2)}" cy="${p.y.toFixed(2)}" r="${r}" fill="rgb(${c.r},${c.g},${c.b})" stroke="rgba(0,0,0,0.7)" stroke-width="1.5"/>`;
   }).filter(Boolean);
 
@@ -145,9 +146,10 @@ async function main() {
     panOffset: { assetOffsetX: 200, assetOffsetY: 0 },
     outFile: 'map-canvas-check-panned.png',
   });
-  // z=13 och z=15, centrerade
+  // z=13, z=15 och z=17, centrerade
   await render({ zoom: 13, outFile: 'map-canvas-check-z13.png' });
   await render({ zoom: 15, outFile: 'map-canvas-check-z15.png' });
+  await render({ zoom: 17, outFile: 'map-canvas-check-z17.png' });
 }
 
 main().catch((err) => { console.error(err); process.exit(1); });

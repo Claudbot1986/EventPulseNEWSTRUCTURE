@@ -30,6 +30,7 @@ const ZOOM_LEVELS = [
   { zoom: 11, source: require('../assets/stockholm-tiles-z11.png'), label: 'z11 overview', assetSize: { width: 1080, height: 1362 }, assetBounds: { minLat: 58.511, maxLat: 60.149, minLng: 16.81, maxLng: 19.33 } },
   { zoom: 13, source: require('../assets/stockholm-tiles-z13.png'), label: 'z13 neighborhood', assetSize: { width: 1080, height: 1362 }, assetBounds: { minLat: 59.1245, maxLat: 59.5355, minLng: 17.755, maxLng: 18.385 } },
   { zoom: 15, source: require('../assets/stockholm-tiles-z15.png'), label: 'z15 street', assetSize: { width: 1080, height: 1362 }, assetBounds: { minLat: 59.2786, maxLat: 59.3814, minLng: 17.991, maxLng: 18.149 } },
+  { zoom: 17, source: require('../assets/stockholm-tiles-z17.png'), label: 'z17 street-name detail', assetSize: { width: 1080, height: 1362 }, assetBounds: { minLat: 59.317, maxLat: 59.343, minLng: 18.05, maxLng: 18.09 } },
 ];
 
 // Hitta närmaste tillgänglig z-nivå för en given fractional zoom.
