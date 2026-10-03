@@ -11,6 +11,7 @@
 import EventPulseCard from './EventPulseCard';
 import EventPulseCarousel from './EventPulseCarousel';
 import EventPulseSenaste from './EventPulseSenaste';
+import AppleMapsScreen from './AppleMapsScreen';
 import HemScreen from './HemScreen';
 import HemStar from './HemStar';
 import HemSupabase from './HemSupabase';
@@ -178,6 +179,19 @@ export const COMPONENT_REGISTRY = [
       'filter-baren. Fullscreen-läge — ingen scroll från sandbox-listan, ' +
       'bara karta + filter + counts.',
     Component: MapScreen,
+    sampleProps: {},
+    fullscreen: true,
+  },
+  {
+    id: 'apple-maps-screen',
+    name: 'Apple-kartor',
+    description:
+      'NY sektion (2026-10-03) helt fristående från MapScreen. Visar ' +
+      'framtida events från Supabase på riktig Apple Maps (react-native-maps ' +
+      'med PROVIDER_DEFAULT). Flytande native pinch/pan/zoom — inga ' +
+      'PNG-snap-nivåer. Auto-klustring av markers via react-native-map-clustering. ' +
+      'Samma filter (Idag / Helgen / Nästa helg / Alla) som MapScreen.',
+    Component: AppleMapsScreen,
     sampleProps: {},
     fullscreen: true,
   },
