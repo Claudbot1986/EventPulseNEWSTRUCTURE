@@ -158,8 +158,10 @@ export default function AppleMapsScreen() {
             <Marker
               key={e.id}
               coordinate={{ latitude: e.lat, longitude: e.lng }}
-              title={e.title_sv || e.title_en || 'Event'}
-              description={e.start_time}
+              // Medvetet INGA title/description — de triggar Apple Maps'
+              // default-vita callout som tar över tryckningen och blockerar
+              // vår onPress. MapEventCard (via selectedEvent-state) är vår
+              // enda event-info-yta.
               onPress={() => handleMarkerPress(e)}
             />
           ))}
