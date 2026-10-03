@@ -12,11 +12,13 @@
 //
 // Stil: dark surface, orange accent, samma tokens som AppleMapsScreen.
 
-import { Image, Pressable, StyleSheet, Text, View } from 'react-native';
+import { useEffect, useRef } from 'react';
+import { Animated, Easing, Image, Pressable, StyleSheet, Text, View } from 'react-native';
 import {
   pickTitle,
   formatMetaLine,
   pickFreeLabel,
+  pickImageUrl,
 } from './MapEventCard.helpers.js';
 
 const TOKENS = {
@@ -66,12 +68,27 @@ export default function MapEventCard({
   onReadMore,
   testID = 'map-event-card',
 }) {
+  const slideAnim = useRef(new Animated.Value(0)).current;
+
+  // Slide-up + fade-in när kortet mountas (dvs ny event vald).
+  useEffect(() => {
+    if (!event) return;
+    slideAnim.setValue(0);
+    Animated.timing(slideAnim, {
+      toValue: 1,
+      duration: 220,
+      easing: Easing.out(Easing.cubic),
+      useNativeDriver: true,
+    }).start();
+  }, [event?.id, event, slideAnim]);
+
   if (!event) return null;
 
   const title = pickTitle(event);
   const meta = formatMetaLine(event);
   const freeLabel = pickFreeLabel(event);
-  const imageSource = sourceOf(event.image_url || event.imageSource);
+  const imageUri = pickImageUrl(event);
+  const imageSource = sourceOf(imageUri);
 
   const handleClose = () => {
     if (typeof onClose === 'function') onClose();
@@ -80,9 +97,22 @@ export default function MapEventCard({
     if (typeof onReadMore === 'function') onReadMore(event);
   };
 
+  // Animation-transformation: slide från 60px nerifrån + opacity 0 → 1.
+  const animatedStyle = {
+    opacity: slideAnim,
+    transform: [
+      {
+        translateY: slideAnim.interpolate({
+          inputRange: [0, 1],
+          outputRange: [60, 0],
+        }),
+      },
+    ],
+  };
+
   return (
-    <View
-      style={styles.card}
+    <Animated.View
+      style={[styles.card, animatedStyle]}
       testID={testID}
       accessibilityLabel={`Event-kort: ${title}`}
     >
@@ -147,7 +177,7 @@ export default function MapEventCard({
           <Text style={styles.readMoreText}>Läs mer</Text>
         </Pressable>
       </View>
-    </View>
+    </Animated.View>
   );
 }
 

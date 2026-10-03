@@ -12,7 +12,7 @@ import { STOCKHOLM_CENTER } from './mapProjection.js';
 export const FETCH_PAGE_SIZE = 1000;
 export const FETCH_MAX_PAGES = 10;
 export const FETCH_SELECT =
-  'id, title_sv, title_en, start_time, lat, lng, category_slug, is_free, confidence_score';
+  'id, title_sv, title_en, start_time, lat, lng, category_slug, is_free, confidence_score, image_url';
 
 /**
  * Hämta future events paginerat från Supabase events_public.

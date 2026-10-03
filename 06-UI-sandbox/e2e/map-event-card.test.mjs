@@ -161,3 +161,43 @@ test('hasRenderableContent: null → false', () => {
 test('hasRenderableContent: endast is_free=true räcker inte', () => {
   assertStrict.equal(helpers.hasRenderableContent({ is_free: true }), false);
 });
+
+// --- pickImageUrl ------------------------------------------------------
+
+test('pickImageUrl: string-URL returneras', () => {
+  assertStrict.equal(
+    helpers.pickImageUrl({ image_url: 'https://example.com/img.jpg' }),
+    'https://example.com/img.jpg',
+  );
+});
+
+test('pickImageUrl: tom sträng → null', () => {
+  assertStrict.equal(helpers.pickImageUrl({ image_url: '' }), null);
+});
+
+test('pickImageUrl: number (lokal asset) → null', () => {
+  // require()-nummer är inte en URL, returnera null så anroparen väljer placeholder.
+  assertStrict.equal(helpers.pickImageUrl({ image_url: 12345 }), null);
+});
+
+test('pickImageUrl: imageSource (preview-konvention) accepteras', () => {
+  assertStrict.equal(
+    helpers.pickImageUrl({ imageSource: 'https://preview/img.png' }),
+    'https://preview/img.png',
+  );
+});
+
+test('pickImageUrl: object med uri → uri extraheras', () => {
+  assertStrict.equal(
+    helpers.pickImageUrl({ image_url: { uri: 'https://x.com/a.jpg' } }),
+    'https://x.com/a.jpg',
+  );
+});
+
+test('pickImageUrl: null event → null', () => {
+  assertStrict.equal(helpers.pickImageUrl(null), null);
+});
+
+test('pickImageUrl: undefined image_url → null', () => {
+  assertStrict.equal(helpers.pickImageUrl({}), null);
+});

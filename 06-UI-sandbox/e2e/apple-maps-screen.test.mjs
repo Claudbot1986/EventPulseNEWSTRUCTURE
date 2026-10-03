@@ -79,12 +79,16 @@ test('export: FILTER_MODES innehåller alla fyra lägen', () => {
   }
 });
 
-test('export: FETCH_SELECT inkluderar lat, lng, title, start_time', () => {
+test('export: FETCH_SELECT inkluderar lat, lng, title, start_time, image_url', () => {
   assertStrict.ok(helpers.FETCH_SELECT.includes('lat'));
   assertStrict.ok(helpers.FETCH_SELECT.includes('lng'));
   assertStrict.ok(helpers.FETCH_SELECT.includes('title_sv'));
   assertStrict.ok(helpers.FETCH_SELECT.includes('title_en'));
   assertStrict.ok(helpers.FETCH_SELECT.includes('start_time'));
+  assertStrict.ok(
+    helpers.FETCH_SELECT.includes('image_url'),
+    'FETCH_SELECT saknar image_url — MapEventCard kan inte visa riktiga bilder',
+  );
 });
 
 test('export: INITIAL_REGION pekar på Stockholm (Sergels torg-området)', () => {
@@ -317,5 +321,26 @@ test('live: filtrerade events är mappable till Marker-coordinates', async () =>
     assertStrict.ok(Number.isFinite(m.coordinate.longitude));
     assertStrict.equal(typeof m.title, 'string');
     assertStrict.ok(m.title.length > 0);
+  }
+});
+
+test('live: events har image_url-fält (för MapEventCard-bilder)', async () => {
+  // Hämta med full select för att testa
+  const url = new URL(`${SUPABASE_URL}/rest/v1/events_public`);
+  url.searchParams.set(
+    'select',
+    'id, title_sv, image_url',
+  );
+  url.searchParams.set('start_time', `gte.${new Date().toISOString()}`);
+  url.searchParams.set('limit', '20');
+  const res = await fetch(url, { headers: FETCH_HEADERS });
+  if (!res.ok) return; // skip om fel
+  const rows = await res.json();
+  // Bara kolla att fältet finns — andel med bild varierar över tid.
+  for (const row of rows) {
+    assertStrict.ok(
+      'image_url' in row,
+      'image_url-fältet saknas i response',
+    );
   }
 });

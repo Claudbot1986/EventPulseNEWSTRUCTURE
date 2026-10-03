@@ -70,3 +70,21 @@ export function hasRenderableContent(event) {
   const hasMeta = Boolean(event.start_time || event.category_slug);
   return hasTitle || hasMeta;
 }
+
+/**
+ * Returnera bild-URL (sträng) om eventet har en. Returnerar null om
+ * URL saknas, är tom, eller är ett require()-nummer (lokala hanteras
+ * separat av sourceOf() i komponenten).
+ *
+ * Accepterar både `image_url` (Supabase-konvention) och `imageSource`
+ * (test/preview-konvention).
+ */
+export function pickImageUrl(event) {
+  if (!event) return null;
+  const candidate = event.image_url || event.imageSource;
+  if (!candidate) return null;
+  if (typeof candidate === 'number') return null; // require() — hanteras av sourceOf()
+  if (typeof candidate === 'string' && candidate.length > 0) return candidate;
+  if (typeof candidate === 'object' && candidate.uri) return candidate.uri;
+  return null;
+}
