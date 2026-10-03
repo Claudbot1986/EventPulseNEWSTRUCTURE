@@ -114,15 +114,23 @@ export function GridBaseLayer({ viewport, panOffset, style, testID = 'map-base-g
  * `panOffset` (assetOffsetX/Y) — bildens position förskjuts inom en
  * overflow:hidden-wrapper så användaren ser ett annat varsellt område.
  *
+ * `scale` (default 1) uppscalar hela asset-renderingen → kartan visas i
+ * högre pixelinzoomning. Mellan två asset-nivåer (t.ex. z13 → z15) får
+ * scale gå från 1 → 2 för sömlös zoom-känsla. Vid scale > 1 renderas
+ * bilden med synliga pixel-block ("pixlat") — det är förväntat och
+ * önskat: användaren KÄNNER zoom-stegen.
+ *
  * Props:
  *   - viewport: { width, height, zoom, bounds }
  *   - panOffset: { assetOffsetX, assetOffsetY } (default 0,0 = centrerad)
+ *   - scale:    upscale-faktor (default 1)
  *   - resizeMode: 'cover' | 'contain' | 'stretch' | 'center' (default 'contain')
  *   - showZoomBadge: boolean (default true)
  */
 export function StaticTilesBaseLayer({
   viewport,
   panOffset = { assetOffsetX: 0, assetOffsetY: 0 },
+  scale = 1,
   resizeMode = 'contain',
   style,
   testID = 'map-base-static-tiles',
@@ -131,9 +139,10 @@ export function StaticTilesBaseLayer({
   const { width, height, zoom } = viewport;
   const level = pickZoomLevel(zoom);
   const { assetSize } = level;
-  // Initial offset = halva skillnaden mellan asset och viewport → centrerad.
-  const initialX = (assetSize.width - width) / 2;
-  const initialY = (assetSize.height - height) / 2;
+  // Initial offset (renderade pixlar) = halva skillnaden mellan
+  // uppscalad asset och viewport → centrerad vid offset=0.
+  const initialX = (assetSize.width * scale - width) / 2;
+  const initialY = (assetSize.height * scale - height) / 2;
   const left = -(initialX + panOffset.assetOffsetX);
   const top = -(initialY + panOffset.assetOffsetY);
 
@@ -145,7 +154,12 @@ export function StaticTilesBaseLayer({
     >
       <Image
         source={level.source}
-        style={[styles.assetImage, { width: assetSize.width, height: assetSize.height, left, top }]}
+        style={[styles.assetImage, {
+          width: assetSize.width * scale,
+          height: assetSize.height * scale,
+          left,
+          top,
+        }]}
         resizeMode={resizeMode}
         pointerEvents="none"
       />
@@ -154,7 +168,7 @@ export function StaticTilesBaseLayer({
       </View>
       {showZoomBadge ? (
         <View style={styles.cornerTopRight} pointerEvents="none">
-          <Text style={styles.zoomBadgeText}>z{Math.round(zoom)}</Text>
+          <Text style={styles.zoomBadgeText}>z{level.zoom}</Text>
         </View>
       ) : null}
     </View>

@@ -236,6 +236,211 @@ test('panOffsetForCenter: klipper till giltiga gränser', () => {
   );
 });
 
+// ─── Fractional zoom (sömlös zoom mellan asset-lager) ──────────────
+
+test('pickAssetForFractionalZoom: mappar f till (asset, scale) vid snap-points', () => {
+  const { pickAssetForFractionalZoom, ZOOM_ASSETS } = projection;
+  // Snap-intervall: [11,12), [12,14), [14,16].
+  // Scale = 2^(f - snapStart), så vid starten av varje intervall = 1.
+  // f=11: z11, scale 1
+  assertStrict.equal(pickAssetForFractionalZoom(11).level, ZOOM_ASSETS[0]);
+  assertStrict.ok(Math.abs(pickAssetForFractionalZoom(11).scale - 1) < 1e-9);
+  // f=12 (snap till z13): z13, scale 1
+  const at12 = pickAssetForFractionalZoom(12);
+  assertStrict.equal(at12.level, ZOOM_ASSETS[1]);
+  assertStrict.ok(Math.abs(at12.scale - 1) < 1e-9);
+  // f=12.5: z13, scale √2 (pixlat-halvvägs)
+  const mid = pickAssetForFractionalZoom(12.5);
+  assertStrict.equal(mid.level, ZOOM_ASSETS[1]);
+  assertStrict.ok(Math.abs(mid.scale - Math.SQRT2) < 1e-9);
+  // f=14 (snap till z15, "z14 öppnas"): z15, scale 1
+  const at14 = pickAssetForFractionalZoom(14);
+  assertStrict.equal(at14.level, ZOOM_ASSETS[2]);
+  assertStrict.ok(Math.abs(at14.scale - 1) < 1e-9);
+  // f=13.999: z13, scale ≈ 4 (nära "pixlat" taket — känns som z14)
+  const justBelow14 = pickAssetForFractionalZoom(13.999);
+  assertStrict.equal(justBelow14.level, ZOOM_ASSETS[1]);
+  assertStrict.ok(justBelow14.scale > 3.99 && justBelow14.scale < 4.0 + 1e-9);
+  // Över max: stannar på sista asset.
+  assertStrict.equal(pickAssetForFractionalZoom(99).level, ZOOM_ASSETS[2]);
+});
+
+test('visibleBoundsFromAsset: scale=2 halverar geografisk lng-span (samma center)', () => {
+  const { visibleBoundsFromAsset, ZOOM_ASSETS } = projection;
+  const asset = ZOOM_ASSETS[1]; // z13
+  const size = { width: 360, height: 454 };
+  const b1 = visibleBoundsFromAsset(asset.assetBounds, asset.assetSize, size,
+    { assetOffsetX: 0, assetOffsetY: 0 }, 1);
+  const b2 = visibleBoundsFromAsset(asset.assetBounds, asset.assetSize, size,
+    { assetOffsetX: 0, assetOffsetY: 0 }, 2);
+  // Centers ska vara desamma (default offset = centrerad).
+  const c1 = (b1.minLng + b1.maxLng) / 2;
+  const c2 = (b2.minLng + b2.maxLng) / 2;
+  assertStrict.ok(Math.abs(c1 - c2) < 1e-9,
+    `centerLng ska vara identisk (scale=1: ${c1}, scale=2: ${c2})`);
+  // Span vid scale=2 ska vara hälften av scale=1 (uppscalning).
+  const span1 = b1.maxLng - b1.minLng;
+  const span2 = b2.maxLng - b2.minLng;
+  assertStrict.ok(
+    Math.abs(span1 - span2 * 2) / span1 < 1e-9,
+    `scale=2 span ska vara hälften av scale=1 (1=${span1}, 2=${span2})`,
+  );
+});
+
+test('visibleBoundsFromAsset: scale=1 bakåtkompatibelt med default-arg', () => {
+  const { visibleBoundsFromAsset, ZOOM_ASSETS } = projection;
+  const asset = ZOOM_ASSETS[0];
+  const size = { width: 360, height: 454 };
+  const a = visibleBoundsFromAsset(asset.assetBounds, asset.assetSize, size);
+  const b = visibleBoundsFromAsset(asset.assetBounds, asset.assetSize, size,
+    { assetOffsetX: 0, assetOffsetY: 0 }, 1);
+  assertStrict.ok(Math.abs(a.minLng - b.minLng) < 1e-12);
+  assertStrict.ok(Math.abs(a.maxLng - b.maxLng) < 1e-12);
+});
+
+test('panOffsetForCenter: scale=2 centrerar fortfarande på target', () => {
+  const { panOffsetForCenter, visibleBoundsFromAsset, ZOOM_ASSETS } = projection;
+  const asset = ZOOM_ASSETS[1];
+  const size = { width: 360, height: 454 };
+  const target = { lat: 59.32, lng: 18.07 };
+  const off1 = panOffsetForCenter(asset.assetBounds, asset.assetSize, size, target, 1);
+  const off2 = panOffsetForCenter(asset.assetBounds, asset.assetSize, size, target, 2);
+  // scale=2 → samma target i viewport-center trots högre render-scale.
+  const b1 = visibleBoundsFromAsset(asset.assetBounds, asset.assetSize, size, off1, 1);
+  const b2 = visibleBoundsFromAsset(asset.assetBounds, asset.assetSize, size, off2, 2);
+  for (const [name, expected, actual] of [
+    ['centerLng@scale=1', target.lng, (b1.minLng + b1.maxLng) / 2],
+    ['centerLat@scale=1', target.lat, (b1.minLat + b1.maxLat) / 2],
+    ['centerLng@scale=2', target.lng, (b2.minLng + b2.maxLng) / 2],
+    ['centerLat@scale=2', target.lat, (b2.minLat + b2.maxLat) / 2],
+  ]) {
+    assertStrict.ok(
+      Math.abs(expected - actual) < 1e-9,
+      `${name}: actual=${actual} ≠ expected=${expected}`,
+    );
+  }
+});
+
+// ─── Pinch focal-point math (användaren förväntar att pinch-center hålls fast) ───
+
+/**
+ * Hjälpfunktion som simulerar MapCanvas pinch-handlerns focal-point
+ * matematik, givet start-tillstånd, ny zoom, och pinch-focal pixel-koordinater.
+ *
+ * Returnerar { panOffset, center, scale, bounds } som uppstår efter pinch.
+ */
+function simulatePinch(startZoom, startPanOffset, focalX, focalY, newZoom, size, W, H) {
+  const {
+    pickAssetForFractionalZoom, visibleBoundsFromAsset, panOffsetForCenter,
+  } = projection;
+  const startPicked = pickAssetForFractionalZoom(startZoom);
+  const startAsset = startPicked.level;
+  const startScale = startPicked.scale;
+  const startBounds = visibleBoundsFromAsset(
+    startAsset.assetBounds, startAsset.assetSize, size, startPanOffset, startScale,
+  );
+  const focalLng = startBounds.minLng + (focalX / W) * (startBounds.maxLng - startBounds.minLng);
+  const focalLat = startBounds.maxLat - (focalY / H) * (startBounds.maxLat - startBounds.minLat);
+
+  const newPicked = pickAssetForFractionalZoom(newZoom);
+  const newAsset = newPicked.level;
+  const newScale = newPicked.scale;
+  const centeredPan = panOffsetForCenter(
+    newAsset.assetBounds, newAsset.assetSize, size,
+    { lat: focalLat, lng: focalLng }, newScale,
+  );
+  const halfSpanX = newScale * (newAsset.assetSize.width - W / newScale) / 2;
+  const halfSpanY = newScale * (newAsset.assetSize.height - H / newScale) / 2;
+  const newPan = {
+    assetOffsetX: Math.max(-halfSpanX, Math.min(halfSpanX, centeredPan.assetOffsetX + (W / 2 - focalX))),
+    assetOffsetY: Math.max(-halfSpanY, Math.min(halfSpanY, centeredPan.assetOffsetY + (H / 2 - focalY))),
+  };
+  const bounds = visibleBoundsFromAsset(
+    newAsset.assetBounds, newAsset.assetSize, size, newPan, newScale,
+  );
+  return { bounds, panOffset: newPan, scale: newScale, asset: newAsset };
+}
+
+/**
+ * Beräkna var (lat, lng) hamnar på skärmen i en viss viewport.
+ */
+function lngLatToScreenPx(lat, lng, viewport) {
+  const x = ((lng - viewport.bounds.minLng) /
+    (viewport.bounds.maxLng - viewport.bounds.minLng)) * viewport.width;
+  const y = ((viewport.bounds.maxLat - lat) /
+    (viewport.bounds.maxLat - viewport.bounds.minLat)) * viewport.height;
+  return { x, y };
+}
+
+test('pinch-focal: center-pinch (focalX=W/2) håller kartan centrerad', () => {
+  // Pinch vid mitten ska ge samma centerLng/Lat som start (om man inte
+  // flyttade sig utanför asset).
+  const size = { width: 360, height: 454 };
+  const start = simulatePinch(13.0, { assetOffsetX: 0, assetOffsetY: 0 }, 180, 227, 13.5, size, 360, 454);
+  const viewport = { width: 360, height: 454, bounds: start.bounds };
+  const cx = (start.bounds.minLng + start.bounds.maxLng) / 2;
+  const cy = (start.bounds.minLat + start.bounds.maxLat) / 2;
+  // Center ska matcha STOCKHOLM_CENTER (pannad till mitten vid start).
+  assertStrict.ok(Math.abs(cx - 18.07) < 0.01,
+    `cx=${cx} ska vara ≈ 18.07 (asset center)`);
+  assertStrict.ok(Math.abs(cy - 59.33) < 0.01,
+    `cy=${cy} ska vara ≈ 59.33 (asset center)`);
+  // focalLng/focalLat (som var asset-center) ska hamna på (180, 227)
+  // i den nya vyn.
+  const p = lngLatToScreenPx(59.33, 18.07, viewport);
+  assertStrict.ok(Math.abs(p.x - 180) < 0.5,
+    `p.x=${p.x} ska vara ≈ 180 (pannad center-pinch → focal kvar)`);
+  assertStrict.ok(Math.abs(p.y - 227) < 0.5,
+    `p.y=${p.y} ska vara ≈ 227`);
+});
+
+test('pinch-focal: off-center pinch (focalX=300) håller focal på samma plats', () => {
+  // REGRESSION: tidigare kod använde "focalX - newFocalX" som shift och
+  // skiftade content i FEL riktning. Vi verifierar att om MapCanvas
+  // beräknar focal lat/lng från START-tillståndet (samma scale som
+  // start-zoom), så hamnar den lat/lng på samma pixel efter pinch.
+  const size = { width: 360, height: 454 };
+  const W = 360, H = 454;
+  const focalX = 300, focalY = 100;
+  // Beräkna start-bounds med SAMMA scale som pinch-handlern använder
+  // (scale=2 vid f=13 p.g. snapStart=12). Annars blir det fel lat/lng.
+  const startZoom = 13.0;
+  const startPicked = projection.pickAssetForFractionalZoom(startZoom);
+  const startBounds = projection.visibleBoundsFromAsset(
+    startPicked.level.assetBounds,
+    startPicked.level.assetSize,
+    size,
+    { assetOffsetX: 0, assetOffsetY: 0 },
+    startPicked.scale,
+  );
+  const focalLng = startBounds.minLng + (focalX / W) * (startBounds.maxLng - startBounds.minLng);
+  const focalLat = startBounds.maxLat - (focalY / H) * (startBounds.maxLat - startBounds.minLat);
+  // Efter pinch f=13.5: ska focal lat/lng hamna på samma pixel (300, 100).
+  const result = simulatePinch(startZoom, { assetOffsetX: 0, assetOffsetY: 0 }, focalX, focalY, 13.5, size, W, H);
+  const viewport = { width: W, height: H, bounds: result.bounds };
+  const p = lngLatToScreenPx(focalLat, focalLng, viewport);
+  assertStrict.ok(Math.abs(p.x - focalX) < 0.5,
+    `focal ska stanna på x=${focalX}, fick ${p.x.toFixed(2)} (REGRESSION: tidigare skiftade content i motsatt riktning)`);
+  assertStrict.ok(Math.abs(p.y - focalY) < 0.5,
+    `focal ska stanna på y=${focalY}, fick ${p.y.toFixed(2)}`);
+});
+
+test('pinch-focal: scale=2 med center-pinch ger ingen drift i geo-center', () => {
+  // Verifierar att centerLat → vi start vid (focal=center) → efter pinch →
+  // centerLat förskjuts INTE mot norr (som bilden visade).
+  const size = { width: 360, height: 454 };
+  const W = 360, H = 454;
+  const start = simulatePinch(13.0, { assetOffsetX: 0, assetOffsetY: 0 }, W / 2, H / 2, 14.0, size, W, H);
+  // Efter pinch ska asset center fortfarande ligga på center-pixeln
+  // (eftersom startfocal = center).
+  const cx = (start.bounds.minLng + start.bounds.maxLng) / 2;
+  const cy = (start.bounds.minLat + start.bounds.maxLat) / 2;
+  assertStrict.ok(Math.abs(cx - 18.07) < 0.01,
+    `centerLng ska stanna vid asset center, fick ${cx}`);
+  assertStrict.ok(Math.abs(cy - 59.33) < 0.01,
+    `centerLat ska stanna vid asset center (REGRESSION: brukade drifta norr), fick ${cy}`);
+});
+
 test('projektion (Mercator): Stockholm centrum projiceras till medial x/y', () => {
   const { projectViewport, STOCKHOLM_FALLBACK, STOCKHOLM_VIEWPORT } = projection;
   const { x, y, visible } = projectViewport(

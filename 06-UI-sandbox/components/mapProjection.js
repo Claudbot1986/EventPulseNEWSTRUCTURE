@@ -91,6 +91,36 @@ export function pickZoomAsset(targetZoom) {
   return best;
 }
 
+/**
+ * Hämta asset + upscale-scale för en continuous (fractional) zoom.
+ *
+ * Bakgrund: vi har bara assets på z11/z13/z15 (udda). Mellan t.ex. z13
+ * och z14 vill användaren ha sömlös pixel-zoom (asset-render vid scale
+ * 1 → 2). Vid f=14 byts asset till z15 ("z14 öppnas") och scale = 1.
+ *
+ * Mappning (snap-intervall = [11,12), [12,14), [14,16]):
+ *   f ∈ [11, 12): z11-asset, scale = 2^(f-11)        [1, 2) — pixlat
+ *   f ∈ [12, 14): z13-asset, scale = 2^(f-12)        [1, 4) — pixlat
+ *   f ∈ [14, 16]: z15-asset, scale = 2^(f-14)        [1, 4) — pixlat
+ *
+ * Bounds-helper-funktionerna tar scale för att beräkna rätt synlig
+ * lat/lng-span. Med scale=1 är funktionsfall identiskt med tidigare
+ * scale=0-default (default-arg bakåtkompatibelt).
+ *
+ * @param {number} f  fractional zoom (t.ex. 13.7)
+ * @returns {{ level: object, scale: number, snapStart: number }}
+ */
+export function pickAssetForFractionalZoom(f) {
+  const clamped = Number.isFinite(f) ? f : ZOOM_ASSETS[0].zoom;
+  let level;
+  let snapStart;
+  if (clamped < 12) { level = ZOOM_ASSETS[0]; snapStart = 11; }
+  else if (clamped < 14) { level = ZOOM_ASSETS[1]; snapStart = 12; }
+  else { level = ZOOM_ASSETS[2]; snapStart = 14; }
+  const scale = Math.pow(2, clamped - snapStart);
+  return { level, scale, snapStart };
+}
+
 // --- Hjälpare --------------------------------------------------------------
 
 const _lngToWorldPx = (lng, zoom) => ((lng + 180) / 360) * (1 << zoom) * TILE_SIZE;
@@ -306,27 +336,42 @@ export function projectToXY(lat, lng, bounds, size) {
  * Asset:t täcker hela assetBounds; vi visar en viewport-stor window som
  * förskjutits med assetOffsetX/Y (default = centrerad).
  *
+ * Med scale > 1 renderas asset:n uppscalad så viewporten ser en
+ * mindre geografisk area (mer zoom). panOffset mäts i renderade pixlar
+ * (dvs samma screen-rörelse oavsett scale — naturlig pan-känsla).
+ *
  * Returnerar bounds som täcker EXAKT det samma latitud/longitud som
  * det synliga området — så projectViewport ger rätt pin-positioner.
  *
  * @param {{minLat,maxLat,minLng,maxLng}} assetBounds
- * @param {{width,height}} assetSize   hela asset:ets pixel-storlek
- * @param {{width,height}} size        viewport-storlek
+ * @param {{width,height}} assetSize         hela asset:ets pixel-storlek
+ * @param {{width,height}} size              viewport-storlek
  * @param {{assetOffsetX,assetOffsetY}} panOffset   default {0,0} = centrerad
+ * @param {number} [scale=1]                 upscale-faktor (1 = native)
  * @returns {{minLat,maxLat,minLng,maxLng}}
  */
-export function visibleBoundsFromAsset(assetBounds, assetSize, size, panOffset = { assetOffsetX: 0, assetOffsetY: 0 }) {
-  const initialX = (assetSize.width - size.width) / 2;
-  const initialY = (assetSize.height - size.height) / 2;
-  const visLeft = Math.max(0, Math.min(assetSize.width - size.width, initialX + panOffset.assetOffsetX));
-  const visTop = Math.max(0, Math.min(assetSize.height - size.height, initialY + panOffset.assetOffsetY));
+export function visibleBoundsFromAsset(
+  assetBounds,
+  assetSize,
+  size,
+  panOffset = { assetOffsetX: 0, assetOffsetY: 0 },
+  scale = 1,
+) {
+  // Vid scale s renderas bilden assetSize*wide s. Initial-offset i renderade
+  // pixlar = (assetSize.width*s - size.width) / 2. I asset-pixlar (den
+  // geografiska kartan) blir motsvarande initial-offset / s, och den
+  // synliga bredden i asset-pixlar blir size.width / s.
+  const visLeftAsset = (assetSize.width - size.width / scale) / 2 + panOffset.assetOffsetX / scale;
+  const visTopAsset = (assetSize.height - size.height / scale) / 2 + panOffset.assetOffsetY / scale;
+  const visRightAsset = visLeftAsset + size.width / scale;
+  const visBottomAsset = visTopAsset + size.height / scale;
 
   const lngRange = assetBounds.maxLng - assetBounds.minLng;
   const latRange = assetBounds.maxLat - assetBounds.minLat;
-  const minLng = assetBounds.minLng + (visLeft / assetSize.width) * lngRange;
-  const maxLng = assetBounds.minLng + ((visLeft + size.width) / assetSize.width) * lngRange;
-  const maxLat = assetBounds.maxLat - (visTop / assetSize.height) * latRange;
-  const minLat = assetBounds.maxLat - ((visTop + size.height) / assetSize.height) * latRange;
+  const minLng = assetBounds.minLng + (visLeftAsset / assetSize.width) * lngRange;
+  const maxLng = assetBounds.minLng + (visRightAsset / assetSize.width) * lngRange;
+  const maxLat = assetBounds.maxLat - (visTopAsset / assetSize.height) * latRange;
+  const minLat = assetBounds.maxLat - (visBottomAsset / assetSize.height) * latRange;
 
   return { minLat, maxLat, minLng, maxLng };
 }
@@ -336,36 +381,35 @@ export function visibleBoundsFromAsset(assetBounds, assetSize, size, panOffset =
  * Användbart när användaren zoomar in till en ny z-nivå — vi vill
  * att center-punkten ska matcha.
  *
+ * Med scale > 1 returneras offset i renderade pixlar (så samma pan-rörelse
+ * i pixlar känns lika oavsett scale).
+ *
  * @param {{minLat,maxLat,minLng,maxLng}} assetBounds
  * @param {{width,height}} assetSize
  * @param {{width,height}} size
  * @param {{lat,lng}} targetCenter
+ * @param {number} [scale=1]
  * @returns {{assetOffsetX,assetOffsetY}}
  */
-export function panOffsetForCenter(assetBounds, assetSize, size, targetCenter) {
+export function panOffsetForCenter(assetBounds, assetSize, size, targetCenter, scale = 1) {
   const lngRange = assetBounds.maxLng - assetBounds.minLng;
   const latRange = assetBounds.maxLat - assetBounds.minLat;
   // Asset pixel av target-center:
   const cx = ((targetCenter.lng - assetBounds.minLng) / lngRange) * assetSize.width;
   const cy = ((assetBounds.maxLat - targetCenter.lat) / latRange) * assetSize.height;
-  // Vi vill att viewport-center ska visa asset pixel cx,cy:
-  // viewport-center = (size.width/2, size.height/2) i viewport
-  // viewport top-left = (visLeft, visTop) i asset
-  // viewport center = (visLeft + size.width/2, visTop + size.height/2) i asset
-  // Sätt den lika med (cx, cy):
-  const visLeft = cx - size.width / 2;
-  const visTop = cy - size.height / 2;
-  const initialX = (assetSize.width - size.width) / 2;
-  const initialY = (assetSize.height - size.height) / 2;
-  // panOffset = visLeft - initialX (assetOffsetX är hur mycket vi flyttat från centrerad)
-  let assetOffsetX = visLeft - initialX;
-  let assetOffsetY = visTop - initialY;
+  // Avstånd från asset-center i asset-pixlar:
+  const cxRel = cx - assetSize.width / 2;
+  const cyRel = cy - assetSize.height / 2;
+  // Offset i renderade pixlar (för att hålla pan naturlig oavsett scale):
+  let assetOffsetX = scale * cxRel;
+  let assetOffsetY = scale * cyRel;
   // Klipp till giltiga gränser så viewport håller sig inom asset.
-  const minVisX = 0;
-  const maxVisX = assetSize.width - size.width;
-  const minVisY = 0;
-  const maxVisY = assetSize.height - size.height;
-  assetOffsetX = Math.max(minVisX - initialX, Math.min(maxVisX - initialX, assetOffsetX));
-  assetOffsetY = Math.max(minVisY - initialY, Math.min(maxVisY - initialY, assetOffsetY));
+  // Synlig asset-area i asset-pixlar: bredd = size.width / scale,
+  // centrerad → [center - size.width/(2*scale), center + size.width/(2*scale)].
+  // Tillåtna offset = scale × (halva marginalen).
+  const halfSpanX = scale * (assetSize.width - size.width / scale) / 2;
+  const halfSpanY = scale * (assetSize.height - size.height / scale) / 2;
+  assetOffsetX = Math.max(-halfSpanX, Math.min(halfSpanX, assetOffsetX));
+  assetOffsetY = Math.max(-halfSpanY, Math.min(halfSpanY, assetOffsetY));
   return { assetOffsetX, assetOffsetY };
 }
