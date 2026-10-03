@@ -162,6 +162,10 @@ export default function AppleMapsScreen() {
               // default-vita callout som tar över tryckningen och blockerar
               // vår onPress. MapEventCard (via selectedEvent-state) är vår
               // enda event-info-yta.
+              //
+              // tracksViewChanges={true} krävs för att onPress ska fyra
+              // pålitligt på iOS (default false → JS-view cachelagras).
+              tracksViewChanges
               onPress={() => handleMarkerPress(e)}
             />
           ))}
