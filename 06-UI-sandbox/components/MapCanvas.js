@@ -52,7 +52,15 @@ const TOKENS = {
   },
 };
 
-const INITIAL_ZOOM = 11;
+// 2026-10-03 — default zoom höjd från z=11 (hela Storstockholm, ~30 km,
+// omöjligt att läsa gator) till z=17 native (Sergels torg-mikrokvarter,
+// ~870 m × 970 m, gatunamn tydligt läsbara från start: Hamngatan,
+// Sveavägen, Drottninggatan, Kungsgatan, Vasagatan). OSM-label-text
+// renderas bara i z17-källasset:t — upscale av z15 (z15@scale>1) ger
+// bara pixlat-blurr, inte läsbar text. Användaren kan pinch:a ut till
+// z=15 (kvarter), z=13 (distrikt) eller z=11 (hel översikt). Center
+// förblir Sergels torg.
+const INITIAL_ZOOM = 16;
 
 export default function MapCanvas({
   events,

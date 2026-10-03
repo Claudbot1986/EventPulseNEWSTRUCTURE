@@ -312,6 +312,50 @@ test('z=17 max zoom (f=18): viewport ≈ 0.4 km² (gatunamn-storlek)', () => {
     `viewport lng-span=${lngSpanMeters.toFixed(0)} m < 50 m (för litet, kan inte visa gatunamn)`);
 });
 
+// Regression-skydd för default-view i MapCanvas. 2026-10-03 höjdes
+// default från z=11 (hela Storstockholm, gatunamn oläsligt) till z=17
+// native (Sergels torg-mikrokvarter, gatunamn tydligt läsbara från
+// start). Detta test läser MapCanvas.js som text och verifierar att
+// INITIAL_ZOOM fortfarande är ett värde som snapppar till z17 vid
+// scale=1 — annars syns inte gatunamn vid start.
+test('MapCanvas: INITIAL_Zoom snapppar till z17@scale=1 (gatunamn-läsbart default)', async () => {
+  const { readFileSync } = await import('node:fs');
+  const { fileURLToPath } = await import('node:url');
+  const { resolve, dirname } = await import('node:path');
+  const here = dirname(fileURLToPath(import.meta.url));
+  const mapCanvasPath = resolve(here, '..', 'components', 'MapCanvas.js');
+  const src = readFileSync(mapCanvasPath, 'utf8');
+  const m = src.match(/const\s+INITIAL_ZOOM\s*=\s*([0-9.]+)\s*;/);
+  assertStrict.ok(m, 'INITIAL_ZOOM-konstanten måste finnas i MapCanvas.js');
+  const initialZoom = Number.parseFloat(m[1]);
+  assertStrict.ok(Number.isFinite(initialZoom),
+    `INITIAL_ZOOM="${m[1]}" är inte ett nummer`);
+
+  const { pickAssetForFractionalZoom, visibleBoundsFromAsset } = projection;
+  const picked = pickAssetForFractionalZoom(initialZoom);
+  const bounds = visibleBoundsFromAsset(
+    picked.level.assetBounds, picked.level.assetSize,
+    { width: 360, height: 454 },
+    { assetOffsetX: 0, assetOffsetY: 0 },
+    picked.scale,
+  );
+  const lngSpanKm = (bounds.maxLng - bounds.minLng) * 74; // 1° lng ≈ 74 km vid lat 59°
+
+  // Acceptera två intervall:
+  //   a) z17 native (f ∈ [16, 18]) — gatunamn-skärpa, viewport < 1 km
+  //   b) z15 upscale (f ∈ [14, 16)) — gatunamn kan vara läsbara med
+  //      scale ≥ 2 (≈pixlat-bloss från z15 OSM-tile)
+  // Vad vi INTE accepterar: z=11 (översikt) eller z=13 (distrikt)
+  // eftersom gatunamn då är oläsligt vid scale=1.
+  const inZ17 = picked.level.zoom === 17 && Math.abs(picked.scale - 1) < 1e-9;
+  const inZ15Scaled = picked.level.zoom === 15 && picked.scale >= 2;
+  assertStrict.ok(inZ17 || inZ15Scaled,
+    `INITIAL_ZOOM=${initialZoom} → z${picked.level.zoom}@scale=${picked.scale.toFixed(2)} ` +
+    `(viewport ~${lngSpanKm.toFixed(2)} km) — gatunamn riskerar att vara oläsligt vid start`);
+  assertStrict.ok(lngSpanKm < 5,
+    `INITIAL_ZOOM=${initialZoom} ger ${lngSpanKm.toFixed(2)} km viewport — för stort för gatunamn-läsbarhet`);
+});
+
 test('visibleBoundsFromAsset: scale=2 halverar geografisk lng-span (samma center)', () => {
   const { visibleBoundsFromAsset, ZOOM_ASSETS } = projection;
   const asset = ZOOM_ASSETS[1]; // z13
