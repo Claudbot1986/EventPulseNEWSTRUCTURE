@@ -14,7 +14,7 @@
 // App.js använder `fullscreen: true` på registry-entryn så panorering
 // inte störs av vertikal scroll från sandbox-listan.
 
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { PROVIDER_DEFAULT, Marker } from 'react-native-maps';
 import MapView from 'react-native-map-clustering';
@@ -82,8 +82,51 @@ export default function AppleMapsScreen() {
     setSelectedEvent(event);
   }, []);
 
-  const handleMapPress = useCallback(() => {
-    setSelectedEvent(null);
+  // Håll senaste filtrerade events i en ref så handleMapPress kan jämföra
+  // koordinater utan att behöva återskapas vid varje filterbyte.
+  const markersRef = useRef([]);
+  useEffect(() => {
+    markersRef.current = filteredEvents;
+  }, [filteredEvents]);
+
+  // Tap-tolerans i lat/lng-grader. Stockholm @ 59°N:
+  //   0.001 lat ≈ 111 m, 0.001 lng ≈ 56 m
+  // Så 0.001 Euclidiskt ≈ ~80–130 m beroende på riktning.
+  // Generöst så en tumtryckning alltid fångar markern även vid låg zoom.
+  const TAP_TOLERANCE = 0.001;
+
+  // MapView.onPress fångar ALLA tryck (även på markers — react-native-maps
+  // på iOS levererar ibland inte Marker.onPress). Vi jämför koordinaten mot
+  // alla markers och visar kortet om en ligger inom tolerans, annars stänger
+  // vi det (tomt tryck).
+  const handleMapPress = useCallback((event) => {
+    const tapCoord = event?.nativeEvent?.coordinate;
+    if (!tapCoord || typeof tapCoord.latitude !== 'number') {
+      setSelectedEvent(null);
+      return;
+    }
+    const markers = markersRef.current;
+    if (!markers || markers.length === 0) {
+      setSelectedEvent(null);
+      return;
+    }
+    let nearest = null;
+    let nearestDist = Infinity;
+    for (const m of markers) {
+      if (!Number.isFinite(m.lat) || !Number.isFinite(m.lng)) continue;
+      const dLat = tapCoord.latitude - m.lat;
+      const dLng = tapCoord.longitude - m.lng;
+      const dist = Math.sqrt(dLat * dLat + dLng * dLng);
+      if (dist < nearestDist) {
+        nearestDist = dist;
+        nearest = m;
+      }
+    }
+    if (nearest && nearestDist < TAP_TOLERANCE) {
+      setSelectedEvent(nearest);
+    } else {
+      setSelectedEvent(null);
+    }
   }, []);
 
   const handleCardClose = useCallback(() => {
