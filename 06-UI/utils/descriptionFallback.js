@@ -19,13 +19,18 @@
 const FALLBACK_KEY = 'details.descriptionMissing';
 const FALLBACK_UNKNOWN_KEY = 'details.descriptionMissingUnknown';
 
+import { stripHtml } from './stripHtml.js';
+
 function hasRealDescription(s) {
   return typeof s === 'string' && s.trim().length >= 10;
 }
 
 function chooseDescriptionField(...candidates) {
   for (const c of candidates) {
-    if (hasRealDescription(c)) return c.trim();
+    // 2026-10-03 — stripHtml innan längd-koll så beskrivningar med enbart
+    // HTML-taggar (t.ex. "<p></p>") inte räknas som "real".
+    const cleaned = stripHtml(c);
+    if (hasRealDescription(cleaned)) return cleaned.trim();
   }
   return null;
 }

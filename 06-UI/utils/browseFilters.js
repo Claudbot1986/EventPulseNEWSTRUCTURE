@@ -180,11 +180,13 @@ export function matchesStatus(event, statusFilter) {
  */
 export function matchesQuery(event, queryTerms) {
   if (!queryTerms || queryTerms.length === 0) return true;
-  const description =
+  const { stripHtml } = require('./stripHtml.js');
+  const description = stripHtml(
     event?.description ||
-    event?.description_sv ||
-    event?.description_en ||
-    '';
+      event?.description_sv ||
+      event?.description_en ||
+      null,
+  ) || '';
   const haystack = normalizeSearchText(
     `${event?.title || ''} ${event?.venue_name || event?.venue || ''} ${description}`
   );

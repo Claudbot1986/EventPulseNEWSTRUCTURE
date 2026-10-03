@@ -84,7 +84,12 @@ export function mapAgentEventToRow(event, language) {
   // onEventPress kan skicka tillbaka hela nyttolasten utan en andra
   // server-roundtrip.
   const ticketUrl = event.ticket_url || event.url || null;
+  // 2026-10-03: description-sanering. Spelning.se-exporter kommer in med
+  // raw <p>...</p>-taggar (Robert Wells m.fl.). stripHtmlHtml tar bort
+  // taggarna men bevarar paragrafer-brytningar och avkodar HTML-entiteter.
+  const { stripHtml } = require('../utils/stripHtml.js');
   const desc = event.description || event.description_sv || event.description_en || null;
+  const cleanedDesc = stripHtml(desc);
   return {
     id: event.id,
     title: decodeHtmlEntities(event.title) || 'Untitled',
@@ -116,7 +121,7 @@ export function mapAgentEventToRow(event, language) {
     hasExternalLink: Boolean(ticketUrl || event.hasExternalLink),
     time: event.time || null,
     source: event.source || null,
-    description: decodeHtmlEntities(desc),
+    description: cleanedDesc,
     image_url: event.image_url || event.imageUrl || null,
     image_ai_generated: event.image_ai_generated === true,
     image_ai_optout: event.image_ai_optout === true,

@@ -114,7 +114,8 @@ function toDetailsScreenEvent(row) {
   // och Utforska-flödet kör nu alla genom samma mapper → garanterat
   // identisk DetailsScreen-payload oavsett källa.
   const title = row.title || row.title_sv || row.title_en || 'Evenemang';
-  const description = row.description || row.description_sv || row.description_en || null;
+  const { stripHtml } = require('../utils/stripHtml.js');
+  const description = stripHtml(row.description || row.description_sv || row.description_en || null);
   const ticketUrl = row.ticket_url || row.url || null;
   const category = row.category || row.category_slug || null;
   return {
