@@ -86,9 +86,20 @@ export default function KartaScreen({ onEventPress }) {
     }
     let result;
     try {
-      result = await fetchFutureEvents(supabase);
+      // 2026-10-03 — progressiv laddning: onBatch flippar status='ready'
+      // efter första 500 events (≈ 1.76s cold) så kartan blir interaktiv
+      // direkt. Resterande sidor appendas i bakgrunden (~0.7-1.3s styck).
+      // Tidigare: status='ready' först efter ALL events hämtade (~7s).
+      result = await fetchFutureEvents(supabase, (batch) => {
+        if (typeof console !== 'undefined' && console.info) {
+          console.info('[KartaScreen] batch arrived, size=', batch.length);
+        }
+        setEvents(batch);
+        // Första batch: status='ready' så kartan renderas. setStatus
+        // är stabil — upprepade batch-callbacks är no-ops efter första.
+        setStatus((prev) => (prev === 'ready' ? prev : 'ready'));
+      });
     } catch (err) {
-      // Nätverksfel / oväntat throw — logga rå fel, visa översatt text.
       if (typeof console !== 'undefined' && console.error) {
         console.error('[KartaScreen] fetch threw:', err);
       }
@@ -106,8 +117,10 @@ export default function KartaScreen({ onEventPress }) {
       return;
     }
     if (typeof console !== 'undefined' && console.info) {
-      console.info('[KartaScreen] load() ok, rows=', Array.isArray(rows) ? rows.length : 0);
+      console.info('[KartaScreen] load() done, total rows=', Array.isArray(rows) ? rows.length : 0);
     }
+    // Säkerställ att slutgiltig events-lista är satt (även om sista
+    // onBatch redan skickade allt — ingen risk att det vi inte gör).
     setEvents(rows || []);
     setStatus('ready');
   }, []);

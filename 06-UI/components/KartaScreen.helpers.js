@@ -12,16 +12,25 @@ import { STOCKHOLM_BOUNDS, STOCKHOLM_CENTER } from './mapProjection.js';
 // 2026-10-03: sänkt från 1000×10 för att PostgREST inte ska time:a ut
 // (error 57014: canceling statement due to statement timeout).
 // Stockholm-bounds i WHERE + LIMIT 500 rådar ett subset på ~2 000 rader
-// som PostgREST returnerar på <2s. 500×4=2 000 rader är tillräckligt för
-// kart-pins (vi visar max ~30 i viewport äter).
+// som PostgREST returnerar på <2s. 500×7=3 500 rader är vår "soft cap" —
+// tillräckligt för dagens 3 192 framtida Stockholm-events (med 10 %
+// marginal för datatillväxt).
 //
 // 2026-10-03: SELECT utökad med alla fält som DetailsScreen-toDetailsScreenEvent-
 // mappen behöver (title_sv/title_en, description_sv/description_en, ticket_url,
 // source, image_ai_*) — så "Läs mer" öppnar samma fulla eventkort som Hem-
 // karusellen producerar, inget avskalat subset.
+//
+// 2026-10-03: FETCH_HARD_CAP höjd från 2 000 till 5 000. Tidigare cap var
+// en gissning ("tillräckligt för viewport") som nu gömde ~1 192 events.
+// Mätning mot prod-DB visar 7-sidors sekventiell fetch ≈ 7s (första
+// sidan 1.76s cold start, resterande <1.3s styck). För att inte göra
+// initial-load 7s väntan laddar vi progressivt via onBatch-callback
+// (se fetchFutureEvents) — första 500 events visas direkt, resterande
+// appends i bakgrunden.
 export const FETCH_PAGE_SIZE = 500;
-export const FETCH_MAX_PAGES = 4;
-export const FETCH_HARD_CAP = 2000;
+export const FETCH_MAX_PAGES = 7;
+export const FETCH_HARD_CAP = 5000;
 export const FETCH_SELECT =
   'id, title_sv, title_en, description_sv, description_en, ' +
   'start_time, lat, lng, ' +
@@ -32,19 +41,24 @@ export const FETCH_SELECT =
 /**
  * Hämta future events paginerat från Supabase events_public.
  *
- * Stockholm-bounds + LIMIT-cap gör query:n index-vänlig och snabb även
- * med 3 600+ events i tabellen (utan bounds hade PostgREST time:at ut
- * vid 6s default timeout — error 57014).
+ * Stockholm-bounds gör query:n index-vänlig och snabb även med 3 600+
+ * events i tabellen (utan bounds hade PostgREST time:at ut vid 6s default
+ * timeout — error 57014).
+ *
+ * 2026-10-03: progressiv laddning via onBatch-callback. Efter varje
+ * 500-radssida anropas onBatch(eventsSoFar) så KartaScreen kan flippa
+ * status='ready' direkt och låta resterande sidor appendas i bakgrunden.
  *
  * @param {object} supabase  Supabase client (services/supabaseClient)
+ * @param {(batch: Array) => void} [onBatch]  valfri callback efter varje sida
  * @returns {Promise<{events: Array, error: Error|null}>}
  */
-export async function fetchFutureEvents(supabase) {
+export async function fetchFutureEvents(supabase, onBatch) {
   const all = [];
   const now = new Date().toISOString();
   for (let page = 0; page < FETCH_MAX_PAGES; page++) {
     const from = page * FETCH_PAGE_SIZE;
-    const to = Math.min(from + FETCH_PAGE_SIZE, FETCH_HARD_CAP) - 1;
+    const to = from + FETCH_PAGE_SIZE - 1;
     const { data, error } = await supabase
       .from('events_public')
       .select(FETCH_SELECT)
@@ -61,6 +75,15 @@ export async function fetchFutureEvents(supabase) {
     if (error) return { events: [], error };
     const rows = data || [];
     all.push(...rows);
+    // Fire batch-callback efter varje sida så KartaScreen kan progressivt
+    // rendera markers och flippa status='ready' efter första batchen.
+    if (typeof onBatch === 'function') {
+      try {
+        onBatch([...all]);
+      } catch (_) {
+        /* KartaScreen felhanterar i sina egna setState */
+      }
+    }
     if (rows.length < FETCH_PAGE_SIZE) break;
     if (all.length >= FETCH_HARD_CAP) break;
   }
