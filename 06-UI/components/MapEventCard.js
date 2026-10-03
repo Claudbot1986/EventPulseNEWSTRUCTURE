@@ -12,7 +12,7 @@
 //
 // Stil: dark surface, orange accent, samma tokens som AppleMapsScreen.
 
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Animated, Easing, Image, Pressable, StyleSheet, Text, View } from 'react-native';
 import {
   pickTitle,
@@ -69,6 +69,15 @@ export default function MapEventCard({
   testID = 'map-event-card',
 }) {
   const slideAnim = useRef(new Animated.Value(0)).current;
+  // 2026-10-03 — image-load-state. En del image_url:er pekar på trasiga
+  // WebP-filer (t.ex. import-stamped/.../wintervikenlive.webp för Robert
+  // Wells-eventet — fel venue-namn i URL). På iOS kan en korrupt WebP
+  // krascha den native image-decode-pipelinen. Vi fångar felet och
+  // visar placeholder istället.
+  const [imageBroken, setImageBroken] = useState(false);
+  useEffect(() => {
+    setImageBroken(false);
+  }, [event?.id]);
 
   // Slide-up + fade-in när kortet mountas (dvs ny event vald).
   useEffect(() => {
@@ -132,12 +141,18 @@ export default function MapEventCard({
 
       <View style={styles.row}>
         <View style={styles.imageWrap}>
-          {imageSource ? (
+          {imageSource && !imageBroken ? (
             <Image
               source={imageSource}
               style={styles.image}
               resizeMode="cover"
               accessibilityIgnoresInvertColors
+              onError={() => {
+                if (typeof console !== 'undefined' && console.warn) {
+                  console.warn('[MapEventCard] image onError — falling back to placeholder for', event?.id);
+                }
+                setImageBroken(true);
+              }}
             />
           ) : (
             <View style={styles.placeholder}>

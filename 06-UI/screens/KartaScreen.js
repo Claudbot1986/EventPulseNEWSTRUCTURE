@@ -81,9 +81,23 @@ export default function KartaScreen({ onEventPress }) {
   const load = useCallback(async () => {
     setStatus('loading');
     setErrorMsg(null);
-    const { events: rows, error } = await fetchFutureEvents(supabase);
+    if (typeof console !== 'undefined' && console.info) {
+      console.info('[KartaScreen] load() start');
+    }
+    let result;
+    try {
+      result = await fetchFutureEvents(supabase);
+    } catch (err) {
+      // Nätverksfel / oväntat throw — logga rå fel, visa översatt text.
+      if (typeof console !== 'undefined' && console.error) {
+        console.error('[KartaScreen] fetch threw:', err);
+      }
+      setStatus('error');
+      setErrorMsg(translateError(err));
+      return;
+    }
+    const { events: rows, error } = result || {};
     if (error) {
-      // Logga rå fel för dev-tools — UI visar bara översatt text.
       if (typeof console !== 'undefined' && console.error) {
         console.error('[KartaScreen] fetch error:', error);
       }
@@ -91,7 +105,10 @@ export default function KartaScreen({ onEventPress }) {
       setErrorMsg(translateError(error));
       return;
     }
-    setEvents(rows);
+    if (typeof console !== 'undefined' && console.info) {
+      console.info('[KartaScreen] load() ok, rows=', Array.isArray(rows) ? rows.length : 0);
+    }
+    setEvents(rows || []);
     setStatus('ready');
   }, []);
 
@@ -100,13 +117,19 @@ export default function KartaScreen({ onEventPress }) {
   }, [load]);
 
   const handleMarkerPress = useCallback((event) => {
-    setSelectedEvent(event);
+    if (typeof console !== 'undefined' && console.info) {
+      console.info('[KartaScreen] marker press:', event?.id);
+    }
+    if (event) setSelectedEvent(event);
   }, []);
 
   // Tomt kart-tryck → stäng kort.
   // (react-native-maps MapView.onPress fyrar BARA för tomma tryck,
   // inte för marker-tryck — de går via vår hit-detection-overlay.)
   const handleMapPress = useCallback(() => {
+    if (typeof console !== 'undefined' && console.info) {
+      console.info('[KartaScreen] map press (empty) — closing card');
+    }
     setSelectedEvent(null);
   }, []);
 
@@ -120,10 +143,24 @@ export default function KartaScreen({ onEventPress }) {
   }, []);
 
   const handleRegionChange = useCallback((newRegion) => {
+    // 2026-10-03 — defensiv cap på min zoom (latitudeDelta >= 0.005,
+    // dvs ca 500m). Under detta tenderar react-native-map-clustering
+    // + vår hit-detection-overlay (en Pressable per marker) att prestera
+    // dåligt när 100+ Stockholm-fallback-events projiceras till samma pixel.
+    if (
+      newRegion &&
+      Number.isFinite(newRegion.latitudeDelta) &&
+      newRegion.latitudeDelta < 0.005
+    ) {
+      return;
+    }
     setRegion(newRegion);
   }, []);
 
   const handleCardClose = useCallback(() => {
+    if (typeof console !== 'undefined' && console.info) {
+      console.info('[KartaScreen] card close (X) — clearing selectedEvent');
+    }
     setSelectedEvent(null);
   }, []);
 
@@ -145,7 +182,15 @@ export default function KartaScreen({ onEventPress }) {
   // Projicera lat/lng → skärm-koordinater för hit-detection-overlay.
   // Bounds-baserad projektion gör att zoom-värdet inte spelar roll —
   // det är bounds (region) som ger korrekt pixel-position.
-  const projectedMarkers = useMemo(() => {
+  // 2026-10-03 — hård cap på antal hit-detection-Pressables som renderas.
+// Vid extremt liten latitudeDelta kan 200+ markers projiceras inom view;
+// react-native-map-clustering klarar det visuellt, men vår overlay med
+// en <Pressable> per marker kraschar layouten / RN-bryggan. Vi cappar
+// på 80 — tillräckligt för att täcka alla rimligt synliga events i
+// viewport, men stoppar OOM/UI-tråd-krasch vid super-zoom.
+const HIT_OVERLAY_CAP = 80;
+
+const projectedMarkers = useMemo(() => {
     if (!mapSize.width || !mapSize.height) return [];
     const customViewport = {
       ...viewportFromCenter(
@@ -167,6 +212,7 @@ export default function KartaScreen({ onEventPress }) {
       const p = projectViewport(e.lat, e.lng, customViewport);
       if (!p.visible) continue;
       out.push({ event: e, x: p.x, y: p.y });
+      if (out.length >= HIT_OVERLAY_CAP) break;
     }
     return out;
   }, [filteredEvents, region, mapSize]);

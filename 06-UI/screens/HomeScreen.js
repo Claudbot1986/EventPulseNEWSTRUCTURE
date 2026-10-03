@@ -108,9 +108,15 @@ function toDetailsScreenEvent(row) {
   const time = valid
     ? `${String(start.getHours()).padStart(2, '0')}:${String(start.getMinutes()).padStart(2, '0')}`
     : null;
-  const title = row.title_sv || row.title_en || 'Evenemang';
-  const description = row.description_sv || row.description_en || null;
-  const ticketUrl = row.ticket_url || null;
+  // 2026-10-03 — shape-agnostisk: accepterar både raw Supabase-rad
+  // (title_sv/title_en/description_sv/description_en/ticket_url/category_slug)
+  // OCH mapAgentEventToRow-rad (title/description/url/category). Hem, Karta
+  // och Utforska-flödet kör nu alla genom samma mapper → garanterat
+  // identisk DetailsScreen-payload oavsett källa.
+  const title = row.title || row.title_sv || row.title_en || 'Evenemang';
+  const description = row.description || row.description_sv || row.description_en || null;
+  const ticketUrl = row.ticket_url || row.url || null;
+  const category = row.category || row.category_slug || null;
   return {
     id: row.id,
     title,
@@ -119,7 +125,7 @@ function toDetailsScreenEvent(row) {
     date,
     time,
     description,
-    category: row.category_slug || null,
+    category,
     source: row.source || null,
     image_url: row.image_url || null,
     imageUrl: row.image_url || null,

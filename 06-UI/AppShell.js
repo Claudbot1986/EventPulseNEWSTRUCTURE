@@ -120,10 +120,22 @@ export default function AppShell() {
   // originating tab right before the switch and clear the ref once it's
   // restored (one card-tap → one round-trip).
   const previousTabRef = useRef(null);
+  // 2026-10-03 — Karta-reload på back-from-detail. När användaren kom
+  // från Karta-fliken, öppnade DetailsScreen, och trycker "< Tillbaka"
+  // vill vi inte att det inzoomade kart-läget ska följa med tillbaka
+  // (kan också utlösa samma krasch som uppstod vid zoom). mapReloadEpoch
+  // används som React-key på KartaScreen — vid inkrement tvingar React
+  // en full unmount/remount som återställer region→INITIAL_REGION,
+  // selectedEvent→null, events→re-fetch.
+  const [mapReloadEpoch, setMapReloadEpoch] = useState(0);
   const handleDetailBack = useCallback(() => {
-    if (previousTabRef.current) {
-      setActiveTab(previousTabRef.current);
+    const targetTab = previousTabRef.current;
+    if (targetTab) {
+      setActiveTab(targetTab);
       previousTabRef.current = null;
+      if (targetTab === 'map') {
+        setMapReloadEpoch((k) => k + 1);
+      }
     }
   }, []);
 
@@ -528,7 +540,9 @@ export default function AppShell() {
         )}
         {mountedTabsRef.current.map && (
           <View style={activeTab === 'map' ? styles.tabPanel : styles.tabHidden}>
-            <KartaScreen onEventPress={handleHomeCardPress} />
+            {/* mapReloadEpoch i key = force-remount på back-from-detail
+                så INITIAL_REGION återställs (se handleDetailBack). */}
+            <KartaScreen key={`map-${mapReloadEpoch}`} onEventPress={handleHomeCardPress} />
           </View>
         )}
         {mountedTabsRef.current.profile && (

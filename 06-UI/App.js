@@ -169,6 +169,20 @@ function getCtaText(source, t) {
   return t(ctaLabelKeys[source] || 'cta.fallback');
 }
 
+// 2026-10-03 — shape-agnostisk safety-net. Hem/Karta-flödet kör redan
+// genom toDetailsScreenEvent INNAN de når App.js, men UtforskaSection
+// skickar mapAgentEventToRow-rows direkt. require:as lazy eftersom
+// HomeScreen själv importerar saker från App.js-context — undviker
+// circular-import-timeout vid module-init.
+function toDetailsScreenEventSafe(event) {
+  try {
+    const mod = require('./screens/HomeScreen');
+    const fn = mod?.toDetailsScreenEvent || mod?.default?.toDetailsScreenEvent;
+    if (typeof fn === 'function') return fn(event);
+  } catch (_) { /* HomeScreen kan sakna toDetailsScreenEvent i framtiden — fail open */ }
+  return null;
+}
+
 function getVenueLabel(event) {
   return event.venue || event.venue_name || null;
 }
@@ -2262,9 +2276,15 @@ export default function App({ onUserLoggedOut, onOpenLogin, chipNonce = 0, onExp
   // accepterad för bakåtkompatibilitet men används inte längre.
 
   const handleEventPress = (event) => {
-    setSelectedEvent(event);
-    if (event?.id) {
-      void analyticsClient.eventView(event.id, event.source, event.category);
+    // 2026-10-03 — shape-agnostisk transform: Hem/Karta-flödet kör redan
+    // genom toDetailsScreenEvent, men UtforskaSection skickar row-shape
+    // från mapAgentEventToRow. Vi kör samma sista transform här så
+    // DetailsScreen får GARANTERAT identiskt payload oavsett flöde —
+    // Hem → Utforska → Karta blir pixelregränsade.
+    const payload = toDetailsScreenEventSafe(event);
+    setSelectedEvent(payload || event);
+    if ((payload || event)?.id) {
+      void analyticsClient.eventView((payload || event).id, (payload || event).source, (payload || event).category);
     }
   };
 
