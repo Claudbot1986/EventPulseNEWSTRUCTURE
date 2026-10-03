@@ -14,10 +14,11 @@
 // App.js använder `fullscreen: true` på registry-entryn så panorering
 // inte störs av vertikal scroll från sandbox-listan.
 
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { PROVIDER_DEFAULT, Marker } from 'react-native-maps';
 import MapView from 'react-native-map-clustering';
+import { projectViewport, viewportFromCenter } from './mapProjection.js';
 import { supabase } from '../services/supabaseClient';
 import MapFilterBar from './MapFilterBar';
 import MapEventCard from './MapEventCard';
@@ -56,6 +57,10 @@ export default function AppleMapsScreen() {
   const [events, setEvents] = useState([]);
   const [activeMode, setActiveMode] = useState('weekend');
   const [selectedEvent, setSelectedEvent] = useState(null);
+  // Hit-detection-overlay behöver känna till region + storlek för att
+  // kunna projicera lat/lng → skärm-koordinater.
+  const [mapSize, setMapSize] = useState({ width: 0, height: 0 });
+  const [region, setRegion] = useState(INITIAL_REGION);
 
   const load = useCallback(async () => {
     setStatus('loading');
@@ -82,51 +87,24 @@ export default function AppleMapsScreen() {
     setSelectedEvent(event);
   }, []);
 
-  // Håll senaste filtrerade events i en ref så handleMapPress kan jämföra
-  // koordinater utan att behöva återskapas vid varje filterbyte.
-  const markersRef = useRef([]);
-  useEffect(() => {
-    markersRef.current = filteredEvents;
-  }, [filteredEvents]);
+  // Tomt kart-tryck → stäng kort.
+  // (react-native-maps MapView.onPress fyrar BARA för tomma tryck,
+  // inte för marker-tryck — de går via vår hit-detection-overlay.)
+  const handleMapPress = useCallback(() => {
+    setSelectedEvent(null);
+  }, []);
 
-  // Tap-tolerans i lat/lng-grader. Stockholm @ 59°N:
-  //   0.001 lat ≈ 111 m, 0.001 lng ≈ 56 m
-  // Så 0.001 Euclidiskt ≈ ~80–130 m beroende på riktning.
-  // Generöst så en tumtryckning alltid fångar markern även vid låg zoom.
-  const TAP_TOLERANCE = 0.001;
+  const handleMapLayout = useCallback((event) => {
+    const { width, height } = event.nativeEvent.layout;
+    setMapSize((prev) =>
+      prev.width === width && prev.height === height
+        ? prev
+        : { width, height },
+    );
+  }, []);
 
-  // MapView.onPress fångar ALLA tryck (även på markers — react-native-maps
-  // på iOS levererar ibland inte Marker.onPress). Vi jämför koordinaten mot
-  // alla markers och visar kortet om en ligger inom tolerans, annars stänger
-  // vi det (tomt tryck).
-  const handleMapPress = useCallback((event) => {
-    const tapCoord = event?.nativeEvent?.coordinate;
-    if (!tapCoord || typeof tapCoord.latitude !== 'number') {
-      setSelectedEvent(null);
-      return;
-    }
-    const markers = markersRef.current;
-    if (!markers || markers.length === 0) {
-      setSelectedEvent(null);
-      return;
-    }
-    let nearest = null;
-    let nearestDist = Infinity;
-    for (const m of markers) {
-      if (!Number.isFinite(m.lat) || !Number.isFinite(m.lng)) continue;
-      const dLat = tapCoord.latitude - m.lat;
-      const dLng = tapCoord.longitude - m.lng;
-      const dist = Math.sqrt(dLat * dLat + dLng * dLng);
-      if (dist < nearestDist) {
-        nearestDist = dist;
-        nearest = m;
-      }
-    }
-    if (nearest && nearestDist < TAP_TOLERANCE) {
-      setSelectedEvent(nearest);
-    } else {
-      setSelectedEvent(null);
-    }
+  const handleRegionChange = useCallback((newRegion) => {
+    setRegion(newRegion);
   }, []);
 
   const handleCardClose = useCallback(() => {
@@ -142,6 +120,35 @@ export default function AppleMapsScreen() {
 
   const counts = computeCountsByMode(events, FILTER_MODES);
   const filteredEvents = filterEventsByMode(events, activeMode);
+
+  // Projicera lat/lng → skärm-koordinater för hit-detection-overlay.
+  // Bounds-baserad projektion gör att zoom-värdet inte spelar roll —
+  // det är bounds (region) som ger korrekt pixel-position.
+  const projectedMarkers = useMemo(() => {
+    if (!mapSize.width || !mapSize.height) return [];
+    const customViewport = {
+      ...viewportFromCenter(
+        region.latitude,
+        region.longitude,
+        11, // godtycklig zoom — bounds styr projektionen
+        mapSize,
+      ),
+      bounds: {
+        minLat: region.latitude - region.latitudeDelta / 2,
+        maxLat: region.latitude + region.latitudeDelta / 2,
+        minLng: region.longitude - region.longitudeDelta / 2,
+        maxLng: region.longitude + region.longitudeDelta / 2,
+      },
+    };
+    const out = [];
+    for (const e of filteredEvents) {
+      if (!Number.isFinite(e.lat) || !Number.isFinite(e.lng)) continue;
+      const p = projectViewport(e.lat, e.lng, customViewport);
+      if (!p.visible) continue;
+      out.push({ event: e, x: p.x, y: p.y });
+    }
+    return out;
+  }, [filteredEvents, region, mapSize]);
 
   // Loading / error / empty enligt SCREEN_STATES.md — ingen rubrik, minimal text.
   if (status === 'loading') {
@@ -182,7 +189,7 @@ export default function AppleMapsScreen() {
 
   return (
     <View style={styles.screen} testID="apple-maps-screen-ready">
-      <View style={styles.mapWrap}>
+      <View style={styles.mapWrap} onLayout={handleMapLayout}>
         <MapView
           provider={PROVIDER_DEFAULT}
           style={StyleSheet.absoluteFill}
@@ -192,6 +199,7 @@ export default function AppleMapsScreen() {
           rotateEnabled
           pitchEnabled
           onPress={handleMapPress}
+          onRegionChange={handleRegionChange}
           accessibilityLabel="Apple Maps-karta med Stockholm-events"
           testID="apple-maps-canvas"
           clusterColor={TOKENS.color.accent}
@@ -201,18 +209,31 @@ export default function AppleMapsScreen() {
             <Marker
               key={e.id}
               coordinate={{ latitude: e.lat, longitude: e.lng }}
-              // Medvetet INGA title/description — de triggar Apple Maps'
-              // default-vita callout som tar över tryckningen och blockerar
-              // vår onPress. MapEventCard (via selectedEvent-state) är vår
-              // enda event-info-yta.
-              //
-              // tracksViewChanges={true} krävs för att onPress ska fyra
-              // pålitligt på iOS (default false → JS-view cachelagras).
-              tracksViewChanges
-              onPress={() => handleMarkerPress(e)}
+              identifier={e.id}
+              // title/description AVSIKTLIGT utelämnade — de triggar
+              // Apple Maps' default-vita callout.
             />
           ))}
         </MapView>
+        {/* Hit-detection overlay — osynliga Pressables på varje markers
+            projicerade skärm-koordinat. Detta fångar taps även om
+            <Marker onPress> inte fyrar (vilket är fallet på iOS / RN 0.86
+            New Architecture + react-native-maps 1.27.2 just nu). */}
+        <View style={StyleSheet.absoluteFill} pointerEvents="box-none">
+          {projectedMarkers.map(({ event, x, y }) => (
+            <Pressable
+              key={event.id}
+              style={[
+                styles.markerHit,
+                { left: x - 22, top: y - 22 },
+              ]}
+              onPress={() => handleMarkerPress(event)}
+              accessibilityRole="button"
+              accessibilityLabel={`Öppna ${event.title_sv || event.title_en || 'event'}`}
+              testID={`marker-hit-${event.id}`}
+            />
+          ))}
+        </View>
         {selectedEvent ? (
           <View style={styles.cardOverlay} pointerEvents="box-none">
             <MapEventCard
@@ -271,6 +292,12 @@ const styles = StyleSheet.create({
     left: 16,
     right: 16,
     bottom: 16,
+  },
+  markerHit: {
+    position: 'absolute',
+    width: 44, // iOS minimum touch-target
+    height: 44,
+    backgroundColor: 'transparent',
   },
   status: {
     color: TOKENS.color.textMuted,
