@@ -1,18 +1,21 @@
 /**
  * BottomTabBar — primary navigation (Phase 1 retention).
  *
- * 4 tabs: Home / Explore / Notifications / Profile
+ * 5 tabs: Home / Explore / Map / Notifications / Profile
  *
  * Design choices, mapped to research + UI-DESIGN.md spec:
  *
- *   1. Four tabs total. Apple HIG + NN/g say 3-5 tabs is the sweet spot
- *      for thumb-reach and recognition. We use 4 (the upper bound of
- *      "always-visible"). Five feels like a tabbar graveyard.
+ *   1. Five tabs total (2026-10-03, user request). HIG + NN/g say 3-5 tabs
+ *      is the sweet spot for thumb-reach and recognition; the Karta-tab
+ *      brings the Apple Maps surface inline with the discovery grid so
+ *      users see geography without opening Utforska.
  *
- *   2. Order: Home → Explore → Notifications → Profile.
+ *   2. Order: Home → Explore → Map → Notifications → Profile.
  *      Home (default landing) is leftmost because that's the thumb's
  *      natural zone for "where I start". Profile is rightmost because
- *      it's used least.
+ *      it's used least. Map sits next to Explore since both are
+ *      discovery surfaces (Map = "what's near me", Explore = "what
+ *      matches me").
  *
  *   3. Messages was deliberately dropped. The reference image had
  *      Messages, but the user marked it optional. Building a 1:1 chat
@@ -84,6 +87,7 @@ const TOKENS = {
 const TABS = [
   { id: 'home',          icon: 'home-outline',         iconActive: 'home',           labelKey: 'tabs.home' },
   { id: 'explore',       icon: 'compass-outline',      iconActive: 'compass',        labelKey: 'tabs.explore' },
+  { id: 'map',           icon: 'map-outline',          iconActive: 'map',            labelKey: 'tabs.map' },
   { id: 'notifications', icon: 'notifications-outline', iconActive: 'notifications', labelKey: 'tabs.notifications' },
   { id: 'profile',       icon: 'person-circle-outline', iconActive: 'person-circle', labelKey: 'tabs.profile' },
 ];

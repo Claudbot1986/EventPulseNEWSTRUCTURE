@@ -1692,7 +1692,7 @@ function DetailsScreen({ event, onBack }) {
     <SafeAreaView style={styles.detailsContainer}>
       <View style={styles.detailsHeader}>
         <TouchableOpacity style={styles.backButton} onPress={onBack}>
-          <Text style={styles.backButtonText}>{t('common.back')}</Text>
+          <Text style={styles.backButtonText}>{`< ${t('common.back')}`}</Text>
         </TouchableOpacity>
       </View>
       <ScrollView style={styles.detailsContent} showsVerticalScrollIndicator={false}>
@@ -2022,7 +2022,7 @@ function ExploreDetailScreen({ payload, onBack, onEventPress }) {
           accessibilityRole="button"
           accessibilityLabel={t('common.back')}
         >
-          <Text style={styles.backButtonText}>{t('common.back')}</Text>
+          <Text style={styles.backButtonText}>{`< ${t('common.back')}`}</Text>
         </TouchableOpacity>
       </View>
       <UtforskaSection
@@ -2053,7 +2053,7 @@ function ExploreDetailScreen({ payload, onBack, onEventPress }) {
   );
 }
 
-export default function App({ onUserLoggedOut, onOpenLogin, chipNonce = 0, onExploreReady, isActive = true }) {
+export default function App({ onUserLoggedOut, onOpenLogin, chipNonce = 0, onExploreReady, isActive = true, onDetailBack }) {
   const { t } = useI18n();
   const [selectedEvent, setSelectedEvent] = useState(null);
   const scrollPositionRef = useRef(0);
@@ -2270,6 +2270,12 @@ export default function App({ onUserLoggedOut, onOpenLogin, chipNonce = 0, onExp
 
   const handleBack = () => {
     setSelectedEvent(null);
+    // 2026-10-03 — AppShell sparade ursprunglig-tab i previousTabRef
+    // (när Hem/Karta-kort routade hit). Återställ activeTab dit så
+    // < Tillbaka tar användaren TILLBAKA dit de var — inte till Utforska.
+    if (typeof onDetailBack === 'function') {
+      onDetailBack();
+    }
     // Scroll position is automatically preserved because we don't unmount HomeScreen
   };
 

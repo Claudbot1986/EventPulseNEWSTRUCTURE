@@ -651,10 +651,15 @@ HomeScreen.__formatSenasteSubtitle = formatSenasteSubtitle;
 HomeScreen.__formatIkvallSubtitle = formatIkvallSubtitle;
 HomeScreen.__formatHelgenSubtitle = formatHelgenSubtitle;
 HomeScreen.__upcomingWeekend = upcomingWeekend;
-HomeScreen.__toDetailsScreenEvent = toDetailsScreenEvent;
 HomeScreen.__W_READ_MORE = W_READ_MORE;
 HomeScreen.__W_CLICK = W_CLICK;
 HomeScreen.__W_IMPRESSION = W_IMPRESSION;
+
+// 2026-10-03 — exportera så KartaScreen kan återanvända exakt samma
+// shape-transform som Hem-karusellen producerar. Identisk pipeline:
+// Hem→Utforska→Karta går genom samma PENDING_EVENT_KEY-hand-off och
+// samma DetailsScreen-render.
+export { toDetailsScreenEvent };
 
 const styles = StyleSheet.create({
   root: {

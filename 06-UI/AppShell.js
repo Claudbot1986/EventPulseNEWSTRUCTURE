@@ -16,6 +16,7 @@ import { SafeAreaProvider, initialWindowMetrics } from 'react-native-safe-area-c
 
 import BottomTabBar from './components/BottomTabBar';
 import HomeScreen from './screens/HomeScreen';
+import KartaScreen from './screens/KartaScreen';
 import NotificationsScreen from './screens/NotificationsScreen';
 import ProfileScreen from './screens/ProfileScreen';
 import OnboardingScreen from './screens/OnboardingScreen';
@@ -45,7 +46,9 @@ import { LanguageProvider } from './i18n';
 // verifiering av EU AI Act Art. 50-stämpeln. MÅSTE vara FALSE i prod.
 const EXPLORE_STAR_ENABLED = process.env.EXPO_PUBLIC_EXPLORE_STAR_ENABLED === 'true';
 
-const TABS = ['home', 'explore', 'notifications', 'profile'];
+// 2026-10-03: Karta-tab between Utforska and Notiser. Order is
+// Hem → Utforska → Karta → Notiser → Profil — same order as BottomTabBar.
+const TABS = ['home', 'explore', 'map', 'notifications', 'profile'];
 if (EXPLORE_STAR_ENABLED) TABS.push('explore-star');
 const ONBOARDING_COMPLETE_KEY = 'eventpulse.onboarding_complete';
 const STORAGE_BUDGET_MS = 800;
@@ -108,6 +111,21 @@ export default function AppShell() {
   // kept mounted (display:none while inactive) so switching tabs never
   // remounts/refetches. 'home' is the landing tab so it starts mounted.
   const mountedTabsRef = useRef({ home: true });
+
+  // 2026-10-03 — Return-to-origin-tab for hem/karta/explore-star taps that
+  // route through PENDING_EVENT_KEY. When the user taps a card from the
+  // Karta-tab → AppShell switches activeTab to 'explore' so App.js can
+  // mount DetailsScreen. Without this ref, tapping "< Tillbaka" would
+  // land the user on Utforska instead of back on Karta. We snapshot the
+  // originating tab right before the switch and clear the ref once it's
+  // restored (one card-tap → one round-trip).
+  const previousTabRef = useRef(null);
+  const handleDetailBack = useCallback(() => {
+    if (previousTabRef.current) {
+      setActiveTab(previousTabRef.current);
+      previousTabRef.current = null;
+    }
+  }, []);
 
   // Guest auth nudge (AuthReminderModal). Timing contract 2026-09-20: first
   // nudge ~3 min in, ongoing registration pauses it, an abandoned attempt
@@ -369,8 +387,14 @@ export default function AppShell() {
   // tab. App.js's drain effect (deps [chipNonce]) opens its DetailsScreen
   // for the pending event. JSON round-trip keeps AppShell free of EventCard
   // shape knowledge beyond the id guard.
+  //
+  // 2026-10-03 — previousTabRef snapshot: användaren kom ofta från Karta
+  // eller Hem; vi vill att < Tillbaka ska återställa dem dit, inte lämna
+  // dem på Utforska. Ref rensas efter återställning så upprepade tappar
+  // inte fastnar.
   const handleHomeCardPress = (event) => {
     if (!event || typeof event.id !== 'string' || event.id.length === 0) return;
+    previousTabRef.current = activeTab;
     setItem(PENDING_EVENT_KEY, JSON.stringify(event))
       .catch(() => {})
       .finally(() => setChipNonce((n) => n + 1));
@@ -484,6 +508,9 @@ export default function AppShell() {
             showSearch={showSearch}
             onCloseSearch={closeSearch}
             onOpenSearchFromHome={openSearch}
+            // 2026-10-03 — Tillbaka på DetailsScreen återställer activeTab
+            // till den flik användaren kom ifrån (Karta / Hem / osv).
+            onDetailBack={handleDetailBack}
           />
         </View>
         {mountedTabsRef.current.home && (
@@ -497,6 +524,11 @@ export default function AppShell() {
               onOpenLogin={() => setShowLogin(true)}
               isActive={activeTab === 'notifications'}
             />
+          </View>
+        )}
+        {mountedTabsRef.current.map && (
+          <View style={activeTab === 'map' ? styles.tabPanel : styles.tabHidden}>
+            <KartaScreen onEventPress={handleHomeCardPress} />
           </View>
         )}
         {mountedTabsRef.current.profile && (
