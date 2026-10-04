@@ -238,15 +238,19 @@ describe('pickLibraryFallback', () => {
     expect(result).toEqual({ url: null, library_id: null, match_type: 'none' });
   });
 
-  test('does not query when category_slug is null', async () => {
+  test('does not query category path when category_slug is null', async () => {
+    // 2026-10-04 — Smartare default-fallback: försök först NULL-category-
+    // pool, sedan generisk community/culture-pool. Båda query:ar är
+    // image_library (default + generic), inte category — category-pfad
+    // hoppas över när category_slug är null.
     fromMock.mockReturnValue(makeQuery({ data: null, error: null }));
     rpcMock.mockResolvedValue({ error: null });
 
     const result = await pickLibraryFallback({ category_slug: null });
 
     expect(result.match_type).toBe('none');
-    // Should only have queried the default-image path (1 call), not category
-    expect(fromMock).toHaveBeenCalledTimes(1);
+    // 2 queries: nullDefaultImage + genericFallbackImage (båda mot image_library)
+    expect(fromMock).toHaveBeenCalledTimes(2);
     expect(fromMock).toHaveBeenCalledWith('image_library');
   });
 });

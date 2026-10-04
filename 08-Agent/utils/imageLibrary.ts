@@ -99,13 +99,36 @@ export interface LibraryImage {
 // 'musikaler', biblioteket: 'art-exhibitions'/'theatre-comedy'/'barn' m.fl.).
 // Utan alias fastnar dessa events utan bild trots att passande
 // biblioteksbilder finns. Alias listas i prioritetsordning.
+//
+// 2026-10-04 — utökat täckning. Tidigare 6 entries saknade många av de
+// kategorier som finns i events (musical-theatre, classical, theatre-drama,
+// exhibition, family, talks-lectures, workshop m.fl.). Resultatet blev att
+// hundratals events föll igenom till default-bild (1 st) trots att biblioteket
+// hade 264 music + 229 community + 134 culture-bilder att välja bland.
+// Prioritet: tightast möjliga alias först (mest specifik bildtyp), sedan
+// bredare kategorier som fallback.
 const CATEGORY_ALIASES: Record<string, string[]> = {
-  art: ['art-exhibitions', 'arts'],
+  // Teater / scenkonst
   theater: ['theatre-comedy'],
+  musical: ['theatre-comedy'],
+  'musical-theatre': ['theatre-comedy'],
+  'theatre-drama': ['theatre-comedy'],
+  musikaler: ['theatre-comedy'],
+  // Klassisk musik / orkester
+  classical: ['culture', 'music'],
+  // Konst / utställning
+  art: ['art-exhibitions', 'arts'],
+  exhibition: ['art-exhibitions'],
+  // Familj / barn
   family: ['barn'],
+  barn: ['barn'],
+  // Opera / design / musik-kultur
   opera: ['culture'],
   design: ['culture'],
-  musikaler: ['theatre-comedy'],
+  // Föreläsningar / workshops (infrastruktur-bild från culture/community)
+  talks: ['community', 'culture'],
+  'talks-lectures': ['community', 'culture'],
+  workshop: ['community', 'culture'],
 };
 
 export interface FallbackInput {
@@ -197,13 +220,16 @@ export async function pickLibraryFallback(input: FallbackInput): Promise<Fallbac
   }
 
   // 3. Default-bild (alltid tillgänglig om biblioteket har något)
-  const { data: def } = await db()
-    .from('image_library')
-    .select('id, public_url, storage_path')
-    .is('category_slug', null) // NULL = default-bild
-    .order('times_used', { ascending: true })
-    .limit(1)
-    .single();
+  //    2026-10-04 — smartare fallback: först NULL-category-bilder (samma
+  //    default-pool som tidigare), sedan bred community/culture-pool om
+  //    NULL-poolen är tom. Library har bara 1 NULL-bild idag, vilket
+  //    gör att events utan category (343 st i prod) alla fått samma bild.
+  //    Med community/culture-fallback får NULL-category-events nu variation
+  //    bland de 229 community- + 134 culture-bilder som finns.
+  let def = await nullDefaultImage();
+  if (!def) {
+    def = await genericFallbackImage();
+  }
 
   if (def) {
     await bumpUsage(def.id);
@@ -215,6 +241,41 @@ export async function pickLibraryFallback(input: FallbackInput): Promise<Fallbac
   }
 
   return emptyResult;
+}
+
+/**
+ * Strikt default-pool: bilder med category_slug IS NULL. Endast 1 rad i
+ * library idag, men poolen växer när curator-arbete landar.
+ */
+async function nullDefaultImage(): Promise<{ id: string; storage_path: string | null; public_url: string | null } | null> {
+  const { data } = await db()
+    .from('image_library')
+    .select('id, public_url, storage_path')
+    .is('category_slug', null)
+    .order('times_used', { ascending: true })
+    .limit(1)
+    .maybeSingle();
+  return data || null;
+}
+
+/**
+ * Generisk fallback (2026-10-04): NULL-category-events får en bred
+ * community- eller culture-bild istället för den enda default-bilden.
+ * Returnerar en rad som är rotation-balanced bland de mest använda
+ * generiska kategorierna. Bättre visuell variation utan att kräva curator.
+ */
+async function genericFallbackImage(): Promise<{ id: string; storage_path: string | null; public_url: string | null } | null> {
+  // community + culture är bredast (passar konserter, föreläsningar,
+  // workshop, marknad, dans — utan att vara specifikt "konsert-bild").
+  const GENERIC_CATEGORIES = ['community', 'culture'];
+  const { data } = await db()
+    .from('image_library')
+    .select('id, public_url, storage_path, times_used')
+    .in('category_slug', GENERIC_CATEGORIES)
+    .order('times_used', { ascending: true })
+    .limit(1)
+    .maybeSingle();
+  return data || null;
 }
 
 async function bumpUsage(libraryId: string): Promise<void> {
