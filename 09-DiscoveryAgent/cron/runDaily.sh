@@ -5,7 +5,9 @@
 # Loggar allt till runtime/discovery-agent/daily-YYYY-MM-DD.log.
 #
 # Caps (hårdkodade här också, dubbleras i agent.ts):
-#   MAX=5   — max sources touched per phase
+#   MAX=30  — max sources touched per phase (höjd från 5 → 30 2026-10-04 enligt
+#             Stockholm Coverage Recovery Plan, Fas 2C; tidigare cap gjorde att
+#             237 failing sources ÷ 5/dag = 47 dagar att röra varje en gång)
 #   DRY_RUN=0 — faktiska körningar (sätt till 1 för test)
 
 set -e
@@ -18,7 +20,7 @@ DATE_STR=$(date +%Y-%m-%d)
 DAILY_LOG="$LOG_DIR/daily-$DATE_STR.log"
 TSX_BIN="$PROJECT_ROOT/node_modules/.bin/tsx"
 
-MAX="${MAX:-5}"
+MAX="${MAX:-30}"
 DRY_RUN="${DRY_RUN:-0}"
 
 mkdir -p "$LOG_DIR"

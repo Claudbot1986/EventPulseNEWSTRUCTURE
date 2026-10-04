@@ -108,58 +108,24 @@ export async function healOne(
     lastRoutingReason: status.lastRoutingReason ?? '',
   };
 
-  // Fas 1.2: skip when the last ≥3 heal attempts all logged the same error
-  // signature. Preserves the daily cap for sources with a realistic recovery
-  // chance; retired audit entry is still written so the operator sees the skip.
+  // Fas 2B (2026-10-04, recovery-plan): permanent-error skip DISABLED.
+  // Previously: skip when the last ≥3 heal attempts all logged the same error
+  // signature (preserves daily cap). Now: log as warning but still attempt,
+  // because (a) cap raised to 30 means we have budget, (b) most "permanent"
+  // errors were caused by missing lastRoutingReason which is now fixed,
+  // (c) the per-attempt appendRun still records the skip-count for audit.
   if (hasRepeatableError(source.id)) {
-    const skipResult: HealResult = {
-      sourceId: source.id,
-      tier: tier ?? 2,
-      status: 'deferred',
-      durationMs: Date.now() - start,
-      before,
-      after: { events: before.events },
-      error: `permanent error: same signature in ≥${3} consecutive heal runs — skipping to preserve cap`,
-    };
-    if (!options.dryRun) {
-      appendRun({
-        ts: nowIso(),
-        phase: 'heal',
-        sourceId: source.id,
-        tier: skipResult.tier,
-        durationMs: skipResult.durationMs,
-        before,
-        after: skipResult.after,
-        error: skipResult.error,
-        dryRun: false,
-      });
-    }
-    return skipResult;
+    console.warn(`[heal] WARN: ${source.id} has ≥3 consecutive same-signature failures — still attempting`);
+    // Fall through to actual heal attempt; do not return early.
   }
 
+  // Fas 2A (2026-10-04): pickHealTier defaultar nu till tier 2 när
+  // lastRoutingReason saknas istället för att returnera null.
+  // Detta block är därmed dead code (tier === null når inte hit).
+  // Vi behåller det som defense-in-depth om framtida ändringar återintroducerar null.
   if (tier === null) {
-    const result: HealResult = {
-      sourceId: source.id,
-      tier: 2,
-      status: 'deferred',
-      durationMs: Date.now() - start,
-      before,
-      after: { events: before.events },
-      error: 'no lastRoutingReason — cannot pick tier',
-    };
-    if (!options.dryRun) {
-      appendRun({
-        ts: nowIso(),
-        phase: 'heal',
-        sourceId: source.id,
-        durationMs: result.durationMs,
-        before,
-        after: result.after,
-        error: result.error,
-        dryRun: false,
-      });
-    }
-    return result;
+    console.error(`[heal] unexpected: tier=null for ${source.id}, falling back to tier 2`);
+    // Fall through to tier 2 path below
   }
 
   try {

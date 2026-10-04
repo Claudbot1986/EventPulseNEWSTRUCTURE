@@ -92,13 +92,15 @@ test('pickHealTier → tier 2 when reason contains "0 events"', () => {
   expect(pickHealTier(s)).toBe(2);
 });
 
-test('pickHealTier → null when no lastRoutingReason', () => {
+test('pickHealTier → tier 2 default when no lastRoutingReason (Fas 2A 2026-10-04)', () => {
+  // Behavior change: previously returned null (skip); now defaults to tier 2
+  // so heal pipeline runs and produces a routing reason going forward.
   const s = status({
     consecutiveFailures: 4,
     lastSuccess: null,
     lastRoutingReason: undefined,
   });
-  expect(pickHealTier(s)).toBe(null);
+  expect(pickHealTier(s)).toBe(2);
 });
 
 test('pickHealTier → tier 2 when recent success overrides retire', () => {

@@ -211,7 +211,13 @@ export function pickHealTier(
   }
 
   const reason = status.lastRoutingReason ?? '';
-  if (reason.length === 0) return null;
+  // Fas 2A (2026-10-04, recovery-plan): default to tier 2 when routing reason
+  // is missing, instead of returning null. Reason: 213 of 237 failing sources
+  // in 2026-09-10 status file have no `lastRoutingReason` set, which silently
+  // skipped 95% of all heal attempts. Default to tier 2 (most common case)
+  // so the heal pipeline actually runs and produces a `lastRoutingReason`
+  // going forward. Operator can revisit per-source.
+  if (reason.length === 0) return 2;
 
   // Tier 0 (Fas 2.1): pre-routing-API errors are NOT healable. They signal
   // that Tool A never produced a routable response (breadth: unclear/low_value),

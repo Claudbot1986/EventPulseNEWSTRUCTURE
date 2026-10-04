@@ -41,7 +41,7 @@ interface ParsedArgs {
 
 function parseArgs(argv: string[]): ParsedArgs {
   let dryRun = process.env.DRY_RUN === '1' || process.env.DRY_RUN === 'true';
-  let cap = Number.parseInt(process.env.MAX ?? '5', 10);
+  let cap = Number.parseInt(process.env.MAX ?? '30', 10);
   let forceExpand = false;
 
   for (const arg of argv.slice(2)) {
@@ -61,7 +61,7 @@ function parseArgs(argv: string[]): ParsedArgs {
     }
   }
 
-  if (Number.isNaN(cap) || cap < 1) cap = 5;
+  if (Number.isNaN(cap) || cap < 1) cap = 30;
   return { dryRun, cap, forceExpand };
 }
 
@@ -69,7 +69,7 @@ function printUsage(): void {
   console.log(`Usage: tsx 09-DiscoveryAgent/agent.ts [--dry] [--cap=N] [--force-expand]
 
 Env:
-  MAX=N       Max sources touched per phase (default 5)
+  MAX=N       Max sources touched per phase (default 30, höjd från 5 enligt Stockholm Coverage Recovery Plan 2026-10-04)
   DRY_RUN=1   Same as --dry
 `);
 }
