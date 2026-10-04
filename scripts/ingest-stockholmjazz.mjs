@@ -162,7 +162,9 @@ async function main() {
       location: `POINT(${DEFAULT_LNG} ${DEFAULT_LAT})`,
       lat: DEFAULT_LAT, lng: DEFAULT_LNG,
       ticket_url: url,
-      image_url: image,
+      // 2026-10-04 — Droppa scrape-original (sthlmjazz.se/gdrive) vid import.
+      // matchLibraryFirst (i nattjobbet) tilldelar biblioteks-bild.
+      image_url: null,
       description_sv: description,
       description_en: description,
       status: 'published',

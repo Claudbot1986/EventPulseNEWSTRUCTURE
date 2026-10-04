@@ -98,7 +98,14 @@ async function main() {
         location: `POINT(${lng} ${lat})`,
         lat, lng,
         ticket_url: ev.url ?? null,
-        image_url: ev.image_url ?? null,
+        // 2026-10-04 — Droppa scrape-original livespot.se-img vid import.
+        // Tidigare sparades ev.image_url rakt av, vilket gjorde livespot-
+        // events till "anomalier" (image_url satt men image_ai_generated=
+        // false / image_generation_status != 'library_fallback') → UI
+        // visade tom placeholder. image_generation_status='pending' låter
+        // matchLibraryFirst (i nattlys cron) hämta en biblioteks-bild i
+        // nästa körning — samma kontrakt som övriga källor följer.
+        image_url: null,
         description_sv: ev.description_sv ?? null,
         description_en: ev.description_en ?? null,
         is_free: ev.price_min === 0,

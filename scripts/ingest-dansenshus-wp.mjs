@@ -206,7 +206,9 @@ async function main() {
       location: `POINT(${VENUE_LNG} ${VENUE_LAT})`,
       lat: VENUE_LAT, lng: VENUE_LNG,
       ticket_url: link,
-      image_url: renderedImage || wpImage,
+      // 2026-10-04 — Droppa scrape-originaler (wp-image) vid import. matchLibraryFirst
+      // (i nattjobbet) tilldelar en biblioteks-bild baserat på kategori/venue.
+      image_url: null,
       description_sv: description,
       description_en: description,
       status: 'published',

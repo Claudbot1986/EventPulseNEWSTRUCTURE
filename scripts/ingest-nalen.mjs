@@ -215,7 +215,9 @@ async function main() {
       location: `POINT(${VENUE_LNG} ${VENUE_LAT})`,
       lat: VENUE_LAT, lng: VENUE_LNG,
       ticket_url: url,
-      image_url: image,
+      // 2026-10-04 — Droppa scrape-original vid import. matchLibraryFirst
+      // (i nattjobbet) tilldelar biblioteks-bild baserat på kategori/venue.
+      image_url: null,
       description_sv: description,
       description_en: description,
       status: 'published',
