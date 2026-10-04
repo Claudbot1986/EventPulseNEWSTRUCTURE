@@ -57,6 +57,16 @@ const STORAGE_BUDGET_MS = 800;
 // process — the old per-tab App splash (which flashed black on every
 // Utforska open) is gone.
 const SPLASH_MIN_MS = 3000;
+// 2026-10-04 — Konsistent branded startskärm (logga + "EventPulse") på VARJE
+// cold-start. Tidigare visades splashPlaceholder bara under korta
+// loading-states, så när onboarding redan var gjord såg man nästan ingen
+// logga alls — bara den nativa splash-bilden under ~3s, sen tab-trädet.
+// coldStartDone blir true först när både bootstrap OCH SPLASH_MIN_MS har
+// passerat; tills dess renderas Jordan-LAYOUT-splashen (samma logga + text
+// som native-splashen använder) ovanförhängande kanten i app-flödet.
+// På så sätt blir "startscreeen" identisk varje gång appen startas — ingen
+// roulett mellan "iblandet förut splashPlaceholder, ibland inte".
+const COLD_START_MIN_MS = SPLASH_MIN_MS;
 // Absolute ceiling for the explore-readiness gate (2026-09-20): the splash
 // waits for Utforska's first feed load, but a stalled network must never
 // park the user on a black frame. At the cap we unblock and let the tab
@@ -96,6 +106,38 @@ export default function AppShell() {
   // Splash timing refs — see maybeHideSplash below.
   const splashShownAtRef = useRef(Date.now());
   const splashHiddenRef = useRef(false);
+  // 2026-10-04 — Konsistent branded startskärm: coldStartDone blir true
+  // först när både bootstrap OCH COLD_START_MIN_MS har passerat. Detta
+  // gör att splashPlaceholder (logga + "EventPulse") visas varje cold-start,
+  // inte bara sporadiskt under loading-states. Onboarding/auth-flöden
+  // override:ar splashen — den visas bara när inget annat ska visas.
+  const [coldStartDone, setColdStartDone] = useState(false);
+  useEffect(() => {
+    const id = setTimeout(() => setColdStartDone(true), COLD_START_MIN_MS);
+    return () => clearTimeout(id);
+  }, []);
+  // 2026-10-04 — Synlig "startscreeen" hela tiden: native splash från
+  // expo-splash-screen ligger OS-nivå över JS-trädet och täcker vår egen
+  // splashPlaceholder. hideSplashNow() gömmer native-splashen OMEDELBART
+  // när JS-trädet är redo, så vår egen logga+text-splash blir den synliga
+  // startscreenen. maybeHideSplash behåller SPLASH_MIN_MS-grinden för
+  // bakåtkompatibilitet (gamla anropsvägar), men JS-splash-grenen kallar
+  // hideSplashNow istället.
+  const hideSplashNow = useCallback(() => {
+    if (splashHiddenRef.current) return;
+    splashHiddenRef.current = true;
+    SplashScreen.hideAsync().catch(() => {});
+  }, []);
+  // Hämta native-splashen så fort AppShell har monterat första gången —
+  // splashPlaceholder (logga + "EventPulse") finns redan i JS-trädet (vid
+  // onboardingState=='loading' eller !coldStartDone), så användaren ser vår
+  // startscreen istället för den tomma native-bilden. Utan detta skulle
+  // native-splashen täcka vår splashPlaceholder under hela
+  // SPLASH_MIN_MS-perioden och användaren skulle bara se en logotyp utan
+  // text i 3+ sekunder.
+  useEffect(() => {
+    hideSplashNow();
+  }, [hideSplashNow]);
   // Explore-readiness gate (2026-09-20, "hängde sig" report): the splash
   // used to drop at 3s, so a Hem chip tap could mount Utforska cold — mid
   // fetch of every Hem section — and freeze the JS thread. Now Utforska
@@ -235,9 +277,13 @@ export default function AppShell() {
   }, []);
 
   // Splash lifecycle: the native splash was frozen at module level
-  // (index.js → preventAutoHideAsync). We hide it once onboarding+bootstrap
-  // have settled AND the minimum branding time has elapsed. Both gate points
-  // call maybeHideSplash; the first one to satisfy the constraint wins.
+  // (index.js → preventAutoHideAsync). 2026-10-04 — native splashen döljs
+  // nu OMEDELBART vid mount via hideSplashNow (se useEffect ovan om), så
+  // vår egen splashPlaceholder (logga + "EventPulse") är den synliga
+  // startscreenen. maybeHideSplash behålls som no-op-fallback för bakåt-
+  // kompatibilitet (alla call sites kollar splashHiddenRef.current först).
+  // Tidigare höll maybeHideSplash native-splashen i SPLASH_MIN_MS, vilket
+  // täckte vår JS-splash — användaren såg bara en tom native-bild i 3s.
   const maybeHideSplash = useCallback(() => {
     if (splashHiddenRef.current) return;
     if (splashBlockedRef.current) return; // Utforska hasn't signaled yet
@@ -497,6 +543,26 @@ export default function AppShell() {
         onSuccess={handleMagicLinkSuccess}
         onCancel={handleCodeCancel}
       />
+    );
+  } else if (!coldStartDone) {
+    // 2026-10-04 — Konsistent branded startskärm (logga + "EventPulse") på
+    // VARJE cold-start. När onboardingState='done', userState='logged_in'/
+    // 'guest' och inga auth-ytor är öppna, renderar vi splashPlaceholder
+    // tills COLD_START_MIN_MS har passerat. Tidigare syntes splashPlaceholder
+    // bara sporadiskt under loading-states — nu är den en pålappning som
+    // återställer "logga all synliga" vaře cold-start. Identiskare bild
+    // varje gång appen startas (behöver inte rollspel av "iblandet förut
+    // splashPlaceholder, ibland inte"). Auth-flöden ovanför override:ar
+    // — splashen visar sig bara när inget annat ska visas.
+    body = (
+      <View style={styles.splashPlaceholder}>
+        <Image
+          source={require('./assets/splash.png')}
+          style={styles.splashLogo}
+          resizeMode="contain"
+        />
+        <Text style={styles.splashText}>EventPulse</Text>
+      </View>
     );
   } else {
     body = (
