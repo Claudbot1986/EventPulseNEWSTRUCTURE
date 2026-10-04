@@ -150,13 +150,16 @@ async function callApifySinglePage(fbSlug, onlyUpcoming = true) {
 
 function apifyToRow(ev) {
   const nowIso = new Date().toISOString();
+  // start_timestamp is in SECONDS (not ms) — multiply by 1000
   let startTime = ev.start_utc ?? '';
   if (!startTime && ev.start_timestamp) {
-    startTime = new Date(ev.start_timestamp).toISOString();
+    const tsMs = ev.start_timestamp * 1000;
+    startTime = new Date(tsMs).toISOString();
   }
   let endTime = ev.end_utc ?? '';
   if (!endTime && ev.end_timestamp) {
-    endTime = new Date(ev.end_timestamp).toISOString();
+    const tsMs = ev.end_timestamp * 1000;
+    endTime = new Date(tsMs).toISOString();
   }
   const title = ev.name ?? 'Untitled';
   const lat = (typeof ev.latitude === 'number' && ev.latitude !== 0) ? ev.latitude : 59.3293;
@@ -201,8 +204,13 @@ async function persistEvents(allEvents) {
   const nowMs = Date.now();
   const future = allEvents.filter((e) => {
     if (e.is_past === true) return false;
-    const startTs = e.start_timestamp ?? 0;
-    return startTs > nowMs;
+    if (e.is_canceled === true) return false;
+    // start_timestamp is in SECONDS — multiply by 1000 for ms comparison
+    const startMs = (e.start_timestamp ?? 0) * 1000;
+    if (startMs > nowMs) return true;
+    // Fallback: parse start_utc
+    if (e.start_utc && new Date(e.start_utc).getTime() > nowMs) return true;
+    return false;
   });
 
   if (future.length === 0) return { inserted: 0, future: 0 };
@@ -246,8 +254,8 @@ async function detectCancellations(slug, latestEvents) {
   for (const e of latestEvents) {
     const id = e.id ?? e.url?.split('/').filter(Boolean).pop();
     if (!id) continue;
-    latestIds.add(id);
-    if (e.is_canceled === true) cancelledIds.add(id);
+    latestIds.add(String(id));
+    if (e.is_canceled === true) cancelledIds.add(String(id));
   }
 
   // Events we previously saw but are NOT in latest fetch
@@ -313,8 +321,13 @@ async function testPage(slug, name, category, venue, force = false) {
   const nowMs = Date.now();
   const future = result.events.filter((e) => {
     if (e.is_past === true) return false;
-    const startTs = e.start_timestamp ?? 0;
-    return startTs > nowMs;
+    if (e.is_canceled === true) return false;
+    // start_timestamp is in SECONDS — multiply by 1000 for ms comparison
+    const startMs = (e.start_timestamp ?? 0) * 1000;
+    if (startMs > nowMs) return true;
+    // Fallback: parse start_utc
+    if (e.start_utc && new Date(e.start_utc).getTime() > nowMs) return true;
+    return false;
   });
   const futureCount = future.length;
 
@@ -356,12 +369,13 @@ async function testPage(slug, name, category, venue, force = false) {
   saveStat(newStat);
 
   if (result.ok && futureCount > 0) {
-    if (newCount > 0) {
-      const persist = await persistEvents(result.events);
-      console.log(`  ✓ ${slug.padEnd(35)} ${count} events (${futureCount} future, ${newCount} NEW), ${elapsed}s — persisted ${persist.inserted}`);
-    } else {
-      console.log(`  ↻ ${slug.padEnd(35)} ${count} events (${futureCount} future, 0 new), ${elapsed}s — no DB write needed`);
-    }
+    // Always persist — dedup happens at DB level via upsert+dedup_hash
+    const persist = await persistEvents(result.events);
+    const marker = persist.inserted > 0 ? '✓' : '↻';
+    const detail = persist.inserted > 0
+      ? `${count} events (${futureCount} future, ${newCount} NEW), ${elapsed}s — persisted ${persist.inserted}`
+      : `${count} events (${futureCount} future, 0 new since DB has them), ${elapsed}s — ${persist.dupes || 0} dupes skipped`;
+    console.log(`  ${marker} ${slug.padEnd(35)} ${detail}`);
 
     // Cancellation detection: mark events that disappeared or are marked cancelled
     let cancellationInfo = { cancelled: 0, removed: 0 };
@@ -396,7 +410,7 @@ async function testAll() {
   console.log(`=== Test all candidates ===`);
   console.log(`Total: ${candidates.length}, already working: ${alreadyWorking.size}, to test: ${toTest.length}\n`);
 
-  const CONCURRENCY = 20;
+  const CONCURRENCY = 32;
   const queue = [...toTest];
   const results = [];
   let budgetExhausted = false;
@@ -483,7 +497,6 @@ async function testWorkingPages() {
   console.log(`Tested: ${working.length - totalSkipped}`);
   console.log(`Total future events seen: ${totalEvents}`);
   console.log(`Total NEW events: ${totalNew}`);
-  console.log(`Total cancelled: ${results.reduce((s, r) => s + (r.cancelled || 0), 0)}`);
   console.log(`Apify cost: $${cost.toFixed(4)}`);
 }
 

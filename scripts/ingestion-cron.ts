@@ -91,6 +91,17 @@ const skipEtags = args.includes('--skip-etags');
 const skipGoogleCse = args.includes('--skip-google-cse');
 const skipPatternPromote = args.includes('--skip-pattern-promote');
 const skipManualReviewTriage = args.includes('--skip-manual-triage');
+const skipEventbritePagination = args.includes('--skip-eventbrite');
+const skipTribeIngest = args.includes('--skip-tribe');
+const skipApiDiscovery = args.includes('--skip-api-discovery');
+const skipSitemapDiscovery = args.includes('--skip-sitemap');
+const skipLumaIngest = args.includes('--skip-luma');
+const skipRaIngest = args.includes('--skip-ra');
+const skipPoshIngest = args.includes('--skip-posh');
+const skipRedditIngest = args.includes('--skip-reddit');
+const skipSubpathDiscovery = args.includes('--skip-subpath');
+const skipLivespotIngest = args.includes('--skip-livespot');
+const skipDirectJsonld = args.includes('--skip-direct-jsonld');
 const limitIdx = args.indexOf('--limit');
 const limit = limitIdx !== -1 ? parseInt(args[limitIdx + 1], 10) : 50;
 const smoke = args.includes('--smoke');
@@ -158,6 +169,65 @@ const steps: Array<{ name: string; cmd: string; args: string[] }> = [
     cmd: 'npx',
     args: ['tsx', '02-Ingestion/B-JSON-feedGate/runB.ts', '--limit', String(effectiveLimit), '--workers', '20'],
   },
+
+  // ── P0-EB: Eventbrite pagination (2026-10-04) ─────────────────────────
+  // Standalone .mjs (ingen tsx-overhead). Paginates Eventbrite Stockholm +
+  // sub-city variants 3 months forward, persists future events with dedup.
+  // Respekterar BACKLOG.md rate-limit 1 req / 3s. ~30s runtime.
+  // Källa: sources/eventbrite-stockholm.jsonl (1 req 3s rate-limit, JSON-LD).
+  ...((!skipEventbritePagination) ? [{
+    name: 'eventbrite-pagination',
+    cmd: 'node',
+    args: ['scripts/ingest-eventbrite-stockholm.mjs', '--months=' + String(smoke ? 1 : 3)],
+  }] : []),
+
+  // ── P0-Tribe: The Events Calendar WordPress REST API (2026-10-04) ──────
+  // Generic fetcher för 5+ WP-sajter som kör The Events Calendar-plugin
+  // (upptäckta via scripts/discover-hidden-apis.mjs).
+  // Källa: /wp-json/tribe/events/v1/events endpoint.
+  // ~3 min runtime (5 sources × 7 pages × 2s rate-limit + DB writes).
+  ...((!skipTribeIngest) ? [{
+    name: 'tribe-events',
+    cmd: 'node',
+    args: ['scripts/ingest-tribe-events.mjs', '--pages=10'],
+  }] : []),
+
+  // ── P0-Sitemap: Generic sitemap.xml parser (2026-10-04) ───────────────
+  // Crawlar ALLA 196 sources sitemap, filtrerar event-pattern URLs,
+  // extraherar JSON-LD events från varje URL. ~10 min runtime.
+  ...((!skipSitemapDiscovery) ? [{
+    name: 'sitemap-discovery',
+    cmd: 'node',
+    args: ['scripts/ingest-sitemap-discovery.mjs', '--max-sources=999', '--max-per-source=15'],
+  }] : []),
+
+  // ── P0-Subpath: Auto-discover event subpaths (2026-10-04) ─────────────
+  // Probar 12 kända event-subpaths per source och uppdaterar source-filer
+  // med alternativa URLs. ~10 min runtime (216 sources × 12 paths × 0.5s).
+  ...((!skipSubpathDiscovery) ? [{
+    name: 'subpath-discovery',
+    cmd: 'node',
+    args: ['scripts/discover-subpaths.mjs', '--max-sources=999'],
+  }] : []),
+
+  // ── P0-DirectJSONLD: Generic direct JSON-LD extractor (2026-10-04) ──
+  // För källor med JSON-LD på landing-sidan (utan sitemap).
+  // 10 workers, ~5 min runtime för 196 sources.
+  ...((!skipDirectJsonld) ? [{
+    name: 'direct-jsonld',
+    cmd: 'node',
+    args: ['scripts/ingest-direct-jsonld.mjs'],
+  }] : []),
+
+  // ── P0-Livespot: Livespot.se API (2026-10-04) ───────────────────────
+  // 5,494 Stockholm events via öppet REST-API.
+  // Kör 6 pages = 600 events per natt (rimlig batch, dedup via ev.id).
+  ...((!skipLivespotIngest) ? [{
+    name: 'livespot-stockholm',
+    cmd: 'node',
+    args: ['scripts/ingest-livespot-stockholm.mjs', '--pages=6'],
+  }] : []),
+
   {
     name: 'C-htmlGate',
     cmd: 'npx',
@@ -200,6 +270,49 @@ const steps: Array<{ name: string; cmd: string; args: string[] }> = [
     name: 'etag-refresh',
     cmd: 'npx',
     args: ['tsx', '02-Ingestion/tools/etagRefresh.ts', '--limit', String(effectiveLimit)],
+  }] : []),
+
+  // ── P3-API-discovery (2026-10-04) ────────────────────────────────────
+  // Hidden API discovery — körs veckovis (kontrollerar .last-discovery timestamp).
+  // Upptäcker wp-json/tribe/events/v1, __NEXT_DATA__, GraphQL, etc.
+  // Skapar data/api-discovery-results.jsonl som tribe-fetcher konsumerar.
+  ...((!skipApiDiscovery) ? [{
+    name: 'api-discovery',
+    cmd: 'node',
+    args: ['scripts/discover-hidden-apis.mjs', '--max-age-days=7'],
+  }] : []),
+
+  // ── P1-Luma: Luma.com Stockholm events (2026-10-04) ──────────────────
+  // Tech meetups, hackathons, workshops via Scrapingbee.
+  // 5 kategorier × 1 req / 3s = ~20s runtime.
+  ...((!skipLumaIngest) ? [{
+    name: 'luma-stockholm',
+    cmd: 'node',
+    args: ['scripts/ingest-luma-stockholm.mjs'],
+  }] : []),
+
+  // ── P2-RA: Resident Advisor Stockholm (2026-10-04) ───────────────────
+  // Electronic music events. Kräver Scrapingbee för DataDome-bypass.
+  ...((!skipRaIngest) ? [{
+    name: 'ra-stockholm',
+    cmd: 'node',
+    args: ['scripts/ingest-ra-stockholm.mjs'],
+  }] : []),
+
+  // ── P2-Posh: Posh.vip Stockholm (2026-10-04) ────────────────────────
+  // Social/party events. Kan kräva Scrapingbee för SPA-rendering.
+  ...((!skipPoshIngest) ? [{
+    name: 'posh-stockholm',
+    cmd: 'node',
+    args: ['scripts/ingest-posh-stockholm.mjs'],
+  }] : []),
+
+  // ── P2-Reddit: r/Stockholm events (2026-10-04) ───────────────────────
+  // Community event cross-posts. Kräver Scrapingbee för anti-bot bypass.
+  ...((!skipRedditIngest) ? [{
+    name: 'reddit-stockholm',
+    cmd: 'node',
+    args: ['scripts/ingest-reddit-stockholm.mjs'],
   }] : []),
 ];
 
