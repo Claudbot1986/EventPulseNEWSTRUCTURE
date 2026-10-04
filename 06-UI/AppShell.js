@@ -681,7 +681,11 @@ const styles = StyleSheet.create({
     marginBottom: 24,
   },
   splashText: {
-    color: '#F7F2EA',
+    // 2026-10-04 — Rent vitt (#FFFFFF) på svart botten, inte den cream/off-
+    // white (#F7F2EA) som andra ytor i appen använder. Användaren vill ha
+    // tydlig EventPulse-branding på startscreen: logga + "EventPulse" i
+    // vitt på svart, ingen cream-ton.
+    color: '#FFFFFF',
     fontSize: 34,
     fontWeight: '800',
     letterSpacing: -1,
