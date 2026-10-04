@@ -118,3 +118,8 @@ TEMP/
 
 # Supabase auth-config snapshots (innehåller SMTP-lösenord) — aldrig commita
 06-UI/scripts/email-templates/auth-config-backup-*.json
+
+# Local runtime caches & test artifacts (data/, test-results/)
+/data/
+/test-results/
+/06-UI/test-results/
