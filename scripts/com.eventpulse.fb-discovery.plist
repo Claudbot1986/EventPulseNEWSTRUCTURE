@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!--
+  com.eventpulse.fb-discovery.plist — Daglig FB Events discovery via Apify.
+
+  Kör kl 03:30 varje natt (efter ordinarie ingestion kl 02:30).
+  Re-pollar alla known-working FB-sidor från data/fb-pages-working.jsonl
+  och persisterar nya events via dedup_hash.
+
+  Spegel: scripts/cron/runFbDiscovery.sh → scripts/fb-discovery-engine.mjs
+
+  Status: runtime/fb-discovery/daily-YYYY-MM-DD.log per körning.
+
+  Install:
+    cp scripts/com.eventpulse.fb-discovery.plist ~/Library/LaunchAgents/
+    launchctl load ~/Library/LaunchAgents/com.eventpulse.fb-discovery.plist
+
+  Verifiera (kör nu):
+    launchctl start com.eventpulse.fb-discovery
+    tail -f runtime/fb-discovery/daily-$(date +%Y-%m-%d).log
+
+  Uninstall:
+    launchctl unload ~/Library/LaunchAgents/com.eventpulse.fb-discovery.plist
+    rm ~/Library/LaunchAgents/com.eventpulse.fb-discovery.plist
+
+  Kostnad: ~$0.50/dag för 22 working pages ($15/da mánad). Hela $19-kapaciteten
+  används inom 5-7 dagar, därefter paus tills 1:a i nästa månad.
+-->
+<plist version="1.0">
+<dict>
+  <key>Label</key>
+  <string>com.eventpulse.fb-discovery</string>
+
+  <key>ProgramArguments</key>
+  <array>
+    <string>/bin/bash</string>
+    <string>/Users/claudgashi/EventPulse/scripts/cron/runFbDiscovery.sh</string>
+  </array>
+
+  <key>WorkingDirectory</key>
+  <string>/Users/claudgashi/EventPulse</string>
+
+  <!-- Kör kl 03:30 varje dag (efter ingestion kl 02:30) -->
+  <key>StartCalendarInterval</key>
+  <dict>
+    <key>Hour</key>
+    <integer>3</integer>
+    <key>Minute</key>
+    <integer>30</integer>
+  </dict>
+
+  <key>StandardOutPath</key>
+  <string>/Users/claudgashi/EventPulse/runtime/fb-discovery.out.log</string>
+  <key>StandardErrorPath</key>
+  <string>/Users/claudgashi/EventPulse/runtime/fb-discovery.err.log</string>
+
+  <key>EnvironmentVariables</key>
+  <dict>
+    <key>PROJECT_ROOT</key>
+    <string>/Users/claudgashi/EventPulse</string>
+    <key>PATH</key>
+    <string>/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:/Users/claudgashi/.local/bin</string>
+  </dict>
+</dict>
+</plist>
