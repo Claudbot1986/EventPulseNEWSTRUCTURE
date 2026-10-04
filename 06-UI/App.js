@@ -18,6 +18,19 @@ import Toast from './components/Toast';
 import PushPromptModal from './components/PushPromptModal';
 import UtforskaFilterDropdown from './components/UtforskaFilterDropdown';
 import UtforskaSection from './components/UtforskaSection';
+// 2026-10-04 — ⋯-meny för NewEventCard:s more-knapp i DetailsScreen.
+// Återanvänder samma Spotify-stil bottom-sheet som listan.
+import UtforskaEventActionSheet from './components/UtforskaEventActionSheet';
+// 2026-10-04 — ny eventkorts-design. NewEventCard ersätter den gamla
+// detaljskärmens hero+intro+knappar-stack med en kompakt hero-bild +
+// action-ikoner (♡ 📍 ◷ ↗ ⋯). Samma spara/kalender/dela-flöden som
+// tidigare — bara i ikon-form istället för stora text-knappar.
+import NewEventCard from './components/NewEventCard';
+// 2026-10-04 — dateLine-formatet ("LÖR 26 SEP") i NewEventCard:s top-rad.
+// Samma helper som rowMapping.js mapAgentEventToRow använder för listan,
+// så formatet blir identiskt oavsett om eventet når användaren via Hem-
+// flödet eller via Utforska-rullistan.
+import { formatSwedishDayPrefix } from './components/rowMapping';
 import { enableDinHelgPush, isPushRuntimeAvailable } from './services/pushTokenClient';
 import { analyticsClient } from './services/analyticsClient';
 import ProfileScreen from './screens/ProfileScreen';
@@ -1481,32 +1494,29 @@ const DIN_HELG_PUSH_PROMPT_KEY = 'eventpulse.din_helg_push_prompt_shown';
 
 function DetailsScreen({ event, onBack }) {
   const { t, language } = useI18n();
-  const [ctaError, setCtaError] = useState(null);
-  const [saved, setSaved] = useState(false);
-  const [dismissed, setDismissed] = useState(false);
-  const [calendarError, setCalendarError] = useState(null);
-  const [calendarBusy, setCalendarBusy] = useState(false);
-  // T0061 — share-session state. `shareError` carries network/permission
-  // warnings after the OS Share-sheet closes (best-effort display).
-  const [shareBusy, setShareBusy] = useState(false);
-  const [shareError, setShareError] = useState(null);
-  // S2 (2026-09-20): save bounce + toast. saveScale animates the save button;
-  // saveToast holds the message while the Toast is mounted (null = hidden).
-  const saveScale = useRef(new Animated.Value(1)).current;
+  // 2026-10-04 — refaktorerad till NewEventCard. Sparat-läge hanteras
+  // internt i kortet (♡ ↔ ♥) — DetailsScreen behöver bara veta när
+  // användaren togglar för att utlösa analytics, /agent/feedback och
+  // toast (samma kedja som tidigare). Old state som hörde till de
+  // borttagna knapparna (ctaError, dismissed, calendarBusy/Error,
+  // shareBusy/Error, saveScale-bounce) är borta — motsvarande actions
+  // ligger nu i ikonraden och ⋯-menyn.
   const [saveToast, setSaveToast] = useState(null);
-  // S5 (2026-09-20): Din helg push pre-permission prompt, shown once per
-  // install after the FIRST save (research: ask in context, tease the
-  // notification, then burn the one-shot OS dialog only on accept). Hidden
-  // entirely in runtimes where push cannot work (Expo Go, simulator).
+  // S5: Din helg push pre-permission prompt efter första sparning.
   const [pushPromptVisible, setPushPromptVisible] = useState(false);
-  // AI image rollout (Utforska, 2026-08-26) — see EventItem above.
+  // 2026-10-04 — ⋯-meny (UtforskaEventActionSheet) för open_tickets /
+  // follow_venue / follow_artist / reject_*. sheetEvent håller koll på
+  // vilket event menyn visar. Spar- och kalender-actions i sheeten är
+  // duplicerade med kortets ikoner och hanteras som no-op där
+  // (sheet-save redundans — NewEventCard:s ♡ är auktoritativ).
+  const [sheetEvent, setSheetEvent] = useState(null);
+  // AI image rollout (Utforska, 2026-08-26) — hook returnerar rätt
+  // bild-URL efter lazy / pre-baked / original / tom-box-reglerna.
   const { uri } = useAiImageUrl(event);
 
-  // S4 dwell: measure how long the details view stays open. The clock
-  // (re)starts on mount / event change; on unmount or back we record the
-  // elapsed time as interaction='dwell' — but only at >= DWELL_MIN_MS so
-  // accidental taps through the list don't pollute the signal. Best-effort:
-  // recordEventInteraction never throws (auth/network return warnings).
+  // S4 dwell: mät hur tid-länge detaljvy:n är öppen. Spelar in som
+  // interaction='dwell' vid >= DWELL_MIN_MS så oavsiktlig tap-through
+  // inte smutsar signalen. recordEventInteraction kastar aldrig.
   const dwellStartRef = useRef(Date.now());
   useEffect(() => {
     dwellStartRef.current = Date.now();
@@ -1522,70 +1532,7 @@ function DetailsScreen({ event, onBack }) {
     };
   }, [event?.id]);
 
-  const handleOpenUrl = async () => {
-    if (!event.url) {
-      return;
-    }
-    if (event?.id) {
-      void analyticsClient.eventClick(event.id, 'external');
-      // Fas C.3 (2026-09-23): the ticket click is the strongest taste signal
-      // (WSJ/Chaslot: the action closest to real user value) — record it as
-      // an `outbound` interaction so buildUserSignal's outbound prior can
-      // boost this category in the ranked Utforska feed. Best-effort: a
-      // failed write must never block opening the link, and guests are
-      // silently skipped client-side (auth warning, no fetch).
-      recordEventInteraction({
-        eventId: event.id,
-        interaction: 'outbound',
-      }).catch(() => {});
-    }
-
-    // 2026-09-26 (link-health v2): trasiga events filtreras bort redan på
-    // server-nivå (events_public-viewn), så de når aldrig hit. Vi behöver
-    // ingen klient-side warning längre — UI:t visar bara fungerande events.
-
-    try {
-      const canOpen = await Linking.canOpenURL(event.url);
-      if (!canOpen) {
-        setCtaError(t('details.linkErrorDevice'));
-        return;
-      }
-
-      await Linking.openURL(event.url);
-      setCtaError(null);
-    } catch {
-      setCtaError(t('details.linkErrorNow'));
-    }
-  };
-
-  const handleToggleSave = () => {
-    if (!event?.id) return;
-    const next = !saved;
-    setSaved(next);
-    void analyticsClient.eventSave(event.id, next ? 'save' : 'unsave');
-    // S2 micro-feedback (2026-09-20): small bounce + taste-learning toast on
-    // SAVE — unsave stays silent (no celebratory copy for removing a save).
-    if (next) {
-      Animated.sequence([
-        Animated.timing(saveScale, { toValue: 1.12, duration: 120, useNativeDriver: true }),
-        Animated.spring(saveScale, { toValue: 1, friction: 3, useNativeDriver: true }),
-      ]).start();
-      setSaveToast(t('toast.savedTaste'));
-    }
-    // NOW#2 fix: persist the save to /agent/feedback so the guest's taste
-    // (and Hem → Sparade) actually sees it. Best-effort, never throws; the
-    // 'auth' warning path is unreachable here because AppShell's bootstrap
-    // guarantees a session (anonymous counts) before this tab renders.
-    // NOTE: un-save has no server interaction yet — toggling off stays
-    // UI-local (analytics-only), tracked as a follow-up gap.
-    if (next) {
-      recordEventInteraction({ eventId: event.id, interaction: 'save' }).catch(() => {});
-      void maybePromptDinHelgPush();
-    }
-  };
-
-  // S5: after the first save, offer the weekly Din helg push — once per
-  // install, only when push can actually run in this runtime.
+  // S5: första sparning → erbjud Din helg push (en-gång per install).
   const maybePromptDinHelgPush = useCallback(async () => {
     try {
       const shown = await getItem(DIN_HELG_PUSH_PROMPT_KEY);
@@ -1593,7 +1540,7 @@ function DetailsScreen({ event, onBack }) {
       if (!isPushRuntimeAvailable()) return;
       setPushPromptVisible(true);
     } catch (_err) {
-      // Storage hiccup — skip the prompt rather than nag on every save.
+      // Storage-hicka — skippa prompten istället för att irritera.
     }
   }, []);
 
@@ -1601,10 +1548,7 @@ function DetailsScreen({ event, onBack }) {
     setPushPromptVisible(false);
     try {
       await setItem(DIN_HELG_PUSH_PROMPT_KEY, '1');
-    } catch (_err) {
-      // Best-effort — worst case the prompt reappears once after reinstall.
-    }
-    // Outcome stays silent: the Profile toggle reflects the stored state.
+    } catch (_err) { /* best-effort */ }
     await enableDinHelgPush();
   }, []);
 
@@ -1612,65 +1556,73 @@ function DetailsScreen({ event, onBack }) {
     setPushPromptVisible(false);
     try {
       await setItem(DIN_HELG_PUSH_PROMPT_KEY, '1');
-    } catch (_err) {
-      // Best-effort.
-    }
+    } catch (_err) { /* best-effort */ }
   }, []);
 
-  const handleDismiss = () => {
-    if (!event?.id || dismissed) return;
-    setDismissed(true);
-    void analyticsClient.eventDismiss(event.id);
-    // Tiny delay so the analytics request fires before the screen unmounts.
-    setTimeout(() => onBack(), 250);
-  };
+  // NewEventCard:s ♡-toggle → triggar denna med `next`. Samma
+  // effekt-kedja som tidigare: analytics + recordEventInteraction +
+  // toast + push-prompt (sistnämnda bara vid save, inte unsave).
+  const handleSaveToggle = useCallback((next) => {
+    if (!event?.id) return;
+    void analyticsClient.eventSave(event.id, next ? 'save' : 'unsave');
+    if (next) {
+      setSaveToast(t('toast.savedTaste'));
+      recordEventInteraction({ eventId: event.id, interaction: 'save' }).catch(() => {});
+      void maybePromptDinHelgPush();
+    }
+  }, [event?.id, maybePromptDinHelgPush, t]);
 
-  // T0058 — calendar export. Phase 1 minimum viable: fetch the .ics from
-  // the agent and open it via Linking so the OS prompts the user. iOS
-  // Safari offers "Add to Calendar" on .ics downloads; on Android the user
-  // can pick a calendar app. Apple Wallet .pkpass is deferred (T0066) —
-  // requires signing certs beyond MVP scope.
+  // Öppna ticket-URL (används av ⋯-menyns "Öppna biljetter"-action —
+  // den primära CTA-knappen är borta i den nya layouten).
+  const handleOpenUrl = useCallback(async () => {
+    if (!event.url) return;
+    if (event?.id) {
+      void analyticsClient.eventClick(event.id, 'external');
+      recordEventInteraction({ eventId: event.id, interaction: 'outbound' }).catch(() => {});
+    }
+    try {
+      const canOpen = await Linking.canOpenURL(event.url);
+      if (canOpen) await Linking.openURL(event.url);
+    } catch { /* silent — sheet stänger ändå */ }
+  }, [event?.id, event?.url]);
+
+  // "Inte intresserad" — markerar eventet som ovillt och backar ut.
+  const handleDismiss = useCallback(() => {
+    if (!event?.id) return;
+    void analyticsClient.eventDismiss(event.id);
+    setSheetEvent(null);
+    setTimeout(() => onBack(), 250);
+  }, [event?.id, onBack]);
+
+  // NewEventCard:s ◷-knapp → kalender. Best-effort; tyst vid nätverksfel.
+  // (Toast istället för inline error — samma princip som Hem.)
   const handleAddToCalendar = useCallback(async () => {
-    if (!event?.id || calendarBusy) return;
-    setCalendarBusy(true);
-    setCalendarError(null);
+    if (!event?.id) return;
     try {
       const userId = await getOrCreateAnonUserId();
       const { url } = await fetchEventIcs(event.id, userId);
       const canOpen = await Linking.canOpenURL(url);
-      if (!canOpen) {
-        setCalendarError(t('details.calendarErrorDevice'));
-        return;
+      if (canOpen) {
+        await Linking.openURL(url);
+      } else {
+        setSaveToast(t('details.calendarErrorDevice'));
       }
-      await Linking.openURL(url);
     } catch (err) {
       const msg = err instanceof Error ? err.message : 'unknown';
-      setCalendarError(t('details.calendarErrorFetch', { msg }));
-    } finally {
-      setCalendarBusy(false);
+      setSaveToast(t('details.calendarErrorFetch', { msg }));
     }
-  }, [event?.id, calendarBusy, t]);
+  }, [event?.id, t]);
 
-  // T0061 / MVP-gap §78 — share-event deep-link.
-  // Calls POST /agent/share with the event title (cheap, discoverable), then
-  // opens the native Share-sheet with a `eventpulse://s/{hash}` URL. The
-  // recipient's app resolves the hash against GET /s/:hash and routes to
-  // either the agent (query) or this Detail screen (single event).
+  // NewEventCard:s ↗-knapp → dela. Samma shareSession + native Share-sheet
+  // som tidigare. User-cancellation är tyst (native stänger utan error).
   const handleShare = useCallback(async () => {
-    if (!event?.id || shareBusy) return;
-    setShareBusy(true);
-    setShareError(null);
+    if (!event?.id) return;
     try {
       const title = (event.title ?? t('details.shareEventFallback')).slice(0, 200);
-      // The share `query` is wire data (an agent prompt), not UI copy — it
-      // stays Swedish regardless of UI language.
       const venue = getVenueLabel(event) || 'Stockholm';
       const query = `${title} på ${venue}`;
       const res = await shareSession({ query, eventIds: [event.id] });
-      if (!res.ok) {
-        setShareError(t('details.shareError', { warning: res.warning }));
-        return;
-      }
+      if (!res.ok) return;
       try {
         await Share.share({
           message: t('details.shareMessage', { title, url: res.url }),
@@ -1680,27 +1632,76 @@ function DetailsScreen({ event, onBack }) {
         void analyticsClient.eventShare?.(event.id, 'share');
       } catch (err) {
         const msg = err instanceof Error ? err.message : 'unknown';
-        // User-cancellation is expected — surface no error for it.
         if (!/user did not share|dismissedAction/i.test(msg)) {
-          setShareError(t('details.shareErrorOpen', { msg }));
+          // silent — sheet stänger ändå
         }
       }
-    } finally {
-      setShareBusy(false);
-    }
-  }, [event?.id, event?.title, event?.venue_name, shareBusy, t]);
+    } catch { /* silent */ }
+  }, [event?.id, event?.title, event?.venue_name, t]);
 
-  const venue = getVenueLabel(event);
-  const area = getAreaLabel(event);
-  const price = formatPrice(event, t);
-  // 2026-10-02 — UI-fallback (5.1): hämta description från description-,
-  // description_sv- eller description_en-fältet, eller bygg muted fallback
-  // med källans namn så "Om eventet"-sektionen aldrig försvinner tyst.
-  const detailsDescText = getDetailsDescription(event);
-  const detailsDescFallback = getDetailsDescriptionFallback(event, t, {
+  // 2026-10-04 — Normalisera DetailsScreen-event till UtforskaSection:s
+  // row-shape så UtforskaEventActionSheet (sheet för ⋯-knappen) kan
+  // rendera samma åtgärder som i listan. sheetEvent sätts av NewEventCard:s
+  // onMore och konsumeras av sheeten här.
+  const sheetRowShape = useMemo(() => {
+    if (!sheetEvent) return null;
+    const subtitleParts = [];
+    const datePrefix = formatSwedishDayPrefix(sheetEvent.date, language);
+    if (datePrefix) subtitleParts.push(datePrefix);
+    if (sheetEvent.time) subtitleParts.push(sheetEvent.time);
+    const venueName = sheetEvent.venue_name || sheetEvent.venue || null;
+    const areaName = sheetEvent.area || sheetEvent.city || null;
+    if (venueName) subtitleParts.push(venueName);
+    if (areaName) subtitleParts.push(areaName);
+    return {
+      id: sheetEvent.id,
+      title: sheetEvent.title,
+      imageUrl: sheetEvent.imageUrl || sheetEvent.image_url,
+      subtitleParts,
+      hasTickets: Boolean(sheetEvent.hasExternalLink),
+      venueName,
+      artistName: null,
+      category: sheetEvent.category,
+      saved: false,
+    };
+  }, [sheetEvent, language]);
+
+  // sheetAction — dispatch för UtforskaEventActionSheet:s actionId.
+  // Spara/kalender/dela i sheeten ignoreras (redundanta med kortets
+  // ikoner). open_tickets → URL. reject_not_interested → dismiss + back.
+  const handleSheetAction = useCallback((actionId) => {
+    if (actionId === 'open_tickets') {
+      handleOpenUrl();
+      setSheetEvent(null);
+      return;
+    }
+    if (actionId === 'reject_not_interested') {
+      handleDismiss();
+      return;
+    }
+    // save / add_calendar / share / remind / follow_* / reject_less_category
+    // → UI-stubbar idag (kortets ikoner är auktoritativa för save/kalender/dela).
+  }, [handleOpenUrl, handleDismiss]);
+
+  // NewEventCard-formatering. dateLine = "LÖR 26 SEP · 20:00", meta =
+  // "Venue · Area". Härled från event.date + event.time / venue_name / area.
+  const dateLine = useMemo(() => {
+    const datePart = formatSwedishDayPrefix(event.date, language);
+    const timePart = event.time || null;
+    return [datePart, timePart].filter(Boolean).join(' · ') || null;
+  }, [event.date, event.time, language]);
+  const meta = useMemo(() => {
+    const venue = event.venue_name || event.venue || null;
+    const area = event.area || event.city || null;
+    return [venue, area].filter(Boolean).join(' · ') || null;
+  }, [event.venue, event.venue_name, event.area, event.city]);
+  // 2026-10-02 — UI-fallback (5.1): använd samma description-helper som
+  // Hem-flödings så preview-raden aldrig försvinner tyst vid dataglapp.
+  const preview = getDetailsDescription(event) || getDetailsDescriptionFallback(event, t, {
     formatProviderLabel: (k) => formatProviderLabel(k, t),
     unknownLabel: t('source.unknown'),
   });
+  const badge = event.category ? String(event.category).toUpperCase().slice(0, 12) : null;
 
   return (
     <SafeAreaView style={styles.detailsContainer}>
@@ -1709,137 +1710,34 @@ function DetailsScreen({ event, onBack }) {
           <Text style={styles.backButtonText}>{`< ${t('common.back')}`}</Text>
         </TouchableOpacity>
       </View>
-      <ScrollView style={styles.detailsContent} showsVerticalScrollIndicator={false}>
-        {uri ? (
-          // AI stamp (200×48 at top=740) lives inside cover-crop frame.
-          <Image source={{ uri }} style={styles.detailsImage} resizeMode="cover" />
-        ) : (
-          // Tom enhetlig box istället för text — UI ska INTE avslöja BFL-status.
-          <View style={styles.detailsImageFallback} />
-        )}
-        
-        <View style={styles.detailsIntro}>
-          <CategoryBadge category={event.category} />
-          <Text style={styles.detailsTitle}>{event.title}</Text>
-          {price && <Text style={styles.detailsPrice}>{price}</Text>}
-          {event.hasExternalLink ? (
-            <>
-              <TouchableOpacity
-                style={styles.detailsPrimaryCta}
-                onPress={handleOpenUrl}
-                activeOpacity={0.8}
-                accessibilityRole="button"
-                accessibilityLabel={event.externalLinkLabel || getCtaText(event.source, t)}
-              >
-                <Text style={styles.ctaButtonText}>{event.externalLinkLabel || getCtaText(event.source, t)}</Text>
-              </TouchableOpacity>
-              {ctaError && <Text style={styles.ctaErrorText}>{ctaError}</Text>}
-            </>
-          ) : (
-            <View style={styles.detailsPrimaryCtaUnavailable}>
-              <Text style={styles.ctaUnavailableText}>{t('details.noExternalLink')}</Text>
-            </View>
-          )}
-
-          <View style={styles.detailsActionRow}>
-            <Animated.View style={{ flex: 1, transform: [{ scale: saveScale }] }}>
-              <TouchableOpacity
-                style={[styles.detailsActionButton, saved && styles.detailsActionButtonActive]}
-                onPress={handleToggleSave}
-                activeOpacity={0.7}
-                accessibilityRole="button"
-                accessibilityState={{ selected: saved }}
-                accessibilityLabel={saved ? t('common.removeSaved') : t('common.saveEvent')}
-              >
-                <Text style={[styles.detailsActionText, saved && styles.detailsActionTextActive]}>
-                  {saved ? t('common.saved') : t('common.save')}
-                </Text>
-              </TouchableOpacity>
-            </Animated.View>
-            <TouchableOpacity
-              style={[styles.detailsActionButton, styles.detailsActionButtonDismiss]}
-              onPress={handleDismiss}
-              activeOpacity={0.7}
-              disabled={dismissed}
-              accessibilityRole="button"
-              accessibilityLabel={t('common.dismissEvent')}
-            >
-              <Text style={[styles.detailsActionText, styles.detailsActionTextDismiss]}>
-                {dismissed ? t('common.dismissed') : t('common.dismiss')}
-              </Text>
-            </TouchableOpacity>
-          </View>
-          <TouchableOpacity
-            style={[styles.detailsActionButton, styles.detailsActionButtonFull, calendarBusy && styles.detailsActionButtonDisabled]}
-            onPress={handleAddToCalendar}
-            activeOpacity={0.7}
-            disabled={calendarBusy}
-            accessibilityRole="button"
-            accessibilityLabel={t('details.calendarA11y')}
-          >
-            <Text style={[styles.detailsActionText, calendarBusy && styles.detailsActionTextDisabled]}>
-              {calendarBusy ? t('details.calendarBusy') : t('details.calendar')}
-            </Text>
-          </TouchableOpacity>
-          {calendarError ? <Text style={styles.ctaErrorText}>{calendarError}</Text> : null}
-
-          {/* T0061 — share deep-link. Sibling of "Lägg till i kalender"
-              since both produce outbound intents. */}
-          <TouchableOpacity
-            style={[styles.detailsActionButton, styles.detailsActionButtonFull, shareBusy && styles.detailsActionButtonDisabled]}
-            onPress={handleShare}
-            activeOpacity={0.7}
-            disabled={shareBusy}
-            accessibilityRole="button"
-            accessibilityLabel={t('details.shareA11y')}
-          >
-            <Text style={[styles.detailsActionText, shareBusy && styles.detailsActionTextDisabled]}>
-              {shareBusy ? t('details.shareBusy') : t('details.share')}
-            </Text>
-          </TouchableOpacity>
-          {shareError ? <Text style={styles.ctaErrorText}>{shareError}</Text> : null}
-        </View>
-        
-        <View style={styles.detailsSection}>
-          <Text style={styles.detailsLabel}>{t('details.when')}</Text>
-          <Text style={styles.detailsValue}>
-            {event.date ? formatFullDate(event.date, language) : t('common.dateNotSet')}
-          </Text>
-          <Text style={styles.detailsSubvalue}>{formatEventTime(event, t)}</Text>
-        </View>
-        
-        <View style={styles.detailsSection}>
-          <Text style={styles.detailsLabel}>{t('details.where')}</Text>
-          <Text style={styles.detailsValue}>{venue || t('common.venueMissing')}</Text>
-          {area && <Text style={styles.detailsSubvalue}>{area}</Text>}
-          {event.address && <Text style={styles.detailsSubvalue}>{event.address}</Text>}
-        </View>
-        
-        <View style={styles.detailsSection}>
-          <Text style={styles.detailsLabel}>{t('details.about')}</Text>
-          {detailsDescText ? (
-            <Text style={styles.detailsDescription}>{detailsDescText}</Text>
-          ) : (
-            // 2026-10-02 — UI-fallback (5.1). När beskrivning saknas,
-            // visa muted fallback-text med källa namngen. Användaren
-            // förstår då att det är ett dataglapp, inte en app-bugg.
-            <Text
-              style={[styles.detailsDescription, { color: TOKENS.color.textMuted }]}
-            >
-              {detailsDescFallback}
-            </Text>
-          )}
-        </View>
-        
-        <View style={styles.detailsFooter}>
-          <Text style={styles.detailsSource}>{t('source.footer', { source: event.source ? formatProviderLabel(event.source, t) : t('source.unknown') })}</Text>
-        </View>
-      </ScrollView>
+      <NewEventCard
+        id={event.id}
+        title={event.title}
+        badge={badge}
+        dateLine={dateLine}
+        meta={meta}
+        preview={preview}
+        imageSource={uri}
+        // lat/lng från events_public-joint (toDetailsScreenEvent). null →
+        // NewEventCard defaultar till Stockholm centrum (59.3326 / 18.0668).
+        lat={typeof event.lat === 'number' ? event.lat : 59.3326}
+        lng={typeof event.lng === 'number' ? event.lng : 18.0668}
+        onSave={handleSaveToggle}
+        onCalendar={handleAddToCalendar}
+        onShare={handleShare}
+        onMore={() => setSheetEvent(event)}
+      />
       {saveToast ? <Toast message={saveToast} onHide={() => setSaveToast(null)} /> : null}
       <PushPromptModal
         visible={pushPromptVisible}
         onAccept={handlePushPromptAccept}
         onDecline={handlePushPromptDecline}
+      />
+      <UtforskaEventActionSheet
+        visible={sheetEvent !== null}
+        event={sheetRowShape}
+        onClose={() => setSheetEvent(null)}
+        onAction={handleSheetAction}
       />
     </SafeAreaView>
   );

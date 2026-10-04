@@ -17,9 +17,24 @@ import HemStar from './HemStar';
 import HemSupabase from './HemSupabase';
 import MapEventCard from './MapEventCard';
 import MapScreen from './MapScreen';
+import NewEventCard from './NewEventCard';
 import UtforskaSection from './UtforskaSection';
 
 export const COMPONENT_REGISTRY = [
+  // 2026-10-04: NewEventCard ligger överst — mockup för kompaktare
+  // eventkort. Mindre titel, ingen stor bild, inline-ikoner istället för
+  // 48px-knappar, badge inbakad i datumraden. Syfte: maximal densitet av
+  // viktig info, minimalt störd för chrome.
+  {
+    id: 'new-event-card',
+    name: 'NewEventCard',
+    description:
+      'Mockup 2026-10-04 — kompakt eventkort med badge+datum i toppen, ' +
+      'titel+meta på rad 2, valfri preview-rad. Action-knappar är 28×28 ' +
+      'ikoner (♡ ◷ ↗ ⋯) istället för 48px-knappar med text.',
+    Component: NewEventCard,
+    sampleProps: NewEventCard.__sampleProps,
+  },
   {
     id: 'event-pulse-card',
     name: 'EventPulseCard',

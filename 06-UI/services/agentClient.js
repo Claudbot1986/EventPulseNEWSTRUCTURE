@@ -864,6 +864,26 @@ async function fetchFeedOnce({ baseUrl, from, days, mood, limit, offset, categor
       hasExternalLink: Boolean(ticketUrl),
       externalLinkChipLabel: ticketUrl ? uiText('common.externalLink') : undefined,
       externalLinkLabel: ticketUrl ? uiText('common.readMore') : undefined,
+      // 2026-10-04 — venue-geoposition för kart-popup i NewEventCard.
+      // events_public.lat/lng kommer från supabase-joint (per
+      // eventsCanonical.js) — null om venue saknar koordinater eller
+      // events_public-raden är onormaliserad. List-renderaren faller
+      // då tillbaka till Stockholm centrum i NewEventCard (lat=59.3326,
+      // lng=18.0668). coords normaliseras till Number för att undvika
+      // string-koordinater i MapView-pin (orsakar tyst krasch).
+      lat: typeof e.lat === 'number' ? e.lat : (e.lat != null ? Number(e.lat) : null),
+      lng: typeof e.lng === 'number' ? e.lng : (e.lng != null ? Number(e.lng) : null),
+      // 2026-10-04 — description pass-through. Utan detta tappar
+      // DetailsScreen preview-raden även när events_public har en
+      // beskrivning (t.ex. "Ett av många gratis evenemang på
+      // www.gratisistockholm.nu") — getDetailsDescription()
+      // (06-UI/utils/descriptionFallback.js) läser bara
+      // description/description_sv/description_en, inte source-texten.
+      // Med description-fälten på row-shape flödar de vidare till
+      // toDetailsScreenEvent och NewEventCard-preview-raden fylls.
+      description: typeof e.description === 'string' ? e.description : null,
+      description_sv: typeof e.description_sv === 'string' ? e.description_sv : null,
+      description_en: typeof e.description_en === 'string' ? e.description_en : null,
     };
   });
 
@@ -987,6 +1007,15 @@ export async function fetchRecommendedEvents({ limit = 10, signal, timeoutMs = 1
       image_ai_generated: e.image_ai_generated ?? false,
       image_ai_optout: e.image_ai_optout ?? false,
       source: e.source || 'agent',
+      // 2026-10-04 — description pass-through (samma fix som fetchFeed).
+      // Utan detta visar NewEventCard:s preview-rad enbart fallback-texten
+      // ("Beskrivning saknas — <source>") även när events_public har
+      // description_sv/description_en ifyllda. getDetailsDescription()
+      // läser bara description/description_sv/description_en, inte
+      // source-texten.
+      description: typeof e.description === 'string' ? e.description : null,
+      description_sv: typeof e.description_sv === 'string' ? e.description_sv : null,
+      description_en: typeof e.description_en === 'string' ? e.description_en : null,
       // Rank reasons forwarded so the card renderer can show always-visible
       // "why" chips (Din helg, 2026-09-20). Unknown enums are filtered by
       // resolveReasons — we never substitute a guess. Endpoints without
@@ -1099,6 +1128,15 @@ export async function fetchLiveEvents({
       image_ai_generated: e.image_ai_generated ?? false,
       image_ai_optout: e.image_ai_optout ?? false,
       source: e.source || 'agent',
+      // 2026-10-04 — description pass-through (samma fix som fetchFeed).
+      // Utan detta visar NewEventCard:s preview-rad enbart fallback-texten
+      // ("Beskrivning saknas — <source>") även när events_public har
+      // description_sv/description_en ifyllda. getDetailsDescription()
+      // läser bara description/description_sv/description_en, inte
+      // source-texten.
+      description: typeof e.description === 'string' ? e.description : null,
+      description_sv: typeof e.description_sv === 'string' ? e.description_sv : null,
+      description_en: typeof e.description_en === 'string' ? e.description_en : null,
       // Rank reasons forwarded so the card renderer can show always-visible
       // "why" chips (Din helg, 2026-09-20). Unknown enums are filtered by
       // resolveReasons — we never substitute a guess. Endpoints without
@@ -1624,6 +1662,15 @@ export async function fetchCachedRecommendations({
       image_ai_generated: e.image_ai_generated ?? false,
       image_ai_optout: e.image_ai_optout ?? false,
       source: e.source || 'agent',
+      // 2026-10-04 — description pass-through (samma fix som fetchFeed).
+      // Utan detta visar NewEventCard:s preview-rad enbart fallback-texten
+      // ("Beskrivning saknas — <source>") även när events_public har
+      // description_sv/description_en ifyllda. getDetailsDescription()
+      // läser bara description/description_sv/description_en, inte
+      // source-texten.
+      description: typeof e.description === 'string' ? e.description : null,
+      description_sv: typeof e.description_sv === 'string' ? e.description_sv : null,
+      description_en: typeof e.description_en === 'string' ? e.description_en : null,
       // Rank reasons forwarded so the card renderer can show always-visible
       // "why" chips (Din helg, 2026-09-20). Unknown enums are filtered by
       // resolveReasons — we never substitute a guess. Endpoints without
@@ -1881,6 +1928,15 @@ export async function fetchSavedEvents({ limit = 50, signal, timeoutMs = 12_000 
       image_ai_generated: e.image_ai_generated ?? false,
       image_ai_optout: e.image_ai_optout ?? false,
       source: e.source || 'agent',
+      // 2026-10-04 — description pass-through (samma fix som fetchFeed).
+      // Utan detta visar NewEventCard:s preview-rad enbart fallback-texten
+      // ("Beskrivning saknas — <source>") även när events_public har
+      // description_sv/description_en ifyllda. getDetailsDescription()
+      // läser bara description/description_sv/description_en, inte
+      // source-texten.
+      description: typeof e.description === 'string' ? e.description : null,
+      description_sv: typeof e.description_sv === 'string' ? e.description_sv : null,
+      description_en: typeof e.description_en === 'string' ? e.description_en : null,
       // Rank reasons forwarded so the card renderer can show always-visible
       // "why" chips (Din helg, 2026-09-20). Unknown enums are filtered by
       // resolveReasons — we never substitute a guess. Endpoints without

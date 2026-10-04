@@ -36,6 +36,10 @@ import EventPulseSenaste from '../components/EventPulseSenaste';
 import { useI18n } from '../i18n';
 import { dateNamesFor } from '../i18n/dateNames';
 import { formatLocalTime } from '../services/localTime';
+// 2026-10-04 — Hem-karusellerna ska respektera AI-bild-kontraktet.
+// useAiImageUrl är en pure function (samma regler som DetailsScreen-redan):
+// visar pre-baked AI / library / empty placeholder — ALDRIG original.
+import { useAiImageUrl } from '../hooks/useAiImageUrl';
 
 const TOKENS = {
   color: {
@@ -68,21 +72,31 @@ function pickTitle(event) {
 
 // Pool-poster för Senaste: title, subtitle, imageUrl. imageUrl=null tillåter
 // EventPulseSenasteCard's inbyggda placeholder (View med titel-text).
+//
+// 2026-10-04 — imageUrl-routingen går nu genom useAiImageUrl. Tidigare
+// skickades event.image_url rakt av till kortet, vilket innebar att
+// scrape-originaler (t.ex. Eventbrite-CDN, Facebook-CM) visades i Hem-
+// karusellerna — samma copyright-brott som vi just städade i DB. Hookens
+// regelträd (pre-baked → library → empty) gäller nu även här så Hem-
+// sektionen kan inte längre läcka originalbilder även om DB-kontraktet
+// tillfälligt bryts.
 function toSenasteCard(event, daysShort) {
+  const { uri } = useAiImageUrl(event);
   return {
     id: event.id,
     title: pickTitle(event),
     subtitle: formatSenasteSubtitle(event, daysShort),
-    imageUrl: event.image_url || null,
+    imageUrl: uri,
   };
 }
 
 function toCarouselCard(event, subtitle) {
+  const { uri } = useAiImageUrl(event);
   return {
     id: event.id,
     title: pickTitle(event),
     subtitle,
-    imageUrl: event.image_url || null,
+    imageUrl: uri,
   };
 }
 
@@ -134,6 +148,16 @@ function toDetailsScreenEvent(row) {
     image_ai_optout: row.image_ai_optout === true,
     image_generation_status: row.image_generation_status || null,
     is_free: row.is_free === true,
+    // 2026-10-04 — venue-geoposition för kart-popup i NewEventCard.
+    // agent-flödet / agentClient.js normaliserar redan lat/lng till Number
+    // från events_public-jointen. null → NewEventCard defaultar till
+    // Stockholm centrum.
+    lat: typeof row.lat === 'number' ? row.lat : null,
+    lng: typeof row.lng === 'number' ? row.lng : null,
+    // venue_name / area används av NewEventCard för meta-raden ("Venue · Area").
+    venue_name: row.venue_name || null,
+    area: row.area || row.city || null,
+    address: row.address || null,
   };
 }
 
