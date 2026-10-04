@@ -10,7 +10,7 @@
  */
 
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { View, Text, Image, StyleSheet, Platform, Linking } from 'react-native';
+import { View, Text, StyleSheet, Platform, Linking } from 'react-native';
 import * as SplashScreen from 'expo-splash-screen';
 import { SafeAreaProvider, initialWindowMetrics } from 'react-native-safe-area-context';
 
@@ -57,13 +57,13 @@ const STORAGE_BUDGET_MS = 800;
 // process — the old per-tab App splash (which flashed black on every
 // Utforska open) is gone.
 const SPLASH_MIN_MS = 3000;
-// 2026-10-04 — Konsistent branded startskärm (logga + "EventPulse") på VARJE
-// cold-start. Tidigare visades splashPlaceholder bara under korta
+// 2026-10-04 — Konsistent branded startskärm ("EventPulse" i vitt på svart)
+// på VARJE cold-start. Tidigare visades splashPlaceholder bara under korta
 // loading-states, så när onboarding redan var gjord såg man nästan ingen
-// logga alls — bara den nativa splash-bilden under ~3s, sen tab-trädet.
+// startscreen alls — bara den nativa splash-bilden under ~3s, sen tab-trädet.
 // coldStartDone blir true först när både bootstrap OCH SPLASH_MIN_MS har
-// passerat; tills dess renderas Jordan-LAYOUT-splashen (samma logga + text
-// som native-splashen använder) ovanförhängande kanten i app-flödet.
+// passerat; tills dess renderas startscreenen ("EventPulse"-text på svart)
+// ovanpå app-flödet.
 // På så sätt blir "startscreeen" identisk varje gång appen startas — ingen
 // roulett mellan "iblandet förut splashPlaceholder, ibland inte".
 const COLD_START_MIN_MS = SPLASH_MIN_MS;
@@ -108,9 +108,10 @@ export default function AppShell() {
   const splashHiddenRef = useRef(false);
   // 2026-10-04 — Konsistent branded startskärm: coldStartDone blir true
   // först när både bootstrap OCH COLD_START_MIN_MS har passerat. Detta
-  // gör att splashPlaceholder (logga + "EventPulse") visas varje cold-start,
-  // inte bara sporadiskt under loading-states. Onboarding/auth-flöden
-  // override:ar splashen — den visas bara när inget annat ska visas.
+  // gör att splashPlaceholder ("EventPulse" i vitt på svart) visas varje
+  // cold-start, inte bara sporadiskt under loading-states. Onboarding/
+  // auth-flöden override:ar splashen — den visas bara när inget annat ska
+  // visas.
   const [coldStartDone, setColdStartDone] = useState(false);
   useEffect(() => {
     const id = setTimeout(() => setColdStartDone(true), COLD_START_MIN_MS);
@@ -119,7 +120,7 @@ export default function AppShell() {
   // 2026-10-04 — Synlig "startscreeen" hela tiden: native splash från
   // expo-splash-screen ligger OS-nivå över JS-trädet och täcker vår egen
   // splashPlaceholder. hideSplashNow() gömmer native-splashen OMEDELBART
-  // när JS-trädet är redo, så vår egen logga+text-splash blir den synliga
+  // när JS-trädet är redo, så vår egen text-splash blir den synliga
   // startscreenen. maybeHideSplash behåller SPLASH_MIN_MS-grinden för
   // bakåtkompatibilitet (gamla anropsvägar), men JS-splash-grenen kallar
   // hideSplashNow istället.
@@ -129,12 +130,11 @@ export default function AppShell() {
     SplashScreen.hideAsync().catch(() => {});
   }, []);
   // Hämta native-splashen så fort AppShell har monterat första gången —
-  // splashPlaceholder (logga + "EventPulse") finns redan i JS-trädet (vid
-  // onboardingState=='loading' eller !coldStartDone), så användaren ser vår
-  // startscreen istället för den tomma native-bilden. Utan detta skulle
-  // native-splashen täcka vår splashPlaceholder under hela
-  // SPLASH_MIN_MS-perioden och användaren skulle bara se en logotyp utan
-  // text i 3+ sekunder.
+  // splashPlaceholder ("EventPulse"-text på svart) finns redan i JS-trädet
+  // (vid onboardingState=='loading' eller !coldStartDone), så användaren
+  // ser vår startscreen istället för den tomma native-bilden. Utan detta
+  // skulle native-splashen täcka vår splashPlaceholder under hela
+  // SPLASH_MIN_MS-perioden och användaren skulle inte se texten alls.
   useEffect(() => {
     hideSplashNow();
   }, [hideSplashNow]);
@@ -279,9 +279,9 @@ export default function AppShell() {
   // Splash lifecycle: the native splash was frozen at module level
   // (index.js → preventAutoHideAsync). 2026-10-04 — native splashen döljs
   // nu OMEDELBART vid mount via hideSplashNow (se useEffect ovan om), så
-  // vår egen splashPlaceholder (logga + "EventPulse") är den synliga
-  // startscreenen. maybeHideSplash behålls som no-op-fallback för bakåt-
-  // kompatibilitet (alla call sites kollar splashHiddenRef.current först).
+  // vår egen splashPlaceholder ("EventPulse" i vitt på svart) är den
+  // synliga startscreenen. maybeHideSplash behålls som no-op-fallback för
+  // bakåtkompatibilitet (alla call sites kollar splashHiddenRef.current först).
   // Tidigare höll maybeHideSplash native-splashen i SPLASH_MIN_MS, vilket
   // täckte vår JS-splash — användaren såg bara en tom native-bild i 3s.
   const maybeHideSplash = useCallback(() => {
@@ -492,11 +492,6 @@ export default function AppShell() {
   } else if (onboardingState === 'loading') {
     body = (
       <View style={styles.splashPlaceholder}>
-        <Image
-          source={require('./assets/splash.png')}
-          style={styles.splashLogo}
-          resizeMode="contain"
-        />
         <Text style={styles.splashText}>EventPulse</Text>
       </View>
     );
@@ -505,11 +500,6 @@ export default function AppShell() {
   } else if (userState === 'loading') {
     body = (
       <View style={styles.splashPlaceholder}>
-        <Image
-          source={require('./assets/splash.png')}
-          style={styles.splashLogo}
-          resizeMode="contain"
-        />
         <Text style={styles.splashText}>EventPulse</Text>
       </View>
     );
@@ -545,22 +535,15 @@ export default function AppShell() {
       />
     );
   } else if (!coldStartDone) {
-    // 2026-10-04 — Konsistent branded startskärm (logga + "EventPulse") på
-    // VARJE cold-start. När onboardingState='done', userState='logged_in'/
-    // 'guest' och inga auth-ytor är öppna, renderar vi splashPlaceholder
-    // tills COLD_START_MIN_MS har passerat. Tidigare syntes splashPlaceholder
-    // bara sporadiskt under loading-states — nu är den en pålappning som
-    // återställer "logga all synliga" vaře cold-start. Identiskare bild
-    // varje gång appen startas (behöver inte rollspel av "iblandet förut
-    // splashPlaceholder, ibland inte"). Auth-flöden ovanför override:ar
-    // — splashen visar sig bara när inget annat ska visas.
+    // 2026-10-04 — Konsistent branded startskärm ("EventPulse" i vitt på
+    // svart) på VARJE cold-start. När onboardingState='done',
+    // userState='logged_in'/'guest' och inga auth-ytor är öppna,
+    // renderar vi splashPlaceholder tills COLD_START_MIN_MS har passerat.
+    // 2026-10-04 — Ingen våg-bild, bara text. splashLogo-stilen är borttagen.
+    // Auth-flöden ovanför override:ar — splashen visar sig bara när inget
+    // annat ska visas.
     body = (
       <View style={styles.splashPlaceholder}>
-        <Image
-          source={require('./assets/splash.png')}
-          style={styles.splashLogo}
-          resizeMode="contain"
-        />
         <Text style={styles.splashText}>EventPulse</Text>
       </View>
     );
@@ -675,16 +658,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  splashLogo: {
-    width: 180,
-    height: 180,
-    marginBottom: 24,
-  },
   splashText: {
-    // 2026-10-04 — Rent vitt (#FFFFFF) på svart botten, inte den cream/off-
-    // white (#F7F2EA) som andra ytor i appen använder. Användaren vill ha
-    // tydlig EventPulse-branding på startscreen: logga + "EventPulse" i
-    // vitt på svart, ingen cream-ton.
+    // 2026-10-04 — Rent vitt (#FFFFFF) på svart botten. Tidigare användes
+    // cream/off-white (#F7F2EA) + en pulse-våg-bild (splash.png) ovanför.
+    // Användaren vill ha ren EventPulse-branding: bara text, ingen bild.
     color: '#FFFFFF',
     fontSize: 34,
     fontWeight: '800',
