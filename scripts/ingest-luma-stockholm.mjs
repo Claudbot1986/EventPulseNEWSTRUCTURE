@@ -213,16 +213,26 @@ async function main() {
   }
 
   const rows = future.map((ev) => {
-    const lat = (typeof ev.lat === 'number' && ev.lat !== 0) ? ev.lat : 59.3293;
-    const lng = (typeof ev.lng === 'number' && ev.lng !== 0) ? ev.lng : 18.0686;
+    // 2026-10-05 — null istället för Sergels-torg-fallback.
+    const hasCoord = typeof ev.lat === 'number' && ev.lat !== 0
+                    && typeof ev.lng === 'number' && ev.lng !== 0;
+    const lat = hasCoord ? ev.lat : null;
+    const lng = hasCoord ? ev.lng : null;
     return {
       source: SOURCE_ID,
       title_sv: ev.name,
       title_en: ev.name,
       start_time: ev.startDate,
       end_time: ev.endDate ?? null,
-      location: `POINT(${lng} ${lat})`,
+      location: hasCoord ? `POINT(${lng} ${lat})` : null,
       lat, lng,
+      venue_full_name: ev.venue ?? null,
+      venue_full_address: ev.address ?? null,
+      venue_city: null,
+      venue_lat: lat,
+      venue_lng: lng,
+      venue_url: null,
+      venue_phone: null,
       ticket_url: ev.url,
       status: 'published',
       featured: false,

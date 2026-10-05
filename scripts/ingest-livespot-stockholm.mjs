@@ -87,16 +87,35 @@ async function main() {
     }
 
     const rows = future.map((ev) => {
-      const lat = 59.3293; // default Stockholm
-      const lng = 18.0686;
+      // 2026-10-05 — Använd verklig venue-data från API:t istället för
+      // Sergels-torg-default. Livespot skickar venue-namn (t.ex.
+      // "Entréhallen Nybroplan") + city. lat/lng är null i livespot-svaret
+      // — vi sätter koordinater från vårt venues-register när vi hittar
+      // en match via backfill-venue-geocode.mjs efter denna ingestion.
+      //
+      // Här sparar vi venue_full_name (sant värde från source) och
+      // venue_city. lat/lng lämnas null om inte annars tillgängligt
+      // (livespot saknar koordinater) — backfill-jobb fyller på senare.
+      const venueName = ev.venue ?? null;
+      const venueCity = ev.city ?? null;
+      const lat = null; // backfill-jobb fyller på från venues-tabellen
+      const lng = null;
       return {
         source: SOURCE_ID,
         title_sv: ev.name,
         title_en: ev.name,
         start_time: ev.start_date,
         end_time: ev.end_date ?? null,
-        location: `POINT(${lng} ${lat})`,
+        location: null, // backfill-jobb sätter om match finns
         lat, lng,
+        // 2026-10-05 — verklig venue-data från source-payload.
+        venue_full_name: venueName,
+        venue_full_address: null, // livespot skickar inte address
+        venue_city: venueCity,
+        venue_lat: null,
+        venue_lng: null,
+        venue_url: null,
+        venue_phone: null,
         ticket_url: ev.url ?? null,
         // 2026-10-04 — Droppa scrape-original livespot.se-img vid import.
         // Tidigare sparades ev.image_url rakt av, vilket gjorde livespot-

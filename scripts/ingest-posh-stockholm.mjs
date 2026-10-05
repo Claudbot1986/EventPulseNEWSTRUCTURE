@@ -119,15 +119,25 @@ async function main() {
   if (dryRun || future.length === 0) process.exit(0);
 
   const rows = future.map((ev) => {
-    const lat = 59.3293; // default Stockholm
-    const lng = 18.0686;
+    // 2026-10-05 — Spara verklig venue-data från posh-payload istället
+    // för Sergels-torg-default. POSH skickar venue-namn + address.
+    // lat/lng lämnas null tills backfill-jobb hittar match i venues-tabellen.
     return {
       source: SOURCE_ID,
       title_sv: ev.name, title_en: ev.name,
       start_time: ev.startDate,
       end_time: ev.endDate ?? null,
-      location: `POINT(${lng} ${lat})`,
-      lat, lng,
+      location: null, // backfill-jobb sätter vid match
+      lat: null,
+      lng: null,
+      // 2026-10-05 — verklig venue-data från POSH-source
+      venue_full_name: ev.venue ?? null,
+      venue_full_address: ev.address ?? null,
+      venue_city: 'Stockholm',
+      venue_lat: null,
+      venue_lng: null,
+      venue_url: null,
+      venue_phone: null,
       ticket_url: ev.url,
       status: 'published', featured: false, view_count: 0,
       raw_data: { venue: ev.venue, address: ev.address, fetched_at: new Date().toISOString() },

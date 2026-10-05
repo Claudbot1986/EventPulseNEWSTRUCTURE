@@ -170,8 +170,13 @@ async function fetchCity(cityKey, months, dryRun) {
 
     // Persist with dedup
     const rows = future.map((ev) => {
-      const lat = (typeof ev.lat === 'number' && ev.lat !== 0) ? ev.lat : 59.3293;
-      const lng = (typeof ev.lng === 'number' && ev.lng !== 0) ? ev.lng : 18.0686;
+      // 2026-10-05 — Använd ev.lat/ev.lng om tillgängligt, annars null
+      // (tidigare: Sergels-torg-fallback som var fel för låsta match).
+      // Spara verklig venue-data istället för att kasta den.
+      const hasCoord = typeof ev.lat === 'number' && ev.lat !== 0
+                    && typeof ev.lng === 'number' && ev.lng !== 0;
+      const lat = hasCoord ? ev.lat : null;
+      const lng = hasCoord ? ev.lng : null;
       const startIso = ev.startDate.includes('T') ? ev.startDate : `${ev.startDate}T00:00:00Z`;
       return {
         source: SOURCE_ID,
@@ -179,9 +184,16 @@ async function fetchCity(cityKey, months, dryRun) {
         title_en: ev.name,
         start_time: startIso,
         end_time: ev.endDate ?? null,
-        location: `POINT(${lng} ${lat})`,
-        lat,
-        lng,
+        location: hasCoord ? `POINT(${lng} ${lat})` : null,
+        lat, lng,
+        // 2026-10-05 — verklig venue-data från Eventbrite-payload
+        venue_full_name: ev.venue ?? null,
+        venue_full_address: ev.address ?? null,
+        venue_city: ev.locality ?? 'Stockholm',
+        venue_lat: lat,
+        venue_lng: lng,
+        venue_url: null,
+        venue_phone: null,
         ticket_url: ev.url,
         image_url: typeof ev.image === 'string' ? ev.image : Array.isArray(ev.image) ? ev.image[0] : null,
         status: 'published',
