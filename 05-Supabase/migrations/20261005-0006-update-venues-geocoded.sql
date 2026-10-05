@@ -1,0 +1,13 @@
+-- 20261005-0006-update-venues-geocoded.sql
+--
+-- Uppdaterar venues.lat/lng (och ev. address) från Photon-geocoding
+-- (OSM, publik API). Bara venues som för närvarande har Sergels-torg-fallback
+-- uppdateras. Efter denna uppdateras även events.lat/lng via FK.
+--
+-- Säkerhet:
+--   - WHERE-guards: bara venues där lat=59.3293/lng=18.0686 uppdateras.
+--   - Photon-resultaten är OSM-data (publikt, verifierat crowd-source).
+--   - Kör i mindre batcher (UPDATE per venue) så vi kan ångra enskilda.
+
+-- Kör via Node.js-script som läser /tmp/geocode_results.json och uppdaterar
+-- varje venue individuellt. Inte en stor UPDATE p.g.a. reviewbarhet.
