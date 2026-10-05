@@ -162,8 +162,10 @@ function apifyToRow(ev) {
     endTime = new Date(tsMs).toISOString();
   }
   const title = ev.name ?? 'Untitled';
-  const lat = (typeof ev.latitude === 'number' && ev.latitude !== 0) ? ev.latitude : 59.3293;
-  const lng = (typeof ev.longitude === 'number' && ev.longitude !== 0) ? ev.longitude : 18.0686;
+  // 2026-10-05 — verklig geo från apify istället för Sergels-torg-fallback.
+  // Apify ger latitude/longitude direkt från Facebook-event; null om 0/saknas.
+  const lat = (typeof ev.latitude === 'number' && ev.latitude !== 0) ? ev.latitude : null;
+  const lng = (typeof ev.longitude === 'number' && ev.longitude !== 0) ? ev.longitude : null;
 
   return {
     source: SOURCE_ID,
@@ -176,7 +178,7 @@ function apifyToRow(ev) {
     end_time: endTime || null,
     venue_id: null,
     organizer_id: null,
-    location: `POINT(${lng} ${lat})`,
+    location: (lat != null && lng != null) ? `POINT(${lng} ${lat})` : null,
     lat,
     lng,
     is_free: false,
@@ -187,6 +189,14 @@ function apifyToRow(ev) {
     status: 'published',
     featured: false,
     view_count: ev.attendance_count ?? 0,
+    // 2026-10-05 — verklig venue-data. Apify ger ibland venue-namn + address.
+    venue_full_name: ev.place?.name ?? ev.location?.name ?? null,
+    venue_full_address: ev.place?.address ?? ev.location?.address ?? null,
+    venue_city: ev.place?.city ?? ev.location?.city ?? null,
+    venue_lat: lat,
+    venue_lng: lng,
+    venue_url: null,
+    venue_phone: null,
     raw_data: null,
     dedup_hash: buildDedupHash(title, startTime),
     confidence_score: 55,

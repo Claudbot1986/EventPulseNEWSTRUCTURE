@@ -168,18 +168,30 @@ async function processSource(src, sem, options) {
     }
 
     const inserts = future.map((ev) => {
-      const lat = 59.3293, lng = 18.0686;
+      // 2026-10-05 — verklig venue-data från JSON-LD/HTML-heuristik istället för
+      // Sergels-torg-fallback. lat/lng lämnas null om inte JSON-LD ger geo —
+      // backfill-jobb (backfill-venue-geocode.mjs) slår upp koordinater från
+      // venues-tabellen via fuzzy match på venue_full_name.
+      const hasVenue = !!ev.venue;
       return {
         source: src.slug,
         title_sv: ev.name, title_en: ev.name,
         start_time: ev.startDate,
         end_time: ev.endDate ?? null,
-        location: `POINT(${lng} ${lat})`, lat, lng,
+        location: null, lat: null, lng: null,
         ticket_url: ev.url ?? null,
         image_url: ev.image ?? null,
         description_sv: ev.description,
         description_en: ev.description,
         status: 'published', featured: false, view_count: 0,
+        // 2026-10-05 — verklig venue-data från JSON-LD location.address.
+        venue_full_name: ev.venue,
+        venue_full_address: ev.address ?? null,
+        venue_city: null, // okänt från heuristik
+        venue_lat: null,
+        venue_lng: null,
+        venue_url: null,
+        venue_phone: null,
         raw_data: { venue: ev.venue, address: ev.address, fetched_via: 'event-urls', fetched_at: new Date().toISOString() },
         confidence_score: 65,
         freshness_at: new Date().toISOString(),

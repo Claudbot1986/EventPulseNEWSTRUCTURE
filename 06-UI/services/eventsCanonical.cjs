@@ -9,8 +9,11 @@ const DEFAULT_SUPABASE_URL = 'https://bsllkpvkowwndhhxtlln.supabase.co';
 const DEFAULT_SERVICE_KEY =
   'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJzbGxrcHZrb3d3bmRoaHh0bGxuIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3MzMwMDQzNCwiZXhwIjoyMDg4ODc2NDM0fQ.2BJFgNoS0iP53WuPS_lyjNlHjy11_VLjKmcrhf5Dyis';
 
+// 2026-10-05 — venue_full_* fält tillagda efter migration
+// 20261005-0001-events-venue-full-fields.sql. venue_name prioriteras från
+// venues-tabellen (curated), annars venue_full_name från source-payload.
 const EVENT_SELECT =
-  'id,source,source_id,title_sv,title_en,description_sv,description_en,start_time,end_time,venue_id,lat,lng,is_free,price_min_sek,price_max_sek,ticket_url,image_url,status,category_slug,venues(name,address,city)';
+  'id,source,source_id,title_sv,title_en,description_sv,description_en,start_time,end_time,venue_id,venue_full_name,venue_full_address,venue_city,venue_lat,venue_lng,lat,lng,is_free,price_min_sek,price_max_sek,ticket_url,image_url,status,category_slug,venues(name,address,city)';
 
 function getConfig() {
   return {
@@ -40,9 +43,13 @@ function transformEvent(row) {
   const venue = row.venues || {};
   const title = row.title_sv || row.title_en || 'Untitled';
   const description = row.description_sv || row.description_en || '';
-  const venueName = venue.name || '';
-  const venueAddress = venue.address || '';
-  const city = venue.city || '';
+  // 2026-10-05 — venue-resolution prioritetsordning:
+  //   1. venues.name (curated) — bästa kvalitet
+  //   2. venue_full_name (från source-payload) — fallback om venue_id är null
+  //   3. '' (tom) → UI visar "Plats ej angiven"
+  const venueName = venue.name || row.venue_full_name || '';
+  const venueAddress = venue.address || row.venue_full_address || '';
+  const city = venue.city || row.venue_city || '';
 
   return {
     id: row.id,

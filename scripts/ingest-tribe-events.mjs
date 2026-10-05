@@ -115,10 +115,12 @@ async function fetchOneSource(src, args) {
       const venueName = ev.venue?.venue ?? ev.venue?.name ?? null;
       const address = [ev.venue?.address, ev.venue?.city, ev.venue?.country].filter(Boolean).join(', ') || null;
 
-      // Tribe doesn't expose lat/lng directly. Default to Stockholm if venue exists.
+      // 2026-10-05 — verklig venue-data. Tribe-events-API:t ger venue-namn +
+      // address men INTE lat/lng. Vi lämnar lat/lng null så backfill-jobb
+      // (backfill-venue-geocode.mjs) slår upp koordinater från venues-tabellen
+      // via fuzzy match på venue_full_name. Det är bättre att ha null och rätt
+      // position senare än Sergels-torg-fallback nu.
       const hasVenue = !!venueName;
-      const lat = hasVenue ? 59.3293 : null;
-      const lng = hasVenue ? 18.0686 : null;
 
       return {
         source: slug,
@@ -126,14 +128,25 @@ async function fetchOneSource(src, args) {
         title_en: title,
         start_time: startTime,
         end_time: ev.end_date || null,
-        location: hasVenue ? `POINT(${lng} ${lat})` : null,
-        lat,
-        lng,
+        location: null,
+        lat: null,
+        lng: null,
         ticket_url: ev.url || ev.rest_url || null,
         image_url: null, // tribe often has image in custom field
         status: 'published',
         featured: false,
         view_count: 0,
+        // 2026-10-05 — verklig venue-data från tribe-API:t. venue_full_address
+        // fångar address + city + country (om city/country är separata fält).
+        // venue_full_address är primär (bättre än separata fält om adressen är
+        // komplett).
+        venue_full_name: venueName,
+        venue_full_address: hasVenue ? (ev.venue?.address ?? null) : null,
+        venue_city: ev.venue?.city ?? null,
+        venue_lat: null,
+        venue_lng: null,
+        venue_url: null,
+        venue_phone: null,
         raw_data: {
           venue: venueName,
           address,

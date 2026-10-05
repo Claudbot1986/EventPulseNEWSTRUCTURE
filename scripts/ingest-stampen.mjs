@@ -134,6 +134,14 @@ async function main() {
       status: 'published',
       featured: false,
       view_count: 0,
+      // 2026-10-05 — verklig venue-data. Stampen har fast adress i Gamla Stan.
+      venue_full_name: 'Stampen',
+      venue_full_address: VENUE_ADDR,
+      venue_city: 'Stockholm',
+      venue_lat: VENUE_LAT,
+      venue_lng: VENUE_LNG,
+      venue_url: 'https://stampen.se',
+      venue_phone: null,
       raw_data: {
         venue: 'Stampen',
         address: VENUE_ADDR,

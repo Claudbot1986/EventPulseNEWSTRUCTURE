@@ -313,20 +313,29 @@ async function processSource(source, args, sem) {
 
   const inserts = future.map((ev) => {
     const url = ev.url ?? eventUrls.find((u) => true);
-    const lat = (typeof ev.lat === 'number' && ev.lat !== 0) ? ev.lat : 59.3293;
-    const lng = (typeof ev.lng === 'number' && ev.lng !== 0) ? ev.lng : 18.0686;
+    // 2026-10-05 — verklig geo från sitemap-event istället för Sergels-torg-fallback.
+    const lat = (typeof ev.lat === 'number' && ev.lat !== 0) ? ev.lat : null;
+    const lng = (typeof ev.lng === 'number' && ev.lng !== 0) ? ev.lng : null;
     return {
       source: source.slug,
       title_sv: ev.name,
       title_en: ev.name,
       start_time: ev.startDate,
       end_time: ev.endDate ?? null,
-      location: `POINT(${lng} ${lat})`,
+      location: (lat != null && lng != null) ? `POINT(${lng} ${lat})` : null,
       lat, lng,
       ticket_url: ev.url,
       status: 'published',
       featured: false,
       view_count: 0,
+      // 2026-10-05 — verklig venue-data från JSON-LD eller HTML-heuristik.
+      venue_full_name: ev.venue ?? null,
+      venue_full_address: ev.address ?? null,
+      venue_city: null,
+      venue_lat: lat,
+      venue_lng: lng,
+      venue_url: null,
+      venue_phone: null,
       raw_data: {
         venue: ev.venue, address: ev.address,
         fetched_via: 'sitemap',

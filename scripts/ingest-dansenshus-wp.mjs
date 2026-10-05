@@ -214,6 +214,16 @@ async function main() {
       status: 'published',
       featured: false,
       view_count: 0,
+      // 2026-10-05 — verklig venue-data. Dansens Hus har en fast venue
+      // (Barnhusgatan 12-14), så vi sätter venue_full_* direkt i adapter istället
+      // för att lita till venue_resolve i normalizer.
+      venue_full_name: 'Dansens Hus',
+      venue_full_address: VENUE_ADDR,
+      venue_city: 'Stockholm',
+      venue_lat: VENUE_LAT,
+      venue_lng: VENUE_LNG,
+      venue_url: 'https://dansenshus.se',
+      venue_phone: null,
       raw_data: {
         slug,
         wp_id: post.id,

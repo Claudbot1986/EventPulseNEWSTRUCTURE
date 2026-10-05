@@ -85,12 +85,12 @@ function apifyToRow(ev) {
   const venueName = typeof venue === 'object' ? (venue.name ?? '') : '';
   const venueAddr = typeof venue === 'object' ? (venue.address ?? '') : '';
   const city = typeof venue === 'object' ? (venue.city ?? '') : '';
+  // 2026-10-05 — verklig geo från Apify istället för Sergels-torg-fallback.
+  // null om 0/saknas — backfill-jobb slår upp koordinater från venues.
   const lat = typeof venue === 'object' ? (venue.lat ?? null) : null;
   const lng = typeof venue === 'object' ? (venue.lng ?? null) : null;
-
-  // Stockholm fallback if no coords
-  const finalLat = (typeof lat === 'number' && lat !== 0) ? lat : 59.3293;
-  const finalLng = (typeof lng === 'number' && lng !== 0) ? lng : 18.0686;
+  const finalLat = (typeof lat === 'number' && lat !== 0) ? lat : null;
+  const finalLng = (typeof lng === 'number' && lng !== 0) ? lng : null;
 
   return {
     source: SOURCE_ID,
@@ -103,13 +103,21 @@ function apifyToRow(ev) {
     end_time: endTime,
     venue_id: null,
     organizer_id: null,
-    location: `POINT(${finalLng} ${finalLat})`,
+    location: (finalLat != null && finalLng != null) ? `POINT(${finalLng} ${finalLat})` : null,
     lat: finalLat,
     lng: finalLng,
     is_free: ev.isFree ?? false,
     price_min_sek: null,
     price_max_sek: null,
     ticket_url: ev.ticketUrl ?? ev.url ?? null,
+    // 2026-10-05 — verklig venue-data från apify venue-objektet.
+    venue_full_name: venueName || null,
+    venue_full_address: venueAddr || null,
+    venue_city: city || null,
+    venue_lat: finalLat,
+    venue_lng: finalLng,
+    venue_url: null,
+    venue_phone: null,
     image_url: null, // 2026-10-04 — copyright-skydd. ev.photoUrl är
     //   Facebooks CDN-bild som vi inte har rätt att använda. Lämnas null
     //   → AI-workern genererar (eller biblioteks-fallback). Klienten

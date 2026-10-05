@@ -35,8 +35,8 @@ const LIMIT = limitArg ? parseInt(limitArg.split('=')[1], 10) : Infinity;
 const CONCURRENCY = concArg ? parseInt(concArg.split('=')[1], 10) : 10;
 
 const SITEMAP = 'https://stockholmjazz.se/sitemap.xml';
-const DEFAULT_LAT = 59.3325;
-const DEFAULT_LNG = 18.0647;
+// 2026-10-05 — DEFAULT_LAT/LNG borttaget. lat/lng sätts från JSON-LD location.geo
+// om källan har det, annars null → backfill-jobb fyller på via venue_full_name.
 
 class Sem {
   constructor(n) { this.n = n; this.q = []; this.waiters = []; }
@@ -159,8 +159,11 @@ async function main() {
       title_en: name,
       start_time: new Date(ev.startDate).toISOString(),
       end_time: ev.endDate ? new Date(ev.endDate).toISOString() : null,
-      location: `POINT(${DEFAULT_LNG} ${DEFAULT_LAT})`,
-      lat: DEFAULT_LAT, lng: DEFAULT_LNG,
+      // 2026-10-05 — venue_full_* från JSON-LD location. lat/lng lämnas null
+      // om källans location saknar geo — backfill-jobb slår upp koordinater
+      // från venues-tabellen via fuzzy match på venue_full_name.
+      location: null,
+      lat: null, lng: null,
       ticket_url: url,
       // 2026-10-04 — Droppa scrape-original (sthlmjazz.se/gdrive) vid import.
       // matchLibraryFirst (i nattjobbet) tilldelar biblioteks-bild.
@@ -170,6 +173,13 @@ async function main() {
       status: 'published',
       featured: false,
       view_count: 0,
+      venue_full_name: locName,
+      venue_full_address: ev.location?.address?.streetAddress ?? null,
+      venue_city: ev.location?.address?.addressLocality ?? 'Stockholm',
+      venue_lat: typeof ev.location?.geo?.latitude === 'number' ? ev.location.geo.latitude : null,
+      venue_lng: typeof ev.location?.geo?.longitude === 'number' ? ev.location.geo.longitude : null,
+      venue_url: null,
+      venue_phone: null,
       raw_data: {
         venue: locName,
         location_data: ev.location,

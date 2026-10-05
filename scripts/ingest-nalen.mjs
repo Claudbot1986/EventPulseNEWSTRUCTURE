@@ -223,6 +223,14 @@ async function main() {
       status: 'published',
       featured: false,
       view_count: 0,
+      // 2026-10-05 — verklig venue-data. Nalen har en fast venue-adress.
+      venue_full_name: 'Nalen',
+      venue_full_address: VENUE_ADDR,
+      venue_city: 'Stockholm',
+      venue_lat: VENUE_LAT,
+      venue_lng: VENUE_LNG,
+      venue_url: 'https://www.nalen.com',
+      venue_phone: null,
       raw_data: {
         slug,
         venue: 'Nalen',

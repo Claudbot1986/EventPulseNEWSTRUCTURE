@@ -161,11 +161,23 @@ async function main() {
         title_en: ev.name,
         start_time: ev.startDate,
         end_time: ev.endDate ?? null,
-        location: `POINT(${ev.lng ?? 18.0686} ${ev.lat ?? 59.3293})`,
-        lat: ev.lat ?? 59.3293,
-        lng: ev.lng ?? 18.0686,
+        // 2026-10-05 — verklig venue-data från HTML-extraction istället för
+        // Sergels-torg-fallback. lat/lng null om inte ev.lat/ev.lng kommer
+        // från källan — backfill-jobb slår upp koordinater från venues.
+        location: (ev.lat != null && ev.lng != null) ? `POINT(${ev.lng} ${ev.lat})` : null,
+        lat: ev.lat ?? null,
+        lng: ev.lng ?? null,
         ticket_url: ev.url,
         status: 'published', featured: false, view_count: 0,
+        // 2026-10-05 — verklig venue-data från HTML-heuristik. venue_full_name
+        // och venue_full_address kommer från ev.venue/ev.address.
+        venue_full_name: ev.venue ?? null,
+        venue_full_address: ev.address ?? null,
+        venue_city: null,
+        venue_lat: ev.lat ?? null,
+        venue_lng: ev.lng ?? null,
+        venue_url: null,
+        venue_phone: null,
         raw_data: { venue: ev.venue, address: ev.address, fetched_at: new Date().toISOString(), mode: result.modeUsed },
         confidence_score: 70,
         freshness_at: new Date().toISOString(),

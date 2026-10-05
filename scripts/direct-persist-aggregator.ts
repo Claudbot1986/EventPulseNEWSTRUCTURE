@@ -45,7 +45,9 @@ const supabase = createClient(SUPABASE_URL, SUPABASE_KEY, { auth: { persistSessi
 const EXTRACTED_DIR = path.resolve(__dirname, '..', '03-Queue', '03-extractedevents');
 const CONFIDENCE_SCORE = 60; // Aggregator quality
 const BATCH_SIZE = 50;
-const STOCKHOLM_FALLBACK = { lat: 59.3293, lng: 18.0686 };
+// 2026-10-05 — STOCKHOLM_FALLBACK borttaget. lat/lng sätts från extractor-output
+// (geo.lat/geo.lng) eller null. Backfill-jobb slår upp koordinater från venues
+// baserat på venue_full_name om källan saknar geo.
 
 function buildDedupHash(source: string, title: string, startTime: string): string {
   return createHash('sha256').update(`${source}::${title}::${startTime}`).digest('hex');
@@ -138,9 +140,14 @@ async function ingest(sourceId: string): Promise<void> {
       end_time: endTime,
       venue_id: null,
       organizer_id: null,
-      location: `POINT(${STOCKHOLM_FALLBACK.lng} ${STOCKHOLM_FALLBACK.lat})`, // WKT POINT (lng lat order!) for Stockholm fallback
-      lat: STOCKHOLM_FALLBACK.lat,
-      lng: STOCKHOLM_FALLBACK.lng,
+      // 2026-10-05 — verklig geo från extractor-output (geo.lat/geo.lng) eller
+      // null. Inga Sergels-torg-fallback. Backfill-jobb slår upp koordinater
+      // från venues baserat på venue_full_name om geo saknas.
+      location: (ev.geo?.lat != null && ev.geo?.lng != null)
+        ? `POINT(${ev.geo.lng} ${ev.geo.lat})`
+        : null,
+      lat: ev.geo?.lat ?? null,
+      lng: ev.geo?.lng ?? null,
       is_free: ev.isFree ?? false,
       price_min_sek: ev.priceMin ?? null,
       price_max_sek: ev.priceMax ?? null,
@@ -149,6 +156,14 @@ async function ingest(sourceId: string): Promise<void> {
       status: 'published',
       featured: false,
       view_count: 0,
+      // 2026-10-05 — verklig venue-data från JSON-LD location-fält.
+      venue_full_name: ev.venue ?? null,
+      venue_full_address: ev.address ?? null,
+      venue_city: ev.city ?? null,
+      venue_lat: ev.geo?.lat ?? null,
+      venue_lng: ev.geo?.lng ?? null,
+      venue_url: null,
+      venue_phone: null,
       raw_data: null,
       dedup_hash: dedupHash,
       confidence_score: CONFIDENCE_SCORE,
