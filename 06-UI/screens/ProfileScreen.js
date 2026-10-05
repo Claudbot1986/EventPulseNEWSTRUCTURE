@@ -48,6 +48,7 @@ import {
 import { enableDinHelgPush, disableDinHelgPush } from '../services/pushTokenClient';
 import { useI18n } from '../i18n';
 import { LANGUAGES } from '../i18n/languages';
+import LegalModal from '../components/LegalModal';
 
 const FOLLOW_PUSH_ENABLED_KEY = 'eventpulse.follow_push_enabled';
 const DIN_HELG_PUSH_ENABLED_KEY = 'eventpulse.din_helg_push_enabled';
@@ -227,6 +228,13 @@ export default function ProfileScreen({ onLoggedOut, onOpenLogin }) {
   // consent gate. Without it no usage data can ever leave the app.
   const [analyticsConsent, setAnalyticsConsentState] = useState(false);
   const [analyticsConsentLoaded, setAnalyticsConsentLoaded] = useState(false);
+
+  // Legal modals — privacy policy + terms of service rendered in-app
+  // (Apple App Store reviewers look for this). Content is i18n-driven and
+  // mirrors /privacy/ and /villkor/ on eventpulse.nu. Source of truth for
+  // changes: 02-Operations/2026-10-04-Privacy-LAUNCH-Compliance-Plan.md.
+  const [privacyModalVisible, setPrivacyModalVisible] = useState(false);
+  const [termsModalVisible, setTermsModalVisible] = useState(false);
 
   // Konto — the Supabase auth session (magic link / Apple). Null OR
   // anonymous (NOW#2 bootstrap session with user.is_anonymous) means guest
@@ -813,6 +821,53 @@ export default function ProfileScreen({ onLoggedOut, onOpenLogin }) {
             <ActivityIndicator color={TOKENS.color.accent} />
           )}
         </View>
+
+        {/* Legal links — Apple App Store §5.1.1 review expects in-app access
+          to privacy + terms. i18n strings stay until reverse:true drops the
+          draft banner. */}
+        <Pressable
+          style={({ pressed }) => [
+            styles.row,
+            styles.legalRow,
+            pressed && styles.linkButtonPressed,
+          ]}
+          onPress={() => setPrivacyModalVisible(true)}
+          accessibilityRole="button"
+          accessibilityLabel={t('profile.privacyPolicy')}
+          testID="open-privacy-policy"
+        >
+          <View style={styles.rowTextWrap}>
+            <Text style={styles.rowLabel}>{t('profile.privacyPolicy')}</Text>
+            <Text style={styles.rowDescription}>
+              {t('profile.privacyPolicyDesc')}
+            </Text>
+          </View>
+          <Text style={styles.legalChevron} aria-hidden="true">
+            ›
+          </Text>
+        </Pressable>
+
+        <Pressable
+          style={({ pressed }) => [
+            styles.row,
+            styles.legalRow,
+            pressed && styles.linkButtonPressed,
+          ]}
+          onPress={() => setTermsModalVisible(true)}
+          accessibilityRole="button"
+          accessibilityLabel={t('profile.terms')}
+          testID="open-terms-of-service"
+        >
+          <View style={styles.rowTextWrap}>
+            <Text style={styles.rowLabel}>{t('profile.terms')}</Text>
+            <Text style={styles.rowDescription}>
+              {t('profile.termsDesc')}
+            </Text>
+          </View>
+          <Text style={styles.legalChevron} aria-hidden="true">
+            ›
+          </Text>
+        </Pressable>
       </View>
 
       <LanguageSection t={t} language={language} setLanguage={setLanguage} />
@@ -824,6 +879,17 @@ export default function ProfileScreen({ onLoggedOut, onOpenLogin }) {
       >
         <Text style={styles.linkButtonText}>{t('profile.about')}</Text>
       </Pressable>
+
+      <LegalModal
+        visible={privacyModalVisible}
+        kind="privacy"
+        onClose={() => setPrivacyModalVisible(false)}
+      />
+      <LegalModal
+        visible={termsModalVisible}
+        kind="terms"
+        onClose={() => setTermsModalVisible(false)}
+      />
 
       <Modal
         visible={deleteModalVisible}
@@ -953,6 +1019,17 @@ const styles = StyleSheet.create({
     color: TOKENS.color.textSoft,
     fontSize: TOKENS.fontSize.sm,
     lineHeight: 18,
+  },
+  legalRow: {
+    paddingVertical: TOKENS.space.md,
+    borderTopWidth: 1,
+    borderTopColor: TOKENS.color.border,
+    marginTop: TOKENS.space.md,
+  },
+  legalChevron: {
+    color: TOKENS.color.textMuted,
+    fontSize: 22,
+    paddingHorizontal: TOKENS.space.sm,
   },
   statusLine: {
     color: TOKENS.color.textMuted,

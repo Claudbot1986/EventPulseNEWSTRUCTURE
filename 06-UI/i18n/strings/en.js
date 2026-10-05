@@ -602,4 +602,140 @@ export default {
   'reason.followed_artist.full': 'You follow one of the artists',
   'reason.outbound_personalization.label': 'Your ticket picks',
   'reason.outbound_personalization.full': 'You often click through to tickets for this kind of event',
+
+  // ─── Legal (privacy policy + terms) ─────────────────────────────────────
+  // _legalDraftOnly: '1' = AI draft (banner shown), '0' = reviewed (banner hidden).
+  // Flip to '0' once counsel or the operator has signed off.
+  '_legalDraftOnly': '1',
+
+  'legal.close': 'Close',
+  'legal.lastUpdatedLabel': 'Last updated:',
+  'legal.draftBannerTitle': '⚠️ This is an AI-generated draft',
+  'legal.draftBannerBody':
+    'The text was drafted by an AI based on what the app actually does. It must be reviewed by a responsible person or external counsel before being published as a final policy. EventPulse takes no responsibility for the legal correctness of this text in its current form.',
+  'legal.readOnWebLabel': 'Read the long version with full formatting on the web:',
+  'legal.webMirrorNote':
+    'The same text lives on the website — that copy is updated first, and the in-app version is mirrored at every release.',
+
+  // Profile rows that open the modals
+  'profile.privacyPolicy': 'Privacy Policy',
+  'profile.privacyPolicyDesc': 'Read how we handle your data.',
+  'profile.terms': 'Terms of Service',
+  'profile.termsDesc': 'Rules for using EventPulse.',
+
+  // ─── Privacy policy sections (key order matches LegalModal.js buildSections)
+  'legal.privacy.title': 'Privacy Policy',
+  'legal.privacy.lastUpdated': '2026-10-04 (draft v0.1)',
+
+  'legal.privacy.p1.title': '1. Who we are',
+  'legal.privacy.p1.body':
+    'EventPulse is a personal event agent delivered as an iOS and Android app, developed by [TODO: full company name and corporate ID]. The app helps users in the Stockholm region find concerts, exhibitions and other events based on their own taste. Privacy contact: privacy@eventpulse.nu [TODO: confirm].',
+
+  'legal.privacy.p2a.title': '2.1 Account data (when you create an account)',
+  'legal.privacy.p2a.bullets':
+    'E-mail address (if you sign in via magic link).\nApple ID (if you sign in with Apple — we only receive a unique user id, not your e-mail, if you choose to hide it).\nAuto-generated anonymous user id (if you use the app without signing in).',
+
+  'legal.privacy.p2b.title': '2.2 User-generated data',
+  'legal.privacy.p2b.bullets':
+    'Events you save, tap on or mark as uninteresting.\nVenues and artists you follow.\nPush subscriptions (if you want notifications for specific venues).\nConversations you have with the app\'s built-in event agent.',
+
+  'legal.privacy.p2c.title': '2.3 Device and usage data',
+  'legal.privacy.p2c.bullets':
+    'Device id hashed as a 64-character hex string (anonymous; cannot be traced back to you without our internal salt key).\nLanguage preference.\nLocation (only if you have explicitly granted location access to the app — used to show events near you).',
+
+  'legal.privacy.p2d.title': '2.4 Anonymous statistics (only if you opt in)',
+  'legal.privacy.p2d.body':
+    'The app has a separate opt-in toggle under Profile → Privacy. Statistics include events like tile_tap, event_view, event_save and similar. No personally identifiable information is included. Statistics are retained for up to 30 days.',
+
+  'legal.privacy.p3.title': '3. Why we collect data and on what legal basis',
+  'legal.privacy.p3.body':
+    'Account data and user-generated data are processed to deliver the service you asked for (GDPR Art. 6(1)(b) contract). Push notifications and anonymous statistics are based on your consent (Art. 6(1)(a)), which you can withdraw at any time in the app. Technical logs without PII are processed for security and debugging (Art. 6(1)(f) legitimate interest).',
+
+  'legal.privacy.p4.title': '4. How long we keep the data',
+  'legal.privacy.p4.bullets':
+    'Account data: as long as the account is active. Deleted within 30 days after account deletion.\nUser-generated data: tied to the account; deleted on account deletion via database cascade rules.\nAnonymous statistics: 30 days, then automatically purged.\nPush tokens: until you disable push for a venue or delete your account.',
+
+  'legal.privacy.p5.title': '5. Who we share data with',
+  'legal.privacy.p5.body':
+    'We do not share your personal data with third parties for marketing. Processors: Supabase (authentication, database, file storage — server region [TODO: confirm EU, preferably eu-north-1]); Expo / Apple Push Notification Service (push delivery); OpenAI / Anthropic / chosen LLM provider (agent chat — only the text you send, not account data).',
+
+  'legal.privacy.p6.title': '6. International transfers',
+  'legal.privacy.p6.body':
+    'Some processors may handle data outside the EU/EEA (notably US-based LLM providers). We ensure transfers use an appropriate legal mechanism (EU Commission standard contractual clauses or equivalent). [TODO: document the current mechanism per provider].',
+
+  'legal.privacy.p7.title': '7. Your rights (GDPR Art. 15–22)',
+  'legal.privacy.p7.bullets':
+    'Right of access (Art. 15): You can request a copy of your data. In the app: Profile → Download my data [TODO: button coming in Phase 4].\nRight to rectification (Art. 16): Contact us if something is wrong.\nRight to erasure (Art. 17): In the app: Profile → Delete account.\nRight to restriction (Art. 18): Turn off statistics and/or push under Profile → Privacy.\nRight to data portability (Art. 20): Same export button as Art. 15.\nRight to object (Art. 21): Contact us.',
+
+  'legal.privacy.p8.title': '8. How to exercise your rights',
+  'legal.privacy.p8.body':
+    'Directly in the app under Profile for the most common rights. For other requests, write to privacy@eventpulse.nu. We respond within 30 days per GDPR.',
+
+  'legal.privacy.p9.title': '9. Cookies and tracking on the website',
+  'legal.privacy.p9.body':
+    'The eventpulse.nu website uses no cookies, no tracking pixels and no third-party scripts. The site is entirely same-origin.',
+
+  'legal.privacy.p10.title': '10. Changes to this policy',
+  'legal.privacy.p10.body':
+    'We may update this policy. For material changes, we notify you in the app. The latest update is shown at the top.',
+
+  'legal.privacy.p11.title': '11. Supervisory authority',
+  'legal.privacy.p11.body':
+    'If you believe we handle your data incorrectly, you can lodge a complaint with the Swedish Authority for Privacy Protection (IMY) — imy.se — or your local data protection authority.',
+
+  // ─── Terms of service sections (key order matches LegalModal.js buildSections)
+  'legal.terms.title': 'Terms of Service',
+  'legal.terms.lastUpdated': '2026-10-04 (draft v0.1)',
+
+  'legal.terms.t1.title': '1. What the service is',
+  'legal.terms.t1.body':
+    'EventPulse is a personal event agent that shows events in the Stockholm region based on your own taste. The service is delivered as an iOS and Android app. Events are fetched from public sources and presented with descriptions, times, venues and ticket links where available. EventPulse does not sell tickets.',
+
+  'legal.terms.t2.title': '2. Who can use the service',
+  'legal.terms.t2.body':
+    'You must be at least 16 years old to use EventPulse. If you are under 18 you need a guardian\'s consent.',
+
+  'legal.terms.t3.title': '3. Account',
+  'legal.terms.t3.body':
+    'You can use the app without an account. Some features require an account. Sign in via magic link using your e-mail, or with Apple. You are responsible for keeping your credentials private. Notify us at privacy@eventpulse.nu if you suspect your account has been compromised.',
+
+  'legal.terms.t4.title': '4. Acceptable use',
+  'legal.terms.t4.bullets':
+    'Do not use EventPulse to send spam, harass others or break the law.\nDo not attempt to bypass security or gain unauthorised access to our systems.\nDo not use the app in a way that damages our infrastructure or other users.\nDo not scrape, copy or redistribute event content for commercial purposes.',
+
+  'legal.terms.t5.title': '5. Event content and third parties',
+  'legal.terms.t5.body':
+    'Event information is published by the respective organiser. We are not responsible for the information being correct, current or available. We reserve the right to hide events that turn out to be incorrect, cancelled or misleading.',
+
+  'legal.terms.t6.title': '6. Push notifications',
+  'legal.terms.t6.body':
+    'If you enable push notifications for a venue or artist, we send you a notification when we detect a new event from that source. You can disable push per venue at any time, or globally under your device\'s settings.',
+
+  'legal.terms.t7.title': '7. Changes to the service',
+  'legal.terms.t7.body':
+    'We develop the service continuously. We may add, change or remove features without notice. We strive not to make changes that obviously degrade your experience without good reason.',
+
+  'legal.terms.t8.title': '8. Account deletion and termination',
+  'legal.terms.t8.body':
+    'You can delete your account at any time under Profile → Delete account. We then delete all account-bound data. We may disable or delete your account if you violate these terms or if the service is discontinued.',
+
+  'legal.terms.t9.title': '9. Intellectual property',
+  'legal.terms.t9.body':
+    'The EventPulse app, brand, logo and underlying code belong to us and our licensors. Event images belong to the respective rights holder.',
+
+  'legal.terms.t10.title': '10. Limitation of liability',
+  'legal.terms.t10.body':
+    'EventPulse is provided as-is. We do not guarantee that the service is error-free, uninterrupted or free from defects. We are not liable for indirect damages. Our total liability is limited to what you paid for the service in the past 12 months.',
+
+  'legal.terms.t11.title': '11. Changes to the terms',
+  'legal.terms.t11.body':
+    'We may update these terms. For material changes, we notify you in the app or via e-mail. If you do not accept the new terms, you can delete your account.',
+
+  'legal.terms.t12.title': '12. Governing law and disputes',
+  'legal.terms.t12.body':
+    'These terms are governed by Swedish law. Disputes are settled in a Swedish court, with Stockholm District Court as first instance. You can also turn to the European Commission\'s online dispute resolution platform (ec.europa.eu/consumers/odr).',
+
+  'legal.terms.t13.title': '13. Contact',
+  'legal.terms.t13.body':
+    'Questions about these terms? Write to privacy@eventpulse.nu.',
 };

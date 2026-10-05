@@ -613,4 +613,140 @@ export default {
   'reason.followed_artist.full': 'Du följer en av artisterna',
   'reason.outbound_personalization.label': 'Dina biljettval',
   'reason.outbound_personalization.full': 'Du klickar ofta vidare till biljetter för den här typen av event',
+
+  // ─── Legal (integritetspolicy + villkor) ─────────────────────────────────
+  // _legalDraftOnly: '1' = AI-utkast (banner visas), '0' = granskat (banner borta).
+  // Vänd till '0' när jurist/ansvarig har godkänt texten.
+  '_legalDraftOnly': '1',
+
+  'legal.close': 'Stäng',
+  'legal.lastUpdatedLabel': 'Senast uppdaterad:',
+  'legal.draftBannerTitle': '⚠️ Det här är ett AI-utkast',
+  'legal.draftBannerBody':
+    'Texten är skriven av AI som ett första förslag baserat på vad appen faktiskt gör. Den ska granskas av ansvarig person eller extern jurist innan den publiceras som slutgiltig policy. EventPulse ansvarar inte för textens rättsliga korrekthet i sin nuvarande form.',
+  'legal.readOnWebLabel': 'Läs den fullständiga versionen med formatering på webben:',
+  'legal.webMirrorNote':
+    'Samma text finns på webbplatsen — den uppdateras där först, appens version speglas vid varje release.',
+
+  // Profile rows that open the modals
+  'profile.privacyPolicy': 'Integritetspolicy',
+  'profile.privacyPolicyDesc': 'Läs hur vi hanterar dina uppgifter.',
+  'profile.terms': 'Användarvillkor',
+  'profile.termsDesc': 'Regler för att använda EventPulse.',
+
+  // ─── Privacy policy sections (key order matches LegalModal.js buildSections)
+  'legal.privacy.title': 'Integritetspolicy',
+  'legal.privacy.lastUpdated': '2026-10-04 (utkast v0.1)',
+
+  'legal.privacy.p1.title': '1. Vem vi är',
+  'legal.privacy.p1.body':
+    'EventPulse är en personlig event-agent i form av en iOS- och Android-app, utvecklad av [TODO: fullständigt företagsnamn och organisationsnummer]. Appen hjälper användare i Stockholmsregionen att hitta konserter, utställningar och andra evenemang baserat på deras egen smak. Kontakt för integritetsfrågor: privacy@eventpulse.nu [TODO: bekräfta].',
+
+  'legal.privacy.p2a.title': '2.1 Kontouppgifter (när du skapar konto)',
+  'legal.privacy.p2a.bullets':
+    'E-postadress (om du loggar in via magic link).\nApple-id (om du loggar in med Apple — vi får bara ett unikt användar-id, inte din e-post, om du väljer att dölja den).\nAutogenererat anonymt användar-id (om du använder appen utan att logga in).',
+
+  'legal.privacy.p2b.title': '2.2 Användargenererad data',
+  'legal.privacy.p2b.bullets':
+    'Evenemang du sparar, klickar på eller markerar som ointressanta.\nVenues och artister du följer.\nPush-prenumerationer (om du vill ha notiser för specifika venues).\nEventuella konversationer du har med appens inbyggda event-agent.',
+
+  'legal.privacy.p2c.title': '2.3 Enhets- och användningsdata',
+  'legal.privacy.p2c.bullets':
+    'Enhets-id hashat som 64-tecken hex-kod (anonym, kan inte spåras tillbaka till dig utan vår interna salt-nyckel).\nSpråkinställning.\nPlats (endast om du uttryckligen gett appen platsåtkomst — används för att visa evenemang nära dig).',
+
+  'legal.privacy.p2d.title': '2.4 Anonym statistik (endast om du godkänner)',
+  'legal.privacy.p2d.body':
+    'Appen har en separat opt-in-växel under Profil → Integritet. Statistik innehåller händelser som tile_tap, event_view, event_save med mera. Ingen personlig identifierbar information ingår. Statistik sparas i upp till 30 dagar.',
+
+  'legal.privacy.p3.title': '3. Varför vi samlar in uppgifterna och med vilken rättslig grund',
+  'legal.privacy.p3.body':
+    'Kontouppgifter och användargenererad data behandlas för att leverera tjänsten du har bett om (GDPR Art. 6(1)(b) avtal). Push-notiser och anonym statistik bygger på ditt samtycke (Art. 6(1)(a)), som du kan återkalla när som helst i appen. Tekniska loggar utan PII behandlas för säkerhet och felsökning (Art. 6(1)(f) berättigat intresse).',
+
+  'legal.privacy.p4.title': '4. Hur länge vi sparar uppgifterna',
+  'legal.privacy.p4.bullets':
+    'Kontouppgifter: så länge kontot är aktivt. Raderas inom 30 dagar efter kontoradering.\nAnvändargenererad data: knuten till kontot; raderas vid kontoradering via cascade i databasen.\nAnonym statistik: 30 dagar, därefter automatisk rensning.\nPush-tokens: tills du stänger av push för en venue eller raderar kontot.',
+
+  'legal.privacy.p5.title': '5. Vem vi delar uppgifterna med',
+  'legal.privacy.p5.body':
+    'Vi delar inte dina personuppgifter med tredje part för marknadsföring. Underleverantörer: Supabase (autentisering, databas, fillagring — serverregion [TODO: bekräfta EU, helst eu-north-1]); Expo / Apple Push Notification Service (push-leverans); OpenAI / Anthropic / valfri LLM-leverantör (agent-chatt — endast texten du skickar, inte kontodata).',
+
+  'legal.privacy.p6.title': '6. Överföring till tredje land',
+  'legal.privacy.p6.body':
+    'Vissa underleverantörer kan behandla data utanför EU/EES (särskilt USA-baserade LLM-leverantörer). Vi säkerställer att överföringar sker med lämplig rättslig mekanism (EU-kommissionens standardavtalsklausuler eller motsvarande). [TODO: dokumentera aktuell mekanism per leverantör].',
+
+  'legal.privacy.p7.title': '7. Dina rättigheter (GDPR Art. 15–22)',
+  'legal.privacy.p7.bullets':
+    'Rätt till tillgång (Art. 15): Du kan begära en kopia av dina uppgifter. I appen: Profil → Ladda ner min data [TODO: knapp kommer i Fas 4].\nRätt till rättelse (Art. 16): Kontakta oss om något är fel.\nRätt till radering (Art. 17): I appen: Profil → Radera konto.\nRätt till begränsning (Art. 18): Stäng av statistik och/eller push under Profil → Integritet.\nRätt till dataportabilitet (Art. 20): Samma exportknapp som Art. 15.\nRätt att göra invändningar (Art. 21): Kontakta oss.',
+
+  'legal.privacy.p8.title': '8. Hur du utövar dina rättigheter',
+  'legal.privacy.p8.body':
+    'Direkt i appen under Profil för de vanligaste rättigheterna. För övriga ärenden, skriv till privacy@eventpulse.nu. Vi svarar inom 30 dagar enligt GDPR.',
+
+  'legal.privacy.p9.title': '9. Cookies och spårning på webbplatsen',
+  'legal.privacy.p9.body':
+    'Webbplatsen eventpulse.nu använder inga cookies, inga spårningspixlar och inga tredjeparts-skript. Webbplatsen är helt same-origin.',
+
+  'legal.privacy.p10.title': '10. Ändringar av policyn',
+  'legal.privacy.p10.body':
+    'Vi kan uppdatera denna policy. Vid väsentliga ändringar meddelas du via appen. Senaste uppdatering anges högst upp.',
+
+  'legal.privacy.p11.title': '11. Tillsynsmyndighet',
+  'legal.privacy.p11.body':
+    'Om du anser att vi hanterar dina uppgifter fel kan du klaga till Integritetsskyddsmyndigheten (IMY) — imy.se.',
+
+  // ─── Terms of service sections (key order matches LegalModal.js buildSections)
+  'legal.terms.title': 'Användarvillkor',
+  'legal.terms.lastUpdated': '2026-10-04 (utkast v0.1)',
+
+  'legal.terms.t1.title': '1. Vad tjänsten är',
+  'legal.terms.t1.body':
+    'EventPulse är en personlig event-agent som visar evenemang i Stockholmsregionen baserat på din egen smak. Tjänsten är en app för iOS och Android. Evenemang hämtas från publika källor och presenteras med beskrivningar, tider, platser och eventuella biljettlänkar. EventPulse säljer inga biljetter.',
+
+  'legal.terms.t2.title': '2. Vem som kan använda tjänsten',
+  'legal.terms.t2.body':
+    'Du måste vara minst 16 år för att använda EventPulse. Om du är under 18 behöver du vårdnadshavares godkännande.',
+
+  'legal.terms.t3.title': '3. Konto',
+  'legal.terms.t3.body':
+    'Du kan använda appen utan konto. Vissa funktioner kräver konto. Logga in med magic link via e-post eller med Apple. Du ansvarar för att dina inloggningsuppgifter inte används av någon annan. Meddela oss på privacy@eventpulse.nu om du misstänker att ditt konto har blivit hackat.',
+
+  'legal.terms.t4.title': '4. Acceptabel användning',
+  'legal.terms.t4.bullets':
+    'Använd inte EventPulse för att skicka skräp, trakassera andra eller bryta mot lag.\nFörsök inte kringgå säkerhetsspärrar eller obehörigt komma åt våra system.\nAnvänd inte appen på ett sätt som skadar vår infrastruktur eller andra användare.\nSkrapa, kopiera eller vidaredistribuera inte evenemangsinnehåll i kommersiellt syfte.',
+
+  'legal.terms.t5.title': '5. Evenemangsinnehåll och tredje part',
+  'legal.terms.t5.body':
+    'Evenemangsinformation publiceras av respektive arrangör. Vi ansvarar inte för att informationen är korrekt, aktuell eller tillgänglig. Vi förbehåller oss rätten att dölja events som visat sig vara felaktiga, avbokade eller vilseledande.',
+
+  'legal.terms.t6.title': '6. Push-notiser',
+  'legal.terms.t6.body':
+    'Om du aktiverar push-notiser för en venue eller artist skickar vi dig en notis när vi upptäcker ett nytt evenemang från den källan. Du kan när som helst stänga av push per venue, eller globalt under din enhets inställningar.',
+
+  'legal.terms.t7.title': '7. Ändringar av tjänsten',
+  'legal.terms.t7.body':
+    'Vi utvecklar tjänsten löpande. Vi kan lägga till, ändra eller ta bort funktioner utan förvarning. Vi strävar efter att inte göra ändringar som uppenbart försämrar din upplevelse utan goda skäl.',
+
+  'legal.terms.t8.title': '8. Kontoradering och uppsägning',
+  'legal.terms.t8.body':
+    'Du kan när som helst radera ditt konto under Profil → Radera konto. Vi raderar då all kontoanknuten data. Vi kan stänga av eller radera kontot om du bryter mot dessa villkor eller om tjänsten läggs ned.',
+
+  'legal.terms.t9.title': '9. Immateriella rättigheter',
+  'legal.terms.t9.body':
+    'EventPulse-appen, varumärket, logotypen och den underliggande koden tillhör oss och våra licensgivare. Evenemangsbilder tillhör respektive upphovsrättsinnehavare.',
+
+  'legal.terms.t10.title': '10. Ansvarsbegränsning',
+  'legal.terms.t10.body':
+    'EventPulse tillhandahålls i befintligt skick. Vi garanterar inte att tjänsten är felfri, oavbruten eller fri från fel. Vi ansvarar inte för indirekta skador. Vårt totala ansvar är begränsat till vad du betalat för tjänsten under de senaste 12 månaderna.',
+
+  'legal.terms.t11.title': '11. Ändringar av villkoren',
+  'legal.terms.t11.body':
+    'Vi kan uppdatera dessa villkor. Vid väsentliga ändringar meddelas du i appen eller via e-post. Om du inte godkänner de nya villkoren kan du radera ditt konto.',
+
+  'legal.terms.t12.title': '12. Tillämplig lag och tvist',
+  'legal.terms.t12.body':
+    'Dessa villkor styrs av svensk rätt. Tvister avgörs i svensk domstol, med Stockholms tingsrätt som första instans. Du kan också vända dig till EU-kommissionens tvistlösningsplattform online (ec.europa.eu/consumers/odr).',
+
+  'legal.terms.t13.title': '13. Kontakt',
+  'legal.terms.t13.body':
+    'Frågor om villkoren? Skriv till privacy@eventpulse.nu.',
 };
