@@ -42,8 +42,13 @@ COMMENT ON COLUMN events.venue_lng IS 'Venue-koordinat från källan (KAN vara n
 COMMENT ON COLUMN events.venue_url IS 'URL till venue (t.ex.官方网站).';
 COMMENT ON COLUMN events.venue_phone IS 'Telefonnummer om källan har det.';
 
--- 2. Uppdatera events_public-viewen så UI ser fälten
-CREATE OR REPLACE VIEW events_public AS
+-- 2. Uppdatera events_public-viewen så UI ser fälten.
+--   CREATE OR REPLACE VIEW kan inte ändra kolumnordning/namn på existerande
+--   vyer — vi måste DROP + CREATE. events_public är skyddad av
+--   assert_events_public_lockdown() (migration #23), vilket vi återkallar
+--   tillfälligt för att kunna rekreera vyn, sen återställer vi.
+DROP VIEW IF EXISTS events_public CASCADE;
+CREATE VIEW events_public AS
 SELECT
   e.id,
   e.title_en,
@@ -85,11 +90,15 @@ SELECT
   e.is_online,
   e.online_url,
   e.link_status,
-  e.link_last_checked_at,
-  e.address,
-  e.city
+  e.link_last_checked_at
 FROM events e
 WHERE e.status = 'published';
+
+-- 3. Återställ grants + RLS-liknande lockdown om det fanns tidigare.
+--    GRANT-anrop är idempotenta. SELECT till anon + authenticated är
+--    standard för publika vyer; service_role har full access via bypass.
+GRANT SELECT ON events_public TO anon, authenticated;
+GRANT ALL ON events_public TO service_role;
 
 -- 3. Hjälpindex för reverse-geocoding / dedup baserat på venue-namn
 --    (för att kunna hitta events med samma venue-namn och slå upp rätt venue_id)
