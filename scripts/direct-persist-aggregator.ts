@@ -140,14 +140,12 @@ async function ingest(sourceId: string): Promise<void> {
       end_time: endTime,
       venue_id: null,
       organizer_id: null,
-      // 2026-10-05 — verklig geo från extractor-output (geo.lat/geo.lng) eller
-      // null. Inga Sergels-torg-fallback. Backfill-jobb slår upp koordinater
-      // från venues baserat på venue_full_name om geo saknas.
-      location: (ev.geo?.lat != null && ev.geo?.lng != null)
-        ? `POINT(${ev.geo.lng} ${ev.geo.lat})`
-        : null,
-      lat: ev.geo?.lat ?? null,
-      lng: ev.geo?.lng ?? null,
+      // 2026-10-05 — ParsedEvent saknar geo (extractor ger bara venue/address/city),
+      // så lat/lng är null. Backfill-jobb (backfill-venue-geocode.mjs) slår
+      // upp koordinater från venues-tabellen via fuzzy match på venue_full_name.
+      location: null,
+      lat: null,
+      lng: null,
       is_free: ev.isFree ?? false,
       price_min_sek: ev.priceMin ?? null,
       price_max_sek: ev.priceMax ?? null,
@@ -160,8 +158,8 @@ async function ingest(sourceId: string): Promise<void> {
       venue_full_name: ev.venue ?? null,
       venue_full_address: ev.address ?? null,
       venue_city: ev.city ?? null,
-      venue_lat: ev.geo?.lat ?? null,
-      venue_lng: ev.geo?.lng ?? null,
+      venue_lat: null,
+      venue_lng: null,
       venue_url: null,
       venue_phone: null,
       raw_data: null,
