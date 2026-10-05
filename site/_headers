@@ -1,0 +1,15 @@
+# Cloudflare Pages headers — applied per pattern
+# Static site, no cookies, no analytics. Tight CSP keeps the site data-minimal
+# per eventpulse-growth/02-ARCHITECTURE.md §8 Privacy design.
+
+/*
+  Strict CSP: same-origin only, no inline scripts (we have no JS), no external
+  fonts/images. Inline styles are allowed because every page uses <style> in <head>.
+  Tighten further if/when we add anything.
+*/
+Content-Security-Policy: default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; connect-src 'none'; frame-ancestors 'none'; base-uri 'self'; form-action 'none'; object-src 'none'
+Referrer-Policy: strict-origin-when-cross-origin
+X-Content-Type-Options: nosniff
+X-Frame-Options: DENY
+Permissions-Policy: camera=(), microphone=(), geolocation=(), interest-cohort=()
+Strict-Transport-Security: max-age=31536000; includeSubDomains

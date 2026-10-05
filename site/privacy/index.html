@@ -1,0 +1,191 @@
+<!doctype html>
+<html lang="sv">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Integritetspolicy — EventPulse</title>
+<meta name="description" content="EventPulse integritetspolicy: vilka uppgifter vi samlar in, hur vi använder dem och vilka rättigheter du har enligt GDPR.">
+<meta name="theme-color" content="#000000">
+<link rel="icon" type="image/svg+xml" href="/assets/icon.svg">
+<link rel="alternate" hreflang="sv" href="https://eventpulse.nu/privacy/">
+<link rel="alternate" hreflang="en" href="https://eventpulse.nu/en/privacy/">
+<link rel="stylesheet" href="/assets/styles.css">
+</head>
+<body>
+
+<header class="site-header">
+  <div class="site-header__inner">
+    <a class="site-header__brand" href="/">
+      <img src="/assets/icon.svg" alt=""> EventPulse
+    </a>
+    <nav class="site-header__nav" aria-label="Huvudnavigering">
+      <a href="/privacy/">Integritet</a>
+      <a href="/villkor/">Villkor</a>
+      <a href="/kontakt/">Kontakt</a>
+      <span class="site-header__lang"><strong>SV</strong> · <a href="/en/privacy/">EN</a></span>
+    </nav>
+  </div>
+</header>
+
+<main class="container prose">
+
+  <h1>Integritetspolicy</h1>
+  <p class="meta">Senast uppdaterad: 2026-10-04 · Version 0.1 (utkast)</p>
+
+  <div class="callout">
+    <strong>⚠️ Det här är ett AI-utkast, inte juridisk rådgivning.</strong>
+    Policyn är skriven av AI som ett första förslag baserat på vad appen
+    faktiskt gör. Den ska granskas av ansvarig person eller extern jurist
+    innan den publiceras som slutgiltig policy. EventPulse ansvarar inte
+    för textens rättsliga korrekthet i sin nuvarande form.
+  </div>
+
+  <h2>1. Vem vi är</h2>
+  <p>
+    EventPulse är en personlig event-agent i form av en iOS- och Android-app,
+    utvecklad av [TODO: fullständigt företagsnamn och organisationsnummer].
+    Appen hjälper användare i Stockholmsregionen att hitta konserter,
+    utställningar och andra evenemang baserat på deras egen smak.
+  </p>
+  <p>
+    Kontakt för integritetsfrågor: <a href="mailto:privacy@eventpulse.nu">privacy@eventpulse.nu</a>
+    [TODO: bekräfta eller uppdatera e-postadressen].
+  </p>
+
+  <h2>2. Vilka uppgifter vi samlar in</h2>
+  <p>Vi samlar in följande kategorier av uppgifter:</p>
+
+  <h3>2.1 Kontouppgifter (när du skapar konto)</h3>
+  <ul>
+    <li>E-postadress (om du loggar in via magic link).</li>
+    <li>Apple-id (om du loggar in med Apple — vi får bara ett unikt användar-id, inte din e-post, om du väljer att dölja den).</li>
+    <li>Autogenererat anonymt användar-id (om du använder appen utan att logga in).</li>
+  </ul>
+
+  <h3>2.2 Användargenererad data</h3>
+  <ul>
+    <li>Evenemang du sparar, klickar på eller markerar som ointressanta.</li>
+    <li>Venues och artister du följer.</li>
+    <li>Push-prenumerationer (om du vill ha notiser för specifika venues).</li>
+    <li>Eventuella konversationer du har med appens inbyggda event-agent.</li>
+  </ul>
+
+  <h3>2.3 Enhets- och användningsdata</h3>
+  <ul>
+    <li>Enhets-id hashat som 64-tecken hex-kod (anonym, kan inte spåras tillbaka till dig utan vår interna salt-nyckel).</li>
+    <li>Språkinställning.</li>
+    <li>Plats (endast om du uttryckligen gett appen platsåtkomst — används för att visa evenemang nära dig).</li>
+  </ul>
+
+  <h3>2.4 Anonym statistik (endast om du godkänner)</h3>
+  <p>
+    Appen har en separat opt-in-växel under <em>Profil → Integritet</em>.
+    Statistik innehåller händelser som <em>tile_tap</em>, <em>event_view</em>,
+    <em>event_save</em> med mera. Ingen personlig identifierbar information ingår.
+    Statistik sparas i upp till 30 dagar.
+  </p>
+
+  <h2>3. Varför vi samlar in uppgifterna och med vilken rättslig grund</h2>
+  <table>
+    <thead>
+      <tr><th>Syfte</th><th>Uppgifter</th><th>Rättslig grund (GDPR Art. 6)</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>Leverera tjänsten (visa events, spara, följa venues)</td>
+        <td>Kontouppgifter, användargenererad data</td>
+        <td>Avtal — du har skapat ett konto och vi behöver uppgifterna för att tjänsten ska fungera.</td>
+      </tr>
+      <tr>
+        <td>Push-notiser</td>
+        <td>Push-token, dina följ-val</td>
+        <td>Samtycke — du aktiverar push per venue.</td>
+      </tr>
+      <tr>
+        <td>Anonym statistik</td>
+        <td>Händelsetyper enligt 2.4</td>
+        <td>Samtycke — separat opt-in-växel.</td>
+      </tr>
+      <tr>
+        <td>Säkerhet och felsökning</td>
+        <td>Tekniska loggar (utan PII)</td>
+        <td>Berättigat intresse — att driva en stabil tjänst.</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <h2>4. Hur länge vi sparar uppgifterna</h2>
+  <ul>
+    <li><strong>Kontouppgifter:</strong> så länge kontot är aktivt. Raderas inom 30 dagar efter kontoradering.</li>
+    <li><strong>Användargenererad data (sparade events, följningar, chatt):</strong> knuten till kontot; raderas vid kontoradering via cascade i databasen.</li>
+    <li><strong>Anonym statistik:</strong> 30 dagar, därefter automatisk rensning.</li>
+    <li><strong>Push-tokens:</strong> tills du stänger av push för en venue eller raderar kontot.</li>
+  </ul>
+
+  <h2>5. Vem vi delar uppgifterna med</h2>
+  <p>Vi delar inte dina personuppgifter med tredje part för marknadsföring. Vi använder följande underleverantörer:</p>
+  <ul>
+    <li><strong>Supabase</strong> — autentisering, databas och fillagring. Server-region: [TODO: bekräfta att projektet ligger i EU, helst eu-north-1 Stockholm].</li>
+    <li><strong>Expo / Apple Push Notification Service (APNs)</strong> — leverans av push-notiser.</li>
+    <li><strong>OpenAI / Anthropic / valfri LLM-leverantör</strong> — agent-chatt. Endast den text du skriver skickas, inte kontodata. [TODO: lista aktuell leverantör].</li>
+  </ul>
+
+  <h2>6. Överföring till tredje land</h2>
+  <p>
+    Vissa underleverantörer kan behandla data utanför EU/EES (särskilt
+    USA-baserade LLM-leverantörer). Vi säkerställer att överföringar sker
+    med lämplig rättslig mekanism (EU-kommissionens standardavtalsklausuler
+    eller motsvarande). [TODO: dokumentera aktuell mekanism per leverantör].
+  </p>
+
+  <h2>7. Dina rättigheter (GDPR Art. 15–22)</h2>
+  <ul>
+    <li><strong>Rätt till tillgång (Art. 15):</strong> Du kan begära en kopia av dina uppgifter. I appen: <em>Profil → Ladda ner min data</em> [TODO: knapp kommer i Fas 4].</li>
+    <li><strong>Rätt till rättelse (Art. 16):</strong> Kontakta oss om något är fel.</li>
+    <li><strong>Rätt till radering (Art. 17):</strong> I appen: <em>Profil → Radera konto</em>. Då raderas all kontoanknuten data omedelbart via databasens kaskadregler.</li>
+    <li><strong>Rätt till begränsning (Art. 18):</strong> Stäng av statistik och/eller push under <em>Profil → Integritet</em>.</li>
+    <li><strong>Rätt till dataportabilitet (Art. 20):</strong> Samma exportknapp som Art. 15.</li>
+    <li><strong>Rätt att göra invändningar (Art. 21):</strong> Kontakta oss.</li>
+  </ul>
+
+  <h2>8. Hur du utövar dina rättigheter</h2>
+  <p>
+    Direkt i appen under <em>Profil</em> för de vanligaste rättigheterna.
+    För övriga ärenden, skriv till <a href="mailto:privacy@eventpulse.nu">privacy@eventpulse.nu</a>.
+    Vi svarar inom 30 dagar enligt GDPR.
+  </p>
+
+  <h2>9. Cookies och spårning på webbplatsen</h2>
+  <p>
+    Webbplatsen <strong>eventpulse.nu</strong> använder inga cookies, inga
+    spårningspixlar och inga tredjeparts-skript. Inga analysverktyg är
+    inbäddade. Webbplatsen är helt same-origin.
+  </p>
+
+  <h2>10. Ändringar av policyn</h2>
+  <p>
+    Vi kan uppdatera denna policy. Vid väsentliga ändringar meddelas du
+    via appen. Senaste uppdatering anges högst upp på sidan.
+  </p>
+
+  <h2>11. Tillsynsmyndighet</h2>
+  <p>
+    Om du anser att vi hanterar dina uppgifter fel kan du klaga till
+    Integritetsskyddsmyndigheten (IMY) — <a href="https://www.imy.se" rel="noopener">imy.se</a>.
+  </p>
+
+</main>
+
+<footer class="site-footer">
+  <div class="site-footer__inner">
+    <span>© 2026 EventPulse. Gjord i Stockholm.</span>
+    <span class="site-footer__links">
+      <a href="/privacy/">Integritet</a>
+      <a href="/villkor/">Villkor</a>
+      <a href="/kontakt/">Kontakt</a>
+    </span>
+  </div>
+</footer>
+
+</body>
+</html>

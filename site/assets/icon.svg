@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <!-- EventPulse icon: pulse waveform inside a soft rounded square. -->
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0F172A"/>
+      <stop offset="100%" stop-color="#1E293B"/>
+    </linearGradient>
+    <linearGradient id="pulse" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#22D3EE"/>
+      <stop offset="100%" stop-color="#A78BFA"/>
+    </linearGradient>
+  </defs>
+  <rect width="512" height="512" rx="96" fill="url(#bg)"/>
+  <!-- Concentric rings, suggesting an event/notification beacon -->
+  <circle cx="256" cy="256" r="180" fill="none" stroke="#1E293B" stroke-width="6" opacity="0.7"/>
+  <circle cx="256" cy="256" r="140" fill="none" stroke="#1E293B" stroke-width="6" opacity="0.7"/>
+  <circle cx="256" cy="256" r="100" fill="none" stroke="#1E293B" stroke-width="6" opacity="0.7"/>
+  <!-- Pulse waveform (the "pulse" in EventPulse) -->
+  <path d="M 90 256 L 180 256 L 210 200 L 250 320 L 290 180 L 330 290 L 360 256 L 422 256"
+        fill="none"
+        stroke="url(#pulse)"
+        stroke-width="22"
+        stroke-linecap="round"
+        stroke-linejoin="round"/>
+</svg>

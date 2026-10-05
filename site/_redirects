@@ -1,0 +1,10 @@
+# Cloudflare Pages redirects
+# Pretty URLs without trailing slash + small normalisation.
+
+/en      /en/        301
+/privacy /privacy/   301
+/villkor /villkor/   301
+/kontakt /kontakt/   301
+/en/privacy /en/privacy/ 301
+/en/contact /en/contact/ 301
+/en/terms  /en/terms/  301
