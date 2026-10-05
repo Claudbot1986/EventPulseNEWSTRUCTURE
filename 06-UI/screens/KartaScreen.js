@@ -136,15 +136,39 @@ export default function KartaScreen({ onEventPress }) {
     if (event) setSelectedEvent(event);
   }, []);
 
-  // Tomt kart-tryck → stäng kort.
-  // (react-native-maps MapView.onPress fyrar BARA för tomma tryck,
-  // inte för marker-tryck — de går via vår hit-detection-overlay.)
-  const handleMapPress = useCallback(() => {
+  // Tomt kart-tryck → stäng kort, MEN INTE om trycket är på en marker.
+  //
+  // Bugfix 2026-10-05: react-native-maps MapView.onPress fyrar på ALLA
+  // tap — inklusive direkt på en marker — även när vi har en hit-overlay
+  // ovanpå. Tidigare clearde handleMapPress alltid → kartan öppnade
+  // och stängde kortet i samma gesture. Användaren såg "inget händer"
+  // eller "måste klicka två gånger" beroende på ordningen mellan
+  // MapView.onPress och overlay-Pressable.onPress.
+  //
+  // Fix: jämför tryck-position mot projicerade markörer. Inom 22 px
+  // (samma radie som markerHit-stilen) = tryck var på en marker →
+  // lämna ifred (overlay-Pressable sköter setSelectedEvent).
+  const handleMapPress = useCallback((event) => {
+    const tap = event?.nativeEvent?.position;
+    if (tap && typeof tap.x === 'number' && typeof tap.y === 'number') {
+      const HIT_RADIUS_SQ = 22 * 22;
+      const onMarker = projectedMarkers.some(({ x, y }) => {
+        const dx = tap.x - x;
+        const dy = tap.y - y;
+        return dx * dx + dy * dy <= HIT_RADIUS_SQ;
+      });
+      if (onMarker) {
+        if (typeof console !== 'undefined' && console.info) {
+          console.info('[KartaScreen] map press on marker — letting overlay handle it');
+        }
+        return;
+      }
+    }
     if (typeof console !== 'undefined' && console.info) {
       console.info('[KartaScreen] map press (empty) — closing card');
     }
     setSelectedEvent(null);
-  }, []);
+  }, [projectedMarkers]);
 
   const handleMapLayout = useCallback((event) => {
     const { width, height } = event.nativeEvent.layout;
