@@ -1,10 +1,47 @@
 # Cloudflare Pages redirects
 # Pretty URLs without trailing slash + small normalisation.
+#
+# 2026-10-06: web companion pivot — Hem, Utforska, Karta, Event-detail
+# and friendly category slugs (/konsert, /teater, /utstallning etc. → /utforska/?category=...).
 
-/en      /en/        301
-/privacy /privacy/   301
-/villkor /villkor/   301
-/kontakt /kontakt/   301
-/en/privacy /en/privacy/ 301
-/en/contact /en/contact/ 301
-/en/terms  /en/terms/  301
+/en          /en/          301
+/privacy     /privacy/     301
+/villkor     /villkor/     301
+/kontakt     /kontakt/     301
+/utforska    /utforska/    301
+/karta       /karta/       301
+/event       /event/       301
+
+/en/privacy  /en/privacy/  301
+/en/contact  /en/contact/  301
+/en/terms    /en/terms/    301
+/en/utforska /en/utforska/ 301
+/en/karta    /en/karta/    301
+/en/event    /en/event/    301
+
+# ── Friendly aliases for the top categories (consume via Utforska ?category=)
+# Livespot-style: /konsert-stockholm → /utforska/?category=music
+/konsert      /utforska/?category=music              301
+/konsert/     /utforska/?category=music              301
+/teater       /utforska/?category=theatre-drama      301
+/teater/      /utforska/?category=theatre-drama      301
+/sport        /utforska/?category=sports             301
+/sport/       /utforska/?category=sports             301
+/utstallning  /utforska/?category=exhibition         301
+/utstallning/ /utforska/?category=exhibition         301
+/standup      /utforska/?category=comedy             301
+/standup/     /utforska/?category=comedy             301
+/musik        /utforska/?category=music              301
+/musik/       /utforska/?category=music              301
+/opera        /utforska/?category=opera              301
+/opera/       /utforska/?category=opera              301
+/jazz         /utforska/?category=jazz               301
+/jazz/        /utforska/?category=jazz               301
+/kids         /utforska/?category=kids               301
+/kids/        /utforska/?category=kids               301
+/workshop     /utforska/?category=workshop           301
+/workshop/    /utforska/?category=workshop           301
+/dans         /utforska/?category=dance              301
+/dans/        /utforska/?category=dance              301
+/mat          /utforska/?category=food               301
+/mat/         /utforska/?category=food               301

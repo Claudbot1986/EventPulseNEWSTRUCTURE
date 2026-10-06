@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#000000">
+<meta name="description" content="Explore Stockholm events on an interactive map — click a pin to see the event.">
+<link rel="icon" type="image/svg+xml" href="/assets/icon.svg">
+<link rel="alternate" hreflang="sv" href="https://eventpulse.nu/karta/">
+<link rel="alternate" hreflang="en" href="https://eventpulse.nu/en/karta/">
+<link rel="canonical" href="https://eventpulse.nu/en/karta/">
+<title>Map — EventPulse Stockholm</title>
+<link rel="stylesheet" href="/assets/styles.css">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+      integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
+      crossorigin="">
+<meta name="ep-config" content='{"supabaseUrl":"https://bsllkpvkowwndhhxtlln.supabase.co","anonKey":"sb_publishable_Zy3H6r8GLtZNGC_GseZ-zQ_9aJQiugo"}'>
+</head>
+<body>
+
+<header class="site-header">
+  <div class="site-header__inner">
+    <a class="site-header__brand" href="/en/">
+      <img src="/assets/icon.svg" alt=""> EventPulse
+    </a>
+    <nav class="site-header__nav" aria-label="Main navigation">
+      <a href="/en/">Home</a>
+      <a href="/en/utforska/">Explore</a>
+      <a href="/en/karta/" aria-current="page">Map</a>
+      <a href="/en/privacy/">Privacy</a>
+      <a href="/en/terms/">Terms</a>
+      <span class="site-header__lang"><a href="/">SV</a> · <strong>EN</strong></span>
+    </nav>
+  </div>
+</header>
+
+<main class="container">
+  <section style="padding:var(--s-xl) 0 var(--s-md)">
+    <div class="hero__eyebrow">Map</div>
+    <h1 class="hero__title" style="font-size:clamp(22px,4vw,32px);margin-bottom:var(--s-sm)">Events on the <em>map</em></h1>
+    <p class="hero__lede">
+      Click a pin to see the event. Click the list to focus.
+    </p>
+  </section>
+
+  <section class="map-page">
+    <aside class="map-page__list" id="ep-map-list" aria-label="List of map events"></aside>
+    <div class="map-page__canvas" id="ep-map-canvas" aria-label="Map of Stockholm"></div>
+  </section>
+</main>
+
+<footer class="site-footer">
+  <div class="site-footer__inner">
+    <span>© 2026 EventPulse. Made in Stockholm.</span>
+    <span class="site-footer__links">
+      <a href="/en/privacy/">Privacy</a>
+      <a href="/en/terms/">Terms</a>
+      <a href="/en/contact/">Contact</a>
+    </span>
+  </div>
+</footer>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+        integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
+        crossorigin=""></script>
+<script src="/assets/app.js" defer></script>
+</body>
+</html>

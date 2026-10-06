@@ -3,12 +3,12 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>Privacy Policy — EventPulse</title>
-<meta name="description" content="EventPulse privacy policy: what data we collect, how we use it and what rights you have under GDPR.">
 <meta name="theme-color" content="#000000">
 <link rel="icon" type="image/svg+xml" href="/assets/icon.svg">
-<link rel="alternate" hreflang="en" href="https://eventpulse.nu/en/privacy/">
 <link rel="alternate" hreflang="sv" href="https://eventpulse.nu/privacy/">
+<link rel="alternate" hreflang="en" href="https://eventpulse.nu/en/privacy/">
+<link rel="canonical" href="https://eventpulse.nu/en/privacy/">
+<title>Privacy — EventPulse</title>
 <link rel="stylesheet" href="/assets/styles.css">
 </head>
 <body>
@@ -18,164 +18,32 @@
     <a class="site-header__brand" href="/en/">
       <img src="/assets/icon.svg" alt=""> EventPulse
     </a>
-    <nav class="site-header__nav" aria-label="Main">
-      <a href="/en/privacy/">Privacy</a>
+    <nav class="site-header__nav" aria-label="Main navigation">
+      <a href="/en/">Home</a>
+      <a href="/en/utforska/">Explore</a>
+      <a href="/en/karta/">Map</a>
+      <a href="/en/privacy/" aria-current="page">Privacy</a>
       <a href="/en/terms/">Terms</a>
-      <a href="/en/contact/">Contact</a>
-      <span class="site-header__lang"><a href="/privacy/">SV</a> · <strong>EN</strong></span>
+      <span class="site-header__lang"><a href="/">SV</a> · <strong>EN</strong></span>
     </nav>
   </div>
 </header>
 
-<main class="container prose">
+<main class="container">
+  <article class="prose">
+    <h1>Privacy</h1>
+    <p>EventPulse is built on one principle: collect as little as possible, and sell nothing to anyone.</p>
 
-  <h1>Privacy Policy</h1>
-  <p class="meta">Last updated: 2026-10-04 · Version 0.1 (draft)</p>
+    <h2>What we store</h2>
+    <p>The public website (eventpulse.nu) sets no cookies and no sessions. It reads events directly from our database via public REST and renders them in your browser.</p>
+    <p>The app stores an anonymous user profile that can be upgraded to an account via Apple ID or magic link. No third-party tracking pixels.</p>
 
-  <div class="callout">
-    <strong>⚠️ This is an AI-generated draft, not legal advice.</strong>
-    The text was drafted by an AI based on what the app actually does.
-    It must be reviewed by a responsible person or external counsel before
-    being published as a final policy. EventPulse takes no responsibility
-    for the legal correctness of this text in its current form.
-  </div>
+    <h2>Analytics</h2>
+    <p>Statistics are anonymous and can be turned off at any time. We do not share data with advertisers and we sell nothing.</p>
 
-  <h2>1. Who we are</h2>
-  <p>
-    EventPulse is a personal event agent delivered as an iOS and Android
-    app, developed by [TODO: full company name and corporate ID]. The app
-    helps users in the Stockholm region find concerts, exhibitions and other
-    events based on their own taste.
-  </p>
-  <p>
-    Privacy contact: <a href="mailto:privacy@eventpulse.nu">privacy@eventpulse.nu</a>
-    [TODO: confirm or update the e-mail].
-  </p>
-
-  <h2>2. What data we collect</h2>
-
-  <h3>2.1 Account data (when you create an account)</h3>
-  <ul>
-    <li>E-mail address (if you sign in via magic link).</li>
-    <li>Apple ID (if you sign in with Apple — we only receive a unique user id, not your e-mail, if you choose to hide it).</li>
-    <li>Auto-generated anonymous user id (if you use the app without signing in).</li>
-  </ul>
-
-  <h3>2.2 User-generated data</h3>
-  <ul>
-    <li>Events you save, tap on or mark as uninteresting.</li>
-    <li>Venues and artists you follow.</li>
-    <li>Push subscriptions (if you want notifications for specific venues).</li>
-    <li>Conversations you have with the app's built-in event agent.</li>
-  </ul>
-
-  <h3>2.3 Device and usage data</h3>
-  <ul>
-    <li>Device id hashed as a 64-character hex string (anonymous; cannot be traced back to you without our internal salt key).</li>
-    <li>Language preference.</li>
-    <li>Location (only if you have explicitly granted location access to the app — used to show events near you).</li>
-  </ul>
-
-  <h3>2.4 Anonymous statistics (only if you opt in)</h3>
-  <p>
-    The app has a separate opt-in toggle under <em>Profile → Privacy</em>.
-    Statistics include events like <em>tile_tap</em>, <em>event_view</em>,
-    <em>event_save</em> and similar. No personally identifiable information
-    is included. Statistics are retained for up to 30 days.
-  </p>
-
-  <h2>3. Why we collect data and on what legal basis</h2>
-  <table>
-    <thead>
-      <tr><th>Purpose</th><th>Data</th><th>Legal basis (GDPR Art. 6)</th></tr>
-    </thead>
-    <tbody>
-      <tr>
-        <td>Provide the service (show events, save, follow venues)</td>
-        <td>Account data, user-generated data</td>
-        <td>Contract — you have created an account and we need the data for the service to function.</td>
-      </tr>
-      <tr>
-        <td>Push notifications</td>
-        <td>Push token, your follow choices</td>
-        <td>Consent — you enable push per venue.</td>
-      </tr>
-      <tr>
-        <td>Anonymous statistics</td>
-        <td>Event types per 2.4</td>
-        <td>Consent — separate opt-in toggle.</td>
-      </tr>
-      <tr>
-        <td>Security and debugging</td>
-        <td>Technical logs (no PII)</td>
-        <td>Legitimate interest — running a stable service.</td>
-      </tr>
-    </tbody>
-  </table>
-
-  <h2>4. How long we keep the data</h2>
-  <ul>
-    <li><strong>Account data:</strong> as long as the account is active. Deleted within 30 days after account deletion.</li>
-    <li><strong>User-generated data (saved events, follows, chats):</strong> tied to the account; deleted on account deletion via database cascade rules.</li>
-    <li><strong>Anonymous statistics:</strong> 30 days, then automatically purged.</li>
-    <li><strong>Push tokens:</strong> until you disable push for a venue or delete your account.</li>
-  </ul>
-
-  <h2>5. Who we share data with</h2>
-  <p>We do not share your personal data with third parties for marketing. We use the following processors:</p>
-  <ul>
-    <li><strong>Supabase</strong> — authentication, database and file storage. Server region: [TODO: confirm the project is in the EU, preferably eu-north-1 Stockholm].</li>
-    <li><strong>Expo / Apple Push Notification Service (APNs)</strong> — delivery of push notifications.</li>
-    <li><strong>OpenAI / Anthropic / chosen LLM provider</strong> — agent chat. Only the text you write is sent, not account data. [TODO: list the current provider].</li>
-  </ul>
-
-  <h2>6. International transfers</h2>
-  <p>
-    Some processors may handle data outside the EU/EEA (notably US-based
-    LLM providers). We ensure transfers use an appropriate legal mechanism
-    (EU Commission standard contractual clauses or equivalent). [TODO:
-    document the current mechanism per provider].
-  </p>
-
-  <h2>7. Your rights (GDPR Art. 15–22)</h2>
-  <ul>
-    <li><strong>Right of access (Art. 15):</strong> You can request a copy of your data. In the app: <em>Profile → Download my data</em> [TODO: button coming in Phase 4].</li>
-    <li><strong>Right to rectification (Art. 16):</strong> Contact us if something is wrong.</li>
-    <li><strong>Right to erasure (Art. 17):</strong> In the app: <em>Profile → Delete account</em>. All account-bound data is deleted immediately via database cascades.</li>
-    <li><strong>Right to restriction (Art. 18):</strong> Turn off statistics and/or push under <em>Profile → Privacy</em>.</li>
-    <li><strong>Right to data portability (Art. 20):</strong> Same export button as Art. 15.</li>
-    <li><strong>Right to object (Art. 21):</strong> Contact us.</li>
-  </ul>
-
-  <h2>8. How to exercise your rights</h2>
-  <p>
-    Directly in the app under <em>Profile</em> for the most common rights.
-    For other requests, write to
-    <a href="mailto:privacy@eventpulse.nu">privacy@eventpulse.nu</a>.
-    We respond within 30 days per GDPR.
-  </p>
-
-  <h2>9. Cookies and tracking on the website</h2>
-  <p>
-    The <strong>eventpulse.nu</strong> website uses no cookies, no tracking
-    pixels and no third-party scripts. No analytics tools are embedded.
-    The site is entirely same-origin.
-  </p>
-
-  <h2>10. Changes to this policy</h2>
-  <p>
-    We may update this policy. For material changes, we notify you in the
-    app. The latest update is shown at the top of this page.
-  </p>
-
-  <h2>11. Supervisory authority</h2>
-  <p>
-    If you believe we handle your data incorrectly, you can lodge a
-    complaint with the Swedish Authority for Privacy Protection (IMY) —
-    <a href="https://www.imy.se/en/" rel="noopener">imy.se/en/</a> — or
-    your local data protection authority.
-  </p>
-
+    <h2>Your rights (GDPR)</h2>
+    <p>You have the right to request export or deletion of all data we hold about you. Email <a href="mailto:hej@eventpulse.nu">hej@eventpulse.nu</a>.</p>
+  </article>
 </main>
 
 <footer class="site-footer">

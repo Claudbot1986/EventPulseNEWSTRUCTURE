@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="sv">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#000000">
+<meta name="description" content="Utforska Stockholms evenemang på en interaktiv karta — klicka på en pin för att se eventet.">
+<link rel="icon" type="image/svg+xml" href="/assets/icon.svg">
+<link rel="alternate" hreflang="sv" href="https://eventpulse.nu/karta/">
+<link rel="alternate" hreflang="en" href="https://eventpulse.nu/en/karta/">
+<link rel="canonical" href="https://eventpulse.nu/karta/">
+<title>Karta — EventPulse Stockholm</title>
+<link rel="stylesheet" href="/assets/styles.css">
+<!-- Leaflet CSS (open source, free tile servers, no API key needed) -->
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+      integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
+      crossorigin="">
+<meta name="ep-config" content='{"supabaseUrl":"https://bsllkpvkowwndhhxtlln.supabase.co","anonKey":"sb_publishable_Zy3H6r8GLtZNGC_GseZ-zQ_9aJQiugo"}'>
+</head>
+<body>
+
+<header class="site-header">
+  <div class="site-header__inner">
+    <a class="site-header__brand" href="/">
+      <img src="/assets/icon.svg" alt=""> EventPulse
+    </a>
+    <nav class="site-header__nav" aria-label="Huvudnavigering">
+      <a href="/">Hem</a>
+      <a href="/utforska/">Utforska</a>
+      <a href="/karta/" aria-current="page">Karta</a>
+      <a href="/privacy/">Integritet</a>
+      <a href="/villkor/">Villkor</a>
+      <span class="site-header__lang"><strong>SV</strong> · <a href="/en/">EN</a></span>
+    </nav>
+  </div>
+</header>
+
+<main class="container">
+
+  <section style="padding:var(--s-xl) 0 var(--s-md)">
+    <div class="hero__eyebrow">Karta</div>
+    <h1 class="hero__title" style="font-size:clamp(22px,4vw,32px);margin-bottom:var(--s-sm)">Evenemang på <em>karta</em></h1>
+    <p class="hero__lede">
+      Klicka på en pin för att se eventet. Klicka i listan för att zooma in.
+    </p>
+  </section>
+
+  <section class="map-page">
+    <aside class="map-page__list" id="ep-map-list" aria-label="Lista över events på kartan"></aside>
+    <div class="map-page__canvas" id="ep-map-canvas" aria-label="Karta över Stockholm"></div>
+  </section>
+
+</main>
+
+<footer class="site-footer">
+  <div class="site-footer__inner">
+    <span>© 2026 EventPulse. Gjord i Stockholm.</span>
+    <span class="site-footer__links">
+      <a href="/privacy/">Integritet</a>
+      <a href="/villkor/">Villkor</a>
+      <a href="/kontakt/">Kontakt</a>
+    </span>
+  </div>
+</footer>
+
+<!-- Leaflet JS (open source) -->
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+        integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
+        crossorigin=""></script>
+<script src="/assets/app.js" defer></script>
+</body>
+</html>

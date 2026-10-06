@@ -12,6 +12,23 @@ User decisions baked in (2026-09-20): **guest taste-first är första fokus (100
 
 Do in this order. All items are launch blockers; nothing else enters NOW.
 
+> **2026-10-06 — pivot: web companion site (eventpulse.nu) is now in NOW.**
+> User decision: replace the static marketing site with a full web companion
+> for the EventPulse app. Static HTML + Supabase REST + Leaflet (no Next.js,
+> no server runtime). Mirrors app's Hem/Utforska/Karta sections in
+> dark-theme + EventPulse design tokens. Lives in `site/` (Cloudflare Pages
+> deploy target). See `docs/WEB-COMPANION-PLAN.md` (when created) for scope.
+> Pushed item:
+>
+> 6. **Web companion site (eventpulse.nu)**
+>    - Static HTML/CSS/JS, deploy via Cloudflare Pages
+>    - `/` Hem with carousel rows (Ikväll / Helgen / per-kategori)
+>    - `/utforska` browse by category (samma 31 kategorier som appen)
+>    - `/karta` Leaflet-map, klick-på-pin → eventkort
+>    - `/event/?slug=...` event-detail (JS-templated från URL)
+>    - Dark-only EventPulse-tokens (se `06-UI-sandbox/.claude/eventpulse/ui/DESIGN_SYSTEM.md`)
+>    - Verify: Cloudflare-deploy till eventpulse.nu, smoke-test alla routes
+
 1. **Guest taste-first, server side**
    - Identity = Supabase anonymous sign-in (`auth.uid()`), **not** a custom `anonymous_user_id` column. Verified 2026-09-20: `external_anonymous_users_enabled` enabled via Management API + `scripts/smoke-anon-signin.mjs` 6/6 PASS (session issued, `is_anonymous` claim in JWT, refresh keeps `sub`, PostgREST accepts the anon JWT)
    - `requireUser`-gated endpoints that write/read *own* data accept the anonymous JWT as identity: `/agent/feedback`, `/agent/preferences`, `/agent/saved`, `/agent/recommended`, `/agent/cached-recommendations`

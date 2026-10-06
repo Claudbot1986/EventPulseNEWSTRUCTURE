@@ -3,13 +3,15 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>EventPulse — Your personal event agent for Stockholm</title>
-<meta name="description" content="EventPulse is a personal event agent that helps you find the best concerts, exhibitions and nights out in Stockholm — based on your own taste.">
 <meta name="theme-color" content="#000000">
+<meta name="description" content="EventPulse — your personal event agent for Stockholm. Concerts, theatre, exhibitions — all in one place.">
 <link rel="icon" type="image/svg+xml" href="/assets/icon.svg">
-<link rel="alternate" hreflang="en" href="https://eventpulse.nu/en/">
 <link rel="alternate" hreflang="sv" href="https://eventpulse.nu/">
+<link rel="alternate" hreflang="en" href="https://eventpulse.nu/en/">
+<link rel="canonical" href="https://eventpulse.nu/en/">
+<title>EventPulse — Events in Stockholm</title>
 <link rel="stylesheet" href="/assets/styles.css">
+<meta name="ep-config" content='{"supabaseUrl":"https://bsllkpvkowwndhhxtlln.supabase.co","anonKey":"sb_publishable_Zy3H6r8GLtZNGC_GseZ-zQ_9aJQiugo"}'>
 </head>
 <body>
 
@@ -18,48 +20,80 @@
     <a class="site-header__brand" href="/en/">
       <img src="/assets/icon.svg" alt=""> EventPulse
     </a>
-    <nav class="site-header__nav" aria-label="Main">
+    <nav class="site-header__nav" aria-label="Main navigation">
+      <a href="/en/utforska/">Explore</a>
+      <a href="/en/karta/">Map</a>
       <a href="/en/privacy/">Privacy</a>
       <a href="/en/terms/">Terms</a>
-      <a href="/en/contact/">Contact</a>
       <span class="site-header__lang"><a href="/">SV</a> · <strong>EN</strong></span>
     </nav>
   </div>
 </header>
 
 <main class="container">
-
   <section class="hero">
-    <div class="hero__eyebrow">Personal event agent</div>
-    <h1>Find Stockholm's best events — without the noise.</h1>
+    <div class="hero__eyebrow">Personal event agent · Stockholm</div>
+    <h1 class="hero__title">Find <em>events</em> in Stockholm — without the noise.</h1>
     <p class="hero__lede">
-      EventPulse is an app that learns what you like, then shows you concerts,
-      exhibitions and nights out that actually fit your taste. Follow your
-      venues and artists — get a notification when they add new events.
+      EventPulse learns what you like and shows you concerts, theatre, exhibitions
+      and evenings that actually fit your taste. Here is what's happening in Stockholm
+      right now.
     </p>
-    <div class="hero__cta">
-      <a class="btn btn--primary" href="#" aria-label="Download EventPulse from the App Store">Download on the App Store</a>
-      <a class="btn btn--ghost" href="#features">Learn more</a>
+    <div class="pill-row" role="navigation" aria-label="Quick navigation">
+      <a class="pill is-active" href="/en/" aria-pressed="true">Stockholm</a>
+      <a class="pill" href="/en/utforska/?category=music">Music</a>
+      <a class="pill" href="/en/utforska/?category=theatre-drama">Theatre</a>
+      <a class="pill" href="/en/utforska/?category=exhibition">Exhibition</a>
+      <a class="pill" href="/en/utforska/?category=sports">Sport</a>
+      <a class="pill" href="/en/utforska/?category=comedy">Standup</a>
+      <a class="pill" href="/en/karta/">Map</a>
     </div>
   </section>
 
-  <section id="features" class="features">
-    <div class="feature">
-      <h3>Taste-based ranking</h3>
-      <p>The agent learns from the events you save and tap on, and surfaces more of what they.</p>
+  <section class="section" data-ep-carousel="tonight">
+    <div class="section__head">
+      <h2 class="section__title">Tonight</h2>
+      <a class="section__link" href="/en/utforska/?date=today">See all tonight →</a>
     </div>
-    <div class="feature">
-      <h3>Follow venues and artists</h3>
-      <p>Get a notification when one of your favourite venues adds a new event.</p>
+    <div class="carousel"><div class="carousel__track"></div></div>
+  </section>
+
+  <section class="section" data-ep-carousel="weekend">
+    <div class="section__head">
+      <h2 class="section__title">This weekend</h2>
+      <a class="section__link" href="/en/utforska/?date=weekend">See all weekend →</a>
     </div>
-    <div class="feature">
-      <h3>Saved events</h3>
-      <p>Build your own list of events you don't want to miss, and come back to it.</p>
-    </div>
-    <div class="feature">
-      <h3>Privacy by design</h3>
-      <p>All analytics are anonymous and can be turned off at any time. No selling your data.</p>
-    </div>
+    <div class="carousel"><div class="carousel__track"></div></div>
+  </section>
+
+  <section class="section" data-ep-carousel="music">
+    <div class="section__head"><h2 class="section__title">Music</h2></div>
+    <div class="carousel"><div class="carousel__track"></div></div>
+  </section>
+
+  <section class="section" data-ep-carousel="theatre-drama">
+    <div class="section__head"><h2 class="section__title">Theatre &amp; Drama</h2></div>
+    <div class="carousel"><div class="carousel__track"></div></div>
+  </section>
+
+  <section class="section" data-ep-carousel="exhibition">
+    <div class="section__head"><h2 class="section__title">Exhibitions</h2></div>
+    <div class="carousel"><div class="carousel__track"></div></div>
+  </section>
+
+  <section class="section" data-ep-carousel="community">
+    <div class="section__head"><h2 class="section__title">Community &amp; Workshops</h2></div>
+    <div class="carousel"><div class="carousel__track"></div></div>
+  </section>
+
+  <section class="section" data-ep-carousel="sports">
+    <div class="section__head"><h2 class="section__title">Sport</h2></div>
+    <div class="carousel"><div class="carousel__track"></div></div>
+  </section>
+
+  <section class="section" data-ep-carousel="comedy">
+    <div class="section__head"><h2 class="section__title">Standup &amp; Comedy</h2></div>
+    <div class="carousel"><div class="carousel__track"></div></div>
   </section>
 
 </main>
@@ -75,5 +109,6 @@
   </div>
 </footer>
 
+<script src="/assets/app.js" defer></script>
 </body>
 </html>

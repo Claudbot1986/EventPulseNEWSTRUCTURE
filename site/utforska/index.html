@@ -1,0 +1,102 @@
+<!doctype html>
+<html lang="sv">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#000000">
+<meta name="description" content="Utforska alla evenemang i Stockholm — filtrera på kategori och datum.">
+<link rel="icon" type="image/svg+xml" href="/assets/icon.svg">
+<link rel="alternate" hreflang="sv" href="https://eventpulse.nu/utforska/">
+<link rel="alternate" hreflang="en" href="https://eventpulse.nu/en/utforska/">
+<link rel="canonical" href="https://eventpulse.nu/utforska/">
+<title>Utforska — EventPulse Stockholm</title>
+<link rel="stylesheet" href="/assets/styles.css">
+<meta name="ep-config" content='{"supabaseUrl":"https://bsllkpvkowwndhhxtlln.supabase.co","anonKey":"sb_publishable_Zy3H6r8GLtZNGC_GseZ-zQ_9aJQiugo"}'>
+</head>
+<body>
+
+<header class="site-header">
+  <div class="site-header__inner">
+    <a class="site-header__brand" href="/">
+      <img src="/assets/icon.svg" alt=""> EventPulse
+    </a>
+    <nav class="site-header__nav" aria-label="Huvudnavigering">
+      <a href="/">Hem</a>
+      <a href="/utforska/" aria-current="page">Utforska</a>
+      <a href="/karta/">Karta</a>
+      <a href="/privacy/">Integritet</a>
+      <a href="/villkor/">Villkor</a>
+      <span class="site-header__lang"><strong>SV</strong> · <a href="/en/">EN</a></span>
+    </nav>
+  </div>
+</header>
+
+<main class="container">
+
+  <section class="hero" style="padding-bottom:var(--s-lg)">
+    <div class="hero__eyebrow">Utforska</div>
+    <h1 class="hero__title">Alla <em>evenemang</em> i Stockholm</h1>
+    <p class="hero__lede">
+      Filtrera på kategori och datum. Klicka på ett event för detaljer.
+    </p>
+    <div class="pill-row" role="navigation" aria-label="Datumfilter">
+      <a class="pill is-active" href="/utforska/" aria-pressed="true">Alla</a>
+      <a class="pill" href="/utforska/?date=today">Ikväll</a>
+      <a class="pill" href="/utforska/?date=weekend">Helgen</a>
+      <a class="pill" href="/utforska/?date=tomorrow">Imorgon</a>
+    </div>
+    <div class="pill-row" role="navigation" aria-label="Kategorifilter">
+      <a class="pill is-active" href="/utforska/" aria-pressed="true">Alla kategorier</a>
+      <a class="pill" href="/utforska/?category=music">Musik</a>
+      <a class="pill" href="/utforska/?category=theatre-drama">Teater-drama</a>
+      <a class="pill" href="/utforska/?category=theatre-comedy">Teater &amp; Komedi</a>
+      <a class="pill" href="/utforska/?category=musical-theatre">Musikal</a>
+      <a class="pill" href="/utforska/?category=comedy">Standup</a>
+      <a class="pill" href="/utforska/?category=opera">Opera</a>
+      <a class="pill" href="/utforska/?category=jazz">Jazz</a>
+      <a class="pill" href="/utforska/?category=classical">Klassiskt</a>
+      <a class="pill" href="/utforska/?category=hip-hop">Hip-hop</a>
+      <a class="pill" href="/utforska/?category=pop">Pop</a>
+      <a class="pill" href="/utforska/?category=rock">Rock</a>
+      <a class="pill" href="/utforska/?category=electronic">Elektroniskt</a>
+      <a class="pill" href="/utforska/?category=metal">Metal</a>
+      <a class="pill" href="/utforska/?category=dance">Dans</a>
+      <a class="pill" href="/utforska/?category=exhibition">Utställning</a>
+      <a class="pill" href="/utforska/?category=sports">Sport</a>
+      <a class="pill" href="/utforska/?category=family">Familj</a>
+      <a class="pill" href="/utforska/?category=kids">Barn</a>
+      <a class="pill" href="/utforska/?category=community">Gemenskap</a>
+      <a class="pill" href="/utforska/?category=food">Mat</a>
+      <a class="pill" href="/utforska/?category=workshop">Workshop</a>
+      <a class="pill" href="/utforska/?category=talks-lectures">Föreläsningar</a>
+      <a class="pill" href="/utforska/?category=film">Film</a>
+      <a class="pill" href="/utforska/?category=fairs">Mässa</a>
+      <a class="pill" href="/utforska/?category=flea-market">Loppis</a>
+      <a class="pill" href="/utforska/?category=nightlife">Nattliv</a>
+      <a class="pill" href="/utforska/?category=wine-tasting">Vintasting</a>
+      <a class="pill" href="/utforska/?category=technology">Teknik</a>
+      <a class="pill" href="/utforska/?category=circus">Cirkus</a>
+      <a class="pill" href="/utforska/?category=world-folk">Världsmusik</a>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="event-list" data-ep-grid></div>
+  </section>
+
+</main>
+
+<footer class="site-footer">
+  <div class="site-footer__inner">
+    <span>© 2026 EventPulse. Gjord i Stockholm.</span>
+    <span class="site-footer__links">
+      <a href="/privacy/">Integritet</a>
+      <a href="/villkor/">Villkor</a>
+      <a href="/kontakt/">Kontakt</a>
+    </span>
+  </div>
+</footer>
+
+<script src="/assets/app.js" defer></script>
+</body>
+</html>

@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#000000">
+<meta name="description" content="Browse all events in Stockholm — filter by category and date.">
+<link rel="icon" type="image/svg+xml" href="/assets/icon.svg">
+<link rel="alternate" hreflang="sv" href="https://eventpulse.nu/utforska/">
+<link rel="alternate" hreflang="en" href="https://eventpulse.nu/en/utforska/">
+<link rel="canonical" href="https://eventpulse.nu/en/utforska/">
+<title>Explore — EventPulse Stockholm</title>
+<link rel="stylesheet" href="/assets/styles.css">
+<meta name="ep-config" content='{"supabaseUrl":"https://bsllkpvkowwndhhxtlln.supabase.co","anonKey":"sb_publishable_Zy3H6r8GLtZNGC_GseZ-zQ_9aJQiugo"}'>
+</head>
+<body>
+
+<header class="site-header">
+  <div class="site-header__inner">
+    <a class="site-header__brand" href="/en/">
+      <img src="/assets/icon.svg" alt=""> EventPulse
+    </a>
+    <nav class="site-header__nav" aria-label="Main navigation">
+      <a href="/en/">Home</a>
+      <a href="/en/utforska/" aria-current="page">Explore</a>
+      <a href="/en/karta/">Map</a>
+      <a href="/en/privacy/">Privacy</a>
+      <a href="/en/terms/">Terms</a>
+      <span class="site-header__lang"><a href="/">SV</a> · <strong>EN</strong></span>
+    </nav>
+  </div>
+</header>
+
+<main class="container">
+  <section class="hero" style="padding-bottom:var(--s-lg)">
+    <div class="hero__eyebrow">Explore</div>
+    <h1 class="hero__title">All <em>events</em> in Stockholm</h1>
+    <p class="hero__lede">
+      Filter by category and date. Click an event for details.
+    </p>
+    <div class="pill-row" role="navigation" aria-label="Date filter">
+      <a class="pill is-active" href="/en/utforska/" aria-pressed="true">All</a>
+      <a class="pill" href="/en/utforska/?date=today">Tonight</a>
+      <a class="pill" href="/en/utforska/?date=weekend">Weekend</a>
+    </div>
+    <div class="pill-row" role="navigation" aria-label="Category filter">
+      <a class="pill is-active" href="/en/utforska/" aria-pressed="true">All categories</a>
+      <a class="pill" href="/en/utforska/?category=music">Music</a>
+      <a class="pill" href="/en/utforska/?category=theatre-drama">Drama</a>
+      <a class="pill" href="/en/utforska/?category=exhibition">Exhibition</a>
+      <a class="pill" href="/en/utforska/?category=sports">Sport</a>
+      <a class="pill" href="/en/utforska/?category=comedy">Standup</a>
+      <a class="pill" href="/en/utforska/?category=family">Family</a>
+      <a class="pill" href="/en/utforska/?category=community">Community</a>
+      <a class="pill" href="/en/utforska/?category=opera">Opera</a>
+      <a class="pill" href="/en/utforska/?category=jazz">Jazz</a>
+      <a class="pill" href="/en/utforska/?category=workshop">Workshop</a>
+      <a class="pill" href="/en/utforska/?category=food">Food</a>
+      <a class="pill" href="/en/utforska/?category=film">Film</a>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="event-list" data-ep-grid></div>
+  </section>
+</main>
+
+<footer class="site-footer">
+  <div class="site-footer__inner">
+    <span>© 2026 EventPulse. Made in Stockholm.</span>
+    <span class="site-footer__links">
+      <a href="/en/privacy/">Privacy</a>
+      <a href="/en/terms/">Terms</a>
+      <a href="/en/contact/">Contact</a>
+    </span>
+  </div>
+</footer>
+
+<script src="/assets/app.js" defer></script>
+</body>
+</html>
