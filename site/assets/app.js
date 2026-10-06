@@ -87,6 +87,8 @@
     // events-tabellen har inget slug-fält — använd id i URL:en.
     a.href = `/event/?id=${encodeURIComponent(ev.id)}`;
     a.setAttribute('aria-label', ev.title_sv || ev.title_en || 'Evenemang');
+    // Används av dwell-tracker (categorySlugFromCard) + localStorage-bias
+    if (ev.category_slug) a.dataset.cat = ev.category_slug;
 
     // Image (or empty placeholder)
     const imgWrap = document.createElement('div');
@@ -174,6 +176,14 @@
     for (let i = 0; i < count; i++) trackEl.appendChild(buildSkeletonCard());
   }
 
+  /** Sätt sektionstiteln för "För dig" baserat på om användaren har taste-spår. */
+  function refreshForyouCopy(root, hasTaste) {
+    const titleEl = root.querySelector('.section__title');
+    const linkEl = root.querySelector('.section__link');
+    if (titleEl) titleEl.textContent = hasTaste ? 'För dig' : 'Upptäck';
+    if (linkEl) linkEl.textContent = hasTaste ? 'Rensa smak →' : 'Vad är det här?';
+  }
+
   // ── Section data fetchers (carousels + lists) ──────────────────────────
 
   /** Fetch events for a "tonight" carousel */
@@ -236,6 +246,124 @@
     return cats;
   }
 
+  // ── Taste / personalization (client-side) ────────────────────────────
+  // Håller reda på vilka events användaren dwell:at på (1s card_hold, 3s
+  // list_view) eller klickat. Lagrat i localStorage — ingen backend-write
+  // behövs för denna MVP. När vi senare wire:ar till /agent/feedback (BACKLOG
+  // Fas C) skickas samma shape som appens `recordEventInteraction` — samma
+  // fältnamn, samma metadata.
+
+  const TASTE_KEY = 'ep:taste:v1';
+  /** Shape speglar user_interactions + samma dwell-konventioner som appen:
+   *  events[id] = { dwell_ms, clicks, last_seen, category, sources: ['card_hold','list_view','details_view'] }
+   *  categories[slug] = { score, last_seen }
+   *  För att kunna mappa → POST /agent/feedback { interaction, event_id, metadata }
+   *  räcker det att iterera events och skicka en rad per signal. */
+  function readTaste() {
+    try {
+      const raw = localStorage.getItem(TASTE_KEY);
+      return raw ? JSON.parse(raw) : { events: {}, categories: {} };
+    } catch { return { events: {}, categories: {} }; }
+  }
+  function writeTaste(t) {
+    try {
+      // Begränsa storlek — vi vill inte växa obegränsat
+      if (Object.keys(t.events).length > 500) {
+        const sorted = Object.entries(t.events)
+          .sort((a, b) => (b[1].last_seen || 0) - (a[1].last_seen || 0))
+          .slice(0, 400);
+        t.events = Object.fromEntries(sorted);
+      }
+      localStorage.setItem(TASTE_KEY, JSON.stringify(t));
+    } catch (e) {
+      // localStorage kan vara full eller inaktiverat — vi failar tyst.
+    }
+  }
+  /** Record signal — samma shape som agentClient.recordEventInteraction.
+   *  Viktning: klick=1.0, dwell=0.4 (card_hold) eller 0.6 (list_view/details_view). */
+  function recordEventSignal(eventId, categorySlug, kind /* 'click' | 'dwell' */, source = 'list_view', dwellMs = 0) {
+    if (!eventId) return;
+    const t = readTaste();
+    const now = Date.now();
+    const weight = kind === 'click' ? 1.0
+      : source === 'card_hold' ? 0.4
+      : source === 'list_view' ? 0.6
+      : source === 'details_view' ? 0.6
+      : 0.4;
+    const ev = t.events[eventId] || { dwell_ms: 0, clicks: 0, last_seen: 0, sources: [] };
+    if (kind === 'click') ev.clicks += 1;
+    if (kind === 'dwell') ev.dwell_ms = (ev.dwell_ms || 0) + dwellMs;
+    ev.last_seen = now;
+    ev.category = categorySlug || ev.category;
+    if (!ev.sources.includes(source)) ev.sources.push(source);
+    t.events[eventId] = ev;
+    if (ev.category) {
+      const cat = t.categories[ev.category] || { score: 0, last_seen: 0 };
+      cat.score = (cat.score || 0) + weight;
+      cat.last_seen = now;
+      t.categories[ev.category] = cat;
+    }
+    writeTaste(t);
+  }
+  /** Hämta topp-N kategorier sorterade på score. */
+  function topCategories(n = 3) {
+    const t = readTaste();
+    return Object.entries(t.categories)
+      .sort((a, b) => b[1].score - a[1].score)
+      .slice(0, n)
+      .map(([slug, info]) => ({ slug, score: info.score }));
+  }
+
+  /** Fetch events för "För dig"-karusell.
+   *  Algoritm: om användaren har taste-tracks, hämta events från top-kategorier.
+   *  Annars: högst confidence_score som "default rec".
+   *  Blendas med nya cards från andra kategorier för att inte bli en ekokammare.
+   */
+  async function fetchForYou(limit = 12) {
+    const top = topCategories(3);
+    const trustedCats = top.map((c) => c.slug);
+
+    // Hämta 1 batch från toppkategorier (om någon), 1 batch av högst-rankerade
+    const tasks = [];
+
+    if (trustedCats.length > 0) {
+      const catFilter = `in.(${trustedCats.join(',')})`;
+      tasks.push(epFetch('/events', {
+        select: 'id,title_sv,start_time,image_url,venue_full_name,venue_city,category_slug,confidence_score',
+        status: 'eq.published',
+        start_time: 'gte.' + new Date().toISOString(),
+        category_slug: catFilter,
+        confidence_score: 'gte.65',
+        order: 'confidence_score.desc,start_time.asc',
+        limit: Math.ceil(limit * 0.6),
+      }));
+    }
+
+    // Default: högst confidence-score för discovery
+    tasks.push(epFetch('/events', {
+      select: 'id,title_sv,start_time,image_url,venue_full_name,venue_city,category_slug,confidence_score',
+      status: 'eq.published',
+      start_time: 'gte.' + new Date().toISOString(),
+      confidence_score: 'gte.70',
+      order: 'confidence_score.desc,start_time.asc',
+      limit: limit,
+    }));
+
+    const results = await Promise.all(tasks);
+    // Dedupe och välj
+    const seen = new Set();
+    const merged = [];
+    for (const list of results) {
+      for (const r of list) {
+        if (seen.has(r.id)) continue;
+        seen.add(r.id);
+        merged.push(r);
+      }
+      if (merged.length >= limit) break;
+    }
+    return merged.slice(0, limit);
+  }
+
   /** Fetch a single event for /event/?id=... */
   async function fetchEvent(id) {
     // events-tabellen har ingen slug-kolumn — använd id som lookup-nyckel.
@@ -264,9 +392,9 @@
 
   // ── Mount helpers (per page) ────────────────────────────────────────────
 
-  /** Mount a carousel section into <section data-ep-carousel="tonight|weekend|music|..."> */
+  /** Mount a carousel section into <section data-ep-carousel="tonight|weekend|foryou|music|..."> */
   async function mountCarousel(root) {
-    const kind = root.dataset.epCarousel; // 'tonight' | 'weekend' | '<catSlug>'
+    const kind = root.dataset.epCarousel; // 'tonight' | 'weekend' | 'foryou' | '<catSlug>'
     const track = root.querySelector('.carousel__track');
     const titleEl = root.querySelector('.section__title');
     const linkEl = root.querySelector('.section__link');
@@ -284,6 +412,37 @@
         rows = await fetchWeekend(12);
         title = 'Helgen';
         seeAll = { href: '/utforska/?date=weekend', label: 'Visa helgens alla →' };
+      } else if (kind === 'foryou') {
+        rows = await fetchForYou(12);
+        const hasTaste = topCategories(1).length > 0;
+        refreshForyouCopy(root, hasTaste);
+        // För "För dig" används "Rensa smak" istället för "Visa alla"
+        if (linkEl) {
+          linkEl.href = '#';
+          linkEl.dataset.epForyouClear = '';
+          if (!linkEl._wired) {
+            linkEl._wired = true;
+            linkEl.addEventListener('click', (e) => {
+              e.preventDefault();
+              try { localStorage.removeItem(TASTE_KEY); } catch {}
+              // Rerender genom att cleara karusellens innehåll + refetcha
+              track.innerHTML = '';
+              mountCarousel(root);
+            });
+          }
+        }
+        track.innerHTML = '';
+        if (!rows.length) {
+          const e = buildEmpty('Inga förslag än — utforska för att bygga smak.');
+          track.appendChild(e);
+          return;
+        }
+        rows.forEach((r) => track.appendChild(buildEventCard(r)));
+        // Viktigt: trigga dwell-observatören på nya kort
+        if (typeof window.dispatchEvent === 'function') {
+          window.dispatchEvent(new Event('ep:cards-added'));
+        }
+        return;
       } else {
         // category
         rows = await fetchByCategory(kind, 12);
@@ -309,6 +468,10 @@
         return;
       }
       rows.forEach((r) => track.appendChild(buildEventCard(r)));
+      // Viktigt: trigga dwell-observatören på nya kort
+      if (typeof window.dispatchEvent === 'function') {
+        window.dispatchEvent(new Event('ep:cards-added'));
+      }
     } catch (e) {
       console.error('mountCarousel', kind, e);
       track.innerHTML = '';
@@ -559,7 +722,129 @@
     mountUtforska();
     mountEventDetail();
     mountMap();
+    mountDwellTracker();   // mirror app: 1s card_hold + 3s list_view via IntersectionObserver
   });
+
+  // ── Dwell tracker (mirrors 06-UI/App.js CARD_HOLD_MS + LIST_VIEW_MIN_MS) ──
+  // Tre dwell-källor, samma som appen:
+  //   - card_hold:  mousedown 1s utan släpp → dwell  (metadata.source='card_hold')
+  //   - list_view:  ≥65% synlig i 3s via IntersectionObserver → dwell  (source='list_view')
+  //   - details_view: tid på /event/…-sidan → dwell  (source='details_view')
+  // Lagras i localStorage. När web → /agent/feedback wire:as (BACKLOG Fas C)
+  // skickas samma shape som appens `recordEventInteraction`.
+  const LIST_VIEW_MIN_MS = 3000;
+  const CARD_HOLD_MS = 1000;
+  let dwellObserver = null;
+  const dwellRecordedThisVisit = new Set(); // dedupe: 1 list_view dwell per event per page-load
+
+  function extractEventIdFromCard(card) {
+    if (!card) return null;
+    const href = card.getAttribute('href') || '';
+    const m = href.match(/[?&]id=([^&]+)/);
+    return m ? m[1] : null;
+  }
+  function categorySlugFromCard(card) {
+    // category finns inte på kortet i nuläget — vi plockar från data-cat om satt
+    return card.dataset.cat || null;
+  }
+
+  function mountDwellTracker() {
+    // ── card_hold: 1s mousedown utan mouseup → dwell
+    document.addEventListener('mousedown', (e) => {
+      const card = e.target.closest('.event-card');
+      if (!card) return;
+      const eventId = extractEventIdFromCard(card);
+      if (!eventId) return;
+      const start = Date.now();
+      const onUp = () => {
+        document.removeEventListener('mouseup', onUp);
+        const held = Date.now() - start;
+        if (held >= CARD_HOLD_MS) {
+          recordEventSignal(eventId, categorySlugFromCard(card), 'dwell', 'card_hold', held);
+        }
+      };
+      document.addEventListener('mouseup', onUp, { once: true });
+    });
+
+    // ── click: registrera också
+    document.addEventListener('click', (e) => {
+      const card = e.target.closest('.event-card');
+      if (!card) return;
+      const eventId = extractEventIdFromCard(card);
+      if (eventId) recordEventSignal(eventId, categorySlugFromCard(card), 'click');
+    });
+
+    // ── list_view: IntersectionObserver 65% synlig i 3s
+    if (!('IntersectionObserver' in window)) return;
+    dwellObserver = new IntersectionObserver((entries) => {
+      for (const entry of entries) {
+        const card = entry.target;
+        const eventId = extractEventIdFromCard(card);
+        if (!eventId) continue;
+        if (entry.isIntersecting && entry.intersectionRatio >= 0.5) {
+          // ≥50% synlig — starta 3s dwell-timer (lite mildare än appens 65%
+          // för att kompensera att webbläsarens IntersectionObserver-trösklar
+          // varierar; proportionellt samma signalstyrka)
+          if (!card._dwellTimer) {
+            card._dwellTimer = setTimeout(() => {
+              if (dwellRecordedThisVisit.has(eventId)) return;
+              dwellRecordedThisVisit.add(eventId);
+              recordEventSignal(eventId, categorySlugFromCard(card), 'dwell', 'list_view', LIST_VIEW_MIN_MS);
+            }, LIST_VIEW_MIN_MS);
+          }
+        } else if (card._dwellTimer) {
+          clearTimeout(card._dwellTimer);
+          card._dwellTimer = null;
+        }
+      }
+    }, { threshold: [0, 0.5, 1] });
+
+    // Lägg till alla .event-card i observatorn
+    function observeCards(root = document) {
+      root.querySelectorAll('.event-card').forEach((c) => {
+        if (!c._observed) {
+          dwellObserver.observe(c);
+          c._observed = true;
+        }
+      });
+    }
+    observeCards();
+
+    // MutationObserver: när nya karuseller mountas → observera nya kort
+    const mo = new MutationObserver((muts) => {
+      for (const m of muts) {
+        m.addedNodes.forEach((n) => {
+          if (n.nodeType !== 1) return;
+          if (n.classList?.contains('event-card')) {
+            dwellObserver.observe(n);
+            n._observed = true;
+          } else if (n.querySelectorAll) {
+            observeCards(n);
+          }
+        });
+      }
+    });
+    mo.observe(document.body, { childList: true, subtree: true });
+
+    // Också lyssna på 'ep:cards-added' från mountCarousel (för For dig
+    // som körs separat och kan binda nya events)
+    window.addEventListener('ep:cards-added', () => observeCards());
+
+    // ── details_view: dwell_ms vid unload av /event/…-sidan
+    if (location.pathname.startsWith('/event')) {
+      const params = new URLSearchParams(location.search);
+      const id = params.get('id');
+      const start = Date.now();
+      const record = () => {
+        const ms = Date.now() - start;
+        if (ms >= 500 && id) {
+          recordEventSignal(id, null, 'dwell', 'details_view', ms);
+        }
+      };
+      window.addEventListener('beforeunload', record);
+      window.addEventListener('pagehide', record);
+    }
+  }
 
   // Expose for direct testing
   window.EventPulseWeb = {

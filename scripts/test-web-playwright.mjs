@@ -80,13 +80,13 @@ async function testHem(browser) {
     record('Hem: eventkort renderas', cardCount >= 5, `${cardCount} kort`);
 
     const sectionCount = await page.$$eval('[data-ep-carousel]', (els) => els.length);
-    record('Hem: 9 karusell-sektioner', sectionCount === 9, `${sectionCount} sektioner`);
+    record('Hem: 10 karusell-sektioner', sectionCount === 10, `${sectionCount} sektioner`);
 
     const carouselNames = await page.$$eval('[data-ep-carousel]', (els) =>
       els.map((e) => e.dataset.epCarousel)
     );
     const expectedCarousels = [
-      'tonight', 'weekend', 'music', 'theatre-drama', 'exhibition',
+      'foryou', 'tonight', 'weekend', 'music', 'theatre-drama', 'exhibition',
       'community', 'sports', 'family', 'comedy',
     ];
     record('Hem: alla förväntade karuseller', JSON.stringify(carouselNames.sort()) === JSON.stringify(expectedCarousels.sort()), `har: ${carouselNames.join(', ')}`);
