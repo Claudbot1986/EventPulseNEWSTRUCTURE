@@ -124,13 +124,47 @@ button {
   gap: var(--s-base);
   font-size: 14px;
   font-weight: 600;
+  min-width: 0;
 }
+.site-header__nav > * { flex-shrink: 0; }
 .site-header__nav a {
   color: var(--c-text-muted);
+  white-space: nowrap;
 }
 .site-header__nav a:hover,
 .site-header__nav a[aria-current="page"] {
   color: var(--c-text);
+}
+/* Tablet/mobil: skala ner font, dölj icke-väsentliga nav-länkar (privacy,
+   villkor, kontakt hamnar i sidfoten) */
+@media (max-width: 720px) {
+  .site-header__nav {
+    gap: var(--s-sm);
+    font-size: 13px;
+  }
+  .site-header__nav > a:not([data-essential]) {
+    display: none;
+  }
+  .site-header__lang {
+    margin-left: auto;
+  }
+}
+/* Riktigt smal: bara Utforska. Karta + EN-toggle flyttas till footer */
+@media (max-width: 480px) {
+  .site-header__inner {
+    gap: var(--s-xs);
+  }
+  .site-header__brand {
+    font-size: 15px;
+  }
+  .site-header__nav {
+    font-size: 13px;
+    gap: var(--s-xs);
+  }
+  .site-header__nav > a[data-essential="true"]:nth-of-type(2),
+  .site-header__lang {
+    display: none;
+  }
 }
 
 /* ── Container ──────────────────────────────────────────────────────────── */

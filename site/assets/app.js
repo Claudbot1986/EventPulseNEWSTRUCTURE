@@ -185,8 +185,7 @@
     return epFetch('/events', {
       select: 'id,title_sv,start_time,image_url,venue_full_name,venue_city',
       status: 'eq.published',
-      'start_time.gte': startOfToday.toISOString(),
-      'start_time.lt': endOfToday.toISOString(),
+      and: '(start_time.gte.' + startOfToday.toISOString() + ',start_time.lt.' + endOfToday.toISOString() + ')',
       order: 'start_time.asc',
       limit,
     });
@@ -205,8 +204,7 @@
     return epFetch('/events', {
       select: 'id,title_sv,start_time,image_url,venue_full_name,venue_city',
       status: 'eq.published',
-      'start_time.gte': sat.toISOString(),
-      'start_time.lt': mon.toISOString(),
+      and: '(start_time.gte.' + sat.toISOString() + ',start_time.lt.' + mon.toISOString() + ')',
       order: 'start_time.asc',
       limit,
     });
@@ -218,7 +216,7 @@
       select: 'id,title_sv,start_time,image_url,venue_full_name,venue_city',
       status: 'eq.published',
       category_slug: 'eq.' + catSlug,
-      'start_time.gte': new Date().toISOString(),
+      start_time: 'gte.' + new Date().toISOString(),
       order: 'start_time.asc',
       limit,
     });
@@ -254,7 +252,7 @@
     const params = {
       select: 'id,title_sv,start_time,venue_full_name,venue_city,lat,lng,category_slug',
       status: 'eq.published',
-      'start_time.gte': new Date().toISOString(),
+      start_time: 'gte.' + new Date().toISOString(),
       // not.is.null=lat fungerar inte via PostgREST — använd lat gte -90 istället.
       lat: 'gte.-90',
       order: 'start_time.asc',
@@ -353,11 +351,11 @@
       const q = {
         select: 'id,title_sv,start_time,image_url,venue_full_name,venue_city',
         status: 'eq.published',
-        'start_time.gte': start.toISOString(),
+        start_time: 'gte.' + start.toISOString(),
         order: 'start_time.asc',
         limit: 60,
       };
-      if (end) q['start_time.lt'] = end.toISOString();
+      if (end) { q.and = '(start_time.gte.' + start.toISOString() + ',start_time.lt.' + end.toISOString() + ')'; }
       if (cat) q.category_slug = 'eq.' + cat;
 
       const rows = await epFetch('/events', q);
