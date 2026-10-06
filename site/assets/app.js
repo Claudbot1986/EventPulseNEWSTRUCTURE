@@ -431,18 +431,22 @@
     const listEl = document.querySelector('.map-page__list');
     if (!canvas || !listEl || typeof window.L === 'undefined') return;
 
-    // Initialize Leaflet map (dark tiles from CARTO)
+    // Initialize Leaflet map. Vi använder OpenStreetMap (gratis, ingen API-nyckel)
+    // och gör det dark via CSS-filter — se .leaflet-tile i styles.css.
+    // Tidigare använde vi CARTO dark_all men deras policy kräver nu API-nyckel.
     const map = window.L.map(canvas, {
       zoomControl: true,
       attributionControl: true,
     }).setView([59.3293, 18.0686], 12);
 
     window.L.tileLayer(
-      'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',
+      'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
       {
         maxZoom: 19,
+        // OSM kräver attribution + rimlig trafik. För production med mycket
+        // trafik bör vi köra egen tile-server (eller stadia/stamen med key).
         attribution:
-          '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/attributions">CARTO</a>',
+          '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
       }
     ).addTo(map);
 
@@ -518,10 +522,21 @@
       listEl.appendChild(li);
     });
 
-    // Fit bounds
+    // Fit bounds — begränsad till Stockholm-området så vi inte zoomar ut för
+    // hela Sverige bara för att några events ligger i Umeå/Malmö.
+    // Om alla pinnar är inom 50km av Stockholm centrum, anpassa vyn.
+    // Annars behåll default Stockholm-vinstans och låt pins sticka ut.
     try {
-      const bounds = window.L.latLngBounds(pins.map((p) => [p.lat, p.lng]));
-      map.fitBounds(bounds, { padding: [40, 40] });
+      const stockholmCenter = window.L.latLng(59.3293, 18.0686);
+      const allNearStockholm = pins.every((p) => {
+        const ll = window.L.latLng(p.lat, p.lng);
+        return ll.distanceTo(stockholmCenter) <= 50_000; // 50 km
+      });
+      if (allNearStockholm) {
+        const bounds = window.L.latLngBounds(pins.map((p) => [p.lat, p.lng]));
+        map.fitBounds(bounds, { padding: [40, 40] });
+      }
+      // annars: Stockholm-default-vy, pins utanför området syns i utkanten
     } catch (e) {
       // ignore — keep default Stockholm center
     }

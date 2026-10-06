@@ -485,6 +485,27 @@ button {
   height: 100%;
   background: var(--c-surface);
 }
+/* OSM-tiles är ljusa — gör dem dark via CSS-filter så vi slipper
+   betaltjänst (CARTO dark_all kräver API-nyckel). invert+hue-rotate
+   ger en trovärdig dark-variant utan att kräva server-rendering. */
+.map-page__canvas .leaflet-tile {
+  filter: invert(1) hue-rotate(180deg) brightness(0.92) contrast(0.92);
+}
+.map-page__canvas .leaflet-control-attribution {
+  background: rgba(0, 0, 0, 0.7) !important;
+  color: var(--c-text-muted) !important;
+}
+.map-page__canvas .leaflet-control-attribution a {
+  color: var(--c-text) !important;
+}
+.map-page__canvas .leaflet-control-zoom a {
+  background: var(--c-bg) !important;
+  color: var(--c-text) !important;
+  border-color: var(--c-divider) !important;
+}
+.map-page__canvas .leaflet-control-zoom a:hover {
+  background: var(--c-surface-2) !important;
+}
 
 /* ── Empty / loading / error states ───────────────────────────────────── */
 .event-list__empty,

@@ -12,7 +12,7 @@
   Privata fält (lat/lng, address) läses endast om publishable-anon-nyckeln
   (se migrations/20261006-0004) — inga cookies, ingen session.
 */
-Content-Security-Policy: default-src 'self'; script-src 'self' https://unpkg.com 'unsafe-inline'; style-src 'self' https://unpkg.com 'unsafe-inline'; font-src 'self'; img-src 'self' data: https://*.supabase.co https://*.basemaps.cartocdn.com https://*.openstreetmap.org; connect-src 'self' https://*.supabase.co https://*.basemaps.cartocdn.com https://*.openstreetmap.org; frame-ancestors 'none'; base-uri 'self'; form-action 'none'; object-src 'none'
+Content-Security-Policy: default-src 'self'; script-src 'self' https://unpkg.com 'unsafe-inline'; style-src 'self' https://unpkg.com 'unsafe-inline'; font-src 'self'; img-src 'self' data: https://*.supabase.co https://tile.openstreetmap.org https://*.openstreetmap.org https://tile.openstreetmap.de https://*.basemaps.cartocdn.com; connect-src 'self' https://*.supabase.co https://tile.openstreetmap.org https://*.openstreetmap.org; frame-ancestors 'none'; base-uri 'self'; form-action 'none'; object-src 'none'
 Referrer-Policy: strict-origin-when-cross-origin
 X-Content-Type-Options: nosniff
 X-Frame-Options: DENY
