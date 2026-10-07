@@ -1,0 +1,285 @@
+{
+  "category_slug": "workshop",
+  "events": 104,
+  "docs": 98,
+  "top_1grams_distinctive": [
+    {
+      "w": "workshop",
+      "c": 42,
+      "score": 217.22
+    },
+    {
+      "w": "deltagarna",
+      "c": 32,
+      "score": 143.09
+    },
+    {
+      "w": "skapa",
+      "c": 32,
+      "score": 121.14
+    },
+    {
+      "w": "deltagare",
+      "c": 22,
+      "score": 108.08
+    },
+    {
+      "w": "får",
+      "c": 46,
+      "score": 107.69
+    },
+    {
+      "w": "kursen",
+      "c": 17,
+      "score": 103.74
+    },
+    {
+      "w": "kurs",
+      "c": 18,
+      "score": 96.12
+    },
+    {
+      "w": "erfarenhet",
+      "c": 18,
+      "score": 90.72
+    },
+    {
+      "w": "workshopen",
+      "c": 14,
+      "score": 84.47
+    },
+    {
+      "w": "denna",
+      "c": 37,
+      "score": 78.81
+    },
+    {
+      "w": "lära",
+      "c": 15,
+      "score": 72.29
+    },
+    {
+      "w": "olika",
+      "c": 20,
+      "score": 72.05
+    },
+    {
+      "w": "fokus",
+      "c": 16,
+      "score": 67.6
+    },
+    {
+      "w": "dig",
+      "c": 19,
+      "score": 63.44
+    },
+    {
+      "w": "krävs",
+      "c": 12,
+      "score": 63.31
+    },
+    {
+      "w": "verktyg",
+      "c": 10,
+      "score": 60.67
+    },
+    {
+      "w": "hur",
+      "c": 18,
+      "score": 57.78
+    },
+    {
+      "w": "tillfälle",
+      "c": 11,
+      "score": 57.69
+    },
+    {
+      "w": "inom",
+      "c": 16,
+      "score": 57.32
+    },
+    {
+      "w": "förkunskaper",
+      "c": 9,
+      "score": 56.69
+    },
+    {
+      "w": "utforska",
+      "c": 13,
+      "score": 55.96
+    },
+    {
+      "w": "museet",
+      "c": 13,
+      "score": 55.66
+    },
+    {
+      "w": "egen",
+      "c": 15,
+      "score": 54.4
+    },
+    {
+      "w": "eller",
+      "c": 19,
+      "score": 54.17
+    },
+    {
+      "w": "mönster",
+      "c": 8,
+      "score": 53.81
+    },
+    {
+      "w": "miljö",
+      "c": 11,
+      "score": 53.8
+    },
+    {
+      "w": "fokuserar",
+      "c": 12,
+      "score": 53.58
+    },
+    {
+      "w": "ett",
+      "c": 44,
+      "score": 51.94
+    },
+    {
+      "w": "etnografiska",
+      "c": 9,
+      "score": 51.06
+    },
+    {
+      "w": "workshops",
+      "c": 8,
+      "score": 50.75
+    }
+  ],
+  "top_2grams_distinctive": [
+    {
+      "w": "denna workshop",
+      "c": 14,
+      "score": 87.02
+    },
+    {
+      "w": "deltagarna får",
+      "c": 10,
+      "score": 62.16
+    },
+    {
+      "w": "deltagare får",
+      "c": 9,
+      "score": 57.51
+    },
+    {
+      "w": "fokus ligger",
+      "c": 9,
+      "score": 53.44
+    },
+    {
+      "w": "etnografiska museet",
+      "c": 9,
+      "score": 51.06
+    },
+    {
+      "w": "skapa dans",
+      "c": 7,
+      "score": 50.66
+    },
+    {
+      "w": "denna kurs",
+      "c": 7,
+      "score": 48.65
+    },
+    {
+      "w": "förkunskaper krävs",
+      "c": 7,
+      "score": 46.21
+    },
+    {
+      "w": "tidigare erfarenhet",
+      "c": 7,
+      "score": 45.43
+    },
+    {
+      "w": "unga dansare",
+      "c": 6,
+      "score": 44.13
+    },
+    {
+      "w": "samtida dans",
+      "c": 6,
+      "score": 44.13
+    },
+    {
+      "w": "öppen tillåtande",
+      "c": 6,
+      "score": 44.13
+    },
+    {
+      "w": "workshop kulturhuset",
+      "c": 6,
+      "score": 44.13
+    },
+    {
+      "w": "workshop får",
+      "c": 6,
+      "score": 44.13
+    },
+    {
+      "w": "tillåtande miljö",
+      "c": 6,
+      "score": 43.42
+    },
+    {
+      "w": "ett tillfälle",
+      "c": 7,
+      "score": 43.23
+    },
+    {
+      "w": "kulturhuset stadsteatern",
+      "c": 14,
+      "score": 42.98
+    },
+    {
+      "w": "stockholms läns",
+      "c": 6,
+      "score": 42.79
+    },
+    {
+      "w": "läns hemslöjdsförening",
+      "c": 6,
+      "score": 42.79
+    },
+    {
+      "w": "får deltagarna",
+      "c": 6,
+      "score": 38.94
+    },
+    {
+      "w": "koreografer inom",
+      "c": 5,
+      "score": 38.21
+    },
+    {
+      "w": "unga mellan",
+      "c": 5,
+      "score": 38.21
+    },
+    {
+      "w": "mellan nyfikna",
+      "c": 5,
+      "score": 38.21
+    },
+    {
+      "w": "nyfikna samtida",
+      "c": 5,
+      "score": 38.21
+    },
+    {
+      "w": "inom samtida",
+      "c": 6,
+      "score": 38.06
+    }
+  ],
+  "note": "score = cat_count * log(N / global_count). Higher = more distinctive for this category."
+}

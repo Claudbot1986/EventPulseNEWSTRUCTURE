@@ -1,0 +1,1317 @@
+{
+  "category_slug": "film",
+  "events": 106,
+  "library_count": 2,
+  "approx_images_needed": 1,
+  "top_words": [
+    [
+      "film",
+      278
+    ],
+    [
+      "filmen",
+      164
+    ],
+    [
+      "ett",
+      120
+    ],
+    [
+      "bio",
+      111
+    ],
+    [
+      "kulturhuset",
+      96
+    ],
+    [
+      "stadsteatern",
+      91
+    ],
+    [
+      "filmvisning",
+      88
+    ],
+    [
+      "skandia",
+      69
+    ],
+    [
+      "screening",
+      69
+    ],
+    [
+      "with",
+      56
+    ],
+    [
+      "klarabiografen",
+      54
+    ],
+    [
+      "denna",
+      36
+    ],
+    [
+      "filmer",
+      36
+    ],
+    [
+      "stockholms",
+      35
+    ],
+    [
+      "festival",
+      34
+    ],
+    [
+      "visas",
+      34
+    ],
+    [
+      "fjord",
+      34
+    ],
+    [
+      "sin",
+      33
+    ],
+    [
+      "internationella",
+      33
+    ],
+    [
+      "filmhuset",
+      33
+    ],
+    [
+      "kärlek",
+      32
+    ],
+    [
+      "downs",
+      31
+    ],
+    [
+      "drama",
+      31
+    ],
+    [
+      "samtal",
+      30
+    ],
+    [
+      "shaun",
+      30
+    ],
+    [
+      "zita",
+      29
+    ],
+    [
+      "syndromfestival",
+      29
+    ],
+    [
+      "presenterar",
+      28
+    ],
+    [
+      "hon",
+      26
+    ],
+    [
+      "2026",
+      26
+    ]
+  ],
+  "sample_events": [
+    {
+      "title": "Säsongspremiär hösten 26 | Gratis kortfilms-AW #1: SYSTER MIN",
+      "venue": null
+    },
+    {
+      "title": "KÄRLEK ÖVER TANGER | Premiärvisning på Zita!",
+      "venue": "왕의 정원"
+    },
+    {
+      "title": "Monsters of Film 2026",
+      "venue": "Stockholm"
+    },
+    {
+      "title": "The Love That Remains",
+      "venue": "Bio Skandia"
+    },
+    {
+      "title": "Stockholms Internationella Downs Syndromfestival",
+      "venue": "왕의 정원"
+    }
+  ],
+  "full_corpus": [
+    {
+      "id": "d872031d-f0eb-463f-8fc6-2b06557de1d4",
+      "title_sv": "Säsongspremiär hösten 26 | Gratis kortfilms-AW #1: SYSTER MIN",
+      "title_en": "Säsongspremiär hösten 26 | Gratis kortfilms-AW #1: SYSTER MIN",
+      "desc_sv": "Den 7 oktober drar vi igång höstens säsong av Svensk Kortfilm c/o Folkets Bio med premiären av SYSTER MIN av André Vaara - i samarbete med Cinema Queer!\n\nFilmen hade sin premiär på Göteborg Film Festival tidigare i år, där den var en av tävlingsfilmerna för det prestigefyllda Startsladden-priset. Nu får den äntligen premiär hos oss <3\n\nVi bjuder in till en premiärkväll på Zita med mingel, filmvisn",
+      "desc_en": "Den 7 oktober drar vi igång höstens säsong av Svensk Kortfilm c/o Folkets Bio med premiären av SYSTER MIN av André Vaara - i samarbete med Cinema Queer!\n\nFilmen hade sin premiär på Göteborg Film Festival tidigare i år, där den var en av tävlingsfilmerna för det prestigefyllda Startsladden-priset. Nu får den äntligen premiär hos oss <3\n\nVi bjuder in till en premiärkväll på Zita med mingel, filmvisn",
+      "raw": "Den 7 oktober drar vi igång höstens säsong av Svensk Kortfilm c/o Folkets Bio med premiären av SYSTER MIN av André Vaara - i samarbete med Cinema Queer!\n\nFilmen hade sin premiär på Göteborg Film Festival tidigare i år, där den var en av tävlingsfilmerna för det prestigefyllda Startsladden-priset. Nu får den äntligen premiär hos oss <3\n\nVi bjuder in till en premiärkväll på Zita med mingel, filmvisn",
+      "venue": null,
+      "start": "2026-10-07T16:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "5e9b44e3-daf4-4171-b3ab-eef9ca1c0625",
+      "title_sv": "KÄRLEK ÖVER TANGER | Premiärvisning på Zita!",
+      "title_en": "KÄRLEK ÖVER TANGER | Premiärvisning på Zita!",
+      "desc_sv": "Färgstarkt, kittlande och passionerat - höstens härligaste kärlekshistoria är här! Välkomna på premiären av KÄRLEK ÖVER TANGER på biograf Zita. Innan visningen bjuder vi på ett glas vin. \n\nMaryam Touzani följer upp succén Den blå kaftanen med den legendariska Carmen Maura i huvudrollen som den livsbejakande María Ángeles. Hon älskar sitt liv på Calle Malaga i Tangers färgstarka spanska kvarter men",
+      "desc_en": "Färgstarkt, kittlande och passionerat - höstens härligaste kärlekshistoria är här! Välkomna på premiären av KÄRLEK ÖVER TANGER på biograf Zita. Innan visningen bjuder vi på ett glas vin. \n\nMaryam Touzani följer upp succén Den blå kaftanen med den legendariska Carmen Maura i huvudrollen som den livsbejakande María Ángeles. Hon älskar sitt liv på Calle Malaga i Tangers färgstarka spanska kvarter men",
+      "raw": "Färgstarkt, kittlande och passionerat - höstens härligaste kärlekshistoria är här! Välkomna på premiären av KÄRLEK ÖVER TANGER på biograf Zita. Innan visningen bjuder vi på ett glas vin. \n\nMaryam Touzani följer upp succén Den blå kaftanen med den legendariska Carmen Maura i huvudrollen som den livsbejakande María Ángeles. Hon älskar sitt liv på Calle Malaga i Tangers färgstarka spanska kvarter men",
+      "venue": "왕의 정원",
+      "start": "2026-10-09T16:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "9f31c9cc-df9c-446d-b6fc-d5aa8cbb0238",
+      "title_sv": "Monsters of Film 2026",
+      "title_en": "Monsters of Film 2026",
+      "desc_sv": "Monsters of Film 2026 är en filmfestival på olika biografer i Stockholm.\n\nMonsters of Film 2026 presenterar filmvisningar i Stockholm. Evenemanget äger rum på olika biografer i staden och fokuserar på film.",
+      "desc_en": "Monsters of Film 2026 is a film festival held at various cinemas in Stockholm.\n\nMonsters of Film 2026 features film screenings across Stockholm. The event takes place at different cinemas in the city, focusing on film.",
+      "raw": "Monsters of Film 2026 är en filmfestival på olika biografer i Stockholm.\n\nMonsters of Film 2026 presenterar filmvisningar i Stockholm. Evenemanget äger rum på olika biografer i staden och fokuserar på film.",
+      "venue": "Stockholm",
+      "start": "2026-10-14T15:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "77d19c6d-3f28-47a1-9da0-98f64fc16303",
+      "title_sv": "The Love That Remains",
+      "title_en": "The Love That Remains",
+      "desc_sv": "\"The Love That Remains\" är en isländsk långfilm som visas på Bio Skandia i Stockholm.\n\nDen isländska långfilmen \"The Love That Remains\" skildrar ett år i Anna och Magnús liv, ett nyligen separerat par. De navigerar arbete, sex och familjelivet med en tonårsdotter och tvillingpojkar. Familjescenerna återspeglar gamla känslomässiga band som förändrats men inte helt upplösts. Regissören Hlynur Pálmas",
+      "desc_en": "\"The Love That Remains\" is an Icelandic feature film screening at Bio Skandia in Stockholm.\n\nThe Icelandic feature film \"The Love That Remains\" portrays a year in the lives of Anna and Magnús, a recently separated couple. They navigate work, sex, and the complexities of family life, including a teenage daughter and twin boys. Scenes of family life evoke the strong pull of old certainties and emoti",
+      "raw": "\"The Love That Remains\" är en isländsk långfilm som visas på Bio Skandia i Stockholm.\n\nDen isländska långfilmen \"The Love That Remains\" skildrar ett år i Anna och Magnús liv, ett nyligen separerat par. De navigerar arbete, sex och familjelivet med en tonårsdotter och tvillingpojkar. Familjescenerna återspeglar gamla känslomässiga band som förändrats men inte helt upplösts. Regissören Hlynur Pálmas",
+      "venue": "Bio Skandia",
+      "start": "2026-10-10T19:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "ffcaaa2a-8b39-46e7-9a80-3fbcfde60ec1",
+      "title_sv": "Stockholms Internationella Downs Syndromfestival",
+      "title_en": "Stockholms Internationella Downs Syndromfestival",
+      "desc_sv": "Stockholms Internationella Downs Syndromfestival är en festival på Filmhuset i Stockholm.\n\nFestivalen presenterar Stockholms Internationella Downs Syndromfestival. Det är en samling av evenemang som firar inkludering och mångfald.",
+      "desc_en": "Stockholms Internationella Downs Syndromfestival is a festival at Filmhuset in Stockholm.\n\nThe festival presents Stockholms Internationella Downs Syndromfestival. It is a series of events celebrating inclusion and diversity.",
+      "raw": "Stockholms Internationella Downs Syndromfestival är en festival på Filmhuset i Stockholm.\n\nFestivalen presenterar Stockholms Internationella Downs Syndromfestival. Det är en samling av evenemang som firar inkludering och mångfald.",
+      "venue": "왕의 정원",
+      "start": "2026-10-10T13:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "f28a81bb-e4da-4323-8dc6-1e691fc90003",
+      "title_sv": "En kärlekshistoria",
+      "title_en": "En kärlekshistoria",
+      "desc_sv": "Roy Anderssons klassiker En kärlekshistoria på Stora scenen.",
+      "desc_en": "Roy Anderssons klassiker En kärlekshistoria på Stora scenen.",
+      "raw": "Roy Anderssons klassiker En kärlekshistoria på Stora scenen.",
+      "venue": "dramaten",
+      "start": "2026-12-09T19:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "0f2a668a-5867-4735-b0ea-eee554b937f4",
+      "title_sv": "Fjord",
+      "title_en": "Fjord",
+      "desc_sv": "Fjord är en händelse på Kulturhuset Stadsteatern i Stockholm.\n\nDenna händelse är en vinnare av Guldpalmen i Cannes.",
+      "desc_en": "Fjord is an event at Kulturhuset Stadsteatern in Stockholm.\n\nThis event is a winner of the Palme d'Or in Cannes.",
+      "raw": "Fjord är en händelse på Kulturhuset Stadsteatern i Stockholm.\n\nDenna händelse är en vinnare av Guldpalmen i Cannes.",
+      "venue": "Kulturhuset Stadsteatern",
+      "start": "2026-10-09T12:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "47d7a2ea-b131-4688-b38c-967c845393ff",
+      "title_sv": "Axel Sjöberg - Bland kobbar och skär",
+      "title_en": "Axel Sjöberg - Bland kobbar och skär",
+      "desc_sv": "Filmen \"Axel Sjöberg - Bland kobbar och skär\" visas på Filmhuset Bio Mauritz i Stockholm.\n\nAxel Sjöberg anses vara den första skärgårdskonstnären. Filmen om honom, med titeln lånad från hans bok, skildrar hans liv och karriär. Han trodde på sig själv, men det dröjde innan han slog igenom med en stor utställning på Liljevalchs. Sjöberg är en föregångare till Roland Svensson, som är vår mest kände s",
+      "desc_en": "The film \"Axel Sjöberg - Bland kobbar och skär\" is screening at Filmhuset Bio Mauritz in Stockholm.\n\nAxel Sjöberg is considered the first archipelago artist. The film about him, titled after his book, portrays his life and career. He believed in himself, but it took time for him to break through with a large exhibition at Liljevalchs. Sjöberg is a predecessor to Roland Svensson, who is our most re",
+      "raw": "Filmen \"Axel Sjöberg - Bland kobbar och skär\" visas på Filmhuset Bio Mauritz i Stockholm.\n\nAxel Sjöberg anses vara den första skärgårdskonstnären. Filmen om honom, med titeln lånad från hans bok, skildrar hans liv och karriär. Han trodde på sig själv, men det dröjde innan han slog igenom med en stor utställning på Liljevalchs. Sjöberg är en föregångare till Roland Svensson, som är vår mest kände s",
+      "venue": "Ritz",
+      "start": "2026-12-08T16:30:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "7cf3d2fc-e6fd-4a3a-9bbc-353ecb93ec95",
+      "title_sv": "Kärlek över Tanger – film och samtal om lust genom livet",
+      "title_en": "Kärlek över Tanger – film och samtal om lust genom livet",
+      "desc_sv": "Välkommen till en inspirerande visning av Kärlek över Tanger med introduktion och samtal med Suzann Larsdotter om lust, närhet och sexualitet genom hela livet.\n\nSuzann är auktoriserad specialist i klinisk sexologi och välkänd expert från Gift vid första ögonkastet. Med värme, kunskap och nyfikenhet utmanar hon föreställningen om att lust och närhet skulle ha en övre åldersgräns. Efter filmen öppna",
+      "desc_en": "Välkommen till en inspirerande visning av Kärlek över Tanger med introduktion och samtal med Suzann Larsdotter om lust, närhet och sexualitet genom hela livet.\n\nSuzann är auktoriserad specialist i klinisk sexologi och välkänd expert från Gift vid första ögonkastet. Med värme, kunskap och nyfikenhet utmanar hon föreställningen om att lust och närhet skulle ha en övre åldersgräns. Efter filmen öppna",
+      "raw": "Välkommen till en inspirerande visning av Kärlek över Tanger med introduktion och samtal med Suzann Larsdotter om lust, närhet och sexualitet genom hela livet.\n\nSuzann är auktoriserad specialist i klinisk sexologi och välkänd expert från Gift vid första ögonkastet. Med värme, kunskap och nyfikenhet utmanar hon föreställningen om att lust och närhet skulle ha en övre åldersgräns. Efter filmen öppna",
+      "venue": null,
+      "start": "2026-10-15T03:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "3fb381f3-6422-4e49-abfb-f0a77ad6c0e2",
+      "title_sv": "Stolta stad - Stockholmarn - Ferdinand Boberg",
+      "title_en": "Stolta stad - Stockholmarn - Ferdinand Boberg",
+      "desc_sv": "Stolta stad, Stockholmarn och Ferdinand Boberg är filmer som visas på Zita i Stockholm.\n\n\"Stolta stad\" är den första av fyra nya Stockholmsfilmer och har Carl Michael Bellman i en viktig roll, med hans sånger framförda av trubaduren Ulf Bagge. Filmen börjar med uruppförandet av Romans Drottningholmsmusik vid bröllopet mellan kronprins Adolf Fredrik och Lovisa Ulrika år 1744. \"Stockholmar'n\" presen",
+      "desc_en": "Stolta stad, Stockholmarn, and Ferdinand Boberg are films shown at Zita in Stockholm.\n\n\"Stolta stad\" is the first of four new Stockholm films, featuring Carl Michael Bellman in a significant role, with his songs performed by troubadour Ulf Bagge. The film opens with the premiere of Roman's Drottningholmsmusik at the wedding of Crown Prince Adolf Fredrik and Lovisa Ulrika in 1744. \"Stockholmar'n\" p",
+      "raw": "Stolta stad, Stockholmarn och Ferdinand Boberg är filmer som visas på Zita i Stockholm.\n\n\"Stolta stad\" är den första av fyra nya Stockholmsfilmer och har Carl Michael Bellman i en viktig roll, med hans sånger framförda av trubaduren Ulf Bagge. Filmen börjar med uruppförandet av Romans Drottningholmsmusik vid bröllopet mellan kronprins Adolf Fredrik och Lovisa Ulrika år 1744. \"Stockholmar'n\" presen",
+      "venue": "왕의 정원",
+      "start": "2026-12-01T10:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "d13d915f-1133-4d16-aee2-cd95f9d35164",
+      "title_sv": "Arkipelag",
+      "title_en": "Arkipelag",
+      "desc_sv": "Arkipelag är en filmvisning på Bio Skandia i Stockholm.\n\nLaddat drama möter mörk humor när Alex Schulman regidebuterar med Arkipelag. Gustaf Skarsgård, Fares Fares och Linus Wahlgren spelar tre pappor som följer med sina döttrar på en skolresa. Filmen är årets svenska Oscarsbidrag. Den har en speltid på 107 minuter och dialog på svenska.",
+      "desc_en": "Arkipelag is a film screening at Bio Skandia in Stockholm.\n\nCharged drama meets dark humor as Alex Schulman makes his directorial debut with Arkipelag. Gustaf Skarsgård, Fares Fares, and Linus Wahlgren portray three fathers accompanying their daughters on a school trip. The film is Sweden's Oscar submission for the year. It has a running time of 107 minutes and is spoken in Swedish.",
+      "raw": "Arkipelag är en filmvisning på Bio Skandia i Stockholm.\n\nLaddat drama möter mörk humor när Alex Schulman regidebuterar med Arkipelag. Gustaf Skarsgård, Fares Fares och Linus Wahlgren spelar tre pappor som följer med sina döttrar på en skolresa. Filmen är årets svenska Oscarsbidrag. Den har en speltid på 107 minuter och dialog på svenska.",
+      "venue": "Bio Skandia",
+      "start": "2026-10-23T17:30:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "e74b48fb-cf39-47f4-b8e9-a8cccaedebe9",
+      "title_sv": "Stockholm sedan 50-talet (3 filmer)",
+      "title_en": "Stockholm sedan 50-talet (3 filmer)",
+      "desc_sv": "\"Stockholm sedan 50-talet (3 filmer)\" är en filmvisning på Filmhuset Bio Mauritz i Stockholm.\n\nFilmerna utforskar Stockholms utveckling från mitten av förra århundradet. \"Från Klara till City\" visar omvandlingen av Klarakvarteren med Lennart af Petersens bilder och Thomas Botwids berättarröst. Anders hittade ljud från människor Lennart af Petersens fotograferat, liksom författarna Stig Dagerman, P",
+      "desc_en": "\"Stockholm sedan 50-talet (3 filmer)\" is a film screening at Filmhuset Bio Mauritz in Stockholm.\n\nThe films explore Stockholm's development from the middle of the last century. \"Från Klara till City\" shows the transformation of the Klara districts with Lennart af Petersens' images and Thomas Botwid's narration. Anders found audio from people Lennart af Petersens photographed, as well as authors St",
+      "raw": "\"Stockholm sedan 50-talet (3 filmer)\" är en filmvisning på Filmhuset Bio Mauritz i Stockholm.\n\nFilmerna utforskar Stockholms utveckling från mitten av förra århundradet. \"Från Klara till City\" visar omvandlingen av Klarakvarteren med Lennart af Petersens bilder och Thomas Botwids berättarröst. Anders hittade ljud från människor Lennart af Petersens fotograferat, liksom författarna Stig Dagerman, P",
+      "venue": "Ritz",
+      "start": "2026-11-24T16:30:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "c744ac69-2b8b-470e-8e32-b96784b860a0",
+      "title_sv": "Beginnings",
+      "title_en": "Beginnings",
+      "desc_sv": "Filmen Beginnings visas på Bio Skandia i Stockholm.\n\nDen danska filmen Beginnings är nominerad till Nordiska rådets filmpris. Filmen handlar om Ane och Thomas, som genomgår en skilsmässa när Ane får en blodpropp. Denna situation sätter deras familjeliv med två döttrar i kris. Regissör är Jeanette Nordahl och bland skådespelarna finns Trine Dyrholm och David Dencik. Filmen har en speltid på 109 min",
+      "desc_en": "The film Beginnings is screening at Bio Skandia in Stockholm.\n\nThe Danish feature film Beginnings is nominated for the Nordic Council Film Prize. The film explores the lives of Ane and Thomas, who are divorcing when Ane experiences a blood clot. This event plunges their family life with two daughters into crisis. Jeanette Nordahl directed the film, which stars Trine Dyrholm and David Dencik. The f",
+      "raw": "Filmen Beginnings visas på Bio Skandia i Stockholm.\n\nDen danska filmen Beginnings är nominerad till Nordiska rådets filmpris. Filmen handlar om Ane och Thomas, som genomgår en skilsmässa när Ane får en blodpropp. Denna situation sätter deras familjeliv med två döttrar i kris. Regissör är Jeanette Nordahl och bland skådespelarna finns Trine Dyrholm och David Dencik. Filmen har en speltid på 109 min",
+      "venue": "Bio Skandia",
+      "start": "2026-10-09T19:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "d15572ca-3945-4153-b128-c14da1e0f1d1",
+      "title_sv": "Stockholm - En föränderlig stad",
+      "title_en": "Stockholm - En föränderlig stad",
+      "desc_sv": "Stockholm - En föränderlig stad är en händelse på Filmhuset Bio Mauritz i Stockholm.\n\nHändelsen beskriver utvecklingen av fyra nya stadsdelar i Stockholm. Anders följde upp dessa områden med sin kamera under mer än 25 år, med start tio år senare.",
+      "desc_en": "Stockholm - En föränderlig stad is an event at Filmhuset Bio Mauritz in Stockholm.\n\nThe event describes the development of four new city districts in Stockholm. Anders followed these areas with his camera for more than 25 years, starting ten years later.",
+      "raw": "Stockholm - En föränderlig stad är en händelse på Filmhuset Bio Mauritz i Stockholm.\n\nHändelsen beskriver utvecklingen av fyra nya stadsdelar i Stockholm. Anders följde upp dessa områden med sin kamera under mer än 25 år, med start tio år senare.",
+      "venue": "Ritz",
+      "start": "2026-11-10T16:30:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "fe0ff8ce-0d4a-4b13-9770-a8ecfe017534",
+      "title_sv": "You Are the film",
+      "title_en": "You Are the film",
+      "desc_sv": "You Are the film är en filmvisning på Klarabiografen i Stockholm.\n\nFilmen You Are the Film, regisserad av Makoto Ueda, utspelar sig i Tokyos stadsdel Shimokitazawa. Pjäsförfattaren Madoka och musikern Kazuma ser varandra på duken i biografen Tollywood istället för filmen de förväntade sig. Genom bioduken kan de tala och ingripa i den andres värld, vilket leder till humor och oväntade vändningar. M",
+      "desc_en": "You Are the film is a movie screening at Klarabiografen in Stockholm.\n\nDirected by Makoto Ueda, You Are the Film takes place in Tokyo's Shimokitazawa district. Playwright Madoka and musician Kazuma find themselves on screen at the Tollywood cinema instead of the film they expected. They can communicate through the screen and intervene in each other's worlds, leading to humor and unexpected turns. ",
+      "raw": "You Are the film är en filmvisning på Klarabiografen i Stockholm.\n\nFilmen You Are the Film, regisserad av Makoto Ueda, utspelar sig i Tokyos stadsdel Shimokitazawa. Pjäsförfattaren Madoka och musikern Kazuma ser varandra på duken i biografen Tollywood istället för filmen de förväntade sig. Genom bioduken kan de tala och ingripa i den andres värld, vilket leder till humor och oväntade vändningar. M",
+      "venue": "Stockholm",
+      "start": "2026-10-17T12:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "1ddfb263-d4e4-4df5-92ff-4219f05649a7",
+      "title_sv": "En gång skall du vara en av dem som levat för längesen",
+      "title_en": "En gång skall du vara en av dem som levat för längesen",
+      "desc_sv": "\"En gång skall du vara en av dem som levat för längesen\" är en visuellt storslagen dokumentär på Kulturhuset Stadsteatern i Stockholm.\n\nFilmen är en visuellt storslagen dokumentär om ett gruvsamhälle som håller på att försvinna. Regissörerna Alexander Rynéus och Per Bifrost gästar för ett efterföljande samtal, lett av författaren Mattias Timander.",
+      "desc_en": "\"En gång skall du vara en av dem som levat för längesen\" is a visually magnificent documentary at Kulturhuset Stadsteatern in Stockholm.\n\nThis visually magnificent documentary explores a disappearing mining community. Directors Alexander Rynéus and Per Bifrost will attend for a post-screening discussion, led by author Mattias Timander.",
+      "raw": "\"En gång skall du vara en av dem som levat för längesen\" är en visuellt storslagen dokumentär på Kulturhuset Stadsteatern i Stockholm.\n\nFilmen är en visuellt storslagen dokumentär om ett gruvsamhälle som håller på att försvinna. Regissörerna Alexander Rynéus och Per Bifrost gästar för ett efterföljande samtal, lett av författaren Mattias Timander.",
+      "venue": "Kulturhuset Stadsteatern",
+      "start": "2026-10-08T13:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "207f379e-5400-4610-9ebb-9cec5c454891",
+      "title_sv": "En kärlekshistoria",
+      "title_en": "En kärlekshistoria",
+      "desc_sv": "Roy Anderssons klassiker En kärlekshistoria på Stora scenen.",
+      "desc_en": "Roy Anderssons klassiker En kärlekshistoria på Stora scenen.",
+      "raw": "Roy Anderssons klassiker En kärlekshistoria på Stora scenen.",
+      "venue": "dramaten",
+      "start": "2026-12-18T19:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "b3f33767-94ed-4c39-8652-4b4f7b93dfb2",
+      "title_sv": "Barnvagnsbio: Verity",
+      "title_en": "Barnvagnsbio: Verity",
+      "desc_sv": "Barnvagnsbio: Verity är en barnvagnsbio på Kulturhuset Stadsteatern i Stockholm.\n\nBarnvagnsbio på Klarabiografen visar filmer från aktuell repertoar med salongen anpassad för dig och din bebis. Alla är välkomna, med eller utan bebis.",
+      "desc_en": "Barnvagnsbio: Verity is a pram cinema screening at Kulturhuset Stadsteatern in Stockholm.\n\nThe pram cinema at Klarabiografen screens films from the current repertoire in an auditorium adapted for you and your baby. Everyone is welcome, with or without a baby.",
+      "raw": "Barnvagnsbio: Verity är en barnvagnsbio på Kulturhuset Stadsteatern i Stockholm.\n\nBarnvagnsbio på Klarabiografen visar filmer från aktuell repertoar med salongen anpassad för dig och din bebis. Alla är välkomna, med eller utan bebis.",
+      "venue": "Kulturhuset Stadsteatern",
+      "start": "2026-10-09T09:30:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "75e0889b-c2c3-4da1-9e8c-3547740d17d0",
+      "title_sv": "Sagan om ringen: Härskarringen - Extended version",
+      "title_en": "Sagan om ringen: Härskarringen - Extended version",
+      "desc_sv": "Sagan om ringen: Härskarringen - Extended version är en filmvisning på Bio Skandia i Stockholm.\n\nDenna utökade version av Sagan om ringen: Härskarringen fördjupar den episka berättelsen med över 30 minuter av nya och utökade scener. Filmen är helt omarbetad med nyinspelad dialog och en förbättrad musik av Howard Shore. Peter Jackson har regisserat filmen. Längden är 228 minuter och ljudet är på en",
+      "desc_en": "The Lord of the Rings: The Fellowship of the Ring - Extended version is a film screening at Bio Skandia in Stockholm.\n\nThis extended edition of The Lord of the Rings: The Fellowship of the Ring enriches the epic quest with over 30 minutes of new and expanded scenes. The film is fully polished with re-recorded dialogue and an enhanced musical score by Howard Shore. Peter Jackson is the director. Th",
+      "raw": "Sagan om ringen: Härskarringen - Extended version är en filmvisning på Bio Skandia i Stockholm.\n\nDenna utökade version av Sagan om ringen: Härskarringen fördjupar den episka berättelsen med över 30 minuter av nya och utökade scener. Filmen är helt omarbetad med nyinspelad dialog och en förbättrad musik av Howard Shore. Peter Jackson har regisserat filmen. Längden är 228 minuter och ljudet är på en",
+      "venue": "Bio Skandia",
+      "start": "2026-12-12T09:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "162d8050-c075-475a-961c-b5be21df1860",
+      "title_sv": "Mina drömmars Stockholm",
+      "title_en": "Mina drömmars Stockholm",
+      "desc_sv": "Mina drömmars Stockholm är ett evenemang med presentation av nya filmer om Stockholm på ZIta i Stockholm.\n\nMina drömmars Stockholm presenterar två nya filmer om just Stockholm. Dessa filmer har redigerats av Anders Hanser och Mikael Bodner. Anders Hanser har tillbringat flera år med att vandra och filma med sin kamera i Stockholms innerstad. Medverkande är trubaduren Ulf Bagge, som är en stor Per ",
+      "desc_en": "Mina drömmars Stockholm is an event featuring a presentation of new films about Stockholm at ZIta in Stockholm.\n\nMina drömmars Stockholm presents two new films focusing on Stockholm. These films were edited by Anders Hanser and Mikael Bodner. Anders Hanser spent several years walking and filming with his camera in Stockholm's inner city. Also involved is troubadour Ulf Bagge, a great connoisseur o",
+      "raw": "Mina drömmars Stockholm är ett evenemang med presentation av nya filmer om Stockholm på ZIta i Stockholm.\n\nMina drömmars Stockholm presenterar två nya filmer om just Stockholm. Dessa filmer har redigerats av Anders Hanser och Mikael Bodner. Anders Hanser har tillbringat flera år med att vandra och filma med sin kamera i Stockholms innerstad. Medverkande är trubaduren Ulf Bagge, som är en stor Per ",
+      "venue": "왕의 정원",
+      "start": "2026-10-14T09:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "0bd00f5b-505e-4c69-9f82-7a51cab24a78",
+      "title_sv": "Sense and Sensibility",
+      "title_en": "Sense and Sensibility",
+      "desc_sv": "\"Sense and Sensibility\" är en filmatisering på Bio Skandia i Stockholm.\n\nGeorgia Oakley ger Jane Austens klassiker en ny filmatisering med fokus på kärlek, familj, ekonomisk utsatthet och systerskap. När Mr Dashwood dör lämnas hans hustru och tre döttrar i en osäker ekonomisk situation. Familjen tvingas lämna sitt hem, och systrarna Elinor och Marianne navigerar kärlek och sorg. Den eftertänksamma",
+      "desc_en": "\"Sense and Sensibility\" is a film screening at Bio Skandia in Stockholm.\n\nGeorgia Oakley presents a new film adaptation of Jane Austen's classic, focusing on love, family, financial vulnerability, and sisterhood. When Mr. Dashwood dies, his wife and three daughters are left in an uncertain financial situation. The family is forced to leave their home, and sisters Elinor and Marianne navigate love ",
+      "raw": "\"Sense and Sensibility\" är en filmatisering på Bio Skandia i Stockholm.\n\nGeorgia Oakley ger Jane Austens klassiker en ny filmatisering med fokus på kärlek, familj, ekonomisk utsatthet och systerskap. När Mr Dashwood dör lämnas hans hustru och tre döttrar i en osäker ekonomisk situation. Familjen tvingas lämna sitt hem, och systrarna Elinor och Marianne navigerar kärlek och sorg. Den eftertänksamma",
+      "venue": "Bio Skandia",
+      "start": "2026-10-31T17:30:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "0e37031a-f944-4d80-86c7-6523701e1f8e",
+      "title_sv": "NIPSTER - Hur långt är du beredd att gå?",
+      "title_en": "NIPSTER - Hur långt är du beredd att gå?",
+      "desc_sv": "17åriga Chris hamnar på läger hos högerextrema klimataktivister i de skånska skogarna.\n\nEn angelägen berättelse om hur lätt det är att radikaliseras i jakten på tillhörighet.\n\nNär Chris hamnar i konflikt på ridskolan följer hon med en vän till ett sommarläger för klimatengagerade ungdomar. Där möts hon av gemenskap och mening, men snart avslöjas en skrämmande ekofascistisk agenda riktad mot ett nä",
+      "desc_en": "17åriga Chris hamnar på läger hos högerextrema klimataktivister i de skånska skogarna.\n\nEn angelägen berättelse om hur lätt det är att radikaliseras i jakten på tillhörighet.\n\nNär Chris hamnar i konflikt på ridskolan följer hon med en vän till ett sommarläger för klimatengagerade ungdomar. Där möts hon av gemenskap och mening, men snart avslöjas en skrämmande ekofascistisk agenda riktad mot ett nä",
+      "raw": "17åriga Chris hamnar på läger hos högerextrema klimataktivister i de skånska skogarna.\n\nEn angelägen berättelse om hur lätt det är att radikaliseras i jakten på tillhörighet.\n\nNär Chris hamnar i konflikt på ridskolan följer hon med en vän till ett sommarläger för klimatengagerade ungdomar. Där möts hon av gemenskap och mening, men snart avslöjas en skrämmande ekofascistisk agenda riktad mot ett nä",
+      "venue": null,
+      "start": "2026-10-30T18:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "a18a820a-f8f7-48c7-8f64-bc79a087290e",
+      "title_sv": "Reformaten's Film Club shows \"Reclaiming Cocoa\"!",
+      "title_en": "Reformaten's Film Club shows \"Reclaiming Cocoa\"!",
+      "desc_sv": "Reformatens Filmklubb visar dokumentären Reclaiming Cocoa på Bio - Scen - Bistro Aspen i Hägersten.\n\nFilmen ställer frågan om kakao kan produceras på ett sätt som gynnar naturen, bönder och samhällen. Ghana producerar cirka 25% av världens kakao, men vinsterna har historiskt sett gått till Europa. Reclaiming Cocoa presenterar personer som formar en hållbar framtid för kakao, som Jeanne Donkoh som ",
+      "desc_en": "Reformaten's Film Club presents the documentary Reclaiming Cocoa at Bio - Scen - Bistro Aspen in Hägersten.\n\nThe film asks whether cocoa can be produced in a way that truly benefits nature, farmers, and communities. Ghana produces around 25% of the world's cocoa, but historically, profits have gone to Europe. Reclaiming Cocoa introduces individuals shaping a sustainable future for cocoa, such as J",
+      "raw": "Reformatens Filmklubb visar dokumentären Reclaiming Cocoa på Bio - Scen - Bistro Aspen i Hägersten.\n\nFilmen ställer frågan om kakao kan produceras på ett sätt som gynnar naturen, bönder och samhällen. Ghana producerar cirka 25% av världens kakao, men vinsterna har historiskt sett gått till Europa. Reclaiming Cocoa presenterar personer som formar en hållbar framtid för kakao, som Jeanne Donkoh som ",
+      "venue": "왕의 정원",
+      "start": "2026-10-28T16:30:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "6cb2169c-fc28-4ff7-a077-4ba1fab707cb",
+      "title_sv": "27/10 Kortfilmspaket: En reflektion av mig, Coach Olsson & Pedo Hunters + eftersamtal ",
+      "title_en": "27/10 Kortfilmspaket: En reflektion av mig, Coach Olsson & Pedo Hunters + eftersamtal ",
+      "desc_sv": "Kortfilmspaket: En reflektion av mig, Coach Olsson & Pedo Hunters + eftersamtal är en visning av tre kortfilmer med efterföljande samtal på Kulturhuset Stadsteatern i Stockholm.\n\nBio Husby visar tre kortfilmer följt av ett samtal med medverkande från filmerna. Samtalet leds av Isabelle Pedone.",
+      "desc_en": "Kortfilmspaket: En reflektion av mig, Coach Olsson & Pedo Hunters + eftersamtal is a screening of three short films with a subsequent discussion at Kulturhuset Stadsteatern in Stockholm.\n\nBio Husby presents three short films, followed by a discussion with participants from the films. The conversation is led by Isabelle Pedone.",
+      "raw": "Kortfilmspaket: En reflektion av mig, Coach Olsson & Pedo Hunters + eftersamtal är en visning av tre kortfilmer med efterföljande samtal på Kulturhuset Stadsteatern i Stockholm.\n\nBio Husby visar tre kortfilmer följt av ett samtal med medverkande från filmerna. Samtalet leds av Isabelle Pedone.",
+      "venue": "Kulturhuset Stadsteatern",
+      "start": "2026-10-27T17:30:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "e91e1ad2-e454-4a29-9dd4-7ef5f20b543f",
+      "title_sv": "Secret Cinema",
+      "title_en": "Secret Cinema",
+      "desc_sv": "Secret Cinema är en filmvisning på Bio Skandia i Stockholm.\n\nSecret Cinema återvänder och är en publikfavorit, känd för sin spänning och överraskning. Konceptet bygger på att kvällen alltid levererar en unik känsla, då varken filmens titel, regissör eller skådespelare avslöjas i förväg. Besökare kan förvänta sig en visning med engelskt tal och svensk text. Filmen har en uppskattad längd på cirka t",
+      "desc_en": "Secret Cinema is a film screening event at Bio Skandia in Stockholm.\n\nSecret Cinema returns as an audience favorite, known for its excitement and surprise. The concept ensures the evening always delivers a unique feeling, as neither the film's title, director, nor actors are revealed in advance. The venue fills with anticipation for a screening featuring English dialogue and Swedish subtitles. The",
+      "raw": "Secret Cinema är en filmvisning på Bio Skandia i Stockholm.\n\nSecret Cinema återvänder och är en publikfavorit, känd för sin spänning och överraskning. Konceptet bygger på att kvällen alltid levererar en unik känsla, då varken filmens titel, regissör eller skådespelare avslöjas i förväg. Besökare kan förvänta sig en visning med engelskt tal och svensk text. Filmen har en uppskattad längd på cirka t",
+      "venue": "Bio Skandia",
+      "start": "2026-10-25T19:30:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "1444566a-316f-483d-87ee-c597a1dc48a8",
+      "title_sv": "Minioner & Monster",
+      "title_en": "Minioner & Monster",
+      "desc_sv": "Minioner & Monster är en familjefilm på Kulturhuset Stadsteatern i Stockholm.\n\nMinioner & Monster är ett kaotiskt och skrattfyllt äventyr där Minionerna drömmer om att erövra Hollywood. Deras strävan efter filmberömmelse släpper dock lös monster och kastar världen in i kaos. För att återställa ordningen måste de göra allt som står i deras makt. Denna fartfyllda familjefilm från Illumination är fyl",
+      "desc_en": "Minions & Monsters is a family film at Kulturhuset Stadsteatern in Stockholm.\n\nMinions & Monsters is a chaotic and laughter-filled adventure where the Minions dream of conquering Hollywood. However, their pursuit of film fame unleashes monsters and plunges the world into chaos. To restore order, they must do everything in their power. This fast-paced family film from Illumination is filled with hu",
+      "raw": "Minioner & Monster är en familjefilm på Kulturhuset Stadsteatern i Stockholm.\n\nMinioner & Monster är ett kaotiskt och skrattfyllt äventyr där Minionerna drömmer om att erövra Hollywood. Deras strävan efter filmberömmelse släpper dock lös monster och kastar världen in i kaos. För att återställa ordningen måste de göra allt som står i deras makt. Denna fartfyllda familjefilm från Illumination är fyl",
+      "venue": "Kulturhuset Stadsteatern",
+      "start": "2026-10-26T15:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "b369d0be-80ed-469d-bbaa-4d2b24dfc038",
+      "title_sv": "Fåret Shaun och monstret på bondgården (Premiärkalas!)",
+      "title_en": "Fåret Shaun och monstret på bondgården (Premiärkalas!)",
+      "desc_sv": "\"Fåret Shaun och monstret på bondgården (Premiärkalas!)\" är ett stop motion-äventyr på Kulturhuset Stadsteatern i Stockholm.\n\nFilmen börjar med att bonden förstör fårens pumpaodling inför Halloween. Shaun försöker rädda firandet med ett experiment, vilket får oväntade konsekvenser när bonden försvinner och ett mystiskt monster dyker upp i skogen. Det är ett charmigt och lagom kusligt stop motion-ä",
+      "desc_en": "\"Shaun the Sheep and the Monster on the Farm (Premiere Party!)\" is a stop motion adventure at Kulturhuset Stadsteatern in Stockholm.\n\nThe film begins with the farmer destroying the sheep's pumpkin patch before Halloween. Shaun attempts to save the celebration with an experiment, leading to unexpected events when the farmer disappears and a mysterious monster roams the forest. This charming and mod",
+      "raw": "\"Fåret Shaun och monstret på bondgården (Premiärkalas!)\" är ett stop motion-äventyr på Kulturhuset Stadsteatern i Stockholm.\n\nFilmen börjar med att bonden förstör fårens pumpaodling inför Halloween. Shaun försöker rädda firandet med ett experiment, vilket får oväntade konsekvenser när bonden försvinner och ett mystiskt monster dyker upp i skogen. Det är ett charmigt och lagom kusligt stop motion-ä",
+      "venue": "Kulturhuset Stadsteatern",
+      "start": "2026-10-26T12:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "4548bca4-de4d-4166-af3e-db4aea479745",
+      "title_sv": "Paw Patrol: Dinosaurie-filmen",
+      "title_en": "Paw Patrol: Dinosaurie-filmen",
+      "desc_sv": "Paw Patrol: Dinosaurie-filmen är en animerad barnfilm på Kulturhuset Stadsteatern i Stockholm.\n\nFilmen bjuder på ett fartfyllt äventyr för hela familjen. Valparna hamnar på en mystisk ö full av dinosaurier och måste tillsammans med Rex stoppa borgmästare Överdängare, som har väckt en vulkan. Den animerade filmen handlar om mod, vänskap och lagarbete.",
+      "desc_en": "Paw Patrol: Dinosaurie-filmen is an animated children's film at Kulturhuset Stadsteatern in Stockholm.\n\nThis animated film offers a fast-paced adventure for the whole family. The pups find themselves on a mysterious island full of dinosaurs and must, with Rex, stop Mayor Humdinger from awakening a volcano. It is a story about courage, friendship, and teamwork.",
+      "raw": "Paw Patrol: Dinosaurie-filmen är en animerad barnfilm på Kulturhuset Stadsteatern i Stockholm.\n\nFilmen bjuder på ett fartfyllt äventyr för hela familjen. Valparna hamnar på en mystisk ö full av dinosaurier och måste tillsammans med Rex stoppa borgmästare Överdängare, som har väckt en vulkan. Den animerade filmen handlar om mod, vänskap och lagarbete.",
+      "venue": "Kulturhuset Stadsteatern",
+      "start": "2026-10-25T12:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "53082d40-0c8b-434a-a607-59413182f5a6",
+      "title_sv": "Uppesittarkväll 10 år",
+      "title_en": "Uppesittarkväll 10 år",
+      "desc_sv": "Uppesittarkväll 10 år är ett jubileumsavsnitt på Bio Fågel Blå i Stockholm.\n\nUppesittarkväll firar sitt 10-årsjubileum med ett speciellt avsnitt. Evenemanget innehåller livepublik och markerar en milstolpe i seriens historia.",
+      "desc_en": "Uppesittarkväll 10 år is a jubilee episode at Bio Fågel Blå in Stockholm.\n\nUppesittarkväll celebrates its 10-year anniversary with a special episode. The event includes a live audience and marks a milestone in the series' history.",
+      "raw": "Uppesittarkväll 10 år är ett jubileumsavsnitt på Bio Fågel Blå i Stockholm.\n\nUppesittarkväll firar sitt 10-årsjubileum med ett speciellt avsnitt. Evenemanget innehåller livepublik och markerar en milstolpe i seriens historia.",
+      "venue": "왕의 정원",
+      "start": "2026-10-22T16:30:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "616c6287-a38c-496d-a508-23976487a79a",
+      "title_sv": "Kärlek över Tanger",
+      "title_en": "Kärlek över Tanger",
+      "desc_sv": "Kärlek över Tanger är en föreställning på Kulturhuset Stadsteatern i Stockholm.\n\nDenna sensuella och hjärtvärmande feelgoodfilm vann publikpriset på Göteborg Filmfestival. Den visar att ålderdom innebär fortsatt livslust, drömmar och passion.",
+      "desc_en": "Kärlek över Tanger is a performance at Kulturhuset Stadsteatern in Stockholm.\n\nThis sensual and heartwarming feel-good show won the audience award at the Gothenburg Film Festival. It affirms that old age is far from saying goodbye to defiance, zest for life, dreams, and passionate love.",
+      "raw": "Kärlek över Tanger är en föreställning på Kulturhuset Stadsteatern i Stockholm.\n\nDenna sensuella och hjärtvärmande feelgoodfilm vann publikpriset på Göteborg Filmfestival. Den visar att ålderdom innebär fortsatt livslust, drömmar och passion.",
+      "venue": "Kulturhuset Stadsteatern",
+      "start": "2026-10-22T10:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "3746d3f3-1b49-43c9-ab8b-60e490f208dd",
+      "title_sv": "David Hockney at the Royal Academy of Arts",
+      "title_en": "David Hockney at the Royal Academy of Arts",
+      "desc_sv": "David Hockney at the Royal Academy of Arts är en konstfilm på Kulturhuset Stadsteatern i Stockholm.\n\nDenna konstfilm uppmärksammar David Hockneys fantastiska livsgärning. Det är en repris av en av Kulturhuset Stadsteaterns mest uppskattade filmer genom åren, som visas i Stockholm.",
+      "desc_en": "David Hockney at the Royal Academy of Arts is an art film screening at Kulturhuset Stadsteatern in Stockholm.\n\nThis art film highlights David Hockney's fantastic life's work. It is a rerun of one of Kulturhuset Stadsteatern's most appreciated art films over the years, shown in Stockholm.",
+      "raw": "David Hockney at the Royal Academy of Arts är en konstfilm på Kulturhuset Stadsteatern i Stockholm.\n\nDenna konstfilm uppmärksammar David Hockneys fantastiska livsgärning. Det är en repris av en av Kulturhuset Stadsteaterns mest uppskattade filmer genom åren, som visas i Stockholm.",
+      "venue": "Kulturhuset Stadsteatern",
+      "start": "2026-10-23T12:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "1178c5d7-9979-4ef2-96b9-cf2322bdafb5",
+      "title_sv": "Rocky Road to Dublin + The Making of Rocky Road to Dublin",
+      "title_en": "Rocky Road to Dublin + The Making of Rocky Road to Dublin",
+      "desc_sv": "Filmen \"Rocky Road to Dublin\" och \"The Making of Rocky Road to Dublin\" visas på Kulturhuset Stadsteatern i Stockholm.\n\nFilmen \"Rocky Road to Dublin\" riktar en kritisk blick mot det irländska samhället. Den inspirerades av den franska nya vågen och presenterar intervjuer med offentliga och privata personer. Filmfotot utfördes av Raoul Coutard, känd från den franska nya vågen. Med sin diskreta 16 mm",
+      "desc_en": "\"Rocky Road to Dublin\" and \"The Making of Rocky Road to Dublin\" are screening at Kulturhuset Stadsteatern in Stockholm.\n\nThe film \"Rocky Road to Dublin\" offers a critical perspective on Irish society. Inspired by the French New Wave, it features interviews with both public and private figures. The cinematography was handled by Raoul Coutard, known for his work in the French New Wave. Using his dis",
+      "raw": "Filmen \"Rocky Road to Dublin\" och \"The Making of Rocky Road to Dublin\" visas på Kulturhuset Stadsteatern i Stockholm.\n\nFilmen \"Rocky Road to Dublin\" riktar en kritisk blick mot det irländska samhället. Den inspirerades av den franska nya vågen och presenterar intervjuer med offentliga och privata personer. Filmfotot utfördes av Raoul Coutard, känd från den franska nya vågen. Med sin diskreta 16 mm",
+      "venue": "Kulturhuset Stadsteatern",
+      "start": "2026-10-21T16:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "179418ed-28d4-45ed-98ad-be895a37db51",
+      "title_sv": "Tjugo år med Met på bio: Ett jubileumsfirande",
+      "title_en": "Tjugo år med Met på bio: Ett jubileumsfirande",
+      "desc_sv": "\"Tjugo år med Met på bio\" är ett firande av Metropolitanoperans bioföreställningar på Kulturhuset Stadsteatern i Stockholm.\n\nEventet firar Metropolitanoperans två decennier av scenkonst. Det visar höjdpunkter från operahusets samling av fler än 185 föreställningar som visats på bio.",
+      "desc_en": "\"Twenty Years with Met in Cinema\" is a celebration of Metropolitan Opera screenings at Kulturhuset Stadsteatern in Stockholm.\n\nThe event celebrates the Metropolitan Opera's two decades of stage art. It features highlights from the opera house's collection of over 185 performances screened in cinemas.",
+      "raw": "\"Tjugo år med Met på bio\" är ett firande av Metropolitanoperans bioföreställningar på Kulturhuset Stadsteatern i Stockholm.\n\nEventet firar Metropolitanoperans två decennier av scenkonst. Det visar höjdpunkter från operahusets samling av fler än 185 föreställningar som visats på bio.",
+      "venue": "Kulturhuset Stadsteatern",
+      "start": "2026-10-20T14:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "a72713cd-d4b1-40a3-8d3d-73a07e71c35f",
+      "title_sv": "Stickbio: The Invite",
+      "title_en": "Stickbio: The Invite",
+      "desc_sv": "Stickbio: The Invite är en filmvisning på Kulturhuset Stadsteatern i Stockholm.\n\nEvenemanget visar utvalda aktuella filmer i en salong anpassad för handarbete. Besökare kan titta på film samtidigt som de sysslar med hantverk.",
+      "desc_en": "Stickbio: The Invite is a film screening at Kulturhuset Stadsteatern in Stockholm.\n\nThe event features selected current films in an auditorium adapted for handicrafts. Visitors can watch a film while engaging in their craftwork.",
+      "raw": "Stickbio: The Invite är en filmvisning på Kulturhuset Stadsteatern i Stockholm.\n\nEvenemanget visar utvalda aktuella filmer i en salong anpassad för handarbete. Besökare kan titta på film samtidigt som de sysslar med hantverk.",
+      "venue": "Kulturhuset Stadsteatern",
+      "start": "2026-10-19T17:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "bd698b61-d374-49ce-a037-5b0bc413dcdf",
+      "title_sv": "Cinemateket: Center Stage (1991)",
+      "title_en": "Cinemateket: Center Stage (1991)",
+      "desc_sv": "Cinemateket: Center Stage (1991) är en filmvisning på Bio Skandia i Stockholm.\n\nFilmen Center Stage, med originaltitel Ruan Lingyu, är en biografi om den medieomsusade stumfilmsstjärnan Ruan Lingyu. Hon drevs till självmord vid 24 års ålder på grund av skvallerpressens trakasserier. I rollen som Ruan Lingyu ses Maggie Cheung, känd för sin balans mellan tragisk uttrycksfullhet och återhållsam mysti",
+      "desc_en": "Cinemateket: Center Stage (1991) is a film screening at Bio Skandia in Stockholm.\n\nThe film Center Stage, originally titled Ruan Lingyu, is a biography of the media-hyped silent film star Ruan Lingyu. She was driven to suicide at 24 years old due to harassment from the gossip press. Maggie Cheung portrays Ruan Lingyu, known for her balance of tragic expressiveness and reserved mystery. Stanley Kwa",
+      "raw": "Cinemateket: Center Stage (1991) är en filmvisning på Bio Skandia i Stockholm.\n\nFilmen Center Stage, med originaltitel Ruan Lingyu, är en biografi om den medieomsusade stumfilmsstjärnan Ruan Lingyu. Hon drevs till självmord vid 24 års ålder på grund av skvallerpressens trakasserier. I rollen som Ruan Lingyu ses Maggie Cheung, känd för sin balans mellan tragisk uttrycksfullhet och återhållsam mysti",
+      "venue": "Bio Skandia",
+      "start": "2026-12-10T17:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "5dd495b4-f731-4728-9fbf-6428bd0cf27f",
+      "title_sv": "Psykologer tittar på film: Fjord",
+      "title_en": "Psykologer tittar på film: Fjord",
+      "desc_sv": "Psykologer tittar på film: Fjord är en filmvisning på Kulturhuset Stadsteatern i Stockholm.\n\n\"Psykologer tittar på film\" är tillbaka med ett nytt program som fokuserar på filmer som belyser familjer, relationer och män och fäder. Kvällens film är familjedramat Fjord, som vann Guldpalmen i Cannes. Den rumänske regissören Christian Mungui belyser en rumänsk familjs kulturkrock och kris i ett litet n",
+      "desc_en": "Psykologer tittar på film: Fjord is a film screening at Kulturhuset Stadsteatern in Stockholm.\n\n\"Psykologer tittar på film\" returns with a new program focusing on films that highlight families, relationships, and men and fathers. This evening's film is the family drama Fjord, which won the Palme d'Or in Cannes. Romanian director Christian Mungui explores a Romanian family's culture clash and crisi",
+      "raw": "Psykologer tittar på film: Fjord är en filmvisning på Kulturhuset Stadsteatern i Stockholm.\n\n\"Psykologer tittar på film\" är tillbaka med ett nytt program som fokuserar på filmer som belyser familjer, relationer och män och fäder. Kvällens film är familjedramat Fjord, som vann Guldpalmen i Cannes. Den rumänske regissören Christian Mungui belyser en rumänsk familjs kulturkrock och kris i ett litet n",
+      "venue": "Kulturhuset Stadsteatern",
+      "start": "2026-10-08T16:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "e81d513e-5c1b-46b4-aa55-5a7193295c90",
+      "title_sv": "Film: Jazzoo-Festen",
+      "title_en": "Film: Jazzoo-Festen",
+      "desc_sv": "En tecknad musikfilm som passar alla åldrar – från 2 till 100 år. Vi få följa näktergalen som lyckades samla djur från hela jorden till den stora festen. Korta",
+      "desc_en": "En tecknad musikfilm som passar alla åldrar – från 2 till 100 år. Vi få följa näktergalen som lyckades samla djur från hela jorden till den stora festen. Korta",
+      "raw": "En tecknad musikfilm som passar alla åldrar – från 2 till 100 år. Vi få följa näktergalen som lyckades samla djur från hela jorden till den stora festen. Korta",
+      "venue": "왕의 정원",
+      "start": "2026-10-18T12:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "57bcdfbb-a6c4-4dc8-b81c-36311cdf130c",
+      "title_sv": "Du sotige vallon - Fabrikörerna",
+      "title_en": "Du sotige vallon - Fabrikörerna",
+      "desc_sv": "Du sotige vallon – Fabrikörerna är en filmvisning på Zita i Stockholm.\n\nFilmen Du sotige vallon handlar om vallonbruken i Uppland, som var världsledande och den svenska järn- och stålindustrins vagga. Historien berättas av Louis de Geer, den 13e generationen som vuxit upp på Lövstabruks herrgård. Anders Hanser besökte 15 andra vallonbruk, och sonen Calle bidrog med drönarbilder. Filmen inleds med ",
+      "desc_en": "Du sotige vallon – Fabrikörerna is a film screening at Zita in Stockholm.\n\nThe film Du sotige vallon is about the Walloon forges in Uppland, which were world-leading and the cradle of the Swedish iron and steel industry. The story is narrated by Louis de Geer, the 13th generation to have grown up at Lövstabruk Manor. Anders Hanser visited 15 other Walloon forges, and his son Calle contributed with",
+      "raw": "Du sotige vallon – Fabrikörerna är en filmvisning på Zita i Stockholm.\n\nFilmen Du sotige vallon handlar om vallonbruken i Uppland, som var världsledande och den svenska järn- och stålindustrins vagga. Historien berättas av Louis de Geer, den 13e generationen som vuxit upp på Lövstabruks herrgård. Anders Hanser besökte 15 andra vallonbruk, och sonen Calle bidrog med drönarbilder. Filmen inleds med ",
+      "venue": "왕의 정원",
+      "start": "2026-11-24T10:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "74a99c94-49f7-4b0d-9b05-059c6d76acba",
+      "title_sv": "Vaiana",
+      "title_en": "Vaiana",
+      "desc_sv": "Vaiana är en storslagen spelfilm på Kulturhuset Stadsteatern i Stockholm.\n\nDisneys Vaiana får nytt liv som en storslagen spelfilm. När hennes ö hotas ger sig Vaiana ut över havet för att rädda sitt folk och återställa balansen i naturen. På resan möter hon halvguden Maui. Detta är ett musikfyllt familjeäventyr med Catherine Laga’aia och Dwayne Johnson om mod, identitet och att hitta sin egen väg.",
+      "desc_en": "Vaiana is a grand feature film at Kulturhuset Stadsteatern in Stockholm.\n\nDisney's Vaiana is brought to life as a grand feature film. When her island is threatened, Vaiana sets sail across the ocean to save her people and restore balance to nature. On her journey, she meets the demigod Maui. This is a music-filled family adventure starring Catherine Laga’aia and Dwayne Johnson, focusing on courage",
+      "raw": "Vaiana är en storslagen spelfilm på Kulturhuset Stadsteatern i Stockholm.\n\nDisneys Vaiana får nytt liv som en storslagen spelfilm. När hennes ö hotas ger sig Vaiana ut över havet för att rädda sitt folk och återställa balansen i naturen. På resan möter hon halvguden Maui. Detta är ett musikfyllt familjeäventyr med Catherine Laga’aia och Dwayne Johnson om mod, identitet och att hitta sin egen väg.",
+      "venue": "Kulturhuset Stadsteatern",
+      "start": "2026-10-18T14:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "d39ac0ba-2ff9-404d-9f29-b2d77d2800d7",
+      "title_sv": "Return to Nuke 'Em High  - gästas av Lloyd Kaufman",
+      "title_en": "Return to Nuke 'Em High  - gästas av Lloyd Kaufman",
+      "desc_sv": "Return to Nuke 'Em High är en filmvisning på Zita Folkets Bio i Stockholm.\n\nReturn to Nuke 'Em High är en skräckkomedi av regissören Lloyd Kaufman, där lesbiska tonårsbloggare räddar världen. Filmen utspelar sig på Tromaville High, där glee-klubben muterat till gänget The Cretins. Chrissy och Lauren måste slåss mot mutanter, mobbare och det onda företaget Tromorganic Foodstuffs. Det är Volym 1 av ",
+      "desc_en": "Return to Nuke 'Em High is a film screening at Zita Folkets Bio in Stockholm.\n\nReturn to Nuke 'Em High is a horror comedy by director Lloyd Kaufman, where lesbian teenage bloggers save the world. The film is set at Tromaville High, where the glee club has mutated into the gang The Cretins. Chrissy and Lauren must fight mutants, bullies, and the evil company Tromorganic Foodstuffs. This is Volume 1",
+      "raw": "Return to Nuke 'Em High är en filmvisning på Zita Folkets Bio i Stockholm.\n\nReturn to Nuke 'Em High är en skräckkomedi av regissören Lloyd Kaufman, där lesbiska tonårsbloggare räddar världen. Filmen utspelar sig på Tromaville High, där glee-klubben muterat till gänget The Cretins. Chrissy och Lauren måste slåss mot mutanter, mobbare och det onda företaget Tromorganic Foodstuffs. Det är Volym 1 av ",
+      "venue": "Stockholm",
+      "start": "2026-10-17T19:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "e4b04cfd-68a1-4d56-abef-2fd1e1e69e53",
+      "title_sv": "Occupy Cannes! - gästas av Lloyd Kaufman",
+      "title_en": "Occupy Cannes! - gästas av Lloyd Kaufman",
+      "desc_sv": "Occupy Cannes! är en dokumentärfilmvisning på Zita Folkets Bio i Stockholm.\n\nTroma-gänget åker till Cannes Film Festival för att slåss mot filmbranschen. De ska sälja filmen Return to Nuke ’Em High och demonstrera för oberoende film. Denna punkiga dokumentär skildrar Troma Entertainments kamp mot polisen, byråkrati och festivalglamour. Lloyd Kaufmans döttrar Lily-Hayes och Charlotte filmar attacke",
+      "desc_en": "Occupy Cannes! is a documentary film screening at Zita Folkets Bio in Stockholm.\n\nThe Troma crew travels to the Cannes Film Festival to battle the film industry. They aim to sell their film, Return to Nuke ’Em High, and advocate for independent cinema. This punk documentary depicts Troma Entertainment's fight against police, bureaucracy, and festival glamour. Lloyd Kaufman's daughters, Lily-Hayes ",
+      "raw": "Occupy Cannes! är en dokumentärfilmvisning på Zita Folkets Bio i Stockholm.\n\nTroma-gänget åker till Cannes Film Festival för att slåss mot filmbranschen. De ska sälja filmen Return to Nuke ’Em High och demonstrera för oberoende film. Denna punkiga dokumentär skildrar Troma Entertainments kamp mot polisen, byråkrati och festivalglamour. Lloyd Kaufmans döttrar Lily-Hayes och Charlotte filmar attacke",
+      "venue": "Stockholm",
+      "start": "2026-10-17T17:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "bfc79c22-346b-4e99-a1f1-6117b7d315b7",
+      "title_sv": "Mr. Melvin - gästas av LLoyd Kaufman",
+      "title_en": "Mr. Melvin - gästas av LLoyd Kaufman",
+      "desc_sv": "Mr. Melvin är en filmvisning på Zita Folkets Bio i Stockholm.\n\nMr. Melvin är den länge planerade versionen av Toxic Avenger II och III, rekonstruerad till en 127 minuter lång film. Den skildrar hur Tromavilles idyll krossas när Apocalypse Inc. förgiftar stadens hjälte, Toxic Avenger, och vänder honom mot de sina. Filmen följer Toxies kamp för att konfrontera monstret han blivit för att rädda både ",
+      "desc_en": "Mr. Melvin is a film screening at Zita Folkets Bio in Stockholm.\n\nMr. Melvin is the long-planned version of Toxic Avenger II and III, reconstructed into a 127-minute film. It depicts the shattering of Tromaville's idyllic peace when Apocalypse Inc. poisons the town's hero, Toxic Avenger, turning him against his own. The film follows Toxie's struggle to confront the monster he has become, hoping to",
+      "raw": "Mr. Melvin är en filmvisning på Zita Folkets Bio i Stockholm.\n\nMr. Melvin är den länge planerade versionen av Toxic Avenger II och III, rekonstruerad till en 127 minuter lång film. Den skildrar hur Tromavilles idyll krossas när Apocalypse Inc. förgiftar stadens hjälte, Toxic Avenger, och vänder honom mot de sina. Filmen följer Toxies kamp för att konfrontera monstret han blivit för att rädda både ",
+      "venue": "Stockholm",
+      "start": "2026-10-16T19:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "b1b69681-0615-4ad1-9144-9c7e8fe70dd0",
+      "title_sv": "Dog 51",
+      "title_en": "Dog 51",
+      "desc_sv": "Dog 51 är en filmvisning på Klarabiografen i Stockholm.\n\nFilmen utspelar sig i ett zonindelat Paris, där staden är uppdelad i tre zoner för olika samhällsklasser. En allvetande artificiell intelligens, Alma, styr över polisens brottsbekämpning. När Almas skapare mördas tvingas två poliser, Salia Malberg från zon 2 och Zem Brecht från zon 3, att samarbeta. Regissören Cédric Jimenez, känd för nervig",
+      "desc_en": "Dog 51 is a film screening at Klarabiografen in Stockholm.\n\nThe film is set in a zone-divided Paris, where the city is split into three zones for different social classes. An all-knowing artificial intelligence named Alma controls law enforcement. When Alma's creator is murdered, two police officers, Salia Malberg from Zone 2 and Zem Brecht from Zone 3, are forced to collaborate. Director Cédric J",
+      "raw": "Dog 51 är en filmvisning på Klarabiografen i Stockholm.\n\nFilmen utspelar sig i ett zonindelat Paris, där staden är uppdelad i tre zoner för olika samhällsklasser. En allvetande artificiell intelligens, Alma, styr över polisens brottsbekämpning. När Almas skapare mördas tvingas två poliser, Salia Malberg från zon 2 och Zem Brecht från zon 3, att samarbeta. Regissören Cédric Jimenez, känd för nervig",
+      "venue": "Stockholm",
+      "start": "2026-10-18T13:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "0257ea5d-4a2e-44c3-a855-3d30d16b33e0",
+      "title_sv": "Before the last octopus",
+      "title_en": "Before the last octopus",
+      "desc_sv": "Filmen Before the Last Octopus visas på Bagarmossens Folkets hus i Bagarmossen.\n\nFilmen följer Sea Shepherd Globals arbete i Medelhavet för att stoppa det illegala fisket efter bläckfiskar. Under tre månader till havs drar teamet upp tiotusentals illegala fällor med hjälp av lokala fiskare, forskare och myndigheter. Filmen ger en unik inblick i en undervattensvärld och visar vikten av kollektivt h",
+      "desc_en": "The film Before the Last Octopus is screening at Bagarmossens Folkets hus in Bagarmossen.\n\nThe film documents Sea Shepherd Global's efforts in the Mediterranean to combat illegal octopus fishing. Over three months at sea, the team, supported by local fishers, scientists, and authorities, removes tens of thousands of illegal traps. This film offers a unique look into an underwater world and highlig",
+      "venue": "Folkets Hus",
+      "start": "2026-10-15T17:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "a420b928-a50e-4314-964c-c25c855accc4",
+      "title_sv": "Mum, I'm Alien Pregnant",
+      "title_en": "Mum, I'm Alien Pregnant",
+      "desc_sv": "Mum, I'm Alien Pregnant är en film på Klarabiografen i Stockholm.\n\nMum, I'm Alien Pregnant är en science fiction-komedi och skräckfilm i regi av Sean Wallace och Jordan Mark Windsor. Filmen handlar om Mary, en slacker som bor hemma och blir gravid med en alien efter ett möte med en granne. Graviditeten accelererar snabbt och hennes kropp förvandlas med slem som sprutar ut. Regissörsduon THUNDERLIP",
+      "desc_en": "Mum, I'm Alien Pregnant is a film at Klarabiografen in Stockholm.\n\nMum, I'm Alien Pregnant is a comedy, horror, and sci-fi film directed by Sean Wallace and Jordan Mark Windsor. The film follows Mary, a slacker living at home who becomes pregnant with an alien after an absurd encounter with a neighbor. Her pregnancy accelerates rapidly, causing her body to transform and slime to erupt. The directi",
+      "raw": "Mum, I'm Alien Pregnant är en film på Klarabiografen i Stockholm.\n\nMum, I'm Alien Pregnant är en science fiction-komedi och skräckfilm i regi av Sean Wallace och Jordan Mark Windsor. Filmen handlar om Mary, en slacker som bor hemma och blir gravid med en alien efter ett möte med en granne. Graviditeten accelererar snabbt och hennes kropp förvandlas med slem som sprutar ut. Regissörsduon THUNDERLIP",
+      "venue": "Stockholm",
+      "start": "2026-10-15T15:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "b476de77-0a84-4829-9dbc-b967f5bae87f",
+      "title_sv": "Fjord",
+      "title_en": "Fjord",
+      "desc_sv": "Fjord är ett Guldpalmsvinnande drama av Cristian Mungiu på Kulturhuset Stadsteatern i Stockholm.\n\nGuldpalmsvinnaren Fjord är ett laddat drama av Cristian Mungiu, med Renate Reinsve och Sebastian Stan. Filmen handlar om en norsk-rumänsk familj som bosätter sig i en avlägsen norsk by. Misstankar om familjens uppfostran väcks när dottern kommer till skolan med blåmärken. Detta initierar en konflikt o",
+      "desc_en": "Fjord, a Palme d'Or winning drama by Cristian Mungiu, is presented at Kulturhuset Stadsteatern in Stockholm.\n\nThe Palme d'Or winner Fjord is a charged drama by Cristian Mungiu, starring Renate Reinsve and Sebastian Stan. The film follows a Norwegian-Romanian family as they settle in a remote Norwegian village. Suspicions about the family's upbringing arise when the daughter arrives at school with ",
+      "raw": "Fjord är ett Guldpalmsvinnande drama av Cristian Mungiu på Kulturhuset Stadsteatern i Stockholm.\n\nGuldpalmsvinnaren Fjord är ett laddat drama av Cristian Mungiu, med Renate Reinsve och Sebastian Stan. Filmen handlar om en norsk-rumänsk familj som bosätter sig i en avlägsen norsk by. Misstankar om familjens uppfostran väcks när dottern kommer till skolan med blåmärken. Detta initierar en konflikt o",
+      "venue": "Kulturhuset Stadsteatern",
+      "start": "2026-10-15T11:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "a5d32723-984c-461e-b738-46b9214228c4",
+      "title_sv": "Black Sheeps - Öppningsfilm",
+      "title_en": "Black Sheeps - Öppningsfilm",
+      "desc_sv": "BLACK SHEEPS - Öppningsfilm är en filmvisning på Grand, Salong 1 i Stockholm.\n\nDenna film är en djurskräckis och världspremiär i Midnight X-treme-sektionen på Fantastic Film Festival i Sitges, strax innan den visas i Stockholm. BLACK SHEEPS är uppföljaren till den nyzeeländska filmen BLACK SHEEP av Jonathan King. Regissören återvänder med en film som innehåller genmodifierade zombiefår och praktis",
+      "desc_en": "BLACK SHEEPS - Öppningsfilm is a film screening at Grand, Salong 1 in Stockholm.\n\nThis animal horror film has its world premiere in the Midnight X-treme section at the Fantastic Film Festival in Sitges, just before being shown in Stockholm. BLACK SHEEPS is the sequel to the New Zealand film BLACK SHEEP by Jonathan King. The director returns with a film featuring genetically modified zombie sheep a",
+      "raw": "BLACK SHEEPS - Öppningsfilm är en filmvisning på Grand, Salong 1 i Stockholm.\n\nDenna film är en djurskräckis och världspremiär i Midnight X-treme-sektionen på Fantastic Film Festival i Sitges, strax innan den visas i Stockholm. BLACK SHEEPS är uppföljaren till den nyzeeländska filmen BLACK SHEEP av Jonathan King. Regissören återvänder med en film som innehåller genmodifierade zombiefår och praktis",
+      "venue": "Stockholm",
+      "start": "2026-10-14T16:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "3f204cc7-6f74-4051-b831-b452b0b5e99d",
+      "title_sv": "Kärlek över Tanger",
+      "title_en": "Kärlek över Tanger",
+      "desc_sv": "Kärlek över Tanger är en filmvisning på Spånga Folkan i Spånga.\n\nFilmen Kärlek över Tanger visas på Spånga Folkan. Den beskrivs som höstens mest hjärtevärmande, fylld med livsglädje och egensinnighet.",
+      "desc_en": "Kärlek över Tanger is a film screening at Spånga Folkan in Spånga.\n\nThe film Kärlek över Tanger is shown at Spånga Folkan. It is described as the autumn's most heartwarming, filled with joy of life and idiosyncrasy.",
+      "raw": "Kärlek över Tanger är en filmvisning på Spånga Folkan i Spånga.\n\nFilmen Kärlek över Tanger visas på Spånga Folkan. Den beskrivs som höstens mest hjärtevärmande, fylld med livsglädje och egensinnighet.",
+      "venue": "Folkan",
+      "start": "2026-10-13T17:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "d56d724c-2d4d-48ce-9294-d3587e7149ee",
+      "title_sv": "Fjord",
+      "title_en": "Fjord",
+      "desc_sv": "Fjord är ett Guldpalmsvinnande drama av Cristian Mungiu på Kulturhuset Stadsteatern i Stockholm.\n\nGuldpalmsvinnaren Fjord är ett laddat drama av Cristian Mungiu, med Renate Reinsve och Sebastian Stan. Filmen handlar om en norsk-rumänsk familj som bosätter sig i en avlägsen norsk by. Misstankar om familjens uppfostran väcks när dottern kommer till skolan med blåmärken. Detta initierar en konflikt o",
+      "desc_en": "Fjord, a Palme d'Or winning drama by Cristian Mungiu, is presented at Kulturhuset Stadsteatern in Stockholm.\n\nThe Palme d'Or winner Fjord is a charged drama by Cristian Mungiu, starring Renate Reinsve and Sebastian Stan. The film follows a Norwegian-Romanian family as they settle in a remote Norwegian village. Suspicions about the family's upbringing arise when the daughter arrives at school with ",
+      "raw": "Fjord är ett Guldpalmsvinnande drama av Cristian Mungiu på Kulturhuset Stadsteatern i Stockholm.\n\nGuldpalmsvinnaren Fjord är ett laddat drama av Cristian Mungiu, med Renate Reinsve och Sebastian Stan. Filmen handlar om en norsk-rumänsk familj som bosätter sig i en avlägsen norsk by. Misstankar om familjens uppfostran väcks när dottern kommer till skolan med blåmärken. Detta initierar en konflikt o",
+      "venue": "Kulturhuset Stadsteatern",
+      "start": "2026-10-13T12:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "26b876b1-d997-479c-a7c1-d6b053d31b40",
+      "title_sv": "Peking Opera Blues (Tsui Hark - Retrospektiv)",
+      "title_en": "Peking Opera Blues (Tsui Hark - Retrospektiv)",
+      "desc_sv": "Peking Opera Blues (Tsui Hark - Retrospektiv) är en filmvisning på Kulturhuset Stadsteatern i Stockholm.\n\nKlarabiografen och Timeless presenterar ett Tsui Hark-retrospektiv. Filmen Peking Opera Blues är en av milstolparna från genrens gyllene era.",
+      "desc_en": "Peking Opera Blues (Tsui Hark - Retrospektiv) is a film screening at Kulturhuset Stadsteatern in Stockholm.\n\nKlarabiografen and Timeless present a Tsui Hark retrospective. The film Peking Opera Blues is one of the milestones from the genre's golden era.",
+      "raw": "Peking Opera Blues (Tsui Hark - Retrospektiv) är en filmvisning på Kulturhuset Stadsteatern i Stockholm.\n\nKlarabiografen och Timeless presenterar ett Tsui Hark-retrospektiv. Filmen Peking Opera Blues är en av milstolparna från genrens gyllene era.",
+      "venue": "Kulturhuset Stadsteatern",
+      "start": "2026-10-11T15:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "89d9a30f-5203-48bd-be52-37314f06e801",
+      "title_sv": "Stickbio: Bad Apples",
+      "title_en": "Stickbio: Bad Apples",
+      "desc_sv": "Stickbio: Bad Apples är en filmvisning anpassad för handarbete på Kulturhuset Stadsteatern i Stockholm.\n\nVälkommen till Stickbio på Klarabiografen. Salongen är anpassad så att du kan njuta av en film samtidigt som du jobbar med ditt handarbete.",
+      "desc_en": "Stickbio: Bad Apples is a film screening adapted for needlework at Kulturhuset Stadsteatern in Stockholm.\n\nWelcome to Stickbio at Klarabiografen. The cinema is adapted so you can enjoy a film while working on your needlework.",
+      "raw": "Stickbio: Bad Apples är en filmvisning anpassad för handarbete på Kulturhuset Stadsteatern i Stockholm.\n\nVälkommen till Stickbio på Klarabiografen. Salongen är anpassad så att du kan njuta av en film samtidigt som du jobbar med ditt handarbete.",
+      "venue": "Kulturhuset Stadsteatern",
+      "start": "2026-10-11T12:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "f8943647-83de-4f5b-9116-8126377a4aeb",
+      "title_sv": "Sagan om de två tornen - Extended version",
+      "title_en": "Sagan om de två tornen - Extended version",
+      "desc_sv": "Sagan om de två tornen - Extended version är en filmvisning på Bio Skandia i Stockholm.\n\nI den andra delen av Tolkiens saga fortsätter sällskapet sin heliga strävan att förstöra den enda ringen. Frodo och Sam förlitar sig på Gollum som sitt sista hopp att hitta vägen till Mordor. När Sarumans armé närmar sig förbereder sig Midgård för strid. Kriget om den enda ringen har börjat. Filmen är regisser",
+      "desc_en": "Sagan om de två tornen - Extended version is a film screening at Bio Skandia in Stockholm.\n\nIn the second part of the Tolkien saga, the fellowship continues its sacred quest to destroy the One Ring. Frodo and Sam entrust their lives to Gollum as their final hope to find their way to Mordor. As Saruman's army approaches, Middle-Earth prepares for battle. The War of the One Ring has begun. The film ",
+      "raw": "Sagan om de två tornen - Extended version är en filmvisning på Bio Skandia i Stockholm.\n\nI den andra delen av Tolkiens saga fortsätter sällskapet sin heliga strävan att förstöra den enda ringen. Frodo och Sam förlitar sig på Gollum som sitt sista hopp att hitta vägen till Mordor. När Sarumans armé närmar sig förbereder sig Midgård för strid. Kriget om den enda ringen har börjat. Filmen är regisser",
+      "venue": "Bio Skandia",
+      "start": "2026-12-12T13:33:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "4f19423c-c1db-41ed-97ea-6c3bcf062932",
+      "title_sv": "Arkipelag",
+      "title_en": "Arkipelag",
+      "desc_sv": "Arkipelag är en filmvisning på Bio Skandia i Stockholm.\n\nLaddat drama möter mörk humor när Alex Schulman regidebuterar med Arkipelag. Gustaf Skarsgård, Fares Fares och Linus Wahlgren spelar tre pappor som följer med sina döttrar på en skolresa. Filmen är årets svenska Oscarsbidrag. Den har en speltid på 107 minuter och dialog på svenska.",
+      "desc_en": "Arkipelag is a film screening at Bio Skandia in Stockholm.\n\nCharged drama meets dark humor as Alex Schulman makes his directorial debut with Arkipelag. Gustaf Skarsgård, Fares Fares, and Linus Wahlgren portray three fathers accompanying their daughters on a school trip. The film is Sweden's Oscar submission for the year. It has a running time of 107 minutes and is spoken in Swedish.",
+      "raw": "Arkipelag är en filmvisning på Bio Skandia i Stockholm.\n\nLaddat drama möter mörk humor när Alex Schulman regidebuterar med Arkipelag. Gustaf Skarsgård, Fares Fares och Linus Wahlgren spelar tre pappor som följer med sina döttrar på en skolresa. Filmen är årets svenska Oscarsbidrag. Den har en speltid på 107 minuter och dialog på svenska.",
+      "venue": "Bio Skandia",
+      "start": "2026-10-12T16:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "808a38e1-b0ad-4c08-a4d3-d7bf49f59b19",
+      "title_sv": "Love Like Nature – Från prestation till närvaro",
+      "title_en": "Love Like Nature – Från prestation till närvaro",
+      "desc_sv": "Vad kan vi lära av människor som fortfarande lever nära naturens rytm – och hur kan vi hitta tillbaka till mer närvaro i våra egna moderna liv?\n\nVälkommen till en kväll med den tvåfaldige världsmästaren i vindsurfing och filmskaparen Adam Holm. Vi visar Love Like Nature, en dokumentär som utforskar urfolks perspektiv på natur, kärlek och gemenskap. Filmvisningen följs av en Q&A och en interaktiv w",
+      "desc_en": "Vad kan vi lära av människor som fortfarande lever nära naturens rytm – och hur kan vi hitta tillbaka till mer närvaro i våra egna moderna liv?\n\nVälkommen till en kväll med den tvåfaldige världsmästaren i vindsurfing och filmskaparen Adam Holm. Vi visar Love Like Nature, en dokumentär som utforskar urfolks perspektiv på natur, kärlek och gemenskap. Filmvisningen följs av en Q&A och en interaktiv w",
+      "raw": "Vad kan vi lära av människor som fortfarande lever nära naturens rytm – och hur kan vi hitta tillbaka till mer närvaro i våra egna moderna liv?\n\nVälkommen till en kväll med den tvåfaldige världsmästaren i vindsurfing och filmskaparen Adam Holm. Vi visar Love Like Nature, en dokumentär som utforskar urfolks perspektiv på natur, kärlek och gemenskap. Filmvisningen följs av en Q&A och en interaktiv w",
+      "venue": null,
+      "start": "2026-10-07T16:30:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "399fd3ad-90fa-426c-97b3-06d7dd68f108",
+      "title_sv": "Turner & Constable",
+      "title_en": "Turner & Constable",
+      "desc_sv": "Filmen Turner & Constable är en dokumentärfilm på Kulturhuset Stadsteatern i Stockholm.\n\nDenna dokumentärfilm uppmärksammar 250-årsjubileet av Turners och Constables födelse. Filmen spelades in på Tate Britain-utställningen i London.",
+      "desc_en": "The film Turner & Constable is a documentary film at Kulturhuset Stadsteatern in Stockholm.\n\nThis documentary film commemorates the 250th anniversary of the births of Turner and Constable. The film was recorded at the acclaimed Tate Britain exhibition in London.",
+      "raw": "Filmen Turner & Constable är en dokumentärfilm på Kulturhuset Stadsteatern i Stockholm.\n\nDenna dokumentärfilm uppmärksammar 250-årsjubileet av Turners och Constables födelse. Filmen spelades in på Tate Britain-utställningen i London.",
+      "venue": "Kulturhuset Stadsteatern",
+      "start": "2026-10-10T14:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "22cba9cf-72b1-4038-82a3-20f1f1943d00",
+      "title_sv": "Knattebio: Små djur och stora väsen",
+      "title_en": "Knattebio: Små djur och stora väsen",
+      "desc_sv": "Knattebio: Små djur och stora väsen är en filmvisning på Kulturhuset Stadsteatern i Stockholm.\n\nDenna filmresa tar tittare in i en sagobok fylld med naturupplevelser. Här upplever man årstiderna, djurlivet på land, i vatten och i luften, samt filosoferar under natthimlens stjärnor.",
+      "desc_en": "Knattebio: Små djur och stora väsen is a film screening at Kulturhuset Stadsteatern in Stockholm.\n\nThis cinematic journey invites viewers into a colorful storybook, exploring nature through the seasons and meeting animals on land, in water, and in the sky. Viewers can also philosophize under the night stars.",
+      "raw": "Knattebio: Små djur och stora väsen är en filmvisning på Kulturhuset Stadsteatern i Stockholm.\n\nDenna filmresa tar tittare in i en sagobok fylld med naturupplevelser. Här upplever man årstiderna, djurlivet på land, i vatten och i luften, samt filosoferar under natthimlens stjärnor.",
+      "venue": "Kulturhuset Stadsteatern",
+      "start": "2026-10-18T09:15:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "5f1e9b58-6656-4171-88c1-bbab2c0d48b0",
+      "title_sv": "Film: Round Midnight",
+      "title_en": "Film: Round Midnight",
+      "desc_sv": "En hyllning till de stora svarta jazzmusiker som levde i Paris i slutet av 50-talet. Dale Turner, gigant inom jazzvärlden, hoppas komma ifrån sitt drogmissbruk",
+      "desc_en": "En hyllning till de stora svarta jazzmusiker som levde i Paris i slutet av 50-talet. Dale Turner, gigant inom jazzvärlden, hoppas komma ifrån sitt drogmissbruk",
+      "raw": "En hyllning till de stora svarta jazzmusiker som levde i Paris i slutet av 50-talet. Dale Turner, gigant inom jazzvärlden, hoppas komma ifrån sitt drogmissbruk",
+      "venue": "왕의 정원",
+      "start": "2026-10-16T17:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "030c25a8-0a59-4221-9e24-65a82561d4ee",
+      "title_sv": "Håll Käften - del 1",
+      "title_en": "Håll Käften - del 1",
+      "desc_sv": "\"Håll Käften - del 1\" är en filmvisning med samtal på ABF-huset i Stockholm.\n\nFilmen av Göran Du Rées och Christina Olofson handlar om Tältprojektet, en kulturpolitisk mobilisering där ett cirkustält turnerade genom landet. På scenen fanns musik och teater som berättade arbetarrörelsens historia, och evenemanget lockade över 100 000 människor. Projektet framstår idag som ett tidsdokument och en sp",
+      "desc_en": "\"Håll Käften - del 1\" is a film screening with discussions at ABF-huset in Stockholm.\n\nThe film by Göran Du Rées and Christina Olofson focuses on Tältprojektet, a cultural-political mobilization where a circus tent toured the country. The stage featured music and theater recounting the history of the labor movement, attracting over 100,000 people. The project now serves as a historical document an",
+      "raw": "\"Håll Käften - del 1\" är en filmvisning med samtal på ABF-huset i Stockholm.\n\nFilmen av Göran Du Rées och Christina Olofson handlar om Tältprojektet, en kulturpolitisk mobilisering där ett cirkustält turnerade genom landet. På scenen fanns musik och teater som berättade arbetarrörelsens historia, och evenemanget lockade över 100 000 människor. Projektet framstår idag som ett tidsdokument och en sp",
+      "venue": "abf",
+      "start": "2026-10-10T09:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "c6738d46-9964-4784-9e4c-9d5f3daf0e57",
+      "title_sv": "Kevlar Soul (Kevlarsjäl)",
+      "title_en": "Kevlar Soul (Kevlarsjäl)",
+      "desc_sv": "“Kevlarsjäl” är en filmvisning av den svenska långfilmen på Bio Skandia i Stockholm.\n\nKevlarsjäl är en svensk långfilm, nominerad till Nordiska rådets filmpris. Filmen beskrivs som ett beundransvärt drama med hög konstnärlig integritet och djup social angelägenhet. Den fokuserar på bröderna Robin och Alex som lever med sin alkoholiserade far efter moderns död. Regissören Maria Eriksson-Hechts regi",
+      "desc_en": "“Kevlar Soul” is a film screening of the Swedish feature film at Bio Skandia in Stockholm.\n\nKevlar Soul is a Swedish feature film, nominated for the Nordic Council Film Prize. The film is described as an admirable drama combining high artistic integrity with deep social concern. It focuses on brothers Robin and Alex, who live with their alcoholic father after their mother's death. Director Maria E",
+      "raw": "“Kevlarsjäl” är en filmvisning av den svenska långfilmen på Bio Skandia i Stockholm.\n\nKevlarsjäl är en svensk långfilm, nominerad till Nordiska rådets filmpris. Filmen beskrivs som ett beundransvärt drama med hög konstnärlig integritet och djup social angelägenhet. Den fokuserar på bröderna Robin och Alex som lever med sin alkoholiserade far efter moderns död. Regissören Maria Eriksson-Hechts regi",
+      "venue": "Bio Skandia",
+      "start": "2026-10-08T16:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "b6ca6822-573b-4861-832e-1c1291d69836",
+      "title_sv": "Jorden runt på 100 minuter",
+      "title_en": "Jorden runt på 100 minuter",
+      "desc_sv": "Jorden runt på 100 minuter är en filmvisning på Biograf Grand i Stockholm.\n\nFilmen är inspirerad av en intervju som Anders Hanser gjorde med Thor Heyerdahl om Påskön. Hanser reste till Påskön och besökte Eldslandet, Patagonien, Galapagos, Borneo, Papua Nya Guinea, Japan, Botswana och Marocko. Filmen följer delvis den svenska fregatten Vanadis världsomsegling 1883-85, som hade en fotograf som tog 7",
+      "desc_en": "Jorden runt på 100 minuter is a film screening at Biograf Grand in Stockholm.\n\nThe film is inspired by an interview Anders Hanser conducted with Thor Heyerdahl about Easter Island. Hanser traveled to Easter Island, visiting Tierra del Fuego, Patagonia, Galapagos, Borneo, Papua New Guinea, Japan, Botswana, and Morocco. The film partly traces the journey of the Swedish frigate Vanadis, which sailed ",
+      "raw": "Jorden runt på 100 minuter är en filmvisning på Biograf Grand i Stockholm.\n\nFilmen är inspirerad av en intervju som Anders Hanser gjorde med Thor Heyerdahl om Påskön. Hanser reste till Påskön och besökte Eldslandet, Patagonien, Galapagos, Borneo, Papua Nya Guinea, Japan, Botswana och Marocko. Filmen följer delvis den svenska fregatten Vanadis världsomsegling 1883-85, som hade en fotograf som tog 7",
+      "venue": "왕의 정원",
+      "start": "2026-11-04T10:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "b8f7b733-b8ef-42f4-bdc3-9b60d5ac222b",
+      "title_sv": "Bloody Tennis",
+      "title_en": "Bloody Tennis",
+      "desc_sv": "Bloody Tennis är en filmvisning på Klarabiografen i Stockholm.\n\nAmerikanska Sophie antas till en elit-tennisakademi högt upp i bergen i södra Europa. Där tvingas hon hantera hård konkurrens och brutalitet bland lagkamraterna, samt skolans skumma ritualer. Tävlingsidrotten drivs till sina yttersta gränser med pennalism, psykologisk terror, strikt diet och blodsugande iglar. Sophie lär sig att göra ",
+      "desc_en": "Bloody Tennis is a film screening at Klarabiografen in Stockholm.\n\nAmerican Sophie is accepted into an elite tennis academy high in the mountains of Southern Europe. There, she is forced to deal with fierce competition and brutality among teammates, as well as the school's increasingly peculiar rituals. Competitive sport is pushed to its absolute limits with hazing, psychological terror, strict di",
+      "raw": "Bloody Tennis är en filmvisning på Klarabiografen i Stockholm.\n\nAmerikanska Sophie antas till en elit-tennisakademi högt upp i bergen i södra Europa. Där tvingas hon hantera hård konkurrens och brutalitet bland lagkamraterna, samt skolans skumma ritualer. Tävlingsidrotten drivs till sina yttersta gränser med pennalism, psykologisk terror, strikt diet och blodsugande iglar. Sophie lär sig att göra ",
+      "venue": "Stockholm",
+      "start": "2026-10-25T15:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "018c2622-92f9-402f-9505-36a88f54097f",
+      "title_sv": "The Devils",
+      "title_en": "The Devils",
+      "desc_sv": "Filmen The Devils visas på Bio Skandia i Stockholm.\n\nThe Devils är ett storslaget, kompromisslöst mästerverk i filmhistorien. Med Oscarbelönade Vanessa Redgrave och Oliver Reed i huvudrollerna skildrar filmen en mörk och provocerande berättelse om makt, besatthet, korruption och religiös fanatism. Regisserad av den visionäre filmskaparen Ken Russell är filmen ett omvälvande historiskt drama och et",
+      "desc_en": "The film The Devils is screening at Bio Skandia in Stockholm.\n\nThe Devils is a grand, uncompromising masterpiece in film history. Starring Oscar-winning Vanessa Redgrave and Oliver Reed, the film depicts a dark and provocative story of power, obsession, corruption, and religious fanaticism. Directed by the visionary filmmaker Ken Russell, the film is both a transformative historical drama and a bo",
+      "raw": "Filmen The Devils visas på Bio Skandia i Stockholm.\n\nThe Devils är ett storslaget, kompromisslöst mästerverk i filmhistorien. Med Oscarbelönade Vanessa Redgrave och Oliver Reed i huvudrollerna skildrar filmen en mörk och provocerande berättelse om makt, besatthet, korruption och religiös fanatism. Regisserad av den visionäre filmskaparen Ken Russell är filmen ett omvälvande historiskt drama och et",
+      "venue": "Bio Skandia",
+      "start": "2026-10-25T14:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "88f58316-d467-4f53-9f27-63cdb3d20a10",
+      "title_sv": "The Ones who Grieve - med besök av QUARXX",
+      "title_en": "The Ones who Grieve - med besök av QUARXX",
+      "desc_sv": "The Ones who Grieve är en filmvisning på Klarabiografen i Stockholm.\n\nFilmen 'The Ones who Grieve' är en fransk produktion i genrerna skräck, drama och fantasy. Regisserad av Quarxx, med Thierry Frémont, Zélie Rixhon och Jean-Baptiste Maunier i rollerna, har den en speltid på 116 minuter. Den visas med franskt tal och engelsk text.",
+      "desc_en": "The Ones who Grieve is a film screening at Klarabiografen in Stockholm.\n\nThe film 'The Ones who Grieve' is a French production spanning horror, drama, and fantasy genres. Directed by Quarxx, it stars Thierry Frémont, Zélie Rixhon, and Jean-Baptiste Maunier, with a running time of 116 minutes. It is presented with French audio and English subtitles.",
+      "raw": "The Ones who Grieve är en filmvisning på Klarabiografen i Stockholm.\n\nFilmen 'The Ones who Grieve' är en fransk produktion i genrerna skräck, drama och fantasy. Regisserad av Quarxx, med Thierry Frémont, Zélie Rixhon och Jean-Baptiste Maunier i rollerna, har den en speltid på 116 minuter. Den visas med franskt tal och engelsk text.",
+      "venue": "Stockholm",
+      "start": "2026-10-24T16:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "e2a5e0ce-93f1-4c08-8f98-4130f1822a2d",
+      "title_sv": "Digger",
+      "title_en": "Digger",
+      "desc_sv": "Digger är en svart satirisk komedi på Bio Skandia i Stockholm.\n\nFrån den Oscarsbelönade regissören Alejandro G. Iñárritu, känd för Birdman och The Revenant, kommer filmen Digger. Tom Cruise spelar Digger Rockwell, en excentrisk oljemiljardär som är en av världens mäktigaste män. När en katastrof han själv orsakat hotar med förödande konsekvenser, försöker han desperat övertyga omvärlden om att han",
+      "desc_en": "Digger is a black satirical comedy film at Bio Skandia in Stockholm.\n\nFrom Oscar-winning director Alejandro G. Iñárritu, known for Birdman and The Revenant, comes Digger. Tom Cruise stars as Digger Rockwell, an eccentric oil billionaire and one of the world's most powerful men. When a self-inflicted disaster threatens devastating consequences, he embarks on a frantic mission to convince the world ",
+      "raw": "Digger är en svart satirisk komedi på Bio Skandia i Stockholm.\n\nFrån den Oscarsbelönade regissören Alejandro G. Iñárritu, känd för Birdman och The Revenant, kommer filmen Digger. Tom Cruise spelar Digger Rockwell, en excentrisk oljemiljardär som är en av världens mäktigaste män. När en katastrof han själv orsakat hotar med förödande konsekvenser, försöker han desperat övertyga omvärlden om att han",
+      "venue": "Bio Skandia",
+      "start": "2026-10-23T18:30:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "8c28598f-54da-4380-adf4-843b489e05ab",
+      "title_sv": "Hellmare - gästas av Lloyd Kaufman",
+      "title_en": "Hellmare - gästas av Lloyd Kaufman",
+      "desc_sv": "Hellmare är en skräckkomedifilmvisning på Zita Folkets Bio i Stockholm.\n\nDenna skräckkomedi av regissören Victor Gabriel (Blood Gorge, Cruel) handlar om en grupp vänner som samlas i ett nyligen ärvt hus i Detroit. De ser en sällsynt skräckfilm på VHS, Hellmare, om en vanställd mördare med hästhuvud. Under ett åskväder sugs vännerna in i filmen och måste slåss mot Hellmare och skurkarna från de tra",
+      "desc_en": "Hellmare is a horror comedy film screening at Zita Folkets Bio in Stockholm.\n\nThis horror comedy from director Victor Gabriel (Blood Gorge, Cruel) follows a group of friends gathered in a recently inherited house in Detroit. They watch a rare horror film on VHS called Hellmare, featuring a disfigured horse-headed killer. During a thunderstorm, the friends are sucked into the film and must fight He",
+      "raw": "Hellmare är en skräckkomedifilmvisning på Zita Folkets Bio i Stockholm.\n\nDenna skräckkomedi av regissören Victor Gabriel (Blood Gorge, Cruel) handlar om en grupp vänner som samlas i ett nyligen ärvt hus i Detroit. De ser en sällsynt skräckfilm på VHS, Hellmare, om en vanställd mördare med hästhuvud. Under ett åskväder sugs vännerna in i filmen och måste slåss mot Hellmare och skurkarna från de tra",
+      "venue": "Stockholm",
+      "start": "2026-10-16T21:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "38d300ba-630b-41af-98b0-f06f01ac127a",
+      "title_sv": "No Way Down",
+      "title_en": "No Way Down",
+      "desc_sv": "No Way Down är en filmvisning på Klarabiografen i Stockholm.\n\nI en öde förort står ett igenbommat höghus, känt som en urban legend efter brand och försvinnanden. Fyra unga människor går in i byggnaden, men dörren slår igen bakom dem. Inuti väntar en mördare som känner varje korridor och utbränd trappa. Varje våningsplan blir en ny fälla, utan möjlighet att ta sig ut eller ner. Mohamed Chabane och ",
+      "desc_en": "No Way Down is a film screening at Klarabiografen in Stockholm.\n\nIn a desolate suburb, a boarded-up high-rise stands, known as an urban legend after a fire and mysterious disappearances. Four young people enter the building, but the door closes behind them. Inside, a ruthless killer awaits, familiar with every corridor and burnt-out staircase. Each floor becomes a new trap, with no way out or down",
+      "raw": "No Way Down är en filmvisning på Klarabiografen i Stockholm.\n\nI en öde förort står ett igenbommat höghus, känt som en urban legend efter brand och försvinnanden. Fyra unga människor går in i byggnaden, men dörren slår igen bakom dem. Inuti väntar en mördare som känner varje korridor och utbränd trappa. Varje våningsplan blir en ny fälla, utan möjlighet att ta sig ut eller ner. Mohamed Chabane och ",
+      "venue": "Stockholm",
+      "start": "2026-10-22T17:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "5aba37b9-b2ff-4a85-882d-b163d4c89ac7",
+      "title_sv": "DOGGERLAND 35MM",
+      "title_en": "DOGGERLAND 35MM",
+      "desc_sv": "DOGGERLAND 35MM är en unik filmvisning av Kim Ekbergs Doggerland på Bio Skandia i Stockholm.\n\nBio Skandia presenterar en unik visning av Kim Ekbergs film Doggerland, den enda svenska filmen att visas på 35mm. Efter visningar på Berlins filmfestival och Bergmanveckan förmedlar filmen nyanserade och berörande perspektiv på kulturens roll i samhället. Med fokus på vardagslivets villkor i Norrköping s",
+      "desc_en": "DOGGERLAND 35MM is a unique screening of Kim Ekberg's Doggerland at Bio Skandia in Stockholm.\n\nBio Skandia presents a unique screening of Kim Ekberg's film Doggerland, the only Swedish film to be shown on 35mm. Following screenings at the Berlin Film Festival and Bergman Week, the film conveys nuanced and touching perspectives on the role of culture in society. Focusing on the conditions of everyd",
+      "raw": "DOGGERLAND 35MM är en unik filmvisning av Kim Ekbergs Doggerland på Bio Skandia i Stockholm.\n\nBio Skandia presenterar en unik visning av Kim Ekbergs film Doggerland, den enda svenska filmen att visas på 35mm. Efter visningar på Berlins filmfestival och Bergmanveckan förmedlar filmen nyanserade och berörande perspektiv på kulturens roll i samhället. Med fokus på vardagslivets villkor i Norrköping s",
+      "venue": "Bio Skandia",
+      "start": "2026-10-20T17:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "cc3adb84-2173-4e41-bc4d-d29b6c49c2d8",
+      "title_sv": "Barnvagnsbio: Arkipelag",
+      "title_en": "Barnvagnsbio: Arkipelag",
+      "desc_sv": "Barnvagnsbio: Arkipelag är en filmvisning på Kulturhuset Stadsteatern i Stockholm.\n\nVi visar utvalda filmer från den aktuella repertoaren, med salongen anpassad för dig och din bebis. Alla är välkomna, med eller utan bebis.",
+      "desc_en": "Barnvagnsbio: Arkipelag is a film screening at Kulturhuset Stadsteatern in Stockholm.\n\nWe show selected films from the current repertoire, with the screening room adapted for you and your baby. Everyone is welcome, with or without a baby.",
+      "raw": "Barnvagnsbio: Arkipelag är en filmvisning på Kulturhuset Stadsteatern i Stockholm.\n\nVi visar utvalda filmer från den aktuella repertoaren, med salongen anpassad för dig och din bebis. Alla är välkomna, med eller utan bebis.",
+      "venue": "Kulturhuset Stadsteatern",
+      "start": "2026-10-16T09:30:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "a502300c-30ab-4a04-ae8c-023517829644",
+      "title_sv": "Filmvisning och samtal: The Seoul Guardians",
+      "title_en": "Filmvisning och samtal: The Seoul Guardians",
+      "desc_sv": "Filmvisning och samtal: The Seoul Guardians äger rum på Östasiatiska museet i Stockholm.\n\nFilmvisning och samtal presenterar filmen The Seoul Guardians. Filmen spelades in mitt under de dramatiska händelser som följde Sydkoreas president Yoon Suk Yeols utlysta undantagstillstånd i Seoul. Den placerar publiken i händelsernas centrum och utgör ett starkt tidsdokument. Filmen visar den avgörande roll",
+      "desc_en": "Film screening and conversation: The Seoul Guardians takes place at the Museum of East Asian Art in Stockholm.\n\nThis event presents a film screening followed by a conversation about The Seoul Guardians. The film was recorded amidst the dramatic events that followed South Korea's President Yoon Suk Yeol's declared state of emergency in Seoul. It places the audience directly in the center of these o",
+      "raw": "Filmvisning och samtal: The Seoul Guardians äger rum på Östasiatiska museet i Stockholm.\n\nFilmvisning och samtal presenterar filmen The Seoul Guardians. Filmen spelades in mitt under de dramatiska händelser som följde Sydkoreas president Yoon Suk Yeols utlysta undantagstillstånd i Seoul. Den placerar publiken i händelsernas centrum och utgör ett starkt tidsdokument. Filmen visar den avgörande roll",
+      "venue": "왕의 정원",
+      "start": "2026-10-25T12:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "33ffb150-26aa-408b-8bad-4ff436cf9807",
+      "title_sv": "De Gaulle: Motståndets pris",
+      "title_en": "De Gaulle: Motståndets pris",
+      "desc_sv": "De Gaulle: Motståndets pris är en filmvisning på Bio Skandia i Stockholm.\n\nDe Gaulle: Motståndets pris är den storslagna och sanna berättelsen som kastar publiken in i andra världskrigets avgörande timmar. Filmen skildrar general Charles de Gaulle och de män och kvinnor som vägrade ge upp när den franska nationen föll isär. Mot alla odds skapade han en armé i exil för det fria Frankrike. Detta är ",
+      "desc_en": "De Gaulle: Motståndets pris is a film screening at Bio Skandia in Stockholm.\n\nDe Gaulle: Motståndets pris is the magnificent and true story that plunges the audience into the pivotal hours of World War II. The film portrays General Charles de Gaulle and the men and women who refused to give up as the French nation collapsed. Against all odds, he created an army in exile for a free France. This is ",
+      "raw": "De Gaulle: Motståndets pris är en filmvisning på Bio Skandia i Stockholm.\n\nDe Gaulle: Motståndets pris är den storslagna och sanna berättelsen som kastar publiken in i andra världskrigets avgörande timmar. Filmen skildrar general Charles de Gaulle och de män och kvinnor som vägrade ge upp när den franska nationen föll isär. Mot alla odds skapade han en armé i exil för det fria Frankrike. Detta är ",
+      "venue": "Bio Skandia",
+      "start": "2026-10-31T14:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "4e6dd6b8-db38-4deb-92c3-63e04aecc22c",
+      "title_sv": "Sentimental Value  (Tal: Norska) (Text: Svenska)",
+      "title_en": "Sentimental Value  (Tal: Norska) (Text: Svenska)",
+      "desc_sv": "Filmen Sentimental Value är en filmvisning på Bio Skandia i Stockholm.\n\nDen svenska långfilmen Kevlar Soul är nominerad till Nordiska rådets filmpris. Regissören Maria Eriksson-Hecht, manusförfattaren Pelle Rådström och producenterna Ronny Fritsche och Lizette Jonjic är nominerade. Kevlar Soul är ett drama som skildrar bröderna Robin och Alex liv efter deras mors död, boende med sin alkoholiserade",
+      "desc_en": "The film Sentimental Value is a film screening at Bio Skandia in Stockholm.\n\nThe Swedish feature film Kevlar Soul is nominated for the Nordic Council Film Prize. Director Maria Eriksson-Hecht, screenwriter Pelle Rådström, and producers Ronny Fritsche and Lizette Jonjic are nominated. Kevlar Soul is a drama that depicts the lives of brothers Robin and Alex, living with their alcoholic father after ",
+      "raw": "Filmen Sentimental Value är en filmvisning på Bio Skandia i Stockholm.\n\nDen svenska långfilmen Kevlar Soul är nominerad till Nordiska rådets filmpris. Regissören Maria Eriksson-Hecht, manusförfattaren Pelle Rådström och producenterna Ronny Fritsche och Lizette Jonjic är nominerade. Kevlar Soul är ett drama som skildrar bröderna Robin och Alex liv efter deras mors död, boende med sin alkoholiserade",
+      "venue": "Bio Skandia",
+      "start": "2026-10-10T16:10:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "c719ac4c-e70f-4657-b5eb-d730ea23bc7f",
+      "title_sv": "Stockholms Internationella Downs Syndromfestival",
+      "title_en": "Stockholms Internationella Downs Syndromfestival",
+      "desc_sv": "Stockholms Internationella Downs Syndromfestival är en festival på Filmhuset i Stockholm.\n\nDenna internationella festival fokuserar på Downs syndrom och arrangeras i Filmhuset.",
+      "desc_en": "Stockholms Internationella Downs Syndromfestival is a festival at Filmhuset in Stockholm.\n\nThis international festival focuses on Down Syndrome and is held at Filmhuset.",
+      "raw": "Stockholms Internationella Downs Syndromfestival är en festival på Filmhuset i Stockholm.\n\nDenna internationella festival fokuserar på Downs syndrom och arrangeras i Filmhuset.",
+      "venue": "왕의 정원",
+      "start": "2026-10-10T11:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "d33dfe45-fdab-42f1-a700-5243cb93ebe9",
+      "title_sv": "Never After Dark",
+      "title_en": "Never After Dark",
+      "desc_sv": "Never After Dark är en skräckfilmvisning på Klarabiografen i Stockholm.\n\nFilmen är regisserad av Dave Boyle, känd från House of Ninjas, och är en japansk skräckfilm. Den följer Airi, ett kringvandrande medium som anlitas för att fördriva en manlig ande från en isolerad herrgård. Ju djupare Airi gräver i husets historia, desto mer inser hon att det verkliga hotet inte är övernaturligt, utan de leva",
+      "desc_en": "Never After Dark is a horror film screening at Klarabiografen in Stockholm.\n\nDirected by Dave Boyle, known from House of Ninjas, this Japanese horror film centers on Airi, a wandering medium who helps restless spirits. She is called to an isolated mansion to deal with a male spirit. As Airi investigates the house's history, she realizes the greatest threat is not the supernatural, but the living. ",
+      "raw": "Never After Dark är en skräckfilmvisning på Klarabiografen i Stockholm.\n\nFilmen är regisserad av Dave Boyle, känd från House of Ninjas, och är en japansk skräckfilm. Den följer Airi, ett kringvandrande medium som anlitas för att fördriva en manlig ande från en isolerad herrgård. Ju djupare Airi gräver i husets historia, desto mer inser hon att det verkliga hotet inte är övernaturligt, utan de leva",
+      "venue": "Stockholm",
+      "start": "2026-10-17T14:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "e1fa1ecd-9f63-4b27-9fa1-f15145e93358",
+      "title_sv": "Stockholms Internationella Downs Syndromfestival",
+      "title_en": "Stockholms Internationella Downs Syndromfestival",
+      "desc_sv": "Stockholms Internationella Downs Syndromfestival är en festival på Filmhuset i Stockholm.\n\nFestivalen presenterar Stockholms Internationella Downs Syndromfestival. Den äger rum på Filmhuset i Stockholm.",
+      "desc_en": "Stockholms Internationella Downs Syndromfestival is a festival at Filmhuset in Stockholm.\n\nThe festival presents Stockholms Internationella Downs Syndromfestival. It takes place at Filmhuset in Stockholm.",
+      "raw": "Stockholms Internationella Downs Syndromfestival är en festival på Filmhuset i Stockholm.\n\nFestivalen presenterar Stockholms Internationella Downs Syndromfestival. Den äger rum på Filmhuset i Stockholm.",
+      "venue": "왕의 정원",
+      "start": "2026-10-10T09:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "1d68c25b-d367-48ef-9b86-4ec2432f67ce",
+      "title_sv": "Ikatan Darah",
+      "title_en": "Ikatan Darah",
+      "desc_sv": "Ikatan Darah är en actionthrillerfilm på Klarabiografen i Stockholm.\n\nMega, en före detta pencak silat-stjärna, försörjer sin familj som servitris efter en skada. När hennes bror hamnar i stora spelskulder hos lånehajar, leder ett ögonblicks panik till ett lik, stulna pengar och en armé av gangstrar. För att rädda sin familj måste Mega övervinna ett nätverk av kriminella i alltmer våldsamma närkam",
+      "desc_en": "Ikatan Darah is an action thriller film at Klarabiografen in Stockholm.\n\nMega, a former pencak silat star, works as a waitress to support her family after an injury. When her brother incurs large gambling debts to loan sharks, a moment of panic leads to a body, stolen money, and an army of gangsters. To save her family, Mega must overcome a network of criminals in increasingly violent close combat",
+      "raw": "Ikatan Darah är en actionthrillerfilm på Klarabiografen i Stockholm.\n\nMega, en före detta pencak silat-stjärna, försörjer sin familj som servitris efter en skada. När hennes bror hamnar i stora spelskulder hos lånehajar, leder ett ögonblicks panik till ett lik, stulna pengar och en armé av gangstrar. För att rädda sin familj måste Mega övervinna ett nätverk av kriminella i alltmer våldsamma närkam",
+      "venue": "Stockholm",
+      "start": "2026-10-25T13:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "33788be5-9ce7-4c06-8c3b-f5702cbafe25",
+      "title_sv": "Penny Lane is Dead",
+      "title_en": "Penny Lane is Dead",
+      "desc_sv": "\"Penny Lane is Dead\" är en filmvisning på Klarabiografen i Stockholm.\n\n\"Penny Lane is Dead\" handlar om 17-åriga Penny Lane som firar att hon kommit in på college med sina vänner i familjens sommarstuga. Hennes kusin Kat dyker upp och drogar Penny Lane med spetsade cupcakes, vilket leder till en natt av blod, våld och desperation med ett gäng killar. Filmen är regisserad av Mia Kate Russell, som gö",
+      "desc_en": "\"Penny Lane is Dead\" is a film screening at Klarabiografen in Stockholm.\n\n\"Penny Lane is Dead\" follows 17-year-old Penny Lane as she celebrates college acceptance with friends at her family's summer cottage. Her cousin Kat appears and drugs Penny Lane with spiked cupcakes, leading to a night of blood, violence, and desperation with a group of boys. The film is directed by Mia Kate Russell, who mak",
+      "raw": "\"Penny Lane is Dead\" är en filmvisning på Klarabiografen i Stockholm.\n\n\"Penny Lane is Dead\" handlar om 17-åriga Penny Lane som firar att hon kommit in på college med sina vänner i familjens sommarstuga. Hennes kusin Kat dyker upp och drogar Penny Lane med spetsade cupcakes, vilket leder till en natt av blod, våld och desperation med ett gäng killar. Filmen är regisserad av Mia Kate Russell, som gö",
+      "venue": "Stockholm",
+      "start": "2026-10-16T16:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "ff879c73-366c-4924-95c8-991ed1b9ac65",
+      "title_sv": "Digger",
+      "title_en": "Digger",
+      "desc_sv": "Digger är en svart komedi på Kulturhuset Stadsteatern i Stockholm.\n\nI den svarta komedin Digger spelar Tom Cruise världens mäktigaste man. Han försöker desperat bevisa att han är mänsklighetens räddare innan katastrofen han själv orsakat förstör allt. Alejandro G. Iñárritu regisserar denna satiriska storfilm. Sandra Hüller, Riz Ahmed, Jesse Plemons och John Goodman medverkar i filmen.",
+      "desc_en": "Digger is a black comedy at Kulturhuset Stadsteatern in Stockholm.\n\nIn the black comedy Digger, Tom Cruise plays the world's most powerful man. He desperately tries to prove he is humanity's savior before a catastrophe he himself caused destroys everything. Alejandro G. Iñárritu directs this satirical blockbuster. Sandra Hüller, Riz Ahmed, Jesse Plemons, and John Goodman star in the film.",
+      "raw": "Digger är en svart komedi på Kulturhuset Stadsteatern i Stockholm.\n\nI den svarta komedin Digger spelar Tom Cruise världens mäktigaste man. Han försöker desperat bevisa att han är mänsklighetens räddare innan katastrofen han själv orsakat förstör allt. Alejandro G. Iñárritu regisserar denna satiriska storfilm. Sandra Hüller, Riz Ahmed, Jesse Plemons och John Goodman medverkar i filmen.",
+      "venue": "Kulturhuset Stadsteatern",
+      "start": "2026-10-24T17:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "edcbdd9b-92e8-41b5-a163-786f556bd17c",
+      "title_sv": "Dune: Part Three - exklusiv förhandsvisning",
+      "title_en": "Dune: Part Three - exklusiv förhandsvisning",
+      "desc_sv": "Dune: Part Three - exklusiv förhandsvisning är en filmvisning på Bio Skandia i Stockholm.\n\nDenna exklusiva förhandsvisning av Dune: Part Three äger rum tre dagar före den ordinarie premiären. Filmen fortsätter Denis Villeneuves episka saga i en mörkare och mer filosofisk riktning, med makt, tro och öde i centrum. Paul Atreides står inför svåra val som kan forma universums framtid. Förvänta dig mon",
+      "desc_en": "Dune: Part Three - exclusive preview is a film screening at Bio Skandia in Stockholm.\n\nThis exclusive preview of Dune: Part Three takes place three days before the ordinary premiere. The film continues Denis Villeneuve's epic saga in a darker, more philosophical direction, focusing on power, faith, and destiny. Paul Atreides faces difficult choices that could shape the future of the universe. Expe",
+      "raw": "Dune: Part Three - exklusiv förhandsvisning är en filmvisning på Bio Skandia i Stockholm.\n\nDenna exklusiva förhandsvisning av Dune: Part Three äger rum tre dagar före den ordinarie premiären. Filmen fortsätter Denis Villeneuves episka saga i en mörkare och mer filosofisk riktning, med makt, tro och öde i centrum. Paul Atreides står inför svåra val som kan forma universums framtid. Förvänta dig mon",
+      "venue": "Bio Skandia",
+      "start": "2026-12-15T19:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "0e4a1c26-f6f9-4528-87eb-2e36f7629400",
+      "title_sv": "Stockholms Internationella Downs Syndromfestival",
+      "title_en": "Stockholms Internationella Downs Syndromfestival",
+      "desc_sv": "Stockholms Internationella Downs Syndromfestival är en festival på Filmhuset i Stockholm.\n\nFestivalen presenterar Stockholms Internationella Downs Syndromfestival. Filmhuset är beläget i Stockholm.",
+      "desc_en": "Stockholms Internationella Downs Syndromfestival is a festival at Filmhuset in Stockholm.\n\nThe festival presents Stockholms Internationella Downs Syndromfestival. Filmhuset is located in Stockholm.",
+      "raw": "Stockholms Internationella Downs Syndromfestival är en festival på Filmhuset i Stockholm.\n\nFestivalen presenterar Stockholms Internationella Downs Syndromfestival. Filmhuset är beläget i Stockholm.",
+      "venue": "왕의 정원",
+      "start": "2026-10-10T14:45:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "3c670fb7-317e-4b84-b284-b56c6699434c",
+      "title_sv": "Arkivbio",
+      "title_en": "Arkivbio",
+      "desc_sv": "Arkivbio är en visning av historiska filmer om Nacka på Kulturhuset Dieselverkstaden i Nacka.\n\nUpptäck Nackas vardag genom unika arkivfilmer som visar hur området såg ut och levde. Dessa smalfilmer och videofilmer, digitaliserade med stöd från Längmanska fonden, kommer från Nacka lokalhistoriska arkiv. De presenteras på Dieselverkstadens stora scen, med första akten liveackompanjerad av en pianist",
+      "desc_en": "Arkivbio is a screening of historical films about Nacka at Kulturhuset Dieselverkstaden in Nacka.\n\nDiscover Nacka's everyday life through unique archival films showcasing how the area looked and lived. These narrow-gauge and video films, digitized with support from the Längmanska Foundation, originate from the Nacka local historical archive. They are presented on Dieselverkstaden's main stage, wit",
+      "raw": "Arkivbio är en visning av historiska filmer om Nacka på Kulturhuset Dieselverkstaden i Nacka.\n\nUpptäck Nackas vardag genom unika arkivfilmer som visar hur området såg ut och levde. Dessa smalfilmer och videofilmer, digitaliserade med stöd från Längmanska fonden, kommer från Nacka lokalhistoriska arkiv. De presenteras på Dieselverkstadens stora scen, med första akten liveackompanjerad av en pianist",
+      "venue": "Kulturhuset Dieselverkstaden",
+      "start": "2026-10-28T17:30:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "65cc2182-d58d-4c49-aea1-de19f9ae084f",
+      "title_sv": "24/10 CinemAfrica - Father´s Day + eftersamtal",
+      "title_en": "24/10 CinemAfrica - Father´s Day + eftersamtal",
+      "desc_sv": "CinemAfrica presenterar Sverigepremiären av kortfilmen Father's Day på Kulturhuset Stadsteatern i Stockholm.\n\nVisningen av Father's Day följs av ett samtal om filmen och föräldraskap. CinemAfrica står för Sverigepremiären.",
+      "desc_en": "CinemAfrica presents the Swedish premiere of the short film Father's Day at Kulturhuset Stadsteatern in Stockholm.\n\nThe screening of Father's Day is followed by a discussion about the film and parenthood. CinemAfrica is presenting the Swedish premiere.",
+      "raw": "CinemAfrica presenterar Sverigepremiären av kortfilmen Father's Day på Kulturhuset Stadsteatern i Stockholm.\n\nVisningen av Father's Day följs av ett samtal om filmen och föräldraskap. CinemAfrica står för Sverigepremiären.",
+      "venue": "Kulturhuset Stadsteatern",
+      "start": "2026-10-24T11:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "f78081f9-7ddc-4e40-b738-ef8a1f6256cf",
+      "title_sv": "Filmvisning: Grey Earth (2026) av Dana Kavelina",
+      "title_en": "Filmvisning: Grey Earth (2026) av Dana Kavelina",
+      "desc_sv": "Filmvisningen Grey Earth (2026) av Dana Kavelina äger rum på Bonniers Konsthall i Stockholm.\n\nGrey Earth är en stop motion-film som sammanför en soldat vid fronten med en ko från ett industriellt mjölkföretag. Efter en explosion åtnjuter de ett ögonblick av plötslig frihet. Dana Kavelina återskapar naturens och förstörelsens processer genom cykler av liv, krig och utvinning. Genom minutiöst arbete",
+      "desc_en": "The film screening of Grey Earth (2026) by Dana Kavelina takes place at Bonniers Konsthall in Stockholm.\n\nGrey Earth is a stop-motion film bringing together a soldier at the front with a cow from an industrial dairy farm. They enjoy a moment of sudden freedom after an explosion. Dana Kavelina recreates the processes of nature and destruction through cycles of life, war, and extraction. Through met",
+      "raw": "Filmvisningen Grey Earth (2026) av Dana Kavelina äger rum på Bonniers Konsthall i Stockholm.\n\nGrey Earth är en stop motion-film som sammanför en soldat vid fronten med en ko från ett industriellt mjölkföretag. Efter en explosion åtnjuter de ett ögonblick av plötslig frihet. Dana Kavelina återskapar naturens och förstörelsens processer genom cykler av liv, krig och utvinning. Genom minutiöst arbete",
+      "venue": "Bonniers Konsthall",
+      "start": "2026-11-04T17:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "d0820d62-89da-47be-9ccf-62afc3f69a00",
+      "title_sv": "Sacrum et Profanum (Ny europeisk film)",
+      "title_en": "Sacrum et Profanum (Ny europeisk film)",
+      "desc_sv": "Sacrum et Profanum är en filmserie med ny europeisk film på Kulturhuset Stadsteatern i Stockholm.\n\nDenna filmserie, med namnet \"Ny europeisk film/New European Film\", syftar till att lyfta fram nya europeiska filmer från oetablerade regissörer. Fokus ligger på filmer från hela kontinenten.",
+      "desc_en": "Sacrum et Profanum is a film series showcasing new European cinema at Kulturhuset Stadsteatern in Stockholm.\n\nThis film series, titled \"Ny europeisk film/New European Film\", aims to put a spotlight on new European cinema from emerging directors. The focus is on films from across the continent.",
+      "raw": "Sacrum et Profanum är en filmserie med ny europeisk film på Kulturhuset Stadsteatern i Stockholm.\n\nDenna filmserie, med namnet \"Ny europeisk film/New European Film\", syftar till att lyfta fram nya europeiska filmer från oetablerade regissörer. Fokus ligger på filmer från hela kontinenten.",
+      "venue": "Kulturhuset Stadsteatern",
+      "start": "2026-10-07T16:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "f47ba687-8ef3-433d-860e-49193145013d",
+      "title_sv": "Species (Sanguine)",
+      "title_en": "Species (Sanguine)",
+      "desc_sv": "Sanguine är en filmvisning på Klarabiografen i Stockholm.\n\nMargot, en ung läkare, påbörjar sin AT-tjänst på en stressig akutmottagning i Paris när en okänd sjukdom sprider sig. Denna mystiska mutation, som får patienter att svettas blod, drabbar även henne själv och förändrar hennes kropp. Marion Le Corollers långfilmsdebut beskrivs som en blodig, satirisk sci-fi-body horror, som hade världspremiä",
+      "desc_en": "Sanguine is a film screening at Klarabiografen in Stockholm.\n\nMargot, a young doctor, begins her residency in a busy Paris emergency room as an unknown illness spreads. This mysterious mutation, causing patients to sweat blood, also affects her, changing her body. Marion Le Coroller's feature debut is described as a bloody, satirical sci-fi-body horror, which had its world premiere in Cannes Midni",
+      "raw": "Sanguine är en filmvisning på Klarabiografen i Stockholm.\n\nMargot, en ung läkare, påbörjar sin AT-tjänst på en stressig akutmottagning i Paris när en okänd sjukdom sprider sig. Denna mystiska mutation, som får patienter att svettas blod, drabbar även henne själv och förändrar hennes kropp. Marion Le Corollers långfilmsdebut beskrivs som en blodig, satirisk sci-fi-body horror, som hade världspremiä",
+      "venue": "Stockholm",
+      "start": "2026-10-23T16:30:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "66d0005d-51a4-4a56-a554-c960d935aeec",
+      "title_sv": "Gråben vs ACME",
+      "title_en": "Gråben vs ACME",
+      "desc_sv": "Gråben vs ACME är en höstlovsbio i Bagarmossens Folkets hus, Bagarmossen.\n\nEfter att ha blivit sprängd i luften av Acmes produkter slår Gråben tillbaka, med hjälp av en osäker advokat. Hjulben och dynamit är också en del av berättelsen.",
+      "desc_en": "Gråben vs ACME is a autumn holiday cinema event at Bagarmossens Folkets hus in Bagarmossen.\n\nAfter decades of being blown up by Acme's products, Gråben finally fights back, enlisting the help of an insecure lawyer. Roadrunner and dynamite are also featured in the story.",
+      "raw": "Gråben vs ACME är en höstlovsbio i Bagarmossens Folkets hus, Bagarmossen.\n\nEfter att ha blivit sprängd i luften av Acmes produkter slår Gråben tillbaka, med hjälp av en osäker advokat. Hjulben och dynamit är också en del av berättelsen.",
+      "venue": "Folkets Hus",
+      "start": "2026-10-27T14:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "f943f43d-ceed-40b5-adc0-0c7a3a04bb2e",
+      "title_sv": "Arab Women Film Days Helsingborg 2026",
+      "title_en": "Arab Women Film Days Helsingborg 2026",
+      "desc_sv": "Arab Women Film Days är äntligen tillbaka! \n\nDen efterlängtade upplagan av Arab Women Film Days (AWFD) går av stapeln i Helsingborg den 9-10 Oktober 2026.\n\nUnder dagar bjuder vi på ett handplockat urval av långfilmer, kortfilmer och dokumentärfilmer, tillsammans med skolbio visning, seminarium, och familjefilm! Alla filmer som visas har arabiskt tal och är textade på svenska eller engelska.\n------",
+      "desc_en": "Arab Women Film Days är äntligen tillbaka! \n\nDen efterlängtade upplagan av Arab Women Film Days (AWFD) går av stapeln i Helsingborg den 9-10 Oktober 2026.\n\nUnder dagar bjuder vi på ett handplockat urval av långfilmer, kortfilmer och dokumentärfilmer, tillsammans med skolbio visning, seminarium, och familjefilm! Alla filmer som visas har arabiskt tal och är textade på svenska eller engelska.\n------",
+      "raw": "Arab Women Film Days är äntligen tillbaka! \n\nDen efterlängtade upplagan av Arab Women Film Days (AWFD) går av stapeln i Helsingborg den 9-10 Oktober 2026.\n\nUnder dagar bjuder vi på ett handplockat urval av långfilmer, kortfilmer och dokumentärfilmer, tillsammans med skolbio visning, seminarium, och familjefilm! Alla filmer som visas har arabiskt tal och är textade på svenska eller engelska.\n------",
+      "venue": null,
+      "start": "2026-10-09T16:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "fe38050c-7d92-4f67-91ef-32c7aa607e7e",
+      "title_sv": "Mina drömmars Stockholm",
+      "title_en": "Mina drömmars Stockholm",
+      "desc_sv": "Mina drömmars Stockholm är en visning av två nya filmer om Stockholm på Filmhuset Bio Mauritz i Stockholm.\n\nEfter flera års vandringar med kameran i Stockholms innerstad har Anders Hanser och Mikael Bodner redigerat två nya filmer om Stockholm. Trubaduren Ulf Bagge är en kännare av Per Anders Fogelström och leder vandringar på Södermalm i författarens fotspår. Bagge är både berättare och sångare f",
+      "desc_en": "Mina drömmars Stockholm is a screening of two new films about Stockholm at Filmhuset Bio Mauritz in Stockholm.\n\nAfter several years of walks with the camera in inner-city Stockholm, Anders Hanser and Mikael Bodner have edited two new films about Stockholm. The troubadour Ulf Bagge is an expert on Per Anders Fogelström and leads walks on Södermalm in the author's footsteps. Bagge appears in the fil",
+      "raw": "Mina drömmars Stockholm är en visning av två nya filmer om Stockholm på Filmhuset Bio Mauritz i Stockholm.\n\nEfter flera års vandringar med kameran i Stockholms innerstad har Anders Hanser och Mikael Bodner redigerat två nya filmer om Stockholm. Trubaduren Ulf Bagge är en kännare av Per Anders Fogelström och leder vandringar på Södermalm i författarens fotspår. Bagge är både berättare och sångare f",
+      "venue": "Ritz",
+      "start": "2026-10-13T15:30:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "65852369-cbef-4046-83e0-b1468da2af19",
+      "title_sv": "Nightborn",
+      "title_en": "Nightborn",
+      "desc_sv": "Nightborn är en filmvisning på Klarabiografen i Stockholm.\n\nNightborn är en skräck- och fantasyfilm av Hanna Bergholm. Filmen är en internationell samproduktion med skådespelare som Seidi Haarla och Rupert Grint.",
+      "desc_en": "Nightborn is a film screening at Klarabiografen in Stockholm.\n\nNightborn is a horror and fantasy film by Hanna Bergholm. The film is an international co-production featuring actors such as Seidi Haarla and Rupert Grint.",
+      "raw": "Nightborn är en filmvisning på Klarabiografen i Stockholm.\n\nNightborn är en skräck- och fantasyfilm av Hanna Bergholm. Filmen är en internationell samproduktion med skådespelare som Seidi Haarla och Rupert Grint.",
+      "venue": "Stockholm",
+      "start": "2026-10-23T14:45:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "e17af213-f323-423a-89d2-00c241d4c256",
+      "title_sv": "Ghost in the Cell",
+      "title_en": "Ghost in the Cell",
+      "desc_sv": "Ghost in the Cell är en filmvisning på Klarabiografen i Stockholm.\n\nFilmen Ghost in the Cell, regisserad av Joko Anwar, utspelar sig i ett indonesiskt fängelse där fångar lever i ständig rädsla. När en ny mystisk fånge anländer, börjar en osynlig övernaturlig entitet brutalt mörda fångarna och arrangera liken som blodiga konstverk. Entiteten ger sig på de fångar som har mest negativ aura, vilket f",
+      "desc_en": "Ghost in the Cell is a film screening at Klarabiografen in Stockholm.\n\nThe film Ghost in the Cell, directed by Joko Anwar, is set in an Indonesian prison where inmates live in constant fear. When a new mysterious prisoner arrives, an invisible supernatural entity brutally murders inmates, arranging their corpses as bloody artworks. The entity targets prisoners with the most negative aura, making t",
+      "raw": "Ghost in the Cell är en filmvisning på Klarabiografen i Stockholm.\n\nFilmen Ghost in the Cell, regisserad av Joko Anwar, utspelar sig i ett indonesiskt fängelse där fångar lever i ständig rädsla. När en ny mystisk fånge anländer, börjar en osynlig övernaturlig entitet brutalt mörda fångarna och arrangera liken som blodiga konstverk. Entiteten ger sig på de fångar som har mest negativ aura, vilket f",
+      "venue": "Stockholm",
+      "start": "2026-10-18T15:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "909cfa28-a4d8-470b-86d1-f0dd2e0c7c54",
+      "title_sv": "John Achkar: FEENA NEHKE?",
+      "title_en": "John Achkar: FEENA NEHKE?",
+      "desc_sv": "John Achkar presenterar FEENA NEHKE? på Bio Skandia i Stockholm.\n\nDetta evenemang presenterar John Achkar och hans verk med titeln 'FEENA NEHKE?'. Det äger rum på Bio Skandia i Stockholm.",
+      "desc_en": "John Achkar presents FEENA NEHKE? at Bio Skandia in Stockholm.\n\nThis event features John Achkar, presenting his work titled 'FEENA NEHKE?'. It takes place at Bio Skandia in Stockholm.",
+      "raw": "John Achkar presenterar FEENA NEHKE? på Bio Skandia i Stockholm.\n\nDetta evenemang presenterar John Achkar och hans verk med titeln 'FEENA NEHKE?'. Det äger rum på Bio Skandia i Stockholm.",
+      "venue": "Bio Skandia",
+      "start": "2026-10-30T19:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "5e9d69e4-531b-4021-ab10-19163d3c7401",
+      "title_sv": "KAKO JE RASTAO ROCK'n'ROLL",
+      "title_en": "KAKO JE RASTAO ROCK'n'ROLL",
+      "desc_sv": "KAKO JE RASTAO ROCK'n'ROLL är en filmvisning och bokpresentation på Pygméteatern i Stockholm.\n\nEvenemanget inkluderar en presentation av Petar Janjatovićs Ex YU Rock encyklopedi och en visning av dokumentärfilmen TRENUTAK SNA. Filmen, regisserad av Darko Lungulov, handlar om bandet YU Grupa och deras historia. Den följer bröderna Dragi, Žiki, Radetu och Petru Jelić och utforskar deras musik, famil",
+      "desc_en": "KAKO JE RASTAO ROCK'n'ROLL is a film screening and book presentation at Pygméteatern in Stockholm.\n\nThe event features a presentation of Petar Janjatović's Ex YU Rock encyclopedia and a screening of the documentary film TRENUTAK SNA. Directed by Darko Lungulov, the film explores the history of the band YU Grupa. It tells the story of brothers Dragi, Žiki, Radetu, and Petru Jelić, focusing on their",
+      "raw": "KAKO JE RASTAO ROCK'n'ROLL är en filmvisning och bokpresentation på Pygméteatern i Stockholm.\n\nEvenemanget inkluderar en presentation av Petar Janjatovićs Ex YU Rock encyklopedi och en visning av dokumentärfilmen TRENUTAK SNA. Filmen, regisserad av Darko Lungulov, handlar om bandet YU Grupa och deras historia. Den följer bröderna Dragi, Žiki, Radetu och Petru Jelić och utforskar deras musik, famil",
+      "venue": "Pygméteatern",
+      "start": "2026-10-29T18:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "276f4d56-1f0f-4747-8473-ceb5b02e58cd",
+      "title_sv": "Sentimental Value",
+      "title_en": "Sentimental Value",
+      "desc_sv": "Filmen Sentimental Value visas på Bio Skandia i Stockholm.\n\nDen norska filmen Sentimental Value (Affeksjonsverdi) är nominerad till Nordiska rådets filmpris. Regissören och författaren Joachim Trier, manusförfattaren Eskil Vogt samt producenterna Maria Ekerhovd och Andrea Berentsen Ottmar har nominerats för filmen. Trier har utforskat familjerelationer, minnen och kreativitet genom att förstärka f",
+      "desc_en": "The film Sentimental Value is screening at Bio Skandia in Stockholm.\n\nThe Norwegian feature film Sentimental Value (Affeksjonsverdi) is nominated for the Nordic Council Film Prize. Director and writer Joachim Trier, screenwriter Eskil Vogt, and producers Maria Ekerhovd and Andrea Berentsen Ottmar have been nominated for the film. Trier has explored family relationships, memories, and creativity by",
+      "raw": "Filmen Sentimental Value visas på Bio Skandia i Stockholm.\n\nDen norska filmen Sentimental Value (Affeksjonsverdi) är nominerad till Nordiska rådets filmpris. Regissören och författaren Joachim Trier, manusförfattaren Eskil Vogt samt producenterna Maria Ekerhovd och Andrea Berentsen Ottmar har nominerats för filmen. Trier har utforskat familjerelationer, minnen och kreativitet genom att förstärka f",
+      "venue": "Bio Skandia",
+      "start": "2026-10-10T16:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "5affbf7e-9f19-4468-937b-9626057aeed2",
+      "title_sv": "Sagan om konungens återkomst FEL VERSION",
+      "title_en": "Sagan om konungens återkomst FEL VERSION",
+      "desc_sv": "Sagan om konungens återkomst är en filmvisning på Bio Skandia i Stockholm.\n\nDenna utökade version av Sagan om konungens återkomst expanderar den episka avslutningen med 50 minuter extra filmmaterial. Filmen har en helt remastrad 4K-bild med uppdaterad färggradering och skärpta specialeffekter. Längden är 278 minuter. Peter Jackson är regissören.",
+      "desc_en": "Sagan om konungens återkomst is a film screening at Bio Skandia in Stockholm.\n\nThis Extended Edition of The Return of the King expands the epic conclusion with 50 minutes of additional footage. The film features a fully remastered 4K picture with updated color grading and sharpened special effects. Its length is 278 minutes. Peter Jackson is the director.",
+      "raw": "Sagan om konungens återkomst är en filmvisning på Bio Skandia i Stockholm.\n\nDenna utökade version av Sagan om konungens återkomst expanderar den episka avslutningen med 50 minuter extra filmmaterial. Filmen har en helt remastrad 4K-bild med uppdaterad färggradering och skärpta specialeffekter. Längden är 278 minuter. Peter Jackson är regissören.",
+      "venue": "Bio Skandia",
+      "start": "2026-12-12T19:13:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "2e512035-ed3a-4a6a-aa85-f61dfd7b745e",
+      "title_sv": "Upiro",
+      "title_en": "Upiro",
+      "desc_sv": "Upiro är en filmvisning på Klarabiografen i Stockholm.\n\nÅr 1755 skickas en ung kvinna till ett kloster där noviser drabbats av en mystisk blodsjukdom. En munk undersöker händelserna, men hans metoder krockar med upplysningstidens vetenskapliga syn. Regissören Óscar Martín baserar skräckfilmen på det första fall av vampyrism som dokumenterats av den katolska kyrkan på Iberiska halvön. Filmen innehå",
+      "desc_en": "Upiro is a film screening at Klarabiografen in Stockholm.\n\nIn 1755, a young woman is sent to a monastery where novices are afflicted by a mysterious blood disease. A monk investigates the events, but his methods clash with the scientific views of the Enlightenment. Director Óscar Martín bases the horror film on the first documented case of vampirism by the Catholic Church on the Iberian Peninsula.",
+      "raw": "Upiro är en filmvisning på Klarabiografen i Stockholm.\n\nÅr 1755 skickas en ung kvinna till ett kloster där noviser drabbats av en mystisk blodsjukdom. En munk undersöker händelserna, men hans metoder krockar med upplysningstidens vetenskapliga syn. Regissören Óscar Martín baserar skräckfilmen på det första fall av vampyrism som dokumenterats av den katolska kyrkan på Iberiska halvön. Filmen innehå",
+      "venue": "Stockholm",
+      "start": "2026-10-22T15:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "3aeab19f-75cf-48bb-8bd5-d2de8ce593d3",
+      "title_sv": "Timelessfest: Amelie från Montmartre",
+      "title_en": "Timelessfest: Amelie från Montmartre",
+      "desc_sv": "Timelessfest: Amelie från Montmartre är en filmklassiker på Kulturhuset Stadsteatern i Stockholm.\n\nDen älskade franska filmklassikern handlar om den fantasifulla Amélie Poulain, som bestämmer sig för att förbättra människors liv. Med värme, humor och en säregen syn på tillvaron skapar hon små mirakel i Paris. Samtidigt försöker hon hitta modet att följa sitt eget hjärta. Det är en romantisk och vi",
+      "desc_en": "Timelessfest: Amelie från Montmartre is a film classic at Kulturhuset Stadsteatern in Stockholm.\n\nThis beloved French film classic tells the story of the imaginative Amélie Poulain, who decides to change people's lives for the better. With warmth, humor, and a peculiar view of existence, she creates small miracles in Paris. At the same time, she tries to find the courage to follow her own heart. I",
+      "raw": "Timelessfest: Amelie från Montmartre är en filmklassiker på Kulturhuset Stadsteatern i Stockholm.\n\nDen älskade franska filmklassikern handlar om den fantasifulla Amélie Poulain, som bestämmer sig för att förbättra människors liv. Med värme, humor och en säregen syn på tillvaron skapar hon små mirakel i Paris. Samtidigt försöker hon hitta modet att följa sitt eget hjärta. Det är en romantisk och vi",
+      "venue": "Kulturhuset Stadsteatern",
+      "start": "2026-10-17T17:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "a77ab789-6f6c-4279-8b97-37820a9bd6b9",
+      "title_sv": "Fåret Shaun och monstret på bondgården",
+      "title_en": "Fåret Shaun och monstret på bondgården",
+      "desc_sv": "Fåret Shaun och monstret på bondgården är en biofilm på Kulturhuset Stadsteatern i Stockholm.\n\nI den tredje biofilmen om fåret Shaun ser invånarna på Mossy Bottom Farm fram emot Halloween. Deras pumpaland förstörs av den klumpiga bonden. Shaun förvandlas till ett vetenskapsfår för att åtgärda problemet, men saker går snabbt överstyr. Särskilt efter att bonden försvinner och ett vilddjur dyker upp ",
+      "desc_en": "Shaun the Sheep and the beast on the farm is a film screening at Kulturhuset Stadsteatern in Stockholm.\n\nIn the third film about Shaun the Sheep, the residents of Mossy Bottom Farm look forward to Halloween. Their pumpkin patch is ruined by the clumsy farmer. Shaun turns into a mad scientist sheep to fix the problem, but things quickly get out of hand. This happens especially after the farmer disa",
+      "raw": "Fåret Shaun och monstret på bondgården är en biofilm på Kulturhuset Stadsteatern i Stockholm.\n\nI den tredje biofilmen om fåret Shaun ser invånarna på Mossy Bottom Farm fram emot Halloween. Deras pumpaland förstörs av den klumpiga bonden. Shaun förvandlas till ett vetenskapsfår för att åtgärda problemet, men saker går snabbt överstyr. Särskilt efter att bonden försvinner och ett vilddjur dyker upp ",
+      "venue": "Kulturhuset Stadsteatern",
+      "start": "2026-10-26T14:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "0f72f7d2-2e26-445f-a144-0001a1b15eab",
+      "title_sv": "Monsterfabriken",
+      "title_en": "Monsterfabriken",
+      "desc_sv": "Monsterfabriken är en animerad familjefilm på Kulturhuset Stadsteatern i Stockholm.\n\nFilmen handlar om en ensam professor som skapar märkliga varelser i sitt slott. Hans första skapelse, Styngve, längtar efter kärlek och uppmärksamhet. Styngve rymmer när en cirkus kommer till staden. Det lilla monstret måste snart bli en stor hjälte och stå upp för både sig själv och sina vänner.",
+      "desc_en": "Monsterfabriken is an animated family film at Kulturhuset Stadsteatern in Stockholm.\n\nThe animated family film is about a lonely professor who creates strange creatures in his castle. His first creation, Styngve, longs for love and attention. Styngve escapes when a circus arrives in town. The little monster must soon become a great hero and stand up for both himself and his friends.",
+      "raw": "Monsterfabriken är en animerad familjefilm på Kulturhuset Stadsteatern i Stockholm.\n\nFilmen handlar om en ensam professor som skapar märkliga varelser i sitt slott. Hans första skapelse, Styngve, längtar efter kärlek och uppmärksamhet. Styngve rymmer när en cirkus kommer till staden. Det lilla monstret måste snart bli en stor hjälte och stå upp för både sig själv och sina vänner.",
+      "venue": "Kulturhuset Stadsteatern",
+      "start": "2026-10-28T12:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "9a6e0fa9-a29a-4213-bcc7-b3a68318fece",
+      "title_sv": "Stickbio: One night only",
+      "title_en": "Stickbio: One night only",
+      "desc_sv": "Stickbio: One night only är en filmvisning på Kulturhuset Stadsteatern i Stockholm.\n\nDen romantiska komedin \"One Night Only\" handlar om sex som är förbjudet utom under en natt om året. Filmen regisseras av Will Gluck och har Monica Barbaro och Callum Turner i rollerna som Owen och Allie.",
+      "desc_en": "Stickbio: One night only is a film screening at Kulturhuset Stadsteatern in Stockholm.\n\nThe romantic comedy \"One Night Only\" explores a world where sex is forbidden, except for one night each year. Directed by Will Gluck, the film stars Monica Barbaro and Callum Turner as Owen and Allie.",
+      "raw": "Stickbio: One night only är en filmvisning på Kulturhuset Stadsteatern i Stockholm.\n\nDen romantiska komedin \"One Night Only\" handlar om sex som är förbjudet utom under en natt om året. Filmen regisseras av Will Gluck och har Monica Barbaro och Callum Turner i rollerna som Owen och Allie.",
+      "venue": "Kulturhuset Stadsteatern",
+      "start": "2026-10-12T17:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "2a939d22-1bea-4e61-a405-004f8d04e822",
+      "title_sv": "Fåret Shaun och monstret på bondgården",
+      "title_en": "Fåret Shaun och monstret på bondgården",
+      "desc_sv": "Fåret Shaun och monstret på bondgården är en biofilm på Kulturhuset Stadsteatern i Stockholm.\n\nI den tredje biofilmen om fåret Shaun ser invånarna på Mossy Bottom Farm fram emot Halloween. Deras pumpaland förstörs av den klumpiga bonden. Shaun förvandlas till ett vetenskapsfår för att åtgärda problemet, men saker går snabbt överstyr. Särskilt efter att bonden försvinner och ett vilddjur dyker upp ",
+      "desc_en": "Shaun the Sheep and the beast on the farm is a film screening at Kulturhuset Stadsteatern in Stockholm.\n\nIn the third film about Shaun the Sheep, the residents of Mossy Bottom Farm look forward to Halloween. Their pumpkin patch is ruined by the clumsy farmer. Shaun turns into a mad scientist sheep to fix the problem, but things quickly get out of hand. This happens especially after the farmer disa",
+      "raw": "Fåret Shaun och monstret på bondgården är en biofilm på Kulturhuset Stadsteatern i Stockholm.\n\nI den tredje biofilmen om fåret Shaun ser invånarna på Mossy Bottom Farm fram emot Halloween. Deras pumpaland förstörs av den klumpiga bonden. Shaun förvandlas till ett vetenskapsfår för att åtgärda problemet, men saker går snabbt överstyr. Särskilt efter att bonden försvinner och ett vilddjur dyker upp ",
+      "venue": "Kulturhuset Stadsteatern",
+      "start": "2026-10-29T14:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "433271fa-4bea-4c70-8c3d-e6e2ca0165fa",
+      "title_sv": "Fjord",
+      "title_en": "Fjord",
+      "desc_sv": "Fjord är en händelse på Kulturhuset Stadsteatern i Stockholm.\n\nDenna händelse är en Guldpalmsvinnare från Cannes.",
+      "desc_en": "Fjord is an event at Kulturhuset Stadsteatern in Stockholm.\n\nThis event is a Palme d'Or winner from Cannes.",
+      "raw": "Fjord är en händelse på Kulturhuset Stadsteatern i Stockholm.\n\nDenna händelse är en Guldpalmsvinnare från Cannes.",
+      "venue": "Kulturhuset Stadsteatern",
+      "start": "2026-10-10T16:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "944a46cd-1a27-4792-8dc9-f8254f814b34",
+      "title_sv": "En kärlekshistoria",
+      "title_en": "En kärlekshistoria",
+      "desc_sv": "Roy Anderssons klassiker En kärlekshistoria på Stora scenen.",
+      "desc_en": "Roy Anderssons klassiker En kärlekshistoria på Stora scenen.",
+      "raw": "Roy Anderssons klassiker En kärlekshistoria på Stora scenen.",
+      "venue": "dramaten",
+      "start": "2026-12-11T19:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "5f407349-a24e-46ad-b5fc-5b5359fad38e",
+      "title_sv": "Birita",
+      "title_en": "Birita",
+      "desc_sv": "\"Birita\" är en färöisk dokumentärfilm som visas på Bio Skandia i Stockholm.\n\nDen färöiska dokumentären \"Birita\" är nominerad till Nordiska rådets filmpris. Regissören Búi Dam följer sin familj av teatermakare på Färöarna när de försöker sätta upp Shakespeares Kung Lear. I centrum står Búis mor, Birita, en skådespelerska med svår Alzheimers, som får huvudrollen. Búi brottas med projektets etiska im",
+      "desc_en": "\"Birita\" is a Faroese documentary film screening at Bio Skandia in Stockholm.\n\nThe Faroese documentary \"Birita\" is nominated for the Nordic Council Film Prize. Director Búi Dam follows his family of theatre-makers in the Faroe Islands as they attempt to stage Shakespeare’s King Lear. At its center is Búi's mother, Birita, an actress living with severe Alzheimer’s, cast in the lead role. Búi strugg",
+      "raw": "\"Birita\" är en färöisk dokumentärfilm som visas på Bio Skandia i Stockholm.\n\nDen färöiska dokumentären \"Birita\" är nominerad till Nordiska rådets filmpris. Regissören Búi Dam följer sin familj av teatermakare på Färöarna när de försöker sätta upp Shakespeares Kung Lear. I centrum står Búis mor, Birita, en skådespelerska med svår Alzheimers, som får huvudrollen. Búi brottas med projektets etiska im",
+      "venue": "Bio Skandia",
+      "start": "2026-10-08T19:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "663754fe-5c81-4548-b917-61741dd32a93",
+      "title_sv": "Short Film Competition 2026",
+      "title_en": "Short Film Competition 2026",
+      "desc_sv": "Short Film Competition 2026 är en kortfilmstävling på Klarabiografen i Stockholm.\n\nEvenemanget presenterar ett kortfilmspaket inom sektionen Monsters of Film. Detta är det officiella urvalet för Short Film Competition 2026, med ett varierat utbud av elva kortfilmer. Bland de titlar som visas finns Anax, Coming Home, Gimme, Haiku 27, Väsen (Hollow), Lullaby, Strive, Tasty Encounters, The Calendar o",
+      "desc_en": "Short Film Competition 2026 is a short film competition at Klarabiografen in Stockholm.\n\nThe event features a short film package as part of the Monsters of Film section. This is the official selection for the Short Film Competition 2026, showcasing a diverse range of eleven short films. Titles presented include Anax, Coming Home, Gimme, Haiku 27, Väsen (Hollow), Lullaby, Strive, Tasty Encounters, ",
+      "raw": "Short Film Competition 2026 är en kortfilmstävling på Klarabiografen i Stockholm.\n\nEvenemanget presenterar ett kortfilmspaket inom sektionen Monsters of Film. Detta är det officiella urvalet för Short Film Competition 2026, med ett varierat utbud av elva kortfilmer. Bland de titlar som visas finns Anax, Coming Home, Gimme, Haiku 27, Väsen (Hollow), Lullaby, Strive, Tasty Encounters, The Calendar o",
+      "venue": "Stockholm",
+      "start": "2026-10-24T14:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "90fb76bd-e6b4-4b31-b3a8-584a57f21451",
+      "title_sv": "A light that never goes out",
+      "title_en": "A light that never goes out",
+      "desc_sv": "Filmen A Light That Never Goes Out visas på Bio Skandia i Stockholm.\n\nDen finska långfilmen A Light That Never Goes Out är nominerad till Nordiska rådets filmpris. Filmen handlar om den framgångsrike klassiska flöjtisten Pauli, som återvänder till sin hemstad efter en kris. Han dras in i experimentell musik genom den gamla skolkamraten Iiris. Filmen premiärvisades på Cannes Film Festival ACID och ",
+      "desc_en": "The film A Light That Never Goes Out is screening at Bio Skandia in Stockholm.\n\nThe Finnish feature film A Light That Never Goes Out is nominated for the Nordic Council Film Prize. The film centers on successful classical flutist Pauli, who returns to his small hometown after a breakdown. He is drawn into experimental music by old schoolmate Iiris. The film premiered at Cannes Film Festival ACID a",
+      "raw": "Filmen A Light That Never Goes Out visas på Bio Skandia i Stockholm.\n\nDen finska långfilmen A Light That Never Goes Out är nominerad till Nordiska rådets filmpris. Filmen handlar om den framgångsrike klassiska flöjtisten Pauli, som återvänder till sin hemstad efter en kris. Han dras in i experimentell musik genom den gamla skolkamraten Iiris. Filmen premiärvisades på Cannes Film Festival ACID och ",
+      "venue": "Bio Skandia",
+      "start": "2026-10-09T16:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "3e41a4fe-f92f-49fd-a428-f69aef6cfb03",
+      "title_sv": "Truly Naked",
+      "title_en": "Truly Naked",
+      "desc_sv": "Truly Naked är en filmvisning på Klarabiografen i Stockholm.\n\nTruly Naked är Muriel d’Ansembourgs långfilmsdebut, en film från Nederländerna, Belgien och Frankrike. Filmen handlar om tonåringen Alec, som arbetar för sin pappa Dylan som driver en småskalig porrfilmsproduktion. När de tvingas flytta till en sömnig kuststad möter Alec Nina, vars syn på intimitet utmanar hans egna erfarenheter. Detta ",
+      "desc_en": "Truly Naked is a film screening at Klarabiografen in Stockholm.\n\nTruly Naked is Muriel d’Ansembourg's feature film debut, a film from the Netherlands, Belgium, and France. The film follows teenager Alec, who works for his father Dylan, running a small-scale porn film production. When they are forced to move to a sleepy coastal town, Alec meets Nina, whose perspective on intimacy challenges his own",
+      "raw": "Truly Naked är en filmvisning på Klarabiografen i Stockholm.\n\nTruly Naked är Muriel d’Ansembourgs långfilmsdebut, en film från Nederländerna, Belgien och Frankrike. Filmen handlar om tonåringen Alec, som arbetar för sin pappa Dylan som driver en småskalig porrfilmsproduktion. När de tvingas flytta till en sömnig kuststad möter Alec Nina, vars syn på intimitet utmanar hans egna erfarenheter. Detta ",
+      "venue": "Stockholm",
+      "start": "2026-10-16T14:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "ade4cb3f-6357-42a0-86e0-df578495ce6e",
+      "title_sv": "Film och samtal: Beat the heat",
+      "title_en": "Film och samtal: Beat the heat",
+      "desc_sv": "\"Film och samtal: Beat the heat\" är en filmvisning med samtal på ABF-huset i Stockholm.\n\nEvenemanget visar dokumentären \"Beat the Heat\", som följer Klimaseniorinnens resa från engagemang till seger i Europadomstolen. Filmen ger en inblick i hur en grupp äldre kvinnor lyckades sätta klimatfrågan på den internationella dagordningen. Efter filmen följer ett samtal med representanter från Klimaseniori",
+      "desc_en": "\"Film och samtal: Beat the heat\" is a film screening and discussion at ABF-huset in Stockholm.\n\nThe event features the documentary \"Beat the Heat\", which chronicles the journey of Klimaseniorinnen from activism to a victory in the European Court of Human Rights. The film offers insight into how a group of older women successfully placed the climate issue on the international agenda. Following the ",
+      "raw": "\"Film och samtal: Beat the heat\" är en filmvisning med samtal på ABF-huset i Stockholm.\n\nEvenemanget visar dokumentären \"Beat the Heat\", som följer Klimaseniorinnens resa från engagemang till seger i Europadomstolen. Filmen ger en inblick i hur en grupp äldre kvinnor lyckades sätta klimatfrågan på den internationella dagordningen. Efter filmen följer ett samtal med representanter från Klimaseniori",
+      "venue": "abf",
+      "start": "2026-10-07T16:00:00+00:00",
+      "has_img": true
+    }
+  ]
+}

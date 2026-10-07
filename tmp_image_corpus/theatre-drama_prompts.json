@@ -1,0 +1,25 @@
+{
+  "category_slug": "theatre-drama",
+  "events": 1776,
+  "library_now": 0,
+  "approx_images_needed": 18,
+  "model": "minimax/minimax-m3",
+  "prompts": [
+    {
+      "pattern": "A_wide",
+      "prompt": "Wide shot of a Stockholm theatre auditorium with warm house lights fading as a lone actress in a long coat crosses a dimly lit proscenium stage at Dramaten, gilded balconies framing the scene under soft amber glow."
+    },
+    {
+      "pattern": "B_medium",
+      "prompt": "Medium shot of a woman in a vintage dress standing center stage at Oscarsteatern under a single warm spotlight, gesturing with one hand while the orchestra pit below sits in shadow during a dramatic moment of the musical."
+    },
+    {
+      "pattern": "C_environment",
+      "prompt": "Behind-the-scenes view of Kulturhuset Stadsteatern's black box theatre, a director in a knit sweater leaning over a script table while two actors in rehearsal clothes mark blocking under cool worklight illumination, cables coiled on the wooden floor."
+    },
+    {
+      "pattern": "D_detail",
+      "prompt": "Close-up of an actor's hands gripping the edge of a worn wooden chair on a sparse stage, knuckles tense, warm tungsten side-light catching dust in the air and the rough texture of period costume fabric."
+    }
+  ]
+}

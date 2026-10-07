@@ -1,0 +1,285 @@
+{
+  "category_slug": "family",
+  "events": 56,
+  "docs": 53,
+  "top_1grams_distinctive": [
+    {
+      "w": "coco",
+      "c": 8,
+      "score": 57.06
+    },
+    {
+      "w": "disney",
+      "c": 9,
+      "score": 56.69
+    },
+    {
+      "w": "miguel",
+      "c": 8,
+      "score": 54.96
+    },
+    {
+      "w": "stitch",
+      "c": 7,
+      "score": 50.66
+    },
+    {
+      "w": "discover",
+      "c": 8,
+      "score": 50.39
+    },
+    {
+      "w": "action",
+      "c": 9,
+      "score": 49.88
+    },
+    {
+      "w": "ice",
+      "c": 8,
+      "score": 49.73
+    },
+    {
+      "w": "show",
+      "c": 15,
+      "score": 46.98
+    },
+    {
+      "w": "elsa",
+      "c": 8,
+      "score": 45.02
+    },
+    {
+      "w": "tinker",
+      "c": 6,
+      "score": 44.13
+    },
+    {
+      "w": "realm",
+      "c": 6,
+      "score": 44.13
+    },
+    {
+      "w": "moana",
+      "c": 6,
+      "score": 44.13
+    },
+    {
+      "w": "enchanted",
+      "c": 6,
+      "score": 44.13
+    },
+    {
+      "w": "chandelier",
+      "c": 6,
+      "score": 44.13
+    },
+    {
+      "w": "mischievous",
+      "c": 6,
+      "score": 44.13
+    },
+    {
+      "w": "skating",
+      "c": 6,
+      "score": 44.13
+    },
+    {
+      "w": "daring",
+      "c": 6,
+      "score": 44.13
+    },
+    {
+      "w": "aerial",
+      "c": 6,
+      "score": 44.13
+    },
+    {
+      "w": "stunts",
+      "c": 6,
+      "score": 44.13
+    },
+    {
+      "w": "mermaid",
+      "c": 6,
+      "score": 44.13
+    },
+    {
+      "w": "mischief",
+      "c": 6,
+      "score": 44.13
+    },
+    {
+      "w": "collectible",
+      "c": 6,
+      "score": 44.13
+    },
+    {
+      "w": "lanyard",
+      "c": 6,
+      "score": 44.13
+    },
+    {
+      "w": "sure",
+      "c": 6,
+      "score": 44.13
+    },
+    {
+      "w": "purchasing",
+      "c": 6,
+      "score": 44.13
+    },
+    {
+      "w": "chosen",
+      "c": 6,
+      "score": 44.13
+    },
+    {
+      "w": "provider",
+      "c": 6,
+      "score": 44.13
+    },
+    {
+      "w": "button",
+      "c": 6,
+      "score": 44.13
+    },
+    {
+      "w": "learn",
+      "c": 6,
+      "score": 44.13
+    },
+    {
+      "w": "magic",
+      "c": 8,
+      "score": 44.02
+    }
+  ],
+  "top_2grams_distinctive": [
+    {
+      "w": "ice presenterar",
+      "c": 8,
+      "score": 57.06
+    },
+    {
+      "w": "presenterar discover",
+      "c": 8,
+      "score": 57.06
+    },
+    {
+      "w": "disney ice",
+      "c": 8,
+      "score": 52.35
+    },
+    {
+      "w": "discover magic",
+      "c": 8,
+      "score": 51.12
+    },
+    {
+      "w": "magic celebrate",
+      "c": 6,
+      "score": 44.13
+    },
+    {
+      "w": "celebrate disney",
+      "c": 6,
+      "score": 44.13
+    },
+    {
+      "w": "disney magic",
+      "c": 6,
+      "score": 44.13
+    },
+    {
+      "w": "magic disney",
+      "c": 6,
+      "score": 44.13
+    },
+    {
+      "w": "ice presents",
+      "c": 6,
+      "score": 44.13
+    },
+    {
+      "w": "presents discover",
+      "c": 6,
+      "score": 44.13
+    },
+    {
+      "w": "magic fast",
+      "c": 6,
+      "score": 44.13
+    },
+    {
+      "w": "paced family",
+      "c": 6,
+      "score": 44.13
+    },
+    {
+      "w": "family friendly",
+      "c": 6,
+      "score": 44.13
+    },
+    {
+      "w": "friendly production",
+      "c": 6,
+      "score": 44.13
+    },
+    {
+      "w": "production follows",
+      "c": 6,
+      "score": 44.13
+    },
+    {
+      "w": "follows search",
+      "c": 6,
+      "score": 44.13
+    },
+    {
+      "w": "search tinker",
+      "c": 6,
+      "score": 44.13
+    },
+    {
+      "w": "tinker bell",
+      "c": 6,
+      "score": 44.13
+    },
+    {
+      "w": "bell through",
+      "c": 6,
+      "score": 44.13
+    },
+    {
+      "w": "through stunning",
+      "c": 6,
+      "score": 44.13
+    },
+    {
+      "w": "stunning worlds",
+      "c": 6,
+      "score": 44.13
+    },
+    {
+      "w": "worlds explore",
+      "c": 6,
+      "score": 44.13
+    },
+    {
+      "w": "explore colourful",
+      "c": 6,
+      "score": 44.13
+    },
+    {
+      "w": "colourful spirit",
+      "c": 6,
+      "score": 44.13
+    },
+    {
+      "w": "spirit realm",
+      "c": 6,
+      "score": 44.13
+    }
+  ],
+  "note": "score = cat_count * log(N / global_count). Higher = more distinctive for this category."
+}

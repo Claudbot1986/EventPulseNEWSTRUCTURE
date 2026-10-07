@@ -1,0 +1,534 @@
+{
+  "category_slug": "circus",
+  "events": 35,
+  "library_count": 0,
+  "approx_images_needed": 1,
+  "top_words": [
+    [
+      "magic",
+      69
+    ],
+    [
+      "labero",
+      47
+    ],
+    [
+      "cirkusföreställning",
+      47
+    ],
+    [
+      "performance",
+      44
+    ],
+    [
+      "hus",
+      39
+    ],
+    [
+      "kompani",
+      37
+    ],
+    [
+      "giraff",
+      37
+    ],
+    [
+      "pile",
+      37
+    ],
+    [
+      "world",
+      35
+    ],
+    [
+      "sista",
+      35
+    ],
+    [
+      "föreställning",
+      34
+    ],
+    [
+      "ett",
+      34
+    ],
+    [
+      "circus",
+      31
+    ],
+    [
+      "andetaget",
+      31
+    ],
+    [
+      "magisk",
+      26
+    ],
+    [
+      "dansens",
+      24
+    ],
+    [
+      "presenterar",
+      24
+    ],
+    [
+      "kulturhuset",
+      24
+    ],
+    [
+      "show",
+      24
+    ],
+    [
+      "signal",
+      22
+    ],
+    [
+      "botanica",
+      21
+    ],
+    [
+      "artefakt",
+      20
+    ],
+    [
+      "föreställningen",
+      20
+    ],
+    [
+      "denna",
+      19
+    ],
+    [
+      "stadsteatern",
+      18
+    ],
+    [
+      "below",
+      18
+    ],
+    [
+      "cirkus",
+      18
+    ],
+    [
+      "yes",
+      18
+    ],
+    [
+      "impossible",
+      18
+    ],
+    [
+      "zero",
+      16
+    ]
+  ],
+  "sample_events": [
+    {
+      "title": "Labero's Magic World",
+      "venue": "La Botanica"
+    },
+    {
+      "title": "Kompani Giraff - The Pile",
+      "venue": "Dansens Hus Studioscen"
+    },
+    {
+      "title": "Kompani Giraff | The Pile",
+      "venue": "Dansens Hus"
+    },
+    {
+      "title": "Sveriges sista magiker",
+      "venue": "Kulturhuset Stadsteatern"
+    },
+    {
+      "title": "Artefakt ",
+      "venue": "Kulturhuset Stadsteatern"
+    }
+  ],
+  "full_corpus": [
+    {
+      "id": "d7662dfb-8f01-4bf4-8c13-3e181daa0b86",
+      "title_sv": "Labero's Magic World",
+      "title_en": "Labero's Magic World",
+      "desc_sv": "Labero's Magic World är en magisk föreställning på La Botanica i Stockholm.\n\n\"Labero's Magic World\" är en exklusiv magisk föreställning som kombinerar illusioner med mystik. Den erbjuder \"boutique magic\" där varje akt är utformad för att ge en personlig och nära upplevelse. Joe Labero, en mästare inom magins konst med över tre årtionden av globala turnéer, skapar en atmosfär som sträcker sig borto",
+      "desc_en": "Labero's Magic World is a magic performance at La Botanica in Stockholm.\n\n\"Labero's Magic World\" is an exclusive magic performance that combines illusions with a touch of mystery. It features \"boutique magic,\" where each act is carefully designed to provide a personal and intimate experience. Joe Labero, a master of magic with over three decades of global tours, creates an atmosphere that extends ",
+      "raw": "Labero's Magic World är en magisk föreställning på La Botanica i Stockholm.\n\n\"Labero's Magic World\" är en exklusiv magisk föreställning som kombinerar illusioner med mystik. Den erbjuder \"boutique magic\" där varje akt är utformad för att ge en personlig och nära upplevelse. Joe Labero, en mästare inom magins konst med över tre årtionden av globala turnéer, skapar en atmosfär som sträcker sig borto",
+      "venue": "La Botanica",
+      "start": "2026-10-09T16:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "d831a5cb-e78c-4012-ac4a-543c0e15585f",
+      "title_sv": "Kompani Giraff - The Pile",
+      "title_en": "Kompani Giraff - The Pile",
+      "desc_sv": "Kompani Giraff - The Pile är en föreställning på Dansens Hus Studioscen i Stockholm.\n\nKompani Giraff presenterar sin föreställning \"The Pile\". Denna produktion kan upplevas på Dansens Hus Studioscen i Stockholm.",
+      "desc_en": "Kompani Giraff - The Pile is a performance at Dansens Hus Studioscen in Stockholm.\n\nKompani Giraff presents their performance \"The Pile\". This production can be experienced at Dansens Hus Studioscen in Stockholm.",
+      "raw": "Kompani Giraff - The Pile är en föreställning på Dansens Hus Studioscen i Stockholm.\n\nKompani Giraff presenterar sin föreställning \"The Pile\". Denna produktion kan upplevas på Dansens Hus Studioscen i Stockholm.",
+      "venue": "Dansens Hus Studioscen",
+      "start": "2027-02-19T17:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "f9721c05-cdfd-4a21-ab9f-e1e447478ae0",
+      "title_sv": "Kompani Giraff | The Pile",
+      "title_en": "Kompani Giraff | The Pile",
+      "desc_sv": "Publiksuccén \"The Pile\" är tillbaka! Missa inte denna böjliga cirkusföreställning om en svårbemästrad hög och längtan att bryta sig loss.",
+      "desc_en": "Publiksuccén \"The Pile\" är tillbaka! Missa inte denna böjliga cirkusföreställning om en svårbemästrad hög och längtan att bryta sig loss.",
+      "raw": "Publiksuccén \"The Pile\" är tillbaka! Missa inte denna böjliga cirkusföreställning om en svårbemästrad hög och längtan att bryta sig loss.",
+      "venue": "Dansens Hus",
+      "start": "2027-02-17T19:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "7b5d7f82-2915-427c-b303-c0807b1e001b",
+      "title_sv": "Sveriges sista magiker",
+      "title_en": "Sveriges sista magiker",
+      "desc_sv": "Hyllade Isidor Olsbjörk tar sig an Kulturhuset Stadsteaterns scen under hösten 2026. Välkommen till en magisk show fylld av makalösa trick och filterlös humor.\n\nEn söndag i december 2008 satt Isidor på vardagsrumsgolvet framför teven i familjens fyrarummare i Frölunda, när livet förändrades för alltid. På teven visades ett program med en maskerad trollkarl som avslöjade trollkarlarnas topphemliga ",
+      "desc_en": "Hyllade Isidor Olsbjörk tar sig an Kulturhuset Stadsteaterns scen under hösten 2026. Välkommen till en magisk show fylld av makalösa trick och filterlös humor.\n\nEn söndag i december 2008 satt Isidor på vardagsrumsgolvet framför teven i familjens fyrarummare i Frölunda, när livet förändrades för alltid. På teven visades ett program med en maskerad trollkarl som avslöjade trollkarlarnas topphemliga ",
+      "raw": "Hyllade Isidor Olsbjörk tar sig an Kulturhuset Stadsteaterns scen under hösten 2026. Välkommen till en magisk show fylld av makalösa trick och filterlös humor.\n\nEn söndag i december 2008 satt Isidor på vardagsrumsgolvet framför teven i familjens fyrarummare i Frölunda, när livet förändrades för alltid. På teven visades ett program med en maskerad trollkarl som avslöjade trollkarlarnas topphemliga ",
+      "venue": "Kulturhuset Stadsteatern",
+      "start": "2026-12-05T18:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "faf333f7-533c-4031-b48e-ce7d30a06715",
+      "title_sv": "Artefakt ",
+      "title_en": "Artefakt ",
+      "desc_sv": "Artefakt är en cirkusföreställning på Kulturhuset Stadsteatern i Stockholm.\n\nFöreställningen Artefakt kombinerar jonglering med arkeologi och använder uråldriga objekt som dinosaurieägg, meteoriter och mammutben som jongleringsrekvisita. Jonglörerna Jay Gilligan och Erik Åberg från kompaniet Kapsel skapar berättelser runt varje artefakt. De förvandlar historien till ett levande spektakel av vetens",
+      "desc_en": "Artefakt is a circus performance at Kulturhuset Stadsteatern in Stockholm.\n\nThe Artefakt performance combines juggling with archaeology, using ancient objects such as dinosaur eggs, meteorites, and mammoth bones as juggling props. Jugglers Jay Gilligan and Erik Åberg from the Kapsel company create narratives woven around each artifact. They transform history into a living spectacle of science and ",
+      "raw": "Artefakt är en cirkusföreställning på Kulturhuset Stadsteatern i Stockholm.\n\nFöreställningen Artefakt kombinerar jonglering med arkeologi och använder uråldriga objekt som dinosaurieägg, meteoriter och mammutben som jongleringsrekvisita. Jonglörerna Jay Gilligan och Erik Åberg från kompaniet Kapsel skapar berättelser runt varje artefakt. De förvandlar historien till ett levande spektakel av vetens",
+      "venue": "Kulturhuset Stadsteatern",
+      "start": "2026-10-27T12:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "dcd216b0-8c74-4209-8922-33fdab0d16c5",
+      "title_sv": "Below Zero - In Praise of Shadows",
+      "title_en": "Below Zero - In Praise of Shadows",
+      "desc_sv": "Below Zero - In Praise of Shadows är en cirkusföreställning på Stora Scen i Stockholm.\n\nCirkuskompaniet Below Zeros föreställning In Praise of Shadows är en hyllning till skuggorna inom och runt oss. Sju akrobater rör sig till nyskriven folkmusik som framförs live, med viskande fioler som övergår i trummor och club beats. Scenografin påminner om berg, hav och glaciärer, där halsbrytande volter och",
+      "desc_en": "Below Zero - In Praise of Shadows is a circus performance at Stora Scen in Stockholm.\n\nBelow Zero circus company's performance In Praise of Shadows is a tribute to the shadows within and around us. Seven acrobats move to newly composed folk music performed live, featuring whispering violins transitioning into drums and club beats. The scenography evokes mountains, oceans, and glaciers, where breat",
+      "raw": "Below Zero - In Praise of Shadows är en cirkusföreställning på Stora Scen i Stockholm.\n\nCirkuskompaniet Below Zeros föreställning In Praise of Shadows är en hyllning till skuggorna inom och runt oss. Sju akrobater rör sig till nyskriven folkmusik som framförs live, med viskande fioler som övergår i trummor och club beats. Scenografin påminner om berg, hav och glaciärer, där halsbrytande volter och",
+      "venue": "Stora Scen, Barnhusgatan 12-14",
+      "start": "2026-11-13T18:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "d19ca9e0-6fec-4f2e-bab6-2cd4af8a65bc",
+      "title_sv": "Below Zero - In Praise of Shadows",
+      "title_en": "Below Zero - In Praise of Shadows",
+      "desc_sv": "Below Zero - In Praise of Shadows är en cirkusföreställning på Stora Scen i Stockholm.\n\nCirkuskompaniet Below Zero presenterar",
+      "desc_en": "Below Zero - In Praise of Shadows is a circus performance at Stora Scen in Stockholm.\n\nThe circus company Below Zero presents",
+      "raw": "Below Zero - In Praise of Shadows är en cirkusföreställning på Stora Scen i Stockholm.\n\nCirkuskompaniet Below Zero presenterar",
+      "venue": "Stora Scen, Barnhusgatan 12-14",
+      "start": "2026-11-14T14:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "c2885f62-dae3-438e-8f32-62a3496be6c2",
+      "title_sv": "Labero's Magic World",
+      "title_en": "Labero's Magic World",
+      "desc_sv": "Labero's Magic World är en magisk föreställning på La Botanica i Stockholm.\n\nLabero's Magic World på La Botanica är en exklusiv magisk föreställning som väver samman illusioner med mystik. Denna 'boutique magic' är utformad för att ge en personlig och nära upplevelse. Joe Labero, en mästare inom magins konst med över tre decennier av globala turnéer, skapar en unik atmosfär. Föreställningen innefa",
+      "desc_en": "Labero's Magic World is a magic show at La Botanica in Stockholm.\n\nLabero's Magic World at La Botanica is an exclusive magic show that weaves together illusions with a touch of mystery. This 'boutique magic' is designed to provide a personal and intimate experience. Joe Labero, a master of the art of magic with over three decades of global tours, creates a unique atmosphere. The performance includ",
+      "raw": "Labero's Magic World är en magisk föreställning på La Botanica i Stockholm.\n\nLabero's Magic World på La Botanica är en exklusiv magisk föreställning som väver samman illusioner med mystik. Denna 'boutique magic' är utformad för att ge en personlig och nära upplevelse. Joe Labero, en mästare inom magins konst med över tre decennier av globala turnéer, skapar en unik atmosfär. Föreställningen innefa",
+      "venue": "La Botanica",
+      "start": "2026-11-12T17:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "062d5c94-b8b8-4da5-8100-1b79f07c614b",
+      "title_sv": "Elefant, clown- cirkusföreställning, från 3 år med familj",
+      "title_en": "Elefant, clown- cirkusföreställning, från 3 år med familj",
+      "desc_sv": "Nu blir det cirkus för alla, Välkommen till en nostalgisk minicirkus för alla barn som aldrig sett en klassisk cirkus och för alla oss som har förälskat oss i den. Tidigt innan cirkusen har vaknat smyger nyfikna Nalle Clown in under tältduken. Tänk att få se en livs levande elefant! Men allting verkar övergivet? Vart har cirkusmagin tagit vägen? Tillsammans med Nalle Clown och en cirkuskollega får",
+      "desc_en": "Nu blir det cirkus för alla, Välkommen till en nostalgisk minicirkus för alla barn som aldrig sett en klassisk cirkus och för alla oss som har förälskat oss i den. Tidigt innan cirkusen har vaknat smyger nyfikna Nalle Clown in under tältduken. Tänk att få se en livs levande elefant! Men allting verkar övergivet? Vart har cirkusmagin tagit vägen? Tillsammans med Nalle Clown och en cirkuskollega får",
+      "raw": "Nu blir det cirkus för alla, Välkommen till en nostalgisk minicirkus för alla barn som aldrig sett en klassisk cirkus och för alla oss som har förälskat oss i den. Tidigt innan cirkusen har vaknat smyger nyfikna Nalle Clown in under tältduken. Tänk att få se en livs levande elefant! Men allting verkar övergivet? Vart har cirkusmagin tagit vägen? Tillsammans med Nalle Clown och en cirkuskollega får",
+      "venue": "Elefant, clown- cirkusföreställning, från 3 år med familj",
+      "start": "2026-11-14T10:30:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "507a0330-d510-4cb5-ac67-28c0918fdd20",
+      "title_sv": "Artefakt ",
+      "title_en": "Artefakt ",
+      "desc_sv": "Artefakt är en cirkusföreställning på Kulturhuset Stadsteatern i Stockholm.\n\nFöreställningen Artefakt kombinerar jonglering med arkeologi och använder uråldriga objekt som dinosaurieägg, meteoriter och mammutben som jongleringsrekvisita. Jonglörerna Jay Gilligan och Erik Åberg från kompaniet Kapsel skapar berättelser runt varje artefakt. De förvandlar historien till ett levande spektakel av vetens",
+      "desc_en": "Artefakt is a circus performance at Kulturhuset Stadsteatern in Stockholm.\n\nThe Artefakt performance combines juggling with archaeology, using ancient objects such as dinosaur eggs, meteorites, and mammoth bones as juggling props. Jugglers Jay Gilligan and Erik Åberg from the Kapsel company create narratives woven around each artifact. They transform history into a living spectacle of science and ",
+      "raw": "Artefakt är en cirkusföreställning på Kulturhuset Stadsteatern i Stockholm.\n\nFöreställningen Artefakt kombinerar jonglering med arkeologi och använder uråldriga objekt som dinosaurieägg, meteoriter och mammutben som jongleringsrekvisita. Jonglörerna Jay Gilligan och Erik Åberg från kompaniet Kapsel skapar berättelser runt varje artefakt. De förvandlar historien till ett levande spektakel av vetens",
+      "venue": "Kulturhuset Stadsteatern",
+      "start": "2026-10-27T15:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "e0d9823f-185c-4c78-a58d-b9579aaaad1b",
+      "title_sv": "Yes Person",
+      "title_en": "Yes Person",
+      "desc_sv": "\"Yes Person\" är en humoristisk cirkusföreställning på Kulturhuset Stadsteatern i Stockholm.\n\nFöreställningen \"Yes Person\" av kompaniet Based on Kimberly bygger på premissen att säga ja till allt och omfamna idéer istället för att välja bort dem. Denna humoristiska cirkusföreställning uppmanar till att ge liv åt favoriter snarare än att kassera dem. Kompaniet Based on Kimberly presenterar ett gästs",
+      "desc_en": "\"Yes Person\" is a humorous circus performance at Kulturhuset Stadsteatern in Stockholm.\n\nThe performance \"Yes Person\" by the company Based on Kimberly is built on the premise of saying yes to everything and embracing ideas instead of discarding them. This humorous circus performance encourages giving life to favorites rather than killing them. The company Based on Kimberly presents a guest perform",
+      "raw": "\"Yes Person\" är en humoristisk cirkusföreställning på Kulturhuset Stadsteatern i Stockholm.\n\nFöreställningen \"Yes Person\" av kompaniet Based on Kimberly bygger på premissen att säga ja till allt och omfamna idéer istället för att välja bort dem. Denna humoristiska cirkusföreställning uppmanar till att ge liv åt favoriter snarare än att kassera dem. Kompaniet Based on Kimberly presenterar ett gästs",
+      "venue": "Kulturhuset Stadsteatern",
+      "start": "2026-10-18T14:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "e370c01f-f06d-45b9-891a-90ca01dcf72a",
+      "title_sv": "Yes Person",
+      "title_en": "Yes Person",
+      "desc_sv": "\"Yes Person\" är en humoristisk cirkusföreställning på Kulturhuset Stadsteatern i Stockholm.\n\nFöreställningen \"Yes Person\" av kompaniet Based on Kimberly bygger på premissen att säga ja till allt och omfamna idéer istället för att välja bort dem. Denna humoristiska cirkusföreställning uppmanar till att ge liv åt favoriter snarare än att kassera dem. Kompaniet Based on Kimberly presenterar ett gästs",
+      "desc_en": "\"Yes Person\" is a humorous circus performance at Kulturhuset Stadsteatern in Stockholm.\n\nThe performance \"Yes Person\" by the company Based on Kimberly is built on the premise of saying yes to everything and embracing ideas instead of discarding them. This humorous circus performance encourages giving life to favorites rather than killing them. The company Based on Kimberly presents a guest perform",
+      "raw": "\"Yes Person\" är en humoristisk cirkusföreställning på Kulturhuset Stadsteatern i Stockholm.\n\nFöreställningen \"Yes Person\" av kompaniet Based on Kimberly bygger på premissen att säga ja till allt och omfamna idéer istället för att välja bort dem. Denna humoristiska cirkusföreställning uppmanar till att ge liv åt favoriter snarare än att kassera dem. Kompaniet Based on Kimberly presenterar ett gästs",
+      "venue": "Kulturhuset Stadsteatern",
+      "start": "2026-10-17T17:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "c1f0be9d-1fb0-45f7-9445-376b9bc0cc37",
+      "title_sv": "Baltic Battle 2026",
+      "title_en": "Baltic Battle 2026",
+      "desc_sv": "Baltic Battle 2026 äger rum på Wollmar Yxkullsgatan 18 i Stockholm.\n\nBaltic Battle 2026 utökas med flera dagar och platser. Evenemanget beskrivs som större, djärvare och vildare än tidigare upplagor.",
+      "desc_en": "Baltic Battle 2026 takes place at Wollmar Yxkullsgatan 18 in Stockholm.\n\nBaltic Battle 2026 expands to include multiple days and venues. The event is described as bigger, bolder, and wilder than previous editions.",
+      "raw": "Baltic Battle 2026 äger rum på Wollmar Yxkullsgatan 18 i Stockholm.\n\nBaltic Battle 2026 utökas med flera dagar och platser. Evenemanget beskrivs som större, djärvare och vildare än tidigare upplagor.",
+      "venue": "왕의 정원",
+      "start": "2026-10-11T13:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "324f609b-1359-4966-a2f7-698bd55652cd",
+      "title_sv": "ADAM",
+      "title_en": "ADAM",
+      "desc_sv": "ADAM är ett evenemang på Cirkus i Stockholm.\n\nDetaljer om evenemanget ADAM på Cirkus i Stockholm är sparsamma. Följ den information som tillhandahålls på den officiella evenemangssidan.",
+      "desc_en": "ADAM is an event at Cirkus in Stockholm.\n\nDetails regarding the ADAM event at Cirkus in Stockholm are scarce. Follow the information provided on the official event page.",
+      "raw": "ADAM är ett evenemang på Cirkus i Stockholm.\n\nDetaljer om evenemanget ADAM på Cirkus i Stockholm är sparsamma. Följ den information som tillhandahålls på den officiella evenemangssidan.",
+      "venue": "Cirkus",
+      "start": "2026-10-17T13:30:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "92e0f99a-6c53-45ce-a021-f1d9f7be5371",
+      "title_sv": "Tyngd och tillit ",
+      "title_en": "Tyngd och tillit ",
+      "desc_sv": "\"Tyngd och tillit\" är en akrobatikföreställning på Kulturhuset Stadsteatern i Stockholm.\n\nFöreställningen presenterar två kroppar i ständig rörelse, som utför akrobatik i en relation byggd på precision, kommunikation och kompromiss. Mellan de två akrobaterna uppstår en värld där tyngd blir språk och tillit blir verktyg. Denna föreställning är producerad av Kaaos Kaamos, ett internationellt cirkusk",
+      "desc_en": "\"Tyngd och tillit\" is an acrobatics performance at Kulturhuset Stadsteatern in Stockholm.\n\nThe performance features two bodies in constant motion, performing acrobatics in a relationship built on precision, communication, and compromise. In the intimate space between them, a world emerges where weight becomes language and trust becomes a tool. This production is by Kaaos Kaamos, an international c",
+      "raw": "\"Tyngd och tillit\" är en akrobatikföreställning på Kulturhuset Stadsteatern i Stockholm.\n\nFöreställningen presenterar två kroppar i ständig rörelse, som utför akrobatik i en relation byggd på precision, kommunikation och kompromiss. Mellan de två akrobaterna uppstår en värld där tyngd blir språk och tillit blir verktyg. Denna föreställning är producerad av Kaaos Kaamos, ett internationellt cirkusk",
+      "venue": "Kulturhuset Stadsteatern",
+      "start": "2026-10-08T17:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "82b9720b-6d0b-44b5-bf10-bb16c9c94976",
+      "title_sv": "Riksteatern: 20 Years Later, Still Here!",
+      "title_en": "Riksteatern: 20 Years Later, Still Here!",
+      "desc_sv": "Riksteatern: 20 Years Later, Still Here! är en akrobatisk och humoristisk cirkusföreställning på Messingen i Upplands Väsby.\n\nRiksteaterns föreställning 20 Years Later, Still Here! är en akrobatisk och humoristisk cirkusföreställning. Den presenteras på Messingen i Upplands Väsby.",
+      "desc_en": "Riksteatern: 20 Years Later, Still Here! is an acrobatic and humorous circus performance at Messingen in Upplands Väsby.\n\nRiksteatern's performance 20 Years Later, Still Here! is an acrobatic and humorous circus show. It is presented at Messingen in Upplands Väsby.",
+      "raw": "Riksteatern: 20 Years Later, Still Here! är en akrobatisk och humoristisk cirkusföreställning på Messingen i Upplands Väsby.\n\nRiksteaterns föreställning 20 Years Later, Still Here! är en akrobatisk och humoristisk cirkusföreställning. Den presenteras på Messingen i Upplands Väsby.",
+      "venue": "왕의 정원",
+      "start": "2026-11-15T18:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "e1de198f-2d56-4d01-84a3-cb95f5706185",
+      "title_sv": "Tyngd och tillit ",
+      "title_en": "Tyngd och tillit ",
+      "desc_sv": "Tyngd och tillit är en cirkusföreställning på Kulturhuset Stadsteatern i Stockholm.\n\nFöreställningen utforskar relationen mellan två akrobater i ständig rörelse. Denna relation bygger på precision, kommunikation och kompromiss. Mellan dem uppstår en värld där tyngd blir ett språk och tillit blir ett verktyg. Kaaos Kaamos, ett internationellt cirkuskollektiv med bas i Umeå, har producerat föreställ",
+      "desc_en": "Tyngd och tillit is a circus performance at Kulturhuset Stadsteatern in Stockholm.\n\nThe performance explores the relationship between two acrobats in constant motion. This relationship is built on precision, communication, and compromise. In the intimate space between them, a world emerges where weight becomes a language and trust becomes a tool. Kaaos Kaamos, an international circus collective ba",
+      "raw": "Tyngd och tillit är en cirkusföreställning på Kulturhuset Stadsteatern i Stockholm.\n\nFöreställningen utforskar relationen mellan två akrobater i ständig rörelse. Denna relation bygger på precision, kommunikation och kompromiss. Mellan dem uppstår en värld där tyngd blir ett språk och tillit blir ett verktyg. Kaaos Kaamos, ett internationellt cirkuskollektiv med bas i Umeå, har producerat föreställ",
+      "venue": "Kulturhuset Stadsteatern",
+      "start": "2026-10-08T15:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "f7ce414d-5fbd-4fe7-ae13-4bc2d16d95a4",
+      "title_sv": "Efter sista andetaget",
+      "title_en": "Efter sista andetaget",
+      "desc_sv": "Efter sista andetaget är en otäck cirkusföreställning på Teodok Kallhälls Gamla Folkets hus i Stockholm.\n\nDenna otäcka cirkusföreställning utforskar det som skrämmer allra mest. Den handlar om tiden som följer efter sista andetaget.",
+      "desc_en": "Efter sista andetaget is a creepy circus performance at Teodok Kallhälls Gamla Folkets hus in Stockholm.\n\nThis creepy circus performance explores what scares most. It is about the time that follows after the last breath.",
+      "raw": "Efter sista andetaget är en otäck cirkusföreställning på Teodok Kallhälls Gamla Folkets hus i Stockholm.\n\nDenna otäcka cirkusföreställning utforskar det som skrämmer allra mest. Den handlar om tiden som följer efter sista andetaget.",
+      "venue": "Folkets Hus",
+      "start": "2026-10-31T19:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "2421000a-3f03-42e3-bacb-76571327c9ca",
+      "title_sv": "Kompani Giraff | The Pile",
+      "title_en": "Kompani Giraff | The Pile",
+      "desc_sv": "Kompani Giraff | The Pile är ett evenemang på Dansens Hus i Stockholm.\n\nKompani Giraff presenterar The Pile på Dansens Hus i Stockholm.",
+      "desc_en": "Kompani Giraff | The Pile is an event at Dansens Hus in Stockholm.\n\nKompani Giraff presents The Pile at Dansens Hus in Stockholm.",
+      "raw": "Kompani Giraff | The Pile är ett evenemang på Dansens Hus i Stockholm.\n\nKompani Giraff presenterar The Pile på Dansens Hus i Stockholm.",
+      "venue": "Dansens Hus",
+      "start": "2027-02-18T17:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "915ca432-d626-479f-9e05-6810062ab957",
+      "title_sv": "Efter sista andetaget",
+      "title_en": "Efter sista andetaget",
+      "desc_sv": "Efter sista andetaget är en cirkusföreställning på Teodok Kallhälls Gamla Folkets hus i Stockholm.\n\n\"Efter sista andetaget\" är en otäck cirkusföreställning. Den utforskar det som skrämmer allra mest, tiden efter sista andetaget.",
+      "desc_en": "Efter sista andetaget is a circus performance at Teodok Kallhälls Gamla Folkets hus in Stockholm.\n\n\"Efter sista andetaget\" is an eerie circus performance. It explores what frightens most, the time after the last breath.",
+      "raw": "Efter sista andetaget är en cirkusföreställning på Teodok Kallhälls Gamla Folkets hus i Stockholm.\n\n\"Efter sista andetaget\" är en otäck cirkusföreställning. Den utforskar det som skrämmer allra mest, tiden efter sista andetaget.",
+      "venue": "Folkets Hus",
+      "start": "2026-10-25T14:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "c39ffbbc-5243-4d58-b094-ee85b5f3263e",
+      "title_sv": "Alice i Underlandet Cirkusshow",
+      "title_en": "Alice i Underlandet Cirkusshow",
+      "desc_sv": "Alice i Underlandet Cirkusshow är en dans- och cirkusföreställning på Cirkus i Stockholm.\n\nAlice i Underlandet dans- och cirkusshow återvänder efter en turné som sågs av över 20 000 åskådare. Ensemblen består av 30 artister, inklusive Europas främsta inom cirkuskonst. Detta är en färgstark, modern cirkusföreställning som förenar dans, akrobatik och teater. Den använder högteknologisk multimedia me",
+      "desc_en": "Alice i Underlandet Cirkusshow is a dance and circus performance at Cirkus in Stockholm.\n\nThe Alice in Wonderland dance and circus show returns after a tour seen by over 20,000 spectators. The ensemble features 30 artists, including some of Europe's foremost circus artists. This vibrant, modern circus performance unites dance, acrobatics, and theatre. It uses high-tech multimedia with spectacular ",
+      "raw": "Alice i Underlandet Cirkusshow är en dans- och cirkusföreställning på Cirkus i Stockholm.\n\nAlice i Underlandet dans- och cirkusshow återvänder efter en turné som sågs av över 20 000 åskådare. Ensemblen består av 30 artister, inklusive Europas främsta inom cirkuskonst. Detta är en färgstark, modern cirkusföreställning som förenar dans, akrobatik och teater. Den använder högteknologisk multimedia me",
+      "venue": "Cirkus",
+      "start": "2026-11-03T17:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "5dabeb9a-a6b6-4a27-a7dd-ad25d742154a",
+      "title_sv": "Below Zero [SWE] | In Praise of Shadows",
+      "title_en": "Below Zero [SWE] | In Praise of Shadows",
+      "desc_sv": "En familjeföreställning med svindlande akrobatik och nyskriven livemusik i en hyllning till skuggorna inom oss, såväl som runt oss.",
+      "desc_en": "En familjeföreställning med svindlande akrobatik och nyskriven livemusik i en hyllning till skuggorna inom oss, såväl som runt oss.",
+      "raw": "En familjeföreställning med svindlande akrobatik och nyskriven livemusik i en hyllning till skuggorna inom oss, såväl som runt oss.",
+      "venue": "Dansens Hus",
+      "start": "2026-11-12T19:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "fa0b9f23-0837-4a04-bb2b-b359608a591c",
+      "title_sv": "Alice i Underlandet Cirkusshow",
+      "title_en": "Alice i Underlandet Cirkusshow",
+      "desc_sv": "Alice i Underlandet Cirkusshow är en cirkusföreställning på Cirkus i Stockholm.\n\nAlice i Underlandet Cirkusshow presenterar en ensemble med 30 artister, inklusive några av Europas främsta cirkusartister. Föreställningen är en modern cirkusupplevelse som förenar dans, akrobatik och teater. Den använder högteknologisk multimedia med LED-dekorationer och omslutande projektioner för att skapa nya värl",
+      "desc_en": "Alice in Wonderland Circus Show is a circus performance at Cirkus in Stockholm.\n\nThe Alice in Wonderland Circus Show features an ensemble of 30 artists, including some of Europe's leading circus performers. This modern circus experience combines dance, acrobatics, and theatre. It utilizes high-tech multimedia with LED decorations and immersive projections to create new worlds. The audience can exp",
+      "raw": "Alice i Underlandet Cirkusshow är en cirkusföreställning på Cirkus i Stockholm.\n\nAlice i Underlandet Cirkusshow presenterar en ensemble med 30 artister, inklusive några av Europas främsta cirkusartister. Föreställningen är en modern cirkusupplevelse som förenar dans, akrobatik och teater. Den använder högteknologisk multimedia med LED-dekorationer och omslutande projektioner för att skapa nya värl",
+      "venue": "Cirkus",
+      "start": "2026-11-04T17:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "f83fd9eb-b03c-4a67-bde5-33b904d1854a",
+      "title_sv": "Kompani Giraff | The Pile",
+      "title_en": "Kompani Giraff | The Pile",
+      "desc_sv": "The Pile av Kompani Giraff är ett evenemang på Dansens Hus i Stockholm.\n\nKompani Giraff presenterar evenemanget The Pile, som äger rum på Dansens Hus i Stockholm.",
+      "desc_en": "The Pile by Kompani Giraff is an event at Dansens Hus in Stockholm.\n\nKompani Giraff presents the event The Pile, which takes place at Dansens Hus in Stockholm.",
+      "raw": "The Pile av Kompani Giraff är ett evenemang på Dansens Hus i Stockholm.\n\nKompani Giraff presenterar evenemanget The Pile, som äger rum på Dansens Hus i Stockholm.",
+      "venue": "Dansens Hus",
+      "start": "2027-02-19T17:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "d85c6a55-d138-448d-b519-d7a6f84c8fdf",
+      "title_sv": "Kompani Giraff | The Pile",
+      "title_en": "Kompani Giraff | The Pile",
+      "desc_sv": "Kompani Giraff presenterar The Pile på Dansens Hus i Stockholm.\n\nKompani Giraff framför The Pile på Dansens Hus. Detta är en produktion av Kompani Giraff som spelas i Stockholm.",
+      "desc_en": "Kompani Giraff presents The Pile at Dansens Hus in Stockholm.\n\nKompani Giraff performs The Pile at Dansens Hus. This production by Kompani Giraff takes place in Stockholm.",
+      "raw": "Kompani Giraff presenterar The Pile på Dansens Hus i Stockholm.\n\nKompani Giraff framför The Pile på Dansens Hus. Detta är en produktion av Kompani Giraff som spelas i Stockholm.",
+      "venue": "Dansens Hus",
+      "start": "2027-02-18T12:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "0b33340e-8adf-4123-bb6a-205281a71d20",
+      "title_sv": "Labero's Magic World",
+      "title_en": "Labero's Magic World",
+      "desc_sv": "Labero's Magic World är en exklusiv magisk föreställning på La Botanica i Stockholm.\n\nTräd in i Labero's Magic World, en exklusiv magisk föreställning på La Botanica. Det är en värld av \"boutique magic\" där varje akt är utformad för att ge en personlig och nära upplevelse. Joe Labero, en mästare inom magins konst med över tre årtionden av globala turnéer, skapar en magisk atmosfär. Föreställningen",
+      "desc_en": "Labero's Magic World is an exclusive magical performance at La Botanica in Stockholm.\n\nStep into Labero's Magic World, an exclusive magical performance at La Botanica. This is a world of \"boutique magic\" where each act is designed to provide a personal and intimate experience. Joe Labero, a master of magic with over three decades of global tours, creates a magical atmosphere. The performance inclu",
+      "raw": "Labero's Magic World är en exklusiv magisk föreställning på La Botanica i Stockholm.\n\nTräd in i Labero's Magic World, en exklusiv magisk föreställning på La Botanica. Det är en värld av \"boutique magic\" där varje akt är utformad för att ge en personlig och nära upplevelse. Joe Labero, en mästare inom magins konst med över tre årtionden av globala turnéer, skapar en magisk atmosfär. Föreställningen",
+      "venue": "La Botanica",
+      "start": "2026-11-06T17:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "c73fd39d-626a-4390-a9e5-68405a96831d",
+      "title_sv": "Efter sista andetaget",
+      "title_en": "Efter sista andetaget",
+      "desc_sv": "Efter sista andetaget är en otäck cirkusföreställning på Teodok Kallhälls Gamla Folkets hus i Stockholm.\n\nDetta är en otäck cirkusföreställning om det som skrämmer allra mest. Den utforskar tiden efter sista andetaget och äger rum på Teodok Kallhälls Gamla Folkets hus.",
+      "desc_en": "Efter sista andetaget is a creepy circus performance at Teodok Kallhälls Gamla Folkets hus in Stockholm.\n\nThis creepy circus performance is about what frightens us most. It explores the time after the last breath and takes place at Teodok Kallhälls Gamla Folkets hus.",
+      "raw": "Efter sista andetaget är en otäck cirkusföreställning på Teodok Kallhälls Gamla Folkets hus i Stockholm.\n\nDetta är en otäck cirkusföreställning om det som skrämmer allra mest. Den utforskar tiden efter sista andetaget och äger rum på Teodok Kallhälls Gamla Folkets hus.",
+      "venue": "Folkets Hus",
+      "start": "2026-11-01T14:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "1362a2d3-b58f-4a0a-9e4f-788ca047d527",
+      "title_sv": "Daniel Kane – Impossible MAGIC • 7/11 • Halmstad",
+      "title_en": "Daniel Kane – Impossible MAGIC • 7/11 • Halmstad",
+      "desc_sv": "Det du ser kan inte vara sant – men ändå händer det, mitt framför dina ögon.\n\nDaniel Kane ger inte en vanlig show, för Impossible Magic är som en glitch i verkligheten. Han böjer natur­lagarna, läser tankar och gör det omöjliga möjligt – på scenen, utan dolda trick eller digitala genvägar.\n\nImpossible Magic är inte bara en show – det är ett test av dina sinnen. En kväll där du både skrattar, tvivl",
+      "desc_en": "Det du ser kan inte vara sant – men ändå händer det, mitt framför dina ögon.\n\nDaniel Kane ger inte en vanlig show, för Impossible Magic är som en glitch i verkligheten. Han böjer natur­lagarna, läser tankar och gör det omöjliga möjligt – på scenen, utan dolda trick eller digitala genvägar.\n\nImpossible Magic är inte bara en show – det är ett test av dina sinnen. En kväll där du både skrattar, tvivl",
+      "raw": "Det du ser kan inte vara sant – men ändå händer det, mitt framför dina ögon.\n\nDaniel Kane ger inte en vanlig show, för Impossible Magic är som en glitch i verkligheten. Han böjer natur­lagarna, läser tankar och gör det omöjliga möjligt – på scenen, utan dolda trick eller digitala genvägar.\n\nImpossible Magic är inte bara en show – det är ett test av dina sinnen. En kväll där du både skrattar, tvivl",
+      "venue": null,
+      "start": "2026-11-07T18:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "c8af8f4d-df29-489d-9bf3-dbcdb122a48e",
+      "title_sv": "Daniel Kane – Impossible MAGIC • 8/11 • Ulricehamn",
+      "title_en": "Daniel Kane – Impossible MAGIC • 8/11 • Ulricehamn",
+      "desc_sv": "Det du ser kan inte vara sant – men ändå händer det, mitt framför dina ögon.\n\nDaniel Kane ger inte en vanlig show, för Impossible Magic är som en glitch i verkligheten. Han böjer natur­lagarna, läser tankar och gör det omöjliga möjligt – på scenen, utan dolda trick eller digitala genvägar.\n\nImpossible Magic är inte bara en show – det är ett test av dina sinnen. En kväll där du både skrattar, tvivl",
+      "desc_en": "Det du ser kan inte vara sant – men ändå händer det, mitt framför dina ögon.\n\nDaniel Kane ger inte en vanlig show, för Impossible Magic är som en glitch i verkligheten. Han böjer natur­lagarna, läser tankar och gör det omöjliga möjligt – på scenen, utan dolda trick eller digitala genvägar.\n\nImpossible Magic är inte bara en show – det är ett test av dina sinnen. En kväll där du både skrattar, tvivl",
+      "raw": "Det du ser kan inte vara sant – men ändå händer det, mitt framför dina ögon.\n\nDaniel Kane ger inte en vanlig show, för Impossible Magic är som en glitch i verkligheten. Han böjer natur­lagarna, läser tankar och gör det omöjliga möjligt – på scenen, utan dolda trick eller digitala genvägar.\n\nImpossible Magic är inte bara en show – det är ett test av dina sinnen. En kväll där du både skrattar, tvivl",
+      "venue": null,
+      "start": "2026-11-08T17:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "8383f396-b41a-409e-a00d-7038e9602bb8",
+      "title_sv": "Signal",
+      "title_en": "Signal",
+      "desc_sv": "Signal är en föreställning med Brynolf & Ljung på Teater Rival i Stockholm.\n\nBrynolf & Ljung presenterar Signal, en föreställning som får publiken att tvivla på verkligheten. Med fingerfärdighet, psykologi och suggestion tar de med publiken på en kväll där gränsen mellan möjligt och omöjligt suddas ut. Signal innehåller både stora, visuellt slående illusioner och magi som sker i medvetandet. Peter",
+      "desc_en": "Signal is a performance with Brynolf & Ljung at Teater Rival in Stockholm.\n\nBrynolf & Ljung present Signal, a performance designed to make the audience question reality. Through sleight of hand, psychology, and suggestion, they lead the audience on an evening where the line between the possible and the impossible blurs. Signal features both large, visually striking illusions and magic that occurs ",
+      "raw": "Signal är en föreställning med Brynolf & Ljung på Teater Rival i Stockholm.\n\nBrynolf & Ljung presenterar Signal, en föreställning som får publiken att tvivla på verkligheten. Med fingerfärdighet, psykologi och suggestion tar de med publiken på en kväll där gränsen mellan möjligt och omöjligt suddas ut. Signal innehåller både stora, visuellt slående illusioner och magi som sker i medvetandet. Peter",
+      "venue": "Rival",
+      "start": "2027-02-26T18:30:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "d265f664-0920-4aa1-97a6-b6a706523c43",
+      "title_sv": "Disney on Ice",
+      "title_en": "Disney on Ice",
+      "venue": "Avicii Arena",
+      "start": "2027-01-08T12:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "75f829be-0ca6-46a6-acfb-f7b7ba9d4719",
+      "title_sv": "Labero's Magic World",
+      "title_en": "Labero's Magic World",
+      "desc_sv": "Labero's Magic World är en exklusiv magisk föreställning på La Botanica i Stockholm.\n\nJoe Labero presenterar Labero's Magic World, en exklusiv magisk föreställning på La Botanica. Denna upplevelse av \"boutique magic\" väver samman illusioner med en touch av mystik. Med över tre decennier av globala turnéer skapar Joe Labero en magisk atmosfär utformad för att ge en personlig och nära upplevelse. Fö",
+      "desc_en": "Labero's Magic World is an exclusive magical performance at La Botanica in Stockholm.\n\nJoe Labero presents Labero's Magic World, an exclusive magical performance at La Botanica. This \"boutique magic\" experience weaves together illusions with a touch of mystery. With over three decades of global tours, Joe Labero creates a magical atmosphere designed for a personal and intimate experience. The perf",
+      "raw": "Labero's Magic World är en exklusiv magisk föreställning på La Botanica i Stockholm.\n\nJoe Labero presenterar Labero's Magic World, en exklusiv magisk föreställning på La Botanica. Denna upplevelse av \"boutique magic\" väver samman illusioner med en touch av mystik. Med över tre decennier av globala turnéer skapar Joe Labero en magisk atmosfär utformad för att ge en personlig och nära upplevelse. Fö",
+      "venue": "La Botanica",
+      "start": "2026-11-07T17:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "4f725feb-b6fc-4731-a71e-4ffc9ab7018f",
+      "title_sv": "Efter sista andetaget",
+      "title_en": "Efter sista andetaget",
+      "desc_sv": "Efter sista andetaget är en otäck cirkusföreställning på Teodok Kallhälls Gamla Folkets hus i Stockholm.\n\nFöreställningen handlar om det som skrämmer allra mest, tiden efter sista andetaget. Den beskrivs som en otäck cirkusupplevelse.",
+      "desc_en": "Efter sista andetaget is a scary circus performance at Teodok Kallhälls Gamla Folkets hus in Stockholm.\n\nThe performance explores what frightens us most, the time after the last breath. It is described as a scary circus experience.",
+      "raw": "Efter sista andetaget är en otäck cirkusföreställning på Teodok Kallhälls Gamla Folkets hus i Stockholm.\n\nFöreställningen handlar om det som skrämmer allra mest, tiden efter sista andetaget. Den beskrivs som en otäck cirkusupplevelse.",
+      "venue": "Folkets Hus",
+      "start": "2026-10-24T18:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "a9b09062-a186-420e-ba93-124c1221f5da",
+      "title_sv": "Sveriges sista magiker",
+      "title_en": "Sveriges sista magiker",
+      "desc_sv": "Hyllade Isidor Olsbjörk tar sig an Kulturhuset Stadsteaterns scen under hösten 2026. Välkommen till en magisk show fylld av makalösa trick och filterlös humor.\n\nEn söndag i december 2008 satt Isidor på vardagsrumsgolvet framför teven i familjens fyrarummare i Frölunda, när livet förändrades för alltid. På teven visades ett program med en maskerad trollkarl som avslöjade trollkarlarnas topphemliga ",
+      "desc_en": "Hyllade Isidor Olsbjörk tar sig an Kulturhuset Stadsteaterns scen under hösten 2026. Välkommen till en magisk show fylld av makalösa trick och filterlös humor.\n\nEn söndag i december 2008 satt Isidor på vardagsrumsgolvet framför teven i familjens fyrarummare i Frölunda, när livet förändrades för alltid. På teven visades ett program med en maskerad trollkarl som avslöjade trollkarlarnas topphemliga ",
+      "raw": "Hyllade Isidor Olsbjörk tar sig an Kulturhuset Stadsteaterns scen under hösten 2026. Välkommen till en magisk show fylld av makalösa trick och filterlös humor.\n\nEn söndag i december 2008 satt Isidor på vardagsrumsgolvet framför teven i familjens fyrarummare i Frölunda, när livet förändrades för alltid. På teven visades ett program med en maskerad trollkarl som avslöjade trollkarlarnas topphemliga ",
+      "venue": "Kulturhuset Stadsteatern",
+      "start": "2026-10-24T17:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "3cb2c9b9-85a7-4d29-93d8-4e5335aab199",
+      "title_sv": "Signal",
+      "title_en": "Signal",
+      "desc_sv": "Signal är en föreställning med Brynolf & Ljung på Teater Rival i Stockholm.\n\nBrynolf & Ljung presenterar Signal, en föreställning som får publiken att tvivla på verkligheten. Med fingerfärdighet, psykologi och suggestion tar de med publiken på en kväll där gränsen mellan möjligt och omöjligt suddas ut. Signal innehåller både stora, visuellt slående illusioner och magi som sker i medvetandet. Peter",
+      "desc_en": "Signal is a performance with Brynolf & Ljung at Teater Rival in Stockholm.\n\nBrynolf & Ljung present Signal, a performance designed to make the audience question reality. Through sleight of hand, psychology, and suggestion, they lead the audience on an evening where the line between the possible and the impossible blurs. Signal features both large, visually striking illusions and magic that occurs ",
+      "raw": "Signal är en föreställning med Brynolf & Ljung på Teater Rival i Stockholm.\n\nBrynolf & Ljung presenterar Signal, en föreställning som får publiken att tvivla på verkligheten. Med fingerfärdighet, psykologi och suggestion tar de med publiken på en kväll där gränsen mellan möjligt och omöjligt suddas ut. Signal innehåller både stora, visuellt slående illusioner och magi som sker i medvetandet. Peter",
+      "venue": "Rival",
+      "start": "2027-03-12T18:30:00+00:00",
+      "has_img": true
+    }
+  ]
+}

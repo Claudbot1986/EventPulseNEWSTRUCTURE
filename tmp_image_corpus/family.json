@@ -1,0 +1,759 @@
+{
+  "category_slug": "family",
+  "events": 56,
+  "library_count": 0,
+  "approx_images_needed": 1,
+  "top_words": [
+    [
+      "with",
+      88
+    ],
+    [
+      "disney",
+      82
+    ],
+    [
+      "magic",
+      82
+    ],
+    [
+      "skyview",
+      65
+    ],
+    [
+      "discover",
+      64
+    ],
+    [
+      "ice",
+      61
+    ],
+    [
+      "arena",
+      44
+    ],
+    [
+      "avicii",
+      39
+    ],
+    [
+      "hot",
+      38
+    ],
+    [
+      "wheels",
+      38
+    ],
+    [
+      "show",
+      36
+    ],
+    [
+      "action",
+      35
+    ],
+    [
+      "presents",
+      34
+    ],
+    [
+      "stunt",
+      33
+    ],
+    [
+      "family",
+      33
+    ],
+    [
+      "presenterar",
+      32
+    ],
+    [
+      "barn",
+      31
+    ],
+    [
+      "dig",
+      27
+    ],
+    [
+      "får",
+      26
+    ],
+    [
+      "ett",
+      26
+    ],
+    [
+      "åldersgräns",
+      24
+    ],
+    [
+      "coco",
+      24
+    ],
+    [
+      "miguel",
+      24
+    ],
+    [
+      "party",
+      24
+    ],
+    [
+      "elsa",
+      21
+    ],
+    [
+      "stitch",
+      21
+    ],
+    [
+      "denna",
+      21
+    ],
+    [
+      "genom",
+      20
+    ],
+    [
+      "follows",
+      19
+    ],
+    [
+      "through",
+      19
+    ]
+  ],
+  "sample_events": [
+    {
+      "title": "Nötknäpparen ",
+      "venue": "Konsertsalen"
+    },
+    {
+      "title": "Sofia GA 0522 Real - Do not purchases",
+      "venue": "Ticketmaster"
+    },
+    {
+      "title": "Att använda källor i högskolestudier",
+      "venue": "Zoom – no registration"
+    },
+    {
+      "title": "Får jag använda den här bilden i mitt exjobb eller avhandling?",
+      "venue": "Zoom – no registration"
+    },
+    {
+      "title": "Zotero – kom igång med referenshanteringsprogram",
+      "venue": "Zoom – no registration"
+    }
+  ],
+  "full_corpus": [
+    {
+      "id": "f9784b43-9540-4b93-b40b-074651128313",
+      "title_sv": "Nötknäpparen ",
+      "title_en": "Nötknäpparen ",
+      "desc_sv": "Den världsberömda baletten Nötknäpparen framförd av ukrainska balettstjärnor blir en magisk julklapp för hela familjen!",
+      "desc_en": "Den världsberömda baletten Nötknäpparen framförd av ukrainska balettstjärnor blir en magisk julklapp för hela familjen!",
+      "raw": "Den världsberömda baletten Nötknäpparen framförd av ukrainska balettstjärnor blir en magisk julklapp för hela familjen!",
+      "venue": "Konsertsalen",
+      "start": "2026-11-22T19:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "b691aacb-27e3-4503-910d-fc1f8b68d7e7",
+      "title_sv": "Sofia GA 0522 Real - Do not purchases",
+      "title_en": "Sofia GA 0522 Real - Do not purchases",
+      "venue": "Ticketmaster",
+      "start": "2027-12-22T00:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "9aada413-9110-433b-851d-3c72ceebcb6d",
+      "title_sv": "Att använda källor i högskolestudier",
+      "title_en": "Att använda källor i högskolestudier",
+      "desc_sv": "För att lyckas med dina högskolestudier behöver du kunna hitta och referera till relevanta och trovärdiga källor i dina inlämningsuppgifter. Detta webbinarium hjälper dig att förbättra dessa färdigheter.",
+      "desc_en": "För att lyckas med dina högskolestudier behöver du kunna hitta och referera till relevanta och trovärdiga källor i dina inlämningsuppgifter. Detta webbinarium hjälper dig att förbättra dessa färdigheter.",
+      "raw": "För att lyckas med dina högskolestudier behöver du kunna hitta och referera till relevanta och trovärdiga källor i dina inlämningsuppgifter. Detta webbinarium hjälper dig att förbättra dessa färdigheter.",
+      "venue": "Zoom – no registration",
+      "start": "2026-11-03T12:15:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "a8db5b29-e076-4ddf-9ca8-a5310671ba09",
+      "title_sv": "Får jag använda den här bilden i mitt exjobb eller avhandling?",
+      "title_en": "Får jag använda den här bilden i mitt exjobb eller avhandling?",
+      "desc_sv": "Om du vill använda bilder och figurer från andra källor behöver du veta vad som gäller. Lär dig om upphovsrätt, licenser som tillåter återanvändning, och hur du gör för att be om tillstånd.",
+      "desc_en": "Om du vill använda bilder och figurer från andra källor behöver du veta vad som gäller. Lär dig om upphovsrätt, licenser som tillåter återanvändning, och hur du gör för att be om tillstånd.",
+      "raw": "Om du vill använda bilder och figurer från andra källor behöver du veta vad som gäller. Lär dig om upphovsrätt, licenser som tillåter återanvändning, och hur du gör för att be om tillstånd.",
+      "venue": "Zoom – no registration",
+      "start": "2026-12-03T12:15:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "3fe172ce-8434-4c0b-b19c-c5760bcd586d",
+      "title_sv": "Zotero – kom igång med referenshanteringsprogram",
+      "title_en": "Zotero – kom igång med referenshanteringsprogram",
+      "desc_sv": "Tycker du det är svårt och tråkigt att skriva referenser? Du är inte ensam. Använd referenshanteringsprogrammet Zotero så blir det lättare.",
+      "desc_en": "Tycker du det är svårt och tråkigt att skriva referenser? Du är inte ensam. Använd referenshanteringsprogrammet Zotero så blir det lättare.",
+      "raw": "Tycker du det är svårt och tråkigt att skriva referenser? Du är inte ensam. Använd referenshanteringsprogrammet Zotero så blir det lättare.",
+      "venue": "Zoom – no registration",
+      "start": "2026-11-10T12:15:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "ad8f618a-8745-4d35-94d2-2026cb2382ad",
+      "title_sv": "Hur du undviker plagiering",
+      "title_en": "Hur du undviker plagiering",
+      "desc_sv": "Välkommen till detta webbinarium för studenter där du lär dig undvika plagiering och hur du använder källor på ett korrekt sätt.",
+      "desc_en": "Välkommen till detta webbinarium för studenter där du lär dig undvika plagiering och hur du använder källor på ett korrekt sätt.",
+      "raw": "Välkommen till detta webbinarium för studenter där du lär dig undvika plagiering och hur du använder källor på ett korrekt sätt.",
+      "venue": "Zoom – no registration",
+      "start": "2026-11-19T12:15:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "ed4072ca-f9a0-41ff-808e-c3b75c13ef0b",
+      "title_sv": "Referenshantering i Overleaf och LaTeX",
+      "title_en": "Referenshantering i Overleaf och LaTeX",
+      "desc_sv": "Välkommen till ett webbinarium om hur du kan integrera Zotero med Overleaf för att underlätta referenshanteringen.",
+      "desc_en": "Välkommen till ett webbinarium om hur du kan integrera Zotero med Overleaf för att underlätta referenshanteringen.",
+      "raw": "Välkommen till ett webbinarium om hur du kan integrera Zotero med Overleaf för att underlätta referenshanteringen.",
+      "venue": "Zoom – no registration",
+      "start": "2026-11-12T12:15:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "1bfb7e8d-1107-425b-a6f4-be83c4d534ff",
+      "title_sv": "Läsa akademiska texter – tips på lässtrategier",
+      "title_en": "Läsa akademiska texter – tips på lässtrategier",
+      "desc_sv": "Du får lära dig smarta sätt att läsa olika typer av akademiska texter på ett effektivt sätt.",
+      "desc_en": "Du får lära dig smarta sätt att läsa olika typer av akademiska texter på ett effektivt sätt.",
+      "raw": "Du får lära dig smarta sätt att läsa olika typer av akademiska texter på ett effektivt sätt.",
+      "venue": "Zoom - no registration",
+      "start": "2026-10-27T12:15:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "20b0f373-e8f3-43f3-9a38-4511b5053d2f",
+      "title_sv": "Hot Wheels - Live in Action | 17 oktober, Matinéföreställning | Stockholm",
+      "title_en": "Hot Wheels - Live in Action | 17 oktober, Matinéföreställning | Stockholm",
+      "desc_sv": "HOT WHEELS STUNT SHOW\n17/10 Matinéföreställning fr kl. 10:30\n\nÅldersgräns: Ingen åldersgräns \n(barn mellan 0-2 år går in gratis utan biljett och får sitta i knät)\n\n----\n\nFrån världens mest sålda leksak och The Original Stunt Brand™ kommer nu den helt nya liveföreställningen Hot Wheels Stunt Show. Upplev fartfylld action och fullgasad spänning när legendariska Hot Wheels-fordon väcks till liv och u",
+      "desc_en": "HOT WHEELS STUNT SHOW\n17/10 Matinéföreställning fr kl. 10:30\n\nÅldersgräns: Ingen åldersgräns \n(barn mellan 0-2 år går in gratis utan biljett och får sitta i knät)\n\n----\n\nFrån världens mest sålda leksak och The Original Stunt Brand™ kommer nu den helt nya liveföreställningen Hot Wheels Stunt Show. Upplev fartfylld action och fullgasad spänning när legendariska Hot Wheels-fordon väcks till liv och u",
+      "raw": "HOT WHEELS STUNT SHOW\n17/10 Matinéföreställning fr kl. 10:30\n\nÅldersgräns: Ingen åldersgräns \n(barn mellan 0-2 år går in gratis utan biljett och får sitta i knät)\n\n----\n\nFrån världens mest sålda leksak och The Original Stunt Brand™ kommer nu den helt nya liveföreställningen Hot Wheels Stunt Show. Upplev fartfylld action och fullgasad spänning när legendariska Hot Wheels-fordon väcks till liv och u",
+      "venue": null,
+      "start": "2026-10-17T08:30:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "9d51e334-5869-4ca9-bd85-50f7591e8906",
+      "title_sv": "Dalija Acin Thelander | Forza Forza!",
+      "title_en": "Dalija Acin Thelander | Forza Forza!",
+      "desc_sv": "En dansupplevelse för små upptäckare och deras vuxna – fylld av rörelse, lek och oväntade möten.",
+      "desc_en": "En dansupplevelse för små upptäckare och deras vuxna – fylld av rörelse, lek och oväntade möten.",
+      "raw": "En dansupplevelse för små upptäckare och deras vuxna – fylld av rörelse, lek och oväntade möten.",
+      "venue": "Dansens Hus",
+      "start": "2027-03-13T19:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "179d9321-5d34-4c16-9bde-f5872a44f62c",
+      "title_sv": "Skyview",
+      "title_en": "Skyview",
+      "desc_sv": "Skyview är en upplevelse på Avicii Arena i Stockholm.\n\nSkyview är en gondolattraktion som tar besökare till toppen av Avicii Arena. Det ger en utsikt över Stockholm från hög höjd.",
+      "desc_en": "Skyview is an experience at Avicii Arena in Stockholm.\n\nSkyview is a gondola attraction that takes visitors to the top of Avicii Arena. It offers a high-altitude view of Stockholm.",
+      "raw": "Skyview är en upplevelse på Avicii Arena i Stockholm.\n\nSkyview är en gondolattraktion som tar besökare till toppen av Avicii Arena. Det ger en utsikt över Stockholm från hög höjd.",
+      "venue": "Avicii Arena",
+      "start": "2027-01-07T23:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "594fef7d-81e8-4b5e-beec-22b38f44e09a",
+      "title_sv": "Skyview",
+      "title_en": "Skyview",
+      "desc_sv": "Skyview är en upplevelse på Skyview - Avicii Arena i Stockholm.\n\nSkyview är en attraktion som erbjuder besökare utsikt från taket av Avicii Arena. Det är en möjlighet att uppleva Stockholms skyline från en unik position.",
+      "desc_en": "Skyview is an experience at Skyview - Avicii Arena in Stockholm.\n\nSkyview is an attraction that offers visitors views from the roof of Avicii Arena. It is an opportunity to experience the Stockholm skyline from a unique vantage point.",
+      "raw": "Skyview är en upplevelse på Skyview - Avicii Arena i Stockholm.\n\nSkyview är en attraktion som erbjuder besökare utsikt från taket av Avicii Arena. Det är en möjlighet att uppleva Stockholms skyline från en unik position.",
+      "venue": "Avicii Arena",
+      "start": "2027-01-06T23:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "81b31d44-caba-4121-bccb-7d5d805b4b25",
+      "title_sv": "Hansson de Wolfe United",
+      "title_en": "Hansson de Wolfe United",
+      "desc_sv": "Major Swedish band returns autumn 2026 with over quarter million sold studio albums and classic hits including 'Var kommer barnen in'.",
+      "desc_en": "Major Swedish band returns autumn 2026 with over quarter million sold studio albums and classic hits including 'Var kommer barnen in'.",
+      "raw": "Major Swedish band returns autumn 2026 with over quarter million sold studio albums and classic hits including 'Var kommer barnen in'.",
+      "venue": "Rival",
+      "start": "2026-11-17T17:30:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "e78bb134-f037-428e-925b-06df7ca72d1a",
+      "title_sv": "Disney On Ice presents Discover the Magic",
+      "title_en": "Disney On Ice presents Discover the Magic",
+      "desc_sv": "Disney On Ice presenterar Discover the Magic Celebrate Disney magic at Disney On Ice presents Discover the Magic, a fast-paced, family-friendly production that follows the search for Tinker Bell through stunning worlds. Explore the colourful spirit realm of Coco with Miguel, brave the ocean with Moana, marvel at Belle's enchanted chandelier, and sing with Elsa. Watch Stitch crash the action with m",
+      "desc_en": "Disney On Ice presenterar Discover the Magic Celebrate Disney magic at Disney On Ice presents Discover the Magic, a fast-paced, family-friendly production that follows the search for Tinker Bell through stunning worlds. Explore the colourful spirit realm of Coco with Miguel, brave the ocean with Moana, marvel at Belle's enchanted chandelier, and sing with Elsa. Watch Stitch crash the action with m",
+      "raw": "Disney On Ice presenterar Discover the Magic Celebrate Disney magic at Disney On Ice presents Discover the Magic, a fast-paced, family-friendly production that follows the search for Tinker Bell through stunning worlds. Explore the colourful spirit realm of Coco with Miguel, brave the ocean with Moana, marvel at Belle's enchanted chandelier, and sing with Elsa. Watch Stitch crash the action with m",
+      "venue": "Valhallagatan 1",
+      "start": "2027-01-17T13:30:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "25734f2e-abdf-476b-873b-9b2e0bbcde2f",
+      "title_sv": "Disney On Ice presents Discover the Magic",
+      "title_en": "Disney On Ice presents Discover the Magic",
+      "desc_sv": "Disney On Ice presenterar Discover the Magic Celebrate Disney magic at Disney On Ice presents Discover the Magic, a fast-paced, family-friendly production that follows the search for Tinker Bell through stunning worlds. Explore the colourful spirit realm of Coco with Miguel, brave the ocean with Moana, marvel at Belle's enchanted chandelier, and sing with Elsa. Watch Stitch crash the action with m",
+      "desc_en": "Disney On Ice presenterar Discover the Magic Celebrate Disney magic at Disney On Ice presents Discover the Magic, a fast-paced, family-friendly production that follows the search for Tinker Bell through stunning worlds. Explore the colourful spirit realm of Coco with Miguel, brave the ocean with Moana, marvel at Belle's enchanted chandelier, and sing with Elsa. Watch Stitch crash the action with m",
+      "raw": "Disney On Ice presenterar Discover the Magic Celebrate Disney magic at Disney On Ice presents Discover the Magic, a fast-paced, family-friendly production that follows the search for Tinker Bell through stunning worlds. Explore the colourful spirit realm of Coco with Miguel, brave the ocean with Moana, marvel at Belle's enchanted chandelier, and sing with Elsa. Watch Stitch crash the action with m",
+      "venue": "Valhallagatan 1",
+      "start": "2027-01-16T17:30:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "11aa434d-6ad4-47b4-a5c4-c69c947ae649",
+      "title_sv": "Skyview",
+      "title_en": "Skyview",
+      "desc_sv": "Skyview är en upplevelse på Skyview - Avicii Arena i Stockholm.\n\nSkyview erbjuder en unik möjlighet att uppleva en av Stockholms mest kända byggnader. Besökare kan åka upp längs utsidan av Avicii Arena.",
+      "desc_en": "Skyview is an experience at Skyview - Avicii Arena in Stockholm.\n\nSkyview offers a unique opportunity to experience one of Stockholm's most famous buildings. Visitors can travel up the exterior of the Avicii Arena.",
+      "raw": "Skyview är en upplevelse på Skyview - Avicii Arena i Stockholm.\n\nSkyview erbjuder en unik möjlighet att uppleva en av Stockholms mest kända byggnader. Besökare kan åka upp längs utsidan av Avicii Arena.",
+      "venue": "Avicii Arena",
+      "start": "2026-12-17T23:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "61d0ed94-d350-41db-8d61-fdeb6df8150c",
+      "title_sv": "Disney On Ice presents Discover the Magic",
+      "title_en": "Disney On Ice presents Discover the Magic",
+      "desc_sv": "Disney On Ice presenterar Discover the Magic Celebrate Disney magic at Disney On Ice presents Discover the Magic, a fast-paced, family-friendly production that follows the search for Tinker Bell through stunning worlds. Explore the colourful spirit realm of Coco with Miguel, brave the ocean with Moana, marvel at Belle's enchanted chandelier, and sing with Elsa. Watch Stitch crash the action with m",
+      "desc_en": "Disney On Ice presenterar Discover the Magic Celebrate Disney magic at Disney On Ice presents Discover the Magic, a fast-paced, family-friendly production that follows the search for Tinker Bell through stunning worlds. Explore the colourful spirit realm of Coco with Miguel, brave the ocean with Moana, marvel at Belle's enchanted chandelier, and sing with Elsa. Watch Stitch crash the action with m",
+      "raw": "Disney On Ice presenterar Discover the Magic Celebrate Disney magic at Disney On Ice presents Discover the Magic, a fast-paced, family-friendly production that follows the search for Tinker Bell through stunning worlds. Explore the colourful spirit realm of Coco with Miguel, brave the ocean with Moana, marvel at Belle's enchanted chandelier, and sing with Elsa. Watch Stitch crash the action with m",
+      "venue": "Valhallagatan 1",
+      "start": "2027-01-17T09:30:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "8f76d961-d4c4-4f97-9ba8-6a9a9df39903",
+      "title_sv": "Disney On Ice presents Discover the Magic",
+      "title_en": "Disney On Ice presents Discover the Magic",
+      "desc_sv": "Disney On Ice presenterar Discover the Magic Celebrate Disney magic at Disney On Ice presents Discover the Magic, a fast-paced, family-friendly production that follows the search for Tinker Bell through stunning worlds. Explore the colourful spirit realm of Coco with Miguel, brave the ocean with Moana, marvel at Belle's enchanted chandelier, and sing with Elsa. Watch Stitch crash the action with m",
+      "desc_en": "Disney On Ice presenterar Discover the Magic Celebrate Disney magic at Disney On Ice presents Discover the Magic, a fast-paced, family-friendly production that follows the search for Tinker Bell through stunning worlds. Explore the colourful spirit realm of Coco with Miguel, brave the ocean with Moana, marvel at Belle's enchanted chandelier, and sing with Elsa. Watch Stitch crash the action with m",
+      "raw": "Disney On Ice presenterar Discover the Magic Celebrate Disney magic at Disney On Ice presents Discover the Magic, a fast-paced, family-friendly production that follows the search for Tinker Bell through stunning worlds. Explore the colourful spirit realm of Coco with Miguel, brave the ocean with Moana, marvel at Belle's enchanted chandelier, and sing with Elsa. Watch Stitch crash the action with m",
+      "venue": "Valhallagatan 1",
+      "start": "2027-01-16T09:30:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "8bc54bc9-8590-4887-bbfc-701d23e524be",
+      "title_sv": "HSO &#8211; Majas alfabetssånger &#8211; Familjekonsert",
+      "title_en": "HSO &#8211; Majas alfabetssånger &#8211; Familjekonsert",
+      "venue": null,
+      "start": "2026-10-17T15:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "60269784-b98b-4d7e-a735-9f4ef0279219",
+      "title_sv": "Halloween på Gröna Lund 2026",
+      "title_en": "Halloween på Gröna Lund 2026",
+      "desc_sv": "Hösten är (snart) här vilket betyder att det äntligen är dags för Halloween på Gröna Lund! 👻\n\nDen 9 oktober förvandlas parken till en ryslig och mysig plats där du kan frossa i skräckhus, attraktioner och läskiga karaktärer. För dig som inte älskar skräck",
+      "desc_en": "Hösten är (snart) här vilket betyder att det äntligen är dags för Halloween på Gröna Lund! 👻\n\nDen 9 oktober förvandlas parken till en ryslig och mysig plats där du kan frossa i skräckhus, attraktioner och läskiga karaktärer. För dig som inte älskar skräck",
+      "raw": "Hösten är (snart) här vilket betyder att det äntligen är dags för Halloween på Gröna Lund! 👻\n\nDen 9 oktober förvandlas parken till en ryslig och mysig plats där du kan frossa i skräckhus, attraktioner och läskiga karaktärer. För dig som inte älskar skräck",
+      "venue": "Gröna Lund",
+      "start": "2026-10-08T22:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "5b8f9010-dd41-4a75-8ecd-1dd9e9ec4891",
+      "title_sv": "Omfamnad på Kulturhuset Stadsteatern",
+      "title_en": "Omfamnad på Kulturhuset Stadsteatern",
+      "desc_sv": "Omfamnad är en utställning där betraktaren inte bara tittar på konst utan blir en del av den. Genom skulptur, textil, måleri, ljud och rumsliga installationer aktiveras kropp, sinnen och närvaro.",
+      "desc_en": "Omfamnad är en utställning där betraktaren inte bara tittar på konst utan blir en del av den. Genom skulptur, textil, måleri, ljud och rumsliga installationer aktiveras kropp, sinnen och närvaro.",
+      "raw": "Omfamnad är en utställning där betraktaren inte bara tittar på konst utan blir en del av den. Genom skulptur, textil, måleri, ljud och rumsliga installationer aktiveras kropp, sinnen och närvaro.",
+      "venue": "Kulturhuset Stadsteatern",
+      "start": "2026-11-02T22:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "86902f9f-3185-404a-9fb7-aba83b7ba2b8",
+      "title_sv": "Omfamnad på Kulturhuset Stadsteatern",
+      "title_en": "Omfamnad på Kulturhuset Stadsteatern",
+      "desc_sv": "Omfamnad är en utställning där betraktaren inte bara tittar på konst utan blir en del av den. Genom skulptur, textil, måleri, ljud och rumsliga installationer aktiveras kropp, sinnen och närvaro.",
+      "desc_en": "Omfamnad är en utställning där betraktaren inte bara tittar på konst utan blir en del av den. Genom skulptur, textil, måleri, ljud och rumsliga installationer aktiveras kropp, sinnen och närvaro.",
+      "raw": "Omfamnad är en utställning där betraktaren inte bara tittar på konst utan blir en del av den. Genom skulptur, textil, måleri, ljud och rumsliga installationer aktiveras kropp, sinnen och närvaro.",
+      "venue": "Kulturhuset Stadsteatern",
+      "start": "2026-11-01T22:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "9783c299-b6d6-4ec4-889c-3afe463815fe",
+      "title_sv": "Disney On Ice presents Discover the Magic",
+      "title_en": "Disney On Ice presents Discover the Magic",
+      "desc_sv": "Disney On Ice presenterar Discover the Magic Celebrate Disney magic at Disney On Ice presents Discover the Magic, a fast-paced, family-friendly production that follows the search for Tinker Bell through stunning worlds. Explore the colourful spirit realm of Coco with Miguel, brave the ocean with Moana, marvel at Belle's enchanted chandelier, and sing with Elsa. Watch Stitch crash the action with m",
+      "desc_en": "Disney On Ice presenterar Discover the Magic Celebrate Disney magic at Disney On Ice presents Discover the Magic, a fast-paced, family-friendly production that follows the search for Tinker Bell through stunning worlds. Explore the colourful spirit realm of Coco with Miguel, brave the ocean with Moana, marvel at Belle's enchanted chandelier, and sing with Elsa. Watch Stitch crash the action with m",
+      "raw": "Disney On Ice presenterar Discover the Magic Celebrate Disney magic at Disney On Ice presents Discover the Magic, a fast-paced, family-friendly production that follows the search for Tinker Bell through stunning worlds. Explore the colourful spirit realm of Coco with Miguel, brave the ocean with Moana, marvel at Belle's enchanted chandelier, and sing with Elsa. Watch Stitch crash the action with m",
+      "venue": "Valhallagatan 1",
+      "start": "2027-01-15T17:30:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "17406dd5-ae81-4577-9f7d-6752edd06824",
+      "title_sv": "Skyview",
+      "title_en": "Skyview",
+      "desc_sv": "Skyview är en attraktion på Avicii Arena i Stockholm.\n\nSkyview erbjuder en unik utsikt över Stockholm från toppen av Avicii Arena. Besökare färdas i en glaskabin längs arenans utsida.",
+      "desc_en": "Skyview is an attraction at Avicii Arena in Stockholm.\n\nSkyview offers a unique panoramic view of Stockholm from the top of Avicii Arena. Visitors travel in a glass gondola along the arena's exterior.",
+      "raw": "Skyview är en attraktion på Avicii Arena i Stockholm.\n\nSkyview erbjuder en unik utsikt över Stockholm från toppen av Avicii Arena. Besökare färdas i en glaskabin längs arenans utsida.",
+      "venue": "Avicii Arena",
+      "start": "2026-12-16T23:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "e7267d9d-5ee7-4aa3-ade0-4c1abef793ba",
+      "title_sv": "Skyview",
+      "title_en": "Skyview",
+      "desc_sv": "Skyview är en upplevelse på Skyview - Avicii Arena i Stockholm.\n\nSkyview erbjuder en möjlighet att se Stockholm från ovan. Denna attraktion ger en utsikt över staden och arenan.",
+      "desc_en": "Skyview is an experience at Skyview - Avicii Arena in Stockholm.\n\nSkyview offers a chance to see Stockholm from above. This attraction provides a view of the city and the arena.",
+      "raw": "Skyview är en upplevelse på Skyview - Avicii Arena i Stockholm.\n\nSkyview erbjuder en möjlighet att se Stockholm från ovan. Denna attraktion ger en utsikt över staden och arenan.",
+      "venue": "Avicii Arena",
+      "start": "2026-10-06T22:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "81346bf4-85ac-4543-9d04-d68a7105aed2",
+      "title_sv": "Emil i Lönneberga",
+      "title_en": "Emil i Lönneberga",
+      "desc_sv": "Emil i Lönneberga är en familjemusikal på Intiman i Stockholm.\n\nHöstens familjemusikal är fylld med hyss, skratt och musik, baserad på den klassiska berättelsen om Emil i Lönneberga.",
+      "desc_en": "Emil i Lönneberga is a family musical at Intiman in Stockholm.\n\nThis family musical is filled with mischief, laughter, and music, based on the classic story of Emil i Lönneberga.",
+      "raw": "Emil i Lönneberga är en familjemusikal på Intiman i Stockholm.\n\nHöstens familjemusikal är fylld med hyss, skratt och musik, baserad på den klassiska berättelsen om Emil i Lönneberga.",
+      "venue": "Intiman",
+      "start": "2026-12-13T14:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "fe5f39c1-f20f-4b24-818f-9cf0245c8540",
+      "title_sv": "Escape-spill for familien på Ribsenfestivalen",
+      "title_en": "Escape-spill for familien på Ribsenfestivalen",
+      "desc_sv": "Ribsenfestivalen og Sjøfartsmuseet inviterer vi til escape-kveld for hele familien på Sjøfartsmuseet!\n\nTiden tikker. Kruttet venter. Kan dere løse mysteriet før det er for sent?\n\nDere åpner en mystisk skipskiste fra napoleonskrigenes dager, hvor matros Peder Gjeruldsens siste hemmeligheter venter på å bli avdekket. Tiden er knapp! En kruttønne truer med å eksplodere om bare 30 minutter. Kan dere l",
+      "desc_en": "Ribsenfestivalen og Sjøfartsmuseet inviterer vi til escape-kveld for hele familien på Sjøfartsmuseet!\n\nTiden tikker. Kruttet venter. Kan dere løse mysteriet før det er for sent?\n\nDere åpner en mystisk skipskiste fra napoleonskrigenes dager, hvor matros Peder Gjeruldsens siste hemmeligheter venter på å bli avdekket. Tiden er knapp! En kruttønne truer med å eksplodere om bare 30 minutter. Kan dere l",
+      "raw": "Ribsenfestivalen og Sjøfartsmuseet inviterer vi til escape-kveld for hele familien på Sjøfartsmuseet!\n\nTiden tikker. Kruttet venter. Kan dere løse mysteriet før det er for sent?\n\nDere åpner en mystisk skipskiste fra napoleonskrigenes dager, hvor matros Peder Gjeruldsens siste hemmeligheter venter på å bli avdekket. Tiden er knapp! En kruttønne truer med å eksplodere om bare 30 minutter. Kan dere l",
+      "venue": "왕의 정원",
+      "start": "2026-10-20T16:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "85ef05b8-71af-404b-9643-a088109956d5",
+      "title_sv": "Fåret Shaun och monstret på bondgården (Premiärkalas!)",
+      "title_en": "Fåret Shaun och monstret på bondgården (Premiärkalas!)",
+      "desc_sv": "\"Fåret Shaun och monstret på bondgården (Premiärkalas!)\" är ett stop motion-äventyr på Kulturhuset Stadsteatern i Stockholm.\n\nFilmen börjar med att bonden förstör fårens pumpaodling inför Halloween. Shaun försöker rädda firandet med ett experiment, vilket får oväntade konsekvenser när bonden försvinner och ett mystiskt monster dyker upp i skogen. Det är ett charmigt och lagom kusligt stop motion-ä",
+      "desc_en": "\"Shaun the Sheep and the Monster on the Farm (Premiere Party!)\" is a stop motion adventure at Kulturhuset Stadsteatern in Stockholm.\n\nThe film begins with the farmer destroying the sheep's pumpkin patch before Halloween. Shaun attempts to save the celebration with an experiment, leading to unexpected events when the farmer disappears and a mysterious monster roams the forest. This charming and mod",
+      "raw": "\"Fåret Shaun och monstret på bondgården (Premiärkalas!)\" är ett stop motion-äventyr på Kulturhuset Stadsteatern i Stockholm.\n\nFilmen börjar med att bonden förstör fårens pumpaodling inför Halloween. Shaun försöker rädda firandet med ett experiment, vilket får oväntade konsekvenser när bonden försvinner och ett mystiskt monster dyker upp i skogen. Det är ett charmigt och lagom kusligt stop motion-ä",
+      "venue": "Kulturhuset Stadsteatern",
+      "start": "2026-10-18T11:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "5fee801d-3689-455f-a145-ce6258733838",
+      "title_sv": "Knattebio: Gitarren från havet",
+      "title_en": "Knattebio: Gitarren från havet",
+      "desc_sv": "Knattebio: Gitarren från havet är en filmvisning på Kulturhuset Stadsteatern i Stockholm.\n\nGitarren från havet är en poetisk och musikfylld familjefilm om vänskap, drömmar och musikens kraft. Filmen följer en ung pojke vars liv förändras när en mystisk gitarr spolas upp ur havet. Ett varmt äventyr fyllt av fantasi för hela familjen.",
+      "desc_en": "Knattebio: Gitarren från havet is a film screening at Kulturhuset Stadsteatern in Stockholm.\n\nGitarren från havet is a poetic and music-filled family film about friendship, dreams, and the power of music. The film follows a young boy whose life changes when a mysterious guitar washes ashore from the sea. A warm adventure full of imagination for the whole family.",
+      "raw": "Knattebio: Gitarren från havet är en filmvisning på Kulturhuset Stadsteatern i Stockholm.\n\nGitarren från havet är en poetisk och musikfylld familjefilm om vänskap, drömmar och musikens kraft. Filmen följer en ung pojke vars liv förändras när en mystisk gitarr spolas upp ur havet. Ett varmt äventyr fyllt av fantasi för hela familjen.",
+      "venue": "Kulturhuset Stadsteatern",
+      "start": "2026-10-18T10:30:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "215dfe69-e9c6-4bea-a96a-f440bba74641",
+      "title_sv": "Disney On Ice presenterar Discover the Magic",
+      "title_en": "Disney On Ice presenterar Discover the Magic",
+      "desc_sv": "Malmö Arena Lördag 30 januari 2027 kl 18:30 Fira Disneys magi i Disney On Ice presenterar Discover the Magic, en fartfylld och familjevänlig föreställning som följer jakten på Tingeling genom fantastiska världar. Utforska den färgsprakande andevärlden i Coco tillsammans med Miguel, våga dig ut på havet med Vaiana, förundras över Belles förtrollade ljusstake och sjung med Elsa. Se Stitch skapa kaos",
+      "desc_en": "Malmö Arena Lördag 30 januari 2027 kl 18:30 Fira Disneys magi i Disney On Ice presenterar Discover the Magic, en fartfylld och familjevänlig föreställning som följer jakten på Tingeling genom fantastiska världar. Utforska den färgsprakande andevärlden i Coco tillsammans med Miguel, våga dig ut på havet med Vaiana, förundras över Belles förtrollade ljusstake och sjung med Elsa. Se Stitch skapa kaos",
+      "raw": "Malmö Arena Lördag 30 januari 2027 kl 18:30 Fira Disneys magi i Disney On Ice presenterar Discover the Magic, en fartfylld och familjevänlig föreställning som följer jakten på Tingeling genom fantastiska världar. Utforska den färgsprakande andevärlden i Coco tillsammans med Miguel, våga dig ut på havet med Vaiana, förundras över Belles förtrollade ljusstake och sjung med Elsa. Se Stitch skapa kaos",
+      "venue": "Malmö Arena",
+      "start": "2027-01-29T14:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "0bca8065-b34d-4e09-8f61-5ca94dac0557",
+      "title_sv": "Hot Wheels - Live in Action | 17 oktober, Kvällsföreställning | Stockholm",
+      "title_en": "Hot Wheels - Live in Action | 17 oktober, Kvällsföreställning | Stockholm",
+      "desc_sv": "HOT WHEELS STUNT SHOW\n17/10 Kvällsföreställning fr kl. 17:30\n\nÅldersgräns: Ingen åldersgräns \n(barn mellan 0-2 år går in gratis utan biljett och får sitta i knät)\n\n----\n\nFrån världens mest sålda leksak och The Original Stunt Brand™ kommer nu den helt nya liveföreställningen Hot Wheels Stunt Show. Upplev fartfylld action och fullgasad spänning när legendariska Hot Wheels-fordon väcks till liv och u",
+      "desc_en": "HOT WHEELS STUNT SHOW\n17/10 Kvällsföreställning fr kl. 17:30\n\nÅldersgräns: Ingen åldersgräns \n(barn mellan 0-2 år går in gratis utan biljett och får sitta i knät)\n\n----\n\nFrån världens mest sålda leksak och The Original Stunt Brand™ kommer nu den helt nya liveföreställningen Hot Wheels Stunt Show. Upplev fartfylld action och fullgasad spänning när legendariska Hot Wheels-fordon väcks till liv och u",
+      "raw": "HOT WHEELS STUNT SHOW\n17/10 Kvällsföreställning fr kl. 17:30\n\nÅldersgräns: Ingen åldersgräns \n(barn mellan 0-2 år går in gratis utan biljett och får sitta i knät)\n\n----\n\nFrån världens mest sålda leksak och The Original Stunt Brand™ kommer nu den helt nya liveföreställningen Hot Wheels Stunt Show. Upplev fartfylld action och fullgasad spänning när legendariska Hot Wheels-fordon väcks till liv och u",
+      "venue": null,
+      "start": "2026-10-17T15:30:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "c6d6db01-05e0-4f44-9bf3-9bded801b274",
+      "title_sv": "Skyview",
+      "title_en": "Skyview",
+      "desc_sv": "Skyview är en upplevelse på Avicii Arena i Stockholm.\n\nSkyview är en attraktion där besökare kan åka upp längs utsidan av Avicii Arena. Det erbjuder en utsikt över Stockholm från en av stadens mest kända byggnader.",
+      "desc_en": "Skyview is an experience at Avicii Arena in Stockholm.\n\nSkyview is an attraction that takes visitors up the exterior of Avicii Arena. It offers a view of Stockholm from one of the city's well-known buildings.",
+      "raw": "Skyview är en upplevelse på Avicii Arena i Stockholm.\n\nSkyview är en attraktion där besökare kan åka upp längs utsidan av Avicii Arena. Det erbjuder en utsikt över Stockholm från en av stadens mest kända byggnader.",
+      "venue": "Avicii Arena",
+      "start": "2027-01-03T23:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "d372648f-dd1e-4d42-8c22-989e509aa0d3",
+      "title_sv": "Skyview",
+      "title_en": "Skyview",
+      "desc_sv": "Skyview är en upplevelse på Skyview - Avicii Arena i Stockholm.\n\nDenna attraktion erbjuder en tur uppför utsidan av Avicii Arena. Det ger besökarna en utsikt över Stockholm från en unik vinkel.",
+      "desc_en": "Skyview is an experience at Skyview - Avicii Arena in Stockholm.\n\nThis attraction offers a ride up the exterior of the Avicii Arena. It provides visitors with a view of Stockholm from a unique perspective.",
+      "raw": "Skyview är en upplevelse på Skyview - Avicii Arena i Stockholm.\n\nDenna attraktion erbjuder en tur uppför utsidan av Avicii Arena. Det ger besökarna en utsikt över Stockholm från en unik vinkel.",
+      "venue": "Avicii Arena",
+      "start": "2026-10-16T22:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "609768e4-ece6-43af-8537-4bd3903047c4",
+      "title_sv": "Hot Wheels - Live in Action | 18 oktober, Matinéföreställning | Stockholm",
+      "title_en": "Hot Wheels - Live in Action | 18 oktober, Matinéföreställning | Stockholm",
+      "desc_sv": "HOT WHEELS STUNT SHOW\n18/10 Matinéföreställning fr kl. 10:30\n\nÅldersgräns: Ingen åldersgräns \n(barn mellan 0-2 år går in gratis utan biljett och får sitta i knät)\n\n----\n\nFrån världens mest sålda leksak och The Original Stunt Brand™ kommer nu den helt nya liveföreställningen Hot Wheels Stunt Show. Upplev fartfylld action och fullgasad spänning när legendariska Hot Wheels-fordon väcks till liv och u",
+      "desc_en": "HOT WHEELS STUNT SHOW\n18/10 Matinéföreställning fr kl. 10:30\n\nÅldersgräns: Ingen åldersgräns \n(barn mellan 0-2 år går in gratis utan biljett och får sitta i knät)\n\n----\n\nFrån världens mest sålda leksak och The Original Stunt Brand™ kommer nu den helt nya liveföreställningen Hot Wheels Stunt Show. Upplev fartfylld action och fullgasad spänning när legendariska Hot Wheels-fordon väcks till liv och u",
+      "raw": "HOT WHEELS STUNT SHOW\n18/10 Matinéföreställning fr kl. 10:30\n\nÅldersgräns: Ingen åldersgräns \n(barn mellan 0-2 år går in gratis utan biljett och får sitta i knät)\n\n----\n\nFrån världens mest sålda leksak och The Original Stunt Brand™ kommer nu den helt nya liveföreställningen Hot Wheels Stunt Show. Upplev fartfylld action och fullgasad spänning när legendariska Hot Wheels-fordon väcks till liv och u",
+      "venue": null,
+      "start": "2026-10-18T08:30:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "8a98cb5d-a6ae-4e3c-9f13-056e18f639ed",
+      "title_sv": "Använd Google Scholar smartare",
+      "title_en": "Använd Google Scholar smartare",
+      "desc_sv": "Lär dig utnyttja världens populäraste vetenskapliga databas på bästa sätt.",
+      "desc_en": "Lär dig utnyttja världens populäraste vetenskapliga databas på bästa sätt.",
+      "raw": "Lär dig utnyttja världens populäraste vetenskapliga databas på bästa sätt.",
+      "venue": "Zoom - no registration",
+      "start": "2026-10-09T12:15:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "1da269f6-1588-4c4b-a1e8-3f0be7b57ef1",
+      "title_sv": "Party Med Smurfarna – SMURFHITS • 7/11 • Hässleholm",
+      "title_en": "Party Med Smurfarna – SMURFHITS • 7/11 • Hässleholm",
+      "desc_sv": "Häng med på en magisk show när Smurfarna intar scenen! \n\nUnder 20 minuter leder vår smurfiga konferencier oss genom denna roliga show, skriven av den legendariska Monica Forsberg. Monica, som gett röst åt otaliga Disney-klassiker och författat mängder av smurfhits, har skapat ett manus som förenar smurfarna med en oförglömlig mix av nya som gamla smurfhits som \"Bara Smurfa Bastu\" och \"Sommarsmurfa",
+      "desc_en": "Häng med på en magisk show när Smurfarna intar scenen! \n\nUnder 20 minuter leder vår smurfiga konferencier oss genom denna roliga show, skriven av den legendariska Monica Forsberg. Monica, som gett röst åt otaliga Disney-klassiker och författat mängder av smurfhits, har skapat ett manus som förenar smurfarna med en oförglömlig mix av nya som gamla smurfhits som \"Bara Smurfa Bastu\" och \"Sommarsmurfa",
+      "raw": "Häng med på en magisk show när Smurfarna intar scenen! \n\nUnder 20 minuter leder vår smurfiga konferencier oss genom denna roliga show, skriven av den legendariska Monica Forsberg. Monica, som gett röst åt otaliga Disney-klassiker och författat mängder av smurfhits, har skapat ett manus som förenar smurfarna med en oförglömlig mix av nya som gamla smurfhits som \"Bara Smurfa Bastu\" och \"Sommarsmurfa",
+      "venue": null,
+      "start": "2026-11-07T13:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "a65ea186-338a-47eb-b08a-80d4ad41648e",
+      "title_sv": "Disney On Ice presenterar Discover the Magic",
+      "title_en": "Disney On Ice presenterar Discover the Magic",
+      "desc_sv": "Disney On Ice presenterar Discover the Magic Hela familjens stora favorit Disney On Ice kommer tillbaka till Scandinavium! Denna gång med showen Discover the Magic. Du följer väl med? Discover the Magic är en fartfylld och familjevänlig föreställning som tar er med på jakten efter Tingeling genom fantastiska världar. Följ med och utforska den färgsprakande andevärlden i Coco tillsammans med Miguel",
+      "desc_en": "Disney On Ice presenterar Discover the Magic Hela familjens stora favorit Disney On Ice kommer tillbaka till Scandinavium! Denna gång med showen Discover the Magic. Du följer väl med? Discover the Magic är en fartfylld och familjevänlig föreställning som tar er med på jakten efter Tingeling genom fantastiska världar. Följ med och utforska den färgsprakande andevärlden i Coco tillsammans med Miguel",
+      "raw": "Disney On Ice presenterar Discover the Magic Hela familjens stora favorit Disney On Ice kommer tillbaka till Scandinavium! Denna gång med showen Discover the Magic. Du följer väl med? Discover the Magic är en fartfylld och familjevänlig föreställning som tar er med på jakten efter Tingeling genom fantastiska världar. Följ med och utforska den färgsprakande andevärlden i Coco tillsammans med Miguel",
+      "venue": "Scandinavium",
+      "start": "2027-01-15T14:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "5d6895e6-b597-4243-92b3-28f0f6eecca2",
+      "title_sv": "Tydligt uttal på engelska: Några tips och övningar",
+      "title_en": "Tydligt uttal på engelska: Några tips och övningar",
+      "desc_sv": "Under denna workshop lär du dig enkla, effektiva strategier för att förbättra ditt engelska uttal.",
+      "desc_en": "Under denna workshop lär du dig enkla, effektiva strategier för att förbättra ditt engelska uttal.",
+      "raw": "Under denna workshop lär du dig enkla, effektiva strategier för att förbättra ditt engelska uttal.",
+      "venue": "Zoom – no registration",
+      "start": "2026-10-29T12:15:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "73f3a509-9d04-42b9-bcac-662d391e6435",
+      "title_sv": "Våga tala – att hantera nervositet vid muntliga presentationer",
+      "title_en": "Våga tala – att hantera nervositet vid muntliga presentationer",
+      "desc_sv": "Välkommen till detta webbinarium där du får lära dig mer om talängslan och strategier för muntliga presentationer.",
+      "desc_en": "Välkommen till detta webbinarium där du får lära dig mer om talängslan och strategier för muntliga presentationer.",
+      "raw": "Välkommen till detta webbinarium där du får lära dig mer om talängslan och strategier för muntliga presentationer.",
+      "venue": "Zoom – no registration",
+      "start": "2026-11-24T12:15:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "93047e05-2a79-4dfd-98a2-c30ed1c204a5",
+      "title_sv": "FAMILJEFEST - MAMMA MIA! THE PARTY",
+      "title_en": "FAMILJEFEST - MAMMA MIA! THE PARTY",
+      "desc_sv": "FAMILJEFEST - MAMMA MIA! THE PARTY är en familjefest på Tyrol i Stockholm.\n\nEvenemanget är en familjefest med en anpassad show, inklusive ljudvolymen, som riktar sig till barn från 8 år. Gästerna välkomnas till en grekisk taverna som serverar en medelhavsmeny, uppdaterad för yngre besökare. Festen kretsar kring ABBAs låtar. Barn från 8 år och äldre är välkomna, medan små barn och spädbarn inte kan",
+      "desc_en": "FAMILJEFEST - MAMMA MIA! THE PARTY is a family event at Tyrol in Stockholm.\n\nFAMILJEFEST - MAMMA MIA! THE PARTY is a family event featuring an adapted show, with sound volume adjusted to suit children aged 8 and older. Guests are welcomed into a Greek tavern, which serves a Mediterranean menu specifically updated for younger visitors. The celebration centers around ABBA's songs. Children aged 8 an",
+      "raw": "FAMILJEFEST - MAMMA MIA! THE PARTY är en familjefest på Tyrol i Stockholm.\n\nEvenemanget är en familjefest med en anpassad show, inklusive ljudvolymen, som riktar sig till barn från 8 år. Gästerna välkomnas till en grekisk taverna som serverar en medelhavsmeny, uppdaterad för yngre besökare. Festen kretsar kring ABBAs låtar. Barn från 8 år och äldre är välkomna, medan små barn och spädbarn inte kan",
+      "venue": "Tyrol",
+      "start": "2027-01-02T12:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "1475a9fa-a789-4370-8cd4-31b628a2aff8",
+      "title_sv": "Disney On Ice presents Discover the Magic",
+      "title_en": "Disney On Ice presents Discover the Magic",
+      "desc_sv": "Disney On Ice presenterar Discover the Magic Celebrate Disney magic at Disney On Ice presents Discover the Magic, a fast-paced, family-friendly production that follows the search for Tinker Bell through stunning worlds. Explore the colourful spirit realm of Coco with Miguel, brave the ocean with Moana, marvel at Belle's enchanted chandelier, and sing with Elsa. Watch Stitch crash the action with m",
+      "desc_en": "Disney On Ice presenterar Discover the Magic Celebrate Disney magic at Disney On Ice presents Discover the Magic, a fast-paced, family-friendly production that follows the search for Tinker Bell through stunning worlds. Explore the colourful spirit realm of Coco with Miguel, brave the ocean with Moana, marvel at Belle's enchanted chandelier, and sing with Elsa. Watch Stitch crash the action with m",
+      "raw": "Disney On Ice presenterar Discover the Magic Celebrate Disney magic at Disney On Ice presents Discover the Magic, a fast-paced, family-friendly production that follows the search for Tinker Bell through stunning worlds. Explore the colourful spirit realm of Coco with Miguel, brave the ocean with Moana, marvel at Belle's enchanted chandelier, and sing with Elsa. Watch Stitch crash the action with m",
+      "venue": "Valhallagatan 1",
+      "start": "2027-01-16T13:30:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "3bb10063-64e6-4057-ae03-517d53866860",
+      "title_sv": "Oliver & Olivia",
+      "title_en": "Oliver & Olivia",
+      "desc_sv": "Oliver & Olivia är en musikteaterupplevelse på Teaterverket Svea i Stockholm.\n\nDenna musikteaterupplevelse är för hela familjen och presenterar färgstarka och tankeväckande karaktärer. De befinner sig i en förtrollande skog och reflekterar över sin identitet, riktning i livet och var de hör hemma.",
+      "desc_en": "Oliver & Olivia is a musical theater experience at Teaterverket Svea in Stockholm.\n\nThis musical theater experience for the whole family features colorful and thought-provoking characters. They are in an enchanting forest, pondering who they are, which path to take, and where they belong.",
+      "raw": "Oliver & Olivia är en musikteaterupplevelse på Teaterverket Svea i Stockholm.\n\nDenna musikteaterupplevelse är för hela familjen och presenterar färgstarka och tankeväckande karaktärer. De befinner sig i en förtrollande skog och reflekterar över sin identitet, riktning i livet och var de hör hemma.",
+      "venue": "Teaterverket Svea",
+      "start": "2026-11-01T12:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "6ab06900-ec00-4719-bf5f-4e56eb26be8f",
+      "title_sv": "Oliver & Olivia",
+      "title_en": "Oliver & Olivia",
+      "desc_sv": "Oliver & Olivia är en musikteaterupplevelse på Teaterverket Svea i Stockholm.\n\nDenna musikteaterupplevelse är för hela familjen och presenterar färgstarka och tankeväckande karaktärer. De befinner sig i en förtrollande skog och reflekterar över sin identitet, riktning i livet och var de hör hemma.",
+      "desc_en": "Oliver & Olivia is a musical theater experience at Teaterverket Svea in Stockholm.\n\nThis musical theater experience for the whole family features colorful and thought-provoking characters. They are in an enchanting forest, pondering who they are, which path to take, and where they belong.",
+      "raw": "Oliver & Olivia är en musikteaterupplevelse på Teaterverket Svea i Stockholm.\n\nDenna musikteaterupplevelse är för hela familjen och presenterar färgstarka och tankeväckande karaktärer. De befinner sig i en förtrollande skog och reflekterar över sin identitet, riktning i livet och var de hör hemma.",
+      "venue": "Teaterverket Svea",
+      "start": "2026-11-01T10:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "f1b8f137-da0c-4798-a696-6176e5bee48a",
+      "title_sv": "Hot Wheels - Live in Action | Stockholm",
+      "title_en": "Hot Wheels - Live in Action | Stockholm",
+      "desc_sv": "HOT WHEELS STUNT SHOW\n18/10 Matinéföreställning fr kl. 10:30\n\nÅldersgräns: Ingen åldersgräns \n(barn mellan 0-2 år går in gratis utan biljett och får sitta i knät)\n\n----\n\nFrån världens mest sålda leksak och The Original Stunt Brand™ kommer nu den helt nya ",
+      "desc_en": "HOT WHEELS STUNT SHOW\n18/10 Matinéföreställning fr kl. 10:30\n\nÅldersgräns: Ingen åldersgräns \n(barn mellan 0-2 år går in gratis utan biljett och får sitta i knät)\n\n----\n\nFrån världens mest sålda leksak och The Original Stunt Brand™ kommer nu den helt nya ",
+      "raw": "HOT WHEELS STUNT SHOW\n18/10 Matinéföreställning fr kl. 10:30\n\nÅldersgräns: Ingen åldersgräns \n(barn mellan 0-2 år går in gratis utan biljett och får sitta i knät)\n\n----\n\nFrån världens mest sålda leksak och The Original Stunt Brand™ kommer nu den helt nya ",
+      "venue": null,
+      "start": "2026-10-17T22:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "49489653-7c34-492c-8227-51460bfc080f",
+      "title_sv": "FAMILJEFEST - MAMMA MIA! THE PARTY",
+      "title_en": "FAMILJEFEST - MAMMA MIA! THE PARTY",
+      "desc_sv": "FAMILJEFEST - MAMMA MIA! THE PARTY är en familjefest på Tyrol i Stockholm.\n\nDenna familjefest på Tyrol erbjuder en anpassad show, inklusive justerad ljudvolym, för att passa gäster från 8 år. Evenemanget utspelar sig i en grekisk tavernamiljö och inkluderar en medelhavsmeny som är uppdaterad för att tilltala även yngre besökare. ABBA:s låtar står i centrum för upplevelsen. Barn som är 8 år eller ä",
+      "desc_en": "FAMILJEFEST - MAMMA MIA! THE PARTY is a family party at Tyrol in Stockholm.\n\nThis family party at Tyrol presents an adapted show, including adjusted sound volume, suitable for guests aged 8 years and older. The event takes place in a Greek taverna setting and features a Mediterranean menu updated to appeal to younger visitors. ABBA's songs are central to the experience. Children aged 8 or older ar",
+      "raw": "FAMILJEFEST - MAMMA MIA! THE PARTY är en familjefest på Tyrol i Stockholm.\n\nDenna familjefest på Tyrol erbjuder en anpassad show, inklusive justerad ljudvolym, för att passa gäster från 8 år. Evenemanget utspelar sig i en grekisk tavernamiljö och inkluderar en medelhavsmeny som är uppdaterad för att tilltala även yngre besökare. ABBA:s låtar står i centrum för upplevelsen. Barn som är 8 år eller ä",
+      "venue": "Tyrol",
+      "start": "2026-10-25T13:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "36144525-8de6-442d-a5b3-dd208b2ff3d1",
+      "title_sv": "Tumba Centrum Stockholm - Kostnadsfri barn- och familjefotografering",
+      "title_en": "Tumba Centrum Stockholm - Kostnadsfri barn- och familjefotografering",
+      "desc_sv": "Barnfotograf besöker Tumba Centrum den 21/11. Fotoplatsen ligger utanför ICA. Kom på kostnadsfri fotografering utan köp krav! Beställ sedan hemma om du blev nöjd med resultatet. För alla åldrar - från nyfödda bebisar till barn, ungdomar och vuxna. Boka tid, drop-in endast i mån av tid. Tidsbokning, priser och all övrig info på vår hemsida www.studioexpress.se\n\n#barnfoto #bebisfoto #porträttfoto #s",
+      "desc_en": "Barnfotograf besöker Tumba Centrum den 21/11. Fotoplatsen ligger utanför ICA. Kom på kostnadsfri fotografering utan köp krav! Beställ sedan hemma om du blev nöjd med resultatet. För alla åldrar - från nyfödda bebisar till barn, ungdomar och vuxna. Boka tid, drop-in endast i mån av tid. Tidsbokning, priser och all övrig info på vår hemsida www.studioexpress.se\n\n#barnfoto #bebisfoto #porträttfoto #s",
+      "raw": "Barnfotograf besöker Tumba Centrum den 21/11. Fotoplatsen ligger utanför ICA. Kom på kostnadsfri fotografering utan köp krav! Beställ sedan hemma om du blev nöjd med resultatet. För alla åldrar - från nyfödda bebisar till barn, ungdomar och vuxna. Boka tid, drop-in endast i mån av tid. Tidsbokning, priser och all övrig info på vår hemsida www.studioexpress.se\n\n#barnfoto #bebisfoto #porträttfoto #s",
+      "venue": null,
+      "start": "2026-11-21T09:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "fc551ecf-7b9f-467d-a2b5-d2cee356943f",
+      "title_sv": "Dolly Style familjeshowen",
+      "title_en": "Dolly Style familjeshowen",
+      "desc_sv": "Sweden's most colorful pop group presents an energetic family show filled with hits, dancing, glitter and joy during the Christmas holiday period.",
+      "desc_en": "Sweden's most colorful pop group presents an energetic family show filled with hits, dancing, glitter and joy during the Christmas holiday period.",
+      "raw": "Sweden's most colorful pop group presents an energetic family show filled with hits, dancing, glitter and joy during the Christmas holiday period.",
+      "venue": "Rival",
+      "start": "2026-12-28T14:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "7dcbc625-a42f-4b00-b6c0-4a9ca1dc12f0",
+      "title_sv": "När Findus var liten och försvann (från 3 år) Vardag",
+      "title_en": "När Findus var liten och försvann (från 3 år) Vardag",
+      "desc_sv": "När Findus var liten och försvann är en föreställning på Teaterverket Svea i Stockholm.\n\nFöreställningen skildrar hur Pettsons vardag får färg när Findus flyttar in. Livet får plötsligt en mening och varje dag blir ett äventyr. Det är en spännande berättelse om kärlek, nyfikenhet och tålamod som är tänkt att värma både stora och små besökare. Pettson skapar ett särskilt lugn och ger Findus gott om",
+      "desc_en": "När Findus var liten och försvann is a performance at Teaterverket Svea in Stockholm.\n\nThe performance depicts how Pettson's daily life gains color when Findus moves in. Life suddenly acquires meaning, and every day becomes an adventure. This exciting story focuses on love, curiosity, and patience, intended to warm both adults and children. Pettson creates a special calm, allowing Findus ample tim",
+      "raw": "När Findus var liten och försvann är en föreställning på Teaterverket Svea i Stockholm.\n\nFöreställningen skildrar hur Pettsons vardag får färg när Findus flyttar in. Livet får plötsligt en mening och varje dag blir ett äventyr. Det är en spännande berättelse om kärlek, nyfikenhet och tålamod som är tänkt att värma både stora och små besökare. Pettson skapar ett särskilt lugn och ger Findus gott om",
+      "venue": "Teaterverket Svea",
+      "start": "2026-10-20T08:30:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "a0e45fe2-2b31-4abc-9f4a-15410cd9d119",
+      "title_sv": "Höstlov – Vågar ni möta havets spöken? ",
+      "title_en": "Höstlov – Vågar ni möta havets spöken? ",
+      "desc_sv": "Höstlov på Sjöhistoriska – Vågar ni möta havets spöken? 👻\n\nDen 24 oktober – 1 november fylls Sjöhistoriska av sjöspöken, gastar och mystiska berättelser från havet. Följ med på en lagom ryslig familjevisning med gamla sägner och sjömansskrock, lyssna till spöklika sagor och ge er ut på en kuslig tipspromenad genom museet. Håll ögonen öppna – kanske gömmer sig något bland fartyg och föremål…\n\nHöst",
+      "desc_en": "Höstlov på Sjöhistoriska – Vågar ni möta havets spöken? 👻\n\nDen 24 oktober – 1 november fylls Sjöhistoriska av sjöspöken, gastar och mystiska berättelser från havet. Följ med på en lagom ryslig familjevisning med gamla sägner och sjömansskrock, lyssna till spöklika sagor och ge er ut på en kuslig tipspromenad genom museet. Håll ögonen öppna – kanske gömmer sig något bland fartyg och föremål…\n\nHöst",
+      "raw": "Höstlov på Sjöhistoriska – Vågar ni möta havets spöken? 👻\n\nDen 24 oktober – 1 november fylls Sjöhistoriska av sjöspöken, gastar och mystiska berättelser från havet. Följ med på en lagom ryslig familjevisning med gamla sägner och sjömansskrock, lyssna till spöklika sagor och ge er ut på en kuslig tipspromenad genom museet. Håll ögonen öppna – kanske gömmer sig något bland fartyg och föremål…\n\nHöst",
+      "venue": "Sjöhistoriska museet",
+      "start": "2026-10-24T08:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "6a05696f-0e01-4bb8-b10f-a4e12700e5c1",
+      "title_sv": "Familjelördag: Alea iacta est",
+      "title_en": "Familjelördag: Alea iacta est",
+      "desc_sv": "Familjelördag: Alea iacta est är en improviserad clownföreställning på Kulturhuset Dieselverkstaden i Nacka.\n\nClownen Sven står på scen med tio tärningar, vars 60 symboler hämtade från världsdramatiken avgör hans öde. Detta skapar över 700 biljoner möjliga berättelser, vilket innebär att ingen föreställning blir den andra lik. Vad som kommer att hända är lika okänt för clownen Sven som för publike",
+      "desc_en": "Familjelördag: Alea iacta est is an improvised clown performance at Kulturhuset Dieselverkstaden in Nacka.\n\nClown Sven takes the stage with ten dice, whose 60 symbols drawn from world drama determine his fate. This setup allows for over 700 trillion possible stories, meaning no two performances will be alike. What will happen is as unknown to Clown Sven as it is to the audience. The performance is",
+      "raw": "Familjelördag: Alea iacta est är en improviserad clownföreställning på Kulturhuset Dieselverkstaden i Nacka.\n\nClownen Sven står på scen med tio tärningar, vars 60 symboler hämtade från världsdramatiken avgör hans öde. Detta skapar över 700 biljoner möjliga berättelser, vilket innebär att ingen föreställning blir den andra lik. Vad som kommer att hända är lika okänt för clownen Sven som för publike",
+      "venue": "Kulturhuset Dieselverkstaden",
+      "start": "2026-11-07T12:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "b4d479b3-884f-4fd6-a6df-75be4ed16156",
+      "title_sv": "Tobbe Trollkarl \"30 år i barnens tjänst!\"",
+      "title_en": "Tobbe Trollkarl \"30 år i barnens tjänst!\"",
+      "venue": "Maximteatern",
+      "start": "2026-10-25T00:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "3aaf6805-e692-43c9-8b7e-b829a179a1c8",
+      "title_sv": "FRÖKEN JULIE & KRISTIN",
+      "title_en": "FRÖKEN JULIE & KRISTIN",
+      "desc_sv": "[Teater]  I samarbete med Tage Granit ",
+      "desc_en": "[Teater]  I samarbete med Tage Granit ",
+      "raw": "[Teater]  I samarbete med Tage Granit ",
+      "venue": "Strindbergs Intima Teater",
+      "start": "2026-10-17T00:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "ff266862-906a-4fa6-8e7b-43e9e769b345",
+      "title_sv": "Hansson de Wolfe United",
+      "title_en": "Hansson de Wolfe United",
+      "desc_sv": "Major Swedish band returns autumn 2026 with over quarter million sold studio albums and classic hits including 'Var kommer barnen in'.",
+      "desc_en": "Major Swedish band returns autumn 2026 with over quarter million sold studio albums and classic hits including 'Var kommer barnen in'.",
+      "raw": "Major Swedish band returns autumn 2026 with over quarter million sold studio albums and classic hits including 'Var kommer barnen in'.",
+      "venue": "Rival",
+      "start": "2026-11-17T19:30:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "205cae30-e00d-423b-9cc4-40a7dd644d21",
+      "title_sv": "Emil i Lönneberga",
+      "title_en": "Emil i Lönneberga",
+      "desc_sv": "Familjemusikalen \"Emil i Lönneberga\" spelas på Intiman i Stockholm.\n\nDenna familjemusikal bygger på Astrid Lindgrens berättelser om Emil i Lönneberga. Den fylls med hyss, skratt och musik, anpassad för en ung publik.",
+      "desc_en": "The family musical \"Emil i Lönneberga\" is performed at Intiman in Stockholm.\n\nThis family musical is based on Astrid Lindgren's stories about Emil i Lönneberga. It is filled with mischief, laughter, and music, suitable for a young audience.",
+      "raw": "Familjemusikalen \"Emil i Lönneberga\" spelas på Intiman i Stockholm.\n\nDenna familjemusikal bygger på Astrid Lindgrens berättelser om Emil i Lönneberga. Den fylls med hyss, skratt och musik, anpassad för en ung publik.",
+      "venue": "Intiman",
+      "start": "2026-12-13T10:30:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "9b211c66-7b93-4617-ac85-2c62c85a149d",
+      "title_sv": "Barnens Julvärld med Nassim Al Fakir",
+      "title_en": "Barnens Julvärld med Nassim Al Fakir",
+      "desc_sv": "Efter förra årets publiksuccé är det nu klart att Nassim Al Fakir återvänder med den hyllade familjeföreställningen Barnens Julvärld. Den 20 december kommer Barnens Julvärld till Kulturhuset, fylld av musik, humor, julstämning och roliga upptåg för barn mellan 3 och 10 år och deras vuxna.\n\nBiljetter: https://kulturhusetstadsteatern.se/barn-ung/barnens-julvarld\n\nI Barnens Julvärld bjuder Nassim Al ",
+      "desc_en": "Efter förra årets publiksuccé är det nu klart att Nassim Al Fakir återvänder med den hyllade familjeföreställningen Barnens Julvärld. Den 20 december kommer Barnens Julvärld till Kulturhuset, fylld av musik, humor, julstämning och roliga upptåg för barn mellan 3 och 10 år och deras vuxna.\n\nBiljetter: https://kulturhusetstadsteatern.se/barn-ung/barnens-julvarld\n\nI Barnens Julvärld bjuder Nassim Al ",
+      "raw": "Efter förra årets publiksuccé är det nu klart att Nassim Al Fakir återvänder med den hyllade familjeföreställningen Barnens Julvärld. Den 20 december kommer Barnens Julvärld till Kulturhuset, fylld av musik, humor, julstämning och roliga upptåg för barn mellan 3 och 10 år och deras vuxna.\n\nBiljetter: https://kulturhusetstadsteatern.se/barn-ung/barnens-julvarld\n\nI Barnens Julvärld bjuder Nassim Al ",
+      "venue": "Kulturhuset Stadsteatern",
+      "start": "2026-12-20T12:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "e68e6d51-7e6a-4d90-a4ef-956b33f07716",
+      "title_sv": "MAMMA MIA! THE PARTY",
+      "title_en": "MAMMA MIA! THE PARTY",
+      "desc_sv": "Mamma Mia! The Party är en fest på Tyrol i Stockholm.\n\nSedan världspremiären i Stockholm har Mamma Mia! The Party dragit fulla tavernor i både London och Göteborg. Besökare kliver in genom dörrarna och förflyttas till Nikos taverna på den grekiska paradisön Skopelos. Kvällen inkluderar en välkomstouzo, en fyrarätters medelhavsmeny, sång, dans, våghalsiga luftfärder och dansanta servitörer. ABBAs l",
+      "desc_en": "Mamma Mia! The Party is a celebration at Tyrol in Stockholm.\n\nSince its world premiere in Stockholm, Mamma Mia! The Party has filled tavernas in London and Gothenburg. Guests step through the doors and are magically taken to Nikos taverna on the Greek island of Skopelos. The evening includes a welcome ouzo, a four-course Mediterranean menu, singing, dancing, daring aerial acrobatics, and dancing w",
+      "raw": "Mamma Mia! The Party är en fest på Tyrol i Stockholm.\n\nSedan världspremiären i Stockholm har Mamma Mia! The Party dragit fulla tavernor i både London och Göteborg. Besökare kliver in genom dörrarna och förflyttas till Nikos taverna på den grekiska paradisön Skopelos. Kvällen inkluderar en välkomstouzo, en fyrarätters medelhavsmeny, sång, dans, våghalsiga luftfärder och dansanta servitörer. ABBAs l",
+      "venue": "Tyrol",
+      "start": "2027-01-23T18:30:00+00:00",
+      "has_img": true
+    }
+  ]
+}

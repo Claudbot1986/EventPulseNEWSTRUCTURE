@@ -1,0 +1,749 @@
+{
+  "category_slug": "wine-tasting",
+  "events": 59,
+  "library_count": 0,
+  "approx_images_needed": 1,
+  "top_words": [
+    [
+      "viner",
+      79
+    ],
+    [
+      "franska",
+      72
+    ],
+    [
+      "2026",
+      62
+    ],
+    [
+      "wine",
+      57
+    ],
+    [
+      "tasting",
+      50
+    ],
+    [
+      "vinprovning",
+      40
+    ],
+    [
+      "dig",
+      40
+    ],
+    [
+      "ostar",
+      36
+    ],
+    [
+      "vin",
+      33
+    ],
+    [
+      "akkurat",
+      32
+    ],
+    [
+      "vinprovningar",
+      30
+    ],
+    [
+      "folii",
+      30
+    ],
+    [
+      "genom",
+      28
+    ],
+    [
+      "finns",
+      28
+    ],
+    [
+      "vindagen",
+      28
+    ],
+    [
+      "wines",
+      27
+    ],
+    [
+      "event",
+      27
+    ],
+    [
+      "gin",
+      27
+    ],
+    [
+      "bistrot",
+      24
+    ],
+    [
+      "wasahof",
+      24
+    ],
+    [
+      "ett",
+      23
+    ],
+    [
+      "2027",
+      22
+    ],
+    [
+      "mischa",
+      22
+    ],
+    [
+      "with",
+      21
+    ],
+    [
+      "prova",
+      21
+    ],
+    [
+      "besökare",
+      20
+    ],
+    [
+      "plats",
+      20
+    ],
+    [
+      "restaurang",
+      20
+    ],
+    [
+      "laddar",
+      18
+    ],
+    [
+      "vinbaren",
+      18
+    ]
+  ],
+  "sample_events": [
+    {
+      "title": "7 oktober: Glasprovning Riedel",
+      "venue": "왕의 정원"
+    },
+    {
+      "title": "Västerås Öl &#038; Destillat 2027",
+      "venue": "Västerås Kongress"
+    },
+    {
+      "title": "Sthlm Food &#038; Wine 2026",
+      "venue": "Stockholmsmässan"
+    },
+    {
+      "title": "Bordeaux; rött, vitt och sött",
+      "venue": "Wasahof"
+    },
+    {
+      "title": "Bourgogne - fina vita eleganta röda",
+      "venue": "Wasahof"
+    }
+  ],
+  "full_corpus": [
+    {
+      "id": "8dd71f02-b657-44a1-a2ff-a0d12610b09f",
+      "title_sv": "7 oktober: Glasprovning Riedel",
+      "title_en": "7 oktober: Glasprovning Riedel",
+      "desc_sv": "Glasprovning Riedel är en glasprovning med experten Lydia Sandström på Tryffelsvinets Klubblokal i Stockholm.\n\nGlasexperten Lydia Sandström guidar besökare genom vikten av att välja rätt glas till rätt vin. Hon presenterar fyra kupor från Riedels exklusiva Veloche-serie, designade för att framhäva olika viners egenskaper. Till detta öppnas fyra välsmakande viner. Familjen Riedel har över 260 års e",
+      "desc_en": "Riedel Glass Tasting is a glass tasting with expert Lydia Sandström at Tryffelsvinets Klubblokal in Stockholm.\n\nGlass expert Lydia Sandström guides attendees through the importance of selecting the right glass for each wine. She presents four different Riedel Veloche series bowls, each designed to highlight specific wine characteristics. Four flavorful wines are opened to accompany these glasses. ",
+      "raw": "Glasprovning Riedel är en glasprovning med experten Lydia Sandström på Tryffelsvinets Klubblokal i Stockholm.\n\nGlasexperten Lydia Sandström guidar besökare genom vikten av att välja rätt glas till rätt vin. Hon presenterar fyra kupor från Riedels exklusiva Veloche-serie, designade för att framhäva olika viners egenskaper. Till detta öppnas fyra välsmakande viner. Familjen Riedel har över 260 års e",
+      "venue": "왕의 정원",
+      "start": "2026-10-07T15:30:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "d1d78796-432d-49a6-bb7d-ba64b20f3a61",
+      "title_sv": "Västerås Öl &#038; Destillat 2027",
+      "title_en": "Västerås Öl &#038; Destillat 2027",
+      "venue": "Västerås Kongress",
+      "start": "2027-02-12T00:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "dc312a12-3525-4a1b-bdc0-85dfa512cc65",
+      "title_sv": "Sthlm Food &#038; Wine 2026",
+      "title_en": "Sthlm Food &#038; Wine 2026",
+      "venue": "Stockholmsmässan",
+      "start": "2026-11-06T01:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "c76473ce-4111-44a1-a4ed-75084ac1e3ba",
+      "title_sv": "Bordeaux; rött, vitt och sött",
+      "title_en": "Bordeaux; rött, vitt och sött",
+      "desc_sv": "Bordeaux; rött, vitt och sött är en vinprovning på Le Bistrot de Wasahof i Stockholm.\n\nDenna vinprovning bekantar deltagarna med viner enligt ett valt tema, lett av en kunnig vinprovare. Det finns möjlighet att lägga till en ostbricka med franska ostar.",
+      "desc_en": "Bordeaux; red, white and sweet is a wine tasting at Le Bistrot de Wasahof in Stockholm.\n\nThis wine tasting introduces participants to wines based on a chosen theme, led by an experienced wine expert. There is an option to add a cheese board with French cheeses.",
+      "raw": "Bordeaux; rött, vitt och sött är en vinprovning på Le Bistrot de Wasahof i Stockholm.\n\nDenna vinprovning bekantar deltagarna med viner enligt ett valt tema, lett av en kunnig vinprovare. Det finns möjlighet att lägga till en ostbricka med franska ostar.",
+      "venue": "Wasahof",
+      "start": "2026-12-10T16:30:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "161a1b68-418e-4db8-8151-e46cfaaf3aaa",
+      "title_sv": "Bourgogne - fina vita eleganta röda",
+      "title_en": "Bourgogne - fina vita eleganta röda",
+      "desc_sv": "Bourgogne - fina vita eleganta röda är en vinprovning på Le Bistrot de Wasahof i Stockholm.\n\nUnder ledning av en kunnig vinprovare bekantar sig besökare med viner enligt det valda temat. Det finns också möjlighet att välja till en ostbricka med franska ostar.",
+      "desc_en": "Bourgogne - fina vita eleganta röda is a wine tasting at Le Bistrot de Wasahof in Stockholm.\n\nUnder the guidance of an experienced wine connoisseur, visitors will explore wines according to the chosen theme. There is also an option to enjoy a cheese platter with French cheeses.",
+      "raw": "Bourgogne - fina vita eleganta röda är en vinprovning på Le Bistrot de Wasahof i Stockholm.\n\nUnder ledning av en kunnig vinprovare bekantar sig besökare med viner enligt det valda temat. Det finns också möjlighet att välja till en ostbricka med franska ostar.",
+      "venue": "Wasahof",
+      "start": "2026-12-04T16:30:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "44909bb0-d520-4a93-9efa-bf0e64cdc3fa",
+      "title_sv": "Så blir höstens vinprovningar på Folii",
+      "title_en": "Så blir höstens vinprovningar på Folii",
+      "desc_sv": "Nu laddar vinbaren Folii upp för en höst fylld av vinprovningar.",
+      "desc_en": "Nu laddar vinbaren Folii upp för en höst fylld av vinprovningar.",
+      "raw": "Nu laddar vinbaren Folii upp för en höst fylld av vinprovningar.",
+      "venue": "Folii",
+      "start": "2026-10-09T22:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "7d88e1bc-4930-4e15-9dfd-a712475f5c87",
+      "title_sv": "Franska viner & franska ostar",
+      "title_en": "Franska viner & franska ostar",
+      "desc_sv": "Franska viner & franska ostar är en vinprovning på Le Bistrot de Wasahof i Stockholm.\n\nEn kunnig vinprovare guidar genom viner baserade på ett valt tema. Gäster kan välja att komplettera provningen med en ostbricka med franska ostar.",
+      "desc_en": "Franska viner & franska ostar is a wine tasting at Le Bistrot de Wasahof in Stockholm.\n\nA knowledgeable wine expert guides guests through wines based on a chosen theme. Guests can choose to complement the tasting with a cheese board featuring French cheeses.",
+      "raw": "Franska viner & franska ostar är en vinprovning på Le Bistrot de Wasahof i Stockholm.\n\nEn kunnig vinprovare guidar genom viner baserade på ett valt tema. Gäster kan välja att komplettera provningen med en ostbricka med franska ostar.",
+      "venue": "Wasahof",
+      "start": "2026-11-27T16:30:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "0aab4724-1c11-445c-808f-de9aefdda995",
+      "title_sv": "Italienska vindagen 2026",
+      "title_en": "Italienska vindagen 2026",
+      "desc_sv": "Italienska vindagen 2026 är en vinprovning på Grand Hotel i Stockholm.\n\nVälkommen till dagen då viner från många av Italiens hörn kan provas. Svenska vinimportörer och producenter finns på plats och hjälper besökare att hitta favoritviner. Det finns också möjlighet att få tips för en semester i Italien med fokus på vin och gastronomi. Besökare kan även provsmaka italienska ostar, charkuterier och ",
+      "desc_en": "Italian Wine Day 2026 is a wine tasting event at Grand Hotel in Stockholm.\n\nWelcome to the day when wines from many corners of Italy can be sampled. Swedish wine importers and producers are on site, helping visitors discover their favorite wines. There is also an opportunity to get tips for a holiday in Italy focusing on wine and gastronomy. Visitors can also taste Italian cheeses, cured meats, an",
+      "raw": "Italienska vindagen 2026 är en vinprovning på Grand Hotel i Stockholm.\n\nVälkommen till dagen då viner från många av Italiens hörn kan provas. Svenska vinimportörer och producenter finns på plats och hjälper besökare att hitta favoritviner. Det finns också möjlighet att få tips för en semester i Italien med fokus på vin och gastronomi. Besökare kan även provsmaka italienska ostar, charkuterier och ",
+      "venue": "Grand Hotel",
+      "start": "2026-11-21T11:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "3dc01497-fc54-493e-ba72-71d9427053bc",
+      "title_sv": "FRANSKA VINDAGEN 2026",
+      "title_en": "FRANSKA VINDAGEN 2026",
+      "desc_sv": "Den 14 november är det efterlängtad nypremiär för dagen som firar franska viner och smaker. Vi hälsar dig varmt välkommen att prova, jämföra och upptäcka viner från några av Frankrikes främsta vinregioner! Svenska vinimportörer finns på plats för att guida dig genom provningarna och hjälpa dig att hitta nya favoriter. Utöver vinerna kan du även njuta av franska ostar, charkuterier och många andra ",
+      "desc_en": "Den 14 november är det efterlängtad nypremiär för dagen som firar franska viner och smaker. Vi hälsar dig varmt välkommen att prova, jämföra och upptäcka viner från några av Frankrikes främsta vinregioner! Svenska vinimportörer finns på plats för att guida dig genom provningarna och hjälpa dig att hitta nya favoriter. Utöver vinerna kan du även njuta av franska ostar, charkuterier och många andra ",
+      "raw": "Den 14 november är det efterlängtad nypremiär för dagen som firar franska viner och smaker. Vi hälsar dig varmt välkommen att prova, jämföra och upptäcka viner från några av Frankrikes främsta vinregioner! Svenska vinimportörer finns på plats för att guida dig genom provningarna och hjälpa dig att hitta nya favoriter. Utöver vinerna kan du även njuta av franska ostar, charkuterier och många andra ",
+      "venue": "FRANSKA VINDAGEN 2026",
+      "start": "2026-11-14T11:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "7a73180c-1bd7-42ff-b8a8-a4f8523c1575",
+      "title_sv": "Italienska vindagen 2026",
+      "title_en": "Italienska vindagen 2026",
+      "desc_sv": "Saturday, 21 November 2026, 11:00",
+      "desc_en": "Saturday, 21 November 2026, 11:00",
+      "raw": "Saturday, 21 November 2026, 11:00",
+      "venue": "Grand Hotel",
+      "start": "2026-11-21T11:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "e25f22ae-d88b-4b7b-89cd-82e31ec0b2bf",
+      "title_sv": "Så blir höstens vinprovningar på Folii",
+      "title_en": "Så blir höstens vinprovningar på Folii",
+      "desc_sv": "Nu laddar vinbaren Folii upp för en höst fylld av vinprovningar.",
+      "desc_en": "Nu laddar vinbaren Folii upp för en höst fylld av vinprovningar.",
+      "raw": "Nu laddar vinbaren Folii upp för en höst fylld av vinprovningar.",
+      "venue": "Folii",
+      "start": "2026-11-14T22:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "fb37d8f3-df7e-4fec-aa4e-d9fa51c3ed0b",
+      "title_sv": "Berömda viner från Spanien",
+      "title_en": "Berömda viner från Spanien",
+      "desc_sv": "Berömda viner från Spanien är en vinprovning på Le Bistrot de Wasahof i Stockholm.\n\nDenna vinprovning bekantar deltagarna med viner från Spanien, med vägledning av en kunnig vinprovare. En ostbricka med franska ostar kan väljas till i samband med provningen.",
+      "desc_en": "Famous Wines from Spain is a wine tasting at Le Bistrot de Wasahof in Stockholm.\n\nThis wine tasting introduces participants to wines from Spain, guided by a knowledgeable wine expert. A cheese platter with French cheeses can be added during the tasting.",
+      "raw": "Berömda viner från Spanien är en vinprovning på Le Bistrot de Wasahof i Stockholm.\n\nDenna vinprovning bekantar deltagarna med viner från Spanien, med vägledning av en kunnig vinprovare. En ostbricka med franska ostar kan väljas till i samband med provningen.",
+      "venue": "Wasahof",
+      "start": "2026-11-12T16:30:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "7859fcd7-5bc7-4a90-b73a-f97693dac2e6",
+      "title_sv": "Borlänge Öl &amp; Whiskymässa 2026",
+      "title_en": "Borlänge Öl &amp; Whiskymässa 2026",
+      "venue": "왕의 정원",
+      "start": "2026-11-13T00:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "f858d7e3-42be-4cf9-b6de-35dafe5f0e60",
+      "title_sv": "Så blir höstens vinprovningar på Folii",
+      "title_en": "Så blir höstens vinprovningar på Folii",
+      "desc_sv": "Nu laddar vinbaren Folii upp för en höst fylld av vinprovningar.",
+      "desc_en": "Nu laddar vinbaren Folii upp för en höst fylld av vinprovningar.",
+      "raw": "Nu laddar vinbaren Folii upp för en höst fylld av vinprovningar.",
+      "venue": "Folii",
+      "start": "2026-10-30T22:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "e2fb90ff-c0a0-4a6f-acb0-23e1f052aa8f",
+      "title_sv": "Tema Chablis",
+      "title_en": "Tema Chablis",
+      "desc_sv": "Tema Chablis är en vinprovning på Le Bistrot de Wasahof i Stockholm.\n\nTillsammans med en kunnig vinprovare får besökare bekanta sig med viner enligt det valda temat. I samband med provningen kan man välja att njuta av en ostbricka med franska ostar.",
+      "desc_en": "Tema Chablis is a wine tasting event at Le Bistrot de Wasahof in Stockholm.\n\nTogether with an experienced wine connoisseur, visitors will get acquainted with wines according to the chosen theme. In conjunction with the tasting, an optional cheese platter with French cheeses is available.",
+      "raw": "Tema Chablis är en vinprovning på Le Bistrot de Wasahof i Stockholm.\n\nTillsammans med en kunnig vinprovare får besökare bekanta sig med viner enligt det valda temat. I samband med provningen kan man välja att njuta av en ostbricka med franska ostar.",
+      "venue": "Wasahof",
+      "start": "2026-11-06T16:30:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "999f5bf1-6ccc-49af-97a5-fbedd2fdebeb",
+      "title_sv": "\"Smaka på\" gin",
+      "title_en": "\"Smaka på\" gin",
+      "desc_sv": "Smaka på gin är en ginprovning på Dövas Hus i Bromma.\n\nEvenemanget bjuder in till AW på Dövas Hus, där du kan prova gin med Henrik Sundqvist. Det är uppdelat i två grupper.",
+      "desc_en": "Smaka på gin is a gin tasting at Dövas Hus in Bromma.\n\nThe event invites you to an after-work at Dövas Hus, where you can taste gin with Henrik Sundqvist. It is divided into two groups.",
+      "raw": "Smaka på gin är en ginprovning på Dövas Hus i Bromma.\n\nEvenemanget bjuder in till AW på Dövas Hus, där du kan prova gin med Henrik Sundqvist. Det är uppdelat i två grupper.",
+      "venue": "왕의 정원",
+      "start": "2026-11-06T16:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "e1dab04e-ba0f-4ecc-bcf0-53370470d769",
+      "title_sv": "Vin i Linköping 2026",
+      "title_en": "Vin i Linköping 2026",
+      "venue": "왕의 정원",
+      "start": "2026-10-09T00:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "e2f6b6b2-d2ea-4e74-b505-10d89f965abb",
+      "title_sv": "Calvadosprovning: Château du Breuil",
+      "title_en": "Calvadosprovning: Château du Breuil",
+      "desc_sv": "Calvadosprovning: Château du Breuil är en calvadosprovning på Akkurat Bar & Restaurang i Stockholm.\n\nSébastien CADY, Export and Brand Director från Château du Breuil, presenterar en calvadosprovning. Château du Breuil är beläget i Pays d’Auge i Calvados, Normandie, Frankrike, med ett slottsbyggnad och ett destilleri samt 22 000 äppelträd. Calvados föds genom att äppelcider destilleras till äppelsp",
+      "desc_en": "Calvados Tasting: Château du Breuil is a calvados tasting at Akkurat Bar & Restaurang in Stockholm.\n\nSébastien CADY, Export and Brand Director from Château du Breuil, presents a calvados tasting. Château du Breuil is located in Pays d’Auge in Calvados, Normandie, France, featuring a castle building and a distillery, alongside 22,000 apple trees. Calvados is created by distilling apple cider into a",
+      "raw": "Calvadosprovning: Château du Breuil är en calvadosprovning på Akkurat Bar & Restaurang i Stockholm.\n\nSébastien CADY, Export and Brand Director från Château du Breuil, presenterar en calvadosprovning. Château du Breuil är beläget i Pays d’Auge i Calvados, Normandie, Frankrike, med ett slottsbyggnad och ett destilleri samt 22 000 äppelträd. Calvados föds genom att äppelcider destilleras till äppelsp",
+      "venue": "왕의 정원",
+      "start": "2026-10-27T17:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "635fb4e2-1e93-46c5-b1b6-5e78d176066c",
+      "title_sv": "Nolia Beer &#038; Taste Umeå 2026",
+      "title_en": "Nolia Beer &#038; Taste Umeå 2026",
+      "venue": "왕의 정원",
+      "start": "2026-10-23T00:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "6c44dae0-9e3d-43c1-a7c7-c4a2fd9132e5",
+      "title_sv": "Stockholm Beer &amp; Whisky Festival 2026",
+      "title_en": "Stockholm Beer &amp; Whisky Festival 2026",
+      "venue": "Nacka",
+      "start": "2026-10-23T00:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "7ee75ccd-3583-4c69-9b86-8523665a6cc1",
+      "title_sv": "Ölklubbsmöte 21:a oktober kl. 18.00",
+      "title_en": "Ölklubbsmöte 21:a oktober kl. 18.00",
+      "desc_sv": "Ölklubbsmöte is a beer club meeting at Akkurat - Restaurang Södermalm in Stockholm.\n\nDenna händelse är ett möte för ölklubben. Den äger rum på Akkurat, en restaurang på Södermalm i Stockholm.",
+      "desc_en": "Ölklubbsmöte is a beer club meeting at Akkurat - Restaurang Södermalm in Stockholm.\n\nThis event is a meeting for the beer club. It takes place at Akkurat, a restaurant located in Södermalm, Stockholm.",
+      "raw": "Ölklubbsmöte is a beer club meeting at Akkurat - Restaurang Södermalm in Stockholm.\n\nDenna händelse är ett möte för ölklubben. Den äger rum på Akkurat, en restaurang på Södermalm i Stockholm.",
+      "venue": "왕의 정원",
+      "start": "2026-10-21T16:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "ab6ef306-7cff-4ff5-9d64-b6e744fe4241",
+      "title_sv": "Vin & Mat med Mischa Billing",
+      "title_en": "Vin & Mat med Mischa Billing",
+      "desc_sv": "Vin & Mat med Mischa Billing är en mat- och vinupplevelse på Origo i Solna.\n\nMischa Billing, sommelier och lektor i måltidskunskap och känd från TV, gästar Origo. Hon är en av Sveriges mest kända sommelierer och expert på att kombinera mat och dryck. Kvällen inkluderar en provning av fyra utvalda viner, framtagna av Mischa och köksmästare Christian. Efter provningen serveras en trerättersmiddag me",
+      "desc_en": "Vin & Mat med Mischa Billing is a food and wine experience at Origo in Solna.\n\nSommelier and meal science lecturer Mischa Billing, known from TV, visits Origo. She is one of Sweden's most famous sommeliers and an expert in combining food and drink. The evening includes a tasting of four selected wines, developed by Mischa and head chef Christian. Following the tasting, a three-course dinner featur",
+      "raw": "Vin & Mat med Mischa Billing är en mat- och vinupplevelse på Origo i Solna.\n\nMischa Billing, sommelier och lektor i måltidskunskap och känd från TV, gästar Origo. Hon är en av Sveriges mest kända sommelierer och expert på att kombinera mat och dryck. Kvällen inkluderar en provning av fyra utvalda viner, framtagna av Mischa och köksmästare Christian. Efter provningen serveras en trerättersmiddag me",
+      "venue": "왕의 정원",
+      "start": "2026-11-21T17:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "b752d056-b33a-4469-ac47-b8eabc8aa19c",
+      "title_sv": "\"Smaka på\" gin - Grupp 1",
+      "title_en": "\"Smaka på\" gin - Grupp 1",
+      "desc_sv": "Smaka på gin med Henrik Sundqvist är en ginprovning på Dövas Hus i Bromma.\n\nDenna ginprovning leds av Henrik Sundqvist och är den första av två grupper under kvällen. Det är ett tillfälle att prova gin med en expertguide.",
+      "desc_en": "Smaka på gin med Henrik Sundqvist is a gin tasting event at Dövas Hus in Bromma.\n\nThis gin tasting is led by Henrik Sundqvist and is the first of two groups during the evening. It provides an opportunity to sample gin with an expert guide.",
+      "raw": "Smaka på gin med Henrik Sundqvist är en ginprovning på Dövas Hus i Bromma.\n\nDenna ginprovning leds av Henrik Sundqvist och är den första av två grupper under kvällen. Det är ett tillfälle att prova gin med en expertguide.",
+      "venue": "왕의 정원",
+      "start": "2026-11-06T17:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "c412bd5f-25b9-4840-9aa5-6b8fdc36b44b",
+      "title_sv": "Så blir höstens vinprovningar på Folii",
+      "title_en": "Så blir höstens vinprovningar på Folii",
+      "desc_sv": "Nu laddar vinbaren Folii upp för en höst fylld av vinprovningar.",
+      "desc_en": "Nu laddar vinbaren Folii upp för en höst fylld av vinprovningar.",
+      "raw": "Nu laddar vinbaren Folii upp för en höst fylld av vinprovningar.",
+      "venue": "Folii",
+      "start": "2026-11-27T22:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "5f474037-0d5e-41f4-9eb5-8069045c21cf",
+      "title_sv": "Växjö Ölfestival KÖK11 2027",
+      "title_en": "Växjö Ölfestival KÖK11 2027",
+      "venue": "왕의 정원",
+      "start": "2027-04-10T11:15:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "c4f606d7-2f11-483b-970e-0cd2b5e1c15d",
+      "title_sv": "FRANSKA VINDAGEN 2026",
+      "title_en": "FRANSKA VINDAGEN 2026",
+      "desc_sv": "Den 14 november är det efterlängtad nypremiär för dagen som firar franska viner och smaker. Vi hälsar dig varmt välkommen att prova, jämföra och upptäcka viner från några av Frankrikes främsta vinregioner! Svenska vinimportörer finns på plats för att guida dig genom provningarna och hjälpa dig att hitta nya favoriter. Utöver vinerna kan du även njuta av franska ostar, charkuterier och många andra ",
+      "desc_en": "Den 14 november är det efterlängtad nypremiär för dagen som firar franska viner och smaker. Vi hälsar dig varmt välkommen att prova, jämföra och upptäcka viner från några av Frankrikes främsta vinregioner! Svenska vinimportörer finns på plats för att guida dig genom provningarna och hjälpa dig att hitta nya favoriter. Utöver vinerna kan du även njuta av franska ostar, charkuterier och många andra ",
+      "raw": "Den 14 november är det efterlängtad nypremiär för dagen som firar franska viner och smaker. Vi hälsar dig varmt välkommen att prova, jämföra och upptäcka viner från några av Frankrikes främsta vinregioner! Svenska vinimportörer finns på plats för att guida dig genom provningarna och hjälpa dig att hitta nya favoriter. Utöver vinerna kan du även njuta av franska ostar, charkuterier och många andra ",
+      "venue": "Münchenbryggeriet",
+      "start": "2026-11-14T16:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "c76ef599-6752-4248-9360-5ddb21cca55c",
+      "title_sv": "Sparkling &#038; Wine Jönköping 2026",
+      "title_en": "Sparkling &#038; Wine Jönköping 2026",
+      "venue": "Elite Stora Hotellet",
+      "start": "2026-10-23T00:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "94d5a657-0252-43b4-a9f7-0f23fcf914b8",
+      "title_sv": "21 oktober: Vinmakarbesök William Fèvre",
+      "title_en": "21 oktober: Vinmakarbesök William Fèvre",
+      "desc_sv": "Vinmakarbesök William Fèvre är en provning på Tryffelsvinets Klubblokal i Stockholm.\n\nVinklubben välkomnar till en Chablisafton med William Fèvres vindirektör Didier Séguier. Han bidrar med erfarenhet, värderingar och en innovativ vision till egendomen. Fokus ligger på kommande årgångar genom att prova Premier- och Grand Cru från denna producent. Vinerna präglas av de kimmeridgiska jordarnas kalkr",
+      "desc_en": "William Fèvre winemaker visit is a tasting event at Tryffelsvinets Klubblokal in Stockholm.\n\nThe Wine Club hosts a Chablis evening with William Fèvre's director of wine, Didier Séguier. He contributes experience, values, and an innovative vision to the estate. The event focuses on upcoming vintages, featuring Premier and Grand Cru tastings from this esteemed producer. The wines are characterized b",
+      "raw": "Vinmakarbesök William Fèvre är en provning på Tryffelsvinets Klubblokal i Stockholm.\n\nVinklubben välkomnar till en Chablisafton med William Fèvres vindirektör Didier Séguier. Han bidrar med erfarenhet, värderingar och en innovativ vision till egendomen. Fokus ligger på kommande årgångar genom att prova Premier- och Grand Cru från denna producent. Vinerna präglas av de kimmeridgiska jordarnas kalkr",
+      "venue": "왕의 정원",
+      "start": "2026-10-21T15:30:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "b29bd758-aae7-4a1e-9904-c5e53b9b6023",
+      "title_sv": "Klassiska viner från Italien",
+      "title_en": "Klassiska viner från Italien",
+      "desc_sv": "Klassiska viner från Italien är en vinprovning på Le Bistrot de Wasahof i Stockholm.\n\nEvenemanget Klassiska viner från Italien är en vinprovning där deltagarna bekantar sig med italienska viner tillsammans med en kunnig vinprovare. Det finns möjlighet att avnjuta en ostbricka med franska ostar i samband med provningen.",
+      "desc_en": "Classic Wines from Italy is a wine tasting event at Le Bistrot de Wasahof in Stockholm.\n\nThe Classic Wines from Italy event offers participants an opportunity to explore Italian wines with a knowledgeable expert. Guests can also choose to enjoy a selection of French cheeses on a board during the tasting.",
+      "raw": "Klassiska viner från Italien är en vinprovning på Le Bistrot de Wasahof i Stockholm.\n\nEvenemanget Klassiska viner från Italien är en vinprovning där deltagarna bekantar sig med italienska viner tillsammans med en kunnig vinprovare. Det finns möjlighet att avnjuta en ostbricka med franska ostar i samband med provningen.",
+      "venue": "Wasahof",
+      "start": "2026-10-09T15:30:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "1fef3df2-f8dd-4135-9bac-bbf4cf349ac5",
+      "title_sv": "Växjö Dryckesfestival KÖK11 2026",
+      "title_en": "Växjö Dryckesfestival KÖK11 2026",
+      "venue": "왕의 정원",
+      "start": "2026-10-10T00:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "12b45ad8-6fa5-4b98-93c6-1a1500a0c9b2",
+      "title_sv": "20 oktober: Världens bästa Bordeauxviner med världens bästa sommelier",
+      "title_en": "20 oktober: Världens bästa Bordeauxviner med världens bästa sommelier",
+      "desc_sv": "Vinprovningen Världens bästa Bordeauxviner med världens bästa sommelier hålls på Tryffelsvinets Klubblokal i Stockholm.\n\nAndreas Larsson, världsmästare i sommellerie, leder en provning av åtta Bordeauxviner från några av världens mest kända slott. Bland dessa giganter återfinns Premier Cru Classé-slotten Mouton-Rothschild, Lafite-Rothschild, Latour och Haut-Brion. Dessutom provar man Premier Grand",
+      "desc_en": "The wine tasting World's Best Bordeaux Wines with the World's Best Sommelier takes place at Tryffelsvinets Klubblokal in Stockholm.\n\nAndreas Larsson, World Champion in Sommellerie, leads a tasting of eight Bordeaux wines from some of the world's most renowned châteaux. Among these giants are Premier Cru Classé estates Mouton-Rothschild, Lafite-Rothschild, Latour, and Haut-Brion. Additionally, it f",
+      "raw": "Vinprovningen Världens bästa Bordeauxviner med världens bästa sommelier hålls på Tryffelsvinets Klubblokal i Stockholm.\n\nAndreas Larsson, världsmästare i sommellerie, leder en provning av åtta Bordeauxviner från några av världens mest kända slott. Bland dessa giganter återfinns Premier Cru Classé-slotten Mouton-Rothschild, Lafite-Rothschild, Latour och Haut-Brion. Dessutom provar man Premier Grand",
+      "venue": "왕의 정원",
+      "start": "2026-10-20T16:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "f7a0cba4-2675-4274-b2b9-5dbcc089c17f",
+      "title_sv": "Boksalong där Alf Tumble guidar oss bland Piemontes viner",
+      "title_en": "Boksalong där Alf Tumble guidar oss bland Piemontes viner",
+      "desc_sv": "Alf Tumble guidar oss bland Piemontes viner är en boksalong på Gamla Stans Bokhandel i Stockholm.\n\nAlf Tumble presenterar sin nya bok PIEMONTE, som handlar om Piemonte, en av världens mest hyllade vinregioner. Han guidar oss bland Piemontes viner, som sträcker sig från kraftfulla Barolo-viner till friska vita favoriter och charmiga bubbel. Kvällen beskrivs som en möjlighet att lära sig om druvor, ",
+      "desc_en": "Alf Tumble guides us through the wines of Piedmont is a book salon at Gamla Stans Bokhandel in Stockholm.\n\nAlf Tumble presents his new book PIEMONTE, focusing on Piedmont, one of the world's most acclaimed wine regions. He guides attendees through Piedmont's wines, including powerful Barolo wines, fresh white favorites, and charming sparkling wines. The evening is an opportunity to learn about gra",
+      "raw": "Alf Tumble guidar oss bland Piemontes viner är en boksalong på Gamla Stans Bokhandel i Stockholm.\n\nAlf Tumble presenterar sin nya bok PIEMONTE, som handlar om Piemonte, en av världens mest hyllade vinregioner. Han guidar oss bland Piemontes viner, som sträcker sig från kraftfulla Barolo-viner till friska vita favoriter och charmiga bubbel. Kvällen beskrivs som en möjlighet att lära sig om druvor, ",
+      "venue": "Gamla stan",
+      "start": "2026-12-02T17:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "58a54ddf-acc2-47e7-bf53-246fc527729a",
+      "title_sv": "Öppen Ölprovning: IPA & APA",
+      "title_en": "Öppen Ölprovning: IPA & APA",
+      "desc_sv": "Öppen Ölprovning: IPA & APA är en ölprovning på Akkurat Bar & Restaurang i Stockholm.\n\nDenna ölprovning utforskar IPA och APA, två välkända men varierade ölstilar. Besökare får prova sex olika sorters IPA och APA. Under provningen reder man ut skillnader mellan exempelvis en klassisk West Coast och en modern, disig och fruktig IPA. Råvaror kommer att doftas och smakas för att förstå hur de påverka",
+      "desc_en": "Öppen Ölprovning: IPA & APA is a beer tasting event at Akkurat Bar & Restaurang in Stockholm.\n\nThis beer tasting explores IPA and APA, two well-known yet varied beer styles. Attendees will sample six different types of IPA and APA. The event clarifies the differences between styles, such as a classic West Coast IPA and a modern, hazy, and fruity IPA. Raw ingredients will be smelled and tasted to u",
+      "raw": "Öppen Ölprovning: IPA & APA är en ölprovning på Akkurat Bar & Restaurang i Stockholm.\n\nDenna ölprovning utforskar IPA och APA, två välkända men varierade ölstilar. Besökare får prova sex olika sorters IPA och APA. Under provningen reder man ut skillnader mellan exempelvis en klassisk West Coast och en modern, disig och fruktig IPA. Råvaror kommer att doftas och smakas för att förstå hur de påverka",
+      "venue": "왕의 정원",
+      "start": "2026-10-16T16:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "8823ce63-a344-486a-8dcf-6f9d2dc296cf",
+      "title_sv": "Premiär: Akkurat Modern Lager Tour MK:9",
+      "title_en": "Premiär: Akkurat Modern Lager Tour MK:9",
+      "desc_sv": "Premiär: Akkurat Modern Lager Tour MK:9 är ett ölevent på Akkurat Bar & Restaurang i Stockholm.\n\nDenna premiär presenterar det senaste samarbetsprojektet: Swedish Modern Lager Tour Mk:9. För att fira premiären serveras ölen på klassiskt vis, självrunnen från fat. Bryggeriet som detta samarbete gjorts med avslöjas på plats.",
+      "desc_en": "Premiär: Akkurat Modern Lager Tour MK:9 is a beer event at Akkurat Bar & Restaurang in Stockholm.\n\nThis premiere introduces the latest collaborative project: the Swedish Modern Lager Tour Mk:9. To celebrate the premiere, the beer will be served in a classic manner, self-tapped from a cask. The brewery involved in this collaboration will be revealed at the event.",
+      "raw": "Premiär: Akkurat Modern Lager Tour MK:9 är ett ölevent på Akkurat Bar & Restaurang i Stockholm.\n\nDenna premiär presenterar det senaste samarbetsprojektet: Swedish Modern Lager Tour Mk:9. För att fira premiären serveras ölen på klassiskt vis, självrunnen från fat. Bryggeriet som detta samarbete gjorts med avslöjas på plats.",
+      "venue": "왕의 정원",
+      "start": "2026-10-14T14:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "4af3e6c9-73a6-4796-a0e4-08afe0a8080e",
+      "title_sv": "Så blir höstens vinprovningar på Folii",
+      "title_en": "Så blir höstens vinprovningar på Folii",
+      "desc_sv": "Nu laddar vinbaren Folii upp för en höst fylld av vinprovningar.",
+      "desc_en": "Nu laddar vinbaren Folii upp för en höst fylld av vinprovningar.",
+      "raw": "Nu laddar vinbaren Folii upp för en höst fylld av vinprovningar.",
+      "venue": "Folii",
+      "start": "2026-10-10T22:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "a42c1225-3886-4162-ae1e-4a80f46af8f7",
+      "title_sv": "Vinprovning med Amfora i Stockholm - Viner från jordens hetaste adresser",
+      "title_en": "Vinprovning med Amfora i Stockholm - Viner från jordens hetaste adresser",
+      "desc_sv": "Vinprovning med Amfora är en vinprovning på Matbutiken Cajsa Warg Vasastan i Stockholm.\n\nBesökare får uppleva viner från jordens hetaste adresser. Evenemanget visar hur aska och extrema miljöer kan skapa unika smaker.",
+      "desc_en": "Wine tasting with Amfora is a wine tasting at Matbutiken Cajsa Warg Vasastan in Stockholm.\n\nVisitors can experience wines from the hottest addresses on earth. The event demonstrates how ash and extreme environments can create unique flavors.",
+      "raw": "Vinprovning med Amfora är en vinprovning på Matbutiken Cajsa Warg Vasastan i Stockholm.\n\nBesökare får uppleva viner från jordens hetaste adresser. Evenemanget visar hur aska och extrema miljöer kan skapa unika smaker.",
+      "venue": "왕의 정원",
+      "start": "2026-10-22T16:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "fea237a9-0687-4aef-af23-d296bbbc727c",
+      "title_sv": "FRANSKA VINDAGEN 2026",
+      "title_en": "FRANSKA VINDAGEN 2026",
+      "raw": " \nDen 14 november är det efterlängtad nypremiär för dagen som firar franska viner och smaker. Vi hälsar dig varmt välkommen att prova, jämföra och upptäcka viner från några av Frankrikes främsta vinregioner!\n\nSvenska vinimportörer finns på plats för att guida dig genom provningarna och hjälpa dig att hitta nya favoriter. Utöver vinerna kan du även njuta av franska ostar, charkuterier och många and",
+      "venue": "Torkel Knutssons Gatan 2",
+      "start": "2026-11-14T17:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "a6e443a5-3bc7-4c04-b31d-c01fc01df008",
+      "title_sv": "Vin & Mat med Mischa Billing",
+      "title_en": "Vin & Mat med Mischa Billing",
+      "desc_sv": "Vin & Mat med Mischa Billing är en kväll med vinprovning och middag på Origo i Solna.\n\nMischa Billing, sommelier och lektor i måltidskunskap, leder kvällen på Origo. Gästerna får njuta av Mischas favoritviner och en trerättersmiddag. Middagen, serverad på Bistro Victor, fokuserar på nordiska råvaror där vilt, hav och skog möts. Kvällen startar med en vinprovning av fyra utvalda viner som Mischa oc",
+      "desc_en": "Vin & Mat med Mischa Billing is an evening of wine tasting and dinner at Origo in Solna.\n\nMischa Billing, a sommelier and lecturer in culinary science, hosts this event at Origo. Guests will enjoy Mischa's favorite wines and a three-course dinner. The dinner, served at Bistro Victor, features Nordic ingredients, where game, sea, and forest flavors converge. The evening begins with a wine tasting o",
+      "raw": "Vin & Mat med Mischa Billing är en kväll med vinprovning och middag på Origo i Solna.\n\nMischa Billing, sommelier och lektor i måltidskunskap, leder kvällen på Origo. Gästerna får njuta av Mischas favoritviner och en trerättersmiddag. Middagen, serverad på Bistro Victor, fokuserar på nordiska råvaror där vilt, hav och skog möts. Kvällen startar med en vinprovning av fyra utvalda viner som Mischa oc",
+      "venue": "왕의 정원",
+      "start": "2026-11-20T17:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "44ca87e4-ae01-4c8c-a155-fdcf9864cb7f",
+      "title_sv": "Spritmuseum Champagnefestival",
+      "title_en": "Spritmuseum Champagnefestival",
+      "desc_sv": "Gillar du champagne, men väljer ofta sådant du redan känner till?\nDen 10 oktober fyller vi Spritmuseum med över 150 champagner. \n\nVåra dryckeskunniga, bland andra Nadja Karlsson, finns på plats för att guida dig till nya favoriter och oväntade upptäckter.\n\n🍾 595 kr inklusive entré\n🍾 Fyra smakbiljetter\n🍾 Ett Richard Juhlin-glas att ta med hem\n\n10 oktober · kl. 13–17\n\nBiljetter på spritmuseum.se/",
+      "desc_en": "Gillar du champagne, men väljer ofta sådant du redan känner till?\nDen 10 oktober fyller vi Spritmuseum med över 150 champagner. \n\nVåra dryckeskunniga, bland andra Nadja Karlsson, finns på plats för att guida dig till nya favoriter och oväntade upptäckter.\n\n🍾 595 kr inklusive entré\n🍾 Fyra smakbiljetter\n🍾 Ett Richard Juhlin-glas att ta med hem\n\n10 oktober · kl. 13–17\n\nBiljetter på spritmuseum.se/",
+      "raw": "Gillar du champagne, men väljer ofta sådant du redan känner till?\nDen 10 oktober fyller vi Spritmuseum med över 150 champagner. \n\nVåra dryckeskunniga, bland andra Nadja Karlsson, finns på plats för att guida dig till nya favoriter och oväntade upptäckter.\n\n🍾 595 kr inklusive entré\n🍾 Fyra smakbiljetter\n🍾 Ett Richard Juhlin-glas att ta med hem\n\n10 oktober · kl. 13–17\n\nBiljetter på spritmuseum.se/",
+      "venue": "Spritmuseum",
+      "start": "2026-10-10T11:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "8794f9d9-8380-4f49-90be-3ef85647afab",
+      "title_sv": "Halvblind Speed Tasting: Svart Öl",
+      "title_en": "Halvblind Speed Tasting: Svart Öl",
+      "desc_sv": "Halvblind Speed Tasting: Svart Öl är en provning på Akkurat Bar & Restaurang i Stockholm.\n\nDenna provning utmanar smaklökar och ölkunskaper. Deltagarna får fem olika svarta ölsorter presenterade för sig. Uppgiften är att identifiera ölsorterna och placera dem i rätt ordning. Den som lyckas pricka in alla fem vinner ett exklusivt glas. Välkommen till Akkurat.",
+      "desc_en": "Halvblind Speed Tasting: Svart Öl is a tasting event at Akkurat Bar & Restaurang in Stockholm.\n\nThis tasting challenges both palates and beer knowledge. Participants are presented with five different black beers. The task is to identify each beer and place them in the correct order. Those who manage to get all five correct will win an exclusive glass. Welcome to Akkurat.",
+      "raw": "Halvblind Speed Tasting: Svart Öl är en provning på Akkurat Bar & Restaurang i Stockholm.\n\nDenna provning utmanar smaklökar och ölkunskaper. Deltagarna får fem olika svarta ölsorter presenterade för sig. Uppgiften är att identifiera ölsorterna och placera dem i rätt ordning. Den som lyckas pricka in alla fem vinner ett exklusivt glas. Välkommen till Akkurat.",
+      "venue": "왕의 정원",
+      "start": "2026-10-08T15:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "1ff12058-3fd7-4cdb-a756-4433298964f4",
+      "title_sv": "Vinresa genom Toscana",
+      "title_en": "Vinresa genom Toscana",
+      "desc_sv": "Vinresa genom Toscana är en vinprovning på Vinkällaren Vigneron i Stockholm.\n\nUnder kvällen upptäcks två av Italiens mest spännande vinområden. Deltagarna provar sex utvalda viner i tre flighter som berättar om sina växtplatser, traditioner och ursprung. Eva Dahlqvist, svensk ambassadör för Chianti Classico, och Vincent Arrhenius guidar genom provningen. En generös ost- och charkbuffé serveras til",
+      "desc_en": "Vinresa genom Toscana is a wine tasting at Vinkällaren Vigneron in Stockholm.\n\nDuring the evening, two of Italy's most exciting wine regions are explored. Participants taste six selected wines in three flights, showcasing their different growing sites, traditions, and origins. Eva Dahlqvist, Swedish ambassador for Chianti Classico, and Vincent Arrhenius guide the tasting. A generous cheese and cha",
+      "raw": "Vinresa genom Toscana är en vinprovning på Vinkällaren Vigneron i Stockholm.\n\nUnder kvällen upptäcks två av Italiens mest spännande vinområden. Deltagarna provar sex utvalda viner i tre flighter som berättar om sina växtplatser, traditioner och ursprung. Eva Dahlqvist, svensk ambassadör för Chianti Classico, och Vincent Arrhenius guidar genom provningen. En generös ost- och charkbuffé serveras til",
+      "venue": "왕의 정원",
+      "start": "2026-11-04T17:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "7780f2f8-e715-470f-8d37-07da866e0468",
+      "title_sv": "Så blir höstens vinprovningar på Folii",
+      "title_en": "Så blir höstens vinprovningar på Folii",
+      "desc_sv": "Nu laddar vinbaren Folii upp för en höst fylld av vinprovningar.",
+      "desc_en": "Nu laddar vinbaren Folii upp för en höst fylld av vinprovningar.",
+      "raw": "Nu laddar vinbaren Folii upp för en höst fylld av vinprovningar.",
+      "venue": "Folii",
+      "start": "2026-11-13T22:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "986e4cc8-0e85-4c98-beaa-61935345c1f1",
+      "title_sv": "Vin i Umeå Vinmässa 2026",
+      "title_en": "Vin i Umeå Vinmässa 2026",
+      "venue": "Umeå Folkets Hus",
+      "start": "2026-11-20T00:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "cc0e9444-2350-4b5e-bf2e-62a70867ce30",
+      "title_sv": "FRANSKA VINDAGEN 2026",
+      "title_en": "FRANSKA VINDAGEN 2026",
+      "raw": " \nDen 14 november är det efterlängtad nypremiär för dagen som firar franska viner och smaker. Vi hälsar dig varmt välkommen att prova, jämföra och upptäcka viner från några av Frankrikes främsta vinregioner!\n\nSvenska vinimportörer finns på plats för att guida dig genom provningarna och hjälpa dig att hitta nya favoriter. Utöver vinerna kan du även njuta av franska ostar, charkuterier och många and",
+      "venue": "Torkel Knutssons Gatan 2",
+      "start": "2026-11-14T14:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "dbf8b3de-cb7c-4c39-8667-e0fdf474adba",
+      "title_sv": "Sparkling &#038; Wine Malmö 2026",
+      "title_en": "Sparkling &#038; Wine Malmö 2026",
+      "venue": "왕의 정원",
+      "start": "2026-11-13T00:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "69de21d2-206b-4393-8bbd-165d154f4712",
+      "title_sv": "AVSKALAT - Vin- & Ciderfestival Stockholm 2026",
+      "title_en": "AVSKALAT - Vin- & Ciderfestival Stockholm 2026",
+      "desc_sv": "AVSKALAT - Vin- & Ciderfestival Stockholm 2026 är en vin- och ciderfestival på Brygghuset i Stockholm.\n\nAVSKALAT – Vin- & Ciderfestival Stockholm 2026 är den åttonde upplagan av evenemanget. Festivalen hålls på Brygghuset, som ligger vid Odenplan i centrala Stockholm. Fokus ligger på ekologiska och biodynamiska viner, samt hantverkscider. Deltagare kan även upptäcka passande delikatesser. Detta är",
+      "desc_en": "AVSKALAT - Wine & Cider Festival Stockholm 2026 is a wine and cider festival at Brygghuset in Stockholm.\n\nAVSKALAT – Wine & Cider Festival Stockholm 2026 marks the eighth edition of this event. The festival is held at Brygghuset, located near Odenplan in central Stockholm. Its focus is on organic and biodynamic wines, along with craft ciders. Attendees can also discover suitable delicacies. This p",
+      "raw": "AVSKALAT - Vin- & Ciderfestival Stockholm 2026 är en vin- och ciderfestival på Brygghuset i Stockholm.\n\nAVSKALAT – Vin- & Ciderfestival Stockholm 2026 är den åttonde upplagan av evenemanget. Festivalen hålls på Brygghuset, som ligger vid Odenplan i centrala Stockholm. Fokus ligger på ekologiska och biodynamiska viner, samt hantverkscider. Deltagare kan även upptäcka passande delikatesser. Detta är",
+      "venue": "Brygghuset Stockholm - Teater Scarlet",
+      "start": "2026-10-24T10:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "cb020567-1e3f-468a-9d65-917d7a4206e7",
+      "title_sv": "Stockholm Rum Fest 2027",
+      "title_en": "Stockholm Rum Fest 2027",
+      "desc_sv": "Stockholm Rum Fest 2027 är en festival tillägnad rom på K-märkt Garnisonen i Stockholm.\n\nStockholm Rum Fest 2027 är Nordens enda festival helt dedikerad till rom och firas för femte året i rad. Festivalen hyllar rom och sockerrörsbaserade spritsorter från hela världen. Besökare kan förvänta sig över 50 olika romvarumärken och mer än 150 sorter att prova, tillsammans med groggar och cocktails. Det ",
+      "desc_en": "Stockholm Rum Fest 2027 is a festival dedicated to rum at K-märkt Garnisonen in Stockholm.\n\nStockholm Rum Fest 2027 is the only festival in the Nordics entirely dedicated to rum, returning for its fifth consecutive year. It celebrates rum and other sugarcane spirits from around the world. Guests can explore over 50 different rum brands and more than 150 varieties, alongside grogs and cocktails. Th",
+      "raw": "Stockholm Rum Fest 2027 är en festival tillägnad rom på K-märkt Garnisonen i Stockholm.\n\nStockholm Rum Fest 2027 är Nordens enda festival helt dedikerad till rom och firas för femte året i rad. Festivalen hyllar rom och sockerrörsbaserade spritsorter från hela världen. Besökare kan förvänta sig över 50 olika romvarumärken och mer än 150 sorter att prova, tillsammans med groggar och cocktails. Det ",
+      "venue": "왕의 정원",
+      "start": "2027-06-05T10:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "d961974c-23e8-4026-938c-3bb83d1ce87c",
+      "title_sv": "Vinfestival 2027 - The Wine & Spirits Collective",
+      "title_en": "Vinfestival 2027 - The Wine & Spirits Collective",
+      "desc_sv": "Vinfestival 2027 – The Wine & Spirits Collective är en vinfestival på 7A Posthuset i Stockholm.\n\nVälkommen till Vinfestival 2027 – mötesplatsen för dig som vill lära dig mer om vin. The Wine & Spirits Collective bjuder in till vinfestival i Posthusets salonger. Producenter från flera länder samlas och du får möjlighet att träffa dem, höra deras berättelser och provsmaka ett urval viner. Legitimati",
+      "desc_en": "Vinfestival 2027 – The Wine & Spirits Collective is a wine festival at 7A Posthuset in Stockholm.\n\nWelcome to Vinfestival 2027, the meeting place for those who want to learn more about wine. The Wine & Spirits Collective invites you to a wine festival in Posthuset's salons. Producers from several countries gather, and you will have the opportunity to meet them, hear their stories, and sample a sel",
+      "raw": "Vinfestival 2027 – The Wine & Spirits Collective är en vinfestival på 7A Posthuset i Stockholm.\n\nVälkommen till Vinfestival 2027 – mötesplatsen för dig som vill lära dig mer om vin. The Wine & Spirits Collective bjuder in till vinfestival i Posthusets salonger. Producenter från flera länder samlas och du får möjlighet att träffa dem, höra deras berättelser och provsmaka ett urval viner. Legitimati",
+      "venue": "왕의 정원",
+      "start": "2027-01-24T13:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "7b993be2-3103-47aa-bfc8-7a368c06186f",
+      "title_sv": "Örebro Öl- &amp; Whisky Festival 2026",
+      "title_en": "Örebro Öl- &amp; Whisky Festival 2026",
+      "venue": "Conventum Arena",
+      "start": "2026-11-27T00:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "837dbd95-97e4-4a62-81d5-6b11cb75add9",
+      "title_sv": "Nordamerika & Sydamerika",
+      "title_en": "Nordamerika & Sydamerika",
+      "desc_sv": "Nordamerika & Sydamerika är en vinprovning på Le Bistrot de Wasahof i Stockholm.\n\nEvenemanget erbjuder en vinprovning där deltagare bekantar sig med viner utifrån ett tema. En kunnig vinprovare leder provningen, och det finns möjlighet att avnjuta en ostbricka med franska ostar.",
+      "desc_en": "Nordamerika & Sydamerika is a wine tasting at Le Bistrot de Wasahof in Stockholm.\n\nThe event features a wine tasting where participants explore wines according to a chosen theme. An experienced wine expert guides the tasting, and there is an option to enjoy a cheese platter with French cheeses.",
+      "raw": "Nordamerika & Sydamerika är en vinprovning på Le Bistrot de Wasahof i Stockholm.\n\nEvenemanget erbjuder en vinprovning där deltagare bekantar sig med viner utifrån ett tema. En kunnig vinprovare leder provningen, och det finns möjlighet att avnjuta en ostbricka med franska ostar.",
+      "venue": "Wasahof",
+      "start": "2026-10-23T15:30:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "4a1fcd1a-7977-4b0a-a4fd-d9a17cdcf952",
+      "title_sv": "FRANSKA VINDAGEN 2026",
+      "title_en": "FRANSKA VINDAGEN 2026",
+      "raw": " \nDen 14 november är det efterlängtad nypremiär för dagen som firar franska viner och smaker. Vi hälsar dig varmt välkommen att prova, jämföra och upptäcka viner från några av Frankrikes främsta vinregioner!\n\nSvenska vinimportörer finns på plats för att guida dig genom provningarna och hjälpa dig att hitta nya favoriter. Utöver vinerna kan du även njuta av franska ostar, charkuterier och många and",
+      "venue": "Torkel Knutssons Gatan 2",
+      "start": "2026-11-14T11:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "a74a2c62-f50f-4330-9fd4-5f6f4ed7698f",
+      "title_sv": "FRANSKA VINDAGEN 2026",
+      "title_en": "FRANSKA VINDAGEN 2026",
+      "raw": " \nDen 14 november är det efterlängtad nypremiär för dagen som firar franska viner och smaker. Vi hälsar dig varmt välkommen att prova, jämföra och upptäcka viner från några av Frankrikes främsta vinregioner!\n\nSvenska vinimportörer finns på plats för att guida dig genom provningarna och hjälpa dig att hitta nya favoriter. Utöver vinerna kan du även njuta av franska ostar, charkuterier och många and",
+      "venue": "Torkel Knutssons Gatan 2",
+      "start": "2026-11-14T13:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "a0b18b4c-966a-47ba-b410-c173f663cb7d",
+      "title_sv": "FRANSKA VINDAGEN 2026",
+      "title_en": "FRANSKA VINDAGEN 2026",
+      "raw": " \nDen 14 november är det efterlängtad nypremiär för dagen som firar franska viner och smaker. Vi hälsar dig varmt välkommen att prova, jämföra och upptäcka viner från några av Frankrikes främsta vinregioner!\n\nSvenska vinimportörer finns på plats för att guida dig genom provningarna och hjälpa dig att hitta nya favoriter. Utöver vinerna kan du även njuta av franska ostar, charkuterier och många and",
+      "venue": "Torkel Knutssons Gatan 2",
+      "start": "2026-11-14T16:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "4ef95043-0bf8-401a-9af9-2e0c22e80628",
+      "title_sv": "Ostron, vin & champagne",
+      "title_en": "Ostron, vin & champagne",
+      "desc_sv": "Ostron, vin & champagne är en vinprovning på Le Bistrot de Wasahof i Stockholm.\n\nEvenemanget erbjuder en vinprovning med en kunnig vinprovare. Besökare kan välja att njuta av en ostbricka med franska ostar i samband med provningen.",
+      "desc_en": "Ostron, vin & champagne is a wine tasting at Le Bistrot de Wasahof in Stockholm.\n\nThe event features a wine tasting led by an expert sommelier. Guests have the option to enjoy a French cheese board along with the tasting.",
+      "raw": "Ostron, vin & champagne är en vinprovning på Le Bistrot de Wasahof i Stockholm.\n\nEvenemanget erbjuder en vinprovning med en kunnig vinprovare. Besökare kan välja att njuta av en ostbricka med franska ostar i samband med provningen.",
+      "venue": "Wasahof",
+      "start": "2026-12-17T16:30:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "3961bdfa-190e-4ee7-bdf7-d47df0cb2daa",
+      "title_sv": "Malmö Öl &#038; Whiskyfestival 2027",
+      "title_en": "Malmö Öl &#038; Whiskyfestival 2027",
+      "venue": "Malmö Arena",
+      "start": "2027-03-05T00:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "2c36c2b9-ab42-42db-aebb-f3babc5713ed",
+      "title_sv": "Avskalat &#8211; Naturvins &#038; Ciderfestival 2026",
+      "title_en": "Avskalat &#8211; Naturvins &#038; Ciderfestival 2026",
+      "venue": "Stockholm",
+      "start": "2026-10-24T12:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "fc08c6a0-f256-4a88-a35d-ecc8cbaf0e3f",
+      "title_sv": "FRANSKA VINDAGEN 2026",
+      "title_en": "FRANSKA VINDAGEN 2026",
+      "desc_sv": "FRANSKA VINDAGEN 2026 är en vinhändelse på Münchenbryggeriet i Stockholm.\n\nFranska Vindagen 2026 är en nypremiär för att upptäcka viner från Frankrikes främsta regioner. Svenska vinimportörer guidar besökare genom provningarna för att hitta nya favoriter. Utöver vinerna finns franska ostar, charkuterier och andra delikatesser till försäljning på plats. Dagen är uppdelad i tre provningspass i Mälar",
+      "desc_en": "FRANSKA VINDAGEN 2026 is a wine event at Münchenbryggeriet in Stockholm.\n\nFranska Vindagen 2026 marks a return for discovering wines from France's foremost regions. Swedish wine importers will guide visitors through tastings to help find new favorites. In addition to wines, French cheeses, charcuterie, and other delicacies will be available for sale on-site. The day is divided into three tasting s",
+      "raw": "FRANSKA VINDAGEN 2026 är en vinhändelse på Münchenbryggeriet i Stockholm.\n\nFranska Vindagen 2026 är en nypremiär för att upptäcka viner från Frankrikes främsta regioner. Svenska vinimportörer guidar besökare genom provningarna för att hitta nya favoriter. Utöver vinerna finns franska ostar, charkuterier och andra delikatesser till försäljning på plats. Dagen är uppdelad i tre provningspass i Mälar",
+      "venue": "Münchenbryggeriet",
+      "start": "2026-11-14T11:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "cb2441c6-8e14-4eb8-8585-2292e56c7a35",
+      "title_sv": "\"Smaka på\" gin - Grupp 2",
+      "title_en": "\"Smaka på\" gin - Grupp 2",
+      "desc_sv": "\"Smaka på\" gin är en ginprovning med Henrik Sundqvist på Dövas Hus i Bromma.\n\nEvenemanget erbjuder en ginprovning ledd av Henrik Sundqvist, uppdelad i grupp 2. Det ger deltagarna möjlighet att utforska ginens värld.",
+      "desc_en": "\"Smaka på\" gin is a gin tasting with Henrik Sundqvist at Dövas Hus in Bromma.\n\nThe event features a gin tasting led by Henrik Sundqvist, structured as Group 2. It offers participants an opportunity to explore the world of gin.",
+      "raw": "\"Smaka på\" gin är en ginprovning med Henrik Sundqvist på Dövas Hus i Bromma.\n\nEvenemanget erbjuder en ginprovning ledd av Henrik Sundqvist, uppdelad i grupp 2. Det ger deltagarna möjlighet att utforska ginens värld.",
+      "venue": "왕의 정원",
+      "start": "2026-11-06T18:30:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "8a932cd3-110f-4081-9441-f58513969153",
+      "title_sv": "Ölklubbsmöte 20:e oktober kl. 18.00",
+      "title_en": "Ölklubbsmöte 20:e oktober kl. 18.00",
+      "desc_sv": "Ölklubbsmöte is an event at Akkurat - Restaurang Södermalm in Stockholm.\n\nAkkurat, known for its wide selection, hosts this beer club meeting. The event is an opportunity for enthusiasts to meet and explore different beers.",
+      "desc_en": "Ölklubbsmöte is an event at Akkurat - Restaurang Södermalm in Stockholm.\n\nAkkurat, a venue known for its extensive selection, hosts this beer club meeting. The event provides an opportunity for enthusiasts to gather and explore various beers.",
+      "raw": "Ölklubbsmöte is an event at Akkurat - Restaurang Södermalm in Stockholm.\n\nAkkurat, known for its wide selection, hosts this beer club meeting. The event is an opportunity for enthusiasts to meet and explore different beers.",
+      "venue": "왕의 정원",
+      "start": "2026-10-20T16:00:00+00:00",
+      "has_img": true
+    }
+  ]
+}

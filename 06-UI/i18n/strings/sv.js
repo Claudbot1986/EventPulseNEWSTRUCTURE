@@ -696,7 +696,7 @@ export default {
 
   // ─── Terms of service sections (key order matches LegalModal.js buildSections)
   'legal.terms.title': 'Användarvillkor',
-  'legal.terms.lastUpdated': '2026-10-04 (utkast v0.1)',
+  'legal.terms.lastUpdated': '2026-10-05 (utkast v0.2)',
 
   'legal.terms.t1.title': '1. Vad tjänsten är',
   'legal.terms.t1.body':
@@ -712,7 +712,7 @@ export default {
 
   'legal.terms.t4.title': '4. Acceptabel användning',
   'legal.terms.t4.bullets':
-    'Använd inte EventPulse för att skicka skräp, trakassera andra eller bryta mot lag.\nFörsök inte kringgå säkerhetsspärrar eller obehörigt komma åt våra system.\nAnvänd inte appen på ett sätt som skadar vår infrastruktur eller andra användare.\nSkrapa, kopiera eller vidaredistribuera inte evenemangsinnehåll i kommersiellt syfte.',
+    'Använd inte EventPulse för att skicka skräp, trakassera andra eller bryta mot lag.\nFörsök inte kringgå säkerhetsspärrar eller obehörigt komma åt våra system.\nAnvänd inte appen på ett sätt som skadar vår infrastruktur eller andra användare.\nSkrapa, kopiera eller vidaredistribuera inte evenemangsinnehåll i kommersiellt syfte.\nReverse-engineera, dekompilera eller använd inte automatiserade verktyg mot appen eller våra system utan vårt skriftliga tillstånd.',
 
   'legal.terms.t5.title': '5. Evenemangsinnehåll och tredje part',
   'legal.terms.t5.body':
@@ -720,7 +720,7 @@ export default {
 
   'legal.terms.t6.title': '6. Push-notiser',
   'legal.terms.t6.body':
-    'Om du aktiverar push-notiser för en venue eller artist skickar vi dig en notis när vi upptäcker ett nytt evenemang från den källan. Du kan när som helst stänga av push per venue, eller globalt under din enhets inställningar.',
+    'Om du aktiverar push-notiser för en venue eller artist skickar vi dig en notis när vi upptäcker ett nytt evenemang från den källan. Du kan när som helst stänga av push per venue, eller globalt under din enhets inställningar. Vi begränsar push-notiser till rimlig mängd — som tumregel max en notis per följd venue och dygn.',
 
   'legal.terms.t7.title': '7. Ändringar av tjänsten',
   'legal.terms.t7.body':
@@ -736,7 +736,7 @@ export default {
 
   'legal.terms.t10.title': '10. Ansvarsbegränsning',
   'legal.terms.t10.body':
-    'EventPulse tillhandahålls i befintligt skick. Vi garanterar inte att tjänsten är felfri, oavbruten eller fri från fel. Vi ansvarar inte för indirekta skador. Vårt totala ansvar är begränsat till vad du betalat för tjänsten under de senaste 12 månaderna.',
+    'EventPulse tillhandahålls i befintligt skick. Vi garanterar inte att tjänsten är felfri, oavbruten eller fri från fel. Vi ansvarar inte för indirekta skador. Vårt totala ansvar är begränsat till vad du betalat för tjänsten under de senaste 12 månaderna. Tvingande konsumentskyddande lagstiftning (bl.a. konsumentköplagen, distansavtalslagen och konsumentkreditlagen) gäller dock alltid till konsumentens fördel och har företräde framför denna ansvarsbegränsning.',
 
   'legal.terms.t11.title': '11. Ändringar av villkoren',
   'legal.terms.t11.body':
@@ -749,4 +749,10 @@ export default {
   'legal.terms.t13.title': '13. Kontakt',
   'legal.terms.t13.body':
     'Frågor om villkoren? Skriv till privacy@eventpulse.nu.',
+
+  'legal.terms.t14.title': '14. Meddelanden',
+  'legal.terms.t14.body':
+    'Vi skickar meddelanden till dig via appen, e-post eller push-notiser. Du samtycker till att elektroniska meddelanden har samma rättsliga verkan som skriftliga. Det gäller särskilt ändringsmeddelanden enligt §11 och säkerhetsrelaterad information.',
+  'legal.terms.t14.bullets':
+    'Vi strävar efter att leverera säkerhets- och incidentmeddelanden via push även om du stängt av övriga push-notiser.',
 };

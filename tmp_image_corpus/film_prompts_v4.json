@@ -1,0 +1,31 @@
+{
+  "category_slug": "film",
+  "events": 106,
+  "jev_q1": 0.72,
+  "jev_q2": 0.66,
+  "jev_q3": 0.45,
+  "description_corpus_size": 106,
+  "model": "MiniMax-M3",
+  "prompts": [
+    {
+      "pattern": "A_wide",
+      "prompt": "Wide-angle photo of a packed auditorium inside Bio Skandia in Stockholm, soft house lights illuminating rows of seated audience members facing a glowing cinema screen, velvet curtains framing the stage, natural daylight spilling faintly through the lobby doors in the background."
+    },
+    {
+      "pattern": "B_medium",
+      "prompt": "Medium shot of an audience seated inside the darkened screening room at Bio Skandia in Stockholm, faces lit by the flickering illumination of a film projection, relaxed postures leaning toward the screen, stage-light photography capturing cinematic ambiance."
+    },
+    {
+      "pattern": "C_environment",
+      "prompt": "Environmental photo of the grand neoclassical facade of Dramaten in Stockholm, ticket holders gathering on the stone staircase during a film screening event, overcast natural daylight casting soft shadows, autumn leaves scattered across the pavement, pedestrians crossing in the foreground."
+    },
+    {
+      "pattern": "D_detail",
+      "prompt": "Close-up detail shot of a weathered brass usherette lantern resting on a velvet-upholstered armrest inside Bio Skandia in Stockholm, warm incandescent bulb glowing against dark mahogany paneling, shallow depth of field revealing blurred silhouettes of seated patrons in the background."
+    },
+    {
+      "pattern": "E_intimate",
+      "prompt": "Intimate close-up of two friends sharing whispered conversation in the back row of a darkened cinema at Dramaten in Stockholm, faces softly illuminated by the spill of projector light, their shoulders touching, a half-empty popcorn bucket resting between them."
+    }
+  ]
+}

@@ -1,0 +1,1725 @@
+{
+  "category_slug": "food",
+  "events": 154,
+  "library_count": 7,
+  "approx_images_needed": 1,
+  "top_words": [
+    [
+      "hits",
+      258
+    ],
+    [
+      "golden",
+      252
+    ],
+    [
+      "julbord",
+      213
+    ],
+    [
+      "2026",
+      205
+    ],
+    [
+      "dinnershow",
+      191
+    ],
+    [
+      "party",
+      190
+    ],
+    [
+      "vinterträdgården",
+      175
+    ],
+    [
+      "mamma",
+      132
+    ],
+    [
+      "mia",
+      132
+    ],
+    [
+      "ett",
+      97
+    ],
+    [
+      "karaoke",
+      87
+    ],
+    [
+      "french",
+      80
+    ],
+    [
+      "touch",
+      80
+    ],
+    [
+      "with",
+      78
+    ],
+    [
+      "underhållning",
+      74
+    ],
+    [
+      "helkväll",
+      70
+    ],
+    [
+      "evening",
+      69
+    ],
+    [
+      "kvällen",
+      65
+    ],
+    [
+      "ikonisk",
+      60
+    ],
+    [
+      "christmas",
+      60
+    ],
+    [
+      "crémant",
+      60
+    ],
+    [
+      "cocktails",
+      60
+    ],
+    [
+      "tyrol",
+      57
+    ],
+    [
+      "erbjuder",
+      56
+    ],
+    [
+      "taverna",
+      56
+    ],
+    [
+      "rättersmeny",
+      54
+    ],
+    [
+      "nikos",
+      54
+    ],
+    [
+      "skopelos",
+      54
+    ],
+    [
+      "nattklubb",
+      52
+    ],
+    [
+      "inkluderar",
+      48
+    ]
+  ],
+  "sample_events": [
+    {
+      "title": "Julbord - eftermiddag 2026",
+      "venue": "왕의 정원"
+    },
+    {
+      "title": "Sverige – Bosnien-Hercegovina",
+      "venue": "Strawberry Arena"
+    },
+    {
+      "title": "Golden Hits Dinnershow",
+      "venue": "왕의 정원"
+    },
+    {
+      "title": "Sverige–Litauen",
+      "venue": "Strawberry Arena"
+    },
+    {
+      "title": "Golden Hits Dinnershow",
+      "venue": "왕의 정원"
+    }
+  ],
+  "full_corpus": [
+    {
+      "id": "43e3d511-be3d-4030-b3e8-442a9b1e9e70",
+      "title_sv": "Julbord - eftermiddag 2026",
+      "title_en": "Julbord - eftermiddag 2026",
+      "venue": "왕의 정원",
+      "start": "2026-12-19T14:30:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "757e82b7-08e7-4464-86a2-d6e94ba8f490",
+      "title_sv": "Sverige – Bosnien-Hercegovina",
+      "title_en": "Sverige – Bosnien-Hercegovina",
+      "desc_sv": "Nations League football match",
+      "desc_en": "Nations League football match",
+      "raw": "Nations League football match",
+      "venue": "Strawberry Arena",
+      "start": "2026-11-14T00:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "f37ee5ee-1b1a-4c9c-84de-2882e5e359b9",
+      "title_sv": "Golden Hits Dinnershow",
+      "title_en": "Golden Hits Dinnershow",
+      "desc_sv": "Golden Hits Dinnershow är en dinnershow med ikonisk underhållning på Golden Hits i Stockholm.\n\nDenna helkväll på Golden Hits erbjuder en 3-rättersmeny, ikonisk underhållning, nattklubb och karaoke.",
+      "desc_en": "Golden Hits Dinnershow is a dinner show with iconic entertainment at Golden Hits in Stockholm.\n\nThis full evening at Golden Hits features a 3-course menu, iconic entertainment, a nightclub, and karaoke.",
+      "raw": "Golden Hits Dinnershow är en dinnershow med ikonisk underhållning på Golden Hits i Stockholm.\n\nDenna helkväll på Golden Hits erbjuder en 3-rättersmeny, ikonisk underhållning, nattklubb och karaoke.",
+      "venue": "왕의 정원",
+      "start": "2027-06-04T16:30:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "41a73197-1c1c-4b01-aa36-299371569dc6",
+      "title_sv": "Sverige–Litauen",
+      "title_en": "Sverige–Litauen",
+      "desc_sv": "Women's World Cup Playoff match between Sweden and Lithuania.",
+      "desc_en": "Women's World Cup Playoff match between Sweden and Lithuania.",
+      "raw": "Women's World Cup Playoff match between Sweden and Lithuania.",
+      "venue": "Strawberry Arena",
+      "start": "2026-10-13T00:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "5f3765bd-403d-489a-952f-4d8f8152e890",
+      "title_sv": "Golden Hits Dinnershow",
+      "title_en": "Golden Hits Dinnershow",
+      "desc_sv": "Golden Hits Dinnershow är en dinnershow på Golden Hits i Stockholm.\n\nEvenemanget erbjuder en helkväll med en 3-rättersmeny, ikonisk underhållning, nattklubb och karaoke. Gästerna får en mångsidig upplevelse.",
+      "desc_en": "Golden Hits Dinnershow is a dinner show at Golden Hits in Stockholm.\n\nThe event offers a full evening with a 3-course menu, iconic entertainment, a nightclub, and karaoke. Guests can enjoy a diverse experience.",
+      "raw": "Golden Hits Dinnershow är en dinnershow på Golden Hits i Stockholm.\n\nEvenemanget erbjuder en helkväll med en 3-rättersmeny, ikonisk underhållning, nattklubb och karaoke. Gästerna får en mångsidig upplevelse.",
+      "venue": "왕의 정원",
+      "start": "2027-04-17T16:30:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "0b13e4cf-0932-48a9-9d3a-77a1761e4283",
+      "title_sv": "Golden Hits Dinnershow",
+      "title_en": "Golden Hits Dinnershow",
+      "desc_sv": "Golden Hits Dinnershow är en dinnershow med underhållning, nattklubb och karaoke på Golden Hits i Stockholm.\n\nDet är en helkväll med en 3-rättersmeny. Kvällen inkluderar även ikonisk underhållning, nattklubb och karaoke.",
+      "desc_en": "Golden Hits Dinnershow is a dinnershow with entertainment, nightclub, and karaoke at Golden Hits in Stockholm.\n\nThis is a full evening featuring a 3-course menu. The night also includes iconic entertainment, a nightclub, and karaoke.",
+      "raw": "Golden Hits Dinnershow är en dinnershow med underhållning, nattklubb och karaoke på Golden Hits i Stockholm.\n\nDet är en helkväll med en 3-rättersmeny. Kvällen inkluderar även ikonisk underhållning, nattklubb och karaoke.",
+      "venue": "왕의 정원",
+      "start": "2027-04-15T16:30:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "193a48c2-db69-4368-a7fd-b4e741b839dd",
+      "title_sv": "E.M.D.",
+      "title_en": "E.M.D.",
+      "desc_sv": "Erik Segerstedt, Mattias Andréasson and Danny Saucedo reunite for their 2026 Christmas tour 'Välkommen hem' celebrating hits and holidays.",
+      "desc_en": "Erik Segerstedt, Mattias Andréasson and Danny Saucedo reunite for their 2026 Christmas tour 'Välkommen hem' celebrating hits and holidays.",
+      "raw": "Erik Segerstedt, Mattias Andréasson and Danny Saucedo reunite for their 2026 Christmas tour 'Välkommen hem' celebrating hits and holidays.",
+      "venue": "Rival",
+      "start": "2026-11-25T19:30:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "23a8bd40-5260-4a0c-b4b7-e1b8f8c4b949",
+      "title_sv": "Matmilen Södermalm",
+      "title_en": "Matmilen Södermalm",
+      "desc_sv": "Matmilen Södermalm är en matpromenad i Stockholm.\n\nMatmilen är en matpromenad som tar besökare till flera restauranger. På varje ställe får man provsmaka en liten rätt, ett smakprov som speglar krogens själ. Detta ger en möjlighet att upptäcka den lokala restaurangscenen. Under ett antal timmar besöks utvalda restauranger på ett smidigt sätt. Eventet är inte idealiskt för allergiker då allergier i",
+      "desc_en": "Matmilen Södermalm is a food walk in Stockholm.\n\nMatmilen is a food walk that takes visitors to several restaurants. At each location, guests receive a small dish to sample, a taste that reflects the soul of the establishment. This offers an enjoyable way to discover the local restaurant scene. Over several hours, selected restaurants are visited smoothly. The event is not ideal for those with all",
+      "raw": "Matmilen Södermalm är en matpromenad i Stockholm.\n\nMatmilen är en matpromenad som tar besökare till flera restauranger. På varje ställe får man provsmaka en liten rätt, ett smakprov som speglar krogens själ. Detta ger en möjlighet att upptäcka den lokala restaurangscenen. Under ett antal timmar besöks utvalda restauranger på ett smidigt sätt. Eventet är inte idealiskt för allergiker då allergier i",
+      "venue": "Stockholm",
+      "start": "2026-10-17T10:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "a5ed6947-643f-441e-be7b-56b875e5cf4e",
+      "title_sv": "Golden Hits Dinnershow",
+      "title_en": "Golden Hits Dinnershow",
+      "desc_sv": "Golden Hits Dinnershow är en dinnershow på Golden Hits i Stockholm.\n\nDenna helkväll på Golden Hits erbjuder en 3-rättersmeny, ikonisk underhållning, nattklubb och karaoke.",
+      "desc_en": "Golden Hits Dinnershow is a dinnershow at Golden Hits in Stockholm.\n\nThis full evening at Golden Hits features a 3-course meal, iconic entertainment, a nightclub, and karaoke.",
+      "raw": "Golden Hits Dinnershow är en dinnershow på Golden Hits i Stockholm.\n\nDenna helkväll på Golden Hits erbjuder en 3-rättersmeny, ikonisk underhållning, nattklubb och karaoke.",
+      "venue": "왕의 정원",
+      "start": "2027-03-13T17:30:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "a6032931-a2e6-4cbe-b3e5-9088ef2baed4",
+      "title_sv": "Korvfestivalen i Stockholm 2027",
+      "title_en": "Korvfestivalen i Stockholm 2027",
+      "venue": "Münchenbryggeriet",
+      "start": "2027-03-12T00:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "8a0ef874-0686-4754-a832-f0f979a2cf9c",
+      "title_sv": "Golden Hits Dinnershow",
+      "title_en": "Golden Hits Dinnershow",
+      "desc_sv": "Golden Hits Dinnershow är en helkväll med 3-rättersmeny, ikonisk underhållning, nattklubb och karaoke på Golden Hits i Stockholm.\n\nEvenemanget Golden Hits Dinnershow erbjuder en helkväll med en 3-rättersmeny. Besökare kan uppleva ikonisk underhållning, dansa på nattklubben och sjunga karaoke på Golden Hits i Stockholm.",
+      "desc_en": "Golden Hits Dinnershow is an evening with a 3-course menu, iconic entertainment, a nightclub, and karaoke at Golden Hits in Stockholm.\n\nThe Golden Hits Dinnershow event offers a full evening with a 3-course menu. Guests can experience iconic entertainment, dance at the nightclub, and enjoy karaoke at Golden Hits in Stockholm.",
+      "raw": "Golden Hits Dinnershow är en helkväll med 3-rättersmeny, ikonisk underhållning, nattklubb och karaoke på Golden Hits i Stockholm.\n\nEvenemanget Golden Hits Dinnershow erbjuder en helkväll med en 3-rättersmeny. Besökare kan uppleva ikonisk underhållning, dansa på nattklubben och sjunga karaoke på Golden Hits i Stockholm.",
+      "venue": "왕의 정원",
+      "start": "2027-03-05T17:30:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "91d08288-d42a-4ade-b0f1-5cd92bfdb571",
+      "title_sv": "Dryck &#038; Deli Estrad Alingsås 2027",
+      "title_en": "Dryck &#038; Deli Estrad Alingsås 2027",
+      "venue": "왕의 정원",
+      "start": "2027-02-26T08:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "1ce88979-73f8-43e1-afae-4d437703b059",
+      "title_sv": "Mozart and Stenhammar",
+      "title_en": "Mozart and Stenhammar",
+      "desc_sv": "Eva Ollikainen conducts Swedish Radio Symphony Orchestra with pianist Rudolf Buchbinder. Features Mozart's dramatic Piano Concerto No. 20 and Wilhelm Stenhammar's romantic first symphony.",
+      "desc_en": "Eva Ollikainen conducts Swedish Radio Symphony Orchestra with pianist Rudolf Buchbinder. Features Mozart's dramatic Piano Concerto No. 20 and Wilhelm Stenhammar's romantic first symphony.",
+      "raw": "Eva Ollikainen conducts Swedish Radio Symphony Orchestra with pianist Rudolf Buchbinder. Features Mozart's dramatic Piano Concerto No. 20 and Wilhelm Stenhammar's romantic first symphony.",
+      "venue": "Berwaldhallen",
+      "start": "2027-02-11T19:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "127e43ac-3982-48b7-a16f-0f094e7baebb",
+      "title_sv": "Fatoumata Diawara",
+      "title_en": "Fatoumata Diawara",
+      "desc_sv": "Hyllade maliska sångerskan Fatoumata Diawara har under det senaste decenniet etablerat sig som en av Afrikas mest inflytelserika röster. Med sin kraftfulla röst, sitt unika gitarrspel och sin förmåga att förena traditionell Wassoulou-musik med modern afropop och västerländska influenser, har hon nått en publik långt utanför kontinentens gränser. Den 17 oktober spelar hon i Stockholm!",
+      "desc_en": "Hyllade maliska sångerskan Fatoumata Diawara har under det senaste decenniet etablerat sig som en av Afrikas mest inflytelserika röster. Med sin kraftfulla röst, sitt unika gitarrspel och sin förmåga att förena traditionell Wassoulou-musik med modern afropop och västerländska influenser, har hon nått en publik långt utanför kontinentens gränser. Den 17 oktober spelar hon i Stockholm!",
+      "raw": "Hyllade maliska sångerskan Fatoumata Diawara har under det senaste decenniet etablerat sig som en av Afrikas mest inflytelserika röster. Med sin kraftfulla röst, sitt unika gitarrspel och sin förmåga att förena traditionell Wassoulou-musik med modern afropop och västerländska influenser, har hon nått en publik långt utanför kontinentens gränser. Den 17 oktober spelar hon i Stockholm!",
+      "venue": "Kulturhuset Stadsteatern",
+      "start": "2026-10-17T20:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "be8471e1-1f4b-444f-aa8a-6196d399c4eb",
+      "title_sv": "Hernö Gin firar 15 år – så blir jubileumsåret i Stockholm",
+      "title_en": "Hernö Gin firar 15 år – så blir jubileumsåret i Stockholm",
+      "desc_sv": "Gin- och cocktailprovningar, jubileumsevent och nya lanseringar väntar när Hernö Gin firar 15 år.",
+      "desc_en": "Gin- och cocktailprovningar, jubileumsevent och nya lanseringar väntar när Hernö Gin firar 15 år.",
+      "raw": "Gin- och cocktailprovningar, jubileumsevent och nya lanseringar väntar när Hernö Gin firar 15 år.",
+      "venue": "Hernö Gin Bar Stockholm",
+      "start": "2026-10-08T22:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "c0cd1ff0-b84c-4392-9c27-1a83b29c7071",
+      "title_sv": "French Touch Party - Stockholm (20:30 - 00:30)",
+      "title_en": "French Touch Party - Stockholm (20:30 - 00:30)",
+      "desc_sv": "Soirée French Touch, Crémant & Cocktails. / French Touch party, Crémant & Cocktails.",
+      "desc_en": "Soirée French Touch, Crémant & Cocktails. / French Touch party, Crémant & Cocktails.",
+      "raw": "Soirée French Touch, Crémant & Cocktails. / French Touch party, Crémant & Cocktails.",
+      "venue": "Kungsholmstorg 15",
+      "start": "2026-11-13T17:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "b00cc373-3e7f-429f-80bf-340b90f6b182",
+      "title_sv": "Korvfestivalen i Stockholm 2027",
+      "title_en": "Korvfestivalen i Stockholm 2027",
+      "desc_sv": "Korvfestivalen i Stockholm 2027 är en mötesplats för korvälskare på Münchenbryggeriet i Stockholm.\n\nKorvfestivalen i Stockholm är den självklara mötesplatsen för alla korvälskare. Denna händelse äger rum på Münchenbryggeriet.",
+      "desc_en": "Korvfestivalen i Stockholm 2027 is a gathering for sausage lovers at Münchenbryggeriet in Stockholm.\n\nKorvfestivalen in Stockholm is the obvious meeting place for all sausage lovers. This event takes place at Münchenbryggeriet.",
+      "raw": "Korvfestivalen i Stockholm 2027 är en mötesplats för korvälskare på Münchenbryggeriet i Stockholm.\n\nKorvfestivalen i Stockholm är den självklara mötesplatsen för alla korvälskare. Denna händelse äger rum på Münchenbryggeriet.",
+      "venue": "Münchenbryggeriet",
+      "start": "2027-03-14T22:59:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "f817b486-45da-4bcc-8b97-524ad8cc280d",
+      "title_sv": "Julbord - lunch 2026",
+      "title_en": "Julbord - lunch 2026",
+      "venue": "왕의 정원",
+      "start": "2026-12-20T11:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "7548d129-a7f3-40b2-9338-861fe543013b",
+      "title_sv": "Julbord - eftermiddag 2026",
+      "title_en": "Julbord - eftermiddag 2026",
+      "venue": "왕의 정원",
+      "start": "2026-12-18T13:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "070ffaf4-bea5-438b-aab6-2594403048d5",
+      "title_sv": "Julbord i Vinterträdgården 2026",
+      "title_en": "Julbord i Vinterträdgården 2026",
+      "desc_sv": "Julbord i Vinterträdgården 2026 är ett julbord på Vinterträdgården i Stockholm.\n\nEvenemanget Julbord i Vinterträdgården 2026 äger rum på Vinterträdgården i Stockholm. Det är ett traditionellt julbord som serveras i en av stadens klassiska lokaler.",
+      "desc_en": "Julbord i Vinterträdgården 2026 is a Christmas dinner at Vinterträdgården in Stockholm.\n\nThe event Julbord i Vinterträdgården 2026 takes place at Vinterträdgården in Stockholm. This traditional Christmas dinner is served in one of the city's classic venues.",
+      "venue": "Trädgården",
+      "start": "2026-12-17T17:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "8191b13f-38d5-4161-8ae0-389e44d65281",
+      "title_sv": "Julbord - kväll 2026",
+      "title_en": "Julbord - kväll 2026",
+      "venue": "왕의 정원",
+      "start": "2026-12-17T17:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "3b3cca40-8d47-4fa4-900b-a6260a9f2851",
+      "title_sv": "Julbord i Vinterträdgården 2026",
+      "title_en": "Julbord i Vinterträdgården 2026",
+      "desc_sv": "Julbord i Vinterträdgården 2026 är ett julbord på Vinterträdgården i Stockholm.\n\nJulbord i Vinterträdgården 2026 erbjuder en traditionell julbordsupplevelse. Evenemanget äger rum i Vinterträdgården i Stockholm. Det är ett tillfälle att njuta av ett klassiskt svenskt julbord.",
+      "desc_en": "Julbord i Vinterträdgården 2026 is a Christmas dinner at Vinterträdgården in Stockholm.\n\nJulbord i Vinterträdgården 2026 presents a traditional Christmas dinner experience. The event takes place at Vinterträdgården in Stockholm. It offers an opportunity to enjoy a classic Swedish Christmas buffet.",
+      "raw": "Julbord i Vinterträdgården 2026 är ett julbord på Vinterträdgården i Stockholm.\n\nJulbord i Vinterträdgården 2026 erbjuder en traditionell julbordsupplevelse. Evenemanget äger rum i Vinterträdgården i Stockholm. Det är ett tillfälle att njuta av ett klassiskt svenskt julbord.",
+      "venue": "Trädgården",
+      "start": "2026-12-16T17:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "bccfae54-00c8-4ffa-ba41-2c489d6d5de4",
+      "title_sv": "Julbord - kväll 2026",
+      "title_en": "Julbord - kväll 2026",
+      "venue": "왕의 정원",
+      "start": "2026-12-16T17:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "4dcf9d7d-3fbf-4092-8719-0b04d55392c8",
+      "title_sv": "Julbord - eftermiddag 2026",
+      "title_en": "Julbord - eftermiddag 2026",
+      "venue": "왕의 정원",
+      "start": "2026-12-13T14:30:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "e086b448-3a35-400b-8e71-b1ee20dfa7c5",
+      "title_sv": "Julbord - lunch 2026",
+      "title_en": "Julbord - lunch 2026",
+      "venue": "왕의 정원",
+      "start": "2026-12-12T11:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "bd4ad403-778a-4acd-a494-44ee72d9e7d8",
+      "title_sv": "Julbord - eftermiddag 2026",
+      "title_en": "Julbord - eftermiddag 2026",
+      "venue": "왕의 정원",
+      "start": "2026-12-04T13:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "3633710b-68a3-4dc1-8020-d6c48838e6df",
+      "title_sv": "French Touch Party - Stockholm (20:30 - 00:30)",
+      "title_en": "French Touch Party - Stockholm (20:30 - 00:30)",
+      "desc_sv": "Soirée French Touch, Crémant & Cocktails. / French Touch party, Crémant & Cocktails.",
+      "desc_en": "Soirée French Touch, Crémant & Cocktails. / French Touch party, Crémant & Cocktails.",
+      "raw": "Soirée French Touch, Crémant & Cocktails. / French Touch party, Crémant & Cocktails.",
+      "venue": "Kungsholmstorg 15",
+      "start": "2026-11-13T17:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "e7ef6051-3b41-4e1c-9cf7-ebf4c271094b",
+      "title_sv": "Julbord i Vinterträdgården 2026",
+      "title_en": "Julbord i Vinterträdgården 2026",
+      "desc_sv": "Julbord i Vinterträdgården 2026 är ett julbord på Vinterträdgården i Stockholm.\n\nJulbord i Vinterträdgården 2026 är ett julbord som arrangeras på Vinterträdgården i Stockholm.",
+      "desc_en": "Julbord i Vinterträdgården 2026 is a Christmas dinner buffet at Vinterträdgården in Stockholm.\n\nJulbord i Vinterträdgården 2026 is a Christmas dinner buffet held at Vinterträdgården in Stockholm.",
+      "raw": "Julbord i Vinterträdgården 2026 är ett julbord på Vinterträdgården i Stockholm.\n\nJulbord i Vinterträdgården 2026 är ett julbord som arrangeras på Vinterträdgården i Stockholm.",
+      "venue": "Trädgården",
+      "start": "2026-12-03T18:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "ce79729b-29bc-4acf-859c-93e3c11d2f00",
+      "title_sv": "Julbord i Vinterträdgården 2026",
+      "title_en": "Julbord i Vinterträdgården 2026",
+      "desc_sv": "Julbord i Vinterträdgården 2026 är ett julbord på Vinterträdgården i Stockholm.\n\nVinterträdgården i Stockholm dukar upp ett julbord för år 2026. Det är en festlig måltid som traditionellt avnjuts under julsäsongen.",
+      "desc_en": "Julbord i Vinterträdgården 2026 is a Christmas buffet at Vinterträdgården in Stockholm.\n\nVinterträdgården in Stockholm hosts a Christmas buffet for the year 2026. This festive meal is a traditional Swedish dining experience during the holiday season.",
+      "raw": "Julbord i Vinterträdgården 2026 är ett julbord på Vinterträdgården i Stockholm.\n\nVinterträdgården i Stockholm dukar upp ett julbord för år 2026. Det är en festlig måltid som traditionellt avnjuts under julsäsongen.",
+      "venue": "Trädgården",
+      "start": "2026-12-02T17:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "1a4ea4c5-6123-45c5-a761-64931635da1d",
+      "title_sv": "Golden Hits Dinnershow",
+      "title_en": "Golden Hits Dinnershow",
+      "desc_sv": "Golden Hits Dinnershow är en helkväll på Golden Hits i Stockholm.\n\nDenna helkväll på Golden Hits inkluderar en 3-rättersmeny och ikonisk underhållning. Efter middagen fortsätter kvällen med nattklubb och karaoke.",
+      "desc_en": "Golden Hits Dinnershow is a full evening event at Golden Hits in Stockholm.\n\nThis full evening at Golden Hits includes a 3-course dinner and iconic entertainment. Following dinner, the night continues with a nightclub and karaoke.",
+      "raw": "Golden Hits Dinnershow är en helkväll på Golden Hits i Stockholm.\n\nDenna helkväll på Golden Hits inkluderar en 3-rättersmeny och ikonisk underhållning. Efter middagen fortsätter kvällen med nattklubb och karaoke.",
+      "venue": "왕의 정원",
+      "start": "2027-01-30T17:30:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "02ac00db-72ba-473f-84e6-af498d659e70",
+      "title_sv": "Julbord - lunch 2026",
+      "title_en": "Julbord - lunch 2026",
+      "venue": "왕의 정원",
+      "start": "2026-11-28T11:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "2dfd5841-741c-41f5-8561-ec6fa07c476e",
+      "title_sv": "Julbord - 2026",
+      "title_en": "Julbord - 2026",
+      "venue": "왕의 정원",
+      "start": "2026-11-27T14:30:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "bd491859-c3c5-4809-a70c-b0546bcdd9e1",
+      "title_sv": "Jazzbrunch Nalen Restaurang",
+      "title_en": "Jazzbrunch Nalen Restaurang",
+      "desc_sv": "På lördagar serverar Nalen Restaurang brunch till tonerna av jazz.\n\nNalen, eller Nationalpalatset som huset också kallas, är en av Sveriges äldsta och mest tongivande kulturarenor med en brokig och fascinerande historia. Här har kända jazzmusiker och artister som Monica Zetterlund, Arne Domnérus och Charlie Parker spelat.\n\nBrunchen serveras till bordet i fyra serveringar. Vi börjar med kallrökt la",
+      "desc_en": "På lördagar serverar Nalen Restaurang brunch till tonerna av jazz.\n\nNalen, eller Nationalpalatset som huset också kallas, är en av Sveriges äldsta och mest tongivande kulturarenor med en brokig och fascinerande historia. Här har kända jazzmusiker och artister som Monica Zetterlund, Arne Domnérus och Charlie Parker spelat.\n\nBrunchen serveras till bordet i fyra serveringar. Vi börjar med kallrökt la",
+      "raw": "På lördagar serverar Nalen Restaurang brunch till tonerna av jazz.\n\nNalen, eller Nationalpalatset som huset också kallas, är en av Sveriges äldsta och mest tongivande kulturarenor med en brokig och fascinerande historia. Här har kända jazzmusiker och artister som Monica Zetterlund, Arne Domnérus och Charlie Parker spelat.\n\nBrunchen serveras till bordet i fyra serveringar. Vi börjar med kallrökt la",
+      "venue": "Nalen",
+      "start": "2026-11-14T10:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "9311485d-bbd5-4205-949c-7003f2e6a105",
+      "title_sv": "Mat för livet 2026",
+      "title_en": "Mat för livet 2026",
+      "desc_sv": "Mat för livet 2026 är Sveriges största gluten- och laktosfria mässa på Kistamässan i Bagarmossen.\n\nMat för livet 2026 är Sveriges största gluten- och laktosfria mässa. Evenemanget erbjuder besökare en plattform för att lyssna på föreläsningar och delta i tävlingar. Det finns även möjlighet att ställa frågor direkt till olika experter. Besökare kan också se utställare och det fullständiga programme",
+      "desc_en": "Mat för livet 2026 is Sweden's largest gluten- and lactose-free fair at Kistamässan in Bagarmossen.\n\nMat för livet 2026 presents Sweden's largest gluten- and lactose-free fair. This event provides visitors with a platform to attend lectures and participate in competitions. There will also be opportunities to ask questions directly to various experts. Visitors can explore exhibitors and view the co",
+      "raw": "Mat för livet 2026 är Sveriges största gluten- och laktosfria mässa på Kistamässan i Bagarmossen.\n\nMat för livet 2026 är Sveriges största gluten- och laktosfria mässa. Evenemanget erbjuder besökare en plattform för att lyssna på föreläsningar och delta i tävlingar. Det finns även möjlighet att ställa frågor direkt till olika experter. Besökare kan också se utställare och det fullständiga programme",
+      "venue": "왕의 정원",
+      "start": "2026-11-13T23:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "31e9adcf-712f-4d6d-9115-db685e20220b",
+      "title_sv": "Golden Hits Dinnershow",
+      "title_en": "Golden Hits Dinnershow",
+      "desc_sv": "Golden Hits Dinnershow är en helkväll med 3-rättersmeny, ikonisk underhållning, nattklubb och karaoke på Golden Hits i Stockholm.\n\nGolden Hits Dinnershow erbjuder en helkväll med en 3-rättersmeny. Gästerna får uppleva ikonisk underhållning, följt av nattklubb och karaoke.",
+      "desc_en": "Golden Hits Dinnershow is a full evening with a 3-course menu, iconic entertainment, nightclub, and karaoke at Golden Hits in Stockholm.\n\nThe Golden Hits Dinnershow offers a full evening with a 3-course menu. Guests can experience iconic entertainment, followed by a nightclub and karaoke.",
+      "raw": "Golden Hits Dinnershow är en helkväll med 3-rättersmeny, ikonisk underhållning, nattklubb och karaoke på Golden Hits i Stockholm.\n\nGolden Hits Dinnershow erbjuder en helkväll med en 3-rättersmeny. Gästerna får uppleva ikonisk underhållning, följt av nattklubb och karaoke.",
+      "venue": "왕의 정원",
+      "start": "2027-01-23T17:30:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "f2f41df3-01ed-4649-b242-6cf42d7d889e",
+      "title_sv": "John Lundvik Julturné",
+      "title_en": "John Lundvik Julturné",
+      "desc_sv": "John Lundvik with Mats Björkes Caravan Christmas tour 2026. Musical journey featuring classic and new Christmas songs with fresh arrangements and interpretations.",
+      "desc_en": "John Lundvik with Mats Björkes Caravan Christmas tour 2026. Musical journey featuring classic and new Christmas songs with fresh arrangements and interpretations.",
+      "raw": "John Lundvik with Mats Björkes Caravan Christmas tour 2026. Musical journey featuring classic and new Christmas songs with fresh arrangements and interpretations.",
+      "venue": "Rival",
+      "start": "2026-12-15T19:30:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "e0823d99-a3bf-4a29-805c-5bbeef0f609a",
+      "title_sv": "The Mwuanas",
+      "title_en": "The Mwuanas",
+      "desc_sv": "Svensk hiphop och R&B i intimt liveformat.",
+      "desc_en": "Svensk hiphop och R&B i intimt liveformat.",
+      "raw": "Svensk hiphop och R&B i intimt liveformat.",
+      "venue": "Fasching",
+      "start": "2027-02-12T19:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "f0320bd2-3f4e-4c01-9da6-f0a4cb657c78",
+      "title_sv": "Julbord - kväll 2026",
+      "title_en": "Julbord - kväll 2026",
+      "venue": "왕의 정원",
+      "start": "2026-12-11T17:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "0622f525-1fc4-4564-9d04-4c22127ea55a",
+      "title_sv": "MAMMA MIA! THE PARTY",
+      "title_en": "MAMMA MIA! THE PARTY",
+      "desc_sv": "Mamma Mia! The Party är en fest på Tyrol i Stockholm.\n\nSedan världspremiären i Stockholm har Mamma Mia! The Party dragit fulla tavernor i både London och Göteborg. Besökare kliver in genom dörrarna och förflyttas till Nikos taverna på den grekiska paradisön Skopelos. Kvällen inkluderar en välkomstouzo, en fyrarätters medelhavsmeny, sång, dans, våghalsiga luftfärder och dansanta servitörer. ABBAs l",
+      "desc_en": "Mamma Mia! The Party is a celebration at Tyrol in Stockholm.\n\nSince its world premiere in Stockholm, Mamma Mia! The Party has filled tavernas in London and Gothenburg. Guests step through the doors and are magically taken to Nikos taverna on the Greek island of Skopelos. The evening includes a welcome ouzo, a four-course Mediterranean menu, singing, dancing, daring aerial acrobatics, and dancing w",
+      "raw": "Mamma Mia! The Party är en fest på Tyrol i Stockholm.\n\nSedan världspremiären i Stockholm har Mamma Mia! The Party dragit fulla tavernor i både London och Göteborg. Besökare kliver in genom dörrarna och förflyttas till Nikos taverna på den grekiska paradisön Skopelos. Kvällen inkluderar en välkomstouzo, en fyrarätters medelhavsmeny, sång, dans, våghalsiga luftfärder och dansanta servitörer. ABBAs l",
+      "venue": "Tyrol",
+      "start": "2027-01-22T17:30:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "bb4670a7-f215-449f-b8c0-2958593fc109",
+      "title_sv": "Julbord i Vinterträdgården 2026",
+      "title_en": "Julbord i Vinterträdgården 2026",
+      "desc_sv": "Julbord i Vinterträdgården 2026 är ett julbord på Vinterträdgården i Stockholm.\n\nEvenemanget Julbord i Vinterträdgården 2026 erbjuder en klassisk julmåltid. Det äger rum i Vinterträdgården i Stockholm. Besökare kan njuta av ett traditionellt svenskt julbord.",
+      "desc_en": "Julbord i Vinterträdgården 2026 is a Christmas buffet at Vinterträdgården in Stockholm.\n\nThe event Julbord i Vinterträdgården 2026 offers a classic Christmas meal. It takes place at Vinterträdgården in Stockholm. Guests can enjoy a traditional Swedish Christmas buffet.",
+      "raw": "Julbord i Vinterträdgården 2026 är ett julbord på Vinterträdgården i Stockholm.\n\nEvenemanget Julbord i Vinterträdgården 2026 erbjuder en klassisk julmåltid. Det äger rum i Vinterträdgården i Stockholm. Besökare kan njuta av ett traditionellt svenskt julbord.",
+      "venue": "Trädgården",
+      "start": "2026-12-04T17:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "89584030-f724-4bb2-a34e-1f43d5eaf952",
+      "title_sv": "MAMMA MIA! THE PARTY",
+      "title_en": "MAMMA MIA! THE PARTY",
+      "desc_sv": "Mamma Mia! The Party är en fest på Tyrol i Stockholm.\n\nSedan världspremiären i Stockholm har Mamma Mia! The Party dragit fulla tavernor i både London och Göteborg. Besökare kliver in genom dörrarna och förflyttas till Nikos taverna på den grekiska paradisön Skopelos. Kvällen inkluderar en välkomstouzo, en fyrarätters medelhavsmeny, sång, dans, våghalsiga luftfärder och dansanta servitörer. ABBAs l",
+      "desc_en": "Mamma Mia! The Party is a celebration at Tyrol in Stockholm.\n\nSince its world premiere in Stockholm, Mamma Mia! The Party has filled tavernas in London and Gothenburg. Guests step through the doors and are magically taken to Nikos taverna on the Greek island of Skopelos. The evening includes a welcome ouzo, a four-course Mediterranean menu, singing, dancing, daring aerial acrobatics, and dancing w",
+      "raw": "Mamma Mia! The Party är en fest på Tyrol i Stockholm.\n\nSedan världspremiären i Stockholm har Mamma Mia! The Party dragit fulla tavernor i både London och Göteborg. Besökare kliver in genom dörrarna och förflyttas till Nikos taverna på den grekiska paradisön Skopelos. Kvällen inkluderar en välkomstouzo, en fyrarätters medelhavsmeny, sång, dans, våghalsiga luftfärder och dansanta servitörer. ABBAs l",
+      "venue": "Tyrol",
+      "start": "2027-01-16T18:30:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "152e4e46-905b-4fde-8e78-b3da1f24a3b6",
+      "title_sv": "Afternoon tea: I kunglig tjänst kl. 12.00",
+      "title_en": "Afternoon tea: I kunglig tjänst kl. 12.00",
+      "desc_sv": "Afternoon tea med utställningen I kunglig tjänst hålls på Livrustkammaren i Stockholm.\n\nDenna kungliga afternoon tea serveras i Stensalen med utsikt över Kungliga Slottet. Grillska Huset erbjuder ett buffébord med varma scones, bröd, hemlagad lemoncurd, marmelad, ost och grädde. Därutöver finns ljuvliga bakverk från bageriet, inklusive mummor, maränger, småkakor och kärleksmums. Efter eller före t",
+      "desc_en": "Afternoon tea and a tour of the \"I kunglig tjänst\" exhibition are held at Livrustkammaren in Stockholm.\n\nThis royal afternoon tea is served in the Stone Hall with a view of the Royal Palace. Grillska Huset provides a buffet table with warm scones, bread, homemade lemon curd, marmalade, cheese, and cream. Additionally, delightful pastries from the bakery are offered, including mummor, meringues, sm",
+      "raw": "Afternoon tea med utställningen I kunglig tjänst hålls på Livrustkammaren i Stockholm.\n\nDenna kungliga afternoon tea serveras i Stensalen med utsikt över Kungliga Slottet. Grillska Huset erbjuder ett buffébord med varma scones, bröd, hemlagad lemoncurd, marmelad, ost och grädde. Därutöver finns ljuvliga bakverk från bageriet, inklusive mummor, maränger, småkakor och kärleksmums. Efter eller före t",
+      "venue": "왕의 정원",
+      "start": "2026-11-08T11:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "23a75517-8548-42d2-9c2d-7914e1522c34",
+      "title_sv": "Jazzbrunch Nalen Restaurang",
+      "title_en": "Jazzbrunch Nalen Restaurang",
+      "desc_sv": "På lördagar serverar Nalen Restaurang brunch till tonerna av jazz.\n\nNalen, eller Nationalpalatset som huset också kallas, är en av Sveriges äldsta och mest tongivande kulturarenor med en brokig och fascinerande historia. Här har kända jazzmusiker och artister som Monica Zetterlund, Arne Domnérus och Charlie Parker spelat.\n\nBrunchen serveras till bordet i fyra serveringar. Vi börjar med kallrökt la",
+      "desc_en": "På lördagar serverar Nalen Restaurang brunch till tonerna av jazz.\n\nNalen, eller Nationalpalatset som huset också kallas, är en av Sveriges äldsta och mest tongivande kulturarenor med en brokig och fascinerande historia. Här har kända jazzmusiker och artister som Monica Zetterlund, Arne Domnérus och Charlie Parker spelat.\n\nBrunchen serveras till bordet i fyra serveringar. Vi börjar med kallrökt la",
+      "raw": "På lördagar serverar Nalen Restaurang brunch till tonerna av jazz.\n\nNalen, eller Nationalpalatset som huset också kallas, är en av Sveriges äldsta och mest tongivande kulturarenor med en brokig och fascinerande historia. Här har kända jazzmusiker och artister som Monica Zetterlund, Arne Domnérus och Charlie Parker spelat.\n\nBrunchen serveras till bordet i fyra serveringar. Vi börjar med kallrökt la",
+      "venue": "Nalen",
+      "start": "2026-12-12T10:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "5aa30b20-9dfa-410a-93a3-5724df833859",
+      "title_sv": "Golden Hits Dinnershow",
+      "title_en": "Golden Hits Dinnershow",
+      "desc_sv": "Golden Hits Dinnershow är en middagsshow med ikonisk underhållning på Golden Hits i Stockholm.\n\nEvenemanget erbjuder en helkväll med trerättersmeny och ikonisk underhållning. Efter middagen finns möjlighet att besöka nattklubben och sjunga karaoke.",
+      "desc_en": "Golden Hits Dinnershow is a dinner show with iconic entertainment at Golden Hits in Stockholm.\n\nThis event offers a full evening with a three-course menu and iconic entertainment. After dinner, guests can enjoy a nightclub and karaoke.",
+      "raw": "Golden Hits Dinnershow är en middagsshow med ikonisk underhållning på Golden Hits i Stockholm.\n\nEvenemanget erbjuder en helkväll med trerättersmeny och ikonisk underhållning. Efter middagen finns möjlighet att besöka nattklubben och sjunga karaoke.",
+      "venue": "왕의 정원",
+      "start": "2027-01-16T17:30:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "3ab23536-a4ba-40a1-b8bd-aa62c72fbd92",
+      "title_sv": "Golden Hits Dinnershow",
+      "title_en": "Golden Hits Dinnershow",
+      "desc_sv": "Golden Hits Dinnershow är en helkväll med middag och underhållning på Golden Hits i Stockholm.\n\nDenna dinnershow erbjuder en 3-rättersmeny, ikonisk underhållning, nattklubb och karaoke. Gästerna får uppleva en kombination av mat och nöje på Golden Hits.",
+      "desc_en": "Golden Hits Dinnershow is an evening of dinner and entertainment at Golden Hits in Stockholm.\n\nThis dinner show features a 3-course menu, iconic entertainment, a nightclub, and karaoke. Guests can experience a blend of dining and nightlife at Golden Hits.",
+      "raw": "Golden Hits Dinnershow är en helkväll med middag och underhållning på Golden Hits i Stockholm.\n\nDenna dinnershow erbjuder en 3-rättersmeny, ikonisk underhållning, nattklubb och karaoke. Gästerna får uppleva en kombination av mat och nöje på Golden Hits.",
+      "venue": "왕의 정원",
+      "start": "2027-01-14T17:30:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "7e053fbc-ee21-4a42-b552-680c28d2021b",
+      "title_sv": "Mat för livet 2026",
+      "title_en": "Mat för livet 2026",
+      "desc_sv": "Mat för livet 2026 är Sveriges största gluten- och laktosfria mässa på Kistamässan i Bagarmossen.\n\nMat för livet 2026 är Sveriges största mässa för gluten- och laktosfria produkter. Besökare kan lyssna på föreläsningar och delta i tävlingar. Det finns också möjlighet att ställa frågor till experter inom området. Mässan presenterar årets utställare och program, vilket ger en överblick över det sena",
+      "desc_en": "Mat för livet 2026 is Sweden's largest gluten- and lactose-free fair at Kistamässan in Bagarmossen.\n\nMat för livet 2026 is Sweden's largest fair dedicated to gluten- and lactose-free products. Attendees can listen to lectures and participate in competitions. There is also an opportunity to ask questions to experts in the field. The fair showcases the year's exhibitors and program, offering an over",
+      "raw": "Mat för livet 2026 är Sveriges största gluten- och laktosfria mässa på Kistamässan i Bagarmossen.\n\nMat för livet 2026 är Sveriges största mässa för gluten- och laktosfria produkter. Besökare kan lyssna på föreläsningar och delta i tävlingar. Det finns också möjlighet att ställa frågor till experter inom området. Mässan presenterar årets utställare och program, vilket ger en överblick över det sena",
+      "venue": "왕의 정원",
+      "start": "2026-11-12T23:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "bc7607a7-689b-4c5c-9f97-b89d1c8009c9",
+      "title_sv": "Julbord - kväll 2026",
+      "title_en": "Julbord - kväll 2026",
+      "venue": "왕의 정원",
+      "start": "2026-12-12T18:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "feb72e1f-9c5e-4cfa-83b3-700cba080871",
+      "title_sv": "Afternoon tea: I kunglig tjänst kl. 14.30",
+      "title_en": "Afternoon tea: I kunglig tjänst kl. 14.30",
+      "desc_sv": "Afternoon tea: I kunglig tjänst är ett evenemang på Livrustkammaren i Stockholm.\n\nAfternoon tea i Stensalen erbjuder en kunglig upplevelse med utsikt över Kungliga Slottet. Grillska Huset serverar ett klassiskt buffébord med varma scones, bröd, hemlagad lemoncurd, marmelad, ost och grädde. Därutöver finns bakverk som mummor, maränger, småkakor och kärleksmums. Utställningen \"I kunglig tjänst\" ger ",
+      "desc_en": "Afternoon tea: I kunglig tjänst is an event at Livrustkammaren in Stockholm.\n\nAfternoon tea in Stensalen offers a royal experience with views of the Royal Palace. Grillska Huset serves a classic buffet table with warm scones, bread, homemade lemon curd, marmalade, cheese, and cream. Additionally, pastries like \"mummor\", meringues, cookies, and \"kärleksmums\" are available. The exhibition \"I kunglig",
+      "raw": "Afternoon tea: I kunglig tjänst är ett evenemang på Livrustkammaren i Stockholm.\n\nAfternoon tea i Stensalen erbjuder en kunglig upplevelse med utsikt över Kungliga Slottet. Grillska Huset serverar ett klassiskt buffébord med varma scones, bröd, hemlagad lemoncurd, marmelad, ost och grädde. Därutöver finns bakverk som mummor, maränger, småkakor och kärleksmums. Utställningen \"I kunglig tjänst\" ger ",
+      "venue": "왕의 정원",
+      "start": "2026-11-08T13:30:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "27782bbe-9c91-4cb1-892f-223ecedaae71",
+      "title_sv": "French Touch Party - Stockholm (20:30 - 00:30)",
+      "title_en": "French Touch Party - Stockholm (20:30 - 00:30)",
+      "desc_sv": "Soirée French Touch, Crémant & Cocktails. / French Touch party, Crémant & Cocktails.",
+      "desc_en": "Soirée French Touch, Crémant & Cocktails. / French Touch party, Crémant & Cocktails.",
+      "raw": "Soirée French Touch, Crémant & Cocktails. / French Touch party, Crémant & Cocktails.",
+      "venue": "Kungsholmstorg 15",
+      "start": "2026-11-13T17:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "c510959a-e950-4ea4-b988-41e9b87a361d",
+      "title_sv": "MAMMA MIA! THE PARTY",
+      "title_en": "MAMMA MIA! THE PARTY",
+      "desc_sv": "MAMMA MIA! THE PARTY är en festkväll på Tyrol i Stockholm.\n\nKliv in i Nikos taverna på den grekiska paradisön Skopelos. Kvällen inkluderar en fyrarätters medelhavsmeny, välkomstouzo, sång, dans och våghalsiga luftfärder. Evenemanget med ABBA:s låtar produceras av Björn Ulvaeus och Pophouse. Medverkande artister varierar under spelperioden. Bordsplaceringen är klar vid ankomst och alla i en bokning",
+      "desc_en": "MAMMA MIA! THE PARTY is a party evening at Tyrol in Stockholm.\n\nStep into Nikos' taverna on the Greek paradise island of Skopelos. The evening includes a four-course Mediterranean menu, welcome ouzo, singing, dancing, and daring aerial acrobatics. Featuring ABBA's songs, the event is produced by Björn Ulvaeus and Pophouse. Participating artists vary during the performance period. Table seating is ",
+      "raw": "MAMMA MIA! THE PARTY är en festkväll på Tyrol i Stockholm.\n\nKliv in i Nikos taverna på den grekiska paradisön Skopelos. Kvällen inkluderar en fyrarätters medelhavsmeny, välkomstouzo, sång, dans och våghalsiga luftfärder. Evenemanget med ABBA:s låtar produceras av Björn Ulvaeus och Pophouse. Medverkande artister varierar under spelperioden. Bordsplaceringen är klar vid ankomst och alla i en bokning",
+      "venue": "Tyrol",
+      "start": "2027-01-08T17:30:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "26f3d3b0-2c8b-4b34-8c16-b37d752cdaf1",
+      "title_sv": "MAMMA MIA! THE PARTY",
+      "title_en": "MAMMA MIA! THE PARTY",
+      "desc_sv": "MAMMA MIA! THE PARTY är en festkväll på Tyrol i Stockholm som utspelar sig på Nikos taverna på ön Skopelos.\n\nKliv in i Nikos taverna på den grekiska paradisön Skopelos för en helkväll. Kvällen inkluderar en fyrarätters medelhavsmeny med välkomstouzo. Under festen bjuds det på sång, dans, våghalsiga luftfärder och dansanta servitörer, tillsammans med ABBAs låtar. Varje kväll är unik, och medverkand",
+      "desc_en": "MAMMA MIA! THE PARTY is a party night at Tyrol in Stockholm, set in Nikos' taverna on the island of Skopelos.\n\nStep into Nikos' taverna on the Greek paradise island of Skopelos for an entire evening. The night includes a four-course Mediterranean menu with welcome ouzo. During the party, enjoy singing, dancing, daring aerial acrobatics, and dancing waiters, all set to ABBA's songs. Each evening is",
+      "raw": "MAMMA MIA! THE PARTY är en festkväll på Tyrol i Stockholm som utspelar sig på Nikos taverna på ön Skopelos.\n\nKliv in i Nikos taverna på den grekiska paradisön Skopelos för en helkväll. Kvällen inkluderar en fyrarätters medelhavsmeny med välkomstouzo. Under festen bjuds det på sång, dans, våghalsiga luftfärder och dansanta servitörer, tillsammans med ABBAs låtar. Varje kväll är unik, och medverkand",
+      "venue": "Tyrol",
+      "start": "2027-01-07T17:30:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "548b114d-f85c-4220-86f9-51ec0d90bb61",
+      "title_sv": "Golden Hits Dinnershow",
+      "title_en": "Golden Hits Dinnershow",
+      "desc_sv": "Golden Hits Dinnershow är en helkväll med underhållning på Golden Hits i Stockholm.\n\nEvenemanget erbjuder en 3-rättersmeny tillsammans med ikonisk underhållning. Kvällen kompletteras med en nattklubb och karaoke.",
+      "desc_en": "Golden Hits Dinnershow is a complete evening of entertainment at Golden Hits in Stockholm.\n\nThe event features a 3-course menu alongside iconic entertainment. The evening is complemented by a nightclub and karaoke.",
+      "raw": "Golden Hits Dinnershow är en helkväll med underhållning på Golden Hits i Stockholm.\n\nEvenemanget erbjuder en 3-rättersmeny tillsammans med ikonisk underhållning. Kvällen kompletteras med en nattklubb och karaoke.",
+      "venue": "왕의 정원",
+      "start": "2027-01-07T17:30:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "00592398-c21d-4591-9dd9-3177a913ecd4",
+      "title_sv": "Julbord - eftermiddag 2026",
+      "title_en": "Julbord - eftermiddag 2026",
+      "venue": "왕의 정원",
+      "start": "2026-12-16T13:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "4ac22415-ba03-43d8-b111-452af55da66b",
+      "title_sv": "Matmilen Vasastan",
+      "title_en": "Matmilen Vasastan",
+      "desc_sv": "Matmilen Vasastan är en matpromenad som tar dig till restauranger i Stockholm.\n\nMatmilen är en matpromenad där besökare får upptäcka den lokala restaurangscenen. Promenaden tar dig till flera utvalda restauranger i Vasastan. På varje ställe provsmakas en liten rätt, ett smakprov som speglar varje krogs karaktär. Konceptet är utformat för att vara smidigt, så att deltagare kan njuta och upptäcka ny",
+      "desc_en": "Matmilen Vasastan is a food walk visiting several restaurants in Stockholm.\n\nMatmilen is a food walk designed for visitors to discover the local restaurant scene. The walk takes you to several selected restaurants in Vasastan. At each location, guests taste a small dish, a sample reflecting the character of each eatery. The concept is arranged to be smooth and simple, allowing participants to enjo",
+      "raw": "Matmilen Vasastan är en matpromenad som tar dig till restauranger i Stockholm.\n\nMatmilen är en matpromenad där besökare får upptäcka den lokala restaurangscenen. Promenaden tar dig till flera utvalda restauranger i Vasastan. På varje ställe provsmakas en liten rätt, ett smakprov som speglar varje krogs karaktär. Konceptet är utformat för att vara smidigt, så att deltagare kan njuta och upptäcka ny",
+      "venue": "Stockholm",
+      "start": "2026-10-31T11:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "8525153f-cb9b-474f-88a1-2728741d9fec",
+      "title_sv": "The Mwuanas",
+      "title_en": "The Mwuanas",
+      "desc_sv": "Svensk hiphop och R&B i intimt liveformat.",
+      "desc_en": "Svensk hiphop och R&B i intimt liveformat.",
+      "raw": "Svensk hiphop och R&B i intimt liveformat.",
+      "venue": "Fasching",
+      "start": "2027-02-12T21:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "4838c08d-7a4c-4913-989d-bdfe7eb106ee",
+      "title_sv": "Mat- och Hantverksmässa på Ramvik Folkets Hus 2026",
+      "title_en": "Mat- och Hantverksmässa på Ramvik Folkets Hus 2026",
+      "venue": "Folkets Hus",
+      "start": "2026-10-24T11:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "f6fb4003-2405-44eb-add0-6350ff860590",
+      "title_sv": "MAMMA MIA! THE PARTY",
+      "title_en": "MAMMA MIA! THE PARTY",
+      "desc_sv": "Mamma Mia! The Party är en fest på Tyrol i Stockholm.\n\nSedan världspremiären i Stockholm har Mamma Mia! The Party dragit fulla tavernor i både London och Göteborg. Besökare kliver in genom dörrarna och förflyttas till Nikos taverna på den grekiska paradisön Skopelos. Kvällen inkluderar en välkomstouzo, en fyrarätters medelhavsmeny, sång, dans, våghalsiga luftfärder och dansanta servitörer. ABBAs l",
+      "desc_en": "Mamma Mia! The Party is a celebration at Tyrol in Stockholm.\n\nSince its world premiere in Stockholm, Mamma Mia! The Party has filled tavernas in London and Gothenburg. Guests step through the doors and are magically taken to Nikos taverna on the Greek island of Skopelos. The evening includes a welcome ouzo, a four-course Mediterranean menu, singing, dancing, daring aerial acrobatics, and dancing w",
+      "raw": "Mamma Mia! The Party är en fest på Tyrol i Stockholm.\n\nSedan världspremiären i Stockholm har Mamma Mia! The Party dragit fulla tavernor i både London och Göteborg. Besökare kliver in genom dörrarna och förflyttas till Nikos taverna på den grekiska paradisön Skopelos. Kvällen inkluderar en välkomstouzo, en fyrarätters medelhavsmeny, sång, dans, våghalsiga luftfärder och dansanta servitörer. ABBAs l",
+      "venue": "Tyrol",
+      "start": "2027-02-13T12:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "a21ce8e3-8d84-463d-8279-fc45c95839e6",
+      "title_sv": "Drottning Kristina 400 år",
+      "title_en": "Drottning Kristina 400 år",
+      "desc_sv": "Har du alltid velat gå på en kunglig födelsedagsfest? Välkommen att fira drottning Kristina! 👑\n\nÅr 2026 skulle drottning Kristina ha fyllt 400 år. Det uppmärksammar Vasamuseet, tillsammans med Livrustkammaren och Christina Akademien, med en stämningsfull kväll där historia, musik och mat möts i en unik hyllning till en av Sveriges mest fascinerande regenter.\n\nKvällen bjuder på en 1600-talsinspire",
+      "desc_en": "Har du alltid velat gå på en kunglig födelsedagsfest? Välkommen att fira drottning Kristina! 👑\n\nÅr 2026 skulle drottning Kristina ha fyllt 400 år. Det uppmärksammar Vasamuseet, tillsammans med Livrustkammaren och Christina Akademien, med en stämningsfull kväll där historia, musik och mat möts i en unik hyllning till en av Sveriges mest fascinerande regenter.\n\nKvällen bjuder på en 1600-talsinspire",
+      "raw": "Har du alltid velat gå på en kunglig födelsedagsfest? Välkommen att fira drottning Kristina! 👑\n\nÅr 2026 skulle drottning Kristina ha fyllt 400 år. Det uppmärksammar Vasamuseet, tillsammans med Livrustkammaren och Christina Akademien, med en stämningsfull kväll där historia, musik och mat möts i en unik hyllning till en av Sveriges mest fascinerande regenter.\n\nKvällen bjuder på en 1600-talsinspire",
+      "venue": "Vasamuseet",
+      "start": "2026-12-08T16:30:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "f44337ed-ac17-4716-be27-48d10f114369",
+      "title_sv": "Julbord",
+      "title_en": "Julbord",
+      "desc_sv": "Julbord är ett klassiskt julbord på Reimersholme Hotel i Stockholm.\n\nVälkommen att fira in julen med ett julbord av Michel, som dukar upp rustik, klassisk julmat och lokala delikatesser. Utbudet inkluderar kalla, varma, rökta, salta, inlagda och söta rätter, med gott om alternativ för alla smaker. Kvällen inleds utomhus på gården där gästerna samlas kring en eld för glögg och stämningsfull musik. ",
+      "desc_en": "Julbord is a classic Christmas dinner at Reimersholme Hotel in Stockholm.\n\nCelebrate Christmas with a traditional Julbord prepared by Michel, featuring rustic classic Christmas food and fine local delicacies. The offerings include cold, warm, smoked, salty, pickled, and sweet dishes, with many options available for everyone. The evening begins outdoors in the courtyard, where guests gather around ",
+      "raw": "Julbord är ett klassiskt julbord på Reimersholme Hotel i Stockholm.\n\nVälkommen att fira in julen med ett julbord av Michel, som dukar upp rustik, klassisk julmat och lokala delikatesser. Utbudet inkluderar kalla, varma, rökta, salta, inlagda och söta rätter, med gott om alternativ för alla smaker. Kvällen inleds utomhus på gården där gästerna samlas kring en eld för glögg och stämningsfull musik. ",
+      "venue": "Reimersholme Hotel",
+      "start": "2026-11-25T15:30:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "3ccaeda0-0439-42c1-94c3-c78cca4ba5fe",
+      "title_sv": "Julbord - lunch 2026",
+      "title_en": "Julbord - lunch 2026",
+      "venue": "왕의 정원",
+      "start": "2026-12-13T11:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "28d47969-d1aa-4fc6-9ada-358aa3c19d7d",
+      "title_sv": "MAMMA MIA! THE PARTY",
+      "title_en": "MAMMA MIA! THE PARTY",
+      "desc_sv": "Mamma Mia! The Party är en fest på Tyrol i Stockholm.\n\nSedan världspremiären i Stockholm har Mamma Mia! The Party dragit fulla tavernor i både London och Göteborg. Besökare kliver in genom dörrarna och förflyttas till Nikos taverna på den grekiska paradisön Skopelos. Kvällen inkluderar en välkomstouzo, en fyrarätters medelhavsmeny, sång, dans, våghalsiga luftfärder och dansanta servitörer. ABBAs l",
+      "desc_en": "Mamma Mia! The Party is a celebration at Tyrol in Stockholm.\n\nSince its world premiere in Stockholm, Mamma Mia! The Party has filled tavernas in London and Gothenburg. Guests step through the doors and are magically taken to Nikos taverna on the Greek island of Skopelos. The evening includes a welcome ouzo, a four-course Mediterranean menu, singing, dancing, daring aerial acrobatics, and dancing w",
+      "raw": "Mamma Mia! The Party är en fest på Tyrol i Stockholm.\n\nSedan världspremiären i Stockholm har Mamma Mia! The Party dragit fulla tavernor i både London och Göteborg. Besökare kliver in genom dörrarna och förflyttas till Nikos taverna på den grekiska paradisön Skopelos. Kvällen inkluderar en välkomstouzo, en fyrarätters medelhavsmeny, sång, dans, våghalsiga luftfärder och dansanta servitörer. ABBAs l",
+      "venue": "Tyrol",
+      "start": "2027-01-30T12:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "d605e1c4-080d-4e2f-a591-3a74c7fac935",
+      "title_sv": "Julbord i Vinterträdgården 2026",
+      "title_en": "Julbord i Vinterträdgården 2026",
+      "desc_sv": "Julbord i Vinterträdgården 2026 är ett julbord på Vinterträdgården i Stockholm.\n\nEvenemanget Julbord i Vinterträdgården 2026 erbjuder en traditionell julmåltid. Det äger rum på Vinterträdgården i Stockholm och ger gästerna en möjlighet att uppleva julen.",
+      "desc_en": "Julbord i Vinterträdgården 2026 is a Christmas dinner at Vinterträdgården in Stockholm.\n\nThe event Julbord i Vinterträdgården 2026 offers a traditional Christmas dinner. It takes place at Vinterträdgården in Stockholm, providing guests with an opportunity to experience the festive season.",
+      "raw": "Julbord i Vinterträdgården 2026 är ett julbord på Vinterträdgården i Stockholm.\n\nEvenemanget Julbord i Vinterträdgården 2026 erbjuder en traditionell julmåltid. Det äger rum på Vinterträdgården i Stockholm och ger gästerna en möjlighet att uppleva julen.",
+      "venue": "Trädgården",
+      "start": "2026-11-29T14:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "de1c8dd1-2b43-48c4-9c19-b55a67758824",
+      "title_sv": "Julbord - eftermiddag 2026",
+      "title_en": "Julbord - eftermiddag 2026",
+      "venue": "왕의 정원",
+      "start": "2026-11-27T13:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "cf873a9f-c2d4-406f-a862-ac6e1dc9330e",
+      "title_sv": "Matt Hansen",
+      "title_en": "Matt Hansen",
+      "desc_sv": "Concert by Matt Hansen at Fållan.",
+      "desc_en": "Concert by Matt Hansen at Fållan.",
+      "raw": "Concert by Matt Hansen at Fållan.",
+      "venue": "Fallan",
+      "start": "2026-10-16T19:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "c1d08456-8188-4be5-bba6-430a9add614a",
+      "title_sv": "Matt Maeson",
+      "title_en": "Matt Maeson",
+      "venue": "Debaser",
+      "start": "2026-10-10T00:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "1bf552ff-14c7-4d4c-9800-42cab8b51a2b",
+      "title_sv": "French Touch Party - Stockholm (20:30 - 00:30)",
+      "title_en": "French Touch Party - Stockholm (20:30 - 00:30)",
+      "desc_sv": "Soirée French Touch, Crémant & Cocktails. / French Touch party, Crémant & Cocktails.",
+      "desc_en": "Soirée French Touch, Crémant & Cocktails. / French Touch party, Crémant & Cocktails.",
+      "raw": "Soirée French Touch, Crémant & Cocktails. / French Touch party, Crémant & Cocktails.",
+      "venue": "Kungsholmstorg 15",
+      "start": "2026-11-13T17:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "3d049388-b5c0-4abc-87d5-8a0bf9b3ccc9",
+      "title_sv": "Julbord - lunch 2026",
+      "title_en": "Julbord - lunch 2026",
+      "venue": "왕의 정원",
+      "start": "2026-11-29T11:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "4247aca2-bcda-4593-ae10-38e73f1c9bd5",
+      "title_sv": "Julbord - kväll 2026",
+      "title_en": "Julbord - kväll 2026",
+      "venue": "왕의 정원",
+      "start": "2026-12-10T17:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "62fbc925-c981-446c-a630-00ef8b8b0528",
+      "title_sv": "Julbord - eftermiddag 2026",
+      "title_en": "Julbord - eftermiddag 2026",
+      "venue": "왕의 정원",
+      "start": "2026-12-11T13:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "85e4de78-bd95-4cf1-b3ba-f5744d4d260e",
+      "title_sv": "Sthlm Food &#038; Wine",
+      "title_en": "Sthlm Food &#038; Wine",
+      "desc_sv": "På Sthlm Food & Wine möts matglädje och ny kunskap under ett och samma tak. Här hittar du ett noga utvalt dryckessortiment med vin, bubbel, öl och destillat samt spännande matprodukter, streetfood, praliner – allt i världsklass! Ta med dig dina vänner, din partner eller familjen och låt er svepas med i en helg fylld av njutning, upptäckarlust och minnesvärda smakupplevelser.",
+      "desc_en": "På Sthlm Food & Wine möts matglädje och ny kunskap under ett och samma tak. Här hittar du ett noga utvalt dryckessortiment med vin, bubbel, öl och destillat samt spännande matprodukter, streetfood, praliner – allt i världsklass! Ta med dig dina vänner, din partner eller familjen och låt er svepas med i en helg fylld av njutning, upptäckarlust och minnesvärda smakupplevelser.",
+      "raw": "På Sthlm Food & Wine möts matglädje och ny kunskap under ett och samma tak. Här hittar du ett noga utvalt dryckessortiment med vin, bubbel, öl och destillat samt spännande matprodukter, streetfood, praliner – allt i världsklass! Ta med dig dina vänner, din partner eller familjen och låt er svepas med i en helg fylld av njutning, upptäckarlust och minnesvärda smakupplevelser.",
+      "venue": "Stockholmsmässan",
+      "start": "2026-11-06T00:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "99242098-aa88-490d-9208-801a95654af5",
+      "title_sv": "IN HIS PRESENCE 6.0 (REVIVAL)",
+      "title_en": "IN HIS PRESENCE 6.0 (REVIVAL)",
+      "desc_sv": "WORSHIP - PRAISE - TRANSFORMATION - PROPHETIC - WORD - PRAYER- REVIVAL",
+      "desc_en": "WORSHIP - PRAISE - TRANSFORMATION - PROPHETIC - WORD - PRAYER- REVIVAL",
+      "raw": "WORSHIP - PRAISE - TRANSFORMATION - PROPHETIC - WORD - PRAYER- REVIVAL",
+      "venue": "Citykyrkan",
+      "start": "2026-10-10T00:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "15fb3710-a81d-49cf-aea2-df22c2acd360",
+      "title_sv": "MAMMA MIA! THE PARTY",
+      "title_en": "MAMMA MIA! THE PARTY",
+      "desc_sv": "Mamma Mia! The Party är ett event på Tyrol i Stockholm.\n\nMamma Mia! The Party har dragit fulla tavernor i London och Göteborg efter världspremiären i Stockholm. Gäster kliver in på Nikos taverna på den grekiska paradisön Skopelos. Här väntar en helkväll med välkomstouzo, en fyrarätters medelhavsmeny, sång, dans, våghalsiga luftfärder, dansanta servitörer och ABBA-låtar. Varje kväll är unik, och in",
+      "desc_en": "Mamma Mia! The Party is an event at Tyrol in Stockholm.\n\nMamma Mia! The Party has filled taverns in London and Gothenburg since its world premiere in Stockholm. Guests step into Nikos' tavern on the Greek paradise island of Skopelos. An evening includes welcome ouzo, a four-course Mediterranean menu, song, dance, daring aerial acts, dancing waiters, and ABBA's songs. Each evening is unique, and no",
+      "raw": "Mamma Mia! The Party är ett event på Tyrol i Stockholm.\n\nMamma Mia! The Party har dragit fulla tavernor i London och Göteborg efter världspremiären i Stockholm. Gäster kliver in på Nikos taverna på den grekiska paradisön Skopelos. Här väntar en helkväll med välkomstouzo, en fyrarätters medelhavsmeny, sång, dans, våghalsiga luftfärder, dansanta servitörer och ABBA-låtar. Varje kväll är unik, och in",
+      "venue": "Tyrol",
+      "start": "2026-11-22T12:30:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "f1e039ad-15e2-449c-acc5-cb871c5fe79b",
+      "title_sv": "Fatoumata Diawara",
+      "title_en": "Fatoumata Diawara",
+      "desc_sv": "Hyllade maliska sångerskan Fatoumata Diawara har under det senaste decenniet etablerat sig som en av Afrikas mest inflytelserika röster. Med sin kraftfulla röst, sitt unika gitarrspel och sin förmåga att förena traditionell Wassoulou-musik med modern afropop och västerländska influenser, har hon nått en publik långt utanför kontinentens gränser. Den 17 oktober spelar hon i Stockholm!",
+      "desc_en": "Hyllade maliska sångerskan Fatoumata Diawara har under det senaste decenniet etablerat sig som en av Afrikas mest inflytelserika röster. Med sin kraftfulla röst, sitt unika gitarrspel och sin förmåga att förena traditionell Wassoulou-musik med modern afropop och västerländska influenser, har hon nått en publik långt utanför kontinentens gränser. Den 17 oktober spelar hon i Stockholm!",
+      "raw": "Hyllade maliska sångerskan Fatoumata Diawara har under det senaste decenniet etablerat sig som en av Afrikas mest inflytelserika röster. Med sin kraftfulla röst, sitt unika gitarrspel och sin förmåga att förena traditionell Wassoulou-musik med modern afropop och västerländska influenser, har hon nått en publik långt utanför kontinentens gränser. Den 17 oktober spelar hon i Stockholm!",
+      "venue": "Kulturhuset Stadsteatern",
+      "start": "2026-10-17T18:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "b4e1baab-b60f-4bec-a591-d4c6aa5bd9b9",
+      "title_sv": "Golden Hits Dinnershow",
+      "title_en": "Golden Hits Dinnershow",
+      "desc_sv": "Golden Hits Dinnershow är en dinnershow på Golden Hits i Stockholm.\n\nDenna dinnershow erbjuder en 3-rättersmeny. Kvällen inkluderar ikonisk underhållning, nattklubb och karaoke.",
+      "desc_en": "Golden Hits Dinnershow is a dinnershow at Golden Hits in Stockholm.\n\nThis dinnershow features a 3-course menu. The evening includes iconic entertainment, a nightclub, and karaoke.",
+      "raw": "Golden Hits Dinnershow är en dinnershow på Golden Hits i Stockholm.\n\nDenna dinnershow erbjuder en 3-rättersmeny. Kvällen inkluderar ikonisk underhållning, nattklubb och karaoke.",
+      "venue": "왕의 정원",
+      "start": "2027-03-06T17:30:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "ce7725cc-804b-4a6c-b936-ca80315c6749",
+      "title_sv": "MAMMA MIA! THE PARTY",
+      "title_en": "MAMMA MIA! THE PARTY",
+      "desc_sv": "Mamma Mia! The Party är en fest på Tyrol i Stockholm.\n\nSedan världspremiären i Stockholm har Mamma Mia! The Party dragit fulla tavernor i både London och Göteborg. Besökare kliver in genom dörrarna och förflyttas till Nikos taverna på den grekiska paradisön Skopelos. Kvällen inkluderar en välkomstouzo, en fyrarätters medelhavsmeny, sång, dans, våghalsiga luftfärder och dansanta servitörer. ABBAs l",
+      "desc_en": "Mamma Mia! The Party is a celebration at Tyrol in Stockholm.\n\nSince its world premiere in Stockholm, Mamma Mia! The Party has filled tavernas in London and Gothenburg. Guests step through the doors and are magically taken to Nikos taverna on the Greek island of Skopelos. The evening includes a welcome ouzo, a four-course Mediterranean menu, singing, dancing, daring aerial acrobatics, and dancing w",
+      "raw": "Mamma Mia! The Party är en fest på Tyrol i Stockholm.\n\nSedan världspremiären i Stockholm har Mamma Mia! The Party dragit fulla tavernor i både London och Göteborg. Besökare kliver in genom dörrarna och förflyttas till Nikos taverna på den grekiska paradisön Skopelos. Kvällen inkluderar en välkomstouzo, en fyrarätters medelhavsmeny, sång, dans, våghalsiga luftfärder och dansanta servitörer. ABBAs l",
+      "venue": "Tyrol",
+      "start": "2026-10-10T17:30:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "1e2a6200-8cf8-409b-9646-b98bedde81c5",
+      "title_sv": "Golden Hits Dinnershow",
+      "title_en": "Golden Hits Dinnershow",
+      "desc_sv": "Golden Hits Dinnershow är en middagsshow på Golden Hits i Stockholm.\n\nGolden Hits Dinnershow är en helkväll med en 3-rättersmeny. Kvällen inkluderar även ikonisk underhållning, nattklubb och karaoke.",
+      "desc_en": "Golden Hits Dinnershow is a dinner show at Golden Hits in Stockholm.\n\nThe Golden Hits Dinnershow offers a full evening featuring a 3-course meal. The night also includes iconic entertainment, a nightclub, and karaoke.",
+      "raw": "Golden Hits Dinnershow är en middagsshow på Golden Hits i Stockholm.\n\nGolden Hits Dinnershow är en helkväll med en 3-rättersmeny. Kvällen inkluderar även ikonisk underhållning, nattklubb och karaoke.",
+      "venue": "왕의 정원",
+      "start": "2027-03-04T17:30:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "a6838f45-ecfb-4c37-a452-22d6f289ffa6",
+      "title_sv": "MAMMA MIA! THE PARTY",
+      "title_en": "MAMMA MIA! THE PARTY",
+      "desc_sv": "Mamma Mia! The Party är en fest på Tyrol i Stockholm.\n\nSedan världspremiären i Stockholm har Mamma Mia! The Party dragit fulla tavernor i både London och Göteborg. Besökare kliver in genom dörrarna och förflyttas till Nikos taverna på den grekiska paradisön Skopelos. Kvällen inkluderar en välkomstouzo, en fyrarätters medelhavsmeny, sång, dans, våghalsiga luftfärder och dansanta servitörer. ABBAs l",
+      "desc_en": "Mamma Mia! The Party is a celebration at Tyrol in Stockholm.\n\nSince its world premiere in Stockholm, Mamma Mia! The Party has filled tavernas in London and Gothenburg. Guests step through the doors and are magically taken to Nikos taverna on the Greek island of Skopelos. The evening includes a welcome ouzo, a four-course Mediterranean menu, singing, dancing, daring aerial acrobatics, and dancing w",
+      "raw": "Mamma Mia! The Party är en fest på Tyrol i Stockholm.\n\nSedan världspremiären i Stockholm har Mamma Mia! The Party dragit fulla tavernor i både London och Göteborg. Besökare kliver in genom dörrarna och förflyttas till Nikos taverna på den grekiska paradisön Skopelos. Kvällen inkluderar en välkomstouzo, en fyrarätters medelhavsmeny, sång, dans, våghalsiga luftfärder och dansanta servitörer. ABBAs l",
+      "venue": "Tyrol",
+      "start": "2027-02-26T17:30:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "24fc3b47-14c4-4c32-9bfb-8dca2d5e2478",
+      "title_sv": "French Touch Party - Stockholm (20:30 - 00:30)",
+      "title_en": "French Touch Party - Stockholm (20:30 - 00:30)",
+      "desc_sv": "Soirée French Touch, Crémant & Cocktails. / French Touch party, Crémant & Cocktails.",
+      "desc_en": "Soirée French Touch, Crémant & Cocktails. / French Touch party, Crémant & Cocktails.",
+      "raw": "Soirée French Touch, Crémant & Cocktails. / French Touch party, Crémant & Cocktails.",
+      "venue": "Kungsholmstorg 15",
+      "start": "2026-11-13T17:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "b89cc4d5-176a-4ad2-81a6-4ad369eee50b",
+      "title_sv": "French Touch Party - Stockholm (20:30 - 00:30)",
+      "title_en": "French Touch Party - Stockholm (20:30 - 00:30)",
+      "desc_sv": "Soirée French Touch, Crémant & Cocktails. / French Touch party, Crémant & Cocktails.",
+      "desc_en": "Soirée French Touch, Crémant & Cocktails. / French Touch party, Crémant & Cocktails.",
+      "raw": "Soirée French Touch, Crémant & Cocktails. / French Touch party, Crémant & Cocktails.",
+      "venue": "Kungsholmstorg 15",
+      "start": "2026-11-13T17:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "562dd881-4843-4899-92b2-e88a72fe1c56",
+      "title_sv": "Julbord - kväll 2026",
+      "title_en": "Julbord - kväll 2026",
+      "venue": "왕의 정원",
+      "start": "2026-12-04T17:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "b4c86b19-35e1-4abd-8828-e1ce7ee76eb5",
+      "title_sv": "Matt Hansen",
+      "title_en": "Matt Hansen",
+      "desc_sv": "Concert by Matt Hansen at Fållan.",
+      "desc_en": "Concert by Matt Hansen at Fållan.",
+      "raw": "Concert by Matt Hansen at Fållan.",
+      "venue": "Fallan",
+      "start": "2026-10-16T17:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "a3faf575-c6bb-4e88-a7e1-b092957e8f91",
+      "title_sv": "French Touch Party - Stockholm (20:30 - 00:30)",
+      "title_en": "French Touch Party - Stockholm (20:30 - 00:30)",
+      "desc_sv": "Soirée French Touch, Crémant & Cocktails. / French Touch party, Crémant & Cocktails.",
+      "desc_en": "Soirée French Touch, Crémant & Cocktails. / French Touch party, Crémant & Cocktails.",
+      "raw": "Soirée French Touch, Crémant & Cocktails. / French Touch party, Crémant & Cocktails.",
+      "venue": "Kungsholmstorg 15",
+      "start": "2026-11-13T17:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "8565d442-c83f-4997-b1c1-010de2d72d59",
+      "title_sv": "MAMMA MIA! THE PARTY",
+      "title_en": "MAMMA MIA! THE PARTY",
+      "desc_sv": "Mamma Mia! The Party är en fest på Tyrol i Stockholm.\n\nSedan världspremiären i Stockholm har Mamma Mia! The Party dragit fulla tavernor i både London och Göteborg. Besökare kliver in genom dörrarna och förflyttas till Nikos taverna på den grekiska paradisön Skopelos. Kvällen inkluderar en välkomstouzo, en fyrarätters medelhavsmeny, sång, dans, våghalsiga luftfärder och dansanta servitörer. ABBAs l",
+      "desc_en": "Mamma Mia! The Party is a celebration at Tyrol in Stockholm.\n\nSince its world premiere in Stockholm, Mamma Mia! The Party has filled tavernas in London and Gothenburg. Guests step through the doors and are magically taken to Nikos taverna on the Greek island of Skopelos. The evening includes a welcome ouzo, a four-course Mediterranean menu, singing, dancing, daring aerial acrobatics, and dancing w",
+      "raw": "Mamma Mia! The Party är en fest på Tyrol i Stockholm.\n\nSedan världspremiären i Stockholm har Mamma Mia! The Party dragit fulla tavernor i både London och Göteborg. Besökare kliver in genom dörrarna och förflyttas till Nikos taverna på den grekiska paradisön Skopelos. Kvällen inkluderar en välkomstouzo, en fyrarätters medelhavsmeny, sång, dans, våghalsiga luftfärder och dansanta servitörer. ABBAs l",
+      "venue": "Tyrol",
+      "start": "2027-01-21T17:30:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "a1a8d5f9-0a16-4071-a99d-117d0e6e2f22",
+      "title_sv": "Fredagsrundan",
+      "title_en": "Fredagsrundan",
+      "desc_sv": "Fredagsrundan är en upplevelse med middag på tre restauranger i Stockholm.\n\nFredagsrundan är en middagstur som börjar med förrätt på Svartklubben, där maten serveras i totalt mörker för att lyfta fram smaker, dofter och konsistenser. Därefter går deltagarna till Casa Piadina för charkuterier och valfri piadina. Kvällen avslutas med pasta och livemusik på Bistroteket Maria. Sammanlagt utgör de tre ",
+      "desc_en": "Fredagsrundan is a dining experience across three restaurants in Stockholm.\n\nFredagsrundan is a dinner tour that starts with an appetizer at Svartklubben, where the food is served in total darkness to highlight flavors, scents, and textures. Participants then move on to Casa Piadina for charcuterie and a piadina of their choice. The evening concludes with pasta and live music at Bistroteket Maria.",
+      "raw": "Fredagsrundan är en upplevelse med middag på tre restauranger i Stockholm.\n\nFredagsrundan är en middagstur som börjar med förrätt på Svartklubben, där maten serveras i totalt mörker för att lyfta fram smaker, dofter och konsistenser. Därefter går deltagarna till Casa Piadina för charkuterier och valfri piadina. Kvällen avslutas med pasta och livemusik på Bistroteket Maria. Sammanlagt utgör de tre ",
+      "venue": "Stockholm",
+      "start": "2026-10-09T15:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "4b4fc10e-dd44-475c-87bf-e1e0067d193c",
+      "title_sv": "Afternoon Tea i Hedvig",
+      "title_en": "Afternoon Tea i Hedvig",
+      "desc_sv": "Afternoon Tea i Hedvig är ett Afternoon Tea-evenemang på Hedvig Eleonora församlingshem i Stockholm.\n\nHedvig Eleonora församling bjuder in till Afternoon Tea i församlingssalen. Evenemanget är ett populärt sätt att inleda helgen för många gäster. Gästerna serveras veckans snittar med bubbel, ett urval av te, samt Husfars hembakta scones med tillbehör. En nybakad kaka avslutar varje tillfälle. Afte",
+      "desc_en": "Afternoon Tea i Hedvig is an Afternoon Tea event at Hedvig Eleonora församlingshem in Stockholm.\n\nHedvig Eleonora parish hosts Afternoon Tea in its parish hall. This event has become a popular way for many guests to begin their weekend. Guests are served the week's canapés with sparkling wine, a selection of teas, and the house father's homemade scones with various accompaniments. Each occasion co",
+      "raw": "Afternoon Tea i Hedvig är ett Afternoon Tea-evenemang på Hedvig Eleonora församlingshem i Stockholm.\n\nHedvig Eleonora församling bjuder in till Afternoon Tea i församlingssalen. Evenemanget är ett populärt sätt att inleda helgen för många gäster. Gästerna serveras veckans snittar med bubbel, ett urval av te, samt Husfars hembakta scones med tillbehör. En nybakad kaka avslutar varje tillfälle. Afte",
+      "venue": "왕의 정원",
+      "start": "2026-10-09T13:30:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "c5f1916e-0efd-46b5-adea-ef8a50ebc454",
+      "title_sv": "Restaurant of the Week | Foodies + New Friends: Stockholm",
+      "title_en": "Restaurant of the Week | Foodies + New Friends: Stockholm",
+      "venue": "Restaurant of the Week",
+      "start": "2026-10-09T00:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "754bad90-48c9-456a-8c8a-5d0658b96626",
+      "title_sv": "Julbord - eftermiddag 2026",
+      "title_en": "Julbord - eftermiddag 2026",
+      "venue": "왕의 정원",
+      "start": "2026-12-20T14:30:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "d76b2141-7bd6-4293-b835-c702fb188127",
+      "title_sv": "VegoKraft Vegomässa 2026",
+      "title_en": "VegoKraft Vegomässa 2026",
+      "venue": "왕의 정원",
+      "start": "2026-11-01T10:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "0547e21e-5786-4c39-84c2-adf6054a10f5",
+      "title_sv": "Matmilen Stockholm City",
+      "title_en": "Matmilen Stockholm City",
+      "desc_sv": "Matmilen Stockholm City är en matpromenad i Stockholm, Stockholm.\n\nMatmilen Stockholm City är en matpromenad som tar deltagare till flera utvalda restauranger. På varje ställe serveras ett smakprov, en liten rätt som speglar krogens karaktär. Konceptet är utformat för att enkelt upptäcka den lokala restaurangscenen under ett par timmar. Startgrupper, från 1 till 6, används för att sprida ut deltag",
+      "desc_en": "Matmilen Stockholm City is a food walk in Stockholm, Stockholm.\n\nMatmilen Stockholm City is a food walk that takes participants to several selected restaurants. At each location, a small dish is served, offering a taste that reflects the character of the establishment. The concept is designed for easily discovering the local restaurant scene over a few hours. Start groups, from 1 to 6, are utilize",
+      "raw": "Matmilen Stockholm City är en matpromenad i Stockholm, Stockholm.\n\nMatmilen Stockholm City är en matpromenad som tar deltagare till flera utvalda restauranger. På varje ställe serveras ett smakprov, en liten rätt som speglar krogens karaktär. Konceptet är utformat för att enkelt upptäcka den lokala restaurangscenen under ett par timmar. Startgrupper, från 1 till 6, används för att sprida ut deltag",
+      "venue": "Stockholm",
+      "start": "2026-10-10T10:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "f94d88a3-04cf-4ad9-8390-906c94087436",
+      "title_sv": "Måns Möller - Mitt Perfekta Liv",
+      "title_en": "Måns Möller - Mitt Perfekta Liv",
+      "desc_sv": "Måns Möller presenterar sin prisbelönta succéföreställning om autism, föräldraskap och världens mest oförutsägbara vardag.",
+      "desc_en": "Måns Möller presenterar sin prisbelönta succéföreställning om autism, föräldraskap och världens mest oförutsägbara vardag.",
+      "raw": "Måns Möller presenterar sin prisbelönta succéföreställning om autism, föräldraskap och världens mest oförutsägbara vardag.",
+      "venue": "Rival",
+      "start": "2026-12-12T17:30:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "43b11f0b-7685-4e7d-9414-8c9130fc62e4",
+      "title_sv": "Tommy Körberg - Julen är här",
+      "title_en": "Tommy Körberg - Julen är här",
+      "desc_sv": "Upplev en oförglömlig julkväll tillsammans med en av Sveriges mest älskade röster. ”Julen är här!” med Tommy Körberg är mer än en konsert – det är en varm, stämningsfull och innerlig resa rakt in i hjärtat av julen. Under cirka 100 minuter bjuder Tommy, tillsammans med sina skickliga musiker, på en härlig blandning av tidlösa [&hellip;]",
+      "desc_en": "Upplev en oförglömlig julkväll tillsammans med en av Sveriges mest älskade röster. ”Julen är här!” med Tommy Körberg är mer än en konsert – det är en varm, stämningsfull och innerlig resa rakt in i hjärtat av julen. Under cirka 100 minuter bjuder Tommy, tillsammans med sina skickliga musiker, på en härlig blandning av tidlösa [&hellip;]",
+      "raw": "Upplev en oförglömlig julkväll tillsammans med en av Sveriges mest älskade röster. ”Julen är här!” med Tommy Körberg är mer än en konsert – det är en varm, stämningsfull och innerlig resa rakt in i hjärtat av julen. Under cirka 100 minuter bjuder Tommy, tillsammans med sina skickliga musiker, på en härlig blandning av tidlösa [&hellip;]",
+      "venue": "Rival",
+      "start": "2026-12-10T19:30:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "782abcba-c985-449a-acf1-f7b21bb82349",
+      "title_sv": "Afternoon Tea i Hedvig",
+      "title_en": "Afternoon Tea i Hedvig",
+      "desc_sv": "Afternoon Tea i Hedvig är ett evenemang på Hedvig Eleonora församlingshem i Stockholm.\n\nHedvig Eleonora församling bjuder in till Afternoon Tea i sin församlingssal i Stockholm. Detta evenemang har hållits i församlingen i tio år och är ett populärt sätt att inleda helgen. Upplevelsen består av fyra delar: veckans snittar med bubbel, tre sorters te, Husfars hembakta scones med olika tillbehör samt",
+      "desc_en": "Afternoon Tea in Hedvig is an event at Hedvig Eleonora församlingshem in Stockholm.\n\nHedvig Eleonora parish invites guests to Afternoon Tea in its parish hall in Stockholm. This tradition has been held by the parish for ten years and is a popular way to start the weekend. The experience consists of four parts: weekly canapés with sparkling wine, three types of tea, Husfar's homemade scones with va",
+      "raw": "Afternoon Tea i Hedvig är ett evenemang på Hedvig Eleonora församlingshem i Stockholm.\n\nHedvig Eleonora församling bjuder in till Afternoon Tea i sin församlingssal i Stockholm. Detta evenemang har hållits i församlingen i tio år och är ett populärt sätt att inleda helgen. Upplevelsen består av fyra delar: veckans snittar med bubbel, tre sorters te, Husfars hembakta scones med olika tillbehör samt",
+      "venue": "왕의 정원",
+      "start": "2026-10-23T13:30:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "d4e0bdc1-1d9e-4ebe-a0c9-c317bc0aa0b7",
+      "title_sv": "MAMMA MIA! THE PARTY",
+      "title_en": "MAMMA MIA! THE PARTY",
+      "desc_sv": "Mamma Mia! The Party är en festkväll med fyrarättersmeny och ABBAs låtar på Tyrol i Stockholm.\n\nMamma Mia! The Party förvandlar Tyrol till Nikos taverna på den grekiska paradisön Skopelos. Här upplever gästerna en helkväll som inkluderar välkomstouzo och en fyrarätters medelhavsmeny. Kvällen bjuder på sång, dans, våghalsiga luftfärder och dansanta servitörer, allt ackompanjerat av ABBAs låtar. Det",
+      "desc_en": "Mamma Mia! The Party is an evening party with a four-course menu and ABBA songs at Tyrol in Stockholm.\n\nMamma Mia! The Party transforms Tyrol into Nikos taverna on the Greek paradise island of Skopelos. Guests experience a full evening that includes a welcome ouzo and a delicious four-course Mediterranean menu. The night features singing, dancing, daring aerial stunts, and dancing waiters, all set",
+      "raw": "Mamma Mia! The Party är en festkväll med fyrarättersmeny och ABBAs låtar på Tyrol i Stockholm.\n\nMamma Mia! The Party förvandlar Tyrol till Nikos taverna på den grekiska paradisön Skopelos. Här upplever gästerna en helkväll som inkluderar välkomstouzo och en fyrarätters medelhavsmeny. Kvällen bjuder på sång, dans, våghalsiga luftfärder och dansanta servitörer, allt ackompanjerat av ABBAs låtar. Det",
+      "venue": "Tyrol",
+      "start": "2026-11-27T17:30:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "ef55d57a-5e5c-49e2-bb34-90ae02d0338f",
+      "title_sv": "Julbord - lunch 2026",
+      "title_en": "Julbord - lunch 2026",
+      "venue": "왕의 정원",
+      "start": "2026-12-19T11:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "26f668a1-9fa9-4e5d-87cb-5493e704eb7a",
+      "title_sv": "MAMMA MIA! THE PARTY",
+      "title_en": "MAMMA MIA! THE PARTY",
+      "desc_sv": "Mamma Mia! The Party är en fest på Tyrol i Stockholm.\n\nSedan världspremiären i Stockholm har Mamma Mia! The Party dragit fulla tavernor i både London och Göteborg. Besökare kliver in genom dörrarna och förflyttas till Nikos taverna på den grekiska paradisön Skopelos. Kvällen inkluderar en välkomstouzo, en fyrarätters medelhavsmeny, sång, dans, våghalsiga luftfärder och dansanta servitörer. ABBAs l",
+      "desc_en": "Mamma Mia! The Party is a celebration at Tyrol in Stockholm.\n\nSince its world premiere in Stockholm, Mamma Mia! The Party has filled tavernas in London and Gothenburg. Guests step through the doors and are magically taken to Nikos taverna on the Greek island of Skopelos. The evening includes a welcome ouzo, a four-course Mediterranean menu, singing, dancing, daring aerial acrobatics, and dancing w",
+      "raw": "Mamma Mia! The Party är en fest på Tyrol i Stockholm.\n\nSedan världspremiären i Stockholm har Mamma Mia! The Party dragit fulla tavernor i både London och Göteborg. Besökare kliver in genom dörrarna och förflyttas till Nikos taverna på den grekiska paradisön Skopelos. Kvällen inkluderar en välkomstouzo, en fyrarätters medelhavsmeny, sång, dans, våghalsiga luftfärder och dansanta servitörer. ABBAs l",
+      "venue": "Tyrol",
+      "start": "2027-02-27T18:30:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "b2f8a42f-99f8-4ec2-8f11-32049c37f33b",
+      "title_sv": "Julbord - kväll 2026",
+      "title_en": "Julbord - kväll 2026",
+      "venue": "왕의 정원",
+      "start": "2026-12-19T18:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "be97c0be-a084-4be0-9aeb-1ce471f3ec8f",
+      "title_sv": "Julbord - eftermiddag 2026",
+      "title_en": "Julbord - eftermiddag 2026",
+      "venue": "왕의 정원",
+      "start": "2026-11-29T14:30:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "e8199fad-c2fd-4fc9-9d56-0900a300c1bb",
+      "title_sv": "Fredrik Andersson",
+      "title_en": "Fredrik Andersson",
+      "desc_sv": "Fredrik Andersson presenterar ny föreställning 'TOO SOON'. Material och nya skämt framväxer genom aktuella händelser och mötet med publiken.",
+      "desc_en": "Fredrik Andersson presenterar ny föreställning 'TOO SOON'. Material och nya skämt framväxer genom aktuella händelser och mötet med publiken.",
+      "raw": "Fredrik Andersson presenterar ny föreställning 'TOO SOON'. Material och nya skämt framväxer genom aktuella händelser och mötet med publiken.",
+      "venue": "Rival",
+      "start": "2027-10-20T17:30:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "94ffb58b-93a5-44c4-9448-817735a68202",
+      "title_sv": "MAMMA MIA! THE PARTY",
+      "title_en": "MAMMA MIA! THE PARTY",
+      "desc_sv": "MAMMA MIA! THE PARTY är ett party på Tyrol i Stockholm.\n\nMamma Mia! The Party bjuder in gästerna till Nikos taverna på den grekiska paradisön Skopelos. Kvällen inkluderar en välkomstouzo och en fyrarätters medelhavsmeny, kompletterat med sång och dans till ABBAs låtar. Dansanta servitörer och våghalsiga luftfärder bidrar till en livlig atmosfär. Varje kväll är unik och händelseförloppet beror på v",
+      "desc_en": "MAMMA MIA! THE PARTY is a party at Tyrol in Stockholm.\n\nMamma Mia! The Party invites guests into Nikos taverna on the Greek paradise island of Skopelos. The evening includes a welcome ouzo and a delicious four-course Mediterranean menu, along with singing and dancing to ABBA's songs. Dancing waiters and daring aerial acrobatics contribute to a lively atmosphere. Each evening is unique, as the cour",
+      "raw": "MAMMA MIA! THE PARTY är ett party på Tyrol i Stockholm.\n\nMamma Mia! The Party bjuder in gästerna till Nikos taverna på den grekiska paradisön Skopelos. Kvällen inkluderar en välkomstouzo och en fyrarätters medelhavsmeny, kompletterat med sång och dans till ABBAs låtar. Dansanta servitörer och våghalsiga luftfärder bidrar till en livlig atmosfär. Varje kväll är unik och händelseförloppet beror på v",
+      "venue": "Tyrol",
+      "start": "2026-11-14T12:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "6a37b941-fb0f-45a3-9157-f902fc7431d9",
+      "title_sv": "Julbord - kväll 2026",
+      "title_en": "Julbord - kväll 2026",
+      "venue": "왕의 정원",
+      "start": "2026-12-02T17:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "3e29a5bc-61d7-4aae-a7f8-0cb6e62692ae",
+      "title_sv": "Svenska Dryckesfestivalen Stockholm 2027",
+      "title_en": "Svenska Dryckesfestivalen Stockholm 2027",
+      "desc_sv": "Svenska Dryckesfestivalen Stockholm 2027 är en dryckesfestival på Münchenbryggeriet i Stockholm.\n\nSvenska Dryckesfestivalen Stockholm 2027 är en festival för drycker. Besökare välkomnas till Münchenbryggeriet för detta evenemang.",
+      "desc_en": "Svenska Dryckesfestivalen Stockholm 2027 is a beverage festival at Münchenbryggeriet in Stockholm.\n\nSvenska Dryckesfestivalen Stockholm 2027 is a festival dedicated to beverages. Visitors are welcomed to Münchenbryggeriet for this event.",
+      "raw": "Svenska Dryckesfestivalen Stockholm 2027 är en dryckesfestival på Münchenbryggeriet i Stockholm.\n\nSvenska Dryckesfestivalen Stockholm 2027 är en festival för drycker. Besökare välkomnas till Münchenbryggeriet för detta evenemang.",
+      "venue": "Münchenbryggeriet",
+      "start": "2027-02-14T13:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "fc524dfc-b382-463c-8439-19c4a41c0f11",
+      "title_sv": "Choklad- &amp; Konfektyrfestivalen 2027",
+      "title_en": "Choklad- &amp; Konfektyrfestivalen 2027",
+      "desc_sv": "Choklad- & Konfektyrfestivalen 2027 är en choklad- och konfektyrfestival på Münchenbryggeriet i Stockholm.\n\nDenna festival på Münchenbryggeriet är tillägnad choklad och konfektyr. Evenemanget erbjuder en samlingsplats för sötsaker i Stockholm.",
+      "desc_en": "Choklad- & Konfektyrfestivalen 2027 is a chocolate and confectionery festival at Münchenbryggeriet in Stockholm.\n\nThis festival at Münchenbryggeriet is dedicated to chocolate and confectionery. The event offers a gathering place for sweets in Stockholm.",
+      "raw": "Choklad- & Konfektyrfestivalen 2027 är en choklad- och konfektyrfestival på Münchenbryggeriet i Stockholm.\n\nDenna festival på Münchenbryggeriet är tillägnad choklad och konfektyr. Evenemanget erbjuder en samlingsplats för sötsaker i Stockholm.",
+      "venue": "Münchenbryggeriet",
+      "start": "2027-03-20T09:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "cbd88d7f-d061-4f1b-b733-870904a42801",
+      "title_sv": "Måns Möller - Mitt Perfekta Liv",
+      "title_en": "Måns Möller - Mitt Perfekta Liv",
+      "desc_sv": "Måns Möller återvänder med den prisbelönta succéföreställningen Mitt Perfekta Liv – en standupshow om autism, föräldraskap och världens mest oförutsägbara vardag. Rival lördag 12 december &#8211; biljetter här. Över 100 000 personer har redan sett föreställningen, som avslutades med en stor final på Avicii Arena. Men när ett tv-bolag ville sända succén upptäckte Måns att [&hellip;]",
+      "desc_en": "Måns Möller återvänder med den prisbelönta succéföreställningen Mitt Perfekta Liv – en standupshow om autism, föräldraskap och världens mest oförutsägbara vardag. Rival lördag 12 december &#8211; biljetter här. Över 100 000 personer har redan sett föreställningen, som avslutades med en stor final på Avicii Arena. Men när ett tv-bolag ville sända succén upptäckte Måns att [&hellip;]",
+      "raw": "Måns Möller återvänder med den prisbelönta succéföreställningen Mitt Perfekta Liv – en standupshow om autism, föräldraskap och världens mest oförutsägbara vardag. Rival lördag 12 december &#8211; biljetter här. Över 100 000 personer har redan sett föreställningen, som avslutades med en stor final på Avicii Arena. Men när ett tv-bolag ville sända succén upptäckte Måns att [&hellip;]",
+      "venue": "Rival",
+      "start": "2026-12-12T19:30:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "59c33ac6-ee0a-48a6-97ed-0f5c34451733",
+      "title_sv": "Julbord - kväll 2026",
+      "title_en": "Julbord - kväll 2026",
+      "venue": "왕의 정원",
+      "start": "2026-11-28T18:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "6b23aac5-57ef-466a-8824-39188e049ff5",
+      "title_sv": "E.M.D.",
+      "title_en": "E.M.D.",
+      "desc_sv": "Erik Segerstedt, Mattias Andréasson and Danny Saucedo reunite for their 2026 Christmas tour 'Välkommen hem' celebrating hits and holidays.",
+      "desc_en": "Erik Segerstedt, Mattias Andréasson and Danny Saucedo reunite for their 2026 Christmas tour 'Välkommen hem' celebrating hits and holidays.",
+      "raw": "Erik Segerstedt, Mattias Andréasson and Danny Saucedo reunite for their 2026 Christmas tour 'Välkommen hem' celebrating hits and holidays.",
+      "venue": "Rival",
+      "start": "2026-11-25T17:30:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "f24f1b73-b3a3-4223-b9ba-ad339ac0f348",
+      "title_sv": "Golden Hits Dinnershow",
+      "title_en": "Golden Hits Dinnershow",
+      "desc_sv": "Golden Hits Dinnershow är en dinnershow på Golden Hits i Stockholm.\n\nGolden Hits Dinnershow erbjuder en helkväll på Golden Hits. Gästerna får en 3-rättersmeny, ikonisk underhållning, nattklubb och karaoke.",
+      "desc_en": "Golden Hits Dinnershow is a dinner show at Golden Hits in Stockholm.\n\nGolden Hits Dinnershow offers a full evening at Golden Hits. Guests receive a 3-course menu, iconic entertainment, a nightclub, and karaoke.",
+      "raw": "Golden Hits Dinnershow är en dinnershow på Golden Hits i Stockholm.\n\nGolden Hits Dinnershow erbjuder en helkväll på Golden Hits. Gästerna får en 3-rättersmeny, ikonisk underhållning, nattklubb och karaoke.",
+      "venue": "왕의 정원",
+      "start": "2027-03-18T17:30:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "3b20a8f4-9ad1-4f80-965c-5f4eda3a8d3d",
+      "title_sv": "Julbord - eftermiddag 2026",
+      "title_en": "Julbord - eftermiddag 2026",
+      "venue": "왕의 정원",
+      "start": "2026-12-12T14:30:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "bb99845a-4ab6-424a-95ee-8d59cf2be4e1",
+      "title_sv": "Julbord - eftermiddag 2026",
+      "title_en": "Julbord - eftermiddag 2026",
+      "venue": "왕의 정원",
+      "start": "2026-12-02T13:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "fe0247e5-522f-4edb-bc5b-907b96ff680f",
+      "title_sv": "MAMMA MIA! THE PARTY",
+      "title_en": "MAMMA MIA! THE PARTY",
+      "desc_sv": "Mamma Mia! The Party är en fest på Tyrol i Stockholm.\n\nSedan världspremiären i Stockholm har Mamma Mia! The Party dragit fulla tavernor i både London och Göteborg. Besökare kliver in genom dörrarna och förflyttas till Nikos taverna på den grekiska paradisön Skopelos. Kvällen inkluderar en välkomstouzo, en fyrarätters medelhavsmeny, sång, dans, våghalsiga luftfärder och dansanta servitörer. ABBAs l",
+      "desc_en": "Mamma Mia! The Party is a celebration at Tyrol in Stockholm.\n\nSince its world premiere in Stockholm, Mamma Mia! The Party has filled tavernas in London and Gothenburg. Guests step through the doors and are magically taken to Nikos taverna on the Greek island of Skopelos. The evening includes a welcome ouzo, a four-course Mediterranean menu, singing, dancing, daring aerial acrobatics, and dancing w",
+      "raw": "Mamma Mia! The Party är en fest på Tyrol i Stockholm.\n\nSedan världspremiären i Stockholm har Mamma Mia! The Party dragit fulla tavernor i både London och Göteborg. Besökare kliver in genom dörrarna och förflyttas till Nikos taverna på den grekiska paradisön Skopelos. Kvällen inkluderar en välkomstouzo, en fyrarätters medelhavsmeny, sång, dans, våghalsiga luftfärder och dansanta servitörer. ABBAs l",
+      "venue": "Tyrol",
+      "start": "2027-02-12T17:30:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "f954c660-1930-4920-a241-be5b51e74390",
+      "title_sv": "Sinnenas värld: Med smak av kimchi",
+      "title_en": "Sinnenas värld: Med smak av kimchi",
+      "desc_sv": "Sinnenas värld: Med smak av kimchi är en provsmakning och kurs i kimchitillverkning på Östasiatiska museet i Stockholm.\n\nVälkomna till Östasiatiska museet på Internationella Kimchidagen. Soon Bok Lee och Yeo Kim från Seol Kimchi leder en provsmakning av kimchi med olika smaker, beroende på fermenteringstid. Deltagare får lära sig grunderna i att tillverka kimchi genom steg för steg handledning. Ku",
+      "desc_en": "Sinnenas värld: Med smak av kimchi is a kimchi tasting and making workshop at the Museum of Far Eastern Antiquities in Stockholm.\n\nWelcome to the Museum of Far Eastern Antiquities on International Kimchi Day. Soon Bok Lee and Yeo Kim from Seol Kimchi will lead a tasting of kimchi with different flavors, depending on the fermentation time. Participants will learn the basics of making kimchi through",
+      "raw": "Sinnenas värld: Med smak av kimchi är en provsmakning och kurs i kimchitillverkning på Östasiatiska museet i Stockholm.\n\nVälkomna till Östasiatiska museet på Internationella Kimchidagen. Soon Bok Lee och Yeo Kim från Seol Kimchi leder en provsmakning av kimchi med olika smaker, beroende på fermenteringstid. Deltagare får lära sig grunderna i att tillverka kimchi genom steg för steg handledning. Ku",
+      "venue": "왕의 정원",
+      "start": "2026-11-22T11:30:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "0c42c28c-d730-4809-bac8-b38ebe0cfe16",
+      "title_sv": "The Awake",
+      "title_en": "The Awake",
+      "desc_sv": "A psychological horror play set in a future where sleep has been eradicated in the name of progress. An exclusive reading featuring British dramatist and performer Jenna Fincken discussing her ongoing work.",
+      "desc_en": "A psychological horror play set in a future where sleep has been eradicated in the name of progress. An exclusive reading featuring British dramatist and performer Jenna Fincken discussing her ongoing work.",
+      "raw": "A psychological horror play set in a future where sleep has been eradicated in the name of progress. An exclusive reading featuring British dramatist and performer Jenna Fincken discussing her ongoing work.",
+      "venue": "Playhouse Teater",
+      "start": "2026-12-08T19:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "42008d9a-c47c-4adb-86ae-e9e25436d8ff",
+      "title_sv": "Julbord - kväll 2026",
+      "title_en": "Julbord - kväll 2026",
+      "venue": "왕의 정원",
+      "start": "2026-11-27T17:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "113c36e4-2587-43b0-afff-0bf69cb0a896",
+      "title_sv": "John Lundvik Julturné",
+      "title_en": "John Lundvik Julturné",
+      "desc_sv": "John Lundvik with Mats Björkes Caravan Christmas tour 2026. Musical journey featuring classic and new Christmas songs with fresh arrangements and interpretations.",
+      "desc_en": "John Lundvik with Mats Björkes Caravan Christmas tour 2026. Musical journey featuring classic and new Christmas songs with fresh arrangements and interpretations.",
+      "raw": "John Lundvik with Mats Björkes Caravan Christmas tour 2026. Musical journey featuring classic and new Christmas songs with fresh arrangements and interpretations.",
+      "venue": "Rival",
+      "start": "2026-12-15T17:30:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "4d6e0741-b8bb-41b6-90ee-fa6a36120965",
+      "title_sv": "Wallmans International Dinnershow",
+      "title_en": "Wallmans International Dinnershow",
+      "desc_sv": "Wallmans International Dinnershow är en middagsshow på Wallmans Stockholm i Stockholm.\n\nWallmans International Dinnershow erbjuder en kväll med mat, musik och magi. Det är en upplevelse fylld av glädje, skratt och gemenskap.",
+      "desc_en": "Wallmans International Dinnershow is a dinnershow at Wallmans Stockholm in Stockholm.\n\nWallmans International Dinnershow presents an evening featuring food, music, and magic. Guests can expect joy, laughter, and togetherness.",
+      "raw": "Wallmans International Dinnershow är en middagsshow på Wallmans Stockholm i Stockholm.\n\nWallmans International Dinnershow erbjuder en kväll med mat, musik och magi. Det är en upplevelse fylld av glädje, skratt och gemenskap.",
+      "venue": "Stockholm",
+      "start": "2026-11-25T17:20:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "dfdeb6ac-d24a-4b42-ab00-3c5aaff65c19",
+      "title_sv": "Bak &amp; Choklad 2026",
+      "title_en": "Bak &amp; Choklad 2026",
+      "venue": "Stockholmsmässan",
+      "start": "2026-10-09T00:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "df8b7f48-5614-4b35-9bb2-8ffb24ef0faf",
+      "title_sv": "Golden Hits Dinnershow",
+      "title_en": "Golden Hits Dinnershow",
+      "desc_sv": "Golden Hits Dinnershow är en helkväll med underhållning på Golden Hits i Stockholm.\n\nEvenemanget erbjuder en komplett helkväll med en 3-rättersmeny. Besökare kan uppleva ikonisk underhållning, följt av nattklubb och karaoke på Golden Hits.",
+      "desc_en": "Golden Hits Dinnershow is an evening featuring entertainment at Golden Hits in Stockholm.\n\nThis event offers a complete evening with a 3-course menu. Guests can enjoy iconic entertainment, followed by a nightclub and karaoke at Golden Hits.",
+      "raw": "Golden Hits Dinnershow är en helkväll med underhållning på Golden Hits i Stockholm.\n\nEvenemanget erbjuder en komplett helkväll med en 3-rättersmeny. Besökare kan uppleva ikonisk underhållning, följt av nattklubb och karaoke på Golden Hits.",
+      "venue": "왕의 정원",
+      "start": "2027-01-08T17:30:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "825d0a92-659f-415e-8632-f38c919dc23c",
+      "title_sv": "Jazzbrunch Nalen Restaurang",
+      "title_en": "Jazzbrunch Nalen Restaurang",
+      "desc_sv": "På lördagar serverar Nalen Restaurang brunch till tonerna av jazz.\n\nNalen, eller Nationalpalatset som huset också kallas, är en av Sveriges äldsta och mest tongivande kulturarenor med en brokig och fascinerande historia. Här har kända jazzmusiker och artister som Monica Zetterlund, Arne Domnérus och Charlie Parker spelat.\n\nBrunchen serveras till bordet i fyra serveringar. Vi börjar med kallrökt la",
+      "desc_en": "På lördagar serverar Nalen Restaurang brunch till tonerna av jazz.\n\nNalen, eller Nationalpalatset som huset också kallas, är en av Sveriges äldsta och mest tongivande kulturarenor med en brokig och fascinerande historia. Här har kända jazzmusiker och artister som Monica Zetterlund, Arne Domnérus och Charlie Parker spelat.\n\nBrunchen serveras till bordet i fyra serveringar. Vi börjar med kallrökt la",
+      "raw": "På lördagar serverar Nalen Restaurang brunch till tonerna av jazz.\n\nNalen, eller Nationalpalatset som huset också kallas, är en av Sveriges äldsta och mest tongivande kulturarenor med en brokig och fascinerande historia. Här har kända jazzmusiker och artister som Monica Zetterlund, Arne Domnérus och Charlie Parker spelat.\n\nBrunchen serveras till bordet i fyra serveringar. Vi börjar med kallrökt la",
+      "venue": "Nalen",
+      "start": "2026-10-17T09:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "d5cfe310-48be-404b-bb50-04ec41491444",
+      "title_sv": "Golden Hits Dinnershow",
+      "title_en": "Golden Hits Dinnershow",
+      "desc_sv": "Golden Hits Dinnershow är en helkväll med 3-rättersmeny, ikonisk underhållning, nattklubb och karaoke på Golden Hits i Stockholm.\n\nGolden Hits Dinnershow erbjuder en helkväll med en 3-rättersmeny. Gästerna får uppleva ikonisk underhållning. Kvällen fortsätter med nattklubb och karaoke.",
+      "desc_en": "Golden Hits Dinnershow is a full evening event with a 3-course menu, iconic entertainment, nightclub, and karaoke at Golden Hits in Stockholm.\n\nThe Golden Hits Dinnershow offers a full evening with a 3-course menu. Guests will experience iconic entertainment. The night continues with a nightclub and karaoke.",
+      "raw": "Golden Hits Dinnershow är en helkväll med 3-rättersmeny, ikonisk underhållning, nattklubb och karaoke på Golden Hits i Stockholm.\n\nGolden Hits Dinnershow erbjuder en helkväll med en 3-rättersmeny. Gästerna får uppleva ikonisk underhållning. Kvällen fortsätter med nattklubb och karaoke.",
+      "venue": "왕의 정원",
+      "start": "2027-01-09T17:30:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "032f431a-ab9a-4102-bceb-1e1485c9f284",
+      "title_sv": "Fredrik Andersson",
+      "title_en": "Fredrik Andersson",
+      "desc_sv": "Fredrik Andersson presenterar ny föreställning 'TOO SOON'. Material och nya skämt framväxer genom aktuella händelser och mötet med publiken.",
+      "desc_en": "Fredrik Andersson presenterar ny föreställning 'TOO SOON'. Material och nya skämt framväxer genom aktuella händelser och mötet med publiken.",
+      "raw": "Fredrik Andersson presenterar ny föreställning 'TOO SOON'. Material och nya skämt framväxer genom aktuella händelser och mötet med publiken.",
+      "venue": "Rival",
+      "start": "2027-10-20T19:30:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "6490f7ed-0f05-4e2d-bace-33301a0b3396",
+      "title_sv": "French Touch Party - Stockholm (20:30 - 00:30)",
+      "title_en": "French Touch Party - Stockholm (20:30 - 00:30)",
+      "desc_sv": "Soirée French Touch, Crémant & Cocktails. / French Touch party, Crémant & Cocktails.",
+      "desc_en": "Soirée French Touch, Crémant & Cocktails. / French Touch party, Crémant & Cocktails.",
+      "raw": "Soirée French Touch, Crémant & Cocktails. / French Touch party, Crémant & Cocktails.",
+      "venue": "Kungsholmstorg 15",
+      "start": "2026-11-13T17:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "e6c15fc9-b96e-4b46-8a8d-68797d0cbd3f",
+      "title_sv": "Beethoven's Missa Solemnis",
+      "title_en": "Beethoven's Missa Solemnis",
+      "desc_sv": "Conductor Petr Popelka with Swedish Radio Symphony Orchestra, Swedish Radio Choir, and Eric Ericson Chamber Choir. One of classical music's most magnificent spiritual works uniting prayer and dramatic power with world-class soloists.",
+      "desc_en": "Conductor Petr Popelka with Swedish Radio Symphony Orchestra, Swedish Radio Choir, and Eric Ericson Chamber Choir. One of classical music's most magnificent spiritual works uniting prayer and dramatic power with world-class soloists.",
+      "raw": "Conductor Petr Popelka with Swedish Radio Symphony Orchestra, Swedish Radio Choir, and Eric Ericson Chamber Choir. One of classical music's most magnificent spiritual works uniting prayer and dramatic power with world-class soloists.",
+      "venue": "Berwaldhallen",
+      "start": "2027-04-23T19:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "4e5b22e6-444e-40e2-9f61-f1883ce9b7c2",
+      "title_sv": "French Touch Party - Stockholm (20:30 - 00:30)",
+      "title_en": "French Touch Party - Stockholm (20:30 - 00:30)",
+      "desc_sv": "Soirée French Touch, Crémant & Cocktails. / French Touch party, Crémant & Cocktails.",
+      "desc_en": "Soirée French Touch, Crémant & Cocktails. / French Touch party, Crémant & Cocktails.",
+      "raw": "Soirée French Touch, Crémant & Cocktails. / French Touch party, Crémant & Cocktails.",
+      "venue": "Kungsholmstorg 15",
+      "start": "2026-11-13T17:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "c53564d4-f12b-47c9-be8b-4210a6c7021f",
+      "title_sv": "John Lundvik",
+      "title_en": "John Lundvik",
+      "desc_sv": "Christmas tour with Mats Björke's Caravan featuring classic and new Christmas songs with warm arrangements.",
+      "desc_en": "Christmas tour with Mats Björke's Caravan featuring classic and new Christmas songs with warm arrangements.",
+      "raw": "Christmas tour with Mats Björke's Caravan featuring classic and new Christmas songs with warm arrangements.",
+      "venue": "Rival",
+      "start": "2026-12-15T19:30:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "1ce744a3-6f73-4024-a2e6-9825b4d3b543",
+      "title_sv": "Golden Hits Dinnershow",
+      "title_en": "Golden Hits Dinnershow",
+      "desc_sv": "Golden Hits Dinnershow är en dinnershow på Golden Hits i Stockholm.\n\nGolden Hits Dinnershow erbjuder en helkväll med en 3-rättersmeny. Kvällen inkluderar ikonisk underhållning, nattklubb och karaoke.",
+      "desc_en": "Golden Hits Dinnershow is a dinnershow at Golden Hits in Stockholm.\n\nGolden Hits Dinnershow offers an entire evening with a 3-course menu. The night includes iconic entertainment, a nightclub, and karaoke.",
+      "raw": "Golden Hits Dinnershow är en dinnershow på Golden Hits i Stockholm.\n\nGolden Hits Dinnershow erbjuder en helkväll med en 3-rättersmeny. Kvällen inkluderar ikonisk underhållning, nattklubb och karaoke.",
+      "venue": "왕의 정원",
+      "start": "2027-01-21T17:30:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "8e62642a-0076-4a79-8d74-616a492e4276",
+      "title_sv": "Julbord i Vinterträdgården 2026",
+      "title_en": "Julbord i Vinterträdgården 2026",
+      "desc_sv": "Julbord i Vinterträdgården 2026 är ett julbord på Vinterträdgården i Stockholm.\n\nJulbord i Vinterträdgården 2026 erbjuder en julbordsupplevelse i Vinterträdgården, Stockholm. Detta evenemang presenterar traditionella rätter i en klassisk miljö. Det är en möjlighet att njuta av julens smaker.",
+      "desc_en": "Julbord i Vinterträdgården 2026 is a Christmas smorgasbord at Vinterträdgården in Stockholm.\n\nJulbord i Vinterträdgården 2026 offers a Christmas smorgasbord experience at Vinterträdgården, Stockholm. This event presents traditional dishes in a classic setting. It is an opportunity to enjoy the flavors of Christmas.",
+      "raw": "Julbord i Vinterträdgården 2026 är ett julbord på Vinterträdgården i Stockholm.\n\nJulbord i Vinterträdgården 2026 erbjuder en julbordsupplevelse i Vinterträdgården, Stockholm. Detta evenemang presenterar traditionella rätter i en klassisk miljö. Det är en möjlighet att njuta av julens smaker.",
+      "venue": "Trädgården",
+      "start": "2026-12-12T17:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "89c2495e-101e-4069-8872-54e237a26b22",
+      "title_sv": "Golden Hits Dinnershow",
+      "title_en": "Golden Hits Dinnershow",
+      "desc_sv": "Golden Hits Dinnershow är en dinnershow på Golden Hits i Stockholm.\n\nEn helkväll med Golden Hits Dinnershow inkluderar en 3-rättersmeny. Kvällen bjuder på ikonisk underhållning, nattklubb och karaoke.",
+      "desc_en": "Golden Hits Dinnershow is a dinnershow at Golden Hits in Stockholm.\n\nThe Golden Hits Dinnershow offers a full evening of entertainment. It includes a 3-course menu, iconic entertainment, a nightclub, and karaoke.",
+      "raw": "Golden Hits Dinnershow är en dinnershow på Golden Hits i Stockholm.\n\nEn helkväll med Golden Hits Dinnershow inkluderar en 3-rättersmeny. Kvällen bjuder på ikonisk underhållning, nattklubb och karaoke.",
+      "venue": "왕의 정원",
+      "start": "2027-06-10T16:30:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "f641da2e-bf7a-40d0-9a42-e010033ec5a1",
+      "title_sv": "Golden Hits Dinnershow",
+      "title_en": "Golden Hits Dinnershow",
+      "desc_sv": "Golden Hits Dinnershow är en helkväll med underhållning på Golden Hits i Stockholm.\n\nGolden Hits Dinnershow erbjuder en helkväll med en 3-rättersmeny och ikonisk underhållning. Efter middagen finns det möjlighet att fortsätta kvällen i nattklubben eller med karaoke.",
+      "desc_en": "Golden Hits Dinnershow is an evening event with entertainment at Golden Hits in Stockholm.\n\nThe Golden Hits Dinnershow offers an evening complete with a 3-course menu and iconic entertainment. Afterwards, guests can continue the evening in the nightclub or with karaoke.",
+      "raw": "Golden Hits Dinnershow är en helkväll med underhållning på Golden Hits i Stockholm.\n\nGolden Hits Dinnershow erbjuder en helkväll med en 3-rättersmeny och ikonisk underhållning. Efter middagen finns det möjlighet att fortsätta kvällen i nattklubben eller med karaoke.",
+      "venue": "왕의 정원",
+      "start": "2027-06-03T16:30:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "cc2cf08a-25f0-482a-a1c1-9d351011a03f",
+      "title_sv": "Julbord - eftermiddag 2026",
+      "title_en": "Julbord - eftermiddag 2026",
+      "venue": "왕의 정원",
+      "start": "2026-12-17T13:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "99ec98d4-6090-47df-ae3b-14c754ed62c4",
+      "title_sv": "Julbord - eftermiddag 2026",
+      "title_en": "Julbord - eftermiddag 2026",
+      "venue": "왕의 정원",
+      "start": "2026-11-28T14:30:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "d63b3a7d-59a2-4d1b-be3c-5f6674db9eca",
+      "title_sv": "Golden Hits Dinnershow",
+      "title_en": "Golden Hits Dinnershow",
+      "desc_sv": "Golden Hits Dinnershow är en dinnershow på Golden Hits i Stockholm.\n\nGolden Hits Dinnershow är en helkväll med en 3-rättersmeny. Kvällen bjuder på ikonisk underhållning, följt av nattklubb och karaoke.",
+      "desc_en": "Golden Hits Dinnershow is a dinnershow at Golden Hits in Stockholm.\n\nGolden Hits Dinnershow is a full evening event that includes a 3-course menu. The evening features iconic entertainment, followed by a nightclub and karaoke.",
+      "raw": "Golden Hits Dinnershow är en dinnershow på Golden Hits i Stockholm.\n\nGolden Hits Dinnershow är en helkväll med en 3-rättersmeny. Kvällen bjuder på ikonisk underhållning, följt av nattklubb och karaoke.",
+      "venue": "왕의 정원",
+      "start": "2027-05-29T16:30:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "b571b1e1-1370-4dd9-8a24-b7b8bbdce343",
+      "title_sv": "Ostfestivalen Stockholm 2027",
+      "title_en": "Ostfestivalen Stockholm 2027",
+      "desc_sv": "Ostfestivalen Stockholm 2027 är en ostfestival på Münchenbryggeriet i Stockholm.\n\nOstfestivalen Stockholm 2027, som äger rum på Münchenbryggeriet i Stockholm, är en hyllning till svensk ost.",
+      "desc_en": "Ostfestivalen Stockholm 2027 is a cheese festival at Münchenbryggeriet in Stockholm.\n\nOstfestivalen Stockholm 2027, held at Münchenbryggeriet in Stockholm, is a tribute to Swedish cheese.",
+      "raw": "Ostfestivalen Stockholm 2027 är en ostfestival på Münchenbryggeriet i Stockholm.\n\nOstfestivalen Stockholm 2027, som äger rum på Münchenbryggeriet i Stockholm, är en hyllning till svensk ost.",
+      "venue": "Münchenbryggeriet",
+      "start": "2027-02-14T22:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "78689b72-28de-4af9-bc1e-c3d350c8b7cd",
+      "title_sv": "Golden Hits Dinnershow",
+      "title_en": "Golden Hits Dinnershow",
+      "desc_sv": "Golden Hits Dinnershow är en middagsshow på Golden Hits i Stockholm.\n\nDetta är en helkväll med en 3-rättersmeny. Kvällen inkluderar ikonisk underhållning, nattklubb och karaoke.",
+      "desc_en": "Golden Hits Dinnershow is a dinner show at Golden Hits in Stockholm.\n\nThis is a full evening featuring a 3-course menu. The evening includes iconic entertainment, a nightclub, and karaoke.",
+      "raw": "Golden Hits Dinnershow är en middagsshow på Golden Hits i Stockholm.\n\nDetta är en helkväll med en 3-rättersmeny. Kvällen inkluderar ikonisk underhållning, nattklubb och karaoke.",
+      "venue": "왕의 정원",
+      "start": "2027-06-05T16:30:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "44c47b27-4ae6-4857-9410-3a33f5fa3a24",
+      "title_sv": "MAMMA MIA! THE PARTY",
+      "title_en": "MAMMA MIA! THE PARTY",
+      "desc_sv": "MAMMA MIA! THE PARTY är en grekisk festkväll med fyrarättersmeny och ABBAs låtar på Tyrol i Stockholm.\n\nKliv in på Nikos taverna på den grekiska paradisön Skopelos för en helkväll med underhållning. Gästerna välkomnas med ouzo och avnjuter en fyrarätters medelhavsmeny. Kvällen bjuder på sång, dans, våghalsiga luftfärder och dansanta servitörer, ackompanjerat av ABBAs låtar. Varje kväll är unik, oc",
+      "desc_en": "MAMMA MIA! THE PARTY is a Greek party evening with a four-course menu and ABBA's songs at Tyrol in Stockholm.\n\nStep into Nikos' taverna on the Greek paradise island of Skopelos for an evening of entertainment. Guests are welcomed with ouzo and enjoy a four-course Mediterranean menu. The evening features singing, dancing, daring aerial acts, and dancing waiters, all accompanied by ABBA's songs. Eac",
+      "raw": "MAMMA MIA! THE PARTY är en grekisk festkväll med fyrarättersmeny och ABBAs låtar på Tyrol i Stockholm.\n\nKliv in på Nikos taverna på den grekiska paradisön Skopelos för en helkväll med underhållning. Gästerna välkomnas med ouzo och avnjuter en fyrarätters medelhavsmeny. Kvällen bjuder på sång, dans, våghalsiga luftfärder och dansanta servitörer, ackompanjerat av ABBAs låtar. Varje kväll är unik, oc",
+      "venue": "Tyrol",
+      "start": "2026-12-29T17:30:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "33a42b19-7c00-434c-9a0e-ea291c5b6056",
+      "title_sv": "Golden Hits Dinnershow",
+      "title_en": "Golden Hits Dinnershow",
+      "desc_sv": "Golden Hits Dinnershow är en dinnershow på Golden Hits i Stockholm.\n\nGolden Hits Dinnershow på Golden Hits erbjuder en helkväll med en 3-rättersmeny. Gästerna får ikonisk underhållning följt av nattklubb och karaoke.",
+      "desc_en": "Golden Hits Dinnershow is a dinnershow at Golden Hits in Stockholm.\n\nThe Golden Hits Dinnershow at Golden Hits provides an entire evening featuring a 3-course menu. Guests can enjoy iconic entertainment, followed by a nightclub and karaoke.",
+      "raw": "Golden Hits Dinnershow är en dinnershow på Golden Hits i Stockholm.\n\nGolden Hits Dinnershow på Golden Hits erbjuder en helkväll med en 3-rättersmeny. Gästerna får ikonisk underhållning följt av nattklubb och karaoke.",
+      "venue": "왕의 정원",
+      "start": "2027-03-19T17:30:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "beab931a-cb44-4f7b-b514-f1fdf3d7779c",
+      "title_sv": "Golden Hits Dinnershow",
+      "title_en": "Golden Hits Dinnershow",
+      "desc_sv": "Golden Hits Dinnershow är en helkväll med 3-rättersmeny, ikonisk underhållning, nattklubb och karaoke på Golden Hits i Stockholm.\n\nEvenemanget kombinerar en 3-rättersmeny med ikonisk underhållning. Kvällen fortsätter med tillgång till både nattklubb och karaoke. Detta sker på Golden Hits.",
+      "desc_en": "Golden Hits Dinnershow is an evening featuring a 3-course menu, iconic entertainment, a nightclub, and karaoke at Golden Hits in Stockholm.\n\nThe event combines a 3-course menu with iconic entertainment. The evening continues with access to both a nightclub and karaoke. This takes place at Golden Hits.",
+      "raw": "Golden Hits Dinnershow är en helkväll med 3-rättersmeny, ikonisk underhållning, nattklubb och karaoke på Golden Hits i Stockholm.\n\nEvenemanget kombinerar en 3-rättersmeny med ikonisk underhållning. Kvällen fortsätter med tillgång till både nattklubb och karaoke. Detta sker på Golden Hits.",
+      "venue": "왕의 정원",
+      "start": "2027-03-20T17:30:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "2b4a9021-c917-4f26-830c-5a838f75c834",
+      "title_sv": "Golden Hits Dinnershow",
+      "title_en": "Golden Hits Dinnershow",
+      "desc_sv": "Golden Hits Dinnershow är en helkväll med underhållning på Golden Hits i Stockholm.\n\nEn helkväll med 3-rättersmeny, ikonisk underhållning, nattklubb och karaoke erbjuds på Golden Hits i Stockholm.",
+      "desc_en": "Golden Hits Dinnershow is a full evening of entertainment at Golden Hits in Stockholm.\n\nThis full evening event at Golden Hits in Stockholm includes a 3-course menu, iconic entertainment, nightclub, and karaoke.",
+      "raw": "Golden Hits Dinnershow är en helkväll med underhållning på Golden Hits i Stockholm.\n\nEn helkväll med 3-rättersmeny, ikonisk underhållning, nattklubb och karaoke erbjuds på Golden Hits i Stockholm.",
+      "venue": "왕의 정원",
+      "start": "2027-02-26T17:30:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "69bab1be-ec8f-4cfe-aaf7-7ec18e23e192",
+      "title_sv": "Mat för Livet 2026",
+      "title_en": "Mat för Livet 2026",
+      "venue": "왕의 정원",
+      "start": "2026-11-13T00:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "b5d187b9-b607-4c0d-bd54-d392e718de0b",
+      "title_sv": "Jazzbrunch Nalen Restaurang",
+      "title_en": "Jazzbrunch Nalen Restaurang",
+      "desc_sv": "På lördagar serverar Nalen Restaurang brunch till tonerna av jazz.\n\nNalen, eller Nationalpalatset som huset också kallas, är en av Sveriges äldsta och mest tongivande kulturarenor med en brokig och fascinerande historia. Här har kända jazzmusiker och artister som Monica Zetterlund, Arne Domnérus och Charlie Parker spelat.\n\nBrunchen serveras till bordet i fyra serveringar. Vi börjar med kallrökt la",
+      "desc_en": "På lördagar serverar Nalen Restaurang brunch till tonerna av jazz.\n\nNalen, eller Nationalpalatset som huset också kallas, är en av Sveriges äldsta och mest tongivande kulturarenor med en brokig och fascinerande historia. Här har kända jazzmusiker och artister som Monica Zetterlund, Arne Domnérus och Charlie Parker spelat.\n\nBrunchen serveras till bordet i fyra serveringar. Vi börjar med kallrökt la",
+      "raw": "På lördagar serverar Nalen Restaurang brunch till tonerna av jazz.\n\nNalen, eller Nationalpalatset som huset också kallas, är en av Sveriges äldsta och mest tongivande kulturarenor med en brokig och fascinerande historia. Här har kända jazzmusiker och artister som Monica Zetterlund, Arne Domnérus och Charlie Parker spelat.\n\nBrunchen serveras till bordet i fyra serveringar. Vi börjar med kallrökt la",
+      "venue": "Nalen",
+      "start": "2026-11-07T10:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "9a5f6ed8-e32e-4ce9-8e88-48e4e2a1a100",
+      "title_sv": "Golden Hits Dinnershow",
+      "title_en": "Golden Hits Dinnershow",
+      "desc_sv": "Golden Hits Dinnershow är en middags- och underhållningskväll på Golden Hits i Stockholm.\n\nEvenemanget är en helkväll som kombinerar en 3-rättersmeny med ikonisk underhållning. Kvällen inkluderar också tillgång till nattklubb och karaoke.",
+      "desc_en": "Golden Hits Dinnershow is a dinner and entertainment evening at Golden Hits in Stockholm.\n\nThe event is a full evening that combines a 3-course menu with iconic entertainment. The evening also includes access to a nightclub and karaoke.",
+      "raw": "Golden Hits Dinnershow är en middags- och underhållningskväll på Golden Hits i Stockholm.\n\nEvenemanget är en helkväll som kombinerar en 3-rättersmeny med ikonisk underhållning. Kvällen inkluderar också tillgång till nattklubb och karaoke.",
+      "venue": "왕의 정원",
+      "start": "2027-04-29T16:30:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "965a8cff-50e8-436f-af77-1e7abac70aa8",
+      "title_sv": "Matmilen Södermalm",
+      "title_en": "Matmilen Södermalm",
+      "desc_sv": "Matmilen Södermalm är en matpromenad med restaurangbesök i Stockholm.\n\nMatmilen är en matpromenad som tar dig till flera restauranger. På varje ställe får du provsmaka en liten rätt, ett smakprov som speglar krogens karaktär. Detta är ett sätt att upptäcka den lokala restaurangscenen. Arrangemanget löper smidigt och enkelt, och din uppgift blir att njuta samt upptäcka nya restauranger. Allergier k",
+      "desc_en": "Matmilen Södermalm is a food walk with restaurant visits in Stockholm.\n\nMatmilen Södermalm offers a food walk that guides you to several restaurants. At each stop, guests can sample a small dish, a taste that reflects the unique character of the establishment. This provides an opportunity to explore the local restaurant scene. The event is designed to be smooth and simple, allowing attendees to en",
+      "raw": "Matmilen Södermalm är en matpromenad med restaurangbesök i Stockholm.\n\nMatmilen är en matpromenad som tar dig till flera restauranger. På varje ställe får du provsmaka en liten rätt, ett smakprov som speglar krogens karaktär. Detta är ett sätt att upptäcka den lokala restaurangscenen. Arrangemanget löper smidigt och enkelt, och din uppgift blir att njuta samt upptäcka nya restauranger. Allergier k",
+      "venue": null,
+      "start": "2026-10-10T10:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "1cf959b8-37d3-472b-b315-6cfef718bc10",
+      "title_sv": "MAMMA MIA! THE PARTY",
+      "title_en": "MAMMA MIA! THE PARTY",
+      "desc_sv": "Mamma Mia! The Party är en fest på Tyrol i Stockholm.\n\nSedan världspremiären i Stockholm har Mamma Mia! The Party dragit fulla tavernor i både London och Göteborg. Besökare kliver in genom dörrarna och förflyttas till Nikos taverna på den grekiska paradisön Skopelos. Kvällen inkluderar en välkomstouzo, en fyrarätters medelhavsmeny, sång, dans, våghalsiga luftfärder och dansanta servitörer. ABBAs l",
+      "desc_en": "Mamma Mia! The Party is a celebration at Tyrol in Stockholm.\n\nSince its world premiere in Stockholm, Mamma Mia! The Party has filled tavernas in London and Gothenburg. Guests step through the doors and are magically taken to Nikos taverna on the Greek island of Skopelos. The evening includes a welcome ouzo, a four-course Mediterranean menu, singing, dancing, daring aerial acrobatics, and dancing w",
+      "raw": "Mamma Mia! The Party är en fest på Tyrol i Stockholm.\n\nSedan världspremiären i Stockholm har Mamma Mia! The Party dragit fulla tavernor i både London och Göteborg. Besökare kliver in genom dörrarna och förflyttas till Nikos taverna på den grekiska paradisön Skopelos. Kvällen inkluderar en välkomstouzo, en fyrarätters medelhavsmeny, sång, dans, våghalsiga luftfärder och dansanta servitörer. ABBAs l",
+      "venue": "Tyrol",
+      "start": "2027-01-23T12:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "fc831bce-9e85-4699-82a2-3bde824c0702",
+      "title_sv": "MAMMA MIA! THE PARTY",
+      "title_en": "MAMMA MIA! THE PARTY",
+      "desc_sv": "MAMMA MIA! THE PARTY förvandlar Tyrol i Stockholm till en grekisk taverna med ABBA:s musik i centrum. Upplev den glada och färgstarka stämningen när du deltar i en helkväll fylld med sång, dans och god mat. Det är mer än en middag, det är en hyllning till 70- och 80-talets discopop och en musikalisk resa som engagerar alla sinnen. Låt dig ryckas med i en musikalisk fest där ingen sitter still.",
+      "desc_en": "MAMMA MIA! THE PARTY transforms Tyrol in Stockholm into a Greek taverna with ABBA's music at its heart. Experience the joyful and colorful atmosphere as you take part in an evening filled with singing, dancing, and good food. It's more than a dinner, it's a celebration of 70s and 80s disco pop and a musical journey that engages all the senses. Get swept away in a musical feast where no one stays s",
+      "raw": "MAMMA MIA! THE PARTY förvandlar Tyrol i Stockholm till en grekisk taverna med ABBA:s musik i centrum. Upplev den glada och färgstarka stämningen när du deltar i en helkväll fylld med sång, dans och god mat. Det är mer än en middag, det är en hyllning till 70- och 80-talets discopop och en musikalisk resa som engagerar alla sinnen. Låt dig ryckas med i en musikalisk fest där ingen sitter still.",
+      "venue": "Tyrol",
+      "start": "2026-11-26T17:30:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "88cacc06-c70b-4d03-b8ac-1f414ce69e12",
+      "title_sv": "MAMMA MIA! THE PARTY",
+      "title_en": "MAMMA MIA! THE PARTY",
+      "desc_sv": "Mamma Mia! The Party är en fest på Tyrol i Stockholm.\n\nSedan världspremiären i Stockholm har Mamma Mia! The Party dragit fulla tavernor i både London och Göteborg. Besökare kliver in genom dörrarna och förflyttas till Nikos taverna på den grekiska paradisön Skopelos. Kvällen inkluderar en välkomstouzo, en fyrarätters medelhavsmeny, sång, dans, våghalsiga luftfärder och dansanta servitörer. ABBAs l",
+      "desc_en": "Mamma Mia! The Party is a celebration at Tyrol in Stockholm.\n\nSince its world premiere in Stockholm, Mamma Mia! The Party has filled tavernas in London and Gothenburg. Guests step through the doors and are magically taken to Nikos taverna on the Greek island of Skopelos. The evening includes a welcome ouzo, a four-course Mediterranean menu, singing, dancing, daring aerial acrobatics, and dancing w",
+      "raw": "Mamma Mia! The Party är en fest på Tyrol i Stockholm.\n\nSedan världspremiären i Stockholm har Mamma Mia! The Party dragit fulla tavernor i både London och Göteborg. Besökare kliver in genom dörrarna och förflyttas till Nikos taverna på den grekiska paradisön Skopelos. Kvällen inkluderar en välkomstouzo, en fyrarätters medelhavsmeny, sång, dans, våghalsiga luftfärder och dansanta servitörer. ABBAs l",
+      "venue": "Tyrol",
+      "start": "2027-02-20T18:30:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "231f05e2-da9d-4db4-915f-bf7fc8a2f0ad",
+      "title_sv": "French Touch Party - Stockholm (20:30 - 00:30)",
+      "title_en": "French Touch Party - Stockholm (20:30 - 00:30)",
+      "desc_sv": "Soirée French Touch, Crémant & Cocktails. / French Touch party, Crémant & Cocktails.",
+      "desc_en": "Soirée French Touch, Crémant & Cocktails. / French Touch party, Crémant & Cocktails.",
+      "raw": "Soirée French Touch, Crémant & Cocktails. / French Touch party, Crémant & Cocktails.",
+      "venue": "Kungsholmstorg 15",
+      "start": "2026-11-13T17:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "5894a121-76ef-4549-ab99-99f3f28c44ef",
+      "title_sv": "Julbord i Vinterträdgården 2026",
+      "title_en": "Julbord i Vinterträdgården 2026",
+      "desc_sv": "Julbord i Vinterträdgården 2026 är ett julbord på Vinterträdgården i Stockholm.\n\nJulbord i Vinterträdgården 2026 är en klassisk julmåltid. Detta evenemang hålls på Vinterträdgården i Stockholm.",
+      "desc_en": "Julbord i Vinterträdgården 2026 is a Christmas buffet at Vinterträdgården in Stockholm.\n\nJulbord i Vinterträdgården 2026 is a classic Christmas meal. This event is held at Vinterträdgården in Stockholm.",
+      "raw": "Julbord i Vinterträdgården 2026 är ett julbord på Vinterträdgården i Stockholm.\n\nJulbord i Vinterträdgården 2026 är en klassisk julmåltid. Detta evenemang hålls på Vinterträdgården i Stockholm.",
+      "venue": "Trädgården",
+      "start": "2026-12-19T17:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "dcaf0a6a-054d-4be6-a6c9-68ccde00f5d4",
+      "title_sv": "Julbord - kväll 2026",
+      "title_en": "Julbord - kväll 2026",
+      "venue": "왕의 정원",
+      "start": "2026-12-18T17:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "2ed11c4d-544d-4c33-9898-6b9c51cd876c",
+      "title_sv": "Matmilen Kungsholmen",
+      "title_en": "Matmilen Kungsholmen",
+      "desc_sv": "Matmilen Kungsholmen är en matpromenad i Stockholm där besökare provsmakar rätter från olika restauranger.\n\nMatmilen Kungsholmen är en matpromenad där deltagare besöker ett antal utvalda restauranger under flera timmar. Vid varje stopp får man provsmaka en liten rätt som speglar restaurangens karaktär. Detta är ett sätt att upptäcka den lokala restaurangscenen och nya krogar i staden. Allergier ka",
+      "desc_en": "Matmilen Kungsholmen is a food walk in Stockholm where visitors taste small dishes from various restaurants.\n\nMatmilen Kungsholmen is a food walk where participants visit several selected restaurants over a few hours. At each location, a small dish reflecting the establishment's unique character is offered for tasting. This event provides an opportunity to discover the local restaurant scene and n",
+      "raw": "Matmilen Kungsholmen är en matpromenad i Stockholm där besökare provsmakar rätter från olika restauranger.\n\nMatmilen Kungsholmen är en matpromenad där deltagare besöker ett antal utvalda restauranger under flera timmar. Vid varje stopp får man provsmaka en liten rätt som speglar restaurangens karaktär. Detta är ett sätt att upptäcka den lokala restaurangscenen och nya krogar i staden. Allergier ka",
+      "venue": "Stockholm",
+      "start": "2026-10-24T10:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "4cb2a874-7690-4e8a-aa5a-896c1b10ed8c",
+      "title_sv": "Julbord i Vinterträdgården 2026",
+      "title_en": "Julbord i Vinterträdgården 2026",
+      "desc_sv": "Julbord i Vinterträdgården 2026 är ett julbord på Vinterträdgården i Stockholm.\n\nJulbord i Vinterträdgården 2026 är ett julbord som hålls på Vinterträdgården i Stockholm. Evenemanget erbjuder en traditionell julbordsupplevelse.",
+      "desc_en": "Julbord i Vinterträdgården 2026 is a Christmas buffet at Vinterträdgården in Stockholm.\n\nJulbord i Vinterträdgården 2026 is a Christmas buffet held at Vinterträdgården in Stockholm. The event offers a traditional Christmas dining experience.",
+      "raw": "Julbord i Vinterträdgården 2026 är ett julbord på Vinterträdgården i Stockholm.\n\nJulbord i Vinterträdgården 2026 är ett julbord som hålls på Vinterträdgården i Stockholm. Evenemanget erbjuder en traditionell julbordsupplevelse.",
+      "venue": "Trädgården",
+      "start": "2026-12-06T14:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "2f04ba88-a348-4874-8a62-bb1adde33da5",
+      "title_sv": "Julbord i Vinterträdgården 2026",
+      "title_en": "Julbord i Vinterträdgården 2026",
+      "desc_sv": "Julbord i Vinterträdgården 2026 är ett julbord på Vinterträdgården i Stockholm.\n\nJulbord i Vinterträdgården 2026 erbjuder en traditionell julbordsupplevelse. Evenemanget äger rum på Vinterträdgården i Stockholm.",
+      "desc_en": "Julbord i Vinterträdgården 2026 is a Christmas smorgasbord at Vinterträdgården in Stockholm.\n\nJulbord i Vinterträdgården 2026 presents a traditional Christmas smorgasbord experience. This event is held at Vinterträdgården in Stockholm.",
+      "raw": "Julbord i Vinterträdgården 2026 är ett julbord på Vinterträdgården i Stockholm.\n\nJulbord i Vinterträdgården 2026 erbjuder en traditionell julbordsupplevelse. Evenemanget äger rum på Vinterträdgården i Stockholm.",
+      "venue": "Trädgården",
+      "start": "2026-11-28T17:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "4a6bc0ac-a1b2-4fbd-ac77-5bccd3703627",
+      "title_sv": "Julbord i Vinterträdgården 2026",
+      "title_en": "Julbord i Vinterträdgården 2026",
+      "desc_sv": "Julbord i Vinterträdgården 2026 är ett julbord på Vinterträdgården i Stockholm.\n\nJulbord i Vinterträdgården 2026 äger rum på Vinterträdgården i Stockholm. Evenemanget erbjuder ett traditionellt julbord på den angivna platsen.",
+      "desc_en": "Julbord i Vinterträdgården 2026 is a Christmas smorgasbord at Vinterträdgården in Stockholm.\n\nJulbord i Vinterträdgården 2026 takes place at Vinterträdgården in Stockholm. This event offers a traditional Christmas smorgasbord at the specified venue.",
+      "raw": "Julbord i Vinterträdgården 2026 är ett julbord på Vinterträdgården i Stockholm.\n\nJulbord i Vinterträdgården 2026 äger rum på Vinterträdgården i Stockholm. Evenemanget erbjuder ett traditionellt julbord på den angivna platsen.",
+      "venue": "Trädgården",
+      "start": "2026-12-05T17:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "d0ae854a-8c72-4838-9fde-73e1250e1cc2",
+      "title_sv": "Sthlm Food &amp; Wine 2026",
+      "title_en": "Sthlm Food &amp; Wine 2026",
+      "venue": "Stockholmsmässan",
+      "start": "2026-11-06T00:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "0557a4f2-60ec-4559-a103-89d60d148845",
+      "title_sv": "En innerlig jul",
+      "title_en": "En innerlig jul",
+      "desc_sv": "Andreas Aleman and Tareq Taylor invite you to a warm and personal musical living room with top Swedish musicians, creating a magical Christmas evening with ballads and classics.",
+      "desc_en": "Andreas Aleman and Tareq Taylor invite you to a warm and personal musical living room with top Swedish musicians, creating a magical Christmas evening with ballads and classics.",
+      "raw": "Andreas Aleman and Tareq Taylor invite you to a warm and personal musical living room with top Swedish musicians, creating a magical Christmas evening with ballads and classics.",
+      "venue": "Rival",
+      "start": "2026-12-17T17:30:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "59a11cb5-313e-468e-9fbc-f2b7afc44a69",
+      "title_sv": "Julbord i Vinterträdgården 2026",
+      "title_en": "Julbord i Vinterträdgården 2026",
+      "desc_sv": "Julbord i Vinterträdgården 2026 är ett julbord på Vinterträdgården i Stockholm.\n\nEvenemanget Julbord i Vinterträdgården 2026 äger rum på Vinterträdgården i Stockholm. Det är ett julbord som serveras på denna plats.",
+      "desc_en": "Julbord i Vinterträdgården 2026 is a Christmas buffet at Vinterträdgården in Stockholm.\n\nThe event Julbord i Vinterträdgården 2026 takes place at Vinterträdgården in Stockholm. It is a Christmas buffet served at this venue.",
+      "raw": "Julbord i Vinterträdgården 2026 är ett julbord på Vinterträdgården i Stockholm.\n\nEvenemanget Julbord i Vinterträdgården 2026 äger rum på Vinterträdgården i Stockholm. Det är ett julbord som serveras på denna plats.",
+      "venue": "Trädgården",
+      "start": "2026-12-13T14:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "bc127655-c136-4916-a5b7-080d9eafc8fc",
+      "title_sv": "Julbord i Vinterträdgården 2026",
+      "title_en": "Julbord i Vinterträdgården 2026",
+      "desc_sv": "Julbord i Vinterträdgården 2026 är ett julbord på Vinterträdgården i Stockholm.\n\nJulbord i Vinterträdgården 2026 erbjuder ett julbord i Vinterträdgården, Stockholm. Detta evenemang presenterar en traditionell julmåltid.",
+      "desc_en": "Julbord i Vinterträdgården 2026 is a Christmas buffet at Vinterträdgården in Stockholm.\n\nJulbord i Vinterträdgården 2026 presents a Christmas buffet at Vinterträdgården in Stockholm. This event offers a traditional holiday meal.",
+      "raw": "Julbord i Vinterträdgården 2026 är ett julbord på Vinterträdgården i Stockholm.\n\nJulbord i Vinterträdgården 2026 erbjuder ett julbord i Vinterträdgården, Stockholm. Detta evenemang presenterar en traditionell julmåltid.",
+      "venue": "Trädgården",
+      "start": "2026-12-18T17:00:00+00:00",
+      "has_img": true
+    }
+  ]
+}

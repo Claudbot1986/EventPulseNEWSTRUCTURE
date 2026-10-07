@@ -1,0 +1,31 @@
+{
+  "category_slug": "opera",
+  "events": 291,
+  "jev_q1": 0.69,
+  "jev_q2": 0.66,
+  "jev_q3": 0.48,
+  "description_corpus_size": 124,
+  "model": "template-fallback",
+  "prompts": [
+    {
+      "pattern": "A_wide",
+      "prompt": "Wide establishing shot, singers on a Stockholm opera stage, orchestra visible, classical warm lighting, Göta Lejon, no text no logos, real photography."
+    },
+    {
+      "pattern": "B_medium",
+      "prompt": "Medium candid photograph, singers on a Stockholm opera stage, orchestra visible, classical warm lighting, Göta Lejon, two or three people in frame, warm natural light, documentary style, no text."
+    },
+    {
+      "pattern": "C_environment",
+      "prompt": "Environmental establishing view, Göta Lejon, atmosphere with subtle hints of folkoperan, warm lighting, no people in focus, real photography."
+    },
+    {
+      "pattern": "D_detail",
+      "prompt": "Close-up detail photograph at Göta Lejon, focusing on folkoperan and opera, shallow depth of field, warm light, no text."
+    },
+    {
+      "pattern": "E_intimate",
+      "prompt": "Intimate close photograph at Göta Lejon, candid human presence in soft focus, hint of opera, emotional warmth, real photography, no text."
+    }
+  ]
+}

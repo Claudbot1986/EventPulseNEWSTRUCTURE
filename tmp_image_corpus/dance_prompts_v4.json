@@ -1,0 +1,36 @@
+{
+  "category_slug": "dance",
+  "events": 272,
+  "jev_q1": 0.42,
+  "jev_q2": 0.67,
+  "jev_q3": 0.43,
+  "description_corpus_size": 260,
+  "model": "MiniMax-M3",
+  "prompts": [
+    {
+      "pattern": "A_wide",
+      "prompt": "Wide shot of a contemporary dance performance inside Dansens Hus Stockholm, two dancers mid-leap across a dimly lit stage bathed in cool blue wash, hardwood floor reflecting overhead spots, audience silhouettes in the foreground under warm house light.",
+      "category": "dance"
+    },
+    {
+      "pattern": "B_medium",
+      "prompt": "Medium shot of a dancer in a flowing pale dress extending one arm toward a partner crouched on the scuffed wooden floor of Dansens Hus, single warm side-light carving their figures against deep shadow, sweat visible on bare shoulder.",
+      "category": "dance"
+    },
+    {
+      "pattern": "C_environment",
+      "prompt": "Empty stage at MDT Moderna Dansteatern between rehearsals, black marley floor scuffed from footwork, a single folding chair and discarded water bottle, afternoon daylight filtering through tall industrial windows of the Stockholm venue, dust suspended in the air.",
+      "category": "dance"
+    },
+    {
+      "pattern": "D_detail",
+      "prompt": "Close-up of a dancer's pointe shoes laced tightly over reddened ankles, ribbons trailing across the painted black stage floor of a Stockholm theater, shallow depth of field blurring a row of warm footlights in the background.",
+      "category": "dance"
+    },
+    {
+      "pattern": "E_intimate",
+      "prompt": "Intimate angle from the front row of a small Dansens Hus studio showing two dancers in slow contact improvisation, foreheads almost touching, breathing visible in cool stage haze, single spotlight from above isolating their torsos against black curtains.",
+      "category": "dance"
+    }
+  ]
+}

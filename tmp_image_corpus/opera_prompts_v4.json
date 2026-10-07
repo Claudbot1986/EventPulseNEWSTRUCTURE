@@ -1,0 +1,31 @@
+{
+  "category_slug": "opera",
+  "events": 291,
+  "jev_q1": 0.69,
+  "jev_q2": 0.66,
+  "jev_q3": 0.48,
+  "description_corpus_size": 124,
+  "model": "MiniMax-M3",
+  "prompts": [
+    {
+      "pattern": "A_wide",
+      "prompt": "Wide photograph of a full opera stage at Göta Lejon in Stockholm, orchestra pit visible, a soprano in a red gown singing under warm golden stage lights, rows of chorus members behind her, velvet curtains framing the scene, no visible text or logos, natural auditorium ambiance."
+    },
+    {
+      "pattern": "B_medium",
+      "prompt": "Medium shot of a tenor and mezzo-soprano performing at Folkoperan in Stockholm, intimate wooden stage, amber sidelighting, expressive singing gestures, audience silhouettes blurred in foreground, no signage, classical theatrical photography."
+    },
+    {
+      "pattern": "C_environment",
+      "prompt": "Environmental photo of Berwaldhallen concert hall interior in Stockholm, curved wooden walls, a full symfoniorkester seated with conductor mid-gesture, soft overhead stage lighting casting shadows on empty balcony seats, acoustic panels visible, no readable text."
+    },
+    {
+      "pattern": "D_detail",
+      "prompt": "Close detail of a violinist's hands at Berwaldhallen, bow crossing strings with motion smear, instrument varnished wood reflecting stage light, blurred radios microphone overhead, narrow depth of field, virtuositet captured in still frame, no logos."
+    },
+    {
+      "pattern": "E_intimate",
+      "prompt": "Intimate candid of a soloist bowing her head backstage at Folkoperan, costume pearls catching soft practical light from a dressing room mirror, a hand reaching to adjust a hairpiece, shallow focus, warm Stockholm evening atmosphere, no visible branding or text."
+    }
+  ]
+}

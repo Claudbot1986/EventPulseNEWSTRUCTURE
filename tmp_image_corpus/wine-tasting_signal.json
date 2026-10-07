@@ -1,0 +1,285 @@
+{
+  "category_slug": "wine-tasting",
+  "events": 59,
+  "docs": 45,
+  "top_1grams_distinctive": [
+    {
+      "w": "viner",
+      "c": 25,
+      "score": 151.68
+    },
+    {
+      "w": "vinprovning",
+      "c": 18,
+      "score": 115.9
+    },
+    {
+      "w": "ostar",
+      "c": 17,
+      "score": 109.46
+    },
+    {
+      "w": "franska",
+      "c": 16,
+      "score": 88.04
+    },
+    {
+      "w": "vinprovningar",
+      "c": 12,
+      "score": 82.43
+    },
+    {
+      "w": "vinerna",
+      "c": 12,
+      "score": 82.43
+    },
+    {
+      "w": "provningen",
+      "c": 10,
+      "score": 70.37
+    },
+    {
+      "w": "delikatesser",
+      "c": 10,
+      "score": 68.7
+    },
+    {
+      "w": "kunnig",
+      "c": 9,
+      "score": 64.19
+    },
+    {
+      "w": "vinimportörer",
+      "c": 9,
+      "score": 64.19
+    },
+    {
+      "w": "vinregioner",
+      "c": 9,
+      "score": 64.19
+    },
+    {
+      "w": "prova",
+      "c": 12,
+      "score": 64.08
+    },
+    {
+      "w": "charkuterier",
+      "c": 9,
+      "score": 63.33
+    },
+    {
+      "w": "vinprovare",
+      "c": 8,
+      "score": 57.9
+    },
+    {
+      "w": "ostbricka",
+      "c": 8,
+      "score": 57.9
+    },
+    {
+      "w": "vindagen",
+      "c": 8,
+      "score": 57.9
+    },
+    {
+      "w": "provningarna",
+      "c": 8,
+      "score": 57.9
+    },
+    {
+      "w": "bistrot",
+      "c": 8,
+      "score": 57.06
+    },
+    {
+      "w": "matprodukter",
+      "c": 8,
+      "score": 57.06
+    },
+    {
+      "w": "provningar",
+      "c": 8,
+      "score": 57.06
+    },
+    {
+      "w": "wasahof",
+      "c": 8,
+      "score": 56.29
+    },
+    {
+      "w": "guida",
+      "c": 8,
+      "score": 56.29
+    },
+    {
+      "w": "speed",
+      "c": 8,
+      "score": 56.29
+    },
+    {
+      "w": "frankrikes",
+      "c": 8,
+      "score": 54.36
+    },
+    {
+      "w": "tema",
+      "c": 10,
+      "score": 54.09
+    },
+    {
+      "w": "druvor",
+      "c": 8,
+      "score": 53.81
+    },
+    {
+      "w": "gastronomi",
+      "c": 7,
+      "score": 51.49
+    },
+    {
+      "w": "provningspass",
+      "c": 7,
+      "score": 51.49
+    },
+    {
+      "w": "mälarsalen",
+      "c": 7,
+      "score": 51.49
+    },
+    {
+      "w": "vinkällan",
+      "c": 7,
+      "score": 51.49
+    }
+  ],
+  "top_2grams_distinctive": [
+    {
+      "w": "franska ostar",
+      "c": 16,
+      "score": 105.62
+    },
+    {
+      "w": "svenska vinimportörer",
+      "c": 9,
+      "score": 64.19
+    },
+    {
+      "w": "ostar charkuterier",
+      "c": 9,
+      "score": 64.19
+    },
+    {
+      "w": "andra delikatesser",
+      "c": 9,
+      "score": 64.19
+    },
+    {
+      "w": "nya favoriter",
+      "c": 9,
+      "score": 61.16
+    },
+    {
+      "w": "vinprovning bistrot",
+      "c": 8,
+      "score": 57.9
+    },
+    {
+      "w": "kunnig vinprovare",
+      "c": 8,
+      "score": 57.9
+    },
+    {
+      "w": "ostbricka franska",
+      "c": 8,
+      "score": 57.9
+    },
+    {
+      "w": "franska viner",
+      "c": 8,
+      "score": 57.9
+    },
+    {
+      "w": "vindagen 2026",
+      "c": 8,
+      "score": 57.9
+    },
+    {
+      "w": "upptäcka viner",
+      "c": 8,
+      "score": 57.9
+    },
+    {
+      "w": "plats guida",
+      "c": 8,
+      "score": 57.9
+    },
+    {
+      "w": "guida dig",
+      "c": 8,
+      "score": 57.9
+    },
+    {
+      "w": "genom provningarna",
+      "c": 8,
+      "score": 57.9
+    },
+    {
+      "w": "favoriter utöver",
+      "c": 8,
+      "score": 57.9
+    },
+    {
+      "w": "utöver vinerna",
+      "c": 8,
+      "score": 57.9
+    },
+    {
+      "w": "bistrot wasahof",
+      "c": 8,
+      "score": 57.06
+    },
+    {
+      "w": "frankrikes främsta",
+      "c": 8,
+      "score": 56.29
+    },
+    {
+      "w": "finns plats",
+      "c": 9,
+      "score": 55.94
+    },
+    {
+      "w": "hitta nya",
+      "c": 8,
+      "score": 55.6
+    },
+    {
+      "w": "försäljning plats",
+      "c": 8,
+      "score": 55.6
+    },
+    {
+      "w": "november efterlängtad",
+      "c": 7,
+      "score": 51.49
+    },
+    {
+      "w": "efterlängtad nypremiär",
+      "c": 7,
+      "score": 51.49
+    },
+    {
+      "w": "nypremiär dagen",
+      "c": 7,
+      "score": 51.49
+    },
+    {
+      "w": "dagen firar",
+      "c": 7,
+      "score": 51.49
+    }
+  ],
+  "note": "score = cat_count * log(N / global_count). Higher = more distinctive for this category."
+}

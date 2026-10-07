@@ -1,0 +1,26 @@
+{
+  "category_slug": "film",
+  "events": 106,
+  "library_now": 2,
+  "approx_images_needed": 1,
+  "description_corpus_size": 106,
+  "model": "minimax/minimax-m3",
+  "prompts": [
+    {
+      "pattern": "A_wide",
+      "prompt": "Wide view of a darkened Stockholm cinema auditorium at Bio Skandia, the curved screen casting pale blue light over rows of viewers leaning back in red velvet seats, with warm exit signs glowing along the side walls."
+    },
+    {
+      "pattern": "B_medium",
+      "prompt": "Medium shot of a small crowd gathered in the lobby of Stockholm's Zita cinema, guests holding wine glasses and chatting before a premiere screening, soft warm lighting from brass wall sconces."
+    },
+    {
+      "pattern": "C_environment",
+      "prompt": "Evening exterior of a Stockholm cinema building on a quiet street, warm amber light spilling from the lobby windows onto the wet sidewalk where a few people approach the entrance under streetlamps."
+    },
+    {
+      "pattern": "D_detail",
+      "prompt": "Close-up of hands cradling a glass of red wine in soft focus, with the blurred bokeh of a Stockholm cinema lobby behind, capturing the anticipatory moment before a film premiere."
+    }
+  ]
+}

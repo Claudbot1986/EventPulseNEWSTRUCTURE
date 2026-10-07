@@ -1,0 +1,26 @@
+{
+  "category_slug": "food",
+  "events": 154,
+  "library_now": 7,
+  "approx_images_needed": 1,
+  "description_corpus_size": 109,
+  "model": "minimax/minimax-m3",
+  "prompts": [
+    {
+      "pattern": "A_wide",
+      "prompt": "Wide shot of a Stockholm dinner-show venue with candlelit round tables arranged in rows, guests seated for a three-course menu while a small stage glows warmly at the front of the room."
+    },
+    {
+      "pattern": "B_medium",
+      "prompt": "Medium shot of friends raising flutes of crémant at a candlelit dinner table in a Stockholm restaurant, a three-course meal in progress with white napkins and sparkling glassware catching warm light."
+    },
+    {
+      "pattern": "C_environment",
+      "prompt": "Environment shot of a Södermalm street at dusk with cozy bistro windows glowing amber, small groups of diners visible through the glass seated at long wooden tables sharing tasting plates and wine."
+    },
+    {
+      "pattern": "D_detail",
+      "prompt": "Close-up detail of a Nordic tasting plate on white porcelain, delicate fish and herb garnish in sharp focus while candlelight reflects off a coupe glass in soft Stockholm restaurant bokeh behind."
+    }
+  ]
+}

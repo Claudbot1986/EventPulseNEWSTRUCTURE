@@ -1,0 +1,26 @@
+{
+  "category_slug": "sports",
+  "events": 493,
+  "library_now": 2,
+  "approx_images_needed": 3,
+  "description_corpus_size": 116,
+  "model": "minimax/minimax-m3",
+  "prompts": [
+    {
+      "pattern": "A_wide",
+      "prompt": "Wide shot from the upper tier of a Stockholm ice hockey arena, the brightly lit rink below framed by a packed crowd in winter coats. Players in contrasting jerseys warm up near the goal crease as the pre-game atmosphere builds."
+    },
+    {
+      "pattern": "B_medium",
+      "prompt": "Medium shot of two amateur boxers exchanging punches inside a roped ring at a Stockholm sports hall, their bare torsos glistening with sweat under overhead gymnasium lights. Coaches and a small audience of friends watch from folding chairs along the perimeter."
+    },
+    {
+      "pattern": "C_environment",
+      "prompt": "Wide view of Solvalla's oval trotting track on a grey Stockholm afternoon, the dirt course stretching past white railing toward a low clubhouse and modest grandstand. A handful of spectators in jackets linger along the inner fence."
+    },
+    {
+      "pattern": "D_detail",
+      "prompt": "Close-up of a pair of well-worn running shoes resting on damp cobblestones, lit by soft late-summer evening light, with blurred runners passing in the background of a Stockholm city race finish area."
+    }
+  ]
+}

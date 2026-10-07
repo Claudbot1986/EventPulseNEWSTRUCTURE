@@ -1,0 +1,1088 @@
+{
+  "category_slug": "nightlife",
+  "events": 87,
+  "library_count": 1,
+  "approx_images_needed": 1,
+  "top_words": [
+    [
+      "golden",
+      262
+    ],
+    [
+      "hits",
+      262
+    ],
+    [
+      "dinnershow",
+      198
+    ],
+    [
+      "party",
+      159
+    ],
+    [
+      "karaoke",
+      90
+    ],
+    [
+      "underhållning",
+      86
+    ],
+    [
+      "helkväll",
+      80
+    ],
+    [
+      "mamma",
+      76
+    ],
+    [
+      "mia",
+      76
+    ],
+    [
+      "kvällen",
+      72
+    ],
+    [
+      "nattklubb",
+      69
+    ],
+    [
+      "ikonisk",
+      68
+    ],
+    [
+      "evening",
+      57
+    ],
+    [
+      "2026",
+      54
+    ],
+    [
+      "event",
+      50
+    ],
+    [
+      "ett",
+      50
+    ],
+    [
+      "rättersmeny",
+      49
+    ],
+    [
+      "debaser",
+      48
+    ],
+    [
+      "with",
+      46
+    ],
+    [
+      "inkluderar",
+      41
+    ],
+    [
+      "evenemanget",
+      40
+    ],
+    [
+      "entertainment",
+      39
+    ],
+    [
+      "night",
+      39
+    ],
+    [
+      "halloween",
+      39
+    ],
+    [
+      "erbjuder",
+      37
+    ],
+    [
+      "course",
+      36
+    ],
+    [
+      "dans",
+      36
+    ],
+    [
+      "full",
+      35
+    ],
+    [
+      "denna",
+      35
+    ],
+    [
+      "2027",
+      34
+    ]
+  ],
+  "sample_events": [
+    {
+      "title": "Golden Hits Dinnershow",
+      "venue": "왕의 정원"
+    },
+    {
+      "title": "Golden Hits Dinnershow",
+      "venue": "왕의 정원"
+    },
+    {
+      "title": "Golden Hits Dinnershow",
+      "venue": "왕의 정원"
+    },
+    {
+      "title": "Golden Hits Dinnershow",
+      "venue": "왕의 정원"
+    },
+    {
+      "title": "Efterfest SM-finaler Innebandy 2027",
+      "venue": "Annexet"
+    }
+  ],
+  "full_corpus": [
+    {
+      "id": "1e664d69-072f-4004-849f-257aecc0e9e9",
+      "title_sv": "Golden Hits Dinnershow",
+      "title_en": "Golden Hits Dinnershow",
+      "desc_sv": "Golden Hits Dinnershow är en helkväll med ikonisk underhållning på Golden Hits i Stockholm.\n\nEn helkväll på Golden Hits som inkluderar en 3-rättersmeny och ikonisk underhållning. Kvällen fortsätter sedan med nattklubb och karaoke.",
+      "desc_en": "Golden Hits Dinnershow is a full evening with iconic entertainment at Golden Hits in Stockholm.\n\nA full evening at Golden Hits includes a 3-course dinner and iconic entertainment. The night then continues with a nightclub and karaoke.",
+      "raw": "Golden Hits Dinnershow är en helkväll med ikonisk underhållning på Golden Hits i Stockholm.\n\nEn helkväll på Golden Hits som inkluderar en 3-rättersmeny och ikonisk underhållning. Kvällen fortsätter sedan med nattklubb och karaoke.",
+      "venue": "왕의 정원",
+      "start": "2027-06-19T16:30:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "3ef3825a-1b8e-4869-b0d9-7646e67e72be",
+      "title_sv": "Golden Hits Dinnershow",
+      "title_en": "Golden Hits Dinnershow",
+      "desc_sv": "Golden Hits Dinnershow är en dinnershow på Golden Hits i Stockholm.\n\nGolden Hits Dinnershow erbjuder en helkväll med 3-rättersmeny. Kvällen inkluderar ikonisk underhållning, nattklubb och karaoke.",
+      "desc_en": "Golden Hits Dinnershow is a dinnershow at Golden Hits in Stockholm.\n\nThe Golden Hits Dinnershow offers a full evening with a 3-course menu. The night includes iconic entertainment, a nightclub, and karaoke.",
+      "raw": "Golden Hits Dinnershow är en dinnershow på Golden Hits i Stockholm.\n\nGolden Hits Dinnershow erbjuder en helkväll med 3-rättersmeny. Kvällen inkluderar ikonisk underhållning, nattklubb och karaoke.",
+      "venue": "왕의 정원",
+      "start": "2027-06-12T16:30:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "931e54f9-adb5-4adb-abbf-8a9b43f014a5",
+      "title_sv": "Golden Hits Dinnershow",
+      "title_en": "Golden Hits Dinnershow",
+      "desc_sv": "Golden Hits Dinnershow är en dinnershow på Golden Hits i Stockholm.\n\nGolden Hits Dinnershow erbjuder en helkväll med en 3-rättersmeny och ikonisk underhållning. Efter middagen fortsätter kvällen med nattklubb och karaoke.",
+      "desc_en": "Golden Hits Dinnershow is a dinner show at Golden Hits in Stockholm.\n\nGolden Hits Dinnershow offers a full evening with a 3-course menu and iconic entertainment. After dinner, the night continues with a nightclub and karaoke.",
+      "raw": "Golden Hits Dinnershow är en dinnershow på Golden Hits i Stockholm.\n\nGolden Hits Dinnershow erbjuder en helkväll med en 3-rättersmeny och ikonisk underhållning. Efter middagen fortsätter kvällen med nattklubb och karaoke.",
+      "venue": "왕의 정원",
+      "start": "2027-05-14T16:30:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "2cd06a91-1e7d-4d6e-9478-b83e39e79b3c",
+      "title_sv": "Golden Hits Dinnershow",
+      "title_en": "Golden Hits Dinnershow",
+      "desc_sv": "Golden Hits Dinnershow är en dinnershow på Golden Hits i Stockholm.\n\nGolden Hits Dinnershow erbjuder en helkväll med ikonisk underhållning. Gäster avnjuter en 3-rättersmeny, och kvällen fortsätter sedan med nattklubb och karaoke.",
+      "desc_en": "Golden Hits Dinnershow is a dinnershow at Golden Hits in Stockholm.\n\nThe Golden Hits Dinnershow offers a full evening with iconic entertainment. Guests enjoy a 3-course meal, and the night continues with a nightclub and karaoke.",
+      "raw": "Golden Hits Dinnershow är en dinnershow på Golden Hits i Stockholm.\n\nGolden Hits Dinnershow erbjuder en helkväll med ikonisk underhållning. Gäster avnjuter en 3-rättersmeny, och kvällen fortsätter sedan med nattklubb och karaoke.",
+      "venue": "왕의 정원",
+      "start": "2027-05-01T16:30:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "89639ed6-b74c-4a0e-b681-9fbe581f9852",
+      "title_sv": "Efterfest SM-finaler Innebandy 2027",
+      "title_en": "Efterfest SM-finaler Innebandy 2027",
+      "desc_sv": "Efterfest SM-finaler Innebandy 2027 är en efterfest på Annexet i Stockholm.\n\nEvenemanget är den officiella efterfesten för SM-finalerna i Innebandy 2027. Det äger rum på Annexet i Stockholm och markerar slutet på mästerskapen.",
+      "desc_en": "Efterfest SM-finaler Innebandy 2027 is an after-party at Annexet in Stockholm.\n\nThis event is the official after-party for the Floorball SM Finals 2027. It takes place at Annexet in Stockholm and marks the conclusion of the championships.",
+      "raw": "Efterfest SM-finaler Innebandy 2027 är en efterfest på Annexet i Stockholm.\n\nEvenemanget är den officiella efterfesten för SM-finalerna i Innebandy 2027. Det äger rum på Annexet i Stockholm och markerar slutet på mästerskapen.",
+      "venue": "Annexet",
+      "start": "2027-05-08T20:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "91e9c9ab-a511-406e-9a69-48bd621474bc",
+      "title_sv": "Golden Hits Dinnershow",
+      "title_en": "Golden Hits Dinnershow",
+      "desc_sv": "Golden Hits Dinnershow är en helkväll med middag och underhållning på Golden Hits i Stockholm.\n\nEvenemanget erbjuder en 3-rättersmeny, ikonisk underhållning, nattklubb och karaoke. Detta kombinerar middag med kvällsunderhållning på en och samma plats.",
+      "desc_en": "Golden Hits Dinnershow is a full evening with dinner and entertainment at Golden Hits in Stockholm.\n\nThe event offers a 3-course menu, iconic entertainment, a nightclub, and karaoke. It combines dining with evening entertainment in one location.",
+      "raw": "Golden Hits Dinnershow är en helkväll med middag och underhållning på Golden Hits i Stockholm.\n\nEvenemanget erbjuder en 3-rättersmeny, ikonisk underhållning, nattklubb och karaoke. Detta kombinerar middag med kvällsunderhållning på en och samma plats.",
+      "venue": "왕의 정원",
+      "start": "2027-05-06T16:30:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "f6ef932d-ff27-426e-8051-75dd2c6356f0",
+      "title_sv": "COCKTAILPARTY",
+      "title_en": "COCKTAILPARTY",
+      "desc_sv": "Cocktailparty är en festkväll på Biblioteket Live i Stockholm.\n\nVälkommen till en pulserande festkväll mitt på Södermalm. Kliv in i den historiska och stämningsfulla miljön på Biblioteket Live för en natt fylld av välskakade cocktails, goda smaker och fantastisk stämning från start till stängning. Bartendrarna serverar fantastiska drinkar i baren medan DJ:n sätter tonen för dansgolvet.",
+      "desc_en": "Cocktailparty is an evening party at Biblioteket Live in Stockholm.\n\nWelcome to a vibrant party night in the heart of Södermalm. Step into the historical and atmospheric setting of Biblioteket Live for a night filled with well-shaken cocktails, delicious flavors, and a fantastic atmosphere from start to finish. Bartenders will serve amazing drinks at the bar while the DJ sets the tone for the danc",
+      "raw": "Cocktailparty är en festkväll på Biblioteket Live i Stockholm.\n\nVälkommen till en pulserande festkväll mitt på Södermalm. Kliv in i den historiska och stämningsfulla miljön på Biblioteket Live för en natt fylld av välskakade cocktails, goda smaker och fantastisk stämning från start till stängning. Bartendrarna serverar fantastiska drinkar i baren medan DJ:n sätter tonen för dansgolvet.",
+      "venue": "Biblioteket Live",
+      "start": "2026-10-10T20:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "43a17f17-9bec-4ef7-a467-d7b903ffddc7",
+      "title_sv": "MAMMA MIA! THE PARTY",
+      "title_en": "MAMMA MIA! THE PARTY",
+      "desc_sv": "MAMMA MIA! THE PARTY är ett party på Tyrol, Stockholm.\n\nSedan världspremiären i Stockholm har MAMMA MIA! THE PARTY dragit fulla tavernor i både London och Göteborg. Detta dansanta och glädjefyllda party firar 10 år. Kliv in på Nikos taverna på den grekiska paradisön Skopelos för en kväll med välkomstouzo och en fyrarätters medelhavsmeny. Kvällen inkluderar sång, dans, våghalsiga luftfärder, dansan",
+      "desc_en": "MAMMA MIA! THE PARTY is a party at Tyrol, Stockholm.\n\nSince its world premiere in Stockholm, MAMMA MIA! THE PARTY has filled tavernas in both London and Gothenburg. This dancing and joyful party celebrates its 10th anniversary. Guests step into Nikos' taverna on the Greek paradise island of Skopelos for an evening featuring welcome ouzo and a four-course Mediterranean menu. The experience includes",
+      "raw": "MAMMA MIA! THE PARTY är ett party på Tyrol, Stockholm.\n\nSedan världspremiären i Stockholm har MAMMA MIA! THE PARTY dragit fulla tavernor i både London och Göteborg. Detta dansanta och glädjefyllda party firar 10 år. Kliv in på Nikos taverna på den grekiska paradisön Skopelos för en kväll med välkomstouzo och en fyrarätters medelhavsmeny. Kvällen inkluderar sång, dans, våghalsiga luftfärder, dansan",
+      "venue": "Tyrol",
+      "start": "2026-11-18T17:30:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "35638088-2ab4-45da-9e04-b186a9814739",
+      "title_sv": "Golden Hits Dinnershow",
+      "title_en": "Golden Hits Dinnershow",
+      "desc_sv": "Golden Hits Dinnershow är en dinnershow på Golden Hits i Stockholm.\n\nEvenemanget erbjuder en helkväll med en 3-rättersmeny, ikonisk underhållning, nattklubb och karaoke.",
+      "desc_en": "Golden Hits Dinnershow is a dinnershow at Golden Hits in Stockholm.\n\nThe event offers an entire evening with a 3-course menu, iconic entertainment, a nightclub, and karaoke.",
+      "raw": "Golden Hits Dinnershow är en dinnershow på Golden Hits i Stockholm.\n\nEvenemanget erbjuder en helkväll med en 3-rättersmeny, ikonisk underhållning, nattklubb och karaoke.",
+      "venue": "왕의 정원",
+      "start": "2027-04-02T16:30:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "6e807020-cc31-4e15-bac8-e634f5b18bab",
+      "title_sv": "Golden Hits Dinnershow",
+      "title_en": "Golden Hits Dinnershow",
+      "desc_sv": "Golden Hits Dinnershow är en helkväll med 3-rättersmeny, ikonisk underhållning, nattklubb och karaoke på Golden Hits i Stockholm.\n\nDet är en helkväll som inkluderar en 3-rättersmeny. Gäster kan förvänta sig ikonisk underhållning, nattklubb och karaoke som en del av upplevelsen.",
+      "desc_en": "Golden Hits Dinnershow is a full evening with a 3-course menu, iconic entertainment, nightclub, and karaoke at Golden Hits in Stockholm.\n\nThis full evening includes a 3-course menu. Guests can expect iconic entertainment, a nightclub, and karaoke as part of the experience.",
+      "raw": "Golden Hits Dinnershow är en helkväll med 3-rättersmeny, ikonisk underhållning, nattklubb och karaoke på Golden Hits i Stockholm.\n\nDet är en helkväll som inkluderar en 3-rättersmeny. Gäster kan förvänta sig ikonisk underhållning, nattklubb och karaoke som en del av upplevelsen.",
+      "venue": "왕의 정원",
+      "start": "2027-04-01T16:30:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "ec3be332-1f97-41ab-a2aa-6d7a7839fc5c",
+      "title_sv": "Golden Hits Dinnershow",
+      "title_en": "Golden Hits Dinnershow",
+      "desc_sv": "Golden Hits Dinnershow är en middagsföreställning på Golden Hits i Stockholm.\n\nKvällen erbjuder en 3-rättersmeny tillsammans med ikonisk underhållning. Efter föreställningen fortsätter kvällen med nattklubb och karaoke.",
+      "desc_en": "Golden Hits Dinnershow is a dinner show at Golden Hits in Stockholm.\n\nThis evening offers a 3-course menu alongside iconic entertainment. Following the show, the night continues with a nightclub and karaoke.",
+      "raw": "Golden Hits Dinnershow är en middagsföreställning på Golden Hits i Stockholm.\n\nKvällen erbjuder en 3-rättersmeny tillsammans med ikonisk underhållning. Efter föreställningen fortsätter kvällen med nattklubb och karaoke.",
+      "venue": "왕의 정원",
+      "start": "2027-03-27T17:30:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "d065a515-b260-41ca-8991-ca39cac252cb",
+      "title_sv": "420 | Lost Miracle (Sébastien Léger and Roy Rosenfeld) | Stockholm",
+      "title_en": "420 | Lost Miracle (Sébastien Léger and Roy Rosenfeld) | Stockholm",
+      "desc_sv": "Den 10 oktober gästas vi av Lost Miracle – ett unikt samarbete mellan Sébastien Léger och Roy Rosenfeld. Båda har under lång tid format världens dansgolv, från Coachella till Cercle, men nu tar de sin gemensamma vision till vårt klubbgolv på Slaktkyrkan. Det ger oss en sällsynt chans att få uppleva deras djupt melodiska och detaljrika sound i en intim miljö.\n\nSedan släppet av \"Panko Day\" har Lost ",
+      "desc_en": "Den 10 oktober gästas vi av Lost Miracle – ett unikt samarbete mellan Sébastien Léger och Roy Rosenfeld. Båda har under lång tid format världens dansgolv, från Coachella till Cercle, men nu tar de sin gemensamma vision till vårt klubbgolv på Slaktkyrkan. Det ger oss en sällsynt chans att få uppleva deras djupt melodiska och detaljrika sound i en intim miljö.\n\nSedan släppet av \"Panko Day\" har Lost ",
+      "raw": "Den 10 oktober gästas vi av Lost Miracle – ett unikt samarbete mellan Sébastien Léger och Roy Rosenfeld. Båda har under lång tid format världens dansgolv, från Coachella till Cercle, men nu tar de sin gemensamma vision till vårt klubbgolv på Slaktkyrkan. Det ger oss en sällsynt chans att få uppleva deras djupt melodiska och detaljrika sound i en intim miljö.\n\nSedan släppet av \"Panko Day\" har Lost ",
+      "venue": null,
+      "start": "2026-10-10T20:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "b8b4a090-78d7-4494-b0fc-e1a10df3baea",
+      "title_sv": "Golden Hits Dinnershow",
+      "title_en": "Golden Hits Dinnershow",
+      "desc_sv": "Golden Hits Dinnershow är en ikonisk dinnershow på Golden Hits i Stockholm.\n\nGolden Hits Dinnershow erbjuder en helkväll med underhållning på Golden Hits. Gästerna får en 3-rättersmeny, ikonisk underhållning, nattklubb och karaoke.",
+      "desc_en": "Golden Hits Dinnershow is an iconic dinnershow at Golden Hits in Stockholm.\n\nGolden Hits Dinnershow offers a full evening of entertainment at Golden Hits. Guests receive a 3-course menu, iconic entertainment, a nightclub, and karaoke.",
+      "raw": "Golden Hits Dinnershow är en ikonisk dinnershow på Golden Hits i Stockholm.\n\nGolden Hits Dinnershow erbjuder en helkväll med underhållning på Golden Hits. Gästerna får en 3-rättersmeny, ikonisk underhållning, nattklubb och karaoke.",
+      "venue": "왕의 정원",
+      "start": "2027-04-08T16:30:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "3e952d01-aca4-48ba-9ddf-b0b4b11627a4",
+      "title_sv": "Mall Call | Stinsen | 27–28 Nov",
+      "title_en": "Mall Call | Stinsen | 27–28 Nov",
+      "desc_sv": "Mall Call @ Stinsen Sollentuna\nNovember 27–28\nTickets out now at https://www.mallcall.se/\n\nEarly Bird SOLD OUT\nFriday VIP Tickets SOLD OUT\n–\nWelcome to Mall Call at Stinsen, Sollentuna, November 27–28\n\nClub culture has always had a talent for seeing possibilities where others see limitations. Warehouses become dancefloors, forests become raves, abandoned buildings become temporary worlds of their ",
+      "desc_en": "Mall Call @ Stinsen Sollentuna\nNovember 27–28\nTickets out now at https://www.mallcall.se/\n\nEarly Bird SOLD OUT\nFriday VIP Tickets SOLD OUT\n–\nWelcome to Mall Call at Stinsen, Sollentuna, November 27–28\n\nClub culture has always had a talent for seeing possibilities where others see limitations. Warehouses become dancefloors, forests become raves, abandoned buildings become temporary worlds of their ",
+      "raw": "Mall Call @ Stinsen Sollentuna\nNovember 27–28\nTickets out now at https://www.mallcall.se/\n\nEarly Bird SOLD OUT\nFriday VIP Tickets SOLD OUT\n–\nWelcome to Mall Call at Stinsen, Sollentuna, November 27–28\n\nClub culture has always had a talent for seeing possibilities where others see limitations. Warehouses become dancefloors, forests become raves, abandoned buildings become temporary worlds of their ",
+      "venue": null,
+      "start": "2026-11-27T19:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "041d66c7-7dc7-453a-9d19-b123e5b7ee78",
+      "title_sv": "13/2 SHREK RAVE | DEBASER KLUBBEN",
+      "title_en": "13/2 SHREK RAVE | DEBASER KLUBBEN",
+      "desc_sv": "SHREK RAVE KOMMER TILL STOCKHOLM!\n\nDär underground-rave möter liveshow förvandlas träsket till en fullskalig fest med tung dansmusik, stora visuals och produktion på festivalnivå. DJs styr kvällen med techno, house, EDM, drum & bass och Shrek-remixar, samtidigt som Shrek-karaktärer och liveinslag dyker upp under hela kvällen.\n\nFörvänta dig det oväntade när träsket vaknar till liv med uppträdanden,",
+      "desc_en": "SHREK RAVE IS COMING TO STOCKHOLM!\n\nWhere underground rave meets live stage show, the swamp transforms into a full-scale party built around heavy dance music, huge visuals and festival-level production. DJs drive the night with Techno, House, EDM, Drum & Bass and Shrek remixes, while Shrek characters and live moments appear throughout the night.\n\nExpect the unexpected as the swamp comes alive with",
+      "raw": "SHREK RAVE KOMMER TILL STOCKHOLM!\n\nDär underground-rave möter liveshow förvandlas träsket till en fullskalig fest med tung dansmusik, stora visuals och produktion på festivalnivå. DJs styr kvällen med techno, house, EDM, drum & bass och Shrek-remixar, samtidigt som Shrek-karaktärer och liveinslag dyker upp under hela kvällen.\n\nFörvänta dig det oväntade när träsket vaknar till liv med uppträdanden,",
+      "venue": "Debaser Strand",
+      "start": "2027-02-13T21:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "1d63ce27-d0a9-4062-9fbf-5d2355971bd2",
+      "title_sv": "Nightlife Tour: VIP Entry to 2–3 Clubs & Bar Games",
+      "title_en": "Nightlife Tour: VIP Entry to 2–3 Clubs & Bar Games",
+      "venue": "The Auld Dub",
+      "start": "2026-10-07T00:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "5f8b3381-bc9c-4435-841d-19043e07b73a",
+      "title_sv": "Golden Hits Dinnershow",
+      "title_en": "Golden Hits Dinnershow",
+      "desc_sv": "Golden Hits Dinnershow är en dinnershow på Golden Hits i Stockholm.\n\nUpplev en helkväll med en 3-rättersmeny och ikonisk underhållning. Efter middagen fortsätter kvällen med nattklubb och karaoke.",
+      "desc_en": "Golden Hits Dinnershow is a dinnershow at Golden Hits in Stockholm.\n\nExperience a full evening featuring a 3-course menu and iconic entertainment. Following dinner, the night continues with a nightclub and karaoke.",
+      "raw": "Golden Hits Dinnershow är en dinnershow på Golden Hits i Stockholm.\n\nUpplev en helkväll med en 3-rättersmeny och ikonisk underhållning. Efter middagen fortsätter kvällen med nattklubb och karaoke.",
+      "venue": "왕의 정원",
+      "start": "2027-02-18T17:30:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "2057e436-8f93-4aea-b6b3-305d33911b22",
+      "title_sv": "JULDAGEN X BIBLIOTEKET LIVE",
+      "title_en": "JULDAGEN X BIBLIOTEKET LIVE",
+      "desc_sv": "Juldagen X Biblioteket Live är ett evenemang på Ljusgården i Stockholm.\n\nEvenemanget har fyra dansgolv, fyra barer och tre våningar.",
+      "desc_en": "Juldagen X Biblioteket Live is an event at Ljusgården in Stockholm.\n\nThe event features four dance floors, four bars, and three levels.",
+      "raw": "Juldagen X Biblioteket Live är ett evenemang på Ljusgården i Stockholm.\n\nEvenemanget har fyra dansgolv, fyra barer och tre våningar.",
+      "venue": "왕의 정원",
+      "start": "2026-12-25T21:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "8b6c6b55-c69c-44e9-ae16-5c82dda2e813",
+      "title_sv": "NYÅRSAFTON 2026/2027 PÅ HYDE STOCKHOLM",
+      "title_en": "NYÅRSAFTON 2026/2027 PÅ HYDE STOCKHOLM",
+      "desc_sv": "NYÅRSAFTON 2026/2027 PÅ HYDE STOCKHOLM är en nyårsfest på HYDE Stockholm i Stockholm.\n\nÅrets sista kväll avslutas med en fest på HYDE Stockholm. Fira nyårsafton i city med en kväll fylld av energi, stämning och musik som pågår fram till 03:00. När klockan slår tolv lämnas 2026 bakom oss och det nya året välkomnas. Samla vännerna och klä upp er för en av årets största kvällar.",
+      "desc_en": "NYÅRSAFTON 2026/2027 PÅ HYDE STOCKHOLM is a New Year's Eve party at HYDE Stockholm in Stockholm.\n\nThe last evening of the year concludes with a party at HYDE Stockholm. Celebrate New Year's Eve in the city with an evening filled with energy, atmosphere, and music until 03:00. As the clock strikes twelve, 2026 is left behind, and the new year is welcomed. Gather friends and dress up for one of the ",
+      "raw": "NYÅRSAFTON 2026/2027 PÅ HYDE STOCKHOLM är en nyårsfest på HYDE Stockholm i Stockholm.\n\nÅrets sista kväll avslutas med en fest på HYDE Stockholm. Fira nyårsafton i city med en kväll fylld av energi, stämning och musik som pågår fram till 03:00. När klockan slår tolv lämnas 2026 bakom oss och det nya året välkomnas. Samla vännerna och klä upp er för en av årets största kvällar.",
+      "venue": "Stockholm",
+      "start": "2026-12-31T21:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "6f1a74a3-610d-4278-90e4-8a66e031d4b7",
+      "title_sv": "OKTOBERFIST 2026",
+      "title_en": "OKTOBERFIST 2026",
+      "desc_sv": "OKTOBERFIST 2026 är en fest på House of Q i Stockholm.\n\nOKTOBERFIST återvänder med en bayersk fest, beskriven som större än någonsin tidigare. Evenemanget utlovar kalla öl, queers och ”wurst galore”. Festen äger rum på House of Q och har två dansgolv med inslag från Kroatien, Réunion och Grekland. Vännerna Stockholm Bears är med och står värd för ett eget ”okto-bear-fest”-golv. Tack vare sommartid",
+      "desc_en": "OKTOBERFIST 2026 is a party at House of Q in Stockholm.\n\nOKTOBERFIST returns with a Bavarian brawl, described as bigger than ever before. The event promises cold beers, hot queers, and wurst galore. The party takes place at House of Q with two dancefloors, packed with treats from Croatia, Réunion, Greece, and more. Friends Stockholm Bears will host their own okto-bear-fest floor. Thanks to dayligh",
+      "raw": "OKTOBERFIST 2026 är en fest på House of Q i Stockholm.\n\nOKTOBERFIST återvänder med en bayersk fest, beskriven som större än någonsin tidigare. Evenemanget utlovar kalla öl, queers och ”wurst galore”. Festen äger rum på House of Q och har två dansgolv med inslag från Kroatien, Réunion och Grekland. Vännerna Stockholm Bears är med och står värd för ett eget ”okto-bear-fest”-golv. Tack vare sommartid",
+      "venue": "House of Q",
+      "start": "2026-10-24T19:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "70630303-9f26-4b2c-9852-4a3ed59441a0",
+      "title_sv": "DIMENSION - TECHNO STOCKHOLM - 3RD ANNIVERSARY",
+      "title_en": "DIMENSION - TECHNO STOCKHOLM - 3RD ANNIVERSARY",
+      "desc_sv": "🔥 TECHNO STOCKHOLM — 3RD ANNIVERSARY 🔥\n\nOn 28 November, we celebrate three years of TECHNO STOCKHOLM.\n\n📍 SLAKTKYRKAN — STOCKHOLM\n📅 28 NOVEMBER 2026\n⏰ 21:00 — 03:00\n🔞 AGE 18+\n🌍 International Artists\n🔊 Hard Techno - Emotional Schranz \n⚡ Full Power\n\nMAIN EVENT LINEUP:\n\n🔉 KOTORRI\nhttps://www.instagram.com/kotorri_djk\nhttps://kotorri.jim.do/bio\n\n🔉 NACHTIGALLER\nhttps://www.instagram.com/nachtig",
+      "desc_en": "🔥 TECHNO STOCKHOLM — 3RD ANNIVERSARY 🔥\n\nOn 28 November, we celebrate three years of TECHNO STOCKHOLM.\n\n📍 SLAKTKYRKAN — STOCKHOLM\n📅 28 NOVEMBER 2026\n⏰ 21:00 — 03:00\n🔞 AGE 18+\n🌍 International Artists\n🔊 Hard Techno - Emotional Schranz \n⚡ Full Power\n\nMAIN EVENT LINEUP:\n\n🔉 KOTORRI\nhttps://www.instagram.com/kotorri_djk\nhttps://kotorri.jim.do/bio\n\n🔉 NACHTIGALLER\nhttps://www.instagram.com/nachtig",
+      "raw": "🔥 TECHNO STOCKHOLM — 3RD ANNIVERSARY 🔥\n\nOn 28 November, we celebrate three years of TECHNO STOCKHOLM.\n\n📍 SLAKTKYRKAN — STOCKHOLM\n📅 28 NOVEMBER 2026\n⏰ 21:00 — 03:00\n🔞 AGE 18+\n🌍 International Artists\n🔊 Hard Techno - Emotional Schranz \n⚡ Full Power\n\nMAIN EVENT LINEUP:\n\n🔉 KOTORRI\nhttps://www.instagram.com/kotorri_djk\nhttps://kotorri.jim.do/bio\n\n🔉 NACHTIGALLER\nhttps://www.instagram.com/nachtig",
+      "venue": null,
+      "start": "2026-11-28T20:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "f360db19-a4b3-4021-aae4-7257c2face29",
+      "title_sv": "Golden Hits Dinnershow",
+      "title_en": "Golden Hits Dinnershow",
+      "desc_sv": "Golden Hits Dinnershow är en helkväll med middag och underhållning på Golden Hits i Stockholm.\n\nDenna helkväll på Golden Hits kombinerar en 3-rättersmeny med ikonisk underhållning. Kvällen fortsätter med nattklubb och karaoke för gästerna.",
+      "desc_en": "Golden Hits Dinnershow är en helkväll med middag och underhållning på Golden Hits i Stockholm.\n\nDenna helkväll på Golden Hits kombinerar en 3-rättersmeny med ikonisk underhållning. Kvällen fortsätter med nattklubb och karaoke för gästerna.",
+      "raw": "Golden Hits Dinnershow är en helkväll med middag och underhållning på Golden Hits i Stockholm.\n\nDenna helkväll på Golden Hits kombinerar en 3-rättersmeny med ikonisk underhållning. Kvällen fortsätter med nattklubb och karaoke för gästerna.",
+      "venue": "Golden Hits",
+      "start": "2027-02-12T17:30:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "ea886599-d8aa-43c0-bf70-e650c925be1c",
+      "title_sv": "Golden Hits Dinnershow",
+      "title_en": "Golden Hits Dinnershow",
+      "desc_sv": "Golden Hits Dinnershow är en helkväll med middag och underhållning på Golden Hits i Stockholm.\n\nDenna dinnershow erbjuder en helkväll med trerättersmeny och ikonisk underhållning. Efter middagen fortsätter kvällen med nattklubb och karaoke.",
+      "desc_en": "Golden Hits Dinnershow är en helkväll med middag och underhållning på Golden Hits i Stockholm.\n\nDenna dinnershow erbjuder en helkväll med trerättersmeny och ikonisk underhållning. Efter middagen fortsätter kvällen med nattklubb och karaoke.",
+      "raw": "Golden Hits Dinnershow är en helkväll med middag och underhållning på Golden Hits i Stockholm.\n\nDenna dinnershow erbjuder en helkväll med trerättersmeny och ikonisk underhållning. Efter middagen fortsätter kvällen med nattklubb och karaoke.",
+      "venue": "Golden Hits",
+      "start": "2027-02-11T17:30:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "9ebd01ef-8554-45e7-bd07-85a129dfc65d",
+      "title_sv": "Golden Hits Dinnershow",
+      "title_en": "Golden Hits Dinnershow",
+      "desc_sv": "Golden Hits Dinnershow är en helkväll med ikonisk underhållning på Golden Hits i Stockholm.\n\nDenna helkväll på Golden Hits inkluderar en trerättersmeny, ikonisk underhållning, nattklubb och karaoke.",
+      "desc_en": "Golden Hits Dinnershow är en helkväll med ikonisk underhållning på Golden Hits i Stockholm.\n\nDenna helkväll på Golden Hits inkluderar en trerättersmeny, ikonisk underhållning, nattklubb och karaoke.",
+      "raw": "Golden Hits Dinnershow är en helkväll med ikonisk underhållning på Golden Hits i Stockholm.\n\nDenna helkväll på Golden Hits inkluderar en trerättersmeny, ikonisk underhållning, nattklubb och karaoke.",
+      "venue": "Golden Hits",
+      "start": "2027-02-05T17:30:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "d7b51b23-630b-4d3c-aaaa-b63ce3c1914e",
+      "title_sv": "X-CRUISE - PARTYBUSS GÖTEBORG - STOCKHOLM",
+      "title_en": "X-CRUISE - PARTYBUSS GÖTEBORG - STOCKHOLM",
+      "desc_sv": "Med X-CRUISE PARTYBUSS blir resan till fartyget en del av upplevelsen. Festen börjar redan på bussen där musik och stämning skapar en maximal förväntan inför helgen ombord. Borta är all stress med resor och byten; bussen tar dig direkt från din hemort, som Göteborg, Borås eller Linköping, till terminalen i Stockholm. Samma smidiga resa väntar när det är dags att åka hem på söndagen. Det här är det",
+      "desc_en": "With the X-CRUISE PARTYBUSS, the journey to the ship becomes part of the experience. The party starts on the bus, where music and atmosphere build maximum anticipation for the weekend aboard. Gone is all the stress of travel and transfers; the bus takes you directly from your hometown, like Gothenburg, Borås, or Linköping, to the terminal in Stockholm. The same smooth journey awaits when it's time",
+      "raw": "Med X-CRUISE PARTYBUSS blir resan till fartyget en del av upplevelsen. Festen börjar redan på bussen där musik och stämning skapar en maximal förväntan inför helgen ombord. Borta är all stress med resor och byten; bussen tar dig direkt från din hemort, som Göteborg, Borås eller Linköping, till terminalen i Stockholm. Samma smidiga resa väntar när det är dags att åka hem på söndagen. Det här är det",
+      "venue": "왕의 정원",
+      "start": "2026-11-27T18:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "1b061da1-275a-4e0b-a2d0-57a2d6771e18",
+      "title_sv": "X-CRUISE - PARTYBUSS KARLSTAD - STOCKHOLM",
+      "title_en": "X-CRUISE - PARTYBUSS KARLSTAD - STOCKHOLM",
+      "venue": "왕의 정원",
+      "start": "2026-11-27T18:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "4246a150-f692-4d4b-bd0c-324d2b35f6fe",
+      "title_sv": "MAMMA MIA! THE PARTY",
+      "title_en": "MAMMA MIA! THE PARTY",
+      "desc_sv": "MAMMA MIA! THE PARTY bjuder in till en grekisk tavernakväll på Tyrol i Stockholm, inspirerad av ABBA:s musik. Räkna med dans, sång och en festlig atmosfär. Scenarier och artister skapar en levande musikalisk upplevelse direkt på plats i lokalen. Denna upplevelse fokuserar på glädjen i musiken och den gemensamma festen.",
+      "desc_en": "MAMMA MIA! THE PARTY invites you to a Greek taverna night at Tyrol in Stockholm, inspired by the music of ABBA. Expect dancing, singing, and a festive atmosphere. Scenarios and performers create a vibrant musical experience right on location. This event focuses on the joy of the music and shared celebration.",
+      "raw": "MAMMA MIA! THE PARTY bjuder in till en grekisk tavernakväll på Tyrol i Stockholm, inspirerad av ABBA:s musik. Räkna med dans, sång och en festlig atmosfär. Scenarier och artister skapar en levande musikalisk upplevelse direkt på plats i lokalen. Denna upplevelse fokuserar på glädjen i musiken och den gemensamma festen.",
+      "venue": "Tyrol",
+      "start": "2026-10-24T11:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "abe7aeba-6e83-4ad0-8c5a-ededf71047c7",
+      "title_sv": "Golden Hits Dinnershow",
+      "title_en": "Golden Hits Dinnershow",
+      "desc_sv": "Golden Hits Dinnershow är en middagsshow på Golden Hits i Stockholm.\n\nDetta är en helkväll med en trerättersmeny, ikonisk underhållning, nattklubb och karaoke.",
+      "desc_en": "Golden Hits Dinnershow is a dinner show at Golden Hits in Stockholm.\n\nThis is a full evening featuring a three-course menu, iconic entertainment, a nightclub, and karaoke.",
+      "raw": "Golden Hits Dinnershow är en middagsshow på Golden Hits i Stockholm.\n\nDetta är en helkväll med en trerättersmeny, ikonisk underhållning, nattklubb och karaoke.",
+      "venue": "왕의 정원",
+      "start": "2027-01-29T17:30:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "396d4a1f-4b6f-4e6e-8064-066cd32616d1",
+      "title_sv": "X-CRUISE - PARTYBUSS SUNDSVALL - STOCKHOLM",
+      "title_en": "X-CRUISE - PARTYBUSS SUNDSVALL - STOCKHOLM",
+      "venue": "왕의 정원",
+      "start": "2026-11-27T18:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "5b98991c-194b-451d-a263-a18480d3b013",
+      "title_sv": "Golden Hits Dinnershow",
+      "title_en": "Golden Hits Dinnershow",
+      "desc_sv": "Golden Hits Dinnershow är en middagsshow på Golden Hits i Stockholm.\n\nGolden Hits Dinnershow erbjuder en helkväll med en 3-rättersmeny. Gästerna får uppleva ikonisk underhållning, följt av nattklubb och karaoke.",
+      "desc_en": "Golden Hits Dinnershow is a dinner show at Golden Hits in Stockholm.\n\nThe Golden Hits Dinnershow offers a full evening experience, featuring a 3-course menu. Guests can enjoy iconic entertainment, followed by a nightclub and karaoke.",
+      "raw": "Golden Hits Dinnershow är en middagsshow på Golden Hits i Stockholm.\n\nGolden Hits Dinnershow erbjuder en helkväll med en 3-rättersmeny. Gästerna får uppleva ikonisk underhållning, följt av nattklubb och karaoke.",
+      "venue": "왕의 정원",
+      "start": "2027-01-28T17:30:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "8e6e3cdf-4381-4356-a246-24ee9b1a38ac",
+      "title_sv": "Fredrik Andersson - Too Soon",
+      "title_en": "Fredrik Andersson - Too Soon",
+      "desc_sv": "Fredrik Andersson är tillbaka med ny turné: TOO SOON. Allt kan hända och inget är heligt inte ens sånt som egentligen är just ”too soon”",
+      "desc_en": "Fredrik Andersson är tillbaka med ny turné: TOO SOON. Allt kan hända och inget är heligt inte ens sånt som egentligen är just ”too soon”",
+      "raw": "Fredrik Andersson är tillbaka med ny turné: TOO SOON. Allt kan hända och inget är heligt inte ens sånt som egentligen är just ”too soon”",
+      "venue": "Konsertsalen",
+      "start": "2027-01-30T19:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "1eef36d2-845e-415f-ae38-233cfa3da384",
+      "title_sv": "Nyårsafton Kyoto Nattklubb 2026/2027",
+      "title_en": "Nyårsafton Kyoto Nattklubb 2026/2027",
+      "desc_sv": "Fira nyårsafton 2026 på Kasai – en oförglömlig kväll fylld av energi, musik och fest när vi tillsammans räknar ner till 2027!\n\nAvsluta året och välkomna det nya i sann Kasai-anda, med musik, fest och stämning långt in på natten.\n\nÖppettider: 22:00–05:00\n\nDatum: Torsdag 31 december 2026\n\nKlädsel: Vårdad och elegant nyårsklädsel\n\nPlats: Kasai, Linnégatan 18\n\nÅlder och nykterhet kontrolleras vid anko",
+      "desc_en": "Celebrate New Year’s Eve 2026 at Kasai – an unforgettable night of music, energy and celebration as we count down to 2027!\n\nSay goodbye to 2026 and welcome the new year in true Kasai style, with music and an incredible atmosphere until late.\n\nOpening hours: 22:00–05:00\n\nDate: Thursday, December 31, 2026\n\nDress code: Smart & elegant New Year’s attire\n\nVenue: Kasai, Linnégatan 18\n\nAge and sobriety w",
+      "raw": "Fira nyårsafton 2026 på Kasai – en oförglömlig kväll fylld av energi, musik och fest när vi tillsammans räknar ner till 2027!\n\nAvsluta året och välkomna det nya i sann Kasai-anda, med musik, fest och stämning långt in på natten.\n\nÖppettider: 22:00–05:00\n\nDatum: Torsdag 31 december 2026\n\nKlädsel: Vårdad och elegant nyårsklädsel\n\nPlats: Kasai, Linnégatan 18\n\nÅlder och nykterhet kontrolleras vid anko",
+      "venue": "왕의 정원",
+      "start": "2026-12-31T21:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "4ac46ddc-37ef-4b4e-af1f-254fe4e17801",
+      "title_sv": "MAMMA MIA! THE PARTY",
+      "title_en": "MAMMA MIA! THE PARTY",
+      "desc_sv": "MAMMA MIA! THE PARTY är en festkväll på Tyrol i Stockholm.\n\nGästerna kliver in i Nikos taverna på den grekiska ön Skopelos för en helkväll med välkomstouzo, en fyrarätters medelhavsmeny, sång och dans. ABBA:s låtar är i fokus och eventet inkluderar dansanta servitörer och våghalsiga luftfärder. Varje kväll är unik, och hur det slutar beror på var ABBA:s låtar tar publiken. Evenemanget produceras a",
+      "desc_en": "MAMMA MIA! THE PARTY is an evening party at Tyrol in Stockholm.\n\nGuests enter Nikos' taverna on the Greek island of Skopelos for an evening that includes a welcome ouzo, a four-course Mediterranean menu, singing, and dancing. ABBA's songs are central to the event, which features dancing waiters and daring aerial acts. Each evening is unique, with the ending depending on where ABBA's songs take the",
+      "raw": "MAMMA MIA! THE PARTY är en festkväll på Tyrol i Stockholm.\n\nGästerna kliver in i Nikos taverna på den grekiska ön Skopelos för en helkväll med välkomstouzo, en fyrarätters medelhavsmeny, sång och dans. ABBA:s låtar är i fokus och eventet inkluderar dansanta servitörer och våghalsiga luftfärder. Varje kväll är unik, och hur det slutar beror på var ABBA:s låtar tar publiken. Evenemanget produceras a",
+      "venue": "Tyrol",
+      "start": "2027-01-02T18:30:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "c77fb6c5-4118-44e4-806b-84eea551fefa",
+      "title_sv": "NYÅRSAFTON 2026/2027 PÅ SENSE - THE NODE - STHLM",
+      "title_en": "NYÅRSAFTON 2026/2027 PÅ SENSE - THE NODE - STHLM",
+      "desc_sv": "Nyårsafton 2026/2027 på The Node är en nyårsfest på The Node - Under The Fountain i Stockholm.\n\nNyårsfesten Nyårsafton 2026/2027 arrangeras på The Node - Under The Fountain, en plats belägen vid Sergelstorg mitt i centrala Stockholm. Firandet inkluderar tillgång till två barer och två separata dansgolv. Gästerna kan gemensamt räkna ner till tolvslaget under kvällen. Festligheterna fortsätter sedan",
+      "desc_en": "New Year's Eve 2026/2027 at The Node is a New Year's party at The Node - Under The Fountain in Stockholm.\n\nThe New Year's party New Year's Eve 2026/2027 is held at The Node - Under The Fountain, a venue located at Sergelstorg in the heart of central Stockholm. The celebration includes access to two bars and two separate dance floors. Guests can collectively count down to midnight during the evenin",
+      "raw": "Nyårsafton 2026/2027 på The Node är en nyårsfest på The Node - Under The Fountain i Stockholm.\n\nNyårsfesten Nyårsafton 2026/2027 arrangeras på The Node - Under The Fountain, en plats belägen vid Sergelstorg mitt i centrala Stockholm. Firandet inkluderar tillgång till två barer och två separata dansgolv. Gästerna kan gemensamt räkna ner till tolvslaget under kvällen. Festligheterna fortsätter sedan",
+      "venue": "Sergels torg",
+      "start": "2026-12-31T21:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "37bf751c-f0aa-4363-b67e-9b3b750ebb73",
+      "title_sv": "Efter jobbet",
+      "title_en": "Efter jobbet",
+      "desc_sv": "Efter jobbet är ett evenemang på Nalen Restaurang i Stockholm.\n\nNalen Restaurang bjuder in till Efter jobbet. Under evenemanget finns bra priser i baren, skön stämning och fredagsmusik. Nalen ligger centralt i Stockholm, nära Hötorget, Drottninggatan och Sergels Torg. Restaurangen har även närhet till tunnelbanestationer och T-Centralen. Observera att det inte finns plats för barnvagnar i restaura",
+      "desc_en": "Efter jobbet is an event at Nalen Restaurang in Stockholm.\n\nNalen Restaurang invites guests to Efter jobbet. The event offers good prices at the bar, a pleasant atmosphere, and Friday music. Nalen is centrally located in Stockholm, close to Hötorget, Drottninggatan, and Sergels Torg. The restaurant is also near subway stations and T-Centralen. Please note that there is no space for strollers in th",
+      "raw": "Efter jobbet är ett evenemang på Nalen Restaurang i Stockholm.\n\nNalen Restaurang bjuder in till Efter jobbet. Under evenemanget finns bra priser i baren, skön stämning och fredagsmusik. Nalen ligger centralt i Stockholm, nära Hötorget, Drottninggatan och Sergels Torg. Restaurangen har även närhet till tunnelbanestationer och T-Centralen. Observera att det inte finns plats för barnvagnar i restaura",
+      "venue": "Nalen",
+      "start": "2026-10-09T14:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "f5b68e38-447b-4384-bfb2-bf67be195a3c",
+      "title_sv": "SUS HALLOWEEN PARTY",
+      "title_en": "SUS HALLOWEEN PARTY",
+      "desc_sv": "SUS HALLOWEEN PARTY är en halloweenfest på båten Patricia i Stockholm.\n\nSUS bjuder in till sin årliga Halloweenfest ombord på båten Patricia. Klädkoden är Halloween och kostymer uppmuntras starkt. En kostymtävling anordnas under kvällen, med ett pris till den bäst klädda. Detta evenemang är exklusivt för SUS-medlemmar.",
+      "desc_en": "SUS HALLOWEEN PARTY is a Halloween party on the boat Patricia in Stockholm.\n\nSUS invites you to their annual Halloween Party on the boat Patricia. The dress code is Halloween, and costumes are highly encouraged. There will be a costume contest during the night, with a prize for the best dressed. This event is exclusive to SUS members.",
+      "raw": "SUS HALLOWEEN PARTY är en halloweenfest på båten Patricia i Stockholm.\n\nSUS bjuder in till sin årliga Halloweenfest ombord på båten Patricia. Klädkoden är Halloween och kostymer uppmuntras starkt. En kostymtävling anordnas under kvällen, med ett pris till den bäst klädda. Detta evenemang är exklusivt för SUS-medlemmar.",
+      "venue": "왕의 정원",
+      "start": "2026-11-04T21:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "ee7a9b0c-485e-426a-9b06-ddc4b48ff3b6",
+      "title_sv": "31/10 FAYER HALLOWEEN EDITION | Debaser Klubben",
+      "title_en": "31/10 FAYER HALLOWEEN EDITION | Debaser Klubben",
+      "desc_sv": "Den 31 oktober kliver FAYER över till den mörka sidan.\n\nFAYER tar över Debaser Klubben för en Halloween Edition där PERREO möter Halloween – från att dörrarna öppnar tills den sista svettdroppen landar på dansgolvet.\n\nKom i din mest hard fit, mest crazy utklädnad eller precis som du är. Gå all in. Ingenting är för extra, för mörkt eller för over the top den här kvällen. Vi utser kvällens bästa Hal",
+      "desc_en": "This October 31st, FAYER steps into the dark side.\n\nFayer takes over Debaser Klubben for a Halloween Edition where PERREO meets Halloween — from the moment the doors open until the last drop of sweat hits the dance floor.\n\nCome in your hardest fit, your craziest costume, or simply as you are. Go crazy. Nothing is too extra, too dark, or too over the top tonight. And yes — we’ll be crowning the bes",
+      "raw": "Den 31 oktober kliver FAYER över till den mörka sidan.\n\nFAYER tar över Debaser Klubben för en Halloween Edition där PERREO möter Halloween – från att dörrarna öppnar tills den sista svettdroppen landar på dansgolvet.\n\nKom i din mest hard fit, mest crazy utklädnad eller precis som du är. Gå all in. Ingenting är för extra, för mörkt eller för over the top den här kvällen. Vi utser kvällens bästa Hal",
+      "venue": "Debaser Nova",
+      "start": "2026-10-31T22:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "fc8c6714-3264-46b7-abc5-5c545e56f532",
+      "title_sv": "Out of Office After Work Café Opera 23 okt",
+      "title_en": "Out of Office After Work Café Opera 23 okt",
+      "desc_sv": "Out of Office After Work är ett After Work-evenemang på Café Opera i Stockholm.\n\nEvenemanget är helt kontantfritt. Besökare ombeds att bära vårdad klädsel.",
+      "desc_en": "Out of Office After Work is an After Work event at Café Opera in Stockholm.\n\nThe event is entirely cashless. Guests are requested to wear neat attire.",
+      "raw": "Out of Office After Work är ett After Work-evenemang på Café Opera i Stockholm.\n\nEvenemanget är helt kontantfritt. Besökare ombeds att bära vårdad klädsel.",
+      "venue": "Café Opera",
+      "start": "2026-10-23T15:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "7a0276ff-9721-4dbc-b353-514ca47d7e20",
+      "title_sv": "NOSTALGIKLUBBEN - 2000s HALLOWEEN",
+      "title_en": "NOSTALGIKLUBBEN - 2000s HALLOWEEN",
+      "desc_sv": "Välkommen till Nostalgiklubbens 2000s Halloween Edition – Sveriges största 00-talsklubb, och vi går ALL IN.\n\nVi delar ut pris till kvällens bästa utklädnad, så gräv djupt i 00-talsarkivet. Gå all in på tribal tramp stamps, kom som Pitbull, hämta inspiration från 00-talets horror movies (I Know What You Did Last Summer, Scary Movie), återförena Spice Girls, förvandla kompisgänget till Bratz Dolls e",
+      "desc_en": "CALLING ALL THE MANEATERS, MONSTERS & Y2K BADDIES!\n\nDon’t Cha – The Pussycat Dolls\n\nGimme More – Britney Spears\n\nParty in the U.S.A. – Miley Cyrus\n\nBeauty And A Beat – Justin Bieber, Nicki Minaj\n\nThe Next Episode (ft. Snoop Dogg) – Dr. Dre\n\nWho’s That Girl – Eve\n\nCall On Me – Eric Prydz\n\nI Want It That Way – Backstreet Boys\n\nSo What – P!nk\n\nPump It – Black Eyed Peas\n\nEverytime We Touch – Cascada\n\n",
+      "raw": "Välkommen till Nostalgiklubbens 2000s Halloween Edition – Sveriges största 00-talsklubb, och vi går ALL IN.\n\nVi delar ut pris till kvällens bästa utklädnad, så gräv djupt i 00-talsarkivet. Gå all in på tribal tramp stamps, kom som Pitbull, hämta inspiration från 00-talets horror movies (I Know What You Did Last Summer, Scary Movie), återförena Spice Girls, förvandla kompisgänget till Bratz Dolls e",
+      "venue": "Debaser Strand",
+      "start": "2026-10-23T20:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "6ff795b4-286c-4803-be73-24c09a42a7b2",
+      "title_sv": "Rave Stockholm: White Lucia",
+      "title_en": "Rave Stockholm: White Lucia",
+      "desc_sv": "Rave Stockholm: White Lucia är ett psytrance-rave på Slaktkyrkan i Johanneshov.\n\nWhite Lucia är en ceremoni där psytrance, ljus och tusentals människor förenas. Slaktkyrkan förvandlas till ett fruset tempel av kristaller, lasers och hypnotiska visuals. En storslagen Lucia Ceremony samt lasers, visuals och vinterinspirerad scenografi väntar besökare. Evenemanget presenterar internationella headline",
+      "desc_en": "Rave Stockholm: White Lucia is a psytrance rave at Slaktkyrkan in Johanneshov.\n\nWhite Lucia is a ceremony uniting psytrance, light, and thousands of people. Slaktkyrkan transforms into a frozen temple of crystals, lasers, and hypnotic visuals. A grand Lucia Ceremony awaits, featuring lasers, visuals, and winter-inspired scenography. The event presents international headliners and Sweden's foremost",
+      "raw": "Rave Stockholm: White Lucia är ett psytrance-rave på Slaktkyrkan i Johanneshov.\n\nWhite Lucia är en ceremoni där psytrance, ljus och tusentals människor förenas. Slaktkyrkan förvandlas till ett fruset tempel av kristaller, lasers och hypnotiska visuals. En storslagen Lucia Ceremony samt lasers, visuals och vinterinspirerad scenografi väntar besökare. Evenemanget presenterar internationella headline",
+      "venue": "Slaktkyrkan",
+      "start": "2026-12-12T21:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "eab3c160-1490-46b4-947d-4bf38a3e7dab",
+      "title_sv": "Efter jobbet i Nalen Restaurang",
+      "title_en": "Efter jobbet i Nalen Restaurang",
+      "venue": "Nalen",
+      "start": "2026-11-27T19:30:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "2faf2a6c-2460-469d-8229-2b9899f50668",
+      "title_sv": "ANDRZEJKI 2026 - Stockholm",
+      "title_en": "ANDRZEJKI 2026 - Stockholm",
+      "desc_sv": "ANDRZEJKI 2026 är en tillställning på The Public i Täby.\n\nThe Public i Täby är värd för ANDRZEJKI 2026, som beskrivs som en av höstens mest efterlängtade tillställningar. DJ Smoll ansvarar för musiken under kvällen. Ett band som ska uppträda denna kväll är ännu inte avslöjat. En särskild gäst kommer att tillkännages inom kort. Evenemanget marknadsförs som en polish NightClub i Stockholm.",
+      "desc_en": "ANDRZEJKI 2026 is an event at The Public in Täby.\n\nThe Public in Täby will host ANDRZEJKI 2026, described as one of the most anticipated events of the autumn. DJ Smoll will be responsible for the music during the evening. A band performing this night is yet to be revealed. A special guest will be announced shortly. The event is promoted as a polish NightClub in Stockholm.",
+      "raw": "ANDRZEJKI 2026 är en tillställning på The Public i Täby.\n\nThe Public i Täby är värd för ANDRZEJKI 2026, som beskrivs som en av höstens mest efterlängtade tillställningar. DJ Smoll ansvarar för musiken under kvällen. Ett band som ska uppträda denna kväll är ännu inte avslöjat. En särskild gäst kommer att tillkännages inom kort. Evenemanget marknadsförs som en polish NightClub i Stockholm.",
+      "venue": "왕의 정원",
+      "start": "2026-11-28T21:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "3161e77a-3692-4067-96fe-18a8845507c1",
+      "title_sv": "17/10 PARTY LIKE IT'S 2007-2011 | DEBASER KLUBBEN",
+      "title_en": "17/10 PARTY LIKE IT'S 2007-2011 | DEBASER KLUBBEN",
+      "desc_sv": "Party Like It's 2007-2011 är en festkväll på Debaser Strand i Stockholm.\n\nParty Like It's 2007-2011 återvänder till Debaser med låtar från fem musikår. Kvällen fokuserar på musik från en mytomspunnen period. Förvänta dig en hemmafest med svett, dans och allsång. Det blir en fest där deltagarna sjunger med till musiken till fullo.",
+      "desc_en": "Party Like It's 2007-2011 is a party night at Debaser Strand in Stockholm.\n\nParty Like It's 2007-2011 returns to Debaser with songs from five mythical years in music. This evening will focus on a specific musical era. Expect a house-party energy with dancing and singing along. The event promises a night of sweat and enthusiastic participation.",
+      "raw": "Party Like It's 2007-2011 är en festkväll på Debaser Strand i Stockholm.\n\nParty Like It's 2007-2011 återvänder till Debaser med låtar från fem musikår. Kvällen fokuserar på musik från en mytomspunnen period. Förvänta dig en hemmafest med svett, dans och allsång. Det blir en fest där deltagarna sjunger med till musiken till fullo.",
+      "venue": "Debaser Strand",
+      "start": "2026-10-17T21:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "6b0ce0f8-a174-428d-af38-9a3fc038eba6",
+      "title_sv": "16/10 POP DIVAS NIGHT CLUB | DEBASER KLUBBEN",
+      "title_en": "16/10 POP DIVAS NIGHT CLUB | DEBASER KLUBBEN",
+      "desc_sv": "Din drömklubb är här!\n\nFrån dagens största popstjärnor som Charli XCX, Zara Larsson, RAYE och Chappell Roan till några av pophistoriens största ikoner: Rihanna, Britney, Madonna och många fler.\n\nHela natten spelar vi line-upen från din drömfestival:\n\nZara Larsson - Charli XCX - Sabrina Carpenter - Britney Spears - Chappell Roan - Rihanna - Dua Lipa - Beyoncé - Tyla - Tate McRae - RAYE - Ariana Gra",
+      "desc_en": "Your dream club night is here!\n\nFrom today’s biggest pop stars like Charli XCX, Zara Larsson, RAYE and Chappell Roan to some of pop’s most iconic legends: Rihanna, Britney, Madonna and many more.\n\nAll night long, we’re playing the lineup of your dream festival:\n\nZara Larsson - Charli XCX - Sabrina Carpenter - Britney Spears - Chappell Roan - Rihanna - Dua Lipa - Beyoncé - Tyla - Tate McRae - RAYE ",
+      "raw": "Din drömklubb är här!\n\nFrån dagens största popstjärnor som Charli XCX, Zara Larsson, RAYE och Chappell Roan till några av pophistoriens största ikoner: Rihanna, Britney, Madonna och många fler.\n\nHela natten spelar vi line-upen från din drömfestival:\n\nZara Larsson - Charli XCX - Sabrina Carpenter - Britney Spears - Chappell Roan - Rihanna - Dua Lipa - Beyoncé - Tyla - Tate McRae - RAYE - Ariana Gra",
+      "venue": "Debaser Nova",
+      "start": "2026-10-16T21:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "e0be934e-ecc0-4091-b514-62f9abd988ef",
+      "title_sv": "CUBAN NIGHT — SOCIAL DANCE, SHOWS & ANIMATION",
+      "title_en": "CUBAN NIGHT — SOCIAL DANCE, SHOWS & ANIMATION",
+      "desc_sv": "Cuban Night är en kväll med social dans, shower och animation på Bagarmossens Folkets Hus i Bagarmossen.\n\nDenna kväll erbjuder en full natt med kubanska vibbar, social dans, shower och non-stop animation. DJ Liber spelar 100% kubansk musik hela natten, från Salsa och Timba till andra kubanska rytmer. Diasnmai & Molina framför en specialshow med kubansk smak och energi. Kvällen inkluderar även kuba",
+      "desc_en": "Cuban Night is an evening of social dance, shows, and animation at Bagarmossens Folkets Hus in Bagarmossen.\n\nThis event offers a full night of Cuban vibes, social dancing, live shows, and non-stop animation. DJ Liber will keep the energy high with 100% Cuban music all night, from Salsa and Timba to other Cuban rhythms. Diasnmai & Molina are performing a special show during the night, bringing Cuba",
+      "raw": "Cuban Night är en kväll med social dans, shower och animation på Bagarmossens Folkets Hus i Bagarmossen.\n\nDenna kväll erbjuder en full natt med kubanska vibbar, social dans, shower och non-stop animation. DJ Liber spelar 100% kubansk musik hela natten, från Salsa och Timba till andra kubanska rytmer. Diasnmai & Molina framför en specialshow med kubansk smak och energi. Kvällen inkluderar även kuba",
+      "venue": "Folkets Hus",
+      "start": "2026-11-21T19:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "46f88526-5573-419d-8a3d-301f3129f5e0",
+      "title_sv": "MAMMA MIA! THE PARTY",
+      "title_en": "MAMMA MIA! THE PARTY",
+      "desc_sv": "MAMMA MIA! THE PARTY är en festupplevelse på Tyrol i Stockholm.\n\nMamma Mia! The Party firar tio år. Sedan världspremiären i Stockholm har evenemanget fyllt tavernor i både London och Göteborg. Gästerna kliver in i Nikos taverna på den grekiska ön Skopelos. Kvällen inkluderar en välkomstouzo, en fyrarätters medelhavsmeny, sång, dans, våghalsiga luftfärder och dansande servitörer, med musik från ABB",
+      "desc_en": "MAMMA MIA! THE PARTY is a party experience at Tyrol in Stockholm.\n\nMamma Mia! The Party celebrates ten years. Since its world premiere in Stockholm, the event has filled tavernas in both London and Gothenburg. Guests step into Nikos taverna on the Greek island of Skopelos. The evening includes a welcome ouzo, a four-course Mediterranean menu, singing, dancing, daring aerial acts, and dancing waite",
+      "raw": "MAMMA MIA! THE PARTY är en festupplevelse på Tyrol i Stockholm.\n\nMamma Mia! The Party firar tio år. Sedan världspremiären i Stockholm har evenemanget fyllt tavernor i både London och Göteborg. Gästerna kliver in i Nikos taverna på den grekiska ön Skopelos. Kvällen inkluderar en välkomstouzo, en fyrarätters medelhavsmeny, sång, dans, våghalsiga luftfärder och dansande servitörer, med musik från ABB",
+      "venue": "Tyrol",
+      "start": "2026-11-21T12:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "178e945d-a0d7-44ab-8141-738c3498036e",
+      "title_sv": "Golden Hits Dinnershow",
+      "title_en": "Golden Hits Dinnershow",
+      "desc_sv": "Golden Hits Dinnershow är en helkväll med 3-rättersmeny, ikonisk underhållning, nattklubb och karaoke på Golden Hits i Stockholm.\n\nKvällen inkluderar en 3-rättersmeny och ikonisk underhållning. Efter middagen fortsätter kvällen med både nattklubb och karaoke.",
+      "desc_en": "Golden Hits Dinnershow is an entire evening featuring a 3-course menu, iconic entertainment, a nightclub, and karaoke at Golden Hits in Stockholm.\n\nThe evening includes a 3-course menu and iconic entertainment. After dinner, the evening continues with both a nightclub and karaoke.",
+      "raw": "Golden Hits Dinnershow är en helkväll med 3-rättersmeny, ikonisk underhållning, nattklubb och karaoke på Golden Hits i Stockholm.\n\nKvällen inkluderar en 3-rättersmeny och ikonisk underhållning. Efter middagen fortsätter kvällen med både nattklubb och karaoke.",
+      "venue": "왕의 정원",
+      "start": "2027-04-03T16:30:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "ff73d2fe-0779-4b6e-bdd4-26fc1339bb88",
+      "title_sv": "Pub Crawl in Stockolm",
+      "title_en": "Pub Crawl in Stockolm",
+      "venue": "City Backpackers Hostel Stockholm",
+      "start": "2026-10-08T00:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "ca21de29-207d-435e-a6f7-325f5b18f4af",
+      "title_sv": "MAMMA MIA! THE PARTY",
+      "title_en": "MAMMA MIA! THE PARTY",
+      "desc_sv": "MAMMA MIA! THE PARTY är en festkväll på Tyrol i Stockholm.\n\nMamma Mia! The Party har sedan världspremiären i Stockholm dragit fulla tavernor i London och Göteborg. Upplev en helkväll på Nikos taverna på den grekiska ön Skopelos. Kvällen inkluderar välkomstouzo, en fyrarätters medelhavsmeny, sång, dans och våghalsiga luftfärder. Dansanta servitörer och ABBA:s låtar är en del av festen. Varje kväll ",
+      "desc_en": "MAMMA MIA! THE PARTY is a party evening at Tyrol in Stockholm.\n\nMamma Mia! The Party has drawn full tavernas in London and Gothenburg since its world premiere in Stockholm. Step into Nikos taverna on the Greek island of Skopelos for a full evening experience. The event includes a welcome ouzo, a delicious four-course Mediterranean menu, singing, dancing, and daring aerial acts. Dancing waiters and",
+      "raw": "MAMMA MIA! THE PARTY är en festkväll på Tyrol i Stockholm.\n\nMamma Mia! The Party har sedan världspremiären i Stockholm dragit fulla tavernor i London och Göteborg. Upplev en helkväll på Nikos taverna på den grekiska ön Skopelos. Kvällen inkluderar välkomstouzo, en fyrarätters medelhavsmeny, sång, dans och våghalsiga luftfärder. Dansanta servitörer och ABBA:s låtar är en del av festen. Varje kväll ",
+      "venue": "Tyrol",
+      "start": "2026-11-20T17:30:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "975ed253-96cd-42c4-934f-58ae250bb3db",
+      "title_sv": "420 | Lost Miracle (Sébastien Léger and Roy Rosenfeld) | Stockholm",
+      "title_en": "420 | Lost Miracle (Sébastien Léger and Roy Rosenfeld) | Stockholm",
+      "desc_sv": "Den 10 oktober gästas vi av Lost Miracle – ett unikt samarbete mellan Sébastien Léger och Roy Rosenfeld. Båda har under lång tid format världens dansgolv, från Coachella till Cercle, men nu tar de sin gemensamma vision till vårt klubbgolv på Slaktkyrkan. ",
+      "desc_en": "Den 10 oktober gästas vi av Lost Miracle – ett unikt samarbete mellan Sébastien Léger och Roy Rosenfeld. Båda har under lång tid format världens dansgolv, från Coachella till Cercle, men nu tar de sin gemensamma vision till vårt klubbgolv på Slaktkyrkan. ",
+      "raw": "Den 10 oktober gästas vi av Lost Miracle – ett unikt samarbete mellan Sébastien Léger och Roy Rosenfeld. Båda har under lång tid format världens dansgolv, från Coachella till Cercle, men nu tar de sin gemensamma vision till vårt klubbgolv på Slaktkyrkan. ",
+      "venue": null,
+      "start": "2026-10-09T22:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "48e34b3a-936e-4182-8688-af3462920541",
+      "title_sv": "Vi som bara vill dansa 10 år",
+      "title_en": "Vi som bara vill dansa 10 år",
+      "desc_sv": "Vi som bara vill dansa 10 år är en klubbfest på Trädgården i Stockholm.\n\nEfter otaliga svettiga dansgolv och energifyllda klubbkvällar, med grymma DJ:s och live-tutorials, firar Vi som bara vill dansa 10 år med en maxad XL-kväll. Konceptet att dansa tidigt på kvällen har varit en succé sedan starten. Klubben grundades och arrangeras av Nina Beckmann, Samira Bouabana, Sepidar Hosseini och Hanne Lin",
+      "desc_en": "Vi Som Bara Vill Dansa 10 år is a club anniversary celebration at Trädgården in Stockholm.\n\nThe club Vi Som Bara Vill Dansa celebrates its 10th anniversary, marking a decade of energetic club nights and amazing dance floors. The concept of clubbing straight from work has created a loyal following. Since its beginning, the club has featured brilliant DJs and created vibrant dance floors in various ",
+      "raw": "Vi som bara vill dansa 10 år är en klubbfest på Trädgården i Stockholm.\n\nEfter otaliga svettiga dansgolv och energifyllda klubbkvällar, med grymma DJ:s och live-tutorials, firar Vi som bara vill dansa 10 år med en maxad XL-kväll. Konceptet att dansa tidigt på kvällen har varit en succé sedan starten. Klubben grundades och arrangeras av Nina Beckmann, Samira Bouabana, Sepidar Hosseini och Hanne Lin",
+      "venue": "Trädgården",
+      "start": "2026-10-09T16:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "d3637cd5-df6b-461e-a500-06636a2a297c",
+      "title_sv": "Efter jobbet med Virtuous Vodka | Nalen Restaurang",
+      "title_en": "Efter jobbet med Virtuous Vodka | Nalen Restaurang",
+      "desc_sv": "Fredagen den 9 oktober ses vi efter jobbet i restaurangen tillsammans med Virtuous Vodka klockan 16.00–19.00, med bra priser i baren, skön stämning och fredagsmusik i högtalarna.\n\nVirtuous Vodka är en prisbelönt ekologisk rågvodka från Sverige. Tillverkad för smakens skull, med naturliga ekologiska ingredienser. Inga tillsatser. Inget tillsatt socker och inga artificiella ingredienser. Bara äkta s",
+      "desc_en": "Fredagen den 9 oktober ses vi efter jobbet i restaurangen tillsammans med Virtuous Vodka klockan 16.00–19.00, med bra priser i baren, skön stämning och fredagsmusik i högtalarna.\n\nVirtuous Vodka är en prisbelönt ekologisk rågvodka från Sverige. Tillverkad för smakens skull, med naturliga ekologiska ingredienser. Inga tillsatser. Inget tillsatt socker och inga artificiella ingredienser. Bara äkta s",
+      "raw": "Fredagen den 9 oktober ses vi efter jobbet i restaurangen tillsammans med Virtuous Vodka klockan 16.00–19.00, med bra priser i baren, skön stämning och fredagsmusik i högtalarna.\n\nVirtuous Vodka är en prisbelönt ekologisk rågvodka från Sverige. Tillverkad för smakens skull, med naturliga ekologiska ingredienser. Inga tillsatser. Inget tillsatt socker och inga artificiella ingredienser. Bara äkta s",
+      "venue": "Nalen",
+      "start": "2026-10-09T14:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "d8e32eb4-8dc5-4143-84d5-2b922109cb29",
+      "title_sv": "9/10 TRAP WORLD | DEBASER KLUBBEN",
+      "title_en": "9/10 TRAP WORLD | DEBASER KLUBBEN",
+      "desc_sv": "Debaser presenterar Trap World\n\nEn ny klubbkväll för fans av modern hiphop, trap, rage, drill och besläktade genrer.\n\nFrån 2010-talets trap-era till dagens hiphop.\n\nDrake, Kendrick Lamar, J. Cole, Travis Scott, Future, 21 Savage, Lil Baby, Gunna, Doja Cat, Megan Thee Stallion, Cardi B, Tyler, the Creator, Playboi Carti, Metro Boomin, Yeat, Sexyy Red, Ice Spice, Central Cee, Kanye West, Pop Smoke, ",
+      "desc_en": "To all the Trap, Drill, Rage and modern Hip-Hop fans, this is 4 you.\n\nA new club night movement in Stockholm that is here to stay.\n\nFrom 2010s golden trap era to the contemporary bangers.\n\nDrake, Kendrick Lamar, J.Cole, Travis Scott, Future, 21 Savage, Lil Baby, Gunna, Doja Cat, Megan Thee Stallion, Cardi B, Tyler, the Creator, Playboi Carti, Metro Boomin, Yeat,  Sexyy Red, Ice Spice, Central Cee,",
+      "raw": "Debaser presenterar Trap World\n\nEn ny klubbkväll för fans av modern hiphop, trap, rage, drill och besläktade genrer.\n\nFrån 2010-talets trap-era till dagens hiphop.\n\nDrake, Kendrick Lamar, J. Cole, Travis Scott, Future, 21 Savage, Lil Baby, Gunna, Doja Cat, Megan Thee Stallion, Cardi B, Tyler, the Creator, Playboi Carti, Metro Boomin, Yeat, Sexyy Red, Ice Spice, Central Cee, Kanye West, Pop Smoke, ",
+      "venue": "Debaser Nova",
+      "start": "2026-10-09T21:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "e0ea4199-8a6d-4734-81c8-b6d51efd42a6",
+      "title_sv": "French Revolution",
+      "title_en": "French Revolution",
+      "desc_sv": "\"French Revolution\" är ett evenemang på Nalen Klubb i Stockholm.\n\nEvenemanget \"French Revolution\" arrangeras på Nalen Klubb i Stockholm.",
+      "desc_en": "\"French Revolution\" is an event at Nalen Klubb in Stockholm.\n\nThe event \"French Revolution\" is being held at Nalen Klubb in Stockholm.",
+      "raw": "\"French Revolution\" är ett evenemang på Nalen Klubb i Stockholm.\n\nEvenemanget \"French Revolution\" arrangeras på Nalen Klubb i Stockholm.",
+      "venue": "Nalen Klubb",
+      "start": "2026-10-29T19:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "3777661d-de31-40f6-b793-3d7a959dc39f",
+      "title_sv": "Technostate BIGBANG Halloween",
+      "title_en": "Technostate BIGBANG Halloween",
+      "desc_sv": "Technostate BIGBANG Halloween är en ravefestival på Annexet i Stockholm.\n\nSveriges största Halloween-event för elektronisk dansmusik, Technostate BIGBANG, återvänder. Annexet omvandlas till en storskalig inomhusrave med kraftfullt ljud och visuella effekter för tusentals besökare. Evenemanget är känt för hög produktionsstandard, internationella bokningar och en gemenskap för rave-entusiaster. Förv",
+      "desc_en": "Technostate BIGBANG Halloween is a rave event at Annexet in Stockholm.\n\nSweden's largest Halloween event for electronic dance music returns. Annexet transforms into a large-scale indoor rave featuring powerful sound and immersive visuals for thousands of attendees. Built by Technostate, BIGBANG is recognized for high production standards, international bookings, and bringing the rave community tog",
+      "raw": "Technostate BIGBANG Halloween är en ravefestival på Annexet i Stockholm.\n\nSveriges största Halloween-event för elektronisk dansmusik, Technostate BIGBANG, återvänder. Annexet omvandlas till en storskalig inomhusrave med kraftfullt ljud och visuella effekter för tusentals besökare. Evenemanget är känt för hög produktionsstandard, internationella bokningar och en gemenskap för rave-entusiaster. Förv",
+      "venue": "Annexet",
+      "start": "2026-10-31T21:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "4962fb41-efec-4725-8805-704e8d095fb6",
+      "title_sv": "NYÅRSAFTON 2026/2027 PÅ BIBLIOTEKET LIVE",
+      "title_en": "NYÅRSAFTON 2026/2027 PÅ BIBLIOTEKET LIVE",
+      "desc_sv": "NYÅRSAFTON 2026/2027 PÅ BIBLIOTEKET LIVE är Stockholms största nyårsfest på Biblioteket Live i Stockholm.\n\nNYÅRSAFTON 2026/2027 PÅ BIBLIOTEKET LIVE är Stockholms största nyårsfest. Efter en tidigare succé återvänder festen, nu större, bättre och festligare än någonsin. Festen firar in det nya året i hjärtat av Södermalm på Biblioteket Live. Evenemanget har fyra barer, fyra dansgolv och tre våninga",
+      "desc_en": "NYÅRSAFTON 2026/2027 PÅ BIBLIOTEKET LIVE is Stockholm's largest New Year's party at Biblioteket Live in Stockholm.\n\nNYÅRSAFTON 2026/2027 PÅ BIBLIOTEKET LIVE, Stockholm's largest New Year's party, returns to Biblioteket Live. Following a previous success, the event is now larger, better, and more festive than before. The New Year is celebrated in the heart of Södermalm. The party features four bars",
+      "raw": "NYÅRSAFTON 2026/2027 PÅ BIBLIOTEKET LIVE är Stockholms största nyårsfest på Biblioteket Live i Stockholm.\n\nNYÅRSAFTON 2026/2027 PÅ BIBLIOTEKET LIVE är Stockholms största nyårsfest. Efter en tidigare succé återvänder festen, nu större, bättre och festligare än någonsin. Festen firar in det nya året i hjärtat av Södermalm på Biblioteket Live. Evenemanget har fyra barer, fyra dansgolv och tre våninga",
+      "venue": "Biblioteket Live",
+      "start": "2026-12-31T21:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "6f230322-6517-4a9e-884e-63cd653ea3e2",
+      "title_sv": "9/10 STHLM BAILE | DEBASER KLUBBEN",
+      "title_en": "9/10 STHLM BAILE | DEBASER KLUBBEN",
+      "desc_sv": "Fredag den 9 oktober tar vi över Debaser för ännu en ifrågasättbar mängd brasiliansk funk och andra besläktade rytmer som dina knän förmodligen inte var förberedda på.\n\nBrazilian Funk, Reggaeton och Perreo hela natten. Har du varit på Baile förut vet du vad som gäller. Om inte – kom och ta reda på det.\n\nResidents:\n\nPacifyka\n\nSoares\n\nMatheusroo\n\nGuest DJs:\n\nSnoopy\n\nResidents:\n\nPacifyka\n\nSoares\n\nMat",
+      "desc_en": "On October 9, we take over Debaser for another questionable amount of Brazilian funk and other related rhythms your knees probably weren’t prepared for.\n\nBrazilian Funk, Reggaeton and Perreo all night. If you’ve been to the Baile before, you know the drill. If not, come find out.",
+      "raw": "Fredag den 9 oktober tar vi över Debaser för ännu en ifrågasättbar mängd brasiliansk funk och andra besläktade rytmer som dina knän förmodligen inte var förberedda på.\n\nBrazilian Funk, Reggaeton och Perreo hela natten. Har du varit på Baile förut vet du vad som gäller. Om inte – kom och ta reda på det.\n\nResidents:\n\nPacifyka\n\nSoares\n\nMatheusroo\n\nGuest DJs:\n\nSnoopy\n\nResidents:\n\nPacifyka\n\nSoares\n\nMat",
+      "venue": "Debaser Strand",
+      "start": "2026-10-09T21:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "3a87812e-ed42-4a73-b42e-0c28b7c144ef",
+      "title_sv": "Technostate",
+      "title_en": "Technostate",
+      "venue": "Annexet",
+      "start": "2026-10-31T21:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "d885ca84-a8d4-4e74-8834-345f646d1817",
+      "title_sv": "Golden Hits Dinnershow",
+      "title_en": "Golden Hits Dinnershow",
+      "desc_sv": "Golden Hits Dinnershow är en helkväll med underhållning på Golden Hits i Stockholm.\n\nEvenemanget erbjuder en 3-rättersmeny, ikonisk underhållning, nattklubb och karaoke. Det är en helkväll med flera aktiviteter samlade på ett ställe.",
+      "desc_en": "Golden Hits Dinnershow is an evening of entertainment at Golden Hits in Stockholm.\n\nThe event features a 3-course menu, iconic entertainment, a nightclub, and karaoke. It is a complete evening with several activities combined in one place.",
+      "raw": "Golden Hits Dinnershow är en helkväll med underhållning på Golden Hits i Stockholm.\n\nEvenemanget erbjuder en 3-rättersmeny, ikonisk underhållning, nattklubb och karaoke. Det är en helkväll med flera aktiviteter samlade på ett ställe.",
+      "venue": "왕의 정원",
+      "start": "2027-05-15T16:30:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "973a4acb-a3d7-4308-a9bc-6f6b48288519",
+      "title_sv": "The Spy Bar-New Year's Eve 2026",
+      "title_en": "The Spy Bar-New Year's Eve 2026",
+      "desc_sv": "The Spy Bar-New Year's Eve 2026 är ett nyårsfirande på Spy Bar i Stockholm.\n\nVälkommen att fira nyår på The Spy Bar, en nattklubb i Stockholm. Stämningen är konstant på topp och musiken stängs inte av förrän klockan fem på morgonen. Det blir ett spektakulärt nyårsfirande som fortsätter hela natten lång. Vårdad nyårsklädsel krävs.",
+      "desc_en": "The Spy Bar-New Year's Eve 2026 is a New Year's celebration at Spy Bar in Stockholm.\n\nWelcome to celebrate New Year's Eve at The Spy Bar, a nightclub in Stockholm. The atmosphere is consistently top-notch and the music does not stop until five in the morning. This will be a spectacular New Year's celebration that continues all night long. Formal New Year's attire is required.",
+      "raw": "The Spy Bar-New Year's Eve 2026 är ett nyårsfirande på Spy Bar i Stockholm.\n\nVälkommen att fira nyår på The Spy Bar, en nattklubb i Stockholm. Stämningen är konstant på topp och musiken stängs inte av förrän klockan fem på morgonen. Det blir ett spektakulärt nyårsfirande som fortsätter hela natten lång. Vårdad nyårsklädsel krävs.",
+      "venue": "왕의 정원",
+      "start": "2026-12-31T22:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "65398b80-2b25-45b0-9cfb-b752602860e3",
+      "title_sv": "Tequila Club #26",
+      "title_en": "Tequila Club #26",
+      "desc_sv": "Tequila Club #26 är ett evenemang på Hemlig venue i Stockholm.\n\nDenna upplaga markerar den 26:e gången Tequila Club anordnas. Evenemanget äger rum på en hemlig plats i Stockholm.",
+      "desc_en": "Tequila Club #26 is an event at Hemlig venue in Stockholm.\n\nThis edition marks the 26th installment of Tequila Club. The event is held at a secret venue in Stockholm.",
+      "raw": "Tequila Club #26 är ett evenemang på Hemlig venue i Stockholm.\n\nDenna upplaga markerar den 26:e gången Tequila Club anordnas. Evenemanget äger rum på en hemlig plats i Stockholm.",
+      "venue": "왕의 정원",
+      "start": "2026-11-28T18:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "eeb1255d-3f87-4ab5-a10c-57fe6aa46361",
+      "title_sv": "10/10 HEATED RIVALRY VS OFF CAMPUS | Debaser",
+      "title_en": "10/10 HEATED RIVALRY VS OFF CAMPUS | Debaser",
+      "desc_sv": "Heated Rivalry VS Off Campus är en klubbkväll för hockeyfandoms på Debaser Strand i Stockholm.\n\nDenna klubbkväll är för BookTok-fans som älskar hockeyromantik och slår ihop fester för Heated Rivalry och Off Campus. Besökare kan förvänta sig de hetaste TikTok-klippen och de största ögonblicken från berättelserna på storbildsskärm. DJs spelar låtarna som gjorde fans besatta, blandat med pophits och ",
+      "desc_en": "Heated Rivalry VS Off Campus is a hockey fandom club night at Debaser Strand in Stockholm.\n\nThis event combines the Heated Rivalry and Off Campus parties for BookTok Hockey fans. Attendees can expect the hottest TikTok edits and biggest moments from the shows played on the big screen throughout the night. DJs will play soundtracks that made fans obsessed, alongside pop bangers and LGBTQ+ anthems. ",
+      "raw": "Heated Rivalry VS Off Campus är en klubbkväll för hockeyfandoms på Debaser Strand i Stockholm.\n\nDenna klubbkväll är för BookTok-fans som älskar hockeyromantik och slår ihop fester för Heated Rivalry och Off Campus. Besökare kan förvänta sig de hetaste TikTok-klippen och de största ögonblicken från berättelserna på storbildsskärm. DJs spelar låtarna som gjorde fans besatta, blandat med pophits och ",
+      "venue": "Debaser Strand",
+      "start": "2026-10-10T21:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "f621955a-90d5-49a3-a3d0-dc84ffb4adf9",
+      "title_sv": "Golden Hits Dinnershow",
+      "title_en": "Golden Hits Dinnershow",
+      "desc_sv": "Golden Hits Dinnershow är en helkväll på Golden Hits i Stockholm.\n\nEvenemanget på Golden Hits erbjuder en trerättersmeny, ikonisk underhållning, nattklubb och karaoke.",
+      "desc_en": "Golden Hits Dinnershow is a full evening event at Golden Hits in Stockholm.\n\nThis event at Golden Hits features a three-course menu, iconic entertainment, a nightclub, and karaoke.",
+      "raw": "Golden Hits Dinnershow är en helkväll på Golden Hits i Stockholm.\n\nEvenemanget på Golden Hits erbjuder en trerättersmeny, ikonisk underhållning, nattklubb och karaoke.",
+      "venue": "왕의 정원",
+      "start": "2027-05-07T16:30:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "72f36be6-6dee-4428-b8e6-f08d3d604007",
+      "title_sv": "MAMMA MIA! THE PARTY",
+      "title_en": "MAMMA MIA! THE PARTY",
+      "desc_sv": "Mamma Mia! The Party är en fest på Tyrol i Stockholm.\n\nSedan världspremiären i Stockholm har Mamma Mia! The Party dragit fulla tavernor i både London och Göteborg. Besökare kliver in genom dörrarna och förflyttas till Nikos taverna på den grekiska paradisön Skopelos. Kvällen inkluderar en välkomstouzo, en fyrarätters medelhavsmeny, sång, dans, våghalsiga luftfärder och dansanta servitörer. ABBAs l",
+      "desc_en": "Mamma Mia! The Party is a celebration at Tyrol in Stockholm.\n\nSince its world premiere in Stockholm, Mamma Mia! The Party has filled tavernas in London and Gothenburg. Guests step through the doors and are magically taken to Nikos taverna on the Greek island of Skopelos. The evening includes a welcome ouzo, a four-course Mediterranean menu, singing, dancing, daring aerial acrobatics, and dancing w",
+      "raw": "Mamma Mia! The Party är en fest på Tyrol i Stockholm.\n\nSedan världspremiären i Stockholm har Mamma Mia! The Party dragit fulla tavernor i både London och Göteborg. Besökare kliver in genom dörrarna och förflyttas till Nikos taverna på den grekiska paradisön Skopelos. Kvällen inkluderar en välkomstouzo, en fyrarätters medelhavsmeny, sång, dans, våghalsiga luftfärder och dansanta servitörer. ABBAs l",
+      "venue": "Tyrol",
+      "start": "2027-01-29T17:30:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "25068173-8cde-4724-9d7b-068e74d62de4",
+      "title_sv": "Deztination presents: WOLF CITY",
+      "title_en": "Deztination presents: WOLF CITY",
+      "desc_sv": "𝐖𝐄𝐋𝐂𝐎𝐌𝐄 𝐓𝐎 𝐖𝐎𝐋𝐅 𝐂𝐈𝐓𝐘 🇸🇪\n\nWhen the daylight fades, the urban jungle transforms. Deep beneath the concrete, a raw frequency begins to pulse, calling out into the dark.\n\nOnce again, Deztination invites you to step inside a world driven by raw power and unyielding rhythm. Step into 𝐖𝐎𝐋𝐅 𝐂𝐈𝐓𝐘 - an underground sanctuary where the sound takes over, the boundaries dissolve and t",
+      "desc_en": "𝐖𝐄𝐋𝐂𝐎𝐌𝐄 𝐓𝐎 𝐖𝐎𝐋𝐅 𝐂𝐈𝐓𝐘 🇸🇪\n\nWhen the daylight fades, the urban jungle transforms. Deep beneath the concrete, a raw frequency begins to pulse, calling out into the dark.\n\nOnce again, Deztination invites you to step inside a world driven by raw power and unyielding rhythm. Step into 𝐖𝐎𝐋𝐅 𝐂𝐈𝐓𝐘 - an underground sanctuary where the sound takes over, the boundaries dissolve and t",
+      "raw": "𝐖𝐄𝐋𝐂𝐎𝐌𝐄 𝐓𝐎 𝐖𝐎𝐋𝐅 𝐂𝐈𝐓𝐘 🇸🇪\n\nWhen the daylight fades, the urban jungle transforms. Deep beneath the concrete, a raw frequency begins to pulse, calling out into the dark.\n\nOnce again, Deztination invites you to step inside a world driven by raw power and unyielding rhythm. Step into 𝐖𝐎𝐋𝐅 𝐂𝐈𝐓𝐘 - an underground sanctuary where the sound takes over, the boundaries dissolve and t",
+      "venue": null,
+      "start": "2026-11-21T19:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "159cc562-9501-4be3-a172-ea5e1f341239",
+      "title_sv": "MAMMA MIA! THE PARTY",
+      "title_en": "MAMMA MIA! THE PARTY",
+      "desc_sv": "MAMMA MIA! THE PARTY är en festkväll med mat och underhållning på Tyrol i Stockholm.\n\nStig in i Nikos taverna, belägen på den grekiska paradisön Skopelos, för en festkväll fylld med upplevelser. Kvällen inleds med en välkomstouzo och bjuder sedan på en läcker fyrarätters medelhavsmeny. Underhållningen består av sång, dans, våghalsiga luftfärder och framträdanden av dansanta servitörer, allt till t",
+      "desc_en": "MAMMA MIA! THE PARTY is an evening of food and entertainment at Tyrol in Stockholm.\n\nStep into Nikos' taverna, located on the Greek paradise island of Skopelos, for a party evening full of experiences. The evening begins with a welcome ouzo, followed by a delicious four-course Mediterranean menu. Entertainment includes singing, dancing, daring aerial acts, and performances by dancing waiters, all ",
+      "raw": "MAMMA MIA! THE PARTY är en festkväll med mat och underhållning på Tyrol i Stockholm.\n\nStig in i Nikos taverna, belägen på den grekiska paradisön Skopelos, för en festkväll fylld med upplevelser. Kvällen inleds med en välkomstouzo och bjuder sedan på en läcker fyrarätters medelhavsmeny. Underhållningen består av sång, dans, våghalsiga luftfärder och framträdanden av dansanta servitörer, allt till t",
+      "venue": "Tyrol",
+      "start": "2027-01-09T12:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "f60bad2f-8b3a-418a-89aa-342cc58468ec",
+      "title_sv": "Golden Hits Dinnershow",
+      "title_en": "Golden Hits Dinnershow",
+      "desc_sv": "Golden Hits Dinnershow är en dinnershow på Golden Hits i Stockholm.\n\nDenna dinnershow erbjuder en helkväll med en 3-rättersmeny. Kvällen inkluderar även ikonisk underhållning, nattklubb och karaoke.",
+      "desc_en": "Golden Hits Dinnershow is a dinnershow at Golden Hits in Stockholm.\n\nThis dinnershow offers a full evening with a 3-course menu. The night also includes iconic entertainment, a nightclub, and karaoke.",
+      "raw": "Golden Hits Dinnershow är en dinnershow på Golden Hits i Stockholm.\n\nDenna dinnershow erbjuder en helkväll med en 3-rättersmeny. Kvällen inkluderar även ikonisk underhållning, nattklubb och karaoke.",
+      "venue": "왕의 정원",
+      "start": "2027-06-11T16:30:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "490bf1c1-84fa-443b-a5f8-fb9add1501d0",
+      "title_sv": "Golden Hits Dinnershow",
+      "title_en": "Golden Hits Dinnershow",
+      "desc_sv": "Golden Hits Dinnershow är en dinnershow på Golden Hits i Stockholm.\n\nEvenemanget erbjuder en helkväll med 3-rättersmeny, ikonisk underhållning, nattklubb och karaoke.",
+      "desc_en": "Golden Hits Dinnershow is a dinner show at Golden Hits in Stockholm.\n\nThe event offers a full evening with a 3-course menu, iconic entertainment, a nightclub, and karaoke.",
+      "raw": "Golden Hits Dinnershow är en dinnershow på Golden Hits i Stockholm.\n\nEvenemanget erbjuder en helkväll med 3-rättersmeny, ikonisk underhållning, nattklubb och karaoke.",
+      "venue": "왕의 정원",
+      "start": "2027-03-26T17:30:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "96b793fc-5539-4c7e-9461-20fd0df95009",
+      "title_sv": "Golden Hits Dinnershow",
+      "title_en": "Golden Hits Dinnershow",
+      "desc_sv": "Golden Hits Dinnershow är en helkväll med underhållning, middag och nattklubb på Golden Hits i Stockholm.\n\nDenna helkväll på Golden Hits inkluderar en 3-rättersmeny. Gäster kan uppleva ikonisk underhållning, följt av nattklubb och karaoke.",
+      "desc_en": "Golden Hits Dinnershow is a full evening event with entertainment, dinner, and a nightclub at Golden Hits in Stockholm.\n\nThis full evening event at Golden Hits features a 3-course menu. Guests can enjoy iconic entertainment, followed by a nightclub and karaoke.",
+      "raw": "Golden Hits Dinnershow är en helkväll med underhållning, middag och nattklubb på Golden Hits i Stockholm.\n\nDenna helkväll på Golden Hits inkluderar en 3-rättersmeny. Gäster kan uppleva ikonisk underhållning, följt av nattklubb och karaoke.",
+      "venue": "왕의 정원",
+      "start": "2027-05-27T16:30:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "5c160c07-f46d-4569-8ac4-1ebc60fcfb37",
+      "title_sv": "Golden Hits Dinnershow",
+      "title_en": "Golden Hits Dinnershow",
+      "desc_sv": "Golden Hits Dinnershow är en helkväll med underhållning på Golden Hits i Stockholm.\n\nDenna helkväll inkluderar en 3-rättersmeny och ikonisk underhållning. Efter middag och show fortsätter kvällen med nattklubb och karaoke.",
+      "desc_en": "Golden Hits Dinnershow is an evening event with entertainment at Golden Hits in Stockholm.\n\nThis full evening includes a 3-course dinner and iconic entertainment. After dinner and the show, the night continues with a nightclub and karaoke.",
+      "raw": "Golden Hits Dinnershow är en helkväll med underhållning på Golden Hits i Stockholm.\n\nDenna helkväll inkluderar en 3-rättersmeny och ikonisk underhållning. Efter middag och show fortsätter kvällen med nattklubb och karaoke.",
+      "venue": "왕의 정원",
+      "start": "2027-05-21T16:30:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "864629f4-442a-416e-b77a-0669c0a6736f",
+      "title_sv": "Golden Hits Dinnershow",
+      "title_en": "Golden Hits Dinnershow",
+      "desc_sv": "Golden Hits Dinnershow är en dinnershow på Golden Hits i Stockholm.\n\nGolden Hits Dinnershow erbjuder en helkväll med en trerättersmeny. Besökare kan uppleva ikonisk underhållning, nattklubb och karaoke.",
+      "desc_en": "Golden Hits Dinnershow is a dinnershow at Golden Hits in Stockholm.\n\nThe Golden Hits Dinnershow offers a full evening with a three-course menu. Guests can experience iconic entertainment, a nightclub, and karaoke.",
+      "raw": "Golden Hits Dinnershow är en dinnershow på Golden Hits i Stockholm.\n\nGolden Hits Dinnershow erbjuder en helkväll med en trerättersmeny. Besökare kan uppleva ikonisk underhållning, nattklubb och karaoke.",
+      "venue": "왕의 정원",
+      "start": "2027-04-09T16:30:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "f4bb59b6-0522-4ec2-83b1-15430cc5f3e3",
+      "title_sv": "El Colmadon Presents: El Junte Latino- Denim Party",
+      "title_en": "El Colmadon Presents: El Junte Latino- Denim Party",
+      "desc_sv": "El Junte Latino – Denim Edition är en danskväll på Taperia Tapas Bar i Stockholm.\n\nEl Junte Latino bjuder in till en kväll med musik och dans. Denna gång är temat denim, så besökare uppmanas att klä sig i sin favoritdenim. Innan festen erbjuds en bachataklass för att värma upp och lära sig nya steg. Musiken startar sedan och El Colmadon börjar.",
+      "desc_en": "El Junte Latino – Denim Edition is a dance event at Taperia Tapas Bar in Stockholm.\n\nEl Junte Latino is hosting an evening of music and dancing. This event has a denim theme, so attendees are encouraged to wear their favorite denim look. Before the party, a bachata class is offered to warm up and learn new steps. Afterwards, the music begins, and El Colmadon starts.",
+      "raw": "El Junte Latino – Denim Edition är en danskväll på Taperia Tapas Bar i Stockholm.\n\nEl Junte Latino bjuder in till en kväll med musik och dans. Denna gång är temat denim, så besökare uppmanas att klä sig i sin favoritdenim. Innan festen erbjuds en bachataklass för att värma upp och lära sig nya steg. Musiken startar sedan och El Colmadon börjar.",
+      "venue": "왕의 정원",
+      "start": "2026-10-09T18:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "01f83c2a-8499-46c3-bbbe-a92e641a8a8d",
+      "title_sv": "Golden Hits Dinnershow",
+      "title_en": "Golden Hits Dinnershow",
+      "desc_sv": "Golden Hits Dinnershow är en dinnershow på Golden Hits i Stockholm.\n\nGolden Hits Dinnershow erbjuder en helkväll med trerättersmeny, ikonisk underhållning, nattklubb och karaoke. Detta är en dinnershow som kombinerar middag med kvällsunderhållning på Golden Hits.",
+      "desc_en": "Golden Hits Dinnershow is a dinnershow at Golden Hits in Stockholm.\n\nGolden Hits Dinnershow offers a full evening with a three-course menu, iconic entertainment, a nightclub, and karaoke. This dinnershow combines dinner with evening entertainment at Golden Hits.",
+      "raw": "Golden Hits Dinnershow är en dinnershow på Golden Hits i Stockholm.\n\nGolden Hits Dinnershow erbjuder en helkväll med trerättersmeny, ikonisk underhållning, nattklubb och karaoke. Detta är en dinnershow som kombinerar middag med kvällsunderhållning på Golden Hits.",
+      "venue": "왕의 정원",
+      "start": "2027-06-17T16:30:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "b8834d87-c303-444c-846e-afef59d9dd10",
+      "title_sv": "Glorias 50+ Disco Glitter Party Café Opera 19/12",
+      "title_en": "Glorias 50+ Disco Glitter Party Café Opera 19/12",
+      "desc_sv": "Glorias 50+ Disco Glitter Party är en 50+ klubb AW på Café Opera i Stockholm.\n\nDJ Gloria presenterar Glorias 50+ Disco AW, årets sista fest på Café Opera. Gäster uppmanas att klä sig i glitter för denna glänsande tillställning. Kvällen bjuder på ett stort dansgolv för mingel och dans, med musik från 50-talet fram till idag, inklusive disco, rock, pop och latin. Besökare måste vara minst 50 år gaml",
+      "desc_en": "Glorias 50+ Disco Glitter Party is a 50+ club AW at Café Opera in Stockholm.\n\nDJ Gloria hosts Glorias 50+ Disco AW, the last party of the year at Café Opera. Guests are encouraged to dress in glitter for this sparkling event. The evening features a large dance floor for mingling and dancing, with music from the 50s to today, including disco, rock, pop, and Latin. Attendees must be at least 50 year",
+      "raw": "Glorias 50+ Disco Glitter Party är en 50+ klubb AW på Café Opera i Stockholm.\n\nDJ Gloria presenterar Glorias 50+ Disco AW, årets sista fest på Café Opera. Gäster uppmanas att klä sig i glitter för denna glänsande tillställning. Kvällen bjuder på ett stort dansgolv för mingel och dans, med musik från 50-talet fram till idag, inklusive disco, rock, pop och latin. Besökare måste vara minst 50 år gaml",
+      "venue": "Café Opera",
+      "start": "2026-12-19T17:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "f123fa1a-3b70-4cd8-972d-ae94d7803fa8",
+      "title_sv": "EL COLMADON — HALLOWEEN PARTY",
+      "title_en": "EL COLMADON — HALLOWEEN PARTY",
+      "desc_sv": "EL COLMADON — HALLOWEEN PARTY är en halloweenfest på Taperia Tapas Bar i Stockholm.\n\nEl Colmadon förvandlas till en kväll med kostymer, dans, musik och fest. Före festen inleds kvällen med en Bachata-klass. Besökare uppmanas komma i kostym för att fira Halloween i Colmadon-stil.",
+      "desc_en": "EL COLMADON — HALLOWEEN PARTY is a Halloween party at Taperia Tapas Bar in Stockholm.\n\nEl Colmadon will be transformed into a night of costumes, dancing, music, and pure madness. Before the party, a Bachata class will be held to warm up. Attendees are encouraged to wear costumes to celebrate Halloween in Colmadon style.",
+      "raw": "EL COLMADON — HALLOWEEN PARTY är en halloweenfest på Taperia Tapas Bar i Stockholm.\n\nEl Colmadon förvandlas till en kväll med kostymer, dans, musik och fest. Före festen inleds kvällen med en Bachata-klass. Besökare uppmanas komma i kostym för att fira Halloween i Colmadon-stil.",
+      "venue": "왕의 정원",
+      "start": "2026-10-31T19:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "ed97e03f-388e-4a50-ac5f-9559b00f78a6",
+      "title_sv": "Golden Hits Dinnershow",
+      "title_en": "Golden Hits Dinnershow",
+      "desc_sv": "Golden Hits Dinnershow är en dinnershow på Golden Hits i Stockholm.\n\nDet är en helkväll som inkluderar en 3-rättersmeny, ikonisk underhållning, nattklubb och karaoke. Kvällen erbjuder en kombination av mat och nöje.",
+      "desc_en": "Golden Hits Dinnershow is a dinnershow at Golden Hits in Stockholm.\n\nIt is a full evening that includes a 3-course menu, iconic entertainment, a nightclub, and karaoke. The evening offers a combination of dining and entertainment.",
+      "raw": "Golden Hits Dinnershow är en dinnershow på Golden Hits i Stockholm.\n\nDet är en helkväll som inkluderar en 3-rättersmeny, ikonisk underhållning, nattklubb och karaoke. Kvällen erbjuder en kombination av mat och nöje.",
+      "venue": "왕의 정원",
+      "start": "2027-04-30T16:30:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "e6da303f-a686-4e41-bdd3-ec01bf2d3ba7",
+      "title_sv": "Golden Hits Dinnershow",
+      "title_en": "Golden Hits Dinnershow",
+      "desc_sv": "Golden Hits Dinnershow är en dinnershow på Golden Hits i Stockholm som inkluderar en 3-rättersmeny, underhållning, nattklubb och karaoke.\n\nDenna helkväll bjuder på en 3-rättersmeny, ikonisk underhållning, nattklubb och karaoke. Det är ett komplett nöjespaket som erbjuds på Golden Hits.",
+      "desc_en": "Golden Hits Dinnershow is a dinner show at Golden Hits in Stockholm, featuring a 3-course menu, entertainment, a nightclub, and karaoke.\n\nThis full evening offers a 3-course menu, iconic entertainment, a nightclub, and karaoke. It is a complete entertainment package available at Golden Hits.",
+      "raw": "Golden Hits Dinnershow är en dinnershow på Golden Hits i Stockholm som inkluderar en 3-rättersmeny, underhållning, nattklubb och karaoke.\n\nDenna helkväll bjuder på en 3-rättersmeny, ikonisk underhållning, nattklubb och karaoke. Det är ett komplett nöjespaket som erbjuds på Golden Hits.",
+      "venue": "왕의 정원",
+      "start": "2027-05-13T16:30:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "c6109dde-214b-4359-9830-b255937be006",
+      "title_sv": "MAMMA MIA! THE PARTY",
+      "title_en": "MAMMA MIA! THE PARTY",
+      "desc_sv": "MAMMA MIA! THE PARTY är ett party på Tyrol i Stockholm.\n\nMAMMA MIA! THE PARTY har sedan sin världspremiär i Stockholm lockat fulla tavernor i London och Göteborg. Detta dansanta och glädjefyllda party firar 10 år. Gästerna kliver in i Nikos taverna på den grekiska ön Skopelos. Kvällen inkluderar en välkomstouzo, en fyrarätters medelhavsmeny, sång, dans, våghalsiga luftfärder och dansanta servitöre",
+      "desc_en": "MAMMA MIA! THE PARTY is a party at Tyrol in Stockholm.\n\nSince its world premiere in Stockholm, MAMMA MIA! THE PARTY has attracted full tavernas in London and Gothenburg. This joyful and dance-filled party celebrates 10 years. Guests step into Nikos taverna on the Greek island of Skopelos. The evening features a welcome ouzo, a four-course Mediterranean menu, singing, dancing, daring aerial acrobat",
+      "raw": "MAMMA MIA! THE PARTY är ett party på Tyrol i Stockholm.\n\nMAMMA MIA! THE PARTY har sedan sin världspremiär i Stockholm lockat fulla tavernor i London och Göteborg. Detta dansanta och glädjefyllda party firar 10 år. Gästerna kliver in i Nikos taverna på den grekiska ön Skopelos. Kvällen inkluderar en välkomstouzo, en fyrarätters medelhavsmeny, sång, dans, våghalsiga luftfärder och dansanta servitöre",
+      "venue": "Tyrol",
+      "start": "2026-10-31T12:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "a8b27115-6e37-43d2-9af7-c71eb90eb987",
+      "title_sv": "HAPPY NEW YEAR - MAMMA MIA! THE PARTY",
+      "title_en": "HAPPY NEW YEAR - MAMMA MIA! THE PARTY",
+      "desc_sv": "HAPPY NEW YEAR - MAMMA MIA! THE PARTY är en nyårsfest på Tyrol i Stockholm.\n\nKliv in på Nikos taverna på den grekiska paradisön Skopelos för en nyårskväll. Kvällen inkluderar ett glas champagne vid ankomst, en välkomstouzo och en festlig nyårsinspirerad medelhavsmeny. Gästerna bjuds på sång, dans, våghalsiga luftfärder, dansanta servitörer och ABBA:s låtar. Festen produceras av Björn Ulvaeus och P",
+      "desc_en": "HAPPY NEW YEAR - MAMMA MIA! THE PARTY is a New Year's Eve party at Tyrol in Stockholm.\n\nStep into Nikos' taverna on the Greek paradise island of Skopelos for a New Year's Eve celebration. The evening includes a glass of champagne upon arrival, a welcome ouzo, and a festive New Year-inspired Mediterranean menu. Guests will experience singing, dancing, daring aerial acrobatics, dancing waiters, and ",
+      "raw": "HAPPY NEW YEAR - MAMMA MIA! THE PARTY är en nyårsfest på Tyrol i Stockholm.\n\nKliv in på Nikos taverna på den grekiska paradisön Skopelos för en nyårskväll. Kvällen inkluderar ett glas champagne vid ankomst, en välkomstouzo och en festlig nyårsinspirerad medelhavsmeny. Gästerna bjuds på sång, dans, våghalsiga luftfärder, dansanta servitörer och ABBA:s låtar. Festen produceras av Björn Ulvaeus och P",
+      "venue": "Tyrol",
+      "start": "2026-12-31T18:30:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "c441e698-2a68-4bd8-8dcc-b09e839809b7",
+      "title_sv": "MAMMA MIA! THE PARTY",
+      "title_en": "MAMMA MIA! THE PARTY",
+      "desc_sv": "Mamma Mia! The Party är en fest på Tyrol i Stockholm.\n\nMamma Mia! The Party firar sitt 10-årsjubileum. Sedan världspremiären i Stockholm har konceptet dragit fulla tavernor i London och Göteborg. Detta party utspelar sig på Nikos taverna på den grekiska ön Skopelos. Kvällen inkluderar en fyrarätters medelhavsmeny, sång, dans, och ABBAs låtar. Björn Ulvaeus och Pophouse har producerat upplevelsen.",
+      "desc_en": "Mamma Mia! The Party is a party at Tyrol in Stockholm.\n\nMamma Mia! The Party celebrates its 10th anniversary. Since its world premiere in Stockholm, the concept has filled taverns in London and Gothenburg. This party takes place at Nikos' tavern on the Greek island of Skopelos. The evening includes a four-course Mediterranean menu, singing, dancing, and ABBA's songs. Björn Ulvaeus and Pophouse hav",
+      "raw": "Mamma Mia! The Party är en fest på Tyrol i Stockholm.\n\nMamma Mia! The Party firar sitt 10-årsjubileum. Sedan världspremiären i Stockholm har konceptet dragit fulla tavernor i London och Göteborg. Detta party utspelar sig på Nikos taverna på den grekiska ön Skopelos. Kvällen inkluderar en fyrarätters medelhavsmeny, sång, dans, och ABBAs låtar. Björn Ulvaeus och Pophouse har producerat upplevelsen.",
+      "venue": "Tyrol",
+      "start": "2026-10-31T18:30:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "3593821c-7299-499e-81b8-e0e449b2f052",
+      "title_sv": "17/10 FUN FACTORY | DEBASER KLUBBEN",
+      "title_en": "17/10 FUN FACTORY | DEBASER KLUBBEN",
+      "desc_sv": "Välkommen till en natt fylld med tung bas, energi och värme! DJ Sonic Madagascar får dansgolvet att koka till tonerna av afrobeats, soca, latin pop, reggaeton, dancehall och reggae. Från Kingston till Lagos, från Havana till Port of Spain – en hyllning till musik, dans och kultur!\n\nVi levererar: tung bas. Vi förväntar oss: heta moves och ett pulserande dansgolv tills lamporna tänds!",
+      "desc_en": "Welcome to a night of pure rhythm and global energy. DJ Sonic Madagascar takes over the decks with a fiery blend of afrobeats, soca, latin pop, reggaeton, dancehall and reggae. From Kingston to Lagos, from Havana to Port of Spain – this is a celebration of sound, culture, and movement!\n\nWe serve: heavy bass. We expect in return: hot dance moves and a dancefloor that never cools down!",
+      "raw": "Välkommen till en natt fylld med tung bas, energi och värme! DJ Sonic Madagascar får dansgolvet att koka till tonerna av afrobeats, soca, latin pop, reggaeton, dancehall och reggae. Från Kingston till Lagos, från Havana till Port of Spain – en hyllning till musik, dans och kultur!\n\nVi levererar: tung bas. Vi förväntar oss: heta moves och ett pulserande dansgolv tills lamporna tänds!",
+      "venue": "Debaser Nova",
+      "start": "2026-10-17T21:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "8f04771b-d5e1-4435-906e-b5b2d20bf9a4",
+      "title_sv": "Glorias 50+ Disco AW Café Opera 20/11",
+      "title_en": "Glorias 50+ Disco AW Café Opera 20/11",
+      "desc_sv": "Glorias 50+ Disco AW är en 50+ klubb med DJ Gloria på Café Opera i Stockholm.\n\nDenna 50+ klubb-AW med DJ Gloria återvänder till Café Opera. Här erbjuds ett stort dansgolv för kul och mingel. DJ Gloria spelar en blandning av musik från 50-talet fram till idag, inklusive disco, rock, pop, tryckare, latin, styrdans och bugg. För att komma in måste besökare ha fyllt 50 år och vara beredda att visa leg",
+      "desc_en": "Glorias 50+ Disco AW is a 50+ club event featuring DJ Gloria at Café Opera in Stockholm.\n\nThis 50+ club after-work event with DJ Gloria returns to Café Opera. It features a large dance floor for enjoyment and mingling. DJ Gloria plays a mix of music from the 50s to today, including disco, rock, pop, slow dances, Latin, partner dances, and bugg. To enter, guests must be 50 years or older and be pre",
+      "raw": "Glorias 50+ Disco AW är en 50+ klubb med DJ Gloria på Café Opera i Stockholm.\n\nDenna 50+ klubb-AW med DJ Gloria återvänder till Café Opera. Här erbjuds ett stort dansgolv för kul och mingel. DJ Gloria spelar en blandning av musik från 50-talet fram till idag, inklusive disco, rock, pop, tryckare, latin, styrdans och bugg. För att komma in måste besökare ha fyllt 50 år och vara beredda att visa leg",
+      "venue": "Café Opera",
+      "start": "2026-11-20T17:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "c7f0418a-cfc4-49b8-9751-bd314ec21698",
+      "title_sv": "Techno Stockholm DIMENSION - Pre Party",
+      "title_en": "Techno Stockholm DIMENSION - Pre Party",
+      "desc_sv": "Techno Stockholm Dimension Pre-Party är en förfest på Slakthuset i Johanneshov.\n\nTechno Stockholm firar tre år, och denna förfest inleder firandet. Kvällen är tillägnad hård techno med lokala och internationella artister. Detta evenemang presenterar ett tungt ljud och den energi som har format Techno Stockholm under de senaste tre åren.",
+      "desc_en": "Techno Stockholm Dimension Pre-Party is a pre-party at Slakthuset in Johanneshov.\n\nTechno Stockholm is celebrating three years, and this pre-party kicks off the anniversary. The night is dedicated to hard techno, featuring local and international artists. This event will present heavy sound and the energy that has shaped Techno Stockholm over the past three years.",
+      "raw": "Techno Stockholm Dimension Pre-Party är en förfest på Slakthuset i Johanneshov.\n\nTechno Stockholm firar tre år, och denna förfest inleder firandet. Kvällen är tillägnad hård techno med lokala och internationella artister. Detta evenemang presenterar ett tungt ljud och den energi som har format Techno Stockholm under de senaste tre åren.",
+      "venue": "Slakthuset",
+      "start": "2026-11-13T21:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "09f17b16-bd88-4a84-b51f-e687a02fabcc",
+      "title_sv": "DATUM/MÅNAD ARTIST | DEBASER KLUBBEN (Nova)",
+      "title_en": "DATUM/MÅNAD ARTIST | DEBASER KLUBBEN (Nova)",
+      "desc_sv": "Klubbevenemanget 'DATUM/MÅNAD ARTIST | DEBASER KLUBBEN (Nova)' hålls på DEBASER NOVA i Stockholm.\n\nKlubbevenemanget 'DATUM/MÅNAD ARTIST | DEBASER KLUBBEN (Nova)' äger rum på DEBASER NOVA i Stockholm. Specifika detaljer om artister eller presentationer har inte angetts för detta tillfälle. Evenemanget utlovar en livlig atmosfär, typisk för Debasers goda rykte. Det är uppmärksammat för sin unika klu",
+      "desc_en": "The 'DATUM/MÅNAD ARTIST | DEBASER KLUBBEN (Nova)' club event is held at DEBASER NOVA in Stockholm.\n\nThe event 'DATUM/MÅNAD ARTIST | DEBASER KLUBBEN (Nova)' is hosted at DEBASER NOVA in Stockholm. Specific details about performers or presentations were not provided for this occasion. The event is characterized by a lively atmosphere, consistent with Debaser's known reputation. It is recognized for ",
+      "raw": "Klubbevenemanget 'DATUM/MÅNAD ARTIST | DEBASER KLUBBEN (Nova)' hålls på DEBASER NOVA i Stockholm.\n\nKlubbevenemanget 'DATUM/MÅNAD ARTIST | DEBASER KLUBBEN (Nova)' äger rum på DEBASER NOVA i Stockholm. Specifika detaljer om artister eller presentationer har inte angetts för detta tillfälle. Evenemanget utlovar en livlig atmosfär, typisk för Debasers goda rykte. Det är uppmärksammat för sin unika klu",
+      "venue": "Debaser Nova",
+      "start": "2026-12-29T22:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "d801f470-117d-4928-83db-1d2990ad893b",
+      "title_sv": "MAMMA MIA! THE PARTY",
+      "title_en": "MAMMA MIA! THE PARTY",
+      "desc_sv": "Mamma Mia! The Party är ett party på Tyrol i Stockholm.\n\nMamma Mia! The Party firar 10 år som Sveriges mest dansanta och glädjefyllda party. Konceptet har sedan världspremiären i Stockholm dragit fulla tavernor både i London och Göteborg. Gästerna kliver in i Nikos taverna på den grekiska paradisön Skopelos. Här väntar en helkväll med välkomstouzo, en fyrarätters medelhavsmeny, sång, dans och ABBA",
+      "desc_en": "Mamma Mia! The Party is a party at Tyrol in Stockholm.\n\nMamma Mia! The Party celebrates 10 years as Sweden's most dance-filled and joyful party. Since its world premiere in Stockholm, the concept has attracted full tavernas in both London and Gothenburg. Guests step into Nikos' taverna on the Greek paradise island of Skopelos. An entire evening awaits with welcome ouzo, a four-course Mediterranean",
+      "raw": "Mamma Mia! The Party är ett party på Tyrol i Stockholm.\n\nMamma Mia! The Party firar 10 år som Sveriges mest dansanta och glädjefyllda party. Konceptet har sedan världspremiären i Stockholm dragit fulla tavernor både i London och Göteborg. Gästerna kliver in i Nikos taverna på den grekiska paradisön Skopelos. Här väntar en helkväll med välkomstouzo, en fyrarätters medelhavsmeny, sång, dans och ABBA",
+      "venue": "Tyrol",
+      "start": "2026-11-04T17:30:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "15a2c8db-3252-43a3-aed6-8a8c0e76ecab",
+      "title_sv": "Efter jobbet med DJ Skåne i Nalen Restaurang",
+      "title_en": "Efter jobbet med DJ Skåne i Nalen Restaurang",
+      "venue": "Nalen",
+      "start": "2026-10-23T19:30:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "06e02dd6-29c8-443d-8a70-3166bd0234b9",
+      "title_sv": "Golden Hits Dinnershow",
+      "title_en": "Golden Hits Dinnershow",
+      "desc_sv": "Golden Hits Dinnershow är en middagsshow på Golden Hits i Stockholm.\n\nEvenemanget erbjuder en helkväll med en 3-rättersmeny och ikonisk underhållning. Kvällen fortsätter sedan med tillgång till nattklubb och karaoke.",
+      "desc_en": "Golden Hits Dinnershow is a dinner show at Golden Hits in Stockholm.\n\nThe event offers a full evening featuring a 3-course menu and iconic entertainment. The night continues with access to a nightclub and karaoke.",
+      "raw": "Golden Hits Dinnershow är en middagsshow på Golden Hits i Stockholm.\n\nEvenemanget erbjuder en helkväll med en 3-rättersmeny och ikonisk underhållning. Kvällen fortsätter sedan med tillgång till nattklubb och karaoke.",
+      "venue": "왕의 정원",
+      "start": "2027-06-18T16:30:00+00:00",
+      "has_img": true
+    }
+  ]
+}

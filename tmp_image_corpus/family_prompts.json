@@ -1,0 +1,25 @@
+{
+  "category_slug": "family",
+  "events": 56,
+  "library_now": 0,
+  "approx_images_needed": 1,
+  "model": "minimax/minimax-m3",
+  "prompts": [
+    {
+      "pattern": "A_wide",
+      "prompt": "A wide shot of a family of four walking along a gravel path through Djurgården park in Stockholm on a crisp autumn afternoon, golden leaves scattered on the ground, parents holding hands with two young children in colorful jackets, soft natural daylight."
+    },
+    {
+      "pattern": "B_medium",
+      "prompt": "Medium shot of a mother and her seven-year-old daughter standing together at the edge of an indoor ice rink in Stockholm, watching a figure skater in a glittering blue costume glide past them, soft arena lighting reflecting off the polished ice."
+    },
+    {
+      "pattern": "C_environment",
+      "prompt": "A view inside Stockholm's ornate Konsertsalen with parents and small children seated among deep red velvet chairs, a string orchestra tuning on stage under warm chandelier light, gilded balconies and painted ceiling details visible above."
+    },
+    {
+      "pattern": "D_detail",
+      "prompt": "Close-up of a child's small hand gripping a worn wooden railing on the Ericsson Globe Skyview platform, Stockholm harbor and distant islands blurred behind, natural daylight catching the side of the child's smiling face."
+    }
+  ]
+}

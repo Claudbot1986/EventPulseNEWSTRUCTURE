@@ -119,6 +119,17 @@ TEMP/
 # Supabase auth-config snapshots (innehåller SMTP-lösenord) — aldrig commita
 06-UI/scripts/email-templates/auth-config-backup-*.json
 
+# BFL image library — lokal katalog med genererade bilder (1.2 GB),
+# staging-mapp för stämplade webp (251 MB), och prompt-corpus (13 MB).
+# Binärer och regenererbara artefakter — återskapas via scripts/_generate_bfl_*.
+# Repo: scripts + tmp_image_corpus/*.json + tmp_image_corpus/*_prompts_*.json
+/local_image_library/
+/stamping_local/
+/tmp_image_corpus/*.png
+/tmp_image_corpus/*_full.json
+/tmp_image_corpus/*_jev.json
+/tmp_image_corpus/*_summary.json
+
 # Local runtime caches & test artifacts (data/, test-results/)
 /data/
 /test-results/

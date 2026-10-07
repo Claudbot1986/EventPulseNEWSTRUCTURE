@@ -873,6 +873,11 @@ async function fetchFeedOnce({ baseUrl, from, days, mood, limit, offset, categor
       // string-koordinater i MapView-pin (orsakar tyst krasch).
       lat: typeof e.lat === 'number' ? e.lat : (e.lat != null ? Number(e.lat) : null),
       lng: typeof e.lng === 'number' ? e.lng : (e.lng != null ? Number(e.lng) : null),
+      // 2026-10-06 — verifierad online-flagga från events_public.is_online.
+      // MapScreen filtrerar bort dessa från kart-pinnar; HomeScreen
+      // och DetailsScreen visar fortfarande dem (UI-UX-beslut).
+      is_online: e.is_online === true,
+      online_url: typeof e.online_url === 'string' ? e.online_url : null,
       // 2026-10-04 — description pass-through. Utan detta tappar
       // DetailsScreen preview-raden även när events_public har en
       // beskrivning (t.ex. "Ett av många gratis evenemang på

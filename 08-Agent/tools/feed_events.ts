@@ -223,12 +223,19 @@ export async function feedEvents(
       // (confidence, staleness, geo nudge) and the upcoming mood matcher
       // become active on the browse page. Same columns events_public
       // already exposes for search_events (EVENT_SELECT_COLUMNS).
+      // T0201 (2026-10-05): eventpulse_summary + description_license +
+      // description_attribution + description_source_url. events_public view
+      // filtrerar description_en/sv till NULL när license='unknown' — UI/agent
+      // får summary primärt, fallback till license-tillåten description.
       'id, title_sv, title_en, description_sv, description_en, ' +
+      'description_license, description_attribution, description_source_url, ' +
+      'eventpulse_summary, ' +
       'start_time, end_time, venue_id, ' +
       'category_slug, is_free, price_min_sek, price_max_sek, ticket_url, image_url, ' +
       'image_license, image_attribution, image_source_url, ' +
       'image_ai_generated, image_ai_optout, image_generation_status, ' +
       'confidence_score, freshness_at, lat, lng, ' +
+      'is_online, online_url, ' +
       'source, ' +
       'venues:venue_id(name, city)'
     )
@@ -420,7 +427,13 @@ export async function feedEvents(
         'Untitled',
       // Fas C: description feeds the ranker (and the mood matcher, Fas D).
       // Same sv > en fallback as search_events so ranking stays language-stable.
-      description: r.description_sv || r.description_en || undefined,
+      // T0201 (2026-10-05): eventpulse_summary prioriteras. description_sv/en
+      // är redan filtrerade av events_public view (NULL när license='unknown')
+      // så vi kan returnera dem direkt utan extra kontroll.
+      description: r.eventpulse_summary || r.description_sv || r.description_en || undefined,
+      description_license: r.description_license ?? null,
+      description_attribution: r.description_attribution ?? null,
+      description_source_url: r.description_source_url ?? null,
       start_time: r.start_time,
       end_time: r.end_time ?? null,
       venue_name: r.venues?.name ?? '',

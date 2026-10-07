@@ -1,0 +1,26 @@
+{
+  "category_slug": "theatre-comedy",
+  "events": 853,
+  "library_now": 3,
+  "approx_images_needed": 6,
+  "description_corpus_size": 765,
+  "model": "minimax/minimax-m3",
+  "prompts": [
+    {
+      "pattern": "A_wide",
+      "prompt": "Wide interior shot of a small Stockholm comedy club basement, a single performer under a warm overhead spotlight at a standing microphone, low wooden tables with seated audience in the foreground, exposed brick walls and dim amber house lights."
+    },
+    {
+      "pattern": "B_medium",
+      "prompt": "Medium shot of a standup comedian on stage at an intimate Stockholm venue, holding a handheld microphone mid-gesture under warm amber stage light, relaxed expression and slight grin, dark background with faintly visible audience silhouettes."
+    },
+    {
+      "pattern": "C_environment",
+      "prompt": "Low-angle view across a packed Stockholm comedy club room toward a small raised stage, audience members leaning forward and laughing in their seats, warm sconce lighting on brick and wood walls typical of a Södermalm basement venue."
+    },
+    {
+      "pattern": "D_detail",
+      "prompt": "Tight close-up of a comedian's hand gripping a handheld microphone against their chest, soft warm stage bokeh behind, a small wooden stool with a water glass visible to the side, a single rim light from above."
+    }
+  ]
+}

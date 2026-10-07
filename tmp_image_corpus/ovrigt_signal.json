@@ -1,0 +1,285 @@
+{
+  "category_slug": "ovrigt",
+  "events": 27,
+  "docs": 27,
+  "top_1grams_distinctive": [
+    {
+      "w": "nybroplan",
+      "c": 12,
+      "score": 79.22
+    },
+    {
+      "w": "guider",
+      "c": 12,
+      "score": 78.53
+    },
+    {
+      "w": "entréhallen",
+      "c": 12,
+      "score": 77.27
+    },
+    {
+      "w": "dramatens",
+      "c": 12,
+      "score": 76.68
+    },
+    {
+      "w": "guidad",
+      "c": 13,
+      "score": 71.54
+    },
+    {
+      "w": "visning",
+      "c": 14,
+      "score": 67.89
+    },
+    {
+      "w": "kunniga",
+      "c": 11,
+      "score": 62.67
+    },
+    {
+      "w": "rundtur",
+      "c": 7,
+      "score": 42
+    },
+    {
+      "w": "tur",
+      "c": 6,
+      "score": 34.94
+    },
+    {
+      "w": "nybörjare",
+      "c": 5,
+      "score": 33.31
+    },
+    {
+      "w": "passar",
+      "c": 6,
+      "score": 30.7
+    },
+    {
+      "w": "kursen",
+      "c": 4,
+      "score": 24.41
+    },
+    {
+      "w": "nacka",
+      "c": 5,
+      "score": 24.35
+    },
+    {
+      "w": "märtas",
+      "c": 3,
+      "score": 24.14
+    },
+    {
+      "w": "målarsal",
+      "c": 3,
+      "score": 24.14
+    },
+    {
+      "w": "dieselverkstaden",
+      "c": 4,
+      "score": 24.13
+    },
+    {
+      "w": "stygn",
+      "c": 3,
+      "score": 23.48
+    },
+    {
+      "w": "deltagarna",
+      "c": 5,
+      "score": 22.36
+    },
+    {
+      "w": "platsen",
+      "c": 4,
+      "score": 22.09
+    },
+    {
+      "w": "någon",
+      "c": 5,
+      "score": 21.77
+    },
+    {
+      "w": "broderi",
+      "c": 3,
+      "score": 21.71
+    },
+    {
+      "w": "krävs",
+      "c": 4,
+      "score": 21.1
+    },
+    {
+      "w": "delta",
+      "c": 4,
+      "score": 20.58
+    },
+    {
+      "w": "tekniker",
+      "c": 4,
+      "score": 20.31
+    },
+    {
+      "w": "erfarna",
+      "c": 3,
+      "score": 19.99
+    },
+    {
+      "w": "lära",
+      "c": 4,
+      "score": 19.28
+    },
+    {
+      "w": "förkunskaper",
+      "c": 3,
+      "score": 18.9
+    },
+    {
+      "w": "stjärna",
+      "c": 3,
+      "score": 18.2
+    },
+    {
+      "w": "workshopen",
+      "c": 3,
+      "score": 18.1
+    },
+    {
+      "w": "introduktion",
+      "c": 3,
+      "score": 17.55
+    }
+  ],
+  "top_2grams_distinctive": [
+    {
+      "w": "entréhallen nybroplan",
+      "c": 12,
+      "score": 79.22
+    },
+    {
+      "w": "guidad visning",
+      "c": 13,
+      "score": 73.45
+    },
+    {
+      "w": "dramatens kunniga",
+      "c": 11,
+      "score": 73.28
+    },
+    {
+      "w": "kunniga guider",
+      "c": 11,
+      "score": 73.28
+    },
+    {
+      "w": "visning rundtur",
+      "c": 6,
+      "score": 44.13
+    },
+    {
+      "w": "nybroplan guidad",
+      "c": 6,
+      "score": 44.13
+    },
+    {
+      "w": "tur entréhallen",
+      "c": 6,
+      "score": 42.79
+    },
+    {
+      "w": "visning guidad",
+      "c": 5,
+      "score": 37.44
+    },
+    {
+      "w": "guidad tur",
+      "c": 5,
+      "score": 33.63
+    },
+    {
+      "w": "rundtur entréhallen",
+      "c": 4,
+      "score": 31.3
+    },
+    {
+      "w": "visning dramatens",
+      "c": 4,
+      "score": 31.3
+    },
+    {
+      "w": "guider upplev",
+      "c": 4,
+      "score": 31.3
+    },
+    {
+      "w": "både nybörjare",
+      "c": 4,
+      "score": 29.95
+    },
+    {
+      "w": "någon dramatens",
+      "c": 4,
+      "score": 29.42
+    },
+    {
+      "w": "passar både",
+      "c": 4,
+      "score": 28.95
+    },
+    {
+      "w": "dieselverkstaden nacka",
+      "c": 4,
+      "score": 25.2
+    },
+    {
+      "w": "kulturhuset dieselverkstaden",
+      "c": 4,
+      "score": 25.03
+    },
+    {
+      "w": "workshop maja",
+      "c": 3,
+      "score": 24.14
+    },
+    {
+      "w": "maja stjärna",
+      "c": 3,
+      "score": 24.14
+    },
+    {
+      "w": "märtas målarsal",
+      "c": 3,
+      "score": 24.14
+    },
+    {
+      "w": "visning någon",
+      "c": 3,
+      "score": 22.93
+    },
+    {
+      "w": "möjlighet prova",
+      "c": 3,
+      "score": 19.99
+    },
+    {
+      "w": "förkunskaper krävs",
+      "c": 3,
+      "score": 19.8
+    },
+    {
+      "w": "stygn passar",
+      "c": 2,
+      "score": 16.67
+    },
+    {
+      "w": "broderat tidigare",
+      "c": 2,
+      "score": 16.67
+    }
+  ],
+  "note": "score = cat_count * log(N / global_count). Higher = more distinctive for this category."
+}

@@ -1,0 +1,449 @@
+{
+  "category_slug": "ovrigt",
+  "events": 27,
+  "library_count": 0,
+  "approx_images_needed": 1,
+  "top_words": [
+    [
+      "guidad",
+      116
+    ],
+    [
+      "visning",
+      103
+    ],
+    [
+      "entréhallen",
+      66
+    ],
+    [
+      "nybroplan",
+      66
+    ],
+    [
+      "dramatens",
+      39
+    ],
+    [
+      "guider",
+      39
+    ],
+    [
+      "kunniga",
+      33
+    ],
+    [
+      "tur",
+      33
+    ],
+    [
+      "workshop",
+      30
+    ],
+    [
+      "rundtur",
+      21
+    ],
+    [
+      "maja",
+      21
+    ],
+    [
+      "stjärna",
+      21
+    ],
+    [
+      "broderi",
+      20
+    ],
+    [
+      "denna",
+      18
+    ],
+    [
+      "passar",
+      18
+    ],
+    [
+      "ett",
+      18
+    ],
+    [
+      "besökare",
+      18
+    ],
+    [
+      "genom",
+      18
+    ],
+    [
+      "keramik",
+      16
+    ],
+    [
+      "nacka",
+      15
+    ],
+    [
+      "deltagarna",
+      15
+    ],
+    [
+      "får",
+      15
+    ],
+    [
+      "möjlighet",
+      15
+    ],
+    [
+      "kursen",
+      15
+    ],
+    [
+      "yin",
+      14
+    ],
+    [
+      "kurs",
+      14
+    ],
+    [
+      "spooky",
+      14
+    ],
+    [
+      "pilates",
+      14
+    ],
+    [
+      "brodera",
+      13
+    ],
+    [
+      "platsen",
+      12
+    ]
+  ],
+  "sample_events": [
+    {
+      "title": "Guidad visning",
+      "venue": "Entréhallen Nybroplan"
+    },
+    {
+      "title": "Brodera blommor – workshop med Maja Stjärna",
+      "venue": "Märtas målarsal, Kulturhuset Dieselverkstaden"
+    },
+    {
+      "title": "RnB Yin Yoga 10 Okt kl.12:30",
+      "venue": "YogaDevi"
+    },
+    {
+      "title": "Guidad visning",
+      "venue": "Entréhallen Nybroplan"
+    },
+    {
+      "title": "Brodera på kläder – workshop med Maja Stjärna",
+      "venue": "Märtas målarsal, Kulturhuset Dieselverkstaden"
+    }
+  ],
+  "full_corpus": [
+    {
+      "id": "191fd7b8-cbeb-471d-a22c-dc35820513df",
+      "title_sv": "Guidad visning",
+      "title_en": "Guidad visning",
+      "desc_sv": "Guidad visning är en rundtur på Entréhallen Nybroplan i Stockholm.\n\nGå en guidad visning och utforska platsen med en av Dramatens kunniga guider. Det ger en inblick i Entréhallen Nybroplan.",
+      "desc_en": "Guidad visning är en rundtur på Entréhallen Nybroplan i Stockholm.\n\nGå en guidad visning och utforska platsen med en av Dramatens kunniga guider. Det ger en inblick i Entréhallen Nybroplan.",
+      "raw": "Guidad visning är en rundtur på Entréhallen Nybroplan i Stockholm.\n\nGå en guidad visning och utforska platsen med en av Dramatens kunniga guider. Det ger en inblick i Entréhallen Nybroplan.",
+      "venue": "Entréhallen Nybroplan",
+      "start": "2026-10-07T15:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "b2ccba45-e42d-4b54-97a0-73b6a4ab2686",
+      "title_sv": "Brodera blommor – workshop med Maja Stjärna",
+      "title_en": "Brodera blommor – workshop med Maja Stjärna",
+      "desc_sv": "Brodera blommor – workshop med Maja Stjärna är en workshop i fritt broderi på Märtas målarsal i Nacka.\n\nDenna blomstrande workshop i fritt broderi leds av Maja Stjärna. Deltagarna får lära sig enkla och användbara stygn som passar särskilt fint för att brodera blommor och växter. Inspiration hämtas från klassiska floraillustrationer för att tolka motiv med nål och tråd, verklighetstroget eller fan",
+      "desc_en": "Brodera blommor – workshop med Maja Stjärna är en workshop i fritt broderi på Märtas målarsal i Nacka.\n\nDenna blomstrande workshop i fritt broderi leds av Maja Stjärna. Deltagarna får lära sig enkla och användbara stygn som passar särskilt fint för att brodera blommor och växter. Inspiration hämtas från klassiska floraillustrationer för att tolka motiv med nål och tråd, verklighetstroget eller fan",
+      "raw": "Brodera blommor – workshop med Maja Stjärna är en workshop i fritt broderi på Märtas målarsal i Nacka.\n\nDenna blomstrande workshop i fritt broderi leds av Maja Stjärna. Deltagarna får lära sig enkla och användbara stygn som passar särskilt fint för att brodera blommor och växter. Inspiration hämtas från klassiska floraillustrationer för att tolka motiv med nål och tråd, verklighetstroget eller fan",
+      "venue": "Märtas målarsal, Kulturhuset Dieselverkstaden",
+      "start": "2026-10-10T08:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "ad2d6068-e2e7-4a7e-91e1-6d6e09c4aa31",
+      "title_sv": "RnB Yin Yoga 10 Okt kl.12:30",
+      "title_en": "RnB Yin Yoga 10 Okt kl.12:30",
+      "desc_sv": "RnB Yin Yoga är en yogaklass på YogaDevi i Stockholm.\n\nDenna yogaklass erbjuder en harmonisk kombination av RnB-musik och Yin Yoga. Deltagarna kan fördjupa sig i en avkopplande upplevelse där meditativa yin yogapositioner möter de mjuka tonerna av RnB-musik. Klassen inkluderar djupgående stretch, total avkoppling och meditation. Yin Yoga passar alla och är ett tillfälle att stanna upp och samla kr",
+      "desc_en": "RnB Yin Yoga är en yogaklass på YogaDevi i Stockholm.\n\nDenna yogaklass erbjuder en harmonisk kombination av RnB-musik och Yin Yoga. Deltagarna kan fördjupa sig i en avkopplande upplevelse där meditativa yin yogapositioner möter de mjuka tonerna av RnB-musik. Klassen inkluderar djupgående stretch, total avkoppling och meditation. Yin Yoga passar alla och är ett tillfälle att stanna upp och samla kr",
+      "raw": "RnB Yin Yoga är en yogaklass på YogaDevi i Stockholm.\n\nDenna yogaklass erbjuder en harmonisk kombination av RnB-musik och Yin Yoga. Deltagarna kan fördjupa sig i en avkopplande upplevelse där meditativa yin yogapositioner möter de mjuka tonerna av RnB-musik. Klassen inkluderar djupgående stretch, total avkoppling och meditation. Yin Yoga passar alla och är ett tillfälle att stanna upp och samla kr",
+      "venue": "YogaDevi",
+      "start": "2026-10-10T10:30:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "76503e75-6493-4270-9ff9-1dc0f40c380d",
+      "title_sv": "Guidad visning",
+      "title_en": "Guidad visning",
+      "desc_sv": "Guidad visning är en guidad tur på Entréhallen Nybroplan i Stockholm.\n\nEvenemanget erbjuder en guidad tur med någon av Dramatens kunniga guider. Besökare får utforska teatern under ledning av sakkunnig personal.",
+      "desc_en": "Guidad visning är en guidad tur på Entréhallen Nybroplan i Stockholm.\n\nEvenemanget erbjuder en guidad tur med någon av Dramatens kunniga guider. Besökare får utforska teatern under ledning av sakkunnig personal.",
+      "raw": "Guidad visning är en guidad tur på Entréhallen Nybroplan i Stockholm.\n\nEvenemanget erbjuder en guidad tur med någon av Dramatens kunniga guider. Besökare får utforska teatern under ledning av sakkunnig personal.",
+      "venue": "Entréhallen Nybroplan",
+      "start": "2026-10-11T12:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "0c453099-2acb-460c-ab52-99226f2c9a48",
+      "title_sv": "Brodera på kläder – workshop med Maja Stjärna",
+      "title_en": "Brodera på kläder – workshop med Maja Stjärna",
+      "desc_sv": "Brodera på kläder – workshop med Maja Stjärna är en broderi-workshop på Märtas målarsal, Kulturhuset Dieselverkstaden i Nacka.\n\nDenna workshop fokuserar på att förnya kläder med hjälp av broderi. Deltagare får lära sig olika tekniker och stygn som passar för specifika plagg. Dessutom behandlas vilken typ av broderigarner som lämpar sig för olika sorters tyger. Workshopen passar både nybörjare och ",
+      "desc_en": "Brodera på kläder – workshop med Maja Stjärna är en broderi-workshop på Märtas målarsal, Kulturhuset Dieselverkstaden i Nacka.\n\nDenna workshop fokuserar på att förnya kläder med hjälp av broderi. Deltagare får lära sig olika tekniker och stygn som passar för specifika plagg. Dessutom behandlas vilken typ av broderigarner som lämpar sig för olika sorters tyger. Workshopen passar både nybörjare och ",
+      "raw": "Brodera på kläder – workshop med Maja Stjärna är en broderi-workshop på Märtas målarsal, Kulturhuset Dieselverkstaden i Nacka.\n\nDenna workshop fokuserar på att förnya kläder med hjälp av broderi. Deltagare får lära sig olika tekniker och stygn som passar för specifika plagg. Dessutom behandlas vilken typ av broderigarner som lämpar sig för olika sorters tyger. Workshopen passar både nybörjare och ",
+      "venue": "Märtas målarsal, Kulturhuset Dieselverkstaden",
+      "start": "2026-10-11T08:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "61aa4084-a771-43df-893c-625e12e83422",
+      "title_sv": "Guidad visning",
+      "title_en": "Guidad visning",
+      "desc_sv": "Guidad visning är en rundtur på Entréhallen Nybroplan i Stockholm.\n\nGå en guidad visning med någon av Dramatens kunniga guider. De leder dig genom Entréhallen Nybroplan.",
+      "desc_en": "Guidad visning är en rundtur på Entréhallen Nybroplan i Stockholm.\n\nGå en guidad visning med någon av Dramatens kunniga guider. De leder dig genom Entréhallen Nybroplan.",
+      "raw": "Guidad visning är en rundtur på Entréhallen Nybroplan i Stockholm.\n\nGå en guidad visning med någon av Dramatens kunniga guider. De leder dig genom Entréhallen Nybroplan.",
+      "venue": "Entréhallen Nybroplan",
+      "start": "2026-10-15T15:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "6a4c1efb-15e0-4dfe-b39e-ddf3778e9cdd",
+      "title_sv": "Guidad visning",
+      "title_en": "Guidad visning",
+      "desc_sv": "En guidad visning äger rum på Entréhallen Nybroplan i Stockholm.\n\nGå en guidad visning med en av Dramatens kunniga guider. Upplev en insiktsfull rundtur i Dramatens regi på Entréhallen Nybroplan.",
+      "desc_en": "En guidad visning äger rum på Entréhallen Nybroplan i Stockholm.\n\nGå en guidad visning med en av Dramatens kunniga guider. Upplev en insiktsfull rundtur i Dramatens regi på Entréhallen Nybroplan.",
+      "raw": "En guidad visning äger rum på Entréhallen Nybroplan i Stockholm.\n\nGå en guidad visning med en av Dramatens kunniga guider. Upplev en insiktsfull rundtur i Dramatens regi på Entréhallen Nybroplan.",
+      "venue": "Entréhallen Nybroplan",
+      "start": "2026-10-18T12:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "766cfc38-243d-4c5f-a2c9-3d2d0c9d0988",
+      "title_sv": "Meditativt broderi - workshop med Maja Stjärna",
+      "title_en": "Meditativt broderi - workshop med Maja Stjärna",
+      "desc_sv": "Meditativt broderi är en workshop med Maja Stjärna på Märtas målarsal, Kulturhuset Dieselverkstaden i Nacka.\n\nMaja Stjärna bjuder in till en lugnande workshop i meditativt broderi, öppen för både nybörjare och erfarna deltagare. Workshopen inleds med en introduktion till handbroderi, inklusive grundtekniker och enkla stygn. Därefter broderar deltagarna i tystnad till meditativ musik. Målet är att ",
+      "desc_en": "Meditativt broderi är en workshop med Maja Stjärna på Märtas målarsal, Kulturhuset Dieselverkstaden i Nacka.\n\nMaja Stjärna bjuder in till en lugnande workshop i meditativt broderi, öppen för både nybörjare och erfarna deltagare. Workshopen inleds med en introduktion till handbroderi, inklusive grundtekniker och enkla stygn. Därefter broderar deltagarna i tystnad till meditativ musik. Målet är att ",
+      "raw": "Meditativt broderi är en workshop med Maja Stjärna på Märtas målarsal, Kulturhuset Dieselverkstaden i Nacka.\n\nMaja Stjärna bjuder in till en lugnande workshop i meditativt broderi, öppen för både nybörjare och erfarna deltagare. Workshopen inleds med en introduktion till handbroderi, inklusive grundtekniker och enkla stygn. Därefter broderar deltagarna i tystnad till meditativ musik. Målet är att ",
+      "venue": "Märtas målarsal, Kulturhuset Dieselverkstaden",
+      "start": "2026-10-18T08:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "5079b42c-b9c7-426c-b430-6e1166d09b0a",
+      "title_sv": "Allmänhetens visning",
+      "title_en": "Allmänhetens visning",
+      "desc_sv": "Allmänhetens visning är en astronomisk visning på Magnethuset i Stockholm.\n\nBesökare får ett föredrag om astronomi och möjlighet att titta i STARs teleskop. Alla gäster har möjlighet att se genom teleskopet.",
+      "desc_en": "Allmänhetens visning är en astronomisk visning på Magnethuset i Stockholm.\n\nBesökare får ett föredrag om astronomi och möjlighet att titta i STARs teleskop. Alla gäster har möjlighet att se genom teleskopet.",
+      "raw": "Allmänhetens visning är en astronomisk visning på Magnethuset i Stockholm.\n\nBesökare får ett föredrag om astronomi och möjlighet att titta i STARs teleskop. Alla gäster har möjlighet att se genom teleskopet.",
+      "venue": "Magnethuset",
+      "start": "2026-10-20T17:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "0b764633-6dc4-44dd-9859-3460259e19f4",
+      "title_sv": "Dynamics User Group Sweden - 20 Oktober 2026",
+      "title_en": "Dynamics User Group Sweden - 20 Oktober 2026",
+      "desc_sv": "Dynamics User Group Sweden Höstträff är en heldag för nätverkande och lärande på Quality Hotel Strawberry Arena i Solna.\n\nDenna heldag riktar sig till alla som kommer i kontakt med, jobbar med eller använder Dynamics-produkter. Eventet är arrangerat av användare, för användare, och syftar till att diskutera problem samt knyta nya kontakter i en avslappnad miljö. Dagen inkluderar sessioner, break-o",
+      "desc_en": "Dynamics User Group Sweden Höstträff är en heldag för nätverkande och lärande på Quality Hotel Strawberry Arena i Solna.\n\nDenna heldag riktar sig till alla som kommer i kontakt med, jobbar med eller använder Dynamics-produkter. Eventet är arrangerat av användare, för användare, och syftar till att diskutera problem samt knyta nya kontakter i en avslappnad miljö. Dagen inkluderar sessioner, break-o",
+      "raw": "Dynamics User Group Sweden Höstträff är en heldag för nätverkande och lärande på Quality Hotel Strawberry Arena i Solna.\n\nDenna heldag riktar sig till alla som kommer i kontakt med, jobbar med eller använder Dynamics-produkter. Eventet är arrangerat av användare, för användare, och syftar till att diskutera problem samt knyta nya kontakter i en avslappnad miljö. Dagen inkluderar sessioner, break-o",
+      "venue": "Quality Hotel Strawberry Arena",
+      "start": "2026-10-20T06:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "05d037b4-2dc7-4212-820b-217a0416324c",
+      "title_sv": "Guidad visning",
+      "title_en": "Guidad visning",
+      "desc_sv": "Guidad visning är en guidad tur på Entréhallen Nybroplan i Stockholm.\n\nBesökare kan följa med på en guidad tur ledd av Dramatens kunniga guider. Detta ger en inblick bakom kulisserna vid platsen i Stockholm.",
+      "desc_en": "Guidad visning är en guidad tur på Entréhallen Nybroplan i Stockholm.\n\nBesökare kan följa med på en guidad tur ledd av Dramatens kunniga guider. Detta ger en inblick bakom kulisserna vid platsen i Stockholm.",
+      "raw": "Guidad visning är en guidad tur på Entréhallen Nybroplan i Stockholm.\n\nBesökare kan följa med på en guidad tur ledd av Dramatens kunniga guider. Detta ger en inblick bakom kulisserna vid platsen i Stockholm.",
+      "venue": "Entréhallen Nybroplan",
+      "start": "2026-10-28T16:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "a614c755-15fe-4fa5-b4aa-7d7a17a5ca14",
+      "title_sv": "Guidad visning",
+      "title_en": "Guidad visning",
+      "desc_sv": "Guidad visning är en guidad tur i Entréhallen Nybroplan i Stockholm.\n\nDelta i en guidad visning med en av Dramatens erfarna guider. Upplev en tur genom Entréhallen Nybroplan.",
+      "desc_en": "Guidad visning är en guidad tur i Entréhallen Nybroplan i Stockholm.\n\nDelta i en guidad visning med en av Dramatens erfarna guider. Upplev en tur genom Entréhallen Nybroplan.",
+      "raw": "Guidad visning är en guidad tur i Entréhallen Nybroplan i Stockholm.\n\nDelta i en guidad visning med en av Dramatens erfarna guider. Upplev en tur genom Entréhallen Nybroplan.",
+      "venue": "Entréhallen Nybroplan",
+      "start": "2026-10-29T16:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "036d00f6-ba32-4dd5-9b23-42aa8ed05b30",
+      "title_sv": "Guidad visning",
+      "title_en": "Guidad visning",
+      "desc_sv": "Guidad visning är en guidad tur i Entréhallen Nybroplan, Stockholm.\n\nFölj med på en guidad visning i Entréhallen Nybroplan. En av Dramatens kunniga guider leder turen och delar med sig av sin kunskap om platsen.",
+      "desc_en": "Guidad visning är en guidad tur i Entréhallen Nybroplan, Stockholm.\n\nFölj med på en guidad visning i Entréhallen Nybroplan. En av Dramatens kunniga guider leder turen och delar med sig av sin kunskap om platsen.",
+      "raw": "Guidad visning är en guidad tur i Entréhallen Nybroplan, Stockholm.\n\nFölj med på en guidad visning i Entréhallen Nybroplan. En av Dramatens kunniga guider leder turen och delar med sig av sin kunskap om platsen.",
+      "venue": "Entréhallen Nybroplan",
+      "start": "2026-11-01T13:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "b0df25ec-c5d1-4daa-967e-d2ae1812bd56",
+      "title_sv": "Guidad visning",
+      "title_en": "Guidad visning",
+      "desc_sv": "Guidad visning är en guidad tur på Entréhallen Nybroplan i Stockholm.\n\nDelta i en guidad tur med Dramatens kunniga guider. Evenemanget äger rum i Entréhallen Nybroplan i Stockholm.",
+      "desc_en": "Guidad visning är en guidad tur på Entréhallen Nybroplan i Stockholm.\n\nDelta i en guidad tur med Dramatens kunniga guider. Evenemanget äger rum i Entréhallen Nybroplan i Stockholm.",
+      "raw": "Guidad visning är en guidad tur på Entréhallen Nybroplan i Stockholm.\n\nDelta i en guidad tur med Dramatens kunniga guider. Evenemanget äger rum i Entréhallen Nybroplan i Stockholm.",
+      "venue": "Entréhallen Nybroplan",
+      "start": "2026-10-21T15:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "d903228c-f05b-42fe-8bda-864b0d7eeb74",
+      "title_sv": "Keramik 12-13 år - Höstlovskurs",
+      "title_en": "Keramik 12-13 år - Höstlovskurs",
+      "desc_sv": "Keramik 12-13 år - Höstlovskurs är en keramikverkstad på Kulturhuset Dieselverkstaden i Nacka.\n\nKursen hämtar inspiration från höstens färger, ljus och mörker. Deltagarna arbetar både individuellt och med samarbetsövningar, med fokus på bruksföremål och skulpturala verk. Olika tekniker som forma, tumma, ringla och bygga utforskas, och det finns även möjlighet att prova på att dreja. Leran målas me",
+      "desc_en": "Keramik 12-13 år - Höstlovskurs är en keramikverkstad på Kulturhuset Dieselverkstaden i Nacka.\n\nKursen hämtar inspiration från höstens färger, ljus och mörker. Deltagarna arbetar både individuellt och med samarbetsövningar, med fokus på bruksföremål och skulpturala verk. Olika tekniker som forma, tumma, ringla och bygga utforskas, och det finns även möjlighet att prova på att dreja. Leran målas me",
+      "raw": "Keramik 12-13 år - Höstlovskurs är en keramikverkstad på Kulturhuset Dieselverkstaden i Nacka.\n\nKursen hämtar inspiration från höstens färger, ljus och mörker. Deltagarna arbetar både individuellt och med samarbetsövningar, med fokus på bruksföremål och skulpturala verk. Olika tekniker som forma, tumma, ringla och bygga utforskas, och det finns även möjlighet att prova på att dreja. Leran målas me",
+      "venue": "Kulturhuset Dieselverkstaden, Fritiofs formsal plan 3",
+      "start": "2026-10-26T12:30:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "77d08a6d-1082-4433-990b-3cd35277b239",
+      "title_sv": "Höstsalongen i Stockholm 2026",
+      "title_en": "Höstsalongen i Stockholm 2026",
+      "desc_sv": "Höstsalongen i Stockholm 2026 är en vinmässa på At Six i Stockholm.\n\nHöstsalongen i Stockholm 2026 är en social vinmässa med fokus på upplevelse och gemenskap. Besökare kan upptäcka, dofta, smaka och prata vin med över 30 importörer som guidar och ger personliga tips. Det är en modern och avslappnad vinmässa som passar både nybörjare och vinintresserade. Här finns möjlighet att prova hundratals vi",
+      "desc_en": "Höstsalongen i Stockholm 2026 är en vinmässa på At Six i Stockholm.\n\nHöstsalongen i Stockholm 2026 är en social vinmässa med fokus på upplevelse och gemenskap. Besökare kan upptäcka, dofta, smaka och prata vin med över 30 importörer som guidar och ger personliga tips. Det är en modern och avslappnad vinmässa som passar både nybörjare och vinintresserade. Här finns möjlighet att prova hundratals vi",
+      "raw": "Höstsalongen i Stockholm 2026 är en vinmässa på At Six i Stockholm.\n\nHöstsalongen i Stockholm 2026 är en social vinmässa med fokus på upplevelse och gemenskap. Besökare kan upptäcka, dofta, smaka och prata vin med över 30 importörer som guidar och ger personliga tips. Det är en modern och avslappnad vinmässa som passar både nybörjare och vinintresserade. Här finns möjlighet att prova hundratals vi",
+      "venue": "At Six",
+      "start": "2026-10-17T10:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "f3be8f68-aa7f-4f71-b061-5ad625814be7",
+      "title_sv": "Guidad visning",
+      "title_en": "Guidad visning",
+      "desc_sv": "Guidad visning är en tur på Entréhallen Nybroplan i Stockholm.\n\nGå en guidad visning med en av Dramatens kunniga guider. Upplev en tur på Entréhallen Nybroplan i Stockholm.",
+      "desc_en": "Guidad visning är en tur på Entréhallen Nybroplan i Stockholm.\n\nGå en guidad visning med en av Dramatens kunniga guider. Upplev en tur på Entréhallen Nybroplan i Stockholm.",
+      "raw": "Guidad visning är en tur på Entréhallen Nybroplan i Stockholm.\n\nGå en guidad visning med en av Dramatens kunniga guider. Upplev en tur på Entréhallen Nybroplan i Stockholm.",
+      "venue": "Entréhallen Nybroplan",
+      "start": "2026-10-10T14:30:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "16d33c69-36a3-4ef5-a3e4-075de79a82f8",
+      "title_sv": "Nāked Brunch",
+      "title_en": "Nāked Brunch",
+      "desc_sv": "Nāked Brunch är ett event på The House i Stockholm.\n\nNāked Brunch är ett event som äger rum på The House. Det erbjuder en upplevelse i en avslappnad atmosfär.",
+      "desc_en": "Nāked Brunch är ett event på The House i Stockholm.\n\nNāked Brunch är ett event som äger rum på The House. Det erbjuder en upplevelse i en avslappnad atmosfär.",
+      "raw": "Nāked Brunch är ett event på The House i Stockholm.\n\nNāked Brunch är ett event som äger rum på The House. Det erbjuder en upplevelse i en avslappnad atmosfär.",
+      "venue": "The House",
+      "start": "2026-10-10T10:30:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "6ce9e238-df93-4fb1-87f9-f37ee16e0319",
+      "title_sv": "World Vibe Webb",
+      "title_en": "World Vibe Webb",
+      "desc_sv": "World Vibe Webb är en kurs på Svenska Tecknare i Stockholm.\n\nDenna kurs utforskar webbens utveckling och syftar till att återta den genom att skapa personliga webbplatser. Deltagarna kommer att lära sig HTML och CSS, utforska domännamn och webbhosting, samt bygga en egen digital trädgård. Detta görs med AI-stödd programmering i Cursor, en metod som kallas vibe-programmering. Kursen passar dig som ",
+      "desc_en": "World Vibe Webb är en kurs på Svenska Tecknare i Stockholm.\n\nDenna kurs utforskar webbens utveckling och syftar till att återta den genom att skapa personliga webbplatser. Deltagarna kommer att lära sig HTML och CSS, utforska domännamn och webbhosting, samt bygga en egen digital trädgård. Detta görs med AI-stödd programmering i Cursor, en metod som kallas vibe-programmering. Kursen passar dig som ",
+      "raw": "World Vibe Webb är en kurs på Svenska Tecknare i Stockholm.\n\nDenna kurs utforskar webbens utveckling och syftar till att återta den genom att skapa personliga webbplatser. Deltagarna kommer att lära sig HTML och CSS, utforska domännamn och webbhosting, samt bygga en egen digital trädgård. Detta görs med AI-stödd programmering i Cursor, en metod som kallas vibe-programmering. Kursen passar dig som ",
+      "venue": "Svenska Tecknare",
+      "start": "2026-11-02T17:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "20b57cf3-3b15-48c9-b71b-4c337bbfd6be",
+      "title_sv": "15 oktober: Vinmakarbesök Felix Wagemann från Philipp Kuhn",
+      "title_en": "15 oktober: Vinmakarbesök Felix Wagemann från Philipp Kuhn",
+      "desc_sv": "Vinmakarbesök Felix Wagemann från Philipp Kuhn är en vinprovning på Tryffelsvinets Klubblokal i Stockholm.\n\nVälkommen till en provning med Felix Wagemann från Weingut Philipp Kuhn, där tysk riesling och pinot noir i världsklass står i fokus. Under kvällen djupdyker vi i gårdens portfölj och lär oss mer om Pfalz, Tysklands soligaste vinregion. Weingut Philipp Kuhn är en familjeegendom döpt efter de",
+      "desc_en": "Vinmakarbesök Felix Wagemann från Philipp Kuhn är en vinprovning på Tryffelsvinets Klubblokal i Stockholm.\n\nVälkommen till en provning med Felix Wagemann från Weingut Philipp Kuhn, där tysk riesling och pinot noir i världsklass står i fokus. Under kvällen djupdyker vi i gårdens portfölj och lär oss mer om Pfalz, Tysklands soligaste vinregion. Weingut Philipp Kuhn är en familjeegendom döpt efter de",
+      "raw": "Vinmakarbesök Felix Wagemann från Philipp Kuhn är en vinprovning på Tryffelsvinets Klubblokal i Stockholm.\n\nVälkommen till en provning med Felix Wagemann från Weingut Philipp Kuhn, där tysk riesling och pinot noir i världsklass står i fokus. Under kvällen djupdyker vi i gårdens portfölj och lär oss mer om Pfalz, Tysklands soligaste vinregion. Weingut Philipp Kuhn är en familjeegendom döpt efter de",
+      "venue": "Tryffelsvinets Klubblokal",
+      "start": "2026-10-15T15:30:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "13b86a0d-830c-4960-8a43-4730229dabab",
+      "title_sv": "Keramik - Helgkurs för vuxna",
+      "title_en": "Keramik - Helgkurs för vuxna",
+      "desc_sv": "Keramik - Helgkurs för vuxna är en helgkurs i keramik på Kulturhuset Dieselverkstaden i Nacka.\n\nKeramik - Helgkurs för vuxna erbjuder möjlighet att prova tekniker som drejning, tumning, ringling och kavling. Deltagare får grundläggande kunskap i drejning, från centrering av lera till beskickning, och turas om att använda lokalens fyra drejskivor. Kursen avslutas med ett tillfälle för dekorering oc",
+      "desc_en": "Keramik - Helgkurs för vuxna är en helgkurs i keramik på Kulturhuset Dieselverkstaden i Nacka.\n\nKeramik - Helgkurs för vuxna erbjuder möjlighet att prova tekniker som drejning, tumning, ringling och kavling. Deltagare får grundläggande kunskap i drejning, från centrering av lera till beskickning, och turas om att använda lokalens fyra drejskivor. Kursen avslutas med ett tillfälle för dekorering oc",
+      "raw": "Keramik - Helgkurs för vuxna är en helgkurs i keramik på Kulturhuset Dieselverkstaden i Nacka.\n\nKeramik - Helgkurs för vuxna erbjuder möjlighet att prova tekniker som drejning, tumning, ringling och kavling. Deltagare får grundläggande kunskap i drejning, från centrering av lera till beskickning, och turas om att använda lokalens fyra drejskivor. Kursen avslutas med ett tillfälle för dekorering oc",
+      "venue": "Kulturhuset Dieselverkstaden, Fritiofs formsal plan 3",
+      "start": "2026-10-17T08:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "af3bedd7-aa2b-4c59-aba4-ce0452e3fe69",
+      "title_sv": "Guidad visning",
+      "title_en": "Guidad visning",
+      "desc_sv": "Guidad visning är en rundtur på Confidencen i Solna.\n\nDenna guidade visning tar besökare genom Confidencens kungliga foajéer, salongen och upp på scenen. Under turen berättas historien om hur Sveriges äldsta bevarade teater återuppstod från ruiner. Teatern fungerar än idag som en levande scen. Detta är en introduktion för nya besökare, eller för den som vill förstå platsen djupare inför en förestä",
+      "desc_en": "Guidad visning är en rundtur på Confidencen i Solna.\n\nDenna guidade visning tar besökare genom Confidencens kungliga foajéer, salongen och upp på scenen. Under turen berättas historien om hur Sveriges äldsta bevarade teater återuppstod från ruiner. Teatern fungerar än idag som en levande scen. Detta är en introduktion för nya besökare, eller för den som vill förstå platsen djupare inför en förestä",
+      "raw": "Guidad visning är en rundtur på Confidencen i Solna.\n\nDenna guidade visning tar besökare genom Confidencens kungliga foajéer, salongen och upp på scenen. Under turen berättas historien om hur Sveriges äldsta bevarade teater återuppstod från ruiner. Teatern fungerar än idag som en levande scen. Detta är en introduktion för nya besökare, eller för den som vill förstå platsen djupare inför en förestä",
+      "venue": "Confidencen",
+      "start": "2026-10-24T10:15:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "685c5717-1917-4844-808b-67bd46efc3ff",
+      "title_sv": "KURS: Sticka samiska vantmönster",
+      "title_en": "KURS: Sticka samiska vantmönster",
+      "desc_sv": "KURS: Sticka samiska vantmönster är en kurs vid Stockholms Läns Hemslöjdsförening i Stockholm.\n\nErika Nordvall Falck leder kursen Sticka samiska vantmönster, som utforskar ett rikt kulturarv genom traditionella vantar. De mönster som arbetas med har stickats i det nordliga området från 1700-talet och framåt. Kursen utgår från deltagarens egen förmåga och intresse, vilket möjliggör arbete med många",
+      "desc_en": "KURS: Sticka samiska vantmönster är en kurs vid Stockholms Läns Hemslöjdsförening i Stockholm.\n\nErika Nordvall Falck leder kursen Sticka samiska vantmönster, som utforskar ett rikt kulturarv genom traditionella vantar. De mönster som arbetas med har stickats i det nordliga området från 1700-talet och framåt. Kursen utgår från deltagarens egen förmåga och intresse, vilket möjliggör arbete med många",
+      "raw": "KURS: Sticka samiska vantmönster är en kurs vid Stockholms Läns Hemslöjdsförening i Stockholm.\n\nErika Nordvall Falck leder kursen Sticka samiska vantmönster, som utforskar ett rikt kulturarv genom traditionella vantar. De mönster som arbetas med har stickats i det nordliga området från 1700-talet och framåt. Kursen utgår från deltagarens egen förmåga och intresse, vilket möjliggör arbete med många",
+      "venue": "Stockholms Läns Hemslöjdsförening",
+      "start": "2026-11-21T09:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "b8437e5c-48e9-4ac5-af9d-f6f9b9e5be42",
+      "title_sv": "Guidad visning",
+      "title_en": "Guidad visning",
+      "desc_sv": "Guidad visning är en rundtur ledd av guider på Entréhallen Nybroplan i Stockholm.\n\nGå en guidad visning med någon av Dramatens kunniga guider. Upptäck Entréhallen Nybroplan med expertis och djupare förståelse.",
+      "desc_en": "Guidad visning är en rundtur ledd av guider på Entréhallen Nybroplan i Stockholm.\n\nGå en guidad visning med någon av Dramatens kunniga guider. Upptäck Entréhallen Nybroplan med expertis och djupare förståelse.",
+      "raw": "Guidad visning är en rundtur ledd av guider på Entréhallen Nybroplan i Stockholm.\n\nGå en guidad visning med någon av Dramatens kunniga guider. Upptäck Entréhallen Nybroplan med expertis och djupare förståelse.",
+      "venue": "Entréhallen Nybroplan",
+      "start": "2026-10-27T16:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "03583bc7-8c6e-4e7f-a9ec-8d5f5538342d",
+      "title_sv": "Spooky Pilates",
+      "title_en": "Spooky Pilates",
+      "desc_sv": "SPOOKY PILATES 🎃🖤 Reformer Pilates • Bubbel • Halloween Mingle Det är lördag… så låt oss göra lördagen lite spookier. 👻 Välkommen till Spooky Pilates – en Halloween-inspirerad eftermiddag tillsammans med Girls Meet Up och Energy Reformer, där vi kombinerar Reformer Pilates, spooky vibes, bubbel och mingel. 🖤🥂 👻 KOM I DIN BÄSTA SPOOKY MOOD Vi vill självklart se lite Halloween vibes! 🎃 Kom gä",
+      "desc_en": "SPOOKY PILATES 🎃🖤 Reformer Pilates • Bubbel • Halloween Mingle Det är lördag… så låt oss göra lördagen lite spookier. 👻 Välkommen till Spooky Pilates – en Halloween-inspirerad eftermiddag tillsammans med Girls Meet Up och Energy Reformer, där vi kombinerar Reformer Pilates, spooky vibes, bubbel och mingel. 🖤🥂 👻 KOM I DIN BÄSTA SPOOKY MOOD Vi vill självklart se lite Halloween vibes! 🎃 Kom gä",
+      "raw": "SPOOKY PILATES 🎃🖤 Reformer Pilates • Bubbel • Halloween Mingle Det är lördag… så låt oss göra lördagen lite spookier. 👻 Välkommen till Spooky Pilates – en Halloween-inspirerad eftermiddag tillsammans med Girls Meet Up och Energy Reformer, där vi kombinerar Reformer Pilates, spooky vibes, bubbel och mingel. 🖤🥂 👻 KOM I DIN BÄSTA SPOOKY MOOD Vi vill självklart se lite Halloween vibes! 🎃 Kom gä",
+      "venue": "Energii Östermalm - Reformer Pilates",
+      "start": "2026-10-17T14:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "e94555e8-9290-4333-8645-d3f0f8795953",
+      "title_sv": "Guidad visning",
+      "title_en": "Guidad visning",
+      "desc_sv": "Guidad visning är en rundtur på Entréhallen Nybroplan i Stockholm.\n\nGå en guidad visning med en av Dramatens kunniga guider. Upplev Entréhallen Nybroplan i Stockholm.",
+      "desc_en": "Guidad visning är en rundtur på Entréhallen Nybroplan i Stockholm.\n\nGå en guidad visning med en av Dramatens kunniga guider. Upplev Entréhallen Nybroplan i Stockholm.",
+      "raw": "Guidad visning är en rundtur på Entréhallen Nybroplan i Stockholm.\n\nGå en guidad visning med en av Dramatens kunniga guider. Upplev Entréhallen Nybroplan i Stockholm.",
+      "venue": "Entréhallen Nybroplan",
+      "start": "2026-10-14T15:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "f64214a7-e080-4154-a889-424e1d3afd5a",
+      "title_sv": "Guidad visning",
+      "title_en": "Guidad visning",
+      "desc_sv": "Guidad visning är en rundtur på Entréhallen Nybroplan i Stockholm.\n\nFölj med på en guidad visning med någon av Dramatens kunniga guider. Upptäck Entréhallen Nybroplan i Stockholm.",
+      "desc_en": "Guidad visning är en rundtur på Entréhallen Nybroplan i Stockholm.\n\nFölj med på en guidad visning med någon av Dramatens kunniga guider. Upptäck Entréhallen Nybroplan i Stockholm.",
+      "raw": "Guidad visning är en rundtur på Entréhallen Nybroplan i Stockholm.\n\nFölj med på en guidad visning med någon av Dramatens kunniga guider. Upptäck Entréhallen Nybroplan i Stockholm.",
+      "venue": "Entréhallen Nybroplan",
+      "start": "2026-10-08T15:00:00+00:00",
+      "has_img": true
+    }
+  ]
+}

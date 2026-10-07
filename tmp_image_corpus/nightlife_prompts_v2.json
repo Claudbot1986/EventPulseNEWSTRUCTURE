@@ -1,0 +1,26 @@
+{
+  "category_slug": "nightlife",
+  "events": 87,
+  "library_now": 1,
+  "approx_images_needed": 1,
+  "description_corpus_size": 80,
+  "model": "minimax/minimax-m3",
+  "prompts": [
+    {
+      "pattern": "A_wide",
+      "prompt": "Wide shot of a dimly lit Stockholm dinner-show hall, long candlelit tables set with white linen, a performer mid-song on a small stage bathed in warm amber spotlights, disco lights glowing further back where a nightclub dance floor is visible."
+    },
+    {
+      "pattern": "B_medium",
+      "prompt": "Medium shot of guests in evening wear clinking wine glasses at a long banquet table, plates of a three-course dinner half-finished, a singer in a sequined jacket performing on stage just behind them under theatrical pink and gold lighting."
+    },
+    {
+      "pattern": "C_environment",
+      "prompt": "Stylized Greek taverna interior on a Stockholm stage, blue-washed walls and hanging vines, ABBA-style dancers leaping between candlelit tables as guests raise ouzo glasses, the front row cheering with raised hands in warm amber light."
+    },
+    {
+      "pattern": "D_detail",
+      "prompt": "Close-up of a bartender's hands shaking a cocktail beside a low-lit bar counter, bottles backlit in copper, a DJ silhouetted behind a turntable setup glowing blue further into the room, condensation on the glass catching the warm light."
+    }
+  ]
+}

@@ -1,0 +1,31 @@
+{
+  "category_slug": "family",
+  "events": 56,
+  "jev_q1": 0.65,
+  "jev_q2": 0.59,
+  "jev_q3": 0.45,
+  "description_corpus_size": 52,
+  "model": "template-fallback",
+  "prompts": [
+    {
+      "pattern": "A_wide",
+      "prompt": "Wide establishing shot, a Stockholm family event, multi-generation candid moment, warm natural light, Konsertsalen, no text no logos, real photography."
+    },
+    {
+      "pattern": "B_medium",
+      "prompt": "Medium candid photograph, a Stockholm family event, multi-generation candid moment, warm natural light, Konsertsalen, two or three people in frame, warm natural light, documentary style, no text."
+    },
+    {
+      "pattern": "C_environment",
+      "prompt": "Environmental establishing view, Konsertsalen, atmosphere with subtle hints of coco, warm lighting, no people in focus, real photography."
+    },
+    {
+      "pattern": "D_detail",
+      "prompt": "Close-up detail photograph at Konsertsalen, focusing on coco and disney, shallow depth of field, warm light, no text."
+    },
+    {
+      "pattern": "E_intimate",
+      "prompt": "Intimate close photograph at Konsertsalen, candid human presence in soft focus, hint of disney, emotional warmth, real photography, no text."
+    }
+  ]
+}

@@ -1,0 +1,31 @@
+{
+  "category_slug": "nightlife",
+  "events": 87,
+  "jev_q1": 0.77,
+  "jev_q2": 0.63,
+  "jev_q3": 0.44,
+  "description_corpus_size": 80,
+  "model": "MiniMax-M3",
+  "prompts": [
+    {
+      "pattern": "A_wide",
+      "prompt": "Wide shot of the Golden Hits venue at 왕의 정원 in Stockholm, warm golden stage lights bathing the dining hall, guests at candlelit tables watching performers in glittering attire, karaoke screens glowing on each side, festive helkväll atmosphere captured in natural-event photography."
+    },
+    {
+      "pattern": "B_medium",
+      "prompt": "Medium shot of a smiling couple clinking champagne flutes at 왕의 정원, Golden Hits dinnershow underway behind them, performers mid-song under golden spotlights, nattklubb dancers visible in soft background focus, warm indoor event lighting."
+    },
+    {
+      "pattern": "C_environment",
+      "prompt": "Environmental shot of Tyrol Stockholm's taverna interior, blue-washed walls and string lights, guests dancing between rustic wooden tables, stage with live band, karaoke corner lit in pink neon, lively helkväll crowd energy documented in candid event photography."
+    },
+    {
+      "pattern": "D_detail",
+      "prompt": "Close detail of a crystal glass catching golden stage light, blurred performers singing karaoke behind, confetti on a white tablecloth at 왕의 정원, a half-finished dessert plate reflecting nattklubb ambient glow, intimate event-night photography."
+    },
+    {
+      "pattern": "E_intimate",
+      "prompt": "Intimate close-up of two friends laughing at a lounge booth in Annexet Stockholm, soft golden mood lighting, karaoke performer mid-sway in the warm bokeh background, a helkväll of music captured naturally on candid event photography."
+    }
+  ]
+}

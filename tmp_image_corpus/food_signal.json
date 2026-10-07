@@ -1,0 +1,285 @@
+{
+  "category_slug": "food",
+  "events": 154,
+  "docs": 114,
+  "top_1grams_distinctive": [
+    {
+      "w": "party",
+      "c": 28,
+      "score": 118.76
+    },
+    {
+      "w": "helkväll",
+      "c": 28,
+      "score": 114.45
+    },
+    {
+      "w": "rättersmeny",
+      "c": 23,
+      "score": 112.5
+    },
+    {
+      "w": "golden",
+      "c": 24,
+      "score": 111.33
+    },
+    {
+      "w": "karaoke",
+      "c": 24,
+      "score": 111.33
+    },
+    {
+      "w": "ikonisk",
+      "c": 24,
+      "score": 102.47
+    },
+    {
+      "w": "dinnershow",
+      "c": 25,
+      "score": 100.8
+    },
+    {
+      "w": "underhållning",
+      "c": 25,
+      "score": 99.27
+    },
+    {
+      "w": "nattklubb",
+      "c": 22,
+      "score": 98.38
+    },
+    {
+      "w": "paradisön",
+      "c": 17,
+      "score": 97.68
+    },
+    {
+      "w": "våghalsiga",
+      "c": 17,
+      "score": 96.45
+    },
+    {
+      "w": "luftfärder",
+      "c": 17,
+      "score": 96.45
+    },
+    {
+      "w": "fyrarätters",
+      "c": 17,
+      "score": 96.06
+    },
+    {
+      "w": "pophouse",
+      "c": 17,
+      "score": 95.67
+    },
+    {
+      "w": "taverna",
+      "c": 18,
+      "score": 95.53
+    },
+    {
+      "w": "nikos",
+      "c": 17,
+      "score": 95.3
+    },
+    {
+      "w": "skopelos",
+      "c": 17,
+      "score": 94.93
+    },
+    {
+      "w": "ulvaeus",
+      "c": 17,
+      "score": 94.93
+    },
+    {
+      "w": "medelhavsmeny",
+      "c": 17,
+      "score": 94.58
+    },
+    {
+      "w": "tyrol",
+      "c": 18,
+      "score": 93.09
+    },
+    {
+      "w": "hits",
+      "c": 26,
+      "score": 92.33
+    },
+    {
+      "w": "grekiska",
+      "c": 17,
+      "score": 92.26
+    },
+    {
+      "w": "välkomstouzo",
+      "c": 16,
+      "score": 90.77
+    },
+    {
+      "w": "dansanta",
+      "c": 16,
+      "score": 88.36
+    },
+    {
+      "w": "vinterträdgården",
+      "c": 13,
+      "score": 88.34
+    },
+    {
+      "w": "inkluderar",
+      "c": 24,
+      "score": 87.62
+    },
+    {
+      "w": "erbjuder",
+      "c": 28,
+      "score": 82.77
+    },
+    {
+      "w": "servitörer",
+      "c": 16,
+      "score": 81.87
+    },
+    {
+      "w": "abbas",
+      "c": 15,
+      "score": 79.37
+    },
+    {
+      "w": "julbord",
+      "c": 14,
+      "score": 79.1
+    }
+  ],
+  "top_2grams_distinctive": [
+    {
+      "w": "ikonisk underhållning",
+      "c": 24,
+      "score": 114.06
+    },
+    {
+      "w": "hits dinnershow",
+      "c": 24,
+      "score": 113.62
+    },
+    {
+      "w": "golden hits",
+      "c": 24,
+      "score": 113.4
+    },
+    {
+      "w": "nattklubb karaoke",
+      "c": 22,
+      "score": 105.38
+    },
+    {
+      "w": "grekiska paradisön",
+      "c": 17,
+      "score": 97.68
+    },
+    {
+      "w": "paradisön skopelos",
+      "c": 17,
+      "score": 97.68
+    },
+    {
+      "w": "våghalsiga luftfärder",
+      "c": 17,
+      "score": 96.45
+    },
+    {
+      "w": "taverna grekiska",
+      "c": 17,
+      "score": 96.06
+    },
+    {
+      "w": "fyrarätters medelhavsmeny",
+      "c": 17,
+      "score": 96.06
+    },
+    {
+      "w": "nikos taverna",
+      "c": 17,
+      "score": 95.67
+    },
+    {
+      "w": "ulvaeus pophouse",
+      "c": 17,
+      "score": 95.67
+    },
+    {
+      "w": "björn ulvaeus",
+      "c": 17,
+      "score": 94.93
+    },
+    {
+      "w": "dans våghalsiga",
+      "c": 16,
+      "score": 91.93
+    },
+    {
+      "w": "dansanta servitörer",
+      "c": 16,
+      "score": 91.54
+    },
+    {
+      "w": "sång dans",
+      "c": 18,
+      "score": 89.03
+    },
+    {
+      "w": "julbord vinterträdgården",
+      "c": 13,
+      "score": 88.34
+    },
+    {
+      "w": "vinterträdgården 2026",
+      "c": 13,
+      "score": 88.34
+    },
+    {
+      "w": "ett julbord",
+      "c": 14,
+      "score": 87.02
+    },
+    {
+      "w": "luftfärder dansanta",
+      "c": 15,
+      "score": 86.95
+    },
+    {
+      "w": "abbas låtar",
+      "c": 15,
+      "score": 86.56
+    },
+    {
+      "w": "mia party",
+      "c": 18,
+      "score": 85.05
+    },
+    {
+      "w": "underhållning nattklubb",
+      "c": 16,
+      "score": 83.68
+    },
+    {
+      "w": "vinterträdgården julbord",
+      "c": 12,
+      "score": 82.43
+    },
+    {
+      "w": "välkomstouzo fyrarätters",
+      "c": 14,
+      "score": 81.16
+    },
+    {
+      "w": "mamma mia",
+      "c": 18,
+      "score": 79.63
+    }
+  ],
+  "note": "score = cat_count * log(N / global_count). Higher = more distinctive for this category."
+}

@@ -1,0 +1,285 @@
+{
+  "category_slug": "nightlife",
+  "events": 87,
+  "docs": 80,
+  "top_1grams_distinctive": [
+    {
+      "w": "karaoke",
+      "c": 28,
+      "score": 129.88
+    },
+    {
+      "w": "golden",
+      "c": 27,
+      "score": 125.25
+    },
+    {
+      "w": "nattklubb",
+      "c": 28,
+      "score": 125.21
+    },
+    {
+      "w": "helkväll",
+      "c": 29,
+      "score": 118.54
+    },
+    {
+      "w": "ikonisk",
+      "c": 27,
+      "score": 115.28
+    },
+    {
+      "w": "underhållning",
+      "c": 28,
+      "score": 111.18
+    },
+    {
+      "w": "dinnershow",
+      "c": 27,
+      "score": 108.86
+    },
+    {
+      "w": "rättersmeny",
+      "c": 21,
+      "score": 102.72
+    },
+    {
+      "w": "hits",
+      "c": 28,
+      "score": 99.43
+    },
+    {
+      "w": "party",
+      "c": 19,
+      "score": 80.59
+    },
+    {
+      "w": "dansgolv",
+      "c": 12,
+      "score": 73.23
+    },
+    {
+      "w": "inkluderar",
+      "c": 20,
+      "score": 73.01
+    },
+    {
+      "w": "dans",
+      "c": 18,
+      "score": 70.36
+    },
+    {
+      "w": "tyrol",
+      "c": 11,
+      "score": 56.89
+    },
+    {
+      "w": "pophouse",
+      "c": 10,
+      "score": 56.28
+    },
+    {
+      "w": "erbjuder",
+      "c": 19,
+      "score": 56.16
+    },
+    {
+      "w": "nikos",
+      "c": 10,
+      "score": 56.06
+    },
+    {
+      "w": "skopelos",
+      "c": 10,
+      "score": 55.84
+    },
+    {
+      "w": "ulvaeus",
+      "c": 10,
+      "score": 55.84
+    },
+    {
+      "w": "medelhavsmeny",
+      "c": 10,
+      "score": 55.63
+    },
+    {
+      "w": "festen",
+      "c": 11,
+      "score": 55.58
+    },
+    {
+      "w": "grekiska",
+      "c": 10,
+      "score": 54.27
+    },
+    {
+      "w": "taverna",
+      "c": 10,
+      "score": 53.07
+    },
+    {
+      "w": "välkomstouzo",
+      "c": 9,
+      "score": 51.06
+    },
+    {
+      "w": "fyrarätters",
+      "c": 9,
+      "score": 50.85
+    },
+    {
+      "w": "fortsätter",
+      "c": 13,
+      "score": 47.5
+    },
+    {
+      "w": "mamma",
+      "c": 11,
+      "score": 46.42
+    },
+    {
+      "w": "björn",
+      "c": 10,
+      "score": 45.9
+    },
+    {
+      "w": "våghalsiga",
+      "c": 8,
+      "score": 45.39
+    },
+    {
+      "w": "luftfärder",
+      "c": 8,
+      "score": 45.39
+    }
+  ],
+  "top_2grams_distinctive": [
+    {
+      "w": "nattklubb karaoke",
+      "c": 27,
+      "score": 129.33
+    },
+    {
+      "w": "ikonisk underhållning",
+      "c": 27,
+      "score": 128.31
+    },
+    {
+      "w": "hits dinnershow",
+      "c": 27,
+      "score": 127.82
+    },
+    {
+      "w": "golden hits",
+      "c": 27,
+      "score": 127.57
+    },
+    {
+      "w": "underhållning nattklubb",
+      "c": 16,
+      "score": 83.68
+    },
+    {
+      "w": "rättersmeny ikonisk",
+      "c": 15,
+      "score": 80.35
+    },
+    {
+      "w": "dinnershow golden",
+      "c": 12,
+      "score": 68.36
+    },
+    {
+      "w": "erbjuder helkväll",
+      "c": 12,
+      "score": 65.57
+    },
+    {
+      "w": "dinnershow helkväll",
+      "c": 11,
+      "score": 60.75
+    },
+    {
+      "w": "nikos taverna",
+      "c": 10,
+      "score": 56.28
+    },
+    {
+      "w": "ulvaeus pophouse",
+      "c": 10,
+      "score": 56.28
+    },
+    {
+      "w": "helkväll rättersmeny",
+      "c": 10,
+      "score": 55.84
+    },
+    {
+      "w": "björn ulvaeus",
+      "c": 10,
+      "score": 55.84
+    },
+    {
+      "w": "fortsätter nattklubb",
+      "c": 8,
+      "score": 54.36
+    },
+    {
+      "w": "mia party",
+      "c": 11,
+      "score": 51.97
+    },
+    {
+      "w": "dinnershow dinnershow",
+      "c": 11,
+      "score": 51.21
+    },
+    {
+      "w": "taverna grekiska",
+      "c": 9,
+      "score": 50.85
+    },
+    {
+      "w": "fyrarätters medelhavsmeny",
+      "c": 9,
+      "score": 50.85
+    },
+    {
+      "w": "sång dans",
+      "c": 10,
+      "score": 49.46
+    },
+    {
+      "w": "mamma mia",
+      "c": 11,
+      "score": 48.66
+    },
+    {
+      "w": "hits golden",
+      "c": 8,
+      "score": 46.81
+    },
+    {
+      "w": "underhållning golden",
+      "c": 8,
+      "score": 46.38
+    },
+    {
+      "w": "våghalsiga luftfärder",
+      "c": 8,
+      "score": 45.39
+    },
+    {
+      "w": "dinnershow erbjuder",
+      "c": 9,
+      "score": 44.82
+    },
+    {
+      "w": "inkluderar rättersmeny",
+      "c": 7,
+      "score": 43.51
+    }
+  ],
+  "note": "score = cat_count * log(N / global_count). Higher = more distinctive for this category."
+}

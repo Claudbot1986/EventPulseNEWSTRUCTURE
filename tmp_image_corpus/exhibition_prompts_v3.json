@@ -1,0 +1,31 @@
+{
+  "category_slug": "exhibition",
+  "events": 596,
+  "jev_q1": 0.67,
+  "jev_q2": 0.71,
+  "jev_q3": 0.46,
+  "description_corpus_size": 528,
+  "model": "template-fallback",
+  "prompts": [
+    {
+      "pattern": "A_wide",
+      "prompt": "Wide establishing shot, an art gallery interior in Stockholm, soft skylight, paintings and installations, Nationalmuseum, no text no logos, real photography."
+    },
+    {
+      "pattern": "B_medium",
+      "prompt": "Medium candid photograph, an art gallery interior in Stockholm, soft skylight, paintings and installations, Nationalmuseum, two or three people in frame, warm natural light, documentary style, no text."
+    },
+    {
+      "pattern": "C_environment",
+      "prompt": "Environmental establishing view, Nationalmuseum, atmosphere with subtle hints of utställning, warm lighting, no people in focus, real photography."
+    },
+    {
+      "pattern": "D_detail",
+      "prompt": "Close-up detail photograph at Nationalmuseum, focusing on utställning and utställningen, shallow depth of field, warm light, no text."
+    },
+    {
+      "pattern": "E_intimate",
+      "prompt": "Intimate close photograph at Nationalmuseum, candid human presence in soft focus, hint of utställningen, emotional warmth, real photography, no text."
+    }
+  ]
+}

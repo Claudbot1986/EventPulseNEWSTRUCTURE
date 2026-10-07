@@ -1,0 +1,25 @@
+{
+  "category_slug": "kids",
+  "events": 101,
+  "library_now": 0,
+  "approx_images_needed": 2,
+  "model": "minimax/minimax-m3",
+  "prompts": [
+    {
+      "pattern": "A_wide",
+      "prompt": "Wide candid shot inside Kulturhuset Stadsteatern's main hall, a small child reaching up to touch a paper-mache goose prop, soft daylight spilling through tall windows, audience of toddlers seated on colorful cushions at the edge of the stage."
+    },
+    {
+      "pattern": "B_medium",
+      "prompt": "Medium photo of a five-year-old laughing with face paint dots, standing next to an actor in a striped scarf at Kulturhuset Stadsteatern, warm overhead house lights, shallow depth of field blurring the marley floor."
+    },
+    {
+      "pattern": "C_environment",
+      "prompt": "Environmental view of a wooden stage at Dieselverkstaden dressed as a living room, two toddlers crawling under a pastel blanket fort, a parent singing off to the side, natural window light from the converted industrial windows."
+    },
+    {
+      "pattern": "D_detail",
+      "prompt": "Close-up of small hands crumpling red tissue paper to make a paper flower during a craft break at Kulturhuset Stadsteatern, a paper snowdrop resting on the workshop table, gentle afternoon light, the child's painted fingernails slightly out of focus."
+    }
+  ]
+}

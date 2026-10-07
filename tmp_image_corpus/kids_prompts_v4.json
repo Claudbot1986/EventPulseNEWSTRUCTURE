@@ -1,0 +1,31 @@
+{
+  "category_slug": "kids",
+  "events": 101,
+  "jev_q1": 0.39,
+  "jev_q2": 0.6,
+  "jev_q3": 0.44,
+  "description_corpus_size": 87,
+  "model": "MiniMax-M3",
+  "prompts": [
+    {
+      "pattern": "A_wide",
+      "prompt": "Wide documentary shot of a children's forest-themed theatre performance on stage at Teaterverket Svea, young audience members seated on colorful cushions, warm overhead stage lighting, actors in earthy costumes moving among painted tree backdrops, natural grain, 35mm feel."
+    },
+    {
+      "pattern": "B_medium",
+      "prompt": "Medium shot inside a cozy kids' performance space at Dieselverkstaden, a group of parents and toddlers sitting in a circle on the floor, a smiling adult leading a song with gentle hand gestures, soft window daylight spilling across wooden floorboards, candid and warm."
+    },
+    {
+      "pattern": "C_environment",
+      "prompt": "Environmental photo of Kulturhuset Stadsteatern's Unga Klara auditorium before doors open, empty tiered seating in red fabric, small marionette stage props arranged downstage, a few staff members walking along the aisle, natural daylight filtering through high windows, documentary realism."
+    },
+    {
+      "pattern": "D_detail",
+      "prompt": "Close detail shot of a child's small hand reaching toward a hand-painted wooden bird marionette used in a family performance, delicate strings visible, shallow depth of field, soft stage spotlight on the prop, warm tones, natural texture of wood and skin."
+    },
+    {
+      "pattern": "E_intimate",
+      "prompt": "Intimate close-up of a five-year-old child with bright eyes watching a stage show at Teaterverket Svea, mouth slightly open in wonder, warm amber side-light from the stage illuminating the face, background blurred into soft bokeh, tender and natural expression."
+    }
+  ]
+}

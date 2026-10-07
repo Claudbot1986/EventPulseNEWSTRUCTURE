@@ -1,0 +1,26 @@
+{
+  "category_slug": "circus",
+  "events": 35,
+  "library_now": 0,
+  "approx_images_needed": 1,
+  "description_corpus_size": 34,
+  "model": "minimax/minimax-m3",
+  "prompts": [
+    {
+      "pattern": "A_wide",
+      "prompt": "Wide shot of a Stockholm theater stage bathed in cool blue wash, where seven acrobats in pale costumes balance on a towering, unstable-looking pile of crates and planks, live folk musicians visible downstage under dim warm sidelights, audience silhouettes in foreground."
+    },
+    {
+      "pattern": "B_medium",
+      "prompt": "Medium shot of two jugglers in dark knit sweaters mid-performance, catching an oversized dark meteorite-like stone between them on a Kulturhuset Stadsteatern stage, scattered fossil and bone props on a draped table beside them, warm theatrical spots overhead."
+    },
+    {
+      "pattern": "C_environment",
+      "prompt": "View inside a small classic red-and-gold circus tent, a clown in oversized shoes sneaking under the canvas flap while a small child in the front row watches wide-eyed, soft daylight filtering through the tent seams, sawdust ring in soft focus."
+    },
+    {
+      "pattern": "D_detail",
+      "prompt": "Close-up of a magician's weathered hands delicately holding a polished brass apparatus under a single warm spotlight, dark velvet curtain and bokeh of stage rigging behind, intimate boutique-cabinet atmosphere on a small Stockholm stage."
+    }
+  ]
+}

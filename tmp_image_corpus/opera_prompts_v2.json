@@ -1,0 +1,26 @@
+{
+  "category_slug": "opera",
+  "events": 291,
+  "library_now": 0,
+  "approx_images_needed": 3,
+  "description_corpus_size": 124,
+  "model": "minimax/minimax-m3",
+  "prompts": [
+    {
+      "pattern": "A_wide",
+      "prompt": "Wide view inside Berwaldhallen's warm wood-paneled concert hall, a full symphony orchestra and large choir arranged on tiered platforms under amber stage lighting, conductor mid-gesture with audience silhouettes in the foreground."
+    },
+    {
+      "pattern": "B_medium",
+      "prompt": "Medium shot of a female cabaret singer in a black dress under a single warm spotlight at Göta Lejon, microphone raised toward her face, expression intense, soft red velvet curtain dimly lit behind her."
+    },
+    {
+      "pattern": "C_environment",
+      "prompt": "Environmental view through a Stockholm city bus window at dusk, a soprano in a flowing dress sings to seated passengers while suburban Huddinge streets glide past, streetlight mixing with the warm bus interior."
+    },
+    {
+      "pattern": "D_detail",
+      "prompt": "Close-up of a soprano's hands resting on the brass railing of an opera box at Folkoperan, pearl earrings and dark velvet costume softly lit, painted proscenium arch blurred in the background."
+    }
+  ]
+}

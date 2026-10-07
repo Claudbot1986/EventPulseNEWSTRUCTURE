@@ -93,7 +93,9 @@ export function mapAgentEventToRow(event, language) {
   return {
     id: event.id,
     title: decodeHtmlEntities(event.title) || 'Untitled',
-    badge: event.category ? String(event.category).toUpperCase().slice(0, 12) : null,
+    badge: event.is_online
+      ? 'ONLINE'
+      : (event.category ? String(event.category).toUpperCase().slice(0, 12) : null),
     subtitleParts: [
       datePrefix,
       decodeHtmlEntities(event.time) || null,

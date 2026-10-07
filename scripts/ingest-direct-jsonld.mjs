@@ -5,6 +5,10 @@
  * Till skillnad från sitemap-discovery som kräver URL-patterns i sitemap,
  * extraherar denna direkt JSON-LD events från source-filen URL.
  *
+ * T0201.5 (2026-10-06, Steg 3): push till raw_events BullMQ-queue istället
+ * för direkt upsert. Ger normalizer chans att köra categoryKeywords + T0201 +
+ * dedup + venue_id resolution per event.
+ *
  * Användning:
  *   node scripts/ingest-direct-jsonld.mjs                    # alla 196+ sources
  *   node scripts/ingest-direct-jsonld.mjs --slug=dansenshus  # en source
@@ -16,6 +20,8 @@ import { createHash } from 'crypto';
 import { createClient } from '@supabase/supabase-js';
 import { readFileSync, readdirSync } from 'fs';
 import { join } from 'path';
+import { Queue } from 'bullmq';
+import IORedis from 'ioredis';
 import * as cheerio from 'cheerio';
 
 const CONCURRENCY = parseInt(process.env.JSONLD_CONCURRENCY ?? '10', 10);
@@ -23,8 +29,16 @@ const PER_REQUEST_TIMEOUT = 12000;
 
 const SUB = process.env.SUPABASE_URL;
 const SK = process.env.SUPABASE_SERVICE_ROLE_KEY;
+const REDIS_URL = process.env.REDIS_URL || 'redis://localhost:6379';
 if (!SUB || !SK) { console.error('Missing env'); process.exit(2); }
 const supabase = createClient(SUB, SK, { auth: { persistSession: false } });
+
+// T0201.5: BullMQ raw_events-queue. Workern (startWorker.ts) dränerar och
+// processar varje event genom normalizern. Direkt-upsert kringgår all
+// kategori-mappning, dedup och T0201 — något vi fasar ut enligt Steg 3.
+const rawEventsQueue = new Queue('raw_events', {
+  connection: new IORedis(REDIS_URL, { maxRetriesPerRequest: null, enableReadyCheck: false }),
+});
 
 function dedupHash(title, startTime, sourceId) {
   return createHash('sha256').update(`${sourceId}::${title}::${startTime}`).digest('hex');
@@ -83,6 +97,25 @@ function extractEvent(d) {
   const loc = d.location || {};
   const addr = loc.address || {};
   const address = [addr.streetAddress, addr.postalCode, addr.addressLocality].filter(Boolean).join(', ') || null;
+  // T0201.5: extrahera @type för categories-fält (Event→community,
+  // MusicEvent→music, etc). Detta matas till normalizerns canonicalizeCategorySlug
+  // som omvandlar till kanon-slug. Saknas @type → categories=[] →
+  // normalizer faller tillbaka till source-default eller 'community'.
+  const ldType = d['@type'] ?? null;
+  const typeMap = {
+    'MusicEvent': 'music',
+    'TheaterEvent': 'theater',
+    'ComedyEvent': 'standup',
+    'DanceEvent': 'community',
+    'Festival': 'festival',
+    'SportsEvent': 'sport',
+    'ScreeningEvent': 'film',
+    'ExhibitionEvent': 'art-exhibitions',
+    'EducationEvent': 'community',
+    'ChildrensEvent': 'community',
+  };
+  const categories = ldType && typeMap[ldType] ? [typeMap[ldType]] : [];
+
   return {
     name: d.name,
     startDate: d.startDate,
@@ -93,6 +126,7 @@ function extractEvent(d) {
     lat: loc.geo?.latitude != null ? parseFloat(loc.geo.latitude) : null,
     lng: loc.geo?.longitude != null ? parseFloat(loc.geo.longitude) : null,
     description: d.description?.slice(0, 500) || null,
+    categories,
   };
 }
 
@@ -114,59 +148,64 @@ async function processSource(src, sem) {
       return { slug: src.slug, error: 'no future events', fetched: events.length };
     }
 
-    const inserts = future.map((ev) => {
-      // 2026-10-05 — null istället för Sergels-torg-fallback om lat/lng
-      // saknas. Verklig venue-data sparas för backfill-jobb.
+    // T0201.5: Bygg RawEventInput-payloads och push till raw_events-queue.
+    // Workern dränerar kön i 15-min drain-fönstret (startWorker.ts under
+    // supervisor-steget) och kör normalizer per event.
+    const raws = future.map((ev) => {
       const hasCoord = typeof ev.lat === 'number' && ev.lat !== 0
                     && typeof ev.lng === 'number' && ev.lng !== 0;
       const lat = hasCoord ? ev.lat : null;
       const lng = hasCoord ? ev.lng : null;
       return {
-        source: src.slug,
-        title_sv: ev.name,
-        title_en: ev.name,
+        // Required RawEventInput fields:
+        title: ev.name,
+        description: ev.description,
         start_time: ev.startDate,
         end_time: ev.endDate ?? null,
-        location: hasCoord ? `POINT(${lng} ${lat})` : null,
+        venue_name: ev.venue,
+        venue_address: ev.address,
         lat, lng,
-        venue_full_name: ev.venue ?? null,
-        venue_full_address: ev.address ?? null,
-        venue_city: null,
-        venue_lat: lat,
-        venue_lng: lng,
-        venue_url: null,
-        venue_phone: null,
+        categories: ev.categories,
+        is_free: false,  // JSON-LD ger inte pris → false default
+        price_min_sek: null,
+        price_max_sek: null,
         ticket_url: ev.url,
-        description_sv: ev.description,
-        description_en: ev.description,
-        status: 'published', featured: false, view_count: 0,
-        raw_data: { venue: ev.venue, address: ev.address, fetched_via: 'direct-jsonld', fetched_at: new Date().toISOString() },
-        confidence_score: 70,
-        freshness_at: new Date().toISOString(),
-        last_seen_at: new Date().toISOString(),
-        published_at: new Date().toISOString(),
-        image_generation_status: 'pending',
-        image_ai_generated: false,
-        image_ai_optout: false,
-        is_online: false,
-        dedup_hash: dedupHash(ev.name, ev.startDate, src.slug),
+        image_url: null,
+        source: src.slug,
+        source_id: null,  // JSON-LD ger inget externt ID — normalizer dedupar på title+start
+        detected_language: null,
+        raw_payload: {
+          venue: ev.venue,
+          address: ev.address,
+          fetched_via: 'direct-jsonld',
+          fetched_at: new Date().toISOString(),
+        },
       };
     });
 
-    const hashes = inserts.map((r) => r.dedup_hash);
-    const existing = new Set();
-    for (let i = 0; i < hashes.length; i += 500) {
-      const { data: ed } = await supabase.from('events').select('dedup_hash').in('dedup_hash', hashes.slice(i, i + 500));
-      for (const r of ed ?? []) if (r.dedup_hash) existing.add(r.dedup_hash);
-    }
-    const fresh = inserts.filter((r) => !existing.has(r.dedup_hash));
-    const dups = inserts.length - fresh.length;
+    // Pre-dedup mot befintliga events för att inte fylla kön med dubletter
+    // (även om normalizer dedupar, det är onödigt arbete).
+    const existingKeys = new Set();
+    const { data: existingRows } = await supabase
+      .from('events')
+      .select('dedup_hash')
+      .eq('source', src.slug);
+    for (const r of existingRows ?? []) if (r.dedup_hash) existingKeys.add(r.dedup_hash);
 
-    for (let i = 0; i < fresh.length; i += 50) {
-      const { data, error } = await supabase.from('events').upsert(fresh.slice(i, i + 50), { onConflict: 'dedup_hash' }).select('id');
-      if (error) {
-        console.error(`  ${src.slug}: upsert error ${error.message}`);
-        continue;
+    let pageQueued = 0;
+    let pageSkipped = 0;
+    for (let i = 0; i < raws.length; i++) {
+      const r = raws[i];
+      const hash = dedupHash(r.title, r.start_time, src.slug);
+      if (existingKeys.has(hash)) { pageSkipped++; continue; }
+      try {
+        await rawEventsQueue.add(`directjsonld-${hash.slice(0, 16)}`, r, {
+          removeOnComplete: 1000,
+          removeOnFail: 5000,
+        });
+        pageQueued++;
+      } catch (e) {
+        console.error(`  ${src.slug}: queue.add failed for ${r.title}: ${e.message}`);
       }
     }
 
@@ -174,8 +213,8 @@ async function processSource(src, sem) {
       slug: src.slug,
       fetched: events.length,
       future: future.length,
-      persisted: fresh.length,
-      duplicates: dups,
+      persisted: pageQueued,
+      duplicates: pageSkipped,
     };
   } finally {
     sem.release();
@@ -235,4 +274,7 @@ async function main() {
   console.log(`fetched=${totals.fetched} future=${totals.future} persisted=${totals.persisted} duplicates=${totals.duplicates} errors=${totals.errors}`);
 }
 
-main().then(() => process.exit(0)).catch((e) => { console.error('FATAL:', e); process.exit(1); });
+main().then(async () => {
+  await rawEventsQueue.close();
+  process.exit(0);
+}).catch((e) => { console.error('FATAL:', e); process.exit(1); });

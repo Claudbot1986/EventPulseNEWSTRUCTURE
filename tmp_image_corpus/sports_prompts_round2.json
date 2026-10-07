@@ -1,0 +1,110 @@
+{
+  "category_slug": "sports",
+  "jev_q1": 0.78,
+  "jev_q2": 0.66,
+  "model": "MiniMax-M3",
+  "source_set_count": 2,
+  "source_prompts_count": 5,
+  "items": [
+    {
+      "category": "sports",
+      "pattern": "A_wide",
+      "rep": 0,
+      "prompt": "Wide-angle photograph of an ice hockey match at Hovet arena in Stockholm. Djurgården IF players in dark jerseys skate toward the goal during a fast break. Crowd fills the lower bowl beneath bright arena lights reflecting off the glossy ice.",
+      "seed": "0-0",
+      "jev_q1": 0.78,
+      "jev_q2": 0.66,
+      "model": "MiniMax-M3"
+    },
+    {
+      "category": "sports",
+      "pattern": "B_medium",
+      "rep": 0,
+      "prompt": "Medium shot of Djurgården IF dam (women's team) hockey players gathered near the boards at Hovet, tapping gloves after a goal. Their jerseys are saturated blue and white, faces flushed under cool fluorescent arena lighting.",
+      "seed": "0-1",
+      "jev_q1": 0.78,
+      "jev_q2": 0.66,
+      "model": "MiniMax-M3"
+    },
+    {
+      "category": "sports",
+      "pattern": "C_environment",
+      "rep": 0,
+      "prompt": "Environmental photograph of Solvalla Travbana track at midday. Horses and sulkies round the far turn, dust catching natural sunlight, spectators lining the inner rail, vintage cars parked in parkeringen near Bromma visible in the background.",
+      "seed": "0-2",
+      "jev_q1": 0.78,
+      "jev_q2": 0.66,
+      "model": "MiniMax-M3"
+    },
+    {
+      "category": "sports",
+      "pattern": "D_detail",
+      "rep": 0,
+      "prompt": "Close-up detail of a worn hockey puck scratched and scuffed, resting on the scratched ice surface at Hovet arena in Stockholm. A single skate blade tip enters the frame, blade gleaming under the overhead match lighting.",
+      "seed": "0-3",
+      "jev_q1": 0.78,
+      "jev_q2": 0.66,
+      "model": "MiniMax-M3"
+    },
+    {
+      "category": "sports",
+      "pattern": "E_intimate",
+      "rep": 0,
+      "prompt": "Intimate low-angle shot of a harness racehorse trotting past the camera at Solvalla Travbana, jockey in colorful silks leaning forward, warm afternoon sunlight catching the horse's glossy coat, blurred grandstand crowd behind.",
+      "seed": "0-4",
+      "jev_q1": 0.78,
+      "jev_q2": 0.66,
+      "model": "MiniMax-M3"
+    },
+    {
+      "category": "sports",
+      "pattern": "A_wide",
+      "rep": 1,
+      "prompt": "Wide-angle photograph of an ice hockey match at Hovet arena in Stockholm. Djurgården IF players in dark jerseys skate toward the goal during a fast break. Crowd fills the lower bowl beneath bright arena lights reflecting off the glossy ice, during a quiet weekday matinee.",
+      "seed": "1-0",
+      "jev_q1": 0.78,
+      "jev_q2": 0.66,
+      "model": "MiniMax-M3"
+    },
+    {
+      "category": "sports",
+      "pattern": "B_medium",
+      "rep": 1,
+      "prompt": "Medium shot of Djurgården IF dam (women's team) hockey players gathered near the boards at Hovet, tapping gloves after a goal. Their jerseys are saturated blue and white, faces flushed under cool fluorescent arena lighting, on a busy weekend evening.",
+      "seed": "1-1",
+      "jev_q1": 0.78,
+      "jev_q2": 0.66,
+      "model": "MiniMax-M3"
+    },
+    {
+      "category": "sports",
+      "pattern": "C_environment",
+      "rep": 1,
+      "prompt": "Environmental photograph of Solvalla Travbana track at midday. Horses and sulkies round the far turn, dust catching natural sunlight, spectators lining the inner rail, vintage cars parked in parkeringen near Bromma visible in the background, with a hint of golden hour glow.",
+      "seed": "1-2",
+      "jev_q1": 0.78,
+      "jev_q2": 0.66,
+      "model": "MiniMax-M3"
+    },
+    {
+      "category": "sports",
+      "pattern": "D_detail",
+      "rep": 1,
+      "prompt": "Close-up detail of a worn hockey puck scratched and scuffed, resting on the scratched ice surface at Hovet arena in Stockholm. A single skate blade tip enters the frame, blade gleaming under the overhead match lighting, in soft diffused daylight.",
+      "seed": "1-3",
+      "jev_q1": 0.78,
+      "jev_q2": 0.66,
+      "model": "MiniMax-M3"
+    },
+    {
+      "category": "sports",
+      "pattern": "E_intimate",
+      "rep": 1,
+      "prompt": "Intimate low-angle shot of a harness racehorse trotting past the camera at Solvalla Travbana, jockey in colorful silks leaning forward, warm afternoon sunlight catching the horse's glossy coat, blurred grandstand crowd behind, under dramatic cool lighting.",
+      "seed": "1-4",
+      "jev_q1": 0.78,
+      "jev_q2": 0.66,
+      "model": "MiniMax-M3"
+    }
+  ]
+}

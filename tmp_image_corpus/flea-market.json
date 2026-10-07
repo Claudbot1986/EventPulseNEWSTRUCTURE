@@ -1,0 +1,433 @@
+{
+  "category_slug": "flea-market",
+  "events": 28,
+  "library_count": 0,
+  "approx_images_needed": 1,
+  "top_words": [
+    [
+      "sök",
+      63
+    ],
+    [
+      "loppis",
+      51
+    ],
+    [
+      "evenemang",
+      48
+    ],
+    [
+      "2026",
+      41
+    ],
+    [
+      "design",
+      35
+    ],
+    [
+      "ett",
+      30
+    ],
+    [
+      "karlaplan",
+      30
+    ],
+    [
+      "många",
+      27
+    ],
+    [
+      "www",
+      27
+    ],
+    [
+      "gratisistockholm",
+      27
+    ],
+    [
+      "konst",
+      26
+    ],
+    [
+      "marknad",
+      23
+    ],
+    [
+      "oktober",
+      23
+    ],
+    [
+      "festival",
+      22
+    ],
+    [
+      "bakluckeloppis",
+      21
+    ],
+    [
+      "kategori",
+      21
+    ],
+    [
+      "visade",
+      21
+    ],
+    [
+      "konsert",
+      21
+    ],
+    [
+      "scen",
+      21
+    ],
+    [
+      "nattklubb",
+      21
+    ],
+    [
+      "film",
+      21
+    ],
+    [
+      "dans",
+      21
+    ],
+    [
+      "museum",
+      21
+    ],
+    [
+      "poesi",
+      21
+    ],
+    [
+      "litteratur",
+      21
+    ],
+    [
+      "sport",
+      21
+    ],
+    [
+      "motion",
+      21
+    ],
+    [
+      "barn",
+      21
+    ],
+    [
+      "ungdom",
+      21
+    ],
+    [
+      "föreläsning",
+      21
+    ]
+  ],
+  "sample_events": [
+    {
+      "title": "Stor Bakluckeloppis i Kista Galleria",
+      "venue": "Kista Galleria, Östra p-garaget, Hanstavägen, 164 53 Kista"
+    },
+    {
+      "title": "Bakluckeloppis i Liljeholmen",
+      "venue": "Liljeholmstorget Gallerias p-hus, plan 2, Liljeholmen"
+    },
+    {
+      "title": "Bakluckeloppis i Liljeholmen",
+      "venue": "Liljeholmstorget Gallerias p-hus, plan 2, Liljeholmen"
+    },
+    {
+      "title": "Bakluckeloppis i Liljeholmen",
+      "venue": "Liljeholmstorget Gallerias p-hus, plan 2, Liljeholmen"
+    },
+    {
+      "title": "Bakluckeloppis i Hågelbyparken",
+      "venue": "Hågelbyparken, Tumba"
+    }
+  ],
+  "full_corpus": [
+    {
+      "id": "d15260f3-ad6e-4bd9-8593-47909eb1312c",
+      "title_sv": "Stor Bakluckeloppis i Kista Galleria",
+      "title_en": "Stor Bakluckeloppis i Kista Galleria",
+      "desc_sv": "Ett av många gratis evenemang på www.gratisistockholm.nu",
+      "desc_en": "Ett av många gratis evenemang på www.gratisistockholm.nu",
+      "raw": "Ett av många gratis evenemang på www.gratisistockholm.nu",
+      "venue": "Kista Galleria, Östra p-garaget, Hanstavägen, 164 53 Kista",
+      "start": "2026-10-25T09:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "5181eff2-8b6d-42aa-8c2e-2a54475eabb0",
+      "title_sv": "Bakluckeloppis i Liljeholmen",
+      "title_en": "Bakluckeloppis i Liljeholmen",
+      "desc_sv": "Ett av många gratis evenemang på www.gratisistockholm.nu",
+      "desc_en": "Ett av många gratis evenemang på www.gratisistockholm.nu",
+      "raw": "Ett av många gratis evenemang på www.gratisistockholm.nu",
+      "venue": "Liljeholmstorget Gallerias p-hus, plan 2, Liljeholmen",
+      "start": "2026-12-06T09:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "8daebd77-e5bd-46aa-9d4d-ffa8d80a5fba",
+      "title_sv": "Bakluckeloppis i Liljeholmen",
+      "title_en": "Bakluckeloppis i Liljeholmen",
+      "desc_sv": "Ett av många gratis evenemang på www.gratisistockholm.nu",
+      "desc_en": "Ett av många gratis evenemang på www.gratisistockholm.nu",
+      "raw": "Ett av många gratis evenemang på www.gratisistockholm.nu",
+      "venue": "Liljeholmstorget Gallerias p-hus, plan 2, Liljeholmen",
+      "start": "2026-10-18T09:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "de3d648a-5823-423a-b9cf-e07286332739",
+      "title_sv": "Bakluckeloppis i Liljeholmen",
+      "title_en": "Bakluckeloppis i Liljeholmen",
+      "desc_sv": "Ett av många gratis evenemang på www.gratisistockholm.nu",
+      "desc_en": "Ett av många gratis evenemang på www.gratisistockholm.nu",
+      "raw": "Ett av många gratis evenemang på www.gratisistockholm.nu",
+      "venue": "Liljeholmstorget Gallerias p-hus, plan 2, Liljeholmen",
+      "start": "2026-11-15T09:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "2d83327f-551b-4d60-908d-ff3f234b1f2f",
+      "title_sv": "Bakluckeloppis i Hågelbyparken",
+      "title_en": "Bakluckeloppis i Hågelbyparken",
+      "desc_sv": "SÖK PÅ KATEGORI 20 mest visade Konsert Scen Nattklubb Film Dans Museum Festival Konst/Design Poesi/Litteratur Sport/Motion Barn/Ungdom Marknad/Loppis Föreläsning/Kurs Kropp/Själ Övrigt SÖK PÅ RUBRIK SÖK I KALENDER «oktober 2026» måntisonstorfrelörsön2829301234567891011121314151617181920212223242526272829303112345678 GRATIS EVENEMANG I STOCKHOLM Bakluckeloppis i Hågelbyparken (131386) Bakluckeloppi",
+      "desc_en": "SÖK PÅ KATEGORI 20 mest visade Konsert Scen Nattklubb Film Dans Museum Festival Konst/Design Poesi/Litteratur Sport/Motion Barn/Ungdom Marknad/Loppis Föreläsning/Kurs Kropp/Själ Övrigt SÖK PÅ RUBRIK SÖK I KALENDER «oktober 2026» måntisonstorfrelörsön2829301234567891011121314151617181920212223242526272829303112345678 GRATIS EVENEMANG I STOCKHOLM Bakluckeloppis i Hågelbyparken (131386) Bakluckeloppi",
+      "raw": "SÖK PÅ KATEGORI 20 mest visade Konsert Scen Nattklubb Film Dans Museum Festival Konst/Design Poesi/Litteratur Sport/Motion Barn/Ungdom Marknad/Loppis Föreläsning/Kurs Kropp/Själ Övrigt SÖK PÅ RUBRIK SÖK I KALENDER «oktober 2026» måntisonstorfrelörsön2829301234567891011121314151617181920212223242526272829303112345678 GRATIS EVENEMANG I STOCKHOLM Bakluckeloppis i Hågelbyparken (131386) Bakluckeloppi",
+      "venue": "Hågelbyparken, Tumba",
+      "start": "2026-10-10T09:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "6f3763b6-4247-4d96-a358-9584c972d020",
+      "title_sv": "Antikmässa Bäckaskog Slott 2027",
+      "title_en": "Antikmässa Bäckaskog Slott 2027",
+      "venue": "왕의 정원",
+      "start": "2027-04-24T00:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "38e64fad-4069-49af-8bed-1ef87073e2d8",
+      "title_sv": "Skivmässa i Förslöv 2026",
+      "title_en": "Skivmässa i Förslöv 2026",
+      "venue": "왕의 정원",
+      "start": "2026-11-07T11:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "2a14ff24-29ec-4be9-8de6-b3877250a4a3",
+      "title_sv": "Skivmässa Hultsfred Kulturhuset Valhall 2026",
+      "title_en": "Skivmässa Hultsfred Kulturhuset Valhall 2026",
+      "venue": "Kulturhuset",
+      "start": "2026-11-07T11:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "eb9ddae9-e168-4bcd-b3ff-8d050a55cdda",
+      "title_sv": "Loppis på Karlaplan",
+      "title_en": "Loppis på Karlaplan",
+      "desc_sv": "SÖK PÅ KATEGORI 20 mest visade Konsert Scen Nattklubb Film Dans Museum Festival Konst/Design Poesi/Litteratur Sport/Motion Barn/Ungdom Marknad/Loppis Föreläsning/Kurs Kropp/Själ Övrigt SÖK PÅ RUBRIK SÖK I KALENDER «oktober 2026» måntisonstorfrelörsön2829301234567891011121314151617181920212223242526272829303112345678 GRATIS EVENEMANG I STOCKHOLM Loppis på Karlaplan (131020) Klassiska loppisen på Ka",
+      "desc_en": "SÖK PÅ KATEGORI 20 mest visade Konsert Scen Nattklubb Film Dans Museum Festival Konst/Design Poesi/Litteratur Sport/Motion Barn/Ungdom Marknad/Loppis Föreläsning/Kurs Kropp/Själ Övrigt SÖK PÅ RUBRIK SÖK I KALENDER «oktober 2026» måntisonstorfrelörsön2829301234567891011121314151617181920212223242526272829303112345678 GRATIS EVENEMANG I STOCKHOLM Loppis på Karlaplan (131020) Klassiska loppisen på Ka",
+      "raw": "SÖK PÅ KATEGORI 20 mest visade Konsert Scen Nattklubb Film Dans Museum Festival Konst/Design Poesi/Litteratur Sport/Motion Barn/Ungdom Marknad/Loppis Föreläsning/Kurs Kropp/Själ Övrigt SÖK PÅ RUBRIK SÖK I KALENDER «oktober 2026» måntisonstorfrelörsön2829301234567891011121314151617181920212223242526272829303112345678 GRATIS EVENEMANG I STOCKHOLM Loppis på Karlaplan (131020) Klassiska loppisen på Ka",
+      "venue": "Karlaplan, Östermalm",
+      "start": "2026-10-24T09:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "e06bc94c-e76c-4b95-88d4-60146b140856",
+      "title_sv": "Nya Antikmässan",
+      "title_en": "Nya Antikmässan",
+      "desc_sv": "Nya Antikmässan är Nordens största antikmarknad där du som besökare kan handla antikviteter, vintage, modern design, konst, kuriosa och byggnadsvård från våra utställare och ta med dig dina fynd hem direkt! Ta del av kunskap och inspiration från olika tidsepoker. Vi har även ett fullspäckat scenprogram som ger dig möjlighet att lyssna till och lära dig av författare, konstvetare och kända profiler",
+      "desc_en": "Nya Antikmässan är Nordens största antikmarknad där du som besökare kan handla antikviteter, vintage, modern design, konst, kuriosa och byggnadsvård från våra utställare och ta med dig dina fynd hem direkt! Ta del av kunskap och inspiration från olika tidsepoker. Vi har även ett fullspäckat scenprogram som ger dig möjlighet att lyssna till och lära dig av författare, konstvetare och kända profiler",
+      "raw": "Nya Antikmässan är Nordens största antikmarknad där du som besökare kan handla antikviteter, vintage, modern design, konst, kuriosa och byggnadsvård från våra utställare och ta med dig dina fynd hem direkt! Ta del av kunskap och inspiration från olika tidsepoker. Vi har även ett fullspäckat scenprogram som ger dig möjlighet att lyssna till och lära dig av författare, konstvetare och kända profiler",
+      "venue": "Stockholmsmässan",
+      "start": "2027-03-11T00:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "6182b8a4-7ac9-4949-a891-667303295262",
+      "title_sv": "Loppis på Karlaplan",
+      "title_en": "Loppis på Karlaplan",
+      "desc_sv": "SÖK PÅ KATEGORI 20 mest visade Konsert Scen Nattklubb Film Dans Museum Festival Konst/Design Poesi/Litteratur Sport/Motion Barn/Ungdom Marknad/Loppis Föreläsning/Kurs Kropp/Själ Övrigt SÖK PÅ RUBRIK SÖK I KALENDER «oktober 2026» måntisonstorfrelörsön2829301234567891011121314151617181920212223242526272829303112345678 GRATIS EVENEMANG I STOCKHOLM Loppis på Karlaplan (131021) Klassiska loppisen på Ka",
+      "desc_en": "SÖK PÅ KATEGORI 20 mest visade Konsert Scen Nattklubb Film Dans Museum Festival Konst/Design Poesi/Litteratur Sport/Motion Barn/Ungdom Marknad/Loppis Föreläsning/Kurs Kropp/Själ Övrigt SÖK PÅ RUBRIK SÖK I KALENDER «oktober 2026» måntisonstorfrelörsön2829301234567891011121314151617181920212223242526272829303112345678 GRATIS EVENEMANG I STOCKHOLM Loppis på Karlaplan (131021) Klassiska loppisen på Ka",
+      "raw": "SÖK PÅ KATEGORI 20 mest visade Konsert Scen Nattklubb Film Dans Museum Festival Konst/Design Poesi/Litteratur Sport/Motion Barn/Ungdom Marknad/Loppis Föreläsning/Kurs Kropp/Själ Övrigt SÖK PÅ RUBRIK SÖK I KALENDER «oktober 2026» måntisonstorfrelörsön2829301234567891011121314151617181920212223242526272829303112345678 GRATIS EVENEMANG I STOCKHOLM Loppis på Karlaplan (131021) Klassiska loppisen på Ka",
+      "venue": "Karlaplan, Östermalm",
+      "start": "2026-10-31T09:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "f6f6fc67-d044-4027-8138-f6b503b48bd3",
+      "title_sv": "Loppis på Karlaplan",
+      "title_en": "Loppis på Karlaplan",
+      "desc_sv": "SÖK PÅ KATEGORI 20 mest visade Konsert Scen Nattklubb Film Dans Museum Festival Konst/Design Poesi/Litteratur Sport/Motion Barn/Ungdom Marknad/Loppis Föreläsning/Kurs Kropp/Själ Övrigt SÖK PÅ RUBRIK SÖK I KALENDER «oktober 2026» måntisonstorfrelörsön2829301234567891011121314151617181920212223242526272829303112345678 GRATIS EVENEMANG I STOCKHOLM Loppis på Karlaplan (131018) Klassiska loppisen på Ka",
+      "desc_en": "SÖK PÅ KATEGORI 20 mest visade Konsert Scen Nattklubb Film Dans Museum Festival Konst/Design Poesi/Litteratur Sport/Motion Barn/Ungdom Marknad/Loppis Föreläsning/Kurs Kropp/Själ Övrigt SÖK PÅ RUBRIK SÖK I KALENDER «oktober 2026» måntisonstorfrelörsön2829301234567891011121314151617181920212223242526272829303112345678 GRATIS EVENEMANG I STOCKHOLM Loppis på Karlaplan (131018) Klassiska loppisen på Ka",
+      "raw": "SÖK PÅ KATEGORI 20 mest visade Konsert Scen Nattklubb Film Dans Museum Festival Konst/Design Poesi/Litteratur Sport/Motion Barn/Ungdom Marknad/Loppis Föreläsning/Kurs Kropp/Själ Övrigt SÖK PÅ RUBRIK SÖK I KALENDER «oktober 2026» måntisonstorfrelörsön2829301234567891011121314151617181920212223242526272829303112345678 GRATIS EVENEMANG I STOCKHOLM Loppis på Karlaplan (131018) Klassiska loppisen på Ka",
+      "venue": "Karlaplan, Östermalm",
+      "start": "2026-10-10T09:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "7f1389ec-81f5-4997-9e02-70503b0b2896",
+      "title_sv": "Loppis på Karlaplan",
+      "title_en": "Loppis på Karlaplan",
+      "desc_sv": "SÖK PÅ KATEGORI 20 mest visade Konsert Scen Nattklubb Film Dans Museum Festival Konst/Design Poesi/Litteratur Sport/Motion Barn/Ungdom Marknad/Loppis Föreläsning/Kurs Kropp/Själ Övrigt SÖK PÅ RUBRIK SÖK I KALENDER «oktober 2026» måntisonstorfrelörsön2829301234567891011121314151617181920212223242526272829303112345678 GRATIS EVENEMANG I STOCKHOLM Loppis på Karlaplan (131019) Klassiska loppisen på Ka",
+      "desc_en": "SÖK PÅ KATEGORI 20 mest visade Konsert Scen Nattklubb Film Dans Museum Festival Konst/Design Poesi/Litteratur Sport/Motion Barn/Ungdom Marknad/Loppis Föreläsning/Kurs Kropp/Själ Övrigt SÖK PÅ RUBRIK SÖK I KALENDER «oktober 2026» måntisonstorfrelörsön2829301234567891011121314151617181920212223242526272829303112345678 GRATIS EVENEMANG I STOCKHOLM Loppis på Karlaplan (131019) Klassiska loppisen på Ka",
+      "raw": "SÖK PÅ KATEGORI 20 mest visade Konsert Scen Nattklubb Film Dans Museum Festival Konst/Design Poesi/Litteratur Sport/Motion Barn/Ungdom Marknad/Loppis Föreläsning/Kurs Kropp/Själ Övrigt SÖK PÅ RUBRIK SÖK I KALENDER «oktober 2026» måntisonstorfrelörsön2829301234567891011121314151617181920212223242526272829303112345678 GRATIS EVENEMANG I STOCKHOLM Loppis på Karlaplan (131019) Klassiska loppisen på Ka",
+      "venue": "Karlaplan, Östermalm",
+      "start": "2026-10-17T09:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "8b8ccbae-9b77-4a15-8d5d-dfd28ee7a3e7",
+      "title_sv": "Loppis på Karlaplan",
+      "title_en": "Loppis på Karlaplan",
+      "desc_sv": "SÖK PÅ KATEGORI 20 mest visade Konsert Scen Nattklubb Film Dans Museum Festival Konst/Design Poesi/Litteratur Sport/Motion Barn/Ungdom Marknad/Loppis Föreläsning/Kurs Kropp/Själ Övrigt SÖK PÅ RUBRIK SÖK I KALENDER «oktober 2026» måntisonstorfrelörsön2829301234567891011121314151617181920212223242526272829303112345678 GRATIS EVENEMANG I STOCKHOLM Loppis på Karlaplan (131022) Klassiska loppisen på Ka",
+      "desc_en": "SÖK PÅ KATEGORI 20 mest visade Konsert Scen Nattklubb Film Dans Museum Festival Konst/Design Poesi/Litteratur Sport/Motion Barn/Ungdom Marknad/Loppis Föreläsning/Kurs Kropp/Själ Övrigt SÖK PÅ RUBRIK SÖK I KALENDER «oktober 2026» måntisonstorfrelörsön2829301234567891011121314151617181920212223242526272829303112345678 GRATIS EVENEMANG I STOCKHOLM Loppis på Karlaplan (131022) Klassiska loppisen på Ka",
+      "raw": "SÖK PÅ KATEGORI 20 mest visade Konsert Scen Nattklubb Film Dans Museum Festival Konst/Design Poesi/Litteratur Sport/Motion Barn/Ungdom Marknad/Loppis Föreläsning/Kurs Kropp/Själ Övrigt SÖK PÅ RUBRIK SÖK I KALENDER «oktober 2026» måntisonstorfrelörsön2829301234567891011121314151617181920212223242526272829303112345678 GRATIS EVENEMANG I STOCKHOLM Loppis på Karlaplan (131022) Klassiska loppisen på Ka",
+      "venue": "Karlaplan, Östermalm",
+      "start": "2026-11-07T09:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "d9e82358-e6e1-4122-a7a8-832d0c267b1d",
+      "title_sv": "Myntmässa Stockholm Hotell Courtyard 2026",
+      "title_en": "Myntmässa Stockholm Hotell Courtyard 2026",
+      "venue": "Courtyard by Marriott Stockholm Kungsholmen",
+      "start": "2026-10-11T00:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "164a334d-92ef-4438-a4b4-056ba37d5771",
+      "title_sv": "Skivmässa Jönköping Kulturhuset 2026",
+      "title_en": "Skivmässa Jönköping Kulturhuset 2026",
+      "venue": "Kulturhuset",
+      "start": "2026-10-11T10:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "001a1804-210d-4dad-84ce-0a8e0cffbbb4",
+      "title_sv": "Kristianstad Skivmässa 2026",
+      "title_en": "Kristianstad Skivmässa 2026",
+      "venue": "Biljardkompaniet",
+      "start": "2026-10-24T11:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "4c0072bc-ba3e-48ed-914d-38eaf53b2c09",
+      "title_sv": "Tullinge Jul marknad 2026",
+      "title_en": "Tullinge Jul marknad 2026",
+      "desc_sv": "Ett av många gratis evenemang på www.gratisistockholm.nu",
+      "desc_en": "Ett av många gratis evenemang på www.gratisistockholm.nu",
+      "raw": "Ett av många gratis evenemang på www.gratisistockholm.nu",
+      "venue": "Tullinge Centrum",
+      "start": "2026-11-28T08:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "c3dbc290-470f-4daf-91c7-5979175bf47e",
+      "title_sv": "Bakluckeloppis i Liljeholmen",
+      "title_en": "Bakluckeloppis i Liljeholmen",
+      "desc_sv": "Ett av många gratis evenemang på www.gratisistockholm.nu",
+      "desc_en": "Ett av många gratis evenemang på www.gratisistockholm.nu",
+      "raw": "Ett av många gratis evenemang på www.gratisistockholm.nu",
+      "venue": "Liljeholmstorget Gallerias p-hus, plan 2, Liljeholmen",
+      "start": "2026-11-01T09:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "7ab55296-d85d-4797-8370-10a75ed634c2",
+      "title_sv": "Skivmässa Flo Flo-Sal Bygdegård 2026",
+      "title_en": "Skivmässa Flo Flo-Sal Bygdegård 2026",
+      "venue": "Sal B",
+      "start": "2026-10-10T11:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "c42f5bfc-8afc-4183-bf72-63ba4b351449",
+      "title_sv": "Grand Antiques, Art & Design",
+      "title_en": "Grand Antiques, Art & Design",
+      "desc_sv": "Grand Antiques, Art & Design är en mässa på Liljevalchs+ i Stockholm.\n\nLiljevalchs salar fylls med antikviteter, konst och design under fyra dagar. Alla utställda objekt är till salu. Utställarna har valt ut sina mest unika och högklassiga föremål exklusivt för mässan. Här presenteras antika smycken, brännförgyllda empire-bronser, skandinavisk design, orientaliska mattor, skulpturer samt modern oc",
+      "desc_en": "Grand Antiques, Art & Design is a fair at Liljevalchs+ in Stockholm.\n\nLiljevalchs' halls will be filled with antiques, art, and design over four days. All displayed objects are for sale. Exhibitors have selected their most unique and high-class items exclusively for the fair. Here, antique jewelry, gilt-bronze Empire bronzes, Scandinavian design, oriental rugs, sculptures, as well as modern and cl",
+      "raw": "Grand Antiques, Art & Design är en mässa på Liljevalchs+ i Stockholm.\n\nLiljevalchs salar fylls med antikviteter, konst och design under fyra dagar. Alla utställda objekt är till salu. Utställarna har valt ut sina mest unika och högklassiga föremål exklusivt för mässan. Här presenteras antika smycken, brännförgyllda empire-bronser, skandinavisk design, orientaliska mattor, skulpturer samt modern oc",
+      "venue": "Liljevalchs+",
+      "start": "2026-10-08T09:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "136bf023-7f00-4295-9c7f-267f2610d483",
+      "title_sv": "Stor Bakluckeloppis i Kista Galleria",
+      "title_en": "Stor Bakluckeloppis i Kista Galleria",
+      "desc_sv": "Ett av många gratis evenemang på www.gratisistockholm.nu",
+      "desc_en": "Ett av många gratis evenemang på www.gratisistockholm.nu",
+      "raw": "Ett av många gratis evenemang på www.gratisistockholm.nu",
+      "venue": "Kista Galleria, Östra p-garaget, Hanstavägen, 164 53 Kista",
+      "start": "2026-11-22T09:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "b9697dee-939c-44fd-a954-9a1813b81b4d",
+      "title_sv": "Stor Bakluckeloppis i Kista Galleria",
+      "title_en": "Stor Bakluckeloppis i Kista Galleria",
+      "desc_sv": "Ett av många gratis evenemang på www.gratisistockholm.nu",
+      "desc_en": "Ett av många gratis evenemang på www.gratisistockholm.nu",
+      "raw": "Ett av många gratis evenemang på www.gratisistockholm.nu",
+      "venue": "Kista Galleria, Östra p-garaget, Hanstavägen, 164 53 Kista",
+      "start": "2026-12-13T09:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "ea1d2fe1-2f80-41e3-80ae-d55a57b90b4b",
+      "title_sv": "Solvalla Bakluckeloppis",
+      "title_en": "Solvalla Bakluckeloppis",
+      "desc_sv": "Ett av många gratis evenemang på www.gratisistockholm.nu",
+      "desc_en": "Ett av många gratis evenemang på www.gratisistockholm.nu",
+      "raw": "Ett av många gratis evenemang på www.gratisistockholm.nu",
+      "venue": "Solvalla Travbana, parkeringen, Bromma",
+      "start": "2026-10-10T22:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "11ce281e-6442-47cd-85b5-9ad36b0d5e2a",
+      "title_sv": "Loppis på Karlaplan",
+      "title_en": "Loppis på Karlaplan",
+      "desc_sv": "SÖK PÅ KATEGORI 20 mest visade Konsert Scen Nattklubb Film Dans Museum Festival Konst/Design Poesi/Litteratur Sport/Motion Barn/Ungdom Marknad/Loppis Föreläsning/Kurs Kropp/Själ Övrigt SÖK PÅ RUBRIK SÖK I KALENDER «oktober 2026» måntisonstorfrelörsön2829301234567891011121314151617181920212223242526272829303112345678 GRATIS EVENEMANG I STOCKHOLM Loppis på Karlaplan (131023) Klassiska loppisen på Ka",
+      "desc_en": "SÖK PÅ KATEGORI 20 mest visade Konsert Scen Nattklubb Film Dans Museum Festival Konst/Design Poesi/Litteratur Sport/Motion Barn/Ungdom Marknad/Loppis Föreläsning/Kurs Kropp/Själ Övrigt SÖK PÅ RUBRIK SÖK I KALENDER «oktober 2026» måntisonstorfrelörsön2829301234567891011121314151617181920212223242526272829303112345678 GRATIS EVENEMANG I STOCKHOLM Loppis på Karlaplan (131023) Klassiska loppisen på Ka",
+      "raw": "SÖK PÅ KATEGORI 20 mest visade Konsert Scen Nattklubb Film Dans Museum Festival Konst/Design Poesi/Litteratur Sport/Motion Barn/Ungdom Marknad/Loppis Föreläsning/Kurs Kropp/Själ Övrigt SÖK PÅ RUBRIK SÖK I KALENDER «oktober 2026» måntisonstorfrelörsön2829301234567891011121314151617181920212223242526272829303112345678 GRATIS EVENEMANG I STOCKHOLM Loppis på Karlaplan (131023) Klassiska loppisen på Ka",
+      "venue": "Karlaplan, Östermalm",
+      "start": "2026-11-14T09:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "91a3d14e-51f9-4fd3-886c-713f36e25846",
+      "title_sv": "Samlarkortfestivalen Stockholm 24-25 oktober 2026",
+      "title_en": "Samlarkortfestivalen Stockholm 24-25 oktober 2026",
+      "desc_sv": "Samlarkortfestivalen är en samlarkortsfestival på Stockholm Waterfront i Stockholm.\n\nSamlarkortfestivalen är Sveriges event för samlarkort i alla dess former, med fokus på Pokémon, YU-GI-OH, Magic The Gathering, Hockeykort, Disney Lorcana, Fotbollskort, Star Wars och OnePiece. Här finns butiker och privatpersoner som säljer kort. Säljare och besökare från hela landet deltar. Det anordnas även akti",
+      "desc_en": "Samlarkortfestivalen Stockholm is a collector card festival at Stockholm Waterfront in Stockholm.\n\nSamlarkortfestivalen is Sweden's event for collector cards of all forms, focusing on Pokémon, YU-GI-OH, Magic The Gathering, Hockey cards, Disney Lorcana, Football cards, Star Wars, and OnePiece. Both stores and private sellers offer cards here. Sellers and visitors from across the country are expect",
+      "raw": "Samlarkortfestivalen är en samlarkortsfestival på Stockholm Waterfront i Stockholm.\n\nSamlarkortfestivalen är Sveriges event för samlarkort i alla dess former, med fokus på Pokémon, YU-GI-OH, Magic The Gathering, Hockeykort, Disney Lorcana, Fotbollskort, Star Wars och OnePiece. Här finns butiker och privatpersoner som säljer kort. Säljare och besökare från hela landet deltar. Det anordnas även akti",
+      "venue": "Stockholm Waterfront",
+      "start": "2026-10-24T08:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "ba2dfd7d-03d1-4a9c-9d30-bf6ead12a2e6",
+      "title_sv": "Skivmässan i Linköping 2026",
+      "title_en": "Skivmässan i Linköping 2026",
+      "venue": "왕의 정원",
+      "start": "2026-10-24T10:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "7b86a7b8-29d2-4e1b-b077-7d6d7f803597",
+      "title_sv": "Vinyllördag med Skivmässa i Gävle 2026",
+      "title_en": "Vinyllördag med Skivmässa i Gävle 2026",
+      "venue": "Grand Hotel",
+      "start": "2026-11-07T11:00:00+00:00",
+      "has_img": true
+    }
+  ]
+}

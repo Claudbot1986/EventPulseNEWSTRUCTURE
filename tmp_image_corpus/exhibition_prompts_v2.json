@@ -1,0 +1,26 @@
+{
+  "category_slug": "exhibition",
+  "events": 596,
+  "library_now": 0,
+  "approx_images_needed": 6,
+  "description_corpus_size": 528,
+  "model": "minimax/minimax-m3",
+  "prompts": [
+    {
+      "pattern": "A_wide",
+      "prompt": "Wide shot of Kulturhuset Stadsteatern's Galleri 5 in Stockholm, visitors moving through a softly lit contemporary exhibition of textile sculptures, hanging woven forms, and painted panels. Overhead spotlights cast warm pools on the floor, natural daylight filtering from tall windows."
+    },
+    {
+      "pattern": "B_medium",
+      "prompt": "Medium photograph of a single museum-goer standing close to a large mixed-media painting in a white-cube gallery, observing it from a slight angle. Soft directional gallery lighting picks out the textured brushwork, while other framed works recede along the wall behind."
+    },
+    {
+      "pattern": "C_environment",
+      "prompt": "Environmental view inside the Nationalmuseum in Stockholm, high-ceilinged hall with natural light from tall windows, visitors walking between canvases of Nordic modernist paintings. Pale marble floors, muted parquet, and quiet crowd in a reverent atmosphere."
+    },
+    {
+      "pattern": "D_detail",
+      "prompt": "Close detail shot of a dark-toned oil painting's surface, showing a fragmented figurative composition with a glowing spatial light installation bleeding into the background. A visitor's shoulder and clasped hands appear softly out of focus at the frame's edge."
+    }
+  ]
+}

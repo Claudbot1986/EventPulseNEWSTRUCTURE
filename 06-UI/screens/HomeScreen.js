@@ -85,9 +85,20 @@ function toSenasteCard(event, daysShort) {
   return {
     id: event.id,
     title: pickTitle(event),
-    subtitle: formatSenasteSubtitle(event, daysShort),
+    subtitle: withOnlinePrefix(event, formatSenasteSubtitle(event, daysShort)),
     imageUrl: uri,
   };
+}
+
+// 2026-10-06 — Online-events prefixas med "ONLINE" i alla subtitle-rader.
+// Stilen är en kort versal etikett ("ONLINE · MUSIK") så det sticker ut i
+// carousel-tiles utan att ta en helt ny badge-rad. Strikt === true
+// skyddar mot null/undefined. Online-events filtreras redan bort från
+// kart-pinnar (MapScreen.js), men listas fortfarande som vanligt i Hem.
+function withOnlinePrefix(event, baseText) {
+  if (!event || event.is_online !== true) return baseText;
+  const sep = baseText ? ' · ' : '';
+  return `ONLINE${sep}${baseText}`;
 }
 
 function toCarouselCard(event, subtitle) {
@@ -95,7 +106,7 @@ function toCarouselCard(event, subtitle) {
   return {
     id: event.id,
     title: pickTitle(event),
-    subtitle,
+    subtitle: withOnlinePrefix(event, subtitle),
     imageUrl: uri,
   };
 }

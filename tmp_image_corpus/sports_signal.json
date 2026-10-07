@@ -1,0 +1,285 @@
+{
+  "category_slug": "sports",
+  "events": 493,
+  "docs": 158,
+  "top_1grams_distinctive": [
+    {
+      "w": "match",
+      "c": 30,
+      "score": 175.53
+    },
+    {
+      "w": "djurgården",
+      "c": 28,
+      "score": 168.93
+    },
+    {
+      "w": "dam",
+      "c": 25,
+      "score": 153.47
+    },
+    {
+      "w": "hockey",
+      "c": 24,
+      "score": 148.23
+    },
+    {
+      "w": "hovet",
+      "c": 23,
+      "score": 133.33
+    },
+    {
+      "w": "matchen",
+      "c": 21,
+      "score": 133.21
+    },
+    {
+      "w": "solvalla",
+      "c": 20,
+      "score": 126.87
+    },
+    {
+      "w": "atg",
+      "c": 16,
+      "score": 105.62
+    },
+    {
+      "w": "synkas",
+      "c": 16,
+      "score": 105.62
+    },
+    {
+      "w": "svenskalag",
+      "c": 16,
+      "score": 105.62
+    },
+    {
+      "w": "hämtad",
+      "c": 16,
+      "score": 102.24
+    },
+    {
+      "w": "aikinnebandy",
+      "c": 15,
+      "score": 99.93
+    },
+    {
+      "w": "huvudspelet",
+      "c": 14,
+      "score": 94.17
+    },
+    {
+      "w": "2027",
+      "c": 25,
+      "score": 92.94
+    },
+    {
+      "w": "samling",
+      "c": 16,
+      "score": 84.16
+    },
+    {
+      "w": "hockeymatch",
+      "c": 11,
+      "score": 76.45
+    },
+    {
+      "w": "lagen",
+      "c": 11,
+      "score": 74.75
+    },
+    {
+      "w": "onsdagsnöjet",
+      "c": 10,
+      "score": 70.37
+    },
+    {
+      "w": "v86",
+      "c": 10,
+      "score": 70.37
+    },
+    {
+      "w": "www",
+      "c": 16,
+      "score": 68.13
+    },
+    {
+      "w": "aik",
+      "c": 9,
+      "score": 64.19
+    },
+    {
+      "w": "detta",
+      "c": 26,
+      "score": 64.03
+    },
+    {
+      "w": "avgörs",
+      "c": 9,
+      "score": 63.33
+    },
+    {
+      "w": "denna",
+      "c": 29,
+      "score": 61.77
+    },
+    {
+      "w": "äger",
+      "c": 21,
+      "score": 60.95
+    },
+    {
+      "w": "arena",
+      "c": 16,
+      "score": 60.68
+    },
+    {
+      "w": "february",
+      "c": 10,
+      "score": 58.51
+    },
+    {
+      "w": "sunday",
+      "c": 11,
+      "score": 58.38
+    },
+    {
+      "w": "hammarby",
+      "c": 8,
+      "score": 57.9
+    },
+    {
+      "w": "2026",
+      "c": 26,
+      "score": 57.85
+    }
+  ],
+  "top_2grams_distinctive": [
+    {
+      "w": "matchen hämtad",
+      "c": 16,
+      "score": 105.62
+    },
+    {
+      "w": "hämtad synkas",
+      "c": 16,
+      "score": 105.62
+    },
+    {
+      "w": "synkas svenskalag",
+      "c": 16,
+      "score": 105.62
+    },
+    {
+      "w": "svenskalag www",
+      "c": 16,
+      "score": 105.62
+    },
+    {
+      "w": "www svenskalag",
+      "c": 16,
+      "score": 105.62
+    },
+    {
+      "w": "djurgården hockey",
+      "c": 16,
+      "score": 105.62
+    },
+    {
+      "w": "samling matchen",
+      "c": 15,
+      "score": 99.93
+    },
+    {
+      "w": "svenskalag aikinnebandy",
+      "c": 15,
+      "score": 99.93
+    },
+    {
+      "w": "aikinnebandy dam",
+      "c": 15,
+      "score": 99.93
+    },
+    {
+      "w": "huvudspelet atg",
+      "c": 11,
+      "score": 76.45
+    },
+    {
+      "w": "hockeymatch hovet",
+      "c": 11,
+      "score": 76.45
+    },
+    {
+      "w": "denna match",
+      "c": 10,
+      "score": 70.37
+    },
+    {
+      "w": "hovet denna",
+      "c": 9,
+      "score": 64.19
+    },
+    {
+      "w": "dam djurgården",
+      "c": 9,
+      "score": 64.19
+    },
+    {
+      "w": "ser djurgården",
+      "c": 9,
+      "score": 64.19
+    },
+    {
+      "w": "äger rum",
+      "c": 21,
+      "score": 61.35
+    },
+    {
+      "w": "february 2027",
+      "c": 10,
+      "score": 60.01
+    },
+    {
+      "w": "match hovet",
+      "c": 8,
+      "score": 57.9
+    },
+    {
+      "w": "rum hovet",
+      "c": 8,
+      "score": 57.9
+    },
+    {
+      "w": "möte mellan",
+      "c": 9,
+      "score": 54
+    },
+    {
+      "w": "v86 avgörs",
+      "c": 7,
+      "score": 51.49
+    },
+    {
+      "w": "match ser",
+      "c": 7,
+      "score": 51.49
+    },
+    {
+      "w": "mellan två",
+      "c": 8,
+      "score": 47.5
+    },
+    {
+      "w": "avgörs tillsammans",
+      "c": 6,
+      "score": 44.93
+    },
+    {
+      "w": "hovet djurgården",
+      "c": 6,
+      "score": 44.93
+    }
+  ],
+  "note": "score = cat_count * log(N / global_count). Higher = more distinctive for this category."
+}

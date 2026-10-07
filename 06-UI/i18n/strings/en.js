@@ -685,7 +685,7 @@ export default {
 
   // ─── Terms of service sections (key order matches LegalModal.js buildSections)
   'legal.terms.title': 'Terms of Service',
-  'legal.terms.lastUpdated': '2026-10-04 (draft v0.1)',
+  'legal.terms.lastUpdated': '2026-10-05 (draft v0.2)',
 
   'legal.terms.t1.title': '1. What the service is',
   'legal.terms.t1.body':
@@ -701,7 +701,7 @@ export default {
 
   'legal.terms.t4.title': '4. Acceptable use',
   'legal.terms.t4.bullets':
-    'Do not use EventPulse to send spam, harass others or break the law.\nDo not attempt to bypass security or gain unauthorised access to our systems.\nDo not use the app in a way that damages our infrastructure or other users.\nDo not scrape, copy or redistribute event content for commercial purposes.',
+    'Do not use EventPulse to send spam, harass others or break the law.\nDo not attempt to bypass security or gain unauthorised access to our systems.\nDo not use the app in a way that damages our infrastructure or other users.\nDo not scrape, copy or redistribute event content for commercial purposes.\nDo not reverse-engineer, decompile or use automated tools against the app or our systems without our written permission.',
 
   'legal.terms.t5.title': '5. Event content and third parties',
   'legal.terms.t5.body':
@@ -709,7 +709,7 @@ export default {
 
   'legal.terms.t6.title': '6. Push notifications',
   'legal.terms.t6.body':
-    'If you enable push notifications for a venue or artist, we send you a notification when we detect a new event from that source. You can disable push per venue at any time, or globally under your device\'s settings.',
+    'If you enable push notifications for a venue or artist, we send you a notification when we detect a new event from that source. You can disable push per venue at any time, or globally under your device\'s settings. We limit push notifications to a reasonable volume — typically no more than one notification per followed venue per day.',
 
   'legal.terms.t7.title': '7. Changes to the service',
   'legal.terms.t7.body':
@@ -725,7 +725,7 @@ export default {
 
   'legal.terms.t10.title': '10. Limitation of liability',
   'legal.terms.t10.body':
-    'EventPulse is provided as-is. We do not guarantee that the service is error-free, uninterrupted or free from defects. We are not liable for indirect damages. Our total liability is limited to what you paid for the service in the past 12 months.',
+    'EventPulse is provided as-is. We do not guarantee that the service is error-free, uninterrupted or free from defects. We are not liable for indirect damages. Our total liability is limited to what you paid for the service in the past 12 months. Mandatory consumer protection legislation (including the Swedish Consumer Purchase Act, the Distance Contracts Act and equivalent local consumer law) always applies to the consumer\'s benefit and takes precedence over this limitation.',
 
   'legal.terms.t11.title': '11. Changes to the terms',
   'legal.terms.t11.body':
@@ -738,4 +738,10 @@ export default {
   'legal.terms.t13.title': '13. Contact',
   'legal.terms.t13.body':
     'Questions about these terms? Write to privacy@eventpulse.nu.',
+
+  'legal.terms.t14.title': '14. Notices',
+  'legal.terms.t14.body':
+    'We send notices to you via the app, e-mail or push notifications. You agree that electronic notices have the same legal effect as written ones. This applies in particular to change notices under §11 and to security-related information.',
+  'legal.terms.t14.bullets':
+    'We will deliver critical security and incident notices via push even if you have disabled other push notifications.',
 };

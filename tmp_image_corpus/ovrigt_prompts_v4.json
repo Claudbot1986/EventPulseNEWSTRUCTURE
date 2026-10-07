@@ -1,0 +1,31 @@
+{
+  "category_slug": "ovrigt",
+  "events": 27,
+  "jev_q1": 0.53,
+  "jev_q2": 0.7,
+  "jev_q3": 0.41,
+  "description_corpus_size": 27,
+  "model": "MiniMax-M3",
+  "prompts": [
+    {
+      "pattern": "A_wide",
+      "prompt": "Wide natural-light photo of a guide leading a small group of visitors through the grand Entréhallen Nybroplan foyer in Stockholm, polished stone floors, arched glass ceiling panels casting soft daylight, visitors looking up and around attentively."
+    },
+    {
+      "pattern": "B_medium",
+      "prompt": "Medium natural-light shot of a guide in casual dark clothing gesturing toward a velvet-upholstered doorway inside Confidencen, three adult visitors following closely, warm golden hour light filtering through tall palace windows."
+    },
+    {
+      "pattern": "C_environment",
+      "prompt": "Environmental natural-light photo inside YogaDevi studio on Södermalm, Stockholm, with cork floor, potted plants, and a dozen participants on mats in a relaxed Yin pose while soft RnB plays from speakers."
+    },
+    {
+      "pattern": "D_detail",
+      "prompt": "Close-up natural-light detail of a guide's hand pointing at ornate gilded plasterwork on a Confidencen wall, shallow depth of field, a visitor's shoulder softly blurred in the background, daylight illuminating the carved floral motif."
+    },
+    {
+      "pattern": "E_intimate",
+      "prompt": "Intimate soft natural-light close-up of two visitors leaning in to listen as a guide whispers near a sculptural bronze fixture at Entréhallen Nybroplan, blurred marble columns framing the quiet, curious moment in Stockholm."
+    }
+  ]
+}

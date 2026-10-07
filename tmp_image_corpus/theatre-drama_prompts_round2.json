@@ -1,0 +1,560 @@
+{
+  "category_slug": "theatre-drama",
+  "jev_q1": 0.73,
+  "jev_q2": 0.65,
+  "model": "MiniMax-M3",
+  "source_set_count": 11,
+  "source_prompts_count": 5,
+  "items": [
+    {
+      "category": "theatre-drama",
+      "pattern": "A_wide",
+      "rep": 0,
+      "prompt": "Wide photograph of a dark stage at Teaterverket Svea in Stockholm, where the new uppsättning of a drama unfolds. Eight women in vintage dresses stand frozen in a snowy country-house parlor, a body draped across an antique bed center-stage. Warm amber stage lighting cuts through theatrical fog.",
+      "seed": "0-0",
+      "jev_q1": 0.73,
+      "jev_q2": 0.65,
+      "model": "MiniMax-M3"
+    },
+    {
+      "category": "theatre-drama",
+      "pattern": "B_medium",
+      "rep": 0,
+      "prompt": "Medium photo of four actresses mid-scene on the Kulturhuset Stadsteatern stage during the dramatic föreställningen. Costumes from the 1960s, painted wooden doors behind them, harsh overhead stage-light casting sharp shadows across their tense faces and clasped hands.",
+      "seed": "0-1",
+      "jev_q1": 0.73,
+      "jev_q2": 0.65,
+      "model": "MiniMax-M3"
+    },
+    {
+      "category": "theatre-drama",
+      "pattern": "C_environment",
+      "rep": 0,
+      "prompt": "Environmental shot inside the gilded auditorium of China Teatern in Stockholm, audience members filling red velvet seats under crystal chandeliers. The curtain rises mid-föreställningen, revealing a long dinner table set for a final meal, soft amber stage-light spilling into the hall.",
+      "seed": "0-2",
+      "jev_q1": 0.73,
+      "jev_q2": 0.65,
+      "model": "MiniMax-M3"
+    },
+    {
+      "category": "theatre-drama",
+      "pattern": "D_detail",
+      "rep": 0,
+      "prompt": "Close detail photograph of a black-gloved hand gripping a silver kitchen knife, point downward into rumpled white bed linen on stage. Out-of-focus chandelier bokeh above. Moody spotlight from a Teaterverket Svea dramatic uppsättning, the surrounding darkness swallowing the edges.",
+      "seed": "0-3",
+      "jev_q1": 0.73,
+      "jev_q2": 0.65,
+      "model": "MiniMax-M3"
+    },
+    {
+      "category": "theatre-drama",
+      "pattern": "E_intimate",
+      "rep": 0,
+      "prompt": "Intimate close-up of a single actress under a tight warm spotlight at Kulturhuset Stadsteatern, tears visible on her cheek, pearl necklace catching the stage-light. Soft black backdrop, no other figures in frame, capturing one raw, exposed moment of the föreställningen.",
+      "seed": "0-4",
+      "jev_q1": 0.73,
+      "jev_q2": 0.65,
+      "model": "MiniMax-M3"
+    },
+    {
+      "category": "theatre-drama",
+      "pattern": "A_wide",
+      "rep": 1,
+      "prompt": "Wide photograph of a dark stage at Teaterverket Svea in Stockholm, where the new uppsättning of a drama unfolds. Eight women in vintage dresses stand frozen in a snowy country-house parlor, a body draped across an antique bed center-stage. Warm amber stage lighting cuts through theatrical fog, during a quiet weekday matinee.",
+      "seed": "1-0",
+      "jev_q1": 0.73,
+      "jev_q2": 0.65,
+      "model": "MiniMax-M3"
+    },
+    {
+      "category": "theatre-drama",
+      "pattern": "B_medium",
+      "rep": 1,
+      "prompt": "Medium photo of four actresses mid-scene on the Kulturhuset Stadsteatern stage during the dramatic föreställningen. Costumes from the 1960s, painted wooden doors behind them, harsh overhead stage-light casting sharp shadows across their tense faces and clasped hands, on a busy weekend evening.",
+      "seed": "1-1",
+      "jev_q1": 0.73,
+      "jev_q2": 0.65,
+      "model": "MiniMax-M3"
+    },
+    {
+      "category": "theatre-drama",
+      "pattern": "C_environment",
+      "rep": 1,
+      "prompt": "Environmental shot inside the gilded auditorium of China Teatern in Stockholm, audience members filling red velvet seats under crystal chandeliers. The curtain rises mid-föreställningen, revealing a long dinner table set for a final meal, soft amber stage-light spilling into the hall, with a hint of golden hour glow.",
+      "seed": "1-2",
+      "jev_q1": 0.73,
+      "jev_q2": 0.65,
+      "model": "MiniMax-M3"
+    },
+    {
+      "category": "theatre-drama",
+      "pattern": "D_detail",
+      "rep": 1,
+      "prompt": "Close detail photograph of a black-gloved hand gripping a silver kitchen knife, point downward into rumpled white bed linen on stage. Out-of-focus chandelier bokeh above. Moody spotlight from a Teaterverket Svea dramatic uppsättning, the surrounding darkness swallowing the edges, in soft diffused daylight.",
+      "seed": "1-3",
+      "jev_q1": 0.73,
+      "jev_q2": 0.65,
+      "model": "MiniMax-M3"
+    },
+    {
+      "category": "theatre-drama",
+      "pattern": "E_intimate",
+      "rep": 1,
+      "prompt": "Intimate close-up of a single actress under a tight warm spotlight at Kulturhuset Stadsteatern, tears visible on her cheek, pearl necklace catching the stage-light. Soft black backdrop, no other figures in frame, capturing one raw, exposed moment of the föreställningen, under dramatic cool lighting.",
+      "seed": "1-4",
+      "jev_q1": 0.73,
+      "jev_q2": 0.65,
+      "model": "MiniMax-M3"
+    },
+    {
+      "category": "theatre-drama",
+      "pattern": "A_wide",
+      "rep": 2,
+      "prompt": "Wide photograph of a dark stage at Teaterverket Svea in Stockholm, where the new uppsättning of a drama unfolds. Eight women in vintage dresses stand frozen in a snowy country-house parlor, a body draped across an antique bed center-stage. Warm amber stage lighting cuts through theatrical fog, in soft diffused daylight.",
+      "seed": "2-0",
+      "jev_q1": 0.73,
+      "jev_q2": 0.65,
+      "model": "MiniMax-M3"
+    },
+    {
+      "category": "theatre-drama",
+      "pattern": "B_medium",
+      "rep": 2,
+      "prompt": "Medium photo of four actresses mid-scene on the Kulturhuset Stadsteatern stage during the dramatic föreställningen. Costumes from the 1960s, painted wooden doors behind them, harsh overhead stage-light casting sharp shadows across their tense faces and clasped hands, under dramatic cool lighting.",
+      "seed": "2-1",
+      "jev_q1": 0.73,
+      "jev_q2": 0.65,
+      "model": "MiniMax-M3"
+    },
+    {
+      "category": "theatre-drama",
+      "pattern": "C_environment",
+      "rep": 2,
+      "prompt": "Environmental shot inside the gilded auditorium of China Teatern in Stockholm, audience members filling red velvet seats under crystal chandeliers. The curtain rises mid-föreställningen, revealing a long dinner table set for a final meal, soft amber stage-light spilling into the hall, with rich saturated color palette.",
+      "seed": "2-2",
+      "jev_q1": 0.73,
+      "jev_q2": 0.65,
+      "model": "MiniMax-M3"
+    },
+    {
+      "category": "theatre-drama",
+      "pattern": "D_detail",
+      "rep": 2,
+      "prompt": "Close detail photograph of a black-gloved hand gripping a silver kitchen knife, point downward into rumpled white bed linen on stage. Out-of-focus chandelier bokeh above. Moody spotlight from a Teaterverket Svea dramatic uppsättning, the surrounding darkness swallowing the edges, shot from a low audience angle.",
+      "seed": "2-3",
+      "jev_q1": 0.73,
+      "jev_q2": 0.65,
+      "model": "MiniMax-M3"
+    },
+    {
+      "category": "theatre-drama",
+      "pattern": "E_intimate",
+      "rep": 2,
+      "prompt": "Intimate close-up of a single actress under a tight warm spotlight at Kulturhuset Stadsteatern, tears visible on her cheek, pearl necklace catching the stage-light. Soft black backdrop, no other figures in frame, capturing one raw, exposed moment of the föreställningen, shot from an elevated balcony angle.",
+      "seed": "2-4",
+      "jev_q1": 0.73,
+      "jev_q2": 0.65,
+      "model": "MiniMax-M3"
+    },
+    {
+      "category": "theatre-drama",
+      "pattern": "A_wide",
+      "rep": 3,
+      "prompt": "Wide photograph of a dark stage at Teaterverket Svea in Stockholm, where the new uppsättning of a drama unfolds. Eight women in vintage dresses stand frozen in a snowy country-house parlor, a body draped across an antique bed center-stage. Warm amber stage lighting cuts through theatrical fog, shot from a low audience angle.",
+      "seed": "3-0",
+      "jev_q1": 0.73,
+      "jev_q2": 0.65,
+      "model": "MiniMax-M3"
+    },
+    {
+      "category": "theatre-drama",
+      "pattern": "B_medium",
+      "rep": 3,
+      "prompt": "Medium photo of four actresses mid-scene on the Kulturhuset Stadsteatern stage during the dramatic föreställningen. Costumes from the 1960s, painted wooden doors behind them, harsh overhead stage-light casting sharp shadows across their tense faces and clasped hands, shot from an elevated balcony angle.",
+      "seed": "3-1",
+      "jev_q1": 0.73,
+      "jev_q2": 0.65,
+      "model": "MiniMax-M3"
+    },
+    {
+      "category": "theatre-drama",
+      "pattern": "C_environment",
+      "rep": 3,
+      "prompt": "Environmental shot inside the gilded auditorium of China Teatern in Stockholm, audience members filling red velvet seats under crystal chandeliers. The curtain rises mid-föreställningen, revealing a long dinner table set for a final meal, soft amber stage-light spilling into the hall, with shallow depth of field.",
+      "seed": "3-2",
+      "jev_q1": 0.73,
+      "jev_q2": 0.65,
+      "model": "MiniMax-M3"
+    },
+    {
+      "category": "theatre-drama",
+      "pattern": "D_detail",
+      "rep": 3,
+      "prompt": "Close detail photograph of a black-gloved hand gripping a silver kitchen knife, point downward into rumpled white bed linen on stage. Out-of-focus chandelier bokeh above. Moody spotlight from a Teaterverket Svea dramatic uppsättning, the surrounding darkness swallowing the edges, in warm evening light.",
+      "seed": "3-3",
+      "jev_q1": 0.73,
+      "jev_q2": 0.65,
+      "model": "MiniMax-M3"
+    },
+    {
+      "category": "theatre-drama",
+      "pattern": "E_intimate",
+      "rep": 3,
+      "prompt": "Intimate close-up of a single actress under a tight warm spotlight at Kulturhuset Stadsteatern, tears visible on her cheek, pearl necklace catching the stage-light. Soft black backdrop, no other figures in frame, capturing one raw, exposed moment of the föreställningen, under overcast Nordic daylight.",
+      "seed": "3-4",
+      "jev_q1": 0.73,
+      "jev_q2": 0.65,
+      "model": "MiniMax-M3"
+    },
+    {
+      "category": "theatre-drama",
+      "pattern": "A_wide",
+      "rep": 4,
+      "prompt": "Wide photograph of a dark stage at Teaterverket Svea in Stockholm, where the new uppsättning of a drama unfolds. Eight women in vintage dresses stand frozen in a snowy country-house parlor, a body draped across an antique bed center-stage. Warm amber stage lighting cuts through theatrical fog, in warm evening light.",
+      "seed": "4-0",
+      "jev_q1": 0.73,
+      "jev_q2": 0.65,
+      "model": "MiniMax-M3"
+    },
+    {
+      "category": "theatre-drama",
+      "pattern": "B_medium",
+      "rep": 4,
+      "prompt": "Medium photo of four actresses mid-scene on the Kulturhuset Stadsteatern stage during the dramatic föreställningen. Costumes from the 1960s, painted wooden doors behind them, harsh overhead stage-light casting sharp shadows across their tense faces and clasped hands, under overcast Nordic daylight.",
+      "seed": "4-1",
+      "jev_q1": 0.73,
+      "jev_q2": 0.65,
+      "model": "MiniMax-M3"
+    },
+    {
+      "category": "theatre-drama",
+      "pattern": "C_environment",
+      "rep": 4,
+      "prompt": "Environmental shot inside the gilded auditorium of China Teatern in Stockholm, audience members filling red velvet seats under crystal chandeliers. The curtain rises mid-föreställningen, revealing a long dinner table set for a final meal, soft amber stage-light spilling into the hall, with subtle cinematic atmosphere.",
+      "seed": "4-2",
+      "jev_q1": 0.73,
+      "jev_q2": 0.65,
+      "model": "MiniMax-M3"
+    },
+    {
+      "category": "theatre-drama",
+      "pattern": "D_detail",
+      "rep": 4,
+      "prompt": "Close detail photograph of a black-gloved hand gripping a silver kitchen knife, point downward into rumpled white bed linen on stage. Out-of-focus chandelier bokeh above. Moody spotlight from a Teaterverket Svea dramatic uppsättning, the surrounding darkness swallowing the edges, during a quiet weekday matinee.",
+      "seed": "4-3",
+      "jev_q1": 0.73,
+      "jev_q2": 0.65,
+      "model": "MiniMax-M3"
+    },
+    {
+      "category": "theatre-drama",
+      "pattern": "E_intimate",
+      "rep": 4,
+      "prompt": "Intimate close-up of a single actress under a tight warm spotlight at Kulturhuset Stadsteatern, tears visible on her cheek, pearl necklace catching the stage-light. Soft black backdrop, no other figures in frame, capturing one raw, exposed moment of the föreställningen, on a busy weekend evening.",
+      "seed": "4-4",
+      "jev_q1": 0.73,
+      "jev_q2": 0.65,
+      "model": "MiniMax-M3"
+    },
+    {
+      "category": "theatre-drama",
+      "pattern": "A_wide",
+      "rep": 5,
+      "prompt": "Wide photograph of a dark stage at Teaterverket Svea in Stockholm, where the new uppsättning of a drama unfolds. Eight women in vintage dresses stand frozen in a snowy country-house parlor, a body draped across an antique bed center-stage. Warm amber stage lighting cuts through theatrical fog, during a quiet weekday matinee.",
+      "seed": "5-0",
+      "jev_q1": 0.73,
+      "jev_q2": 0.65,
+      "model": "MiniMax-M3"
+    },
+    {
+      "category": "theatre-drama",
+      "pattern": "B_medium",
+      "rep": 5,
+      "prompt": "Medium photo of four actresses mid-scene on the Kulturhuset Stadsteatern stage during the dramatic föreställningen. Costumes from the 1960s, painted wooden doors behind them, harsh overhead stage-light casting sharp shadows across their tense faces and clasped hands, on a busy weekend evening.",
+      "seed": "5-1",
+      "jev_q1": 0.73,
+      "jev_q2": 0.65,
+      "model": "MiniMax-M3"
+    },
+    {
+      "category": "theatre-drama",
+      "pattern": "C_environment",
+      "rep": 5,
+      "prompt": "Environmental shot inside the gilded auditorium of China Teatern in Stockholm, audience members filling red velvet seats under crystal chandeliers. The curtain rises mid-föreställningen, revealing a long dinner table set for a final meal, soft amber stage-light spilling into the hall, with a hint of golden hour glow.",
+      "seed": "5-2",
+      "jev_q1": 0.73,
+      "jev_q2": 0.65,
+      "model": "MiniMax-M3"
+    },
+    {
+      "category": "theatre-drama",
+      "pattern": "D_detail",
+      "rep": 5,
+      "prompt": "Close detail photograph of a black-gloved hand gripping a silver kitchen knife, point downward into rumpled white bed linen on stage. Out-of-focus chandelier bokeh above. Moody spotlight from a Teaterverket Svea dramatic uppsättning, the surrounding darkness swallowing the edges, in soft diffused daylight.",
+      "seed": "5-3",
+      "jev_q1": 0.73,
+      "jev_q2": 0.65,
+      "model": "MiniMax-M3"
+    },
+    {
+      "category": "theatre-drama",
+      "pattern": "E_intimate",
+      "rep": 5,
+      "prompt": "Intimate close-up of a single actress under a tight warm spotlight at Kulturhuset Stadsteatern, tears visible on her cheek, pearl necklace catching the stage-light. Soft black backdrop, no other figures in frame, capturing one raw, exposed moment of the föreställningen, under dramatic cool lighting.",
+      "seed": "5-4",
+      "jev_q1": 0.73,
+      "jev_q2": 0.65,
+      "model": "MiniMax-M3"
+    },
+    {
+      "category": "theatre-drama",
+      "pattern": "A_wide",
+      "rep": 6,
+      "prompt": "Wide photograph of a dark stage at Teaterverket Svea in Stockholm, where the new uppsättning of a drama unfolds. Eight women in vintage dresses stand frozen in a snowy country-house parlor, a body draped across an antique bed center-stage. Warm amber stage lighting cuts through theatrical fog, in soft diffused daylight.",
+      "seed": "6-0",
+      "jev_q1": 0.73,
+      "jev_q2": 0.65,
+      "model": "MiniMax-M3"
+    },
+    {
+      "category": "theatre-drama",
+      "pattern": "B_medium",
+      "rep": 6,
+      "prompt": "Medium photo of four actresses mid-scene on the Kulturhuset Stadsteatern stage during the dramatic föreställningen. Costumes from the 1960s, painted wooden doors behind them, harsh overhead stage-light casting sharp shadows across their tense faces and clasped hands, under dramatic cool lighting.",
+      "seed": "6-1",
+      "jev_q1": 0.73,
+      "jev_q2": 0.65,
+      "model": "MiniMax-M3"
+    },
+    {
+      "category": "theatre-drama",
+      "pattern": "C_environment",
+      "rep": 6,
+      "prompt": "Environmental shot inside the gilded auditorium of China Teatern in Stockholm, audience members filling red velvet seats under crystal chandeliers. The curtain rises mid-föreställningen, revealing a long dinner table set for a final meal, soft amber stage-light spilling into the hall, with rich saturated color palette.",
+      "seed": "6-2",
+      "jev_q1": 0.73,
+      "jev_q2": 0.65,
+      "model": "MiniMax-M3"
+    },
+    {
+      "category": "theatre-drama",
+      "pattern": "D_detail",
+      "rep": 6,
+      "prompt": "Close detail photograph of a black-gloved hand gripping a silver kitchen knife, point downward into rumpled white bed linen on stage. Out-of-focus chandelier bokeh above. Moody spotlight from a Teaterverket Svea dramatic uppsättning, the surrounding darkness swallowing the edges, shot from a low audience angle.",
+      "seed": "6-3",
+      "jev_q1": 0.73,
+      "jev_q2": 0.65,
+      "model": "MiniMax-M3"
+    },
+    {
+      "category": "theatre-drama",
+      "pattern": "E_intimate",
+      "rep": 6,
+      "prompt": "Intimate close-up of a single actress under a tight warm spotlight at Kulturhuset Stadsteatern, tears visible on her cheek, pearl necklace catching the stage-light. Soft black backdrop, no other figures in frame, capturing one raw, exposed moment of the föreställningen, shot from an elevated balcony angle.",
+      "seed": "6-4",
+      "jev_q1": 0.73,
+      "jev_q2": 0.65,
+      "model": "MiniMax-M3"
+    },
+    {
+      "category": "theatre-drama",
+      "pattern": "A_wide",
+      "rep": 7,
+      "prompt": "Wide photograph of a dark stage at Teaterverket Svea in Stockholm, where the new uppsättning of a drama unfolds. Eight women in vintage dresses stand frozen in a snowy country-house parlor, a body draped across an antique bed center-stage. Warm amber stage lighting cuts through theatrical fog, shot from a low audience angle.",
+      "seed": "7-0",
+      "jev_q1": 0.73,
+      "jev_q2": 0.65,
+      "model": "MiniMax-M3"
+    },
+    {
+      "category": "theatre-drama",
+      "pattern": "B_medium",
+      "rep": 7,
+      "prompt": "Medium photo of four actresses mid-scene on the Kulturhuset Stadsteatern stage during the dramatic föreställningen. Costumes from the 1960s, painted wooden doors behind them, harsh overhead stage-light casting sharp shadows across their tense faces and clasped hands, shot from an elevated balcony angle.",
+      "seed": "7-1",
+      "jev_q1": 0.73,
+      "jev_q2": 0.65,
+      "model": "MiniMax-M3"
+    },
+    {
+      "category": "theatre-drama",
+      "pattern": "C_environment",
+      "rep": 7,
+      "prompt": "Environmental shot inside the gilded auditorium of China Teatern in Stockholm, audience members filling red velvet seats under crystal chandeliers. The curtain rises mid-föreställningen, revealing a long dinner table set for a final meal, soft amber stage-light spilling into the hall, with shallow depth of field.",
+      "seed": "7-2",
+      "jev_q1": 0.73,
+      "jev_q2": 0.65,
+      "model": "MiniMax-M3"
+    },
+    {
+      "category": "theatre-drama",
+      "pattern": "D_detail",
+      "rep": 7,
+      "prompt": "Close detail photograph of a black-gloved hand gripping a silver kitchen knife, point downward into rumpled white bed linen on stage. Out-of-focus chandelier bokeh above. Moody spotlight from a Teaterverket Svea dramatic uppsättning, the surrounding darkness swallowing the edges, in warm evening light.",
+      "seed": "7-3",
+      "jev_q1": 0.73,
+      "jev_q2": 0.65,
+      "model": "MiniMax-M3"
+    },
+    {
+      "category": "theatre-drama",
+      "pattern": "E_intimate",
+      "rep": 7,
+      "prompt": "Intimate close-up of a single actress under a tight warm spotlight at Kulturhuset Stadsteatern, tears visible on her cheek, pearl necklace catching the stage-light. Soft black backdrop, no other figures in frame, capturing one raw, exposed moment of the föreställningen, under overcast Nordic daylight.",
+      "seed": "7-4",
+      "jev_q1": 0.73,
+      "jev_q2": 0.65,
+      "model": "MiniMax-M3"
+    },
+    {
+      "category": "theatre-drama",
+      "pattern": "A_wide",
+      "rep": 8,
+      "prompt": "Wide photograph of a dark stage at Teaterverket Svea in Stockholm, where the new uppsättning of a drama unfolds. Eight women in vintage dresses stand frozen in a snowy country-house parlor, a body draped across an antique bed center-stage. Warm amber stage lighting cuts through theatrical fog, in warm evening light.",
+      "seed": "8-0",
+      "jev_q1": 0.73,
+      "jev_q2": 0.65,
+      "model": "MiniMax-M3"
+    },
+    {
+      "category": "theatre-drama",
+      "pattern": "B_medium",
+      "rep": 8,
+      "prompt": "Medium photo of four actresses mid-scene on the Kulturhuset Stadsteatern stage during the dramatic föreställningen. Costumes from the 1960s, painted wooden doors behind them, harsh overhead stage-light casting sharp shadows across their tense faces and clasped hands, under overcast Nordic daylight.",
+      "seed": "8-1",
+      "jev_q1": 0.73,
+      "jev_q2": 0.65,
+      "model": "MiniMax-M3"
+    },
+    {
+      "category": "theatre-drama",
+      "pattern": "C_environment",
+      "rep": 8,
+      "prompt": "Environmental shot inside the gilded auditorium of China Teatern in Stockholm, audience members filling red velvet seats under crystal chandeliers. The curtain rises mid-föreställningen, revealing a long dinner table set for a final meal, soft amber stage-light spilling into the hall, with subtle cinematic atmosphere.",
+      "seed": "8-2",
+      "jev_q1": 0.73,
+      "jev_q2": 0.65,
+      "model": "MiniMax-M3"
+    },
+    {
+      "category": "theatre-drama",
+      "pattern": "D_detail",
+      "rep": 8,
+      "prompt": "Close detail photograph of a black-gloved hand gripping a silver kitchen knife, point downward into rumpled white bed linen on stage. Out-of-focus chandelier bokeh above. Moody spotlight from a Teaterverket Svea dramatic uppsättning, the surrounding darkness swallowing the edges, during a quiet weekday matinee.",
+      "seed": "8-3",
+      "jev_q1": 0.73,
+      "jev_q2": 0.65,
+      "model": "MiniMax-M3"
+    },
+    {
+      "category": "theatre-drama",
+      "pattern": "E_intimate",
+      "rep": 8,
+      "prompt": "Intimate close-up of a single actress under a tight warm spotlight at Kulturhuset Stadsteatern, tears visible on her cheek, pearl necklace catching the stage-light. Soft black backdrop, no other figures in frame, capturing one raw, exposed moment of the föreställningen, on a busy weekend evening.",
+      "seed": "8-4",
+      "jev_q1": 0.73,
+      "jev_q2": 0.65,
+      "model": "MiniMax-M3"
+    },
+    {
+      "category": "theatre-drama",
+      "pattern": "A_wide",
+      "rep": 9,
+      "prompt": "Wide photograph of a dark stage at Teaterverket Svea in Stockholm, where the new uppsättning of a drama unfolds. Eight women in vintage dresses stand frozen in a snowy country-house parlor, a body draped across an antique bed center-stage. Warm amber stage lighting cuts through theatrical fog, during a quiet weekday matinee.",
+      "seed": "9-0",
+      "jev_q1": 0.73,
+      "jev_q2": 0.65,
+      "model": "MiniMax-M3"
+    },
+    {
+      "category": "theatre-drama",
+      "pattern": "B_medium",
+      "rep": 9,
+      "prompt": "Medium photo of four actresses mid-scene on the Kulturhuset Stadsteatern stage during the dramatic föreställningen. Costumes from the 1960s, painted wooden doors behind them, harsh overhead stage-light casting sharp shadows across their tense faces and clasped hands, on a busy weekend evening.",
+      "seed": "9-1",
+      "jev_q1": 0.73,
+      "jev_q2": 0.65,
+      "model": "MiniMax-M3"
+    },
+    {
+      "category": "theatre-drama",
+      "pattern": "C_environment",
+      "rep": 9,
+      "prompt": "Environmental shot inside the gilded auditorium of China Teatern in Stockholm, audience members filling red velvet seats under crystal chandeliers. The curtain rises mid-föreställningen, revealing a long dinner table set for a final meal, soft amber stage-light spilling into the hall, with a hint of golden hour glow.",
+      "seed": "9-2",
+      "jev_q1": 0.73,
+      "jev_q2": 0.65,
+      "model": "MiniMax-M3"
+    },
+    {
+      "category": "theatre-drama",
+      "pattern": "D_detail",
+      "rep": 9,
+      "prompt": "Close detail photograph of a black-gloved hand gripping a silver kitchen knife, point downward into rumpled white bed linen on stage. Out-of-focus chandelier bokeh above. Moody spotlight from a Teaterverket Svea dramatic uppsättning, the surrounding darkness swallowing the edges, in soft diffused daylight.",
+      "seed": "9-3",
+      "jev_q1": 0.73,
+      "jev_q2": 0.65,
+      "model": "MiniMax-M3"
+    },
+    {
+      "category": "theatre-drama",
+      "pattern": "E_intimate",
+      "rep": 9,
+      "prompt": "Intimate close-up of a single actress under a tight warm spotlight at Kulturhuset Stadsteatern, tears visible on her cheek, pearl necklace catching the stage-light. Soft black backdrop, no other figures in frame, capturing one raw, exposed moment of the föreställningen, under dramatic cool lighting.",
+      "seed": "9-4",
+      "jev_q1": 0.73,
+      "jev_q2": 0.65,
+      "model": "MiniMax-M3"
+    },
+    {
+      "category": "theatre-drama",
+      "pattern": "A_wide",
+      "rep": 10,
+      "prompt": "Wide photograph of a dark stage at Teaterverket Svea in Stockholm, where the new uppsättning of a drama unfolds. Eight women in vintage dresses stand frozen in a snowy country-house parlor, a body draped across an antique bed center-stage. Warm amber stage lighting cuts through theatrical fog, in soft diffused daylight.",
+      "seed": "10-0",
+      "jev_q1": 0.73,
+      "jev_q2": 0.65,
+      "model": "MiniMax-M3"
+    },
+    {
+      "category": "theatre-drama",
+      "pattern": "B_medium",
+      "rep": 10,
+      "prompt": "Medium photo of four actresses mid-scene on the Kulturhuset Stadsteatern stage during the dramatic föreställningen. Costumes from the 1960s, painted wooden doors behind them, harsh overhead stage-light casting sharp shadows across their tense faces and clasped hands, under dramatic cool lighting.",
+      "seed": "10-1",
+      "jev_q1": 0.73,
+      "jev_q2": 0.65,
+      "model": "MiniMax-M3"
+    },
+    {
+      "category": "theatre-drama",
+      "pattern": "C_environment",
+      "rep": 10,
+      "prompt": "Environmental shot inside the gilded auditorium of China Teatern in Stockholm, audience members filling red velvet seats under crystal chandeliers. The curtain rises mid-föreställningen, revealing a long dinner table set for a final meal, soft amber stage-light spilling into the hall, with rich saturated color palette.",
+      "seed": "10-2",
+      "jev_q1": 0.73,
+      "jev_q2": 0.65,
+      "model": "MiniMax-M3"
+    },
+    {
+      "category": "theatre-drama",
+      "pattern": "D_detail",
+      "rep": 10,
+      "prompt": "Close detail photograph of a black-gloved hand gripping a silver kitchen knife, point downward into rumpled white bed linen on stage. Out-of-focus chandelier bokeh above. Moody spotlight from a Teaterverket Svea dramatic uppsättning, the surrounding darkness swallowing the edges, shot from a low audience angle.",
+      "seed": "10-3",
+      "jev_q1": 0.73,
+      "jev_q2": 0.65,
+      "model": "MiniMax-M3"
+    },
+    {
+      "category": "theatre-drama",
+      "pattern": "E_intimate",
+      "rep": 10,
+      "prompt": "Intimate close-up of a single actress under a tight warm spotlight at Kulturhuset Stadsteatern, tears visible on her cheek, pearl necklace catching the stage-light. Soft black backdrop, no other figures in frame, capturing one raw, exposed moment of the föreställningen, shot from an elevated balcony angle.",
+      "seed": "10-4",
+      "jev_q1": 0.73,
+      "jev_q2": 0.65,
+      "model": "MiniMax-M3"
+    }
+  ]
+}

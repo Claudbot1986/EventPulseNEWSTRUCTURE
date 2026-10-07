@@ -1,0 +1,25 @@
+{
+  "category_slug": "music",
+  "events": 5009,
+  "library_now": 264,
+  "approx_images_needed": 1,
+  "model": "minimax/minimax-m3",
+  "prompts": [
+    {
+      "pattern": "A_wide",
+      "prompt": "Wide photograph of a dimly lit Stockholm-style concert hall with arched brick ceilings, a full band silhouetted on stage under cool blue and warm amber spotlights, a sparse audience seated at small candle-lit tables in the foreground."
+    },
+    {
+      "pattern": "B_medium",
+      "prompt": "Medium shot on a Stockholm club stage, a female vocalist in a black dress gripping a vintage standing microphone mid-note, sweat visible on her forehead, warm spotlight from above against a dark velvet curtain backdrop."
+    },
+    {
+      "pattern": "C_environment",
+      "prompt": "Atmospheric photograph of an empty Stockholm jazz club interior, worn leather booths, exposed wooden beams, brass instruments resting on a small stage under soft pendant lighting, a bartender polishing a glass behind the counter."
+    },
+    {
+      "pattern": "D_detail",
+      "prompt": "Extreme close-up of a guitarist's calloused left hand pressing a chord on a worn rosewood fretboard, shallow depth of field showing silver tuning pegs, warm amber stage light catching the strings' shimmer."
+    }
+  ]
+}

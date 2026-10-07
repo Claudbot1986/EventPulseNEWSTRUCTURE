@@ -511,7 +511,7 @@ export default {
 
   // ─── Terms of service sections (key order matches LegalModal.js buildSections)
   'legal.terms.title': 'Termini di servizio',
-  'legal.terms.lastUpdated': '2026-10-04 (bozza v0.1)',
+  'legal.terms.lastUpdated': '2026-10-05 (bozza v0.2)',
 
   'legal.terms.t1.title': '1. Cos\'è il servizio',
   'legal.terms.t1.body':
@@ -527,7 +527,7 @@ export default {
 
   'legal.terms.t4.title': '4. Uso accettabile',
   'legal.terms.t4.bullets':
-    'Non usare EventPulse per inviare spam, molestare altri o violare la legge.\nNon tentare di aggirare le barriere di sicurezza o accedere senza autorizzazione ai nostri sistemi.\nNon usare l\'app in modo da danneggiare la nostra infrastruttura o altri utenti.\nNon fare scraping, copiare o ridistribuire il contenuto degli eventi per scopi commerciali.',
+    'Non usare EventPulse per inviare spam, molestare altri o violare la legge.\nNon tentare di aggirare le barriere di sicurezza o accedere senza autorizzazione ai nostri sistemi.\nNon usare l\'app in modo da danneggiare la nostra infrastruttura o altri utenti.\nNon fare scraping, copiare o ridistribuire il contenuto degli eventi per scopi commerciali.\nNon fare reverse-engineering, decompilare o usare strumenti automatizzati contro l\'app o i nostri sistemi senza il nostro permesso scritto.',
 
   'legal.terms.t5.title': '5. Contenuto degli eventi e terze parti',
   'legal.terms.t5.body':
@@ -535,7 +535,7 @@ export default {
 
   'legal.terms.t6.title': '6. Notifiche push',
   'legal.terms.t6.body':
-    'Se attivi le notifiche push per un locale o artista, ti inviamo una notifica quando rileviamo un nuovo evento da quella fonte. Puoi disattivare le push per singolo locale in qualsiasi momento, o globalmente nelle impostazioni del dispositivo.',
+    'Se attivi le notifiche push per un locale o artista, ti inviamo una notifica quando rileviamo un nuovo evento da quella fonte. Puoi disattivare le push per singolo locale in qualsiasi momento, o globalmente nelle impostazioni del dispositivo. Limitiamo le notifiche push a un volume ragionevole — in genere non più di una notifica per locale seguito al giorno.',
 
   'legal.terms.t7.title': '7. Modifiche al servizio',
   'legal.terms.t7.body':
@@ -551,7 +551,7 @@ export default {
 
   'legal.terms.t10.title': '10. Limitazione di responsabilità',
   'legal.terms.t10.body':
-    'EventPulse è fornito "così com\'è". Non garantiamo che il servizio sia privo di errori, ininterrotto o esente da difetti. Non siamo responsabili per danni indiretti. La nostra responsabilità totale è limitata a quanto hai pagato per il servizio negli ultimi 12 mesi.',
+    'EventPulse è fornito "così com\'è". Non garantiamo che il servizio sia privo di errori, ininterrotto o esente da difetti. Non siamo responsabili per danni indiretti. La nostra responsabilità totale è limitata a quanto hai pagato per il servizio negli ultimi 12 mesi. La legislazione obbligatoria a tutela dei consumatori (incluso il Codice del Consumo italiano e le equivalenti leggi locali) si applica sempre a beneficio del consumatore e ha precedenza con tale limitazione.',
 
   'legal.terms.t11.title': '11. Modifiche ai termini',
   'legal.terms.t11.body':
@@ -564,4 +564,10 @@ export default {
   'legal.terms.t13.title': '13. Contatti',
   'legal.terms.t13.body':
     'Domande su questi termini? Scrivi a privacy@eventpulse.nu.',
+
+  'legal.terms.t14.title': '14. Comunicazioni',
+  'legal.terms.t14.body':
+    'Ti inviamo comunicazioni tramite l\'app, e-mail o notifiche push. Accetti che le comunicazioni elettroniche abbiano lo stesso effetto legale di quelle scritte. Questo vale in particolare per le comunicazioni di modifica ai sensi del §11 e per le informazioni relative alla sicurezza.',
+  'legal.terms.t14.bullets':
+    'Inviamo comunicazioni critiche di sicurezza e incidenti tramite push anche se hai disattivato le altre notifiche push.',
 };

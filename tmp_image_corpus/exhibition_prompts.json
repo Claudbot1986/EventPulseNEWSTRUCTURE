@@ -1,0 +1,25 @@
+{
+  "category_slug": "exhibition",
+  "events": 596,
+  "library_now": 0,
+  "approx_images_needed": 6,
+  "model": "minimax/minimax-m3",
+  "prompts": [
+    {
+      "pattern": "A_wide",
+      "prompt": "A wide daylight photograph inside Kulturhuset Stadsteatern's bright top-floor gallery, where two visitors in casual winter clothes walk among large abstract canvases mounted on white walls, polished wooden floor reflecting tall arched windows."
+    },
+    {
+      "pattern": "B_medium",
+      "prompt": "A medium shot inside Armémuseum's softly lit exhibition room, a woman in a wool coat standing thoughtfully before a glass display case holding a faded historical uniform, single warm spotlight illuminating the artifact."
+    },
+    {
+      "pattern": "C_environment",
+      "prompt": "An environmental view of Fylkingen's converted industrial space in Stockholm, raw brick walls and exposed steel beams framing a hanging textile installation, a lone visitor in dark clothing gazing upward, soft natural skylight filtering from above."
+    },
+    {
+      "pattern": "D_detail",
+      "prompt": "A tight close-up of cracked oil paint on a Stockholm gallery canvas, thick impasto texture catching directional spotlight, with a blurred silhouette of a viewer's reflection visible across the protective glass pane."
+    }
+  ]
+}

@@ -1,0 +1,285 @@
+{
+  "category_slug": "exhibition",
+  "events": 596,
+  "docs": 533,
+  "top_1grams_distinctive": [
+    {
+      "w": "utställning",
+      "c": 146,
+      "score": 580.96
+    },
+    {
+      "w": "utställningen",
+      "c": 129,
+      "score": 562.36
+    },
+    {
+      "w": "hellip",
+      "c": 81,
+      "score": 388.78
+    },
+    {
+      "w": "armémuseum",
+      "c": 77,
+      "score": 377.45
+    },
+    {
+      "w": "scrabble",
+      "c": 65,
+      "score": 340.92
+    },
+    {
+      "w": "alfapet",
+      "c": 65,
+      "score": 340.92
+    },
+    {
+      "w": "scrabbleförbundet",
+      "c": 64,
+      "score": 336.65
+    },
+    {
+      "w": "språk",
+      "c": 71,
+      "score": 331.13
+    },
+    {
+      "w": "schackhylla",
+      "c": 62,
+      "score": 328.07
+    },
+    {
+      "w": "ordspelet",
+      "c": 62,
+      "score": 328.07
+    },
+    {
+      "w": "måndagskvällarna",
+      "c": 62,
+      "score": 328.07
+    },
+    {
+      "w": "språkmuseet",
+      "c": 62,
+      "score": 328.07
+    },
+    {
+      "w": "konkurrens",
+      "c": 62,
+      "score": 327.09
+    },
+    {
+      "w": "legendarisk",
+      "c": 62,
+      "score": 324.25
+    },
+    {
+      "w": "rum",
+      "c": 118,
+      "score": 319.72
+    },
+    {
+      "w": "stadsteatern",
+      "c": 104,
+      "score": 317.31
+    },
+    {
+      "w": "konst",
+      "c": 80,
+      "score": 310.53
+    },
+    {
+      "w": "besökare",
+      "c": 96,
+      "score": 304.25
+    },
+    {
+      "w": "kulturhuset",
+      "c": 105,
+      "score": 303.21
+    },
+    {
+      "w": "kulturhusets",
+      "c": 63,
+      "score": 283.5
+    },
+    {
+      "w": "utställningar",
+      "c": 58,
+      "score": 267.63
+    },
+    {
+      "w": "samlingar",
+      "c": 50,
+      "score": 266.18
+    },
+    {
+      "w": "spela",
+      "c": 62,
+      "score": 264.72
+    },
+    {
+      "w": "fått",
+      "c": 62,
+      "score": 264.72
+    },
+    {
+      "w": "vernissage",
+      "c": 46,
+      "score": 255.91
+    },
+    {
+      "w": "konstnären",
+      "c": 53,
+      "score": 255.43
+    },
+    {
+      "w": "utforska",
+      "c": 58,
+      "score": 249.67
+    },
+    {
+      "w": "möjlighet",
+      "c": 69,
+      "score": 244.65
+    },
+    {
+      "w": "måleri",
+      "c": 54,
+      "score": 244.18
+    },
+    {
+      "w": "skulptur",
+      "c": 53,
+      "score": 242.46
+    }
+  ],
+  "top_2grams_distinctive": [
+    {
+      "w": "svenska scrabbleförbundet",
+      "c": 64,
+      "score": 336.65
+    },
+    {
+      "w": "utställning kulturhuset",
+      "c": 62,
+      "score": 328.07
+    },
+    {
+      "w": "spela scrabble",
+      "c": 62,
+      "score": 328.07
+    },
+    {
+      "w": "scrabble rum",
+      "c": 62,
+      "score": 328.07
+    },
+    {
+      "w": "rum språk",
+      "c": 62,
+      "score": 328.07
+    },
+    {
+      "w": "språk kulturhusets",
+      "c": 62,
+      "score": 328.07
+    },
+    {
+      "w": "kulturhusets schackhylla",
+      "c": 62,
+      "score": 328.07
+    },
+    {
+      "w": "schackhylla legendarisk",
+      "c": 62,
+      "score": 328.07
+    },
+    {
+      "w": "legendarisk fått",
+      "c": 62,
+      "score": 328.07
+    },
+    {
+      "w": "fått konkurrens",
+      "c": 62,
+      "score": 328.07
+    },
+    {
+      "w": "konkurrens klassiska",
+      "c": 62,
+      "score": 328.07
+    },
+    {
+      "w": "klassiska ordspelet",
+      "c": 62,
+      "score": 328.07
+    },
+    {
+      "w": "ordspelet scrabble",
+      "c": 62,
+      "score": 328.07
+    },
+    {
+      "w": "scrabble tidigare",
+      "c": 62,
+      "score": 328.07
+    },
+    {
+      "w": "tidigare alfapet",
+      "c": 62,
+      "score": 328.07
+    },
+    {
+      "w": "alfapet måndagskvällarna",
+      "c": 62,
+      "score": 328.07
+    },
+    {
+      "w": "måndagskvällarna bjuder",
+      "c": 62,
+      "score": 328.07
+    },
+    {
+      "w": "bjuder svenska",
+      "c": 62,
+      "score": 328.07
+    },
+    {
+      "w": "scrabbleförbundet språkmuseet",
+      "c": 62,
+      "score": 328.07
+    },
+    {
+      "w": "språkmuseet hellip",
+      "c": 62,
+      "score": 328.07
+    },
+    {
+      "w": "kulturhuset stadsteatern",
+      "c": 104,
+      "score": 319.26
+    },
+    {
+      "w": "konstruktion bild",
+      "c": 38,
+      "score": 219.3
+    },
+    {
+      "w": "bild utställning",
+      "c": 38,
+      "score": 219.3
+    },
+    {
+      "w": "utställning nacka",
+      "c": 38,
+      "score": 219.3
+    },
+    {
+      "w": "nacka konsthall",
+      "c": 38,
+      "score": 219.3
+    }
+  ],
+  "note": "score = cat_count * log(N / global_count). Higher = more distinctive for this category."
+}

@@ -1,0 +1,31 @@
+{
+  "category_slug": "exhibition",
+  "events": 596,
+  "jev_q1": 0.67,
+  "jev_q2": 0.71,
+  "jev_q3": 0.46,
+  "description_corpus_size": 528,
+  "model": "MiniMax-M3",
+  "prompts": [
+    {
+      "pattern": "A_wide",
+      "prompt": "Wide interior shot of a grand Stockholm gallery hall bathed in soft skylight from tall arched windows, visitors scattered across pale wooden floors viewing large framed Nordic paintings hung in symmetrical rows along cream walls."
+    },
+    {
+      "pattern": "B_medium",
+      "prompt": "Medium view inside Kulturhuset Stadsteatern exhibition space where a woman in a grey coat stands before a textile sculpture, natural daylight streaming from clerestory windows casting gentle shadows across the installation."
+    },
+    {
+      "pattern": "C_environment",
+      "prompt": "Environmental photograph of Liljevalchs konsthall Stockholm exhibition room, high ceilings with exposed beams, visitors seated on a long bench contemplating mixed-media wall works, diffused daylight entering through tall glass doors."
+    },
+    {
+      "pattern": "D_detail",
+      "prompt": "Close detail of a sculptural installation corner: folded linen draping over a wooden armature, warm afternoon light revealing woven texture, no people in frame, set within a Stockholm utställning gallery."
+    },
+    {
+      "pattern": "E_intimate",
+      "prompt": "Intimate handheld-style shot of an older visitor reading exhibition placard beside a softly lit painting, shallow depth of field, warm tungsten and natural window light mixing on the gallery wall in Stockholm."
+    }
+  ]
+}

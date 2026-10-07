@@ -1701,7 +1701,9 @@ function DetailsScreen({ event, onBack }) {
     formatProviderLabel: (k) => formatProviderLabel(k, t),
     unknownLabel: t('source.unknown'),
   });
-  const badge = event.category ? String(event.category).toUpperCase().slice(0, 12) : null;
+  const badge = event.is_online
+    ? 'ONLINE'
+    : (event.category ? String(event.category).toUpperCase().slice(0, 12) : null);
 
   return (
     <SafeAreaView style={styles.detailsContainer}>

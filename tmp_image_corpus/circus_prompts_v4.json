@@ -1,0 +1,31 @@
+{
+  "category_slug": "circus",
+  "events": 35,
+  "jev_q1": 0.74,
+  "jev_q2": 0.57,
+  "jev_q3": 0.43,
+  "description_corpus_size": 34,
+  "model": "MiniMax-M3",
+  "prompts": [
+    {
+      "pattern": "A_wide",
+      "prompt": "Wide-angle photograph of a full cirkusföreställning in progress at a Stockholm theater stage, acrobats balancing atop a tall pile formation under warm theatrical spotlights, packed audience silhouettes in the foreground, curtains framing the scene."
+    },
+    {
+      "pattern": "B_medium",
+      "prompt": "Medium shot of three performers mid-routine during a circus föreställning on a Stockholm stage, two perched on the pile while one dives gracefully, soft stage lighting catches airborne dust, black rigging visible above."
+    },
+    {
+      "pattern": "C_environment",
+      "prompt": "Environmental photograph inside a Stockholm theater auditorium before the cirkusföreställning begins, the pile structure rises center-stage under dimmed houselights, empty red velvet seats fill the foreground, soft amber glow along the proscenium."
+    },
+    {
+      "pattern": "D_detail",
+      "prompt": "Close-up detail shot of a calloused hand gripping rough wooden planks of the towering pile during a circus föreställning on a Stockholm stage, illuminated illusion of tension, shallow depth of field blurring background rigging."
+    },
+    {
+      "pattern": "E_intimate",
+      "prompt": "Intimate portrait of a young acrobat backstage at a Stockholm venue, adjusting a sequined costume beside the towering pile minutes before the cirkusföreställning, single warm practical light, candid sweat-beaded expression, soft bokeh of hanging ropes."
+    }
+  ]
+}

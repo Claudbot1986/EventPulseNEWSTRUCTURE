@@ -1,0 +1,285 @@
+{
+  "category_slug": "theatre-drama",
+  "events": 1776,
+  "docs": 1748,
+  "top_1grams_distinctive": [
+    {
+      "w": "regi",
+      "c": 353,
+      "score": 1145.93
+    },
+    {
+      "w": "musikalen",
+      "c": 311,
+      "score": 1082.68
+    },
+    {
+      "w": "föreställningen",
+      "c": 427,
+      "score": 1024.86
+    },
+    {
+      "w": "utspelar",
+      "c": 278,
+      "score": 997.49
+    },
+    {
+      "w": "uppsättning",
+      "c": 271,
+      "score": 995.24
+    },
+    {
+      "w": "oscarsteatern",
+      "c": 264,
+      "score": 972.03
+    },
+    {
+      "w": "chicago",
+      "c": 260,
+      "score": 961.47
+    },
+    {
+      "w": "drama",
+      "c": 252,
+      "score": 951.31
+    },
+    {
+      "w": "ola",
+      "c": 257,
+      "score": 914.82
+    },
+    {
+      "w": "handlingen",
+      "c": 235,
+      "score": 904.99
+    },
+    {
+      "w": "pjäsen",
+      "c": 232,
+      "score": 885.72
+    },
+    {
+      "w": "klassiker",
+      "c": 248,
+      "score": 833.65
+    },
+    {
+      "w": "sillén",
+      "c": 208,
+      "score": 828.56
+    },
+    {
+      "w": "huvudrollerna",
+      "c": 217,
+      "score": 826.88
+    },
+    {
+      "w": "edward",
+      "c": 209,
+      "score": 820.35
+    },
+    {
+      "w": "påkostad",
+      "c": 209,
+      "score": 808.83
+    },
+    {
+      "w": "föreställning",
+      "c": 302,
+      "score": 802.72
+    },
+    {
+      "w": "satir",
+      "c": 198,
+      "score": 801
+    },
+    {
+      "w": "möts",
+      "c": 232,
+      "score": 786.37
+    },
+    {
+      "w": "spektakulära",
+      "c": 196,
+      "score": 782.45
+    },
+    {
+      "w": "intar",
+      "c": 213,
+      "score": 782.24
+    },
+    {
+      "w": "musikalupplevelse",
+      "c": 190,
+      "score": 779.34
+    },
+    {
+      "w": "mord",
+      "c": 189,
+      "score": 775.24
+    },
+    {
+      "w": "systrarna",
+      "c": 190,
+      "score": 774.81
+    },
+    {
+      "w": "ellen",
+      "c": 192,
+      "score": 774.11
+    },
+    {
+      "w": "forssmed",
+      "c": 188,
+      "score": 772.96
+    },
+    {
+      "w": "talsglamour",
+      "c": 188,
+      "score": 772.96
+    },
+    {
+      "w": "shownummer",
+      "c": 188,
+      "score": 772.96
+    },
+    {
+      "w": "showbusiness",
+      "c": 188,
+      "score": 772.96
+    },
+    {
+      "w": "världsstjärnan",
+      "c": 188,
+      "score": 772.05
+    }
+  ],
+  "top_2grams_distinctive": [
+    {
+      "w": "ett drama",
+      "c": 236,
+      "score": 921.6
+    },
+    {
+      "w": "handlingen utspelar",
+      "c": 219,
+      "score": 868.66
+    },
+    {
+      "w": "edward sillén",
+      "c": 208,
+      "score": 828.56
+    },
+    {
+      "w": "musikalen chicago",
+      "c": 194,
+      "score": 790.21
+    },
+    {
+      "w": "uppsättning regi",
+      "c": 190,
+      "score": 779.34
+    },
+    {
+      "w": "världsberömda musikalen",
+      "c": 188,
+      "score": 772.96
+    },
+    {
+      "w": "chicago intar",
+      "c": 188,
+      "score": 772.96
+    },
+    {
+      "w": "intar oscarsteatern",
+      "c": 188,
+      "score": 772.96
+    },
+    {
+      "w": "oscarsteatern höst",
+      "c": 188,
+      "score": 772.96
+    },
+    {
+      "w": "höst storslagen",
+      "c": 188,
+      "score": 772.96
+    },
+    {
+      "w": "storslagen påkostad",
+      "c": 188,
+      "score": 772.96
+    },
+    {
+      "w": "påkostad svensk",
+      "c": 188,
+      "score": 772.96
+    },
+    {
+      "w": "svensk uppsättning",
+      "c": 188,
+      "score": 772.96
+    },
+    {
+      "w": "sillén världsstjärnan",
+      "c": 188,
+      "score": 772.96
+    },
+    {
+      "w": "världsstjärnan peter",
+      "c": 188,
+      "score": 772.96
+    },
+    {
+      "w": "jöback systrarna",
+      "c": 188,
+      "score": 772.96
+    },
+    {
+      "w": "systrarna hanna",
+      "c": 188,
+      "score": 772.96
+    },
+    {
+      "w": "hanna ellen",
+      "c": 188,
+      "score": 772.96
+    },
+    {
+      "w": "ellen lindblad",
+      "c": 188,
+      "score": 772.96
+    },
+    {
+      "w": "lindblad ola",
+      "c": 188,
+      "score": 772.96
+    },
+    {
+      "w": "ola forssmed",
+      "c": 188,
+      "score": 772.96
+    },
+    {
+      "w": "forssmed huvudrollerna",
+      "c": 188,
+      "score": 772.96
+    },
+    {
+      "w": "huvudrollerna bjuds",
+      "c": 188,
+      "score": 772.96
+    },
+    {
+      "w": "glittrande musikalupplevelse",
+      "c": 188,
+      "score": 772.96
+    },
+    {
+      "w": "musikalupplevelse fylld",
+      "c": 188,
+      "score": 772.96
+    }
+  ],
+  "note": "score = cat_count * log(N / global_count). Higher = more distinctive for this category."
+}

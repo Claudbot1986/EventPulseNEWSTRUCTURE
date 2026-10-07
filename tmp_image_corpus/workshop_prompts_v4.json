@@ -1,0 +1,31 @@
+{
+  "category_slug": "workshop",
+  "events": 104,
+  "jev_q1": 0.63,
+  "jev_q2": 0.64,
+  "jev_q3": 0.41,
+  "description_corpus_size": 98,
+  "model": "MiniMax-M3",
+  "prompts": [
+    {
+      "pattern": "A_wide",
+      "prompt": "A wide-angle natural-light photograph of a workshop room inside Best Western Plus Park City Hammarby Sjöstad, participants seated at round tables writing on large sheets of paper, soft daylight filtering through tall windows overlooking the water, candid engaged expressions, warm interior tones, photojournalistic style."
+    },
+    {
+      "pattern": "B_medium",
+      "prompt": "A medium shot of workshop participants gathered around a long table at Kulturhuset Stadsteatern, hands holding needles and thread while repairing fabric scraps, focused downward gazes, ambient daylight from ceiling skylights, shallow depth of field, documentary photography aesthetic with soft natural tones."
+    },
+    {
+      "pattern": "C_environment",
+      "prompt": "An environmental portrait of a crafts workshop inside Etnografiska museet, a participant carefully folding accordion-style paper pages on a wooden table, traditional Japanese binding materials arranged nearby, warm museum lighting with soft window reflections, candid concentration, editorial documentary style, wide contextual framing."
+    },
+    {
+      "pattern": "D_detail",
+      "prompt": "A close-up detail shot of hands threading colorful yarn during a workshop session at Kulturhuset Stadsteatern, visible woven textures and tangled fibers on a worn wooden surface, natural diffused daylight, shallow focus on fingertips, tactile and intimate framing reminiscent of craft photography."
+    },
+    {
+      "pattern": "E_intimate",
+      "prompt": "An intimate close-up of a workshop participant's face at Etnografiska museet, eyes lowered while measuring paper folds with a small ruler, soft golden afternoon light from a side window, gentle bokeh of museum artifacts in the background, emotionally candid expression, fine-art natural light photography."
+    }
+  ]
+}

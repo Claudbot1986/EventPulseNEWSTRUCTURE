@@ -1,0 +1,31 @@
+{
+  "category_slug": "kids",
+  "events": 101,
+  "jev_q1": 0.39,
+  "jev_q2": 0.6,
+  "jev_q3": 0.44,
+  "description_corpus_size": 87,
+  "model": "template-fallback",
+  "prompts": [
+    {
+      "pattern": "A_wide",
+      "prompt": "Wide establishing shot, children and parents at a Stockholm family venue, playful candid moment, warm light, Dieselverkstaden, no text no logos, real photography."
+    },
+    {
+      "pattern": "B_medium",
+      "prompt": "Medium candid photograph, children and parents at a Stockholm family venue, playful candid moment, warm light, Dieselverkstaden, two or three people in frame, warm natural light, documentary style, no text."
+    },
+    {
+      "pattern": "C_environment",
+      "prompt": "Environmental establishing view, Dieselverkstaden, atmosphere with subtle hints of föreställningen, warm lighting, no people in focus, real photography."
+    },
+    {
+      "pattern": "D_detail",
+      "prompt": "Close-up detail photograph at Dieselverkstaden, focusing on föreställningen and föreställning, shallow depth of field, warm light, no text."
+    },
+    {
+      "pattern": "E_intimate",
+      "prompt": "Intimate close photograph at Dieselverkstaden, candid human presence in soft focus, hint of föreställning, emotional warmth, real photography, no text."
+    }
+  ]
+}

@@ -1,0 +1,31 @@
+{
+  "category_slug": "food",
+  "events": 154,
+  "jev_q1": 0.46,
+  "jev_q2": 0.6,
+  "jev_q3": 0.4,
+  "description_corpus_size": 109,
+  "model": "MiniMax-M3",
+  "prompts": [
+    {
+      "pattern": "A_wide",
+      "prompt": "Wide-angle natural-light photo of a lively Stockholm waterfront dinner party, guests seated at long communal tables beside the water, plates of grilled fish and salads, candles flickering, soft evening daylight, smiling faces mid-conversation, candid and warm atmosphere."
+    },
+    {
+      "pattern": "B_medium",
+      "prompt": "Medium shot in natural daylight of four friends laughing at an outdoor table in Stockholm, sharing a Swedish meatball platter with lingonberry jam and boiled potatoes, golden-hour sunlight on their relaxed expressions, shallow depth of field, candid party mood."
+    },
+    {
+      "pattern": "C_environment",
+      "prompt": "Environment photo inside Golden Hits at 왕의 정원 Stockholm during a helkväll dinnershow, wide candlelit dining hall with round tables set for a three-course menu, guests in evening attire chatting under warm amber ceiling lights, elegant stage visible in the background."
+    },
+    {
+      "pattern": "D_detail",
+      "prompt": "Close-up detail shot of a white porcelain plate holding a three-course tasting menu at a Stockholm helkväll party, golden sauce drizzled over seared salmon, microgreens garnish, candle reflection in the rim, natural side-light revealing steam and texture."
+    },
+    {
+      "pattern": "E_intimate",
+      "prompt": "Intimate natural-light photo of two guests clinking champagne flutes at a Stockholm helkväll, soft window light illuminating their smiling faces, blurred plates of dessert and roses on the table, warm shallow focus capturing a quiet celebratory moment."
+    }
+  ]
+}

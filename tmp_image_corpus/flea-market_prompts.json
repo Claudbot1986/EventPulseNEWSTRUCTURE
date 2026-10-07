@@ -1,0 +1,25 @@
+{
+  "category_slug": "flea-market",
+  "events": 28,
+  "library_now": 0,
+  "approx_images_needed": 1,
+  "model": "minimax/minimax-m3",
+  "prompts": [
+    {
+      "pattern": "A_wide",
+      "prompt": "Wide shot of a Bakluckeloppis spread across a sunlit parking lot at Hågelbyparken, with two rows of open car trunks displaying vintage lamps, stacked books, and patterned ceramics on blankets. Natural daylight, a couple browsing a trunk in the foreground, soft afternoon haze."
+    },
+    {
+      "pattern": "B_medium",
+      "prompt": "Medium shot of a flea market stall beneath the concrete pillars of Liljeholmstorget Gallerias parking house, a woman in a denim jacket sorting through a cardboard box of mid-century glassware. Mixed daylight filtering in from the garage opening, worn asphalt floor, no signage visible."
+    },
+    {
+      "pattern": "C_environment",
+      "prompt": "Environment-focused view down a row of parked cars at Kista Galleria rooftop lot, trunks popped open as vendors unpack boxes of records, framed prints, and toys onto striped blankets. Overcast natural light, distant Stockholm skyline, one child tugging a parent's hand toward a stall."
+    },
+    {
+      "pattern": "D_detail",
+      "prompt": "Close-up of a flea market vendor's hands carefully unwrapping a small turquoise ceramic figurine from yellowed newspaper, surrounded by clutter of brass candlesticks and leather-bound journals on a wool blanket. Shallow depth of field, soft diffused daylight, no readable text anywhere."
+    }
+  ]
+}

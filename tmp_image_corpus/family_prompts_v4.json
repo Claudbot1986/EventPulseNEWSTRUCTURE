@@ -1,0 +1,31 @@
+{
+  "category_slug": "family",
+  "events": 56,
+  "jev_q1": 0.65,
+  "jev_q2": 0.59,
+  "jev_q3": 0.45,
+  "description_corpus_size": 52,
+  "model": "MiniMax-M3",
+  "prompts": [
+    {
+      "pattern": "A_wide",
+      "prompt": "Wide photo of a Stockholm theatre auditorium during a daytime family ballet performance; families with children watch as dancers in classic costumes fill a warmly lit stage; natural daylight filters through tall windows; real photo style, no logos visible."
+    },
+    {
+      "pattern": "B_medium",
+      "prompt": "Medium shot of a smiling mother and young child in cozy autumn jackets inside a Stockholm family event venue, holding pumpkin-themed crafts; soft natural light from large windows; candid real-photo feel; warm smiles, no text visible."
+    },
+    {
+      "pattern": "C_environment",
+      "prompt": "Environment photo of a Stockholm theme park amusement area decorated for Halloween, families walking among rides and costumed characters; overcast Nordic daylight; real photo, no logos on rides, rides recognizable but unbranded."
+    },
+    {
+      "pattern": "D_detail",
+      "prompt": "Close-up detail of small painted pumpkin figurines and a child’s felt costume accessory arranged on a wooden table inside a Stockholm family theater lobby; soft window light; real photo style, no text visible anywhere."
+    },
+    {
+      "pattern": "E_intimate",
+      "prompt": "Intimate close-up of a father whispering to his laughing toddler on his lap inside a Stockholm theater during a children’s movie screening; warm interior light reflecting off their faces; genuine candid real photo, no logos visible."
+    }
+  ]
+}

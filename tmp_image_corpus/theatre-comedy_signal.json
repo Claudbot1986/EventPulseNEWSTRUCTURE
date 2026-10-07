@@ -1,0 +1,285 @@
+{
+  "category_slug": "theatre-comedy",
+  "events": 853,
+  "docs": 848,
+  "top_1grams_distinctive": [
+    {
+      "w": "standup",
+      "c": 227,
+      "score": 889.18
+    },
+    {
+      "w": "komiker",
+      "c": 215,
+      "score": 861.11
+    },
+    {
+      "w": "komedi",
+      "c": 153,
+      "score": 608.82
+    },
+    {
+      "w": "comedy",
+      "c": 138,
+      "score": 608.67
+    },
+    {
+      "w": "showen",
+      "c": 127,
+      "score": 496.96
+    },
+    {
+      "w": "presenterar",
+      "c": 197,
+      "score": 484.26
+    },
+    {
+      "w": "norra",
+      "c": 86,
+      "score": 404.06
+    },
+    {
+      "w": "paus",
+      "c": 132,
+      "score": 389.39
+    },
+    {
+      "w": "föreställningen",
+      "c": 159,
+      "score": 381.62
+    },
+    {
+      "w": "scen",
+      "c": 137,
+      "score": 380.03
+    },
+    {
+      "w": "betnér",
+      "c": 75,
+      "score": 378.94
+    },
+    {
+      "w": "gäster",
+      "c": 88,
+      "score": 370.37
+    },
+    {
+      "w": "varje",
+      "c": 118,
+      "score": 370
+    },
+    {
+      "w": "skratt",
+      "c": 101,
+      "score": 369.97
+    },
+    {
+      "w": "show",
+      "c": 117,
+      "score": 366.43
+    },
+    {
+      "w": "sveriges",
+      "c": 137,
+      "score": 363.06
+    },
+    {
+      "w": "timmar",
+      "c": 89,
+      "score": 361.69
+    },
+    {
+      "w": "brunn",
+      "c": 72,
+      "score": 361.13
+    },
+    {
+      "w": "sin",
+      "c": 160,
+      "score": 351.82
+    },
+    {
+      "w": "humor",
+      "c": 103,
+      "score": 350.84
+    },
+    {
+      "w": "maffia",
+      "c": 67,
+      "score": 348.43
+    },
+    {
+      "w": "standupklubbar",
+      "c": 67,
+      "score": 348.43
+    },
+    {
+      "w": "sign",
+      "c": 67,
+      "score": 344.65
+    },
+    {
+      "w": "clarion",
+      "c": 67,
+      "score": 340.21
+    },
+    {
+      "w": "superweekend",
+      "c": 63,
+      "score": 331.39
+    },
+    {
+      "w": "bästa",
+      "c": 90,
+      "score": 331.09
+    },
+    {
+      "w": "club",
+      "c": 76,
+      "score": 325.37
+    },
+    {
+      "w": "johanna",
+      "c": 66,
+      "score": 324.24
+    },
+    {
+      "w": "klubben",
+      "c": 68,
+      "score": 323.16
+    },
+    {
+      "w": "två",
+      "c": 111,
+      "score": 322.95
+    }
+  ],
+  "top_2grams_distinctive": [
+    {
+      "w": "två timmar",
+      "c": 79,
+      "score": 389.84
+    },
+    {
+      "w": "magnus betnér",
+      "c": 75,
+      "score": 378.94
+    },
+    {
+      "w": "comedy club",
+      "c": 74,
+      "score": 376.71
+    },
+    {
+      "w": "norra brunn",
+      "c": 72,
+      "score": 362.89
+    },
+    {
+      "w": "maffia comedy",
+      "c": 67,
+      "score": 348.43
+    },
+    {
+      "w": "bästa komiker",
+      "c": 66,
+      "score": 344.19
+    },
+    {
+      "w": "äldsta största",
+      "c": 66,
+      "score": 344.19
+    },
+    {
+      "w": "största standupklubbar",
+      "c": 66,
+      "score": 344.19
+    },
+    {
+      "w": "sveriges äldsta",
+      "c": 66,
+      "score": 332.64
+    },
+    {
+      "w": "comedy superweekend",
+      "c": 63,
+      "score": 331.39
+    },
+    {
+      "w": "sign maffia",
+      "c": 63,
+      "score": 331.39
+    },
+    {
+      "w": "hotel sign",
+      "c": 63,
+      "score": 328.55
+    },
+    {
+      "w": "clarion hotel",
+      "c": 63,
+      "score": 323.22
+    },
+    {
+      "w": "betnér johanna",
+      "c": 60,
+      "score": 318.44
+    },
+    {
+      "w": "johanna nordström",
+      "c": 60,
+      "score": 318.44
+    },
+    {
+      "w": "200 000",
+      "c": 66,
+      "score": 314.89
+    },
+    {
+      "w": "nordström carl",
+      "c": 57,
+      "score": 305.35
+    },
+    {
+      "w": "carl stanley",
+      "c": 57,
+      "score": 305.35
+    },
+    {
+      "w": "bar restaurang",
+      "c": 57,
+      "score": 298.96
+    },
+    {
+      "w": "clarion sign",
+      "c": 55,
+      "score": 296.53
+    },
+    {
+      "w": "varje helg",
+      "c": 55,
+      "score": 295.57
+    },
+    {
+      "w": "fest clarion",
+      "c": 52,
+      "score": 284.14
+    },
+    {
+      "w": "clarion hotels",
+      "c": 52,
+      "score": 284.14
+    },
+    {
+      "w": "hotels bar",
+      "c": 52,
+      "score": 284.14
+    },
+    {
+      "w": "fortsätter fest",
+      "c": 51,
+      "score": 279.65
+    }
+  ],
+  "note": "score = cat_count * log(N / global_count). Higher = more distinctive for this category."
+}

@@ -1,0 +1,31 @@
+{
+  "category_slug": "film",
+  "events": 106,
+  "jev_q1": 0.72,
+  "jev_q2": 0.66,
+  "jev_q3": 0.45,
+  "description_corpus_size": 106,
+  "model": "template-fallback",
+  "prompts": [
+    {
+      "pattern": "A_wide",
+      "prompt": "Wide establishing shot, a Stockholm cinema interior, audience in silhouette, glowing screen, dramaten, no text no logos, real photography."
+    },
+    {
+      "pattern": "B_medium",
+      "prompt": "Medium candid photograph, a Stockholm cinema interior, audience in silhouette, glowing screen, dramaten, two or three people in frame, warm natural light, documentary style, no text."
+    },
+    {
+      "pattern": "C_environment",
+      "prompt": "Environmental establishing view, dramaten, atmosphere with subtle hints of filmen, warm lighting, no people in focus, real photography."
+    },
+    {
+      "pattern": "D_detail",
+      "prompt": "Close-up detail photograph at dramaten, focusing on filmen and filmvisning, shallow depth of field, warm light, no text."
+    },
+    {
+      "pattern": "E_intimate",
+      "prompt": "Intimate close photograph at dramaten, candid human presence in soft focus, hint of filmvisning, emotional warmth, real photography, no text."
+    }
+  ]
+}

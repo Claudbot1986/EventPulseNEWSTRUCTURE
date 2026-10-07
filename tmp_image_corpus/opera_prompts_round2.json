@@ -1,0 +1,60 @@
+{
+  "category_slug": "opera",
+  "jev_q1": 0.69,
+  "jev_q2": 0.66,
+  "model": "MiniMax-M3",
+  "source_set_count": 1,
+  "source_prompts_count": 5,
+  "items": [
+    {
+      "category": "opera",
+      "pattern": "A_wide",
+      "rep": 0,
+      "prompt": "Wide photograph of a full opera stage at Göta Lejon in Stockholm, orchestra pit visible, a soprano in a red gown singing under warm golden stage lights, rows of chorus members behind her, velvet curtains framing the scene, no visible text or logos, natural auditorium ambiance.",
+      "seed": "0-0",
+      "jev_q1": 0.69,
+      "jev_q2": 0.66,
+      "model": "MiniMax-M3"
+    },
+    {
+      "category": "opera",
+      "pattern": "B_medium",
+      "rep": 0,
+      "prompt": "Medium shot of a tenor and mezzo-soprano performing at Folkoperan in Stockholm, intimate wooden stage, amber sidelighting, expressive singing gestures, audience silhouettes blurred in foreground, no signage, classical theatrical photography.",
+      "seed": "0-1",
+      "jev_q1": 0.69,
+      "jev_q2": 0.66,
+      "model": "MiniMax-M3"
+    },
+    {
+      "category": "opera",
+      "pattern": "C_environment",
+      "rep": 0,
+      "prompt": "Environmental photo of Berwaldhallen concert hall interior in Stockholm, curved wooden walls, a full symfoniorkester seated with conductor mid-gesture, soft overhead stage lighting casting shadows on empty balcony seats, acoustic panels visible, no readable text.",
+      "seed": "0-2",
+      "jev_q1": 0.69,
+      "jev_q2": 0.66,
+      "model": "MiniMax-M3"
+    },
+    {
+      "category": "opera",
+      "pattern": "D_detail",
+      "rep": 0,
+      "prompt": "Close detail of a violinist's hands at Berwaldhallen, bow crossing strings with motion smear, instrument varnished wood reflecting stage light, blurred radios microphone overhead, narrow depth of field, virtuositet captured in still frame, no logos.",
+      "seed": "0-3",
+      "jev_q1": 0.69,
+      "jev_q2": 0.66,
+      "model": "MiniMax-M3"
+    },
+    {
+      "category": "opera",
+      "pattern": "E_intimate",
+      "rep": 0,
+      "prompt": "Intimate candid of a soloist bowing her head backstage at Folkoperan, costume pearls catching soft practical light from a dressing room mirror, a hand reaching to adjust a hairpiece, shallow focus, warm Stockholm evening atmosphere, no visible branding or text.",
+      "seed": "0-4",
+      "jev_q1": 0.69,
+      "jev_q2": 0.66,
+      "model": "MiniMax-M3"
+    }
+  ]
+}

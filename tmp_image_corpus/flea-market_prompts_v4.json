@@ -1,0 +1,31 @@
+{
+  "category_slug": "flea-market",
+  "events": 28,
+  "jev_q1": 0.68,
+  "jev_q2": 0.64,
+  "jev_q3": 0.41,
+  "description_corpus_size": 19,
+  "model": "MiniMax-M3",
+  "prompts": [
+    {
+      "pattern": "A_wide",
+      "prompt": "A wide daylight view of a bustling trunk sale at Liljeholmstorget Gallerias p-hus, plan 2 in Liljeholmen. Cars line up with open boots displaying vintage clothing, lamps, and porcelain. Shoppers in light jackets stroll between vehicles. Concrete parking structure, lively atmosphere, soft overcast natural daylight."
+    },
+    {
+      "pattern": "B_medium",
+      "prompt": "A medium shot at Stockholmsmässan during an antique fair. A vendor in a beige apron arranges brass candlesticks and mid-century design glassware on a linen-draped table. Browsers lean closer, gesturing. Indoor natural light from tall exhibition windows, neutral tones, candid documentary photography."
+    },
+    {
+      "pattern": "C_environment",
+      "prompt": "An environmental wide view of Kista Galleria's Östra p-garaget, Hanstavägen, 164 53 Kista, transformed into a seasonal flea market. Open car boots spill toys, framed art, and stacked vinyl onto tarmac. Families and curious pensioners weave between vehicles. Grey concrete, soft overcast natural daylight, authentic spring atmosphere."
+    },
+    {
+      "pattern": "D_detail",
+      "prompt": "A close detail shot of weathered hands sifting through a wooden crate of antique door knobs and brass keys at Stockholmsmässan. Tarnished metal catches soft natural exhibition light. Rustic textures, blurred background of additional vintage finds, shallow depth of field, tactile and authentic."
+    },
+    {
+      "pattern": "E_intimate",
+      "prompt": "An intimate portrait of a smiling seller leaning into the back seat of a hatchback at Liljeholmstorget Gallerias p-hus, plan 2. They hold up a small ceramic vase toward camera, surrounded by folded textiles and old postcards. Soft natural daylight filtering through the garage opening, warm candid moment."
+    }
+  ]
+}

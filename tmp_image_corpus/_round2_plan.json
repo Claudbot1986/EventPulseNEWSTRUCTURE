@@ -1,0 +1,137 @@
+[
+  {
+    "category": "(NULL)",
+    "events": 2,
+    "images": 1,
+    "need": 4,
+    "deficit": 3,
+    "upsets": 1,
+    "itemsInThisCat": 5
+  },
+  {
+    "category": "barn-familj",
+    "events": 4,
+    "images": 0,
+    "need": 4,
+    "deficit": 4,
+    "upsets": 1,
+    "itemsInThisCat": 5
+  },
+  {
+    "category": "dance",
+    "events": 271,
+    "images": 6,
+    "need": 10,
+    "deficit": 4,
+    "upsets": 1,
+    "itemsInThisCat": 5
+  },
+  {
+    "category": "dans",
+    "events": 2,
+    "images": 0,
+    "need": 4,
+    "deficit": 4,
+    "upsets": 1,
+    "itemsInThisCat": 5
+  },
+  {
+    "category": "exhibition",
+    "events": 595,
+    "images": 5,
+    "need": 20,
+    "deficit": 15,
+    "upsets": 3,
+    "itemsInThisCat": 15
+  },
+  {
+    "category": "festival",
+    "events": 1,
+    "images": 0,
+    "need": 4,
+    "deficit": 4,
+    "upsets": 1,
+    "itemsInThisCat": 5
+  },
+  {
+    "category": "humor",
+    "events": 2,
+    "images": 0,
+    "need": 4,
+    "deficit": 4,
+    "upsets": 1,
+    "itemsInThisCat": 5
+  },
+  {
+    "category": "musikal",
+    "events": 14,
+    "images": 0,
+    "need": 4,
+    "deficit": 4,
+    "upsets": 1,
+    "itemsInThisCat": 5
+  },
+  {
+    "category": "opera",
+    "events": 291,
+    "images": 5,
+    "need": 10,
+    "deficit": 5,
+    "upsets": 1,
+    "itemsInThisCat": 5
+  },
+  {
+    "category": "sports",
+    "events": 493,
+    "images": 7,
+    "need": 17,
+    "deficit": 10,
+    "upsets": 2,
+    "itemsInThisCat": 10
+  },
+  {
+    "category": "standup",
+    "events": 15,
+    "images": 0,
+    "need": 4,
+    "deficit": 4,
+    "upsets": 1,
+    "itemsInThisCat": 5
+  },
+  {
+    "category": "talks-lectures",
+    "events": 255,
+    "images": 5,
+    "need": 9,
+    "deficit": 4,
+    "upsets": 1,
+    "itemsInThisCat": 5
+  },
+  {
+    "category": "theater",
+    "events": 2,
+    "images": 0,
+    "need": 4,
+    "deficit": 4,
+    "upsets": 1,
+    "itemsInThisCat": 5
+  },
+  {
+    "category": "theatre-comedy",
+    "events": 851,
+    "images": 8,
+    "need": 29,
+    "deficit": 21,
+    "upsets": 5,
+    "itemsInThisCat": 25
+  },
+  {
+    "category": "theatre-drama",
+    "events": 1772,
+    "images": 5,
+    "need": 60,
+    "deficit": 55,
+    "upsets": 11,
+    "itemsInThisCat": 55
+  }
+]

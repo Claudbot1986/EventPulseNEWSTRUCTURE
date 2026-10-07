@@ -1,0 +1,285 @@
+{
+  "category_slug": "flea-market",
+  "events": 28,
+  "docs": 19,
+  "top_1grams_distinctive": [
+    {
+      "w": "gratisistockholm",
+      "c": 9,
+      "score": 63.33
+    },
+    {
+      "w": "design",
+      "c": 9,
+      "score": 45.93
+    },
+    {
+      "w": "karlaplan",
+      "c": 6,
+      "score": 44.93
+    },
+    {
+      "w": "loppisen",
+      "c": 6,
+      "score": 44.93
+    },
+    {
+      "w": "säsongsstart",
+      "c": 6,
+      "score": 44.93
+    },
+    {
+      "w": "fullbokat",
+      "c": 6,
+      "score": 44.93
+    },
+    {
+      "w": "säljplats",
+      "c": 6,
+      "score": 44.93
+    },
+    {
+      "w": "karlaloppis",
+      "c": 6,
+      "score": 44.93
+    },
+    {
+      "w": "stockholmsmarknader",
+      "c": 6,
+      "score": 44.93
+    },
+    {
+      "w": "loppisarrangör",
+      "c": 6,
+      "score": 44.93
+    },
+    {
+      "w": "erfarenhe",
+      "c": 6,
+      "score": 44.93
+    },
+    {
+      "w": "midsommar",
+      "c": 6,
+      "score": 44.13
+    },
+    {
+      "w": "extraordinär",
+      "c": 6,
+      "score": 43.42
+    },
+    {
+      "w": "sök",
+      "c": 7,
+      "score": 41.57
+    },
+    {
+      "w": "loppis",
+      "c": 7,
+      "score": 41.57
+    },
+    {
+      "w": "rubrik",
+      "c": 7,
+      "score": 41.57
+    },
+    {
+      "w": "måntisonstorfrelörsön2829301234567891011121314151617181920212223242526272829303112345678",
+      "c": 7,
+      "score": 41.57
+    },
+    {
+      "w": "kategori",
+      "c": 7,
+      "score": 41.36
+    },
+    {
+      "w": "övrigt",
+      "c": 7,
+      "score": 41.36
+    },
+    {
+      "w": "sport",
+      "c": 7,
+      "score": 40.96
+    },
+    {
+      "w": "marknad",
+      "c": 7,
+      "score": 40.77
+    },
+    {
+      "w": "stängt",
+      "c": 6,
+      "score": 39.97
+    },
+    {
+      "w": "motion",
+      "c": 7,
+      "score": 39.71
+    },
+    {
+      "w": "lördagar",
+      "c": 6,
+      "score": 39.61
+    },
+    {
+      "w": "litteratur",
+      "c": 7,
+      "score": 39.55
+    },
+    {
+      "w": "visade",
+      "c": 7,
+      "score": 38.8
+    },
+    {
+      "w": "kalender",
+      "c": 7,
+      "score": 38.8
+    },
+    {
+      "w": "www",
+      "c": 9,
+      "score": 38.33
+    },
+    {
+      "w": "ungdom",
+      "c": 7,
+      "score": 37.62
+    },
+    {
+      "w": "kurs",
+      "c": 7,
+      "score": 37.38
+    }
+  ],
+  "top_2grams_distinctive": [
+    {
+      "w": "många www",
+      "c": 9,
+      "score": 63.33
+    },
+    {
+      "w": "www gratisistockholm",
+      "c": 9,
+      "score": 63.33
+    },
+    {
+      "w": "ett många",
+      "c": 9,
+      "score": 61.83
+    },
+    {
+      "w": "konst design",
+      "c": 8,
+      "score": 47.03
+    },
+    {
+      "w": "måntisonstorfrelörsön2829301234567891011121314151617181920212223242526272829303112345678 loppis",
+      "c": 6,
+      "score": 44.93
+    },
+    {
+      "w": "loppis karlaplan",
+      "c": 6,
+      "score": 44.93
+    },
+    {
+      "w": "klassiska loppisen",
+      "c": 6,
+      "score": 44.93
+    },
+    {
+      "w": "loppisen karlaplan",
+      "c": 6,
+      "score": 44.93
+    },
+    {
+      "w": "karlaplan tillbaka",
+      "c": 6,
+      "score": 44.93
+    },
+    {
+      "w": "tillbaka säsongsstart",
+      "c": 6,
+      "score": 44.93
+    },
+    {
+      "w": "säsongsstart april",
+      "c": 6,
+      "score": 44.93
+    },
+    {
+      "w": "april extraordinär",
+      "c": 6,
+      "score": 44.93
+    },
+    {
+      "w": "extraordinär loppis",
+      "c": 6,
+      "score": 44.93
+    },
+    {
+      "w": "loppis vackra",
+      "c": 6,
+      "score": 44.93
+    },
+    {
+      "w": "vackra karlaplan",
+      "c": 6,
+      "score": 44.93
+    },
+    {
+      "w": "karlaplan centrala",
+      "c": 6,
+      "score": 44.93
+    },
+    {
+      "w": "centrala lördagar",
+      "c": 6,
+      "score": 44.93
+    },
+    {
+      "w": "lördagar mellan",
+      "c": 6,
+      "score": 44.93
+    },
+    {
+      "w": "mellan april",
+      "c": 6,
+      "score": 44.93
+    },
+    {
+      "w": "april november",
+      "c": 6,
+      "score": 44.93
+    },
+    {
+      "w": "november stängt",
+      "c": 6,
+      "score": 44.93
+    },
+    {
+      "w": "stängt midsommar",
+      "c": 6,
+      "score": 44.93
+    },
+    {
+      "w": "midsommar juni",
+      "c": 6,
+      "score": 44.93
+    },
+    {
+      "w": "juni begränsat",
+      "c": 6,
+      "score": 44.93
+    },
+    {
+      "w": "platser snabbt",
+      "c": 6,
+      "score": 44.93
+    }
+  ],
+  "note": "score = cat_count * log(N / global_count). Higher = more distinctive for this category."
+}

@@ -1,0 +1,1228 @@
+{
+  "category_slug": "kids",
+  "events": 101,
+  "library_count": 0,
+  "approx_images_needed": 2,
+  "top_words": [
+    [
+      "ett",
+      94
+    ],
+    [
+      "performance",
+      85
+    ],
+    [
+      "föreställningen",
+      77
+    ],
+    [
+      "jag",
+      75
+    ],
+    [
+      "föreställning",
+      75
+    ],
+    [
+      "babblarna",
+      66
+    ],
+    [
+      "kulturhuset",
+      62
+    ],
+    [
+      "vardag",
+      62
+    ],
+    [
+      "stadsteatern",
+      59
+    ],
+    [
+      "harri",
+      58
+    ],
+    [
+      "teater",
+      56
+    ],
+    [
+      "with",
+      53
+    ],
+    [
+      "skogen",
+      52
+    ],
+    [
+      "klonks",
+      52
+    ],
+    [
+      "kalas",
+      50
+    ],
+    [
+      "stäppvalpen",
+      49
+    ],
+    [
+      "får",
+      48
+    ],
+    [
+      "teaterverket",
+      48
+    ],
+    [
+      "svea",
+      48
+    ],
+    [
+      "klapp",
+      48
+    ],
+    [
+      "klara",
+      46
+    ],
+    [
+      "unga",
+      43
+    ],
+    [
+      "öron",
+      43
+    ],
+    [
+      "lilla",
+      41
+    ],
+    [
+      "denna",
+      39
+    ],
+    [
+      "barn",
+      39
+    ],
+    [
+      "hon",
+      38
+    ],
+    [
+      "nya",
+      36
+    ],
+    [
+      "sin",
+      36
+    ],
+    [
+      "djojj",
+      33
+    ]
+  ],
+  "sample_events": [
+    {
+      "title": "Nils Holgersson",
+      "venue": "Kulturhuset Stadsteatern"
+    },
+    {
+      "title": "Sång för föräldralediga",
+      "venue": "Dieselverkstaden"
+    },
+    {
+      "title": "Jag Kan! (2-5 år)",
+      "venue": "왕의 정원"
+    },
+    {
+      "title": "Det kommer tigrar (2.5-6 år)",
+      "venue": "왕의 정원"
+    },
+    {
+      "title": "Stäppvalpen – Påsklovsteater",
+      "venue": "Kulturhuset Stadsteatern"
+    }
+  ],
+  "full_corpus": [
+    {
+      "id": "788b0609-e29f-4a3e-835c-5885036228e1",
+      "title_sv": "Nils Holgersson",
+      "title_en": "Nils Holgersson",
+      "desc_sv": "Talande djur. Förvandling. Svindlande flykt. Följ med på ett storslaget äventyr för hela familjen, där fantasi, magi och natur väcks till liv på scenen. I Marionetteaterns tolkning av \"Nils Holgerssons underbara resa\" får Selma Lagerlöfs klassiska berättelse ny skrud i en dramatisering av Lucas Svensson. Premiär den 6 december på Lilla scenen.",
+      "desc_en": "Talande djur. Förvandling. Svindlande flykt. Följ med på ett storslaget äventyr för hela familjen, där fantasi, magi och natur väcks till liv på scenen. I Marionetteaterns tolkning av \"Nils Holgerssons underbara resa\" får Selma Lagerlöfs klassiska berättelse ny skrud i en dramatisering av Lucas Svensson. Premiär den 6 december på Lilla scenen.",
+      "raw": "Talande djur. Förvandling. Svindlande flykt. Följ med på ett storslaget äventyr för hela familjen, där fantasi, magi och natur väcks till liv på scenen. I Marionetteaterns tolkning av \"Nils Holgerssons underbara resa\" får Selma Lagerlöfs klassiska berättelse ny skrud i en dramatisering av Lucas Svensson. Premiär den 6 december på Lilla scenen.",
+      "venue": "Kulturhuset Stadsteatern",
+      "start": "2026-12-05T13:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "48e964ee-fbae-459e-a3a4-29064417a6f3",
+      "title_sv": "Sång för föräldralediga",
+      "title_en": "Sång för föräldralediga",
+      "desc_sv": "En kurs för dig som är föräldraledig och vill sjunga med andra vuxna!",
+      "desc_en": "En kurs för dig som är föräldraledig och vill sjunga med andra vuxna!",
+      "raw": "En kurs för dig som är föräldraledig och vill sjunga med andra vuxna!",
+      "venue": "Dieselverkstaden",
+      "start": "2026-10-06T22:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "01e9b2fb-4071-4069-a55c-7b23a6ba4bc5",
+      "title_sv": "Jag Kan! (2-5 år)",
+      "title_en": "Jag Kan! (2-5 år)",
+      "desc_sv": "Jag Kan! är ett kroppspoetiskt teateräventyr på Lilla 3 i Stockholm.\n\nJag Kan! är ett kroppspoetiskt teateräventyr skapat för de yngsta. Föreställningen belyser glädjen i att lyckas och utmaningen i att lära sig nya saker. Den skildrar hur kämpigt det kan vara att lära nytt och den stolthet man känner när man plötsligt kan det man nyss inte kunde. Målet är att inspirera till självtillit, självkäns",
+      "desc_en": "Jag Kan! is a body poetic theater adventure at Lilla 3 in Stockholm.\n\nJag Kan! is a body poetic theater adventure created for the youngest audience. The performance highlights the joy of succeeding and the challenge of learning new things. It portrays how difficult it can be to learn something new and the pride one feels when suddenly mastering what was previously unknown. The aim is to inspire se",
+      "raw": "Jag Kan! är ett kroppspoetiskt teateräventyr på Lilla 3 i Stockholm.\n\nJag Kan! är ett kroppspoetiskt teateräventyr skapat för de yngsta. Föreställningen belyser glädjen i att lyckas och utmaningen i att lära sig nya saker. Den skildrar hur kämpigt det kan vara att lära nytt och den stolthet man känner när man plötsligt kan det man nyss inte kunde. Målet är att inspirera till självtillit, självkäns",
+      "venue": "왕의 정원",
+      "start": "2026-10-10T09:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "58f9dba3-e61a-48da-ad8c-7fbc5e1cad79",
+      "title_sv": "Det kommer tigrar (2.5-6 år)",
+      "title_en": "Det kommer tigrar (2.5-6 år)",
+      "desc_sv": "Det kommer tigrar är en föreställning på Teater Tre i Stockholm, fritt utifrån Barbro Lindgrens böcker.\n\nFöreställningen Det kommer tigrar är fritt baserad på böckerna om Loranga, Masarin och Dartanjang av Barbro Lindgren. Publiken följer med genom skogen, förbi sophögen och giraffen, hela vägen hem till Masarin. Där sover pappa Loranga under köksbordet och farfar Dartanjang tar febern i vedboden.",
+      "desc_en": "Det kommer tigrar is a performance at Teater Tre in Stockholm, freely adapted from Barbro Lindgren's books.\n\nThe performance Det kommer tigrar is freely based on the books about Loranga, Masarin, and Dartanjang by Barbro Lindgren. The audience follows a journey through the forest, past a rubbish heap and a giraffe, leading to Masarin's home. There, father Loranga is sleeping under the kitchen tabl",
+      "raw": "Det kommer tigrar är en föreställning på Teater Tre i Stockholm, fritt utifrån Barbro Lindgrens böcker.\n\nFöreställningen Det kommer tigrar är fritt baserad på böckerna om Loranga, Masarin och Dartanjang av Barbro Lindgren. Publiken följer med genom skogen, förbi sophögen och giraffen, hela vägen hem till Masarin. Där sover pappa Loranga under köksbordet och farfar Dartanjang tar febern i vedboden.",
+      "venue": "왕의 정원",
+      "start": "2026-10-10T09:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "6b2bb5ab-6bbc-47ad-90df-54dcd28781fd",
+      "title_sv": "Stäppvalpen – Påsklovsteater",
+      "title_en": "Stäppvalpen – Påsklovsteater",
+      "desc_sv": "Stäppvalpen – Påsklovsteater är en föreställning på Unga Klara, Kulturhuset Stadsteatern i Stockholm.\n\nFöreställningen handlar om Harri som kämpar med att passa in och att omfamna sin inre varg. En klassresa till en magisk teater gör att Harri kan möta alla sina jag. Föreställningen, regisserad och skriven av Lola Zackow, är baserad på Hermann Hesses klassiker Stäppvargen. Det är en samproduktion ",
+      "desc_en": "Stäppvalpen – Påsklovsteater is a performance at Unga Klara, Kulturhuset Stadsteatern in Stockholm.\n\nThe performance is about Harri, who struggles to fit in and embrace her inner wolf. A class trip to a magical theater allows Harri to meet all her selves. The performance, directed and written by Lola Zackow, is based on Hermann Hesse's classic Steppenwolf. It is a co-production between Unga Klara ",
+      "raw": "Stäppvalpen – Påsklovsteater är en föreställning på Unga Klara, Kulturhuset Stadsteatern i Stockholm.\n\nFöreställningen handlar om Harri som kämpar med att passa in och att omfamna sin inre varg. En klassresa till en magisk teater gör att Harri kan möta alla sina jag. Föreställningen, regisserad och skriven av Lola Zackow, är baserad på Hermann Hesses klassiker Stäppvargen. Det är en samproduktion ",
+      "venue": "Kulturhuset Stadsteatern",
+      "start": "2027-04-01T16:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "87c97e8f-cfc3-42ec-a1bb-9c2df5fde3dd",
+      "title_sv": "Barnlördagar på Kungliga Operan",
+      "title_en": "Barnlördagar på Kungliga Operan",
+      "desc_sv": "Välkomna till barnlördagarna på Kungliga Operan.",
+      "desc_en": "Välkomna till barnlördagarna på Kungliga Operan.",
+      "raw": "Välkomna till barnlördagarna på Kungliga Operan.",
+      "venue": "Kungliga Operan",
+      "start": "2026-10-09T22:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "692d0566-8c67-4125-980e-f099097c2a9d",
+      "title_sv": "Stäppvalpen – Påsklovsteater",
+      "title_en": "Stäppvalpen – Påsklovsteater",
+      "desc_sv": "Stäppvalpen – Påsklovsteater är en föreställning på Unga Klara, Kulturhuset Stadsteatern i Stockholm.\n\nFöreställningen handlar om Harri som kämpar med att passa in och att omfamna sin inre varg. En klassresa till en magisk teater gör att Harri kan möta alla sina jag. Föreställningen, regisserad och skriven av Lola Zackow, är baserad på Hermann Hesses klassiker Stäppvargen. Det är en samproduktion ",
+      "desc_en": "Stäppvalpen – Påsklovsteater is a performance at Unga Klara, Kulturhuset Stadsteatern in Stockholm.\n\nThe performance is about Harri, who struggles to fit in and embrace her inner wolf. A class trip to a magical theater allows Harri to meet all her selves. The performance, directed and written by Lola Zackow, is based on Hermann Hesse's classic Steppenwolf. It is a co-production between Unga Klara ",
+      "venue": "Kulturhuset Stadsteatern",
+      "start": "2027-03-30T08:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "2cf5d255-8bc5-459a-8ae2-5f590bd56dce",
+      "title_sv": "Skogen har öron (7-12 år) Vardag",
+      "title_en": "Skogen har öron (7-12 år) Vardag",
+      "desc_sv": "Skogen har öron är en föreställning för 7-12 år på Teaterverket Svea i Stockholm.\n\nDet är en rafflande deckargåta som utspelar sig i vildmarken. Föreställningen handlar om längtan efter att känna sig behövd och svårigheten att bryta sig loss från en tilldelad roll.",
+      "desc_en": "Skogen har öron is a performance for ages 7-12 at Teaterverket Svea in Stockholm.\n\nThis thrilling detective mystery unfolds in the wilderness. The performance explores themes of longing to feel needed and the challenge of breaking free from an assigned role.",
+      "raw": "Skogen har öron är en föreställning för 7-12 år på Teaterverket Svea i Stockholm.\n\nDet är en rafflande deckargåta som utspelar sig i vildmarken. Föreställningen handlar om längtan efter att känna sig behövd och svårigheten att bryta sig loss från en tilldelad roll.",
+      "venue": "Teaterverket Svea",
+      "start": "2027-04-13T08:45:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "0b587251-7bba-4f59-973d-ee8c9279114c",
+      "title_sv": "Biohack me",
+      "title_en": "Biohack me",
+      "desc_sv": "Biohack me är en föreställning för mellanstadiet om snabbspolad evolution och vilda drömmar på Tornrummet i Stockholm.\n\nFöreställningen Biohack me tar med mellanstadiet på en resa kring snabbspolad evolution och vilda drömmar. Upplev en berättelse skräddarsydd för en yngre publik.",
+      "desc_en": "Biohack me är en föreställning för mellanstadiet om snabbspolad evolution och vilda drömmar på Tornrummet i Stockholm.\n\nFöreställningen Biohack me tar med mellanstadiet på en resa kring snabbspolad evolution och vilda drömmar. Upplev en berättelse skräddarsydd för en yngre publik.",
+      "raw": "Biohack me är en föreställning för mellanstadiet om snabbspolad evolution och vilda drömmar på Tornrummet i Stockholm.\n\nFöreställningen Biohack me tar med mellanstadiet på en resa kring snabbspolad evolution och vilda drömmar. Upplev en berättelse skräddarsydd för en yngre publik.",
+      "venue": "Tornrummet",
+      "start": "2027-03-18T09:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "8dd28e30-f945-4add-aa17-399de43fd651",
+      "title_sv": "Stäppvalpen",
+      "title_en": "Stäppvalpen",
+      "desc_sv": "Stäppvalpen är en föreställning på Unga Klara, Kulturhuset Stadsteatern i Stockholm.\n\nFöreställningen handlar om Harri, som ska börja i sjätte klass och känner sig sällan rätt. När hon försöker vara som alla andra tappar hon svansen och morrar. När hon försöker vara en varg kommer hennes mänskliga jag i vägen för det roliga. Under en klassresa till en magisk teater får Harri möta alla sina jag. Fö",
+      "desc_en": "Stäppvalpen is a performance at Unga Klara, Kulturhuset Stadsteatern in Stockholm.\n\nThe performance centers on Harri, who is about to start sixth grade and rarely feels right. When she tries to act like others, she drops her tail and growls. When she attempts to be a wolf, her human self obstructs all fun. During a class trip to a magical theater, Harri gets to meet all her selves. The performance",
+      "raw": "Stäppvalpen är en föreställning på Unga Klara, Kulturhuset Stadsteatern i Stockholm.\n\nFöreställningen handlar om Harri, som ska börja i sjätte klass och känner sig sällan rätt. När hon försöker vara som alla andra tappar hon svansen och morrar. När hon försöker vara en varg kommer hennes mänskliga jag i vägen för det roliga. Under en klassresa till en magisk teater får Harri möta alla sina jag. Fö",
+      "venue": "Kulturhuset Stadsteatern",
+      "start": "2027-03-18T09:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "663eac32-d881-4d9d-88e3-a01a39ce8965",
+      "title_sv": "Skoja' bara (vardag)",
+      "title_en": "Skoja' bara (vardag)",
+      "desc_sv": "Skoja' bara (vardag) är en klassrumsföreställning på Teaterverket Svea i Stockholm.\n\nDenna klassrumsföreställning utforskar mellanstadiets turbulenta tid, där jaget och gruppen utforskas. Den behandlar lek som kan bli allvar, när ett skämt drivs för långt och får livsavgörande konsekvenser.",
+      "desc_en": "Skoja' bara (vardag) is a classroom performance at Teaterverket Svea in Stockholm.\n\nThis classroom performance explores the turbulent middle school years, a time for self-discovery and group dynamics. It examines how play can turn serious, when a joke goes too far and leads to life-altering consequences.",
+      "raw": "Skoja' bara (vardag) är en klassrumsföreställning på Teaterverket Svea i Stockholm.\n\nDenna klassrumsföreställning utforskar mellanstadiets turbulenta tid, där jaget och gruppen utforskas. Den behandlar lek som kan bli allvar, när ett skämt drivs för långt och får livsavgörande konsekvenser.",
+      "venue": "Teaterverket Svea",
+      "start": "2027-03-18T08:15:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "39dcea2a-8ed6-4dcd-89e2-9ee1146328f0",
+      "title_sv": null,
+      "title_en": "Humlan Djojj på äventyr med Radiosymfonikerna",
+      "desc_sv": "Bonuskonsert: Beethovens septett Välkommen att stanna kvar efter konserten för mer musik när musiker ur Sveriges Radios Symfoniorkester framför Beethovens septett i Ess-dur. Ett verk som förenar serenadens lätthet med en rikedom av klanger och infall. I det livfulla samspelet mellan violin, viola, cello och kontrabas samt klarinett, fagott och horn får varje instrument träda fram – från lyriska me",
+      "desc_en": "Bonuskonsert: Beethovens septett Välkommen att stanna kvar efter konserten för mer musik när musiker ur Sveriges Radios Symfoniorkester framför Beethovens septett i Ess-dur. Ett verk som förenar serenadens lätthet med en rikedom av klanger och infall. I det livfulla samspelet mellan violin, viola, cello och kontrabas samt klarinett, fagott och horn får varje instrument träda fram – från lyriska me",
+      "raw": "Bonuskonsert: Beethovens septett Välkommen att stanna kvar efter konserten för mer musik när musiker ur Sveriges Radios Symfoniorkester framför Beethovens septett i Ess-dur. Ett verk som förenar serenadens lätthet med en rikedom av klanger och infall. I det livfulla samspelet mellan violin, viola, cello och kontrabas samt klarinett, fagott och horn får varje instrument träda fram – från lyriska me",
+      "venue": "Berwaldhallen",
+      "start": "2026-10-24T12:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "f5a89b74-2469-4a9f-a6d2-b24025ebee53",
+      "title_sv": "Stäppvalpen",
+      "title_en": "Stäppvalpen",
+      "desc_sv": "Stäppvalpen är en föreställning på Unga Klara, Kulturhuset Stadsteatern i Stockholm.\n\nFöreställningen handlar om Harri, som ska börja i sjätte klass och känner sig sällan rätt. När hon försöker vara som alla andra tappar hon svansen och morrar. När hon försöker vara en varg kommer hennes mänskliga jag i vägen för det roliga. Under en klassresa till en magisk teater får Harri möta alla sina jag. Fö",
+      "desc_en": "Stäppvalpen is a performance at Unga Klara, Kulturhuset Stadsteatern in Stockholm.\n\nThe performance centers on Harri, who is about to start sixth grade and rarely feels right. When she tries to act like others, she drops her tail and growls. When she attempts to be a wolf, her human self obstructs all fun. During a class trip to a magical theater, Harri gets to meet all her selves. The performance",
+      "raw": "Stäppvalpen är en föreställning på Unga Klara, Kulturhuset Stadsteatern i Stockholm.\n\nFöreställningen handlar om Harri, som ska börja i sjätte klass och känner sig sällan rätt. När hon försöker vara som alla andra tappar hon svansen och morrar. När hon försöker vara en varg kommer hennes mänskliga jag i vägen för det roliga. Under en klassresa till en magisk teater får Harri möta alla sina jag. Fö",
+      "venue": "Kulturhuset Stadsteatern",
+      "start": "2027-03-16T09:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "dd4a89a6-fa8e-4991-91a6-44d506b9f677",
+      "title_sv": "Biohack me",
+      "title_en": "Biohack me",
+      "desc_sv": "Biohack me är en föreställning på Tornrummet i Stockholm.\n\nFöreställningen Biohack me handlar om snabbspolad evolution och vilda drömmar. Den är skapad speciellt för mellanstadiets elever, med fokus på fantasifulla teman.",
+      "desc_en": "Biohack me är en föreställning på Tornrummet i Stockholm.\n\nFöreställningen Biohack me handlar om snabbspolad evolution och vilda drömmar. Den är skapad speciellt för mellanstadiets elever, med fokus på fantasifulla teman.",
+      "raw": "Biohack me är en föreställning på Tornrummet i Stockholm.\n\nFöreställningen Biohack me handlar om snabbspolad evolution och vilda drömmar. Den är skapad speciellt för mellanstadiets elever, med fokus på fantasifulla teman.",
+      "venue": "Tornrummet",
+      "start": "2027-03-16T09:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "2414966e-a341-40f2-b10e-6dbd62f90dcb",
+      "title_sv": "Skogen har öron (7-12 år) Vardag",
+      "title_en": "Skogen har öron (7-12 år) Vardag",
+      "desc_sv": "Skogen har öron är en föreställning för 7-12 år på Teaterverket Svea i Stockholm.\n\nDet är en rafflande deckargåta som utspelar sig i vildmarken. Föreställningen handlar om längtan efter att känna sig behövd och svårigheten att bryta sig loss från en tilldelad roll.",
+      "desc_en": "Skogen har öron is a performance for ages 7-12 at Teaterverket Svea in Stockholm.\n\nThis thrilling detective mystery unfolds in the wilderness. The performance explores themes of longing to feel needed and the challenge of breaking free from an assigned role.",
+      "raw": "Skogen har öron är en föreställning för 7-12 år på Teaterverket Svea i Stockholm.\n\nDet är en rafflande deckargåta som utspelar sig i vildmarken. Föreställningen handlar om längtan efter att känna sig behövd och svårigheten att bryta sig loss från en tilldelad roll.",
+      "venue": "Teaterverket Svea",
+      "start": "2026-10-08T07:15:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "81bcb452-2914-4c08-9368-2be367a6a2ab",
+      "title_sv": "Amnesi",
+      "title_en": "Amnesi",
+      "desc_sv": "Amnesi är ett drama på Lejonkulan i Stockholm.\n\nDetta drama utforskar syskonskap och rätten till ens minnen. Pjäsen presenteras på Lejonkulan i Stockholm.",
+      "desc_en": "Amnesi is a drama at Lejonkulan in Stockholm.\n\nThis drama explores siblinghood and the right to one's memories. The play is presented at Lejonkulan in Stockholm.",
+      "raw": "Amnesi är ett drama på Lejonkulan i Stockholm.\n\nDetta drama utforskar syskonskap och rätten till ens minnen. Pjäsen presenteras på Lejonkulan i Stockholm.",
+      "venue": "왕의 정원",
+      "start": "2027-03-16T09:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "d7e163e1-cb38-4732-bd01-4167aa9efcba",
+      "title_sv": null,
+      "title_en": "Humlan Djojj på äventyr med Radiosymfonikerna",
+      "desc_sv": "Bonuskonsert: Beethovens septett Välkommen att stanna kvar efter konserten för mer musik när musiker ur Sveriges Radios Symfoniorkester framför Beethovens septett i Ess-dur. Ett verk som förenar serenadens lätthet med en rikedom av klanger och infall. I det livfulla samspelet mellan violin, viola, cello och kontrabas samt klarinett, fagott och horn får varje instrument träda fram – från lyriska me",
+      "desc_en": "Bonuskonsert: Beethovens septett Välkommen att stanna kvar efter konserten för mer musik när musiker ur Sveriges Radios Symfoniorkester framför Beethovens septett i Ess-dur. Ett verk som förenar serenadens lätthet med en rikedom av klanger och infall. I det livfulla samspelet mellan violin, viola, cello och kontrabas samt klarinett, fagott och horn får varje instrument träda fram – från lyriska me",
+      "raw": "Bonuskonsert: Beethovens septett Välkommen att stanna kvar efter konserten för mer musik när musiker ur Sveriges Radios Symfoniorkester framför Beethovens septett i Ess-dur. Ett verk som förenar serenadens lätthet med en rikedom av klanger och infall. I det livfulla samspelet mellan violin, viola, cello och kontrabas samt klarinett, fagott och horn får varje instrument träda fram – från lyriska me",
+      "venue": "Berwaldhallen",
+      "start": "2026-10-24T10:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "32ac2130-8cec-4f56-8ed6-14d2bf502273",
+      "title_sv": "Pettson & Findus - Pannkakstårtan",
+      "title_en": "Pettson & Findus - Pannkakstårtan",
+      "venue": "Konsistoriegatan 7",
+      "start": "2026-10-11T11:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "cd921d19-5e7f-4c32-86de-91dad0d790a2",
+      "title_sv": "Humlan Djojj på äventyr med Radiosymfonikerna",
+      "title_en": "Humlan Djojj på äventyr med Radiosymfonikerna",
+      "desc_sv": "När Humlan Djojj flyger vilse hamnar han mitt i Berwaldhallen, omgiven av en levande orkester som surrar som en hel värld av insekter. Samtidigt letar han efter sin vän Flugan Flax, som ropar på hjälp efter att ha fastnat i en bastuba. Tillsammans med sina vänner och musikerna ger sig Djojj ut på ett lekfullt och musikaliskt äventyr. En varm och interaktiv konsertupplevelse för hela familjen, där ",
+      "desc_en": "När Humlan Djojj flyger vilse hamnar han mitt i Berwaldhallen, omgiven av en levande orkester som surrar som en hel värld av insekter. Samtidigt letar han efter sin vän Flugan Flax, som ropar på hjälp efter att ha fastnat i en bastuba. Tillsammans med sina vänner och musikerna ger sig Djojj ut på ett lekfullt och musikaliskt äventyr. En varm och interaktiv konsertupplevelse för hela familjen, där ",
+      "raw": "När Humlan Djojj flyger vilse hamnar han mitt i Berwaldhallen, omgiven av en levande orkester som surrar som en hel värld av insekter. Samtidigt letar han efter sin vän Flugan Flax, som ropar på hjälp efter att ha fastnat i en bastuba. Tillsammans med sina vänner och musikerna ger sig Djojj ut på ett lekfullt och musikaliskt äventyr. En varm och interaktiv konsertupplevelse för hela familjen, där ",
+      "venue": "Berwaldhallen",
+      "start": "2026-10-24T00:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "18aba3d6-9e04-4023-a5b6-b59c2175b8b3",
+      "title_sv": "Skoja' bara (vardag)",
+      "title_en": "Skoja' bara (vardag)",
+      "desc_sv": "Skoja' bara (vardag) är en klassrumsföreställning på Teaterverket Svea i Stockholm.\n\nDenna klassrumsföreställning utforskar mellanstadiets turbulenta tid, där jaget och gruppen utforskas. Den behandlar lek som kan bli allvar, när ett skämt drivs för långt och får livsavgörande konsekvenser.",
+      "desc_en": "Skoja' bara (vardag) is a classroom performance at Teaterverket Svea in Stockholm.\n\nThis classroom performance explores the turbulent middle school years, a time for self-discovery and group dynamics. It examines how play can turn serious, when a joke goes too far and leads to life-altering consequences.",
+      "raw": "Skoja' bara (vardag) är en klassrumsföreställning på Teaterverket Svea i Stockholm.\n\nDenna klassrumsföreställning utforskar mellanstadiets turbulenta tid, där jaget och gruppen utforskas. Den behandlar lek som kan bli allvar, när ett skämt drivs för långt och får livsavgörande konsekvenser.",
+      "venue": "Teaterverket Svea",
+      "start": "2027-03-18T09:45:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "ec9ce2bd-f866-47dc-8ed1-bb0217552111",
+      "title_sv": "Pettson & Findus - Pannkakstårtan",
+      "title_en": "Pettson & Findus - Pannkakstårtan",
+      "venue": "Konsistoriegatan 7",
+      "start": "2026-10-11T11:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "90d22709-374d-483c-9172-eab0c61ae3be",
+      "title_sv": "Humlan Djojj på äventyr med Radiosymfonikerna",
+      "title_en": "Humlan Djojj på äventyr med Radiosymfonikerna",
+      "desc_sv": "När Humlan Djojj flyger vilse hamnar han mitt i Berwaldhallen, omgiven av en levande orkester som surrar som en hel värld av insekter. Samtidigt letar han efter sin vän Flugan Flax, som ropar på hjälp efter att ha fastnat i en bastuba. Tillsammans med sina vänner och musikerna ger sig Djojj ut på ett lekfullt och musikaliskt äventyr. En varm och interaktiv konsertupplevelse för hela familjen, där ",
+      "desc_en": "När Humlan Djojj flyger vilse hamnar han mitt i Berwaldhallen, omgiven av en levande orkester som surrar som en hel värld av insekter. Samtidigt letar han efter sin vän Flugan Flax, som ropar på hjälp efter att ha fastnat i en bastuba. Tillsammans med sina vänner och musikerna ger sig Djojj ut på ett lekfullt och musikaliskt äventyr. En varm och interaktiv konsertupplevelse för hela familjen, där ",
+      "raw": "När Humlan Djojj flyger vilse hamnar han mitt i Berwaldhallen, omgiven av en levande orkester som surrar som en hel värld av insekter. Samtidigt letar han efter sin vän Flugan Flax, som ropar på hjälp efter att ha fastnat i en bastuba. Tillsammans med sina vänner och musikerna ger sig Djojj ut på ett lekfullt och musikaliskt äventyr. En varm och interaktiv konsertupplevelse för hela familjen, där ",
+      "venue": "Berwaldhallen",
+      "start": "2026-10-24T10:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "00e53b11-84c6-4d23-8c46-0e000808a572",
+      "title_sv": "Allt är matte",
+      "title_en": "Allt är matte",
+      "desc_sv": "Allt är matte är en dansföreställning på ZebraDans i Stockholm.\n\nDenna dansföreställning riktar sig till barn i åldern 6-7 år. Den utforskar matematikens storslagna värld genom dans på ZebraDans.",
+      "desc_en": "Allt är matte is a dance performance at ZebraDans in Stockholm.\n\nThis dance performance is aimed at children aged 6-7 years. It explores the grand world of mathematics through dance at ZebraDans.",
+      "raw": "Allt är matte är en dansföreställning på ZebraDans i Stockholm.\n\nDenna dansföreställning riktar sig till barn i åldern 6-7 år. Den utforskar matematikens storslagna värld genom dans på ZebraDans.",
+      "venue": "왕의 정원",
+      "start": "2026-12-11T09:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "e616b3c5-d6b8-4967-a4c9-47137bd13e8b",
+      "title_sv": "Disney On Ice presents Discover the Magic",
+      "title_en": "Disney On Ice presents Discover the Magic",
+      "desc_sv": "Disney On Ice presenterar Discover the Magic Celebrate Disney magic at Disney On Ice presents Discover the Magic, a fast-paced, family-friendly production that follows the search for Tinker Bell through stunning worlds. Explore the colourful spirit realm of Coco with Miguel, brave the ocean with Moana, marvel at Belle's enchanted chandelier, and sing with Elsa. Watch Stitch crash the action with m",
+      "desc_en": "Disney On Ice presenterar Discover the Magic Celebrate Disney magic at Disney On Ice presents Discover the Magic, a fast-paced, family-friendly production that follows the search for Tinker Bell through stunning worlds. Explore the colourful spirit realm of Coco with Miguel, brave the ocean with Moana, marvel at Belle's enchanted chandelier, and sing with Elsa. Watch Stitch crash the action with m",
+      "raw": "Disney On Ice presenterar Discover the Magic Celebrate Disney magic at Disney On Ice presents Discover the Magic, a fast-paced, family-friendly production that follows the search for Tinker Bell through stunning worlds. Explore the colourful spirit realm of Coco with Miguel, brave the ocean with Moana, marvel at Belle's enchanted chandelier, and sing with Elsa. Watch Stitch crash the action with m",
+      "venue": "Valhallagatan 1",
+      "start": "2027-01-15T14:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "26e20308-9014-43d1-8894-c8a9bec5a654",
+      "title_sv": "Pyssel med drop-in: Små halloween-pumpor av papper",
+      "title_en": "Pyssel med drop-in: Små halloween-pumpor av papper",
+      "venue": "왕의 정원",
+      "start": "2026-10-17T11:30:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "b32437c3-862a-4287-a793-45151c3160fe",
+      "title_sv": "Disney on Ice",
+      "title_en": "Disney on Ice",
+      "desc_sv": "Discover the Magic",
+      "desc_en": "Discover the Magic",
+      "raw": "Discover the Magic",
+      "venue": "Avicii Arena",
+      "start": "2027-01-07T22:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "1ed31573-b68e-4af7-84ed-f1e235b9d561",
+      "title_sv": "Spökfarfar, från 4 år och familj",
+      "title_en": "Spökfarfar, från 4 år och familj",
+      "desc_sv": "Eriks farfar har just gått bort. Hans föräldrar försöker förgäves trösta och förklara. Så en natt står hans farfar i hans rum. Farfar har blivit ett spöke, men han verkar ha glömt något...Tillsammans ger de sig ut på ett äventyr fullt av minnen. I leken kommer Erik fram till insikten att farfar alltid kommer att vara med honom. Spökfarfar är en berättelse efter en bok av Kim Fupz Aakeson och Eva E",
+      "desc_en": "Eriks farfar har just gått bort. Hans föräldrar försöker förgäves trösta och förklara. Så en natt står hans farfar i hans rum. Farfar har blivit ett spöke, men han verkar ha glömt något...Tillsammans ger de sig ut på ett äventyr fullt av minnen. I leken kommer Erik fram till insikten att farfar alltid kommer att vara med honom. Spökfarfar är en berättelse efter en bok av Kim Fupz Aakeson och Eva E",
+      "raw": "Eriks farfar har just gått bort. Hans föräldrar försöker förgäves trösta och förklara. Så en natt står hans farfar i hans rum. Farfar har blivit ett spöke, men han verkar ha glömt något...Tillsammans ger de sig ut på ett äventyr fullt av minnen. I leken kommer Erik fram till insikten att farfar alltid kommer att vara med honom. Spökfarfar är en berättelse efter en bok av Kim Fupz Aakeson och Eva E",
+      "venue": "Spökfarfar, från 4 år och familj",
+      "start": "2026-10-24T09:30:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "40baee2e-bab6-4f3e-bebc-f27f77a4425e",
+      "title_sv": "Historiedetektiverna: Mysteriet med den snarkande &#xE4;nkan",
+      "title_en": "Historiedetektiverna: Mysteriet med den snarkande &#xE4;nkan",
+      "desc_sv": "Änkan Bökman levde i Gamla stan på 1500-talet. Tre äkta män hann hon med och nu ligger hon och snarkar på museet. Trodde vi … Passar barn från 7 år.",
+      "desc_en": "Änkan Bökman levde i Gamla stan på 1500-talet. Tre äkta män hann hon med och nu ligger hon och snarkar på museet. Trodde vi … Passar barn från 7 år.",
+      "raw": "Änkan Bökman levde i Gamla stan på 1500-talet. Tre äkta män hann hon med och nu ligger hon och snarkar på museet. Trodde vi … Passar barn från 7 år.",
+      "venue": "Stadsmuseet, Slussen",
+      "start": "2027-01-09T22:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "eba037e4-908e-4639-8339-564f303d8ccf",
+      "title_sv": "UnderBARA BARN 2026",
+      "title_en": "UnderBARA BARN 2026",
+      "venue": "Stockholmsmässan",
+      "start": "2026-10-16T01:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "30c03131-73ae-465e-b40f-ee11cee33169",
+      "title_sv": "Babblarna & Klonks Klapp-kalas",
+      "title_en": "Babblarna & Klonks Klapp-kalas",
+      "desc_sv": "Babblarna & Klonks Klapp-kalas är en musikal på Nya Cirkus i Stockholm.\n\nMusikalen Babblarna & Klonks Klapp-kalas är en färgsprakande, svängig och interaktiv föreställning för de allra yngsta, som har spelats mer än 1100 gånger. Klonk firar sin födelsedag och alla Babblarna är med. Det blir tårta, ballonger, fiskdamm, kalashattar samt sång, dans och skratt. Barnen uppmuntras att klappa takten, bab",
+      "desc_en": "Babblarna & Klonks Klapp-kalas is a musical at Nya Cirkus in Stockholm.\n\nThe musical Babblarna & Klonks Klapp-kalas is a colorful, lively, and interactive show for the youngest audience, having been performed over 1100 times. Klonk's birthday is being celebrated, with all the Babblarna characters present. The event features cake, balloons, party games, party hats, along with singing, dancing, and ",
+      "raw": "Babblarna & Klonks Klapp-kalas är en musikal på Nya Cirkus i Stockholm.\n\nMusikalen Babblarna & Klonks Klapp-kalas är en färgsprakande, svängig och interaktiv föreställning för de allra yngsta, som har spelats mer än 1100 gånger. Klonk firar sin födelsedag och alla Babblarna är med. Det blir tårta, ballonger, fiskdamm, kalashattar samt sång, dans och skratt. Barnen uppmuntras att klappa takten, bab",
+      "venue": "Nya Cirkus",
+      "start": "2026-12-05T13:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "ede6dbee-4906-48a1-a15b-ad3550a96eb8",
+      "title_sv": "Helena Franzén | Personligt utrymme",
+      "title_en": "Helena Franzén | Personligt utrymme",
+      "desc_sv": "Vad är ditt personliga utrymme? En poetisk och tankeväckande dansföreställning för barn 9-12 år om gränser, respekt och modet att vara sig själv.",
+      "desc_en": "Vad är ditt personliga utrymme? En poetisk och tankeväckande dansföreställning för barn 9-12 år om gränser, respekt och modet att vara sig själv.",
+      "raw": "Vad är ditt personliga utrymme? En poetisk och tankeväckande dansföreställning för barn 9-12 år om gränser, respekt och modet att vara sig själv.",
+      "venue": "Dansens Hus",
+      "start": "2027-04-07T19:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "a7568652-6607-4dda-affe-54aa9238d989",
+      "title_sv": "Lilla spöket Laban busar vidare ",
+      "title_en": "Lilla spöket Laban busar vidare ",
+      "desc_sv": "Lilla spöket Laban busar vidare är en föreställning på Kulturhuset Stadsteatern i Stockholm.\n\nLilla Spöket Laban återvänder med nya äventyr på Slottet Godmorgonsol. Denna föreställning erbjuder publiken nya upptåg.",
+      "desc_en": "Lilla spöket Laban busar vidare is a performance at Kulturhuset Stadsteatern in Stockholm.\n\nLittle Ghost Laban returns with new adventures at Castle Good Morning Sun. This performance offers the audience new antics.",
+      "raw": "Lilla spöket Laban busar vidare är en föreställning på Kulturhuset Stadsteatern i Stockholm.\n\nLilla Spöket Laban återvänder med nya äventyr på Slottet Godmorgonsol. Denna föreställning erbjuder publiken nya upptåg.",
+      "venue": "Kulturhuset Stadsteatern",
+      "start": "2026-10-29T12:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "5d79f2b6-3c88-406b-9fef-687df0395e55",
+      "title_sv": "Nelly Rapp - Porten till underjorden",
+      "title_en": "Nelly Rapp - Porten till underjorden",
+      "desc_sv": "Nelly Rapp - Porten till underjorden är en föreställning på Kulturhuset Stadsteatern i Stockholm.\n\nNelly återförenas med sin mamma och får veta att en uråldrig vampyr planerar att öppna porten till underjorden. Där väntar en slumrande ondska på att släppas fri. Tillsammans med Valle och London måste de stoppa vampyren innan katastrofen är ett faktum.",
+      "desc_en": "Nelly Rapp - Porten till underjorden is a performance at Kulturhuset Stadsteatern in Stockholm.\n\nNelly reunites with her mother and learns that an ancient vampire intends to open the gate to the underworld. There, a dormant evil awaits release. Together with Valle and London, they must stop the vampire before disaster strikes.",
+      "raw": "Nelly Rapp - Porten till underjorden är en föreställning på Kulturhuset Stadsteatern i Stockholm.\n\nNelly återförenas med sin mamma och får veta att en uråldrig vampyr planerar att öppna porten till underjorden. Där väntar en slumrande ondska på att släppas fri. Tillsammans med Valle och London måste de stoppa vampyren innan katastrofen är ett faktum.",
+      "venue": "Kulturhuset Stadsteatern",
+      "start": "2026-10-27T13:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "8848bbbd-f3b0-48ff-a6ca-e77609f5fc6f",
+      "title_sv": "Pappa Kapsyl - Dinosaurielåtar!",
+      "title_en": "Pappa Kapsyl - Dinosaurielåtar!",
+      "desc_sv": "Världens mest populära dinorockare återvänder äntligen till Gävle! Med en kavalkad av sina mest populära dinosaurielåtar bjuder familjefavoriten Pappa Kapsyl på en fartfylld show där rockiga köttätarlåtar blandas med allsång och roliga upptåg med publiken.\n\nPappa Kapsyl gör musik, böcker, videor och föreställningar om dinosaurier för barn och deras föräldrar! Med 25 miljoner streams på Spotify och",
+      "desc_en": "Världens mest populära dinorockare återvänder äntligen till Gävle! Med en kavalkad av sina mest populära dinosaurielåtar bjuder familjefavoriten Pappa Kapsyl på en fartfylld show där rockiga köttätarlåtar blandas med allsång och roliga upptåg med publiken.\n\nPappa Kapsyl gör musik, böcker, videor och föreställningar om dinosaurier för barn och deras föräldrar! Med 25 miljoner streams på Spotify och",
+      "raw": "Världens mest populära dinorockare återvänder äntligen till Gävle! Med en kavalkad av sina mest populära dinosaurielåtar bjuder familjefavoriten Pappa Kapsyl på en fartfylld show där rockiga köttätarlåtar blandas med allsång och roliga upptåg med publiken.\n\nPappa Kapsyl gör musik, böcker, videor och föreställningar om dinosaurier för barn och deras föräldrar! Med 25 miljoner streams på Spotify och",
+      "venue": null,
+      "start": "2026-11-15T13:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "42931167-3fa4-4e00-a957-2e2224a69816",
+      "title_sv": "Spökrunda",
+      "title_en": "Spökrunda",
+      "desc_sv": "Spökrunda är ett barnäventyr på Huvudsta allé 21 i Solna.\n\nBarn i åldrarna 3-6 år bjuds in till ett spökäventyr i parken. De åker häst och vagn till en spökstig där de letar efter mystiska ledtrådar. När uppdraget är slutfört får barnen en godispåse som belöning. Endast barn i åldrarna 3-6 år kan anmäla sig till detta äventyr.",
+      "desc_en": "Spökrunda is a children's adventure at Huvudsta allé 21 in Solna.\n\nChildren aged 3-6 years are invited to a ghost adventure in the park. They will ride a horse and carriage to a ghost trail where they search for mysterious clues. Once the mission is completed, the children receive a goodie bag as a reward. Please note that only children aged 3-6 years can register for this adventure.",
+      "raw": "Spökrunda är ett barnäventyr på Huvudsta allé 21 i Solna.\n\nBarn i åldrarna 3-6 år bjuds in till ett spökäventyr i parken. De åker häst och vagn till en spökstig där de letar efter mystiska ledtrådar. När uppdraget är slutfört får barnen en godispåse som belöning. Endast barn i åldrarna 3-6 år kan anmäla sig till detta äventyr.",
+      "venue": "왕의 정원",
+      "start": "2026-10-24T13:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "69eb28be-71a8-4ec2-9098-e833d7431e46",
+      "title_sv": "Animation 12-13 år - Höstlovskurs",
+      "title_en": "Animation 12-13 år - Höstlovskurs",
+      "desc_sv": "Animation 12-13 år - Höstlovskurs är en animationskurs på Kulturhuset Dieselverkstaden i Nacka.\n\nKursen lär ut animationens beståndsdelar under tre eftermiddagar. Deltagarna får testa stop motion-animation med papper och lera, samt cellanimation där bilder tecknas en i taget. Animering och redigering sker med iPads. Kursen tillämpar Levande Verkstadspedagogik, vilket uppmuntrar till att skapa anim",
+      "desc_en": "Animation 12-13 år - Höstlovskurs is an animation course at Kulturhuset Dieselverkstaden in Nacka.\n\nThis course teaches the fundamentals of animation over three afternoons. Participants will experiment with both stop motion animation using materials like paper and clay, and cell animation where images are drawn one at a time. iPads are used for animation and editing during the course. The course a",
+      "raw": "Animation 12-13 år - Höstlovskurs är en animationskurs på Kulturhuset Dieselverkstaden i Nacka.\n\nKursen lär ut animationens beståndsdelar under tre eftermiddagar. Deltagarna får testa stop motion-animation med papper och lera, samt cellanimation där bilder tecknas en i taget. Animering och redigering sker med iPads. Kursen tillämpar Levande Verkstadspedagogik, vilket uppmuntrar till att skapa anim",
+      "venue": "Kulturhuset Dieselverkstaden",
+      "start": "2026-10-26T12:30:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "08c2d000-6937-48a0-9713-7ca022664206",
+      "title_sv": "Babblarna & Klonks Klapp-kalas - 2027",
+      "title_en": "Babblarna & Klonks Klapp-kalas - 2027",
+      "desc_sv": "Musikalen Babblarna & Klonks Klapp-kalas spelas på Nya Cirkus i Stockholm.\n\nMusikalen Babblarna & Klonks Klapp-kalas är en färgsprakande, svängig och interaktiv föreställning för de allra yngsta, med över 1100 tidigare uppsättningar. Denna musikal firar Klonks födelsedag tillsammans med alla Babblarna. Det blir tårta, ballonger, fiskdamm och kalashattar, fyllt med sång, dans och skratt. Barnen får",
+      "desc_en": "The musical Babblarna & Klonks Klapp-kalas is performed at Nya Cirkus in Stockholm.\n\nThe musical Babblarna & Klonks Klapp-kalas is a colorful, lively, and interactive performance for the youngest audience, with over 1100 previous shows. This musical celebrates Klonk's birthday together with all the Babblarna characters. The event features cake, balloons, a lucky dip, and party hats, filled with si",
+      "raw": "Musikalen Babblarna & Klonks Klapp-kalas spelas på Nya Cirkus i Stockholm.\n\nMusikalen Babblarna & Klonks Klapp-kalas är en färgsprakande, svängig och interaktiv föreställning för de allra yngsta, med över 1100 tidigare uppsättningar. Denna musikal firar Klonks födelsedag tillsammans med alla Babblarna. Det blir tårta, ballonger, fiskdamm och kalashattar, fyllt med sång, dans och skratt. Barnen får",
+      "venue": "Nya Cirkus",
+      "start": "2027-02-21T13:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "40969690-eb38-4e3d-a1f2-9d7597d7ad0d",
+      "title_sv": "Pyssel med drop-in: läskiga varglappar",
+      "title_en": "Pyssel med drop-in: läskiga varglappar",
+      "venue": "왕의 정원",
+      "start": "2026-11-14T12:30:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "cb9fd63d-eeec-4149-a8f0-6f67483047e4",
+      "title_sv": "Pyssel med drop-in: läskiga varglappar",
+      "title_en": "Pyssel med drop-in: läskiga varglappar",
+      "venue": "왕의 정원",
+      "start": "2026-11-07T12:30:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "0b622959-56c8-4966-bbf1-1cbb8111a3ba",
+      "title_sv": "Lilla spöket Laban - spökdags",
+      "title_en": "Lilla spöket Laban - spökdags",
+      "desc_sv": "Lilla spöket Laban - spökdags är en filmvisning på Kulturhuset Stadsteatern i Stockholm.\n\nDet är en filmvisning för barn mellan 2 och 5 år. Alla besökare bjuds på saft och popcorn. Filmerna är mellan 20 och 55 minuter långa.",
+      "desc_en": "Lilla spöket Laban - spökdags is a film screening at Kulturhuset Stadsteatern in Stockholm.\n\nThis is a film screening for children between 2 and 5 years old. All visitors are offered juice and popcorn. The films shown are between 20 and 55 minutes long.",
+      "raw": "Lilla spöket Laban - spökdags är en filmvisning på Kulturhuset Stadsteatern i Stockholm.\n\nDet är en filmvisning för barn mellan 2 och 5 år. Alla besökare bjuds på saft och popcorn. Filmerna är mellan 20 och 55 minuter långa.",
+      "venue": "Kulturhuset Stadsteatern",
+      "start": "2026-10-18T11:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "6a1c9aed-f90f-4795-a02b-accf26384b32",
+      "title_sv": "Babblarna & Klonks Klapp-kalas",
+      "title_en": "Babblarna & Klonks Klapp-kalas",
+      "desc_sv": "Babblarna & Klonks Klapp-kalas är en interaktiv musikal för de allra yngsta på Nya Cirkus i Stockholm.\n\nMusikalen ”Babblarna & Klonks Klapp-kalas” är en färgsprakande, svängig och interaktiv föreställning för de allra yngsta. Föreställningen firar Klonks födelsedag, där alla Babblarna deltar med tårta, ballonger, fiskdamm och kalashattar. Barnen kan delta aktivt genom att klappa takten, babbla, bu",
+      "desc_en": "Babblarna & Klonks Klapp-kalas is an interactive musical for the very youngest at Nya Cirkus in Stockholm.\n\nThe musical Babblarna & Klonks Klapp-kalas is a colorful, swinging, and interactive performance for the very youngest. The show celebrates Klonk's birthday, with all Babblarna participating with cake, balloons, party games, and party hats. Children can actively participate by clapping, babbl",
+      "raw": "Babblarna & Klonks Klapp-kalas är en interaktiv musikal för de allra yngsta på Nya Cirkus i Stockholm.\n\nMusikalen ”Babblarna & Klonks Klapp-kalas” är en färgsprakande, svängig och interaktiv föreställning för de allra yngsta. Föreställningen firar Klonks födelsedag, där alla Babblarna deltar med tårta, ballonger, fiskdamm och kalashattar. Barnen kan delta aktivt genom att klappa takten, babbla, bu",
+      "venue": "Nya Cirkus",
+      "start": "2026-12-05T10:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "eb30c681-9ad0-4612-9dbf-8e41f0ab6803",
+      "title_sv": "Knattebio: Lilla spöket Laban spökar igen",
+      "title_en": "Knattebio: Lilla spöket Laban spökar igen",
+      "desc_sv": "Knattebio: Lilla spöket Laban spökar igen är en barnbio på Kulturhuset Stadsteatern i Stockholm.\n\nLilla spöket Laban är tillbaka med nya äventyr. Händelserna utspelar sig runt slottet Gomorronsol.",
+      "desc_en": "Knattebio: Lilla spöket Laban spökar igen is a children's cinema event at Kulturhuset Stadsteatern in Stockholm.\n\nThe little ghost Laban returns with new adventures. The events take place around Gomorronsol Castle.",
+      "raw": "Knattebio: Lilla spöket Laban spökar igen är en barnbio på Kulturhuset Stadsteatern i Stockholm.\n\nLilla spöket Laban är tillbaka med nya äventyr. Händelserna utspelar sig runt slottet Gomorronsol.",
+      "venue": "Kulturhuset Stadsteatern",
+      "start": "2026-10-25T10:15:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "6b0755bd-d316-4664-be83-2df7ca7c7a70",
+      "title_sv": "Humlan Djojj on an adventure with the Swedish Radio Symphony Orchestra",
+      "title_en": "Humlan Djojj on an adventure with the Swedish Radio Symphony Orchestra",
+      "desc_sv": "Interactive children's concert with Grammy-nominated artist Humlan Djojj and Swedish Radio Symphony Orchestra in playful musical adventure.",
+      "desc_en": "Interactive children's concert with Grammy-nominated artist Humlan Djojj and Swedish Radio Symphony Orchestra in playful musical adventure.",
+      "raw": "Interactive children's concert with Grammy-nominated artist Humlan Djojj and Swedish Radio Symphony Orchestra in playful musical adventure.",
+      "venue": "Berwaldhallen",
+      "start": "2026-10-24T12:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "06a863c6-69b1-4b82-8456-646029e95e6e",
+      "title_sv": "Lorpan längtar - höst 26 ",
+      "title_en": "Lorpan längtar - höst 26 ",
+      "desc_sv": "Lorpan längtar - höst 26 är en pjäs på Dockteatern Tittut i Stockholm.\n\nLorpan längtar - höst 26 är en pjäs skapad av Stina Wirsén och Ingalill Ellung. Föreställningen är avsedd för barn i åldrarna 2 till 6 år och spelas på Dockteatern Tittut i Stockholm.",
+      "desc_en": "Lorpan längtar - höst 26 is a play at Dockteatern Tittut in Stockholm.\n\nLorpan längtar - höst 26 is a play created by Stina Wirsén and Ingalill Ellung. The performance is intended for children aged 2 to 6 years and takes place at Dockteatern Tittut in Stockholm.",
+      "venue": "Teatern",
+      "start": "2026-10-21T08:45:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "c5350a98-878b-4b2b-95e1-e81e3c00c0db",
+      "title_sv": "underBARA BARN Stockholm 2026",
+      "title_en": "underBARA BARN Stockholm 2026",
+      "venue": "Stockholmsmässan",
+      "start": "2026-10-16T00:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "7e7f0cad-f8c1-4007-8141-3385f37d6dd8",
+      "title_sv": "Stockholmianatisdag: Parker f&#xF6;r lek &#x2013; barnens milj&#xF6;er i v&#xE4;lf&#xE4;rdssamh&#xE4;llet",
+      "title_en": "Stockholmianatisdag: Parker f&#xF6;r lek &#x2013; barnens milj&#xF6;er i v&#xE4;lf&#xE4;rdssamh&#xE4;llet",
+      "desc_sv": "I år är det 90 år sedan parkleken började ta form i Stockholm. I denna Stockholmianatisdag skildras parklekarnas historia och hur barns lekmiljöer blev en del av den moderna stadens sociala och ...",
+      "desc_en": "I år är det 90 år sedan parkleken började ta form i Stockholm. I denna Stockholmianatisdag skildras parklekarnas historia och hur barns lekmiljöer blev en del av den moderna stadens sociala och ...",
+      "raw": "I år är det 90 år sedan parkleken började ta form i Stockholm. I denna Stockholmianatisdag skildras parklekarnas historia och hur barns lekmiljöer blev en del av den moderna stadens sociala och ...",
+      "venue": "Stadsarkivet Liljeholmskajen",
+      "start": "2026-11-02T22:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "0dec72f0-0848-4842-8c17-3baf6e311b6a",
+      "title_sv": "Skoja' bara (vardag)",
+      "title_en": "Skoja' bara (vardag)",
+      "desc_sv": "Skoja' bara (vardag) är en klassrumsföreställning på Teaterverket Svea i Stockholm.\n\nFöreställningen utforskar mellanstadietiden, en turbulent period där jaget, gruppen och förmågan att påverka omvärlden utforskas. Den visar hur lek kan övergå i allvar och ett skämt drivas för långt, med plötsliga livs- och dödsutfall.",
+      "desc_en": "Skoja' bara (vardag) is a classroom performance at Teaterverket Svea in Stockholm.\n\nThe performance explores the turbulent middle school period, a time for exploring the self, the group, and the ability to influence the world. It shows how play can quickly turn serious, and a joke driven too far can become a matter of life and death.",
+      "raw": "Skoja' bara (vardag) är en klassrumsföreställning på Teaterverket Svea i Stockholm.\n\nFöreställningen utforskar mellanstadietiden, en turbulent period där jaget, gruppen och förmågan att påverka omvärlden utforskas. Den visar hur lek kan övergå i allvar och ett skämt drivas för långt, med plötsliga livs- och dödsutfall.",
+      "venue": "Teaterverket Svea",
+      "start": "2026-11-20T08:15:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "58666706-2bde-47ac-9911-b768eaece4e6",
+      "title_sv": "Humlan Djojj on an adventure with the Swedish Radio Symphony Orchestra",
+      "title_en": "Humlan Djojj on an adventure with the Swedish Radio Symphony Orchestra",
+      "desc_sv": "Interactive children's concert with Grammy-nominated artist Humlan Djojj and Swedish Radio Symphony Orchestra in playful musical adventure.",
+      "desc_en": "Interactive children's concert with Grammy-nominated artist Humlan Djojj and Swedish Radio Symphony Orchestra in playful musical adventure.",
+      "raw": "Interactive children's concert with Grammy-nominated artist Humlan Djojj and Swedish Radio Symphony Orchestra in playful musical adventure.",
+      "venue": "Berwaldhallen",
+      "start": "2026-10-24T10:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "f2fd9b81-e09e-4d23-8d5c-3af626e5d5a3",
+      "title_sv": "Kris, kaos & katastrof - höstlovsteater",
+      "title_en": "Kris, kaos & katastrof - höstlovsteater",
+      "desc_sv": "Kris, kaos & katastrof - höstlovsteater är en sci-fi komedi på Unga Klara, Kulturhuset Stadsteatern i Stockholm.\n\nKris, kaos & katastrof - höstlovsteater är en sci-fi komedi. Den utspelar sig i ett klassrum där fem elever och en lärare samlas för ett omprov i svenska. Uppgiften är att beskriva hur deras liv ser ut om 20 år. Eleverna kämpar med frågor om framtiden, från överbeskyddande föräldrar oc",
+      "desc_en": "Kris, kaos & katastrof - höstlovsteater is a sci-fi comedy at Unga Klara, Kulturhuset Stadsteatern in Stockholm.\n\nKris, kaos & katastrof - höstlovsteater is a sci-fi comedy. The play is set in a classroom where five students and one teacher gather for a re-exam in Swedish. Their assignment is to answer what their lives will look like in 20 years. The students grapple with worries about the future,",
+      "raw": "Kris, kaos & katastrof - höstlovsteater är en sci-fi komedi på Unga Klara, Kulturhuset Stadsteatern i Stockholm.\n\nKris, kaos & katastrof - höstlovsteater är en sci-fi komedi. Den utspelar sig i ett klassrum där fem elever och en lärare samlas för ett omprov i svenska. Uppgiften är att beskriva hur deras liv ser ut om 20 år. Eleverna kämpar med frågor om framtiden, från överbeskyddande föräldrar oc",
+      "venue": "Kulturhuset Stadsteatern",
+      "start": "2026-10-29T18:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "d9da4fe8-286b-403b-b033-9c63043ac81d",
+      "title_sv": "Stäppvalpen – Påsklovsteater",
+      "title_en": "Stäppvalpen – Påsklovsteater",
+      "desc_sv": "Stäppvalpen – Påsklovsteater är en föreställning på Unga Klara, Kulturhuset Stadsteatern i Stockholm.\n\nFöreställningen handlar om Harri som kämpar med att passa in och att omfamna sin inre varg. En klassresa till en magisk teater gör att Harri kan möta alla sina jag. Föreställningen, regisserad och skriven av Lola Zackow, är baserad på Hermann Hesses klassiker Stäppvargen. Det är en samproduktion ",
+      "desc_en": "Stäppvalpen – Påsklovsteater is a performance at Unga Klara, Kulturhuset Stadsteatern in Stockholm.\n\nThe performance is about Harri, who struggles to fit in and embrace her inner wolf. A class trip to a magical theater allows Harri to meet all her selves. The performance, directed and written by Lola Zackow, is based on Hermann Hesse's classic Steppenwolf. It is a co-production between Unga Klara ",
+      "raw": "Stäppvalpen – Påsklovsteater är en föreställning på Unga Klara, Kulturhuset Stadsteatern i Stockholm.\n\nFöreställningen handlar om Harri som kämpar med att passa in och att omfamna sin inre varg. En klassresa till en magisk teater gör att Harri kan möta alla sina jag. Föreställningen, regisserad och skriven av Lola Zackow, är baserad på Hermann Hesses klassiker Stäppvargen. Det är en samproduktion ",
+      "venue": "Kulturhuset Stadsteatern",
+      "start": "2027-04-02T16:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "faff5b7f-fe43-4c35-8c01-86cb5359bcf2",
+      "title_sv": "Jag Kan! (2-5 år)",
+      "title_en": "Jag Kan! (2-5 år)",
+      "desc_sv": "Jag Kan! är ett kroppspoetiskt teateräventyr på Lilla 3 i Stockholm.\n\nFöreställningen Jag Kan! är ett kroppspoetiskt teateräventyr för de yngsta. Den utforskar lyckan i att klara av och hur kämpigt det kan vara att lära nytt. Pjäsen vill inspirera till självtillit och självkänsla, samt modet att pröva igen när det går på tok. Den uppmuntrar även till kreativ problemlösning. Genom teaterns lek, hum",
+      "desc_en": "Jag Kan! is a body-poetic theatre adventure at Lilla 3 in Stockholm.\n\nThe performance Jag Kan! is a body-poetic theatre adventure for the youngest audience. It explores the joy of succeeding and the challenges that can arise when learning new things. The play aims to inspire self-confidence, self-esteem, and the courage to try again after setbacks. It also encourages creative problem-solving. Thro",
+      "raw": "Jag Kan! är ett kroppspoetiskt teateräventyr på Lilla 3 i Stockholm.\n\nFöreställningen Jag Kan! är ett kroppspoetiskt teateräventyr för de yngsta. Den utforskar lyckan i att klara av och hur kämpigt det kan vara att lära nytt. Pjäsen vill inspirera till självtillit och självkänsla, samt modet att pröva igen när det går på tok. Den uppmuntrar även till kreativ problemlösning. Genom teaterns lek, hum",
+      "venue": "왕의 정원",
+      "start": "2026-11-17T09:45:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "f119e011-4f0e-48e5-b615-0080e7c9318b",
+      "title_sv": "Snöbrist och Knäcklängtan 12.00",
+      "title_en": "Snöbrist och Knäcklängtan 12.00",
+      "desc_sv": "\"Snöbrist och Knäcklängtan\" är en julberättelse för skådespelare i åldern 7-9 år på Tonsalen Huddinge i Huddinge.\n\nDenna julberättelse handlar om vänskap och önskningar. Julen närmar sig, men det finns ingen snö, vilket hindrar pulkaåkning, snöänglar och tomtens släde. Barnen bestämmer sig för att inte ge upp och utför en snörit. De vandrar mot Nordpolen och möter en bekymrad men hjälpsam tomte. F",
+      "desc_en": "\"Snöbrist och Knäcklängtan\" is a Christmas story for actors aged 7-9 at Tonsalen Huddinge in Huddinge.\n\nThis Christmas story is about friendship and wishes. Christmas is approaching, but there is no snow, which prevents sledding, snow angels, and Santa's sleigh. The children decide not to give up and perform a snow ritual. They journey towards the North Pole and encounter a worried but helpful San",
+      "raw": "\"Snöbrist och Knäcklängtan\" är en julberättelse för skådespelare i åldern 7-9 år på Tonsalen Huddinge i Huddinge.\n\nDenna julberättelse handlar om vänskap och önskningar. Julen närmar sig, men det finns ingen snö, vilket hindrar pulkaåkning, snöänglar och tomtens släde. Barnen bestämmer sig för att inte ge upp och utför en snörit. De vandrar mot Nordpolen och möter en bekymrad men hjälpsam tomte. F",
+      "venue": "왕의 정원",
+      "start": "2026-11-14T11:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "6d6edaaf-7454-4bc0-be8d-9fd622c398b4",
+      "title_sv": "Hot Wheels Stunt Show",
+      "title_en": "Hot Wheels Stunt Show",
+      "desc_sv": "Fr&aring;n v&auml;rldens mest s&aring;lda leksak och The Original Stunt Brand&trade; kommer nu den helt nya livef&ouml;rest&auml;llningen Hot Wheels Stunt Show till Avicii Arena 17-18 oktober. Upplev fartfylld action och fullgasad sp&auml;nning n&auml;r legendariska Hot Wheels-fordon v&auml;cks till liv och utf&ouml;r hisnande stuntnummer som tidigare bara varit m&ouml;jliga att f&ouml;rest&auml;l",
+      "desc_en": "Fr&aring;n v&auml;rldens mest s&aring;lda leksak och The Original Stunt Brand&trade; kommer nu den helt nya livef&ouml;rest&auml;llningen Hot Wheels Stunt Show till Avicii Arena 17-18 oktober. Upplev fartfylld action och fullgasad sp&auml;nning n&auml;r legendariska Hot Wheels-fordon v&auml;cks till liv och utf&ouml;r hisnande stuntnummer som tidigare bara varit m&ouml;jliga att f&ouml;rest&auml;l",
+      "raw": "Fr&aring;n v&auml;rldens mest s&aring;lda leksak och The Original Stunt Brand&trade; kommer nu den helt nya livef&ouml;rest&auml;llningen Hot Wheels Stunt Show till Avicii Arena 17-18 oktober. Upplev fartfylld action och fullgasad sp&auml;nning n&auml;r legendariska Hot Wheels-fordon v&auml;cks till liv och utf&ouml;r hisnande stuntnummer som tidigare bara varit m&ouml;jliga att f&ouml;rest&auml;l",
+      "venue": "Avicii Arena",
+      "start": "2026-10-16T22:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "b42c48af-a9da-41de-bfad-90fa8409691b",
+      "title_sv": "Tassen på hjärtat",
+      "title_en": "Tassen på hjärtat",
+      "desc_sv": "Tassen på hjärtat är en berättelse om ett magiskt möte på Lejonkulan i Stockholm.\n\nDenna föreställning på Lejonkulan i Stockholm skildrar ett magiskt möte som förändrar en familjs liv för alltid.",
+      "desc_en": "Tassen på hjärtat is a story about a magical meeting at Lejonkulan in Stockholm.\n\nThis performance at Lejonkulan in Stockholm depicts a magical meeting that changes a family's life forever.",
+      "raw": "Tassen på hjärtat är en berättelse om ett magiskt möte på Lejonkulan i Stockholm.\n\nDenna föreställning på Lejonkulan i Stockholm skildrar ett magiskt möte som förändrar en familjs liv för alltid.",
+      "venue": "왕의 정원",
+      "start": "2026-10-07T08:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "2e73f026-8d61-49ac-85ce-c46a0ec513d9",
+      "title_sv": "Snöbrist och Knäcklängtan 15.00",
+      "title_en": "Snöbrist och Knäcklängtan 15.00",
+      "desc_sv": "Snöbrist och Knäcklängtan är en julberättelse på Tonsalen Huddinge i Huddinge.\n\nDenna julberättelse handlar om vänskap och önskningar och skildrar situationen när det inte finns någon snö inför julen. Utan snö fungerar varken pulkaåkning, snöänglar eller tomtens släde. Barnen bestämmer sig för att utföra en snörit och vandra mot Nordpolen, där de möter en tomte. Föreställningen är ett vintersävent",
+      "desc_en": "Snöbrist och Knäcklängtan is a Christmas story at Tonsalen Huddinge in Huddinge.\n\nThis warm and funny Christmas story explores friendship and wishes, focusing on the lack of snow as Christmas approaches. Without snow, sledding, snow angels, and even Santa's sleigh cannot function properly. The children decide to perform a snow ritual and journey towards the North Pole, where they encounter a Santa",
+      "raw": "Snöbrist och Knäcklängtan är en julberättelse på Tonsalen Huddinge i Huddinge.\n\nDenna julberättelse handlar om vänskap och önskningar och skildrar situationen när det inte finns någon snö inför julen. Utan snö fungerar varken pulkaåkning, snöänglar eller tomtens släde. Barnen bestämmer sig för att utföra en snörit och vandra mot Nordpolen, där de möter en tomte. Föreställningen är ett vintersävent",
+      "venue": "왕의 정원",
+      "start": "2026-11-14T14:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "2a329241-bb4e-4efe-af03-a615c8e16ec8",
+      "title_sv": "Poängen med Pekka, från 4 år med familj",
+      "title_en": "Poängen med Pekka, från 4 år med familj",
+      "desc_sv": "Svängig och klurig musikteater med Masthuggsteatern, Pekkas jobb är viktigt och roligt. Han mäter med sin mätare, kontrollerar, rapporterar och älskar sitt jobb. Men så en dag händer något som Pekka inte var beredd på, han förlorar sitt jobb. Allt rasar för Pekka men till slut sitter Pekka och publiken tillsammans i en värld av möjligheter: något har gått förlorat men annat kan vinnas och något ny",
+      "desc_en": "Svängig och klurig musikteater med Masthuggsteatern, Pekkas jobb är viktigt och roligt. Han mäter med sin mätare, kontrollerar, rapporterar och älskar sitt jobb. Men så en dag händer något som Pekka inte var beredd på, han förlorar sitt jobb. Allt rasar för Pekka men till slut sitter Pekka och publiken tillsammans i en värld av möjligheter: något har gått förlorat men annat kan vinnas och något ny",
+      "raw": "Svängig och klurig musikteater med Masthuggsteatern, Pekkas jobb är viktigt och roligt. Han mäter med sin mätare, kontrollerar, rapporterar och älskar sitt jobb. Men så en dag händer något som Pekka inte var beredd på, han förlorar sitt jobb. Allt rasar för Pekka men till slut sitter Pekka och publiken tillsammans i en värld av möjligheter: något har gått förlorat men annat kan vinnas och något ny",
+      "venue": "Poängen med Pekka, från 4 år med familj",
+      "start": "2026-11-28T10:30:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "f1c5daf1-ae59-49a8-8493-ccca546313d7",
+      "title_sv": "Stäppvalpen – Påsklovsteater",
+      "title_en": "Stäppvalpen – Påsklovsteater",
+      "desc_sv": "Stäppvalpen – Påsklovsteater är en föreställning på Unga Klara, Kulturhuset Stadsteatern i Stockholm.\n\nFöreställningen handlar om Harri som kämpar med att passa in och att omfamna sin inre varg. En klassresa till en magisk teater gör att Harri kan möta alla sina jag. Föreställningen, regisserad och skriven av Lola Zackow, är baserad på Hermann Hesses klassiker Stäppvargen. Det är en samproduktion ",
+      "desc_en": "Stäppvalpen – Påsklovsteater is a performance at Unga Klara, Kulturhuset Stadsteatern in Stockholm.\n\nThe performance is about Harri, who struggles to fit in and embrace her inner wolf. A class trip to a magical theater allows Harri to meet all her selves. The performance, directed and written by Lola Zackow, is based on Hermann Hesse's classic Steppenwolf. It is a co-production between Unga Klara ",
+      "raw": "Stäppvalpen – Påsklovsteater är en föreställning på Unga Klara, Kulturhuset Stadsteatern i Stockholm.\n\nFöreställningen handlar om Harri som kämpar med att passa in och att omfamna sin inre varg. En klassresa till en magisk teater gör att Harri kan möta alla sina jag. Föreställningen, regisserad och skriven av Lola Zackow, är baserad på Hermann Hesses klassiker Stäppvargen. Det är en samproduktion ",
+      "venue": "Kulturhuset Stadsteatern",
+      "start": "2027-03-31T16:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "8062362c-c11e-463b-a931-6df403b0f598",
+      "title_sv": "Humlan Djojj on an adventure with the Swedish Radio Symphony Orchestra",
+      "title_en": "Humlan Djojj on an adventure with the Swedish Radio Symphony Orchestra",
+      "desc_sv": "Interactive children's concert with Grammy-nominated artist Humlan Djojj and Swedish Radio Symphony Orchestra in playful musical adventure.",
+      "desc_en": "Interactive children's concert with Grammy-nominated artist Humlan Djojj and Swedish Radio Symphony Orchestra in playful musical adventure.",
+      "raw": "Interactive children's concert with Grammy-nominated artist Humlan Djojj and Swedish Radio Symphony Orchestra in playful musical adventure.",
+      "venue": "Berwaldhallen",
+      "start": "2026-10-24T10:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "b5fe709d-b885-4c27-85bb-07871acc9386",
+      "title_sv": "Pyssel med drop-in: Madickens pudel",
+      "title_en": "Pyssel med drop-in: Madickens pudel",
+      "venue": "왕의 정원",
+      "start": "2026-11-21T12:30:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "b3053361-ab5c-4d71-be18-152bc923ff4c",
+      "title_sv": "Barnvagnsbio: Kärlek över Tanger",
+      "title_en": "Barnvagnsbio: Kärlek över Tanger",
+      "desc_sv": "Barnvagnsbio: Kärlek över Tanger är en barnvagnsbio på Kulturhuset Stadsteatern i Stockholm.\n\nVälkommen på barnvagnsbio på Klarabiografen. Vi har valt ut guldkorn ur aktuell filmrepertoar som vi visar med salongen anpassad för dig och din bäbis. Alla är välkomna med eller utan bäbis.",
+      "desc_en": "Barnvagnsbio: Kärlek över Tanger is a pram cinema at Kulturhuset Stadsteatern in Stockholm.\n\nWelcome to the pram cinema at Klarabiografen. We have selected highlights from the current film repertoire, shown in an auditorium adapted for you and your baby. Everyone is welcome, with or without a baby.",
+      "raw": "Barnvagnsbio: Kärlek över Tanger är en barnvagnsbio på Kulturhuset Stadsteatern i Stockholm.\n\nVälkommen på barnvagnsbio på Klarabiografen. Vi har valt ut guldkorn ur aktuell filmrepertoar som vi visar med salongen anpassad för dig och din bäbis. Alla är välkomna med eller utan bäbis.",
+      "venue": "Kulturhuset Stadsteatern",
+      "start": "2026-10-23T09:30:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "6c0c2926-21c7-43ef-a5b7-7aeff5a97489",
+      "title_sv": "Kris, kaos & katastrof - höstlovsteater",
+      "title_en": "Kris, kaos & katastrof - höstlovsteater",
+      "desc_sv": "Kris, kaos & katastrof - höstlovsteater är en sci-fi komedi på Unga Klara, Kulturhuset Stadsteatern i Stockholm.\n\nPå en måndag morgon samlas fem elever och en lärare i ett klassrum för ett omprov i svenska. Uppgiften är att besvara frågan \"hur ser ditt liv ut om 20 år?\", men eleverna kämpar med osäkerhet inför framtiden. De hanterar tankar om överbeskyddande föräldrar, gängkriminella bröder och ex",
+      "desc_en": "Kris, kaos & katastrof - höstlovsteater is a sci-fi comedy at Unga Klara, Kulturhuset Stadsteatern in Stockholm.\n\nOn a Monday morning, five students and a teacher gather in a classroom for a Swedish re-exam. Their task is to answer the question \"what will your life look like in 20 years?\", but the students struggle with uncertainty about the future. They confront concerns about overprotective pare",
+      "raw": "Kris, kaos & katastrof - höstlovsteater är en sci-fi komedi på Unga Klara, Kulturhuset Stadsteatern i Stockholm.\n\nPå en måndag morgon samlas fem elever och en lärare i ett klassrum för ett omprov i svenska. Uppgiften är att besvara frågan \"hur ser ditt liv ut om 20 år?\", men eleverna kämpar med osäkerhet inför framtiden. De hanterar tankar om överbeskyddande föräldrar, gängkriminella bröder och ex",
+      "venue": "Kulturhuset Stadsteatern",
+      "start": "2026-10-28T18:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "879d36eb-8cc6-48ab-9384-2c0aef011c8b",
+      "title_sv": "Det kommer tigrar (2.5-6 år)",
+      "title_en": "Det kommer tigrar (2.5-6 år)",
+      "desc_sv": "Det kommer tigrar är en föreställning baserad på böckerna om Loranga, Masarin och Dartanjang, på Teater Tre i Stockholm.\n\nDet kommer tigrar är fritt baserad på Barbro Lindgrens böcker om Loranga, Masarin och Dartanjang. Publiken följer med på en resa genom skogen, förbi sophögen och giraffen, hela vägen hem till Masarin. Där sover pappa Loranga under köksbordet och farfar Dartanjang tar febern i v",
+      "desc_en": "Det kommer tigrar is a performance based on the books about Loranga, Masarin, and Dartanjang, at Teater Tre in Stockholm.\n\nDet kommer tigrar is freely based on Barbro Lindgren's books about Loranga, Masarin, and Dartanjang. The audience joins a journey through the forest, past the rubbish heap and the giraffe, all the way home to Masarin. There, father Loranga sleeps under the kitchen table, and g",
+      "raw": "Det kommer tigrar är en föreställning baserad på böckerna om Loranga, Masarin och Dartanjang, på Teater Tre i Stockholm.\n\nDet kommer tigrar är fritt baserad på Barbro Lindgrens böcker om Loranga, Masarin och Dartanjang. Publiken följer med på en resa genom skogen, förbi sophögen och giraffen, hela vägen hem till Masarin. Där sover pappa Loranga under köksbordet och farfar Dartanjang tar febern i v",
+      "venue": "왕의 정원",
+      "start": "2026-10-28T08:15:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "a86c8dbb-0ee0-4c6a-b1a3-913e9ffda5c4",
+      "title_sv": "Skoja' bara (vardag)",
+      "title_en": "Skoja' bara (vardag)",
+      "desc_sv": "Skoja' bara (vardag) är en klassrumsföreställning på Teaterverket Svea i Stockholm.\n\nDenna klassrumsföreställning utforskar mellanstadiets turbulenta tid, där jaget och gruppen utforskas. Den behandlar lek som kan bli allvar, när ett skämt drivs för långt och får livsavgörande konsekvenser.",
+      "desc_en": "Skoja' bara (vardag) is a classroom performance at Teaterverket Svea in Stockholm.\n\nThis classroom performance explores the turbulent middle school years, a time for self-discovery and group dynamics. It examines how play can turn serious, when a joke goes too far and leads to life-altering consequences.",
+      "raw": "Skoja' bara (vardag) är en klassrumsföreställning på Teaterverket Svea i Stockholm.\n\nDenna klassrumsföreställning utforskar mellanstadiets turbulenta tid, där jaget och gruppen utforskas. Den behandlar lek som kan bli allvar, när ett skämt drivs för långt och får livsavgörande konsekvenser.",
+      "venue": "Teaterverket Svea",
+      "start": "2027-03-16T09:45:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "1bc88680-14d5-42e6-929b-7e5dc49bba9b",
+      "title_sv": "Höstlovsteater: Bygget",
+      "title_en": "Höstlovsteater: Bygget",
+      "desc_sv": "Höstlovsteater: Bygget är en clownföreställning med Dotterbolaget på ABBA-salen, Messingen i Upplands Väsby.\n\nHöstlovsteater: Bygget bjuder på en clownföreställning med Dotterbolaget. Denna föreställning hålls på ABBA-salen, Messingen.",
+      "desc_en": "Höstlovsteater: Bygget is a clown performance with Dotterbolaget at ABBA-salen, Messingen in Upplands Väsby.\n\nHöstlovsteater: Bygget presents a clown performance by Dotterbolaget. This show is held at ABBA-salen, Messingen.",
+      "raw": "Höstlovsteater: Bygget är en clownföreställning med Dotterbolaget på ABBA-salen, Messingen i Upplands Väsby.\n\nHöstlovsteater: Bygget bjuder på en clownföreställning med Dotterbolaget. Denna föreställning hålls på ABBA-salen, Messingen.",
+      "venue": "왕의 정원",
+      "start": "2026-10-26T10:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "ce86e063-f863-455a-bf92-19d32e8fb9f3",
+      "title_sv": "Livet är härligt, mamma!",
+      "title_en": "Livet är härligt, mamma!",
+      "desc_sv": "Det är sommar på Söderön. Lo och mamma ger sig ut på utflykt och upptäcker skogen och djuren, havet och naturen. Livet är härligt, mamma! ropar Lo. Men när en s",
+      "desc_en": "Det är sommar på Söderön. Lo och mamma ger sig ut på utflykt och upptäcker skogen och djuren, havet och naturen. Livet är härligt, mamma! ropar Lo. Men när en s",
+      "raw": "Det är sommar på Söderön. Lo och mamma ger sig ut på utflykt och upptäcker skogen och djuren, havet och naturen. Livet är härligt, mamma! ropar Lo. Men när en s",
+      "venue": "Fasching",
+      "start": "2026-10-18T11:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "52ff68c0-dcc2-4a43-9298-8ac4ee3ecf52",
+      "title_sv": "Skogen har öron (7-12 år) Vardag",
+      "title_en": "Skogen har öron (7-12 år) Vardag",
+      "desc_sv": "Skogen har öron är en föreställning för 7-12 år på Teaterverket Svea i Stockholm.\n\nDet är en rafflande deckargåta som utspelar sig i vildmarken. Föreställningen handlar om längtan efter att känna sig behövd och svårigheten att bryta sig loss från en tilldelad roll.",
+      "desc_en": "Skogen har öron is a performance for ages 7-12 at Teaterverket Svea in Stockholm.\n\nThis thrilling detective mystery unfolds in the wilderness. The performance explores themes of longing to feel needed and the challenge of breaking free from an assigned role.",
+      "raw": "Skogen har öron är en föreställning för 7-12 år på Teaterverket Svea i Stockholm.\n\nDet är en rafflande deckargåta som utspelar sig i vildmarken. Föreställningen handlar om längtan efter att känna sig behövd och svårigheten att bryta sig loss från en tilldelad roll.",
+      "venue": "Teaterverket Svea",
+      "start": "2027-04-15T08:45:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "891c30ef-b60a-41fc-bc83-1d8e615565d6",
+      "title_sv": "Jag Kan! (2-5 år)",
+      "title_en": "Jag Kan! (2-5 år)",
+      "desc_sv": "Jag Kan! är ett kroppspoetiskt teateräventyr på Teater Tre i Stockholm.\n\n\"Jag Kan!\" är ett kroppspoetiskt teateräventyr riktat till de yngsta besökarna. Föreställningen handlar om lyckan i att klara av och hur stolt man blir när man plötsligt kan det man nyss inte kunde. Den vill inspirera till självtillit och självkänsla, samt modet att pröva igen när det går på tok. Äventyret uppmuntrar också ti",
+      "desc_en": "Jag Kan! is a body-poetic theatre adventure at Teater Tre in Stockholm.\n\n\"Jag Kan!\" is a body-poetic theatre adventure designed for the youngest audience members. The performance explores the joy of succeeding and the pride felt when suddenly mastering something new. It aims to inspire self-reliance and self-esteem, fostering the courage to try again when things go wrong. The adventure also encour",
+      "raw": "Jag Kan! är ett kroppspoetiskt teateräventyr på Teater Tre i Stockholm.\n\n\"Jag Kan!\" är ett kroppspoetiskt teateräventyr riktat till de yngsta besökarna. Föreställningen handlar om lyckan i att klara av och hur stolt man blir när man plötsligt kan det man nyss inte kunde. Den vill inspirera till självtillit och självkänsla, samt modet att pröva igen när det går på tok. Äventyret uppmuntrar också ti",
+      "venue": "왕의 정원",
+      "start": "2026-10-21T08:45:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "ded26f42-154b-44b0-a5e5-8fde514e00fe",
+      "title_sv": "Skogen har öron (7-12 år) Vardag",
+      "title_en": "Skogen har öron (7-12 år) Vardag",
+      "desc_sv": "“Skogen har öron” är en deckargåta i vildmarken för 7-12 år på Teaterverket Svea i Stockholm.\n\nFöreställningen är en spännande deckargåta om längtan efter att känna sig behövd. Den behandlar även svårigheten att bryta sig loss från tilldelade roller.",
+      "desc_en": "“Skogen har öron” is a wilderness detective mystery for ages 7-12 at Teaterverket Svea in Stockholm.\n\nThis performance is an exciting detective mystery about the longing to feel needed. It also addresses the difficulty of breaking free from assigned roles.",
+      "raw": "“Skogen har öron” är en deckargåta i vildmarken för 7-12 år på Teaterverket Svea i Stockholm.\n\nFöreställningen är en spännande deckargåta om längtan efter att känna sig behövd. Den behandlar även svårigheten att bryta sig loss från tilldelade roller.",
+      "venue": "Teaterverket Svea",
+      "start": "2026-10-21T08:45:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "51e657f7-1f87-40a7-86c1-d898ea0d2e7d",
+      "title_sv": "Skogen har öron (7-12 år) Vardag",
+      "title_en": "Skogen har öron (7-12 år) Vardag",
+      "desc_sv": "Skogen har öron (7-12 år) Vardag är en föreställning på Teaterverket Svea i Stockholm.\n\nSkogen har öron (7-12 år) Vardag är en rafflande deckargåta som utspelar sig i vildmarken. Föreställningen utforskar längtan efter att känna sig behövd och svårigheten att bryta sig loss från tilldelade roller.",
+      "desc_en": "Skogen har öron (7-12 år) Vardag is a performance at Teaterverket Svea in Stockholm.\n\nSkogen har öron (7-12 år) Vardag is an exciting detective mystery set in the wilderness. The performance explores the longing to feel needed and the challenge of breaking free from assigned roles.",
+      "raw": "Skogen har öron (7-12 år) Vardag är en föreställning på Teaterverket Svea i Stockholm.\n\nSkogen har öron (7-12 år) Vardag är en rafflande deckargåta som utspelar sig i vildmarken. Föreställningen utforskar längtan efter att känna sig behövd och svårigheten att bryta sig loss från tilldelade roller.",
+      "venue": "Teaterverket Svea",
+      "start": "2026-10-21T07:15:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "0f84a590-3ba6-4d0f-804b-ffe7d23daa0a",
+      "title_sv": "Barnlördagar på Kungliga Operan",
+      "title_en": "Barnlördagar på Kungliga Operan",
+      "desc_sv": "Välkomna till barnlördagarna på Kungliga Operan.",
+      "desc_en": "Välkomna till barnlördagarna på Kungliga Operan.",
+      "raw": "Välkomna till barnlördagarna på Kungliga Operan.",
+      "venue": "Kungliga Operan",
+      "start": "2026-10-23T22:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "dda8b44e-ac24-42d3-97ce-9751684b1347",
+      "title_sv": "Pyssel med drop-in: Små halloween-pumpor av papper",
+      "title_en": "Pyssel med drop-in: Små halloween-pumpor av papper",
+      "venue": "왕의 정원",
+      "start": "2026-10-10T11:30:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "2e7988d9-fac1-453b-a7c1-93e418ea0462",
+      "title_sv": "Babblarna & Klonks Klapp-kalas",
+      "title_en": "Babblarna & Klonks Klapp-kalas",
+      "desc_sv": "Babblarna & Klonks Klapp-kalas är en musikal på Nacka Aula i Nacka.\n\nBabblarna & Klonks Klapp-kalas är en musikal som efter mer än 1100 föreställningar beskrivs som en större succé än någonsin. Denna färgsprakande, svängiga och interaktiva föreställning är för de allra yngsta. Klonk fyller år och alla Babblarna är på plats för att fira med tårta, ballonger, fiskdamm och kalashattar. Barnen får var",
+      "desc_en": "Babblarna & Klonks Klapp-kalas is a musical at Nacka Aula in Nacka.\n\nBabblarna & Klonks Klapp-kalas is a musical described as a bigger success than ever after more than 1100 performances. This colorful, swingy, and interactive show is designed for the youngest audiences. Klonk is celebrating a birthday, and all Babblarna are present to celebrate with cake, balloons, a fishing pond, and party hats.",
+      "raw": "Babblarna & Klonks Klapp-kalas är en musikal på Nacka Aula i Nacka.\n\nBabblarna & Klonks Klapp-kalas är en musikal som efter mer än 1100 föreställningar beskrivs som en större succé än någonsin. Denna färgsprakande, svängiga och interaktiva föreställning är för de allra yngsta. Klonk fyller år och alla Babblarna är på plats för att fira med tårta, ballonger, fiskdamm och kalashattar. Barnen får var",
+      "venue": "Nacka",
+      "start": "2026-10-18T09:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "80f17607-1ab6-49a0-8c13-bde2747f68dc",
+      "title_sv": "Babblarna & Klonks Klapp-kalas",
+      "title_en": "Babblarna & Klonks Klapp-kalas",
+      "desc_sv": "Babblarna & Klonks Klapp-kalas är en färgsprakande och interaktiv musikal på Nya Cirkus i Stockholm.\n\nMusikalen Babblarna & Klonks Klapp-kalas är en svängig och interaktiv upplevelse för de allra yngsta. Klonk firar sin födelsedag med Babblarna, vilket innebär tårta, ballonger, fiskdamm och kalashattar. Publiken bjuds in att delta genom att klappa takten, babbla, bubbla, köra bil och dansa med sin",
+      "desc_en": "Babblarna & Klonks Klapp-kalas is a colorful and interactive musical at Nya Cirkus in Stockholm.\n\nThe musical Babblarna & Klonks Klapp-kalas is a lively and interactive experience for the youngest audience. Klonk celebrates a birthday, with all the Babblarna characters joining for cake, balloons, a fishing pond, and party hats. Children are invited to participate by clapping, babbling, bubbling, d",
+      "raw": "Babblarna & Klonks Klapp-kalas är en färgsprakande och interaktiv musikal på Nya Cirkus i Stockholm.\n\nMusikalen Babblarna & Klonks Klapp-kalas är en svängig och interaktiv upplevelse för de allra yngsta. Klonk firar sin födelsedag med Babblarna, vilket innebär tårta, ballonger, fiskdamm och kalashattar. Publiken bjuds in att delta genom att klappa takten, babbla, bubbla, köra bil och dansa med sin",
+      "venue": "Nya Cirkus",
+      "start": "2026-10-17T14:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "c4f1f2b1-df20-4c40-beef-6e61ea30824a",
+      "title_sv": "Livet är härligt, mamma!",
+      "title_en": "Livet är härligt, mamma!",
+      "desc_sv": "Livet är härligt, mamma! är en musikföreställning för barn 4–9 år om ett barns upptäcktsfärd i naturen. Med nyskriven musik framförd live av fyra musiker följer",
+      "desc_en": "Livet är härligt, mamma! är en musikföreställning för barn 4–9 år om ett barns upptäcktsfärd i naturen. Med nyskriven musik framförd live av fyra musiker följer",
+      "raw": "Livet är härligt, mamma! är en musikföreställning för barn 4–9 år om ett barns upptäcktsfärd i naturen. Med nyskriven musik framförd live av fyra musiker följer",
+      "venue": "왕의 정원",
+      "start": "2026-10-17T12:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "f9ce9425-3412-47d2-b558-751f44cc342d",
+      "title_sv": "Skogen har öron (7-12 år) Vardag",
+      "title_en": "Skogen har öron (7-12 år) Vardag",
+      "desc_sv": "Skogen har öron är en föreställning för 7-12 år på Teaterverket Svea i Stockholm.\n\nDet är en rafflande deckargåta som utspelar sig i vildmarken. Föreställningen handlar om längtan efter att känna sig behövd och svårigheten att bryta sig loss från en tilldelad roll.",
+      "desc_en": "Skogen har öron is a performance for ages 7-12 at Teaterverket Svea in Stockholm.\n\nThis thrilling detective mystery unfolds in the wilderness. The performance explores themes of longing to feel needed and the challenge of breaking free from an assigned role.",
+      "raw": "Skogen har öron är en föreställning för 7-12 år på Teaterverket Svea i Stockholm.\n\nDet är en rafflande deckargåta som utspelar sig i vildmarken. Föreställningen handlar om längtan efter att känna sig behövd och svårigheten att bryta sig loss från en tilldelad roll.",
+      "venue": "Teaterverket Svea",
+      "start": "2027-04-15T07:15:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "b7ecef87-22ca-4a55-8b6b-88e9cceec51e",
+      "title_sv": "Gymnasiemässan",
+      "title_en": "Gymnasiemässan",
+      "desc_sv": "Välkommen till Gymnasiemässan – första steget mot gymnasievalet! Här får elever i årskurs 9 och deras vårdnadshavare en unik möjlighet att utforska olika utbildningar, träffa skolor och få svar på viktiga frågor om antagning, datum och gymnasievalet. Kom och låt er inspireras!",
+      "desc_en": "Välkommen till Gymnasiemässan – första steget mot gymnasievalet! Här får elever i årskurs 9 och deras vårdnadshavare en unik möjlighet att utforska olika utbildningar, träffa skolor och få svar på viktiga frågor om antagning, datum och gymnasievalet. Kom och låt er inspireras!",
+      "raw": "Välkommen till Gymnasiemässan – första steget mot gymnasievalet! Här får elever i årskurs 9 och deras vårdnadshavare en unik möjlighet att utforska olika utbildningar, träffa skolor och få svar på viktiga frågor om antagning, datum och gymnasievalet. Kom och låt er inspireras!",
+      "venue": "Stockholmsmässan",
+      "start": "2027-11-23T00:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "1ba65016-e9aa-4435-903f-0b8da1f1da9f",
+      "title_sv": "Pettson & Findus - Pannkakstårtan",
+      "title_en": "Pettson & Findus - Pannkakstårtan",
+      "venue": "Konsistoriegatan 7",
+      "start": "2026-10-11T11:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "cf2e7e45-459d-4a21-a27f-7551b2ead710",
+      "title_sv": "UnderBARA BARN",
+      "title_en": "UnderBARA BARN",
+      "desc_sv": "Välkommen till Underbara Barn – Sveriges största barnkalas! Under tre inspirerande dagar fylls Stockholmsmässan av lek, inspiration och upplevelser för hela familjen. Här möter du över 70 utställare, upptäcker nya produkter, lyssnar på inspirerande föreläsningar och låter barnen ta del av roliga aktiviteter och scenunderhållning. En färgsprakande mötesplats för gravida, småbarnsföräldrar och alla ",
+      "desc_en": "Välkommen till Underbara Barn – Sveriges största barnkalas! Under tre inspirerande dagar fylls Stockholmsmässan av lek, inspiration och upplevelser för hela familjen. Här möter du över 70 utställare, upptäcker nya produkter, lyssnar på inspirerande föreläsningar och låter barnen ta del av roliga aktiviteter och scenunderhållning. En färgsprakande mötesplats för gravida, småbarnsföräldrar och alla ",
+      "raw": "Välkommen till Underbara Barn – Sveriges största barnkalas! Under tre inspirerande dagar fylls Stockholmsmässan av lek, inspiration och upplevelser för hela familjen. Här möter du över 70 utställare, upptäcker nya produkter, lyssnar på inspirerande föreläsningar och låter barnen ta del av roliga aktiviteter och scenunderhållning. En färgsprakande mötesplats för gravida, småbarnsföräldrar och alla ",
+      "venue": "Stockholmsmässan",
+      "start": "2026-10-15T23:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "471454c9-05f2-41be-97ef-b12bd0fe2d8f",
+      "title_sv": "Jag Kan! (2-5 år)",
+      "title_en": "Jag Kan! (2-5 år)",
+      "desc_sv": "Jag Kan! är ett kroppspoetiskt teateräventyr på Teater Tre i Stockholm.\n\nJag Kan! är ett kroppspoetiskt teateräventyr för de yngsta, som handlar om glädjen i att lyckas med nya saker. Föreställningen utforskar hur utmanande det kan vara att lära sig något nytt. Den visar också stoltheten som uppstår när man plötsligt kan det man tidigare inte behärskade. Målet är att inspirera till självtillit och",
+      "desc_en": "Jag Kan! is a body-poetic theatre adventure at Teater Tre in Stockholm.\n\n\"Jag Kan!\" (I Can!) is a body-poetic theatre adventure for the youngest audience, focusing on the joy of accomplishment. It explores how challenging it can be to learn new things. The performance also highlights the pride felt upon mastering something previously unknown. Its goal is to inspire self-reliance, self-esteem, and ",
+      "raw": "Jag Kan! är ett kroppspoetiskt teateräventyr på Teater Tre i Stockholm.\n\nJag Kan! är ett kroppspoetiskt teateräventyr för de yngsta, som handlar om glädjen i att lyckas med nya saker. Föreställningen utforskar hur utmanande det kan vara att lära sig något nytt. Den visar också stoltheten som uppstår när man plötsligt kan det man tidigare inte behärskade. Målet är att inspirera till självtillit och",
+      "venue": "왕의 정원",
+      "start": "2026-10-20T08:45:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "4f65889e-bd63-49af-94d7-69a21cdfa81f",
+      "title_sv": "Knapparna med Teater Sláva",
+      "title_en": "Knapparna med Teater Sláva",
+      "desc_sv": "Knapparna med Teater Sláva är en föreställning på Teater Sláva, Tonsalen i Huddinge.\n\nDenna föreställning av Teater Sláva presenteras på Teater Sláva, Tonsalen. Evenemanget heter 'Knapparna'.",
+      "desc_en": "Knapparna with Teater Sláva is a performance at Teater Sláva, Tonsalen in Huddinge.\n\nThis performance by Teater Sláva is presented at Teater Sláva, Tonsalen. The event is titled 'Knapparna'.",
+      "raw": "Knapparna med Teater Sláva är en föreställning på Teater Sláva, Tonsalen i Huddinge.\n\nDenna föreställning av Teater Sláva presenteras på Teater Sláva, Tonsalen. Evenemanget heter 'Knapparna'.",
+      "venue": "왕의 정원",
+      "start": "2026-10-18T14:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "ba74c259-2b07-4240-b076-3abb2014aeec",
+      "title_sv": "Jag Kan! (2-5 år)",
+      "title_en": "Jag Kan! (2-5 år)",
+      "desc_sv": "Jag Kan! (2-5 år) är ett kroppspoetiskt teateräventyr på Lilla 3 i Stockholm.\n\n\"Jag Kan!\" är ett teateräventyr skapat för de yngsta, där fokus ligger på lyckan i att klara av nya saker. Föreställningen utforskar hur utmanande det kan vara att lära sig något nytt, samt den stolthet som uppstår när man behärskar det man tidigare inte kunde. Den inspirerar till självtillit och självkänsla, och uppmun",
+      "desc_en": "Jag Kan! (2-5 years) is a body-poetic theatre adventure at Lilla 3 in Stockholm.\n\n\"Jag Kan!\" is a body-poetic theatre adventure designed for the youngest audience, focusing on the joy of accomplishment. It explores the challenges of learning new skills and the pride that comes from mastering something once deemed difficult. The performance aims to inspire self-reliance and self-esteem, encouraging",
+      "raw": "Jag Kan! (2-5 år) är ett kroppspoetiskt teateräventyr på Lilla 3 i Stockholm.\n\n\"Jag Kan!\" är ett teateräventyr skapat för de yngsta, där fokus ligger på lyckan i att klara av nya saker. Föreställningen utforskar hur utmanande det kan vara att lära sig något nytt, samt den stolthet som uppstår när man behärskar det man tidigare inte kunde. Den inspirerar till självtillit och självkänsla, och uppmun",
+      "venue": "왕의 정원",
+      "start": "2026-11-18T09:45:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "b941455b-8433-49c1-88a1-504a4573bd9c",
+      "title_sv": "Jag Kan! (2-5 år)",
+      "title_en": "Jag Kan! (2-5 år)",
+      "desc_sv": "Jag Kan! är ett kroppspoetiskt teateräventyr för de yngsta på Lilla 3 i Stockholm.\n\nJag Kan! är ett kroppspoetiskt teateräventyr som fokuserar på glädjen i att lyckas. Föreställningen utforskar utmaningarna med att lära sig nya saker och den stolthet som följer när man övervinner svårigheter. Den syftar till att inspirera självtillit, självkänsla och modet att försöka igen vid motgångar. Genom lek",
+      "desc_en": "Jag Kan! is a body-poetic theatre adventure for the youngest at Lilla 3 in Stockholm.\n\nJag Kan! is a body-poetic theatre adventure focusing on the joy of accomplishment. The performance explores the challenges of learning new things and the pride that comes from mastering what was once difficult. It aims to inspire self-reliance, self-esteem, and the courage to persist when facing setbacks. Throug",
+      "raw": "Jag Kan! är ett kroppspoetiskt teateräventyr för de yngsta på Lilla 3 i Stockholm.\n\nJag Kan! är ett kroppspoetiskt teateräventyr som fokuserar på glädjen i att lyckas. Föreställningen utforskar utmaningarna med att lära sig nya saker och den stolthet som följer när man övervinner svårigheter. Den syftar till att inspirera självtillit, självkänsla och modet att försöka igen vid motgångar. Genom lek",
+      "venue": "왕의 정원",
+      "start": "2026-11-17T08:15:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "aee5500c-c9e4-4cf7-9412-cfe243447ea0",
+      "title_sv": "Skoja' bara (vardag)",
+      "title_en": "Skoja' bara (vardag)",
+      "desc_sv": "Skoja' bara (vardag) är en klassrumsföreställning på Teaterverket Svea i Stockholm.\n\nDenna klassrumsföreställning utforskar att gå långt över gränsen. Den skildrar mellanstadiet som en turbulent tid där lek snabbt kan övergå i allvar, och ett skämt plötsligt blir en fråga om liv och död.",
+      "desc_en": "Skoja' bara (vardag) is a classroom performance at Teaterverket Svea in Stockholm.\n\nThis classroom performance explores pushing boundaries. It portrays middle school as a turbulent time when play can quickly turn serious, and a joke suddenly becomes a matter of life and death.",
+      "raw": "Skoja' bara (vardag) är en klassrumsföreställning på Teaterverket Svea i Stockholm.\n\nDenna klassrumsföreställning utforskar att gå långt över gränsen. Den skildrar mellanstadiet som en turbulent tid där lek snabbt kan övergå i allvar, och ett skämt plötsligt blir en fråga om liv och död.",
+      "venue": "Teaterverket Svea",
+      "start": "2026-11-20T09:45:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "7a4c7273-d271-42bb-bf16-3529937c813a",
+      "title_sv": "Gymnasiemässan",
+      "title_en": "Gymnasiemässan",
+      "desc_sv": "Välkommen till Gymnasiemässan – första steget mot gymnasievalet! Här får elever i årskurs 9 och deras vårdnadshavare en unik möjlighet att utforska olika utbildningar, träffa skolor och få svar på viktiga frågor om antagning, datum och gymnasievalet. Kom och låt er inspireras!",
+      "desc_en": "Välkommen till Gymnasiemässan – första steget mot gymnasievalet! Här får elever i årskurs 9 och deras vårdnadshavare en unik möjlighet att utforska olika utbildningar, träffa skolor och få svar på viktiga frågor om antagning, datum och gymnasievalet. Kom och låt er inspireras!",
+      "raw": "Välkommen till Gymnasiemässan – första steget mot gymnasievalet! Här får elever i årskurs 9 och deras vårdnadshavare en unik möjlighet att utforska olika utbildningar, träffa skolor och få svar på viktiga frågor om antagning, datum och gymnasievalet. Kom och låt er inspireras!",
+      "venue": "Stockholmsmässan",
+      "start": "2028-11-21T00:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "01783953-6313-4dd8-bfd6-4f4f6765a235",
+      "title_sv": "Tobbe Trollkarl \"30 år i barnens tjänst!\"",
+      "title_en": "Tobbe Trollkarl \"30 år i barnens tjänst!\"",
+      "desc_sv": "Tobbe sammanfattar sin 30-åriga karriär med en galen show (i vanlig ordning) med en massa aldrig förut skådade trick och galenskaper för hela familjen! ”Underbart att kunna underhålla en så bred åldersgrupp att både barn och vuxna kan prata om det länge efteråt” – påscen.se, högsta betyg! ”Han trollbinder sin unga publik, det är en sevärd familjeshow!” – Aftonbladet, Jens Peterson",
+      "desc_en": "Tobbe sammanfattar sin 30-åriga karriär med en galen show (i vanlig ordning) med en massa aldrig förut skådade trick och galenskaper för hela familjen! ”Underbart att kunna underhålla en så bred åldersgrupp att både barn och vuxna kan prata om det länge efteråt” – påscen.se, högsta betyg! ”Han trollbinder sin unga publik, det är en sevärd familjeshow!” – Aftonbladet, Jens Peterson",
+      "raw": "Tobbe sammanfattar sin 30-åriga karriär med en galen show (i vanlig ordning) med en massa aldrig förut skådade trick och galenskaper för hela familjen! ”Underbart att kunna underhålla en så bred åldersgrupp att både barn och vuxna kan prata om det länge efteråt” – påscen.se, högsta betyg! ”Han trollbinder sin unga publik, det är en sevärd familjeshow!” – Aftonbladet, Jens Peterson",
+      "venue": "Maximteatern",
+      "start": "2026-10-24T22:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "b6713cc3-17c3-4457-a648-6de728cf3864",
+      "title_sv": "Kalevalaskåpet med Teater Sláva",
+      "title_en": "Kalevalaskåpet med Teater Sláva",
+      "desc_sv": "Kalevalaskåpet med Teater Sláva är en sagoteater på Teater Sláva, Tonsalen i Huddinge.\n\nEn sagoteater fylld av pärlor från Kalevalas sagoskatt, det finska eposet. Föreställningen spelas på svenska med inslag av finska sånger.",
+      "desc_en": "Kalevalaskåpet med Teater Sláva is a story theatre performance at Teater Sláva, Tonsalen in Huddinge.\n\nThis story theatre performance features treasures from Kalevala's wealth of fairy tales, based on the proud Finnish epic. It is performed in Swedish with elements of Finnish songs.",
+      "raw": "Kalevalaskåpet med Teater Sláva är en sagoteater på Teater Sláva, Tonsalen i Huddinge.\n\nEn sagoteater fylld av pärlor från Kalevalas sagoskatt, det finska eposet. Föreställningen spelas på svenska med inslag av finska sånger.",
+      "venue": "왕의 정원",
+      "start": "2026-11-08T13:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "6d6f95ee-bf44-4189-b06c-ab886a8d42e6",
+      "title_sv": "Gräv - höst 26",
+      "title_en": "Gräv - höst 26",
+      "desc_sv": "Gräv är en dockteatermusikal på Dockteatern Tittut i Stockholm.\n\nDockteatermusikalen Gräv är avsedd för barn i åldern 2-6 år. Den handlar om Billie, som varje morgon passerar en byggarbetsplats på väg till förskolan. Fascinationen för maskinerna och grävmaskinens rörelser får hela världen att stanna. En dag uppstår en vänskap mellan Billie och grävmaskinen. Denna vänskap, som växer fram ur känslan",
+      "desc_en": "Gräv is a puppet theatre musical at Dockteatern Tittut in Stockholm.\n\nThe puppet theatre musical Gräv is intended for children aged 2-6 years. It follows Billie, who walks past a construction site every morning on the way to preschool. The fascination with the machines and the excavator's movements makes the whole world stand still. One day, a friendship develops between Billie and the excavator. ",
+      "raw": "Gräv är en dockteatermusikal på Dockteatern Tittut i Stockholm.\n\nDockteatermusikalen Gräv är avsedd för barn i åldern 2-6 år. Den handlar om Billie, som varje morgon passerar en byggarbetsplats på väg till förskolan. Fascinationen för maskinerna och grävmaskinens rörelser får hela världen att stanna. En dag uppstår en vänskap mellan Billie och grävmaskinen. Denna vänskap, som växer fram ur känslan",
+      "venue": "Teatern",
+      "start": "2026-10-10T09:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "5e0d0552-1f27-438e-bd78-bbf9535b9df3",
+      "title_sv": "Stäppvalpen",
+      "title_en": "Stäppvalpen",
+      "desc_sv": "Stäppvalpen är en föreställning på Unga Klara, Kulturhuset Stadsteatern i Stockholm.\n\nFöreställningen handlar om Harri, som ska börja i sjätte klass och känner sig sällan rätt. När hon försöker vara som alla andra tappar hon svansen och morrar. När hon försöker vara en varg kommer hennes mänskliga jag i vägen för det roliga. Under en klassresa till en magisk teater får Harri möta alla sina jag. Fö",
+      "desc_en": "Stäppvalpen is a performance at Unga Klara, Kulturhuset Stadsteatern in Stockholm.\n\nThe performance centers on Harri, who is about to start sixth grade and rarely feels right. When she tries to act like others, she drops her tail and growls. When she attempts to be a wolf, her human self obstructs all fun. During a class trip to a magical theater, Harri gets to meet all her selves. The performance",
+      "raw": "Stäppvalpen är en föreställning på Unga Klara, Kulturhuset Stadsteatern i Stockholm.\n\nFöreställningen handlar om Harri, som ska börja i sjätte klass och känner sig sällan rätt. När hon försöker vara som alla andra tappar hon svansen och morrar. När hon försöker vara en varg kommer hennes mänskliga jag i vägen för det roliga. Under en klassresa till en magisk teater får Harri möta alla sina jag. Fö",
+      "venue": "Kulturhuset Stadsteatern",
+      "start": "2027-03-04T10:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "36ce0325-b632-4441-b7d8-d5fdba321c0a",
+      "title_sv": "När Findus var liten och försvann (från 3 år) Vardag",
+      "title_en": "När Findus var liten och försvann (från 3 år) Vardag",
+      "desc_sv": "När Findus var liten och försvann är en teaterföreställning för barn från 3 år på Teaterverket Svea i Stockholm.\n\nFöreställningen skildrar hur Findus flyttar in hos Pettson och ger hans vardag ny mening. Varje dag blir ett äventyr fyllt av kärlek, nyfikenhet och tålamod. Denna berättelse värmer publiken, både stora och små. Pettson skapar ett lugn som ger Findus tid att bekanta sig med sin omgivni",
+      "desc_en": "When Findus was little and disappeared is a theater performance for children aged 3 and up at Teaterverket Svea in Stockholm.\n\nThe performance depicts how Findus moves in with Pettson, bringing new meaning to his everyday life. Each day becomes an adventure filled with love, curiosity, and patience. This story warms the audience, both adults and children. Pettson creates a calm environment, allowi",
+      "raw": "När Findus var liten och försvann är en teaterföreställning för barn från 3 år på Teaterverket Svea i Stockholm.\n\nFöreställningen skildrar hur Findus flyttar in hos Pettson och ger hans vardag ny mening. Varje dag blir ett äventyr fyllt av kärlek, nyfikenhet och tålamod. Denna berättelse värmer publiken, både stora och små. Pettson skapar ett lugn som ger Findus tid att bekanta sig med sin omgivni",
+      "venue": "Teaterverket Svea",
+      "start": "2027-02-18T09:30:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "31d14d69-69d1-48f1-a151-24175c055c4c",
+      "title_sv": "När Findus var liten och försvann (från 3 år) Helg",
+      "title_en": "När Findus var liten och försvann (från 3 år) Helg",
+      "desc_sv": "När Findus var liten och försvann är en föreställning på Teaterverket Svea i Stockholm.\n\nNär Findus flyttar in får Pettsons vardag plötsligt färg, mening och varje dag blir ett äventyr. Detta är en spännande föreställning om kärlek, nyfikenhet och tålamod. Den värmer både stora och små besökare. Pettson skapar ett särskilt lugn och ger Findus gott om tid att bekanta sig med omgivningarna. Det ger ",
+      "desc_en": "När Findus var liten och försvann är en föreställning på Teaterverket Svea i Stockholm.\n\nNär Findus flyttar in får Pettsons vardag plötsligt färg, mening och varje dag blir ett äventyr. Detta är en spännande föreställning om kärlek, nyfikenhet och tålamod. Den värmer både stora och små besökare. Pettson skapar ett särskilt lugn och ger Findus gott om tid att bekanta sig med omgivningarna. Det ger ",
+      "raw": "När Findus var liten och försvann är en föreställning på Teaterverket Svea i Stockholm.\n\nNär Findus flyttar in får Pettsons vardag plötsligt färg, mening och varje dag blir ett äventyr. Detta är en spännande föreställning om kärlek, nyfikenhet och tålamod. Den värmer både stora och små besökare. Pettson skapar ett särskilt lugn och ger Findus gott om tid att bekanta sig med omgivningarna. Det ger ",
+      "venue": "Teaterverket Svea",
+      "start": "2027-02-20T12:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "7f9dc8f4-11fc-4c6b-a77f-9c64098abcef",
+      "title_sv": "Det kommer tigrar (2.5-6 år)",
+      "title_en": "Det kommer tigrar (2.5-6 år)",
+      "desc_sv": "Det kommer tigrar, fritt baserad på böckerna av Barbro Lindgren, visas på Teater Tre i Stockholm.\n\nDet kommer tigrar är fritt utifrån böckerna om Loranga, Masarin och Dartanjang av Barbro Lindgren. Föreställningen följer med genom skogen, förbi sophögen och giraffen, hem till Masarin. Där sover pappa Loranga under köksbordet, och farfar Dartanjang tar febern i vedbon. Solen går upp över garagebass",
+      "desc_en": "Det kommer tigrar, freely based on books by Barbro Lindgren, is presented at Teater Tre in Stockholm.\n\n'Det kommer tigrar' is freely adapted from Barbro Lindgren's books about Loranga, Masarin, and Dartanjang. The performance takes you through the forest, past the rubbish heap and the giraffe, to Masarin's home. There, papa Loranga sleeps under the kitchen table, and grandpa Dartanjang takes his f",
+      "raw": "Det kommer tigrar, fritt baserad på böckerna av Barbro Lindgren, visas på Teater Tre i Stockholm.\n\nDet kommer tigrar är fritt utifrån böckerna om Loranga, Masarin och Dartanjang av Barbro Lindgren. Föreställningen följer med genom skogen, förbi sophögen och giraffen, hem till Masarin. Där sover pappa Loranga under köksbordet, och farfar Dartanjang tar febern i vedbon. Solen går upp över garagebass",
+      "venue": "왕의 정원",
+      "start": "2026-10-10T11:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "c7f311ef-ed4a-4fad-9065-b52194ed61a2",
+      "title_sv": "Skogen har öron (7-12 år) Vardag",
+      "title_en": "Skogen har öron (7-12 år) Vardag",
+      "desc_sv": "Skogen har öron är en föreställning för 7-12 år på Teaterverket Svea i Stockholm.\n\nDet är en rafflande deckargåta som utspelar sig i vildmarken. Föreställningen handlar om längtan efter att känna sig behövd och svårigheten att bryta sig loss från en tilldelad roll.",
+      "desc_en": "Skogen har öron is a performance for ages 7-12 at Teaterverket Svea in Stockholm.\n\nThis thrilling detective mystery unfolds in the wilderness. The performance explores themes of longing to feel needed and the challenge of breaking free from an assigned role.",
+      "raw": "Skogen har öron är en föreställning för 7-12 år på Teaterverket Svea i Stockholm.\n\nDet är en rafflande deckargåta som utspelar sig i vildmarken. Föreställningen handlar om längtan efter att känna sig behövd och svårigheten att bryta sig loss från en tilldelad roll.",
+      "venue": "Teaterverket Svea",
+      "start": "2027-04-13T07:15:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "50580817-b1b6-4c19-b582-aa3073d5ed63",
+      "title_sv": "Knattebio: Vem är vem?",
+      "title_en": "Knattebio: Vem är vem?",
+      "desc_sv": "Knattebio: Vem är vem? är en barnbioföreställning på Kulturhuset Stadsteatern i Stockholm.\n\nEvenemanget Knattebio: Vem är vem? är en barnbioföreställning på Kulturhuset Stadsteatern. Denna filmvisning riktar sig till yngre barn med fokus på att utforska identiteter och karaktärer.",
+      "desc_en": "Knattebio: Vem är vem? is a children's cinema screening at Kulturhuset Stadsteatern in Stockholm.\n\nThe event Knattebio: Vem är vem? is a children's cinema screening at Kulturhuset Stadsteatern. This film presentation is aimed at younger children, focusing on exploring identities and characters.",
+      "raw": "Knattebio: Vem är vem? är en barnbioföreställning på Kulturhuset Stadsteatern i Stockholm.\n\nEvenemanget Knattebio: Vem är vem? är en barnbioföreställning på Kulturhuset Stadsteatern. Denna filmvisning riktar sig till yngre barn med fokus på att utforska identiteter och karaktärer.",
+      "venue": "Kulturhuset Stadsteatern",
+      "start": "2026-10-25T11:30:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "749961f6-7f75-46f6-9c34-9d6ee9a2d1b1",
+      "title_sv": "Stäppvalpen – Påsklovsteater",
+      "title_en": "Stäppvalpen – Påsklovsteater",
+      "desc_sv": "Stäppvalpen – Påsklovsteater är en föreställning på Unga Klara, Kulturhuset Stadsteatern i Stockholm.\n\nFöreställningen handlar om Harri som kämpar med att passa in och att omfamna sin inre varg. En klassresa till en magisk teater gör att Harri kan möta alla sina jag. Föreställningen, regisserad och skriven av Lola Zackow, är baserad på Hermann Hesses klassiker Stäppvargen. Det är en samproduktion ",
+      "desc_en": "Stäppvalpen – Påsklovsteater is a performance at Unga Klara, Kulturhuset Stadsteatern in Stockholm.\n\nThe performance is about Harri, who struggles to fit in and embrace her inner wolf. A class trip to a magical theater allows Harri to meet all her selves. The performance, directed and written by Lola Zackow, is based on Hermann Hesse's classic Steppenwolf. It is a co-production between Unga Klara ",
+      "raw": "Stäppvalpen – Påsklovsteater är en föreställning på Unga Klara, Kulturhuset Stadsteatern i Stockholm.\n\nFöreställningen handlar om Harri som kämpar med att passa in och att omfamna sin inre varg. En klassresa till en magisk teater gör att Harri kan möta alla sina jag. Föreställningen, regisserad och skriven av Lola Zackow, är baserad på Hermann Hesses klassiker Stäppvargen. Det är en samproduktion ",
+      "venue": "Kulturhuset Stadsteatern",
+      "start": "2027-04-03T12:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "7ae2f8c2-5537-4117-b7b9-9d4516c71aeb",
+      "title_sv": "Babblarna & Klonks Klapp-kalas",
+      "title_en": "Babblarna & Klonks Klapp-kalas",
+      "desc_sv": "Babblarna & Klonks Klapp-kalas är en interaktiv musikal på Nacka Aula i Nacka.\n\nMusikalen ”Babblarna & Klonks Klapp-kalas” bjuder in till ett magiskt kalas och har varit en stor succé med över 1100 föreställningar. Det är en interaktiv musikal för de allra yngsta, där Klonk firar sin födelsedag. Alla Babblarna är på plats för att fira med tårta, ballonger, sång och dans. Barnen uppmuntras att akti",
+      "desc_en": "Babblarna & Klonks Klapp-kalas is an interactive musical at Nacka Aula in Nacka.\n\nThe musical “Babblarna & Klonks Klapp-kalas” invites to a magical party and has seen great success with over 1100 performances. It is an interactive musical for the youngest audience, where Klonk celebrates a birthday. All Babblarna characters are present to celebrate with cake, balloons, song, and dance. Children ar",
+      "raw": "Babblarna & Klonks Klapp-kalas är en interaktiv musikal på Nacka Aula i Nacka.\n\nMusikalen ”Babblarna & Klonks Klapp-kalas” bjuder in till ett magiskt kalas och har varit en stor succé med över 1100 föreställningar. Det är en interaktiv musikal för de allra yngsta, där Klonk firar sin födelsedag. Alla Babblarna är på plats för att fira med tårta, ballonger, sång och dans. Barnen uppmuntras att akti",
+      "venue": "Nacka",
+      "start": "2026-10-18T12:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "9d165639-c9aa-4eaf-a56b-ec01b6da4caa",
+      "title_sv": "Skogen har öron (7-12 år) Vardag",
+      "title_en": "Skogen har öron (7-12 år) Vardag",
+      "desc_sv": "Skogen har öron (7-12 år) Vardag är en föreställning på Teaterverket Svea i Stockholm.\n\nDet är en rafflande deckargåta som utspelar sig i vildmarken. Föreställningen utforskar teman om längtan efter att känna sig behövd och svårigheten att bryta sig loss från tilldelade roller.",
+      "desc_en": "Skogen har öron (7-12 år) Vardag is a performance at Teaterverket Svea in Stockholm.\n\nThis is a thrilling detective mystery set in the wilderness. The performance explores themes of the longing to feel needed and the difficulty of breaking free from assigned roles.",
+      "raw": "Skogen har öron (7-12 år) Vardag är en föreställning på Teaterverket Svea i Stockholm.\n\nDet är en rafflande deckargåta som utspelar sig i vildmarken. Föreställningen utforskar teman om längtan efter att känna sig behövd och svårigheten att bryta sig loss från tilldelade roller.",
+      "venue": "Teaterverket Svea",
+      "start": "2026-10-08T08:45:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "97dc1331-3575-4800-a149-fcfc103c8103",
+      "title_sv": "Stäppvalpen",
+      "title_en": "Stäppvalpen",
+      "desc_sv": "Stäppvalpen är en föreställning på Unga Klara, Kulturhuset Stadsteatern i Stockholm.\n\nFöreställningen handlar om Harri, som ska börja i sjätte klass och känner sig sällan rätt. När hon försöker vara som alla andra tappar hon svansen och morrar. När hon försöker vara en varg kommer hennes mänskliga jag i vägen för det roliga. Under en klassresa till en magisk teater får Harri möta alla sina jag. Fö",
+      "desc_en": "Stäppvalpen is a performance at Unga Klara, Kulturhuset Stadsteatern in Stockholm.\n\nThe performance centers on Harri, who is about to start sixth grade and rarely feels right. When she tries to act like others, she drops her tail and growls. When she attempts to be a wolf, her human self obstructs all fun. During a class trip to a magical theater, Harri gets to meet all her selves. The performance",
+      "raw": "Stäppvalpen är en föreställning på Unga Klara, Kulturhuset Stadsteatern i Stockholm.\n\nFöreställningen handlar om Harri, som ska börja i sjätte klass och känner sig sällan rätt. När hon försöker vara som alla andra tappar hon svansen och morrar. När hon försöker vara en varg kommer hennes mänskliga jag i vägen för det roliga. Under en klassresa till en magisk teater får Harri möta alla sina jag. Fö",
+      "venue": "Kulturhuset Stadsteatern",
+      "start": "2027-03-17T09:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "1629e5b1-4d45-4070-a2eb-cdc510fbb681",
+      "title_sv": "Lilla spöket Laban busar vidare ",
+      "title_en": "Lilla spöket Laban busar vidare ",
+      "desc_sv": "Lilla spöket Laban busar vidare är en föreställning på Kulturhuset Stadsteatern i Stockholm.\n\nLilla Spöket Laban återvänder med nya äventyr på Slottet Godmorgonsol. Denna föreställning erbjuder publiken nya upptåg.",
+      "desc_en": "Lilla spöket Laban busar vidare is a performance at Kulturhuset Stadsteatern in Stockholm.\n\nLittle Ghost Laban returns with new adventures at Castle Good Morning Sun. This performance offers the audience new antics.",
+      "raw": "Lilla spöket Laban busar vidare är en föreställning på Kulturhuset Stadsteatern i Stockholm.\n\nLilla Spöket Laban återvänder med nya äventyr på Slottet Godmorgonsol. Denna föreställning erbjuder publiken nya upptåg.",
+      "venue": "Kulturhuset Stadsteatern",
+      "start": "2026-10-28T12:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "0ffabe42-f46b-4751-9703-9feca4df5eff",
+      "title_sv": "Babymusik",
+      "title_en": "Babymusik",
+      "venue": null,
+      "start": "2026-10-07T11:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "88b4e185-40e3-4355-b58e-77a368f1c636",
+      "title_sv": "Stäppvalpen - Urpremiär",
+      "title_en": "Stäppvalpen - Urpremiär",
+      "desc_sv": "Urpremiären av Stäppvalpen är en föreställning på Unga Klara, Kulturhuset Stadsteatern i Stockholm.\n\nFöreställningen handlar om Harri, som kämpar med att passa in när hon ska börja sjätte klass. Hon morrar när hon försöker vara som andra och hennes människojag stör när hon försöker varga. Under en klassresa till en magisk teater får Harri möta alla sina jag. Lola Zackow har skrivit manus och regis",
+      "desc_en": "The premiere of Stäppvalpen is a performance at Unga Klara, Kulturhuset Stadsteatern in Stockholm.\n\nThe performance centers on Harri, who struggles to fit in as she starts sixth grade. She growls when trying to act like others, and her human self interferes when she tries to be wolf-like. During a class trip to a magical theater, Harri gets to meet all her different selves. Lola Zackow wrote the s",
+      "raw": "Urpremiären av Stäppvalpen är en föreställning på Unga Klara, Kulturhuset Stadsteatern i Stockholm.\n\nFöreställningen handlar om Harri, som kämpar med att passa in när hon ska börja sjätte klass. Hon morrar när hon försöker vara som andra och hennes människojag stör när hon försöker varga. Under en klassresa till en magisk teater får Harri möta alla sina jag. Lola Zackow har skrivit manus och regis",
+      "venue": "Kulturhuset Stadsteatern",
+      "start": "2027-03-05T10:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "66abb90c-8885-4148-b2b9-15591e78ff53",
+      "title_sv": "Skoja' bara (vardag)",
+      "title_en": "Skoja' bara (vardag)",
+      "desc_sv": "Skoja' bara (vardag) är en klassrumsföreställning på Teaterverket Svea i Stockholm.\n\nDenna klassrumsföreställning utforskar mellanstadiets turbulenta tid, där jaget och gruppen utforskas. Den behandlar lek som kan bli allvar, när ett skämt drivs för långt och får livsavgörande konsekvenser.",
+      "desc_en": "Skoja' bara (vardag) is a classroom performance at Teaterverket Svea in Stockholm.\n\nThis classroom performance explores the turbulent middle school years, a time for self-discovery and group dynamics. It examines how play can turn serious, when a joke goes too far and leads to life-altering consequences.",
+      "raw": "Skoja' bara (vardag) är en klassrumsföreställning på Teaterverket Svea i Stockholm.\n\nDenna klassrumsföreställning utforskar mellanstadiets turbulenta tid, där jaget och gruppen utforskas. Den behandlar lek som kan bli allvar, när ett skämt drivs för långt och får livsavgörande konsekvenser.",
+      "venue": "Teaterverket Svea",
+      "start": "2027-03-16T08:15:00+00:00",
+      "has_img": true
+    }
+  ]
+}

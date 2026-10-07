@@ -1,0 +1,25 @@
+{
+  "category_slug": "circus",
+  "events": 35,
+  "library_now": 0,
+  "approx_images_needed": 1,
+  "model": "minimax/minimax-m3",
+  "prompts": [
+    {
+      "pattern": "A_wide",
+      "prompt": "Wide shot inside a striped circus tent in Stockholm, a solitary acrobat suspended on aerial silks under a single warm spotlight, dusty red velvet seats curving away in soft focus with one spectator's silhouette in the foreground."
+    },
+    {
+      "pattern": "B_medium",
+      "prompt": "Medium shot of a magician in a black tailcoat performing a sleight-of-hand card trick, hands sharp in focus under a tight white spotlight, dark stage fading to black around him with faint blue haze drifting past."
+    },
+    {
+      "pattern": "C_environment",
+      "prompt": "Inside a Stockholm black-box studio theater with exposed brick walls and visible overhead rigging, a contortionist bending backward on a low wooden platform under cool white working lights, a stagehand adjusting a cable in the background."
+    },
+    {
+      "pattern": "D_detail",
+      "prompt": "Extreme close-up of a performer's chalk-dusted hand gripping a polished brass juggling club, blurred red stage curtain and Stockholm theater scaffolding behind, lit by a single warm amber sidelight that catches the dust on his knuckles."
+    }
+  ]
+}

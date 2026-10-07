@@ -1,0 +1,25 @@
+{
+  "category_slug": "workshop",
+  "events": 104,
+  "library_now": 0,
+  "approx_images_needed": 2,
+  "model": "minimax/minimax-m3",
+  "prompts": [
+    {
+      "pattern": "A_wide",
+      "prompt": "Wide shot of a long wooden workshop table inside Kulturhuset Stadsteatern's bright studio, a dozen participants leaning over craft materials, sunlight pouring through tall arched windows onto scattered paper and tools."
+    },
+    {
+      "pattern": "B_medium",
+      "prompt": "Medium photo of a smiling participant in her thirties concentrating on Japanese bookbinding at Etnografiska museet, her hands pressing folded paper on a worn desk, natural side light from a nearby window, others blurred behind her."
+    },
+    {
+      "pattern": "C_environment",
+      "prompt": "Environmental shot of a cozy workshop room at Best Western Plus Park City Hammarby Sjöstad, sticky notes covering a glass wall, a facilitator in a grey sweater gesturing to a laptop screen, soft daylight from the harbour-facing windows."
+    },
+    {
+      "pattern": "D_detail",
+      "prompt": "Close-up of weathered hands carefully stitching a torn denim patch during a mending workshop, spools of colored thread, small scissors, and a ceramic mug of coffee arranged on a linen-covered table at Kulturhuset Stadsteatern, warm window light."
+    }
+  ]
+}

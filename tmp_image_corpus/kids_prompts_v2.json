@@ -1,0 +1,26 @@
+{
+  "category_slug": "kids",
+  "events": 101,
+  "library_now": 0,
+  "approx_images_needed": 2,
+  "description_corpus_size": 87,
+  "model": "minimax/minimax-m3",
+  "prompts": [
+    {
+      "pattern": "A_wide",
+      "prompt": "Wide photograph of a children's theater stage inside Kulturhuset Stadsteatern, marionette puppets suspended mid-flight above a painted forest backdrop, warm amber stage lighting illuminating scattered child-sized chairs in the front rows."
+    },
+    {
+      "pattern": "B_medium",
+      "prompt": "Medium shot of a young performer in a grey wolf costume kneeling on a wooden stage at Unga Klara, reaching out toward small children seated on floor cushions, soft daylight spilling from high windows."
+    },
+    {
+      "pattern": "C_environment",
+      "prompt": "Environmental view of an intimate black-box theater at Teaterverket Svea, a single performer sitting cross-legged on the floor surrounded by scattered school backpacks and a simple wooden chair, warm overhead lighting."
+    },
+    {
+      "pattern": "D_detail",
+      "prompt": "Close-up of small painted wooden marionette hands gripping strings against a softly lit fabric backdrop on stage at Kulturhuset Stadsteatern, shallow depth of field, warm amber tones."
+    }
+  ]
+}

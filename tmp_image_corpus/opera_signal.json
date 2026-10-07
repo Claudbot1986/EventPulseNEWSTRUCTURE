@@ -1,0 +1,285 @@
+{
+  "category_slug": "opera",
+  "events": 291,
+  "docs": 290,
+  "top_1grams_distinctive": [
+    {
+      "w": "folkoperan",
+      "c": 202,
+      "score": 760.46
+    },
+    {
+      "w": "opera",
+      "c": 33,
+      "score": 156.52
+    },
+    {
+      "w": "radios",
+      "c": 28,
+      "score": 125.21
+    },
+    {
+      "w": "symfoniorkester",
+      "c": 28,
+      "score": 115.26
+    },
+    {
+      "w": "virtuositet",
+      "c": 24,
+      "score": 112.76
+    },
+    {
+      "w": "viola",
+      "c": 24,
+      "score": 111.73
+    },
+    {
+      "w": "rikedom",
+      "c": 23,
+      "score": 111.54
+    },
+    {
+      "w": "livfulla",
+      "c": 23,
+      "score": 109.31
+    },
+    {
+      "w": "klarinett",
+      "c": 23,
+      "score": 108.67
+    },
+    {
+      "w": "träda",
+      "c": 23,
+      "score": 108.67
+    },
+    {
+      "w": "dur",
+      "c": 23,
+      "score": 108.47
+    },
+    {
+      "w": "bonuskonsert",
+      "c": 22,
+      "score": 107.14
+    },
+    {
+      "w": "septett",
+      "c": 22,
+      "score": 107.14
+    },
+    {
+      "w": "serenadens",
+      "c": 22,
+      "score": 107.14
+    },
+    {
+      "w": "fagott",
+      "c": 22,
+      "score": 107.14
+    },
+    {
+      "w": "iskandar",
+      "c": 22,
+      "score": 107.14
+    },
+    {
+      "w": "komilov",
+      "c": 22,
+      "score": 107.14
+    },
+    {
+      "w": "lanning",
+      "c": 22,
+      "score": 107.14
+    },
+    {
+      "w": "mctigert",
+      "c": 22,
+      "score": 107.14
+    },
+    {
+      "w": "1827",
+      "c": 22,
+      "score": 107.14
+    },
+    {
+      "w": "diana",
+      "c": 22,
+      "score": 106.92
+    },
+    {
+      "w": "crafoord",
+      "c": 22,
+      "score": 106.92
+    },
+    {
+      "w": "blixt",
+      "c": 22,
+      "score": 106.92
+    },
+    {
+      "w": "ess",
+      "c": 22,
+      "score": 106.69
+    },
+    {
+      "w": "walter",
+      "c": 22,
+      "score": 106.69
+    },
+    {
+      "w": "1770",
+      "c": 22,
+      "score": 106.69
+    },
+    {
+      "w": "beräknas",
+      "c": 22,
+      "score": 106.25
+    },
+    {
+      "w": "lätthet",
+      "c": 22,
+      "score": 105.81
+    },
+    {
+      "w": "horn",
+      "c": 22,
+      "score": 105.38
+    },
+    {
+      "w": "beethovens",
+      "c": 23,
+      "score": 105.22
+    }
+  ],
+  "top_2grams_distinctive": [
+    {
+      "w": "sveriges radios",
+      "c": 28,
+      "score": 125.21
+    },
+    {
+      "w": "radios symfoniorkester",
+      "c": 28,
+      "score": 125.21
+    },
+    {
+      "w": "violin viola",
+      "c": 23,
+      "score": 109.95
+    },
+    {
+      "w": "träda fram",
+      "c": 23,
+      "score": 108.88
+    },
+    {
+      "w": "bonuskonsert beethovens",
+      "c": 22,
+      "score": 107.14
+    },
+    {
+      "w": "beethovens septett",
+      "c": 22,
+      "score": 107.14
+    },
+    {
+      "w": "septett välkommen",
+      "c": 22,
+      "score": 107.14
+    },
+    {
+      "w": "välkommen stanna",
+      "c": 22,
+      "score": 107.14
+    },
+    {
+      "w": "kvar konserten",
+      "c": 22,
+      "score": 107.14
+    },
+    {
+      "w": "konserten musiker",
+      "c": 22,
+      "score": 107.14
+    },
+    {
+      "w": "septett ess",
+      "c": 22,
+      "score": 107.14
+    },
+    {
+      "w": "ess dur",
+      "c": 22,
+      "score": 107.14
+    },
+    {
+      "w": "förenar serenadens",
+      "c": 22,
+      "score": 107.14
+    },
+    {
+      "w": "serenadens lätthet",
+      "c": 22,
+      "score": 107.14
+    },
+    {
+      "w": "lätthet rikedom",
+      "c": 22,
+      "score": 107.14
+    },
+    {
+      "w": "rikedom klanger",
+      "c": 22,
+      "score": 107.14
+    },
+    {
+      "w": "klanger infall",
+      "c": 22,
+      "score": 107.14
+    },
+    {
+      "w": "infall livfulla",
+      "c": 22,
+      "score": 107.14
+    },
+    {
+      "w": "livfulla samspelet",
+      "c": 22,
+      "score": 107.14
+    },
+    {
+      "w": "mellan violin",
+      "c": 22,
+      "score": 107.14
+    },
+    {
+      "w": "kontrabas samt",
+      "c": 22,
+      "score": 107.14
+    },
+    {
+      "w": "samt klarinett",
+      "c": 22,
+      "score": 107.14
+    },
+    {
+      "w": "klarinett fagott",
+      "c": 22,
+      "score": 107.14
+    },
+    {
+      "w": "fagott horn",
+      "c": 22,
+      "score": 107.14
+    },
+    {
+      "w": "horn får",
+      "c": 22,
+      "score": 107.14
+    }
+  ],
+  "note": "score = cat_count * log(N / global_count). Higher = more distinctive for this category."
+}

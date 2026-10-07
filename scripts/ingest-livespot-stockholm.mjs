@@ -2,8 +2,17 @@
 /**
  * ingest-livespot-stockholm.mjs — Livespot.se API ingestion för Stockholm events.
  *
- * Livespot samlar events från massor av svenska venues i en JSON-API.
- * För Stockholm bara finns 5,494 events tillgängliga!
+ * T0201 (2026-10-05): REWRITTEN — push via raw_events queue istället för direkt
+ * upsert till events-tabellen. Detta gör att events passerar genom:
+ *   1. raw_events BullMQ-queue (med idempotens per external_id)
+ *   2. processRawEvent i 04-Normalizer/normalizer.ts
+ *      a. categorySlug-mappning (via categories[]-array + source-default)
+ *      b. T0201: eventpulse_summary, description_license, raw_description
+ *      c. dedup_hash, geo-propagation
+ *   3. link_health-check (via check_link_health.ts som körs separat)
+ *
+ * Resultat: livespot-events får samma behandling som övriga källor —
+ * category_slug, T0201-summary, license, link_status.
  *
  * Användning:
  *   node scripts/ingest-livespot-stockholm.mjs
@@ -12,21 +21,29 @@
  */
 
 import 'dotenv/config';
-import { createHash } from 'crypto';
-import { createClient } from '@supabase/supabase-js';
+import { Queue } from 'bullmq';
+import IORedis from 'ioredis';
 
 const SOURCE_ID = 'livespot-stockholm';
 const RATE_LIMIT_MS = 1000;
 const DEFAULT_LIMIT = 100;
 
-const SUPABASE_URL_VAL = process.env.SUPABASE_URL;
-const SUPABASE_KEY_VAL = process.env.SUPABASE_SERVICE_ROLE_KEY;
-if (!SUPABASE_URL_VAL || !SUPABASE_KEY_VAL) { console.error('Missing env'); process.exit(2); }
-const supabase = createClient(SUPABASE_URL_VAL, SUPABASE_KEY_VAL, { auth: { persistSession: false } });
+const REDIS_URL = process.env.REDIS_URL || 'redis://localhost:6379';
+if (!process.env.SUPABASE_URL) { console.error('Missing SUPABASE_URL'); process.exit(2); }
 
-function dedupHash(externalId) {
-  return createHash('sha256').update(`${SOURCE_ID}::${externalId}`).digest('hex');
+// ── Queue connection (lazy) ─────────────────────────────────────────────────
+let connection;
+function getConnection() {
+  if (!connection) {
+    connection = new IORedis(REDIS_URL, {
+      maxRetriesPerRequest: null,
+      enableReadyCheck: false,
+    });
+  }
+  return connection;
 }
+
+const rawEventsQueue = new Queue('raw_events', { connection: getConnection() });
 
 function sleep(ms) { return new Promise((r) => setTimeout(r, ms)); }
 
@@ -47,6 +64,58 @@ async function fetchPage(page, batchSize, startDate, endDate) {
   return await r.json();
 }
 
+/**
+ * Map livespot's categories-array till normalizer-compatible categories[].
+ * Livespot returnerar fria strängar (t.ex. "Teater", "Musik") — vi mappar
+ * dem till våra kanon-slugs (music, community, etc.).
+ *
+ * Livespot "Teater" → "theater" → "theater"
+ * Livespot "Musik"   → "music"   → "concert"
+ * Livespot "Standup" → "standup" → "standup"
+ *
+ * Om okänt, lämnas kategorin som livespot-råsträng så normalizer-fallback kan
+ * hantera den via categoryKeywords.ts.
+ */
+function normalizeLivespotCategories(rawCategories) {
+  if (!Array.isArray(rawCategories)) return [];
+  const map = {
+    'teater': 'theater',
+    'teatern': 'theater',
+    'musik': 'music',
+    'music': 'music',
+    'konsert': 'music',
+    'konserter': 'music',
+    'standup': 'standup',
+    'comedy': 'standup',
+    'utställning': 'art-exhibitions',
+    'exhibition': 'art-exhibitions',
+    'festival': 'festival',
+    'film': 'film',
+    'bio': 'film',
+    'screening': 'film',
+    'workshop': 'workshop',
+    'kurs': 'workshop',
+    'sport': 'sport',
+    'idrott': 'sport',
+    'barn': 'community',
+    'family': 'community',
+    'community': 'community',
+    'mat': 'community',
+    'food': 'community',
+    'dryck': 'community',
+    'drink': 'community',
+  };
+  const result = [];
+  for (const c of rawCategories) {
+    if (typeof c !== 'string') continue;
+    const lower = c.toLowerCase().trim();
+    const mapped = map[lower];
+    if (mapped && !result.includes(mapped)) result.push(mapped);
+    else if (!mapped && !result.includes(lower)) result.push(lower);
+  }
+  return result;
+}
+
 async function main() {
   const args = process.argv.slice(2);
   const startDate = args.find((a) => a.startsWith('--start-date='))?.split('=')[1] ?? '2026-10-01';
@@ -55,7 +124,7 @@ async function main() {
 
   console.log(`Livespot Stockholm — ${startDate} to ${endDate}, max ${maxPages} pages`);
 
-  const totals = { fetched: 0, persisted: 0, duplicates: 0, pages: 0 };
+  const totals = { fetched: 0, queued: 0, skipped: 0, pages: 0 };
   let page = 1;
   let totalPages = 1;
 
@@ -86,54 +155,33 @@ async function main() {
       continue;
     }
 
-    const rows = future.map((ev) => {
-      // 2026-10-05 — Använd verklig venue-data från API:t istället för
-      // Sergels-torg-default. Livespot skickar venue-namn (t.ex.
-      // "Entréhallen Nybroplan") + city. lat/lng är null i livespot-svaret
-      // — vi sätter koordinater från vårt venues-register när vi hittar
-      // en match via backfill-venue-geocode.mjs efter denna ingestion.
-      //
-      // Här sparar vi venue_full_name (sant värde från source) och
-      // venue_city. lat/lng lämnas null om inte annars tillgängligt
-      // (livespot saknar koordinater) — backfill-jobb fyller på senare.
+    // Build RawEventInput payloads and push to raw_events queue
+    let pageQueued = 0;
+    for (const ev of future) {
       const venueName = ev.venue ?? null;
       const venueCity = ev.city ?? null;
-      const lat = null; // backfill-jobb fyller på från venues-tabellen
-      const lng = null;
-      return {
-        source: SOURCE_ID,
-        title_sv: ev.name,
-        title_en: ev.name,
+      const categories = normalizeLivespotCategories(ev.categories ?? []);
+
+      const raw = {
+        title: ev.name,
+        description: ev.description_sv ?? ev.description ?? null,
         start_time: ev.start_date,
         end_time: ev.end_date ?? null,
-        location: null, // backfill-jobb sätter om match finns
-        lat, lng,
-        // 2026-10-05 — verklig venue-data från source-payload.
-        venue_full_name: venueName,
-        venue_full_address: null, // livespot skickar inte address
-        venue_city: venueCity,
-        venue_lat: null,
-        venue_lng: null,
-        venue_url: null,
-        venue_phone: null,
-        ticket_url: ev.url ?? null,
-        // 2026-10-04 — Droppa scrape-original livespot.se-img vid import.
-        // Tidigare sparades ev.image_url rakt av, vilket gjorde livespot-
-        // events till "anomalier" (image_url satt men image_ai_generated=
-        // false / image_generation_status != 'library_fallback') → UI
-        // visade tom placeholder. image_generation_status='pending' låter
-        // matchLibraryFirst (i nattlys cron) hämta en biblioteks-bild i
-        // nästa körning — samma kontrakt som övriga källor följer.
-        image_url: null,
-        description_sv: ev.description_sv ?? null,
-        description_en: ev.description_en ?? null,
-        is_free: ev.price_min === 0,
+        venue_name: venueName,
+        venue_address: null,
+        lat: null,           // backfill-jobb fyller på från venues-tabellen
+        lng: null,
+        categories,
+        category: categories[0] ?? null,
+        is_free: ev.price_min === 0 || ev.price_min === '0',
         price_min_sek: ev.price_min != null ? Math.round(parseFloat(ev.price_min)) : null,
         price_max_sek: ev.price_max != null ? Math.round(parseFloat(ev.price_max)) : null,
-        status: 'published',
-        featured: false,
-        view_count: 0,
-        raw_data: {
+        ticket_url: ev.url ?? null,
+        image_url: null,
+        source: SOURCE_ID,
+        source_id: ev.id,
+        detected_language: ev.description_sv ? 'sv' : (ev.description_en ? 'en' : null),
+        raw_payload: {
           venue: ev.venue,
           city: ev.city,
           availability: ev.availability,
@@ -144,48 +192,47 @@ async function main() {
           livespot_slug: ev.slug,
           fetched_at: new Date().toISOString(),
         },
-        confidence_score: 80,
-        freshness_at: new Date().toISOString(),
-        last_seen_at: new Date().toISOString(),
-        published_at: new Date().toISOString(),
-        image_generation_status: 'pending',
-        image_ai_generated: false,
-        image_ai_optout: false,
-        is_online: false,
-        dedup_hash: dedupHash(ev.id ?? `${ev.name}::${ev.start_date}`),
       };
-    });
 
-    // Filter existing
-    const hashes = rows.map((r) => r.dedup_hash);
-    const existing = new Set();
-    for (let i = 0; i < hashes.length; i += 500) {
-      const { data: ed } = await supabase.from('events').select('dedup_hash').in('dedup_hash', hashes.slice(i, i + 500));
-      for (const r of ed ?? []) if (r.dedup_hash) existing.add(r.dedup_hash);
-    }
-    const fresh = rows.filter((r) => !existing.has(r.dedup_hash));
-    totals.duplicates += rows.length - fresh.length;
-
-    // Batch upsert
-    for (let i = 0; i < fresh.length; i += 50) {
-      const { data, error } = await supabase.from('events').upsert(fresh.slice(i, i + 50), { onConflict: 'dedup_hash' }).select('id');
-      if (error) {
-        console.error(`  page ${page}: upsert error ${error.message}`);
+      // Skippa tomma titlar eller ogiltiga start_time
+      if (!raw.title || !raw.start_time) {
+        totals.skipped++;
         continue;
       }
-      totals.persisted += data?.length ?? 0;
+
+      try {
+        // BullMQ jobId kan inte innehålla ":". Idempotens hanteras istället
+        // av normalizerns dedup_hash på events.category_slug/source_id.
+        await rawEventsQueue.add(`livespot-${ev.id}`, raw, {
+          removeOnComplete: 1000,
+          removeOnFail: 5000,
+        });
+        pageQueued++;
+      } catch (e) {
+        console.error(`  page ${page}: queue.add failed for ${ev.id}: ${e.message}`);
+      }
     }
 
-    console.log(`  page ${page}: fetched=${events.length} future=${future.length} new=${fresh.length} (${totals.persisted} total)`);
+    totals.queued += pageQueued;
+    totals.pages++;
+    console.log(`  page ${page}: fetched=${events.length} future=${future.length} queued=${pageQueued} skipped=${totals.skipped - (totals.queued - pageQueued)}`);
     page++;
-    totals.pages = page - 1;
   }
 
-  console.log(`\n=== TOTAL ===`);
-  console.log(`fetched=${totals.fetched} persisted=${totals.persisted} duplicates=${totals.duplicates} pages=${totals.pages}`);
+  console.log(`\n=== Resultat ===`);
+  console.log(`Pages: ${totals.pages}`);
+  console.log(`Fetched: ${totals.fetched}`);
+  console.log(`Queued (raw_events): ${totals.queued}`);
+  console.log(`Skipped: ${totals.skipped}`);
 
-  const { count } = await supabase.from('events_public').select('*', { count: 'exact', head: true }).eq('source', SOURCE_ID);
-  console.log(`DB ${SOURCE_ID} total: ${count}`);
+  // Vänta lite så BullMQ hinner flusha
+  await sleep(500);
+
+  await rawEventsQueue.close();
+  process.exit(0);
 }
 
-main().then(() => process.exit(0)).catch((e) => { console.error('FATAL:', e); process.exit(1); });
+main().catch((err) => {
+  console.error('FATAL:', err);
+  process.exit(1);
+});

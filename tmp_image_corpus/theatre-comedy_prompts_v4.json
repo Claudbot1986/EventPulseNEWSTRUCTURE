@@ -1,0 +1,31 @@
+{
+  "category_slug": "theatre-comedy",
+  "events": 853,
+  "jev_q1": 0.71,
+  "jev_q2": 0.65,
+  "jev_q3": 0.47,
+  "description_corpus_size": 765,
+  "model": "MiniMax-M3",
+  "prompts": [
+    {
+      "pattern": "A_wide",
+      "prompt": "Wide shot of a komiker holding a microphone on stage at Intiman in Stockholm, spotlight cutting through haze, audience visible as silhouettes in velvet seats, natural cool daylight leaking from a side window, candid documentary photography of a standup comedy show, no text anywhere."
+    },
+    {
+      "pattern": "B_medium",
+      "prompt": "Medium frame of a standup komiker mid-joke at Intiman, one hand raised for emphasis, warm tungsten glow on the brick backdrop, rows of laughing audience members in soft focus, the venue's intimate stage layout clearly visible, photojournalistic capture of live comedy."
+    },
+    {
+      "pattern": "C_environment",
+      "prompt": "Environmental portrait inside Sofia Common's cozy comedyklubb, exposed brick walls, mismatched wooden chairs, a lone komiker gripping the mic stand, low ceiling lamps casting amber pools, a couple of patrons leaning forward smiling, real-event atmosphere of a Stockholm standup night."
+    },
+    {
+      "pattern": "D_detail",
+      "prompt": "Close detail of a komedi performer's hand gripping a battered microphone on a small wooden stand, tape wrapped around the handle, blurred background showing a Stockholm comedy club bar with bottles catching warm stage-light, documentary texture, no readable signage present."
+    },
+    {
+      "pattern": "E_intimate",
+      "prompt": "Intimate close-up of a young woman in the front row laughing openly during a komiker set at Sofia Common, shallow depth of field, warm tungsten side-light sculpting her face, the performer's gesturing hand softly visible behind her, capturing genuine joy of live standup comedy."
+    }
+  ]
+}

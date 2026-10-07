@@ -167,6 +167,12 @@ export interface EventCard {
 
 export interface EventDetail extends EventCard {
   description?: string | null;
+  // T0201 (2026-10-05) — license-fält för description. UI visar attribution
+  // badge om license kräver det. description_en/sv är NULL om license='unknown'
+  // (filtrerat av events_public view).
+  description_license?: string | null;
+  description_attribution?: string | null;
+  description_source_url?: string | null;
   offers: Array<{
     offer_url: string;
     price_min?: number | null;

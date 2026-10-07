@@ -1,0 +1,26 @@
+{
+  "category_slug": "flea-market",
+  "events": 28,
+  "library_now": 0,
+  "approx_images_needed": 1,
+  "description_corpus_size": 19,
+  "model": "minimax/minimax-m3",
+  "prompts": [
+    {
+      "pattern": "A_wide",
+      "prompt": "A wide daylight view of the Karlaplan flea market on Östermalm, rows of folding tables laden with secondhand books, ceramics, and vintage clothing spread across the cobblestone square, shoppers browsing between stalls with classical Stockholm apartment buildings framing the background."
+    },
+    {
+      "pattern": "B_medium",
+      "prompt": "A medium shot inside a concrete parking garage showing an open car trunk filled with sorted household goods, a vendor in casual summer clothes leaning against the vehicle, neighboring cars with their boots also open displaying lamps, frames, and kitchenware under cool fluorescent lighting."
+    },
+    {
+      "pattern": "C_environment",
+      "prompt": "An outdoor summer scene at Hågelbyparken with cars parked across a sunlit green meadow, open trunks overflowing with toys, glassware, and bric-a-brac, families and dog-walkers wandering between vehicles under scattered birch trees casting dappled shadows on the grass."
+    },
+    {
+      "pattern": "D_detail",
+      "prompt": "A close-up of weathered hands arranging brass candlesticks, blue-and-white porcelain, and stacked leather-bound books on a worn linen cloth at an indoor antique fair, soft warm overhead lighting catching the patina of aged metal and cracked glaze."
+    }
+  ]
+}

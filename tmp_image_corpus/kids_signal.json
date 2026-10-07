@@ -1,0 +1,285 @@
+{
+  "category_slug": "kids",
+  "events": 101,
+  "docs": 90,
+  "top_1grams_distinctive": [
+    {
+      "w": "föreställningen",
+      "c": 40,
+      "score": 96.01
+    },
+    {
+      "w": "föreställning",
+      "c": 32,
+      "score": 85.06
+    },
+    {
+      "w": "svea",
+      "c": 16,
+      "score": 83.44
+    },
+    {
+      "w": "teaterverket",
+      "c": 16,
+      "score": 82.09
+    },
+    {
+      "w": "yngsta",
+      "c": 14,
+      "score": 73.43
+    },
+    {
+      "w": "klara",
+      "c": 15,
+      "score": 73.37
+    },
+    {
+      "w": "skogen",
+      "c": 12,
+      "score": 70.9
+    },
+    {
+      "w": "lek",
+      "c": 13,
+      "score": 69.21
+    },
+    {
+      "w": "barn",
+      "c": 20,
+      "score": 64.52
+    },
+    {
+      "w": "stäppvalpen",
+      "c": 10,
+      "score": 63.43
+    },
+    {
+      "w": "harri",
+      "c": 10,
+      "score": 63.43
+    },
+    {
+      "w": "zackow",
+      "c": 10,
+      "score": 63.43
+    },
+    {
+      "w": "hesses",
+      "c": 10,
+      "score": 63.43
+    },
+    {
+      "w": "stäppvargen",
+      "c": 10,
+      "score": 63.43
+    },
+    {
+      "w": "klassresa",
+      "c": 10,
+      "score": 62.99
+    },
+    {
+      "w": "lola",
+      "c": 10,
+      "score": 62.99
+    },
+    {
+      "w": "hermann",
+      "c": 10,
+      "score": 62.99
+    },
+    {
+      "w": "samproduktion",
+      "c": 10,
+      "score": 61.76
+    },
+    {
+      "w": "jag",
+      "c": 16,
+      "score": 61.38
+    },
+    {
+      "w": "stadsteater",
+      "c": 10,
+      "score": 58.79
+    },
+    {
+      "w": "stadsteatern",
+      "c": 19,
+      "score": 57.97
+    },
+    {
+      "w": "deckargåta",
+      "c": 8,
+      "score": 57.9
+    },
+    {
+      "w": "vildmarken",
+      "c": 8,
+      "score": 57.9
+    },
+    {
+      "w": "behövd",
+      "c": 8,
+      "score": 57.9
+    },
+    {
+      "w": "kulturhuset",
+      "c": 20,
+      "score": 57.75
+    },
+    {
+      "w": "unga",
+      "c": 13,
+      "score": 57.25
+    },
+    {
+      "w": "svårigheten",
+      "c": 8,
+      "score": 57.06
+    },
+    {
+      "w": "varg",
+      "c": 9,
+      "score": 55.25
+    },
+    {
+      "w": "öron",
+      "c": 8,
+      "score": 54.96
+    },
+    {
+      "w": "teater",
+      "c": 17,
+      "score": 54.84
+    }
+  ],
+  "top_2grams_distinctive": [
+    {
+      "w": "teaterverket svea",
+      "c": 16,
+      "score": 84.92
+    },
+    {
+      "w": "möta jag",
+      "c": 10,
+      "score": 63.9
+    },
+    {
+      "w": "klara kulturhuset",
+      "c": 12,
+      "score": 63.69
+    },
+    {
+      "w": "unga klara",
+      "c": 12,
+      "score": 63.5
+    },
+    {
+      "w": "föreställningen harri",
+      "c": 10,
+      "score": 63.43
+    },
+    {
+      "w": "klassresa magisk",
+      "c": 10,
+      "score": 63.43
+    },
+    {
+      "w": "magisk teater",
+      "c": 10,
+      "score": 63.43
+    },
+    {
+      "w": "harri möta",
+      "c": 10,
+      "score": 63.43
+    },
+    {
+      "w": "lola zackow",
+      "c": 10,
+      "score": 63.43
+    },
+    {
+      "w": "hermann hesses",
+      "c": 10,
+      "score": 63.43
+    },
+    {
+      "w": "hesses klassiker",
+      "c": 10,
+      "score": 63.43
+    },
+    {
+      "w": "klassiker stäppvargen",
+      "c": 10,
+      "score": 63.43
+    },
+    {
+      "w": "mellan unga",
+      "c": 10,
+      "score": 63.43
+    },
+    {
+      "w": "klara uppsala",
+      "c": 10,
+      "score": 63.43
+    },
+    {
+      "w": "uppsala stadsteater",
+      "c": 10,
+      "score": 63.43
+    },
+    {
+      "w": "föreställning unga",
+      "c": 10,
+      "score": 62.99
+    },
+    {
+      "w": "samproduktion mellan",
+      "c": 10,
+      "score": 62.56
+    },
+    {
+      "w": "kulturhuset stadsteatern",
+      "c": 19,
+      "score": 58.33
+    },
+    {
+      "w": "jag föreställningen",
+      "c": 9,
+      "score": 57.95
+    },
+    {
+      "w": "zackow baserad",
+      "c": 9,
+      "score": 57.95
+    },
+    {
+      "w": "skogen öron",
+      "c": 8,
+      "score": 57.9
+    },
+    {
+      "w": "längtan känna",
+      "c": 8,
+      "score": 57.9
+    },
+    {
+      "w": "känna behövd",
+      "c": 8,
+      "score": 57.9
+    },
+    {
+      "w": "svårigheten bryta",
+      "c": 8,
+      "score": 57.9
+    },
+    {
+      "w": "baserad hermann",
+      "c": 9,
+      "score": 57.51
+    }
+  ],
+  "note": "score = cat_count * log(N / global_count). Higher = more distinctive for this category."
+}

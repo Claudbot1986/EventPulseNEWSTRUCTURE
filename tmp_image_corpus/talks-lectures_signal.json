@@ -1,0 +1,285 @@
+{
+  "category_slug": "talks-lectures",
+  "events": 256,
+  "docs": 245,
+  "top_1grams_distinctive": [
+    {
+      "w": "samtal",
+      "c": 56,
+      "score": 267.18
+    },
+    {
+      "w": "hur",
+      "c": 67,
+      "score": 215.07
+    },
+    {
+      "w": "boken",
+      "c": 34,
+      "score": 184.52
+    },
+    {
+      "w": "join",
+      "c": 30,
+      "score": 156.89
+    },
+    {
+      "w": "författare",
+      "c": 28,
+      "score": 152.48
+    },
+    {
+      "w": "föreläsning",
+      "c": 29,
+      "score": 150.39
+    },
+    {
+      "w": "samtalet",
+      "c": 28,
+      "score": 148.61
+    },
+    {
+      "w": "föredrag",
+      "c": 24,
+      "score": 141.1
+    },
+    {
+      "w": "ett",
+      "c": 114,
+      "score": 134.58
+    },
+    {
+      "w": "experts",
+      "c": 21,
+      "score": 132.28
+    },
+    {
+      "w": "investing",
+      "c": 21,
+      "score": 132.28
+    },
+    {
+      "w": "chat",
+      "c": 21,
+      "score": 131.39
+    },
+    {
+      "w": "property",
+      "c": 21,
+      "score": 131.39
+    },
+    {
+      "w": "samarbete",
+      "c": 32,
+      "score": 128.17
+    },
+    {
+      "w": "tips",
+      "c": 21,
+      "score": 122.3
+    },
+    {
+      "w": "team",
+      "c": 21,
+      "score": 120.66
+    },
+    {
+      "w": "museet",
+      "c": 28,
+      "score": 119.87
+    },
+    {
+      "w": "författaren",
+      "c": 21,
+      "score": 113.22
+    },
+    {
+      "w": "about",
+      "c": 22,
+      "score": 113.17
+    },
+    {
+      "w": "real",
+      "c": 21,
+      "score": 112.86
+    },
+    {
+      "w": "utforskar",
+      "c": 33,
+      "score": 105.09
+    },
+    {
+      "w": "inom",
+      "c": 29,
+      "score": 103.89
+    },
+    {
+      "w": "var",
+      "c": 30,
+      "score": 97.7
+    },
+    {
+      "w": "föreläsningen",
+      "c": 15,
+      "score": 97.35
+    },
+    {
+      "w": "samtalar",
+      "c": 15,
+      "score": 97.35
+    },
+    {
+      "w": "hon",
+      "c": 32,
+      "score": 97.15
+    },
+    {
+      "w": "medelhavsmuseet",
+      "c": 15,
+      "score": 96.58
+    },
+    {
+      "w": "historia",
+      "c": 24,
+      "score": 96.34
+    },
+    {
+      "w": "fokuserar",
+      "c": 21,
+      "score": 93.76
+    },
+    {
+      "w": "han",
+      "c": 33,
+      "score": 93.54
+    }
+  ],
+  "top_2grams_distinctive": [
+    {
+      "w": "ett samtal",
+      "c": 31,
+      "score": 177.35
+    },
+    {
+      "w": "join chat",
+      "c": 21,
+      "score": 132.28
+    },
+    {
+      "w": "chat with",
+      "c": 21,
+      "score": 132.28
+    },
+    {
+      "w": "with experts",
+      "c": 21,
+      "score": 132.28
+    },
+    {
+      "w": "experts about",
+      "c": 21,
+      "score": 132.28
+    },
+    {
+      "w": "about investing",
+      "c": 21,
+      "score": 132.28
+    },
+    {
+      "w": "investing property",
+      "c": 21,
+      "score": 132.28
+    },
+    {
+      "w": "property real",
+      "c": 21,
+      "score": 132.28
+    },
+    {
+      "w": "real tips",
+      "c": 21,
+      "score": 132.28
+    },
+    {
+      "w": "tips real",
+      "c": 21,
+      "score": 132.28
+    },
+    {
+      "w": "real team",
+      "c": 21,
+      "score": 132.28
+    },
+    {
+      "w": "ett föredrag",
+      "c": 13,
+      "score": 85.82
+    },
+    {
+      "w": "internationell författarscen",
+      "c": 11,
+      "score": 76.45
+    },
+    {
+      "w": "världen gaza",
+      "c": 10,
+      "score": 68.7
+    },
+    {
+      "w": "garderob kom",
+      "c": 9,
+      "score": 64.19
+    },
+    {
+      "w": "tid serveringen",
+      "c": 9,
+      "score": 64.19
+    },
+    {
+      "w": "serveringen öppnar",
+      "c": 9,
+      "score": 64.19
+    },
+    {
+      "w": "innan samtalet",
+      "c": 9,
+      "score": 64.19
+    },
+    {
+      "w": "samtalet bra",
+      "c": 9,
+      "score": 64.19
+    },
+    {
+      "w": "större samt",
+      "c": 9,
+      "score": 64.19
+    },
+    {
+      "w": "tas garderoben",
+      "c": 9,
+      "score": 64.19
+    },
+    {
+      "w": "innan foto",
+      "c": 9,
+      "score": 64.19
+    },
+    {
+      "w": "gärna god",
+      "c": 9,
+      "score": 62.55
+    },
+    {
+      "w": "servering garderob",
+      "c": 9,
+      "score": 61.83
+    },
+    {
+      "w": "salongen ryggsäckar",
+      "c": 9,
+      "score": 61.83
+    }
+  ],
+  "note": "score = cat_count * log(N / global_count). Higher = more distinctive for this category."
+}

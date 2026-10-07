@@ -1,0 +1,25 @@
+{
+  "category_slug": "community",
+  "events": 2167,
+  "library_now": 229,
+  "approx_images_needed": 1,
+  "model": "minimax/minimax-m3",
+  "prompts": [
+    {
+      "pattern": "A_wide",
+      "prompt": "Wide shot of about twenty people gathered on the stone steps outside Kulturhuset in central Stockholm on an overcast afternoon, natural daylight, a woman in a yellow scarf gesturing as she addresses the crowd during a neighborhood meetup."
+    },
+    {
+      "pattern": "B_medium",
+      "prompt": "Medium shot of an elderly woman with silver hair and glasses reading aloud from a picture book to a circle of attentive children seated cross-legged on the carpeted floor of a Stockholm public library, warm natural light filtering through tall windows."
+    },
+    {
+      "pattern": "C_environment",
+      "prompt": "Environmental portrait of a man in his forties wearing a denim apron helping a teenage girl arrange ceramic pots on a wooden shelf inside a community workshop at Konstverkstan, soft afternoon light from a skylight illuminating the cluttered, lived-in studio space."
+    },
+    {
+      "pattern": "D_detail",
+      "prompt": "Close-up of weathered hands passing a steaming cup of glögg across a worn wooden table at an outdoor Christmas community market in Skansen, shallow depth of field, late afternoon golden light catching the steam rising between strangers sharing a moment."
+    }
+  ]
+}

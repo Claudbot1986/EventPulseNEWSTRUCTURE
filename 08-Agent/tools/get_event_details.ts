@@ -9,12 +9,21 @@ import type { EventDetail } from '../types';
 
 // Row shape for the untyped supabase select below (established pattern:
 // EventRow/VenueRow in search_events.ts). Types what the query returns.
+//
+// 2026-10-05 (T0201): la till eventpulse_summary, description_license,
+// description_attribution. events_public view exponerar ENDAST description_en/sv
+// om description_license är tillåtande — agenten kan lita på detta utan
+// ytterligare kontroll.
 interface EventDetailRow {
   id: string;
   title_sv: string | null;
   title_en: string | null;
   description_sv: string | null;
   description_en: string | null;
+  description_license: string | null;
+  description_attribution: string | null;
+  description_source_url: string | null;
+  eventpulse_summary: string | null;
   start_time: string;
   end_time: string | null;
   venue_id: string | null;
@@ -40,6 +49,8 @@ export async function getEventDetails(
     .from(TABLE)
     .select(
       'id, title_en, title_sv, description_en, description_sv, ' +
+      'description_license, description_attribution, description_source_url, ' +
+      'eventpulse_summary, ' +
       'start_time, end_time, venue_id, is_free, price_min_sek, price_max_sek, ' +
       'ticket_url, image_url, category_slug'
     )
@@ -81,7 +92,16 @@ export async function getEventDetails(
       is_free: !!row.is_free,
       ticket_url: row.ticket_url ?? null,
       image_url: row.image_url ?? null,
-      description: row.description_sv || row.description_en || null,
+      // T0201 (2026-10-05): prioritera eventpulse_summary om det finns.
+      // description_sv/en exponeras BARA om description_license är tillåtande
+      // (view-nivå-filter); agenten litar på det och returnerar null annars.
+      description: row.eventpulse_summary
+        || row.description_sv
+        || row.description_en
+        || null,
+      description_license: row.description_license ?? null,
+      description_attribution: row.description_attribution ?? null,
+      description_source_url: row.description_source_url ?? null,
       offers: (offers ?? []).map((o) => ({
         offer_url: o.offer_url,
         price_min: o.price_min ?? null,

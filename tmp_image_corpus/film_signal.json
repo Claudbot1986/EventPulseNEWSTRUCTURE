@@ -1,0 +1,285 @@
+{
+  "category_slug": "film",
+  "events": 106,
+  "docs": 106,
+  "top_1grams_distinctive": [
+    {
+      "w": "filmen",
+      "c": 63,
+      "score": 300.58
+    },
+    {
+      "w": "filmvisning",
+      "c": 42,
+      "score": 231.11
+    },
+    {
+      "w": "bio",
+      "c": 36,
+      "score": 184.21
+    },
+    {
+      "w": "skandia",
+      "c": 21,
+      "score": 113.59
+    },
+    {
+      "w": "klarabiografen",
+      "c": 18,
+      "score": 113.38
+    },
+    {
+      "w": "filmer",
+      "c": 19,
+      "score": 101.78
+    },
+    {
+      "w": "film",
+      "c": 21,
+      "score": 98.85
+    },
+    {
+      "w": "visas",
+      "c": 20,
+      "score": 94.68
+    },
+    {
+      "w": "stadsteatern",
+      "c": 30,
+      "score": 91.53
+    },
+    {
+      "w": "kulturhuset",
+      "c": 31,
+      "score": 89.52
+    },
+    {
+      "w": "regissören",
+      "c": 17,
+      "score": 77.51
+    },
+    {
+      "w": "zita",
+      "c": 9,
+      "score": 61.16
+    },
+    {
+      "w": "minuter",
+      "c": 18,
+      "score": 60.02
+    },
+    {
+      "w": "visar",
+      "c": 14,
+      "score": 58.12
+    },
+    {
+      "w": "filmhuset",
+      "c": 8,
+      "score": 55.6
+    },
+    {
+      "w": "följer",
+      "c": 14,
+      "score": 54.34
+    },
+    {
+      "w": "ett",
+      "c": 45,
+      "score": 53.12
+    },
+    {
+      "w": "denna",
+      "c": 24,
+      "score": 51.12
+    },
+    {
+      "w": "upp",
+      "c": 16,
+      "score": 46.02
+    },
+    {
+      "w": "cannes",
+      "c": 6,
+      "score": 44.93
+    },
+    {
+      "w": "filmpris",
+      "c": 6,
+      "score": 44.93
+    },
+    {
+      "w": "sin",
+      "c": 20,
+      "score": 43.98
+    },
+    {
+      "w": "regisserad",
+      "c": 9,
+      "score": 43.83
+    },
+    {
+      "w": "rådets",
+      "c": 6,
+      "score": 43.42
+    },
+    {
+      "w": "skildrar",
+      "c": 9,
+      "score": 39.12
+    },
+    {
+      "w": "visning",
+      "c": 8,
+      "score": 38.8
+    },
+    {
+      "w": "fjord",
+      "c": 5,
+      "score": 38.21
+    },
+    {
+      "w": "långfilmsdebut",
+      "c": 5,
+      "score": 38.21
+    },
+    {
+      "w": "samtal",
+      "c": 8,
+      "score": 38.17
+    },
+    {
+      "w": "tal",
+      "c": 7,
+      "score": 37.27
+    }
+  ],
+  "top_2grams_distinctive": [
+    {
+      "w": "bio skandia",
+      "c": 21,
+      "score": 113.59
+    },
+    {
+      "w": "kulturhuset stadsteatern",
+      "c": 30,
+      "score": 92.09
+    },
+    {
+      "w": "filmvisning klarabiografen",
+      "c": 11,
+      "score": 76.45
+    },
+    {
+      "w": "filmvisning bio",
+      "c": 10,
+      "score": 70.37
+    },
+    {
+      "w": "nominerad nordiska",
+      "c": 6,
+      "score": 44.93
+    },
+    {
+      "w": "rådets filmpris",
+      "c": 6,
+      "score": 44.93
+    },
+    {
+      "w": "visas bio",
+      "c": 6,
+      "score": 43.42
+    },
+    {
+      "w": "nordiska rådets",
+      "c": 6,
+      "score": 43.42
+    },
+    {
+      "w": "filmvisning kulturhuset",
+      "c": 6,
+      "score": 42.79
+    },
+    {
+      "w": "stadsteatern denna",
+      "c": 7,
+      "score": 39.55
+    },
+    {
+      "w": "folkets bio",
+      "c": 5,
+      "score": 38.21
+    },
+    {
+      "w": "klarabiografen filmen",
+      "c": 5,
+      "score": 38.21
+    },
+    {
+      "w": "filmen följer",
+      "c": 5,
+      "score": 36.78
+    },
+    {
+      "w": "stadsteatern filmen",
+      "c": 5,
+      "score": 36.19
+    },
+    {
+      "w": "filmen regisserad",
+      "c": 5,
+      "score": 35.66
+    },
+    {
+      "w": "film festival",
+      "c": 4,
+      "score": 31.3
+    },
+    {
+      "w": "filmvisning samtal",
+      "c": 4,
+      "score": 31.3
+    },
+    {
+      "w": "festival filmhuset",
+      "c": 4,
+      "score": 31.3
+    },
+    {
+      "w": "zita folkets",
+      "c": 4,
+      "score": 31.3
+    },
+    {
+      "w": "kärlek tanger",
+      "c": 4,
+      "score": 30.57
+    },
+    {
+      "w": "filmhuset bio",
+      "c": 4,
+      "score": 30.57
+    },
+    {
+      "w": "bio mauritz",
+      "c": 4,
+      "score": 30.57
+    },
+    {
+      "w": "laddat drama",
+      "c": 4,
+      "score": 29.95
+    },
+    {
+      "w": "internationella downs",
+      "c": 4,
+      "score": 28.95
+    },
+    {
+      "w": "downs syndromfestival",
+      "c": 4,
+      "score": 28.95
+    }
+  ],
+  "note": "score = cat_count * log(N / global_count). Higher = more distinctive for this category."
+}

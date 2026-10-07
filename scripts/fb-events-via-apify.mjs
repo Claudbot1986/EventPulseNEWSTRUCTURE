@@ -12,6 +12,8 @@
 import { readFileSync, writeFileSync } from 'fs';
 import { createHash } from 'crypto';
 import { createClient } from '@supabase/supabase-js';
+import { Queue } from 'bullmq';
+import IORedis from 'ioredis';
 import { fetchHtml } from '../02-Ingestion/tools/fetchTools.js';
 
 const APIFY_API_KEY = process.env.APIFY_API_KEY;
@@ -23,6 +25,12 @@ if (!APIFY_API_KEY) { console.error('APIFY_API_KEY missing'); process.exit(2); }
 if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) { console.error('Supabase env missing'); process.exit(2); }
 
 const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, { auth: { persistSession: false } });
+
+// T0201.5: BullMQ raw_events-queue. Workern dränerar kön och bearbetar
+// varje event genom normalizer (kategori, dedup, venue_id, T0201).
+const rawEventsQueue = new Queue('raw_events', {
+  connection: new IORedis(process.env.REDIS_URL || 'redis://localhost:6379', { maxRetriesPerRequest: null, enableReadyCheck: false }),
+});
 
 const SOURCE_ID = 'fb-events-stockholm-apify';
 
@@ -135,6 +143,8 @@ function apifyToRow(ev) {
     image_ai_generated: false,
     image_ai_optout: false,
     is_online: false,
+    // 2026-10-06 (T0201.4): category_slug-fallback 'community' för att undvika NULL i DB.
+    category_slug: 'community',
   };
 }
 
@@ -176,15 +186,48 @@ async function main() {
 
   if (rows.length === 0) { console.log('  all dupes — no-op'); return; }
 
-  let inserted = 0;
+  // T0201.5: push till raw_events BullMQ-queue (ersätter direkt-upsert).
+  // Workern dränerar kön och kör normalizer (kategori, dedup, T0201).
+  let pageQueued = 0;
   let failed = 0;
-  for (let i = 0; i < rows.length; i += 50) {
-    const batch = rows.slice(i, i + 50);
-    const { data, error } = await supabase.from('events').upsert(batch, { onConflict: 'dedup_hash' }).select('id');
-    if (error) { console.error(`  batch error: ${error.message}`); failed += batch.length; continue; }
-    inserted += data?.length ?? 0;
+  for (const row of rows) {
+    try {
+      const raw = {
+        title: row.title_sv ?? row.title_en ?? '',
+        description: row.description_sv ?? row.description_en ?? null,
+        start_time: row.start_time,
+        end_time: row.end_time ?? null,
+        venue_name: row.venue_full_name ?? null,
+        venue_address: row.venue_full_address ?? null,
+        lat: row.lat ?? null,
+        lng: row.lng ?? null,
+        categories: row.category_slug ? [row.category_slug] : [],
+        is_free: !!row.is_free,
+        price_min_sek: row.price_min_sek ?? null,
+        price_max_sek: row.price_max_sek ?? null,
+        ticket_url: row.ticket_url ?? null,
+        image_url: null,
+        source: row.source,
+        source_id: null,
+        detected_language: null,
+        raw_payload: {
+          venue: row.venue_full_name,
+          city: row.venue_city,
+          fetched_via: 'fb-apify',
+          fetched_at: new Date().toISOString(),
+        },
+      };
+      await rawEventsQueue.add(`fb-apify-${row.dedup_hash.slice(0, 16)}`, raw, {
+        removeOnComplete: 1000,
+        removeOnFail: 5000,
+      });
+      pageQueued++;
+    } catch (e) {
+      console.error(`queue.add failed for ${row.title_sv ?? row.title_en}: ${e.message}`);
+      failed++;
+    }
   }
-  console.log(`  inserted/updated: ${inserted}, failed: ${failed}`);
+  console.log(`  queued: ${pageQueued}, failed: ${failed}`);
 
   // Save raw for audit
   writeFileSync('/tmp/fb-apify-results.json', JSON.stringify(events, null, 2));

@@ -1,0 +1,25 @@
+{
+  "category_slug": "ovrigt",
+  "events": 27,
+  "library_now": 0,
+  "approx_images_needed": 1,
+  "model": "minimax/minimax-m3",
+  "prompts": [
+    {
+      "pattern": "A_wide",
+      "prompt": "A small group of visitors stands inside the grand entrance hall of Dramaten at Nybroplan, listening to a guide in a dark wool coat who gestures toward the arched windows and marble floor under soft daylight spilling through tall glass panes."
+    },
+    {
+      "pattern": "B_medium",
+      "prompt": "A woman in a linen apron leans over a wooden table inside Kulturhuset Dieselverkstaden's Märtas målarsal, demonstrating embroidery stitches to a small group of seated participants as pale autumn light falls across scattered thread skeins."
+    },
+    {
+      "pattern": "C_environment",
+      "prompt": "Inside a quiet Stockholm yoga studio with pale plaster walls and tall windows, an instructor in loose grey clothing guides a small class through gentle floor stretches on simple cork mats under soft northern daylight."
+    },
+    {
+      "pattern": "D_detail",
+      "prompt": "A close-up of weathered hands pulling a needle and rust-red thread through natural linen fabric, with a worn wooden embroidery hoop and small ceramic bowl of buttons resting on a scuffed craft table in soft window light."
+    }
+  ]
+}

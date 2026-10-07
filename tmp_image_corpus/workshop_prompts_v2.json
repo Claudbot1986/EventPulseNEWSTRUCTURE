@@ -1,0 +1,26 @@
+{
+  "category_slug": "workshop",
+  "events": 104,
+  "library_now": 0,
+  "approx_images_needed": 2,
+  "description_corpus_size": 98,
+  "model": "minimax/minimax-m3",
+  "prompts": [
+    {
+      "pattern": "A_wide",
+      "prompt": "Wide photograph inside Kulturhuset Stadsteatern's bright workshop room, tall windows casting soft daylight across long wooden tables where a dozen adults sit sewing patches onto worn denim jackets, surrounded by colorful fabric scraps, thread spools, and needle-felted cushions."
+    },
+    {
+      "pattern": "B_medium",
+      "prompt": "Medium shot of young dancers in a sunlit Stockholm dance studio with pale wooden floors and tall mirrors, a choreographer in loose black clothing demonstrating a movement while teenage participants mirror the gesture with focused, intent expressions."
+    },
+    {
+      "pattern": "C_environment",
+      "prompt": "Environmental portrait inside Dramatenbaren, warm pendant lights glowing above a small group of adults standing in a loose circle, one person holding an open book while others listen attentively in the dim theatrical lounge with velvet seating in the background."
+    },
+    {
+      "pattern": "D_detail",
+      "prompt": "Close-up of weathered hands folding patterned washi paper into a traditional Japanese accordion binding on a worn wooden table, soft natural light from an Etnografiska museet window illuminating the delicate creases and muted floral designs of the sheets."
+    }
+  ]
+}

@@ -164,6 +164,11 @@ function aggregateVenues(events) {
     const venueName = event.venue || event.venue_name || null;
     if (!venueName) continue;
 
+    // 2026-10-06 — verifierade online-events syns inte på kartan.
+    // Använd strikt === true så null/false-händelser passerar.
+    // (HomeScreen + DetailsScreen visar dem fortfarande.)
+    if (event.is_online === true) continue;
+
     const known = knownCoordsFor(venueName);
     const lat = Number.isFinite(event.lat) ? event.lat : known?.lat;
     const lng = Number.isFinite(event.lng) ? event.lng : known?.lng;

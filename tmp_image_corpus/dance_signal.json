@@ -1,0 +1,285 @@
+{
+  "category_slug": "dance",
+  "events": 272,
+  "docs": 266,
+  "top_1grams_distinctive": [
+    {
+      "w": "dansens",
+      "c": 124,
+      "score": 559.8
+    },
+    {
+      "w": "hus",
+      "c": 124,
+      "score": 453.45
+    },
+    {
+      "w": "benke",
+      "c": 43,
+      "score": 222.39
+    },
+    {
+      "w": "äger",
+      "c": 74,
+      "score": 214.76
+    },
+    {
+      "w": "rum",
+      "c": 76,
+      "score": 205.92
+    },
+    {
+      "w": "romeo",
+      "c": 42,
+      "score": 205.88
+    },
+    {
+      "w": "rydman",
+      "c": 39,
+      "score": 205.15
+    },
+    {
+      "w": "julia",
+      "c": 42,
+      "score": 199.21
+    },
+    {
+      "w": "föreställning",
+      "c": 74,
+      "score": 196.69
+    },
+    {
+      "w": "presenterar",
+      "c": 76,
+      "score": 186.82
+    },
+    {
+      "w": "dansföreställning",
+      "c": 31,
+      "score": 174.46
+    },
+    {
+      "w": "fredrik",
+      "c": 42,
+      "score": 159.14
+    },
+    {
+      "w": "death",
+      "c": 32,
+      "score": 153.28
+    },
+    {
+      "w": "dans",
+      "c": 37,
+      "score": 144.64
+    },
+    {
+      "w": "love",
+      "c": 32,
+      "score": 144.47
+    },
+    {
+      "w": "rydmans",
+      "c": 25,
+      "score": 141.83
+    },
+    {
+      "w": "föreställningen",
+      "c": 59,
+      "score": 141.61
+    },
+    {
+      "w": "nötknäpparen",
+      "c": 23,
+      "score": 141.19
+    },
+    {
+      "w": "tolkning",
+      "c": 30,
+      "score": 136.33
+    },
+    {
+      "w": "presenteras",
+      "c": 40,
+      "score": 133.82
+    },
+    {
+      "w": "dalija",
+      "c": 19,
+      "score": 122.34
+    },
+    {
+      "w": "acin",
+      "c": 19,
+      "score": 122.34
+    },
+    {
+      "w": "thelander",
+      "c": 19,
+      "score": 122.34
+    },
+    {
+      "w": "forza",
+      "c": 19,
+      "score": 122.34
+    },
+    {
+      "w": "verket",
+      "c": 25,
+      "score": 116.18
+    },
+    {
+      "w": "dance",
+      "c": 19,
+      "score": 104.18
+    },
+    {
+      "w": "välkänd",
+      "c": 18,
+      "score": 102.54
+    },
+    {
+      "w": "denna",
+      "c": 48,
+      "score": 102.24
+    },
+    {
+      "w": "klassiska",
+      "c": 28,
+      "score": 100.87
+    },
+    {
+      "w": "ett",
+      "c": 84,
+      "score": 99.16
+    }
+  ],
+  "top_2grams_distinctive": [
+    {
+      "w": "dansens hus",
+      "c": 124,
+      "score": 563.48
+    },
+    {
+      "w": "rum dansens",
+      "c": 43,
+      "score": 241.05
+    },
+    {
+      "w": "fredrik benke",
+      "c": 42,
+      "score": 217.81
+    },
+    {
+      "w": "äger rum",
+      "c": 74,
+      "score": 216.18
+    },
+    {
+      "w": "romeo julia",
+      "c": 42,
+      "score": 211.17
+    },
+    {
+      "w": "benke rydman",
+      "c": 39,
+      "score": 205.75
+    },
+    {
+      "w": "julia death",
+      "c": 32,
+      "score": 189.06
+    },
+    {
+      "w": "death love",
+      "c": 32,
+      "score": 189.06
+    },
+    {
+      "w": "föreställning dansens",
+      "c": 30,
+      "score": 176.38
+    },
+    {
+      "w": "presenteras dansens",
+      "c": 25,
+      "score": 154.41
+    },
+    {
+      "w": "ett dansens",
+      "c": 25,
+      "score": 152.56
+    },
+    {
+      "w": "benke rydmans",
+      "c": 25,
+      "score": 141.83
+    },
+    {
+      "w": "hus fredrik",
+      "c": 20,
+      "score": 127.8
+    },
+    {
+      "w": "dalija acin",
+      "c": 19,
+      "score": 122.34
+    },
+    {
+      "w": "acin thelander",
+      "c": 19,
+      "score": 122.34
+    },
+    {
+      "w": "forza forza",
+      "c": 19,
+      "score": 122.34
+    },
+    {
+      "w": "rydman presenterar",
+      "c": 19,
+      "score": 115.28
+    },
+    {
+      "w": "tolkning klassiska",
+      "c": 18,
+      "score": 115.02
+    },
+    {
+      "w": "klassiska berättelsen",
+      "c": 19,
+      "score": 113.41
+    },
+    {
+      "w": "thelander forza",
+      "c": 17,
+      "score": 111.25
+    },
+    {
+      "w": "hus detta",
+      "c": 15,
+      "score": 98.16
+    },
+    {
+      "w": "hus studioscen",
+      "c": 15,
+      "score": 97.35
+    },
+    {
+      "w": "stora scen",
+      "c": 23,
+      "score": 95.95
+    },
+    {
+      "w": "nötknäpparen föreställning",
+      "c": 14,
+      "score": 94.17
+    },
+    {
+      "w": "presenterar föreställningen",
+      "c": 14,
+      "score": 93.27
+    }
+  ],
+  "note": "score = cat_count * log(N / global_count). Higher = more distinctive for this category."
+}

@@ -9,6 +9,12 @@ import { evaluateTitle, checkBlockB } from './title-quality-gate';
 // 2026-10-02 — Description routing-helper (5.2). Ren function: tar raw.description
 // + venue.country och returnerar description_sv + description_en + audit-reason.
 import { routeDescription, type VenueInfo } from './descriptionRouting';
+// 2026-10-05 — T0201 description rights + fact-based summary.
+// Tre nya moduler som bygger eventpulse_summary + license + retention från
+// source-fälten och raw.description. Inga anrop till LLM i Fas 1.
+import { resolveDescriptionLicense, type SourceLicenseRegistry } from './descriptionLicense';
+import { buildEventpulseFacts, buildEventpulseSummary, type EventpulseFacts } from './eventpulseSummary';
+import { shouldCaptureRawDescription, countFilledFacts } from './rawDescriptionRetention';
 import { getDefaultCategorySlugForSource } from './sourceCategoryDefaults';
 import { canonicalizeCategorySlug } from './categoryCanonicalize';
 import { extractHeadliner, resolveArtist } from './artistResolver';
@@ -602,6 +608,66 @@ export async function processRawEvent(job: Job<RawEventInput>): Promise<void> {
     );
   }
 
+  // ─── T0201 (2026-10-05): Description rights + fact-based summary ─────────
+  //
+  // Bygger eventpulse_summary + eventpulse_summary_facts deterministiskt från
+  // redan normaliserade fält + raw.description (regex-extraktion). Inga LLM-
+  // anrop i Fas 1 (användarbeslut). Rättighetsstatus via source-registry med
+  // default 'unknown'.
+  //
+  // raw_description fångas BARA om:
+  //   - license är 'unknown' (vi vet inte om innehållet är säkert att visa)
+  //   - ELLER deterministisk extraktion lämnade < 5 fyllda fält (reprocessing)
+  //
+  // Källa-registret laddas en gång per process; tom vid uppstart (override).
+  const sourceLicense = resolveDescriptionLicense({
+    source: raw.source,
+    registry: process.env.EVENTPULSE_DESCRIPTION_LICENSE_REGISTRY
+      ? JSON.parse(process.env.EVENTPULSE_DESCRIPTION_LICENSE_REGISTRY) as SourceLicenseRegistry
+      : null,
+  });
+
+  // Plocka venue-namn för summary-input (om vi redan hämtat venue kan vi
+  // hämta namnet; annars använd raw.venue_name om det finns).
+  // city: EventPulse är Stockholm-first (MASTERPLAN §1) — default till
+  // 'Stockholm' om inte annat är känt. raw har inte city; venues.resolver
+  // kan returnera det men vi kör vidare utan för att hålla koden enkel.
+  const venueNameForSummary = raw.venue_name ?? null;
+  const cityForSummary = venueCountry === 'SE' ? 'Stockholm' : null;
+
+  const { facts: epFacts, provenance: epProvenance } = buildEventpulseFacts({
+    category_slug,
+    venue_name: venueNameForSummary,
+    city: cityForSummary,
+    start_time: raw.start_time ?? null,
+    end_time: raw.end_time ?? null,
+    is_free: raw.is_free ?? null,
+    price_min_sek: raw.price_min_sek ?? null,
+    price_max_sek: raw.price_max_sek ?? null,
+    title: raw.title ?? null,
+    raw_description: raw.description ?? null,
+    source: raw.source ?? null,
+  });
+
+  const eventpulseSummaryText = buildEventpulseSummary(epFacts);
+
+  // Bestäm om raw_description ska lagras (capture-villkor enligt
+  // rawDescriptionRetention.ts).
+  const filledFactsCount = countFilledFacts(epFacts as unknown as Record<string, unknown>);
+  const captureDecision = shouldCaptureRawDescription({
+    license: sourceLicense.license,
+    filledFactCount: filledFactsCount,
+  });
+  const rawDescriptionToStore = captureDecision.capture ? (raw.description ?? null) : null;
+  const rawDescriptionCapturedAt = captureDecision.capture ? new Date().toISOString() : null;
+
+  console.log(
+    `[normalizer] T0201: license=${sourceLicense.license} ` +
+    `(${sourceLicense.rule}), summary=${eventpulseSummaryText ? 'YES' : 'NO'}, ` +
+    `facts=${filledFactsCount}/25, raw_desc=${captureDecision?.capture ? 'KEPT' : 'DISCARDED'} ` +
+    `(${captureDecision.reason}) [event ${raw.title?.slice(0, 30) ?? 'untitled'}]`,
+  );
+
   const observedAt = new Date().toISOString();
 
   const normalized: Partial<NormalizedEvent> & Record<string, unknown> = {
@@ -642,6 +708,23 @@ export async function processRawEvent(job: Job<RawEventInput>): Promise<void> {
     image_ai_generated: false,
     image_generation_status: 'pending',
     image_generation_attempts: 0,
+    // ── T0201 (2026-10-05): Description rights + fact-based summary ─────
+    //   - description_license: huruvida description_en/sv får exponeras publikt.
+    //   - description_attribution/source_url: för visning i UI om license tillåter.
+    //   - raw_description + captured_at: käll-text, 30-dagars retention.
+    //   - eventpulse_summary: faktbaserad deterministisk sammanfattning (primär i UI).
+    //   - eventpulse_summary_facts/provenance: extraherade fakta + spår.
+    //   - eventpulse_summary_generated_at/model: audit.
+    description_license: sourceLicense.license,
+    description_attribution: sourceLicense.attribution,
+    description_source_url: raw.url ?? null,
+    raw_description: rawDescriptionToStore,
+    raw_description_captured_at: rawDescriptionCapturedAt,
+    eventpulse_summary: eventpulseSummaryText,
+    eventpulse_summary_facts: epFacts as unknown as Record<string, unknown>,
+    eventpulse_summary_provenance: epProvenance as unknown as Record<string, unknown>,
+    eventpulse_summary_generated_at: eventpulseSummaryText ? observedAt : null,
+    eventpulse_summary_model: 'deterministic-v1',
     // Agent Event Graph columns (MASTERPLAN §13). Seed on every parse so
     // ranking/freshness stay meaningful; confidence mirrors the SQL migration
     // 20260818-0002-confidence-v1.sql.

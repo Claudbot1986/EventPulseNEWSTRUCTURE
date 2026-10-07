@@ -1,0 +1,25 @@
+{
+  "category_slug": "film",
+  "events": 106,
+  "library_now": 2,
+  "approx_images_needed": 1,
+  "model": "minimax/minimax-m3",
+  "prompts": [
+    {
+      "pattern": "A_wide",
+      "prompt": "Wide dusk shot of an art-house cinema facade in central Stockholm, warm light spilling from the entrance as a young woman in a denim jacket pauses on the sidewalk to check her phone."
+    },
+    {
+      "pattern": "B_medium",
+      "prompt": "Medium shot inside a small Stockholm cinema lobby, a bearded man in a wool sweater holds a paper ticket beneath a vintage marquee frame, soft natural light from tall windows."
+    },
+    {
+      "pattern": "C_environment",
+      "prompt": "Interior of a classic Stockholm screening room with red velvet seats and ornate ceiling, a single cinema-goer in a dark coat walks down the aisle toward the screen, dim house lights fading."
+    },
+    {
+      "pattern": "D_detail",
+      "prompt": "Close-up of a 35mm film reel spinning in a warm projector beam inside a Stockholm independent cinema, dust motes drifting through the amber light, shallow depth of field."
+    }
+  ]
+}

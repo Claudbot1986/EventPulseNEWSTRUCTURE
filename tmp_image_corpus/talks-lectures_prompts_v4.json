@@ -1,0 +1,31 @@
+{
+  "category_slug": "talks-lectures",
+  "events": 256,
+  "jev_q1": 0.67,
+  "jev_q2": 0.62,
+  "jev_q3": 0.43,
+  "description_corpus_size": 244,
+  "model": "MiniMax-M3",
+  "prompts": [
+    {
+      "pattern": "A_wide",
+      "prompt": "Wide photograph of a brightly lit auditorium at Oscarsteatern in Stockholm, a long stage with two authors seated in soft chairs mid-samtal, a full audience in tiered seating, warm tungsten footlights and natural daylight filtering through high arched windows, candid atmosphere, no logos."
+    },
+    {
+      "pattern": "B_medium",
+      "prompt": "Medium shot inside Bonniers Konsthall of a författare and a moderator engaged in samtal on a low gallery plinth, white concrete walls and contemporary art framing them, audience seated cross-legged on the floor, soft daylight from skylights, no visible text."
+    },
+    {
+      "pattern": "C_environment",
+      "prompt": "Environmental photograph of a Stockholm conference hall during a digital marketing talk, rows of attentive attendees facing a glass-walled stage, presenters gesturing toward a screen, cool daylight through tall windows, candid professional atmosphere, no logos or text."
+    },
+    {
+      "pattern": "D_detail",
+      "prompt": "Close-up detail of an author's hand resting on an open boken on a wooden lectern at Oscarsteatern, the gilt stage curtain softly blurred behind, fingers mid-gesture, warm stage light catching paper edges, no readable text visible."
+    },
+    {
+      "pattern": "E_intimate",
+      "prompt": "Intimate portrait of a författare leaning into a microphone during a quiet samtal, soft side lighting, a single listener visible in soft focus behind, neutral Stockholm gallery backdrop, candid natural expression, no logos or signage."
+    }
+  ]
+}

@@ -1,0 +1,26 @@
+{
+  "category_slug": "ovrigt",
+  "events": 27,
+  "library_now": 0,
+  "approx_images_needed": 1,
+  "description_corpus_size": 27,
+  "model": "minimax/minimax-m3",
+  "prompts": [
+    {
+      "pattern": "A_wide",
+      "prompt": "Wide documentary-style photograph of a guided tour group gathered inside the grand entrance hall of Dramaten at Nybroplan in Stockholm. Tall windows cast natural daylight across marble columns as a guide gestures toward ornate architectural details, visitors listening attentively in winter coats."
+    },
+    {
+      "pattern": "B_medium",
+      "prompt": "Medium-shot photograph of a craft workshop inside Märtas målarsal at Kulturhuset Dieselverkstaden in Nacka. Several participants lean over a wooden table working on embroidery hoops with colorful threads and botanical motifs, soft daylight falling across their hands and fabric."
+    },
+    {
+      "pattern": "C_environment",
+      "prompt": "Environmental photograph of Confidencen's intimate baroque theater interior in Solna. A small guided tour group stands in the gilded royal salon under warm chandelier light, examining hand-painted walls and red velvet furnishings of Sweden's oldest preserved theater."
+    },
+    {
+      "pattern": "D_detail",
+      "prompt": "Close-up detail photograph of hands working an embroidery needle through linen stretched in a wooden hoop, botanical flora illustrations and thread skeins scattered nearby, soft natural window light highlighting the texture of fabric and stitches."
+    }
+  ]
+}

@@ -98,6 +98,9 @@ export default function MapEventCard({
   const freeLabel = pickFreeLabel(event);
   const imageUri = pickImageUrl(event);
   const imageSource = sourceOf(imageUri);
+  // 2026-10-06 — verifierad online-flagga visas som egen pill bredvid free.
+  // Strikt === true skyddar mot null/undefined (null = default offline).
+  const isOnline = event?.is_online === true;
 
   const handleClose = () => {
     if (typeof onClose === 'function') onClose();
@@ -173,6 +176,11 @@ export default function MapEventCard({
           {freeLabel ? (
             <View style={styles.freePill}>
               <Text style={styles.freePillText}>{freeLabel}</Text>
+            </View>
+          ) : null}
+          {isOnline ? (
+            <View style={styles.onlinePill}>
+              <Text style={styles.onlinePillText}>ONLINE</Text>
             </View>
           ) : null}
         </View>
@@ -290,6 +298,24 @@ const styles = StyleSheet.create({
   },
   freePillText: {
     color: TOKENS.color.accent,
+    fontSize: TOKENS.font.freePill.size,
+    fontWeight: TOKENS.font.freePill.weight,
+    letterSpacing: TOKENS.font.freePill.letterSpacing,
+  },
+  // 2026-10-06 — Online-pill (matcherad green). Visas bredvid freeLabel om
+  // event.is_online === true. Strikt !== true-skydd redan i render-villkoret.
+  onlinePill: {
+    alignSelf: 'flex-start',
+    backgroundColor: 'rgba(120,200,160,0.12)',
+    borderColor: '#7DD3A8',
+    borderWidth: 1,
+    borderRadius: 6,
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    marginTop: 4,
+  },
+  onlinePillText: {
+    color: '#7DD3A8',
     fontSize: TOKENS.font.freePill.size,
     fontWeight: TOKENS.font.freePill.weight,
     letterSpacing: TOKENS.font.freePill.letterSpacing,

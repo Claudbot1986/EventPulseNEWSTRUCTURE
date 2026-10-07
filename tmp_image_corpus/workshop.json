@@ -1,0 +1,1278 @@
+{
+  "category_slug": "workshop",
+  "events": 104,
+  "library_count": 0,
+  "approx_images_needed": 2,
+  "top_words": [
+    [
+      "workshop",
+      283
+    ],
+    [
+      "ett",
+      102
+    ],
+    [
+      "skapa",
+      99
+    ],
+    [
+      "får",
+      96
+    ],
+    [
+      "with",
+      90
+    ],
+    [
+      "denna",
+      77
+    ],
+    [
+      "kulturhuset",
+      66
+    ],
+    [
+      "kurs",
+      65
+    ],
+    [
+      "deltagarna",
+      60
+    ],
+    [
+      "participants",
+      48
+    ],
+    [
+      "stadsteatern",
+      46
+    ],
+    [
+      "course",
+      45
+    ],
+    [
+      "museet",
+      44
+    ],
+    [
+      "dig",
+      42
+    ],
+    [
+      "will",
+      36
+    ],
+    [
+      "workshops",
+      35
+    ],
+    [
+      "eller",
+      33
+    ],
+    [
+      "djupdyk",
+      33
+    ],
+    [
+      "dansen",
+      33
+    ],
+    [
+      "dans",
+      33
+    ],
+    [
+      "your",
+      32
+    ],
+    [
+      "din",
+      32
+    ],
+    [
+      "etnografiska",
+      30
+    ],
+    [
+      "deltagare",
+      30
+    ],
+    [
+      "erbjuder",
+      29
+    ],
+    [
+      "olika",
+      29
+    ],
+    [
+      "stina",
+      29
+    ],
+    [
+      "kursen",
+      28
+    ],
+    [
+      "utforskar",
+      28
+    ],
+    [
+      "unga",
+      27
+    ]
+  ],
+  "sample_events": [
+    {
+      "title": "Build your AI Team",
+      "venue": "Best Western Plus Park City Hammarby Sjöstad"
+    },
+    {
+      "title": "Lappa och laga ",
+      "venue": "Kulturhuset Stadsteatern"
+    },
+    {
+      "title": "Japansk bokbindning Orihon",
+      "venue": "Etnografiska museet"
+    },
+    {
+      "title": "Workshops",
+      "venue": "dramaten"
+    },
+    {
+      "title": "Workshops",
+      "venue": "dramaten"
+    }
+  ],
+  "full_corpus": [
+    {
+      "id": "8f91e0ea-9952-467b-ab55-92e5bd9142a2",
+      "title_sv": "Build your AI Team",
+      "title_en": "Build your AI Team",
+      "desc_sv": "Design powerful AI systems that handle real tasks, then scale them to any business problem you face.",
+      "desc_en": "Design powerful AI systems that handle real tasks, then scale them to any business problem you face.",
+      "raw": "Design powerful AI systems that handle real tasks, then scale them to any business problem you face.",
+      "venue": "Best Western Plus Park City Hammarby Sjöstad",
+      "start": "2026-10-10T17:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "d97f907b-044b-46c7-8e8f-c2185cc24372",
+      "title_sv": "Lappa och laga ",
+      "title_en": "Lappa och laga ",
+      "desc_sv": "Lappa och laga är en pyssel- och reparationsaktivitet på Kulturhuset Stadsteatern i Stockholm.\n\nVi hjälper varandra att laga och återbruka. Slöjdhandledare finns på plats för att ge stöd och vägledning. Återbrukade material finns tillgängliga att använda.",
+      "desc_en": "Lappa och laga is a craft and repair activity at Kulturhuset Stadsteatern in Stockholm.\n\nWe help each other repair and reuse items. Craft instructors are on site to provide support and guidance. Reused materials are available for use.",
+      "raw": "Lappa och laga är en pyssel- och reparationsaktivitet på Kulturhuset Stadsteatern i Stockholm.\n\nVi hjälper varandra att laga och återbruka. Slöjdhandledare finns på plats för att ge stöd och vägledning. Återbrukade material finns tillgängliga att använda.",
+      "venue": "Kulturhuset Stadsteatern",
+      "start": "2026-10-07T15:30:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "8e19c5bd-ca91-4189-b922-0ca5e3aeff27",
+      "title_sv": "Japansk bokbindning Orihon",
+      "title_en": "Japansk bokbindning Orihon",
+      "desc_sv": "Japansk bokbindning Orihon är en workshop på Etnografiska museet i Stockholm.\n\nI workshopen får du lära dig den traditionella japanska bokbindningstekniken med dragspelskonstruktionen, kallad Orihon. Orihon är en bokbindningsstil som funnits i Japan sedan 1000-talet och används än idag för buddhistiska sutror och Goshuin-cho. Japanskt mönstrat papper, kallat Chiyo-gami, används till omslagen på de",
+      "desc_en": "Japanese Bookbinding Orihon is a workshop at Etnografiska museet in Stockholm.\n\nIn this workshop, you will learn the traditional Japanese bookbinding technique with an accordion construction, called Orihon. Orihon is a bookbinding style that has existed in Japan since the 1000s and is still used today for Buddhist sutras and Goshuin-cho, a collection book for temple stamps. Japanese patterned pape",
+      "raw": "Japansk bokbindning Orihon är en workshop på Etnografiska museet i Stockholm.\n\nI workshopen får du lära dig den traditionella japanska bokbindningstekniken med dragspelskonstruktionen, kallad Orihon. Orihon är en bokbindningsstil som funnits i Japan sedan 1000-talet och används än idag för buddhistiska sutror och Goshuin-cho. Japanskt mönstrat papper, kallat Chiyo-gami, används till omslagen på de",
+      "venue": "Etnografiska museet",
+      "start": "2026-10-07T15:30:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "a465c1e8-0454-4e35-8756-f35955a01745",
+      "title_sv": "Workshops",
+      "title_en": "Workshops",
+      "desc_sv": "Workshops är ett tillfälle att utforska text, kropp och röst i Dramatenbaren i Stockholm.\n\nDessa workshops erbjuder deltagare möjligheten att gestalta texten, kroppen och rösten. Fokus ligger på mötet med klassiska verk av författare som Shakespeare och Molière.",
+      "desc_en": "Workshops is an opportunity to explore text, body, and voice at Dramatenbaren in Stockholm.\n\nThese workshops offer participants the chance to interpret text, body, and voice. The focus is on engaging with classic works by authors such as Shakespeare and Molière.",
+      "raw": "Workshops är ett tillfälle att utforska text, kropp och röst i Dramatenbaren i Stockholm.\n\nDessa workshops erbjuder deltagare möjligheten att gestalta texten, kroppen och rösten. Fokus ligger på mötet med klassiska verk av författare som Shakespeare och Molière.",
+      "venue": "dramaten",
+      "start": "2026-10-11T11:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "cb748aba-57c4-4888-a306-086b5e297f15",
+      "title_sv": "Workshops",
+      "title_en": "Workshops",
+      "desc_sv": "Workshops är ett tillfälle att öva på gestaltning av text, kropp och röst på Dramatenbaren i Stockholm.\n\nUnder dessa workshops får deltagare möjlighet att gestalta text, kropp och röst. Fokus ligger på mötet med klassiska verk av författare som Shakespeare och Molière.",
+      "desc_en": "Workshops offer a chance to practice interpreting text, body, and voice at Dramatenbaren in Stockholm.\n\nThese workshops offer participants the opportunity to interpret text, body, and voice. The focus is on engaging with classic works by authors like Shakespeare and Molière.",
+      "raw": "Workshops är ett tillfälle att öva på gestaltning av text, kropp och röst på Dramatenbaren i Stockholm.\n\nUnder dessa workshops får deltagare möjlighet att gestalta text, kropp och röst. Fokus ligger på mötet med klassiska verk av författare som Shakespeare och Molière.",
+      "venue": "dramaten",
+      "start": "2026-10-10T11:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "56f6c5da-0b24-4f6b-8d58-797bdd63b035",
+      "title_sv": "Meditation & föreläsning: Medkänsla som väg till lycka",
+      "title_en": "Meditation & föreläsning: Medkänsla som väg till lycka",
+      "desc_sv": "Meditation & föreläsning: Medkänsla som väg till lycka är en kurs i Stockholm.\n\nDetta event fokuserar på idén att lycka inte handlar om att få mer, utan om att öppna sig mot andra. Buddhismen presenterar en syn där medkänsla är vägen till välbefinnande. Kursen utforskar den buddhistiska synen på medkänsla. Deltagarna får insikter i hur medkänsla kan förändra vår relation till oss själva, till andr",
+      "desc_en": "Meditation & Lecture: Compassion as a Path to Happiness is a course in Stockholm.\n\nThis event focuses on the idea that happiness is not about acquiring more, but about opening up to others. Buddhism presents a view where compassion is the path to well-being. The course explores the Buddhist perspective on compassion. Participants will gain insights into how compassion can transform our relationshi",
+      "raw": "Meditation & föreläsning: Medkänsla som väg till lycka är en kurs i Stockholm.\n\nDetta event fokuserar på idén att lycka inte handlar om att få mer, utan om att öppna sig mot andra. Buddhismen presenterar en syn där medkänsla är vägen till välbefinnande. Kursen utforskar den buddhistiska synen på medkänsla. Deltagarna får insikter i hur medkänsla kan förändra vår relation till oss själva, till andr",
+      "venue": null,
+      "start": "2026-10-24T08:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "79f0152f-bfd4-403c-a4cc-b4970eaaa90f",
+      "title_sv": "WHY WE SING - Gospeldag för körledare och pianister ",
+      "title_en": "WHY WE SING - Gospeldag för körledare och pianister ",
+      "desc_sv": "WHY WE SING - Gospeldag för körledare och pianister.\n\nMåndagen den 12 oktober är du som körledare, kyrkomusiker, kapellmästare eller pianist välkommen till en heldag med gospel på Bromma Folkhögskola utanför Stockholm. Där får du ny inspiration och träffa kollegor från hela Sverige.\n\nVi jobbar praktiskt med sångteknik, uttryck och repertoar, höra om gospelmusikens första hundra år utifrån nya \"Thi",
+      "desc_en": "WHY WE SING - Gospeldag för körledare och pianister.\n\nMåndagen den 12 oktober är du som körledare, kyrkomusiker, kapellmästare eller pianist välkommen till en heldag med gospel på Bromma Folkhögskola utanför Stockholm. Där får du ny inspiration och träffa kollegor från hela Sverige.\n\nVi jobbar praktiskt med sångteknik, uttryck och repertoar, höra om gospelmusikens första hundra år utifrån nya \"Thi",
+      "raw": "WHY WE SING - Gospeldag för körledare och pianister.\n\nMåndagen den 12 oktober är du som körledare, kyrkomusiker, kapellmästare eller pianist välkommen till en heldag med gospel på Bromma Folkhögskola utanför Stockholm. Där får du ny inspiration och träffa kollegor från hela Sverige.\n\nVi jobbar praktiskt med sångteknik, uttryck och repertoar, höra om gospelmusikens första hundra år utifrån nya \"Thi",
+      "venue": null,
+      "start": "2026-10-12T08:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "24e10eb3-0601-4533-b76d-8b16c62f26cc",
+      "title_sv": "Breathwork with Hale in The House of the Muses",
+      "title_en": "Breathwork with Hale in The House of the Muses",
+      "desc_sv": "Experience art with both body and mind. In collaboration with Hale, Liljevalchs invites you to a guided breathwork session held in conjunction with Ylva Snöfrid’s exhibition The House of the Muses.\n\nThe experience begins with a brief guided tour of the exhibition. In The House of the Muses Ylva Snöfrid explores themes of presence, consciousness, and creativity, allowing art to become a space for b",
+      "desc_en": "Experience art with both body and mind. In collaboration with Hale, Liljevalchs invites you to a guided breathwork session held in conjunction with Ylva Snöfrid’s exhibition The House of the Muses.\n\nThe experience begins with a brief guided tour of the exhibition. In The House of the Muses Ylva Snöfrid explores themes of presence, consciousness, and creativity, allowing art to become a space for b",
+      "raw": "Experience art with both body and mind. In collaboration with Hale, Liljevalchs invites you to a guided breathwork session held in conjunction with Ylva Snöfrid’s exhibition The House of the Muses.\n\nThe experience begins with a brief guided tour of the exhibition. In The House of the Muses Ylva Snöfrid explores themes of presence, consciousness, and creativity, allowing art to become a space for b",
+      "venue": null,
+      "start": "2026-10-08T16:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "d7d2e702-9066-4789-a671-9a0823d02891",
+      "title_sv": "Djupdyk i dansen -  Yared Tilahun Cederlund",
+      "title_en": "Djupdyk i dansen -  Yared Tilahun Cederlund",
+      "desc_sv": "Djupdyk i dansen med Yared Tilahun Cederlund är en workshop i dans på Skeppsholmsstudion i Stockholm.\n\nWorkshopen med dansaren och koreografen Yared Tilahun Cederlund riktar sig till unga dansare som vill möta framstående koreografer inom samtida dans. Den ger möjlighet att tala om och skapa dans i en öppen och tillåtande miljö. Workshopen är ett exklusivt tillfälle för unga mellan 16 och 24 år so",
+      "desc_en": "Djupdyk i dansen with Yared Tilahun Cederlund is a dance workshop at Skeppsholmsstudion in Stockholm.\n\nThis workshop with dancer and choreographer Yared Tilahun Cederlund is aimed at young dancers who wish to connect with prominent choreographers in contemporary dance. It provides an opportunity to discuss and create dance in an open and permissive environment. The workshop is an exclusive occasio",
+      "raw": "Djupdyk i dansen med Yared Tilahun Cederlund är en workshop i dans på Skeppsholmsstudion i Stockholm.\n\nWorkshopen med dansaren och koreografen Yared Tilahun Cederlund riktar sig till unga dansare som vill möta framstående koreografer inom samtida dans. Den ger möjlighet att tala om och skapa dans i en öppen och tillåtande miljö. Workshopen är ett exklusivt tillfälle för unga mellan 16 och 24 år so",
+      "venue": "왕의 정원",
+      "start": "2027-04-17T11:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "ac8a4115-8fde-44a4-9059-7d9f14193ffa",
+      "title_sv": "DJ-workshop ",
+      "title_en": "DJ-workshop ",
+      "desc_sv": "DJ-workshop är en workshop på Kulturhuset Stadsteatern i Stockholm.\n\nDenna DJ-workshop ger dig en genomgång av utrustning och mixningens grunder. Du får öva på enklare övergångar med BPM-räkning, EQ och loopar. Detta är en engångskurs för att komma igång och få tillgång till Lavas DJ-verkstad.",
+      "desc_en": "DJ-workshop is a workshop at Kulturhuset Stadsteatern in Stockholm.\n\nThis DJ workshop provides an overview of equipment and mixing fundamentals. Participants will practice simple transitions using BPM counting, EQ, and loops. It is a one-time course designed to help you get started and gain access to Lava's DJ workshop.",
+      "raw": "DJ-workshop är en workshop på Kulturhuset Stadsteatern i Stockholm.\n\nDenna DJ-workshop ger dig en genomgång av utrustning och mixningens grunder. Du får öva på enklare övergångar med BPM-räkning, EQ och loopar. Detta är en engångskurs för att komma igång och få tillgång till Lavas DJ-verkstad.",
+      "venue": "Kulturhuset Stadsteatern",
+      "start": "2026-10-20T14:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "eba45d19-bef0-4e62-a8da-42bf651910fb",
+      "title_sv": "Öppen ateljé",
+      "title_en": "Öppen ateljé",
+      "desc_sv": "Öppen ateljé är en skapande verksamhet för måleri på ABF-huset i Stockholm.\n\nInled helgen med en stunds skapande verksamhet. Deltagarna kan aktivera sin kreativitet och väcka lusten att måla. Öppen ateljé erbjuder fem tillfällen med varierande tema som syftar till att utveckla måleriet. Teman inkluderar Kärleken till färgen, våga mer i akvarell och akryl, samt Kärleken till trädgårdens skörd i akv",
+      "desc_en": "Open Studio is a creative painting activity at ABF-huset in Stockholm.\n\nBegin the weekend with a moment of creative activity. Participants can activate their creativity and awaken the desire to paint. The Open Studio offers five sessions with varying themes, designed to help develop painting skills. Themes include Love for Color, Dare More in watercolor and acrylic, and Love for the Garden's Harve",
+      "raw": "Öppen ateljé är en skapande verksamhet för måleri på ABF-huset i Stockholm.\n\nInled helgen med en stunds skapande verksamhet. Deltagarna kan aktivera sin kreativitet och väcka lusten att måla. Öppen ateljé erbjuder fem tillfällen med varierande tema som syftar till att utveckla måleriet. Teman inkluderar Kärleken till färgen, våga mer i akvarell och akryl, samt Kärleken till trädgårdens skörd i akv",
+      "venue": "abf",
+      "start": "2026-10-09T15:30:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "41fac384-2d8e-4a37-a78e-0503391de27f",
+      "title_sv": "Sy &#038; Hantverksfestivalen Stockholm 2026",
+      "title_en": "Sy &#038; Hantverksfestivalen Stockholm 2026",
+      "venue": "Stockholmsmässan",
+      "start": "2026-10-23T00:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "107a34bb-bf5f-4dfc-b020-f1f76fab9698",
+      "title_sv": "Möt konstnärerna i utställningen Omfamnad",
+      "title_en": "Möt konstnärerna i utställningen Omfamnad",
+      "desc_sv": "Under hösten bjuder vi in till en serie visningar och workshops där du får komma närmare konsten och konstnärerna i utställningen Omfamnad. Vid tre torsdagskvällar möter du en av utställningens konstnärer i ett personligt samtal om deras arbete, process och de idéer som formar verken i utställningen.\n\nKvällarna inleds med en introduktion i utställningen, följt av ett konstnärssamtal och avslutas m",
+      "desc_en": "Under hösten bjuder vi in till en serie visningar och workshops där du får komma närmare konsten och konstnärerna i utställningen Omfamnad. Vid tre torsdagskvällar möter du en av utställningens konstnärer i ett personligt samtal om deras arbete, process och de idéer som formar verken i utställningen.\n\nKvällarna inleds med en introduktion i utställningen, följt av ett konstnärssamtal och avslutas m",
+      "raw": "Under hösten bjuder vi in till en serie visningar och workshops där du får komma närmare konsten och konstnärerna i utställningen Omfamnad. Vid tre torsdagskvällar möter du en av utställningens konstnärer i ett personligt samtal om deras arbete, process och de idéer som formar verken i utställningen.\n\nKvällarna inleds med en introduktion i utställningen, följt av ett konstnärssamtal och avslutas m",
+      "venue": "Kulturhuset Stadsteatern",
+      "start": "2026-10-08T15:30:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "6dead55c-57ac-4af4-ac1d-65f2c07d638d",
+      "title_sv": "Tantric Pleasure- A Day for Couples",
+      "title_en": "Tantric Pleasure- A Day for Couples",
+      "desc_sv": "Tantric Pleasure- A Day for Couples är en parkurs i tantra på AYSE holistiska Hälsohuset i Sollentuna.\n\nTantric Pleasure- A Day for Couples är en dag för par att uppleva större närhet, kärlek, energi och lust. Parkurserna är utformade för att utforska tantra och ge tid för varandra i ett tryggt och hållet rum. Vackra tantriska övningar delas, och kurserna passar alla par oavsett ålder, sexuell läg",
+      "desc_en": "Tantric Pleasure- A Day for Couples is a tantra course for partners at AYSE holistiska Hälsohuset in Sollentuna.\n\nTantric Pleasure- A Day for Couples offers a day for partners to experience greater closeness, love, energy, and desire. These couple courses are designed for exploring tantra and dedicating time to each other in a safe and held space. Beautiful tantric exercises are shared, suitable f",
+      "raw": "Tantric Pleasure- A Day for Couples är en parkurs i tantra på AYSE holistiska Hälsohuset i Sollentuna.\n\nTantric Pleasure- A Day for Couples är en dag för par att uppleva större närhet, kärlek, energi och lust. Parkurserna är utformade för att utforska tantra och ge tid för varandra i ett tryggt och hållet rum. Vackra tantriska övningar delas, och kurserna passar alla par oavsett ålder, sexuell läg",
+      "venue": "Sollentuna",
+      "start": "2026-12-12T09:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "2c09b69d-fa76-40e3-8f91-932cbe780001",
+      "title_sv": "Djupdyk i dansen - Bambam Frost",
+      "title_en": "Djupdyk i dansen - Bambam Frost",
+      "desc_sv": "Djupdyk i dansen med Bambam Frost är en workshop för unga dansare på Skeppsholmsstudion i Stockholm.\n\nDenna workshopserie, \"Djupdyk i dansen\", ger unga dansare chansen att arbeta nära framstående koreografer inom samtida dans. Workshopen erbjuder en öppen och tillåtande miljö för att diskutera och skapa dans. Det är ett exklusivt tillfälle för unga mellan 16 och 24 år som är nyfikna på samtida/mod",
+      "desc_en": "Djupdyk i dansen med Bambam Frost är en workshop för unga dansare på Skeppsholmsstudion i Stockholm.\n\nDenna workshopserie, \"Djupdyk i dansen\", ger unga dansare chansen att arbeta nära framstående koreografer inom samtida dans. Workshopen erbjuder en öppen och tillåtande miljö för att diskutera och skapa dans. Det är ett exklusivt tillfälle för unga mellan 16 och 24 år som är nyfikna på samtida/mod",
+      "raw": "Djupdyk i dansen med Bambam Frost är en workshop för unga dansare på Skeppsholmsstudion i Stockholm.\n\nDenna workshopserie, \"Djupdyk i dansen\", ger unga dansare chansen att arbeta nära framstående koreografer inom samtida dans. Workshopen erbjuder en öppen och tillåtande miljö för att diskutera och skapa dans. Det är ett exklusivt tillfälle för unga mellan 16 och 24 år som är nyfikna på samtida/mod",
+      "venue": "Skeppsholmsstudion",
+      "start": "2027-02-06T12:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "1b9597a1-723b-40b8-a3e5-999827a5029b",
+      "title_sv": "Stadsretreat: Glädjen i att ge",
+      "title_en": "Stadsretreat: Glädjen i att ge",
+      "desc_sv": "Stadsretreat: Glädjen i att ge är en kurs i Stockholm.\n\nStadsretreat: Glädjen i att ge är en kurs som utforskar generositetens positiva resultat. Inom buddhismen är givande det första steget på bodhisattvavägen, en väg till varaktig ro och lycka för både dig själv och andra. Kursen tränar deltagare i att ge materiella saker, tid, råd, beskydd och kärlek. Deltagarna får praktiska tips för att tillä",
+      "desc_en": "Stadsretreat: Glädjen i att ge is a course in Stockholm.\n\nStadsretreat: Glädjen i att ge is a course exploring the incredibly positive results of developing generosity. Within Buddhism, giving is the first step on the Bodhisattva path, which leads to lasting peace and happiness for ourselves and others. This course trains participants in giving material things, time, advice, protection, and love. ",
+      "raw": "Stadsretreat: Glädjen i att ge är en kurs i Stockholm.\n\nStadsretreat: Glädjen i att ge är en kurs som utforskar generositetens positiva resultat. Inom buddhismen är givande det första steget på bodhisattvavägen, en väg till varaktig ro och lycka för både dig själv och andra. Kursen tränar deltagare i att ge materiella saker, tid, råd, beskydd och kärlek. Deltagarna får praktiska tips för att tillä",
+      "venue": null,
+      "start": "2026-11-28T09:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "42e0273e-eb99-4d6b-969d-f0539da90de4",
+      "title_sv": "Workshop: Handgripligt",
+      "title_en": "Workshop: Handgripligt",
+      "desc_sv": "Workshop: Handgripligt är en workshop på Armémuseum i Stockholm.\n\nI workshopen \"Handgripligt\" får deltagare prova olika tekniker för att laga och förstärka textilier med lappar, broderi och synliga lagningar. Denna färdighet kan både förlänga ett plaggs liv och bli ett kreativt uttryck. Att vårda kläder är en viktig del av krisberedskap och har varit en del av människors vardag i alla tider. Works",
+      "desc_en": "Workshop: Handgripligt is a workshop at Armémuseum in Stockholm.\n\nIn the \"Handgripligt\" workshop, participants will try various techniques to repair and strengthen textiles using patches, embroidery, and visible mending. This skill can both extend a garment's life and become a creative expression. Caring for clothes is an essential part of crisis preparedness and has been a vital aspect of daily l",
+      "raw": "Workshop: Handgripligt är en workshop på Armémuseum i Stockholm.\n\nI workshopen \"Handgripligt\" får deltagare prova olika tekniker för att laga och förstärka textilier med lappar, broderi och synliga lagningar. Denna färdighet kan både förlänga ett plaggs liv och bli ett kreativt uttryck. Att vårda kläder är en viktig del av krisberedskap och har varit en del av människors vardag i alla tider. Works",
+      "venue": "왕의 정원",
+      "start": "2026-11-26T14:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "9901cac6-3d94-4e8a-93ba-c1e6997a6406",
+      "title_sv": "Tvådagarskurs: Lär dig väva i bandgrind",
+      "title_en": "Tvådagarskurs: Lär dig väva i bandgrind",
+      "desc_sv": "“Tvådagarskurs: Lär dig väva i bandgrind” är en kurs i bandvävning på Etnografiska museet i Stockholm.\n\nAtt väva band i bandgrind är en gammal vävmetod som praktiserats runtom i världen, särskilt i olika delar av Sápmi. Tekniken innebär att man spänner upp en smal väv mellan vävarens kropp och en fast punkt. Kursen inleds med en introduktion till bandgrindens historia. Du får lära dig att sätta up",
+      "desc_en": "“Tvådagarskurs: Lär dig väva i bandgrind” is a band weaving course at Etnografiska museet in Stockholm.\n\nWeaving bands with a band loom is an ancient weaving method practiced worldwide, extensively in various parts of Sápmi. The technique involves stretching a narrow weave between the weaver's body and a fixed point. The course begins with an introduction to the history of the band loom. Participa",
+      "raw": "“Tvådagarskurs: Lär dig väva i bandgrind” är en kurs i bandvävning på Etnografiska museet i Stockholm.\n\nAtt väva band i bandgrind är en gammal vävmetod som praktiserats runtom i världen, särskilt i olika delar av Sápmi. Tekniken innebär att man spänner upp en smal väv mellan vävarens kropp och en fast punkt. Kursen inleds med en introduktion till bandgrindens historia. Du får lära dig att sätta up",
+      "venue": "Etnografiska museet",
+      "start": "2026-11-21T10:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "e5be5817-f3b8-4414-b1a8-89d9e9a432c8",
+      "title_sv": "Workshop: Bind din julkrans",
+      "title_en": "Workshop: Bind din julkrans",
+      "desc_sv": "Workshop: Bind din julkrans är en workshop på Prins Eugens Waldemarsudde i Stockholm.\n\nFlorist Kristina Öhman delar med sig av sin erfarenhet. Hon ger praktiska råd och tips för att skapa vackra och dekorativa kransar till jul.",
+      "desc_en": "Workshop: Tie your Christmas Wreath is a workshop at Prins Eugens Waldemarsudde in Stockholm.\n\nFlorist Kristina Öhman shares her experience. She provides practical advice and tips for creating beautiful and decorative Christmas wreaths.",
+      "raw": "Workshop: Bind din julkrans är en workshop på Prins Eugens Waldemarsudde i Stockholm.\n\nFlorist Kristina Öhman delar med sig av sin erfarenhet. Hon ger praktiska råd och tips för att skapa vackra och dekorativa kransar till jul.",
+      "venue": "Prins Eugens Waldemarsudde",
+      "start": "2026-11-17T16:30:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "d197bcdd-aa4d-43a8-a199-34ec8d48909c",
+      "title_sv": "Skapa & kaka - teckning och collage",
+      "title_en": "Skapa & kaka - teckning och collage",
+      "desc_sv": "Skapa & kaka – teckning och collage är en workshop på Prins Eugens Waldemarsudde i Stockholm.\n\nSkapa & kaka – teckning och collage erbjuder en möjlighet att delta i en kreativ aktivitet med fokus på teckning och collage. Detta sker på Prins Eugens Waldemarsudde i Stockholm.",
+      "desc_en": "Skapa & kaka - teckning och collage is a workshop at Prins Eugens Waldemarsudde in Stockholm.\n\nSkapa & kaka - teckning och collage offers a chance to engage in a creative activity centered on drawing and collage. This event takes place at Prins Eugens Waldemarsudde in Stockholm.",
+      "raw": "Skapa & kaka – teckning och collage är en workshop på Prins Eugens Waldemarsudde i Stockholm.\n\nSkapa & kaka – teckning och collage erbjuder en möjlighet att delta i en kreativ aktivitet med fokus på teckning och collage. Detta sker på Prins Eugens Waldemarsudde i Stockholm.",
+      "venue": "Prins Eugens Waldemarsudde",
+      "start": "2026-11-17T12:30:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "3f7b1210-86ac-4dfb-8952-d5a82c4a6576",
+      "title_sv": "Skapa & skåla - collage",
+      "title_en": "Skapa & skåla - collage",
+      "desc_sv": "Skapa & skåla - collage är ett collage-skapande evenemang på Prins Eugens Waldemarsudde i Stockholm.\n\nSkapa och skåla i en mysig miljö i ateljén på Waldemarsudde. Inspirerade av konsten skapas collage i blandteknik. Besök utställningarna innan evenemanget börjar.",
+      "desc_en": "Skapa & skåla - collage is a collage-making event at Prins Eugens Waldemarsudde in Stockholm.\n\nCreate and enjoy a cozy atmosphere in the studio at Waldemarsudde. Inspired by art, participants will make collages using mixed media. Guests can also visit the exhibitions before the event starts.",
+      "raw": "Skapa & skåla - collage är ett collage-skapande evenemang på Prins Eugens Waldemarsudde i Stockholm.\n\nSkapa och skåla i en mysig miljö i ateljén på Waldemarsudde. Inspirerade av konsten skapas collage i blandteknik. Besök utställningarna innan evenemanget börjar.",
+      "venue": "Prins Eugens Waldemarsudde",
+      "start": "2026-11-12T16:30:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "b11cc603-2e4a-4c98-a9bf-39e40f43db1b",
+      "title_sv": "Din stil som AI-modell",
+      "title_en": "Din stil som AI-modell",
+      "desc_sv": "Din stil som AI-modell är en kurs på Svenska Tecknare i Stockholm.\n\nDenna kurs, 'Din stil som AI-modell', fokuserar på att träna en personlig AI-modell med egna illustrationer för att den ska lära känna igen ditt formspråk. När modellen är klar kan den användas för att skissa, testa idéer och prototypa nya bilder i just din stil. Kursen introducerar LoRA, en metod för att effektivt lära en befintl",
+      "desc_en": "Din stil som AI-modell is a course at Svenska Tecknare in Stockholm.\n\nThis course, 'Your Style as an AI Model', focuses on training a personal AI model with your own illustrations so it learns to recognize your visual language. Once the model is complete, it can be used for sketching, testing ideas, and prototyping new images in your specific style. The course introduces LoRA, a method for efficie",
+      "raw": "Din stil som AI-modell är en kurs på Svenska Tecknare i Stockholm.\n\nDenna kurs, 'Din stil som AI-modell', fokuserar på att träna en personlig AI-modell med egna illustrationer för att den ska lära känna igen ditt formspråk. När modellen är klar kan den användas för att skissa, testa idéer och prototypa nya bilder i just din stil. Kursen introducerar LoRA, en metod för att effektivt lära en befintl",
+      "venue": "왕의 정원",
+      "start": "2026-11-09T17:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "9cbd086c-eaed-41e7-a5db-4b3c14cf32b6",
+      "title_sv": "Workshop: Sashiko",
+      "title_en": "Workshop: Sashiko",
+      "desc_sv": "Workshop: Sashiko är en workshop på Östasiatiska museet i Stockholm.\n\nSashikosömnad är en japansk teknik som ursprungligen användes av bönder för att laga kläder och textilier. Idag har den utvecklats till en sömnadsteknik med ett utpräglat eget uttryck och är populär världen över. Under kursen på Östasiatiska museet får deltagarna utforska museets helt nya Sashikoutställning tillsammans med kursl",
+      "desc_en": "Workshop: Sashiko is a workshop at Östasiatiska museet in Stockholm.\n\nSashiko sewing is a Japanese technique originally used by farmers to mend clothes and textiles. Today, it has evolved into a sewing technique with its own distinct expression and is popular worldwide. During the course at Östasiatiska museet, participants will explore the museum's brand new Sashiko exhibition alongside the cours",
+      "raw": "Workshop: Sashiko är en workshop på Östasiatiska museet i Stockholm.\n\nSashikosömnad är en japansk teknik som ursprungligen användes av bönder för att laga kläder och textilier. Idag har den utvecklats till en sömnadsteknik med ett utpräglat eget uttryck och är populär världen över. Under kursen på Östasiatiska museet får deltagarna utforska museets helt nya Sashikoutställning tillsammans med kursl",
+      "venue": "왕의 정원",
+      "start": "2026-11-07T12:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "8352f160-1f86-4ffc-9087-8bbe77a0ae7b",
+      "title_sv": "Thursday Moves - 5Rhythms movement practice!",
+      "title_en": "Thursday Moves - 5Rhythms movement practice!",
+      "desc_sv": "Thursday Moves - 5Rhythms movement practice är en rörelsepraktik på Drakenbergssalen i Stockholm.\n\nThursday Moves 5Rhythms movement practice grundar dig i din kropp och andning, vilket väcker dig till liv och bjuder in till rörelseglädje. Denna närvaroträning och utforskning genom rörelse syftar till att skapa kontakt med kroppens inneboende intelligens. Praktiken ökar din kroppsmedvetenhet, bidra",
+      "desc_en": "Thursday Moves - 5Rhythms movement practice is a movement practice at Drakenbergssalen in Stockholm.\n\nThursday Moves 5Rhythms movement practice grounds you in your body and breath, awakening you and inviting joy of movement. This presence training and exploration through movement aims to connect with the body's inherent intelligence. The practice increases body awareness, contributes to a more sta",
+      "raw": "Thursday Moves - 5Rhythms movement practice är en rörelsepraktik på Drakenbergssalen i Stockholm.\n\nThursday Moves 5Rhythms movement practice grundar dig i din kropp och andning, vilket väcker dig till liv och bjuder in till rörelseglädje. Denna närvaroträning och utforskning genom rörelse syftar till att skapa kontakt med kroppens inneboende intelligens. Praktiken ökar din kroppsmedvetenhet, bidra",
+      "venue": "왕의 정원",
+      "start": "2026-11-05T17:30:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "9263953b-8422-4024-a49b-8a1ed984e4e5",
+      "title_sv": "Mending Magic med Stina Löving",
+      "title_en": "Mending Magic med Stina Löving",
+      "desc_sv": "Mending Magic med Stina Löving är en workshop i Solna Folkets Hus, Solna.\n\nDenna kreativa workshop utforskar hur lagning och redesign kan vara konst såväl som funktion. Deltagarna kan upptäcka fantasin och enkla tekniker för att ge kläder nytt liv. Workshopen använder garn och textil, och arbetet sker med händerna. Inga förkunskaper behövs för att delta.",
+      "desc_en": "Mending Magic med Stina Löving is a workshop at Solna Folkets Hus, Solna.\n\nThis creative workshop explores how mending and redesign can be art as well as function. Participants can discover imagination and simple techniques to give clothes new life. The workshop uses yarn and textiles, and the work is done by hand. No prior knowledge is required to participate.",
+      "raw": "Mending Magic med Stina Löving är en workshop i Solna Folkets Hus, Solna.\n\nDenna kreativa workshop utforskar hur lagning och redesign kan vara konst såväl som funktion. Deltagarna kan upptäcka fantasin och enkla tekniker för att ge kläder nytt liv. Workshopen använder garn och textil, och arbetet sker med händerna. Inga förkunskaper behövs för att delta.",
+      "venue": "Folkets Hus",
+      "start": "2026-10-30T13:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "beca3cea-2b1a-4215-919c-f7959c0ff7db",
+      "title_sv": "KURS: Sy och brodera en maxad marsma",
+      "title_en": "KURS: Sy och brodera en maxad marsma",
+      "desc_sv": "KURS: Sy och brodera en maxad marsma är en broderikurs på Stockholms Läns Hemslöjdsförening i Stockholm.\n\nKursen erbjuder grannlåtsbroderi där deltagarna får använda pärlor, knappar och band på ylletyg. Under helgen syr varje deltagare en egen marsma, ett vackert och praktiskt fodral för sybehör. Marsman har olika fickor och fack på insidan och pryds av stygn och dekorationer på utsidan. Kursledar",
+      "desc_en": "KURS: Sy och brodera en maxad marsma is an embroidery course at Stockholms Läns Hemslöjdsförening in Stockholm.\n\nThe course offers embellished embroidery where participants will use beads, buttons, and ribbons on wool fabric. Over the weekend, each participant will sew their own marsma, a beautiful and practical case for sewing supplies. The marsma features various pockets and compartments on the ",
+      "raw": "KURS: Sy och brodera en maxad marsma är en broderikurs på Stockholms Läns Hemslöjdsförening i Stockholm.\n\nKursen erbjuder grannlåtsbroderi där deltagarna får använda pärlor, knappar och band på ylletyg. Under helgen syr varje deltagare en egen marsma, ett vackert och praktiskt fodral för sybehör. Marsman har olika fickor och fack på insidan och pryds av stygn och dekorationer på utsidan. Kursledar",
+      "venue": "Stockholm",
+      "start": "2026-11-07T09:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "21c706c0-396a-4fcc-b5bc-69e3865c60f3",
+      "title_sv": "Mordmysterium + Middag = Succé (Sjöfart)",
+      "title_en": "Mordmysterium + Middag = Succé (Sjöfart)",
+      "desc_sv": "Mordmysterium + Middag = Succé (Sjöfart) är ett mordmysterium med middag på Scandic Sjöfartshotellet i Stockholm.\n\nAlla deltagare får en rollfigur med egna ledtrådar och uppdrag som ska utföras under kvällen. Professionella instruktörer leder mordmysteriet där gästerna agerar på en bekväm nivå för att lösa fallet. Kvällen avslutas med prisutdelning för bästa lösning, mest pengar och bästa karaktär",
+      "desc_en": "Mordmysterium + Middag = Succé (Sjöfart) is a murder mystery dinner at Scandic Sjöfartshotellet in Stockholm.\n\nGuests are assigned a character role with individual clues and tasks to complete throughout the evening. Professional instructors lead the murder mystery, where participants engage at their own comfort level to solve the case. The event concludes with prizes awarded for the \"Best Solution",
+      "raw": "Mordmysterium + Middag = Succé (Sjöfart) är ett mordmysterium med middag på Scandic Sjöfartshotellet i Stockholm.\n\nAlla deltagare får en rollfigur med egna ledtrådar och uppdrag som ska utföras under kvällen. Professionella instruktörer leder mordmysteriet där gästerna agerar på en bekväm nivå för att lösa fallet. Kvällen avslutas med prisutdelning för bästa lösning, mest pengar och bästa karaktär",
+      "venue": "HOTELL",
+      "start": "2026-12-19T17:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "004e6d35-b51d-459f-8023-8e66cf57e164",
+      "title_sv": "Djupdyk i dansen -  Charlotte Engelkes",
+      "title_en": "Djupdyk i dansen -  Charlotte Engelkes",
+      "desc_sv": "Djupdyk i dansen - Charlotte Engelkes är en workshop på Skeppsholmsstudion i Stockholm.\n\nDenna workshopsserie, Djupdyk i dansen, riktar sig till unga dansare som vill komma närmare framstående koreografer inom samtida dans. Workshopen ger deltagarna möjlighet att prata om och skapa dans i en öppen och tillåtande miljö. Det är ett tillfälle med ett fåtal platser för unga mellan 16 och 24 år, som är",
+      "desc_en": "Djupdyk i dansen - Charlotte Engelkes is a workshop at Skeppsholmsstudion in Stockholm.\n\nThis workshop series, Djupdyk i dansen (Deep Dive into Dance), is for young dancers who want to engage with prominent choreographers in contemporary dance. The workshop offers participants the opportunity to discuss and create dance in an open and permissive environment. It is an exclusive occasion with a few ",
+      "raw": "Djupdyk i dansen - Charlotte Engelkes är en workshop på Skeppsholmsstudion i Stockholm.\n\nDenna workshopsserie, Djupdyk i dansen, riktar sig till unga dansare som vill komma närmare framstående koreografer inom samtida dans. Workshopen ger deltagarna möjlighet att prata om och skapa dans i en öppen och tillåtande miljö. Det är ett tillfälle med ett fåtal platser för unga mellan 16 och 24 år, som är",
+      "venue": "왕의 정원",
+      "start": "2027-05-22T11:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "a7b29fa8-ddce-4644-b0ea-01ca5b6ee740",
+      "title_sv": "Wax Carving & Silver Ring Casting Workshop",
+      "title_en": "Wax Carving & Silver Ring Casting Workshop",
+      "venue": "왕의 정원",
+      "start": "2026-10-24T12:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "524dd5c3-f8cd-4107-97b7-4c140258dc04",
+      "title_sv": "Workshop: Skapa julpynt i mässing",
+      "title_en": "Workshop: Skapa julpynt i mässing",
+      "desc_sv": "Workshop: Skapa julpynt i mässing\n\nSöndag 15 november kl. 13 och 14.30\n\nMed Smedjan Blackeberg\n\nHur klädde man julgranarna förr? Gärna med sådant som man tillverkat själv! I denna workshop slöjdar vi pynt i mässingsplåt under handledning av Smedjan Blackeberg. Kvällen inleds med glöggmingel i palatsköket, följt av en workshop i Tavelgalleriet på översta våningen i huset. Material, handledning och ",
+      "desc_en": "Workshop: Skapa julpynt i mässing\n\nSöndag 15 november kl. 13 och 14.30\n\nMed Smedjan Blackeberg\n\nHur klädde man julgranarna förr? Gärna med sådant som man tillverkat själv! I denna workshop slöjdar vi pynt i mässingsplåt under handledning av Smedjan Blackeberg. Kvällen inleds med glöggmingel i palatsköket, följt av en workshop i Tavelgalleriet på översta våningen i huset. Material, handledning och ",
+      "raw": "Workshop: Skapa julpynt i mässing\n\nSöndag 15 november kl. 13 och 14.30\n\nMed Smedjan Blackeberg\n\nHur klädde man julgranarna förr? Gärna med sådant som man tillverkat själv! I denna workshop slöjdar vi pynt i mässingsplåt under handledning av Smedjan Blackeberg. Kvällen inleds med glöggmingel i palatsköket, följt av en workshop i Tavelgalleriet på översta våningen i huset. Material, handledning och ",
+      "venue": null,
+      "start": "2026-11-15T12:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "996ab34e-8b53-454f-87ae-ab7cd81fb3b8",
+      "title_sv": "Stockholm Murder Mystery: Solve the case!",
+      "title_en": "Stockholm Murder Mystery: Solve the case!",
+      "desc_sv": "Highlights 🕵️ Investigate a chilling crime across 12 city locations 📱 Use just your phone to uncover clues and solve puzzles 🌆 Your everyday streets become the ultimate crime scene General Info 📅 Date &amp;amp; Time: Start any day, any time (evening recommend",
+      "desc_en": "Highlights 🕵️ Investigate a chilling crime across 12 city locations 📱 Use just your phone to uncover clues and solve puzzles 🌆 Your everyday streets become the ultimate crime scene General Info 📅 Date &amp;amp; Time: Start any day, any time (evening recommend",
+      "raw": "Highlights 🕵️ Investigate a chilling crime across 12 city locations 📱 Use just your phone to uncover clues and solve puzzles 🌆 Your everyday streets become the ultimate crime scene General Info 📅 Date &amp;amp; Time: Start any day, any time (evening recommend",
+      "venue": null,
+      "start": "2026-10-31T22:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "eb28ae17-951b-41ef-a099-887268f40967",
+      "title_sv": "Roots in Motion ° urban edition Stockholm",
+      "title_en": "Roots in Motion ° urban edition Stockholm",
+      "desc_sv": "Roots in Motion ° urban edition Stockholm är ett event som utforskar rötter, relationer och mönster på Hälsans Hus i Stockholm.\n\nRoots in Motion ° urban edition Stockholm är en helg dedikerad till att utforska rötter, relationer och mönster. Detta sker genom Familjekonstellationer och Open Floor Movement Practice. Evenemanget fokuserar på hur kroppens och familjesystemets levande intelligens möts ",
+      "desc_en": "Roots in Motion ° urban edition Stockholm is an event exploring roots, relationships, and patterns at Hälsans Hus in Stockholm.\n\nRoots in Motion ° urban edition Stockholm is a weekend dedicated to exploring roots, relationships, and patterns. This exploration takes place through Family Constellations and Open Floor Movement Practice. The event focuses on how the living intelligence of the body and",
+      "raw": "Roots in Motion ° urban edition Stockholm är ett event som utforskar rötter, relationer och mönster på Hälsans Hus i Stockholm.\n\nRoots in Motion ° urban edition Stockholm är en helg dedikerad till att utforska rötter, relationer och mönster. Detta sker genom Familjekonstellationer och Open Floor Movement Practice. Evenemanget fokuserar på hur kroppens och familjesystemets levande intelligens möts ",
+      "venue": "Hälsans Hus",
+      "start": "2026-10-30T17:30:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "ff89b54f-bf16-4207-8540-e5129e3bf1a7",
+      "title_sv": "Haunted Cake Decorating Party",
+      "title_en": "Haunted Cake Decorating Party",
+      "desc_sv": "Haunted Cake Decorating Party är en tårtdekorationsfest som arrangeras av Mel's Bakery på Cafe T Sofo i Stockholm.\n\nMel's Bakery anordnar en tårtdekorationsfest på Cafe T Sofo i Stockholm. Detta evenemang ger en möjlighet att dekorera din egen Halloween-tårta. Under tiden får besökarna också njuta av lättare tilltugg och en dryck. Deltagarna får ta hem sin egen dekorerade tårta efter evenemanget. ",
+      "desc_en": "The Haunted Cake Decorating Party is a cake decorating event hosted by Mel's Bakery at Cafe T Sofo in Stockholm.\n\nJoin Mel's Bakery for a cake decorating party at Cafe T Sofo in Stockholm. This event offers a chance to decorate your own Halloween cake. While decorating, attendees will also enjoy light bites and a drink. Participants can take their completed cake creation home after the event. Ther",
+      "raw": "Haunted Cake Decorating Party är en tårtdekorationsfest som arrangeras av Mel's Bakery på Cafe T Sofo i Stockholm.\n\nMel's Bakery anordnar en tårtdekorationsfest på Cafe T Sofo i Stockholm. Detta evenemang ger en möjlighet att dekorera din egen Halloween-tårta. Under tiden får besökarna också njuta av lättare tilltugg och en dryck. Deltagarna får ta hem sin egen dekorerade tårta efter evenemanget. ",
+      "venue": null,
+      "start": "2026-10-31T14:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "22c89bb3-f297-4106-a4e5-0dcb07a1f7b8",
+      "title_sv": "Djupdyk i dansen - Helena Franzén",
+      "title_en": "Djupdyk i dansen - Helena Franzén",
+      "desc_sv": "Helena Franzén håller den första delen i en workshopserie för unga dansare på Skeppsholmsstudion i Stockholm.\n\nDenna workshop är den första i en serie för unga dansare som vill komma närmare framstående koreografer inom samtida dans. Helena Franzén delar med sig av sitt arbete som dansare. Workshopen erbjuder en öppen och tillåtande miljö för att prata om och skapa dans. Det är ett exklusivt tillf",
+      "desc_en": "Helena Franzén leads the first part of a workshop series for young dancers at Skeppsholmsstudion in Stockholm.\n\nThis workshop is the first in a series for young dancers interested in working with prominent contemporary dance choreographers. Helena Franzén shares insights from her extensive work as a dancer. The workshop provides an open and supportive environment for discussing and creating dance.",
+      "raw": "Helena Franzén håller den första delen i en workshopserie för unga dansare på Skeppsholmsstudion i Stockholm.\n\nDenna workshop är den första i en serie för unga dansare som vill komma närmare framstående koreografer inom samtida dans. Helena Franzén delar med sig av sitt arbete som dansare. Workshopen erbjuder en öppen och tillåtande miljö för att prata om och skapa dans. Det är ett exklusivt tillf",
+      "venue": "왕의 정원",
+      "start": "2026-10-31T12:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "c62c59fe-4f43-418e-9e33-b8aafacaf4a3",
+      "title_sv": "Metallprägling - Corazón de Milagrito",
+      "title_en": "Metallprägling - Corazón de Milagrito",
+      "desc_sv": "Metallprägling - Corazón de Milagrito är en workshop på Etnografiska museet i Stockholm.\n\nWorkshoppen fokuserar på Corazón de Milagrito, även kallat Sagrado Corazón, en symbol inom mexikansk folkkonst. Hjärtat symboliserar tacksamhet, hopp, kärlek, läkning och andliga mirakel, och används som skyddande amulett eller dekorativ prydnad. Deltagare får skapa ett personligt mirakelhjärta av mjuk metall",
+      "desc_en": "Metal Embossing - Corazón de Milagrito is a workshop at the Etnografiska museet in Stockholm.\n\nThe workshop focuses on Corazón de Milagrito, also known as Sagrado Corazón, a symbol in Mexican folk art. The heart symbolizes gratitude, hope, love, healing, and spiritual miracles, often used as a protective amulet or decorative ornament. Participants will create their own personal miracle heart using",
+      "raw": "Metallprägling - Corazón de Milagrito är en workshop på Etnografiska museet i Stockholm.\n\nWorkshoppen fokuserar på Corazón de Milagrito, även kallat Sagrado Corazón, en symbol inom mexikansk folkkonst. Hjärtat symboliserar tacksamhet, hopp, kärlek, läkning och andliga mirakel, och används som skyddande amulett eller dekorativ prydnad. Deltagare får skapa ett personligt mirakelhjärta av mjuk metall",
+      "venue": "Etnografiska museet",
+      "start": "2026-10-31T12:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "d7903afb-b21c-43f1-80a4-7bbd371a0ee2",
+      "title_sv": "Workshop: Sår, blod och brännskador",
+      "title_en": "Workshop: Sår, blod och brännskador",
+      "desc_sv": "Workshop: Sår, blod och brännskador är en workshop på Scenkonstmuseet i Stockholm.\n\nDenna workshop lär ut maskörens knep för att skapa sår, blod och brännskador med vardagliga material. Lär dig teknikerna för realistiska effekter.",
+      "desc_en": "Workshop: Wounds, Blood and Burns is a workshop at Scenkonstmuseet in Stockholm.\n\nThis workshop teaches makeup artist tricks for creating wounds, blood, and burns using common household materials. Learn techniques for realistic effects.",
+      "raw": "Workshop: Sår, blod och brännskador är en workshop på Scenkonstmuseet i Stockholm.\n\nDenna workshop lär ut maskörens knep för att skapa sår, blod och brännskador med vardagliga material. Lär dig teknikerna för realistiska effekter.",
+      "venue": "왕의 정원",
+      "start": "2026-10-27T10:30:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "0bbd4aec-c3e4-4c75-81a1-a0d264b3e78d",
+      "title_sv": "Screentryck workshop",
+      "title_en": "Screentryck workshop",
+      "desc_sv": "Screentryck workshop är en gör-det-själv-verkstad på Kulturhuset Stadsteatern i Stockholm.\n\nI Lavas screentrycksverkstad kan deltagare mellan 14 och 25 år trycka på kläder eller skapa affischer. För att delta krävs att man först går en workshop som går igenom hela processen steg för steg och där man får prova att trycka på tyg.",
+      "desc_en": "Screentryck workshop is a do-it-yourself workshop at Kulturhuset Stadsteatern in Stockholm.\n\nIn Lava's screen printing workshop, participants aged 14 to 25 can print on clothes or create posters. To use the workshop, you must first attend a workshop that covers the entire process step by step, including trying your hand at printing on fabric.",
+      "raw": "Screentryck workshop är en gör-det-själv-verkstad på Kulturhuset Stadsteatern i Stockholm.\n\nI Lavas screentrycksverkstad kan deltagare mellan 14 och 25 år trycka på kläder eller skapa affischer. För att delta krävs att man först går en workshop som går igenom hela processen steg för steg och där man får prova att trycka på tyg.",
+      "venue": "Kulturhuset Stadsteatern",
+      "start": "2026-10-12T14:30:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "532dcca4-a4cd-42a5-a61d-7c3b43f4c5e3",
+      "title_sv": "Workshop: Handgripligt",
+      "title_en": "Workshop: Handgripligt",
+      "desc_sv": "Workshop: Handgripligt är en workshop på Armémuseum i Stockholm.\n\nI workshopen \"Lappa & laga med Matsson Marnell\" får du lära dig olika tekniker för att laga och förstärka textilier med lappar, broderi och synliga lagningar. En lagning kan både förlänga ett plaggs liv och bli ett kreativt uttryck. Denna praktiska färdighet bidrar till hållbarhet och ökad beredskap, och har varit en viktig del av m",
+      "desc_en": "Workshop: Handgripligt is a workshop at Armémuseum in Stockholm.\n\nIn the workshop \"Mend & Repair with Matsson Marnell\", you will learn various techniques to mend and reinforce textiles using patches, embroidery, and visible repairs. A mend can both extend a garment's life and become a creative expression. This practical skill contributes to sustainability and increased readiness, having been an im",
+      "raw": "Workshop: Handgripligt är en workshop på Armémuseum i Stockholm.\n\nI workshopen \"Lappa & laga med Matsson Marnell\" får du lära dig olika tekniker för att laga och förstärka textilier med lappar, broderi och synliga lagningar. En lagning kan både förlänga ett plaggs liv och bli ett kreativt uttryck. Denna praktiska färdighet bidrar till hållbarhet och ökad beredskap, och har varit en viktig del av m",
+      "venue": "왕의 정원",
+      "start": "2026-10-22T13:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "e8665fba-2046-4431-9533-bc923d0ef7ac",
+      "title_sv": "Alla snickrar! ",
+      "title_en": "Alla snickrar! ",
+      "desc_sv": "Alla snickrar! är en workshop på Kulturhuset Stadsteatern i Stockholm.\n\nDenna workshop låter deltagare snickra med trärester från Kulturhuset Stadsteaterns snickeri. Verktyg som såg, borr, skruvdragare och hyvelbänk används.",
+      "desc_en": "Alla snickrar! is a workshop at Kulturhuset Stadsteatern in Stockholm.\n\nThis workshop allows participants to woodwork with wood scraps from Kulturhuset Stadsteatern's carpentry. Tools such as saws, drills, screwdrivers, and a traditional planing bench are used.",
+      "raw": "Alla snickrar! är en workshop på Kulturhuset Stadsteatern i Stockholm.\n\nDenna workshop låter deltagare snickra med trärester från Kulturhuset Stadsteaterns snickeri. Verktyg som såg, borr, skruvdragare och hyvelbänk används.",
+      "venue": "Kulturhuset Stadsteatern",
+      "start": "2026-10-22T15:30:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "b0507f52-a19d-4ba6-8a2d-20fc722af7cd",
+      "title_sv": "Nycklar till personligheten | Ditt nästa steg",
+      "title_en": "Nycklar till personligheten | Ditt nästa steg",
+      "desc_sv": "\"Nycklar till personligheten | Ditt nästa steg\" är en digital workshopserie på Zoom i Stockholm.\n\nDenna digitala workshopserie, ledd av Cicci Lyckow Bäckman, utforskar Enneagrammets mindre uppmärksammade aspekter. Deltagarna kommer att fördjupa sig bortom det de kanske redan vet om sin personlighetstyp. Fokus ligger på centertriaderna, undertryckta center och centre scrambling. Syftet är att upptä",
+      "desc_en": "\"Nycklar till personligheten | Ditt nästa steg\" is a digital workshop series on Zoom in Stockholm.\n\nThis digital workshop series, led by Cicci Lyckow Bäckman, explores less commonly noticed aspects of the Enneagram. Participants will delve beyond their current understanding of their personality type. The focus is on center triads, repressed centers, and center scrambling. The goal is to discover w",
+      "raw": "\"Nycklar till personligheten | Ditt nästa steg\" är en digital workshopserie på Zoom i Stockholm.\n\nDenna digitala workshopserie, ledd av Cicci Lyckow Bäckman, utforskar Enneagrammets mindre uppmärksammade aspekter. Deltagarna kommer att fördjupa sig bortom det de kanske redan vet om sin personlighetstyp. Fokus ligger på centertriaderna, undertryckta center och centre scrambling. Syftet är att upptä",
+      "venue": "왕의 정원",
+      "start": "2026-10-21T16:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "6f322423-f2b3-4553-b388-e00b478a0bd7",
+      "title_sv": "DJ-workshop ",
+      "title_en": "DJ-workshop ",
+      "desc_sv": "DJ-workshop är en workshop på Kulturhuset Stadsteatern i Stockholm.\n\nDenna DJ-workshop ger dig en genomgång av utrustning och mixningens grunder. Du får öva på enklare övergångar med BPM-räkning, EQ och loopar. Detta är en engångskurs för att komma igång och få tillgång till Lavas DJ-verkstad.",
+      "desc_en": "DJ-workshop is a workshop at Kulturhuset Stadsteatern in Stockholm.\n\nThis DJ workshop provides an overview of equipment and mixing fundamentals. Participants will practice simple transitions using BPM counting, EQ, and loops. It is a one-time course designed to help you get started and gain access to Lava's DJ workshop.",
+      "raw": "DJ-workshop är en workshop på Kulturhuset Stadsteatern i Stockholm.\n\nDenna DJ-workshop ger dig en genomgång av utrustning och mixningens grunder. Du får öva på enklare övergångar med BPM-räkning, EQ och loopar. Detta är en engångskurs för att komma igång och få tillgång till Lavas DJ-verkstad.",
+      "venue": "Kulturhuset Stadsteatern",
+      "start": "2026-10-20T15:30:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "e3ee92ec-7d4e-41e3-ac32-dd62bf9c666a",
+      "title_sv": "Indigo Katazome Workshop (2 dagar)",
+      "title_en": "Indigo Katazome Workshop (2 dagar)",
+      "desc_sv": "Indigo Katazome Workshop är en kreativ workshop på JR–Work–Shop i Stockholm.\n\nIndigo Katazome Workshop utforskar en traditionell japansk teknik för att skapa mönster med schablon och färga med naturlig indigo. Deltagarna lär sig hela processen, från att blanda ett indigobad med 1-2-3-metoden till att skapa och skära ut pappersschabloner. Tekniken inkluderar också att trycka och färga tyg i olika b",
+      "desc_en": "The Indigo Katazome Workshop is a creative workshop at JR–Work–Shop in Stockholm.\n\nThe Indigo Katazome Workshop explores a traditional Japanese technique for creating patterns with stencils and dyeing with natural indigo. Participants learn the entire process, from blending an indigo bath using the 1-2-3 method to creating and cutting paper stencils. The technique also involves printing and dyeing",
+      "raw": "Indigo Katazome Workshop är en kreativ workshop på JR–Work–Shop i Stockholm.\n\nIndigo Katazome Workshop utforskar en traditionell japansk teknik för att skapa mönster med schablon och färga med naturlig indigo. Deltagarna lär sig hela processen, från att blanda ett indigobad med 1-2-3-metoden till att skapa och skära ut pappersschabloner. Tekniken inkluderar också att trycka och färga tyg i olika b",
+      "venue": "왕의 정원",
+      "start": "2026-11-21T09:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "5cf5bf75-8a76-4d26-b8c5-7dadf0fd283a",
+      "title_sv": "Konsten att påverka genom kommunikation – Masterclass",
+      "title_en": "Konsten att påverka genom kommunikation – Masterclass",
+      "desc_sv": "Konsten att påverka genom kommunikation – Masterclass är en kommunikationsutbildning på Infinity Studio i Solna.\n\nDenna unika kommunikationsutbildning erbjuder en inblick bakom politikens och journalistikens kulisser. Det är en exklusiv inspirationsdag med Patric Nilsson och gästföreläsare Malou von Sivers, som bland annat talar om kommunikation även utan innehåll. Deltagarna får också en workshop",
+      "desc_en": "Konsten att påverka genom kommunikation – Masterclass is a communication training at Infinity Studio in Solna.\n\nThis unique communication training offers insight behind the scenes of politics and journalism. It is an exclusive inspiration day with Patric Nilsson and guest lecturer Malou von Sivers, who will speak about communicating even without content. Participants will also engage in a workshop",
+      "raw": "Konsten att påverka genom kommunikation – Masterclass är en kommunikationsutbildning på Infinity Studio i Solna.\n\nDenna unika kommunikationsutbildning erbjuder en inblick bakom politikens och journalistikens kulisser. Det är en exklusiv inspirationsdag med Patric Nilsson och gästföreläsare Malou von Sivers, som bland annat talar om kommunikation även utan innehåll. Deltagarna får också en workshop",
+      "venue": "왕의 정원",
+      "start": "2026-11-05T08:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "405bf39b-c96b-4dd8-a6dc-9548d9372adf",
+      "title_sv": "Workshop: Skapa en Yokai-mask!",
+      "title_en": "Workshop: Skapa en Yokai-mask!",
+      "desc_sv": "Workshop: Skapa en Yokai-mask! är en workshop på Etnografiska museet i Stockholm.\n\nUnder denna workshop får besökare möjligheten att skapa sin egen Yokai-mask. Workshoppen leds av föreningen PeppKai UNF/IOGT-NTO, en nykterhets- och nördförening med fokus på östasiatisk populärkultur. Deltagarna kommer att lära sig olika målartekniker, hur man efterliknar texturer och skapar hängutsmyckningar med e",
+      "desc_en": "Workshop: Skapa en Yokai-mask! is a workshop at Etnografiska museet in Stockholm.\n\nDuring this workshop, visitors can create their own Yokai mask. The workshop is led by the association PeppKai UNF/IOGT-NTO, a sobriety and nerd association with a focus on East Asian popular culture. Participants will learn various painting techniques, how to mimic textures, and create hanging decorations with simp",
+      "raw": "Workshop: Skapa en Yokai-mask! är en workshop på Etnografiska museet i Stockholm.\n\nUnder denna workshop får besökare möjligheten att skapa sin egen Yokai-mask. Workshoppen leds av föreningen PeppKai UNF/IOGT-NTO, en nykterhets- och nördförening med fokus på östasiatisk populärkultur. Deltagarna kommer att lära sig olika målartekniker, hur man efterliknar texturer och skapar hängutsmyckningar med e",
+      "venue": "Etnografiska museet",
+      "start": "2026-10-18T11:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "bb2431c6-d8fa-4dc7-a197-0d3088d619f9",
+      "title_sv": "Build your AI Team",
+      "title_en": "Build your AI Team",
+      "desc_sv": "Join our Agentic AI Bootcamp and build your own AI team.Design powerful AI systems that handle real tasks, then scale them to any business problem you face.We use modern methodologies and frameworks with clear pu",
+      "desc_en": "Join our Agentic AI Bootcamp and build your own AI team.Design powerful AI systems that handle real tasks, then scale them to any business problem you face.We use modern methodologies and frameworks with clear pu",
+      "raw": "Join our Agentic AI Bootcamp and build your own AI team.Design powerful AI systems that handle real tasks, then scale them to any business problem you face.We use modern methodologies and frameworks with clear pu",
+      "venue": "Best Western Plus Park City Hammarby Sjöstad",
+      "start": "2026-10-10T17:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "c22b89ef-e0e3-4ab2-b18b-e66a1338355b",
+      "title_sv": "Konstlördagar med Studio Funk - textil",
+      "title_en": "Konstlördagar med Studio Funk - textil",
+      "desc_sv": "Välkommen till höstens Konstlördagar med Studio Funk på Tensta konsthall!\n\nKl.13-16\n\n24 Oktober: Textila vimplar och banderoller. Du får prova på att skapa bilder med tyg.\n\nKonstlördagar är till för dig som vill skapa och uppleva konst.\n\nDet är för vuxna personer med funktionsvariationer som bor på LSS-boende eller går på Daglig verksamhet. \nEller är från målgruppen och är intresserade av skapande",
+      "desc_en": "Välkommen till höstens Konstlördagar med Studio Funk på Tensta konsthall!\n\nKl.13-16\n\n24 Oktober: Textila vimplar och banderoller. Du får prova på att skapa bilder med tyg.\n\nKonstlördagar är till för dig som vill skapa och uppleva konst.\n\nDet är för vuxna personer med funktionsvariationer som bor på LSS-boende eller går på Daglig verksamhet. \nEller är från målgruppen och är intresserade av skapande",
+      "raw": "Välkommen till höstens Konstlördagar med Studio Funk på Tensta konsthall!\n\nKl.13-16\n\n24 Oktober: Textila vimplar och banderoller. Du får prova på att skapa bilder med tyg.\n\nKonstlördagar är till för dig som vill skapa och uppleva konst.\n\nDet är för vuxna personer med funktionsvariationer som bor på LSS-boende eller går på Daglig verksamhet. \nEller är från målgruppen och är intresserade av skapande",
+      "venue": null,
+      "start": "2026-10-24T11:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "a36b0ec7-1ccf-460e-b342-084f1394ee5d",
+      "title_sv": "Högtryck på papper",
+      "title_en": "Högtryck på papper",
+      "desc_sv": "Högtryck på papper är en workshop på Kulturhuset Stadsteatern i Stockholm.\n\nDenna workshop fokuserar på grunderna i högtryck, där deltagarna får karva, klippa och trycka på papper. Materialet består av spillbitar från trä, kartong och linoleum från Kulturhuset.",
+      "desc_en": "Högtryck på papper is a workshop at Kulturhuset Stadsteatern in Stockholm.\n\nThis workshop focuses on the basics of relief printing, where participants will carve, cut, and print on paper. Materials used are scrap pieces of wood, cardboard, and linoleum from Kulturhuset.",
+      "raw": "Högtryck på papper är en workshop på Kulturhuset Stadsteatern i Stockholm.\n\nDenna workshop fokuserar på grunderna i högtryck, där deltagarna får karva, klippa och trycka på papper. Materialet består av spillbitar från trä, kartong och linoleum från Kulturhuset.",
+      "venue": "Kulturhuset Stadsteatern",
+      "start": "2026-10-08T15:30:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "b77ee8e9-4760-4cfd-8fb0-9841f61406a9",
+      "title_sv": "Djupdyk i dansen -  Björn Säfsten",
+      "title_en": "Djupdyk i dansen -  Björn Säfsten",
+      "desc_sv": "Djupdyk i dansen är en workshop med koreografen Björn Säfsten på Skeppsholmsstudion i Stockholm.\n\nDenna workshopserie riktar sig till unga dansare som vill komma närmare framstående koreografer inom samtida dans. Det är en möjlighet att prata om och skapa dans i en öppen och tillåtande miljö. Evenemanget erbjuder ett exklusivt tillfälle för unga mellan 16 och 24 år som är nyfikna på den samtida/mo",
+      "desc_en": "Djupdyk i dansen is a workshop with choreographer Björn Säfsten at Skeppsholmsstudion in Stockholm.\n\nThis workshop series is aimed at young dancers who wish to engage with prominent choreographers in contemporary dance. It provides an opportunity to discuss and create dance in an open and permissive environment. The event offers an exclusive occasion for young people between 16 and 24 who are curi",
+      "raw": "Djupdyk i dansen är en workshop med koreografen Björn Säfsten på Skeppsholmsstudion i Stockholm.\n\nDenna workshopserie riktar sig till unga dansare som vill komma närmare framstående koreografer inom samtida dans. Det är en möjlighet att prata om och skapa dans i en öppen och tillåtande miljö. Evenemanget erbjuder ett exklusivt tillfälle för unga mellan 16 och 24 år som är nyfikna på den samtida/mo",
+      "venue": "왕의 정원",
+      "start": "2027-02-27T12:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "8d7114da-8d60-4421-bd5a-8c50ea8c9970",
+      "title_sv": "Djupdyk i dansen -  Räserbyrån",
+      "title_en": "Djupdyk i dansen -  Räserbyrån",
+      "desc_sv": "Djupdyk i dansen – Räserbyrån är en workshop med Räserbyrån på Skeppsholmsstudion i Stockholm.\n\nDenna workshop riktar sig till unga dansare mellan 16 och 24 år som vill fördjupa sig i modern och samtida dans. Det är en del av en workshopserie som erbjuder exklusiva, intensiva helger med ett fåtal platser. Deltagarna får möjlighet att prata om och skapa dans i en öppen och tillåtande miljö. Worksho",
+      "desc_en": "Djupdyk i dansen – Räserbyrån is a workshop with Räserbyrån at Skeppsholmsstudion in Stockholm.\n\nThis workshop is for young dancers between 16 and 24 years old who want to delve deeper into modern and contemporary dance. It is part of a workshop series offering exclusive, intensive weekends with limited spots. Participants will have the opportunity to discuss and create dance in an open, permissiv",
+      "raw": "Djupdyk i dansen – Räserbyrån är en workshop med Räserbyrån på Skeppsholmsstudion i Stockholm.\n\nDenna workshop riktar sig till unga dansare mellan 16 och 24 år som vill fördjupa sig i modern och samtida dans. Det är en del av en workshopserie som erbjuder exklusiva, intensiva helger med ett fåtal platser. Deltagarna får möjlighet att prata om och skapa dans i en öppen och tillåtande miljö. Worksho",
+      "venue": "왕의 정원",
+      "start": "2027-03-20T12:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "de08e8f0-7398-485a-828f-552ef74623c2",
+      "title_sv": "Tvådagarskurs: Från kimono till origami",
+      "title_en": "Tvådagarskurs: Från kimono till origami",
+      "desc_sv": "Tvådagarskurs: Från kimono till origami är en kurs på Östasiatiska museet i Stockholm.\n\nVid det första kurstillfället studeras och demonteras en kimono sydd av vävda japanska textilier från Meijiperioden. Därefter introduceras den japanska tekniken tygdubblering (klot), där tyg klistras på papper för att skapa ett hållbart och vackert material. Vid det andra kurstillfället används det färdiga klot",
+      "desc_en": "Two-day course: From Kimono to Origami is a course at the Museum of East Asian Art in Stockholm.\n\nThe first course session involves studying and disassembling a kimono made from woven Japanese textiles from the Meiji period. Following this, the Japanese fabric-doubling technique called \"klot\" is introduced, where fabric is glued onto paper to create a durable and beautiful material. During the sec",
+      "raw": "Tvådagarskurs: Från kimono till origami är en kurs på Östasiatiska museet i Stockholm.\n\nVid det första kurstillfället studeras och demonteras en kimono sydd av vävda japanska textilier från Meijiperioden. Därefter introduceras den japanska tekniken tygdubblering (klot), där tyg klistras på papper för att skapa ett hållbart och vackert material. Vid det andra kurstillfället används det färdiga klot",
+      "venue": "왕의 정원",
+      "start": "2026-10-17T11:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "9a61c75c-eec5-4f40-b8c2-28200bd2edf7",
+      "title_sv": "Teckna kroki med Stina Wollter",
+      "title_en": "Teckna kroki med Stina Wollter",
+      "desc_sv": "Teckna kroki med Stina Wollter är ett krokievenemang på Konstakademien i Stockholm.\n\nKonstnären och pedagogen Stina Wollter, med över 35 års erfarenhet av modellmåleri och krokiundervisning, leder detta evenemang. Fokus ligger på att tecknaren ska få nya verktyg och skaparglädje. Undervisningen arbetar nära modellen och utforskar människokroppen som ett formäventyr. Deltagare kommer att studera sp",
+      "desc_en": "Teckna kroki med Stina Wollter is a life drawing event at Konstakademien in Stockholm.\n\nArtist and educator Stina Wollter, with over 35 years of experience in teaching model painting and life drawing, leads this event. The focus is for participants to gain new tools and creative joy. Instruction works closely with the model, exploring the human body as a form adventure. Attendees will study tensio",
+      "raw": "Teckna kroki med Stina Wollter är ett krokievenemang på Konstakademien i Stockholm.\n\nKonstnären och pedagogen Stina Wollter, med över 35 års erfarenhet av modellmåleri och krokiundervisning, leder detta evenemang. Fokus ligger på att tecknaren ska få nya verktyg och skaparglädje. Undervisningen arbetar nära modellen och utforskar människokroppen som ett formäventyr. Deltagare kommer att studera sp",
+      "venue": "Konstakademien",
+      "start": "2026-11-07T12:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "f3c0703b-068d-4cd7-9bcd-3c44f563f7ab",
+      "title_sv": "Introduktionskurs: Japansk teceremoni",
+      "title_en": "Introduktionskurs: Japansk teceremoni",
+      "desc_sv": "Introduktionskurs: Japansk teceremoni är en kurs i japansk teceremoni på Etnografiska museet i Stockholm.\n\nDenna introduktionskurs i japansk teceremoni följer Urasenkeskolan, med rötter i temästaren Sen no Rikyū (1522-1591), och sträcker sig över tio onsdagskvällar. Deltagarna lär sig en grundläggande variant av teceremonin och dess principer steg för steg. Undervisningen balanserar estetiska, spi",
+      "desc_en": "Introduktionskurs: Japansk teceremoni is an introductory course on Japanese tea ceremony at Etnografiska museet in Stockholm.\n\nThis introductory course on Japanese tea ceremony follows the Urasenke school, which dates back to tea master Sen no Rikyū (1522-1591), and spans ten Wednesday evenings. Participants will learn a basic variant of the tea ceremony and its principles step by step. Instructio",
+      "raw": "Introduktionskurs: Japansk teceremoni är en kurs i japansk teceremoni på Etnografiska museet i Stockholm.\n\nDenna introduktionskurs i japansk teceremoni följer Urasenkeskolan, med rötter i temästaren Sen no Rikyū (1522-1591), och sträcker sig över tio onsdagskvällar. Deltagarna lär sig en grundläggande variant av teceremonin och dess principer steg för steg. Undervisningen balanserar estetiska, spi",
+      "venue": "Etnografiska museet",
+      "start": "2026-10-14T16:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "892bcf35-5d23-4718-a793-dede9c253049",
+      "title_sv": "Att mixa i Dolby Atmos - från kreativ placering till en mix som översätter",
+      "title_en": "Att mixa i Dolby Atmos - från kreativ placering till en mix som översätter",
+      "desc_sv": "En praktisk genomgång av hur en Dolby Atmos-mix byggs och anpassas för högtalare, hörlurar, hemmabio och bil.",
+      "desc_en": "En praktisk genomgång av hur en Dolby Atmos-mix byggs och anpassas för högtalare, hörlurar, hemmabio och bil.",
+      "raw": "En praktisk genomgång av hur en Dolby Atmos-mix byggs och anpassas för högtalare, hörlurar, hemmabio och bil.",
+      "venue": "Stockholmsmässan",
+      "start": "2026-10-08T17:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "904f13fb-8e0d-4fb6-ba81-20869f6b9590",
+      "title_sv": "SENSUAL BACHATA",
+      "title_en": "SENSUAL BACHATA",
+      "desc_sv": "SENSUAL BACHATA är en Bachata Workshop och Mingle på The House i Stockholm.\n\nEvenemanget SENSUAL BACHATA erbjuder en Bachata Workshop och Mingle. Det är ett tillfälle att uppleva dans och umgänge.",
+      "desc_en": "SENSUAL BACHATA is a Bachata Workshop & Mingle at The House in Stockholm.\n\nThe SENSUAL BACHATA event features a Bachata Workshop & Mingle. It offers an opportunity to experience dance and socialize.",
+      "raw": "SENSUAL BACHATA är en Bachata Workshop och Mingle på The House i Stockholm.\n\nEvenemanget SENSUAL BACHATA erbjuder en Bachata Workshop och Mingle. Det är ett tillfälle att uppleva dans och umgänge.",
+      "venue": "The House",
+      "start": "2026-10-27T17:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "6322416a-3db0-456d-bd50-23e02eff32ec",
+      "title_sv": "Pleasure Within - Breathwork ",
+      "title_en": "Pleasure Within - Breathwork ",
+      "desc_sv": "THE LIFE FORCE BETWEEN BODIES är en breathwork-upplevelse på The House i Stockholm.\n\nTHE LIFE FORCE BETWEEN BODIES erbjuder en djupgående resa in i kroppens intelligens genom medveten andning och rörelse. Upplevelsen förenar uråldrig visdom med modern kroppsförståelse för att reglera nervsystemet och främja självkontakt. Sebastien, tantraterapeut och Kundaliniyoga-instruktör, integrerar andningsöv",
+      "desc_en": "THE LIFE FORCE BETWEEN BODIES is a breathwork experience at The House in Stockholm.\n\nTHE LIFE FORCE BETWEEN BODIES offers an immersive journey into the body's intelligence through conscious breathing and movements. This experience combines ancient wisdom with a modern understanding of the body to regulate the nervous system and foster self-reconnection. Sebastien, a Tantra Therapist and Kundalini ",
+      "raw": "THE LIFE FORCE BETWEEN BODIES är en breathwork-upplevelse på The House i Stockholm.\n\nTHE LIFE FORCE BETWEEN BODIES erbjuder en djupgående resa in i kroppens intelligens genom medveten andning och rörelse. Upplevelsen förenar uråldrig visdom med modern kroppsförståelse för att reglera nervsystemet och främja självkontakt. Sebastien, tantraterapeut och Kundaliniyoga-instruktör, integrerar andningsöv",
+      "venue": "The House",
+      "start": "2026-10-13T16:15:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "01744894-20c0-4a5b-8ffd-f1c4d23255c5",
+      "title_sv": "Screentryck workshop",
+      "title_en": "Screentryck workshop",
+      "desc_sv": "Screentryck workshop är en gör-det-själv-verkstad på Kulturhuset Stadsteatern i Stockholm.\n\nLavas screentrycksverkstad är en gör-det-själv-aktivitet för dig mellan 14 och 25 år. Du kan trycka på tyg som t-shirts eller göra egna affischer. För att använda verkstaden behöver du först gå en introduktionsworkshop.",
+      "desc_en": "Screentryck workshop is a DIY screen printing workshop at Kulturhuset Stadsteatern in Stockholm.\n\nLava's screen printing workshop is a DIY activity for participants aged 14 to 25. You can print on textiles like t-shirts or create your own posters. To use the workshop, you first need to attend an introductory workshop.",
+      "raw": "Screentryck workshop är en gör-det-själv-verkstad på Kulturhuset Stadsteatern i Stockholm.\n\nLavas screentrycksverkstad är en gör-det-själv-aktivitet för dig mellan 14 och 25 år. Du kan trycka på tyg som t-shirts eller göra egna affischer. För att använda verkstaden behöver du först gå en introduktionsworkshop.",
+      "venue": "Kulturhuset Stadsteatern",
+      "start": "2026-10-19T14:30:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "59df10db-c88e-4262-a192-a038ccd98208",
+      "title_sv": "Undergång – ett interaktivt deckarspel",
+      "title_en": "Undergång – ett interaktivt deckarspel",
+      "desc_sv": "Välkommen till ett interaktivt deckarspel där skeppen Vasa och Titanic spelar huvudrollerna! Passar perfekt för dig som vill samla vänner, familj eller kollegor för en spännande och annorlunda kväll på museet.\n\nKliv in i berättelsen som problemlösare och tidsresenärer, utan krav på förberedelser. Ni kommer som ni är och får allt ni behöver på plats. Tillsammans samlar ni ledtrådar, förhör vittnen,",
+      "desc_en": "Välkommen till ett interaktivt deckarspel där skeppen Vasa och Titanic spelar huvudrollerna! Passar perfekt för dig som vill samla vänner, familj eller kollegor för en spännande och annorlunda kväll på museet.\n\nKliv in i berättelsen som problemlösare och tidsresenärer, utan krav på förberedelser. Ni kommer som ni är och får allt ni behöver på plats. Tillsammans samlar ni ledtrådar, förhör vittnen,",
+      "raw": "Välkommen till ett interaktivt deckarspel där skeppen Vasa och Titanic spelar huvudrollerna! Passar perfekt för dig som vill samla vänner, familj eller kollegor för en spännande och annorlunda kväll på museet.\n\nKliv in i berättelsen som problemlösare och tidsresenärer, utan krav på förberedelser. Ni kommer som ni är och får allt ni behöver på plats. Tillsammans samlar ni ledtrådar, förhör vittnen,",
+      "venue": "Vasamuseet",
+      "start": "2026-11-18T16:30:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "50447c97-7315-473b-9f9e-70a90280b09c",
+      "title_sv": "A magical night at hogwarts",
+      "title_en": "A magical night at hogwarts",
+      "desc_sv": "En magisk pysselkväll ✨ Harry Potter-inspirerad Din inbjudan till en kväll fylld av magi, pyssel och höstmys har anlänt! 💌🦉 Den 12 november kl. 18.00 bjuder Girls Meet Up in till en Harry Potter-inspirerad pysselkväll på AB Café i Stockholm. Vi dekorerar caféet med Harry Potter-inspirerade detaljer och skapar en mysig miljö där du kan låta fantasin flöda, träffa andra tjejer och skapa något fint",
+      "desc_en": "✨ A Magical Craft Night ✨ Harry Potter Inspired Your invitation to an evening of magic, crafting and cozy autumn vibes has arrived! 💌🦉 Join Girls Meet Up on 12 November at 6 p.m. for a Harry Potter inspired craft night at AB Café in Stockholm. We’ll decorate the café with Harry Potter inspired details and create a cozy setting where you can let your imagination wander, meet other girls and make ",
+      "raw": "En magisk pysselkväll ✨ Harry Potter-inspirerad Din inbjudan till en kväll fylld av magi, pyssel och höstmys har anlänt! 💌🦉 Den 12 november kl. 18.00 bjuder Girls Meet Up in till en Harry Potter-inspirerad pysselkväll på AB Café i Stockholm. Vi dekorerar caféet med Harry Potter-inspirerade detaljer och skapar en mysig miljö där du kan låta fantasin flöda, träffa andra tjejer och skapa något fint",
+      "venue": "왕의 정원",
+      "start": "2026-11-12T17:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "db9cfe6a-7efe-4dbe-a22d-1b3613a3b239",
+      "title_sv": "Laserskärare workshop",
+      "title_en": "Laserskärare workshop",
+      "desc_sv": "Laserskärare workshop äger rum på Kulturhuset Stadsteatern i Stockholm.\n\nUnder denna workshop får deltagarna möjlighet att skära och gravera i material som plywood, MDF, läder och färgad akryl med hjälp av en laserskärare. Det går att skapa smycken, askar och miniatyrmodeller.",
+      "desc_en": "Laserskärare workshop is a workshop at Kulturhuset Stadsteatern in Stockholm.\n\nParticipants in this workshop can cut and engrave materials such as plywood, MDF, leather, and colored acrylic using a laser cutter. You can create various items, including jewelry, boxes, and miniature models.",
+      "raw": "Laserskärare workshop äger rum på Kulturhuset Stadsteatern i Stockholm.\n\nUnder denna workshop får deltagarna möjlighet att skära och gravera i material som plywood, MDF, läder och färgad akryl med hjälp av en laserskärare. Det går att skapa smycken, askar och miniatyrmodeller.",
+      "venue": "Kulturhuset Stadsteatern",
+      "start": "2026-10-12T15:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "9d275ef3-e150-4318-a328-9791312965bf",
+      "title_sv": "Senapsworkshop Apotekarsocietetens museum",
+      "title_en": "Senapsworkshop Apotekarsocietetens museum",
+      "desc_sv": "Senapsworkshop Apotekarsocietetens museum är en workshop på Apotekarsocietetens museum i Stockholm.\n\nDelta i en senapsworkshop där du får lära dig att göra din egen senap. Du kommer att mortla och väga ingredienser tillsammans med andra entusiaster i en rolig miljö.",
+      "desc_en": "Senapsworkshop Apotekarsocietetens museum is a mustard workshop at Apotekarsocietetens museum in Stockholm.\n\nJoin a mustard workshop where you can learn to make your own mustard. Participants will pound and weigh ingredients with other enthusiasts in a fun setting.",
+      "raw": "Senapsworkshop Apotekarsocietetens museum är en workshop på Apotekarsocietetens museum i Stockholm.\n\nDelta i en senapsworkshop där du får lära dig att göra din egen senap. Du kommer att mortla och väga ingredienser tillsammans med andra entusiaster i en rolig miljö.",
+      "venue": "왕의 정원",
+      "start": "2026-11-18T16:30:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "e301a396-9061-4851-af17-50e252c0aa7e",
+      "title_sv": "Konstlördagar med Studio Funk: Collage och arkiv",
+      "title_en": "Konstlördagar med Studio Funk: Collage och arkiv",
+      "desc_sv": "Välkommen till höstens Konstlördagar med Studio Funk på Tensta konsthall!\n\nKl.13-16\n21 November: Collage och arkiv. Du får prova på att skapa bilder av arkivmaterial och papper.\n\nKonstlördagar är till för dig som vill skapa och uppleva konst.\nDet är för vuxna personer med funktionsvariationer som bor på LSS-boende eller går på Daglig verksamhet.\n\nEller är från målgruppen och är intresserade av ska",
+      "desc_en": "Välkommen till höstens Konstlördagar med Studio Funk på Tensta konsthall!\n\nKl.13-16\n21 November: Collage och arkiv. Du får prova på att skapa bilder av arkivmaterial och papper.\n\nKonstlördagar är till för dig som vill skapa och uppleva konst.\nDet är för vuxna personer med funktionsvariationer som bor på LSS-boende eller går på Daglig verksamhet.\n\nEller är från målgruppen och är intresserade av ska",
+      "raw": "Välkommen till höstens Konstlördagar med Studio Funk på Tensta konsthall!\n\nKl.13-16\n21 November: Collage och arkiv. Du får prova på att skapa bilder av arkivmaterial och papper.\n\nKonstlördagar är till för dig som vill skapa och uppleva konst.\nDet är för vuxna personer med funktionsvariationer som bor på LSS-boende eller går på Daglig verksamhet.\n\nEller är från målgruppen och är intresserade av ska",
+      "venue": null,
+      "start": "2026-11-21T12:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "a65eba63-167e-4247-a576-8bc220ae3799",
+      "title_sv": "Workshop: Sashiko",
+      "title_en": "Workshop: Sashiko",
+      "desc_sv": "Workshop: Sashiko är en kurs i sömnadsteknik på Östasiastiska museet i Stockholm.\n\nSashiko är en sömnadsteknik som ursprungligen användes av japanska bönder för att laga kläder och textilier. Idag är det en teknik med ett distinkt uttryck som är populär globalt. Under workshopen får deltagarna utforska museets nya Sashikoutställning tillsammans med kursledaren. Ni kommer att lära er om sashikons h",
+      "desc_en": "Workshop: Sashiko is a sewing technique course at Östasiastiska museet in Stockholm.\n\nSashiko is a sewing technique originally used by Japanese farmers to mend clothes and textiles. Today, it is a technique with a distinct expression that is popular globally. During the workshop, participants will explore the museum's new Sashiko exhibition together with the course leader. You will learn about Sas",
+      "raw": "Workshop: Sashiko är en kurs i sömnadsteknik på Östasiastiska museet i Stockholm.\n\nSashiko är en sömnadsteknik som ursprungligen användes av japanska bönder för att laga kläder och textilier. Idag är det en teknik med ett distinkt uttryck som är populär globalt. Under workshopen får deltagarna utforska museets nya Sashikoutställning tillsammans med kursledaren. Ni kommer att lära er om sashikons h",
+      "venue": "왕의 정원",
+      "start": "2026-10-10T11:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "3d0a11ae-5b8f-47c1-a584-3be0550529bb",
+      "title_sv": "KURS: Upcycling och fritt broderi",
+      "title_en": "KURS: Upcycling och fritt broderi",
+      "desc_sv": "KURS: Upcycling och fritt broderi är en kurs på Stockholms Läns Hemslöjdsförening i Stockholm.\n\nDenna kurs fokuserar på att förvandla gamla kläder till \"skrytplagg\" med hjälp av olika dekorationstekniker. Deltagarna kan få hjälp och inspiration att göra ett älsklingsplagg användbart igen genom applikation, paljett- och pärlsömnad samt fritt broderi. Kursledare är Nina Sandström, som brinner för hå",
+      "desc_en": "KURS: Upcycling och fritt broderi is a course at Stockholms Läns Hemslöjdsförening in Stockholm.\n\nThis course focuses on transforming old clothes into \"statement garments\" using various decoration techniques. Participants can receive help and inspiration to make a favorite garment usable again through application, sequin and bead embroidery, and free embroidery. The course leader is Nina Sandström",
+      "raw": "KURS: Upcycling och fritt broderi är en kurs på Stockholms Läns Hemslöjdsförening i Stockholm.\n\nDenna kurs fokuserar på att förvandla gamla kläder till \"skrytplagg\" med hjälp av olika dekorationstekniker. Deltagarna kan få hjälp och inspiration att göra ett älsklingsplagg användbart igen genom applikation, paljett- och pärlsömnad samt fritt broderi. Kursledare är Nina Sandström, som brinner för hå",
+      "venue": "Stockholm",
+      "start": "2026-10-10T08:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "1279e41d-74b6-47a4-8a27-cd598a1ae1ad",
+      "title_sv": "Build your AI Team",
+      "title_en": "Build your AI Team",
+      "desc_sv": "Join our Agentic AI Bootcamp and build your own AI team.Design powerful AI systems that handle real tasks, then scale them to any business problem you face.We use modern methodologies and frameworks with clear pu",
+      "desc_en": "Join our Agentic AI Bootcamp and build your own AI team.Design powerful AI systems that handle real tasks, then scale them to any business problem you face.We use modern methodologies and frameworks with clear pu",
+      "raw": "Join our Agentic AI Bootcamp and build your own AI team.Design powerful AI systems that handle real tasks, then scale them to any business problem you face.We use modern methodologies and frameworks with clear pu",
+      "venue": null,
+      "start": "2026-10-09T22:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "306fc536-838f-4295-8e4e-7fdbc4eae8f9",
+      "title_sv": "Breathwork med Hale i Musernas hus",
+      "title_en": "Breathwork med Hale i Musernas hus",
+      "desc_sv": "Breathwork med Hale är en guidad andningssession på Liljevalchs konsthall i Stockholm.\n\nUpplev konst med både kropp och sinne när Liljevalchs bjuder in till en guidad breathwork-session med Hale, i anslutning till Ylva Snöfrids utställning Musornas hus. Upplevelsen inleds med en kort guidad tur i utställningen. Musornas hus utforskar frågor om närvaro, medvetande och skapande. Utställningen låter ",
+      "desc_en": "Breathwork med Hale is a guided breathwork session at Liljevalchs konsthall in Stockholm.\n\nExperience art with both body and mind as Liljevalchs invites you to a guided breathwork session with Hale, held in conjunction with Ylva Snöfrid’s exhibition The House of the Muses. The experience begins with a brief introduction of the exhibition. The House of the Muses explores themes of presence, conscio",
+      "raw": "Breathwork med Hale är en guidad andningssession på Liljevalchs konsthall i Stockholm.\n\nUpplev konst med både kropp och sinne när Liljevalchs bjuder in till en guidad breathwork-session med Hale, i anslutning till Ylva Snöfrids utställning Musornas hus. Upplevelsen inleds med en kort guidad tur i utställningen. Musornas hus utforskar frågor om närvaro, medvetande och skapande. Utställningen låter ",
+      "venue": "liljevalchs",
+      "start": "2026-10-08T16:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "37cb1f7d-bb61-4e07-9597-1c90f17045ff",
+      "title_sv": "Tanken och handen",
+      "title_en": "Tanken och handen",
+      "desc_sv": "Tanken och handen är en föreläsning och workshop ledd av Lotta Dinäss på Konstakademien i Stockholm.\n\nDenna kväll utforskar sambandet mellan händer och hjärna, med Lotta Dinäss som programhållare. Hon är konstnär och arkitekt, samt föreläsare och workshopledare med fokus på samverkan mellan hand och hjärna. En kort föreläsning kommer att dyka ner i neurovetenskapen bakom handens och hjärnans samsp",
+      "desc_en": "Tanken och handen is a lecture and workshop led by Lotta Dinäss at Konstakademien in Stockholm.\n\nThis evening explores the collaboration between hands and the brain, with Lotta Dinäss as the program host. She is an artist and architect, as well as a lecturer and workshop leader focusing on the interaction between hand and brain. A short lecture will delve into the neuroscience behind the interplay",
+      "raw": "Tanken och handen är en föreläsning och workshop ledd av Lotta Dinäss på Konstakademien i Stockholm.\n\nDenna kväll utforskar sambandet mellan händer och hjärna, med Lotta Dinäss som programhållare. Hon är konstnär och arkitekt, samt föreläsare och workshopledare med fokus på samverkan mellan hand och hjärna. En kort föreläsning kommer att dyka ner i neurovetenskapen bakom handens och hjärnans samsp",
+      "venue": "Konstakademien",
+      "start": "2026-10-28T17:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "df125fb6-ea27-4068-a15e-621fd3b8d18f",
+      "title_sv": "NUDE NOIR - Surr3al Life Drawing ",
+      "title_en": "NUDE NOIR - Surr3al Life Drawing ",
+      "desc_sv": "NUDE NOIR - Surr3al Life Drawing är en teckningssession på The House i Stockholm.\n\nDenna teckningssession med titeln \"NUDE NOIR - Surr3al Life Drawing\" äger rum på The House. Fokus ligger på att teckna modeller.",
+      "desc_en": "NUDE NOIR - Surr3al Life Drawing is a life drawing session at The House in Stockholm.\n\nThis drawing session, titled \"NUDE NOIR - Surr3al Life Drawing\", takes place at The House. The focus is on drawing live models.",
+      "raw": "NUDE NOIR - Surr3al Life Drawing är en teckningssession på The House i Stockholm.\n\nDenna teckningssession med titeln \"NUDE NOIR - Surr3al Life Drawing\" äger rum på The House. Fokus ligger på att teckna modeller.",
+      "venue": "The House",
+      "start": "2026-10-26T17:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "0fcb5ef6-c6a3-4dee-adf9-7a08ee477c93",
+      "title_sv": "Retreat med medicinsk yoga",
+      "title_en": "Retreat med medicinsk yoga",
+      "desc_sv": "Retreat med medicinsk yoga äger rum i Hedvig Eleonora kyrka, Stockholm.\n\nDenna retreat erbjuder medicinsk yoga, bibelmeditation, bön och egen reflektion. Dagen avslutas med en andakt. Retreaten leds av prästen Jenny Lingesjö och yogainstruktören Jenny Ekholm.",
+      "desc_en": "Retreat med medicinsk yoga is a retreat at Hedvig Eleonora kyrka in Stockholm.\n\nThis retreat offers medical yoga, Bible meditation, prayer, and personal reflection. The day concludes with a devotion. The retreat is led by priest Jenny Lingesjö and yoga instructor Jenny Ekholm.",
+      "raw": "Retreat med medicinsk yoga äger rum i Hedvig Eleonora kyrka, Stockholm.\n\nDenna retreat erbjuder medicinsk yoga, bibelmeditation, bön och egen reflektion. Dagen avslutas med en andakt. Retreaten leds av prästen Jenny Lingesjö och yogainstruktören Jenny Ekholm.",
+      "venue": "왕의 정원",
+      "start": "2026-10-24T07:30:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "2d12b181-2365-4174-b02a-efd07ad8e6f6",
+      "title_sv": "Tvådagarskurs i skånskt yllebroderi i samarbete med Hemslöjden i Skåne",
+      "title_en": "Tvådagarskurs i skånskt yllebroderi i samarbete med Hemslöjden i Skåne",
+      "venue": "왕의 정원",
+      "start": "2026-10-17T08:15:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "cce73b20-f998-451c-9c15-cf097a7ffaa1",
+      "title_sv": "Kurs - Halmslöjd till jul",
+      "title_en": "Kurs - Halmslöjd till jul",
+      "desc_sv": "Kurs - Halmslöjd till jul är en endagskurs i halmslöjd vid Stockholms läns hemslöjdsförening i Stockholm.\n\nDenna endagskurs i halmslöjd möjliggör skapandet av flera mindre juldekorationer. Deltagarna kan bland annat tillverka halmhängen till granen, halmstjärnor, små kransar, änglar och kanske en liten tomte. Halmslöjdare Ulla-Britt Torstensdotter delar generöst med sig av sin långa erfarenhet av ",
+      "desc_en": "Kurs - Halmslöjd till jul is a one-day straw craft course at Stockholms läns hemslöjdsförening in Stockholm.\n\nThis one-day course in straw craft offers the opportunity to create several smaller Christmas decorations. Participants can make straw ornaments for the tree, straw stars, small wreaths, angels, and possibly a small gnome. Straw artisan Ulla-Britt Torstensdotter generously shares her exten",
+      "raw": "Kurs - Halmslöjd till jul är en endagskurs i halmslöjd vid Stockholms läns hemslöjdsförening i Stockholm.\n\nDenna endagskurs i halmslöjd möjliggör skapandet av flera mindre juldekorationer. Deltagarna kan bland annat tillverka halmhängen till granen, halmstjärnor, små kransar, änglar och kanske en liten tomte. Halmslöjdare Ulla-Britt Torstensdotter delar generöst med sig av sin långa erfarenhet av ",
+      "venue": "Stockholm",
+      "start": "2026-12-05T09:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "83f9c879-4e68-45ca-91f5-ad17411a72a9",
+      "title_sv": "FPV Drone Assembly Workshop with STFU Tacticats",
+      "title_en": "FPV Drone Assembly Workshop with STFU Tacticats",
+      "venue": "Stockholm, Sweden",
+      "start": "2026-10-24T10:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "82ffaa3d-7078-47e6-a495-06f7bba7904f",
+      "title_sv": "Workshops",
+      "title_en": "Workshops",
+      "desc_sv": "Workshops är ett evenemang för att gestalta text, kropp och röst på Dramatenbaren i Stockholm.\n\nHär får du möjlighet att utforska hur man gestaltar text, kropp och röst. Det sker genom möten med klassiska verk av författare som Shakespeare och Molière.",
+      "desc_en": "Workshops is an event for interpreting text, body, and voice at Dramatenbaren in Stockholm.\n\nHere you get the opportunity to explore how to interpret text, body, and voice. This is done through engaging with classic works by authors such as Shakespeare and Molière.",
+      "raw": "Workshops är ett evenemang för att gestalta text, kropp och röst på Dramatenbaren i Stockholm.\n\nHär får du möjlighet att utforska hur man gestaltar text, kropp och röst. Det sker genom möten med klassiska verk av författare som Shakespeare och Molière.",
+      "venue": "dramaten",
+      "start": "2026-10-18T09:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "10c79bb3-86a6-456a-acf5-60ebb3606761",
+      "title_sv": "Bilderboksdagen och nyinstiftat internationellt bilderbokspris!",
+      "title_en": "Bilderboksdagen och nyinstiftat internationellt bilderbokspris!",
+      "desc_sv": "Välkommen till den första upplagan av Bilderboksdagen – en eftermiddag och kväll som utforskar och uppmärksammar bilderboken som konstform. Möt några av Nordens och världens främsta bilderboksskapare i samtal och workshops, och upplev den första prisutdelningen av Kulturhuset Stadsteaterns nyinstiftade Bilderbokspris.\n\nTvå evenemang – ett paketpris\nBilderboksdagen och Kulturhuset Stadsteaterns Bil",
+      "desc_en": "Välkommen till den första upplagan av Bilderboksdagen – en eftermiddag och kväll som utforskar och uppmärksammar bilderboken som konstform. Möt några av Nordens och världens främsta bilderboksskapare i samtal och workshops, och upplev den första prisutdelningen av Kulturhuset Stadsteaterns nyinstiftade Bilderbokspris.\n\nTvå evenemang – ett paketpris\nBilderboksdagen och Kulturhuset Stadsteaterns Bil",
+      "raw": "Välkommen till den första upplagan av Bilderboksdagen – en eftermiddag och kväll som utforskar och uppmärksammar bilderboken som konstform. Möt några av Nordens och världens främsta bilderboksskapare i samtal och workshops, och upplev den första prisutdelningen av Kulturhuset Stadsteaterns nyinstiftade Bilderbokspris.\n\nTvå evenemang – ett paketpris\nBilderboksdagen och Kulturhuset Stadsteaterns Bil",
+      "venue": "Kulturhuset Stadsteatern",
+      "start": "2026-11-18T13:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "03fbf2b4-95ff-41fd-964f-ad37732a8fb6",
+      "title_sv": "Mordmysterium + Middag = Succé (Teaterbrasse)",
+      "title_en": "Mordmysterium + Middag = Succé (Teaterbrasse)",
+      "desc_sv": "Mordmysterium + Middag = Succé (Teaterbrasse) är en mordgåtemiddag på Teaterbrasseriet i Stockholm.\n\nTeaterbrasseriet i Stockholm arrangerar en kväll med mordmysterium och middag. Deltagarna får en gästlista samt instruktioner om sin rollfigur och ledtrådar för att lösa kvällens mordgåta. Alla deltagare får en egen roll med uppdrag som ska utföras under kvällen, och agerar på den nivå de själva är",
+      "desc_en": "Mordmysterium + Middag = Succé (Teaterbrasse) is a murder mystery dinner at Teaterbrasseriet in Stockholm.\n\nTeaterbrasseriet in Stockholm hosts an evening featuring a murder mystery and dinner. Participants receive a guest list, instructions for their character, and clues to solve the evening's mystery. Everyone is assigned a role with specific tasks to perform and can participate at their comfort",
+      "raw": "Mordmysterium + Middag = Succé (Teaterbrasse) är en mordgåtemiddag på Teaterbrasseriet i Stockholm.\n\nTeaterbrasseriet i Stockholm arrangerar en kväll med mordmysterium och middag. Deltagarna får en gästlista samt instruktioner om sin rollfigur och ledtrådar för att lösa kvällens mordgåta. Alla deltagare får en egen roll med uppdrag som ska utföras under kvällen, och agerar på den nivå de själva är",
+      "venue": "왕의 정원",
+      "start": "2026-10-31T17:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "1a2c7414-cabd-41a8-a890-1d3a7b2a5107",
+      "title_sv": "Workshops",
+      "title_en": "Workshops",
+      "desc_sv": "Workshops är en gestaltningsworkshop på Dramatenbaren i Stockholm.\n\nFokus ligger på att prova att gestalta text, kropp och röst. Deltagarna möter klassiker som Shakespeare och Molière genom praktiska övningar.",
+      "desc_en": "Workshops is a performance workshop at Dramatenbaren in Stockholm.\n\nThe focus is on trying to interpret text, body, and voice. Participants will engage with classics such as Shakespeare and Molière through practical exercises.",
+      "raw": "Workshops är en gestaltningsworkshop på Dramatenbaren i Stockholm.\n\nFokus ligger på att prova att gestalta text, kropp och röst. Deltagarna möter klassiker som Shakespeare och Molière genom praktiska övningar.",
+      "venue": "dramaten",
+      "start": "2026-10-17T09:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "aaa7b7ad-f87b-4c74-aacc-cbbc3d5d9354",
+      "title_sv": "Skymningsmåleri ",
+      "title_en": "Skymningsmåleri ",
+      "desc_sv": "Skymningsmåleri vid Kulturhuset Stadsteatern bjuder in till en kreativ stund med fri målning vid staffli. Låt Stockholms stadsljus och utsikten över Sergels torg vara din främsta inspiration när penseln möter duken. Detta är ett tillfälle att koppla av och utforska din konstnärliga sida i en inspirerande miljö. Kulturhuset Stadsteatern, en central och levande kulturscen, erbjuder den perfekta kuli",
+      "desc_en": "Skymningsmåleri at Kulturhuset Stadsteatern invites you to a creative session of free painting at an easel. Let the city lights of Stockholm and the view over Sergels torg be your primary inspiration as the brush meets the canvas. This is an opportunity to relax and explore your artistic side in an inspiring environment. Kulturhuset Stadsteatern, a central and vibrant cultural hub, offers the perf",
+      "raw": "Skymningsmåleri vid Kulturhuset Stadsteatern bjuder in till en kreativ stund med fri målning vid staffli. Låt Stockholms stadsljus och utsikten över Sergels torg vara din främsta inspiration när penseln möter duken. Detta är ett tillfälle att koppla av och utforska din konstnärliga sida i en inspirerande miljö. Kulturhuset Stadsteatern, en central och levande kulturscen, erbjuder den perfekta kuli",
+      "venue": "Kulturhuset Stadsteatern",
+      "start": "2026-10-15T15:30:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "a71c229f-47a5-4140-86c0-44114f970495",
+      "title_sv": "Lappa och laga ",
+      "title_en": "Lappa och laga ",
+      "desc_sv": "Lappa och laga är en pyssel- och reparationsaktivitet på Kulturhuset Stadsteatern i Stockholm.\n\nVi hjälper varandra att laga och återbruka. Slöjdhandledare finns på plats för att ge stöd och vägledning. Återbrukade material finns tillgängliga att använda.",
+      "desc_en": "Lappa och laga is a craft and repair activity at Kulturhuset Stadsteatern in Stockholm.\n\nWe help each other repair and reuse items. Craft instructors are on site to provide support and guidance. Reused materials are available for use.",
+      "raw": "Lappa och laga är en pyssel- och reparationsaktivitet på Kulturhuset Stadsteatern i Stockholm.\n\nVi hjälper varandra att laga och återbruka. Slöjdhandledare finns på plats för att ge stöd och vägledning. Återbrukade material finns tillgängliga att använda.",
+      "venue": "Kulturhuset Stadsteatern",
+      "start": "2026-10-21T15:30:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "cfec12b7-0e3d-4a59-bfde-921a84663403",
+      "title_sv": "Musikprogrammering: Live coding med Strudel.cc",
+      "title_en": "Musikprogrammering: Live coding med Strudel.cc",
+      "desc_sv": "Musikprogrammering: Live coding med Strudel.cc är en workshop på Kulturhuset Stadsteatern i Stockholm.\n\nKom och skapa musik med kod i denna workshop. Deltagare kan skapa beats, melodier och kontrollerat kaos genom att programmera live i webbläsaren.",
+      "desc_en": "Musikprogrammering: Live coding med Strudel.cc is a workshop at Kulturhuset Stadsteatern in Stockholm.\n\nJoin this workshop to create music with code. Participants can create beats, melodies, and controlled chaos by live coding in a web browser.",
+      "raw": "Musikprogrammering: Live coding med Strudel.cc är en workshop på Kulturhuset Stadsteatern i Stockholm.\n\nKom och skapa musik med kod i denna workshop. Deltagare kan skapa beats, melodier och kontrollerat kaos genom att programmera live i webbläsaren.",
+      "venue": "Kulturhuset Stadsteatern",
+      "start": "2026-10-19T15:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "ccf3c909-3b00-49e1-bda2-29466498f536",
+      "title_sv": "Kantele LABB",
+      "title_en": "Kantele LABB",
+      "desc_sv": "Kantele LABB med Anna Heikkinen är ett tillfälle att spela kantele på Kulturhuset Stadsteatern i Stockholm.\n\nAnna Heikkinen introducerar Finlands uråldriga instrument. Besökare kan lyssna på en kort konsert, upptäcka kantelen och prova att spela tillsammans. Det utlovas en lugn, kreativ och nära stund med kantelen.",
+      "desc_en": "Kantele LABB with Anna Heikkinen is an opportunity to play the kantele at Kulturhuset Stadsteatern in Stockholm.\n\nAnna Heikkinen introduces Finland's ancient instrument. Visitors can listen to a short concert, discover the kantele, and try playing it together. It promises to be a calm, creative, and intimate moment with the kantele.",
+      "raw": "Kantele LABB med Anna Heikkinen är ett tillfälle att spela kantele på Kulturhuset Stadsteatern i Stockholm.\n\nAnna Heikkinen introducerar Finlands uråldriga instrument. Besökare kan lyssna på en kort konsert, upptäcka kantelen och prova att spela tillsammans. Det utlovas en lugn, kreativ och nära stund med kantelen.",
+      "venue": "Kulturhuset Stadsteatern",
+      "start": "2026-10-11T10:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "5c7a8a82-b915-4787-8abc-3039a1f9ca62",
+      "title_sv": "Animation 10-11 år - Höstlovskurs",
+      "title_en": "Animation 10-11 år - Höstlovskurs",
+      "desc_sv": "Animation 10-11 år - Höstlovskurs är en kurs i animering på Kulturhuset Dieselverkstaden i Nacka.\n\nUnder tre förmiddagar får deltagarna lära sig animeringens beståndsdelar och skapa sin egen video. Kursen innefattar både stop motion-animering, med bland annat papper och lera, samt cell animation där man tecknar en bild i taget. iPads används för att animera och redigera. Det som skapas i modellera",
+      "desc_en": "Animation 10-11 år - Höstlovskurs is an animation course at Kulturhuset Dieselverkstaden in Nacka.\n\nOver three mornings, participants will learn the components of animation and create their own video. The course includes both stop motion animation, using materials like paper and clay, and cell animation, where one image is drawn at a time. iPads are used for animating and editing. Clay creations c",
+      "raw": "Animation 10-11 år - Höstlovskurs är en kurs i animering på Kulturhuset Dieselverkstaden i Nacka.\n\nUnder tre förmiddagar får deltagarna lära sig animeringens beståndsdelar och skapa sin egen video. Kursen innefattar både stop motion-animering, med bland annat papper och lera, samt cell animation där man tecknar en bild i taget. iPads används för att animera och redigera. Det som skapas i modellera",
+      "venue": "Kulturhuset Dieselverkstaden",
+      "start": "2026-10-26T08:30:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "76bd85c3-f5da-462b-bde8-ce10f1c708cb",
+      "title_sv": "Föreläsning: Skapa koreografi – Lovisa Wallerström",
+      "title_en": "Föreläsning: Skapa koreografi – Lovisa Wallerström",
+      "desc_sv": "Hur gör man för att skapa en dans och komma vidare när idéerna tar slut? Under denna digitala föreläsning och workshop får du prova olika metoder för att skapa rörelser och koreografier. Du får verktyg för att utveckla längre dansverk – och tips på hur du kan hantera idétorka och prestationskrav.\n\nFöreläsningen passar alla som dansar, oavsett nivå, erfarenhet eller dansstil. Detta är del 2 av 3 i ",
+      "desc_en": "Hur gör man för att skapa en dans och komma vidare när idéerna tar slut? Under denna digitala föreläsning och workshop får du prova olika metoder för att skapa rörelser och koreografier. Du får verktyg för att utveckla längre dansverk – och tips på hur du kan hantera idétorka och prestationskrav.\n\nFöreläsningen passar alla som dansar, oavsett nivå, erfarenhet eller dansstil. Detta är del 2 av 3 i ",
+      "raw": "Hur gör man för att skapa en dans och komma vidare när idéerna tar slut? Under denna digitala föreläsning och workshop får du prova olika metoder för att skapa rörelser och koreografier. Du får verktyg för att utveckla längre dansverk – och tips på hur du kan hantera idétorka och prestationskrav.\n\nFöreläsningen passar alla som dansar, oavsett nivå, erfarenhet eller dansstil. Detta är del 2 av 3 i ",
+      "venue": null,
+      "start": "2026-10-21T16:30:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "6b6b8d60-e675-4fd1-a939-9e0182b8e287",
+      "title_sv": "Stadsvandring med Christopher O'Regan - Grändernas hemligheter",
+      "title_en": "Stadsvandring med Christopher O'Regan - Grändernas hemligheter",
+      "desc_sv": "\"Stadsvandring med Christopher O'Regan - Grändernas hemligheter\" är en guidad tur i Gamla stan, Stockholm.\n\nChristopher O'Regan är känd från TV, där han berättar om Sveriges historia och trollbinder tittare med sina berättelser. Med gedigen kunskap och elegant vältalighet levandegör han det förflutna som ingen annan. Deltagare kan nu uppleva honom live på en av hans underhållande stadsvandringar i",
+      "desc_en": "\"Stadsvandring med Christopher O'Regan - Grändernas hemligheter\" is a guided city walk in Gamla stan, Stockholm.\n\nChristopher O'Regan is known from TV, where he captivates viewers with stories about Swedish history. With extensive knowledge and eloquent rhetoric, he makes the past come alive. Participants can now experience him live on one of his entertaining city walks in Stockholm. He has a quar",
+      "raw": "\"Stadsvandring med Christopher O'Regan - Grändernas hemligheter\" är en guidad tur i Gamla stan, Stockholm.\n\nChristopher O'Regan är känd från TV, där han berättar om Sveriges historia och trollbinder tittare med sina berättelser. Med gedigen kunskap och elegant vältalighet levandegör han det förflutna som ingen annan. Deltagare kan nu uppleva honom live på en av hans underhållande stadsvandringar i",
+      "venue": "Gamla stan",
+      "start": "2026-11-07T10:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "cebeaa37-5a69-4b27-9877-14560d5f0e5f",
+      "title_sv": "Teckna kroki med Stina Wollter",
+      "title_en": "Teckna kroki med Stina Wollter",
+      "desc_sv": "Teckna kroki med Stina Wollter är en krokilektion på Konstakademien i Stockholm.\n\nKonstnären och pedagogen Stina Wollter leder denna krokilektion. Med över 35 års erfarenhet av modellmåleri och kroki arbetar hon nära modellen för att vägleda deltagarna. Målet är att varje tecknare ska lämna tillfället med nya verktyg och en känsla av skaparglädje. Temat för lektionen är kroppens landskap. Fokus li",
+      "desc_en": "Draw croquis with Stina Wollter is a croquis lesson at Konstakademien in Stockholm.\n\nArtist and educator Stina Wollter leads this croquis lesson. With over 35 years of experience teaching model painting and croquis, she works closely with the model to guide participants. The aim is for each drawer to leave the session with new tools and a sense of creative joy. The lesson's theme is the body's lan",
+      "raw": "Teckna kroki med Stina Wollter är en krokilektion på Konstakademien i Stockholm.\n\nKonstnären och pedagogen Stina Wollter leder denna krokilektion. Med över 35 års erfarenhet av modellmåleri och kroki arbetar hon nära modellen för att vägleda deltagarna. Målet är att varje tecknare ska lämna tillfället med nya verktyg och en känsla av skaparglädje. Temat för lektionen är kroppens landskap. Fokus li",
+      "venue": "Konstakademien",
+      "start": "2026-11-04T16:30:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "a03f8a27-a195-4d03-a03f-67b4b68effe4",
+      "title_sv": "Skrivkurs med Nawroz Zakholy – 5 onsdagar under hösten ",
+      "title_en": "Skrivkurs med Nawroz Zakholy – 5 onsdagar under hösten ",
+      "desc_sv": "Är du mellan 15-26 år och nyfiken på att utveckla ditt skrivande och att läsa och bli läst?\nUnder fem onsdagar träffas vi och närmar oss skrivande, litteratur och läsande tillsammans.\n\nKursen leds av Nawroz Zakholy, som är poet, skrivcoach och lärare i Scenpoesi och berättande på SMI Stockholm. Tyngdpunkten under kursen ligger på poesi men utforskar även andra berättartekniker och manusskrivande. ",
+      "desc_en": "Är du mellan 15-26 år och nyfiken på att utveckla ditt skrivande och att läsa och bli läst?\nUnder fem onsdagar träffas vi och närmar oss skrivande, litteratur och läsande tillsammans.\n\nKursen leds av Nawroz Zakholy, som är poet, skrivcoach och lärare i Scenpoesi och berättande på SMI Stockholm. Tyngdpunkten under kursen ligger på poesi men utforskar även andra berättartekniker och manusskrivande. ",
+      "raw": "Är du mellan 15-26 år och nyfiken på att utveckla ditt skrivande och att läsa och bli läst?\nUnder fem onsdagar träffas vi och närmar oss skrivande, litteratur och läsande tillsammans.\n\nKursen leds av Nawroz Zakholy, som är poet, skrivcoach och lärare i Scenpoesi och berättande på SMI Stockholm. Tyngdpunkten under kursen ligger på poesi men utforskar även andra berättartekniker och manusskrivande. ",
+      "venue": null,
+      "start": "2026-10-07T15:30:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "ac1ec278-52a5-4d90-abe4-bbc5856d3cf6",
+      "title_sv": "Familjekonstellationer med Jennifer Wallentin",
+      "title_en": "Familjekonstellationer med Jennifer Wallentin",
+      "desc_sv": "🌷Välkommen till en varm och utforskande kväll på Klustret tillsammans med Jennifer Wallentin.\n\nFamiljekonstellationer är ett sätt att utforska de relationer, mönster och dynamiker vi bär med oss från våra familjesystem – sådant som ibland kan påverka oss utan att vi riktigt är medvetna om det.\n\nI en konstellation arbetar vi tillsammans i det som brukar kallas fältet. Det kan vara svårt att beskri",
+      "desc_en": "🌷Välkommen till en varm och utforskande kväll på Klustret tillsammans med Jennifer Wallentin.\n\nFamiljekonstellationer är ett sätt att utforska de relationer, mönster och dynamiker vi bär med oss från våra familjesystem – sådant som ibland kan påverka oss utan att vi riktigt är medvetna om det.\n\nI en konstellation arbetar vi tillsammans i det som brukar kallas fältet. Det kan vara svårt att beskri",
+      "raw": "🌷Välkommen till en varm och utforskande kväll på Klustret tillsammans med Jennifer Wallentin.\n\nFamiljekonstellationer är ett sätt att utforska de relationer, mönster och dynamiker vi bär med oss från våra familjesystem – sådant som ibland kan påverka oss utan att vi riktigt är medvetna om det.\n\nI en konstellation arbetar vi tillsammans i det som brukar kallas fältet. Det kan vara svårt att beskri",
+      "venue": null,
+      "start": "2026-10-14T16:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "426ef7d3-3087-4bca-9df9-6cdf60432575",
+      "title_sv": "Kurs - Julpyssel med extra allt",
+      "title_en": "Kurs - Julpyssel med extra allt",
+      "desc_sv": "\"Kurs - Julpyssel med extra allt\" är en kreativ julpysselkurs på Stockholms läns hemslöjdsförening i Stockholm.\n\nTor Cederman håller en workshop med temat Kreativt julpyssel med extra allt. På denna kurs får kreativiteten flöda bland färgstarka material som papperskrus, glitterlurv, kakformar och limpistoler. Det blir korta föreläsningar och diskussioner. Framför allt blir det hardcore julpyssel m",
+      "desc_en": "\"Kurs - Julpyssel med extra allt\" is a creative Christmas crafting course at Stockholms läns hemslöjdsförening in Stockholm.\n\nTor Cederman is leading a workshop focused on creative Christmas crafting with extra everything. This course encourages creativity to flow among colorful items like paper crimps, glitter fluff, cookie cutters, and glue guns. There will be short lectures and discussions. The",
+      "raw": "\"Kurs - Julpyssel med extra allt\" är en kreativ julpysselkurs på Stockholms läns hemslöjdsförening i Stockholm.\n\nTor Cederman håller en workshop med temat Kreativt julpyssel med extra allt. På denna kurs får kreativiteten flöda bland färgstarka material som papperskrus, glitterlurv, kakformar och limpistoler. Det blir korta föreläsningar och diskussioner. Framför allt blir det hardcore julpyssel m",
+      "venue": "Stockholm",
+      "start": "2026-12-12T09:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "f4cef456-d639-4dd3-b6f1-c15306d178c9",
+      "title_sv": "Masterclass – Teaterns verktyg",
+      "title_en": "Masterclass – Teaterns verktyg",
+      "desc_sv": "\"Masterclass – Teaterns verktyg\" är en workshop i Tornrummet i Stockholm.\n\nDenna workshop lär dig om de olika och spännande roller som finns bakom scenen inom teatern.",
+      "desc_en": "\"Masterclass – Teaterns verktyg\" is a workshop at Tornrummet in Stockholm.\n\nThis workshop teaches you about the various and exciting roles that exist behind the scenes in theater.",
+      "raw": "\"Masterclass – Teaterns verktyg\" är en workshop i Tornrummet i Stockholm.\n\nDenna workshop lär dig om de olika och spännande roller som finns bakom scenen inom teatern.",
+      "venue": "왕의 정원",
+      "start": "2026-10-26T08:30:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "120c1446-038f-428f-9636-b87017e6228f",
+      "title_sv": "Keramik 10-11år - Höstlovskurs",
+      "title_en": "Keramik 10-11år - Höstlovskurs",
+      "desc_sv": "Keramik 10-11år - Höstlovskurs är en kurs i keramik på Kulturhuset Dieselverkstaden i Nacka.\n\nDenna kurs låter dig utforska keramik med inspiration från höstens färger. Du får arbeta både individuellt och med samarbetsövningar, samt skapa bruksföremål och skulpturer. Olika tekniker som forma, tumma, ringla och bygga provas, och det finns även möjlighet att dreja. Leran målas med engober i olika fä",
+      "desc_en": "Keramik 10-11år - Höstlovskurs is a ceramics course at Kulturhuset Dieselverkstaden in Nacka.\n\nThis course allows participants to explore ceramics, drawing inspiration from autumn's various colors, light, and darkness. Attendees will work individually and in collaboration, creating both functional items and sculptures. They will try different techniques such as shaping, pinching, coiling, and buil",
+      "raw": "Keramik 10-11år - Höstlovskurs är en kurs i keramik på Kulturhuset Dieselverkstaden i Nacka.\n\nDenna kurs låter dig utforska keramik med inspiration från höstens färger. Du får arbeta både individuellt och med samarbetsövningar, samt skapa bruksföremål och skulpturer. Olika tekniker som forma, tumma, ringla och bygga provas, och det finns även möjlighet att dreja. Leran målas med engober i olika fä",
+      "venue": "Kulturhuset Dieselverkstaden",
+      "start": "2026-10-26T08:30:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "659456b2-6797-4b49-90a5-e97587edd231",
+      "title_sv": "KURS: Träslöjd för trångbodda",
+      "title_en": "KURS: Träslöjd för trångbodda",
+      "desc_sv": "KURS: Träslöjd för trångbodda är en träslöjdskurs på Stockholms Läns Hemslöjdsförening i Stockholm.\n\nKursen Träslöjd för trångbodda är en blandning av teori och praktik, med fokus på att slöjda med enkla medel. Inga förkunskaper krävs för att delta, men ett praktiskt handlag är att föredra. Deltagarna får lära sig tekniker, metoder och enkla konstruktioner, samt smarta förvaringslösningar för en l",
+      "desc_en": "KURS: Träslöjd för trångbodda is a woodworking course at Stockholms Läns Hemslöjdsförening in Stockholm.\n\nThe course Woodworking for Small Spaces blends theory and practice, focusing on crafting with simple means. No prior knowledge is required to participate, but practical skill is preferred. Attendees will learn techniques, methods, and simple constructions, along with smart storage solutions fo",
+      "raw": "KURS: Träslöjd för trångbodda är en träslöjdskurs på Stockholms Läns Hemslöjdsförening i Stockholm.\n\nKursen Träslöjd för trångbodda är en blandning av teori och praktik, med fokus på att slöjda med enkla medel. Inga förkunskaper krävs för att delta, men ett praktiskt handlag är att föredra. Deltagarna får lära sig tekniker, metoder och enkla konstruktioner, samt smarta förvaringslösningar för en l",
+      "venue": "Stockholm",
+      "start": "2026-10-24T08:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "dd9f03ee-21f5-41ba-883a-b8d6f6bc0797",
+      "title_sv": "3D-design och print workshop",
+      "title_en": "3D-design och print workshop",
+      "desc_sv": "\"3D-design och print workshop\" är en workshop på Kulturhuset Stadsteatern i Stockholm.\n\nDenna workshop fokuserar på 3D-design och utskrift. Kulturhuset Stadsteatern i Stockholm är värd för evenemanget.",
+      "desc_en": "\"3D-design and print workshop\" is a workshop at Kulturhuset Stadsteatern in Stockholm.\n\nThis workshop focuses on 3D design and printing. Kulturhuset Stadsteatern in Stockholm hosts the event.",
+      "raw": "\"3D-design och print workshop\" är en workshop på Kulturhuset Stadsteatern i Stockholm.\n\nDenna workshop fokuserar på 3D-design och utskrift. Kulturhuset Stadsteatern i Stockholm är värd för evenemanget.",
+      "venue": "Kulturhuset Stadsteatern",
+      "start": "2026-10-19T15:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "209b748d-5432-4e83-9a53-ef98b3684c2d",
+      "title_sv": "Meditationer för kontrollfreaks",
+      "title_en": "Meditationer för kontrollfreaks",
+      "desc_sv": "Meditationer för kontrollfreaks är en meditationskurs i Stockholm.\n\nDenna kurs riktar sig till den som ofta dubbelkollar, planerar och tänker igenom olika scenarier. Den utforskar vad som händer när behovet av kontroll tar mer energi än det ger. Kursen tydliggör att meditation inte syftar till att sluta tänka eller bli likgiltig. Istället fokuserar den på att hitta ett inre utrymme för trygghet, d",
+      "desc_en": "Meditationer för kontrollfreaks is a meditation course in Stockholm.\n\nThis course is for individuals who frequently double-check, plan, and think through various scenarios. It explores what happens when the need for control begins to consume more energy than it provides. The course clarifies that meditation is not about ceasing to think or becoming indifferent. Instead, it focuses on discovering a",
+      "raw": "Meditationer för kontrollfreaks är en meditationskurs i Stockholm.\n\nDenna kurs riktar sig till den som ofta dubbelkollar, planerar och tänker igenom olika scenarier. Den utforskar vad som händer när behovet av kontroll tar mer energi än det ger. Kursen tydliggör att meditation inte syftar till att sluta tänka eller bli likgiltig. Istället fokuserar den på att hitta ett inre utrymme för trygghet, d",
+      "venue": null,
+      "start": "2026-10-17T08:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "80bede7e-b7f1-4279-8159-34abc106c772",
+      "title_sv": "Workshop: Bind din julkrans",
+      "title_en": "Workshop: Bind din julkrans",
+      "desc_sv": "Workshop: Bind din julkrans är en workshop på Prins Eugens Waldemarsudde i Stockholm.\n\nFlorist Kristina Öhman leder en workshop i att skapa julkransar. Deltagarna får praktiska råd och tips för att binda vackra och dekorativa kransar till jul.",
+      "desc_en": "Workshop: Bind din julkrans is a workshop at Prins Eugens Waldemarsudde in Stockholm.\n\nFlorist Kristina Öhman leads a workshop on creating Christmas wreaths. Participants receive practical advice and tips for making beautiful and decorative wreaths for the holidays.",
+      "raw": "Workshop: Bind din julkrans är en workshop på Prins Eugens Waldemarsudde i Stockholm.\n\nFlorist Kristina Öhman leder en workshop i att skapa julkransar. Deltagarna får praktiska råd och tips för att binda vackra och dekorativa kransar till jul.",
+      "venue": "Prins Eugens Waldemarsudde",
+      "start": "2026-11-19T14:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "89b41ef0-a0b8-47ff-8e5a-94c643ed9c49",
+      "title_sv": "Teckna kroki med Stina Wollter",
+      "title_en": "Teckna kroki med Stina Wollter",
+      "desc_sv": "Teckna kroki med Stina Wollter är ett evenemang för krokiteckning på Konstakademien i Stockholm.\n\nEvenemanget erbjuder en möjlighet att utforska människokroppens formäventyr genom krokiteckning. Konstnären och pedagogen Stina Wollter leder sessionen. Hon har över 35 års erfarenhet av undervisning i modellmåleri och kroki. Wollter arbetar nära modellen för att ge tecknaren nya verktyg och skaparglä",
+      "desc_en": "Draw Croquis with Stina Wollter is a croquis drawing event at Konstakademien in Stockholm.\n\nThis event offers an opportunity to explore the human body's adventure in form through croquis drawing. Artist and pedagogue Stina Wollter leads the session. She has over 35 years of experience teaching model painting and croquis. Wollter works closely with the model, aiming for participants to leave with n",
+      "raw": "Teckna kroki med Stina Wollter är ett evenemang för krokiteckning på Konstakademien i Stockholm.\n\nEvenemanget erbjuder en möjlighet att utforska människokroppens formäventyr genom krokiteckning. Konstnären och pedagogen Stina Wollter leder sessionen. Hon har över 35 års erfarenhet av undervisning i modellmåleri och kroki. Wollter arbetar nära modellen för att ge tecknaren nya verktyg och skaparglä",
+      "venue": "Konstakademien",
+      "start": "2026-10-14T15:30:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "c70128b8-cb1f-4fc6-9fd7-0b24f9ab3bc3",
+      "title_sv": "Hola tjejer – Pilates, Matcha & Ice Latte ",
+      "title_en": "Hola tjejer – Pilates, Matcha & Ice Latte ",
+      "desc_sv": "\"Hola tjejer – Pilates, Matcha & Ice Latte\" är ett Reformer Pilates-evenemang på Energii Östermalm - Reformer Pilates i Stockholm.\n\nDetta evenemang är för dig som vill träffa nya tjejer i Stockholm och göra något mysigt tillsammans. Det börjar med ett Reformer Pilates-pass på Energi Östermalm. Efter passet får deltagarna välja mellan Matcha eller Ice Latte, och sedan finns det tid att prata och lä",
+      "desc_en": "\"Hola tjejer – Pilates, Matcha & Ice Latte\" is a Reformer Pilates event at Energii Östermalm - Reformer Pilates in Stockholm.\n\nThis event is for those who want to meet new girls in Stockholm and do something pleasant together. It begins with a Reformer Pilates session at Energi Östermalm. After the session, participants can choose between Matcha or Ice Latte, followed by time to talk and get to kn",
+      "raw": "\"Hola tjejer – Pilates, Matcha & Ice Latte\" är ett Reformer Pilates-evenemang på Energii Östermalm - Reformer Pilates i Stockholm.\n\nDetta evenemang är för dig som vill träffa nya tjejer i Stockholm och göra något mysigt tillsammans. Det börjar med ett Reformer Pilates-pass på Energi Östermalm. Efter passet får deltagarna välja mellan Matcha eller Ice Latte, och sedan finns det tid att prata och lä",
+      "venue": "왕의 정원",
+      "start": "2026-10-24T12:30:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "9ab4fc48-d728-44ab-9885-03792bfa2ffc",
+      "title_sv": "Tvådagarskurs i skånskt yllebroderi i samarbete med Hemslöjden i Skåne",
+      "title_en": "Tvådagarskurs i skånskt yllebroderi i samarbete med Hemslöjden i Skåne",
+      "venue": "왕의 정원",
+      "start": "2026-11-21T09:15:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "42bac5c4-6065-404b-be82-ea668777bee4",
+      "title_sv": "Jazzkroki",
+      "title_en": "Jazzkroki",
+      "desc_sv": "Kom och teckna människor som dansar och rör sig till jazzmusik.\n\nRörelser som återkommer så man hinner fånga dem på papper. Inspirerande musik i mysig miljö. (M",
+      "desc_en": "Kom och teckna människor som dansar och rör sig till jazzmusik.\n\nRörelser som återkommer så man hinner fånga dem på papper. Inspirerande musik i mysig miljö. (M",
+      "raw": "Kom och teckna människor som dansar och rör sig till jazzmusik.\n\nRörelser som återkommer så man hinner fånga dem på papper. Inspirerande musik i mysig miljö. (M",
+      "venue": "왕의 정원",
+      "start": "2026-10-12T17:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "f0f60af5-f222-4e68-8c76-3576137d8a86",
+      "title_sv": "Turboteater 10-11 år - Höstlovskurs",
+      "title_en": "Turboteater 10-11 år - Höstlovskurs",
+      "desc_sv": "Turboteater 10-11 år - Höstlovskurs är en teaterkurs för barn på Kulturhuset Dieselverkstaden i Nacka.\n\nUnder tre förmiddagar får deltagarna utforska skådespelarövningar, improvisation, röst och kroppsliga uttryck. Tillsammans skapar de en miniföreställning, komplett med kostym, ljud och ljus. Föreställningen framförs sedan för nära och kära på Dieselverkstadens Lilla scen. Kursen är fylld av krea",
+      "desc_en": "Turboteater 10-11 år - Höstlovskurs is a children's theater course at Kulturhuset Dieselverkstaden in Nacka.\n\nOver three mornings, participants will explore acting exercises, improvisation, voice work, and physical expression. Together, they will create a mini-performance, complete with costumes, sound, and lighting. This performance will then be presented to friends and family on Dieselverkstaden",
+      "raw": "Turboteater 10-11 år - Höstlovskurs är en teaterkurs för barn på Kulturhuset Dieselverkstaden i Nacka.\n\nUnder tre förmiddagar får deltagarna utforska skådespelarövningar, improvisation, röst och kroppsliga uttryck. Tillsammans skapar de en miniföreställning, komplett med kostym, ljud och ljus. Föreställningen framförs sedan för nära och kära på Dieselverkstadens Lilla scen. Kursen är fylld av krea",
+      "venue": "Kulturhuset Dieselverkstaden",
+      "start": "2026-10-26T08:30:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "59fd5c58-c594-471b-916e-e11781ca778c",
+      "title_sv": "Möt konstnärerna i utställningen Omfamnad",
+      "title_en": "Möt konstnärerna i utställningen Omfamnad",
+      "desc_sv": "Under hösten bjuder vi in till en serie visningar och workshops där du får komma närmare konsten och konstnärerna i utställningen Omfamnad. Vid tre torsdagskvällar möter du en av utställningens konstnärer i ett personligt samtal om deras arbete, process och de idéer som formar verken i utställningen.\n\nKvällarna inleds med en introduktion i utställningen, följt av ett konstnärssamtal och avslutas m",
+      "desc_en": "Under hösten bjuder vi in till en serie visningar och workshops där du får komma närmare konsten och konstnärerna i utställningen Omfamnad. Vid tre torsdagskvällar möter du en av utställningens konstnärer i ett personligt samtal om deras arbete, process och de idéer som formar verken i utställningen.\n\nKvällarna inleds med en introduktion i utställningen, följt av ett konstnärssamtal och avslutas m",
+      "raw": "Under hösten bjuder vi in till en serie visningar och workshops där du får komma närmare konsten och konstnärerna i utställningen Omfamnad. Vid tre torsdagskvällar möter du en av utställningens konstnärer i ett personligt samtal om deras arbete, process och de idéer som formar verken i utställningen.\n\nKvällarna inleds med en introduktion i utställningen, följt av ett konstnärssamtal och avslutas m",
+      "venue": "Kulturhuset Stadsteatern",
+      "start": "2026-11-05T16:30:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "7cd13dec-2656-47ed-83ce-9e1aea59d0f8",
+      "title_sv": "Origami - Pappersvikning kryssmönster",
+      "title_en": "Origami - Pappersvikning kryssmönster",
+      "desc_sv": "Origami - Pappersvikning kryssmönster är en kurs på Etnografiska museet i Stockholm.\n\nUnder denna kurs får deltagare lära sig en modern tolkning av origamitekniken diamantmönster eller kryssvikning. Du utforskar den struktur som skapas på papprets yta och viker ett mönster som baskonstruktion. Utifrån detta skapas egna tredimensionella objekt, och deltagare får även provvika mönster för avancerade",
+      "desc_en": "Origami - Cross-fold pattern paper folding is a course at Etnografiska museet in Stockholm.\n\nThis course teaches participants a modern interpretation of the origami technique known as diamond pattern or cross-folding. You will explore the structure created on the paper's surface and fold a pattern as a base construction. From this, participants will create their own three-dimensional objects and a",
+      "raw": "Origami - Pappersvikning kryssmönster är en kurs på Etnografiska museet i Stockholm.\n\nUnder denna kurs får deltagare lära sig en modern tolkning av origamitekniken diamantmönster eller kryssvikning. Du utforskar den struktur som skapas på papprets yta och viker ett mönster som baskonstruktion. Utifrån detta skapas egna tredimensionella objekt, och deltagare får även provvika mönster för avancerade",
+      "venue": "Etnografiska museet",
+      "start": "2026-11-08T10:30:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "bc3cafc0-87e4-4b10-9c75-b750f77f1fe5",
+      "title_sv": "Workshop: Skapa en Yokai-mask!",
+      "title_en": "Workshop: Skapa en Yokai-mask!",
+      "desc_sv": "Workshop: Skapa en Yokai-mask! är en workshop på Etnografiska museet i Stockholm.\n\nUnder denna workshop får besökare möjligheten att skapa sin egen Yokai-mask. Workshoppen leds av föreningen PeppKai UNF/IOGT-NTO, en nykterhets- och nördförening med fokus på östasiatisk populärkultur. Deltagarna kommer att lära sig olika målartekniker, hur man efterliknar texturer och skapar hängutsmyckningar med e",
+      "desc_en": "Workshop: Skapa en Yokai-mask! is a workshop at Etnografiska museet in Stockholm.\n\nDuring this workshop, visitors can create their own Yokai mask. The workshop is led by the association PeppKai UNF/IOGT-NTO, a sobriety and nerd association with a focus on East Asian popular culture. Participants will learn various painting techniques, how to mimic textures, and create hanging decorations with simp",
+      "raw": "Workshop: Skapa en Yokai-mask! är en workshop på Etnografiska museet i Stockholm.\n\nUnder denna workshop får besökare möjligheten att skapa sin egen Yokai-mask. Workshoppen leds av föreningen PeppKai UNF/IOGT-NTO, en nykterhets- och nördförening med fokus på östasiatisk populärkultur. Deltagarna kommer att lära sig olika målartekniker, hur man efterliknar texturer och skapar hängutsmyckningar med e",
+      "venue": "Etnografiska museet",
+      "start": "2026-10-17T11:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "76b55e06-60e1-45e3-a468-d2fc7923ca2f",
+      "title_sv": "Origami julpyssel",
+      "title_en": "Origami julpyssel",
+      "desc_sv": "Origami julpyssel är en workshop på Etnografiska museet i Stockholm.\n\nVälkommen till en workshop med jultema på Etnografiska museet. Kursledaren Miro Burman är en erfaren bokbindare och utbildad bildpedagog från Konstfack. Burmans specialiteter omfattar japansk bokbindning, djupgående kunskaper om japanpapper samt papperskonstruktion. Hon har dessutom bred erfarenhet som kursledare vid olika konst",
+      "desc_en": "Origami julpyssel is a Christmas-themed workshop at Etnografiska museet in Stockholm.\n\nWelcome to a Christmas-themed workshop at Etnografiska museet. The course leader, Miro Burman, is an experienced bookbinder and a trained art educator from Konstfack. Burman's specialties include Japanese bookbinding, in-depth knowledge of Japanese paper, and paper construction. She also has broad experience as ",
+      "raw": "Origami julpyssel är en workshop på Etnografiska museet i Stockholm.\n\nVälkommen till en workshop med jultema på Etnografiska museet. Kursledaren Miro Burman är en erfaren bokbindare och utbildad bildpedagog från Konstfack. Burmans specialiteter omfattar japansk bokbindning, djupgående kunskaper om japanpapper samt papperskonstruktion. Hon har dessutom bred erfarenhet som kursledare vid olika konst",
+      "venue": "Etnografiska museet",
+      "start": "2026-12-16T16:30:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "4d9fc7e8-5f68-4284-a8b8-f63d0ad5412c",
+      "title_sv": "Ikebana: Kinro Kansha no Hi",
+      "title_en": "Ikebana: Kinro Kansha no Hi",
+      "desc_sv": "Ikebana: Kinro Kansha no Hi är en workshop i ikebana på Etnografiska museet i Stockholm.\n\nHär kan besökare prova på ikebana, ett japanskt traditionellt sätt att arrangera blommor. Ikebana anses vara kopplat till konst, filosofi och meditation. Workshopen inspireras av Kinro Kansha no Hi, en tacksägelse för skörden, samt den japanska månfestivalen. Genom ikebana upptäcks växternas skönhet på ett ny",
+      "desc_en": "Ikebana: Kinro Kansha no Hi is an ikebana workshop at Etnografiska museet in Stockholm.\n\nVisitors can try ikebana, a traditional Japanese method of flower arrangement. Ikebana is considered to be linked to art, philosophy, and meditation. The workshop draws inspiration from Kinro Kansha no Hi, a harvest thanksgiving, and the Japanese Moon Festival. Through ikebana, the beauty of plants is discover",
+      "raw": "Ikebana: Kinro Kansha no Hi är en workshop i ikebana på Etnografiska museet i Stockholm.\n\nHär kan besökare prova på ikebana, ett japanskt traditionellt sätt att arrangera blommor. Ikebana anses vara kopplat till konst, filosofi och meditation. Workshopen inspireras av Kinro Kansha no Hi, en tacksägelse för skörden, samt den japanska månfestivalen. Genom ikebana upptäcks växternas skönhet på ett ny",
+      "venue": "Etnografiska museet",
+      "start": "2026-11-14T12:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "d9e8c6af-914e-4d6a-b1c8-28dd7a3b77b7",
+      "title_sv": "ThirdPlace - Croquis (Kroki) with Aslisu Art & Sthlm Life Drawing Sessions. (POLE-CROQUIS: SPOOKY EDITION)",
+      "title_en": "ThirdPlace - Croquis (Kroki) with Aslisu Art & Sthlm Life Drawing Sessions. (POLE-CROQUIS: SPOOKY EDITION)",
+      "venue": "ThirdPlace ArtCafe’ & SoberBar",
+      "start": "2026-10-29T17:00:00+00:00",
+      "has_img": true
+    },
+    {
+      "id": "53bed57c-6bb6-4311-8af0-0de2d37c65eb",
+      "title_sv": "Kurs - Filta en kjolväska",
+      "title_en": "Kurs - Filta en kjolväska",
+      "desc_sv": "Kursen Filta en kjolväska hålls på Stockholms läns hemslöjdsförening i Stockholm.\n\nI denna kurs leds deltagarna av Kinna Ohlsson för att tova en kjolväska i egen design. Fokus ligger på våttovning av fårull för att skapa en personlig väska med vackra dekorationer. Deltagarna lär sig även att konstruera ett eget mönster för väskan. Kinna Ohlsson är filtmakare med utbildning från bland annat Hantver",
+      "desc_en": "The course \"Felt a Skirt Bag\" takes place at Stockholms läns hemslöjdsförening in Stockholm.\n\nIn this course, participants are guided by Kinna Ohlsson to felt a skirt bag of their own design. The focus is on wet felting sheep wool to create a personal bag with beautiful decorations. Participants also learn to construct their own pattern for the bag. Kinna Ohlsson is a feltmaker with education from",
+      "raw": "Kursen Filta en kjolväska hålls på Stockholms läns hemslöjdsförening i Stockholm.\n\nI denna kurs leds deltagarna av Kinna Ohlsson för att tova en kjolväska i egen design. Fokus ligger på våttovning av fårull för att skapa en personlig väska med vackra dekorationer. Deltagarna lär sig även att konstruera ett eget mönster för väskan. Kinna Ohlsson är filtmakare med utbildning från bland annat Hantver",
+      "venue": "Stockholm",
+      "start": "2026-11-29T09:00:00+00:00",
+      "has_img": true
+    }
+  ]
+}
