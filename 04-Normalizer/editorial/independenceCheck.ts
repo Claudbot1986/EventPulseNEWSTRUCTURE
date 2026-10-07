@@ -63,14 +63,16 @@ function findMatchedPhrases(draft: string, source: string): string[] {
   const draftLower = draft.toLowerCase();
   const sourceLower = source.toLowerCase();
 
-  const draftWords = draftLower.split(/\s+/);
-  const sourceWords = sourceLower.split(/\s+/);
+  // Vi behåller ord ≥ 2 tecken (för att inte tappa 'är', 'i', 'på').
+  // För similarity-likhet (tokenize) används ≥ 3 + filler-listan.
+  const draftWords = draftLower.split(/\s+/).filter((w) => w.length >= 2);
+  const sourceWords = sourceLower.split(/\s+/).filter((w) => w.length >= 2);
 
   const matches: string[] = [];
   let i = 0;
   while (i < draftWords.length) {
     let matchedLength = 0;
-    for (let len = Math.min(PHRASE_LENGTH, draftWords.length - i); len >= PHRASE_LENGTH; len--) {
+    for (let len = Math.min(PHRASE_LENGTH, draftWords.length - i); len >= 3; len--) {
       const candidate = draftWords.slice(i, i + len).join(' ');
       const sourceJoined = sourceWords.join(' ');
       if (sourceJoined.includes(candidate)) {
