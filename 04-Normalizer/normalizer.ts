@@ -21,6 +21,8 @@ import { extractHeadliner, resolveArtist } from './artistResolver';
 import { aiImageQueue, startAiImageWorker } from '../08-Agent/workers/aiImageWorker';
 import { appendSkipLog } from '../08-Agent/utils/skipLog';
 import { pickLibraryFallback, markEventWithLibraryFallback } from '../08-Agent/utils/imageLibrary';
+// 2026-10-07 — P7 Editorial Engine. Opt-in via EDITORIAL_ENABLED=1.
+import { maybeRunEditorial, type NormalizedEventForEditorial } from './editorial/normalizerIntegration';
 
 // Starta AI-bild-worker i samma process (no-op om AI_IMAGE_PIPELINE_ENABLED=0).
 startAiImageWorker();
@@ -847,6 +849,24 @@ export async function processRawEvent(job: Job<RawEventInput>): Promise<void> {
       });
     }
   }
+
+  // 2026-10-07 — P7 Editorial Engine (opt-in via EDITORIAL_ENABLED=1).
+  // Kör efter event + bild-kö är på plats. Misslyckas tyst så eventet ändå
+  // syns (UI faller tillbaka till eventpulse_summary om editorial saknas).
+  await maybeRunEditorial({ supabase }, {
+    event_id,
+    title: raw.title,
+    category_slug: (normalized.category_slug as string | null) ?? null,
+    venue_name: venueNameForSummary,
+    city: cityForSummary,
+    start_time: raw.start_time ?? null,
+    end_time: raw.end_time ?? null,
+    price_min_sek: normalized.price_min_sek ?? null,
+    is_free: normalized.is_free ?? null,
+    language: (raw as { language?: string | null }).language ?? null,
+    source: raw.source ?? null,
+    raw_description: (raw as { description?: string | null }).description ?? null,
+  });
 }
 
 /** Log ingestion statistics per source */
