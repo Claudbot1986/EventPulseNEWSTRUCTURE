@@ -33,6 +33,9 @@ const T = {
     preview: { size: 12, weight: '300', lineHeight: 16 },
     icon: { size: 16, weight: '600' },
     badge: { size: 10, weight: '800', letterSpacing: 0.6 },
+    // 2026-10-07: Läs mer-knappen är gul text dateLine (11) + 3 pt → 14 pt,
+    // samma letterSpacing 0.4 som MapEventCard.readMore.
+    readMore: { size: 14, weight: '700', letterSpacing: 0.4 },
   },
   space: {
     padX: 14,
@@ -47,6 +50,12 @@ const T = {
     metaMargin: 2,
     previewMargin: 6,
     bottomPad: 12,
+    // 2026-10-07: Läs mer-knappen sitter på egen rad efter preview,
+    // högerjusterad. Samma padding/radius som MapEventCard.readMore.
+    readMoreRowMargin: 8,
+    readMoreRadius: 8,
+    readMorePadX: 12,
+    readMorePadY: 6,
   },
 };
 
@@ -90,6 +99,8 @@ const ICON = {
  * @property {() => void} [onShare]               parent wirable till shareSession
  * @property {() => void} [onMore]                parent wirable till UtforskaEventActionSheet
  * @property {() => void} [onPin]                 analytics-callback för kartöppning
+ * @property {() => void} [onReadMore]            2026-10-07: callback för "Läs mer"-knappen
+ *                                              (samma stil som MapEventCard).
  * @property {string} [a11yLabel]
  */
 
@@ -110,6 +121,7 @@ export default function NewEventCard({
   onShare,
   onMore,
   onPin,
+  onReadMore,
   a11yLabel,
 }) {
   const source = sourceOf(imageSource);
@@ -276,6 +288,28 @@ export default function NewEventCard({
           >
             {preview}
           </Text>
+        ) : null}
+
+        {/* Rad 5 (2026-10-07): "Läs mer"-knapp — samma stil som
+            MapEventCard.readMore (orange ram, rektangulär, gul text).
+            Visas alltid när onReadMore finns — parent bestämmer om knappen
+            ska renderas (t.ex. bara om preview är truncated eller om det
+            finns mer info på details-skärmen). Högerjusterad, egen rad. */}
+        {onReadMore ? (
+          <View style={styles.readMoreRow}>
+            <Pressable
+              style={({ pressed }) => [
+                styles.readMore,
+                pressed && styles.readMorePressed,
+              ]}
+              onPress={onReadMore}
+              accessibilityRole="button"
+              accessibilityLabel="Läs mer"
+              testID="event-card-read-more"
+            >
+              <Text style={styles.readMoreText}>Läs mer</Text>
+            </Pressable>
+          </View>
         ) : null}
       </View>
     </Pressable>
@@ -446,5 +480,32 @@ const styles = StyleSheet.create({
     lineHeight: T.font.preview.lineHeight,
     marginTop: T.space.previewMargin,
     opacity: 0.75,
+  },
+  // 2026-10-07: "Läs mer"-knappen (egen rad, högerjusterad). Samma stil
+  // som MapEventCard.readMore — orange ram, rektangulär, gul text.
+  readMoreRow: {
+    flexDirection: 'row',
+    justifyContent: 'flex-end',
+    marginTop: T.space.readMoreRowMargin,
+  },
+  readMore: {
+    minHeight: 36,
+    paddingHorizontal: T.space.readMorePadX,
+    paddingVertical: T.space.readMorePadY,
+    borderRadius: T.space.readMoreRadius,
+    borderWidth: 1,
+    borderColor: T.color.accent,
+    backgroundColor: 'rgba(255,180,84,0.08)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  readMorePressed: {
+    opacity: 0.6,
+  },
+  readMoreText: {
+    color: T.color.accent,
+    fontSize: T.font.readMore.size,
+    fontWeight: T.font.readMore.weight,
+    letterSpacing: T.font.readMore.letterSpacing,
   },
 });

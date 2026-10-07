@@ -429,7 +429,8 @@ describe('end-to-end: marketing text → facts → summary (A)', () => {
       category_slug: 'music',
       venue_name: 'Avicii Arena',
       city: 'Stockholm',
-      start_time: '2026-11-14T19:30:00Z',
+      // 2026-10-07 — TZ-aware: explicit +01:00 för att start_time ska vara 19:30 CET.
+      start_time: '2026-11-14T19:30:00+01:00',
       is_free: false,
       price_min_sek: 450,
       title: 'Artist X',

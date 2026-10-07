@@ -1717,6 +1717,12 @@ function DetailsScreen({ event, onBack }) {
         title={event.title}
         badge={badge}
         dateLine={dateLine}
+        // 2026-10-07: "Läs mer"-knappen (samma stil som MapEventCard.readMore)
+        // öppnar ticket-URL:en om sådan finns — samma kedja som
+        // handleOpenUrl / sheet-action 'open_tickets'. Knappen visas alltid
+        // (onReadMore alltid satt) — tom URL gör den no-op via
+        // Linking.canOpenURL-skyddet i handleOpenUrl.
+        onReadMore={handleOpenUrl}
         meta={meta}
         preview={preview}
         imageSource={uri}
