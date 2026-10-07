@@ -360,8 +360,23 @@ async function processSource(source, args, sem) {
     const { data: ed } = await supabase.from('events').select('dedup_hash').in('dedup_hash', hashes.slice(i, i + 500));
     for (const r of ed ?? []) if (r.dedup_hash) existing.add(r.dedup_hash);
   }
-  const fresh = inserts.filter((r) => !existing.has(r.dedup_hash));
+  let fresh = inserts.filter((r) => !existing.has(r.dedup_hash));
   stats.duplicates += inserts.length - fresh.length;
+
+  // 2026-10-07 — dedupe INOM batchen. Annars ger Postgres
+  // "ON CONFLICT DO UPDATE command cannot affect row a second time" när två
+  // rader i samma upsert-chunk har samma dedup_hash (t.ex. sthlmlist,
+  // stockholmsmassan har ofta 2–3 events med identisk (title,start) från
+  // multi-day-serier eller scrape-dubletter).
+  const seenHash = new Map();
+  for (const row of fresh) {
+    if (!seenHash.has(row.dedup_hash)) seenHash.set(row.dedup_hash, row);
+  }
+  const dedupedCount = fresh.length - seenHash.size;
+  if (dedupedCount > 0) {
+    console.log(`  ${source.slug}: in-batch dedup removed ${dedupedCount} duplicate dedup_hash rows`);
+  }
+  fresh = Array.from(seenHash.values());
 
   for (let i = 0; i < fresh.length; i += 50) {
     const { data, error } = await supabase.from('events').upsert(fresh.slice(i, i + 50), { onConflict: 'dedup_hash' }).select('id');
