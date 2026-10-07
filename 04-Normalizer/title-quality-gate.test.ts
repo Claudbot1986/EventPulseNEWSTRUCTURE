@@ -22,6 +22,14 @@ describe('evaluateTitle', () => {
       expect(evaluateTitle('Untitled', 'billetto').ok).toBe(false);
       expect(evaluateTitle('Okänd', 'billetto').ok).toBe(false);
     });
+    it('placeholder phrases (2026-10-07 — TEST EVENT regression)', () => {
+      expect(evaluateTitle('TEST EVENT', 'billetto').ok).toBe(false);
+      expect(evaluateTitle('Test Event', 'billetto').ok).toBe(false);
+      expect(evaluateTitle('Test event 1', 'billetto').ok).toBe(false);
+      expect(evaluateTitle('[TEST EVENT]', 'billetto').ok).toBe(false);
+      expect(evaluateTitle('Sample event', 'billetto').ok).toBe(false);
+      expect(evaluateTitle('Dummy event xyz', 'billetto').ok).toBe(false);
+    });
     it('pure punctuation', () => {
       expect(evaluateTitle('...', 'billetto').ok).toBe(false);
       expect(evaluateTitle('— —', 'billetto').ok).toBe(false);

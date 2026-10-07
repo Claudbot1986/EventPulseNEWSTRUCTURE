@@ -33,13 +33,22 @@ const PLACEHOLDER_TITLES = new Set([
   'soon',
   'placeholder',
   'test',
+  'test event',
+  'test event 1',
+  'test event 2',
   'sample',
+  'sample event',
   'lorem ipsum',
   'untitled',
   'okänd',
   'unknown',
   'saknar titel',
 ]);
+
+// Fångar titlar som är placeholder-fraser inbäddade i längre strängar, t.ex.
+//(örtest event), [test event 1], TEST EVENT COPY osv. Undvik falska positiva
+// genom att kräva minst 2 placeholder-ord eller standalone phrase.
+const PLACEHOLDER_PHRASE_RX = /\b(test event|sample event|lorem ipsum|placeholder text|dummy event|example event|fake event)\b/i;
 
 const SOURCE_NAME_VARIANTS = (source: string): string[] => {
   const s = source.trim().toLowerCase();
@@ -65,6 +74,10 @@ export function evaluateTitle(title: string | undefined | null, source: string):
   }
   if (PLACEHOLDER_TITLES.has(normalised)) {
     return { ok: false, reason: 'placeholder-text', normalised };
+  }
+  if (PLACEHOLDER_PHRASE_RX.test(trimmed)) {
+    // 2026-10-07 — fångar "TEST EVENT", "[Test Event 1]" etc.
+    return { ok: false, reason: 'placeholder-phrase', normalised };
   }
   if (DATE_ONLY_RX.test(trimmed)) {
     return { ok: false, reason: 'date-only', normalised };
