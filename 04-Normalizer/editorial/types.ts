@@ -22,7 +22,18 @@
  * 2026-10-07 — Steg 1 (P7) av EventPulse Editorial Description Engine.
  */
 
-import type { Json } from '@supabase/supabase-js';
+/**
+ * JSON-värde (Supabase JSONB shape). Re-deklarerad lokalt för att inte
+ * vara beroende av @supabase/supabase-js interna exports (vilka varierar
+ * mellan versioner).
+ */
+export type Json =
+  | string
+  | number
+  | boolean
+  | null
+  | { [key: string]: Json | undefined }
+  | Json[];
 
 /**
  * Structured Event Profile (steg 2).
