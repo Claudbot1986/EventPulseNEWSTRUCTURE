@@ -15,7 +15,10 @@
  */
 
 import { spawn } from 'child_process';
-import { writeFileSync, readFileSync, existsSync } from 'fs';
+import {
+  writeFileSync, readFileSync, existsSync,
+  mkdirSync, openSync, closeSync, writeSync, appendFileSync,
+} from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
 
@@ -25,6 +28,8 @@ const __dirname = path.dirname(__filename);
 const PROJECT_ROOT = path.resolve(__dirname, '../');
 const RUNTIME_DIR = path.resolve(PROJECT_ROOT, 'runtime');
 const STATUS_FILE = path.resolve(RUNTIME_DIR, 'ingestion-cron.status.json');
+const STEPS_LOG_DIR = path.resolve(RUNTIME_DIR, 'ingestion-cron', 'steps');
+const CHAIN_OVERVIEW = path.resolve(RUNTIME_DIR, 'ingestion-cron', 'chain-overview.log');
 
 // ─── Types ─────────────────────────────────────────────────────────────────
 
@@ -77,6 +82,24 @@ function readStatus(): StatusFile {
 
 function writeStatus(s: StatusFile): void {
   writeFileSync(STATUS_FILE, JSON.stringify(s, null, 2), 'utf8');
+}
+
+/**
+ * Append a line to the chain-overview log. Each line is a self-contained
+ * JSONL record that a watchdog can tail to detect stuck steps.
+ *
+ * Format: { ts, event, step, exitCode?, pid?, cmd? }
+ */
+function appendChainOverview(record: Record<string, unknown>): void {
+  try {
+    if (!existsSync(path.dirname(CHAIN_OVERVIEW))) {
+      mkdirSync(path.dirname(CHAIN_OVERVIEW), { recursive: true });
+    }
+    appendFileSync(CHAIN_OVERVIEW, JSON.stringify({ ts: new Date().toISOString(), ...record }) + '\n', 'utf8');
+  } catch (err) {
+    // Best-effort — never let logging break the chain.
+    console.error('[ingestion-cron] chain-overview write failed:', err instanceof Error ? err.message : String(err));
+  }
 }
 
 // ─── CLI args ───────────────────────────────────────────────────────────────
@@ -140,17 +163,53 @@ function runStep(name: string, cmd: string, args: string[]): Promise<SpawnResult
     const startedAt = new Date().toISOString();
     console.log(`[ingestion-cron] ▶ ${name}: ${cmd} ${args.join(' ')}`);
 
-    const proc = spawn(cmd, args, { cwd: PROJECT_ROOT, stdio: 'inherit' });
+    // 2026-10-07 — per-step log files. Each step gets its own .log and .err.log
+    // under runtime/ingestion-cron/steps/ so we can read what a single step did
+    // without grepping the interleaved launchd.out.log. The chain-overview.log
+    // gets a one-line record per step start/end (JSONL) for watchdog tooling.
+    if (!existsSync(STEPS_LOG_DIR)) mkdirSync(STEPS_LOG_DIR, { recursive: true });
+    const stepStamp = startedAt.replace(/[:.]/g, '-');
+    const stepLogPath = path.resolve(STEPS_LOG_DIR, `${name}-${stepStamp}.log`);
+    const stepErrPath = path.resolve(STEPS_LOG_DIR, `${name}-${stepStamp}.err.log`);
+    const stepOutFd = openSync(stepLogPath, 'a');
+    const stepErrFd = openSync(stepErrPath, 'a');
+    // Tee headers so even an empty step log says what it is.
+    writeSync(stepOutFd, `─── ${name} started ${startedAt} (${cmd} ${args.join(' ')})\n`);
+    writeSync(stepErrFd, `─── ${name} started ${startedAt} (${cmd} ${args.join(' ')})\n`);
+
+    appendChainOverview({ event: 'step-start', step: name, pid: process.pid, cmd: `${cmd} ${args.join(' ')}` });
+
+    const proc = spawn(cmd, args, {
+      cwd: PROJECT_ROOT,
+      // pipe så vi kan tee:a till både parent stdout OCH per-step file.
+      stdio: ['ignore', 'pipe', 'pipe'],
+    });
     let sourcesProcessed = 0;
     let eventsExtracted = 0;
 
-    // Buffra stdout i en kort array för att kunna parsa "X events"-rader
-    // (för status-sammanfattning). Vi loggar också direkt via stdio:inherit.
+    // Tee: varje chunk från child skrivs både till parent stdout/stderr OCH
+    // till step-loggen. Håll koll på ordning så vi inte tappar rader vid ras.
+    proc.stdout.on('data', (chunk) => {
+      process.stdout.write(chunk);
+      try { writeSync(stepOutFd, chunk); } catch {}
+    });
+    proc.stderr.on('data', (chunk) => {
+      process.stderr.write(chunk);
+      try { writeSync(stepErrFd, chunk); } catch {}
+    });
 
     proc.on('exit', (code) => {
       const finishedAt = new Date().toISOString();
       const exitCode = code ?? 1;
-      console.log(`[ingestion-cron] ✓ ${name}: exit=${exitCode}`);
+      const durationMs = new Date(finishedAt).getTime() - new Date(startedAt).getTime();
+      try {
+        writeSync(stepOutFd, `─── ${name} finished ${finishedAt} exit=${exitCode} duration=${durationMs}ms\n`);
+        writeSync(stepErrFd, `─── ${name} finished ${finishedAt} exit=${exitCode} duration=${durationMs}ms\n`);
+        closeSync(stepOutFd);
+        closeSync(stepErrFd);
+      } catch {}
+      appendChainOverview({ event: 'step-end', step: name, exitCode, durationMs });
+      console.log(`[ingestion-cron] ✓ ${name}: exit=${exitCode} duration=${durationMs}ms log=${path.relative(PROJECT_ROOT, stepLogPath)}`);
       resolve({ exitCode, sourcesProcessed, eventsExtracted });
     });
   });
