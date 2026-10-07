@@ -53,7 +53,19 @@ import sharp from 'sharp';
 // uppmätt via librsvg-render) + 2×42 px marginal. Tidigare 280 px lämnade
 // ~120 px dött utrymme efter sista bokstaven, vilket gjorde pill smalare
 // i själva verket än texten den innehöll.
-const AI_STAMP_SVG = `<svg width="202" height="48" viewBox="0 0 202 48" xmlns="http://www.w3.org/2000/svg">
+// Bottom-stripe (2026-10-07): istället för tight 202×48-pill i nedre vänstra
+// hörnet (som beskärs vid cover-crop i sidled — t.ex. 16:9-bilder i 1.15:1
+// eventkort-containrar), använder vi en 1024×64-stripe längs hela bildens
+// nederkant. Centrerad text + orange prick. Alltid synlig oavsett crop-typ:
+//   - Sidled-beskärning (16:9 i 1.15:1 container): stripen är fullbred →
+//     bevaras alltid i synligt intervall.
+//   - Topp/botten-beskärning (kvadrat i 1.15:1): stripen är i nederkanten
+//     och 64 px hög — bara cover-crop med mer än ~10% vertikal-beskärning
+//     kan ta bort den, och då är bilden så tight croppad att ingen annan
+//     position heller hade synts.
+//
+// Säkerställer att EU AI Act Art. 50-disclosure:n syns i alla UI-containrar.
+const AI_STAMP_SVG = `<svg width="1024" height="64" viewBox="0 0 1024 64" xmlns="http://www.w3.org/2000/svg">
   <defs>
     <filter id="textShadow" x="-10%" y="-10%" width="120%" height="120%">
       <feGaussianBlur in="SourceAlpha" stdDeviation="1.2"/>
@@ -67,11 +79,11 @@ const AI_STAMP_SVG = `<svg width="202" height="48" viewBox="0 0 202 48" xmlns="h
       </feMerge>
     </filter>
   </defs>
-  <rect x="2" y="2" width="199" height="44" rx="22" ry="22"
+  <rect x="0" y="0" width="1024" height="64" rx="0" ry="0"
         fill="rgba(15,15,18,0.20)"
         stroke="rgba(255,180,84,0.45)" stroke-width="1.5"/>
-  <circle cx="26" cy="24" r="6" fill="#FFB454" fill-opacity="0.60"/>
-  <text x="44" y="31" font-family="Arial, sans-serif" font-size="18"
+  <circle cx="412" cy="32" r="8" fill="#FFB454" fill-opacity="0.60"/>
+  <text x="432" y="40" font-family="Arial, sans-serif" font-size="22"
         font-weight="bold" fill="#FFFFFF" fill-opacity="0.60"
         letter-spacing="0.5"
         filter="url(#textShadow)">AI-genererad</text>
@@ -319,9 +331,10 @@ function readPngXmp(buffer: Buffer): PngXmpResult {
  */
 export type StampPosition = 'bottom-right' | 'bottom-left';
 
-const STAMP_W = 202;
-const STAMP_H = 48;
-const STAMP_INSET = 24;
+// 2026-10-07: Bottom-stripe är fullbred (W) och 64 px hög — proportionsskalas
+// för andra bildstorlekar (samma princip som tidigare top=740 för 1024-bilder).
+const STAMP_H = 64;
+const STAMP_INSET = 0;   // stripe fyller hela bredden, ingen inset behövs
 
 interface StampBox {
   left: number;
@@ -333,17 +346,19 @@ interface StampBox {
 /**
  * Var stämpeln hamnar för en given bildstorlek.
  *
- * `top=740` är safe-zone inom cover-crop för alla kända UI-containrar
- * (worst-case synlig y-range 210-815; se fil-docblock). För bilder som
- * inte är 1024 px höga skalas safe-zonen proportionellt.
+ * Bottom-stripe: fullbred (W), 64 px hög, i nederkanten. Skalas för andra
+ * bildstorlekar så 64-px-höjden proportionellt bibehålls relativt till
+ * bildens totala höjd.
  *
  * `applyAiCompliance` och `checkAiStamp` MÅSTE använda samma funktion,
  * annars letar verifieringen på fel ställe.
  */
 function stampBox(W: number, H: number, position: StampPosition): StampBox {
-  const top = H >= 1024 ? 740 : Math.round((H / 1024) * 740);
-  const left = position === 'bottom-left' ? STAMP_INSET : W - STAMP_INSET - STAMP_W;
-  return { left, top, width: STAMP_W, height: STAMP_H };
+  // Stripen är alltid fullbred oavsett position — synlighet efter
+  // cover-crop är viktigare än hörnvisorsval.
+  void position;
+  const height = H >= 1024 ? STAMP_H : Math.max(24, Math.round((H / 1024) * STAMP_H));
+  return { left: 0, top: H - height, width: W, height };
 }
 
 export interface ApplyAiComplianceInput {
