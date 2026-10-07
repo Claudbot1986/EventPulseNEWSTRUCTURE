@@ -1,0 +1,394 @@
+{
+  "reviewed": 43,
+  "elapsed_s": 40.2,
+  "both": [],
+  "results": [
+    {
+      "cat": "dance",
+      "file": "bfl2_c_environment_r0_f199b292ec.webp",
+      "both": false,
+      "knife": false,
+      "glove": false,
+      "subject": "An empty, dimly lit industrial hall with a folding chair, a bottle, and a can on the wet floor, illuminated by dramatic light rays through tall windows.",
+      "why": "Ja, den mörka, övergivna lokalen med ensam stol och dramatiska ljusstrålar har en tydligt kuslig och hotfull stämning som kan kännas obehaglig för en användare som scrollar."
+    },
+    {
+      "cat": "dance",
+      "file": "bfl2_d_detail_r0_afc6324f98.webp",
+      "both": false,
+      "knife": false,
+      "glove": false,
+      "subject": "Close-up of ballerina pointe shoes with satin ribbons on a dark stage floor, with warm stage lights blurred in the background.",
+      "why": "Nej, bilden är elegant och stämningsfull med klassisk balett-estetik, och passar väl för en evenemangsapp."
+    },
+    {
+      "cat": "dance",
+      "file": "bfl2_a_wide_r0_f94ff66418.webp",
+      "both": false,
+      "knife": false,
+      "glove": false,
+      "subject": "Two dancers captured mid-air jumping under dramatic blue stage spotlights.",
+      "why": "No, the image feels energetic and celebratory, like a concert or performance moment, and would not seem creepy to a user browsing an events app."
+    },
+    {
+      "cat": "dance",
+      "file": "bfl3_a_wide_r0_2f587beddd.webp",
+      "both": false,
+      "knife": false,
+      "glove": false,
+      "subject": "Two dancers performing leaps on a stage under blue lighting",
+      "why": "No, this is an elegant and dynamic dance performance image that would feel inspiring to users browsing an events app, not threatening."
+    },
+    {
+      "cat": "dance",
+      "file": "bfl2_b_medium_r0_58f5e0e97b.webp",
+      "both": false,
+      "knife": false,
+      "glove": false,
+      "subject": "A dramatic contemporary dance or theatre performance featuring a woman in a flowing white dress with outstretched arms and a man seated on the floor in a contemplative pose.",
+      "why": "The image has a dramatic, artistic quality typical of contemporary dance or theatre performances. While the poses are intense, they appear artistic and performative rather than threatening. The dark background and dramatic lighting give it a moody feel, but it's the kind of imagery that would fit a theatre/performance event listing."
+    },
+    {
+      "cat": "dance",
+      "file": "bfl2_e_intimate_r0_a979313a0d.webp",
+      "both": false,
+      "knife": false,
+      "glove": false,
+      "subject": "Two shirtless men in an artistic, intimate embrace pose under dramatic spotlight lighting on a dark stage.",
+      "why": "The dramatic shadowy atmosphere and intimate pose between two men might feel slightly ambiguous or unsettling to a casual scroller expecting event promotions, though it could also be read as artistic dance or performance imagery."
+    },
+    {
+      "cat": "dance",
+      "file": "bfl_a_wide_f94ff66418.webp",
+      "both": false,
+      "knife": false,
+      "glove": false,
+      "subject": "Two dancers performing on a stage illuminated by blue spotlights during a theatrical or dance event.",
+      "why": "no, this is an elegant and inviting dance performance image that would feel engaging and appropriate for an events app."
+    },
+    {
+      "cat": "dance",
+      "file": "bfl_b_medium_58f5e0e97b.webp",
+      "both": false,
+      "knife": false,
+      "glove": false,
+      "subject": "A dramatic dance or theatrical performance scene with a woman in a white dress reaching toward a seated shirtless man in dark lighting.",
+      "why": "The image has a dramatic, intense theatrical quality with stark lighting, but it's clearly an artistic performance piece rather than threatening - it would feel dramatic but not creepy to a Swedish events app user."
+    },
+    {
+      "cat": "dance",
+      "file": "bfl_e_intimate_a979313a0d.webp",
+      "both": false,
+      "knife": false,
+      "glove": false,
+      "subject": "Two silhouetted figures face each other in an intimate, dance-like pose under a single dramatic spotlight in a dark, smoky space.",
+      "why": "no — the mood is romantic and artistic, evoking theatre or contemporary dance, which suits an events app rather than feeling threatening."
+    },
+    {
+      "cat": "exhibition",
+      "file": "bfl2_a_wide_r2_d7c6a5e636.webp",
+      "both": false,
+      "knife": false,
+      "glove": false,
+      "subject": "A bright, spacious art gallery with high ceilings, skylights, and visitors viewing large landscape and portrait paintings.",
+      "why": "no"
+    },
+    {
+      "cat": "dance",
+      "file": "bfl_d_detail_afc6324f98.webp",
+      "both": false,
+      "knife": false,
+      "glove": false,
+      "subject": "Close-up of pointe ballet shoes with ribbons laced around the ankles on a dark, reflective stage floor with warm bokeh lights in the background.",
+      "why": "No — this elegant, atmospheric image of ballet pointe shoes is artistic and inviting, fitting well for a theatre/dance event listing."
+    },
+    {
+      "cat": "exhibition",
+      "file": "bfl2_b_medium_r0_511e1861a7.webp",
+      "both": false,
+      "knife": false,
+      "glove": false,
+      "subject": "A person in a gray coat stands viewing a large, chaotic sculptural installation of twisted fabric and paper materials in a weathered gallery space with a pitched roof and skylights.",
+      "why": "no"
+    },
+    {
+      "cat": "exhibition",
+      "file": "bfl2_a_wide_r0_9f1f9793ea.webp",
+      "both": false,
+      "knife": false,
+      "glove": false,
+      "subject": "A spacious art gallery with a vaulted glass ceiling displaying numerous framed paintings while crowds of visitors view the artwork.",
+      "why": "no"
+    },
+    {
+      "cat": "exhibition",
+      "file": "bfl2_b_medium_r1_ea2e9ebef0.webp",
+      "both": false,
+      "knife": false,
+      "glove": false,
+      "subject": "Visitors viewing an imposing abstract sculptural installation in a bright contemporary art gallery space.",
+      "why": "No, the image conveys a calm, sophisticated art exhibition atmosphere that would feel inviting and culturally enriching rather than creepy or threatening."
+    },
+    {
+      "cat": "dance",
+      "file": "bfl_c_environment_f199b292ec.webp",
+      "both": false,
+      "knife": false,
+      "glove": false,
+      "subject": "An empty industrial warehouse space featuring large windows, brick walls, a concrete floor, a single folding chair, and dramatic sunlight streaming through the glass.",
+      "why": "No — the image is atmospheric and moody but reads as artistic rather than creepy, with warm sunlight and an empty, contemplative mood suitable for event visuals."
+    },
+    {
+      "cat": "exhibition",
+      "file": "bfl2_a_wide_r1_0c27062fb0.webp",
+      "both": false,
+      "knife": false,
+      "glove": false,
+      "subject": "<one sentence>",
+      "why": "<one sentence — would this image feel creepy/threatening to a user scrolling an events app? Or no>"
+    },
+    {
+      "cat": "exhibition",
+      "file": "bfl2_c_environment_r2_de40e318c2.webp",
+      "both": false,
+      "knife": false,
+      "glove": false,
+      "subject": "An art gallery interior with visitors seated on benches and standing, viewing contemporary paintings on the walls.",
+      "why": "no"
+    },
+    {
+      "cat": "exhibition",
+      "file": "bfl2_c_environment_r1_13af394495.webp",
+      "both": false,
+      "knife": false,
+      "glove": false,
+      "subject": "People sit on benches in a spacious art gallery viewing colorful abstract paintings on the walls.",
+      "why": "Nej, this image is calm and inviting — a peaceful gallery scene that would feel welcoming rather than threatening to a user scrolling an events app."
+    },
+    {
+      "cat": "exhibition",
+      "file": "bfl2_c_environment_r0_0c428a47a2.webp",
+      "both": false,
+      "knife": false,
+      "glove": false,
+      "subject": "People sitting on a bench viewing artwork in a bright, spacious gallery with exposed wooden ceiling trusses.",
+      "why": "No, the scene depicts a calm, inviting art gallery with soft aesthetic appeal — entirely appropriate and welcoming for an events app."
+    },
+    {
+      "cat": "exhibition",
+      "file": "bfl2_d_detail_r0_82c4e00930.webp",
+      "both": false,
+      "knife": false,
+      "glove": false,
+      "subject": "Softly draped champagne-colored silk fabric illuminated by warm golden light.",
+      "why": "No, the image is elegant and serene with no threatening or unsettling elements."
+    },
+    {
+      "cat": "exhibition",
+      "file": "bfl2_b_medium_r2_b335ae345f.webp",
+      "both": false,
+      "knife": false,
+      "glove": false,
+      "subject": "A person viewing a large abstract fabric sculpture in a sunlit gallery space.",
+      "why": "The image is actually quite peaceful and artistic - it shows someone contemplating art in a gallery. It wouldn't feel creepy or threatening to a user scrolling an events app - it would feel contemplative and inspiring."
+    },
+    {
+      "cat": "exhibition",
+      "file": "bfl2_e_intimate_r2_07ac530885.webp",
+      "both": false,
+      "knife": false,
+      "glove": false,
+      "subject": "An older man with glasses and a dark coat stands in an art gallery reading a booklet, with a large ornate framed painting on the wall behind him.",
+      "why": "No, the scene depicts a calm, contemplative museum visitor reading, which feels appropriate and inviting for an events app."
+    },
+    {
+      "cat": "exhibition",
+      "file": "bfl2_d_detail_r1_f60a5224cf.webp",
+      "both": false,
+      "knife": false,
+      "glove": false,
+      "subject": "A close-up of golden-orange fabric tied with ropes around poles, possibly a sail or tent structure.",
+      "why": "no"
+    },
+    {
+      "cat": "exhibition",
+      "file": "bfl3_a_wide_r0_ee55484c5c.webp",
+      "both": false,
+      "knife": false,
+      "glove": false,
+      "subject": "<one sentence>",
+      "why": "<one sentence>"
+    },
+    {
+      "cat": "exhibition",
+      "file": "bfl2_e_intimate_r1_ec01694b81.webp",
+      "both": false,
+      "knife": false,
+      "glove": false,
+      "subject": "One sentence about what's in the image",
+      "why": "Would this feel creepy/threatening? It looks like a calm, contemplative scene of an elderly man in a museum reading a book near a painting. Not threatening."
+    },
+    {
+      "cat": "exhibition",
+      "file": "bfl2_d_detail_r2_f000529cf2.webp",
+      "both": false,
+      "knife": false,
+      "glove": false,
+      "subject": "Close-up of draped beige curtains or fabric with warm golden lighting filtering through.",
+      "why": "no"
+    },
+    {
+      "cat": "exhibition",
+      "file": "bfl2_e_intimate_r0_4ba606f1d0.webp",
+      "both": false,
+      "knife": false,
+      "glove": false,
+      "subject": "An elderly man with glasses reads a small program booklet while viewing artwork in a gallery.",
+      "why": "No — the scene depicts a calm, contemplative moment of an art-gallery visitor and would feel welcoming rather than threatening to a user scrolling an events app."
+    },
+    {
+      "cat": "exhibition",
+      "file": "bfl_b_medium_511e1861a7.webp",
+      "both": false,
+      "knife": false,
+      "glove": false,
+      "subject": "A person viewing a large fabric and natural material art installation in a bright gallery space.",
+      "why": "No, this would not feel creepy or threatening - it appears to be an artistic, peaceful gallery installation."
+    },
+    {
+      "cat": "talks-lectures",
+      "file": "bfl2_a_wide_r0_533771b68c.webp",
+      "both": false,
+      "knife": false,
+      "glove": false,
+      "subject": "A panel discussion or interview taking place on a grand theater stage before a large seated audience in an ornate historic venue.",
+      "why": "No, this image is not creepy or threatening — it depicts a normal, elegant cultural event with warm lighting and a captivated audience."
+    },
+    {
+      "cat": "exhibition",
+      "file": "bfl_d_detail_82c4e00930.webp",
+      "both": false,
+      "knife": false,
+      "glove": false,
+      "subject": "Close-up of softly draped beige linen fabric with warm golden lighting filtering through.",
+      "why": "No, this is a calm, warm, and aesthetically pleasing image that would not feel creepy or threatening."
+    },
+    {
+      "cat": "exhibition",
+      "file": "bfl_e_intimate_4ba606f1d0.webp",
+      "both": false,
+      "knife": false,
+      "glove": false,
+      "subject": "An elderly man with white hair and glasses stands in a dimly lit gallery, holding a book and contemplating a framed painting on the wall.",
+      "why": "no — the scene is calm and contemplative, showing a visitor quietly engaging with art, which fits well with a cultural events app."
+    },
+    {
+      "cat": "talks-lectures",
+      "file": "bfl2_b_medium_r0_c8692de5ba.webp",
+      "both": false,
+      "knife": false,
+      "glove": false,
+      "subject": "A panel discussion with three people seated on chairs on a raised platform in a bright art gallery, with an audience watching and paintings on the walls.",
+      "why": "no, the image depicts a calm, professional cultural event in a well-lit gallery space with no unsettling or threatening elements."
+    },
+    {
+      "cat": "exhibition",
+      "file": "bfl_c_environment_0c428a47a2.webp",
+      "both": false,
+      "knife": false,
+      "glove": false,
+      "subject": "Visitors sitting on benches viewing abstract paintings in a modern art museum with high ceilings and large windows.",
+      "why": "no, it shows a calm gallery setting with people enjoying art, which is a welcoming and culturally appropriate image for an events app."
+    },
+    {
+      "cat": "exhibition",
+      "file": "bfl_a_wide_9f1f9793ea.webp",
+      "both": false,
+      "knife": false,
+      "glove": false,
+      "subject": "A spacious art museum gallery with a vaulted glass skylight ceiling, classical paintings in gilded frames lining the cream-colored hall on a polished wood floor with visitors browsing.",
+      "why": "no — this is a calm, well-lit cultural gallery scene that would feel inviting and appropriate for an events app."
+    },
+    {
+      "cat": "talks-lectures",
+      "file": "bfl3_a_wide_r0_bcd1e267ec.webp",
+      "both": false,
+      "knife": false,
+      "glove": false,
+      "subject": "A panel discussion or interview with three people on stage in front of a large audience in a theater venue.",
+      "why": "This looks like a normal events app image - a theater panel discussion, nothing creepy."
+    },
+    {
+      "cat": "talks-lectures",
+      "file": "bfl2_d_detail_r0_6d83b0f973.webp",
+      "both": false,
+      "knife": false,
+      "glove": false,
+      "subject": "A hand resting on an open book",
+      "why": "This is a calm, contemplative image of someone reading - not creepy or threatening</think>"
+    },
+    {
+      "cat": "talks-lectures",
+      "file": "bfl2_c_environment_r0_088e3da441.webp",
+      "both": false,
+      "knife": false,
+      "glove": false,
+      "subject": "A digital marketing conference panel with several men in suits presenting on stage to a seated audience in a modern venue with large windows.",
+      "why": "This is a professional conference/event setting with people discussing digital marketing. It looks like a normal business event scene. There's nothing threatening or creepy about it. It would actually fit well on an events app as a representation of a professional conference or networking event.</think>"
+    },
+    {
+      "cat": "talks-lectures",
+      "file": "bfl_a_wide_533771b68c.webp",
+      "both": false,
+      "knife": false,
+      "glove": false,
+      "subject": "A large audience gathered in an ornate concert hall/theatre with people on stage",
+      "why": "This is a normal event venue scene, not creepy</think>"
+    },
+    {
+      "cat": "talks-lectures",
+      "file": "bfl_d_detail_6d83b0f973.webp",
+      "both": false,
+      "knife": false,
+      "glove": false,
+      "subject": "A hand points at the text in an open book resting on a wooden table.",
+      "why": "No, the scene feels calm and scholarly, like someone studying or reading, not threatening."
+    },
+    {
+      "cat": "talks-lectures",
+      "file": "bfl_b_medium_c8692de5ba.webp",
+      "both": false,
+      "knife": false,
+      "glove": false,
+      "subject": "A man in a dark suit giving a talk or presentation in an art gallery while an audience listens seated on the floor.",
+      "why": "No, the image appears calm and engaging, showing a typical cultural/art event setting suitable for an events platform."
+    },
+    {
+      "cat": "talks-lectures",
+      "file": "bfl2_e_intimate_r0_045503cdee.webp",
+      "both": false,
+      "knife": false,
+      "glove": false,
+      "subject": "An older man with gray hair speaking into a microphone with a woman visible in the blurred background.",
+      "why": "No, this looks like a calm, ordinary panel discussion or interview scene that would not feel creepy or threatening to a user scrolling an events app."
+    },
+    {
+      "cat": "talks-lectures",
+      "file": "bfl_c_environment_088e3da441.webp",
+      "both": false,
+      "knife": false,
+      "glove": false,
+      "subject": "An indoor event venue with speakers at the front and an audience seated facing the speakers.",
+      "why": "This is a normal event/lecture setting that wouldn't feel creepy or threatening.</think>"
+    },
+    {
+      "cat": "talks-lectures",
+      "file": "bfl_e_intimate_045503cdee.webp",
+      "both": false,
+      "knife": false,
+      "glove": false,
+      "subject": "A man with long blonde hair speaking into a microphone at what appears to be a performance or speaking event.",
+      "why": "no"
+    }
+  ]
+}

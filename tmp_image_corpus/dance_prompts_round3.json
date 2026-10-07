@@ -1,0 +1,21 @@
+{
+  "category_slug": "dance",
+  "jev_q1": 0.42,
+  "jev_q2": 0.67,
+  "model": "MiniMax-M3",
+  "source_prompts_count": 5,
+  "target_count": 1,
+  "items": [
+    {
+      "category": "dance",
+      "pattern": "A_wide",
+      "rep": 0,
+      "prompt": "Wide shot of a contemporary dance performance inside Dansens Hus Stockholm, two dancers mid-leap across a dimly lit stage bathed in cool blue wash, hardwood floor reflecting overhead spots, audience silhouettes in the foreground under warm house light, in warm window-lit indoor setting, hands naturally resting at sides or in pockets, no tools or props in hands.",
+      "seed": "r3-0",
+      "jev_q1": 0.42,
+      "jev_q2": 0.67,
+      "model": "MiniMax-M3",
+      "replacement_for": "knife_glove_review_2026-10-07"
+    }
+  ]
+}

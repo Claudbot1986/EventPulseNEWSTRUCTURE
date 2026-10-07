@@ -1,0 +1,142 @@
+{
+  "category_slug": "theatre-drama",
+  "jev_q1": 0.73,
+  "jev_q2": 0.65,
+  "model": "MiniMax-M3",
+  "source_prompts_count": 5,
+  "target_count": 12,
+  "items": [
+    {
+      "category": "theatre-drama",
+      "pattern": "A_wide",
+      "rep": 0,
+      "prompt": "Wide photograph of a dark stage at Teaterverket Svea in Stockholm, where the new uppsättning of a drama unfolds. Eight women in vintage dresses stand frozen in a snowy country-house parlor, a body draped across an antique bed center-stage. Warm amber stage lighting cuts through theatrical fog, in warm window-lit indoor setting, hands naturally resting at sides or in pockets, no tools or props in hands.",
+      "seed": "r3-0",
+      "jev_q1": 0.73,
+      "jev_q2": 0.65,
+      "model": "MiniMax-M3",
+      "replacement_for": "knife_glove_review_2026-10-07"
+    },
+    {
+      "category": "theatre-drama",
+      "pattern": "B_medium",
+      "rep": 0,
+      "prompt": "Medium photo of four actresses mid-scene on the Kulturhuset Stadsteatern stage during the dramatic föreställningen. Costumes from the 1960s, painted wooden doors behind them, harsh overhead stage-light casting sharp shadows across their tense faces and clasped hands, in soft diffused daylight, people standing or seated naturally, no weapons, no cutting tools, hands ungloved.",
+      "seed": "r3-1",
+      "jev_q1": 0.73,
+      "jev_q2": 0.65,
+      "model": "MiniMax-M3",
+      "replacement_for": "knife_glove_review_2026-10-07"
+    },
+    {
+      "category": "theatre-drama",
+      "pattern": "C_environment",
+      "rep": 0,
+      "prompt": "Environmental shot inside the gilded auditorium of China Teatern in Stockholm, audience members filling red velvet seats under crystal chandeliers. The curtain rises mid-föreställningen, revealing a long dinner table set for a final meal, soft amber stage-light spilling into the hall, with calm ambient warmth, no sudden movements, no aggressive gestures, hands at rest.",
+      "seed": "r3-2",
+      "jev_q1": 0.73,
+      "jev_q2": 0.65,
+      "model": "MiniMax-M3",
+      "replacement_for": "knife_glove_review_2026-10-07"
+    },
+    {
+      "category": "theatre-drama",
+      "pattern": "D_detail",
+      "rep": 0,
+      "prompt": "Close detail photograph of a black-gloved hand gripping a silver kitchen knife, point downward into rumpled white bed linen on stage. Out-of-focus chandelier bokeh above. Moody spotlight from a Teaterverket Svea dramatic uppsättning, the surrounding darkness swallowing the edges, during a quiet weekday matinee, audience members seated calmly, no threatening imagery, hands relaxed.",
+      "seed": "r3-3",
+      "jev_q1": 0.73,
+      "jev_q2": 0.65,
+      "model": "MiniMax-M3",
+      "replacement_for": "knife_glove_review_2026-10-07"
+    },
+    {
+      "category": "theatre-drama",
+      "pattern": "E_intimate",
+      "rep": 0,
+      "prompt": "Intimate close-up of a single actress under a tight warm spotlight at Kulturhuset Stadsteatern, tears visible on her cheek, pearl necklace catching the stage-light. Soft black backdrop, no other figures in frame, capturing one raw, exposed moment of the föreställningen, shot from a wide audience angle showing the whole venue, hands small and indistinct, no objects in hands.",
+      "seed": "r3-4",
+      "jev_q1": 0.73,
+      "jev_q2": 0.65,
+      "model": "MiniMax-M3",
+      "replacement_for": "knife_glove_review_2026-10-07"
+    },
+    {
+      "category": "theatre-drama",
+      "pattern": "A_wide",
+      "rep": 1,
+      "prompt": "Wide photograph of a dark stage at Teaterverket Svea in Stockholm, where the new uppsättning of a drama unfolds. Eight women in vintage dresses stand frozen in a snowy country-house parlor, a body draped across an antique bed center-stage. Warm amber stage lighting cuts through theatrical fog, under soft overcast Nordic daylight, no sharp objects, no gloves, hands empty.",
+      "seed": "r3-5",
+      "jev_q1": 0.73,
+      "jev_q2": 0.65,
+      "model": "MiniMax-M3",
+      "replacement_for": "knife_glove_review_2026-10-07"
+    },
+    {
+      "category": "theatre-drama",
+      "pattern": "B_medium",
+      "rep": 1,
+      "prompt": "Medium photo of four actresses mid-scene on the Kulturhuset Stadsteatern stage during the dramatic föreställningen. Costumes from the 1960s, painted wooden doors behind them, harsh overhead stage-light casting sharp shadows across their tense faces and clasped hands, under neutral cool interior lighting, empty stage or gallery space, no close-up of hands or implements.",
+      "seed": "r3-6",
+      "jev_q1": 0.73,
+      "jev_q2": 0.65,
+      "model": "MiniMax-M3",
+      "replacement_for": "knife_glove_review_2026-10-07"
+    },
+    {
+      "category": "theatre-drama",
+      "pattern": "C_environment",
+      "rep": 1,
+      "prompt": "Environmental shot inside the gilded auditorium of China Teatern in Stockholm, audience members filling red velvet seats under crystal chandeliers. The curtain rises mid-föreställningen, revealing a long dinner table set for a final meal, soft amber stage-light spilling into the hall, in a peaceful cultural venue interior, people walking or standing calmly, hands free of objects.",
+      "seed": "r3-7",
+      "jev_q1": 0.73,
+      "jev_q2": 0.65,
+      "model": "MiniMax-M3",
+      "replacement_for": "knife_glove_review_2026-10-07"
+    },
+    {
+      "category": "theatre-drama",
+      "pattern": "D_detail",
+      "rep": 1,
+      "prompt": "Close detail photograph of a black-gloved hand gripping a silver kitchen knife, point downward into rumpled white bed linen on stage. Out-of-focus chandelier bokeh above. Moody spotlight from a Teaterverket Svea dramatic uppsättning, the surrounding darkness swallowing the edges, with shallow depth of field focused on a stage area, no close-up of hands, no implements visible.",
+      "seed": "r3-8",
+      "jev_q1": 0.73,
+      "jev_q2": 0.65,
+      "model": "MiniMax-M3",
+      "replacement_for": "knife_glove_review_2026-10-07"
+    },
+    {
+      "category": "theatre-drama",
+      "pattern": "E_intimate",
+      "rep": 1,
+      "prompt": "Intimate close-up of a single actress under a tight warm spotlight at Kulturhuset Stadsteatern, tears visible on her cheek, pearl necklace catching the stage-light. Soft black backdrop, no other figures in frame, capturing one raw, exposed moment of the föreställningen, shot from an elevated balcony angle, focus on spatial composition, hands not visible in foreground.",
+      "seed": "r3-9",
+      "jev_q1": 0.73,
+      "jev_q2": 0.65,
+      "model": "MiniMax-M3",
+      "replacement_for": "knife_glove_review_2026-10-07"
+    },
+    {
+      "category": "theatre-drama",
+      "pattern": "A_wide",
+      "rep": 2,
+      "prompt": "Wide photograph of a dark stage at Teaterverket Svea in Stockholm, where the new uppsättning of a drama unfolds. Eight women in vintage dresses stand frozen in a snowy country-house parlor, a body draped across an antique bed center-stage. Warm amber stage lighting cuts through theatrical fog, with a subtle cinematic atmosphere, focus on faces and expressions, hands not visible or holding everyday items only.",
+      "seed": "r3-10",
+      "jev_q1": 0.73,
+      "jev_q2": 0.65,
+      "model": "MiniMax-M3",
+      "replacement_for": "knife_glove_review_2026-10-07"
+    },
+    {
+      "category": "theatre-drama",
+      "pattern": "B_medium",
+      "rep": 2,
+      "prompt": "Medium photo of four actresses mid-scene on the Kulturhuset Stadsteatern stage during the dramatic föreställningen. Costumes from the 1960s, painted wooden doors behind them, harsh overhead stage-light casting sharp shadows across their tense faces and clasped hands, with rich saturated color palette of the venue itself, no person close to camera, focus on architecture.",
+      "seed": "r3-11",
+      "jev_q1": 0.73,
+      "jev_q2": 0.65,
+      "model": "MiniMax-M3",
+      "replacement_for": "knife_glove_review_2026-10-07"
+    }
+  ]
+}

@@ -1,0 +1,22 @@
+{
+  "reviewed": 155,
+  "elapsed_s": 0,
+  "both": [
+    "dance/bfl2_e_intimate_r0_a979313a0d.webp",
+    "exhibition/bfl2_d_detail_r1_f60a5224cf.webp",
+    "talks-lectures/bfl2_b_medium_r0_c8692de5ba.webp",
+    "theatre-drama/bfl2_d_detail_r0_d236c5984b.webp",
+    "theatre-drama/bfl2_d_detail_r10_9fbe61ac85.webp",
+    "theatre-drama/bfl2_d_detail_r1_284cef3a38.webp",
+    "theatre-drama/bfl2_d_detail_r2_9fbe61ac85.webp",
+    "theatre-drama/bfl2_d_detail_r4_f0793b82aa.webp",
+    "theatre-drama/bfl2_d_detail_r5_284cef3a38.webp",
+    "theatre-drama/bfl2_d_detail_r7_18a22c4fc8.webp",
+    "theatre-drama/bfl2_d_detail_r3_18a22c4fc8.webp",
+    "theatre-drama/bfl2_d_detail_r8_f0793b82aa.webp",
+    "theatre-drama/bfl2_d_detail_r6_9fbe61ac85.webp",
+    "theatre-drama/bfl2_d_detail_r9_284cef3a38.webp",
+    "theatre-drama/bfl_d_detail_d236c5984b.webp"
+  ],
+  "note": "Frozen resultat från första vision-review-körning 2026-10-07. Senare körningar gav varierande resultat pga vision-modellens stokastik, men detta är den auktoritativa listan för removal-skriptet."
+}

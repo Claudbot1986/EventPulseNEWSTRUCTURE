@@ -1,0 +1,21 @@
+{
+  "category_slug": "exhibition",
+  "jev_q1": 0.67,
+  "jev_q2": 0.71,
+  "model": "MiniMax-M3",
+  "source_prompts_count": 5,
+  "target_count": 1,
+  "items": [
+    {
+      "category": "exhibition",
+      "pattern": "A_wide",
+      "rep": 0,
+      "prompt": "Wide interior shot of a grand Stockholm gallery hall bathed in soft skylight from tall arched windows, visitors scattered across pale wooden floors viewing large framed Nordic paintings hung in symmetrical rows along cream walls, in warm window-lit indoor setting, hands naturally resting at sides or in pockets, no tools or props in hands.",
+      "seed": "r3-0",
+      "jev_q1": 0.67,
+      "jev_q2": 0.71,
+      "model": "MiniMax-M3",
+      "replacement_for": "knife_glove_review_2026-10-07"
+    }
+  ]
+}
