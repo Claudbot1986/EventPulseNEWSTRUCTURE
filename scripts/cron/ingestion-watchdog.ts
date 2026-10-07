@@ -17,9 +17,12 @@
  *      visar running=true → ZOMBIE.
  *
  * Default-trösklar (kan overridas via env):
- *   WATCHDOG_STEP_HUNG_MS    = 30 min — step-start utan step-end
- *   WATCHDOG_OVERVIEW_STALE_MS = 30 min — filen inte ändrad
- *   WATCHDOG_CHAIN_ALIVE_MS  = 6 h    — kedjan får inte köra längre än så
+ *   WATCHDOG_STEP_HUNG_MS    = 90 min — step-start utan step-end
+ *   WATCHDOG_OVERVIEW_STALE_MS = 60 min — filen inte ändrad
+ *   WATCHDOG_CHAIN_ALIVE_MS  = 16 h   — kedjan får inte köra längre än så
+ *
+ * 2026-10-07 — höjda gränser så tunga steg (sitemap-discovery på 196 källor,
+ * C-htmlGate med 200+ rounds) inte triggar watchdog vid normal körning.
  *
  * Output:
  *   - runtime/ingestion-cron/watchdog.log (append-only human-readable)
@@ -44,9 +47,9 @@ const STATUS_FILE = path.resolve(PROJECT_ROOT, 'runtime/ingestion-cron.status.js
 const WATCHDOG_LOG = path.resolve(PROJECT_ROOT, 'runtime/ingestion-cron/watchdog.log');
 const WATCHDOG_STATE = path.resolve(PROJECT_ROOT, 'runtime/ingestion-cron/watchdog.json');
 
-const STEP_HUNG_MS = parseInt(process.env.WATCHDOG_STEP_HUNG_MS ?? String(30 * 60_000), 10);
-const OVERVIEW_STALE_MS = parseInt(process.env.WATCHDOG_OVERVIEW_STALE_MS ?? String(30 * 60_000), 10);
-const CHAIN_ALIVE_MS = parseInt(process.env.WATCHDOG_CHAIN_ALIVE_MS ?? String(6 * 60 * 60_000), 10);
+const STEP_HUNG_MS = parseInt(process.env.WATCHDOG_STEP_HUNG_MS ?? String(90 * 60_000), 10);
+const OVERVIEW_STALE_MS = parseInt(process.env.WATCHDOG_OVERVIEW_STALE_MS ?? String(60 * 60_000), 10);
+const CHAIN_ALIVE_MS = parseInt(process.env.WATCHDOG_CHAIN_ALIVE_MS ?? String(16 * 60 * 60_000), 10);
 
 interface OverviewRow {
   ts: string;

@@ -126,7 +126,11 @@ const skipSubpathDiscovery = args.includes('--skip-subpath');
 const skipLivespotIngest = args.includes('--skip-livespot');
 const skipDirectJsonld = args.includes('--skip-direct-jsonld');
 const limitIdx = args.indexOf('--limit');
-const limit = limitIdx !== -1 ? parseInt(args[limitIdx + 1], 10) : 50;
+// 2026-10-07 — default --limit höjt från 50 → 200. Bakgrund: tunga steg
+// (sitemap-discovery, C-htmlGate, subpath-discovery) kan nu hantera fler
+// sources/rounds i en enda körning. Sänkt värde kan fortfarande sättas via
+// `--limit N` på CLI.
+const limit = limitIdx !== -1 ? parseInt(args[limitIdx + 1], 10) : 200;
 const smoke = args.includes('--smoke');
 // SKIP_BFL=1 (eller --skip-bfl): kör D-images med bibliotek-fallback istället
 // för BFL-generering. Tänkt för nattläget tills BFL-credits fyllts på
@@ -302,8 +306,10 @@ const steps: Array<{ name: string; cmd: string; args: string[] }> = [
 
   {
     name: 'C-htmlGate',
+    // 2026-10-07 — --max-rounds 200 (default) för längre körningar. Innan
+    // 50, vilket begränsade hur många kandidater C hann processa per natt.
     cmd: 'npx',
-    args: ['tsx', '02-Ingestion/C-htmlGate/run-dynamic-pool.ts', '--workers', '5', '--max-rounds', smoke ? '5' : '50'],
+    args: ['tsx', '02-Ingestion/C-htmlGate/run-dynamic-pool.ts', '--workers', '5', '--max-rounds', smoke ? '5' : '200'],
   },
 
   // ── P1A: D-renderGate (Scrapingbee för JS-tunga sidor) ─────────────────
