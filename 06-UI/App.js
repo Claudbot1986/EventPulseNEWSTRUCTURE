@@ -1841,6 +1841,32 @@ function ExploreDetailScreen({ payload, onBack, onEventPress }) {
     };
   }, [route, language]);
 
+  // fetchRouteTotalOnly (2026-10-07): hämter ENBART total-räkningen för
+  // route-headern ("8 EVENEMANG"). Körs parallellt med första
+  // fetchPage(0) så stor-kategorier (music=4999 events) inte blockerar
+  // första paint. Bakgrunden tar 1-3s extra men UI visar redan events.
+  // Returnerar null vid fel så vi inte skriver 'NaN EVENEMANG' till UI.
+  const fetchRouteTotalOnly = useCallback(async (signal) => {
+    try {
+      const dateMode = route.dateMode || 'any';
+      const fromIso = tileRoutes.computeFromIso(dateMode, new Date());
+      const days = tileRoutes.DATE_MODE_DAYS[dateMode] || 14;
+      // limit=1 eftersom vi bara vill ha total — snabbaste varianten.
+      const page = await fetchFeed({
+        from: fromIso,
+        days,
+        limit: 1,
+        offset: 0,
+        ...(route.category ? { category: route.category } : {}),
+        ...(route.fetcherExtra || {}),
+        signal,
+      });
+      return typeof page.total === 'number' ? page.total : null;
+    } catch (_err) {
+      return null;
+    }
+  }, [route]);
+
   // Initial fetch — offset=0, ny controller. tileId byter route → reset.
   useEffect(() => {
     if (!isRealRoute) {
@@ -1860,14 +1886,28 @@ function ExploreDetailScreen({ payload, onBack, onEventPress }) {
     setTotalCount(null);
     (async () => {
       try {
-        const { rows, hasMore: more, total } = await fetchPage(0, controller.signal);
+        // 2026-10-07 (front-load): kör fetchPage + totalOnly parallellt.
+        // Första paint visar rows så snart fetchPage är klar (0.5-1s för
+        // limit=15). Total räknas i bakgrunden — kan ta 5-11s för music
+        // (4999 events) men UI är redan användbart. fetchRouteTotalOnly
+        // är tyst vid fel så vi inte 'rubbar' UI:t.
+        const [pageResult] = await Promise.all([
+          fetchPage(0, controller.signal),
+          fetchRouteTotalOnly(controller.signal).then((t) => {
+            if (!controller.signal.aborted && t != null) {
+              setTotalCount(t);
+            }
+          }),
+        ]);
         if (!controller.signal.aborted) {
+          const { rows, hasMore: more } = pageResult;
           setRealEvents(rows);
           setHasMore(more);
           setNextOffset(rows.length);
           // total är en route-egenskap (ändras inte när bladet fylls på),
-          // sätt en gång från initial-fetch — paginering uppdaterar inte.
-          setTotalCount(total);
+          // sätt en gång från initial-fetch om totalOnly inte redan
+          // hunnit — fallback till page.total från första sidans svar.
+          setTotalCount((prev) => prev ?? pageResult.total);
           setFetchState('idle');
         }
       } catch (err) {
@@ -1881,7 +1921,7 @@ function ExploreDetailScreen({ payload, onBack, onEventPress }) {
     return () => {
       controller.abort();
     };
-  }, [isRealRoute, tileId, language, fetchPage]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [isRealRoute, tileId, language, fetchPage, fetchRouteTotalOnly]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Infinite scroll — UtforskaSection:s ScrollView anropar
   // handleEndReached när innehållet är nära botten. Skyddas av
