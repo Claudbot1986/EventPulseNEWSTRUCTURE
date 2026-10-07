@@ -301,7 +301,7 @@ async function main() {
           city: row.venue_city,
           fetched_via: 'luma',
           fetched_at: new Date().toISOString(),
-        };
+        },
       };
       await rawEventsQueue.add(`luma-${row.dedup_hash.slice(0, 16)}`, raw, {
         removeOnComplete: 1000,
