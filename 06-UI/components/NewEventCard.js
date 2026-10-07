@@ -52,10 +52,12 @@ const T = {
     bottomPad: 12,
     // 2026-10-07: Läs mer-knappen sitter på egen rad efter preview,
     // högerjusterad. Samma padding/radius som MapEventCard.readMore.
-    readMoreRowMargin: 8,
+    // 2026-10-07 (justering): lite mindre padding så knappen krymper
+    // proportionellt mot MapEventCard.
+    readMoreRowMargin: 6,
     readMoreRadius: 8,
-    readMorePadX: 12,
-    readMorePadY: 6,
+    readMorePadX: 10,
+    readMorePadY: 4,
   },
 };
 
@@ -489,7 +491,7 @@ const styles = StyleSheet.create({
     marginTop: T.space.readMoreRowMargin,
   },
   readMore: {
-    minHeight: 36,
+    minHeight: 30,
     paddingHorizontal: T.space.readMorePadX,
     paddingVertical: T.space.readMorePadY,
     borderRadius: T.space.readMoreRadius,
