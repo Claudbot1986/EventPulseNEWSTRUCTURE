@@ -179,6 +179,18 @@ function runStep(name: string, cmd: string, args: string[]): Promise<SpawnResult
 
     appendChainOverview({ event: 'step-start', step: name, pid: process.pid, cmd: `${cmd} ${args.join(' ')}` });
 
+    // 2026-10-07 — heartbeat en gång/minut under långa steg så watchdog
+    // inte tror att chain är död. Stegets step-end skriver en heartbeat till
+    // chain-overview.log — samma fil watchdog kollar.
+    const heartbeat = setInterval(() => {
+      appendChainOverview({
+        event: 'heartbeat',
+        step: name,
+        pid: process.pid,
+        childPid: proc.pid,
+      });
+    }, 60_000);
+
     const proc = spawn(cmd, args, {
       cwd: PROJECT_ROOT,
       // pipe så vi kan tee:a till både parent stdout OCH per-step file.
@@ -199,6 +211,7 @@ function runStep(name: string, cmd: string, args: string[]): Promise<SpawnResult
     });
 
     proc.on('exit', (code) => {
+      clearInterval(heartbeat);
       const finishedAt = new Date().toISOString();
       const exitCode = code ?? 1;
       const durationMs = new Date(finishedAt).getTime() - new Date(startedAt).getTime();
