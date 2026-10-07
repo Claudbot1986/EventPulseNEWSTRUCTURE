@@ -1,19 +1,22 @@
 #!/bin/bash
-# runNightly.sh — EN kedja för hela natten. Ersätter separata launchd-tider
-# för purge (03:00), supervisor (04:30), discovery (05:00). Beslut 2026-09-16.
-# Ordning: ingestion (13 steg) → purge → supervisor → discovery.
-# Fortsätter alltid vidare även om ett steg faller; exit 1 om något steg föll
-# (syns i launchctl list). Varje steg skriver sina egna loggar som förut.
+# runNightly.sh — EN kedja för hela natten. PENSIONERAD 2026-10-07.
 #
-# Schemaläggs av com.eventpulse.ingestion.plist kl 02:00 (det enda nattjobbet).
+# Tidigare schemalagd av com.eventpulse.ingestion.plist kl 02:00. Nu är
+# ingestion-chain direktanropad via tsx i plisten (för att undvika
+# launchd-zombie-mönstret där bash höll stdout-rör öppet medan child
+# hängde). Post-ingest-stegen körs av com.eventpulse.post-ingest.plist
+# kl 04:00 via scripts/cron/runPostIngest.sh.
+#
+# Denna fil finns kvar för manuell debugging (kör `bash runNightly.sh`
+# i en terminal om du vill köra allt i sekvens). Den anropas INTE av
+# launchd längre.
 
-set -uo pipefail     # OBS: inte -e — kedjan ska aldrig avbrytas mitt i
+set -uo pipefail
 
 PROJECT_ROOT="${PROJECT_ROOT:-/Users/claudgashi/EventPulse}"
 cd "$PROJECT_ROOT"
 TSX_BIN="$PROJECT_ROOT/node_modules/.bin/tsx"
 
-# .env en gång för hela kedjan (barn-skripten sourcar själva också — ofarligt)
 if [ -f "$PROJECT_ROOT/.env" ]; then
   set -a
   # shellcheck disable=SC1091
@@ -21,35 +24,31 @@ if [ -f "$PROJECT_ROOT/.env" ]; then
   set +a
 fi
 
-# Supervisor behöver dessa (samma som dess gamla plist hade):
 export EVENTPULSE_PROJECT_ROOT="$PROJECT_ROOT"
 export EVENTPULSE_VAULT_ROOT="${EVENTPULSE_VAULT_ROOT:-/Users/claudgashi/Desktop/MyVault/TomorGashi}"
-# SKIP_BFL=1 ärvs från plisten → når ingestion-cron (D-images bibliotek-fallback).
 
 declare -a RES=()
 
-# run <namn> <cmd...> — kör, notera exit, fortsätt alltid vidare i kedjan.
 run() {
   local name="$1"; shift
-  echo "[nightly] ▶ ${name} start $(date -u +%Y-%m-%dT%H:%M:%SZ)"
+  echo "[nightly-manual] ▶ ${name} start $(date -u +%Y-%m-%dT%H:%M:%SZ)"
   "$@"
   local rc=$?
   RES+=("${name}=${rc}")
-  echo "[nightly] ${name} exit=${rc}"
+  echo "[nightly-manual] ${name} exit=${rc}"
 }
 
-echo "[nightly] ═══ NIGHTLY CHAIN START $(date -u +%Y-%m-%dT%H:%M:%SZ) ═══"
+echo "[nightly-manual] ═══ START (manuell körning — pensionerad kedja) ═══"
 
-run ingestion      bash scripts/cron/runIngestion.sh
+run ingestion      "$TSX_BIN" scripts/ingestion-cron.ts --limit 50
 run link-health    "$TSX_BIN" 09-ScrapingSupervisor/check_link_health.ts --limit 200
 run purge          bash scripts/start-purge.sh
 run supervisor     "$TSX_BIN" 09-ScrapingSupervisor/runDaily.ts
 run discovery      bash 09-DiscoveryAgent/cron/runDaily.sh
 run mrq-prune      "$TSX_BIN" scripts/prune-mrq.ts --commit
 
-echo "[nightly] ═══ KLAR $(date -u +%Y-%m-%dT%H:%M:%SZ) ═══  ${RES[*]}"
+echo "[nightly-manual] ═══ KLAR $(date -u +%Y-%m-%dT%H:%M:%SZ) ═══  ${RES[*]}"
 
-# Exit 1 om något steg föll — syns som LastExitStatus i launchctl list.
 for r in "${RES[@]}"; do
   [[ "$r" == *=0 ]] || exit 1
 done

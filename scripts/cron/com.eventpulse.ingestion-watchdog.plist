@@ -29,7 +29,7 @@
   <array>
     <string>/bin/bash</string>
     <string>-c</string>
-    <string>cd /Users/claudgashi/EventPulse && . ./.env 2>/dev/null; exec ./node_modules/.bin/tsx scripts/cron/ingestion-watchdog.ts</string>
+    <string>cd /Users/claudgashi/EventPulse &amp;&amp; . ./.env 2>/dev/null; exec ./node_modules/.bin/tsx scripts/cron/ingestion-watchdog.ts</string>
   </array>
 
   <key>WorkingDirectory</key>

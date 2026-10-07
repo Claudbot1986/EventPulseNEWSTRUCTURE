@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN"
+  "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!--
+  com.eventpulse.post-ingest.plist — Städar EFTER ingestion-chain (04:00).
+
+  Kör link-health → purge → supervisor → discovery → mrq-prune.
+  Använder bash-wrapper eftersom dessa steg är korta bash-kedjor som inte
+  riskerar zombie-maskering (de är över på minuter).
+
+  Schedule:
+    Hour=4  Minute=0   (daily)
+  ThrottleInterval 6h — skydd mot dubbel-start.
+
+  Install:
+    cp scripts/cron/com.eventpulse.post-ingest.plist ~/Library/LaunchAgents/
+    launchctl unload ~/Library/LaunchAgents/com.eventpulse.post-ingest.plist 2>/dev/null
+    launchctl load ~/Library/LaunchAgents/com.eventpulse.post-ingest.plist
+
+  Uninstall:
+    launchctl unload ~/Library/LaunchAgents/com.eventpulse.post-ingest.plist
+    rm ~/Library/LaunchAgents/com.eventpulse.post-ingest.plist
+-->
+<plist version="1.0">
+<dict>
+  <key>Label</key>
+  <string>com.eventpulse.post-ingest</string>
+
+  <key>ProgramArguments</key>
+  <array>
+    <string>/bin/bash</string>
+    <string>/Users/claudgashi/EventPulse/scripts/cron/runPostIngest.sh</string>
+  </array>
+
+  <key>WorkingDirectory</key>
+  <string>/Users/claudgashi/EventPulse</string>
+
+  <key>StartCalendarInterval</key>
+  <dict>
+    <key>Hour</key>
+    <integer>4</integer>
+    <key>Minute</key>
+    <integer>0</integer>
+  </dict>
+
+  <key>ThrottleInterval</key>
+  <integer>21600</integer>
+
+  <key>StandardOutPath</key>
+  <string>/Users/claudgashi/EventPulse/runtime/ingestion-cron/post-ingest.out.log</string>
+  <key>StandardErrorPath</key>
+  <string>/Users/claudgashi/EventPulse/runtime/ingestion-cron/post-ingest.err.log</string>
+
+  <key>EnvironmentVariables</key>
+  <dict>
+    <key>PATH</key>
+    <string>/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:/Users/claudgashi/.local/bin</string>
+  </dict>
+
+  <key>RunAtLoad</key>
+  <false/>
+  <key>KeepAlive</key>
+  <false/>
+</dict>
+</plist>
