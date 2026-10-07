@@ -222,13 +222,14 @@ B. Persistent project memory accurately represents the resulting project state.
 
 Vault maintenance is part of normal project execution, not a separate documentation task.
 
-## Autonomous Execution Loop — QUARANTINED (2026-08-22)
+## Autonomous Execution Loop — REMOVED (2026-10-07)
 
-The unattended Claude Code loop is isolated in `AUTONOMOUS-QUARANTINE/`.
-Original section: `AUTONOMOUS-QUARANTINE/claude-md/Autonomous-Execution-Loop.md`.
-Restore steps: `AUTONOMOUS-QUARANTINE/README.md`.
+EventPulse körs interaktivt. Användaren vill INTE ha en unattended Claude Code-loop i projektet. Tidigare lå en quarantine-mapp (`AUTONOMOUS-QUARANTINE/`) som isolerade script + launchd-jobb + CLAUDE.md-sektion för denna loop; allt detta är borttaget (commit `7f38598`).
 
-Do **not** chain tasks unattended. Do **not** invoke `scripts/autonomous-loop.sh`, `/resume`, or `/start` as an autonomous session. This is a normal interactive session: finish the user's request and stop.
+Konsekvens:
+- Inga `/start` eller `/resume` slash-kommandon.
+- Inget `scripts/autonomous-loop.sh`, ingen `com.eventpulse.autonomous.plist`.
+- Längre körningar möjliggörs genom **högre kapacitet per steg** (`--limit`, `WATCHDOG_*`), inte genom att kedja orelaterade uppgifter utan mänsklig inblandning.
 
 ## EventPulse
 
