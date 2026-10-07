@@ -28,6 +28,7 @@ import {
   detectCategoryFromUrl,
   detectCategoryFromContainerClass,
 } from './categoryKeywords.js';
+import { toUtcIsoFromStockholm } from '../lib/stockholmTime.js';
 
 export interface ExtractResult {
   events: ParsedEvent[];
@@ -576,8 +577,8 @@ export function toRawEventInput(event: ParsedEvent): RawEventInput {
   return {
     title: event.title,
     description: event.description || null,
-    start_time: event.date && event.time ? `${event.date}T${event.time}:00+02:00` : event.date,
-    end_time: event.endDate && event.endTime ? `${event.endDate}T${event.endTime}:00+02:00` : event.endDate || null,
+    start_time: toUtcIsoFromStockholm(event.date, event.time) ?? event.date ?? null,
+    end_time: toUtcIsoFromStockholm(event.endDate ?? null, event.endTime) ?? event.endDate ?? null,
     venue_name: event.venue || null,
     venue_address: event.address || null,
     lat: null, // TODO: geocode from address if needed

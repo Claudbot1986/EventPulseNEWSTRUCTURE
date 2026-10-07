@@ -21,6 +21,7 @@ import * as dotenv from 'dotenv';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import fs from 'fs';
+import { toUtcIsoFromStockholm } from '../02-Ingestion/lib/stockholmTime.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -130,14 +131,11 @@ async function ingest(sourceId: string): Promise<void> {
     await rawEventsQueue.add(jobId, {
       title: ev.title ?? '',
       description: ev.description ?? null,
-      // ParsedEvent has date (YYYY-MM-DD) + time (HH:MM) — combine to ISO.
-      // If time missing, use T00:00:00; normalizer rejects only past dates.
-      start_time: (ev.date && ev.time)
-          ? `${ev.date}T${ev.time}:00+02:00`
-          : (ev.date ? `${ev.date}T00:00:00+02:00` : ''),
-      end_time: (ev.endDate && ev.endTime)
-          ? `${ev.endDate}T${ev.endTime}:00+02:00`
-          : (ev.endDate ? `${ev.endDate}T00:00:00+02:00` : null),
+      // ParsedEvent has date (YYYY-MM-DD) + time (HH:MM) — convert to UTC ISO
+      // via Stockholm-tz (CEST/CET beroberoende av datum — INTE hårdkodat +02:00).
+      // If time missing, use T00:00:00 lokal tid; normalizer rejects only past dates.
+      start_time: toUtcIsoFromStockholm(ev.date, ev.time) ?? '',
+      end_time: toUtcIsoFromStockholm(ev.endDate, ev.endTime),
       venue_name: ev.venue ?? ev.location?.name ?? null,
       venue_address: ev.address ?? ev.location?.address ?? null,
       lat: ev.geo?.lat ?? ev.lat ?? null,

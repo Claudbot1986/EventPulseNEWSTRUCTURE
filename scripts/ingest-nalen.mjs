@@ -22,6 +22,7 @@
 import 'dotenv/config';
 import { createHash, randomUUID } from 'crypto';
 import { createClient } from '@supabase/supabase-js';
+import { fromZonedTime } from 'date-fns-tz';
 
 const SUPABASE_URL_VAL = process.env.SUPABASE_URL;
 const SUPABASE_KEY_VAL = process.env.SUPABASE_SERVICE_ROLE_KEY;
@@ -59,16 +60,22 @@ function decodeHtml(s) {
     .replace(/&#8211;/g, '–').replace(/&#8217;/g, "'").replace(/&#8221;/g, '"').replace(/&#8220;/g, '"');
 }
 
-function parseSvDate(text) {
-  // "8 september 2025" or "4 oktober 2026"
-  const m = text.match(/(\d{1,2})\s+([a-zåäöé]+)\s+(\d{4})/i);
+function parseSvDate(text, defaultHourMinute = '19:30') {
+  // "8 september 2025" or "4 oktober 2026" (valfri tid: "8 september 2025 20:00")
+  // Returnerar UTC Date — om tid saknas använd defaultHourMinute som
+  // STOCKHOLM-lokaltid och konvertera till UTC (INTE hårdkodat UTC).
+  const m = text.match(/(\d{1,2})\s+([a-zåäöé]+)\s+(\d{4})(?:\s+(\d{1,2}):(\d{2}))?/i);
   if (!m) return null;
   const day = parseInt(m[1], 10);
   const monthKey = m[2].toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
   const month = SV_MONTHS[monthKey];
   const year = parseInt(m[3], 10);
   if (!month) return null;
-  return new Date(Date.UTC(year, month - 1, day, 19, 30, 0));
+  const hour = m[4] != null ? parseInt(m[4], 10) : parseInt(defaultHourMinute.split(':')[0], 10);
+  const minute = m[5] != null ? parseInt(m[5], 10) : parseInt(defaultHourMinute.split(':')[1], 10);
+  // Tolka (year, month, day, hour, minute) som Europe/Stockholm och konvertera.
+  const localIso = `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}T${String(hour).padStart(2, '0')}:${String(minute).padStart(2, '0')}:00`;
+  return fromZonedTime(localIso, 'Europe/Stockholm');
 }
 
 function findEarliestFutureDate(html, allDates) {
@@ -185,13 +192,18 @@ async function main() {
     let startDate = null;
     if (title) {
       // Look for date in title
-      const dateMatch = title.match(/(\d{1,2})\s+([a-zåäöé]+)\s+(\d{4})/i);
+      const dateMatch = title.match(/(\d{1,2})\s+([a-zåäöé]+)\s+(\d{4})(?:\s+(\d{1,2}):(\d{2}))?/i);
       if (dateMatch) {
         const day = parseInt(dateMatch[1], 10);
         const monthKey = dateMatch[2].toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
         const month = SV_MONTHS[monthKey];
         const year = parseInt(dateMatch[3], 10);
-        if (month) startDate = new Date(Date.UTC(year, month - 1, day, 19, 30, 0));
+        const hour = dateMatch[4] != null ? parseInt(dateMatch[4], 10) : 19;
+        const minute = dateMatch[5] != null ? parseInt(dateMatch[5], 10) : 30;
+        if (month) {
+          const localIso = `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}T${String(hour).padStart(2, '0')}:${String(minute).padStart(2, '0')}:00`;
+          startDate = fromZonedTime(localIso, 'Europe/Stockholm');
+        }
       }
     }
     if (!startDate) { noDate++; return null; }
