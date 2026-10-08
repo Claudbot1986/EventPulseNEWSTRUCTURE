@@ -110,8 +110,46 @@ describe('buildShortFactBasedLine (T0201)', () => {
   });
 });
 
-describe('getDetailsDescription (T0201 resolution order)', () => {
-  it('1) prefers eventpulse_summary when present', () => {
+describe('getDetailsDescription (P7 + T0201 resolution order)', () => {
+  it('0) prefers editorial_description when present (P7 — MiniMax-M3)', () => {
+    expect(
+      getDetailsDescription({
+        editorial_description: 'Hooligan Bobs intar Debaser med en svängig rockkonsert och publikrespons.',
+        eventpulse_summary: 'Kort template-rad som INTE ska visas.',
+        description_license: 'pressbild',
+      })
+    ).toBe('Hooligan Bobs intar Debaser med en svängig rockkonsert och publikrespons.');
+  });
+
+  it('0b) falls through to eventpulse_summary when editorial_description is null', () => {
+    expect(
+      getDetailsDescription({
+        editorial_description: null,
+        eventpulse_summary: 'Template-rad som vinner när editorial saknas.',
+      })
+    ).toBe('Template-rad som vinner när editorial saknas.');
+  });
+
+  it('0c) falls through to eventpulse_summary when editorial_description is too short (<10 chars)', () => {
+    // Samma hasRealDescription-tröskel som andra fält.
+    expect(
+      getDetailsDescription({
+        editorial_description: 'Kort',
+        eventpulse_summary: 'Template-rad som vinner när editorial är för kort.',
+      })
+    ).toBe('Template-rad som vinner när editorial är för kort.');
+  });
+
+  it('0d) strips HTML in editorial_description (defensive — MiniMax-M3 ska inte leverera HTML)', () => {
+    expect(
+      getDetailsDescription({
+        editorial_description: '<p>Hooligan Bobs intar Debaser med rockkonsert.</p>',
+        eventpulse_summary: 'Template-rad som INTE ska visas.',
+      })
+    ).toBe('Hooligan Bobs intar Debaser med rockkonsert.');
+  });
+
+  it('1) prefers eventpulse_summary when present (and no editorial_description)', () => {
     expect(
       getDetailsDescription({
         eventpulse_summary: 'Konsert med Artist X på Avicii Arena den 14 november.',

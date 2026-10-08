@@ -888,7 +888,15 @@ async function fetchFeedOnce({ baseUrl, from, days, mood, limit, offset, categor
       // toDetailsScreenEvent och NewEventCard-preview-raden fylls.
       description: typeof e.description === 'string' ? e.description : null,
       description_sv: typeof e.description_sv === 'string' ? e.description_sv : null,
-      description_en: typeof e.description_en === 'string' ? e.description_en : null,
+      description_en: typeof e.description_en === 'string' ? e.description_en : null,  // 2026-10-07 — T0201 summary (deterministic template) — utan detta tappar UI:t den sammanfattning vi just backfillade.
+      eventpulse_summary: typeof e.eventpulse_summary === 'string' ? e.eventpulse_summary : null,
+      // 2026-10-08 — P7 Editorial Description Engine (MiniMax-M3). UI:t
+      // läser editorial_description som primär källa i getDetailsDescription()
+      // (06-UI/utils/descriptionFallback.js) — högre kvalitet än
+      // eventpulse_summary, lägre risk än scraped text. generated_at
+      // forwarded för framtida staleness-logik.
+      editorial_description: typeof e.editorial_description === 'string' ? e.editorial_description : null,
+      editorial_description_generated_at: typeof e.editorial_description_generated_at === 'string' ? e.editorial_description_generated_at : null,
     };
   });
 
@@ -1020,7 +1028,15 @@ export async function fetchRecommendedEvents({ limit = 10, signal, timeoutMs = 1
       // source-texten.
       description: typeof e.description === 'string' ? e.description : null,
       description_sv: typeof e.description_sv === 'string' ? e.description_sv : null,
-      description_en: typeof e.description_en === 'string' ? e.description_en : null,
+      description_en: typeof e.description_en === 'string' ? e.description_en : null,  // 2026-10-07 — T0201 summary (deterministic template) — utan detta tappar UI:t den sammanfattning vi just backfillade.
+      eventpulse_summary: typeof e.eventpulse_summary === 'string' ? e.eventpulse_summary : null,
+      // 2026-10-08 — P7 Editorial Description Engine (MiniMax-M3). UI:t
+      // läser editorial_description som primär källa i getDetailsDescription()
+      // (06-UI/utils/descriptionFallback.js) — högre kvalitet än
+      // eventpulse_summary, lägre risk än scraped text. generated_at
+      // forwarded för framtida staleness-logik.
+      editorial_description: typeof e.editorial_description === 'string' ? e.editorial_description : null,
+      editorial_description_generated_at: typeof e.editorial_description_generated_at === 'string' ? e.editorial_description_generated_at : null,
       // Rank reasons forwarded so the card renderer can show always-visible
       // "why" chips (Din helg, 2026-09-20). Unknown enums are filtered by
       // resolveReasons — we never substitute a guess. Endpoints without
@@ -1141,7 +1157,15 @@ export async function fetchLiveEvents({
       // source-texten.
       description: typeof e.description === 'string' ? e.description : null,
       description_sv: typeof e.description_sv === 'string' ? e.description_sv : null,
-      description_en: typeof e.description_en === 'string' ? e.description_en : null,
+      description_en: typeof e.description_en === 'string' ? e.description_en : null,  // 2026-10-07 — T0201 summary (deterministic template) — utan detta tappar UI:t den sammanfattning vi just backfillade.
+      eventpulse_summary: typeof e.eventpulse_summary === 'string' ? e.eventpulse_summary : null,
+      // 2026-10-08 — P7 Editorial Description Engine (MiniMax-M3). UI:t
+      // läser editorial_description som primär källa i getDetailsDescription()
+      // (06-UI/utils/descriptionFallback.js) — högre kvalitet än
+      // eventpulse_summary, lägre risk än scraped text. generated_at
+      // forwarded för framtida staleness-logik.
+      editorial_description: typeof e.editorial_description === 'string' ? e.editorial_description : null,
+      editorial_description_generated_at: typeof e.editorial_description_generated_at === 'string' ? e.editorial_description_generated_at : null,
       // Rank reasons forwarded so the card renderer can show always-visible
       // "why" chips (Din helg, 2026-09-20). Unknown enums are filtered by
       // resolveReasons — we never substitute a guess. Endpoints without
@@ -1675,7 +1699,15 @@ export async function fetchCachedRecommendations({
       // source-texten.
       description: typeof e.description === 'string' ? e.description : null,
       description_sv: typeof e.description_sv === 'string' ? e.description_sv : null,
-      description_en: typeof e.description_en === 'string' ? e.description_en : null,
+      description_en: typeof e.description_en === 'string' ? e.description_en : null,  // 2026-10-07 — T0201 summary (deterministic template) — utan detta tappar UI:t den sammanfattning vi just backfillade.
+      eventpulse_summary: typeof e.eventpulse_summary === 'string' ? e.eventpulse_summary : null,
+      // 2026-10-08 — P7 Editorial Description Engine (MiniMax-M3). UI:t
+      // läser editorial_description som primär källa i getDetailsDescription()
+      // (06-UI/utils/descriptionFallback.js) — högre kvalitet än
+      // eventpulse_summary, lägre risk än scraped text. generated_at
+      // forwarded för framtida staleness-logik.
+      editorial_description: typeof e.editorial_description === 'string' ? e.editorial_description : null,
+      editorial_description_generated_at: typeof e.editorial_description_generated_at === 'string' ? e.editorial_description_generated_at : null,
       // Rank reasons forwarded so the card renderer can show always-visible
       // "why" chips (Din helg, 2026-09-20). Unknown enums are filtered by
       // resolveReasons — we never substitute a guess. Endpoints without
@@ -1941,7 +1973,15 @@ export async function fetchSavedEvents({ limit = 50, signal, timeoutMs = 12_000 
       // source-texten.
       description: typeof e.description === 'string' ? e.description : null,
       description_sv: typeof e.description_sv === 'string' ? e.description_sv : null,
-      description_en: typeof e.description_en === 'string' ? e.description_en : null,
+      description_en: typeof e.description_en === 'string' ? e.description_en : null,  // 2026-10-07 — T0201 summary (deterministic template) — utan detta tappar UI:t den sammanfattning vi just backfillade.
+      eventpulse_summary: typeof e.eventpulse_summary === 'string' ? e.eventpulse_summary : null,
+      // 2026-10-08 — P7 Editorial Description Engine (MiniMax-M3). UI:t
+      // läser editorial_description som primär källa i getDetailsDescription()
+      // (06-UI/utils/descriptionFallback.js) — högre kvalitet än
+      // eventpulse_summary, lägre risk än scraped text. generated_at
+      // forwarded för framtida staleness-logik.
+      editorial_description: typeof e.editorial_description === 'string' ? e.editorial_description : null,
+      editorial_description_generated_at: typeof e.editorial_description_generated_at === 'string' ? e.editorial_description_generated_at : null,
       // Rank reasons forwarded so the card renderer can show always-visible
       // "why" chips (Din helg, 2026-09-20). Unknown enums are filtered by
       // resolveReasons — we never substitute a guess. Endpoints without

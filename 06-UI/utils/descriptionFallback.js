@@ -23,6 +23,16 @@
  *      byggd från typ/artist/venue/stad/datum.
  *   3. description_en/sv ENDAST om license är tillåtande (säker fallback).
  *   4. Aldrig: scraped raw description eller license='unknown' text.
+ *
+ * 2026-10-08 — P7 Editorial Description Engine live. editorial_description
+ * (skriven av MiniMax-M3 med hård brandvägg mot källtext) är NY primär
+ * källa: högre kvalitet än eventpulse_summary, lägre risk än scraped
+ * text. Resolution-ordning uppdaterad:
+ *   1. editorial_description (NY — MiniMax-M3, factuality+independence-checkad)
+ *   2. eventpulse_summary (deterministisk template)
+ *   3. Faktbaserad kort rad
+ *   4. description_en/sv (bara om license tillåter)
+ *   5. null → muted fallback
  */
 
 const FALLBACK_KEY = 'details.descriptionMissing';
@@ -131,14 +141,19 @@ export function buildShortFactBasedLine(event) {
  * the event has no real description. Caller decides whether to show
  * the "Om eventet" section.
  *
- * Resolution order (T0201):
- *   1. eventpulse_summary (primary — fact-based, neutral)
- *   2. description_en/sv ENDAST om description_license är tillåtande
+ * Resolution order (P7 2026-10-08, T0201 2026-10-05):
+ *   1. editorial_description (MiniMax-M3, factuality+independence-checkad —
+ *      högst kvalitet, lägst copyright-risk). Sätts av Editorial Engine
+ *      (04-Normalizer/editorial/) när EDITORIAL_ENABLED=1 och pipelinen
+ *      passerar. Saknas den → steg 2.
+ *   2. eventpulse_summary (deterministisk template, alltid pålitlig)
+ *   3. Faktbaserad kort rad ("Konsert med X på Y…")
+ *   4. description_en/sv ENDAST om description_license är tillåtande
  *      (vi ALDRIG visar scraped text om license='unknown')
- *   3. Faktbaserad kort rad byggd från strukturerade fält
- *   4. null → UI visar muted fallback
+ *   5. null → UI visar muted fallback
  *
- * @param {{ eventpulse_summary?: string|null, description?: string|null,
+ * @param {{ editorial_description?: string|null,
+ *           eventpulse_summary?: string|null, description?: string|null,
  *           description_sv?: string|null, description_en?: string|null,
  *           description_license?: string|null, source?: string|null,
  *           category_slug?: string|null, artist?: string|null,
@@ -149,12 +164,20 @@ export function buildShortFactBasedLine(event) {
 export function getDetailsDescription(event) {
   if (!event || typeof event !== 'object') return null;
 
-  // 1. Primär: eventpulse_summary
+  // 1. Primär (P7): editorial_description från MiniMax-M3.
+  // Brandväggen i 04-Normalizer/editorial/textualFirewall.ts garanterar
+  // att den aldrig innehåller källtext. UI visar den rakt av (samma
+  // hasRealDescription-tröskel, ≥10 tecken efter stripHtml).
+  if (event.editorial_description && hasRealDescription(event.editorial_description)) {
+    return stripHtml(event.editorial_description).trim();
+  }
+
+  // 2. eventpulse_summary (deterministisk template, alltid pålitlig)
   if (event.eventpulse_summary && hasRealDescription(event.eventpulse_summary)) {
     return stripHtml(event.eventpulse_summary).trim();
   }
 
-  // 2. Beskrivning ENDAST om license är tillåtande
+  // 3. Beskrivning ENDAST om license är tillåtande
   // (default 'unknown' blockerar scraped source text)
   if (isPublicLicense(event.description_license)) {
     const fromDescription = chooseDescriptionField(
@@ -165,11 +188,11 @@ export function getDetailsDescription(event) {
     if (fromDescription) return fromDescription;
   }
 
-  // 3. Faktbaserad kort rad (aldrig scraped text)
+  // 4. Faktbaserad kort rad (aldrig scraped text)
   const factBased = buildShortFactBasedLine(event);
   if (factBased) return factBased;
 
-  // 4. null → UI visar muted fallback
+  // 5. null → UI visar muted fallback
   return null;
 }
 
@@ -204,9 +227,10 @@ export function getDetailsDescriptionFallback(event, t, opts = {}) {
  * Returns the description preview to render under the title in a row.
  * Two-line max — callers apply `numberOfLines={2} ellipsizeMode="tail"`.
  *
- * Samma T0201-resolution som getDetailsDescription.
+ * Samma P7+T0201-resolution som getDetailsDescription.
  *
- * @param {{ eventpulse_summary?: string|null, description?: string|null,
+ * @param {{ editorial_description?: string|null,
+ *           eventpulse_summary?: string|null, description?: string|null,
  *           description_sv?: string|null, description_en?: string|null,
  *           description_license?: string|null,
  *           category_slug?: string|null, artist?: string|null,
