@@ -42,7 +42,7 @@ export interface EditorialPipelineInput {
   event: EventUnderstandingInput;
   /** Source description — ENDAST tillgänglig EFTER writer-anropet, inte i writer-inputs. */
   sourceDescription: string | null;
-  /** LLM-klient (OpenAI eller mock). */
+  /** LLM-klient (MiniMax-M3 eller mock). */
   llm: LlmClient;
   /** Valfri modell. */
   model?: string;

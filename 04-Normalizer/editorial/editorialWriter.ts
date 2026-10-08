@@ -6,9 +6,9 @@
  * VIKTIGT: Writer får BARA WriterSafeInputs (Profile + event-data + style guide).
  * Source-text når aldrig hit (textualFirewall.ts garanterar det).
  *
- * LLM-abstraktion: EditorialLlmClient interface. OpenAI är primär (OpenAI-rad 1
- * OK enligt API-nyckelstatus 2026-09-20). Anthropic var sönder vid samma test
- * — används inte. För tester finns en MockLlmClient.
+ * LLM-abstraktion: LlmClient interface. MiniMax-M3 är primär (samma modell som
+ * projektets chatt kör på, OpenAI-nycklar borttagna ur path). För tester finns
+ * en MockLlmClient.
  *
  * Steg 4/15 i P7 Definition of Done.
  */
@@ -30,24 +30,35 @@ export interface LlmClient {
   generate(args: LlmGenerateArgs): Promise<string>;
 }
 
-// ─── OpenAI-klient ──────────────────────────────────────────────────────────
+// ─── MiniMax-M3-klient (primär) ──────────────────────────────────────────────
 
-export interface OpenAIClientConfig {
+export interface MiniMaxConfig {
   apiKey: string;
   defaultModel?: string;
   baseUrl?: string;
 }
 
-export class OpenAILlmClient implements LlmClient {
-  readonly name = 'openai';
+/**
+ * OpenAI-kompatibel klient mot MiniMax-API:et.
+ *
+ *   baseUrl:  https://api.minimax.io/v1 (overridable via MINIMAX_BASE_URL)
+ *   modell:   'minimax-M3' default (overridable via MINIMAX_MODEL)
+ *   auth:     Bearer MINIMAX_API_KEY (root .env)
+ *
+ * MiniMax-modeller bäddar in internt resonemang i `<think>…</think>` före det
+ * slutgiltiga content-svaret. Vi strippar det deterministiskt — samma approach
+ * som 02-Ingestion/AI/minimaxConfig.ts använder för category-classification.
+ */
+export class MiniMaxM3LlmClient implements LlmClient {
+  readonly name = 'minimax-M3';
   private apiKey: string;
   private defaultModel: string;
   private baseUrl: string;
 
-  constructor(config: OpenAIClientConfig) {
+  constructor(config: MiniMaxConfig) {
     this.apiKey = config.apiKey;
-    this.defaultModel = config.defaultModel ?? 'gpt-4o-mini';
-    this.baseUrl = config.baseUrl ?? 'https://api.openai.com/v1';
+    this.defaultModel = config.defaultModel ?? 'minimax-M3';
+    this.baseUrl = (config.baseUrl ?? 'https://api.minimax.io/v1').replace(/\/$/, '');
   }
 
   async generate(args: LlmGenerateArgs): Promise<string> {
@@ -71,13 +82,26 @@ export class OpenAILlmClient implements LlmClient {
 
     if (!res.ok) {
       const errText = await res.text();
-      throw new Error(`OpenAI ${res.status}: ${errText.slice(0, 200)}`);
+      throw new Error(`MiniMax ${res.status}: ${errText.slice(0, 200)}`);
     }
 
-    const data = await res.json() as { choices?: Array<{ message?: { content?: string } }> };
-    const text = data.choices?.[0]?.message?.content ?? '';
-    return text.trim();
+    const data = (await res.json()) as {
+      choices?: Array<{ message?: { content?: string } }>;
+    };
+    const raw = data.choices?.[0]?.message?.content ?? '';
+    return stripThinkBlock(raw).trim();
   }
+}
+
+/**
+ * Strippa MiniMax-modellers inbyggda `<think>…</think>`-block.
+ * Modeller som MiniMax-M2.7/M3 bäddar in kedjeresonemang i content före det
+ * slutgiltiga svaret. Vi vill bara ha slut-svaret.
+ *
+ * Exponerad för tester som vill verifiera parsing av rå MiniMax-output.
+ */
+export function stripThinkBlock(content: string): string {
+  return content.replace(/<think>[\s\S]*?<\/think>/g, '').trim();
 }
 
 // ─── Mock-klient (för tester) ────────────────────────────────────────────────
@@ -181,7 +205,7 @@ export interface EditorialWriterInput {
 
 export async function writeEditorialDescription(input: EditorialWriterInput): Promise<EditorialDraft> {
   const { inputs, llm, seed } = input;
-  const model = input.model ?? (llm instanceof OpenAILlmClient ? (llm as OpenAILlmClient)['defaultModel'] : 'unknown');
+  const model = input.model ?? 'minimax-M3';
 
   const systemPrompt = buildSystemPrompt(inputs.style_guide);
   const userPrompt = buildUserPrompt(inputs);

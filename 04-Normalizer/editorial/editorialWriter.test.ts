@@ -4,7 +4,8 @@
 import { describe, expect, it } from 'vitest';
 import {
   MockLlmClient,
-  OpenAILlmClient,
+  MiniMaxM3LlmClient,
+  stripThinkBlock,
   writeEditorialDescription,
 } from './editorialWriter';
 import { compileWriterInputs, STYLE_GUIDE } from './textualFirewall';
@@ -42,10 +43,10 @@ describe('writeEditorialDescription', () => {
         language: 'sv',
       },
     });
-    const draft = await writeEditorialDescription({ inputs, llm: mock, model: 'gpt-4o-mini' });
+    const draft = await writeEditorialDescription({ inputs, llm: mock, model: 'minimax-M3' });
     expect(draft.text.length).toBeGreaterThan(0);
     expect(draft.word_count).toBeGreaterThan(0);
-    expect(draft.meta.model).toBe('gpt-4o-mini');
+    expect(draft.meta.model).toBe('minimax-M3');
     expect(draft.meta.prompt_version).toBe('editorial-writer/v1');
   });
 
@@ -90,11 +91,36 @@ describe('writeEditorialDescription', () => {
     expect(captured).toContain('live band');
   });
 
-  it('OpenAILlmClient bygger korrekt request utan att köra (konstruktion OK)', () => {
-    const client = new OpenAILlmClient({
+  it('MiniMaxM3LlmClient bygger korrekt request utan att köra (konstruktion OK)', () => {
+    const client = new MiniMaxM3LlmClient({
       apiKey: 'sk-test-123',
-      defaultModel: 'gpt-4o-mini',
+      defaultModel: 'minimax-M3',
     });
-    expect(client.name).toBe('openai');
+    expect(client.name).toBe('minimax-M3');
+  });
+
+  it('MiniMaxM3LlmClient normaliserar bas-URL (tar bort trailing slash)', () => {
+    const client = new MiniMaxM3LlmClient({
+      apiKey: 'sk-test-123',
+      baseUrl: 'https://api.minimax.io/v1/',
+    });
+    expect((client as unknown as { baseUrl: string }).baseUrl).toBe('https://api.minimax.io/v1');
+  });
+});
+
+describe('stripThinkBlock', () => {
+  it('plockar bort <think>…</think>-block och returnerar slut-svar', () => {
+    const raw = '<think>jag räknar ut…\nflera rader resonemang…\n…klar</think>Hooligan Bobs intar Debaser.';
+    expect(stripThinkBlock(raw)).toBe('Hooligan Bobs intar Debaser.');
+  });
+
+  it('lämnar content oförändrat när inget think-block finns', () => {
+    const raw = 'Kort svar utan resonemang.';
+    expect(stripThinkBlock(raw)).toBe('Kort svar utan resonemang.');
+  });
+
+  it('hanterar flera think-block (tar bort alla)', () => {
+    const raw = '<think>första resonemanget</think>Hooligan Bobs spelar.<think>andra resonemanget</think> Ikväll på Debaser.';
+    expect(stripThinkBlock(raw)).toBe('Hooligan Bobs spelar. Ikväll på Debaser.');
   });
 });

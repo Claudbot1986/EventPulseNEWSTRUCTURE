@@ -33,7 +33,7 @@ source description (BARA för oberoende-kontroll)
 | `types.ts` | TypeScript-typer (EventProfile, WriterSafeInputs, EditorialDraft, Factuality/Independence-result) |
 | `eventUnderstanding.ts` | Semantisk extraktion, 23 v3-kategorier |
 | `textualFirewall.ts` | Runtime-brandvägg + STYLE_GUIDE |
-| `editorialWriter.ts` | LLM-anrop (OpenAI primär, mock för tester) |
+| `editorialWriter.ts` | LLM-anrop (MiniMax-M3 primär, mock för tester) |
 | `factualityCheck.ts` | Deterministisk claim-verifiering |
 | `independenceCheck.ts` | Jaccard-likhet + fras-match mot source |
 | `index.ts` | Pipeline-orchestrator |

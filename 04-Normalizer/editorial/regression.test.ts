@@ -139,12 +139,12 @@ describe('Editorial Engine — regressioner', () => {
       text: 'Bra text.',
       word_count: 2,
       info_level: 'RICH' as const,
-      meta: { model: 'gpt-4o-mini', prompt_version: 'v1', generated_at: '2026-10-07T00:00:00Z' },
+      meta: { model: 'minimax-M3', prompt_version: 'v1', generated_at: '2026-10-07T00:00:00Z' },
     };
     const sed = buildStoredEditorialDescription(draft, true, true);
     expect(sed.text).toBe('Bra text.');
     expect(sed.info_level).toBe('RICH');
-    expect(sed.model).toBe('gpt-4o-mini');
+    expect(sed.model).toBe('minimax-M3');
     expect(sed.factuality_pass).toBe(true);
     expect(sed.independence_pass).toBe(true);
   });

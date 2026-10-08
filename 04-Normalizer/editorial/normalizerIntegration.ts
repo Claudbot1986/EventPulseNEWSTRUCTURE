@@ -9,6 +9,10 @@
  *   3. Om status === 'passed' → skriv tillbaka Profile + editorial_description
  *      + generated_at + info_level + model + prompt_version.
  *
+ * LLM: MiniMax-M3 via MINIMAX_API_KEY (root .env). Saknas nyckel → mock-LLM
+ * (icke-fatalt, korta placeholder-texter). Byt modell/endpoint via
+ * MINIMAX_MODEL / MINIMAX_BASE_URL.
+ *
  * Fel hanteras som non-critical (som aiImageQueue) — misslyckad editorial
  * får INTE hindra eventet från att synas i UI. UI faller tillbaka till
  * eventpulse_summary om editorial saknas.
@@ -16,7 +20,7 @@
 
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { runEditorialPipeline, buildStoredProfile, buildStoredEditorialDescription } from './index';
-import { OpenAILlmClient, MockLlmClient } from './editorialWriter';
+import { MiniMaxM3LlmClient, MockLlmClient } from './editorialWriter';
 import type { EventUnderstandingInput } from './eventUnderstanding';
 
 // ─── Env / config ────────────────────────────────────────────────────────────
@@ -25,15 +29,19 @@ export function isEditorialEnabled(): boolean {
   return process.env.EDITORIAL_ENABLED === '1';
 }
 
-function buildLlmClient(): OpenAILlmClient | MockLlmClient {
-  const apiKey = process.env.OPENAI_API_KEY;
+function buildLlmClient(): MiniMaxM3LlmClient | MockLlmClient {
+  const apiKey = process.env.MINIMAX_API_KEY;
   if (!apiKey) {
     // Icke-fatalt — faller tillbaka till mock med kort text. Bättre än att
     // krascha normalizer-kön.
-    console.warn('[editorial] OPENAI_API_KEY saknas — använder mock-LLM (korta placeholder-texter)');
-    return new MockLlmClient('Eventbeskrivning (mock — OPENAI_API_KEY ej satt).');
+    console.warn('[editorial] MINIMAX_API_KEY saknas — använder mock-LLM (korta placeholder-texter)');
+    return new MockLlmClient('Eventbeskrivning (mock — MINIMAX_API_KEY ej satt).');
   }
-  return new OpenAILlmClient({ apiKey });
+  return new MiniMaxM3LlmClient({
+    apiKey,
+    defaultModel: process.env.MINIMAX_MODEL ?? 'minimax-M3',
+    baseUrl: process.env.MINIMAX_BASE_URL ?? 'https://api.minimax.io/v1',
+  });
 }
 
 // ─── Input-byggare ───────────────────────────────────────────────────────────
@@ -151,7 +159,7 @@ export async function maybeRunEditorial(
       event: inputs,
       sourceDescription: event.raw_description ?? null,
       llm,
-      model: llm instanceof OpenAILlmClient ? 'gpt-4o-mini' : 'mock',
+      model: llm instanceof MiniMaxM3LlmClient ? 'minimax-M3' : 'mock',
       maxAttempts: 2,
     });
 
