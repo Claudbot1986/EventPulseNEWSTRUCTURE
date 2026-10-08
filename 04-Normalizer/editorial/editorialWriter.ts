@@ -86,10 +86,25 @@ export class MiniMaxM3LlmClient implements LlmClient {
     }
 
     const data = (await res.json()) as {
-      choices?: Array<{ message?: { content?: string } }>;
+      choices?: Array<{ message?: { content?: string }; finish_reason?: string }>;
     };
-    const raw = data.choices?.[0]?.message?.content ?? '';
-    return stripThinkBlock(raw).trim();
+    const choice = data.choices?.[0];
+    const raw = choice?.message?.content ?? '';
+
+    // MiniMax-M3 bäddar in <think>…</think> som kan konsumera många tokens
+    // och lämna slut-svaret tomt (finish_reason='length'). Vid tomt svar
+    // → returnera tydlig signal (inte empty string) → pipeline-rapporten
+    // visar det som "VERY_LOW" istället för att tyst gå vidare.
+    const stripped = stripThinkBlock(raw).trim();
+    if (!stripped) {
+      const reason = choice?.finish_reason ?? 'unknown';
+      throw new Error(
+        `MiniMax returned empty content (finish_reason=${reason}, ` +
+        `raw_len=${raw.length}) — think block kan ha konsumerat hela max_tokens. ` +
+        `Öka max_tokens eller använd en modell utan think-block.`,
+      );
+    }
+    return stripped;
   }
 }
 
@@ -214,7 +229,7 @@ export async function writeEditorialDescription(input: EditorialWriterInput): Pr
     systemPrompt,
     userPrompt,
     model,
-    maxTokens: 300,
+    maxTokens: 800, // MiniMax-M3 behöver utrymme för think-block + 2-3 meningar svar
     temperature: 0.7,
   });
 
