@@ -12,11 +12,20 @@ User decisions baked in (2026-09-20): **guest taste-first är första fokus (100
 
 Do in this order. All items are launch blockers; nothing else enters NOW.
 
-1. **Guest taste-first, server side**
+1. **Guest taste-first, server side** [IN PROGRESS 2026-10-09]
+   - Server: `scripts/smoke-anon-signin.mjs` 6/6 PASS (2026-09-20).
+   - UI: un-hide personalized home sections (Rekommenderat/Förslag/Sparade) for guests in `AppShell`/`HomeScreen`; reframe `AuthReminderModal` copy till sync-framing.
 
-### Pre-launch (unchanged from current BACKLOG)
+### Pre-launch (updated 2026-10-09)
 
-- AI image top-up: BFL credits + run backfill until `image_status='pending'` = 0. Do not flag as blocker before launch point.
+- ~~Analytics decision~~ **Resolved 2026-10-09** (`81b467d2` — Fas 1.5 #4 Val A): `user_interactions` enda funnel source. `analyticsClient` markerad non-funnel.
+- AI image top-up: BFL round 5 batch + backfill-verktyg klart (`1f81a149`, 2026-10-09). Kvar: kör backfill tills `image_status='pending'` = 0. Inte blocker innan launch point.
+
+### Phase 1.5 levererat (för historik)
+
+- Stream A.1 — `02-Ingestion/gateEvalReport.{ts,test.ts}` (per-gate markdown-formatter, `compareGateReports(before, after)`) — `a6c45ea7`, 13/13 nya tester, 41/41 totalt.
+- Stream B.1 — `06-UI/FEATURE_MAP.md` (153 rader) + feature-as-directory pilot `06-UI/features/save-favorite/` (591 rader) + visual-regression CI (`06-UI/e2e/visual-regression/`) — `b0fdff72` + `520bd6a2`.
+- Agent Runtime safety-gate Tier 0 regression-fix + Tier 1 design change (Alt B) — `7207229b` + `03a2234d`.
 
 ---
 
