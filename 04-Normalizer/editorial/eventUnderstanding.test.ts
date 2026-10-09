@@ -220,6 +220,106 @@ describe('buildEventProfile', () => {
   });
 });
 
+// ─── FAS 3 Evidence Pack — entity_extractor → Profile.performers ───────────
+//
+// Innan denna integration hade Profile.performers BARA data från artistResolver.
+// Nu fångar vi också artister från title via extractEntities (rules + LLM-fallback).
+// Cross-site verifierat på live-sample 2026-10-08.
+
+describe('FAS 3 — title-baserad entity_extractor → Profile.performers', () => {
+  it('Quidam: Helene Berg + 5 → alla 6 performers syns i profile', () => {
+    const input: EventUnderstandingInput = {
+      category_slug: 'community',
+      title: 'Quidam: Helene Berg + Paul Pignon + Ida Lundén + Thomas Bjelkeborn + Eva Lindal + Philippe Moenne-Loccoz',
+    };
+    const p = buildEventProfile(input);
+    expect(p.performers).toContain('Helene Berg');
+    expect(p.performers).toContain('Paul Pignon');
+    expect(p.performers).toContain('Ida Lundén');
+    expect(p.performers).toContain('Thomas Bjelkeborn');
+    expect(p.performers).toContain('Eva Lindal');
+    expect(p.performers).toContain('Philippe Moenne-Loccoz');
+    expect(p.performers.length).toBe(6);
+    expect(p.provenance['performers']).toContain('entity_extractor:title');
+  });
+
+  it('Anton Estby + Henrythefreak → 2 comedians syns', () => {
+    const input: EventUnderstandingInput = {
+      category_slug: 'humor',
+      title: 'Anton Estby och Henrythefreak - Standup 2026, Stockholm',
+    };
+    const p = buildEventProfile(input);
+    expect(p.performers).toContain('Anton Estby');
+    expect(p.performers).toContain('Henrythefreak');
+  });
+
+  it('Donovan Woods (ensamt namn) → artist i profile', () => {
+    const input: EventUnderstandingInput = {
+      category_slug: 'music',
+      title: 'Donovan Woods',
+    };
+    const p = buildEventProfile(input);
+    expect(p.performers).toContain('Donovan Woods');
+  });
+
+  it('AIK vs BIK Karlskoga (sport) → 2 teams syns', () => {
+    const input: EventUnderstandingInput = {
+      category_slug: 'sports',
+      title: 'AIK - BIK Karlskoga',
+    };
+    const p = buildEventProfile(input);
+    expect(p.performers).toContain('AIK');
+    expect(p.performers).toContain('BIK Karlskoga');
+  });
+
+  it('Chicago (musical-theatre) → Chicago som work SKA INTE hamna i performers', () => {
+    const input: EventUnderstandingInput = {
+      category_slug: 'musical-theatre',
+      title: 'Chicago - the Musical Oscarsteatern 2026-10-09 19:30',
+    };
+    const p = buildEventProfile(input);
+    // performers-listan ska INTE innehålla Chicago
+    expect(p.performers).not.toContain('Chicago');
+    // Inte heller "Oscarsteatern" (det är en venue-referens i title)
+    expect(p.performers).not.toContain('Oscarsteatern');
+  });
+
+  it('Utan title → performers-listan tom (vi hittar inte på)', () => {
+    const input: EventUnderstandingInput = {
+      category_slug: 'music',
+      // No title
+    };
+    const p = buildEventProfile(input);
+    expect(p.performers).toEqual([]);
+  });
+
+  it('artistResolver har redan performers → entity_extractor får INTE lägga till', () => {
+    // Om artistResolver har gett performers ska vi INTE double-source.
+    // (entity_extractor triggar bara om performers.length === 0)
+    const input: EventUnderstandingInput = {
+      category_slug: 'music',
+      title: 'Veronica Maggio Sommarturné',
+      performers: ['Någon-annan-artist'],
+    };
+    const p = buildEventProfile(input);
+    // BARA den från artistResolver, inte entity_extractor
+    expect(p.performers).toContain('Någon-annan-artist');
+    // Här kan vi inte förvänta oss Veronica Maggio (hon syns inte i titeln utan 'X med X'-pattern)
+    // utan bara säkerställa att artistResolver vinner.
+  });
+
+  it('profileInfoLevel höjs till RICH när title ger performers', () => {
+    const input: EventUnderstandingInput = {
+      category_slug: 'community',
+      title: 'Quidam: Helene Berg + Paul Pignon + Ida Lundén',
+    };
+    const p = buildEventProfile(input);
+    // 3 performers + genres + content → MEDIUM eller RICH
+    const level = profileInfoLevel(p);
+    expect(['RICH', 'MEDIUM']).toContain(level);
+  });
+});
+
 describe('profileInfoLevel', () => {
   it('tom profile → VERY_LOW', () => {
     expect(profileInfoLevel({

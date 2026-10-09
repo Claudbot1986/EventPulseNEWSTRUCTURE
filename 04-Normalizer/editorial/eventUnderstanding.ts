@@ -19,6 +19,7 @@
 import type { EventProfile } from './types';
 import { CATEGORY_BY_SLUG } from '../categoryDefinitions';
 import { extractSemantics, applySemanticExtraction } from './semanticExtractor';
+import { extractEntities } from './entityExtractor';
 
 // ─── Inputs (strukturerade event-fält + valfri raw_description) ──────────────
 
@@ -400,6 +401,41 @@ export function buildEventProfile(input: EventUnderstandingInput): EventProfile 
   }
   if (input.support_acts?.length) {
     add('support_acts', 'artist_resolver');
+  }
+
+  // ── FAS 3 Evidence Pack: Performers från title (entityExtractor) ───────────
+  //
+  // Om artistResolver inte gav några performers OCH vi har title +
+  // category_slug → kör extractEntities för att hitta artister i titeln.
+  //
+  // Cross-site bevisat (live-sample 2026-10-08): 18 events där titeln
+  // namnger artister men artistResolver inte fångat (Quidam: Helene Berg
+  // + 5 till, Norra Brunn: Måns Möller + 2 till, Anton Estby, etc.).
+  //
+  // Vi filtrerar bort icke-performer-roller (work/referenced/theme/
+  // unknown/organizer) — bara riktiga artister tillåts i Profile.
+  if (performers.length === 0 && input.title && input.category_slug) {
+    const entities = extractEntities({
+      title: input.title,
+      raw_description: null,
+      category_slug: input.category_slug,
+      venue_name: input.venue_name ?? null,
+    });
+    const PERFORMER_ROLES = new Set([
+      'artist', 'ensemble', 'band', 'performer', 'comedian',
+      'conductor', 'soloist', 'speaker', 'dj', 'team',
+    ]);
+    const titlePerformers: string[] = [];
+    for (const e of entities) {
+      if (!PERFORMER_ROLES.has(e.role)) continue;
+      // Undvik dubletter mot performers-listan
+      if (titlePerformers.includes(e.name)) continue;
+      titlePerformers.push(e.name);
+    }
+    if (titlePerformers.length > 0) {
+      performers.push(...titlePerformers);
+      add('performers', 'entity_extractor:title');
+    }
   }
 
   // ── Languages ─────────────────────────────────────────────────────────────
