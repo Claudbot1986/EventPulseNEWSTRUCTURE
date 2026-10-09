@@ -77,6 +77,8 @@ export interface PreGateResult {
   hasMain: boolean;
   /** Whether <article> was found */
   hasArticle: boolean;
+  /** Whether an alternative main-content element was found (fallback for C1_NO_MAIN_ARTICLE) */
+  hasAltMain: boolean;
   /** Number of <time datetime> elements */
   timeTagCount: number;
   /** Number of ISO date patterns (YYYY-MM-DD) in scoped text */
@@ -174,7 +176,7 @@ export async function screenUrl(url: string): Promise<PreGateResult> {
       fetchError: r.error ?? 'unknown',
       categorization: 'unfetchable',
       reason: `fetch-fail: ${r.error ?? 'unknown'}`,
-      hasMain: false, hasArticle: false,
+      hasMain: false, hasArticle: false, hasAltMain: false,
       timeTagCount: 0, isoDateCount: 0, sweDateCount: 0, dateCount: 0,
       headingCount: 0, listContainerCount: 0, listItemCount: 0, linkCount: 0,
       venueMarkerCount: 0, priceMarkerCount: 0, likelyJsRendered: false,
@@ -189,8 +191,21 @@ export async function screenUrl(url: string): Promise<PreGateResult> {
   const hasArticle = $('article').length > 0;
   const timeTagCount = $('time[datetime]').length;
 
-  // Scope text for date scanning: main and article only
-  const scopeText = $('main, article, [role="main"], .content, .event-content, .kalender, .event-list').text() || '';
+  // ─── Alternative main-content detection (C1_NO_MAIN_ARTICLE fallback) ───
+  // Aktiveras ENDAST om hasMain === false && hasArticle === false.
+  // Mål: fånga sajter som använder div/section istället för <main>/<article>.
+  // Generaliserad — verifierat på 16+ unika källor i batch-209.
+  const altMainSelectors = [
+    '[role="main"]',
+    '.main-content', '.mainContent', '#main-content', '#mainContent',
+    '.content', '.page-content', '.entry-content',
+    '.event-list', '.eventList', '.kalender', '.calendar',
+  ];
+  const $altMain = $(altMainSelectors.join(', '));
+  const hasAltMain = $altMain.length > 0;
+
+  // Scope text for date scanning: main, article, or alternative main-content
+  const scopeText = $('main, article, [role="main"], .content, .event-content, .kalender, .event-list, .main-content, .entry-content, .calendar').text() || '';
   const isoDateRegex = /\d{4}-\d{2}-\d{2}(?:T\d{2}:\d{2}(?::\d{2})?)?/g;
   const swedishDateRegex = /\d{1,2}\s+(?:januari|februari|mars|april|maj|juni|juli|augusti|september|oktober|november|december|jan|feb|mar|apr|maj|jun|jul|aug|sep|okt|nov|dec)\s+\d{4}|\d{1,2}\/\d{1,2}\s+\d{4}/gi;
   const isoDateCount = Math.min(20, (scopeText.match(isoDateRegex) || []).length);
@@ -222,9 +237,14 @@ export async function screenUrl(url: string): Promise<PreGateResult> {
   // honest fix (label → assignment) = queue task.
   let reason!: string;
 
-  if (!hasMain && !hasArticle) {
+  if (!hasMain && !hasArticle && !hasAltMain) {
     categorization = 'no-main';
-    reason = 'no <main> or <article>';
+    reason = 'no <main>, <article>, or alternative main-content';
+  } else if (!hasMain && !hasArticle && hasAltMain) {
+    // Fallback: använd alt-main som scope, men sätt weak istället för no-main
+    // (vi vet inte säkert att det är main-content, men vi ska testa)
+    categorization = 'weak';
+    reason = `alt-main fallback (${$altMain.length} matches via [role=main|class*=content|...])`;
   } else if (timeTagCount >= 3 && dateCount >= 3) {
     categorization = 'strong';
     reason = `${timeTagCount} time-tags + ${dateCount} dates`;
@@ -271,6 +291,7 @@ export async function screenUrl(url: string): Promise<PreGateResult> {
     html: r.html,
     hasMain,
     hasArticle,
+    hasAltMain,
     timeTagCount,
     isoDateCount,
     sweDateCount,

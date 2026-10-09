@@ -24,6 +24,14 @@ export interface DiscoveredLink {
   matchedConcepts: string[];
 }
 
+/**
+ * Steg 4 feature-flag: inlänk-räkning som popularitet-tiebreaker.
+ * Sätts till false för A/B-jämförelse i Fas B.2 cohort-mätning.
+ * Default: true (Steg 4 aktiv).
+ */
+export const INBOUND_TIEBREAKER_ENABLED =
+  process.env.EVENTPULSE_C0_INBOUND_TIEBREAKER !== 'false';
+
 export interface CandidatePage {
   url: string;
   href: string;
@@ -513,11 +521,14 @@ export async function discoverEventCandidates(
 
   candidates.sort((a, b) => {
     // Steg 4: primär sort på eventDensityScore (befintlig semantik),
-    // tiebreaker på finalScore (inlänk-viktad).
+    // tiebreaker på finalScore (inlänk-viktad) om feature-flag aktiv.
     if (b.eventDensityScore !== a.eventDensityScore) {
       return b.eventDensityScore - a.eventDensityScore;
     }
-    return b.finalScore - a.finalScore;
+    if (INBOUND_TIEBREAKER_ENABLED) {
+      return b.finalScore - a.finalScore;
+    }
+    return 0; // Ingen tiebreaker — bevara insättningsordning
   });
 
   // -----------------------------------------------------------------------
