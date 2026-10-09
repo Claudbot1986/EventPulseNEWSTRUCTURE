@@ -240,6 +240,36 @@ export function buildApp(opts: {
     res.json({ ok: true, phase: 0 });
   });
 
+  // ─── D-render pilot (Val C, 2026-10-09) ──────────────────────────────
+  // Per CLAUDE.md "DO NOT BUILD YET": D-render is NOT default path.
+  // This endpoint is admin-gated (AGENT_ADMIN_TOKEN) and source-specific
+  // (only 5 sourceIds in the allowlist may pass). It exists to measure
+  // whether headless rendering actually unlocks events for the
+  // C1_STRONG_JS_RENDER_D_SIGNAL cluster — before any auto-routing.
+  app.post('/agent/render', requireAdmin, generalLimiter.middleware, async (req: Request, res: Response) => {
+    const { sourceId, url, behavior, timeout } = req.body ?? {};
+    if (typeof sourceId !== 'string' || !sourceId) {
+      return res.status(400).json({ error: 'sourceId required' });
+    }
+    // Dynamic import keeps the D-render code out of the default 08-Agent
+    // boot path. Costs one extra ~200ms on first call.
+    const { runPilotSource } = await import(
+      '../02-Ingestion/D-renderGate/runD-pilot.js'
+    );
+    const result = await runPilotSource(sourceId, {
+      url: typeof url === 'string' ? url : undefined,
+      behavior: typeof behavior === 'string' ? behavior : undefined,
+      timeout: typeof timeout === 'number' ? timeout : undefined,
+    });
+    if (result.exitReason === 'source-not-in-allowlist') {
+      return res.status(404).json({ error: 'source not in pilot allowlist', result });
+    }
+    if (result.exitReason === 'render-failed') {
+      return res.status(502).json({ error: 'render failed', result });
+    }
+    return res.json({ result });
+  });
+
   // ─── AI image smoketest (Step A) ────────────────────────────────────
   // Mounted BEFORE the per-route generalLimiter so the router itself
   // can decide what to expose (the middleware is gated by env flag and
