@@ -316,3 +316,9 @@ Format: `YYYY-MM-DD HH:MM | type | state (≤140c) | answer | action taken`.
 2026-10-06 20:21 | advisor | score | BFL Flux 1.1 Pro, real Stockholm venues, real humans, realistic lighting. We write prompts in English. We want prompts that read like rea... | {"jev_prompt_set": {"type": "score", "score": 1.1, "legend": {"0": ["1", "POOR"], "1": ["5", "OK"], "2": ["10", "EXCELLENT"]}, "probabilities": {"0": 0.31, "1": 0.27, "2": 0.42}, "confidence": 0}} | uses 4-pattern rotation per category
 2026-10-06 20:21 | advisor | noul | Per-category corpus for EventPulse (titles + descriptions + venues). We use M2.7/MiniMax-M3 to expand each top-word cluster into 4 prompt... | {"jev_m27_expansion": {"type": "noul", "noul": 0.55}} | expansion pipeline
 2026-10-06 20:21 | advisor | noul | EventPulse image_library fallback. Worker assigns each event the best matching library image by venue_pattern + category_slug. Today: 177... | {"jev_theatre_drama_18": {"type": "noul", "noul": 0.93}} | theatre-drama 18 images
+2026-10-07 06:25 | advisor | noul | /Users/claudgashi/EventPulse | {"bfl-image-distribution": {"type": "noul", "noul": 0.52}} | 
+2026-10-07 06:25 | advisor | noul | /Users/claudgashi/EventPulse | {"bfl-prompt-patterns": {"type": "noul", "noul": 0.44}} | 
+2026-10-07 06:25 | advisor | score | /Users/claudgashi/EventPulse | {"bfl-55-image-plan": {"type": "score", "score": 0, "legend": {"0": ["match-rate", "match-rate"]}, "probabilities": {"0": 1}, "confidence": 1}} | 
+2026-10-07 06:25 | advisor | noul | /Users/claudgashi/EventPulse | {"bfl-double-events-100": {"type": "noul", "noul": 0.52}} | 
+2026-10-07 06:25 | advisor | choice | /Users/claudgashi/EventPulse | {"bfl-image-strategy": {"type": "choice", "choice": "{\"maximizes\"", "probabilities": {"{\"maximizes\"": 1}, "confidence": 1}} | 
+2026-10-07 06:26 | advisor | noul | /Users/claudgashi/EventPulse | {"bfl-prompt-knife-risk": {"type": "noul", "noul": 0.37}} | 

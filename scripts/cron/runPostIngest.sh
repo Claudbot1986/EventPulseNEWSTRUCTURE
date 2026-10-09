@@ -1,12 +1,15 @@
 #!/bin/bash
 # runPostIngest.sh — kör EFTER ingestion-cron (som launchd kör direkt).
-# Innehåller link-health, purge, supervisor, discovery, mrq-prune.
+# Innehåller link-health, purge, supervisor, discovery, mrq-prune, image-quota-check.
 # Schemaläggs av com.eventpulse.post-ingest.plist kl 04:00.
 #
 # 2026-10-07 — separerad från runNightly.sh så att ingestion-chain kan köras
 # av launchd via tsx-direktanrop (inte via bash-wrapper). Annars kan en hängande
 # child-process maskera att bash är vid liv → launchd tror allt är OK → startar
 # aldrig om nästa planerade körning.
+#
+# 2026-10-08 — quota-check efter mrq-prune (användarbeslut). Skriver ENDAST plan-JSON,
+# genererar inga BFL-bilder. Användaren granskar plan och kör round5 manuellt.
 
 set -uo pipefail
 
@@ -42,6 +45,7 @@ run purge          bash scripts/start-purge.sh
 run supervisor     "$TSX_BIN" 09-ScrapingSupervisor/runDaily.ts
 run discovery      bash 09-DiscoveryAgent/cron/runDaily.sh
 run mrq-prune      "$TSX_BIN" scripts/prune-mrq.ts --commit
+run quota-check    "$TSX_BIN" scripts/_check_image_quota.ts --emit-plan
 
 echo "[post-ingest] ═══ KLAR $(date -u +%Y-%m-%dT%H:%M:%SZ) ═══  ${RES[*]}"
 

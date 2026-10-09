@@ -54,6 +54,8 @@ async function collectImages() {
     const files = await fs.readdir(sub);
     for (const f of files) {
       if (!/\.(webp|png|jpe?g)$/i.test(f)) continue;
+      // ENDAST round5-bilder (bfl5_*.webp, bfl5b_*.webp, bfl5c_*.webp eller bfl5d_*.webp). Andra rundor hanteras separat.
+      if (!f.startsWith('bfl5_') && !f.startsWith('bfl5b_') && !f.startsWith('bfl5c_') && !f.startsWith('bfl5d_')) continue;
       out.push({ cat, file: f, abs: path.join(sub, f) });
     }
   }

@@ -32,7 +32,10 @@ const STORAGE_BUCKET = 'event-posters';
 const STAMPED_PREFIX = 'import-stamped';
 const SRC_DIR = join(process.cwd(), 'local_image_library');
 
-const TAGS = ['bfl', 'flux-pro-1.1', 'stamped-2026-10-06'];
+// Round5-taggar (2026-10-07) — bfl5_*.webp som genererades för 1/30-påfyllnad.
+const TAGS_ROUND5 = ['bfl', 'flux-pro-1.1', 'stamped-2026-10-07', 'round5-1per30'];
+// Befintliga round2-taggar (2026-10-06) för bakåtkompatibilitet.
+const TAGS_ROUND2 = ['bfl', 'flux-pro-1.1', 'stamped-2026-10-06'];
 const DEFAULT_RATING = 3;
 
 const argIdx = (n: string): string | null => {
@@ -72,6 +75,8 @@ function collectWebps(): ReadonlyArray<WebpFile> {
     } catch { continue; }
     for (const f of stat) {
       if (!f.toLowerCase().endsWith('.webp')) continue;
+      // Valfri bfl5-only-flagga för staging av round5 (--only5 laddar bara bfl5_).
+      if (process.argv.includes('--only5') && !f.startsWith('bfl5_') && !f.startsWith('bfl5b_') && !f.startsWith('bfl5c_') && !f.startsWith('bfl5d_')) continue;
       const storagePath = `${STORAGE_BUCKET}/${STAMPED_PREFIX}/${f}`;
       out.push({
         cat,
@@ -158,11 +163,14 @@ async function uploadAndRegister(file: WebpFile): Promise<UploadResult> {
     }
   }
 
+  // Välj tagg-set baserat på filnamn (round5 = bfl5_*, bfl5b_*, bfl5c_*, bfl5d_*).
+  const isRound5 = /^bfl5[a-z]?_/.test(file.filename);
+  const tags = isRound5 ? TAGS_ROUND5 : TAGS_ROUND2;
   const libRes = await addToLibrary({
     storage_path: file.storagePath,
     public_url: file.publicUrl,
     category_slug: file.cat,
-    tags: TAGS,
+    tags,
     rating: DEFAULT_RATING,
   });
   if (!libRes.ok) {
