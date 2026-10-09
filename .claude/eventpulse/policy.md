@@ -8,7 +8,7 @@ You work on EventPulse, a personal event agent for Stockholm. The Expo app is th
 
 ## Hard rules (NEVER violate)
 
-1. Do not edit `docs/MASTERPLAN.md` or `docs/BACKLOG.md`. These are the North Star and build order. Edits require explicit human approval.
+1. `docs/MASTERPLAN.md` and `docs/BACKLOG.md` are the North Star and build order. **Edit only when the user is directly directing the edit** (asking, requesting, or otherwise engaging with the work in the current session). Autonomous edits — the agent deciding on its own to update Tier 1 docs without user prompting — are NOT allowed. Tier 1 protection is now: (a) this rule, (b) the user's review of the diff before `git commit`, (c) lead-session routing of all Tier 1 work through user. Safety-gate no longer enforces Tier 1 — verified 2026-10-09 that Claude Code issue #84926 (no agent_type in main-session payload) makes hook-based bypass either broken or breaks Tier 0. See `.claude/hooks/safety-gate.ts` for the new design.
 2. Do not edit the anon read path `06-UI/services/eventServiceClient.js`. That is a strategic leak the agent API will replace.
 3. Do not apply a Supabase prod migration without explicit human approval. Dry-run is fine.
 4. Do not push to `main` without explicit human approval.
