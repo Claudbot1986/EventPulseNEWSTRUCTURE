@@ -9,23 +9,23 @@
   "prompts": [
     {
       "pattern": "A_wide",
-      "prompt": "Wide shot of the Golden Hits venue at 왕의 정원 in Stockholm, warm golden stage lights bathing the dining hall, guests at candlelit tables watching performers in glittering attire, karaoke screens glowing on each side, festive helkväll atmosphere captured in natural-event photography."
+      "prompt": "Wide photograph of the Golden Hits dinner theater in Stockholm, captured during a helkväll performance. Stage glows amber over white-clothed tables where a full crowd raises champagne coupes. Karaoke screen lit in the background, nattklubb atmosphere, warm tungsten and natural stage light."
     },
     {
       "pattern": "B_medium",
-      "prompt": "Medium shot of a smiling couple clinking champagne flutes at 왕의 정원, Golden Hits dinnershow underway behind them, performers mid-song under golden spotlights, nattklubb dancers visible in soft background focus, warm indoor event lighting."
+      "prompt": "Medium shot at Tyrol Stockholm during a lively banquet night. Three friends in elegant evening wear laugh mid-conversation, clinking glasses beside a tiered Greek-blue cake. Ikonisk Mediterranean taverna decor, soft amber stage lighting bouncing off stucco arches behind them."
     },
     {
       "pattern": "C_environment",
-      "prompt": "Environmental shot of Tyrol Stockholm's taverna interior, blue-washed walls and string lights, guests dancing between rustic wooden tables, stage with live band, karaoke corner lit in pink neon, lively helkväll crowd energy documented in candid event photography."
+      "prompt": "Environmental view of the Golden Hits ballroom at 왕의 정원, Stockholm. Round tables stretch into the distance under a glittering golden chandelier, the karaoke backdrop glowing magenta. A performer in sequins stands center stage under warm stage-light wash, guests visible mid-applause."
     },
     {
       "pattern": "D_detail",
-      "prompt": "Close detail of a crystal glass catching golden stage light, blurred performers singing karaoke behind, confetti on a white tablecloth at 왕의 정원, a half-finished dessert plate reflecting nattklubb ambient glow, intimate event-night photography."
+      "prompt": "Close detail of a karaoke screen glowing with song lyrics beside a half-finished cocktail on a Golden Hits dinner table. Golden napkin folds, scattered confetti, and a golden wristwatch resting on white linen. Warm nattklubb ambient light catches each metallic surface."
     },
     {
       "pattern": "E_intimate",
-      "prompt": "Intimate close-up of two friends laughing at a lounge booth in Annexet Stockholm, soft golden mood lighting, karaoke performer mid-sway in the warm bokeh background, a helkväll of music captured naturally on candid event photography."
+      "prompt": "Intimate portrait of two women at Tyrol Stockholm sharing karaoke microphones, cheeks flushed from laughter. Blurred golden string lights fill the background, glasses of wine catching stage-light flares. Candid helkväll energy, natural warm color temperature, soft focus surroundings."
     }
   ]
 }

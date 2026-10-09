@@ -1,0 +1,169 @@
+{
+  "category_slug": "pop",
+  "events": 10,
+  "docs": 10,
+  "top_1grams_distinctive": [
+    {
+      "w": "låtskrivare",
+      "c": 20,
+      "score": 49.698132995760005
+    },
+    {
+      "w": "strömstedt",
+      "c": 20,
+      "score": 47.95790545596741
+    },
+    {
+      "w": "niklas",
+      "c": 20,
+      "score": 38.91820298110626
+    },
+    {
+      "w": "melodifestivalen",
+      "c": 10,
+      "score": 28.33213344056216
+    },
+    {
+      "w": "han",
+      "c": 20,
+      "score": 27.725887222397812
+    },
+    {
+      "w": "skådespelare",
+      "c": 10,
+      "score": 25.649493574615366
+    },
+    {
+      "w": "solokarriär",
+      "c": 10,
+      "score": 24.849066497880003
+    },
+    {
+      "w": "hagsätra",
+      "c": 10,
+      "score": 21.972245773362197
+    },
+    {
+      "w": "artister",
+      "c": 10,
+      "score": 21.972245773362197
+    },
+    {
+      "w": "deltagit",
+      "c": 10,
+      "score": 21.972245773362197
+    },
+    {
+      "w": "sångare",
+      "c": 10,
+      "score": 20.79441541679836
+    },
+    {
+      "w": "utanför",
+      "c": 10,
+      "score": 20.79441541679836
+    },
+    {
+      "w": "skrivit",
+      "c": 10,
+      "score": 20.79441541679836
+    },
+    {
+      "w": "svensk",
+      "c": 10,
+      "score": 19.45910149055313
+    },
+    {
+      "w": "artist",
+      "c": 10,
+      "score": 19.45910149055313
+    },
+    {
+      "w": "växte",
+      "c": 10,
+      "score": 17.91759469228055
+    },
+    {
+      "w": "musik",
+      "c": 10,
+      "score": 17.91759469228055
+    },
+    {
+      "w": "andra",
+      "c": 10,
+      "score": 17.91759469228055
+    },
+    {
+      "w": "född",
+      "c": 10,
+      "score": 16.094379124341003
+    },
+    {
+      "w": "juli",
+      "c": 10,
+      "score": 16.094379124341003
+    }
+  ],
+  "top_2grams_distinctive": [
+    [
+      "niklas strömstedt",
+      20
+    ],
+    [
+      "strömstedt född",
+      10
+    ],
+    [
+      "född juli",
+      10
+    ],
+    [
+      "juli 1958",
+      10
+    ],
+    [
+      "1958 lund",
+      10
+    ],
+    [
+      "lund svensk",
+      10
+    ],
+    [
+      "svensk sångare",
+      10
+    ],
+    [
+      "sångare låtskrivare",
+      10
+    ],
+    [
+      "låtskrivare skådespelare",
+      10
+    ],
+    [
+      "skådespelare han",
+      10
+    ],
+    [
+      "han växte",
+      10
+    ],
+    [
+      "växte upp",
+      10
+    ],
+    [
+      "upp hagsätra",
+      10
+    ],
+    [
+      "hagsätra utanför",
+      10
+    ],
+    [
+      "utanför känd",
+      10
+    ]
+  ]
+}

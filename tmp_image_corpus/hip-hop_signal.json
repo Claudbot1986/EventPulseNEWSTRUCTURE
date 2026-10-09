@@ -1,0 +1,38 @@
+{
+  "category_slug": "hip-hop",
+  "events": 1,
+  "docs": 0,
+  "top_1grams_distinctive": [
+    {
+      "w": "författaren",
+      "c": 1,
+      "score": 2.4849066497880004
+    },
+    {
+      "w": "berättelsen",
+      "c": 1,
+      "score": 2.4849066497880004
+    },
+    {
+      "w": "välkommen",
+      "c": 1,
+      "score": 2.302585092994046
+    },
+    {
+      "w": "boksamtal",
+      "c": 1,
+      "score": 2.302585092994046
+    },
+    {
+      "w": "martel",
+      "c": 1,
+      "score": 1.9459101490553132
+    },
+    {
+      "w": "yann",
+      "c": 1,
+      "score": 1.6094379124341003
+    }
+  ],
+  "top_2grams_distinctive": []
+}

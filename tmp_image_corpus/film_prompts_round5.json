@@ -1,0 +1,36 @@
+{
+  "category_slug": "film",
+  "events": 106,
+  "library": 2,
+  "target_count": 2,
+  "jev_q1": 0.72,
+  "jev_q2": 0.66,
+  "model": "MiniMax-M3",
+  "source_prompts_count": 4,
+  "items": [
+    {
+      "category": "film",
+      "pattern": "A_wide",
+      "rep": 0,
+      "prompt": "A wide shot of Dramaten's historic auditorium in Stockholm, plush red velvet seats filled with an audience watching a film projected on the grande stage screen, warm sconce lighting illuminating ornate plasterwork, golden proscenium glow, no visible text or logos, in soft northern daylight, shallow depth of field, editorial Stockholm color tones. no weapons, no knives, no blood, no gloves, no hands holding objects, no close-up faces of minors, no violence, child-safe imagery, family-friendly.",
+      "jev_q1": 0.72,
+      "jev_q2": 0.66,
+      "model": "MiniMax-M3",
+      "round": 5,
+      "seed": "r5-0",
+      "replacement_for": "1_per_30_image_library_2026-10-07"
+    },
+    {
+      "category": "film",
+      "pattern": "A_wide",
+      "rep": 0,
+      "prompt": "A wide shot of Dramaten's historic auditorium in Stockholm, plush red velvet seats filled with an audience watching a film projected on the grande stage screen, warm sconce lighting illuminating ornate plasterwork, golden proscenium glow, no visible text or logos, with warm tungsten and window light mixed, ambient interior glow. no weapons, no knives, no blood, no gloves, no hands holding objects, no close-up faces of minors, no violence, child-safe imagery, family-friendly.",
+      "jev_q1": 0.72,
+      "jev_q2": 0.66,
+      "model": "MiniMax-M3",
+      "round": 5,
+      "seed": "r5-1",
+      "replacement_for": "1_per_30_image_library_2026-10-07"
+    }
+  ]
+}

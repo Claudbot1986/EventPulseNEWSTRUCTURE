@@ -1,0 +1,31 @@
+{
+  "category_slug": "standup",
+  "events": 15,
+  "jev_q1": 0.3,
+  "jev_q2": 0.65,
+  "jev_q3": 0.1,
+  "description_corpus_size": 15,
+  "model": "MiniMax-M3",
+  "prompts": [
+    {
+      "pattern": "A_wide",
+      "prompt": "Wide photo of a standup comedy stage in Stockholm, the performer standing center holding a microphone under warm stage lights, laughing audience filling tiered seating in the foreground, red velvet curtains framing the proscenium, atmospheric haze drifting through the beams."
+    },
+    {
+      "pattern": "B_medium",
+      "prompt": "Medium shot on stage at Scalateatern during a standup set, a comedian in a dark blazer gripping a handheld microphone, mouth open mid-punchline, a single wooden stool and water glass beside them, soft amber spotlights against black backdrop."
+    },
+    {
+      "pattern": "C_environment",
+      "prompt": "Environmental photo inside Bio Skandia's ornate cinema interior, vintage balcony seating draped in shadow, gilded walls catching dim foyer light, a lone comedian walking across the wooden stage checking the mic, empty red seats receding into the background."
+    },
+    {
+      "pattern": "D_detail",
+      "prompt": "Close detail shot of a standup performer's hand wrapped around a silver microphone on Scalateatern's stage, sweat visible on their forehead, blurred warm bokeh of stage bulbs behind, the fabric of a black sleeve crisp in the foreground."
+    },
+    {
+      "pattern": "E_intimate",
+      "prompt": "Intimate candid of a standup comedian seated on a stool during a quiet moment at Bio Skandia, head tilted back in genuine laughter, two audience members leaning forward smiling in soft front-row light, shadows pooling in the historic theater's upper balconies."
+    }
+  ]
+}

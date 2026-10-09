@@ -1,0 +1,120 @@
+{
+  "category_slug": "dance",
+  "events": 272,
+  "library": 1,
+  "target_count": 9,
+  "jev_q1": 0.42,
+  "jev_q2": 0.67,
+  "model": "MiniMax-M3",
+  "source_prompts_count": 4,
+  "items": [
+    {
+      "category": "dance",
+      "pattern": "A_wide",
+      "rep": 0,
+      "prompt": "Wide-angle capture of a contemporary dance performance on the wooden stage of Dansens Hus in Stockholm, four dancers mid-leap under cool stage lights, empty orchestra seats in foreground, high-contrast chiaroscuro, shot from balcony like a documentary photo, in soft northern daylight, shallow depth of field, editorial Stockholm color tones. no weapons, no knives, no blood, no gloves, no hands holding objects, no close-up faces of minors, no violence, child-safe imagery, family-friendly.",
+      "jev_q1": 0.42,
+      "jev_q2": 0.67,
+      "model": "MiniMax-M3",
+      "round": 5,
+      "seed": "r5-0",
+      "replacement_for": "1_per_30_image_library_2026-10-07"
+    },
+    {
+      "category": "dance",
+      "pattern": "A_wide",
+      "rep": 0,
+      "prompt": "Wide-angle capture of a contemporary dance performance on the wooden stage of Dansens Hus in Stockholm, four dancers mid-leap under cool stage lights, empty orchestra seats in foreground, high-contrast chiaroscuro, shot from balcony like a documentary photo, with warm tungsten and window light mixed, ambient interior glow. no weapons, no knives, no blood, no gloves, no hands holding objects, no close-up faces of minors, no violence, child-safe imagery, family-friendly.",
+      "jev_q1": 0.42,
+      "jev_q2": 0.67,
+      "model": "MiniMax-M3",
+      "round": 5,
+      "seed": "r5-1",
+      "replacement_for": "1_per_30_image_library_2026-10-07"
+    },
+    {
+      "category": "dance",
+      "pattern": "A_wide",
+      "rep": 0,
+      "prompt": "Wide-angle capture of a contemporary dance performance on the wooden stage of Dansens Hus in Stockholm, four dancers mid-leap under cool stage lights, empty orchestra seats in foreground, high-contrast chiaroscuro, shot from balcony like a documentary photo, overcast Nordic daylight, muted color palette, atmospheric perspective. no weapons, no knives, no blood, no gloves, no hands holding objects, no close-up faces of minors, no violence, child-safe imagery, family-friendly.",
+      "jev_q1": 0.42,
+      "jev_q2": 0.67,
+      "model": "MiniMax-M3",
+      "round": 5,
+      "seed": "r5-2",
+      "replacement_for": "1_per_30_image_library_2026-10-07"
+    },
+    {
+      "category": "dance",
+      "pattern": "A_wide",
+      "rep": 0,
+      "prompt": "Wide-angle capture of a contemporary dance performance on the wooden stage of Dansens Hus in Stockholm, four dancers mid-leap under cool stage lights, empty orchestra seats in foreground, high-contrast chiaroscuro, shot from balcony like a documentary photo, late afternoon golden hour light, long shadows, calm mood. no weapons, no knives, no blood, no gloves, no hands holding objects, no close-up faces of minors, no violence, child-safe imagery, family-friendly.",
+      "jev_q1": 0.42,
+      "jev_q2": 0.67,
+      "model": "MiniMax-M3",
+      "round": 5,
+      "seed": "r5-3",
+      "replacement_for": "1_per_30_image_library_2026-10-07"
+    },
+    {
+      "category": "dance",
+      "pattern": "A_wide",
+      "rep": 1,
+      "prompt": "Wide-angle capture of a contemporary dance performance on the wooden stage of Dansens Hus in Stockholm, four dancers mid-leap under cool stage lights, empty orchestra seats in foreground, high-contrast chiaroscuro, shot from balcony like a documentary photo, in soft northern daylight, shallow depth of field, editorial Stockholm color tones. no weapons, no knives, no blood, no gloves, no hands holding objects, no close-up faces of minors, no violence, child-safe imagery, family-friendly.",
+      "jev_q1": 0.42,
+      "jev_q2": 0.67,
+      "model": "MiniMax-M3",
+      "round": 5,
+      "seed": "r5-4",
+      "replacement_for": "1_per_30_image_library_2026-10-07"
+    },
+    {
+      "category": "dance",
+      "pattern": "A_wide",
+      "rep": 1,
+      "prompt": "Wide-angle capture of a contemporary dance performance on the wooden stage of Dansens Hus in Stockholm, four dancers mid-leap under cool stage lights, empty orchestra seats in foreground, high-contrast chiaroscuro, shot from balcony like a documentary photo, with warm tungsten and window light mixed, ambient interior glow. no weapons, no knives, no blood, no gloves, no hands holding objects, no close-up faces of minors, no violence, child-safe imagery, family-friendly.",
+      "jev_q1": 0.42,
+      "jev_q2": 0.67,
+      "model": "MiniMax-M3",
+      "round": 5,
+      "seed": "r5-5",
+      "replacement_for": "1_per_30_image_library_2026-10-07"
+    },
+    {
+      "category": "dance",
+      "pattern": "A_wide",
+      "rep": 1,
+      "prompt": "Wide-angle capture of a contemporary dance performance on the wooden stage of Dansens Hus in Stockholm, four dancers mid-leap under cool stage lights, empty orchestra seats in foreground, high-contrast chiaroscuro, shot from balcony like a documentary photo, overcast Nordic daylight, muted color palette, atmospheric perspective. no weapons, no knives, no blood, no gloves, no hands holding objects, no close-up faces of minors, no violence, child-safe imagery, family-friendly.",
+      "jev_q1": 0.42,
+      "jev_q2": 0.67,
+      "model": "MiniMax-M3",
+      "round": 5,
+      "seed": "r5-6",
+      "replacement_for": "1_per_30_image_library_2026-10-07"
+    },
+    {
+      "category": "dance",
+      "pattern": "A_wide",
+      "rep": 1,
+      "prompt": "Wide-angle capture of a contemporary dance performance on the wooden stage of Dansens Hus in Stockholm, four dancers mid-leap under cool stage lights, empty orchestra seats in foreground, high-contrast chiaroscuro, shot from balcony like a documentary photo, late afternoon golden hour light, long shadows, calm mood. no weapons, no knives, no blood, no gloves, no hands holding objects, no close-up faces of minors, no violence, child-safe imagery, family-friendly.",
+      "jev_q1": 0.42,
+      "jev_q2": 0.67,
+      "model": "MiniMax-M3",
+      "round": 5,
+      "seed": "r5-7",
+      "replacement_for": "1_per_30_image_library_2026-10-07"
+    },
+    {
+      "category": "dance",
+      "pattern": "A_wide",
+      "rep": 2,
+      "prompt": "Wide-angle capture of a contemporary dance performance on the wooden stage of Dansens Hus in Stockholm, four dancers mid-leap under cool stage lights, empty orchestra seats in foreground, high-contrast chiaroscuro, shot from balcony like a documentary photo, in soft northern daylight, shallow depth of field, editorial Stockholm color tones. no weapons, no knives, no blood, no gloves, no hands holding objects, no close-up faces of minors, no violence, child-safe imagery, family-friendly.",
+      "jev_q1": 0.42,
+      "jev_q2": 0.67,
+      "model": "MiniMax-M3",
+      "round": 5,
+      "seed": "r5-8",
+      "replacement_for": "1_per_30_image_library_2026-10-07"
+    }
+  ]
+}

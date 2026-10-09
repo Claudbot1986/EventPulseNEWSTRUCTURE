@@ -1,0 +1,169 @@
+{
+  "category_slug": "musikal",
+  "events": 29,
+  "docs": 29,
+  "top_1grams_distinctive": [
+    {
+      "w": "chicago",
+      "c": 45,
+      "score": 93.57486937559261
+    },
+    {
+      "w": "musical",
+      "c": 44,
+      "score": 91.49542783391277
+    },
+    {
+      "w": "oscarsteatern",
+      "c": 34,
+      "score": 89.7279492069188
+    },
+    {
+      "w": "broadwayklassiker",
+      "c": 26,
+      "score": 75.14966570530028
+    },
+    {
+      "w": "ikonisk",
+      "c": 21,
+      "score": 43.66827237527655
+    },
+    {
+      "w": "presenteras",
+      "c": 15,
+      "score": 37.273599746820004
+    },
+    {
+      "w": "extra",
+      "c": 16,
+      "score": 28.66815150764888
+    },
+    {
+      "w": "musikal",
+      "c": 13,
+      "score": 27.032740041837865
+    },
+    {
+      "w": "handskar",
+      "c": 12,
+      "score": 26.366694928034633
+    },
+    {
+      "w": "allt",
+      "c": 16,
+      "score": 25.751006598945605
+    },
+    {
+      "w": "föreställningen",
+      "c": 9,
+      "score": 24.95329850015803
+    },
+    {
+      "w": "aldrig",
+      "c": 12,
+      "score": 23.350921788663758
+    },
+    {
+      "w": "denna",
+      "c": 13,
+      "score": 23.292873099964716
+    },
+    {
+      "w": "produktion",
+      "c": 9,
+      "score": 21.581057455185338
+    },
+    {
+      "w": "torka",
+      "c": 12,
+      "score": 21.50111363073666
+    },
+    {
+      "w": "tårar",
+      "c": 12,
+      "score": 21.50111363073666
+    },
+    {
+      "w": "utan",
+      "c": 13,
+      "score": 20.922692861643302
+    },
+    {
+      "w": "musikalen",
+      "c": 8,
+      "score": 18.420680743952367
+    },
+    {
+      "w": "ikoniska",
+      "c": 7,
+      "score": 15.380572041353537
+    },
+    {
+      "w": "musik",
+      "c": 8,
+      "score": 14.33407575382444
+    }
+  ],
+  "top_2grams_distinctive": [
+    [
+      "chicago musical",
+      44
+    ],
+    [
+      "ikonisk broadwayklassiker",
+      21
+    ],
+    [
+      "musical ikonisk",
+      18
+    ],
+    [
+      "extra allt",
+      16
+    ],
+    [
+      "oscarsteatern chicago",
+      12
+    ],
+    [
+      "torka aldrig",
+      12
+    ],
+    [
+      "aldrig tårar",
+      12
+    ],
+    [
+      "tårar utan",
+      12
+    ],
+    [
+      "utan handskar",
+      12
+    ],
+    [
+      "broadwayklassiker oscarsteatern",
+      11
+    ],
+    [
+      "broadwayklassiker presenteras",
+      11
+    ],
+    [
+      "musical chicago",
+      11
+    ],
+    [
+      "oscarsteatern denna",
+      9
+    ],
+    [
+      "presenteras extra",
+      8
+    ],
+    [
+      "allt oscarsteatern",
+      7
+    ]
+  ]
+}

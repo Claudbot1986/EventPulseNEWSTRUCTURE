@@ -1,0 +1,169 @@
+{
+  "category_slug": "humor",
+  "events": 35,
+  "docs": 35,
+  "top_1grams_distinctive": [
+    {
+      "w": "standup",
+      "c": 34,
+      "score": 70.70101241711441
+    },
+    {
+      "w": "föreställningen",
+      "c": 13,
+      "score": 36.04365338911715
+    },
+    {
+      "w": "komiker",
+      "c": 15,
+      "score": 31.191623125197538
+    },
+    {
+      "w": "magnus",
+      "c": 16,
+      "score": 31.13456238488501
+    },
+    {
+      "w": "scalateatern",
+      "c": 12,
+      "score": 30.779392289538443
+    },
+    {
+      "w": "standupföreställning",
+      "c": 10,
+      "score": 30.44522437723423
+    },
+    {
+      "w": "betnér",
+      "c": 15,
+      "score": 29.1886522358297
+    },
+    {
+      "w": "oss",
+      "c": 20,
+      "score": 27.725887222397812
+    },
+    {
+      "w": "presenterar",
+      "c": 11,
+      "score": 27.333973147668004
+    },
+    {
+      "w": "evenemanget",
+      "c": 11,
+      "score": 27.333973147668004
+    },
+    {
+      "w": "comedy",
+      "c": 13,
+      "score": 25.296831937719073
+    },
+    {
+      "w": "kväll",
+      "c": 14,
+      "score": 25.08463256919277
+    },
+    {
+      "w": "swingers",
+      "c": 11,
+      "score": 24.169470350698415
+    },
+    {
+      "w": "emellan",
+      "c": 11,
+      "score": 22.873856958478193
+    },
+    {
+      "w": "måltiden",
+      "c": 10,
+      "score": 21.972245773362197
+    },
+    {
+      "w": "mia",
+      "c": 13,
+      "score": 18.021826694558577
+    },
+    {
+      "w": "sista",
+      "c": 10,
+      "score": 17.91759469228055
+    },
+    {
+      "w": "sveriges",
+      "c": 8,
+      "score": 17.577796618689757
+    },
+    {
+      "w": "publiken",
+      "c": 8,
+      "score": 17.577796618689757
+    },
+    {
+      "w": "mellan",
+      "c": 9,
+      "score": 17.51319134149782
+    }
+  ],
+  "top_2grams_distinctive": [
+    [
+      "magnus betnér",
+      13
+    ],
+    [
+      "oss swingers",
+      11
+    ],
+    [
+      "swingers emellan",
+      11
+    ],
+    [
+      "sista måltiden",
+      10
+    ],
+    [
+      "mellan oss",
+      9
+    ],
+    [
+      "mia myself",
+      9
+    ],
+    [
+      "myself sista",
+      9
+    ],
+    [
+      "full english",
+      7
+    ],
+    [
+      "china teatern",
+      7
+    ],
+    [
+      "standup komedi",
+      6
+    ],
+    [
+      "mariatorget pitchers",
+      6
+    ],
+    [
+      "pitchers casino",
+      6
+    ],
+    [
+      "äger rum",
+      5
+    ],
+    [
+      "standup schyffert",
+      5
+    ],
+    [
+      "schyffert sundin",
+      5
+    ]
+  ]
+}

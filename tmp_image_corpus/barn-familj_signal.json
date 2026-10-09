@@ -1,0 +1,169 @@
+{
+  "category_slug": "barn-familj",
+  "events": 54,
+  "docs": 54,
+  "top_1grams_distinctive": [
+    {
+      "w": "konstverkstan",
+      "c": 52,
+      "score": 137.23098113999345
+    },
+    {
+      "w": "verkstad",
+      "c": 31,
+      "score": 68.11396189742281
+    },
+    {
+      "w": "material",
+      "c": 31,
+      "score": 68.11396189742281
+    },
+    {
+      "w": "kulturhuset",
+      "c": 27,
+      "score": 67.092479544276
+    },
+    {
+      "w": "stadsteatern",
+      "c": 26,
+      "score": 66.68868329399996
+    },
+    {
+      "w": "barn",
+      "c": 39,
+      "score": 62.76807858492991
+    },
+    {
+      "w": "husets",
+      "c": 29,
+      "score": 56.431394322604085
+    },
+    {
+      "w": "tillsammans",
+      "c": 22,
+      "score": 54.66794629533601
+    },
+    {
+      "w": "olika",
+      "c": 29,
+      "score": 51.961024607613595
+    },
+    {
+      "w": "skapa",
+      "c": 27,
+      "score": 48.377505669157486
+    },
+    {
+      "w": "sig",
+      "c": 30,
+      "score": 41.58883083359672
+    },
+    {
+      "w": "utställningar",
+      "c": 15,
+      "score": 39.585859944228886
+    },
+    {
+      "w": "tekniker",
+      "c": 17,
+      "score": 37.352817814715735
+    },
+    {
+      "w": "där",
+      "c": 26,
+      "score": 36.04365338911715
+    },
+    {
+      "w": "återbrukat",
+      "c": 15,
+      "score": 35.96842909197556
+    },
+    {
+      "w": "verkstäder",
+      "c": 15,
+      "score": 35.96842909197556
+    },
+    {
+      "w": "kulturhusets",
+      "c": 14,
+      "score": 35.909291004461515
+    },
+    {
+      "w": "vuxna",
+      "c": 20,
+      "score": 35.8351893845611
+    },
+    {
+      "w": "eller",
+      "c": 18,
+      "score": 32.25167044610499
+    },
+    {
+      "w": "möjlighet",
+      "c": 14,
+      "score": 32.23619130191664
+    }
+  ],
+  "top_2grams_distinctive": [
+    [
+      "kulturhuset stadsteatern",
+      26
+    ],
+    [
+      "barn vuxna",
+      17
+    ],
+    [
+      "stadsteatern konstverkstan",
+      15
+    ],
+    [
+      "verkstad där",
+      15
+    ],
+    [
+      "husets utställningar",
+      15
+    ],
+    [
+      "olika material",
+      15
+    ],
+    [
+      "material tekniker",
+      15
+    ],
+    [
+      "återbrukat material",
+      15
+    ],
+    [
+      "material husets",
+      14
+    ],
+    [
+      "olika verkstäder",
+      14
+    ],
+    [
+      "konstverkstan verkstad",
+      13
+    ],
+    [
+      "konstverkstan kulturhusets",
+      13
+    ],
+    [
+      "arbeta mycket",
+      13
+    ],
+    [
+      "mycket möjligt",
+      13
+    ],
+    [
+      "möjligt återbrukat",
+      13
+    ]
+  ]
+}

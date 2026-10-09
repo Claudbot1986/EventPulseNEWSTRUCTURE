@@ -1,0 +1,31 @@
+{
+  "category_slug": "hip-hop",
+  "events": 1,
+  "jev_q1": 0.3,
+  "jev_q2": 0.65,
+  "jev_q3": 0.1,
+  "description_corpus_size": 0,
+  "model": "MiniMax-M3",
+  "prompts": [
+    {
+      "pattern": "A_wide",
+      "prompt": "Wide shot of an outdoor hip-hop stage in Stockholm's Tantolunden park, golden hour sunlight, crowd of young people in streetwear facing the DJ booth, hand gestures raised, soft shadows on grass, photographic realism."
+    },
+    {
+      "pattern": "B_medium",
+      "prompt": "Medium shot inside a brick-walled hip-hop venue in Södermalm, Stockholm, a single performer in an oversized hoodie gripping the microphone under dim amber stage light, sweat on skin, real photography."
+    },
+    {
+      "pattern": "C_environment",
+      "prompt": "Environment photo of an empty hip-hop club interior near Medborgarplatsen, Stockholm, graffiti murals on concrete walls, scattered cables, a stool and water bottle on stage, natural daylight through high windows, documentary style."
+    },
+    {
+      "pattern": "D_detail",
+      "prompt": "Close detail of a cracked vinyl record spinning on a turntable, golden stage light, a hand adjusting the needle, blurred Stockholm city lights through a small window behind, authentic grain and texture."
+    },
+    {
+      "pattern": "E_intimate",
+      "prompt": "Intimate portrait of a young woman in a beanie, eyes closed, whispering lyrics under cool blue stage light in a tiny basement hip-hop venue in Stockholm, candid skin texture, soft bokeh."
+    }
+  ]
+}

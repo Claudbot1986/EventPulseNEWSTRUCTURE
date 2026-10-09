@@ -1,0 +1,169 @@
+{
+  "category_slug": "dans",
+  "events": 14,
+  "docs": 14,
+  "top_1grams_distinctive": [
+    {
+      "w": "dansföreställning",
+      "c": 8,
+      "score": 23.122974063169316
+    },
+    {
+      "w": "nötknäpparen",
+      "c": 6,
+      "score": 15.389696144769221
+    },
+    {
+      "w": "practice",
+      "c": 7,
+      "score": 15.380572041353537
+    },
+    {
+      "w": "föreställningen",
+      "c": 5,
+      "score": 13.862943611198906
+    },
+    {
+      "w": "verkligheten",
+      "c": 5,
+      "score": 12.824746787307683
+    },
+    {
+      "w": "tillit",
+      "c": 6,
+      "score": 11.675460894331879
+    },
+    {
+      "w": "zebradans",
+      "c": 5,
+      "score": 11.51292546497023
+    },
+    {
+      "w": "tyngd",
+      "c": 6,
+      "score": 10.75055681536833
+    },
+    {
+      "w": "denna",
+      "c": 6,
+      "score": 10.75055681536833
+    },
+    {
+      "w": "stockholms",
+      "c": 4,
+      "score": 9.591581091193483
+    },
+    {
+      "w": "dansträff",
+      "c": 4,
+      "score": 9.210340371976184
+    },
+    {
+      "w": "dansa",
+      "c": 5,
+      "score": 8.958797346140274
+    },
+    {
+      "w": "rörelse",
+      "c": 4,
+      "score": 8.317766166719343
+    },
+    {
+      "w": "bebisar",
+      "c": 4,
+      "score": 8.317766166719343
+    },
+    {
+      "w": "äger",
+      "c": 5,
+      "score": 8.047189562170502
+    },
+    {
+      "w": "rund",
+      "c": 5,
+      "score": 8.047189562170502
+    },
+    {
+      "w": "motorbaletten",
+      "c": 3,
+      "score": 7.9171719888457766
+    },
+    {
+      "w": "mellan",
+      "c": 4,
+      "score": 7.783640596221253
+    },
+    {
+      "w": "cirkus",
+      "c": 4,
+      "score": 7.783640596221253
+    },
+    {
+      "w": "stadsteatern",
+      "c": 3,
+      "score": 7.694848072384611
+    }
+  ],
+  "top_2grams_distinctive": [
+    [
+      "äger rum",
+      5
+    ],
+    [
+      "verkligheten rund",
+      5
+    ],
+    [
+      "tyngd tillit",
+      4
+    ],
+    [
+      "kulturhuset stadsteatern",
+      3
+    ],
+    [
+      "allt matte",
+      3
+    ],
+    [
+      "dansföreställning barn",
+      3
+    ],
+    [
+      "ecstatic dance",
+      3
+    ],
+    [
+      "rund dansföreställning",
+      3
+    ],
+    [
+      "thursday moves",
+      3
+    ],
+    [
+      "within practice",
+      3
+    ],
+    [
+      "bara vill",
+      3
+    ],
+    [
+      "vill dansa",
+      3
+    ],
+    [
+      "stadsteatern föreställningen",
+      2
+    ],
+    [
+      "ständig rörelse",
+      2
+    ],
+    [
+      "precision kommunikation",
+      2
+    ]
+  ]
+}

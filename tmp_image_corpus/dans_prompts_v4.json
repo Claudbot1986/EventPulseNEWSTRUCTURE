@@ -1,0 +1,31 @@
+{
+  "category_slug": "dans",
+  "events": 14,
+  "jev_q1": 0.3,
+  "jev_q2": 0.65,
+  "jev_q3": 0.1,
+  "description_corpus_size": 14,
+  "model": "MiniMax-M3",
+  "prompts": [
+    {
+      "pattern": "A_wide",
+      "prompt": "Wide shot from the back of the auditorium at Kulturhuset Stadsteatern in Stockholm, capturing the full stage bathed in warm theatrical house lights before a dansföreställning begins, an audience of parents and children settling into curved red seats, soft daylight still glowing through high lobby windows."
+    },
+    {
+      "pattern": "B_medium",
+      "prompt": "Medium shot on the ZebraDans stage of two dancers mid-lift during a contemporary dansföreställning at Kulturhuset Stadsteatern, sweat catching stage light, one performer extended horizontally while the other supports from below, blurred audience clapping behind, focus on tension and trust."
+    },
+    {
+      "pattern": "C_environment",
+      "prompt": "Behind-the-scenes view of Kulturhuset Stadsteatern's marble-floored foyer during intermission of a dansföreställning, children in coats running past abstract wall art, adults holding coffee cups, natural light from tall Sergels torg-facing windows casting long shadows across the polished floor."
+    },
+    {
+      "pattern": "D_detail",
+      "prompt": "Close-up of a young ballet student's satin pointe shoe resting on a worn wooden barre at Kulturhuset Stadsteatern, ribbons neatly tied, chalk dust visible on the scuffed floor beneath, warm overhead studio light catching pink fabric, capturing pre-performance stillness before a nötknäpparen rehearsal."
+    },
+    {
+      "pattern": "E_intimate",
+      "prompt": "Tender close-up of a toddler and caregiver seated front row at Kulturhuset Stadsteatern watching a dansföreställning for babies, soft pastel stage lighting washing over their faces, the child mimicking a dancer's arm wave, bokeh of other audience members in the background, quiet shared wonder."
+    }
+  ]
+}

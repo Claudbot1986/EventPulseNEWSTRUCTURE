@@ -9,23 +9,23 @@
   "prompts": [
     {
       "pattern": "A_wide",
-      "prompt": "Wide photograph of a full opera stage at Göta Lejon in Stockholm, orchestra pit visible, a soprano in a red gown singing under warm golden stage lights, rows of chorus members behind her, velvet curtains framing the scene, no visible text or logos, natural auditorium ambiance."
+      "prompt": "Wide-angle photograph of Folkoperan's historic auditorium during an opera performance, full stage visible with an orchestra in the pit, singers in period costume under warm stage lighting, audience in shadowy stalls, gilded balconies framing the scene."
     },
     {
       "pattern": "B_medium",
-      "prompt": "Medium shot of a tenor and mezzo-soprano performing at Folkoperan in Stockholm, intimate wooden stage, amber sidelighting, expressive singing gestures, audience silhouettes blurred in foreground, no signage, classical theatrical photography."
+      "prompt": "Medium shot on stage at Folkoperan, a soprano in a flowing gown singing beside a tenor, conductor's baton mid-gesture, choir visible in background rows, soft amber stage lights casting shadows across the wooden proscenium."
     },
     {
       "pattern": "C_environment",
-      "prompt": "Environmental photo of Berwaldhallen concert hall interior in Stockholm, curved wooden walls, a full symfoniorkester seated with conductor mid-gesture, soft overhead stage lighting casting shadows on empty balcony seats, acoustic panels visible, no readable text."
+      "prompt": "Environmental photo inside Berwaldhallen's wood-paneled concert hall, full symfoniorkester on stage, string section mid-bow, conductor at podium, natural daylight filtering through skylights, audience seated in curved rows, minimalist Scandinavian architecture surrounding performers."
     },
     {
       "pattern": "D_detail",
-      "prompt": "Close detail of a violinist's hands at Berwaldhallen, bow crossing strings with motion smear, instrument varnished wood reflecting stage light, blurred radios microphone overhead, narrow depth of field, virtuositet captured in still frame, no logos."
+      "prompt": "Close-up detail of a violinist's hands mid-performance, bow pressing into strings with visible virtuositet, rosin dust catching stage light, dark concert-hall background blurred, the polished spruce of a Stradivarius-style instrument reflecting warm spotlights."
     },
     {
       "pattern": "E_intimate",
-      "prompt": "Intimate candid of a soloist bowing her head backstage at Folkoperan, costume pearls catching soft practical light from a dressing room mirror, a hand reaching to adjust a hairpiece, shallow focus, warm Stockholm evening atmosphere, no visible branding or text."
+      "prompt": "Intimate backstage portrait at Göta Lejon, a performer in dramatic opera makeup adjusting a pearl earring before a gilt-framed mirror, soft tungsten bulb illumination, theatrical costumes hanging in shadow, quiet concentration before stepping onto stage."
     }
   ]
 }

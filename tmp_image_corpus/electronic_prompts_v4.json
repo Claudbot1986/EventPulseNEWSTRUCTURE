@@ -1,0 +1,31 @@
+{
+  "category_slug": "electronic",
+  "events": 1,
+  "jev_q1": 0.3,
+  "jev_q2": 0.65,
+  "jev_q3": 0.1,
+  "description_corpus_size": 0,
+  "model": "MiniMax-M3",
+  "prompts": [
+    {
+      "pattern": "A_wide",
+      "prompt": "Wide-angle photograph of a packed electronic music event at KTH Reactor in Stockholm, students and young adults dancing under deep blue and magenta stage lighting, fog drifting across the concrete floor, rows of mixing desks visible on a raised platform, natural darkness of late evening outside the venue's tall windows."
+    },
+    {
+      "pattern": "B_medium",
+      "prompt": "Medium shot of three attendees collaborating in front of a modular synthesizer wall at KTH Reactor in Stockholm, hands adjusting cables and knobs, soft purple backlight from the modular setup, smiles and focused expressions, volumetric haze, candid documentary photography under dim venue lighting."
+    },
+    {
+      "pattern": "C_environment",
+      "prompt": "Environmental photo of a Stockholm warehouse venue hosting a learning-focused electronic technologies showcase, exposed steel trusses overhead, LED panels displaying generative waveforms, a crowd mingling around demo stations, warm tungsten worklamps mixed with cool cyan wash, shot on full-frame with shallow depth."
+    },
+    {
+      "pattern": "D_detail",
+      "prompt": "Extreme close-up of a DJ's fingers adjusting a row of illuminated knobs on a professional controller, deep red and electric-blue LED indicators, faint reflections on the glossy surface, shallow bokeh background hinting at a Stockholm crowd, crisp lighting emphasizing textures and engraved labels."
+    },
+    {
+      "pattern": "E_intimate",
+      "prompt": "Intimate portrait of two friends with closed eyes and wide smiles embracing on a darkened Stockholm dance floor, single warm spotlight catching their silhouettes, soft green laser points scattered across their faces, sweat visible on skin, emotive concert photography with grain and gentle motion blur."
+    }
+  ]
+}

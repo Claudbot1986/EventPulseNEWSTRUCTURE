@@ -1,0 +1,31 @@
+{
+  "category_slug": "musical-theatre",
+  "events": 112,
+  "jev_q1": 0.3,
+  "jev_q2": 0.65,
+  "jev_q3": 0.1,
+  "description_corpus_size": 110,
+  "model": "MiniMax-M3",
+  "prompts": [
+    {
+      "pattern": "A_wide",
+      "prompt": "Wide-angle photograph of the grand stage at Oscarsteatern in Stockholm during a Chicago musical performance, full ensemble cast in 1920s flapper costumes mid-chorus, sweeping velvet curtains framing the scene, warm theatrical stage lighting casting dramatic shadows, audience silhouettes in foreground, smoke haze drifting across the spotlight."
+    },
+    {
+      "pattern": "B_medium",
+      "prompt": "Medium shot of two chorus performers in sequined black dresses executing a synchronized pose on the Oscarsteatern stage, one arm raised, legs crossed at the ankle, cool blue and amber stage lights catching the sequins, ornate proscenium arch visible behind them, soft lens flare."
+    },
+    {
+      "pattern": "C_environment",
+      "prompt": "Environmental photograph of the iconic Art Deco interior of Berwaldhallen in Stockholm, empty auditorium with rows of velvet seats bathed in dim house lights, gilded balcony railings and geometric ceiling panels, a single custodian polishing the wooden aisle, natural dusk light filtering through the entrance doors."
+    },
+    {
+      "pattern": "D_detail",
+      "prompt": "Close-up detail shot of a chrome-plated microphone on a wooden stage floor at Oscarsteatern, scattered sheet music pages nearby, a black fedora resting on top of a battered amplifier, warm tungsten stage light creating long shadows, shallow depth of field blurring the orchestra pit behind."
+    },
+    {
+      "pattern": "E_intimate",
+      "prompt": "Intimate backstage portrait at Oscarsteatern Stockholm, a single female performer adjusting a pearl necklace in a lit vanity mirror, face half in shadow, soft golden bulb light reflecting off the glass, scattered makeup brushes and a wilted red rose on the counter, natural warm tones."
+    }
+  ]
+}

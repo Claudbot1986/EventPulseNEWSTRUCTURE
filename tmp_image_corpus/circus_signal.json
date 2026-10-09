@@ -1,285 +1,169 @@
 {
   "category_slug": "circus",
-  "events": 35,
-  "docs": 34,
+  "events": 33,
+  "docs": 33,
   "top_1grams_distinctive": [
     {
       "w": "cirkusföreställning",
-      "c": 15,
-      "score": 99.93
-    },
-    {
-      "w": "illusioner",
-      "c": 6,
-      "score": 35.81
-    },
-    {
-      "w": "föreställning",
-      "c": 13,
-      "score": 34.55
-    },
-    {
-      "w": "föreställningen",
-      "c": 14,
-      "score": 33.6
-    },
-    {
-      "w": "pile",
-      "c": 5,
-      "score": 33.31
+      "c": 22,
+      "score": 65.9061100181878
     },
     {
       "w": "magic",
-      "c": 6,
-      "score": 33.02
+      "c": 20,
+      "score": 35.8351893845611
+    },
+    {
+      "w": "föreställningen",
+      "c": 11,
+      "score": 30.498475944637594
+    },
+    {
+      "w": "sista",
+      "c": 17,
+      "score": 30.459910976876934
     },
     {
       "w": "andetaget",
-      "c": 4,
-      "score": 31.3
-    },
-    {
-      "w": "otäck",
-      "c": 4,
-      "score": 31.3
-    },
-    {
-      "w": "teodok",
-      "c": 4,
-      "score": 31.3
-    },
-    {
-      "w": "kallhälls",
-      "c": 4,
-      "score": 31.3
-    },
-    {
-      "w": "skrämmer",
-      "c": 4,
-      "score": 30.57
-    },
-    {
-      "w": "botanica",
-      "c": 4,
-      "score": 29.95
-    },
-    {
-      "w": "gastronomisk",
-      "c": 4,
-      "score": 29.95
-    },
-    {
-      "w": "magisk",
-      "c": 6,
-      "score": 29.68
-    },
-    {
-      "w": "presenterar",
-      "c": 12,
-      "score": 29.5
-    },
-    {
-      "w": "kulinariska",
-      "c": 4,
-      "score": 29.42
-    },
-    {
-      "w": "läckerheter",
-      "c": 4,
-      "score": 29.42
-    },
-    {
-      "w": "hembakade",
-      "c": 4,
-      "score": 29.42
-    },
-    {
-      "w": "hus",
-      "c": 8,
-      "score": 29.25
-    },
-    {
-      "w": "boutique",
-      "c": 4,
-      "score": 28.95
-    },
-    {
-      "w": "labero",
-      "c": 4,
-      "score": 28.53
+      "c": 13,
+      "score": 29.933606208922598
     },
     {
       "w": "kompani",
-      "c": 4,
-      "score": 28.15
+      "c": 14,
+      "score": 29.1121815835177
     },
     {
-      "w": "kompaniet",
-      "c": 4,
-      "score": 28.15
-    },
-    {
-      "w": "bakverk",
-      "c": 4,
-      "score": 27.8
+      "w": "presenterar",
+      "c": 11,
+      "score": 27.333973147668004
     },
     {
       "w": "giraff",
-      "c": 4,
-      "score": 27.8
+      "c": 14,
+      "score": 27.242742086774385
     },
     {
-      "w": "trollkarl",
-      "c": 4,
-      "score": 27.48
+      "w": "labero",
+      "c": 13,
+      "score": 25.296831937719073
     },
     {
-      "w": "trick",
-      "c": 4,
-      "score": 27.18
+      "w": "efter",
+      "c": 14,
+      "score": 25.08463256919277
     },
     {
-      "w": "joe",
-      "c": 4,
-      "score": 25.37
+      "w": "pile",
+      "c": 14,
+      "score": 22.532130774077405
     },
     {
-      "w": "värld",
-      "c": 7,
-      "score": 25.2
+      "w": "upplevelse",
+      "c": 9,
+      "score": 21.581057455185338
     },
     {
-      "w": "buffé",
-      "c": 4,
-      "score": 25.03
+      "w": "magisk",
+      "c": 11,
+      "score": 21.405011639608446
+    },
+    {
+      "w": "cirkus",
+      "c": 11,
+      "score": 21.405011639608446
+    },
+    {
+      "w": "kulturhuset",
+      "c": 8,
+      "score": 19.879253198304003
+    },
+    {
+      "w": "impossible",
+      "c": 8,
+      "score": 19.183162182386965
+    },
+    {
+      "w": "framför",
+      "c": 9,
+      "score": 18.71497387511852
+    },
+    {
+      "w": "hus",
+      "c": 13,
+      "score": 18.021826694558577
+    },
+    {
+      "w": "denna",
+      "c": 10,
+      "score": 17.91759469228055
+    },
+    {
+      "w": "botanica",
+      "c": 8,
+      "score": 17.577796618689757
     }
   ],
   "top_2grams_distinctive": [
-    {
-      "w": "cirkusföreställning kulturhuset",
-      "c": 5,
-      "score": 38.21
-    },
-    {
-      "w": "stadsteatern föreställningen",
-      "c": 6,
-      "score": 34.47
-    },
-    {
-      "w": "sista andetaget",
-      "c": 4,
-      "score": 31.3
-    },
-    {
-      "w": "andetaget otäck",
-      "c": 4,
-      "score": 31.3
-    },
-    {
-      "w": "otäck cirkusföreställning",
-      "c": 4,
-      "score": 31.3
-    },
-    {
-      "w": "cirkusföreställning teodok",
-      "c": 4,
-      "score": 31.3
-    },
-    {
-      "w": "teodok kallhälls",
-      "c": 4,
-      "score": 31.3
-    },
-    {
-      "w": "kallhälls gamla",
-      "c": 4,
-      "score": 31.3
-    },
-    {
-      "w": "gamla folkets",
-      "c": 4,
-      "score": 31.3
-    },
-    {
-      "w": "skrämmer allra",
-      "c": 4,
-      "score": 31.3
-    },
-    {
-      "w": "utformad personlig",
-      "c": 4,
-      "score": 30.57
-    },
-    {
-      "w": "största buffé",
-      "c": 4,
-      "score": 30.57
-    },
-    {
-      "w": "labero magic",
-      "c": 4,
-      "score": 29.95
-    },
-    {
-      "w": "magic world",
-      "c": 4,
-      "score": 29.95
-    },
-    {
-      "w": "föreställning botanica",
-      "c": 4,
-      "score": 29.95
-    },
-    {
-      "w": "exklusiv magisk",
-      "c": 4,
-      "score": 29.95
-    },
-    {
-      "w": "boutique magic",
-      "c": 4,
-      "score": 29.95
-    },
-    {
-      "w": "globala turnéer",
-      "c": 4,
-      "score": 29.95
-    },
-    {
-      "w": "turnéer skapar",
-      "c": 4,
-      "score": 29.95
-    },
-    {
-      "w": "gastronomisk upplevelse",
-      "c": 4,
-      "score": 29.95
-    },
-    {
-      "w": "kulinariska läckerheter",
-      "c": 4,
-      "score": 29.95
-    },
-    {
-      "w": "läckerheter världen",
-      "c": 4,
-      "score": 29.95
-    },
-    {
-      "w": "hembakade bakverk",
-      "c": 4,
-      "score": 29.95
-    },
-    {
-      "w": "magisk föreställning",
-      "c": 4,
-      "score": 29.42
-    },
-    {
-      "w": "personlig nära",
-      "c": 4,
-      "score": 29.42
-    }
-  ],
-  "note": "score = cat_count * log(N / global_count). Higher = more distinctive for this category."
+    [
+      "kompani giraff",
+      14
+    ],
+    [
+      "efter sista",
+      13
+    ],
+    [
+      "sista andetaget",
+      13
+    ],
+    [
+      "labero magic",
+      9
+    ],
+    [
+      "magic world",
+      9
+    ],
+    [
+      "dansens hus",
+      8
+    ],
+    [
+      "daniel kane",
+      8
+    ],
+    [
+      "impossible magic",
+      8
+    ],
+    [
+      "giraff pile",
+      7
+    ],
+    [
+      "yes person",
+      6
+    ],
+    [
+      "kulturhuset stadsteatern",
+      6
+    ],
+    [
+      "exklusiv magisk",
+      6
+    ],
+    [
+      "alice underlandet",
+      6
+    ],
+    [
+      "framför dina",
+      6
+    ],
+    [
+      "dina ögon",
+      6
+    ]
+  ]
 }

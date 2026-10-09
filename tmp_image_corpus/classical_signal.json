@@ -1,0 +1,141 @@
+{
+  "category_slug": "classical",
+  "events": 21,
+  "docs": 7,
+  "top_1grams_distinctive": [
+    {
+      "w": "berwaldhallen",
+      "c": 7,
+      "score": 18.473401307306812
+    },
+    {
+      "w": "minnet",
+      "c": 3,
+      "score": 5.8377304471659395
+    },
+    {
+      "w": "känslosvall",
+      "c": 2,
+      "score": 4.969813299576001
+    },
+    {
+      "w": "julkonsert",
+      "c": 2,
+      "score": 4.795790545596741
+    },
+    {
+      "w": "sagokraft",
+      "c": 2,
+      "score": 4.605170185988092
+    },
+    {
+      "w": "gud",
+      "c": 3,
+      "score": 4.1588830833596715
+    },
+    {
+      "w": "wilsons",
+      "c": 2,
+      "score": 4.1588830833596715
+    },
+    {
+      "w": "gilbert",
+      "c": 2,
+      "score": 4.1588830833596715
+    },
+    {
+      "w": "shango",
+      "c": 2,
+      "score": 3.8918202981106265
+    },
+    {
+      "w": "memory",
+      "c": 2,
+      "score": 3.8918202981106265
+    },
+    {
+      "w": "berlin",
+      "c": 2,
+      "score": 3.8918202981106265
+    },
+    {
+      "w": "broman",
+      "c": 2,
+      "score": 3.8918202981106265
+    },
+    {
+      "w": "mozart",
+      "c": 2,
+      "score": 3.8918202981106265
+    },
+    {
+      "w": "bowie",
+      "c": 2,
+      "score": 3.58351893845611
+    },
+    {
+      "w": "radiosymfonikerna",
+      "c": 1,
+      "score": 2.8903717578961645
+    },
+    {
+      "w": "sekelskiftets",
+      "c": 1,
+      "score": 2.639057329615259
+    },
+    {
+      "w": "dubbelkonsert",
+      "c": 1,
+      "score": 2.639057329615259
+    },
+    {
+      "w": "mendelssohns",
+      "c": 1,
+      "score": 2.5649493574615367
+    },
+    {
+      "w": "emelyanychev",
+      "c": 1,
+      "score": 2.5649493574615367
+    },
+    {
+      "w": "brytningstid",
+      "c": 1,
+      "score": 2.5649493574615367
+    }
+  ],
+  "top_2grams_distinctive": [
+    [
+      "minnet gud",
+      3
+    ],
+    [
+      "gud wilsons",
+      2
+    ],
+    [
+      "wilsons shango",
+      2
+    ],
+    [
+      "shango memory",
+      2
+    ],
+    [
+      "bowie berlin",
+      2
+    ],
+    [
+      "känslosvall sagokraft",
+      2
+    ],
+    [
+      "sagokraft gilbert",
+      2
+    ],
+    [
+      "gilbert broman",
+      2
+    ]
+  ]
+}

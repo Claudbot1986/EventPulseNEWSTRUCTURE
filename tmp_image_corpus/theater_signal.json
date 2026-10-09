@@ -1,0 +1,133 @@
+{
+  "category_slug": "theater",
+  "events": 2,
+  "docs": 2,
+  "top_1grams_distinctive": [
+    {
+      "w": "kärlekshistoria",
+      "c": 3,
+      "score": 8.317766166719343
+    },
+    {
+      "w": "mamma",
+      "c": 3,
+      "score": 5.375278407684165
+    },
+    {
+      "w": "party",
+      "c": 3,
+      "score": 5.375278407684165
+    },
+    {
+      "w": "anderssons",
+      "c": 2,
+      "score": 4.795790545596741
+    },
+    {
+      "w": "klassiker",
+      "c": 2,
+      "score": 4.605170185988092
+    },
+    {
+      "w": "mia",
+      "c": 3,
+      "score": 4.1588830833596715
+    },
+    {
+      "w": "scenen",
+      "c": 2,
+      "score": 3.8918202981106265
+    },
+    {
+      "w": "stora",
+      "c": 2,
+      "score": 3.58351893845611
+    },
+    {
+      "w": "roy",
+      "c": 2,
+      "score": 2.772588722239781
+    },
+    {
+      "w": "föreställningen",
+      "c": 1,
+      "score": 2.772588722239781
+    },
+    {
+      "w": "festupplevelse",
+      "c": 1,
+      "score": 2.70805020110221
+    },
+    {
+      "w": "medelhavsmeny",
+      "c": 1,
+      "score": 2.639057329615259
+    },
+    {
+      "w": "välkomstouzo",
+      "c": 1,
+      "score": 2.5649493574615367
+    },
+    {
+      "w": "presenteras",
+      "c": 1,
+      "score": 2.4849066497880004
+    },
+    {
+      "w": "huvudrollen",
+      "c": 1,
+      "score": 2.4849066497880004
+    },
+    {
+      "w": "fyrarätters",
+      "c": 1,
+      "score": 2.4849066497880004
+    },
+    {
+      "w": "medverkande",
+      "c": 1,
+      "score": 2.4849066497880004
+    },
+    {
+      "w": "inkluderar",
+      "c": 1,
+      "score": 2.3978952727983707
+    },
+    {
+      "w": "våghalsiga",
+      "c": 1,
+      "score": 2.3978952727983707
+    },
+    {
+      "w": "luftfärder",
+      "c": 1,
+      "score": 2.3978952727983707
+    }
+  ],
+  "top_2grams_distinctive": [
+    [
+      "mamma mia",
+      3
+    ],
+    [
+      "mia party",
+      3
+    ],
+    [
+      "roy anderssons",
+      2
+    ],
+    [
+      "anderssons klassiker",
+      2
+    ],
+    [
+      "klassiker kärlekshistoria",
+      2
+    ],
+    [
+      "stora scenen",
+      2
+    ]
+  ]
+}

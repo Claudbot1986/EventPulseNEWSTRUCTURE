@@ -1,0 +1,33 @@
+{
+  "category_slug": "electronic",
+  "events": 1,
+  "docs": 0,
+  "top_1grams_distinctive": [
+    {
+      "w": "technologies",
+      "c": 1,
+      "score": 2.5649493574615367
+    },
+    {
+      "w": "learning",
+      "c": 1,
+      "score": 2.1972245773362196
+    },
+    {
+      "w": "machine",
+      "c": 1,
+      "score": 2.0794415416798357
+    },
+    {
+      "w": "icmlt",
+      "c": 1,
+      "score": 1.791759469228055
+    },
+    {
+      "w": "2027",
+      "c": 1,
+      "score": 1.6094379124341003
+    }
+  ],
+  "top_2grams_distinctive": []
+}

@@ -9,23 +9,23 @@
   "prompts": [
     {
       "pattern": "A_wide",
-      "prompt": "Wide-angle photograph of an ice hockey match at Hovet arena in Stockholm. Djurgården IF players in dark jerseys skate toward the goal during a fast break. Crowd fills the lower bowl beneath bright arena lights reflecting off the glossy ice."
+      "prompt": "Wide-angle photograph of a dam hockey match at Hovet arena in Stockholm, players skating on ice under bright overhead lights, fans packed in the stands wearing Djurgården colors, crisp action across the rink with the curved roof framing the scene."
     },
     {
       "pattern": "B_medium",
-      "prompt": "Medium shot of Djurgården IF dam (women's team) hockey players gathered near the boards at Hovet, tapping gloves after a goal. Their jerseys are saturated blue and white, faces flushed under cool fluorescent arena lighting."
+      "prompt": "Medium shot of a Djurgården hockey player skating with the puck during a dam match at Hovet, teammates trailing behind, arena lights reflecting off helmets and the polished ice, focused athletic motion captured at eye level."
     },
     {
       "pattern": "C_environment",
-      "prompt": "Environmental photograph of Solvalla Travbana track at midday. Horses and sulkies round the far turn, dust catching natural sunlight, spectators lining the inner rail, vintage cars parked in parkeringen near Bromma visible in the background."
+      "prompt": "Environmental photo of Hovet arena interior during a hockey match, sweeping view of the ice, tiered seating, scoreboard glowing above, fans in Djurgården scarves filling the lower bowl, warm stage-light illumination against the cold ice."
     },
     {
       "pattern": "D_detail",
-      "prompt": "Close-up detail of a worn hockey puck scratched and scuffed, resting on the scratched ice surface at Hovet arena in Stockholm. A single skate blade tip enters the frame, blade gleaming under the overhead match lighting."
+      "prompt": "Close-up detail of a hockey stick and puck frozen on the ice at Hovet, scuff marks and skate blades visible in the foreground, blurred boards and arena lights creating bokeh, no logos or text in frame."
     },
     {
       "pattern": "E_intimate",
-      "prompt": "Intimate low-angle shot of a harness racehorse trotting past the camera at Solvalla Travbana, jockey in colorful silks leaning forward, warm afternoon sunlight catching the horse's glossy coat, blurred grandstand crowd behind."
+      "prompt": "Intimate portrait of a young fan in a vintage Djurgården sweater watching the dam hockey match at Hovet, hands gripping the railing, soft arena light on their face, anticipation visible in their expression as the crowd blurs behind."
     }
   ]
 }

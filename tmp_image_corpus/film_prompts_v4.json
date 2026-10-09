@@ -9,23 +9,23 @@
   "prompts": [
     {
       "pattern": "A_wide",
-      "prompt": "Wide-angle photo of a packed auditorium inside Bio Skandia in Stockholm, soft house lights illuminating rows of seated audience members facing a glowing cinema screen, velvet curtains framing the stage, natural daylight spilling faintly through the lobby doors in the background."
+      "prompt": "A wide shot of Dramaten's historic auditorium in Stockholm, plush red velvet seats filled with an audience watching a film projected on the grande stage screen, warm sconce lighting illuminating ornate plasterwork, golden proscenium glow, no visible text or logos."
     },
     {
       "pattern": "B_medium",
-      "prompt": "Medium shot of an audience seated inside the darkened screening room at Bio Skandia in Stockholm, faces lit by the flickering illumination of a film projection, relaxed postures leaning toward the screen, stage-light photography capturing cinematic ambiance."
+      "prompt": "A medium shot of four friends unwrapping candy and settling into vintage cinema seats at Bio Skandia in Stockholm, dim house lights fading as a glowing screen casts blue light across their faces, natural candid energy, no readable text."
     },
     {
       "pattern": "C_environment",
-      "prompt": "Environmental photo of the grand neoclassical facade of Dramaten in Stockholm, ticket holders gathering on the stone staircase during a film screening event, overcast natural daylight casting soft shadows, autumn leaves scattered across the pavement, pedestrians crossing in the foreground."
+      "prompt": "An environmental view of a Stockholm cinema lobby at Skandia during a filmvisning, framed posters lining cream walls, a couple purchasing tickets at the wooden booth, soft daylight filtering through tall entrance windows, no visible logos or lettering."
     },
     {
       "pattern": "D_detail",
-      "prompt": "Close-up detail shot of a weathered brass usherette lantern resting on a velvet-upholstered armrest inside Bio Skandia in Stockholm, warm incandescent bulb glowing against dark mahogany paneling, shallow depth of field revealing blurred silhouettes of seated patrons in the background."
+      "prompt": "A close detail of a worn velvet cinema seat armrest at Bio Skandia, a forgotten paper ticket stub and cracked leather gloves resting on it, projector glow spilling warm amber light across the textured fabric, no readable text or branding."
     },
     {
       "pattern": "E_intimate",
-      "prompt": "Intimate close-up of two friends sharing whispered conversation in the back row of a darkened cinema at Dramaten in Stockholm, faces softly illuminated by the spill of projector light, their shoulders touching, a half-empty popcorn bucket resting between them."
+      "prompt": "An intimate shot of a single elderly woman with silver hair pulled into a low bun, wiping a tear while watching a film at Dramaten, soft projector light illuminating her gentle smile, shallow depth of field, no visible text or signage."
     }
   ]
 }

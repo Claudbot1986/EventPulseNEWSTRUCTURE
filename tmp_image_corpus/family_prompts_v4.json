@@ -9,23 +9,23 @@
   "prompts": [
     {
       "pattern": "A_wide",
-      "prompt": "Wide photo of a Stockholm theatre auditorium during a daytime family ballet performance; families with children watch as dancers in classic costumes fill a warmly lit stage; natural daylight filters through tall windows; real photo style, no logos visible."
+      "prompt": "A wide shot of a sunny Stockholm waterfront promenade where families with young children discover playful puppet mascots, strollers and ice cream carts scattered along the path, soft afternoon light, candid documentary photography, low angle."
     },
     {
       "pattern": "B_medium",
-      "prompt": "Medium shot of a smiling mother and young child in cozy autumn jackets inside a Stockholm family event venue, holding pumpkin-themed crafts; soft natural light from large windows; candid real-photo feel; warm smiles, no text visible."
+      "prompt": "A medium shot of a parent and child sharing a moment beside a colorful character costume evoking Stitch, frozen mid-laugh on a Nordic theater stage, warm stage lighting spilling across their faces, photojournalistic composition."
     },
     {
       "pattern": "C_environment",
-      "prompt": "Environment photo of a Stockholm theme park amusement area decorated for Halloween, families walking among rides and costumed characters; overcast Nordic daylight; real photo, no logos on rides, rides recognizable but unbranded."
+      "prompt": "An environment shot inside a Stockholm theater lobby decorated with oversized Disney-inspired murals and Miguel-style papel picado banners, families gathering under skylights, natural daylight filtering through tall windows, wide lens."
     },
     {
       "pattern": "D_detail",
-      "prompt": "Close-up detail of small painted pumpkin figurines and a child’s felt costume accessory arranged on a wooden table inside a Stockholm family theater lobby; soft window light; real photo style, no text visible anywhere."
+      "prompt": "A close detail of small hands clutching a crocheted teddy bear beside a glossy program book on a wooden seat, soft window light from a Stockholm venue revealing fabric textures, shallow depth of field, tender documentary style."
     },
     {
       "pattern": "E_intimate",
-      "prompt": "Intimate close-up of a father whispering to his laughing toddler on his lap inside a Stockholm theater during a children’s movie screening; warm interior light reflecting off their faces; genuine candid real photo, no logos visible."
+      "prompt": "An intimate over-the-shoulder shot of a mother whispering to a toddler seated on her lap, both watching a Discovery-themed animated sequence on screen, dim theater glow warming their faces, candid and quiet, gentle bokeh."
     }
   ]
 }

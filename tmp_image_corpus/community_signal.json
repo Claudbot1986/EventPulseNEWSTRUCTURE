@@ -1,0 +1,169 @@
+{
+  "category_slug": "community",
+  "events": 2373,
+  "docs": 1421,
+  "top_1grams_distinctive": [
+    {
+      "w": "2026",
+      "c": 418,
+      "score": 672.745047397454
+    },
+    {
+      "w": "barn",
+      "c": 378,
+      "score": 608.36753090009
+    },
+    {
+      "w": "föreställningen",
+      "c": 219,
+      "score": 607.196930170512
+    },
+    {
+      "w": "konstverkstan",
+      "c": 181,
+      "score": 477.6693766603619
+    },
+    {
+      "w": "skyview",
+      "c": 202,
+      "score": 420.0471914193268
+    },
+    {
+      "w": "denna",
+      "c": 225,
+      "score": 403.1458805763124
+    },
+    {
+      "w": "sig",
+      "c": 280,
+      "score": 388.16242111356934
+    },
+    {
+      "w": "musik",
+      "c": 202,
+      "score": 361.9354127840671
+    },
+    {
+      "w": "där",
+      "c": 257,
+      "score": 356.2776508078119
+    },
+    {
+      "w": "kulturhuset",
+      "c": 137,
+      "score": 340.43221102095606
+    },
+    {
+      "w": "får",
+      "c": 240,
+      "score": 332.71064666877373
+    },
+    {
+      "w": "kommer",
+      "c": 163,
+      "score": 317.18335429601603
+    },
+    {
+      "w": "tillsammans",
+      "c": 119,
+      "score": 295.70389132477203
+    },
+    {
+      "w": "material",
+      "c": 133,
+      "score": 292.2308687857172
+    },
+    {
+      "w": "with",
+      "c": 181,
+      "score": 291.30826215057215
+    },
+    {
+      "w": "avicii",
+      "c": 147,
+      "score": 286.04879191113105
+    },
+    {
+      "w": "stadsteatern",
+      "c": 111,
+      "score": 284.70937867823056
+    },
+    {
+      "w": "evenemanget",
+      "c": 114,
+      "score": 283.279358075832
+    },
+    {
+      "w": "under",
+      "c": 158,
+      "score": 283.09799613803267
+    },
+    {
+      "w": "har",
+      "c": 202,
+      "score": 280.0314609462179
+    }
+  ],
+  "top_2grams_distinctive": [
+    [
+      "avicii arena",
+      141
+    ],
+    [
+      "kulturhuset stadsteatern",
+      110
+    ],
+    [
+      "sven ingvars",
+      89
+    ],
+    [
+      "barn vuxna",
+      83
+    ],
+    [
+      "beethovens septett",
+      80
+    ],
+    [
+      "septett ess",
+      80
+    ],
+    [
+      "ess dur",
+      80
+    ],
+    [
+      "äger rum",
+      77
+    ],
+    [
+      "kungliga filharmonikerna",
+      75
+    ],
+    [
+      "guidad visning",
+      68
+    ],
+    [
+      "arena skyview",
+      57
+    ],
+    [
+      "barn mellan",
+      52
+    ],
+    [
+      "visning barn",
+      51
+    ],
+    [
+      "sveriges radios",
+      48
+    ],
+    [
+      "radios symfoniorkester",
+      48
+    ]
+  ]
+}

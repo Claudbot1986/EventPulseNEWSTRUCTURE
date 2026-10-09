@@ -1,0 +1,113 @@
+{
+  "category_slug": "livepodd",
+  "events": 1,
+  "docs": 1,
+  "top_1grams_distinctive": [
+    {
+      "w": "gardell",
+      "c": 4,
+      "score": 8.317766166719343
+    },
+    {
+      "w": "jonas",
+      "c": 3,
+      "score": 5.375278407684165
+    },
+    {
+      "w": "romanen",
+      "c": 2,
+      "score": 4.1588830833596715
+    },
+    {
+      "w": "sverige",
+      "c": 2,
+      "score": 4.1588830833596715
+    },
+    {
+      "w": "internationell",
+      "c": 1,
+      "score": 2.70805020110221
+    },
+    {
+      "w": "sammanhängande",
+      "c": 1,
+      "score": 2.70805020110221
+    },
+    {
+      "w": "författarscen",
+      "c": 1,
+      "score": 2.639057329615259
+    },
+    {
+      "w": "ursprungligen",
+      "c": 1,
+      "score": 2.639057329615259
+    },
+    {
+      "w": "stadsteatern",
+      "c": 1,
+      "score": 2.5649493574615367
+    },
+    {
+      "w": "generationer",
+      "c": 1,
+      "score": 2.5649493574615367
+    },
+    {
+      "w": "kulturhuset",
+      "c": 1,
+      "score": 2.4849066497880004
+    },
+    {
+      "w": "presenterar",
+      "c": 1,
+      "score": 2.4849066497880004
+    },
+    {
+      "w": "aidskrisen",
+      "c": 1,
+      "score": 2.3978952727983707
+    },
+    {
+      "w": "fortsätter",
+      "c": 1,
+      "score": 2.3978952727983707
+    },
+    {
+      "w": "fokuserar",
+      "c": 1,
+      "score": 2.302585092994046
+    },
+    {
+      "w": "klassiska",
+      "c": 1,
+      "score": 2.302585092994046
+    },
+    {
+      "w": "utforskar",
+      "c": 1,
+      "score": 2.302585092994046
+    },
+    {
+      "w": "samtalar",
+      "c": 1,
+      "score": 2.1972245773362196
+    },
+    {
+      "w": "handskar",
+      "c": 1,
+      "score": 2.1972245773362196
+    },
+    {
+      "w": "samtalet",
+      "c": 1,
+      "score": 2.1972245773362196
+    }
+  ],
+  "top_2grams_distinctive": [
+    [
+      "jonas gardell",
+      3
+    ]
+  ]
+}

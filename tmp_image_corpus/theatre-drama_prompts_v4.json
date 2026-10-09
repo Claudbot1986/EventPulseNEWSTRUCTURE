@@ -9,23 +9,23 @@
   "prompts": [
     {
       "pattern": "A_wide",
-      "prompt": "Wide photograph of a dark stage at Teaterverket Svea in Stockholm, where the new uppsättning of a drama unfolds. Eight women in vintage dresses stand frozen in a snowy country-house parlor, a body draped across an antique bed center-stage. Warm amber stage lighting cuts through theatrical fog."
+      "prompt": "Wide stage photograph at Teaterverket Svea during the föreställningen of 8 kvinnor, an isolated manor set bathed in cold blue stage lighting, eight women in vintage dresses frozen mid-gesture around a body on a four-poster bed, swirling artificial snow, theatrical depth of field capturing the entire proscenium."
     },
     {
       "pattern": "B_medium",
-      "prompt": "Medium photo of four actresses mid-scene on the Kulturhuset Stadsteatern stage during the dramatic föreställningen. Costumes from the 1960s, painted wooden doors behind them, harsh overhead stage-light casting sharp shadows across their tense faces and clasped hands."
+      "prompt": "Medium shot from the audience at Kulturhuset Stadsteatern, two performers mid-dialogue in this regi of a contemporary drama, warm amber spotlight isolating them against a minimalist black set, natural posture, sweat on brow, attentive faces three meters apart under tight theatrical focus."
     },
     {
       "pattern": "C_environment",
-      "prompt": "Environmental shot inside the gilded auditorium of China Teatern in Stockholm, audience members filling red velvet seats under crystal chandeliers. The curtain rises mid-föreställningen, revealing a long dinner table set for a final meal, soft amber stage-light spilling into the hall."
+      "prompt": "Environmental photo of China Teatern's ornate gilded balcony during a musikalen rehearsal, red velvet seats empty, intricate plasterwork lit by soft daylight through skylights, a single actress in silhouette reading a script at the edge of the polished wooden stage."
     },
     {
       "pattern": "D_detail",
-      "prompt": "Close detail photograph of a black-gloved hand gripping a silver kitchen knife, point downward into rumpled white bed linen on stage. Out-of-focus chandelier bokeh above. Moody spotlight from a Teaterverket Svea dramatic uppsättning, the surrounding darkness swallowing the edges."
+      "prompt": "Close-up detail shot of a gloved hand gripping a silver letter opener on a dark mahogany desk, stage lighting from above casting hard shadow, prop from the uppsättning at Teaterverket Svea, shallow focus blurring a half-burnt candle and torn letters behind it."
     },
     {
       "pattern": "E_intimate",
-      "prompt": "Intimate close-up of a single actress under a tight warm spotlight at Kulturhuset Stadsteatern, tears visible on her cheek, pearl necklace catching the stage-light. Soft black backdrop, no other figures in frame, capturing one raw, exposed moment of the föreställningen."
+      "prompt": "Intimate portrait from the wings at Kulturhuset Stadsteatern, a young actress in a worn wool coat adjusting her collar before entrance, exposed single tungsten bulb lighting her face, smudged stage makeup, eyes looking offstage with quiet dread, shoulder and chest framing."
     }
   ]
 }

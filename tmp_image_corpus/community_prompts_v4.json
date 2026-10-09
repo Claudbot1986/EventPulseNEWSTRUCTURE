@@ -1,0 +1,31 @@
+{
+  "category_slug": "community",
+  "events": 2373,
+  "jev_q1": 0.3,
+  "jev_q2": 0.65,
+  "jev_q3": 0.1,
+  "description_corpus_size": 1421,
+  "model": "MiniMax-M3",
+  "prompts": [
+    {
+      "pattern": "A_wide",
+      "prompt": "Wide candid photo at Debaser Strand in 2026, a renovated red barn warehouse with brick walls and string lights. A diverse crowd of friends mills near the bar, chatting and laughing under natural daylight filtering through tall industrial windows."
+    },
+    {
+      "pattern": "B_medium",
+      "prompt": "Medium documentary photo inside a Stockholm community barn gathering in 2026. Three people in their thirties share stories around a wooden table, coffee mugs in hand, warm natural light spilling through a large window, candid and relaxed."
+    },
+    {
+      "pattern": "C_environment",
+      "prompt": "Environment-first photo of Debaser Strand's outdoor riverside terrace on a 2026 summer afternoon. People gather at picnic tables beside a pale wooden building, laundry-line bunting overhead, soft northern daylight casting gentle shadows across worn planks."
+    },
+    {
+      "pattern": "D_detail",
+      "prompt": "Detail photo of weathered barn wood at Debaser Strand in 2026, painted with layered community event posters and peeling teal paint. A hand pins a fresh flyer among older ones, natural side-light highlighting the rough grain and curling paper edges."
+    },
+    {
+      "pattern": "E_intimate",
+      "prompt": "Intimate candid photo at a 2026 Stockholm barn-style community night. Two friends lean close in a quiet corner, one gesturing softly, the other's face tilted with a gentle smile, illuminated by warm amber light from a single hanging bulb."
+    }
+  ]
+}

@@ -1,0 +1,169 @@
+{
+  "category_slug": "festival",
+  "events": 14,
+  "docs": 14,
+  "top_1grams_distinctive": [
+    {
+      "w": "internationella",
+      "c": 23,
+      "score": 63.76954061151497
+    },
+    {
+      "w": "syndromfestival",
+      "c": 21,
+      "score": 58.224363167035406
+    },
+    {
+      "w": "stockholms",
+      "c": 21,
+      "score": 50.355800728765786
+    },
+    {
+      "w": "downs",
+      "c": 25,
+      "score": 44.79398673070138
+    },
+    {
+      "w": "festival",
+      "c": 14,
+      "score": 30.761144082707073
+    },
+    {
+      "w": "filmhuset",
+      "c": 9,
+      "score": 20.723265836946414
+    },
+    {
+      "w": "festivalen",
+      "c": 8,
+      "score": 19.183162182386965
+    },
+    {
+      "w": "telefonfabriken",
+      "c": 6,
+      "score": 16.635532333438686
+    },
+    {
+      "w": "evenemanget",
+      "c": 6,
+      "score": 14.909439898728003
+    },
+    {
+      "w": "jazz",
+      "c": 9,
+      "score": 14.484941211906902
+    },
+    {
+      "w": "hägersten",
+      "c": 4,
+      "score": 9.210340371976184
+    },
+    {
+      "w": "syndrom",
+      "c": 4,
+      "score": 8.317766166719343
+    },
+    {
+      "w": "hartwig",
+      "c": 4,
+      "score": 8.317766166719343
+    },
+    {
+      "w": "äger",
+      "c": 5,
+      "score": 8.047189562170502
+    },
+    {
+      "w": "kommer",
+      "c": 4,
+      "score": 7.783640596221253
+    },
+    {
+      "w": "kulturhuset",
+      "c": 3,
+      "score": 7.4547199493640015
+    },
+    {
+      "w": "dubbelmusik",
+      "c": 3,
+      "score": 7.4547199493640015
+    },
+    {
+      "w": "presenterar",
+      "c": 3,
+      "score": 7.4547199493640015
+    },
+    {
+      "w": "inkludering",
+      "c": 3,
+      "score": 7.4547199493640015
+    },
+    {
+      "w": "mötesplats",
+      "c": 3,
+      "score": 7.193685818395112
+    }
+  ],
+  "top_2grams_distinctive": [
+    [
+      "stockholms internationella",
+      21
+    ],
+    [
+      "internationella downs",
+      21
+    ],
+    [
+      "downs syndromfestival",
+      21
+    ],
+    [
+      "syndromfestival festival",
+      8
+    ],
+    [
+      "äger rum",
+      5
+    ],
+    [
+      "jazz festival",
+      5
+    ],
+    [
+      "syndromfestival stockholms",
+      5
+    ],
+    [
+      "downs syndrom",
+      4
+    ],
+    [
+      "festival filmhuset",
+      4
+    ],
+    [
+      "telefonfabriken hägersten",
+      4
+    ],
+    [
+      "syndromfestival äger",
+      3
+    ],
+    [
+      "filmhuset festivalen",
+      3
+    ],
+    [
+      "festivalen presenterar",
+      3
+    ],
+    [
+      "presenterar stockholms",
+      3
+    ],
+    [
+      "festival telefonfabriken",
+      3
+    ]
+  ]
+}

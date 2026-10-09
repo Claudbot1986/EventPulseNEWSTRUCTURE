@@ -1,0 +1,31 @@
+{
+  "category_slug": "rock",
+  "events": 5,
+  "jev_q1": 0.3,
+  "jev_q2": 0.65,
+  "jev_q3": 0.1,
+  "description_corpus_size": 0,
+  "model": "MiniMax-M3",
+  "prompts": [
+    {
+      "pattern": "A_wide",
+      "prompt": "A wide shot of a packed Stockholm rock venue under cool blue stage lights, crowd with raised fists silhouetted against a towering amplifier stack, guitarist mid-stride center stage, haze drifting through beams, real photo, Stockholm concert photography."
+    },
+    {
+      "pattern": "B_medium",
+      "prompt": "A medium shot of a long-haired drummer in a sleeveless shirt hammering a kit at a Stockholm rock gig, sweat visible under warm amber stage light, blurred cymbals mid-crash, drumsticks in motion, authentic concert photography."
+    },
+    {
+      "pattern": "C_environment",
+      "prompt": "A wide environmental shot of a dim Stockholm rock club, exposed brick walls tagged with stickers, a digital marcon amp glowing in the corner, a roadie coiling a thick XLR cable across a sticky wooden floor, moody side lighting."
+    },
+    {
+      "pattern": "D_detail",
+      "prompt": "A tight detail photo of a scuffed leather guitar strap with a digital marcon tuner clipped to it, resting against a sunburst Stratocaster body backstage in a Stockholm venue, warm natural daylight from a half-open loading door."
+    },
+    {
+      "pattern": "E_intimate",
+      "prompt": "An intimate close-up of a vocalist gripping a Shure SM58, eyes closed, fringe damp, soft warm stage light catching her face as she leans toward the mic at a Stockholm rock show, faint crowd glow behind, candid photo."
+    }
+  ]
+}

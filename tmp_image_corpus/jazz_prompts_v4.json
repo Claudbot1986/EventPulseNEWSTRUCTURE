@@ -1,0 +1,31 @@
+{
+  "category_slug": "jazz",
+  "events": 3,
+  "jev_q1": 0.3,
+  "jev_q2": 0.65,
+  "jev_q3": 0.1,
+  "description_corpus_size": 2,
+  "model": "MiniMax-M3",
+  "prompts": [
+    {
+      "pattern": "A_wide",
+      "prompt": "Wide photo of a wooden dance pavilion at Folkets Park Falköping during an autumn evening, warm stage lights spilling onto couples dancing, autumn leaves on the ground, lanterns glowing softly, candid joyful atmosphere, natural dusk fading behind oak trees."
+    },
+    {
+      "pattern": "B_medium",
+      "prompt": "Medium shot of a live jazz trio performing on a small wooden stage in Folkets Park Falköping, saxophonist leaning into the melody, upright bass and brushed drums, audience members swaying close in the foreground under warm amber stage light."
+    },
+    {
+      "pattern": "C_environment",
+      "prompt": "Environment photo of Folkets Park Falköping park grounds at twilight, string lights strung between maples, families and couples strolling along gravel paths toward the lit dance pavilion, golden autumn foliage framing the scene, natural fading daylight mixed with gentle park illumination."
+    },
+    {
+      "pattern": "D_detail",
+      "prompt": "Close detail shot of a musician's weathered hand pressing keys on an upright piano on a dimly lit stage at Folkets Park Falköping, ivory keys slightly yellowed, warm tungsten stage light highlighting brass fittings and a half-finished coffee cup nearby."
+    },
+    {
+      "pattern": "E_intimate",
+      "prompt": "Intimate candid photo of an older couple slow-dancing cheek-to-cheek under glowing lanterns at a park pavilion in Falköping, soft tungsten light catching silver hair and her floral blouse, blurred dancers and oak trees in the background, gentle natural dusk."
+    }
+  ]
+}

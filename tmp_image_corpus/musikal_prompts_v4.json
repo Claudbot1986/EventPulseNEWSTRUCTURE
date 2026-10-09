@@ -1,0 +1,31 @@
+{
+  "category_slug": "musikal",
+  "events": 29,
+  "jev_q1": 0.3,
+  "jev_q2": 0.65,
+  "jev_q3": 0.1,
+  "description_corpus_size": 29,
+  "model": "MiniMax-M3",
+  "prompts": [
+    {
+      "pattern": "A_wide",
+      "prompt": "Wide-angle photograph of a full Chicago-style musical stage inside Skarpnäcks Kulturhus, with a jazz-era ensemble lined up under warm amber spotlights, dancers in fishnet stockings striking poses, gilded Art Deco backdrop towering behind them, natural-looking stage lighting casting dramatic shadows across the wooden floor."
+    },
+    {
+      "pattern": "B_medium",
+      "prompt": "Medium shot from the audience of a Chicago musical number mid-performance, three performers in sleek black sequined costumes executing a synchronized choreography, one woman with arms thrown back singing, warm stage lights illuminating their faces against a shadowy proscenium arch."
+    },
+    {
+      "pattern": "C_environment",
+      "prompt": "Environmental view of Skarpnäcks Kulturhus auditorium before curtain, red velvet seats receding toward a lit stage, crew members adjusting microphones, framed playbills on the lobby walls reflecting soft afternoon daylight filtering through tall windows, anticipation hanging in the warm air."
+    },
+    {
+      "pattern": "D_detail",
+      "prompt": "Close-up detail of a performer's gloved hand resting on a vintage microphone stand during a Chicago musical scene, sparkling black mesh sleeve, silver nail polish catching stage light, blurred golden instruments and fellow cast members visible in the background bokeh."
+    },
+    {
+      "pattern": "E_intimate",
+      "prompt": "Intimate backstage portrait at Skarpnäcks Kulturhus, a single performer in classic 1920s flapper attire applying bold red lipstick in a brightly lit dressing room mirror, bare bulbs framing the mirror, costume feathers and pearls scattered on the counter beside her."
+    }
+  ]
+}

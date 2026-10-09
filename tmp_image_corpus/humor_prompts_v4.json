@@ -1,0 +1,31 @@
+{
+  "category_slug": "humor",
+  "events": 35,
+  "jev_q1": 0.3,
+  "jev_q2": 0.65,
+  "jev_q3": 0.1,
+  "description_corpus_size": 35,
+  "model": "MiniMax-M3",
+  "prompts": [
+    {
+      "pattern": "A_wide",
+      "prompt": "Wide shot of a small comedy club interior at Telefonfabriken Stockholm, a comedian holding a microphone on a small stage, audience of about thirty people laughing, warm dim amber stage light on the performer, soft glow on the crowd, natural relaxed atmosphere, candid photography."
+    },
+    {
+      "pattern": "B_medium",
+      "prompt": "Medium shot of a standup comedian mid-joke on a dark stage, hand raised gesturing, spotlight illuminating his face and shoulders, Telefonfabriken Stockholm venue visible in soft background bokeh, audience silhouettes out of focus, expressive eyes caught mid-punchline, stage light photography."
+    },
+    {
+      "pattern": "C_environment",
+      "prompt": "Empty Telefonfabriken Stockholm comedy stage before föreställningen begins, single chair, small table with water glass, spotlight casting warm pool on dark wood floor, faded red curtain backdrop, quiet anticipation, no people, natural stage light from above, wide environmental photograph."
+    },
+    {
+      "pattern": "D_detail",
+      "prompt": "Close-up detail of a worn handheld microphone resting on a wooden stool edge, Telefonfabriken Stockholm stage blurred behind, warm amber stage light catching the metal grill, shallow depth of field, intimate still-life of standup performance preparation, natural photography."
+    },
+    {
+      "pattern": "E_intimate",
+      "prompt": "Intimate over-the-shoulder view from the back row of a standup show, foreground silhouette of an audience member's head, performer on Telefonfabriken Stockholm stage under warm spotlight holding the mic, soft focus, sense of shared laughter, natural stage light, candid documentary feel."
+    }
+  ]
+}

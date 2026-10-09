@@ -1,0 +1,147 @@
+{
+  "generated_at": "2026-10-08T16:36:57.934Z",
+  "source": "_check_image_quota",
+  "target_per_30": 30,
+  "items": [
+    {
+      "category": "humor",
+      "need": 20,
+      "events": 35,
+      "library": 0,
+      "target": 20
+    },
+    {
+      "category": "musikal",
+      "need": 20,
+      "events": 29,
+      "library": 0,
+      "target": 20
+    },
+    {
+      "category": "standup",
+      "need": 20,
+      "events": 15,
+      "library": 0,
+      "target": 20
+    },
+    {
+      "category": "dans",
+      "need": 20,
+      "events": 14,
+      "library": 0,
+      "target": 20
+    },
+    {
+      "category": "festival",
+      "need": 20,
+      "events": 14,
+      "library": 0,
+      "target": 20
+    },
+    {
+      "category": "pop",
+      "need": 20,
+      "events": 10,
+      "library": 0,
+      "target": 20
+    },
+    {
+      "category": "sport",
+      "need": 20,
+      "events": 7,
+      "library": 0,
+      "target": 20
+    },
+    {
+      "category": "rock",
+      "need": 20,
+      "events": 5,
+      "library": 0,
+      "target": 20
+    },
+    {
+      "category": "jazz",
+      "need": 20,
+      "events": 3,
+      "library": 0,
+      "target": 20
+    },
+    {
+      "category": "theater",
+      "need": 20,
+      "events": 2,
+      "library": 0,
+      "target": 20
+    },
+    {
+      "category": "electronic",
+      "need": 20,
+      "events": 1,
+      "library": 0,
+      "target": 20
+    },
+    {
+      "category": "hip-hop",
+      "need": 20,
+      "events": 1,
+      "library": 0,
+      "target": 20
+    },
+    {
+      "category": "livepodd",
+      "need": 20,
+      "events": 1,
+      "library": 0,
+      "target": 20
+    },
+    {
+      "category": "classical",
+      "need": 19,
+      "events": 21,
+      "library": 1,
+      "target": 20
+    },
+    {
+      "category": "arts",
+      "need": 19,
+      "events": 0,
+      "library": 1,
+      "target": 20
+    },
+    {
+      "category": "flea-market",
+      "need": 9,
+      "events": 27,
+      "library": 11,
+      "target": 20
+    },
+    {
+      "category": "circus",
+      "need": 8,
+      "events": 33,
+      "library": 12,
+      "target": 20
+    },
+    {
+      "category": "art-exhibitions",
+      "need": 7,
+      "events": 0,
+      "library": 13,
+      "target": 20
+    },
+    {
+      "category": "musical-theatre",
+      "need": 4,
+      "events": 112,
+      "library": 0,
+      "target": 4
+    },
+    {
+      "category": "barn",
+      "need": 4,
+      "events": 0,
+      "library": 16,
+      "target": 20
+    }
+  ]
+}

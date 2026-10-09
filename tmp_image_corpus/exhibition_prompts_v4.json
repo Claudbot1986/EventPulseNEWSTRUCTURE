@@ -9,23 +9,23 @@
   "prompts": [
     {
       "pattern": "A_wide",
-      "prompt": "Wide interior shot of a grand Stockholm gallery hall bathed in soft skylight from tall arched windows, visitors scattered across pale wooden floors viewing large framed Nordic paintings hung in symmetrical rows along cream walls."
+      "prompt": "Wide-angle photo of a spacious white-walled exhibition hall at Kulturhuset Stadsteatern in Stockholm, with visitors strolling among towering textile and sound installations bathed in soft natural light from tall arched windows."
     },
     {
       "pattern": "B_medium",
-      "prompt": "Medium view inside Kulturhuset Stadsteatern exhibition space where a woman in a grey coat stands before a textile sculpture, natural daylight streaming from clerestory windows casting gentle shadows across the installation."
+      "prompt": "Medium shot of a woman in a navy coat pausing before a large abstract painting in a Nationalmuseum gallery, warm natural light spilling across the parquet floor, other visitors blurred behind her."
     },
     {
       "pattern": "C_environment",
-      "prompt": "Environmental photograph of Liljevalchs konsthall Stockholm exhibition room, high ceilings with exposed beams, visitors seated on a long bench contemplating mixed-media wall works, diffused daylight entering through tall glass doors."
+      "prompt": "Environmental photo of an immersive sculpture installation inside Liljevalchs in Stockholm, visitors standing barefoot on linen-covered flooring, soft overhead gallery lighting, draped fabrics and ceramic forms surrounding them."
     },
     {
       "pattern": "D_detail",
-      "prompt": "Close detail of a sculptural installation corner: folded linen draping over a wooden armature, warm afternoon light revealing woven texture, no people in frame, set within a Stockholm utställning gallery."
+      "prompt": "Close detail shot of intricate woven textile fibers on a sculpture at Kulturhuset Stadsteatern, threads catching pale natural light, the blurred silhouette of a viewer reflected in a nearby glass case."
     },
     {
       "pattern": "E_intimate",
-      "prompt": "Intimate handheld-style shot of an older visitor reading exhibition placard beside a softly lit painting, shallow depth of field, warm tungsten and natural window light mixing on the gallery wall in Stockholm."
+      "prompt": "Intimate photo of a man and child holding hands while listening through headphones to a sound piece at Nationalmuseum, soft window light illuminating their faces amid a quiet, sparsely populated exhibition room."
     }
   ]
 }

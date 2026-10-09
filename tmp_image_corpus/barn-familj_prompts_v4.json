@@ -1,0 +1,31 @@
+{
+  "category_slug": "barn-familj",
+  "events": 54,
+  "jev_q1": 0.3,
+  "jev_q2": 0.65,
+  "jev_q3": 0.1,
+  "description_corpus_size": 54,
+  "model": "MiniMax-M3",
+  "prompts": [
+    {
+      "pattern": "A_wide",
+      "prompt": "Wide interior shot of Kulturhuset Stadsteatern's main glass atrium in Stockholm, families with young children walking across the polished floor toward a colorful konstverkstan workshop, morning daylight pouring through tall windows, soft window-light casting long shadows."
+    },
+    {
+      "pattern": "B_medium",
+      "prompt": "Medium shot inside Kulturhuset Stadsteatern in Stockholm, three parents crouching beside toddlers painting paper at low tables during a konstverkstan session, faces lit by overhead daylight, aprons splattered with paint, warm smiles, natural-light photography."
+    },
+    {
+      "pattern": "C_environment",
+      "prompt": "Environmental wide of Kulturhuset Stadsteatern's children's workshop hall near Sergels torg, soft afternoon daylight, scattered wooden stools, low shelves with clay and crayons, a parent holding a baby carrier while another child runs toward the door, relaxed atmosphere."
+    },
+    {
+      "pattern": "D_detail",
+      "prompt": "Close detail of small chubby hands molding bright orange clay on a wooden konstverkstan table, dried paint flecks under fingernails, a drop of wet clay glistening, soft diffused daylight from Kulturhuset Stadsteatern windows, shallow depth of field."
+    },
+    {
+      "pattern": "E_intimate",
+      "prompt": "Intimate portrait of a father and three-year-old daughter leaning over a konstverkstan easel inside Kulturhuset Stadsteatern, gentle stage-light warmth on their foreheads, daughter giggling with paint on her cheek, quiet fatherly smile, natural-light, candid framing."
+    }
+  ]
+}

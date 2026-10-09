@@ -1,0 +1,31 @@
+{
+  "category_slug": "classical",
+  "events": 21,
+  "jev_q1": 0.3,
+  "jev_q2": 0.3,
+  "jev_q3": 0.1,
+  "description_corpus_size": 7,
+  "model": "MiniMax-M3",
+  "prompts": [
+    {
+      "pattern": "A_wide",
+      "prompt": "Wide-angle documentary photograph of a full symphony orchestra mid-performance on a grand Nordic concert hall stage, musicians in formal black attire playing strings and brass, conductor with raised baton, warm amber stage lighting casting a soft glow on polished wooden floors and acoustic panels."
+    },
+    {
+      "pattern": "B_medium",
+      "prompt": "Medium shot of a violinist and cellist performing together in the pit of a classical opera house, bow strokes captured in motion, focused expressions, soft bokeh of orchestra members behind them, warm golden stage light reflecting off varnish and brass instruments."
+    },
+    {
+      "pattern": "C_environment",
+      "prompt": "Environmental photograph of an empty Stockholm concert hall auditorium before doors open, rows of velvet seats bathed in soft natural daylight from tall windows, ornate ceiling details, a single stagehand adjusting a music stand in the distance, anticipatory silence conveyed through still composition."
+    },
+    {
+      "pattern": "D_detail",
+      "prompt": "Close-up detail shot of a concertmaster's hands on a Stradivarius violin, weathered fingers pressing strings against ebony fingerboard, shallow depth of field blurring the sheet music behind, warm amber stage light catching rosin dust in the air, intimate texture of aged wood."
+    },
+    {
+      "pattern": "E_intimate",
+      "prompt": "Intimate candid photograph of a pianist at a Steinway grand piano during a quiet chamber moment, hands resting gently on keys, soft side lighting illuminating concentration on her face, blurred empty concert hall seats receding into darkness behind, deeply personal and reflective atmosphere."
+    }
+  ]
+}

@@ -1,0 +1,60 @@
+{
+  "category_slug": "workshop",
+  "events": 104,
+  "library": 0,
+  "target_count": 4,
+  "jev_q1": 0.63,
+  "jev_q2": 0.64,
+  "model": "MiniMax-M3",
+  "source_prompts_count": 4,
+  "items": [
+    {
+      "category": "workshop",
+      "pattern": "A_wide",
+      "rep": 0,
+      "prompt": "Wide-angle photograph of a workshop inside the bright atrium of Kulturhuset Stadsteatern in Stockholm, with participants seated around long wooden tables working on textile mending, natural daylight streaming through tall windows, scattered fabric scraps and needles on the table, in soft northern daylight, shallow depth of field, editorial Stockholm color tones. no weapons, no knives, no blood, no gloves, no hands holding objects, no close-up faces of minors, no violence, child-safe imagery, family-friendly.",
+      "jev_q1": 0.63,
+      "jev_q2": 0.64,
+      "model": "MiniMax-M3",
+      "round": 5,
+      "seed": "r5-0",
+      "replacement_for": "1_per_30_image_library_2026-10-07"
+    },
+    {
+      "category": "workshop",
+      "pattern": "A_wide",
+      "rep": 0,
+      "prompt": "Wide-angle photograph of a workshop inside the bright atrium of Kulturhuset Stadsteatern in Stockholm, with participants seated around long wooden tables working on textile mending, natural daylight streaming through tall windows, scattered fabric scraps and needles on the table, with warm tungsten and window light mixed, ambient interior glow. no weapons, no knives, no blood, no gloves, no hands holding objects, no close-up faces of minors, no violence, child-safe imagery, family-friendly.",
+      "jev_q1": 0.63,
+      "jev_q2": 0.64,
+      "model": "MiniMax-M3",
+      "round": 5,
+      "seed": "r5-1",
+      "replacement_for": "1_per_30_image_library_2026-10-07"
+    },
+    {
+      "category": "workshop",
+      "pattern": "A_wide",
+      "rep": 0,
+      "prompt": "Wide-angle photograph of a workshop inside the bright atrium of Kulturhuset Stadsteatern in Stockholm, with participants seated around long wooden tables working on textile mending, natural daylight streaming through tall windows, scattered fabric scraps and needles on the table, overcast Nordic daylight, muted color palette, atmospheric perspective. no weapons, no knives, no blood, no gloves, no hands holding objects, no close-up faces of minors, no violence, child-safe imagery, family-friendly.",
+      "jev_q1": 0.63,
+      "jev_q2": 0.64,
+      "model": "MiniMax-M3",
+      "round": 5,
+      "seed": "r5-2",
+      "replacement_for": "1_per_30_image_library_2026-10-07"
+    },
+    {
+      "category": "workshop",
+      "pattern": "A_wide",
+      "rep": 0,
+      "prompt": "Wide-angle photograph of a workshop inside the bright atrium of Kulturhuset Stadsteatern in Stockholm, with participants seated around long wooden tables working on textile mending, natural daylight streaming through tall windows, scattered fabric scraps and needles on the table, late afternoon golden hour light, long shadows, calm mood. no weapons, no knives, no blood, no gloves, no hands holding objects, no close-up faces of minors, no violence, child-safe imagery, family-friendly.",
+      "jev_q1": 0.63,
+      "jev_q2": 0.64,
+      "model": "MiniMax-M3",
+      "round": 5,
+      "seed": "r5-3",
+      "replacement_for": "1_per_30_image_library_2026-10-07"
+    }
+  ]
+}

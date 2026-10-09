@@ -1,0 +1,169 @@
+{
+  "category_slug": "music",
+  "events": 4846,
+  "docs": 4653,
+  "top_1grams_distinctive": [
+    {
+      "w": "har",
+      "c": 3285,
+      "score": 4553.97697627884
+    },
+    {
+      "w": "strong",
+      "c": 1964,
+      "score": 3821.767532744635
+    },
+    {
+      "w": "musik",
+      "c": 1721,
+      "score": 3083.6180465414827
+    },
+    {
+      "w": "2026",
+      "c": 1280,
+      "score": 2060.0805279156484
+    },
+    {
+      "w": "sig",
+      "c": 1431,
+      "score": 1983.7872307625635
+    },
+    {
+      "w": "tillsammans",
+      "c": 760,
+      "score": 1888.5290538388804
+    },
+    {
+      "w": "där",
+      "c": 1217,
+      "score": 1687.1202374829068
+    },
+    {
+      "w": "under",
+      "c": 937,
+      "score": 1678.8786226666875
+    },
+    {
+      "w": "bandet",
+      "c": 778,
+      "score": 1513.9180959650337
+    },
+    {
+      "w": "mest",
+      "c": 874,
+      "score": 1406.6487354674036
+    },
+    {
+      "w": "kommer",
+      "c": 720,
+      "score": 1401.0553073198255
+    },
+    {
+      "w": "efter",
+      "c": 760,
+      "score": 1361.7371966133217
+    },
+    {
+      "w": "publiken",
+      "c": 603,
+      "score": 1324.9264201337403
+    },
+    {
+      "w": "genom",
+      "c": 733,
+      "score": 1313.3596909441642
+    },
+    {
+      "w": "sveriges",
+      "c": 594,
+      "score": 1305.1513989377145
+    },
+    {
+      "w": "han",
+      "c": 928,
+      "score": 1286.4811671192585
+    },
+    {
+      "w": "presenterar",
+      "c": 511,
+      "score": 1269.7872980416682
+    },
+    {
+      "w": "inte",
+      "c": 783,
+      "score": 1260.1898854359006
+    },
+    {
+      "w": "dinnershow",
+      "c": 520,
+      "score": 1246.9055418551527
+    },
+    {
+      "w": "jazz",
+      "c": 766,
+      "score": 1232.829440924521
+    }
+  ],
+  "top_2grams_distinctive": [
+    [
+      "wallmans international",
+      282
+    ],
+    [
+      "international dinnershow",
+      282
+    ],
+    [
+      "äger rum",
+      265
+    ],
+    [
+      "strong strong",
+      241
+    ],
+    [
+      "mat musik",
+      207
+    ],
+    [
+      "sveriges mest",
+      199
+    ],
+    [
+      "jazz festival",
+      189
+    ],
+    [
+      "golden hits",
+      181
+    ],
+    [
+      "rock roll",
+      180
+    ],
+    [
+      "rör sig",
+      179
+    ],
+    [
+      "debaser strand",
+      169
+    ],
+    [
+      "kungliga filharmonikerna",
+      166
+    ],
+    [
+      "november 2026",
+      164
+    ],
+    [
+      "mest älskade",
+      164
+    ],
+    [
+      "kollektivet livet",
+      163
+    ]
+  ]
+}

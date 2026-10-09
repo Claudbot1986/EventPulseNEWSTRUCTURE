@@ -1,0 +1,169 @@
+{
+  "category_slug": "musical-theatre",
+  "events": 112,
+  "docs": 110,
+  "top_1grams_distinctive": [
+    {
+      "w": "chicago",
+      "c": 234,
+      "score": 486.58932075308155
+    },
+    {
+      "w": "oscarsteatern",
+      "c": 156,
+      "score": 411.6929434199804
+    },
+    {
+      "w": "2026",
+      "c": 141,
+      "score": 226.93074565320813
+    },
+    {
+      "w": "musikalupplevelse",
+      "c": 78,
+      "score": 225.44899711590082
+    },
+    {
+      "w": "musical",
+      "c": 107,
+      "score": 222.50024495974242
+    },
+    {
+      "w": "världsstjärnan",
+      "c": 78,
+      "score": 211.2279156859724
+    },
+    {
+      "w": "världsberömda",
+      "c": 78,
+      "score": 205.8464717099902
+    },
+    {
+      "w": "huvudrollerna",
+      "c": 78,
+      "score": 205.8464717099902
+    },
+    {
+      "w": "underhållande",
+      "c": 78,
+      "score": 205.8464717099902
+    },
+    {
+      "w": "spektakulära",
+      "c": 78,
+      "score": 200.06604988199987
+    },
+    {
+      "w": "showbusiness",
+      "c": 78,
+      "score": 200.06604988199987
+    },
+    {
+      "w": "uppsättning",
+      "c": 78,
+      "score": 193.82271868346402
+    },
+    {
+      "w": "talsglamour",
+      "c": 78,
+      "score": 193.82271868346402
+    },
+    {
+      "w": "storslagen",
+      "c": 78,
+      "score": 187.03583127827292
+    },
+    {
+      "w": "glittrande",
+      "c": 78,
+      "score": 187.03583127827292
+    },
+    {
+      "w": "shownummer",
+      "c": 78,
+      "score": 187.03583127827292
+    },
+    {
+      "w": "prisbelönt",
+      "c": 78,
+      "score": 187.03583127827292
+    },
+    {
+      "w": "berömmelse",
+      "c": 78,
+      "score": 187.03583127827292
+    },
+    {
+      "w": "handlingen",
+      "c": 78,
+      "score": 187.03583127827292
+    },
+    {
+      "w": "ingvars",
+      "c": 87,
+      "score": 180.9114141261457
+    }
+  ],
+  "top_2grams_distinctive": [
+    [
+      "sven ingvars",
+      87
+    ],
+    [
+      "världsberömda musikalen",
+      78
+    ],
+    [
+      "musikalen chicago",
+      78
+    ],
+    [
+      "chicago intar",
+      78
+    ],
+    [
+      "intar oscarsteatern",
+      78
+    ],
+    [
+      "oscarsteatern höst",
+      78
+    ],
+    [
+      "höst storslagen",
+      78
+    ],
+    [
+      "storslagen påkostad",
+      78
+    ],
+    [
+      "påkostad svensk",
+      78
+    ],
+    [
+      "svensk uppsättning",
+      78
+    ],
+    [
+      "uppsättning regi",
+      78
+    ],
+    [
+      "regi edward",
+      78
+    ],
+    [
+      "edward sillén",
+      78
+    ],
+    [
+      "sillén världsstjärnan",
+      78
+    ],
+    [
+      "världsstjärnan peter",
+      78
+    ]
+  ]
+}

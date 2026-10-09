@@ -1,0 +1,31 @@
+{
+  "category_slug": "pop",
+  "events": 10,
+  "jev_q1": 0.3,
+  "jev_q2": 0.65,
+  "jev_q3": 0.1,
+  "description_corpus_size": 10,
+  "model": "MiniMax-M3",
+  "prompts": [
+    {
+      "pattern": "A_wide",
+      "prompt": "Wide shot of a concert hall stage at Växjö Konserthus, warm stage lights glowing on a lone acoustic guitar and microphone stand, silhouetted male singer with guitar facing a softly lit audience, wooden interior panels, no text or logos visible, atmospheric pop concert photography."
+    },
+    {
+      "pattern": "B_medium",
+      "prompt": "Medium shot of a male singer-songwriter performing on stage, strumming an acoustic guitar and singing into a vintage microphone, soft amber stage lighting casting gentle shadows, blurred crowd in background, candid concert photography style, no visible text or signage."
+    },
+    {
+      "pattern": "C_environment",
+      "prompt": "Environmental photograph inside Växjö Konserthus foyer before a pop concert, scattered audience members mingling near curved wooden walls and ticket counters, warm tungsten pendant lights overhead, polished concrete floor, natural candid atmosphere, no visible text or posters."
+    },
+    {
+      "pattern": "D_detail",
+      "prompt": "Close-up detail of calloused fingers pressing steel strings on an acoustic guitar, shallow depth of field blurring warm stage lights behind, worn pickguard visible, intimate concert moment captured in low ambient light, photography focused purely on instrument texture."
+    },
+    {
+      "pattern": "E_intimate",
+      "prompt": "Intimate close-up of a Swedish male singer-songwriter mid-performance, eyes closed under a single warm spotlight, subtle stubble and silver hair catching amber stage light, microphone close to his lips, audience entirely out of focus, deeply personal concert portrait."
+    }
+  ]
+}

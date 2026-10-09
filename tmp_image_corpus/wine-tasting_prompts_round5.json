@@ -1,0 +1,36 @@
+{
+  "category_slug": "wine-tasting",
+  "events": 59,
+  "library": 0,
+  "target_count": 2,
+  "jev_q1": 0.8,
+  "jev_q2": 0.61,
+  "model": "MiniMax-M3",
+  "source_prompts_count": 4,
+  "items": [
+    {
+      "category": "wine-tasting",
+      "pattern": "A_wide",
+      "rep": 0,
+      "prompt": "Wide shot of an autumn wine tasting inside Folii wine bar in Stockholm, golden natural light filtering through tall windows, a long rustic table laden with dozens of wine bottles, cheese boards with French cheeses, and twenty guests standing in small groups swirling glasses and conversing warmly, in soft northern daylight, shallow depth of field, editorial Stockholm color tones. no weapons, no knives, no blood, no gloves, no hands holding objects, no close-up faces of minors, no violence, child-safe imagery, family-friendly.",
+      "jev_q1": 0.8,
+      "jev_q2": 0.61,
+      "model": "MiniMax-M3",
+      "round": 5,
+      "seed": "r5-0",
+      "replacement_for": "1_per_30_image_library_2026-10-07"
+    },
+    {
+      "category": "wine-tasting",
+      "pattern": "A_wide",
+      "rep": 0,
+      "prompt": "Wide shot of an autumn wine tasting inside Folii wine bar in Stockholm, golden natural light filtering through tall windows, a long rustic table laden with dozens of wine bottles, cheese boards with French cheeses, and twenty guests standing in small groups swirling glasses and conversing warmly, with warm tungsten and window light mixed, ambient interior glow. no weapons, no knives, no blood, no gloves, no hands holding objects, no close-up faces of minors, no violence, child-safe imagery, family-friendly.",
+      "jev_q1": 0.8,
+      "jev_q2": 0.61,
+      "model": "MiniMax-M3",
+      "round": 5,
+      "seed": "r5-1",
+      "replacement_for": "1_per_30_image_library_2026-10-07"
+    }
+  ]
+}

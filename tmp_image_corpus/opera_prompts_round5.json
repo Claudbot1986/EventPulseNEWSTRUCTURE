@@ -1,0 +1,132 @@
+{
+  "category_slug": "opera",
+  "events": 291,
+  "library": 0,
+  "target_count": 10,
+  "jev_q1": 0.69,
+  "jev_q2": 0.66,
+  "model": "MiniMax-M3",
+  "source_prompts_count": 4,
+  "items": [
+    {
+      "category": "opera",
+      "pattern": "A_wide",
+      "rep": 0,
+      "prompt": "Wide-angle photograph of Folkoperan's historic auditorium during an opera performance, full stage visible with an orchestra in the pit, singers in period costume under warm stage lighting, audience in shadowy stalls, gilded balconies framing the scene, in soft northern daylight, shallow depth of field, editorial Stockholm color tones. no weapons, no knives, no blood, no gloves, no hands holding objects, no close-up faces of minors, no violence, child-safe imagery, family-friendly.",
+      "jev_q1": 0.69,
+      "jev_q2": 0.66,
+      "model": "MiniMax-M3",
+      "round": 5,
+      "seed": "r5-0",
+      "replacement_for": "1_per_30_image_library_2026-10-07"
+    },
+    {
+      "category": "opera",
+      "pattern": "A_wide",
+      "rep": 0,
+      "prompt": "Wide-angle photograph of Folkoperan's historic auditorium during an opera performance, full stage visible with an orchestra in the pit, singers in period costume under warm stage lighting, audience in shadowy stalls, gilded balconies framing the scene, with warm tungsten and window light mixed, ambient interior glow. no weapons, no knives, no blood, no gloves, no hands holding objects, no close-up faces of minors, no violence, child-safe imagery, family-friendly.",
+      "jev_q1": 0.69,
+      "jev_q2": 0.66,
+      "model": "MiniMax-M3",
+      "round": 5,
+      "seed": "r5-1",
+      "replacement_for": "1_per_30_image_library_2026-10-07"
+    },
+    {
+      "category": "opera",
+      "pattern": "A_wide",
+      "rep": 0,
+      "prompt": "Wide-angle photograph of Folkoperan's historic auditorium during an opera performance, full stage visible with an orchestra in the pit, singers in period costume under warm stage lighting, audience in shadowy stalls, gilded balconies framing the scene, overcast Nordic daylight, muted color palette, atmospheric perspective. no weapons, no knives, no blood, no gloves, no hands holding objects, no close-up faces of minors, no violence, child-safe imagery, family-friendly.",
+      "jev_q1": 0.69,
+      "jev_q2": 0.66,
+      "model": "MiniMax-M3",
+      "round": 5,
+      "seed": "r5-2",
+      "replacement_for": "1_per_30_image_library_2026-10-07"
+    },
+    {
+      "category": "opera",
+      "pattern": "A_wide",
+      "rep": 0,
+      "prompt": "Wide-angle photograph of Folkoperan's historic auditorium during an opera performance, full stage visible with an orchestra in the pit, singers in period costume under warm stage lighting, audience in shadowy stalls, gilded balconies framing the scene, late afternoon golden hour light, long shadows, calm mood. no weapons, no knives, no blood, no gloves, no hands holding objects, no close-up faces of minors, no violence, child-safe imagery, family-friendly.",
+      "jev_q1": 0.69,
+      "jev_q2": 0.66,
+      "model": "MiniMax-M3",
+      "round": 5,
+      "seed": "r5-3",
+      "replacement_for": "1_per_30_image_library_2026-10-07"
+    },
+    {
+      "category": "opera",
+      "pattern": "A_wide",
+      "rep": 1,
+      "prompt": "Wide-angle photograph of Folkoperan's historic auditorium during an opera performance, full stage visible with an orchestra in the pit, singers in period costume under warm stage lighting, audience in shadowy stalls, gilded balconies framing the scene, in soft northern daylight, shallow depth of field, editorial Stockholm color tones. no weapons, no knives, no blood, no gloves, no hands holding objects, no close-up faces of minors, no violence, child-safe imagery, family-friendly.",
+      "jev_q1": 0.69,
+      "jev_q2": 0.66,
+      "model": "MiniMax-M3",
+      "round": 5,
+      "seed": "r5-4",
+      "replacement_for": "1_per_30_image_library_2026-10-07"
+    },
+    {
+      "category": "opera",
+      "pattern": "A_wide",
+      "rep": 1,
+      "prompt": "Wide-angle photograph of Folkoperan's historic auditorium during an opera performance, full stage visible with an orchestra in the pit, singers in period costume under warm stage lighting, audience in shadowy stalls, gilded balconies framing the scene, with warm tungsten and window light mixed, ambient interior glow. no weapons, no knives, no blood, no gloves, no hands holding objects, no close-up faces of minors, no violence, child-safe imagery, family-friendly.",
+      "jev_q1": 0.69,
+      "jev_q2": 0.66,
+      "model": "MiniMax-M3",
+      "round": 5,
+      "seed": "r5-5",
+      "replacement_for": "1_per_30_image_library_2026-10-07"
+    },
+    {
+      "category": "opera",
+      "pattern": "A_wide",
+      "rep": 1,
+      "prompt": "Wide-angle photograph of Folkoperan's historic auditorium during an opera performance, full stage visible with an orchestra in the pit, singers in period costume under warm stage lighting, audience in shadowy stalls, gilded balconies framing the scene, overcast Nordic daylight, muted color palette, atmospheric perspective. no weapons, no knives, no blood, no gloves, no hands holding objects, no close-up faces of minors, no violence, child-safe imagery, family-friendly.",
+      "jev_q1": 0.69,
+      "jev_q2": 0.66,
+      "model": "MiniMax-M3",
+      "round": 5,
+      "seed": "r5-6",
+      "replacement_for": "1_per_30_image_library_2026-10-07"
+    },
+    {
+      "category": "opera",
+      "pattern": "A_wide",
+      "rep": 1,
+      "prompt": "Wide-angle photograph of Folkoperan's historic auditorium during an opera performance, full stage visible with an orchestra in the pit, singers in period costume under warm stage lighting, audience in shadowy stalls, gilded balconies framing the scene, late afternoon golden hour light, long shadows, calm mood. no weapons, no knives, no blood, no gloves, no hands holding objects, no close-up faces of minors, no violence, child-safe imagery, family-friendly.",
+      "jev_q1": 0.69,
+      "jev_q2": 0.66,
+      "model": "MiniMax-M3",
+      "round": 5,
+      "seed": "r5-7",
+      "replacement_for": "1_per_30_image_library_2026-10-07"
+    },
+    {
+      "category": "opera",
+      "pattern": "A_wide",
+      "rep": 2,
+      "prompt": "Wide-angle photograph of Folkoperan's historic auditorium during an opera performance, full stage visible with an orchestra in the pit, singers in period costume under warm stage lighting, audience in shadowy stalls, gilded balconies framing the scene, in soft northern daylight, shallow depth of field, editorial Stockholm color tones. no weapons, no knives, no blood, no gloves, no hands holding objects, no close-up faces of minors, no violence, child-safe imagery, family-friendly.",
+      "jev_q1": 0.69,
+      "jev_q2": 0.66,
+      "model": "MiniMax-M3",
+      "round": 5,
+      "seed": "r5-8",
+      "replacement_for": "1_per_30_image_library_2026-10-07"
+    },
+    {
+      "category": "opera",
+      "pattern": "A_wide",
+      "rep": 2,
+      "prompt": "Wide-angle photograph of Folkoperan's historic auditorium during an opera performance, full stage visible with an orchestra in the pit, singers in period costume under warm stage lighting, audience in shadowy stalls, gilded balconies framing the scene, with warm tungsten and window light mixed, ambient interior glow. no weapons, no knives, no blood, no gloves, no hands holding objects, no close-up faces of minors, no violence, child-safe imagery, family-friendly.",
+      "jev_q1": 0.69,
+      "jev_q2": 0.66,
+      "model": "MiniMax-M3",
+      "round": 5,
+      "seed": "r5-9",
+      "replacement_for": "1_per_30_image_library_2026-10-07"
+    }
+  ]
+}

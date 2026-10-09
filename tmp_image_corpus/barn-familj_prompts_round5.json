@@ -1,0 +1,36 @@
+{
+  "category_slug": "barn-familj",
+  "events": 54,
+  "library": 0,
+  "target_count": 2,
+  "jev_q1": 0.3,
+  "jev_q2": 0.65,
+  "model": "MiniMax-M3",
+  "source_prompts_count": 4,
+  "items": [
+    {
+      "category": "barn-familj",
+      "pattern": "A_wide",
+      "rep": 0,
+      "prompt": "Wide interior shot of Kulturhuset Stadsteatern's main glass atrium in Stockholm, families with young children walking across the polished floor toward a colorful konstverkstan workshop, morning daylight pouring through tall windows, soft window-light casting long shadows, in soft northern daylight, shallow depth of field, editorial Stockholm color tones. no weapons, no knives, no blood, no gloves, no hands holding objects, no close-up faces of minors, no violence, child-safe imagery, family-friendly.",
+      "jev_q1": 0.3,
+      "jev_q2": 0.65,
+      "model": "MiniMax-M3",
+      "round": 5,
+      "seed": "r5-0",
+      "replacement_for": "1_per_30_image_library_2026-10-07"
+    },
+    {
+      "category": "barn-familj",
+      "pattern": "A_wide",
+      "rep": 0,
+      "prompt": "Wide interior shot of Kulturhuset Stadsteatern's main glass atrium in Stockholm, families with young children walking across the polished floor toward a colorful konstverkstan workshop, morning daylight pouring through tall windows, soft window-light casting long shadows, with warm tungsten and window light mixed, ambient interior glow. no weapons, no knives, no blood, no gloves, no hands holding objects, no close-up faces of minors, no violence, child-safe imagery, family-friendly.",
+      "jev_q1": 0.3,
+      "jev_q2": 0.65,
+      "model": "MiniMax-M3",
+      "round": 5,
+      "seed": "r5-1",
+      "replacement_for": "1_per_30_image_library_2026-10-07"
+    }
+  ]
+}

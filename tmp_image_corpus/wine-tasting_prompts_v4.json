@@ -9,23 +9,23 @@
   "prompts": [
     {
       "pattern": "A_wide",
-      "prompt": "Wide-angle photograph of a bright wine-tasting event at Folii in Stockholm, long wooden table lined with French wine bottles, cheese platters, and dozens of stemmed glasses. Twenty guests stand chatting in soft northern daylight streaming through tall windows. Natural light, shallow depth, realistic editorial style."
+      "prompt": "Wide shot of an autumn wine tasting inside Folii wine bar in Stockholm, golden natural light filtering through tall windows, a long rustic table laden with dozens of wine bottles, cheese boards with French cheeses, and twenty guests standing in small groups swirling glasses and conversing warmly."
     },
     {
       "pattern": "B_medium",
-      "prompt": "Medium shot inside Folii wine bar in Stockholm, a sommelier in a dark apron pours deep red wine into a glass while three attentive guests lean in. Rustic wooden bar, scattered notes and bread on the counter. Warm tungsten evening glow mixed with daylight, candid photo feel."
+      "prompt": "Medium shot of a sommelier in a dark apron pouring red wine for a smiling couple at Le Bistrot de Wasahof in Stockholm, warm stage-light from overhead pendants, French cheeses and crusty bread arranged on the marble counter, intimate bistro atmosphere with soft bokeh background."
     },
     {
       "pattern": "C_environment",
-      "prompt": "Environment shot of the elegant Grand Hotel ballroom in Stockholm set for a wine-tasting. Tall arched windows overlook the harbor, long tables draped in linen carry dozens of Italian wine bottles, decanters, and tasting cards. Guests mill softly, natural afternoon light falling across the parquet floor."
+      "prompt": "Environment view of the elegant Vinterträdgården ballroom at Grand Hotel Stockholm during an Italian wine tasting, soft natural daylight streaming through arched windows, rows of wooden tables draped in white linen, hundreds of wine glasses catching the light, guests browsing Italian import tables."
     },
     {
       "pattern": "D_detail",
-      "prompt": "Tight detail photograph of a marble surface at a Stockholm wine-tasting: a half-poured glass of golden wine catching window light, a wedge of aged French cheese, a crumb of baguette, and a small handwritten tasting card. Soft natural side-light, shallow focus, photorealistic texture."
+      "prompt": "Close-up detail of three crystal wine glasses on a slate board, filled with deep ruby Bordeaux wines, beside wedges of aged French cheeses and fig jam, a hand reaching to lift one glass, warm tungsten stage lighting, shallow depth of field on a wooden Wasahof bistro table."
     },
     {
       "pattern": "E_intimate",
-      "prompt": "Intimate close-up portrait of a smiling sommelier at Le Bistrot de Wasahof in Stockholm holding a glass of rosé at cheek height. Background shows blurred guests and chalkboard menus. Warm amber interior lighting, gentle bokeh, candid human presence, natural photography."
+      "prompt": "Intimate eye-level shot of two friends clinking wine glasses at Folii bar, soft natural autumn light from a nearby window illuminating their joyful expressions, a shared cheese board with French cheeses between them, candid moment of laughter, blurred Stockholm street visible behind them."
     }
   ]
 }

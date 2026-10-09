@@ -9,23 +9,23 @@
   "prompts": [
     {
       "pattern": "A_wide",
-      "prompt": "Wide photograph of a brightly lit auditorium at Oscarsteatern in Stockholm, a long stage with two authors seated in soft chairs mid-samtal, a full audience in tiered seating, warm tungsten footlights and natural daylight filtering through high arched windows, candid atmosphere, no logos."
+      "prompt": "Wide shot of a stage at Oscarsteatern in Stockholm, warm stage lights glowing across a long panel table where four speakers sit with microphones, attentive audience filling the velvet seats, a curated literary samtal unfolding under ornate ceiling details."
     },
     {
       "pattern": "B_medium",
-      "prompt": "Medium shot inside Bonniers Konsthall of a författare and a moderator engaged in samtal on a low gallery plinth, white concrete walls and contemporary art framing them, audience seated cross-legged on the floor, soft daylight from skylights, no visible text."
+      "prompt": "Medium shot inside Bonniers Konsthall, a författare seated in a minimalist chair facing a moderator, both holding open copies of boken, gallery visitors listening closely in soft natural light from tall windows, the conversation captured mid-discussion."
     },
     {
       "pattern": "C_environment",
-      "prompt": "Environmental photograph of a Stockholm conference hall during a digital marketing talk, rows of attentive attendees facing a glass-walled stage, presenters gesturing toward a screen, cool daylight through tall windows, candid professional atmosphere, no logos or text."
+      "prompt": "Environmental view of a Stockholm conference hall, attendees mingling beside a large projection screen displaying event branding-free slides, the room bright with overhead natural light, two speakers rehearsing their samtal near the lectern before participants join."
     },
     {
       "pattern": "D_detail",
-      "prompt": "Close-up detail of an author's hand resting on an open boken on a wooden lectern at Oscarsteatern, the gilt stage curtain softly blurred behind, fingers mid-gesture, warm stage light catching paper edges, no readable text visible."
+      "prompt": "Close-up detail of a worn paperback boken resting on a wooden chair arm at Bonniers Konsthall, a hand mid-gesture beside it, soft daylight illuminating the creased pages and a water glass, suggesting a pause during a thoughtful författare samtal."
     },
     {
       "pattern": "E_intimate",
-      "prompt": "Intimate portrait of a författare leaning into a microphone during a quiet samtal, soft side lighting, a single listener visible in soft focus behind, neutral Stockholm gallery backdrop, candid natural expression, no logos or signage."
+      "prompt": "Intimate portrait of a single speaker at Oscarsteatern, face lit by warm stage light, hands open mid-sentence explaining hur creativity evolves, the boken tucked under one arm, the background blurred into deep amber bokeh suggesting an engaged audience."
     }
   ]
 }

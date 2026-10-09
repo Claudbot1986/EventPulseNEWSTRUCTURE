@@ -1,31 +1,31 @@
 {
   "category_slug": "circus",
-  "events": 35,
-  "jev_q1": 0.74,
-  "jev_q2": 0.57,
-  "jev_q3": 0.43,
-  "description_corpus_size": 34,
+  "events": 33,
+  "jev_q1": 0.3,
+  "jev_q2": 0.65,
+  "jev_q3": 0.1,
+  "description_corpus_size": 33,
   "model": "MiniMax-M3",
   "prompts": [
     {
       "pattern": "A_wide",
-      "prompt": "Wide-angle photograph of a full cirkusföreställning in progress at a Stockholm theater stage, acrobats balancing atop a tall pile formation under warm theatrical spotlights, packed audience silhouettes in the foreground, curtains framing the scene."
+      "prompt": "Wide photograph of a circus performance inside Kulturhuset Stadsteatern's grand theatre in Stockholm, full stage visible under warm spotlights, an acrobat mid-leap above silk drapes, audience silhouettes in the foreground seats, natural ambient glow from house lights."
     },
     {
       "pattern": "B_medium",
-      "prompt": "Medium shot of three performers mid-routine during a circus föreställning on a Stockholm stage, two perched on the pile while one dives gracefully, soft stage lighting catches airborne dust, black rigging visible above."
+      "prompt": "Medium documentary shot of a circus performer balancing on a brass unicycle at Kulturhuset Stadsteatern, gloved hand extended for balance, magenta velvet curtain behind, stage lights casting soft overhead shadows, a fellow artist watching from the wings."
     },
     {
       "pattern": "C_environment",
-      "prompt": "Environmental photograph inside a Stockholm theater auditorium before the cirkusföreställning begins, the pile structure rises center-stage under dimmed houselights, empty red velvet seats fill the foreground, soft amber glow along the proscenium."
+      "prompt": "Environmental portrait of a juggler rehearsing in Kulturhuset Stadsteatern's backstage hallway, mirrors and wooden doors lining the corridor, fluorescent lighting mixing with daylight from tall windows, clubs suspended mid-air in quiet practice."
     },
     {
       "pattern": "D_detail",
-      "prompt": "Close-up detail shot of a calloused hand gripping rough wooden planks of the towering pile during a circus föreställning on a Stockholm stage, illuminated illusion of tension, shallow depth of field blurring background rigging."
+      "prompt": "Close-up detail of a magician's hands holding a playing card between fingers at a Stockholm theater, soft stage-light catching the card's glossy edge, velvet costume sleeve visible, shallow depth of field blurring the dark audience beyond."
     },
     {
       "pattern": "E_intimate",
-      "prompt": "Intimate portrait of a young acrobat backstage at a Stockholm venue, adjusting a sequined costume beside the towering pile minutes before the cirkusföreställning, single warm practical light, candid sweat-beaded expression, soft bokeh of hanging ropes."
+      "prompt": "Intimate photograph of a circus duo embracing after a finale bow, faces close and smiling, golden stage spill light on their skin, Kulturhuset Stadsteatern's ornate balcony blurred behind, backstage chatter implied by soft background glow."
     }
   ]
 }

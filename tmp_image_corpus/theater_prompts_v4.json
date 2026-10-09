@@ -1,0 +1,31 @@
+{
+  "category_slug": "theater",
+  "events": 2,
+  "jev_q1": 0.3,
+  "jev_q2": 0.65,
+  "jev_q3": 0.1,
+  "description_corpus_size": 2,
+  "model": "MiniMax-M3",
+  "prompts": [
+    {
+      "pattern": "A_wide",
+      "prompt": "Wide angle photograph of Stora Scenen's grand interior during a theatrical performance, soft amber stage lights spilling across velvet seats, a small family group in the center aisle looking up at the illuminated proscenium, captured in natural documentary style with warm ambient glow."
+    },
+    {
+      "pattern": "B_medium",
+      "prompt": "Medium shot of a mother holding her daughter's hand inside Stora Scenen, both gazing at the softly lit stage, audience silhouettes blurred behind them, gentle warm stage lighting on their faces, candid theater photography with shallow depth of field."
+    },
+    {
+      "pattern": "C_environment",
+      "prompt": "Environmental portrait of couples strolling along Stockholm's waterfront at dusk near Stora Scenen, a couple in mid-embrace on the quay, golden hour light reflecting on the water, classic Swedish theater district atmosphere with historic architecture in soft focus."
+    },
+    {
+      "pattern": "D_detail",
+      "prompt": "Close-up detail of two hands intertwined resting on a velvet theater seat armrest, a single theater program partially visible, warm stage light casting soft shadows, intimate texture-focused photography capturing a quiet romantic moment before a performance."
+    },
+    {
+      "pattern": "E_intimate",
+      "prompt": "Intimate portrait of a woman and her mother whispering to each other in a dimly lit Stora Scenen corridor, faces gently illuminated by warm sconce light, candid emotional moment captured with natural skin tones and shallow focus."
+    }
+  ]
+}

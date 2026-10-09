@@ -1,0 +1,60 @@
+{
+  "category_slug": "kids",
+  "events": 101,
+  "library": 0,
+  "target_count": 4,
+  "jev_q1": 0.39,
+  "jev_q2": 0.6,
+  "model": "MiniMax-M3",
+  "source_prompts_count": 4,
+  "items": [
+    {
+      "category": "kids",
+      "pattern": "A_wide",
+      "rep": 0,
+      "prompt": "Wide-angle photograph of a children's forest mystery performance at Teaterverket Svea in Stockholm. Young audience members and adult chaperones sit on tiered wooden benches bathed in warm afternoon light from tall industrial windows, watching a dimly lit stage where shadowy figures move among pine branches, in soft northern daylight, shallow depth of field, editorial Stockholm color tones. no weapons, no knives, no blood, no gloves, no hands holding objects, no close-up faces of minors, no violence, child-safe imagery, family-friendly.",
+      "jev_q1": 0.39,
+      "jev_q2": 0.6,
+      "model": "MiniMax-M3",
+      "round": 5,
+      "seed": "r5-0",
+      "replacement_for": "1_per_30_image_library_2026-10-07"
+    },
+    {
+      "category": "kids",
+      "pattern": "A_wide",
+      "rep": 0,
+      "prompt": "Wide-angle photograph of a children's forest mystery performance at Teaterverket Svea in Stockholm. Young audience members and adult chaperones sit on tiered wooden benches bathed in warm afternoon light from tall industrial windows, watching a dimly lit stage where shadowy figures move among pine branches, with warm tungsten and window light mixed, ambient interior glow. no weapons, no knives, no blood, no gloves, no hands holding objects, no close-up faces of minors, no violence, child-safe imagery, family-friendly.",
+      "jev_q1": 0.39,
+      "jev_q2": 0.6,
+      "model": "MiniMax-M3",
+      "round": 5,
+      "seed": "r5-1",
+      "replacement_for": "1_per_30_image_library_2026-10-07"
+    },
+    {
+      "category": "kids",
+      "pattern": "A_wide",
+      "rep": 0,
+      "prompt": "Wide-angle photograph of a children's forest mystery performance at Teaterverket Svea in Stockholm. Young audience members and adult chaperones sit on tiered wooden benches bathed in warm afternoon light from tall industrial windows, watching a dimly lit stage where shadowy figures move among pine branches, overcast Nordic daylight, muted color palette, atmospheric perspective. no weapons, no knives, no blood, no gloves, no hands holding objects, no close-up faces of minors, no violence, child-safe imagery, family-friendly.",
+      "jev_q1": 0.39,
+      "jev_q2": 0.6,
+      "model": "MiniMax-M3",
+      "round": 5,
+      "seed": "r5-2",
+      "replacement_for": "1_per_30_image_library_2026-10-07"
+    },
+    {
+      "category": "kids",
+      "pattern": "A_wide",
+      "rep": 0,
+      "prompt": "Wide-angle photograph of a children's forest mystery performance at Teaterverket Svea in Stockholm. Young audience members and adult chaperones sit on tiered wooden benches bathed in warm afternoon light from tall industrial windows, watching a dimly lit stage where shadowy figures move among pine branches, late afternoon golden hour light, long shadows, calm mood. no weapons, no knives, no blood, no gloves, no hands holding objects, no close-up faces of minors, no violence, child-safe imagery, family-friendly.",
+      "jev_q1": 0.39,
+      "jev_q2": 0.6,
+      "model": "MiniMax-M3",
+      "round": 5,
+      "seed": "r5-3",
+      "replacement_for": "1_per_30_image_library_2026-10-07"
+    }
+  ]
+}

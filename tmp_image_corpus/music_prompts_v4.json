@@ -1,0 +1,31 @@
+{
+  "category_slug": "music",
+  "events": 4846,
+  "jev_q1": 0.3,
+  "jev_q2": 0.65,
+  "jev_q3": 0.1,
+  "description_corpus_size": 4653,
+  "model": "MiniMax-M3",
+  "prompts": [
+    {
+      "pattern": "A_wide",
+      "prompt": "Wide-angle shot of the Debaser Strand concert hall interior from the back of the room, a strong crowd packed shoulder to shoulder facing a small stage bathed in warm amber stage light, the low ceiling creating an intimate cavern feel, late evening"
+    },
+    {
+      "pattern": "B_medium",
+      "prompt": "Medium shot inside Debaser Strand showing a tight cluster of fans at the front rail, a har-haired performer leaning into the microphone with strong eye contact toward the audience, colored stage lights cutting through a faint haze, motion energy"
+    },
+    {
+      "pattern": "C_environment",
+      "prompt": "Environmental portrait captured in the venue's bar area, a long-haired guitarist standing among small tables under red pendant lamps, Debaser Strand's harbor-view windows behind revealing twilight over Söder Mälarstrand"
+    },
+    {
+      "pattern": "D_detail",
+      "prompt": "Close-up macro detail of hands gripping a microphone stand at Debaser Strand, knuckles taut with strong tension, scratched silver metal catching a single blue spotlight, shallow depth of field blurring the dark backdrop"
+    },
+    {
+      "pattern": "E_intimate",
+      "prompt": "Intimate candid from the front row of Debaser Strand, a vocalist with a har smile inches from the crowd's reaching hands, warm stage glow lighting her profile while fans sing back, raw late-night energy, soft grain"
+    }
+  ]
+}

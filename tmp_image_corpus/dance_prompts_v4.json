@@ -9,28 +9,23 @@
   "prompts": [
     {
       "pattern": "A_wide",
-      "prompt": "Wide shot of a contemporary dance performance inside Dansens Hus Stockholm, two dancers mid-leap across a dimly lit stage bathed in cool blue wash, hardwood floor reflecting overhead spots, audience silhouettes in the foreground under warm house light.",
-      "category": "dance"
+      "prompt": "Wide-angle capture of a contemporary dance performance on the wooden stage of Dansens Hus in Stockholm, four dancers mid-leap under cool stage lights, empty orchestra seats in foreground, high-contrast chiaroscuro, shot from balcony like a documentary photo."
     },
     {
       "pattern": "B_medium",
-      "prompt": "Medium shot of a dancer in a flowing pale dress extending one arm toward a partner crouched on the scuffed wooden floor of Dansens Hus, single warm side-light carving their figures against deep shadow, sweat visible on bare shoulder.",
-      "category": "dance"
+      "prompt": "Medium shot inside Dansens Hus Stockholm, a dancer in a slate-blue costume rising from a low lunge, single warm spotlight cutting through haze, blurred crimson backdrop, audience silhouettes just visible at frame edge, candid performance photography."
     },
     {
       "pattern": "C_environment",
-      "prompt": "Empty stage at MDT Moderna Dansteatern between rehearsals, black marley floor scuffed from footwork, a single folding chair and discarded water bottle, afternoon daylight filtering through tall industrial windows of the Stockholm venue, dust suspended in the air.",
-      "category": "dance"
+      "prompt": "Behind-the-scenes photo in Fallan's arched Stockholm brick cellar, a dancer stretching at a wooden barre while three others adjust pointe shoes on worn floorboards, daylight from a small window mixing with cool exit light, lived-in rehearsal atmosphere."
     },
     {
       "pattern": "D_detail",
-      "prompt": "Close-up of a dancer's pointe shoes laced tightly over reddened ankles, ribbons trailing across the painted black stage floor of a Stockholm theater, shallow depth of field blurring a row of warm footlights in the background.",
-      "category": "dance"
+      "prompt": "Close detail shot on Dansens Hus stage, a dancer's arched bare foot pressing into scuffed marley flooring, fabric of costume hem curling mid-turn, single raked amber stage light raking across skin texture, shallow depth of field."
     },
     {
       "pattern": "E_intimate",
-      "prompt": "Intimate angle from the front row of a small Dansens Hus studio showing two dancers in slow contact improvisation, foreheads almost touching, breathing visible in cool stage haze, single spotlight from above isolating their torsos against black curtains.",
-      "category": "dance"
+      "prompt": "Intimate candid photo in MDT Moderna Dansteatern's black-box studio Stockholm, two dancers touching foreheads in stillness, soft overhead work-light glow on sweat-sheened shoulders, dust motes drifting through the warm beam, gentle documentary framing."
     }
   ]
 }

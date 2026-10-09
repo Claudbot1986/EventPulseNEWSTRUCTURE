@@ -1,0 +1,157 @@
+{
+  "category_slug": "sport",
+  "events": 7,
+  "docs": 7,
+  "top_1grams_distinctive": [
+    {
+      "w": "solvalla",
+      "c": 9,
+      "score": 19.775021196025975
+    },
+    {
+      "w": "aik",
+      "c": 6,
+      "score": 8.317766166719343
+    },
+    {
+      "w": "onsdagsnöjet",
+      "c": 3,
+      "score": 7.694848072384611
+    },
+    {
+      "w": "kroppskultur",
+      "c": 3,
+      "score": 7.694848072384611
+    },
+    {
+      "w": "superlördag",
+      "c": 3,
+      "score": 7.4547199493640015
+    },
+    {
+      "w": "evenemanget",
+      "c": 3,
+      "score": 7.4547199493640015
+    },
+    {
+      "w": "djurgårdens",
+      "c": 3,
+      "score": 7.4547199493640015
+    },
+    {
+      "w": "detta",
+      "c": 4,
+      "score": 7.16703787691222
+    },
+    {
+      "w": "solna",
+      "c": 4,
+      "score": 7.16703787691222
+    },
+    {
+      "w": "criterium",
+      "c": 3,
+      "score": 6.907755278982138
+    },
+    {
+      "w": "lunchtrav",
+      "c": 3,
+      "score": 6.907755278982138
+    },
+    {
+      "w": "breeders",
+      "c": 3,
+      "score": 6.591673732008658
+    },
+    {
+      "w": "finaler",
+      "c": 3,
+      "score": 6.238324625039507
+    },
+    {
+      "w": "denna",
+      "c": 3,
+      "score": 5.375278407684165
+    },
+    {
+      "w": "tävlingsdag",
+      "c": 2,
+      "score": 4.969813299576001
+    },
+    {
+      "w": "huvudspelet",
+      "c": 2,
+      "score": 4.969813299576001
+    },
+    {
+      "w": "consolation",
+      "c": 2,
+      "score": 4.969813299576001
+    },
+    {
+      "w": "försäljning",
+      "c": 2,
+      "score": 4.969813299576001
+    },
+    {
+      "w": "solnahallen",
+      "c": 2,
+      "score": 4.969813299576001
+    },
+    {
+      "w": "sale",
+      "c": 3,
+      "score": 4.828313737302301
+    }
+  ],
+  "top_2grams_distinctive": [
+    [
+      "solvalla criterium",
+      3
+    ],
+    [
+      "criterium sale",
+      3
+    ],
+    [
+      "aik herr",
+      3
+    ],
+    [
+      "herr djurgårdens",
+      3
+    ],
+    [
+      "aik dam",
+      3
+    ],
+    [
+      "detta sker",
+      2
+    ],
+    [
+      "huvudspelet atg",
+      2
+    ],
+    [
+      "breeders crown",
+      2
+    ],
+    [
+      "crown tvååringar",
+      2
+    ],
+    [
+      "sale försäljning",
+      2
+    ],
+    [
+      "amei winter",
+      2
+    ],
+    [
+      "winter arc",
+      2
+    ]
+  ]
+}

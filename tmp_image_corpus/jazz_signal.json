@@ -1,0 +1,169 @@
+{
+  "category_slug": "jazz",
+  "events": 3,
+  "docs": 2,
+  "top_1grams_distinctive": [
+    {
+      "w": "falköping",
+      "c": 7,
+      "score": 16.11809565095832
+    },
+    {
+      "w": "folkets",
+      "c": 7,
+      "score": 14.55609079175885
+    },
+    {
+      "w": "park",
+      "c": 7,
+      "score": 11.266065387038703
+    },
+    {
+      "w": "dans",
+      "c": 6,
+      "score": 9.656627474604601
+    },
+    {
+      "w": "wennbergs",
+      "c": 3,
+      "score": 6.907755278982138
+    },
+    {
+      "w": "allstars",
+      "c": 3,
+      "score": 6.591673732008658
+    },
+    {
+      "w": "trinnöjegatan",
+      "c": 2,
+      "score": 5.278114659230518
+    },
+    {
+      "w": "gemenskap",
+      "c": 2,
+      "score": 4.605170185988092
+    },
+    {
+      "w": "stämning",
+      "c": 2,
+      "score": 4.394449154672439
+    },
+    {
+      "w": "oktober",
+      "c": 2,
+      "score": 4.1588830833596715
+    },
+    {
+      "w": "kontant",
+      "c": 2,
+      "score": 4.1588830833596715
+    },
+    {
+      "w": "entrén",
+      "c": 2,
+      "score": 3.8918202981106265
+    },
+    {
+      "w": "öppnar",
+      "c": 2,
+      "score": 3.8918202981106265
+    },
+    {
+      "w": "betala",
+      "c": 2,
+      "score": 3.8918202981106265
+    },
+    {
+      "w": "caféet",
+      "c": 2,
+      "score": 3.8918202981106265
+    },
+    {
+      "w": "kväll",
+      "c": 2,
+      "score": 3.58351893845611
+    },
+    {
+      "w": "datum",
+      "c": 2,
+      "score": 3.58351893845611
+    },
+    {
+      "w": "plats",
+      "c": 2,
+      "score": 3.58351893845611
+    },
+    {
+      "w": "entré",
+      "c": 2,
+      "score": 3.58351893845611
+    },
+    {
+      "w": "swish",
+      "c": 2,
+      "score": 3.58351893845611
+    }
+  ],
+  "top_2grams_distinctive": [
+    [
+      "folkets park",
+      7
+    ],
+    [
+      "park falköping",
+      4
+    ],
+    [
+      "dans allstars",
+      2
+    ],
+    [
+      "allstars folkets",
+      2
+    ],
+    [
+      "upp dans",
+      2
+    ],
+    [
+      "oktober 2026",
+      2
+    ],
+    [
+      "2026 tid",
+      2
+    ],
+    [
+      "tid entrén",
+      2
+    ],
+    [
+      "entrén öppnar",
+      2
+    ],
+    [
+      "öppnar plats",
+      2
+    ],
+    [
+      "plats folkets",
+      2
+    ],
+    [
+      "park trinnöjegatan",
+      2
+    ],
+    [
+      "trinnöjegatan falköping",
+      2
+    ],
+    [
+      "falköping entré",
+      2
+    ],
+    [
+      "entré 200",
+      2
+    ]
+  ]
+}

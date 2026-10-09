@@ -1,0 +1,31 @@
+{
+  "category_slug": "livepodd",
+  "events": 1,
+  "jev_q1": 0.3,
+  "jev_q2": 0.65,
+  "jev_q3": 0.1,
+  "description_corpus_size": 1,
+  "model": "MiniMax-M3",
+  "prompts": [
+    {
+      "pattern": "A_wide",
+      "prompt": "Wide shot of a Stockholm theater auditorium at Kulturhuset Stadsteatern, stage lit with warm spotlights, an empty chair behind a wooden podium facing a packed audience in soft house-light glow, natural-camera perspective, no text visible anywhere."
+    },
+    {
+      "pattern": "B_medium",
+      "prompt": "Medium shot from the front row of Kulturhuset Stadsteatern Stockholm, a man in a dark sweater seated onstage holding a paperback, audience members leaning forward attentively, stage-light photography with gentle ambient glow on faces."
+    },
+    {
+      "pattern": "C_environment",
+      "prompt": "Environment view of Kulturhuset Stadsteatern's glass-walled lobby in Stockholm, people queuing past concrete columns, late-afternoon daylight spilling through tall windows, the auditorium doors open in background, candid natural-light photography, no signage readable."
+    },
+    {
+      "pattern": "D_detail",
+      "prompt": "Close-up detail of a small handheld radio microphone resting on a wooden stool beside a water glass, shallow depth of field, warm stage-light bouncing off the metal grille, soft audience blur behind, Stockholm cultural-venue atmosphere."
+    },
+    {
+      "pattern": "E_intimate",
+      "prompt": "Intimate over-the-shoulder view from the back of a darkened Kulturhuset Stadsteatern hall, two seated figures conversing under a single amber spotlight, audience silhouettes in foreground, quiet natural-light spill from side exits, candid documentary feel."
+    }
+  ]
+}

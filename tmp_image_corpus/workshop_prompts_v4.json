@@ -9,23 +9,23 @@
   "prompts": [
     {
       "pattern": "A_wide",
-      "prompt": "A wide-angle natural-light photograph of a workshop room inside Best Western Plus Park City Hammarby Sjöstad, participants seated at round tables writing on large sheets of paper, soft daylight filtering through tall windows overlooking the water, candid engaged expressions, warm interior tones, photojournalistic style."
+      "prompt": "Wide-angle photograph of a workshop inside the bright atrium of Kulturhuset Stadsteatern in Stockholm, with participants seated around long wooden tables working on textile mending, natural daylight streaming through tall windows, scattered fabric scraps and needles on the table."
     },
     {
       "pattern": "B_medium",
-      "prompt": "A medium shot of workshop participants gathered around a long table at Kulturhuset Stadsteatern, hands holding needles and thread while repairing fabric scraps, focused downward gazes, ambient daylight from ceiling skylights, shallow depth of field, documentary photography aesthetic with soft natural tones."
+      "prompt": "Medium shot of workshop participants gathered at a long table inside Etnografiska museet in Stockholm, each carefully folding paper into a traditional Japanese Orihon bookbinding structure, soft natural light illuminating their concentrated faces, brushes and colored threads resting on the wood."
     },
     {
       "pattern": "C_environment",
-      "prompt": "An environmental portrait of a crafts workshop inside Etnografiska museet, a participant carefully folding accordion-style paper pages on a wooden table, traditional Japanese binding materials arranged nearby, warm museum lighting with soft window reflections, candid concentration, editorial documentary style, wide contextual framing."
+      "prompt": "Environmental photo of a conference room at Best Western Plus Park City Hammarby Sjöstad in Stockholm, where workshop attendees collaborate around laptops designing AI workflows on whiteboards, afternoon daylight from the windows reflecting off the waterfront."
     },
     {
       "pattern": "D_detail",
-      "prompt": "A close-up detail shot of hands threading colorful yarn during a workshop session at Kulturhuset Stadsteatern, visible woven textures and tangled fibers on a worn wooden surface, natural diffused daylight, shallow focus on fingertips, tactile and intimate framing reminiscent of craft photography."
+      "prompt": "Close-up detail of workshop hands threading a needle through worn denim at Kulturhuset Stadsteatern in Stockholm, shallow depth of field showing colorful fabric patches, a small tin of buttons, natural window light catching the thread."
     },
     {
       "pattern": "E_intimate",
-      "prompt": "An intimate close-up of a workshop participant's face at Etnografiska museet, eyes lowered while measuring paper folds with a small ruler, soft golden afternoon light from a side window, gentle bokeh of museum artifacts in the background, emotionally candid expression, fine-art natural light photography."
+      "prompt": "Intimate, softly lit photograph of a workshop instructor demonstrating Orihon folding to two attentive participants at Etnografiska museet in Stockholm, warm gallery lighting, focused expressions, finished accordion-bound books resting on the table between them."
     }
   ]
 }

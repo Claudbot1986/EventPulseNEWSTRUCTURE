@@ -1,0 +1,4499 @@
+{
+  "generated_at": "2026-10-08T18:08:38.457Z",
+  "total_unique_urls": 285,
+  "total_events": 4848,
+  "items": [
+    {
+      "old_url": "https://bsllkpvkowwndhhxtlln.supabase.co/storage/v1/object/public/event-posters/import-stamped/nrmastsrjande-sergelstorg.png",
+      "old_storage_path": "event-posters/import-stamped/nrmastsrjande-sergelstorg.png",
+      "event_count": 240,
+      "category_slug": "barn-familj",
+      "sample_titles": [
+        "Sofiero höstljus 2026 &#8211; Det mystiska",
+        "Stockholm Jazz Festival/DubbelMusik",
+        "French Touch Party - Stockholm (20:30 - 00:30)"
+      ],
+      "sample_event_ids": [
+        "9da1c401-99d6-48b6-ae51-78ddb95a3cac",
+        "b566189e-8b15-4ddd-8244-003c2e163ee9",
+        "27782bbe-9c91-4cb1-892f-223ecedaae71"
+      ]
+    },
+    {
+      "old_url": "https://bsllkpvkowwndhhxtlln.supabase.co/storage/v1/object/public/event-posters/import-stamped/kammarmusikfestivaliallhelgonakyrkankonsertnr42026allhelgonakyrkan-allhelgonakyrkan.png",
+      "old_storage_path": "event-posters/import-stamped/kammarmusikfestivaliallhelgonakyrkankonsertnr42026allhelgonakyrkan-allhelgonakyrkan.png",
+      "event_count": 20,
+      "category_slug": "music",
+      "sample_titles": [
+        "Waterloo",
+        "Musikcafé: Fröken Elvis – Auditoriet",
+        "Lamb of God @ Avicii Arena"
+      ],
+      "sample_event_ids": [
+        "25805f6b-df4d-4ab5-90a3-ad2f76a884c7",
+        "fad44825-a473-47dd-9ce8-654c05584148",
+        "323ebf85-664b-4094-bb8e-2e025a64c2b1"
+      ]
+    },
+    {
+      "old_url": "https://bsllkpvkowwndhhxtlln.supabase.co/storage/v1/object/public/event-posters/import-stamped/yttlingjazzfasching-fasching.png",
+      "old_storage_path": "event-posters/import-stamped/yttlingjazzfasching-fasching.png",
+      "event_count": 20,
+      "category_slug": "music",
+      "sample_titles": [
+        "Stockholm Jazzfestival • Jazz Jam • Oct 9 • 23:30-02:00",
+        "Luciakonsert",
+        "Patrick Spicer"
+      ],
+      "sample_event_ids": [
+        "f532f966-bc01-4e34-9ad2-a0d7fc6ad61f",
+        "f199f620-563a-45c4-b9aa-f02e558fcbeb",
+        "b3cd629a-ae77-4116-95a8-8298c971e6b1"
+      ]
+    },
+    {
+      "old_url": "https://bsllkpvkowwndhhxtlln.supabase.co/storage/v1/object/public/event-posters/import-stamped/utspelkammarmusikfestival-kuben.png",
+      "old_storage_path": "event-posters/import-stamped/utspelkammarmusikfestival-kuben.png",
+      "event_count": 20,
+      "category_slug": "music",
+      "sample_titles": [
+        "Thank you for the music - Acoustic Session – La Gardie Aulan",
+        "27/2 LEE ROCKER | DEBASER STRAND",
+        "Floor Jansen"
+      ],
+      "sample_event_ids": [
+        "9d731be4-758c-472b-863e-b974ccf7d108",
+        "9f764382-e49b-4d79-9c32-8993fcf4dd98",
+        "79b11056-b3b4-4a51-a2cd-e13d6da2c8f1"
+      ]
+    },
+    {
+      "old_url": "https://bsllkpvkowwndhhxtlln.supabase.co/storage/v1/object/public/event-posters/import-stamped/bokaspersorkester-ilmagnificostage1-stage1.png",
+      "old_storage_path": "event-posters/import-stamped/bokaspersorkester-ilmagnificostage1-stage1.png",
+      "event_count": 20,
+      "category_slug": "music",
+      "sample_titles": [
+        "HARRIET NAUER - LIVE AT WINTERVIKEN",
+        "Hogwarts Magic Symphony by Lords of the Sound",
+        "Nassim Al Fakir Barnens Julvärld – Biljardkompaniet"
+      ],
+      "sample_event_ids": [
+        "3c1bac07-4953-4c5d-9e3f-251b270dc056",
+        "5b33ffc7-ec1c-4775-824f-b960b0a93f51",
+        "6a4f1e58-d7cf-41c6-a0a9-93fa95b42953"
+      ]
+    },
+    {
+      "old_url": "https://bsllkpvkowwndhhxtlln.supabase.co/storage/v1/object/public/event-posters/import-stamped/pusciferannexet-annexet.png",
+      "old_storage_path": "event-posters/import-stamped/pusciferannexet-annexet.png",
+      "event_count": 19,
+      "category_slug": "music",
+      "sample_titles": [
+        "The Sorcerers",
+        "Rekordåren - Slaktkyrkan 7 november ",
+        "Kid Francescoli"
+      ],
+      "sample_event_ids": [
+        "735ca706-aef1-4a4c-b332-7a6545494282",
+        "b08d37de-ad38-4417-9113-931cf8afcbdc",
+        "52bd14d2-a7aa-452e-8154-86587301c3a2"
+      ]
+    },
+    {
+      "old_url": "https://bsllkpvkowwndhhxtlln.supabase.co/storage/v1/object/public/event-posters/import-stamped/amonamarthhovet-hovet.png",
+      "old_storage_path": "event-posters/import-stamped/amonamarthhovet-hovet.png",
+      "event_count": 19,
+      "category_slug": "music",
+      "sample_titles": [
+        "Nu kommer alla julshower med DE VET DU",
+        "Paris Paloma",
+        "Damn!"
+      ],
+      "sample_event_ids": [
+        "2566c3eb-4ad6-42af-bad4-ba3b0d1a88a7",
+        "08a34668-1980-4858-a61e-ab5536d1f54a",
+        "221a9cb2-bbf4-43bc-84d3-4bc3b475a92d"
+      ]
+    },
+    {
+      "old_url": "https://bsllkpvkowwndhhxtlln.supabase.co/storage/v1/object/public/event-posters/import-stamped/kateatonfasching-fasching.png",
+      "old_storage_path": "event-posters/import-stamped/kateatonfasching-fasching.png",
+      "event_count": 19,
+      "category_slug": "music",
+      "sample_titles": [
+        "Amanda Ginsburg - Det är jul nu igen | 13/12 Göteborg, Stenhammarsalen",
+        "Folkoperan Foajé: Dockor efter läggdags",
+        "Lena från Vetlanda"
+      ],
+      "sample_event_ids": [
+        "79201ab4-3a27-4b63-bcc1-f05005c442b5",
+        "8871a8d5-55df-4d05-b448-5a91d3575670",
+        "d0bb1636-96ce-4e7a-aa91-3ea9d305b6b6"
+      ]
+    },
+    {
+      "old_url": "https://bsllkpvkowwndhhxtlln.supabase.co/storage/v1/object/public/event-posters/import-stamped/isonandfilleannexet-annexet.png",
+      "old_storage_path": "event-posters/import-stamped/isonandfilleannexet-annexet.png",
+      "event_count": 19,
+      "category_slug": "music",
+      "sample_titles": [
+        "MAGNUS CARLSSON - ÄNGLARNAS TID – Grangärde kyrka",
+        "Whitechapel",
+        "Mats/Morgan/Henrik | Stockholm Jazz Festival"
+      ],
+      "sample_event_ids": [
+        "b0ddd630-1508-4441-b728-9824e8776fa4",
+        "a35535c9-5c75-4291-88ab-376c420aa51c",
+        "bd1cce98-ad07-4df9-ad94-2c1beb2baf16"
+      ]
+    },
+    {
+      "old_url": "https://bsllkpvkowwndhhxtlln.supabase.co/storage/v1/object/public/event-posters/import-stamped/frnbroadwaymedkrlekystadsteater-ystadsteater.png",
+      "old_storage_path": "event-posters/import-stamped/frnbroadwaymedkrlekystadsteater-ystadsteater.png",
+      "event_count": 19,
+      "category_slug": "music",
+      "sample_titles": [
+        "Magnus Carlson & The Weekend Choir – Härnösands teater",
+        "SJF 2026 - Åsa Runefelt Grupp",
+        "Upptäck Ravels Boléro"
+      ],
+      "sample_event_ids": [
+        "a9fa1456-2f6c-4ae6-af6a-fe97f9484f08",
+        "2037a46c-ab1b-4840-9d7e-7dac24ac18df",
+        "03dc58f9-0fd5-4dd8-bbf3-3fe609988df6"
+      ]
+    },
+    {
+      "old_url": "https://bsllkpvkowwndhhxtlln.supabase.co/storage/v1/object/public/event-posters/import-stamped/artemasfllen-fllen.png",
+      "old_storage_path": "event-posters/import-stamped/artemasfllen-fllen.png",
+      "event_count": 19,
+      "category_slug": "music",
+      "sample_titles": [
+        "Liam med vänner",
+        "STRAVINSKY ELDFÅGELN  - Kungliga Filharmonikerna, Elim Chan, dirigent",
+        "ALLHELGONASERIEN STHLM JAZZ:\n SOUL REIMAGINED-en kväll Katarina Pop"
+      ],
+      "sample_event_ids": [
+        "cd7558a9-3aa7-4687-a395-3f58ec5bd899",
+        "a3f5e9c7-6d2a-45e7-aa7e-53622a99377d",
+        "acae0053-465a-41dc-98e6-7cb6053cb2c5"
+      ]
+    },
+    {
+      "old_url": "https://bsllkpvkowwndhhxtlln.supabase.co/storage/v1/object/public/event-posters/import-stamped/enhyllningtillbjrnafzelius80rystadsteater-ystadsteater.png",
+      "old_storage_path": "event-posters/import-stamped/enhyllningtillbjrnafzelius80rystadsteater-ystadsteater.png",
+      "event_count": 19,
+      "category_slug": "music",
+      "sample_titles": [
+        "Thuva Härdelin & Lelo Nika trio",
+        "Lina Lövstrand Woodwind Stories",
+        "26/11 GURRIERS | DEBASER NOVA"
+      ],
+      "sample_event_ids": [
+        "3541a329-4266-42af-98e9-5868a859ed37",
+        "bf0dfe16-bcbb-464b-83a5-71cf338f3b10",
+        "65f131c8-4376-4a68-832a-53fac28fb987"
+      ]
+    },
+    {
+      "old_url": "https://bsllkpvkowwndhhxtlln.supabase.co/storage/v1/object/public/event-posters/import-stamped/seinaboseyhalmstadsteater-halmstadsteater.png",
+      "old_storage_path": "event-posters/import-stamped/seinaboseyhalmstadsteater-halmstadsteater.png",
+      "event_count": 19,
+      "category_slug": "music",
+      "sample_titles": [
+        "Primitive Ring | Hus 7",
+        "Billy Opel - Centralteatern, Gävle – CentralTeatern",
+        "Engmans Kapell Julturné 2026"
+      ],
+      "sample_event_ids": [
+        "a1f5c13b-1207-426d-b6d9-b7cf166edef6",
+        "554ec6f1-f8a7-4dfc-a091-657b10914fa1",
+        "5c9962dc-1d44-44a2-a3fc-a614d1afb65c"
+      ]
+    },
+    {
+      "old_url": "https://bsllkpvkowwndhhxtlln.supabase.co/storage/v1/object/public/event-posters/import-stamped/rushfiftysomethingplatinumtickets-.png",
+      "old_storage_path": "event-posters/import-stamped/rushfiftysomethingplatinumtickets-.png",
+      "event_count": 19,
+      "category_slug": "music",
+      "sample_titles": [
+        "Christmas Unplugged 2026 med Peter, Bruno, Matilda och Petra Wahlgren – Växjö Konserthus",
+        "Jills Round",
+        "A Zero8 Christmas"
+      ],
+      "sample_event_ids": [
+        "1429d85b-1814-4f7d-9f96-43b0b771e362",
+        "bbc09b29-e0ef-4d6e-898a-dfb86ba19051",
+        "d6b227b4-ed1d-4b77-8652-5952c9559e79"
+      ]
+    },
+    {
+      "old_url": "https://bsllkpvkowwndhhxtlln.supabase.co/storage/v1/object/public/event-posters/import-stamped/musikquizlitesmalare-mlkkanalscenen.png",
+      "old_storage_path": "event-posters/import-stamped/musikquizlitesmalare-mlkkanalscenen.png",
+      "event_count": 19,
+      "category_slug": "music",
+      "sample_titles": [
+        "Violetta tar bussen – Skärblacka Folkets Hus",
+        "BRITTEN, BARBER OCH ELGAR  - Kungliga Filharmonikerna, Stephanie Childress, dirigent - James Ehnes, violin",
+        "Paris Paloma"
+      ],
+      "sample_event_ids": [
+        "22a11a1e-fca1-4d59-8e7b-626b5a615730",
+        "81b45ce5-3c6e-468c-9de1-c452cdcfd906",
+        "86e36102-989a-45cf-a3bc-7e3c6bf73868"
+      ]
+    },
+    {
+      "old_url": "https://bsllkpvkowwndhhxtlln.supabase.co/storage/v1/object/public/event-posters/import-stamped/beethovenampbrabbins-konsertsalen.png",
+      "old_storage_path": "event-posters/import-stamped/beethovenampbrabbins-konsertsalen.png",
+      "event_count": 19,
+      "category_slug": "music",
+      "sample_titles": [
+        "Eric Bibb - One Mississippi Autumn Tour 2026",
+        "Max Ionata Special Edition – Blueskällaren Bruksgården",
+        "Stockholm Vråljazz 2027"
+      ],
+      "sample_event_ids": [
+        "0a2f04f1-a614-410a-8577-f6eae256c435",
+        "72bf6140-8d67-4302-84ae-c2e3c380ed87",
+        "af2795b3-17e5-4926-8a13-e962e1aea942"
+      ]
+    },
+    {
+      "old_url": "https://bsllkpvkowwndhhxtlln.supabase.co/storage/v1/object/public/event-posters/import-stamped/ssongsppningmedbeethovenochsjostakovitjstage1-stage1.png",
+      "old_storage_path": "event-posters/import-stamped/ssongsppningmedbeethovenochsjostakovitjstage1-stage1.png",
+      "event_count": 19,
+      "category_slug": "music",
+      "sample_titles": [
+        "Tarja",
+        "Sofia Camara",
+        "Petter - Södra Teatern"
+      ],
+      "sample_event_ids": [
+        "97f5cc79-a521-4a5f-99b5-4a8dfad734f1",
+        "d0ff8760-95d1-43f5-bfaa-f84bee31eb64",
+        "1585df3f-edde-4bfc-a57d-4082eca2b136"
+      ]
+    },
+    {
+      "old_url": "https://bsllkpvkowwndhhxtlln.supabase.co/storage/v1/object/public/event-posters/import-stamped/benjaminingrossowhathappensnextplatinumtickets-.png",
+      "old_storage_path": "event-posters/import-stamped/benjaminingrossowhathappensnextplatinumtickets-.png",
+      "event_count": 19,
+      "category_slug": "music",
+      "sample_titles": [
+        "Bellvie",
+        "Teddy Swims",
+        "Wallmans International Dinnershow"
+      ],
+      "sample_event_ids": [
+        "73ad8f27-05b7-403b-acf5-ae226ae86d9b",
+        "e36e8e0d-7180-4f97-a189-a8be3824e448",
+        "102b9a57-2642-484a-bd71-0d73742932d8"
+      ]
+    },
+    {
+      "old_url": "https://bsllkpvkowwndhhxtlln.supabase.co/storage/v1/object/public/event-posters/import-stamped/thearkutescenenhuskvarnafolketspark-utescenenhuskvarnafolketspark.png",
+      "old_storage_path": "event-posters/import-stamped/thearkutescenenhuskvarnafolketspark-utescenenhuskvarnafolketspark.png",
+      "event_count": 19,
+      "category_slug": "music",
+      "sample_titles": [
+        "The Obsessed + Klastos | Stockholm",
+        "We Will Rock You 22/1 – Hebeteatern, Folkets Hus Kulturhuset",
+        "Harry Potter och Dödsrelikerna™ – Del 1 In Concert"
+      ],
+      "sample_event_ids": [
+        "42a6c0be-f535-476d-8695-d52872029e09",
+        "8bc697bb-fe0f-42a0-92e0-15c1083c0fac",
+        "d54233e7-1514-485a-aa31-f7b54c4e2e2a"
+      ]
+    },
+    {
+      "old_url": "https://bsllkpvkowwndhhxtlln.supabase.co/storage/v1/object/public/event-posters/import-stamped/mnozilbrass-strau-konsertsalen.png",
+      "old_storage_path": "event-posters/import-stamped/mnozilbrass-strau-konsertsalen.png",
+      "event_count": 19,
+      "category_slug": "music",
+      "sample_titles": [
+        "Warhaus",
+        "Chicago - the Musical Oscarsteatern 2026-10-15 19:30",
+        "Sång om stjärnorna med Radiokören  - i Storkyrkan"
+      ],
+      "sample_event_ids": [
+        "cb9fdd64-f88c-4221-8354-c9173e71ec8b",
+        "770bd3b4-559a-41b0-9fe2-e58c46a8ad1a",
+        "f068c3e1-dae8-4b13-8acd-5fc8f5b780b1"
+      ]
+    },
+    {
+      "old_url": "https://bsllkpvkowwndhhxtlln.supabase.co/storage/v1/object/public/event-posters/import-stamped/majorlazersoundsystem-frbindelsehallen.png",
+      "old_storage_path": "event-posters/import-stamped/majorlazersoundsystem-frbindelsehallen.png",
+      "event_count": 19,
+      "category_slug": "music",
+      "sample_titles": [
+        "Karin Hammar Fab 4 invites Hildegunn Øiseth | Stockholm Jazz Festival",
+        "Voidgarden",
+        "DISCO INFERNO - Sveriges största discoshow!"
+      ],
+      "sample_event_ids": [
+        "0b793042-7397-423d-ba3d-d06b4a9af8c8",
+        "45b2348f-bf98-491b-b732-a84ca7b06ad5",
+        "adb723ae-7225-4a2c-86d6-8a543e84bcc0"
+      ]
+    },
+    {
+      "old_url": "https://bsllkpvkowwndhhxtlln.supabase.co/storage/v1/object/public/event-posters/import-stamped/oskarlinnrosaviciiarena-aviciiarena.png",
+      "old_storage_path": "event-posters/import-stamped/oskarlinnrosaviciiarena-aviciiarena.png",
+      "event_count": 19,
+      "category_slug": "music",
+      "sample_titles": [
+        "Euskefeurat - Maränger och surdeg – Studio Acusticum, Stora Salen",
+        "TOMAS LEDIN - SYMPHONIA POLITROPOU",
+        "12/11 KYLE ALESSANDRO | DEBASER NOVA"
+      ],
+      "sample_event_ids": [
+        "3df0a415-d09d-4bef-a752-b9ea01d2d000",
+        "28ae595c-1aa1-4230-b4d5-4f236708ec64",
+        "7d288841-a11d-455d-bb5f-6479baaead39"
+      ]
+    },
+    {
+      "old_url": "https://bsllkpvkowwndhhxtlln.supabase.co/storage/v1/object/public/event-posters/import-stamped/ilistochlustystadsteater-ystadsteater.png",
+      "old_storage_path": "event-posters/import-stamped/ilistochlustystadsteater-ystadsteater.png",
+      "event_count": 19,
+      "category_slug": "music",
+      "sample_titles": [
+        "Hugo Löf Quartet",
+        "Elvis, Elvis, Elvis! - 2026 – Karlstad CCC",
+        "The Magic Numbers"
+      ],
+      "sample_event_ids": [
+        "7797e451-4737-4ca4-9d59-fff770bd9756",
+        "56285951-c1e0-43e0-98e4-6f9749257a47",
+        "0f1e0a5b-18bc-4b47-b862-a4eabfc9ba26"
+      ]
+    },
+    {
+      "old_url": "https://bsllkpvkowwndhhxtlln.supabase.co/storage/v1/object/public/event-posters/import-stamped/tomasledin-symphoniapolitropougvlekonserthus-gevaliasalen-gvlekonserthus-gevaliasalen.png",
+      "old_storage_path": "event-posters/import-stamped/tomasledin-symphoniapolitropougvlekonserthus-gevaliasalen-gvlekonserthus-gevaliasalen.png",
+      "event_count": 19,
+      "category_slug": "music",
+      "sample_titles": [
+        "Per Andersson - Kardborreshowen",
+        "Newkid - Akust-ish",
+        "12/12 FRANSKA TRION | DEBASER STRAND"
+      ],
+      "sample_event_ids": [
+        "cd644a97-afdd-40b4-8f35-39507c483a2c",
+        "85fff485-3b92-4732-b352-8097d80663f3",
+        "259d5ec8-ecf5-4a6a-8335-3da296e43d99"
+      ]
+    },
+    {
+      "old_url": "https://bsllkpvkowwndhhxtlln.supabase.co/storage/v1/object/public/event-posters/import-stamped/emelyanychevtolkarsalonenschumann-berwaldhallen.png",
+      "old_storage_path": "event-posters/import-stamped/emelyanychevtolkarsalonenschumann-berwaldhallen.png",
+      "event_count": 19,
+      "category_slug": "music",
+      "sample_titles": [
+        "C.O.F.F.I.N",
+        "Lena från Vetlanda",
+        "FRÅN TEATERSCENEN"
+      ],
+      "sample_event_ids": [
+        "deacb2e7-db4a-48cf-ae07-114c99f4113d",
+        "42296ab8-efd2-456a-84a6-bc5c9dc11570",
+        "619113b8-1444-4a53-8c66-808fcaff2279"
+      ]
+    },
+    {
+      "old_url": "https://bsllkpvkowwndhhxtlln.supabase.co/storage/v1/object/public/event-posters/import-stamped/dirtythreedebaserstrand-debaserstrand.png",
+      "old_storage_path": "event-posters/import-stamped/dirtythreedebaserstrand-debaserstrand.png",
+      "event_count": 19,
+      "category_slug": "music",
+      "sample_titles": [
+        "STEFAN SUNDSTRÖM MED BAND",
+        "8/11 EZHEL | DEBASER STRAND",
+        "Aca Lukas"
+      ],
+      "sample_event_ids": [
+        "92706f17-af96-46b4-b175-6d0c5d6d12cb",
+        "8cdeff21-79a8-4f87-ae56-ff691e462095",
+        "f58539c8-3421-43a4-95fb-6b3566648946"
+      ]
+    },
+    {
+      "old_url": "https://bsllkpvkowwndhhxtlln.supabase.co/storage/v1/object/public/event-posters/import-stamped/deafheavenslaktkyrkan-slaktkyrkan.png",
+      "old_storage_path": "event-posters/import-stamped/deafheavenslaktkyrkan-slaktkyrkan.png",
+      "event_count": 19,
+      "category_slug": "music",
+      "sample_titles": [
+        "IDOL LIVE 2026",
+        "The Dire Straits Experience",
+        "Omid & Jamshid – Live in Concert"
+      ],
+      "sample_event_ids": [
+        "6dba1295-c405-4017-bfbb-3486c91c1245",
+        "e4d1fbba-e0b1-4072-a53d-4759202ece21",
+        "40bb4902-8f63-46e0-bb9e-0b73aec80383"
+      ]
+    },
+    {
+      "old_url": "https://bsllkpvkowwndhhxtlln.supabase.co/storage/v1/object/public/event-posters/import-stamped/badbunny-debtirarmsfotosworldtourvippackages-strawberryarena.png",
+      "old_storage_path": "event-posters/import-stamped/badbunny-debtirarmsfotosworldtourvippackages-strawberryarena.png",
+      "event_count": 19,
+      "category_slug": "music",
+      "sample_titles": [
+        "Meditationskonsert",
+        "EMMALISA HALLANDER TRIO",
+        "Simple Plan"
+      ],
+      "sample_event_ids": [
+        "5c76f8c9-9a97-4202-978a-3a6653cfd91e",
+        "a87d8d34-1a5b-4438-9b67-52060dd5b339",
+        "f9387799-579b-402c-968e-7986d7706756"
+      ]
+    },
+    {
+      "old_url": "https://bsllkpvkowwndhhxtlln.supabase.co/storage/v1/object/public/event-posters/import-stamped/flatearthsocietybekulturhusetnajaden-konsertsalen-kulturhusetnajaden-konsertsalen.png",
+      "old_storage_path": "event-posters/import-stamped/flatearthsocietybekulturhusetnajaden-konsertsalen-kulturhusetnajaden-konsertsalen.png",
+      "event_count": 19,
+      "category_slug": "music",
+      "sample_titles": [
+        "Musikmiddag med Operapärlor Mozart + Da Ponte",
+        "En hyllning till Björn Afzelius",
+        "Nu slår en blomma ut – Channa Riedel tolkar Dagerman & Margolin"
+      ],
+      "sample_event_ids": [
+        "0bec95fb-26e9-475b-a903-fdd9181c26f8",
+        "c684bf7c-d1d3-452b-922f-7d1a4d511d46",
+        "83a7a72d-93e4-4793-a032-1bd796f0a6fe"
+      ]
+    },
+    {
+      "old_url": "https://bsllkpvkowwndhhxtlln.supabase.co/storage/v1/object/public/event-posters/import-stamped/jcolethefall-offtourplatinumtickets-.png",
+      "old_storage_path": "event-posters/import-stamped/jcolethefall-offtourplatinumtickets-.png",
+      "event_count": 19,
+      "category_slug": "music",
+      "sample_titles": [
+        "TMS Bowie - Hunky Dory – Carlsson På Kajen - Folkparken vid Mälaren",
+        "Rassel Prassel Orkester",
+        "Kammarmusikens mellandagskonsert"
+      ],
+      "sample_event_ids": [
+        "4bbbef15-4039-4978-b0ec-7cf811d71588",
+        "f92b1c4e-75da-4fb1-b1e6-6c97aade91b0",
+        "360e7aab-b442-4055-bdd9-444f1388ed85"
+      ]
+    },
+    {
+      "old_url": "https://bsllkpvkowwndhhxtlln.supabase.co/storage/v1/object/public/event-posters/import-stamped/sveningvars-igridagimorgon70rhaga-haga.png",
+      "old_storage_path": "event-posters/import-stamped/sveningvars-igridagimorgon70rhaga-haga.png",
+      "event_count": 18,
+      "category_slug": "music",
+      "sample_titles": [
+        "7/11 JOSEF SLUNGE | DEBASER STRAND",
+        "5/11 KRISTOFER ÅSTRÖM | DEBASER STRAND",
+        "Torka aldrig tårar utan handskar Tickets, Tour and Concert Dates – www.gotalejon.se"
+      ],
+      "sample_event_ids": [
+        "26a1583b-8905-460a-bf4a-7bfd2265a961",
+        "2b8d9384-09a2-4a05-a2a5-dd15b2fbacec",
+        "f8dcc5d3-ee23-42d5-a3cf-f7cf743208aa"
+      ]
+    },
+    {
+      "old_url": "https://bsllkpvkowwndhhxtlln.supabase.co/storage/v1/object/public/event-posters/import-stamped/pinkfloydsdarksideofthemoon-liveinconcertlokomotivet-lokomotivet.png",
+      "old_storage_path": "event-posters/import-stamped/pinkfloydsdarksideofthemoon-liveinconcertlokomotivet-lokomotivet.png",
+      "event_count": 18,
+      "category_slug": "music",
+      "sample_titles": [
+        "THE VERY BEST OF THIN LIZZY - PHIL LYNOTT AND GARY MOORE",
+        "Ato Karlsson Sundsvall – Bio Drakstaden",
+        "Bryan Bielanski @ Gamla Enskede Bryggeri"
+      ],
+      "sample_event_ids": [
+        "97803ac4-a6f2-4817-ab4e-6d948e3c682f",
+        "c8e04e79-ff9e-4414-a607-9318673a1838",
+        "67b47155-a100-4512-abe6-e0dce98fca6a"
+      ]
+    },
+    {
+      "old_url": "https://bsllkpvkowwndhhxtlln.supabase.co/storage/v1/object/public/event-posters/import-stamped/mrvelthegonersriorio-rio.png",
+      "old_storage_path": "event-posters/import-stamped/mrvelthegonersriorio-rio.png",
+      "event_count": 18,
+      "category_slug": "music",
+      "sample_titles": [
+        "Young Gun Silver Fox (support: Miller Campbell) | Nalen, Stockholm",
+        "Wallmans International Dinnershow",
+        "BONAFIDE"
+      ],
+      "sample_event_ids": [
+        "6a771ee2-cff2-4acf-9d45-8ac5436222e7",
+        "e50084e3-b38d-458e-a996-60d9aaafa37a",
+        "e6ce4b3d-f7f4-40da-8fb7-22b8ee2897a1"
+      ]
+    },
+    {
+      "old_url": "https://bsllkpvkowwndhhxtlln.supabase.co/storage/v1/object/public/event-posters/import-stamped/deeppurpleaviciiarena-aviciiarena.png",
+      "old_storage_path": "event-posters/import-stamped/deeppurpleaviciiarena-aviciiarena.png",
+      "event_count": 18,
+      "category_slug": "music",
+      "sample_titles": [
+        "Lena från Vetlanda",
+        "Wallmans International Dinnershow",
+        "Torka aldrig tårar utan handskar Tickets, Tour and Concert Dates – www.gotalejon.se"
+      ],
+      "sample_event_ids": [
+        "3f8b6dbd-b3d7-47db-8e25-1aa3ff15a37e",
+        "af29370c-ad00-466d-9361-8743d396335e",
+        "872df16f-d0fc-4e59-b83c-026f3224f451"
+      ]
+    },
+    {
+      "old_url": "https://bsllkpvkowwndhhxtlln.supabase.co/storage/v1/object/public/event-posters/import-stamped/biginjapan2026-konsertsalen.png",
+      "old_storage_path": "event-posters/import-stamped/biginjapan2026-konsertsalen.png",
+      "event_count": 18,
+      "category_slug": "music",
+      "sample_titles": [
+        "Lars Vegas Trio - Varje dag är jul! – Storsjöteatern",
+        "John Vincent III",
+        "Promenadorquestern"
+      ],
+      "sample_event_ids": [
+        "b076f872-31c9-44ff-ab6e-09f2bdf0dd40",
+        "300b069f-485e-422d-8181-461a74c3de0f",
+        "42c4554a-12ed-4b29-80cc-4b5308da5199"
+      ]
+    },
+    {
+      "old_url": "https://bsllkpvkowwndhhxtlln.supabase.co/storage/v1/object/public/event-posters/import-stamped/darin-akustiskt2026-konsertsalen.png",
+      "old_storage_path": "event-posters/import-stamped/darin-akustiskt2026-konsertsalen.png",
+      "event_count": 18,
+      "category_slug": "music",
+      "sample_titles": [
+        "West Of Eden – Celtic Christmas • 27/11 • Gävle",
+        "Seinabo Sey",
+        "I Am An Instrument + Friends"
+      ],
+      "sample_event_ids": [
+        "00cb078e-7a0e-4c98-a9c8-37c0bfed5998",
+        "8e02f880-2c0e-4d88-9420-95e4d50438fc",
+        "04cb0eba-ff11-42e2-86be-20751af36ec7"
+      ]
+    },
+    {
+      "old_url": "https://bsllkpvkowwndhhxtlln.supabase.co/storage/v1/object/public/event-posters/import-stamped/viktornornlinuswahlgren-ourlivesourmusicalsstage1-stage1.png",
+      "old_storage_path": "event-posters/import-stamped/viktornornlinuswahlgren-ourlivesourmusicalsstage1-stage1.png",
+      "event_count": 18,
+      "category_slug": "music",
+      "sample_titles": [
+        "Josef Slunge",
+        "Kurt Rosenwinkel &#039;The Remedy&#039;",
+        "The Temperance Movement"
+      ],
+      "sample_event_ids": [
+        "e76a3de0-d6a6-431e-9c2c-97369a3cd0ab",
+        "655bfb9c-19d4-47f0-ad33-ef47d19d41d7",
+        "1f5169d6-20c9-4142-b327-5b6ecb70f65f"
+      ]
+    },
+    {
+      "old_url": "https://bsllkpvkowwndhhxtlln.supabase.co/storage/v1/object/public/event-posters/import-stamped/midorihiranomarkuskyrkanbjrkhagen-markuskyrkanbjrkhagen.png",
+      "old_storage_path": "event-posters/import-stamped/midorihiranomarkuskyrkanbjrkhagen-markuskyrkanbjrkhagen.png",
+      "event_count": 18,
+      "category_slug": "music",
+      "sample_titles": [
+        "J3PO",
+        "Los Kjarkas Tickets, Tour and Concert Dates – www.gotalejon.se",
+        "Bach Jazz"
+      ],
+      "sample_event_ids": [
+        "eedb9287-e34e-48ef-9c39-bda7cd61ea66",
+        "26583c4a-f561-473c-9bd9-9f9896880797",
+        "afbf4063-eb8c-4a8e-a168-57498665e35d"
+      ]
+    },
+    {
+      "old_url": "https://bsllkpvkowwndhhxtlln.supabase.co/storage/v1/object/public/event-posters/import-stamped/seinaboseystage1-stage1.png",
+      "old_storage_path": "event-posters/import-stamped/seinaboseystage1-stage1.png",
+      "event_count": 18,
+      "category_slug": "music",
+      "sample_titles": [
+        "Terra – Arbis",
+        "BLANACE and BERNS presents PAUL VAN DYK & ORJAN NILSEN!",
+        "Eoghan Ó Ceannabháin"
+      ],
+      "sample_event_ids": [
+        "e361acd2-ba32-46db-80b8-e0365e251874",
+        "923bea75-3c0f-4069-9bee-954bf4ecc005",
+        "aaec7755-9221-4823-a2c2-180377d61393"
+      ]
+    },
+    {
+      "old_url": "https://bsllkpvkowwndhhxtlln.supabase.co/storage/v1/object/public/event-posters/import-stamped/dollystyle-familjeshowenstage1-stage1.png",
+      "old_storage_path": "event-posters/import-stamped/dollystyle-familjeshowenstage1-stage1.png",
+      "event_count": 18,
+      "category_slug": "music",
+      "sample_titles": [
+        "30/11 LAVINA | DEBASER NOVA",
+        "Rebecka Törnqvist & Johan Lindström",
+        "Magnus Carlsson @ Gustaf Vasa Kyrka"
+      ],
+      "sample_event_ids": [
+        "742633e5-e712-491f-9925-fcbfb52fccf0",
+        "63470afb-c305-4166-8aff-de2542a31a06",
+        "e7c778e1-9eb8-46f6-8340-c2f7b69e98b7"
+      ]
+    },
+    {
+      "old_url": "https://bsllkpvkowwndhhxtlln.supabase.co/storage/v1/object/public/event-posters/import-stamped/matthansenfllan-fllan.png",
+      "old_storage_path": "event-posters/import-stamped/matthansenfllan-fllan.png",
+      "event_count": 18,
+      "category_slug": "music",
+      "sample_titles": [
+        "Ellinor Bengtsson, trumpet   Bonita Dodo, piano – Kalmar Slott Gröna salen",
+        "Saint Levant - AFANDI WORLD TOUR",
+        " Dolly Style, Familjeshowen I Skellefteå"
+      ],
+      "sample_event_ids": [
+        "dff189f3-35cf-4e21-a5e4-e2883c791995",
+        "f321b020-ade9-42de-9114-4033ee6e7071",
+        "d3d4540f-dda0-480d-8f5a-ff261da7b3fb"
+      ]
+    },
+    {
+      "old_url": "https://bsllkpvkowwndhhxtlln.supabase.co/storage/v1/object/public/event-posters/import-stamped/chrisklffordwinterviken-winterviken.png",
+      "old_storage_path": "event-posters/import-stamped/chrisklffordwinterviken-winterviken.png",
+      "event_count": 18,
+      "category_slug": "music",
+      "sample_titles": [
+        "Gustav Lundgren",
+        "Kasino - Solo 2027 | Södra Teatern, Stockholm",
+        "Gong"
+      ],
+      "sample_event_ids": [
+        "8782ecfc-6744-4a3f-9f39-b3a7187587e3",
+        "a611530c-e3df-4872-afdc-fb5b3c6dbfe6",
+        "56909f92-5340-4636-ba2c-33fd85b2932c"
+      ]
+    },
+    {
+      "old_url": "https://bsllkpvkowwndhhxtlln.supabase.co/storage/v1/object/public/event-posters/import-stamped/linneajonssonhivemindvsterskonserthus-vsterskonserthus.png",
+      "old_storage_path": "event-posters/import-stamped/linneajonssonhivemindvsterskonserthus-vsterskonserthus.png",
+      "event_count": 18,
+      "category_slug": "music",
+      "sample_titles": [
+        "Wallmans International Dinnershow",
+        "Kåldolmar & Club Killers Feat. Mira Ray",
+        "Fredrik Andersson - Too soon"
+      ],
+      "sample_event_ids": [
+        "b512a383-0fdd-4881-b41c-ff56f42ac29a",
+        "dea247d5-a989-453c-874f-ca46e667e27d",
+        "97318478-6995-4180-b5ba-b539d67524ca"
+      ]
+    },
+    {
+      "old_url": "https://bsllkpvkowwndhhxtlln.supabase.co/storage/v1/object/public/event-posters/import-stamped/enhyllningskonserttilltowacarson90reskilstunateater-eskilstunateater.png",
+      "old_storage_path": "event-posters/import-stamped/enhyllningskonserttilltowacarson90reskilstunateater-eskilstunateater.png",
+      "event_count": 18,
+      "category_slug": "music",
+      "sample_titles": [
+        "Warhaus",
+        "Lucifer + Bloodfang",
+        "Julkonsert - våra mest älskade julsånger"
+      ],
+      "sample_event_ids": [
+        "1cc0c230-9306-4412-8c13-952e30cc0ef1",
+        "08ba301e-a879-4f58-a0b3-60929c506326",
+        "2c1adaa8-6fde-453b-9153-38c43797cc7c"
+      ]
+    },
+    {
+      "old_url": "https://bsllkpvkowwndhhxtlln.supabase.co/storage/v1/object/public/event-posters/import-stamped/kimwildegtalejon-gtalejon.png",
+      "old_storage_path": "event-posters/import-stamped/kimwildegtalejon-gtalejon.png",
+      "event_count": 18,
+      "category_slug": "music",
+      "sample_titles": [
+        "Torka aldrig tårar utan handskar Tickets, Tour and Concert Dates – www.gotalejon.se",
+        "SOFIE SVENSSON & DOM DÄR – Platens Bar",
+        "Dygdernas ordning"
+      ],
+      "sample_event_ids": [
+        "10f82bbe-af94-462e-8f67-a5f5251be865",
+        "6bf8aeac-dabc-44ed-9d75-5b4d4cd08057",
+        "8e6d7793-c769-4d94-a649-f4f82a7d76a8"
+      ]
+    },
+    {
+      "old_url": "https://bsllkpvkowwndhhxtlln.supabase.co/storage/v1/object/public/event-posters/import-stamped/mightyqueenthetivoli-thetivoli.png",
+      "old_storage_path": "event-posters/import-stamped/mightyqueenthetivoli-thetivoli.png",
+      "event_count": 18,
+      "category_slug": "music",
+      "sample_titles": [
+        "Wallmans International Dinnershow",
+        "Höstkonsert med Nacka musikklasser 19.30",
+        "ORGELKVÄLL  - Joel Lyssarides, piano - Johannes Skoog, orgel"
+      ],
+      "sample_event_ids": [
+        "6c8bfc49-d845-4690-a551-1a1c2e0ee96a",
+        "3f526901-2ce5-4dc2-8f21-1c913d701aa5",
+        "c337e1e8-b9f4-4e58-aab3-a93e94f2b079"
+      ]
+    },
+    {
+      "old_url": "https://bsllkpvkowwndhhxtlln.supabase.co/storage/v1/object/public/event-posters/import-stamped/pernillawahlgrenlivemedbandfredriksdalsteatern-fredriksdalsteatern.png",
+      "old_storage_path": "event-posters/import-stamped/pernillawahlgrenlivemedbandfredriksdalsteatern-fredriksdalsteatern.png",
+      "event_count": 18,
+      "category_slug": "music",
+      "sample_titles": [
+        "Musikcaféserien Eksjö  - Fröken Elvis – Olsbergs Arena",
+        "Christina Gustafsson & Leo Lindbergs Trio",
+        "Manon Lamartine"
+      ],
+      "sample_event_ids": [
+        "8fe3cd59-cccf-40a7-9f65-50885cdaa265",
+        "cc49e205-b90c-4ebc-9d28-243ff554dfbe",
+        "99a6752c-2367-400d-ad8f-325d8ab52266"
+      ]
+    },
+    {
+      "old_url": "https://bsllkpvkowwndhhxtlln.supabase.co/storage/v1/object/public/event-posters/import-stamped/thecrownkulturhusetsagatorshlla-kulturhusetsagatorshlla.png",
+      "old_storage_path": "event-posters/import-stamped/thecrownkulturhusetsagatorshlla-kulturhusetsagatorshlla.png",
+      "event_count": 18,
+      "category_slug": "music",
+      "sample_titles": [
+        "Jul i Engelbrekt",
+        "Klubb Overload- Cobra Sloth - CKC - Plot of Knives",
+        "Jag är Carola – En musikalisk livsberättelse – Växjö Konserthus"
+      ],
+      "sample_event_ids": [
+        "1ddfe827-3c53-478e-89d3-c44231e22dd4",
+        "713d4959-e19c-4c1a-b288-a0dafc29c154",
+        "1bdd92a3-8be5-48c3-b18d-42ed06ba95d3"
+      ]
+    },
+    {
+      "old_url": "https://bsllkpvkowwndhhxtlln.supabase.co/storage/v1/object/public/event-posters/import-stamped/themagicnumbersdebaserstrand-debaserstrand.png",
+      "old_storage_path": "event-posters/import-stamped/themagicnumbersdebaserstrand-debaserstrand.png",
+      "event_count": 18,
+      "category_slug": "music",
+      "sample_titles": [
+        "Twang Outlaws – Bryggeriet Wernamo",
+        "Operakonsert på Ulriksdals höstmarknad",
+        "Johannes Bäckström Quintet"
+      ],
+      "sample_event_ids": [
+        "1a948280-54f4-4747-8984-61e1266a942a",
+        "f7e53069-b34d-4186-898a-9ce5c5ab2b27",
+        "e8da0779-c186-4982-87d7-d4ce71aebae2"
+      ]
+    },
+    {
+      "old_url": "https://bsllkpvkowwndhhxtlln.supabase.co/storage/v1/object/public/event-posters/import-stamped/theamityafflictionfllan-fllan.png",
+      "old_storage_path": "event-posters/import-stamped/theamityafflictionfllan-fllan.png",
+      "event_count": 18,
+      "category_slug": "music",
+      "sample_titles": [
+        "MOZARTS REQUIEM",
+        "MAGNUS CARLSSON - ÄNGLARNAS TID",
+        "Swingin Four – Kulturbaren, Folkets Hus Kulturhuset"
+      ],
+      "sample_event_ids": [
+        "9ff80187-7448-4ff9-8747-8a67d3699b23",
+        "4e033613-8c47-4ff7-9993-fe4583d3cfab",
+        "2e924105-02de-4e3f-bfd0-6e7463364ae1"
+      ]
+    },
+    {
+      "old_url": "https://bsllkpvkowwndhhxtlln.supabase.co/storage/v1/object/public/event-posters/import-stamped/whataview12-13juni-torkelknutssonsgatan2.png",
+      "old_storage_path": "event-posters/import-stamped/whataview12-13juni-torkelknutssonsgatan2.png",
+      "event_count": 18,
+      "category_slug": "music",
+      "sample_titles": [
+        "Wallmans International Dinnershow",
+        "Stad i ljus",
+        "Jag har inte tid – Sista chansen tour – Kristianstad Teater"
+      ],
+      "sample_event_ids": [
+        "809e3c43-3874-479c-bcd4-a8e26cd721a1",
+        "d26a7e7a-39ca-4a20-961c-5a04656bbae1",
+        "1ca84b62-7d55-4e13-9515-2c5054a2c016"
+      ]
+    },
+    {
+      "old_url": "https://bsllkpvkowwndhhxtlln.supabase.co/storage/v1/object/public/event-posters/import-stamped/innelleadjset-berns.png",
+      "old_storage_path": "event-posters/import-stamped/innelleadjset-berns.png",
+      "event_count": 18,
+      "category_slug": "music",
+      "sample_titles": [
+        "Lunchkonsert: Ja, tack!",
+        "Tomoki Sanders + Naima Nefertari",
+        "Månegarm & Thyrfing – Droskan"
+      ],
+      "sample_event_ids": [
+        "53ad4969-e263-4b00-be45-7bfc270b2a40",
+        "054b0843-4086-4e16-af5c-3ba53ef80481",
+        "b66f4cef-4269-4266-818e-d84b9000070a"
+      ]
+    },
+    {
+      "old_url": "https://bsllkpvkowwndhhxtlln.supabase.co/storage/v1/object/public/event-posters/import-stamped/musikenfrnlejonkungenlivekonsertlokomotivet-lokomotivet.png",
+      "old_storage_path": "event-posters/import-stamped/musikenfrnlejonkungenlivekonsertlokomotivet-lokomotivet.png",
+      "event_count": 18,
+      "category_slug": "music",
+      "sample_titles": [
+        "LISE DE LA SALLE  - Lise de la Salle, piano",
+        "THE VERY BEST OF THIN LIZZY, PHIL LYNOTT AND GARY MOORE",
+        "BOEMESKE NOCI"
+      ],
+      "sample_event_ids": [
+        "e7f2e4fc-6fda-4d6f-9d5e-36e70ede353d",
+        "7b5e0954-3ff1-4882-aee3-a004e1d97c29",
+        "c4c1b520-4b7d-471a-9c74-58144d343d11"
+      ]
+    },
+    {
+      "old_url": "https://bsllkpvkowwndhhxtlln.supabase.co/storage/v1/object/public/event-posters/import-stamped/steveearlefiladelfiaconventioncenter-filadelfiaconventioncenter.png",
+      "old_storage_path": "event-posters/import-stamped/steveearlefiladelfiaconventioncenter-filadelfiaconventioncenter.png",
+      "event_count": 18,
+      "category_slug": "music",
+      "sample_titles": [
+        "Linnea Jonsson & Mindaugas Stumbras ",
+        "THESE MODERN TIMES + FUN CONTROL",
+        "Liam Elion - Live på Nomad!"
+      ],
+      "sample_event_ids": [
+        "61faa9dc-ecc0-4ad6-b2b0-b633b4bef9b7",
+        "8f59b443-59fe-4a1d-bdde-e24907bcd286",
+        "b3318893-77d8-47c3-9988-b7a65ace6d8d"
+      ]
+    },
+    {
+      "old_url": "https://bsllkpvkowwndhhxtlln.supabase.co/storage/v1/object/public/event-posters/import-stamped/nxbrx-norrdansstage2-stage2.png",
+      "old_storage_path": "event-posters/import-stamped/nxbrx-norrdansstage2-stage2.png",
+      "event_count": 18,
+      "category_slug": "music",
+      "sample_titles": [
+        "Niklas Strömstedt - Tyck OM mig – Hebeteatern, Folkets Hus Kulturhuset",
+        "En vandring till Sibelius",
+        "Saint Levant"
+      ],
+      "sample_event_ids": [
+        "49b4c7d4-1b32-4b38-bdbf-81483db52bcc",
+        "c6b149c6-451b-4f66-94d8-16f7cbc68583",
+        "448c1f1b-ec27-47d8-a48a-62b86c18a564"
+      ]
+    },
+    {
+      "old_url": "https://bsllkpvkowwndhhxtlln.supabase.co/storage/v1/object/public/event-posters/import-stamped/tommykrberg-unpluggedgvlekonserthus-gevaliasalen-gvlekonserthus-gevaliasalen.png",
+      "old_storage_path": "event-posters/import-stamped/tommykrberg-unpluggedgvlekonserthus-gevaliasalen-gvlekonserthus-gevaliasalen.png",
+      "event_count": 18,
+      "category_slug": "music",
+      "sample_titles": [
+        "Buffalo Traffic Jam",
+        "Lars Jansson / Erik Söderlind Quartet",
+        "feeble little horse | Hus 7"
+      ],
+      "sample_event_ids": [
+        "a447600f-320a-4de9-9498-7d326c3bed2b",
+        "2a46db64-8cf2-478a-871e-97912971f696",
+        "44ecfa4e-e636-4e00-9955-54d9aede1ab1"
+      ]
+    },
+    {
+      "old_url": "https://bsllkpvkowwndhhxtlln.supabase.co/storage/v1/object/public/event-posters/import-stamped/strausselektra-svit-berwaldhallen.png",
+      "old_storage_path": "event-posters/import-stamped/strausselektra-svit-berwaldhallen.png",
+      "event_count": 18,
+      "category_slug": "music",
+      "sample_titles": [
+        "När det lider mot jul - Lisa Nilsson",
+        "En kväll att minnas med Sten & Stanley – Auditoriet",
+        "Rodrigo y Gabriela"
+      ],
+      "sample_event_ids": [
+        "28840003-3d2a-4228-8641-ac3771693c7a",
+        "2af44dea-be76-4827-b2a6-4b009c931cff",
+        "d5557eb8-c999-44e0-ba55-d332a7c95a92"
+      ]
+    },
+    {
+      "old_url": "https://bsllkpvkowwndhhxtlln.supabase.co/storage/v1/object/public/event-posters/import-stamped/heaveblooddie-debasernova.png",
+      "old_storage_path": "event-posters/import-stamped/heaveblooddie-debasernova.png",
+      "event_count": 18,
+      "category_slug": "music",
+      "sample_titles": [
+        "TYSKE LUDDER",
+        "Jason Moran | Stockholm Jazz Festival",
+        "Amaranthe + support – Huskvarna Folkets Park"
+      ],
+      "sample_event_ids": [
+        "1084991e-2652-448b-ace9-8d0bdeee39cb",
+        "f5d6d38e-9f53-498d-89e0-6bc02ca7699d",
+        "f467bb19-8f3f-472a-b0f3-85896c4e19d0"
+      ]
+    },
+    {
+      "old_url": "https://bsllkpvkowwndhhxtlln.supabase.co/storage/v1/object/public/event-posters/import-stamped/janlundgrenochmondaynightbigband-kuben.png",
+      "old_storage_path": "event-posters/import-stamped/janlundgrenochmondaynightbigband-kuben.png",
+      "event_count": 18,
+      "category_slug": "music",
+      "sample_titles": [
+        "Ezra Collective | Fållan, Stockholm",
+        "Getdown Services",
+        "Upptäck Ravels Boléro"
+      ],
+      "sample_event_ids": [
+        "7930b4c8-89be-4d85-8d5f-25693fb813b0",
+        "336e782e-0dc1-4afd-b98f-2a157f19aa5b",
+        "eef75e5f-ce1c-478e-a778-0180c4c7eec6"
+      ]
+    },
+    {
+      "old_url": "https://bsllkpvkowwndhhxtlln.supabase.co/storage/v1/object/public/event-posters/import-stamped/mathiasalgotssonconfidencen-confidencen.png",
+      "old_storage_path": "event-posters/import-stamped/mathiasalgotssonconfidencen-confidencen.png",
+      "event_count": 18,
+      "category_slug": "music",
+      "sample_titles": [
+        "DISCO INFERNO 2026",
+        "Titanique",
+        "TED GÄRDESTAD  - Signerat Peter Nordahl"
+      ],
+      "sample_event_ids": [
+        "02243f78-b643-438f-b335-eabc6b8d5f7d",
+        "4f19252c-2172-4b21-9482-6dbb57c113b3",
+        "27bbadae-23d5-4e51-b5a8-c31eee691372"
+      ]
+    },
+    {
+      "old_url": "https://bsllkpvkowwndhhxtlln.supabase.co/storage/v1/object/public/event-posters/import-stamped/theweekndistrawberryarenapremiumexperience-premium33-strawberryarena.png",
+      "old_storage_path": "event-posters/import-stamped/theweekndistrawberryarenapremiumexperience-premium33-strawberryarena.png",
+      "event_count": 18,
+      "category_slug": "music",
+      "sample_titles": [
+        "SJF 2026 - Moa Matilda Kvintett",
+        "Roms fontäner och Tjajkovskijs polska  - Kavakos i Szymanowskis violinkonsert",
+        "Havok + Blood Red Throne + Xonor + Eradikated"
+      ],
+      "sample_event_ids": [
+        "0a403792-ee80-403d-be0d-cb98f2530b06",
+        "0668cb9d-203d-44d0-948e-f8bdded81f07",
+        "a822121e-c7a7-44a9-b414-3ba1e98fa622"
+      ]
+    },
+    {
+      "old_url": "https://bsllkpvkowwndhhxtlln.supabase.co/storage/v1/object/public/event-posters/import-stamped/ukpinkfloydexperience-sdrateatern.png",
+      "old_storage_path": "event-posters/import-stamped/ukpinkfloydexperience-sdrateatern.png",
+      "event_count": 18,
+      "category_slug": "music",
+      "sample_titles": [
+        "Romanskonsert med Stockholm Operastudio 2",
+        "Miss Li",
+        "Musikcafé: Minna Weurlander – Auditoriet"
+      ],
+      "sample_event_ids": [
+        "657ea108-94cd-43d4-8fb8-121e2f21d769",
+        "35251f91-427b-4f14-a440-f268b833cbcc",
+        "5cf46fdc-42f2-4716-a725-6483f8ff44ac"
+      ]
+    },
+    {
+      "old_url": "https://bsllkpvkowwndhhxtlln.supabase.co/storage/v1/object/public/event-posters/import-stamped/tomasledin-symphoniapolitropoukarlstadccc-karlstadccc.png",
+      "old_storage_path": "event-posters/import-stamped/tomasledin-symphoniapolitropoukarlstadccc-karlstadccc.png",
+      "event_count": 18,
+      "category_slug": "music",
+      "sample_titles": [
+        "Rush: Fifty Something ",
+        "The Music of Hans Zimmer",
+        "Lovad - 16 okt Moriska Paviljongen Malmö"
+      ],
+      "sample_event_ids": [
+        "8781518e-b04c-4c7e-a4a7-1b91936213bd",
+        "659ee9df-0580-4f9d-8ac0-918b79068323",
+        "ffc3475b-ce41-4031-9f12-a9b4aaf4b7a1"
+      ]
+    },
+    {
+      "old_url": "https://bsllkpvkowwndhhxtlln.supabase.co/storage/v1/object/public/event-posters/import-stamped/sveningvars-konsertsalen.png",
+      "old_storage_path": "event-posters/import-stamped/sveningvars-konsertsalen.png",
+      "event_count": 18,
+      "category_slug": "music",
+      "sample_titles": [
+        "Christmas Unplugged 2026 med Peter, Bruno, Matilda och Petra Wahlgren",
+        "Lena från Vetlanda",
+        "Bowie in Berlin"
+      ],
+      "sample_event_ids": [
+        "c46f0acf-bebf-4ad3-8c40-494bf5959d89",
+        "5cf5b361-973a-448a-b2a4-0c39271bf7ae",
+        "ca6af3fd-f284-4bf8-87ad-2c4dac40efbf"
+      ]
+    },
+    {
+      "old_url": "https://bsllkpvkowwndhhxtlln.supabase.co/storage/v1/object/public/event-posters/import-stamped/musikkvllmeddanielbentzengustavbrandtgrndensmat-grndensmat.png",
+      "old_storage_path": "event-posters/import-stamped/musikkvllmeddanielbentzengustavbrandtgrndensmat-grndensmat.png",
+      "event_count": 18,
+      "category_slug": "music",
+      "sample_titles": [
+        "Chelsea Wolfe @ Vasateatern",
+        "Cavern Deep @ Fredagsmangel",
+        "BEETHOVEN SYMFONI NR 7  - Göteborgs Symfoniker, Pekka Kuusisto, dirigent"
+      ],
+      "sample_event_ids": [
+        "808ea65b-d718-40ff-a365-ff21b4b2d399",
+        "63669318-f2bc-4166-aa16-c91bc87ca62b",
+        "0b12031e-3735-4bcf-91c7-53ee3fe83dae"
+      ]
+    },
+    {
+      "old_url": "https://bsllkpvkowwndhhxtlln.supabase.co/storage/v1/object/public/event-posters/import-stamped/veronicamaggiostockholmstadion-stockholmstadion.png",
+      "old_storage_path": "event-posters/import-stamped/veronicamaggiostockholmstadion-stockholmstadion.png",
+      "event_count": 18,
+      "category_slug": "music",
+      "sample_titles": [
+        "11/10 KING DUDE | LAMIA VOX | DEBASER STRAND",
+        "Lena från Vetlanda",
+        "Noah Kahan: The Great Divide World Tour, Platinumbiljetter"
+      ],
+      "sample_event_ids": [
+        "3542b681-f84c-4cc8-ba50-35d0aa33de05",
+        "26368634-f25a-4b90-9bc5-ace47c803eb8",
+        "2ae2e4c4-d0f7-4bb5-be16-bd22ce199776"
+      ]
+    },
+    {
+      "old_url": "https://bsllkpvkowwndhhxtlln.supabase.co/storage/v1/object/public/event-posters/import-stamped/stenstanleyystadsteater-ystadsteater.png",
+      "old_storage_path": "event-posters/import-stamped/stenstanleyystadsteater-ystadsteater.png",
+      "event_count": 18,
+      "category_slug": "music",
+      "sample_titles": [
+        "DIMENSION - TECHNO STOCKHOLM - 3RD ANNIVERSARY ",
+        "I ett vinterland – Gustav Adolfs kyrka",
+        "feeble little horse @ Hus 7"
+      ],
+      "sample_event_ids": [
+        "6ca80a5e-316b-4d8b-85d5-1bc34cd1d21d",
+        "acceb523-bb00-4b95-ad56-58a4ca72effc",
+        "1707d0ce-d38a-4fb5-a4bb-aeab5a9e2cf2"
+      ]
+    },
+    {
+      "old_url": "https://bsllkpvkowwndhhxtlln.supabase.co/storage/v1/object/public/event-posters/import-stamped/lskadespion-konsertsalen.png",
+      "old_storage_path": "event-posters/import-stamped/lskadespion-konsertsalen.png",
+      "event_count": 18,
+      "category_slug": "music",
+      "sample_titles": [
+        "Only The Poets (support: Alex Spencer) | Nalen, Stockholm ",
+        "Lunar Fest 2026",
+        "Torka aldrig tårar utan handskar Tickets, Tour and Concert Dates – www.gotalejon.se"
+      ],
+      "sample_event_ids": [
+        "9ca66c96-0d7a-4351-bc18-ee976a1bafb2",
+        "c0610876-9ca7-45f9-948d-4103ebe227dc",
+        "b5002a10-5e03-42e8-9b53-9a618ff7464a"
+      ]
+    },
+    {
+      "old_url": "https://bsllkpvkowwndhhxtlln.supabase.co/storage/v1/object/public/event-posters/import-stamped/sgeir-styckmstergatan10.png",
+      "old_storage_path": "event-posters/import-stamped/sgeir-styckmstergatan10.png",
+      "event_count": 18,
+      "category_slug": "music",
+      "sample_titles": [
+        "Pianoafton med David Huang",
+        "Ingrid Steinkopf Trio",
+        "Marko Hietala @ Debaser Nova"
+      ],
+      "sample_event_ids": [
+        "261186d6-7fce-4708-9396-de09bcdd5543",
+        "2ce2b894-cba0-4f60-bb96-44437819e635",
+        "b6e972d0-86e4-4037-9583-4bfbd1f4c1de"
+      ]
+    },
+    {
+      "old_url": "https://bsllkpvkowwndhhxtlln.supabase.co/storage/v1/object/public/event-posters/import-stamped/adamoleniuskollektivetlivet-kollektivetlivet.png",
+      "old_storage_path": "event-posters/import-stamped/adamoleniuskollektivetlivet-kollektivetlivet.png",
+      "event_count": 18,
+      "category_slug": "music",
+      "sample_titles": [
+        "Dave Keller live at Hartwig",
+        "The Magic Numbers",
+        "Jonas Lundqvist"
+      ],
+      "sample_event_ids": [
+        "b492aa2c-ca3d-4bb2-98e5-1c8625c597e5",
+        "d3058d9b-0b71-4839-91eb-3128c012e38b",
+        "528291c2-6d03-47f0-bb05-088e1d43240e"
+      ]
+    },
+    {
+      "old_url": "https://bsllkpvkowwndhhxtlln.supabase.co/storage/v1/object/public/event-posters/import-stamped/yebanishedprivateersgamestreet-gamestreet.png",
+      "old_storage_path": "event-posters/import-stamped/yebanishedprivateersgamestreet-gamestreet.png",
+      "event_count": 18,
+      "category_slug": "music",
+      "sample_titles": [
+        "Emmalisa Hallander Trio",
+        "Hardcore Superstar - “Dirty Halo” Tour – Biljardkompaniet",
+        "Elvis, Elvis, Elvis! - 2026"
+      ],
+      "sample_event_ids": [
+        "b1585f72-cd00-4e74-9c3c-3bb18946bb67",
+        "6004550c-2406-45c3-a1a0-3fcd7937bc0a",
+        "bffb90cd-34c5-4b73-9ad2-f373ba0182a7"
+      ]
+    },
+    {
+      "old_url": "https://bsllkpvkowwndhhxtlln.supabase.co/storage/v1/object/public/event-posters/import-stamped/division7mejeriet-mejeriet.png",
+      "old_storage_path": "event-posters/import-stamped/division7mejeriet-mejeriet.png",
+      "event_count": 18,
+      "category_slug": "music",
+      "sample_titles": [
+        "Yalla Miku och Second Hand Orchestra!",
+        "Rigmor Gustafsson Södra Latins Jazzfestival",
+        "Nyårskonsert  med Gourmettallrik SERVERAS FRÅN 14.15  Spegelsalen kl.15.00"
+      ],
+      "sample_event_ids": [
+        "ecde236d-f166-43ac-b3fe-2ca411d3a40c",
+        "4702368f-5c1c-4d03-9851-6419671a572c",
+        "436a89fc-0392-4cc4-bc01-de09718a9b32"
+      ]
+    },
+    {
+      "old_url": "https://bsllkpvkowwndhhxtlln.supabase.co/storage/v1/object/public/event-posters/import-stamped/patrickspicer-sdrateatern.png",
+      "old_storage_path": "event-posters/import-stamped/patrickspicer-sdrateatern.png",
+      "event_count": 18,
+      "category_slug": "music",
+      "sample_titles": [
+        "BEETHOVEN OCH NIELSEN  - Kungliga Filharmonikerna, Sakari Oramo, dirigent - Janine Jansen, violin",
+        "Kärlekens prövningar  - med Emelyanychev & Ibragimova",
+        "ALLHELGONASERIEN STHLM JAZZ\n \nKristin Amparo & Sly Stone Forever"
+      ],
+      "sample_event_ids": [
+        "8efdee84-0f27-48ee-8f65-8d0da4ca7a2d",
+        "56283c74-3768-4eae-ac88-4ef11e07c759",
+        "734eb778-349e-415b-bfc9-0e407aa30072"
+      ]
+    },
+    {
+      "old_url": "https://bsllkpvkowwndhhxtlln.supabase.co/storage/v1/object/public/event-posters/import-stamped/pitestringquartetsarakulturhusstage5-sarakulturhusstage5.png",
+      "old_storage_path": "event-posters/import-stamped/pitestringquartetsarakulturhusstage5-sarakulturhusstage5.png",
+      "event_count": 18,
+      "category_slug": "music",
+      "sample_titles": [
+        "Popmusik i symfoniorkester - konsert med Erik Segerstedt, Samuel Gajicki, ungdomsorkester och S:t Eriks Orkesterförening",
+        "OASEN #41 @ Timmermansgården",
+        "Konsert med kör och orgel"
+      ],
+      "sample_event_ids": [
+        "76d50729-857d-4998-8060-e7a4f44e8461",
+        "f2ed2895-a0e8-4dba-b170-a1362dc477f0",
+        "5d471d8e-67aa-4983-9cfd-742d1a16ca0a"
+      ]
+    },
+    {
+      "old_url": "https://bsllkpvkowwndhhxtlln.supabase.co/storage/v1/object/public/event-posters/import-stamped/arloparks-desiretour-styckmstergatan10.png",
+      "old_storage_path": "event-posters/import-stamped/arloparks-desiretour-styckmstergatan10.png",
+      "event_count": 18,
+      "category_slug": "music",
+      "sample_titles": [
+        "KPOP FOREVER!",
+        "London Symphonic Rock Orchestra",
+        "Stephen Wilson Jr. - Gary The Torch Tour"
+      ],
+      "sample_event_ids": [
+        "c4304395-93a1-459f-8fb1-6662c8583ad9",
+        "e0a8865e-d82d-45f8-a0a5-16a148364308",
+        "a9712954-3a32-4d9d-94a6-9b9cfba4b5c2"
+      ]
+    },
+    {
+      "old_url": "https://bsllkpvkowwndhhxtlln.supabase.co/storage/v1/object/public/event-posters/import-stamped/drottningkristina400rjderskyrka-jderskyrka.png",
+      "old_storage_path": "event-posters/import-stamped/drottningkristina400rjderskyrka-jderskyrka.png",
+      "event_count": 18,
+      "category_slug": "music",
+      "sample_titles": [
+        "BENJAMIN INGROSSO |  WHAT HAPPENS NEXT?",
+        "261105 Lívia Mattos",
+        "Wallmans International Dinnershow"
+      ],
+      "sample_event_ids": [
+        "106a6e22-0870-445d-94cf-7b0e475344d5",
+        "290c5011-bf5a-49b5-8eba-b8ff5aa84479",
+        "8f6678c9-4fd4-4f1c-8cbe-fd66934c5bae"
+      ]
+    },
+    {
+      "old_url": "https://bsllkpvkowwndhhxtlln.supabase.co/storage/v1/object/public/event-posters/import-stamped/johnvincentiii-debasernova.png",
+      "old_storage_path": "event-posters/import-stamped/johnvincentiii-debasernova.png",
+      "event_count": 18,
+      "category_slug": "music",
+      "sample_titles": [
+        "Mariam The Believer | Nalen, Stockholm",
+        "Benjamin Ingrosso – Löfbergs Arena",
+        "Min Pappa Errol - En show om Eddie Meduza – Gamla Teatern"
+      ],
+      "sample_event_ids": [
+        "d891681e-2080-4cbc-af3a-bece5bfa713a",
+        "fc54347e-65ac-45a4-977b-a75f59eea5aa",
+        "f5b319e6-459b-488d-86f1-94e1d80c2893"
+      ]
+    },
+    {
+      "old_url": "https://bsllkpvkowwndhhxtlln.supabase.co/storage/v1/object/public/event-posters/import-stamped/matteimahlerampbrabbins-konsertsalen.png",
+      "old_storage_path": "event-posters/import-stamped/matteimahlerampbrabbins-konsertsalen.png",
+      "event_count": 18,
+      "category_slug": "music",
+      "sample_titles": [
+        "Genom Natten",
+        "Lena från Vetlanda",
+        "Publikbiljetter - PopKids St Eriks show i Betlehemskyrkan"
+      ],
+      "sample_event_ids": [
+        "502db6d8-b0ce-42c3-96da-d4de4dca038d",
+        "cb976d7a-2264-46d2-b86f-46b0c33bb087",
+        "6b005178-4fc8-4bc8-865d-7c48e5effa44"
+      ]
+    },
+    {
+      "old_url": "https://bsllkpvkowwndhhxtlln.supabase.co/storage/v1/object/public/event-posters/import-stamped/admelioraencore-encore.png",
+      "old_storage_path": "event-posters/import-stamped/admelioraencore-encore.png",
+      "event_count": 18,
+      "category_slug": "music",
+      "sample_titles": [
+        "KLAS BAS · COCKHOUSE · CIVIL POLIS · ELIS MONTEVERDE BURRAU",
+        "Humorquizet – Julspecial",
+        "Graveyard @ Fållan"
+      ],
+      "sample_event_ids": [
+        "adb83336-51aa-4f3d-87a1-c01ca935e607",
+        "cdb6a067-6c1c-4975-90c8-b25efc3fbe36",
+        "46ff6a19-6aa2-4e45-8b8b-5018517e6452"
+      ]
+    },
+    {
+      "old_url": "https://bsllkpvkowwndhhxtlln.supabase.co/storage/v1/object/public/event-posters/import-stamped/julenenligttimotorshllakulturhusetsaga-kulturhusetsaga.png",
+      "old_storage_path": "event-posters/import-stamped/julenenligttimotorshllakulturhusetsaga-kulturhusetsaga.png",
+      "event_count": 18,
+      "category_slug": "music",
+      "sample_titles": [
+        "The Wallflowers",
+        "Moonica Mac 2026 – Magasinet",
+        "Tungsten | Rockbar, Örebro"
+      ],
+      "sample_event_ids": [
+        "3c12fc9f-31cb-4126-8398-6609f3e4522b",
+        "e7882bdb-e636-47c6-a987-616ec84a2c40",
+        "8ec6fae8-adb3-4b00-8a28-bca0b65ebc53"
+      ]
+    },
+    {
+      "old_url": "https://bsllkpvkowwndhhxtlln.supabase.co/storage/v1/object/public/event-posters/import-stamped/division7stage2-stage2.png",
+      "old_storage_path": "event-posters/import-stamped/division7stage2-stage2.png",
+      "event_count": 18,
+      "category_slug": "music",
+      "sample_titles": [
+        "WE Bop Kvintett ",
+        "Cory Wong | The Fretboard Odyssey",
+        "Bitchin Bajas"
+      ],
+      "sample_event_ids": [
+        "ca08fcea-8fd9-439c-a4c0-377decc388d6",
+        "10ab1929-9596-4e89-a909-a5f847d8d6dc",
+        "60df7c43-7fef-4162-a8df-8b728fbcc623"
+      ]
+    },
+    {
+      "old_url": "https://bsllkpvkowwndhhxtlln.supabase.co/storage/v1/object/public/event-posters/import-stamped/hrhr-sdrateatern.png",
+      "old_storage_path": "event-posters/import-stamped/hrhr-sdrateatern.png",
+      "event_count": 18,
+      "category_slug": "music",
+      "sample_titles": [
+        "Lucia &amp; julmatiné",
+        "PW Nilsson Trio feat. Leo Lindberg",
+        "Lena från Vetlanda"
+      ],
+      "sample_event_ids": [
+        "b4bc413d-71f2-49e7-a3f9-3918239fd3af",
+        "949c011e-635d-44f8-b793-4c8a7adbb592",
+        "331d03da-2ffa-483c-91dc-3b77a3a0f5fe"
+      ]
+    },
+    {
+      "old_url": "https://bsllkpvkowwndhhxtlln.supabase.co/storage/v1/object/public/event-posters/import-stamped/thehousealbaniannightkenanmemictupanathehouse-thehouse.png",
+      "old_storage_path": "event-posters/import-stamped/thehousealbaniannightkenanmemictupanathehouse-thehouse.png",
+      "event_count": 18,
+      "category_slug": "music",
+      "sample_titles": [
+        "EN HYLLNING TILL MONICA Z MED FRIDA ÖHRN",
+        "Rebūke",
+        "Kombo: Langendorf United + The Sorcerers"
+      ],
+      "sample_event_ids": [
+        "226c8df8-6125-49ee-8622-9199d8cff3cb",
+        "0f06a7b7-6850-4df1-aee9-2ccfd9b20eee",
+        "e823bd7a-de39-45f6-89a6-6233caa1e715"
+      ]
+    },
+    {
+      "old_url": "https://bsllkpvkowwndhhxtlln.supabase.co/storage/v1/object/public/event-posters/import-stamped/grissiniprojectericericsonhallenfdskeppsholmskyrkanpskeppsholmen-ericericsonhallenfdskeppsholmskyrkanpskeppsholmen.png",
+      "old_storage_path": "event-posters/import-stamped/grissiniprojectericericsonhallenfdskeppsholmskyrkanpskeppsholmen-ericericsonhallenfdskeppsholmskyrkanpskeppsholmen.png",
+      "event_count": 18,
+      "category_slug": "music",
+      "sample_titles": [
+        "En strålande jul – Kristianstads teater",
+        "PRIEST RELEASEFEST – Platens Bar",
+        "En hyllning till Kal P Dal"
+      ],
+      "sample_event_ids": [
+        "5f04df50-1e85-4f04-9448-73b0384b63c6",
+        "4ccab468-1cd1-4ddf-bfb8-5ec939feebd0",
+        "953c72f6-c684-4403-946b-b902446e7321"
+      ]
+    },
+    {
+      "old_url": "https://bsllkpvkowwndhhxtlln.supabase.co/storage/v1/object/public/event-posters/import-stamped/rostamnalenklubb-nalenklubb.png",
+      "old_storage_path": "event-posters/import-stamped/rostamnalenklubb-nalenklubb.png",
+      "event_count": 18,
+      "category_slug": "music",
+      "sample_titles": [
+        "Bach Jazz",
+        "Golden Hits Dinnershow",
+        "Immortal Technique"
+      ],
+      "sample_event_ids": [
+        "0584c7d9-d369-489f-8ee9-3cf6969f3424",
+        "3ca83229-80de-472d-a0a2-0760eebef2a6",
+        "2bf13f15-aa58-4ae0-8f80-9314e185499e"
+      ]
+    },
+    {
+      "old_url": "https://bsllkpvkowwndhhxtlln.supabase.co/storage/v1/object/public/event-posters/import-stamped/jasminemyrafasching-fasching.png",
+      "old_storage_path": "event-posters/import-stamped/jasminemyrafasching-fasching.png",
+      "event_count": 18,
+      "category_slug": "music",
+      "sample_titles": [
+        "Terra – Frimis",
+        "Langendorf United",
+        "Solna Allstars in concert"
+      ],
+      "sample_event_ids": [
+        "452453fb-4d38-4729-b2bb-e3227a0f6113",
+        "c06638a7-2c15-4672-b153-f72e4d8911d9",
+        "61319b83-2088-4065-a411-d6e19a64c7d0"
+      ]
+    },
+    {
+      "old_url": "https://bsllkpvkowwndhhxtlln.supabase.co/storage/v1/object/public/event-posters/import-stamped/foofighterstakecovertour2026-strawberryarena.png",
+      "old_storage_path": "event-posters/import-stamped/foofighterstakecovertour2026-strawberryarena.png",
+      "event_count": 18,
+      "category_slug": "music",
+      "sample_titles": [
+        "Amanda Ginsburg - Det är jul nu igen | 4/12 Örebro, Kulturkvarteret",
+        "THE BLACK DAHLIA MURDER-TWO DECADES OF NOCTURNAL-EUROPÉ 2027",
+        "Lucia med Nacka Musikklasser"
+      ],
+      "sample_event_ids": [
+        "7f812c04-f37f-4fc1-ba3d-e1c14db77130",
+        "5c06c479-1601-41cc-81b2-5194e4df4d63",
+        "15239f4a-2780-49eb-82b9-0796ed6788b1"
+      ]
+    },
+    {
+      "old_url": "https://bsllkpvkowwndhhxtlln.supabase.co/storage/v1/object/public/event-posters/import-stamped/odebrandprivatfest-privatfest.png",
+      "old_storage_path": "event-posters/import-stamped/odebrandprivatfest-privatfest.png",
+      "event_count": 18,
+      "category_slug": "music",
+      "sample_titles": [
+        "EN HYLLNING TILL BJÖRN AFZELIUS - 80 ÅR",
+        "Tarja",
+        "261113\tMielo Trio"
+      ],
+      "sample_event_ids": [
+        "d8bfcada-79ec-4bcf-a0c7-b3fd379b46d9",
+        "5391a802-8093-40c0-9394-70e2df95f656",
+        "3c6a211e-086d-496d-871c-33dd39de96be"
+      ]
+    },
+    {
+      "old_url": "https://bsllkpvkowwndhhxtlln.supabase.co/storage/v1/object/public/event-posters/import-stamped/examenskonsertmedmalmlatinskolasspets-sngare-mlkkanalscenen.png",
+      "old_storage_path": "event-posters/import-stamped/examenskonsertmedmalmlatinskolasspets-sngare-mlkkanalscenen.png",
+      "event_count": 18,
+      "category_slug": "music",
+      "sample_titles": [
+        "Congolese Super Night",
+        "Fem Myror - konsert – Teatern",
+        "Westlife 25 - The Anniversary World Tour"
+      ],
+      "sample_event_ids": [
+        "23418679-437a-467a-9bb4-7c1489d75c70",
+        "1a7464b9-d197-495c-9f7f-d391f9b83b42",
+        "3b19e53b-5ef8-450b-ad69-2e780e11712d"
+      ]
+    },
+    {
+      "old_url": "https://bsllkpvkowwndhhxtlln.supabase.co/storage/v1/object/public/event-posters/import-stamped/oliviarodrigoaviciiarena-aviciiarena.png",
+      "old_storage_path": "event-posters/import-stamped/oliviarodrigoaviciiarena-aviciiarena.png",
+      "event_count": 18,
+      "category_slug": "music",
+      "sample_titles": [
+        "Fröken Elvis Jul | Örebro, Kulturkvarteret",
+        "Gretchen Parlato",
+        "James Yorkston"
+      ],
+      "sample_event_ids": [
+        "b59131cd-b217-44b3-8add-e57160ece108",
+        "c9aa6fdf-1abb-48fb-85c7-f1af7412c53f",
+        "751ecd2b-e0f4-4bed-938e-b0c1bf55cee0"
+      ]
+    },
+    {
+      "old_url": "https://bsllkpvkowwndhhxtlln.supabase.co/storage/v1/object/public/event-posters/import-stamped/hoodoogurusdebaserstrand-debaserstrand.png",
+      "old_storage_path": "event-posters/import-stamped/hoodoogurusdebaserstrand-debaserstrand.png",
+      "event_count": 18,
+      "category_slug": "music",
+      "sample_titles": [
+        "The Fray Meet & Greet Package",
+        "Teddybears - Utsålt",
+        "Min Människa "
+      ],
+      "sample_event_ids": [
+        "e974bd99-e41c-4a82-b55e-36bc343cf3d3",
+        "95a26c0a-2212-4b19-9386-5e77b814b7cb",
+        "b531506b-35dd-4622-a932-52ef2640226e"
+      ]
+    },
+    {
+      "old_url": "https://bsllkpvkowwndhhxtlln.supabase.co/storage/v1/object/public/event-posters/import-stamped/ohwhatanighthammarskjldsalen-hammarskjldsalen.png",
+      "old_storage_path": "event-posters/import-stamped/ohwhatanighthammarskjldsalen-hammarskjldsalen.png",
+      "event_count": 18,
+      "category_slug": "music",
+      "sample_titles": [
+        "THE ROLLING THUNDER BAND",
+        "Stjärnan från Betlehem",
+        "Bruckners femma enligt Stutzmann"
+      ],
+      "sample_event_ids": [
+        "07cd4cc4-cc95-4012-a80d-7336fa9280a9",
+        "b4f5d37d-d049-4b70-8d20-c0df0d68862e",
+        "5b0d220f-edff-41cf-a7c6-7ff946798d4e"
+      ]
+    },
+    {
+      "old_url": "https://bsllkpvkowwndhhxtlln.supabase.co/storage/v1/object/public/event-posters/import-stamped/beastinblackarenanfryshuset-arenanfryshuset.png",
+      "old_storage_path": "event-posters/import-stamped/beastinblackarenanfryshuset-arenanfryshuset.png",
+      "event_count": 18,
+      "category_slug": "music",
+      "sample_titles": [
+        "PJ Morton",
+        "Wallmans International Dinnershow",
+        "Zucchero | Cirkus, Stockholm"
+      ],
+      "sample_event_ids": [
+        "cb1916cb-70d7-4335-ac7e-ec4bb725baed",
+        "9fc9852c-e448-4345-8b6b-5807f6b2ea2a",
+        "ce3d4b4e-7ccb-4d43-92e6-2846b6200e77"
+      ]
+    },
+    {
+      "old_url": "https://bsllkpvkowwndhhxtlln.supabase.co/storage/v1/object/public/event-posters/import-stamped/dadharmonyharmonyfortheholidayslandskyrkan-landskyrkan.png",
+      "old_storage_path": "event-posters/import-stamped/dadharmonyharmonyfortheholidayslandskyrkan-landskyrkan.png",
+      "event_count": 18,
+      "category_slug": "music",
+      "sample_titles": [
+        "EUSKEFEURAT - 50 år av maränger och surdeg! – Alströmerteatern",
+        "Känslosvall och sagokraft - med Gilbert & Broman",
+        "David Ritschard - Fållan, Stockholm"
+      ],
+      "sample_event_ids": [
+        "493e45ac-586a-4fa5-849d-83be666bdc44",
+        "dbbb8478-6b44-49ec-9cd6-0a9242e94056",
+        "c1b09efd-20fb-4491-bb84-3fefcd8a56ba"
+      ]
+    },
+    {
+      "old_url": "https://bsllkpvkowwndhhxtlln.supabase.co/storage/v1/object/public/event-posters/import-stamped/lakestreetdivefllan-fllan.png",
+      "old_storage_path": "event-posters/import-stamped/lakestreetdivefllan-fllan.png",
+      "event_count": 18,
+      "category_slug": "music",
+      "sample_titles": [
+        "Ludwig Hart - Unplugged – Navet, The Pot",
+        "GOLD - Tribute ABBA, GÄRDESTAD & Vi – Gasklockorna Gävle - Stora Gasklockan",
+        "BRAHMS PIANOKONSERT NR 2  - Kungliga Filharmonikerna, Manfred Honeck, dirigent - Beatrice Rana, piano"
+      ],
+      "sample_event_ids": [
+        "0d113f7b-8847-4f5f-b344-57bd8c01da0a",
+        "60f930e2-d1d0-4552-8a74-d88b2e5ddcf5",
+        "cd64f7c8-dc55-4729-9b38-c8b70bd72422"
+      ]
+    },
+    {
+      "old_url": "https://bsllkpvkowwndhhxtlln.supabase.co/storage/v1/object/public/event-posters/import-stamped/foyvancesdrateatern-sdrateatern.png",
+      "old_storage_path": "event-posters/import-stamped/foyvancesdrateatern-sdrateatern.png",
+      "event_count": 18,
+      "category_slug": "music",
+      "sample_titles": [
+        "Finlandia",
+        "Visvågen på Sköldpaddsön",
+        "Folkoperan Foajé: Carmen med jazztrio och berättare"
+      ],
+      "sample_event_ids": [
+        "490c5d87-bc52-4cf6-8932-5fe356c8a29c",
+        "a0416586-2007-42f9-a0e6-4b715cd1eb0b",
+        "d02e1998-393f-4fe7-ad06-e71bcf48a1c0"
+      ]
+    },
+    {
+      "old_url": "https://bsllkpvkowwndhhxtlln.supabase.co/storage/v1/object/public/event-posters/import-stamped/nerogrisnalenklubb-nalenklubb.png",
+      "old_storage_path": "event-posters/import-stamped/nerogrisnalenklubb-nalenklubb.png",
+      "event_count": 18,
+      "category_slug": "music",
+      "sample_titles": [
+        "Julkul med Johan Glans",
+        "Torka aldrig tårar utan handskar Tickets, Tour and Concert Dates – www.gotalejon.se",
+        "Matti Norlin"
+      ],
+      "sample_event_ids": [
+        "f44461d2-ed8a-4b59-afd3-0922218d12b3",
+        "fb7b4053-339f-49c6-b4dc-0517e953b1a6",
+        "2d427a6c-dc36-4acb-9dcc-26d07b3a4f6d"
+      ]
+    },
+    {
+      "old_url": "https://bsllkpvkowwndhhxtlln.supabase.co/storage/v1/object/public/event-posters/import-stamped/bokaspersorkester-ilmagnificohelsingborgarena-helsingborgarena.png",
+      "old_storage_path": "event-posters/import-stamped/bokaspersorkester-ilmagnificohelsingborgarena-helsingborgarena.png",
+      "event_count": 18,
+      "category_slug": "music",
+      "sample_titles": [
+        "The Plan – The Tivoli - Vinylbaren",
+        "Mattias Risbergs Mining International",
+        "Dea Matrona"
+      ],
+      "sample_event_ids": [
+        "c201accb-5a0d-41db-9aee-e55dd82604c4",
+        "f62ad0cc-b757-4d57-8f8d-75071cd980fc",
+        "c1fb77b3-1cdb-40d3-9065-c8545ff7874e"
+      ]
+    },
+    {
+      "old_url": "https://bsllkpvkowwndhhxtlln.supabase.co/storage/v1/object/public/event-posters/import-stamped/hannesaitmanthetivoli-thetivoli.png",
+      "old_storage_path": "event-posters/import-stamped/hannesaitmanthetivoli-thetivoli.png",
+      "event_count": 18,
+      "category_slug": "music",
+      "sample_titles": [
+        "En hyllning till Björn Afzelius – 80 år – Växjö Teater",
+        "Elder",
+        "The Italian Tenors"
+      ],
+      "sample_event_ids": [
+        "cd4db95e-5861-4c7c-b98e-af2dad5fa51f",
+        "d2dff867-8e3a-41ef-bf7c-86824ef5fa2b",
+        "f3a23d6b-0182-46a3-87f0-a65830f3c440"
+      ]
+    },
+    {
+      "old_url": "https://bsllkpvkowwndhhxtlln.supabase.co/storage/v1/object/public/event-posters/import-stamped/larswinnerbckhsten2026halmstadarena-halmstadarena.png",
+      "old_storage_path": "event-posters/import-stamped/larswinnerbckhsten2026halmstadarena-halmstadarena.png",
+      "event_count": 18,
+      "category_slug": "music",
+      "sample_titles": [
+        "beabadoobee: The Powerlines Tour | Stockholm",
+        "Robert Wells",
+        "Pernilla Andersson - Vintersånger från Garbo – Hebeteatern, Folkets Hus Kulturhuset"
+      ],
+      "sample_event_ids": [
+        "65576ccc-7e48-4988-9f39-25f1c3a32d52",
+        "8bac75d2-a9fe-4400-bc10-8ad8daad33e4",
+        "c4f4e047-d541-40b2-a02c-71c87eefa015"
+      ]
+    },
+    {
+      "old_url": "https://bsllkpvkowwndhhxtlln.supabase.co/storage/v1/object/public/event-posters/import-stamped/-banan-kompaniet.png",
+      "old_storage_path": "event-posters/import-stamped/-banan-kompaniet.png",
+      "event_count": 18,
+      "category_slug": "music",
+      "sample_titles": [
+        "Sven Ingvars – Yesterday. Today. Tomorrow. 70 years.",
+        "Amaranthe – Magasinet",
+        "Alexander Brott på Södra Latins Jazzfestival "
+      ],
+      "sample_event_ids": [
+        "66957f14-af61-4fba-8dbc-6bc069896bf7",
+        "f31382e4-2f63-4b14-ae4d-11c49f76d363",
+        "3b8dfa2c-99eb-45c4-9aa3-fa39fd3c36d8"
+      ]
+    },
+    {
+      "old_url": "https://bsllkpvkowwndhhxtlln.supabase.co/storage/v1/object/public/event-posters/import-stamped/aaprockyaviciiarena-aviciiarena.png",
+      "old_storage_path": "event-posters/import-stamped/aaprockyaviciiarena-aviciiarena.png",
+      "event_count": 18,
+      "category_slug": "music",
+      "sample_titles": [
+        "Bo Kaspers Orkester - ll magnifico – Gävle Konserthus - Gevaliasalen",
+        "Best of the Boss - The Bruce Springsteen Tribute – Hebeteatern, Folkets Hus Kulturhuset",
+        "Seinabo Sey + Support: Fanny Avonne - Skövde Kulturhus"
+      ],
+      "sample_event_ids": [
+        "a65258ff-9799-416e-bc1a-dc9b664f9034",
+        "cc38dc57-f0d9-4e34-a9a0-b8e065fc4bd0",
+        "017e5a0c-1307-4aaa-b603-3a9c068187c4"
+      ]
+    },
+    {
+      "old_url": "https://bsllkpvkowwndhhxtlln.supabase.co/storage/v1/object/public/event-posters/import-stamped/10cc-konsertsalen.png",
+      "old_storage_path": "event-posters/import-stamped/10cc-konsertsalen.png",
+      "event_count": 18,
+      "category_slug": "music",
+      "sample_titles": [
+        "Spiders + The Dahmers",
+        "The World of Sevdah & More -Duco Kneževic & Etno Royal World Orchestra",
+        "En Hemlig Artist #12"
+      ],
+      "sample_event_ids": [
+        "5e362849-993b-4354-81c4-bc219630b59a",
+        "27c468d4-f95b-469e-8a59-49d399507270",
+        "07e18431-0a45-44ea-abd0-0114bdc6b253"
+      ]
+    },
+    {
+      "old_url": "https://bsllkpvkowwndhhxtlln.supabase.co/storage/v1/object/public/event-posters/import-stamped/ricardomontanergtalejon-gtalejon.png",
+      "old_storage_path": "event-posters/import-stamped/ricardomontanergtalejon-gtalejon.png",
+      "event_count": 18,
+      "category_slug": "music",
+      "sample_titles": [
+        "29/11 THE HARDKISS | DEBASER STRAND",
+        "The Refreshments - Rock ‘n’ Roll X-mas – Slottescenen",
+        "beabadoobee: The Powerlines Tour"
+      ],
+      "sample_event_ids": [
+        "d0af3605-66b7-4345-855a-fa2bc3cf9a7b",
+        "cdda67e8-20b2-402e-b1be-17af93fb1fc0",
+        "a9e690fb-017c-4b41-aff0-e1a29c3b92ee"
+      ]
+    },
+    {
+      "old_url": "https://bsllkpvkowwndhhxtlln.supabase.co/storage/v1/object/public/event-posters/import-stamped/roselinestockholmroots-stockholmroots.png",
+      "old_storage_path": "event-posters/import-stamped/roselinestockholmroots-stockholmroots.png",
+      "event_count": 18,
+      "category_slug": "music",
+      "sample_titles": [
+        "Tinie Tempah",
+        "KAJ Tickets, Tour and Concert Dates – www.gotalejon.se",
+        "Evigt Edvin - En humorshow med Edvin Törnblom"
+      ],
+      "sample_event_ids": [
+        "a0d2c09a-7887-4320-ae6e-d124a6d560c0",
+        "bd8fe374-3d76-4009-a684-e34ad183f2a1",
+        "6bf90c04-00bf-4775-9a71-b93ddde8900e"
+      ]
+    },
+    {
+      "old_url": "https://bsllkpvkowwndhhxtlln.supabase.co/storage/v1/object/public/event-posters/import-stamped/lunchkrenvren2026-kuben.png",
+      "old_storage_path": "event-posters/import-stamped/lunchkrenvren2026-kuben.png",
+      "event_count": 18,
+      "category_slug": "music",
+      "sample_titles": [
+        "BACKYARD LIVE MUSIC - Daniel Lemma – Julins Backyard Barbecue",
+        "Gävle Goes 90s del IV - Pandora & Dede Lopez – Musikhuset",
+        "Dirty Thirty 28 nov: Kenny Allstars(UK)"
+      ],
+      "sample_event_ids": [
+        "d03d2350-ac7e-49b2-866d-ea1194a640c0",
+        "e4b2bc67-002a-41cd-b96a-d310b56d69a8",
+        "97149827-b976-4092-b2ed-cd4fb18a2f02"
+      ]
+    },
+    {
+      "old_url": "https://bsllkpvkowwndhhxtlln.supabase.co/storage/v1/object/public/event-posters/import-stamped/theweekndafterhourstildawntourvippackages-strawberryarena.png",
+      "old_storage_path": "event-posters/import-stamped/theweekndafterhourstildawntourvippackages-strawberryarena.png",
+      "event_count": 18,
+      "category_slug": "music",
+      "sample_titles": [
+        "Dungen på Söderhamns Teater – Söderhamns Teater",
+        "Dinnershow Stad i ljus - ett musikalisk möte med Py Bäckman – Grand Hotel",
+        "MAGNUS CARLSSON - ÄNGLARNAS TID"
+      ],
+      "sample_event_ids": [
+        "272c4f58-ecfc-4483-be95-28d48ddcb84c",
+        "f92b51cb-e673-49f6-aca9-331f4f22cbe9",
+        "396531f9-d76a-4b76-8810-cc94e083b8e1"
+      ]
+    },
+    {
+      "old_url": "https://bsllkpvkowwndhhxtlln.supabase.co/storage/v1/object/public/event-posters/import-stamped/odebrandfretagsevent-fretagsevent.png",
+      "old_storage_path": "event-posters/import-stamped/odebrandfretagsevent-fretagsevent.png",
+      "event_count": 18,
+      "category_slug": "music",
+      "sample_titles": [
+        "Liam Elion / Tilda Björnberg Duo på Hellsten",
+        "aespa",
+        "Vilt & Vittra – Kontra-En del av Lochness"
+      ],
+      "sample_event_ids": [
+        "3dadf159-46ae-4f0f-aa3b-7756ab9ea88f",
+        "821f81c1-d879-4243-8ebc-e4844f8b4029",
+        "6c76b937-435a-4e55-9298-a7741e1b176e"
+      ]
+    },
+    {
+      "old_url": "https://bsllkpvkowwndhhxtlln.supabase.co/storage/v1/object/public/event-posters/import-stamped/thehealingpowerofmeditation-sdrateatern.png",
+      "old_storage_path": "event-posters/import-stamped/thehealingpowerofmeditation-sdrateatern.png",
+      "event_count": 18,
+      "category_slug": "music",
+      "sample_titles": [
+        "Dylan Moran Tickets, Tour and Concert Dates – www.gotalejon.se",
+        "Torka aldrig tårar utan handskar Tickets, Tour and Concert Dates – www.gotalejon.se",
+        "Skogen – Scenkonstverkstan - Estrad Norr"
+      ],
+      "sample_event_ids": [
+        "025957e3-c95d-4546-958c-e37897982b9a",
+        "00c737ca-23de-4e4f-a2c1-586c54db5fc5",
+        "98bab2f2-4187-4f4e-b466-f9d5e1fae3ff"
+      ]
+    },
+    {
+      "old_url": "https://bsllkpvkowwndhhxtlln.supabase.co/storage/v1/object/public/event-posters/import-stamped/mozartamphoneck-konsertsalen.png",
+      "old_storage_path": "event-posters/import-stamped/mozartamphoneck-konsertsalen.png",
+      "event_count": 18,
+      "category_slug": "music",
+      "sample_titles": [
+        "Hindemiths violinkonsert och Schuberts stora symfoni  - med Honeck & Zimmermann",
+        "Teddybears",
+        "Fula Sidorna - Portad från Bistron - utan ljus"
+      ],
+      "sample_event_ids": [
+        "0dbb95ec-b20a-40c5-8935-b9c591737cc2",
+        "0a4bc1bc-04ea-4f0f-bbb6-6c6ce3daa067",
+        "b081b658-2d79-4ca9-b3df-ed2cea24e87c"
+      ]
+    },
+    {
+      "old_url": "https://bsllkpvkowwndhhxtlln.supabase.co/storage/v1/object/public/event-posters/import-stamped/unosvenningssonwinterviken-winterviken.png",
+      "old_storage_path": "event-posters/import-stamped/unosvenningssonwinterviken-winterviken.png",
+      "event_count": 18,
+      "category_slug": "music",
+      "sample_titles": [
+        "Klubb DÖD: Crooked Mouth + Träet-Mund-Spilli",
+        "När det lider mot jul - Lisa Nilsson",
+        "Babblarna & Klonks Klapp-kalas"
+      ],
+      "sample_event_ids": [
+        "bfb323f1-5a5a-4cdc-92a9-1224b6d06d91",
+        "f223e2fe-9fcb-4957-bf7f-895546244f36",
+        "1e14db76-a432-4b49-b1bb-a0e3ae4a01b9"
+      ]
+    },
+    {
+      "old_url": "https://bsllkpvkowwndhhxtlln.supabase.co/storage/v1/object/public/event-posters/import-stamped/ariesglassjawworldtour-hornstullsstrand4.png",
+      "old_storage_path": "event-posters/import-stamped/ariesglassjawworldtour-hornstullsstrand4.png",
+      "event_count": 18,
+      "category_slug": "music",
+      "sample_titles": [
+        "Thank you for the music – Falkenbergs Stadsteater",
+        "LUDWIG HART - UNPLUGGED – Scalateatern",
+        "Valter Nilsson – Katalin and all that Jazz"
+      ],
+      "sample_event_ids": [
+        "86697a48-d64c-4203-8823-a44b803a2a23",
+        "0b7a283b-418f-4578-b741-156cce497842",
+        "5be49366-1229-4e4e-ab58-077f8de2a68b"
+      ]
+    },
+    {
+      "old_url": "https://bsllkpvkowwndhhxtlln.supabase.co/storage/v1/object/public/event-posters/import-stamped/nellmescalnalenstorasalen-nalenstorasalen.png",
+      "old_storage_path": "event-posters/import-stamped/nellmescalnalenstorasalen-nalenstorasalen.png",
+      "event_count": 18,
+      "category_slug": "music",
+      "sample_titles": [
+        "Kombo: Langendorf United + The Sorcerers",
+        "Michael Jeff Johnson",
+        "Whitechapel"
+      ],
+      "sample_event_ids": [
+        "6447242e-aa90-4552-b1f3-456354a4bee6",
+        "2fbd27c9-806a-484e-9f4e-048833a41958",
+        "a0611939-c09c-43ab-a840-47003a59da33"
+      ]
+    },
+    {
+      "old_url": "https://bsllkpvkowwndhhxtlln.supabase.co/storage/v1/object/public/event-posters/import-stamped/christmasnightstage1-stage1.png",
+      "old_storage_path": "event-posters/import-stamped/christmasnightstage1-stage1.png",
+      "event_count": 18,
+      "category_slug": "music",
+      "sample_titles": [
+        "Torka aldrig tårar utan handskar Tickets, Tour and Concert Dates – www.gotalejon.se",
+        "Seinabo Sey + waterbaby | Klubb Efterslag",
+        "Julkonsert"
+      ],
+      "sample_event_ids": [
+        "99a211f2-1b72-4f2d-837d-c3233992c3f6",
+        "746f240c-a891-4e60-8589-82030b1b38fd",
+        "0812f6a1-037a-4591-9757-5db26531fbd2"
+      ]
+    },
+    {
+      "old_url": "https://bsllkpvkowwndhhxtlln.supabase.co/storage/v1/object/public/event-posters/import-stamped/katherinepriddynalenklubb-nalenklubb.png",
+      "old_storage_path": "event-posters/import-stamped/katherinepriddynalenklubb-nalenklubb.png",
+      "event_count": 18,
+      "category_slug": "music",
+      "sample_titles": [
+        "John Craigie",
+        "KAMELOT | DARK ASYLUM WORLD TOUR",
+        "John Vincent III @ Debaser Nova"
+      ],
+      "sample_event_ids": [
+        "8f61fb4b-f5eb-425d-b889-1580418cc21c",
+        "0b1de5dc-91e6-4b19-8726-5f3740639db8",
+        "f9a0f32e-51ee-4adc-b1c6-f42f07b0d263"
+      ]
+    },
+    {
+      "old_url": "https://bsllkpvkowwndhhxtlln.supabase.co/storage/v1/object/public/event-posters/import-stamped/stolofskapell-edwardandthehayridersstolofskapelltylsand-stolofskapelltylsand.png",
+      "old_storage_path": "event-posters/import-stamped/stolofskapell-edwardandthehayridersstolofskapelltylsand-stolofskapelltylsand.png",
+      "event_count": 18,
+      "category_slug": "music",
+      "sample_titles": [
+        "BRUNOZ – En konsert med Bruno Mitsogiannis – Växjö Konserthus",
+        "Den Flygande Bokrullen -  matinékonsert",
+        "MAMMA MIA! THE PARTY"
+      ],
+      "sample_event_ids": [
+        "2a0ef58e-f46f-45fd-a975-4688eaeb7338",
+        "c6f3349e-b7b3-489d-b455-e9ae05e97b74",
+        "3ddb25b8-fdad-4f54-a419-0e01c7a1a323"
+      ]
+    },
+    {
+      "old_url": "https://bsllkpvkowwndhhxtlln.supabase.co/storage/v1/object/public/event-posters/import-stamped/nallescirkus-konsertsalen.png",
+      "old_storage_path": "event-posters/import-stamped/nallescirkus-konsertsalen.png",
+      "event_count": 18,
+      "category_slug": "music",
+      "sample_titles": [
+        "Sagan om Ringen, Hobbit och Maktens Ringar – Live in Concert – Motala Folkets Hus",
+        "Bromander live på Twang",
+        "Tomas Ledin: Symphonia Politropou – Stora konsertsalen, Musikhögskolan Ingesund"
+      ],
+      "sample_event_ids": [
+        "009952eb-e92b-41db-b84b-62030259aa4a",
+        "8a5346f6-b6c5-4a1c-9f18-3a2e117963b4",
+        "cfcfa41f-c3f3-447e-8595-48432544b72d"
+      ]
+    },
+    {
+      "old_url": "https://bsllkpvkowwndhhxtlln.supabase.co/storage/v1/object/public/event-posters/import-stamped/johncraigienalenklubb-nalenklubb.png",
+      "old_storage_path": "event-posters/import-stamped/johncraigienalenklubb-nalenklubb.png",
+      "event_count": 18,
+      "category_slug": "music",
+      "sample_titles": [
+        "Sara Parkman – Falkhallen",
+        "Golden Hits Dinnershow",
+        "The music of Hans Zimmer vs John Williams – Palladium"
+      ],
+      "sample_event_ids": [
+        "ab92b513-107d-4d35-b332-cddcee4948fc",
+        "0b4c9bfa-7fb7-4b5d-986c-831ad67c4425",
+        "9a99ca76-49b0-4356-8217-c86c4576bf8b"
+      ]
+    },
+    {
+      "old_url": "https://bsllkpvkowwndhhxtlln.supabase.co/storage/v1/object/public/event-posters/import-stamped/jazzikubenmichaelmayous-kuben.png",
+      "old_storage_path": "event-posters/import-stamped/jazzikubenmichaelmayous-kuben.png",
+      "event_count": 18,
+      "category_slug": "music",
+      "sample_titles": [
+        "Visvågen på Sköldpaddsön",
+        "Saults",
+        "Haydns avskedssymfoni - Malin Bromans avskedskonsert"
+      ],
+      "sample_event_ids": [
+        "af6ae6ca-0f25-4821-b41a-068e50b06119",
+        "85bd41eb-2fc4-45a4-ab9f-2d4db1c275dd",
+        "190cb6b6-7779-44dc-8873-8134b63e1dfe"
+      ]
+    },
+    {
+      "old_url": "https://bsllkpvkowwndhhxtlln.supabase.co/storage/v1/object/public/event-posters/import-stamped/westofedencelticchristmaseskilstunaeskilstunateater-eskilstunateater.png",
+      "old_storage_path": "event-posters/import-stamped/westofedencelticchristmaseskilstunaeskilstunateater-eskilstunateater.png",
+      "event_count": 18,
+      "category_slug": "music",
+      "sample_titles": [
+        "SOS – En Hyllning till ABBA – Cassels",
+        "Eoghan Ó Ceannabháin | Kulturhuset Stadsteatern",
+        "Nils Landgren Christmas with My Friends 2026"
+      ],
+      "sample_event_ids": [
+        "d1499563-6244-496b-819b-49136301dacd",
+        "ca5fe10e-f21c-4066-b095-328c4a4c1e55",
+        "92efab14-915b-42ff-bd24-1d663cb99e14"
+      ]
+    },
+    {
+      "old_url": "https://bsllkpvkowwndhhxtlln.supabase.co/storage/v1/object/public/event-posters/import-stamped/tomasanderssonwijkyrkorna2026immanuelskyrkanborsimmanuelskyrkan-immanuelskyrkan.png",
+      "old_storage_path": "event-posters/import-stamped/tomasanderssonwijkyrkorna2026immanuelskyrkanborsimmanuelskyrkan-immanuelskyrkan.png",
+      "event_count": 18,
+      "category_slug": "music",
+      "sample_titles": [
+        "Hermanos Gutiérrez | Cirkus, Stockholm",
+        "Stjärnjul 2026",
+        "MINI  - Blåset!"
+      ],
+      "sample_event_ids": [
+        "c8f935f8-330d-4cba-86e9-2ac1163a5128",
+        "92a20f6c-55b4-432c-ad01-86a09f1fa9d6",
+        "12a2e14d-9306-4ef3-be24-8195b3bb0b18"
+      ]
+    },
+    {
+      "old_url": "https://bsllkpvkowwndhhxtlln.supabase.co/storage/v1/object/public/event-posters/import-stamped/theproclaimerskgelbanansdrateatern-kgelbanansdrateatern.png",
+      "old_storage_path": "event-posters/import-stamped/theproclaimerskgelbanansdrateatern-kgelbanansdrateatern.png",
+      "event_count": 18,
+      "category_slug": "music",
+      "sample_titles": [
+        "The Bootleg Beatles",
+        "Jamie Woon @ Kollektivet Livet",
+        "THE BEST OF CHRISTER SJÖGREN – Lunds stadsteater"
+      ],
+      "sample_event_ids": [
+        "a9072e2b-cd40-4eb0-94fd-b177b03caf95",
+        "10fc6a8e-279d-4986-8f65-a23df45a5700",
+        "44503646-1243-4692-87d9-51d4e9728d6f"
+      ]
+    },
+    {
+      "old_url": "https://bsllkpvkowwndhhxtlln.supabase.co/storage/v1/object/public/event-posters/import-stamped/linneahenrikssonbaraviburtrskkyrka-burtrskkyrka.png",
+      "old_storage_path": "event-posters/import-stamped/linneahenrikssonbaraviburtrskkyrka-burtrskkyrka.png",
+      "event_count": 17,
+      "category_slug": "music",
+      "sample_titles": [
+        "Euskefeurat",
+        "MAKSIM SEGMENTI WORLD TOUR",
+        "The Sheepdogs"
+      ],
+      "sample_event_ids": [
+        "25713fa5-d1ab-435e-873e-1a878b0e0bf4",
+        "c4810b75-6a52-465b-ba46-fa0aad5a4364",
+        "b434cd5c-f8ab-4500-a96b-2013b9378f11"
+      ]
+    },
+    {
+      "old_url": "https://bsllkpvkowwndhhxtlln.supabase.co/storage/v1/object/public/event-posters/import-stamped/thelemontwigsdebaserstrand-debaserstrand.png",
+      "old_storage_path": "event-posters/import-stamped/thelemontwigsdebaserstrand-debaserstrand.png",
+      "event_count": 17,
+      "category_slug": "music",
+      "sample_titles": [
+        "Kombobiljett: Momoko Gill + Juan Romeros Manuella Orkester",
+        "Petter",
+        "Jan Lundgren/Ulf Wakenius Quartet – Dunkers kulturhus"
+      ],
+      "sample_event_ids": [
+        "5d21ac1c-ac29-48dd-9ee7-6e024560fdb1",
+        "4d033b17-aa80-4531-a423-b898657b9ba0",
+        "42843435-c2e3-4a09-bf32-e515afa1903c"
+      ]
+    },
+    {
+      "old_url": "https://bsllkpvkowwndhhxtlln.supabase.co/storage/v1/object/public/event-posters/import-stamped/briantempletonuscarlssonpkajen-folkparkenvidmlaren-carlssonpkajen-folkparkenvidmlaren.png",
+      "old_storage_path": "event-posters/import-stamped/briantempletonuscarlssonpkajen-folkparkenvidmlaren-carlssonpkajen-folkparkenvidmlaren.png",
+      "event_count": 17,
+      "category_slug": "music",
+      "sample_titles": [
+        "Magnus Carlson & The Weekend Choir – Storsjöteatern",
+        "Icona Pop",
+        "HÖSTKONSERT  - Stockholms musikgymnasiums höstkonsert"
+      ],
+      "sample_event_ids": [
+        "81a6b8dc-5d8f-4462-8232-780a01ece458",
+        "3dee280d-eb89-4917-b900-75b31d9c38f1",
+        "729dfc66-71a5-4b2c-9453-5be3579f5a14"
+      ]
+    },
+    {
+      "old_url": "https://bsllkpvkowwndhhxtlln.supabase.co/storage/v1/object/public/event-posters/import-stamped/fakeminkaterriblebeauty-thetour-hornstullsstrand4.png",
+      "old_storage_path": "event-posters/import-stamped/fakeminkaterriblebeauty-thetour-hornstullsstrand4.png",
+      "event_count": 17,
+      "category_slug": "music",
+      "sample_titles": [
+        "261219 Visor i Vintertid",
+        "Oum",
+        "Wallmans International Dinnershow"
+      ],
+      "sample_event_ids": [
+        "c0123a48-838a-43df-afe6-9c541cfa399e",
+        "af546712-6afb-411a-940f-c4251a242035",
+        "11228866-31fe-4feb-9e9f-3dafef3e14e0"
+      ]
+    },
+    {
+      "old_url": "https://bsllkpvkowwndhhxtlln.supabase.co/storage/v1/object/public/event-posters/import-stamped/rockmytikalen-thetivoli30rthetivoli-thetivoli.png",
+      "old_storage_path": "event-posters/import-stamped/rockmytikalen-thetivoli30rthetivoli-thetivoli.png",
+      "event_count": 17,
+      "category_slug": "music",
+      "sample_titles": [
+        "Yard Act",
+        "Julen Enligt Timo",
+        "Rickard Malmsten Vocal Project featuring Titti Björkegren"
+      ],
+      "sample_event_ids": [
+        "72a66f65-a7aa-4ee7-b647-67f9a0951f2c",
+        "f595b20a-acd5-450f-b1e4-71a25bbde79e",
+        "68eb49bc-a277-4a8c-92fd-a9fb91cdc973"
+      ]
+    },
+    {
+      "old_url": "https://bsllkpvkowwndhhxtlln.supabase.co/storage/v1/object/public/event-posters/import-stamped/johnmoodshosoi-hosoi.png",
+      "old_storage_path": "event-posters/import-stamped/johnmoodshosoi-hosoi.png",
+      "event_count": 17,
+      "category_slug": "music",
+      "sample_titles": [
+        "ElGrandeToto",
+        "Wallmans International Dinnershow",
+        "Thorbjørn Risager & The Black Tornado (UTSÅLT!) | Nalen, Stockholm"
+      ],
+      "sample_event_ids": [
+        "47c909cb-f966-4b8e-ad82-348c49ed0ac9",
+        "3d0330e6-0f01-4c12-b66e-9b144ab2a9d7",
+        "d29c72a5-028e-4559-b8aa-9d93d6e557f0"
+      ]
+    },
+    {
+      "old_url": "https://bsllkpvkowwndhhxtlln.supabase.co/storage/v1/object/public/event-posters/import-stamped/plastilinamoshdebaserstrand-debaserstrand.png",
+      "old_storage_path": "event-posters/import-stamped/plastilinamoshdebaserstrand-debaserstrand.png",
+      "event_count": 17,
+      "category_slug": "music",
+      "sample_titles": [
+        "La Tremendita + Maggie Cullen",
+        "Golden Hits Dinnershow",
+        "Michelle David & The True-tones @ Fasching"
+      ],
+      "sample_event_ids": [
+        "a9b2d200-05a6-4254-96eb-f5caff94b637",
+        "a937e617-b5e6-47ad-9730-2de4fc603e88",
+        "5db8fe4e-13a5-4f2f-a2f7-d40b8a35ffe0"
+      ]
+    },
+    {
+      "old_url": "https://bsllkpvkowwndhhxtlln.supabase.co/storage/v1/object/public/event-posters/import-stamped/miakarlssonscalateaternskllare-scalateaternskllare.png",
+      "old_storage_path": "event-posters/import-stamped/miakarlssonscalateaternskllare-scalateaternskllare.png",
+      "event_count": 17,
+      "category_slug": "music",
+      "sample_titles": [
+        "Fatoumata Diawara",
+        "Benjamin Ingrosso",
+        "Kirk Fletcher Band feat. Erika Baier"
+      ],
+      "sample_event_ids": [
+        "2424a592-c5b4-4ee5-a4b0-4462e3a73a59",
+        "79e02902-bbd2-4800-b24c-b7216d41fdf2",
+        "27f60891-581d-40de-942b-24b43fe2fae4"
+      ]
+    },
+    {
+      "old_url": "https://bsllkpvkowwndhhxtlln.supabase.co/storage/v1/object/public/event-posters/import-stamped/makrosskulturhusetnajaden-foajscenen-kulturhusetnajaden-foajscenen.png",
+      "old_storage_path": "event-posters/import-stamped/makrosskulturhusetnajaden-foajscenen-kulturhusetnajaden-foajscenen.png",
+      "event_count": 17,
+      "category_slug": "music",
+      "sample_titles": [
+        "Fatoumata Diawara",
+        "261114 Zoe Pia & Tenores di Orosei",
+        "DEEP PURPLE"
+      ],
+      "sample_event_ids": [
+        "c19afa42-aceb-46d4-8daa-0d6355eeeb91",
+        "a0b86142-2583-4cfc-bcc8-4ccbd06c65e1",
+        "5621a0f9-c563-4926-b6af-0ce43330d366"
+      ]
+    },
+    {
+      "old_url": "https://bsllkpvkowwndhhxtlln.supabase.co/storage/v1/object/public/event-posters/import-stamped/maddoxbatson-liveworldwidetour-fryshuset.png",
+      "old_storage_path": "event-posters/import-stamped/maddoxbatson-liveworldwidetour-fryshuset.png",
+      "event_count": 17,
+      "category_slug": "music",
+      "sample_titles": [
+        "Kurt Rosenwinkel 'The Remedy'",
+        "KUSTBANDET IN CONCERT",
+        "Julfest på Havslyckan – magi på nära håll ✨ – Havslyckan"
+      ],
+      "sample_event_ids": [
+        "f38825ea-c436-4679-bb3d-4d1c3770c16e",
+        "3e6e527a-2a28-4be6-bbb4-882aa0913742",
+        "5d94b2f4-8763-471c-89a9-2a0be36d0fae"
+      ]
+    },
+    {
+      "old_url": "https://bsllkpvkowwndhhxtlln.supabase.co/storage/v1/object/public/event-posters/import-stamped/reclaimthemusic-inconcertnordanteatern-nordanteatern.png",
+      "old_storage_path": "event-posters/import-stamped/reclaimthemusic-inconcertnordanteatern-nordanteatern.png",
+      "event_count": 17,
+      "category_slug": "music",
+      "sample_titles": [
+        "Let There Be Light - Trinity & Cimberly",
+        "Wallmans International Dinnershow",
+        "Nyårskonsert med Stockholms Strauss-Orkester 2026"
+      ],
+      "sample_event_ids": [
+        "dc5c047d-3928-4bf8-b8a6-440ebf6e24d0",
+        "5b643d93-0c5e-4088-a1af-5656e96f4731",
+        "38dcb8fb-ea93-4279-aada-5d5f4e41301d"
+      ]
+    },
+    {
+      "old_url": "https://bsllkpvkowwndhhxtlln.supabase.co/storage/v1/object/public/event-posters/import-stamped/bohuslnbigband-milescoltranekulturhusetnajaden-konsertsalen-kulturhusetnajaden-konsertsalen.png",
+      "old_storage_path": "event-posters/import-stamped/bohuslnbigband-milescoltranekulturhusetnajaden-konsertsalen-kulturhusetnajaden-konsertsalen.png",
+      "event_count": 17,
+      "category_slug": "music",
+      "sample_titles": [
+        "SCHUMANN SYMFONI NR 2  - Kungliga Filharmonikerna, Sasha Scolnik-Brower, dirigent",
+        "Caoilfhionn Rose",
+        "Those Damn Crows @ Annexet"
+      ],
+      "sample_event_ids": [
+        "21e3b5e2-5863-40e0-9e2d-bffb5516f203",
+        "8d1ae3b9-1049-406e-8bf9-f53908b9f3ad",
+        "e79812f9-f6b5-4325-a866-3c11102b275f"
+      ]
+    },
+    {
+      "old_url": "https://bsllkpvkowwndhhxtlln.supabase.co/storage/v1/object/public/event-posters/import-stamped/footballdramaticsnordanteatern-nordanteatern.png",
+      "old_storage_path": "event-posters/import-stamped/footballdramaticsnordanteatern-nordanteatern.png",
+      "event_count": 17,
+      "category_slug": "music",
+      "sample_titles": [
+        "MIKKEY DEE With Friends Playing MOTÖRHEAD Classics – Garden",
+        "30/10 OLD SCHOOL VIBES HALLOWEEN | DEBASER",
+        "Club King Kong: Dorotea + Bleak Streak + Buffalo | Hus 7"
+      ],
+      "sample_event_ids": [
+        "b5f1a67b-04af-47ef-8504-a59f49f1ed3d",
+        "df2791b6-4376-4d5a-b33c-71b3a6ab1f61",
+        "a8a97134-7487-4c96-b2eb-ba5c1cc56d78"
+      ]
+    },
+    {
+      "old_url": "https://bsllkpvkowwndhhxtlln.supabase.co/storage/v1/object/public/event-posters/import-stamped/elviselviselvis-2026halmstadsteater-halmstadsteater.png",
+      "old_storage_path": "event-posters/import-stamped/elviselviselvis-2026halmstadsteater-halmstadsteater.png",
+      "event_count": 17,
+      "category_slug": "music",
+      "sample_titles": [
+        "Nils Landgren Christmas with My Friends 2026",
+        "25/11 C.O.F.F.I.N | DEBASER NOVA",
+        "Sven-Ingvars"
+      ],
+      "sample_event_ids": [
+        "08d0dcfd-78d0-4d89-aaa2-666582bf2892",
+        "f6811232-a215-4ecb-b38f-e50f402c80ed",
+        "5b2f6293-6198-4288-9010-c91ad79992b7"
+      ]
+    },
+    {
+      "old_url": "https://bsllkpvkowwndhhxtlln.supabase.co/storage/v1/object/public/event-posters/import-stamped/frnnyavrlden-konsertsalen.png",
+      "old_storage_path": "event-posters/import-stamped/frnnyavrlden-konsertsalen.png",
+      "event_count": 17,
+      "category_slug": "music",
+      "sample_titles": [
+        "NYTT DATUM  MEFISTO + BLOOD OF JUPITER",
+        "Labero's Magic World",
+        "STENHAMMAR QUARTET"
+      ],
+      "sample_event_ids": [
+        "cf119dcf-46ab-4b11-83b4-e451bae52ca0",
+        "48156ac4-c44b-4f78-b83a-072a2f1b929e",
+        "7f930234-703c-4fcd-a2c3-d1b8afbc8791"
+      ]
+    },
+    {
+      "old_url": "https://bsllkpvkowwndhhxtlln.supabase.co/storage/v1/object/public/event-posters/import-stamped/5secondsofsummer-everyonesastarworldtourplatinumtickets-hovet.png",
+      "old_storage_path": "event-posters/import-stamped/5secondsofsummer-everyonesastarworldtourplatinumtickets-hovet.png",
+      "event_count": 17,
+      "category_slug": "music",
+      "sample_titles": [
+        "DISCO INFERNO - Sveriges Största Discoshow – Växjö Konserthus",
+        "INFINITY –Celebrating the Music of Michael Jackson – Flygeln",
+        "Bob Hansson Snällast vinner - en invastion av hopp! – Studio Acusticum, Black Box"
+      ],
+      "sample_event_ids": [
+        "58ec63aa-54da-4813-8c5f-65129218b9cf",
+        "a57e04e7-7e71-4d77-8e53-82564b75ef7b",
+        "dc1415ec-803a-4898-b8f9-b09776750465"
+      ]
+    },
+    {
+      "old_url": "https://bsllkpvkowwndhhxtlln.supabase.co/storage/v1/object/public/event-posters/import-stamped/troublemakersthesensitivevonbacchisofiehofunderjord-sofiehofunderjord.png",
+      "old_storage_path": "event-posters/import-stamped/troublemakersthesensitivevonbacchisofiehofunderjord-sofiehofunderjord.png",
+      "event_count": 17,
+      "category_slug": "music",
+      "sample_titles": [
+        "The Fray - Autumn Light Tour",
+        "Ström + Devils Cigarette",
+        "Caroline af Ugglas & The Pot Bellies"
+      ],
+      "sample_event_ids": [
+        "444ef386-ff81-4e25-b916-5061314f271e",
+        "ada69058-3d87-4029-b6fc-6e292d12ac04",
+        "6f119cec-c56f-4f39-b18e-49681a1fe4df"
+      ]
+    },
+    {
+      "old_url": "https://bsllkpvkowwndhhxtlln.supabase.co/storage/v1/object/public/event-posters/import-stamped/thuvahrdelinlelonikatriosarakulturhushjortronet-sarakulturhushjortronet.png",
+      "old_storage_path": "event-posters/import-stamped/thuvahrdelinlelonikatriosarakulturhushjortronet-sarakulturhushjortronet.png",
+      "event_count": 17,
+      "category_slug": "music",
+      "sample_titles": [
+        "Julbord & Show 2026 – Västerås Kongress",
+        "John Lundvik med Mats Björkes Caravan - Julturné 2026 @ Rival",
+        "Höstkonsert för Barndiabetesfonden 2026"
+      ],
+      "sample_event_ids": [
+        "c513fd52-0fab-4024-ac16-16994b3ea565",
+        "42c0d80d-583e-4ecf-bc9a-01612c4d2134",
+        "53e235b3-bd88-4a09-89e2-548810d4cbe7"
+      ]
+    },
+    {
+      "old_url": "https://bsllkpvkowwndhhxtlln.supabase.co/storage/v1/object/public/event-posters/import-stamped/sveningvars-igridagimorgon70rhalmstadsteater-halmstadsteater.png",
+      "old_storage_path": "event-posters/import-stamped/sveningvars-igridagimorgon70rhalmstadsteater-halmstadsteater.png",
+      "event_count": 17,
+      "category_slug": "music",
+      "sample_titles": [
+        "Comfort Module",
+        "Gurriers",
+        "Oh What a Night"
+      ],
+      "sample_event_ids": [
+        "8432364e-5e8e-4f10-8423-0eb5e77c0e78",
+        "eaa04020-4e13-4dac-b90a-caaaccb56fa5",
+        "23f977b3-5333-43cb-bf6b-dafb1313e4f1"
+      ]
+    },
+    {
+      "old_url": "https://bsllkpvkowwndhhxtlln.supabase.co/storage/v1/object/public/event-posters/import-stamped/joostkleinworldtour-frbindelsehallen.png",
+      "old_storage_path": "event-posters/import-stamped/joostkleinworldtour-frbindelsehallen.png",
+      "event_count": 17,
+      "category_slug": "music",
+      "sample_titles": [
+        "Lars Winnerbäck @ Avicii Arena",
+        "SIBELIUS, RAVEL OCH BARTÓK  - Kungliga Filharmonikerna, Jukka-Pekka Saraste, dirigent - Fazil Say, piano - Storkyrkans Kammarkör",
+        "Wallmans International Dinnershow"
+      ],
+      "sample_event_ids": [
+        "6b677d29-b681-4968-a603-245dd5a86496",
+        "af9bd49c-a872-4b82-9c3b-253e8fe952ef",
+        "0e600973-a2f9-432b-b870-5b1ccda6f398"
+      ]
+    },
+    {
+      "old_url": "https://bsllkpvkowwndhhxtlln.supabase.co/storage/v1/object/public/event-posters/import-stamped/aaprocky-dontbedumbworldtourplatinumtickets-.png",
+      "old_storage_path": "event-posters/import-stamped/aaprocky-dontbedumbworldtourplatinumtickets-.png",
+      "event_count": 17,
+      "category_slug": "music",
+      "sample_titles": [
+        "West Of Eden – Celtic Christmas • 26/11 • Enköping",
+        "Torka aldrig tårar utan handskar",
+        "HAKEN"
+      ],
+      "sample_event_ids": [
+        "39599043-f70f-4e3a-ae20-710797478f7e",
+        "8ecb5485-b35a-42ef-b06b-9494f0e33b1e",
+        "ac7d921b-d912-4a4e-8252-fb5e56804d7e"
+      ]
+    },
+    {
+      "old_url": "https://bsllkpvkowwndhhxtlln.supabase.co/storage/v1/object/public/event-posters/import-stamped/msomterpeterjback-konsertsalen.png",
+      "old_storage_path": "event-posters/import-stamped/msomterpeterjback-konsertsalen.png",
+      "event_count": 17,
+      "category_slug": "music",
+      "sample_titles": [
+        "The Last Internationale",
+        "Magnus Carlson &amp; The Moon Ray Quintet",
+        "Nicko McBrain Tickets, Tour and Concert Dates – www.gotalejon.se"
+      ],
+      "sample_event_ids": [
+        "67aed019-6a2b-4f32-bad6-d9cbbbc41279",
+        "7bfe2178-357a-4569-a4ef-d87f52ba17e8",
+        "c125111e-7422-40b8-b717-da2f307693bb"
+      ]
+    },
+    {
+      "old_url": "https://bsllkpvkowwndhhxtlln.supabase.co/storage/v1/object/public/event-posters/import-stamped/teatairovicxoysocialclub-xoysocialclub.png",
+      "old_storage_path": "event-posters/import-stamped/teatairovicxoysocialclub-xoysocialclub.png",
+      "event_count": 17,
+      "category_slug": "music",
+      "sample_titles": [
+        "Lucia med Nacka Musikklasser",
+        "Wallmans International Dinnershow",
+        "Bollywood Dhamaka I White party I Biblioteket Live I 24 October 2026"
+      ],
+      "sample_event_ids": [
+        "9ef91353-03c5-4877-9981-5ed2626a524c",
+        "2b70c74a-0357-4e9c-afa9-3803ce783093",
+        "aa371ed6-d4ba-415e-ae2c-1f909350913c"
+      ]
+    },
+    {
+      "old_url": "https://bsllkpvkowwndhhxtlln.supabase.co/storage/v1/object/public/event-posters/import-stamped/tameimpalaplatinumtickets-.png",
+      "old_storage_path": "event-posters/import-stamped/tameimpalaplatinumtickets-.png",
+      "event_count": 17,
+      "category_slug": "music",
+      "sample_titles": [
+        "Fatoumata Diawara | Stockholm Jazz Festival",
+        "Lars Winnerbäck – Löfbergs Arena",
+        "Halmstad Teater | Emmi Christensson & Rickard Söderberg - En Fridfull Jul"
+      ],
+      "sample_event_ids": [
+        "8603e7c9-1849-4560-b395-d978ae68cafd",
+        "e8a2812c-eea7-4236-8d01-3aadf79bee78",
+        "114b76f3-e841-4dcf-8ecc-6087cba22605"
+      ]
+    },
+    {
+      "old_url": "https://bsllkpvkowwndhhxtlln.supabase.co/storage/v1/object/public/event-posters/import-stamped/phantombaystadsgrdsterminalen-stadsgrdsterminalen.png",
+      "old_storage_path": "event-posters/import-stamped/phantombaystadsgrdsterminalen-stadsgrdsterminalen.png",
+      "event_count": 17,
+      "category_slug": "music",
+      "sample_titles": [
+        "Tove Lo | Avicii Arena, Stockholm ",
+        "Sven Ingvars - Igår. Idag. Imorgon. 70 år.",
+        "EVA DAHLGREN – REVALUTION CLUB – Västerås Kongress"
+      ],
+      "sample_event_ids": [
+        "9222acb2-272c-40df-bfc3-4ddd142d28f8",
+        "38bc56dc-02a7-4dba-b0ff-a1a330bacaa0",
+        "790f1e44-44ef-4dd8-98c3-5e144fa58a08"
+      ]
+    },
+    {
+      "old_url": "https://bsllkpvkowwndhhxtlln.supabase.co/storage/v1/object/public/event-posters/import-stamped/djungelbokenthemusical-konsertsalen.png",
+      "old_storage_path": "event-posters/import-stamped/djungelbokenthemusical-konsertsalen.png",
+      "event_count": 17,
+      "category_slug": "music",
+      "sample_titles": [
+        "Eva Dahlgren – Magasinet",
+        "Från Swing till Funk",
+        "John Németh & Knock-Out Greg & Blue Flames – Söderport"
+      ],
+      "sample_event_ids": [
+        "50ea50b9-f3fe-4f2e-8cf1-2ffed667cde8",
+        "bbd88142-7442-4711-bc41-6a9f60e0dde8",
+        "3542d1ae-e258-4bbc-afba-e39e1d8b0b77"
+      ]
+    },
+    {
+      "old_url": "https://bsllkpvkowwndhhxtlln.supabase.co/storage/v1/object/public/event-posters/import-stamped/robertwells40rvidflygelneskilstunateater-eskilstunateater.png",
+      "old_storage_path": "event-posters/import-stamped/robertwells40rvidflygelneskilstunateater-eskilstunateater.png",
+      "event_count": 17,
+      "category_slug": "music",
+      "sample_titles": [
+        "Dizzee Rascal",
+        "Mathias Algotsson & Svante Henryson",
+        "Mats/Morgan/Henrik"
+      ],
+      "sample_event_ids": [
+        "6e2854e8-2145-4a22-b774-4a0e2f593c0e",
+        "06c44118-c436-40f9-91ad-b3b2ad36270c",
+        "9432aebb-3924-43bd-b621-b1b6032b5fd8"
+      ]
+    },
+    {
+      "old_url": "https://bsllkpvkowwndhhxtlln.supabase.co/storage/v1/object/public/event-posters/import-stamped/dvoksserenadberwaldsseptett-medmusikerurradiosymfonikernaochtjeckiskafilharmonikerna-berwaldhallen.png",
+      "old_storage_path": "event-posters/import-stamped/dvoksserenadberwaldsseptett-medmusikerurradiosymfonikernaochtjeckiskafilharmonikerna-berwaldhallen.png",
+      "event_count": 17,
+      "category_slug": "music",
+      "sample_titles": [
+        "Hvalfugl",
+        "Wallmans International Dinnershow",
+        "Yasuaki Shimizu"
+      ],
+      "sample_event_ids": [
+        "8ee7f432-8063-4167-97fd-86c40d884141",
+        "029aa368-d25a-4ecb-84ea-1d807f6ae1f3",
+        "bb4666d4-68f7-4c11-97e8-78f37c8cb65a"
+      ]
+    },
+    {
+      "old_url": "https://bsllkpvkowwndhhxtlln.supabase.co/storage/v1/object/public/event-posters/import-stamped/stadiljus-sdrateatern.png",
+      "old_storage_path": "event-posters/import-stamped/stadiljus-sdrateatern.png",
+      "event_count": 17,
+      "category_slug": "music",
+      "sample_titles": [
+        "Tarab-konsert II i Bromma",
+        "La La Brooks of The Crystals",
+        "Amaranthe + Self Deception + Ankor – Nöjesfabriken"
+      ],
+      "sample_event_ids": [
+        "536440fd-90f5-4df0-9efa-ca0dbdd2c16e",
+        "b6d45720-2a4b-4735-ada2-d594b891ee02",
+        "d60d2af9-98a1-42fe-ba3d-4fdb7b05ccae"
+      ]
+    },
+    {
+      "old_url": "https://bsllkpvkowwndhhxtlln.supabase.co/storage/v1/object/public/event-posters/import-stamped/danielkane-impossiblemagicdramalogen-dramalogen.png",
+      "old_storage_path": "event-posters/import-stamped/danielkane-impossiblemagicdramalogen-dramalogen.png",
+      "event_count": 17,
+      "category_slug": "music",
+      "sample_titles": [
+        "ZAN CODY",
+        "YOU+ | Fryshuset, Stockholm",
+        "Disney on Ice"
+      ],
+      "sample_event_ids": [
+        "08cb33db-aadd-43ce-805d-6c968320de5d",
+        "5d5a673a-a2b4-40e4-8d77-cf929841144f",
+        "523fbca3-80bf-4486-8cbd-fcf4255575cc"
+      ]
+    },
+    {
+      "old_url": "https://bsllkpvkowwndhhxtlln.supabase.co/storage/v1/object/public/event-posters/import-stamped/evadahlgrenhalmstadsteater-halmstadsteater.png",
+      "old_storage_path": "event-posters/import-stamped/evadahlgrenhalmstadsteater-halmstadsteater.png",
+      "event_count": 17,
+      "category_slug": "music",
+      "sample_titles": [
+        "JOHAN ÖSTLING - PJÄS",
+        "Rama Lama 10 år! ",
+        "Hvalfugl"
+      ],
+      "sample_event_ids": [
+        "1013c10d-78ad-4154-9f20-ef443d7dc7dd",
+        "ca10acfc-de4e-45ca-9010-6f19aad681a9",
+        "0481937e-7cf7-4a17-ace8-fb7028cb7ca9"
+      ]
+    },
+    {
+      "old_url": "https://bsllkpvkowwndhhxtlln.supabase.co/storage/v1/object/public/event-posters/import-stamped/sknskaskrnor3-omsknskaventyraregodmatgrndensmat-grndensmat.png",
+      "old_storage_path": "event-posters/import-stamped/sknskaskrnor3-omsknskaventyraregodmatgrndensmat-grndensmat.png",
+      "event_count": 17,
+      "category_slug": "music",
+      "sample_titles": [
+        "Ingrid Schyborger solo + Äleklint Combo",
+        "GREATEST 80'S - THE PARTY",
+        "Svartklubben - Mat & Musik i Mörker"
+      ],
+      "sample_event_ids": [
+        "25bbd85a-a54f-43b1-be9c-63c372bc4ea2",
+        "fe38a2d5-1b66-4368-bd84-3786a97897f1",
+        "c96d6829-2e41-478b-a341-4b9dc3a6cfc0"
+      ]
+    },
+    {
+      "old_url": "https://bsllkpvkowwndhhxtlln.supabase.co/storage/v1/object/public/event-posters/import-stamped/theweekndafterhourstildawntour-strawberryarena.png",
+      "old_storage_path": "event-posters/import-stamped/theweekndafterhourstildawntour-strawberryarena.png",
+      "event_count": 17,
+      "category_slug": "music",
+      "sample_titles": [
+        "1/4 SYNNE VO | DEBASER STRAND",
+        "Rodrigo y Gabriela Our Home Tour",
+        "Stockholm Intiman | Emmi Christensson & Rickard Söderberg - En Fridfull Jul"
+      ],
+      "sample_event_ids": [
+        "3e8db2df-015f-405b-a7c2-95e3e666b3c2",
+        "b9bf20ab-959a-4bb3-8688-63fd8817c19a",
+        "41632f14-cab2-4521-9363-597b024a6f54"
+      ]
+    },
+    {
+      "old_url": "https://bsllkpvkowwndhhxtlln.supabase.co/storage/v1/object/public/event-posters/import-stamped/cockneyrejectskulturhuset-kulturhuset.png",
+      "old_storage_path": "event-posters/import-stamped/cockneyrejectskulturhuset-kulturhuset.png",
+      "event_count": 17,
+      "category_slug": "music",
+      "sample_titles": [
+        "Julkonsert",
+        "Svartklubben - Mat & Musik i Mörker",
+        "aespa"
+      ],
+      "sample_event_ids": [
+        "c0cb14d9-1144-4a8d-93c6-6bbcb593e080",
+        "5a49a22f-a7f6-4503-8a1a-5c04634e48ac",
+        "6198da9c-c882-4796-9a6b-2ce58c87e185"
+      ]
+    },
+    {
+      "old_url": "https://bsllkpvkowwndhhxtlln.supabase.co/storage/v1/object/public/event-posters/import-stamped/bjrnrosenstrmskansen-skansen.png",
+      "old_storage_path": "event-posters/import-stamped/bjrnrosenstrmskansen-skansen.png",
+      "event_count": 17,
+      "category_slug": "music",
+      "sample_titles": [
+        "Miltons feat. Kiralina Salandy",
+        "Amanda Ginsburg @ Södra Teatern",
+        "Angus-The ultimate AC/DC tribute – Pumphuset"
+      ],
+      "sample_event_ids": [
+        "6ade0d4f-be2d-4080-9350-a4a3d53756c3",
+        "08b5b93c-3076-4cc4-94d4-e484c5c78cab",
+        "f4aab035-4892-4831-9bc2-372658cf1e26"
+      ]
+    },
+    {
+      "old_url": "https://bsllkpvkowwndhhxtlln.supabase.co/storage/v1/object/public/event-posters/import-stamped/trickbagmusikhusetnedreplan-musikhusetnedreplan.png",
+      "old_storage_path": "event-posters/import-stamped/trickbagmusikhusetnedreplan-musikhusetnedreplan.png",
+      "event_count": 17,
+      "category_slug": "music",
+      "sample_titles": [
+        "ULD",
+        "Helena Nordin \"Stories of a thousand heartbeats\"",
+        "Everything Yes | Stockholm Jazz Festival"
+      ],
+      "sample_event_ids": [
+        "b93d087d-d653-42c1-953c-871f4268bc2f",
+        "58ccef3d-402d-4782-9a66-62e14d10b233",
+        "76ae96d1-49bc-4be2-81bc-277675049add"
+      ]
+    },
+    {
+      "old_url": "https://bsllkpvkowwndhhxtlln.supabase.co/storage/v1/object/public/event-posters/import-stamped/6lackfllan-fllan.png",
+      "old_storage_path": "event-posters/import-stamped/6lackfllan-fllan.png",
+      "event_count": 17,
+      "category_slug": "music",
+      "sample_titles": [
+        "THE HALO EFFECT  - European Tour 2027",
+        "Trickbag – E-Street",
+        "Tungsten - Ashes Tour 2026 | Stockholm"
+      ],
+      "sample_event_ids": [
+        "21975567-e493-4e58-973a-e754ac385c5b",
+        "f88f84f1-9ac3-4c2e-b61d-9f8a875faef6",
+        "3c0a5115-4da5-4947-b83d-bf4ae063facf"
+      ]
+    },
+    {
+      "old_url": "https://bsllkpvkowwndhhxtlln.supabase.co/storage/v1/object/public/event-posters/import-stamped/pinkturnsbluereimersholmehotel-reimersholmehotel.png",
+      "old_storage_path": "event-posters/import-stamped/pinkturnsbluereimersholmehotel-reimersholmehotel.png",
+      "event_count": 17,
+      "category_slug": "music",
+      "sample_titles": [
+        "Brahms Requiem med Lunds Studentsångare – Växjö Domkyrka",
+        "ÖMK Académie konsert",
+        "Open Stage - jam för sångare och musiker"
+      ],
+      "sample_event_ids": [
+        "f88fe3b5-49da-49a5-adc4-ce71d2889a8c",
+        "d955d2d5-df25-433d-a6d2-755453c81d41",
+        "7752f60d-42f4-4ed0-9994-9c4b20f63962"
+      ]
+    },
+    {
+      "old_url": "https://bsllkpvkowwndhhxtlln.supabase.co/storage/v1/object/public/event-posters/import-stamped/torssonattviljamenintekunnajnkpingteater-jnkpingteater.png",
+      "old_storage_path": "event-posters/import-stamped/torssonattviljamenintekunnajnkpingteater-jnkpingteater.png",
+      "event_count": 17,
+      "category_slug": "music",
+      "sample_titles": [
+        "Tinie Tempah",
+        "Summoning Of Darkness Festival 2026",
+        "Danny Grissett @ Fasching"
+      ],
+      "sample_event_ids": [
+        "32247d17-6a14-42e9-9020-f3a843630c30",
+        "e2715b3d-7f8e-4c6b-8106-9ffb063f0dda",
+        "e30680b7-f8ac-49ee-8bc1-dc8616c082b5"
+      ]
+    },
+    {
+      "old_url": "https://bsllkpvkowwndhhxtlln.supabase.co/storage/v1/object/public/event-posters/import-stamped/torsson-attviljamenintekunna-konsistoriegatan7.png",
+      "old_storage_path": "event-posters/import-stamped/torsson-attviljamenintekunna-konsistoriegatan7.png",
+      "event_count": 17,
+      "category_slug": "music",
+      "sample_titles": [
+        "Klara Tapper Kvartett",
+        "Dirty Three",
+        "SCHUBERT SYMFONI NR 3  - Kungliga Filharmonikerna, Herbert Blomstedt, dirigent"
+      ],
+      "sample_event_ids": [
+        "48773e30-6aa0-46f4-89c0-3c4be078ea46",
+        "ef7dfccf-7f59-41fa-a4f8-2516c1b0b057",
+        "31a89e74-5f40-4b87-8343-34236f63fc36"
+      ]
+    },
+    {
+      "old_url": "https://bsllkpvkowwndhhxtlln.supabase.co/storage/v1/object/public/event-posters/import-stamped/quiltysommarkonsertpholmbergetholmberget-holmberget.png",
+      "old_storage_path": "event-posters/import-stamped/quiltysommarkonsertpholmbergetholmberget-holmberget.png",
+      "event_count": 17,
+      "category_slug": "music",
+      "sample_titles": [
+        "BERIDNA HÖGVAKTEN - I KRIG OCH FRED  - Livgardets dragonmusikkår, Karl-Magnus Fredriksson",
+        "Nacka Big Band - Christmas Extravaganza",
+        "Från Broadway till Duvemåla"
+      ],
+      "sample_event_ids": [
+        "05e0693d-1189-4905-a55e-ff227afe3020",
+        "3d65d664-f781-4736-a316-52c540f796e3",
+        "d26cae23-9112-4f99-b977-c2692bb592d6"
+      ]
+    },
+    {
+      "old_url": "https://bsllkpvkowwndhhxtlln.supabase.co/storage/v1/object/public/event-posters/import-stamped/mamasgunkollektivetlivet-kollektivetlivet.png",
+      "old_storage_path": "event-posters/import-stamped/mamasgunkollektivetlivet-kollektivetlivet.png",
+      "event_count": 17,
+      "category_slug": "music",
+      "sample_titles": [
+        "Wallmans International Dinnershow",
+        "DARE - Road to (Sw)Eden tour 2026 pt 2 – Garden",
+        "Sam Gendel @ Fasching"
+      ],
+      "sample_event_ids": [
+        "83cb5722-95ce-45d3-9368-e0b496e8b75b",
+        "c8e2170e-5f36-4b3a-972c-65ea1e15eb83",
+        "7abc3653-b745-4c44-be63-900b2538e2b9"
+      ]
+    },
+    {
+      "old_url": "https://bsllkpvkowwndhhxtlln.supabase.co/storage/v1/object/public/event-posters/import-stamped/oktoberfestpsaluhallensaluhallen-saluhallen.png",
+      "old_storage_path": "event-posters/import-stamped/oktoberfestpsaluhallensaluhallen-saluhallen.png",
+      "event_count": 17,
+      "category_slug": "music",
+      "sample_titles": [
+        "Anna-Lotta Larsson",
+        "Quilty - Out on The Ocean – Kulturbaren, Folkets Hus Kulturhuset",
+        "Torka aldrig tårar utan handskar Tickets, Tour and Concert Dates – www.gotalejon.se"
+      ],
+      "sample_event_ids": [
+        "27ad656e-1310-4bc2-b360-652681966780",
+        "5689d4db-b309-4b06-a675-25cae12bd652",
+        "8d81bbc6-2fd9-4c64-b1c3-d923c9991b08"
+      ]
+    },
+    {
+      "old_url": "https://bsllkpvkowwndhhxtlln.supabase.co/storage/v1/object/public/event-posters/import-stamped/bystrmochtjajkovskijstage1-stage1.png",
+      "old_storage_path": "event-posters/import-stamped/bystrmochtjajkovskijstage1-stage1.png",
+      "event_count": 17,
+      "category_slug": "music",
+      "sample_titles": [
+        "A Tribute to Dire Straits – Kulturhuset tio14",
+        "Lena från Vetlanda",
+        "DISCO INFERNO – Sweden's Biggest Disco Show"
+      ],
+      "sample_event_ids": [
+        "9a5c997b-64d3-4b1f-aa2b-63b162d2b664",
+        "1bae19c5-3ed1-466b-893d-3d67f540614c",
+        "af4dfa35-0a92-4bc7-85e7-7a0b03f0664d"
+      ]
+    },
+    {
+      "old_url": "https://bsllkpvkowwndhhxtlln.supabase.co/storage/v1/object/public/event-posters/import-stamped/themusicofcoldplayunpluggedystadsteater-ystadsteater.png",
+      "old_storage_path": "event-posters/import-stamped/themusicofcoldplayunpluggedystadsteater-ystadsteater.png",
+      "event_count": 17,
+      "category_slug": "music",
+      "sample_titles": [
+        "Immanuel Wilkins Quartet",
+        "Jazzsalong: Nina Simone & Other Moods",
+        "DARE - Road to (Sw)Eden tour 2026 pt 2"
+      ],
+      "sample_event_ids": [
+        "fc8fa913-2fbd-4b65-bf65-06c986fe2966",
+        "43fa93a3-b080-4fd3-b229-3ff60c70a326",
+        "0583ee11-b002-45ef-81fa-cc46ac5760be"
+      ]
+    },
+    {
+      "old_url": "https://bsllkpvkowwndhhxtlln.supabase.co/storage/v1/object/public/event-posters/import-stamped/nobusinesslikeshowbusiness-konsertsalen.png",
+      "old_storage_path": "event-posters/import-stamped/nobusinesslikeshowbusiness-konsertsalen.png",
+      "event_count": 17,
+      "category_slug": "music",
+      "sample_titles": [
+        "Swing Magnifique",
+        "The Delines | Debaser Nova",
+        "David Eugene Edwards"
+      ],
+      "sample_event_ids": [
+        "99599c5f-a7c1-4b0f-97a8-37981f36ffbb",
+        "666ed117-0005-4115-84ed-501733ebd17a",
+        "bd3f8aea-dc3c-4ce0-a366-fe1a19b412f6"
+      ]
+    },
+    {
+      "old_url": "https://bsllkpvkowwndhhxtlln.supabase.co/storage/v1/object/public/event-posters/import-stamped/julialogansnickeriet-snickeriet.png",
+      "old_storage_path": "event-posters/import-stamped/julialogansnickeriet-snickeriet.png",
+      "event_count": 17,
+      "category_slug": "music",
+      "sample_titles": [
+        "ELVIS, ELVIS, ELVIS! – 2026 – Idun, Umeå Folkets Hus",
+        "KPOP FOREVER!",
+        "Unna dig en lycklig liten jul"
+      ],
+      "sample_event_ids": [
+        "c6353dc8-4fce-4a80-97fd-b83c5504ead8",
+        "e5f1301e-192b-4f4e-804d-e915b96d8ef0",
+        "ec4ecf71-4396-462e-9da8-f1430cabe3ce"
+      ]
+    },
+    {
+      "old_url": "https://bsllkpvkowwndhhxtlln.supabase.co/storage/v1/object/public/event-posters/import-stamped/afrorave-debaserstrand.png",
+      "old_storage_path": "event-posters/import-stamped/afrorave-debaserstrand.png",
+      "event_count": 17,
+      "category_slug": "music",
+      "sample_titles": [
+        "Wallmans International Dinnershow",
+        "En kväll att minnas med &#8211; Sten &amp; Stanley",
+        "Musikcaféserien - Ethno on the road – Olsbergs Arena"
+      ],
+      "sample_event_ids": [
+        "b618af91-fc2a-479b-80b3-0dd0406c7f10",
+        "02632738-454d-4cb7-a5a0-5397d1e6d297",
+        "707acfb4-aa9e-45d9-8401-b1fc9a87e7ca"
+      ]
+    },
+    {
+      "old_url": "https://bsllkpvkowwndhhxtlln.supabase.co/storage/v1/object/public/event-posters/import-stamped/sofiehagen-sdrateatern.png",
+      "old_storage_path": "event-posters/import-stamped/sofiehagen-sdrateatern.png",
+      "event_count": 17,
+      "category_slug": "music",
+      "sample_titles": [
+        "KPOP FOREVER!",
+        "Dungen | Vasateatern, Stockholm ",
+        "Wallmans International Dinnershow"
+      ],
+      "sample_event_ids": [
+        "f9679fc5-a86f-4c22-a0f0-dffdfb1a059b",
+        "478d8410-66e8-4e35-8f2a-443bfd98f884",
+        "eed892b1-27e2-47f6-810d-6ffe75982f4c"
+      ]
+    },
+    {
+      "old_url": "https://bsllkpvkowwndhhxtlln.supabase.co/storage/v1/object/public/event-posters/import-stamped/thehardkissberns-berns.png",
+      "old_storage_path": "event-posters/import-stamped/thehardkissberns-berns.png",
+      "event_count": 17,
+      "category_slug": "music",
+      "sample_titles": [
+        "Tarabband",
+        "Benjamin Ingrosso @ Avicii Arena",
+        "SWOTE"
+      ],
+      "sample_event_ids": [
+        "69d1b02e-f2ca-48cf-b53f-563e21c123b2",
+        "ca83b6a8-f11c-4b4d-a628-98e01aceb1e8",
+        "953b7ccc-ca6b-4d12-bcb2-29f6be22a697"
+      ]
+    },
+    {
+      "old_url": "https://bsllkpvkowwndhhxtlln.supabase.co/storage/v1/object/public/event-posters/import-stamped/andreashourdakisgroupkulturhusetnajaden-foajscenen-kulturhusetnajaden-foajscenen.png",
+      "old_storage_path": "event-posters/import-stamped/andreashourdakisgroupkulturhusetnajaden-foajscenen-kulturhusetnajaden-foajscenen.png",
+      "event_count": 17,
+      "category_slug": "music",
+      "sample_titles": [
+        "BENJAMIN INGROSSO | WHAT HAPPENS NEXT? – Gärdehov",
+        "STINT",
+        "Tennessee Tears"
+      ],
+      "sample_event_ids": [
+        "95f40a55-29e3-4a4d-b751-8365242b35c0",
+        "17336dd3-b077-46c2-8def-856185309d8c",
+        "47523ba9-f97f-42cc-800b-c2a465ee60d6"
+      ]
+    },
+    {
+      "old_url": "https://bsllkpvkowwndhhxtlln.supabase.co/storage/v1/object/public/event-posters/import-stamped/thearkulriksdalsslott-ulriksdalsslott.png",
+      "old_storage_path": "event-posters/import-stamped/thearkulriksdalsslott-ulriksdalsslott.png",
+      "event_count": 17,
+      "category_slug": "music",
+      "sample_titles": [
+        "Tanani - Herluf-Pedersen/Jonasson/Paco",
+        "FÏX8:SËD8",
+        "Sweden Zumba Festival Stockholm Halloween Party ft. William The Wild Shaker"
+      ],
+      "sample_event_ids": [
+        "c7a004bd-27bd-4219-8fa2-196404b3f49b",
+        "3ce81603-0012-40bb-922c-9c9dfed82bca",
+        "9a183534-9a33-4d15-9e80-9910c9f650a1"
+      ]
+    },
+    {
+      "old_url": "https://bsllkpvkowwndhhxtlln.supabase.co/storage/v1/object/public/event-posters/import-stamped/atokarlssoneskilstunaeskilstunateater-eskilstunateater.png",
+      "old_storage_path": "event-posters/import-stamped/atokarlssoneskilstunaeskilstunateater-eskilstunateater.png",
+      "event_count": 17,
+      "category_slug": "music",
+      "sample_titles": [
+        "Vi sjunger in advent! ",
+        "Euskefeurat - Maränger och surdeg – Studio Acusticum, Stora Salen",
+        "Soweto Gospel Choir @ Nya Cirkus"
+      ],
+      "sample_event_ids": [
+        "1ba75219-5915-4d39-b9ba-d2a9d254ca96",
+        "fd1e551a-fa38-43b8-82bc-6151a5cf54a1",
+        "f15052fb-e75f-407c-8117-7bc6fadb31cf"
+      ]
+    },
+    {
+      "old_url": "https://bsllkpvkowwndhhxtlln.supabase.co/storage/v1/object/public/event-posters/import-stamped/dannestrhedpbackagrdenbackagrdensterlen-backagrdensterlen.png",
+      "old_storage_path": "event-posters/import-stamped/dannestrhedpbackagrdenbackagrdensterlen-backagrdensterlen.png",
+      "event_count": 17,
+      "category_slug": "music",
+      "sample_titles": [
+        "POLINA OSETINSKAYA:VÅRKONSERT  - Stjärnpianisten spelar Bach, Beethoven och Franck",
+        "TARJA",
+        "MAMMA MIA! THE PARTY"
+      ],
+      "sample_event_ids": [
+        "a3bcd4e2-6d7a-41db-9a56-8fe704c57d59",
+        "f792ff93-da68-4420-9eeb-64de9b98e369",
+        "2eac49c8-c05b-433e-befd-21dbe8a5b270"
+      ]
+    },
+    {
+      "old_url": "https://bsllkpvkowwndhhxtlln.supabase.co/storage/v1/object/public/event-posters/import-stamped/hselfwintervikenlive-wintervikenlive.png",
+      "old_storage_path": "event-posters/import-stamped/hselfwintervikenlive-wintervikenlive.png",
+      "event_count": 17,
+      "category_slug": "music",
+      "sample_titles": [
+        "Julkonsert - stjärnan, barnet och änglarna",
+        "The High Society - A Rat Pack Celebration!",
+        "BEETHOVEN SYMFONI NR 2  - Gävle Symfoniorkester, Christian Reif, dirigent"
+      ],
+      "sample_event_ids": [
+        "02c1eb4e-7adc-4571-9731-9ece2fe4acad",
+        "4592cad1-9ee6-42f5-8c47-2626f62a93de",
+        "21f0af35-faea-4452-9984-9414fbb11afb"
+      ]
+    },
+    {
+      "old_url": "https://bsllkpvkowwndhhxtlln.supabase.co/storage/v1/object/public/event-posters/import-stamped/masgob-k-b-k.png",
+      "old_storage_path": "event-posters/import-stamped/masgob-k-b-k.png",
+      "event_count": 17,
+      "category_slug": "music",
+      "sample_titles": [
+        "John Craigie",
+        "Stjärnjul 2026",
+        "The Magic Numbers"
+      ],
+      "sample_event_ids": [
+        "7cb5b8c5-cfcd-4416-98e4-f5458b0dcf14",
+        "d8b7d33a-4a2f-465d-9168-f1251c923c20",
+        "99fb97a9-7952-4acd-8c80-58695dd3561c"
+      ]
+    },
+    {
+      "old_url": "https://bsllkpvkowwndhhxtlln.supabase.co/storage/v1/object/public/event-posters/import-stamped/the12tenors-songsofeternity-konsertsalen.png",
+      "old_storage_path": "event-posters/import-stamped/the12tenors-songsofeternity-konsertsalen.png",
+      "event_count": 17,
+      "category_slug": "music",
+      "sample_titles": [
+        "Madison Mcferrin",
+        "Arne Alligator & Djungeltrumman – Västerås Kongress",
+        "LEONKORO QUARTETT"
+      ],
+      "sample_event_ids": [
+        "a01b42e8-dca6-46b9-bc9b-36afa28a6140",
+        "e3c49add-42e4-4efd-9f98-de76a1b874fb",
+        "95424b30-8369-4b0d-a3e8-e06450b1eee0"
+      ]
+    },
+    {
+      "old_url": "https://bsllkpvkowwndhhxtlln.supabase.co/storage/v1/object/public/event-posters/import-stamped/albansknderajannexet-annexet.png",
+      "old_storage_path": "event-posters/import-stamped/albansknderajannexet-annexet.png",
+      "event_count": 17,
+      "category_slug": "music",
+      "sample_titles": [
+        "Malmö Palladium | Emmi Christensson & Rickard Söderberg - En Fridfull Jul",
+        "Robert Wells ”40 år vid flygeln” – Folkan Teater",
+        "Min pappa Errol – En musikalisk berättelse om Eddie Meduza – Auditoriet"
+      ],
+      "sample_event_ids": [
+        "4bab0da0-438f-4c6c-896d-622057b9e300",
+        "af5c3b52-2284-4bc7-9278-7114168e1f04",
+        "d78b3f0e-dcf6-4d09-be7a-fe570514bbec"
+      ]
+    },
+    {
+      "old_url": "https://bsllkpvkowwndhhxtlln.supabase.co/storage/v1/object/public/event-posters/import-stamped/kaizersorchestrafllan-fllan.png",
+      "old_storage_path": "event-posters/import-stamped/kaizersorchestrafllan-fllan.png",
+      "event_count": 17,
+      "category_slug": "music",
+      "sample_titles": [
+        "Får jag vara med - Sarah Riedel sjunger Stina Wirsén",
+        "Golden Hits Dinnershow Nyårsafton 2026",
+        "MOZART SINFONIA CONCERTANTE  - Kungliga Filharmonikerna, Ryan Bancroft, dirigent - Janine Jansen, violin - Timothy Ridout, viola"
+      ],
+      "sample_event_ids": [
+        "df58d4a0-5f0b-439e-a5e7-76cdbb66f279",
+        "6c0779d3-a9c7-49cd-8624-59823cb9e4fa",
+        "5335b35c-ed79-4be8-bad7-4954f5509214"
+      ]
+    },
+    {
+      "old_url": "https://bsllkpvkowwndhhxtlln.supabase.co/storage/v1/object/public/event-posters/import-stamped/stolofskapell-visaftonikapelletstolofskapelltylsand-stolofskapelltylsand.png",
+      "old_storage_path": "event-posters/import-stamped/stolofskapell-visaftonikapelletstolofskapelltylsand-stolofskapelltylsand.png",
+      "event_count": 17,
+      "category_slug": "music",
+      "sample_titles": [
+        "KAY KHOSROWS VÄG",
+        "Alice In Videoland + Priest - Debaser Strand",
+        "Afro Reggae Mania Ep2"
+      ],
+      "sample_event_ids": [
+        "09e5567b-c5c6-4246-b551-bfda9a909ffa",
+        "044decfc-25d7-486b-b7ae-a758d86f646a",
+        "4c9e8df5-7f72-4d53-b59d-5b7a41126177"
+      ]
+    },
+    {
+      "old_url": "https://bsllkpvkowwndhhxtlln.supabase.co/storage/v1/object/public/event-posters/import-stamped/thesoundtrackofourlivesmosebacketerrassen-mosebacketerrassen.png",
+      "old_storage_path": "event-posters/import-stamped/thesoundtrackofourlivesmosebacketerrassen-mosebacketerrassen.png",
+      "event_count": 17,
+      "category_slug": "music",
+      "sample_titles": [
+        "Pop Choir Concert 2026  - med Vocal House",
+        "KAYHAN KALHOR - VOICE OF ETERNITY  - Pangean Rhytm",
+        "HYBRIS HEALERS + LOVE RÖNNLUND"
+      ],
+      "sample_event_ids": [
+        "8991e9e7-585a-4a83-87f2-4b424d7ee1b0",
+        "539324a2-1333-43cd-b264-59207c94950c",
+        "64e0cd06-4118-4f61-aea0-169cbfbc4509"
+      ]
+    },
+    {
+      "old_url": "https://bsllkpvkowwndhhxtlln.supabase.co/storage/v1/object/public/event-posters/import-stamped/benjaminingrossoaviciiarena-aviciiarena.png",
+      "old_storage_path": "event-posters/import-stamped/benjaminingrossoaviciiarena-aviciiarena.png",
+      "event_count": 17,
+      "category_slug": "music",
+      "sample_titles": [
+        "John Craigie",
+        "SKANDINAVIENGALAN 2027",
+        " Dolly Style, Familjeshowen I Luleå"
+      ],
+      "sample_event_ids": [
+        "30cf2520-d204-484d-96ac-e65eed459ba2",
+        "9c241a90-e778-4751-86cf-7c80a2f6726e",
+        "03ccaaec-509d-4ce7-b6a4-d7fdcd65b7f3"
+      ]
+    },
+    {
+      "old_url": "https://bsllkpvkowwndhhxtlln.supabase.co/storage/v1/object/public/event-posters/import-stamped/wulyfnalenklubb-nalenklubb.png",
+      "old_storage_path": "event-posters/import-stamped/wulyfnalenklubb-nalenklubb.png",
+      "event_count": 17,
+      "category_slug": "music",
+      "sample_titles": [
+        "Upptäck sekelskiftets balettmusik",
+        "Hökis Visrum Presenterar Caroline & Stefan",
+        "The Sheepdogs"
+      ],
+      "sample_event_ids": [
+        "f1f1fa58-e731-4bde-b4c3-1a7c0567683f",
+        "0de55389-e88e-485f-85cd-fa0e48ba26bc",
+        "f06103fb-8c9b-4a2a-9eb9-565f2bbcdffd"
+      ]
+    },
+    {
+      "old_url": "https://bsllkpvkowwndhhxtlln.supabase.co/storage/v1/object/public/event-posters/import-stamped/deeppurpleplatinumtickets-.png",
+      "old_storage_path": "event-posters/import-stamped/deeppurpleplatinumtickets-.png",
+      "event_count": 17,
+      "category_slug": "music",
+      "sample_titles": [
+        "Hökis Visrum Presenterar Elins Backe",
+        "Hökis Visrum i samarbete med Studiefrämjandet  Presenterar öppen scen",
+        "DOUG SEEGERS & EMILIA LINDBERG (songs we sing) BY THE RIVERSIDE"
+      ],
+      "sample_event_ids": [
+        "9aa08d2b-9c8b-4da1-8642-43ff2e8cda22",
+        "620386b7-802a-471a-9b13-59cf80edefc7",
+        "5a542cd7-3c06-4bcd-8bec-742c64ba228d"
+      ]
+    },
+    {
+      "old_url": "https://bsllkpvkowwndhhxtlln.supabase.co/storage/v1/object/public/event-posters/import-stamped/badbunny-debtirarmsfotosworldtour-strawberryarena.png",
+      "old_storage_path": "event-posters/import-stamped/badbunny-debtirarmsfotosworldtour-strawberryarena.png",
+      "event_count": 17,
+      "category_slug": "music",
+      "sample_titles": [
+        "ROCKMYTIKALEN -THE TIVOLI 30ÅR – The Tivoli",
+        "The World of Sevdah and More – PB-Hallen",
+        "Wallmans International Dinnershow"
+      ],
+      "sample_event_ids": [
+        "73be2aff-133d-443c-8952-fbf90ded2a70",
+        "b19e8ea8-86b2-4736-bcfa-2f3e9d57f7dd",
+        "761e9ec0-f705-4a53-95b3-5a7d882a4036"
+      ]
+    },
+    {
+      "old_url": "https://bsllkpvkowwndhhxtlln.supabase.co/storage/v1/object/public/event-posters/import-stamped/nannegrnwall-hrrjag-konsertsalen.png",
+      "old_storage_path": "event-posters/import-stamped/nannegrnwall-hrrjag-konsertsalen.png",
+      "event_count": 17,
+      "category_slug": "music",
+      "sample_titles": [
+        "1900 – En audiovisuell konsert",
+        "nimino - keep me awake tour",
+        "The Fray - Autumn Light Tour"
+      ],
+      "sample_event_ids": [
+        "02e6d7ce-c881-47b1-825c-6384ed0a69dc",
+        "480fbb4c-46e0-42ab-9077-5be9adad19eb",
+        "fdb8f2b5-be65-4200-b925-b1c01ef5cec8"
+      ]
+    },
+    {
+      "old_url": "https://bsllkpvkowwndhhxtlln.supabase.co/storage/v1/object/public/event-posters/import-stamped/bagjanoktyabrgtalejon-gtalejon.png",
+      "old_storage_path": "event-posters/import-stamped/bagjanoktyabrgtalejon-gtalejon.png",
+      "event_count": 17,
+      "category_slug": "music",
+      "sample_titles": [
+        "beabadoobee: The Powerlines Tour",
+        "Boy In Space",
+        "GLENN MILLER ORCHESTRA  - Christmas Show 2026"
+      ],
+      "sample_event_ids": [
+        "a27e6c57-2fdf-4002-8460-fe744041b2b9",
+        "d1943f5e-1060-4063-857a-918968f5284c",
+        "90beacb1-afa2-4fa0-a139-79c5332a724c"
+      ]
+    },
+    {
+      "old_url": "https://bsllkpvkowwndhhxtlln.supabase.co/storage/v1/object/public/event-posters/import-stamped/tommykrberg-unpluggedhalmstadsteater-halmstadsteater.png",
+      "old_storage_path": "event-posters/import-stamped/tommykrberg-unpluggedhalmstadsteater-halmstadsteater.png",
+      "event_count": 17,
+      "category_slug": "music",
+      "sample_titles": [
+        "Josef Slunge – Mejeriet",
+        "Dans till Kjellez – Gustaf Fröding Hotell & Konferens",
+        "Strzalek/Svanberg/Arborelius"
+      ],
+      "sample_event_ids": [
+        "41b718d8-9f35-428e-8ca6-856575bbef4d",
+        "6dfad3bf-0efb-4cba-8559-cf258027b676",
+        "4158a76a-9b38-44a4-8dea-eeb45e1b7cf2"
+      ]
+    },
+    {
+      "old_url": "https://bsllkpvkowwndhhxtlln.supabase.co/storage/v1/object/public/event-posters/import-stamped/stockholmswingallstars-spiritofellingtoncentralteaterngvlefolketshus-centralteaterngvlefolketshus.png",
+      "old_storage_path": "event-posters/import-stamped/stockholmswingallstars-spiritofellingtoncentralteaterngvlefolketshus-centralteaterngvlefolketshus.png",
+      "event_count": 17,
+      "category_slug": "music",
+      "sample_titles": [
+        "Jasper Høiby 3Elements",
+        "Tuva Bergenheim - Skärgårdsjazz",
+        "Tyla - THE A*POP WORLD TOUR"
+      ],
+      "sample_event_ids": [
+        "fbf28b78-ad8d-4776-a596-e27ae4150541",
+        "bf9a60b6-c5a4-4612-8a0a-39f575e99a47",
+        "e54990e5-a543-47ae-b5c4-f45be4fb9aaa"
+      ]
+    },
+    {
+      "old_url": "https://bsllkpvkowwndhhxtlln.supabase.co/storage/v1/object/public/event-posters/import-stamped/stonemountainorchestraampolebrud-kuben.png",
+      "old_storage_path": "event-posters/import-stamped/stonemountainorchestraampolebrud-kuben.png",
+      "event_count": 17,
+      "category_slug": "music",
+      "sample_titles": [
+        "Fatoumata Diawara in Stockholm",
+        "Våreld med Orozco-Estrada & Byström",
+        "Music from Vienna"
+      ],
+      "sample_event_ids": [
+        "36ea098b-1fe8-40cc-9e97-48df9a18677f",
+        "b007a835-b4bf-43aa-9f43-940f7ddb7ebf",
+        "65439af7-c32f-44f1-93af-b8ff8085f570"
+      ]
+    },
+    {
+      "old_url": "https://bsllkpvkowwndhhxtlln.supabase.co/storage/v1/object/public/event-posters/import-stamped/pattismithquartet-cirkus.png",
+      "old_storage_path": "event-posters/import-stamped/pattismithquartet-cirkus.png",
+      "event_count": 17,
+      "category_slug": "music",
+      "sample_titles": [
+        "ELSA RUNDBOM KVARTETT",
+        "Lavina",
+        "Belonging 50 år - Paulsberg/Hulbækmo/Fiske/Storaas"
+      ],
+      "sample_event_ids": [
+        "fe259d59-7080-4f35-a1be-47f1accbe9ce",
+        "6b71433b-f95a-430d-8dc3-253d7f9b25f2",
+        "1fb52f50-fe45-48a2-8b28-ef2acab5a104"
+      ]
+    },
+    {
+      "old_url": "https://bsllkpvkowwndhhxtlln.supabase.co/storage/v1/object/public/event-posters/import-stamped/valternilssonlokomotivetlokomotivet-lokomotivet.png",
+      "old_storage_path": "event-posters/import-stamped/valternilssonlokomotivetlokomotivet-lokomotivet.png",
+      "event_count": 17,
+      "category_slug": "music",
+      "sample_titles": [
+        "In Flames - EUROPEAN TOUR 2027",
+        "Mica Millar",
+        "Ensemble Anaracho feat. Andreas Hourdakis & Fredrik Nordström"
+      ],
+      "sample_event_ids": [
+        "6c72fd7a-ca57-4b4c-b4aa-8f0831d177c4",
+        "5d2a2f33-8392-4841-aa34-bacea303b467",
+        "a6ab54d5-e78e-48ac-bbb8-9d0c40fd911d"
+      ]
+    },
+    {
+      "old_url": "https://bsllkpvkowwndhhxtlln.supabase.co/storage/v1/object/public/event-posters/import-stamped/eltonjohnmeetsfreddiemercurysciencevillage-sciencevillage.png",
+      "old_storage_path": "event-posters/import-stamped/eltonjohnmeetsfreddiemercurysciencevillage-sciencevillage.png",
+      "event_count": 17,
+      "category_slug": "music",
+      "sample_titles": [
+        "IBEX band l Selam Festival Stockholm",
+        "Lovad - 17 okt Pustervik Göteborg",
+        "Omah Lay"
+      ],
+      "sample_event_ids": [
+        "54eedc69-2e8f-498d-93db-b1f0308a9f57",
+        "b43e864f-b9a7-4a13-b58e-bab7bd52121b",
+        "00d801c5-01f5-4c71-a5f6-6bed93d6f57e"
+      ]
+    },
+    {
+      "old_url": "https://bsllkpvkowwndhhxtlln.supabase.co/storage/v1/object/public/event-posters/import-stamped/djkrushkollektivetlivet-kollektivetlivet.png",
+      "old_storage_path": "event-posters/import-stamped/djkrushkollektivetlivet-kollektivetlivet.png",
+      "event_count": 17,
+      "category_slug": "music",
+      "sample_titles": [
+        "Organ Day",
+        "Jonas Lundqvist | Katalin Uppsala",
+        "Golden Hits Dinnershow"
+      ],
+      "sample_event_ids": [
+        "44d96718-55c6-4691-bccd-a951f7f1f097",
+        "992f5071-c228-4039-8023-f7cb4eb83a57",
+        "c353acf6-6ca6-4d75-914c-518a2b7439f9"
+      ]
+    },
+    {
+      "old_url": "https://bsllkpvkowwndhhxtlln.supabase.co/storage/v1/object/public/event-posters/import-stamped/kneecap-b-k.png",
+      "old_storage_path": "event-posters/import-stamped/kneecap-b-k.png",
+      "event_count": 17,
+      "category_slug": "music",
+      "sample_titles": [
+        "Allsång i Hjorthagen med Anders, Bo & Kerstin!",
+        "Bowie in Berlin",
+        "TSITSANIS & LOΪZOS möter AFZELIUS!"
+      ],
+      "sample_event_ids": [
+        "4da5d192-c075-42ed-8095-09b92637b55f",
+        "6965b506-84ca-499a-871a-b81128ae06c8",
+        "1ab7a293-9b90-4caf-9199-fa0cd5e56ea6"
+      ]
+    },
+    {
+      "old_url": "https://bsllkpvkowwndhhxtlln.supabase.co/storage/v1/object/public/event-posters/import-stamped/systemofadown-strawberryarena.png",
+      "old_storage_path": "event-posters/import-stamped/systemofadown-strawberryarena.png",
+      "event_count": 17,
+      "category_slug": "music",
+      "sample_titles": [
+        "Elvis Elvis Elvis! – Garden",
+        "Jul med Franska Trion",
+        "Mattias Risbergs Mining International"
+      ],
+      "sample_event_ids": [
+        "b48c8ac1-46e7-43e9-ac87-1d36b09d2a5d",
+        "ca01b3c3-9b9b-437e-a55a-b0904c300c5f",
+        "e75fb858-e424-4d62-80b9-9525fe19a43f"
+      ]
+    },
+    {
+      "old_url": "https://bsllkpvkowwndhhxtlln.supabase.co/storage/v1/object/public/event-posters/import-stamped/xperience-thedinnershow2026bollbrolyckan-helsingborgsnjespalats-bollbrolyckan-helsingborgsnjespalats.png",
+      "old_storage_path": "event-posters/import-stamped/xperience-thedinnershow2026bollbrolyckan-helsingborgsnjespalats-bollbrolyckan-helsingborgsnjespalats.png",
+      "event_count": 17,
+      "category_slug": "music",
+      "sample_titles": [
+        "Upptäck Ravels Boléro",
+        "Yazmin Lacey | Stockholm Jazz Festival",
+        "Julen med Loa Falkman & Tina Ahlin"
+      ],
+      "sample_event_ids": [
+        "95fbffa3-b954-4fa2-9091-144448334dc1",
+        "b5286053-6468-4d83-87a7-3304d8f82345",
+        "13d36005-1093-4f0d-b80a-10f9e0efcd29"
+      ]
+    },
+    {
+      "old_url": "https://bsllkpvkowwndhhxtlln.supabase.co/storage/v1/object/public/event-posters/import-stamped/vintergalamedemdsdrafoajen-sdrafoajen.png",
+      "old_storage_path": "event-posters/import-stamped/vintergalamedemdsdrafoajen-sdrafoajen.png",
+      "event_count": 17,
+      "category_slug": "music",
+      "sample_titles": [
+        "Teddybears – Magasinet",
+        "nimino - keep me awake tour",
+        "The Dire Straits Experience"
+      ],
+      "sample_event_ids": [
+        "9a4d03a7-e6bb-409b-af1d-1bb92c789393",
+        "130262a9-6d47-4d64-a76e-186a0ac4059f",
+        "2063dcc3-059c-4225-8c86-8d6f8f56b4cb"
+      ]
+    },
+    {
+      "old_url": "https://bsllkpvkowwndhhxtlln.supabase.co/storage/v1/object/public/event-posters/import-stamped/atokarlssonhalmstaddramalogen-dramalogen.png",
+      "old_storage_path": "event-posters/import-stamped/atokarlssonhalmstaddramalogen-dramalogen.png",
+      "event_count": 17,
+      "category_slug": "music",
+      "sample_titles": [
+        "Maj Kristin Karlsson ",
+        "Good Charlotte @ Hovet",
+        "Sturle Dagsland + LIVMØDR"
+      ],
+      "sample_event_ids": [
+        "6c86dd17-c602-4da8-ada2-fcd881a03a66",
+        "1cbb2128-bf70-4f86-8991-b55b0b6729ff",
+        "e50db14e-5b01-4939-8da3-b8e00cb40214"
+      ]
+    },
+    {
+      "old_url": "https://bsllkpvkowwndhhxtlln.supabase.co/storage/v1/object/public/event-posters/import-stamped/sessafasching-fasching.png",
+      "old_storage_path": "event-posters/import-stamped/sessafasching-fasching.png",
+      "event_count": 17,
+      "category_slug": "music",
+      "sample_titles": [
+        "BACHJAZZ – Studio Acusticum, Black Box",
+        "Neil Young Tribute med EP's Trailer Park + Gäster",
+        "15/10 HARTMANN | BLACK PAISLEY | DEBASER NOVA"
+      ],
+      "sample_event_ids": [
+        "6e366127-15c4-49c8-8a00-8f9bf228166e",
+        "5604def5-2d74-4e6e-91e1-7009dc703764",
+        "af34cdfa-b622-4f2e-b2c6-a795ee572a8f"
+      ]
+    },
+    {
+      "old_url": "https://bsllkpvkowwndhhxtlln.supabase.co/storage/v1/object/public/event-posters/import-stamped/emmylouharrisplatinumtickets-.png",
+      "old_storage_path": "event-posters/import-stamped/emmylouharrisplatinumtickets-.png",
+      "event_count": 17,
+      "category_slug": "music",
+      "sample_titles": [
+        "Wallmans International Dinnershow",
+        "Wallmans International Dinnershow",
+        "Bowie in Berlin"
+      ],
+      "sample_event_ids": [
+        "455f68f1-4d0f-4066-8e59-4b24221ed9fc",
+        "bc5e4a40-4f98-4b6c-bf2f-3ecff7c0daad",
+        "c9c3c45e-dbf3-48dc-925f-6ca69af24059"
+      ]
+    },
+    {
+      "old_url": "https://bsllkpvkowwndhhxtlln.supabase.co/storage/v1/object/public/event-posters/import-stamped/hollyhumberstone-nalen.png",
+      "old_storage_path": "event-posters/import-stamped/hollyhumberstone-nalen.png",
+      "event_count": 17,
+      "category_slug": "music",
+      "sample_titles": [
+        "19/2 BERNTH | DEBASER STRAND",
+        "Lena från Vetlanda",
+        "Ladies Got the Blues Quartet – E-Street"
+      ],
+      "sample_event_ids": [
+        "0c6babd4-825c-49e1-8f49-084df231e42c",
+        "7df7d73a-6bf2-48d4-8a19-c5fc9facffdc",
+        "7f6dbb95-bcc3-437e-8ac3-2da63a3306ad"
+      ]
+    },
+    {
+      "old_url": "https://bsllkpvkowwndhhxtlln.supabase.co/storage/v1/object/public/event-posters/import-stamped/pink-182pubanchor-pubanchor.png",
+      "old_storage_path": "event-posters/import-stamped/pink-182pubanchor-pubanchor.png",
+      "event_count": 17,
+      "category_slug": "music",
+      "sample_titles": [
+        "Kasper Agnas Koki Niwa",
+        "Heather Nova | Kulturhuset Stadsteatern",
+        "Legally Blonde"
+      ],
+      "sample_event_ids": [
+        "86924768-6004-47d3-b952-a60a490f6e46",
+        "d94ebdec-a58a-42b4-bfa8-749ca2ec7126",
+        "5d9b4ced-707f-403f-a1d4-eefa64d0d8f2"
+      ]
+    },
+    {
+      "old_url": "https://bsllkpvkowwndhhxtlln.supabase.co/storage/v1/object/public/event-posters/import-stamped/ateensgrnalund-grnalund.png",
+      "old_storage_path": "event-posters/import-stamped/ateensgrnalund-grnalund.png",
+      "event_count": 17,
+      "category_slug": "music",
+      "sample_titles": [
+        "Big fish + Crash Nomada",
+        "Vega Trails",
+        "Hommage à Piazzolla Bandoneon möter stråkensemble och gitarr!"
+      ],
+      "sample_event_ids": [
+        "45088e1d-7278-40cc-98a0-c9c1821a6618",
+        "2e39e24e-ee3a-4bc6-bad5-bdac73530f6e",
+        "e5b5b05e-42e9-4731-b8d6-8bc65f436966"
+      ]
+    },
+    {
+      "old_url": "https://bsllkpvkowwndhhxtlln.supabase.co/storage/v1/object/public/event-posters/import-stamped/yuraleeampmariannashirinyan-kuben.png",
+      "old_storage_path": "event-posters/import-stamped/yuraleeampmariannashirinyan-kuben.png",
+      "event_count": 17,
+      "category_slug": "music",
+      "sample_titles": [
+        "261021 Caixa Cubo",
+        "Tommy Körberg - Julen är här!",
+        "VØLD - Shitsame - Jopo Roadkills"
+      ],
+      "sample_event_ids": [
+        "090e4a8e-db0f-4f41-8b0b-e1c08c59b60b",
+        "cef8571f-9e15-4c26-9701-654b75661715",
+        "2ac645b0-72a8-4b4f-9cc0-30650b3c27fa"
+      ]
+    },
+    {
+      "old_url": "https://bsllkpvkowwndhhxtlln.supabase.co/storage/v1/object/public/event-posters/import-stamped/thesimongarfunkelstoryscalateatern-scalateatern.png",
+      "old_storage_path": "event-posters/import-stamped/thesimongarfunkelstoryscalateatern-scalateatern.png",
+      "event_count": 17,
+      "category_slug": "music",
+      "sample_titles": [
+        "William Sundman Sääf – The Tivoli",
+        "261128 Kv. Arken",
+        "Billy Opel – Hjalmar Bergman Teatern"
+      ],
+      "sample_event_ids": [
+        "4b40d352-bf1c-4f4d-9320-d3474b048cdf",
+        "ab2536ed-d2f3-47ef-999c-fc06958f1a74",
+        "147f19bd-0f38-43e5-a02e-9de061b149cd"
+      ]
+    },
+    {
+      "old_url": "https://bsllkpvkowwndhhxtlln.supabase.co/storage/v1/object/public/event-posters/import-stamped/torsson-attviljamenintekunnahalmstadsteater-halmstadsteater.png",
+      "old_storage_path": "event-posters/import-stamped/torsson-attviljamenintekunnahalmstadsteater-halmstadsteater.png",
+      "event_count": 17,
+      "category_slug": "music",
+      "sample_titles": [
+        "The World of Sevdah & More -Duco Kneževic & Etno Royal World Orchestra",
+        "Benny Sings @ Debaser Strand",
+        "Seinabo Sey"
+      ],
+      "sample_event_ids": [
+        "b3d75949-5692-48d3-9843-bb82fac2f439",
+        "43031b07-f3f5-4e70-9167-eb4f48c60ba1",
+        "29255e1f-62cf-4ae3-b4f9-a1a68e500143"
+      ]
+    },
+    {
+      "old_url": "https://bsllkpvkowwndhhxtlln.supabase.co/storage/v1/object/public/event-posters/import-stamped/thencomessilencekollektivetlivet-kollektivetlivet.png",
+      "old_storage_path": "event-posters/import-stamped/thencomessilencekollektivetlivet-kollektivetlivet.png",
+      "event_count": 17,
+      "category_slug": "music",
+      "sample_titles": [
+        "BEETHOVEN OCH NIELSEN  - Kungliga Filharmonikerna, Sakari Oramo, dirigent - Janine Jansen, violin",
+        "Greczula",
+        "Stockholm Extreme Sounds"
+      ],
+      "sample_event_ids": [
+        "a6800e7f-5989-4ca1-a2e6-e58d021e9079",
+        "2d61eae3-7a9f-4cb9-b748-7a20ff9a1055",
+        "43368862-4935-4a91-a93d-8a684f40c6a3"
+      ]
+    },
+    {
+      "old_url": "https://bsllkpvkowwndhhxtlln.supabase.co/storage/v1/object/public/event-posters/import-stamped/bassdrumofdeath-europ2026debasernova-debasernova.png",
+      "old_storage_path": "event-posters/import-stamped/bassdrumofdeath-europ2026debasernova-debasernova.png",
+      "event_count": 17,
+      "category_slug": "music",
+      "sample_titles": [
+        "Nemzzz",
+        "Torka aldrig tårar utan handskar Tickets, Tour and Concert Dates – www.gotalejon.se",
+        "Poängen med Pekka, från 4 år med familj"
+      ],
+      "sample_event_ids": [
+        "5e83e9fb-50ce-49fd-9f9b-5f4b9cadb500",
+        "0fb12b0c-a3db-404c-a9f6-114860ff8c5e",
+        "dfe7d03e-03b2-4701-b716-2009ca68c4bf"
+      ]
+    },
+    {
+      "old_url": "https://bsllkpvkowwndhhxtlln.supabase.co/storage/v1/object/public/event-posters/import-stamped/elviselviselvis-cirkus.png",
+      "old_storage_path": "event-posters/import-stamped/elviselviselvis-cirkus.png",
+      "event_count": 17,
+      "category_slug": "music",
+      "sample_titles": [
+        "EN KVÄLL ATT MINNAS MED - STEN & STANLEY – Storsjöteatern",
+        "Lars Winnerbäck",
+        "David Eugene Edwards"
+      ],
+      "sample_event_ids": [
+        "51aa1369-0a2c-4162-9712-5974689ffc4f",
+        "fdef4eb1-27b1-4bce-b29d-87f5b3c061b2",
+        "7a525446-8016-4846-82cc-750ea14d9f20"
+      ]
+    },
+    {
+      "old_url": "https://bsllkpvkowwndhhxtlln.supabase.co/storage/v1/object/public/event-posters/import-stamped/euskefeurat-sdrateatern.png",
+      "old_storage_path": "event-posters/import-stamped/euskefeurat-sdrateatern.png",
+      "event_count": 17,
+      "category_slug": "music",
+      "sample_titles": [
+        "RÅ – Sofiehof Underjord",
+        "Östblocket 30 år",
+        "Ung & Punk 2026 – Kulturhuset, B-salen"
+      ],
+      "sample_event_ids": [
+        "5b1166c5-c529-4fa5-a630-9e1c59046137",
+        "dfbedb9b-9423-4c17-9893-ee8d6cbe9fbe",
+        "d917668f-3b38-48cc-bb39-55cdcd8e1424"
+      ]
+    },
+    {
+      "old_url": "https://bsllkpvkowwndhhxtlln.supabase.co/storage/v1/object/public/event-posters/import-stamped/dexysmidnightrunnersgtalejon-gtalejon.png",
+      "old_storage_path": "event-posters/import-stamped/dexysmidnightrunnersgtalejon-gtalejon.png",
+      "event_count": 17,
+      "category_slug": "music",
+      "sample_titles": [
+        "DOLLY STYLE - FAMILJESHOWEN – Västerås Kongress",
+        "Stockholms indiekör | Is it still light outside?",
+        "JAZZ I KÄRRTORP Barnjazz ”Oddjob Jazzoo” "
+      ],
+      "sample_event_ids": [
+        "a610ba40-7b51-4358-aa02-874ed10b05a7",
+        "89caf9c2-56af-4920-b13b-2a9ea7cd38e1",
+        "f5227e50-47b0-47d0-8aa3-e757f14bc95f"
+      ]
+    },
+    {
+      "old_url": "https://bsllkpvkowwndhhxtlln.supabase.co/storage/v1/object/public/event-posters/import-stamped/skelleftesymfoniorkesterqueenattheoperastage1-stage1.png",
+      "old_storage_path": "event-posters/import-stamped/skelleftesymfoniorkesterqueenattheoperastage1-stage1.png",
+      "event_count": 17,
+      "category_slug": "music",
+      "sample_titles": [
+        "Violetta tar bussen (kl. 15:00) – Kulturhuset Folkets Park",
+        "En hyllning till Björn Afzelius – 80 år – Cassels",
+        "KLUBB RIKKY DISCO | Wild Violets | DJ burgerhead | 9 OCT | SLAKTHUSET I STOCKHOLM"
+      ],
+      "sample_event_ids": [
+        "3e63b3d5-9d7f-4f63-bda1-ef38a2f6ef89",
+        "46de310e-4d90-4c0e-b85f-018c4f8c0ddb",
+        "e7b879ca-764b-4ab2-babc-bd504036e005"
+      ]
+    },
+    {
+      "old_url": "https://bsllkpvkowwndhhxtlln.supabase.co/storage/v1/object/public/event-posters/import-stamped/thomasjrvhedensverigesroligastejulkonsertvsterskongress-vsterskongress.png",
+      "old_storage_path": "event-posters/import-stamped/thomasjrvhedensverigesroligastejulkonsertvsterskongress-vsterskongress.png",
+      "event_count": 17,
+      "category_slug": "music",
+      "sample_titles": [
+        "The Delines",
+        "Glaive – God Save The Three",
+        "P2 hyllar Bach och hans vänner"
+      ],
+      "sample_event_ids": [
+        "5fd56351-13e1-4d5b-9e08-e86e73bde93b",
+        "215ad8bb-f0f5-4978-80e7-d32f0276d76b",
+        "557b86e6-29bc-4ab7-ad68-ea2fd52b3f2c"
+      ]
+    },
+    {
+      "old_url": "https://bsllkpvkowwndhhxtlln.supabase.co/storage/v1/object/public/event-posters/import-stamped/maxraabepalastorchestercirkus-cirkus.png",
+      "old_storage_path": "event-posters/import-stamped/maxraabepalastorchestercirkus-cirkus.png",
+      "event_count": 17,
+      "category_slug": "music",
+      "sample_titles": [
+        "Näääk & Nimo",
+        "Billy Opel - Kalmar Teater – Kalmar Teater",
+        "Sara Parkman | Katalin Uppsala"
+      ],
+      "sample_event_ids": [
+        "29a75187-d57a-4ad8-9960-c8a5f07c91cb",
+        "e5b23fd0-be48-4a6e-8d03-20cdfd20275d",
+        "25a0b81d-3106-4f32-87eb-5d669b5b56d8"
+      ]
+    },
+    {
+      "old_url": "https://bsllkpvkowwndhhxtlln.supabase.co/storage/v1/object/public/event-posters/import-stamped/yawningmanatnalen-nalen.png",
+      "old_storage_path": "event-posters/import-stamped/yawningmanatnalen-nalen.png",
+      "event_count": 16,
+      "category_slug": "music",
+      "sample_titles": [
+        "DISCO PÅ RIKTIGT med Cotton Club och Kayo – Konsertsalen Culturum",
+        "The Mwuanas",
+        "HAWK ON FLIGHT – 50-ÅRSJUBILEUMSTURNÉ 2026 – Makeriet"
+      ],
+      "sample_event_ids": [
+        "0e381889-232f-4314-818d-32921fb089a3",
+        "88b8a9d4-6d64-4fba-895d-62029e1c6563",
+        "e7f651d5-4c76-438e-88a4-519111c2db7d"
+      ]
+    },
+    {
+      "old_url": "https://bsllkpvkowwndhhxtlln.supabase.co/storage/v1/object/public/event-posters/import-stamped/euskefeuratstage1-stage1.png",
+      "old_storage_path": "event-posters/import-stamped/euskefeuratstage1-stage1.png",
+      "event_count": 16,
+      "category_slug": "music",
+      "sample_titles": [
+        "Lotta Hasselquist Nilsson | Mot ett universum som sprakar",
+        "Stockholm Jazz på Hartwig - festivalbiljett 11 kvällar",
+        "Maria & Bengan - Trubbel med polaren Per – Falkenbergs Stadsteater"
+      ],
+      "sample_event_ids": [
+        "2610c916-4da3-4c46-b428-584d755d73d6",
+        "b5e81334-e19a-45fb-97f8-75549ccd206e",
+        "9b494845-b1f1-4c29-ba11-8bfa68278ee3"
+      ]
+    },
+    {
+      "old_url": "https://bsllkpvkowwndhhxtlln.supabase.co/storage/v1/object/public/event-posters/import-stamped/charliejeer-debasernova.png",
+      "old_storage_path": "event-posters/import-stamped/charliejeer-debasernova.png",
+      "event_count": 16,
+      "category_slug": "music",
+      "sample_titles": [
+        "OPUS13 STRÅKKVARTETT",
+        "EUSKEFEURAT - 50 år av maränger och surdeg!",
+        "Musikalisk salong med Framnäs klassiker – Piteå"
+      ],
+      "sample_event_ids": [
+        "ef08fd10-bb6b-41f2-b4d9-a4da06f0bcdc",
+        "00d62a41-fbcd-4601-8d80-182cb842d918",
+        "84af029e-ac20-445d-9439-f785644941db"
+      ]
+    },
+    {
+      "old_url": "https://bsllkpvkowwndhhxtlln.supabase.co/storage/v1/object/public/event-posters/import-stamped/sivanperwerliveinstockholm-cirkus.png",
+      "old_storage_path": "event-posters/import-stamped/sivanperwerliveinstockholm-cirkus.png",
+      "event_count": 16,
+      "category_slug": "music",
+      "sample_titles": [
+        "Orsa Spelmän, Tina Ahlin, Bengan Janson",
+        "Maksim Tickets, Tour and Concert Dates – www.gotalejon.se",
+        "G.F. Händel Messias"
+      ],
+      "sample_event_ids": [
+        "9dda8828-e2ad-483d-9c96-519b7868ca4b",
+        "0074a0b4-7c13-4367-9327-6497674614f7",
+        "1a60fed1-93b4-462d-8cb4-29e940cd0c6b"
+      ]
+    },
+    {
+      "old_url": "https://bsllkpvkowwndhhxtlln.supabase.co/storage/v1/object/public/event-posters/import-stamped/themagicnumbers-hornstullsstrand4.png",
+      "old_storage_path": "event-posters/import-stamped/themagicnumbers-hornstullsstrand4.png",
+      "event_count": 16,
+      "category_slug": "music",
+      "sample_titles": [
+        "Julkonsert",
+        "Belonging 50 år - Paulsberg/Hulbækmo/Fiske/Storaas",
+        "Copenhagen Drummers Tickets, Tour and Concert Dates – www.gotalejon.se"
+      ],
+      "sample_event_ids": [
+        "e288cba3-6ea6-4810-8e89-4522e4b248c4",
+        "b81955a1-0870-436a-a5d3-3de1399be2a1",
+        "f5cd2384-0257-4ad9-8ae5-b1267348ce3b"
+      ]
+    },
+    {
+      "old_url": "https://bsllkpvkowwndhhxtlln.supabase.co/storage/v1/object/public/event-posters/import-stamped/pitbullimbackplatinumtickets-3arena.png",
+      "old_storage_path": "event-posters/import-stamped/pitbullimbackplatinumtickets-3arena.png",
+      "event_count": 16,
+      "category_slug": "music",
+      "sample_titles": [
+        "GRYMLINGS - det bästa för dig – Åhaga",
+        "Torka aldrig tårar utan handskar",
+        "The Australian Pink Floyd Show @ Annexet"
+      ],
+      "sample_event_ids": [
+        "06ba9bc0-1a85-454a-ab0e-580937b9c931",
+        "26ef8748-4371-443d-9982-732304c33916",
+        "d3a2b825-0817-42b1-b535-35685852821f"
+      ]
+    },
+    {
+      "old_url": "https://bsllkpvkowwndhhxtlln.supabase.co/storage/v1/object/public/event-posters/import-stamped/johncorabifriendsriorio-rio.png",
+      "old_storage_path": "event-posters/import-stamped/johncorabifriendsriorio-rio.png",
+      "event_count": 16,
+      "category_slug": "music",
+      "sample_titles": [
+        "ALLT @ Debaser Strand",
+        "Julkonsert",
+        "President"
+      ],
+      "sample_event_ids": [
+        "25a9f79d-8edf-4a9d-854b-f74130b7e3a7",
+        "7677479b-7626-46e2-8629-3326699f21a7",
+        "b5e1f1f7-6040-4883-b52f-b3db8d5ff539"
+      ]
+    },
+    {
+      "old_url": "https://bsllkpvkowwndhhxtlln.supabase.co/storage/v1/object/public/event-posters/import-stamped/lukeelliotsdrateatern-sdrateatern.png",
+      "old_storage_path": "event-posters/import-stamped/lukeelliotsdrateatern-sdrateatern.png",
+      "event_count": 16,
+      "category_slug": "music",
+      "sample_titles": [
+        "LKN // Popidyll – Söderport",
+        "Klassiska favoriter – från opera till Rachmaninov – Västra Vrams Kyrka",
+        "Wallmans International Dinnershow"
+      ],
+      "sample_event_ids": [
+        "b061481b-c686-4608-b767-bf067a9cae7e",
+        "116fc19a-4dc6-4bfc-8c32-d0a3fb6b2da0",
+        "b97b9df5-d3d2-4320-a428-3f24360f5dd2"
+      ]
+    },
+    {
+      "old_url": "https://bsllkpvkowwndhhxtlln.supabase.co/storage/v1/object/public/event-posters/import-stamped/brunoberleslaktkyrkan-slaktkyrkan.png",
+      "old_storage_path": "event-posters/import-stamped/brunoberleslaktkyrkan-slaktkyrkan.png",
+      "event_count": 16,
+      "category_slug": "music",
+      "sample_titles": [
+        "Bach i nytt ljus",
+        "Dirty Three",
+        "UK Subs"
+      ],
+      "sample_event_ids": [
+        "9c5cc360-1b4d-4193-9753-6f5397e183da",
+        "f578a4a0-1b5c-4b3f-9598-8def469a2e51",
+        "68627bed-a9e8-452d-b2db-881839dc7c84"
+      ]
+    },
+    {
+      "old_url": "https://bsllkpvkowwndhhxtlln.supabase.co/storage/v1/object/public/event-posters/import-stamped/kammarmusikfestivaliallhelgonakyrkankonsertnr22026allhelgonakyrkan-allhelgonakyrkan.png",
+      "old_storage_path": "event-posters/import-stamped/kammarmusikfestivaliallhelgonakyrkankonsertnr22026allhelgonakyrkan-allhelgonakyrkan.png",
+      "event_count": 16,
+      "category_slug": "music",
+      "sample_titles": [
+        "Chicago - the Musical",
+        "John Craigie (support: Jobi Riccio) | Nalen, Stockholm",
+        "Dygdernas ordning med Radiokören - Doyle dirigerar Macmillan & von Bingen"
+      ],
+      "sample_event_ids": [
+        "d228e591-2645-4fc2-853f-ff7b23d40ab3",
+        "7268c169-6985-4c25-8223-5f68a3b7b595",
+        "14cb3b7c-013c-46be-805a-adb62c9f7312"
+      ]
+    },
+    {
+      "old_url": "https://bsllkpvkowwndhhxtlln.supabase.co/storage/v1/object/public/event-posters/import-stamped/abramisbramamagbootsthehouse-thehouse.png",
+      "old_storage_path": "event-posters/import-stamped/abramisbramamagbootsthehouse-thehouse.png",
+      "event_count": 16,
+      "category_slug": "music",
+      "sample_titles": [
+        "KLASSISKT MED BEBIS  - Biljett gäller för en vuxen och en bebis 0 - 12 månader",
+        "Bruckner's fifth according to Stutzmann",
+        "Melker Falk & Astrid Ymén"
+      ],
+      "sample_event_ids": [
+        "b9a35910-06f5-458c-8963-01129310d1fc",
+        "039f4ba6-35c6-436f-bbdf-e6e7796af8fa",
+        "37edc75b-a55a-4322-8e51-a2a069ca5803"
+      ]
+    },
+    {
+      "old_url": "https://bsllkpvkowwndhhxtlln.supabase.co/storage/v1/object/public/event-posters/import-stamped/thenocturnalaffairklubbenfryshuset-klubbenfryshuset.png",
+      "old_storage_path": "event-posters/import-stamped/thenocturnalaffairklubbenfryshuset-klubbenfryshuset.png",
+      "event_count": 16,
+      "category_slug": "music",
+      "sample_titles": [
+        "Tungsten – Mejeriet",
+        "Pearl & The Oysters | Hus 7",
+        "Wallmans International Dinnershow"
+      ],
+      "sample_event_ids": [
+        "db040508-5dff-4071-bf33-dabecf5627ca",
+        "f01e4088-52c2-46bb-a7fc-cd2a70ae3d43",
+        "2f09de9a-78eb-4608-bed1-46c4cf5b9e8b"
+      ]
+    },
+    {
+      "old_url": "https://bsllkpvkowwndhhxtlln.supabase.co/storage/v1/object/public/event-posters/import-stamped/bernsbernssalonger-bernssalonger.png",
+      "old_storage_path": "event-posters/import-stamped/bernsbernssalonger-bernssalonger.png",
+      "event_count": 16,
+      "category_slug": "music",
+      "sample_titles": [
+        "Chicago - the Musical Oscarsteatern 2026-11-05 19:30",
+        "Floor Jansen",
+        "Merit Hemmingson – Storsjöteatern, Salongen"
+      ],
+      "sample_event_ids": [
+        "ebca46e5-a966-464a-9c66-338d2e9a0ed3",
+        "ce0b21fa-73e0-4cd3-a682-df18474ea013",
+        "bd3bbbd6-66ac-4d92-b23f-48b466105217"
+      ]
+    },
+    {
+      "old_url": "https://bsllkpvkowwndhhxtlln.supabase.co/storage/v1/object/public/event-posters/import-stamped/blockbusters-konsertsalen.png",
+      "old_storage_path": "event-posters/import-stamped/blockbusters-konsertsalen.png",
+      "event_count": 16,
+      "category_slug": "music",
+      "sample_titles": [
+        "Star Wars: A New Hope Live in Concert",
+        "Weeping Willows Christmas",
+        "Moses Yoofee Trio"
+      ],
+      "sample_event_ids": [
+        "d4ada228-b4c5-4373-8162-f2589782276e",
+        "73b747c6-d0a6-414c-ad52-2fd4dba412d3",
+        "c2303b0e-b460-4a38-ad2a-6e8e63e0df93"
+      ]
+    },
+    {
+      "old_url": "https://bsllkpvkowwndhhxtlln.supabase.co/storage/v1/object/public/event-posters/import-stamped/trubbeltumult-livepinnergrdennjesfabriken-njesfabriken.png",
+      "old_storage_path": "event-posters/import-stamped/trubbeltumult-livepinnergrdennjesfabriken-njesfabriken.png",
+      "event_count": 16,
+      "category_slug": "music",
+      "sample_titles": [
+        "Aspen Creek",
+        "Robert Wells ”40 år vid flygeln” på Söderhamns Teater – Söderhamns Teater",
+        "BRITTEN, BARBER OCH ELGAR  - Kungliga Filharmonikerna, Stephanie Childress, dirigent - James Ehnes, violin"
+      ],
+      "sample_event_ids": [
+        "7cc13b6c-d842-448d-9eec-af4fba2eea9b",
+        "5abb1c86-d4c2-4e2e-816e-4c2922baf8b7",
+        "a9b5fd5c-a99e-4c1f-b647-b53fd9e31cef"
+      ]
+    },
+    {
+      "old_url": "https://bsllkpvkowwndhhxtlln.supabase.co/storage/v1/object/public/event-posters/import-stamped/worldofmusicals-konsertsalen.png",
+      "old_storage_path": "event-posters/import-stamped/worldofmusicals-konsertsalen.png",
+      "event_count": 16,
+      "category_slug": "music",
+      "sample_titles": [
+        "Vinterfesten 2026 – Deltat /Östra Piren",
+        "Sam Newbould Quintet (GB/NL/ES/IL) – Dunkers kulturhus",
+        "KAJ – Tonhallen"
+      ],
+      "sample_event_ids": [
+        "12f9cbfb-5952-42c9-b9ca-b021e0f455b8",
+        "532e5117-ad2c-40e9-892a-699276998c50",
+        "6e0c2c04-cf56-416a-9130-bb043308d570"
+      ]
+    },
+    {
+      "old_url": "https://bsllkpvkowwndhhxtlln.supabase.co/storage/v1/object/public/event-posters/import-stamped/bethhart-b-k.png",
+      "old_storage_path": "event-posters/import-stamped/bethhart-b-k.png",
+      "event_count": 16,
+      "category_slug": "music",
+      "sample_titles": [
+        "Olivia Rodrigo - 20 mars",
+        "Christmas Unplugged 2026",
+        "Stad i ljus - Ett musikaliskt möte med Py Bäckman – Kulturhuset tio14"
+      ],
+      "sample_event_ids": [
+        "04c4f2eb-6307-4ace-919d-0acbea59d48c",
+        "48a3502f-5ca4-44ac-aef8-528a67979fdf",
+        "87a44f1d-04a5-4d3e-a7b6-ea7da4584760"
+      ]
+    },
+    {
+      "old_url": "https://bsllkpvkowwndhhxtlln.supabase.co/storage/v1/object/public/event-posters/import-stamped/karindahlbergberntwilhelmssonmartinlutherskyrka-martinlutherskyrka.png",
+      "old_storage_path": "event-posters/import-stamped/karindahlbergberntwilhelmssonmartinlutherskyrka-martinlutherskyrka.png",
+      "event_count": 16,
+      "category_slug": "music",
+      "sample_titles": [
+        "Rymden – Mejeriet",
+        "Immanuel Big Band feat. Viktoria Glans",
+        "Jubileumskonsert: Stora läktarorgeln i Hedvig fyller 50 år!"
+      ],
+      "sample_event_ids": [
+        "0f07028e-4713-49d0-a3d2-7d2fb4a1732d",
+        "ede6d98e-cbc8-4fab-87ed-37da486d7dd7",
+        "69c0ea93-1907-470c-9575-1cdd1db194b1"
+      ]
+    },
+    {
+      "old_url": "https://bsllkpvkowwndhhxtlln.supabase.co/storage/v1/object/public/event-posters/import-stamped/robyn-thesexistentialtourplatinumtickets-.png",
+      "old_storage_path": "event-posters/import-stamped/robyn-thesexistentialtourplatinumtickets-.png",
+      "event_count": 16,
+      "category_slug": "music",
+      "sample_titles": [
+        "Placebo",
+        "Only The Poets",
+        "Shabaka"
+      ],
+      "sample_event_ids": [
+        "37cade06-62b4-4427-b76c-c518143cf58b",
+        "96b0468e-fc5a-4345-b670-e1af8b5ba1f2",
+        "12ccef76-6785-44da-af48-29d9e79df1be"
+      ]
+    },
+    {
+      "old_url": "https://bsllkpvkowwndhhxtlln.supabase.co/storage/v1/object/public/event-posters/import-stamped/vernissagehanveltmanatnalen-nalen.png",
+      "old_storage_path": "event-posters/import-stamped/vernissagehanveltmanatnalen-nalen.png",
+      "event_count": 16,
+      "category_slug": "music",
+      "sample_titles": [
+        "Corpo",
+        "LAIDBACK LUKE - BIBLIOTEKET LIVE - SAT 17 OCT",
+        "Honeymilk"
+      ],
+      "sample_event_ids": [
+        "5c6d3ffe-16b1-4b21-9a76-aec34b3e97a2",
+        "5ef09b9f-041d-4fc3-b1d3-6699ce56d277",
+        "4de5825b-c6c1-429d-ba71-713d9c51de33"
+      ]
+    },
+    {
+      "old_url": "https://bsllkpvkowwndhhxtlln.supabase.co/storage/v1/object/public/event-posters/import-stamped/storapassionsbandetluciasinnenashus-sinnenashus.png",
+      "old_storage_path": "event-posters/import-stamped/storapassionsbandetluciasinnenashus-sinnenashus.png",
+      "event_count": 16,
+      "category_slug": "music",
+      "sample_titles": [
+        "Tyske Ludder @ Debaser Nova",
+        "Mick Harvey &amp; Amanda Acevedo",
+        "Wallmans International Dinnershow"
+      ],
+      "sample_event_ids": [
+        "6764a5cc-0e0c-4625-9605-7553fab4cbfe",
+        "01242bcb-2e56-4ec1-a1f1-86594a646457",
+        "cd37e37d-59d8-4296-8559-93c3a6b0bb52"
+      ]
+    },
+    {
+      "old_url": "https://bsllkpvkowwndhhxtlln.supabase.co/storage/v1/object/public/event-posters/import-stamped/waterbaby-sdrateatern.png",
+      "old_storage_path": "event-posters/import-stamped/waterbaby-sdrateatern.png",
+      "event_count": 16,
+      "category_slug": "music",
+      "sample_titles": [
+        "Daniela Rathana möter Radiosymfonikerna & Radiokören",
+        "We Will Rock You 9/1 – Hebeteatern, Folkets Hus Kulturhuset",
+        "Hans Olding Trio"
+      ],
+      "sample_event_ids": [
+        "6dc99617-09ee-495c-a9eb-f106599d7f46",
+        "dabd6e43-be37-4776-a5f8-f6f652994750",
+        "8d7cc066-42d6-41de-9a64-f60b6be5f3c3"
+      ]
+    },
+    {
+      "old_url": "https://bsllkpvkowwndhhxtlln.supabase.co/storage/v1/object/public/event-posters/import-stamped/sveningvars-igridagimorgon70rscalateatern-scalateatern.png",
+      "old_storage_path": "event-posters/import-stamped/sveningvars-igridagimorgon70rscalateatern-scalateatern.png",
+      "event_count": 16,
+      "category_slug": "music",
+      "sample_titles": [
+        "Östblocket 30 år",
+        "Creedence Tribute, Best of CCR & John Fogerty Tour – Falkenbergs Stadsteater",
+        "DJ Krush"
+      ],
+      "sample_event_ids": [
+        "d50ad6ca-64b3-4762-9a82-1c2e3a797fe9",
+        "0140f586-b627-40d3-9e69-9bfd0bfad1aa",
+        "fc177a9c-7e87-4a33-853e-d20364e1d29e"
+      ]
+    },
+    {
+      "old_url": "https://bsllkpvkowwndhhxtlln.supabase.co/storage/v1/object/public/event-posters/import-stamped/malinbromanchristopherparkessimoncrawford-phillipskulturhusetnajaden-kulturhusetnajaden.png",
+      "old_storage_path": "event-posters/import-stamped/malinbromanchristopherparkessimoncrawford-phillipskulturhusetnajaden-kulturhusetnajaden.png",
+      "event_count": 16,
+      "category_slug": "music",
+      "sample_titles": [
+        "Hello Dolly – Falkenbergs Stadsteater",
+        "Kväll Höglund",
+        "Bitchin Bajas"
+      ],
+      "sample_event_ids": [
+        "fd5f0d91-7b82-4262-a2cf-6aea732e0d9c",
+        "da2c2e1e-9542-4052-a3a8-27ef7a3f1189",
+        "c31210a4-8450-43b5-ba5c-aaa2e1be8807"
+      ]
+    },
+    {
+      "old_url": "https://bsllkpvkowwndhhxtlln.supabase.co/storage/v1/object/public/event-posters/import-stamped/hardcoresuperstarstage2-stage2.png",
+      "old_storage_path": "event-posters/import-stamped/hardcoresuperstarstage2-stage2.png",
+      "event_count": 16,
+      "category_slug": "music",
+      "sample_titles": [
+        "Amistat + Support: Orange Oak | Nalen, Stockholm",
+        "KARIN HELLQVIST - VIOLIN",
+        "En Hemlig Artist #11"
+      ],
+      "sample_event_ids": [
+        "76e0b6cd-1795-4481-ba45-fbd841e40632",
+        "1fcee6a1-c211-44f5-9e6b-d3891f8e9b67",
+        "33ef263f-8c67-459f-9139-aad956efc9f5"
+      ]
+    },
+    {
+      "old_url": "https://bsllkpvkowwndhhxtlln.supabase.co/storage/v1/object/public/event-posters/import-stamped/emililnnebergaystadsteater-ystadsteater.png",
+      "old_storage_path": "event-posters/import-stamped/emililnnebergaystadsteater-ystadsteater.png",
+      "event_count": 16,
+      "category_slug": "music",
+      "sample_titles": [
+        "Imminence",
+        "Corpo",
+        "Sari Schorr"
+      ],
+      "sample_event_ids": [
+        "85eab131-f525-4e85-9731-155ec00d1ef3",
+        "21e1078f-c8de-4e08-92a7-a6dc607713fd",
+        "1a3fc3b7-c892-414f-b9ac-88604ea7d39f"
+      ]
+    },
+    {
+      "old_url": "https://bsllkpvkowwndhhxtlln.supabase.co/storage/v1/object/public/event-posters/import-stamped/orkesternfilialenframfralpsymfonin-berwaldhallen.png",
+      "old_storage_path": "event-posters/import-stamped/orkesternfilialenframfralpsymfonin-berwaldhallen.png",
+      "event_count": 16,
+      "category_slug": "music",
+      "sample_titles": [
+        "Nu börjar Spöktimmen",
+        "The Soul of Christmas Tickets, Tour and Concert Dates – www.gotalejon.se",
+        "J. Cole: The Fall-Off Tour, Platinumbiljetter"
+      ],
+      "sample_event_ids": [
+        "943bb607-f7f2-4ddb-896d-558986d33b55",
+        "60bcf75c-3402-41d5-9e4e-df6a4a0cd627",
+        "22fed357-80ab-411f-a0e4-fdbcb83f03bd"
+      ]
+    },
+    {
+      "old_url": "https://bsllkpvkowwndhhxtlln.supabase.co/storage/v1/object/public/event-posters/import-stamped/adelsfestivalen2026adelsfestivalen2026-adelsfestivalen2026.png",
+      "old_storage_path": "event-posters/import-stamped/adelsfestivalen2026adelsfestivalen2026-adelsfestivalen2026.png",
+      "event_count": 16,
+      "category_slug": "music",
+      "sample_titles": [
+        "EMIL I LÖNNEBERGA",
+        "Tommy Körberg - Julen är här!",
+        "Kåldolmar & Club Killers Feat. Mira Ray"
+      ],
+      "sample_event_ids": [
+        "c0f95b25-5c8e-4398-acd1-6ea8e9b19599",
+        "b8d937f7-b20a-443b-bb08-a6ff3f38693f",
+        "d4411177-2fdb-4ab2-ad53-6ee6c8560953"
+      ]
+    },
+    {
+      "old_url": "https://bsllkpvkowwndhhxtlln.supabase.co/storage/v1/object/public/event-posters/import-stamped/evadahlgrenlokomotivetlokomotivet-lokomotivet.png",
+      "old_storage_path": "event-posters/import-stamped/evadahlgrenlokomotivetlokomotivet-lokomotivet.png",
+      "event_count": 16,
+      "category_slug": "music",
+      "sample_titles": [
+        "Valter Nilsson – Mejeriet",
+        "RITSCH RATSCH på Vasan",
+        "Laura Pausini - YO CANTO WORLD TOUR"
+      ],
+      "sample_event_ids": [
+        "940c68a0-3ae5-45c3-ba40-9d821e07bf30",
+        "bed26d2b-a1bb-4917-a722-06e0a5996307",
+        "1cf2c8f0-bd38-4b07-9fa8-eac62b5cbde2"
+      ]
+    },
+    {
+      "old_url": "https://bsllkpvkowwndhhxtlln.supabase.co/storage/v1/object/public/event-posters/import-stamped/alesso-sollidenscenenskansen.png",
+      "old_storage_path": "event-posters/import-stamped/alesso-sollidenscenenskansen.png",
+      "event_count": 16,
+      "category_slug": "music",
+      "sample_titles": [
+        "Höstkonsert",
+        "Niklas Strömstedt – Tyck OM mig",
+        "Kyle Alessandro"
+      ],
+      "sample_event_ids": [
+        "466d83bb-e929-4a48-a7d3-a250a748989e",
+        "6a8d3f7d-9fb0-44b5-8b38-e5f348441d2d",
+        "99417341-5402-4781-b3ea-bac631df70f5"
+      ]
+    },
+    {
+      "old_url": "https://bsllkpvkowwndhhxtlln.supabase.co/storage/v1/object/public/event-posters/import-stamped/ohwhatanight-konsistoriegatan7.png",
+      "old_storage_path": "event-posters/import-stamped/ohwhatanight-konsistoriegatan7.png",
+      "event_count": 16,
+      "category_slug": "music",
+      "sample_titles": [
+        "Må-bra-kören",
+        "God Mother + Svart Samtid + Denim Demons | Hus 7",
+        "Wallmans International Dinnershow"
+      ],
+      "sample_event_ids": [
+        "33ecb04b-86b3-44a0-9b13-cc620a98d953",
+        "013c644d-cebf-41d4-a278-23bd80d0bb97",
+        "64f52978-6d87-4733-9669-8ad12d042f47"
+      ]
+    },
+    {
+      "old_url": "https://bsllkpvkowwndhhxtlln.supabase.co/storage/v1/object/public/event-posters/import-stamped/theverybestofthinlizzyphillynottandgarymoorescalateatern-scalateatern.png",
+      "old_storage_path": "event-posters/import-stamped/theverybestofthinlizzyphillynottandgarymoorescalateatern-scalateatern.png",
+      "event_count": 16,
+      "category_slug": "music",
+      "sample_titles": [
+        "Golden Hits Dinnershow",
+        "EN KVÄLL ATT MINNAS MED - STEN & STANLEY – Sagateatern",
+        "Judith Hill | Stockholm Jazz Festival"
+      ],
+      "sample_event_ids": [
+        "71a8b4e4-3bac-4c1b-a63d-777f875c9eab",
+        "2d0c4542-aae0-45c6-8cb2-83e7913d245a",
+        "1cc31905-b591-4f30-b50f-61f00a5eb1ce"
+      ]
+    },
+    {
+      "old_url": "https://bsllkpvkowwndhhxtlln.supabase.co/storage/v1/object/public/event-posters/import-stamped/teddybearsnjesfabriken-njesfabriken.png",
+      "old_storage_path": "event-posters/import-stamped/teddybearsnjesfabriken-njesfabriken.png",
+      "event_count": 16,
+      "category_slug": "music",
+      "sample_titles": [
+        "Joy Strings med Charlie Sandström - ung scen i hjorthagen",
+        "Soppteater -  Före Elvis - Caroline Wennergren – Clio, Folkets Hus Kulturhuset",
+        "We Will Rock You 23/1 – Hebeteatern, Folkets Hus Kulturhuset"
+      ],
+      "sample_event_ids": [
+        "f3c9c09a-4e8f-4bfe-acba-75e6205ce3d9",
+        "af4835dd-8d76-49df-ada9-a69059e42ecb",
+        "f4410814-5ca7-4894-93a2-c6439c45f454"
+      ]
+    },
+    {
+      "old_url": "https://bsllkpvkowwndhhxtlln.supabase.co/storage/v1/object/public/event-posters/import-stamped/odebrandrestaurangjnackastrand-restaurangjnackastrand.png",
+      "old_storage_path": "event-posters/import-stamped/odebrandrestaurangjnackastrand-restaurangjnackastrand.png",
+      "event_count": 16,
+      "category_slug": "music",
+      "sample_titles": [
+        "Emmi Christensson & Rickard Söderberg Fridfull Jul",
+        "ARVINGARNA - Klart det ska bli jul, igen! – Växjö Konserthus",
+        "Christmas in Ireland – Kalmarsalen"
+      ],
+      "sample_event_ids": [
+        "28ceb949-b09b-4ace-95fb-938b05b24ea4",
+        "4296dff6-4e06-4ca3-80bd-428a6aa8c276",
+        "1e64cf51-79db-4b27-a41d-15b10ac0dbe6"
+      ]
+    },
+    {
+      "old_url": "https://bsllkpvkowwndhhxtlln.supabase.co/storage/v1/object/public/event-posters/import-stamped/thefray-autumnlighttour-b-k.png",
+      "old_storage_path": "event-posters/import-stamped/thefray-autumnlighttour-b-k.png",
+      "event_count": 16,
+      "category_slug": "music",
+      "sample_titles": [
+        "Torka aldrig tårar utan handskar Tickets, Tour and Concert Dates – www.gotalejon.se",
+        "Morgan Wallen tribute UK | Extrainsatt datum",
+        "aespa LIVE TOUR - SYNK : COMPLæXITY – in STOCKHOLM, Platinumbiljetter"
+      ],
+      "sample_event_ids": [
+        "ae3d373a-0a0f-4e13-9226-ae6b962e50eb",
+        "405fa72e-c166-4fdb-86b6-866ad07829b6",
+        "b6dc9f88-578b-44d0-a6d4-177e06b9c1f5"
+      ]
+    },
+    {
+      "old_url": "https://bsllkpvkowwndhhxtlln.supabase.co/storage/v1/object/public/event-posters/import-stamped/pjolterguysstockholm-stockholm.png",
+      "old_storage_path": "event-posters/import-stamped/pjolterguysstockholm-stockholm.png",
+      "event_count": 16,
+      "category_slug": "music",
+      "sample_titles": [
+        "NNHMN is back to STOCKHOLM!",
+        "Totalgalet Köttgrottorna + vänner dag 2",
+        "Daniel Adams-Ray med Norrköpings symfoniorkester"
+      ],
+      "sample_event_ids": [
+        "2319a65c-2a3c-4ba7-8cef-97782f8b4395",
+        "5024cc0d-75a6-4454-afe1-ef0bc05b4bce",
+        "53eb354f-fb1e-4f45-b0b5-77a87149ea29"
+      ]
+    },
+    {
+      "old_url": "https://bsllkpvkowwndhhxtlln.supabase.co/storage/v1/object/public/event-posters/import-stamped/valerymeladze-konsertsalen.png",
+      "old_storage_path": "event-posters/import-stamped/valerymeladze-konsertsalen.png",
+      "event_count": 16,
+      "category_slug": "music",
+      "sample_titles": [
+        "Thomas Järvheden - Sveriges roligaste julkonsert",
+        "SJOSTAKOVITJ PIANOKVINTETT  - Filharmoniker i Närbild",
+        "Den Svenska Björnstammen – Magasinet"
+      ],
+      "sample_event_ids": [
+        "f096848e-7c57-4b3a-9b94-57f7b57c0de2",
+        "b77fccaa-6e94-4ceb-b7ca-cdccdd85e729",
+        "980626c9-3c18-4965-bda4-d80f84ca288d"
+      ]
+    },
+    {
+      "old_url": "https://bsllkpvkowwndhhxtlln.supabase.co/storage/v1/object/public/event-posters/import-stamped/tovestyrkevrmeverket-vrmeverket.png",
+      "old_storage_path": "event-posters/import-stamped/tovestyrkevrmeverket-vrmeverket.png",
+      "event_count": 15,
+      "category_slug": "music",
+      "sample_titles": [
+        "LAULAME KOOS III",
+        "Kåldolmar & Club Killers Feat. Mira Ray",
+        "Orgelkonsert på juldagen"
+      ],
+      "sample_event_ids": [
+        "bd108d81-5aa9-42c6-b6c1-a3c604b7f507",
+        "d00144d8-1bca-45a5-9054-efdee9587850",
+        "8e4a15e7-029f-40b0-8114-29aaf9d6d128"
+      ]
+    },
+    {
+      "old_url": "https://bsllkpvkowwndhhxtlln.supabase.co/storage/v1/object/public/event-posters/import-stamped/rosannecashgtalejon-gtalejon.png",
+      "old_storage_path": "event-posters/import-stamped/rosannecashgtalejon-gtalejon.png",
+      "event_count": 15,
+      "category_slug": "music",
+      "sample_titles": [
+        "Amanda Ginsburg - \"Det är jul nu igen\"",
+        "Julkonsert 2026",
+        "Banna Sona Band"
+      ],
+      "sample_event_ids": [
+        "04f409e0-f32f-415c-b46d-e5e23c559f57",
+        "0bbe3517-e24a-4e77-a8b6-b6a34a8c38c3",
+        "f5b538af-930c-4aa3-92d5-853ff095dc30"
+      ]
+    },
+    {
+      "old_url": "https://bsllkpvkowwndhhxtlln.supabase.co/storage/v1/object/public/event-posters/import-stamped/sofiaisella-fryshuset.png",
+      "old_storage_path": "event-posters/import-stamped/sofiaisella-fryshuset.png",
+      "event_count": 15,
+      "category_slug": "music",
+      "sample_titles": [
+        "Glaive – God Save The Three",
+        "Julkonsert med Romeo &amp; Julia Kören",
+        "Golden Hits Dinnershow"
+      ],
+      "sample_event_ids": [
+        "2aa6b74c-98fa-46d7-b063-3725f6a91af8",
+        "32a3bca5-03a2-4214-aeea-81930c147483",
+        "bbd795de-d94f-424e-b677-4701fa3bd8a9"
+      ]
+    },
+    {
+      "old_url": "https://bsllkpvkowwndhhxtlln.supabase.co/storage/v1/object/public/event-posters/import-stamped/bokaspersorkester-ilmagnificohalmstadsteater-halmstadsteater.png",
+      "old_storage_path": "event-posters/import-stamped/bokaspersorkester-ilmagnificohalmstadsteater-halmstadsteater.png",
+      "event_count": 15,
+      "category_slug": "music",
+      "sample_titles": [
+        "Åsa Jinder - 50 år som artist – Nyköpings Teater",
+        "Teddybears",
+        "Anastasía sjunger Alf Robertson | Kulturhuset Stadsteatern"
+      ],
+      "sample_event_ids": [
+        "6855c754-daae-4988-b431-f2507cdfcf71",
+        "080c2b65-ea81-4939-bb43-2b087ec7581a",
+        "43c4c947-547d-44ce-94e5-852409e61cf6"
+      ]
+    },
+    {
+      "old_url": "https://bsllkpvkowwndhhxtlln.supabase.co/storage/v1/object/public/event-posters/import-stamped/thefrayb-k-b-k.png",
+      "old_storage_path": "event-posters/import-stamped/thefrayb-k-b-k.png",
+      "event_count": 15,
+      "category_slug": "music",
+      "sample_titles": [
+        "Lucia - familjekonsert",
+        "Sundbybergs Storband",
+        "29/10 ZAN CODY | DEBASER STRAND"
+      ],
+      "sample_event_ids": [
+        "42ab731b-bcbd-48e6-9287-e2bec59a1dda",
+        "5dec3cd1-5b2f-415d-8870-d658a3af57cb",
+        "2292640d-9776-4cb8-9fd2-c1eeeb159124"
+      ]
+    },
+    {
+      "old_url": "https://bsllkpvkowwndhhxtlln.supabase.co/storage/v1/object/public/event-posters/import-stamped/kajgtalejon-gtalejon.png",
+      "old_storage_path": "event-posters/import-stamped/kajgtalejon-gtalejon.png",
+      "event_count": 15,
+      "category_slug": "music",
+      "sample_titles": [
+        "HOGWARTS MAGIC SYMPHONY – Växjö Konserthus",
+        "Lena från Vetlanda",
+        "Skaiv / Stockholm Jazz Festival: Daniella Ljungsberg + David Åhlén"
+      ],
+      "sample_event_ids": [
+        "884595bb-5dd2-4180-9be0-61f9979603e1",
+        "d9f72f34-0772-46a6-8792-5040a5a98cef",
+        "0b1f45ae-6941-4e30-b315-a0320d8f7ba7"
+      ]
+    },
+    {
+      "old_url": "https://bsllkpvkowwndhhxtlln.supabase.co/storage/v1/object/public/event-posters/import-stamped/andersfrnnblomsdrateatern-sdrateatern.png",
+      "old_storage_path": "event-posters/import-stamped/andersfrnnblomsdrateatern-sdrateatern.png",
+      "event_count": 15,
+      "category_slug": "music",
+      "sample_titles": [
+        "BERWALD OCH BRAHMS  - Kungliga Filharmonikerna, Alan Gilbert, dirigent - Lisa Batiashvili, violin",
+        "Live at Heart 2027",
+        "Allt"
+      ],
+      "sample_event_ids": [
+        "70045c27-a534-43d4-bd26-5a64ba86875b",
+        "cfb333aa-920b-4cd7-81c5-685f1579dee1",
+        "40284d83-e312-450d-9b14-e1ca668ce8a2"
+      ]
+    },
+    {
+      "old_url": "https://bsllkpvkowwndhhxtlln.supabase.co/storage/v1/object/public/event-posters/import-stamped/linkinpark-fromzeroworldtour2026platinumtickets-3arena.png",
+      "old_storage_path": "event-posters/import-stamped/linkinpark-fromzeroworldtour2026platinumtickets-3arena.png",
+      "event_count": 15,
+      "category_slug": "music",
+      "sample_titles": [
+        "Yttling Jazz",
+        "Tinie Tempah @ Debaser Strand",
+        "Evigt Edvin med Edvin Törnblom 2026 – Magasinet"
+      ],
+      "sample_event_ids": [
+        "f71659b7-c6ab-4d39-89fb-09eaf356867b",
+        "46e56e9b-cf2d-4fac-9556-8db605a3cc3c",
+        "162f66ca-8d65-4b93-9d27-efc9d2c9c82d"
+      ]
+    },
+    {
+      "old_url": "https://bsllkpvkowwndhhxtlln.supabase.co/storage/v1/object/public/event-posters/import-stamped/blackmoosebiblioteketlive-biblioteketlive.png",
+      "old_storage_path": "event-posters/import-stamped/blackmoosebiblioteketlive-biblioteketlive.png",
+      "event_count": 15,
+      "category_slug": "music",
+      "sample_titles": [
+        "Hindemiths violinkonsert och Schuberts stora symfoni  - med Honeck & Zimmermann",
+        "Hindemith och Schubert",
+        "BENJAMIN INGROSSO |  WHAT HAPPENS NEXT? - EXTRA"
+      ],
+      "sample_event_ids": [
+        "5913d605-c086-435c-8531-5d98fff6bdf7",
+        "5ecbd83d-e5a0-4fef-97a5-7ea81f735b47",
+        "16fe47c5-eb33-48e0-b015-e80be6e0bd93"
+      ]
+    },
+    {
+      "old_url": "https://bsllkpvkowwndhhxtlln.supabase.co/storage/v1/object/public/event-posters/import-stamped/emmylouharrisaviciiarena-aviciiarena.png",
+      "old_storage_path": "event-posters/import-stamped/emmylouharrisaviciiarena-aviciiarena.png",
+      "event_count": 15,
+      "category_slug": "music",
+      "sample_titles": [
+        "11/12 DEBASER SELECTS | DEBASER STRAND & NOVA",
+        "WAGNER - WESENDONCK LIEDER  - Kungliga Filharmonikerna, Thomas Dausgaard, dirigent - Christina Nilsson, sopran",
+        "MAGNUS CARLSSON - ÄNGLARNAS TID – Gustav Adolfs kyrka"
+      ],
+      "sample_event_ids": [
+        "1ca0fe77-c696-47fd-9356-be57eb446fda",
+        "56af1538-ed22-429a-906d-6690cf9561d2",
+        "07f410da-6cb6-4f5d-8d21-43a4b5b9ca58"
+      ]
+    },
+    {
+      "old_url": "https://bsllkpvkowwndhhxtlln.supabase.co/storage/v1/object/public/event-posters/import-stamped/mollyhammarlivsvittneystadsteater-ystadsteater.png",
+      "old_storage_path": "event-posters/import-stamped/mollyhammarlivsvittneystadsteater-ystadsteater.png",
+      "event_count": 14,
+      "category_slug": "music",
+      "sample_titles": [
+        "INDY THE ORGANSLAYER Live at Hartwig",
+        "Akustisk punk",
+        "Golden Hits Dinnershow"
+      ],
+      "sample_event_ids": [
+        "2b20bc1a-a6d7-4805-91ea-e2fff4379c8c",
+        "21e6246d-feb6-4af6-a75e-28c7fa9c10dc",
+        "0cec115d-ef8d-4587-a480-79bea1a41119"
+      ]
+    },
+    {
+      "old_url": "https://bsllkpvkowwndhhxtlln.supabase.co/storage/v1/object/public/event-posters/import-stamped/theaudiencewestend-sergelstorg.png",
+      "old_storage_path": "event-posters/import-stamped/theaudiencewestend-sergelstorg.png",
+      "event_count": 3,
+      "category_slug": "classical",
+      "sample_titles": [
+        "Till minnet av en gud - Wilsons Shango Memory",
+        "Wagners ring utan ord",
+        "Till minnet av en gud - Wilsons Shango Memory"
+      ],
+      "sample_event_ids": [
+        "ba18b94e-ce4c-441c-8ace-a5b27a2d3539",
+        "ca7a9a1b-dac9-47d3-a113-a738de28088d",
+        "41e2fd7e-8e20-400b-917e-3760b2333cde"
+      ]
+    },
+    {
+      "old_url": "https://bsllkpvkowwndhhxtlln.supabase.co/storage/v1/object/public/event-posters/import-stamped/rumfrminnen-sergelstorg.png",
+      "old_storage_path": "event-posters/import-stamped/rumfrminnen-sergelstorg.png",
+      "event_count": 2,
+      "category_slug": "classical",
+      "sample_titles": [
+        "En vandring till Sibelius",
+        "Hindemith och Schubert"
+      ],
+      "sample_event_ids": [
+        "5c80c29a-f5c4-4b17-bf5a-5705dfa8d480",
+        "f61cc36a-58ca-4b98-9697-fa5885afb76c"
+      ]
+    },
+    {
+      "old_url": "https://bsllkpvkowwndhhxtlln.supabase.co/storage/v1/object/public/event-posters/import-stamped/kaliffa-sergelstorg.png",
+      "old_storage_path": "event-posters/import-stamped/kaliffa-sergelstorg.png",
+      "event_count": 2,
+      "category_slug": "classical",
+      "sample_titles": [
+        "Mozart, Liszt och Dantes Inferno  - med Adès, Keller & Bota",
+        "Upptäck sekelskiftets balettmusik"
+      ],
+      "sample_event_ids": [
+        "f3851e09-f56f-465c-8d0a-3f3784d22b55",
+        "ac234485-7eb4-4f54-a1f9-d77b0f36d876"
+      ]
+    },
+    {
+      "old_url": "https://bsllkpvkowwndhhxtlln.supabase.co/storage/v1/object/public/event-posters/import-stamped/granmma-sergelstorg.png",
+      "old_storage_path": "event-posters/import-stamped/granmma-sergelstorg.png",
+      "event_count": 2,
+      "category_slug": "classical",
+      "sample_titles": [
+        "Mendelssohns Italienska med Emelyanychev - Max Bruch dubbelkonsert & Stenhammars Reverenza",
+        "Bruckners femma enligt Stutzmann"
+      ],
+      "sample_event_ids": [
+        "f73010ad-7d3b-4457-8877-d9ed481c3ab4",
+        "585f9604-44ef-4998-bce8-e16391023b70"
+      ]
+    },
+    {
+      "old_url": "https://bsllkpvkowwndhhxtlln.supabase.co/storage/v1/object/public/event-posters/import-stamped/pinocchiolive3-sergelstorg.png",
+      "old_storage_path": "event-posters/import-stamped/pinocchiolive3-sergelstorg.png",
+      "event_count": 2,
+      "category_slug": "classical",
+      "sample_titles": [
+        "Julkonsert 2026",
+        "Minnet av en gud"
+      ],
+      "sample_event_ids": [
+        "52ad37ef-9a09-4b85-8262-8e12d331ac77",
+        "b1b8d0ff-0d27-400b-9ca8-83c1aac03bbf"
+      ]
+    },
+    {
+      "old_url": "https://bsllkpvkowwndhhxtlln.supabase.co/storage/v1/object/public/event-posters/import-stamped/theplayboyofthewesternworld-sergelstorg.png",
+      "old_storage_path": "event-posters/import-stamped/theplayboyofthewesternworld-sergelstorg.png",
+      "event_count": 1,
+      "category_slug": "classical",
+      "sample_titles": [
+        "Julkonsert"
+      ],
+      "sample_event_ids": [
+        "3f97af1a-a40d-4fe6-a32f-5e0176064d10"
+      ]
+    },
+    {
+      "old_url": "https://bsllkpvkowwndhhxtlln.supabase.co/storage/v1/object/public/event-posters/import-stamped/motstndskraft-abf.png",
+      "old_storage_path": "event-posters/import-stamped/motstndskraft-abf.png",
+      "event_count": 1,
+      "category_slug": "community",
+      "sample_titles": [
+        "Bass Drum of Death"
+      ],
+      "sample_event_ids": [
+        "3366a6d1-4b96-42be-9ab2-a1bbbfb3d012"
+      ]
+    },
+    {
+      "old_url": "https://bsllkpvkowwndhhxtlln.supabase.co/storage/v1/object/public/event-posters/import-stamped/upploppet-husby.png",
+      "old_storage_path": "event-posters/import-stamped/upploppet-husby.png",
+      "event_count": 1,
+      "category_slug": "classical",
+      "sample_titles": [
+        "Klangstorm och horisont"
+      ],
+      "sample_event_ids": [
+        "543d9029-0803-45e6-bd2c-df5c55a4c5a5"
+      ]
+    },
+    {
+      "old_url": "https://bsllkpvkowwndhhxtlln.supabase.co/storage/v1/object/public/event-posters/import-stamped/torsdagshngmedbarochgrillprosendalstrdgrd-rosendalstrdgrd.png",
+      "old_storage_path": "event-posters/import-stamped/torsdagshngmedbarochgrillprosendalstrdgrd-rosendalstrdgrd.png",
+      "event_count": 1,
+      "category_slug": "community",
+      "sample_titles": [
+        "Fokus Hjälpmedel Örebro 2026"
+      ],
+      "sample_event_ids": [
+        "93c4c166-0adf-4312-95c5-1c1a2b87bbf2"
+      ]
+    },
+    {
+      "old_url": "https://bsllkpvkowwndhhxtlln.supabase.co/storage/v1/object/public/event-posters/import-stamped/harnessingaiformarketinginnovationstockholm-stockholm.png",
+      "old_storage_path": "event-posters/import-stamped/harnessingaiformarketinginnovationstockholm-stockholm.png",
+      "event_count": 1,
+      "category_slug": "community",
+      "sample_titles": [
+        "Äldreomsorgsdagarna 2026"
+      ],
+      "sample_event_ids": [
+        "f5ff2ec4-343a-4291-bda5-68ab3a604aec"
+      ]
+    },
+    {
+      "old_url": "https://bsllkpvkowwndhhxtlln.supabase.co/storage/v1/object/public/event-posters/import-stamped/lerworkshopdorodango-sergelstorg.png",
+      "old_storage_path": "event-posters/import-stamped/lerworkshopdorodango-sergelstorg.png",
+      "event_count": 1,
+      "category_slug": "classical",
+      "sample_titles": [
+        "Bowie in Berlin"
+      ],
+      "sample_event_ids": [
+        "3324cfc1-c6cb-4237-956b-7f48fce1f92b"
+      ]
+    },
+    {
+      "old_url": "https://bsllkpvkowwndhhxtlln.supabase.co/storage/v1/object/public/event-posters/import-stamped/brandvandringpxe5sxf6der-sxf6dermalm.png",
+      "old_storage_path": "event-posters/import-stamped/brandvandringpxe5sxf6der-sxf6dermalm.png",
+      "event_count": 1,
+      "category_slug": "community",
+      "sample_titles": [
+        "A Norman stitch-up? The story behind the Bayeux Tapestry"
+      ],
+      "sample_event_ids": [
+        "bc46d087-ada0-47ed-a9c6-3649ca5c2dd8"
+      ]
+    },
+    {
+      "old_url": "https://bsllkpvkowwndhhxtlln.supabase.co/storage/v1/object/public/event-posters/import-stamped/vannaminne-sergelstorg.png",
+      "old_storage_path": "event-posters/import-stamped/vannaminne-sergelstorg.png",
+      "event_count": 1,
+      "category_slug": "classical",
+      "sample_titles": [
+        "Känslosvall och sagokraft - med Gilbert & Broman"
+      ],
+      "sample_event_ids": [
+        "1767a564-5a71-42cc-a7df-1392ed545420"
+      ]
+    },
+    {
+      "old_url": "https://bsllkpvkowwndhhxtlln.supabase.co/storage/v1/object/public/event-posters/import-stamped/amadeus-sergelstorg.png",
+      "old_storage_path": "event-posters/import-stamped/amadeus-sergelstorg.png",
+      "event_count": 1,
+      "category_slug": "classical",
+      "sample_titles": [
+        "Sång om stjärnorna med Radiokören - i Storkyrkan"
+      ],
+      "sample_event_ids": [
+        "633700ba-3a8b-4e57-8681-978a2fc550dc"
+      ]
+    },
+    {
+      "old_url": "https://bsllkpvkowwndhhxtlln.supabase.co/storage/v1/object/public/event-posters/import-stamped/rymden-sergelstorg.png",
+      "old_storage_path": "event-posters/import-stamped/rymden-sergelstorg.png",
+      "event_count": 1,
+      "category_slug": "classical",
+      "sample_titles": [
+        "Humlan Djojj på äventyr med Radiosymfonikerna"
+      ],
+      "sample_event_ids": [
+        "39dcea2a-8ed6-4dcd-89e2-9ee1146328f0"
+      ]
+    },
+    {
+      "old_url": "https://bsllkpvkowwndhhxtlln.supabase.co/storage/v1/object/public/event-posters/import-stamped/swedenvmug-april2026-arrow.png",
+      "old_storage_path": "event-posters/import-stamped/swedenvmug-april2026-arrow.png",
+      "event_count": 1,
+      "category_slug": "classical",
+      "sample_titles": [
+        "Mozart och Stenhammar med Ollikainen & Buchbinder"
+      ],
+      "sample_event_ids": [
+        "82eaa79d-1c46-4571-9abe-c8cf7dd0b8a9"
+      ]
+    },
+    {
+      "old_url": "https://bsllkpvkowwndhhxtlln.supabase.co/storage/v1/object/public/event-posters/import-stamped/konstpbiopicasso-arebelinparis-sergelstorg.png",
+      "old_storage_path": "event-posters/import-stamped/konstpbiopicasso-arebelinparis-sergelstorg.png",
+      "event_count": 1,
+      "category_slug": "classical",
+      "sample_titles": [
+        "Känslosvall och sagokraft med Gilbert & Broman"
+      ],
+      "sample_event_ids": [
+        "1772756c-6fc7-4117-a618-f06687be3f4a"
+      ]
+    },
+    {
+      "old_url": "https://bsllkpvkowwndhhxtlln.supabase.co/storage/v1/object/public/event-posters/import-stamped/musiktillminnelse-medradiokrenpeterdijkstra-.png",
+      "old_storage_path": "event-posters/import-stamped/musiktillminnelse-medradiokrenpeterdijkstra-.png",
+      "event_count": 1,
+      "category_slug": "community",
+      "sample_titles": [
+        "Circel Session: NRF Europe Recap Breakfast - STHLM"
+      ],
+      "sample_event_ids": [
+        "5201ac30-b573-4658-896f-a3d1dcf38c4f"
+      ]
+    },
+    {
+      "old_url": "https://bsllkpvkowwndhhxtlln.supabase.co/storage/v1/object/public/event-posters/import-stamped/radiokrentolkarpalestrina-istorkyrkan-.png",
+      "old_storage_path": "event-posters/import-stamped/radiokrentolkarpalestrina-istorkyrkan-.png",
+      "event_count": 1,
+      "category_slug": "community",
+      "sample_titles": [
+        "Crash course i årets Nobelpriser"
+      ],
+      "sample_event_ids": [
+        "573ac309-22d8-492f-b386-f035bb92851b"
+      ]
+    },
+    {
+      "old_url": "https://bsllkpvkowwndhhxtlln.supabase.co/storage/v1/object/public/event-posters/import-stamped/goethesfilmklubbcurveballwirmachendiewahrheit-goethe-institutschweden.png",
+      "old_storage_path": "event-posters/import-stamped/goethesfilmklubbcurveballwirmachendiewahrheit-goethe-institutschweden.png",
+      "event_count": 1,
+      "category_slug": "classical",
+      "sample_titles": [
+        "Balett i brytningstid"
+      ],
+      "sample_event_ids": [
+        "a3b3b6f0-f576-4f9c-aca6-eb804aa63457"
+      ]
+    }
+  ]
+}

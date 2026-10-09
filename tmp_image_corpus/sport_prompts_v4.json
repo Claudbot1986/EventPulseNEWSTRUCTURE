@@ -1,0 +1,31 @@
+{
+  "category_slug": "sport",
+  "events": 7,
+  "jev_q1": 0.3,
+  "jev_q2": 0.65,
+  "jev_q3": 0.1,
+  "description_corpus_size": 7,
+  "model": "MiniMax-M3",
+  "prompts": [
+    {
+      "pattern": "A_wide",
+      "prompt": "Wide photograph of Solvalla harness racing track under bright daylight, a trotter pulling a sulky around the bend, grandstands packed with cheering spectators, Stockholm skyline in distance, vivid green turf, dynamic action captured."
+    },
+    {
+      "pattern": "B_medium",
+      "prompt": "Medium shot at Solvalla of a driver in racing silks gripping reins, focused expression, his trotter mid-stride, blurred crowd and turf rail behind, natural afternoon sunlight, sweat on the horse, dust kicking up."
+    },
+    {
+      "pattern": "C_environment",
+      "prompt": "Environmental photo inside Solvalla's main grandstand, spectators leaning over railings watching horses parade before post, signage and tote boards visible, natural light filtering through open roof, Stockholm crowds layered in seats."
+    },
+    {
+      "pattern": "D_detail",
+      "prompt": "Close-up detail of a horse's hooves striking dirt at Solvalla, motion blur on legs, sulky wheel spinning, clods of earth flying, warm late-afternoon sunlight, the bridle and reins taut, no text visible."
+    },
+    {
+      "pattern": "E_intimate",
+      "prompt": "Intimate portrait of a jockey standing beside his calm trotter in Solvalla's paddock, soft golden-hour light, hand resting on horse's neck, blurred grandstand behind, quiet pre-race moment, sweat sheen on the animal's coat."
+    }
+  ]
+}

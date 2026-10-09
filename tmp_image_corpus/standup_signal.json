@@ -1,0 +1,169 @@
+{
+  "category_slug": "standup",
+  "events": 15,
+  "docs": 15,
+  "top_1grams_distinctive": [
+    {
+      "w": "standup",
+      "c": 19,
+      "score": 39.50938929191688
+    },
+    {
+      "w": "scalateatern",
+      "c": 12,
+      "score": 30.779392289538443
+    },
+    {
+      "w": "schyffert",
+      "c": 12,
+      "score": 27.63102111592855
+    },
+    {
+      "w": "sundin",
+      "c": 12,
+      "score": 23.350921788663758
+    },
+    {
+      "w": "norra",
+      "c": 11,
+      "score": 19.709354161508603
+    },
+    {
+      "w": "brunn",
+      "c": 11,
+      "score": 19.709354161508603
+    },
+    {
+      "w": "gärdenfors",
+      "c": 7,
+      "score": 16.785266909588593
+    },
+    {
+      "w": "comedy",
+      "c": 7,
+      "score": 13.621371043387192
+    },
+    {
+      "w": "magnus",
+      "c": 7,
+      "score": 13.621371043387192
+    },
+    {
+      "w": "simon",
+      "c": 7,
+      "score": 12.542316284596385
+    },
+    {
+      "w": "standupföreställning",
+      "c": 4,
+      "score": 12.178089750893692
+    },
+    {
+      "w": "föreställningen",
+      "c": 4,
+      "score": 11.090354888959125
+    },
+    {
+      "w": "presenterar",
+      "c": 4,
+      "score": 9.939626599152001
+    },
+    {
+      "w": "nöjespalats",
+      "c": 4,
+      "score": 9.939626599152001
+    },
+    {
+      "w": "showen",
+      "c": 5,
+      "score": 9.729550745276565
+    },
+    {
+      "w": "betnér",
+      "c": 5,
+      "score": 9.729550745276565
+    },
+    {
+      "w": "maffia",
+      "c": 5,
+      "score": 9.729550745276565
+    },
+    {
+      "w": "kväll",
+      "c": 5,
+      "score": 8.958797346140274
+    },
+    {
+      "w": "ingen",
+      "c": 5,
+      "score": 8.958797346140274
+    },
+    {
+      "w": "erbjuder",
+      "c": 4,
+      "score": 8.788898309344878
+    }
+  ],
+  "top_2grams_distinctive": [
+    [
+      "schyffert sundin",
+      12
+    ],
+    [
+      "norra brunn",
+      11
+    ],
+    [
+      "standup schyffert",
+      9
+    ],
+    [
+      "simon gärdenfors",
+      7
+    ],
+    [
+      "maffia comedy",
+      5
+    ],
+    [
+      "standupföreställning scalateatern",
+      4
+    ],
+    [
+      "brunn simon",
+      4
+    ],
+    [
+      "magnus betnér",
+      4
+    ],
+    [
+      "sundin standupföreställning",
+      3
+    ],
+    [
+      "standup scalateatern",
+      3
+    ],
+    [
+      "scalateatern scalateatern",
+      3
+    ],
+    [
+      "mariatorget pitchers",
+      3
+    ],
+    [
+      "pitchers casino",
+      3
+    ],
+    [
+      "äger rum",
+      3
+    ],
+    [
+      "jävla karlar",
+      3
+    ]
+  ]
+}

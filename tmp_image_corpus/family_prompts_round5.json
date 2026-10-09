@@ -1,0 +1,36 @@
+{
+  "category_slug": "family",
+  "events": 56,
+  "library": 0,
+  "target_count": 2,
+  "jev_q1": 0.65,
+  "jev_q2": 0.59,
+  "model": "MiniMax-M3",
+  "source_prompts_count": 4,
+  "items": [
+    {
+      "category": "family",
+      "pattern": "A_wide",
+      "rep": 0,
+      "prompt": "A wide shot of a sunny Stockholm waterfront promenade where families with young children discover playful puppet mascots, strollers and ice cream carts scattered along the path, soft afternoon light, candid documentary photography, low angle, in soft northern daylight, shallow depth of field, editorial Stockholm color tones. no weapons, no knives, no blood, no gloves, no hands holding objects, no close-up faces of minors, no violence, child-safe imagery, family-friendly.",
+      "jev_q1": 0.65,
+      "jev_q2": 0.59,
+      "model": "MiniMax-M3",
+      "round": 5,
+      "seed": "r5-0",
+      "replacement_for": "1_per_30_image_library_2026-10-07"
+    },
+    {
+      "category": "family",
+      "pattern": "A_wide",
+      "rep": 0,
+      "prompt": "A wide shot of a sunny Stockholm waterfront promenade where families with young children discover playful puppet mascots, strollers and ice cream carts scattered along the path, soft afternoon light, candid documentary photography, low angle, with warm tungsten and window light mixed, ambient interior glow. no weapons, no knives, no blood, no gloves, no hands holding objects, no close-up faces of minors, no violence, child-safe imagery, family-friendly.",
+      "jev_q1": 0.65,
+      "jev_q2": 0.59,
+      "model": "MiniMax-M3",
+      "round": 5,
+      "seed": "r5-1",
+      "replacement_for": "1_per_30_image_library_2026-10-07"
+    }
+  ]
+}

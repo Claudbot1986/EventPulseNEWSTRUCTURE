@@ -9,23 +9,23 @@
   "prompts": [
     {
       "pattern": "A_wide",
-      "prompt": "Wide natural-light photo of a guide leading a small group of visitors through the grand Entréhallen Nybroplan foyer in Stockholm, polished stone floors, arched glass ceiling panels casting soft daylight, visitors looking up and around attentively."
+      "prompt": "A wide natural-light photograph of Entréhallen Nybroplan in Stockholm, where a group of six visitors follows a guide across the grand marble foyer beneath soaring arched ceilings and crystal chandeliers, polished floors reflecting pale daylight."
     },
     {
       "pattern": "B_medium",
-      "prompt": "Medium natural-light shot of a guide in casual dark clothing gesturing toward a velvet-upholstered doorway inside Confidencen, three adult visitors following closely, warm golden hour light filtering through tall palace windows."
+      "prompt": "A medium shot inside Confidencen's ornate 18th-century hall in Solna, a guide gesturing toward gilded wall panels while three visitors in winter coats listen attentively, warm candlelight and soft window light illuminating their faces."
     },
     {
       "pattern": "C_environment",
-      "prompt": "Environmental natural-light photo inside YogaDevi studio on Södermalm, Stockholm, with cork floor, potted plants, and a dozen participants on mats in a relaxed Yin pose while soft RnB plays from speakers."
+      "prompt": "An environmental view of a serene yoga studio at YogaDevi in Stockholm, natural light pouring through tall windows onto pale wooden floors where a small group of students reclines on bolsters, soft shadows stretching across the room."
     },
     {
       "pattern": "D_detail",
-      "prompt": "Close-up natural-light detail of a guide's hand pointing at ornate gilded plasterwork on a Confidencen wall, shallow depth of field, a visitor's shoulder softly blurred in the background, daylight illuminating the carved floral motif."
+      "prompt": "A detailed close-up of a guide's hand holding a brass key beside an aged velvet rope at Entréhallen Nybroplan, warm tungsten stage light catching the metallic sheen against dark carved wood, soft background bokeh."
     },
     {
       "pattern": "E_intimate",
-      "prompt": "Intimate soft natural-light close-up of two visitors leaning in to listen as a guide whispers near a sculptural bronze fixture at Entréhallen Nybroplan, blurred marble columns framing the quiet, curious moment in Stockholm."
+      "prompt": "An intimate natural-light shot of a beginner yogi's hands resting gently on a sage green mat at YogaDevi in Stockholm, soft diffused daylight from a nearby window highlighting fingertips and the subtle texture of the mat."
     }
   ]
 }

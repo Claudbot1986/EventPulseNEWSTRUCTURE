@@ -1,0 +1,31 @@
+{
+  "category_slug": "festival",
+  "events": 14,
+  "jev_q1": 0.3,
+  "jev_q2": 0.65,
+  "jev_q3": 0.1,
+  "description_corpus_size": 14,
+  "model": "MiniMax-M3",
+  "prompts": [
+    {
+      "pattern": "A_wide",
+      "prompt": "Wide natural-light photograph of Fylkingen's brick experimental venue during Stockholms Internationella Downs Syndromfestival, captured from the back of the hall. Audience seated on mismatched chairs, warm afternoon sun filtering through tall industrial windows onto the worn wooden floor."
+    },
+    {
+      "pattern": "B_medium",
+      "prompt": "Medium-shot daylight image inside Fylkingen during a noisy modern dance block of the syndromfestival: five smiling performers wearing bright primary colors stand shoulder to shoulder on the low stage, arms gently linked, soft window light on their faces."
+    },
+    {
+      "pattern": "C_environment",
+      "prompt": "Environmental photograph of a Stockholm outdoor square near Slussen at the syndromfestival, food stalls, balloon arches, families on blankets, a brass trio playing, late afternoon golden natural light catching white tents and children's jackets."
+    },
+    {
+      "pattern": "D_detail",
+      "prompt": "Extreme close-up natural-light detail of a festival volunteer's hand tying a red ribbon onto a white wristband stack on a folding table, the syndromfestival banner blurred softly behind, sun-warm skin tones, shallow depth."
+    },
+    {
+      "pattern": "E_intimate",
+      "prompt": "Intimate candid portrait, soft diffused daylight from a side window: a young performer with Down syndrome resting her chin on her hands backstage at Fylkingen, sequined collar catching the light, quiet proud smile, warm Stockholm afternoon."
+    }
+  ]
+}

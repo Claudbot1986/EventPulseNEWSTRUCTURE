@@ -1,31 +1,31 @@
 {
   "category_slug": "flea-market",
-  "events": 28,
-  "jev_q1": 0.68,
-  "jev_q2": 0.64,
-  "jev_q3": 0.41,
-  "description_corpus_size": 19,
+  "events": 27,
+  "jev_q1": 0.3,
+  "jev_q2": 0.65,
+  "jev_q3": 0.1,
+  "description_corpus_size": 18,
   "model": "MiniMax-M3",
   "prompts": [
     {
       "pattern": "A_wide",
-      "prompt": "A wide daylight view of a bustling trunk sale at Liljeholmstorget Gallerias p-hus, plan 2 in Liljeholmen. Cars line up with open boots displaying vintage clothing, lamps, and porcelain. Shoppers in light jackets stroll between vehicles. Concrete parking structure, lively atmosphere, soft overcast natural daylight."
+      "prompt": "Wide daylight view of a bustling loppis spread across Karlaplan park, white-cloth tables brimming with porcelain, framed prints, and silverware, while dozens of locals browse between bare-branched trees with the pale Stockholm skyline behind them, natural overcast light, candid atmosphere."
     },
     {
       "pattern": "B_medium",
-      "prompt": "A medium shot at Stockholmsmässan during an antique fair. A vendor in a beige apron arranges brass candlesticks and mid-century design glassware on a linen-draped table. Browsers lean closer, gesturing. Indoor natural light from tall exhibition windows, neutral tones, candid documentary photography."
+      "prompt": "Medium shot at Stockholm Waterfront's airy congress hall where rows of vintage stalls display weathered leather suitcases, brass lamps, and stacked vinyl, a middle-aged woman in a wool coat leaning over a table examining a ceramic bowl, soft diffused indoor light."
     },
     {
       "pattern": "C_environment",
-      "prompt": "An environmental wide view of Kista Galleria's Östra p-garaget, Hanstavägen, 164 53 Kista, transformed into a seasonal flea market. Open car boots spill toys, framed art, and stacked vinyl onto tarmac. Families and curious pensioners weave between vehicles. Grey concrete, soft overcast natural daylight, authentic spring atmosphere."
+      "prompt": "Environmental view inside Stockholm Waterfront during an antikmässan, tall arched windows spilling natural morning light onto herringbone parquet, antique dealers standing beside glass cabinets of jewelry and clocks, visitors navigating narrow aisles, the cavernous hall stretching toward a distant stage."
     },
     {
       "pattern": "D_detail",
-      "prompt": "A close detail shot of weathered hands sifting through a wooden crate of antique door knobs and brass keys at Stockholmsmässan. Tarnished metal catches soft natural exhibition light. Rustic textures, blurred background of additional vintage finds, shallow depth of field, tactile and authentic."
+      "prompt": "Close-up still life on a flea-market blanket at Karlaplan: chipped enamel teapots, a tarnished hand mirror, embroidered linen napkins, a pair of retro sunglasses resting on a tattered atlas, captured in soft northern daylight with shallow depth of field."
     },
     {
       "pattern": "E_intimate",
-      "prompt": "An intimate portrait of a smiling seller leaning into the back seat of a hatchback at Liljeholmstorget Gallerias p-hus, plan 2. They hold up a small ceramic vase toward camera, surrounded by folded textiles and old postcards. Soft natural daylight filtering through the garage opening, warm candid moment."
+      "prompt": "Intimate portrait of an elderly man kneeling at a loppis near Karlaplan, carefully unwrapping a small brass figurine from newspaper, his weathered hands and tartan scarf prominent, late-afternoon sun raking across the ground, background softly blurred with other browsers and folded tables."
     }
   ]
 }

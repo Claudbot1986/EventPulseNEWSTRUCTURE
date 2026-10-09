@@ -1,285 +1,169 @@
 {
   "category_slug": "flea-market",
-  "events": 28,
-  "docs": 19,
+  "events": 27,
+  "docs": 18,
   "top_1grams_distinctive": [
     {
-      "w": "gratisistockholm",
-      "c": 9,
-      "score": 63.33
-    },
-    {
-      "w": "design",
-      "c": 9,
-      "score": 45.93
-    },
-    {
       "w": "karlaplan",
-      "c": 6,
-      "score": 44.93
-    },
-    {
-      "w": "loppisen",
-      "c": 6,
-      "score": 44.93
-    },
-    {
-      "w": "säsongsstart",
-      "c": 6,
-      "score": 44.93
-    },
-    {
-      "w": "fullbokat",
-      "c": 6,
-      "score": 44.93
-    },
-    {
-      "w": "säljplats",
-      "c": 6,
-      "score": 44.93
-    },
-    {
-      "w": "karlaloppis",
-      "c": 6,
-      "score": 44.93
-    },
-    {
-      "w": "stockholmsmarknader",
-      "c": 6,
-      "score": 44.93
-    },
-    {
-      "w": "loppisarrangör",
-      "c": 6,
-      "score": 44.93
-    },
-    {
-      "w": "erfarenhe",
-      "c": 6,
-      "score": 44.93
-    },
-    {
-      "w": "midsommar",
-      "c": 6,
-      "score": 44.13
-    },
-    {
-      "w": "extraordinär",
-      "c": 6,
-      "score": 43.42
-    },
-    {
-      "w": "sök",
-      "c": 7,
-      "score": 41.57
+      "c": 24,
+      "score": 55.2620422318571
     },
     {
       "w": "loppis",
-      "c": 7,
-      "score": 41.57
+      "c": 25,
+      "score": 48.64775372638283
     },
     {
-      "w": "rubrik",
-      "c": 7,
-      "score": 41.57
+      "w": "bakluckeloppis",
+      "c": 12,
+      "score": 32.49660241322652
     },
     {
       "w": "måntisonstorfrelörsön2829301234567891011121314151617181920212223242526272829303112345678",
       "c": 7,
-      "score": 41.57
+      "score": 31.420454588124976
     },
     {
-      "w": "kategori",
-      "c": 7,
-      "score": 41.36
+      "w": "gratis",
+      "c": 16,
+      "score": 31.13456238488501
     },
     {
-      "w": "övrigt",
-      "c": 7,
-      "score": 41.36
+      "w": "sök",
+      "c": 21,
+      "score": 29.112181583517703
     },
     {
-      "w": "sport",
-      "c": 7,
-      "score": 40.96
+      "w": "2026",
+      "c": 17,
+      "score": 27.360444511379704
     },
     {
-      "w": "marknad",
-      "c": 7,
-      "score": 40.77
+      "w": "loppisen",
+      "c": 12,
+      "score": 26.366694928034633
     },
     {
-      "w": "stängt",
+      "w": "gratisistockholm",
+      "c": 9,
+      "score": 25.498920096505945
+    },
+    {
+      "w": "besökare",
+      "c": 10,
+      "score": 21.972245773362197
+    },
+    {
+      "w": "april",
+      "c": 12,
+      "score": 21.50111363073666
+    },
+    {
+      "w": "stockholmsmarknader",
       "c": 6,
-      "score": 39.97
+      "score": 17.974393641323946
     },
     {
-      "w": "motion",
+      "w": "föreläsning",
       "c": 7,
-      "score": 39.71
-    },
-    {
-      "w": "lördagar",
-      "c": 6,
-      "score": 39.61
+      "score": 17.394346548516
     },
     {
       "w": "litteratur",
       "c": 7,
-      "score": 39.55
+      "score": 16.785266909588593
     },
     {
-      "w": "visade",
-      "c": 7,
-      "score": 38.8
+      "w": "marknad",
+      "c": 8,
+      "score": 16.635532333438686
     },
     {
-      "w": "kalender",
-      "c": 7,
-      "score": 38.8
+      "w": "oktober",
+      "c": 8,
+      "score": 16.635532333438686
     },
     {
-      "w": "www",
+      "w": "största",
+      "c": 8,
+      "score": 16.635532333438686
+    },
+    {
+      "w": "loppisarrangör",
+      "c": 6,
+      "score": 16.24830120661326
+    },
+    {
+      "w": "många",
       "c": 9,
-      "score": 38.33
+      "score": 16.125835223052494
     },
     {
-      "w": "ungdom",
+      "w": "nattklubb",
       "c": 7,
-      "score": 37.62
-    },
-    {
-      "w": "kurs",
-      "c": 7,
-      "score": 37.38
+      "score": 16.11809565095832
     }
   ],
   "top_2grams_distinctive": [
-    {
-      "w": "många www",
-      "c": 9,
-      "score": 63.33
-    },
-    {
-      "w": "www gratisistockholm",
-      "c": 9,
-      "score": 63.33
-    },
-    {
-      "w": "ett många",
-      "c": 9,
-      "score": 61.83
-    },
-    {
-      "w": "konst design",
-      "c": 8,
-      "score": 47.03
-    },
-    {
-      "w": "måntisonstorfrelörsön2829301234567891011121314151617181920212223242526272829303112345678 loppis",
-      "c": 6,
-      "score": 44.93
-    },
-    {
-      "w": "loppis karlaplan",
-      "c": 6,
-      "score": 44.93
-    },
-    {
-      "w": "klassiska loppisen",
-      "c": 6,
-      "score": 44.93
-    },
-    {
-      "w": "loppisen karlaplan",
-      "c": 6,
-      "score": 44.93
-    },
-    {
-      "w": "karlaplan tillbaka",
-      "c": 6,
-      "score": 44.93
-    },
-    {
-      "w": "tillbaka säsongsstart",
-      "c": 6,
-      "score": 44.93
-    },
-    {
-      "w": "säsongsstart april",
-      "c": 6,
-      "score": 44.93
-    },
-    {
-      "w": "april extraordinär",
-      "c": 6,
-      "score": 44.93
-    },
-    {
-      "w": "extraordinär loppis",
-      "c": 6,
-      "score": 44.93
-    },
-    {
-      "w": "loppis vackra",
-      "c": 6,
-      "score": 44.93
-    },
-    {
-      "w": "vackra karlaplan",
-      "c": 6,
-      "score": 44.93
-    },
-    {
-      "w": "karlaplan centrala",
-      "c": 6,
-      "score": 44.93
-    },
-    {
-      "w": "centrala lördagar",
-      "c": 6,
-      "score": 44.93
-    },
-    {
-      "w": "lördagar mellan",
-      "c": 6,
-      "score": 44.93
-    },
-    {
-      "w": "mellan april",
-      "c": 6,
-      "score": 44.93
-    },
-    {
-      "w": "april november",
-      "c": 6,
-      "score": 44.93
-    },
-    {
-      "w": "november stängt",
-      "c": 6,
-      "score": 44.93
-    },
-    {
-      "w": "stängt midsommar",
-      "c": 6,
-      "score": 44.93
-    },
-    {
-      "w": "midsommar juni",
-      "c": 6,
-      "score": 44.93
-    },
-    {
-      "w": "juni begränsat",
-      "c": 6,
-      "score": 44.93
-    },
-    {
-      "w": "platser snabbt",
-      "c": 6,
-      "score": 44.93
-    }
-  ],
-  "note": "score = cat_count * log(N / global_count). Higher = more distinctive for this category."
+    [
+      "loppis karlaplan",
+      12
+    ],
+    [
+      "många gratis",
+      9
+    ],
+    [
+      "gratis www",
+      9
+    ],
+    [
+      "www gratisistockholm",
+      9
+    ],
+    [
+      "oktober 2026",
+      8
+    ],
+    [
+      "sök kategori",
+      7
+    ],
+    [
+      "kategori mest",
+      7
+    ],
+    [
+      "mest visade",
+      7
+    ],
+    [
+      "visade scen",
+      7
+    ],
+    [
+      "scen nattklubb",
+      7
+    ],
+    [
+      "nattklubb film",
+      7
+    ],
+    [
+      "film dans",
+      7
+    ],
+    [
+      "dans museum",
+      7
+    ],
+    [
+      "museum festival",
+      7
+    ],
+    [
+      "festival konst",
+      7
+    ]
+  ]
 }

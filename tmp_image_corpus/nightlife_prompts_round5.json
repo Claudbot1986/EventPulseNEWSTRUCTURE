@@ -1,0 +1,36 @@
+{
+  "category_slug": "nightlife",
+  "events": 87,
+  "library": 1,
+  "target_count": 2,
+  "jev_q1": 0.77,
+  "jev_q2": 0.63,
+  "model": "MiniMax-M3",
+  "source_prompts_count": 4,
+  "items": [
+    {
+      "category": "nightlife",
+      "pattern": "A_wide",
+      "rep": 0,
+      "prompt": "Wide photograph of the Golden Hits dinner theater in Stockholm, captured during a helkväll performance. Stage glows amber over white-clothed tables where a full crowd raises champagne coupes. Karaoke screen lit in the background, nattklubb atmosphere, warm tungsten and natural stage light, in soft northern daylight, shallow depth of field, editorial Stockholm color tones. no weapons, no knives, no blood, no gloves, no hands holding objects, no close-up faces of minors, no violence, child-safe imagery, family-friendly.",
+      "jev_q1": 0.77,
+      "jev_q2": 0.63,
+      "model": "MiniMax-M3",
+      "round": 5,
+      "seed": "r5-0",
+      "replacement_for": "1_per_30_image_library_2026-10-07"
+    },
+    {
+      "category": "nightlife",
+      "pattern": "A_wide",
+      "rep": 0,
+      "prompt": "Wide photograph of the Golden Hits dinner theater in Stockholm, captured during a helkväll performance. Stage glows amber over white-clothed tables where a full crowd raises champagne coupes. Karaoke screen lit in the background, nattklubb atmosphere, warm tungsten and natural stage light, with warm tungsten and window light mixed, ambient interior glow. no weapons, no knives, no blood, no gloves, no hands holding objects, no close-up faces of minors, no violence, child-safe imagery, family-friendly.",
+      "jev_q1": 0.77,
+      "jev_q2": 0.63,
+      "model": "MiniMax-M3",
+      "round": 5,
+      "seed": "r5-1",
+      "replacement_for": "1_per_30_image_library_2026-10-07"
+    }
+  ]
+}

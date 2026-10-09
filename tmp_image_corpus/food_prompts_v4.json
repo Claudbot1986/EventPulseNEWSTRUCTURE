@@ -9,23 +9,23 @@
   "prompts": [
     {
       "pattern": "A_wide",
-      "prompt": "Wide-angle natural-light photo of a lively Stockholm waterfront dinner party, guests seated at long communal tables beside the water, plates of grilled fish and salads, candles flickering, soft evening daylight, smiling faces mid-conversation, candid and warm atmosphere."
+      "prompt": "A wide shot of a long banquet table at Golden Hits in Stockholm, laden with artfully plated three-course dishes under warm chandelier light. Groups of guests raise wine glasses in a celebratory toast, with the glittering stage and karaoke screen visible in the background of this helkväll event."
     },
     {
       "pattern": "B_medium",
-      "prompt": "Medium shot in natural daylight of four friends laughing at an outdoor table in Stockholm, sharing a Swedish meatball platter with lingonberry jam and boiled potatoes, golden-hour sunlight on their relaxed expressions, shallow depth of field, candid party mood."
+      "prompt": "A medium photograph at Golden Hits in Stockholm showing a server placing a perfectly seared main course in front of two smiling women dressed for a party night. Warm ambient restaurant lighting catches the steam rising from the dish, with a champagne coupe held mid-toast in the foreground."
     },
     {
       "pattern": "C_environment",
-      "prompt": "Environment photo inside Golden Hits at 왕의 정원 Stockholm during a helkväll dinnershow, wide candlelit dining hall with round tables set for a three-course menu, guests in evening attire chatting under warm amber ceiling lights, elegant stage visible in the background."
+      "prompt": "An environment photograph capturing the elegant dining hall of Golden Hits in Stockholm during a helkväll dinnershow. Round tables are set with white linens and small floral centerpieces, while guests mingle between courses near illuminated arched windows reflecting the city evening outside."
     },
     {
       "pattern": "D_detail",
-      "prompt": "Close-up detail shot of a white porcelain plate holding a three-course tasting menu at a Stockholm helkväll party, golden sauce drizzled over seared salmon, microgreens garnish, candle reflection in the rim, natural side-light revealing steam and texture."
+      "prompt": "A tight detail shot of a chocolate-drizzled dessert plated on a black ceramic dish, garnished with gold leaf and fresh raspberries. The softly blurred background shows a glittering party table at Golden Hits in Stockholm, with sparkle from wine glasses and a glowing candle."
     },
     {
       "pattern": "E_intimate",
-      "prompt": "Intimate natural-light photo of two guests clinking champagne flutes at a Stockholm helkväll, soft window light illuminating their smiling faces, blurred plates of dessert and roses on the table, warm shallow focus capturing a quiet celebratory moment."
+      "prompt": "An intimate close-up of a couple sharing a candlelit three-course dinner at Golden Hits in Stockholm. The man cuts into his steak while the woman laughs softly, her hand resting near his on the white tablecloth. Warm helkväll lighting frames their faces with gentle bokeh."
     }
   ]
 }
