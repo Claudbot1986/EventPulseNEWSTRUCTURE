@@ -255,9 +255,21 @@ const DATE_RANGE_RULES: readonly DateRangeRule[] = [
   {
     pattern: /\b(nästa\s+vecka|next\s+week)\b/i,
     build: (_m, now, tz) => {
-      const wd = weekdayInStockholm(now, tz);
-      // Next Monday: from Sun, +1d; otherwise days until next Mon +7.
-      const nextMonDelta = wd === 0 ? 1 : (1 - wd + 7) % 7 + 7;
+      const wd = weekdayInStockholm(now, tz); // 0=Sun..6=Sat
+      // "nästa vecka" = the upcoming Mon..Sun that the user has NOT yet
+      // entered.
+      //   wd=0 (Sun): +1d — tomorrow is next Mon.
+      //   wd=1 (Mon): AMBIGUOUS — "this week" vs "next week". We pick the
+      //               upcoming (next) Mon by adding +7d. This mirrors the
+      //               original (pre-2026-10-09) behaviour for Monday and
+      //               matches the golden-eval expectation for NOW=Monday.
+      //   wd=2..6 (Tue–Sat): the upcoming Mon is just (1-wd+7)%7 days away,
+      //               do NOT add the extra +7. That +7 is what caused the
+      //               Q13 fail on Friday (golden-eval got +10 instead of +3).
+      let nextMonDelta: number;
+      if (wd === 0) nextMonDelta = 1;
+      else if (wd === 1) nextMonDelta = 7;
+      else nextMonDelta = (1 - wd + 7) % 7;
       const mon = shiftDaysInStockholm(now, tz, nextMonDelta);
       const sun = shiftDaysInStockholm(
         new Date(`${mon}T12:00:00.000Z`),

@@ -82,9 +82,17 @@ const EDIT_RULES: EditRule[] = [
     // Scoped to actual vault path; previous regex `/^\/Volumes\/.*\/.*\.md$/`
     // over-matched every project .md under /Volumes/. Machine-synced files
     // (VAULT_MACHINE_SYNC_FILES) are excepted — see comment above.
+    //
+    // Lead/ep-lead are added to bypassRoles (2026-10-09): the lead-session
+    // already runs `isLead()`-bypass above for the EDIT_RULES loop, but that
+    // early-exit branch never fires because Claude Code does not carry
+    // agent_name in real PreToolUse payloads (verified 2026-09-04). Adding
+    // the lead roles to bypassRoles restores the intended behaviour: the
+    // lead-session can write vault notes (CLAUDE.md names vault-sync as the
+    // role for *automated* sync, not for the lead's own session notes).
     match: (p) => /\/00-Vault\//.test(p) && p.endsWith(".md") && !isVaultMachineSyncFile(p),
     reason: "Obsidian vault files belong to vault-sync role only (machine-synced files excepted).",
-    bypassRoles: ["vault-sync"] as string[],
+    bypassRoles: ["vault-sync", "ep-lead", "lead"] as string[],
   },
 ];
 

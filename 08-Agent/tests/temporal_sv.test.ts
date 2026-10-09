@@ -283,6 +283,44 @@ describe('parseSwedishDateRange — rule coverage', () => {
     expect(r).toEqual({ from: '2026-08-24', to: '2026-08-30' });
   });
 
+  // Regression: Q13 fail 2026-10-09. The golden eval was anchored on a
+  // Friday (2026-08-21) and the old `nextMonDelta = (1 - wd + 7) % 7 + 7`
+  // produced +10 days (Mon 2026-08-31) instead of +3 (Mon 2026-08-24).
+  // The fix is conditional: from Thu–Sat (wd 4–6), do NOT add the extra
+  // week. These seven cases pin the new behaviour for every weekday.
+  describe('"nästa vecka" weekday regression (Stream C.4 / Q13, 2026-10-09)', () => {
+    // Anchor week: Mon 2026-08-24..Sun 2026-08-30 — the "upcoming"
+    // Mon..Sun from any day in the prior week (Mon 2026-08-17..Sun 2026-08-23).
+    const ANCHORS: Array<{ ymd: string; weekday: string; expected: { from: string; to: string } }> = [
+      // Sun → "nästa vecka" = Mon 2026-08-17..Sun 2026-08-23 (the week
+      //         that starts tomorrow).
+      { ymd: '2026-08-16', weekday: 'Sun', expected: { from: '2026-08-17', to: '2026-08-23' } },
+      // Mon → +7d. Mon is ambiguous ("this week" vs "next week"); we pick
+      //       the upcoming Mon, matching golden-eval's pinned NOW=Monday.
+      { ymd: '2026-08-17', weekday: 'Mon', expected: { from: '2026-08-24', to: '2026-08-30' } },
+      // Tue → +6d.
+      { ymd: '2026-08-18', weekday: 'Tue', expected: { from: '2026-08-24', to: '2026-08-30' } },
+      // Wed → +5d.
+      { ymd: '2026-08-19', weekday: 'Wed', expected: { from: '2026-08-24', to: '2026-08-30' } },
+      // Thu → +4d. (was +11d pre-fix — Q13 sibling.)
+      { ymd: '2026-08-20', weekday: 'Thu', expected: { from: '2026-08-24', to: '2026-08-30' } },
+      // Fri → +3d. Q13 fail pre-fix (was +10d).
+      { ymd: '2026-08-21', weekday: 'Fri', expected: { from: '2026-08-24', to: '2026-08-30' } },
+      // Sat → +2d. (was +9d pre-fix.)
+      { ymd: '2026-08-22', weekday: 'Sat', expected: { from: '2026-08-24', to: '2026-08-30' } },
+    ];
+
+    for (const a of ANCHORS) {
+      it(`from ${a.weekday} ${a.ymd} → ${a.expected.from}..${a.expected.to}`, () => {
+        // Pin time-of-day at noon Stockholm (10:00 UTC) so the calendar day
+        // is unambiguous regardless of DST or server TZ.
+        const now = new Date(`${a.ymd}T10:00:00.000Z`);
+        const r = parseSwedishDateRange('nästa vecka', now, TZ);
+        expect(r).toEqual(a.expected);
+      });
+    }
+  });
+
   it('"nästa månad" → first day of next Stockholm month (placeholder; revisit later)', () => {
     const r = parseSwedishDateRange('nästa månad', NOW, TZ);
     // August → September: 2026-09-01..2026-09-30.

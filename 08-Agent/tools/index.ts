@@ -15,6 +15,9 @@
  *   - ALLOWED_INTERACTIONS     — enum of every persisted interaction
  *   - ALLOWED_REJECT_REASONS   — enum of reject_reason buckets
  *   - DEFAULT_REJECT_REASON    — the "no reject_reason supplied" fallback
+ *
+ * Stream C.1 (Agent Trust Plan 2026-10-09):
+ *   - verifyEventSources   — verify external sources before returning events
  */
 
 export {
@@ -25,3 +28,13 @@ export {
   DEFAULT_REJECT_REASON,
   type RecordFeedbackResult,
 } from './record_feedback';
+
+export {
+  verifyEventSources,
+  verifyEventBatch,
+  type SourceRef,
+  type VerifyCheck,
+  type VerifyCheckKind,
+  type VerifyResult,
+  type VerifyOptions,
+} from './verify_event_sources';

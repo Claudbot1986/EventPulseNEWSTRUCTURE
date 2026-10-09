@@ -25,7 +25,27 @@
 import golden from './golden-queries.stockholm.json' with { type: 'json' };
 import { parseIntentDeterministic } from '../tools/parse_intent';
 import { rankEvents } from '../tools/rank_events';
+import { composeReply } from '../llmRouter';
 import type { EventCard, IntentBrief, RankedEvent } from '../types';
+
+// ─── CLI mode ────────────────────────────────────────────────────────────────
+// Stream C.4 (Agent Trust Plan 2026-10-09): --mode live-m3 kör samma 23 queries
+// mot MiniMax-M3 via llmRouter.composeReply och jämför highlightedIds mot
+// facit. Anti-hallucination-garanti: vi kollar att highlightedIds ⊆ ranked_ids
+// (modellen kan inte "hitta på" events som inte rankades).
+//
+// Trend sparas i 08-Agent/eval/trends/<week>.json för veckovis diff.
+type EvalMode = 'deterministic' | 'live-m3';
+
+function parseModeArg(): EvalMode {
+  const idx = process.argv.indexOf('--mode');
+  if (idx === -1) return 'deterministic';
+  const v = process.argv[idx + 1];
+  if (v === 'live-m3') return 'live-m3';
+  return 'deterministic';
+}
+
+const MODE: EvalMode = parseModeArg();
 
 // Pinned "now" so date-range expectations stay stable across runs.
 const NOW = new Date('2026-08-21T17:00:00Z'); // Friday evening, the magic-slice anchor.
@@ -82,6 +102,12 @@ interface QueryResult {
   tool_ids_used: string[];
   hallucinations: string[];
   empty_ok: boolean;
+  /** M3-mode only: ids the LLM highlighted. */
+  m3_highlighted_ids?: string[];
+  /** M3-mode only: whether the LLM reply used LLM (vs deterministic fallback). */
+  m3_used_llm?: boolean;
+  /** M3-mode only: free-text reply from the LLM (PII-safe, no URLs/titles). */
+  m3_reply_summary?: string;
 }
 
 function filterByIntent(cards: EventCard[], intent: IntentBrief): EventCard[] {
@@ -99,7 +125,7 @@ function filterByIntent(cards: EventCard[], intent: IntentBrief): EventCard[] {
   return out;
 }
 
-function evaluate(tc: GoldenCase): QueryResult {
+async function evaluate(tc: GoldenCase): Promise<QueryResult> {
   const errors: string[] = [];
   const hallucinations: string[] = [];
 
@@ -165,7 +191,7 @@ function evaluate(tc: GoldenCase): QueryResult {
   // expects categories, ranking MUST also be empty (no fabrication).
   const empty_ok = !(filtered.length === 0 && ranked.length > 0);
 
-  return {
+  const base: QueryResult = {
     id: tc.id,
     query: tc.query,
     intent_ok: errors.length === 0,
@@ -175,12 +201,48 @@ function evaluate(tc: GoldenCase): QueryResult {
     hallucinations,
     empty_ok,
   };
+
+  // M3-mode: kör composeReply mot live MiniMax-M3 och kontrollera anti-hallucination.
+  if (MODE === 'live-m3' && ranked.length > 0) {
+    try {
+      const composeInput = {
+        intent,
+        cards: ranked.map((r) => r.card),
+        warnings: [],
+        relaxed_constraint: null,
+      };
+      const reply = await composeReply(composeInput);
+      const rankedIdSet = new Set(ranked.map((r) => r.card.id));
+      const fabrications = reply.highlightedIds.filter((id) => !rankedIdSet.has(id));
+      if (fabrications.length > 0) {
+        hallucinations.push(
+          `m3-fabrication: highlightedIds not in ranked: ${fabrications.join(',')}`
+        );
+      }
+      // PII-safe summary: bara längd och en kort flagga, inga URL:er/titlar.
+      const summary = `len=${reply.reply.length} usedLlm=${reply.usedLlm} highlights=${reply.highlightedIds.length}`;
+      return {
+        ...base,
+        m3_highlighted_ids: reply.highlightedIds,
+        m3_used_llm: reply.usedLlm,
+        m3_reply_summary: summary,
+      };
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : String(err);
+      return {
+        ...base,
+        m3_reply_summary: `error: ${msg.slice(0, 80)}`,
+      };
+    }
+  }
+
+  return base;
 }
 
-function main(): void {
+async function main(): Promise<void> {
   const results: QueryResult[] = [];
   for (const tc of golden as GoldenCase[]) {
-    results.push(evaluate(tc));
+    results.push(await evaluate(tc));
   }
 
   let pass = 0;
@@ -196,15 +258,53 @@ function main(): void {
     console.log(`[${status}] ${r.id}  ${r.query}`);
     if (details.length > 0) console.log(`        ${details.join(' | ')}`);
     console.log(`        ranked=${r.ranked_ids.length === 0 ? '[]' : r.ranked_ids.join(',')}`);
+    if (MODE === 'live-m3' && r.m3_reply_summary) {
+      console.log(`        m3=${r.m3_reply_summary}`);
+    }
   }
 
   console.log('---');
+  console.log(`Mode: ${MODE}`);
   console.log(`Queries: ${results.length}  Pass: ${pass}  Fail: ${fail}`);
   console.log(`Total hallucinations: ${results.reduce((s, r) => s + r.hallucinations.length, 0)}`);
+
+  if (MODE === 'live-m3') {
+    await saveTrend(results);
+  }
 
   if (fail > 0) {
     process.exit(1);
   }
+}
+
+/** Spara trend-data i 08-Agent/eval/trends/<iso-week>.json. */
+async function saveTrend(results: QueryResult[]): Promise<void> {
+  const fs = await import('node:fs');
+  const now = new Date();
+  const weekLabel = `week-of-${now.getUTCFullYear()}-${String(getISOWeek(now)).padStart(2, '0')}`;
+  const trendDir = new URL('./trends/', import.meta.url);
+  const trendPath = new URL(`./trends/${weekLabel}.json`, import.meta.url);
+  fs.mkdirSync(trendDir, { recursive: true });
+  const payload = {
+    week: weekLabel,
+    mode: MODE,
+    timestamp: now.toISOString(),
+    deterministic_pass: results.filter((r) => r.intent_ok && r.hallucinations.length === 0 && r.empty_ok).length,
+    total: results.length,
+    divergence_pattern: results
+      .filter((r) => r.m3_reply_summary && !r.m3_used_llm)
+      .map((r) => ({ id: r.id, note: 'm3-fallback-used' })),
+  };
+  fs.writeFileSync(trendPath, JSON.stringify(payload, null, 2) + '\n', 'utf-8');
+  console.log(`Trend saved: ${trendPath.pathname}`);
+}
+
+/** ISO week number. */
+function getISOWeek(d: Date): number {
+  const date = new Date(d.getTime());
+  date.setUTCDate(date.getUTCDate() + 4 - (date.getUTCDay() || 7));
+  const yearStart = new Date(Date.UTC(date.getUTCFullYear(), 0, 1));
+  return Math.ceil((((date.getTime() - yearStart.getTime()) / 86400000) + 1) / 7);
 }
 
 // Run only when invoked as the entrypoint, so vitest can import without side effects.
@@ -218,7 +318,7 @@ const isMain = (() => {
 })();
 
 if (isMain) {
-  main();
+  void main();
 }
 
 export { evaluate, type GoldenCase, type QueryResult };
