@@ -15,6 +15,8 @@ import { describe, expect, it, vi, beforeEach } from 'vitest';
 
 vi.mock('./renderGate', () => ({
   renderPage: vi.fn(),
+  estimateBehaviorCost: (behavior: string) =>
+    ({ 'auto': 10, 'static-only': 10, 'premium-only': 25, 'stealth': 75 } as Record<string, number>)[behavior] ?? 0,
 }));
 
 vi.mock('../F-eventExtraction/adapters', () => ({
@@ -183,5 +185,46 @@ describe('runD-pilot — successful render + extraction', () => {
     const result = await runPilotSource('dramaten', { url: customUrl });
     expect(result.url).toBe(customUrl);
     expect(mockRender).toHaveBeenCalledWith(customUrl, expect.any(Object));
+  });
+
+  it('falls back to estimateBehaviorCost when render.metrics omits creditsCharged', async () => {
+    // Val C fas C: SB-API:et returnerar inte alltid creditsCharged. Vi vill
+    // ändå logga en rimlig kostnad så pilotens budget kan summeras.
+    mockRender.mockResolvedValueOnce({
+      url: RENDER_PILOT_URLS.hallsberg,
+      success: true,
+      html: '<html></html>',
+      metrics: {
+        renderTimeMs: 100,
+        htmlLength: 50,
+        hasEventContent: false,
+        behavior: 'premium-only',
+        // creditsCharged är medvetet utelämnat — fallback ska ge 25
+      },
+    });
+    mockAdapters.mockReturnValueOnce(null);
+    mockExtract.mockReturnValueOnce({
+      events: [], rawCount: 0, parseErrors: [],
+      sourceUrl: RENDER_PILOT_URLS.hallsberg, methodsUsed: [], methodBreakdown: {},
+    });
+
+    const result = await runPilotSource('hallsberg', {});
+    expect(result.exitReason).toBe('ok');
+    expect(result.creditsCharged).toBe(25); // estimateBehaviorCost('premium-only')
+  });
+
+  it('falls back to estimateBehaviorCost on render failure when metrics lacks credits', async () => {
+    // Val C fas C: även vid misslyckad render ska vi logga en uppskattad
+    // kostnad så pilotens credit-budget summerar rätt.
+    mockRender.mockResolvedValueOnce({
+      url: RENDER_PILOT_URLS.jonkoping,
+      success: false,
+      error: 'SB 5xx',
+      metrics: { renderTimeMs: 100, htmlLength: 0, hasEventContent: false },
+      // creditsCharged saknas → fallback
+    });
+    const result = await runPilotSource('jonkoping', {});
+    expect(result.exitReason).toBe('render-failed');
+    expect(result.creditsCharged).toBe(25);
   });
 });

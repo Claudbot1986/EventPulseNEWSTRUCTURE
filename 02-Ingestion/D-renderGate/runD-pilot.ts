@@ -11,7 +11,7 @@
  * C0/C1/C2 logic, IGNORE_PATTERNS, or scoring weights. The pilot is
  * isolated, with its own allowlist and log file.
  */
-import { renderPage, type RenderResult, type RenderBehavior } from './renderGate';
+import { renderPage, estimateBehaviorCost, type RenderResult, type RenderBehavior } from './renderGate';
 import { isPilotSource, RENDER_PILOT_URLS } from './sourceAllowlist';
 import { runAdapters } from '../F-eventExtraction/adapters';
 import { extractEvents, type ExtractResult } from '../F-eventExtraction/universal-extractor';
@@ -92,7 +92,7 @@ export async function runPilotSource(
       renderSuccess: false,
       renderError: render.error ?? 'no-html',
       htmlLength: 0,
-      creditsCharged: render.metrics?.creditsCharged ?? 0,
+      creditsCharged: render.metrics?.creditsCharged ?? estimateBehaviorCost(behavior),
       usedStealthFallback: !!render.metrics?.usedStealthFallback,
       adapterHits: [],
       events: [],
@@ -122,7 +122,7 @@ export async function runPilotSource(
     durationMs: Date.now() - start,
     renderSuccess: true,
     htmlLength: render.html.length,
-    creditsCharged: render.metrics?.creditsCharged ?? 0,
+    creditsCharged: render.metrics?.creditsCharged ?? estimateBehaviorCost(behavior),
     usedStealthFallback: !!render.metrics?.usedStealthFallback,
     adapterHits,
     events,
