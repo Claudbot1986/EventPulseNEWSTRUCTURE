@@ -13,6 +13,7 @@ import { fetchHtml, normalizeFetchUrl } from '../../tools/fetchTools';
 import { load } from 'cheerio';
 import type { DerivedRulesStore } from '../c4-derived-rules';
 import { FailCategory } from '../C4-ai-analysis';
+import { fetchAllSitemaps as fetchSitemapsDeep } from '../tools/scrapingBeeDeep';
 
 export interface DiscoveredLink {
   url: string;
@@ -28,6 +29,8 @@ export interface CandidatePage {
   href: string;
   sourceRegion: string;
   eventDensityScore: number;
+  inboundCount: number; // Steg 4: antal <a href> på root som pekar hit (popularitet)
+  finalScore: number; // eventDensityScore + log2(inboundCount + 1)
   metrics: {
     dateMentions: number;
     timeTagCount: number;
@@ -54,7 +57,7 @@ export interface FrontierDiscoveryResult {
   };
   // Rule tracking: was a derived rule or built-in pattern used to find the winner?
   ruleApplied: {
-    source: 'none' | 'link-discovery' | 'derived-rule' | 'swedish-patterns';
+    source: 'none' | 'link-discovery' | 'derived-rule' | 'swedish-patterns' | 'sitemap';
     pathsTested: string[];
     winnerPath: string | null;
   };
@@ -344,7 +347,46 @@ export async function discoverEventCandidates(
   
   const $ = load(rootFetch.html);
   const allLinks = collectLinks($, baseUrl);
-  
+
+  // -----------------------------------------------------------------------
+  // Steg 4 (2026-10-09): Inlänk-räkning (popularitet-signal)
+  // Räknar hur många gånger varje unik URL förekommer som <a href> på root-sidan.
+  // Till skillnad från allLinks (som deduperas via `seen`-set) räknar vi VARJE
+  // förekomst, så att en URL som länkas in 5 ggr får högre popularity.
+  //
+  // Generalization Protection: General — <a href> är universell HTML, inget
+  // sajtspecifikt mönster. Inget IGNORE_PATTERNS-tillägg, ingen scoring-vikt.
+  // Tiebreaker-formel: eventDensityScore + log2(inboundCount + 1).
+  // Logaritmisk för att undvika att dominera täta nav-länkar.
+  // -----------------------------------------------------------------------
+  const inboundCounts = new Map<string, number>();
+  $('a[href]').each((_: any, el: any) => {
+    const href = ($(el).attr('href') || '').trim();
+    if (!href || href.startsWith('#') || href.startsWith('mailto:') || href.startsWith('tel:')) return;
+    let fullUrl: string;
+    try {
+      if (href.startsWith('http')) {
+        fullUrl = href;
+      } else if (href.startsWith('/')) {
+        fullUrl = new URL(href, baseUrl).href;
+      } else {
+        return;
+      }
+    } catch {
+      return;
+    }
+    try {
+      const uObj = new URL(fullUrl);
+      const bObj = new URL(baseUrl);
+      if (uObj.origin !== bObj.origin) return;
+    } catch {
+      return;
+    }
+    // Normalisera: ta bort fragment
+    const cleanUrl = fullUrl.split('#')[0];
+    inboundCounts.set(cleanUrl, (inboundCounts.get(cleanUrl) ?? 0) + 1);
+  });
+
   const linksByRegion: Record<string, number> = {};
   for (const link of allLinks) {
     linksByRegion[link.sourceRegion] = (linksByRegion[link.sourceRegion] || 0) + 1;
@@ -362,31 +404,121 @@ export async function discoverEventCandidates(
   });
   
   const topLinks = sortedLinks.slice(0, MAX_CANDIDATES_TO_FETCH);
-  
+
+  // -----------------------------------------------------------------------
+  // STEP 0 (Fas 2, 2026-10-09): sitemap.xml + robots.txt Sitemap-direktiv
+  // Lägger till sitemap-URL:er som ett extra kandidat-set SOM KONKURRERAR
+  // MED BFS-resultatet via samma eventDensityScore-formel (inga nya scoringvikter).
+  // Filtret shouldIgnore() återanvänds rakt av — INGA nya IGNORE_PATTERNS.
+  // Graceful degradation: om sitemap-miss, returnerar tom array → oförändrat beteende.
+  //
+  // Generalization Protection: General (alla sajter som HAR sitemap följer samma
+  // XML-konvention; robots.txt-Sitemap-direktiv följer Google-spec).
+  // Inget sajtspecifikt — vi tar återan befintlig fetchAllSitemaps + parseXmlSitemap.
+  // -----------------------------------------------------------------------
+  const sitemapUrls: string[] = [];
+  let sitemapStats = { attempted: 0, found: 0, afterFilter: 0 };
+  try {
+    const sitemapResult = await fetchSitemapsDeep(baseUrl);
+    sitemapStats.attempted = sitemapResult.attempts.length;
+    sitemapStats.found = sitemapResult.urls.length;
+    for (const u of sitemapResult.urls) {
+      // Same-origin check (samma som collectLinks): hoppa externa
+      try {
+        const uObj = new URL(u);
+        const bObj = new URL(baseUrl);
+        if (uObj.origin !== bObj.origin) continue;
+      } catch {
+        continue;
+      }
+      // Same ignore-filter som BFS-länkar (inga nya IGNORE_PATTERNS)
+      const uPath = (() => { try { return new URL(u).pathname; } catch { return u; } })();
+      if (shouldIgnore(uPath, '')) continue;
+      // Depth-cap (samma som BFS-länkar)
+      if (getPathDepth(u, baseUrl) > MAX_DEPTH) continue;
+      sitemapUrls.push(u);
+    }
+    sitemapStats.afterFilter = sitemapUrls.length;
+    if (sitemapUrls.length > 0) {
+      console.log(`[C0] ${sourceId || rootUrl}: sitemap discovery found ${sitemapUrls.length} candidate URLs (raw=${sitemapResult.urls.length}, attempts=${sitemapResult.attempts.length}, sources=${sitemapResult.sources.length})`);
+    }
+  } catch (err) {
+    // Graceful: fortsätt med BFS-resultatet ensam
+    console.warn(`[C0] ${sourceId || rootUrl}: sitemap discovery failed: ${err}`);
+  }
+
+  // Cap sitemap-össök så att vi inte överskrider MAX_CANDIDATES_TO_FETCH totalt
+  const sitemapTop = sitemapUrls.slice(0, MAX_CANDIDATES_TO_FETCH);
+
   const candidates: CandidatePage[] = [];
-  
+
   for (const link of topLinks) {
     const metrics = await measureEventDensity(link.url);
-    
-    const eventDensityScore = 
+
+    const eventDensityScore =
       metrics.dateMentions * 2 +
       metrics.timeTagCount * 3 +
       metrics.eventBlockCount +
       metrics.ticketCtaCount +
       Math.min(metrics.linkCount, 10);
-    
+
+    // Steg 4: inlänk-räkning som tiebreaker
+    const inboundCount = inboundCounts.get(link.url.split('#')[0]) ?? 0;
+    const finalScore = eventDensityScore + Math.log2(inboundCount + 1);
+
     candidates.push({
       url: link.url,
       href: link.href,
       sourceRegion: link.sourceRegion,
       eventDensityScore,
+      inboundCount,
+      finalScore,
       metrics,
       concepts: link.matchedConcepts,
-      rankingReason: `score=${eventDensityScore} from dates:${metrics.dateMentions} timeTags:${metrics.timeTagCount} blocks:${metrics.eventBlockCount} cta:${metrics.ticketCtaCount}`,
+      rankingReason: `score=${eventDensityScore} + log2(${inboundCount + 1})=${finalScore.toFixed(2)} (inbound=${inboundCount})`,
     });
   }
-  
-  candidates.sort((a, b) => b.eventDensityScore - a.eventDensityScore);
+
+  // Mät density för sitemap-URL:er på samma sätt
+  for (const url of sitemapTop) {
+    try {
+      const metrics = await measureEventDensity(url);
+      const eventDensityScore =
+        metrics.dateMentions * 2 +
+        metrics.timeTagCount * 3 +
+        metrics.eventBlockCount +
+        metrics.ticketCtaCount +
+        Math.min(metrics.linkCount, 10);
+      if (eventDensityScore === 0) continue; // sitemap-URL utan signaler → skippa (minskar brus)
+      let urlPath = '';
+      try { urlPath = new URL(url).pathname; } catch { /* keep empty */ }
+      // Steg 4: inlänk-räkning — sitemap-URL:er har ofta 0 inlänkar på root, men log2(1)=0 så de konkurrerar rättvist
+      const inboundCount = inboundCounts.get(url.split('#')[0]) ?? 0;
+      const finalScore = eventDensityScore + Math.log2(inboundCount + 1);
+      candidates.push({
+        url,
+        href: urlPath,
+        sourceRegion: 'sitemap',
+        eventDensityScore,
+        inboundCount,
+        finalScore,
+        metrics,
+        concepts: ['sitemap-discovery'],
+        rankingReason: `sitemap: score=${eventDensityScore} + log2(${inboundCount + 1})=${finalScore.toFixed(2)} (inbound=${inboundCount})`,
+      });
+    } catch {
+      // skippa URLs som inte går att mäta
+    }
+  }
+
+  candidates.sort((a, b) => {
+    // Steg 4: primär sort på eventDensityScore (befintlig semantik),
+    // tiebreaker på finalScore (inlänk-viktad).
+    if (b.eventDensityScore !== a.eventDensityScore) {
+      return b.eventDensityScore - a.eventDensityScore;
+    }
+    return b.finalScore - a.finalScore;
+  });
 
   // -----------------------------------------------------------------------
   // Swedish Patterns Fallback (IMP-009) — IMMEDIATE when 0 candidates
@@ -409,17 +541,22 @@ export async function discoverEventCandidates(
           metrics.ticketCtaCount +
           Math.min(metrics.linkCount, 10);
         if (densityScore > 0) {
+          // Steg 4: inlänk-räkning som tiebreaker även i fallback
+          const inboundCount = inboundCounts.get(candidateUrl.split('#')[0]) ?? 0;
+          const finalScore = densityScore + Math.log2(inboundCount + 1);
           subpageFallback = {
             url: candidateUrl,
             href: pattern,
             sourceRegion: 'swedish-patterns',
             eventDensityScore: densityScore,
+            inboundCount,
+            finalScore,
             metrics,
             concepts: SWEDISH_EVENT_PATTERNS,
-            rankingReason: `swedish-patterns fallback: ${pattern} score=${densityScore}`,
+            rankingReason: `swedish-patterns fallback: ${pattern} score=${densityScore} + log2(${inboundCount + 1})=${finalScore.toFixed(2)}`,
           };
           subpageFallbackSource = 'swedish-patterns';
-          console.log(`[C0] ${sourceId || rootUrl}: SWEDISH_PATTERN HIT → ${candidateUrl} (score=${densityScore}) — WINNER via built-in Swedish path`);
+          console.log(`[C0] ${sourceId || rootUrl}: SWEDISH_PATTERN HIT → ${candidateUrl} (score=${densityScore}, inbound=${inboundCount}) — WINNER via built-in Swedish path`);
           break;
         }
       } catch {
@@ -440,17 +577,21 @@ export async function discoverEventCandidates(
             metrics.ticketCtaCount +
             Math.min(metrics.linkCount, 10);
           if (densityScore > 0) {
+            const inboundCount = inboundCounts.get(candidateUrl.split('#')[0]) ?? 0;
+            const finalScore = densityScore + Math.log2(inboundCount + 1);
             subpageFallback = {
               url: candidateUrl,
               href: pattern,
               sourceRegion: 'swedish-patterns-domain-base',
               eventDensityScore: densityScore,
+              inboundCount,
+              finalScore,
               metrics,
               concepts: SWEDISH_EVENT_PATTERNS,
-              rankingReason: `swedish-patterns domain-base fallback: ${candidateUrl} score=${densityScore}`,
+              rankingReason: `swedish-patterns domain-base fallback: ${candidateUrl} score=${densityScore} + log2(${inboundCount + 1})=${finalScore.toFixed(2)}`,
             };
             subpageFallbackSource = 'swedish-patterns';
-            console.log(`[C0] ${sourceId || rootUrl}: SWEDISH_PATTERN HIT (domain-base) → ${candidateUrl} (score=${densityScore})`);
+            console.log(`[C0] ${sourceId || rootUrl}: SWEDISH_PATTERN HIT (domain-base) → ${candidateUrl} (score=${densityScore}, inbound=${inboundCount})`);
             break;
           }
         } catch {
@@ -499,9 +640,10 @@ export async function discoverEventCandidates(
   }
   
   // Determine ruleApplied
-  let ruleAppliedSource: 'none' | 'link-discovery' | 'derived-rule' | 'swedish-patterns' = 'none';
+  let ruleAppliedSource: 'none' | 'link-discovery' | 'derived-rule' | 'swedish-patterns' | 'sitemap' = 'none';
   if (bestCandidate) {
-    ruleAppliedSource = 'link-discovery';
+    // Om vinnaren kom från sitemap-source-regionen, rapportera det (Fas 2, 2026-10-09)
+    ruleAppliedSource = bestCandidate.sourceRegion === 'sitemap' ? 'sitemap' : 'link-discovery';
   } else if (subpageFallback) {
     ruleAppliedSource = subpageFallbackSource || 'none';
   }

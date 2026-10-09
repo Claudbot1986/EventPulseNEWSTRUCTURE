@@ -20,38 +20,46 @@
 
 ---
 
-## 🚫 HARD SCOPE BOUNDARY — 123 ÄR EN C-TESTRIGG-LOOP
+## 🚫 HARD SCOPE BOUNDARY — 123 ÄR EN INGESTION-LOOP (UPPDATERAD 2026-10-09)
 
-**DENNA REGLER ÄR BINDANDE. 123 FÅR ALDRIG VERKA UTANFÖR C-SPÅRET.**
+**SCOPE-BESLUT 2026-10-09 (användarbeslut):** HELA ingestion ska innefattas i 123.
+Det innebär att A-gate, B-gate, C-testRigg, D-render, F-eventExtraction, G-universalScout,
+H-manualReview ALLA är inom 123:s arbetsområde — så länge arbetet är i `02-Ingestion/`.
 
 ### 🚫 VAD 123 INTE FÅR GÖRA (EXPLICITA FÖRBUD)
 
-1. **Ändra `02-Ingestion/scheduler.ts`** — inga som helst ändringar
-2. **Integrera D-renderGate i scheduler eller produktionsflöden** — D är separat
-3. **Röra preUI/UI-produktionsflöden** — normalizer, BullMQ, Supabase, UI-queue
-4. **Bygga A/B/D/H-integrering i produktionsflöden** — inte 123:s ansvar
+1. **Röra preUI/UI-produktionsflöden** — normalizer, BullMQ, Supabase, UI-queue (utanför 02-Ingestion)
+2. **Röra `services/ingestion/` utanför `02-Ingestion/C-htmlGate/`** — tjänstelagret utanför
+3. **Röra `06-UI/`, `08-Agent/`, `10-Analytics/`** — andra subsystem
+4. **Röra `docs/MASTERPLAN.md` eller `docs/BACKLOG.md`** utan uttryckligt uppdrag
 5. **Byta batch mitt i en runda** — arbeta på exakt samma failmängd
 6. **Starta ny batch utan uttryckligt uppdrag** — batchar definierade via batch-maker
-7. **Göra ändringar utanför C-testRiggen** — ingenting i scheduler, runtime (utom rapporter), services/ingestion (utom C-htmlGate)
+7. **Göra ändringar i scheduler/produktionsflöden** utanför `02-Ingestion/`
 
-### ✅ VAD 123 ENBART FÅR GÖRA
+### ✅ VAD 123 FÅR GÖRA (UPPDATERAD 2026-10-09)
 
-- C1/C2/C3/C4-AI förbättring inom `02-Ingestion/C-htmlGate/`
-- Små generella ändringar i C-komponenter
-- Analysera samma failmängd (`postTestC-Fail-round*.jsonl`)
+- C0/C1/C2/C3/C4-AI förbättring inom `02-Ingestion/C-htmlGate/`
+- **A-gate arbete i `02-Ingestion/A-directAPI-networkGate/`** (scope-vidgat 2026-10-09)
+- **B-gate arbete i `02-Ingestion/B-JSON-feedGate/`** (scope-vidgat 2026-10-09)
+- **D-render-arbete i `02-Ingestion/D-renderGate/`** (scope-vidgat 2026-10-09)
+- **F-eventExtraction-arbete i `02-Ingestion/F-eventExtraction/`** (scope-vidgat 2026-10-09)
+- **G-universalScout-arbete i `02-Ingestion/G-universalScout/`** (scope-vidgat 2026-10-09)
+- **H-manualReview-arbete i `02-Ingestion/H-manualReview/`** (scope-vidgat 2026-10-09)
+- Köra pipelines (`runA.ts`, `runB.ts`, `run-dynamic-pool.ts`, etc.) — befintliga scripts
+- Fylla runtime-köer (postB-preC, postA, postB) från sources/ för testning
 - Skriva rapporter till `C-htmlGate/reports/batch-{N}/`
 
-### 🎯 SCOPE-CHECKLISTA
+### 🎯 SCOPE-CHECKLISTA (UPPDATERAD)
 
 ```
-Uppgift berör scheduler.ts?:           [JA/NEJ] → OM JA: STOPP
-Uppgift berör D-renderGate?:          [JA/NEJ] → OM JA: STOPP
-Uppgift berör preUI/UI-flöden?:       [JA/NEJ] → OM JA: STOPP
-Uppgift berör A/B/H-integration?:     [JA/NEJ] → OM JA: STOPP
-Uppgift är inom C-testRiggen?:        [JA/NEJ] → OM NEJ: STOPP
+Uppgift berör preUI/UI-flöden?:           [JA/NEJ] → OM JA: STOPP
+Uppgift berör services/ingestion utanför C-htmlGate?: [JA/NEJ] → OM JA: STOPP
+Uppgift berör 06-UI/08-Agent/10-Analytics?: [JA/NEJ] → OM JA: STOPP
+Uppgift berör docs/MASTERPLAN.md?:          [JA/NEJ] → OM JA: STOPP
+Uppgift är inom 02-Ingestion/?:           [JA/NEJ] → OM NEJ: STOPP
 ```
 
-**Om ja på någon av de fyra första frågorna → uppgiften är förbjuden för 123.**
+**Om ja på någon av de tre första frågorna → uppgiften är förbjuden för 123.**
 
 ---
 

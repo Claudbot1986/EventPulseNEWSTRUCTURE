@@ -1395,7 +1395,7 @@ function routeResult(result: CResult, roundsParticipated: number): string {
         const isC2PromisingZeroEvents =
           (result.exitReason === 'EXTRACTION_ZERO_PROMISING_HTML' ||
            result.exitReason === 'EXTRACTION_ZERO_C3_AI_ZERO') &&
-          result.c2.score >= 20;
+          result.c2?.score >= 20;
         if (isC2PromisingZeroEvents) {
           queuePath = QUEUES.D;
           queueName = 'postTestC-D';
@@ -2561,20 +2561,20 @@ async function main() {
         failType: result?.failType || 'unresolved',
         evidence: result?.evidence || src.queueReason || '',
         winningStage: result?.winningStage || 'C3',
-        c0Candidates: result?.c0.candidates ?? 0,
-        c0LinksFound: result?.c0.ruleAppliedPaths
+        c0Candidates: result?.c0?.candidates ?? 0,
+        c0LinksFound: result?.c0?.ruleAppliedPaths
           ? result.c0.ruleAppliedPaths.map((p, i) => ({ href: p, anchorText: 'derived-rule', score: 10 - i, region: 'rule' }))
           : [],
-        c0RootFallback: result?.c0.rootFallback ?? false,
-        c0WinnerUrl: result?.c0.winnerUrl ?? null,
-        c1Verdict: result?.c1.verdict ?? null,
-        c1LikelyJsRendered: result?.c1.likelyJsRendered ?? false,
-        c1TimeTagCount: result?.c1.timeTagCount ?? 0,
-        c1DateCount: result?.c1.dateCount ?? 0,
-        c2Verdict: result?.c2.verdict ?? null,
-        c2Score: result?.c2.score ?? null,
-        c2Reason: result?.c2.reason ?? null,
-        eventsFound: result?.extract.eventsFound ?? 0,
+        c0RootFallback: result?.c0?.rootFallback ?? false,
+        c0WinnerUrl: result?.c0?.winnerUrl ?? null,
+        c1Verdict: result?.c1?.verdict ?? null,
+        c1LikelyJsRendered: result?.c1?.likelyJsRendered ?? false,
+        c1TimeTagCount: result?.c1?.timeTagCount ?? 0,
+        c1DateCount: result?.c1?.dateCount ?? 0,
+        c2Verdict: result?.c2?.verdict ?? null,
+        c2Score: result?.c2?.score ?? null,
+        c2Reason: result?.c2?.reason ?? null,
+        eventsFound: result?.extract?.eventsFound ?? 0,
         consecutiveFailures: src.roundsParticipated,
         lastPathUsed: src.enrichedData?.lastPathUsed ?? null,
         triageResult: src.enrichedData?.triageResult ?? null,
