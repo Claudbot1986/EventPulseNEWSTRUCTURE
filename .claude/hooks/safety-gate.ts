@@ -62,15 +62,20 @@ function isVaultMachineSyncFile(p: string): boolean {
 }
 
 const EDIT_RULES: EditRule[] = [
+  // 2026-10-09: MASTERPLAN.md and BACKLOG.md rules REMOVED.
+  // Rationale (Alt B, see policy.md §1 update): these are strategic docs that
+  // the lead-session edits on user's direct request. Hook-based protection
+  // cannot distinguish main-session-from-user (Claude Code issue #84926: no
+  // agent_type in main-session payload) and the previous `bypassRoles` fix
+  // only worked for subagents — main session stayed blocked. The new model:
+  // - policy.md: still blocked (Tier 0, no bypassRoles).
+  // - MASTERPLAN/BACKLOG: protected at a different layer (user-direction
+  //   required; agent refuses autonomous edits via policy.md §1).
+  // Hook is no longer the right enforcement point for Tier 1.
   {
-    match: (p) => /\/docs\/MASTERPLAN\.md$/.test(p),
-    reason: "docs/MASTERPLAN.md is Tier 1 — runtime may not mutate (see plan §17).",
-  },
-  {
-    match: (p) => /\/docs\/BACKLOG\.md$/.test(p),
-    reason: "docs/BACKLOG.md is Tier 1 — runtime may not mutate (see plan §17).",
-  },
-  {
+    // Tier 0 invariant core: stays locked for every role, including lead.
+    // isLead() early-exit below is restricted to Bash to prevent bypassing
+    // this rule from a subagent with agent_type=ep-lead (verified 2026-10-09).
     match: (p) => p.endsWith(".claude/eventpulse/policy.md") || /\/eventpulse\/policy\.md$/.test(p),
     reason: ".claude/eventpulse/policy.md is the Tier 0 invariant core — runtime may not mutate.",
   },
@@ -83,13 +88,13 @@ const EDIT_RULES: EditRule[] = [
     // over-matched every project .md under /Volumes/. Machine-synced files
     // (VAULT_MACHINE_SYNC_FILES) are excepted — see comment above.
     //
-    // Lead/ep-lead are added to bypassRoles (2026-10-09): the lead-session
-    // already runs `isLead()`-bypass above for the EDIT_RULES loop, but that
-    // early-exit branch never fires because Claude Code does not carry
-    // agent_name in real PreToolUse payloads (verified 2026-09-04). Adding
-    // the lead roles to bypassRoles restores the intended behaviour: the
-    // lead-session can write vault notes (CLAUDE.md names vault-sync as the
-    // role for *automated* sync, not for the lead's own session notes).
+    // Lead/ep-lead are kept in bypassRoles (2026-10-09): the main session has
+    // no agent_type in PreToolUse payload (Claude Code issue #84926), so the
+    // isLead() early-exit above never fires for it. The per-rule bypassRoles
+    // path is the only way for the lead-session (when it spawns a subagent
+    // with agent_type=ep-lead) to write vault notes (CLAUDE.md names
+    // vault-sync as the role for *automated* sync, not for the lead's own
+    // session notes).
     match: (p) => /\/00-Vault\//.test(p) && p.endsWith(".md") && !isVaultMachineSyncFile(p),
     reason: "Obsidian vault files belong to vault-sync role only (machine-synced files excepted).",
     bypassRoles: ["vault-sync", "ep-lead", "lead"] as string[],
@@ -143,11 +148,21 @@ async function main(): Promise<void> {
 
   const toolName: string = payload.tool_name || "";
   const toolInput = payload.tool_input || {};
-  const agentName: string | undefined = payload.agent_name || undefined;
+  // 2026-10-09: read `agent_type` first (the field that actually exists in
+  // Claude Code PreToolUse payloads for subagent calls, ≥2.1.69; verified
+  // 2026-10-09 with v2.1.96) and fall back to `agent_name` for forward
+  // compatibility.
+  const agentName: string | undefined = payload.agent_type || payload.agent_name || undefined;
   const cwd: string = payload.cwd || process.cwd();
 
-  if (isLead(agentName)) {
-    // Lead logs but allows.
+  // 2026-10-09: isLead early-exit restricted to Bash only. For Edit/Write/
+  // MultiEdit, the per-rule bypassRoles path applies (currently the 00-Vault
+  // rule for vault-sync/ep-lead/lead). Restricting isLead() to Bash prevents
+  // the previous Tier 0 regression where a subagent with agent_type=ep-lead
+  // could Edit policy.md (the only Tier 0 path that previously had no
+  // bypassRoles) — verified 2026-10-09, was exiting 0 from this branch
+  // before reaching the EDIT_RULES loop.
+  if (isLead(agentName) && toolName === "Bash") {
     process.stderr.write(
       `[ep-safety-gate] lead agent '${agentName}' tool=${toolName} — bypass active, logged only.\n`,
     );
