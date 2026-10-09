@@ -65,12 +65,19 @@ export interface NormalizedEventForEditorial {
 
 /**
  * Översätt normaliserade event-fält → EventUnderstandingInput.
+ *
+ * FAS 3 Evidence Pack (2026-10-09): vi sätter INTE performers här — låt
+ * buildEventProfile:s inbyggda entity_extractor-fallback (som kör
+ * extractEntities med regler + LLM-fallback) fylla performers från title
+ * om artistResolver inte redan har gett några.
+ *
+ * Den tidigare `extractPerformersFromTitle`-heuristiken (första kapitaliserade
+ * frasen) är avlägsnad — entity_extractor är mer sofistikerad och fångar
+ * colon_lists, slash_collabs, ampersand_lists, single_name, etc.
  */
 export function toEventUnderstandingInput(
   e: NormalizedEventForEditorial,
 ): EventUnderstandingInput {
-  // Försök hitta performers från title (artistResolver sköter redan detta i
-  // normalizer.ts). Här använder vi bara title som fallback.
   return {
     category_slug: e.category_slug ?? null,
     venue_name: e.venue_name ?? null,
@@ -82,16 +89,11 @@ export function toEventUnderstandingInput(
     language: e.language ?? null,
     source: e.source ?? null,
     title: e.title ?? null,
-    performers: extractPerformersFromTitle(e.title),
+    // performers lämnas tom — buildEventProfile:s entity_extractor-fallback
+    // fyller på om nödvändigt. Detta förhindrar dubbel-extraktion och ger
+    // samma extraherings-pipeline oavsett om artistResolver har data eller ej.
+    performers: undefined,
   };
-}
-
-function extractPerformersFromTitle(title: string | null | undefined): string[] {
-  if (!title) return [];
-  // Enkel heuristik: "Artist på venue" / "Artist: subtitel" / "Artist @ venue"
-  // Tar första kapitaliserade frasen som performer.
-  const m = title.match(/^([A-ZÅÄÖ][a-zåäö]+(?:\s+[A-ZÅÄÖ][a-zåäö]+)*)/);
-  return m ? [m[1]] : [];
 }
 
 // ─── DB-skribent ─────────────────────────────────────────────────────────────
