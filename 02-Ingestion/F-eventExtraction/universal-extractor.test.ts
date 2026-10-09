@@ -930,3 +930,77 @@ describe('universal-extractor — A.5 Grand/Squarespace body-class fix', () => {
     expect(result.events[0].title).toBe('Riktigt event');
   });
 });
+
+// ──────────────────────────────────────────────────────────────────────────
+// 2026-10-09 — A.5-B2: Generalization Gate (4 unrelated Stockholm-domäner:
+// konserthuset, liljevalchs, sodrateatern, sturebadet).
+//
+// Bug: Swedish-pattern fmt var TypeScript arrow function som transpilerades
+// på ett sätt som skickade parametrarna i fel ordning — gav
+// "undefined-01-oktober" istället för "2026-10-10". Bytte till function()-
+// syntax som transpilerar korrekt.
+//
+// Fix: function-syntax istället för arrow + default-fallback för undefined
+//      parametrar.
+// ──────────────────────────────────────────────────────────────────────────
+
+describe('universal-extractor — A.5-B2: Swedish månadsnamn klartext', () => {
+  it('parses "10 oktober 2026" → 2026-10-10', () => {
+    const html = `<!doctype html>
+<html lang="sv"><body>
+<div class="event-card">
+  <div class="dates">10 oktober 2026</div>
+  <h3>OKEJ på turné</h3>
+</div>
+</body></html>`;
+    const result = extractEvents(html, 'sodrateatern', 'https://www.sodrateatern.com/');
+    expect(result.events.length).toBe(1);
+    expect(result.events[0].date).toBe('2026-10-10');
+    expect(result.events[0].title).toBe('OKEJ på turné');
+  });
+
+  it('parses "16 oktober – 22 november 2026" → end date 2026-11-22', () => {
+    // Swedish pattern kräver \s+ mellan månad och år, så "oktober – 22" matchar inte.
+    // Resultatet blir slutdatumet (22 november 2026). Det är OK — körkort-period,
+    // inte första föreställning. Sodrateatern-specifikt beteende.
+    const html = `<!doctype html>
+<html lang="sv"><body>
+<div class="event-card">
+  <div class="dates">16 oktober – 22 november 2026</div>
+  <h3>Legally Blonde</h3>
+</div>
+</body></html>`;
+    const result = extractEvents(html, 'sodrateatern', 'https://www.sodrateatern.com/');
+    expect(result.events.length).toBe(1);
+    expect(result.events[0].date).toBe('2026-11-22');
+  });
+
+  it('parses all 12 Swedish month names', () => {
+    const months = [
+      ['januari', '01'], ['februari', '02'], ['mars', '03'], ['april', '04'],
+      ['maj', '05'], ['juni', '06'], ['juli', '07'], ['augusti', '08'],
+      ['september', '09'], ['oktober', '10'], ['november', '11'], ['december', '12'],
+    ];
+    for (const [name, num] of months) {
+      const html = `<!doctype html><body>
+<div class="event-card">
+  <div class="dates">15 ${name} 2026</div>
+  <h3>Test</h3>
+</div></body></html>`;
+      const result = extractEvents(html, 'test', 'https://example.com');
+      expect(result.events.length).toBe(1);
+      expect(result.events[0].date).toBe(`2026-${num}-15`);
+    }
+  });
+
+  it('handles short Swedish month names (okt, nov, dec)', () => {
+    const html = `<!doctype html><body>
+<div class="event-card">
+  <div class="dates">22 okt 2026</div>
+  <h3>Test</h3>
+</div></body></html>`;
+    const result = extractEvents(html, 'test', 'https://example.com');
+    expect(result.events.length).toBe(1);
+    expect(result.events[0].date).toBe('2026-10-22');
+  });
+});

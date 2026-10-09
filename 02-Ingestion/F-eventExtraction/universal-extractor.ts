@@ -75,9 +75,10 @@ const DATE_PATTERNS = [
   { rx: /(\d{4}-\d{2}-\d{2})/, fmt: (m: string) => m },
   // Swedish: 25 mars 2025 / 25 mar 2025
   { rx: /(\d{1,2})\s+(januari|februari|mars|april|maj|juni|juli|augusti|september|oktober|november|december|jan|feb|mar|apr|jun|jul|aug|sep|okt|nov|dec)\w*\s+(\d{4})/i,
-    fmt: (_: string, day: string, mon: string, year: string) => {
-      const m = SWE_MONTH_MAP[mon.toLowerCase()] ?? '01';
-      return `${year}-${m}-${day.padStart(2,'0')}`;
+    fmt: function (day: string, mon: string, year: string): string {
+      const monthNum = SWE_MONTH_MAP[(mon || '').toLowerCase()] ?? '01';
+      const dayPadded = (day || '01').padStart(2, '0');
+      return `${year}-${monthNum}-${dayPadded}`;
     }
   },
   // European: 25/03/2025 or 25.03.2025 (day-first, for SE context)
