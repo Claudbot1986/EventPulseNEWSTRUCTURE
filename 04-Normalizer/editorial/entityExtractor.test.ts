@@ -837,3 +837,106 @@ describe('FAS 3 — LLM-fallback: integration med mock-provider', () => {
     expect(out[0]?.role).toBe('artist');  // 'wizard' ej i ALLOWED_LLM_ROLES → default
   });
 });
+
+// ─── FAS 3.5 — entityConfidencePenalty (active-learning-koppling) ────────────
+//
+// Icke-DB-del av active-learning-flödet. Verifierar att penalty-hjälparen
+// gör korrekta avdrag baserat på entitet-confidence:
+//   - VERIFIED → +boost
+//   - SUPPORTED → liten boost
+//   - INFERRED → -3 per
+//   - AMBIGUOUS → -4 per (värre än INFERRED)
+//   - UNKNOWN → -2 per
+// Clampas till [-15, +5] så vi aldrig över-ändrar confidence-score.
+
+import {
+  computeEntityPenalty,
+  applyEntityPenalty,
+} from './entityConfidencePenalty';
+import type { ExtractedEntity } from './types';
+
+function stubEntity(confidence: ExtractedEntity['confidence']): ExtractedEntity {
+  return {
+    name: 'X',
+    role: 'artist',
+    evidence: { field: 'title', span: '', method: '' },
+    confidence,
+  };
+}
+
+describe('FAS 3.5 — computeEntityPenalty', () => {
+  it('Tom lista → 0 (ingen signal)', () => {
+    expect(computeEntityPenalty([])).toBe(0);
+  });
+
+  it('Alla VERIFIED → boost +5 (clamped från +11)', () => {
+    const out = computeEntityPenalty([
+      stubEntity('VERIFIED'),
+      stubEntity('VERIFIED'),
+      stubEntity('VERIFIED'),
+    ]);
+    // 3 × +2 = +6, +5 bonus för alla-verified = +11, clamped till +5
+    expect(out).toBe(5);
+  });
+
+  it('Mixed SUPPORTED + INFERRED → -2 (-6 +1 = -5)', () => {
+    // 1 × +1 - 2 × 3 = -5 (inte all-verified bonus)
+    expect(computeEntityPenalty([
+      stubEntity('SUPPORTED'),
+      stubEntity('INFERRED'),
+      stubEntity('INFERRED'),
+    ])).toBe(-5);
+  });
+
+  it('3 AMBIGUOUS → -12 (värre än INFERRED)', () => {
+    expect(computeEntityPenalty([
+      stubEntity('AMBIGUOUS'),
+      stubEntity('AMBIGUOUS'),
+      stubEntity('AMBIGUOUS'),
+    ])).toBe(-12);
+  });
+
+  it('5 INFERRED → -15 (clamped från -15)', () => {
+    expect(computeEntityPenalty([
+      stubEntity('INFERRED'),
+      stubEntity('INFERRED'),
+      stubEntity('INFERRED'),
+      stubEntity('INFERRED'),
+      stubEntity('INFERRED'),
+    ])).toBe(-15);
+  });
+
+  it('Floor-clamp: 10 INFERRED → ändå -15 (aldrig mer)', () => {
+    const ten = Array(10).fill(0).map(() => stubEntity('INFERRED'));
+    expect(computeEntityPenalty(ten)).toBe(-15);
+  });
+});
+
+describe('FAS 3.5 — applyEntityPenalty (floor 0, ceil 100)', () => {
+  it('Score 85 + mixed penalty → 80', () => {
+    expect(applyEntityPenalty(85, [
+      stubEntity('SUPPORTED'),
+      stubEntity('INFERRED'),
+      stubEntity('INFERRED'),
+    ])).toBe(80);
+  });
+
+  it('Score 10 + INFERRED → 7 (floor-skydd sänker till 7)', () => {
+    expect(applyEntityPenalty(10, [stubEntity('INFERRED')])).toBe(7);
+  });
+
+  it('Score 95 + 3 INFERRED → 86 (-9)', () => {
+    expect(applyEntityPenalty(95, [
+      stubEntity('INFERRED'),
+      stubEntity('INFERRED'),
+      stubEntity('INFERRED'),
+    ])).toBe(86);
+  });
+
+  it('Score 30 + alla VERIFIED → 35 (+5 boost)', () => {
+    expect(applyEntityPenalty(30, [
+      stubEntity('VERIFIED'),
+      stubEntity('VERIFIED'),
+    ])).toBe(35);
+  });
+});
