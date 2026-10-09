@@ -50,6 +50,11 @@ import type { TriageResult } from './C-htmlGate/C1-preHtmlGate/C1-preHtmlGate';
 import { inspectUrl } from './B-JSON-feedGate/networkInspector';
 import { evaluateNetworkGate } from './B-JSON-feedGate/A-networkGate';
 import { extractFromApi } from './B-JSON-feedGate/networkEventExtractor';
+import {
+  makeRunId,
+  writeIngestionRunSummary,
+  type IngestionRunStage,
+} from './tools/runRecorder';
 // D-renderGate: renderPage FINNS men KÖRS INTE ännu.
 // Denna import är kvar för framtida integration men är inaktiv just nu.
 
@@ -428,8 +433,24 @@ async function runSource(source: SourceTruth, options: { recheck?: boolean } = {
 
     // Queue the extracted events (samma mönster som jsonld/network)
     if (eventsFound > 0) {
-      const rawEvents = htmlResult.events.map(e => {
-        const raw = toRawEventInput(e);
+      // 2026-10-09 — Fas H: Filtrera events utan datum + venue-default.
+      // Spegling av samma logik som phase1ToQueue.ts:385. Universal-extractor
+      // producerar ibland events med tom date (whitespace, "unknown") och
+      // saknar ofta venue (92% av 137 events senaste 7 dagarna). source.id
+      // (t.ex. "gota-lejon") används som venue-fallback.
+      const usableEvents = htmlResult.events.filter(e => {
+        const d = (e.date ?? '').trim();
+        return d && d !== 'unknown';
+      });
+      const dropped = htmlResult.events.length - usableEvents.length;
+      if (dropped > 0) {
+        console.log(`   Dropped ${dropped} event(s) without valid date`);
+      }
+      const rawEvents = usableEvents.map(e => {
+        const enriched = (!e.venue || !e.venue.trim() || e.venue === 'unknown')
+          ? { ...e, venue: source.id }
+          : e;
+        const raw = toRawEventInput(enriched);
         return {
           ...raw,
           source: source.id,
@@ -680,8 +701,16 @@ async function runSource(source: SourceTruth, options: { recheck?: boolean } = {
         console.log(`✓ Triage successful (${eventsFound} events) but source needs preferredPath update`);
 
         // Queue the extracted events (samma mönster som jsonld/network)
-        const rawEvents = htmlResult.events.map(e => {
-          const raw = toRawEventInput(e);
+        // 2026-10-09 — Fas H: filtrera events utan datum + venue-default (samma logik som rad 436).
+        const usableEvents3 = htmlResult.events.filter(e => {
+          const d = (e.date ?? '').trim();
+          return d && d !== 'unknown';
+        });
+        const rawEvents = usableEvents3.map(e => {
+          const enriched = (!e.venue || !e.venue.trim() || e.venue === 'unknown')
+            ? { ...e, venue: source.id }
+            : e;
+          const raw = toRawEventInput(enriched);
           return {
             ...raw,
             source: source.id,
@@ -733,8 +762,21 @@ async function runSource(source: SourceTruth, options: { recheck?: boolean } = {
 
 async function main() {
   const args = process.argv.slice(2);
-  
+
   console.log('═══ SOURCE SCHEDULER ═══');
+
+  // ── Run-logging state (skrivs till runtime/ingestion_runs.jsonl i finally) ──
+  const startTs = new Date().toISOString();
+  const startedAt = Date.now();
+  const runId = makeRunId('scheduler');
+  const stages: IngestionRunStage[] = [];
+  let attempted = 0;
+  let succeeded = 0;
+  let didWork = false;
+  let errorSummary: string | null = null;
+  let totalEvents = 0;
+
+  try {
   
   if (args.includes('--rebuild')) {
     rebuildPriorityQueue();
@@ -774,19 +816,29 @@ async function main() {
   // ── RUN SINGLE SOURCE: --source <sourceId> ─────────────────────────────────
   const sourceIndex = args.findIndex(a => a === '--source');
   if (sourceIndex !== -1 && args[sourceIndex + 1]) {
+    didWork = true;
     const targetSourceId = args[sourceIndex + 1];
     const source = getSource(targetSourceId);
     if (!source) {
       console.log(`Source '${targetSourceId}' hittades inte i sources/.`);
+      errorSummary = `unknown source: ${targetSourceId}`;
       return;
     }
     console.log(`Kör source: ${source.id} (${source.url})\n`);
+    attempted = 1;
+    const sourceStartedAt = Date.now();
     await runSource(source, { recheck: true });
+    const statusAfter = getSourceStatus(source.id);
+    const sourceOk = statusAfter?.status === 'success';
+    stages.push({ stage: 'A', ok: sourceOk, durationMs: Date.now() - sourceStartedAt, itemsOut: statusAfter?.lastEventsFound ?? 0 });
+    if (sourceOk) succeeded = 1;
+    totalEvents += statusAfter?.lastEventsFound ?? 0;
     process.exit(0);
   }
 
   // ── BATCH TRIAGE: Kör C1 på alla triage_required/unknown/never_run ─────────
   if (args.includes('--triage-batch')) {
+    didWork = true;
     const sources = getAllSources();
     const statuses = getAllStatuses();
     const statusMap = new Map(statuses.map(s => [s.sourceId, s]));
@@ -912,41 +964,81 @@ async function main() {
   }
   
   if (args.includes('--all') || args.includes('--recheck')) {
+    didWork = true;
     const sources = getAllSources();
     console.log(`Kör alla ${sources.length} sources...`);
-    
+    attempted = sources.length;
+    const allStartedAt = Date.now();
+
     for (const source of sources) {
+      const before = getSourceStatus(source.id)?.lastEventsFound ?? 0;
       await runSource(source, { recheck: true });
+      const after = getSourceStatus(source.id);
+      if (after?.status === 'success') succeeded += 1;
+      totalEvents += (after?.lastEventsFound ?? 0) - before;
       // Lite paus mellan körningar
       await new Promise(r => setTimeout(r, 500));
     }
+    stages.push({ stage: 'A', ok: succeeded === attempted, durationMs: Date.now() - allStartedAt, itemsOut: totalEvents });
     return;
   }
-  
+
   // Normal mode: kör nästa i prioritetskön
   const next = getNextInQueue();
-  
+
   if (!next) {
     console.log('Prioritetskön är tom. Kör --rebuild för att återuppbygga.');
     rebuildPriorityQueue();
     return;
   }
-  
+
   console.log(`Nästa i kö: ${next.sourceId} (priority=${next.priority}, reason=${next.reason})`);
-  
+
   const source = getSource(next.sourceId);
   if (!source) {
     console.log(`Source ${next.sourceId} hittades inte i sources/. Ta bort från kö.`);
+    errorSummary = `unknown source: ${next.sourceId}`;
     removeFromQueue(next.sourceId);
     return;
   }
-  
+
+  didWork = true;
+  attempted = 1;
+  const defaultStartedAt = Date.now();
   await runSource(source);
   removeFromQueue(next.sourceId);
-  
+  const afterDefault = getSourceStatus(source.id);
+  if (afterDefault?.status === 'success') succeeded = 1;
+  totalEvents += afterDefault?.lastEventsFound ?? 0;
+  stages.push({ stage: 'A', ok: afterDefault?.status === 'success', durationMs: Date.now() - defaultStartedAt, itemsOut: afterDefault?.lastEventsFound ?? 0 });
+
   // Exit cleanly after processing (fixes scheduler hang-bug)
   // BullMQ workers continue in background, but main process should exit
   process.exit(0);
+  } finally {
+    // Logga batch-körning till runtime/ingestion_runs.jsonl (även vid fel)
+    if (didWork) {
+      const endTs = new Date().toISOString();
+      const ok = stages.length > 0 && stages.every((s) => s.ok) && succeeded === attempted;
+      writeIngestionRunSummary({
+        runId,
+        triggerSource: 'scheduler',
+        startTs,
+        endTs,
+        durationMs: Date.now() - startedAt,
+        ok,
+        sourcesAttempted: attempted,
+        sourcesSucceeded: succeeded,
+        sourcesFailed: attempted - succeeded,
+        totalEventsFound: totalEvents,
+        totalEventsPersisted: 0,
+        stagesCompleted: stages,
+        errorSummary,
+        pid: process.pid,
+        reportPath: null,
+      });
+    }
+  }
 }
 
 main().catch(console.error);

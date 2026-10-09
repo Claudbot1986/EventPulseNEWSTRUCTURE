@@ -382,9 +382,31 @@ async function phase1CandidateToQueue(
 
   // Step 3: Convert and queue each event
   console.log(`[phase1→queue] Queuing ${extractResult.events.length} events from ${url}`);
+  let droppedNoDate = 0;
   for (const event of extractResult.events) {
+    // 2026-10-09 — Fas H: Filtrera events utan giltigt datum.
+    // Universal-extractor producerar ibland events med tom/whitespace
+    // date (t.ex. 3arena "Stevie Wonder" med date="\n   ") som sedan
+    // blir NULL i databasen och inte är användbara. Bättre att droppa
+    // dem i phase1→queue-steget än att skicka skräp vidare.
+    const eventDate = (event.date ?? '').trim();
+    if (!eventDate || eventDate === 'unknown') {
+      droppedNoDate++;
+      continue;
+    }
+
     try {
-      const raw = toRawEventInput(event);
+      // 2026-10-09 — Fas H: Venue-default till sourceName.
+      // 92% av 137 events senaste 7 dagarna saknade venue (gota-lejon 68/68,
+      // 3arena 5/5, eskilstuna 15/15, borlange-kommun 6/6). SourceName är
+      // känt och korrekt (källans eget namn, t.ex. "Göta Lejon"). Fallback
+      // sker BARA om venue är tom/whitespace/"unknown" — alla andra venues
+      // bevaras oförändrat. Per Generalization Protection Rule: sourceName
+      // är source-specifik (inte site-specifik), så globalt OK.
+      const enrichedEvent = (!event.venue || !event.venue.trim() || event.venue === 'unknown')
+        ? { ...event, venue: sourceName }
+        : event;
+      const raw = toRawEventInput(enrichedEvent);
       // Override source_id if needed — use listing page as source identifier
       const safeJobId = `${sourceName}-${raw.source_id}`.replace(/:/g, '-');
 
@@ -397,6 +419,9 @@ async function phase1CandidateToQueue(
     } catch (err) {
       result.errors.push(`Queue error for "${event.title}": ${err}`);
     }
+  }
+  if (droppedNoDate > 0) {
+    console.log(`[phase1→queue] Dropped ${droppedNoDate} event(s) without valid date`);
   }
 
   result.status = result.events_queued === result.events_extracted ? 'success' : 'partial';
