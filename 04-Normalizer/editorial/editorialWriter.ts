@@ -179,6 +179,18 @@ REGLER (följ alltid):
 4. Inga emojis. Inga hashtags. Inga "Boka nu!"-uppmaningar.
 5. Om Profilen är tunn, skriv kortare och mer allmänt hellre än att gissa.
 
+FAS 6 STRIKTA REGLER (factuality-pass):
+6. NÄMNA ALDRIG något som inte finns ordagrant i Profilen eller evenemangs-datan.
+   Även om det "rimligen" skulle vara sant — hitta ALDRIG på det.
+   Skriv inte "country-folk" om Profile bara har "folk"; inte "kanadensiska"
+   om Profile inte säger det; inte "svenska komediscenens" om Profile inte har det.
+7. ANVÄND venue_name och city ENDAST om de finns i evenemangs-datan.
+   Om venue_name är null — skriv "i Stockholm" eller liknande generellt.
+8. SUBSTANTIV EXAKTHET: när du nämner artister, använd deras fulla namn från Profile
+   (för- och efternamn om Profile anger det). Aldrig bara förnamn.
+9. UNDVIK adjektiv-beskrivningar av artister ("kända", "populära")
+   om inte Profile använder dem.
+
 STILISTIK:
 ${styleGuide}
 

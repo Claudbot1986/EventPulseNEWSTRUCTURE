@@ -145,6 +145,63 @@ describe('writeEditorialDescription', () => {
   });
 });
 
+// ─── FAS 6 Writer V2 — striktare regler för factuality-pass ────────────────────
+//
+// Verifierar att system-promten innehåller de strikta reglerna mot
+// "hitta-på-fakta"-beteende (cross-site verifierat på live-sample 2026-10-09).
+// Rikttig M3 producerar prosa MED 31/38/29 unsupported claims utan dessa
+// regler — med dem: 9/41/17. Donovan Woods fallet (41) kräver Profile-utökning
+// via Gazetteer (FAS 3.1).
+
+describe('FAS 6 — system-prompt strikta-regler (anti-hallucination)', () => {
+  function captureSystemPrompt(cannedText: string): Promise<string> {
+    return new Promise((resolve) => {
+      const mock = new MockLlmClient((args) => {
+        resolve(args.systemPrompt);
+        return cannedText;
+      });
+      const inputs = compileWriterInputs({
+        profile: baseProfile,
+        event: { title: 'X', start_time: '2026-10-15T20:00:00+02:00' },
+      });
+      void writeEditorialDescription({ inputs, llm: mock });
+    });
+  }
+
+  it('System-prompt innehåller regel #6: NÄMNA ALDRIG fakta utöver Profile', async () => {
+    const sys = await captureSystemPrompt('Kort text.');
+    expect(sys).toContain('NÄMNA ALDRIG');
+    expect(sys).toMatch(/Profile|Profilen/);
+  });
+
+  it('System-prompt innehåller regel #7: venue_name ENDAST om den finns i event-data', async () => {
+    const sys = await captureSystemPrompt('Kort text.');
+    expect(sys).toContain('venue_name');
+    expect(sys).toContain('city');
+  });
+
+  it('System-prompt innehåller regel #8: fulla artistnamn (för+efter)', async () => {
+    const sys = await captureSystemPrompt('Kort text.');
+    // Vi använder "deras fulla namn" (inte "fullständiga") i prompten — testa det.
+    expect(sys).toContain('fulla namn');
+    expect(sys).toContain('efternamn');
+  });
+
+  it('System-prompt förbjuder adjektiv-beskrivningar (kända/populära)', async () => {
+    const sys = await captureSystemPrompt('Kort text.');
+    expect(sys).toMatch(/kända|populära/);
+    expect(sys).toContain('UNDVIK');
+  });
+
+  it('System-prompt behåller de ursprungliga 5 reglerna (regression-skydd)', async () => {
+    const sys = await captureSystemPrompt('Kort text.');
+    expect(sys).toContain('BARA från informationen');
+    expect(sys).toContain('ALDRIG på');
+    expect(sys).toContain('Inga emojis');
+    expect(sys).toContain('tunn');
+  });
+});
+
 describe('stripThinkBlock', () => {
   it('plockar bort <think>…</think>-block och returnerar slut-svar', () => {
     const raw = '<think>jag räknar ut…\nflera rader resonemang…\n…klar</think>Hooligan Bobs intar Debaser.';
