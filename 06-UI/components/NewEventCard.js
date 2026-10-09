@@ -37,6 +37,9 @@ const T = {
     // 2026-10-07: Läs mer-knappen är gul text dateLine (11) + 3 pt → 14 pt,
     // samma letterSpacing 0.4 som MapEventCard.readMore.
     readMore: { size: 14, weight: '700', letterSpacing: 0.4 },
+    // 2026-10-10: Tier 1 attribution — mindre än meta, italic, mest muted.
+    // "Artistinfo från öppna datakällor" eller liknande.
+    dataSource: { size: 11, weight: '400', letterSpacing: 0.1 },
   },
   space: {
     padX: 14,
@@ -50,6 +53,8 @@ const T = {
     titleMargin: 6,
     metaMargin: 2,
     previewMargin: 6,
+    // 2026-10-10: Tier 1 attribution raden under meta.
+    dataSourceMargin: 4,
     bottomPad: 12,
     // 2026-10-07: Läs mer-knappen sitter på egen rad efter preview,
     // högerjusterad. Samma padding/radius som MapEventCard.readMore.
@@ -125,6 +130,10 @@ export default function NewEventCard({
   onMore,
   onPin,
   onReadMore,
+  // 2026-10-10 (FAS 3.2 attribution, Tier 1) — kort öppen-data-text,
+  // t.ex. "Artistinfo från öppna datakällor". Pedagogisk attribution
+  // istället för ©-raden. Computed av parent från event.profile.
+  dataSource = null,
   a11yLabel,
 }) {
   const source = sourceOf(imageSource);
@@ -133,7 +142,8 @@ export default function NewEventCard({
   // Nu visas bilden helt (contain) och wrap-ramen matchar bildens aspect.
   const { aspect: imageAspect } = useImageAspect(imageSource);
   const label = a11yLabel
-    ?? [id ? `#${id}` : null, title, dateLine, meta].filter(Boolean).join(' — ');
+    ?? [id ? `#${id}` : null, title, dateLine, meta, dataSource]
+        .filter(Boolean).join(' — ');
   const stop = (fn) => (e) => { e?.stopPropagation?.(); fn?.(); };
 
   // Spara-toggle. Lokal state speglar initialt `saved`-proppen och
@@ -286,6 +296,21 @@ export default function NewEventCard({
         {meta ? (
           <Text style={styles.meta} numberOfLines={1} ellipsizeMode="tail">
             {meta}
+          </Text>
+        ) : null}
+
+        {/* Rad 3b (2026-10-10, FAS 3.2): Tier 1 attribution.
+            Diskret, italic, muted — visar att artistinfo etc. kommer
+            från öppna datakällor. Computed av parent från event.profile
+            via buildAttribution(). Tier 2/3 hanteras på details-sidan. */}
+        {dataSource ? (
+          <Text
+            style={styles.dataSource}
+            numberOfLines={1}
+            ellipsizeMode="tail"
+            accessibilityLabel={`Datakälla: ${dataSource}`}
+          >
+            {dataSource}
           </Text>
         ) : null}
 
@@ -486,6 +511,19 @@ const styles = StyleSheet.create({
     fontSize: T.font.meta.size,
     fontWeight: T.font.meta.weight,
     marginTop: T.space.metaMargin,
+  },
+  // 2026-10-10: Tier 1 attribution — diskret text under meta-rad.
+  // Visar "Artistinfo från öppna datakällor" eller liknande. Italic,
+  // lägre opacitet än meta, ingen ikon (för att inte konkurrera med
+  // meta om uppmärksamhet). Hela raden är 1 line + ellipsize.
+  dataSource: {
+    color: T.color.textMuted,
+    fontSize: T.font.dataSource.size,
+    fontWeight: T.font.dataSource.weight,
+    letterSpacing: T.font.dataSource.letterSpacing,
+    fontStyle: 'italic',
+    marginTop: T.space.dataSourceMargin,
+    opacity: 0.7,
   },
   preview: {
     color: T.color.textMuted,
