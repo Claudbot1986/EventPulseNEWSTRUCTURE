@@ -866,3 +866,67 @@ describe('universal-extractor — date patterns (Flaskhals 2 fix)', () => {
     expect(result.events[0].date).toBe(`${today}-03-25`);
   });
 });
+
+// ──────────────────────────────────────────────────────────────────────────
+// 2026-10-09 — A.5 Grand-bugg: body-class med "blog"/"article"/"news"/"post"
+// hindrar Squarespace-eventlist-event-cards från att matchas.
+//
+// Problem: universal-extractor använde `$card.closest('[class*="news|article|
+// blog|post"]')` som "filter bort nyhetsartiklar". Men Squarespace-defaults
+// ger body class="...tweak-blog-...". Eftersom `closest()` inkluderar
+// elementet självt + alla ancestors, fångades ALLA event-cards som "news".
+//
+// Fix: använd `:not(body, html)` i selektorn så body/html inte matchas,
+// och exkludera element vars egen klass innehåller news/post (inte bara
+// article/blog som kan vara del av event-classnames).
+// ──────────────────────────────────────────────────────────────────────────
+
+describe('universal-extractor — A.5 Grand/Squarespace body-class fix', () => {
+  it('extracts events from Squarespace eventlist-event cards (Grand Malmö)', () => {
+    // Minimal Grand-liknande HTML: body har "blog" i klassnamnet, men en
+    // <article class="eventlist-event"> är inte en blog-post.
+    const html = `<!doctype html>
+<html><body class="tweak-blog-masonry collection-type-events view-list">
+<article class="eventlist-event eventlist-event--upcoming">
+  <a href="/calendar/vinprovning-2026"><h2>Vinprovning 2026</h2></a>
+  <ul class="eventlist-meta">
+    <li><time class="event-date" datetime="2026-10-12">måndag 12 oktober 2026</time></li>
+    <li><time class="event-time-localized-start" datetime="2026-10-12T18:00">18:00</time></li>
+  </ul>
+</article>
+<article class="eventlist-event eventlist-event--upcoming">
+  <a href="/calendar/konsert-2026"><h2>Höstkonsert</h2></a>
+  <ul class="eventlist-meta">
+    <li><time class="event-date" datetime="2026-10-19">måndag 19 oktober 2026</time></li>
+  </ul>
+</article>
+</body></html>`;
+    const result = extractEvents(html, 'grandmalmo', 'https://www.grandmalmo.se/calendar');
+    expect(result.events.length).toBeGreaterThanOrEqual(2);
+    const dates = result.events.map((e) => e.date).sort();
+    expect(dates).toContain('2026-10-12');
+    expect(dates).toContain('2026-10-19');
+  });
+
+  it('still filters out real news-article wrappers (regression)', () => {
+    // News-blog pattern med body utan "blog" i klass — ska fortsatt filtreras.
+    // Strukturen har en <main>-wrapper med events inuti (realistiskt mönster).
+    const html = `<!doctype html>
+<html><body>
+<main>
+  <article class="news-article">
+    <h2>Nyhet om konsert</h2>
+    <time datetime="2026-10-12">12 oktober 2026</time>
+  </article>
+  <article class="eventlist-event eventlist-event--upcoming">
+    <a href="/e/1"><h2>Riktigt event</h2></a>
+    <time class="event-date" datetime="2026-10-12">12 oktober 2026</time>
+  </article>
+</main>
+</body></html>`;
+    const result = extractEvents(html, 'mixed', 'https://example.com/calendar');
+    // Det riktiga eventet ska finnas, news-artikeln ska filtreras bort.
+    expect(result.events.length).toBeGreaterThanOrEqual(1);
+    expect(result.events[0].title).toBe('Riktigt event');
+  });
+});

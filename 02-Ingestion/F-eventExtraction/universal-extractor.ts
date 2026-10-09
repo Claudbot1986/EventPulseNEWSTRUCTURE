@@ -1346,7 +1346,17 @@ function extractHtmlHeuristics($: cheerio.CheerioAPI, source: string, baseUrl: s
       const $card = $(el);
 
       if ($card.closest('nav, footer, .nav, .sidebar, [class*="breadcrumb"]').length > 0) return;
-      if ($card.closest('[class*="news"], [class*="article"], [class*="blog"], [class*="post"]').length > 0) return;
+      // 2026-10-09 (A.5 Grand fix): undvik body/html som ancestor-match, och kräv
+      // att en ancestor med news/post också har en semantisk news-blog-rolle.
+      // Squarespace-defaults ger body class="...tweak-blog-..." vilket gjorde att
+      // ALLA event-cards filtrerades bort. Vi tillåter nu article/blog-containrar
+      // så länge de inte också har news/post i samma träd.
+      const newsAncestor = $card.parents().filter((_: any, el: any) => {
+        if (el.tagName === 'body' || el.tagName === 'html') return false;
+        const cls = ($(el).attr('class') || '').toLowerCase();
+        return /news|post/.test(cls);
+      }).length;
+      if (newsAncestor > 0) return;
 
       const title = extractTitle($, $card);
       if (!title || title.length < 2 || title.length > 200) return;
@@ -1409,7 +1419,14 @@ function extractTimeAnchors($: cheerio.CheerioAPI, source: string, baseUrl: stri
     const datetime = $time.attr('datetime') || '';
     if (!datetime || !/^\d{4}-\d{2}-\d{2}/.test(datetime)) return;
 
-    if ($time.closest('nav, footer, [class*="breadcrumb"], [class*="nav"], [class*="news"], [class*="article"]').length > 0) return;
+    if ($time.closest('nav, footer, [class*="breadcrumb"], [class*="nav"]').length > 0) return;
+    // 2026-10-09 (A.5 Grand fix): samma body-träd som i C1 ovan.
+    const timeNewsAncestor = $time.parents().filter((_: any, el: any) => {
+      if (el.tagName === 'body' || el.tagName === 'html') return false;
+      const cls = ($(el).attr('class') || '').toLowerCase();
+      return /news|article|post/.test(cls);
+    }).length;
+    if (timeNewsAncestor > 0) return;
 
     const { date, time } = parseDate(datetime);
 
