@@ -87,6 +87,53 @@ function categoryTendsToWorkTitle(category: string | null | undefined): boolean 
   return ['musical-theatre', 'theatre-drama', 'opera', 'film', 'dance'].includes(category ?? '');
 }
 
+/**
+ * Kategorier där det är rimligt att TITELN innehåller performers (X och Y, X - Y, X på Y).
+ *
+ * FAS 2.5 (2026-10-09): Detta är grinden som gör att "Konstruktion och bild" (exhibition)
+ * inte feltolkas som två performers. Tidigare fångade `X och Y` mönstret alla kategorier,
+ * vilket gav 8 FPs. Nu fångas `X och Y` ENDAST för performer-bearing kategorier.
+ *
+ * Cross-site evidens: alla 8 FP-fall i live-sample var i icke-performer-kategorier
+ * (exhibition, food, wine-tasting, flea-market, festival).
+ */
+const PERFORMER_BEARING_CATEGORIES: ReadonlySet<string> = new Set([
+  'music',
+  'classical',
+  'opera',
+  'jazz',
+  'electronic',
+  'rock',
+  'pop',
+  'theatre-comedy',
+  'theatre-drama',
+  'musical-theatre',
+  'dance',
+  'sport',
+  'sports',
+  'humor',
+  'talks-lectures',
+  'workshop',
+  'kids',
+  'family',
+  'barn-familj',
+]);
+
+/**
+ * Event-type keywords som signalerar att ett ord ÄR ett event-namn (inte en artist).
+ *
+ * Används i `X på Y`, `colon_list`, `single_name`-heuristik för att filtrera bort
+ * "Jazzfest", "Julfest", "Barnlördagar" etc.
+ *
+ * Cross-site: jazzfest, loppis, fest, mässa, festival är vanliga titel-ord i Stockholm events.
+ */
+const EVENT_TYPE_KEYWORDS: ReadonlyArray<string> = [
+  'fest', 'festival', 'mässa', 'party', 'afton', 'kväll', 'natt',
+  'gig', 'show', 'tour', 'nights', 'session', 'salong',
+  'konsert', 'concert', 'live', 'event', 'eventet',
+  'loppis', 'marknad', 'mässa',
+];
+
 // ─── Negativa mönster (saker vi INTE ska extrahera som performer) ───────────
 //
 // Dessa mönster matchas på TITLE. Om ett namn förekommer i ett negativt
@@ -108,8 +155,10 @@ const NEGATIVE_TITLE_PATTERNS: ReadonlyArray<{ pattern: RegExp; role: EntityRole
   { pattern: /^en\s+kväll\s+med\s+(.+)$/i, role: 'theme', reason: 'themed_event' },
 
   // Verkstitlar (musical, the play, the symphony, the opera)
-  { pattern: /^(.+?)\s+-\s+the\s+(?:musical|play|film|opera|ballet|symphony)$/i, role: 'work', reason: 'work_title' },
-  { pattern: /^the\s+(.+?)\s+(?:musical|opera|ballet|symphony|concerto)$/i, role: 'work', reason: 'work_title' },
+  // Tätat 2026-10-09 (FAS 2.5): även vid efterföljande text (datum/venue/location),
+  // t.ex. "Chicago - the Musical Oscarsteatern 2026-10-09 19:30".
+  { pattern: /^(.+?)\s+-\s+(?:the\s+)?(?:musical|play|film|opera|ballet|symphony)(?:[\s\d].+|$)/i, role: 'work', reason: 'work_title' },
+  { pattern: /^the\s+(.+?)\s+(?:musical|opera|ballet|symphony|concerto)(?:[\s\d].+|$)/i, role: 'work', reason: 'work_title' },
 
   // Konsert/festival med kompositör som work context (inte performer)
   { pattern: /^(.+?)\s+in\s+concert$/i, role: 'work', reason: 'concert_about_composer' },
@@ -197,6 +246,53 @@ function isValidName(s: string): boolean {
   return true;
 }
 
+/**
+ * Returnerar true om `s` innehåller något av våra kända event-type keywords.
+ *
+ * "Jazzfest" → true (innehåller "fest").
+ * "Veronica Maggio" → false.
+ * "Julfest på Konserthuset" → true (innehåller "fest").
+ *
+ * FAS 2.5: Tillåter partiell matchning i sammansatta ord (utan word-boundary)
+ * för att fånga "jazzfest", "julfest", "höstfest" etc.
+ */
+function containsEventKeyword(s: string): boolean {
+  const lower = s.toLowerCase();
+  return EVENT_TYPE_KEYWORDS.some(kw => lower.includes(kw.toLowerCase()));
+}
+
+/**
+ * Returnerar true om strängen ser ut som en FRAS (innehåller " och ", " + ", " - ",
+ * etc.) snarare än ett namn. Används för att förhindra att `X på Y`-mönstret
+ * feltolkar sammansatta utställnings-/event-titlar.
+ *
+ * Cross-site evidens: "Konstruktion och bild" (exhibition), "Så blir höstens
+ * vinprovningar" (wine-tasting) — båda undviks.
+ */
+function looksLikePhraseNotName(s: string): boolean {
+  return /\s+(?:och|\+|,|\-|\|)\s+/i.test(s);
+}
+
+/**
+ * Välj bästa role för en entitet i en kategori. Prioriterar:
+ *   - comedian (humor/teater-komedi-kategorier)
+ *   - artist (musik-kategorier)
+ *   - team (sport-kategorier)
+ *   - performer (fallback för andra performance-kategorier)
+ *
+ * Detta gör att colon_list-entiteter får samma roll som om de hade
+ * extraherats via "X och Y"-mönstret i samma kategori.
+ */
+function pickBestRoleForCategory(category: string | null): EntityRole {
+  if (!category) return 'artist';
+  const validRoles = rolesForCategory(category);
+  const priority: readonly EntityRole[] = ['comedian', 'artist', 'performer', 'team', 'ensemble'];
+  for (const r of priority) {
+    if (validRoles.has(r)) return r;
+  }
+  return [...validRoles][0] as EntityRole;
+}
+
 /** Matcha positiva title-mönster. Returnerar 0+ entiteter. */
 function matchPositiveTitlePatterns(
   title: string,
@@ -205,6 +301,14 @@ function matchPositiveTitlePatterns(
 ): MatchedTitleEntity[] {
   const out: MatchedTitleEntity[] = [];
   for (const p of POSITIVE_TITLE_PATTERNS) {
+    // ── FAS 2.5: Kategori-grind för `X och Y`-mönstret ──────────────────
+    // Utan denna grind ger "Konstruktion och bild" (exhibition), "Vin i Linköping"
+    // (wine-tasting) etc. falska performers. Cross-site evidens: alla 8 FPs i
+    // live-sample 2026-10-08 var i icke-performer-kategorier.
+    if (p.method === 'title_pattern:och' && category && !PERFORMER_BEARING_CATEGORIES.has(category)) {
+      continue;
+    }
+
     const m = title.match(p.pattern);
     if (!m) continue;
 
@@ -215,6 +319,8 @@ function matchPositiveTitlePatterns(
       const a = m[1]?.trim();
       const b = m[2]?.trim();
       if (!isValidName(a) || !isValidName(b)) continue;
+      // ── FAS 2.5: Skydd mot event-keywords i `X och Y` (t.ex. "Barnlördagar och Kalas")
+      if (containsEventKeyword(a) || containsEventKeyword(b)) continue;
       const role = pickRoleForCategory(p.role, category);
       out.push({ name: a, role, method: p.method, inferredFromCategory });
       out.push({ name: b, role, method: p.method, inferredFromCategory });
@@ -223,6 +329,12 @@ function matchPositiveTitlePatterns(
       const artistName = m[1]?.trim();
       const afterPa = m[2]?.trim();
       if (!isValidName(artistName)) continue;
+      // ── FAS 2.5: Skydd mot event-keywords i X (t.ex. "Jazzfest på Konserthuset")
+      // "Jazzfest" är ett event-namn, inte en artist.
+      if (containsEventKeyword(artistName)) continue;
+      // ── FAS 2.5: Skydd mot fras-liknande X (t.ex. "Konstruktion och bild",
+      // "Så blir höstens vinprovningar"). Cross-site: 2 av 14 FP-fall.
+      if (looksLikePhraseNotName(artistName)) continue;
       const role = pickRoleForCategory(p.role, category);
       out.push({ name: artistName, role, method: p.method, inferredFromCategory });
       // Y är venue, INTE performer — vi returnerar den bara om den INTE matchar venueName
@@ -240,6 +352,166 @@ function matchPositiveTitlePatterns(
     break;
   }
   return out;
+}
+
+/**
+ * FAS 2.5: Matcha `Title: A [+ ,] B [+ ,] C ...` — kolon-prefixerade listor.
+ *
+ * Designprincip: LHS (före kolon) MÅSTE vara kort programnamn (1-3 ord),
+ * annars är det inte en lista utan en mening. RHS är 2+ tokens, var och en
+ * proper-name-format (börjar med versal), separerade av + eller ,.
+ *
+ * Cross-site evidens:
+ *   - sthlmlist: "Quidam: Helene Berg + Paul Pignon + ..." (6 performers)
+ *   - sthlmlist: "Praktikpresentation: Skånes Dansteater + Escarleth Romo Pozo"
+ *   - livespot-stockholm: "Norra Brunn: Måns Möller, Tobias Erehed, ..."
+ *   - berwaldhallen: delvis i #28 (work-titel före : erkänns som work).
+ */
+function matchColonList(
+  title: string,
+  category: string | null,
+): MatchedTitleEntity[] {
+  // Hitta första kolon. Tillåt bokstäver/siffror i LHS, men EJ fler kolon.
+  const colonIdx = title.indexOf(':');
+  if (colonIdx <= 0 || colonIdx >= title.length - 1) return [];
+  // Bara första kolonen — fånga "Norra Brunn: Måns Möller, Tobias..."
+  const lhs = title.slice(0, colonIdx).trim();
+  const rhsRaw = title.slice(colonIdx + 1).trim();
+  if (!lhs || !rhsRaw) return [];
+
+  // LHS måste vara kort programnamn (1-3 ord).
+  const lhsWords = lhs.split(/\s+/).filter(w => w.length > 0);
+  if (lhsWords.length < 1 || lhsWords.length > 3) return [];
+
+  // LHS får inte innehålla skiljetecken som tyder på mening.
+  if (/[?!]/.test(lhs)) return [];
+
+  // RHS: splittra på + eller , (eller ` och `).
+  // Plocka ut icke-tomma tokens.
+  const tokens = rhsRaw
+    .split(/\s*(?:\+|,)\s*/)
+    .map(t => t.trim())
+    .filter(t => t.length > 0);
+
+  if (tokens.length < 2) return [];
+
+  // Varje token måste se ut som ett proper name (börja med versal,
+  // innehålla minst en bokstav, EJ vara bara skiljetecken).
+  const names = tokens.filter(t => {
+    if (!isValidName(t)) return false;
+    if (!/^[A-ZÅÄÖ]/.test(t)) return false;
+    // Ska inte vara ett enstaka prepositionsord ("i", "med", "och")
+    if (/^(?:med|och|på|i|av|medverkande|the|and)$/i.test(t)) return false;
+    return true;
+  });
+
+  if (names.length < 2) return [];
+
+  // Bestäm roll baserat på kategori (prioritera comedian → artist → performer → team).
+  const validRoles = rolesForCategory(category);
+  const role = pickBestRoleForCategory(category);
+
+  return names.map((name) => ({
+    name,
+    role,
+    method: 'title_pattern:colon_list',
+    inferredFromCategory: !validRoles.has(role),
+  }));
+}
+
+/**
+ * FAS 2.5: Matcha `Artist / Group` — slash-separator för samarbeten/konstellationer.
+ *
+ * Särskiljer från datum-mönster (2026/10/09) genom att kräva att båda sidor
+ * är proper-name-format. Cross-site evidens: sthlmlist.
+ */
+function matchSlashCollab(
+  title: string,
+  category: string | null,
+): MatchedTitleEntity[] {
+  // Hitta slash som INTE är omgiven av siffror.
+  // Tillåt bara slash mellan text-segment.
+  const m = title.match(
+    /^([A-ZÅÄÖ][\p{L}åäöÅÄÖ'\.\-]+(?:\s+[A-ZÅÄÖ][\p{L}åäöÅÄÖ'\.\-]+){0,3})\s+\/\s+([A-ZÅÄÖ][\p{L}åäöÅÄÖ'\.\-]+(?:\s+[A-ZÅÄÖ][\p{L}åäöÅÄÖ'\.\-]+){0,3})\s*$/u,
+  );
+  if (!m) return [];
+  const a = m[1].trim();
+  const b = m[2].trim();
+
+  // Varken a eller b får vara ren siffra (skydd mot datum).
+  if (/^\d+$/.test(a) || /^\d+$/.test(b)) return [];
+
+  // Båda måste vara giltliga namn.
+  if (!isValidName(a) || !isValidName(b)) return [];
+
+  // Brandvägg mot event-keywords.
+  if (containsEventKeyword(a) || containsEventKeyword(b)) return [];
+
+  const validRoles = rolesForCategory(category);
+  const role: EntityRole = validRoles.has('artist') ? 'artist' : 'artist';
+
+  return [
+    { name: a, role, method: 'title_pattern:slash_collab', inferredFromCategory: false },
+    { name: b, role, method: 'title_pattern:slash_collab', inferredFromCategory: false },
+  ];
+}
+
+/**
+ * FAS 2.5: Single-name heuristik för musik-kategorier.
+ *
+ * Används som sista fallback när inget annat mönster matchar. Kräver:
+ *   - Kategori ∈ music/jazz/classical/pop/rock/electronic
+ *   - Titeln är 1-4 ord, alla börjar med VERSAL
+ *   - Inga skiljetecken/separatorer
+ *   - Inga event-type keywords
+ *   - Inga årstal/siffror
+ *
+ * Cross-site: sthlmlist, livespot-stockholm (Donovan Woods m.fl.)
+ *
+ * Skydd:
+ *   - "Hamlet" (theatre-drama) — fel kategori → skip
+ *   - "Antikrist" (theatre-drama) — fel kategori → skip
+ *   - "Big in Japan 2026" — har siffror → skip
+ *   - "Birita" (ovrigt) — fel kategori → skip
+ *   - "Joy With Strings" (festival) — fel kategori → skip
+ *   - "Vin i Linköping" (community) — har "i" + fel kategori → skip
+ */
+function matchSingleName(
+  title: string,
+  category: string | null,
+): MatchedTitleEntity | null {
+  const musicCategories = new Set([
+    'music', 'jazz', 'classical', 'pop', 'rock', 'electronic',
+  ]);
+  if (!category || !musicCategories.has(category)) return null;
+
+  const clean = title.trim();
+
+  // Inga separatorer eller skiljetecken
+  if (/[:,\-|&+?!]/.test(clean)) return null;
+
+  // Inga siffror (år, klockslag, etc.)
+  if (/\d/.test(clean)) return null;
+
+  // Inga event-keywords
+  if (containsEventKeyword(clean)) return null;
+
+  // Inga småord som prepositioner/konjunktioner
+  if (/\b(?:på|med|och|i|av|för|från|hos|över|under|medverkande|the|and|at|in)\b/i.test(clean)) return null;
+
+  // 1-4 ord, alla versalbörjande
+  const words = clean.split(/\s+/).filter(w => w.length > 0);
+  if (words.length < 1 || words.length > 4) return null;
+
+  const validWord = /^[A-ZÅÄÖ][\p{L}åäöÅÄÖ'\.\-]+$/u;
+  if (!words.every(w => validWord.test(w))) return null;
+
+  return {
+    name: clean,
+    role: 'artist',
+    method: 'title_pattern:single_name',
+    inferredFromCategory: false,
+  };
 }
 
 // ─── Pass på raw_description (svaga signaler) ────────────────────────────────
@@ -371,8 +643,9 @@ export function extractEntities(input: EntityExtractionInput): ExtractedEntity[]
       if (categoryTendsToWorkTitle(category)) {
         // Lägg till som work, INTE performer.
         // Försök extrahera work-namnet (utan suffix som "the musical")
-        const workMatch = title.match(/^(.+?)\s+-\s+(?:the\s+)?(?:musical|play|film|opera|ballet|symphony)$/i)
-          ?? title.match(/^the\s+(.+?)\s+(?:musical|opera)/i);
+        // Tätat 2026-10-09: matcher även med efterföljande text som "Oscarsteatern 2026-10-09".
+        const workMatch = title.match(/^(.+?)\s+-\s+(?:the\s+)?(?:musical|play|film|opera|ballet|symphony)(?:[\s\d].+|$)/i)
+          ?? title.match(/^the\s+(.+?)\s+(?:musical|opera)(?:[\s\d].+|$)/i);
         const workName = workMatch?.[1]?.trim() ?? title;
         dedup({
           name: workName,
@@ -384,10 +657,41 @@ export function extractEntities(input: EntityExtractionInput): ExtractedEntity[]
       // Annars: returnera ingenting (vi vet inte vem som är artist).
     } else {
       // ── Pass 2b: TITLE — positiva mönster ─────────────────────────────
-      const matches = matchPositiveTitlePatterns(title, category, input.venue_name);
+      // FAS 2.5 (2026-10-09): ordnad kaskad av mönster, mest specifika först.
+      //
+      // 1. colon_list  — "Quidam: A + B + C" / "Norra Brunn: A, B, C"
+      //    (kräver kort LHS + 2+ tokens i RHS)
+      // 2. slash_collab — "Lars Jansson / Erik Söderlind Quartet"
+      //    (undantag för datum-mönster)
+      // 3. POSITIVE_TITLE_PATTERNS — befintliga "X och Y", "X - Y", "X på Y",
+      //    "X vs Y", "med X", "DJ X", etc. (med kategori-grind på `och` + keyword-skydd på `på`)
+      // 4. single_name — fallback: 1-4 ord, alla VERSAL, music-kategori
+      //
+      // Val av ordning: colon_list kommer FÖRST eftersom dess matchning är mest
+      // strukturellt specifik och ger färre false positives när den väl fångar.
       const validRoles = rolesForCategory(category);
+      const allMatches: MatchedTitleEntity[] = [];
 
-      for (const m of matches) {
+      const colonList = matchColonList(title, category);
+      if (colonList.length >= 2) {
+        allMatches.push(...colonList);
+      } else {
+        // Slash-collab är ovanligt och kan samexistera med andra mönster
+        // men inte på samma text — välj slash om den fångar.
+        const slash = matchSlashCollab(title, category);
+        if (slash.length === 2) {
+          allMatches.push(...slash);
+        } else {
+          allMatches.push(...matchPositiveTitlePatterns(title, category, input.venue_name));
+        }
+        // Single-name är ENDAST en fallback om vi inte hittat något.
+        if (allMatches.length === 0) {
+          const single = matchSingleName(title, category);
+          if (single) allMatches.push(single);
+        }
+      }
+
+      for (const m of allMatches) {
         const isInferredRole = !validRoles.has(m.role);
         dedup({
           name: m.name,

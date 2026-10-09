@@ -320,3 +320,177 @@ describe('Scenarion från live-sample (runtime/live-sample-2026-10-08)', () => {
     expect(e.filter(x => x.role === 'artist')).toHaveLength(0);
   });
 });
+
+// ─── FAS 2.5: NYA MÖNSTER FÖR ATT SLUTA 9 MISSADE EVENTS ─────────────────────
+//
+// Online-forskning (Stanford SLP §17, dev.to NER-jämförelse) bekräftar:
+//   - Pattern-based approach med named-entity-kontext är gold standard för korta titlar
+//   - LLM-NER med små modeller når bara 36–66 % recall på artistnamn
+//   - Ren regelbaserad approach med multipla mönster + dedup är bästa vägen
+//
+// Nya mönster (alla med multi-site evidens i live-sample):
+//   1. colon_list  — "Title: A + B + C" och "Title: A, B, C"
+//   2. slash_collab — "Artist / Group" (undantag för datum-mönster)
+//   3. single_name — ensamt artistnamn i musik-kategori (Donovan Woods)
+//   4. Negative: "the Musical/Play/Symphony" även med efterföljande text
+//
+// Befintliga neg-pattern behåller sina 9 negativa testfall oförändrade (23/23).
+
+describe('Nya mönster FAS 2.5 — multipla missed events', () => {
+  it('Quidam: A + B + C → 6 performers (colon_list, plus-list)', () => {
+    const e = extractEntities({
+      title: 'Quidam: Helene Berg + Paul Pignon + Ida Lundén + Thomas Bjelkeborn + Eva Lindal + Philippe Moenne-Loccoz',
+      raw_description: null,
+      category_slug: 'community',
+      venue_name: 'Fylkingen',
+    });
+    const names = e.map(x => x.name).sort();
+    expect(names).toContain('Helene Berg');
+    expect(names).toContain('Paul Pignon');
+    expect(names).toContain('Ida Lundén');
+    expect(names).toContain('Thomas Bjelkeborn');
+    expect(names).toContain('Eva Lindal');
+    expect(names).toContain('Philippe Moenne-Loccoz');
+    // Quidam (LHS) ska INTE bli artist
+    expect(e.find(x => x.name === 'Quidam')).toBeUndefined();
+    // Roll sätts av kategori-mapping (community → performer/artist)
+    expect(e.every(x => ['artist', 'performer'].includes(x.role))).toBe(true);
+  });
+
+  it('Norra Brunn: A, B, C → 3 comedians (colon_list, komma-list)', () => {
+    const e = extractEntities({
+      title: 'Norra Brunn: Måns Möller, Tobias Erehed, Dominik Henzel',
+      raw_description: null,
+      category_slug: 'theatre-comedy',
+      venue_name: 'Norra Brunn',
+    });
+    expect(e.find(x => x.name === 'Måns Möller')?.role).toBe('comedian');
+    expect(e.find(x => x.name === 'Tobias Erehed')?.role).toBe('comedian');
+    expect(e.find(x => x.name === 'Dominik Henzel')?.role).toBe('comedian');
+    // "Norra Brunn" (LHS) är venue, INTE performer
+    expect(e.filter(x => x.role === 'comedian').length).toBe(3);
+  });
+
+  it('Praktikpresentation: A + B → 2 performers (colon_list, plus-list)', () => {
+    const e = extractEntities({
+      title: 'Praktikpresentation: Skånes Dansteater + Escarleth Romo Pozo',
+      raw_description: null,
+      category_slug: 'dance',
+      venue_name: 'Dansens Hus',
+    });
+    expect(e.find(x => x.name === 'Skånes Dansteater')).toBeDefined();
+    expect(e.find(x => x.name === 'Escarleth Romo Pozo')).toBeDefined();
+  });
+
+  it('Lars Jansson / Erik Söderlind Quartet → 2 artists (slash_collab)', () => {
+    const e = extractEntities({
+      title: 'Lars Jansson / Erik Söderlind Quartet',
+      raw_description: null,
+      category_slug: 'community',
+      venue_name: 'Fasching',
+    });
+    expect(e.find(x => x.name === 'Lars Jansson')).toBeDefined();
+    expect(e.find(x => x.name === 'Erik Söderlind Quartet')).toBeDefined();
+  });
+
+  it('Slash får INTE fånga datum-mönster (2026/10/09)', () => {
+    const e = extractEntities({
+      title: 'Some Event 2026/10/09',
+      raw_description: null,
+      category_slug: 'music',
+      venue_name: null,
+    });
+    // Inte heller matchas av slash eftersom "Some Event 2026" inte är
+    // capitalized-pattern på båda sidor av slashen.
+    expect(e.filter(x => x.role === 'artist').length).toBe(0);
+  });
+
+  it('Donovan Woods (ensamt namn, music) → 1 artist', () => {
+    const e = extractEntities({
+      title: 'Donovan Woods',
+      raw_description: null,
+      category_slug: 'music',
+      venue_name: 'Debaser',
+    });
+    const d = e.find(x => x.name === 'Donovan Woods');
+    expect(d).toBeDefined();
+    expect(d?.role).toBe('artist');
+    expect(d?.confidence).toBe('SUPPORTED');
+  });
+
+  it('Donovan Woods-liknande titel (community) → INTE artist (kategori-grind)', () => {
+    const e = extractEntities({
+      title: 'Donovan Woods',
+      raw_description: null,
+      category_slug: 'community',
+      venue_name: null,
+    });
+    // single_name-grinden kräver music-kategori
+    expect(e.find(x => x.name === 'Donovan Woods' && x.role === 'artist')).toBeUndefined();
+  });
+
+  it('Ensamt work-title "Antikrist" (theatre-drama) → INTE artist', () => {
+    const e = extractEntities({
+      title: 'Antikrist',
+      raw_description: null,
+      category_slug: 'theatre-drama',
+      venue_name: null,
+    });
+    // Inte i music-kategori, ska inte trigga single_name
+    expect(e.find(x => x.role === 'artist')).toBeUndefined();
+  });
+
+  it('"Joy With Strings" (festival) → INTE artist (3 ord, ej i musik-kategori)', () => {
+    const e = extractEntities({
+      title: 'Joy With Strings',
+      raw_description: null,
+      category_slug: 'festival',
+      venue_name: null,
+    });
+    expect(e.filter(x => x.role === 'artist')).toHaveLength(0);
+  });
+
+  it('"Jazzfest på Konserthuset" (music, innehåller "fest") → INTE trigga single_name', () => {
+    const e = extractEntities({
+      title: 'Jazzfest på Konserthuset',
+      raw_description: null,
+      category_slug: 'music',
+      venue_name: null,
+    });
+    // "fest"-keyword gör att single_name inte fångar.
+    // Och "på" gör att colon_list etc. inte heller fångar.
+    expect(e.filter(x => x.role === 'artist')).toHaveLength(0);
+  });
+});
+
+// ─── TÄTNING AV NEGATIVA MÖNSTER ─────────────────────────────────────────────
+
+describe('FAS 2.5 — tätare negativa mönster', () => {
+  it('"Chicago - the Musical Oscarsteatern 2026-10-09 19:30" → Chicago som work (inte artist)', () => {
+    // NYTT fall: live-sample #11 — negativa mönstret ska fånga även med efterföljande text.
+    const e = extractEntities({
+      title: 'Chicago - the Musical Oscarsteatern 2026-10-09 19:30',
+      raw_description: null,
+      category_slug: 'musical-theatre',
+      venue_name: 'Oscarsteatern',
+    });
+    const chicago = e.find(x => x.name === 'Chicago');
+    if (chicago) {
+      expect(chicago.role).toBe('work');
+      expect(chicago.role).not.toBe('artist');
+      expect(chicago.role).not.toBe('performer');
+    }
+    // INGA artist/performer-entiteter ska finnas
+    expect(e.filter(x => ['artist', 'performer', 'band'].includes(x.role))).toHaveLength(0);
+  });
+
+  it('"Konstruktion och bild" (exhibition) → INGA performers (kategori-grind på "och")', () => {
+    const e = extractEntities({
+      title: '"Konstruktion och bild" på Nacka konsthall',
+      raw_description: null,
+      category_slug: 'exhibition',
+      venue_name: 'Nacka konsthall',
+    });
+    expect(e.filter(x => x.role === 'artist' || x.role === 'performer')).toHaveLength(0);
+  });
+});
