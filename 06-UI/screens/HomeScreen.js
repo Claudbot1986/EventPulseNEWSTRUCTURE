@@ -40,6 +40,10 @@ import { formatLocalTime } from '../services/localTime';
 // useAiImageUrl är en pure function (samma regler som DetailsScreen-redan):
 // visar pre-baked AI / library / empty placeholder — ALDRIG original.
 import { useAiImageUrl } from '../hooks/useAiImageUrl';
+// Fas 1.5 #1 (2026-10-09) — guest taste-first UI-gate. Pure helper,
+// lives in HEM-QUARANTINE för vitest-testbarhet (mobileHomeScreen.test.ts
+// kan pinna semantiken utan React Native testing-library).
+import { shouldRenderPersonalized } from '../HEM-QUARANTINE/screens/home/personalizedGate';
 
 const TOKENS = {
   color: {
@@ -255,12 +259,25 @@ function scoreFor(signalsForId) {
 }
 
 /**
- * @param {{ onCardPress?: (event: { id: string, title: string }) => void }} props
+ * @param {{
+ *   onCardPress?: (event: { id: string, title: string }) => void,
+ *   userState?: 'loading' | 'guest' | 'logged_in',
+ * }} props
  *   onCardPress: triggas vid tryck på För-dig/Ikväll/Helgen/Upptäck-kort och
  *     Senaste-kort. AppShell kopplar detta till handleHomeCardPress som
  *     öppnar DetailsScreen i Utforska.
+ *   userState: AUTH-gate för personaliserade karuseller (Fas 1.5 #1, 2026-10-09).
+ *     - 'loading'   → göm de 5 personaliserade karusellerna tills auth-state lösts
+ *     - 'guest'     → visa dem (anon-smak fungerar via Phase 1.5 #1 server-side)
+ *     - 'logged_in' → visa dem
+ *     - undefined   → visa dem (backward-compat; AppShell kommer alltid skicka det)
+ *     Content-sektioner (Foodies/Gratis/Nytt/Upptäck) påverkas ALDRIG av userState.
  */
-export default function HomeScreen({ onCardPress }) {
+export default function HomeScreen({ onCardPress, userState }) {
+  // Fas 1.5 #1: guest-taste-first. Personalized sections (För dig, Senaste,
+  // Ikväll, Imorgon, Helgen) visas endast när auth-state är löst (inte loading).
+  // Server-side redan klar (anon-signin), UI-gate: bara vänta in userState.
+  const showPersonalized = shouldRenderPersonalized(userState);
   const { t, language } = useI18n();
   const daysShort = dateNamesFor(language).daysShort;
   const [signals, setSignals] = useState({});
@@ -621,40 +638,54 @@ export default function HomeScreen({ onCardPress }) {
       {/* Sektioner i ordning enligt användarens val 2026-09-25 — Först =
           personlig rekommendation, sedan Senaste (memory), sedan
           Ikväll/Helgen, sist K3-reserv. Inget ovanför karusellerna. */}
-      <EventPulseCarousel
-        headerText={t('home.sections.fordig')}
-        cards={fordigCards}
-        loading={fordig.status === 'loading'}
-        emptyText={t('home.emptySection')}
-      />
+      {/* Fas 1.5 #1 (2026-10-09): guest taste-first — visa personliga
+          karuseller även för gäster. userState='loading' döljer dem tills
+          auth-state lösts (förhindrar flash av tomma/default-cards). */}
+      {showPersonalized && (
+        <EventPulseCarousel
+          testID="home-personalized-gated"
+          headerText={t('home.sections.fordig')}
+          cards={fordigCards}
+          loading={fordig.status === 'loading'}
+          emptyText={t('home.emptySection')}
+        />
+      )}
 
-      <EventPulseSenaste
-        headerText={t('home.sections.senaste')}
-        cards={senasteWithHandlers}
-        loading={senastePool.status === 'loading'}
-        emptyText={t('home.emptySection')}
-      />
+      {showPersonalized && (
+        <EventPulseSenaste
+          headerText={t('home.sections.senaste')}
+          cards={senasteWithHandlers}
+          loading={senastePool.status === 'loading'}
+          emptyText={t('home.emptySection')}
+        />
+      )}
 
-      <EventPulseCarousel
-        headerText={t('home.sections.ikvall')}
-        cards={ikvallCards}
-        loading={ikvall.status === 'loading'}
-        emptyText={t('home.emptySection')}
-      />
+      {showPersonalized && (
+        <EventPulseCarousel
+          headerText={t('home.sections.ikvall')}
+          cards={ikvallCards}
+          loading={ikvall.status === 'loading'}
+          emptyText={t('home.emptySection')}
+        />
+      )}
 
-      <EventPulseCarousel
-        headerText={t('home.sections.imorgon')}
-        cards={imorgonCards}
-        loading={imorgon.status === 'loading'}
-        emptyText={t('home.emptySection')}
-      />
+      {showPersonalized && (
+        <EventPulseCarousel
+          headerText={t('home.sections.imorgon')}
+          cards={imorgonCards}
+          loading={imorgon.status === 'loading'}
+          emptyText={t('home.emptySection')}
+        />
+      )}
 
-      <EventPulseCarousel
-        headerText={t('home.sections.helgen')}
-        cards={helgenCards}
-        loading={helgen.status === 'loading'}
-        emptyText={t('home.emptySection')}
-      />
+      {showPersonalized && (
+        <EventPulseCarousel
+          headerText={t('home.sections.helgen')}
+          cards={helgenCards}
+          loading={helgen.status === 'loading'}
+          emptyText={t('home.emptySection')}
+        />
+      )}
 
       <EventPulseCarousel
         headerText={t('home.sections.foodies')}
