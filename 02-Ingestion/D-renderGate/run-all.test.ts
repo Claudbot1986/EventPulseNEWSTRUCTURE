@@ -1,10 +1,10 @@
 /**
  * run-all.test.ts — Verifierar att nattlig runner:
- * - kör alla 5 pilotkällor
+ * - kör alla 10 pilotkällor (5 ursprungliga + 5 Stockholm-förtätning Fas F)
  * - serial ordning (deterministisk)
  * - övriga körs även om en source failar (kedjan ska inte brytas)
  *
- * 2026-10-09 — Val C fas A.
+ * 2026-10-09 — Val C fas A + fas F (Stockholm-förtätning).
  */
 import { describe, expect, it, vi, beforeEach } from 'vitest';
 import * as path from 'node:path';
@@ -14,7 +14,12 @@ vi.mock('./runD-pilot', () => ({
 }));
 
 vi.mock('./sourceAllowlist', () => ({
-  RENDER_PILOT_SOURCES: new Set(['dramaten', 'hallsberg', 'jonkoping', 'djurgarden', 'jarfalla']),
+  RENDER_PILOT_SOURCES: new Set([
+    'dramaten', 'hallsberg', 'jonkoping', 'djurgarden', 'jarfalla',
+    // 2026-10-09 — Fas F: Stockholm-förtätning
+    'fotografiska', 'stockholm-jazz-festival', 'thatsup-stockholm-events',
+    'visit-stockholm', 'sparvag-city',
+  ]),
 }));
 
 // Sätt CWD till runtime/d-render-pilot så logPath-lösningen fungerar
@@ -61,18 +66,19 @@ const failResult = (sid: string) => ({
 });
 
 describe('runAllPilots — serial loop', () => {
-  it('kör alla 5 pilotkällor och summerar korrekt', async () => {
+  it('kör alla 10 pilotkällor och summerar korrekt', async () => {
+    // 2026-10-09 — Fas F: 10 källor (5 ursprungliga + 5 Stockholm-förtätning)
     mockRun.mockImplementation(async (sid: string) => successResult(sid));
 
     const origLog = console.log;
     console.log = () => {};
     try {
       const summary = await runAllPilots();
-      expect(summary.results).toHaveLength(5);
-      expect(summary.totalEvents).toBe(5);
-      expect(summary.totalCredits).toBe(125);
-      expect(summary.successful).toBe(5);
-      expect(mockRun).toHaveBeenCalledTimes(5);
+      expect(summary.results).toHaveLength(10);
+      expect(summary.totalEvents).toBe(10);
+      expect(summary.totalCredits).toBe(250);
+      expect(summary.successful).toBe(10);
+      expect(mockRun).toHaveBeenCalledTimes(10);
     } finally {
       console.log = origLog;
     }
@@ -90,10 +96,10 @@ describe('runAllPilots — serial loop', () => {
     console.warn = () => {};
     try {
       const summary = await runAllPilots();
-      expect(summary.results).toHaveLength(5);
-      expect(summary.successful).toBe(4);
-      expect(summary.totalEvents).toBe(4);
-      expect(mockRun).toHaveBeenCalledTimes(5);
+      expect(summary.results).toHaveLength(10);
+      expect(summary.successful).toBe(9);
+      expect(summary.totalEvents).toBe(9);
+      expect(mockRun).toHaveBeenCalledTimes(10);
     } finally {
       console.log = origLog;
       console.warn = origWarn;
@@ -111,7 +117,11 @@ describe('runAllPilots — serial loop', () => {
     console.log = () => {};
     try {
       await runAllPilots();
-      expect(order).toEqual(['djurgarden', 'dramaten', 'hallsberg', 'jarfalla', 'jonkoping']);
+      expect(order).toEqual([
+        'djurgarden', 'dramaten', 'fotografiska', 'hallsberg', 'jarfalla',
+        'jonkoping', 'sparvag-city', 'stockholm-jazz-festival',
+        'thatsup-stockholm-events', 'visit-stockholm',
+      ]);
     } finally {
       console.log = origLog;
     }

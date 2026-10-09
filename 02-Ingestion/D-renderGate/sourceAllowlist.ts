@@ -20,6 +20,14 @@ export const RENDER_PILOT_SOURCES: ReadonlySet<string> = new Set([
   'jonkoping',
   'djurgarden',
   'jarfalla',
+  // 2026-10-09 — Fas F: Stockholm-prioriterade källor som tidigare hade
+  // 0 events via C-pipelinen (URL död eller D-route-fails). D-render +
+  // universal-extractor ger nu events.
+  'fotografiska',
+  'stockholm-jazz-festival',
+  'thatsup-stockholm-events',
+  'visit-stockholm',
+  'sparvag-city',
 ]);
 
 /**
@@ -41,6 +49,18 @@ export const RENDER_PILOT_URLS: Readonly<Record<string, string>> = {
   // jarfalla.jsonl (3 events redan extraherade från denna URL).
   // Original URL pekade på företagsnätverk-dropdown (fel sida, 0 events).
   jarfalla:   'https://www.jarfalla.se/omsorgochstod/barnungaochfamilj/evenemangforfamiljer.4.4bd0a201194307b97542ee34.html',
+  // 2026-10-09 — Fas F: Stockholm-förtätning. C-pipelinen gav 0 events
+  // för fotografiska (URL död enligt RawSources). stockholm.fotografiska.com/sv
+  // är den fungerande URL:en — verifierad 2026-10-09, 4 events.
+  fotografiska: 'https://stockholm.fotografiska.com/sv',
+  // Stockholm Jazz Festival — verifierad 2026-10-09, 1 event.
+  'stockholm-jazz-festival': 'https://www.stockholmjazz.se',
+  // Thatsup Stockholm events listing.
+  'thatsup-stockholm-events': 'https://thatsup.se/stockholm/events',
+  // Visit Stockholm "biggest upcoming events" artikel.
+  'visit-stockholm': 'https://www.visitstockholm.com/see-do/attractions/biggest-upcoming-events',
+  // Spårvägsmuseet "Aktuellt" — guidade visningar etc.
+  'sparvag-city': 'https://www.sparvagsmuseet.se/se-och-gora/aktuellt/',
 };
 
 export function isPilotSource(sourceId: string): boolean {
