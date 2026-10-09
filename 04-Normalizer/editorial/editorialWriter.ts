@@ -263,6 +263,15 @@ export async function writeEditorialDescription(input: EditorialWriterInput): Pr
     temperature: 0.7,
   });
 
+  // Defensive guard: MockLlmClient eller trasig LLM-provider kan returnera
+  // tomt/undefined. Härda input-validitet så vi inte kraschar på .split() —
+  // tidigare kraschade smoke-testet med "Cannot read properties of undefined".
+  if (typeof text !== 'string' || text.trim().length === 0) {
+    throw new Error(
+      `LLM returned empty/non-string content (type=${typeof text}, len=${(text as unknown as { length?: number })?.length ?? '?'}).`,
+    );
+  }
+
   const word_count = text.split(/\s+/).filter(Boolean).length;
 
   return {

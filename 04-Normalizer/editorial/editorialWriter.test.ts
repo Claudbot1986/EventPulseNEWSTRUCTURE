@@ -106,6 +106,43 @@ describe('writeEditorialDescription', () => {
     });
     expect((client as unknown as { baseUrl: string }).baseUrl).toBe('https://api.minimax.io/v1');
   });
+
+  // FAS 3 Evidence Pack — regression-skydd för pre-existerande bug på rad 266
+  // (writeEditorialDescription kraschade med 'Cannot read properties of undefined'
+  // om LLM returnerade '' eller undefined). Nu ska empty content ge tydligt fel.
+  it('Kastar tydligt fel vid tom LLM-respons (skydd mot text.split(undefined))', async () => {
+    const emptyMock = new MockLlmClient('');
+    const inputs = compileWriterInputs({
+      profile: baseProfile,
+      event: { title: 'X', start_time: '2026-10-15T20:00:00+02:00' },
+    });
+    await expect(
+      writeEditorialDescription({ inputs, llm: emptyMock })
+    ).rejects.toThrow(/empty.*non-string content/);
+  });
+
+  it('Kastar tydligt fel vid whitespace-only LLM-respons', async () => {
+    const whitespaceMock = new MockLlmClient('   \n  \t  ');
+    const inputs = compileWriterInputs({
+      profile: baseProfile,
+      event: { title: 'X', start_time: '2026-10-15T20:00:00+02:00' },
+    });
+    await expect(
+      writeEditorialDescription({ inputs, llm: whitespaceMock })
+    ).rejects.toThrow(/empty.*non-string content/);
+  });
+
+  it('Accepterar non-empty sträng även utan skiljetecken (debug-mocks tillåts)', async () => {
+    const noPunctMock = new MockLlmClient('Hooligan Bobs intar Debaser med rock från scenen');
+    const inputs = compileWriterInputs({
+      profile: baseProfile,
+      event: { title: 'X', start_time: '2026-10-15T20:00:00+02:00' },
+    });
+    // Mock-inmatning kan sakna skiljetecken — vi tolererar det
+    // (MiniMax-M3LlmClient är den som kräver skiljetecken i prod).
+    const draft = await writeEditorialDescription({ inputs, llm: noPunctMock });
+    expect(draft.text).toBe('Hooligan Bobs intar Debaser med rock från scenen');
+  });
 });
 
 describe('stripThinkBlock', () => {

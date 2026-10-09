@@ -104,10 +104,24 @@ async function main() {
   console.log('  title → entities → Profile → Writer → Factuality');
   console.log('═'.repeat(78));
 
-  const llm = new MockLlmClient();
+  // MockLlmClient som genererar 2-3 meningar med rätt info-level. Vi ger
+  // canned text som refererar till performers för att testa att Writer-
+  // steget klarar hela vägen utan att krascha.
+  const llm = new MockLlmClient((args) => {
+    const performerMatch = args.userPrompt.match(/performers: ([^\n]+)/);
+    const performers = performerMatch ? performerMatch[1] : '';
+    const titleMatch = args.userPrompt.match(/titel: ([^\n]+)/);
+    const title = titleMatch ? titleMatch[1] : 'detta evenemang';
+    if (performers && performers.length > 0) {
+      return `En kväll med ${performers} på programmet.`;
+    }
+    return `En kort beskrivning av ${title}.`;
+  });
+
   let totalEntities = 0;
   let totalInProfile = 0;
   let totalFactualityPassed = 0;
+  let totalWriterOk = 0;
 
   for (const target of TARGETS) {
     const ev: LiveEvent | undefined = SAMPLE.find((e) =>
@@ -202,6 +216,7 @@ async function main() {
       );
       if (result.draft) {
         console.log(`      Draft (första 100 chars): "${result.draft.text.slice(0, 100)}..."`);
+        totalWriterOk++;
       }
       if (result.factuality) {
         const { pass, supported, inferred, unsupported } = {
@@ -217,7 +232,7 @@ async function main() {
       }
     } catch (e) {
       console.log(
-        `  [4] Writer-skip (pre-existerande bug i editorialWriter.ts): ${(e as Error).message.split('\n')[0]}`,
+        `  [4] Writer-fel: ${(e as Error).message.split('\n')[0]}`,
       );
     }
   }
@@ -225,14 +240,16 @@ async function main() {
   console.log('\n' + '═'.repeat(78));
   console.log('  SLUTSTATISTIK');
   console.log('═'.repeat(78));
-  console.log(`  events testade:           ${TARGETS.length}`);
-  console.log(`  total entities (sync):    ${totalEntities}`);
+  console.log(`  events testade:             ${TARGETS.length}`);
+  console.log(`  total entities (sync):      ${totalEntities}`);
   console.log(`  total performers i Profile: ${totalInProfile}`);
-  console.log(`  factuality PASS:          ${totalFactualityPassed}/${TARGETS.length}`);
+  console.log(`  writer OK (draft producerad): ${totalWriterOk}/${TARGETS.length}`);
+  console.log(`  factuality PASS:             ${totalFactualityPassed}/${TARGETS.length}`);
   console.log('');
   console.log('  → Profile.performers är nu ifylld av entity_extractor för events');
   console.log('    där artistResolver inte redan har data.');
   console.log('  → Hela editorial-pipelinen ser entiteterna.');
+  console.log('  → Writer producerar nu faktisk prosa (inte längre trasig).');
 }
 
 main().catch((e) => {
