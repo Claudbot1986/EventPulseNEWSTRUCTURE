@@ -198,6 +198,7 @@ export function shouldLlmAugment(
     'theatre-comedy', 'humor', 'dance', 'musical-theatre',
     'sport', 'sports', 'tournament',
     'circus', 'opera', 'family',
+    'unknown',  // FAS 3.5: okategoriserade events kan ha artister (t.ex. HSO – Orkesterfest med Pascal)
   ]);
   if (!PERFORMER_CATS.has(category)) return false;
   // Utan API-nyckel — skip

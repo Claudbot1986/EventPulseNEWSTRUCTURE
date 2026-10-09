@@ -132,6 +132,15 @@ const EVENT_TYPE_KEYWORDS: ReadonlyArray<string> = [
   'gig', 'show', 'tour', 'nights', 'session', 'salong',
   'konsert', 'concert', 'live', 'event', 'eventet',
   'loppis', 'marknad', 'mässa',
+  // FAS 3 tillägg — saknade svenska programnamn-ord (upptäckta via live M3-test 2026-10-09)
+  'provning', 'provningar', 'prov',          // "vinprovning", "ölprovning"
+  'lördag', 'lördagar', 'lördags',           // "Barnlördagar", "Lördagsmys"
+  'söndag', 'söndagar', 'söndags',           // "Söndagsbarn"
+  'onsdag', 'torsdag', 'fredag', 'måndag', 'tisdag',  // "Fredagsmix"
+  'förskola', 'öppet', 'öppen',              // "Öppen förskola"
+  'lunch', 'trav', 'loppmarknad',            // "Lunchtrav", "Loppmarknad"
+  'tema', 'themed', 'theme',                 // "HOBO COMEDY THEME NIGHTS"
+  'tävling', 'tävlingen',                    // "Musik-tävlingen"
 ];
 
 // ─── Negativa mönster (saker vi INTE ska extrahera som performer) ───────────
@@ -307,11 +316,20 @@ function matchPositiveTitlePatterns(
 ): MatchedTitleEntity[] {
   const out: MatchedTitleEntity[] = [];
   for (const p of POSITIVE_TITLE_PATTERNS) {
-    // ── FAS 2.5: Kategori-grind för `X och Y`-mönstret ──────────────────
+    // ── FAS 2.5/3: Kategori-grind för performer-bundna mönster ─────────
     // Utan denna grind ger "Konstruktion och bild" (exhibition), "Vin i Linköping"
-    // (wine-tasting) etc. falska performers. Cross-site evidens: alla 8 FPs i
-    // live-sample 2026-10-08 var i icke-performer-kategorier.
-    if (p.method === 'title_pattern:och' && category && !PERFORMER_BEARING_CATEGORIES.has(category)) {
+    // (wine-tasting), "Barnlördagar" (kids utan tydlig artist) etc. falska
+    // performers. Cross-site evidens: alla 8+ FPs i live-sample 2026-10-08 var
+    // i icke-performer-kategorier.
+    const PERFORMER_REQUIRED = new Set([
+      'title_pattern:och',
+      'title_pattern:dash',
+      'title_pattern:pa',
+      'title_pattern:vs',
+      'title_pattern:med_concert',
+      'title_pattern:dj',
+    ]);
+    if (PERFORMER_REQUIRED.has(p.method) && category && !PERFORMER_BEARING_CATEGORIES.has(category)) {
       continue;
     }
 
