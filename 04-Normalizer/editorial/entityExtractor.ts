@@ -600,13 +600,33 @@ const DESCRIPTION_PATTERNS: ReadonlyArray<{ pattern: RegExp; role: EntityRole; m
   { pattern: /[Pp]å\s+scenen(?:\s+står)?:?\s+([A-ZÅÄÖ][a-zåäö]+(?:\s+[a-zåäö]+)?(?:\s+[A-ZÅÄÖ][a-zåäö]+)?)/, role: 'performer', method: 'desc_pattern:scenen' },
 
   // "Dirigent: X"
-  { pattern: /Dirigent:?\s+([A-ZÅÄÖ][a-zåäö]+(?:\s+[a-zåäö]+){0,3})/, role: 'conductor', method: 'desc_pattern:dirigent' },
+  // FAS 3 fix: tillåt VERSAL-börjande fortsättning (Peter Dijkstra — båda versal).
+  // Före: matchade bara "Peter" pga gemen-tvång i fortsättning; "Dijkstra" försvann.
+  { pattern: /Dirigent:?\s+([A-ZÅÄÖ][A-Za-zåäöÅÄÖ\-']+(?:\s+[A-Za-zåäöÅÄÖ\-']+){0,4})/, role: 'conductor', method: 'desc_pattern:dirigent' },
 
   // "Solist: X" / "Pianosolist: X"
   { pattern: /(?:Pianosolist|Cellosolist|Violinsolist|Solist)\s*(?:är|:)\s+([A-ZÅÄÖ][\w\såäöÅÄÖ\.\-]{2,40})/, role: 'artist', method: 'desc_pattern:solist' },
 
   // "Artister: X, Y"
   { pattern: /Artister:?\s+([A-ZÅÄÖ][^.;\n]+)/, role: 'artist', method: 'desc_pattern:artister' },
+
+  // ── FAS 3 (Hybrid Pipeline) — nya description-mönster ──────────────────
+  // "Ensemble: Stockholm Saxophone Quartet" → ensemble (klassisk konsert)
+  // Cross-site: Konserthuset, Berwaldhallen-program, sthlmlist-classical.
+  { pattern: /Ensemble:?\s+([A-ZÅÄÖ][\w\såäöÅÄÖ\-']{2,60})/, role: 'ensemble', method: 'desc_pattern:ensemble' },
+
+  // "Kör: Radiokören" → ensemble (kör = choir)
+  // Cross-site: Berwaldhallen m.fl. körkonserter.
+  // Stop vid "och"/","/"."/$ så "Kör: Radiokören och Peter Dijkstra" → bara Radiokören.
+  { pattern: /Kör:?\s+([A-ZÅÄÖ][\w\såäöÅÄÖ\-']{2,60}?)(?=\s*,|\s+och\b|\.|$)/, role: 'ensemble', method: 'desc_pattern:kor' },
+
+  // "Recitatör: X" → performer (talk/litteratur)
+  // Cross-site: litteratur-kvällar, Strindberg-läsningar, diktkvällar.
+  { pattern: /Recitatör:?\s+([A-ZÅÄÖ][\w\såäöÅÄÖ\-']{2,60})/, role: 'performer', method: 'desc_pattern:recitator' },
+
+  // "Gästartist: X" → artist (support/guest act)
+  // Cross-site: jazz-spelningar, musikpuber med gästartister.
+  { pattern: /Gästartist:?\s+([A-ZÅÄÖ][\w\såäöÅÄÖ\-']{2,60})/, role: 'artist', method: 'desc_pattern:guest_artist' },
 ];
 
 /** Returnerar entitets-signaler från raw_description. Svagare än title. */

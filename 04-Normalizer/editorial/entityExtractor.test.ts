@@ -321,7 +321,81 @@ describe('Scenarion från live-sample (runtime/live-sample-2026-10-08)', () => {
   });
 });
 
-// ─── FAS 2.6: AMPERSAND-MÖNSTER ("med X & Y" / "X & Y & Z") ─────────────────
+// ─── FAS 3 (Hybrid Pipeline): utökade DESCRIPTION-PATTERNS ─────────────────
+//
+// I nuläget: bara 5 description-patterns (medverkande, scenen, dirigent, solist, artister).
+// Många svenska konserter/text-evenemang använder andra prefix:
+//   "Ensemble: Stockholm Saxophone Quartet"  → ensemble
+//   "Kör: Radiokören"                       → ensemble
+//   "Recitatör: Håkan Hellström"             → performer (talk)
+//   "Läsning av: August Strindberg"         → work or author
+//   "Gästartist: Lena Nilsson"               → artist (support act)
+//
+// Cross-site evidens: Konserthuset-sidor använder ofta "Ensemble: X" mönster,
+// Berlinale/StHLM-sthlmlist använder "Recitatör: X", Berwaldhallen har
+// "Gästartist" för konserter med inbjudna artister.
+
+describe('FAS 3 — utökade description-patterns', () => {
+  it('"Ensemble: Stockholm Saxophone Quartet" → ensemble', () => {
+    const e = extractEntities({
+      title: 'Konsert',
+      raw_description: 'Ensemble: Stockholm Saxophone Quartet. Program: Verk av Bach och Pärt.',
+      category_slug: 'classical',
+      venue_name: null,
+    });
+    const sq = e.find(x => x.name === 'Stockholm Saxophone Quartet');
+    expect(sq).toBeDefined();
+    expect(sq?.role).toBe('ensemble');
+    expect(sq?.confidence).toBe('SUPPORTED');
+  });
+
+  it('"Kör: Radiokören" → ensemble (befintlig "Radiokören" matchas via title-pattern om den finns)', () => {
+    const e = extractEntities({
+      title: 'Musik till åminnelse',
+      raw_description: 'Kör: Radiokören och Peter Dijkstra. Dirigent: Peter Dijkstra.',
+      category_slug: 'classical',
+      venue_name: null,
+    });
+    // Radiokören ska finnas
+    expect(e.find(x => x.name === 'Radiokören')).toBeDefined();
+    // Peter Dijkstra både som kör-medlem OCH dirigent (dedupliceras till kör-medlem eller dirigent)
+    const pd = e.find(x => x.name === 'Peter Dijkstra');
+    expect(pd).toBeDefined();
+  });
+
+  it('"Recitatör: Håkan Hellström" → performer (talk/litteratur)', () => {
+    const e = extractEntities({
+      title: 'Kväll med Strindberg',
+      raw_description: 'Recitatör: Håkan Hellström. Texter av August Strindberg.',
+      category_slug: 'literature',
+      venue_name: null,
+    });
+    expect(e.find(x => x.name === 'Håkan Hellström')?.role).toBe('performer');
+  });
+
+  it('"Gästartist: Lena Nilsson" → artist (support act context)', () => {
+    const e = extractEntities({
+      title: 'Huvudkonsert',
+      raw_description: 'Huvudartist: Anna Svensson. Gästartist: Lena Nilsson.',
+      category_slug: 'jazz',
+      venue_name: null,
+    });
+    expect(e.find(x => x.name === 'Lena Nilsson')?.role).toBe('artist');
+  });
+
+  it('Description fångar komma-lista som title-pattern missar', () => {
+    // Title är generisk ("Lunchkonsert"), description namnger artisterna
+    const e = extractEntities({
+      title: 'Lunchkonsert',
+      raw_description: 'Medverkande: Veronica Maggio, Håkan Hellström, Nina Persson.',
+      category_slug: 'music',
+      venue_name: null,
+    });
+    expect(e.find(x => x.name === 'Veronica Maggio')).toBeDefined();
+    expect(e.find(x => x.name === 'Håkan Hellström')).toBeDefined();
+    expect(e.find(x => x.name === 'Nina Persson')).toBeDefined();
+  });
+});
 //
 // Återstående edge case från FAS 2.5-rapporten:
 //   live-sample #28: "Musik till åminnelse - med Radiokören & Peter Dijkstra"
@@ -581,5 +655,185 @@ describe('FAS 2.5 — tätare negativa mönster', () => {
       venue_name: 'Nacka konsthall',
     });
     expect(e.filter(x => x.role === 'artist' || x.role === 'performer')).toHaveLength(0);
+  });
+});
+
+// ─── FAS 3 — LLM-FALLBACK (MiniMax M3 via entityLlmAugment.ts) ───────────────
+//
+// Användaren bad uttryckligen om MiniMax M3 (ej OpenAI). Modulen speglar
+// llmRouter.ts-arkitekturen: api.minimax.io/v1, MiniMax-M3 model, fetch.
+// Testerna kör med mock-provider för att inte bränna API-kvoter.
+
+import {
+  llmAugmentEntities,
+  shouldLlmAugment,
+  parseLlmEntityJson,
+  filterHallucinatedNames,
+  type LlmProvider,
+} from './entityLlmAugment';
+
+describe('FAS 3 — LLM-fallback: parsing & beslutslogik', () => {
+  it('parseLlmEntityJson: vanlig JSON-array', () => {
+    const out = parseLlmEntityJson(
+      '[{"name":"Veronica Maggio","role":"artist","confidence":0.95}]',
+    );
+    expect(out).toHaveLength(1);
+    expect(out[0].name).toBe('Veronica Maggio');
+    expect(out[0].role).toBe('artist');
+    expect(out[0].confidence).toBe(0.95);
+  });
+
+  it('parseLlmEntityJson: med markdown-fences', () => {
+    const out = parseLlmEntityJson(
+      '```json\n[{"name":"Donovan Woods","role":"artist","confidence":0.85}]\n```',
+    );
+    expect(out).toHaveLength(1);
+    expect(out[0].name).toBe('Donovan Woods');
+  });
+
+  it('parseLlmEntityJson: tom array (inga performers)', () => {
+    expect(parseLlmEntityJson('[]')).toHaveLength(0);
+  });
+
+  it('parseLlmEntityJson: ogiltig JSON → []', () => {
+    expect(parseLlmEntityJson('Inte JSON alls')).toHaveLength(0);
+    expect(parseLlmEntityJson('')).toHaveLength(0);
+    expect(parseLlmEntityJson('{ "name": "fel format" }')).toHaveLength(0);
+  });
+
+  it('shouldLlmAugment: triggar INTE om regler redan gav entities', () => {
+    expect(shouldLlmAugment('Donovan Woods', 'music', 1)).toBe(false);
+  });
+
+  it('shouldLlmAugment: triggar INTE på för korta / för långa titlar', () => {
+    expect(shouldLlmAugment('AB', 'music', 0)).toBe(false);
+    expect(shouldLlmAugment('X'.repeat(101), 'music', 0)).toBe(false);
+  });
+
+  it('shouldLlmAugment: triggar INTE på icke-performer-kategori', () => {
+    expect(shouldLlmAugment('Donovan Woods', 'exhibition', 0)).toBe(false);
+    expect(shouldLlmAugment('Donovan Woods', 'community', 0)).toBe(false);
+  });
+
+  it('shouldLlmAugment: triggar när allt är rätt (förutom API-nyckel — vi skip i unit-test)', () => {
+    // API-nyckel-sak gör shouldLlmAugment false; i prod sätts nyckeln via env.
+    const prev = process.env.MINIMAX_API_KEY;
+    process.env.MINIMAX_API_KEY = 'mock-key-for-unit-test';
+    expect(shouldLlmAugment('Donovan Woods', 'music', 0)).toBe(true);
+    process.env.MINIMAX_API_KEY = prev;
+  });
+});
+
+describe('FAS 3 — LLM-fallback: anti-hallucination', () => {
+  it('filterHallucinatedNames: substring-match accepteras', () => {
+    const out = filterHallucinatedNames(
+      [{ name: 'Donovan Woods', role: 'artist' }],
+      'Donovan Woods',
+    );
+    expect(out).toHaveLength(1);
+  });
+
+  it('filterHallucinatedNames: VERSAL-börjande 1-3 ord accepteras även utan substring', () => {
+    const out = filterHallucinatedNames(
+      [{ name: 'Lars Jansson', role: 'artist' }],
+      'Konsert på Fasching',  // Namnet finns inte i titeln
+    );
+    expect(out).toHaveLength(1);
+  });
+
+  it('filterHallucinationNames: förkastar för låg kvalitet', () => {
+    const out = filterHallucinatedNames(
+      [{ name: 'asdf123', role: 'artist' },  // ingen VERSAL-början
+       { name: 'A', role: 'artist' },         // för kort
+       { name: 'x'.repeat(60), role: 'artist' }], // för lång
+      'Musik på Konserthuset',
+    );
+    expect(out).toHaveLength(0);
+  });
+});
+
+describe('FAS 3 — LLM-fallback: integration med mock-provider', () => {
+  // Mock-provider för att undvika nätverk + API-kostnad
+  const mockProvider: LlmProvider = {
+    async complete(_sys, _msg) {
+      return '[{"name":"Donovan Woods","role":"artist","confidence":0.92}]';
+    },
+  };
+
+  const failingProvider: LlmProvider = {
+    async complete() {
+      throw new Error('mock network error');
+    },
+  };
+
+  it('Happy path: mock-provider returnerar performer → SUPPORTED + llm_fallback-evidens', async () => {
+    const out = await llmAugmentEntities(
+      { title: 'Donovan Woods', category: 'music', venue_name: null },
+      mockProvider,
+    );
+    expect(out).toHaveLength(1);
+    expect(out[0].name).toBe('Donovan Woods');
+    expect(out[0].role).toBe('artist');
+    expect(out[0].confidence).toBe('SUPPORTED');
+    expect(out[0].evidence.method).toBe('llm_fallback:minimax-m3');
+  });
+
+  it('Fel-vägen: provider kastar → tom lista (no-op)', async () => {
+    const out = await llmAugmentEntities(
+      { title: 'Donovan Woods', category: 'music', venue_name: null },
+      failingProvider,
+    );
+    expect(out).toHaveLength(0);
+  });
+
+  it('Confidence >= 0.7 → SUPPORTED; annars INFERRED', async () => {
+    const lowConfProvider: LlmProvider = {
+      async complete() {
+        return '[{"name":"Donovan Woods","role":"artist","confidence":0.5}]';
+      },
+    };
+    const out = await llmAugmentEntities(
+      { title: 'Donovan Woods', category: 'music', venue_name: null },
+      lowConfProvider,
+    );
+    expect(out[0]?.confidence).toBe('INFERRED');
+  });
+
+  it('Hallucinerat namn (modellen hittar på) filtreras bort', async () => {
+    const hallProvider: LlmProvider = {
+      async complete() {
+        // Modellen returnerar ett namn som inte finns i titeln OCH inte är VERsal-börj.
+        return '[{"name":"h4ck3r","role":"artist","confidence":0.9}]';
+      },
+    };
+    const out = await llmAugmentEntities(
+      { title: 'Veronica Maggio', category: 'music', venue_name: null },
+      hallProvider,
+    );
+    expect(out).toHaveLength(0);  // filtret stoppar fabricerat namn
+  });
+
+  it('Tom LLM-output → tom lista', async () => {
+    const emptyProvider: LlmProvider = {
+      async complete() { return '[]'; },
+    };
+    const out = await llmAugmentEntities(
+      { title: 'Donovan Woods', category: 'music', venue_name: null },
+      emptyProvider,
+    );
+    expect(out).toHaveLength(0);
+  });
+
+  it('Roll mappas korrekt (okänd roll → artist default)', async () => {
+    const oddRoleProvider: LlmProvider = {
+      async complete() {
+        return '[{"name":"Donovan Woods","role":"wizard","confidence":0.92}]';
+      },
+    };
+    const out = await llmAugmentEntities(
+      { title: 'Donovan Woods', category: 'music', venue_name: null },
+      oddRoleProvider,
+    );
+    expect(out[0]?.role).toBe('artist');  // 'wizard' ej i ALLOWED_LLM_ROLES → default
   });
 });
