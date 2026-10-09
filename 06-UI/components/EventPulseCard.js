@@ -5,6 +5,7 @@ import {
   Text,
   View,
 } from 'react-native';
+import { useImageAspect } from '../hooks/useImageAspect.js';
 
 // Tokens från DESIGN_SYSTEM.md (binding-värden 2026-09-24).
 const TOKENS = {
@@ -53,6 +54,13 @@ export default function EventPulseCard({
 }) {
   const source = sourceOf(imageSource);
   const a11yLabel = accessibilityLabel ?? `${subtitle} — ${title}`;
+  // 2026-10-07 — wrap-aspect sätts till bildens naturliga aspect så bilden
+  // visas helt utan crop. Tidigare användes fast aspectRatio 1.15 +
+  // resizeMode cover — crop:ade bilden upptill/nedtill. Användaren
+  // klagade: "bilderna i eventcard måste vara helt synliga, inget
+  // inzopmat, ramen runt bilden / framen som bilden sitter mountad i
+  // behöver vara samma aspect ratio".
+  const { aspect: imageAspect } = useImageAspect(imageSource);
 
   return (
     <Pressable
@@ -61,12 +69,12 @@ export default function EventPulseCard({
       accessibilityRole="button"
       accessibilityLabel={a11yLabel}
     >
-      <View style={styles.imageWrap}>
+      <View style={[styles.imageWrap, { aspectRatio: imageAspect }]}>
         {source ? (
           <Image
             source={source}
             style={styles.image}
-            resizeMode="cover"
+            resizeMode="contain"
             accessibilityIgnoresInvertColors
           />
         ) : (
@@ -92,9 +100,11 @@ const styles = StyleSheet.create({
   cardPressed: {
     opacity: 0.7,
   },
+  // 2026-10-07 — wrap-aspect sätts dynamiskt från useImageAspect().
+  // Inget hård aspectRatio här — bilden ska få wrap:en att följa sina
+  // egna proportioner så hela bilden syns (contain-resize).
   imageWrap: {
     width: '100%',
-    aspectRatio: 1.15,
     overflow: 'hidden',
     backgroundColor: TOKENS.color.bg,
     borderWidth: 0.5,

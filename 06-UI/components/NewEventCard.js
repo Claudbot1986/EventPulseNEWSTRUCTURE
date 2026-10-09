@@ -12,6 +12,7 @@
 import { useState } from 'react';
 import { Image, Modal, Pressable, StyleSheet, Text, View } from 'react-native';
 import MapView, { PROVIDER_DEFAULT, Marker } from 'react-native-maps';
+import { useImageAspect } from '../hooks/useImageAspect.js';
 
 // Tokens speglar 06-UI:s mörka/beige/orange-estetik (DESIGN_SYSTEM.md binding).
 const T = {
@@ -127,6 +128,10 @@ export default function NewEventCard({
   a11yLabel,
 }) {
   const source = sourceOf(imageSource);
+  // 2026-10-07 — wrap-aspect sätts till bildens naturliga aspect. Tidigare
+  // fast 1.15 + cover cropade bilden (speciellt vertikala biblioteksbilder).
+  // Nu visas bilden helt (contain) och wrap-ramen matchar bildens aspect.
+  const { aspect: imageAspect } = useImageAspect(imageSource);
   const label = a11yLabel
     ?? [id ? `#${id}` : null, title, dateLine, meta].filter(Boolean).join(' — ');
   const stop = (fn) => (e) => { e?.stopPropagation?.(); fn?.(); };
@@ -156,13 +161,16 @@ export default function NewEventCard({
       accessibilityRole="button"
       accessibilityLabel={label}
     >
-      {/* Hero-bild (croppad top+botten med cover; 1.15 aspect wrap) */}
+      {/* Hero-bild (wrap-aspect sätts dynamiskt från useImageAspect() —
+          bilden visas helt med contain-resize, ramen matchar bildens
+          naturliga aspect). 2026-10-07-bytet: tidigare fast 1.15 + cover
+          cropade bilden. Nu visas allt i centrum utan crop. */}
       {source ? (
-        <View style={styles.heroWrap}>
+        <View style={[styles.heroWrap, { aspectRatio: imageAspect }]}>
           <Image
             source={source}
             style={styles.hero}
-            resizeMode="cover"
+            resizeMode="contain"
             accessibilityIgnoresInvertColors
           />
         </View>
@@ -345,19 +353,23 @@ const styles = StyleSheet.create({
     backgroundColor: T.color.surface,
     opacity: 0.85,
   },
+  // 2026-10-07 — wrap-aspect sätts dynamiskt från useImageAspect().
+  // Inget hård aspectRatio här — bilden får wrap:en att följa sina egna
+  // proportioner så hela bilden syns (contain-resize).
   heroWrap: {
     marginHorizontal: T.space.padX,
     marginTop: T.space.padY,
     borderRadius: T.space.heroRadius,
     overflow: 'hidden',
     backgroundColor: T.color.placeholder,
-    aspectRatio: T.space.heroAspect,
   },
   hero: {
     width: '100%',
     height: '100%',
-    resizeMode: 'cover',
+    resizeMode: 'contain',
   },
+  // Placeholder behåller fast aspectRatio så layouten är stabil även
+  // innan/aspect när bilden inte finns.
   heroPlaceholder: {
     marginHorizontal: T.space.padX,
     marginTop: T.space.padY,

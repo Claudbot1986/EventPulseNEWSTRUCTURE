@@ -175,6 +175,7 @@ describe('Editorial Engine — 6 event-typer', () => {
       language: 'sv',
       source: 'avicii',
       title: 'Djurgården — Hammarby',
+      performers: ['Djurgården', 'Hammarby'],
     };
     const { buildEventProfile } = await import('./eventUnderstanding');
     const profile = buildEventProfile(event);

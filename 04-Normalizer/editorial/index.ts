@@ -27,7 +27,9 @@ import { buildEventProfile, profileInfoLevel, type EventUnderstandingInput } fro
 import { compileWriterInputs, assertFirewallClean } from './textualFirewall';
 import { checkFactuality } from './factualityCheck';
 import { checkIndependence, DEFAULT_SIMILARITY_THRESHOLD } from './independenceCheck';
+import { checkDataQuality, type DataQualityReport } from './dataQualityCheck';
 import { writeEditorialDescription, type LlmClient } from './editorialWriter';
+import { chooseFallback, type FallbackResult } from './fallbackHierarchy';
 import type {
   EditorialDraft,
   EditorialPipelineResult,
@@ -71,7 +73,16 @@ export async function runEditorialPipeline(
   const factThreshold = options?.factualityThreshold; // null = använd default
 
   // ── Steg 1: Profile från strukturerade fält ──────────────────────────────
-  const profile = buildEventProfile(input.event);
+  let profile = buildEventProfile(input.event);
+
+  // ── Steg 1.5: Data Quality Check (P7 steg 4) ────────────────────────────
+  // Returnerar evidence fusion-rapport (signaler, conflict-flagga, confidence,
+  // inferred_event_type). Profilen MUTERAS INTE. Gate skyddar bara Writer.
+  // För Zurich-pattern: flera starka signaler (genre-ord i title, performers,
+  // venue-typ) → conflict=true + inferred_event_type=music → pipeline kan
+  // besluta att INTE kalla Writer och istället använda FACT-BASED fallback.
+  const dataQuality: DataQualityReport = checkDataQuality(input.event, profile);
+
   const infoLevel = profileInfoLevel(profile);
 
   // ── Steg 2: WriterSafeInputs (brandväggen strippar source) ───────────────
@@ -109,12 +120,47 @@ export async function runEditorialPipeline(
       title: input.event.title ?? undefined,
       venue_name: input.event.venue_name ?? null,
       city: input.event.city ?? null,
+      category_slug: input.event.category_slug ?? null,
     },
   });
 
   let independence = checkIndependence({
     draft,
     sourceDescription: input.sourceDescription,
+    profile: input.event ? {
+      event_type: profile.event_type,
+      performers: profile.performers,
+      support_acts: profile.support_acts,
+      genres: profile.genres,
+      subgenres: profile.subgenres,
+      content: profile.content,
+      experience_characteristics: profile.experience_characteristics,
+      setting: profile.setting,
+      themes: profile.themes,
+      concept: profile.concept,
+      performance_style: profile.performance_style,
+      audience_participation: profile.audience_participation,
+      language: profile.language,
+      target_audience: profile.target_audience,
+      age_context: profile.age_context,
+      duration_minutes: profile.duration_minutes,
+      premiere: profile.premiere,
+      tour: profile.tour,
+      festival_context: profile.festival_context,
+      special_guests: profile.special_guests,
+      repertoire: profile.repertoire,
+      production_characteristics: profile.production_characteristics,
+      educational_content: profile.educational_content,
+      family_characteristics: profile.family_characteristics,
+      accessibility: profile.accessibility,
+      practical_information: profile.practical_information,
+      provenance: profile.provenance,
+    } : undefined,
+    event: {
+      title: input.event.title ?? undefined,
+      venue_name: input.event.venue_name ?? null,
+      city: input.event.city ?? null,
+    },
     threshold: indepThreshold,
   });
 
@@ -142,6 +188,7 @@ export async function runEditorialPipeline(
         title: input.event.title ?? undefined,
         venue_name: input.event.venue_name ?? null,
         city: input.event.city ?? null,
+        category_slug: input.event.category_slug ?? null,
       },
     });
 
@@ -154,25 +201,42 @@ export async function runEditorialPipeline(
 
   // ── Slutgiltigt resultat ────────────────────────────────────────────────
   const passed = factuality.pass && independence.pass;
-  const finalText = passed ? draft.text : undefined;
-  const status: EditorialPipelineResult['status'] = passed
-    ? 'passed'
-    : attempts >= maxAttempts
-      ? 'failed'
-      : 'regenerating';
+  let finalText = passed ? draft.text : undefined;
+  let status: EditorialPipelineResult['status'];
+  let fallback: FallbackResult | null = null;
+  let error: string | undefined;
+
+  if (passed) {
+    status = 'passed';
+  } else if (attempts < maxAttempts) {
+    status = 'regenerating';
+    error = `Kvalitetsgrind(ar) underkända efter ${attempts} försök: ` +
+      (factuality.pass ? '' : `factuality (${factuality.unsupported_claims.length} unsupported); `) +
+      (independence.pass ? '' : `independence (sim ${independence.max_similarity}); `);
+  } else {
+    // LLM klarade inte kvalitetsgrindarna — försök fallback-kedjan.
+    // chooseFallback väljer FACT (om Profile räcker) → MINIMAL (om titel finns) → null.
+    fallback = chooseFallback(profile, input.event);
+    if (fallback.level) {
+      finalText = fallback.text;
+      status = fallback.level === 'FACT' ? 'fallback_fact' : 'fallback_minimal';
+      error = undefined; // fallback hittades — inte ett fel
+    } else {
+      status = 'failed';
+      error = `Kunde inte uppfylla kvalitetsgrindarna (${maxAttempts} försök) och ` +
+              `ingen fallback möjlig (saknar titel/venue/datum).`;
+    }
+  }
 
   return {
     status,
     draft,
     factuality,
     independence,
+    data_quality: dataQuality,
     attempts,
     final_text: finalText,
-    error: passed
-      ? undefined
-      : `Kunde inte uppfylla båda kvalitetsgrindarna efter ${maxAttempts} försök: ` +
-        (factuality.pass ? '' : `factuality fail (${factuality.unsupported_claims.length} unsupported); `) +
-        (independence.pass ? '' : `independence fail (sim ${independence.max_similarity}); `),
+    error,
   };
 }
 

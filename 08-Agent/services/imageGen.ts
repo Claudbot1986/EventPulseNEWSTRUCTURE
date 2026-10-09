@@ -357,26 +357,16 @@ async function uploadAndPersist(
       })
     : rawBuffer;
 
-  // 2026-09-01: konsolidering till två-roll-bibliotek. BFL producerar två
-  // filer per generation:
-  //   - import-original/  ← rå BFL-output (ostämplad)
-  //   - import-stamped/   ← samma bild med EU AI Act-stämpel inbakad
-  // Detta gör att stamp_all_originals.ts kan re-stämpla utan att hämta
-  // BFL igen. storage_path i image_library pekar alltid på import-original/,
-  // och `stampedUrlForStoragePath()` mappar URL:en till import-stamped/.
-  const originalPath = `import-original/${storagePath}.${ext}`;
+  // 2026-10-08 (användarbeslut): INGA rå-bilder till Supabase Storage.
+  //   - import-original/ togs bort helt (kostar storage i onödan).
+  //   - Bara stämplade bilder laddas upp till import-stamped/.
+  //   - image_library.storage_path pekar nu direkt på import-stamped/-
+  //     sökvägen (migrerat 2026-10-08).
+  // Tidigare (2026-09-01) laddades både original + stämplad upp;
+  //   se git history om re-stämpling utan BFL behövs igen.
   const stampedPath = `import-stamped/${storagePath}.${ext}`;
 
-  // Ladda upp BÅDA — först original, sedan stämplad kopia.
-  const { error: origErr } = await supabase.storage
-    .from(STORAGE_BUCKET)
-    .upload(originalPath, rawBuffer, {
-      contentType: mime,
-      upsert: true,
-      cacheControl: '31536000',
-    });
-  if (origErr) throw new Error(`Storage upload (original) failed: ${origErr.message}`);
-
+  // Ladda upp BARA den stämplade varianten.
   const { error: uploadErr } = await supabase.storage
     .from(STORAGE_BUCKET)
     .upload(stampedPath, buffer, {

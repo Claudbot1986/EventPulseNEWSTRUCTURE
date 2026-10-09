@@ -1,24 +1,26 @@
 /**
- * eventUnderstanding.ts — semantisk extraktion från strukturerade event-fält.
+ * eventUnderstanding.ts — semantisk extraktion från strukturerade event-fält
+ * + raw_description (entiteter, INTE formulering).
  *
- * Pipeline-steg 1 av 6 i EventPulse Editorial Description Engine (P7).
+ * Pipeline-steg 1 av 4 i EventPulse Editorial Description Engine (P7).
  *
- * Designprincip: Profile byggs UTAN att läsa source description-texten.
- * Input = strukturerade fält (category_slug, venue, datum, pris, performers
- * från artistResolver, source-namn). Allt som kräver beskrivningstolkning
- * sätts till null/[] — vi hittar ALDRIG på.
+ * Designprincip (omarbetad 2026-10-08):
+ *   1. Strukturerade fält är primärkälla (category_slug, venue, datum, pris,
+ *      performers från artistResolver).
+ *   2. raw_description FÅR läsas — men ENDAST för entitetsextraktion
+ *      (orkester, solist, kompositörer, verk, varaktighet). Vi extraherar
+ *      ALDRIG meningar. Resultatet lagras i Profile (inte som fritext).
+ *   3. textualFirewall (compileWriterInputs) blockerar source_description
+ *      från att nå Writer. Profile är det enda Writer ser.
  *
- * Det här är deterministisk extraktion (inga LLM-anrop). AI:n kommer
- * istället in i nästa steg (editorialWriter) och får BARA Profile +
- * EventPulse-data.
- *
- * Steg 1.3/15 i P7 Definition of Done.
+ * Steg 1.3/15 i P7 Definition of Done. Omarbetad 2026-10-08.
  */
 
 import type { EventProfile } from './types';
 import { CATEGORY_BY_SLUG } from '../categoryDefinitions';
+import { extractSemantics, applySemanticExtraction } from './semanticExtractor';
 
-// ─── Inputs (strukturerade event-fält ENBART) ────────────────────────────────
+// ─── Inputs (strukturerade event-fält + valfri raw_description) ──────────────
 
 export interface EventUnderstandingInput {
   /** category_slug från events-tabellen (kanonsk). */
@@ -49,6 +51,17 @@ export interface EventUnderstandingInput {
   support_acts?: string[];
   /** Titel (för semantik — t.ex. "Jazzkväll med X"). */
   title?: string | null;
+  /**
+   * raw_description-text (entitetsextraktion).
+   *
+   * FÅR läsas av Event Understanding för att extrahera BETYDELSE (orkester,
+   * solist, kompositörer, verk, varaktighet). Får ALDRIG nå Writer —
+   * textualFirewall.compileWriterInputs() kastar om source_description,
+   * raw_description eller liknande fält finns i inputs.
+   *
+   * Valfri — om null/empty hoppas semantisk extraktion över.
+   */
+  raw_description?: string | null;
 }
 
 // ─── Category → Profile mappning ─────────────────────────────────────────────
@@ -424,20 +437,56 @@ export function buildEventProfile(input: EventUnderstandingInput): EventProfile 
     add('setting', `category:${catSlug}`);
   }
 
-  // ── Duration (om vi har start + end), annars typisk default för kategori ──
+  // ── Duration (KORRIGERAD 2026-10-08 efter P8-granskning) ──────────────────
+  //
+  // Prioritetsordning:
+  //   1. Explicit source duration (endast källa vi litar på — strukturerat fält
+  //      eller pålitligt beräknat från start+end på samma faktiska föreställning)
+  //   2. Annars UNKNOWN / NULL
+  //
+  // KORRIGERING: category-typical duration är INTE ett FACT. Det är en
+  // deterministisk gissning. Vi får inte ersätta "1440 min (24h, multi-day)"
+  // med "180 min (musikal-typiskt)" och kalla det FACT.
+  //
+  // Sanity check: värden som beror på calendar span istället för aktivitets-
+  // duration — t.ex. 1440 min (24h), 2880 min (48h), 4319 min (~3 dygn) — får
+  // INTE tolkas som aktivitetslängd. De sätts till null.
+  //
+  // En hård 600-min-gräns är FÖR STRAM. Vi kan inte veta att 11h är fel utan
+  // att förstå eventsemantiken. Fas 4:s 10h-gräns är därför BORTTAGEN.
+  //
+  // Om vi i framtiden behöver ett "estimated" separat fält:
+  //   - estimatedDurationMinutes (number | null)
+  //   - estimatedDurationConfidence (VERIFIED | SUPPORTED | AMBIGUOUS | INFERRED | UNKNOWN)
+  //   - estimatedDurationMethod ('category_prior' | ...)
+  // Detta byggs INTE i P8. Default: OM VI INTE VET → NULL.
   let duration_minutes: number | undefined;
   if (input.start_time && input.end_time) {
     const start = new Date(input.start_time).getTime();
     const end = new Date(input.end_time).getTime();
     if (!isNaN(start) && !isNaN(end) && end > start) {
-      duration_minutes = Math.round((end - start) / 60_000);
-      add('duration_minutes', 'events_row:start+end');
+      const rawDuration = Math.round((end - start) / 60_000);
+      // Sanity check: calendar-span-detection utan hård aktivitets-gräns.
+      // En aktivitets-duration får rimligtvis inte överstiga 24h (1440 min).
+      // Allt därutöver är calendar-span (festival, mässa, multi-day event),
+      // inte aktivitetslängd. Sätt till null.
+      //
+      // OBS: 24h-gränsen är EN ABSTRAKTIONSGRÄNS, inte "för lång aktivitet".
+      // Ett 6h DJ-set som korsar midnatt (22:00 → 04:00) har rawDuration 360
+      // min — under 24h — och bevaras som aktivitetslängd.
+      const DURATION_MAX_ACTIVITY_MIN = 24 * 60; // 1440 min = 24h
+      // >= används — exakt 24h är nästan alltid en calendar-span-bugg
+      // (end_time kopierad från nästa dag), inte en 24h-maraton.
+      if (rawDuration >= DURATION_MAX_ACTIVITY_MIN) {
+        add('duration_minutes', `events_row:start+end:calendar_span(${rawDuration}min exceeds 24h)`);
+      } else {
+        duration_minutes = rawDuration;
+        add('duration_minutes', 'events_row:start+end');
+      }
     }
   }
-  if (duration_minutes == null && hints) {
-    duration_minutes = hints.typical_duration_min;
-    add('duration_minutes', `category:${catSlug}:typical`);
-  }
+  // category-typical fallback är BORTTAGEN — skulle vara en deterministisk
+  // hallucination. OM duration_minutes är null stannar den null.
 
   // ── Experience characteristics + content + audience_participation + style ─
   const experience_characteristics: string[] = hints ? [...hints.experience_characteristics] : [];
@@ -497,6 +546,21 @@ export function buildEventProfile(input: EventUnderstandingInput): EventProfile 
     practical_information: practical_information.length ? practical_information : undefined,
     provenance,
   };
+
+  // ── Steg 1.4: Semantisk extraktion från raw_description ─────────────────
+  // OM raw_description finns — extrahera entiteter (orkester, solist,
+  // kompositörer, verk, varaktighet) och applicera på Profile.
+  //
+  // Viktigt: vi extraherar ALDRIG meningar. Bara strukturerade entiteter
+  // (namn, antal, listor). textualFirewall blockerar raw_description från
+  // att nå Writer — Profile är det enda Writer ser.
+  if (input.raw_description && input.raw_description.trim().length > 0) {
+    const extraction = extractSemantics(input.raw_description);
+    if (extraction.evidence.length > 0) {
+      add('semantic_extraction', `semantic_extractor:${extraction.evidence.length} signals`);
+      return applySemanticExtraction(profile, extraction);
+    }
+  }
 
   return profile;
 }

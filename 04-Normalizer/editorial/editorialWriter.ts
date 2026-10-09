@@ -75,6 +75,11 @@ export class MiniMaxM3LlmClient implements LlmClient {
           { role: 'system', content: args.systemPrompt },
           { role: 'user', content: args.userPrompt },
         ],
+        // MiniMax-M3: stäng av intern reasoning. Diagnostik 2026-10-08 visade
+        // att `thinking: { type: 'disabled' }` ger 0 reasoning_tokens, ~60%
+        // färre completion_tokens och 50% snabbare svar. Writer behöver inte
+        // resonemang — Profile är redan klar, generera text direkt.
+        thinking: { type: 'disabled' },
         max_tokens: args.maxTokens ?? 300,
         temperature: args.temperature ?? 0.7,
       }),
@@ -87,21 +92,42 @@ export class MiniMaxM3LlmClient implements LlmClient {
 
     const data = (await res.json()) as {
       choices?: Array<{ message?: { content?: string }; finish_reason?: string }>;
+      usage?: {
+        completion_tokens?: number;
+        completion_tokens_details?: { reasoning_tokens?: number };
+        prompt_tokens?: number;
+        total_tokens?: number;
+      };
     };
     const choice = data.choices?.[0];
     const raw = choice?.message?.content ?? '';
+    const finishReason = choice?.finish_reason ?? 'unknown';
+    const usage = data.usage;
 
-    // MiniMax-M3 bäddar in <think>…</think> som kan konsumera många tokens
-    // och lämna slut-svaret tomt (finish_reason='length'). Vid tomt svar
-    // → returnera tydlig signal (inte empty string) → pipeline-rapporten
-    // visar det som "VERY_LOW" istället för att tyst gå vidare.
+    // Defensiv stripThinkBlock ifall disable-parametern ignoreras av modellen
+    // (vissa M3-builds släpper igenom tänket ändå).
     const stripped = stripThinkBlock(raw).trim();
-    if (!stripped) {
-      const reason = choice?.finish_reason ?? 'unknown';
+
+    // Hård fail-conditions — en avklippt text får ALDRIG accepteras.
+    if (finishReason === 'length') {
       throw new Error(
-        `MiniMax returned empty content (finish_reason=${reason}, ` +
-        `raw_len=${raw.length}) — think block kan ha konsumerat hela max_tokens. ` +
-        `Öka max_tokens eller använd en modell utan think-block.`,
+        `MiniMax truncated output (finish_reason=length, content_len=${stripped.length}, ` +
+        `completion_tokens=${usage?.completion_tokens ?? '?'}, ` +
+        `max_tokens=${args.maxTokens ?? 300}). ` +
+        `Truncated text får inte användas.`,
+      );
+    }
+    if (!stripped) {
+      throw new Error(
+        `MiniMax returned empty content (finish_reason=${finishReason}, ` +
+        `raw_len=${raw.length}).`,
+      );
+    }
+    // Defensiv sanity-check: avklippt mening (slutar utan skiljetecken) → fail.
+    if (!stripped.match(/[.!?]["')\]]?$/)) {
+      throw new Error(
+        `MiniMax returned apparently incomplete sentence (no terminal punctuation): ` +
+        `"${stripped.slice(-60)}"`,
       );
     }
     return stripped;
@@ -229,7 +255,11 @@ export async function writeEditorialDescription(input: EditorialWriterInput): Pr
     systemPrompt,
     userPrompt,
     model,
-    maxTokens: 800, // MiniMax-M3 behöver utrymme för think-block + 2-3 meningar svar
+    // 350 räcker för 2-3 meningar med thinking disabled (ingen think att
+    // budgetera för). Om MiniMax ignorerar disable-flaggan blir 350 för
+    // litet — då triggar finish_reason=length och pipeline-regenererar /
+    // faller tillbaka till fact-based summary.
+    maxTokens: 350,
     temperature: 0.7,
   });
 

@@ -19,6 +19,7 @@
 // kort-variant.
 
 import { Image, Pressable, StyleSheet, Text, View } from 'react-native';
+import { useImageAspect } from '../hooks/useImageAspect.js';
 
 const TOKENS = {
   color: {
@@ -67,6 +68,9 @@ export default function EventPulseSenasteCard({
 }) {
   const source = sourceOf(imageSource);
   const a11yLabel = accessibilityLabel ?? `${title} — ${subtitle}`;
+  // 2026-10-07 — wrap-aspect sätts till bildens naturliga aspect. Tidigare
+  // fast 1.15 + cover cropade bilden. Nu visas bilden helt (contain).
+  const { aspect: imageAspect } = useImageAspect(imageSource);
 
   return (
     <Pressable
@@ -75,12 +79,12 @@ export default function EventPulseSenasteCard({
       accessibilityRole="button"
       accessibilityLabel={a11yLabel}
     >
-      <View style={styles.imageWrap}>
+      <View style={[styles.imageWrap, { aspectRatio: imageAspect }]}>
         {source ? (
           <Image
             source={source}
             style={styles.image}
-            resizeMode="cover"
+            resizeMode="contain"
             accessibilityIgnoresInvertColors
           />
         ) : (
@@ -106,12 +110,11 @@ const styles = StyleSheet.create({
   cardPressed: {
     opacity: 0.7,
   },
+  // 2026-10-07 — wrap-aspect sätts dynamiskt från useImageAspect().
+  // Inget hård aspectRatio här — bilden ska få wrap:en att följa sina
+  // egna proportioner så hela bilden syns (contain-resize).
   imageWrap: {
     width: '100%',
-    // Binding (DESIGN_SYSTEM.md § Canonical card anatomy): aspectRatio
-    // 1.15 + resizeMode cover kapar bilden upptill/nedtill — detta är
-    // "avklippt botten"-mönstret. Samma behandling som EventPulseCard.
-    aspectRatio: 1.15,
     overflow: 'hidden',
     backgroundColor: TOKENS.color.bg,
     borderWidth: 0.5,

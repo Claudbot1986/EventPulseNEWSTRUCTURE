@@ -49,21 +49,26 @@ function publicUrlFor(storagePath: string): string {
 }
 
 /**
- * Mappa `image_library.storage_path` (pekar på import-original/, ostämplade
- * original) till den stämplade UI-URL:en (import-stamped/, det UI läser).
+ * Mappa `image_library.storage_path` (pekar numera direkt på import-stamped/)
+ * till den publika URL som UI läser.
  *
- * Bakgrund (2026-09-01): två-roll-bibliotek infört. UI visar alltid
- * stämplade varianter — så `pickLibraryFallback` returnerar import-stamped/-
- * URL även när storage_path refererar till import-original/.
+ * Bakgrund (2026-10-08): image_library.storage_path pekar DIREKT på
+ * import-stamped/ (migration 2026-10-08). Inga rå-bilder till Storage —
+ * imageGen.ts laddar bara upp stämplade varianter. Därför är denna
+ * funktion i praktiken en no-op för nya entries.
+ *
+ * Bakåtkompatibilitet (2026-09-01): tidigare pekade storage_path på
+ * import-original/ och UI mappade via denna funktion. Efter migreringen
+ * finns inga sådana rader kvar, men funktionen finns kvar som skydd
+ * om äldre rader slinker igenom (t.ex. via tredjeparts-system).
  *
  * Substring-match utan inledande slash för att täcka båda formaten:
- *   - `import-original/foo.png`         (nya entries från addToLibrary)
- *   - `event-posters/import-original/foo.png` (migrerade entries)
+ *   - `import-stamped/foo.png`           (normala entries, nya + migrerade)
+ *   - `event-posters/import-stamped/foo.png`  (full path)
+ *   - `import-original/foo.png`          (legacy, mappas till stamped)
+ *   - `event-posters/import-original/foo.png` (legacy, mappas till stamped)
  *
- * Regex `/import-original\//` ersätter BARA första förekomsten, vilket
- * förhindrar dubbel-ersättning i patologiskt formaterade paths.
- *
- * Om filen saknar import-original/-segment (t.ex. legacy `events/`-rad eller
+ * Om filen saknar import-*-segment (t.ex. legacy `events/`-rad eller
  * QA-only `ai-originals/`-rad) returneras storage_path oförändrat.
  */
 function stampedUrlForStoragePath(storagePath: string | null | undefined): string | null {

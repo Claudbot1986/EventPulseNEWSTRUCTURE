@@ -102,16 +102,37 @@ export async function writeEditorialBack(
   pipelineResult: Awaited<ReturnType<typeof runEditorialPipeline>>,
   profile: import('./types').EventProfile,
 ): Promise<boolean> {
-  if (pipelineResult.status !== 'passed') {
-    console.log(`[editorial] event ${event_id} status=${pipelineResult.status} — skriv INTE tillbaka`);
+  // Vi skriver tillbaka om vi har en slutgiltig text — oavsett om det är
+  // LLM-genererad (passed) eller fallback (fallback_fact / fallback_minimal).
+  // Hellre en FACT-lista än ingenting alls i UI.
+  if (pipelineResult.status === 'failed' ||
+      pipelineResult.status === 'regenerating' ||
+      pipelineResult.status === 'pending' ||
+      !pipelineResult.final_text) {
+    console.log(`[editorial] event ${event_id} status=${pipelineResult.status} — skriv INTE tillbaka (ingen slutgiltig text)`);
     return false;
   }
 
-  const sed = buildStoredEditorialDescription(
-    pipelineResult.draft!,
-    pipelineResult.factuality!.pass,
-    pipelineResult.independence!.pass,
-  );
+  // LLM-genererad: använd full meta (model, prompt_version, attempts).
+  // Fallback: bygg StoredEditorialDescription utan LLM-meta.
+  const sed = pipelineResult.draft
+    ? buildStoredEditorialDescription(
+        pipelineResult.draft,
+        pipelineResult.factuality?.pass ?? false,
+        pipelineResult.independence?.pass ?? false,
+      )
+    : {
+        // Fallback-text — bygg minimal StoredEditorialDescription
+        text: pipelineResult.final_text,
+        info_level: pipelineResult.status === 'fallback_fact' ? ('LOW' as const) : ('VERY_LOW' as const),
+        factuality_pass: false, // fallback kunde inte valideras
+        independence_pass: false,
+        model: 'fallback',
+        prompt_version: 'fallback-v1',
+        generated_at: new Date().toISOString(),
+        attempts: pipelineResult.attempts + 1,
+        word_count: pipelineResult.final_text.split(/\s+/).filter(Boolean).length,
+      };
   const sp = buildStoredProfile(profile);
 
   const { error } = await supabase
@@ -130,7 +151,8 @@ export async function writeEditorialBack(
     console.warn(`[editorial] DB-update misslyckades för ${event_id}: ${error.message}`);
     return false;
   }
-  console.log(`[editorial] event ${event_id} skrev redaktionell beskrivning (info_level=${sed.info_level}, attempts=${pipelineResult.attempts + 1})`);
+  const source = pipelineResult.draft ? 'LLM' : 'fallback';
+  console.log(`[editorial] event ${event_id} skrev ${source}-beskrivning (info_level=${sed.info_level}, attempts=${pipelineResult.attempts + 1})`);
   return true;
 }
 

@@ -57,7 +57,8 @@ describe('buildEventProfile', () => {
     expect(p.provenance['event_type']).toContain('category:rock');
   });
 
-  it('teater utan end_time → typical_duration från kategori', () => {
+  it('teater utan end_time → duration_minutes = undefined (ingen typical-fallback)', () => {
+    // [KORRIGERAD 2026-10-08] category-typical är INTE ett FACT.
     const input: EventUnderstandingInput = {
       category_slug: 'theatre-drama',
       venue_type: 'theater',
@@ -68,7 +69,7 @@ describe('buildEventProfile', () => {
     const p = buildEventProfile(input);
     expect(p.event_type).toBe('theater');
     expect(p.genres).toContain('drama');
-    expect(p.duration_minutes).toBe(150); // typical_duration för theatre-drama
+    expect(p.duration_minutes).toBeUndefined(); // null, INTE 150
     expect(p.setting).toBe('teater');
     expect(p.themes).toBeUndefined();
   });
@@ -85,17 +86,17 @@ describe('buildEventProfile', () => {
     expect(p.practical_information).toContain('Fri entré');
   });
 
-  it('barn-kategori får barnanpassad duration', () => {
+  it('barn-kategori → duration_minutes = undefined (ingen typical-fallback)', () => {
     const input: EventUnderstandingInput = {
       category_slug: 'kids',
       venue_name: 'Junibacken',
     };
     const p = buildEventProfile(input);
     expect(p.target_audience).toContain('barn');
-    expect(p.duration_minutes).toBe(60); // kort för barn
+    expect(p.duration_minutes).toBeUndefined(); // null, INTE 60
   });
 
-  it('electronic → 240 min default (långt DJ-set)', () => {
+  it('electronic → duration_minutes = undefined (ingen typical-fallback)', () => {
     const input: EventUnderstandingInput = {
       category_slug: 'electronic',
       venue_type: 'club',
@@ -103,7 +104,7 @@ describe('buildEventProfile', () => {
     const p = buildEventProfile(input);
     expect(p.event_type).toBe('music');
     expect(p.genres).toContain('elektroniskt');
-    expect(p.duration_minutes).toBe(240);
+    expect(p.duration_minutes).toBeUndefined(); // null, INTE 240
     expect(p.audience_participation).toContain('dans');
   });
 
@@ -146,6 +147,76 @@ describe('buildEventProfile', () => {
     expect(p.tour).toBeUndefined();
     expect(p.festival_context).toBeUndefined();
     expect(p.premiere).toBeUndefined();
+  });
+
+  // [KORRIGERAD 2026-10-08 efter P8-granskning]
+  // Duration-fallback till category-typical är en deterministisk hallucination.
+  // Felaktiga duration-värden ska INTE ersättas med kategoritypiska värden —
+  // de ska bli null. UI/Writer får då utelämna duration.
+  it('multi-day calendar span (1440 min = 24h) → duration_minutes = null, INTE category-typical', () => {
+    // Chicago: musical-theatre, start=2026-10-09T19:30, end=2026-10-10T19:30
+    //  → rawDuration = 1440 min (24h calendar span). Inte aktivitetstid.
+    const input: EventUnderstandingInput = {
+      category_slug: 'musical-theatre',
+      venue_type: 'theater',
+      start_time: '2026-10-09T19:30:00+02:00',
+      end_time: '2026-10-10T19:30:00+02:00',
+    };
+    const p = buildEventProfile(input);
+    // Varken 1440 (calendar span) eller 180 (typical) — null är korrekt.
+    expect(p.duration_minutes).toBeUndefined();
+    expect(p.provenance['duration_minutes']).toEqual(
+      expect.arrayContaining([expect.stringMatching(/calendar_span/)])
+    );
+  });
+
+  it('multi-day 72h calendar span → duration_minutes = null', () => {
+    // Bak & Choklad: 72h festival-span över 3 dygn
+    const input: EventUnderstandingInput = {
+      category_slug: 'food',
+      venue_type: 'studio',
+      start_time: '2026-10-09T08:00:00+02:00',
+      end_time: '2026-10-12T08:00:00+02:00', // 4320 min = 72h
+    };
+    const p = buildEventProfile(input);
+    expect(p.duration_minutes).toBeUndefined();
+  });
+
+  it('rimlig 2h duration (120 min) → behålls från start+end', () => {
+    const input: EventUnderstandingInput = {
+      category_slug: 'music',
+      venue_type: 'club',
+      start_time: '2026-10-09T20:00:00+02:00',
+      end_time: '2026-10-09T22:00:00+02:00', // 120 min
+    };
+    const p = buildEventProfile(input);
+    expect(p.duration_minutes).toBe(120);
+    expect(p.provenance['duration_minutes']).toEqual(['events_row:start+end']);
+  });
+
+  it('rimlig 11h duration (660 min) → behålls, FÅR vara > 600', () => {
+    // Festival / heldagsekonsert kan vara 11h utan att vara fel.
+    // Vi sätter INTE hård 600-gräns.
+    const input: EventUnderstandingInput = {
+      category_slug: 'festival',
+      venue_type: 'park',
+      start_time: '2026-10-09T10:00:00+02:00',
+      end_time: '2026-10-09T21:00:00+02:00', // 660 min = 11h, single day
+    };
+    const p = buildEventProfile(input);
+    expect(p.duration_minutes).toBe(660); // behålls — single-day
+    expect(p.provenance['duration_minutes']).toEqual(['events_row:start+end']);
+  });
+
+  it('duration utan end_time → null (inte heller category-typical)', () => {
+    const input: EventUnderstandingInput = {
+      category_slug: 'music',
+      venue_type: 'club',
+      start_time: '2026-10-09T20:00:00+02:00',
+      // No end_time
+    };
+    const p = buildEventProfile(input);
+    expect(p.duration_minutes).toBeUndefined();
   });
 });
 

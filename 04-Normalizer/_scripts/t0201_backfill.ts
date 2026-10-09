@@ -202,25 +202,39 @@ async function main() {
 
     // Batch-update via UPDATE för varje event (vi behöver uppdatera 10 fält)
     // Använder service_role — går endast mot events-tabellen (inte vyn).
-    for (const upd of updates) {
-      const { error: updateErr } = await supabase
-        .from('events')
-        .update({
-          description_license: upd.description_license,
-          description_attribution: upd.description_attribution,
-          description_source_url: upd.description_source_url,
-          raw_description: upd.raw_description,
-          raw_description_captured_at: upd.raw_description_captured_at,
-          eventpulse_summary: upd.eventpulse_summary,
-          eventpulse_summary_facts: upd.eventpulse_summary_facts,
-          eventpulse_summary_provenance: upd.eventpulse_summary_provenance,
-          eventpulse_summary_generated_at: upd.eventpulse_summary_generated_at,
-          eventpulse_summary_model: upd.eventpulse_summary_model,
-        })
-        .eq('id', upd.id);
-      if (updateErr) {
-        console.error(`[t0201-backfill] UPDATE failed for ${upd.id}:`, updateErr.message);
+    // 2026-10-07 — Promise.all med concurrency=20 istället för serial await.
+    // Per-event UPDATE tog ~500ms mot Supabase, så 14k events = ~2h serial.
+    // Med 20 parallella UPDATEs per batch blir det ~2-3 min totalt.
+    const UPDATE_CONCURRENCY = 20;
+    let updateCursor = 0;
+    let batchErrors = 0;
+    while (updateCursor < updates.length) {
+      const slice = updates.slice(updateCursor, updateCursor + UPDATE_CONCURRENCY);
+      const results = await Promise.allSettled(
+        slice.map((upd) =>
+          supabase.from('events').update({
+            description_license: upd.description_license,
+            description_attribution: upd.description_attribution,
+            description_source_url: upd.description_source_url,
+            raw_description: upd.raw_description,
+            raw_description_captured_at: upd.raw_description_captured_at,
+            eventpulse_summary: upd.eventpulse_summary,
+            eventpulse_summary_facts: upd.eventpulse_summary_facts,
+            eventpulse_summary_provenance: upd.eventpulse_summary_provenance,
+            eventpulse_summary_generated_at: upd.eventpulse_summary_generated_at,
+            eventpulse_summary_model: upd.eventpulse_summary_model,
+          }).eq('id', upd.id)
+        )
+      );
+      for (const r of results) {
+        if (r.status === 'rejected' || (r.status === 'fulfilled' && r.value.error)) {
+          batchErrors++;
+        }
       }
+      updateCursor += slice.length;
+    }
+    if (batchErrors > 0) {
+      console.warn(`[t0201-backfill] ${batchErrors} UPDATE errors in this batch`);
     }
 
     console.log(`[t0201-backfill] processed ${counts.scanned}, with_summary=${counts.with_summary}`);

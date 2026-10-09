@@ -211,15 +211,13 @@ async function markEvents(
   // Library-registrering (2026-08-27): varje BFL-success växer biblioteket.
   // Idempotent — storage_path är UNIQUE, dubbletter returnerar befintlig rad.
   // Tyst vid fel — vi vill inte krascha ett lyckat BFL-jobb pga library-fel.
-  // 2026-09-01: registrera med import-original/-prefix. imageGen.ts laddar
-  // upp rå BFL-output till import-original/ + stämplad kopia till
-  // import-stamped/. Library lagrar import-original/-path som identitet, och
-  // `stampedUrlForStoragePath()` mappar URL:en som UI:n ser till
-  // import-stamped/. På så sätt är stamp_all_originals.ts trivial att köra
-  // när stämpel-design ändras.
+  // 2026-10-08 (användarbeslut): image_library.storage_path pekar nu DIREKT
+  // på import-stamped/ (inte import-original/). Inga rå-bilder till Storage.
+  //   - imageGen.ts laddar bara upp stämplad variant till import-stamped/.
+  //   - stampedUrlForStoragePath är därmed en no-op (storage_path = URL).
   if (storagePath) {
     await addToLibrary({
-      storage_path: `import-original/${storagePath}.png`,
+      storage_path: `import-stamped/${storagePath}.png`,
       category_slug: group.representative.category_slug ?? null,
       source_event_id: group.ids[0] ?? null,
       tags: ['bfl-success'],

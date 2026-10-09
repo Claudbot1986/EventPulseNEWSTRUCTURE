@@ -166,18 +166,27 @@ export interface EditorialDraft {
 }
 
 /**
- * Factuality check-resultat.
+ * Factuality check-resultat (claim-by-claim).
  *
  * Verifierar att ALLA materiella påståenden i draften kan härledas till
- * Profile. PASS om alla stödjs. unsupported_claims innehåller de påståenden
- * som inte kunde verifieras (för regeneration).
+ * Profile. PASS endast om inga UNSUPPORTED claims finns. INFERRED claims
+ * (semantiska konsekvenser av kategori) accepteras.
  */
 export interface FactualityResult {
   pass: boolean;
-  /** claims som inte kunde verifieras mot Profile. */
+  /** claims som inte kunde verifieras mot Profile eller kategori. */
   unsupported_claims: string[];
-  /** claims som verifierades (för loggning). */
+  /** claims som verifierades mot Profile eller event-fält. */
   supported_claims: string[];
+  /** claims som accepterats via kategori-hints (semantisk konsekvens). */
+  inferred_claims?: string[];
+  /** Detaljer per claim — används för loggning och regeneration feedback. */
+  details?: Array<{
+    claim: string;
+    status: 'SUPPORTED' | 'INFERRED' | 'UNSUPPORTED';
+    evidence: Array<{ field: string; value: string }>;
+    match_type: 'exact' | 'substring' | 'word-overlap' | 'none';
+  }>;
   checked_at: string;
 }
 
@@ -199,15 +208,29 @@ export interface IndependenceResult {
 }
 
 /**
- * Pipeline-resultat (3 state machine).
+ * Pipeline-resultat (state machine).
+ *
+ * passed           — LLM-genererad text som klarade factuality + independence
+ * regenerating     — minst en grind underkänd, regenerering startad
+ * fallback_fact    — LLM misslyckades → FACT-lista från Profile
+ * fallback_minimal — LLM misslyckades → bara titel + venue + datum
+ * failed           — Inte ens MINIMAL kunde byggas (saknar titel/venue/datum)
  */
-export type EditorialStatus = 'pending' | 'passed' | 'regenerating' | 'failed';
+export type EditorialStatus =
+  | 'pending'
+  | 'passed'
+  | 'regenerating'
+  | 'fallback_fact'
+  | 'fallback_minimal'
+  | 'failed';
 
 export interface EditorialPipelineResult {
   status: EditorialStatus;
   draft?: EditorialDraft;
   factuality?: FactualityResult;
   independence?: IndependenceResult;
+  /** Data quality gate — evidence fusion-resultat. */
+  data_quality?: import('./dataQualityCheck').DataQualityReport;
   /** Antal regenereringsförsök. */
   attempts: number;
   /** Slutlig status när klar. */
@@ -265,6 +288,91 @@ export const EMPTY_PROFILE: EventProfile = {
   language: ['sv'],
   provenance: {},
 };
+
+// ─── Entity Extraction (P8 FAS 2, 2026-10-08) ───────────────────────────────
+//
+// GENERELL semantisk extraktion som ersätter den smala Zurich-pattern-only
+// semanticExtractor.ts. Syftet är att identifiera entities (personer/band/
+// verk/team) från title + raw_description + strukturerade fält, med
+// konserva role-konfidens och evidence per entitet.
+
+/**
+ * Roller som en extraherad entitet kan ha i ett event.
+ * Konservativ: bara roller vi kan belägga med mönster eller strukturerad data.
+ */
+export type EntityRole =
+  | 'artist'        // Musikartist / DJ
+  | 'band'          // Grupp
+  | 'dj'            // Specifikt DJ
+  | 'comedian'      // Standup-artist
+  | 'performer'     // Teater/dans/skådespelare
+  | 'ensemble'      // Orkester/ensemble
+  | 'conductor'     // Dirigent
+  | 'soloist'       // Solist (klassisk)
+  | 'speaker'       // Föreläsare
+  | 'team'          // Sport-lag
+  | 'work'          // Verk (musical, pjäs, opera, film)
+  | 'composer'      // Kompositör (refererad, inte performer)
+  | 'author'        // Bokförfattare
+  | 'organizer'     // Arrangör/venue (refererad)
+  | 'referenced'    // Tribute/hyllning — namnges men uppträder inte
+  | 'theme'         // Tematisk event (fest med namn, hyllningsafton)
+  | 'unknown';
+
+/**
+ * Konfidens för en extraherad entitet.
+ *
+ * VI ANVÄNDER INTE DECIMAL-TAL (0.93 vs 0.87) — för kalibrerad
+ * sannolikhet behövs JEV (senare). Etiketter är tydligare att audita.
+ */
+export type EntityConfidence =
+  | 'VERIFIED'   // Strukturdata bekräftar
+  | 'SUPPORTED'  // Generellt mönster + kategori stödjer
+  | 'INFERRED'   // Rimlig utifrån kategori men inte uttryckligen sagt
+  | 'AMBIGUOUS'  // Flera tolkningar — returneras separat för review
+  | 'UNKNOWN';   // Vet inte
+
+/**
+ * Varifrån en entitet kommer.
+ * Vi sparar exakt source-text för att kunna granska.
+ */
+export interface EntityEvidence {
+  /** Vilket fält entity:n hittades i. */
+  field: 'title' | 'raw_description' | 'structured_input' | 'venue_name';
+  /** Det exakta textavsnitt som stödjer claim. */
+  span: string;
+  /** Vilken metod/regel som extraherade. */
+  method: string;
+}
+
+/**
+ * En enskild extraherad entitet med dess roll och evidens.
+ */
+export interface ExtractedEntity {
+  /** Entitetens namn (normaliserat — trimming, lowercase behålls för läsbarhet). */
+  name: string;
+  /** Vad entiteten har för roll i just detta event. */
+  role: EntityRole;
+  /** Evidens: varifrån vi vet detta. */
+  evidence: EntityEvidence;
+  /** Hur säkra vi är. */
+  confidence: EntityConfidence;
+}
+
+/**
+ * Input till extractEntities().
+ *
+ * OBS: vi sparar INTE denna i DB — det är en runtime-struktur. Profil och
+ * DB-schema förblir oförändrade i P8 FAS 2.
+ */
+export interface EntityExtractionInput {
+  title: string | null;
+  raw_description: string | null;
+  category_slug: string | null;
+  venue_name: string | null;
+  /** Från artistResolver/structured pipeline (om löses upp tidigare). */
+  structured_performers?: string[];
+}
 
 /**
  * DB row med description-fält (för typecheck).

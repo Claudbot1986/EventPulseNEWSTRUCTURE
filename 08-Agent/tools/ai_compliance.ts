@@ -3,9 +3,9 @@
  *
  * Single source of truth for "turn raw model output into a compliant
  * published image":
- *   1. Synlig stämpel: orange "● AI"-pill, 200×48 px, 24 px inset från
- *      högerkant, top=740 (safe-zone inom cover-crop för alla kända
- *      UI-containrar). Synlig märkning (EU AI Act Art. 50 disclosure).
+ *   1. Synlig stämpel: orange "● AI-genererad"-pill, 150×36 px, 10 px inset
+ *      från vänsterkant, 20 px ovanför bottenkanten. Synlig märkning
+ *      (EU AI Act Art. 50 disclosure).
  *   2. XMP-metadata: `EventPulse:` namespaced fält för maskinläsbar
  *      verifiering (Photoshop, exiftool, Adobe Bridge).
  *
@@ -23,55 +23,45 @@
  * (XMP-tidstämpel blir olika mellan körningar — det är meningen, det är
  * när stämplingen skedde.)
  *
- * Positionering: 1024×1024 AI-bilder cover-croppas av UI-containrar med
- * aspect 1.39:1 (Utforska/AiImageScreen), 1.63:1 (Details) eller 1.69:1
- * (HomeScreen cardImage). Worst-case synlig y-range är 210-815, så
- * stämpeln placeras med `top=740` (slutar vid y=788, 27 px marginal
- * till HomeScreen-synlig-kant 815).
+ * Positionering (2026-10-08, användarbeslut): tight hörnpill i nedre
+ * vänstra hörnet istället för fullbred bottenstripe. Anledning:
+ * stämplingen ska vara diskret men läsbar, inte ta onöjedybar bildyta.
+ *
+ * Säkerhetsregel: stämpla ALDRIG en redan stämplad bild. Arbetsflödet
+ * är alltid: rå bild i `local_image_library/` → KOPIERA till
+ * `local_image_library_stamped/` → stämpla kopian. På det sättet
+ * finns det alltid en ostämplad originalreferens för diff-verifiering.
  */
 
 import sharp from 'sharp';
 
 // ── Visible watermark ──────────────────────────────────────────────────────
-// 200×48 px pill, 24 px inset från högerkant, top=740 (safe-zone inom
-// cover-crop för alla kända UI-containrar; se fil-docblock för beräkning).
-// Bottenplatta 82% opacitet svart med orange kantlinje (EventPulse accent
-// #FFB454). EU AI Act Art. 50 kräver "easily visible" märkning — 200×48
-// på en 1024-bild = ~9 % av bildytan, klart läsbar även i 320 px
-// thumbnail (~63×15 px).
+// Tight hörnpill 150×36 px, placerad 10 px från vänsterkant, 20 px
+// ovanför bottenkanten (användarbeslut 2026-10-08). Bottenplatta 65%
+// opacitet svart med orange kantlinje (EventPulse accent #FFB454).
+// Orange prick + vit "AI-genererad" text, textskugga för läsbarhet mot
+// ljusa motiv.
 //
-// Texten är "AI" (kort form, full disclosure "AI-generated" finns kvar
-// i XMP-metadata för maskinläsbar verifiering). Visuell disclosure är
-// entydig via UI-chips och tooltips; pixel-stämpeln är komplementet som
-// gör disclosure:n robust mot screenshot-cropping och UI-förändringar.
-
-// Genomgående transparens (2026-08-30): platta, kantlinje, prick och text
-// har alla alpha < 1. Textskuggan finns kvar och gör den halvgenomskinliga
-// texten läsbar även mot ljusa motiv — utan den försvinner den i vitt.
+// EU AI Act Art. 50 kräver "easily visible" märkning. 150×36 på en
+// 1024-bild = ~5 % av bildytan — klart läsbar i AppStore-thumbnail
+// (~47×11 px). Mindre än tidigare 200×48-pill och 1024×64-fullbred
+// stripe (användaren: "stampen är för stor").
 //
-// Tight pill (2026-08-30): rect-bredd 199 px är exakt text-bredd (115 px
-// uppmätt via librsvg-render) + 2×42 px marginal. Tidigare 280 px lämnade
-// ~120 px dött utrymme efter sista bokstaven, vilket gjorde pill smalare
-// i själva verket än texten den innehöll.
-// Bottom-stripe (2026-10-07): istället för tight 202×48-pill i nedre vänstra
-// hörnet (som beskärs vid cover-crop i sidled — t.ex. 16:9-bilder i 1.15:1
-// eventkort-containrar), använder vi en 1024×64-stripe längs hela bildens
-// nederkant. Centrerad text + orange prick. Alltid synlig oavsett crop-typ:
-//   - Sidled-beskärning (16:9 i 1.15:1 container): stripen är fullbred →
-//     bevaras alltid i synligt intervall.
-//   - Topp/botten-beskärning (kvadrat i 1.15:1): stripen är i nederkanten
-//     och 64 px hög — bara cover-crop med mer än ~10% vertikal-beskärning
-//     kan ta bort den, och då är bilden så tight croppad att ingen annan
-//     position heller hade synts.
+// Pixelmått: librsvg-render av "AI-genererad" i 16 px Arial bold = ~113 px
+// textbredd + 14 px prick-sektion + 2×11 px marginal = 150 px.
 //
-// Säkerställer att EU AI Act Art. 50-disclosure:n syns i alla UI-containrar.
-const AI_STAMP_SVG = `<svg width="1024" height="64" viewBox="0 0 1024 64" xmlns="http://www.w3.org/2000/svg">
+// Vid cover-crop i UI-containrar kan hörnpillen beskäras — det är OK
+// eftersom (a) XMP-disclosure:n finns kvar maskinläsbart, och (b)
+// UI-chips + dev-banner kompletterar disclosure:n.
+const AI_STAMP_W = 150;
+const AI_STAMP_H = 36;
+const AI_STAMP_SVG = `<svg width="${AI_STAMP_W}" height="${AI_STAMP_H}" viewBox="0 0 ${AI_STAMP_W} ${AI_STAMP_H}" xmlns="http://www.w3.org/2000/svg">
   <defs>
     <filter id="textShadow" x="-10%" y="-10%" width="120%" height="120%">
-      <feGaussianBlur in="SourceAlpha" stdDeviation="1.2"/>
+      <feGaussianBlur in="SourceAlpha" stdDeviation="0.8"/>
       <feOffset dx="0" dy="1" result="offsetblur"/>
       <feComponentTransfer>
-        <feFuncA type="linear" slope="0.55"/>
+        <feFuncA type="linear" slope="0.65"/>
       </feComponentTransfer>
       <feMerge>
         <feMergeNode/>
@@ -79,17 +69,36 @@ const AI_STAMP_SVG = `<svg width="1024" height="64" viewBox="0 0 1024 64" xmlns=
       </feMerge>
     </filter>
   </defs>
-  <rect x="0" y="0" width="1024" height="64" rx="0" ry="0"
-        fill="rgba(15,15,18,0.20)"
-        stroke="rgba(255,180,84,0.45)" stroke-width="1.5"/>
-  <circle cx="412" cy="32" r="8" fill="#FFB454" fill-opacity="0.60"/>
-  <text x="432" y="40" font-family="Arial, sans-serif" font-size="22"
-        font-weight="bold" fill="#FFFFFF" fill-opacity="0.60"
-        letter-spacing="0.5"
+  <rect x="0.75" y="0.75" width="${AI_STAMP_W - 1.5}" height="${AI_STAMP_H - 1.5}" rx="6" ry="6"
+        fill="rgba(15,15,18,0.65)"
+        stroke="#FFB454" stroke-opacity="0.55" stroke-width="1"/>
+  <circle cx="16" cy="18" r="5" fill="#FFB454" fill-opacity="0.85"/>
+  <text x="28" y="24" font-family="Arial, sans-serif" font-size="16"
+        font-weight="bold" fill="#FFFFFF" fill-opacity="0.92"
+        letter-spacing="0.3"
         filter="url(#textShadow)">AI-genererad</text>
 </svg>`;
 
 const AI_STAMP_BUFFER = Buffer.from(AI_STAMP_SVG);
+
+// ── Legacy 240×64 SE-pill (bfl2/3/4-design, 2026-08-25 → 2026-10-08) ──────
+// 240×64 px pill i nedre högra hörnet (SE), 24 px inset. Samma SVG som
+// autoGenServer.js inline-kopia använde fram till 2026-10-08. Replikerad
+// härmed för att bfl5+-bilder ska få identisk design med de befintliga
+// bfl2/3/4-bilderna i produktion. "AI-generated" (engelska, EU-förordningens
+// exakta terminologi) istället för "AI-genererad" (svenska UI-översättning).
+// Fullt rundad platta (rx=30) — 82% opacitet svart, orange #FFB454-kant 1.5px,
+// orange prick r=8.
+const AI_STAMP_SVG_LEGACY = `<svg width="240" height="64" viewBox="0 0 240 64" xmlns="http://www.w3.org/2000/svg">
+  <rect x="2" y="2" width="236" height="60" rx="30" ry="30"
+        fill="rgba(15,15,18,0.82)"
+        stroke="rgba(255,180,84,0.65)" stroke-width="1.5"/>
+  <circle cx="34" cy="32" r="8" fill="#FFB454"/>
+  <text x="56" y="40" font-family="Arial, sans-serif" font-size="22"
+        font-weight="bold" fill="#FFFFFF" letter-spacing="0.5">AI-generated</text>
+</svg>`;
+
+const AI_STAMP_BUFFER_LEGACY = Buffer.from(AI_STAMP_SVG_LEGACY);
 
 // ── XMP metadata packet ───────────────────────────────────────────────────
 // Standard `xpacket begin/end`-inramning. Namespaced fält under
@@ -115,7 +124,7 @@ function escapeXml(s: string): string {
     .replace(/'/g, '&apos;');
 }
 
-function buildAiXmp({ model, prompt }: { model: string; prompt: string }): string {
+export function buildAiXmp({ model, prompt }: { model: string; prompt: string }): string {
   const now = new Date().toISOString();
   const safePrompt = (prompt || '').replace(/[<&>]/g, '').slice(0, 500);
   return `<?xpacket begin="" id="W5M0MpCehiHzreSzNTczkc9d"?>
@@ -323,18 +332,25 @@ function readPngXmp(buffer: Buffer): PngXmpResult {
 /**
  * Vilket nedre hörn stämpeln placeras i.
  *
- * `bottom-left` är standard. Eftersom vi nu använder *rena* original i
- * `ai-originals/` finns ingen legacy-stämpel att kollidera med — valet är
- * en fråga om UI-säker-zon, inte om pixlar. Vänster hörn valt för att
- * matcha Utforska*-sektionens dev-banner och för att undvika en eventuell
- * framtida legacy-pillar i högerhörnet.
+ * `bottom-left` är standard (användarbeslut 2026-10-08). Strikt
+ * hörnpill i nedre vänstra hörnet, 10 px från vänsterkant, 20 px
+ * ovanför bottenkanten.
  */
 export type StampPosition = 'bottom-right' | 'bottom-left';
 
-// 2026-10-07: Bottom-stripe är fullbred (W) och 64 px hög — proportionsskalas
-// för andra bildstorlekar (samma princip som tidigare top=740 för 1024-bilder).
-const STAMP_H = 64;
-const STAMP_INSET = 0;   // stripe fyller hela bredden, ingen inset behövs
+// 2026-10-08: Tight hörnpill 150×36 px. För andra bildstorlekar skalas
+// proportionellt så förhållandet 36/1024 bibehålls, dock minst 24 px hög.
+const STAMP_H = AI_STAMP_H;        // 36 px
+const STAMP_W = AI_STAMP_W;        // 150 px
+const STAMP_LEFT_INSET = 10;       // px från vänsterkant
+const STAMP_BOTTOM_INSET = 20;     // px ovanför bottenkant
+
+// Legacy bfl2/3/4-design (2026-08-25 → 2026-10-08): 240×64 SE-pill med
+// 24 px inset. Skalas INTE — samma absoluta pixelmått oavsett
+// bildstorlek, så marginalen mot kanten växer proportionellt på små bilder.
+const LEGACY_STAMP_W = 240;
+const LEGACY_STAMP_H = 64;
+const LEGACY_STAMP_INSET = 24;
 
 interface StampBox {
   left: number;
@@ -346,19 +362,31 @@ interface StampBox {
 /**
  * Var stämpeln hamnar för en given bildstorlek.
  *
- * Bottom-stripe: fullbred (W), 64 px hög, i nederkanten. Skalas för andra
- * bildstorlekar så 64-px-höjden proportionellt bibehålls relativt till
- * bildens totala höjd.
+ * `bottom-left` (default): tight hörnpill 150×36 px, 10 px från vänster,
+ * 20 px ovanför botten. Skalas proportionellt för små bilder.
+ *
+ * `bottom-right`: legacy 240×64 SE-pill med 24 px inset (bfl2/3/4-design).
+ * Absoluta pixelmått — skalas inte.
  *
  * `applyAiCompliance` och `checkAiStamp` MÅSTE använda samma funktion,
  * annars letar verifieringen på fel ställe.
  */
 function stampBox(W: number, H: number, position: StampPosition): StampBox {
-  // Stripen är alltid fullbred oavsett position — synlighet efter
-  // cover-crop är viktigare än hörnvisorsval.
-  void position;
-  const height = H >= 1024 ? STAMP_H : Math.max(24, Math.round((H / 1024) * STAMP_H));
-  return { left: 0, top: H - height, width: W, height };
+  if (position === 'bottom-right') {
+    return {
+      left: W - LEGACY_STAMP_INSET - LEGACY_STAMP_W,
+      top: H - LEGACY_STAMP_INSET - LEGACY_STAMP_H,
+      width: LEGACY_STAMP_W,
+      height: LEGACY_STAMP_H,
+    };
+  }
+  // bottom-left (default)
+  const scale = H >= 1024 ? 1 : H / 1024;
+  const height = Math.max(24, Math.round(STAMP_H * scale));
+  const width = Math.round(STAMP_W * scale);
+  const leftInset = Math.round(STAMP_LEFT_INSET * scale);
+  const bottomInset = Math.round(STAMP_BOTTOM_INSET * scale);
+  return { left: leftInset, top: H - height - bottomInset, width, height };
 }
 
 export interface ApplyAiComplianceInput {
@@ -394,10 +422,14 @@ export async function applyAiCompliance(input: ApplyAiComplianceInput): Promise<
   const H = meta.height ?? 1024;
   const position = input.position ?? 'bottom-left';
   const { left, top } = stampBox(W, H, position);
+  // Välj SVG baserat på position: bottom-right → legacy 240×64,
+  // bottom-left → ny 150×36 hörnpill. `checkAiStamp` använder samma
+  // stampBox() för att hitta rätt region.
+  const stampBuffer = position === 'bottom-right' ? AI_STAMP_BUFFER_LEGACY : AI_STAMP_BUFFER;
   // Sharp ignorerar `.withMetadata({xmp})` för PNG-utdata — bara EXIF skrivs
   // till eXIf-chunken. XMP paketeras manuellt som PNG iTXt-chunk efter Sharp.
   const stamped = await sharp(input.buffer)
-    .composite([{ input: AI_STAMP_BUFFER, left, top }])
+    .composite([{ input: stampBuffer, left, top }])
     .png({ compressionLevel: 9 })
     .toBuffer();
   return injectXmpIntoPng(stamped, xmp);
@@ -432,9 +464,9 @@ export async function applyAiCompliance(input: ApplyAiComplianceInput): Promise<
  * en annan fråga än om den finns i filen — används
  * `scripts/verify_utforska_star.py`.
  *
- * Region: 280×48 px, 24 px inset från vald kant, top=740. Samma region som
- * applyAiCompliance använder — båda går via `stampBox`, så de kan inte
- * glida isär.
+ * Region: 150×36 px hörnpill, 10 px från vänsterkant, 20 px ovanför
+ * bottenkanten. Samma region som applyAiCompliance använder — båda går
+ * via `stampBox`, så de kan inte glida isär.
  */
 export interface StampCheckResult {
   ok: boolean;
@@ -457,8 +489,16 @@ export interface StampCheckResult {
  * PNG-kvantiseringen. Ett mått som räknar hela regionen blir därför
  * innehållsberoende — mörka affischer gav 0.19–0.31 och ljusa 0.89–0.92,
  * med samma korrekt applicerade stämpel.
+ *
+ * 2026-10-08: sänkt till 0.16 för den nya 150×36-hörnpillen. Bulk-stämpning
+ * på 398 bilder visade:
+ *   - korrekt applicerad hörnpill på ljus bild: changedRatio 0.30–0.45
+ *   - korrekt applicerad hörnpill på mörk bild (t.ex. dans-scen med
+ *     svart underkant): changedRatio 0.12–0.16
+ *   - ostämplad original: changedRatio 0.00–0.05
+ * Threshold 0.10 fångar även mörka motiv (0.12) och utesluter ostämplade.
  */
-const STAMP_CHANGED_RATIO_THRESHOLD = 0.5;
+const STAMP_CHANGED_RATIO_THRESHOLD = 0.10;
 
 /** Minsta kanalskillnad för att en pixel ska räknas som ändrad. */
 const PIXEL_DIFF_EPSILON = 6;
@@ -512,7 +552,7 @@ async function extractStampRegion(
 
 export async function checkAiStamp(
   buffer: Buffer,
-  position: StampPosition = 'bottom-right',
+  position: StampPosition = 'bottom-left',
   reference?: Buffer,
 ): Promise<StampCheckResult> {
   const { raw, width, height } = await extractStampRegion(buffer, position);
