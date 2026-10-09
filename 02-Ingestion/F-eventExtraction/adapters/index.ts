@@ -19,6 +19,7 @@ import * as chinaTeatern from './china-teatern';
 import * as eventbriteStockholm from './eventbriteStockholm';
 import * as visitstockholm from './visitstockholm';
 import * as billettoStockholm from './billettoStockholm';
+import * as biljettshop from './biljettshop';
 import type { ParsedEvent } from '../schema';
 
 export interface SiteAdapter {
@@ -66,6 +67,11 @@ export const ADAPTERS: SiteAdapter[] = [
     name: 'billettoStockholm',
     matches: billettoStockholm.matches,
     extract: billettoStockholm.extract,
+  },
+  {
+    name: 'biljettshop',
+    matches: biljettshop.matches,
+    extract: biljettshop.extract,
   },
 ];
 

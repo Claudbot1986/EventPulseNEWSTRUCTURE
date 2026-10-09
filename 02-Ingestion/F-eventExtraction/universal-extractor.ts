@@ -40,6 +40,7 @@ import {
   ExtractionConfidenceSchema,
 } from './schema';
 import { detectCategoryFromContainerClass } from './categoryKeywords.js';
+import { runAdapters } from './adapters/index.js';
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -1653,6 +1654,29 @@ export function extractEvents(html: string, source: string, baseUrl: string): Ex
 
   if (!html || html.length < 100) {
     return { events: [], rawCount: 0, parseErrors: ['Empty HTML'], sourceUrl: baseUrl, methodsUsed: [], methodBreakdown: {} };
+  }
+
+  // PRIORITY: site-specific adapters (per CLAUDE.md Generalization Protection
+  // Rule, isolated from C0/C1/C2). Run before any universal heuristic so that
+  // site quirks are handled by the dedicated adapter.
+  const adapterResult = runAdapters(html, baseUrl, source);
+  if (adapterResult && adapterResult.events.length > 0) {
+    for (const evt of adapterResult.events) {
+      const key = `${evt.title}|${evt.date}|${evt.time || ''}|${evt.url || ''}`;
+      if (seenKeys.has(key)) continue;
+      seenKeys.add(key);
+      allEvents.push(evt);
+      methodBreakdown[adapterResult.adapter] = (methodBreakdown[adapterResult.adapter] || 0) + 1;
+    }
+    const methodsUsed = Object.keys(methodBreakdown);
+    return {
+      events: allEvents,
+      rawCount: allEvents.length,
+      parseErrors: [],
+      sourceUrl: baseUrl,
+      methodsUsed,
+      methodBreakdown,
+    };
   }
 
   const $ = cheerio.load(html);
