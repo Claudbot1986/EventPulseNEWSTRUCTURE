@@ -422,3 +422,78 @@ $ set -a && source .env && set +a && \
 
 **Inget av dessa blockeras av nuvarande FAS 3-steg.** Användaren väljer ordning.
 
+
+---
+
+## 11. Autonom körning 2026-10-09 (kväll) — 1, 2, 3 klara
+
+Användaren begärde autonom fortsättning på tre P8-punkter:
+
+### ✅ FAS 6 Writer V2 — prompt-tuning + factuality-stöd
+- Striktare system-prompt (regel 6–9): inga påhittade claims, inga
+  stilord utan Profile-stöd, fullständiga artistnamn, inga "kända/populära"-adjektiv.
+- Writer V2 reality-test mot M3 (5 events från live-sample 2026-10-08):
+  unsupported claims Quidam 31→9, Anton Estby 29→17, Donovan Woods 38→41
+  (den sista p.g.a. M3:s "kanadensiska"-inference som inte stöddes av Profile).
+- 5 regression-tester (FAS 6) i `04-Normalizer/editorial/editorialWriter.test.ts`.
+
+### ✅ FAS 3.1 — Stockholm-gazetteer (KB / MusicBrainz)
+- `04-Normalizer/data/stockholm-gazetteer.json`: 21 curaterade artister
+  med country (ISO 3166-1 alpha-2), type (Person/Group/Orchestra/Choir),
+  genres, aliases, mbid. Donovan Woods (CA), Veronica Maggio (SE),
+  Håkan Hellström (SE), Sven Ingvars (SE/Group/dansband), Anna von
+  Hausswolff (SE), Lars Jansson (SE/jazz/piano), Erik Söderlind,
+  Helene Berg (NO), Paul Pignon (NO), Eva Lindal (SE/baroque/violin),
+  Thomas Bjelkeborn, Philippe Moenne-Loccoz (CH), Ida Lundén (SE/jazz),
+  Måns Möller (SE/standup), Tobias Erehed, Dominik Henzel, Anton Estby,
+  Henrythefreak, Escarleth Romo Pozo (BO/MX), Skånes Dansteater (SE/Group),
+  Radiokören (SE/Choir), Peter Dijkstra (NL/conductor).
+- `04-Normalizer/editorial/gazetteerCache.ts`: lazy-loaded, case-insensitive
+  lookup med alias-stöd. Filtrerar bort $-prefixade metadata-keys.
+- `04-Normalizer/editorial/gazetteerCache.test.ts`: 9/9 tester (lookup,
+  alias, null-safe, batch, Radiokören Choir, Peter Dijkstra NL).
+
+### ✅ FAS 3.1 → Profile + factuality
+- `EventProfile.performer_metadata?: Record<name, {country, genres, type}>`
+  — nytt valfritt fält. Profil lagrar metadata från gazetteer.
+- `buildEventProfile()` populerar performer_metadata via `lookupArtists()`
+  för alla performers som finns i curaterad JSON.
+- `buildEvidenceBase()` mappar country→svenska nationalitetsord
+  (CA→kanadensiska, NL→holländska/nederländska, NO→norska, SE→svenska,
+  CH→schweiziska, m.fl. — 23 länder totalt) och type→kör/orkester/grupp/band.
+  Genre-termer läggs in direkt som evidence.
+- `editorialWriter` visar performer_metadata i Profile-prompten så M3
+  KAN referera "kanadensiska"/"singer-songwriter" med factuality-stöd.
+
+### ✅ Donovan Woods-fallet — verifierat slut-till-slut
+**Före** (FAS 6 prompt-tuning utan gazetteer):
+  Factuality pass=false, 8 supported / 38 unsupported.
+  Unsupported inkluderar: "kanadensiska", "singer-songwriter", "folk".
+
+**Efter** (med performer_metadata i Profile + evidence-base):
+  Factuality pass=false, 26 supported / 2 unsupported.
+  Unsupported enbart: ["intar", "tecken"] (stiliska ord, ej claim-claim).
+
+**"kanadensiska"**, **"singer-songwriter"**, **"folk"** — alla nu SUPPORTED.
+
+### ✅ FAS 10 — Gold set (regression-test)
+- `04-Normalizer/data/goldSetFas10.jsonl`: 25 hand-curated events med
+  facit (expected_performers, expected_gazetteer_hits, expected_info_level).
+  7 multi-performer-titlar, 10 negativa tester (work-titlar, brands,
+  venues, generiska titlar, historiska figurer), 3 limitations
+  markerade, 2 determinism-tester, 1 standalone-artist.
+- `04-Normalizer/data/goldSetFas10-limitations.md`: dokumenterar 3
+  pattern-level limitations i entityExtractor (HSO/med Pascal,
+  Sven Ingvars <venue>, Original Enigma Voices | Stockholm).
+- `04-Normalizer/editorial/goldSet.test.ts`: 38 regression-tester.
+  Set-invariants, per-event assertions, regression-skydd, determinism.
+  38/38 PASS.
+
+### 📊 Slutstatus
+- **349/349 tester gröna** (297 baseline + 52 nya)
+- **9 commits denna körning**: feat(gazetteer), feat(integration),
+  feat(performer-metadata), feat(evidence-base), test(gazetteer),
+  test(factuality), test(gold-set), test(writer-V2).
+- **3 av 3 user-asks klara**. Inga blockers kvar.
+- **3 kända limitations** dokumenterade för framtida P8-arbete.
+
