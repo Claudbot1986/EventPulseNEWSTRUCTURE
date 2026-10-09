@@ -1,0 +1,325 @@
+<!doctype html>
+<html lang="sv">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#000000">
+<link rel="icon" type="image/svg+xml" href="/assets/icon.svg?v=foryou1">
+<link rel="canonical" href="https://eventpulse.nu/datakallor/demo.html">
+<title>Attribution-demo — EventPulse</title>
+<link rel="stylesheet" href="/assets/styles.css?v=foryou1">
+<style>
+  body { background: #fafaf8; }
+  .demo-wrap {
+    max-width: 760px;
+    margin: 0 auto;
+    padding: 2.5rem 1.5rem 4rem;
+    color: #1a1a1a;
+  }
+  h1 { font-size: 1.8rem; margin: 0 0 0.3rem; }
+  .lede { color: #555; margin: 0 0 2rem; }
+
+  .event-card {
+    background: #fff;
+    border: 1px solid #e5e5e3;
+    border-radius: 14px;
+    padding: 1.5rem 1.75rem;
+    margin: 1.5rem 0;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+  }
+  .event-card h2 {
+    font-size: 1.3rem;
+    margin: 0 0 0.4rem;
+    color: #111;
+  }
+  .event-meta {
+    font-size: 0.9rem;
+    color: #666;
+    margin: 0 0 1.2rem;
+  }
+  .event-desc {
+    line-height: 1.6;
+    margin: 0 0 1.5rem;
+    color: #333;
+  }
+
+  /* ── Tier 1: footer-text (alltid synlig) ─────────────────── */
+  .attribution-tier1 {
+    border-top: 1px solid #ececea;
+    padding-top: 1rem;
+    margin-top: 1rem;
+    font-size: 0.9rem;
+    color: #666;
+  }
+  .attribution-tier1 a {
+    color: #5a5a5a;
+    text-decoration: underline;
+    cursor: pointer;
+  }
+  .attribution-tier1 a:hover { color: #111; }
+
+  /* ── Tier 2: disclosure-kort (vid klick) ──────────────────── */
+  .attribution-tier2 {
+    display: none;
+    margin-top: 1rem;
+    background: #f7f7f5;
+    border-radius: 10px;
+    padding: 1.1rem 1.25rem;
+  }
+  .attribution-tier2.open { display: block; }
+  .attribution-tier2 h3 {
+    font-size: 0.95rem;
+    margin: 0 0 0.75rem;
+    color: #333;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+  .attribution-tier2 ul {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+  .attribution-tier2 li {
+    padding: 0.5rem 0;
+    border-bottom: 1px solid #e5e5e3;
+    font-size: 0.92rem;
+  }
+  .attribution-tier2 li:last-child { border-bottom: none; }
+  .attribution-tier2 .source-name { font-weight: 600; }
+  .attribution-tier2 .source-desc { color: #555; font-size: 0.86rem; }
+  .attribution-tier2 .source-license { color: #2a7a2a; font-size: 0.85rem; font-style: italic; }
+
+  /* ── Tier 3: full förklaring ─────────────────────────────── */
+  .attribution-tier3 {
+    display: none;
+    margin-top: 1rem;
+    background: #fff;
+    border: 1px solid #d8d8d4;
+    border-radius: 10px;
+    padding: 1.25rem 1.5rem;
+  }
+  .attribution-tier3.open { display: block; }
+  .attribution-tier3 pre {
+    font-family: inherit;
+    white-space: pre-wrap;
+    line-height: 1.65;
+    margin: 0;
+    color: #333;
+  }
+
+  .demo-nav {
+    margin-bottom: 2rem;
+    font-size: 0.9rem;
+  }
+  .demo-nav a { color: #5a5a5a; text-decoration: underline; }
+</style>
+</head>
+<body>
+
+<div class="demo-wrap">
+  <div class="demo-nav"><a href="/datakallor/">← Tillbaka till datakällor</a></div>
+
+  <h1>Attribution-demo</h1>
+  <p class="lede">Tre nivåer av attribution för fyra olika evenemang. Klicka på länkarna under varje evenemang för att se mer.</p>
+
+  <!-- ── Event 1: Donovan Woods (artist + open data) ────────── -->
+  <div class="event-card">
+    <h2>Donovan Woods</h2>
+    <p class="event-meta">Lör 25 okt, 20:00 · Debaser, Stockholm · 250 kr</p>
+    <p class="event-desc">
+      En konsert med Donovan Woods, kanadensisk singer-songwriter med rötter i
+      folk- och countrymusiken.
+    </p>
+
+    <!-- Tier 1: Alltid synlig -->
+    <div class="attribution-tier1">
+      🎵 Artistinfo från <a class="open-tier2" data-target="t2-1">öppna datakällor</a> · <a class="open-tier3" data-target="t3-1">Läs mer</a>
+    </div>
+
+    <!-- Tier 2: Disclosure -->
+    <div class="attribution-tier2" id="t2-1">
+      <h3>Varifrån?</h3>
+      <ul>
+        <li>
+          <span class="source-name">🎵 Donovan Woods</span><br>
+          <span class="source-desc">Artistinfo från MusicBrainz — en community-driven databas</span><br>
+          <span class="source-license">public domain — fri att använda</span>
+        </li>
+      </ul>
+    </div>
+
+    <!-- Tier 3: Full -->
+    <div class="attribution-tier3" id="t3-1">
+      <pre>🎵 Artistinfo från MusicBrainz
+   En databas över artister, album och skivbolag som drivs av en global community.
+   All deras data är "public domain" — det betyder att den inte har någon
+   upphovsrätt alls. Vem som helst får använda den hur de vill.
+
+🇪🇺 Allt lagras i Stockholm
+   Vår egen databas ligger i EU. Vi använder bara data som är öppen för alla.
+
+Kort sagt: informationen är verifierad av tusentals människor världen över,
+och fri att använda. Du kan lita på att den är korrekt.</pre>
+    </div>
+  </div>
+
+  <!-- ── Event 2: Hamlet (subject, no artist) ────────────────── -->
+  <div class="event-card">
+    <h2>Människokung Hamlet</h2>
+    <p class="event-meta">Fre 8 nov, 19:00 · Dramaten, Stockholm · från 295 kr</p>
+    <p class="event-desc">
+      En nytolkning av William Shakespeares tragedi Hamlet, originalspråk engelska,
+      skrivet kring 1603.
+    </p>
+
+    <div class="attribution-tier1">
+      📚 Verk-info från <a class="open-tier2" data-target="t2-2">öppna datakällor</a> · <a class="open-tier3" data-target="t3-2">Läs mer</a>
+    </div>
+
+    <div class="attribution-tier2" id="t2-2">
+      <h3>Varifrån?</h3>
+      <ul>
+        <li>
+          <span class="source-name">📚 Hamlet</span><br>
+          <span class="source-desc">Verk från Wikidata — strukturerad data bakom Wikipedia</span><br>
+          <span class="source-license">public domain — fri att använda</span>
+        </li>
+        <li>
+          <span class="source-name">👤 William Shakespeare</span><br>
+          <span class="source-desc">Person från Wikidata</span><br>
+          <span class="source-license">public domain — fri att använda</span>
+        </li>
+        <li>
+          <span class="source-name">🏛️ Dramaten</span><br>
+          <span class="source-desc">Organisation från Wikidata</span><br>
+          <span class="source-license">public domain — fri att använda</span>
+        </li>
+      </ul>
+    </div>
+
+    <div class="attribution-tier3" id="t3-2">
+      <pre>📚 Verk och organisationer från Wikipedia & Wikidata
+   Världens fria uppslagsverk och dess strukturerade datakälla.
+   All data är public domain — vem som helst får använda den.
+
+🇪🇺 Allt lagras i Stockholm
+   Vår egen databas ligger i EU. Vi använder bara data som är öppen för alla.
+
+Kort sagt: informationen är verifierad av tusentals människor världen över,
+och fri att använda. Du kan lita på att den är korrekt.</pre>
+    </div>
+  </div>
+
+  <!-- ── Event 3: Bokcirkel (topic + org) ────────────────────── -->
+  <div class="event-card">
+    <h2>Bokcirkel: Svensk litteratur</h2>
+    <p class="event-meta">Ons 13 nov, 18:00 · Stockholms stadsbibliotek · Gratis</p>
+    <p class="event-desc">
+      Träffas och diskutera svensk litteratur med fokus på moderna röster. För dig som
+      vill utforska nya författare och samtalar om böcker.
+    </p>
+
+    <div class="attribution-tier1">
+      📚 Ämnes- och lokalinfo från <a class="open-tier2" data-target="t2-3">öppna datakällor</a> · <a class="open-tier3" data-target="t3-3">Läs mer</a>
+    </div>
+
+    <div class="attribution-tier2" id="t2-3">
+      <h3>Varifrån?</h3>
+      <ul>
+        <li>
+          <span class="source-name">📚 Svensk litteratur</span><br>
+          <span class="source-desc">Ämne från Wikidata</span><br>
+          <span class="source-license">public domain — fri att använda</span>
+        </li>
+        <li>
+          <span class="source-name">🏛️ Stockholms stadsbibliotek</span><br>
+          <span class="source-desc">Organisation från Wikidata (grundat 1928)</span><br>
+          <span class="source-license">public domain — fri att använda</span>
+        </li>
+      </ul>
+    </div>
+
+    <div class="attribution-tier3" id="t3-3">
+      <pre>📚 Verk och organisationer från Wikipedia & Wikidata
+   Världens fria uppslagsverk och dess strukturerade datakälla.
+   All data är public domain — vem som helst får använda den.
+
+🇪🇺 Allt lagras i Stockholm
+   Vår egen databas ligger i EU. Vi använder bara data som är öppen för alla.
+
+Kort sagt: informationen är verifierad av tusentals människor världen över,
+och fri att använda. Du kan lita på att den är korrekt.</pre>
+    </div>
+  </div>
+
+  <!-- ── Event 4: Familjeevent (org + series) ───────────────── -->
+  <div class="event-card">
+    <h2>Barnlördagar på Kungliga Operan</h2>
+    <p class="event-meta">Lör 16 nov, 14:00 · Kungliga Operan, Stockholm · från 95 kr</p>
+    <p class="event-desc">
+      Familjeföreställning på Kungliga Operan, en av Stockholms äldsta kulturinstitutioner
+      (grundad 1773).
+    </p>
+
+    <div class="attribution-tier1">
+      🏛️ Lokalinfo från <a class="open-tier2" data-target="t2-4">öppna datakällor</a> · <a class="open-tier3" data-target="t3-4">Läs mer</a>
+    </div>
+
+    <div class="attribution-tier2" id="t2-4">
+      <h3>Varifrån?</h3>
+      <ul>
+        <li>
+          <span class="source-name">🏛️ Kungliga Operan</span><br>
+          <span class="source-desc">Organisation från Wikidata (grundad 1773)</span><br>
+          <span class="source-license">public domain — fri att använda</span>
+        </li>
+        <li>
+          <span class="source-name">📅 Lördagsbarn</span><br>
+          <span class="source-desc">Evenemangsserie curerad av EventPulse</span><br>
+          <span class="source-license">curerad av oss — fri att använda</span>
+        </li>
+      </ul>
+    </div>
+
+    <div class="attribution-tier3" id="t3-4">
+      <pre>📚 Verk och organisationer från Wikipedia & Wikidata
+   Världens fria uppslagsverk och dess strukturerade datakälla.
+   All data är public domain — vem som helst får använda den.
+
+🇪🇺 Allt lagras i Stockholm
+   Vår egen databas ligger i EU. Vi använder bara data som är öppen för alla.
+
+Kort sagt: informationen är verifierad av tusentals människor världen över,
+och fri att använda. Du kan lita på att den är korrekt.</pre>
+    </div>
+  </div>
+
+  <p style="margin-top: 3rem; font-size: 0.9rem; color: #777; text-align: center;">
+    Detta är en demo. Den slutliga designen integreras i EventPulse-appen.
+    <br><a href="/datakallor/">← Tillbaka till datakällor</a>
+  </p>
+</div>
+
+<script>
+  // Toggle tier 2 (disclosure)
+  document.querySelectorAll('.open-tier2').forEach(function(link) {
+    link.addEventListener('click', function(e) {
+      e.preventDefault();
+      var id = this.getAttribute('data-target');
+      var el = document.getElementById(id);
+      if (el) el.classList.toggle('open');
+    });
+  });
+  // Toggle tier 3 (full)
+  document.querySelectorAll('.open-tier3').forEach(function(link) {
+    link.addEventListener('click', function(e) {
+      e.preventDefault();
+      var id = this.getAttribute('data-target');
+      var el = document.getElementById(id);
+      if (el) el.classList.toggle('open');
+    });
+  });
+</script>
+
+</body>
+</html>
