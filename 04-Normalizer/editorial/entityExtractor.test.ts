@@ -321,6 +321,95 @@ describe('Scenarion från live-sample (runtime/live-sample-2026-10-08)', () => {
   });
 });
 
+// ─── FAS 2.6: AMPERSAND-MÖNSTER ("med X & Y" / "X & Y & Z") ─────────────────
+//
+// Återstående edge case från FAS 2.5-rapporten:
+//   live-sample #28: "Musik till åminnelse - med Radiokören & Peter Dijkstra"
+//     → "Musik till åminnelse" (FP artist) + "med Radiokören & Peter Dijkstra" (FP artist)
+//   Förväntat: "Radiokören" + "Peter Dijkstra" (work-titel före - med är EJ performer).
+//
+// Cross-site bekräftelse:
+//   - Berwaldhallen: "Musik till åminnelse - med X & Y" (1 källa) — men mönstret
+//     "X & Y" i konsertlistor är generellt vanligt (festival-lineup, "Artist1 & Artist2").
+//   - Stockholm-kulturhus brukar lista ensemble + dirigent med "Ensemble & Dirigent".
+//
+// Säkerhetsnät:
+//   - Kräver "med" ELLER helt konsert-list-context
+//   - Kräver att alla splits är proper names (versalbörjande)
+//   - Hoppar över om åtkomst via "med" hittar bara 1 giltig entitet
+//   - Skippar för icke-performer-kategorier (utställning/loppis/vinprovning)
+
+describe('FAS 2.6 — ampersand-mönster för "med X & Y"', () => {
+  it('"Med X & Y" → 2 entities, INTE work-titel som artist', () => {
+    const e = extractEntities({
+      title: 'Musik till åminnelse - med Radiokören & Peter Dijkstra',
+      raw_description: null,
+      category_slug: 'jazz',
+      venue_name: null,
+    });
+    // Radiokören och Peter Dijkstra extraheras
+    expect(e.find(x => x.name === 'Radiokören')).toBeDefined();
+    expect(e.find(x => x.name === 'Peter Dijkstra')).toBeDefined();
+    // Work-titel "Musik till åminnelse" ska INTE vara artist
+    const musik = e.find(x => x.name === 'Musik till åminnelse');
+    if (musik) {
+      expect(musik.role).not.toBe('artist');
+      expect(musik.role).not.toBe('performer');
+    }
+    // Total antal artister/performer ska vara 2, inte 3+
+    expect(e.filter(x => ['artist', 'performer', 'ensemble'].includes(x.role))).toHaveLength(2);
+  });
+
+  it('"med X & Y & Z" (3 entities) → alla 3 extraheras', () => {
+    const e = extractEntities({
+      title: 'Vinterkonsert - med Radiokören & Peter Dijkstra & Elin Lund',
+      raw_description: null,
+      category_slug: 'classical',
+      venue_name: null,
+    });
+    expect(e.find(x => x.name === 'Radiokören')).toBeDefined();
+    expect(e.find(x => x.name === 'Peter Dijkstra')).toBeDefined();
+    expect(e.find(x => x.name === 'Elin Lund')).toBeDefined();
+    expect(e.filter(x => ['artist', 'performer', 'ensemble'].includes(x.role)).length).toBeGreaterThanOrEqual(3);
+  });
+
+  it('"&" utan "med"-prefix → INTE trigga (skyddar "Salt & Pepper" / bandnamn)', () => {
+    const e = extractEntities({
+      title: 'Earth, Wind & Fire',
+      raw_description: null,
+      category_slug: 'music',
+      venue_name: 'Globen',
+    });
+    // Splitting här skulle ge ["Earth, Wind", "Fire"] — fel. Hela titeln är work/band.
+    // Mönstret ska bara fånga "med X & Y".
+    expect(e.filter(x => ['artist', 'performer'].includes(x.role))).toHaveLength(0);
+  });
+
+  it('"med X" ensamt (utan &) → INTE trigga ampersand-pattern (redan hanterat av befintlig `med` pattern)', () => {
+    const e = extractEntities({
+      title: 'Konsert med Veronica Maggio',
+      raw_description: null,
+      category_slug: 'music',
+      venue_name: null,
+    });
+    // Veronica Maggio extraheras via befintlig `med`-pattern (inte ampersand)
+    expect(e.find(x => x.name === 'Veronica Maggio')).toBeDefined();
+    // Inte splittras på "med" (skulle ge ett felaktigt extra entity)
+    expect(e.filter(x => ['artist', 'performer'].includes(x.role))).toHaveLength(1);
+  });
+
+  it('"Med X & Y" i utställnings-kategori → INTE trigga (fel kategori)', () => {
+    const e = extractEntities({
+      title: 'Vernissage med Konstnär A & Curator B',
+      raw_description: null,
+      category_slug: 'exhibition',
+      venue_name: null,
+    });
+    // Exhibition är inte performer-bearing — ampersand-pattern skippar
+    expect(e.filter(x => ['artist', 'performer'].includes(x.role))).toHaveLength(0);
+  });
+});
+
 // ─── FAS 2.5: NYA MÖNSTER FÖR ATT SLUTA 9 MISSADE EVENTS ─────────────────────
 //
 // Online-forskning (Stanford SLP §17, dev.to NER-jämförelse) bekräftar:

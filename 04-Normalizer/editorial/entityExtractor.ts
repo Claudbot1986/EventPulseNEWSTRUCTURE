@@ -208,6 +208,12 @@ const POSITIVE_TITLE_PATTERNS: ReadonlyArray<TitlePattern> = [
   // "Föreläsning med X" / "Talk med X"
   { pattern: /^(?:föreläsning|talk|samtal)\s+med\s+(.+)$/i, role: 'speaker', categoryHint: 'talks-lectures', method: 'title_pattern:med' },
 
+  // FAS 2.6: "Konsert med X" / "Spelning med X" / "Turné med X" — generellt med-prefix
+  // för konserter / spelningar. Cross-site: sthlmlist, dehartomyso, kulturhus-listor.
+  // Säkerhetsnät: endast performer-bearing categories (via matchPositiveTitlePatterns).
+  // Dessutom: "med X" måste vara ett proper name (versalbörjande, ej småord som "en kväll").
+  { pattern: /^(?:konsert|spelning|konserter|turné|turne|gig|show|afton|kväll|konsertserie|forestilling|foreställning)\s+med\s+([A-ZÅÄÖ][\w\såäöÅÄÖ\-']{1,50})$/i, role: 'artist', method: 'title_pattern:med_concert' },
+
   // "Live: X" / "Live med X"
   { pattern: /^live(?:\s*på|\s*med|\s*:)\s*(.+)$/i, role: 'artist', method: 'title_pattern:live' },
 
@@ -457,6 +463,69 @@ function matchSlashCollab(
 }
 
 /**
+ * FAS 2.6: Matcha `med X & Y [& Z ...]` — ampersand-lista med "med"-prefix.
+ *
+ * Särdrag: kräver `med` (swe: "with") som prefix OCH att det finns
+ * minst en `&` med versalbörjande tokens på båda sidor.
+ *
+ * Exempel:
+ *   "Musik till åminnelse - med Radiokören & Peter Dijkstra" → 2 performers
+ *   "Vinterkonsert - med X & Y & Z" → 3 performers
+ *
+ * Säkerhetsnät:
+ *   - Kräver performer-bearing kategori (utöver första "med"-kravet)
+ *   - Varje split måste börja med versal (proper name-format)
+ *   - Skippar om "&" saknas eller färre än 2 giltliga namn hittas
+ *   - Skippar "Earth, Wind & Fire" (utan "med"-prefix) — bandnamn skyddas
+ *
+ * Cross-site: Berwaldhallen #28. Mönstret är generellt (svenska konsertlistor).
+ */
+function matchAmpersandList(
+  title: string,
+  category: string | null,
+): MatchedTitleEntity[] {
+  // Snabb bortval om varken "med" eller "&" finns.
+  if (!/\bmed\b/i.test(title) || !title.includes('&')) return [];
+
+  // Snabb bortval om kategori inte performer-bearing.
+  if (!category || !PERFORMER_BEARING_CATEGORIES.has(category)) return [];
+
+  // Hitta "med X [& Y ...]" i titeln. Vi kräver att texten fram till `med`
+  // slutar med skiljetecken/whitespace (för att inte feltolka "Medical" osv).
+  const m = title.match(/(?:^.+?[\s\-,:]\s*|\s)med\s+([A-ZÅÄÖ][^]*?(?:\s+&\s+[A-ZÅÄÖ][^]*?)+)\s*$/i);
+  if (!m) return [];
+
+  const raw = m[1].trim();
+
+  // Splittra på `&` med valfri whitespace runt.
+  const candidates = raw.split(/\s*&\s*/).map(s => s.trim()).filter(s => s.length > 0);
+
+  // Varje del måste vara ett giltligt proper name — börja med versal,
+  // innehålla minst en bokstav, inte vara enbart preposition/småord.
+  const validNames = candidates.filter(s =>
+    isValidName(s) &&
+    /^[A-ZÅÄÖ]/.test(s) &&
+    !/^(?:och|på|med|av|i|medverkande|the|and|en|ett|en\s+kväll)$/i.test(s)
+  );
+
+  if (validNames.length < 2) return [];
+
+  // Ytterligare skydd: ampersand-pattern ska inte hämta in hela meningar.
+  // Om någon del är > 50 tecken är det sannolikt en fras, inte ett namn.
+  if (validNames.some(n => n.length > 50)) return [];
+
+  const validRoles = rolesForCategory(category);
+  const role = pickBestRoleForCategory(category);
+
+  return validNames.map((name) => ({
+    name,
+    role,
+    method: 'title_pattern:ampersand_list',
+    inferredFromCategory: !validRoles.has(role),
+  }));
+}
+
+/**
  * FAS 2.5: Single-name heuristik för musik-kategorier.
  *
  * Används som sista fallback när inget annat mönster matchar. Kräver:
@@ -676,18 +745,25 @@ export function extractEntities(input: EntityExtractionInput): ExtractedEntity[]
       if (colonList.length >= 2) {
         allMatches.push(...colonList);
       } else {
-        // Slash-collab är ovanligt och kan samexistera med andra mönster
-        // men inte på samma text — välj slash om den fångar.
-        const slash = matchSlashCollab(title, category);
-        if (slash.length === 2) {
-          allMatches.push(...slash);
+        // ── FAS 2.6: Ampersand-list "med X & Y & Z" (work-titel före `- med`) ────
+        // Testas INNan slash/positive så att work-titel-pattern inte fångar hela titeln.
+        const ampList = matchAmpersandList(title, category);
+        if (ampList.length >= 2) {
+          allMatches.push(...ampList);
         } else {
-          allMatches.push(...matchPositiveTitlePatterns(title, category, input.venue_name));
-        }
-        // Single-name är ENDAST en fallback om vi inte hittat något.
-        if (allMatches.length === 0) {
-          const single = matchSingleName(title, category);
-          if (single) allMatches.push(single);
+          // Slash-collab är ovanligt och kan samexistera med andra mönster
+          // men inte på samma text — välj slash om den fångar.
+          const slash = matchSlashCollab(title, category);
+          if (slash.length === 2) {
+            allMatches.push(...slash);
+          } else {
+            allMatches.push(...matchPositiveTitlePatterns(title, category, input.venue_name));
+          }
+          // Single-name är ENDAST en fallback om vi inte hittat något.
+          if (allMatches.length === 0) {
+            const single = matchSingleName(title, category);
+            if (single) allMatches.push(single);
+          }
         }
       }
 
