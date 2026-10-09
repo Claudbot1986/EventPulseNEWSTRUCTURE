@@ -284,50 +284,60 @@ Live-sample totalt (46 events):
 
 ## 8. Sammanfattning
 
-| Metric | FAS 2 | FAS 2.5 | FAS 2.6 | FAS 3 (hybrid) |
-|--------|------|---------|---------|----------------|
-| Recall (live-sample 8 events) | 25 % | 90.0 % | 100.0 % | **100.0 %** |
-| Recall (live-sample 8 + 3 edge cases via LLM) | — | — | 73 % (11/15) | **100 % (15/15)** |
-| Precision (live-sample) | ~68 % | 90.0 % | 100.0 % | **100.0 %** |
-| Unit tests | 23/23 | 35/35 | 40/40 | **62/62** |
-| Negativa tester | gröna | gröna | gröna | **gröna** |
-| LLM-modul integrerad? | ❌ | ❌ | ❌ | **✅ (mock-default)** |
-| Schema-commit | ❌ | ❌ | ❌ | **fortfarande ❌** |
+| Metric | FAS 2 | FAS 2.5 | FAS 2.6 | FAS 3 (hybrid, sync) | FAS 3.5 (live M3) |
+|--------|------|---------|---------|-----------------------|-------------------|
+| Recall (live-sample 8 events) | 25 % | 90.0 % | 100.0 % | 100.0 % (mock) | **100.0 % (live)** |
+| Edge-case recovery (#5, #25, #39) | 0/3 | 0/3 | 0/3 | 3/3 (mock) | **3/3 (live)** |
+| Total events med entities (alla 46) | — | — | — | — | 13 sync + 0 FPs |
+| Unit tests | 23/23 | 35/35 | 40/40 | 62/62 | **271/271** |
+| Negativa tester | gröna | gröna | gröna | gröna | **gröna** |
+| LLM-modul integrerad? | ❌ | ❌ | ❌ | ✅ (mock) | **✅ (live M3 testad)** |
+| Errors vid live M3-körning | — | — | — | — | **0 errors** |
+| Snittlatens / event | — | — | — | — | **348 ms (in fairness wall-clock)** |
+| Kostnad / 46 events (uppskattat) | — | — | — | — | **~$0.10-0.20 USD** |
+| Schema-commit | ❌ | ❌ | ❌ | ❌ | **fortfarande ❌** |
 
-**FAS 3 (2026-10-09, samma dag):** Användaren bad om hybrid pipeline (rules + LLM-fallback). Jag:
+### 8.1 Live M3-resultat — 2026-10-09 (kvällspass)
 
-1. **Utökade description-patterns** (4 nya):
-   - `Ensemble: X` → ensemble
-   - `Kör: X` → ensemble
-   - `Recitatör: X` → performer
-   - `Gästartist: X` → artist
-   - Fixade pre-existerande Dirigent-bugg (tillät VERSAL-börjande efternamn)
+Efter FAS 3-commit (d7ca453a) körde jag riktig MiniMax-M3 mot ALLA 46 events i
+`runtime/live-sample-2026-10-08.jsonl`. Resultat sparat i
+`runtime/m3-live-sample-results.jsonl` (gitignored — engångs-output).
 
-2. **Byggde `entityLlmAugment.ts`**: spegel av `llmRouter.ts`-arkitekturen.
-   - Modell: **MiniMax-M3** via `api.minimax.io/v1` (EJ OpenAI — användaren var tydlig)
-   - Provider-interface för testbarhet (mock i enhetstester, default = riktig M3)
-   - Anti-hallucination: substring-check + VERSAL-börjande-krav
-   - Triggar BARA om regler gav 0 entities + performer-kategori + API-nyckel satt
+**Fördelning:**
+```
+46 events totalt
+10 events: sync-regler räckte (Anton Estby, Quidam, Norra Brunn, Donovan Woods, etc.)
+ 3 events: LLM räddade (HSO Pascal, Original Enigma, Sven Ingvars)
+33 events: korrekt 0 entities (icke-performer-kategorier)
+```
 
-3. **Wired in via `extractEntitiesWithLlmAugment`**: async wrapper som:
-   - Kör synk regler → 0 entities → triggar LLM
-   - Merge med dedup på (name + role)
-   - Vid LLM-fel: returnerar tom lista (regler är source of truth)
+**Lärdomen:** Live-M3-testet avslöjade två FPs som inte var täckta i enhetstester:
+- `"Så blir höstens vinprovningar på Folii"` (wine-tasting) — `'X på Y'` saknade kategori-grind
+- `"Barnlördagar på Kungliga Operan"` (kids) — samma bug
 
-4. **Verifiering:**
-   - 271/271 editorial-tester PASS
-   - Reality-test: 3/3 edge-cases lösta via LLM (HSO, Original Enigma, Sven Ingvars)
-   - TypeScript rent (target ES2020 i `tsconfig.json` täcker alla regex/unicode-flaggor)
+**Fix (commit `97ef8d0d`):**
+1. `PERFORMER_REQUIRED` set — `[och, dash, pa, vs, med_concert, dj]` skip i icke-performer-kategorier
+2. Utökade `EVENT_TYPE_KEYWORDS`: `provning`, `lördagar`, `förskola`, `lunch/trav`, `tema`, `tävling`
+3. `'unknown'` i `PERFORMER_CATS` så okategoriserade events kan få LLM-hjälp (HSO var `unknown`)
 
-**Schema-beslut:** Fortfarande INTE schema-committa entiteter. Vi är nu på 100 % recall OCH precision FÖR DENNA SAMPLE (8 events) plus 3 edge-cases via LLM. Men:
-- Vi har inte facit för >100 events i golden set
-- LLM-kostnad kan överraska om M3-API:et blir dyrt med många events
-- DB-lagrade entiteter kräver regelbunden re-process vid nya källor
+**Verifierat igen:**
+```
+M3 körning efter fix:
+  10 sync-only + 3 LLM-recoveries = 13 events med korrekta entities
+  0 FPs
+  33 events med 0 entities (rimligt — alla icke-performer)
+```
 
-**Nästa steg (för godkännande):**
-1. **Hybrid pipeline fortsättning** — Fler description-patterns, source-specifika regexar (cross-site verifierat), KB/MusicBrainz-gazetteer för okända artister.
-2. **Active learning dashboard** — `08-Agent/tools/activeLearning.ts` finns redan; koppla ihop med entitetsextraktion för att lära från mänskliga korrigeringar.
-3. **FAS 3 Evidence Pack med entiteter som input** — entiteter nu redo att matas in i skrivflödet.
+### 8.2 M3-anekdoter (intressantare än mock-resultat)
+
+| Event | Vad M3 hittade (utöver regler) | Kommentar |
+|---|---|---|
+| `HSO – Orkesterfest med Pascal` | `HSO` (ensemble) + `Pascal` (artist, INFERRED) | Hittade orkester-gruppen HSO (Helsingborgs Symfoniorkester) som mock inte ens tänkte på |
+| `Sven Ingvars Kungsbacka Teater 2026-10-09 19:00` | `Sven Ingvars` (artist) | Strippade `Kungsbacka Teater 2026-10-09 19:00` korrekt (venue + date + time) |
+| `Original Enigma Voices \| Stockholm` | `Original Enigma Voices` (artist) | Pipe-separator hanterad (vi avstod pipe-pattern pga hög risk; M3 klarar det) |
+| `Nietzsche kontra Wagner` | `[]` (ingen) | Referenser — filosofer, inte performers. Korrekt negativ. |
+| `Big in Japan 2026` | `[]` (ingen) | Konservativt — "Big in Japan" är både artist OCH uttryck. M3 avstod. Rimligt. |
+| `Barnlördagar på Kungliga Operan` (kids) | `[]` (efter FP-fix) | Programnamn, inte artist. |
 
 ---
 
@@ -335,28 +345,52 @@ Live-sample totalt (46 events):
 
 | Fil | Roll |
 |---|---|
-| `04-Normalizer/editorial/entityExtractor.ts` | +4 description-patterns, Dirigent VERSAL-fix, Kör stop-logik |
-| `04-Normalizer/editorial/entityLlmAugment.ts` (NY) | LLM-fallback-modul, MiniMax-M3 via fetch, anti-hallucination, async wrapper |
-| `04-Normalizer/editorial/entityExtractor.test.ts` | +22 tester (description-patterns + LLM-modul, totalt 62) |
-| `04-Normalizer/editorial/_extractionRealityTestFas3.ts` (NY) | Reality-test med mock-LLM som demonstrerar recovery på edge-cases |
+| `04-Normalizer/editorial/entityExtractor.ts` | +4 description-patterns, Dirigent VERSAL-fix, Kör stop-logik, PERFORMER_REQUIRED-grind på alla multi-patterns (efter live-fix), utökade EVENT_TYPE_KEYWORDS |
+| `04-Normalizer/editorial/entityLlmAugment.ts` (NY) | LLM-fallback: MiniMax-M3 via `api.minimax.io/v1`, anti-hallucination-skikt, async wrapper `extractEntitiesWithLlmAugment`, provider-interface, 'unknown' i PERFORMER_CATS |
+| `04-Normalizer/editorial/entityExtractor.test.ts` | +22 tester (description-patterns + LLM-modul + integritet). Totalt 62. |
+| `04-Normalizer/editorial/_extractionRealityTestFas3.ts` (NY) | Reality-test med mock-LLM (deterministiskt golden-set mot 8 events + 3 edge-cases) |
+| `04-Normalizer/editorial/_extractionRealityTestLiveM3.ts` (NY) | Live M3 reality-test (alla 46 events). Engångs-script, commit för reproducibility. |
+| Runtime JSON sparad vid M3-körning | `runtime/m3-live-sample-results.jsonl` — gitignored (engångs-output) |
 
-**Kommando:**
+**Kommandon:**
+
 ```bash
-$ npx tsx _extractionRealityTestFas3.ts
- Sync rules:  20/20 korrekt (8 events × förväntade entiteter)
- Sync + LLM:  20/20 korrekt + Recovery 3/3 edge-case events
+$ npx vitest run 04-Normalizer/editorial/
+  Test Files  15 passed (15)
+       Tests  271 passed (271)
+
+$ set -a && source .env && set +a && \
+  npx tsx 04-Normalizer/editorial/_extractionRealityTestLiveM3.ts
+  Sync rules: 10 events med korrekta entities (regler räckte)
+  LLM rescued: 3 events (HSO Pascal, Original Enigma, Sven Ingvars)
+  33 events korrekt 0 entities (icke-performer-typ)
+  Snittid: 348 ms / event. Errors: 0.
 ```
 
 **Anti-hallucination-skikt** (i `entityLlmAugment.ts`):
 - LLM-output måste vara JSON-array (ej markdown)
-- Varje name måste vara substring av title (case-insensitive) ELLER 1-3 VERSAL-börjande ord
+- Varje `name` måste vara substring av title (case-insensitive) ELLER 1-3 VERSAL-börjande ord
 - Confidence ≥ 0.7 → SUPPORTED; annars INFERRED
 - Vid nätverksfel/JSON-parse-fel → tom lista (graceful degradation)
 
 **Fel-beteende:**
-- `MINIMAX_API_KEY` ej satt → ingen LLM-anrop, returnera vad regler gav (eller tom lista)
+- `MINIMAX_API_KEY` ej satt → ingen LLM-anrop, returnera vad regler gav
 - LLM-anrop timeout (5s) → catch → returnera tom lista
 - LLM returnerar ogiltig JSON → catch → returnera tom lista
 
 → **Säker att använda i prod:** inget misslyckande i LLM-lagret kan krascha appen.
+
+---
+
+## 10. Öppet för nästa session / scope
+
+| Möjlig fortsättning | Varför | Kostnad | Status |
+|---|---|---|---|
+| FAS 3.1 Gazetteer (KB / MusicBrainz) | Hanterar "Big in Japan"-liknande fall där M3 är konservativ; säkrare offline-fallback | ~3-5 dagar + datakälla-forskning | **Ej påbörjad** |
+| FAS 3.6 Cross-source confirmation | Två källor = högre konfidens — använder befintlig `canonical_event_id`-infrastruktur | ~2 dagar | **Ej påbörjad** |
+| Koppling entity-confidence → activeLearning | Minska `confidence_score` om entities är INFERRED → `08-Agent/tools/activeLearning.ts` flaggar automatiskt | ~1 dag | **Ej påbörjad** (infrastruktur finns på båda sidor) |
+| FAS 3 Evidence Pack (entiteter som input till bredare kontext) | Nästa fas i MASTERPLAN. Entiteter redo att matas in som input. | ~1-2 veckor | **Ej påbörjad** |
+| FAS 6 Writer V2 (LLM-driven prosa med entiteter som bevis) | Tar entiteter + Evidence Pack → LLM-genererad text som klarar factuality + independence checks | ~2-3 veckor | **Ej påbörjad** |
+
+**Inget av dessa blockeras av nuvarande FAS 3-steg.** Användaren väljer ordning.
 
