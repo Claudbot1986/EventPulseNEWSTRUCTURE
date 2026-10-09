@@ -168,6 +168,70 @@ const QUANTITY_TIME: ReadonlySet<string> = new Set([
   'decennier', 'decennium',
 ]);
 
+/**
+ * Mappa ISO 3166-1 alpha-2 country-code till svenska nationalitetsord.
+ *
+ * Används av buildEvidenceBase för att stödja claims som 'kanadensiska',
+ * 'norska', 'holländska' när Profile.performer_metadata har country.
+ *
+ * Fler språkformer (pluralis bestämd, "från X") kan läggas till vid behov —
+ * det viktiga är att alla rimliga former av nationalitetsordet täcks.
+ */
+function countryToSwedish(country: string): string[] {
+  const map: Record<string, string[]> = {
+    CA: ['kanadensiska', 'kanadensisk', 'kanadensiskt', 'canadensiska', 'canadensisk'],
+    SE: ['svenska', 'svensk', 'svenskt', 'svenskar'],
+    US: ['amerikanska', 'amerikansk', 'amerikanskt'],
+    NO: ['norska', 'norsk', 'norskt'],
+    DK: ['danska', 'dansk', 'danskt'],
+    FI: ['finska', 'finsk', 'finskt'],
+    NL: ['holländska', 'holländsk', 'holländskt', 'nederländska', 'nederländsk'],
+    DE: ['tyska', 'tysk', 'tyskt'],
+    GB: ['brittiska', 'brittisk', 'brittiskt', 'engelska', 'engelsk', 'engelskt'],
+    UK: ['brittiska', 'brittisk', 'brittiskt', 'engelska', 'engelsk', 'engelskt'],
+    FR: ['franska', 'fransk', 'franskt'],
+    IT: ['italienska', 'italiensk', 'italienskt'],
+    ES: ['spanska', 'spansk', 'spanskt'],
+    CH: ['schweiziska', 'schweizisk', 'schweiziskt'],
+    AT: ['österrikiska', 'österrikisk', 'österrikiskt'],
+    IE: ['irländska', 'irländsk', 'irländskt'],
+    IS: ['isländska', 'isländsk', 'isländskt'],
+    PL: ['polska', 'polsk', 'polskt'],
+    RU: ['ryska', 'rysk', 'ryskt'],
+    JP: ['japanska', 'japansk', 'japanskt'],
+    CN: ['kinesiska', 'kinesisk', 'kinesiskt'],
+    AU: ['australiska', 'australisk', 'australiskt'],
+    NZ: ['nyzeeländska', 'nyzeeländsk', 'nyzeeländskt'],
+    BO: ['bolivianska', 'boliviansk', 'bolivianskt'],
+    MX: ['mexikanska', 'mexikansk', 'mexikanskt'],
+  };
+  return map[country.toUpperCase()] ?? [];
+}
+
+/**
+ * Mappa MusicBrainz 'type' (Person/Group/Orchestra/Choir) till svenska termer.
+ *
+ * Används för att stödja claims som 'kör', 'körsång', 'orkester', 'grupp'
+ * när Profile.performer_metadata har type.
+ */
+function typeToSwedish(type: string): string[] {
+  const lower = type.toLowerCase();
+  switch (lower) {
+    case 'person':
+      return [];
+    case 'group':
+      return ['grupp', 'band'];
+    case 'orchestra':
+      return ['orkester', 'filharmoniker', 'symfoniker'];
+    case 'choir':
+      return ['kör', 'körsång', 'körsångare', 'kören'];
+    case 'ensemble':
+      return ['ensemble'];
+    default:
+      return [];
+  }
+}
+
 function isStylisticOrCommon(w: string): boolean {
   const lower = w.toLowerCase().replace(/[.,;:!?]$/, '');
   if (lower.length < 4) return true;
@@ -371,6 +435,36 @@ function buildEvidenceBase(
   if (event.title) addName(event.title, 'direct', 'event.title');
   if (event.venue_name) addName(event.venue_name, 'direct', 'event.venue_name');
   if (event.city) add(event.city, 'direct', 'event.city');
+
+  // ── DIRECT: performer_metadata (gazetteer, FAS 3.1) ──────────────────────
+  // Map country-codes och type till svenska adjektiv/substantiv som Writer
+  // rimligen kan använda när den namnger en performer. Detta gör att
+  // claims som 'kanadensiska singer-songwriter Donovan Woods' (som
+  // striktare Writer V2 prompt tenderar att producera) blir SUPPORTED
+  // istället för UNSUPPORTED.
+  if (profile.performer_metadata) {
+    for (const [name, meta] of Object.entries(profile.performer_metadata)) {
+      if (!meta) continue;
+      // Country → språkliga former
+      if (meta.country) {
+        for (const term of countryToSwedish(meta.country)) {
+          add(term, 'direct', `performer_metadata:country:${name}`);
+        }
+      }
+      // Type → språkliga former
+      if (meta.type) {
+        for (const term of typeToSwedish(meta.type)) {
+          add(term, 'direct', `performer_metadata:type:${name}`);
+        }
+      }
+      // Genres → direktorden
+      if (meta.genres) {
+        for (const g of meta.genres) {
+          add(g, 'direct', `performer_metadata:genre:${name}`);
+        }
+      }
+    }
+  }
 
   // ── DIRECT: start_time / end_time (datum + tid) ───────────────────────
   if (event.start_time) {

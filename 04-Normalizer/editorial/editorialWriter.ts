@@ -180,10 +180,11 @@ REGLER (följ alltid):
 5. Om Profilen är tunn, skriv kortare och mer allmänt hellre än att gissa.
 
 FAS 6 STRIKTA REGLER (factuality-pass):
-6. NÄMNA ALDRIG något som inte finns ordagrant i Profilen eller evenemangs-datan.
-   Även om det "rimligen" skulle vara sant — hitta ALDRIG på det.
-   Skriv inte "country-folk" om Profile bara har "folk"; inte "kanadensiska"
-   om Profile inte säger det; inte "svenska komediscenens" om Profile inte har det.
+6. NÄMNA ALDRIG något som inte finns ordagrant i Profilen, evenemangs-datan
+   eller performer_metadata (KB/MusicBrainz-gazetteer). Även om det "rimligen"
+   skulle vara sant — hitta ALDRIG på det. Skriv inte "country-folk" om Profile
+   bara har "folk"; inte "kanadensiska" om performer_metadata saknar land=CA;
+   inte "svenska komediscenens" om Profile inte har det.
 7. ANVÄND venue_name och city ENDAST om de finns i evenemangs-datan.
    Om venue_name är null — skriv "i Stockholm" eller liknande generellt.
 8. SUBSTANTIV EXAKTHET: när du nämner artister, använd deras fulla namn från Profile
@@ -231,6 +232,23 @@ function buildUserPrompt(inputs: WriterSafeInputs): string {
   if (profile.setting) lines.push(`- setting: ${profile.setting}`);
   if (profile.practical_information?.length) lines.push(`- practical_information: ${profile.practical_information.join(', ')}`);
   if (profile.family_characteristics?.length) lines.push(`- family_characteristics: ${profile.family_characteristics.join(', ')}`);
+  // FAS 3.1 — performer_metadata från gazetteer. Strukturerad kunskap (inte
+  // källtext) som tillåter Writer att skriva 'kanadensiska' / 'holländsk'
+  // och ändå klara factuality-check. ALLA country/genres/type-termer är
+  // factuality-godkända via Profile.performer_metadata.
+  if (profile.performer_metadata && Object.keys(profile.performer_metadata).length > 0) {
+    lines.push('- performer_metadata (från KB/MusicBrainz-gazetteer, faktagranskat):');
+    for (const [name, meta] of Object.entries(profile.performer_metadata)) {
+      if (!meta) continue;
+      const parts: string[] = [];
+      if (meta.country) parts.push(`land=${meta.country}`);
+      if (meta.type) parts.push(`typ=${meta.type}`);
+      if (meta.genres?.length) parts.push(`genrer=${meta.genres.join('/')}`);
+      if (parts.length > 0) {
+        lines.push(`  · ${name}: ${parts.join(', ')}`);
+      }
+    }
+  }
 
   lines.push('');
   lines.push('EVENEMANG:');

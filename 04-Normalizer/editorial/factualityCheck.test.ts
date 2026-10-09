@@ -273,3 +273,84 @@ describe('checkFactuality — normalization av format (P7 2026-10-08)', () => {
     expect(r.pass).toBe(true);
   });
 });
+
+describe('checkFactuality — performer_metadata (FAS 3.1, 2026-10-09)', () => {
+  it('PASS "kanadensiska" när Profile.performer_metadata.country=CA (Donovan Woods-fallet)', () => {
+    // Donovan Woods-fallet: striktare Writer V2 prompt tenderar att skriva
+    // "kanadensiska singer-songwriter Donovan Woods" — utan gazetteer-data
+    // är "kanadensiska" UNSUPPORTED. Med performer_metadata.country=CA
+    // blir claim:en SUPPORTED.
+    const profile: EventProfile = {
+      ...baseProfile,
+      performers: ['Donovan Woods'],
+      performer_metadata: {
+        'Donovan Woods': { country: 'CA', genres: ['folk', 'country', 'singer-songwriter'], type: 'Person' },
+      },
+    };
+    const draft = mkDraft('Den kanadensiska singer-songwriter Donovan Woods intar scenen.');
+    const r = checkFactuality({ draft, profile, event: baseEvent });
+    expect(r.pass).toBe(true);
+    expect(r.unsupported_claims).not.toContain('kanadensiska');
+  });
+
+  it('FAIL "kanadensiska" om Profile.performer_metadata saknas (regression-skydd)', () => {
+    // Utan gazetteer → "kanadensiska" är inte belagd i Profile. Detta är
+    // regression-skydd: om någon tar bort performer_metadata-stödet ska
+    // detta test faila och tvinga fram en aktiv decision.
+    const profile: EventProfile = {
+      ...baseProfile,
+      performers: ['Donovan Woods'],
+      // performer_metadata: undefined
+    };
+    const draft = mkDraft('Den kanadensiska singer-songwriter Donovan Woods intar scenen.');
+    const r = checkFactuality({ draft, profile, event: baseEvent });
+    expect(r.pass).toBe(false);
+    expect(r.unsupported_claims).toContain('kanadensiska');
+  });
+
+  it('PASS "holländsk" när Profile.performer_metadata.country=NL (Peter Dijkstra)', () => {
+    const profile: EventProfile = {
+      ...baseProfile,
+      event_type: 'classical',
+      performers: ['Peter Dijkstra'],
+      performer_metadata: {
+        'Peter Dijkstra': { country: 'NL', genres: ['classical'], type: 'Person' },
+      },
+    };
+    // Undviker 'kören'/'dirigent' för att isolera country-claimen som testas.
+    const draft = mkDraft('Den holländska Peter Dijkstra gästar Stockholm.');
+    const r = checkFactuality({ draft, profile, event: baseEvent });
+    expect(r.pass).toBe(true);
+    expect(r.unsupported_claims).not.toContain('holländska');
+  });
+
+  it('PASS "kören" när type=Choir (Radiokören)', () => {
+    const profile: EventProfile = {
+      ...baseProfile,
+      event_type: 'classical',
+      performers: ['Radiokören'],
+      performer_metadata: {
+        'Radiokören': { country: 'SE', genres: ['classical', 'choral'], type: 'Choir' },
+      },
+    };
+    // Isolerar type-claimen: minimal prosa med bara performer-namn + kören.
+    const draft = mkDraft('Kören Radiokören sjunger.');
+    const r = checkFactuality({ draft, profile, event: baseEvent });
+    // Kören ska inte längre hamna i unsupported_claims.
+    expect(r.unsupported_claims).not.toContain('kören');
+  });
+
+  it('PASS genre-claim när performer_metadata.genres innehåller termen (folk)', () => {
+    const profile: EventProfile = {
+      ...baseProfile,
+      performers: ['Donovan Woods'],
+      performer_metadata: {
+        'Donovan Woods': { country: 'CA', genres: ['folk', 'country', 'singer-songwriter'], type: 'Person' },
+      },
+    };
+    const draft = mkDraft('Donovan Woods sjunger egna folk-låtar.');
+    const r = checkFactuality({ draft, profile, event: baseEvent });
+    expect(r.pass).toBe(true);
+    expect(r.unsupported_claims).not.toContain('folk');
+  });
+});

@@ -106,6 +106,22 @@ export interface EventProfile {
   practical_information?: string[];
   /** source provenance — vilka sources bidragit med vilka fakta. */
   provenance: Record<string, string[]>;
+  /**
+   * FAS 3.1 (2026-10-09) — per-performer metadata från gazetteer (KB/MusicBrainz).
+   *
+   * Nyckel = performerns namn (samma form som `performers`).
+   * Används av factuality-check för att verifiera claims som 'kanadensiska',
+   * 'holländska', 'folk-singer-songwriter' mot gazetteer-data istället för
+   * att kräva description-text.
+   *
+   * Tomt/null om performern inte finns i gazetteer (t.ex. lokala artister,
+   * Quidam, etc.) — då får Writer undvika sådana claims.
+   */
+  performer_metadata?: Record<string, {
+    country?: string;
+    genres?: string[];
+    type?: string;
+  }>;
 }
 
 /**

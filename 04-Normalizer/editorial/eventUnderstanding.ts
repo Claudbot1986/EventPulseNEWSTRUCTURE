@@ -20,6 +20,7 @@ import type { EventProfile } from './types';
 import { CATEGORY_BY_SLUG } from '../categoryDefinitions';
 import { extractSemantics, applySemanticExtraction } from './semanticExtractor';
 import { extractEntities } from './entityExtractor';
+import { lookupArtists } from './gazetteerCache';
 
 // ─── Inputs (strukturerade event-fält + valfri raw_description) ──────────────
 
@@ -438,6 +439,32 @@ export function buildEventProfile(input: EventUnderstandingInput): EventProfile 
     }
   }
 
+  // ── FAS 3.1: Performer-metadata från gazetteer (KB/MusicBrainz) ────────────
+  //
+  // Om vi har performers OCH de finns i curaterad Stockholm-gazetteer →
+  // populera Profile.performer_metadata med country/genres/type. Detta ger
+  // factuality-check stöd för claims som 'kanadensiska' eller
+  // 'folk-singer-songwriter' även när source-text är licens-blockerad.
+  //
+  // Cross-site bevisat på Quidam (Helene Berg NO/jazz) och
+  // Musik till åminnelse (Radiokören SE/Choir, Peter Dijkstra NL/conductor).
+  let performer_metadata: Record<string, { country?: string; genres?: string[]; type?: string }> | undefined;
+  if (performers.length > 0) {
+    const lookups = lookupArtists(performers);
+    let hitCount = 0;
+    for (const [name, entry] of Object.entries(lookups)) {
+      if (!entry) continue;
+      if (!performer_metadata) performer_metadata = {};
+      performer_metadata[name] = {
+        country: entry.country || undefined,
+        genres: entry.genres.length > 0 ? entry.genres : undefined,
+        type: entry.type,
+      };
+      hitCount++;
+    }
+    if (hitCount > 0) add('performer_metadata', `gazetteer:${hitCount}/${performers.length} hits`);
+  }
+
   // ── Languages ─────────────────────────────────────────────────────────────
   const language: string[] = [];
   if (input.language) {
@@ -581,6 +608,7 @@ export function buildEventProfile(input: EventUnderstandingInput): EventProfile 
     setting,
     practical_information: practical_information.length ? practical_information : undefined,
     provenance,
+    performer_metadata,
   };
 
   // ── Steg 1.4: Semantisk extraktion från raw_description ─────────────────
