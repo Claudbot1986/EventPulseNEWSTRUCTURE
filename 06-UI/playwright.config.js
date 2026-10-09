@@ -5,6 +5,11 @@
  *   npx playwright test                  # run all test files
  *   npx playwright test e2e/home.test.mjs  # run home screen tests only
  *
+ * Visual regression (Stream B.2): baselines sparas under
+ * e2e/visual-regression/baseline/ via snapshotPathTemplate. Standard-sökvägen
+ * `<spec>-snapshots/` är svår att hitta i kodgranskning; vi peggar
+ * baselinen på en förutsägbar plats som täcks av FEATURE_MAP.
+ *
  * The Metro dev server must be running on port 8081 before running tests:
  *   cd 06-UI && npx expo start --host lan --port 8081
  *
@@ -34,4 +39,12 @@ export default defineConfig({
       use: { ...devices['Desktop Chrome'] },
     },
   ],
+
+  // Stream B.2 (Agent Trust Plan 2026-10-09): pegga visual-regression
+  // baselines under e2e/visual-regression/baseline/. {arg} = namnet i
+  // expect(page).toHaveScreenshot('name'); {platform} = 'darwin' etc.
+  //   Resultat: e2e/visual-regression/baseline/<name>-darwin.png
+  // Om du flyttar filen, glöm inte att committa både spec + baseline.
+  snapshotPathTemplate:
+    'e2e/visual-regression/baseline/{arg}-{platform}{ext}',
 });

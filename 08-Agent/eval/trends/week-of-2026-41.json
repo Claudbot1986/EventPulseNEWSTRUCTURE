@@ -1,0 +1,97 @@
+{
+  "week": "week-of-2026-41",
+  "mode": "live-m3",
+  "timestamp": "2026-10-09T04:40:53.525Z",
+  "deterministic_pass": 23,
+  "total": 23,
+  "divergence_pattern": [
+    {
+      "id": "Q01",
+      "note": "m3-fallback-used"
+    },
+    {
+      "id": "Q02",
+      "note": "m3-fallback-used"
+    },
+    {
+      "id": "Q03",
+      "note": "m3-fallback-used"
+    },
+    {
+      "id": "Q04",
+      "note": "m3-fallback-used"
+    },
+    {
+      "id": "Q05",
+      "note": "m3-fallback-used"
+    },
+    {
+      "id": "Q06",
+      "note": "m3-fallback-used"
+    },
+    {
+      "id": "Q07",
+      "note": "m3-fallback-used"
+    },
+    {
+      "id": "Q08",
+      "note": "m3-fallback-used"
+    },
+    {
+      "id": "Q09",
+      "note": "m3-fallback-used"
+    },
+    {
+      "id": "Q10",
+      "note": "m3-fallback-used"
+    },
+    {
+      "id": "Q11",
+      "note": "m3-fallback-used"
+    },
+    {
+      "id": "Q13",
+      "note": "m3-fallback-used"
+    },
+    {
+      "id": "Q14",
+      "note": "m3-fallback-used"
+    },
+    {
+      "id": "Q15",
+      "note": "m3-fallback-used"
+    },
+    {
+      "id": "Q16",
+      "note": "m3-fallback-used"
+    },
+    {
+      "id": "Q17",
+      "note": "m3-fallback-used"
+    },
+    {
+      "id": "Q18",
+      "note": "m3-fallback-used"
+    },
+    {
+      "id": "Q19",
+      "note": "m3-fallback-used"
+    },
+    {
+      "id": "Q20",
+      "note": "m3-fallback-used"
+    },
+    {
+      "id": "Q21",
+      "note": "m3-fallback-used"
+    },
+    {
+      "id": "Q22",
+      "note": "m3-fallback-used"
+    },
+    {
+      "id": "Q23",
+      "note": "m3-fallback-used"
+    }
+  ]
+}

@@ -1,0 +1,100 @@
+name: visual-regression
+
+# Stream B.2 (Agent Trust Plan 2026-10-09): kör visual-regression
+# self-tests vid PR + visual-regression live-screenshots mot staging-deploy.
+#
+# - PR mot main: kör bara @visual-self-test (kräver ingen Metro). Syfte:
+#   verifiera att pipeline-mekaniken (Playwrights screenshot-diff) är hel.
+# - Schedule (nightly): kör @visual-live också, mot staging-deploy. Syfte:
+#   fånga UI-regressioner orsakade av icke-UI-ändringar (CSS-beroenden,
+#   tema-refactor, font-ändringar).
+#
+# Att INTE köra live i PR-CI: Metro i CI-maskiner är flaky pga font-cache
+# och native-modul-resolution. Self-test är deterministiskt och räcker för
+# att skydda mot pipeline-regressioner.
+
+on:
+  pull_request:
+    paths:
+      - '06-UI/**'
+      - '06-UI/e2e/visual-regression/**'
+      - '.github/workflows/visual-regression.yml'
+  schedule:
+    # Nightly 03:00 UTC (04:00/05:00 Stockholm beroende på sommar/vintertid)
+    - cron: '0 3 * * *'
+
+jobs:
+  self-test:
+    name: visual-regression self-test (PR-safe)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: 06-UI/package-lock.json
+
+      - name: Install 06-UI deps
+        working-directory: 06-UI
+        run: npm ci
+
+      - name: Install Playwright browsers
+        working-directory: 06-UI
+        run: npx playwright install --with-deps chromium
+
+      - name: Run visual-regression self-test
+        working-directory: 06-UI
+        run: |
+          npx playwright test e2e/visual-regression/ \
+            --grep '@visual-self-test'
+
+      - name: Upload diff artefacts on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: visual-regression-diff
+          path: |
+            06-UI/test-results/
+            06-UI/e2e/visual-regression/baseline/
+
+  live-screenshots:
+    name: visual-regression live screens (nightly)
+    # Kör bara om: (a) scheduled, eller (b) manuellt triggat.
+    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+    needs: self-test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: 06-UI/package-lock.json
+
+      - name: Install 06-UI deps
+        working-directory: 06-UI
+        run: npm ci
+
+      - name: Install Playwright browsers
+        working-directory: 06-UI
+        run: npx playwright install --with-deps chromium
+
+      - name: Run visual-regression live (requires Metro)
+        working-directory: 06-UI
+        env:
+          BASE_URL: ${{ secrets.STAGING_BASE_URL || 'http://localhost:8081' }}
+        run: |
+          npx playwright test e2e/visual-regression/ \
+            --grep '@visual-live'
+
+      - name: Upload diff artefacts on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: visual-regression-live-diff
+          path: |
+            06-UI/test-results/
+            06-UI/e2e/visual-regression/baseline/

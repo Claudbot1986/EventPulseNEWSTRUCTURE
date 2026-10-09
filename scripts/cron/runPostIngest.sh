@@ -46,6 +46,9 @@ run supervisor     "$TSX_BIN" 09-ScrapingSupervisor/runDaily.ts
 run discovery      bash 09-DiscoveryAgent/cron/runDaily.sh
 run mrq-prune      "$TSX_BIN" scripts/prune-mrq.ts --commit
 run quota-check    "$TSX_BIN" scripts/_check_image_quota.ts --emit-plan
+# 2026-10-09 — Stream A.2 eval-hook: kör ground truth mot senaste batch
+run eval-gate      "$TSX_BIN" runtime/ingestion/eval/run-eval.ts --gate A-to-B
+run eval-schema    "$TSX_BIN" runtime/ingestion/eval/_schemas/smoke-test.ts
 
 echo "[post-ingest] ═══ KLAR $(date -u +%Y-%m-%dT%H:%M:%SZ) ═══  ${RES[*]}"
 
