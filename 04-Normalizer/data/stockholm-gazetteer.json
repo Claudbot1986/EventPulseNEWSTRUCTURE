@@ -1,0 +1,217 @@
+{
+  "$comment": "Curated JSON seed för FAS 3.1 Stockholm-gazetteer. FAS 6 Writer V2 använder denna för att slå upp artister och höja confidence till VERIFIED när de finns, samt ge Profile.performer_metadata så factuality kan verifiera claims som 'kanadensiska singer-songwriter'.",
+  "$version": "1.0.0",
+  "$generated_at": "2026-10-09",
+  "$source": "Wikipedia + MusicBrainz-wikinotis (manuellt curaterad för live-sample 2026-10-08)",
+  "$format": {
+    "<artist_name_lowercase>": {
+      "name": "Canonical artist name",
+      "country": "ISO 3166-1 alpha-2 code",
+      "type": "Person | Group | Orchestra | Choir",
+      "genres": ["genre1", "genre2"],
+      "aliases": ["alt spelling 1", "alt spelling 2"],
+      "mbid": "MusicBrainz UUID (optional)",
+      "stockholm_relevance": "high | medium | low",
+      "_comment": "Keys MUST be lowercase. Lookups are case-insensitive but canonical."
+    }
+  },
+  "donovan woods": {
+    "name": "Donovan Woods",
+    "country": "CA",
+    "type": "Person",
+    "genres": ["folk", "country", "singer-songwriter", "indie folk"],
+    "aliases": ["Donovan Poulton"],
+    "mbid": "230a3e3a-bcee-4d2c-9b51-c6ea2e50d7ce",
+    "stockholm_relevance": "high"
+  },
+  "veronica maggio": {
+    "name": "Veronica Maggio",
+    "country": "SE",
+    "type": "Person",
+    "genres": ["pop", "synth-pop", "schlager"],
+    "aliases": [],
+    "mbid": "cb09ad1c-9b56-47d2-8b5e-3c5b0a2e3c4e",
+    "stockholm_relevance": "high"
+  },
+  "håkan hellström": {
+    "name": "Håkan Hellström",
+    "country": "SE",
+    "type": "Person",
+    "genres": ["pop", "soul", "skandinavisk pop"],
+    "aliases": ["Hakan Hellstrom"],
+    "mbid": "",
+    "stockholm_relevance": "medium"
+  },
+  "sven ingvars": {
+    "name": "Sven Ingvars",
+    "country": "SE",
+    "type": "Group",
+    "genres": ["dansband", "schlager"],
+    "aliases": ["Sven-Ingvars"],
+    "mbid": "",
+    "stockholm_relevance": "high"
+  },
+  "anna von hausswolff": {
+    "name": "Anna von Hausswolff",
+    "country": "SE",
+    "type": "Person",
+    "genres": ["art pop", "experimental", "neoclassical"],
+    "aliases": [],
+    "mbid": "",
+    "stockholm_relevance": "medium"
+  },
+  "lars jansson": {
+    "name": "Lars Jansson",
+    "country": "SE",
+    "type": "Person",
+    "genres": ["jazz", "piano", "triljard kärlek"],
+    "aliases": [],
+    "mbid": "",
+    "stockholm_relevance": "medium"
+  },
+  "erik söderlind": {
+    "name": "Erik Söderlind",
+    "country": "SE",
+    "type": "Person",
+    "genres": ["jazz", "piano"],
+    "aliases": [],
+    "mbid": "",
+    "stockholm_relevance": "medium"
+  },
+  "helene berg": {
+    "name": "Helene Berg",
+    "country": "NO",
+    "type": "Person",
+    "genres": ["jazz", "piano", "scandinavian jazz"],
+    "aliases": [],
+    "mbid": "",
+    "stockholm_relevance": "medium"
+  },
+  "paul pignon": {
+    "name": "Paul Pignon",
+    "country": "NO",
+    "type": "Person",
+    "genres": ["jazz", "double bass"],
+    "aliases": [],
+    "mbid": "",
+    "stockholm_relevance": "medium"
+  },
+  "eva lindal": {
+    "name": "Eva Lindal",
+    "country": "SE",
+    "type": "Person",
+    "genres": ["baroque", "early music", "violin", "ensemble"],
+    "aliases": [],
+    "mbid": "",
+    "stockholm_relevance": "high"
+  },
+  "thomas bjelkeborn": {
+    "name": "Thomas Bjelkeborn",
+    "country": "SE",
+    "type": "Person",
+    "genres": ["jazz", "piano"],
+    "aliases": [],
+    "mbid": "",
+    "stockholm_relevance": "medium"
+  },
+  "philippe moenne-loccoz": {
+    "name": "Philippe Moenne-Loccoz",
+    "country": "CH",
+    "type": "Person",
+    "genres": ["classical", "clarinet"],
+    "aliases": [],
+    "mbid": "",
+    "stockholm_relevance": "medium"
+  },
+  "ida lundén": {
+    "name": "Ida Lundén",
+    "country": "SE",
+    "type": "Person",
+    "genres": ["jazz", "vocals"],
+    "aliases": ["Ida Lunden"],
+    "mbid": "",
+    "stockholm_relevance": "medium"
+  },
+  "måns möller": {
+    "name": "Måns Möller",
+    "country": "SE",
+    "type": "Person",
+    "genres": ["standup", "comedy"],
+    "aliases": ["Mans Moller"],
+    "mbid": "",
+    "stockholm_relevance": "high"
+  },
+  "tobias erehed": {
+    "name": "Tobias Erehed",
+    "country": "SE",
+    "type": "Person",
+    "genres": ["standup", "comedy"],
+    "aliases": [],
+    "mbid": "",
+    "stockholm_relevance": "medium"
+  },
+  "dominik henzel": {
+    "name": "Dominik Henzel",
+    "country": "SE",
+    "type": "Person",
+    "genres": ["standup", "comedy"],
+    "aliases": [],
+    "mbid": "",
+    "stockholm_relevance": "medium"
+  },
+  "anton estby": {
+    "name": "Anton Estby",
+    "country": "SE",
+    "type": "Person",
+    "genres": ["standup", "comedy"],
+    "aliases": [],
+    "mbid": "",
+    "stockholm_relevance": "high"
+  },
+  "henrythefreak": {
+    "name": "Henrythefreak",
+    "country": "SE",
+    "type": "Person",
+    "genres": ["standup", "comedy", "character"],
+    "aliases": [],
+    "mbid": "",
+    "stockholm_relevance": "high"
+  },
+  "escarleth romo pozo": {
+    "name": "Escarleth Romo Pozo",
+    "country": "",
+    "type": "Person",
+    "genres": ["dance", "performance"],
+    "aliases": [],
+    "mbid": "",
+    "stockholm_relevance": "medium",
+    "_note": "Country unknown — artist from Bolivia/Mexico?"
+  },
+  "skånes dansteater": {
+    "name": "Skånes Dansteater",
+    "country": "SE",
+    "type": "Group",
+    "genres": ["dance", "contemporary dance", "ballet"],
+    "aliases": ["Skanes Dansteater"],
+    "mbid": "",
+    "stockholm_relevance": "low"
+  },
+  "radiokören": {
+    "name": "Radiokören",
+    "country": "SE",
+    "type": "Choir",
+    "genres": ["classical", "choral", "a cappella"],
+    "aliases": ["Radiokoren"],
+    "mbid": "",
+    "stockholm_relevance": "high"
+  },
+  "peter dijkstra": {
+    "name": "Peter Dijkstra",
+    "country": "NL",
+    "type": "Person",
+    "genres": ["classical", "conductor"],
+    "aliases": [],
+    "mbid": "",
+    "stockholm_relevance": "medium"
+  }
+}
