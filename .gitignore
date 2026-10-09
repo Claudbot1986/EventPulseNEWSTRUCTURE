@@ -124,11 +124,19 @@ TEMP/
 # Binärer och regenererbara artefakter — återskapas via scripts/_generate_bfl_*.
 # Repo: scripts + tmp_image_corpus/*.json + tmp_image_corpus/*_prompts_*.json
 /local_image_library/
+# local_image_library_stamped/ — binärer + manifest (README vitlistas, resten ignoreras).
+# Pipeline: scripts/_stamp_bulk.ts → scripts/_upload_bfl_to_library.ts.
+local_image_library_stamped/**
+!/local_image_library_stamped/README.md
+!/local_image_library_stamped/.gitkeep
 /stamping_local/
 /tmp_image_corpus/*.png
+/tmp_image_corpus/*.webp
 /tmp_image_corpus/*_full.json
 /tmp_image_corpus/*_jev.json
 /tmp_image_corpus/*_summary.json
+# Kör-runtime planer — regenereras av quota-check-scripten.
+tmp_image_corpus/_image_quota_plan_*.json
 
 # Local runtime caches & test artifacts (data/, test-results/)
 /data/
