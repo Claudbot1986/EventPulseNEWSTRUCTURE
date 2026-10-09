@@ -10,6 +10,12 @@
  * entry point is a no-op — no fetch, no queue growth, no retry storm
  * against a dead localhost.
  *
+ * Decision 2026-10-09 (Fas 1.5 #4 — Val A): `user_interactions` is the
+ * only funnel source for launch. This 10-Analytics push path is therefore
+ * not part of the product funnel; the 10-Analytics server remains
+ * available for the supervisor dashboard (internal only). Do not add new
+ * product-funnel events here.
+ *
  * Identity model:
  * - Legacy test profiles were removed with UserPickerScreen (guest mode
  *   2026-09-19). Whatever active_user key an older build left in storage
