@@ -809,3 +809,60 @@ describe('universal-extractor — tolerant JSON-LD parser (Webflow-sajter)', () 
     expect(evt!.description).toContain('för');
   });
 });
+
+
+describe('universal-extractor — date patterns (Flaskhals 2 fix)', () => {
+  it('parses dd/mm without year (SE calendar grid)', () => {
+    // Real Fållan-pattern: event-list wrapper containing li.event-card items.
+    // Uses <ul class="event-list"> + <li class="event-card"> so scope root is
+    // <ul> only, allowing find() to descend into the <li> as a card.
+    const html = `<!doctype html>
+<html lang="sv"><body>
+<ul class="event-list">
+<li class="event-card">
+<a class="event-link" href="/whats-on/konsert"><h2 class="event-title">Konsert ikväll</h2></a>
+<div class="event-venue">Fållan</div>
+<span class="event-date">22/03</span>
+</li>
+</ul>
+</body></html>`;
+    const result = extractEvents(html, 'fallan', 'https://www.fallan.nu/whats-on');
+    expect(result.events.length).toBeGreaterThan(0);
+    const today = new Date().getFullYear();
+    expect(result.events[0].date).toBe(`${today}-03-22`);
+  });
+
+  it('parses dd-mm without year (SE calendar grid, dash variant)', () => {
+    // Real Grönan-pattern: dash separator (15-08) instead of slash.
+    const html = `<!doctype html>
+<html lang="sv"><body>
+<ul class="event-list">
+<li class="event-card">
+<a class="event-link" href="/event/festival"><h2 class="event-title">Festival</h2></a>
+<span class="event-date">15-08</span>
+</li>
+</ul>
+</body></html>`;
+    const result = extractEvents(html, 'gronalund', 'https://www.gronalund.com/event');
+    expect(result.events.length).toBeGreaterThan(0);
+    const today = new Date().getFullYear();
+    expect(result.events[0].date).toBe(`${today}-08-15`);
+  });
+
+  it('disambiguates day/month when value > 12 (e.g. 25/03 = 25th March, 03/25 invalid)', () => {
+    // First number > 12 must be day (25 is impossible as a month).
+    const html = `<!doctype html>
+<html lang="sv"><body>
+<ul class="event-list">
+<li class="event-card">
+<a class="event-link" href="/show"><h2 class="event-title">Show</h2></a>
+<span class="event-date">25/03</span>
+</li>
+</ul>
+</body></html>`;
+    const result = extractEvents(html, 'test', 'https://example.com');
+    expect(result.events.length).toBeGreaterThan(0);
+    const today = new Date().getFullYear();
+    expect(result.events[0].date).toBe(`${today}-03-25`);
+  });
+});

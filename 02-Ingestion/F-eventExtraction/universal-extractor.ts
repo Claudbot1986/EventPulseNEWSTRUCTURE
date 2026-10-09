@@ -87,6 +87,18 @@ const DATE_PATTERNS = [
       return `${year}-${m.padStart(2,'0')}-${d.padStart(2,'0')}`;
     }
   },
+  // European short: 25/03 or 25-03 (no year — common in calendar grids, assumes current year)
+  { rx: /(\d{1,2})[/\-](\d{1,2})(?!\d)/,
+    fmt: (_: string, a: string, b: string) => {
+      // If a > 12, a is day; else b > 12 → b is day; else default SE (a=day, b=month)
+      let day: string, month: string;
+      if (parseInt(a) > 12) { day = a; month = b; }
+      else if (parseInt(b) > 12) { day = b; month = a; }
+      else { day = a; month = b; }
+      const year = new Date().getFullYear();
+      return `${year}-${month.padStart(2,'0')}-${day.padStart(2,'0')}`;
+    }
+  },
 ];
 
 const TIME_RX = /\b(\d{1,2}):(\d{2})(?::\d{2})?/;
@@ -1212,6 +1224,21 @@ function extractHtmlHeuristics($: cheerio.CheerioAPI, source: string, baseUrl: s
       if (val) return parseDate(val);
     }
     const cardText = $card.text();
+    // European short: dd/mm or dd-mm without year (common in calendar grids)
+    const shortDateRx = /(\d{1,2})[/\-](\d{1,2})(?!\d)/;
+    const shortMatch = cardText.match(shortDateRx);
+    if (shortMatch) {
+      const a = shortMatch[1];
+      const b = shortMatch[2];
+      let day: string, month: string;
+      if (parseInt(a) > 12) { day = a; month = b; }
+      else if (parseInt(b) > 12) { day = b; month = a; }
+      else { day = a; month = b; } // SE default
+      const year = new Date().getFullYear();
+      const dateStr = `${year}-${month.padStart(2,'0')}-${day.padStart(2,'0')}`;
+      const t = TIME_RX.exec(cardText);
+      return { date: dateStr, time: t ? `${t[1].padStart(2,'0')}:${t[2]}` : undefined };
+    }
     const sweDateRx = /(\d{1,2})\s+(januari|februari|mars|april|maj|juni|juli|augusti|september|oktober|november|december|jan|feb|mar|apr|maj|jun|jul|aug|sep|okt|nov|dec)\w*\s+(\d{4})/i;
     const m = cardText.match(sweDateRx);
     if (m) return parseDate(cardText);
