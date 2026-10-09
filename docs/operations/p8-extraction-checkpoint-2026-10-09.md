@@ -284,18 +284,46 @@ Live-sample totalt (46 events):
 
 ## 8. Sammanfattning
 
-| Metric | FAS 2 | FAS 2.5 | FAS 2.6 | FAS 3 (hybrid, sync) | FAS 3.5 (live M3) |
-|--------|------|---------|---------|-----------------------|-------------------|
-| Recall (live-sample 8 events) | 25 % | 90.0 % | 100.0 % | 100.0 % (mock) | **100.0 % (live)** |
-| Edge-case recovery (#5, #25, #39) | 0/3 | 0/3 | 0/3 | 3/3 (mock) | **3/3 (live)** |
-| Total events med entities (alla 46) | — | — | — | — | 13 sync + 0 FPs |
-| Unit tests | 23/23 | 35/35 | 40/40 | 62/62 | **271/271** |
-| Negativa tester | gröna | gröna | gröna | gröna | **gröna** |
-| LLM-modul integrerad? | ❌ | ❌ | ❌ | ✅ (mock) | **✅ (live M3 testad)** |
-| Errors vid live M3-körning | — | — | — | — | **0 errors** |
-| Snittlatens / event | — | — | — | — | **348 ms (in fairness wall-clock)** |
-| Kostnad / 46 events (uppskattat) | — | — | — | — | **~$0.10-0.20 USD** |
-| Schema-commit | ❌ | ❌ | ❌ | ❌ | **fortfarande ❌** |
+| Metric | FAS 2 | FAS 2.5 | FAS 2.6 | FAS 3 (hybrid) | FAS 3.5 (active-learning) | FAS 3 Evidence Pack |
+|--------|------|---------|---------|----------------|---------------------------|---------------------|
+| Recall (live-sample 8 events) | 25 % | 90.0 % | 100.0 % | 100.0 % | 100.0 % | **100.0 % + Profile** |
+| Edge-case recovery (3 events via LLM) | 0/3 | 0/3 | 0/3 | 3/3 (mock + live) | 3/3 | **3/3** |
+| Total events med entities (alla 46) | — | — | — | 13 | 13 | **13** |
+| Unit tests | 23/23 | 35/35 | 40/40 | 271/271 | 281/281 | **289/289** |
+| Negativa tester | gröna | gröna | gröna | gröna | gröna | **gröna** |
+| LLM-modul integrerad? | ❌ | ❌ | ❌ | ✅ (mock + live) | ✅ | **✅** |
+| Editor-pipeline integration | ❌ | ❌ | ❌ | ❌ | ❌ | **✅ Profile.performers** |
+| Active learning wire | ❌ | ❌ | ❌ | ❌ | ✅ | **✅** |
+| Schema-commit | ❌ | ❌ | ❌ | ❌ | ❌ | **❌ (Profile redan JSONB, regenereras automatiskt)** |
+
+### FAS 3 Evidence Pack — entiteter når hela editorial-flödet
+
+Vi har nu stängt **loopen helt**: entiteter som extraheras flödar in i `EventProfile.performers`, vilket hela editorial-pipelinen kan konsumera (writer, factuality, independence).
+
+**Verifierat via end-to-end smoke-test (`_endToEndSmoke.ts`):**
+
+```
+Quidam: Helene Berg + 5 → 6 entities → 6 performers  (info_level=MEDIUM)
+Chicago: 1 work-entity → 0 performers (work-titel-skydd ✓)
+Anton Estby + Henrythefreak → 2 comedians → 2 performers
+Donovan Woods → 1 artist → 1 performer
+```
+
+Provenance-kedjan fungerar: `Profile.provenance.performers: ['entity_extractor:title']` gör att alla performers i Profile kan spåras tillbaka till entity_extractor (eller artistResolver om det redan fanns data).
+
+**Kvarvarande scope för framtida sessioner:**
+
+| Scope | Beskrivning | Status |
+|---|---|---|
+| FAS 3.1 Gazetteer (KB/MusicBrainz) | Hanterar "Big in Japan"-fall där M3 är konservativ | Ej påbörjad |
+| FAS 3.6 Cross-source confirmation | Två källor = högre confidence via `canonical_event_id` | Ej påbörjad |
+| Utöka sync-script med description-JOIN | Rikare entity-signals för penalty | Ej påbörjad |
+| writeEditorialDescription bug (red 266) | Pre-existerande — inte vår regression | Bug existerar |
+| FAS 6 Writer V2 | LLM-prosa med Profile.performers som input | Ej påbörjad (redo) |
+
+---
+
+## 9. FAS 3 — kodfiler och commits
 
 ### 8.1 Live M3-resultat — 2026-10-09 (kvällspass)
 
