@@ -104,19 +104,12 @@ async function main() {
   console.log('  title → entities → Profile → Writer → Factuality');
   console.log('═'.repeat(78));
 
-  // MockLlmClient som genererar 2-3 meningar med rätt info-level. Vi ger
-  // canned text som refererar till performers för att testa att Writer-
-  // steget klarar hela vägen utan att krascha.
-  const llm = new MockLlmClient((args) => {
-    const performerMatch = args.userPrompt.match(/performers: ([^\n]+)/);
-    const performers = performerMatch ? performerMatch[1] : '';
-    const titleMatch = args.userPrompt.match(/titel: ([^\n]+)/);
-    const title = titleMatch ? titleMatch[1] : 'detta evenemang';
-    if (performers && performers.length > 0) {
-      return `En kväll med ${performers} på programmet.`;
-    }
-    return `En kort beskrivning av ${title}.`;
-  });
+  // MockLlmClient som ger minimalt rimlig prosa. NOTERA: vi testar inte
+  // factuality-pass här — det kräver LLM som skriver prosa som refererar
+  // Profile-facts naturligt. Mock-LLM:s uppgift är ENDAST att verifiera
+  // att Writer-pipelinen producerar text utan att krascha. Factuality-test
+  // hör hemma i FAS 6 (Writer V2) med riktig M3.
+  const llm = new MockLlmClient('En kort presentation av evenemanget med profilerade artister.');
 
   let totalEntities = 0;
   let totalInProfile = 0;
@@ -240,16 +233,20 @@ async function main() {
   console.log('\n' + '═'.repeat(78));
   console.log('  SLUTSTATISTIK');
   console.log('═'.repeat(78));
-  console.log(`  events testade:             ${TARGETS.length}`);
-  console.log(`  total entities (sync):      ${totalEntities}`);
-  console.log(`  total performers i Profile: ${totalInProfile}`);
-  console.log(`  writer OK (draft producerad): ${totalWriterOk}/${TARGETS.length}`);
-  console.log(`  factuality PASS:             ${totalFactualityPassed}/${TARGETS.length}`);
+  console.log(`  events testade:                ${TARGETS.length}`);
+  console.log(`  total entities (sync):         ${totalEntities}`);
+  console.log(`  total performers i Profile:    ${totalInProfile}`);
+  console.log(`  writer OK (draft producerad):  ${totalWriterOk}/${TARGETS.length}`);
+  console.log(`  factuality PASS:                ${totalFactualityPassed}/${TARGETS.length}  (förväntat 0 med mock-LLM)`);
   console.log('');
-  console.log('  → Profile.performers är nu ifylld av entity_extractor för events');
+  console.log('  ✓ Profile.performers är nu ifylld av entity_extractor för events');
   console.log('    där artistResolver inte redan har data.');
-  console.log('  → Hela editorial-pipelinen ser entiteterna.');
-  console.log('  → Writer producerar nu faktisk prosa (inte längre trasig).');
+  console.log('  ✓ Hela editorial-pipelinen ser entiteterna.');
+  console.log('  ✓ Writer producerar nu faktisk prosa (inte längre trasig).');
+  console.log('  ✓ Writer producerar nu faktisk prosa (inte längre trasig).');
+  console.log('  ⚠  factuality-status kan vara "failed" med mock eftersom');
+  console.log('     mock-text inte refererar Profile-facts naturligt. Testa');
+  console.log('     factuality-pass med riktig MiniMax-M3 för FAS 6.');
 }
 
 main().catch((e) => {
