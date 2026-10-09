@@ -33,8 +33,14 @@ export const RENDER_PILOT_URLS: Readonly<Record<string, string>> = {
   dramaten:   'https://www.dramaten.se/repertoar/amnesi',
   hallsberg:  'https://www.hallsberg.se/visit-hallsberg.html',
   jonkoping:  'https://www.jonkoping.se/evenemangskalender/evenemangskalender',
-  djurgarden: 'https://www.djurgarden.se/kalendarium.html',
-  jarfalla:   'https://www.jarfalla.se/foretagochnaringsliv/foretagsnatverkochevenemang.4.7174b53f19482f39e501d8ed.html',
+  // 2026-10-09 — Val C fas B: rätt URL hittad via 01-Sources/RawSources/
+  // djurgardens-if.md (3arena listar Djurgården-fotboll som evenemang).
+  // Original URL pekade på kalendarium.html (fel sida, 0 events).
+  djurgarden: 'https://3arena.se/evenemang/sport/djurgarden-fotboll/',
+  // 2026-10-09 — Val C fas B: rätt URL hittad via 03-Queue/.../D/
+  // jarfalla.jsonl (3 events redan extraherade från denna URL).
+  // Original URL pekade på företagsnätverk-dropdown (fel sida, 0 events).
+  jarfalla:   'https://www.jarfalla.se/omsorgochstod/barnungaochfamilj/evenemangforfamiljer.4.4bd0a201194307b97542ee34.html',
 };
 
 export function isPilotSource(sourceId: string): boolean {
