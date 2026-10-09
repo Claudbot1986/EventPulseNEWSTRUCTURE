@@ -41,11 +41,13 @@
 2. Stale lock-filer från avbrutna körningar (3 gånger) → manuellt rensade.
 3. Pre-existerande buggar i `run-dynamic-pool.ts` rad 1398 + 2564: `result.c2.score` och `result.c0.candidates` utan optional chaining → **fixade 2026-10-09**.
 
-**Batch-209 resultat:**
-- **postTestC-UI: 4 sources, 159 events** (eskilstuna 15, historiska-museet 68, gota-lejon 70, borlange-kommun 6)
-- **postTestC-D: 8 sources** (JS-render fallback — `C1_NO_MAIN_ARTICLE` är flaskhals)
-- **postTestC-manual-review: 38 sources** (3-rounds exhausted)
+**Batch-209 resultat (KORRIGERADE SIFFROR 2026-10-09 — se `02-Operations/2026-10-09-Batch-209-Faktakorrigering.md`):**
+- **postTestC-UI: 4 sources, 94 events** (3arena 5, eskilstuna 15, gota-lejon 68, borlange-kommun 6)
+- **postTestC-D: 5 sources** (JS-render fallback — `C1_STRONG_JS_RENDER_D_SIGNAL`)
+- **postTestC-manual-review: 32 sources** (3-rounds exhausted)
 - 77 batch-traces sparade
+
+**OBS:** Tidigare version av denna rapport angav 159 events och historiska-museet som winner — det var fel. `historiska-museet` har 0 events (C2_UNCLEAR, manual-review). 3arena saknades helt.
 
 **Viktigt fynd:** Sitemap-discovery hittade många winners (`c0RuleSource=sitemap`), men C1_NO_MAIN_ARTICLE är den nya flaskhalsen. **Steg 2 (sitemap) fixar C0 men inte C1-strukturproblem.**
 
