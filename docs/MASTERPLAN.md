@@ -6,7 +6,7 @@ Start date for the 90-day clock: **2026-08-17** (today = day 34).
 
 ---
 
-## 0. Where we stand (2026-09-20, verified against HEAD `34828f4`)
+## 0. Where we stand (2026-10-09, verified against HEAD `03a2234d`)
 
 The agent-first pivot from 2026-08-17 is **executed, not pending**. Current truth:
 
@@ -14,19 +14,29 @@ The agent-first pivot from 2026-08-17 is **executed, not pending**. Current trut
 - Event Graph: 8 600+ future Stockholm events persisted (2026-08-20 count; ~6 900 with images 2026-09-05). `confidence_score` v1, `canonical_event_id`, `event_offers`, `event_provenance` all migrated.
 - Private Agent API live on Fly.io (`eventpulse-agent.fly.dev`, 2026-09-12). `eventServiceClient.js` anon REST no longer the product path.
 - 27 endpoints in `08-Agent/server.ts`: `/agent/chat`, `/agent/feed`, `/agent/feedback`, `/agent/outbound`, `/agent/preferences`, `/agent/saved`, `/agent/follow`, `/agent/notifications`, `/agent/recommended`, `/agent/cached-recommendations`, `/agent/curated-collections`, `/agent/share` + `/s/:hash`, `/agent/auth/apple`, `/agent/metrics`, `/agent/experiments/personalization`, + more.
-- Tools: `parse_intent` + Swedish `temporal_sv`, `search_events` (real venue_name, zero-result broadening), `rank_events` (heuristic, `reasons[]` explainability), `record_feedback` (impression/click/save/reject/outbound + `reject_reason` enum), `personalize` (count-based priors, Laplace + Wilson, 30d decay), `experiments` (sticky 50/50 hash assignment, z-test, OEC=outbound CTR), `diversify` (MMR), `share_session`.
-- Crons running: `sync_personalization` (materialized category weights into `user_signal_weights`, 6h), `pre_render_recommendations`, `reminders`, `follow_drops`, `attendance_prompt`. Nightly ingestion chain via `runNightly.sh`.
+- Tools: `parse_intent` + Swedish `temporal_sv` (updated 2026-10-09 with weekday-regression tests per `b0fdff72`), `search_events` (real venue_name, zero-result broadening), `rank_events` (heuristic, `reasons[]` explainability), `record_feedback` (impression/click/save/reject/outbound + `reject_reason` enum), `personalize` (count-based priors, Laplace + Wilson, 30d decay), `experiments` (sticky 50/50 hash assignment, z-test, OEC=outbound CTR), `diversify` (MMR), `share_session`, `verify_event_sources` (528 test lines per `b0fdff72`).
+- Crons running: `sync_personalization` (materialized category weights into `user_signal_weights`, 6h), `pre_render_recommendations`, `reminders`, `follow_drops`, `attendance_prompt`. Nightly ingestion chain via `runNightly.sh` with watchdog + per-step heartbeat + per-step logfiles + chain-overview.log (per `85a62f78`, `cad3827b`, `b1b56bab`); post-ingest split into own plist (per `8ea53258`).
 - Expo: scroll feed as home (Ikväll/Helgen/Rekommenderat sections), chat as secondary affordance in Utforska, onboarding screen, profile, notifications tab, calendar/ical export, follows/reminders/attendance rating UI. Auth: Apple + magic link via Supabase.
 - Guest mode (2026-09-19, `34828f4`): app opens anonymously on Hem/Utforska; login asked only on personalized surfaces; AuthReminderModal after 30s; `getOrCreateAnonUserId` persistent UUID in AsyncStorage.
-- Golden-query anti-hallucination eval harness exists (`08-Agent/eval/`).
+- Golden-query anti-hallucination eval harness exists (`08-Agent/eval/`) — 23/23 PASS deterministic, 23/23 PASS live-m3 (per `b0fdff72`); trend saved per session, M3 402 → graceful fallback.
 - Account deletion cascade + RLS isolation tests exist.
-- AI images: every future event has an image (library reuse; generation paused for cost, pre-launch top-up planned).
+- AI images: every future event has an image. P7 Editorial Description Engine live (44 files / 7 793 insertions per `6cd0c22b` — `eventUnderstanding` semantic extraction WITHOUT source-text + `textualFirewall` + checks + writer + orchestrator + UI wire as primary description source). Generation on MiniMax M3 (`4ffb06fe`).
+- **IngestState type system** (151 lines, 87 lines tests) — single source of truth for ingestion state, replacing parallel string types. `02-Ingestion/ingestState.{ts,test.ts}` per `b0fdff72`.
+- **gateEvalReport** (244 lines, 196 lines tests) — per-gate markdown formatter in C-testRig format with `compareGateReports(before, after)`. Stream A.1 deliverable per `a6c45ea7`. 13/13 new tests, 41/41 total.
+- **Feature-as-directory pilot: save-favorite** (`06-UI/features/save-favorite/` — api/ui/types/test, 591 lines) per `b0fdff72`. First structured feature path; template for future features.
+- **FEATURE_MAP** (153 lines per `b0fdff72`) — feature inventory at `06-UI/FEATURE_MAP.md`.
+- **Visual regression CI** (`06-UI/e2e/visual-regression/` — spec + README + baseline PNG, 296 lines) per `b0fdff72` and `520bd6a2` (Playwright CI workflow).
+- **BFL image backfill round 5** (`1f81a149`) — batch + backfill-verktyg + minor-safety-review. Generation paused for cost; pre-launch top-up planned.
 
-**Open blockers (known 2026-09-12…20):**
+**Agent Runtime design notes (2026-10-09):**
+- `safety-gate.ts` is the runtime invariant enforcement for Tier 0 (`policy.md` only). Tier 1 protection (MASTERPLAN/BACKLOG) moved to agent discipline + user diff review before `git commit` — see `.claude/eventpulse/policy.md` §1 and commits `7207229b` + `03a2234d`. Reason: Claude Code issue #84926 (no `agent_type` in main-session payload) means hook-based bypass cannot identify the main session as lead; the previous `bypassRoles` design only worked for subagents and introduced a Tier 0 regression that allowed lead subagents to edit `policy.md`.
+
+**Open blockers (known 2026-09-12…2026-10-09):**
 1. ~~LLM keys~~ **Resolved 2026-09-20:** prod chat formally on MiniMax M3 (`08-Agent/llmRouter.ts`), supervisor/ingestion on MiniMax M2.7 (`02-Ingestion/AI/minimaxConfig.ts`); `@anthropic-ai/sdk` removed. Dead keys in `.env` (Anthropic, duplicate OpenAI line, Google, PAT×2) are hygiene, not blockers.
 2. Web/iPhone-Chrome Supabase auth broken (`signInWithOtp is not a function`). Native iOS unaffected.
-3. `analyticsClient` disabled in prod (`EXPO_PUBLIC_ANALYTICS_URL` unset) — funnel metrics only via `user_interactions`.
+3. ~~`analyticsClient` disabled in prod~~ **Resolved 2026-10-09** (`81b467d2` — Fas 1.5 #4 Val A): `analyticsClient` formally marked as non-funnel source for launch. Internal `analytics_events` table is not part of the launch funnel. Funnel metrics are `user_interactions` only. No migration, no dashboard remap (would break existing supervisor views).
 4. Growth strategy package (`eventpulse-growth/`) written 2026-09-20 but assumes pre-personalization state; repo is ahead of ~10/15 of its prompts. Mapping done; remainder folded into Phases below.
+5. Guest taste-first: NOW item (Phase 1.5 #1). Server-side `scripts/smoke-anon-signin.mjs` 6/6 PASS (2026-09-20); UI un-hide of personalized home sections (Rekommenderat/Förslag/Sparade) for guests in `AppShell`/`HomeScreen` is the remaining work. [UNVERIFIED in 2026-10-09 session — pending UI change.]
 
 ---
 
@@ -96,7 +106,7 @@ Everything else waits. Launch blockers only:
    - Anon→auth = `linkIdentity`: same `user.id` preserved, taste rows follow automatically — no migration endpoint, no id-mapping table.
 2. **LLM keys — RESOLVED 2026-09-20:** prod chat formally on MiniMax M3; supervisor/ingestion on M2.7. Remaining: live golden-eval mode (today's runner is deterministic-only) + `.env` hygiene for dead keys.
 3. **Web auth** (`signInWithOtp`) — decide launch scope: native-only launch makes this non-blocking; if Expo web is in scope it is a blocker.
-4. **Analytics decision:** either set `EXPO_PUBLIC_ANALYTICS_URL` (10-Analytics) or formally declare `user_interactions` the only funnel source for launch. No silent dead queues.
+4. ~~**Analytics decision**~~ **Resolved 2026-10-09** (`81b467d2`): formally declare `user_interactions` the only funnel source for launch. `analyticsClient` marked non-funnel (`06-UI/services/analyticsClient.js`). `EXPO_PUBLIC_ANALYTICS_URL` stays unset; no silent dead queues.
 5. **AI image top-up** at launch (BFL credits + backfill run) — already documented in BACKLOG; not a blocker before that point.
 6. Privacy/retention statement for anonymous tracking (GDPR) — one page, linked in app.
 
