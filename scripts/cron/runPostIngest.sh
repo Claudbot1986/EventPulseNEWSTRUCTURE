@@ -45,6 +45,10 @@ run purge          bash scripts/start-purge.sh
 run supervisor     "$TSX_BIN" 09-ScrapingSupervisor/runDaily.ts
 run discovery      bash 09-DiscoveryAgent/cron/runDaily.sh
 run mrq-prune      "$TSX_BIN" scripts/prune-mrq.ts --commit
+# 2026-10-09 — Val C fas A: auto-nattlig D-render-pilot för 5 source-specifika
+# Stockholm-källor. Resultatet loggas i runtime/d-render-pilot/log.jsonl.
+# Cron-wrappen returnerar alltid 0 (fel loggas i JSONL).
+run d-render-pilot bash scripts/cron/runD-render-pilot.sh
 run quota-check    "$TSX_BIN" scripts/_check_image_quota.ts --emit-plan
 # 2026-10-09 — Stream A.2 eval-hook: kör ground truth mot senaste batch
 run eval-gate      "$TSX_BIN" runtime/ingestion/eval/run-eval.ts --gate A-to-B
