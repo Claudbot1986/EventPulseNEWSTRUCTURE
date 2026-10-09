@@ -18,10 +18,14 @@
  *   - Max 10 källor per körning (förhindrar runaway)
  *   - Max 3 URL-varianter per källa (skyddar mot rate-limit)
  *   - MAX_HEAL_ATTEMPTS = 3 (källan ger upp efter 3 misslyckade heal-försök)
+ *   - Årlig re-check: 1 maj (computeNextRecheckAt) — maj-launchd kan tvinga re-check med --may-recheck
  *   - INGEN auto-update av source-filer — allt går via heal-log för manuell review
  *   - Varje test-URL loggas separat för spårbarhet
  *
- * Run: npx tsx 02-Ingestion/tools/autoHealFailedSources.ts
+ * Run:
+ *   npx tsx 02-Ingestion/tools/autoHealFailedSources.ts           # nattlig auto-run
+ *   npx tsx ... --source id1,id2                                  # specifika källor
+ *   npx tsx ... --may-recheck                                     # tvinga re-check av exhausted
  */
 
 import { readFileSync, writeFileSync, existsSync, mkdirSync, appendFileSync } from 'fs';
@@ -90,8 +94,30 @@ export interface HealCandidateResult {
 export interface HealState {
   /** sourceId → antal heal-försök (räknas upp vid still_dead, nollställs vid heal_candidate) */
   attempts: Record<string, number>;
-  /** sourceId som markerats exhausted (maxförsök uppnådda) — exkluderas permanent */
-  exhausted: Record<string, { since: string; reason: string }>;
+  /** sourceId som markerats exhausted (maxförsök uppnådda) — exkluderas till nästa re-check-datum */
+  exhausted: Record<string, {
+    since: string;
+    reason: string;
+    /** ISO-datum; vid detta datum testar heal-loopen källan igen. Default = idag + 365 dagar (nästa maj-re-check). */
+    nextRecheckAt: string;
+  }>;
+}
+
+/**
+ * Beräkna nästa re-check-datum (default = 1 maj nästa år).
+ * Maj är valt eftersom Stockholm-kulturarrangörer ofta byter plattform inför sommarsäsongen.
+ */
+export function computeNextRecheckAt(now: Date = new Date()): string {
+  const target = new Date(now);
+  // Om nuvarande datum är efter 1 maj innevarande år → sikta på 1 maj nästa år.
+  // Annars → sikta på 1 maj innevarande år.
+  const currentYear = target.getFullYear();
+  const mayThisYear = new Date(Date.UTC(currentYear, 4, 1, 0, 0, 0));
+  let next = mayThisYear;
+  if (target.getTime() >= mayThisYear.getTime()) {
+    next = new Date(Date.UTC(currentYear + 1, 4, 1, 0, 0, 0));
+  }
+  return next.toISOString();
 }
 
 export interface HealRunSummary {
@@ -184,13 +210,23 @@ export function selectHealCandidates(
   sources = getAllSources({ scope: 'stockholm' }),
   statuses = getAllStatuses(),
   healState = readHealState(),
+  options: { forceRecheckExhausted?: boolean } = {},
 ): Array<{ id: string; url: string; consecutiveFailures: number; lastError?: string }> {
   const statusById = new Map(statuses.map(s => [s.sourceId, s]));
   const candidates: Array<{ id: string; url: string; consecutiveFailures: number; lastError?: string }> = [];
 
   for (const src of sources) {
-    // Respekt: redan exhausted → skippa permanent
-    if (healState.exhausted[src.id]) continue;
+    // Respekt: exhausted → skippa (om inte re-check-datum passerat)
+    const exhaustedEntry = healState.exhausted[src.id];
+    if (exhaustedEntry && !options.forceRecheckExhausted) {
+      const recheckTime = new Date(exhaustedEntry.nextRecheckAt).getTime();
+      const now = Date.now();
+      if (recheckTime > now) {
+        // Fortfarande i karantän — hoppa över
+        continue;
+      }
+      // Re-check-datum passerat → inkludera källan (årlig maj-re-check)
+    }
 
     const status = statusById.get(src.id);
     if (!status) continue;
@@ -272,6 +308,8 @@ export async function runHeal(options: {
   verbose?: boolean;
   /** Injicera heal-state (för test/CLI); default läser från fil */
   healStateOverride?: HealState;
+  /** Om true: tvinga re-check av exhausted även om nextRecheckAt > nu (maj-launchd-läge) */
+  forceRecheckExhausted?: boolean;
 } = {}): Promise<HealRunSummary> {
   const startedAt = new Date().toISOString();
   const maxSources = options.maxSources ?? MAX_SOURCES_PER_RUN;
@@ -294,8 +332,12 @@ export async function runHeal(options: {
         const src = getSource(id);
         const status = getAllStatuses().find(s => s.sourceId === id);
         if (!src || !status) return null;
-        // Respektera exhausted även i targeted-läge
-        if (healState.exhausted[id]) return null;
+        // Respektera exhausted även i targeted-läge (om inte re-check passerat)
+        const exhaustedEntry = healState.exhausted[id];
+        if (exhaustedEntry && !options.forceRecheckExhausted) {
+          const recheckTime = new Date(exhaustedEntry.nextRecheckAt).getTime();
+          if (recheckTime > Date.now()) return null;
+        }
         return {
           id: src.id,
           url: src.url,
@@ -305,7 +347,7 @@ export async function runHeal(options: {
       })
       .filter((c): c is { id: string; url: string; consecutiveFailures: number; lastError?: string } => c !== null);
   } else {
-    candidates = selectHealCandidates(undefined, undefined, healState).slice(0, maxSources);
+    candidates = selectHealCandidates(undefined, undefined, healState, { forceRecheckExhausted: options.forceRecheckExhausted }).slice(0, maxSources);
   }
 
   const results: HealCandidateResult[] = [];
@@ -367,24 +409,31 @@ export async function runHeal(options: {
 
     // Uppdatera heal-state baserat på outcome
     const priorAttempts = healState.attempts[candidate.id] ?? 0;
+    const wasExhausted = !!healState.exhausted[candidate.id];
     let nextAttempts = priorAttempts;
 
     if (outcome === 'heal_candidate') {
       // Lyckad heal → nollställ räknare (källan är aktivigen)
       healState.attempts[candidate.id] = 0;
+      delete healState.exhausted[candidate.id]; // ta bort exhausted-markering
       nextAttempts = 0;
+      if (wasExhausted) {
+        reason = `Återaktiverad vid årlig re-check (${healState.exhausted[candidate.id]?.nextRecheckAt?.slice(0, 10) ?? '?'}). ${reason ?? ''}`;
+      }
     } else {
       // still_dead → öka räknare
       nextAttempts = priorAttempts + 1;
       healState.attempts[candidate.id] = nextAttempts;
 
-      // Om max uppnått → mark exhausted
+      // Om max uppnått → mark exhausted med nästa re-check-datum (1 maj nästa år)
       if (nextAttempts >= MAX_HEAL_ATTEMPTS) {
         outcome = 'exhausted';
-        reason = `${MAX_HEAL_ATTEMPTS} heal-försök utan framgång — exkluderas permanent från heal-loopen. ${reason ?? ''}`;
+        const nextRecheckAt = computeNextRecheckAt();
+        reason = `${MAX_HEAL_ATTEMPTS} heal-försök utan framgång — exkluderas tills ${nextRecheckAt.slice(0, 10)} (årlig maj-re-check). ${reason ?? ''}`;
         healState.exhausted[candidate.id] = {
           since: new Date().toISOString(),
           reason: `Still dead efter ${MAX_HEAL_ATTEMPTS} försök`,
+          nextRecheckAt,
         };
       }
     }
@@ -440,22 +489,24 @@ export async function runHeal(options: {
 
 // ─── CLI ─────────────────────────────────────────────────────────────────────
 
-// Allow `npx tsx autoHealFailedSources.ts --source <id> [--verbose]`
+// Allow `npx tsx autoHealFailedSources.ts [--source <id>] [--verbose] [--may-recheck]`
 if (import.meta.url === `file://${process.argv[1]}`) {
   const args = process.argv.slice(2);
   const sourceIdx = args.indexOf('--source');
   const verbose = args.includes('--verbose');
+  const forceRecheckExhausted = args.includes('--may-recheck');
   const sourceIds = sourceIdx >= 0 && args[sourceIdx + 1]
     ? args[sourceIdx + 1].split(',').map(s => s.trim())
     : undefined;
 
-  runHeal({ sourceIds, verbose })
+  runHeal({ sourceIds, verbose, forceRecheckExhausted })
     .then(summary => {
       console.log(JSON.stringify({
         checked: summary.candidatesChecked,
         healCandidates: summary.healCandidatesFound,
         stillDead: summary.stillDeadCount,
         durationMs: new Date(summary.completedAt).getTime() - new Date(summary.startedAt).getTime(),
+        forceRecheckExhausted,
       }, null, 2));
       process.exit(0);
     })

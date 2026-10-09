@@ -49,6 +49,10 @@ run mrq-prune      "$TSX_BIN" scripts/prune-mrq.ts --commit
 # Stockholm-källor. Resultatet loggas i runtime/d-render-pilot/log.jsonl.
 # Cron-wrappen returnerar alltid 0 (fel loggas i JSONL).
 run d-render-pilot bash scripts/cron/runD-render-pilot.sh
+# 2026-10-09 — Fas P: auto-nattlig heal-loop för cf≤3 Stockholm-källor med 0 events.
+# Loggar till runtime/heal-log.jsonl. Exhausted-källor (efter 3 misslyckade försök) respekteras
+# tills nextRecheckAt (default 1 maj nästa år). Cron-wrappen returnerar alltid 0.
+run auto-heal      bash scripts/cron/runAutoHeal.sh
 run quota-check    "$TSX_BIN" scripts/_check_image_quota.ts --emit-plan
 # 2026-10-09 — Stream A.2 eval-hook: kör ground truth mot senaste batch
 run eval-gate      "$TSX_BIN" runtime/ingestion/eval/run-eval.ts --gate A-to-B

@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN"
+  "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!--
+  com.eventpulse.mayheal.plist — Årlig maj-re-check av exhausted Stockholm-källor.
+
+  Kör 1 maj kl 03:00 (CEST) varje år. Tvingar heal-loopen att re-check:a exhausted-källor
+  vars nextRecheckAt passerat. Om källan fungerar igen → återaktiverad; om inte → ny nextRecheckAt
+  om 1 år (computeNextRecheckAt).
+
+  Schedule:
+    Month=5  Day=1  Hour=3  Minute=0  (yearly)
+  ThrottleInterval 24h — skydd mot dubbel-start.
+
+  Fas P2 (2026-10-09).
+
+  Install:
+    cp scripts/cron/com.eventpulse.mayheal.plist ~/Library/LaunchAgents/
+    launchctl unload ~/Library/LaunchAgents/com.eventpulse.mayheal.plist 2>/dev/null
+    launchctl load ~/Library/LaunchAgents/com.eventpulse.mayheal.plist
+
+  Uninstall:
+    launchctl unload ~/Library/LaunchAgents/com.eventpulse.mayheal.plist
+    rm ~/Library/LaunchAgents/com.eventpulse.mayheal.plist
+-->
+<plist version="1.0">
+<dict>
+  <key>Label</key>
+  <string>com.eventpulse.mayheal</string>
+
+  <key>ProgramArguments</key>
+  <array>
+    <string>/bin/bash</string>
+    <string>/Users/claudgashi/EventPulse/scripts/cron/runAutoHeal.sh</string>
+  </array>
+
+  <key>WorkingDirectory</key>
+  <string>/Users/claudgashi/EventPulse</string>
+
+  <key>EnvironmentVariables</key>
+  <dict>
+    <key>HEAL_MODE</key>
+    <string>may-recheck</string>
+    <key>PATH</key>
+    <string>/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:/Users/claudgashi/.local/bin</string>
+  </dict>
+
+  <key>StartCalendarInterval</key>
+  <dict>
+    <key>Month</key>
+    <integer>5</integer>
+    <key>Day</key>
+    <integer>1</integer>
+    <key>Hour</key>
+    <integer>3</integer>
+    <key>Minute</key>
+    <integer>0</integer>
+  </dict>
+
+  <key>ThrottleInterval</key>
+  <integer>86400</integer>
+
+  <key>StandardOutPath</key>
+  <string>/Users/claudgashi/EventPulse/runtime/ingestion-cron/may-heal.out.log</string>
+  <key>StandardErrorPath</key>
+  <string>/Users/claudgashi/EventPulse/runtime/ingestion-cron/may-heal.err.log</string>
+
+  <key>RunAtLoad</key>
+  <false/>
+  <key>KeepAlive</key>
+  <false/>
+</dict>
+</plist>

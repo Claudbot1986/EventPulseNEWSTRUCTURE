@@ -42,6 +42,7 @@ import {
   selectHealCandidates,
   testUrl,
   runHeal,
+  computeNextRecheckAt,
 } from './autoHealFailedSources';
 import { fetchHtml } from './fetchTools';
 import { getAllSources, getAllStatuses, getSource } from './sourceRegistry';
@@ -278,7 +279,7 @@ describe('runHeal', () => {
       sourceIds: ['old-dead'],
       healStateOverride: {
         attempts: { 'old-dead': 3 },
-        exhausted: { 'old-dead': { since: '2026-10-09T12:00:00Z', reason: 'Still dead efter 3 försök' } }
+        exhausted: { 'old-dead': { since: '2026-10-09T12:00:00Z', reason: 'Still dead efter 3 försök', nextRecheckAt: new Date(Date.now() + 1000 * 60 * 60 * 24 * 180).toISOString() } }
       }
     });
     expect(summary.candidatesChecked).toBe(0); // exhausted → exkluderas
@@ -360,5 +361,121 @@ describe('CLI', () => {
     // Simulera --source cli-test-anrop
     const summary = await runHeal({ sourceIds: ['cli-test'] });
     expect(summary.candidatesChecked).toBe(1);
+  });
+});
+
+// ─── computeNextRecheckAt ────────────────────────────────────────────────────
+
+describe('computeNextRecheckAt', () => {
+  test('före 1 maj: returnerar 1 maj innevarande år', () => {
+    const now = new Date('2026-03-15T12:00:00Z');
+    const result = computeNextRecheckAt(now);
+    expect(result).toBe('2026-05-01T00:00:00.000Z');
+  });
+
+  test('exakt 1 maj: returnerar 1 maj NÄSTA år (vi vill inte köra samma dag)', () => {
+    const now = new Date('2026-05-01T00:00:00Z');
+    const result = computeNextRecheckAt(now);
+    expect(result).toBe('2027-05-01T00:00:00.000Z');
+  });
+
+  test('efter 1 maj: returnerar 1 maj nästa år', () => {
+    const now = new Date('2026-10-15T12:00:00Z');
+    const result = computeNextRecheckAt(now);
+    expect(result).toBe('2027-05-01T00:00:00.000Z');
+  });
+
+  test('default utan arg → använder now()', () => {
+    const result = computeNextRecheckAt();
+    expect(result).toMatch(/^\d{4}-05-01T00:00:00\.000Z$/);
+  });
+});
+
+// ─── nextRecheckAt-flödet ────────────────────────────────────────────────────
+
+describe('nextRecheckAt-flödet', () => {
+  test('exhausted med nextRecheckAt i framtiden → hoppas över', async () => {
+    const futureDate = new Date(Date.now() + 1000 * 60 * 60 * 24 * 180).toISOString();
+    const { selectHealCandidates } = await import('./autoHealFailedSources');
+    const result = selectHealCandidates(
+      [{ id: 'sleeping', url: 'https://sleeping.se', city: 'Stockholm', type: 'venue', preferredPath: 'html' } as any],
+      [{ sourceId: 'sleeping', status: 'fail', lastEventsFound: 0, consecutiveFailures: 3, attempts: 4, lastError: 'no-jsonld' } as any],
+      {
+        attempts: { 'sleeping': 3 },
+        exhausted: { 'sleeping': { since: '2026-10-01', reason: '3 misslyckade försök', nextRecheckAt: futureDate } }
+      }
+    );
+    expect(result).toHaveLength(0);
+  });
+
+  test('exhausted med nextRecheckAt i dåtid → inkluderas (årlig maj-re-check)', async () => {
+    const pastDate = new Date(Date.now() - 1000 * 60 * 60 * 24 * 7).toISOString();
+    const { selectHealCandidates } = await import('./autoHealFailedSources');
+    const result = selectHealCandidates(
+      [{ id: 'wake-up', url: 'https://wake-up.se', city: 'Stockholm', type: 'venue', preferredPath: 'html' } as any],
+      [{ sourceId: 'wake-up', status: 'fail', lastEventsFound: 0, consecutiveFailures: 3, attempts: 4, lastError: 'no-jsonld' } as any],
+      {
+        attempts: { 'wake-up': 3 },
+        exhausted: { 'wake-up': { since: '2025-10-01', reason: '3 misslyckade försök', nextRecheckAt: pastDate } }
+      }
+    );
+    expect(result).toHaveLength(1);
+  });
+
+  test('forceRecheckExhausted=true ignorerar nextRecheckAt', async () => {
+    const futureDate = new Date(Date.now() + 1000 * 60 * 60 * 24 * 180).toISOString();
+    getSourceMock.mockImplementation((id: string) => {
+      if (id === 'forced') return { id: 'forced', url: 'https://forced.se', name: 'F', city: 'Stockholm', type: 'venue', preferredPath: 'html' };
+      return null;
+    });
+    getAllStatusesMock.mockReturnValue([
+      { sourceId: 'forced', status: 'fail', lastEventsFound: 0, consecutiveFailures: 3, attempts: 4, lastError: 'no-jsonld' },
+    ]);
+    fetchHtmlMock.mockResolvedValue({ success: true, html: '<html></html>', finalUrl: 'https://forced.se' });
+
+    const summary = await runHeal({
+      sourceIds: ['forced'],
+      forceRecheckExhausted: true,
+      healStateOverride: {
+        attempts: { 'forced': 3 },
+        exhausted: { 'forced': { since: '2026-10-01', reason: 'old', nextRecheckAt: futureDate } }
+      }
+    });
+    expect(summary.candidatesChecked).toBe(1);
+  });
+
+  test('lyckad re-check resettar exhausted och attempts', async () => {
+    const pastDate = new Date(Date.now() - 1000 * 60 * 60 * 24).toISOString();
+
+    getSourceMock.mockImplementation((id: string) => {
+      if (id === 'comeback') return { id: 'comeback', url: 'https://comeback.se/wrong-path', name: 'C', city: 'Stockholm', type: 'venue', preferredPath: 'html' };
+      return null;
+    });
+    getAllStatusesMock.mockReturnValue([
+      { sourceId: 'comeback', status: 'fail', lastEventsFound: 0, consecutiveFailures: 3, attempts: 4, lastError: 'no-jsonld' },
+    ]);
+    fetchHtmlMock.mockImplementation((url: string) => {
+      if (url === 'https://comeback.se/wrong-path') {
+        return Promise.resolve({ success: true, html: '<html></html>', finalUrl: url });
+      }
+      return Promise.resolve({
+        success: true,
+        html: `<html><body>
+          <article class="event"><h2>Event One</h2><time datetime="2026-10-15T19:00">15 okt 2026</time></article>
+          <article class="event"><h2>Event Two</h2><time datetime="2026-10-16T19:00">16 okt 2026</time></article>
+        </body></html>`,
+        finalUrl: url,
+      });
+    });
+
+    const summary = await runHeal({
+      sourceIds: ['comeback'],
+      healStateOverride: {
+        attempts: { 'comeback': 3 },
+        exhausted: { 'comeback': { since: '2025-10-01', reason: 'old', nextRecheckAt: pastDate } }
+      }
+    });
+    expect(summary.results[0].outcome).toBe('heal_candidate');
+    expect(summary.results[0].healAttempts).toBe(0);
   });
 });
