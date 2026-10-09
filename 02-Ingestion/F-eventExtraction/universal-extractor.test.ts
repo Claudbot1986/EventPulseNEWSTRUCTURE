@@ -868,6 +868,109 @@ describe('universal-extractor — date patterns (Flaskhals 2 fix)', () => {
 });
 
 // ──────────────────────────────────────────────────────────────────────────
+// 2026-10-09 — Hallsberg-bug: shortDateRx matchade tidsintervall `12.00-15.00`
+// som `2026-00-15`. Hallsberg-appen (SiteVision) har tidsintervall i sin
+// JSON-state, och eftersom `[class*="event"]` på `<div class="...events...">`
+// matchade hela kalender-wrappern som "ett kort", fångades `00-15`.
+//
+// Fix: kortslut-lookbehind `(?<![\d.])` kräver att första siffran INTE är
+// föregången av siffra eller punkt. `12.00-15.00` → ingen matchning.
+// `Event 25-10` → matchar fortfarande.
+// ──────────────────────────────────────────────────────────────────────────
+
+describe('universal-extractor — Hallsberg tidsintervall-bug (2026-00-15)', () => {
+  it('returns NO event with date=YYYY-00-DD when cardText contains time intervals', async () => {
+    // Minskar hallsberg-SiteVision-rendered.html till dess kärna:
+    // <div class="...marketplace-sitevision-events..."> innehåller både
+    // <ul> med events OCH <script> med JSON-state som har "12.00-15.00".
+    // C1 ska INTE tolka `00-15` som `2026-00-15`.
+    const html = `<!doctype html>
+<html lang="sv"><body>
+<div class="sv-custom-module marketplace-sitevision-events">
+<ul class="env-list">
+<li class="env-list__item env-card">
+<a href="/evenemang/konst"><h3>Konstutställning</h3></a>
+</li>
+</ul>
+<script>AppRegistry.registerInitialState('x','y',{"items":[{"text":"Vernissage lördag 10 oktober12.00-15.00. Öppettider: 12.00-16.00, 16.00-18.00","displayName":"Konstutställning","eventDate":"10 oktober 2026"}]})</script>
+</div>
+</body></html>`;
+    const result = extractEvents(html, 'hallsberg', 'https://www.hallsberg.se/visit-hallsberg.html');
+    expect(result.events.length).toBeGreaterThan(0);
+    for (const e of result.events) {
+      expect(e.date).not.toMatch(/-00-\d{2}$/);
+    }
+  });
+
+  it('matches dd-mm even when preceded by letter (regression: Event 25-10)', () => {
+    const html = `<!doctype html>
+<html lang="sv"><body>
+<ul class="event-list">
+<li class="event-card">
+<a href="/e"><h2 class="event-title">Event 25-10</h2></a>
+</li>
+</ul>
+</body></html>`;
+    const result = extractEvents(html, 'test', 'https://example.com');
+    expect(result.events.length).toBeGreaterThan(0);
+    const today = new Date().getFullYear();
+    expect(result.events[0].date).toBe(`${today}-10-25`);
+  });
+
+  it('matches dd/mm even when preceded by space (regression: 5/12)', () => {
+    const html = `<!doctype html>
+<html lang="sv"><body>
+<ul class="event-list">
+<li class="event-card">
+<a href="/e"><h2 class="event-title">Konsert 5/12</h2></a>
+</li>
+</ul>
+</body></html>`;
+    const result = extractEvents(html, 'test', 'https://example.com');
+    expect(result.events.length).toBeGreaterThan(0);
+    const today = new Date().getFullYear();
+    expect(result.events[0].date).toBe(`${today}-12-05`);
+  });
+
+  it('does NOT match time interval "09.00-17.00" inside cardText', () => {
+    // Om tidsintervall vore ett datum skulle `00-17` bli `2026-00-17`.
+    // Vi verifierar att kortet inte plockar `2026-00-17` när SIFTER + PUNKT
+    // föregår första siffran — den europeiska `dd/mm`-formen ska vinna.
+    const html = `<!doctype html>
+<html lang="sv"><body>
+<ul class="event-list">
+<li class="event-card">
+<a href="/e"><h2 class="event-title">Öppet hus</h2></a>
+<span class="event-date">5/10 Öppet 09.00-17.00 vardagar</span>
+</li>
+</ul>
+</body></html>`;
+    const result = extractEvents(html, 'test', 'https://example.com');
+    expect(result.events.length).toBeGreaterThan(0);
+    for (const e of result.events) {
+      expect(e.date).not.toMatch(/-00-\d{2}$/);
+    }
+  });
+
+  it('does NOT match "12.00-15.00" inside an unrelated paragraph inside card', () => {
+    const html = `<!doctype html>
+<html lang="sv"><body>
+<ul class="event-list">
+<li class="event-card">
+<a href="/e"><h2 class="event-title">Vernissage</h2></a>
+<p>5/10 Vernissage lördag 10 oktober12.00-15.00. Öppettider under perioden.</p>
+</li>
+</ul>
+</body></html>`;
+    const result = extractEvents(html, 'test', 'https://example.com');
+    expect(result.events.length).toBeGreaterThan(0);
+    for (const e of result.events) {
+      expect(e.date).not.toMatch(/-00-\d{2}$/);
+    }
+  });
+});
+
+// ──────────────────────────────────────────────────────────────────────────
 // 2026-10-09 — A.5 Grand-bugg: body-class med "blog"/"article"/"news"/"post"
 // hindrar Squarespace-eventlist-event-cards från att matchas.
 //

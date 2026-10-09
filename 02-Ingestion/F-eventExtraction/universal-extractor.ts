@@ -1226,8 +1226,12 @@ function extractHtmlHeuristics($: cheerio.CheerioAPI, source: string, baseUrl: s
       if (val) return parseDate(val);
     }
     const cardText = $card.text();
-    // European short: dd/mm or dd-mm without year (common in calendar grids)
-    const shortDateRx = /(\d{1,2})[/\-](\d{1,2})(?!\d)/;
+    // European short: dd/mm or dd-mm without year (common in calendar grids).
+    // 2026-10-09 — Hallsberg-bug: kräv att första siffran INTE föregås av
+    // siffra eller punkt (annars matchar `00-15` i `12.00-15.00`-tidsintervall
+    // som `2026-00-15`). Lookbehind `(?<![\d.])` tillåter bara start på
+    // word-boundary: `Event 25-10`, `Konsert 5/12`, men inte `12.00-15.00`.
+    const shortDateRx = /(?<![\d.])(\d{1,2})[/\-](\d{1,2})(?!\d)/;
     const shortMatch = cardText.match(shortDateRx);
     if (shortMatch) {
       const a = shortMatch[1];
