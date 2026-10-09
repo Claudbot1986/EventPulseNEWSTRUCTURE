@@ -10,7 +10,7 @@
  */
 
 import { createServer, IncomingMessage, ServerResponse } from 'http';
-import { readFileSync, readdirSync, statSync, existsSync, mkdirSync } from 'fs';
+import { readFileSync, readdirSync, statSync, existsSync, mkdirSync, appendFileSync } from 'fs';
 import { dirname, join, resolve } from 'path';
 import { fileURLToPath, pathToFileURL } from 'url';
 import {
@@ -209,6 +209,12 @@ export interface BflCredits {
   credits?: number | null;
   error?: string;
   fetchedAt?: string;
+  // BFL ingestion-error-spårning (användarbeslut 2026-10-08): logga fel
+  // till runtime/scraping-supervisor/bfl-errors.jsonl och visa "inga krediter
+  // under ingestion" om det finns ≥1 fel senaste 24h.
+  ingestionErrors24h?: number;
+  lastIngestionErrorAt?: string | null;
+  lastIngestionErrorMsg?: string | null;
 }
 
 // 10-Analytics server (port 7778) status — proxied med 3s timeout + 10s cache.
@@ -832,14 +838,93 @@ async function collectAgent(): Promise<AgentMetrics> {
   }
 }
 
-// BFL credits — proxied from autoGenServer (port 7790). 60s in-process cache
-// så 15-min meta-refresh inte hamrar BFL API:t. autoGenServer cachar i sin tur
-// ingenting; anropet dit har 4s server-side timeout.
+// BFL credits — proxied from autoGenServer (port 7790) ELLER direkt mot BFL API.
+// 60s in-process cache så 15-min meta-refresh inte hamrar BFL API:t.
+// autoGenServer cachar i sin tur ingenting; anropet dit har 5s server-side timeout.
 let _bflCreditsCache: { data: BflCredits; ts: number } | null = null;
+
+// BFL ingestion-error-spårning (användarbeslut 2026-10-08). Logga varje
+// misslyckat BFL-anrop under ingestion till en JSONL-fil. Klienten visar en
+// liten rad "inga krediter under ingestion" om det finns ≥1 fel senaste 24h.
+const BFL_ERROR_LOG = join(PROJECT_ROOT, 'runtime/scraping-supervisor/bfl-errors.jsonl');
+const BFL_ERROR_WINDOW_MS = 24 * 60 * 60 * 1000;
+
+interface BflErrorEntry {
+  timestamp: string;
+  source: 'api-fetch' | 'ingestion';
+  error: string;
+  statusCode?: number;
+}
+
+function readBflErrors(windowMs = BFL_ERROR_WINDOW_MS): BflErrorEntry[] {
+  if (!existsSync(BFL_ERROR_LOG)) return [];
+  const cutoff = Date.now() - windowMs;
+  const out: BflErrorEntry[] = [];
+  for (const line of readFileSync(BFL_ERROR_LOG, 'utf-8').split('\n').filter(Boolean)) {
+    try {
+      const e = JSON.parse(line) as BflErrorEntry;
+      if (new Date(e.timestamp).getTime() >= cutoff) out.push(e);
+    } catch { /* ignorera korrupta rader */ }
+  }
+  return out;
+}
+
+function appendBflError(entry: BflErrorEntry): void {
+  const dir = join(PROJECT_ROOT, 'runtime/scraping-supervisor');
+  if (!existsSync(dir)) mkdirSync(dir, { recursive: true });
+  appendFileSync(BFL_ERROR_LOG, JSON.stringify(entry) + '\n');
+}
+
+/**
+ * Direkt-fetch av BFL-credits. Används om AUTOGEN_URL inte svarar.
+ * Returnerar {ok, credits} om BFL svarar, {ok:false, error} annars.
+ */
+async function fetchBflCreditsDirect(): Promise<BflCredits> {
+  const key = process.env.BFL_API_KEY;
+  if (!key) {
+    return { ok: false, error: 'BFL_API_KEY not configured', fetchedAt: new Date().toISOString() };
+  }
+  try {
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), 5000);
+    let res: Response;
+    try {
+      res = await fetch('https://api.bfl.ai/v1/credits', {
+        method: 'GET',
+        headers: { 'x-key': key, accept: 'application/json' },
+        signal: controller.signal,
+      });
+    } finally {
+      clearTimeout(timer);
+    }
+    if (!res.ok) {
+      const errMsg = `BFL ${res.status}`;
+      appendBflError({ timestamp: new Date().toISOString(), source: 'api-fetch', error: errMsg, statusCode: res.status });
+      return { ok: false, error: errMsg, fetchedAt: new Date().toISOString() };
+    }
+    const j = (await res.json()) as { credits?: number };
+    return { ok: typeof j.credits === 'number' && j.credits > 0, credits: j.credits ?? null, fetchedAt: new Date().toISOString() };
+  } catch (err) {
+    const errMsg = String((err as Error)?.message ?? err);
+    appendBflError({ timestamp: new Date().toISOString(), source: 'api-fetch', error: errMsg });
+    return { ok: false, error: errMsg, fetchedAt: new Date().toISOString() };
+  }
+}
+
 async function collectBflCredits(): Promise<BflCredits> {
   const now = Date.now();
-  if (_bflCreditsCache && now - _bflCreditsCache.ts < 60_000) return _bflCreditsCache.data;
+  if (_bflCreditsCache && now - _bflCreditsCache.ts < 60_000) {
+    // Uppdatera bara ingestion-error-räknare (lättare data)
+    const errs = readBflErrors();
+    return {
+      ..._bflCreditsCache.data,
+      ingestionErrors24h: errs.length,
+      lastIngestionErrorAt: errs.length > 0 ? errs[errs.length - 1].timestamp : null,
+      lastIngestionErrorMsg: errs.length > 0 ? errs[errs.length - 1].error : null,
+    };
+  }
   const url = process.env.AUTOGEN_URL ?? 'http://localhost:7790/bfl-credits';
+  let data: BflCredits;
   try {
     const controller = new AbortController();
     const timer = setTimeout(() => controller.abort(), 5000);
@@ -850,24 +935,35 @@ async function collectBflCredits(): Promise<BflCredits> {
       clearTimeout(timer);
     }
     if (!res.ok) {
-      const data: BflCredits = { ok: false, error: `autoGenServer ${res.status}`, fetchedAt: new Date().toISOString() };
-      _bflCreditsCache = { data, ts: now };
-      return data;
+      data = { ok: false, error: `autoGenServer ${res.status}`, fetchedAt: new Date().toISOString() };
+    } else {
+      const j = (await res.json()) as Partial<BflCredits>;
+      data = {
+        ok: Boolean(j.ok),
+        credits: j.credits ?? null,
+        error: j.error,
+        fetchedAt: new Date().toISOString(),
+      };
     }
-    const j = (await res.json()) as Partial<BflCredits>;
-    const data: BflCredits = {
-      ok: Boolean(j.ok),
-      credits: j.credits ?? null,
-      error: j.error,
-      fetchedAt: new Date().toISOString(),
-    };
-    _bflCreditsCache = { data, ts: now };
-    return data;
   } catch (err) {
-    const data: BflCredits = { ok: false, error: String((err as Error)?.message ?? err), fetchedAt: new Date().toISOString() };
-    _bflCreditsCache = { data, ts: now };
-    return data;
+    // autoGenServer nere — prova direkt mot BFL som fallback (om key finns)
+    if (process.env.BFL_API_KEY) {
+      data = await fetchBflCreditsDirect();
+    } else {
+      data = { ok: false, error: String((err as Error)?.message ?? err), fetchedAt: new Date().toISOString() };
+      appendBflError({ timestamp: new Date().toISOString(), source: 'api-fetch', error: data.error });
+    }
   }
+  _bflCreditsCache = { data, ts: now };
+
+  // Lägg till ingestion-error-stat (24h fönster)
+  const errs = readBflErrors();
+  return {
+    ...data,
+    ingestionErrors24h: errs.length,
+    lastIngestionErrorAt: errs.length > 0 ? errs[errs.length - 1].timestamp : null,
+    lastIngestionErrorMsg: errs.length > 0 ? errs[errs.length - 1].error : null,
+  };
 }
 
 // 10-Analytics server (port 7778) — direkt fetch mot /health, 10s cache.
@@ -1876,6 +1972,52 @@ async function serveJson(req: IncomingMessage, res: ServerResponse): Promise<boo
     } catch (err) {
       res.writeHead(500, { 'Content-Type': 'application/json' });
       res.end(JSON.stringify({ error: String(err) }));
+    }
+    return true;
+  }
+  // POST /api/bfl-error — logga ett BFL-anrop-fel under ingestion.
+  // Body: { error: string, statusCode?: number }
+  if (req.method === 'POST' && url === '/api/bfl-error') {
+    try {
+      const body = await new Promise<string>((resolve, reject) => {
+        const chunks: Buffer[] = [];
+        req.on('data', (c: Buffer) => chunks.push(c));
+        req.on('end', () => resolve(Buffer.concat(chunks).toString('utf8')));
+        req.on('error', reject);
+      });
+      const parsed = JSON.parse(body || '{}');
+      if (typeof parsed.error !== 'string' || parsed.error.length === 0) {
+        res.writeHead(400, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ ok: false, error: 'missing .error string' }));
+        return true;
+      }
+      appendBflError({
+        timestamp: new Date().toISOString(),
+        source: 'ingestion',
+        error: parsed.error.slice(0, 200),
+        statusCode: typeof parsed.statusCode === 'number' ? parsed.statusCode : undefined,
+      });
+      _bflCreditsCache = null; // invalidera så dashboard-refresh ser direkt
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ ok: true }));
+    } catch (err) {
+      res.writeHead(500, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ ok: false, error: String((err as Error)?.message ?? err) }));
+    }
+    return true;
+  }
+  // GET /api/bfl-credits — direkt-fetch (för test/debug).
+  if (url === '/api/bfl-credits' && req.method === 'GET') {
+    try {
+      const data = await collectBflCredits();
+      res.writeHead(200, {
+        'Content-Type': 'application/json; charset=utf-8',
+        'Cache-Control': 'no-cache',
+      });
+      res.end(JSON.stringify(data));
+    } catch (err) {
+      res.writeHead(500, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ ok: false, error: String(err) }));
     }
     return true;
   }

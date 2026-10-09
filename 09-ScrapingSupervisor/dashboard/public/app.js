@@ -197,10 +197,11 @@ function applyAnalyticsServerState(as) {
 })();
 
 (async () => {
+  let data; // deklarerad utanför try så BFL-rendering (som ligger efter try/catch) kan se den
   try {
     const res = await fetch('/api/status', { cache: 'no-store' });
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    const data = await res.json();
+    data = await res.json();
 
     document.getElementById('last-run').textContent =
       data.lastRunIso ? new Date(data.lastRunIso).toLocaleString() : 'never';
@@ -958,7 +959,7 @@ function renderLiveTiles(data) {
   // Grön om credits > 0, röd om 0 / senaste anropet misslyckades, grå om okänt.
   const bflBox = document.getElementById('btn-bfl-credits');
   if (bflBox) {
-    const bc = data.bflCredits || {};
+    const bc = (data && data.bflCredits) || {};
     bflBox.classList.remove('bfl-credits-box--ok', 'bfl-credits-box--bad', 'bfl-credits-box--unknown');
     if (bc.ok === true) {
       bflBox.classList.add('bfl-credits-box--ok');
@@ -973,6 +974,23 @@ function renderLiveTiles(data) {
     } else {
       bflBox.classList.add('bfl-credits-box--unknown');
       bflBox.title = 'BFL credits status okänd';
+    }
+
+    // Ingestion-error-status (användarbeslut 2026-10-08): visa liten rad
+    // under BFL-knappen om det finns ≥1 fel senaste 24h.
+    const statusEl = document.getElementById('bfl-ingestion-status');
+    const statusTextEl = document.getElementById('bfl-ingestion-status-text');
+    const errCount = typeof bc.ingestionErrors24h === 'number' ? bc.ingestionErrors24h : 0;
+    if (statusEl && statusTextEl) {
+      if (errCount > 0) {
+        statusEl.classList.remove('bfl-ingestion-status--hidden');
+        statusTextEl.textContent = `inga krediter under ingestion (${errCount} fel senaste 24h)`;
+        statusEl.title = bc.lastIngestionErrorAt
+          ? `Senaste fel: ${bc.lastIngestionErrorMsg ?? '?'} @ ${bc.lastIngestionErrorAt}`
+          : (bc.lastIngestionErrorMsg ?? '');
+      } else {
+        statusEl.classList.add('bfl-ingestion-status--hidden');
+      }
     }
   }
 

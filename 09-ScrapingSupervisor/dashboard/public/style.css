@@ -1107,6 +1107,7 @@ ul.bars li {
      .bfl-credits-box--bad      = röd   (credits == 0 / senaste anropet misslyckades)
      .bfl-credits-box--unknown  = grå   (default innan /api/status svarat) */
 .bfl-credits-box {
+  position: relative;
   display: inline-flex;
   align-items: center;
   gap: 6px;
@@ -1148,6 +1149,28 @@ ul.bars li {
 .bfl-credits-box:focus-visible {
   outline: 2px solid #fbbf24;
   outline-offset: 2px;
+}
+
+/* BFL ingestion-status — liten rad UNDER BFL-knappen, vit text 10pt,
+   visas bara om det finns ≥1 BFL-fel senaste 24h (användarbeslut 2026-10-08). */
+.bfl-ingestion-status {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  margin-top: 4px;
+  padding: 2px 6px;
+  font-size: 10pt;
+  line-height: 1.2;
+  color: #ffffff;
+  background: rgba(220, 38, 38, 0.92);  /* matchar --bad-röd */
+  border-radius: 4px;
+  white-space: nowrap;
+  z-index: 50;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.4);
+  pointer-events: none;
+}
+.bfl-ingestion-status--hidden {
+  display: none;
 }
 .bfl-credits-box-icon {
   font-size: 18px;
