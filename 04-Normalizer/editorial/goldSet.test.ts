@@ -34,6 +34,8 @@ interface GoldEntry {
   expected_performers: string[];
   expected_performer_count: number;
   expected_gazetteer_hits: string[];
+  expected_subject_hits?: string[];  // FAS 3.2: subject-gazetteer-träffar (nyckelord-baserade)
+  expected_subject_hits_optional?: string[]; // Subjekt som kräver djupare relationsslutledning (auktor → verk, org → serie, etc.) — INTE blockers
   expected_info_level: 'RICH' | 'MEDIUM' | 'LOW' | 'VERY_LOW';
   note: string;
 }
@@ -92,7 +94,12 @@ function runPipeline(gold: GoldEntry): {
     .filter(([_, entry]) => entry !== null)
     .map(([name]) => name);
 
-  return { performers: profile.performers, profile, gazetteerHits };
+  // 4. Subject-hits (FAS 3.2 — öppen data: Wikidata, Wikipedia)
+  const subjectHits = profile.subject_metadata
+    ? Object.keys(profile.subject_metadata)
+    : [];
+
+  return { performers: profile.performers, profile, gazetteerHits, subjectHits };
 }
 
 describe('Gold set FAS 10 — entity extraction & profile regression', () => {
@@ -123,7 +130,7 @@ describe('Gold set FAS 10 — entity extraction & profile regression', () => {
   describe('per-event assertions', () => {
     for (const gold of GOLD) {
       it(`${gold.id} — "${gold.title.slice(0, 50)}${gold.title.length > 50 ? '…' : ''}"`, () => {
-        const { performers, profile, gazetteerHits } = runPipeline(gold);
+        const { performers, profile, gazetteerHits, subjectHits } = runPipeline(gold);
 
         // 1. Exakt antal performers
         expect(performers.length, `${gold.id}: performer count`).toBe(
@@ -150,6 +157,28 @@ describe('Gold set FAS 10 — entity extraction & profile regression', () => {
         const gotHits = new Set(gazetteerHits);
         for (const h of gold.expected_gazetteer_hits) {
           expect(gotHits.has(h), `${gold.id}: expected gazetteer hit "${h}"`).toBe(true);
+        }
+
+        // 3b. Subject-hits (FAS 3.2) — minst de förväntade måste finnas
+        if (gold.expected_subject_hits && gold.expected_subject_hits.length > 0) {
+          const gotSubjects = new Set(subjectHits);
+          for (const s of gold.expected_subject_hits) {
+            // subject-namnet får vara hur som helst i Profile (case-insensitive)
+            const lower = s.toLowerCase();
+            const hasMatch = Array.from(gotSubjects).some((g) => g.toLowerCase() === lower);
+            expect(hasMatch, `${gold.id}: expected subject hit "${s}" (got: ${JSON.stringify([...gotSubjects])})`).toBe(true);
+          }
+        }
+
+        // 3c. Optional subject hits (bara loggade — INTE blockers)
+        if (gold.expected_subject_hits_optional && gold.expected_subject_hits_optional.length > 0) {
+          const gotSubjects = new Set(subjectHits.map((s) => s.toLowerCase()));
+          for (const s of gold.expected_subject_hits_optional) {
+            const lower = s.toLowerCase();
+            if (!gotSubjects.has(lower)) {
+              console.log(`ℹ️  ${gold.id}: optional subject hit "${s}" ej matchad (kräver djupare relationsslutledning)`);
+            }
+          }
         }
 
         // 4. Info-level är minst det förväntade (mjuk assertion — Profile

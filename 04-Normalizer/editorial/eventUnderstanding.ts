@@ -21,6 +21,7 @@ import { CATEGORY_BY_SLUG } from '../categoryDefinitions';
 import { extractSemantics, applySemanticExtraction } from './semanticExtractor';
 import { extractEntities } from './entityExtractor';
 import { lookupArtists } from './gazetteerCache';
+import { lookupSubjects, type SubjectEntry } from './subjectCache';
 
 // ─── Inputs (strukturerade event-fält + valfri raw_description) ──────────────
 
@@ -465,6 +466,75 @@ export function buildEventProfile(input: EventUnderstandingInput): EventProfile 
     if (hitCount > 0) add('performer_metadata', `gazetteer:${hitCount}/${performers.length} hits`);
   }
 
+  // ── FAS 3.2: Subject-metadata från öppen data (Wikidata CC0 / Wikipedia) ─────
+  //
+  // Vi extraherar INTE subject-namn automatiskt i FAS 3.2 — istället låter
+  // vi performers (entityExtractor) fungera som tidigare, men vi slår upp
+  // ALLA performers PLUS titelnyckelord mot subjectCache. Detta fångar:
+  //   - Verk som innehåller performerns namn (t.ex. "Chicago - the Musical"
+  //     → slå upp "Chicago" mot subjectCache)
+  //   - Organisationer (Kungliga Operan, Dramaten, etc.)
+  //   - Ämnen (jazz, litteratur, AI)
+  //
+  // Notera: subject-LIVE-lookup (Wikidata SPARQL) är en async operation
+  // som inte passar i synk buildEventProfile. Vi använder ENBART curated
+  // JSON här. För live-Wikidata-lookup, använd lookupSubjectLive() i en
+  // separat async-pipeline (t.ex. en bakgrundsjobb).
+  let subject_metadata: Record<string, {
+    kind?: string;
+    country?: string;
+    language?: string;
+    inception_year?: number;
+    wikidata_id?: string | null;
+    author?: string;
+    genre?: string;
+    form?: string;
+    attribution?: string;
+  }> | undefined;
+
+  // Kandidater att slå upp: performer-namn + full title + venue + city + tokens
+  const subjectCandidates: string[] = [
+    ...performers,
+    // Full title (så att "Kungliga Operan", "Stockholms stadsbibliotek" matchar)
+    ...(input.title ? [input.title] : []),
+    // Titel-del FÖRE pipe/separator (vanligt mönster: "Kärlek över tanger | Premiärvisning...")
+    ...(input.title?.split(/[|]/)[0]?.trim() ? [input.title.split(/[|]/)[0]!.trim()] : []),
+    // Venue-namn (ofta innehåller org-namn: "Kungliga Operan", "Dramaten")
+    ...(input.venue_name ? [input.venue_name] : []),
+    // Stad (Stockholm är en subject, men inte särskilt informativt)
+    // Hämta tokens från titel (FAS 3.2 light — separata ord > 2 tecken)
+    ...(input.title?.split(/[\s\-:&|,()!?.]+/)
+      .map((w) => w.trim())
+      .filter((w) => w.length >= 2) ?? []),
+  ];
+
+  const subjectLookups = lookupSubjects(subjectCandidates);
+  let subjectHitCount = 0;
+  // Deduplicera: vi vill bara ha EN entry per canonical subject-namn,
+  // även om flera kandidater (alias, full title, venue_name) träffar samma.
+  const seenCanonical = new Set<string>();
+  for (const [name, entry] of Object.entries(subjectLookups)) {
+    if (!entry) continue;
+    const canonical = entry.name.toLowerCase();
+    if (seenCanonical.has(canonical)) continue;
+    seenCanonical.add(canonical);
+    if (!subject_metadata) subject_metadata = {};
+    // Använd canonical name (entry.name) som nyckel — INTE alias-ordet
+    subject_metadata[entry.name] = {
+      kind: entry.kind,
+      country: entry.country,
+      language: entry.language,
+      inception_year: entry.inception_year,
+      wikidata_id: entry.wikidata_id,
+      author: entry.metadata?.author,
+      genre: entry.metadata?.genre,
+      form: entry.metadata?.form,
+      attribution: `${entry.name} (${entry._source.license} via ${entry._source.primary})`,
+    };
+    subjectHitCount++;
+  }
+  if (subjectHitCount > 0) add('subject_metadata', `subject-cache:${subjectHitCount} hits`);
+
   // ── Languages ─────────────────────────────────────────────────────────────
   const language: string[] = [];
   if (input.language) {
@@ -609,6 +679,7 @@ export function buildEventProfile(input: EventUnderstandingInput): EventProfile 
     practical_information: practical_information.length ? practical_information : undefined,
     provenance,
     performer_metadata,
+    subject_metadata,
   };
 
   // ── Steg 1.4: Semantisk extraktion från raw_description ─────────────────

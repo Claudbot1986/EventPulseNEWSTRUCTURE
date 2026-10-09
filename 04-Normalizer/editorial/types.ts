@@ -122,6 +122,27 @@ export interface EventProfile {
     genres?: string[];
     type?: string;
   }>;
+  /**
+   * FAS 3.2 (2026-10-09) — per-subject metadata från open-data (Wikidata CC0,
+   * Wikipedia CC BY-SA). Nyckel = subject-namn. Används för att verifiera
+   * claims om verk ('William Shakespeares Hamlet'), författare, språk,
+   * premiärår, organisationer ('Kungliga Operan, grundad 1773') och ämnen
+   * mot öppen data istället för venue-copy.
+   *
+   * Källa = subjectCache (curated) + subjectLiveEnrich (Wikidata).
+   */
+  subject_metadata?: Record<string, {
+    kind?: string;
+    country?: string;
+    language?: string;
+    inception_year?: number;
+    wikidata_id?: string | null;
+    author?: string;
+    genre?: string;
+    form?: string;
+    /** Attribution-payload — visas i UI om källan kräver det. */
+    attribution?: string;
+  }>;
 }
 
 /**

@@ -209,6 +209,48 @@ function countryToSwedish(country: string): string[] {
 }
 
 /**
+ * Mappa ISO 639-1 språkkod till svenska språknamn.
+ */
+function languageToSwedish(lang: string): string[] {
+  const map: Record<string, string[]> = {
+    sv: ['svenska', 'svensk', 'svenskt', 'på svenska'],
+    en: ['engelska', 'engelsk', 'engelskt', 'på engelska'],
+    no: ['norska', 'norsk', 'norskt', 'på norska'],
+    da: ['danska', 'dansk', 'danskt', 'på danska'],
+    de: ['tyska', 'tysk', 'tyskt', 'på tyska'],
+    fr: ['franska', 'fransk', 'franskt', 'på franska'],
+    it: ['italienska', 'italiensk', 'italienskt', 'på italienska'],
+    es: ['spanska', 'spansk', 'spanskt', 'på spanska'],
+    la: ['latin', 'på latin'],
+    el: ['grekiska', 'grekisk', 'på grekiska'],
+  };
+  return map[lang.toLowerCase()] ?? [];
+}
+
+/**
+ * Mappa Wikidata 'kind' (work/person/org/topic) till svenska termer.
+ */
+function kindToSwedish(kind: string): string[] {
+  const lower = kind.toLowerCase();
+  switch (lower) {
+    case 'work':
+      return ['verk', 'pjäs', 'film', 'bok', 'musikal'];
+    case 'person':
+      return ['person', 'författare', 'dramatiker', 'regissör'];
+    case 'organization':
+      return ['organisation', 'institution', 'kulturhus', 'teater'];
+    case 'venue':
+      return ['lokal', 'teater', 'biograf', 'scen'];
+    case 'topic':
+      return ['ämne', 'ämnesområde', 'tema'];
+    case 'event_series':
+      return ['serie', 'programserie'];
+    default:
+      return [];
+  }
+}
+
+/**
  * Mappa MusicBrainz 'type' (Person/Group/Orchestra/Choir) till svenska termer.
  *
  * Används för att stödja claims som 'kör', 'körsång', 'orkester', 'grupp'
@@ -461,6 +503,63 @@ function buildEvidenceBase(
       if (meta.genres) {
         for (const g of meta.genres) {
           add(g, 'direct', `performer_metadata:genre:${name}`);
+        }
+      }
+    }
+  }
+
+  // ── DIRECT: subject_metadata (open data, FAS 3.2) ────────────────────────
+  // Map work/person/org/topic claims mot öppen data (Wikidata CC0 +
+  // Wikipedia CC BY-SA). Gör att claims som 'William Shakespeares
+  // tragedi Hamlet' eller 'Kungliga Operan, grundad 1773' blir SUPPORTED.
+  if (profile.subject_metadata) {
+    for (const [name, meta] of Object.entries(profile.subject_metadata)) {
+      if (!meta) continue;
+      // Subject-namnet självt (work/person/org/topic) — Writer ska kunna
+      // referera till verket/personen/orgen direkt.
+      addName(name, 'direct', `subject_metadata:name:${name}`);
+      // Country (för person/org/venue)
+      if (meta.country) {
+        for (const term of countryToSwedish(meta.country)) {
+          add(term, 'direct', `subject_metadata:country:${name}`);
+        }
+      }
+      // Language (för work) → svensk språknamn
+      if (meta.language) {
+        for (const term of languageToSwedish(meta.language)) {
+          add(term, 'direct', `subject_metadata:language:${name}`);
+        }
+      }
+      // Inception year (work/person/org) → flera format
+      if (meta.inception_year) {
+        add(String(meta.inception_year), 'direct', `subject_metadata:year:${name}`);
+        add(`kring ${meta.inception_year}`, 'direct', `subject_metadata:year:${name}`);
+        add(`sedan ${meta.inception_year}`, 'direct', `subject_metadata:year:${name}`);
+        add(`från ${meta.inception_year}`, 'direct', `subject_metadata:year:${name}`);
+        add(`grundad ${meta.inception_year}`, 'direct', `subject_metadata:year:${name}`);
+        add(`grundades ${meta.inception_year}`, 'direct', `subject_metadata:year:${name}`);
+      }
+      // Author (work)
+      if (meta.author) {
+        addName(meta.author, 'direct', `subject_metadata:author:${name}`);
+        // Ofta skrivs författare som "av X" eller "X:s"
+        const lastName = meta.author.split(' ').pop();
+        if (lastName) {
+          add(`${lastName}s`, 'direct', `subject_metadata:author:${name}`);
+        }
+      }
+      // Genre (work/topic)
+      if (meta.genre) {
+        add(meta.genre, 'direct', `subject_metadata:genre:${name}`);
+      }
+      // Form (work)
+      if (meta.form) {
+        add(meta.form, 'direct', `subject_metadata:form:${name}`);
+      }
+      // Kind → svensk motsvarighet
+      if (meta.kind) {
+        for (const term of kindToSwedish(meta.kind)) {
+          add(term, 'direct', `subject_metadata:kind:${name}`);
         }
       }
     }

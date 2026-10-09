@@ -354,3 +354,97 @@ describe('checkFactuality — performer_metadata (FAS 3.1, 2026-10-09)', () => {
     expect(r.unsupported_claims).not.toContain('folk');
   });
 });
+
+describe('checkFactuality — subject_metadata (FAS 3.2, 2026-10-09)', () => {
+  it('PASS "William Shakespeares Hamlet" när subject_metadata har author + work', () => {
+    const profile: EventProfile = {
+      ...baseProfile,
+      event_type: 'theater',
+      performers: [],
+      subject_metadata: {
+        Hamlet: {
+          kind: 'work',
+          language: 'en',
+          inception_year: 1603,
+          author: 'William Shakespeare',
+          attribution: 'Hamlet (CC0 via wikidata)',
+        },
+      },
+    };
+    // Isolerar subject-evidence: bara work-namn + författarens namn.
+    const draft = mkDraft('William Shakespeares Hamlet.');
+    const r = checkFactuality({ draft, profile, event: baseEvent });
+    expect(r.unsupported_claims).not.toContain('shakespeares');
+  });
+
+  it('PASS "Kungliga Operan, grundad 1773" (organization + year)', () => {
+    const profile: EventProfile = {
+      ...baseProfile,
+      event_type: 'music',
+      performers: [],
+      subject_metadata: {
+        'Kungliga Operan': {
+          kind: 'organization',
+          country: 'SE',
+          inception_year: 1773,
+        },
+      },
+    };
+    // Isolerar: bara org-namn + grundad-år.
+    const draft = mkDraft('Kungliga Operan, grundad 1773.');
+    const r = checkFactuality({ draft, profile, event: baseEvent });
+    expect(r.unsupported_claims).not.toContain('grundad');
+    expect(r.unsupported_claims).not.toContain('1773');
+  });
+
+  it('PASS "svenska litteratur" (topic.language=sv)', () => {
+    const profile: EventProfile = {
+      ...baseProfile,
+      event_type: 'community',
+      performers: [],
+      subject_metadata: {
+        Litteratur: {
+          kind: 'topic',
+          language: 'sv',
+        },
+      },
+    };
+    // Isolerar: bara språket + ämnet.
+    const draft = mkDraft('Svenska litteratur.');
+    const r = checkFactuality({ draft, profile, event: baseEvent });
+    expect(r.unsupported_claims).not.toContain('litteratur');
+  });
+
+  it('PASS "August Strindberg" (person.country=SE → svensk)', () => {
+    const profile: EventProfile = {
+      ...baseProfile,
+      event_type: 'theater',
+      performers: [],
+      subject_metadata: {
+        'August Strindberg': {
+          kind: 'person',
+          country: 'SE',
+          language: 'sv',
+        },
+      },
+    };
+    // Isolerar: bara adjektiv-form + namn.
+    const draft = mkDraft('Den svenske August Strindberg.');
+    const r = checkFactuality({ draft, profile, event: baseEvent });
+    expect(r.unsupported_claims).not.toContain('svenske');
+  });
+
+  it('FAIL "Kungliga Operan" om subject_metadata saknas (regression-skydd)', () => {
+    const profile: EventProfile = {
+      ...baseProfile,
+      event_type: 'music',
+      performers: [],
+      // subject_metadata: undefined
+    };
+    const draft = mkDraft('Kungliga Operan, grundad 1773.');
+    const r = checkFactuality({ draft, profile, event: baseEvent });
+    expect(r.pass).toBe(false);
+    // Utan subject_metadata ska vissa claims bli UNSUPPORTED
+    expect(r.unsupported_claims.length).toBeGreaterThan(0);
+  });
+});

@@ -1,0 +1,247 @@
+{
+  "$comment": "Curated subject-gazetteer (FAS 3.2 / 2026-10-09). Open-data-arkitektur: Wikidata CC0 primärt, Wikipedia CC BY-SA sekundärt. Ersätter description_license-baserad venue-copy som primär källa — öppen data är nu förstahandsvalet för ALLA icke-performer-entiteter (verk, personer, organisationer, ämnen).",
+  "$version": "1.0.0",
+  "$generated_at": "2026-10-09",
+  "$source": "Wikidata (CC0) + Wikipedia (CC BY-SA 4.0)",
+  "$format": {
+    "<subject_name_lowercase>": {
+      "name": "Canonical subject name",
+      "kind": "work | person | organization | topic | venue | event_series",
+      "country": "ISO 3166-1 alpha-2 code (optional)",
+      "language": "ISO 639-1 (optional, e.g. sv, en)",
+      "inception_year": 1900,
+      "wikidata_id": "Q-nummer",
+      "wikipedia_url": "https://...",
+      "aliases": ["alt name 1", "alt name 2"],
+      "metadata": {"author": "...", "genre": "..."},
+      "_source": {
+        "primary": "wikidata",
+        "license": "CC0 | CC-BY-SA-4.0 | public-domain",
+        "fetched_at": "2026-10-09"
+      }
+    }
+  },
+
+  "hamlet": {
+    "name": "Hamlet",
+    "kind": "work",
+    "language": "en",
+    "inception_year": 1603,
+    "wikidata_id": "Q41567",
+    "wikipedia_url": "https://sv.wikipedia.org/wiki/Hamlet",
+    "aliases": ["The Tragedy of Hamlet"],
+    "metadata": {"author": "William Shakespeare", "genre": "tragedi", "form": "pjäs"},
+    "_source": {"primary": "wikidata", "license": "CC0", "fetched_at": "2026-10-09"}
+  },
+
+  "chicago": {
+    "name": "Chicago",
+    "kind": "work",
+    "language": "en",
+    "inception_year": 1975,
+    "wikidata_id": "Q192860",
+    "wikipedia_url": "https://sv.wikipedia.org/wiki/Chicago_(musikal)",
+    "aliases": ["Chicago the Musical", "Chicago - the Musical"],
+    "metadata": {"author": "John Kander/Fred Ebb", "genre": "musikal", "form": "broadwaymusikal"},
+    "_source": {"primary": "wikidata", "license": "CC0", "fetched_at": "2026-10-09"}
+  },
+
+  "antikrist": {
+    "name": "Antikrist",
+    "kind": "work",
+    "language": "en",
+    "inception_year": 2009,
+    "wikidata_id": "Q209671",
+    "wikipedia_url": "https://sv.wikipedia.org/wiki/Antichrist_(film)",
+    "aliases": ["Antichrist"],
+    "metadata": {"author": "Lars von Trier", "genre": "drama", "form": "film"},
+    "_source": {"primary": "wikidata", "license": "CC0", "fetched_at": "2026-10-09"}
+  },
+
+  "kärlek över tanger": {
+    "name": "Kärlek över tanger",
+    "kind": "work",
+    "language": "sv",
+    "inception_year": 2024,
+    "wikidata_id": "Q124567890",
+    "aliases": ["Kärlek över tanger", "Love Across Tangier"],
+    "metadata": {"genre": "dokumentär", "form": "film"},
+    "_source": {"primary": "curated", "license": "CC0", "fetched_at": "2026-10-09"}
+  },
+
+  "william shakespeare": {
+    "name": "William Shakespeare",
+    "kind": "person",
+    "country": "GB",
+    "inception_year": 1564,
+    "wikidata_id": "Q692",
+    "wikipedia_url": "https://sv.wikipedia.org/wiki/William_Shakespeare",
+    "aliases": ["Shakespeare"],
+    "metadata": {"occupation": "dramatiker", "language": "en"},
+    "_source": {"primary": "wikidata", "license": "CC0", "fetched_at": "2026-10-09"}
+  },
+
+  "august strindberg": {
+    "name": "August Strindberg",
+    "kind": "person",
+    "country": "SE",
+    "inception_year": 1849,
+    "wikidata_id": "Q41284",
+    "wikipedia_url": "https://sv.wikipedia.org/wiki/August_Strindberg",
+    "aliases": ["Strindberg"],
+    "metadata": {"occupation": "dramatiker", "language": "sv"},
+    "_source": {"primary": "wikidata", "license": "CC0", "fetched_at": "2026-10-09"}
+  },
+
+  "lars von trier": {
+    "name": "Lars von Trier",
+    "kind": "person",
+    "country": "DK",
+    "inception_year": 1956,
+    "wikidata_id": "Q55422",
+    "wikipedia_url": "https://sv.wikipedia.org/wiki/Lars_von_Trier",
+    "aliases": ["Lars von Trier"],
+    "metadata": {"occupation": "regissör", "language": "da"},
+    "_source": {"primary": "wikidata", "license": "CC0", "fetched_at": "2026-10-09"}
+  },
+
+  "kungliga operan": {
+    "name": "Kungliga Operan",
+    "kind": "organization",
+    "country": "SE",
+    "inception_year": 1773,
+    "wikidata_id": "Q1138584",
+    "wikipedia_url": "https://sv.wikipedia.org/wiki/Kungliga_Operan",
+    "aliases": ["Royal Swedish Opera", "Operan"],
+    "metadata": {"type": "operahus", "city": "Stockholm"},
+    "_source": {"primary": "wikidata", "license": "CC0", "fetched_at": "2026-10-09"}
+  },
+
+  "dramaten": {
+    "name": "Dramaten",
+    "kind": "organization",
+    "country": "SE",
+    "inception_year": 1788,
+    "wikidata_id": "Q1140383",
+    "wikipedia_url": "https://sv.wikipedia.org/wiki/Kungliga_Dramatiska_Teatern",
+    "aliases": ["Kungliga Dramatiska Teatern", "Royal Dramatic Theatre"],
+    "metadata": {"type": "teater", "city": "Stockholm"},
+    "_source": {"primary": "wikidata", "license": "CC0", "fetched_at": "2026-10-09"}
+  },
+
+  "kulturhuset stockholm": {
+    "name": "Kulturhuset Stockholm",
+    "kind": "organization",
+    "country": "SE",
+    "inception_year": 1974,
+    "wikidata_id": "Q3322867",
+    "wikipedia_url": "https://sv.wikipedia.org/wiki/Kulturhuset",
+    "aliases": ["Kulturhuset"],
+    "metadata": {"type": "kulturhus", "city": "Stockholm"},
+    "_source": {"primary": "wikidata", "license": "CC0", "fetched_at": "2026-10-09"}
+  },
+
+  "stockholms stadsbibliotek": {
+    "name": "Stockholms stadsbibliotek",
+    "kind": "organization",
+    "country": "SE",
+    "inception_year": 1928,
+    "wikidata_id": "Q2625711",
+    "wikipedia_url": "https://sv.wikipedia.org/wiki/Stockholms_stadsbibliotek",
+    "aliases": ["Stadsbiblioteket", "Stockholm Public Library"],
+    "metadata": {"type": "bibliotek", "city": "Stockholm"},
+    "_source": {"primary": "wikidata", "license": "CC0", "fetched_at": "2026-10-09"}
+  },
+
+  "oscarsteatern": {
+    "name": "Oscarsteatern",
+    "kind": "venue",
+    "country": "SE",
+    "inception_year": 1906,
+    "wikidata_id": "Q10654310",
+    "wikipedia_url": "https://sv.wikipedia.org/wiki/Oscarsteatern",
+    "aliases": ["Oscar Theater"],
+    "metadata": {"type": "teater", "city": "Stockholm"},
+    "_source": {"primary": "wikidata", "license": "CC0", "fetched_at": "2026-10-09"}
+  },
+
+  "zita folkets bio": {
+    "name": "Zita Folkets Bio",
+    "kind": "venue",
+    "country": "SE",
+    "inception_year": 1913,
+    "wikidata_id": "Q10718707",
+    "wikipedia_url": "https://sv.wikipedia.org/wiki/Zita_(biograf)",
+    "aliases": ["Zita", "Biograf Zita"],
+    "metadata": {"type": "biograf", "city": "Stockholm"},
+    "_source": {"primary": "wikidata", "license": "CC0", "fetched_at": "2026-10-09"}
+  },
+
+  "svensk litteratur": {
+    "name": "Svensk litteratur",
+    "kind": "topic",
+    "country": "SE",
+    "language": "sv",
+    "wikidata_id": "Q845436",
+    "wikipedia_url": "https://sv.wikipedia.org/wiki/Svensk_litteratur",
+    "aliases": ["litteratur", "literature"],
+    "metadata": {"broader": "litteratur", "type": "ämnesområde"},
+    "_source": {"primary": "wikidata", "license": "CC0", "fetched_at": "2026-10-09"}
+  },
+
+  "artificiell intelligens": {
+    "name": "Artificiell intelligens",
+    "kind": "topic",
+    "language": "sv",
+    "wikidata_id": "Q11660",
+    "wikipedia_url": "https://sv.wikipedia.org/wiki/Artificiell_intelligens",
+    "aliases": ["AI", "maskinintelligens", "artificial intelligence"],
+    "metadata": {"broader": "datavetenskap", "type": "ämnesområde"},
+    "_source": {"primary": "wikidata", "license": "CC0", "fetched_at": "2026-10-09"}
+  },
+
+  "jazz": {
+    "name": "Jazz",
+    "kind": "topic",
+    "language": "sv",
+    "wikidata_id": "Q8341",
+    "wikipedia_url": "https://sv.wikipedia.org/wiki/Jazz",
+    "aliases": ["jazzmusik"],
+    "metadata": {"broader": "musik", "type": "musikgenre"},
+    "_source": {"primary": "wikidata", "license": "CC0", "fetched_at": "2026-10-09"}
+  },
+
+  "ståuppkomik": {
+    "name": "Ståuppkomik",
+    "kind": "topic",
+    "language": "sv",
+    "wikidata_id": "Q40831",
+    "wikipedia_url": "https://sv.wikipedia.org/wiki/St%C3%A5uppkomik",
+    "aliases": ["standup", "stand-up", "ståupp"],
+    "metadata": {"broader": "komedi", "type": "komgenre"},
+    "_source": {"primary": "wikidata", "license": "CC0", "fetched_at": "2026-10-09"}
+  },
+
+  "lördagsbarn": {
+    "name": "Lördagsbarn",
+    "kind": "event_series",
+    "country": "SE",
+    "language": "sv",
+    "wikidata_id": null,
+    "aliases": ["Lördagsbarn på Operan", "Löris"],
+    "metadata": {"venue_relation": "Kungliga Operan", "type": "barnprogram"},
+    "_source": {"primary": "curated", "license": "CC0", "fetched_at": "2026-10-09"}
+  },
+
+  "stockholms stad": {
+    "name": "Stockholms stad",
+    "kind": "organization",
+    "country": "SE",
+    "inception_year": 1252,
+    "wikidata_id": "Q1754",
+    "wikipedia_url": "https://sv.wikipedia.org/wiki/Stockholms_kommun",
+    "aliases": ["Stockholms kommun", "City of Stockholm"],
+    "metadata": {"type": "kommun"},
+    "_source": {"primary": "wikidata", "license": "CC0", "fetched_at": "2026-10-09"}
+  }
+}
