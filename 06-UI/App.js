@@ -1074,7 +1074,12 @@ function HomeScreen({ onEventPress, scrollPositionRef, pendingIntent, dismissPen
       let page;
 
       while (attempts < 7) {
-        page = await fetchFeed({ from, days: 7, mood: moodFilterRef.current });
+        // 2026-10-10 (two-stage feed, användarbeslut): först limit:10 för
+        // omedelbar visning (minskar risken för 20s-feed-timeout på första
+        // request när agent-servern är långsam), sen limit:30 i bakgrunden
+        // för att fylla ut veckan. Hoppar över när användaren redan paginerar.
+        const initialLimit = append ? 30 : 10;
+        page = await fetchFeed({ from, days: 7, mood: moodFilterRef.current, limit: initialLimit });
         // With a mood filter an empty page is an honest answer ("nothing
         // atmospheric this week"), not a quiet-Sunday gap — never day-hop.
         if (page.events.length > 0 || append || moodFilterRef.current) break;
@@ -1094,6 +1099,37 @@ function HomeScreen({ onEventPress, scrollPositionRef, pendingIntent, dismissPen
       // don't refetch the total — the page-level call already returned the
       // full DB count, so we trust it across windows.
       if (!append) setTotalCount(page.total ?? 0);
+
+      // 2026-10-10 (two-stage feed, användarbeslut): efter att UI:t visat
+      // första 10 events, hämta limit:30 i bakgrunden för att fylla ut.
+      // Hoppar över om användaren redan paginerar, eller om sidan var full
+      // (inga has_more), eller om vi redan visar >= 30 events.
+      if (
+        !append &&
+        page.has_more &&
+        page.events.length < 30
+      ) {
+        // Schedule på next tick så UI hinner rendera 10 först. Om requesten
+        // timeoutar igen har användaren redan 10 events på skärmen.
+        setTimeout(() => {
+          fetchFeed({
+            from,
+            days: 7,
+            mood: moodFilterRef.current,
+            limit: 30,
+          })
+            .then((more) => {
+              if (more?.events?.length > 0) {
+                setEvents((prev) => deduplicateEvents([...prev, ...more.events]));
+                setHasMore(more.has_more ?? false);
+              }
+            })
+            .catch(() => {
+              // Tyst fel — användaren har redan 10 events från första requesten.
+              // Scroll-bottom (loadMore) tar vid om hen vill ha mer.
+            });
+        }, 50);
+      }
     } catch (err) {
       if (isFetchCanceled(err)) {
         // External cancel (app reload/teardown) — not a load failure. The
