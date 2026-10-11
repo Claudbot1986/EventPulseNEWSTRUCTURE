@@ -16,6 +16,11 @@ import * as dotenv from 'dotenv';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import fs from 'fs';
+import {
+  makeRunId,
+  writeIngestionRunSummary,
+  type IngestionRunStage,
+} from '../02-Ingestion/tools/runRecorder';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -110,39 +115,72 @@ function runSubprocess(name: string, scriptPath: string, fileLog: string): Promi
 async function main(): Promise<number> {
   const fileLog = getRunLogPath();
   const startedAt = Date.now();
+  const startTs = new Date(startedAt).toISOString();
+  const runId = makeRunId('daily');
+  const stages: IngestionRunStage[] = [];
+  let exitCode = 0;
+  let errorSummary: string | null = null;
 
-  log(`═══════════════════════════════════════════════════════════`, fileLog);
-  log(`  EventPulse daglig körning (runDaily)  │  ${new Date().toISOString().split('T')[0]}`, fileLog);
-  log(`═══════════════════════════════════════════════════════════`, fileLog);
+  try {
+    log(`═══════════════════════════════════════════════════════════`, fileLog);
+    log(`  EventPulse daglig körning (runDaily)  │  ${new Date().toISOString().split('T')[0]}`, fileLog);
+    log(`═══════════════════════════════════════════════════════════`, fileLog);
 
-  // Steg 1: supervisor (source health)
-  log(`[1/3] supervisor — start`, fileLog);
-  const supervisor = await runSubprocess('supervisor', SUPERVISOR_TS, fileLog);
-  if (supervisor.exitCode !== 0) {
-    log(`[1/3] supervisor — FAIL (exit=${supervisor.exitCode}) — fortsätter med pipeline`, fileLog);
-  } else {
-    log(`[1/3] supervisor — OK`, fileLog);
+    // Steg 1: supervisor (source health)
+    log(`[1/3] supervisor — start`, fileLog);
+    const supervisor = await runSubprocess('supervisor', SUPERVISOR_TS, fileLog);
+    stages.push({ stage: 'A', ok: supervisor.exitCode === 0, durationMs: supervisor.durationMs, itemsOut: 0 });
+    if (supervisor.exitCode !== 0) {
+      log(`[1/3] supervisor — FAIL (exit=${supervisor.exitCode}) — fortsätter med pipeline`, fileLog);
+    } else {
+      log(`[1/3] supervisor — OK`, fileLog);
+    }
+
+    // Steg 2: ingestionPipeline (data flow — inkluderar bridge + runD-scrapingbee som steg 1d)
+    log(`[2/3] ingestionPipeline — start`, fileLog);
+    const pipeline = await runSubprocess('ingestionPipeline', PIPELINE_TS, fileLog);
+    stages.push({ stage: 'B', ok: pipeline.exitCode === 0, durationMs: pipeline.durationMs, itemsOut: 0 });
+    if (pipeline.exitCode !== 0) {
+      log(`[2/3] ingestionPipeline — FAIL (exit=${pipeline.exitCode}) — fortsätter med dränering`, fileLog);
+      errorSummary = `pipeline exit=${pipeline.exitCode}`;
+    } else {
+      log(`[2/3] ingestionPipeline — OK`, fileLog);
+    }
+
+    // Steg 3: dränera BullMQ-kön till Supabase (workern är daemon — tidsbegränsad dränering)
+    log(`[3/3] startWorker — dränering`, fileLog);
+    const drain = await runSubprocessWithTimeout('startWorker-drain', WORKER_TS, fileLog, WORKER_DRAIN_MS);
+    stages.push({ stage: 'D', ok: drain.exitCode === 0, durationMs: drain.durationMs, itemsOut: 0 });
+    log(`[3/3] startWorker — ${drain.exitCode === 0 ? 'OK' : `FAIL (exit=${drain.exitCode})`}`, fileLog);
+
+    log(`═══════════════════════════════════════════════════════════`, fileLog);
+    log(`  KLAR  │  totalDuration=${Date.now() - startedAt}ms`, fileLog);
+    log(`═══════════════════════════════════════════════════════════`, fileLog);
+    // Misslyckad pipeline (t.ex. bi-steg) blockerar inte dränering — speglas i exit-koden
+    exitCode = pipeline.exitCode !== 0 ? pipeline.exitCode : drain.exitCode;
+    return exitCode;
+  } finally {
+    // Logga batch-körning till runtime/ingestion_runs.jsonl (även vid fel)
+    const endTs = new Date().toISOString();
+    const ok = stages.every((s) => s.ok);
+    writeIngestionRunSummary({
+      runId,
+      triggerSource: 'daily',
+      startTs,
+      endTs,
+      durationMs: Date.now() - startedAt,
+      ok,
+      sourcesAttempted: 0, // runDaily orkestrerar — antal källor ligger i pipeline-steget
+      sourcesSucceeded: 0,
+      sourcesFailed: ok ? 0 : 1,
+      totalEventsFound: 0,
+      totalEventsPersisted: 0,
+      stagesCompleted: stages,
+      errorSummary,
+      pid: process.pid,
+      reportPath: null,
+    });
   }
-
-  // Steg 2: ingestionPipeline (data flow — inkluderar bridge + runD-scrapingbee som steg 1d)
-  log(`[2/3] ingestionPipeline — start`, fileLog);
-  const pipeline = await runSubprocess('ingestionPipeline', PIPELINE_TS, fileLog);
-  if (pipeline.exitCode !== 0) {
-    log(`[2/3] ingestionPipeline — FAIL (exit=${pipeline.exitCode}) — fortsätter med dränering`, fileLog);
-  } else {
-    log(`[2/3] ingestionPipeline — OK`, fileLog);
-  }
-
-  // Steg 3: dränera BullMQ-kön till Supabase (workern är daemon — tidsbegränsad dränering)
-  log(`[3/3] startWorker — dränering`, fileLog);
-  const drain = await runSubprocessWithTimeout('startWorker-drain', WORKER_TS, fileLog, WORKER_DRAIN_MS);
-  log(`[3/3] startWorker — ${drain.exitCode === 0 ? 'OK' : `FAIL (exit=${drain.exitCode})`}`, fileLog);
-
-  log(`═══════════════════════════════════════════════════════════`, fileLog);
-  log(`  KLAR  │  totalDuration=${Date.now() - startedAt}ms`, fileLog);
-  log(`═══════════════════════════════════════════════════════════`, fileLog);
-  // Misslyckad pipeline (t.ex. bi-steg) blockerar inte dränering — speglas i exit-koden
-  return pipeline.exitCode !== 0 ? pipeline.exitCode : drain.exitCode;
 }
 
 main().then((c) => process.exit(c)).catch((e) => { console.error('fatal:', e); process.exit(1); });

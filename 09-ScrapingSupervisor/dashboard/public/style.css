@@ -144,6 +144,19 @@ main {
 .kpi-tile { position: relative; }
 .layer-tile { position: relative; }
 
+.kpi-tile--clickable { cursor: pointer; transition: transform 0.1s ease, box-shadow 0.1s ease; }
+.kpi-tile--clickable:hover { transform: translateY(-1px); box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12); }
+.kpi-tile--clickable:focus-visible { outline: 2px solid var(--accent, #58a6ff); outline-offset: 2px; }
+
+.kpi-action-btn {
+  position: absolute; top: 8px; right: 8px;
+  font-size: 11px; font-weight: 600; letter-spacing: 0.04em;
+  padding: 3px 8px; border: 1px solid var(--border, #30363d); border-radius: 4px;
+  background: var(--bg-elevated, #161b22); color: var(--text, #c9d1d9);
+  cursor: pointer; text-transform: uppercase;
+}
+.kpi-action-btn:hover { background: var(--accent, #58a6ff); color: #fff; border-color: var(--accent, #58a6ff); }
+
 dl { margin: 0; display: grid; grid-template-columns: auto 1fr; gap: 6px 16px; }
 dt { color: var(--muted); font-size: 13px; }
 dd { margin: 0; font-size: 14px; font-variant-numeric: tabular-nums; }

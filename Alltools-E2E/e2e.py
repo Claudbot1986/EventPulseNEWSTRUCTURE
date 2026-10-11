@@ -38,6 +38,84 @@ def run_id() -> str:
     return datetime.now().strftime("%Y%m%d-%H%M%S")
 
 
+# ─── Ingestion runs log (runtime/ingestion_runs.jsonl) ─────────────────────────
+# En rad per batch/cykel. Spegel av 02-Ingestion/tools/runRecorder.ts (TS).
+# Skriver till ROOT/runtime/ingestion_runs.jsonl (gitignorerad, ingen Supabase).
+INGESTION_RUNS_LOG = ROOT / "runtime" / "ingestion_runs.jsonl"
+
+
+def _random_suffix() -> str:
+    import secrets
+    return secrets.token_hex(2)
+
+
+def write_ingestion_run_summary(
+    trigger: str,
+    run_id_value: str,
+    sources_attempted: int,
+    report_path: Optional[str],
+    stage_notes: List[str],
+    exit_code: int,
+    dry_run: bool,
+    per_source_events: int = 0,
+    start_ts: Optional[str] = None,
+) -> None:
+    """Append-only skrivning av en batch-rad. Kastar aldrig (loggning får aldrig krascha).
+
+    start_ts: om angiven används den (redan UTC, från rapporten) — detta undviker
+              tidszons-buggar som uppstår om man parsar rid (lokal tid) som UTC.
+    """
+    try:
+        INGESTION_RUNS_LOG.parent.mkdir(parents=True, exist_ok=True)
+        end_ts = now_iso()
+        if not start_ts:
+            # Fallback: bygg från rid (lokal tid, antas vara UTC om systemklockan är UTC)
+            try:
+                start_dt = datetime.strptime(run_id_value, "%Y%m%d-%H%M%S").replace(tzinfo=timezone.utc)
+                start_ts = start_dt.isoformat().replace("+00:00", "Z")
+            except ValueError:
+                start_ts = end_ts
+        # Räkna duration korrekt
+        try:
+            start_dt = datetime.fromisoformat(start_ts.replace("Z", "+00:00"))
+            duration_ms = int((datetime.now(timezone.utc) - start_dt).total_seconds() * 1000)
+        except Exception:
+            duration_ms = 0
+        ok = exit_code == 0 and not dry_run
+        # Första felet (om något) från stage_notes
+        error_summary: Optional[str] = None
+        if not ok:
+            for note in stage_notes:
+                if "ERROR" in note.upper() or "FAIL" in note.upper() or "exception" in note.lower():
+                    error_summary = note[:200]
+                    break
+            if error_summary is None:
+                error_summary = f"exit_code={exit_code}"
+        entry = {
+            "runId": f"{trigger}-{run_id_value}-{_random_suffix()}",
+            "triggerSource": trigger,
+            "startTs": start_ts,
+            "endTs": end_ts,
+            "durationMs": max(0, duration_ms),
+            "ok": ok,
+            "sourcesAttempted": sources_attempted,
+            "sourcesSucceeded": sources_attempted if ok else 0,
+            "sourcesFailed": 0 if ok else sources_attempted,
+            "totalEventsFound": per_source_events,
+            "totalEventsPersisted": 0,  # E2E vet inte vad som persisterades — läses i TS-tap
+            "stagesCompleted": [],  # TS-tap-points fyller i detaljer; e2e har inte steg-fönster
+            "errorSummary": error_summary,
+            "pid": os.getpid(),
+            "reportPath": report_path,
+            "dryRun": dry_run,
+        }
+        with INGESTION_RUNS_LOG.open("a", encoding="utf-8") as f:
+            f.write(json.dumps(entry, ensure_ascii=False) + "\n")
+    except Exception as e:
+        # Loggning får aldrig krascha en körning — stderr är OK.
+        print(f"[E2E] WARNING: ingestion_runs-log misslyckades: {e}", file=sys.stderr)
+
+
 def _source_preferred_path_field(obj: dict) -> Optional[str]:
     pp = obj.get("preferredPath")
     if pp is None:
@@ -285,6 +363,30 @@ def main() -> int:
     rp = REPORTS / f"run-{rid}.json"
     rp.write_text(json.dumps(report, ensure_ascii=False, indent=2), encoding="utf-8")
     print(f"[E2E] report={rp}")
+
+    # ── Logga batch-körning till runtime/ingestion_runs.jsonl ────────────────
+    try:
+        # Summera events från rapportens perSource (rappor är redan byggd ovan)
+        per_source_events = 0
+        try:
+            for ps in (report.get("perSource") or []):
+                per_source_events += int(ps.get("eventsFound") or 0)
+        except Exception:
+            pass
+        write_ingestion_run_summary(
+            trigger="e2e",
+            run_id_value=rid,
+            sources_attempted=len(sids),
+            report_path=str(rp),
+            stage_notes=list(res.stage_notes or []),
+            exit_code=res.exit_code,
+            dry_run=dry,
+            per_source_events=per_source_events,
+            start_ts=report.get("timestamp"),
+        )
+    except Exception as e:
+        # Loggning får aldrig krascha en körning
+        print(f"[E2E] WARNING: kunde inte skriva ingestion_runs.jsonl: {e}", file=sys.stderr)
 
     if res.exit_code != 0:
         return res.exit_code if res.exit_code <= 127 else 1

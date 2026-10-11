@@ -2323,3 +2323,126 @@ function wireUaToolbar() {
     return res;
   };
 })();
+
+// ─── Ingestion runs log (runtime/ingestion_runs.jsonl) ────────────────────────
+// Klickbar KPI-tile + LOGG-knapp öppnar befintlig #review-modal med en tabell
+// över de senaste batch-körningarna (e2e / daily / scheduler).
+
+async function fetchRuns() {
+  const r = await fetch('/api/runs?limit=50', { cache: 'no-store' });
+  if (!r.ok) throw new Error(`HTTP ${r.status}`);
+  return await r.json();
+}
+
+function renderRunsKpi(runs) {
+  const sumEl = document.getElementById('kpi-runs-summary');
+  const capEl = document.getElementById('kpi-runs-caption');
+  if (!sumEl || !capEl) return;
+  if (!runs || runs.length === 0) {
+    sumEl.textContent = '—';
+    sumEl.classList.remove('ok', 'warn', 'bad');
+    capEl.textContent = 'no batches yet';
+    return;
+  }
+  // Senaste = först (sortering sker i servern)
+  const latest = runs[0];
+  const ageH = (Date.now() - new Date(latest.startTs).getTime()) / 3600000;
+  let ageStr;
+  if (ageH < 1) ageStr = `${Math.round(ageH * 60)} min sedan`;
+  else if (ageH < 24) ageStr = `${Math.round(ageH)} h sedan`;
+  else ageStr = `${Math.round(ageH / 24)} d sedan`;
+  sumEl.textContent = ageStr;
+  sumEl.classList.toggle('ok', latest.ok && ageH <= 24);
+  sumEl.classList.toggle('warn', !latest.ok ? true : ageH <= 24 * 7);
+  sumEl.classList.toggle('bad', !latest.ok && ageH > 24 * 7);
+  const eventsLabel = latest.totalEventsFound > 0
+    ? `${latest.totalEventsFound} events`
+    : '0 events';
+  const okLabel = latest.ok ? 'OK' : 'FAIL';
+  capEl.textContent = `${latest.triggerSource} · ${okLabel} · ${latest.sourcesAttempted} src · ${eventsLabel}`;
+}
+
+async function openRunsModal() {
+  const m = document.getElementById('review-modal');
+  const title = document.getElementById('review-modal-title');
+  const body = document.getElementById('review-modal-body');
+  if (!m || !body || !title) return;
+  title.textContent = 'Ingestion runs (runtime/ingestion_runs.jsonl)';
+  body.innerHTML = '<p class="empty">Loading…</p>';
+  m.hidden = false;
+  try {
+    const data = await fetchRuns();
+    renderRunsTable(body, data.runs || []);
+  } catch (err) {
+    body.innerHTML = `<p class="empty">Kunde inte läsa runs: ${escapeHtml(String(err))}</p>`;
+  }
+}
+
+function renderRunsTable(body, runs) {
+  if (!runs.length) {
+    body.innerHTML = '<p class="empty">Inga batch-körningar loggade ännu. Kör t.ex. <code>python3 Alltools-E2E/e2e.py --from-preA --limit 1</code> eller <code>npx tsx 09-ScrapingSupervisor/runDaily.ts</code>.</p>';
+    return;
+  }
+  const rows = runs.map((r) => {
+    const startLocal = new Date(r.startTs).toLocaleString('sv-SE');
+    const dur = r.durationMs < 1000 ? `${r.durationMs} ms` : `${(r.durationMs / 1000).toFixed(1)} s`;
+    const okBadge = r.ok ? '<span class="num-badge ok">OK</span>' : '<span class="num-badge bad">FAIL</span>';
+    const stageCells = (r.stagesCompleted || [])
+      .map((s) => `${s.stage}:${s.ok ? '✓' : '✗'} ${s.durationMs}ms (${s.itemsOut ?? 0})`)
+      .join('<br>');
+    const err = r.errorSummary ? `<span class="empty">${escapeHtml(String(r.errorSummary).slice(0, 120))}</span>` : '—';
+    const report = r.reportPath ? `<code>${escapeHtml(String(r.reportPath).split('/').slice(-1)[0])}</code>` : '—';
+    return `<tr>
+      <td>${escapeHtml(startLocal)}</td>
+      <td>${escapeHtml(r.triggerSource || '?')}</td>
+      <td>${okBadge}</td>
+      <td>${dur}</td>
+      <td>${r.sourcesAttempted ?? 0} / ${r.sourcesSucceeded ?? 0}</td>
+      <td>${r.totalEventsFound ?? 0}</td>
+      <td>${stageCells || '—'}</td>
+      <td>${err}</td>
+      <td>${report}</td>
+    </tr>`;
+  }).join('');
+  body.innerHTML = `<table>
+    <thead><tr>
+      <th>Start</th><th>Trigger</th><th>Status</th><th>Duration</th>
+      <th>Attempted / OK</th><th>Events</th><th>Stages</th><th>Error</th><th>Report</th>
+    </tr></thead>
+    <tbody>${rows}</tbody>
+  </table>`;
+}
+
+// Wire: klick på tile eller LOGG-knapp öppnar modal; tangentbord (Enter/Space) också.
+function wireRunsTile() {
+  const tile = document.getElementById('kpi-runs');
+  const btn = document.getElementById('kpi-runs-open');
+  if (tile && !tile.dataset.wired) {
+    tile.addEventListener('click', () => openRunsModal());
+    tile.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        openRunsModal();
+      }
+    });
+    tile.dataset.wired = '1';
+  }
+  if (btn && !btn.dataset.wired) {
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      openRunsModal();
+    });
+    btn.dataset.wired = '1';
+  }
+}
+
+// Initial load — populera KPI direkt, modal öppnas på begäran.
+(async function initRunsOnLoad() {
+  wireRunsTile();
+  try {
+    const data = await fetchRuns();
+    renderRunsKpi(data.runs || []);
+  } catch {
+    /* tyst fel — KPI visar '—' */
+  }
+})();

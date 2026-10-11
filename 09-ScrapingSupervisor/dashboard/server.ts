@@ -49,6 +49,7 @@ import {
   loadRetiredIndex,
   type LifecycleEntry,
 } from '../../02-Ingestion/lib/quarantineGuard.js';
+import { readRecentIngestionRuns } from '../../02-Ingestion/tools/runRecorder';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -1826,6 +1827,31 @@ async function serveJson(req: IncomingMessage, res: ServerResponse): Promise<boo
         'Cache-Control': 'no-cache',
       });
       res.end(JSON.stringify(data));
+    } catch (err) {
+      res.writeHead(500, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ error: String(err) }));
+    }
+    return true;
+  }
+  if (url && url.startsWith('/api/runs')) {
+    // Ingestion runs log — en rad per batch/cykel (e2e/daily/scheduler).
+    // Stöder ?limit=N (default 50, max 500). Tom fil → HTTP 200 med count:0.
+    try {
+      const qIdx = url.indexOf('?');
+      let limit = 50;
+      if (qIdx !== -1) {
+        const params = new URLSearchParams(url.slice(qIdx + 1));
+        const raw = Number(params.get('limit') ?? 50);
+        if (Number.isFinite(raw) && raw > 0) {
+          limit = Math.min(500, Math.floor(raw));
+        }
+      }
+      const runs = readRecentIngestionRuns(limit);
+      res.writeHead(200, {
+        'Content-Type': 'application/json; charset=utf-8',
+        'Cache-Control': 'no-cache',
+      });
+      res.end(JSON.stringify({ count: runs.length, runs }));
     } catch (err) {
       res.writeHead(500, { 'Content-Type': 'application/json' });
       res.end(JSON.stringify({ error: String(err) }));

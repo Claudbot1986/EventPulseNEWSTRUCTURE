@@ -194,6 +194,12 @@
           <div class="kpi-value" id="kpi-last-toola">—</div>
           <div class="kpi-caption">newest lastSuccess in sources_status.jsonl</div>
         </div>
+        <div class="kpi-tile kpi-tile--clickable" id="kpi-runs" role="button" tabindex="0" data-info="One row per ingestion batch/cycle (e2e / daily / scheduler). Click the tile (or the LOGG button) to open a log of recent runs with duration, sources attempted vs succeeded, and any error summary. Data: runtime/ingestion_runs.jsonl (gitignored, ephemeral).">
+          <div class="kpi-label">Ingestion runs<button type="button" class="info-btn" data-info-target="kpi-runs" aria-label="help">i</button></div>
+          <div class="kpi-value" id="kpi-runs-summary">—</div>
+          <div class="kpi-caption" id="kpi-runs-caption">no batches yet</div>
+          <button type="button" class="kpi-action-btn" id="kpi-runs-open" aria-label="Öppna logg">LOGG</button>
+        </div>
       </section>
 
       <main>
