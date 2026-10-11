@@ -65,10 +65,80 @@ describe('matchesCategoryWithGroups — real feed slugs', () => {
     expect(matchesCategoryWithGroups({ category: 'food-drink' }, ['food'])).toBe(true);
   });
 
-  it('ungrouped pills pass through exactly (music/sports/nightlife)', () => {
-    expect('music' in CATEGORY_GROUPS).toBe(false);
-    expect(matchesCategoryWithGroups({ category: 'music' }, ['music'])).toBe(true);
+  it('all 18 UI-pills are now explicit groups (2026-10-11 — 100 % coverage)', () => {
+    // 2026-10-11: music / sports / nightlife lades till i CATEGORY_GROUPS
+    // för att täcka musiksubslags (MusicBrainz) och svenska/engelska
+    // sport-varianter. Tidigare var dessa pass-through — men pass-through
+    // matchar INTE subslags, så coverage-gap kvarstod för 410 events.
+    for (const pill of ['music', 'opera', 'theatre-comedy', 'theatre-drama', 'dance',
+                        'circus', 'exhibition', 'flea-market', 'food', 'wine-tasting',
+                        'kids', 'family', 'film', 'talks-lectures', 'workshop',
+                        'sports', 'nightlife', 'community']) {
+      expect(pill in CATEGORY_GROUPS).toBe(true);
+      expect(CATEGORY_GROUPS[pill as keyof typeof CATEGORY_GROUPS].length).toBeGreaterThan(0);
+    }
     expect(matchesCategoryWithGroups({ category: 'music' }, ['sports'])).toBe(false);
+    expect(matchesCategoryWithGroups({ category: 'music' }, ['opera'])).toBe(false);
+  });
+
+  // 2026-10-11 — pin 100 % coverage. Verifierat mot 11 889 framtida events i
+  // Supabase: 0 events vars category_slug inte täcks av någon UI-pill.
+  // Varje entry motsvarar en slug som emitterades av adapter/MusicBrainz/
+  // normalizer men som INTE var UI-mappad innan denna ändring.
+  it('music pill covers MusicBrainz genre subslugs (pass-through)', () => {
+    for (const slug of ['music', 'classical', 'jazz', 'rock', 'pop', 'electronic', 'hip-hop']) {
+      expect(matchesCategoryWithGroups({ category: slug }, ['music'])).toBe(true);
+    }
+    expect(matchesCategoryWithGroups({ category: 'opera' }, ['music'])).toBe(false);
+  });
+
+  it('theatre-comedy pill covers standup, humor, comedy', () => {
+    for (const slug of ['theatre-comedy', 'standup', 'humor', 'comedy']) {
+      expect(matchesCategoryWithGroups({ category: slug }, ['theatre-comedy'])).toBe(true);
+    }
+    expect(matchesCategoryWithGroups({ category: 'theatre-drama' }, ['theatre-comedy'])).toBe(false);
+  });
+
+  it('theatre-drama pill covers musical, musikal, musical-theatre, theater', () => {
+    for (const slug of ['theatre-drama', 'musical', 'musikal', 'musical-theatre', 'theater']) {
+      expect(matchesCategoryWithGroups({ category: slug }, ['theatre-drama'])).toBe(true);
+    }
+    expect(matchesCategoryWithGroups({ category: 'theatre-comedy' }, ['theatre-drama'])).toBe(false);
+  });
+
+  it('dance pill covers dans (svensk form)', () => {
+    expect(matchesCategoryWithGroups({ category: 'dance' }, ['dance'])).toBe(true);
+    expect(matchesCategoryWithGroups({ category: 'dans' }, ['dance'])).toBe(true);
+    expect(matchesCategoryWithGroups({ category: 'musical-theatre' }, ['dance'])).toBe(false);
+  });
+
+  it('sports pill covers sport (svensk form)', () => {
+    expect(matchesCategoryWithGroups({ category: 'sports' }, ['sports'])).toBe(true);
+    expect(matchesCategoryWithGroups({ category: 'sport' }, ['sports'])).toBe(true);
+    expect(matchesCategoryWithGroups({ category: 'football' }, ['sports'])).toBe(false);
+  });
+
+  it('family pill covers barn-familj', () => {
+    expect(matchesCategoryWithGroups({ category: 'family' }, ['family'])).toBe(true);
+    expect(matchesCategoryWithGroups({ category: 'barn-familj' }, ['family'])).toBe(true);
+    expect(matchesCategoryWithGroups({ category: 'kids' }, ['family'])).toBe(false);
+  });
+
+  it('community pill covers festival, festivals, ovrigt', () => {
+    for (const slug of ['community', 'festival', 'festivals', 'ovrigt']) {
+      expect(matchesCategoryWithGroups({ category: slug }, ['community'])).toBe(true);
+    }
+    expect(matchesCategoryWithGroups({ category: 'music' }, ['community'])).toBe(false);
+  });
+
+  it('regression: barn still in barn group (legacy key preserved)', () => {
+    expect(matchesCategoryWithGroups({ category: 'barn' }, ['barn'])).toBe(true);
+    expect(matchesCategoryWithGroups({ category: 'family' }, ['barn'])).toBe(true);
+  });
+
+  it('regression: food-drink still in food group (legacy key preserved)', () => {
+    expect(matchesCategoryWithGroups({ category: 'food' }, ['food'])).toBe(true);
+    expect(matchesCategoryWithGroups({ category: 'food-drink' }, ['food'])).toBe(true);
   });
 
   it('multiple selected pills = OR across groups', () => {

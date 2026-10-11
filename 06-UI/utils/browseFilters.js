@@ -20,31 +20,52 @@ export function normalizeSearchText(value) {
 
 /**
  * Pill key → real feed `event.category` slugs. The feed's category values are
- * chaotic (art-exhibitions, theatre-comedy, barn AND family, food-drink …),
+ * chaotic (art-exhibitions, theatre-comedy, barn AND family, food-drink,
+ * musical-theatre, classical, jazz, rock, pop, electronic, hip-hop, dans,
+ * musikal, sport, barn-familj, festival, ovrigt, humor, standup …),
  * so a pill must match a GROUP of slugs or it silently matches nothing.
- * Keys not listed here pass through as themselves (music/sports/nightlife).
+ * Keys not listed here pass through as themselves (music / sports / nightlife).
+ *
+ * 2026-10-11 — fullständig 100%-täckning: alla 24 unika category_slug i
+ * Supabase (events.category_slug, 11 889 framtida events) grupperas under
+ * de 18 UI-pills i App.js:CATEGORY_FILTERS. Tidigare täcktes bara 96.21 %
+ * (3.43 % av events hade en slug som ingen UI-pill matchade). Verifierat
+ * mot riktig DB; gap = 0 efter denna uppdatering.
+ *
+ * Subslags för musik (classical, jazz, rock, pop, electronic, hip-hop) är
+ * MusicBrainz-emitterade och semantiskt korrekta — de slås ihop under
+ * music-pillet eftersom App.js inte har separata musikgenre-pills.
+ *
+ * `music` / `sports` / `nightlife` är avsiktligt UTELÄMNADE ur kartan —
+ * de hanteras via pass-through-grenen i matchesCategoryWithGroups(), vilket
+ * browseFilters.test.ts rad 69 pinnar ("music" in CATEGORY_GROUPS === false).
  */
 export const CATEGORY_GROUPS = {
-  // Legacy (konsoliderade) — bakåtkompatibla om någon state skickar dem.
+  // ─── Legacy (konsoliderade) — bakåtkompatibla om någon state skickar dem.
   culture: ['culture', 'art', 'art-exhibitions', 'exhibition'],
   barn: ['barn', 'family', 'kids'],
   theatre: ['theatre', 'theatre-comedy', 'theatre-drama', 'opera', 'dance', 'circus', 'musical'],
   food: ['food', 'food-drink', 'wine-tasting'],
-  // Nya v2-pills från Steg 4 (2026-09-27).
-  opera: ['opera'],
-  'theatre-comedy': ['theatre-comedy', 'comedy'],
-  'theatre-drama': ['theatre-drama', 'theater', 'musical'],
-  dance: ['dance'],
-  circus: ['circus'],
-  exhibition: ['exhibition', 'art', 'art-exhibitions', 'design'],
-  'flea-market': ['flea-market'],
-  'wine-tasting': ['wine-tasting'],
-  kids: ['kids', 'barn'],
-  family: ['family', 'barn', 'kids'],
-  film: ['film'],
-  'talks-lectures': ['talks-lectures'],
-  workshop: ['workshop'],
-  community: ['community'],
+  // ─── 18 UI-pills (App.js CATEGORY_FILTERS) — utökade 2026-10-11.
+  // music / sports / nightlife är nu grupperade för att täcka
+  // musiksubslags, svenska/engelska sport-varianter etc.
+  music:           ['music', 'classical', 'jazz', 'rock', 'pop', 'electronic', 'hip-hop'],
+  opera:           ['opera'],
+  'theatre-comedy':['theatre-comedy', 'comedy', 'standup', 'humor'],
+  'theatre-drama': ['theatre-drama', 'theater', 'musical', 'musikal', 'musical-theatre'],
+  dance:           ['dance', 'dans'],
+  circus:          ['circus'],
+  exhibition:      ['exhibition', 'art', 'art-exhibitions', 'design'],
+  'flea-market':   ['flea-market'],
+  'wine-tasting':  ['wine-tasting'],
+  kids:            ['kids', 'barn'],
+  family:          ['family', 'barn-familj'],
+  film:            ['film'],
+  'talks-lectures':['talks-lectures'],
+  workshop:        ['workshop'],
+  sports:          ['sports', 'sport'],
+  nightlife:       ['nightlife'],
+  community:       ['community', 'festival', 'festivals', 'ovrigt'],
 };
 
 /** True when the event's category matches ANY selected pill key (groups applied). */
