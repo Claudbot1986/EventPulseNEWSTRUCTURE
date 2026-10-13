@@ -285,12 +285,14 @@ export async function writeEditorialDescription(input: EditorialWriterInput): Pr
     systemPrompt,
     userPrompt,
     model,
-    // 350 räcker för 2-3 meningar med thinking disabled (ingen think att
-    // budgetera för). Om MiniMax ignorerar disable-flaggan blir 350 för
-    // litet — då triggar finish_reason=length och pipeline-regenererar /
-    // faller tillbaka till fact-based summary.
-    maxTokens: 350,
-    temperature: 0.7,
+    // FAS 3.2 (2026-10-13): stramare max_tokens + temperature hindrar M3
+    // från att gissa adjektiv/biografi som inte finns i Profile. Med 150
+    // tokens räcker 1-2 meningar — nog för att vara unik, för lite för att
+    // hallucineras utförligt. Temperatur 0.3 ger mer konservativ output.
+    // Pipeline faller tillbaka till FACT/MINIMAL vid max_tokens-truncering
+    // eller factuality-fail.
+    maxTokens: 150,
+    temperature: 0.3,
   });
 
   // Defensive guard: MockLlmClient eller trasig LLM-provider kan returnera

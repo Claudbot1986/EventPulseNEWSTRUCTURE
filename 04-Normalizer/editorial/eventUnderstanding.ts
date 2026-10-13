@@ -173,6 +173,18 @@ const CATEGORY_HINTS: ReadonlyMap<string, CategoryHints> = new Map([
     audience_participation: ['lyssning'],
     performance_style: 'klassisk interpretativ',
   }],
+  // FAS 3.2 (2026-10-13): 'music' som catch-all-subgenre-nyckel. Utan denna
+  // fångas inte events med category_slug='music' (verifierat — defaultade till
+  // 'community' i Profile event_type). Mångfacetterad genre-lista istället för
+  // ett enskilt genus för att inte styra faktualitets-claim för hårt.
+  ['music', {
+    event_type: 'music',
+    genres: [],
+    experience_characteristics: ['live', 'ljudupplevelse', 'publik'],
+    content: ['musikframförande'],
+    target_audience: ['alla'],
+    audience_participation: ['lyssning', 'publikrespons'],
+  }],
   ['rock', {
     event_type: 'music',
     genres: ['rock'],
