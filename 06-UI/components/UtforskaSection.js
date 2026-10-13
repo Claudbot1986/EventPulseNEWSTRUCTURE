@@ -256,6 +256,24 @@ function EventRow({ event, onPress, onMenuPress }) {
             {preview}
           </Text>
         ) : null}
+        {/* 2026-10-13 (FAS 3.2): Tier 1 attribution-rad. Visas UNDER
+            preview när preview finns, eller ISTÄLLET för preview när
+            den inte finns. Diskret (italic, opacity 0.7) — säger
+            "detta är verifierat öppen data" istället för "© 2026". */}
+        {event.dataSource ? (
+          <Text
+            style={styles.dataSource}
+            numberOfLines={1}
+            ellipsizeMode="tail"
+            accessibilityLabel={`Datakälla: ${event.dataSource}`}
+          >
+            {event.dataSource}
+          </Text>
+        ) : null}
+          >
+            {preview}
+          </Text>
+        ) : null}
       </View>
       <Pressable
         onPress={() => onMenuPress?.(event)}
@@ -549,6 +567,18 @@ const styles = StyleSheet.create({
     fontSize: TOKENS.font.subtitle.size - 1,
     fontWeight: '400',
     marginTop: 6,
+    flexShrink: 1,
+  },
+  // 2026-10-13 (FAS 3.2): Tier 1 attribution-rad. Diskret — italic,
+  // mindre font, opacity 0.65. Visar "Artistinfo från öppna datakällor"
+  // eller liknande. Computed av mapAgentEventToRow från event_profile.
+  dataSource: {
+    color: TOKENS.color.textMuted,
+    fontSize: TOKENS.font.subtitle.size - 2,
+    fontWeight: '400',
+    fontStyle: 'italic',
+    opacity: 0.65,
+    marginTop: 4,
     flexShrink: 1,
   },
   menuBtn: {

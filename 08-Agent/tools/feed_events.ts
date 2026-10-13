@@ -227,9 +227,14 @@ export async function feedEvents(
       // description_attribution + description_source_url. events_public view
       // filtrerar description_en/sv till NULL när license='unknown' — UI/agent
       // får summary primärt, fallback till license-tillåten description.
+      // FAS 3.2 (2026-10-13): event_profile JSONB — innehåller performer_metadata
+      // + subject_metadata som används för Tier 1 attribution-rad i UI:t.
+      // Kan vara NULL om editorial pipeline inte körts ännu — UI visar
+      // då ingen attribution-rad (graceful).
       'id, title_sv, title_en, description_sv, description_en, ' +
       'description_license, description_attribution, description_source_url, ' +
       'eventpulse_summary, ' +
+      'event_profile, ' +
       'start_time, end_time, venue_id, ' +
       'category_slug, is_free, price_min_sek, price_max_sek, ticket_url, image_url, ' +
       'image_license, image_attribution, image_source_url, ' +

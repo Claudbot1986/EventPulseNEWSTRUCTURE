@@ -90,6 +90,21 @@ export function mapAgentEventToRow(event, language) {
   const { stripHtml } = require('../utils/stripHtml.js');
   const desc = event.description || event.description_sv || event.description_en || null;
   const cleanedDesc = stripHtml(desc);
+  // 2026-10-13 (FAS 3.2): Tier 1 attribution-rad. Computed från
+  // event_profile (innehåller performer_metadata + subject_metadata).
+  // Försök server-side först (snabb), fallback client-side om
+  // dataSource redan är precomputed.
+  let dataSource = event.data_source || null;
+  if (!dataSource && event.event_profile) {
+    try {
+      const { buildAttribution } = require('../../04-Normalizer/editorial/dataAttribution');
+      const profile = event.event_profile?.profile ?? event.event_profile;
+      const attr = buildAttribution(profile);
+      if (attr?.hasOpenData) dataSource = attr.tier1;
+    } catch (err) {
+      // graceful: saknas modulen visas ingen attribution-rad
+    }
+  }
   return {
     id: event.id,
     title: decodeHtmlEntities(event.title) || 'Untitled',
@@ -129,5 +144,11 @@ export function mapAgentEventToRow(event, language) {
     image_ai_optout: event.image_ai_optout === true,
     image_generation_status: event.image_generation_status || null,
     is_free: event.is_free === true,
+    // 2026-10-13 (FAS 3.2): Tier 1 attribution från öppen data. Visas
+    // av EventRow under preview-raden om den är satt.
+    dataSource,
+    // 2026-10-13: hela profile förutsätts vidarebefordras till
+    // DetailsScreen så NewEventCard får samma attribution.
+    event_profile: event.event_profile ?? null,
   };
 }
