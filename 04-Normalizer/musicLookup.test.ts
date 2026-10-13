@@ -52,11 +52,30 @@ describe('musicBrainzLookup', () => {
     setEnv('MUSICBRAINZ_USER_AGENT', ORIGINAL_ENV.MUSICBRAINZ_USER_AGENT);
   });
 
-  it('returnerar null när MUSICBRAINZ_USER_AGENT saknas', async () => {
-    setEnv('MUSICBRAINZ_USER_AGENT', undefined);
+  it('returnerar null när MUSICBRAINZ_USER_AGENT är tom/whitespace', async () => {
+    // 2026-10-13: default fallback finns i koden — borttagen env triggar
+    // fallback-UA ('EventPulse/1.0 (https://eventpulse.nu/kontakt)') och
+    // nätverksanropet kör. För att stänga av: sätt env till whitespace
+    // (som trimas till tom sträng). Säkerhetsbältet fångar bara literal tom.
+    setEnv('MUSICBRAINZ_USER_AGENT', '   ');
     const result = await musicBrainzLookup('Rodrigo y Gabriela');
     expect(result).toBeNull();
     expect(fetchSpy).not.toHaveBeenCalled();
+  });
+
+  it('default fallback-UA används när MUSICBRAINZ_USER_AGENT ej satt', async () => {
+    setEnv('MUSICBRAINZ_USER_AGENT', undefined);
+    fetchSpy.mockResolvedValueOnce(mockFetchResponse({
+      artists: [{ id: 'fallback-1', name: 'Rodrigo y Gabriela', score: 95, type: 'Group' }],
+    }));
+    const result = await musicBrainzLookup('Rodrigo y Gabriela');
+    expect(result).not.toBeNull();
+    expect(result?.mbid).toBe('fallback-1');
+    expect(fetchSpy).toHaveBeenCalledTimes(1);
+    const [url, opts] = fetchSpy.mock.calls[0];
+    expect((opts as RequestInit).headers).toMatchObject({
+      'User-Agent': expect.stringContaining('EventPulse/1.0'),
+    });
   });
 
   it('returnerar null för tom headliner', async () => {

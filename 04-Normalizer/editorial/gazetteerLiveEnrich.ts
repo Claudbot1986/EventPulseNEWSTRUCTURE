@@ -20,7 +20,11 @@
  *   const meta = await lookupArtistLive('Big in Japan');
  *   // → { country: 'SE', genres: ['pop'], type: 'Group' }  eller null
  */
-import { lookupArtist as curatedLookup } from './gazetteerCache';
+import * as curatedModule from './gazetteerCache';
+import {
+  lookupArtist as curatedLookup,
+  setInCache as curatedSetInCache,
+} from './gazetteerCache';
 import { musicBrainzLookup, type MusicBrainzArtist } from '../musicLookup';
 import type { ArtistEntry } from './gazetteerCache';
 
@@ -57,6 +61,22 @@ function setInLiveCache(name: string, entry: ArtistEntry | null): void {
     entry,
     expiresAt: Date.now() + CACHE_TTL_MS,
   });
+  // 2026-10-13: spegla live-resultat till curated cache så
+  // buildEventProfile (som läser via lookupArtists från curated) ser
+  // det live-uppslagna. Tidigare försök med (curatedModule as any)._cache
+  // var no-op eftersom _cache är modul-private. Nu via publikt
+  // `setInCache`-API. Persistent curated.json uppdateras INTE.
+  if (entry !== null) {
+    try {
+      curatedSetInCache(name, entry);
+    } catch {
+      // curatedSetInCache är defensiv (returnerar tyst om input skevt),
+      // men vi vill inte att cache-mirror ska kunna krascha live-lookup.
+    }
+    // undertryck oanvänd import-varning (curatedModule hålls kvar för
+    // framtida extend)
+    void curatedModule;
+  }
 }
 
 // ─── Rate limiting ──────────────────────────────────────────────────────────
@@ -114,9 +134,11 @@ export async function lookupArtistLive(name: string | null | undefined): Promise
   const cached = getFromLiveCache(trimmed);
   if (cached !== undefined) return cached;
 
-  // 3. MusicBrainz — rate-limited, network
-  if (!process.env.MUSICBRAINZ_USER_AGENT) {
-    // Ingen UA = ingen live-lookup möjlig. Returnera null och cacha.
+  // 3. MusicBrainz — rate-limited, network. Använd default UA om env
+  // ej satt (samma default som musicLookup.ts — MusicBrainz policy
+  // kräver beskrivande User-Agent).
+  const mbUA = (process.env.MUSICBRAINZ_USER_AGENT ?? 'EventPulse/1.0 (https://eventpulse.nu/kontakt)').trim();
+  if (!mbUA) {
     setInLiveCache(trimmed, null);
     return null;
   }

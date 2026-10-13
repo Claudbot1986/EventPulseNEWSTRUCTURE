@@ -128,6 +128,34 @@ export function gazetteerStats(): { totalArtists: number; loaded: boolean } {
 }
 
 /**
+ * Lägg till en artist i curated-cache (runtime-mirror från live-lookup).
+ *
+ * Används av gazetteerLiveEnrich för att göra färskt uppslagna artister
+ * synliga i lookupArtist/lookupArtists utan att behöva skriva till
+ * stockholm-gazetteer.json (persistent curated.json är curator-roll).
+ *
+ * Lagrar i samma lazy-loaded `Record<string, ArtistEntry>` som
+ * `lookupArtist`/`lookupArtists` läser från.
+ *
+ * @param name  artistnamn (key-casning = name.toLowerCase())
+ * @param entry ArtistEntry — kan inte vara null (clear använd istället)
+ */
+export function setInCache(name: string, entry: ArtistEntry): void {
+  if (!name || !entry) return;
+  const cache = loadCache();
+  cache[name.toLowerCase()] = entry;
+}
+
+/**
+ * Ta bort en artist från curated-cache (för test-isolation).
+ */
+export function clearFromCache(name: string): void {
+  if (!name) return;
+  const cache = loadCache();
+  delete cache[name.toLowerCase()];
+}
+
+/**
  * Test-hook: rensa cache (tvinga omladdning).
  */
 export function __resetGazetteerCacheForTests(): void {

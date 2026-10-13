@@ -12,6 +12,7 @@ import {
   __resetLiveCacheForTests,
   liveCacheStats,
 } from './gazetteerLiveEnrich';
+import { __resetGazetteerCacheForTests } from './gazetteerCache';
 
 // Mock musicBrainzLookup för att undvika riktiga nätverksanrop i tester.
 vi.mock('../musicLookup', () => ({
@@ -25,6 +26,7 @@ const mockMB = musicBrainzLookup as unknown as ReturnType<typeof vi.fn>;
 describe('gazetteerLiveEnrich', () => {
   beforeEach(() => {
     __resetLiveCacheForTests();
+    __resetGazetteerCacheForTests(); // Rensa även curated-cache — live-resultat speglas hit
     mockMB.mockReset();
     // Sätt en User-Agent som default för test
     process.env.MUSICBRAINZ_USER_AGENT = 'EventPulse-test/1.0 (test@example.com)';
@@ -81,8 +83,11 @@ describe('gazetteerLiveEnrich', () => {
   });
 
   describe('graceful degradation', () => {
-    it('null om MUSICBRAINZ_USER_AGENT inte satt', async () => {
-      delete process.env.MUSICBRAINZ_USER_AGENT;
+    it('null om MUSICBRAINZ_USER_AGENT är tom sträng (efter fallback)', async () => {
+      // 2026-10-13: default fallback finns i koden — tom sträng är det enda
+      // sättet att stänga av live-lookup. Borttaget env triggar fallback-UA:n
+      // ('EventPulse/1.0 (https://eventpulse.nu/kontakt)') så guard passerar.
+      process.env.MUSICBRAINZ_USER_AGENT = '   '; // whitespace-only → trim → ''
       mockMB.mockResolvedValue({
         mbid: 'mb-1',
         name: 'Big in Japan',
@@ -93,6 +98,21 @@ describe('gazetteerLiveEnrich', () => {
       const r = await lookupArtistLive('Big in Japan');
       expect(r).toBeNull();
       expect(mockMB).not.toHaveBeenCalled();
+    });
+
+    it('default fallback-UA används om MUSICBRAINZ_USER_AGENT ej satt', async () => {
+      delete process.env.MUSICBRAINZ_USER_AGENT;
+      mockMB.mockResolvedValue({
+        mbid: 'mb-fallback',
+        name: 'Big in Japan',
+        score: 95,
+        type: 'Group',
+        country: 'SE',
+      });
+      const r = await lookupArtistLive('Big in Japan');
+      // Borttagen env → fallback-UA träder in → MB-anrop görs → entry returneras
+      expect(r).not.toBeNull();
+      expect(mockMB).toHaveBeenCalledTimes(1);
     });
 
     it('null om MB returnerar null (nätverksfel/tomt)', async () => {

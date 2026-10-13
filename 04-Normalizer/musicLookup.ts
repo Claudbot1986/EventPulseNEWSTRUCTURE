@@ -100,9 +100,12 @@ export async function musicBrainzLookup(
   headliner: string,
   options: MusicBrainzLookupOptions = {},
 ): Promise<MusicBrainzArtist | null> {
-  const userAgent = (process.env.MUSICBRAINZ_USER_AGENT ?? '').trim();
+  // Default User-Agent används om MUSICBRAINZ_USER_AGENT ej är satt.
+  // MB policy kräver beskrivande User-Agent (kontaktinfo). Vi använder
+  // EventPulse-kontakt-adress som default.
+  const userAgent = (process.env.MUSICBRAINZ_USER_AGENT ?? 'EventPulse/1.0 (https://eventpulse.nu/kontakt)').trim();
   if (!userAgent) {
-    return null; // MB policy: must send a descriptive User-Agent
+    return null; // skulle bara hända om env är satt till tom sträng
   }
   if (!headliner.trim()) return null;
 
