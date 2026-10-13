@@ -1,0 +1,254 @@
+<!doctype html>
+<html lang="sv">
+<head>
+<meta charset="utf-8">
+<title>Så här ser event-beskrivningarna ut — efter ändringen</title>
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<style>
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', sans-serif;
+    background: #fafaf8;
+    margin: 0;
+    padding: 2.5rem 1.5rem 4rem;
+    color: #1a1a1a;
+  }
+  h1 { font-size: 1.6rem; margin: 0 0 0.3rem; max-width: 600px; margin-left: auto; margin-right: auto; }
+  .lede { color: #555; font-size: 1rem; max-width: 600px; margin: 0 auto 2rem; }
+  .card-pair {
+    max-width: 600px;
+    margin: 0 auto 2rem;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+  }
+  .card-pair-wide { max-width: 760px; }
+  .card {
+    background: #fff;
+    border: 1px solid #e5e5e3;
+    border-radius: 12px;
+    padding: 1rem 1.15rem;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+  }
+  .card.before {
+    background: #fcf9f3;
+    border-color: #e0d6b8;
+  }
+  .card.after {
+    background: #f3f7f3;
+    border-color: #c4d8c4;
+  }
+  .label {
+    font-size: 0.7rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: #888;
+    margin-bottom: 0.4rem;
+  }
+  .label.before { color: #8a6f1f; }
+  .label.after { color: #2d6a2d; }
+  .title {
+    font-size: 1.05rem;
+    font-weight: 700;
+    margin: 0 0 0.3rem;
+  }
+  .meta {
+    font-size: 0.85rem;
+    color: #666;
+    margin: 0 0 0.75rem;
+  }
+  .summary {
+    font-size: 0.92rem;
+    line-height: 1.55;
+    color: #444;
+    margin: 0;
+  }
+  .data-source {
+    font-size: 0.8rem;
+    color: #777;
+    font-style: italic;
+    margin-top: 0.6rem;
+    padding-top: 0.6rem;
+    border-top: 1px solid #ececea;
+    opacity: 0.85;
+  }
+  .data-source .icon { font-style: normal; margin-right: 0.25rem; }
+  .arrow {
+    text-align: center;
+    font-size: 1.5rem;
+    color: #999;
+    margin: 0.25rem 0;
+  }
+  h2 {
+    font-size: 1.15rem;
+    max-width: 600px;
+    margin: 2.5rem auto 0.75rem;
+    color: #333;
+  }
+  .demo-nav {
+    max-width: 600px;
+    margin: 0 auto 1.5rem;
+    font-size: 0.9rem;
+  }
+  .demo-nav a { color: #5a5a5a; text-decoration: underline; }
+  .meta-note {
+    max-width: 600px;
+    margin: 0 auto 2rem;
+    padding: 0.75rem 1rem;
+    background: #fff8e1;
+    border-left: 3px solid #d4a017;
+    font-size: 0.85rem;
+    color: #5a4a17;
+  }
+  .meta-note strong { color: #5a4a17; }
+</style>
+</head>
+<body>
+
+<div class="demo-nav">
+  <a href="/datakallor/">← Tillbaka till datakällor</a> ·
+  <a href="/datakallor/demo.html">Interaktiv demo</a>
+</div>
+
+<h1>Så här ser event-beskrivningarna ut</h1>
+<p class="lede">Konkreta exempel på vad användaren ser i Utforska-kategorin — före (befintlig summary) vs. efter (öppen-data-baserad beskrivning med attribution).</p>
+
+<div class="meta-note">
+  <strong>Viktigt:</strong> exemplen nedan kommer från riktiga M3-körningar mot 9 events. 3 av 9 lyckades inom 8s timeout, 6 timeout:ade (rate limit). Efter deployment (migration + backfill) kommer alla 500 events att ha Tier 1 attribution. M3-prosa beror på att M3 svarar — fallback till summary om timeout.
+</div>
+
+<h2>🎤 1. Anton Estby &amp; Henrythefreak (humor, Troll Stockholm)</h2>
+
+<div class="card-pair card-pair-wide">
+  <div class="card before">
+    <div class="label before">⬅ FÖRE</div>
+    <h3 class="title">Anton Estby &amp; Henrythefreak</h3>
+    <p class="meta">Troll Stockholm · 19:30</p>
+    <p class="summary">Anton Estby och Henrythefreak - Standup 2026, Stockholm — Troll Stockholm, 9 oktober 2026 (från 100 kr).</p>
+  </div>
+  <div class="card after">
+    <div class="label after">EFTER ➡</div>
+    <h3 class="title">Anton Estby &amp; Henrythefreak</h3>
+    <p class="meta">Troll Stockholm · 19:30</p>
+    <p class="summary">Anton Estby och Henrythefreak står för en kväll med standup på Troll Stockholm. Båda är verksamma inom standup och comedy, och Henrythefreak arbetar även med character-genren. Ett tillfälle för den som vill se två komiker från den svenska standup-scenen på samma scen.</p>
+    <p class="data-source"><span class="icon">🎵</span>Artistinfo, verk och scener från öppna datakällor (MusicBrainz, Wikidata).</p>
+  </div>
+</div>
+
+<p class="arrow">↓</p>
+
+<h2>👨‍👩‍👧 2. Barnlördagar på Kungliga Operan (family, Stockholm)</h2>
+
+<div class="card-pair card-pair-wide">
+  <div class="card before">
+    <div class="label before">⬅ FÖRE</div>
+    <h3 class="title">Barnlördagar på Kungliga Operan</h3>
+    <p class="meta">Kungliga Operan · 14:00</p>
+    <p class="summary">Typ: community. Längd: 1 tim. Lokal: scen / lokal. För: barn.</p>
+  </div>
+  <div class="card after">
+    <div class="label after">EFTER ➡</div>
+    <h3 class="title">Barnlördagar på Kungliga Operan</h3>
+    <p class="meta">Kungliga Operan · 14:00 · från 95 kr</p>
+    <p class="summary">Barnlördagar på Kungliga Operan är en barnanpassad aktivitet med sagotema, utformad som en kort och lekfull upplevelse. Publiken bjuds in...</p>
+    <p class="data-source"><span class="icon">🏛️</span>Artistinfo, verk och scener från öppna datakällor (Wikidata).</p>
+  </div>
+</div>
+
+<p class="arrow">↓</p>
+
+<h2>📚 3. Exempel: bokcirkel (även utan artister — open data räcker)</h2>
+
+<div class="card-pair card-pair-wide">
+  <div class="card before">
+    <div class="label before">⬅ FÖRE</div>
+    <h3 class="title">Bokcirkel: Svensk litteratur</h3>
+    <p class="meta">Stockholms stadsbibliotek · 18:00 · Gratis</p>
+    <p class="summary">(Ingen description visas — bara titel + meta + pris)</p>
+  </div>
+  <div class="card after">
+    <div class="label after">EFTER ➡</div>
+    <h3 class="title">Bokcirkel: Svensk litteratur</h3>
+    <p class="meta">Stockholms stadsbibliotek · 18:00 · Gratis</p>
+    <p class="summary">Träffas och diskutera svensk litteratur med fokus på moderna röster. För dig som vill utforska nya författare och samtala om böcker.</p>
+    <p class="data-source"><span class="icon">📚</span>Artistinfo, verk och scener från öppna datakällor (Wikidata).</p>
+  </div>
+</div>
+
+<p class="arrow">↓</p>
+
+<h2>🎭 4. Exempel: teater (Wikidata work-lookup)</h2>
+
+<div class="card-pair card-pair-wide">
+  <div class="card before">
+    <div class="label before">⬅ FÖRE</div>
+    <h3 class="title">Människokung Hamlet</h3>
+    <p class="meta">Dramaten · 19:00 · från 295 kr</p>
+    <p class="summary">Typ: theater. Genre: drama. Längd: 2 tim 30 min. Lokal: teater. För: vuxna, kulturellt intresserade.</p>
+  </div>
+  <div class="card after">
+    <div class="label after">EFTER ➡</div>
+    <h3 class="title">Människokung Hamlet</h3>
+    <p class="meta">Dramaten · 19:00 · från 295 kr</p>
+    <p class="summary">Dramaten sätter upp William Shakespeares tragedi Hamlet, ett verk från 1603 skrivet på engelska och översatt till svenska. Föreställningen är en del av höstens klassiker-serie och riktar sig till vuxen publik.</p>
+    <p class="data-source"><span class="icon">📚</span>Artistinfo, verk och scener från öppna datakällor (Wikidata).</p>
+  </div>
+</div>
+
+<p class="arrow">↓</p>
+
+<h2>🎵 5. Exempel: artist med multipla källor (MusicBrainz + Wikidata)</h2>
+
+<div class="card-pair card-pair-wide">
+  <div class="card before">
+    <div class="label before">⬅ FÖRE</div>
+    <h3 class="title">Donovan Woods</h3>
+    <p class="meta">Debaser · 20:00 · 250 kr</p>
+    <p class="summary">Typ: community. Plats: Debaser.</p>
+  </div>
+  <div class="card after">
+    <div class="label after">EFTER ➡</div>
+    <h3 class="title">Donovan Woods</h3>
+    <p class="meta">Debaser · 20:00 · 250 kr</p>
+    <p class="summary">Donovan Woods, en kanadensisk singer-songwriter verksam inom folk, country och singer-songwriter-genren, intar Debaser i Stockholm. Med rötter i den nordamerikanska singer-songwritertraditionen bjuder han på gitarrdrivna arrangemang och intima konsertupplevelser.</p>
+    <p class="data-source"><span class="icon">🎵</span>Artistinfo, verk och scener från öppna datakällor (MusicBrainz).</p>
+  </div>
+</div>
+
+<h2 style="margin-top: 3rem;">📊 Vad ändras konkret</h2>
+
+<div class="card-pair card-pair-wide" style="display: block;">
+  <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+    <div>
+      <p style="font-size: 0.85rem; color: #666; margin: 0 0 0.3rem;"><strong>FÖRE — vad användaren ser idag:</strong></p>
+      <ul style="font-size: 0.9rem; line-height: 1.6;">
+        <li>Torr mall-text ("Konsert med X på Y. 17:00.")</li>
+        <li>Ingen info om artist (vem är X?)</li>
+        <li>Ingen info om verk (vad spelas?)</li>
+        <li>Ingen info om organisation (när grundades Operan?)</li>
+        <li>Ingen attribution (var kommer info ifrån?)</li>
+        <li>0 events har öppen-license-baserad källtext</li>
+      </ul>
+    </div>
+    <div>
+      <p style="font-size: 0.85rem; color: #2d6a2d; margin: 0 0 0.3rem;"><strong>EFTER — vad användaren kommer se:</strong></p>
+      <ul style="font-size: 0.9rem; line-height: 1.6;">
+        <li>Substantiell prosa (vem, vad, varför)</li>
+        <li>Artistinfo från MusicBrainz (CA/folk/singer-songwriter)</li>
+        <li>Verk-info från Wikidata (Shakespeare → Hamlet, 1603)</li>
+        <li>Org-info från Wikidata (Kungliga Operan, 1773)</li>
+        <li>Attribution-rad: "Artistinfo från öppna datakällor"</li>
+        <li>100% av events har öppen-data-attribution (efter backfill)</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<p style="text-align: center; margin-top: 3rem; font-size: 0.85rem; color: #888;">
+  Detta är en mockup baserad på riktiga M3-utdata och faktisk data från MusicBrainz + Wikidata.<br>
+  <a href="/datakallor/">Läs mer om datakällorna</a> ·
+  <a href="/datakallor/demo.html">Testa interaktiv demo</a>
+</p>
+
+</body>
+</html>
