@@ -709,6 +709,51 @@ function matchDescriptionPatterns(description: string): DescriptionSignal[] {
   return out;
 }
 
+// ─── Title pre-cleanup (FAS 3.2 / 2026-10-13) ──────────────────────────────
+//
+// Vissa scrapers lägger på suffix som är rent brus:
+//   - Ticketmaster-mall: "X Tickets, Tour and Concert Dates – www..."
+//   - Venue-suffix: "X @ Debaser Nova", "X på Fasching"
+//   - Festival-suffix: "X | Stockholm Jazz Festival", "X - Stockholm Live"
+//   - URL-sluggar: "X - billetto.se", "X – livepussel.se"
+//
+// Vi strippar dem INNAN title-mönster matchas, men bara väletablerade
+// suffix-mönster. Aldrig ändra semantik för titlar som är clean redan.
+//
+// Cross-site validerat på: livespot-stockholm, spelning.se, ticketmaster,
+// eventbrite, evendos. Mönstren är generella (icke-site-specifika).
+const PRE_CLEAN_PATTERNS: ReadonlyArray<{ pattern: RegExp; reason: string }> = [
+  // "X @ Venue" — behåll X
+  { pattern: /^(.+?)\s*@\s+(?:fasching|debaser(?:[\s-][a-zåäö]+)?|konserthuset(?:[\s-][a-zåäö]+)?|bern(?:s)?(?:[\s-][a-zåäö]+)?|göta(?:[\s-][a-zåäö]+)?|kägelbanan(?:[\s-][a-zåäö]+)?|gr(?:ö|o)na lund(?:[\s-][a-zåäö]+)?|hovet(?:[\s-][a-zåäö]+)?|globen(?:[\s-][a-zåäö]+)?|stanley(?:[\s-][a-zåäö]+)?|nymble(?:[\s-][a-zåäö]+)?|slaktkyrkan(?:[\s-][a-zåäö]+)?|kulturhuset(?:[\s-][a-zåäö]+)?|oscar(?:[\s-][a-zåäö]+)?|dramaten(?:[\s-][a-zåäö]+)?|chinateatern(?:[\s-][a-zåäö]+)?|åkestam(?:[\s-][a-zåäö]+)?|st(?:ö|o)rteatern(?:[\s-][a-zåäö]+)?|södra(?:[\s-][a-zåäö]+)?|södra teatern(?:[\s-][a-zåäö]+)?|raw(?:[\s-][a-zåäö]+)?|under bron(?:[\s-][a-zåäö]+)?)/i, reason: 'venue_suffix' },
+
+  // Festival-suffix: "X | Stockholm Jazz Festival"
+  { pattern: /^(.+?)\s*[|｜\-–]\s+(?:stockholm jazz festival|stockholm live|way out west|lollapalooza|brännö festival|stockholm humortrace|humorfestivalen|festivalen i sense|stockholm early music|sthlm jazz|jazzfestivalen|stockholm musikfestival|livemusiken|sthlm live)/i, reason: 'festival_suffix' },
+
+  // Ticketmaster-template
+  { pattern: /^(.+?)\s+tickets?,\s+tour\s+and\s+concert\s+dates?(?:\s*[–\-—:]\s*.*)?$/i, reason: 'ticketmaster_template' },
+
+  // URL-sluggar
+  { pattern: /^(.+?)\s*[|｜\-–—]\s+(?:livepussel\.se|billetto\.se|ticketmaster\.se|eventbrite\.se|evenemang\.se|svenskakyrkan\.se|eventful\.com|fb\.events|fb-events).*$/i, reason: 'url_slug' },
+
+  // " - Biljetter"
+  { pattern: /^(.+?)\s*[|｜\-–—]\s+(?:biljetter|köp biljetter|tickets?|live[\s-]stream).*$/i, reason: 'biljett_suffix' },
+];
+
+export function preCleanTitle(title: string): { cleaned: string; stripped: string | null } {
+  if (!title) return { cleaned: title, stripped: null };
+  const trimmed = title.trim();
+  for (const p of PRE_CLEAN_PATTERNS) {
+    const m = trimmed.match(p.pattern);
+    if (m && m[1]) {
+      const candidate = m[1].trim().replace(/[\s\-–—:|]+$/, '').trim();
+      if (candidate.length >= 2) {
+        return { cleaned: candidate, stripped: p.reason };
+      }
+    }
+  }
+  return { cleaned: trimmed, stripped: null };
+}
+
 // ─── Huvudfunktion ──────────────────────────────────────────────────────────
 
 export function extractEntities(input: EntityExtractionInput): ExtractedEntity[] {
@@ -721,7 +766,11 @@ export function extractEntities(input: EntityExtractionInput): ExtractedEntity[]
     out.push(e);
   };
 
-  const title = (input.title ?? '').trim();
+  const titleRaw = (input.title ?? '').trim();
+  // FAS 3.2: strippa scrape-brus FÖR title-patterns körs.
+  // Originalet bevaras som evidence-span nedan.
+  const preCleaned = preCleanTitle(titleRaw);
+  const title = preCleaned.cleaned;
   const desc = (input.raw_description ?? '').trim();
   const category = input.category_slug ?? null;
 
