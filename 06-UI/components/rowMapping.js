@@ -90,10 +90,12 @@ export function mapAgentEventToRow(event, language) {
   const { stripHtml } = require('../utils/stripHtml.js');
   const desc = event.description || event.description_sv || event.description_en || null;
   const cleanedDesc = stripHtml(desc);
-  // 2026-10-13 (FAS 3.2): Tier 1 attribution-rad. Computed från
-  // event_profile (innehåller performer_metadata + subject_metadata).
-  // Försök server-side först (snabb), fallback client-side om
-  // dataSource redan är precomputed.
+  // 2026-10-13 (FAS 3.2): Tier 1 attribution-rad. Trevägslösning:
+  //   1. event.data_source (om server-side precomputed)
+  //   2. event.event_profile → buildAttribution (om migration är på plats)
+  //   3. Klient-side fallback (computeTier1Attribution) — fungerar IDAG
+  //      utan migration genom att extrahera artister/orgs/ämnen från
+  //      title+venue via curaterad data.
   let dataSource = event.data_source || null;
   if (!dataSource && event.event_profile) {
     try {
@@ -102,7 +104,21 @@ export function mapAgentEventToRow(event, language) {
       const attr = buildAttribution(profile);
       if (attr?.hasOpenData) dataSource = attr.tier1;
     } catch (err) {
-      // graceful: saknas modulen visas ingen attribution-rad
+      // graceful: saknas modulen, fall through till klient-side
+    }
+  }
+  if (!dataSource) {
+    // Klient-side fallback — fungerar utan migration.
+    try {
+      const { computeTier1Attribution } = require('../utils/attributionTier1');
+      const r = computeTier1Attribution({
+        title: event.title,
+        venue_name: event.venue_name || event.venue,
+        category_slug: event.category_slug || event.category,
+      });
+      if (r.tier1) dataSource = r.tier1;
+    } catch (err) {
+      // graceful: ingen attribution
     }
   }
   return {

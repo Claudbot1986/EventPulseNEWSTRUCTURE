@@ -270,10 +270,6 @@ function EventRow({ event, onPress, onMenuPress }) {
             {event.dataSource}
           </Text>
         ) : null}
-          >
-            {preview}
-          </Text>
-        ) : null}
       </View>
       <Pressable
         onPress={() => onMenuPress?.(event)}
