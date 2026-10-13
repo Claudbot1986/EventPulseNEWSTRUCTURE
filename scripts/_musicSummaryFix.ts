@@ -51,7 +51,7 @@ async function main(): Promise<void> {
   );
   const now = new Date().toISOString();
 
-  // Hämta music-events utan vare sig summary eller editorial_description
+  // Hämta music-events som saknar eventpulse_summary (oavsett editorial)
   const PAGE = 500;
   const all: DbEvent[] = [];
   for (let from = 0; ; from += PAGE) {
@@ -64,7 +64,6 @@ async function main(): Promise<void> {
       .eq('category_slug', 'music')
       .gt('start_time', now)
       .or('eventpulse_summary.is.null,eventpulse_summary.eq.')
-      .is('editorial_description', null)
       .range(from, from + PAGE - 1);
     if (error) { console.error('Fel:', error.message); process.exit(1); }
     if (!data || data.length === 0) break;
