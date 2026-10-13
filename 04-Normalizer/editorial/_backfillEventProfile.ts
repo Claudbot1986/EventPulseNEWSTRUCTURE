@@ -30,6 +30,9 @@ interface DbEvent {
   title_en: string | null;
   category_slug: string | null;
   venue_id: string | null;
+  /** raw_description används BARA för entitets-extraktion (entityExtractor);
+   *  skickas ALDRIG till M3 (textualFirewall). */
+  raw_description: string | null;
 }
 
 interface BackfillStats {
@@ -61,7 +64,7 @@ async function fetchEventsToBackfill(
   for (let from = 0; all.length < targetCount; from += PAGE) {
     let q = supabase
       .from('events')
-      .select('id, title_sv, title_en, category_slug, venue_id')
+      .select('id, title_sv, title_en, category_slug, venue_id, raw_description')
       .gt('start_time', now)
       .order('start_time', { ascending: true })
       .range(from, from + PAGE - 1);
@@ -106,9 +109,13 @@ async function backfillOne(
     if (!title) return { updated: false, reason: 'no title' };
 
     // 1. extractEntities
+    // raw_description skickas hit ENBART för entitets-extraktion
+    // (entityExtractor matchar strukturerade description-patterns som
+    //  'Medverkande: X', 'Dirigent: Y', 'Solist: Z'). Innehållet når
+    //  aldrig M3 — textualFirewall skyddar senare steg.
     const entities = extractEntities({
       title,
-      raw_description: null,
+      raw_description: ev.raw_description,
       category_slug: ev.category_slug,
       venue_name: null,
     });
