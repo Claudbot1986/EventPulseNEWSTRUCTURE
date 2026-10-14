@@ -125,6 +125,22 @@ const STYLISTIC_ADJECTIVES: ReadonlySet<string> = new Set([
   'möjlig', 'möjligt', 'möjliga',
   'trolig', 'troligt', 'troliga',
   'sannolik', 'sannolikt', 'sannolika',
+  // [FAS 5.1 2026-10-14] M3-prosa i theatre-drama genererar ofta
+  // 'tolkande spel', 'klassisk berättelse', 'lugn scenupplevelse'
+  // — interpretiva adjektiv som inte är materiella claims.
+  'tolkande', 'tolkning', 'tolkning av',
+  'berättande', 'berättelse', 'berättelsen', 'berättelser',
+  'gestaltande', 'gestaltning', 'gestaltas',
+  'fokus', 'centrum', 'bärande',
+  'bär', 'bär fram', 'bär den',
+  'framåt', 'framför', 'inramning',
+  'lugn', 'lugn scenupplevelse', 'skönhet', 'skönt',
+  'glädje', 'glädjande',
+  'textbunden', 'textnära',
+  'gestaltad', 'skapad', 'föreställer', 'föreställa',
+  'publiknära', 'publikmöte',
+  'scenframställan', 'scenframställning', 'scenuppsättning', 'scenkonst',
+  'sammanhang', 'sammanhanget', 'sammanhangsberoende',
   // [FAS 5 2026-10-08] REVERTED duration/kvantitet-adjektiv.
   // Risken är hög att materiella claims ("lång konsert" när duration=30 min,
   // "många artister" utan stöd, "stor orkester" när Profile säger kammarensemble)
