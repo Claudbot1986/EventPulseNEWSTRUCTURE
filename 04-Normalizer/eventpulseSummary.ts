@@ -54,6 +54,15 @@ export interface EventpulseFacts {
   accessibility: string | null;
   /** Arrangör (om fil). */
   organizer: string | null;
+  /**
+   * Titel (community-fallback 2026-10-14). Används BARA om
+   * facts.artist och facts.venue båda är null — då blir titeln
+   * det enda "vad" vi har. Vi presenterar den rakt av (ingen
+   * omformulering, ingen LLM). Syfte: fylla 100% summary-täckning
+   * på kategorier där headliner/venue saknas (community-bucketen
+   * i synnerhet).
+   */
+  title: string | null;
 }
 
 export const EMPTY_FACTS: EventpulseFacts = {
@@ -73,6 +82,7 @@ export const EMPTY_FACTS: EventpulseFacts = {
   price_max_sek: null,
   accessibility: null,
   organizer: null,
+  title: null,
 };
 
 export interface EventpulseFactsInput {
@@ -308,6 +318,14 @@ export function buildEventpulseFacts(input: EventpulseFactsInput): EventpulseFac
     provenance.event_type = 'category';
   }
 
+  // ── title (community-fallback 2026-10-14)
+  // Sätts ALLTID om input.title finns. Används av buildEventpulseSummary
+  // när artist + venue båda saknas. Aldrig input till LLM.
+  if (input.title && input.title.trim().length > 0) {
+    facts.title = input.title.trim();
+    provenance.title = 'events_row';
+  }
+
   // ── artist (från title via extractHeadliner)
   // Vi använder ALLTID headliner om vi får en sträng tillbaka — även när
   // extraction_hint=true (dvs titeln saknar separator). Att "Artist X" eller
@@ -483,13 +501,23 @@ export function formatSwedishDate(date: string | null): string | null {
  *      som support."
  *   - "Standup med X på Norra Brunn i Stockholm den 12 november.
  *      Föreställningen börjar 20.00 och har 18-årsgräns."
+ *
+ * Community-fallback (2026-10-14): Om artist + venue båda saknas för
+ * ett community-event OCH title finns → använd titeln som "vad". Detta
+ * fyller 100% summary-täckning för community-bucketen där många events
+ * saknar venue (fel venue-resolution, t.ex. "왕의 정원") eller artist.
  */
 export function buildEventpulseSummary(facts: EventpulseFacts): string | null {
-  // Vi kräver MINST event_type + (artist | venue) + date för att summary ska
-  // vara värd att visa. Annars är den bara "Vad? När? Var? — Vet ej." vilket
-  // inte hjälper användaren.
+  // Vi kräver MINST event_type + date för att summary ska vara värd att visa.
+  // Annars är den bara "Vad? När? Var? — Vet ej." vilket inte hjälper användaren.
   if (!facts.event_type || !facts.date) return null;
-  if (!facts.artist && !facts.venue) return null;
+
+  // Artist + venue krävs FÖR de flesta typer. För community tillåter vi
+  // dock title som fallback (community-100%-arbete 2026-10-14).
+  const hasArtistOrVenue = !!(facts.artist || facts.venue);
+  if (!hasArtistOrVenue) {
+    if (facts.event_type !== 'community' || !facts.title) return null;
+  }
 
   const swedishDate = formatSwedishDate(facts.date);
   const whereParts: string[] = [];
@@ -559,9 +587,17 @@ export function buildEventpulseSummary(facts: EventpulseFacts): string | null {
     main += '.';
   } else {
     // community / other
-    main = artistPrefix
-      ? `Evenemang med ${artistPrefix}`
-      : `Evenemang`;
+    // Tre nivåer (2026-10-14): artist → title → generiskt "Evenemang"
+    if (artistPrefix) {
+      main = `Evenemang med ${artistPrefix}`;
+    } else if (facts.title) {
+      // Title-fallback: använd titeln rakt av som "vad".
+      // Vi vill inte omformulera (ingen LLM, ingen påhittad info) — bara
+      // presentera titeln i ett sammanhang som fungerar i UI:t.
+      main = `${facts.title}`;
+    } else {
+      main = `Evenemang`;
+    }
     if (where) main += ` på ${where}`;
     if (swedishDate) main += ` den ${swedishDate}`;
     main += '.';

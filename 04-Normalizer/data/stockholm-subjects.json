@@ -243,5 +243,155 @@
     "aliases": ["Stockholms kommun", "City of Stockholm"],
     "metadata": {"type": "kommun"},
     "_source": {"primary": "wikidata", "license": "CC0", "fetched_at": "2026-10-09"}
+  },
+
+  "riksteatern": {
+    "name": "Riksteatern",
+    "kind": "organization",
+    "country": "SE",
+    "inception_year": 1934,
+    "wikidata_id": "Q10714317",
+    "wikipedia_url": "https://sv.wikipedia.org/wiki/Riksteatern",
+    "aliases": ["Riksteatern Sverige", "Swedish National Theatre"],
+    "metadata": {"type": "riksorganisation", "city": "Stockholm", "role": "arrangör"},
+    "_source": {"primary": "wikidata", "license": "CC0", "fetched_at": "2026-10-14"}
+  },
+
+  "abf": {
+    "name": "ABF",
+    "kind": "organization",
+    "country": "SE",
+    "inception_year": 1912,
+    "wikidata_id": "Q10437227",
+    "wikipedia_url": "https://sv.wikipedia.org/wiki/Arbetarnas_bildningsförbund",
+    "aliases": ["Arbetarnas bildningsförbund", "Workers' Educational Association of Sweden"],
+    "metadata": {"type": "studieförbund", "city": "Stockholm", "role": "arrangör"},
+    "_source": {"primary": "wikidata", "license": "CC0", "fetched_at": "2026-10-14"}
+  },
+
+  "studiefrämjandet": {
+    "name": "Studiefrämjandet",
+    "kind": "organization",
+    "country": "SE",
+    "inception_year": 1932,
+    "wikidata_id": "Q10658083",
+    "wikipedia_url": "https://sv.wikipedia.org/wiki/Studiefrämjandet",
+    "aliases": ["Studiefrämjandet Sverige"],
+    "metadata": {"type": "studieförbund", "city": "Stockholm", "role": "arrangör"},
+    "_source": {"primary": "wikidata", "license": "CC0", "fetched_at": "2026-10-14"}
+  },
+
+  "medborgarskolan": {
+    "name": "Medborgarskolan",
+    "kind": "organization",
+    "country": "SE",
+    "inception_year": 1940,
+    "wikidata_id": "Q10565134",
+    "wikipedia_url": "https://sv.wikipedia.org/wiki/Medborgarskolan",
+    "aliases": ["Medborgarskolans riksförbund"],
+    "metadata": {"type": "studieförbund", "city": "Stockholm", "role": "arrangör"},
+    "_source": {"primary": "wikidata", "license": "CC0", "fetched_at": "2026-10-14"}
+  },
+
+  "storkyrkan": {
+    "name": "Storkyrkan",
+    "kind": "venue",
+    "country": "SE",
+    "inception_year": 1279,
+    "wikidata_id": "Q847024",
+    "wikipedia_url": "https://sv.wikipedia.org/wiki/Storkyrkan",
+    "aliases": ["Stockholm Cathedral", "Storkyrkan Stockholm"],
+    "metadata": {"type": "kyrka", "city": "Stockholm"},
+    "_source": {"primary": "wikidata", "license": "CC0", "fetched_at": "2026-10-14"}
+  },
+
+  "folkoperan": {
+    "name": "Folkoperan",
+    "kind": "organization",
+    "country": "SE",
+    "inception_year": 1976,
+    "wikidata_id": "Q10457612",
+    "wikipedia_url": "https://sv.wikipedia.org/wiki/Folkoperan",
+    "aliases": ["Folkoperan Stockholm"],
+    "metadata": {"type": "operahus", "city": "Stockholm", "role": "arrangör"},
+    "_source": {"primary": "wikidata", "license": "CC0", "fetched_at": "2026-10-14"}
+  },
+
+  "kungliga biblioteket": {
+    "name": "Kungliga biblioteket",
+    "kind": "venue",
+    "country": "SE",
+    "inception_year": 1526,
+    "wikidata_id": "Q10369984",
+    "wikipedia_url": "https://sv.wikipedia.org/wiki/Kungliga_biblioteket",
+    "aliases": ["KB", "National Library of Sweden"],
+    "metadata": {"type": "bibliotek", "city": "Stockholm", "role": "arrangör"},
+    "_source": {"primary": "wikidata", "license": "CC0", "fetched_at": "2026-10-14"}
+  },
+
+  "demokrati": {
+    "name": "Demokrati",
+    "kind": "topic",
+    "language": "sv",
+    "wikidata_id": "Q7163",
+    "wikipedia_url": "https://sv.wikipedia.org/wiki/Demokrati",
+    "aliases": ["democracy"],
+    "metadata": {"broader": "statsvetenskap", "type": "ämnesområde"},
+    "_source": {"primary": "wikidata", "license": "CC0", "fetched_at": "2026-10-14"}
+  },
+
+  "hållbarhet": {
+    "name": "Hållbarhet",
+    "kind": "topic",
+    "language": "sv",
+    "wikidata_id": "Q6054690",
+    "wikipedia_url": "https://sv.wikipedia.org/wiki/H%C3%A5llbar_utveckling",
+    "aliases": ["hållbar utveckling", "sustainability", "sustainable development"],
+    "metadata": {"broader": "miljövetenskap", "type": "ämnesområde"},
+    "_source": {"primary": "wikidata", "license": "CC0", "fetched_at": "2026-10-14"}
+  },
+
+  "psykologi": {
+    "name": "Psykologi",
+    "kind": "topic",
+    "language": "sv",
+    "wikidata_id": "Q9415",
+    "wikipedia_url": "https://sv.wikipedia.org/wiki/Psykologi",
+    "aliases": ["psychology"],
+    "metadata": {"broader": "vetenskap", "type": "ämnesområde"},
+    "_source": {"primary": "wikidata", "license": "CC0", "fetched_at": "2026-10-14"}
+  },
+
+  "historia": {
+    "name": "Historia",
+    "kind": "topic",
+    "language": "sv",
+    "wikidata_id": "Q309",
+    "wikipedia_url": "https://sv.wikipedia.org/wiki/Historia",
+    "aliases": ["history"],
+    "metadata": {"broader": "humanvetenskap", "type": "ämnesområde"},
+    "_source": {"primary": "wikidata", "license": "CC0", "fetched_at": "2026-10-14"}
+  },
+
+  "klimat": {
+    "name": "Klimat",
+    "kind": "topic",
+    "language": "sv",
+    "wikidata_id": "Q7937",
+    "wikipedia_url": "https://sv.wikipedia.org/wiki/Klimat",
+    "aliases": ["climate"],
+    "metadata": {"broader": "geovetenskap", "type": "ämnesområde"},
+    "_source": {"primary": "wikidata", "license": "CC0", "fetched_at": "2026-10-14"}
+  },
+
+  "migration": {
+    "name": "Migration",
+    "kind": "topic",
+    "language": "sv",
+    "wikidata_id": "Q931709",
+    "wikipedia_url": "https://sv.wikipedia.org/wiki/Migration",
+    "aliases": ["befolkningsrörelse", "migration"],
+    "metadata": {"broader": "samhällsvetenskap", "type": "ämnesområde"},
+    "_source": {"primary": "wikidata", "license": "CC0", "fetched_at": "2026-10-14"}
   }
 }

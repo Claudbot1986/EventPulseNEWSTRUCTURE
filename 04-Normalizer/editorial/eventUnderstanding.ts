@@ -355,13 +355,17 @@ const CATEGORY_HINTS: ReadonlyMap<string, CategoryHints> = new Map([
   ['community', {
     event_type: 'community',
     genres: [],
-    experience_characteristics: ['lokalt'],
-    content: ['lokalt program'],
-    target_audience: ['lokala'],
+    // FAS 3.2 + Community-100% (2026-10-14): utökat med content/themes för att
+    // ge M3 naturligt prosa-material som factuality kan verifiera mot öppna
+    // källor (Wikidata). Mönster: samma som music-entry commit 4c2f215d.
+    experience_characteristics: ['lokalt', 'pedagogiskt', 'gemensamt', 'samhällsengagemang', 'kunskapsdelning'],
+    content: ['lokalt program', 'studiecirkel', 'samtal', 'workshop', 'visning', 'stadsvandring', 'möte', 'föreläsning'],
+    themes: ['samhälle', 'lärande', 'kultur', 'historia', 'demokrati', 'gemenskap', 'hållbarhet'],
+    target_audience: ['lokala', 'vuxna', 'intresserade', 'studerande'],
     typical_duration_min: 90,
-    default_setting: 'lokal',
-    audience_participation: ['varierad'],
-    performance_style: 'öppen',
+    default_setting: 'lokal / bibliotek / föreningslokal',
+    audience_participation: ['frågor', 'diskussion', 'delaktighet'],
+    performance_style: 'pedagogisk och öppen',
   }],
 ]);
 
