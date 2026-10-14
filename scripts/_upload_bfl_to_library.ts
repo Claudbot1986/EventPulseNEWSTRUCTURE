@@ -30,7 +30,10 @@ const db = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, { auth: { persi
 
 const STORAGE_BUCKET = 'event-posters';
 const STAMPED_PREFIX = 'import-stamped';
-const SRC_DIR = join(process.cwd(), 'local_image_library');
+// 2026-10-12: läs från local_image_library_stamped/ — bfl5v2-pipelinen skriver
+// stämplade WebP dit. JSON-metadata (.json) läses fortfarande från
+// local_image_library/<cat>/<name>.json (se collectWebps()).
+const SRC_DIR = join(process.cwd(), 'local_image_library_stamped');
 
 // Round5-taggar (2026-10-07) — bfl5_*.webp som genererades för 1/30-påfyllnad.
 const TAGS_ROUND5 = ['bfl', 'flux-pro-1.1', 'stamped-2026-10-07', 'round5-1per30'];
@@ -58,6 +61,7 @@ interface WebpFile {
   storagePath: string;       // event-posters/import-stamped/<name>.webp
   publicUrl: string;
   sizeBytes: number;
+  clusterTags: string[];     // läses från .json metadata om finns
 }
 
 function collectWebps(): ReadonlyArray<WebpFile> {
@@ -78,12 +82,30 @@ function collectWebps(): ReadonlyArray<WebpFile> {
       // Valfri bfl5-only-flagga för staging av round5 (--only5 laddar bara bfl5_).
       if (process.argv.includes('--only5') && !f.startsWith('bfl5_') && !f.startsWith('bfl5b_') && !f.startsWith('bfl5c_') && !f.startsWith('bfl5d_')) continue;
       const storagePath = `${STORAGE_BUCKET}/${STAMPED_PREFIX}/${f}`;
+
+      // Läs cluster_tags från .json-metadata om den finns.
+      // bfl5v2-pipelinen sparar .json i local_image_library/<cat>/ (intill original-PNG)
+      // medan WebP:n ligger i local_image_library_stamped/<cat>/ — vi kollar båda.
+      const metaStamped = join(sub, f.replace(/\.webp$/, '.json'));
+      const metaOrig = join(process.cwd(), 'local_image_library', cat, f.replace(/\.webp$/, '.json'));
+      const metaPath = existsSync(metaStamped) ? metaStamped : metaOrig;
+      let clusterTags: string[] = [];
+      if (existsSync(metaPath)) {
+        try {
+          const meta = JSON.parse(readFileSync(metaPath, 'utf8')) as { cluster_tags?: string[] };
+          clusterTags = Array.isArray(meta.cluster_tags) ? meta.cluster_tags : [];
+        } catch {
+          // Ignorera trasig JSON — vi faller tillbaka till tom array
+        }
+      }
+
       out.push({
         cat,
         filename: f,
         storagePath,
         publicUrl: publicUrlFor(storagePath),
         sizeBytes: readFileSync(join(sub, f)).length,
+        clusterTags,
       });
     }
   }
@@ -102,6 +124,7 @@ async function addToLibrary(input: {
   public_url: string;
   category_slug: string;
   tags: string[];
+  cluster_tags?: string[];
   rating: number;
 }): Promise<AddToLibraryResult> {
   // Upsert med onConflict: storage_path, ignoreDuplicates: true (samma mönster
@@ -115,6 +138,7 @@ async function addToLibrary(input: {
         category_slug: input.category_slug,
         venue_pattern: null,
         tags: input.tags,
+        cluster_tags: input.cluster_tags ?? [],
         source_event_id: null,
         rating: input.rating,
         approved_by: 'auto',
@@ -166,11 +190,26 @@ async function uploadAndRegister(file: WebpFile): Promise<UploadResult> {
   // Välj tagg-set baserat på filnamn (round5 = bfl5_*, bfl5b_*, bfl5c_*, bfl5d_*).
   const isRound5 = /^bfl5[a-z]?_/.test(file.filename);
   const tags = isRound5 ? TAGS_ROUND5 : TAGS_ROUND2;
+
+  // 2026-10-12: om raden redan finns OCH vi nu har cluster_tags, uppdatera raden
+  // explicit (upsert med ignoreDuplicates hoppar befintliga rader). Detta är
+  // säkert: vi rör bara cluster_tags, inga andra fält.
+  if (file.clusterTags.length > 0) {
+    const { error: upErr } = await db
+      .from('image_library')
+      .update({ cluster_tags: file.clusterTags })
+      .eq('storage_path', file.storagePath);
+    if (upErr && upErr.code !== 'PGRST116') {
+      // PGRST116 = no rows updated, vilket är OK (raden finns inte → addToLibrary skapar den)
+    }
+  }
+
   const libRes = await addToLibrary({
     storage_path: file.storagePath,
     public_url: file.publicUrl,
     category_slug: file.cat,
     tags,
+    cluster_tags: file.clusterTags,   // ← nytt: läses från .json
     rating: DEFAULT_RATING,
   });
   if (!libRes.ok) {

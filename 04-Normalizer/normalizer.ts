@@ -819,7 +819,12 @@ export async function processRawEvent(job: Job<RawEventInput>): Promise<void> {
       // Om biblioteket är tomt (tidig uppstart) fortsätter vi till AI-jobbet.
       const libMatch = await pickLibraryFallback({
         venue_id,
+        venue_name: venueNameForSummary,
         category_slug,
+        // 2026-10-14 — steg 4: skicka event_id + raw_description så
+        // pickLibraryFallback kan använda v2-matchning (cluster_tags via M3).
+        event_id,
+        raw_description: raw.description ?? null,
       });
       if (libMatch.url && libMatch.library_id) {
         await markEventWithLibraryFallback(event_id, libMatch);

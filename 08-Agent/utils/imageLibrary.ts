@@ -24,6 +24,7 @@
  */
 
 import { createClient, type SupabaseClient } from '@supabase/supabase-js';
+import { findImageForEvent } from '../../BFL-generator/lib/match.js';
 
 let _supabase: SupabaseClient | null = null;
 function db(): SupabaseClient {
@@ -143,12 +144,17 @@ export interface FallbackInput {
   venue_name?: string | null;
   /** category_slug från event (t.ex. 'music', 'culture') */
   category_slug?: string | null;
+  // 2026-10-14 — steg 4: används av v2-matchning (cluster_tags via M3).
+  /** Event-id (för v2-matchning + framtida logging) */
+  event_id?: string | null;
+  /** Event-beskrivning (raw, som M3 ska läsa och generera taggar från) */
+  raw_description?: string | null;
 }
 
 export interface FallbackResult {
   url: string | null;
   library_id: string | null;
-  match_type: 'venue+category' | 'category' | 'kind' | 'default' | 'none';
+  match_type: 'cluster_match' | 'venue+category' | 'category' | 'kind' | 'default' | 'none';
 }
 
 /**
@@ -163,7 +169,43 @@ export async function pickLibraryFallback(input: FallbackInput): Promise<Fallbac
   //    Vi returnerar default som fallback om allt annat misslyckas.
   const emptyResult: FallbackResult = { url: null, library_id: null, match_type: 'none' };
 
-  // 1. Venue+category-match (2026-08-30): om vi har venue_name OCH det finns
+  // 1. Cluster-tags-matchning (2026-10-14, steg 4) — smartast alternativ.
+  //    M3 läser event-beskrivning → genererar 3-5 sök-taggar → matchar mot
+  //    image_library.cluster_tags (PostgREST cs. på 1-element-array per gren).
+  //    Vid träff: bästa bilden (lägst times_used vid lika overlap).
+  //    Vid fel/tomt/timeout: faller igenom till venue+category.
+  //    Vi wrappar i try/catch + Promise-race mot 5s så pipeline aldrig blockeras.
+  if (input.event_id && input.category_slug && input.raw_description?.trim()) {
+    try {
+      const v2 = await Promise.race([
+        findImageForEvent({
+          event_id: input.event_id,
+          category_slug: input.category_slug,
+          raw_description: input.raw_description,
+        }),
+        new Promise<null>((_, reject) =>
+          setTimeout(() => reject(new Error('v2-match timeout 5s')), 5_000),
+        ),
+      ]);
+      if (v2?.best?.id && v2.best.public_url) {
+        await bumpUsage(v2.best.id);
+        return {
+          url: stampedUrlForStoragePath(v2.best.storage_path ?? v2.best.public_url),
+          library_id: v2.best.id,
+          match_type: 'cluster_match',
+        };
+      }
+    } catch (err) {
+      // Tyst — vi vill inte krascha ingestion pga v2-fel. Logga som varning.
+      console.warn(
+        `[imageLibrary] v2-match misslyckades (event=${input.event_id}): ${
+          err instanceof Error ? err.message : 'okänt'
+        } → faller igenom till venue+category`,
+      );
+    }
+  }
+
+  // 2. Venue+category-match (2026-08-30): om vi har venue_name OCH det finns
   //    biblioteksbilder med venue_pattern som är en case-insensitive substring
   //    av venue_name, använd den. Kräver också category_slug (annars hade vi
   //    cross-cats som inte är samma typ av scen — t.ex. teater-venue får inte
