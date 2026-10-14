@@ -118,7 +118,7 @@ export async function runNliJudge(
   return result;
 }
 
-function parseNliVerdict(raw: string): NliVerdict {
+export function parseNliVerdict(raw: string): NliVerdict {
   const t = raw.trim().toUpperCase();
   // Strikt matchning — undvik tvetydighet
   if (t === 'Y' || t === 'YES' || t === 'JA') return 'yes';
