@@ -117,6 +117,11 @@ export default function NewEventCard({
   dateLine,
   meta,
   preview = null,
+  // 2026-10-14 — fas 5.7: utöka default-preview från 2 till 10 rader så
+  // Användaren slipper "Läs mer"-tratten och ser hela FACT-beskrivningen
+  // direkt i tilen. Samtalsvillkor 2026-10-14: "här vill jag ha 10 rader max".
+  // Konfigurerbart via prop för callers som vill ha cliffhanger-versionen.
+  previewLines = 10,
   badge = null,
   imageSource = null,
   saved = false,
@@ -314,11 +319,12 @@ export default function NewEventCard({
           </Text>
         ) : null}
 
-        {/* Rad 4 (valfri): description-preview */}
+        {/* Rad 4 (valfri): description-preview.
+            Antal rader styrs av `previewLines` prop (default 10 från 2026-10-14). */}
         {preview ? (
           <Text
             style={styles.preview}
-            numberOfLines={2}
+            numberOfLines={previewLines}
             ellipsizeMode="tail"
           >
             {preview}
