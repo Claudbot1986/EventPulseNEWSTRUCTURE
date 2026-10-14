@@ -114,7 +114,7 @@ describe('buildFactBasedFallback', () => {
     // Resterande meningar ska börja med känt label-ord.
     const allowedLabels = [
       'Typ', 'Medverkande', 'Genre', 'Längd', 'Lokal', 'Koncept',
-      'Repertoar', 'Ensemble', 'För', 'Plats', 'Datum', 'Pris', 'Type',
+      'Repertoar', 'Ensemble', 'För', 'Plats', 'Datum', 'Tid', 'Pris', 'Type',
     ];
     const sentences = r.text.split(/\.\s+/);
     // Första meningen ska vara title

@@ -154,8 +154,10 @@ function collectFactFields(
     });
   }
 
-  // 10. Datum (ger unikhet vid samma title/venue — samma show, olika datum)
+  // 10. Datum + tid (ger unikhet vid samma title/venue — samma show, olika datum/tid)
   // [FAS 5.2 2026-10-14] Title + venue + datum = garanterat unikt per event
+  // [FAS 5.3 2026-10-14] + Tid (HH:MM) eftersom många theatre-events har tom
+  // title → utan tid blir 351 events identiska "Typ: theater. Genre: drama..."
   if (event.start_time) {
     const d = new Date(event.start_time);
     if (!isNaN(d.getTime())) {
@@ -164,6 +166,17 @@ function collectFactFields(
         out.push({
           label: 'Datum',
           value: dateStr,
+          source: 'start_time',
+        });
+      }
+      // Tid (HH:MM) — separerar events med samma datum men olika tider
+      const hours = d.getHours().toString().padStart(2, '0');
+      const mins = d.getMinutes().toString().padStart(2, '0');
+      const timeStr = `${hours}:${mins}`;
+      if (timeStr !== '00:00') {
+        out.push({
+          label: 'Tid',
+          value: timeStr,
           source: 'start_time',
         });
       }
