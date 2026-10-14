@@ -143,13 +143,17 @@ async function backfillOne(
       performers,
     });
 
-    const hasContent =
-      (profile.performer_metadata && Object.keys(profile.performer_metadata).length > 0) ||
-      (profile.subject_metadata && Object.keys(profile.subject_metadata).length > 0);
-
-    if (!hasContent) {
-      return { updated: false, reason: 'no gazetteer hits', profile };
-    }
+    // Community-100%-arbete 2026-10-14: vi sparar nu ALLTID profilen, inte
+    // bara när subject/performer-metadata finns. Motivation:
+    //   - Community-events saknar ofta artist-namn → subject/performer träffar
+    //     inte curaterade subjects. Det betyder inte att profilen är tom.
+    //   - Profilen kan ha category-derived content (event_type, themes,
+    //     experience_characteristics, setting) som är verifierbart fakta.
+    //   - profileInfoLevel markerar korrekt hur 'tunn' profilen är.
+    //   - M3-writer faller tillbaka till deterministic FACT-summary för
+    //     LOW/VERY_LOW-profiler — så ingen påhittad info riskeras.
+    // Tidigare 'no gazetteer hits'-skip INAKTIVERAT (community-first, 2026-10-14).
+    const hasContent = true;
 
     // 5. Spara i DB
     const profileJson = {
