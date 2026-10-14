@@ -8,7 +8,8 @@
  *     Avicii Arena, Södra Teatern, Göta Lejon, Fylkingen, Strawberry
  *     Arena, Katalin) → music
  *   - Familj-titel (julfrossa, snögubben, "från X år", barnföreställning) → family
- *   - Mäss-titel (mässa, mässan, expo, konferens) → family (om barn) el. stannar
+ *   - Mäss-titel (mässa, mässan, expo, konferens) → exhibition
+ *   - Tur-titel (stadsvandring, guidad visning, guidad tur) → ovrigt
  *
  * Cross-site-evidens: musiker-venues innehåller events från 4+ olika källor
  * (livespot-stockholm, sthlmlist, nalen, berwaldhallen, stockholm-live).
@@ -41,6 +42,15 @@ const FAMILY_TITLES = [
   'mumindalen', 'barnföreställning', 'barnteater',
   'från 5 år', 'från 3 år', 'från 6 år', 'från 8 år', 'från 2 år',
   'barnshow', 'familjeföreställning',
+];
+const FAIR_TITLES = [
+  'mässa', 'mässan', 'expo', 'industrimässa', 'julmässa', 'höstmässa', 'vårmässa',
+  'bokmässa', 'skolmässa', 'gymnasimässa', 'arbetsmarknadsmässa',
+  'konferens', 'kongress', 'summit',
+];
+const TOUR_TITLES = [
+  'stadsvandring', 'guidad visning', 'guidad tur', 'guidning',
+  'sightseeing', 'promenad',
 ];
 const SKYVIEW_VENUES = ['skyview'];
 
@@ -84,6 +94,8 @@ async function main(): Promise<void> {
   // Klassificera
   const toMusic: DbEvent[] = [];
   const toFamily: DbEvent[] = [];
+  const toExhibition: DbEvent[] = [];
+  const toOvrigt: DbEvent[] = [];
   const skipped: { ev: DbEvent; reason: string }[] = [];
 
   for (const ev of all) {
@@ -112,24 +124,43 @@ async function main(): Promise<void> {
       toFamily.push(ev);
       continue;
     }
+
+    // FAIR (mässa/expo) → exhibition
+    // Cross-site-evidens: 12 av 15 fair-samples har "mässa"/"expo" i titeln
+    // från 3 olika källor (kungstradgarden, stockholmsmassan, lokalhelhet-calendar).
+    if (FAIR_TITLES.some(ft => title.includes(ft))) {
+      toExhibition.push(ev);
+      continue;
+    }
+
+    // TOUR (stadsvandring/guidad visning) → ovrigt
+    // Cross-site-evidens: alla 10 tour-samples har "stadsvandring"/"guidad"
+    // från samma källa (livespot-stockholm) — turistaktiviteter.
+    if (TOUR_TITLES.some(tt => title.includes(tt))) {
+      toOvrigt.push(ev);
+      continue;
+    }
   }
 
-  console.log(`  → music:  ${toMusic.length}`);
-  console.log(`  → family: ${toFamily.length}`);
-  console.log(`  → skip:   ${skipped.length} (Skyview-attraktioner)`);
-  console.log(`  total:    ${toMusic.length + toFamily.length + skipped.length} av ${all.length}`);
+  console.log(`  → music:      ${toMusic.length}`);
+  console.log(`  → family:     ${toFamily.length}`);
+  console.log(`  → exhibition: ${toExhibition.length}`);
+  console.log(`  → ovrigt:     ${toOvrigt.length}`);
+  console.log(`  → skip:       ${skipped.length} (Skyview-attraktioner)`);
+  const total = toMusic.length + toFamily.length + toExhibition.length + toOvrigt.length + skipped.length;
+  console.log(`  total:        ${total} av ${all.length}`);
 
   if (dryRun) {
     console.log('\n  DRY-RUN — inga ändringar. Kör utan --dry-run för att verkställa.');
-    console.log('\n  Sample (10 från music):');
-    for (const ev of toMusic.slice(0, 10)) {
-      const t = (ev.title_sv || ev.title_en || '?').slice(0, 45);
+    console.log('\n  Sample (5 från exhibition/fair):');
+    for (const ev of toExhibition.slice(0, 5)) {
+      const t = (ev.title_sv || ev.title_en || '?').slice(0, 50);
       const v = ev.venues?.name || '?';
       console.log(`    ${(ev.source || '?').padEnd(22)} | ${v.padEnd(25)} | ${t}`);
     }
-    console.log('\n  Sample (5 från family):');
-    for (const ev of toFamily.slice(0, 5)) {
-      const t = (ev.title_sv || ev.title_en || '?').slice(0, 45);
+    console.log('\n  Sample (5 från ovrigt/tour):');
+    for (const ev of toOvrigt.slice(0, 5)) {
+      const t = (ev.title_sv || ev.title_en || '?').slice(0, 50);
       const v = ev.venues?.name || '?';
       console.log(`    ${(ev.source || '?').padEnd(22)} | ${v.padEnd(25)} | ${t}`);
     }
@@ -140,6 +171,8 @@ async function main(): Promise<void> {
   const targets = [
     { events: toMusic, newSlug: 'music', label: 'music' },
     { events: toFamily, newSlug: 'family', label: 'family' },
+    { events: toExhibition, newSlug: 'exhibition', label: 'exhibition' },
+    { events: toOvrigt, newSlug: 'ovrigt', label: 'ovrigt' },
   ];
 
   for (const t of targets) {
@@ -160,6 +193,11 @@ async function main(): Promise<void> {
       }
     }
     console.log(`\n  ${t.label}: ${updated} uppdaterade, ${failed} fel`);
+    // Logga IDs för återställning om det behövs (FAS 5.2 2026-10-14)
+    if (t.events.length > 0) {
+      const idList = t.events.map(e => e.id).join(',');
+      console.log(`  IDs (för rollback): ${idList.slice(0, 200)}${idList.length > 200 ? '...' : ''}`);
+    }
   }
 
   console.log('\n  Klart. Verifiera med:');
