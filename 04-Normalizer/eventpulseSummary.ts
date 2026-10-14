@@ -502,22 +502,21 @@ export function formatSwedishDate(date: string | null): string | null {
  *   - "Standup med X på Norra Brunn i Stockholm den 12 november.
  *      Föreställningen börjar 20.00 och har 18-årsgräns."
  *
- * Community-fallback (2026-10-14): Om artist + venue båda saknas för
- * ett community-event OCH title finns → använd titeln som "vad". Detta
- * fyller 100% summary-täckning för community-bucketen där många events
- * saknar venue (fel venue-resolution, t.ex. "왕의 정원") eller artist.
+ * Title-fallback (2026-10-14): Om artist + venue båda saknas för
+ * ALLA event-typer OCH title finns → använd titeln som "vad". Detta
+ * fyller 100% summary-täckning även när venue-resolution är trasig
+ * (t.ex. "왕의 정원") eller artist inte extraheras. För music/concert
+ * slår title-fallback sällan in eftersom MusicBrainz normalt ger artist;
+ * för theatre-drama, community, exhibition m.fl. är titeln ofta det
+ * enda "vad" vi har — och det räcker.
  */
 export function buildEventpulseSummary(facts: EventpulseFacts): string | null {
   // Vi kräver MINST event_type + date för att summary ska vara värd att visa.
-  // Annars är den bara "Vad? När? Var? — Vet ej." vilket inte hjälper användaren.
   if (!facts.event_type || !facts.date) return null;
 
-  // Artist + venue krävs FÖR de flesta typer. För community tillåter vi
-  // dock title som fallback (community-100%-arbete 2026-10-14).
+  // Artist + venue krävs, ELLER title som fallback (alla typer från 2026-10-14).
   const hasArtistOrVenue = !!(facts.artist || facts.venue);
-  if (!hasArtistOrVenue) {
-    if (facts.event_type !== 'community' || !facts.title) return null;
-  }
+  if (!hasArtistOrVenue && !facts.title) return null;
 
   const swedishDate = formatSwedishDate(facts.date);
   const whereParts: string[] = [];
@@ -532,56 +531,56 @@ export function buildEventpulseSummary(facts: EventpulseFacts): string | null {
   if (facts.event_type === 'concert') {
     main = artistPrefix
       ? `Konsert med ${artistPrefix}`
-      : `Konsert`;
+      : (facts.title ?? `Konsert`);
     if (where) main += ` på ${where}`;
     if (swedishDate) main += ` den ${swedishDate}`;
     main += '.';
   } else if (facts.event_type === 'theater') {
     main = artistPrefix
       ? `Teater med ${artistPrefix}`
-      : `Teater`;
+      : (facts.title ?? `Teater`);
     if (where) main += ` på ${where}`;
     if (swedishDate) main += ` den ${swedishDate}`;
     main += '.';
   } else if (facts.event_type === 'standup') {
     main = artistPrefix
       ? `Standup med ${artistPrefix}`
-      : `Standup`;
+      : (facts.title ?? `Standup`);
     if (where) main += ` på ${where}`;
     if (swedishDate) main += ` den ${swedishDate}`;
     main += '.';
   } else if (facts.event_type === 'exhibition') {
     main = artistPrefix
       ? `Utställning med ${artistPrefix}`
-      : `Utställning`;
+      : (facts.title ?? `Utställning`);
     if (where) main += ` på ${where}`;
     if (swedishDate) main += ` med start ${swedishDate}`;
     main += '.';
   } else if (facts.event_type === 'festival') {
     main = artistPrefix
       ? `Festival med ${artistPrefix}`
-      : `Festival`;
+      : (facts.title ?? `Festival`);
     if (where) main += ` på ${where}`;
     if (swedishDate) main += ` den ${swedishDate}`;
     main += '.';
   } else if (facts.event_type === 'workshop') {
     main = artistPrefix
       ? `Workshop med ${artistPrefix}`
-      : `Workshop`;
+      : (facts.title ?? `Workshop`);
     if (where) main += ` på ${where}`;
     if (swedishDate) main += ` den ${swedishDate}`;
     main += '.';
   } else if (facts.event_type === 'screening') {
     main = artistPrefix
       ? `Visning med ${artistPrefix}`
-      : `Visning`;
+      : (facts.title ?? `Visning`);
     if (where) main += ` på ${where}`;
     if (swedishDate) main += ` den ${swedishDate}`;
     main += '.';
   } else if (facts.event_type === 'sport') {
     main = artistPrefix
       ? `Sportevenemang med ${artistPrefix}`
-      : `Sportevenemang`;
+      : (facts.title ?? `Sportevenemang`);
     if (where) main += ` på ${where}`;
     if (swedishDate) main += ` den ${swedishDate}`;
     main += '.';

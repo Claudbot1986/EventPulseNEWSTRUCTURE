@@ -121,13 +121,18 @@ const CATEGORY_HINTS: ReadonlyMap<string, CategoryHints> = new Map([
   ['theatre-drama', {
     event_type: 'theater',
     genres: ['drama'],
-    experience_characteristics: ['scenföreställning', 'berättande'],
-    content: ['pjäs', 'dialog', 'scenografi'],
-    target_audience: ['vuxna', 'kulturellt intresserade'],
+    // FAS 3 + Theatre-drama-100% (2026-10-14): utökat med content/themes
+    // för att ge M3 naturligt prosa-material som factuality kan verifiera
+    // mot öppna källor (Wikidata works + dramatiker-curator). Mönster: samma
+    // som music-entry (commit 4c2f215d) och community-entry (2026-10-14).
+    experience_characteristics: ['scenföreställning', 'berättande', 'emotionellt', 'gestaltning', 'litterär bearbetning'],
+    content: ['pjäs', 'dialog', 'scenografi', 'repliker', 'karaktärer', 'konflikt', 'tolkning'],
+    themes: ['relationer', 'makt', 'identitet', 'moral', 'samhälle', 'mänskliga villkor', 'historia'],
+    target_audience: ['vuxna', 'kulturellt intresserade', 'litteraturintresserade'],
     typical_duration_min: 150,
     default_setting: 'teater',
-    audience_participation: ['lyssning'],
-    performance_style: 'interpretativ',
+    audience_participation: ['lyssning', 'reflektion', 'applåd'],
+    performance_style: 'interpretativ med textbunden gestaltning',
   }],
   ['dance', {
     event_type: 'theater',
