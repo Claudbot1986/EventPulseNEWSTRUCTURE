@@ -79,12 +79,18 @@ export function useAiImageUrl(event) {
     return { uri: imageUrl, source: 'pre-baked', stampVisible: true };
   }
 
-  // 3. Library fallback — server assigned a library image when BFL was
-  //    unavailable (no_credits / transient error). image_ai_generated=false,
-  //    status='library_fallback'. No AI-stamp in the image.
+  // 3. Library / icke-AI-bild — server har redan bild-URL:en (antingen som
+  //    library_fallback efter BFL-fel, eller som direkt-uppladdad från
+  //    ingestion). Tidigare krävde detta `image_generation_status ===
+  //    'library_fallback'` exakt, vilket gjorde att events med status=null
+  //    (vanligaste fallet) föll till tom-box. Användaren såg att listan
+  //    visade Mica Millar-bilden men DetailsScreen visade "EVENT"-placeholder.
+  //
+  //    Beslut: image_ai_generated=false + image_url finns → visa den.
+  //    Skiljer inte på library_fallback / pending / null — alla är
+  //    "icke-AI-genererad" från klientperspektiv.
   if (
     event.image_ai_generated === false &&
-    event.image_generation_status === 'library_fallback' &&
     typeof imageUrl === 'string' &&
     imageUrl.length > 0
   ) {
