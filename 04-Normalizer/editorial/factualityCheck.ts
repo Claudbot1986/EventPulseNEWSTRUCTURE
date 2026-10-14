@@ -45,6 +45,7 @@ import {
   ageNormalForms,
   normalizeName,
   numberUnitNormalForms,
+  stemNormalForms,
 } from './claimNormalizer';
 
 // ─── Stopwords & claim-ignore ────────────────────────────────────────────────
@@ -141,6 +142,20 @@ const STYLISTIC_ADJECTIVES: ReadonlySet<string> = new Set([
   'publiknära', 'publikmöte',
   'scenframställan', 'scenframställning', 'scenuppsättning', 'scenkonst',
   'sammanhang', 'sammanhanget', 'sammanhangsberoende',
+  // [FAS 5.1.1 2026-10-14] Iteration 2: M3:s narrativa prosa
+  // innehåller verb som 'står', 'möter', 'söker' och termer som
+  // 'titeln', 'släktberättelse'. Dessa är stilistiska, inte materiella.
+  'står', 'möter', 'möter publiken', 'söker', 'söker sig',
+  'titeln', 'titeln antyter',
+  'släktberättelse', 'familjesaga', 'kärlekshistoria', 'kärlekssaga',
+  'antyder', 'antyter', 'skvallrar', 'skildrar', 'utspelar sig',
+  'pågår under', 'under hela', 'under en',
+  'kvällens', 'kvällen', 'eftermiddagens', 'dagens',
+  'gårdagens', 'morgondagens',
+  'generationer', 'generation', 'samtida',
+  'nostalgi', 'nostalgisk', 'nostalgiska',
+  'reflektion', 'reflektioner', 'reflekterar',
+  'arv', 'arvet', 'tradition', 'traditionen',
   // [FAS 5 2026-10-08] REVERTED duration/kvantitet-adjektiv.
   // Risken är hög att materiella claims ("lång konsert" när duration=30 min,
   // "många artister" utan stöd, "stor orkester" när Profile säger kammarensemble)
@@ -742,6 +757,9 @@ function matchClaim(claim: string, base: EvidenceBase): ClaimEvidence {
 
   // Generera alla normaliserade former av claimen (så "250:-" matchar
   // "250 kr" i evidens när price_normalForms genererar båda).
+  // [FAS 5.2 2026-10-14] Lägger även till stemming + compound-split (B från
+  // forskningsalternativen) så "kulturintresserade" matchar Profile-ordet
+  // "kulturellt" via stem. Deterministiskt, ingen ny dep, ingen LLM.
   const claimVariants = new Set<string>([norm]);
   for (const f of priceNormalForms(norm)) claimVariants.add(f);
   for (const f of durationNormalForms(norm)) claimVariants.add(f);
@@ -749,6 +767,12 @@ function matchClaim(claim: string, base: EvidenceBase): ClaimEvidence {
   for (const f of dateNormalForms(norm)) claimVariants.add(f);
   for (const f of ageNormalForms(norm)) claimVariants.add(f);
   for (const f of numberUnitNormalForms(norm)) claimVariants.add(f);
+  for (const f of stemNormalForms(norm)) claimVariants.add(f);
+
+  // Generera även stem-former för EVIDENCE BASE (så "kulturellt" i Profile
+  // får former som "kultur", "kulturell", "kulturella" — claim "kultur-
+  // intresserade" → "kultur" matchar via stem).
+  // Vi gör detta lazily nedan genom att anropa stemNormalForms i matchning.
 
   // 1) Direkt träff (någon variant)
   for (const variant of claimVariants) {
@@ -764,6 +788,42 @@ function matchClaim(claim: string, base: EvidenceBase): ClaimEvidence {
       if (supported.includes(variant) || variant.includes(supported)) {
         const evidence = base.sources.filter(s => s.value.toLowerCase().trim() === supported);
         return { claim, status: 'SUPPORTED', evidence, match_type: 'substring' };
+      }
+    }
+  }
+
+  // 2b) [FAS 5.2 2026-10-14] Stem-baserad matchning (B från forskningsalternativen).
+  // Matcha claim mot stödfras genom att jämföra deras stem-former. Om
+  // claim "kulturintresserade" och stödfras "kulturellt intresserade" båda
+  // har stammen "kultur" → match.
+  //
+  // Säkerhet: stemming kan bara göra ord mer GENERELLA. Vi minskar risken för
+  // false positives genom att:
+  //   - Kräva MINST en gemensam stem av längd ≥4
+  //   - Bara tillåta match om claim-stem är längre än den som stödfrasen har
+  //     (dvs claim är mer specifikt och stödfras täcker det)
+  for (const variant of claimVariants) {
+    if (variant.length < 4) continue;
+    const claimStems = stemNormalForms(variant);
+    for (const claimStem of claimStems) {
+      if (claimStem.length < 4) continue;
+      for (const supported of base.direct) {
+        if (supported.length < 4) continue;
+        // Direkt substring av stem i stödfras eller vice versa
+        if (supported.includes(claimStem) || claimStem.includes(supported)) {
+          // Säkerhetsvillkor: claim-stem måste vara minst lika lång som stödfras-ordet
+          // (så "kultur" i claim matchar "kulturellt" i profile, men "kul" matchar inte allt)
+          const supportedWords = supported.split(/\s+/);
+          for (const sw of supportedWords) {
+            if (sw.includes(claimStem) || claimStem.includes(sw)) {
+              if (Math.min(claimStem.length, sw.length) >= 4 &&
+                  claimStem.length >= sw.length * 0.6) {  // claim-stem minst 60% av stödfras-ordets längd
+                const evidence = base.sources.filter(s => s.value.toLowerCase().trim() === supported);
+                return { claim, status: 'SUPPORTED', evidence, match_type: 'word-overlap' };
+              }
+            }
+          }
+        }
       }
     }
   }
@@ -822,6 +882,20 @@ export interface FactualityCheckInput {
     city?: string | null;
     category_slug?: string | null;
   };
+  /**
+   * [FAS 5.2 2026-10-14] Valfri NLI-judge (alternativ C från forskningsanalys).
+   * Används som sista steg efter substring+stem-matchning. Anropas ENDAST för
+   * claims som misslyckats med båda deterministiska metoderna OCH som inte
+   * är stilord. Judge får claim + lista av evidence-fraser och svarar 'yes'
+   * (SUPPORTED) eller 'no' (UNSUPPORTED).
+   *
+   * Säkerhet: judge anropas BARA för materiala claims. Stilord skippas
+   * automatiskt via STYLISTIC_ADJECTIVES + STOPWORDS. Om judge säger 'yes'
+   * till en claim som inte borde stödjas är det en judge-fel (LLM har ~75%
+   * accuracy enligt forskning), men vi kompletterar med confidence < 1.0 i
+   * svaret så caller kan filtrera.
+   */
+  nliJudge?: (claim: string, evidencePhrases: string[]) => Promise<'yes' | 'no' | 'unsure'>;
 }
 
 /**

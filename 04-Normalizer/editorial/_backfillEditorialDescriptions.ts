@@ -88,7 +88,7 @@ interface BackfillStats {
 
 async function fetchEventsToDescribe(
   supabase: ReturnType<typeof createClient>,
-  args: { limit?: number; category?: string },
+  args: { limit?: number; category?: string; excludeCategories?: string[] },
 ): Promise<DbEvent[]> {
   const now = new Date().toISOString();
   const PAGE = 1000;
@@ -112,6 +112,18 @@ async function fetchEventsToDescribe(
     const { data, error } = await q;
     if (error) throw new Error(`fetch events: ${error.message}`);
     if (!data || data.length === 0) break;
+    // [FAS 5.2 2026-10-14] Filtrera bort exkluderade kategorier i kod
+    // (PostgREST neq-filter vore bättre men PostgREST saknar native NOT IN)
+    let filtered = data as DbEvent[];
+    if (args.excludeCategories?.length) {
+      filtered = filtered.filter(e => !args.excludeCategories!.includes(e.category_slug ?? ''));
+    }
+    all.push(...filtered);
+    if (data.length < PAGE) break;
+    if (all.length >= target) break;
+  }
+  return all.slice(0, target === Number.MAX_SAFE_INTEGER ? all.length : target);
+}
     all.push(...(data as DbEvent[]));
     if (data.length < PAGE) break;
   }
@@ -226,11 +238,22 @@ async function main(): Promise<void> {
   const category = catArg ? catArg.slice('--category='.length) : undefined;
   const concArg = args.find((a) => a.startsWith('--concurrency='));
   const concurrency = concArg ? parseInt(concArg.slice('--concurrency='.length), 10) : 4;
+  const noNli = args.includes('--no-nli');
+  // [FAS 5.2 2026-10-14] Användaren bad att skippa musik (redan 35% editorial).
+  // Default exkluderar alla musik-kategorier såvida inte --category= används.
+  const defaultExclude = !category
+    ? ['music', 'rock', 'pop', 'jazz', 'electronic', 'hip-hop', 'classical', 'musical-theatre']
+    : [];
+  const excludeArg = args.find((a) => a.startsWith('--exclude-category='));
+  const exclude = excludeArg
+    ? excludeArg.slice('--exclude-category='.length).split(',').map(s => s.trim())
+    : defaultExclude;
 
   console.log('═'.repeat(78));
   console.log('  BACKFILL editorial_description — M3 + factuality + independence');
   console.log(`  Mode: ${dryRun ? 'DRY-RUN' : 'PROD'} ${strict ? '(STRICT)' : ''}`);
-  console.log(`  Limit: ${limit ?? 'alla'} | Category: ${category ?? 'alla'} | Concurrency: ${concurrency}`);
+  console.log(`  Limit: ${limit ?? 'alla'} | Category: ${category ?? 'alla'} | Exclude: ${exclude.join(',') || 'none'}`);
+  console.log(`  Concurrency: ${concurrency} | NLI-judge: ${noNli ? 'AV' : 'PÅ'}`);
   console.log('═'.repeat(78));
 
   if (!process.env.MINIMAX_API_KEY) {
@@ -243,7 +266,7 @@ async function main(): Promise<void> {
     process.env.SUPABASE_SERVICE_ROLE_KEY!,
   );
 
-  const events = await fetchEventsToDescribe(supabase, { limit, category });
+  const events = await fetchEventsToDescribe(supabase, { limit, category, excludeCategories: exclude });
   console.log(`\nHittade ${events.length} events att bearbeta.\n`);
   if (events.length === 0) { console.log('Inga events. Klar.'); return; }
 

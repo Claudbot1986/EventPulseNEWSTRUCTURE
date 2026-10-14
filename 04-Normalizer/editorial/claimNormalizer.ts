@@ -423,3 +423,100 @@ export function allNormalForms(text: string, kind?: 'duration' | 'date' | 'time'
 
   return Array.from(forms).filter((f) => f.length >= 2);
 }
+
+// ─── Swedish stemming / compound splitting (FAS 5.2, 2026-10-14) ────────────
+
+/**
+ * Generera normaliserade former av ett svenskt ord via enkel stemming +
+ * compound-split. Används för att matcha M3:s prosa mot Profile-ord trots
+ * böjningsformer.
+ *
+ * Forskningsreferens (2024-2025): "Evaluators heavily rely on surface-level
+ * matches between the claim and the document" (Rashkin et al. 2023, citerat
+ * i arXiv 2501.14883). Substring-match är standard, men lider av:
+ *   1. Böjningsformer ("kulturellt" vs "kulturella")
+ *   2. Sammansatta ord ("kulturintresserade" vs "kulturellt intresserade")
+ *
+ * Denna funktion genererar former som en substring-match borde hitta:
+ *   "kulturellt" → { "kulturellt", "kulturell", "kultur" }
+ *   "kulturintresserade" → { "kulturintresserade", "kultur", "intresserad",
+ *                             "intresse", "intress" }
+ *
+ * VIKTIGT: Detta är INTE full SNT/lemma — vi har inte Swedish Treebank
+ * i produktion. Det är heuristiskt: 5-6 vanliga suffix borttagna + första
+ * sammansättningsled (5+ tecken). Det är deterministiskt, ingen LLM, ingen
+ * extern dep.
+ *
+ * Säkerhet: stemming kan bara göra ett ord GENERELLARE, aldrig mer specifikt.
+ * Ett "kultur" claim kan inte matcha "kulturellt intresserade" (det omvända).
+ * Vi minskar risken för false positives genom att INTE splitta ord <7 tecken.
+ */
+export function stemNormalForms(text: string): string[] {
+  if (!text) return [];
+  const forms = new Set<string>();
+  const lower = text.toLowerCase().trim();
+  if (lower.length < 4) return [lower];
+  forms.add(lower);
+
+  // Lista över vanliga svenska ändelser att prova (längsta först)
+  const SUFFIXES = [
+    'intresserade', 'inriktade', 'förankrade',
+    'iserade', 'iserade', 'arbetande', 'agerande',
+    'ande', 'ende',
+    'hetens', 'hetar', 'heten',
+    'tionen', 'tioner', 'tion',
+    'erade', 'erade', 'erande',
+    'het', 'iska', 'iskt', 'iska', 'isk',
+    'ade', 'ande',
+    'ade', 'are', 'ast', 'are',
+    'ens', 'ers', 'arn', 'ans',
+    'ar', 'er', 'or', 'an', 'en', 'et', 'as',
+    's', 't', 'd', 'n',
+  ];
+
+  // Steg 1: Strip suffix (längsta först) — ger grundform
+  let stem = lower;
+  for (const suf of SUFFIXES) {
+    if (stem.endsWith(suf) && stem.length - suf.length >= 3) {
+      stem = stem.slice(0, -suf.length);
+      break;
+    }
+  }
+  if (stem.length >= 4) forms.add(stem);
+
+  // Steg 2: Compound-split — splitta på "intresserade", "-", "+"
+  // Exempel: "kulturintresserade" → "kultur" + "intresserade"
+  // Bara splittra om första ledet är ≥6 tecken (sannolik sammansättning)
+  for (const sep of ['intresserade', 'inriktade', 'förankrad', '-', ' ', '+']) {
+    if (lower.includes(sep)) {
+      const parts = lower.split(sep);
+      for (const p of parts) {
+        const trimmed = p.trim();
+        if (trimmed.length >= 4) forms.add(trimmed);
+        if (trimmed.length >= 7) {
+          // Strip suffix även på compound-led
+          for (const suf of SUFFIXES) {
+            if (trimmed.endsWith(suf) && trimmed.length - suf.length >= 4) {
+              forms.add(trimmed.slice(0, -suf.length));
+              break;
+            }
+          }
+        }
+      }
+    }
+  }
+
+  // Steg 3: För mycket sammansatta ord (kulturintresserade), splitta på "in", "för"
+  // för att hitta "kultur" + "intresserade"
+  if (lower.length >= 12) {
+    for (const joiner of ['intresserade', 'inriktade', 'förankrade', 'anordnade', 'genomförande', 'relaterade', 'förknippade']) {
+      const idx = lower.indexOf(joiner);
+      if (idx > 0) {
+        const left = lower.slice(0, idx);
+        if (left.length >= 4) forms.add(left);
+      }
+    }
+  }
+
+  return Array.from(forms);
+}
