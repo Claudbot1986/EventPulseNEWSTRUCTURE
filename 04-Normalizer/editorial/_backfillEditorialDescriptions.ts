@@ -124,11 +124,6 @@ async function fetchEventsToDescribe(
   }
   return all.slice(0, target === Number.MAX_SAFE_INTEGER ? all.length : target);
 }
-    all.push(...(data as DbEvent[]));
-    if (data.length < PAGE) break;
-  }
-  return all.slice(0, target === Number.MAX_SAFE_INTEGER ? all.length : target);
-}
 
 /**
  * Kör runEditorialPipeline för ett event. sourceDescription (raw_description)
