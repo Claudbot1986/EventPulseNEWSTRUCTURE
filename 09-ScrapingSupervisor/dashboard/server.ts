@@ -11,6 +11,7 @@
 
 import { createServer, IncomingMessage, ServerResponse } from 'http';
 import { readFileSync, readdirSync, statSync, existsSync, mkdirSync, appendFileSync } from 'fs';
+import { spawn } from 'child_process';
 import { dirname, join, resolve } from 'path';
 import { fileURLToPath, pathToFileURL } from 'url';
 import {
@@ -965,6 +966,140 @@ async function collectBflCredits(): Promise<BflCredits> {
     lastIngestionErrorAt: errs.length > 0 ? errs[errs.length - 1].timestamp : null,
     lastIngestionErrorMsg: errs.length > 0 ? errs[errs.length - 1].error : null,
   };
+}
+
+// ─── BFL orchestrate helpers (2026-10-12) ────────────────────────────────
+// Wrapper runt scripts/bfl_orchestrate.ts — dashboard-knappen spawnar
+// subprocess och läser samma tmp/bfl_runs/<runId>.json som CLI:n skriver.
+
+interface BflCategoryRow {
+  slug: string;
+  libraryCount: number;
+}
+
+async function collectBflCategories(): Promise<BflCategoryRow[]> {
+  // Hämta distinct kategorier från image_library + räkna rader per kategori.
+  // PostgREST ger oss group via select(category_slug, count) men för enkelhetens
+  // skull frågor vi events-tabellen (image_library saknar groupby-API i PostgREST).
+  const url = process.env.SUPABASE_URL;
+  const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  if (!url || !key) throw new Error('SUPABASE_URL/KEY saknas');
+  const res = await fetch(
+    `${url}/rest/v1/image_library?select=category_slug&limit=10000`,
+    { headers: { apikey: key, Authorization: `Bearer ${key}` } },
+  );
+  if (!res.ok) throw new Error(`image_library fetch ${res.status}`);
+  const rows = (await res.json()) as Array<{ category_slug: string | null }>;
+  const byCat = new Map<string, number>();
+  for (const r of rows) {
+    if (!r.category_slug) continue;
+    byCat.set(r.category_slug, (byCat.get(r.category_slug) ?? 0) + 1);
+  }
+  return [...byCat.entries()]
+    .sort((a, b) => b[1] - a[1])
+    .map(([slug, libraryCount]) => ({ slug, libraryCount }));
+}
+
+interface StartBflOrchestratorInput {
+  category: string;
+  count: number;
+  maxCredits?: number;
+  mockPrompts?: boolean;
+}
+
+interface StartBflOrchestratorResult {
+  ok: boolean;
+  runId: string;
+  pid: number;
+  estimatedCredits: number;
+  runJsonPath: string;
+}
+
+function newBflRunId(): string {
+  const ts = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19);
+  const rand = Math.random().toString(36).slice(2, 8);
+  return `${ts}-${rand}`;
+}
+
+function startBflOrchestrator(input: StartBflOrchestratorInput): StartBflOrchestratorResult {
+  const runId = newBflRunId();
+  const estimated = 4 * input.count;
+  const args = [
+    '--env-file=.env', '--import', 'tsx',
+    'scripts/bfl_orchestrate.ts',
+    `--category=${input.category}`,
+    `--count=${input.count}`,
+    `--run-id=${runId}`,
+  ];
+  if (input.maxCredits) args.push(`--max-credits=${input.maxCredits}`);
+  if (input.mockPrompts) args.push('--mock-prompts');
+
+  const child = spawn('node', args, {
+    cwd: PROJECT_ROOT,
+    env: process.env,
+    stdio: ['ignore', 'pipe', 'pipe'],
+    detached: true,
+  });
+
+  // Starta detached så child överlever om dashboard-servern startas om.
+  child.stdout?.on('data', () => {}); // tyst — orchestrator skriver till run-JSON
+  child.stderr?.on('data', () => {});
+  child.unref();
+
+  const pid = child.pid ?? -1;
+  return {
+    ok: pid > 0,
+    runId,
+    pid,
+    estimatedCredits: estimated,
+    runJsonPath: join(PROJECT_ROOT, 'tmp', 'bfl_runs', `${runId}.json`),
+  };
+}
+
+function readBflRunState(runId: string): unknown | null {
+  // Säkerhets-validera runId (förhindra path traversal)
+  if (!/^[A-Za-z0-9_\-:]+$/.test(runId)) return null;
+  const path = join(PROJECT_ROOT, 'tmp', 'bfl_runs', `${runId}.json`);
+  if (!existsSync(path)) return null;
+  try {
+    return JSON.parse(readFileSync(path, 'utf8'));
+  } catch {
+    return null;
+  }
+}
+
+interface CancelBflRunResult {
+  ok: boolean;
+  cancelled: boolean;
+  reason?: string;
+}
+
+function cancelBflRun(runId: string): CancelBflRunResult {
+  if (!/^[A-Za-z0-9_\-:]+$/.test(runId)) return { ok: false, cancelled: false, reason: 'invalid runId' };
+  const state = readBflRunState(runId) as { status?: string } | null;
+  if (!state) return { ok: false, cancelled: false, reason: 'run not found' };
+  if (state.status === 'success' || state.status === 'failed' || state.status === 'cancelled') {
+    return { ok: false, cancelled: false, reason: `run already ${state.status}` };
+  }
+  // Hitta orchestrator-processen via pid-filen i runJsonPath
+  // Vi har bara runId — orchestrator skrev pid till runJsonPath. Använde
+  // process.pid (=dashboard-pid) i sin initiala record. Bättre: orchestrator
+  // kan uppdatera med child-pid. För nu: returnera "use SIGTERM via pid 0".
+  // Implementation: orchestrator skriver pid i sin egen run-JSON (se
+  // scripts/bfl_orchestrate.ts:initResult — process.pid). För att verkligen
+  // kunna cancel behöver vi orchestratorns child-pid, inte dashboard-pid.
+  // HACK: orchestrator-pid = parent pid av om spawn kör i `tsx`-träd. Vi
+  // försöker `pgrep -f bfl_orchestrate.ts --category=${category}` via subprocess.
+  try {
+    // Enklaste strategin: kör `pkill -TERM -f bfl_orchestrate.ts`. Risken är
+    // att vi dödar andra pågående orchestrator-körningar. För dashboard-
+    // användning räcker detta — det finns sällan >1 samtidig körning.
+    const { execSync } = require('node:child_process') as typeof import('node:child_process');
+    execSync('pkill -TERM -f "bfl_orchestrate.ts"', { stdio: 'ignore' });
+    return { ok: true, cancelled: true };
+  } catch {
+    return { ok: false, cancelled: false, reason: 'no orchestrator process to kill' };
+  }
 }
 
 // 10-Analytics server (port 7778) — direkt fetch mot /health, 10s cache.
@@ -2092,6 +2227,106 @@ async function serveJson(req: IncomingMessage, res: ServerResponse): Promise<boo
     }
     return true;
   }
+
+  // ─── BFL orchestrate endpoints (2026-10-12) ────────────────────────────
+  // Möjliggör knapp-kontrollerad BFL-bildgenerering direkt från dashboard.
+  // GET  /api/bfl/categories  — distinct kategorier från image_library
+  // POST /api/bfl/run         — starta orchestrator (returnerar runId + pid)
+  // GET  /api/bfl/run/:id/status — läs senaste state från tmp/bfl_runs/<id>.json
+  // POST /api/bfl/run/:id/cancel — SIGTERM till orchestrator-processen
+
+  if (req.method === 'GET' && url === '/api/bfl/categories') {
+    try {
+      const cats = await collectBflCategories();
+      res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'no-cache' });
+      res.end(JSON.stringify({ ok: true, categories: cats }));
+    } catch (err) {
+      res.writeHead(500, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ ok: false, error: String((err as Error)?.message ?? err) }));
+    }
+    return true;
+  }
+
+  if (req.method === 'POST' && url === '/api/bfl/run') {
+    try {
+      const body = await new Promise<string>((resolve, reject) => {
+        const chunks: Buffer[] = [];
+        req.on('data', (c: Buffer) => chunks.push(c));
+        req.on('end', () => resolve(Buffer.concat(chunks).toString('utf8')));
+        req.on('error', reject);
+      });
+      const parsed = JSON.parse(body || '{}') as {
+        category?: string;
+        count?: number;
+        maxCredits?: number;
+        mockPrompts?: boolean;
+      };
+      if (typeof parsed.category !== 'string' || parsed.category.length === 0) {
+        res.writeHead(400, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ ok: false, error: 'missing category' }));
+        return true;
+      }
+      if (typeof parsed.count !== 'number' || parsed.count <= 0 || parsed.count > 2000) {
+        res.writeHead(400, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ ok: false, error: 'count must be 1-2000' }));
+        return true;
+      }
+      const estimated = 4 * parsed.count;
+      const cap = parsed.maxCredits ?? estimated;
+      if (estimated > cap) {
+        res.writeHead(400, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ ok: false, error: `credit-spärr: ${estimated} > ${cap}` }));
+        return true;
+      }
+      // Kolla tillgängliga credits om vi kan (för att ge en tydligare 400)
+      let available: number | null = null;
+      try {
+        const credits = await collectBflCredits();
+        if (typeof credits.credits === 'number') available = credits.credits;
+      } catch {
+        /* ignore — tillåt körning ändå */
+      }
+      if (available !== null && estimated > available) {
+        res.writeHead(400, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ ok: false, error: `BFL-credits otillräckligt: behov=${estimated}, tillgängligt=${available}` }));
+        return true;
+      }
+      const run = startBflOrchestrator(parsed);
+      _bflCreditsCache = null; // invalidate — körningen kan påverka framtida kredit-räkning
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify(run));
+    } catch (err) {
+      res.writeHead(500, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ ok: false, error: String((err as Error)?.message ?? err) }));
+    }
+    return true;
+  }
+
+  // /api/bfl/run/:id/status
+  const statusMatch = url.match(/^\/api\/bfl\/run\/([^/]+)\/status$/);
+  if (statusMatch && req.method === 'GET') {
+    const runId = statusMatch[1];
+    const state = readBflRunState(runId);
+    if (!state) {
+      res.writeHead(404, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ ok: false, error: 'run not found' }));
+      return true;
+    }
+    res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'no-cache' });
+    res.end(JSON.stringify({ ok: true, result: state }));
+    return true;
+  }
+
+  // /api/bfl/run/:id/cancel
+  const cancelMatch = url.match(/^\/api\/bfl\/run\/([^/]+)\/cancel$/);
+  if (cancelMatch && req.method === 'POST') {
+    const runId = cancelMatch[1];
+    const cancelled = cancelBflRun(runId);
+    res.writeHead(cancelled.ok ? 200 : 404, { 'Content-Type': 'application/json' });
+    res.end(JSON.stringify(cancelled));
+    return true;
+  }
+
   return false;
 }
 

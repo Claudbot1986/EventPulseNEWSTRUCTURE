@@ -24,6 +24,13 @@
           <span class="bfl-credits-box-sub">AI-gen bilder</span>
         </span>
       </a>
+      <button type="button" id="btn-bfl-generate" class="bfl-generate-btn" aria-label="Generate BFL images for a category">
+        <span class="bfl-generate-btn-icon" aria-hidden="true">🪄</span>
+        <span class="bfl-generate-btn-text">
+          <span class="bfl-generate-btn-title">Generera BFL-bilder</span>
+          <span class="bfl-generate-btn-sub">välj kategori + antal</span>
+        </span>
+      </button>
       <div id="bfl-ingestion-status" class="bfl-ingestion-status bfl-ingestion-status--hidden" aria-live="polite" aria-atomic="true">
         <span id="bfl-ingestion-status-text">inga krediter under ingestion</span>
       </div>
@@ -733,6 +740,72 @@
         <button type="button" class="review-modal-close" data-review-close aria-label="Close">×</button>
       </header>
       <div id="review-modal-body" class="review-modal-body"></div>
+    </div>
+  </div>
+
+  <!-- BFL-generate modal (2026-10-12) — startar bfl_orchestrate.ts med progress -->
+  <div id="bfl-generate-modal" class="bfl-modal" role="dialog" aria-modal="true" aria-labelledby="bfl-generate-modal-title" hidden>
+    <div class="bfl-modal-overlay" data-bfl-generate-close></div>
+    <div class="bfl-modal-content">
+      <header class="bfl-modal-header">
+        <h2 id="bfl-generate-modal-title">🪄 Generera BFL-bilder</h2>
+        <button type="button" class="bfl-modal-close" data-bfl-generate-close aria-label="Close">×</button>
+      </header>
+      <div class="bfl-modal-body">
+        <div class="bfl-form-row">
+          <label for="bfl-category-select">Kategori</label>
+          <select id="bfl-category-select"></select>
+        </div>
+        <div class="bfl-form-row">
+          <label>Antal</label>
+          <div class="bfl-count-presets">
+            <button type="button" class="bfl-count-btn" data-count="20">20</button>
+            <button type="button" class="bfl-count-btn" data-count="50">50</button>
+            <button type="button" class="bfl-count-btn" data-count="100">100</button>
+            <button type="button" class="bfl-count-btn" data-count="250">250</button>
+            <button type="button" class="bfl-count-btn" data-count="500">500</button>
+            <input type="number" id="bfl-count-custom" min="1" max="2000" placeholder="Custom" />
+          </div>
+        </div>
+        <div class="bfl-form-row">
+          <label class="bfl-checkbox-label">
+            <input type="checkbox" id="bfl-mock-prompts" checked />
+            Använd mock-prompter (skippa M3 — säkrare default)
+          </label>
+        </div>
+        <div class="bfl-cost-info">
+          <div>Beräknad kostnad: <strong id="bfl-cost-credits">0</strong> BFL-credits</div>
+          <div>Tillgängligt: <strong id="bfl-available-credits">—</strong> BFL-credits</div>
+          <div id="bfl-cost-warning" class="bfl-cost-warning" hidden></div>
+        </div>
+        <div class="bfl-progress" id="bfl-progress" hidden>
+          <div class="bfl-progress-step" data-step="cluster">
+            <span class="bfl-progress-icon">○</span>
+            <span class="bfl-progress-label">Klustrar events</span>
+            <span class="bfl-progress-detail"></span>
+          </div>
+          <div class="bfl-progress-step" data-step="batch">
+            <span class="bfl-progress-icon">○</span>
+            <span class="bfl-progress-label">Genererar bilder (BFL)</span>
+            <span class="bfl-progress-detail"></span>
+          </div>
+          <div class="bfl-progress-step" data-step="upload">
+            <span class="bfl-progress-icon">○</span>
+            <span class="bfl-progress-label">Laddar upp till library</span>
+            <span class="bfl-progress-detail"></span>
+          </div>
+          <div class="bfl-progress-step" data-step="backfill">
+            <span class="bfl-progress-icon">○</span>
+            <span class="bfl-progress-label">Tilldelar events bilder</span>
+            <span class="bfl-progress-detail"></span>
+          </div>
+        </div>
+        <div class="bfl-modal-actions">
+          <button type="button" id="bfl-generate-cancel-btn" class="bfl-btn-secondary" aria-label="Cancel running BFL job">Avbryt körning</button>
+          <button type="button" id="bfl-generate-submit-btn" class="bfl-btn-primary">Starta</button>
+        </div>
+        <div id="bfl-generate-log" class="bfl-generate-log" hidden></div>
+      </div>
     </div>
   </div>
 

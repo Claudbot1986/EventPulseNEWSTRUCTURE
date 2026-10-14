@@ -463,6 +463,7 @@ function applyAnalyticsServerState(as) {
 
   // Wire review buttons (after DOM is ready, once)
   wireReviewButtons();
+  initBflGenerateModal();
 })();
 
 /** Minimal HTML escaper for DB-fed source names rendered into innerHTML. */
@@ -1708,6 +1709,293 @@ function wireReviewButtons() {
 function closeReviewModal() {
   const m = document.getElementById('review-modal');
   if (m) m.hidden = true;
+}
+
+// ─── BFL generate modal (2026-10-12) ────────────────────────────────────
+
+let bflModalState = {
+  runId: null,
+  pollTimer: null,
+  count: 20,
+  availableCredits: null,
+};
+
+function initBflGenerateModal() {
+  const btn = document.getElementById('btn-bfl-generate');
+  if (!btn || btn.dataset.wired) return;
+  btn.dataset.wired = '1';
+  btn.addEventListener('click', openBflGenerateModal);
+
+  // Close handlers
+  document.querySelectorAll('[data-bfl-generate-close]').forEach((el) => {
+    if (el.dataset.wired) return;
+    el.dataset.wired = '1';
+    el.addEventListener('click', closeBflGenerateModal);
+  });
+
+  // Esc key closes
+  document.addEventListener('keydown', (ev) => {
+    const m = document.getElementById('bfl-generate-modal');
+    if (ev.key === 'Escape' && m && !m.hidden) closeBflGenerateModal();
+  });
+
+  // Count presets
+  document.querySelectorAll('.bfl-count-btn').forEach((btn) => {
+    if (btn.dataset.wired) return;
+    btn.dataset.wired = '1';
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.bfl-count-btn').forEach((b) => b.classList.remove('active'));
+      btn.classList.add('active');
+      const custom = document.getElementById('bfl-count-custom');
+      if (custom) custom.value = '';
+      bflModalState.count = parseInt(btn.dataset.count, 10);
+      updateBflCost();
+    });
+  });
+
+  // Custom count
+  const customInput = document.getElementById('bfl-count-custom');
+  if (customInput) {
+    customInput.addEventListener('input', () => {
+      document.querySelectorAll('.bfl-count-btn').forEach((b) => b.classList.remove('active'));
+      bflModalState.count = parseInt(customInput.value, 10) || 0;
+      updateBflCost();
+    });
+  }
+
+  // Default: 20 markerad
+  const defaultBtn = document.querySelector('.bfl-count-btn[data-count="20"]');
+  if (defaultBtn) defaultBtn.classList.add('active');
+
+  // Submit
+  const submitBtn = document.getElementById('bfl-generate-submit-btn');
+  if (submitBtn) submitBtn.addEventListener('click', submitBflRun);
+
+  // Cancel run
+  const cancelBtn = document.getElementById('bfl-generate-cancel-btn');
+  if (cancelBtn) cancelBtn.addEventListener('click', cancelBflRun);
+}
+
+async function openBflGenerateModal() {
+  const m = document.getElementById('bfl-generate-modal');
+  if (!m) return;
+  m.hidden = false;
+
+  // Nollställ progress om det fanns från förra körningen
+  resetBflProgress();
+
+  // Hämta kategorier + credits parallellt
+  try {
+    const [catsRes, creditsRes] = await Promise.all([
+      fetch('/api/bfl/categories').then((r) => r.json()),
+      fetch('/api/bfl-credits').then((r) => r.json()),
+    ]);
+    const select = document.getElementById('bfl-category-select');
+    if (select && catsRes.ok && Array.isArray(catsRes.categories)) {
+      select.innerHTML = catsRes.categories
+        .map((c) => `<option value="${c.slug}">${c.slug} (${c.libraryCount} bilder)</option>`)
+        .join('');
+    }
+    if (creditsRes && typeof creditsRes.credits === 'number') {
+      bflModalState.availableCredits = creditsRes.credits;
+      const el = document.getElementById('bfl-available-credits');
+      if (el) el.textContent = String(creditsRes.credits);
+    }
+    updateBflCost();
+  } catch (err) {
+    console.warn('[bfl-modal] kunde inte ladda kategorier/credits:', err);
+  }
+}
+
+function closeBflGenerateModal() {
+  const m = document.getElementById('bfl-generate-modal');
+  if (m) m.hidden = true;
+  if (bflModalState.pollTimer) {
+    clearInterval(bflModalState.pollTimer);
+    bflModalState.pollTimer = null;
+  }
+}
+
+function updateBflCost() {
+  const cost = 4 * bflModalState.count;
+  const el = document.getElementById('bfl-cost-credits');
+  if (el) el.textContent = String(cost);
+  const warnEl = document.getElementById('bfl-cost-warning');
+  const submitBtn = document.getElementById('bfl-generate-submit-btn');
+  if (bflModalState.availableCredits !== null && cost > bflModalState.availableCredits) {
+    if (warnEl) {
+      warnEl.textContent = `⚠️ Kostnad överstigerade tillgängliga credits (${cost} > ${bflModalState.availableCredits})`;
+      warnEl.hidden = false;
+    }
+    if (submitBtn) submitBtn.disabled = true;
+  } else if (warnEl) {
+    warnEl.hidden = true;
+    if (submitBtn) submitBtn.disabled = false;
+  }
+}
+
+function resetBflProgress() {
+  const progress = document.getElementById('bfl-progress');
+  if (progress) progress.hidden = true;
+  document.querySelectorAll('.bfl-progress-step').forEach((step) => {
+    step.querySelector('.bfl-progress-icon').textContent = '○';
+    step.querySelector('.bfl-progress-icon').className = 'bfl-progress-icon';
+    step.querySelector('.bfl-progress-detail').textContent = '';
+  });
+  const cancelBtn = document.getElementById('bfl-generate-cancel-btn');
+  if (cancelBtn) cancelBtn.hidden = true;
+  const submitBtn = document.getElementById('bfl-generate-submit-btn');
+  if (submitBtn) {
+    submitBtn.disabled = false;
+    submitBtn.textContent = 'Starta';
+  }
+  const log = document.getElementById('bfl-generate-log');
+  if (log) {
+    log.innerHTML = '';
+    log.hidden = true;
+  }
+}
+
+async function submitBflRun() {
+  const select = document.getElementById('bfl-category-select');
+  const mockEl = document.getElementById('bfl-mock-prompts');
+  const submitBtn = document.getElementById('bfl-generate-submit-btn');
+  const cancelBtn = document.getElementById('bfl-generate-cancel-btn');
+  if (!select || !submitBtn) return;
+  const category = select.value;
+  const count = bflModalState.count;
+  if (!category || count <= 0) return;
+
+  submitBtn.disabled = true;
+  submitBtn.textContent = 'Startar…';
+  if (cancelBtn) cancelBtn.hidden = false;
+
+  try {
+    const res = await fetch('/api/bfl/run', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ category, count, mockPrompts: mockEl?.checked ?? true }),
+    });
+    const data = await res.json();
+    if (!res.ok || !data.ok) {
+      alert(`❌ Kunde inte starta: ${data.error || res.statusText}`);
+      submitBtn.disabled = false;
+      submitBtn.textContent = 'Starta';
+      if (cancelBtn) cancelBtn.hidden = true;
+      return;
+    }
+    bflModalState.runId = data.runId;
+    document.getElementById('bfl-progress').hidden = false;
+    startBflPolling();
+  } catch (err) {
+    alert(`❌ Nätverksfel: ${err.message}`);
+    submitBtn.disabled = false;
+    submitBtn.textContent = 'Starta';
+  }
+}
+
+function startBflPolling() {
+  if (bflModalState.pollTimer) clearInterval(bflModalState.pollTimer);
+  bflModalState.pollTimer = setInterval(pollBflRun, 2000);
+  pollBflRun(); // första poll direkt
+}
+
+async function pollBflRun() {
+  if (!bflModalState.runId) return;
+  try {
+    const res = await fetch(`/api/bfl/run/${bflModalState.runId}/status`);
+    const data = await res.json();
+    if (!res.ok || !data.ok) return;
+    renderBflRunState(data.result);
+    const s = data.result.status;
+    if (s === 'success' || s === 'partial' || s === 'failed' || s === 'cancelled' || s === 'dry-run') {
+      clearInterval(bflModalState.pollTimer);
+      bflModalState.pollTimer = null;
+      const submitBtn = document.getElementById('bfl-generate-submit-btn');
+      if (submitBtn) {
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'Starta igen';
+      }
+      const cancelBtn = document.getElementById('bfl-generate-cancel-btn');
+      if (cancelBtn) cancelBtn.hidden = true;
+      // Uppdatera credits-räknaren i headern om körningen kostade credits
+      if (data.result.costBflCredits > 0) refreshBflCreditsHeader();
+    }
+  } catch (err) {
+    console.warn('[bfl-poll]', err);
+  }
+}
+
+function renderBflRunState(result) {
+  // Cluster
+  const c = result.progress.cluster;
+  setBflStep('cluster', c.done, `${c.tagCount} taggar`);
+
+  // Batch
+  const b = result.progress.batch;
+  if (b.requested > 0) {
+    setBflStep('batch', b.done, `${b.succeeded}/${b.requested} ok${b.failed > 0 ? ` (${b.failed} fel)` : ''}${b.skipped > 0 ? ` (${b.skipped} skip)` : ''}`);
+  }
+
+  // Upload
+  const u = result.progress.upload;
+  if (u.done || u.uploaded > 0) {
+    setBflStep('upload', u.done, `${u.uploaded} uppladdade`);
+  }
+
+  // Backfill
+  const bf = result.progress.backfill;
+  if (bf.done || bf.matched > 0 || bf.unmatched > 0) {
+    setBflStep('backfill', bf.done, `${bf.matched} match${bf.unmatched > 0 ? `, ${bf.unmatched} no-match` : ''}`);
+  }
+
+  // Log
+  const logEl = document.getElementById('bfl-generate-log');
+  if (logEl && Array.isArray(result.log) && result.log.length > 0) {
+    logEl.hidden = false;
+    logEl.textContent = result.log.slice(-50).join('\n');
+    logEl.scrollTop = logEl.scrollHeight;
+  }
+}
+
+function setBflStep(step, done, detail) {
+  const el = document.querySelector(`.bfl-progress-step[data-step="${step}"]`);
+  if (!el) return;
+  const icon = el.querySelector('.bfl-progress-icon');
+  if (done) {
+    icon.textContent = '✓';
+    icon.className = 'bfl-progress-icon done';
+  } else {
+    icon.textContent = '◐';
+    icon.className = 'bfl-progress-icon running';
+  }
+  el.querySelector('.bfl-progress-detail').textContent = detail;
+}
+
+async function cancelBflRun() {
+  if (!bflModalState.runId) return;
+  if (!confirm('Avbryta körningen?')) return;
+  try {
+    await fetch(`/api/bfl/run/${bflModalState.runId}/cancel`, { method: 'POST' });
+  } catch (err) {
+    console.warn('[bfl-cancel]', err);
+  }
+}
+
+async function refreshBflCreditsHeader() {
+  // Tvinga header-rutan att uppdatera genom att invalidera /api/bfl-credits cache
+  // via en separat fetch (backend invaliderar vid ny körning, men UI behöver uppdatera)
+  try {
+    const res = await fetch('/api/bfl-credits');
+    const data = await res.json();
+    const el = document.getElementById('btn-bfl-credits');
+    if (el && data && typeof data.credits === 'number') {
+      el.classList.remove('bfl-credits-box--unknown');
+      el.querySelector('.bfl-credits-box-sub').textContent = `${data.credits} credits`;
+    }
+  } catch (err) {
+    /* ignore */
+  }
 }
 
 async function openReviewModal(kind) {
