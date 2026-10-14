@@ -247,10 +247,16 @@ export async function pickLibraryFallback(input: FallbackInput): Promise<Fallbac
     ? [input.category_slug, ...(CATEGORY_ALIASES[input.category_slug] ?? [])]
     : [];
   for (const cat of catCandidates) {
+    // 2026-10-14: filtrera bort bilder med tomma cluster_tags. Utan detta
+    // hamnar samma "replacement"-bild (5055-användning-bilden i community)
+    // på i princip alla events i sin kategori. Tomma cluster_tags = ingen
+    // visuell signal = ska inte användas i auto-match.
     const { data: byCat } = await db()
       .from('image_library')
       .select('id, public_url, storage_path, times_used')
       .eq('category_slug', cat)
+      .not('cluster_tags', 'is', null)
+      .not('cluster_tags', 'eq', '{}')
       .order('rating', { ascending: false, nullsFirst: false })
       .order('times_used', { ascending: true }) // minst använda först (rotation)
       .limit(1)
@@ -293,12 +299,16 @@ export async function pickLibraryFallback(input: FallbackInput): Promise<Fallbac
 /**
  * Strikt default-pool: bilder med category_slug IS NULL. Endast 1 rad i
  * library idag, men poolen växer när curator-arbete landar.
+ * 2026-10-14: kräv också icke-tomma cluster_tags så vi inte väljer en bild
+ * som matchar mot vad som helst (samma bug som fixades i kategori-match).
  */
 async function nullDefaultImage(): Promise<{ id: string; storage_path: string | null; public_url: string | null } | null> {
   const { data } = await db()
     .from('image_library')
     .select('id, public_url, storage_path')
     .is('category_slug', null)
+    .not('cluster_tags', 'is', null)
+    .not('cluster_tags', 'eq', '{}')
     .order('times_used', { ascending: true })
     .limit(1)
     .maybeSingle();
@@ -310,6 +320,7 @@ async function nullDefaultImage(): Promise<{ id: string; storage_path: string | 
  * community- eller culture-bild istället för den enda default-bilden.
  * Returnerar en rad som är rotation-balanced bland de mest använda
  * generiska kategorierna. Bättre visuell variation utan att kräva curator.
+ * 2026-10-14: kräv också icke-tomma cluster_tags.
  */
 async function genericFallbackImage(): Promise<{ id: string; storage_path: string | null; public_url: string | null } | null> {
   // community + culture är bredast (passar konserter, föreläsningar,
@@ -319,6 +330,8 @@ async function genericFallbackImage(): Promise<{ id: string; storage_path: strin
     .from('image_library')
     .select('id, public_url, storage_path, times_used')
     .in('category_slug', GENERIC_CATEGORIES)
+    .not('cluster_tags', 'is', null)
+    .not('cluster_tags', 'eq', '{}')
     .order('times_used', { ascending: true })
     .limit(1)
     .maybeSingle();

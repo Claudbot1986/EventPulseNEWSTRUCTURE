@@ -115,6 +115,22 @@ function toCarouselCard(event, subtitle) {
   };
 }
 
+// 2026-10-14 — dedup-bild-i-karusell. Utan detta kan samma fallback-bild
+// (t.ex. library-bilden med 5055 användningar i community) dyka upp 5-7
+// gånger i rad. Första eventet som använder en bild "vinner" — resten
+// filtreras bort. Tom imageUrl behandlas som "alltid okej" så events utan
+// bild inte blockerar andra. Tomma URI-grupperas på samma sätt så inte
+// heller 7 mörka placeholder-tiles visas i rad.
+function dedupeByImageUrl(cards) {
+  const seen = new Set();
+  return cards.filter((c) => {
+    const key = c.imageUrl || `__empty_${c.id}`;
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
+}
+
 // Normaliserar en Supabase-rad (events_public) till den shape DetailsScreen
 // (App.js) läser: event.id, event.title, event.url, event.hasExternalLink,
 // event.date, event.time, event.description, event.category, event.source,
@@ -566,61 +582,65 @@ export default function HomeScreen({ onCardPress, userState }) {
     }
   };
 
-  const senasteWithHandlers = senaste.map((event) => ({
-    ...toSenasteCard(event, daysShort),
-    onPress: handleCardPress(event),
-  }));
+  const senasteWithHandlers = dedupeByImageUrl(
+    senaste.map((event) => ({
+      ...toSenasteCard(event, daysShort),
+      onPress: handleCardPress(event),
+    }))
+  );
 
   const fordigCards = fordig.status === 'ready'
-    ? fordig.data.map((e) => ({
+    ? dedupeByImageUrl(fordig.data.map((e) => ({
         ...toCarouselCard(e, formatFordigSubtitle(e, t)),
         onPress: handleCardPress(e),
-      }))
+      })))
     : [];
   const ikvallCards = ikvall.status === 'ready'
-    ? ikvall.data.map((e) => ({
+    ? dedupeByImageUrl(ikvall.data.map((e) => ({
         ...toCarouselCard(e, formatIkvallSubtitle(e, t)),
         onPress: handleCardPress(e),
-      }))
+      })))
     : [];
   const helgenCards = helgen.status === 'ready'
-    ? helgen.data.map((e) => ({
+    ? dedupeByImageUrl(helgen.data.map((e) => ({
         ...toCarouselCard(e, formatHelgenSubtitle(e, daysShort, t)),
         onPress: handleCardPress(e),
-      }))
+      })))
     : [];
   const upptackCards = upptack.status === 'ready'
-    ? upptack.data.map((e) => ({
+    ? dedupeByImageUrl(upptack.data.map((e) => ({
         ...toCarouselCard(e, t('home.subtitle.upptack')),
         onPress: handleCardPress(e),
-      }))
+      })))
     : [];
   // 2026-09-26 — 5 nya karuseller (se HOME-CAROUSELS-PLAN.md).
   // Gratis: subtitle = category_slug om satt, annars "Gratis"-tag.
   // Övriga (Imorgon/Foodies/Online/Nytt): veckodag + tid (samma som Helgen).
+  // 2026-10-14 — alla karuseller wrap:ade med dedupeByImageUrl för att stoppa
+  // upprepade fallback-bilder i samma karusell (se Steg C).
   const imorgonCards = imorgon.status === 'ready'
-    ? imorgon.data.map((e) => ({
+    ? dedupeByImageUrl(imorgon.data.map((e) => ({
         ...toCarouselCard(e, formatHelgenSubtitle(e, daysShort, t)),
         onPress: handleCardPress(e),
-      }))
+      })))
     : [];
   const foodiesCards = foodies.status === 'ready'
-    ? foodies.data.map((e) => ({
+    ? dedupeByImageUrl(foodies.data.map((e) => ({
         ...toCarouselCard(e, formatHelgenSubtitle(e, daysShort, t)),
         onPress: handleCardPress(e),
-      }))
+      })))
     : [];
   const gratisCards = gratis.status === 'ready'
-    ? gratis.data.map((e) => ({
+    ? dedupeByImageUrl(gratis.data.map((e) => ({
         ...toCarouselCard(e, e.category_slug || t('home.subtitle.free')),
         onPress: handleCardPress(e),
-      }))
+      })))
     : [];
   const nyttEventpulseCards = nyttEventpulse.status === 'ready'
-    ? nyttEventpulse.data.map((e) => ({
+    ? dedupeByImageUrl(nyttEventpulse.data.map((e) => ({
         ...toCarouselCard(e, formatHelgenSubtitle(e, daysShort, t)),
         onPress: handleCardPress(e),
-      }))
+      })))
     : [];
 
   return (
