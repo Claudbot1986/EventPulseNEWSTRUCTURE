@@ -40,10 +40,13 @@ async function main(): Promise<void> {
   const dryRun = args.includes('--dry-run');
   const catArg = args.find((a) => a.startsWith('--category='));
   const onlyCategory = catArg ? catArg.slice('--category='.length) : undefined;
+  // [FAS 5.3 2026-10-14] --include-music för att uppdatera även musik-events
+  // (krävs för att nå 90% unikhet — 147 events med samma text annars)
+  const includeMusic = args.includes('--include-music');
 
   console.log('═'.repeat(70));
   console.log(`  UPDATE editorial_description med Tid-fält`);
-  console.log(`  Mode: ${dryRun ? 'DRY-RUN' : 'PROD'} | Category: ${onlyCategory ?? 'alla icke-musik'}`);
+  console.log(`  Mode: ${dryRun ? 'DRY-RUN' : 'PROD'} | Category: ${onlyCategory ?? (includeMusic ? 'alla inkl musik' : 'alla icke-musik')}`);
   console.log('═'.repeat(70));
 
   const supabase = createClient(
@@ -72,6 +75,8 @@ async function main(): Promise<void> {
     let filtered = data as DbEvent[];
     if (onlyCategory) {
       filtered = filtered.filter(e => e.category_slug === onlyCategory);
+    } else if (includeMusic) {
+      // Inkludera allt (inkl musik)
     } else {
       filtered = filtered.filter(e => !EXCLUDED_CATEGORIES.includes(e.category_slug ?? ''));
     }
