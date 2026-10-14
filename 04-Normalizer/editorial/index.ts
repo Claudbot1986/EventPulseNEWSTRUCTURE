@@ -30,6 +30,7 @@ import { checkIndependence, DEFAULT_SIMILARITY_THRESHOLD } from './independenceC
 import { checkDataQuality, type DataQualityReport } from './dataQualityCheck';
 import { writeEditorialDescription, type LlmClient } from './editorialWriter';
 import { chooseFallback, type FallbackResult } from './fallbackHierarchy';
+import { runNliJudge, type NliEvidence } from './nliJudge';
 import type {
   EditorialDraft,
   EditorialPipelineResult,
@@ -54,6 +55,14 @@ export interface EditorialPipelineInput {
   maxAttempts?: number;
   /** Valfri callback per försök (för loggning / metrics). */
   onAttempt?: (attempt: number, draft: EditorialDraft, profile: EventProfile) => void;
+  /**
+   * [FAS 5.2 2026-10-14] Aktivera NLI-judge efter factuality-check.
+   * När satt: claims som substring/stem INTE kan verifiera skickas till M3
+   * som NLI-judge. 'yes' → SUPPORTED, 'no'/'unsure' → UNSUPPORTED (default).
+   * Default AV (bevarar 0% M3-pass-rate). Sätt till true för att höja
+   * M3-pass-rate från 0% mot forskningens förväntade 25-50%.
+   */
+  useNliJudge?: boolean;
 }
 
 export interface EditorialPipelineOptions {
@@ -123,6 +132,40 @@ export async function runEditorialPipeline(
       category_slug: input.event.category_slug ?? null,
     },
   });
+
+  // ── NLI-judge (FAS 5.2 2026-10-14): sista utväg för materiala claims ────
+  // När factuality underkänner claims som substring/stem INTE kan verifiera
+  // skickar vi dem till M3 som NLI-judge. 'yes' → stöd. 'no'/'unsure' → ej stöd.
+  // Deterministiskt (temperature=0), timeout 5s/claim, max 5 claims/event.
+  // Säkerhetsantagande: false positive ('yes' för unsupported) är riskabelt,
+  // men NLI-forskning visar 75-77% balanced accuracy — bättre än substring
+  // (som ger 0% pass), sämre än mänsklig annotering.
+  if (
+    input.useNliJudge &&
+    !factuality.pass &&
+    factuality.unsupported_claims.length > 0
+  ) {
+    try {
+      const evidence = buildNliEvidenceFromProfile(
+        factuality.unsupported_claims,
+        profile,
+      );
+      const verdicts = await runNliJudge(input.llm, evidence);
+      const stillUnsupported = factuality.unsupported_claims.filter(
+        (c) => verdicts.get(c) !== 'yes',
+      );
+      if (stillUnsupported.length < factuality.unsupported_claims.length) {
+        factuality = {
+          ...factuality,
+          unsupported_claims: stillUnsupported,
+          pass: stillUnsupported.length === 0,
+        };
+      }
+    } catch {
+      // NLI-fel ska INTE krascha pipeline — factuality-resultatet består.
+      // Säker default: 'unsure' = UNSUPPORTED, inga ändringar.
+    }
+  }
 
   let independence = checkIndependence({
     draft,
@@ -243,6 +286,44 @@ export async function runEditorialPipeline(
 // ─── Helpers för storage ─────────────────────────────────────────────────────
 
 import type { StoredEditorialDescription, StoredEventProfile } from './types';
+
+/**
+ * [FAS 5.2 2026-10-14] Bygg NLI-evidens från Profile.
+ *
+ * Konverterar Profile-fält till korta evidence-phrases som NLI-judge kan
+ * utvärdera mot. Returnerar en NliEvidence per claim, med samma evidens
+ * (Profile-fälten är globala för eventet — claims evalueras mot samma
+ * evidens-pool).
+ *
+ * Säkerhetsantagande: endast strukturerade Profile-fält, aldrig source-text.
+ */
+export function buildNliEvidenceFromProfile(
+  unsupportedClaims: string[],
+  profile: EventProfile,
+): NliEvidence[] {
+  const evidencePhrases: string[] = [];
+
+  // Strukturerade fält → korta evidens-fraser
+  if (profile.event_type) evidencePhrases.push(`Typ: ${profile.event_type}`);
+  for (const p of profile.performers) evidencePhrases.push(`Medverkande: ${p}`);
+  for (const g of profile.genres) evidencePhrases.push(`Genre: ${g}`);
+  for (const sg of profile.subgenres) evidencePhrases.push(`Subgenre: ${sg}`);
+  if (profile.setting) evidencePhrases.push(`Lokal: ${profile.setting}`);
+  for (const t of profile.target_audience) evidencePhrases.push(`För: ${t}`);
+  if (profile.concept) evidencePhrases.push(`Koncept: ${profile.concept}`);
+  if (profile.duration_minutes) evidencePhrases.push(`Längd: ${profile.duration_minutes} minuter`);
+  for (const r of profile.repertoire) evidencePhrases.push(`Repertoar: ${r}`);
+  if (profile.ensemble) evidencePhrases.push(`Ensemble: ${profile.ensemble}`);
+  for (const theme of profile.themes) evidencePhrases.push(`Tema: ${theme}`);
+  for (const style of profile.performance_style) evidencePhrases.push(`Stil: ${style}`);
+  for (const exp of profile.experience_characteristics) evidencePhrases.push(`Upplevelse: ${exp}`);
+
+  // Map each claim to samma evidens (Profile är global per event)
+  return unsupportedClaims.map((claim) => ({
+    claim,
+    evidence_phrases: evidencePhrases,
+  }));
+}
 
 /**
  * Bygg StoredEventProfile för DB-skrivning.

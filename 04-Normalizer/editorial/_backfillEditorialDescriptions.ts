@@ -140,7 +140,7 @@ async function describeOne(
   supabase: ReturnType<typeof createClient>,
   llm: LlmClient,
   ev: DbEvent,
-  args: { strict: boolean; dryRun: boolean; noM3: boolean },
+  args: { strict: boolean; dryRun: boolean; noM3: boolean; useNli: boolean },
 ): Promise<{ result: EditorialPipelineResult; updated: boolean; latencyMs: number; error?: string }> {
   const t0 = Date.now();
   if (!ev.event_profile || !ev.start_time) {
@@ -218,6 +218,7 @@ async function describeOne(
       sourceDescription: ev.raw_description,
       llm,
       seed: ev.id.slice(0, 8),
+      useNliJudge: args.useNli,
     };
 
     const result = await runEditorialPipeline(input);
@@ -283,6 +284,10 @@ async function main(): Promise<void> {
   const concArg = args.find((a) => a.startsWith('--concurrency='));
   const concurrency = concArg ? parseInt(concArg.slice('--concurrency='.length), 10) : 4;
   const noNli = args.includes('--no-nli');
+  // [FAS 5.2 2026-10-14] --use-nli aktiverar NLI-judge som extra steg efter
+  // factuality-check. Default AV (bevarar nuvarande beteende). Kan höja
+  // M3-pass-rate från 0% mot 25-50% per NLI-forskning.
+  const useNli = args.includes('--use-nli');
   // [FAS 5.2 2026-10-14] --no-m3 hoppar M3 helt och går direkt till FACT.
   // Användbart för kategorier med tunn Profile där M3:s 0% pass-rate gör
   // anropet meningslöst (community/exhibition/etc.). Undviker 429-fel.
@@ -301,7 +306,7 @@ async function main(): Promise<void> {
   console.log('  BACKFILL editorial_description — M3 + factuality + independence');
   console.log(`  Mode: ${dryRun ? 'DRY-RUN' : 'PROD'} ${strict ? '(STRICT)' : ''}`);
   console.log(`  Limit: ${limit ?? 'alla'} | Category: ${category ?? 'alla'} | Exclude: ${exclude.join(',') || 'none'}`);
-  console.log(`  Concurrency: ${concurrency} | M3: ${noM3 ? 'AV (direkt FACT)' : 'PÅ'} | NLI-judge: ${noNli ? 'AV' : 'PÅ'}`);
+  console.log(`  Concurrency: ${concurrency} | M3: ${noM3 ? 'AV (direkt FACT)' : 'PÅ'} | NLI-judge: ${useNli ? 'PÅ' : 'AV'}`);
   console.log('═'.repeat(78));
 
   if (!process.env.MINIMAX_API_KEY) {
@@ -334,7 +339,7 @@ async function main(): Promise<void> {
 
   await runWithConcurrency(events, concurrency, async (ev) => {
     const myIdx = ++i;
-    const r = await describeOne(supabase, llm, ev, { strict, dryRun, noM3 });
+    const r = await describeOne(supabase, llm, ev, { strict, dryRun, noM3, useNli });
 
     // Debug-logg per event (första 5)
     if (myIdx <= 5 || myIdx % 50 === 0) {
