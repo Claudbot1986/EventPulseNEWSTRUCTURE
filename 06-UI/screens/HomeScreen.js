@@ -170,7 +170,20 @@ function toDetailsScreenEvent(row) {
     hasExternalLink: Boolean(ticketUrl),
     date,
     time,
+    // 2026-10-14 — fas 5.7 fallback: utan dessa tre fält får DetailsScreen:s
+    // preview-rad bara source-text (description_sv/en via license-check) ELLER
+    // "No description available from <source>"-fallback. editorial_description
+    // är primär i getDetailsDescription; event_profile driver Tier 1
+    // attribution-raden under preview (om publishertillåten källa hittas i
+    // profile.provenance). description_license/attribution/source_url
+    // forwardas för framtida LicenseBadge-rad i DetailsScreen.
     description,
+    editorial_description: typeof row.editorial_description === 'string' ? row.editorial_description : null,
+    editorial_description_generated_at: typeof row.editorial_description_generated_at === 'string' ? row.editorial_description_generated_at : null,
+    event_profile: row.event_profile ?? null,
+    description_license: row.description_license ?? null,
+    description_attribution: row.description_attribution ?? null,
+    description_source_url: row.description_source_url ?? null,
     category,
     source: row.source || null,
     image_url: row.image_url || null,

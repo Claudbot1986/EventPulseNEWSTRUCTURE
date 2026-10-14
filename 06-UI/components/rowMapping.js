@@ -166,5 +166,21 @@ export function mapAgentEventToRow(event, language) {
     // 2026-10-13: hela profile förutsätts vidarebefordras till
     // DetailsScreen så NewEventCard får samma attribution.
     event_profile: event.event_profile ?? null,
+    // 2026-10-14 — fas 5.7: editorial_description är primär källa i
+    // getDetailsDescription() — utan detta visar radens preview-rad och
+    // DetailsScreen bara "No description available from <source>" för alla
+    // events_public-rader där description_license='unknown' (alltså
+    // majoriteten av backfilled editorial-pipelinen). Vi forwardar FÄLTET
+    // oförändrat och låter renderingskiktet (descriptionFallback.js)
+    // bestämma prioritetsordningen.
+    editorial_description: typeof event.editorial_description === 'string'
+      ? event.editorial_description
+      : null,
+    editorial_description_generated_at: typeof event.editorial_description_generated_at === 'string'
+      ? event.editorial_description_generated_at
+      : null,
+    description_license: event.description_license ?? null,
+    description_attribution: event.description_attribution ?? null,
+    description_source_url: event.description_source_url ?? null,
   };
 }

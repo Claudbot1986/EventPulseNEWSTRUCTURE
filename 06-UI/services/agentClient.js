@@ -900,6 +900,8 @@ async function fetchFeedOnce({ baseUrl, from, days, mood, limit, offset, categor
     };
   });
 
+  // DEBUG borttagen 2026-10-14 efter felsökning av fas 5.7 — agentClient.js:s mapping editorial_description är verifierad via testen.
+
   return {
     events,
     from: data.from,
