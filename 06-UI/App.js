@@ -1737,6 +1737,7 @@ function DetailsScreen({ event, onBack }) {
     formatProviderLabel: (k) => formatProviderLabel(k, t),
     unknownLabel: t('source.unknown'),
   });
+  // DEBUG borttagen 2026-10-14 efter felsökning av fas 5.7 — behåll editorial_description framåt i DetailsScreen via fixen i toDetailsScreenEvent (HomeScreen.js).
   const badge = event.is_online
     ? 'ONLINE'
     : (event.category ? String(event.category).toUpperCase().slice(0, 12) : null);
