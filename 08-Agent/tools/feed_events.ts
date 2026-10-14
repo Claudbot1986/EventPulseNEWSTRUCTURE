@@ -234,6 +234,10 @@ export async function feedEvents(
       'id, title_sv, title_en, description_sv, description_en, ' +
       'description_license, description_attribution, description_source_url, ' +
       'eventpulse_summary, ' +
+      // FAS 5.4 2026-10-14: editorial_description (MiniMax-M3 + FACT-template)
+      // är primär källa för UI:t (06-UI/utils/descriptionFallback.js).
+      // Utan detta fältet får UI:t null och visar "ingen beskrivning"-fallback.
+      'editorial_description, editorial_description_generated_at, ' +
       'event_profile, ' +
       'start_time, end_time, venue_id, ' +
       'category_slug, is_free, price_min_sek, price_max_sek, ticket_url, image_url, ' +
