@@ -245,13 +245,12 @@ function EventRow({ event, onPress, onMenuPress }) {
           </View>
         ) : null}
         {preview ? (
-          // 2026-10-14 — utökad från 2 till 10 rader per samtal med användaren.
-          // Användaren ska kunna se hela FACT-beskrivningen direkt i tilen
-          // istället för att behöva klicka "Läs mer" för korta texter.
-          // Utforska-tile blir avsevärt högre — trade-off är att slippa cliffhanger.
+          // 2026-10-02 — description-preview-rad (5.1). numberOfLines={2}
+          // ellipsizeMode="tail" så långa beskrivningar inte trycker
+          // undan resten av listan. Hela texten finns på DetailsScreen.
           <Text
             style={styles.preview}
-            numberOfLines={10}
+            numberOfLines={2}
             ellipsizeMode="tail"
           >
             {preview}
