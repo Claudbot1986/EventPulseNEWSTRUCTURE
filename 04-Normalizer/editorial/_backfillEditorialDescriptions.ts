@@ -56,9 +56,11 @@ import {
 } from './editorialWriter';
 import {
   runEditorialPipeline,
+  buildEventProfile,
   type EditorialPipelineInput,
   type EditorialPipelineResult,
 } from './index';
+import { chooseFallback } from './fallbackHierarchy';
 import type { EventProfile } from './types';
 
 interface DbEvent {
@@ -129,12 +131,16 @@ async function fetchEventsToDescribe(
  * Kör runEditorialPipeline för ett event. sourceDescription (raw_description)
  * skickas BARA med som referens för independence-check, ALDRIG som input till M3
  * (runEditorialPipeline har textualFirewall som strippar det från M3-input).
+ *
+ * Om args.noM3 är satt: hoppar M3 helt och går direkt till FACT-fallback.
+ * Användbart när M3:s 0% pass-rate gör anropet meningslöst (community/exhibition
+ * med tunn Profile). Sparar M3-kostnad och undviker 429-fel.
  */
 async function describeOne(
   supabase: ReturnType<typeof createClient>,
   llm: LlmClient,
   ev: DbEvent,
-  args: { strict: boolean; dryRun: boolean },
+  args: { strict: boolean; dryRun: boolean; noM3: boolean },
 ): Promise<{ result: EditorialPipelineResult; updated: boolean; latencyMs: number; error?: string }> {
   const t0 = Date.now();
   if (!ev.event_profile || !ev.start_time) {
@@ -148,22 +154,65 @@ async function describeOne(
   const title = ev.title_sv || ev.title_en || '';
   if (!title) return { result: null as unknown as EditorialPipelineResult, updated: false, latencyMs: 0, error: 'no_title' };
 
+  const eventInput = {
+    title,
+    category_slug: ev.category_slug,
+    venue_name: ev.venue_full_name,
+    city: ev.venue_city,
+    start_time: ev.start_time,
+    is_free: ev.is_free ?? false,
+    price_min_sek: ev.price_min_sek,
+    language: null, // kolumnen finns inte i DB — språk härleds via categories
+    performers: Object.keys(ev.event_profile.profile.performer_metadata ?? {}),
+    source: 'eventpulse-backfill' as const,
+  };
+
+  // ── noM3-läge: gå direkt till FACT-fallback utan M3-anrop ───────────────
+  if (args.noM3) {
+    try {
+      const profile = buildEventProfile(eventInput);
+      const fallback = chooseFallback(profile, eventInput);
+      if (!fallback.level) {
+        return { result: null as unknown as EditorialPipelineResult, updated: false, latencyMs: Date.now() - t0, error: 'no_fallback' };
+      }
+      const latencyMs = Date.now() - t0;
+      if (!args.dryRun) {
+        const { error } = await supabase
+          .from('events')
+          .update({
+            editorial_description: fallback.text,
+            editorial_model: 'fallback-only',
+            editorial_prompt_version: 'FAS-5.2-2026-10-14',
+            editorial_description_generated_at: new Date().toISOString(),
+            editorial_info_level: fallback.info_level,
+          })
+          .eq('id', ev.id);
+        if (error) return { result: null as unknown as EditorialPipelineResult, updated: false, latencyMs, error: `db: ${error.message}` };
+      }
+      return {
+        result: {
+          status: fallback.level === 'FACT' ? 'fallback_fact' : 'fallback_minimal',
+          draft: null as unknown as EditorialPipelineResult['draft'],
+          factuality: null as unknown as EditorialPipelineResult['factuality'],
+          independence: null as unknown as EditorialPipelineResult['independence'],
+          data_quality: null as unknown as EditorialPipelineResult['data_quality'],
+          attempts: 0,
+          final_text: fallback.text,
+        },
+        updated: true,
+        latencyMs,
+      };
+    } catch (err) {
+      return { result: null as unknown as EditorialPipelineResult, updated: false, latencyMs: Date.now() - t0, error: (err as Error).message };
+    }
+  }
+
+  // ── Normalt läge: kör M3-pipelinen ───────────────────────────────────
   try {
     const input: EditorialPipelineInput = {
       // M3 ser BARA Profile + strukturerade fält. RunEditorialPipeline lägger
       // till source_description på independence-check EFTER (inte till M3).
-      event: {
-        title,
-        category_slug: ev.category_slug,
-        venue_name: ev.venue_full_name,
-        city: ev.venue_city,
-        start_time: ev.start_time,
-        is_free: ev.is_free ?? false,
-        price_min_sek: ev.price_min_sek,
-        language: null, // kolumnen finns inte i DB — språk härleds via categories
-        performers: Object.keys(ev.event_profile.profile.performer_metadata ?? {}),
-        source: 'eventpulse-backfill',
-      },
+      event: eventInput,
       // sourceDescription BARA som POST-hoc-referens för independence-check.
       // Aldrig som input till M3 (textualFirewall belagd).
       sourceDescription: ev.raw_description,
@@ -234,6 +283,10 @@ async function main(): Promise<void> {
   const concArg = args.find((a) => a.startsWith('--concurrency='));
   const concurrency = concArg ? parseInt(concArg.slice('--concurrency='.length), 10) : 4;
   const noNli = args.includes('--no-nli');
+  // [FAS 5.2 2026-10-14] --no-m3 hoppar M3 helt och går direkt till FACT.
+  // Användbart för kategorier med tunn Profile där M3:s 0% pass-rate gör
+  // anropet meningslöst (community/exhibition/etc.). Undviker 429-fel.
+  const noM3 = args.includes('--no-m3');
   // [FAS 5.2 2026-10-14] Användaren bad att skippa musik (redan 35% editorial).
   // Default exkluderar alla musik-kategorier såvida inte --category= används.
   const defaultExclude = !category
@@ -248,7 +301,7 @@ async function main(): Promise<void> {
   console.log('  BACKFILL editorial_description — M3 + factuality + independence');
   console.log(`  Mode: ${dryRun ? 'DRY-RUN' : 'PROD'} ${strict ? '(STRICT)' : ''}`);
   console.log(`  Limit: ${limit ?? 'alla'} | Category: ${category ?? 'alla'} | Exclude: ${exclude.join(',') || 'none'}`);
-  console.log(`  Concurrency: ${concurrency} | NLI-judge: ${noNli ? 'AV' : 'PÅ'}`);
+  console.log(`  Concurrency: ${concurrency} | M3: ${noM3 ? 'AV (direkt FACT)' : 'PÅ'} | NLI-judge: ${noNli ? 'AV' : 'PÅ'}`);
   console.log('═'.repeat(78));
 
   if (!process.env.MINIMAX_API_KEY) {
@@ -281,7 +334,7 @@ async function main(): Promise<void> {
 
   await runWithConcurrency(events, concurrency, async (ev) => {
     const myIdx = ++i;
-    const r = await describeOne(supabase, llm, ev, { strict, dryRun });
+    const r = await describeOne(supabase, llm, ev, { strict, dryRun, noM3 });
 
     // Debug-logg per event (första 5)
     if (myIdx <= 5 || myIdx % 50 === 0) {
