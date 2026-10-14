@@ -154,6 +154,33 @@ function collectFactFields(
     });
   }
 
+  // 10. Datum (ger unikhet vid samma title/venue — samma show, olika datum)
+  // [FAS 5.2 2026-10-14] Title + venue + datum = garanterat unikt per event
+  if (event.start_time) {
+    const d = new Date(event.start_time);
+    if (!isNaN(d.getTime())) {
+      const dateStr = formatDate(event.start_time);
+      if (dateStr) {
+        out.push({
+          label: 'Datum',
+          value: dateStr,
+          source: 'start_time',
+        });
+      }
+    }
+  }
+
+  // 11. Pris (om känt och inte gratis)
+  if (event.is_free === true) {
+    out.push({ label: 'Pris', value: 'gratis', source: 'is_free' });
+  } else if (event.price_min_sek != null && event.price_min_sek > 0) {
+    out.push({
+      label: 'Pris',
+      value: `från ${event.price_min_sek} kr`,
+      source: 'price_min_sek',
+    });
+  }
+
   return out;
 }
 
@@ -179,10 +206,21 @@ export function buildFactBasedFallback(
     return { level: null, text: '', sources: [], word_count: 0, info_level: 'VERY_LOW' };
   }
 
-  // Bygg mening: "Typ: <event_type>." först, sedan fält
+  // Bygg mening: title först (ger unikhet per event), sedan Typ + fält
+  // [FAS 5.2 2026-10-14] Title-prefix gör att FACT blir unikt per event —
+  // utan detta blev 1700+ community-events identiska.
   const lang = primaryLanguage(profile);
   const typeLabel = lang === 'sv' ? 'Typ' : 'Type';
   const parts: string[] = [];
+
+  // Title som första fält — ger unikhet (title är required och per-event)
+  const title = event.title?.trim();
+  if (title && title.length > 0 && title.length < 200) {
+    // Skydd mot title som ser ut som hel mening med skiljetecken i slutet
+    const cleanTitle = title.replace(/[.!?]+$/, '').trim();
+    parts.push(`${cleanTitle}.`);
+  }
+
   parts.push(`${typeLabel}: ${profile.event_type}.`);
 
   for (const f of fields) {

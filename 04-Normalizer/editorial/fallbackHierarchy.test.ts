@@ -104,20 +104,24 @@ describe('buildFactBasedFallback', () => {
   });
 
   it('innehåller ALDRIG meningar från source-text (bara entiteter)', () => {
-    const r = buildFactBasedFallback(RICH_PROFILE, {
+    const event: EventUnderstandingInput = {
       category_slug: 'rock',
-      title: 'X',
-    });
-    // Verifiera att texten bara innehåller label/value-par — inte löpande text.
-    // Varje "mening" ska börja med ett känt label-ord (Typ, Medverkande, Genre,
-    // Längd, Lokal, Koncept, Repertoar, Ensemble, För, Plats).
+      title: 'Hooligan Bobs live på Debaser',
+    };
+    const r = buildFactBasedFallback(RICH_PROFILE, event);
+    // [FAS 5.2 2026-10-14] Title är första mening (ger unikhet per event).
+    // Title är strukturerat fält (från events-tabellen), INTE source-text.
+    // Resterande meningar ska börja med känt label-ord.
     const allowedLabels = [
       'Typ', 'Medverkande', 'Genre', 'Längd', 'Lokal', 'Koncept',
-      'Repertoar', 'Ensemble', 'För', 'Plats', 'Type',
+      'Repertoar', 'Ensemble', 'För', 'Plats', 'Datum', 'Pris', 'Type',
     ];
     const sentences = r.text.split(/\.\s+/);
-    for (const s of sentences) {
-      const trimmed = s.trim();
+    // Första meningen ska vara title
+    expect(sentences[0]?.trim()).toBe(event.title);
+    // Resterande meningar ska börja med label
+    for (let i = 1; i < sentences.length; i++) {
+      const trimmed = sentences[i].trim();
       if (trimmed.length === 0) continue;
       const firstWord = trimmed.split(/[\s:]/)[0];
       expect(allowedLabels).toContain(firstWord);
@@ -232,7 +236,9 @@ describe('chooseFallback', () => {
     expect(r.info_level).toBe('LOW');
   });
 
-  it('MINIMAL profile (typ + lite) → väljer MINIMAL', () => {
+  it('MINIMAL profile + datum → FACT (Typ + Datum räcker som 2 fält)', () => {
+    // [FAS 5.2 2026-10-14] Med title-prefix + datum/venue/price i FACT har vi
+    // 3 fält som standard (title + Typ + Datum) — FACT väljs framför MINIMAL.
     const profile: EventProfile = {
       ...MINIMAL_PROFILE,
       event_type: 'community',
@@ -243,7 +249,7 @@ describe('chooseFallback', () => {
       venue_name: 'Platsen',
       start_time: '2026-10-15T18:00:00+02:00',
     });
-    expect(r.level).toBe('MINIMAL');
+    expect(r.level).toBe('FACT');
   });
 
   it('helt tom profile + titel → MINIMAL (med bara titel)', () => {
