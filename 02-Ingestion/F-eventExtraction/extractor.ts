@@ -29,6 +29,7 @@ import {
   detectCategoryFromContainerClass,
 } from './categoryKeywords.js';
 import { toUtcIsoFromStockholm } from '../lib/stockholmTime.js';
+import { findKlockanInText } from '../lib/swedishTimeText.js';
 
 export interface ExtractResult {
   events: ParsedEvent[];
@@ -1000,6 +1001,46 @@ export function extractFromHtml(html: string, source: string, baseUrl?: string):
               signals: ['html-iso-text-date', 'html-title-snippet'],
             },
           });
+        }
+      }
+    }
+
+    // Strategy 3b: Find Swedish time-of-day in page text and attach it to the
+    // most recently seen text-derived date. Covers "kl. 19:00" (livespot),
+    // "15:00 - 17:00" (jarfalla table cells), "Klockan 17:30–19:00" (arkdes),
+    // and bare "HH:MM-HH:MM" patterns. Does NOT change event count: it only
+    // enriches existing events with a real `time`/`endTime`. Events built in
+    // earlier strategies without a time are re-scanned here.
+    // 2026-10-14: see lib/swedishTimeText.ts for util + tests. Mirrors the
+    // same block in universal-extractor.ts (D-gate path); required here
+    // because scheduler.ts / runA-extract.ts use this file's extractFromHtml
+    // for HTML-path ingestion.
+    if (events.length > 0) {
+      const textTime = findKlockanInText(pageText);
+      if (textTime?.start) {
+        for (let i = events.length - 1; i >= 0; i--) {
+          const ev = events[i];
+          const hasInterval = Boolean(textTime.start && textTime.end);
+          const isMissingTime = !ev.time;
+          const isSingleTimeOnly = Boolean(ev.time) && !ev.endTime;
+          const intervalFixesBug =
+            hasInterval &&
+            (ev.time === textTime.end ||
+              (ev.time === textTime.start && isSingleTimeOnly));
+          const shouldApply = isMissingTime || isSingleTimeOnly || intervalFixesBug;
+          if (!shouldApply) continue;
+          if (hasInterval) {
+            if (ev.time !== textTime.start) ev.time = textTime.start;
+            if (!ev.endTime) ev.endTime = textTime.end;
+          } else {
+            if (!ev.time) ev.time = textTime.start;
+          }
+          ev.confidence = {
+            ...ev.confidence,
+            score: Math.min(1, ev.confidence.score + 0.1),
+            signals: [...ev.confidence.signals, 'time-text-sv'],
+          };
+          break;
         }
       }
     }

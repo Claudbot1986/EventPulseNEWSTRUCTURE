@@ -1107,3 +1107,83 @@ describe('universal-extractor — A.5-B2: Swedish månadsnamn klartext', () => {
     expect(result.events[0].date).toBe('2026-10-22');
   });
 });
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Strategy 3b: Swedish time-of-day text extraction
+// 2026-10-14: regression tests for finding "kl. HH:MM" / "Klockan HH:MM-HH:MM"
+// / bare "HH:MM-HH:MM" patterns in HTML text and attaching them to existing
+// date-derived events. Without this, events from jarfalla/livespot/etc.
+// landed in DB with start_time = midnight-UTC.
+// ─────────────────────────────────────────────────────────────────────────────
+
+describe('universal-extractor — Strategy 3b: Swedish time-of-day text', () => {
+  it('finds "kl. 19:00" near a Swedish date and attaches it', () => {
+    const html = `<!doctype html><body>
+<div class="event-card">
+  <div class="dates">lördag 28 november 2026</div>
+  <h3>Baba-bio</h3>
+  <p>Biljetter via hemsidan. Föreställningen börjar kl. 19:00.</p>
+</div></body></html>`;
+    const result = extractEvents(html, 'jarfalla', 'https://upplevjarfalla.se/cbis-product/2701483');
+    expect(result.events.length).toBe(1);
+    expect(result.events[0].date).toBe('2026-11-28');
+    expect(result.events[0].time).toBe('19:00');
+    // start_time must NOT be midnight when time was extracted
+    expect(result.events[0].time).not.toBe('00:00');
+  });
+
+  it('finds "Klockan 17:30–19:00" en-dash interval and sets start+endTime', () => {
+    const html = `<!doctype html><body>
+<article>
+  <h3>ArkDes torsdagsföredrag</h3>
+  <p>Torsdag, 8 december 2026</p>
+  <p>Klockan 17:30–19:00</p>
+</article></body></html>`;
+    const result = extractEvents(html, 'arkdes', 'https://www.arkdes.se/kalender/test/');
+    expect(result.events.length).toBeGreaterThanOrEqual(1);
+    const ev = result.events.find((e) => e.date === '2026-12-08');
+    expect(ev).toBeDefined();
+    expect(ev!.time).toBe('17:30');
+    expect(ev!.endTime).toBe('19:00');
+  });
+
+  it('finds "<td>15:00 - 17:00</td>" jarfalla-style table cell', () => {
+    const html = `<!doctype html><body>
+<div class="event-card">
+  <div class="dates">lördag 28 november 2026</div>
+  <h3>Baba-bio</h3>
+  <table>
+    <tr><td>Lördag 28 november</td><td>15:00 - 17:00</td></tr>
+  </table>
+</div></body></html>`;
+    const result = extractEvents(html, 'jarfalla', 'https://upplevjarfalla.se/cbis-product/2701483');
+    expect(result.events.length).toBe(1);
+    expect(result.events[0].time).toBe('15:00');
+    expect(result.events[0].endTime).toBe('17:00');
+  });
+
+  it('leaves time undefined when no Swedish time phrase is found', () => {
+    const html = `<!doctype html><body>
+<div class="event-card">
+  <div class="dates">lördag 28 november 2026</div>
+  <h3>Baba-bio</h3>
+  <p>Biljetter kostar 1.25 kr.</p>
+</div></body></html>`;
+    const result = extractEvents(html, 'jarfalla', 'https://upplevjarfalla.se/cbis-product/2701483');
+    expect(result.events.length).toBe(1);
+    // 1.25 must NOT be interpreted as 01:25 (decimals collide with times)
+    expect(result.events[0].time).toBeUndefined();
+  });
+
+  it('does not mutate event count (only enriches existing events)', () => {
+    const html = `<!doctype html><body>
+<article>
+  <h3>Livespot Event</h3>
+  <p>16 oktober 2026 kl. 19:00</p>
+</article></body></html>`;
+    const result = extractEvents(html, 'livespot', 'https://livespot.se/event/foo');
+    // Exactly 1 event, not 2 (time text does NOT create a new event)
+    expect(result.events.length).toBe(1);
+    expect(result.events[0].time).toBe('19:00');
+  });
+});

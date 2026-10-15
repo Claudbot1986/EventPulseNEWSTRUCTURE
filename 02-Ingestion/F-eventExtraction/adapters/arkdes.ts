@@ -18,6 +18,7 @@
  */
 import * as cheerio from 'cheerio';
 import { ParsedEventSchema, type ParsedEvent } from '../schema';
+import { parseKlockan } from '../../lib/swedishTimeText.js';
 
 const SOURCE_ID = 'arkdes';
 const VENUE = 'ArkDes';
@@ -103,22 +104,6 @@ function extractDescription(html: string): string {
   const og = $('meta[property="og:description"]').attr('content')?.trim();
   if (og) return og.slice(0, 500);
   return $('article p, main p').first().text().trim().slice(0, 300);
-}
-
-function parseKlockan(s: string): { start?: string; end?: string } {
-  // "Klockan 17:30–19:00" or "Klockan: 18:00–20:00" or "Klockan 18:00"
-  const m = s.match(/(\d{1,2}):(\d{2})\s*[–-]\s*(\d{1,2}):(\d{2})/);
-  if (m) {
-    return {
-      start: `${m[1].padStart(2, '0')}:${m[2]}`,
-      end: `${m[3].padStart(2, '0')}:${m[4]}`,
-    };
-  }
-  const single = s.match(/(\d{1,2}):(\d{2})/);
-  if (single) {
-    return { start: `${single[1].padStart(2, '0')}:${single[2]}` };
-  }
-  return {};
 }
 
 function extractNarBlock(html: string): {

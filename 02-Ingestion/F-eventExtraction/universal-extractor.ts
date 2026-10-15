@@ -41,6 +41,7 @@ import {
 } from './schema';
 import { detectCategoryFromContainerClass } from './categoryKeywords.js';
 import { runAdapters } from './adapters/index.js';
+import { findKlockanInText } from '../lib/swedishTimeText.js';
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -1756,6 +1757,59 @@ export function extractEvents(html: string, source: string, baseUrl: string): Ex
 
   if (enrichedEvents.length > 0) {
     console.log(`[UniversalExtractor v2] ${enrichedEvents.length} events via ${methodsUsed.join('+')} | ${Object.entries(methodBreakdown).map(([k,v]) => `${k}:${v}`).join(', ')}${pageOgImage ? ' | og-image-fallback applied' : ''}`);
+  }
+
+  // Strategy 3b (2026-10-14): Swedish time-of-day text enrichment.
+  // For events that already have a date but no time, search the page body
+  // text for Swedish time phrases ("kl. 19:00", "Klockan 17:30–19:00",
+  // "<td>15:00 - 17:00</td>", etc.) and attach them. The util is regex-only
+  // and intentionally conservative — it rejects bare decimal patterns
+  // (e.g. prices) so we don't accidentally invent times.
+  //
+  // Apply when EITHER:
+  //   - the event has no time yet (fill from start), OR
+  //   - the event has only a single time AND the util found an interval:
+  //     overwrite with start, then add endTime. Fixes two known C1 bugs:
+  //     a) "<td>15:00 - 17:00</td>" → time=17:00 (end) instead of 15:00
+  //     b) "Klockan 17:30–19:00" → endTime missing because C1 only sets start.
+  //
+  // Sites affected: jarfalla (upplevjarfalla.se table cells), livespot
+  // (livespot.se event pages with "kl. HH:MM"), arkdes (already uses the
+  // pattern via its own adapter; this is a fallback for non-arkdes pages).
+  {
+    const pageText = $('body').text();
+    const textTime = findKlockanInText(pageText);
+    if (textTime?.start) {
+      for (let i = enrichedEvents.length - 1; i >= 0; i--) {
+        const ev = enrichedEvents[i];
+        if (!ev.date) continue;
+        const hasInterval = Boolean(textTime.start && textTime.end);
+        const isMissingTime = !ev.time;
+        const isSingleTimeOnly = Boolean(ev.time) && !ev.endTime;
+        const intervalFixesBug =
+          hasInterval &&
+          (ev.time === textTime.end || // C1 bug a: time is interval end
+            (ev.time === textTime.start && isSingleTimeOnly)); // C1 bug b: only start
+        const shouldApply =
+          isMissingTime || isSingleTimeOnly || intervalFixesBug;
+        if (!shouldApply) continue;
+        // Replace time with interval start if we have a stronger interval,
+        // otherwise fill what's missing.
+        if (hasInterval) {
+          // If C1 set time to the END of an interval (bug a), prefer start.
+          if (ev.time !== textTime.start) ev.time = textTime.start;
+          if (!ev.endTime) ev.endTime = textTime.end;
+        } else {
+          if (!ev.time) ev.time = textTime.start;
+        }
+        ev.confidence = {
+          ...ev.confidence,
+          score: Math.min(1, ev.confidence.score + 0.1),
+          signals: [...ev.confidence.signals, 'time-text-sv'],
+        };
+        break; // attach to the most recent date-bearing event only
+      }
+    }
   }
 
   return {

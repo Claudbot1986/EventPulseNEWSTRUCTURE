@@ -160,6 +160,127 @@ describe('eventbriteStockholm adapter', () => {
   });
 });
 
+// 2026-10-14: Single-event pages (/e/<slug>-tickets-<id>) expose a JSON-LD
+// `SocialEvent` block, NOT an `ItemList`. This fixture covers that path
+// — the events we used to lose to midnight-UTC (e.g. "Nightlife Tour"
+// with startDate=2026-10-14T21:00:00+02:00).
+const SYNTHETIC_SINGLE_EVENT_HTML = `
+<!doctype html>
+<html>
+<head>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "SocialEvent",
+  "name": "Nightlife Tour",
+  "startDate": "2026-10-14T21:00:00+02:00",
+  "endDate": "2026-10-15T02:00:00+02:00",
+  "url": "https://www.eventbrite.com/e/nightlife-tour-tickets-123456789",
+  "image": "https://img.example.com/nightlife.jpg",
+  "location": {
+    "@type": "Place",
+    "name": "The Auld Dub",
+    "address": {
+      "@type": "PostalAddress",
+      "streetAddress": "Stadsgården 8",
+      "addressLocality": "Stockholm",
+      "postalCode": "116 45",
+      "addressCountry": "SE"
+    },
+    "geo": { "@type": "GeoCoordinates", "latitude": "59.32", "longitude": "18.08" }
+  }
+}
+</script>
+</head>
+<body></body>
+</html>
+`;
+
+const SYNTHETIC_SINGLE_EVENT_NO_END_HTML = `
+<!doctype html>
+<html>
+<head>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "SocialEvent",
+  "name": "Standup Showcase",
+  "startDate": "2026-11-03T19:30:00+02:00",
+  "url": "https://www.eventbrite.com/e/standup-showcase-tickets-987654321",
+  "location": { "name": "Södra Teatern", "address": { "addressLocality": "Stockholm" } }
+}
+</script>
+</head>
+<body></body>
+</html>
+`;
+
+describe('eventbriteStockholm — single-event extraction', () => {
+  it('matches() accepts single-event /e/<slug>-tickets-<id> URLs', () => {
+    expect(
+      matches('https://www.eventbrite.com/e/nightlife-tour-tickets-123456789')
+    ).toBe(true);
+    expect(
+      matches('https://www.eventbrite.se/e/standup-showcase-tickets-987654321')
+    ).toBe(true);
+    // Without -tickets-<digits> suffix, must still reject
+    expect(matches('https://www.eventbrite.com/e/just-a-slug')).toBe(false);
+  });
+
+  it('extract() parses SocialEvent JSON-LD and preserves structured start time', () => {
+    const url =
+      'https://www.eventbrite.com/e/nightlife-tour-tickets-123456789';
+    const result = extract(SYNTHETIC_SINGLE_EVENT_HTML, url);
+
+    expect(result.method).toBe('eventbrite-itemlist');
+    expect(result.events.length).toBe(1);
+
+    const ev = result.events[0];
+    expect(() => ParsedEventSchema.parse(ev)).not.toThrow();
+    expect(ev.source).toBe('eventbrite-stockholm-aggregator');
+    expect(ev.title).toBe('Nightlife Tour');
+    expect(ev.date).toBe('2026-10-14');
+    // Critical regression guard: this used to come back as midnight UTC.
+    expect(ev.time).toBe('21:00');
+    expect(ev.endTime).toBe('02:00');
+    expect(ev.venue).toBe('The Auld Dub');
+    expect(ev.city).toBe('Stockholm');
+    expect(ev.url).toBe(url);
+    expect(ev.address).toContain('Stadsgården 8');
+    // Note: universal extractor's normalizeEvent doesn't currently extract geo
+    // (see extractor.ts:584 `lat: null` TODO). We assert it didn't crash on
+    // the geo block — nullish is acceptable for the single-event path
+    // because ItemList path also goes through the same normalizer.
+    expect(ev.lat == null).toBe(true);
+    expect(ev.lng == null).toBe(true);
+  });
+
+  it('extract() handles single-event page with no endDate', () => {
+    const url =
+      'https://www.eventbrite.com/e/standup-showcase-tickets-987654321';
+    const result = extract(SYNTHETIC_SINGLE_EVENT_NO_END_HTML, url);
+
+    expect(result.events.length).toBe(1);
+    const ev = result.events[0];
+    expect(ev.date).toBe('2026-11-03');
+    expect(ev.time).toBe('19:30');
+    // Universal extractor returns '' (empty string) when endDate is absent.
+    // Falsy check is what the persistence path cares about — '' means
+    // "no endTime, treat as null downstream".
+    expect(ev.endTime).toBeFalsy();
+    expect(ev.title).toBe('Standup Showcase');
+  });
+
+  it('extract() returns empty for non-Eventbrite single-event URL', () => {
+    const result = extract(
+      SYNTHETIC_SINGLE_EVENT_HTML,
+      'https://example.com/e/nightlife-tour-tickets-1'
+    );
+    expect(result.events).toEqual([]);
+    expect(result.method).toBe('none');
+  });
+});
+
 describe('eventbriteStockholm — live fetch (B-gate path)', () => {
   it(
     'fetchAndExtract() returns >= 30 real Stockholm events from the live listing page',

@@ -24,11 +24,19 @@
  * title so events with clear categories (musik, teater, workshop, etc.) get
  * their real slug. Items with no detectable keyword still get 'community'
  * via the shared module — which is the correct semantic, not a slaskhink.
+ *
+ * 2026-10-14 change: Single-event URLs of shape /e/<slug>-tickets-<id> were
+ * previously matched (matches() returned true) but the JSON-LD `Event` /
+ * `SocialEvent` blocks were discarded because this adapter only accepted
+ * ItemList at the top level. We now delegate single-event pages to the
+ * shared `extractFromJsonLd` so the structured startDate / endDate /
+ * location / offers are parsed correctly.
  */
 import * as cheerio from 'cheerio';
 import axios from 'axios';
 import { ParsedEventSchema, type ParsedEvent } from '../schema';
 import { detectCategory } from '../categoryKeywords.js';
+import { extractFromJsonLd } from '../extractor.js';
 
 const SOURCE_ID = 'eventbrite-stockholm-aggregator';
 const CITY = 'Stockholm';
@@ -40,13 +48,32 @@ const PAGINATION_URL_FMT =
 const USER_AGENT = 'EventPulse-Bot/1.0';
 const RATE_LIMIT_MS = 3000; // 1 req / 3s per BACKLOG.md
 
+// 2026-10-14: Single-event URLs of shape /e/<slug>-tickets-<id> were previously
+// ignored (matches() returned false), so the structured startDate / endDate
+// JSON-LD on those pages never made it into the queue — events landed with
+// start_time = midnight UTC. We accept the pattern now when the host is an
+// Eventbrite domain AND the URL has /tickets- in the path AND there's no
+// non-SE country hint in the path (e.g. /d/malmo-/). Single-event pages also
+// need the city in the page body or in raw_data.fetched_via to be Stockholm.
 export function matches(url: string): boolean {
   try {
     const u = new URL(url);
-    return (
-      (u.hostname === 'www.eventbrite.com' || u.hostname === 'eventbrite.com') &&
-      /\/d\/sweden--stockholm\//i.test(u.pathname + u.search)
-    );
+    const isEbHost =
+      u.hostname === 'www.eventbrite.com' ||
+      u.hostname === 'eventbrite.com' ||
+      u.hostname === 'www.eventbrite.se' ||
+      u.hostname === 'eventbrite.se';
+    if (!isEbHost) return false;
+    const pathAndQuery = (u.pathname + u.search).toLowerCase();
+
+    // Listing pages (existing behaviour, unchanged)
+    if (/\/d\/sweden--stockholm\//i.test(pathAndQuery)) return true;
+
+    // Single-event page: /e/<slug>-tickets-<digits>
+    // Slug may contain hyphens; must end in "-tickets-<id>" (numeric id).
+    if (/\/e\/[a-z0-9-]+-tickets-\d+\/?$/i.test(u.pathname)) return true;
+
+    return false;
   } catch {
     return false;
   }
@@ -86,6 +113,18 @@ interface JsonLdItemList {
 function extractEventsFromHtml(html: string, url: string): ParsedEvent[] {
   const $ = cheerio.load(html);
   const events: ParsedEvent[] = [];
+
+  // 2026-10-14: Single-event URLs delegate entirely to extractFromJsonLd so
+  // we pick up `Event` / `SocialEvent` / `@graph` blocks (not just ItemList).
+  // The shared extractor also re-uses detectCategory + confidence scoring.
+  if (/\/e\/[a-z0-9-]+-tickets-\d+\/?$/i.test(new URL(url).pathname)) {
+    const jsonLdResult = extractFromJsonLd(html, SOURCE_ID, url);
+    for (const evt of jsonLdResult.events) {
+      // Override source so single events are tagged with this adapter's id.
+      events.push({ ...evt, source: SOURCE_ID });
+    }
+    return events;
+  }
 
   $('script[type="application/ld+json"]').each((_, el) => {
     const content = $(el).html();
