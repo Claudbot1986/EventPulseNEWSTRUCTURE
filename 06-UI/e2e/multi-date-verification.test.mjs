@@ -51,47 +51,14 @@ if (SUPABASE_URL && SB_PUBLISHABLE_KEY) {
 // ─── Helpers ───────────────────────────────────────────────────────────────
 
 /**
- * Klick "Skip" eller "Continue without choosing" — körs som single dispatch
- * med mouse-pointer (RN Web Pressable hanterar inte synthetic .click).
+ * Sätt __SKIP_ONBOARDING__ globalt FÖRE sidan laddar. AppShell läser
+ * denna flagga och hoppar över OnboardingScreen om den är true.
  */
 async function bypassOnboarding(page) {
-  await page.waitForLoadState('networkidle').catch(() => {});
-  await page.waitForTimeout(2500);
-
-  const hemVisible = await page.locator('[role="tab"][aria-selected="true"]').filter({ hasText: 'Hem' }).count();
-  if (hemVisible > 0) return;
-
-  // Hitta knappen via JS — returnera bounding box-råkoordinater.
-  const coords = await page.evaluate(() => {
-    const allEls = Array.from(document.querySelectorAll('button, [role="button"], div, span'));
-    for (const el of allEls) {
-      const txt = (el.innerText || el.textContent || '').trim();
-      if (txt === 'Skip' || txt === 'Hoppa över' || txt === 'Continue without choosing') {
-        const r = el.getBoundingClientRect();
-        if (r.width > 0 && r.height > 0) {
-          return { x: r.x + r.width / 2, y: r.y + r.height / 2, text: txt };
-        }
-      }
-    }
-    return null;
+  await page.addInitScript(() => {
+    // Kör innan sidans JS — sätter flaggan som AppShell kollar.
+    globalThis.__SKIP_ONBOARDING__ = true;
   });
-
-  if (coords) {
-    console.log(`[onboarding] Hittade "${coords.text}" på (${coords.x}, ${coords.y})`);
-    await page.mouse.move(coords.x, coords.y);
-    await page.mouse.down();
-    await page.waitForTimeout(80);
-    await page.mouse.up();
-    await page.waitForTimeout(2500);
-    const newCount = await page.locator('[role="tab"][aria-selected="true"]').filter({ hasText: 'Hem' }).count();
-    if (newCount > 0) {
-      console.log('[onboarding] Hoppade förbi ✓');
-      return;
-    }
-  }
-
-  await page.screenshot({ path: 'e2e/visual-regression/baseline/onboarding-stuck.png', fullPage: true });
-  console.log('[onboarding] Kunde inte passera');
 }
 
 /**

@@ -328,6 +328,28 @@ export default function AppShell() {
       }
     }, STORAGE_BUDGET_MS);
 
+    // 2026-10-18 — TEST-BYPASS: om EXPO_PUBLIC_SKIP_ONBOARDING='1' sätts
+    // hoppas OnboardingScreen över utan att koden i OnboardingScreen.js
+    // ändras. Användaren (Tomor) sa 2026-10-18: "stäng av välkomstskärmen
+    // tillfälligt, släng inte bort den, koppla ur bara".
+    //
+    // Expo bäddar in EXPO_PUBLIC_* via babel-plugin-transform-inline-env-vars
+    // vid bundle-time. Värdet är "1" om Metro startades med
+    // EXPO_PUBLIC_SKIP_ONBOARDING=1 i sin process env. Övriga tider är det
+    // ett annat värde / undefined.
+    //
+    // Vid punkter där `process.env.EXPO_PUBLIC_SKIP_ONBOARDING` av oklar
+    // anledning inte packas upp korrekt i dev-bundle, håller vi även
+    // en explicit flagga. Sätt `globalThis.__SKIP_ONBOARDING__ = true`
+    // i webbläsar-/devtools-konsolen som extra pålitlig bypass.
+    const envSkip =
+      process.env.EXPO_PUBLIC_SKIP_ONBOARDING === '1' ||
+      (typeof globalThis !== 'undefined' && globalThis.__SKIP_ONBOARDING__ === true);
+    if (envSkip) {
+      if (alive) setOnboardingState('done');
+      return () => { alive = false; };
+    }
+
     getItem(ONBOARDING_COMPLETE_KEY)
       .then((value) => {
         if (!alive) return;

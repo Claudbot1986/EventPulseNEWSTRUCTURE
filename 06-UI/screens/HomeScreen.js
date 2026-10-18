@@ -605,7 +605,7 @@ export default function HomeScreen({ onCardPress, userState }) {
   const combinedEventsForGroups = useMemo(() => {
     const sections = [
       senastePool, fordig, ikvall, helgen, upptack, imorgon,
-      foodies, gratis, online, nyttEventpulse,
+      foodies, gratis, nyttEventpulse,
     ];
     const seen = new Set();
     const all = [];
@@ -619,7 +619,7 @@ export default function HomeScreen({ onCardPress, userState }) {
       }
     }
     return all;
-  }, [senastePool, fordig, ikvall, helgen, upptack, imorgon, foodies, gratis, online, nyttEventpulse]);
+  }, [senastePool, fordig, ikvall, helgen, upptack, imorgon, foodies, gratis, nyttEventpulse]);
 
   const occurrenceGroups = useMemo(
     () => groupOccurrences(combinedEventsForGroups),
