@@ -51,9 +51,16 @@ export default function EventPulseCard({
   imageSource,
   onPress,
   accessibilityLabel,
+  // 2026-10-18 — multi-date: antal andra förekomster av samma event
+  // (samma title + venue). 0 = single, n = "+(n) andra datum".
+  // Computedas via utils/eventGrouping.groupOccurrences() i parent.
+  extraDatesCount = 0,
 }) {
   const source = sourceOf(imageSource);
-  const a11yLabel = accessibilityLabel ?? `${subtitle} — ${title}`;
+  const showExtra = typeof extraDatesCount === 'number' && extraDatesCount > 0;
+  const a11yLabel = accessibilityLabel ?? (showExtra
+    ? `${subtitle} — ${title} — ${extraDatesCount} andra datum`
+    : `${subtitle} — ${title}`);
   // 2026-10-07 — wrap-aspect sätts till bildens naturliga aspect så bilden
   // visas helt utan crop. Tidigare användes fast aspectRatio 1.15 +
   // resizeMode cover — crop:ade bilden upptill/nedtill. Användaren
@@ -82,6 +89,15 @@ export default function EventPulseCard({
             <Text style={styles.placeholderText}>{subtitle}</Text>
           </View>
         )}
+        {/* 2026-10-18: liten chip i övre höger hörn om eventet har
+            ytterligare datum. Visuellt subtilt — bara en accent-färgad
+            "+N datum"-label. Användaren ska se "det här är inte ensamt"
+            utan att kortet blir plottrigt. */}
+        {showExtra ? (
+          <View style={styles.extraBadge} accessibilityElementsHidden importantForAccessibility="no">
+            <Text style={styles.extraBadgeText}>+{extraDatesCount}</Text>
+          </View>
+        ) : null}
       </View>
       <Text style={styles.title} numberOfLines={2} ellipsizeMode="tail">
         {title}
@@ -89,6 +105,11 @@ export default function EventPulseCard({
       <Text style={styles.subtitle} numberOfLines={1} ellipsizeMode="tail">
         {subtitle}
       </Text>
+      {showExtra ? (
+        <Text style={styles.extraCaption} numberOfLines={1}>
+          {`+${extraDatesCount} andra datum`}
+        </Text>
+      ) : null}
     </Pressable>
   );
 }
@@ -109,6 +130,26 @@ const styles = StyleSheet.create({
     backgroundColor: TOKENS.color.bg,
     borderWidth: 0.5,
     borderColor: TOKENS.color.border,
+  },
+  // 2026-10-18 — multi-date-badge. Absolut-positionerad chip i övre höger
+  // hörn av bilden. Syns bara när extraDatesCount > 0.
+  extraBadge: {
+    position: 'absolute',
+    top: 6,
+    right: 6,
+    backgroundColor: TOKENS.color.text,
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 8,
+    minWidth: 24,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  extraBadgeText: {
+    color: TOKENS.color.bg,
+    fontSize: 11,
+    fontWeight: '800',
+    letterSpacing: 0.3,
   },
   image: {
     width: '100%',
@@ -140,5 +181,14 @@ const styles = StyleSheet.create({
     fontWeight: TOKENS.font.subtitle.weight,
     letterSpacing: TOKENS.font.subtitle.letterSpacing,
     marginTop: TOKENS.space.titleToSubtitle,
+  },
+  // 2026-10-18 — text-rad under subtitle som förklarar "+N andra datum".
+  // Muted, liten — ska inte konkurrera med titel/subtitle.
+  extraCaption: {
+    color: TOKENS.color.textMuted,
+    fontSize: 10,
+    fontWeight: '600',
+    marginTop: 2,
+    letterSpacing: 0.2,
   },
 });

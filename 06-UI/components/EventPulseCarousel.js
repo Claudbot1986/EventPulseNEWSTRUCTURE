@@ -145,6 +145,9 @@ export default function EventPulseCarousel({
                   subtitle={card.subtitle}
                   imageSource={card.imageUrl}
                   onPress={card.onPress}
+                  // 2026-10-18 — multi-date: passera extraDatesCount från
+                  // groupOccurrences-mappningen som HomeScreen byggde.
+                  extraDatesCount={card.extraDatesCount || 0}
                 />
               ))}
         </ScrollView>
