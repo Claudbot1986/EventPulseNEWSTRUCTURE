@@ -58,6 +58,15 @@
  *   - barn (1) → family: Nötknäpparen "för hela familjen!" (Malmö Live).
  *   - festivals (1) → community: "Öl & Sprit Festivalen" — generiskt.
  *
+ * Round 2 (verifierade 2026-10-18 — 388 events i ovrigt-investigation):
+ *   - 388 events hade OGILTIGA slugs totalt (ovrigt 183, barn-familj 91,
+ *     humor 30, dans 25, musikal 24, standup 15, festival 9, sport 7,
+ *     livepodd 2, theater 2). Mappning sattes i
+ *     runtime/ovrigt-investigation/propose_mapping.ts. DB applicerad (0
+ *     events med ogiltig slug kvar). Dessa entries är FRAMTIDA skydd —
+ *     om någon adapter/normalizer fortsätter emittera legacy-slugs
+ *     fångas de automatiskt vid insert.
+ *
  * Om en adapter fortsätter emittera en deprecated slug efter denna fix
  * förväntas CANONICALIZE fånga den. Om Supabase-kategori-tabellen tappar
  * sluggen helt (se migration 20260929-0001-deprecated-slug-cleanup) fångas
@@ -80,6 +89,7 @@ export interface CanonicalizeResult {
  * Verifierat 2026-09-29. Object.freeze-skyddad (muteras inte).
  */
 const CANONICAL_CATEGORY_SLUGS: Readonly<Record<string, string>> = Object.freeze({
+  // Round 1 (verifierade 2026-09-29)
   'culture':        'community',
   'art-exhibitions': 'exhibition',
   'theater':         'theatre-drama',
@@ -89,6 +99,19 @@ const CANONICAL_CATEGORY_SLUGS: Readonly<Record<string, string>> = Object.freeze
   'food-drink':      'food',
   'barn':            'family',
   'festivals':       'community',
+  // Round 2 (verifierade 2026-10-18 — 388 events i ovrigt-investigation)
+  // Alla täckta av mappning i runtime/ovrigt-investigation/propose_mapping.ts.
+  // Dessa entries fångar adaptrar/normalisern som fortfarande emitterar
+  // legacy-slugs efter städningen.
+  'ovrigt':         'community',     // livespot-stockholm fallback ("vet inte"-fack)
+  'barn-familj':    'kids',          // barn-specifik
+  'humor':          'theatre-comedy',// alla samples är standup/humor
+  'dans':           'dance',
+  'musikal':        'musical-theatre',
+  'standup':        'comedy',
+  'livepodd':       'talks-lectures',
+  'festival':       'community',     // generisk festival
+  'sport':          'sports',        // singularis → pluralis (nuvarande riktiga slug)
 });
 
 /**

@@ -9,8 +9,9 @@
  *     Arena, Katalin) → music
  *   - Familj-titel (julfrossa, snögubben, "från X år", barnföreställning) → family
  *   - Mäss-titel (mässa, mässan, expo, konferens) → exhibition
- *   - Tur-titel (stadsvandring, guidad visning, guidad tur) → ovrigt
- *
+ *   - Tur-titel (stadsvandring, guidad visning, guidad tur) → community
+ *     (ändrat 2026-10-18: 'ovrigt' är en legacy-slug som inte längre
+ *      accepteras — stadsvandringar får stanna i community som fångst-fack)
  * Cross-site-evidens: musiker-venues innehåller events från 4+ olika källor
  * (livespot-stockholm, sthlmlist, nalen, berwaldhallen, stockholm-live).
  *
@@ -95,7 +96,7 @@ async function main(): Promise<void> {
   const toMusic: DbEvent[] = [];
   const toFamily: DbEvent[] = [];
   const toExhibition: DbEvent[] = [];
-  const toOvrigt: DbEvent[] = [];
+  const toCommunityTour: DbEvent[] = []; // stadsvandringar stannar i community (tidigare 'ovrigt')
   const skipped: { ev: DbEvent; reason: string }[] = [];
 
   for (const ev of all) {
@@ -133,11 +134,13 @@ async function main(): Promise<void> {
       continue;
     }
 
-    // TOUR (stadsvandring/guidad visning) → ovrigt
-    // Cross-site-evidens: alla 10 tour-samples har "stadsvandring"/"guidad"
-    // från samma källa (livespot-stockholm) — turistaktiviteter.
+    // TOUR (stadsvandring/guidad visning) → community (ändrat 2026-10-18:
+    // 'ovrigt' togs bort som giltig slug. Turer är aktivitet tillsammans,
+    // dvs community. Inga data förändras eftersom de redan ligger i
+    // community, men vi behåller grenen för bakåtkompatibilitet tills
+    // skriptet tas bort helt.)
     if (TOUR_TITLES.some(tt => title.includes(tt))) {
-      toOvrigt.push(ev);
+      toCommunityTour.push(ev);
       continue;
     }
   }
@@ -145,9 +148,9 @@ async function main(): Promise<void> {
   console.log(`  → music:      ${toMusic.length}`);
   console.log(`  → family:     ${toFamily.length}`);
   console.log(`  → exhibition: ${toExhibition.length}`);
-  console.log(`  → ovrigt:     ${toOvrigt.length}`);
+  console.log(`  → community (tour stadsvandringar): ${toCommunityTour.length}`);
   console.log(`  → skip:       ${skipped.length} (Skyview-attraktioner)`);
-  const total = toMusic.length + toFamily.length + toExhibition.length + toOvrigt.length + skipped.length;
+  const total = toMusic.length + toFamily.length + toExhibition.length + toCommunityTour.length + skipped.length;
   console.log(`  total:        ${total} av ${all.length}`);
 
   if (dryRun) {
@@ -158,8 +161,8 @@ async function main(): Promise<void> {
       const v = ev.venues?.name || '?';
       console.log(`    ${(ev.source || '?').padEnd(22)} | ${v.padEnd(25)} | ${t}`);
     }
-    console.log('\n  Sample (5 från ovrigt/tour):');
-    for (const ev of toOvrigt.slice(0, 5)) {
+    console.log('\n  Sample (5 från community/tour):');
+    for (const ev of toCommunityTour.slice(0, 5)) {
       const t = (ev.title_sv || ev.title_en || '?').slice(0, 50);
       const v = ev.venues?.name || '?';
       console.log(`    ${(ev.source || '?').padEnd(22)} | ${v.padEnd(25)} | ${t}`);
@@ -168,11 +171,14 @@ async function main(): Promise<void> {
   }
 
   // PROD: paginerad UPDATE
+  // 2026-10-18: 'ovrigt' togs bort som giltig slug. toCommunityTour
+  // (stadsvandringar) lämnar vi where-are-they-noop — de är redan i community.
+  // Vi behåller grenen för bakåtkompatibilitet men hoppar över faktisk UPDATE.
   const targets = [
     { events: toMusic, newSlug: 'music', label: 'music' },
     { events: toFamily, newSlug: 'family', label: 'family' },
     { events: toExhibition, newSlug: 'exhibition', label: 'exhibition' },
-    { events: toOvrigt, newSlug: 'ovrigt', label: 'ovrigt' },
+    // toCommunityTour borttagen (skrev 'ovrigt' — legacy-slug) — see 2026-10-18
   ];
 
   for (const t of targets) {

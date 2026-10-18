@@ -61,6 +61,42 @@ describe('canonicalizeCategorySlug', () => {
     it('festivals → community', () => {
       expect(canonicalizeCategorySlug('festivals')?.slug).toBe('community');
     });
+
+    it('ovrigt → community (Round 2, 2026-10-18)', () => {
+      expect(canonicalizeCategorySlug('ovrigt')?.slug).toBe('community');
+    });
+
+    it('barn-familj → kids (Round 2, 2026-10-18)', () => {
+      expect(canonicalizeCategorySlug('barn-familj')?.slug).toBe('kids');
+    });
+
+    it('humor → theatre-comedy (Round 2, 2026-10-18)', () => {
+      expect(canonicalizeCategorySlug('humor')?.slug).toBe('theatre-comedy');
+    });
+
+    it('dans → dance (Round 2, 2026-10-18)', () => {
+      expect(canonicalizeCategorySlug('dans')?.slug).toBe('dance');
+    });
+
+    it('musikal → musical-theatre (Round 2, 2026-10-18)', () => {
+      expect(canonicalizeCategorySlug('musikal')?.slug).toBe('musical-theatre');
+    });
+
+    it('standup → comedy (Round 2, 2026-10-18)', () => {
+      expect(canonicalizeCategorySlug('standup')?.slug).toBe('comedy');
+    });
+
+    it('livepodd → talks-lectures (Round 2, 2026-10-18)', () => {
+      expect(canonicalizeCategorySlug('livepodd')?.slug).toBe('talks-lectures');
+    });
+
+    it('festival → community (Round 2, 2026-10-18)', () => {
+      expect(canonicalizeCategorySlug('festival')?.slug).toBe('community');
+    });
+
+    it('sport → sports (Round 2, 2026-10-18, singularis → pluralis)', () => {
+      expect(canonicalizeCategorySlug('sport')?.slug).toBe('sports');
+    });
   });
 
   describe('giltiga Utforska-slugs passerar oförändrat', () => {
@@ -189,6 +225,7 @@ describe('listCanonicalCategoryMappings', () => {
       'theatre-comedy', 'theatre-drama', 'dance', 'circus', 'exhibition',
       'flea-market', 'food', 'wine-tasting', 'kids', 'family', 'film',
       'talks-lectures', 'workshop', 'sports', 'community', 'nightlife',
+      'comedy', 'fair',  // legacy/fairs-kategorier (Round 2)
     ]);
     const list = listCanonicalCategoryMappings();
     for (const m of list) {
