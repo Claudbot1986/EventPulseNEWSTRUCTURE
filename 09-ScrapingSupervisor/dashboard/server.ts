@@ -10,8 +10,8 @@
  */
 
 import { createServer, IncomingMessage, ServerResponse } from 'http';
-import { readFileSync, readdirSync, statSync, existsSync, mkdirSync, appendFileSync } from 'fs';
-import { spawn } from 'child_process';
+import { readFileSync, readdirSync, statSync, existsSync, mkdirSync, appendFileSync, writeFileSync, renameSync } from 'fs';
+import { spawn, execFile } from 'child_process';
 import { dirname, join, resolve } from 'path';
 import { fileURLToPath, pathToFileURL } from 'url';
 import {
@@ -51,6 +51,7 @@ import {
   type LifecycleEntry,
 } from '../../02-Ingestion/lib/quarantineGuard.js';
 import { readRecentIngestionRuns } from '../../02-Ingestion/tools/runRecorder';
+import { loadCoverageState, reconcileFromDisk } from '../../BFL-generator/lib/zoom-coverage-state';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -1386,19 +1387,47 @@ async function toggleIngestionCron(action: 'start' | 'stop'): Promise<{
 
 function readIngestionCronStatus(): Record<string, unknown> {
   const statusFile = join(PROJECT_ROOT, 'runtime/ingestion-cron.status.json');
+  const emptyStatus = {
+    running: false, pid: null, startedAt: null, finishedAt: null,
+    exitCode: null, durationMs: null, steps: [], totalEventsExtracted: 0, lastError: null,
+  };
   if (!existsSync(statusFile)) {
-    return {
-      running: false, pid: null, startedAt: null, finishedAt: null,
-      exitCode: null, durationMs: null, steps: [], totalEventsExtracted: 0, lastError: null,
-    };
+    return emptyStatus;
   }
   try {
-    return JSON.parse(readFileSync(statusFile, 'utf8'));
-  } catch {
+    const status = JSON.parse(readFileSync(statusFile, 'utf8'));
+    // 2026-10-18: "running:true sedan 2.7 dagar" såg ut som stale flagga, men
+    // var i själva verket en långkörd ingestion-cron mitt i en 10-min sitemap-step.
+    // Visa "alive for Xd Yh" + heartbeat-age istället. Om heartbeat > 2h gammal
+    // OCH PID inte lever → flagga stale och flippa running→false.
+    const now = Date.now();
+    const startedAt = typeof status.startedAt === 'string' ? new Date(status.startedAt).getTime() : null;
+    const lastHeartbeatAt = typeof status.lastHeartbeatAt === 'string'
+      ? new Date(status.lastHeartbeatAt).getTime()
+      : startedAt;
+    const heartbeatAgeMs = lastHeartbeatAt !== null ? now - lastHeartbeatAt : null;
+    const uptimeMs = startedAt !== null ? now - startedAt : null;
+    const pid = typeof status.pid === 'number' ? status.pid : null;
+    let pidAlive: boolean | null = null;
+    if (pid !== null) {
+      try { process.kill(pid, 0); pidAlive = true; }
+      catch { pidAlive = false; }
+    }
+    const STALE_HEARTBEAT_MS = 2 * 60 * 60 * 1000;
+    const stale = status.running === true && (
+      pidAlive === false ||
+      (heartbeatAgeMs !== null && heartbeatAgeMs > STALE_HEARTBEAT_MS)
+    );
     return {
-      running: false, pid: null, startedAt: null, finishedAt: null,
-      exitCode: null, durationMs: null, steps: [], totalEventsExtracted: 0, lastError: 'status-file-corrupt',
+      ...status,
+      uptimeMs,
+      lastHeartbeatAgeMs: heartbeatAgeMs,
+      pidAlive,
+      stale,
+      running: stale ? false : status.running,
     };
+  } catch {
+    return { ...emptyStatus, lastError: 'status-file-corrupt' };
   }
 }
 
@@ -2324,6 +2353,492 @@ async function serveJson(req: IncomingMessage, res: ServerResponse): Promise<boo
     const cancelled = cancelBflRun(runId);
     res.writeHead(cancelled.ok ? 200 : 404, { 'Content-Type': 'application/json' });
     res.end(JSON.stringify(cancelled));
+    return true;
+  }
+
+  // ─── BFL zoom-run endpoints (2026-10-18) ────────────────────────────
+// NY pipeline (parallell med befintlig /api/bfl/run, rör INTE den).
+// Genererar bilder med 10 zoomdjup × 3 pose × 3 ljus variation,
+// MiniMax-modell, AI-stämpling, 2-fas kvotfyllnad (se docs).
+
+interface ZoomRunState {
+  runId: string;
+  startedAt: string;
+  finishedAt: string | null;
+  status: 'running' | 'success' | 'failed';
+  count: number;
+  categories: string[];
+  model: string;
+  variant: string;
+  out: string;
+  pid: number | null;
+  exitCode: number | null;
+  log: string[];
+  imageCount: number;
+}
+
+const ZOOM_RUNS_DIR = join(PROJECT_ROOT, 'tmp', 'bfl_runs');
+
+/**
+ * Auto-fill: beräkna count baserat på quota + state (truth = disk).
+ *
+ * Pipeline (användarens ordning 2026-10-19):
+ *   1. Ladda state från disk
+ *   2. Synka state mot FAKTISKA .webp-filer (reconcileFromDisk) — disk är sanningen
+ *   3. Persista synkad state till state/zoom-coverage.json
+ *   4. Räkna events per kategori (från Supabase)
+ *   5. Räkna disk-filer (för verifiering / defensiv cross-check)
+ *   6. För varje kategori: target = 20 + ceil((events-600)/30)
+ *      gap = max(0, target - state.totals[cat])
+ *      Saknade kombinationer = 90 - state.combos[cat][tag].length, summerat
+ *   7. count = min(200, gap + min(50, missingCombos))
+ *
+ * Returnerar 0 om inget behövs.
+ */
+async function computeAutoFillCount(
+  categoriesFilter?: string[],
+): Promise<number> {
+  const SUPABASE_URL = process.env.SUPABASE_URL;
+  const SUPABASE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  if (!SUPABASE_URL || !SUPABASE_KEY) return 10;
+
+  // 1. Ladda state från disk (eller ny tom state)
+  let state = loadCoverageState(PROJECT_ROOT);
+
+  // 2. Synka state mot FAKTISKA .webp-filer (disk är sanningen).
+  // Användaren bestämde 2026-10-19 att state ska reflektera disk FÖRE beräkning
+  // av behov — annars drar state ifrån verkligheten och auto-fill genererar dubletter.
+  const stampedDir = join(PROJECT_ROOT, 'local_image_library_stamped');
+  const sync = reconcileFromDisk(state, PROJECT_ROOT);
+  if (sync.added > 0) {
+    sync.next.totals = (() => {
+      // Bygg om totals från combos (single source of truth: combos -> totals)
+      const totals: Record<string, number> = {};
+      for (const [cat, byTag] of Object.entries(sync.next.combos)) {
+        let n = 0;
+        for (const arr of Object.values(byTag)) n += arr.length;
+        totals[cat] = n;
+      }
+      return totals;
+    })();
+    sync.next.lastUpdated = new Date().toISOString();
+    writeFileSync(
+      join(PROJECT_ROOT, 'state', 'zoom-coverage.json'),
+      JSON.stringify(sync.next, null, 2),
+    );
+    console.log(
+      `[auto-fill] reconcileFromDisk: ${sync.added} nya kombos tillagda, ${sync.skipped} hoppade (av ${sync.scanned} filer på disk)`,
+    );
+  }
+  state = sync.next;
+
+  // 3. Hämta events per kategori
+  const eventsMap = new Map<string, number>();
+  let offset = 0;
+  const PAGE = 1000;
+  while (true) {
+    const r = await fetch(
+      `${SUPABASE_URL}/rest/v1/events?select=category_slug&offset=${offset}&limit=${PAGE}`,
+      { headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` } },
+    );
+    if (!r.ok) break;
+    const rows = (await r.json()) as Array<{ category_slug: string | null }>;
+    if (!rows.length) break;
+    for (const row of rows) {
+      if (row.category_slug) {
+        eventsMap.set(row.category_slug, (eventsMap.get(row.category_slug) ?? 0) + 1);
+      }
+    }
+    if (rows.length < PAGE) break;
+    offset += PAGE;
+  }
+
+  // 4. Räkna FAKTISKA bilder på disk (truth-of-source, cross-check mot state.totals).
+  // image_library-tabellen i Supabase är inte komplett — många zoom-pipeline-filer
+  // registrerades aldrig där. Disk är den enda sanningen för vad som faktiskt finns.
+  const diskMap = new Map<string, number>();
+  if (existsSync(stampedDir)) {
+    for (const cat of readdirSync(stampedDir)) {
+      const catDir = join(stampedDir, cat);
+      if (!statSync(catDir).isDirectory()) continue;
+      const webps = readdirSync(catDir).filter((f) => f.endsWith('.webp') && f.startsWith('zoom_'));
+      diskMap.set(cat, webps.length);
+    }
+  }
+
+  // 5. Beräkna gap + saknade kombinationer per kategori.
+  // Vi använder state.totals (NU synkad) som library-räknare — diskMap är cross-check.
+  let totalGap = 0;
+  let totalMissingCombos = 0;
+  const allCats = new Set([...eventsMap.keys(), ...diskMap.keys(), ...Object.keys(state.totals)]);
+  for (const cat of allCats) {
+    if (categoriesFilter && categoriesFilter.length > 0 && !categoriesFilter.includes(cat)) continue;
+    const ev = eventsMap.get(cat) ?? 0;
+    if (ev === 0) continue;
+    // library-count: state.totals (synkad) — fallback till diskMap om state saknar cat
+    const lib = state.totals[cat] ?? diskMap.get(cat) ?? 0;
+    // Använd användarens quota-formel
+    const target = 20 + Math.max(0, Math.ceil((ev - 600) / 30));
+    const gap = Math.max(0, target - lib);
+    totalGap += gap;
+    // Saknade kombinationer i state för denna kategori (summerat över tags)
+    const catCombos = state.combos[cat] ?? {};
+    for (const tag of Object.keys(catCombos)) {
+      const missing = Math.max(0, 90 - (catCombos[tag]?.length ?? 0));
+      totalMissingCombos += missing;
+    }
+  }
+  // 6. Cap vid rimlig mängd för att inte bränna för mycket credits
+  return Math.min(200, totalGap + Math.min(50, totalMissingCombos));
+}
+
+function readZoomRunState(runId: string): ZoomRunState | null {
+  if (!/^[A-Za-z0-9_\-:]+$/.test(runId)) return null;
+  const p = join(ZOOM_RUNS_DIR, `zoom_${runId}.json`);
+  if (!existsSync(p)) return null;
+  try { return JSON.parse(readFileSync(p, 'utf8')) as ZoomRunState; }
+  catch { return null; }
+}
+
+// POST /api/bfl/zoom-run
+if (req.method === 'POST' && url === '/api/bfl/zoom-run') {
+  try {
+    const body = await new Promise<string>((resolve, reject) => {
+      const chunks: Buffer[] = [];
+      req.on('data', (c: Buffer) => chunks.push(c));
+      req.on('end', () => resolve(Buffer.concat(chunks).toString('utf8')));
+      req.on('error', reject);
+    });
+    const parsed = JSON.parse(body || '{}') as {
+      count?: number;
+      categories?: string[];
+      model?: string;
+      variant?: 'legacy' | 'small';
+      out?: string;
+      auto?: boolean;  // NY: auto-fill baserat på quota + state
+      maxCount?: number; // NY: input-rutan-cap för auto-fill (annars fri)
+      resetState?: boolean;  // NY: töm state/zoom-coverage.json före körning
+    };
+    let count = Math.max(1, Math.min(500, parsed.count ?? 10));
+    let autoNote = '';
+    let cappedByInput = false;
+    if (parsed.auto) {
+      // Auto-fill: beräkna count baserat på quota + saknade kombinationer.
+      // Läser state/zoom-coverage.json och quota-formeln.
+      count = await computeAutoFillCount(parsed.categories);
+      autoNote = ` (auto-fill: count beräknat till ${count} baserat på 1/30-quota + saknade kombinationer)`;
+      // input-rutan fungerar som MAX-CAP när auto-fill är aktivt.
+      if (typeof parsed.maxCount === 'number' && parsed.maxCount >= 1) {
+        const cap = Math.min(500, Math.max(1, Math.floor(parsed.maxCount)));
+        if (cap < count) {
+          autoNote += ` — cappat till ${cap} (input-rutan)`;
+          cappedByInput = true;
+        }
+        count = Math.min(count, cap);
+      }
+    }
+    const args = [
+      '--env-file=.env',
+      '--import', 'file:///Users/claudgashi/EventPulse/node_modules/tsx/dist/loader.mjs',
+      'BFL-generator/bin/bfl-zoom-orchestrate.ts',
+      `--count=${count}`,
+    ];
+    if (parsed.categories && parsed.categories.length > 0) {
+      args.push(`--categories=${parsed.categories.join(',')}`);
+    }
+    if (parsed.model) args.push(`--model=${parsed.model}`);
+    if (parsed.variant === 'small') args.push('--variant=small');
+    if (parsed.out) args.push(`--out=${parsed.out}`);
+    if (parsed.resetState) args.push('--reset-state');
+
+    const runId = newBflRunId();
+    // Skicka runId till orchestrator FÖRE spawn (så batch + dashboard delar samma state-fil)
+    args.push(`--run-id=${runId}`);
+
+    const child = spawn(process.execPath, args, {
+      cwd: PROJECT_ROOT,
+      env: { ...process.env },
+      stdio: ['ignore', 'pipe', 'pipe'],
+      detached: true,  // överlever om dashboard startas om
+    });
+    child.unref();
+    // Sätt in pending state
+    if (!existsSync(ZOOM_RUNS_DIR)) mkdirSync(ZOOM_RUNS_DIR, { recursive: true });
+    const pending: ZoomRunState = {
+      runId,
+      startedAt: new Date().toISOString(),
+      finishedAt: null,
+      status: 'running',
+      count,
+      categories: parsed.categories ?? [],
+      model: parsed.model ?? 'image-01',
+      variant: parsed.variant ?? 'legacy',
+      out: parsed.out ?? 'local_image_library_stamped',
+      pid: child.pid ?? null,
+      exitCode: null,
+      log: [],
+      imageCount: 0,
+    };
+    writeFileSync(join(ZOOM_RUNS_DIR, `zoom_${runId}.json.tmp`), JSON.stringify(pending, null, 2));
+    renameSync(join(ZOOM_RUNS_DIR, `zoom_${runId}.json.tmp`), join(ZOOM_RUNS_DIR, `zoom_${runId}.json`));
+    res.writeHead(200, { 'Content-Type': 'application/json' });
+    res.end(JSON.stringify({
+      ok: true,
+      runId,
+      pid: child.pid,
+      count,
+      autoNote: autoNote || undefined,
+      cappedByInput: cappedByInput || undefined,
+    }));
+  } catch (err) {
+    res.writeHead(500, { 'Content-Type': 'application/json' });
+    res.end(JSON.stringify({ ok: false, error: String((err as Error)?.message ?? err) }));
+  }
+  return true;
+}
+
+// GET /api/bfl/zoom-run/:id/status
+const zoomStatusMatch = url.match(/^\/api\/bfl\/zoom-run\/([^/]+)\/status$/);
+if (zoomStatusMatch && req.method === 'GET') {
+  const state = readZoomRunState(zoomStatusMatch[1]);
+  if (!state) {
+    res.writeHead(404, { 'Content-Type': 'application/json' });
+    res.end(JSON.stringify({ ok: false, error: 'run not found' }));
+    return true;
+  }
+  res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'no-cache' });
+  res.end(JSON.stringify({ ok: true, result: state }));
+  return true;
+}
+
+// GET /api/bfl/zoom-run/latest — returnera senaste körningens state
+if (url === '/api/bfl/zoom-run/latest' && req.method === 'GET') {
+  if (!existsSync(ZOOM_RUNS_DIR)) {
+    res.writeHead(200, { 'Content-Type': 'application/json' });
+    res.end(JSON.stringify({ ok: true, result: null }));
+    return true;
+  }
+  const files = readdirSync(ZOOM_RUNS_DIR)
+    .filter((f) => f.startsWith('zoom_') && f.endsWith('.json'))
+    .sort()
+    .reverse();
+  let latest: ZoomRunState | null = null;
+  for (const f of files) {
+    try {
+      latest = JSON.parse(readFileSync(join(ZOOM_RUNS_DIR, f), 'utf8')) as ZoomRunState;
+      break;
+    } catch { /* skip */ }
+  }
+  res.writeHead(200, { 'Content-Type': 'application/json' });
+  res.end(JSON.stringify({ ok: true, result: latest }));
+  return true;
+}
+
+// ─── BFL model-compare endpoints (2026-10-18) ─────────────────────
+  // PARALLELLA experiment-endpoints. Rör INTE /api/bfl/* ovan.
+  // Genererar 3 bilder (3 default-kategorier) med EN modell per klick.
+  // Output hamnar i en gemensam parent-mapp för modell-jämförelse.
+  // Skriver INTE till image_library / Supabase / local_image_library.
+
+  const COMPARE_MODELS = new Set(['bfl-flux-2-pro', 'minimax-image-01']);
+  const COMPARE_DEFAULT_CATEGORIES = ['music', 'theatre-drama', 'community'];
+  const COMPARE_RUNS_DIR = join(PROJECT_ROOT, 'tmp', 'bfl_runs');
+  const COMPARE_OUT_BASE = join(PROJECT_ROOT, 'tmp');
+
+  interface CompareRunState {
+    runId: string;
+    model: string;
+    status: 'running' | 'success' | 'failed';
+    startedAt: string;
+    finishedAt: string | null;
+    outDir: string;
+    pid: number | null;
+    exitCode: number | null;
+    log: string[];
+    images: Array<{ category: string; file: string; ok: boolean }>;
+  }
+
+  function readCompareRunState(runId: string): CompareRunState | null {
+    if (!/^[A-Za-z0-9_\-:]+$/.test(runId)) return null;
+    const p = join(COMPARE_RUNS_DIR, `compare_${runId}.json`);
+    if (!existsSync(p)) return null;
+    try { return JSON.parse(readFileSync(p, 'utf8')); } catch { return null; }
+  }
+
+  function writeCompareRunState(state: CompareRunState): void {
+    if (!existsSync(COMPARE_RUNS_DIR)) mkdirSync(COMPARE_RUNS_DIR, { recursive: true });
+    const p = join(COMPARE_RUNS_DIR, `compare_${state.runId}.json`);
+    const tmp = `${p}.tmp`;
+    writeFileSync(tmp, JSON.stringify(state, null, 2));
+    renameSync(tmp, p);
+  }
+
+  if (req.method === 'POST' && url === '/api/bfl/compare-test') {
+    try {
+      const body = await new Promise<string>((resolve, reject) => {
+        const chunks: Buffer[] = [];
+        req.on('data', (c: Buffer) => chunks.push(c));
+        req.on('end', () => resolve(Buffer.concat(chunks).toString('utf8')));
+        req.on('error', reject);
+      });
+      const parsed = JSON.parse(body || '{}') as { model?: string; outDir?: string };
+      if (!parsed.model || !COMPARE_MODELS.has(parsed.model)) {
+        res.writeHead(400, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ ok: false, error: `model måste vara en av ${Array.from(COMPARE_MODELS).join(', ')}` }));
+        return true;
+      }
+      const runId = newBflRunId();
+      // Använd utdelad outDir (så flera knappar kan peka på samma parent),
+      // annars skapa en ny parent per körning.
+      const outDir = parsed.outDir && typeof parsed.outDir === 'string' && parsed.outDir.startsWith(PROJECT_ROOT)
+        ? parsed.outDir
+        : join(COMPARE_OUT_BASE, `bfl_model_compare_${runId}`);
+      if (!existsSync(outDir)) mkdirSync(outDir, { recursive: true });
+
+      const state: CompareRunState = {
+        runId,
+        model: parsed.model,
+        status: 'running',
+        startedAt: new Date().toISOString(),
+        finishedAt: null,
+        outDir,
+        pid: null,
+        exitCode: null,
+        log: [],
+        images: [],
+      };
+      writeCompareRunState(state);
+
+      // Spawn tools/bfl-model-compare.mjs som subprocess.
+      // --no-open: dashboarden öppnar mappen själv när status=success.
+      const args = [
+        '--env-file=.env',
+        'tools/bfl-model-compare.mjs',
+        `--model=${parsed.model}`,
+        `--out-dir=${outDir}`,
+        '--no-open',
+      ];
+      // Använd absolut path till node. När dashboard-servern kör under tsx
+      // och spawnar 'node' får macOS-barnet en minimal env där 'node' inte
+      // alltid är i PATH (vi såg "spawn ENOENT" utan detta).
+      const nodeBin = process.execPath; // samma node-binär som dashboard själv körs på
+      const child = spawn(nodeBin, args, {
+        cwd: PROJECT_ROOT,
+        env: { ...process.env },
+        stdio: ['ignore', 'pipe', 'pipe'],
+      });
+      state.pid = child.pid ?? null;
+      writeCompareRunState(state);
+
+      child.stdout?.on('data', (d: Buffer) => {
+        const lines = d.toString('utf8').split('\n').filter(Boolean);
+        state.log.push(...lines);
+        if (state.log.length > 200) state.log.splice(0, state.log.length - 200);
+        writeCompareRunState(state);
+      });
+      child.stderr?.on('data', (d: Buffer) => {
+        const lines = d.toString('utf8').split('\n').filter(Boolean);
+        state.log.push(...lines.map((l) => `[stderr] ${l}`));
+        if (state.log.length > 200) state.log.splice(0, state.log.length - 200);
+        writeCompareRunState(state);
+      });
+
+      child.on('close', (code) => {
+        state.exitCode = code;
+        state.finishedAt = new Date().toISOString();
+        state.status = code === 0 ? 'success' : 'failed';
+        writeCompareRunState(state);
+      });
+      child.on('error', (err) => {
+        state.log.push(`spawn error: ${err.message}`);
+        state.status = 'failed';
+        state.finishedAt = new Date().toISOString();
+        writeCompareRunState(state);
+      });
+
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ ok: true, runId, outDir, model: parsed.model, pid: state.pid }));
+    } catch (err) {
+      res.writeHead(500, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ ok: false, error: String((err as Error)?.message ?? err) }));
+    }
+    return true;
+  }
+
+  // /api/bfl/compare-test/:id/status
+  const compareStatusMatch = url.match(/^\/api\/bfl\/compare-test\/([^/]+)\/status$/);
+  if (compareStatusMatch && req.method === 'GET') {
+    const state = readCompareRunState(compareStatusMatch[1]);
+    if (!state) {
+      res.writeHead(404, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ ok: false, error: 'run not found' }));
+      return true;
+    }
+    res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'no-cache' });
+    res.end(JSON.stringify({ ok: true, result: state }));
+    return true;
+  }
+
+  // GET /api/bfl/compare-test/out-dir — returnerar senaste körningens outDir
+  // (för att klienten ska kunna återöppna samma parent efter båda knapparna).
+  if (url === '/api/bfl/compare-test/out-dir' && req.method === 'GET') {
+    try {
+      // Hitta senaste compare_*.json i runs-dir → använd dess outDir.
+      if (!existsSync(COMPARE_RUNS_DIR)) {
+        res.writeHead(200, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ ok: true, outDir: null }));
+        return true;
+      }
+      const files = readdirSync(COMPARE_RUNS_DIR)
+        .filter((f) => f.startsWith('compare_') && f.endsWith('.json'))
+        .sort()
+        .reverse();
+      let latest: CompareRunState | null = null;
+      for (const f of files) {
+        try {
+          latest = JSON.parse(readFileSync(join(COMPARE_RUNS_DIR, f), 'utf8')) as CompareRunState;
+          break;
+        } catch { /* skip */ }
+      }
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ ok: true, outDir: latest?.outDir ?? null }));
+    } catch (err) {
+      res.writeHead(500, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ ok: false, error: String((err as Error)?.message ?? err) }));
+    }
+    return true;
+  }
+
+  // GET /api/bfl/compare-test/open?dir=... — kör `open <dir>` på macOS.
+  // Säkerhets-validering: dir måste vara under PROJECT_ROOT/tmp/.
+  if (url.startsWith('/api/bfl/compare-test/open') && req.method === 'GET') {
+    try {
+      const u = new URL(req.url, 'http://x');
+      const dirRaw = u.searchParams.get('dir');
+      if (!dirRaw) {
+        res.writeHead(400, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ ok: false, error: 'missing dir param' }));
+        return true;
+      }
+      const resolved = resolve(dirRaw);
+      const projectResolved = resolve(PROJECT_ROOT);
+      if (!resolved.startsWith(projectResolved)) {
+        res.writeHead(403, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ ok: false, error: 'dir utanför PROJECT_ROOT' }));
+        return true;
+      }
+      if (!existsSync(resolved)) {
+        res.writeHead(404, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ ok: false, error: 'dir finns inte' }));
+        return true;
+      }
+      execFile('open', [resolved], { timeout: 3000 }, () => { /* swallow */ });
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ ok: true, dir: resolved }));
+    } catch (err) {
+      res.writeHead(500, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ ok: false, error: String((err as Error)?.message ?? err) }));
+    }
     return true;
   }
 
