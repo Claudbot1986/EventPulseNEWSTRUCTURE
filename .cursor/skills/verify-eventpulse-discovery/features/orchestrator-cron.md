@@ -1,0 +1,82 @@
+# orchestrator-cron
+
+`scripts/ingestion-cron.ts` — nattlig sekventiell körning av hela discovery-pipelinen. Ägs av launchd (`com.eventpulse.ingestion` plist).
+
+## Sub-features
+
+- Step-lista (rad 265–467 + villkorliga pushes 425–499): A → B → eventbrite → tribe → sitemap → subpath → direct-jsonld → livespot → C → D → I-pdf → manual-review → etag → api-discovery → luma → ra → posh → reddit → image → P2C → P3A → P3B → P3C → pattern-promoter
+- Per-step loggar: `runtime/ingestion-cron/steps/<name>-<ISO>.{log,err.log}`
+- Chain-overview (JSONL): `runtime/ingestion-cron/chain-overview.log` — `{step-start|step-end|heartbeat|pre-kill|green-skip, ...}`
+- Status-singleton: `runtime/ingestion-cron.status.json` — `running, pid, startedAt, lastHeartbeatAt, steps[], totalEventsExtracted`
+- Pre-discovery kill-check (2026-10-18, rad 515–572): dödar levande discovery-processer innan step-loop startar
+- Green-skip-gate (2026-10-18, rad 608–688): läser `runtime/discovery-verification.status.json` för senaste verify-status; skriver skip-fil vid grön korrigering
+- Watchdog-output: `runtime/watchdog.json` (läs av watchdog-script, ej orchestrator)
+
+## How to get to it (user POV)
+
+Användaren ser cron-orchestratorn indirekt: dashboard 7777 visar pågående steg, totalEventsExtracted ökar, status.json visar `running:true`. Manuell körning: `npx tsx scripts/ingestion-cron.ts --smoke` (~15 min, minimal data).
+
+## Driving it
+
+```bash
+cd /Users/claudgashi/EventPulse
+
+# 1. Vilka steg kördes i senaste körningen?
+jq -r 'select(.event=="step-start") | .step' runtime/ingestion-cron/chain-overview.log | tail -25
+
+# 2. Vilka har step-end?
+jq -r 'select(.event=="step-end") | "\(.step)\t\(.exitCode)\t\(.durationMs)ms"' \
+  runtime/ingestion-cron/chain-overview.log | tail -25
+# → exit=0 för alla slutförda
+
+# 3. Häng-detektion: stage med step-start men inget step-end och >5 heartbeats
+python3 -c "
+import json
+events = [json.loads(l) for l in open('runtime/ingestion-cron/chain-overview.log')]
+last_end_per_step = {}
+last_start_per_step = {}
+hb_count_per_step = {}
+for e in events:
+    s = e.get('step')
+    if not s: continue
+    if e['event']=='step-end': last_end_per_step[s] = e['ts']
+    if e['event']=='step-start': last_start_per_step[s] = e['ts']
+    if e['event']=='heartbeat': hb_count_per_step[s] = hb_count_per_step.get(s,0)+1
+hung = [s for s in last_start_per_step if (not last_end_per_step.get(s) or last_start_per_step[s] > last_end_per_step.get(s,'')) and hb_count_per_step.get(s,0) > 5]
+print('HUNG STAGES:', hung)
+print('Heartbeat counts:', {s:c for s,c in hb_count_per_step.items() if c>3})
+"
+
+# 4. status.json har färsk heartbeat?
+python3 -c "
+import json, datetime
+d=json.load(open('runtime/ingestion-cron.status.json'))
+h=d.get('lastHeartbeatAt') or d.get('startedAt')
+age=(datetime.datetime.now(datetime.timezone.utc)-datetime.datetime.fromisoformat(h.replace('Z','+00:00'))).total_seconds()
+print(f'heartbeat age={age:.0f}s running={d.get(\"running\")} pid={d.get(\"pid\")} steps={len(d.get(\"steps\",[]))}')
+"
+# → heartbeat age < 7200 (2h)
+
+# 5. Pre-kill + green-skip har körts?
+jq -c 'select(.event=="pre-kill" or .event=="green-skip")' \
+  runtime/ingestion-cron/chain-overview.log | tail -5
+# → förväntat lång lista efter 2026-10-18 (varje cron-start loggar pre-kill)
+```
+
+Bevis: `chain-overview.log` + `status.json` + `steps/<stage>-<ISO>.log`. Green = alla steg har `step-end` med exit=0 + `totalEventsExtracted > 0` + `heartbeat age < 2h` (om körning pågår).
+
+## Gotchas
+
+**Heartbeat fortsätter även vid häng.** En steg som fastnat i retry-loop genererar heartbeats var 60s — det betyder INTE att steget gör framsteg. Kör hung-detect-grepet ovan för att se om ett steg har `step-start` utan `step-end`.
+
+**Pre-discovery kill-check (2026-10-18, rad 515–572) dödar processer vars cmdline matchar `/scripts\/ingest-[\w-]+\.m?js|/scripts\/discover-[\w-]+\.m?js|/07-Discovery\/src\//` eller innehåller `geoExpansion`/`rssDiscovery`/`discoverySearch`.** Andra typer (t.ex., `node 09-ScrapingSupervisor/dashboard/server.ts`) överlever.
+
+**Green-skip-gate (2026-10-18) skriver till `runtime/discovery-verification.status.json`** med `{ok, lastGreenAt, runId, totalEventsExtracted, durationMs}`. Hoppar INTE över cron-körningen själv — cron ÄR det som körs. Skippet låter bara framtida verify-skill-körningar skippa sig själva om allt är grönt <24h.
+
+**`--smoke` använder `--limit 1` på A/B/D/I-pdf/etag/P3C-rss**, `--queries 1 --per-query 1` på P3A, `--limit 5` på P3B-geo/pattern-promoter/triage. P3C-rss i smoke använder `--limit 5 --concurrency 2 --dry-run=true`.
+
+**`--skip-images` dödar både `D-images` och `P2C-active-learning`.** De ligger bakom `if (!skipImages)` i cron-scriptet.
+
+**launchd-plisten sätter `EVENTPULSE_PROJECT_ROOT`** — orchestratorn läser den i `dotenv.config({ path: ... resolve(PROJECT_ROOT, '.env') })` (runDaily.ts:29, men cron läser här den via env i spawn()). Manuell körning behöver `cd /Users/claudgashi/EventPulse`.
+
+**`runtime/ingestion-cron.status.json` blir stale om cron-processen dör utan att skriva slutstatus.** Lösning = watchdog upptäcker stale och launchd startar en ny.
