@@ -14,7 +14,7 @@
  * eller scoring-vikter. Detta är ett orchestrator-lager ovanpå befintlig kod.
  */
 
-import { spawn } from 'child_process';
+import { spawn, execSync } from 'child_process';
 import {
   writeFileSync, readFileSync, existsSync,
   mkdirSync, openSync, closeSync, writeSync, appendFileSync,
@@ -40,6 +40,8 @@ interface StatusFile {
   finishedAt: string | null;
   exitCode: number | null;
   durationMs: number | null;
+  /** ISO-tid för senaste writeStatus — används av dashboarden som "alive"-signal. */
+  lastHeartbeatAt: string | null;
   steps: Array<{ name: string; startedAt: string; finishedAt: string; exitCode: number; sourcesProcessed: number; eventsExtracted: number }>;
   totalEventsExtracted: number;
   lastError: string | null;
@@ -65,22 +67,40 @@ function readStatus(): StatusFile {
       finishedAt: null,
       exitCode: null,
       durationMs: null,
+      lastHeartbeatAt: null,
       steps: [],
       totalEventsExtracted: 0,
       lastError: null,
     };
   }
   try {
-    return JSON.parse(readFileSync(STATUS_FILE, 'utf8')) as StatusFile;
+    const raw = JSON.parse(readFileSync(STATUS_FILE, 'utf8')) as Partial<StatusFile>;
+    // Bakåtkompatibelt — gamla statusfiler saknar lastHeartbeatAt
+    return {
+      running: raw.running ?? false,
+      pid: raw.pid ?? null,
+      startedAt: raw.startedAt ?? null,
+      finishedAt: raw.finishedAt ?? null,
+      exitCode: raw.exitCode ?? null,
+      durationMs: raw.durationMs ?? null,
+      lastHeartbeatAt: raw.lastHeartbeatAt ?? raw.startedAt ?? null,
+      steps: raw.steps ?? [],
+      totalEventsExtracted: raw.totalEventsExtracted ?? 0,
+      lastError: raw.lastError ?? null,
+    };
   } catch {
     return {
       running: false, pid: null, startedAt: null, finishedAt: null, exitCode: null,
-      durationMs: null, steps: [], totalEventsExtracted: 0, lastError: null,
+      durationMs: null, lastHeartbeatAt: null, steps: [], totalEventsExtracted: 0, lastError: null,
     };
   }
 }
 
 function writeStatus(s: StatusFile): void {
+  // Alltid uppdatera heartbeat vid varje write — dashboarden använder detta
+  // som "alive"-signal. Om processen hänger slutar writeStatus anropas → dashboard
+  // ser gammal heartbeat och kan flagga stale.
+  s.lastHeartbeatAt = new Date().toISOString();
   writeFileSync(STATUS_FILE, JSON.stringify(s, null, 2), 'utf8');
 }
 
@@ -184,8 +204,9 @@ function runStep(name: string, cmd: string, args: string[]): Promise<SpawnResult
     appendChainOverview({ event: 'step-start', step: name, pid: process.pid, cmd: `${cmd} ${args.join(' ')}` });
 
     // 2026-10-07 — heartbeat en gång/minut under långa steg så watchdog
-    // inte tror att chain är död. Stegets step-end skriver en heartbeat till
-    // chain-overview.log — samma fil watchdog kollar.
+    // inte tror att chain är död. 2026-10-18 — uppdatera även status.json
+    // så dashboardens /api/ingestion/status visar färsk heartbeat och inte
+    // flaggar stale efter >2h i en lång subpath/sitemap-step.
     const heartbeat = setInterval(() => {
       appendChainOverview({
         event: 'heartbeat',
@@ -193,6 +214,13 @@ function runStep(name: string, cmd: string, args: string[]): Promise<SpawnResult
         pid: process.pid,
         childPid: proc.pid,
       });
+      try {
+        // Läs färsk status och uppdatera bara lastHeartbeatAt — låt steg-loopens
+        // egna writeStatus fortsatt vara källan för steps/totalEventsExtracted.
+        const cur = readStatus();
+        cur.lastHeartbeatAt = new Date().toISOString();
+        writeFileSync(STATUS_FILE, JSON.stringify(cur, null, 2), 'utf8');
+      } catch { /* best-effort — aldrig krascha steget */ }
     }, 60_000);
 
     const proc = spawn(cmd, args, {
@@ -470,6 +498,79 @@ if (!skipPatternPromote) {
   });
 }
 
+// ─── Pre-discovery kill check (2026-10-18) ────────────────────────────────
+
+/**
+ * Lista ps auxww, hitta processer vars cmdline ser ut som en discovery/ingest-
+ * worker, och skicka SIGTERM till dem (följt av SIGKILL efter 5s om de lever).
+ *
+ * Matchar mot: scripts/ingest-*.mjs, scripts/discover-*.mjs,
+ * 07-Discovery/src/, geoExpansion, rssDiscovery, discoverySearch.
+ *
+ * Exkluderar: processen själv (current pid), npm/tsx-wrappern ovanför oss,
+ * ps/grep/bash. Returnerar lista av dödade PIDs för loggning.
+ *
+ * Loggar varje dödad process till chain-overview.log (event='pre-kill').
+ */
+async function killLivingDiscoveryProcesses(): Promise<number[]> {
+  const self = process.pid;
+  const PATTERNS = [
+    /scripts\/ingest-[\w-]+\.m?js/,           // scripts/ingest-tribe-events.mjs
+    /scripts\/discover-[\w-]+\.m?js/,          // scripts/discover-subpaths.mjs
+    /07-Discovery\/src\//,                     // 07-Discovery/src/...
+    /geoExpansion/,
+    /rssDiscovery/,
+    /discoverySearch/,
+  ];
+
+  let out: string;
+  try {
+    out = execSync('ps auxww', { encoding: 'utf8', timeout: 5_000 });
+  } catch (err) {
+    console.error('[ingestion-cron] pre-kill: ps auxww misslyckades:', err instanceof Error ? err.message : err);
+    return [];
+  }
+
+  const killed: number[] = [];
+  const seen = new Set<number>();
+
+  for (const line of out.split('\n')) {
+    if (!line.trim()) continue;
+    // ps auxww-format: USER PID %CPU %MEM VSZ RSS TTY STAT STARTED TIME COMMAND…
+    // Splitta på whitespace, max 12 delar → COMMAND börjar på index 10.
+    const parts = line.split(/\s+/, 12);
+    if (parts.length < 12) continue;
+    const pid = parseInt(parts[1], 10);
+    if (Number.isNaN(pid) || pid === self) continue;
+    const cmdline = parts.slice(10).join(' ');
+    // Skippa ps/grep/bash och vår egen bash-wrapper ovanför cron.
+    // cmdline börjar typiskt med /opt/homebrew/.../node eller /bin/bash eller liknande.
+    if (/^\/?(usr\/bin\/)?(ps|grep|bash)\b/.test(cmdline)) continue;
+    if (!PATTERNS.some((rx) => rx.test(cmdline))) continue;
+    if (seen.has(pid)) continue;
+    seen.add(pid);
+
+    // Signal: TERM, vänta 5s, KILL om fortfarande vid liv.
+    try {
+      process.kill(pid, 'SIGTERM');
+      appendChainOverview({ event: 'pre-kill-sigterm', pid, cmdline });
+      await new Promise((r) => setTimeout(r, 5_000));
+      try {
+        process.kill(pid, 0); // kollar om processen lever
+        process.kill(pid, 'SIGKILL');
+        appendChainOverview({ event: 'pre-kill-sigkill', pid, cmdline });
+      } catch {
+        // Redan död efter SIGTERM — bra.
+      }
+      killed.push(pid);
+    } catch (err) {
+      console.error(`[ingestion-cron] pre-kill: kunde inte döda pid ${pid}:`, err instanceof Error ? err.message : err);
+    }
+  }
+
+  return killed;
+}
+
 // ─── Main ───────────────────────────────────────────────────────────────────
 
 async function main(): Promise<void> {
@@ -481,6 +582,7 @@ async function main(): Promise<void> {
     finishedAt: null,
     exitCode: null,
     durationMs: null,
+    lastHeartbeatAt: startedAt,
     steps: [],
     totalEventsExtracted: 0,
     lastError: null,
@@ -489,6 +591,43 @@ async function main(): Promise<void> {
 
   console.log(`[ingestion-cron] ═══ START ═══ pid=${process.pid} startedAt=${startedAt}`);
   console.log(`[ingestion-cron] limit=${limit}, skipImages=${skipImages}`);
+
+  // 2026-10-18 — pre-discovery kill-check. Innan step-loopen startar: döda
+  // levande discovery/ingest-processer från en tidigare hängd körning.
+  // tribe-events hängde 2026-10-16–18 i ~76h eftersom cron överlevde watchdog
+  // och startade tribe på nytt vid varje launchd-restart. Om vi inte städar
+  // här kommer varje körning race:a mot samma zombie-processer.
+  const killed = await killLivingDiscoveryProcesses();
+  if (killed.length > 0) {
+    console.log(`[ingestion-cron] pre-kill: dödade ${killed.length} levande discovery-process(er): ${killed.join(', ')}`);
+  } else {
+    console.log('[ingestion-cron] pre-kill: inga levande discovery-processer hittades');
+  }
+  appendChainOverview({ event: 'pre-kill', killedPids: killed, killedCount: killed.length });
+
+  // 2026-10-18 — green-skip-gate. Om verify-eventpulse-discovery kördes nyligen
+  // (<24h) och var grön: skriv en kort status-snapshot till chain-overview.log.
+  // Skippa INTE cron-körningen (cron ÄR det vi vill köra), men använd
+  // skip-filen som "senaste green"-signal för att låta underhålls-skippa
+  // verifierings-skills när allt ser friskt ut.
+  const skipFile = path.join(RUNTIME_DIR, 'discovery-verification.status.json');
+  if (existsSync(skipFile)) {
+    try {
+      const skip = JSON.parse(readFileSync(skipFile, 'utf8'));
+      const lastGreenAt = skip?.lastGreenAt;
+      if (lastGreenAt) {
+        const ageH = (Date.now() - new Date(lastGreenAt).getTime()) / (1000 * 60 * 60);
+        if (ageH < 24 && skip.ok) {
+          console.log(`[ingestion-cron] green-skip: discovery verifierades grön för ${ageH.toFixed(1)}h sedan (run=${skip.runId}) — skippar verify-skill-körning`);
+          appendChainOverview({ event: 'green-skip', lastGreenAt, ageHours: ageH, runId: skip.runId });
+        } else {
+          console.log(`[ingestion-cron] green-skip: senaste verify är ${ageH.toFixed(1)}h gammal eller inte grön — verify-skill körs separat`);
+        }
+      }
+    } catch {
+      // Korrupt fil — ignorera.
+    }
+  }
 
   let totalExit = 0;
   let totalEvents = 0;
@@ -528,17 +667,44 @@ async function main(): Promise<void> {
   if (totalExit !== 0) status.lastError = `Step(s) failed with exit code ${totalExit}`;
   writeStatus(status);
 
+  // 2026-10-18 — green-skip-signal. När cron-körningen är grön (totalExit=0),
+  // uppdatera runtime/discovery-verification.status.json så framtida
+  // verify-skill-körningar kan skippa sig själva <24h efter en grön körning.
+  if (totalExit === 0) {
+    const skipFile = path.join(RUNTIME_DIR, 'discovery-verification.status.json');
+    try {
+      writeFileSync(skipFile, JSON.stringify({
+        ok: true,
+        lastGreenAt: finishedAt,
+        lastRunAt: finishedAt,
+        runId: status.pid ? `cron-${status.pid}-${new Date(finishedAt).getTime()}` : `cron-${new Date(finishedAt).getTime()}`,
+        totalEventsExtracted: totalEvents,
+        durationMs,
+      }, null, 2), 'utf8');
+      console.log(`[ingestion-cron] green-skip: skrev ${path.relative(PROJECT_ROOT, skipFile)}`);
+    } catch (err) {
+      console.error('[ingestion-cron] green-skip: kunde inte skriva skip-fil:', err instanceof Error ? err.message : err);
+    }
+  }
+
   console.log(`[ingestion-cron] ═══ DONE ═══ exit=${totalExit} events=${totalEvents} duration=${durationMs}ms`);
   process.exit(totalExit);
 }
 
-main().catch((err) => {
-  const status = readStatus();
-  status.running = false;
-  status.finishedAt = new Date().toISOString();
-  status.exitCode = 1;
-  status.lastError = err.message ?? String(err);
-  writeStatus(status);
-  console.error('[ingestion-cron] FATAL:', err);
-  process.exit(1);
-});
+// Kör bara main() när filen startas direkt — inte vid import (parse-checks,
+// hooks, tester). Mönster från 09-ScrapingSupervisor/runDaily.ts:231 — förhindrar
+// att npx tsx -e "import('./scripts/ingestion-cron.ts')" råkar starta en riktig
+// nattkörning.
+const _invokedDirectly = process.argv[1] && import.meta.url.endsWith(process.argv[1].replace(/^.*\//, ''));
+if (_invokedDirectly && !process.env.VITEST) {
+  main().catch((err) => {
+    const status = readStatus();
+    status.running = false;
+    status.finishedAt = new Date().toISOString();
+    status.exitCode = 1;
+    status.lastError = err.message ?? String(err);
+    writeStatus(status);
+    console.error('[ingestion-cron] FATAL:', err);
+    process.exit(1);
+  });
+}

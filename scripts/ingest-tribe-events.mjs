@@ -228,6 +228,7 @@ async function fetchOneSource(src, args) {
       }
     }
     console.log(`  queued: ${pageQueued}`);
+    page++;
   }
 
   console.log(`  ${slug} done: fetched=${stats.fetched} persisted=${stats.persisted} duplicates=${stats.duplicates}`);
