@@ -102,7 +102,7 @@ def write_ingestion_run_summary(
             "sourcesSucceeded": sources_attempted if ok else 0,
             "sourcesFailed": 0 if ok else sources_attempted,
             "totalEventsFound": per_source_events,
-            "totalEventsPersisted": 0,  # E2E vet inte vad som persisterades — läses i TS-tap
+            "totalEventsPersisted": None,  # vet inte — E2E startar ingen workern, läses i TS-tap
             "stagesCompleted": [],  # TS-tap-points fyller i detaljer; e2e har inte steg-fönster
             "errorSummary": error_summary,
             "pid": os.getpid(),

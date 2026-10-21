@@ -5,12 +5,14 @@ description: |
   scripts/ingestion-cron.ts orchestrator) by reading the runtime files it writes.
   Use for /verify-eventpulse-discovery, when a discovery script (tribe-events,
   sitemap-discovery, subpath-discovery, direct-jsonld, livespot, luma, ra, posh,
-  reddit, eventbrite-pagination, etag-refresh, P3A-P3C, pattern-promoter,
-  manual-review-triage) misbehaves, or when a stage hangs in
+  reddit, eventbrite-pagination, etag-refresh, P3A-P3C, P3D-source-candidate-tests)
+  misbehaves, or when a stage hangs in
   runtime/ingestion-cron/chain-overview.log. Surface is launchd-driven batch
   orchestration (com.eventpulse.ingestion plist) — the skill inspects evidence,
   it does NOT spawn new runs. LLM-driven discovery ranking lives under
   07-Discovery/src/sourceTesting/ (realToolRunner, runner, phases, decision).
+  `pattern-promoter`/`manual-review-triage` är borttagna ur cron (2026-10-21)
+  men filen lever kvar som dormant.
 disable-model-invocation: false
 ---
 
@@ -20,7 +22,7 @@ disable-model-invocation: false
 
 Discovery-pipelinen ägs av launchd (`com.eventpulse.ingestion` plist) — **aldrig starta en ny pipeline-run inifrån denna skill**. Rör inte `npx tsx scripts/ingestion-cron.ts` eller `npx tsx 09-ScrapingSupervisor/runDaily.ts` i verifieringssyfte.
 
-**Konvention:** behandla en körning som ett *read-only artefakt*. Innan du kan verifiera behöver en körning ha producerat sina filer. Normalt sker det nattetid via launchd; för manuell verifiering kör `npx tsx scripts/ingestion-cron.ts --smoke` EN gång i en separat terminal och låt den slutföras (~15–30 min). `--smoke` sätter `effectiveLimit = 1`, `effectiveDBehavior = 'static-only'`, `--queries 1 --per-query 1`, `--limit 5`, `--dry-run=true` på P3C, `--limit 5` på pattern-promoter/triage — alla på riktiga kodvägar men med minsta datamängd.
+**Konvention:** behandla en körning som ett *read-only artefakt*. Innan du kan verifiera behöver en körning ha producerat sina filer. Normalt sker det nattetid via launchd; för manuell verifiering kör `npx tsx scripts/ingestion-cron.ts --smoke` EN gång i en separat terminal och låt den slutföras (~15–30 min). `--smoke` sätter `effectiveLimit = 1`, `effectiveDBehavior = 'static-only'`, `--queries 1 --per-query 1`, `--limit 5`, `--dry-run=true` på P3C, `--limit 1` på P3D-candidate-tests — alla på riktiga kodvägar men med minsta datamängd.
 
 Ready-signal = en komplitt `step-end` rad i `runtime/ingestion-cron/chain-overview.log` för **varje** steg i step-listan (se `scripts/ingestion-cron.ts:265–423`). Bekräfta med:
 
@@ -37,7 +39,7 @@ jq -r '.event' /Users/claudgashi/EventPulse/runtime/ingestion-cron/chain-overvie
 
 **Dotenv:** `scripts/ingestion-cron.ts` läser inte .env själv; `dotenv.config(...)` finns i `09-ScrapingSupervisor/runDaily.ts:29`. Manuella körningar behöver env-vars satta i förväg (SB_ACCESS_TOKEN, SUPABASE_*, GOOGLE_CSE_ID, GOOGLE_API_KEY, MINIMAX_API_KEY).
 
-Isolering: en cron-process äger `runtime/ingestion-cron.status.json` åt gången. launchd startar en ny efter att en gammal dör. Döda ALDRIG en cron-process i farten för att "frigöra filen" — låt watchdog göra det (`runtime/watchdog.json`).
+Isolering: en cron-process äger `runtime/ingestion-cron.status.json` åt gången. launchd startar en ny efter att en gammal dör. Döda ALDRIG en cron-process i farten för att "frigöra filen" — låt watchdog göra det (`runtime/ingestion-cron/watchdog.json`).
 
 ## Doctor
 
@@ -67,8 +69,10 @@ print(f'heartbeat age = {age:.0f}s, running = {s.get(\"running\")}, pid = {s.get
 # → förväntat: age < 7200 (2h). Annars stale → false positive på running=true.
 
 # 4. watchdog lever?
-test -f runtime/watchdog.json && jq -r '.lastCheck, .stalenessMin' runtime/watchdog.json
-# → förväntat: lastCheck inom senaste 5 minuterna, stalenessMin < 120
+test -f runtime/ingestion-cron/watchdog.json && jq -r '.checkedAt, .ok, .reasons' runtime/ingestion-cron/watchdog.json
+# → förväntat: checkedAt inom senaste 5 minuterna, ok=true, reasons=[]
+#   Fältet heter `checkedAt` (INTE `lastCheck`) och det finns INTE något
+#   `stalenessMin` i filen — tröskeln ligger i watchdog-scriptet, inte i state-filen.
 ```
 
 Doctor-failure = antingen ingen pågående körning att verifiera (OK — gör inget), eller en stale-flagga (se Dashboard 0/0-noteringen i `verify-eventpulse-agent/features/ingestion-dashboard.md`). Stoppa, låt watchdog eller launchd rätta till, kör doctor igen.
@@ -100,7 +104,10 @@ jq -r 'select(.event=="step-start") | .step' runtime/ingestion-cron/chain-overvi
 # 2. Vilka stage:ar har step-end?
 jq -r 'select(.event=="step-end") | "\(.step)\texit=\(.exitCode)\tduration=\(.durationMs)ms"' \
   runtime/ingestion-cron/chain-overview.log | tail -20
-# → exit=0 för alla slutförda steg
+# → exit=0 för alla slutförda steg.
+#   MEN: icke-noll exit är normalt i drift, inte ett sällanfall. 2026-10-21 gav
+#   P2C-active-learning och P3A-discovery exit=1 varje natt. Läs alltid ut de
+#   som avviker — "inga fel" är inte samma sak som "steget producerade resultat".
 
 # 3. Inga hängda heartbeats?
 python3 -c "
@@ -122,7 +129,7 @@ if last_start and (not last_end or last_start > last_end):
 
 ```bash
 # Hitta senaste tribe-events-körning
-LATEST=$(ls -t runtime/ingestion-cron/steps/tribe-events-*.log 2>/dev/null | head -1)
+LATEST=$(ls -t runtime/ingestion-cron/steps/tribe-events-*.log 2>/dev/null | grep -v '\.err\.log$' | head -1)
 echo "Latest tribe log: $LATEST"
 
 # Hur lång var körningen?
@@ -173,12 +180,12 @@ tail -5 runtime/ingestion_runs.jsonl | jq -r '"\(.startTs) \(.triggerSource) ok=
 | Tabell | Vad | När |
 |---|---|---|
 | `events` | nya events från A/B/C/D/P0-steg | per stage |
-| `source_candidates` | discovery output från P3A google-cse + Exa | per P3A |
-| `geo_candidates` | venue-graph expansion från P3B | per P3B |
-| `rss_feeds` | P3C RSS-prenumerationer | per P3C |
+| `source_candidates` | discovery output — `engine` skiljer på `exa_search` / `google_cse` (P3A), `venue_graph_geo` (P3B), `rss_discovery` (P3C) | per P3A/P3B/P3C |
 | `venue_graph` | venue-cluster från 07-Discovery | per geo-expansion |
 
 `COUNT(*) WHERE created_at > now() - interval '24 hours'` före/efter en discovery-run.
+
+**`geo_candidates` och `rss_feeds` finns inte.** Stegen heter så i chain-overview men alla tre skriver till `source_candidates`. Ett `SELECT` mot de gamla tabellnamnen ger "relation does not exist" — filtrera på `engine` i stället.
 
 **Verifieringsprovenok:** kör mot riktig Supabase-instans eller filer som producerats av riktig kodväg (inte syntetiska fixtures). Drives ska granska `chain-overview.log`, inte en mock-JSONL. När watchdog eller status.json visar stale: rapportera `verified-stale` med konkret här pid-anledning (hängd tribe-script, network-error, etc.).
 
@@ -197,7 +204,7 @@ Bevis (chain-overview.log, status.json, jsonl, supabase counts) lämnas intakta.
 
 ## Gotchas
 
-**Launchd har en 10-minuters hard-timeout per steg via watchdog.** Om ett steg tar >10 min dödas den av `runtime/watchdog.json`-logiken, men cron-processen lever vidare. Heartbeat fortsätter — `step-end` kommer aldrig. **Alltid** kolla `runtime/watchdog.json` för stage som har `stalenessMin > 10` (det betyder watchdog flaggade men inte kunde döda).
+**Watchdog hänger länge innan den agerar.** Om ett steg tar >10 min skriver watchdog in `chainPidAlive: false` i `runtime/ingestion-cron/watchdog.json` men cron-processen lever vidare. Heartbeat fortsätter — `step-end` kommer aldrig. Kolla `.reasons` i watchdog-filen för vad som faktiskt flaggades; det finns ingen `stalenessMin` att titta på.
 
 **`scripts/ingest-*.mjs` är .mjs, inte .ts** — `npx tsx` används bara på .ts-steg (A/B/C/D/I/pdf/etag/P3A). Cron-skriptet använder `node` för .mjs och `npx tsx` för .ts. Förväxla inte — Stage-listans `cmd:` i `ingestion-cron.ts:265–467` visar vilken som gäller.
 
@@ -207,9 +214,11 @@ Bevis (chain-overview.log, status.json, jsonl, supabase counts) lämnas intakta.
 
 **`P3A-discovery` är no-op utan `GOOGLE_CSE_ID` + `GOOGLE_API_KEY`.** Kolla `.env` före verifiering. `07-Discovery/src/searchEngines/discoverySearch.ts` försöker Exa först (om `EXA_API_KEY` är riktig), annars Google CSE. Om båda saknas → 0 URLs i output → stage slutförs på ~5s med exit=0.
 
-**`pattern-promoter` (manual-review-triage) är ett C-htmlGate-steg i förklädnad.** Det kör `02-Ingestion/C-htmlGate/runC-pattern-promoter.ts` med `--dry-run --limit 20`. Stages i chain-overview.log heter `manual-review-triage`, inte `pattern-promoter`.
+**`pattern-promoter` (och syskonet `manual-review-triage`) togs bort ur cron 2026-10-21** — båda körde `02-Ingestion/C-htmlGate/runC-pattern-promoter.ts`, vars producent (`runC-pattern-validator.ts`) aldrig skrevs. Koden ligger kvar som dormant. Stage-namnet i äldre chain-rader är `manual-review-triage` eller `pattern-promoter`; dessa kommer INTE dyka upp i nya körningar.
 
-**`ingestion_runs.jsonl` har två skribenter:** runDaily (`09-ScrapingSupervisor/runDaily.ts:209`) och ingestion-cron (via `--smoke` eller `--limit`). triggerSource i jsonl avgör vilken — `daily` eller `cron`. Filtrera på det om du jämför körningar.
+**`ingestion_runs.jsonl` har två skribenter:** runDaily (`09-ScrapingSupervisor/runDaily.ts:239`) och ingestion-cron (via `--smoke` eller `--limit`). triggerSource i jsonl avgör vilken — `daily` eller `cron`. Filtrera på det om du jämför körningar.
+
+**`P3D-source-candidate-tests` är discovery-loopens sista steg.** Claimar via `claim_source_candidate_test_queue()`-RPC:n, kör varje kandidat genom riktiga A/B/C/D-gates i en sandbox, och promote:ar de som passerar smoke-trösklarna (decision.ts) genom `sandbox.ts:promoteSourceCandidate` → `sources/<slug>.jsonl`. `--phase=smoke --limit=1` är `--smoke`-läget; `--limit=20` är skarpt läge.
 
 **Green = skip.** När en körning producerar alla `step-end` med `exitCode=0` och `totalEventsFound>0`: skriv `runtime/discovery-verification.status.json: {lastGreenAt, lastRunId, ok:true, durationMs}`. `scripts/ingestion-cron.ts` läser filen och hoppar över en verifierings-körning om grön <24h gammal.
 
@@ -239,7 +248,8 @@ Spegel av discovery-pipeline-stegen. Se `features/README.md` för index.
 | `etag-refresh` | `02-Ingestion/tools/etagRefresh.ts` | `etag-refresh.md` |
 | `api-discovery` | `scripts/discover-hidden-apis.mjs` | `api-discovery.md` |
 | `luma`, `ra`, `posh`, `reddit` | `scripts/ingest-{luma,ra,posh,reddit}-*.mjs` | `community-platforms.md` |
-| `manual-review-triage` (pattern-promoter) | `02-Ingestion/C-htmlGate/runC-pattern-promoter.ts` | `pattern-promoter.md` |
+| `P3D-source-candidate-tests` | `07-Discovery/src/sourceTesting/` | `p3d-source-candidate-tests.md` (ny 2026-10-21) |
 | `P3A-discovery`, `P3B-geo`, `P3C-rss` | `07-Discovery/src/{searchEngines,venueGraph}/` | `p3-discovery-stages.md` |
+| `pattern-promoter` (dormant, kod kvar) | `02-Ingestion/C-htmlGate/runC-pattern-promoter.ts` | `pattern-promoter.md` |
 | orchestrator | `scripts/ingestion-cron.ts` | `orchestrator-cron.md` |
 | orchestrator | `09-ScrapingSupervisor/runDaily.ts` | `orchestrator-rundaily.md` (cross-ref till verify-eventpulse-agent) |

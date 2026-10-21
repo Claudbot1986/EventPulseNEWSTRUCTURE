@@ -37,7 +37,12 @@ export interface IngestionRunEntry {
   sourcesSucceeded: number;
   sourcesFailed: number;
   totalEventsFound: number;
-  totalEventsPersisted: number;
+  /**
+   * null = skribenten kan inte mäta persistering (t.ex. Alltools-E2E som bara
+   * kör gates utan workern). Tidigare skrevs hårdkodat 0, vilket lästes som
+   * "inget persisterades" när sanningen var "vet inte".
+   */
+  totalEventsPersisted: number | null;
   stagesCompleted: IngestionRunStage[];
   errorSummary: string | null;
   pid: number;

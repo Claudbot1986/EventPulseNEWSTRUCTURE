@@ -88,7 +88,20 @@ function log(line: string, fileLog?: string): void {
   }
 }
 
-interface SubResult { exitCode: number; durationMs: number; stdoutTail: string; }
+interface SubResult { exitCode: number; durationMs: number; stdoutTail: string; eventsPersisted?: number; }
+
+/**
+ * countWorkerCompletions — räkna events som faktiskt persisterats.
+ *
+ * 03-Queue/startWorker.ts:20 skriver exakt en `[worker] Job N completed`-rad
+ * per lyckad normalisering, alltså per event som faktiskt hamnade i Supabase.
+ * Det är enda riktiga källan för "persisted" i workerns flöde.
+ *
+ * Exporterad för test i tests/runDaily_summary.test.ts.
+ */
+export function countWorkerCompletions(stdout: string): number {
+  return (stdout.match(/^\[worker\] Job \d+ completed/gm) ?? []).length;
+}
 
 /** Som runSubprocess men dödar processen efter maxMs — för daemon-processer (t.ex. BullMQ-worker) som ska dränera kön inom ett tidsfönster. Kill vid timeout = förväntat (exitCode rapporteras som 0). */
 function runSubprocessWithTimeout(name: string, scriptPath: string, fileLog: string, maxMs: number): Promise<SubResult> {
@@ -101,6 +114,17 @@ function runSubprocessWithTimeout(name: string, scriptPath: string, fileLog: str
       stdio: ['ignore', 'pipe', 'pipe'],
     });
     let timedOut = false;
+    // 2026-10-21 — buffra stdout. Utan detta kastades workerns hela output
+    // bort (stdoutTail hårdkodades till '') och totalEventsPersisted fick
+    // inget värde alls. Vi håller bara de sista 200 kB — workerns logg är
+    // långsam nog att det räcker, och en jobb-rad är ~100 tecken.
+    let stdoutBuf = '';
+    const capture = (c: Buffer): void => {
+      stdoutBuf += c.toString('utf8');
+      if (stdoutBuf.length > 200_000) stdoutBuf = stdoutBuf.slice(-200_000);
+    };
+    proc.stdout.on('data', capture);
+    proc.stderr.on('data', capture);
     const killTimer = setTimeout(() => {
       timedOut = true;
       log(`[step:${name}] dräneringsfönster slut — stoppar`, fileLog);
@@ -114,7 +138,10 @@ function runSubprocessWithTimeout(name: string, scriptPath: string, fileLog: str
       // alltid förväntat → 0.
       const exitCode = timedOut || signal === 'SIGTERM' ? 0 : (code ?? 1);
       log(`[step:${name}] exit code=${exitCode} signal=${signal ?? '-'} duration=${Date.now() - startedAt}ms`, fileLog);
-      resolve({ exitCode, durationMs: Date.now() - startedAt, stdoutTail: '' });
+      // Räkna ur HELA bufferten, inte ur tailen — en 15-min-dränering kan
+      // rymma långt fler än de 10 sista raderna.
+      const eventsPersisted = countWorkerCompletions(stdoutBuf);
+      resolve({ exitCode, durationMs: Date.now() - startedAt, stdoutTail: '', eventsPersisted });
     });
     proc.on('error', () => {
       clearTimeout(killTimer);
@@ -159,6 +186,8 @@ async function main(): Promise<number> {
   let exitCode = 0;
   let errorSummary: string | null = null;
   let runStats: { sourcesAttempted: number; totalEventsFound: number } = { sourcesAttempted: 0, totalEventsFound: 0 };
+  // 2026-10-21 — ersätter den hårdkodade 0:an. Räknas ur workerns stdout.
+  let persisted = 0;
 
   try {
     log(`═══════════════════════════════════════════════════════════`, fileLog);
@@ -193,8 +222,9 @@ async function main(): Promise<number> {
     // Steg 3: dränera BullMQ-kön till Supabase (workern är daemon — tidsbegränsad dränering)
     log(`[3/3] startWorker — dränering`, fileLog);
     const drain = await runSubprocessWithTimeout('startWorker-drain', WORKER_TS, fileLog, WORKER_DRAIN_MS);
-    stages.push({ stage: 'D', ok: drain.exitCode === 0, durationMs: drain.durationMs, itemsOut: 0 });
-    log(`[3/3] startWorker — ${drain.exitCode === 0 ? 'OK' : `FAIL (exit=${drain.exitCode})`}`, fileLog);
+    persisted = drain.eventsPersisted;
+    stages.push({ stage: 'D', ok: drain.exitCode === 0, durationMs: drain.durationMs, itemsOut: persisted });
+    log(`[3/3] startWorker — ${drain.exitCode === 0 ? 'OK' : `FAIL (exit=${drain.exitCode})`}, ${persisted} events persisterade`, fileLog);
 
     log(`═══════════════════════════════════════════════════════════`, fileLog);
     log(`  KLAR  │  totalDuration=${Date.now() - startedAt}ms`, fileLog);
@@ -217,7 +247,7 @@ async function main(): Promise<number> {
       sourcesSucceeded: ok ? runStats.sourcesAttempted : 0,
       sourcesFailed: ok ? 0 : (runStats.sourcesAttempted || 1),
       totalEventsFound: runStats.totalEventsFound,
-      totalEventsPersisted: 0, // persistering sker i workern, summeras separat
+      totalEventsPersisted: persisted, // räknad ur workerns stdout, 2026-10-21
       stagesCompleted: stages,
       errorSummary,
       pid: process.pid,

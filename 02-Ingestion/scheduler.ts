@@ -1031,7 +1031,10 @@ async function main() {
         sourcesSucceeded: succeeded,
         sourcesFailed: attempted - succeeded,
         totalEventsFound: totalEvents,
-        totalEventsPersisted: 0,
+        // Scheduler-pathen skickar till BullMQ men startar ingen workern i
+        // samma process, så persisteringen är "vet inte", inte noll.
+        // Tidigare hårdkodad 0: lästes som "noll events sparades" varje natt.
+        totalEventsPersisted: null,
         stagesCompleted: stages,
         errorSummary,
         pid: process.pid,

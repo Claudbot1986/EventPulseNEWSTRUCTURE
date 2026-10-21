@@ -203,7 +203,11 @@ const CROSS_QUEUE_DEDUP_FILES: readonly string[] = [
   PREB_QUEUE_FILE,
   POSTA_QUEUE_FILE,
   path.resolve(RUNTIME_DIR, 'postB-queue.jsonl'),
-  path.resolve(RUNTIME_DIR, 'postB-preC-queue.jsonl'),
+  // 2026-10-21 — postB-preC-queue.jsonl UTELÄMNAD. Filen skrivs av B-gates
+  // (runB.ts:46, runB-parallel.ts:58) och läses av C-gates pool
+  // (run-dynamic-pool.ts:113). När A raderade en källa ur den raderade den
+  // den ur C-kön utan att B lagt in den — en källa som B aldrig hanterat
+  // försvann ur C-spåret. A har ingen affär i en fil den inte producerar.
 ];
 
 function removeSourceFromOtherQueues(sourceId: string, exceptFile: string): void {

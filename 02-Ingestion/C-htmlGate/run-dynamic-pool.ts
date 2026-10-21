@@ -49,7 +49,7 @@ import { c4DeepAnalyze, verifyProposals, type C4PipelineResult, type C4DeepAnaly
 import { saveRoundDerivedRules, loadAllDerivedRules, isImprovementEnabled, proposeCandidateRulesAsImprovements, type DerivedRulesStore } from './c4-derived-rules';
 import { isSkipped } from '../lib/quarantineGuard.js';
 import type { HtmlVerdict } from './C2-htmlGate/C2-htmlGate';
-import { readFileSync, writeFileSync, mkdirSync, appendFileSync, readdirSync, unlinkSync, rmdirSync } from 'fs';
+import { readFileSync, writeFileSync, mkdirSync, appendFileSync, readdirSync, unlinkSync, rmdirSync, existsSync } from 'fs';
 import { join, dirname } from 'path';
 import { fileURLToPath, pathToFileURL } from 'url';
 
@@ -2389,8 +2389,21 @@ async function main() {
   // Step 1: Check for existing pool state (resume scenario)
   // If batch-state.jsonl's last entry is a FRESH batch-start (not a completion),
   // any existing pool-state.json is stale from a prior run with the same batch number.
-  const lastEntryRaw = readFileSync(join(REPORTS_DIR, 'batch-state.jsonl'), 'utf8').trim().split('\n').filter(l => l.trim()).slice(-1)[0];
-  const lastEntry = lastEntryRaw ? JSON.parse(lastEntryRaw) : null;
+  // 2026-10-21 — filen läses nu med exists-guard. Utan guarden kastade main()
+  // ENOENT på den allra första körningen i en sandbox (07-Discovery/sourceTesting
+  // RealAbcdSourceCandidateRunner), där REPORTS_DIR är en katalog som inte
+  // existerar än. En saknad batch-state betyder "ingen tidigare körning".
+  const batchStatePath = join(REPORTS_DIR, 'batch-state.jsonl');
+  let lastEntryRaw = '';
+  if (existsSync(batchStatePath)) {
+    try {
+      lastEntryRaw = readFileSync(batchStatePath, 'utf8').trim().split('\n').filter(l => l.trim()).slice(-1)[0] ?? '';
+    } catch { /* oläsbar fil — behandla som saknad */ }
+  }
+  let lastEntry: any = null;
+  try {
+    lastEntry = lastEntryRaw ? JSON.parse(lastEntryRaw) : null;
+  } catch { /* delvis skriven sista rad — behandla som ingen tidigare körning */ }
   // Also compare against batchId field (for when BATCH_NUM default doesn't match currentBatch)
   const isFreshBatchStart = lastEntry?.type === 'batch-start' &&
     (lastEntry?.batchId === `batch-${BATCH_NUM}` || lastEntry?.currentBatch === BATCH_NUM);
@@ -2489,7 +2502,13 @@ async function main() {
     const initial = buildInitialPool(BATCH_TYPE, VERIFICATION_SOURCES, EXPLICIT_SOURCES);
 
     if (!initial || initial.pool.length === 0) {
-      console.error('ERROR: No eligible sources in postB-preC. Aborting.');
+      // 2026-10-21 — tom C-kö är ett legitimt steady state, inte ett fel.
+      // Alla 332 källor är upplösta i sources_status.jsonl (76 success,
+      // 256 fail, 0 never_run), så B har inget att skicka vidare och
+      // postB-preC-queue.jsonl är 0 byte. Detta hände varje natt och
+      // skrevs som ERROR + return → kedjan fortsatte med exit 0 men
+      // loggen såg ut att ha kraschat. Nu avslutas rent med exit 0.
+      console.log('[Step 1] postB-preC is tom — inga nya källor att köra igen i C. Avslutar rent (steady state).');
       return;
     }
 

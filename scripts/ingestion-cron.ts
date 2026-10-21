@@ -33,6 +33,20 @@ const CHAIN_OVERVIEW = path.resolve(RUNTIME_DIR, 'ingestion-cron', 'chain-overvi
 
 // ─── Types ─────────────────────────────────────────────────────────────────
 
+interface StepRecord {
+  name: string;
+  startedAt: string;
+  finishedAt: string;
+  exitCode: number;
+  sourcesProcessed: number | null;
+  /**
+   * null = steget persisterade inget mätbart (skriver eget JSON-format, eller
+   * persisterar inte alls). 0 = steget kördes och persisterade noll. Skillnaden
+   * är viktig: dashboarden ska visa "vet inte" som null, inte "noll".
+   */
+  eventsExtracted: number | null;
+}
+
 interface StatusFile {
   running: boolean;
   pid: number | null;
@@ -42,18 +56,83 @@ interface StatusFile {
   durationMs: number | null;
   /** ISO-tid för senaste writeStatus — används av dashboarden som "alive"-signal. */
   lastHeartbeatAt: string | null;
-  steps: Array<{ name: string; startedAt: string; finishedAt: string; exitCode: number; sourcesProcessed: number; eventsExtracted: number }>;
+  steps: StepRecord[];
+  /** Summa av stegens eventsExtracted. Endast räkningsbara steg bidrar. */
   totalEventsExtracted: number;
   lastError: string | null;
 }
 
 interface StepResult {
-  name: string;
-  startedAt: string;
-  finishedAt: string;
   exitCode: number;
-  sourcesProcessed: number;
-  eventsExtracted: number;
+  sourcesProcessed: number | null;
+  eventsExtracted: number | null;
+}
+
+// ─── Step output parsing ────────────────────────────────────────────────────
+
+/**
+ * Per-steg-recept. Varje adapter skriver både per-källa-rader och en
+ * total-rad med överlappande nycklar, så en generisk `/fetched=(\d+)/g`
+ * dubbelräknar. Lösningen är en explicit tabell: en regex per steg, och den
+ * SISTA matchningen vinner (totalraden skrivs sist).
+ *
+ * Ordningen i regex-gruppen är prioritetsordnad: persisted > queued > future >
+ * fetched. Vi vill rapportera det som faktiskt lämnade processen, inte det
+ * som bara lästes in.
+ */
+const STEP_COUNT_RECIPES: Record<string, RegExp> = {
+  // ingest-tribe-events.mjs:264 — "fetched=548 persisted=0 duplicates=528 errors=0"
+  'tribe-events': /^(?:=== TOTAL ===\n)?fetched=\d+ persisted=(\d+)/m,
+  // ingest-sitemap-discovery.mjs:437 — "sitemap_urls=993742 event_urls=713 fetched=126 persisted=14 ..."
+  'sitemap-discovery': /^sitemap_urls=\d+ event_urls=\d+ fetched=\d+ persisted=(\d+)/m,
+  // ingest-direct-jsonld.mjs:274 — "fetched=490 future=481 persisted=249 ..."
+  'direct-jsonld': /^fetched=\d+ future=\d+ persisted=(\d+)/m,
+  // ingest-eventbrite-stockholm.mjs:316 — "fetched=60 future=42 persisted=24 ..."
+  'eventbrite-pagination': /^fetched=\d+ future=\d+ persisted=(\d+)/m,
+  // ingest-livespot-stockholm.mjs:225 — "Queued (raw_events): 600"
+  'livespot-stockholm': /^Queued \(raw_events\): (\d+)/m,
+  // ingest-luma-stockholm.mjs:315 — "  queued: 12" (per page, sista vinner)
+  'luma-stockholm': /^\s*queued:\s*(\d+)/m,
+  // ingest-ra-stockholm.mjs:213 — samma format som luma
+  'ra-stockholm': /^\s*queued:\s*(\d+)/m,
+  // ingest-posh-stockholm.mjs:214 — samma format som luma
+  'posh-stockholm': /^\s*queued:\s*(\d+)/m,
+};
+
+/**
+ * Steg som persisterar inga events alls. Reddit skriver uttryckligen
+ * "skip persistence — signal-only" (ingest-reddit-stockholm.mjs:99) så dess
+ * "Total candidates: N" är kandidater, inte events. Det ska rapporteras som
+ * null, inte som N — annars säger dashboarden att Reddit lade till events.
+ */
+const STEP_COUNT_EXCLUDED = new Set([
+  'reddit-stockholm',
+  'api-discovery',
+  'subpath-discovery',
+]);
+
+/**
+ * Räkna persisterade events för ett steg utifrån dess stdout.
+ *
+ * Returnerar null när steget inte har ett mätbart count — antingen för att
+ * det saknar recept, eller för att det faktiskt inte persisterar events.
+ * "Vet inte" och "noll" är olika påståenden och ska inte blandas ihop.
+ */
+export function parseStepCounts(stepName: string, stdout: string): number | null {
+  if (STEP_COUNT_EXCLUDED.has(stepName)) return null;
+
+  const recipe = STEP_COUNT_RECIPES[stepName];
+  if (!recipe) return null;
+
+  // Sista matchningen vinner — totalraden skrivs efter per-källa-raderna.
+  let last: string | undefined;
+  for (const m of stdout.matchAll(new RegExp(recipe.source, 'gm'))) {
+    last = m[1];
+  }
+  if (last === undefined) return null;
+
+  const n = Number.parseInt(last, 10);
+  return Number.isFinite(n) ? n : null;
 }
 
 // ─── Status helpers ─────────────────────────────────────────────────────────
@@ -132,8 +211,7 @@ const skipPdf = args.includes('--skip-pdf');
 const skipRss = args.includes('--skip-rss');
 const skipEtags = args.includes('--skip-etags');
 const skipGoogleCse = args.includes('--skip-google-cse');
-const skipPatternPromote = args.includes('--skip-pattern-promote');
-const skipManualReviewTriage = args.includes('--skip-manual-triage');
+const skipCandidateTests = args.includes('--skip-candidate-tests');
 const skipEventbritePagination = args.includes('--skip-eventbrite');
 const skipTribeIngest = args.includes('--skip-tribe');
 const skipApiDiscovery = args.includes('--skip-api-discovery');
@@ -167,7 +245,6 @@ const skipBfl = process.env.SKIP_BFL === '1' || args.includes('--skip-bfl');
  *   - P3A discovery: --queries 1 --per-query 1
  *   - P3B geo: --limit 5
  *   - P3C rss: --limit 5 --concurrency 2 --dry-run=true (skriver inte till DB)
- *   - pattern-promoter / manual-review-triage: --limit 5
  *   - D-renderGate: --behavior static-only (istället för premium-only) för att
  *     undvika Scrapingbee-credits i smoke
  */
@@ -178,8 +255,8 @@ const effectiveDBehavior = smoke ? 'static-only' : 'premium-only';
 
 interface SpawnResult {
   exitCode: number;
-  sourcesProcessed: number;
-  eventsExtracted: number;
+  sourcesProcessed: number | null;
+  eventsExtracted: number | null;
 }
 
 function runStep(name: string, cmd: string, args: string[]): Promise<SpawnResult> {
@@ -228,13 +305,17 @@ function runStep(name: string, cmd: string, args: string[]): Promise<SpawnResult
       // pipe så vi kan tee:a till både parent stdout OCH per-step file.
       stdio: ['ignore', 'pipe', 'pipe'],
     });
-    let sourcesProcessed = 0;
-    let eventsExtracted = 0;
+    let sourcesProcessed: number | null = null;
+    let eventsExtracted: number | null = null;
+    // Barnets stdout måste buffras för att kunna räknas ihop efteråt — utan
+    // detta var eventsExtracted en konstant 0 sedan starten (2026-10-21).
+    let stdoutBuf = '';
 
     // Tee: varje chunk från child skrivs både till parent stdout/stderr OCH
     // till step-loggen. Håll koll på ordning så vi inte tappar rader vid ras.
     proc.stdout.on('data', (chunk) => {
       process.stdout.write(chunk);
+      stdoutBuf += chunk.toString('utf8');
       try { writeSync(stepOutFd, chunk); } catch {}
     });
     proc.stderr.on('data', (chunk) => {
@@ -253,8 +334,13 @@ function runStep(name: string, cmd: string, args: string[]): Promise<SpawnResult
         closeSync(stepOutFd);
         closeSync(stepErrFd);
       } catch {}
-      appendChainOverview({ event: 'step-end', step: name, exitCode, durationMs });
-      console.log(`[ingestion-cron] ✓ ${name}: exit=${exitCode} duration=${durationMs}ms log=${path.relative(PROJECT_ROOT, stepLogPath)}`);
+      eventsExtracted = parseStepCounts(name, stdoutBuf);
+      appendChainOverview({ event: 'step-end', step: name, exitCode, durationMs, eventsExtracted });
+      console.log(
+        `[ingestion-cron] ✓ ${name}: exit=${exitCode} duration=${durationMs}ms ` +
+        `events=${eventsExtracted === null ? 'n/a' : eventsExtracted} ` +
+        `log=${path.relative(PROJECT_ROOT, stepLogPath)}`,
+      );
       resolve({ exitCode, sourcesProcessed, eventsExtracted });
     });
   });
@@ -360,14 +446,11 @@ const steps: Array<{ name: string; cmd: string; args: string[] }> = [
     args: ['tsx', '02-Ingestion/I-pdfExtraction/pdfExtractor.ts', '--limit', String(effectiveLimit), '--concurrency', smoke ? '1' : '3'],
   }] : []),
 
-  // ── P1B: Triagera toolScB-rester → D-gate istället för manual-review ──
-  // (toolScB-routingen är inbakad i C-gate routeResult(); detta steg tömmer
-  // manuellt kvarvarande legacy-rutor via pattern-promoter --dry-run.)
-  ...((!skipManualReviewTriage) ? [{
-    name: 'manual-review-triage',
-    cmd: 'npx',
-    args: ['tsx', '02-Ingestion/C-htmlGate/runC-pattern-promoter.ts', '--dry-run', '--limit', smoke ? '5' : '20'],
-  }] : []),
+  // 2026-10-21 — manual-review-triage BORTA TAGEN. Steget körde
+  // runC-pattern-promoter.ts, som inte är en triage — den läser
+  // reports/pattern-validation/ och avslutar direkt eftersom dess producent
+  // (runC-pattern-validator.ts) aldrig skrevs. Steget gav en falsk bild av att
+  // triage pågick. Se även borttagandet av pattern-promoter nedan.
 
   // ── P2B: ETag / If-Modified-Since dedup ───────────────────────────────
   // Uppdaterar body-hash-cache; skippar nedladdning för oförändrade sidor.
@@ -489,12 +572,42 @@ if (!skipRss) {
   });
 }
 
-if (!skipPatternPromote) {
-  // Pattern promoter: godkänn URL-mönster från C → C0/C2.
+// 2026-10-21 — pattern-promoter BORTA TAGEN ur schemat. runC-pattern-promoter.ts
+// läser reports/pattern-validation/ (rad 28) och avslutar direkt när mappen är
+// tom (rad 182). Producenten runC-pattern-validator.ts finns varken på disk
+// eller i git-historik, så mappen fylls aldrig.
+//
+// Att köra promotorn ändå är inte bara overksikt — den är aktivt skadlig.
+// promoteToC0/C2 (rad 84/120) skriver URL-mönster in i C-lagret, och CLAUDE.md:s
+// Generalization Protection Rule kräver bevis på 2–3 orelaterade domäner
+// innan ett mönster får generaliseras. Utan validator finns ingen sådan
+// evidens, så promotorn kan bara arbeta med skenbart bevisade mönster.
+//
+// Koden ligger kvar. Vill du ha pattern-promotion som riktig loop krävs
+// runC-pattern-validator.ts som läser C-gate-evidensen
+// (runtime/postTestC-*.jsonl, sources_status.jsonl) och kräver ≥2 orelaterade
+// domäner innan status:'confirmed'. Det är ett eget bygge, inte en cron-flagga.
+
+if (!skipCandidateTests) {
+  // P3D: Source-candidate test-loop (2026-10-21).
+  //
+  // Stänger kedjan som P3A/P3B/P3C hittills lämnade öppen. De tre discovery-
+  // stegen skriver 335 kandidater till source_candidates (exa_search 228,
+  // venue_graph_geo 68, rss_discovery 39) som INGEN konsumerade — runnern
+  // kördes aldrig i cron, och dess claim-RPC saknades helt på live-DB.
+  //
+  // Detta steg claimar kandidater ur source_candidate_test_queue, kör var och
+  // en genom riktiga A/B/C/D-gates i en sandbox, och promote:ar de som
+  // klarar smoke-fasen (write sources/<slug>.jsonl — den fil A-gates kan se).
+  //
+  // --phase=smoke: endast smoke-fasen kan ge 'promote' (decision.ts:60,77).
+  //                sanity/breadth ger manual_review även för bra kandidater.
+  // --limit: varje kandidat spawnar e2e.py --from-preA --limit 1 --apply,
+  //         alltså riktiga nätanrop. Kör inte för stort.
   steps.push({
-    name: 'pattern-promoter',
+    name: 'P3D-source-candidate-tests',
     cmd: 'npx',
-    args: ['tsx', '02-Ingestion/C-htmlGate/runC-pattern-promoter.ts', '--limit', smoke ? '5' : '20'],
+    args: ['tsx', '07-Discovery/src/sourceTesting/runSourceCandidateTests.ts', '--phase=smoke', `--limit=${smoke ? '1' : '20'}`],
   });
 }
 
@@ -610,18 +723,22 @@ async function main(): Promise<void> {
   // Skippa INTE cron-körningen (cron ÄR det vi vill köra), men använd
   // skip-filen som "senaste green"-signal för att låta underhålls-skippa
   // verifierings-skills när allt ser friskt ut.
-  const skipFile = path.join(RUNTIME_DIR, 'discovery-verification.status.json');
-  if (existsSync(skipFile)) {
+  // 2026-10-21 — villkoret ändrat från `ageH < 24` till `ageH < 24 && skip.ok`.
+  // Utan ok-villkoret kunde en röd fil ändå räknas som grön.
+  const skipPath = path.join(RUNTIME_DIR, 'discovery-verification.status.json');
+  if (existsSync(skipPath)) {
     try {
-      const skip = JSON.parse(readFileSync(skipFile, 'utf8'));
+      const skip = JSON.parse(readFileSync(skipPath, 'utf8'));
       const lastGreenAt = skip?.lastGreenAt;
       if (lastGreenAt) {
         const ageH = (Date.now() - new Date(lastGreenAt).getTime()) / (1000 * 60 * 60);
         if (ageH < 24 && skip.ok) {
           console.log(`[ingestion-cron] green-skip: discovery verifierades grön för ${ageH.toFixed(1)}h sedan (run=${skip.runId}) — skippar verify-skill-körning`);
           appendChainOverview({ event: 'green-skip', lastGreenAt, ageHours: ageH, runId: skip.runId });
+        } else if (!skip.ok) {
+          console.log(`[ingestion-cron] green-skip: senaste verify är RÖD (exit=${skip.exitCode ?? '?'}, misslyckade steg: ${(skip.failedSteps ?? []).join(', ') || 'okänt'}) — verify-skill körs separat`);
         } else {
-          console.log(`[ingestion-cron] green-skip: senaste verify är ${ageH.toFixed(1)}h gammal eller inte grön — verify-skill körs separat`);
+          console.log(`[ingestion-cron] green-skip: senaste verify är ${ageH.toFixed(1)}h gammal — verify-skill körs separat`);
         }
       }
     } catch {
@@ -631,7 +748,7 @@ async function main(): Promise<void> {
 
   let totalExit = 0;
   let totalEvents = 0;
-  const stepResults: StepResult[] = [];
+  const stepResults: StepRecord[] = [];
 
   for (const step of steps) {
     const stepStartedAt = new Date().toISOString();
@@ -647,11 +764,12 @@ async function main(): Promise<void> {
       eventsExtracted: result.eventsExtracted,
     });
 
-    totalEvents += result.eventsExtracted;
+    // Endast mätbara steg summeras — null betyder "vet inte", inte noll.
+    if (result.eventsExtracted !== null) totalEvents += result.eventsExtracted;
     if (result.exitCode !== 0) totalExit = result.exitCode;
 
     // Uppdatera status under körning så dashboard ser steg-för-steg
-    status.steps = stepResults;
+    status.steps = [...stepResults];
     status.totalEventsExtracted = totalEvents;
     writeStatus(status);
   }
@@ -670,21 +788,52 @@ async function main(): Promise<void> {
   // 2026-10-18 — green-skip-signal. När cron-körningen är grön (totalExit=0),
   // uppdatera runtime/discovery-verification.status.json så framtida
   // verify-skill-körningar kan skippa sig själva <24h efter en grön körning.
-  if (totalExit === 0) {
-    const skipFile = path.join(RUNTIME_DIR, 'discovery-verification.status.json');
-    try {
+  // 2026-10-21 — else-gren tillagd. Utan den skrevs ingenting vid fel, så
+  // lastGreenAt blev stale från en gammal lyckad körning och filen lästes som
+  // "ok" i all evighet. Läs-gate:t ovan (ageH < 24 && skip.ok) självkorrigerar
+  // så snart rätt ok-värde finns — ingen ändring av gate-logiken behövs.
+  const skipFile = path.join(RUNTIME_DIR, 'discovery-verification.status.json');
+  const runId = status.pid
+    ? `cron-${status.pid}-${new Date(finishedAt).getTime()}`
+    : `cron-${new Date(finishedAt).getTime()}`;
+  try {
+    if (totalExit === 0) {
       writeFileSync(skipFile, JSON.stringify({
         ok: true,
         lastGreenAt: finishedAt,
         lastRunAt: finishedAt,
-        runId: status.pid ? `cron-${status.pid}-${new Date(finishedAt).getTime()}` : `cron-${new Date(finishedAt).getTime()}`,
+        runId,
         totalEventsExtracted: totalEvents,
         durationMs,
       }, null, 2), 'utf8');
-      console.log(`[ingestion-cron] green-skip: skrev ${path.relative(PROJECT_ROOT, skipFile)}`);
-    } catch (err) {
-      console.error('[ingestion-cron] green-skip: kunde inte skriva skip-fil:', err instanceof Error ? err.message : err);
+      console.log(`[ingestion-cron] green-skip: skrev grön ${path.relative(PROJECT_ROOT, skipFile)}`);
+    } else {
+      // Behåll en eventuell tidigare lastGreenAt — den är historiskt sann och
+      // gate:t ska kunna se hur länge senast grönt var.
+      let previousGreen: string | null = null;
+      try {
+        const prev = JSON.parse(readFileSync(skipFile, 'utf8'));
+        previousGreen = typeof prev?.lastGreenAt === 'string' ? prev.lastGreenAt : null;
+      } catch { /* fil saknas eller är korrupt — inget att bevara */ }
+
+      const failedSteps = stepResults.filter((s) => s.exitCode !== 0).map((s) => s.name);
+      writeFileSync(skipFile, JSON.stringify({
+        ok: false,
+        lastGreenAt: previousGreen,
+        lastRunAt: finishedAt,
+        runId,
+        exitCode: totalExit,
+        failedSteps,
+        totalEventsExtracted: totalEvents,
+        durationMs,
+      }, null, 2), 'utf8');
+      console.error(
+        `[ingestion-cron] green-skip: skrev RÖD ${path.relative(PROJECT_ROOT, skipFile)} ` +
+        `— exit=${totalExit}, misslyckade steg: ${failedSteps.join(', ') || 'okänt'}`,
+      );
     }
+  } catch (err) {
+    console.error('[ingestion-cron] green-skip: kunde inte skriva skip-fil:', err instanceof Error ? err.message : err);
   }
 
   console.log(`[ingestion-cron] ═══ DONE ═══ exit=${totalExit} events=${totalEvents} duration=${durationMs}ms`);

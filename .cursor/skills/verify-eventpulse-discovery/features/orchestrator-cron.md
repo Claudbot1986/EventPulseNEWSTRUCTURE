@@ -4,13 +4,14 @@
 
 ## Sub-features
 
-- Step-lista (rad 265–467 + villkorliga pushes 425–499): A → B → eventbrite → tribe → sitemap → subpath → direct-jsonld → livespot → C → D → I-pdf → manual-review → etag → api-discovery → luma → ra → posh → reddit → image → P2C → P3A → P3B → P3C → pattern-promoter
+- Step-lista (rad 265–611): A → B → eventbrite → tribe → sitemap → subpath → direct-jsonld → livespot → C → D → I-pdf → etag → api-discovery → luma → ra → posh → reddit → image → P2C → P3A → P3B → P3C → **P3D-source-candidate-tests** (nya 2026-10-21)
+  - **`manual-review-triage` och `pattern-promoter` togs bort ur kedjan 2026-10-21.** Båda körde `runC-pattern-promoter.ts` vars producent (`runC-pattern-validator.ts`) aldrig skrevs → hela kedjan var bruten. Koden ligger kvar på disk; att aktivera den kräver ett eget validator-bygge (se `pattern-promoter.md`).
 - Per-step loggar: `runtime/ingestion-cron/steps/<name>-<ISO>.{log,err.log}`
 - Chain-overview (JSONL): `runtime/ingestion-cron/chain-overview.log` — `{step-start|step-end|heartbeat|pre-kill|green-skip, ...}`
 - Status-singleton: `runtime/ingestion-cron.status.json` — `running, pid, startedAt, lastHeartbeatAt, steps[], totalEventsExtracted`
 - Pre-discovery kill-check (2026-10-18, rad 515–572): dödar levande discovery-processer innan step-loop startar
 - Green-skip-gate (2026-10-18, rad 608–688): läser `runtime/discovery-verification.status.json` för senaste verify-status; skriver skip-fil vid grön korrigering
-- Watchdog-output: `runtime/watchdog.json` (läs av watchdog-script, ej orchestrator)
+- Watchdog-output: `runtime/ingestion-cron/watchdog.json` (läs av watchdog-script, ej orchestrator)
 
 ## How to get to it (user POV)
 
@@ -63,7 +64,11 @@ jq -c 'select(.event=="pre-kill" or .event=="green-skip")' \
 # → förväntat lång lista efter 2026-10-18 (varje cron-start loggar pre-kill)
 ```
 
-Bevis: `chain-overview.log` + `status.json` + `steps/<stage>-<ISO>.log`. Green = alla steg har `step-end` med exit=0 + `totalEventsExtracted > 0` + `heartbeat age < 2h` (om körning pågår).
+Bevis: `chain-overview.log` + `status.json` + `steps/<stage>-<ISO>.log`.
+
+**Green = alla steg har `step-end` med exit=0 + `heartbeat age < 2h` (om körning pågår). `totalEventsExtracted` korrekt summerat över de steg vars adapter skriver en tolkbar totalrad (parser i `ingestion-cron.ts:parseStepCounts`).** Stödda steg: tribe-events, sitemap-discovery, direct-jsonld, eventbrite-pagination, livespot-stockholm, luma-stockholm, posh-stockholm, ra-stockholm. Övriga steg rapporterar `eventsExtracted: null` ("vet inte" — antingen skriver steget eget JSON-format eller persisterar inte).
+
+**`ok: true` i skip-filen styrs av `totalExit === 0`** (`ingestion-cron.ts:694`, else-gren rad 740-749). Vid röd körning skrivs `ok:false` + `failedSteps` + bevarad `lastGreenAt`. En tidigare grön fil lever alltså kvar som `lastGreenAt`-fältet även efter en misslyckad körning.
 
 ## Gotchas
 
@@ -73,7 +78,7 @@ Bevis: `chain-overview.log` + `status.json` + `steps/<stage>-<ISO>.log`. Green =
 
 **Green-skip-gate (2026-10-18) skriver till `runtime/discovery-verification.status.json`** med `{ok, lastGreenAt, runId, totalEventsExtracted, durationMs}`. Hoppar INTE över cron-körningen själv — cron ÄR det som körs. Skippet låter bara framtida verify-skill-körningar skippa sig själva om allt är grönt <24h.
 
-**`--smoke` använder `--limit 1` på A/B/D/I-pdf/etag/P3C-rss**, `--queries 1 --per-query 1` på P3A, `--limit 5` på P3B-geo/pattern-promoter/triage. P3C-rss i smoke använder `--limit 5 --concurrency 2 --dry-run=true`.
+**`--smoke` använder `--limit 1` på A/B/D/I-pdf/etag/P3C-rss**, `--queries 1 --per-query 1` på P3A, `--limit 5` på P3B-geo, `--limit 1` på P3D-candidate-tests. P3C-rss i smoke använder `--limit 5 --concurrency 2 --dry-run=true`.
 
 **`--skip-images` dödar både `D-images` och `P2C-active-learning`.** De ligger bakom `if (!skipImages)` i cron-scriptet.
 
