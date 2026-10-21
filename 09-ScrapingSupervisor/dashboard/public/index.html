@@ -31,6 +31,52 @@
           <span class="bfl-generate-btn-sub">välj kategori + antal</span>
         </span>
       </button>
+      <!-- ─── BFL model-compare knappar (2026-10-18) ─────────────────────
+           Parallella knappar för modell-jämförelse. Rör INTE befintlig
+           btn-bfl-generate eller dess modal — dessa egna endpoints kör
+           tools/bfl-model-compare.mjs med EN modell per klick och öppnar
+           en gemensam parent-mapp för inspektion. -->
+      <button type="button" id="btn-bfl-compare-flux2" class="bfl-generate-btn bfl-generate-btn--compare" aria-label="Generate 3 test images with BFL flux-2-pro">
+        <span class="bfl-generate-btn-icon" aria-hidden="true">🅱️</span>
+        <span class="bfl-generate-btn-text">
+          <span class="bfl-generate-btn-title">BFL flux-2-pro</span>
+          <span class="bfl-generate-btn-sub">3 bilder · jämför-test</span>
+        </span>
+      </button>
+      <button type="button" id="btn-bfl-compare-minimax" class="bfl-generate-btn bfl-generate-btn--compare bfl-generate-btn--minimax" aria-label="Generate 3 test images with MiniMax image-01">
+        <span class="bfl-generate-btn-icon" aria-hidden="true">🟧</span>
+        <span class="bfl-generate-btn-text">
+          <span class="bfl-generate-btn-title">MiniMax image-01</span>
+          <span class="bfl-generate-btn-sub">3 bilder · jämför-test</span>
+        </span>
+      </button>
+      <div id="bfl-compare-status" class="bfl-ingestion-status bfl-ingestion-status--hidden" aria-live="polite" aria-atomic="true">
+        <span id="bfl-compare-status-text">redo</span>
+      </div>
+      <!-- ─── BFL zoom-variation (2026-10-18) ───────────────────────────
+           Genererar bilder med 10 zoomdjup × 3 pose × 3 ljus variation.
+           Använder MiniMax + AI-stämpel. Två-fas-kvotfyllnad.
+           Rör INTE btn-bfl-generate eller dess modal. -->
+      <div class="bfl-zoom-wrap">
+        <input type="number" id="bfl-count" class="bfl-count" min="1" max="500" value="10" title="Antal bilder: exakt antal för Zoom-variation, max-cap för Auto-fill" placeholder="count" aria-label="Antal bilder (används av båda knapparna)" />
+        <button type="button" id="btn-bfl-zoom-auto" class="bfl-generate-btn bfl-generate-btn--zoom-auto" title="Auto-fill: räknar själv ut hur många som behövs baserat på 1/30-quota + saknade kombinationer" aria-label="Auto-fill zoom variation pipeline">
+          <span class="bfl-generate-btn-icon" aria-hidden="true">🎯</span>
+          <span class="bfl-generate-btn-text">
+            <span class="bfl-generate-btn-title">Auto-fill</span>
+            <span class="bfl-generate-btn-sub">systemet räknar ut</span>
+          </span>
+        </button>
+        <button type="button" id="btn-bfl-zoom-run" class="bfl-generate-btn bfl-generate-btn--zoom" aria-label="Run zoom variation pipeline">
+          <span class="bfl-generate-btn-icon" aria-hidden="true">🪄</span>
+          <span class="bfl-generate-btn-text">
+            <span class="bfl-generate-btn-title">Zoom-variation</span>
+            <span class="bfl-generate-btn-sub">MiniMax · 10 zoom × 3 × 3</span>
+          </span>
+        </button>
+        <div id="bfl-zoom-status" class="bfl-ingestion-status bfl-ingestion-status--hidden" aria-live="polite" aria-atomic="true">
+          <span id="bfl-zoom-status-text">redo</span>
+        </div>
+      </div>
       <div id="bfl-ingestion-status" class="bfl-ingestion-status bfl-ingestion-status--hidden" aria-live="polite" aria-atomic="true">
         <span id="bfl-ingestion-status-text">inga krediter under ingestion</span>
       </div>

@@ -42,6 +42,7 @@ header h1 { margin: 0; font-size: 22px; font-weight: 600; }
   justify-content: space-between;
   gap: 20px;
   flex-wrap: wrap;
+  position: relative; /* ankare för alla .bfl-ingestion-status (absolute, top:100%) — tidigare off-screen */
 }
 .header-text {
   flex: 1 1 480px;
@@ -1686,6 +1687,80 @@ body:not(.sidebar-open) .sidebar {
 .bfl-generate-btn-text { display: flex; flex-direction: column; align-items: flex-start; }
 .bfl-generate-btn-title { font-weight: 600; line-height: 1.1; }
 .bfl-generate-btn-sub { font-size: 10px; opacity: 0.75; line-height: 1.1; margin-top: 2px; }
+
+/* ─── BFL model-compare knappar (2026-10-18) ────────────────────
+   Visuellt avgränsade från originalknappen så det är tydligt att
+   de är experiment. Rör inte original-stilen ovan. */
+.bfl-generate-btn--compare {
+  background: linear-gradient(135deg, #1f3a4a, #2d5a73);
+  border-color: #4a8aaa;
+  font-size: 12px;
+  padding: 7px 12px;
+}
+.bfl-generate-btn--compare:hover {
+  background: linear-gradient(135deg, #2d5a73, #3d7a93);
+  box-shadow: 0 4px 12px rgba(74, 138, 170, 0.4);
+}
+.bfl-generate-btn--compare.bfl-generate-btn--minimax {
+  background: linear-gradient(135deg, #4a2e1f, #6e4427);
+  border-color: #b87a3a;
+}
+.bfl-generate-btn--compare.bfl-generate-btn--minimax:hover {
+  background: linear-gradient(135deg, #6e4427, #8a5836);
+  box-shadow: 0 4px 12px rgba(184, 122, 58, 0.4);
+}
+.bfl-generate-btn--compare:disabled {
+  opacity: 0.55;
+  cursor: wait;
+}
+
+/* ─── BFL zoom-variation (2026-10-18) ───────────────────
+   Egen färgskala (lila/mörk) — tydligt experiment. */
+.bfl-zoom-wrap {
+  display: inline-flex;
+  align-items: stretch;
+  gap: 4px;
+  margin-left: 6px;
+  position: relative; /* ankare för #bfl-zoom-status (absolute, top:100%) — tidigare off-screen */
+}
+.bfl-count {
+  width: 64px;
+  padding: 6px 8px;
+  border: 1px solid rgba(255,255,255,0.18);
+  background: rgba(0,0,0,0.25);
+  color: inherit;
+  font-size: 13px;
+  border-radius: 6px;
+  font-family: inherit;
+}
+.bfl-count:focus {
+  outline: 2px solid rgba(120, 90, 180, 0.5);
+  outline-offset: 1px;
+}
+.bfl-generate-btn--zoom {
+  background: linear-gradient(135deg, #3a2a4e, #5a3d7a);
+  border-color: #8a6aaa;
+}
+.bfl-generate-btn--zoom:hover {
+  background: linear-gradient(135deg, #5a3d7a, #7a5d9a);
+  box-shadow: 0 4px 12px rgba(138, 106, 170, 0.4);
+}
+.bfl-generate-btn--zoom:disabled {
+  opacity: 0.55;
+  cursor: wait;
+}
+.bfl-generate-btn--zoom-auto {
+  background: linear-gradient(135deg, #1f4a3a, #2d7a5a);
+  border-color: #5aaa8a;
+}
+.bfl-generate-btn--zoom-auto:hover {
+  background: linear-gradient(135deg, #2d7a5a, #3d9a6a);
+  box-shadow: 0 4px 12px rgba(90, 170, 138, 0.4);
+}
+.bfl-generate-btn--zoom-auto:disabled {
+  opacity: 0.55;
+  cursor: wait;
+}
 
 .bfl-modal { position: fixed; inset: 0; z-index: 1000; display: flex; align-items: center; justify-content: center; }
 .bfl-modal[hidden] { display: none; }

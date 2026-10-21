@@ -35,6 +35,44 @@ const PIPELINE_TS = path.join(PROJECT_ROOT, '09-ScrapingSupervisor/ingestionPipe
 const WORKER_TS = path.join(PROJECT_ROOT, '03-Queue/startWorker.ts');
 const WORKER_DRAIN_MS = 15 * 60 * 1000; // dräneringsfönster: 15 min, sedan stopp
 
+/**
+ * parseRunStats — extrahera riktiga siffror från ingestionPipeline-stdout.
+ *
+ * Tidigare skrev runDaily 0/0/0/0 till ingestion_runs.jsonl. Nu plockar vi
+ * `sourcesAttempted` från sista `[N/M]`-raden och `totalEventsFound` från
+ * `KLAR  │  N events till bullmq`-raden i importToEventPulse.
+ *
+ * Exporterad för test i tests/runDaily_summary.test.ts.
+ */
+export function parseRunStats(stdout: string): { sourcesAttempted: number; totalEventsFound: number } {
+  let sourcesAttempted = 0;
+  let totalEventsFound = 0;
+
+  // Plocka sista [N/M] — det är totalen (270/270 = klar). Pattern: [123/270]
+  const sourceMatches = stdout.match(/\[(\d+)\/(\d+)\][^\n]*/g);
+  if (sourceMatches) {
+    let maxDenom = 0;
+    for (const m of sourceMatches) {
+      const numMatch = m.match(/\[(\d+)\/(\d+)\]/);
+      if (numMatch) {
+        const denom = parseInt(numMatch[2], 10);
+        if (denom > maxDenom) {
+          maxDenom = denom;
+        }
+      }
+    }
+    sourcesAttempted = maxDenom;
+  }
+
+  // Plocka "N events till bullmq" — total events som gick in i kön
+  const eventsMatch = stdout.match(/(\d+)\s+events\s+till\s+bullmq/);
+  if (eventsMatch) {
+    totalEventsFound = parseInt(eventsMatch[1], 10);
+  }
+
+  return { sourcesAttempted, totalEventsFound };
+}
+
 function getRunLogPath(): string {
   const isoDate = new Date().toISOString().split('T')[0];
   return path.join(LOG_DIR, `daily-${isoDate}.log`);
@@ -50,7 +88,7 @@ function log(line: string, fileLog?: string): void {
   }
 }
 
-interface SubResult { exitCode: number; durationMs: number; }
+interface SubResult { exitCode: number; durationMs: number; stdoutTail: string; }
 
 /** Som runSubprocess men dödar processen efter maxMs — för daemon-processer (t.ex. BullMQ-worker) som ska dränera kön inom ett tidsfönster. Kill vid timeout = förväntat (exitCode rapporteras som 0). */
 function runSubprocessWithTimeout(name: string, scriptPath: string, fileLog: string, maxMs: number): Promise<SubResult> {
@@ -76,11 +114,11 @@ function runSubprocessWithTimeout(name: string, scriptPath: string, fileLog: str
       // alltid förväntat → 0.
       const exitCode = timedOut || signal === 'SIGTERM' ? 0 : (code ?? 1);
       log(`[step:${name}] exit code=${exitCode} signal=${signal ?? '-'} duration=${Date.now() - startedAt}ms`, fileLog);
-      resolve({ exitCode, durationMs: Date.now() - startedAt });
+      resolve({ exitCode, durationMs: Date.now() - startedAt, stdoutTail: '' });
     });
     proc.on('error', () => {
       clearTimeout(killTimer);
-      resolve({ exitCode: 1, durationMs: Date.now() - startedAt });
+      resolve({ exitCode: 1, durationMs: Date.now() - startedAt, stdoutTail: '' });
     });
   });
 }
@@ -103,11 +141,11 @@ function runSubprocess(name: string, scriptPath: string, fileLog: string): Promi
       const tail = stdoutBuf.split('\n').filter(Boolean).slice(-30).join('\n');
       for (const line of tail.split('\n')) log(`[step:${name}]   ${line}`, fileLog);
       log(`[step:${name}] exit code=${exitCode} duration=${durationMs}ms`, fileLog);
-      resolve({ exitCode, durationMs });
+      resolve({ exitCode, durationMs, stdoutTail: tail });
     });
     proc.on('error', (err) => {
       log(`[step:${name}] spawn error: ${err.message}`, fileLog);
-      resolve({ exitCode: 1, durationMs: Date.now() - startedAt });
+      resolve({ exitCode: 1, durationMs: Date.now() - startedAt, stdoutTail: '' });
     });
   });
 }
@@ -120,6 +158,7 @@ async function main(): Promise<number> {
   const stages: IngestionRunStage[] = [];
   let exitCode = 0;
   let errorSummary: string | null = null;
+  let runStats: { sourcesAttempted: number; totalEventsFound: number } = { sourcesAttempted: 0, totalEventsFound: 0 };
 
   try {
     log(`═══════════════════════════════════════════════════════════`, fileLog);
@@ -147,6 +186,10 @@ async function main(): Promise<number> {
       log(`[2/3] ingestionPipeline — OK`, fileLog);
     }
 
+    // Extrahera riktiga siffror från pipeline-stdout (tidigare hårdkodat 0/0/0/0)
+    runStats = parseRunStats(pipeline.stdoutTail);
+    log(`[stats] sourcesAttempted=${runStats.sourcesAttempted} totalEventsFound=${runStats.totalEventsFound}`, fileLog);
+
     // Steg 3: dränera BullMQ-kön till Supabase (workern är daemon — tidsbegränsad dränering)
     log(`[3/3] startWorker — dränering`, fileLog);
     const drain = await runSubprocessWithTimeout('startWorker-drain', WORKER_TS, fileLog, WORKER_DRAIN_MS);
@@ -170,11 +213,11 @@ async function main(): Promise<number> {
       endTs,
       durationMs: Date.now() - startedAt,
       ok,
-      sourcesAttempted: 0, // runDaily orkestrerar — antal källor ligger i pipeline-steget
-      sourcesSucceeded: 0,
-      sourcesFailed: ok ? 0 : 1,
-      totalEventsFound: 0,
-      totalEventsPersisted: 0,
+      sourcesAttempted: runStats.sourcesAttempted,
+      sourcesSucceeded: ok ? runStats.sourcesAttempted : 0,
+      sourcesFailed: ok ? 0 : (runStats.sourcesAttempted || 1),
+      totalEventsFound: runStats.totalEventsFound,
+      totalEventsPersisted: 0, // persistering sker i workern, summeras separat
       stagesCompleted: stages,
       errorSummary,
       pid: process.pid,
@@ -183,4 +226,9 @@ async function main(): Promise<number> {
   }
 }
 
-main().then((c) => process.exit(c)).catch((e) => { console.error('fatal:', e); process.exit(1); });
+// Kör bara main() när filen exekveras direkt — inte vid import (tester).
+// Detta förhindrar att tester råkar starta en riktig daglig körning.
+const _invokedDirectly = process.argv[1] && import.meta.url.endsWith(process.argv[1].replace(/^.*\//, ''));
+if (_invokedDirectly && !process.env.VITEST) {
+  main().then((c) => process.exit(c)).catch((e) => { console.error('fatal:', e); process.exit(1); });
+}

@@ -464,6 +464,8 @@ function applyAnalyticsServerState(as) {
   // Wire review buttons (after DOM is ready, once)
   wireReviewButtons();
   initBflGenerateModal();
+  initBflCompareButtons();
+  initBflZoomButton();
 })();
 
 /** Minimal HTML escaper for DB-fed source names rendered into innerHTML. */
@@ -2734,3 +2736,255 @@ function wireRunsTile() {
     /* tyst fel — KPI visar '—' */
   }
 })();
+
+// ─── BFL model-compare knappar (2026-10-18) ────────────────────────
+// PARALLELLA experiment-knappar bredvid btn-bfl-generate.
+// Inga modaler — klick startar en körning och öppnar mappen när klar.
+// Återanvänder INTE befintlig bflModalState för att inte röra originalflödet.
+const compareBtnState = {
+  pollTimer: null,
+  sharedOutDir: null,  // delas mellan båda knapparna för gemensam parent
+};
+
+function setCompareStatus(text, kind = 'unknown') {
+  const wrap = document.getElementById('bfl-compare-status');
+  const span = document.getElementById('bfl-compare-status-text');
+  if (span) span.textContent = text;
+  if (wrap) {
+    wrap.classList.remove('bfl-ingestion-status--hidden', 'bfl-ingestion-status--unknown', 'bfl-ingestion-status--ok', 'bfl-ingestion-status--warn');
+    wrap.classList.add(kind === 'ok' ? 'bfl-ingestion-status--ok' : kind === 'warn' ? 'bfl-ingestion-status--warn' : 'bfl-ingestion-status--unknown');
+    wrap.classList.remove('bfl-ingestion-status--hidden');
+  }
+}
+
+function hideCompareStatus() {
+  const wrap = document.getElementById('bfl-compare-status');
+  if (wrap) wrap.classList.add('bfl-ingestion-status--hidden');
+}
+
+function setCompareButtonsDisabled(disabled) {
+  ['btn-bfl-compare-flux2', 'btn-bfl-compare-minimax'].forEach((id) => {
+    const b = document.getElementById(id);
+    if (b) b.disabled = disabled;
+  });
+}
+
+async function fetchSharedOutDir() {
+  try {
+    const r = await fetch('/api/bfl/compare-test/out-dir');
+    if (!r.ok) return null;
+    const j = await r.json();
+    return j.outDir || null;
+  } catch { return null; }
+}
+
+async function pollCompareRun(runId) {
+  if (compareBtnState.pollTimer) clearInterval(compareBtnState.pollTimer);
+  compareBtnState.pollTimer = setInterval(async () => {
+    try {
+      const r = await fetch(`/api/bfl/compare-test/${runId}/status`);
+      if (!r.ok) return;
+      const j = await r.json();
+      const state = j.result;
+      if (!state) return;
+      const lastLog = (state.log || []).slice(-1)[0] || '';
+      if (state.status === 'running') {
+        setCompareStatus(`genererar ${state.model}… ${lastLog}`, 'warn');
+      } else {
+        clearInterval(compareBtnState.pollTimer);
+        compareBtnState.pollTimer = null;
+        setCompareButtonsDisabled(false);
+        if (state.status === 'success') {
+          setCompareStatus(`✓ ${state.model} klar — öppnar mapp`, 'ok');
+          try {
+            const outDir = state.outDir;
+            // macOS open via dashboard-knappen — vi öppnar parent-mappen som
+            // innehåller båda modellernas undermappar efter båda klick.
+            await fetch(`/api/bfl/compare-test/out-dir`);
+            // Använd server-side 'open' via en liten helper-route eller bara
+            // dirigera klienten: skicka file://-länk i ny flik funkar inte i
+            // browsern. Använd en osynlig <a download> med file:// är inte
+            // tillåtet. Enklaste: anropa en endpoint som kör 'open' på servern.
+            await fetch(`/api/bfl/compare-test/open?dir=${encodeURIComponent(outDir)}`).catch(() => {});
+          } catch { /* ignore */ }
+          // Auto-dölj status efter 4s
+          setTimeout(hideCompareStatus, 4000);
+        } else {
+          setCompareStatus(`✗ ${state.model} misslyckades (exit ${state.exitCode})`, 'warn');
+          setTimeout(hideCompareStatus, 6000);
+        }
+      }
+    } catch { /* ignore poll-fel */ }
+  }, 1500);
+}
+
+async function startCompareRun(model) {
+  setCompareButtonsDisabled(true);
+  setCompareStatus(`startar ${model}…`, 'warn');
+  // Hämta senaste parent-mapp om någon körning redan gjorts idag
+  if (!compareBtnState.sharedOutDir) {
+    compareBtnState.sharedOutDir = await fetchSharedOutDir();
+  }
+  try {
+    const r = await fetch('/api/bfl/compare-test', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ model, outDir: compareBtnState.sharedOutDir }),
+    });
+    const j = await r.json();
+    if (!r.ok || !j.ok) {
+      setCompareStatus(`✗ ${model}: ${j.error || 'okänt fel'}`, 'warn');
+      setCompareButtonsDisabled(false);
+      return;
+    }
+    // Spara den delade parent-mappen om servern skapade en ny
+    if (j.outDir && !compareBtnState.sharedOutDir) {
+      compareBtnState.sharedOutDir = j.outDir;
+    }
+    pollCompareRun(j.runId);
+  } catch (err) {
+    setCompareStatus(`✗ ${model}: ${err.message}`, 'warn');
+    setCompareButtonsDisabled(false);
+  }
+}
+
+function initBflCompareButtons() {
+  const btnFlux = document.getElementById('btn-bfl-compare-flux2');
+  const btnMiniMax = document.getElementById('btn-bfl-compare-minimax');
+  if (btnFlux && !btnFlux.dataset.wired) {
+    btnFlux.dataset.wired = '1';
+    btnFlux.addEventListener('click', () => startCompareRun('bfl-flux-2-pro'));
+  }
+  if (btnMiniMax && !btnMiniMax.dataset.wired) {
+    btnMiniMax.dataset.wired = '1';
+    btnMiniMax.addEventListener('click', () => startCompareRun('minimax-image-01'));
+  }
+}
+
+// ─── BFL zoom-variation (2026-10-18) ────────────────────────
+// Pipeline: 10 zoomdjup × 3 pose × 3 ljus, MiniMax, stämplat.
+// Rör INTE befintlig btn-bfl-generate / modal.
+const zoomBtnState = { pollTimer: null };
+
+function setZoomStatus(text, kind) {
+  const wrap = document.getElementById('bfl-zoom-status');
+  const span = document.getElementById('bfl-zoom-status-text');
+  if (span) span.textContent = text;
+  if (wrap) {
+    wrap.classList.remove('bfl-ingestion-status--hidden', 'bfl-ingestion-status--unknown', 'bfl-ingestion-status--ok', 'bfl-ingestion-status--warn');
+    wrap.classList.add(kind === 'ok' ? 'bfl-ingestion-status--ok' : kind === 'warn' ? 'bfl-ingestion-status--warn' : 'bfl-ingestion-status--unknown');
+    wrap.classList.remove('bfl-ingestion-status--hidden');
+  }
+}
+
+function hideZoomStatus() {
+  const wrap = document.getElementById('bfl-zoom-status');
+  if (wrap) wrap.classList.add('bfl-ingestion-status--hidden');
+}
+
+function setZoomButtonsDisabled(disabled) {
+  const b = document.getElementById('btn-bfl-zoom-run');
+  if (b) b.disabled = disabled;
+  const inp = document.getElementById('bfl-count');
+  if (inp) inp.disabled = disabled;
+  const btnAuto = document.getElementById('btn-bfl-zoom-auto');
+  if (btnAuto) btnAuto.disabled = disabled;
+}
+
+async function pollZoomRun(runId) {
+  if (zoomBtnState.pollTimer) clearInterval(zoomBtnState.pollTimer);
+  zoomBtnState.pollTimer = setInterval(async () => {
+    try {
+      const r = await fetch(`/api/bfl/zoom-run/${runId}/status`);
+      if (!r.ok) return;
+      const j = await r.json();
+      const state = j.result;
+      if (!state) return;
+      if (state.status === 'running') {
+        const lastLog = (state.log || []).slice(-1)[0] || '';
+        setZoomStatus(`genererar… ${state.imageCount ?? 0}/${state.count} ${lastLog}`, 'warn');
+      } else {
+        clearInterval(zoomBtnState.pollTimer);
+        zoomBtnState.pollTimer = null;
+        setZoomButtonsDisabled(false);
+        if (state.status === 'success') {
+          setZoomStatus(`✓ klar — ${state.imageCount} bilder i ${state.out}/`, 'ok');
+          // Öppna output-mappen via serverns open-endpoint
+          try {
+            await fetch(`/api/bfl/compare-test/open?dir=${encodeURIComponent(state.out)}`).catch(() => {});
+          } catch { /* ignore */ }
+          setTimeout(hideZoomStatus, 5000);
+        } else {
+          setZoomStatus(`✗ misslyckades (exit ${state.exitCode})`, 'warn');
+          setTimeout(hideZoomStatus, 6000);
+        }
+      }
+    } catch { /* ignore poll-fel */ }
+  }, 1500);
+}
+
+async function startZoomRun() {
+  const inp = document.getElementById('bfl-count');
+  const count = Math.max(1, Math.min(500, parseInt(inp?.value ?? '10', 10) || 10));
+  setZoomButtonsDisabled(true);
+  setZoomStatus(`startar ${count} bilder med zoom-variation…`, 'warn');
+  try {
+    const r = await fetch('/api/bfl/zoom-run', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ count }),
+    });
+    const j = await r.json();
+    if (!r.ok || !j.ok) {
+      setZoomStatus(`✗ ${j.error || 'okänt fel'}`, 'warn');
+      setZoomButtonsDisabled(false);
+      return;
+    }
+    pollZoomRun(j.runId);
+  } catch (err) {
+    setZoomStatus(`✗ ${err.message}`, 'warn');
+    setZoomButtonsDisabled(false);
+  }
+}
+
+async function startAutoZoomRun() {
+  // input-rutan fungerar som MAX-CAP för auto-fill:
+  // auto-fill räknar själv ut count, men cap'ar till input-värdet.
+  const inp = document.getElementById('bfl-count');
+  const maxCount = Math.max(1, Math.min(500, parseInt(inp?.value ?? '10', 10) || 10));
+  setZoomButtonsDisabled(true);
+  setZoomStatus(`auto-fill: räknar ut högst ${maxCount} bilder…`, 'warn');
+  try {
+    const r = await fetch('/api/bfl/zoom-run', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ auto: true, maxCount }),
+    });
+    const j = await r.json();
+    if (!r.ok || !j.ok) {
+      setZoomStatus(`✗ ${j.error || 'okänt fel'}`, 'warn');
+      setZoomButtonsDisabled(false);
+      return;
+    }
+    const note = j.autoNote ? ` ${j.autoNote}` : '';
+    const capNote = j.cappedByInput ? ` (cappat till ${maxCount} via input)` : '';
+    setZoomStatus(`auto-fill: count=${j.count}${note}${capNote}`, 'warn');
+    pollZoomRun(j.runId);
+  } catch (err) {
+    setZoomStatus(`✗ ${err.message}`, 'warn');
+    setZoomButtonsDisabled(false);
+  }
+}
+
+function initBflZoomButton() {
+  const btn = document.getElementById('btn-bfl-zoom-run');
+  if (btn && !btn.dataset.wired) {
+    btn.dataset.wired = '1';
+    btn.addEventListener('click', startZoomRun);
+  }
+  const btnAuto = document.getElementById('btn-bfl-zoom-auto');
+  if (btnAuto && !btnAuto.dataset.wired) {
+    btnAuto.dataset.wired = '1';
+    btnAuto.addEventListener('click', startAutoZoomRun);
+  }
+}
