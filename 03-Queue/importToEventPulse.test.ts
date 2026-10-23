@@ -3,7 +3,7 @@ import { mkdtempSync, mkdirSync, writeFileSync } from 'fs';
 import { tmpdir } from 'os';
 import path from 'path';
 
-import { toRawEvent, readExtractedEvents, mergeExtractedEvents, eventIdentity, releaseTerminalJob, buildJobId } from './importToEventPulse';
+import { toRawEvent, readExtractedEvents, mergeExtractedEvents, eventIdentity, releaseTerminalJob, buildJobId, selectImportableSources } from './importToEventPulse';
 
 describe('toRawEvent', () => {
   it('maps camelCase extracted event link and image aliases into RawEventInput', () => {
@@ -296,5 +296,54 @@ describe('buildJobId — jobId får inte vara finare än normalizerns dedup', ()
   it('jobId innehåller aldrig ":" — BullMQ avvisar sådana jobbId', () => {
     const raw = toRawEvent('konserthuset', { title: 'Sagolek – Den lille prinsen', date: '2026-10-25', time: '10:00' });
     expect(buildJobId(raw)).not.toContain(':');
+  });
+});
+
+describe('selectImportableSources', () => {
+  // 2026-10-23 — retired/quarantined-källor ska inte importeras. Alla fyra
+  // gates gör detta (quarantineGuard.isSkipped); importen gjorde det inte,
+  // så kyrkogravda källor fortsatte skicka gamla rader till databasen.
+  const skipped = new Set(['scandinavium', 'lulea-hf-2']);
+
+  it('hoppar över retired/quarantined-källor', () => {
+    const { selected, skippedOut } = selectImportableSources(
+      ['scandinavium', 'downtown-2', 'lulea-hf-2'],
+      skipped,
+      null,
+      Infinity,
+    );
+    expect(selected).toEqual(['downtown-2']);
+    expect(skippedOut).toEqual(['scandinavium', 'lulea-hf-2']);
+  });
+
+  it('retired-källor hoppas över även när de uttryckligen begärs via --source', () => {
+    const { selected } = selectImportableSources(
+      ['scandinavium', 'downtown-2'],
+      skipped,
+      new Set(['scandinavium']),
+      Infinity,
+    );
+    expect(selected).toEqual([]);
+  });
+
+  it('--source väljer bara de begärda källorna', () => {
+    const { selected } = selectImportableSources(
+      ['a', 'b', 'c'],
+      skipped,
+      new Set(['b']),
+      Infinity,
+    );
+    expect(selected).toEqual(['b']);
+  });
+
+  it('--limit kapar listan', () => {
+    const { selected } = selectImportableSources(['a', 'b', 'c'], skipped, null, 2);
+    expect(selected).toEqual(['a', 'b']);
+  });
+
+  it('inga källor i kyrkogravet → inga hoppade', () => {
+    const { selected, skippedOut } = selectImportableSources(['a', 'b'], skipped, null, Infinity);
+    expect(selected).toEqual(['a', 'b']);
+    expect(skippedOut).toEqual([]);
   });
 });

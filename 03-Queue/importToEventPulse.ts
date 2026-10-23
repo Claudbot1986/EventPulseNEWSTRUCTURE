@@ -17,6 +17,7 @@ import * as dotenv from 'dotenv';
 import path from 'path';
 import { fileURLToPath, pathToFileURL } from 'url';
 import fs from 'fs';
+import { loadSkippedSourceIds } from '../02-Ingestion/lib/quarantineGuard.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -483,6 +484,36 @@ async function importSource(sourceId: string, dryRun: boolean): Promise<{ enqueu
 
 // ── CLI ─────────────────────────────────────────────────────────────────────
 
+/**
+ * Väljer vilka källor som ska importeras.
+ *
+ * 2026-10-23 — retired/quarantined-källor ska INTE importeras.
+ * Alla fyra gates (A/B/C/D) gör detta via isSkipped(); importen gjorde det
+ * inte, så en källa som lagts i kyrkogravet fortsatte att skicka sina
+ * gamla extraherade rader till databasen varje natt. Mätt: 4 framtida
+ * rader från 'scandinavium' (retired) nådde aldrig databasen — normalizerns
+ * titel-gate avvisar dem ("Scandinavium" är ett venue-namn, inte ett
+ * event) — vilket gjorde att p3-gaten flaggade dem som saknade, och
+ * 65 rader med '[object Object]' i venue_full_address kom från
+ * retired/quarantined-källor som aldrig kan köas om.
+ *
+ * Utdelad som ren funktion så att den kan testas utan Redis/Supabase.
+ */
+export function selectImportableSources(
+  sourceIds: Iterable<string>,
+  skipped: Set<string>,
+  onlySources: Set<string> | null,
+  limit: number,
+): { selected: string[]; skippedOut: string[] } {
+  const all = [...sourceIds];
+  const skippedOut = all.filter((id) => skipped.has(id));
+  const selected = all
+    .filter((id) => !skipped.has(id))
+    .filter((id) => onlySources == null || onlySources.has(id))
+    .slice(0, limit);
+  return { selected, skippedOut };
+}
+
 async function main() {
   const args = process.argv.slice(2);
   const dryRun = args.includes('--dry-run');
@@ -518,9 +549,20 @@ async function main() {
       }
     }
   }
-  const sourceFiles = [...sourceIds]
-    .filter(id => onlySources == null || onlySources.has(id))
-    .slice(0, limit);
+
+  const skipped = loadSkippedSourceIds();
+  const { selected: sourceFiles, skippedOut } = selectImportableSources(
+    sourceIds,
+    skipped,
+    onlySources,
+    limit,
+  );
+  if (skippedOut.length > 0) {
+    console.log(
+      `\n  Hoppar över ${skippedOut.length} retired/quarantined-källor ` +
+        `(inga rader ska importeras från dem): ${skippedOut.join(', ')}\n`,
+    );
+  }
 
   if (sourceFiles.length === 0) {
     if (onlySources) {

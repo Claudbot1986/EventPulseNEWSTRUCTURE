@@ -29,6 +29,7 @@ import { existsSync, readFileSync, writeFileSync, rmSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { spawnSync } from 'node:child_process';
+import { createHash } from 'node:crypto';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.resolve(__dirname, '..');
@@ -271,30 +272,37 @@ async function supabaseGetAll(table, query) {
   return { data: rows };
 }
 
+/**
+ * En rad är "representerad i databasen" på EXAKT samma sätt som normalizern
+ * bestämmer identitet — annars mäter gaten fel sak:
+ *
+ *   1. dedup_hash = sha256(source::source_id), eller
+ *      sha256(source::"titel::start_time") när source_id saknas
+ *   2. ticket_url  — cross-source-dedup (normalizer.ts:460-478). En rad från
+ *      `fallan` som möter `sthlmlist` på samma URL landar i sthlmlist-raden
+ *      och behåller DEN radens identitet. Eventet finns i databasen — men
+ *      under en annan source. En gaten som kräver samma source-titel-tid
+ *      skulle flagga 245 sådana rader som "saknade" trots att de finns.
+ *
+ * Se normalizer.ts:454-489 för exakt formlerna.
+ */
+function buildDedupHash(source, sourceId) {
+  return createHash('sha256').update(`${source}::${sourceId}`).digest('hex');
+}
+
+function dedupHashFor(row) {
+  return row.source_id
+    ? buildDedupHash(row.source, row.source_id)
+    : buildDedupHash(row.source, `${row.title}::${row.start_time}`);
+}
+
 async function p3() {
-  const probe = probeImportCounts();
-  if (probe.error) return fail(`p3: FAIL ${probe.error}`);
-
-  const res = await supabaseGetAll(
-    'events',
-    'select=source,title_sv,title_en,start_time&start_time=gte.' + new Date().toISOString(),
-  );
-  if (res.error) return fail(`p3: FAIL ${res.error}`);
-  const dbRows = res.data ?? [];
-
-  // events-tabellen har title_sv/title_en (normalizern skriver raw.title i
-  // båda), inte en kolumn "title".
-  const key = (source, title, start) => {
-    const ms = Date.parse(start);
-    return `${source}||${String(title ?? '').trim().toLowerCase()}||${Number.isFinite(ms) ? ms : start}`;
-  };
-  const dbKeys = new Set(
-    dbRows.map((r) => key(r.source, r.title_sv ?? r.title_en, r.start_time)),
-  );
-
-  // Bygg samma nycklar ur filerna.
+  // Bygg samma rader ur filerna som importen gör — via den riktiga
+  // toRawEvent(), så att canonical-source och source_id-fallback är
+  // identiska med produktion.
   const probe2 = `
 import { readExtractedEvents, toRawEvent } from ${JSON.stringify(IMPORT_MODULE)};
+import { loadSkippedSourceIds } from ${JSON.stringify(path.join(ROOT, '02-Ingestion/lib/quarantineGuard.ts'))};
 import fs from 'fs';
 import path from 'path';
 const DIR = ${JSON.stringify(EXTRACTED_DIR)};
@@ -307,13 +315,24 @@ for (const entry of fs.readdirSync(DIR, { withFileTypes: true })) {
     }
   }
 }
+// Samma population som importen importerar: retired/quarantined-källor är
+// ute ur pipelinen (se 02-Ingestion/lib/quarantineGuard.ts) och ska inte
+// räknas som "saknade" — de importeras inte alls.
+const skipped = loadSkippedSourceIds();
 const out: any[] = [];
 for (const sid of sourceIds) {
+  if (skipped.has(sid)) continue;
   for (const ev of readExtractedEvents(sid)) {
-    const raw = toRawEvent(sid, ev);
+    const raw = toRawEvent(sid, ev) as any;
     const ms = raw.start_time ? Date.parse(raw.start_time) : NaN;
     if (!(Number.isFinite(ms) && ms >= Date.now())) continue;
-    out.push({ source: raw.source, title: raw.title, start_time: raw.start_time });
+    out.push({
+      source: raw.source,
+      source_id: raw.source_id ?? null,
+      title: raw.title,
+      start_time: raw.start_time,
+      ticket_url: raw.ticket_url ?? null,
+    });
   }
 }
 console.log('###RESULT###' + JSON.stringify(out));
@@ -333,24 +352,51 @@ console.log('###RESULT###' + JSON.stringify(out));
     rmSync(probePath, { force: true });
   }
 
+  // ALLA databasrader, inte bara framtida: cross-source-dedupen kan peka på
+  // en rad med annan tid. PostgREST capar svaret — därför paginering.
+  const res = await supabaseGetAll('events', 'select=dedup_hash,ticket_url');
+  if (res.error) return fail(`p3: FAIL ${res.error}`);
+  const dbRows = res.data ?? [];
+  const dbHashes = new Set(dbRows.map((r) => r.dedup_hash).filter(Boolean));
+  const dbUrls = new Set(dbRows.map((r) => r.ticket_url).filter(Boolean));
+
   const missing = [];
   const seen = new Set();
   for (const r of fileRows) {
-    const k = key(r.source, r.title, r.start_time);
+    const k = dedupHashFor(r);
     if (seen.has(k)) continue;
     seen.add(k);
-    if (!dbKeys.has(k)) missing.push(r);
+    if (dbHashes.has(k)) continue;
+    if (r.ticket_url && dbUrls.has(r.ticket_url)) continue;
+    missing.push(r);
+  }
+
+  // NEGATIV KONTROLL: gaten måste kunna hitta en rad som inte finns. Utan
+  // detta skulle en trasig jämförelse "passa" på en tom databas.
+  const sentinel = {
+    source: '__gate_selftest__',
+    source_id: null,
+    title: 'gate-selftest-saknas-medvetet',
+    start_time: '2099-01-01T00:00:00.000Z',
+    ticket_url: null,
+  };
+  const sentinelFound = !dbHashes.has(dedupHashFor(sentinel)) && !dbUrls.has('__gate_selftest__');
+  if (!sentinelFound) {
+    return fail('p3: FAIL negativ kontroll misslyckades — gaten kan inte längre upptäcka en saknad rad');
   }
 
   const total = seen.size;
   if (missing.length > 0) {
     const ex = missing.slice(0, 5).map((m) => `${m.source}: ${m.title} @ ${m.start_time}`);
     return fail(
-      `p3: FAIL ${missing.length} av ${total} extraherade framtida event saknas i databasen. ` +
-        `Exempel: ${ex.join(' | ')}`,
+      `p3: FAIL ${missing.length} av ${total} extraherade framtida event saknas i databasen ` +
+        `(varken dedup_hash eller ticket_url matchar). Exempel: ${ex.join(' | ')}`,
     );
   }
-  return ok(`p3: alla ${total} extraherade framtida event finns i databasen pass`);
+  return ok(
+    `p3: alla ${total} extraherade framtida event finns i databasen ` +
+      `(dedup_hash/ticket_url — samma identitetsregler som normalizern) pass`,
+  );
 }
 
 // ── CLI ─────────────────────────────────────────────────────────────────────

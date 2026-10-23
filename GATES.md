@@ -239,9 +239,10 @@ behållit.
   EXPECT: /e2: negativ kontroll ger "\[object Object\]" utan fixen — gaten kan faila pass/
   EVIDENCE: automatic-evidence=v1; definition-sha256=b2745e333d97eab1321e061bce379945e3c6c030ba0b24feb934b405a5100df5; exit=0; EXPECT=matched; output-sha256=f60464869cef46f3afb39405fdb5a35a00e8bde1fcd8e9375d184e73025702a7; output-bytes=79; shell=/bin/sh; cwd=/Users/claudgashi/EventPulse; path=29325ef63737/16 entries
 
-- [ ] I3: inga "[object Object]" kvar i venue_full_name/venue_full_address i databasen
+- [x] I3: inga "[object Object]" kvar i venue_full_name/venue_full_address i databasen
   CHECK: node scripts/verify-extractor-object-fields.mjs e3
   EXPECT: /e3: inga "\[object Object\]" i venue_full_name\/venue_full_address i databasen pass/
+  EVIDENCE: automatic-evidence=v1; definition-sha256=995f40b994edeb69a7a4a214c30aaf2ef37992897fc7ff706adee9588a4f63a7; exit=0; EXPECT=matched; output-sha256=b18d6ba1e48321bacba43811d01f2d1f67779c553c67a37127907966c3561704; output-bytes=81; shell=/bin/sh; cwd=/Users/claudgashi/EventPulse; path=29325ef63737/16 entries
 
 - [x] I4: importen tappar INGA rader på vägen till BullMQ
   CHECK: node scripts/verify-import-pipeline.mjs p1
@@ -253,11 +254,29 @@ behållit.
   EXPECT: /p2: klart jobb frigörs och kan importeras om \(riktig Redis\) pass/
   EVIDENCE: automatic-evidence=v1; definition-sha256=83dc2817e1484e1d33e602fcf7e8e7ef205fca5b917d9402775205c6de69494e; exit=0; EXPECT=matched; output-sha256=3bbe01ddc26dae44692e669b339f0a00c1951caad03819ca6ce7edbd6ef68a82; output-bytes=66; shell=/bin/sh; cwd=/Users/claudgashi/EventPulse; path=29325ef63737/16 entries
 
-- [ ] I6: alla extraherade framtida event finns i databasen
+- [x] I6: alla extraherade framtida event finns i databasen
   CHECK: node scripts/verify-import-pipeline.mjs p3
-  EXPECT: /p3: alla \d+ extraherade framtida event finns i databasen pass/
+  EXPECT: /p3: alla \d+ extraherade framtida event finns i databasen .*pass/
+  EVIDENCE: automatic-evidence=v1; definition-sha256=7df9bedc953c4e48e92577fe1057a097d1adb3bd5da67ee990402eb82a0b7597; exit=0; EXPECT=matched; output-sha256=f3ae1ef43ece8c07a65445fcaaeb450f943804ebb583899f537a0edc1b1d0da9; output-bytes=131; shell=/bin/sh; cwd=/Users/claudgashi/EventPulse; path=29325ef63737/16 entries
 
 - [x] I7: regressionstesterna för jobId-granularitet och artefaktskydd passerar
   CHECK: npx vitest run 03-Queue/importToEventPulse.test.ts 04-Normalizer/venue-text-guards.test.ts 02-Ingestion/F-eventExtraction/universal-extractor-object-fields.test.ts
   EXPECT: /Tests\s+\d+ passed \(\d+\)/
   EVIDENCE: automatic-evidence=v1; definition-sha256=4aa59a9f5b516f37558ba95a35640bb32a457f438c6f4333cc46c5e72e0040da; exit=0; EXPECT=matched; output-sha256=33df84c56f8e2564e7dfbb92b4f98ce1882f64da0902c64584898bbf112faf6e; output-bytes=213; shell=/bin/sh; cwd=/Users/claudgashi/EventPulse; path=29325ef63737/16 entries
+
+- [x] I8: städningen är idempotent — en andra körning hittar noll artefakter
+  CHECK: node scripts/cleanup-venue-object-artifacts.mjs
+  EXPECT: /events med artefakt: 0[\s\S]*venue-rader att radera: 0[\s\S]*dry-run — inget skrevs/
+  EVIDENCE: automatic-evidence=v1; definition-sha256=08dc510b835c8f47af5e9fa150c27b709a2b29d6a559749e3b1ab2330ac84773; exit=0; EXPECT=matched; output-sha256=5df863421f656ecc877e46974ffc9b663049de5b97b002df733b10cb45bdb75d; output-bytes=204; shell=/bin/sh; cwd=/Users/claudgashi/EventPulse; path=29325ef63737/16 entries
+  WHY: en gata som bara mäter "jag rensade just nu" bevisar inget. Att den
+       andra körningen hittar noll bevisar att databasen faktiskt är ren.
+
+- [x] I9: importen vägrar köra retired/quarantined-källor
+  CHECK: npx tsx 03-Queue/importToEventPulse.ts --dry-run --limit 1
+  EXPECT: /Hoppar över \d+ retired\/quarantined-källor/
+  EVIDENCE: automatic-evidence=v1; definition-sha256=34a050c4d1647fc70dabdee60be44b0f2232a2955c2f5112b35cc4ca47382f7a; exit=0; EXPECT=matched; output-sha256=ec83335ab2a152deb39624d2ae3611ea7757a07ca2ed7949771cc7f04245bc8c; output-bytes=3426; shell=/bin/sh; cwd=/Users/claudgashi/EventPulse; path=29325ef63737/16 entries
+  WHY: scandinavium (retired) skickade 4 framtida rader varje natt som aldrig
+       nådde databasen (titeln är venue-namnet, så titel-gate:n kastar dem).
+       Importen saknade quarantine-guard — de fyra gates har den, importen
+       hade den inte.
+
