@@ -384,7 +384,13 @@ function runStep(name: string, cmd: string, args: string[]): Promise<SpawnResult
         closeSync(stepErrFd);
       } catch {}
       eventsExtracted = parseStepCounts(name, stdoutBuf);
-      appendChainOverview({ event: 'step-end', step: name, exitCode, durationMs, eventsExtracted, timedOut });
+      // 2026-10-23 — pid SAKNADES här, medan step-start/step-timeout hade det.
+      // Effekten var att 263 av loggens rader inte kunde kopplas till någon
+      // körning: E2 (step-start ska ha ett step-end) och E4 (promote före A)
+      // gick att köra på "sista körningen" men hittade 0 step-end-rader och
+      // failade med "körningen saknar steg". Loggen är observability — den måste
+      // gå att fälla av per körning.
+      appendChainOverview({ event: 'step-end', step: name, pid: process.pid, exitCode, durationMs, eventsExtracted, timedOut });
       console.log(
         `[ingestion-cron] ✓ ${name}: exit=${exitCode} duration=${durationMs}ms ` +
         `events=${eventsExtracted === null ? 'n/a' : eventsExtracted} ` +

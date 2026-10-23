@@ -48,6 +48,7 @@ import { runC4Analysis, type C4InputSource, type C4RoundAnalysis, type C4Analysi
 import { c4DeepAnalyze, verifyProposals, type C4PipelineResult, type C4DeepAnalysisResult } from './c4-deep-analysis';
 import { saveRoundDerivedRules, loadAllDerivedRules, isImprovementEnabled, proposeCandidateRulesAsImprovements, type DerivedRulesStore } from './c4-derived-rules';
 import { isSkipped } from '../lib/quarantineGuard.js';
+import { updateSourceStatus } from '../tools/sourceRegistry';
 import type { HtmlVerdict } from './C2-htmlGate/C2-htmlGate';
 import { readFileSync, writeFileSync, mkdirSync, appendFileSync, readdirSync, unlinkSync, rmdirSync, existsSync } from 'fs';
 import { join, dirname } from 'path';
@@ -1360,6 +1361,23 @@ function routeResult(result: CResult, roundsParticipated: number): string {
       const lines = events.map(e => JSON.stringify(e)).join('\n') + '\n';
       writeFileSync(outFile, lines, 'utf-8');
       console.log(`[C-Extract] Wrote ${events.length} events → ${outFile}`);
+
+      // 2026-10-23 — C skrev aldrig tillbaka till sources_status.jsonl, medan A
+      // och B gör det. Varje källa som B routar till C ("[breadth] unclear")
+      // och som C sedan lyckas extrahera ifrån stod därför kvar som
+      // status=fail för alltid. Mätt samma kväll: 42 av 269 fail-källor hade
+      // events i databasen (livespot-stockholm 5274, spelning-se 797,
+      // dramaten 298, …) — de räknades som döda av dashboarden, av
+      // classify-dead-sources.ts och av E5/E6-gates som bygger
+      // begravningslistor. En begravning hade utplånat källan till de eventen.
+      updateSourceStatus(result.sourceId, {
+        success: true,
+        eventsFound: events.length,
+        pathUsed: 'html',
+        ingestionStage: 'completed',
+        lastRoutingReason: `C-htmlGate: ${events.length} events`,
+        lastRoutingSource: 'runtime_status',
+      });
     }
   } else {
     switch (result.routeSuggestion) {

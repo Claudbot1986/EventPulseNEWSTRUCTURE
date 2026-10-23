@@ -33,7 +33,7 @@
  */
 
 import fs from 'node:fs';
-import { readdirSync, readFileSync } from 'node:fs';
+import { readdirSync, readFileSync, existsSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { spawnSync } from 'node:child_process';
@@ -776,7 +776,62 @@ function e9() {
   return ok('e9: --status avslutar rent pass (exit=0, inga läckta sockets)');
 }
 
-const gates = { g1, g2, g3, g4, g5, g6, h1, h2, h3, h4, h5, h6, e1, e2, e3, e4, e5, e6, e7, e8, e9 };
+/**
+ * E10 — källor som C lyckas extrahera ifrån får inte stå som fail.
+ *
+ * Felgrunden (2026-10-23): run-dynamic-pool.ts (C-htmlGate) importerade aldrig
+ * updateSourceStatus, medan runA.ts och runB.ts gör det. B routar en källa till C
+ * med "[breadth] unclear", C extrahterar den, och raden i sources_status.jsonl
+ * står kvar som status=fail för alltid. Mätt samma kväll: 42 av 269 fail-källor
+ * hade events i databasen. De räknades som döda av dashboarden, av
+ * classify-dead-sources.ts och av E5/E6-gates som bygger begravningslistor —
+ * en begravning hade utplånat källan till de eventen.
+ *
+ * Otron: för varje fil i 03-Queue/03-extractedevents/C/ som innehåller minst
+ * en rad måste motsvarande sourceId stå som success. Negativ kontroll: gaten
+ * räknar de verkliga filerna, så en tom katalog eller en trasig statusfil ger
+ * FAIL, inte PASS.
+ */
+function e10() {
+  const src = readFileSync(path.join(ROOT, '02-Ingestion/C-htmlGate/run-dynamic-pool.ts'), 'utf8');
+  if (!/updateSourceStatus/.test(src)) {
+    return fail('e10: FAIL run-dynamic-pool.ts anropar inte updateSourceStatus — grunden till felet finns kvar');
+  }
+
+  const dir = path.join(ROOT, '03-Queue/03-extractedevents/C');
+  if (!existsSync(dir)) {
+    return fail(`e10: FAIL ${dir} finns inte — kan inte mäta något, detta är inte ett bevis`);
+  }
+  const files = readdirSync(dir).filter((f) => f.endsWith('.jsonl'));
+  if (files.length === 0) {
+    return fail('e10: FAIL negativ kontroll: 0 extraherade filer i C-mappen — gaten mäter ingenting');
+  }
+
+  const rows = readFileSync(path.join(ROOT, 'runtime/sources_status.jsonl'), 'utf8')
+    .trim().split('\n').map((l) => { try { return JSON.parse(l); } catch { return null; } }).filter(Boolean);
+  const latest = new Map();
+  for (const r of rows) if (r.sourceId) latest.set(r.sourceId, r);
+
+  const offenders = [];
+  for (const f of files) {
+    const id = f.replace(/\.jsonl$/, '');
+    const events = readFileSync(path.join(dir, f), 'utf8').trim().split('\n').filter((l) => l.trim()).length;
+    if (events === 0) continue;
+    const st = latest.get(id);
+    if (!st) { offenders.push(`${id}(${events} ev, ingen statusrad)`); continue; }
+    if (st.status !== 'success') offenders.push(`${id}(${events} ev, status=${st.status})`);
+  }
+
+  if (offenders.length > 0) {
+    return fail(
+      `e10: FAIL ${offenders.length}/${files.length} C-extraherade källor står fel i sources_status — ` +
+      offenders.slice(0, 5).join(', '),
+    );
+  }
+  return ok(`e10: C-status är konsekvent pass (${files.length} källor, 0 fel)`);
+}
+
+const gates = { g1, g2, g3, g4, g5, g6, h1, h2, h3, h4, h5, h6, e1, e2, e3, e4, e5, e6, e7, e8, e9, e10 };
 if (!arg || !gates[arg]) {
   console.error(`usage: node scripts/verify-fixes.mjs <${Object.keys(gates).join('|')}>`);
   process.exit(2);

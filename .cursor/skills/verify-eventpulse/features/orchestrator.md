@@ -18,13 +18,22 @@
   A-gatet till nästa natt kl 02:00 — upp till 18 timmars latens. Nu promote:ar
   P3D och A-gatet kör samma natt.
 - **`worker-drain` (`:582`)** — det ENDA steget som skriver till Supabase.
-  `npx tsx 03-Queue/drainQueue.ts --max-ms <900000|60000>`; ligger före P2C som
-  läser ur databasen. Placerat här för att kedjan annars slutar med jobb
-  liggande i `raw_events`: mätt 2026-10-23 var 3 548 jobb väntande sedan
-  2026-10-20 och 0 av nattens 1 147 "funna" events persisterade.
+  `npx tsx 03-Queue/drainQueue.ts --max-ms <5400000|60000>` (90 min sedan
+  2026-10-23, var 15 min); ligger före P2C som läser ur databasen. Placerat här
+  för att kedjan annars slutar med jobb liggande i `raw_events`: mätt 2026-10-23
+  var 3 548 jobb väntande sedan 2026-10-20 och 0 av nattens 1 147 "funna" events
+  persisterade.
+  **Processorn ÄR `processRawEvent`** (fix 2026-10-23). Tidigare skickades en
+  räknande stub, som markerade varje jobb "completed" utan att persistera en
+  rad — se Gotchas.
 - **Per-steg-timeout** — `STEP_TIMEOUT_MS` (`:266`), default 2 h, override via
   `INGESTION_STEP_TIMEOUT_MS`. `SIGTERM` → 30 s → `SIGKILL`. Ett avbrutet steg
   loggas som `exitCode: 124` och `timedOut: true`.
+- **`P2C-active-learning` laddar `.env` själv** sedan 2026-10-23. Steget körs
+  som `tsx --eval "import(...)"` — en inline-`--eval` har ingen fil att härleda
+  sökvägar från, så dotenv kördes aldrig och steget dog med
+  `Error: supabaseUrl is required` efter 381 ms. Det enskilda steget gjorde
+  hela nattens green-fil röd (`ok:false`, `exitCode 1`).
 - **18 skip-flaggor** (`:196-215`) — varje steg kan tas bort ur listan
   runtime, så antalet steg varierar mellan körningar.
 - **`--limit N`** (default 200), **`--smoke`** (tvingar `effectiveLimit = 1`,
@@ -121,3 +130,25 @@ annars förloras beviset på när grönt senast såg ut.
 
 **Cron kör `runB.ts --workers 20`**, men `runB.ts` parsar inte flaggan.
 B är sekvent i drift.
+
+**`worker-drain` räknar bara om den riktiga normalizern kördes.** En gång
+skickade `drainQueue.ts` en stub som processor: `async () => { completed++ }`.
+BullMQ markerade jobbet "completed", `[worker] Job completed`-rader skrevs, och
+`countWorkerCompletions()` i `verify-fixes.mjs` (gate E3) räknade dem — grönt
+på noll persisterade events. Kontrollera därför ALLTID en ändring av drainens
+processor mot databasen, inte mot loggen: `events.updated_at` måste röra sig.
+
+**Import av `normalizer.ts` startar AI-image-workern** (`normalizer.ts:28`).
+Varje CLI som importerar modulen — inklusive en replay-gate — öppnar därför
+också `ai-image-generation`-kön. En replay av 500 failed jobb med workern igång
+hänge i 30 minuter: 0 events uppdaterade, 17 s CPU. Sätt
+`process.env.AI_IMAGE_PIPELINE_ENABLED = '0'` **före** importen, eller stäng
+workern direkt.
+
+**`runtime/sources_priority_queue.jsonl` är ett dödbrev.** Dess enda producent
+är `addToPriorityQueue` (`sourceRegistry.ts:727`), vars enda anropare är
+`02-Ingestion/scheduler.ts` — och scheduler.ts körs inte av någon launchd-plist,
+inte av cron-kedjan, inte av runDaily. Mätt 2026-10-23: filen skrevs sist
+2026-08-25. `sturecompagniet` legat där sedan 2026-04-26 med `runsSinceAdd: 0`.
+Lägg stucka källor i `postB-preC-queue.jsonl` i stället — det är den enda
+köen C-htmlGate faktiskt dränerar.
