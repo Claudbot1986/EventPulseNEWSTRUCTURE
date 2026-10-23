@@ -18,6 +18,9 @@
   varje backfill.
 - **Idempotent frigörning** — migration 0003 frigör befintliga stuck-rader
   vid applicering (23 rader som satt fast i `processing` utan slut).
+  Migration `20261023-0002` gör det igen för de 15 rader som fastnade
+  2026-10-23, med ett **city-oberoende** villkor — reclaimen i claim-funktionen
+  når dem inte, så en frigöring som följde city-filtret hade inte gjort jobbet.
 - **`backfillCandidateCities.ts`** — härleder `city` per engine. Skyddsregel:
   en känd stad får aldrig skrivas över med `null`. Avslutar med
   `sync_source_candidate_queue_city()`.
@@ -92,6 +95,41 @@ node "$DBQ" "SELECT position('30 minutes' in pg_get_functiondef(p.oid)) > 0 AS h
 #    → false = migration 0003 saknas. Kör backfillen EFTER att du applicerat den.
 #    → true  = applicerad (verifierat 2026-10-23).
 ```
+
+**Reclaimen är underordnad city-filtret — en `city IS NULL`-rad kan ALDRIG
+reclaimas.** Migration `20261023-0001` lade till `AND city = 'Stockholm'` i
+samma WHERE som reclaim-predikatet, och filtret gäller **båda** grenarna:
+
+```sql
+WHERE (status = 'pending'
+       OR (status = 'processing'
+           AND (locked_at IS NULL OR locked_at < now() - interval '30 minutes')))
+  AND city = 'Stockholm'      -- ← gäller BÅDA grenarna
+```
+
+Mätt 2026-10-23: 15 rader låg strandade i `processing` sedan en avbruten
+körning. **13 hade `city IS NULL`** och var alltså oåkomliga för reclaimen
+hur gammal låsningen än blev. De två som hade `city='Stockholm'` var
+reclaimbara i princip men konkurrerade med 340 pending-rader i en `ORDER BY`
+där alla 355 rader har `priority_score = 50` — tie-breaken på `created_at` är
+icke-deterministisk utan ett tredje sorteringsnyckel, så vem som vinner är
+fysisk radordning, inte någon egenskap du kan lita på.
+
+Lösningen är `20261023-0002`, som släpper strandade rader med ett
+**medvetet city-oberoende** villkor. En frigöring som filtrerade på city
+skulle inte nå de 13 raderna — det är hela poängen.
+
+Så: `stuck` = 0 betyder inte att allt är friskt. Kör även
+
+```bash
+# Finns det rader som INGEN gång kan reclaimas?
+node "$DBQ" "SELECT coalesce(city,'<NULL>') AS city, count(*)::int AS n
+               FROM source_candidate_test_queue
+              WHERE status='processing' GROUP BY 1 ORDER BY 2 DESC"
+```
+
+Om `processing`-rader med `city = <NULL>` dyker upp är de permanenta — ingen
+körning kommer röra dem. Släpp dem med `20261023-0002`.
 
 **Hämta `pg_get_functiondef` via `pg_proc`-oid, inte via
 `'namn'::regprocedure`.** Casten ger `expected a left parenthesis` — Postgres

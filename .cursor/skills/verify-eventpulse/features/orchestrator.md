@@ -2,7 +2,7 @@
 
 ## Sub-features
 
-- **24 steg, men inte i listordning.** `const steps` (`:399-690`) deklarerar
+- **25 steg, men inte i listordning.** `const steps` (`:399-690`) deklarerar
   dem i A→B→C→D→I-ordning, men en splice (`:626`) flyttar P3A–P3D till
   **förest** vid körning. Ordningen som faktiskt körs:
   `P3A-discovery` (605) → `P3B-venue-graph-geo` (621) → `P3C-rss-discovery` (633)
@@ -12,12 +12,23 @@
   → `C-htmlGate` (471) → `D-renderGate` (484) → `I-pdfExtraction` (493)
   → `etag-refresh` (508) → `api-discovery` (518) → `luma-stockholm` (527)
   → `ra-stockholm` (535) → `posh-stockholm` (543) → `reddit-stockholm` (551)
-  → `D-images` (562) → `worker-drain` (582) → `P2C-active-learning` (591).
+  → `D-images` (573) → `import-to-eventpulse` (608) → `worker-drain` (630)
+  → `P2C-active-learning` (639).
 
   **Varför flytten (2026-10-23):** en källa som P3D promote:ade var osynlig för
   A-gatet till nästa natt kl 02:00 — upp till 18 timmars latens. Nu promote:ar
   P3D och A-gatet kör samma natt.
-- **`worker-drain` (`:582`)** — det ENDA steget som skriver till Supabase.
+- **`import-to-eventpulse` (`:608`) — tillagd 2026-10-23.** Kedjan hade ingen
+  väg till `events`-tabellen: A/B/C/D/I skriver *filer* till
+  `03-Queue/03-extractedevents/`, och importeraren hade 0 referenser här. Den
+  kördes av `com.eventpulse.post-ingest` kl. 04:00, alltså på en klocka
+  oberoende av en kedja som startar 02:00 och tar 1,5–2,5 h — så den importerade
+  alltid föregående nats filer. Mätt 2026-10-23: 18 spårade källor med 120
+  extraherade events och 0 rader i `events`. Ligger före `worker-drain` av
+  samma skäl som drainen ligger där. I `--smoke` får den `--dry-run --limit 5`
+  så att en smoke inte skriver riktiga events. Räknare:
+  `/KLAR\s+│\s+(\d+)\s+events till bullmq/`.
+- **`worker-drain` (`:630`)** — det ENDA steget som skriver till Supabase.
   `npx tsx 03-Queue/drainQueue.ts --max-ms <5400000|60000>` (90 min sedan
   2026-10-23, var 15 min); ligger före P2C som läser ur databasen. Placerat här
   för att kedjan annars slutar med jobb liggande i `raw_events`: mätt 2026-10-23
