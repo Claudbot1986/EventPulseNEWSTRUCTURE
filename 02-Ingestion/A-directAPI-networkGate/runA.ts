@@ -33,6 +33,7 @@ import { isSkipped } from '../lib/quarantineGuard.js';
 import { fetchHtml, queueEvents } from '../tools/fetchTools';
 import { extractFromJsonLd } from '../F-eventExtraction/extractor';
 import { enqueueDAI, dequeueDAI, runDaiForQueue } from './daiHook';
+import { findAdapterForSource } from './adapters';
 
 // ─── Queue File Paths ─────────────────────────────────────────────────────────
 
@@ -244,8 +245,13 @@ interface SourceWithOrigin {
  * Logik:
  * 1. Läs alla entries från preA-queue.jsonl
  * 2. Läs alla sources från sources/ som är never_run
- * 3. preA-entries har högre prioritet än sources-main
- * 4. Dublettkontroll: om sourceId finns i båda, ta från preA (men kör endast en gång)
+ * 3. Läs alla sources som har en API-adapter (preferredPath='api')
+ * 4. preA-entries har högre prioritet än sources-main
+ * 5. Dublettkontroll: om sourceId finns i båda, ta från preA (men kör endast en gång)
+ *
+ * 2026-10-23 — steg 3 tillkom. En källa med en verifierad API-adapter ska
+ * köras varje natt via adaptern, oavsett vad HTML-spåret gav tidigare.
+ * Utan det låg ticketmaster/KMH fast i "fail" och kördes aldrig igen.
  */
 function getNextABatch(limit: number = 10): SourceWithOrigin[] {
   const preAQueue = readPreAQueue();
@@ -253,7 +259,13 @@ function getNextABatch(limit: number = 10): SourceWithOrigin[] {
 
   // Hämta alla never_run sources från sources/
   const allSources = getAllSources();
+
+  // API-adapter-källor — de har en egen, verifierad väg in i databasen.
+  const apiAdapterSources = allSources.filter(s => isApiAdapterSource(s));
+  const apiAdapterIds = new Set(apiAdapterSources.map(s => s.id));
+
   const neverRunSources = allSources.filter(s => {
+    if (apiAdapterIds.has(s.id)) return false; // API-spåret har företräde
     const status = getSourceStatus(s.id);
     return status.status === 'never_run';
   });
@@ -276,13 +288,32 @@ function getNextABatch(limit: number = 10): SourceWithOrigin[] {
     result.push({ sourceId: entry.sourceId, source, queueOrigin: 'preA', preAEntry: entry });
   }
 
-  // Sedan: sources-main (aldrig körda, inte i preA)
+  // Sedan: API-adapter-källor (verifierad egen väg, ska inte svältas)
+  for (const source of apiAdapterSources) {
+    if (result.length >= limit) break;
+    if (preAIds.has(source.id)) continue; // redan körd från preA
+    result.push({ sourceId: source.id, source, queueOrigin: 'sources-main' });
+  }
+
+  // Sist: sources-main (aldrig körda, inte i preA)
   for (const source of sourcesMainOnly) {
     if (result.length >= limit) break;
     result.push({ sourceId: source.id, source, queueOrigin: 'sources-main' });
   }
 
   return result;
+}
+
+/**
+ * Är källan en API-adapter-källa?
+ *
+ * Sanningen avgörs av registret (adapters/index.ts): en källa kan peka på en
+ * adapter explicit via metadata.sourceAdapter, eller automatiskt via sin URL.
+ * Finns ingen adapter faller källan tillbaka till HTML-spåret — precis som
+ * innan.
+ */
+function isApiAdapterSource(source: ReturnType<typeof getSource>): boolean {
+  return findAdapterForSource(source) !== null;
 }
 
 // ─── A Tool Execution ──────────────────────────────────────────────────────────
@@ -292,10 +323,91 @@ interface AResult {
   queueOrigin: 'preA' | 'sources-main';
   success: boolean;
   eventsFound: number;
-  pathUsed: 'jsonld';
+  pathUsed: 'jsonld' | 'api';
   error?: string;
   status: 'never_run' | 'success' | 'fail' | 'error';
   ingestionStage: 'A' | 'completed' | 'failed';
+}
+
+/**
+ * Kör en API-adapter för en källa och skriver raderna till extractedevents/.
+ *
+ * 2026-10-23 — nya vägen för källor med en verifierad API-adapter. Före detta
+ * fanns dispatchen i runA-extract.ts (T0099) men den vägen är död: preUI-kön
+ * fylls bara av den gamla C-gaten, så adaptern kördes aldrig. Här körs
+ * adaptern från Tool A, som är den gate som väljer ut källor att köra.
+ *
+ * Antalet events som rapporteras är det FAKTISKA antalet rader — inte en
+ * heartbeat. Rader som skrivs till extractedevents/ går sedan vidare via
+ * importToEventPulse → raw_events → worker → Supabase.
+ */
+async function runApiAdapterOnSource(
+  sourceId: string,
+  source: NonNullable<ReturnType<typeof getSource>>,
+  queueOrigin: 'preA' | 'sources-main',
+  adapterName: string,
+): Promise<AResult> {
+  console.log(`[A-runner] ${sourceId} (from ${queueOrigin}) — API-adapter: ${adapterName}`);
+
+  const found = findAdapterForSource(source);
+  if (!found) {
+    return {
+      sourceId,
+      queueOrigin,
+      success: false,
+      eventsFound: 0,
+      pathUsed: 'api',
+      error: `adapter '${adapterName}' finns inte i registret`,
+      status: 'error',
+      ingestionStage: 'failed',
+    };
+  }
+
+  try {
+    const result = await found.adapter.run(source);
+
+    if (result.status !== 'completed') {
+      return {
+        sourceId,
+        queueOrigin,
+        success: false,
+        eventsFound: 0,
+        pathUsed: 'api',
+        error: result.error ?? `adapter '${adapterName}' misslyckades`,
+        status: 'fail',
+        ingestionStage: 'failed',
+      };
+    }
+
+    if (result.events.length > 0) {
+      mkdirSync(EXTRACTED_DIR, { recursive: true });
+      const lines = result.events.map(e => JSON.stringify(e)).join('\n') + '\n';
+      writeFileSync(`${EXTRACTED_DIR}/${sourceId}.jsonl`, lines, 'utf-8');
+      console.log(`         → wrote ${result.events.length} events to extractedevents/ (${adapterName})`);
+    }
+
+    return {
+      sourceId,
+      queueOrigin,
+      success: result.events.length > 0,
+      eventsFound: result.events.length,
+      pathUsed: 'api',
+      status: result.events.length > 0 ? 'success' : 'fail',
+      ingestionStage: result.events.length > 0 ? 'completed' : 'failed',
+      error: result.events.length > 0 ? undefined : `adapter '${adapterName}' gav 0 events`,
+    };
+  } catch (err: any) {
+    return {
+      sourceId,
+      queueOrigin,
+      success: false,
+      eventsFound: 0,
+      pathUsed: 'api',
+      error: `adapter '${adapterName}' kastade: ${err?.message ?? err}`,
+      status: 'error',
+      ingestionStage: 'failed',
+    };
+  }
 }
 
 async function runAOnSource(item: SourceWithOrigin): Promise<AResult> {
@@ -314,6 +426,14 @@ async function runAOnSource(item: SourceWithOrigin): Promise<AResult> {
   }
 
   console.log(`[A-runner] ${sourceId} (from ${queueOrigin}) — ${source.url}`);
+
+  // 2026-10-23 — API-adapter-spår. Källan har en verifierad adapter →
+  // kör adaptern i stället för HTML-fetch. Saknas adapter faller vi
+  // tillbaka till HTML-spåret (oförändrat beteende).
+  const adapterMatch = findAdapterForSource(source);
+  if (adapterMatch) {
+    return runApiAdapterOnSource(sourceId, source, queueOrigin, adapterMatch.adapter.name);
+  }
 
   // Fetch HTML
   const fetchResult = await fetchHtml(source.url, { timeout: 20000 });
@@ -374,8 +494,11 @@ function finalizeSource(item: SourceWithOrigin, result: AResult): void {
   updateSourceStatus(sourceId, {
     success: result.success,
     eventsFound: result.eventsFound,
-    pathUsed: 'jsonld',
+    pathUsed: result.pathUsed,
     ingestionStage: result.ingestionStage,
+    // En API-adapter är det bestämda spåret för källan — spara det så att
+    // routingen inte senare skickar tillbaka den till HTML.
+    ...(result.pathUsed === 'api' ? { preferredPath: 'api' as const } : {}),
     lastRoutingReason: `toolA(${queueOrigin}): ${result.success ? `${result.eventsFound} events` : result.error}`,
     lastRoutingSource: 'runtime_status',
   });
@@ -419,7 +542,8 @@ async function main() {
     console.log('');
     console.log('Queue priority:');
     console.log('  1. preA-queue.jsonl (högst prioritet)');
-    console.log('  2. sources-main (alla never_run, inte redan i preA)');
+    console.log('  2. API-adapter-källor (preferredPath=api + registrerad source-adapter)');
+    console.log('  3. sources-main (alla never_run, inte redan i preA)');
     console.log('');
     console.log('Deduplication: om samma sourceId finns i båda, körs den endast en gång (från preA).');
     return;

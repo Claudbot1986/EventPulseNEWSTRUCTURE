@@ -50,6 +50,9 @@ function sourceRecord(
     preferredPathReason: options.preferredPathReason,
     verifiedAt: options.sandbox ? undefined : new Date().toISOString(),
     metadata: {
+      // Kandidatens metadata först — den innehåller källans egen konfiguration
+      // (t.ex. adapter-inställningar) och ska inte försvinna i promote.
+      ...(candidate.metadata ?? {}),
       sourceCandidateId: candidate.id,
       originPath: candidate.originPath,
       evidenceRefs: candidate.evidenceRefs,

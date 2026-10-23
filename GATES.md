@@ -160,3 +160,45 @@ ingenting. Kopian ligger i 03-Queue/ så att dess relativa importer
   CHECK: node scripts/verify-shutdown-safety.mjs --only=drain
   EXPECT: /drain: \d+ jobb completed, 0 failed, \d+ events persisterade i Supabase/
   EVIDENCE: automatic-evidence=v1; definition-sha256=d5d774537dec8ced08cd42dabefdb17a3d9d74ca717479ec9747ff259ebebcdc; exit=0; EXPECT=matched; output-sha256=3edbd38587a007bdc18d7f86955254bfe7b9dba03c5e1e5e3dca76a9a2de39d7; output-bytes=187; shell=/bin/sh; cwd=/Users/claudgashi/EventPulse; path=29325ef63737/16 entries
+
+# Confetti-adapter: källa → API → events i Supabase (2026-10-23)
+
+Scope: Confetti-CMS är verifierat på två orelaterade domäner (kmh.confetti.events
+och founders-alliance.confetti.events), så mönstret är General enligt
+Generalization Protection Rule och fick en source-adapter i stället för en
+C-lager-Ändring. Kedjan som bevisas här går genom fyra lager som tidigare varit
+åtskilda: Confetti-CMS-API → adapter → 03-Queue/03-extractedevents/ → BullMQ
+`raw_events` → worker → 04-Normalizer → Supabase `events`.
+
+Varje gate har en negativ kontroll (se T5 — gaterna körs mot en medvetet trasig
+kopia och MÅSTE falla).
+
+- [x] T1: adaptern är registrerad och hittas både explicit och via värd
+  CHECK: node scripts/verify-confetti-chain.mjs t1
+  EXPECT: /t1: adapter 'confetti' registrerad, värdmatchning: explicit\+auto pass/
+  EVIDENCE: automatic-evidence=v1; definition-sha256=ea60cd0c56501cfc559e77691d654922abc452762de5e76ebd652db7d79df155; exit=0; EXPECT=matched; output-sha256=27a6cc1af1d0c878c1fd13ae14e97c1633fb00760c72eeb645d48800153acdba; output-bytes=144; shell=/bin/sh; cwd=/Users/claudgashi/EventPulse; path=29325ef63737/16 entries
+
+- [x] T2: A-gatet körde API-spåret (inte HTML) och fick events
+  CHECK: node scripts/verify-confetti-chain.mjs t2
+  EXPECT: /t2: A-gatet körde API-adaptern för 2 Confetti-källor/
+  EVIDENCE: automatic-evidence=v1; definition-sha256=a7eb9dfd10d5cbc050afb5ed73d971cc11a58b5b7532a8fcdc8659042dcb7ebc; exit=0; EXPECT=matched; output-sha256=45b37c59d39c7e43026fe90424a1a1d24d9694594926665729db47fb1472af3c; output-bytes=179; shell=/bin/sh; cwd=/Users/claudgashi/EventPulse; path=29325ef63737/16 entries
+
+- [x] T3: extractedevents matchar Confetti-APIt rad för rad — inga upphittade event
+  CHECK: node scripts/verify-confetti-chain.mjs t3
+  EXPECT: /t3: extractedevents matchar Confetti-APIt rad för rad/
+  EVIDENCE: automatic-evidence=v1; definition-sha256=32dba80e1938bfeebdc192dff28f69b6f2889f078a48134461cf2adbe35c6e27; exit=0; EXPECT=matched; output-sha256=f6470db6265484a65d380daeba351e6e1d70f659fb5571be874b9f816d355ea4; output-bytes=201; shell=/bin/sh; cwd=/Users/claudgashi/EventPulse; path=29325ef63737/16 entries
+
+- [x] T4: events finns i Supabase `events` för båda källorna
+  CHECK: node scripts/verify-confetti-chain.mjs t4
+  EXPECT: /t4: events finns i Supabase/
+  EVIDENCE: automatic-evidence=v1; definition-sha256=c5b6a6a6713f220d830d7267a1c687fef74e6910108da030e8ee20b2cf7807f2; exit=0; EXPECT=matched; output-sha256=3765ad959d2000f6e7daee8c77c6b6583963b8f782f4671fa63b0b127936e42b; output-bytes=135; shell=/bin/sh; cwd=/Users/claudgashi/EventPulse; path=29325ef63737/16 entries
+
+- [x] T5: gaterna kan FAIL:a — negativ kontroll mot trasig kopia
+  CHECK: node scripts/verify-confetti-chain.mjs selftest
+  EXPECT: /selftest: gaterna kan faila pass/
+  EVIDENCE: automatic-evidence=v1; definition-sha256=dd8e85c44f8a517cb6576140696d293e5be730779856b2b64ce66c11f444da61; exit=0; EXPECT=matched; output-sha256=7aac3ecacd48b15642889592f66bc11f5c54cfc01354d7513c3405c9770eeb34; output-bytes=135; shell=/bin/sh; cwd=/Users/claudgashi/EventPulse; path=29325ef63737/16 entries
+
+- [x] T6: normalizer skriver venue_full_name/address/city på event-raden
+  CHECK: node scripts/verify-confetti-chain.mjs t6
+  EXPECT: /t6: normalizer skriver venue_full_\* och raderna har plats/
+  EVIDENCE: automatic-evidence=v1; definition-sha256=0498f891f333c2467b1dee1a99854b25a788a8325809ea8c81828d012b2dfbda; exit=0; EXPECT=matched; output-sha256=77e83ed5e7ac65bf61f055e97ed59e89bd8440c5a4ff51d2c0cb376f3144ccfe; output-bytes=180; shell=/bin/sh; cwd=/Users/claudgashi/EventPulse; path=29325ef63737/16 entries

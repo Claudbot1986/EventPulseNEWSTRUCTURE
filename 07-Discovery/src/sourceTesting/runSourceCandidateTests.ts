@@ -22,6 +22,11 @@ async function main(): Promise<void> {
   const repository = createSupabaseSourceCandidateTestRepository(createClient(url, key));
   const toolRunner = new RealAbcdSourceCandidateRunner();
   const claimed = await repository.claimCandidates(limit, phase);
+  // Kön har ingen metadata-kolumn — hämta den ur kandidattabellen så att den
+  // följer med till promote.
+  const metadataByCandidate = await repository.getCandidateMetadata(
+    claimed.map(item => item.sourceCandidateId),
+  );
 
   for (const item of claimed) {
     const candidate: SourceCandidate = {
@@ -33,6 +38,7 @@ async function main(): Promise<void> {
       confidenceScore: item.priorityScore,
       originPath: item.originPath,
       evidenceRefs: [],
+      metadata: metadataByCandidate[item.sourceCandidateId],
     };
     const result = await runSourceCandidateTest({
       candidate,

@@ -83,6 +83,22 @@ export function createSupabaseSourceCandidateTestRepository(supabase: SupabaseLi
       return (data ?? []).map(queueItemFromRow);
     },
 
+    async getCandidateMetadata(sourceCandidateIds: string[]): Promise<Record<string, Record<string, unknown>>> {
+      if (sourceCandidateIds.length === 0) return {};
+      const { data, error } = await supabase
+        .from('source_candidates')
+        .select('id, metadata')
+        .in('id', sourceCandidateIds);
+      if (error) throw new Error(`Failed to fetch source candidate metadata: ${error.message}`);
+      const result: Record<string, Record<string, unknown>> = {};
+      for (const row of data ?? []) {
+        if (row?.id && row.metadata && typeof row.metadata === 'object') {
+          result[row.id] = row.metadata as Record<string, unknown>;
+        }
+      }
+      return result;
+    },
+
     async insertRun(run: SourceCandidateTestRun): Promise<string> {
       const { data, error } = await supabase
         .from('source_candidate_test_runs')

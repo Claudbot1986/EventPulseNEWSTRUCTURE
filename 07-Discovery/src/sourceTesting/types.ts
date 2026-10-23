@@ -19,6 +19,14 @@ export interface SourceCandidate {
   confidenceScore: number;
   originPath: string[];
   evidenceRefs: SourceCandidateEvidenceRef[];
+  /**
+   * Kandidatens egen metadata (jsonb i `source_candidates`).
+   *
+   * Före 2026-10-23 tappades denna vid promote — source-filen fick bara
+   * sourceCandidateId/originPath. Med metadata i hand kan kandidaten bära med
+   * sig konfiguration som källan behöver (t.ex. adapter-inställningar).
+   */
+  metadata?: Record<string, unknown>;
 }
 
 export interface SourceCandidateTestQueueItem {
@@ -115,6 +123,14 @@ export interface SourceCandidateToolRunner {
 
 export interface SourceCandidateTestRepository {
   claimCandidates(limit: number, phase?: SourceCandidateTestPhase): Promise<SourceCandidateTestQueueItem[]>;
+  /**
+   * Läs kandidaternas metadata ur `source_candidates`.
+   *
+   * Kön (`source_candidate_test_queue`) har ingen metadata-kolumn, så den
+   * måste hämtas från kandidattabellen. Utan detta tappas t.ex.
+   * adapter-inställningar när kandidaten promotas till en source.
+   */
+  getCandidateMetadata(sourceCandidateIds: string[]): Promise<Record<string, Record<string, unknown>>>;
   insertRun(run: SourceCandidateTestRun): Promise<string>;
   insertDecision(decision: SourceCandidateDecision): Promise<void>;
   updateCandidateStatus(sourceCandidateId: string, status: SourceCandidateTestStatus, error?: string): Promise<void>;

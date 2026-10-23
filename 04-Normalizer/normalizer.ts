@@ -174,10 +174,18 @@ function isLikelyAttractionAsVenue(name: string): boolean {
  */
 function isValidVenueName(name: string | null | undefined): boolean {
   if (!name) return false;
+  if (typeof name !== 'string') return false; // 2026-10-23: adapter kan ha stoppat in ett objekt
   const trimmed = name.trim();
   if (!trimmed) return false;
   // Reject literal "undefined" strings from Ticketmaster API
   if (trimmed === 'undefined' || trimmed === 'null' || trimmed === 'None') {
+    return false;
+  }
+  // 2026-10-23 — Reject stringifierade JS-objekt ("[object Object]").
+  // Mätt: venues-tabellen hade 156 events kopplade till en venue-rad som hette
+  // "[object Object]" (adapter som lade ett objekt i venue_name). En venue-rad
+  // med det namnet är inte ett ställe — den sprider bara skräp vidare.
+  if (/^\[object .+\]$/.test(trimmed)) {
     return false;
   }
   return true;
@@ -292,7 +300,10 @@ async function findVenueByAddress(address: string): Promise<{ id: string; name: 
 
 /** Resolve venue_id from name + address, creating a new venue record if needed */
 async function resolveVenue(raw: RawEventInput): Promise<string | null> {
-  let venueName = raw.venue_name?.trim() || null;
+  // 2026-10-23 — Samma validering som för raw_payload-fallbacken. Utan den
+  // skapades venue-rader med namnet "undefined"/"[object Object]" direkt från
+  // källans venue_name.
+  let venueName = isValidVenueName(raw.venue_name) ? raw.venue_name.trim() : null;
 
   // Fallback: try to extract from raw_payload
   if (!venueName) {
@@ -477,16 +488,38 @@ export async function processRawEvent(job: Job<RawEventInput>): Promise<void> {
   let venueCountry: string | null = null;
   let venueLat: number | null = null;
   let venueLng: number | null = null;
+  // 2026-10-23 — venue_full_* (namn/adress/stad) skrevs ALDRIG på events-raden
+  // i BullMQ-vägen. Endast direkta insert-script (sthlmlist, kulturen) fyllde
+  // dem, så allt som gick via queue'n (livespot, eventbrite, luma, jarfalla,
+  // Confetti-*) visades UTAN plats i appen: HomeScreen läser venue_full_name
+  // direkt från events-tabellen, inte via en join mot venues.
+  // Mätt 2026-10-23: 464 events hade venue_id men venue_full_name = NULL.
+  // Samma semantik som venue-rescue-batch.mjs: fyll bara det som saknas.
+  let venueFullName: string | undefined;
+  let venueFullAddress: string | undefined;
+  let venueFullCity: string | undefined;
   if (venue_id) {
     const { data: venueRow } = await supabase
       .from('venues')
-      .select('country, lat, lng')
+      .select('country, lat, lng, name, address, city')
       .eq('id', venue_id)
       .limit(1)
       .maybeSingle();
     venueCountry = venueRow?.country ?? null;
     venueLat = venueRow?.lat ?? null;
     venueLng = venueRow?.lng ?? null;
+    venueFullName = venueRow?.name?.trim() || raw.venue_name?.trim() || undefined;
+    // Adressen kommer från den kurade venue-raden när den har en. Saknar den
+    // en (venue skapad från ett event utan adress) faller vi tillbaka på
+    // eventets egen adress från källan — samma ordning som
+    // backfill-venue-from-existing.mjs (venue först, källa sedan).
+    venueFullAddress = venueRow?.address?.trim() || raw.venue_address?.trim() || undefined;
+    venueFullCity = venueRow?.city?.trim() || undefined;
+  } else {
+    // Ingen venue-rad (t.ex. venues-inserten misslyckades) — eventets egen
+    // platsnamn är ändå bättre än tomt för appen.
+    venueFullName = raw.venue_name?.trim() || undefined;
+    venueFullAddress = raw.venue_address?.trim() || undefined;
   }
 
   // MusicBrainz + Last.fm authoritativ artist-uppslagning (2026-09-30).
@@ -686,6 +719,14 @@ export async function processRawEvent(job: Job<RawEventInput>): Promise<void> {
     source: raw.source,
     source_id: raw.source_id,
     venue_id,
+    // 2026-10-23 — Denormalisera venue-namn/adress/stad på event-raden.
+    // HomeScreen läser venue_full_name direkt från events (ingen join mot
+    // venues), så utan detta visades queue'-ingested events UTAN plats.
+    // undefined = Supabase hoppar över fältet → en befintlig adress skrivs
+    // aldrig över med null.
+    venue_full_name: venueFullName,
+    venue_full_address: venueFullAddress,
+    venue_city: venueFullCity,
     // 2026-10-02 geo-bug fix: propagate venues.lat/lng → events.lat/lng.
     lat: resolvedLat,
     lng: resolvedLng,
