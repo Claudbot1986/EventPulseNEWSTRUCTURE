@@ -60,12 +60,20 @@ if status_file.exists():
         if h:
             t = datetime.datetime.fromisoformat(h.replace("Z", "+00:00"))
             age = (datetime.datetime.now(datetime.timezone.utc) - t).total_seconds()
+            running = bool(s.get("running"))
+            # En AVSLUTAD körning har per definition en gammal heartbeat.
+            # Åldern är bara ett felsignal när processen påstår köra.
+            # Räkna i stället hur många steg som faktiskt avslutade.
+            finished = sum(1 for st in s.get("steps", []) if st.get("exitCode") is not None)
             result["checks"]["heartbeat"] = {
-                "ok": age < 7200,
+                "ok": (age < 7200) if running else True,
+                "running": running,
                 "age_seconds": round(age),
-                "running": s.get("running"),
+                "age_matters": running,
                 "pid": s.get("pid"),
                 "steps": len(s.get("steps", [])),
+                "steps_finished": finished,
+                "note": None if running else "senaste körningen avslutad — heartbeat-ålder är förväntad",
             }
         else:
             result["checks"]["heartbeat"] = {"ok": False, "reason": "no timestamps"}

@@ -42,6 +42,6 @@ Varje feature-fil har fyra H2:er: `Sub-features`, `How to get to it (user POV)`,
 
 **Steg som är observerande utan konsument:** `subpath-discovery` (output: `subpath-results.jsonl`, ingen läsare), `api-discovery` (`api-discovery-results.jsonl`, konsumeras av tribe-fetcher, men i praktiken noll-events), `pattern-promoter` (ur cron 2026-10-21; kod kvar på disk). De kan verifieras som "kördes" men aldrig som "gjorde nytta".
 
-**P3D-source-candidate-tests stänger loopen.** De tre discovery-stegen P3A/P3B/P3C skriver 335 kandidater till `source_candidates`; P3D claimar dem via `claim_source_candidate_test_queue()`, kör varje i en riktig sandbox-miljö genom A/B/C/D-gates, och promote:ar de som passerar smoke-trösklarna (skriver `sources/<slug>.jsonl` som A-gates ser).
+**P3D-source-candidate-tests stänger loopen.** De tre discovery-stegen P3A/P3B/P3C skriver 335 kandidater till `source_candidates`; P3D claimar dem via `claim_source_candidate_test_queue(task_limit, target_phase)`, kör varje i en riktig sandbox-miljö genom A/B/C/D-gates, och promote:ar de som passerar smoke-trösklarna (skriver `sources/<slug>.jsonl` som A-gates ser).
 
 **Senast uppdaterad (2026-10-21, maintain-pass):** 13 feature-filer samt SKILL.md och båda harness-scripten reviderade. Rättade: 13 trasiga logglobs, 4 fel watchdog-sökvägar, 2 falska tabellnamn, fel fältnamn i watchdog-checken, 4 recept som greppade strängar scripterna inte skriver, samt 4 missvisande påståenden om konsumtion och persistens. Verifierat live mot 2026-10-21-körningen (24/24 steg, pid 22127).

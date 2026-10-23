@@ -218,7 +218,7 @@ Bevis (chain-overview.log, status.json, jsonl, supabase counts) lämnas intakta.
 
 **`ingestion_runs.jsonl` har två skribenter:** runDaily (`09-ScrapingSupervisor/runDaily.ts:239`) och ingestion-cron (via `--smoke` eller `--limit`). triggerSource i jsonl avgör vilken — `daily` eller `cron`. Filtrera på det om du jämför körningar.
 
-**`P3D-source-candidate-tests` är discovery-loopens sista steg.** Claimar via `claim_source_candidate_test_queue()`-RPC:n, kör varje kandidat genom riktiga A/B/C/D-gates i en sandbox, och promote:ar de som passerar smoke-trösklarna (decision.ts) genom `sandbox.ts:promoteSourceCandidate` → `sources/<slug>.jsonl`. `--phase=smoke --limit=1` är `--smoke`-läget; `--limit=20` är skarpt läge.
+**`P3D-source-candidate-tests` är discovery-loopens sista steg.** Claimar via `claim_source_candidate_test_queue(task_limit, target_phase)`-RPC:n, kör varje kandidat genom riktiga A/B/C/D-gates i en sandbox, och promote:ar de som passerar smoke-trösklarna (decision.ts) genom `sandbox.ts:promoteSourceCandidate` → `sources/<slug>.jsonl`. `--phase=smoke --limit=1` är `--smoke`-läget; `--limit=20` är skarpt läge.
 
 **Green = skip.** När en körning producerar alla `step-end` med `exitCode=0` och `totalEventsFound>0`: skriv `runtime/discovery-verification.status.json: {lastGreenAt, lastRunId, ok:true, durationMs}`. `scripts/ingestion-cron.ts` läser filen och hoppar över en verifierings-körning om grön <24h gammal.
 

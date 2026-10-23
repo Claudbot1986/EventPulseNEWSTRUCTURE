@@ -4,13 +4,18 @@
 
 ## Sub-features
 
-- Step-lista (rad 265–611): A → B → eventbrite → tribe → sitemap → subpath → direct-jsonld → livespot → C → D → I-pdf → etag → api-discovery → luma → ra → posh → reddit → image → P2C → P3A → P3B → P3C → **P3D-source-candidate-tests** (nya 2026-10-21)
+- Step-lista (`scripts/ingestion-cron.ts:351-611`, **23 steg**): A-directAPI → B-network-api → eventbrite-pagination → tribe-events → sitemap-discovery → subpath-discovery → direct-jsonld → livespot-stockholm → C-htmlGate → D-renderGate → I-pdfExtraction → etag-refresh → api-discovery → luma-stockholm → ra-stockholm → posh-stockholm → reddit-stockholm → D-images → P2C-active-learning → P3A-discovery → P3B-venue-graph-geo → P3C-rss-discovery → **P3D-source-candidate-tests** (ny 2026-10-21)
+  - Verifiera listan mot koden, inte mot den här raden:
+    ```bash
+    grep -n "name: '" scripts/ingestion-cron.ts | sed "s/.*name: '\([^']*\)'.*/\1/" | tr '\n' ' '; echo
+    grep -c "name: '" scripts/ingestion-cron.ts   # ska vara 23
+    ```
   - **`manual-review-triage` och `pattern-promoter` togs bort ur kedjan 2026-10-21.** Båda körde `runC-pattern-promoter.ts` vars producent (`runC-pattern-validator.ts`) aldrig skrevs → hela kedjan var bruten. Koden ligger kvar på disk; att aktivera den kräver ett eget validator-bygge (se `pattern-promoter.md`).
 - Per-step loggar: `runtime/ingestion-cron/steps/<name>-<ISO>.{log,err.log}`
 - Chain-overview (JSONL): `runtime/ingestion-cron/chain-overview.log` — `{step-start|step-end|heartbeat|pre-kill|green-skip, ...}`
 - Status-singleton: `runtime/ingestion-cron.status.json` — `running, pid, startedAt, lastHeartbeatAt, steps[], totalEventsExtracted`
-- Pre-discovery kill-check (2026-10-18, rad 515–572): dödar levande discovery-processer innan step-loop startar
-- Green-skip-gate (2026-10-18, rad 608–688): läser `runtime/discovery-verification.status.json` för senaste verify-status; skriver skip-fil vid grön korrigering
+- Pre-discovery kill-check (2026-10-18, `ingestion-cron.ts:620-719`): dödar levande discovery-processer innan step-loop startar
+- Green-skip-gate (2026-10-18, `ingestion-cron.ts:728-795`): läser `runtime/discovery-verification.status.json` för senaste verify-status; skriver skip-fil vid grön korrigering
 - Watchdog-output: `runtime/ingestion-cron/watchdog.json` (läs av watchdog-script, ej orchestrator)
 
 ## How to get to it (user POV)
@@ -68,17 +73,41 @@ Bevis: `chain-overview.log` + `status.json` + `steps/<stage>-<ISO>.log`.
 
 **Green = alla steg har `step-end` med exit=0 + `heartbeat age < 2h` (om körning pågår). `totalEventsExtracted` korrekt summerat över de steg vars adapter skriver en tolkbar totalrad (parser i `ingestion-cron.ts:parseStepCounts`).** Stödda steg: tribe-events, sitemap-discovery, direct-jsonld, eventbrite-pagination, livespot-stockholm, luma-stockholm, posh-stockholm, ra-stockholm. Övriga steg rapporterar `eventsExtracted: null` ("vet inte" — antingen skriver steget eget JSON-format eller persisterar inte).
 
-**`ok: true` i skip-filen styrs av `totalExit === 0`** (`ingestion-cron.ts:694`, else-gren rad 740-749). Vid röd körning skrivs `ok:false` + `failedSteps` + bevarad `lastGreenAt`. En tidigare grön fil lever alltså kvar som `lastGreenAt`-fältet även efter en misslyckad körning.
+**`ok: true` i skip-filen styrs av `totalExit === 0`** (`ingestion-cron.ts:800`, else-gren rad 815-832). Vid röd körning skrivs `ok:false` + `failedSteps` + bevarad `lastGreenAt`. En tidigare grön fil lever alltså kvar som `lastGreenAt`-fältet även efter en misslyckad körning.
+
+**Radnummer i den här filen kan bli gamla.** De ovan är kontrollerade 2026-10-23
+mot `scripts/ingestion-cron.ts`. Hitta alltid symbolen i stället för raden:
+```bash
+grep -n "totalExit === 0\|event: 'pre-kill'\|discovery-verification.status.json" scripts/ingestion-cron.ts
+```
 
 ## Gotchas
 
 **Heartbeat fortsätter även vid häng.** En steg som fastnat i retry-loop genererar heartbeats var 60s — det betyder INTE att steget gör framsteg. Kör hung-detect-grepet ovan för att se om ett steg har `step-start` utan `step-end`.
 
-**Pre-discovery kill-check (2026-10-18, rad 515–572) dödar processer vars cmdline matchar `/scripts\/ingest-[\w-]+\.m?js|/scripts\/discover-[\w-]+\.m?js|/07-Discovery\/src\//` eller innehåller `geoExpansion`/`rssDiscovery`/`discoverySearch`.** Andra typer (t.ex., `node 09-ScrapingSupervisor/dashboard/server.ts`) överlever.
+**Pre-discovery kill-check (2026-10-18) dödar processer vars cmdline matchar `/scripts\/ingest-[\w-]+\.m?js|/scripts\/discover-[\w-]+\.m?js|/07-Discovery\/src\//` eller innehåller `geoExpansion`/`rssDiscovery`/`discoverySearch`.** Andra typer (t.ex., `node 09-ScrapingSupervisor/dashboard/server.ts`) överlever.
 
 **Green-skip-gate (2026-10-18) skriver till `runtime/discovery-verification.status.json`** med `{ok, lastGreenAt, runId, totalEventsExtracted, durationMs}`. Hoppar INTE över cron-körningen själv — cron ÄR det som körs. Skippet låter bara framtida verify-skill-körningar skippa sig själva om allt är grönt <24h.
 
-**`--smoke` använder `--limit 1` på A/B/D/I-pdf/etag/P3C-rss**, `--queries 1 --per-query 1` på P3A, `--limit 5` på P3B-geo, `--limit 1` på P3D-candidate-tests. P3C-rss i smoke använder `--limit 5 --concurrency 2 --dry-run=true`.
+**Smoke-flaggorna är INTE enhetliga — kontrollera per steg i koden.**
+
+| Steg | `--smoke` | Produktion |
+|---|---|---|
+| A / B / D / I-pdf / etag | `--limit 1` (`effectiveLimit`, rad 251) | `--limit <limit>` |
+| `D-images` | `--limit 3` | `--limit <limit>` |
+| P3A | `--queries 1 --per-query 1 --min-exa 1` | `--queries 10 --per-query 10 --min-exa 1` |
+| P3B-geo | `--limit 5 --geo-radius-m 500 --city Stockholm` | `--limit 50` (samma rad) |
+| P3C-rss | `--limit 5 --concurrency 2` **+ `--dry-run`** | `--limit 100 --concurrency 5` |
+| P3D | `--phase=smoke --limit=1` | `--phase=smoke --limit=20` |
+
+P3C-rss i smoke är den enda som får `--dry-run` — och det är en
+**presence-flagga** (`...(smoke ? ['--dry-run'] : [])`, rad 571), inte
+`--dry-run=true`. Skriv `=`-formen och du får flaggan ändå; skriv
+`--dry-run=false` och du får den också. P3D däremot kräver `=`-formen för
+`--limit` (`--limit=${...}`, rad 610) — mellanslagsform tyst ignoreras.
+
+`--min-exa 1` är samma värde i båda lägena, så Exa-gaten är lika aggressiv
+i smoke som i produktion.
 
 **`--skip-images` dödar både `D-images` och `P2C-active-learning`.** De ligger bakom `if (!skipImages)` i cron-scriptet.
 
