@@ -52,6 +52,18 @@ describe('evaluateTitle', () => {
       expect(evaluateTitle('billetto', 'billetto-stockholm').ok).toBe(false);
       expect(evaluateTitle('stockholm', 'billetto-stockholm').ok).toBe(false);
     });
+    it('navigation/CTA phrases (2026-10-24)', () => {
+      // Bevis: 65 brus-rader över 13 orelaterade domäner i corpuset.
+      // Negativ kontroll: 0 av 12 120 events i databasen har dessa titlar.
+      const cases = ['Köp biljetter', 'Biljetter här.', 'Mer Info', 'Läs mer',
+        'På startsidan', 'Nyheter', 'Kalendarium', 'Datum', 'På gång',
+        'Om föreställningen', 'Medverkande', 'Historik', 'click here'];
+      for (const title of cases) {
+        const r = evaluateTitle(title, 'folkoperan');
+        expect(r.ok, `expected "${title}" to be blocked; reason=${r.reason ?? 'none'}`).toBe(false);
+        expect(r.reason).toBe('navigation-text');
+      }
+    });
   });
 
   describe('accepts', () => {
@@ -82,6 +94,13 @@ describe('evaluateTitle', () => {
       // 3-char titles aren't always bad — e.g. "ABBA", "MAM"
       expect(evaluateTitle('ABBA', 'billetto').ok).toBe(true);
       expect(evaluateTitle('Pixies', 'billetto').ok).toBe(true);
+    });
+    it('titles containing a navigation word as part of a real title still pass', () => {
+      // Exakt matchning — inte delsträng. "skolbiljetter" är ett riktigt
+      // event, "Läs mer om språkcafé …" är ett riktigt event med brusig titel.
+      expect(evaluateTitle('skolbiljetter', 'umes-ik').ok).toBe(true);
+      expect(evaluateTitle('Läs mer om språkcafé en viktig mötesplats stadsbiblioteket', 'malmo-opera').ok).toBe(true);
+      expect(evaluateTitle('Nyheter från scenen', 'postmuseum').ok).toBe(true);
     });
     it('returns normalised form for logging on success', () => {
       const r = evaluateTitle('  Nietzsche kontra Wagner  ', 'folkoperan');

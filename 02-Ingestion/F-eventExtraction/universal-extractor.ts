@@ -42,6 +42,7 @@ import {
 import { detectCategoryFromContainerClass } from './categoryKeywords.js';
 import { runAdapters } from './adapters/index.js';
 import { findKlockanInText } from '../lib/swedishTimeText.js';
+import { isNavigationTitle } from './navigationTitles.js';
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -111,6 +112,256 @@ function getToday(): Date {
 }
 
 /**
+ * Sant om sidan är en ARKIV-sida med tidigare evenemang.
+ *
+ * På sådana sidor får ett årslöst datum inte få ett år infererat — då
+ * skulle arkivet vändas till nästa år och skapa händelser som aldrig
+ * inträffar. Bevis: nojesfabriken.se/nojeskalendern/tidigare-evenemang/
+ * är C0-vinnaren för just den källan (densitet 1525) och innehåller bara
+ * passerade evenemang.
+ */
+function isArchiveContext($: cheerio.CheerioAPI, baseUrl: string): boolean {
+  try {
+    if (ARCHIVE_MARKER_RX.test(baseUrl)) return true;
+  } catch { /* ogiltig url — ignorera */ }
+  const heading = $('h1').first().text().trim();
+  return heading.length > 0 && heading.length < 120 && ARCHIVE_MARKER_RX.test(heading);
+}
+
+/**
+ * Svenskt datum UTAN år: "23 okt", "6 nov", "24 okt lördag".
+ *
+ * Negativ lookahead: får INTE matcha när ett år följer ("23 okt 2026") —
+ * då ska den vanliga årsmönstret gälla.
+ *
+ * Lookbehind `(?<!\d)`: dagen får INTE vara de två sista siffrorna i ett
+ * ÅR. Utan det matchar "...Through March 2027" + "Sep 30, 2026" som
+ * "27 Sep" — ett påhittat datum från en nyhetsrubriks publiceringsår.
+ * Bevis: rustourismnews.com (nyhetssida, 2 skräpevents före fixen).
+ */
+const SWE_DATE_NO_YEAR_RX =
+  /(?<!\d)(\d{1,2})\s+(januari|februari|mars|april|maj|juni|juli|augusti|september|oktober|november|december|jan|feb|mar|apr|jun|jul|aug|sep|okt|nov|dec)\b(?!\s*,?\s*\d{4})/i;
+
+/**
+ * Markörer för sidor med TIDIGARE evenemang. På sådana sidor får ett
+ * årslöst datum INTE få ett år infererat — annars vänder vi arkivet
+ * till nästa år och skapar händelser som aldrig inträffar.
+ */
+const ARCHIVE_MARKER_RX =
+  /\b(tidigare|föregående|föregående|previous|past|arkiv|archive|gamla|utgångna|avslutade|finished)\b/i;
+
+/** ISO-datum (YYYY-MM-DD) → null om det inte är ett giltigt datum. */
+function toIsoDate(d: Date): string {
+  return d.toISOString().slice(0, 10);
+}
+
+/** Sant om "YYYY-MM-DD" är ett verkligt datum (t.ex. 31 feb är det inte). */
+function isValidIsoDate(iso: string): boolean {
+  const m = iso.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  if (!m) return false;
+  const d = new Date(Date.UTC(Number(m[1]), Number(m[2]) - 1, Number(m[3])));
+  return (
+    d.getUTCFullYear() === Number(m[1]) &&
+    d.getUTCMonth() === Number(m[2]) - 1 &&
+    d.getUTCDate() === Number(m[3])
+  );
+}
+
+/**
+ * "HH:MM" från timme/minut — undefined om tiden inte är giltig.
+ *
+ * Bevis: dansenshus.se gav "35:54" (en URL-fragment-tid), och
+ * tekniskamuseet.se gav "00:00" ur "0-00". Ett ogiltigt klockslag ska
+ * inte skrivas som event-tid.
+ */
+function formatTime(hour: string, minute: string): string | undefined {
+  const h = parseInt(hour, 10);
+  const m = parseInt(minute, 10);
+  if (!Number.isFinite(h) || !Number.isFinite(m)) return undefined;
+  if (h < 0 || h > 23 || m < 0 || m > 59) return undefined;
+  return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
+}
+
+/** Sant om "HH:MM" är en giltig tid. */
+function isValidTime(value: string): boolean {
+  const m = value.match(/^(\d{1,2}):(\d{2})$/);
+  if (!m) return false;
+  const h = parseInt(m[1], 10);
+  const mm = parseInt(m[2], 10);
+  return h >= 0 && h <= 23 && mm >= 0 && mm <= 59;
+}
+
+/**
+ * Tolka ett svenskt datum UTAN år ("23 okt") som NÄRMASTE framtida
+ * förekomst — samma semantik som veckodags-regeln ovan ("måndag" → nästa
+ * måndag). Datumet i framtiden i år → detta år. Datumet redan förbi →
+ * nästa år.
+ *
+ * Varför: 2026-10-24 — svenska venue-kalendrar visar ofta "24 okt" utan
+ * år. Utan den här tolkningen ger de källorna NOLL events.
+ * Bevis (Generalization Protection Rule, General): 4 orelaterade domäner
+ * visar egenstående evenemangsdatum utan år —
+ *   nojesfabriken.se ("23 okt"), scalateatern.se ("24 okt lördag 19:30"),
+ *   dif.se ("lör 24 okt 17:30"), junibacken.se ("23 Okt").
+ *
+ * @param now Injicerbar "idag" — gör regeln testbar utan att frysa
+ *            klockan i testet.
+ */
+export function parseSwedishMonthDay(
+  day: string,
+  mon: string,
+  now: Date = getToday()
+): string | null {
+  const monthNum = SWE_MONTH_MAP[(mon || '').toLowerCase()];
+  if (!monthNum) return null;
+  const d = parseInt(day, 10);
+  if (!Number.isFinite(d) || d < 1 || d > 31) return null;
+
+  const today = toIsoDate(now);
+  const pad = (n: number) => String(n).padStart(2, '0');
+
+  let iso = `${now.getUTCFullYear()}-${monthNum}-${pad(d)}`;
+  if (!isValidIsoDate(iso)) return null;
+  if (iso < today) {
+    iso = `${now.getUTCFullYear() + 1}-${monthNum}-${pad(d)}`;
+    if (!isValidIsoDate(iso)) return null;
+  }
+  return iso;
+}
+
+/**
+ * Element som bär en DEDIKERAD evenemangstitel ("kort-titel").
+ * Samma uppsättning som C1:s extractTitle — C3 ska resonera om samma sak.
+ */
+const TITLE_ELEMENT_SELECTORS =
+  '[class*="title"], [class*="heading"], h1, h2, h3, h4, h5, h6';
+
+/**
+ * Explicit kalenderdatum i svensk form: "24 okt", "3 nov 2026".
+ * Fångar INTE veckodagar — veckodagen härleds ur datumet, inte vice versa.
+ *
+ * Lookbehind `(?<!\d)`: samma skydd som SWE_DATE_NO_YEAR_RX — dagen får
+ * inte vara en del av ett år.
+ */
+const SWE_EXPLICIT_DATE_RX =
+  /(?<!\d)(\d{1,2})\s+(januari|februari|mars|april|maj|juni|juli|augusti|september|oktober|november|december|jan|feb|mar|apr|jun|jul|aug|sep|okt|nov|dec)\b(?:\s*,?\s*(\d{4}))?/gi;
+
+/** Veckodag som eget ord ("lördag"). */
+const SWE_WEEKDAY_WORD_RX =
+  /\b(måndag|tisdag|onsdag|torsdag|fredag|lördag|söndag|mandag|tirsdag|onsdag|torsdag|fredag|lordag|sondag)\b/i;
+
+/** rel="tag"/"category" → kategori-/filterlänk, aldrig ett event. */
+const TAXONOMY_REL_RX = /^(tag|category|taxonomy)$/i;
+
+/** Element som kan rymma ett evenemangskort (C3:s kortuppslagning). */
+const C3_CARD_SELECTOR =
+  'li, article, [class*="event"], [class*="item"], [class*="card"], [class*="kalender"], [class*="program"]';
+
+/** Hur många nivåer upp C3 får söka efter ett kort med datum. */
+const CARD_EXPANSION_MAX_LEVELS = 4;
+
+/**
+ * Antal UNIKA explicita datum ("D MMM") i en text.
+ * Veckodagar räknas inte — de följer av datumet ("24 okt lördag" är ETT datum).
+ */
+function countExplicitDates(text: string): number {
+  const rx = new RegExp(SWE_EXPLICIT_DATE_RX.source, 'gi');
+  const seen = new Set<string>();
+  let m: RegExpExecArray | null;
+  while ((m = rx.exec(text)) !== null) {
+    seen.add(`${m[1]}/${m[2].toLowerCase()}`);
+    if (m.index === rx.lastIndex) rx.lastIndex++;
+  }
+  return seen.size;
+}
+
+/** Sant om texten innehåller någon datum-signal (datum, veckodag, "i dag"). */
+function hasDateSignal(text: string): boolean {
+  if (countExplicitDates(text) > 0) return true;
+  if (SWE_WEEKDAY_WORD_RX.test(text)) return true;
+  return /\b(i dag|idag|imorgon)\b/i.test(text);
+}
+
+/**
+ * ISO-datum ur "D MMM" + valfritt år. Utan år → närmaste framtida
+ * förekomst (parseSwedishMonthDay).
+ */
+function explicitSwedishDateToIso(
+  day: string,
+  mon: string,
+  year: string | undefined
+): string | null {
+  if (!year) return parseSwedishMonthDay(day, mon);
+  const monthNum = SWE_MONTH_MAP[(mon || '').toLowerCase()];
+  if (!monthNum) return null;
+  const d = parseInt(day, 10);
+  if (!Number.isFinite(d) || d < 1 || d > 31) return null;
+  const iso = `${year}-${monthNum}-${String(d).padStart(2, '0')}`;
+  return isValidIsoDate(iso) ? iso : null;
+}
+
+/**
+ * Länk som leder till biljettsköp — aldrig eventets URL.
+ * Fångar både klassmarkörer ("btn-biljett") och URL-former
+ * ("biljett.scalateatern.se/…/tickets/…").
+ */
+function isTicketCheckoutLink(href: string, className: string): boolean {
+  if (/ticket|biljett|boka|booking|checkout/.test((className || '').toLowerCase())) return true;
+  try {
+    const u = new URL(href, 'https://placeholder.invalid');
+    if (/^(ticket|biljett)/.test(u.hostname.toLowerCase())) return true;
+    return u.pathname
+      .split('/')
+      .filter(Boolean)
+      .some((seg) => /^(tickets?|biljetter?|boka|booking|checkout)/i.test(seg));
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Kortets primära länk: första ankaret som inte är tagg- eller biljettlänk.
+ */
+function primaryEventAnchor($: cheerio.CheerioAPI, $card: any): any {
+  return $card
+    .find('a[href]')
+    .filter((_: any, a: any) => {
+      const rel = ($(a).attr('rel') || '').trim().split(/\s+/)[0];
+      if (rel && TAXONOMY_REL_RX.test(rel)) return false;
+      if (isTicketCheckoutLink($(a).attr('href') || '', $(a).attr('class') || '')) return false;
+      return true;
+    })
+    .first();
+}
+
+/**
+ * Gå uppåt från ett element tills vi hittar ett som innehåller EXAKT ett
+ * explicit datum ("24 okt").
+ *
+ * Varför: det närmaste matchande elementet kan vara en LAYOUT-wrapper.
+ * Tailwind-klassen "items-center" (och "align-items-center") innehåller
+ * delsträngen "item" och matchar därför [class*="item"] — då blir "kortet"
+ * en tom layoutkolumn utan datum och evenemanget försvinner.
+ *
+ * Ett element med flera datum är en LISTA, inte ett kort — då kan datumet
+ * inte tillskrivas ankaret, så vi avbryter med null.
+ */
+function expandToDatedCard($nearest: any): any | null {
+  let $el = $nearest.parent();
+  let levels = 0;
+  while ($el.length && levels < CARD_EXPANSION_MAX_LEVELS) {
+    const tag = $el[0]?.tagName;
+    if (tag === 'body' || tag === 'html') return null;
+    const n = countExplicitDates($el.text());
+    if (n === 1) return $el;
+    if (n > 1) return null;
+    $el = $el.parent();
+    levels++;
+  }
+  return null;
+}
+
+/**
  * Parse relative Swedish date expressions.
  * "Imorgon" → tomorrow's date
  * "I dag" / "Idag" → today
@@ -162,9 +413,11 @@ function parseDate(raw: string): { date: string; time?: string } {
     if (m) {
       try {
         const dateStr = p.fmt(m[1], m[2], m[3], m[4]);
-        if (/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) {
+        // 2026-10-24 — datumet måste vara en RIKTIG kalenderdag.
+        // "2026-02-31" passerar mönstret men finns inte.
+        if (isValidIsoDate(dateStr)) {
           const t = TIME_RX.exec(raw);
-          return { date: dateStr, time: t ? `${t[1].padStart(2,'0')}:${t[2]}` : undefined };
+          return { date: dateStr, time: t ? formatTime(t[1], t[2]) : undefined };
         }
       } catch { /* invalid */ }
     }
@@ -265,7 +518,7 @@ function makeEvent(data: Record<string, unknown>, method: string, source: string
     if (data.startTime || data.time || data.eventTime) {
       const t = norm(data.startTime || data.time || data.eventTime);
       const m = t.match(TIME_RX);
-      time = m ? `${m[1].padStart(2,'0')}:${m[2]}` : t.slice(0,5);
+      time = m ? formatTime(m[1], m[2]) : (isValidTime(t.slice(0, 5)) ? t.slice(0, 5) : undefined);
     }
 
     let venue = '';
@@ -1282,12 +1535,31 @@ function extractHtmlHeuristics($: cheerio.CheerioAPI, source: string, baseUrl: s
       else { day = a; month = b; } // SE default
       const year = new Date().getFullYear();
       const dateStr = `${year}-${month.padStart(2,'0')}-${day.padStart(2,'0')}`;
-      const t = TIME_RX.exec(cardText);
-      return { date: dateStr, time: t ? `${t[1].padStart(2,'0')}:${t[2]}` : undefined };
+      // 2026-10-24 — "30-31 oktober" ger day=30, month=31 → "2026-31-30".
+      // Ett ogiltigt datum får inte lämna extractorn: det landar i
+      // databasen som trasig tid. Bevis: dansenshus.se ("2026-31-30"),
+      // tekniskamuseet.se ("2026-06-00").
+      if (isValidIsoDate(dateStr)) {
+        const t = TIME_RX.exec(cardText);
+        return { date: dateStr, time: t ? formatTime(t[1], t[2]) : undefined };
+      }
     }
-    const sweDateRx = /(\d{1,2})\s+(januari|februari|mars|april|maj|juni|juli|augusti|september|oktober|november|december|jan|feb|mar|apr|maj|jun|jul|aug|sep|okt|nov|dec)\w*\s+(\d{4})/i;
+    const sweDateRx = /(?<!\d)(\d{1,2})\s+(januari|februari|mars|april|maj|juni|juli|augusti|september|oktober|november|december|jan|feb|mar|apr|maj|jun|jul|aug|sep|okt|nov|dec)\w*\s+(\d{4})/i;
     const m = cardText.match(sweDateRx);
     if (m) return parseDate(cardText);
+    // 2026-10-24 — årslöst svenskt datum ("23 okt", "24 okt lördag").
+    // Utan detta ger venue-kalendrar NOLL events. Se parseSwedishMonthDay
+    // för beviset (4 orelaterade domäner).
+    if (!isArchiveContext($, baseUrl)) {
+      const noYear = cardText.match(SWE_DATE_NO_YEAR_RX);
+      if (noYear) {
+        const inferred = parseSwedishMonthDay(noYear[1], noYear[2]);
+        if (inferred) {
+          const t = TIME_RX.exec(cardText);
+          return { date: inferred, time: t ? formatTime(t[1], t[2]) : undefined };
+        }
+      }
+    }
     for (const rel of ['imorgon', 'i dag', 'idag']) {
       if (cardText.toLowerCase().includes(rel)) {
         const result = parseRelativeSwedishDate(rel);
@@ -1351,7 +1623,19 @@ function extractHtmlHeuristics($: cheerio.CheerioAPI, source: string, baseUrl: s
   }
 
   function extractUrl($card: any, baseUrl: string): string {
-    const $a = $card.find('a[href]').first();
+    // 2026-10-24 — skippa kategori-/tagglänkar (rel="tag") och biljettsköp:
+    // de pekar på filter respektive checkout, inte på eventet.
+    const usable = $card
+      .find('a[href]')
+      .filter((_: any, el: any) => {
+        const rel = ($(el).attr('rel') || '').trim().split(/\s+/)[0];
+        if (rel && TAXONOMY_REL_RX.test(rel)) return false;
+        if (isTicketCheckoutLink($(el).attr('href') || '', $(el).attr('class') || '')) return false;
+        return true;
+      })
+      .first();
+    // Fallback: har kortet bara en biljettlänk är den bättre än ingen URL.
+    const $a = usable.length ? usable : $card.find('a[href]').first();
     const href = $a.attr('href') || '';
     if (!href || href === '#' || href === '/' || href.startsWith('#')) return '';
     return buildUrl(href, baseUrl);
@@ -1380,7 +1664,14 @@ function extractHtmlHeuristics($: cheerio.CheerioAPI, source: string, baseUrl: s
       const href = $card.find(sel).first().attr('href') || '';
       if (href && href.length > 3) return buildUrl(href, baseUrl);
     }
-    return '';
+    // 2026-10-24 — biljettsköp känns också igen på URL:en
+    // ("biljetter.folkoperan.se/…/tickets/…").
+    const byUrl = $card
+      .find('a[href]')
+      .filter((_: any, el: any) => isTicketCheckoutLink($(el).attr('href') || '', $(el).attr('class') || ''))
+      .first();
+    const href = byUrl.attr('href') || '';
+    return href && href.length > 3 ? buildUrl(href, baseUrl) : '';
   }
 
   const $scope = $('main, article, [role="main"], .content, .event-content, .kalender, .event-list, [class*="event"]');
@@ -1587,21 +1878,83 @@ function extractSwedishRelativeDates($: cheerio.CheerioAPI, source: string, base
     if (href.startsWith('#') || href === '/' || !href) return;
     if ($a.closest('nav, footer, .nav, [class*="breadcrumb"]').length > 0) return;
 
+    // rel="tag"/"category" → filterlänk till en kategori, aldrig eventet.
+    const rel = ($a.attr('rel') || '').trim().split(/\s+/)[0];
+    if (rel && TAXONOMY_REL_RX.test(rel)) return;
+
+    // Biljettsköp ("biljett.se/…", "btn-biljett") → inte eventets URL.
+    if (isTicketCheckoutLink(href, $a.attr('class') || '')) return;
+
     const linkText = $a.text().trim().replace(/\s+/g, ' ');
     if (linkText.length < 3 || linkText.length > 200) return;
     if (/^(boka|book|köp|buy|läs|read|mer|more|idag|imorgon)$/i.test(linkText)) return;
 
-    const $card = $a.closest('li, article, [class*="event"], [class*="item"], [class*="card"], [class*="kalender"], [class*="program"]');
-    if (!$card.length) return;
+    // ── Kortet ────────────────────────────────────────────────────────
+    // Det närmaste matchande elementet kan vara en LAYOUT-wrapper:
+    // Tailwood-klassen "items-center" innehåller delsträngen "item" och
+    // matchar därför [class*="item"]. Då saknas datumet i korttexten och
+    // evenemanget försvinner helt. Därför går vi uppåt efter ett element
+    // med EXAKT ett explicit datum. Expansionen kan bara skapa event
+    // (ett kort utan datum ger 0 events redan idag).
+    const $nearest = $a.closest(C3_CARD_SELECTOR);
+    if (!$nearest.length) return;
+    let $card = $nearest;
+    if (!hasDateSignal($nearest.text())) {
+      const $expanded = expandToDatedCard($nearest);
+      if (!$expanded) return;
+      $card = $expanded;
+    }
 
     const cardText = $card.text();
 
+    // ── Titel ─────────────────────────────────────────────────────────
+    // Företräde för den DEDIKERADE titelmarkeringen: ankarens egen
+    // ("<a><div class="title">…") eller kortets ("<p class="title">…").
+    // Ankartexten kan ju vara "19:30 Stora scen Humor, Stand up KRISTOFFER …".
+    const $ownTitle = $a.find(TITLE_ELEMENT_SELECTORS).first();
+    const $cardTitle = $card.find(TITLE_ELEMENT_SELECTORS).first();
+    let title: string;
+    if ($ownTitle.length) {
+      title = $ownTitle.text().trim().replace(/\s+/g, ' ');
+    } else if ($cardTitle.length) {
+      // Kortet har en titel men ankaret bär den inte → ankaret är en
+      // CTA-länk ("Läs mer", scen-filter). Bara kortets primära länk
+      // bildar eventet.
+      const $primary = primaryEventAnchor($, $card);
+      if (!$primary.length || $primary[0] !== $a[0]) return;
+      title = $cardTitle.text().trim().replace(/\s+/g, ' ');
+    } else {
+      title = linkText;
+    }
+    if (title.length < 3 || title.length > 200) return;
+
     let foundDate = '', foundTime = '';
 
-    for (const rel of ['imorgon', 'i dag', 'idag']) {
-      if (cardText.toLowerCase().includes(rel)) {
-        const result = parseRelativeSwedishDate(rel);
-        if (result) { foundDate = result; break; }
+    // 2026-10-24 — ett EXPLICIT ÅRSLÖST datum ("24 okt") slår alltid en
+    // veckodagsinferens. Annars får "31 okt lör" fel datum: nästa lördag
+    // efter 23 okt är 24 okt, inte 31 okt.
+    //
+    // Datum MED år ("23 oktober 2026") hanterar C1/C2 (kort med
+    // klassmarkör). C3 ska inte gissa: en nyhetsartikels publiceringsdatum
+    // ligger i samma text och skulle bli ett påhittat event.
+    const explicitRx = new RegExp(SWE_EXPLICIT_DATE_RX.source, 'gi');
+    const explicit = explicitRx.exec(cardText);
+    if (explicit && !explicit[3]) {
+      // Låt C1/C2 äga kortet om det har ett absolut <time datetime>, och
+      // gissa aldrig ett år på en arkivsida.
+      if ($card.find('time[datetime]').length > 0) return;
+      if (isArchiveContext($, baseUrl)) return;
+      const iso = explicitSwedishDateToIso(explicit[1], explicit[2], explicit[3]);
+      if (!iso) return;
+      foundDate = iso;
+    }
+
+    if (!foundDate) {
+      for (const rel of ['imorgon', 'i dag', 'idag']) {
+        if (cardText.toLowerCase().includes(rel)) {
+          const result = parseRelativeSwedishDate(rel);
+          if (result) { foundDate = result; break; }
+        }
       }
     }
 
@@ -1617,7 +1970,7 @@ function extractSwedishRelativeDates($: cheerio.CheerioAPI, source: string, base
     if (!foundDate) {
       const $parent = $card.parent();
       const siblingText = $parent.clone().children().remove().end().text();
-      const sweDateRx = /(\d{1,2})\s+(januari|februari|mars|april|maj|juni|juli|augusti|september|oktober|november|december|jan|feb|mar|apr|maj|jun|jul|aug|sep|okt|nov|dec)\w*\s+(\d{4})/i;
+      const sweDateRx = /(?<!\d)(\d{1,2})\s+(januari|februari|mars|april|maj|juni|juli|augusti|september|oktober|november|december|jan|feb|mar|apr|maj|jun|jul|aug|sep|okt|nov|dec)\w*\s+(\d{4})/i;
       const m = siblingText.match(sweDateRx);
       if (m) {
         const result = parseDate(siblingText);
@@ -1628,7 +1981,7 @@ function extractSwedishRelativeDates($: cheerio.CheerioAPI, source: string, base
     if (!foundDate) return;
 
     const timeMatch = cardText.match(/\b(\d{1,2}):(\d{2})\b/);
-    if (timeMatch) foundTime = `${timeMatch[1].padStart(2,'0')}:${timeMatch[2]}`;
+    if (timeMatch) foundTime = formatTime(timeMatch[1], timeMatch[2]) || '';
 
     let venue = '';
     for (const sel of ['[class*="venue"]','[class*="location"]','[class*="plats"]','[class*="arena"]','address']) {
@@ -1637,13 +1990,13 @@ function extractSwedishRelativeDates($: cheerio.CheerioAPI, source: string, base
     }
 
     const eventUrl = buildUrl(href, baseUrl);
-    const key = `${linkText}|${foundDate}|${foundTime}|${eventUrl}`;
+    const key = `${title}|${foundDate}|${foundTime}|${eventUrl}`;
     if (seenKeys.has(key)) return;
     seenKeys.add(key);
 
     try {
       const evt = ParsedEventSchema.parse({
-        title: linkText, date: foundDate, time: foundTime || undefined,
+        title, date: foundDate, time: foundTime || undefined,
         venue: venue || undefined, url: eventUrl || undefined,
         source, sourceUrl: eventUrl || baseUrl,
         confidence: {
@@ -1701,11 +2054,21 @@ function absolutizeUrl(raw: string, baseUrl: string): string {
 export function extractEvents(html: string, source: string, baseUrl: string): ExtractResult {
   const errors: string[] = [];
   const methodBreakdown: Record<string, number> = {};
+  const navSkipped: Record<string, number> = {};
   const allEvents: ParsedEvent[] = [];
   const seenKeys = new Set<string>();
 
   function addEvents(events: ParsedEvent[], method: string): void {
     for (const evt of events) {
+      // 2026-10-24 — navigations-/CTA-texter är aldrig event-namn. T.ex. en
+      // "köp biljetter"-länk i ett kort som råkar innehålla ett datum blev
+      // annars ett event med titeln "Köp biljetter". Se navigationTitles.ts
+      // för beviset (13 domäner) och den negativa kontrollen mot 12 120
+      // events i databasen.
+      if (isNavigationTitle(evt.title)) {
+        navSkipped[method] = (navSkipped[method] || 0) + 1;
+        continue;
+      }
       const key = `${evt.title}|${evt.date}|${evt.time || ''}|${evt.url || ''}`;
       if (seenKeys.has(key)) continue;
       seenKeys.add(key);
@@ -1724,6 +2087,10 @@ export function extractEvents(html: string, source: string, baseUrl: string): Ex
   const adapterResult = runAdapters(html, baseUrl, source);
   if (adapterResult && adapterResult.events.length > 0) {
     for (const evt of adapterResult.events) {
+      if (isNavigationTitle(evt.title)) {
+        navSkipped[adapterResult.adapter] = (navSkipped[adapterResult.adapter] || 0) + 1;
+        continue;
+      }
       const key = `${evt.title}|${evt.date}|${evt.time || ''}|${evt.url || ''}`;
       if (seenKeys.has(key)) continue;
       seenKeys.add(key);
@@ -1793,9 +2160,10 @@ export function extractEvents(html: string, source: string, baseUrl: string): Ex
   }
 
   const methodsUsed = Object.keys(methodBreakdown);
+  const navSkippedTotal = Object.values(navSkipped).reduce((a, b) => a + b, 0);
 
   if (enrichedEvents.length > 0) {
-    console.log(`[UniversalExtractor v2] ${enrichedEvents.length} events via ${methodsUsed.join('+')} | ${Object.entries(methodBreakdown).map(([k,v]) => `${k}:${v}`).join(', ')}${pageOgImage ? ' | og-image-fallback applied' : ''}`);
+    console.log(`[UniversalExtractor v2] ${enrichedEvents.length} events via ${methodsUsed.join('+')} | ${Object.entries(methodBreakdown).map(([k,v]) => `${k}:${v}`).join(', ')}${pageOgImage ? ' | og-image-fallback applied' : ''}${navSkippedTotal ? ` | nav-skipped: ${Object.entries(navSkipped).map(([k,v]) => `${k}:${v}`).join(', ')}` : ''}`);
   }
 
   // Strategy 3b (2026-10-14): Swedish time-of-day text enrichment.

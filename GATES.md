@@ -280,3 +280,53 @@ behållit.
        Importen saknade quarantine-guard — de fyra gates har den, importen
        hade den inte.
 
+
+# C3-extraktorn: kort, titel och datum (2026-10-24)
+
+Scope: C-gatens HTML-extraktion. Tre fel gjorde att hela venue-kalendrar
+missades eller att nyhetssidor producerade påhittade events.
+
+  1. **Layout-wrapper som "kort".** Tailwind-klasserna "items-center" /
+     "align-items-center" innehåller delsträngen "item" och matchar
+     därför `[class*="item"]`. C3:s `$a.closest(...)` snappar då kortet till
+     en tom layoutkolumn i stället för kortets egen post, och evenemanget
+     försvinner helt. Bevis (Generalization Protection Rule): 24–25
+     orelaterade domäner har samma substring-träff; 13 domäner ändrade
+     kortuppslagning. Fixen är *expanderande* — den kan bara skapa events,
+     aldrig ta bort.
+  2. **Årets siffror som datum.** Regexen för årslösa datum ("23 okt")
+     matchade de två sista siffrorna i ett ÅR om de följdes av en månadsnamn.
+     "...Through March 2027" + "Sep 30, 2026" blev "27 Sep" → 2027-09-27.
+     Fix: lookbehind `(?<!\d)` i fyra regexer.
+  3. **Ogiltiga datum/tider lämnade extractorn.** "30-31 oktober" gav
+     "2026-31-30"; "35:54" skrevs som klockslag. Fix: validering mot en
+     riktig kalenderdag och ett riktigt klockslag.
+
+Fixtures: `scripts/fixtures/*.html` — utklippta ur de RIKTIGA sidorna
+(scalateatern.se/forestallningar, rustourismnews.com, musikindustri.se,
+postmuseum.se). Ingen syntetisk event-markup.
+
+- [x] X1: positiv kontroll — riktig venue-lista ger events med giltiga datum
+  CHECK: node scripts/verify-c3-extractor.mjs x1
+  EXPECT: /x1: scalateatern \d+ events.*"31 okt" → 2026-10-31 pass/
+  EVIDENCE: automatic-evidence=v1; definition-sha256=5d57c17a43efafa089c52ec96966a1ca213fee30574ce621b07b36098c02f02c; exit=0; EXPECT=matched; output-sha256=1ae017d3fa5b01d86ef3d3f317ba4ed96946a3d3cc7aafc2d6e11f87e2de4abd; output-bytes=83; shell=/bin/sh; cwd=/Users/claudgashi/EventPulse; path=29325ef63737/16 entries
+
+- [x] X2: negativ kontroll — nyhetssidor ger INGA events
+  CHECK: node scripts/verify-c3-extractor.mjs x2
+  EXPECT: /x2: 3 nyhetssidor gav 0 events pass/
+  EVIDENCE: automatic-evidence=v1; definition-sha256=bb2d43256cafef2e65a3258223d6e6a194052dcafc19ee13b14b11da2e53cc15; exit=0; EXPECT=matched; output-sha256=24200de4e2b96ffd9bcc26e83a8a50ebebb51f30e3f98fc2e227d5bcf7f6745e; output-bytes=36; shell=/bin/sh; cwd=/Users/claudgashi/EventPulse; path=29325ef63737/16 entries
+
+- [x] X3: inga ogiltiga datum eller klockslag lämnar extractorn
+  CHECK: node scripts/verify-c3-extractor.mjs x3
+  EXPECT: /x3: inga ogiltiga datum eller klockslag i \d+ sidor pass/
+  EVIDENCE: automatic-evidence=v1; definition-sha256=ede9cb28e8219063751e54c35129cefaca164c4a1e033d2fc09e770f10804de3; exit=0; EXPECT=matched; output-sha256=55223ab82c753886ac5a345ce6f18c8daa5907ec3646a82ba724852ecaf924ad; output-bytes=55; shell=/bin/sh; cwd=/Users/claudgashi/EventPulse; path=29325ef63737/16 entries
+
+- [x] X4: negativ kontroll mot extraktor UTAN fixen — gaten kan faila
+  CHECK: node scripts/verify-c3-extractor.mjs x4
+  EXPECT: /x4: utan lookbehind ger nyhetssidorna \d+ skräpeevents — gaten kan faila pass/
+  EVIDENCE: automatic-evidence=v1; definition-sha256=e73d7c2e8e163d002b9ebcaa7f4da67e20c6ba391a634dde8ce889d04b18fd31; exit=0; EXPECT=matched; output-sha256=2fc6637aab4341f96a62660000ea521ee90a5abcaac24faa947205e82487875a; output-bytes=79; shell=/bin/sh; cwd=/Users/claudgashi/EventPulse; path=29325ef63737/16 entries
+
+- [x] X5: ingen källa tappar events om den inte är godkänd
+  CHECK: node scripts/verify-c3-extractor.mjs x5
+  EXPECT: /x5: \d+ källor jämförda, \d+ nedgångar \(alla godkända: .*\) pass/
+  EVIDENCE: automatic-evidence=v1; definition-sha256=2854a607d2e58e3d5dc6cc23186492367a236bd3e588669788b41e8ca8e2e8c7; exit=0; EXPECT=matched; output-sha256=6150292455665ea9806f42435b68da3c8a6d09212113cc465ca6b1a2d5134864; output-bytes=89; shell=/bin/sh; cwd=/Users/claudgashi/EventPulse; path=29325ef63737/16 entries

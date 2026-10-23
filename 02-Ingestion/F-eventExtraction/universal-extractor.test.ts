@@ -12,7 +12,7 @@
 
 import { describe, it, expect } from 'vitest';
 import { readFileSync } from 'fs';
-import { extractEvents } from './universal-extractor';
+import { extractEvents, parseSwedishMonthDay } from './universal-extractor';
 
 // Real markup från https://www.nordiskamuseet.se/evenemang/ (2026-10-23).
 // Teasern har BARA en klocktid (10:00-17:00) — datumet finns på detaljsidan.
@@ -1298,5 +1298,198 @@ describe('universal-extractor — Strategy 3b: Swedish time-of-day text', () => 
     // Exactly 1 event, not 2 (time text does NOT create a new event)
     expect(result.events.length).toBe(1);
     expect(result.events[0].time).toBe('19:00');
+  });
+});
+
+/**
+ * Navigations-/CTA-titlar (2026-10-24).
+ *
+ * C1/C2/C3 gör ibland en navigationslänk till event-titel bara för att
+ * länken ligger i ett "kort" som även innehåller ett datum. Körningen över
+ * 30 live-källor gav 26 brus-rader av 123 datumberoende, över 13 domäner.
+ */
+describe('universal-extractor — navigations-/CTA-titlar blockeras', () => {
+  it('en "köp biljetter"-länk i ett datum-kort blir inte ett event', () => {
+    const html = `<!doctype html><body>
+<div class="event-card">
+  <a href="/biljetter">Köp biljetter</a>
+  <time datetime="2026-11-05">5 nov</time>
+</div></body></html>`;
+    const result = extractEvents(html, 'folkoperanse', 'https://folkoperan.se/kop-biljetter/');
+    expect(result.events.length).toBe(0);
+  });
+
+  it('en "Läs mer"-länk i ett highlighted-event-kort blir inte ett event', () => {
+    const html = `<!doctype html><body>
+<section class="component-highlighted-event">
+  <div class="col-md-6"><a href="/pa-gang/hostlov/">Läs mer</a></div>
+  <time datetime="2026-10-29">29 okt</time>
+</section></body></html>`;
+    const result = extractEvents(html, 'tekniska-museet', 'https://www.tekniskamuseet.se/pa-gang/');
+    expect(result.events.length).toBe(0);
+  });
+
+  it('ett riktigt event i samma kort överlever', () => {
+    const html = `<!doctype html><body>
+<div class="event-card">
+  <h3>Höstlov på Postmusuem</h3>
+  <a href="/aktuellt/hostlov/">Läs mer</a>
+  <time datetime="2026-10-26">26 okt</time>
+</div></body></html>`;
+    const result = extractEvents(html, 'postmuseum', 'https://www.postmuseum.se/aktuellt/');
+    expect(result.events.length).toBeGreaterThan(0);
+    expect(result.events.some((e) => e.title === 'Höstlov på Postmusuem')).toBe(true);
+    expect(result.events.some((e) => e.title === 'Läs mer')).toBe(false);
+  });
+});
+
+/**
+ * Årslösa svenska datum (2026-10-24).
+ *
+ * Svenska venue-kalendrar visar ofta "23 okt" UTAN år. C3:s svenska
+ * datum-regex krävde ett år, så sidorna gav NOLL events trots att de
+ * visade tiotals riktiga evenemang.
+ *
+ * Bevis (Generalization Protection Rule → General): 4 orelaterade domäner
+ *   nojesfabriken.se ("23 okt"), scalateatern.se ("24 okt lördag 19:30"),
+ *   dif.se ("lör 24 okt 17:30"), junibacken.se ("23 Okt").
+ */
+describe('universal-extractor — årslösa svenska datum', () => {
+  it('parseSwedishMonthDay: framtid i år → detta år', () => {
+    const now = new Date('2026-10-22T12:00:00Z');
+    expect(parseSwedishMonthDay('23', 'okt', now)).toBe('2026-10-23');
+    expect(parseSwedishMonthDay('6', 'nov', now)).toBe('2026-11-06');
+  });
+
+  it('parseSwedishMonthDay: datum som passerat → nästa år', () => {
+    const now = new Date('2026-10-24T12:00:00Z');
+    expect(parseSwedishMonthDay('23', 'okt', now)).toBe('2027-10-23');
+    expect(parseSwedishMonthDay('5', 'jan', now)).toBe('2027-01-05');
+  });
+
+  it('parseSwedishMonthDay: ogiltiga datum ger null', () => {
+    const now = new Date('2026-10-22T12:00:00Z');
+    expect(parseSwedishMonthDay('31', 'feb', now)).toBeNull();
+    expect(parseSwedishMonthDay('45', 'okt', now)).toBeNull();
+    expect(parseSwedishMonthDay('0', 'okt', now)).toBeNull();
+    expect(parseSwedishMonthDay('23', 'hopp', now)).toBeNull();
+  });
+
+  it('ett "24 okt"-kort blir ett event med rätt datum', () => {
+    const html = `<!doctype html><body>
+<div class="event-card">
+  <div class="calendar-item__date">24 okt</div>
+  <h2 class="calendar-item__title">Backstreet Girls + Ström</h2>
+</div></body></html>`;
+    const result = extractEvents(html, 'nojesfabriken', 'https://www.nojesfabriken.se/nojeskalendern/');
+    expect(result.events.length).toBeGreaterThan(0);
+    const evt = result.events.find((e) => e.title === 'Backstreet Girls + Ström');
+    expect(evt).toBeDefined();
+    expect(evt!.date).toMatch(/^\d{4}-\d{2}-\d{2}$/);
+    // Datumet ska ligga i framtiden (närmaste förekomst), inte i går.
+    expect(evt!.date >= new Date().toISOString().slice(0, 10)).toBe(true);
+  });
+
+  it('ett årslöst datum med tid ger tiden också', () => {
+    const html = `<!doctype html><body>
+<div class="event-card">
+  <div class="calendar-item__date">24 okt lördag</div>
+  <h2 class="calendar-item__title">CHRISTOFFER NYQVIST – LEJONET FRÅN NORDEN</h2>
+  <span>19:30</span>
+</div></body></html>`;
+    const result = extractEvents(html, 'wwwscalateaternse', 'https://www.scalateatern.se/forestallningar/');
+    const evt = result.events.find((e) => e.title.includes('CHRISTOFFER NYQVIST'));
+    expect(evt).toBeDefined();
+    expect(evt!.time).toBe('19:30');
+  });
+
+  it('arkiv-sidor får INTE år infererat (tidigare evenemang ska inte vändas till nästa år)', () => {
+    const html = `<!doctype html><body>
+<div class="event-card">
+  <div class="calendar-item__date">23 okt</div>
+  <h2 class="calendar-item__title">Gammalt evenemang</h2>
+</div></body></html>`;
+    const result = extractEvents(html, 'nojesfabriken', 'https://www.nojesfabriken.se/nojeskalendern/tidigare-evenemang/');
+    expect(result.events.length).toBe(0);
+  });
+
+  it('ett datum MED år påverkas inte (regression: "23 okt 2026" ska vara 2026)', () => {
+    const html = `<!doctype html><body>
+<div class="event-card">
+  <div class="calendar-item__date">23 okt 2026</div>
+  <h2 class="calendar-item__title">Med år</h2>
+</div></body></html>`;
+    const result = extractEvents(html, 'nojesfabriken', 'https://www.nojesfabriken.se/nojeskalendern/');
+    const evt = result.events.find((e) => e.title === 'Med år');
+    expect(evt).toBeDefined();
+    expect(evt!.date).toBe('2026-10-23');
+  });
+});
+
+describe('universal-extractor — datum-/tidvalidering (2026-10-24)', () => {
+  it('NEGATIV KONTROLL: årets sista två siffror får INTE bli ett datum ("2027" + "Sep 30" → "27 Sep")', () => {
+    // Riktig markup från rustourismnews.com: rubriken slutar på "2027" och
+    // strax efter kommer publiceringsdatumet "Sep 30, 2026". Utan lookbehind
+    // matchar "27 Sep" → 2027-09-27, ett påhittat event.
+    const html = `<!doctype html><html><body>
+<article class="post type-post">
+  <h2 class="entry-title"><a href="https://www.rustourismnews.com/2026/09/30/air-canada-pushes-dubai-return-back-again-flights-cancelled-through-march-2027/">Air Canada Pushes Dubai Return Back Again — Flights Cancelled Through March 2027</a></h2>
+  <div class="entry-meta">Sep 30, 2026</div>
+  <p>Air Canada has again pushed back its return to Dubai, extending the suspension of flights until the end of March 2027.</p>
+</article></body></html>`;
+    const result = extractEvents(html, 'wwwrustourismnewscom', 'https://www.rustourismnews.com/');
+    expect(result.events.length).toBe(0);
+  });
+
+  it('POSITIV KONTROLL: ett riktigt årslöst datum ("23 okt") fungerar fortfarande', () => {
+    const html = `<!doctype html><body>
+<div class="event-card">
+  <div class="calendar-item__date">23 okt</div>
+  <h2 class="calendar-item__title">Riktigt evenemang</h2>
+</div></body></html>`;
+    const result = extractEvents(html, 'nojesfabriken', 'https://www.nojesfabriken.se/nojeskalendern/');
+    const evt = result.events.find((e) => e.title === 'Riktigt evenemang');
+    expect(evt).toBeDefined();
+    expect(evt!.date).toMatch(/^\d{4}-\d{2}-\d{2}$/);
+  });
+
+  it('ogiltiga kalenderdatum lämnar INTE extractorn ("30-31 oktober" → 2026-31-30)', () => {
+    const html = `<!doctype html><body>
+<article class="post type-post">
+  <h2 class="entry-title"><a href="https://dansenshus.se/program/">Elina Pirinen — Ghosts of Rosegarden 30-31 oktober 2026</a></h2>
+  <div class="entry-meta">30-31 oktober 2026</div>
+</article></body></html>`;
+    const result = extractEvents(html, 'dansenshus-sv', 'https://dansenshus.se/');
+    for (const e of result.events) {
+      expect(e.date).toMatch(/^\d{4}-\d{2}-\d{2}$/);
+      const d = new Date(`${e.date}T00:00:00Z`);
+      expect(d.toISOString().slice(0, 10)).toBe(e.date);
+    }
+  });
+
+  it('ogiltiga klockslag skrivs inte som event-tid ("35:54")', () => {
+    const html = `<!doctype html><body>
+<div class="event-card">
+  <div class="calendar-item__date">12 nov</div>
+  <h2 class="calendar-item__title">Tid med trasig timme</h2>
+  <span>35:54</span>
+</div></body></html>`;
+    const result = extractEvents(html, 'dansenshus-sv', 'https://dansenshus.se/');
+    for (const e of result.events) {
+      if (e.time) expect(e.time).toMatch(/^([01]\d|2[0-3]):[0-5]\d$/);
+    }
+  });
+
+  it('giltiga klockslag överlever valideringen ("19:30")', () => {
+    const html = `<!doctype html><body>
+<div class="event-card">
+  <div class="calendar-item__date">12 nov</div>
+  <h2 class="calendar-item__title">Tid med rätt timme</h2>
+  <span>19:30</span>
+</div></body></html>`;
+    const result = extractEvents(html, 'nojesfabriken', 'https://www.nojesfabriken.se/nojeskalendern/');
+    const evt = result.events.find((e) => e.title === 'Tid med rätt timme');
+    expect(evt).toBeDefined();
+    expect(evt!.time).toBe('19:30');
   });
 });

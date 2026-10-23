@@ -12,10 +12,13 @@
  *  - is purely punctuation / symbols
  *  - is a placeholder ("TBD", "TODO", "Coming soon", "Test", "Placeholder")
  *  - is just a date pattern ("2026-09-27", "27/9 2026")
+ *  - is a navigation/CTA phrase ("Köp biljetter", "Läs mer", "På startsidan")
  *
  * The gate is intentionally narrow — false positives would silently drop real events.
  * Suspicious-but-not-rejected titles are NOT blocked here; only obvious garbage is.
  */
+
+import { isNavigationTitle } from '../02-Ingestion/F-eventExtraction/navigationTitles.js';
 
 export interface TitleGateResult {
   ok: boolean;
@@ -81,6 +84,12 @@ export function evaluateTitle(title: string | undefined | null, source: string):
   }
   if (DATE_ONLY_RX.test(trimmed)) {
     return { ok: false, reason: 'date-only', normalised };
+  }
+  // Navigations-/CTA-texter är aldrig event-namn. Bevis: 65 rader över 13
+  // orelaterade domäner i corpuset; 0 av 12 120 events i databasen har
+  // någon av dessa titlar (negativ kontroll → ingen falsk positiv).
+  if (isNavigationTitle(trimmed)) {
+    return { ok: false, reason: 'navigation-text', normalised };
   }
 
   // Source-name match: title equals source (e.g. source=folkoperan, title=Folkoperan)
