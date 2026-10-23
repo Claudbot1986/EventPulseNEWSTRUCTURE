@@ -4,7 +4,14 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-dotenv.config({ path: path.resolve(__dirname, '../../../../.env'), override: true });
+// .env ligger ETT steg upp från 03-Queue. Sökvägen var '../../../../.env',
+// alltså /Users/.env — filen finns inte, så dotenv laddade 0 variabler och
+// getConnection() föll tillbaka på 'redis://host.docker.internal:6379', en
+// Docker-adress som inte finns på maskinen. Symptom: "Connection is closed"
+// för varje CLI som importerar den här modulen utan att REDIS_URL redan
+// finns i miljön. Nightly-flödet har aldrig märkt det — launchd-plisten gör
+// `set -a; . ./.env`, så där är variabeln redan satt (2026-10-23).
+dotenv.config({ path: path.resolve(__dirname, '../.env'), override: true });
 
 import { Queue, Worker, type Job, type ConnectionOptions } from 'bullmq';
 import IORedis from 'ioredis';
@@ -141,4 +148,28 @@ export async function clearSmokeTestQueue(): Promise<void> {
   } catch (err) {
     console.log('[smoke-test] Queue cleanup:', (err as Error).message);
   }
+}
+
+/**
+ * Stäng alla köer och deras Redis-anslutningar.
+ *
+ * Kortlivade CLI:er (runB, scheduler, e2e) som importerar den här modulen
+ * öppnar fyra beständiga ioredis-sockets som annars håller Node:s eventloop
+ * öppen för alltid. Utan detta avslutas processen aldrig — bara för att den
+ * lyckades köa minst ett event (2026-10-23: B-gates hängde i 8+ min efter
+ * att den skrivit sin summary, med fyra ESTABLISHED-sockets till Redis).
+ *
+ * Anropa detta från alla batch-CLI:er strax före process.exit().
+ */
+export async function closeAllQueues(): Promise<void> {
+  const queues = [rawEventsQueue, smokeTestQueue, searchSyncQueue, imageGenerationQueue];
+  await Promise.all(
+    queues.map(async (queue) => {
+      try {
+        await queue.close();
+      } catch (err) {
+        console.error('[queue] close failed:', (err as Error).message);
+      }
+    })
+  );
 }

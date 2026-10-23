@@ -97,6 +97,10 @@ const STEP_COUNT_RECIPES: Record<string, RegExp> = {
   'ra-stockholm': /^\s*queued:\s*(\d+)/m,
   // ingest-posh-stockholm.mjs:214 — samma format som luma
   'posh-stockholm': /^\s*queued:\s*(\d+)/m,
+  // 03-Queue/drainQueue.ts — "[drain] avslutar (X): completed=3535 failed=4 ..."
+  // Detta är det ENDA steget som skriver events till Supabase. Utan det tog
+  // kedjan slut med 3 548 jobb liggande i raw_events sedan 2026-10-20.
+  'worker-drain': /^\[drain\] avslutar \([^)]*\): completed=(\d+)/m,
 };
 
 /**
@@ -520,6 +524,21 @@ if (!skipImages) {
     args: ['tsx', '--eval', `import('./08-Agent/services/imageGen.matchLibraryFirst.ts').then(m => m.matchLibraryFirst({ limit: ${imageLimit}, onlyMissing: true, libraryConcurrency: 5, bflConcurrency: 3, skipBflFallback: ${smoke || skipBfl} })).then(r => console.log(JSON.stringify(r))).catch(e => { console.error(e); process.exit(1); })`],
   });
 
+  // ── worker-drain: sista milen till Supabase ───────────────────────────
+  // Alla steg ovanför skriver till BullMQ-kön `raw_events`. Utan det här steget
+  // ingick de i en kö som ingen dränera i denna kedja — runDaily.ts har en
+  // 15-minuters drain, men det är inte den launchd kör (plisten pekar på
+  // scripts/ingestion-cron.ts). Mätt 2026-10-23: 3 548 jobb väntande, äldsta
+  // från 2026-10-20, 0 persisterade av nattens 1 147 "funna" events.
+  //
+  // Placerat FÖRE P2C, som läser ur databasen och alltså ska se de nycklade
+  // eventsen. --max-ms ger en hård gräns så att steget alltid avslutas.
+  steps.push({
+    name: 'worker-drain',
+    cmd: 'npx',
+    args: ['tsx', '03-Queue/drainQueue.ts', '--max-ms', String(smoke ? 60_000 : 900_000)],
+  });
+
   // ── P2C: Active-learning closed loop ──────────────────────────────────
   // Triggar review-flagga för låg-confidence events → record_feedback
   // → dashboard visar dem i human-review modal.
@@ -610,6 +629,30 @@ if (!skipCandidateTests) {
     args: ['tsx', '07-Discovery/src/sourceTesting/runSourceCandidateTests.ts', '--phase=smoke', `--limit=${smoke ? '1' : '20'}`],
   });
 }
+
+// ─── Ordning: discovery FÖRE ingestion (2026-10-23) ─────────────────────────
+//
+// Kedjan är nu: P3A/P3B/P3C hittar kandidater → P3D testar och promote:ar dem
+// till sources/<slug>.jsonl → A-gatet plockar upp dem (getNextABatch() filtrerar
+// på status === 'never_run') → B/C/D tar vid.
+//
+// Före flytten låg P3D som steg 23 av 23, alltså EFTER A. En källa som
+// promote:ades 08:08 av P3D kunde därför inte nå A-gatet förrän nästa natt
+// kl 02:00 — upp till 18 timmars latens. Ordningen är den enda ändringen;
+// inga stegs kommandon eller gränser har rörts.
+const P3_STEP_NAMES = new Set([
+  'P3A-discovery',
+  'P3B-venue-graph-geo',
+  'P3C-rss-discovery',
+  'P3D-source-candidate-tests',
+]);
+
+steps.splice(
+  0,
+  steps.length,
+  ...steps.filter((s) => P3_STEP_NAMES.has(s.name)),
+  ...steps.filter((s) => !P3_STEP_NAMES.has(s.name)),
+);
 
 // ─── Pre-discovery kill check (2026-10-18) ────────────────────────────────
 

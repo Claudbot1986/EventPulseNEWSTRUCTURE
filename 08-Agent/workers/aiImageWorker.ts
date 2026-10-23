@@ -500,6 +500,22 @@ export function startAiImageWorker(): Worker<AiImageJob> | null {
   return _worker;
 }
 
+/**
+ * Stäng ai-image-workern. Nödvändig för kortlivade CLI:er som importerar
+ * normalizer.ts — den startar workern vid modulimport (rad 28), och en öppen
+ * BullMQ-Worker håller Redis-socketen levande så att processen aldrig avslutas.
+ * Exempel: 03-Queue/drainQueue.ts.
+ */
+export async function stopAiImageWorker(): Promise<void> {
+  if (!_worker) return;
+  try {
+    await _worker.close();
+  } catch (err) {
+    console.error('[ai-image-worker] close failed:', (err as Error).message);
+  }
+  _worker = null;
+}
+
 // Starta worker direkt om denna fil körs (CLI-läge). ESM-säker main-check:
 // require.main saknas i ESM-scope — jämför import.meta.url mot argv[1].
 import { fileURLToPath } from 'url';

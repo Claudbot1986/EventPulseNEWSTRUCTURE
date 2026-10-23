@@ -435,6 +435,20 @@ async function main() {
   console.log(`  ⚠️  postB:      ${strongCandidate} (stark B-kandidat)`);
   console.log(`  ❌ → preC:     ${toC}`);
   console.log(`  Events:         ${totalEvents}`);
+
+  // Stäng Redis-sockets INNAN vi avslutar. queueEvent() importerar
+  // 03-Queue/queue.js lättvindigt, så köerna har bara öppnats om vi faktiskt
+  // köat events — och en öppen ioredis-socket håller eventloopen levande för
+  // alltid. Utan detta hänger B precis när det lyckas (2026-10-23: summary
+  // skrevs, fyra ESTABLISHED-sockets kvar, processen avslutade aldrig).
+  if (totalEvents > 0) {
+    try {
+      const { closeAllQueues } = await import('../../03-Queue/queue.js');
+      await closeAllQueues();
+    } catch (err) {
+      console.error('[B-runner] queue close failed:', (err as Error).message);
+    }
+  }
 }
 
 // Allow top-level execution

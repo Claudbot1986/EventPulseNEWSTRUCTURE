@@ -42,6 +42,19 @@
 
 import { createClient, type SupabaseClient } from '@supabase/supabase-js';
 import { runGoogleCseDiscovery } from './googleCustomSearch.js';
+import * as dotenv from 'dotenv';
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+// P3A var det ENDA av de fyra discovery-stegen som inte laddade .env själv
+// (geoExpansion, rssDiscovery och runSourceCandidateTests gör det). Utan detta
+// är EXA_API_KEY och SUPABASE_URL bara närvarande om föräldraprocessen råkar
+// exportera dem — launchd-plistens `set -a` räckte tills körningen startades
+// på något annat sätt. Verifierat 2026-10-23: en manuell `npx tsx
+// ingestion-cron.ts` gav P3A exit=1 med "EXA_API_KEY saknas eller är
+// placeholder" fast nyckeln ligger på rad 24 i .env.
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+dotenv.config({ path: path.resolve(__dirname, '../../../.env'), override: true });
 
 // ── Supabase client (service_role) ─────────────────────────────────────────
 

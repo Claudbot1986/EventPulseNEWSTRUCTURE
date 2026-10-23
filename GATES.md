@@ -69,3 +69,29 @@ körningar. city_added: source_candidates + source_candidate_test_queue (0003).
   CHECK: node scripts/verify-fixes.mjs h6
   EXPECT: /h6: promoted source ran in A-gate events>0 total=\d+ pass/
   EVIDENCE: automatic-evidence=v1; definition-sha256=96f235aecfdb2369f43e967df1b9e89d87fbf7e417620c28f24639c12f5644ea; exit=0; EXPECT=matched; output-sha256=e5393101830357d58b428ed9df85383cc0d9ac65ef3368bab4310f293a5333ae; output-bytes=56; shell=/bin/sh; cwd=/Users/claudgashi/EventPulse; path=29325ef63737/16 entries
+
+# End-to-end: hela kedjan ger events (2026-10-23, körning 32263)
+
+Scope: kör ingestion + discovery på riktig data tills kedjan producerar events.
+Hittade under körningen: B-gates hänger i evigheten NÄR den lyckas köa events
+(lazy-import av 03-Queue/queue.js öppnar 4 Redis-sockets som aldrig stängs).
+
+- [ ] E1: stängningsfunktion finns och runB stänger köerna före process.exit
+  CHECK: node scripts/verify-fixes.mjs e1
+  EXPECT: /e1: closeAllQueues exporterad\+ runB anropar den pass/
+
+- [ ] E2: ingen gate hänger — varje steg får step-end inom 20 min
+  CHECK: node scripts/verify-fixes.mjs e2
+  EXPECT: /e2: steg utan step-end=\d+ hängda=\d+ pass/
+
+- [ ] E3: kedjan producerar events — totalEventsPersisted > 0
+  CHECK: node scripts/verify-fixes.mjs e3
+  EXPECT: /e3: persisted=\d+ sources_success=\d+ pass/
+
+- [ ] E4: discovery→ingestion går igenom på EN körning (ny källa → A-gate → events)
+  CHECK: node scripts/verify-fixes.mjs e4
+  EXPECT: /e4: promote efter A-körning=\d+ ordning=först pass/
+
+- [ ] E5: ingen källa försvinner tyst — varje död källa är begravd med orsak eller i kö
+  CHECK: node scripts/verify-fixes.mjs e5
+  EXPECT: /e5: graveyard=\d+ utan_orsak=0 pass/

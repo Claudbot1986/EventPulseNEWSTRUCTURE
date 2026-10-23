@@ -2291,6 +2291,29 @@ export async function runDynamicPoolBatch(options: DynamicPoolOptions = {}): Pro
       .map(([key]) => key.split('__')[0]),
   };
 
+  // Källor som lämnat poolen med queuePath === '' ("STAYS_IN_POOL", färre än 3
+  // rundor) skrivs inte till någon kö — de finns bara kvar i state.activePool.
+  // Innan 2026-10-23 skrevs de aldrig tillbaka vid normalt slut, bara vid SIGINT.
+  // Effekt: varje källa som misslyckades i C utan att nå 3 rundor försvann tyst
+  // ur kedjan. Mätt 26 källor, varav 15 låg dessutom i stader utanför Stockholm
+  // och skulle aldrig kunna gå igenom isInScope() igen.
+  const stillActive = state.activePool ?? [];
+  if (stillActive.length > 0) {
+    const lines = stillActive
+      .filter((s: PoolSource) => !state.allExitedIds.includes(s.sourceId))
+      .map((s: PoolSource) => JSON.stringify({
+        sourceId: s.sourceId,
+        queueName: 'postB-preC',
+        queuedAt: new Date().toISOString(),
+        priority: 3,
+        attempt: 1,
+        queueReason: `C: kvar i pool efter ${state.poolRoundNumber} rundor — återköad`,
+      }))
+      .join('\n');
+    if (lines) appendFileSync(QUEUES.PREC, lines + '\n', 'utf8');
+    console.log(`[RunComplete] ${stillActive.length} källor återlagda i postB-preC (tyst dropp tidigare).`);
+  }
+
   // Mark batch complete
   const completionEntry = {
     batchId: `batch-${BATCH_NUM}`,

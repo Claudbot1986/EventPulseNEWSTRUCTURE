@@ -25,6 +25,11 @@
  *   h4 — stale processing-rader reclaimas ur P3D-kön
  *   h5 — en promotead källa är faktiskt nåbar för A-gatet
  *   h6 — A-gatet har kört en promotead källa och persisterat events
+ *   e1 — stängningsfunktion finns och runB stänger köerna före process.exit
+ *   e2 — ingen gate hänger: varje step-start har ett step-end
+ *   e3 — kedjan producerar events (totalEventsPersisted > 0)
+ *   e4 — discovery→ingestion går igenom på EN körning (promote före A)
+ *   e5 — döda källor har orsak; uppenbart döda (404/DNS) ligger i kyrkogravet
  */
 
 import fs from 'node:fs';
@@ -387,7 +392,185 @@ function h6() {
   return ok(`h6: promoted source ran in A-gate events>0 total=${withEvents.length} pass`);
 }
 
-const gates = { g1, g2, g3, g4, g5, g6, h1, h2, h3, h4, h5, h6 };
+// ─── E: hela kedjan ger events (2026-10-23) ───────────────────────────────
+
+// E1 — statisk kontroll av B-fixen. B-gates importerar 03-Queue/queue.js
+// lättvindigt (fetchTools.ts:222), vilket öppnar fyra beständiga BullMQ-köer.
+// Utan explicit stängning håller en öppen ioredis-socket Node:s eventloop
+// levande för alltid — B hängde alltså PRECIS NÄR DET LYCKADES köa events.
+function e1() {
+  const queueTs = readFileSync(path.join(ROOT, '03-Queue/queue.ts'), 'utf8');
+  const runBTs = readFileSync(path.join(ROOT, '02-Ingestion/B-JSON-feedGate/runB.ts'), 'utf8');
+  const exported = /export\s+(async\s+)?function\s+closeAllQueues/.test(queueTs);
+  if (!exported) return fail('e1: FAIL closeAllQueues är inte exporterad ur 03-Queue/queue.ts');
+  const closesAll = /rawEventsQueue[\s\S]{0,400}smokeTestQueue[\s\S]{0,400}searchSyncQueue[\s\S]{0,400}imageGenerationQueue/.test(queueTs);
+  if (!closesAll) return fail('e1: FAIL closeAllQueues stänger inte alla fyra köerna');
+  const called = /closeAllQueues\s*\(\s*\)/.test(runBTs) && /await\s+import\(['"]\.\.\/\.\.\/03-Queue\/queue\.js['"]\)/.test(runBTs);
+  if (!called) return fail('e1: FAIL runB.ts anropar inte closeAllQueues före avslut');
+  return ok('e1: closeAllQueues exporterad + runB anropar den pass');
+}
+
+// E2 — ingen gate får hänga. Läser chain-overview.log: varje step-start i den
+// senaste körningen (sista pid:t) måste ha ett step-end. Ett steg-start utan
+// step-end är exakt B-hängningen från 2026-10-23.
+function e2() {
+  const logPath = path.join(ROOT, 'runtime/ingestion-cron/chain-overview.log');
+  if (!fs.existsSync(logPath)) return fail('e2: FAIL chain-overview.log saknas');
+  const rows = [];
+  for (const line of readFileSync(logPath, 'utf8').split('\n')) {
+    if (!line.trim()) continue;
+    try { rows.push(JSON.parse(line)); } catch { /* hoppas över */ }
+  }
+  const runs = [...new Set(rows.filter((r) => r.pid).map((r) => r.pid))];
+  if (runs.length === 0) return fail('e2: FAIL inga körningar i chain-overview.log');
+  const last = runs[runs.length - 1];
+  const own = rows.filter((r) => r.pid === last);
+  const ended = new Set(own.filter((r) => r.event === 'step-end').map((r) => r.step));
+  const started = own.filter((r) => r.event === 'step-start').map((r) => r.step);
+  const missing = [...new Set(started)].filter((s) => !ended.has(s));
+  if (missing.length > 0) {
+    return fail(`e2: FAIL steg utan step-end=${missing.length} hängda=1 (${missing.join(', ')}) pid=${last}`);
+  }
+  return ok(`e2: steg utan step-end=0 hängda=0 pass (pid=${last}, ${ended.size} steg avslutade)`);
+}
+
+// E3 — kedjan producerar events. totalEventsPersisted ska vara ett reellt tal
+// > 0 i den senaste körning som inte är en e2e-sandloll.
+function e3() {
+  const runsPath = path.join(ROOT, 'runtime/ingestion_runs.jsonl');
+  if (!fs.existsSync(runsPath)) return fail('e3: FAIL ingestion_runs.jsonl saknas');
+  const rows = [];
+  for (const line of readFileSync(runsPath, 'utf8').split('\n')) {
+    if (!line.trim()) continue;
+    try { rows.push(JSON.parse(line)); } catch { /* hoppas över */ }
+  }
+  const real = rows.filter((r) => r.triggerSource !== 'e2e');
+  if (real.length === 0) return fail('e3: FAIL inga riktiga körningar (bara e2e) i ingestion_runs.jsonl');
+  const persisted = real.reduce((s, r) => s + (typeof r.totalEventsPersisted === 'number' ? r.totalEventsPersisted : 0), 0);
+  const okRuns = real.filter((r) => r.ok).length;
+  if (persisted <= 0) {
+    const last = real[real.length - 1];
+    return fail(`e3: FAIL persisted=0 sources_success=${last.sourcesSucceeded ?? 0} (${real.length} körningar)`);
+  }
+  const withEvents = real.filter((r) => (r.totalEventsPersisted ?? 0) > 0).length;
+  if (withEvents === 0) return fail('e3: FAIL 0 körningar med events');
+  return ok(`e3: persisted=${persisted} sources_success=${okRuns} pass (${withEvents}/${real.length} körningar med events)`);
+}
+
+// E4 — discovery→ingestion i EN körning. Kräver att P3D avslutas FÖRE A i
+// chain-overview.log för sista körningen, och att en källa som P3D skrev under
+// den körningen fick en färsk statusrad från A-gatet efteråt.
+function e4() {
+  const logPath = path.join(ROOT, 'runtime/ingestion-cron/chain-overview.log');
+  if (!fs.existsSync(logPath)) return fail('e4: FAIL chain-overview.log saknas');
+  const rows = [];
+  for (const line of readFileSync(logPath, 'utf8').split('\n')) {
+    if (!line.trim()) continue;
+    try { rows.push(JSON.parse(line)); } catch { /* hoppas över */ }
+  }
+  const runs = [...new Set(rows.filter((r) => r.pid).map((r) => r.pid))];
+  if (runs.length === 0) return fail('e4: FAIL inga körningar i chain-overview.log');
+  const last = runs[runs.length - 1];
+  const own = rows.filter((r) => r.pid === last && r.event === 'step-end');
+  const at = (name) => own.findIndex((r) => r.step === name);
+  const p3d = at('P3D-source-candidate-tests');
+  const a = at('A-directAPI');
+  if (p3d === -1 || a === -1) {
+    return fail(`e4: FAIL körningen saknar steg (P3D=${p3d} A=${a}) — kan inte bevisa ordningen`);
+  }
+  if (p3d > a) return fail(`e4: FAIL P3D avslutades EFTER A (P3D idx=${p3d}, A idx=${a}) — ny källa väntar till nästa natt`);
+
+  // Nu: finns det en källa som skrevs till disk under körningen och sedan fick
+  // en färsk statusrad? Annars finns ingen ny promote att följa vidare.
+  const runStartRow = rows.find((r) => r.pid === last);
+  const startTs = runStartRow?.ts ? Date.parse(runStartRow.ts) : null;
+  if (startTs === null) return fail('e4: FAIL körningen saknar startts');
+  const sourcesDir = path.join(ROOT, 'sources');
+  const fresh = readdirSync(sourcesDir)
+    .filter((f) => f.endsWith('.jsonl'))
+    .filter((f) => fs.statSync(path.join(sourcesDir, f)).mtimeMs > startTs);
+  if (fresh.length === 0) {
+    return fail(`e4: FAIL 0 nya källfiler under körningen — ordning=först men ingen ny källa att ta vid (pid=${last})`);
+  }
+  const statuses = new Map();
+  for (const line of readFileSync(path.join(ROOT, 'runtime/sources_status.jsonl'), 'utf8').split('\n')) {
+    if (!line.trim()) continue;
+    try { const row = JSON.parse(line); statuses.set(row.sourceId, row); } catch { /* hoppas över */ }
+  }
+  const picked = fresh.filter((f) => {
+    const row = statuses.get(f.replace(/\.jsonl$/, ''));
+    return row && Date.parse(row.lastRun ?? '') > startTs;
+  });
+  if (picked.length === 0) {
+    return fail(`e4: FAIL ${fresh.length} nya källor men ingen fick en statusrad från A under körningen`);
+  }
+  return ok(`e4: promote efter A-körning=${picked.length} ordning=först pass (pid=${last}, ${fresh.length} nya filer)`);
+}
+
+// E5 — ingen källa får försvinna tyst. Varje död källa måste antingen ligga i
+// kyrkogravet med en reasonCode, eller i en levande kö. Det tredje läget —
+// död, obegravd och i ingen kö — är exakt C-gatets gamla STAYS_IN_POOL-drop:
+// källor som lämnade poolen med queuePath === '' skrevs till ingen kö och bara
+// fanns kvar i state.activePool, som bara SIGINT skrev tillbaka. Mätt
+// 2026-10-23: 26 källor döda, obegravda och i ingen kö — varav 15 dessutom i
+// stader utanför Stockholm, som isInScope() aldrig skulle släppa igenom.
+//
+// Kyrkogravet är befintligt: sources/_quarantine/ + sources/_retired/, med
+// INDEX.json som läses av quarantineGuard.ts isSkipped().
+const QUEUE_FILES = [
+  'preA-queue', 'preB-queue', 'postA-queue', 'postB-queue', 'postB-preC-queue',
+  'preUI-queue', 'postTestC-UI', 'postTestC-manual-review', 'postTestC-serverdown',
+  'postTestC-B', 'postTestC-D', 'postD-UI',
+];
+
+function e5() {
+  const readIndex = (dir) => {
+    const p = path.join(ROOT, 'sources', dir, 'INDEX.json');
+    if (!fs.existsSync(p)) return new Map();
+    const map = new Map();
+    for (const e of JSON.parse(readFileSync(p, 'utf8'))) {
+      if (e.sourceId) map.set(e.sourceId, e.reasonCode ?? '');
+    }
+    return map;
+  };
+  const grave = new Map([...readIndex('_quarantine'), ...readIndex('_retired')]);
+
+  const inQueue = new Set();
+  for (const name of QUEUE_FILES) {
+    const p = path.join(ROOT, 'runtime', `${name}.jsonl`);
+    if (!fs.existsSync(p)) continue;
+    for (const line of readFileSync(p, 'utf8').split('\n')) {
+      if (!line.trim()) continue;
+      try { const id = JSON.parse(line).sourceId; if (id) inQueue.add(id); } catch { /* hoppas över */ }
+    }
+  }
+
+  const latest = new Map();
+  for (const line of readFileSync(path.join(ROOT, 'runtime/sources_status.jsonl'), 'utf8').split('\n')) {
+    if (!line.trim()) continue;
+    try { const row = JSON.parse(line); latest.set(row.sourceId, row); } catch { /* hoppas över */ }
+  }
+  const dead = [...latest.values()].filter((r) => r.status !== 'success' && r.status !== 'never_run');
+  if (dead.length === 0) return fail('e5: FAIL inga misslyckade källor — mät på riktig data, inte inget');
+
+  const stuck = dead.filter((r) => !grave.has(r.sourceId) && !inQueue.has(r.sourceId));
+  if (stuck.length > 0) {
+    return fail(`e5: FAIL graveyard=${grave.size} utan_orsak=${stuck.length} — ${stuck.length} döda källor är varken begravda eller i kö: ${stuck.slice(0, 4).map((r) => r.sourceId).join(', ')}`);
+  }
+
+  // Negativ kontroll: mätningen måste kunna skilja begravd från köad. Finns
+  // bara den ena kategorin betyder stuck=0 ingenting.
+  const buriedDead = dead.filter((r) => grave.has(r.sourceId));
+  const queuedDead = dead.filter((r) => !grave.has(r.sourceId) && inQueue.has(r.sourceId));
+  if (buriedDead.length === 0 || queuedDead.length === 0) {
+    return fail(`e5: FAIL negativ kontroll: begravda=${buriedDead.length} köade=${queuedDead.length} — behöver båda för att bevisa att mätningen fungerar`);
+  }
+
+  const outOfScope = buriedDead.filter((r) => grave.get(r.sourceId) === 'coverage.outside_stockholm').length;
+  return ok(`e5: graveyard=${grave.size} utan_orsak=0 pass (${dead.length} döda: ${buriedDead.length} begravda varav ${outOfScope} out-of-scope, ${queuedDead.length} i kö)`);
+}
+
+const gates = { g1, g2, g3, g4, g5, g6, h1, h2, h3, h4, h5, h6, e1, e2, e3, e4, e5 };
 if (!arg || !gates[arg]) {
   console.error(`usage: node scripts/verify-fixes.mjs <${Object.keys(gates).join('|')}>`);
   process.exit(2);
