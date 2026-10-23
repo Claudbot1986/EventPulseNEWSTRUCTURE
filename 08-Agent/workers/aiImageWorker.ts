@@ -501,19 +501,42 @@ export function startAiImageWorker(): Worker<AiImageJob> | null {
 }
 
 /**
- * Stäng ai-image-workern. Nödvändig för kortlivade CLI:er som importerar
- * normalizer.ts — den startar workern vid modulimport (rad 28), och en öppen
- * BullMQ-Worker håller Redis-socketen levande så att processen aldrig avslutas.
- * Exempel: 03-Queue/drainQueue.ts.
+ * Stäng ai-image-workern OCH de modulnivå-sockets som skapades vid import.
+ *
+ * Nödvändig för kortlivade CLI:er som importerar den här modulen — bara
+ * `import { stopAiImageWorker }` (t.ex. 03-Queue/drainQueue.ts) öppnar två
+ * Redis-anslutningar på modulnivå: `connection` (rad 58) och `aiImageQueue`
+ * (rad 64). En öppen ioredis-socket håller eventloopen levande för alltid, så
+ * processen avslutas aldrig.
+ *
+ * Mätt 2026-10-23: `drainQueue.ts --status` startade 09:57, 10:26 och 10:27
+ * och levde kvar timmar efteråt. `lsof -a -p <pid> -i` visade exakt EN kvarvarande
+ * ESTABLISHED-socket per process mot localhost:6379 — just den modulnivå-
+ * anslutningen. `closeAllQueues()` i queue.ts stänger bara de fyra köerna den
+ * själv skapar, så denna socket överlevde.
+ *
+ * Får anropas flera gånger — workern nollställs efter stängning.
  */
 export async function stopAiImageWorker(): Promise<void> {
-  if (!_worker) return;
-  try {
-    await _worker.close();
-  } catch (err) {
-    console.error('[ai-image-worker] close failed:', (err as Error).message);
+  if (_worker) {
+    try {
+      await _worker.close();
+    } catch (err) {
+      console.error('[ai-image-worker] close failed:', (err as Error).message);
+    }
+    _worker = null;
   }
-  _worker = null;
+  try {
+    await aiImageQueue.close();
+  } catch (err) {
+    console.error('[ai-image-worker] queue close failed:', (err as Error).message);
+  }
+  try {
+    // queue.close() stänger inte den delade IORedis-instansen den byggdes på.
+    await connection.quit();
+  } catch (err) {
+    console.error('[ai-image-worker] redis disconnect failed:', (err as Error).message);
+  }
 }
 
 // Starta worker direkt om denna fil körs (CLI-läge). ESM-säker main-check:

@@ -36,6 +36,7 @@ import fs from 'node:fs';
 import { readdirSync, readFileSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { spawnSync } from 'node:child_process';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.resolve(__dirname, '..');
@@ -671,7 +672,111 @@ async function e7() {
   return ok(`e7: claim filterar city='Stockholm' pass (${skipped} pending uteslutas)`);
 }
 
-const gates = { g1, g2, g3, g4, g5, g6, h1, h2, h3, h4, h5, h6, e1, e2, e3, e4, e5, e6, e7 };
+/**
+ * E8 — cross-source dedup får inte skriva identitetskolumner.
+ *
+ * Bakgrund (2026-10-23): normalizern hittar en befintlig rad via ticket_url
+ * (cross-source dedup), och skrev sedan den NYA källans dedup_hash/source/
+ * source_id på den raden. Den raden ägs av en annan källa, så hashen tillhör
+ * en annan rad → UNIQUE-violation → jobbet kastades, eventet uppdaterades
+ * aldrig. Uppmätt på job 81079 (livespot "Biohack me"):
+ *   duplicate key value violates unique constraint "events_dedup_hash_key"
+ *   duplicate key value violates unique constraint "idx_events_source_source_id_uniq"
+ *
+ * Gaten spelar upp de failed jobb som finns och kräver NOLL unika-konstraint-
+ * brott. Negativ kontroll: antingen spelade vi upp minst ett jobb, eller så
+ * finns inga failed jobb kvar alls (då är gaten inte mätande — det sägs rakt ut).
+ *
+ * Körs i en subprocess på `npx tsx`: normalizer.ts importerar '../03-Queue/queue'
+ * UTAN filändelse, vilket bara tsx (och inte ren node) kan slå upp. Att köra
+ * replayen i verifierprocessen själv kastade "Cannot find module … normalizer.js".
+ * Subprocessen ger dessutom en ren exit att mäta och håller Redis-socklarna
+ * borta från den långlivade verifierprocessen.
+ */
+const E8_SAMPLE = 20;
+function e8() {
+  const REPLAY = `
+    (async () => {
+      process.env.AI_IMAGE_PIPELINE_ENABLED = '0';
+      const { rawEventsQueue, closeAllQueues } = await import('./03-Queue/queue.js');
+      const { processRawEvent } = await import('./04-Normalizer/normalizer.js');
+      const { stopAiImageWorker } = await import('./08-Agent/workers/aiImageWorker.js');
+      const failed = await rawEventsQueue.getFailed(0, ${E8_SAMPLE - 1});
+      const total = (await rawEventsQueue.getJobCounts('failed')).failed ?? 0;
+      let violations = 0, other = 0, done = 0;
+      const msgs = new Set();
+      for (const job of failed) {
+        try { await processRawEvent({ data: job.data }); done += 1; }
+        catch (err) {
+          const m = String(err?.message ?? err);
+          if (/duplicate key value violates unique constraint/.test(m)) {
+            violations += 1;
+            msgs.add(m.replace(/[0-9a-f]{8}-[0-9a-f-]{27}/g, '<uuid>').slice(0, 90));
+          } else other += 1;
+        }
+      }
+      await stopAiImageWorker().catch(() => {});
+      await closeAllQueues().catch(() => {});
+      console.log('E8RESULT ' + JSON.stringify({ n: failed.length, total, violations, other, done, msg: [...msgs][0] ?? '' }));
+      process.exit(0);
+    })().catch((e) => { console.error(e); process.exit(1); });
+  `;
+  const r = spawnSync('npx', ['tsx', '--eval', REPLAY], {
+    cwd: ROOT, encoding: 'utf8', timeout: 420_000, killSignal: 'SIGKILL',
+  });
+  const out = `${r.stdout ?? ''}${r.stderr ?? ''}`;
+  if (r.error || r.signal) return fail(`e8: FAIL replayen avslutade inte rent (${r.error?.message ?? r.signal})`);
+  const line = out.split('\n').find((l) => l.startsWith('E8RESULT '));
+  if (!line) {
+    const why = out.split('\n').filter((l) => /Error|error/.test(l)).slice(0, 2).join(' / ');
+    return fail(`e8: FAIL replayen gav inget resultat — ${why || 'ingen felrad'}`);
+  }
+  const res = JSON.parse(line.slice('E8RESULT '.length));
+  if (res.n === 0) {
+    if (res.total === 0) return ok('e8: inga failed jobb kvar — inget att spela upp (vakuum, ej mätande)');
+    return fail(`e8: FAIL kunde inte läsa failed trots total=${res.total}`);
+  }
+  if (res.violations > 0) {
+    return fail(`e8: FAIL unique-constraint-brott=${res.violations}/${res.n} — ${res.msg}`);
+  }
+  return ok(`e8: cross-source identitet bevarad pass (0 brott av ${res.n} uppspelade: ${res.done} ok, ${res.other} andra fel; ${res.total} failed kvar)`);
+}
+
+
+/**
+ * E9 — drainQueue --status avslutar. Socket-läcka i aiImageWorker.
+ *
+ * Bakgrund (2026-10-23): aiImageWorker.ts öppnar två Redis-sockets på
+ * modulnivå (rad 58 `connection`, rad 64 `aiImageQueue`) bara genom att
+ * importeras. `stopAiImageWorker()` stängde bara workern, aldrig dem, och
+ * `closeAllQueues()` i queue.ts stänger bara de fyra köer den själv skapar.
+ * --status returnade dessutom utan process.exit. Mått: tre --status-processer
+ * levde kvar i timmar (lsof: exakt 1 ESTABLISHED-socket mot localhost:6379).
+ *
+ * Gaten spawnar --status med hård tid och kräver att processen avslutar.
+ * Negativ kontroll: barnet måste ha skrivit ut könivå — annars testar vi bara
+ * att en process kan startas, inte att den gör jobbet.
+ */
+function e9() {
+  const r = spawnSync('npx', ['tsx', '03-Queue/drainQueue.ts', '--status'], {
+    cwd: ROOT, encoding: 'utf8', timeout: 60_000, killSignal: 'SIGKILL',
+  });
+  const out = `${r.stdout ?? ''}${r.stderr ?? ''}`;
+  if (r.error) return fail(`e9: FAIL kunde inte starta --status: ${r.error.message}`);
+  if (r.signal) return fail(`e9: FAIL --status avslutade INTE inom 60 s (signal ${r.signal}) — socket-läckan är tillbaka`);
+  // Måste vara exit 0, inte bara "ingen signal". Utan detta passerade gaten med
+  // exit=1 när processen kraschade på en trasig import — mätt 2026-10-23.
+  if (r.status !== 0) {
+    const why = out.split('\n').filter((l) => /error|Error|Cannot find/i.test(l)).slice(0, 2).join(' / ');
+    return fail(`e9: FAIL --status avslutade med exit ${r.status} — ${why || 'ingen felrad'}`);
+  }
+  if (!/"waiting"\s*:/.test(out)) {
+    return fail(`e9: FAIL negativ kontroll: --status skrev ingen ködjup — processen gjorde inget arbete`);
+  }
+  return ok('e9: --status avslutar rent pass (exit=0, inga läckta sockets)');
+}
+
+const gates = { g1, g2, g3, g4, g5, g6, h1, h2, h3, h4, h5, h6, e1, e2, e3, e4, e5, e6, e7, e8, e9 };
 if (!arg || !gates[arg]) {
   console.error(`usage: node scripts/verify-fixes.mjs <${Object.keys(gates).join('|')}>`);
   process.exit(2);

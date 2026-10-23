@@ -578,10 +578,17 @@ if (!skipImages) {
   //
   // Placerat FÖRE P2C, som läser ur databasen och alltså ska se de nycklade
   // eventsen. --max-ms ger en hård gräns så att steget alltid avslutas.
+  //
+  // 2026-10-23 — budgeten höjd 15 → 90 min efter mätning: en riktig drain med
+  // den RIKTIGA normalizern (inte en räknande stub) tog 293 jobb på 15 min med
+  // 0 misslyckade = 19,5 jobb/min. Run 1 producerade 790 jobb. Med 15 min blev
+  // 492 kvar väntande varje natt — kön växte monotont. 90 min rymmer ~1 750
+  // jobb, alltså en hel natt plus dagens utestående rest. Stegets egen gräns är
+  // ändå STEP_TIMEOUT_MS (2 h), så en budget på 90 min kan aldrig hänga kedjan.
   steps.push({
     name: 'worker-drain',
     cmd: 'npx',
-    args: ['tsx', '03-Queue/drainQueue.ts', '--max-ms', String(smoke ? 60_000 : 900_000)],
+    args: ['tsx', '03-Queue/drainQueue.ts', '--max-ms', String(smoke ? 60_000 : 5_400_000)],
   });
 
   // ── P2C: Active-learning closed loop ──────────────────────────────────

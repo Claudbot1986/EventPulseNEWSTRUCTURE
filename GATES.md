@@ -103,3 +103,11 @@ Hittade under körningen: B-gates hänger i evigheten NÄR den lyckas köa event
 - [ ] E7: P3D claimar bara kandidater som kan nå databasen (city = 'Stockholm')
   CHECK: node scripts/verify-fixes.mjs e7
   EXPECT: /e7: claim filterar city='Stockholm' pass \(\d+ pending uteslutas\)/
+
+- [ ] E8: cross-source dedup skriver inte identitetskolumner på en annan källas rad
+  CHECK: node scripts/verify-fixes.mjs e8
+  EXPECT: /e8: cross-source identitet bevarad pass \(0 brott av \d+ uppspelada/
+
+- [ ] E9: drainQueue --status avslutar — ingen läckt Redis-socket
+  CHECK: node scripts/verify-fixes.mjs e9
+  EXPECT: /e9: --status avslutar rent pass \(exit=0, inga läckta sockets\)/

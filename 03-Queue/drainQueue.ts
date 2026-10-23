@@ -34,6 +34,14 @@ const __dirname = path.dirname(__filename);
 dotenv.config({ path: path.resolve(__dirname, '../.env'), override: true });
 
 import { createNormalizerWorker, closeAllQueues, rawEventsQueue } from './queue.js';
+// 2026-10-23 — processor:n MÅSTE vara den riktiga normalizern. Tidigare skickades
+// en räknande stub: `createNormalizerWorker(async () => { completed++ })`. Det
+// markeraade varje jobb som "completed" utan att persistera en enda rad — en
+// fejk-drain som såg grön ut i loggen. Se .cursor/rules/no-simulated-production-
+// ingestion.mdc. countWorkerCompletions() i verify-fixes.mjs räknar
+// "[worker] Job completed"-rader, så en stub-räknare hade gett E3 grönt på
+// noll persisterade events.
+import { processRawEvent } from '../04-Normalizer/normalizer.js';
 import { stopAiImageWorker } from '../08-Agent/workers/aiImageWorker.js';
 
 const args = process.argv.slice(2);
@@ -54,15 +62,20 @@ async function main(): Promise<void> {
 
   if (args.includes('--status')) {
     console.log(JSON.stringify(start, null, 2));
+    // --status importerar stopAiImageWorker, vilket öppnar två Redis-sockets på
+    // modulnivå. Utan att stänga dem avslutas processen aldrig — mätt 2026-10-23
+    // levde tre --status-processer kvar i timmar (lsof: 1 etablerad socket vardera).
+    await stopAiImageWorker();
     await closeAllQueues();
-    return;
+    process.exit(0);
   }
 
   console.log(`[drain] start: waiting=${start.waiting} active=${start.active} failed=${start.failed} maxMs=${maxMs}`);
 
   let completed = 0;
   let failed = 0;
-  const worker = createNormalizerWorker(async () => {
+  const worker = createNormalizerWorker(async (job) => {
+    await processRawEvent(job);
     completed += 1;
     console.log(`[worker] Job completed — ${completed}/${start.waiting}`);
   });

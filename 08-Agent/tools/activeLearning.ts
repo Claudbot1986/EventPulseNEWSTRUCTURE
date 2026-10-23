@@ -28,7 +28,18 @@
  *   const r = await run({ threshold: 50, batchSize: 100, dryRun: false });
  */
 
+import * as dotenv from 'dotenv';
+import path from 'path';
+import { fileURLToPath } from 'url';
 import { createClient, type SupabaseClient } from '@supabase/supabase-js';
+
+// 2026-10-23 — cron kör steget som `tsx --eval "import('./…')"`, och en inline
+// --eval har ingen fil att härleda CWD/sökväg ifrån, så .env laddas aldrig.
+// Utan detta: "Error: supabaseUrl is required" efter 381 ms, exit=1 — och det
+// enskilda steget gjorde hela nattens green-fil röd (ok:false, exitCode 1).
+// Laddar själv. override:false (default) så ett redan satt runtime-env vinner.
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+dotenv.config({ path: path.resolve(__dirname, '../../.env') });
 
 // ── Supabase client ─────────────────────────────────────────────────────────
 

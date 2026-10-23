@@ -434,6 +434,7 @@ export async function processRawEvent(job: Job<RawEventInput>): Promise<void> {
   // samma URL — t.ex. lulea-hf-2/downtown-2/globen-3/halmstad-konserthus-2
   // (alla biljettshop.se Chicago-musikal): 228 duplicerade rader → 57.
   let existing: { id: string; updated_at: string } | null = null;
+  let existingViaTicketUrl = false;
   const ticketUrl = raw.url || raw.ticket_url || null;
   if (ticketUrl) {
     const { data: byUrl } = await supabase
@@ -444,6 +445,7 @@ export async function processRawEvent(job: Job<RawEventInput>): Promise<void> {
       .maybeSingle();
     if (byUrl) {
       existing = byUrl;
+      existingViaTicketUrl = true;
       console.log(`[normalizer] 🔗 Cross-source dedup hit by ticket_url: ${byUrl.id} (source=${raw.source}, url=${ticketUrl})`);
     }
   }
@@ -750,12 +752,33 @@ export async function processRawEvent(job: Job<RawEventInput>): Promise<void> {
   let event_id: string;
 
   if (existing) {
-    // Update existing event: refresh last_seen_at + confidence, preserve
-    // freshness_at (the row is being re-seen, not freshened).
+    // 2026-10-23 — träffen via ticket_url kan peka på en rad som tillhör en
+    // ANNAN source och därför har en annan dedup_hash. Skriver vi den här
+    // källans hash på den raden krockar den med den rad som redan äger hashen:
+    //   ERROR: duplicate key value violates unique constraint "events_dedup_hash_key"
+    // Uppmätt 2026-10-23 på job 81079 (livespot "Biohack me") — varje sådan
+    // träff kastade, så eventet uppdaterades aldrig. Ännu värre: även utan
+    // kollision skulle radens identitet bytas ut, och ursprungskällan skulle
+    // inte längre hitta den på hash.
+    // På hash-vägen är dedupHash per definition redan radens egen — skriv
+    // samma värde igen är en no-op — så beteendet där är oförändrat.
+    const dedupHashToWrite = existingViaTicketUrl ? undefined : dedupHash;
+    if (existingViaTicketUrl) {
+      console.log(
+        `[normalizer] keeping existing identity (cross-source hit — writing ` +
+        `dedup_hash=${dedupHash.slice(0, 12)}…/source=${raw.source} would ` +
+        `violate events_dedup_hash_key / idx_events_source_source_id_uniq)`,
+      );
+    }
     const { data: updated, error: updateError } = await supabase
       .from('events')
       .update({
         ...normalized,
+        // Identitetskolumner tillhör raden, inte den här körningen. undefined
+        // → Supabase hoppar över dem. Samma mönster som freshness_at nedan.
+        dedup_hash: dedupHashToWrite,
+        source: existingViaTicketUrl ? undefined : raw.source,
+        source_id: existingViaTicketUrl ? undefined : raw.source_id,
         freshness_at: undefined, // keep prior freshness on update
         updated_at: observedAt,
       })
@@ -764,8 +787,14 @@ export async function processRawEvent(job: Job<RawEventInput>): Promise<void> {
       .single();
 
     if (updateError || !updated) {
+      // 2026-10-23 — kasta med DATABASENS egen orsak, inte bara event-uuid:t.
+      // Kö-jobbets failedReason är det enda en operator ser när en natt drunknat;
+      // "Update failed for event 4b8f8162..." säger ingenting om VARFÖR. Utan
+      // detta var 500 failed jobb (mätt 15–20 okt) omöjliga att diagnosticera.
       console.error(`[normalizer] Failed to update event ${existing.id}:`, updateError?.message);
-      throw new Error(`Update failed for event ${existing.id}`);
+      throw new Error(
+        `Update failed for event ${existing.id}: ${updateError?.message ?? 'no rows returned (update matched nothing)'}`,
+      );
     }
     event_id = updated.id;
     console.log(`[normalizer] ✅ Updated: event_id=${event_id}`);
@@ -783,7 +812,7 @@ export async function processRawEvent(job: Job<RawEventInput>): Promise<void> {
 
     if (insertError || !inserted) {
       console.error(`[normalizer] Failed to insert event:`, insertError?.message);
-      throw new Error(`Insert failed for event (hash: ${dedupHash})`);
+      throw new Error(`Insert failed for event (hash: ${dedupHash}): ${insertError?.message ?? 'no rows returned'}`);
     }
     event_id = inserted.id;
     console.log(`[normalizer] ✅ Inserted: event_id=${event_id}`);
