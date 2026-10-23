@@ -101,6 +101,11 @@ const STEP_COUNT_RECIPES: Record<string, RegExp> = {
   // Detta är det ENDA steget som skriver events till Supabase. Utan det tog
   // kedjan slut med 3 548 jobb liggande i raw_events sedan 2026-10-20.
   'worker-drain': /^\[drain\] avslutar \([^)]*\): completed=(\d+)/m,
+  // 03-Queue/importToEventPulse.ts — "KLAR  │  1147 events till bullmq  │  0 errors"
+  // Räknar events som lämnar C/D:s extrahterade filer och går in i BullMQ.
+  // Det är INTE samma sak som worker-drain: detta steg räknar vad som
+  // queue:as, drainQueue räknar vad som faktiskt skrivs till Supabase.
+  'import-to-eventpulse': /KLAR\s+│\s+(\d+)\s+events till bullmq/m,
 };
 
 /**
@@ -573,6 +578,36 @@ if (!skipImages) {
     // (post-launch / med riktig budget). Just nu: BFL nästan aldrig.
     cmd: 'npx',
     args: ['tsx', '--eval', `import('./08-Agent/services/imageGen.matchLibraryFirst.ts').then(m => m.matchLibraryFirst({ limit: ${imageLimit}, onlyMissing: true, libraryConcurrency: 5, bflConcurrency: 3, skipBflFallback: ${smoke || skipBfl} })).then(r => console.log(JSON.stringify(r))).catch(e => { console.error(e); process.exit(1); })`],
+  });
+
+  // ── import-to-eventpulse: extraherade events → BullMQ ─────────────────
+  // 2026-10-23 — samma fel som worker-drain, en helt annan väg.
+  //
+  // A/B/C/D/I skriver sina events till `03-Queue/03-extractedevents/`
+  // (C och D i underkataloger). Ingen gate når `events`-tabellen: de skriver
+  // bara filer. Persistensen sker i `03-Queue/importToEventPulse.ts` → BullMQ
+  // `raw_events` → startWorker → 04-Normalizer.
+  //
+  // Problemet: importeraren kördes INTE i den här kedjan (0 referenser).
+  // Den kördes av `com.eventpulse.post-ingest` (04:00) → runDaily.ts →
+  // ingestionPipeline.ts steg 3 — alltså på en klocka oberoende av den här
+  // kedjan, som startar 02:00 och mätt tar 1,5–2,5 h. Mätt 2026-10-23:
+  // senaste import 02:00 UTC, medan C skrev 13 extrafiler kl. 12:24 UTC.
+  // Följden: 18 spårade källor med sammanlagt 120 extraherade events och
+  // NOLL rader i `events`.
+  //
+  // Bevisad mekanism (2026-10-23, wwwkonserthusetse): 12 events extraherade →
+  // 5 avvisade av datumvakten i importToEventPulse.ts:301 (förgångna eller
+  // `date: "unknown"`) → 7 enqueue:ade → 5 persisterade som riktiga events
+  // 24–26 okt. Kedjan fungerar; den kördes bara fel tid.
+  //
+  // Placerat FÖRE worker-drain, av samma skäl som det steget ligger där: import
+  // måste hinna innan någon dränerar, annars ligger jobben kvar till nästa natt.
+  // `--dry-run` i smoke: annars skulle en smoke-körning skriva riktiga events.
+  steps.push({
+    name: 'import-to-eventpulse',
+    cmd: 'npx',
+    args: ['tsx', '03-Queue/importToEventPulse.ts', ...(smoke ? ['--dry-run', '--limit', '5'] : [])],
   });
 
   // ── worker-drain: sista milen till Supabase ───────────────────────────

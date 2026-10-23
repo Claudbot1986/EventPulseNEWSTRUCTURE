@@ -293,24 +293,89 @@ function h3() {
   return ok('h3: collision non-fatal pass');
 }
 
-// H4 — stale processing-rader måste gå att reclaima, och inga sådana får ligga kvar.
+// H4 — stale processing-rader får inte ligga kvar, och reclaimen måste finnas
+// i den LEVENDE funktionen.
+//
+// 2026-10-23: den här gaten läste MIGRATIONSFILEN för att bevisa att reclaimen
+// fanns. Det bevisade ingenting. Verifierat i den här sessionen: den deployade
+// funktionen har ändrats sedan filen skrevs — 20261023-0001 lade till
+// `AND city = 'Stockholm'`, och den finns inte alls i 20261021-0003. Filen var
+// alltså stale precis när gaten skrev grönt, samtidigt som 15 rader låg
+// strandade i 'processing'.
+//
+// Vad som faktiskt hände med de 15 (mätt 2026-10-23):
+//
+//   13 rader  city IS NULL  → kan inte reclaimas. city-filtret från 20261023-0001
+//                             ligger i samma WHERE som reclaimen och gäller BÅDA
+//                             grenarna, så "pending ELLER stale-processing" +
+//                             city='Stockholm' utesluter dem permanent.
+//    2 rader  city='Stockholm' → reclaimbara i princip, men de konkurrerar med
+//                             340 pending-rader i en ORDER BY där alla har
+//                             priority_score = 50. Tie-breaken på created_at är
+//                             icke-deterministisk utan ett tredje sorteringsnyckel,
+//                             så vem som vinner är fysisk radordning, inte någon
+//                             egenskap vi bryr oss om.
+//
+// Slutsatsen: SQL:en var inte trasig, men "en rad i processing" är ett tillstånd
+// som ingen gate rapporterar och ingen konsument ser. Att lämna kandidater där är
+// värre än 'pending'. 20261023-0002 släpper dem tillbaka.
+//
+// INVARIANTEN GATEN HÅLLER: stranded === 0. Den är icke-vakuös — den gick RÖD med
+// 15 i den här sessionen, vilket är dess enda hittills bevis på att den kan fela.
+// (En tidigare utkastversion av den här gaten hade också ett city-blindspot-fall;
+// det var DÖD kod — mängden är en strikt delmängd av stranded, så kontrollen
+// kan bara nås när stranded==0, och då är blindspot garanterat 0. Borttagen.)
+//
+// Om reclaimen ligger bakom city-filtret är det i sig inte ett fel: bara
+// Stockholm-rader kan claimas, så bara de kan bli strandade. Gaten rapporterar
+// därför läget i PASS-raden i stället för att fejka på det. Om det blir
+// felaktigt beror det på att e7 släpper igen icke-Stockholm-kandidater — och
+// då är det e7 som ska fälla, inte h4.
 async function h4() {
-  const mig = fs.readFileSync(
-    path.join(ROOT, '05-Supabase/migrations/20261021-0003-source-candidate-city-and-stale-reclaim.sql'), 'utf8');
-  if (!/locked_at < now\(\) - interval '30 minutes'/.test(mig)) {
-    return fail('h4: FAIL claim-RPC:n saknar stale-reclaim');
+  const url = readEnvFile().DATABASE_URL;
+  if (!url) return fail('h4: FAIL DATABASE_URL missing — kan inte läsa den levande funktionen');
+  const { Client } = await import('pg');
+  const client = new Client({ connectionString: url });
+  let def;
+  let stranded;
+  try {
+    await client.connect();
+    const fn = await client.query(`
+      SELECT pg_get_functiondef(p.oid) AS def
+      FROM pg_proc p JOIN pg_namespace n ON n.oid = p.pronamespace
+      WHERE n.nspname = 'public' AND p.proname = 'claim_source_candidate_test_queue';
+    `);
+    def = fn.rows[0]?.def ?? '';
+    const q = await client.query(
+      `SELECT count(*)::int AS stranded FROM source_candidate_test_queue
+       WHERE status = 'processing'`,
+    );
+    stranded = q.rows[0]?.stranded ?? 0;
+  } catch (err) {
+    return fail(`h4: FAIL DB-fel: ${err.message}`);
+  } finally {
+    await client.end().catch(() => {});
   }
-  const res = await supabaseGet(
-    'source_candidate_test_queue',
-    'select=id,locked_at&status=eq.processing&limit=2000',
+
+  if (!def) return fail('h4: FAIL claim_source_candidate_test_queue finns inte i databasen');
+  if (!/locked_at < now\(\) - interval '30 minutes'/.test(def)) {
+    return fail('h4: FAIL den LEVENDE claim-funktionen saknar stale-reclaim');
+  }
+  if (stranded > 0) {
+    return fail(
+      `h4: FAIL ${stranded} rader ligger kvar i processing — reclaimen når dem inte. ` +
+        'Se 20261023-0002 (släpp stranded rows).',
+    );
+  }
+  // Advisory: mäter om reclaimen är city-gated. Informativt, inte ett fel —
+  // se invariantkommentaren ovan.
+  const reclaimIdx = def.indexOf('locked_at < now()');
+  const cityIdx = def.indexOf("city = 'Stockholm'");
+  const cityGated = reclaimIdx !== -1 && cityIdx > reclaimIdx;
+  return ok(
+    `h4: reclaim i LEVENDE funktion + 0 stuck pass (stranded=${stranded}, ` +
+      `city-gated reclaim=${cityGated ? 'ja' : 'nej'})`,
   );
-  if (res.error) return fail(`h4: FAIL kunde inte läsa kön: ${res.error}`);
-  const now = Date.now();
-  const stale = res.data.filter(
-    (r) => r.locked_at === null || now - new Date(r.locked_at).getTime() > 30 * 60 * 1000,
-  );
-  if (stale.length > 0) return fail(`h4: FAIL ${stale.length} stale processing-rader kvar i kön`);
-  return ok(`h4: locked_at reclaim present stuck=${stale.length} pass`);
 }
 
 // H5 — minst en P3D-promotead källa måste vara i scope OCH ouppackad, dvs
@@ -863,7 +928,79 @@ function e10() {
   );
 }
 
-const gates = { g1, g2, g3, g4, g5, g6, h1, h2, h3, h4, h5, h6, e1, e2, e3, e4, e5, e6, e7, e8, e9, e10 };
+/**
+ * E11: kedjan importerar extraherade events, och gör det FÖRE drain.
+ *
+ * 2026-10-23. A/B/C/D/I skriver sina events till `03-Queue/03-extractedevents/`
+ * och når aldrig `events`-tabellen själva. Persistensen sker i ett annat lager:
+ * `importToEventPulse.ts` → bullmq `raw_events` → startWorker → normalizer.
+ *
+ * Det steget kördes INTE i `scripts/ingestion-cron.ts` (0 referenser). Det kördes
+ * av `com.eventpulse.post-ingest` (04:00) → runDaily → ingestionPipeline steg 3,
+ * alltså på en klocka oberoende av kedjan som startar 02:00 och mätt tar
+ * 1,5–2,5 h. Mätt 2026-10-23: senaste import 02:00 UTC medan C skrev 13
+ * extrafiler kl. 12:24 UTC — 18 spårade källor med 120 extraherade events och
+ * 0 rader i `events`.
+ *
+ * Otron (lästa ur `runtime/ingestion-cron.status.json`, dvs ur en riktig körning):
+ *   1. steget `import-to-eventpulse` finns bland körningens steg,
+ *   2. det avslutades (exitCode 0),
+ *   3. det ligger FÖRE `worker-drain` i stegordningen — annars dräner workern
+ *      en tom kö och jobben ligger kvar till nästa natt,
+ *   4. det har ett mätt count, inte null.
+ */
+function e11() {
+  const statusFile = path.join(ROOT, 'runtime/ingestion-cron.status.json');
+  if (!existsSync(statusFile)) {
+    return fail('e11: FAIL runtime/ingestion-cron.status.json saknas — ingen körning att mäta, detta är inte ett bevis');
+  }
+  let status;
+  try { status = JSON.parse(readFileSync(statusFile, 'utf8')); }
+  catch (e) { return fail(`e11: FAIL statusfilen går inte att tolka: ${e.message}`); }
+
+  // Negativ kontroll: en fil utan steg mäter ingenting.
+  const steps = status.steps || [];
+  if (steps.length === 0) {
+    return fail(`e11: FAIL negativ kontroll: körningen har ${steps.length} steg — gaten mäter ingenting`);
+  }
+
+  const IMPORT = 'import-to-eventpulse';
+  const DRAIN = 'worker-drain';
+  const iImport = steps.findIndex((s) => s.name === IMPORT);
+  const iDrain = steps.findIndex((s) => s.name === DRAIN);
+
+  if (iImport === -1) {
+    return fail(
+      `e11: FAIL kedjan har inget steg "${IMPORT}" (${steps.length} steg körda) — ` +
+      'extraherade events når aldrig databasen via den här vägen',
+    );
+  }
+  const imp = steps[iImport];
+  if (imp.exitCode !== 0) {
+    return fail(`e11: FAIL ${IMPORT} avslutade med exitCode=${imp.exitCode}`);
+  }
+  if (iDrain === -1) {
+    return fail(`e11: FAIL kedjan saknar "${DRAIN}" — kan inte bevisa ordningen`);
+  }
+  if (iImport >= iDrain) {
+    return fail(
+      `e11: FAIL ordningen är fel: ${IMPORT} på position ${iImport} körs EFTER ${DRAIN} ` +
+      `på position ${iDrain} — workern dränerar en tom kö`,
+    );
+  }
+  if (imp.eventsExtracted === null || imp.eventsExtracted === undefined) {
+    return fail(
+      `e11: FAIL ${IMPORT} har inget mätt count (eventsExtracted=${imp.eventsExtracted}) — ` +
+      'steget kan inte rapportera hur många events som faktiskt gick i BullMQ',
+    );
+  }
+  return ok(
+    `e11: import→drain ordnad pass (${IMPORT} #${iImport} → ${DRAIN} #${iDrain}, ` +
+    `${imp.eventsExtracted} events till bullmq, exit=0)`,
+  );
+}
+
+const gates = { g1, g2, g3, g4, g5, g6, h1, h2, h3, h4, h5, h6, e1, e2, e3, e4, e5, e6, e7, e8, e9, e10, e11 };
 if (!arg || !gates[arg]) {
   console.error(`usage: node scripts/verify-fixes.mjs <${Object.keys(gates).join('|')}>`);
   process.exit(2);

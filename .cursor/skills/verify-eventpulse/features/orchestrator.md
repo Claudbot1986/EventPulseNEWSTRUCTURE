@@ -190,10 +190,22 @@ hänge i 30 minuter: 0 events uppdaterade, 17 s CPU. Sätt
 `process.env.AI_IMAGE_PIPELINE_ENABLED = '0'` **före** importen, eller stäng
 workern direkt.
 
-**`runtime/sources_priority_queue.jsonl` är ett dödbrev.** Dess enda producent
-är `addToPriorityQueue` (`sourceRegistry.ts:727`), vars enda anropare är
-`02-Ingestion/scheduler.ts` — och scheduler.ts körs inte av någon launchd-plist,
-inte av cron-kedjan, inte av runDaily. Mätt 2026-10-23: filen skrevs sist
-2026-08-25. `sturecompagniet` legat där sedan 2026-04-26 med `runsSinceAdd: 0`.
-Lägg stucka källor i `postB-preC-queue.jsonl` i stället — det är den enda
-köen C-htmlGate faktiskt dränerar.
+**`runtime/sources_priority_queue.jsonl` skrivs men dräneras aldrig.**
+Producenten är levande: `updateSourceStatus` anropar `addToPriorityQueue`
+(`sourceRegistry.ts:673`) för varje ny källa. Konsumenten är död: `getNextInQueue`
+och `removeFromQueue` anropas enbart från `02-Ingestion/scheduler.ts:987-1009`,
+och ingen launchd-plist, cron-kedja eller `runDaily` kör `scheduler.ts`.
+
+Mätt 2026-10-23: 382 rader, senast skriven 2026-08-25, `sturecompagniet` med
+`runsSinceAdd: 0` sedan april. De källor P3D promote:ar i dag syns inte heller
+där — `promoteSourceCandidate` (`sandbox.ts`) skriver bara
+`sources/<slug>.jsonl`, aldrig `updateSourceStatus`. Det är därför filen inte
+växer trots 15 nya källor samma dag.
+
+Följden är **visande, inte dataförlust**: filen läses för display av
+`collect_state.ts:145`, men ingen gate agerar på den. Lägg stucka källor i
+`postB-preC-queue.jsonl` i stället — det är den enda köen C-htmlGate faktiskt
+dränerar.
+
+*(Tidigare version av den här noten sa att `addToPriorityQueue` bara anropades
+från `scheduler.ts`. Det var fel — anropet finns i `updateSourceStatus`.)*

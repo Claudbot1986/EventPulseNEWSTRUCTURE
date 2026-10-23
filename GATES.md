@@ -55,10 +55,9 @@ körningar. city_added: source_candidates + source_candidate_test_queue (0003).
   EXPECT: /h3: collision non-fatal pass/
   EVIDENCE: automatic-evidence=v1; definition-sha256=9143ee591ec4f327a30525ef46a8e11216836e856b7f88f1f9a1028346c2a50a; exit=0; EXPECT=matched; output-sha256=9e2008b922e9d4db2affdaa1c1e9e70670d1c401e90ce6ce6700a26464c315df; output-bytes=29; shell=/bin/sh; cwd=/Users/claudgashi/EventPulse; path=29325ef63737/16 entries
 
-- [x] H4: stale processing-rader reclaimas ur P3D-kön (och inga sådana ligger kvar)
+- [x] H4: stale processing-rader får inte ligga kvar, och reclaimen finns i den LEVENDE funktionen
   CHECK: node scripts/verify-fixes.mjs h4
-  EXPECT: /h4: locked_at reclaim present stuck=0 pass/
-  EVIDENCE: automatic-evidence=v1; definition-sha256=f981167864adad31b7e3fcdfae9b54e156764dc8e7aa98c9b580f7a895acb0dc; exit=0; EXPECT=matched; output-sha256=37d776e9649d277c5cbfcfe296be0561eb2b6aa4e77d75292c8c87c68e7a2ddd; output-bytes=43; shell=/bin/sh; cwd=/Users/claudgashi/EventPulse; path=29325ef63737/16 entries
+  EXPECT: /h4: reclaim i LEVENDE funktion \+ 0 stuck pass \(stranded=\d+, city-gated reclaim=\w+\)/
 
 - [x] H5: en promotead källa passerar isInScope() och är nåbar för A-gatet
   CHECK: node scripts/verify-fixes.mjs h5
@@ -115,3 +114,7 @@ Hittade under körningen: B-gates hänger i evigheten NÄR den lyckas köa event
 - [x] E10: källor C lyckas extrahera ifrån står inte som fail i sources_status
   CHECK: node scripts/verify-fixes.mjs e10
   EXPECT: /e10: C-status är konsekvent pass \(\d+ spårade källor, 0 fel/
+
+- [x] E11: import-to-eventpulse körs i kedjan och före worker-drain
+  CHECK: node scripts/verify-fixes.mjs e11
+  EXPECT: /e11: import→drain ordnad pass \(import-to-eventpulse #\d+ → worker-drain #\d+, \d+ events till bullmq, exit=0\)/
