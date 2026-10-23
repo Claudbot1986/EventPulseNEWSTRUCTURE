@@ -255,6 +255,18 @@ const skipBfl = process.env.SKIP_BFL === '1' || args.includes('--skip-bfl');
 const effectiveLimit = smoke ? 1 : limit;
 const effectiveDBehavior = smoke ? 'static-only' : 'premium-only';
 
+// 2026-10-23 — hård gräns per steg. Satt efter mätning, inte gissning:
+// chain-overview.log visar subpath-discovery median 4 178 s och max 4 522 s
+// (75 min) över 7 körningar, sitemap-discovery max 425 s, P3D max 258 s.
+// Två timmar är alltså 1,6 gånger den längsta legitima stegtiden. Under den
+// gränsen hittas verkliga hängningar: tribe-events stod en gång kvar i
+// 419 485 s (116 h) utan att kedjan brytte. Miljövariabeln låter en operator
+// sänka den utan att röra kod.
+const STEP_TIMEOUT_MS = (() => {
+  const fromEnv = Number(process.env.INGESTION_STEP_TIMEOUT_MS ?? '');
+  return Number.isFinite(fromEnv) && fromEnv > 0 ? fromEnv : 2 * 60 * 60 * 1000;
+})();
+
 // ─── Step runner ────────────────────────────────────────────────────────────
 
 interface SpawnResult {
@@ -327,10 +339,43 @@ function runStep(name: string, cmd: string, args: string[]): Promise<SpawnResult
       try { writeSync(stepErrFd, chunk); } catch {}
     });
 
+    // 2026-10-23 — per-step-timeout. Utan detta hänger kedjan för alltid om ett
+    // steg inte avslutar: det fanns ingen gräns på barnprocessen, bara en
+    // heartbeat. Mätt i chain-overview.log: subpath-discovery tar legitimt upp
+    // till 75 min (median 70 min över 7 körningar), men tribe-events har en
+    // riktig hängning på 419 485 s — 116 timmar — i historiken. Två timmar
+    // ligger långt över den längsta legitima stegtiden och fångar den klassen.
+    let timedOut = false;
+    const killTimer = setTimeout(() => {
+      timedOut = true;
+      appendChainOverview({
+        event: 'step-timeout',
+        step: name,
+        pid: process.pid,
+        childPid: proc.pid,
+        limitMs: STEP_TIMEOUT_MS,
+      });
+      console.error(
+        `[ingestion-cron] ⏱ ${name} överskred ${STEP_TIMEOUT_MS} ms — SIGTERM till pid ${proc.pid}`,
+      );
+      try { proc.kill('SIGTERM'); } catch {}
+      // SIGTERM kan ignoreras av ett barn som väntar på I/O. Ge det 30 s, sedan
+      // SIGKILL. Utan eskaleringen är timeouten bara en varning.
+      setTimeout(() => {
+        if (proc.exitCode === null && proc.signalCode === null) {
+          console.error(`[ingestion-cron] ⏱ ${name} svarade inte på SIGTERM — SIGKILL till pid ${proc.pid}`);
+          try { proc.kill('SIGKILL'); } catch {}
+        }
+      }, 30_000).unref?.();
+    }, STEP_TIMEOUT_MS);
+
     proc.on('exit', (code) => {
       clearInterval(heartbeat);
+      clearTimeout(killTimer);
       const finishedAt = new Date().toISOString();
-      const exitCode = code ?? 1;
+      // Ett avbrutet steg är inte exit=0 — steget räknas som fel så att
+      // green-filen skriver ok:false och nästa körning försöker igen.
+      const exitCode = timedOut ? 124 : (code ?? 1);
       const durationMs = new Date(finishedAt).getTime() - new Date(startedAt).getTime();
       try {
         writeSync(stepOutFd, `─── ${name} finished ${finishedAt} exit=${exitCode} duration=${durationMs}ms\n`);
@@ -339,7 +384,7 @@ function runStep(name: string, cmd: string, args: string[]): Promise<SpawnResult
         closeSync(stepErrFd);
       } catch {}
       eventsExtracted = parseStepCounts(name, stdoutBuf);
-      appendChainOverview({ event: 'step-end', step: name, exitCode, durationMs, eventsExtracted });
+      appendChainOverview({ event: 'step-end', step: name, exitCode, durationMs, eventsExtracted, timedOut });
       console.log(
         `[ingestion-cron] ✓ ${name}: exit=${exitCode} duration=${durationMs}ms ` +
         `events=${eventsExtracted === null ? 'n/a' : eventsExtracted} ` +

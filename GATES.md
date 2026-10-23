@@ -95,3 +95,11 @@ Hittade under körningen: B-gates hänger i evigheten NÄR den lyckas köa event
 - [ ] E5: ingen källa försvinner tyst — varje död källa är begravd med orsak eller i kö
   CHECK: node scripts/verify-fixes.mjs e5
   EXPECT: /e5: graveyard=\d+ utan_orsak=0 pass/
+
+- [ ] E6: ingen oanvändbar källa ligger kvar i sources/ — varje fil är antingen in-scope eller begravd
+  CHECK: node scripts/verify-fixes.mjs e6
+  EXPECT: /e6: out_of_scope=0 pass \(\d+ in-scope, \d+ begravda out-of-scope\)/
+
+- [ ] E7: P3D claimar bara kandidater som kan nå databasen (city = 'Stockholm')
+  CHECK: node scripts/verify-fixes.mjs e7
+  EXPECT: /e7: claim filterar city='Stockholm' pass \(\d+ pending uteslutas\)/

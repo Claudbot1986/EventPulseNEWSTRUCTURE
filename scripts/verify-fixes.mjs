@@ -570,7 +570,108 @@ function e5() {
   return ok(`e5: graveyard=${grave.size} utan_orsak=0 pass (${dead.length} döda: ${buriedDead.length} begravda varav ${outOfScope} out-of-scope, ${queuedDead.length} i kö)`);
 }
 
-const gates = { g1, g2, g3, g4, g5, g6, h1, h2, h3, h4, h5, h6, e1, e2, e3, e4, e5 };
+// E6 — ingen oanvändbar källa får ligga kvar i sources/.
+//
+// Defektklassen: sandbox.ts:46 skriver `city: candidate.city ?? undefined`.
+// En promote utan stad ger en fil som isInScope() (sourceRegistry.ts:150,
+// kräver exakt 'Stockholm') släpper förbi i tysthet — A-gatet säger då
+// "sources-main is empty" utan att någon ser varför. Mätt 2026-10-23: 92
+// filer var varken begravda eller in-scope (73 med annan stad, 10 utan stad,
+// 9 märkta "Sweden" vilket inte är en stad), samtidigt som A-gatet kördes på
+// tomma preA-könar.
+//
+// Negativ kontroll krävs: mätningen måste kunna skilja en begravd fil från en
+// levande. Finns bara den ena kategorin är outOfScope=0 inte ett bevis.
+function e6() {
+  // Negativ kontroll först, och ur INDEX.json — inte ur sources/. BEGRAVNING
+  // FLYTTAR filen ur sources/, så en scan av sources/ kan aldrig räkna de
+  // begravda. Det var exakt det som gjorde min första version av den här gaten
+  // falskt FAIL:a (negativ kontroll noll trots 78 begravda).
+  let buriedOutOfScope = 0;
+  for (const dir of ['_quarantine', '_retired']) {
+    const p = path.join(ROOT, 'sources', dir, 'INDEX.json');
+    if (!fs.existsSync(p)) continue;
+    for (const e of JSON.parse(readFileSync(p, 'utf8'))) {
+      if (e.reasonCode === 'coverage.outside_stockholm') buriedOutOfScope += 1;
+    }
+  }
+
+  const sourcesDir = path.join(ROOT, 'sources');
+  let inScope = 0;
+  const outOfScope = [];
+  for (const f of fs.readdirSync(sourcesDir)) {
+    if (!f.endsWith('.jsonl')) continue;
+    let rec;
+    try { rec = JSON.parse(readFileSync(path.join(sourcesDir, f), 'utf8').trim()); } catch { continue; }
+    // Sandbox-filer tas bort efter varje test och är aldrig skrivna ut.
+    if (rec?.metadata?.sandbox) continue;
+    const city = String(rec?.city ?? '').trim();
+    if (city === 'Stockholm') { inScope += 1; continue; }
+    outOfScope.push(`${f.replace(/\.jsonl$/, '')}(${city || 'saknas'})`);
+  }
+
+  if (outOfScope.length > 0) {
+    return fail(`e6: FAIL kvar_oanvändbara=${outOfScope.length} av ${inScope + outOfScope.length} filer — ${outOfScope.slice(0, 5).join(', ')}`);
+  }
+  // Utan begravda oanvändbara filer bevisar outOfScope=0 bara att de aldrig
+  // uppstått — predikatet har då aldrig skiljt något från något.
+  if (buriedOutOfScope === 0) {
+    return fail(`e6: FAIL negativ kontroll: 0 begravda med coverage.outside_stockholm — predikatet har inte skiljt begravd från levande (in-scope=${inScope})`);
+  }
+  return ok(`e6: out_of_scope=0 pass (${inScope} in-scope, ${buriedOutOfScope} begravda out-of-scope)`);
+}
+
+// E7 — P3D får inte testa kandidater som aldrig kan nå databasen.
+//
+// claim_source_candidate_test_queue saknade city-filter före migration
+// 20261023-0001. Mätt 2026-10-23: 381 pending, varav 131 city='Stockholm',
+// 202 city IS NULL och 48 med annan stad. Varje testad kandidat kostar en
+// riktig A→B→C-körning mot nätet (147 s för 20 kandidater, varav 0
+// Stockholm) — två tredjedelar av P3D:s budget gick till källor isInScope()
+// aldrig släpper igenom.
+//
+// Gaten läser den LEVENDE funktionsdefinitionen, inte migrationsfilen: en
+// funktion som skrivs över senare ska falla gaten, inte migrationsfilen.
+async function e7() {
+  const url = readEnvFile().DATABASE_URL;
+  if (!url) return fail('e7: FAIL DATABASE_URL missing — kan inte läsa den levande funktionen');
+  const { Client } = await import('pg');
+  const client = new Client({ connectionString: url });
+  let def;
+  let skipped;
+  try {
+    await client.connect();
+    const fn = await client.query(`
+      SELECT pg_get_functiondef(p.oid) AS def
+      FROM pg_proc p JOIN pg_namespace n ON n.oid = p.pronamespace
+      WHERE n.nspname = 'public' AND p.proname = 'claim_source_candidate_test_queue';
+    `);
+    def = fn.rows[0]?.def ?? '';
+    const cnt = await client.query(
+      `SELECT count(*)::int AS n FROM source_candidate_test_queue
+       WHERE status = 'pending' AND city IS DISTINCT FROM 'Stockholm'`,
+    );
+    skipped = cnt.rows[0]?.n ?? 0;
+  } catch (err) {
+    return fail(`e7: FAIL DB-fel: ${err.message}`);
+  } finally {
+    await client.end().catch(() => {});
+  }
+
+  if (!def) return fail('e7: FAIL claim_source_candidate_test_queue finns inte i databasen');
+  if (!/city\s*=\s*'Stockholm'/.test(def)) {
+    return fail('e7: FAIL claim-funktionen saknar city-filter — utsockes-kandidater kan fortfarande testas');
+  }
+  // Negativ kontroll: filtret ska faktiskt utesluta något. Om inga pending
+  // rader ligger utanför Stockholm är gate:n inte mätande — den testar bara
+  // att filteret finns, inte att det gör skillnad.
+  if (skipped === 0) {
+    return fail('e7: FAIL negativ kontroll: inga pending-kandidater utanför Stockholm att utesluta');
+  }
+  return ok(`e7: claim filterar city='Stockholm' pass (${skipped} pending uteslutas)`);
+}
+
+const gates = { g1, g2, g3, g4, g5, g6, h1, h2, h3, h4, h5, h6, e1, e2, e3, e4, e5, e6, e7 };
 if (!arg || !gates[arg]) {
   console.error(`usage: node scripts/verify-fixes.mjs <${Object.keys(gates).join('|')}>`);
   process.exit(2);
