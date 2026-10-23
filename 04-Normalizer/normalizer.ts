@@ -19,6 +19,7 @@ import { getDefaultCategorySlugForSource } from './sourceCategoryDefaults';
 import { canonicalizeCategorySlug } from './categoryCanonicalize';
 import { extractHeadliner, resolveArtist } from './artistResolver';
 import { aiImageQueue, startAiImageWorker } from '../08-Agent/workers/aiImageWorker';
+import { enqueueSideEffect } from './sideEffectQueue';
 import { appendSkipLog } from '../08-Agent/utils/skipLog';
 import { pickLibraryFallback, markEventWithLibraryFallback } from '../08-Agent/utils/imageLibrary';
 // 2026-10-07 — P7 Editorial Engine. Opt-in via EDITORIAL_ENABLED=1.
@@ -829,7 +830,15 @@ export async function processRawEvent(job: Job<RawEventInput>): Promise<void> {
   }
 
   // Enqueue Meilisearch sync
-  await searchSyncQueue.add('sync', { event_id, action: 'upsert' });
+  //
+  // Eventet är REDAN persisterat i Supabase (rad 807-829) när vi når hit.
+  // En felaktig sidoeffekt får därför INTE kasta — annars markeras jobbet
+  // som failed och dashboard/gates rapporterar "0 events" fastän raden
+  // finns i databasen. Mätt 2026-10-23: 26 jobb dog med "Connection is
+  // closed." i den här raden, trots att alla 26 events fanns i databasen.
+  await enqueueSideEffect('search_sync-köning', event_id, () =>
+    searchSyncQueue.add('sync', { event_id, action: 'upsert' }),
+  );
 
   // Enqueue AI-bild-generering (workern konsumerar asynkront).
   // Skippa om AI-pipelinen är avstängd (AI_IMAGE_PIPELINE_ENABLED=0) — då
@@ -862,12 +871,16 @@ export async function processRawEvent(job: Job<RawEventInput>): Promise<void> {
             `(match_type=${libMatch.match_type}, library_id=${libMatch.library_id})`,
         );
       } else {
-        await aiImageQueue.add(
-          'generate',
-          { event_id, enqueued_at: new Date().toISOString() },
-          { jobId: `ai-img-${event_id}` }, // dedup-id så vi inte köar samma event flera gånger
+        // Samma princip som search_sync ovan: eventet är persisterat, så en
+        // felaktig AI-bild-köning får inte markera jobbet som failed.
+        const queued = await enqueueSideEffect('AI-bild-köning', event_id, () =>
+          aiImageQueue.add(
+            'generate',
+            { event_id, enqueued_at: new Date().toISOString() },
+            { jobId: `ai-img-${event_id}` }, // dedup-id så vi inte köar samma event flera gånger
+          ),
         );
-        console.log(`[normalizer] 📸 AI-bild-jobb köat: ${event_id} (start=${startTime})`);
+        if (queued) console.log(`[normalizer] 📸 AI-bild-jobb köat: ${event_id} (start=${startTime})`);
       }
     } else {
       const reason = startTime ? 'past' : 'missing_start_time';

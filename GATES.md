@@ -58,6 +58,7 @@ körningar. city_added: source_candidates + source_candidate_test_queue (0003).
 - [x] H4: stale processing-rader får inte ligga kvar, och reclaimen finns i den LEVENDE funktionen
   CHECK: node scripts/verify-fixes.mjs h4
   EXPECT: /h4: reclaim i LEVENDE funktion \+ 0 stuck pass \(stranded=\d+, city-gated reclaim=\w+\)/
+  EVIDENCE: automatic-evidence=v1; definition-sha256=9d1db092a19b63d7d7f0450c0ce28ddfee3e9c869128cf79a121d570ea6d19dc; exit=0; EXPECT=matched; output-sha256=87629b7e313c33f3f7eba931858dee63b369b1c1bda184170c5ae891e6fef320; output-bytes=82; shell=/bin/sh; cwd=/Users/claudgashi/EventPulse; path=29325ef63737/16 entries
 
 - [x] H5: en promotead källa passerar isInScope() och är nåbar för A-gatet
   CHECK: node scripts/verify-fixes.mjs h5
@@ -75,46 +76,87 @@ Scope: kör ingestion + discovery på riktig data tills kedjan producerar events
 Hittade under körningen: B-gates hänger i evigheten NÄR den lyckas köa events
 (lazy-import av 03-Queue/queue.js öppnar 4 Redis-sockets som aldrig stängs).
 
-- [ ] E1: stängningsfunktion finns och runB stänger köerna före process.exit
+- [x] E1: stängningsfunktion finns och runB stänger köerna före process.exit
   CHECK: node scripts/verify-fixes.mjs e1
-  EXPECT: /e1: closeAllQueues exporterad\+ runB anropar den pass/
+  EXPECT: /e1: closeAllQueues exporterad \+ runB anropar den pass/
+  EVIDENCE: automatic-evidence=v1; definition-sha256=a49c058e7994515d2d5e68f189fba319d57e9f87f45ece9c0317b7bc7e39aafd; exit=0; EXPECT=matched; output-sha256=0678fc5d97f2f37fcd7d057b0e8a8c27fde0037373675f0f69ffafb0d5915609; output-bytes=54; shell=/bin/sh; cwd=/Users/claudgashi/EventPulse; path=29325ef63737/16 entries
 
-- [ ] E2: ingen gate hänger — varje steg får step-end inom 20 min
+- [x] E2: ingen gate hänger — varje steg får step-end inom 20 min
   CHECK: node scripts/verify-fixes.mjs e2
   EXPECT: /e2: steg utan step-end=\d+ hängda=\d+ pass/
+  EVIDENCE: automatic-evidence=v1; definition-sha256=8f2d682ee7250ca0bc9b9e273c8125d508a5b964e7df45b24d2c070664c3ec80; exit=0; EXPECT=matched; output-sha256=0e409d6bcbd8375c14c0f03748e2369a830501559ee91d9960f0085989e68e0a; output-bytes=71; shell=/bin/sh; cwd=/Users/claudgashi/EventPulse; path=29325ef63737/16 entries
 
-- [ ] E3: kedjan producerar events — totalEventsPersisted > 0
+- [x] E3: kedjan producerar events — totalEventsPersisted > 0
   CHECK: node scripts/verify-fixes.mjs e3
   EXPECT: /e3: persisted=\d+ sources_success=\d+ pass/
+  EVIDENCE: automatic-evidence=v1; definition-sha256=a266f2527d09c8c67c214b2c5bf208330fefdde21f357d32d9f1e48b0aaa6beb; exit=0; EXPECT=matched; output-sha256=8d1e7800d407b2f92e016c13f8c923b371a895e0a011929e6130a6bdf0f39e55; output-bytes=70; shell=/bin/sh; cwd=/Users/claudgashi/EventPulse; path=29325ef63737/16 entries
 
-- [ ] E4: discovery→ingestion går igenom på EN körning (ny källa → A-gate → events)
+- [x] E4: discovery→ingestion går igenom på EN körning (ny källa → A-gate → events)
   CHECK: node scripts/verify-fixes.mjs e4
   EXPECT: /e4: promote efter A-körning=\d+ ordning=först pass/
+  EVIDENCE: automatic-evidence=v1; definition-sha256=931725875e90d8ea9dfb2c3ddb5a6a73a46168a2e7de0e398e2d336d05642872; exit=0; EXPECT=matched; output-sha256=fe8e2285005fcb483c7a8f97c11e2533246d4220e900d7de452200359fdb073f; output-bytes=78; shell=/bin/sh; cwd=/Users/claudgashi/EventPulse; path=29325ef63737/16 entries
 
-- [ ] E5: ingen källa försvinner tyst — varje död källa är begravd med orsak eller i kö
+- [x] E5: ingen källa försvinner tyst — varje död källa är begravd med orsak eller i kö
   CHECK: node scripts/verify-fixes.mjs e5
   EXPECT: /e5: graveyard=\d+ utan_orsak=0 pass/
+  EVIDENCE: automatic-evidence=v1; definition-sha256=c5037fcb48bede69e88240bedfff8d76c61562452af0e16969a6e765fbbb2caf; exit=0; EXPECT=matched; output-sha256=f50671c4e592f68ba210197a0def2b2e015007794c521a2a34c38772263ef5e7; output-bytes=94; shell=/bin/sh; cwd=/Users/claudgashi/EventPulse; path=29325ef63737/16 entries
 
-- [ ] E6: ingen oanvändbar källa ligger kvar i sources/ — varje fil är antingen in-scope eller begravd
+- [x] E6: ingen oanvändbar källa ligger kvar i sources/ — varje fil är antingen in-scope eller begravd
   CHECK: node scripts/verify-fixes.mjs e6
   EXPECT: /e6: out_of_scope=0 pass \(\d+ in-scope, \d+ begravda out-of-scope\)/
+  EVIDENCE: automatic-evidence=v1; definition-sha256=f7f6ba43537e5ccec44b3a8d6053dc84eb81fdd0e2ce6d6a2e7f26c16a316090; exit=0; EXPECT=matched; output-sha256=ce9918cb0a1303ecc7017f80723a93b2875a07fca2050c55ef27879a12d921ac; output-bytes=65; shell=/bin/sh; cwd=/Users/claudgashi/EventPulse; path=29325ef63737/16 entries
 
-- [ ] E7: P3D claimar bara kandidater som kan nå databasen (city = 'Stockholm')
+- [x] E7: P3D claimar bara kandidater som kan nå databasen (city = 'Stockholm')
   CHECK: node scripts/verify-fixes.mjs e7
   EXPECT: /e7: claim filterar city='Stockholm' pass \(\d+ pending uteslutas\)/
+  EVIDENCE: automatic-evidence=v1; definition-sha256=5503d742ba6640fb8dbecdf98794b006b93d370f45a3720c99b93e6b5e20ea52; exit=0; EXPECT=matched; output-sha256=84d029ff8b5e475885d0f7e0d6e0d1bae741c6591cee508a9036c93414d24118; output-bytes=65; shell=/bin/sh; cwd=/Users/claudgashi/EventPulse; path=29325ef63737/16 entries
 
-- [ ] E8: cross-source dedup skriver inte identitetskolumner på en annan källas rad
+- [x] E8: cross-source dedup skriver inte identitetskolumner på en annan källas rad
   CHECK: node scripts/verify-fixes.mjs e8
-  EXPECT: /e8: cross-source identitet bevarad pass \(0 brott av \d+ uppspelada/
+  EXPECT: /e8: cross-source identitet bevarad pass \(0 brott av \d+ uppspelade/
+  EVIDENCE: automatic-evidence=v1; definition-sha256=9494ce278eabd83308f3d3b18df5f9ab14e1672ad430da8e050fd5a3053a10e9; exit=0; EXPECT=matched; output-sha256=86b99dd75060500262b5eb0e4e4779a84da64cd9e7a7c8f107fac7617a5ed691; output-bytes=104; shell=/bin/sh; cwd=/Users/claudgashi/EventPulse; path=29325ef63737/16 entries
 
-- [ ] E9: drainQueue --status avslutar — ingen läckt Redis-socket
+- [x] E9: drainQueue --status avslutar — ingen läckt Redis-socket
   CHECK: node scripts/verify-fixes.mjs e9
   EXPECT: /e9: --status avslutar rent pass \(exit=0, inga läckta sockets\)/
+  EVIDENCE: automatic-evidence=v1; definition-sha256=36110cc8bb3fcc3cad0b1bab94d26969652d0f7870c32998f210430f9b70911e; exit=0; EXPECT=matched; output-sha256=439425b847707a56cd267f1fef1452db26d026ac9d5a35eaf371a64aafee0861; output-bytes=63; shell=/bin/sh; cwd=/Users/claudgashi/EventPulse; path=29325ef63737/16 entries
 
 - [x] E10: källor C lyckas extrahera ifrån står inte som fail i sources_status
   CHECK: node scripts/verify-fixes.mjs e10
   EXPECT: /e10: C-status är konsekvent pass \(\d+ spårade källor, 0 fel/
+  EVIDENCE: automatic-evidence=v1; definition-sha256=755f95a7f6f77005cdc3fc36b325a8fb754738ab2dfe7e2cc2bf4931ece5815d; exit=0; EXPECT=matched; output-sha256=801a11338b8a6e9fc7841a35fd37c4fa8b149f7935a0bf4bff85fd18ffa70046; output-bytes=101; shell=/bin/sh; cwd=/Users/claudgashi/EventPulse; path=29325ef63737/16 entries
 
 - [x] E11: import-to-eventpulse körs i kedjan och före worker-drain
   CHECK: node scripts/verify-fixes.mjs e11
   EXPECT: /e11: import→drain ordnad pass \(import-to-eventpulse #\d+ → worker-drain #\d+, \d+ events till bullmq, exit=0\)/
+  EVIDENCE: automatic-evidence=v1; definition-sha256=5e8e520729c7a8fc5f17061e644bedda225ce5d9cdf03058ff4f5285ced9d3b8; exit=0; EXPECT=matched; output-sha256=7ad6091f99eac07b4dc5f37a0207f38e5ee74b8abfbf8ef32fd13f11c35af802; output-bytes=113; shell=/bin/sh; cwd=/Users/claudgashi/EventPulse; path=29325ef63737/16 entries
+
+# Avslutningssäkerhet: hänger events i luften när kedjan stoppas (2026-10-23)
+
+Scope: tre fel som gjorde att "funna" events aldrig nådde databasen.
+1. startWorker.ts hade ingen SIGTERM-handler — in-flight jobb fastnade i
+   `active` med utgången lås och persisterades ALDRIG.
+2. `drainQueue --status` var inte read-only — utan process.exit(0) föll den
+   rakt in i en riktig dränering av produktionskön.
+3. processRawEvent kastade efter att eventet redan skrivits till Supabase —
+   jobbet markerades failed, vilket säger "inget persisterades".
+
+Negativ kontroll (S1): samma kontroll körs mot en kopia av startWorker.ts
+UTAN SIGTERM-handler. Den MÅSTE lämna orphaner — annars mäter gaten
+ingenting. Kopian ligger i 03-Queue/ så att dess relativa importer
+('./queue', '../04-Normalizer/normalizer') fortfarande löser.
+
+- [x] S1: SIGTERM lämnar inga orphaner — och gaten kan faila
+  CHECK: node scripts/verify-shutdown-safety.mjs --only=sigterm
+  EXPECT: /fast kod: 0 orphaner efter SIGTERM[\s\S]*negativ kontroll: \d+ orphaner utan SIGTERM-handler/
+  EVIDENCE: automatic-evidence=v1; definition-sha256=5dea0932176aefe88cf8794037b20aacc7a811174cbe64754c47885833fc1106; exit=0; EXPECT=matched; output-sha256=2b1c8f07624378f6c454ba5b91cc01c34982c3a995e7232d0b8d9c7b6384d5c9; output-bytes=360; shell=/bin/sh; cwd=/Users/claudgashi/EventPulse; path=29325ef63737/16 entries
+
+- [x] S2: --status är read-only — den dränerar inte produktionskön
+  CHECK: node scripts/verify-shutdown-safety.mjs --only=status
+  EXPECT: /--status avslutade rent \(exit 0\) utan att röra kön/
+  EVIDENCE: automatic-evidence=v1; definition-sha256=ba1b7e08a810ab6e69d86cbb39a704fa109d35d76b1dc29cb12417da73e99008; exit=0; EXPECT=matched; output-sha256=e888e43c7e50dc31bc6d221ea6d77e8b3a184950d16c5e5f1b87d094c0d26ddc; output-bytes=178; shell=/bin/sh; cwd=/Users/claudgashi/EventPulse; path=29325ef63737/16 entries
+
+- [x] S3: riktig drain persisterar events — completed = failed = 0
+  CHECK: node scripts/verify-shutdown-safety.mjs --only=drain
+  EXPECT: /drain: \d+ jobb completed, 0 failed, \d+ events persisterade i Supabase/
+  EVIDENCE: automatic-evidence=v1; definition-sha256=d5d774537dec8ced08cd42dabefdb17a3d9d74ca717479ec9747ff259ebebcdc; exit=0; EXPECT=matched; output-sha256=3edbd38587a007bdc18d7f86955254bfe7b9dba03c5e1e5e3dca76a9a2de39d7; output-bytes=187; shell=/bin/sh; cwd=/Users/claudgashi/EventPulse; path=29325ef63737/16 entries

@@ -48,6 +48,15 @@ const args = process.argv.slice(2);
 const maxMsIdx = args.indexOf('--max-ms');
 const maxMs = maxMsIdx !== -1 && args[maxMsIdx + 1] ? parseInt(args[maxMsIdx + 1], 10) : 1_800_000;
 const POLL_MS = 2_000;
+/** Hur länge vi väntar på in-flight jobb innan vi avslutar hårt. */
+const WORKER_CLOSE_TIMEOUT_MS = 30_000;
+
+/**
+ * Vilket läge ska drainen köra i? Se 03-Queue/drainMode.ts för resonemanget.
+ * Modulen är beroendefri så att regeln kan testas utan Redis.
+ */
+export { resolveDrainMode, type DrainMode } from './drainMode.js';
+import { resolveDrainMode } from './drainMode.js';
 
 async function depth(): Promise<{ waiting: number; active: number; failed: number }> {
   // Utan argument returnerar getJobCounts alla typer. Med typer som argument
@@ -57,16 +66,22 @@ async function depth(): Promise<{ waiting: number; active: number; failed: numbe
   return { waiting: counts.waiting ?? 0, active: counts.active ?? 0, failed: counts.failed ?? 0 };
 }
 
+/** Stäng alla Redis-sockets. Kan inte hänga: båda stegen har timeout. */
+async function closeRedis(): Promise<void> {
+  await stopAiImageWorker();
+  await closeAllQueues();
+}
+
 async function main(): Promise<void> {
+  const mode = resolveDrainMode(args);
   const start = await depth();
 
-  if (args.includes('--status')) {
+  if (mode === 'status') {
     console.log(JSON.stringify(start, null, 2));
     // --status importerar stopAiImageWorker, vilket öppnar två Redis-sockets på
     // modulnivå. Utan att stänga dem avslutas processen aldrig — mätt 2026-10-23
     // levde tre --status-processer kvar i timmar (lsof: 1 etablerad socket vardera).
-    await stopAiImageWorker();
-    await closeAllQueues();
+    await closeRedis();
     process.exit(0);
   }
 
@@ -84,13 +99,31 @@ async function main(): Promise<void> {
     console.error(`[drain] job failed: ${err.message}`);
   });
 
-  const stop = async (reason: string): Promise<void> => {
-    const d = await depth();
-    console.log(`[drain] avslutar (${reason}): completed=${completed} failed=${failed} kvar=${d.waiting} active=${d.active}`);
-    await worker.close();
-    await stopAiImageWorker();
-    await closeAllQueues();
-    process.exit(0);
+  /**
+   * Stäng av dräneringen — idempotent.
+   *
+   * SIGTERM, "kö tom" och maxMs kan träffa samtidigt. Utan single-flight
+   * skulle två anrop köra stängsekvensen parallellt, där den andra kunde
+   * stänga Redis-sockarna medan den första fortfarande väntade på jobb.
+   */
+  let stopPromise: Promise<void> | null = null;
+  const stop = (reason: string): Promise<void> => {
+    if (stopPromise) return stopPromise;
+    stopPromise = (async () => {
+      const d = await depth();
+      console.log(`[drain] avslutar (${reason}): completed=${completed} failed=${failed} kvar=${d.waiting} active=${d.active}`);
+      // Ordningen är load-bearing: worker.close() väntar på ALLA in-flight jobb
+      // (BullMQ WhenCurrentJobsFinished). Sockets får INTE stängas före det —
+      // då dör ett jobb mitt i sin efterpersisteringsköning med
+      // "Connection is closed." och ett redan persisterat event markeras failed.
+      await Promise.race([
+        worker.close(),
+        new Promise<void>((resolve) => setTimeout(resolve, WORKER_CLOSE_TIMEOUT_MS)),
+      ]);
+      await closeRedis();
+      process.exit(0);
+    })();
+    return stopPromise;
   };
 
   process.on('SIGTERM', () => { void stop('SIGTERM'); });
@@ -105,7 +138,15 @@ async function main(): Promise<void> {
   await stop(`maxMs=${maxMs} uppnått`);
 }
 
-main().catch((err) => {
-  console.error('[drain] fel:', err);
-  process.exit(1);
-});
+// ESM-säker main-check: require.main saknas i ESM-scope. Utan detta skulle
+// varje import av modulen starta en riktig dränering av produktionskön.
+const invokedDirectly =
+  typeof process.argv[1] === 'string' &&
+  fileURLToPath(import.meta.url) === path.resolve(process.argv[1]);
+
+if (invokedDirectly) {
+  main().catch((err) => {
+    console.error('[drain] fel:', err);
+    process.exit(1);
+  });
+}

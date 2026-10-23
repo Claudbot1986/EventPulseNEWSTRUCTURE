@@ -984,8 +984,8 @@ function e11() {
   }
   if (iImport >= iDrain) {
     return fail(
-      `e11: FAIL ordningen är fel: ${IMPORT} på position ${iImport} körs EFTER ${DRAIN} ` +
-      `på position ${iDrain} — workern dränerar en tom kö`,
+      `e11: FAIL ordningen är fel: ${IMPORT} på position ${iImport + 1} körs EFTER ${DRAIN} ` +
+      `på position ${iDrain + 1} — workern dränerar en tom kö`,
     );
   }
   if (imp.eventsExtracted === null || imp.eventsExtracted === undefined) {
@@ -995,7 +995,9 @@ function e11() {
     );
   }
   return ok(
-    `e11: import→drain ordnad pass (${IMPORT} #${iImport} → ${DRAIN} #${iDrain}, ` +
+    // Ordningarna är 1-baserade (steg 1..N) — findIndex är 0-baserat, så
+    // utan +1 pekade gaten på fel stegnummer.
+    `e11: import→drain ordnad pass (${IMPORT} #${iImport + 1} → ${DRAIN} #${iDrain + 1}, ` +
     `${imp.eventsExtracted} events till bullmq, exit=0)`,
   );
 }

@@ -501,6 +501,35 @@ export function startAiImageWorker(): Worker<AiImageJob> | null {
 }
 
 /**
+ * Stäng en IORedis-instans utan att kunna hänga.
+ *
+ * `quit()` skickar QUIT och väntar på serverns svar. Om socketen redan är
+ * halvstängd kan svaret aldrig komma, och `await connection.quit()` hänger
+ * då för alltid — processen avslutas aldrig. Mätt 2026-10-23: en
+ * `drainQueue.ts --status`-process levde 9+ timmar med allt annat stängt.
+ *
+ * Efter timeout kopplas socketen ner hårt (disconnect) i stället för att lita
+ * på att QUIT-svaret kommer.
+ */
+async function closeConnection(conn: IORedis, timeoutMs = 3_000): Promise<void> {
+  try {
+    await Promise.race([
+      conn.quit().catch(() => undefined),
+      new Promise<void>((resolve) => setTimeout(resolve, timeoutMs)),
+    ]);
+  } catch (err) {
+    console.error('[ai-image-worker] redis quit failed:', (err as Error).message);
+  }
+  if (conn.status !== 'end') {
+    try {
+      conn.disconnect();
+    } catch (err) {
+      console.error('[ai-image-worker] redis disconnect failed:', (err as Error).message);
+    }
+  }
+}
+
+/**
  * Stäng ai-image-workern OCH de modulnivå-sockets som skapades vid import.
  *
  * Nödvändig för kortlivade CLI:er som importerar den här modulen — bara
@@ -533,7 +562,7 @@ export async function stopAiImageWorker(): Promise<void> {
   }
   try {
     // queue.close() stänger inte den delade IORedis-instansen den byggdes på.
-    await connection.quit();
+    await closeConnection(connection);
   } catch (err) {
     console.error('[ai-image-worker] redis disconnect failed:', (err as Error).message);
   }

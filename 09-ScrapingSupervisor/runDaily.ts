@@ -132,10 +132,11 @@ function runSubprocessWithTimeout(name: string, scriptPath: string, fileLog: str
     }, maxMs);
     proc.on('exit', (code, signal) => {
       clearTimeout(killTimer);
-      // 2026-09-15: workern fångar SIGTERM själv och avslutar med numerisk kod
-      // 143 (signal=null) — då missar den gamla maskningen signal==='SIGTERM'
-      // och steget loggades som falsk FAIL varje natt. Dränerings-timeout är
-      // alltid förväntat → 0.
+      // 2026-10-23: workern fångar nu SIGTERM själv (03-Queue/startWorker.ts
+      // har en graceful-shutdown) och avslutar med exit 0 efter att in-flight
+      // jobb har persisterats. Utan handlern dog processen omedelbart och
+      // jobben lämnades i `active` — events som aldrig nådde databasen.
+      // Dränerings-timeout är alltid förväntat → 0.
       const exitCode = timedOut || signal === 'SIGTERM' ? 0 : (code ?? 1);
       log(`[step:${name}] exit code=${exitCode} signal=${signal ?? '-'} duration=${Date.now() - startedAt}ms`, fileLog);
       // Räkna ur HELA bufferten, inte ur tailen — en 15-min-dränering kan
