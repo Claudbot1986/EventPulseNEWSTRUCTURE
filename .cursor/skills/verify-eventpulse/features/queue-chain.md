@@ -66,12 +66,40 @@ k-source, inte per event. `postA-queue.jsonl` har id + antal events.
 A läser den (`runA.ts:76-77`), men ingen gate skriver tillbaka till den i
 den här kedjan. Verifiera den bara om du jagar just den filen.
 
-**Kedjan har ingen sista port.** Inget av A/B/C/D/I skriver till
-`events`-tabellen via den här vägen — de skriver till
-`03-Queue/03-extractedevents/`. Persistens till Supabase sker i en annan
-lager (`phase1ToQueue.ts` → bullmq `raw_events` → `startWorker.ts` →
-`04-Normalizer`). Se `worker-drain.md`. Om du förväntar dig att en
-A-körning ska fylla `events` gör du fel.
+**Kedjan har ingen sista port — och det är varför C:s events kan fastna.**
+A/B/C/D/I skriver till `events`-tabellen via den här vägen aldrig; de skriver
+till `03-Queue/03-extractedevents/` (`C/` och `D/` i underkataloger).
+Persistensen sker i ett annat lager: `importToEventPulse.ts` → bullmq
+`raw_events` → `startWorker.ts` → `04-Normalizer`.
+
+**Importen körs INTE i ingestion-kedjan.** `scripts/ingestion-cron.ts`
+(24 steg, launchd 02:00) innehåller noll referenser till
+`importToEventPulse`. Importen körs av `com.eventpulse.post-ingest`
+(04:00) → `runPostIngest.sh` → `runDaily.ts` → `ingestionPipeline.ts` steg 3.
+
+Mätt 2026-10-23: ingestion-kedjan tar **1,5–2,5 h**, så post-ingest startar
+medan C fortfarande extraherar. Senaste import var 02:00 UTC; C skrev 13
+extrafiler kl. 12:24 UTC som därför aldrig importerats. Symtom: en källa har
+`extract_success` och events i `03-extractedevents/C/<id>.jsonl`, men noll
+rader i `events`.
+
+Verifiera om en C-källa faktiskt nått databasen — räkna inte C:s egen
+"21 events":
+
+```bash
+node .cursor/skills/verify-eventpulse-handoff/scripts/dbq.mjs \
+  "SELECT count(*) n FROM events WHERE source='<sourceId>'"
+```
+
+**Datumvakten i `importToEventPulse.ts:301` avvisar två olika saker och
+loggar dem som ett.** `if (!Number.isFinite(startMs) || startMs < Date.now())`
+hoppar över både *förgångna* events och events *utan datum*. C skriver ofta
+`date: "unknown"`, vilket ger NaN. Mätt 2026-10-23 över 18 C-källor med 120
+events och noll DB-rader: **43 % förgånget datum, 34 % saknat datum, 23 %
+giltigt framtida datum**. Bara de 23 % kan nå databasen. `konserthuset-2` är
+21/21 utan datum; `junibacken`, `konstfack`, `medeltidsmuseet` är 9/9
+förgångna. Att C rapporterar "21 events" betyder alltså inte 21 användbara
+events.
 
 **Live-köerna innehåller backup-filer.** `preA-queue.BACKUP-stale-20260819.jsonl`,
 `postB-preC-queue.BEFORE-E2E.jsonl` m.fl. finns bredvid de riktiga. En glob

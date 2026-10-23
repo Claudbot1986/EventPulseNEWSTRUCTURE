@@ -788,9 +788,11 @@ function e9() {
  * en begravning hade utplånat källan till de eventen.
  *
  * Otron: för varje fil i 03-Queue/03-extractedevents/C/ som innehåller minst
- * en rad måste motsvarande sourceId stå som success. Negativ kontroll: gaten
- * räknar de verkliga filerna, så en tom katalog eller en trasig statusfil ger
- * FAIL, inte PASS.
+ * en rad, och vars sourceId är SPÅRAD i sources/ och INTE begravd, måste
+ * motsvarande rad stå som success. Negativ kontroll: gaten räknar de
+ * verkliga filerna, så en tom katalog eller en trasig statusfil ger FAIL,
+ * inte PASS. Se scope-korrigeringen i funktionens kropp för varför begravda
+ * och ospårade källor utesluts.
  */
 function e10() {
   const src = readFileSync(path.join(ROOT, '02-Ingestion/C-htmlGate/run-dynamic-pool.ts'), 'utf8');
@@ -807,16 +809,43 @@ function e10() {
     return fail('e10: FAIL negativ kontroll: 0 extraherade filer i C-mappen — gaten mäter ingenting');
   }
 
+  // 2026-10-23 — Scope-korrigering. Första versionen av denna gate krävde att
+  // VARJE C-extraherad källa stod som `success`. Mätningen visade att den
+  // invarianten är falsk. Av 108 C-extraherade källor med fel status var
+  //   64 begravda (42 kyrkograv + 22 karantän) — där är `fail` RÄTT, inte fel.
+  //      En begravd källa ska aldrig återväckas av en statusrad, och `ekero`
+  //      är permanentlyRetired sedan 2026-10-04 (HTTP 000, DNS död).
+  //   18 ospårade (ingen sources/<id>.jsonl — liseberg, malmopera,
+  //      kungliga-operan …). De är C-extrafiler från tiden innan scope:n
+  //      smalnade till Stockholm och ägs inte av A/B/C.
+  // Rätt invariant: en källa som är SPÅRAD i sources/ och INTE begravd får
+  // inte stå som fel om C lyckades extrahera ifrån den. Uteslutningarna
+  // redovisas i utdata så att de inte är tysta.
+  const readIndex = (p) => {
+    try { return JSON.parse(readFileSync(path.join(ROOT, p), 'utf8')); }
+    catch { return []; }
+  };
+  const buried = new Set([
+    ...readIndex('sources/_quarantine/INDEX.json'),
+    ...readIndex('sources/_retired/INDEX.json'),
+  ].map((e) => e.sourceId));
+  const tracked = new Set(readdirSync(path.join(ROOT, 'sources'))
+    .filter((f) => f.endsWith('.jsonl')).map((f) => f.replace(/\.jsonl$/, '')));
+
   const rows = readFileSync(path.join(ROOT, 'runtime/sources_status.jsonl'), 'utf8')
     .trim().split('\n').map((l) => { try { return JSON.parse(l); } catch { return null; } }).filter(Boolean);
   const latest = new Map();
   for (const r of rows) if (r.sourceId) latest.set(r.sourceId, r);
 
   const offenders = [];
+  let checked = 0, skippedBuried = 0, skippedUntracked = 0;
   for (const f of files) {
     const id = f.replace(/\.jsonl$/, '');
     const events = readFileSync(path.join(dir, f), 'utf8').trim().split('\n').filter((l) => l.trim()).length;
     if (events === 0) continue;
+    if (buried.has(id)) { skippedBuried++; continue; }
+    if (!tracked.has(id)) { skippedUntracked++; continue; }
+    checked++;
     const st = latest.get(id);
     if (!st) { offenders.push(`${id}(${events} ev, ingen statusrad)`); continue; }
     if (st.status !== 'success') offenders.push(`${id}(${events} ev, status=${st.status})`);
@@ -824,11 +853,14 @@ function e10() {
 
   if (offenders.length > 0) {
     return fail(
-      `e10: FAIL ${offenders.length}/${files.length} C-extraherade källor står fel i sources_status — ` +
+      `e10: FAIL ${offenders.length}/${checked} spårade C-extraherade källor står fel i sources_status — ` +
       offenders.slice(0, 5).join(', '),
     );
   }
-  return ok(`e10: C-status är konsekvent pass (${files.length} källor, 0 fel)`);
+  return ok(
+    `e10: C-status är konsekvent pass (${checked} spårade källor, 0 fel; ` +
+    `uteslutna: ${skippedBuried} begravda, ${skippedUntracked} ospårade)`,
+  );
 }
 
 const gates = { g1, g2, g3, g4, g5, g6, h1, h2, h3, h4, h5, h6, e1, e2, e3, e4, e5, e6, e7, e8, e9, e10 };

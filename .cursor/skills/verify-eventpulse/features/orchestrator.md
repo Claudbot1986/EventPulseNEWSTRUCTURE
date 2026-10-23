@@ -51,6 +51,51 @@
   ok: true}`, annars `{ok: false, failedSteps, lastRunAt, exitCode, lastError}`
   med `lastGreenAt` **bevarad**. Före fixen skrevs filen bara i lyckad gren,
   så en misslyckad natt lät senaste gröna stå kvar som om allt var ok.
+- **`step-end` skrev ingen `pid` fram till 2026-10-23** — `step-start`,
+  `step-timeout` och `heartbeat` hade den, `step-end` (`:393`) inte. Effekt:
+  263 av `chain-overview.logs rader kunde inte kopplas till någon körning, och
+  E2/E4 failade med "körningen saknar steg" trots att stegen fanns. En gate som
+  väljer "sista körningen" ur loggen måste filtrera på `pid` — kontrollera att
+  den kolumnen finns innan du litar på en sådan gate.
+
+## Källstatus: vem som skriver `runtime/sources_status.jsonl`
+
+`updateSourceStatus` (`02-Ingestion/tools/sourceRegistry.ts:400`) är den enda
+skrivaren. Den anropas av **A** (`runA.ts:374`) och **B** (`runB.ts:176,315`).
+Den anropas **inte av C före 2026-10-23** och inte av D/I.
+
+**Varför det spelar roll:** B routar en källa till C med
+`"toolB(preB): [breadth] unclear"` och sätter då `status=fail`. C extrahterar
+senare 138 events från den — men raden står kvar som `fail` för alltid. Mätt
+2026-10-23: **42 av 269 `fail`-källor hade events i databasen**
+(`livespot-stockholm` 5274, `spelning-se` 797, `dramaten` 298, `songkick` 204 …).
+Ursprungsmätningen "42 av 269" gällde bara dem som **inte** var begravda.
+Se scope-korrigeringen nedan — rätt siffra för den verkliga defekten är
+**26 spårade, obegravda källor / 517 events**.
+
+**Konsekvens som är farligare än siffran:** `classify-dead-sources.ts`,
+dashboarden och E5/E6 bygger sina *begravningslistor* på `status=fail`. En
+begravning utplånar då källan till tusentals events. Verifiera därför alltid en
+begravningslista mot databasen innan något begravs:
+
+```bash
+# källor som står som fail men ändå har events
+node .cursor/skills/verify-eventpulse-handoff/scripts/dbq.mjs \
+  "SELECT source, count(*) n FROM events GROUP BY source ORDER BY n DESC"
+```
+
+Fixen (2026-10-23) är ett `updateSourceStatus`-anrop i `routeResult()` när
+`outcomeType === 'extract_success'` (`run-dynamic-pool.ts:1356`).
+
+**E10-scopet korrigerades samma dag.** Första versionen av gaten krävde att
+*varje* C-extraherad källa stod som `success`, vilket skulle ha tvingat fram en
+återväckning av begravda källor. Av 108 C-extraherade källor med fel status var
+**64 begravda** (42 kyrkograv + 22 karantän; `ekero` är `permanentlyRetired`
+sedan 2026-10-04) och **18 ospårade** (inga `sources/<id>.jsonl` — liseberg,
+malmopera, kungliga-operan, från tiden innan scope:n smalnade till Stockholm).
+För dessa är `fail` korrekt. Rätt invariant: en källa som är **spårad i
+`sources/` och inte begravd** får inte stå som fel. `scripts/backfill-c-extract-status.ts`
+rättade de 26 som verkligen var felstaplade (517 events).
 
 ## How to get to it (user POV)
 

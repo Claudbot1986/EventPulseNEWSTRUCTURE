@@ -112,6 +112,6 @@ Hittade under körningen: B-gates hänger i evigheten NÄR den lyckas köa event
   CHECK: node scripts/verify-fixes.mjs e9
   EXPECT: /e9: --status avslutar rent pass \(exit=0, inga läckta sockets\)/
 
-- [ ] E10: källor C lyckas extrahera ifrån står inte som fail i sources_status
+- [x] E10: källor C lyckas extrahera ifrån står inte som fail i sources_status
   CHECK: node scripts/verify-fixes.mjs e10
-  EXPECT: /e10: C-status är konsekvent pass \(\d+ källor, 0 fel\)/
+  EXPECT: /e10: C-status är konsekvent pass \(\d+ spårade källor, 0 fel/
