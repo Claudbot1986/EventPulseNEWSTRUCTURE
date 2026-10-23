@@ -26,6 +26,8 @@ export interface SourceCandidateTestQueueItem {
   sourceCandidateId: string;
   candidateUrl: string;
   candidateName?: string | null;
+  /** Staden kandidaten hittades i. NULL = okänd scope. */
+  city?: string | null;
   originPath: string[];
   phase: SourceCandidateTestPhase;
   status: SourceCandidateTestStatus;

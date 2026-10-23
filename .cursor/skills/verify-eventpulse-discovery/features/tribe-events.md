@@ -19,27 +19,32 @@ Användaren märker tribe-events när dashboard 7777 visar stale på `tribe-even
 cd /Users/claudgashi/EventPulse
 
 # 1. Senaste tribe-körning
-LATEST=$(ls -t runtime/ingestion-cron/steps/tribe-events-*.log 2>/dev/null | head -1)
+LATEST=$(ls -t runtime/ingestion-cron/steps/tribe-events-*.log 2>/dev/null | grep -v '\.err\.log$' | head -1)
 
 # 2. Vilka wp-json URL:er försökte den?
 grep -oE 'https://[^ ]+/wp-json/tribe/events/v1/events' "$LATEST" | sort -u
 
 # 3. Häng-detektion: samma URL >5 ggr i rad = evig-loop (inte retry)
-URLS=$(grep -oE 'https://[^ ]+/wp-json/tribe/events/v1/events' "$LATEST")
-echo "$URLS" | sort | uniq -c | sort -rn | head -5
-# → förväntat: counts < 5 (varje URL hämtas 1–2 ggr)
-#    tribe-häng 2026-10-18: samma URL ~83k+ ggr (while-true utan page++ i persist-grenen)
+# 3. Regressionskontroll av den historiska evighets-loopen
+grep -cE '^\s+total=[0-9]+, total_pages=[0-9]+' "$LATEST"
+# → 5 (en per källa). Lägre = någon källa avslutade utan att paginera klart.
 
 # 4. Förväntat slut-tillstånd
-grep -E "^─── tribe-events" "$LATEST" | tail -1
-# → '─── tribe-events finished ... exit=0 duration=~180000ms'
+grep -A1 "=== TOTAL ===" "$LATEST" | tail -1
+# → fetched=548 persisted=0 duplicates=528 errors=0
+grep -E "^─── tribe-events finished" "$LATEST" | tail -1
+# → exit=0 duration=~47s
 ```
 
-Bevis: filen `runtime/ingestion-cron/steps/tribe-events-<ISO>.log`. Green = `exit=0` + minst 1 `total=N, total_pages=K`-rad per URL + inga 5xx i >5 returer.
+Bevis: filen `runtime/ingestion-cron/steps/tribe-events-<ISO>.log`. Green = `exit=0` + 5 st `total=N, total_pages=K`-rader + TOTAL-rad med `errors=0`.
+
+**`wp-json`-URL:er skrivs aldrig till loggen.** Det URL-grep som tidigare stod här returnerade alltid tomt resultat — det fanns aldrig något att hitta. Använd antalet `total=`-rader i stället.
 
 ## Gotchas
 
-**Evig-loop på `page++`-väg.** tribe-events hängde 2026-10-16–18 med samma URL 83 778 ggr i rad. Orsak: `scripts/ingest-tribe-events.mjs:80` har `while (true) { ... }` där `page++` bara sker i `if (dryRun || future.length === 0)`-grenen. När `future.length > 0` persisteras events men page inkrementeras aldrig → fast på samma page.
+**Evig-loop-felet är FIXAT (2026-10-19, commit `d846cb44`).** tribe-events hängde 2026-10-16–18 med samma URL 83 778 ggr i rad. Orsak: `while (true)` där `page++` bara skedde i `if (dryRun || future.length === 0)`-grenen. Nu finns `page++` även efter persist-vägen (`ingest-tribe-events.mjs:231`). Verifiera regression med `fetched=548 persisted=0 duplicates=528` — ren sidpaginering. **Om du ser `queued:` upprepas utan att `page N:` växler → buggen är tillbaka.**
+
+**Rätt loggrecept.** `queued: N` skrivs UTAN `page N:`-prefix (`rad 230`), så `grep "page [0-9]+: queued"` ger alltid noll träffar. Rätt mönster är `^\s+total=[0-9]+, total_pages=[0-9]+` (en rad per källa) — 5 träffar = alla 5 källor körda. Summary-raden per källa heter `<slug> done: fetched=N persisted=M duplicates=D`. `wp-json`-URL:er skrivs aldrig till loggen, så URL-grepet i SKILL.md ger tomt resultat varje gång.
 
 **5 hosts hårdkodade inline** i `scripts/ingest-tribe-events.mjs:28-34`. aik + aik-se-kalender delar samma `baseUrl`, så det är 4 unika hosts. Inte laddade från `sources/*.jsonl`.
 
@@ -47,4 +52,4 @@ Bevis: filen `runtime/ingestion-cron/steps/tribe-events-<ISO>.log`. Green = `exi
 
 **Cron-flagga `--pages=10` hårdkodad** i `scripts/ingestion-cron.ts:296`. Ändra via `--skip-tribe` om du vill stänga av utan att röra cron.
 
-**Watchdog sätter stage som stale efter 2h**, men cron-processen lever. Manuellt: `kill <cron-pid>` för att frigöra watchdog-flaggan (`runtime/watchdog.json:stale=true`).
+**Watchdog sätter stage som stale efter 2h**, men cron-processen lever. Manuellt: `kill <cron-pid>` för att frigöra watchdog-flaggan (`runtime/ingestion-cron/watchdog.json:stale=true`).

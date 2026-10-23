@@ -102,7 +102,34 @@ export const DISCOVERY_QUERIES: ReadonlyArray<string> = [
   'standup Stockholm höst',
   'events Göteborg 2026',
   'konsert Malmö 2026',
+  'festival Uppsala 2026',
 ];
+
+/**
+ * Stad per discovery-query. P3A söker över hela listan, även Göteborg och
+ * Malmö, så kandidaten ska bära den stad den faktiskt söktes i — annars
+ * promote:as den in i Stockholms pool bara för att isInScope() inte kan
+ * skilja på dem (2026-10-21).
+ */
+const DISCOVERY_QUERY_CITY: Record<string, string> = {
+  'events Stockholm 2026': 'Stockholm',
+  'konsert Stockholm 2026': 'Stockholm',
+  'teater Stockholm 2026': 'Stockholm',
+  'festival Stockholm 2026': 'Stockholm',
+  'utställning Stockholm 2026': 'Stockholm',
+  'familjeevenemang Stockholm helg': 'Stockholm',
+  'kulturhus Stockholm program': 'Stockholm',
+  'operahus Stockholm biljetter': 'Stockholm',
+  'museum Stockholm evenemang': 'Stockholm',
+  'standup Stockholm höst': 'Stockholm',
+  'events Göteborg 2026': 'Göteborg',
+  'konsert Malmö 2026': 'Malmö',
+  'festival Uppsala 2026': 'Uppsala',
+};
+
+export function cityForDiscoveryQuery(query: string): string | null {
+  return DISCOVERY_QUERY_CITY[query] ?? null;
+}
 
 // ── URL validation (delad med googleCustomSearch) ─────────────────────────
 
@@ -177,6 +204,7 @@ async function writeCandidates(
   origin: 'exa' | 'google',
   sourceQuery: string,
   dryRun: boolean,
+  cityByUrl?: Map<string, string>,
 ): Promise<{ written: number; rejected: number; firstError: string | null }> {
   const valid = urls.filter((u) => isValidCandidateUrl(u));
   const rejected = urls.length - valid.length;
@@ -191,11 +219,34 @@ async function writeCandidates(
     discovered_at: new Date().toISOString(),
     engine: origin === 'exa' ? 'exa_search' : 'google_cse',
     status: 'pending',
+    // Exa-vägen slår ihop hela frågelistan till en URL-mängd, så source_query
+    // är inte per rad. cityByUrl fångar upp den fråga URL:en faktiskt
+    // hittades med.
+    city: cityByUrl?.get(url) ?? cityForDiscoveryQuery(sourceQuery),
   }));
 
   const { error } = await db()
     .from('source_candidates')
     .upsert(rows, { onConflict: 'url', ignoreDuplicates: true });
+
+  // ignoreDuplicates gör att en kandidat som redan finns aldrig lär sig sin
+  // stad när en senare körning hittar samma URL. patch:ar därför city på de
+  // rader som fortfarande saknar den — och bara på dem, så en redan satt stad
+  // aldrig skrivs över och status återställs inte.
+  const urlsByCity = new Map<string, string[]>();
+  for (const row of rows) {
+    if (!row.city) continue;
+    urlsByCity.set(row.city, [...(urlsByCity.get(row.city) ?? []), row.url]);
+  }
+  for (const [city, cityUrls] of urlsByCity) {
+    for (let i = 0; i < cityUrls.length; i += 100) {
+      await db()
+        .from('source_candidates')
+        .update({ city })
+        .is('city', null)
+        .in('url', cityUrls.slice(i, i + 100));
+    }
+  }
 
   return {
     written: error ? 0 : rows.length,
@@ -237,6 +288,9 @@ export async function runDiscoverySearch(
 
   // ── Steg 1: Exa primär ─────────────────────────────────────────────────
   const exaUrls = new Set<string>();
+  // Stad per URL. Utan detta bär varje rad hela frågelistan i source_query
+  // och går inte att härleda stad ifrån (2026-10-21).
+  const exaCityByUrl = new Map<string, string>();
   if (!result.placeholderExa && exaKey) {
     result.exaAvailable = true;
     const selectedQueries = DISCOVERY_QUERIES.slice(
@@ -251,7 +305,11 @@ export async function runDiscoverySearch(
     for (const query of selectedQueries) {
       try {
         const items = await exaSearch(query, exaKey, perQuery);
-        for (const it of items) exaUrls.add(it.url);
+        for (const it of items) {
+          exaUrls.add(it.url);
+          const city = cityForDiscoveryQuery(query);
+          if (city && !exaCityByUrl.has(it.url)) exaCityByUrl.set(it.url, city);
+        }
         result.queriesRun++;
         console.log(`[discoverySearch]   ✓ "${query}" → ${items.length} hits`);
       } catch (err: unknown) {
@@ -276,6 +334,7 @@ export async function runDiscoverySearch(
         'exa',
         DISCOVERY_QUERIES.join(' | '),
         dryRun,
+        exaCityByUrl,
       );
       result.candidatesWritten = write.written;
       result.candidatesRejected += write.rejected;
@@ -335,6 +394,7 @@ export async function runDiscoverySearch(
       'exa',
       DISCOVERY_QUERIES.join(' | '),
       dryRun,
+      exaCityByUrl,
     );
     result.candidatesWritten = write.written;
     result.candidatesRejected += write.rejected;

@@ -61,8 +61,31 @@ function splitSqlStatements(sql: string): string[] {
   let depth = 0;
   let buf = '';
   let inString = false;
+  // Dollar-quoted bodies ($$ ... $$ / $tag$ ... $tag$) hold PL/pgSQL where
+  // semicolons are statement separators, not statement terminators. Without
+  // this the splitter cuts CREATE FUNCTION in half (2026-10-21).
+  let dollarTag: string | null = null;
   for (let i = 0; i < noComments.length; i++) {
     const c = noComments[i];
+    if (dollarTag) {
+      if (c === '$' && noComments.startsWith(dollarTag, i)) {
+        buf += dollarTag;
+        i += dollarTag.length - 1;
+        dollarTag = null;
+      } else {
+        buf += c;
+      }
+      continue;
+    }
+    if (!inString && c === '$') {
+      const m = /^\$[A-Za-z_][A-Za-z0-9_]*\$|^\$\$/.exec(noComments.slice(i));
+      if (m) {
+        dollarTag = m[0];
+        buf += dollarTag;
+        i += dollarTag.length - 1;
+        continue;
+      }
+    }
     if (c === "'" && noComments[i - 1] !== '\\') inString = !inString;
     if (!inString) {
       if (c === '(') depth++;

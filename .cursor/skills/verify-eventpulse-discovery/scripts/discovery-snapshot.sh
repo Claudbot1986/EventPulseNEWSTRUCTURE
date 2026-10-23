@@ -64,24 +64,30 @@ if chain.exists():
         "heartbeat_counts": {s: c for s, c in hb_count.items() if c > 3},
     }
 
-# Section C: tribe-events senaste log
-tribe_logs = sorted(glob.glob(str(root / "runtime/ingestion-cron/steps/tribe-events-*.log")))
+# Section C: tribe-events senaste UT-datafil (.err.log har bara ram + fel)
+tribe_logs = sorted(
+    p for p in glob.glob(str(root / "runtime/ingestion-cron/steps/tribe-events-*.log"))
+    if not p.endswith(".err.log")
+)
 if tribe_logs:
     latest = tribe_logs[-1]
     text = pathlib.Path(latest).read_text(errors="replace")
-    urls = [l for l in text.splitlines() if "/wp-json/tribe/events/v1/events" in l]
-    url_counts = {}
-    for l in urls:
-        # Plocka URL:en ur raden (före whitespace efter URL)
-        u = l.split()[0] if l.split() else ""
-        url_counts[u] = url_counts.get(u, 0) + 1
-    top = sorted(url_counts.items(), key=lambda x: -x[1])[:5]
+    lines = text.splitlines()
+    # Scriptet loggar INTE wp-json-URL:er. Det gamla URL-greppet gav alltid tomt.
+    # Signaturen för den historiska evighets-loopen är istället en "queued:"-rad
+    # utan att "page N:" har växlat — mät hur många källor som paginerade klart.
+    totals = [l for l in lines if l.strip().startswith("total=")]
+    pages = [l for l in lines if l.strip().startswith("page ")]
+    queued = [l for l in lines if l.strip().startswith("queued:")]
     result["sections"]["tribe_latest"] = {
         "log_path": os.path.relpath(latest, root),
         "size_bytes": len(text),
-        "top_urls": [{"url": u, "count": c} for u, c in top],
-        "hang_suspected": any(c >= 5 for _, c in top),
-        "tail": text.splitlines()[-3:] if text else [],
+        "sources_completed": len(totals),        # väntat 5 (en per hårdkodad källa)
+        "page_lines": len(pages),
+        "queued_lines": len(queued),
+        "hang_suspected": len(totals) == 0 and len(queued) > 20,
+        "total_row": next((l for l in reversed(lines) if l.startswith("fetched=")), None),
+        "tail": lines[-3:] if lines else [],
     }
 else:
     result["sections"]["tribe_latest"] = {"error": "no-tribe-log"}

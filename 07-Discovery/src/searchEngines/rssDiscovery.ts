@@ -79,6 +79,8 @@ export interface RssDiscoveryOptions {
 
 export interface DiscoveredFeed {
   sourceId: string;
+  /** Staden på källan feeden hittades hos (så kandidaten bär rätt scope). */
+  city?: string;
   feedUrl: string;
   /** Path-komponenten av feedUrl (t.ex. "/feed", "/nyheter/feed"). */
   discoveredPath: string;
@@ -211,6 +213,7 @@ interface SourceEntry {
   id: string;
   url: string;
   status?: string;
+  city?: string;
 }
 
 function loadWorkingSources(limit: number): SourceEntry[] {
@@ -385,6 +388,7 @@ async function discoverForSource(
     if (urls.length === 0) continue;
     return {
       sourceId: source.id,
+      city: source.city,
       feedUrl,
       discoveredPath: (() => { try { return new URL(feedUrl).pathname; } catch { return ''; } })(),
       format,
@@ -458,6 +462,7 @@ export async function run(opts: RssDiscoveryOptions = {}): Promise<RssDiscoveryR
     discovered_at: new Date().toISOString(),
     engine: 'rss_discovery',
     status: 'pending',
+    city: f.city ?? null,
     metadata: {
       source_id: f.sourceId,
       format: f.format,

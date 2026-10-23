@@ -33,3 +33,39 @@ Scope: bevis för var och en av de sex fixarna från planen "Fixa ingestion + di
   CHECK: node scripts/verify-fixes.mjs g6
   EXPECT: /g6: migrationer \+ P3D-steg pass/
   EVIDENCE: automatic-evidence=v1; definition-sha256=66cab4327915b756654d466049b60f07da9fa1305c3f0c3a7722c19470ac3c7d; exit=0; EXPECT=matched; output-sha256=02d20e1406675f28deb0620fd2abd06f9fae183605cb9314b9b779fd08e9858f; output-bytes=32; shell=/bin/sh; cwd=/Users/claudgashi/EventPulse; path=29325ef63737/16 entries
+
+# Handoff: discovery → ingestion (2026-10-23)
+
+Scope: sex fel som höll kvar promoteade källor ute ur ingestion trots att P3D skrev
+dem till sources/*.jsonl. Bevis för var och ett, plus två livedagar på riktiga
+körningar. city_added: source_candidates + source_candidate_test_queue (0003).
+
+- [x] H1: geoExpansion filtrerar på lat/lng, inte på venues.city
+  CHECK: node scripts/verify-fixes.mjs h1
+  EXPECT: /h1: geo-bbox filter present venues.city not trusted pass/
+  EVIDENCE: automatic-evidence=v1; definition-sha256=803cdebbe3da0ad9289508773d280bb7245ad684cc25e3005e7ede0cd6b88795; exit=0; EXPECT=matched; output-sha256=46a74ee77875ff362818c76d45960cf4dffe5a0013c50f17862c93870898f02e; output-bytes=57; shell=/bin/sh; cwd=/Users/claudgashi/EventPulse; path=29325ef63737/16 entries
+
+- [x] H2: city finns som kolumn och bärs hela vägen queue → CLI → promote
+  CHECK: node scripts/verify-fixes.mjs h2
+  EXPECT: /h2: city column\+queue\+cli pass/
+  EVIDENCE: automatic-evidence=v1; definition-sha256=ac97a97d1e48309df53a011c965188844258fc2a63615db6281bfe51c48a89e6; exit=0; EXPECT=matched; output-sha256=debe9e4596877b070b2db329cd7b32b068a139804701fc35d186619052e92145; output-bytes=31; shell=/bin/sh; cwd=/Users/claudgashi/EventPulse; path=29325ef63737/16 entries
+
+- [x] H3: slug-kollision i promote dödar inte hela batchen
+  CHECK: node scripts/verify-fixes.mjs h3
+  EXPECT: /h3: collision non-fatal pass/
+  EVIDENCE: automatic-evidence=v1; definition-sha256=9143ee591ec4f327a30525ef46a8e11216836e856b7f88f1f9a1028346c2a50a; exit=0; EXPECT=matched; output-sha256=9e2008b922e9d4db2affdaa1c1e9e70670d1c401e90ce6ce6700a26464c315df; output-bytes=29; shell=/bin/sh; cwd=/Users/claudgashi/EventPulse; path=29325ef63737/16 entries
+
+- [x] H4: stale processing-rader reclaimas ur P3D-kön (och inga sådana ligger kvar)
+  CHECK: node scripts/verify-fixes.mjs h4
+  EXPECT: /h4: locked_at reclaim present stuck=0 pass/
+  EVIDENCE: automatic-evidence=v1; definition-sha256=f981167864adad31b7e3fcdfae9b54e156764dc8e7aa98c9b580f7a895acb0dc; exit=0; EXPECT=matched; output-sha256=37d776e9649d277c5cbfcfe296be0561eb2b6aa4e77d75292c8c87c68e7a2ddd; output-bytes=43; shell=/bin/sh; cwd=/Users/claudgashi/EventPulse; path=29325ef63737/16 entries
+
+- [x] H5: en promotead källa passerar isInScope() och är nåbar för A-gatet
+  CHECK: node scripts/verify-fixes.mjs h5
+  EXPECT: /h5: promoted sources in scope=\d+ queued=\d+ processed=\d+ pass/
+  EVIDENCE: automatic-evidence=v1; definition-sha256=c877030d5195210e6743e5a5d518dcd63c7261ef931eb641a193266b94b738c3; exit=0; EXPECT=matched; output-sha256=22f7a5735e3955232da9a00f97d211542bd6710c881ca82e7c3f2004162a3df2; output-bytes=58; shell=/bin/sh; cwd=/Users/claudgashi/EventPulse; path=29325ef63737/16 entries
+
+- [x] H6: riktig A-körning har behandlat en promotead källa och persisterat events
+  CHECK: node scripts/verify-fixes.mjs h6
+  EXPECT: /h6: promoted source ran in A-gate events>0 total=\d+ pass/
+  EVIDENCE: automatic-evidence=v1; definition-sha256=96f235aecfdb2369f43e967df1b9e89d87fbf7e417620c28f24639c12f5644ea; exit=0; EXPECT=matched; output-sha256=e5393101830357d58b428ed9df85383cc0d9ac65ef3368bab4310f293a5333ae; output-bytes=56; shell=/bin/sh; cwd=/Users/claudgashi/EventPulse; path=29325ef63737/16 entries

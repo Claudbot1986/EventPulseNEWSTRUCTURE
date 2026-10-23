@@ -78,7 +78,7 @@ export function removeSandboxSource(root: string, sourceId: string): void {
   rmSync(path.join(root, 'sources', `${sourceId}.jsonl`), { force: true });
 }
 
-export function hasCanonicalSourceUrl(root: string, candidateUrl: string): boolean {
+export function hasCanonicalSourceUrl(root: string, candidateUrl: string, candidateId?: string): boolean {
   const sourcesDir = path.join(root, 'sources');
   if (!existsSync(sourcesDir)) return false;
   const target = canonicalUrl(candidateUrl);
@@ -88,24 +88,48 @@ export function hasCanonicalSourceUrl(root: string, candidateUrl: string): boole
     if (!content) continue;
     const existing = JSON.parse(content);
     if (existing?.metadata?.sandbox) continue;
+    // En egen post från en tidigare promote är inte en dubblett — annars kan
+    // en kandidat aldrig uppdatera sin egen rad (city, namn, preferredPath).
+    if (candidateId && existing?.metadata?.sourceCandidateId === candidateId) continue;
     if (existing?.url && canonicalUrl(String(existing.url)) === target) return true;
   }
   return false;
 }
 
-export function promoteSourceCandidate(root: string, candidate: SourceCandidate, promotion: PromotionInput): string {
-  const sourceId = slugify(candidate.sourceName ?? new URL(candidate.candidateUrl).hostname) || sourceIdForCandidate(candidate);
+function sameCanonicalUrl(sourcePath: string, candidateUrl: string): boolean {
+  if (!existsSync(sourcePath)) return true;
+  const existing = JSON.parse(readFileSync(sourcePath, 'utf8').trim());
+  return canonicalUrl(String(existing.url)) === canonicalUrl(candidateUrl);
+}
+
+export function promoteSourceCandidate(
+  root: string,
+  candidate: SourceCandidate,
+  promotion: PromotionInput,
+): string | null {
   const sourcesDir = path.join(root, 'sources');
   const runtimeDir = path.join(root, 'runtime');
   mkdirSync(sourcesDir, { recursive: true });
   mkdirSync(runtimeDir, { recursive: true });
 
+  // Första promote:en av en domän får det snygga domän-slug:et. Varje följande
+  // URL på samma domän (två evenemangssidor, en pdf) slug:ar till samma namn,
+  // så den får candidate-prefixet istället. Utan detta kunde bara EN URL per
+  // domän någonsin promote:as (2026-10-21).
+  const primaryId = slugify(candidate.sourceName ?? new URL(candidate.candidateUrl).hostname);
+  let sourceId = primaryId || sourceIdForCandidate(candidate);
+  const primaryPath = path.join(sourcesDir, `${sourceId}.jsonl`);
+  if (existsSync(primaryPath) && !sameCanonicalUrl(primaryPath, candidate.candidateUrl)) {
+    sourceId = sourceIdForCandidate(candidate);
+  }
+
   const sourcePath = path.join(sourcesDir, `${sourceId}.jsonl`);
-  if (existsSync(sourcePath)) {
-    const existing = JSON.parse(readFileSync(sourcePath, 'utf8').trim());
-    if (canonicalUrl(String(existing.url)) !== canonicalUrl(candidate.candidateUrl)) {
-      throw new Error(`Source id collision for ${sourceId}`);
-    }
+  if (existsSync(sourcePath) && !sameCanonicalUrl(sourcePath, candidate.candidateUrl)) {
+    // Slug-kollision som överlever fallbacken (t.ex. kandidaten promote:ades
+    // tidigare under ett annat namn). Före 2026-10-21 kastade detta och dödade
+    // hela batchen — nu avbryts bara den här kandidaten.
+    console.warn(`[promote] slug collision for ${sourceId} (${candidate.candidateUrl}) — skipping, source not written`);
+    return null;
   }
 
   const record = sourceRecord(sourceId, candidate, {

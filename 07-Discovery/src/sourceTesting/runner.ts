@@ -61,17 +61,25 @@ export async function runSourceCandidateTest(options: RunSourceCandidateTestOpti
         errors: evidence.errors,
         riskFlags: evidence.riskFlags,
         reportComplete: phaseEvidenceComplete(options.phase, evidence),
-        duplicateCanonicalSource: hasCanonicalSourceUrl(promotionRoot, options.candidate.candidateUrl),
+        duplicateCanonicalSource: hasCanonicalSourceUrl(promotionRoot, options.candidate.candidateUrl, options.candidate.id),
       }),
       evidenceRunId: runId,
     };
     if (decision.decision === 'promote') {
-      decision.promotedSourceId = promoteSourceCandidate(promotionRoot, options.candidate, {
+      const promotedSourceId = promoteSourceCandidate(promotionRoot, options.candidate, {
         preferredPath: evidence.winningPath,
         preferredPathReason: decision.reason,
         testRunId: runId,
         evidenceSummary: `${evidence.eventsPersisted} persisted events via ${evidence.winningPath}`,
       });
+      if (promotedSourceId) {
+        decision.promotedSourceId = promotedSourceId;
+      } else {
+        // Promote gick inte att genomföra (slug-kollision). Beslutet ska då
+        // inte ligga kvar som 'promote' när inget faktiskt skrevs.
+        decision.decision = 'manual_review';
+        decision.reason = `promote blocked: slug collision for source id — ${decision.reason}`;
+      }
     }
 
     await options.repository.insertDecision(decision);

@@ -20,7 +20,7 @@ Användaren ser sitemap-discovery som det steg som "hittar events från sajter v
 cd /Users/claudgashi/EventPulse
 
 # 1. Senaste sitemap-discovery-körning
-LATEST=$(ls -t runtime/ingestion-cron/steps/sitemap-discovery-*.log 2>/dev/null | head -1)
+LATEST=$(ls -t runtime/ingestion-cron/steps/sitemap-discovery-*.log 2>/dev/null | grep -v '\.err\.log$' | head -1)
 
 # 2. Vilka sajter besöktes?
 grep -oE 'sitemap[^ ]*\.xml' "$LATEST" | sort -u | head -20

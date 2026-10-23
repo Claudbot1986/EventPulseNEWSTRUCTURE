@@ -63,9 +63,21 @@ export interface GeoExpansionOptions {
   limit?: number;
   /** Dry-run: räkna men skriv inte. Default false. */
   dryRun?: boolean;
-  /** Filter till specifik stad (default 'Stockholm'). */
+  /** Filter till specifik stad (default 'Stockholm'). Måste finnas i CITY_BOUNDS. */
   city?: string;
 }
+
+/**
+ * Geografiska gränser per stad. venues.city är OTRUSTAT (2026-10-21: venues
+ * i Örebro, Malmö, Växjö och Göteborg står alla märkta city='Stockholm'), så
+ * filtret måste gå på lat/lng. En stad utan box här returnerar hellre inget
+ * än gissade gränser.
+ */
+export const CITY_BOUNDS: Record<string, { minLat: number; maxLat: number; minLng: number; maxLng: number }> = {
+  // Stockholm kommun + kommuner i Storstockholm (Solna, Sundbyberg, Nacka,
+  // Lidingö, Ekerö, Huddinge, Sollentuna, Danderyd, Tyresö, Vaxholm).
+  Stockholm: { minLat: 59.15, maxLat: 59.5, minLng: 17.55, maxLng: 18.3 },
+};
 
 export interface VenuePoint {
   id: string;
@@ -198,13 +210,23 @@ export async function run(opts: GeoExpansionOptions = {}): Promise<GeoExpansionR
     topClusters: [],
   };
 
-  // Hämta venues med koordinater
+  const bounds = CITY_BOUNDS[cityFilter];
+  if (!bounds) {
+    result.firstError = `unknown city "${cityFilter}" — add it to CITY_BOUNDS before expanding`;
+    return result;
+  }
+
+  // Hämta venues med koordinater. Filtret går på lat/lng, INTE på venues.city:
+  // den kolumnen innehåller venues från hela Sverige märkta 'Stockholm'.
   const { data: venues, error: fetchErr } = await db()
     .from('venues')
     .select('id,name,city,lat,lng')
     .not('lat', 'is', null)
     .not('lng', 'is', null)
-    .eq('city', cityFilter);
+    .gte('lat', bounds.minLat)
+    .lte('lat', bounds.maxLat)
+    .gte('lng', bounds.minLng)
+    .lte('lng', bounds.maxLng);
 
   if (fetchErr) {
     result.firstError = `fetch failed: ${fetchErr.message}`;
@@ -262,6 +284,7 @@ export async function run(opts: GeoExpansionOptions = {}): Promise<GeoExpansionR
       discovered_at: new Date().toISOString(),
       engine: 'venue_graph_geo',
       status: 'pending',
+      city: cityFilter,
       metadata: {
         cluster_size: c.size,
         venue_ids: c.venueIds,

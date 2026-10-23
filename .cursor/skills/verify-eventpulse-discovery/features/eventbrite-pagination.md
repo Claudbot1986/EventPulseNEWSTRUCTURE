@@ -20,18 +20,19 @@ Användaren ser eventbrite-pagination som "nya eventbrite-events dyker upp i gra
 cd /Users/claudgashi/EventPulse
 
 # 1. Senaste eventbrite-körning
-LATEST=$(ls -t runtime/ingestion-cron/steps/eventbrite-pagination-*.log 2>/dev/null | head -1)
+LATEST=$(ls -t runtime/ingestion-cron/steps/eventbrite-pagination-*.log 2>/dev/null | grep -v '\.err\.log$' | head -1)
 
 # 2. Hur många events per stad?
 grep -E "^\s*\[" "$LATEST" | head -20
 # → '[stockholm 2026-10-01] fetched=20 future=15 new=8 (page)'
 
 # 3. Förväntat slut-tillstånd
-grep -E "^─── eventbrite-pagination" "$LATEST" | tail -1
-# → exit=0 duration=~30s (7 städer × 3 mån × 3s rate-limit)
+grep -E "^─── eventbrite-pagination finished" "$LATEST" | tail -1
+# → exit=0 duration=~21s
 
-# 4. Total events i bullmq
-grep "TOTAL" "$LATEST" -A 5 | head -10
+# 4. Total events
+sed -n '/=== TOTAL ===/,+2p' "$LATEST"
+# → fetched=60 future=42 persisted=24 duplicates=18  +  "DB eventbrite-stockholm count: 87"
 ```
 
 Bevis: `runtime/ingestion-cron/steps/eventbrite-pagination-<ISO>.log` + Supabase `events`-tabell (efter workern dränerat).

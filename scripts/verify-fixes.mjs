@@ -19,9 +19,16 @@
  *   g4 — C-htmlGate avslutar rent exit=0 på tom postB-preC-kö
  *   g5 — pattern-promoter + manual-review-triage är borta ur cron
  *   g6 — discovery-loopen stängd: kandidater claimas, sandboxas, promote:as
+ *   h1 — geoExpansion filtrerar på lat/lng, inte på venues.city
+ *   h2 — city finns som kolumn och bärs hela vägen till promote
+ *   h3 — slug-kollision i promote dödar inte batchen
+ *   h4 — stale processing-rader reclaimas ur P3D-kön
+ *   h5 — en promotead källa är faktiskt nåbar för A-gatet
+ *   h6 — A-gatet har kört en promotead källa och persisterat events
  */
 
 import fs from 'node:fs';
+import { readdirSync, readFileSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -193,9 +200,200 @@ function g6() {
   return ok('g6: migrationer + P3D-steg pass');
 }
 
-const gates = { g1, g2, g3, g4, g5, g6 };
+// ─── Handoff: discovery → ingestion (2026-10-21) ────────────────────────────
+//
+// Promoterade källor landade i sources/*.jsonl men nådde aldrig A-gatet.
+// Rotorsaken: source_candidates saknade city, så den promoteade filen fick
+// ingen city, isInScope() filtrerade bort den, och A-gatet såg en tom pool.
+
+function readEnvFile() {
+  const out = {};
+  if (!fs.existsSync(path.join(ROOT, '.env'))) return out;
+  for (const line of fs.readFileSync(path.join(ROOT, '.env'), 'utf8').split('\n')) {
+    const m = line.match(/^([A-Z0-9_]+)=(.*)$/);
+    if (m) out[m[1]] = m[2].trim().replace(/^["']|["']$/g, '');
+  }
+  return out;
+}
+
+async function supabaseGet(table, query) {
+  const env = readEnvFile();
+  const url = env.SUPABASE_URL;
+  const key = env.SUPABASE_SERVICE_ROLE_KEY;
+  if (!url || !key) return { error: 'SUPABASE_URL/SUPABASE_SERVICE_ROLE_KEY missing' };
+  const res = await fetch(`${url}/rest/v1/${table}?${query}`, {
+    headers: { apikey: key, Authorization: `Bearer ${key}` },
+  });
+  if (!res.ok) return { error: `HTTP ${res.status}: ${(await res.text()).slice(0, 200)}` };
+  return { data: await res.json() };
+}
+
+// H1 — venues.city är OTRUSTAT. geoExpansion måste filtrera på koordinater.
+function h1() {
+  const geo = path.join(ROOT, '07-Discovery/src/venueGraph/geoExpansion.ts');
+  if (!fs.existsSync(geo)) return fail('h1: FAIL geoExpansion.ts saknas');
+  const g = fs.readFileSync(geo, 'utf8');
+  if (!/export const CITY_BOUNDS/.test(g)) return fail('h1: FAIL CITY_BOUNDS saknas i geoExpansion.ts');
+  if (!/\.gte\('lat'/.test(g) || !/\.lte\('lng'/.test(g)) {
+    return fail('h1: FAIL venue-queryn filtrerar inte på lat/lng-gränser');
+  }
+  if (/\.eq\('city', cityFilter\)/.test(g)) {
+    return fail('h1: FAIL venue-queryn filtrerar fortfarande på venues.city');
+  }
+  if (!/unknown city/.test(g)) return fail('h1: FAIL okänd stad ger inte firstError');
+  return ok('h1: geo-bbox filter present venues.city not trusted pass');
+}
+
+// H2 — city som kolumn, och den bärs hela vägen queue → CLI → promote.
+function h2() {
+  const mig = path.join(ROOT, '05-Supabase/migrations/20261021-0003-source-candidate-city-and-stale-reclaim.sql');
+  if (!fs.existsSync(mig)) return fail('h2: FAIL migration 0003 saknas');
+  const m = fs.readFileSync(mig, 'utf8');
+  if (!/ALTER TABLE source_candidates\s*\n?\s*ADD COLUMN IF NOT EXISTS city TEXT/.test(m)) {
+    return fail('h2: FAIL 0003 lägger inte till city på source_candidates');
+  }
+  if (!/ALTER TABLE source_candidate_test_queue\s*\n?\s*ADD COLUMN IF NOT EXISTS city TEXT/.test(m)) {
+    return fail('h2: FAIL 0003 lägger inte till city på source_candidate_test_queue');
+  }
+  if (!/enqueue_source_candidate_tests[\s\S]*?sc\.city/.test(m)) {
+    return fail('h2: FAIL enqueue-RPC:n bär inte med sc.city');
+  }
+  const repo = fs.readFileSync(path.join(ROOT, '07-Discovery/src/sourceTesting/supabaseRepository.ts'), 'utf8');
+  if (!/city: row\.city \?\? null/.test(repo)) return fail('h2: FAIL queueItemFromRow mappar inte row.city');
+  const cli = fs.readFileSync(path.join(ROOT, '07-Discovery/src/sourceTesting/runSourceCandidateTests.ts'), 'utf8');
+  if (/city: null/.test(cli)) return fail('h2: FAIL CLI har fortfarande city: null hårdkodat');
+  if (!/city: item\.city \?\? null/.test(cli)) return fail('h2: FAIL CLI sätter inte city från item.city');
+  // Prodcenterna ska skriva city, inte lämna den okänd.
+  for (const f of ['searchEngines/discoverySearch.ts', 'venueGraph/geoExpansion.ts', 'searchEngines/rssDiscovery.ts']) {
+    const src = fs.readFileSync(path.join(ROOT, '07-Discovery/src', f), 'utf8');
+    if (!/city:/.test(src)) return fail(`h2: FAIL ${f} skriver ingen city`);
+  }
+  return ok('h2: city column+queue+cli pass');
+}
+
+// H3 — slug-kollision får inte kasta ur hela batchen.
+function h3() {
+  const sb = fs.readFileSync(path.join(ROOT, '07-Discovery/src/sourceTesting/sandbox.ts'), 'utf8');
+  if (/throw new Error\(`Source id collision/.test(sb)) {
+    return fail('h3: FAIL kollision kastar fortfarande — en kandidat kan döda batchen');
+  }
+  if (!/slug collision[\s\S]*?return null/.test(sb)) {
+    return fail('h3: FAIL kollisionen returnerar inte null');
+  }
+  const runner = fs.readFileSync(path.join(ROOT, '07-Discovery/src/sourceTesting/runner.ts'), 'utf8');
+  if (!/promote blocked: slug collision/.test(runner)) {
+    return fail('h3: FAIL runner.ts fångar inte null från promoteSourceCandidate');
+  }
+  return ok('h3: collision non-fatal pass');
+}
+
+// H4 — stale processing-rader måste gå att reclaima, och inga sådana får ligga kvar.
+async function h4() {
+  const mig = fs.readFileSync(
+    path.join(ROOT, '05-Supabase/migrations/20261021-0003-source-candidate-city-and-stale-reclaim.sql'), 'utf8');
+  if (!/locked_at < now\(\) - interval '30 minutes'/.test(mig)) {
+    return fail('h4: FAIL claim-RPC:n saknar stale-reclaim');
+  }
+  const res = await supabaseGet(
+    'source_candidate_test_queue',
+    'select=id,locked_at&status=eq.processing&limit=2000',
+  );
+  if (res.error) return fail(`h4: FAIL kunde inte läsa kön: ${res.error}`);
+  const now = Date.now();
+  const stale = res.data.filter(
+    (r) => r.locked_at === null || now - new Date(r.locked_at).getTime() > 30 * 60 * 1000,
+  );
+  if (stale.length > 0) return fail(`h4: FAIL ${stale.length} stale processing-rader kvar i kön`);
+  return ok(`h4: locked_at reclaim present stuck=${stale.length} pass`);
+}
+
+// H5 — minst en P3D-promotead källa måste vara i scope OCH ouppackad, dvs
+// nåbar av getNextABatch(). Kontrollerar den riktiga filen + riktig status.
+function h5() {
+  const sourcesDir = path.join(ROOT, 'sources');
+  if (!fs.existsSync(sourcesDir)) return fail('h5: FAIL sources/ saknas');
+  const statusPath = path.join(ROOT, 'runtime/sources_status.jsonl');
+  const statuses = new Map();
+  if (fs.existsSync(statusPath)) {
+    for (const line of fs.readFileSync(statusPath, 'utf8').split('\n')) {
+      if (!line.trim()) continue;
+      try {
+        const row = JSON.parse(line);
+        statuses.set(row.id ?? row.sourceId, row.status);
+      } catch { /* trasig rad hoppas över */ }
+    }
+  }
+  const promoted = [];
+  for (const fileName of readdirSync(sourcesDir)) {
+    if (!fileName.endsWith('.jsonl')) continue;
+    const raw = readFileSync(path.join(sourcesDir, fileName), 'utf8').trim();
+    if (!raw) continue;
+    let record;
+    try { record = JSON.parse(raw); } catch { continue; }
+    if (!record?.metadata?.sourceCandidateId) continue;
+    // 'never_run' = ingen statusrad alls, dvs getSourceStatus() svarar never_run
+    // och getNextABatch() plockar upp den. Finns en statusrad har A-gatet redan
+    // behandlat den — då är den bevisat nåbar.
+    promoted.push({ id: record.id, city: record.city ?? null, status: statuses.get(record.id) ?? null });
+  }
+  if (promoted.length === 0) return fail('h5: FAIL ingen P3D-promotead källa i sources/');
+  const inScope = promoted.filter((p) => String(p.city).trim() === 'Stockholm');
+  if (inScope.length === 0) {
+    return fail(`h5: FAIL ${promoted.length} promoteade källor men 0 med city=Stockholm — isInScope() släpper igenom dem`);
+  }
+  const pending = inScope.filter((p) => p.status === null);
+  const processed = inScope.filter((p) => p.status !== null);
+  if (pending.length === 0 && processed.length === 0) {
+    return fail(`h5: FAIL ${inScope.length} i scope men varken ouppackad eller behandlad — A-gatet når dem inte`);
+  }
+  return ok(`h5: promoted sources in scope=${inScope.length} queued=${pending.length} processed=${processed.length} pass`);
+}
+
+// H6 — riktig A-körning ska ha behandlat en promotead källa och persisterat
+// events. Läser bevis ur riktiga filer, ingen egen körning.
+function h6() {
+  const sourcesDir = path.join(ROOT, 'sources');
+  const promotedIds = new Set();
+  for (const fileName of fs.readdirSync(sourcesDir)) {
+    if (!fileName.endsWith('.jsonl')) continue;
+    const raw = fs.readFileSync(path.join(sourcesDir, fileName), 'utf8').trim();
+    if (!raw) continue;
+    let record;
+    try { record = JSON.parse(raw); } catch { continue; }
+    if (record?.metadata?.sourceCandidateId) promotedIds.add(record.id);
+  }
+  if (promotedIds.size === 0) return fail('h6: FAIL ingen promoteade källor att leta efter');
+
+  const statusPath = path.join(ROOT, 'runtime/sources_status.jsonl');
+  if (!fs.existsSync(statusPath)) return fail('h6: FAIL sources_status.jsonl saknas — A-gatet har inte kört');
+  const ran = new Map();
+  for (const line of fs.readFileSync(statusPath, 'utf8').split('\n')) {
+    if (!line.trim()) continue;
+    try {
+      const row = JSON.parse(line);
+      if (promotedIds.has(row.id ?? row.sourceId)) ran.set(row.id ?? row.sourceId, row);
+    } catch { /* trasig rad hoppas över */ }
+  }
+  const attempted = [...ran.entries()].filter(([, r]) => String(r.status).startsWith('success'));
+  if (attempted.length === 0) {
+    const seen = [...ran.values()].map((r) => `${r.id}=${r.status}`).slice(0, 5).join(' ');
+    return fail(`h6: FAIL ingen promotead källa har status success i A-gatet (${seen || 'ingen alls'})`);
+  }
+  const withEvents = attempted.filter(([, r]) => (r.lastEventsFound ?? r.eventsFound ?? 0) > 0);
+  if (withEvents.length === 0) {
+    return fail(`h6: FAIL ${attempted.length} körda men 0 events — A-gatet hittade inget`);
+  }
+  const [id, row] = withEvents[0];
+  return ok(`h6: promoted source ran in A-gate events>0 total=${withEvents.length} pass`);
+}
+
+const gates = { g1, g2, g3, g4, g5, g6, h1, h2, h3, h4, h5, h6 };
 if (!arg || !gates[arg]) {
   console.error(`usage: node scripts/verify-fixes.mjs <${Object.keys(gates).join('|')}>`);
   process.exit(2);
 }
-try { gates[arg](); } catch (e) { fail(`g??: FAIL ${arg} threw: ${e?.message ?? e}`); }
+// h4 pratar med live-DB och är async; await:a alla så ett fel inte glider igenom
+// som ohanterat promise.
+Promise.resolve()
+  .then(() => gates[arg]())
+  .catch((e) => fail(`${arg}: FAIL threw: ${e?.message ?? e}`));

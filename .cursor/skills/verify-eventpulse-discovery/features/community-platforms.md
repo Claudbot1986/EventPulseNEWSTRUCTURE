@@ -1,6 +1,6 @@
 # community-platforms
 
-Fyra community-plattformar: luma (tech meetups), ra (electronic music), posh (social/party), reddit (cross-posts). Alla pushar till `raw_events`-kö.
+Fyra community-plattformar: luma (tech meetups), ra (electronic music), posh (social/party), reddit (cross-posts). **luma, ra och posh pushar till `raw_events`-kö. Reddit persisterar ingenting alls** — bara loggar kandidater.
 
 ## Sub-features
 
@@ -26,14 +26,19 @@ for STEP in luma-stockholm ra-stockholm posh-stockholm reddit-stockholm; do
     runtime/ingestion-cron/chain-overview.log | tail -1
 done
 
-# 2. Senaste log per steg
+# 2. Senaste log per steg — varje adapter har SIN egen loggformat
 for STEP in luma-stockholm ra-stockholm posh-stockholm reddit-stockholm; do
-  LATEST=$(ls -t runtime/ingestion-cron/steps/${STEP}-*.log 2>/dev/null | head -1)
-  echo "=== $STEP: $LATEST ==="
-  grep -E "(fetched|persisted|errors|done)" "$LATEST" 2>/dev/null | tail -5
+  LATEST=$(ls -t runtime/ingestion-cron/steps/${STEP}-*.log 2>/dev/null | grep -v '\.err\.log$' | head -1)
+  echo "=== $STEP ==="
+  tail -5 "$LATEST" 2>/dev/null
 done
+# Referensvärden 2026-10-21:
+#   luma    → "Total: 40 future: 40" + "DB luma-stockholm total: 47"
+#   ra      → "fetched=0 future=0"          (tomt är normalt, RA har ingen JSON-LD)
+#   posh    → "Total: 0 future: 0"
+#   reddit  → "Total candidates: 0 unique: 0"
 
-# 3. Förväntade runtime: 1-3 min vardera (liten datamängd)
+# 3. Förväntade runtime: 8–60 s vardera
 ```
 
 Bevis: 4 chain-overview step-end + per-step loggar + Supabase `events.source`-fördelning.
@@ -44,7 +49,9 @@ Bevis: 4 chain-overview step-end + per-step loggar + Supabase `events.source`-f�
 
 **ra är EN sida (ingen pagination)** — alla Stockholm-events finns på en URL. Risk: om RA ändrar struktur → tyst fel.
 
-**reddit är direkt-upsert, INTE raw_events-kö** — `scripts/ingest-reddit-stockholm.mjs` skriver rakt till `events`-tabellen (rad 5: `const supabase = createClient(...)`, ingen BullMQ). Avviker från mönstret för de andra tre. Kan påverka normalizer-flödet.
+**reddit persisterar INGENTING — bara loggar.** `scripts/ingest-reddit-stockholm.mjs` skapar en Supabase-klient (rad 29) men skriver aldrig till den; rad 99-102 är uttryckligen `// skip persistence — Reddit posts are signal-only, not full events`. Inget `insert()`, inget `upsert()`, ingen BullMQ. Steget är en **läsande signal-sökning**. En tidigare version av den här texten påstod direkt-upsert till `events` — det är fel, och påståendet "alla fyra pushar till `raw_events`-kö" i header-texten är därför också fel för reddit.
+
+Följd: reddit kan aldrig ge ett `persisted > 0`. Facit är `Total candidates: N unique: M` och topp-10-listan. Vill du att reddit ska skapa events krävs implementation — fråga ep-lead.
 
 **reddit `KNOWN_EVENT_HOSTS` är hårdkodad** — ny plattform (t.ex. Dice, Shotgun) → manuellt edit-lista. Hittar inga events för hosts utanför listan.
 

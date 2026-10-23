@@ -28,7 +28,7 @@ async function main(): Promise<void> {
       id: item.sourceCandidateId,
       candidateUrl: item.candidateUrl,
       sourceName: item.candidateName,
-      city: null,
+      city: item.city ?? null,
       priorityScore: item.priorityScore,
       confidenceScore: item.priorityScore,
       originPath: item.originPath,

@@ -17,6 +17,7 @@ function queueItemFromRow(row: any): SourceCandidateTestQueueItem {
     sourceCandidateId: row.source_candidate_id,
     candidateUrl: row.candidate_url,
     candidateName: row.candidate_name ?? null,
+    city: row.city ?? null,
     originPath: row.origin_path ?? [],
     phase: row.phase,
     status: row.status,

@@ -21,14 +21,16 @@ Användaren ser livespot som "den största källan för community-events i Stock
 cd /Users/claudgashi/EventPulse
 
 # 1. Senaste livespot-körning
-LATEST=$(ls -t runtime/ingestion-cron/steps/livespot-stockholm-*.log 2>/dev/null | head -1)
+LATEST=$(ls -t runtime/ingestion-cron/steps/livespot-stockholm-*.log 2>/dev/null | grep -v '\.err\.log$' | head -1)
 
 # 2. Hur många events hämtades?
-grep -E "(page|fetched|persisted|errors)" "$LATEST" | tail -10
+grep -E "^  (total|page [0-9]+:)" "$LATEST" | tail -8
 
 # 3. Förväntat slut-tillstånd
-grep -E "^─── livespot-stockholm" "$LATEST" | tail -1
-# → exit=0 duration=~10 min (6 pages × 100 events + 1s rate-limit)
+sed -n '/=== Resultat ===/,+5p' "$LATEST"
+# → Fetched: 600 / Queued (raw_events): 600 / Skipped: 0
+grep -E "^─── livespot-stockholm finished" "$LATEST"
+# → exit=0 duration=~8.6s (6 pages × 100 events + 1s rate-limit)
 
 # 4. Spot-checka kategorier
 grep -E "category|Teater|Musik|Standup" "$LATEST" | head -5
@@ -43,5 +45,9 @@ Bevis: `runtime/ingestion-cron/steps/livespot-stockholm-<ISO>.log` + Supabase `e
 **`--pages=999` default** är farlig — kan teoretiskt köra i timmar. Cron sätter `--pages=6` explicit. Manuell körning utan `--pages=N` → potentiell runaway.
 
 **Kategori-mappning är partiell** — okända livespot-kategorier lämnas som råsträngar, normalizern fallback-hanterar via `categoryKeywords.ts`. Verifiera att okända kategorier inte blir NULL.
+
+**Scriptet skriver ingen `─── livespot-stockholm`-banner.** Den raden i loggen kommer från `runStep`-omslutningen i `ingestion-cron.ts`, inte från scriptet. Grepa därför efter `=== Resultat ===` för scriptets egen utdata och `^─── livespot-stockholm finished` för orchestratorns rad — inte `^─── livespot-stockholm` generellt.
+
+**`skipped`-räknaren är negativ.** Loggen visar `skipped=0`, `skipped=-100`, `skipped=-200` … Varje rad är ett ackumulerat *delta*, inte ett totalbelopp. Läs `Skipped: 0` i resultatblocket, aldrig per-rad-värdet.
 
 **Livespot JSON-LD saknar ibland tid** (verifierat 2026-10-14, livespot Matt Hansen) — `startDate` finns men `startTime` saknas. UI visar "Tid ej angiven" (se `06-UI/i18n/strings/sv.js:40`).

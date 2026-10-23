@@ -12,7 +12,11 @@ Hidden API endpoint discovery. Scannar ALLA sources efter fetch/axios/GraphQL/`_
 
 ## How to get to it (user POV)
 
-Användaren ser api-discovery som "vi lärde en sajt att den har ett dolt REST-API". Output konsumeras av tribe-events-fetcher (`scripts/ingest-tribe-events.mjs`) och eventuella framtida custom-fetcher. Effekten syns indirekt: fler events från sajter som tidigare såg "omodagbara" ut.
+Användaren ser api-discovery som "vi lärde en sajt att den har ett dolt REST-API".
+
+**Ingen kod läser `data/api-discovery-results.jsonl`.** Sökning i hela repot ger noll konsumenter utanför `discover-hidden-apis.mjs` själv. `ingest-tribe-events.mjs` har hårdkodade `/wp-json/tribe/events/v1/events`-URL:er — den läser inte resultatfilen, utan är handskriven utifrån samma mönster. Steget är **observerande, inte matande**, precis som subpath-discovery.
+
+Konsekvens för verifiering: du kan bevisa att steget skannade, men inte att något kom till nytta. Rapportera det som producerat-underlag, inte som integrerad förmåga.
 
 ## Driving it
 
@@ -31,7 +35,7 @@ test -f data/api-discovery-results.jsonl && wc -l data/api-discovery-results.jso
 grep -E "wp-json|graphql|__NEXT_DATA__" data/api-discovery-results.jsonl | head -5
 
 # 4. Förväntat slut-tillstånd (log-path är stdout, filen via child-process)
-ls -t runtime/ingestion-cron/steps/api-discovery-*.log 2>/dev/null | head -1 | xargs grep -E "Sources to scan|done" | tail -5
+ls -t runtime/ingestion-cron/steps/api-discovery-*.log 2>/dev/null | grep -v '\.err\.log$' | head -1 | xargs grep -E "Sources to scan|done" | tail -5
 ```
 
 Bevis: `chain-overview.log` step-end + `data/api-discovery-results.jsonl` (innehåll) + per-step log (sources scanned).

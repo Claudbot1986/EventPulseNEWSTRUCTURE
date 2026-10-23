@@ -32,6 +32,7 @@
  */
 
 import { createClient, type SupabaseClient } from '@supabase/supabase-js';
+import { cityForDiscoveryQuery, DISCOVERY_QUERIES } from './discoverySearch.js';
 
 // ── Types ───────────────────────────────────────────────────────────────────
 
@@ -71,25 +72,6 @@ function db(): SupabaseClient {
 }
 
 // ── Discovery queries ──────────────────────────────────────────────────────
-
-const DISCOVERY_QUERIES: ReadonlyArray<string> = [
-  // Events i Stockholm
-  'events Stockholm 2026',
-  'konsert Stockholm 2026',
-  'teater Stockholm 2026',
-  'festival Stockholm 2026',
-  'utställning Stockholm 2026',
-  'familjeevenemang Stockholm helg',
-  'kulturhus Stockholm program',
-  'operahus Stockholm biljetter',
-  'museum Stockholm evenemang',
-  'standup Stockholm höst',
-
-  // Mindre städer (Phase 2)
-  'events Göteborg 2026',
-  'konsert Malmö 2026',
-  'festival Uppsala 2026',
-];
 
 /**
  * Validerar URL innan vi skickar den vidare till source_candidates.
@@ -204,6 +186,7 @@ export async function runGoogleCseDiscovery(opts: GoogleCseOptions = {}): Promis
           discovered_at: new Date().toISOString(),
           engine: 'google_cse',
           status: 'pending',
+          city: cityForDiscoveryQuery(query),
         }));
 
         // Upsert på url för att undvika dubbletter

@@ -10,7 +10,11 @@ Auto-discover event subpaths per source. Probar 19 kända event-subpaths per sou
 
 ## How to get to it (user POV)
 
-Användaren ser subpath-discovery som "vi lärde en sajt att den har en events-sida". Output persisteras i `data/subpath-discovery-results.jsonl` som konsumeras av P3A discoverySearch → Exa → nya URL:ar. Effekten syns indirekt: fler events från sajten i grafén.
+Användaren ser subpath-discovery som "vi lärde en sajt att den har en events-sida". Output persisteras i `data/subpath-discovery-results.jsonl`.
+
+**Ingen kod läser den filen.** Sökning i hela repot efter `subpath-discovery-results` ger noll konsumenter utanför scriptet självt och denna skill. `discoverySearch.ts` parsar inga subpath-resultat. Steget är alltså **observerande, inte matande** — det producerar underlag för en människa, inte en automatisk handläggning. Tidigare versioner av den här texten påstod att P3A konsumerar filen; det är fel.
+
+Konsekvens: 17 av 230 källor hittade en events-subpath i nattens körning, men ingen av dem blev automatiskt tillagd som källa. Vill du att de ska det behövs ett steg som läser filen och skriver `source_candidates` — det finns inte.
 
 ## Driving it
 
@@ -18,7 +22,7 @@ Användaren ser subpath-discovery som "vi lärde en sajt att den har en events-s
 cd /Users/claudgashi/EventPulse
 
 # 1. Senaste subpath-körning
-LATEST=$(ls -t runtime/ingestion-cron/steps/subpath-discovery-*.log 2>/dev/null | head -1)
+LATEST=$(ls -t runtime/ingestion-cron/steps/subpath-discovery-*.log 2>/dev/null | grep -v '\.err\.log$' | head -1)
 
 # 2. Vilka sajter gav nya fynd?
 grep -E "(found|discovered|subpath|FOUND|MISSING)" "$LATEST" | head -20

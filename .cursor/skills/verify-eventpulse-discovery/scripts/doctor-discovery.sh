@@ -19,7 +19,7 @@ import json, datetime, os, sys, subprocess, pathlib
 out_path, root = sys.argv[1], pathlib.Path(sys.argv[2])
 status_file = root / "runtime/ingestion-cron.status.json"
 chain = root / "runtime/ingestion-cron/chain-overview.log"
-watchdog = root / "runtime/watchdog.json"
+watchdog = root / "runtime/ingestion-cron/watchdog.json"
 
 result = {
     "ts": datetime.datetime.now(datetime.timezone.utc).isoformat(),
@@ -101,20 +101,24 @@ else:
     result["checks"]["hung_stages"] = {"ok": None, "reason": "chain-log-missing"}
 
 # 5. Watchdog alive?
+#    Fältet är `checkedAt` (inte `lastCheck`), och filen innehåller INTE
+#    `stalenessMin` — den thrasolden ligger i watchdog-scriptet, inte i state-filen.
 if watchdog.exists():
     try:
         w = json.loads(watchdog.read_text())
-        last = w.get("lastCheck")
+        last = w.get("checkedAt")
         if last:
             t = datetime.datetime.fromisoformat(last.replace("Z", "+00:00"))
             age = (datetime.datetime.now(datetime.timezone.utc) - t).total_seconds()
             result["checks"]["watchdog"] = {
                 "ok": age < 300,
                 "age_seconds": round(age),
-                "staleness_min": w.get("stalenessMin"),
+                "watchdog_ok": w.get("ok"),
+                "watchdog_reasons": w.get("reasons"),
+                "chain_pid_alive": w.get("chainPidAlive"),
             }
         else:
-            result["checks"]["watchdog"] = {"ok": False, "reason": "no lastCheck"}
+            result["checks"]["watchdog"] = {"ok": False, "reason": "no checkedAt"}
     except Exception as e:
         result["checks"]["watchdog"] = {"ok": False, "error": str(e)}
 else:
