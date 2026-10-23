@@ -47,7 +47,17 @@ const STATUS_FILE = path.resolve(PROJECT_ROOT, 'runtime/ingestion-cron.status.js
 const WATCHDOG_LOG = path.resolve(PROJECT_ROOT, 'runtime/ingestion-cron/watchdog.log');
 const WATCHDOG_STATE = path.resolve(PROJECT_ROOT, 'runtime/ingestion-cron/watchdog.json');
 
-const STEP_HUNG_MS = parseInt(process.env.WATCHDOG_STEP_HUNG_MS ?? String(90 * 60_000), 10);
+// 2026-10-23 — hängtröskeln följer samma tal som cron:ns egen steggräns
+// (INGESTION_STEP_TIMEOUT_MS, se scripts/ingestion-cron.ts). Tidigare låg den
+// på 90 min medan cron inte hade någon gräns alls, vilket gjorde alerten
+// meningslös: watchdog skrev bara en loggrad och rörde ingenting — tribe-events
+// stod en gång kvar i 419 485 s (116 h) med bara en ALERT-rad som följd.
+// Med samma tal betyder alerten "cron:ns timeout är på väg att döda steget",
+// och en operator som sänker gränsen sänker båda åt gången.
+const STEP_HUNG_MS = parseInt(
+  process.env.WATCHDOG_STEP_HUNG_MS ?? process.env.INGESTION_STEP_TIMEOUT_MS ?? String(2 * 60 * 60_000),
+  10,
+);
 const OVERVIEW_STALE_MS = parseInt(process.env.WATCHDOG_OVERVIEW_STALE_MS ?? String(60 * 60_000), 10);
 const CHAIN_ALIVE_MS = parseInt(process.env.WATCHDOG_CHAIN_ALIVE_MS ?? String(16 * 60 * 60_000), 10);
 
