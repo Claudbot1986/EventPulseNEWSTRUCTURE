@@ -2,16 +2,29 @@
 
 ## Sub-features
 
-- **23 steg i ordning** från `runA.ts:351` (`const steps`):
-  `A-directAPI` (353) → `B-network-api` (358) → `eventbrite-pagination` (369)
-  → `tribe-events` (380) → `sitemap-discovery` (389) → `subpath-discovery` (398)
-  → `direct-jsonld` (407) → `livespot-stockholm` (416) → `C-htmlGate` (422)
-  → `D-renderGate` (435) → `I-pdfExtraction` (444) → `etag-refresh` (459)
-  → `api-discovery` (469) → `luma-stockholm` (478) → `ra-stockholm` (486)
-  → `posh-stockholm` (494) → `reddit-stockholm` (502) → `D-images` (513)
-  → `P2C-active-learning` (527) → `P3A-discovery` (541)
-  → `P3B-venue-graph-geo` (557) → `P3C-rss-discovery` (569)
-  → `P3D-source-candidate-tests` (608).
+- **24 steg, men inte i listordning.** `const steps` (`:399-690`) deklarerar
+  dem i A→B→C→D→I-ordning, men en splice (`:626`) flyttar P3A–P3D till
+  **förest** vid körning. Ordningen som faktiskt körs:
+  `P3A-discovery` (605) → `P3B-venue-graph-geo` (621) → `P3C-rss-discovery` (633)
+  → `P3D-source-candidate-tests` (672) → `A-directAPI` (402) → `B-network-api` (407)
+  → `eventbrite-pagination` (418) → `tribe-events` (429) → `sitemap-discovery` (438)
+  → `subpath-discovery` (447) → `direct-jsonld` (456) → `livespot-stockholm` (465)
+  → `C-htmlGate` (471) → `D-renderGate` (484) → `I-pdfExtraction` (493)
+  → `etag-refresh` (508) → `api-discovery` (518) → `luma-stockholm` (527)
+  → `ra-stockholm` (535) → `posh-stockholm` (543) → `reddit-stockholm` (551)
+  → `D-images` (562) → `worker-drain` (582) → `P2C-active-learning` (591).
+
+  **Varför flytten (2026-10-23):** en källa som P3D promote:ade var osynlig för
+  A-gatet till nästa natt kl 02:00 — upp till 18 timmars latens. Nu promote:ar
+  P3D och A-gatet kör samma natt.
+- **`worker-drain` (`:582`)** — det ENDA steget som skriver till Supabase.
+  `npx tsx 03-Queue/drainQueue.ts --max-ms <900000|60000>`; ligger före P2C som
+  läser ur databasen. Placerat här för att kedjan annars slutar med jobb
+  liggande i `raw_events`: mätt 2026-10-23 var 3 548 jobb väntande sedan
+  2026-10-20 och 0 av nattens 1 147 "funna" events persisterade.
+- **Per-steg-timeout** — `STEP_TIMEOUT_MS` (`:266`), default 2 h, override via
+  `INGESTION_STEP_TIMEOUT_MS`. `SIGTERM` → 30 s → `SIGKILL`. Ett avbrutet steg
+  loggas som `exitCode: 124` och `timedOut: true`.
 - **18 skip-flaggor** (`:196-215`) — varje steg kan tas bort ur listan
   runtime, så antalet steg varierar mellan körningar.
 - **`--limit N`** (default 200), **`--smoke`** (tvingar `effectiveLimit = 1`,
@@ -20,11 +33,15 @@
   per steg, sista matchen vinner. `STEP_COUNT_EXCLUDED`
   (`reddit-stockholm`, `api-discovery`, `subpath-discovery`) ger `null`.
   **A/B/C/D/I saknar recipe → deras `eventsExtracted` är alltid `null`.**
+  `worker-drain` har en recipe: `^\[drain\] avslutar \([^)]*\): completed=(\d+)`.
 - **Statusfil** — `runtime/ingestion-cron.status.json`, skrivs efter varje
-  steg (`:772-774`) med `running`, `pid`, `lastHeartbeatAt`, `steps[]`,
+  steg med `running`, `pid`, `lastHeartbeatAt`, `steps[]`,
   `totalEventsExtracted`, `lastError`, `exitCode`.
-- **Green/red** — `runtime/discovery-verification.status.json` skrivs bara
-  vid `totalExit === 0` (`:795-820`) med `{lastGreenAt, runId, ok}`.
+- **Green/red** — `runtime/discovery-verification.status.json` skrivs i båda
+  grenarna sedan 2026-10-21: vid `totalExit === 0` med `{lastGreenAt, runId,
+  ok: true}`, annars `{ok: false, failedSteps, lastRunAt, exitCode, lastError}`
+  med `lastGreenAt` **bevarad**. Före fixen skrevs filen bara i lyckad gren,
+  så en misslyckad natt lät senaste gröna stå kvar som om allt var ok.
 
 ## How to get to it (user POV)
 
@@ -47,6 +64,10 @@ jq '{
 jq -r 'select(.event=="step-end") | "\(.step)\texit=\(.exitCode)\t\(.durationMs)ms"' \
   runtime/ingestion-cron/chain-overview.log | tail -25
 
+# Vilka steg avbröts av timeout (ska vara tomt i normal drift)
+jq -r 'select(.event=="step-timeout") | "\(.step)\tpid=\(.childPid)\tlimit=\(.limitMs)"' \
+  runtime/ingestion-cron/chain-overview.log | tail -10
+
 # Per-steg-loggar — filtrera ALLTID bort .err.log
 LATEST=$(ls -t runtime/ingestion-cron/steps/A-directAPI-*.log 2>/dev/null | grep -v '\.err\.log$' | head -1)
 tail -20 "$LATEST"
@@ -58,6 +79,12 @@ tail -20 "$LATEST"
 (`:29`). En "sandboxad" cron-körning kör mot riktiga köer. Kör gaten
 direkt om du vill isolera.
 
+**`subpath-discovery` tar 70 min i median och 75 min som värsta uppmätta fall.**
+Det är den längsta legitima stegtiden och den sätter golvet för
+`STEP_TIMEOUT_MS`. Sänker du gränsen under 2 timmar riskerar du att döda ett
+steg som bara är långsamt. Kör du om med låg gräns för att testa timeouten,
+sätt `INGESTION_STEP_TIMEOUT_MS` och var beredd på `exit=124` i loggen.
+
 **`null` och `0` betyder olika saker i `eventsExtracted`.** `null` = steget
 kan inte mäta (skriver eget JSON-format, eller persisterar ingenting).
 `0` = det kördes och fick inget. Dashboarden ska visa null som "vet inte".
@@ -68,6 +95,17 @@ Ett steg som alltid är `null` är inte ett fel — kontrollera
 exit=1 varje natt (P2C-active-learning, P3A-discovery är de kända). En
 körning kan ha 24/24 steg avslutade och ändå ha producerat noll events.
 
+**`exitCode: 124` betyder timeout, inte fel i steget.** Kolla
+`event=="step-timeout"` i chain-overview.log för att skilja "steget hängde"
+från "steget kraschade".
+
+**Watchdog dödar ingenting.** `scripts/cron/ingestion-watchdog.ts` loggar en
+ALERT-rad och avslutar alltid exit=0. Före 2026-10-23 var dess tröskel 90 min
+oberoende av cron, så en 116-timmars hängning bara producerade en loggrad.
+Nu läser den `INGESTION_STEP_TIMEOUT_MS` — men den är fortfarande en reporter,
+inte en räddare. Den enda som faktiskt avslutar ett hängt steg är crons
+egen timeout.
+
 **Launchd äger filen.** En pågående körning blockerar inte läsning men
 skriver över `runtime/ingestion-cron.status.json` medan du läser. Doktorn
 flaggar `cron.running` — respektera det.
@@ -76,10 +114,10 @@ flaggar `cron.running` — respektera det.
 2026-10-21.** Gamla `chain-overview.log`-rader kan innehålla dem. De dyker
 inte upp i nya körningar. (Koden ligger kvar som dormant.)
 
-**Green-filen styrs av en 24-timmarsregel.** Read-gaten vid `:728` hoppar
- över verifieringskörningar om `ageH < 24 && ok`. Om du manuellt
-skriver `ok: false` måste du också sätta `lastGreenAt` till det gamla
-värdet — annars förloras beviset på när grönt senast såg ut.
+**Green-filen styrs av en 24-timmarsregel.** Read-gaten hoppar över
+verifieringskörningar om `ageH < 24 && ok`. Om du manuellt skriver
+`ok: false` måste du också sätta `lastGreenAt` till det gamla värdet —
+annars förloras beviset på när grönt senast såg ut.
 
 **Cron kör `runB.ts --workers 20`**, men `runB.ts` parsar inte flaggan.
 B är sekvent i drift.

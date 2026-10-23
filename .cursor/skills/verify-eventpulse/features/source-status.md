@@ -13,6 +13,15 @@
   `preferredPath`, `pendingNextTool`.
 - **A-gatets filter** — `status === 'never_run'` (`runA.ts:259-262`). Endast
   det; `fail` körs aldrig om.
+- **Kyrkograv** — `sources/_quarantine/` + `sources/_retired/`, vardera med
+  `INDEX.json` (`{sourceId, url, movedAt, reasonCode, note, movedBy}`).
+  `quarantineGuard.ts:134 isSkipped()` läser dem; A och B konsumerar
+  skipset. Hanteras av `02-Ingestion/tools/lifecycle-admin.ts`
+  (`quarantine` / `retire` / `restore` / `list`). **`retire` kräver `--by`** —
+  begravning är ett mänskligt beslut, aldrig automatiskt.
+- **`coverage.outside_stockholm`** är en giltig `ReasonCode`
+  (`sourceLifecycle.ts:70`) och betyder "staden är inte Stockholm, så
+  `isInScope()` släpper aldrig igenom den".
 - **Utdata till bullmq** — inte A/B/C/D/I: de skriver JSONL. Se
   `queue-chain.md`.
 
@@ -52,6 +61,21 @@ console.log({total,inScope,outOfScope:out});
 
 # Saknar city helt? (vanligaste orsaken till tomma körningar)
 jq -c 'select(.metadata.sourceCandidateId and (.city==null or .city=="")) | {id,city}' sources/*.jsonl | head -5
+
+# Kyrkogravet — vad är begravt och varför
+npx tsx 02-Ingestion/tools/lifecycle-admin.ts list --all
+
+# Oanvändbara filer som INTE är begravda (ska vara tomt — gate e6)
+node --input-type=module -e "
+import {readdirSync,readFileSync} from 'node:fs';
+const bad=[];
+for (const f of readdirSync('sources').filter(x=>x.endsWith('.jsonl'))) {
+  const s=JSON.parse(readFileSync('sources/'+f,'utf8').trim());
+  if (s?.metadata?.sandbox) continue;
+  if ((s.city??'').trim()!=='Stockholm') bad.push(f+' city='+(s.city??'(saknas)'));
+}
+console.log({outOfScope: bad.length, bad: bad.slice(0,5)});
+"
 ```
 
 ## Gotchas
@@ -62,6 +86,22 @@ stad, `isInScope()` var falsk, och A loggade "Both preA-queue and
 sources-main are empty" med 8 giltiga källor osynliga. Nu finns
 `city`-kolumnen i `source_candidates` och `source_candidate_test_queue`
 (migration `20261021-0003`) och bärs hela vägen queue → CLI → promote.
+
+**"Sweden" är inte en stad.** `isInScope()` kräver exakt `'Stockholm'`, så
+ett fältvärde `Sweden` är precis så osynligt som `null`. Mätt 2026-10-23 fanns
+9 filer märkta `Sweden` — 4 av dem (fallan, stadsmuseet, stampen, zita) var
+faktiskt Stockholmskällor och fick `city: "Stockholm"` med belägg i
+`metadata.cityEvidence`; de 5 återstående begravdes som
+`coverage.outside_stockholm`.
+
+**`metadata.cityEvidence` + `cityRepairedAt` finns på 14 filer.** De markerar
+de stadslösa filer som fick `city` tilldelad i hand i stället för att härledas
+ur URL:en automatiskt. Läs `cityEvidence` innan du ifrågasätter en `city`.
+
+**92 filer var oanvändbara utan att begravas.** Mätt 2026-10-23: 73 med
+uttrycklig annan stad, 10 utan stad, 9 märkta `Sweden` — samtidigt som A-gatet
+kördes på tomma preA-körer. 78 begravdes, 14 fick stad. Noll kvar.
+Kör `scripts/verify-fixes.mjs e6` för att hålla koll.
 
 **`getSourceStatus` returnerar en standardrad, inte `undefined`.** En källa
 utan rad är `never_run` — inte "saknas". Kod som förväntar sig `undefined`
