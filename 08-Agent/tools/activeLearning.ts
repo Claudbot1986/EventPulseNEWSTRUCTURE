@@ -146,7 +146,11 @@ export async function run(opts: ActiveLearningOptions = {}): Promise<ActiveLearn
 
 // ── CLI wrapper ─────────────────────────────────────────────────────────────
 
-import { fileURLToPath } from 'url';
+// `fileURLToPath` importeras redan högst upp (rad 33). En andra
+// `import { fileURLToPath }` här gjorde modulen OIMPORTIERBAR — ES-imports
+// är hoistade, så rad 33 gäller även den här delen. Symptom: P2C-steget i
+// ingestion-kedjan och hela activeLearning.test.ts föll med
+// "Identifier `fileURLToPath` has already been declared".
 
 const cliArgs = process.argv.slice(2);
 const thresholdIdx = cliArgs.indexOf('--threshold');

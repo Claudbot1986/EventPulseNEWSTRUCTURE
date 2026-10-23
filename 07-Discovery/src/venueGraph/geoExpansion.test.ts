@@ -13,6 +13,11 @@ const fromMock = vi.fn();
 const selectMock = vi.fn();
 const notMock = vi.fn();
 const eqMock = vi.fn();
+// 2026-10-23: h1-fixen (går från venues.city till lat/lng-bbox) lade till
+// .gte()/.lte() i frågan. Mocken hade dem inte, så 8 tester föll med
+// "gte is not a function" — ett hål i harnet, inte en produktregression.
+const gteMock = vi.fn();
+const lteMock = vi.fn();
 const upsertMock = vi.fn();
 
 vi.mock('@supabase/supabase-js', () => ({
@@ -36,11 +41,15 @@ beforeEach(() => {
   selectMock.mockReset();
   notMock.mockReset();
   eqMock.mockReset();
+  gteMock.mockReset();
+  lteMock.mockReset();
   upsertMock.mockReset();
 
   selectMock.mockReturnThis();
   notMock.mockReturnThis();
   eqMock.mockReturnThis();
+  gteMock.mockReturnThis();
+  lteMock.mockReturnThis();
 });
 
 // ── Pure-function tests ───────────────────────────────────────────────────
@@ -73,6 +82,8 @@ describe('geoExpansion.run', () => {
       select: selectMock,
       not: notMock,
       eq: eqMock,
+      gte: gteMock,
+      lte: lteMock,
       then: (resolve: (v: unknown) => void) => resolve({ data: [], error: null }),
     });
 
@@ -92,6 +103,8 @@ describe('geoExpansion.run', () => {
       select: selectMock,
       not: notMock,
       eq: eqMock,
+      gte: gteMock,
+      lte: lteMock,
       then: (resolve: (v: unknown) => void) => resolve({ data: venues, error: null }),
     });
 
@@ -117,6 +130,8 @@ describe('geoExpansion.run', () => {
       select: selectMock,
       not: notMock,
       eq: eqMock,
+      gte: gteMock,
+      lte: lteMock,
       then: (resolve: (v: unknown) => void) => resolve({ data: venues, error: null }),
     });
 
@@ -135,6 +150,8 @@ describe('geoExpansion.run', () => {
       select: selectMock,
       not: notMock,
       eq: eqMock,
+      gte: gteMock,
+      lte: lteMock,
       then: (resolve: (v: unknown) => void) => resolve({ data: venues, error: null }),
     });
 
@@ -153,6 +170,8 @@ describe('geoExpansion.run', () => {
       select: selectMock,
       not: notMock,
       eq: eqMock,
+      gte: gteMock,
+      lte: lteMock,
       then: (resolve: (v: unknown) => void) => resolve({ data: venues, error: null }),
     });
 
@@ -170,6 +189,8 @@ describe('geoExpansion.run', () => {
       select: selectMock,
       not: notMock,
       eq: eqMock,
+      gte: gteMock,
+      lte: lteMock,
       then: (resolve: (v: unknown) => void) => resolve({ data: venues, error: null }),
     });
 
@@ -184,6 +205,8 @@ describe('geoExpansion.run', () => {
       select: selectMock,
       not: notMock,
       eq: eqMock,
+      gte: gteMock,
+      lte: lteMock,
       then: (resolve: (v: unknown) => void) => resolve({ data: null, error: { message: 'connection refused' } }),
     });
 
@@ -204,6 +227,8 @@ describe('geoExpansion.run', () => {
       select: selectMock,
       not: notMock,
       eq: eqMock,
+      gte: gteMock,
+      lte: lteMock,
       then: (resolve: (v: unknown) => void) => resolve({ data: venues, error: null }),
     });
 
