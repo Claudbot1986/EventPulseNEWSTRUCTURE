@@ -28,7 +28,7 @@ import {
   detectCategoryFromUrl,
   detectCategoryFromContainerClass,
 } from './categoryKeywords.js';
-import { toUtcIsoFromStockholm } from '../lib/stockholmTime.js';
+import { toUtcIsoFromStockholm, hasTimeZone, toUtcInstantFromString } from '../lib/stockholmTime.js';
 import { findKlockanInText } from '../lib/swedishTimeText.js';
 
 export interface ExtractResult {
@@ -572,14 +572,86 @@ export function extractHighConfidenceEvents(
 // ─── RawEventInput conversion ─────────────────────────────────────────────────
 
 /**
- * Convert ParsedEvent to RawEventInput for the queue
+ * Hitta ett UTC-ögonblick i en händelse, oavsett vilken form den kom i.
+ *
+ * Två former finns i sammanväxningen:
+ *   - ParsedEvent: `date` ('2026-11-15' eller ISO) + `time` ('18:00'),
+ *     lokaltid enligt Europe/Stockholm.
+ *   - Legacy network-event (networkEventExtractor): `startTime` med hela
+ *     ISO-instanten.
+ *
+ * Före 2026-10-23 lästes bara `date`/`time`. Alla network-path-events
+ * bar därför på `date: undefined` → `start_time: null` → normalizer
+ * skippade dem ("passerat datum/saknar datum") och källan rapporterade
+ * ändå "N events".
  */
-export function toRawEventInput(event: ParsedEvent): RawEventInput {
+/**
+ * Tolka en datumsträng som ett UTC-instant.
+ *
+ * Delegerar till den gemensamma hjälparen i lib/stockholmTime.ts — samma
+ * tolkning används av B-gatens extraherare, scheduler och hit.
+ */
+function resolveStartIso(event: {
+  date?: string | null;
+  time?: string | null;
+  startTime?: string | null;
+}): string | null {
+  const date = event.date?.trim();
+  if (date) {
+    // En naiv datetime ("2026-11-15T18:00:00") måste delas — annars
+    // toUtcIsoFromStockholm tappar tiden och landar på midnatt.
+    // tz-medvetna strängar lämnas orörda (de är redan UTC-instant).
+    if (date.includes('T') && !event.time) {
+      if (hasTimeZone(date)) return toUtcIsoFromStockholm(date) ?? date;
+      const [datePart, timePart = ''] = date.split('T');
+      return toUtcIsoFromStockholm(datePart, timePart.slice(0, 5)) ?? date;
+    }
+    return toUtcIsoFromStockholm(date, event.time) ?? date;
+  }
+  const legacyStart = event.startTime?.trim();
+  if (legacyStart) {
+    return toUtcInstantFromString(legacyStart) ?? legacyStart;
+  }
+  return null;
+}
+
+function resolveEndIso(event: {
+  date?: string | null;
+  time?: string | null;
+  endDate?: string | null;
+  endTime?: string | null;
+}): string | null {
+  const endDate = event.endDate?.trim();
+  if (endDate) {
+    if (endDate.includes('T') && !event.time) {
+      if (hasTimeZone(endDate)) return toUtcIsoFromStockholm(endDate) ?? endDate;
+      const [datePart, timePart = ''] = endDate.split('T');
+      return toUtcIsoFromStockholm(datePart, timePart.slice(0, 5)) ?? endDate;
+    }
+    return toUtcIsoFromStockholm(endDate, event.time) ?? endDate;
+  }
+  // Legacy network-form: endTime bär hela instantet. Kontrollera att det
+  // ser ut som ett instant — ParsedEvent använder 'HH:MM' i samma fält.
+  const legacyEnd = event.endTime?.trim();
+  if (legacyEnd && (legacyEnd.includes('T') || hasTimeZone(legacyEnd))) {
+    return toUtcInstantFromString(legacyEnd) ?? legacyEnd;
+  }
+  return null;
+}
+
+/**
+ * Convert ParsedEvent to RawEventInput for the queue.
+ *
+ * Accepterar även den legacy network-formen (`startTime`/`endTime` med
+ * hela ISO-instanten) som networkEventExtractor producerar.
+ */
+export function toRawEventInput(event: ParsedEvent & { startTime?: string | null }): RawEventInput {
+  const startTime = resolveStartIso(event);
   return {
     title: event.title,
     description: event.description || null,
-    start_time: toUtcIsoFromStockholm(event.date, event.time) ?? event.date ?? null,
-    end_time: toUtcIsoFromStockholm(event.endDate ?? null, event.endTime) ?? event.endDate ?? null,
+    start_time: startTime,
+    end_time: resolveEndIso(event),
     venue_name: event.venue || null,
     venue_address: event.address || null,
     lat: null, // TODO: geocode from address if needed
@@ -594,7 +666,7 @@ export function toRawEventInput(event: ParsedEvent): RawEventInput {
     // → NULL. AI-workern genererar.
     image_url: null,
     source: event.source,
-    source_id: generateEventId(event.source, event.title, event.date),
+    source_id: generateEventId(event.source, event.title, startTime ?? event.date ?? ''),
     detected_language: 'sv',
     raw_payload: event as Record<string, unknown>,
     // Map ParsedEvent.status → events.status_expanded enum. Validated against

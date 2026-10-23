@@ -265,14 +265,25 @@ async function runSource(source: SourceTruth, options: { recheck?: boolean } = {
           // Note: networkEventExtractor returns Tixly-format (startTime, endTime, imageUrl, etc.)
           // queueEvents expects RawEventInput - we map between them
           const { queueEvents } = await import('./tools/fetchTools');
-          const rawEvents = apiResult.events.map(e => ({
+          const { toUtcInstantFromString, toStockholmDate } = await import('./lib/stockholmTime');
+          const rawEvents = apiResult.events.map(e => {
+            // Naiva datumsträngar ("2026-06-15T18:00") måste tolkas som
+            // Europe/Stockholm — `new Date()` gör det beroende på värdens
+            // tidszon, vilket ger olika resultat på olika maskiner.
+            const startTime = toUtcInstantFromString((e as any).startTime);
+            const endTime = toUtcInstantFromString((e as any).endTime);
+            return {
             // Required RawEventInput fields
             source: source.id,  // CRITICAL: was missing, caused source_id=null in DB
             source_id: (e as any).id || `${source.id}-${Math.random().toString(36).slice(2)}`,
             title: (e as any).title || 'Untitled',
             description: (e as any).description || '',
-            start_time: (e as any).startTime ? new Date((e as any).startTime).toISOString() : new Date().toISOString(),
-            end_time: (e as any).endTime ? new Date((e as any).endTime).toISOString() : null,
+            // Utan datum ska händelsen INTE köas med "idag" som gissat datum —
+            // normalizer skippar den ändå, och ett gissat datum är en
+            // påhittad händelse (CLAUDE.md: "AI may not invent events,
+            // venues, dates").
+            start_time: startTime,
+            end_time: endTime,
             url: (e as any).url || '',
             // ── AI-bilder är obligatoriskt → NULL. Workern genererar.
             image_url: null,
@@ -292,9 +303,13 @@ async function runSource(source: SourceTruth, options: { recheck?: boolean } = {
             price: (e as any).price ? `${(e as any).price.min || 0}-${(e as any).price.max || 0}` : null,
             status: (e as any).status || 'available',
             event_url: (e as any).url || '',
-            start_date: (e as any).startTime ? new Date((e as any).startTime).toISOString().split('T')[0] : '',
-            end_date: (e as any).endTime ? new Date((e as any).endTime).toISOString().split('T')[0] : '',
-          }));
+            // Datumet i Europe/Stockholm — inte UTC-datumet. Ett evenem kl.
+            // 00:30 är 23:30Z FÖREGÅENDE dag, och `.split('T')[0]` på
+            // UTC-strängen gav då fel datum.
+            start_date: toStockholmDate(startTime) ?? '',
+            end_date: toStockholmDate(endTime) ?? '',
+            };
+          });
           const { queued } = await queueEvents(source.id, rawEvents as any);
           console.log(`   Queued: ${queued}/${eventsFound}`);
         }

@@ -255,17 +255,44 @@ async function runBOnSource(entry: PreBEntry): Promise<BResult> {
   // Try extraction on top candidates
   let totalEvents = 0;
   const triedUrls: string[] = [];
-  const allExtractedEvents: ParsedEvent[] = [];
+  const allExtractedEvents: (ParsedEvent & { startTime?: string | null })[] = [];
 
   for (const candidate of candidatesToTry) {
     triedUrls.push(candidate.url);
     try {
       const extractResult = await extractFromApi(candidate.url, sourceId);
       totalEvents += extractResult.events.length;
-      // NOTE (batch B K5): extractFromApi returns LegacyNetworkEvent objects
-      // (see networkEventExtractor.ts) — cast bridges to ParsedEvent here.
-      // The legacy→canonical migration itself is a separate queue task.
-      allExtractedEvents.push(...(extractResult.events as unknown as ParsedEvent[]));
+      // extractFromApi ger LegacyNetworkEvent (id/startTime/price/…).
+      // toRawEventInput läserParsedEvent-formen (date/time) — därför översätts
+      // formen här explicit i stället för att tvingas genom en osäker cast.
+      // Utan denna översättning tappades start_time → normalizer skippade
+      // varje event ("saknar datum") trots att B-gatet loggade "N events".
+      allExtractedEvents.push(
+        ...(extractResult.events.map(e => ({
+          ...e,
+          date: e.startTime ?? '',
+          time: undefined,
+          endDate: e.endTime ?? undefined,
+          venue: e.venue,
+          category: e.category,
+          organizer: e.organizer,
+          url: e.url,
+          imageUrl: e.imageUrl,
+          priceMin: e.price?.min,
+          priceMax: e.price?.max,
+          confidence: {
+            score: 0,
+            hasTitle: true,
+            hasDate: Boolean(e.startTime),
+            hasVenue: Boolean(e.venue),
+            hasUrl: Boolean(e.url),
+            hasDescription: Boolean(e.description),
+            hasTicketInfo: Boolean(e.price),
+            eventStatus: e.status,
+            signals: ['network-api'],
+          },
+        })) as unknown as (ParsedEvent & { startTime?: string | null })[]),
+      );
       if (extractResult.events.length > 0) {
         console.log(`         extracted ${extractResult.events.length} events from ${candidate.url}`);
       }

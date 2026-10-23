@@ -11,7 +11,15 @@
  */
 
 import { describe, it, expect } from 'vitest';
+import { readFileSync } from 'fs';
 import { extractEvents } from './universal-extractor';
+
+// Real markup från https://www.nordiskamuseet.se/evenemang/ (2026-10-23).
+// Teasern har BARA en klocktid (10:00-17:00) — datumet finns på detaljsidan.
+const NORDISKA_TEASER = readFileSync(
+  new URL('./__fixtures__/nordiska-museet-teaser.html', import.meta.url),
+  'utf8',
+);
 
 const BASE_URL = 'https://konserthuset.se/kalender';
 
@@ -971,6 +979,111 @@ describe('universal-extractor — Hallsberg tidsintervall-bug (2026-00-15)', () 
 });
 
 // ──────────────────────────────────────────────────────────────────────────
+// 2026-10-09 — // 2026-10-23 — Kolon-bug: shortDateRx matchade `00-17` i tidsintervallet
+// `10:00-17:00` (kolon istället för punkt) → `2026-00-17`.
+//
+// Hallsberg-fixen 2026-10-09 blockerade bara PUNKT (`12.00-15.00`). Tidsintervall
+// med kolon (`10:00-17:00`) slapp igenom och blev ett omöjligt datum.
+//
+// Bevis på 3 ORELATERADE domäner (Generalization Protection Rule):
+//   1. nordiskamuseet.se         — `10:00-17:00` → 2026-00-17 (28/28 rader)
+//   2. kungligamusikhogskolan.se — `18:00-20:00` → 2026-00-20 (35/35 rader)
+//   3. fallan.nu                  — `18:00-20:00` → 2026-00-20 (6/30 rader)
+//   → generell fix i C-lagret är tillåten.
+//
+// Fix: kolon blockeras BÅDE i lookbehind (första siffran får inte föregås av
+//      `:`) och i trailing-guard (efter andra siffran får det inte komma `:`).
+//      `10:00-17:00` kan då aldrig ge ett datum; `Event 25-10` fungerar kvar.
+// ──────────────────────────────────────────────────────────────────────────
+
+describe('universal-extractor — kolon-tidsintervall ger INTE datum (2026-00-17)', () => {
+  it('nordiska-museet (riktig markup): 10:00-17:00 ger INGET påhittat datum', () => {
+    // Riktig teaser från nordiskamuseet.se — bara klocktid, INGEN datummarkering.
+    // Före fixen: `00-17` i `10:00-17:00` blev `2026-00-17` (28/28 rader fel).
+    const result = extractEvents(
+      NORDISKA_TEASER,
+      'nordiska-museet',
+      'https://www.nordiskamuseet.se/evenemang/',
+    );
+    for (const e of result.events) {
+      // Ingen månad 00, ingen månad > 12, ingen dag 00.
+      expect(e.date).not.toMatch(/-00-\d{2}$/);
+      expect(e.date).not.toMatch(/-(1[3-9]|2\d|3[01])-/);
+      expect(e.date).not.toMatch(/-\d{2}-00$/);
+    }
+    // Teasern har ingen datum → inget event alls. Ett påhittat 2026-00-17 är
+    // värre än inget event (CLAUDE.md: "AI may not invent events, venues, dates").
+    expect(result.events.length).toBe(0);
+  });
+
+  it('18:00-20:00 ger INGET datum', () => {
+    const html = `<!doctype html>
+<html lang="sv"><body>
+<ul class="event-list">
+<li class="event-card">
+<a href="/e"><h2 class="event-title">KMH Blåsorkester spelar tyskt</h2></a>
+<span class="event-time">18:00-20:00</span>
+</li>
+</ul>
+</body></html>`;
+    const result = extractEvents(html, 'kungliga-musikhogskolan', 'https://www.kungligamusikhogskolan.se/');
+    for (const e of result.events) {
+      expect(e.date).not.toMatch(/-00-\d{2}$/);
+    }
+    expect(result.events.length).toBe(0);
+  });
+
+  it('8:30-18:00 ger INGET datum (inte 2026-18-30)', () => {
+    const html = `<!doctype html>
+<html lang="sv"><body>
+<ul class="event-list">
+<li class="event-card">
+<a href="/e"><h2 class="event-title">Öppet hus</h2></a>
+<span class="event-time">8:30-18:00</span>
+</li>
+</ul>
+</body></html>`;
+    const result = extractEvents(html, 'nordiska-museet', 'https://www.nordiskamuseet.se/evenemang/');
+    for (const e of result.events) {
+      expect(e.date).not.toMatch(/-18-30$/);
+      expect(e.date).not.toMatch(/-00-\d{2}$/);
+    }
+    expect(result.events.length).toBe(0);
+  });
+
+  it('RATT datum + tidsintervall → rätt datum (regression: 2026-10-09 10:00-17:00)', () => {
+    const html = `<!doctype html>
+<html lang="sv"><body>
+<ul class="event-list">
+<li class="event-card">
+<a href="/e"><h2 class="event-title">Riktigt datum</h2></a>
+<time datetime="2026-10-09">9 oktober</time>
+<span class="event-time">10:00-17:00</span>
+</li>
+</ul>
+</body></html>`;
+    const result = extractEvents(html, 'test', 'https://example.com/');
+    expect(result.events.length).toBe(1);
+    expect(result.events[0].date).toBe('2026-10-09');
+  });
+
+  it('dd-mm datum fungerar kvar även intill ett kolon-tidsintervall (regression)', () => {
+    const html = `<!doctype html>
+<html lang="sv"><body>
+<ul class="event-list">
+<li class="event-card">
+<a href="/e"><h2 class="event-title">Event 25-10</h2></a>
+<span class="event-date">10:00-17:00</span>
+</li>
+</ul>
+</body></html>`;
+    const result = extractEvents(html, 'test', 'https://example.com');
+    expect(result.events.length).toBe(1);
+    const today = new Date().getFullYear();
+    expect(result.events[0].date).toBe(`${today}-10-25`);
+  });
+});
+
 // 2026-10-09 — A.5 Grand-bugg: body-class med "blog"/"article"/"news"/"post"
 // hindrar Squarespace-eventlist-event-cards från att matchas.
 //

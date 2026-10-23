@@ -103,6 +103,52 @@ export function toUtcIso(input: string | undefined | null): string | null {
 }
 
 /**
+ * Tolka en datumsträng som ett UTC-instant — utan att gissa.
+ *
+ * - tz-medveten ("…Z", "…+02:00") → litas på, normaliseras till UTC
+ * - naiv datetime ("2026-11-15T18:00:00") → Europe/Stockholm. Tiden MÅSTE
+ *   delas av först: `toUtcIsoFromStockholm` hämtar tiden från en separat
+ *   parameter och landar annars på midnatt.
+ * - enbart datum ("2026-11-15") → Europe/Stockholm midnatt
+ *
+ * Används av B-gatens nätverks-extraherare, F-eventExtractions mappning och
+ * ingestion-schedulern — alla tre läser samma slags datumsträngar och måste
+ * tolka dem likadant.
+ */
+export function toUtcInstantFromString(value: string | undefined | null): string | null {
+  if (!value) return null;
+  const trimmed = value.trim();
+  if (!trimmed) return null;
+  if (hasTimeZone(trimmed)) {
+    const d = new Date(trimmed);
+    return isNaN(d.getTime()) ? null : d.toISOString();
+  }
+  if (trimmed.includes('T')) {
+    const [datePart, timePart = ''] = trimmed.split('T');
+    return toUtcIsoFromStockholm(datePart, timePart.slice(0, 5));
+  }
+  return toUtcIsoFromStockholm(trimmed);
+}
+
+/**
+ * Datumet (YYYY-MM-DD) som ett UTC-instant har i Europe/Stockholm.
+ *
+ * Viktigt: ett kvällsevenem i Stockholm kl. 18:00 är 16:00Z samma dag, men
+ * ett evenem kl. 00:30 är 23:30Z FÖREGÅENDE dag. `.split('T')[0]` på
+ * UTC-strängen ger då fel datum — här används zonen.
+ */
+export function toStockholmDate(utcIso: string | undefined | null): string | null {
+  if (!utcIso) return null;
+  const d = new Date(utcIso);
+  if (isNaN(d.getTime())) return null;
+  const zoned = toZonedTime(d, STOCKHOLM_TZ);
+  const y = zoned.getFullYear();
+  const m = String(zoned.getMonth() + 1).padStart(2, '0');
+  const day = String(zoned.getDate()).padStart(2, '0');
+  return `${y}-${m}-${day}`;
+}
+
+/**
  * Debug-hjälpare: returnerar vilken offset (i minuter) som gäller för ett
  * visst datum i Europe/Stockholm. Användbart för tester.
  */

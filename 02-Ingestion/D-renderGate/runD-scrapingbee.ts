@@ -26,7 +26,7 @@
 import * as dotenv from 'dotenv';
 import path from 'path';
 import { fileURLToPath } from 'url';
-import { readFileSync, writeFileSync, existsSync, mkdirSync, appendFileSync } from 'fs';
+import { readFileSync, writeFileSync, existsSync, mkdirSync, appendFileSync, unlinkSync } from 'fs';
 import * as cheerio from 'cheerio';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -421,6 +421,20 @@ async function processSource(entry: QueueEntry, maxPages: number, behavior: Rend
       renderedPages,
       creditsUsed,
     };
+  }
+
+  // 2026-10-23 — stale-artifact fix. writeExtractedEvents skriver bara vid
+  // success. En källa som en tidigare körning genererade events för (t.ex.
+  // kungliga-musikhogskolan: 35 rader med påhittade datum 2026-00-20) men
+  // som nu ger 0 behåller då sin gamla fil — och importToEventPulse läser den
+  // som om den vore färsk. Raderas när renderingen faktiskt kördes och
+  // extraktionen gav 0 events.
+  if (unique.length === 0) {
+    const staleFile = path.join(EXTRACTED_DIR, `${entry.sourceId}.jsonl`);
+    if (existsSync(staleFile)) {
+      unlinkSync(staleFile);
+      log(`[D-Extract] Raderade stale extracted-fil (0 events denna körning): ${staleFile}`);
+    }
   }
 
   return {

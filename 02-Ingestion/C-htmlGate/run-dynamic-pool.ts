@@ -1209,6 +1209,25 @@ async function runSourceOnPool(
       }
     }
 
+    // ── Rensa stale extracted-fil (2026-10-23) ───────────────────────────────
+    // C-gaten skriver extracted-filen bara NÄR den hittade events. En källa som
+    // en tidigare körning genererade events för men som nu ger 0 behåller då
+    // sin gamla fil — och importToEventPulse läser den som om den vore färsk.
+    // Verifierat 2026-10-23: nordiska-museet gav 28 påhittade rader
+    // (2026-00-17) i en tidigare körning; efter kolon-fixen ger teasern 0
+    // events, men filen låg kvar med de 28 falska raderna.
+    //
+    // Raderas bara när sidan faktiskt var fetchbar och extraktionen kördes på
+    // riktigt innehåll — annars skulle ett tillfälligt nätverksfel rensa
+    // giltiga data.
+    if (result.c1.fetchable && extHtml && result.extract.eventsFound === 0) {
+      const staleFile = join(C_EXTRACTED_DIR, `${source.sourceId}.jsonl`);
+      if (existsSync(staleFile)) {
+        unlinkSync(staleFile);
+        console.log(`[C-Extract] Raderade stale extracted-fil (0 events denna körning): ${staleFile}`);
+      }
+    }
+
     // ── DETERMINE OUTCOME ─────────────────────────────────────────────────────
     determineOutcome(result, source.url, roundNum, c0FoundWinner);
     result.trace = buildTrace(result, source.url, roundNum);

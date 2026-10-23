@@ -200,28 +200,116 @@ function toIsoEndTime(endDate?: string, endTime?: string, startDate?: string, st
   return null;
 }
 
-function readExtractedEvents(sourceId: string): ExtractedEvent[] {
-  // Primär sökväg: top-level (legacy A/B/C utan subdir)
-  const topLevel = path.join(EXTRACTED_DIR, `${sourceId}.jsonl`);
-  if (fs.existsSync(topLevel)) {
-    return fs.readFileSync(topLevel, 'utf-8')
-      .split('\n').filter(l => l.trim())
-      .map(l => JSON.parse(l) as ExtractedEvent)
-      .filter(e => e !== null);
-  }
-  // Fallback: gate-subdirs (A/, B/, C/, D/) — D-renderGate skriver hit.
-  // Returnerar första match — samma sourceId ska bara finnas i en gate.
-  const gateDirs = ['D', 'C', 'B', 'A'];
-  for (const gate of gateDirs) {
-    const subFile = path.join(EXTRACTED_DIR, gate, `${sourceId}.jsonl`);
-    if (fs.existsSync(subFile)) {
-      return fs.readFileSync(subFile, 'utf-8')
-        .split('\n').filter(l => l.trim())
-        .map(l => JSON.parse(l) as ExtractedEvent)
-        .filter(e => e !== null);
+/**
+ * Identitet för en extraherad rad — används för att slå ihop samma event
+ * från olika gater.
+ *
+ * 2026-10-23 — första versionen nycklade på (titel, datum-dag). Det kollapsade
+ * ÄKTA men olika event: berwaldhallen har t.ex. "Bowie in Berlin" 18:00 och
+ * 20:00 samma dag (206 rader → 104 unika), och gota-lejon har flera show
+ * samma dag med olika biljetter. Live-körningen tappade 22 berwaldhallen-
+ * events på det sättet.
+ *
+ * Nu är identiteten en SAMMANSATT nyckel: alla identitetsfält som finns med
+ * (source_id/id, titel, tidsstämpel, url). Två rader slås ihop bara om de är
+ * identiska i ALLA de fält de båda har — så en rad som saknar ett fält
+ * slås aldrig ihop med en rad som har det. Det är den säkra riktningen:
+ * dubbletter slås ihop, men olika event försvinner aldrig.
+ * Kvarvarande dubbletter hanteras av BullMQ (jobId) och normalizern (dedup).
+ */
+export function eventIdentity(ev: ExtractedEvent): string {
+  const rawTitle = ev.title;
+  const title = (typeof rawTitle === 'string' ? rawTitle : rawTitle?.rendered ?? '')
+    .trim()
+    .toLowerCase();
+  const sid = String(ev.source_id ?? ev.id ?? '').trim();
+  const stamp = eventTimestamp(ev);
+  const url = String(ev.url ?? ev.ticket_url ?? ev.ticketUrl ?? '').trim();
+
+  const parts = [sid, title, stamp, url].filter(p => p.length > 0);
+  if (parts.length === 0) return `r:${JSON.stringify(ev).slice(0, 200)}`;
+  return parts.join('|');
+}
+
+/**
+ * Full tidsstämpel för en rad. Fältordningen varierar mellan gater:
+ * A/B/C använder `date` + `time` (separat), D/B använder `startTime`/`start_time`
+ * (ISO med klockslag). Klockslaget MÅSTE vara med — utan det slås flera
+ * föreställningar samma dag ihop.
+ */
+function eventTimestamp(ev: ExtractedEvent): string {
+  const iso = ev.start_time ?? ev.startTime;
+  if (typeof iso === 'string' && iso.trim()) return iso.trim();
+  const date = String(ev.date ?? '').trim();
+  if (!date) return '';
+  const time = String(ev.time ?? '').trim();
+  return time ? `${date}T${time}` : date;
+}
+
+/**
+ * Slå ihop artefakter för en källa.
+ *
+ * 2026-10-23 — Bug: readExtractedEvents returnerade FÖRSTA träffen (top-level
+ * före gate-subdirs) och ignorerade resten. En källa som passerat flera gater
+ * har artefakter på flera ställen — t.ex. lokalhelhet-calendar: 23 rader
+ * top-level (A-gate, 2026-08-21) + 224 rader i C/ (2026-09-09). Importern
+ * läste top-level-filen och såg aldrig C-gatens 224 rader → 76 framtida
+ * events nådde aldrig databasen trots att de var extraherade.
+ *
+ * Ny regel: alla artefakter läses, rader med samma identitet slås ihop, och
+ * den NYARE artefaktens rad vinner — en senare gatkörning är en förfining av
+ * en tidigare. Artefakter behandlas i mtime-ordning (äldst först) så att
+ * "vinner" alltid betyder "senast skriven".
+ */
+export function mergeExtractedEvents(artifacts: ExtractedEvent[][]): ExtractedEvent[] {
+  const byIdentity = new Map<string, ExtractedEvent>();
+  const order: string[] = [];
+  for (const rows of artifacts) {
+    for (const ev of rows) {
+      if (!ev) continue;
+      const key = eventIdentity(ev);
+      if (!byIdentity.has(key)) order.push(key);
+      byIdentity.set(key, ev); // nyare artefakt vinner
     }
   }
-  return [];
+  return order.map(k => byIdentity.get(k)).filter((e): e is ExtractedEvent => e !== undefined);
+}
+
+/**
+ * Läs ALLA artefakter för en källa: top-level (A/B/C utan subdir) plus
+ * gate-subdirs (A/, B/, C/, D/) — och slå ihop dem.
+ *
+ * @param rootOverride Test-hook: låter tester peka på en temporär katalog.
+ */
+export function readExtractedEvents(sourceId: string, rootOverride?: string): ExtractedEvent[] {
+  const root = rootOverride ?? EXTRACTED_DIR;
+  const candidates: { file: string; mtimeMs: number }[] = [];
+
+  const topLevel = path.join(root, `${sourceId}.jsonl`);
+  if (fs.existsSync(topLevel)) {
+    candidates.push({ file: topLevel, mtimeMs: fs.statSync(topLevel).mtimeMs });
+  }
+  for (const gate of ['D', 'C', 'B', 'A']) {
+    const subFile = path.join(root, gate, `${sourceId}.jsonl`);
+    if (fs.existsSync(subFile)) {
+      candidates.push({ file: subFile, mtimeMs: fs.statSync(subFile).mtimeMs });
+    }
+  }
+  // Äldst först — så att "senaste raden vinner" i mergeExtractedEvents.
+  candidates.sort((a, b) => a.mtimeMs - b.mtimeMs);
+
+  const artifacts = candidates.map(({ file }) =>
+    fs.readFileSync(file, 'utf-8')
+      .split('\n')
+      .filter(l => l.trim())
+      .map(l => {
+        try { return JSON.parse(l) as ExtractedEvent; }
+        catch { return null; }
+      })
+      .filter((e): e is ExtractedEvent => e !== null),
+  );
+
+  return mergeExtractedEvents(artifacts);
 }
 
 /**

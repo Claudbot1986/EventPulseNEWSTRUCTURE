@@ -1228,11 +1228,17 @@ function extractHtmlHeuristics($: cheerio.CheerioAPI, source: string, baseUrl: s
     }
     const cardText = $card.text();
     // European short: dd/mm or dd-mm without year (common in calendar grids).
-    // 2026-10-09 — Hallsberg-bug: kräv att första siffran INTE föregås av
-    // siffra eller punkt (annars matchar `00-15` i `12.00-15.00`-tidsintervall
-    // som `2026-00-15`). Lookbehind `(?<![\d.])` tillåter bara start på
-    // word-boundary: `Event 25-10`, `Konsert 5/12`, men inte `12.00-15.00`.
-    const shortDateRx = /(?<![\d.])(\d{1,2})[/\-](\d{1,2})(?!\d)/;
+    //
+    // 2026-10-09 — Hallsberg-bug: `12.00-15.00` matchade som `00-15` →
+    // `2026-00-15`. Fix: lookbehind `(?<![\d.])`.
+    //
+    // 2026-10-23 — Kolon-bug: samma problem med KOLON istället för punkt.
+    // `10:00-17:00` matchade `00-17` → `2026-00-17`. Bevis på 3 orelaterade
+    // domäner (nordiskamuseet.se, kungligamusikhogskolan.se, fallan.nu).
+    // Fix: kolon blockeras BÅDE före första siffran (`:` i lookbehind) och
+    // efter andra siffran (`:` i trailing-guard). `Event 25-10` och `5/12`
+    // fungerar kvar — de föregås inte av kolon.
+    const shortDateRx = /(?<![\d.:])(\d{1,2})[/\-](\d{1,2})(?!\d|:)/;
     const shortMatch = cardText.match(shortDateRx);
     if (shortMatch) {
       const a = shortMatch[1];
