@@ -15,7 +15,7 @@ P3A-P3C discovery stages. Venue-graph expansion + RSS-prenumerationer + Google C
 
 ## How to get to it (user POV)
 
-Användaren ser P3A-P3C som "nya källor dyker upp i grafén". P3A = nya URL:ar från Google-sökning. P3B = nya venues i närliggande kommuner (Solna, Sundbyberg, Nacka). P3C = RSS-prenumerationer som matar events automatiskt.
+Användaren ser P3A-P3C som "nya källor dyker upp i grafén". P3A = nya URL:ar från sökning. P3B = kluster av Stockholmsvenues som ligger nära varandra — bara inom Stockholms box, inte i grannkommunerna. P3C = RSS-prenumerationer som matar events automatiskt.
 
 Det som avgör om en ny källa *räknas* är `city`. En kandidat utan stad promote:as
 korrekt men når aldrig A-gatet. Läs `city` som den kolumnen i steg 5 nedan.
@@ -65,6 +65,15 @@ sq "source_candidates?select=engine,city&created_at=gte.$(date -u -v-24H +%Y-%m-
               stockholm: [.[] | select(.city=="Stockholm")] | length})'
 #    → withCity 0 för en motor = den sätter inte city = den kandidaten
 #      promote:as men är osynlig för ingestion.
+#
+#    Undantag: venue_graph_geo KAN ha city = NULL och det är då korrekt.
+#    Ett kluster vars centroid ligger utanför Stockholms bbox har ingen
+#    stad — det ska inte heller få en. Läs därför alltid BOTH-siffrorna
+#    tillsammans: n=0 är problem, withCity<n är inte alltid problem.
+
+# 6. Fyll luckor retroaktivt (kräver att 5b visat gapet först)
+npx tsx 07-Discovery/src/sourceTesting/backfillCandidateCities.ts --dry-run
+npx tsx 07-Discovery/src/sourceTesting/backfillCandidateCities.ts
 ```
 
 Bevis: `chain-overview.log` (step-end events) + `source_candidates` uppdelat på
@@ -73,11 +82,46 @@ något blev användbart.
 
 ## Gotchas
 
-**P3A kräver `EXA_API_KEY` — Google-nycklarna är bara reserv.** `discoverySearch.ts:240` gate:ar Exa på `EXA_API_KEY`, Google-grejen på `GOOGLE_API_KEY` + `GOOGLE_CSE_ID`. `isPlaceholderKey()` (rad 121) avvisar `_FAKE_|_PLACEHOLDER_|REPLACE_ME|TODO|FIXME` — dina `.env`-värden för Google matchar `_PLACEHOLDER_`, så reserven hoppas över korrekt. Båda motorerna nollställda → `fatal` (rad 375) → `exit=1`.
+**P3A kräver `EXA_API_KEY` — Google-nycklarna är bara reserv.** `discoverySearch.ts:295` gate:ar Exa på `EXA_API_KEY`, Google-grejen på `GOOGLE_API_KEY` + `GOOGLE_CSE_ID`. `isPlaceholderKey()` (rad 148) avvisar `_FAKE_|_PLACEHOLDER_|REPLACE_ME|TODO|FIXME` — dina `.env`-värden för Google matchar `_PLACEHOLDER_`, så reserven hoppas över korrekt. Båda motorerna nollställda → `fatal` (rad 435) → `exit=1`.
 
 **P3A-körningen kan `exit=1` ge medan felet ligger i cron, inte i discoverySearch.** 2026-10-21 gav P3A `exit=1` med `exaAvailable: false` trots att nyckeln finns i `.env` — orsaken var att launchd-plisten saknade `set -a`, så `. ./.env` lade nycklarna i shellen men inte i child-processens miljö. **Verifiera alltid att `EXA_API_KEY` är nåbar av barnprocessen**, inte bara att den ligger i `.env`.
 
-**P3A Exa först** — `discoverySearch.ts:269` skippar Google helt om `exaUrls.size >= minExa` OCH färre än halva queryerna felade. `--min-exa=1` (default) är aggressivt lågt.
+**P3A Exa först** — `discoverySearch.ts:329-330` skippar Google helt om `exaUrls.size >= minExa` OCH färre än halva queryerna felade. `--min-exa=1` (default) är aggressivt lågt.
+
+**Båda motorerna delar EN frågelista.** `googleCustomSearch.ts:35` importerar
+`DISCOVERY_QUERIES` och `cityForDiscoveryQuery` från `discoverySearch.js` — det
+finns ingen lokal kopia i Google-filen. Kontrollera därför `discoverySearch.ts`
+när du vill veta vad P3A söker; du får inte samma svar genom att läsa
+Google-filen.
+
+**Frågelistan är 13 frågor, och `DISCOVERY_QUERY_CITY` har exakt samma 13.**
+Rad 92–106 respektive 114–128, i samma ordning. Verifiera med:
+```bash
+node -e '
+const s = require("fs").readFileSync("07-Discovery/src/searchEngines/discoverySearch.ts", "utf8");
+// Listan: värden. Objektet: NYCKLAR — måste matcha "x":, inte bara "x",
+// annars fångas även stadsvärdena och du får 13 mot 26 i stället för 13 mot 13.
+const list = (re) => [...s.match(re)[1].matchAll(/'"'"'([^'"'"']+)'"'"'/g)].map(m => m[1]);
+const keys = (re) => [...s.match(re)[1].matchAll(/'"'"'([^'"'"']+)'"'"':/g)].map(m => m[1]);
+const q = list(/DISCOVERY_QUERIES[^=]*=\s*\[([\s\S]*?)\];/);
+const c = keys(/DISCOVERY_QUERY_CITY[^=]*=\s*\{([\s\S]*?)\};/);
+console.log(q.length, c.length,
+  "saknar stad:", q.filter(x => !c.includes(x)),
+  "stad utan fråga:", c.filter(x => !q.includes(x)));
+'
+#    → 13 13 saknar stad: [] stad utan fråga: []
+```
+Tio av dem söker Stockholm, tre söker Göteborg/Malmö/Uppsala. Att listan
+innehåller icke-Stockholms-frågor är avsiktligt — kandidaten bär staden den
+faktiskt söktes i.
+
+**P3B-venue-graph-geo är Stockholms-box, inte "närliggande kommuner".**
+`CITY_BOUNDS` (rad 76-80) definierar bara `Stockholm`, och filtren är ett
+hårt lat/lng-fält (rad 226-229). `--city` med någon annan stad ger
+`firstError: unknown city "…"` (rad 213-217) och avslutar med `exit=1`
+(rad 337). Utöka då `CITY_BOUNDS` först. Verifierat 2026-10-23:
+`--city Kiruna --limit 1 --dry-run` → `exit=1`, `topClusters: []`;
+`--city Stockholm --limit 1 --dry-run` → `exit=0`, ett kluster.
 
 **P3B-venue-graph-geo: `--limit 5` i smoke** annars `--limit 50`. Antal venues expanderade varierar kraftigt mellan körningar beroende på venue graph-tillstånd.
 
@@ -113,11 +157,29 @@ inte är en nyckel i `DISCOVERY_QUERY_CITY`. Därför kan
 de promote:as utan stad och hamnar utanför Stockholms pool. Säkert, men de
 matar inte appen.
 
-**P3C skriver `city: f.city ?? null` — RSS-flöden bär oftast ingen stad.**
-Mätt 2026-10-23: senaste 24 h gav 1 `rss_discovery`-kandidat med
-`withCity: 0`. Det är korrekt beteende, inte en bugg — men det betyder att
-RSS-kandidater nästan aldrig når A-gatet av sig själva. Om RSS-flöden ska
-mata appen måste staden sättas i feed-källan, inte härledas.
+**P3C skriver `city: f.city ?? null` — RSS-radens stad kommer från
+feed-källan, inte från någon fråga.** En `rss_discovery`-kandidat får stad bara
+om `DiscoveredFeed.city` satt var. Mätt 2026-10-23: senaste dygnet gav 1
+kandidat med `withCity: 0` — korrekt, den feeden bar ingen stad.
+
+Men RSS-kandidater har en väg att få stad i efterhand:
+`backfillCandidateCities.ts` härleder `rss_discovery` ur **filen på disk**
+(`source_query` har formen `rss:<sourceId>`, sedan läses `sources/<id>.jsonl`
+och dess `city`-fält — rad 76-80). Därför finns 36 Stockholmsrader bland
+RSS-kandidater trots att de senaste feed-lästa inte har det. Kör backfillen
+för att se hur många RSS-rader som faktiskt är användbara; just nu svarar den
+`toUpdate: 0`, alltså redan allt härlett.
+
+**`backfillCandidateCities.ts` ligger i `sourceTesting/` och SKRIVER till
+`source_candidates`.** Den kör `.update({city})` (rad 135) och avslutar med
+`sync_source_candidate_queue_city()` (rad 139). Så det är fel att tänka att
+`sourceTesting/` bara är testkod. Men den skriver **inte** till `runtime/`-filerna
+— en `sources/*.jsonl` som redan promote:ats utan stad förblir osynlig tills den
+promote:as om. Backfillen kan inte reparera en redan skriven fil.
+
+Den räcker inte heller för Exa-råden (ovan) och den ska **inte** ge stad till
+de 41 `venue_graph_geo`-raderna utanför Stockholm — de har `NULL` av korrekta
+skäl. Kör `--dry-run` först och läs `toUpdate` innan du skriver.
 
 **En stad i kandidattabellen betyder inte Stockholm.** `DISCOVERY_QUERY_CITY`
 innehåller Göteborg, Malmö och Uppsala — de är korrekta värden (frågorna söker
