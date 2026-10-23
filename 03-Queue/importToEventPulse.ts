@@ -55,6 +55,72 @@ interface RawEventInput {
   raw_payload: Record<string, unknown>;
 }
 
+/**
+ * Minimalt gränssnitt för att kolla ett jobbs tillstånd — gör att logiken kan
+ * testas utan Redis.
+ */
+interface JobLookup {
+  getJob(jobId: string): Promise<{
+    getState(): Promise<string>;
+    remove(): Promise<void>;
+  } | undefined>;
+}
+
+/**
+ * BullMQ dedupear på jobId: `add` med ett jobId som redan existerar är en
+ * TYST no-op — även om jobbet ligger i KLART eller MISLYCKAT läge.
+ *
+ * 2026-10-23 — med `removeOnComplete: 100` (queue.ts) ligger de 100 senast
+ * klara jobben kvar i Redis. De blockerar då nattens re-import av exakt de
+ * event som importerades sist — en rättad rad (t.ex. venue '[object Object]'
+ * → rätt platsnamn) når aldrig databasen, utan att något säger ifrån.
+ * Mätt på riktiga körningen: 82 av 1463 framtida events kolliderade.
+ *
+ * Lösningen är att ta bort jobbet NÄR det är i ett terminalt läge (klart
+ * eller mislyckat) och sedan lägga in det igen. Väntande och aktiva jobb
+ * lämnas orörda — där är dedupe önskvärt (samma rad ska inte köas två
+ * gånger samtidigt).
+ */
+export async function releaseTerminalJob(
+  q: JobLookup,
+  jobId: string,
+): Promise<'removed' | 'kept' | 'absent'> {
+  const existing = await q.getJob(jobId);
+  if (!existing) return 'absent';
+  const state = await existing.getState();
+  if (state === 'completed' || state === 'failed') {
+    await existing.remove();
+    return 'removed';
+  }
+  return 'kept';
+}
+
+/**
+ * BullMQ-jobId för en rad.
+ *
+ * 2026-10-23 — jobId byggdes på (source, source_id ?? titel). BullMQ
+ * dedupear på jobId, så två föreställningar med SAMMA titel men olika
+ * klockslag kollapsade till en enda rad: "Sagolek – Den lille prinsen"
+ * 10:00 och 11:30 samma dag. Mätt på riktiga körningen: 158 av 1463
+ * framtida events försvann tyst — de fanns i filen men kom aldrig till
+ * databasen.
+ *
+ * Nyckeln speglar nu NORMALIZERNS dedup-nyckel (normalizer.ts:437-439):
+ *   med source_id → (source, source_id)
+ *   utan          → (source, titel, start_time)
+ * Det är invarianten som ska hålla: jobId-granulariteten får aldrig vara
+ * FINARE än dedup-granulariteten — då kan BullMQ kasta bort en rad som
+ * normalizern skulle ha behållit. Finare är OK: normalizern slår ihop dem
+ * ändå, och det är den som äger dedup-regeln.
+ *
+ * ':' byts ut — BullMQ avvisar jobbId som innehåller kolon.
+ */
+export function buildJobId(raw: RawEventInput): string {
+  const sanitize = (s: string): string => s.replace(/[^a-zA-Z0-9-_]/g, '_');
+  if (raw.source_id) return `${raw.source}--${sanitize(raw.source_id)}`;
+  return `${raw.source}--${sanitize(raw.title)}--${sanitize(raw.start_time ?? '')}`;
+}
+
 async function enqueueRawEvent(raw: RawEventInput): Promise<void> {
   // Reuse the canonical 'raw_events' queue instance from queue.js — it has the
   // same name/prefix/jobOptions this local duplicate built. The old code
@@ -63,8 +129,8 @@ async function enqueueRawEvent(raw: RawEventInput): Promise<void> {
   // queue.ts). One-shot CLI: no per-add close needed, process exit cleans up.
   const { rawEventsQueue: q } = await import('./queue.js');
 
-  const safeTitle = (raw.source_id ?? raw.title).replace(/[^a-zA-Z0-9-_]/g, '_');
-  const jobId = `${raw.source}--${safeTitle}`;
+  const jobId = buildJobId(raw);
+  await releaseTerminalJob(q, jobId);
   await q.add(jobId, raw, { jobId });
 }
 

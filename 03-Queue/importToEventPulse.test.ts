@@ -3,7 +3,7 @@ import { mkdtempSync, mkdirSync, writeFileSync } from 'fs';
 import { tmpdir } from 'os';
 import path from 'path';
 
-import { toRawEvent, readExtractedEvents, mergeExtractedEvents, eventIdentity } from './importToEventPulse';
+import { toRawEvent, readExtractedEvents, mergeExtractedEvents, eventIdentity, releaseTerminalJob, buildJobId } from './importToEventPulse';
 
 describe('toRawEvent', () => {
   it('maps camelCase extracted event link and image aliases into RawEventInput', () => {
@@ -198,5 +198,103 @@ describe('mergeExtractedEvents', () => {
 
     expect(merged).toHaveLength(3);
     expect(merged.map(e => e.title).sort()).toEqual(['A', 'B', 'C']);
+  });
+});
+
+describe('releaseTerminalJob — jobId-dedupe får inte blockera re-import', () => {
+  // Regression 2026-10-23: BullMQ's `add` med ett jobId som redan finns är
+  // en tyst no-op — även i KLART läge. Med `removeOnComplete: 100` ligger de
+  // 100 senast klara jobben kvar, så nattens re-import av exakt de event
+  // som importerades sist blockerades. Mätt: 82 av 1463 framtida events
+  // kolliderade → de rättade raderna nådde aldrig databasen.
+
+  function fakeQueue(state: string | null) {
+    const removed: string[] = [];
+    const q = {
+      getJob: async (jobId: string) =>
+        state === null
+          ? undefined
+          : { getState: async () => state, remove: async () => { removed.push(jobId); } },
+    };
+    return { q, removed };
+  }
+
+  it('tar bort ett KLART jobb så att samma rad kan importeras om', async () => {
+    const { q, removed } = fakeQueue('completed');
+    expect(await releaseTerminalJob(q, 'källa--Event_1')).toBe('removed');
+    expect(removed).toEqual(['källa--Event_1']);
+  });
+
+  it('tar bort ett MISLYCKAT jobb så att ett trasigt event kan försökas igen', async () => {
+    const { q, removed } = fakeQueue('failed');
+    expect(await releaseTerminalJob(q, 'källa--Event_1')).toBe('removed');
+    expect(removed).toHaveLength(1);
+  });
+
+  it('lämnar ett VÄNTANDE jobb orört — där är dedupe önskvärt', async () => {
+    const { q, removed } = fakeQueue('waiting');
+    expect(await releaseTerminalJob(q, 'källa--Event_1')).toBe('kept');
+    expect(removed).toHaveLength(0);
+  });
+
+  it('lämnar ett AKTIVT jobb orört', async () => {
+    const { q, removed } = fakeQueue('active');
+    expect(await releaseTerminalJob(q, 'källa--Event_1')).toBe('kept');
+    expect(removed).toHaveLength(0);
+  });
+
+  it('gör ingenting när jobbet inte finns', async () => {
+    const { q, removed } = fakeQueue(null);
+    expect(await releaseTerminalJob(q, 'källa--Event_1')).toBe('absent');
+    expect(removed).toHaveLength(0);
+  });
+});
+
+describe('buildJobId — jobId får inte vara finare än normalizerns dedup', () => {
+  // Regression 2026-10-23: jobId byggdes på (source, source_id ?? titel).
+  // BullMQ dedupear på jobId, så två föreställningar med Samma titel men
+  // olika klockslag kollapsade till en — "Sagolek" 10:00 och 11:30 samma
+  // dag. Mätt på riktiga körningen: 158 av 1463 framtida events försvann.
+  //
+  // Invariant: jobId-granulariteten ska vara IDENTISK med normalizerns
+  // dedup-nyckel (normalizer.ts:437-439):
+  //   med source_id → buildDedupHash(source, source_id)
+  //   utan          → buildDedupHash(source, `${title}::${start_time}`)
+  // Annars kan BullMQ kasta bort en rad som normalizern skulle ha behållit.
+
+  it('två föreställningar med samma titel men olika klockslag får olika jobId', () => {
+    const a = toRawEvent('konserthuset', { title: 'Sagolek', date: '2026-10-25', time: '10:00' });
+    const b = toRawEvent('konserthuset', { title: 'Sagolek', date: '2026-10-25', time: '11:30' });
+    expect(buildJobId(a)).not.toBe(buildJobId(b));
+  });
+
+  it('två föreställningar med samma titel men olika datum får olika jobId', () => {
+    const a = toRawEvent('konserthuset', { title: 'Sagolek', date: '2026-10-25' });
+    const b = toRawEvent('konserthuset', { title: 'Sagolek', date: '2026-10-26' });
+    expect(buildJobId(a)).not.toBe(buildJobId(b));
+  });
+
+  it('samma rad (samma källa, titel och klockslag) får samma jobId — dedupe ska fungera', () => {
+    const a = toRawEvent('konserthuset', { title: 'Sagolek', date: '2026-10-25', time: '10:00' });
+    const b = toRawEvent('konserthuset', { title: 'Sagolek', date: '2026-10-25', time: '10:00' });
+    expect(buildJobId(a)).toBe(buildJobId(b));
+  });
+
+  it('rad med source_id nycklas på source_id (samma som normalizerns dedup_hash)', () => {
+    const raw = toRawEvent('konserthuset', {
+      title: 'Sagolek', date: '2026-10-25', time: '10:00', source_id: 'abc-123',
+    });
+    expect(buildJobId(raw)).toBe('konserthuset--abc-123');
+  });
+
+  it('två källor med samma titel får olika jobId', () => {
+    const a = toRawEvent('källa-a', { title: 'Sagolek', date: '2026-10-25' });
+    const b = toRawEvent('källa-b', { title: 'Sagolek', date: '2026-10-25' });
+    expect(buildJobId(a)).not.toBe(buildJobId(b));
+  });
+
+  it('jobId innehåller aldrig ":" — BullMQ avvisar sådana jobbId', () => {
+    const raw = toRawEvent('konserthuset', { title: 'Sagolek – Den lille prinsen', date: '2026-10-25', time: '10:00' });
+    expect(buildJobId(raw)).not.toContain(':');
   });
 });

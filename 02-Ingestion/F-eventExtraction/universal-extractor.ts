@@ -196,6 +196,30 @@ function buildUrl(href: string | undefined, base: string): string {
 function norm(val: unknown): string {
   if (typeof val === 'string') return val.trim();
   if (val == null) return '';
+  // 2026-10-23 — JSON-LD/microdata ger ofta ett OBJEKT där vi väntar en
+  // sträng: organizer: { "@type": "Organization", "name": "Stockholm Live" },
+  // location/venue: { "@type": "Place", "name": "Oscarsteatern" },
+  // address: { "@type": "PostalAddress", "streetAddress": "…" }.
+  //
+  // String(obj) ger '[object Object]' — aldrig ett giltigt venue/organizer/
+  // adress. Mätt på de riktiga körningarna: 599 rader i 21 orelaterade
+  // källor bar '[object Object]' i venue/address/organizer/performers, och
+  // 250 av dem är framtida events som faktiskt landade i databasen.
+  //
+  // Objekts 'name' är källans EGEN text (vi hittar inte på något), så den
+  // används. Saknas 'name' → '' (fältet utelämnas) i stället för skräp.
+  //
+  // ARRAYER hanteras separat: microdata kan ge flera värden för samma
+  // itemprop ("<a itemprop=url>" två gånger). Arrayen ska JOINAS, inte
+  // behandlas som ett objekt — annars blir url'en tom och eventet förlorar
+  // sin länk.
+  if (Array.isArray(val)) {
+    return val.map((v) => norm(v)).filter((s) => s.length > 0).join(',');
+  }
+  if (typeof val === 'object') {
+    const name = (val as { name?: unknown }).name;
+    return typeof name === 'string' ? name.trim() : '';
+  }
   return String(val);
 }
 
@@ -270,7 +294,16 @@ function makeEvent(data: Record<string, unknown>, method: string, source: string
 
     if (!venue) venue = norm(data.venue || (typeof data.location === 'string' ? data.location : '') || data.place || data.locationName || data.venueName);
     if (!city) city = norm(data.city || data.town || data.municipality || data.addressLocality);
-    if (!address) address = norm(data.address || data.streetAddress || data.locationAddress);
+    // 2026-10-23 — JSON-LD:s address är ett OBJEKT (PostalAddress), inte en
+    // sträng. norm() ger nu '' för objekt utan 'name', och kedjan
+    // `data.address || data.streetAddress` blockerar då streetAddress — den
+    // riktiga gatanadressen skulle förloras. Läs den explicit i stället.
+    if (!address && data.address && typeof data.address === 'object') {
+      const a = data.address as Record<string, unknown>;
+      address = norm(a.streetAddress);
+      if (!city) city = norm(a.addressLocality || a.city);
+    }
+    if (!address) address = norm(data.streetAddress || data.locationAddress);
 
     let location = venue || city || address;
     if (city && venue && !venue.includes(city)) location = `${venue}, ${city}`;

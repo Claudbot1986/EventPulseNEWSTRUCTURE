@@ -170,24 +170,38 @@ function isLikelyAttractionAsVenue(name: string): boolean {
 }
 
 /**
- * Check if venue name is valid (not "undefined", not empty)
+ * Text som är användbart som fältvärde.
+ *
+ * 2026-10-23 — avvisar bl.a. "undefined"/"null"/"None" och stringifierade
+ * JS-objekt ("[object Object]"). De är artefakter, inte platsinformation.
+ * Skyddet sitter vid PERSISTERINGSGRÄNSEN, inte bara i extraktorn: gamla
+ * extraherade filer innehåller fortfarande artefakten, och varje gammal fil
+ * skulle annars skriva skräp tillbaka till databasen.
  */
-function isValidVenueName(name: string | null | undefined): boolean {
-  if (!name) return false;
-  if (typeof name !== 'string') return false; // 2026-10-23: adapter kan ha stoppat in ett objekt
-  const trimmed = name.trim();
+export function isUsableText(value: string | null | undefined): boolean {
+  if (!value) return false;
+  if (typeof value !== 'string') return false;
+  const trimmed = value.trim();
   if (!trimmed) return false;
-  // Reject literal "undefined" strings from Ticketmaster API
   if (trimmed === 'undefined' || trimmed === 'null' || trimmed === 'None') {
     return false;
   }
+  if (/^\[object .+\]$/.test(trimmed)) {
+    return false;
+  }
+  return true;
+}
+
+/**
+ * Check if venue name is valid (not "undefined", not empty)
+ */
+export function isValidVenueName(name: string | null | undefined): boolean {
+  if (!isUsableText(name)) return false;
+  const trimmed = name!.trim();
   // 2026-10-23 — Reject stringifierade JS-objekt ("[object Object]").
   // Mätt: venues-tabellen hade 156 events kopplade till en venue-rad som hette
   // "[object Object]" (adapter som lade ett objekt i venue_name). En venue-rad
   // med det namnet är inte ett ställe — den sprider bara skräp vidare.
-  if (/^\[object .+\]$/.test(trimmed)) {
-    return false;
-  }
   return true;
 }
 
@@ -362,7 +376,10 @@ async function resolveVenue(raw: RawEventInput): Promise<string | null> {
     .from('venues')
     .insert({
       name: normalizedName,
-      address: raw.venue_address?.trim() ?? '',
+      // 2026-10-23 — artefaktskydd: en venue-rad med address
+      // '[object Object]' sprider skräp vidare till varje event som matchar
+      // den raden. Mätt: 2 venue-rader bar artefakten.
+      address: isUsableText(raw.venue_address) ? raw.venue_address.trim() : '',
       lat: raw.lat ?? 59.3293, // Default: Stockholm city center
       lng: raw.lng ?? 18.0686,
       location: raw.lat && raw.lng
@@ -508,18 +525,34 @@ export async function processRawEvent(job: Job<RawEventInput>): Promise<void> {
     venueCountry = venueRow?.country ?? null;
     venueLat = venueRow?.lat ?? null;
     venueLng = venueRow?.lng ?? null;
-    venueFullName = venueRow?.name?.trim() || raw.venue_name?.trim() || undefined;
+    // 2026-10-23 — både venue-radens namn och källans eget platsnamn kan vara
+    // skräp. Mätt: 46 events (downtown-2, lulea-hf-2, globen-3) bar
+    // venue_full_name = '[object Object]' — de fick det via källans eget
+    // fält, eftersom extraktorn skrev venue: '[object Object]' (JSON-LD-objekt
+    // utan .name). isValidVenueName är samma guard som används för att välja
+    // venue-rad — här skyddar den denormaliserade kolumnen.
+    venueFullName = (isValidVenueName(venueRow?.name) ? venueRow!.name!.trim() : undefined)
+      || (isValidVenueName(raw.venue_name) ? raw.venue_name.trim() : undefined);
     // Adressen kommer från den kurade venue-raden när den har en. Saknar den
     // en (venue skapad från ett event utan adress) faller vi tillbaka på
     // eventets egen adress från källan — samma ordning som
     // backfill-venue-from-existing.mjs (venue först, källa sedan).
-    venueFullAddress = venueRow?.address?.trim() || raw.venue_address?.trim() || undefined;
-    venueFullCity = venueRow?.city?.trim() || undefined;
+    //
+    // 2026-10-23 — samma artefaktskydd som för namnet. Mätt: 116 events
+    // (halmstad-konserthus-2, downtown-2, lulea-hf-2, globen-3) hade
+    // venue_full_address = '[object Object]' — de kom från raw.venue_address
+    // i extraherade filer som skrevs FÖRE extraktor-fixen. Skyddet måste
+    // sitta vid persistensgränsen, annars skriver varje gammal fil skräp
+    // tillbaka.
+    venueFullAddress = (isUsableText(venueRow?.address) ? venueRow!.address!.trim() : undefined)
+      || (isUsableText(raw.venue_address) ? raw.venue_address.trim() : undefined);
+    venueFullCity = isUsableText(venueRow?.city) ? venueRow!.city!.trim() : undefined;
   } else {
     // Ingen venue-rad (t.ex. venues-inserten misslyckades) — eventets egen
-    // platsnamn är ändå bättre än tomt för appen.
-    venueFullName = raw.venue_name?.trim() || undefined;
-    venueFullAddress = raw.venue_address?.trim() || undefined;
+    // platsnamn är ändå bättre än tomt för appen. Men bara om det är ett
+    // giltigt namn: '[object Object]' är inte en plats.
+    venueFullName = isValidVenueName(raw.venue_name) ? raw.venue_name.trim() : undefined;
+    venueFullAddress = isUsableText(raw.venue_address) ? raw.venue_address.trim() : undefined;
   }
 
   // MusicBrainz + Last.fm authoritativ artist-uppslagning (2026-09-30).

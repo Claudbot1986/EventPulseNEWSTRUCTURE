@@ -1,6 +1,6 @@
 # Gates: ingestion + discovery six-fixes (2026-10-21)
 
-OWNS: scripts/ingestion-cron.ts, scripts/verify-fixes.mjs, 09-ScrapingSupervisor/runDaily.ts, 02-Ingestion/A-directAPI-networkGate/runA.ts, 02-Ingestion/C-htmlGate/run-dynamic-pool.ts, 02-Ingestion/tools/runRecorder.ts, 05-Supabase/migrations/20261021-*, 07-Discovery/src/sourceTesting/realToolRunner.ts
+OWNS: scripts/ingestion-cron.ts, scripts/verify-fixes.mjs, 09-ScrapingSupervisor/runDaily.ts, 02-Ingestion/A-directAPI-networkGate/runA.ts, 02-Ingestion/C-htmlGate/run-dynamic-pool.ts, 02-Ingestion/tools/runRecorder.ts, 05-Supabase/migrations/20261021-*, 07-Discovery/src/sourceTesting/realToolRunner.ts, 03-Queue/importToEventPulse.ts, 02-Ingestion/F-eventExtraction/universal-extractor.ts, 04-Normalizer/normalizer.ts, scripts/verify-extractor-object-fields.mjs, scripts/verify-import-pipeline.mjs
 
 Scope: bevis för var och en av de sex fixarna från planen "Fixa ingestion + discovery: sex bevisade fel" (2026-10-21). Verifieras mot riktiga filer, riktig DB och riktiga subprocesser — inga syntetiska räknare.
 
@@ -202,3 +202,62 @@ kopia och MÅSTE falla).
   CHECK: node scripts/verify-confetti-chain.mjs t6
   EXPECT: /t6: normalizer skriver venue_full_\* och raderna har plats/
   EVIDENCE: automatic-evidence=v1; definition-sha256=0498f891f333c2467b1dee1a99854b25a788a8325809ea8c81828d012b2dfbda; exit=0; EXPECT=matched; output-sha256=77e83ed5e7ac65bf61f055e97ed59e89bd8440c5a4ff51d2c0cb376f3144ccfe; output-bytes=180; shell=/bin/sh; cwd=/Users/claudgashi/EventPulse; path=29325ef63737/16 entries
+
+# Importkedjan: inga event får försvinna på vägen (2026-10-23)
+
+Scope: vägen extractedevents/ → BullMQ `raw_events` → worker → normalizer →
+Supabase `events`. Tre tysta förluster hittades på den vägen, alla mätta på
+riktiga körningar:
+
+  1. **jobId-granularitet.** jobId byggdes på (source, source_id ?? titel).
+     BullMQ dedupear på jobId, så "Sagolek – Den lille prinsen" 10:00 och
+     11:30 samma dag kollapsade till ett jobb. Mätt: 1463 framtida rader gav
+     1305 jobb — 158 rader försvann tyst.
+  2. **Terminalt jobb blockerar re-import.** `queue.add` med ett jobbId som
+     redan finns är en tyst no-op, även i KLART läge. Med
+     `removeOnComplete: 100` låg de 100 senast klara jobben kvar, så nattens
+     re-import av de event som importerades sist blockerades. Mätt: 82 av
+     1463.
+  3. **Objektfält i JSON-LD.** `organizer`/`location`/`address` är objekt i
+     schema.org, och `String(obj)` → '[object Object]'. Mätt: 599 rader i 21
+     orelaterade källor bar det, varav 250 var framtida events som landade i
+     databasen. Mönstret är General (21 domäner), så fixen sitter i den
+     generella normaliseringen — inte i någon källspecifik adapter.
+
+Grundinvarianten för jobId:t är: **granulariteten får aldrig vara finare än
+normalizerns dedup-nyckel** (source, source_id) annars (source, titel,
+start_time). Då kan BullMQ aldrig kasta bort en rad som normalizern hade
+behållit.
+
+- [x] I1: extraktorn läser JSON-LD-objektfält (venue/address/organizer/city)
+  CHECK: node scripts/verify-extractor-object-fields.mjs e1
+  EXPECT: /e1: extraktorn läser location\/organizer\/address som objekt pass/
+  EVIDENCE: automatic-evidence=v1; definition-sha256=8cdf7ad9d553cfbb210aaf98daf12d64f3d1eaa717318341999591ed74c82cf6; exit=0; EXPECT=matched; output-sha256=156feb35b7c31f36f17546e09ff535567a56898a4f03d985896343befb746fb5; output-bytes=65; shell=/bin/sh; cwd=/Users/claudgashi/EventPulse; path=29325ef63737/16 entries
+
+- [x] I2: gaten kan FAIL:a — negativ kontroll mot en extraktor UTAN fixen
+  CHECK: node scripts/verify-extractor-object-fields.mjs e2
+  EXPECT: /e2: negativ kontroll ger "\[object Object\]" utan fixen — gaten kan faila pass/
+  EVIDENCE: automatic-evidence=v1; definition-sha256=b2745e333d97eab1321e061bce379945e3c6c030ba0b24feb934b405a5100df5; exit=0; EXPECT=matched; output-sha256=f60464869cef46f3afb39405fdb5a35a00e8bde1fcd8e9375d184e73025702a7; output-bytes=79; shell=/bin/sh; cwd=/Users/claudgashi/EventPulse; path=29325ef63737/16 entries
+
+- [ ] I3: inga "[object Object]" kvar i venue_full_name/venue_full_address i databasen
+  CHECK: node scripts/verify-extractor-object-fields.mjs e3
+  EXPECT: /e3: inga "\[object Object\]" i venue_full_name\/venue_full_address i databasen pass/
+
+- [x] I4: importen tappar INGA rader på vägen till BullMQ
+  CHECK: node scripts/verify-import-pipeline.mjs p1
+  EXPECT: /p1: \d+ framtida rader → \d+ jobbId, ingen rad försvinner/
+  EVIDENCE: automatic-evidence=v1; definition-sha256=837dd1b01512806cd2fc81971064a758f40f52180b47661c4afc34c05e79c3f9; exit=0; EXPECT=matched; output-sha256=50f29bfc2d480e22d8c93c7f1366faa7e1a83452d8b433107a359981d750cf9d; output-bytes=121; shell=/bin/sh; cwd=/Users/claudgashi/EventPulse; path=29325ef63737/16 entries
+
+- [x] I5: ett terminalt jobb frigörs så att re-import inte blockeras
+  CHECK: node scripts/verify-import-pipeline.mjs p2
+  EXPECT: /p2: klart jobb frigörs och kan importeras om \(riktig Redis\) pass/
+  EVIDENCE: automatic-evidence=v1; definition-sha256=83dc2817e1484e1d33e602fcf7e8e7ef205fca5b917d9402775205c6de69494e; exit=0; EXPECT=matched; output-sha256=3bbe01ddc26dae44692e669b339f0a00c1951caad03819ca6ce7edbd6ef68a82; output-bytes=66; shell=/bin/sh; cwd=/Users/claudgashi/EventPulse; path=29325ef63737/16 entries
+
+- [ ] I6: alla extraherade framtida event finns i databasen
+  CHECK: node scripts/verify-import-pipeline.mjs p3
+  EXPECT: /p3: alla \d+ extraherade framtida event finns i databasen pass/
+
+- [x] I7: regressionstesterna för jobId-granularitet och artefaktskydd passerar
+  CHECK: npx vitest run 03-Queue/importToEventPulse.test.ts 04-Normalizer/venue-text-guards.test.ts 02-Ingestion/F-eventExtraction/universal-extractor-object-fields.test.ts
+  EXPECT: /Tests\s+\d+ passed \(\d+\)/
+  EVIDENCE: automatic-evidence=v1; definition-sha256=4aa59a9f5b516f37558ba95a35640bb32a457f438c6f4333cc46c5e72e0040da; exit=0; EXPECT=matched; output-sha256=33df84c56f8e2564e7dfbb92b4f98ce1882f64da0902c64584898bbf112faf6e; output-bytes=213; shell=/bin/sh; cwd=/Users/claudgashi/EventPulse; path=29325ef63737/16 entries
