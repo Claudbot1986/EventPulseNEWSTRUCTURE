@@ -39,8 +39,15 @@
 
 import { detectBotWall } from '../lib/botWallRule';
 
-/** Fel som betyder "sidan svarade, men den här vägen gav inget" → nästa spår. */
-const ROUTING_ERRORS: readonly string[] = ['no-jsonld-or-no-events'];
+/**
+ * Fel som betyder "sidan svarade, men den här vägen gav inget" → nästa spår.
+ *
+ * `rss-feed-route` är ett routing-beslut av samma slag: källans URL är en
+ * feed (preferredPath='rss'), inte en HTML-sida. JSON-LD finns inte i en
+ * feed, så A-gatens JSON-LD-försök misslyckas strukturellt. Källan ska
+ * vidare till B-gatens RSS-spår, inte räknas som fel.
+ */
+const ROUTING_ERRORS: readonly string[] = ['no-jsonld-or-no-events', 'rss-feed-route'];
 
 /**
  * Är utfallet en handoff (källan lever men ska prövas i nästa gate)?

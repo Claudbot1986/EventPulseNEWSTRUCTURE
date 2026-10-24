@@ -35,6 +35,7 @@ import { extractFromJsonLd } from '../F-eventExtraction/extractor';
 import { enqueueDAI, dequeueDAI, runDaiForQueue } from './daiHook';
 import { classifyRoutingHandoff } from './handoffRule';
 import { findAdapterForSource } from './adapters';
+import { isRssSource } from '../B-JSON-feedGate/rssPath';
 
 // ─── Queue File Paths ─────────────────────────────────────────────────────────
 
@@ -265,8 +266,17 @@ function getNextABatch(limit: number = 10): SourceWithOrigin[] {
   const apiAdapterSources = allSources.filter(s => isApiAdapterSource(s));
   const apiAdapterIds = new Set(apiAdapterSources.map(s => s.id));
 
+  // 2026-10-24 — RSS-källor. De har också en egen väg (B-gatens RSS-spår) och
+  // ska köras varje natt, precis som API-adapter-källor. Utan det fastnar de
+  // i 'fail' efter första försöket — A-gatens filter gäller bara 'never_run',
+  // så en 'fail'-statusad källa körs aldrig igen. Det var det som hände med
+  // kth-2: RSS-spåret gav 62 events 2026-09-05 men kördes aldrig om.
+  const rssSources = allSources.filter(s => isRssSource(s));
+  const rssIds = new Set(rssSources.map(s => s.id));
+
   const neverRunSources = allSources.filter(s => {
     if (apiAdapterIds.has(s.id)) return false; // API-spåret har företräde
+    if (rssIds.has(s.id)) return false; // RSS-spåret har företräde
     const status = getSourceStatus(s.id);
     return status.status === 'never_run';
   });
@@ -291,6 +301,13 @@ function getNextABatch(limit: number = 10): SourceWithOrigin[] {
 
   // Sedan: API-adapter-källor (verifierad egen väg, ska inte svältas)
   for (const source of apiAdapterSources) {
+    if (result.length >= limit) break;
+    if (preAIds.has(source.id)) continue; // redan körd från preA
+    result.push({ sourceId: source.id, source, queueOrigin: 'sources-main' });
+  }
+
+  // Sedan: RSS-källor (egen väg i B-gaten — ska inte svältas)
+  for (const source of rssSources) {
     if (result.length >= limit) break;
     if (preAIds.has(source.id)) continue; // redan körd från preA
     result.push({ sourceId: source.id, source, queueOrigin: 'sources-main' });
@@ -427,6 +444,24 @@ async function runAOnSource(item: SourceWithOrigin): Promise<AResult> {
   }
 
   console.log(`[A-runner] ${sourceId} (from ${queueOrigin}) — ${source.url}`);
+
+  // 2026-10-24 — RSS-spår. Källans URL är en feed, inte en HTML-sida. JSON-LD
+  // finns inte i en feed, så A-gatens JSON-LD-försök misslyckas strukturellt
+  // (kth-2: status fail → aldrig omkörd → RSS-spåret i B-gaten nåddes aldrig).
+  // Källa med preferredPath='rss' skickas därför vidare till B-gatens
+  // RSS-spår som en HANDOFF — inte som ett fel.
+  if (isRssSource(source)) {
+    return {
+      sourceId,
+      queueOrigin,
+      success: false,
+      eventsFound: 0,
+      pathUsed: 'jsonld',
+      error: 'rss-feed-route',
+      status: 'fail',
+      ingestionStage: 'A',
+    };
+  }
 
   // 2026-10-23 — API-adapter-spår. Källan har en verifierad adapter →
   // kör adaptern i stället för HTML-fetch. Saknas adapter faller vi

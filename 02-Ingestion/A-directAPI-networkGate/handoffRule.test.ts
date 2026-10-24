@@ -6,6 +6,18 @@ describe('A-gatens handoff-regel', () => {
     expect(classifyRoutingHandoff(false, 'no-jsonld-or-no-events')).toBe(true);
   });
 
+  it('behandlar "källan är en feed" som handoff — den ska till B:s RSS-spår', () => {
+    // 2026-10-24: kth-2 (preferredPath='rss') kördes i A-gaten som om den
+    // vore en HTML-sida. JSON-LD finns inte i en feed, så A-gaten misslyckades
+    // strukturellt — och efter fem försök auto-karantänades källan, trots att
+    // B-gatens RSS-spår ger 62 riktiga events från samma URL.
+    expect(classifyRoutingHandoff(false, 'rss-feed-route')).toBe(true);
+  });
+
+  it('NEGATIV KONTROLL — en feed som svarar 404 är ett transportfel, inte handoff', () => {
+    expect(classifyRoutingHandoff(false, 'Fetch failed: HTTP 404')).toBe(false);
+  });
+
   it('behandlar bot-vägg som handoff — sajten lever, plain HTTP vägras', () => {
     // Mätt 2026-10-24: momentsapp.no svarade 429 fem gånger i A-gaten och
     // blev auto-karantänad, samtidigt som D-gatens browser hämtade samma

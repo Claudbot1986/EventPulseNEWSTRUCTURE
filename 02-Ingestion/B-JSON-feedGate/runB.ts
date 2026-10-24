@@ -31,6 +31,7 @@ import { getSource, getSourceStatus, updateSourceStatus } from '../tools/sourceR
 import { isSkipped } from '../lib/quarantineGuard.js';
 import { evaluateNetworkGate, summarizeNetworkGateResult } from './A-networkGate';
 import { extractFromApi } from './networkEventExtractor';
+import { isRssSource, runRssPath } from './rssPath';
 import type { ParsedEvent } from '../F-eventExtraction/schema';
 import { inspectUrl } from './networkInspector';
 import { queueEvents } from '../tools/fetchTools';
@@ -222,6 +223,43 @@ async function runBOnSource(entry: PreBEntry): Promise<BResult> {
   }
 
   console.log(`[B-runner] ${sourceId} — ${source.url}`);
+
+  // ── RSS path ─────────────────────────────────────────────────────────────
+  // Källans URL är en feed (preferredPath='rss'), inte en HTML-sida. Då ska
+  // feeden läsas som feed — inte köras genom network gate, som letar efter
+  // JSON-LD i HTML och därför alltid misslyckas på en feed.
+  //
+  // 2026-10-24 — detta spår saknades i den seriella varianten (bara
+  // runB-parallel.ts hade det), vilket gjorde RSS-vägen död i cronen:
+  // KTH:s kalenderfeed ger 62 events via RSS men nådde aldrig hit.
+  if (isRssSource(source)) {
+    console.log(`         → RSS path (preferredPath=rss)`);
+    const rssResult = await runRssPath(sourceId, source.url);
+    if (!rssResult.ok) {
+      return {
+        sourceId,
+        success: false,
+        eventsFound: 0,
+        nextPath: 'html',
+        inspectorVerdict: rssResult.verdict,
+        error: rssResult.error,
+        status: 'fail',
+        ingestionStage: 'B',
+      };
+    }
+    console.log(
+      `         → wrote ${rssResult.eventsFound} events to extractedevents/ (${rssResult.verdict})`,
+    );
+    return {
+      sourceId,
+      success: true,
+      eventsFound: rssResult.eventsFound,
+      nextPath: 'network',
+      inspectorVerdict: rssResult.verdict,
+      status: 'success',
+      ingestionStage: 'completed',
+    };
+  }
 
   // Run Network Gate evaluation (breadth mode = phase 2)
   const gateResult = await evaluateNetworkGate(source.url, 'no-jsonld', 2);

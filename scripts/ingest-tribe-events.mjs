@@ -228,6 +228,11 @@ async function fetchOneSource(src, args) {
       }
     }
     console.log(`  queued: ${pageQueued}`);
+    // 2026-10-24 — persisted-räknaren var död: den deklarerades och skrevs
+    // ut men inkrementerades aldrig, så Tribe-raden lög ("persisted=0" trots
+    // att 17 rader köades). Det som faktiskt persisteras här är kön
+    // (raw_events) — workern normaliserar och skriver sedan raderna.
+    stats.persisted += pageQueued;
     page++;
   }
 

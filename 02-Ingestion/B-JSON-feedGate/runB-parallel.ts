@@ -39,7 +39,7 @@ dotenv.config({ path: path.resolve(process.cwd(), '.env'), override: true });
 import { getSource, updateSourceStatus } from '../tools/sourceRegistry';
 import { evaluateNetworkGate, summarizeNetworkGateResult } from './A-networkGate';
 import { extractFromApi } from './networkEventExtractor';
-import { extractFromRss } from './rssExtractor';
+import { isRssSource, runRssPath } from './rssPath';
 import { queueEvents } from '../tools/fetchTools';
 import { toRawEventInput } from '../F-eventExtraction';
 import type { RawEventInput } from '@eventpulse/shared';
@@ -185,50 +185,35 @@ async function runBOnSource(entry: PreBEntry): Promise<BResult> {
   // Sources with preferredPath === 'rss' expose a known RSS 2.0 / Atom feed
   // URL (typically `?rss=calendar` or similar). Skip the network gate — the
   // feed URL is already trusted — and extract events via rssExtractor.
-  if ((source as any).preferredPath === 'rss') {
+  //
+  // Logiken ligger i rssPath.ts så att den seriella varianten (runB.ts, den
+  // cronen kör) och den parallella (den här) inte kan glömmas åt varandra.
+  if (isRssSource(source)) {
     console.log(`         → RSS path (preferredPath=rss)`);
-    try {
-      const rssResult = await extractFromRss(source.url, sourceId);
-      if (rssResult.events.length === 0) {
-        return {
-          sourceId,
-          success: false,
-          eventsFound: 0,
-          nextPath: 'html',
-          inspectorVerdict: `rss:${rssResult.format} rawCount=${rssResult.rawCount} errors=${rssResult.parseErrors.length}`,
-          error: rssResult.parseErrors[0] ?? `RSS feed returned 0 events (format=${rssResult.format})`,
-          status: 'fail',
-          ingestionStage: 'B',
-        };
-      }
-
-      // Persist events to disk (extractedevents/)
-      const { mkdirSync, writeFileSync } = await import('fs');
-      mkdirSync(EXTRACTED_DIR, { recursive: true });
-      const lines = rssResult.events.map(e => JSON.stringify(e)).join('\n') + '\n';
-      writeFileSync(`${EXTRACTED_DIR}/${sourceId}.jsonl`, lines, 'utf-8');
-      console.log(`         → wrote ${rssResult.events.length} events to extractedevents/ (rss ${rssResult.format})`);
-
-      return {
-        sourceId,
-        success: true,
-        eventsFound: rssResult.events.length,
-        nextPath: 'network',
-        inspectorVerdict: `rss:${rssResult.format} rawCount=${rssResult.rawCount}`,
-        status: 'success',
-        ingestionStage: 'completed',
-      };
-    } catch (err: any) {
+    const rssResult = await runRssPath(sourceId, source.url);
+    if (!rssResult.ok) {
       return {
         sourceId,
         success: false,
         eventsFound: 0,
         nextPath: 'html',
-        error: `rss exception: ${err.message}`,
-        status: 'error',
+        inspectorVerdict: rssResult.verdict,
+        error: rssResult.error,
+        status: 'fail',
         ingestionStage: 'B',
       };
     }
+    console.log(`         → wrote ${rssResult.eventsFound} events to extractedevents/ (${rssResult.verdict})`);
+
+    return {
+      sourceId,
+      success: true,
+      eventsFound: rssResult.eventsFound,
+      nextPath: 'network',
+      inspectorVerdict: rssResult.verdict,
+      status: 'success',
+      ingestionStage: 'completed',
+    };
   }
 
   // Run Network Gate evaluation (breadth mode = phase 2)
