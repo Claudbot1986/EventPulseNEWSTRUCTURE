@@ -1036,3 +1036,38 @@ berwaldhallen titel-bitar 20 → 0. Övriga domäner: ingen försämring.
   CHECK: npx tsx scripts/verify-subtitle-titles.mjs --negative-control
   EXPECT: /sb-negativkontroll: före-fix-kopia FAIL:ar som väntat \(\d+ kontroller\) pass/
   EVIDENCE: automatic-evidence=v1; definition-sha256=fa2cfb3c7b2073587a10f142ee67c6fee38872fa51abc341b37e64ecede4f5b2; exit=0; EXPECT=matched; output-sha256=d5e8c8261677fcac081a9dfd8ab606877be9d1023f45d58159243f1d88d71531; output-bytes=304; shell=/bin/sh; cwd=/Users/claudgashi/EventPulse; path=29325ef63737/16 entries
+
+## Censusen ska skilja "fastnar" från "verifierat tom" (2026-10-25)
+
+Scope: `scripts/census-zero-sources.mjs`, `scripts/lib/sourceAudit.mjs` (ny),
+`scripts/lib/sourceAudit.test.ts` (ny),
+`scripts/verify-census-classification.mjs` (ny).
+
+Censusen listar aktiva källor med noll rader i databasen. Två helt olika
+saker hamnade i samma lista: källor som FASTNAT (borde ge events) och
+källor som är utredda och medvetet tomma (parken publicerar inget, lokalen
+har ingen eventyta, säsongen är slut). Operatören kunde inte se vilken
+kategori en rad tillhörde — listan var "3 nollrader" utan mer.
+
+En källa räknas som verifierat tom bara om metadata har ALLA tre fälten:
+`audit_status` (vad som gjordes), `audit_reason` (varför 0 är riktigt) och
+`audit_evidence` (mätningen som stöder det). Ett tomt fält räknas som
+saknat — annars kan en halvfärdig audit dölja en trasig källa.
+
+Utdata: `fastnar` och `verifierat tomma` i skilda hinkar, `--file` skriver
+bara fastnar-listan (med `--file-include-verified` för alla), och
+`--sources-dir` pekar om registret som läses så att negativa kontroller
+kan köras mot en kopia utan att röra produktion.
+
+Mätning 2026-10-25: 130 aktiva källor, 127 med rader, 3 nollrader —
+0 fastnar, 3 verifierat tomma.
+
+- [x] CC1: enhetstesterna för audit-klassificeringen passerar (9 tester, varav sex negativa kontroller)
+  CHECK: npx vitest run scripts/lib/sourceAudit.test.ts
+  EXPECT: /Tests\s+\d+ passed/
+  EVIDENCE: automatic-evidence=v1; definition-sha256=e7940929bdb770d7ed91966e22ed9071a9d9ba89da73cd5dbba9c215f0b53a01; exit=0; EXPECT=matched; output-sha256=5c333dc0ff34b4833b061bddad9a449b02fd4590096f4c21c5beb309ff39c549; output-bytes=207; shell=/bin/sh; cwd=/Users/claudgashi/EventPulse; path=29325ef63737/16 entries
+
+- [x] CC2: censusen skiljer fastnar från verifierat tomma — live mot databasen, plus negativ kontroll med auditen borttagen ur en kopia
+  CHECK: node scripts/verify-census-classification.mjs
+  EXPECT: /cc: censusen skiljer fastnar från verifierat tomma — fastnar=\d+ verifierat=\d+ nollrad=\d+ kontroller=\d+ pass/
+  EVIDENCE: automatic-evidence=v1; definition-sha256=a748b974737c044066388cb7f51fb9028b02f947a190bd2bda24f7cf94192bd5; exit=0; EXPECT=matched; output-sha256=b291ee80b6059cb2689fad74c48023fed2ad03bfd48cb8d3f8b6afa1768acb22; output-bytes=504; shell=/bin/sh; cwd=/Users/claudgashi/EventPulse; path=29325ef63737/16 entries

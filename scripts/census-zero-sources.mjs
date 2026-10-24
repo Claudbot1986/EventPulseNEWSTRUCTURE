@@ -3,13 +3,21 @@
  * census-zero-sources.mjs — vilka AKTIVA källor har noll rader i databasen?
  *
  * Syfte: hitta källor som fastnat. En källa som ger 0 events i Supabase
- * är antingen död (begravs), trasig (fixas) eller oskannad (körs om genom
- * C-gaten). Censusen är listan att jobba ifrån — inte en gissning.
+ * är antingen död (begravs), trasig (fixas), oskannad (körs om genom
+ * C-gaten) eller UTREDD OCH TOM (lådan har ingen eventyta — då är 0
+ * rader riktigt svar, inte fel).
+ *
+ * De två sista fallen får inte se likadana ut. En källa med
+ * `metadata.audit_status` + `audit_reason` är verifierad tom: auditen
+ * står i källfilen med bevis. En källa UTAN sådan audit står i
+ * "fastnar"-listan — det är den listan att jobba ifrån.
  *
  * Kör:
  *   node scripts/census-zero-sources.mjs            # skriv ut listan
  *   node scripts/census-zero-sources.mjs --json     # JSON till stdout
- *   node scripts/census-zero-sources.mjs --file <p> # skriv listan till fil
+ *   node scripts/census-zero-sources.mjs --file <p> # skriv FASTNAR-listan till fil
+ *   node scripts/census-zero-sources.mjs --file <p> --file-include-verified
+ *                                                    # skriv alla nollradskällor
  *
  *   --db-url=<u> --db-key=<k>   # tvinga en specifik DB-anslutning.
  *   Behövs för negativa kontroller: dotenv laddas med override:true, så
@@ -21,6 +29,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import dotenv from 'dotenv';
 import { createClient } from '@supabase/supabase-js';
+import { classifyZeroRowSource } from './lib/sourceAudit.mjs';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 // quiet: dotenv 17 skriver annars en banner på stdout — den skulle göra
@@ -31,12 +40,14 @@ const args = process.argv.slice(2);
 const asJson = args.includes('--json');
 const fileIdx = args.indexOf('--file');
 const outFile = fileIdx >= 0 ? args[fileIdx + 1] : null;
-
-// ---------------------------------------------------------------------------
-// 1. Aktiva källor ur registret
-// ---------------------------------------------------------------------------
-
-const sourcesDir = path.join(ROOT, 'sources');
+const sourcesDirIdx = args.indexOf('--sources-dir');
+// --sources-dir pekar om registret som läses. Det behövs för negativa
+// kontroller: en kopia av sources/ med auditen borttagen ur EN källa måste
+// kunna visas som "fastnar" — utan att röra produktionsfilen.
+const sourcesDir =
+  sourcesDirIdx >= 0 && args[sourcesDirIdx + 1]
+    ? path.resolve(ROOT, args[sourcesDirIdx + 1])
+    : path.join(ROOT, 'sources');
 const active = [];
 for (const file of fs.readdirSync(sourcesDir).sort()) {
   if (!file.endsWith('.jsonl')) continue;
@@ -48,7 +59,13 @@ for (const file of fs.readdirSync(sourcesDir).sort()) {
     continue;
   }
   if (!src?.url || !src?.id) continue;
-  active.push({ id: src.id, url: src.url, name: src.name ?? '', city: src.city ?? '' });
+  active.push({
+    id: src.id,
+    url: src.url,
+    name: src.name ?? '',
+    city: src.city ?? '',
+    metadata: src.metadata ?? {},
+  });
 }
 
 // ---------------------------------------------------------------------------
@@ -113,22 +130,70 @@ if (exactTotal !== totalRows) {
 // 3. Rapportera
 // ---------------------------------------------------------------------------
 
+/**
+ * Är källan UTREDD och medvetet tom?
+ *
+ * Logiken ligger i sourceAudit.mjs så att censusen och dess test delar
+ * samma sanning — annars kunde testet bevisa något annat än vad
+ * operatören ser.
+ */
 const zero = active
   .filter((s) => (counts.get(s.id) ?? 0) === 0)
-  .map((s) => ({ ...s, rows: 0 }));
+  .map((s) => {
+    const { state, audit } = classifyZeroRowSource(s);
+    return {
+      id: s.id,
+      url: s.url,
+      name: s.name,
+      city: s.city,
+      rows: 0,
+      state,
+      audit,
+    };
+  });
 
+const stuck = zero.filter((s) => s.state === 'fastnar');
+const verifiedEmpty = zero.filter((s) => s.state === 'verifierat-tom');
 const withRows = active.length - zero.length;
 
 if (outFile) {
-  fs.writeFileSync(outFile, zero.map((s) => s.id).join('\n') + '\n', 'utf8');
+  const list = args.includes('--file-include-verified') ? zero : stuck;
+  fs.writeFileSync(outFile, list.map((s) => s.id).join('\n') + '\n', 'utf8');
 }
 
 if (asJson) {
-  console.log(JSON.stringify({ total: active.length, withRows, zero, totalRowsInDb: totalRows }, null, 2));
+  console.log(
+    JSON.stringify(
+      {
+        total: active.length,
+        withRows,
+        zero,
+        zeroStuck: stuck.length,
+        zeroVerified: verifiedEmpty.length,
+        stuck: stuck.map((s) => s.id),
+        verifiedEmpty: verifiedEmpty.map((s) => s.id),
+        totalRowsInDb: totalRows,
+      },
+      null,
+      2,
+    ),
+  );
 } else {
   console.log(`Aktiva källor: ${active.length}`);
   console.log(`Med rader i databasen: ${withRows}`);
   console.log(`Noll rader: ${zero.length}`);
+  console.log(`  fastnar (kräver utredning): ${stuck.length}`);
+  console.log(`  verifierat tomma (utredd, ingen åtgärd): ${verifiedEmpty.length}`);
   console.log(`Rader i databasen totalt: ${totalRows} (självkontroll OK)\n`);
-  for (const s of zero) console.log(`  ${s.id.padEnd(42)} ${s.url}`);
+  if (stuck.length > 0) {
+    console.log('FASTNAR:');
+    for (const s of stuck) console.log(`  ${s.id.padEnd(42)} ${s.url}`);
+    console.log('');
+  }
+  if (verifiedEmpty.length > 0) {
+    console.log('VERIFIERAT TOMMA:');
+    for (const s of verifiedEmpty) {
+      console.log(`  ${s.id.padEnd(42)} ${s.audit.status}: ${s.audit.reason}`);
+    }
+  }
 }
