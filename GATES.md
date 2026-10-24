@@ -1,6 +1,6 @@
 # Gates: ingestion + discovery six-fixes (2026-10-21)
 
-OWNS: scripts/ingestion-cron.ts, scripts/verify-fixes.mjs, 09-ScrapingSupervisor/runDaily.ts, 02-Ingestion/A-directAPI-networkGate/runA.ts, 02-Ingestion/C-htmlGate/run-dynamic-pool.ts, 02-Ingestion/tools/runRecorder.ts, 05-Supabase/migrations/20261021-*, 07-Discovery/src/sourceTesting/realToolRunner.ts, 03-Queue/importToEventPulse.ts, 02-Ingestion/F-eventExtraction/universal-extractor.ts, 04-Normalizer/normalizer.ts, scripts/verify-extractor-object-fields.mjs, scripts/verify-import-pipeline.mjs
+OWNS: scripts/ingestion-cron.ts, scripts/verify-fixes.mjs, 09-ScrapingSupervisor/runDaily.ts, 02-Ingestion/A-directAPI-networkGate/runA.ts, 02-Ingestion/C-htmlGate/run-dynamic-pool.ts, 02-Ingestion/tools/runRecorder.ts, 05-Supabase/migrations/20261021-*, 07-Discovery/src/sourceTesting/realToolRunner.ts, 03-Queue/importToEventPulse.ts, 02-Ingestion/F-eventExtraction/universal-extractor.ts, 04-Normalizer/normalizer.ts, scripts/verify-extractor-object-fields.mjs, scripts/verify-import-pipeline.mjs, scripts/verify-date-ranges.ts, 02-Ingestion/F-eventExtraction/universal-extractor-date-range.test.ts
 
 Scope: bevis för var och en av de sex fixarna från planen "Fixa ingestion + discovery: sex bevisade fel" (2026-10-21). Verifieras mot riktiga filer, riktig DB och riktiga subprocesser — inga syntetiska räknare.
 
@@ -775,3 +775,108 @@ körvägen faller SM2, med spegeln utan källans URL faller SM2 igen.
   CHECK: npx vitest run scripts/lib/
   EXPECT: /Tests\s+20 passed \(20\)/
   EVIDENCE: automatic-evidence=v1; definition-sha256=f00b3804a6955057627fc05679502ae522131ae503197eb35e2b361642dd329c; exit=0; EXPECT=matched; output-sha256=fffac15e34622fa59345ad3d8c1d3f22dc0481501a83a8dc7a58ed73e6afe17f; output-bytes=211; shell=/bin/sh; cwd=/Users/claudgashi/EventPulse; path=29325ef63737/16 entries
+
+# Datumintervall i extraktorn: det FÖRSTA intervallet vinner (2026-10-24)
+
+Scope: `02-Ingestion/F-eventExtraction/universal-extractor.ts` (och dess
+tester), `scripts/verify-date-ranges.ts`.
+
+Ett svenskt datumintervall ("12-14 januari 2027", "3 oktober 2026 – 28
+februari 2027") är ETT event som pågår start → slut. Fixen som infördes
+2026-10-24 ändrade två saker:
+
+1. **Det första intervallet i texten vinner** — oavsett om det är ett vanligt
+   intervall eller ett korsmånadsintervall. Innan fixen tog C1:s
+   prioritetsordning (form → ordning), så att korsmånadsintervallet
+   slogs över ett tidigare, enklare intervall. Följd: djurgarden.se
+   ("den 24–25 oktober och 31 oktober–1 november") fick starten 31 oktober
+   i stället för 24 oktober.
+2. **Ett intervall med utskrivet år vinner alltid** — även om ett årslöst
+   intervall står först i texten. Bevis: dansenshus.se ("7-8 maj 2026" +
+   ett avklippt "5-13 maj…" i samma kort).
+
+Regel 1 är **General** enligt Generalization Protection Rule: att en text
+nämner två intervall i samma mening är generell svensk formulering, inte
+ett sitedomänsdrag. Korpuset: 4 av 128 kort med intervall har fler än ett,
+varav 3 upprepar samma intervall.
+
+**Varför en egen oracle.** En gate som bara kör produktionens egna tester
+bevisar att koden gör vad den gjorde i går. `scripts/verify-date-ranges.ts`
+bygger en oracle som är skriven oberoende av extraktorn — egen regex, egen
+årshärledning, egen valregel — och jämför den med extraktorns verkliga
+utdata på riktig korpustext (155 rader) och på åtta handskrivna fixturer.
+
+**Varför en negativ kontroll (DR2).** Utan den bevisar DR1 ingenting: en
+oracle som alltid håller med om allt är värdelös. DR2 muterar en KOPIA av
+extraktorn (temp-fil i samma katalog — originalet rörs aldrig) på tre
+sätt, en regel i tag, och kräver att varje mutation upptäcks av oracle.
+Mutationerna: "sista intervallet vinner", "lookbehind-skyddet bort" och
+"årslöst vinner före med år".
+
+- [ ] DR1: extraktorn ligger inom oracle-fönstret på hela korpusen och ger de handskrivna värdena på fixtursetet
+  CHECK: node scripts/verify-fixes.mjs dr1
+  EXPECT: /dr1: fixtrar=\d+ rader=\d+ avvikelser=0 pass/
+  EVIDENCE: pending
+
+- [ ] DR2: negativ kontroll — tre muterade extraktorkopior upptäcks av oracle (utan denna gate bevisar DR1 ingenting)
+  CHECK: node scripts/verify-fixes.mjs dr2
+  EXPECT: /dr2: negativ kontroll .* fixtrar=\d+ pass/
+  EVIDENCE: pending
+
+- [ ] DR3: live C-körning — de berörda källorna producerar events med giltiga datum
+  CHECK: node scripts/verify-fixes.mjs dr3
+  EXPECT: /dr3: källor=\d+ events=\d+ ogiltiga=0 pass/
+  EVIDENCE: pending
+
+- [ ] DR4: enhetstesterna för datumintervall passerar (inklusive de negativa kontrollerna för månadsnamn och lookbehind)
+  CHECK: npx vitest run 02-Ingestion/F-eventExtraction/universal-extractor-date-range.test.ts
+  EXPECT: /Tests\s+\d+ passed/
+  EVIDENCE: pending
+
+# Statusen i sources_status.jsonl får inte ljuga (2026-10-24)
+
+Scope: `02-Ingestion/D-renderGate/runD-scrapingbee.ts`,
+`02-Ingestion/C-htmlGate/run-dynamic-pool.ts`,
+`scripts/verify-status-truth.ts`.
+
+Kedjan C → D → import → drain kan lyckas och ändå lämna källan som `fail` i
+statusfilen. Det är inte kosmetiskt: felräknaren (`consecutiveFailures`)
+stiger vid varje sådan körning, och vid 5 begravs källan — en källa som
+fungerar försvinner ur pipelinen. Det hände med riksarkivet: C-gaten skrev
+`fail` (plain HTML gav 0 events), D-gaten lyckades sedan (24 events, 25
+credits), men ingen skrev bort `fail`. Källan stod som död medan den hade
+24 events i databasen.
+
+**Två åtgärder:**
+
+1. **D-gaten skriver statusen vid lyckad extrahering** (`runD-scrapingbee.ts`).
+   Bara success skrivs — ett misslyckande i D skrivs redan av C-gaten, och att
+   skriva det igen skulle räkna ett fel två gånger och accelerera
+   auto-quarantän. Statusfelet får ALDRIG kasta: köerna skrivs efter loopen,
+   så ett throw skulle slänga bort resultatet av en körning som redan
+   bränt credits.
+2. **Render-override även på de tre "orphan"-vägarna** i C-gaten.
+   `preferredPath: 'render'` betyder "plain HTML gav 0 events, render är den
+   bekräftade vägen" — men tre sökvägar (ORPHAN-FIX, IMP-001-FIX, RECOVERY)
+   hårdkodade `postTestC-manual-review` och bypassade regeln. Nu går de
+   genom `resolveOrphanRoute()`, som är ren och testad (4 tester, varav två
+   negativa kontroller).
+
+**Räckvidd för mätningen:** bara levande källor i scope (`sources/<id>.jsonl`
+finns och `city = Stockholm`). Burkade/retirerade källor och källor utanför
+Stockholm räknas inte — de hör till andra beslut.
+
+- [ ] ST1: varje källa som D-gaten lyckades med står som success med nollställd felräknare och utan lastError
+  CHECK: node scripts/verify-fixes.mjs st1
+  EXPECT: /st1: kontrollerade=\d+ statusfel=0 rensade_filer=\d+ pass/
+  EVIDENCE: pending
+
+- [ ] ST2: negativ kontroll — en muterad kopia av statusfilen där felräknaren inte nollställs upptäcks (utan denna gate bevisar ST1 ingenting)
+  CHECK: node scripts/verify-fixes.mjs st2
+  EXPECT: /st2: negativ kontroll avvikelser=\d+ .* pass/
+  EVIDENCE: pending
+
+- [ ] ST3: render-override gäller på alla tre orphan-vägarna — 4 enhetstester inkl. två negativa kontroller
+  CHECK: npx vitest run 02-Ingestion/C-htmlGate/run-dynamic-pool.test.ts
+  EXPECT: /Tests\s+\d+ passed/
+  EVIDENCE: pending

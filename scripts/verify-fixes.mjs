@@ -1563,7 +1563,72 @@ async function s3() {
   return ok(`s3: ${counts.join(' ')} negativ=${NEGATIVE} noll av ${negAll.data.length} pass`);
 }
 
-const gates = { g1, g2, g3, g4, g5, g6, g7, g8, g9, h1, h2, h3, h4, h5, h6, e1, e2, e3, e4, e5, e6, e7, e8, e9, e10, e11, n1, n2, s1, s2, s3 };
+/**
+ * DR1/DR2/DR3 — datumintervall.
+ *
+ * Delegerar till `scripts/verify-date-ranges.ts`, som bygger en ORACLE skriven
+ * oberoende av extraktorn och jämför den med produktionen på riktig
+ * korpustext och på handskrivna fixturer. dr2 är den negativa kontrollen:
+ * en muterad KOPIA av extraktorn måste avvika från oracle — annars bevisar
+ * dr1 ingenting.
+ */
+function dateRangeGate(mode) {
+  const script = 'scripts/verify-date-ranges.ts';
+  const r = spawnSync('npx', ['tsx', script, mode], {
+    cwd: ROOT,
+    encoding: 'utf8',
+    timeout: 600_000,
+    killSignal: 'SIGKILL',
+    env: process.env,
+  });
+  const combined = `${r.stdout ?? ''}${r.stderr ?? ''}`;
+  const marker = combined.split('\n').find((l) => l.startsWith(`${mode}:`)) ?? '';
+  if (r.status !== 0) {
+    return fail(`${mode}: FAIL ${marker || combined.split('\n').filter(Boolean).slice(-2).join(' | ') || 'skriptet gav ingen utdata'}`);
+  }
+  if (!marker.endsWith('pass')) {
+    return fail(`${mode}: FAIL skriptet gav ingen "pass"-markör — raden var "${marker}"`);
+  }
+  return ok(marker);
+}
+
+function dr1() { return dateRangeGate('dr1'); }
+function dr2() { return dateRangeGate('dr2'); }
+function dr3() { return dateRangeGate('dr3'); }
+
+/**
+ * ST1/ST2 — statusen i sources_status.jsonl får inte ljuga.
+ *
+ * Delegerar till `scripts/verify-status-truth.ts`. st1 mäter invarianten
+ * "en källa som D-gaten lyckades extrahera ifrån ska stå som success, med
+ * felräknaren nollställd och utan kvarvarande lastError". st2 är den
+ * negativa kontrollen: en MUTERAD KOPIA av statusfilen där felräknaren
+ * inte nollställs måste upptäckas — annars bevisar st1 ingenting.
+ */
+function statusTruthGate(mode) {
+  const script = 'scripts/verify-status-truth.ts';
+  const r = spawnSync('npx', ['tsx', script, mode], {
+    cwd: ROOT,
+    encoding: 'utf8',
+    timeout: 600_000,
+    killSignal: 'SIGKILL',
+    env: process.env,
+  });
+  const combined = `${r.stdout ?? ''}${r.stderr ?? ''}`;
+  const marker = combined.split('\n').find((l) => l.startsWith(`${mode}:`)) ?? '';
+  if (r.status !== 0) {
+    return fail(`${mode}: FAIL ${marker || combined.split('\n').filter(Boolean).slice(-2).join(' | ') || 'skriptet gav ingen utdata'}`);
+  }
+  if (!marker.endsWith('pass')) {
+    return fail(`${mode}: FAIL skriptet gav ingen "pass"-markör — raden var "${marker}"`);
+  }
+  return ok(marker);
+}
+
+function st1() { return statusTruthGate('st1'); }
+function st2() { return statusTruthGate('st2'); }
+
+const gates = { g1, g2, g3, g4, g5, g6, g7, g8, g9, h1, h2, h3, h4, h5, h6, e1, e2, e3, e4, e5, e6, e7, e8, e9, e10, e11, n1, n2, s1, s2, s3, dr1, dr2, dr3, st1, st2 };
 if (!arg || !gates[arg]) {
   console.error(`usage: node scripts/verify-fixes.mjs <${Object.keys(gates).join('|')}>`);
   process.exit(2);
