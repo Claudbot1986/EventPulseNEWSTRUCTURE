@@ -95,6 +95,29 @@ function daysInMonth(year: number, monthIndex: number): number {
 
 const RESOLVERS: SourceEntryUrlResolver[] = [
   {
+    sourceId: 'waldemarsudde',
+    evidence:
+      'Mätt 2026-10-24 mot den riktiga sajten. (1) Bot-vägg: vanlig hämtning av ' +
+      'waldemarsudde.se svarar HTTP 202 med <meta http-equiv="refresh" ' +
+      'content="0;/.well-known/sgcaptcha/?r=…"> — ScrapingBees premium-proxy går förbi. ' +
+      '(2) Listningssidan /aktiviteter/ renderar 153 kB men innehåller NOLL datum — ' +
+      'korten laddas via AJAX. (3) WordPress har egen post-typ "activity" ' +
+      '(rest_base "activity"); datumet står i content.rendered som löptext, inte i acf. ' +
+      '(4) Mätt via ScrapingBee static-only (10 credits/sida): REST-API:et ger 598 poster ' +
+      'i 6 sidor à 100. (5) Adaptermätning på de 500 nyaste posterna: sida 1 ' +
+      '(publicerad 2026-04-27..2026-09-16) ger 85 poster med datum och 15 FRAMTIDA ' +
+      'events; sida 2 (2025-06-18..2026-04-27), 3, 4 och 5 ger 0 framtida events. ' +
+      'Sida 1 räcker alltså och kostar EN render per körning.',
+    resolve(sourceUrl) {
+      if (!/waldemarsudde\.se/i.test(sourceUrl)) return [];
+      // _fields håller payloaden liten: utan dem är svaret 1 156 793 B och
+      // sidan 6 timeout:ade; med dem ~330 kB per sida.
+      return [
+        'https://waldemarsudde.se/wp-json/wp/v2/activity?per_page=100&_fields=id,link,title,date,content',
+      ];
+    },
+  },
+  {
     sourceId: 'momentsapp-stockholm',
     evidence:
       'Mätt 2026-10-24 (D-gatens renderPage med ScrapingBee premium-only, ' +

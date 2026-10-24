@@ -35,6 +35,7 @@ dotenv.config({ path: path.resolve(process.cwd(), '.env'), override: true });
 
 import { getSource } from '../tools/sourceRegistry';
 import { extractFromHtml } from '../F-eventExtraction/universal-extractor';
+import { filterUsableEvents } from '../F-eventExtraction/usableEvents';
 import type { ParsedEvent } from '../F-eventExtraction/schema';
 import { renderPage, type RenderBehavior } from './renderGate';
 import { resolveEntryUrls } from './sourceEntryUrls';
@@ -155,6 +156,25 @@ function dedupeEvents(events: ParsedEvent[]): ParsedEvent[] {
     }
   }
   return out;
+}
+
+/**
+ * Rader som faktiskt överlever importens datumvakt.
+ *
+ * 2026-10-24 — samma princip som C-gaten: "framgång kräver SPARBARA datum,
+ * inte bara rader". Importen (03-Queue/importToEventPulse.ts) kastar bort
+ * rader som är datumlösa, har trasigt datumformat eller ligger i det
+ * förflutna. En D-körning som räknade sådana rader som events ljög om
+ * resultatet OCH slutade för tidigt — tröskeln uppfylldes av skräp och
+ * listningssidan som faktiskt ger events hann aldrig renderas.
+ *
+ * Mätt (2026-10-24, ScrapingBee premium-only):
+ *   biblioteketstockholmse → 2 rader, 0 sparbara (date "unknown", "12:00")
+ *   pingstkyrkan           → 2 rader, 2 sparbara men skräp (en .mp4 och en
+ *                            selma.se-artikel som tagit dagens datum)
+ */
+function usableEvents(events: ParsedEvent[]): ParsedEvent[] {
+  return filterUsableEvents(events);
 }
 
 function normalizedHost(host: string): string {
@@ -401,7 +421,7 @@ async function processSource(entry: QueueEntry, maxPages: number, behavior: Rend
   {
     const extracted = extractSmart(first.html, entry.sourceId, entryUrl);
     for (const e of extracted) allEvents.push(e);
-    const current = dedupeEvents(allEvents);
+    const current = usableEvents(dedupeEvents(allEvents));
     if (current.length >= MIN_EVENTS_FOR_SUCCESS && !hasExplicitEntryUrls) {
       writeExtractedEvents(entry.sourceId, current);
       return {
@@ -426,7 +446,7 @@ async function processSource(entry: QueueEntry, maxPages: number, behavior: Rend
     if (!rr.success || !rr.html) continue;
     const extracted = extractSmart(rr.html, entry.sourceId, url);
     for (const e of extracted) allEvents.push(e);
-    const current = dedupeEvents(allEvents);
+    const current = usableEvents(dedupeEvents(allEvents));
     if (current.length >= MIN_EVENTS_FOR_SUCCESS && !hasExplicitEntryUrls) {
       writeExtractedEvents(entry.sourceId, current);
       return {
@@ -440,7 +460,7 @@ async function processSource(entry: QueueEntry, maxPages: number, behavior: Rend
     }
   }
 
-  const unique = dedupeEvents(allEvents);
+  const unique = usableEvents(dedupeEvents(allEvents));
   if (unique.length >= MIN_EVENTS_FOR_SUCCESS) {
     writeExtractedEvents(entry.sourceId, unique);
     return {
@@ -459,11 +479,15 @@ async function processSource(entry: QueueEntry, maxPages: number, behavior: Rend
   // som nu ger 0 behåller då sin gamla fil — och importToEventPulse läser den
   // som om den vore färsk. Raderas när renderingen faktiskt kördes och
   // extraktionen gav 0 events.
+  //
+  // 2026-10-24 — villkoret är "inga SPARBARA rader", inte "0 rader": 2 rader
+  // med trasigt datum är lika döda som 0 rader, eftersom importen kastar
+  // bort båda.
   if (unique.length === 0) {
     const staleFile = path.join(EXTRACTED_DIR, `${entry.sourceId}.jsonl`);
     if (existsSync(staleFile)) {
       unlinkSync(staleFile);
-      log(`[D-Extract] Raderade stale extracted-fil (0 events denna körning): ${staleFile}`);
+      log(`[D-Extract] Raderade stale extracted-fil (0 sparbara events denna körning): ${staleFile}`);
     }
   }
 
