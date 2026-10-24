@@ -152,6 +152,13 @@ TEMP/
 # Supabase auth-config snapshots (innehåller SMTP-lösenord) — aldrig commita
 06-UI/scripts/email-templates/auth-config-backup-*.json
 
+# Python bytecode-cache
+__pycache__/
+*.pyc
+
+# Discovery-körningars testresultat (runtime-data, inte källkod)
+07-Discovery/testResults/source-candidates/
+
 # BFL image library — lokal katalog med genererade bilder (1.2 GB),
 # staging-mapp för stämplade webp (251 MB), och prompt-corpus (13 MB).
 # Binärer och regenererbara artefakter — återskapas via scripts/_generate_bfl_*.
