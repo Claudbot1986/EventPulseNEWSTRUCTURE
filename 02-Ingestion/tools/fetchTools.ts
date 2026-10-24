@@ -167,6 +167,100 @@ export function normalizeFetchUrl(url: string): string {
   return `https://${trimmed}`;
 }
 
+/**
+ * U+FFFD — tecknet Node sätter in när en byte inte går att avkoda.
+ * Närvaron av det i en avkodad sträng = tecken har gått förlorade.
+ */
+const REPLACEMENT_CHAR = '\uFFFD';
+
+/**
+ * Läser charset ur en Content-Type-header.
+ * T.ex. "text/html; charset=ISO-8859-1" → "iso-8859-1".
+ */
+export function charsetFromContentType(contentType?: string): string | null {
+  if (!contentType) return null;
+  const m = /charset\s*=\s*["']?([\w-]+)/i.exec(contentType);
+  return m ? m[1].toLowerCase() : null;
+}
+
+/**
+ * Läser charset ur HTML:ens meta-tagg (bara i början av dokumentet).
+ *
+ * Server-sidor som skickar `charset=utf-8` i headern men `charset=iso-8859-1`
+ * i meta-taggen är vanliga. Meta-taggen vinner då, eftersom den beskriver
+ * dokumentet självt.
+ */
+export function charsetFromMeta(head: string): string | null {
+  const slice = head.slice(0, 4096);
+  const meta = /<meta[^>]+charset\s*=\s*["']?([\w-]+)/i.exec(slice);
+  return meta ? meta[1].toLowerCase() : null;
+}
+
+/**
+ * Avkodar HTML-bytes med den charset som dokumentet självt anger.
+ *
+ * VARFÖR (2026-10-24, mätt på kultur1.se):
+ *   Content-Type: text/html; charset=ISO-8859-1
+ *   HTTP-byten:   "Samlingsutställning på" (0xE5 = å, 0xF6 = ö)
+ *   Axios/undici: "Samlingsutstllning p"  ← varje svenskt tecken förstört
+ *
+ * Både axios och undici avkodar bytes som UTF-8 oavsett vad headern säger.
+ * HTTP-standarden säger att charset-headern styr avkodningen, så fixen följer
+ * headern — med meta-taggen som fallback, precis som WHATWG föreskriver.
+ *
+ * En server som LUGER (skickar charset=utf-8 men har latin1-bytes) hanteras
+ * också: om UTF-8-avkodningen ger U+FFFD och meta-taggen säger något annat,
+ * används meta. Det är exakt den skadade bild mätningen ovan visar, fast
+ * åt motsatt håll.
+ *
+ * Detta är GENERELLT: varje sajt som deklarerar en icke-UTF-8-charset
+ * påverkas — inte bara kultur1. Ingen C0/C1/C2-heuristik rörs; detta är
+ * HTTP-lagret, inte upptäcktslagret.
+ */
+export function decodeHtmlBytes(buffer: Buffer | Uint8Array, contentType?: string): string {
+  const bytes = Buffer.isBuffer(buffer) ? buffer : Buffer.from(buffer);
+
+  // BOM har företräde framför allt annat.
+  if (bytes.length >= 3 && bytes[0] === 0xef && bytes[1] === 0xbb && bytes[2] === 0xbf) {
+    return bytes.subarray(3).toString('utf8');
+  }
+
+  const headerCharset = charsetFromContentType(contentType);
+  const metaCharset = charsetFromMeta(bytes.subarray(0, 4096).toString('latin1'));
+
+  const decodeWith = (charset: string): string | null => {
+    try {
+      return new TextDecoder(charset, { fatal: false }).decode(bytes);
+    } catch {
+      return null;
+    }
+  };
+
+  const isUtf8 = (c: string | null): boolean => !!c && /^(utf-?8)$/i.test(c);
+
+  // 1) Headern vinner (WHATWG).
+  if (headerCharset) {
+    const decoded = decodeWith(headerCharset);
+    if (decoded !== null) {
+      // Headern säger UTF-8 men byten är trasiga → meta-taggen vet bättre.
+      if (isUtf8(headerCharset) && decoded.includes(REPLACEMENT_CHAR) && metaCharset && !isUtf8(metaCharset)) {
+        const viaMeta = decodeWith(metaCharset);
+        if (viaMeta !== null && !viaMeta.includes(REPLACEMENT_CHAR)) return viaMeta;
+      }
+      return decoded;
+    }
+  }
+
+  // 2) Meta-taggen.
+  if (metaCharset) {
+    const decoded = decodeWith(metaCharset);
+    if (decoded !== null) return decoded;
+  }
+
+  // 3) UTF-8 som sista utväg.
+  return bytes.toString('utf8');
+}
+
 export async function fetchHtml(url: string, options: {
   headers?: Record<string, string>;
   timeout?: number;
@@ -239,6 +333,11 @@ async function fetchHtmlOnce(url: string, options: {
             validateStatus: (status) => status < 500,
             maxRedirects: 0, // we handle redirects manually to capture final URL
             signal: options.signal,
+            // 2026-10-24 — bytes, inte text: avkodningen sker nedan med den
+            // charset servern anger (se decodeHtmlBytes). Axios avkodar annars
+            // alltid som UTF-8, vilket förstör alla svenska tecken på sajter
+            // som skickar charset=ISO-8859-1.
+            responseType: 'arraybuffer',
           }),
         options.signal,
       );
@@ -313,7 +412,7 @@ async function fetchHtmlOnce(url: string, options: {
 
       return {
         success: true,
-        html: response.data,
+        html: decodeHtmlBytes(response.data, response.headers?.['content-type']),
         statusCode: response.status,
         finalUrl: currentUrl,
         redirectChain,
