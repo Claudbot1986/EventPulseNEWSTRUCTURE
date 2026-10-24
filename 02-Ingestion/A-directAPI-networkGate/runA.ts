@@ -213,9 +213,9 @@ const CROSS_QUEUE_DEDUP_FILES: readonly string[] = [
   // försvann ur C-spåret. A har ingen affär i en fil den inte producerar.
 ];
 
-function removeSourceFromOtherQueues(sourceId: string, exceptFile: string): void {
+function removeSourceFromOtherQueues(sourceId: string, exceptFile?: string): void {
   for (const file of CROSS_QUEUE_DEDUP_FILES) {
-    if (file === exceptFile) continue;
+    if (exceptFile && file === exceptFile) continue;
     if (!existsSync(file)) continue;
     let entries: unknown[];
     try {
@@ -345,6 +345,12 @@ interface AResult {
   error?: string;
   status: 'never_run' | 'success' | 'fail' | 'error';
   ingestionStage: 'A' | 'completed' | 'failed';
+  /**
+   * Källan lever men har inget att leverera (t.ex. säsong slut). Detta är
+   * INTE ett fel — källan ska räknas som frisk och får aldrig
+   * auto-quarantänas för en sådan körning.
+   */
+  noEventsReason?: string;
 }
 
 /**
@@ -404,6 +410,25 @@ async function runApiAdapterOnSource(
       console.log(`         → wrote ${result.events.length} events to extractedevents/ (${adapterName})`);
     }
 
+    // 2026-10-24 — adaptern kan säga att källan LEVER men har inget att
+    // leverera just nu (t.ex. en årsvis festival vars säsong är slut).
+    // Det är inte ett fel, och det får inte räknas som ett: annars växer
+    // felräknaren varje natt och källan auto-quarantänas vid 5 — en levande
+    // källa begravd bara för att den är säsongsbunden.
+    if (result.events.length === 0 && result.noEventsReason) {
+      console.log(`         → 0 events men källan är frisk: ${result.noEventsReason}`);
+      return {
+        sourceId,
+        queueOrigin,
+        success: true,
+        eventsFound: 0,
+        pathUsed: 'api',
+        status: 'success',
+        ingestionStage: 'completed',
+        noEventsReason: result.noEventsReason,
+      };
+    }
+
     return {
       sourceId,
       queueOrigin,
@@ -412,7 +437,9 @@ async function runApiAdapterOnSource(
       pathUsed: 'api',
       status: result.events.length > 0 ? 'success' : 'fail',
       ingestionStage: result.events.length > 0 ? 'completed' : 'failed',
-      error: result.events.length > 0 ? undefined : `adapter '${adapterName}' gav 0 events`,
+      error: result.events.length > 0
+        ? undefined
+        : (result.error ?? `adapter '${adapterName}' gav 0 events`),
     };
   } catch (err: any) {
     return {
@@ -554,7 +581,13 @@ function finalizeSource(item: SourceWithOrigin, result: AResult): void {
     // Transportfel (död sajt) är INTE en handoff — de räknas som fel så att
     // källan kan begravas.
     ...(isRoutingHandoff ? { pendingNextTool: 'B-JSON-feedGate' as const } : {}),
-    lastRoutingReason: `toolA(${queueOrigin}): ${result.success ? `${result.eventsFound} events` : result.error}`,
+    // 2026-10-24 — "källan lever men har inget att leverera" (säsong slut)
+    // är ett friskt resultat, inte ett fel. Det ska INTE räknas som fel och
+    // ska INTE auto-quarantäna källan.
+    ...(result.noEventsReason ? { noEventsReason: result.noEventsReason } : {}),
+    lastRoutingReason: result.noEventsReason
+      ? `toolA(${queueOrigin}): ${result.noEventsReason}`
+      : `toolA(${queueOrigin}): ${result.success ? `${result.eventsFound} events` : result.error}`,
     lastRoutingSource: 'runtime_status',
   });
 
@@ -565,6 +598,13 @@ function finalizeSource(item: SourceWithOrigin, result: AResult): void {
     addToPostAQueue(sourceId, result.eventsFound, `toolA(${queueOrigin}): ${result.eventsFound} events`);
     // Hook: om A plötsligt fungerar behöver vi inte D-AI för denna källa
     dequeueDAI(sourceId);
+  } else if (result.noEventsReason) {
+    // 2026-10-24 — adaptern säger att källan lever men har inget att
+    // leverera (säsong slut). Källan ska INTE skickas vidare i HTML-kedjan:
+    // adaptern är källans egen väg, och kedjan skulle bara ge 0 rader och
+    // dessutom riskera att källan markeras som fel där. API-adapter-källor
+    // körs varje natt av A-gaten ändå, så nästa körning fångar nästa säsong.
+    removeSourceFromOtherQueues(sourceId);
   } else {
     // ej A / fail → preB (rensa bort från andra köer först)
     removeSourceFromOtherQueues(sourceId, PREB_QUEUE_FILE);

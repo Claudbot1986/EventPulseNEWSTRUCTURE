@@ -154,6 +154,111 @@ describe('sourceRegistry handoff är inte ett fel', () => {
     expect(quarantineEntries().filter(e => e.sourceId === fx.sourceId)).toHaveLength(0);
   });
 
+  it('noEventsReason ger success, nollställer räknaren och karantänens ALDRIG', () => {
+    // Motiv (2026-10-24): stockholm-jazz-festival körs via API-adapter. Under
+    // säsongen (okt) är API:t friskt men alla 331 rader är förflutna. Utan
+    // noEventsReason vore 0 rader ett fel → consecutiveFailures++ → källan
+    // begravs vid 5 nätter, trots att API:t svarade 200 varje gång.
+    const fx = freshFixture('no-events');
+
+    for (let i = 0; i < 12; i++) {
+      reg.updateSourceStatus(fx.sourceId, {
+        success: true,
+        eventsFound: 0,
+        pathUsed: 'api',
+        ingestionStage: 'completed',
+        noEventsReason: 'API:t svarade med 331 rader, ingen är framtida — festivalen är säsongsbunden.',
+      });
+    }
+
+    const status = reg.getSourceStatus(fx.sourceId);
+    expect(status.status).toBe('success');
+    expect(status.consecutiveFailures).toBe(0);
+    expect(status.lastEventsFound).toBe(0);
+    expect(status.lastError).toBeUndefined();
+    expect(existsSync(fx.quarantineFile)).toBe(false);
+    expect(quarantineEntries().filter(e => e.sourceId === fx.sourceId)).toHaveLength(0);
+  });
+
+  it('NEGATIV KONTROLL: 0 events UTAN noEventsReason är fortfarande ett fel', () => {
+    // Kontrollen kan faila: utan förklaringen ska 0 events räknas som fel
+    // och karantänenas vid 5 — annars vore noEventsReason-grenen vacuous.
+    const fx = freshFixture('zero-without-reason');
+
+    for (let i = 0; i < 5; i++) {
+      reg.updateSourceStatus(fx.sourceId, {
+        success: true,
+        eventsFound: 0,
+        pathUsed: 'api',
+        ingestionStage: 'completed',
+      });
+    }
+
+    const status = reg.getSourceStatus(fx.sourceId);
+    expect(status.status).not.toBe('success');
+    expect(status.consecutiveFailures).toBe(5);
+    expect(existsSync(fx.quarantineFile)).toBe(true);
+  });
+
+  it('noEventsReason städar ALSO en stale pendingNextTool', () => {
+    // Motiv (2026-10-24): stockholm-jazz-festival hade pendingNextTool
+    // 'C-htmlGate' kvar från en äldre körning. Efter adapterkörningen stod
+    // källan som success MEN med routing-hinten kvar — någon som läser
+    // pendingNextTool skulle skicka den vidare i HTML-kedjan igen.
+    const fx = freshFixture('stale-hint');
+    reg.updateSourceStatus(fx.sourceId, {
+      success: false,
+      eventsFound: 0,
+      preferredPath: 'html',
+      ingestionStage: 'B',
+      pendingNextTool: 'C-htmlGate',
+      lastRoutingReason: 'postB-preC: routed',
+      lastRoutingSource: 'runtime_status',
+    });
+    expect(reg.getSourceStatus(fx.sourceId).pendingNextTool).toBe('C-htmlGate');
+
+    reg.updateSourceStatus(fx.sourceId, {
+      success: true,
+      eventsFound: 0,
+      pathUsed: 'api',
+      ingestionStage: 'completed',
+      noEventsReason: 'säsongen är slut',
+    });
+
+    const status = reg.getSourceStatus(fx.sourceId);
+    expect(status.status).toBe('success');
+    expect(status.pendingNextTool).toBeUndefined();
+  });
+
+  it('noEventsReason bryter en redan uppkommen felkedja', () => {
+    // 4 verkliga fel, sedan en säsongslutet-körning. Räknaren ska nollställas
+    // så att källan inte begravs av det femte felet den första riktiga felet
+    // efter säsongen ger.
+    const fx = freshFixture('no-events-resets');
+
+    for (let i = 0; i < 4; i++) {
+      reg.updateSourceStatus(fx.sourceId, {
+        success: false,
+        eventsFound: 0,
+        ingestionStage: 'failed',
+        error: 'Fetch failed: timeout',
+      });
+    }
+    expect(reg.getSourceStatus(fx.sourceId).consecutiveFailures).toBe(4);
+
+    reg.updateSourceStatus(fx.sourceId, {
+      success: true,
+      eventsFound: 0,
+      pathUsed: 'api',
+      ingestionStage: 'completed',
+      noEventsReason: 'säsongen är slut',
+    });
+
+    expect(reg.getSourceStatus(fx.sourceId).consecutiveFailures).toBe(0);
+    expect(reg.getSourceStatus(fx.sourceId).status).toBe('success');
+    expect(existsSync(fx.quarantineFile)).toBe(false);
+  });
+
   it('en handoff nollställer felräknaren — den räknar CONSECUTIVA fel', () => {
     // Motiv (2026-10-24): momentsapp.no samlade fem 429-fel i A-gaten och
     // blev auto-karantänad. Bot-väggen är nu en handoff. Om räknaren inte

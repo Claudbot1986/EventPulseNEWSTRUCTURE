@@ -411,6 +411,16 @@ export function updateSourceStatus(
     // Routingminne
     lastRoutingReason?: string;
     lastRoutingSource?: 'preferredPath' | 'runtime_status' | 'triage' | 'unknown';
+    /**
+     * Källan LEVER men hade inget att leverera den här körningen — t.ex. en
+     * årsvis festival vars säsong är slut. Detta är INTE ett fel: källan
+     * räknas som frisk, felräknaren nollställs och källan kan ALDRIG
+     * auto-quarantänas för en sådan körning.
+     *
+     * Utan den här markeringen är 0 events ett verkligt fel — så en adapter
+     * MÅSTE ange varför ingenting finns, annars är det ett fel som räknas.
+     */
+    noEventsReason?: string;
     pendingNextTool?: 'D-renderGate' | 'api_adapter' | 'network_inspection' |
                     'html_extraction_review' | 'preferredPath_recheck' | 'c1_gate' |
                     'C-htmlGate' | 'B-JSON-feedGate';
@@ -483,7 +493,22 @@ export function updateSourceStatus(
   // Handoff ger därför egen status 'routed' och räknas aldrig som fel.
   const isHandoff = !!result.pendingNextTool;
 
-  if (result.success && result.eventsFound > 0) {
+  if (result.noEventsReason) {
+    // 2026-10-24 — "källan lever men hade inget att leverera" (t.ex. en
+    // årsvis festival vars säsong är slut). Det är ett friskt resultat, inte
+    // ett fel: felräknaren nollställs och källan kan ALDRIG auto-quarantänas
+    // för en sådan körning. Utan den här grenen skulle varje natt räknas
+    // som ett fel → consecutiveFailures++ → begravd vid 5.
+    current.status = 'success';
+    current.lastSuccess = now;
+    current.consecutiveFailures = 0;
+    current.lastEventsFound = 0;
+    current.lastError = undefined;
+    current.pendingNextTool = undefined; // Inget väntar på nästa gate
+    current.routingReviewReason = undefined;
+    current.ingestionStage = 'completed';
+
+  } else if (result.success && result.eventsFound > 0) {
     current.status = 'success';
     current.lastSuccess = now;
     current.consecutiveFailures = 0;
@@ -492,6 +517,17 @@ export function updateSourceStatus(
     current.pendingNextTool = undefined; // Klar, inget nästa verktyg
     current.routingReviewReason = undefined; // Ingen review längre
     current.ingestionStage = 'completed';
+
+  } else if (result.success && isHandoff) {
+    // 2026-10-24 — "success" med 0 events OCH en handoff (t.ex. C1-triage
+    // som hittat en html_candidate). Gate som kan extrahera events har inte
+    // körts än, så detta är inte ett fel — statusen 'routed' säger att
+    // källan väntar på nästa steg. Samma resonemang som handoff-grenen
+    // nedan, men för en körning som rapporterar success.
+    current.status = 'routed';
+    current.consecutiveFailures = 0;
+    current.lastError = result.error;
+    current.ingestionStage = result.ingestionStage ?? 'pending';
 
   } else if (!result.success && result.error?.includes('pending_render_gate')) {
     current.status = 'pending_render_gate';
@@ -540,6 +576,19 @@ export function updateSourceStatus(
     current.consecutiveFailures++;
     current.lastError = result.error;
     current.ingestionStage = result.eventsFound > 0 ? 'completed' : 'failed';
+
+  } else {
+    // 2026-10-24 — sista grenen: "success" med 0 events, ingen handoff och
+    // ingen noEventsReason. Det är en självmotsägelse: gate säger att den
+    // lyckades men levererade ingenting och kan inte förklara varför.
+    // Utan den här grenen föll suchen genom hela maskinen tyst — källan
+    // stod kvar som 'never_run' i all evighet, räknades aldrig som fel och
+    // begravdes aldrig heller. Nu är det ett riktigt fel som räknas, så
+    // en trasig källa syns i felräknaren i stället för att försvinna.
+    current.status = 'fail';
+    current.consecutiveFailures++;
+    current.lastError = result.error ?? 'success_without_events';
+    current.ingestionStage = 'failed';
   }
 
   current.lastPathUsed = result.pathUsed;
