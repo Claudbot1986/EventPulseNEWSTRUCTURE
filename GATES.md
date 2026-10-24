@@ -376,3 +376,38 @@ IGNORE_PATTERN, ingen ny scoring-vikt.
   CHECK: node scripts/verify-c0-sitemap.mjs c3
   EXPECT: /c3: senaste batcharna .*: 0 \.xml-vinnare, \d+ events, \d+ nästa-kandidat-källor \(alla med events > 0\); historiskt \d+ \.xml-vinnare med \d+ events pass/
   EVIDENCE: automatic-evidence=v1; definition-sha256=49181c4a29f595f592323e123b5c47df67ef7bdae1402b8d9903f28b5ad1ce23; exit=0; EXPECT=matched; output-sha256=ce48d462925d1571bd5d06a5b7526d8eec59771e89bfcfe1645e49ced292675f; output-bytes=179; shell=/bin/sh; cwd=/Users/claudgashi/EventPulse; path=29325ef63737/16 entries
+
+---
+
+# Per-step-timeout: kedjan får inte hänga för evigt (2026-10-24)
+
+Scope: `scripts/ingestion-cron.ts` — steg-ledaren.
+
+Kedjan kan fastna i ett steg som aldrig avslutar. Historiken visar
+tribe-events som stod kvar i 419 485 s (116 h) utan att kedjan brytte. En
+heartbeat räcker inte — kedjan behöver en HÅRD gräns.
+
+Timeouten är implementerad (`runStep`, `INGESTION_STEP_TIMEOUT_MS`, default
+2 h, SIGTERM → SIGKILL efter 30 s, exit=124). Men den hade aldrig KÖRTS: i
+`runtime/ingestion-cron/chain-overview.log` (16 574 rader) fanns noll
+"step-timeout"-händelser. Ett mekaniskt som aldrig avfyrats är inte bevisat.
+
+För att kunna bevisa den skapades `--only <steg>` på ingestion-cron, så att
+ett enda steg kan köras isolerat. Okänt stegnamn är ett fel (exit 2), inte
+en tyst "inget att göra" — annars kan en typo få verifieringen att se grön
+ut.
+
+Båda gaten kör samma steg (`direct-jsonld`: 16–31 s i 12 av 12 dokumenterade
+körningar). Bara tröskeln ändras — 8 s mot 600 s. Beviset läses ur de NYA
+raderna i chain-overview.log (radräknaren snapshotas före körningen), så en
+tidigare timeout från en annan körning inte kan smyga igenom.
+
+- [x] TO1: positiv kontroll — 8 s-gränsen dödar steget och kedjan avslutar
+  CHECK: node scripts/verify-step-timeout.mjs t1
+  EXPECT: /t1: direct-jsonld dödad av 8 s-gränsen — step-timeout \+ step-end exit=124 \(\d+ s\), kedjan avslutade med exit=124 pass/
+  EVIDENCE: automatic-evidence=v1; definition-sha256=5bb44dfb182df0e505fe5c2938304a55cb07b3b620f1585dc55866484be4c501; exit=0; EXPECT=matched; output-sha256=2a2aca84640a2e260a2ed47c7dbd088c4de62aa782edc5c4948f39f916be0f8d; output-bytes=120; shell=/bin/sh; cwd=/Users/claudgashi/EventPulse; path=29325ef63737/16 entries
+
+- [x] TO2: negativ kontroll — 600 s-gränsen dödar inget steg
+  CHECK: node scripts/verify-step-timeout.mjs t2
+  EXPECT: /t2: direct-jsonld klarade sig med 600 s-gränsen — exit=0 \(\d+ s\), noll step-timeout pass/
+  EVIDENCE: automatic-evidence=v1; definition-sha256=4d9fc76852bba539a839da6362e1c3f69aa83683856b5acc560754b9ff23d34c; exit=0; EXPECT=matched; output-sha256=e6e79a3b93413965db36cb6be9c72a95eb83d61dd978d63d2331314a112218ed; output-bytes=91; shell=/bin/sh; cwd=/Users/claudgashi/EventPulse; path=29325ef63737/16 entries

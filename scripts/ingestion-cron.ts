@@ -9,9 +9,14 @@
  *   npx tsx scripts/ingestion-cron.ts                 # engångskörning
  *   npx tsx scripts/ingestion-cron.ts --limit 50      # max 50 per steg
  *   npx tsx scripts/ingestion-cron.ts --skip-images    # hoppa över Supabase-bilder
+ *   npx tsx scripts/ingestion-cron.ts --only C-htmlGate   # kör ETT steg
  *
  * Säkerhetsnot: rör INTE runA.ts interface, dedup-hash, IGNORE_PATTERNS
  * eller scoring-vikter. Detta är ett orchestrator-lager ovanpå befintlig kod.
+ *
+ * Per-step-timeout: varje steg har en hård gräns (default 2 h). Sätt
+ * INGESTION_STEP_TIMEOUT_MS=<ms> för att sänka den (t.ex. 8000 för att
+ * bevisa timeouten på ett enda steg med --only).
  */
 
 import { spawn, execSync } from 'child_process';
@@ -232,6 +237,15 @@ const skipRedditIngest = args.includes('--skip-reddit');
 const skipSubpathDiscovery = args.includes('--skip-subpath');
 const skipLivespotIngest = args.includes('--skip-livespot');
 const skipDirectJsonld = args.includes('--skip-direct-jsonld');
+// 2026-10-24 — `--only <steg[,steg2,...]>` kör BARA de angivna stegen.
+// Motiv: en verifiering ska kunna peka på ett enda steg (t.ex. bevisa
+// per-step-timeouten med INGESTION_STEP_TIMEOUT_MS=8000) utan att köra hela
+// kedjan. Ett stegnamn som inte finns är ett FEL — annars kan en typo göra
+// att "ingen kördes" ser ut som "steget gick bra".
+const onlyIdx = args.indexOf('--only');
+const onlyStepIds: string[] = onlyIdx !== -1 && args[onlyIdx + 1]
+  ? args[onlyIdx + 1].split(',').map((s) => s.trim()).filter(Boolean)
+  : [];
 const limitIdx = args.indexOf('--limit');
 // 2026-10-07 — default --limit höjt från 50 → 200. Bakgrund: tunga steg
 // (sitemap-discovery, C-htmlGate, subpath-discovery) kan nu hantera fler
@@ -886,7 +900,24 @@ async function main(): Promise<void> {
   let totalEvents = 0;
   const stepResults: StepRecord[] = [];
 
-  for (const step of steps) {
+  // 2026-10-24 — `--only` filter. Okänt stegnamn är ett fel, inte en tyst
+  // "inget att göra" — annars kan en typo få verifieringen att se grön ut.
+  let selectedSteps = steps;
+  if (onlyStepIds.length > 0) {
+    const known = new Set(steps.map((s) => s.name));
+    const unknown = onlyStepIds.filter((id) => !known.has(id));
+    if (unknown.length) {
+      console.error(
+        `[ingestion-cron] --only: okända steg ${unknown.join(', ')}. ` +
+        `Kända steg: ${[...known].join(', ')}`,
+      );
+      process.exit(2);
+    }
+    selectedSteps = steps.filter((s) => onlyStepIds.includes(s.name));
+    console.log(`[ingestion-cron] --only: kör ${selectedSteps.length}/${steps.length} steg: ${selectedSteps.map((s) => s.name).join(', ')}`);
+  }
+
+  for (const step of selectedSteps) {
     const stepStartedAt = new Date().toISOString();
     const result = await runStep(step.name, step.cmd, step.args);
     const stepFinishedAt = new Date().toISOString();
