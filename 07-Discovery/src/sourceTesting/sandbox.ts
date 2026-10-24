@@ -1,6 +1,7 @@
 import { existsSync, mkdirSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'fs';
 import path from 'path';
 import { appendDiscoveryUiQueueEntry } from './discoveryUiQueue.js';
+import { attachEventUrlToSourceFile } from '../../../02-Ingestion/tools/eventUrls.js';
 import type { PromotionInput, SandboxSource, SourceCandidate, SourceCandidateWinningPath } from './types.js';
 
 function slugify(value: string): string {
@@ -115,14 +116,44 @@ export function promoteSourceCandidate(
   mkdirSync(sourcesDir, { recursive: true });
   mkdirSync(runtimeDir, { recursive: true });
 
-  // Första promote:en av en domän får det snygga domän-slug:et. Varje följande
-  // URL på samma domän (två evenemangssidor, en pdf) slug:ar till samma namn,
-  // så den får candidate-prefixet istället. Utan detta kunde bara EN URL per
-  // domän någonsin promote:as (2026-10-21).
+  // Första promote:en av en domän får det snygga domän-slug:et.
+  //
+  // 2026-10-24 — en FÖLJANDE URL på samma domän blir INTE en egen källa.
+  // Den läggs som en extra event-sida på värdkällan (metadata.eventUrls).
+  //
+  // Tidigare skapades en egen `candidate-<hash>-<slug>.jsonl` per URL. Det gav
+  // 25 extra källfiler för 9 värdar, 67 DB-rader där samma evenemang låg under
+  // flera source-namn, och varje kandidat kördes genom hela C-gaten var för
+  // sig — där C0 hittade samma värdnivå-vinnare (t.ex. /jobba-hos-oss på
+  // operan.se) för dem alla.
+  //
+  // Nu är kandidaten en SIDA av samma venue. C-gaten extraherar den sidan
+  // för sig och slår ihop raderna med huvudkörningen.
   const primaryId = slugify(candidate.sourceName ?? new URL(candidate.candidateUrl).hostname);
   let sourceId = primaryId || sourceIdForCandidate(candidate);
   const primaryPath = path.join(sourcesDir, `${sourceId}.jsonl`);
   if (existsSync(primaryPath) && !sameCanonicalUrl(primaryPath, candidate.candidateUrl)) {
+    const attached = attachEventUrlToSourceFile(primaryPath, candidate.candidateUrl.trim());
+    if (attached) {
+      console.log(
+        `[promote] ${sourceId}: kandidatens URL lades som extra event-sida — ${candidate.candidateUrl}`,
+      );
+      appendDiscoveryUiQueueEntry(root, {
+        sourceId,
+        sourceCandidateId: candidate.id,
+        testRunId: promotion.testRunId,
+        name: candidate.sourceName ?? sourceId,
+        url: candidate.candidateUrl.trim(),
+        city: candidate.city ?? null,
+        promotedAt: new Date().toISOString(),
+        discoveredBy: 'venue_graph',
+        preferredPath: promotion.preferredPath,
+        evidenceSummary: promotion.evidenceSummary,
+        status: 'promoted_to_sources',
+      });
+      return sourceId;
+    }
+    // Kunde inte bifoga (ogiltig URL) — fall tillbaka på egen källa.
     sourceId = sourceIdForCandidate(candidate);
   }
 
