@@ -27,10 +27,12 @@
  * på stderr + exit 1. Utskriften matchas av GATES.md:s `EXPECT:`.
  */
 
-import { existsSync, readFileSync, statSync } from 'node:fs';
+import { existsSync, readFileSync, statSync, mkdtempSync, mkdirSync, writeFileSync, rmSync } from 'node:fs';
+import os from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { spawnSync } from 'node:child_process';
+import { spawnSync, spawn } from 'node:child_process';
+import { liveChainPids } from './lib/chain-guard.mjs';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.resolve(__dirname, '..');
@@ -69,6 +71,27 @@ function newLines(from) {
 }
 
 /**
+ * Vägra köra om en annan ingestion-kedja lever.
+ *
+ * Varför (2026-10-24). Gaten startar ett riktigt produktionssteg. Om
+ * nattkörningen är igång samtidigt mäter gaten inte steget — den krockar
+ * med det. Det hände faktiskt: gaten dödade nattkörningens pågående
+ * discover-subpaths.mjs och ingest-direct-jsonld.mjs (båda exit=1), så
+ * kedjan körde med två av sina steg dödade. En gate som krockar med
+ * produktionen är inte ett mätvärde.
+ */
+function assertNoLiveChain(gate) {
+  const chains = liveChainPids();
+  if (chains.length > 0) {
+    fail(
+      `${gate}: en ingestion-kedja kör (pid ${chains.join(', ')}) — ` +
+      'en gate som krockar med produktionen mäter ingenting. Vänta tills ' +
+      'kedjan är klar, eller kör gaten med --only på ett eget steg.',
+    );
+  }
+}
+
+/**
  * Kör ingestion-cron med ett enda steg och en given timeout, och returnera
  * de nya chain-overview-raderna plus processens exitkod.
  */
@@ -101,6 +124,7 @@ function runCron(timeoutMs, step) {
 // ── T1: positiv kontroll — timeouten dödar steget ─────────────────────────
 
 if (arg === 't1') {
+  assertNoLiveChain('t1');
   const r = runCron(8_000, STEP);
 
   if (r.timedOutByHarness) {
@@ -133,6 +157,7 @@ if (arg === 't1') {
 // ── T2: negativ kontroll — med stor gräns dör inget steg ──────────────────
 
 if (arg === 't2') {
+  assertNoLiveChain('t2');
   const r = runCron(600_000, STEP);
 
   const timeouts = r.lines.filter((l) => l.event === 'step-timeout');
@@ -153,6 +178,61 @@ if (arg === 't2') {
   ok(`t2: ${STEP} klarade sig med 600 s-gränsen — exit=0 (${Math.round(end.durationMs / 1000)} s), noll step-timeout pass`);
 }
 
-if (!['t1', 't2'].includes(arg)) {
-  fail('usage: node scripts/verify-step-timeout.mjs <t1|t2>');
+// ── T3: concurrency-guard — gaten vägrar köra när en kedja lever ──────────
+//
+// Varför. Gaten startar ett riktigt produktionssteg. Om nattkörningen är
+// igång samtidigt mäter gaten inte steget — den krockar med det. Det
+// hände 2026-10-24: gaten startade `ingestion-cron.ts --only direct-jsonld`
+// parallellt med nattkörningen, och pre-kill dödade nattkörningens
+// discover-subpaths.mjs och ingest-direct-jsonld.mjs (båda exit=1).
+//
+// Testet startar en FALSK kedje (cmdline som matchar kedjemönstret) och
+// kräver att gaten vägrar köra. Utan en riktig vägran är guarden dekoration.
+
+if (arg === 't3') {
+  const tmp = mkdtempSync(path.join(os.tmpdir(), 'ep-chain-guard-'));
+  const scriptsDir = path.join(tmp, 'scripts');
+  mkdirSync(scriptsDir, { recursive: true });
+  const chainFile = path.join(scriptsDir, 'ingestion-cron.ts');
+  writeFileSync(
+    chainFile,
+    "console.log('fake chain pid=' + process.pid);\nsetTimeout(() => process.exit(0), 600000);\n",
+    'utf8',
+  );
+
+  let fakePid = null;
+  try {
+    const fake = spawn('node', [chainFile], { stdio: ['ignore', 'pipe', 'pipe'] });
+    await new Promise((resolve, reject) => {
+      let buf = '';
+      const timer = setTimeout(() => reject(new Error('falsk kedja startade inte')), 15_000);
+      fake.stdout.on('data', (d) => {
+        buf += d.toString();
+        const m = buf.match(/pid=(\d+)/);
+        if (m) { clearTimeout(timer); fakePid = parseInt(m[1], 10); resolve(); }
+      });
+      fake.on('error', (e) => { clearTimeout(timer); reject(e); });
+    });
+
+    // Kör gaten på riktigt som en användare skulle göra.
+    const res = spawnSync('node', [path.join(ROOT, 'scripts/verify-step-timeout.mjs'), 't1'], {
+      cwd: ROOT,
+      encoding: 'utf8',
+    });
+    const out = `${res.stdout || ''}${res.stderr || ''}`.trim();
+
+    if (res.status === 0) {
+      fail(`t3: gaten KÖRDE medan en ingestion-kedja levde (pid ${fakePid}) — guarden fungerar inte\n${out}`);
+    }
+    if (!/en ingestion-kedja kör/.test(out)) {
+      fail(`t3: gaten vägrade men av fel skäl: ${out}`);
+    }
+    ok(`t3: gaten vägrade köra medan en ingestion-kedja levde (pid ${fakePid}) — mätvärde och inte krock pass`);
+  } finally {
+    rmSync(tmp, { recursive: true, force: true });
+  }
+}
+
+if (!['t1', 't2', 't3'].includes(arg)) {
+  fail('usage: node scripts/verify-step-timeout.mjs <t1|t2|t3>');
 }

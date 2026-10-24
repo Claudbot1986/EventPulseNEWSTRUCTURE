@@ -87,6 +87,10 @@ grep -n "totalExit === 0\|event: 'pre-kill'\|discovery-verification.status.json"
 
 **Pre-discovery kill-check (2026-10-18) dödar processer vars cmdline matchar `/scripts\/ingest-[\w-]+\.m?js|/scripts\/discover-[\w-]+\.m?js|/07-Discovery\/src\//` eller innehåller `geoExpansion`/`rssDiscovery`/`discoverySearch`.** Andra typer (t.ex., `node 09-ScrapingSupervisor/dashboard/server.ts`) överlever.
 
+**Pre-kill dödar INTE levande kedje-arbete sedan 2026-10-24.** Logiken ligger i `scripts/lib/chain-guard.mjs` och kontrollerar processens *ancestor*: har den en levande ingestion-kedja som förfader lämnas den i fred. Tidigare dödade pre-kill nattkörningens pågående `discover-subpaths.mjs` (exit=1 kl. 00:21:43) och `ingest-direct-jsonld.mjs` (exit=1 kl. 00:21:57) när en verifierings-gate startade cronen parallellt — båda utan FATAL i stderr (de var SIGTERM:ade, inte trasiga). Se `event=="pre-kill-skip"` i chain-overview.log för processer som skippades.
+
+**Kör INTE en gate som startar produktionssteg medan nattkörningen är igång.** `ingestion-cron.ts --only <steg>` startar riktiga steg. Om kedjan kör samtidigt mäter gaten inte steget — den krockar med det (och den äldre pre-kill-logiken dödade dessutom nattkörningens steg). Gates som startar steg vägrar köra via `liveChainPids()` i `scripts/lib/chain-guard.mjs`.
+
 **Green-skip-gate (2026-10-18) skriver till `runtime/discovery-verification.status.json`** med `{ok, lastGreenAt, runId, totalEventsExtracted, durationMs}`. Hoppar INTE över cron-körningen själv — cron ÄR det som körs. Skippet låter bara framtida verify-skill-körningar skippa sig själva om allt är grönt <24h.
 
 **Smoke-flaggorna är INTE enhetliga — kontrollera per steg i koden.**

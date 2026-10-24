@@ -40,6 +40,17 @@
 - **Per-steg-timeout** — `STEP_TIMEOUT_MS` (`:266`), default 2 h, override via
   `INGESTION_STEP_TIMEOUT_MS`. `SIGTERM` → 30 s → `SIGKILL`. Ett avbrutet steg
   loggas som `exitCode: 124` och `timedOut: true`.
+- **`--only <steg[,steg2]>`** (tillagd 2026-10-24) — kör ett eller flera
+  namngivna steg och inget annat. Okänt stegnamn är ett **fel** (exit 2), inte
+  en tyst "inget att göra" — annars kan en typo få verifieringen att se grön ut.
+  Utskriften `[ingestion-cron] --only: kör N/M steg: …` visar vad som valdes.
+  Används av `scripts/verify-step-timeout.mjs` för att bevisa timeouten på ett
+  enda steg.
+- **Pre-kill städar bara zombies** (fix 2026-10-24) — logiken ligger i
+  `scripts/lib/chain-guard.mjs`. En process med en **levande ingestion-kedja som
+  förfader** är levande arbete och lämnas i fred (`event=="pre-kill-skip"`).
+  Tidigare dödade pre-kill nattkörningens pågående steg när någon startade
+  `ingestion-cron.ts --only …` parallellt med nattkörningen.
 - **`P2C-active-learning` laddar `.env` själv** sedan 2026-10-23. Steget körs
   som `tsx --eval "import(...)"` — en inline-`--eval` har ingen fil att härleda
   sökvägar från, så dotenv kördes aldrig och steget dog med
@@ -174,6 +185,11 @@ egen timeout.
 **Launchd äger filen.** En pågående körning blockerar inte läsning men
 skriver över `runtime/ingestion-cron.status.json` medan du läser. Doktorn
 flaggar `cron.running` — respektera det.
+
+**Starta INTE `--only`-körningar medan nattkörningen är igång.** `ps auxww`
+och `liveChainPids()` i `scripts/lib/chain-guard.mjs` avgör om en kedja lever.
+En parallell `--only`-körning mäter inte steget — den krockar med nattkörningens
+steg (och dödade dem med den äldre pre-kill-logiken, se ovan).
 
 **`manual-review-triage` och `pattern-promoter` är borta ur listan sedan
 2026-10-21.** Gamla `chain-overview.log`-rader kan innehålla dem. De dyker

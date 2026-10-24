@@ -19,13 +19,14 @@
  * bevisa timeouten på ett enda steg med --only).
  */
 
-import { spawn, execSync } from 'child_process';
+import { spawn } from 'child_process';
 import {
   writeFileSync, readFileSync, existsSync,
   mkdirSync, openSync, closeSync, writeSync, appendFileSync,
 } from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import { killLivingDiscoveryProcesses } from './lib/chain-guard.mjs';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -762,77 +763,17 @@ steps.splice(
 );
 
 // ─── Pre-discovery kill check (2026-10-18) ────────────────────────────────
+//
+// Logiken ligger i scripts/lib/chain-guard.mjs så att verifierings-gates kan
+// köra exakt samma funktion (se scripts/verify-prekill.mjs).
+//
+// 2026-10-24: pre-kill kontrollerar nu processens ANCESTOR. En process som
+// hör till en levande ingestion-kedja är levande arbete och lämnas i fred.
+// Tidigare dödade pre-kill nattkörningens pågående discover-subpaths.mjs och
+// ingest-direct-jsonld.mjs när en verifierings-gate startade cronen
+// parallellt — båda dog med exit=1 utan FATAL i loggen (de var SIGTERM:ade).
+// Zombies från en död kedja har ingen levande förfader och döds fortfarande.
 
-/**
- * Lista ps auxww, hitta processer vars cmdline ser ut som en discovery/ingest-
- * worker, och skicka SIGTERM till dem (följt av SIGKILL efter 5s om de lever).
- *
- * Matchar mot: scripts/ingest-*.mjs, scripts/discover-*.mjs,
- * 07-Discovery/src/, geoExpansion, rssDiscovery, discoverySearch.
- *
- * Exkluderar: processen själv (current pid), npm/tsx-wrappern ovanför oss,
- * ps/grep/bash. Returnerar lista av dödade PIDs för loggning.
- *
- * Loggar varje dödad process till chain-overview.log (event='pre-kill').
- */
-async function killLivingDiscoveryProcesses(): Promise<number[]> {
-  const self = process.pid;
-  const PATTERNS = [
-    /scripts\/ingest-[\w-]+\.m?js/,           // scripts/ingest-tribe-events.mjs
-    /scripts\/discover-[\w-]+\.m?js/,          // scripts/discover-subpaths.mjs
-    /07-Discovery\/src\//,                     // 07-Discovery/src/...
-    /geoExpansion/,
-    /rssDiscovery/,
-    /discoverySearch/,
-  ];
-
-  let out: string;
-  try {
-    out = execSync('ps auxww', { encoding: 'utf8', timeout: 5_000 });
-  } catch (err) {
-    console.error('[ingestion-cron] pre-kill: ps auxww misslyckades:', err instanceof Error ? err.message : err);
-    return [];
-  }
-
-  const killed: number[] = [];
-  const seen = new Set<number>();
-
-  for (const line of out.split('\n')) {
-    if (!line.trim()) continue;
-    // ps auxww-format: USER PID %CPU %MEM VSZ RSS TTY STAT STARTED TIME COMMAND…
-    // Splitta på whitespace, max 12 delar → COMMAND börjar på index 10.
-    const parts = line.split(/\s+/, 12);
-    if (parts.length < 12) continue;
-    const pid = parseInt(parts[1], 10);
-    if (Number.isNaN(pid) || pid === self) continue;
-    const cmdline = parts.slice(10).join(' ');
-    // Skippa ps/grep/bash och vår egen bash-wrapper ovanför cron.
-    // cmdline börjar typiskt med /opt/homebrew/.../node eller /bin/bash eller liknande.
-    if (/^\/?(usr\/bin\/)?(ps|grep|bash)\b/.test(cmdline)) continue;
-    if (!PATTERNS.some((rx) => rx.test(cmdline))) continue;
-    if (seen.has(pid)) continue;
-    seen.add(pid);
-
-    // Signal: TERM, vänta 5s, KILL om fortfarande vid liv.
-    try {
-      process.kill(pid, 'SIGTERM');
-      appendChainOverview({ event: 'pre-kill-sigterm', pid, cmdline });
-      await new Promise((r) => setTimeout(r, 5_000));
-      try {
-        process.kill(pid, 0); // kollar om processen lever
-        process.kill(pid, 'SIGKILL');
-        appendChainOverview({ event: 'pre-kill-sigkill', pid, cmdline });
-      } catch {
-        // Redan död efter SIGTERM — bra.
-      }
-      killed.push(pid);
-    } catch (err) {
-      console.error(`[ingestion-cron] pre-kill: kunde inte döda pid ${pid}:`, err instanceof Error ? err.message : err);
-    }
-  }
-
-  return killed;
-}
 
 // ─── Main ───────────────────────────────────────────────────────────────────
 
@@ -860,13 +801,21 @@ async function main(): Promise<void> {
   // tribe-events hängde 2026-10-16–18 i ~76h eftersom cron överlevde watchdog
   // och startade tribe på nytt vid varje launchd-restart. Om vi inte städar
   // här kommer varje körning race:a mot samma zombie-processer.
-  const killed = await killLivingDiscoveryProcesses();
+  // Processer som hör till en LEVANDE kedja lämnas i fred (se anmärkningen
+  // ovanför — utan det dödade pre-kill nattkörningens pågående steg).
+  const { killed, skipped } = await killLivingDiscoveryProcesses({
+    selfPid: process.pid,
+    onEvent: (e) => appendChainOverview(e),
+  });
   if (killed.length > 0) {
     console.log(`[ingestion-cron] pre-kill: dödade ${killed.length} levande discovery-process(er): ${killed.join(', ')}`);
   } else {
     console.log('[ingestion-cron] pre-kill: inga levande discovery-processer hittades');
   }
-  appendChainOverview({ event: 'pre-kill', killedPids: killed, killedCount: killed.length });
+  if (skipped.length > 0) {
+    console.log(`[ingestion-cron] pre-kill: skippade ${skipped.length} process(er) som hör till en levande kedja: ${skipped.join(', ')}`);
+  }
+  appendChainOverview({ event: 'pre-kill', killedPids: killed, skippedPids: skipped, killedCount: killed.length, skippedCount: skipped.length });
 
   // 2026-10-18 — green-skip-gate. Om verify-eventpulse-discovery kördes nyligen
   // (<24h) och var grön: skriv en kort status-snapshot till chain-overview.log.

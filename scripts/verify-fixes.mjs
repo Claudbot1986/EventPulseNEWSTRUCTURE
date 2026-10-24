@@ -527,7 +527,13 @@ function e3() {
 // chain-overview.log för sista körningen, och att en källa som P3D skrev under
 // den körningen fick en färsk statusrad från A-gatet efteråt.
 function e4() {
-  const logPath = path.join(ROOT, 'runtime/ingestion-cron/chain-overview.log');
+  // E4_CHAIN_LOG gör det möjligt att peka gaten på en syntetisk logg — det
+  // används av scripts/verify-e4-order.mjs för att bevisa att gaten KAN
+  // faila (negativ kontroll). Utan det hade ingen kunnat visa att "pass"
+  // betyder något.
+  const logPath = process.env.E4_CHAIN_LOG
+    ? path.resolve(process.env.E4_CHAIN_LOG)
+    : path.join(ROOT, 'runtime/ingestion-cron/chain-overview.log');
   if (!fs.existsSync(logPath)) return fail('e4: FAIL chain-overview.log saknas');
   const rows = [];
   for (const line of readFileSync(logPath, 'utf8').split('\n')) {
@@ -536,7 +542,20 @@ function e4() {
   }
   const runs = [...new Set(rows.filter((r) => r.pid).map((r) => r.pid))];
   if (runs.length === 0) return fail('e4: FAIL inga körningar i chain-overview.log');
-  const last = runs[runs.length - 1];
+
+  // 2026-10-24 — "sista körningen" var fel definition. En `--only <steg>`-körning
+  // (t.ex. timeout-gaten) är också en körning i loggen, men den har varken
+  // P3D eller A och den mäter ingenting om ordningen. Gaten ska välja den
+  // senaste körning som faktiskt är en hel kedja — den som har både P3D och A.
+  const fullChains = runs.filter((pid) => {
+    const own = rows.filter((r) => r.pid === pid && r.event === 'step-end');
+    return own.some((r) => r.step === 'P3D-source-candidate-tests')
+      && own.some((r) => r.step === 'A-directAPI');
+  });
+  if (fullChains.length === 0) {
+    return fail('e4: FAIL ingen körning i chain-overview.log har både P3D och A — ingen hel kedja att mäta ordningen i');
+  }
+  const last = fullChains[fullChains.length - 1];
   const own = rows.filter((r) => r.pid === last && r.event === 'step-end');
   const at = (name) => own.findIndex((r) => r.step === name);
   const p3d = at('P3D-source-candidate-tests');
