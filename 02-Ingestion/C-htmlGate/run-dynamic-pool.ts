@@ -2201,7 +2201,26 @@ export async function runDynamicPoolBatch(options: DynamicPoolOptions = {}): Pro
     const initial = buildInitialPool(BATCH_TYPE, VERIFICATION_SOURCES, sources);
 
     if (!initial || initial.pool.length === 0) {
-      throw new Error('No eligible sources in postB-preC');
+      // 2026-10-24 — tom C-kö är ett legitimt steady state, inte ett fel.
+      // main() gör samma sak (rad ~2718). Här gäller det den
+      // programmatiska ingången: 07-Discovery:s
+      // RealAbcdSourceCandidateRunner och run-batch-from-sources.ts. En
+      // kastad fel där ser ut som "C-gaten kraschade" fast ingenting
+      // var fel.
+      console.log('[Step 1] postB-preC är tom — inga nya källor att köra igen i C. Avslutar rent (steady state).');
+      return {
+        batchNum: BATCH_NUM,
+        poolRoundNumber: 0,
+        totalExited: 0,
+        totalActive: 0,
+        queueDistribution: {},
+        stopReason: 'no-eligible-sources',
+        derivedRulesSummary: {
+          totalRulesLoaded: 0,
+          rulesBySource: [],
+          ruleSourcesExitedInSameRound: [],
+        },
+      };
     }
 
     console.log(`  Selected ${initial.pool.length} sources (eligible in postB-preC: ${initial.eligibleInPrec})`);

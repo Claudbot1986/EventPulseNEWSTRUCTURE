@@ -34,6 +34,11 @@ Scope: bevis för var och en av de sex fixarna från planen "Fixa ingestion + di
   EXPECT: /g6: migrationer \+ P3D-steg pass/
   EVIDENCE: automatic-evidence=v1; definition-sha256=66cab4327915b756654d466049b60f07da9fa1305c3f0c3a7722c19470ac3c7d; exit=0; EXPECT=matched; output-sha256=02d20e1406675f28deb0620fd2abd06f9fae183605cb9314b9b779fd08e9858f; output-bytes=32; shell=/bin/sh; cwd=/Users/claudgashi/EventPulse; path=29325ef63737/16 entries
 
+- [x] G7: C-htmlGate:s programmatiska ingång avslutar rent på tom postB-preC-kö
+  CHECK: node scripts/verify-fixes.mjs g7
+  EXPECT: /g7: programmatisk C-ingång avslutar rent exit=0 på tom postB-preC-kö pass/
+  EVIDENCE: automatic-evidence=v1; definition-sha256=50e1a51f94e8284c730ca9f7f9484f310e3429f2e1a706eec4acfd05d619f6ea; exit=0; EXPECT=matched; output-sha256=19371a5183bdfa4f5f4ef951e954e70e77352af8f29185562d38b14fb2d295ed; output-bytes=77; shell=/bin/sh; cwd=/Users/claudgashi/EventPulse; path=29325ef63737/16 entries
+
 # Handoff: discovery → ingestion (2026-10-23)
 
 Scope: sex fel som höll kvar promoteade källor ute ur ingestion trots att P3D skrev

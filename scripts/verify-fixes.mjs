@@ -19,6 +19,7 @@
  *   g4 — C-htmlGate avslutar rent exit=0 på tom postB-preC-kö
  *   g5 — pattern-promoter + manual-review-triage är borta ur cron
  *   g6 — discovery-loopen stängd: kandidater claimas, sandboxas, promote:as
+ *   g7 — C-htmlGate:s programmatiska ingång avslutar rent på tom postB-preC-kö
  *   h1 — geoExpansion filtrerar på lat/lng, inte på venues.city
  *   h2 — city finns som kolumn och bärs hela vägen till promote
  *   h3 — slug-kollision i promote dödar inte batchen
@@ -157,6 +158,54 @@ function g3() {
     if (!/number\s*\|\s*null/.test(decl)) return fail(`g3: FAIL totalEventsPersisted typ = "${decl}" — förväntar number | null`);
   }
   return ok(`g3: countWorkerCompletions+runRecorder totalEventsPersisted decl="${decl}" pass`);
+}
+
+// G7 — C-htmlGate:s PROGRAMMATISKA ingång avslutar rent på tom postB-preC-kö.
+//
+// main() gör redan rätt (den loggar "steady state" och returnerar). Men
+// runDynamicPoolBatch() — den ingång 07-Discovery:s
+// RealAbcdSourceCandidateRunner och run-batch-from-sources.ts använder —
+// kastade fortfarande "No eligible sources in postB-preC". Där ser ett
+// kastat fel ut som "C-gaten kraschade", fast det bara betyder att det
+// inte fanns något att köra.
+//
+// Detta är en KÖRNING-gate, inte en läsning av källkoden: gaten tömer
+// postB-preC-kön, kör den programmatiska ingången och kräver exit 0.
+// Kön återställs alltid, även om gaten fallerar.
+function g7() {
+  const queueFile = path.join(ROOT, 'runtime', 'postB-preC-queue.jsonl');
+  if (!fs.existsSync(queueFile)) return fail('g7: FAIL runtime/postB-preC-queue.jsonl saknas');
+
+  const original = fs.readFileSync(queueFile, 'utf8');
+  const backup = path.join(ROOT, 'runtime', '.postB-preC-queue.jsonl.g7-backup');
+  fs.writeFileSync(backup, original, 'utf8');
+
+  try {
+    fs.writeFileSync(queueFile, '', 'utf8');
+    const r = spawnSync(
+      'npx',
+      ['tsx', '02-Ingestion/C-htmlGate/run-batch-from-sources.ts', '--sources=__g7_no_source__', '--batch-id=997'],
+      { cwd: ROOT, encoding: 'utf8', timeout: 180_000, killSignal: 'SIGKILL' },
+    );
+    const out = `${r.stdout ?? ''}${r.stderr ?? ''}`;
+    if (r.status !== 0) {
+      return fail(
+        `g7: FAIL den programmatiska C-ingången avslutade med exit=${r.status} på tom kö.\n` +
+        `     Sista utdata:\n${out.split('\n').slice(-12).join('\n')}`,
+      );
+    }
+    if (!/postB-preC är tom|steady state/i.test(out)) {
+      return fail(
+        'g7: FAIL körningen avslutade med exit 0 men skrev inte ut steady-state-meddelandet — ' +
+        'den gick en annan väg.\n' +
+        `     Sista utdata:\n${out.split('\n').slice(-12).join('\n')}`,
+      );
+    }
+    return ok('g7: programmatisk C-ingång avslutar rent exit=0 på tom postB-preC-kö pass');
+  } finally {
+    fs.writeFileSync(queueFile, original, 'utf8');
+    fs.rmSync(backup, { force: true });
+  }
 }
 
 // G4 — C-htmlGate avslutar rent exit=0 på tom postB-preC-kö (plan steg 2B).
@@ -1220,7 +1269,7 @@ function n2() {
   );
 }
 
-const gates = { g1, g2, g3, g4, g5, g6, h1, h2, h3, h4, h5, h6, e1, e2, e3, e4, e5, e6, e7, e8, e9, e10, e11, n1, n2 };
+const gates = { g1, g2, g3, g4, g5, g6, g7, h1, h2, h3, h4, h5, h6, e1, e2, e3, e4, e5, e6, e7, e8, e9, e10, e11, n1, n2 };
 if (!arg || !gates[arg]) {
   console.error(`usage: node scripts/verify-fixes.mjs <${Object.keys(gates).join('|')}>`);
   process.exit(2);
