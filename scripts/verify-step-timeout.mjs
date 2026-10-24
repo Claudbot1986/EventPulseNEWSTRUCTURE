@@ -201,8 +201,9 @@ if (arg === 't3') {
   );
 
   let fakePid = null;
+  let fake = null;
   try {
-    const fake = spawn('node', [chainFile], { stdio: ['ignore', 'pipe', 'pipe'] });
+    fake = spawn('node', [chainFile], { stdio: ['ignore', 'pipe', 'pipe'] });
     await new Promise((resolve, reject) => {
       let buf = '';
       const timer = setTimeout(() => reject(new Error('falsk kedja startade inte')), 15_000);
@@ -229,6 +230,13 @@ if (arg === 't3') {
     }
     ok(`t3: gaten vägrade köra medan en ingestion-kedja levde (pid ${fakePid}) — mätvärde och inte krock pass`);
   } finally {
+    // Den falska kedjan lever i 600 s. Utan att döda den håller barnprocessens
+    // öppna pipes föräldrens event-loop vid — gaten skrev "pass" men avslutade
+    // aldrig, så gate-checken SIGKILLade den efter 120 s. Dödar vi den
+    // först avslutas gaten direkt.
+    if (fake && fake.exitCode === null) {
+      try { fake.kill('SIGKILL'); } catch { /* redan död */ }
+    }
     rmSync(tmp, { recursive: true, force: true });
   }
 }

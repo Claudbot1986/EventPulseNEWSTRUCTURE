@@ -411,3 +411,248 @@ tidigare timeout från en annan körning inte kan smyga igenom.
   CHECK: node scripts/verify-step-timeout.mjs t2
   EXPECT: /t2: direct-jsonld klarade sig med 600 s-gränsen — exit=0 \(\d+ s\), noll step-timeout pass/
   EVIDENCE: automatic-evidence=v1; definition-sha256=4d9fc76852bba539a839da6362e1c3f69aa83683856b5acc560754b9ff23d34c; exit=0; EXPECT=matched; output-sha256=e6e79a3b93413965db36cb6be9c72a95eb83d61dd978d63d2331314a112218ed; output-bytes=91; shell=/bin/sh; cwd=/Users/claudgashi/EventPulse; path=29325ef63737/16 entries
+
+# Pre-kill får inte döda en levande kedjas arbete (2026-10-24)
+
+Scope: `scripts/lib/chain-guard.mjs` + `scripts/ingestion-cron.ts` — städning av discovery-processer.
+
+Nattkörningen 2026-10-24 tog skada av sin egen städning:
+`00:21:43` skickades SIGTERM till nattkörningens `discover-subpaths.mjs`
+och `00:21:57` till `ingest-direct-jsonld.mjs`. Båda stegen dog med exit=1
+**utan FATAL i stderr** — de var SIGTERM:ade, inte trasiga. Signalerna kom
+från verifierings-gates som startade `ingestion-cron.ts --only direct-jsonld`
+parallellt med nattkörningen. Den gamla logiken matchade bara cmdline-
+mönstret och kunde inte se skillnaden mellan en zombie och ett barn av den
+kedja som kör JUST NU.
+
+Fixen kontrollerar **ancestor**: har processen en levande ingestion-kedja som
+förfader är den levande arbete och lämnas i fred.
+
+Ett eget fel hittades i fixen under verifieringen: `listProcesses()` använde
+`split(/\s+/, 12)`, och med en regex som separator behåller `split` INTE
+resten av strängen. Varje cmdline klipptes till två ord
+(`…/node --require`), så kedjemönstret matchade aldrig — `liveChainPids()`
+returnerade alltid `[]` och `chainPids` var alltid tom. Det hade gjort
+pre-kill döda kedjans egna barn, precis som den ursprungliga buggen.
+PK0 finns till för att fånga exakt den klassen.
+
+- [x] PK0: cmdline-parsningen får inte klippa — kedjemönstret måste matcha
+  CHECK: node scripts/verify-prekill.mjs pk0
+  EXPECT: /pk0: full cmdline läst \(\d+ tecken\) och den falska kedjan hittades av liveChainPids\(\) — parsningen klipper inte pass/
+  EVIDENCE: automatic-evidence=v1; definition-sha256=0ee84851d3c039c648e9c03f493538da3ee43a96764ce2218500efb73ff890ff; exit=0; EXPECT=matched; output-sha256=afd2ef9150c8b5dccfe7464a0a02537d68fa13c59cbea0bf4269cf1fa3849363; output-bytes=120; shell=/bin/sh; cwd=/Users/claudgashi/EventPulse; path=29325ef63737/16 entries
+
+- [ ] PK1: negativ kontroll — en orphan utan levande kedje-förfader döds fortfarande
+  CHECK: node scripts/verify-prekill.mjs pk1
+  EXPECT: /pk1: orphan utan levande kedje-förfader dödades \(pid \d+\) — städningen fungerar fortfarande pass/
+  EVIDENCE: pending
+
+- [ ] PK2: positiv kontroll — ett barn till en LEVANDE kedja överlever
+  CHECK: node scripts/verify-prekill.mjs pk2
+  EXPECT: /pk2: barn till levande kedja \(pid \d+\) skippades av pre-kill — kedjans pågående steg lever vidare pass/
+  EVIDENCE: pending
+
+# Gater vägrar köra parallellt med produktionen (2026-10-24)
+
+Scope: `scripts/verify-step-timeout.mjs` — konkurrens-skydd.
+
+En gate som startar ett riktigt produktionssteg mäter ingenting när
+nattkörningen kör parallellt — den krockar med den. TO1/TO2 vägrar därför
+köra så länge en ingestion-kedja lever. TO3 bevisar att vägran faktiskt
+händer: en falsk kedje startas, och gaten måste avbryta med ett tydligt
+meddelande.
+
+- [x] TO3: concurrency-guard — gaten vägrar köra när en kedja lever
+  CHECK: node scripts/verify-step-timeout.mjs t3
+  EXPECT: /t3: gaten vägrade köra medan en ingestion-kedja levde \(pid \d+\) — mätvärde och inte krock pass/
+  EVIDENCE: automatic-evidence=v1; definition-sha256=e16b59c3813a69efed8bd67a0738f75cd80e8bac8ff4242b2ec53ae525e944f5; exit=0; EXPECT=matched; output-sha256=009a7c919638437eb3efd4f861a7b27957c47492d5b4da54f0dce6299f7fc5b7; output-bytes=103; shell=/bin/sh; cwd=/Users/claudgashi/EventPulse; path=29325ef63737/16 entries
+
+# e4-ordningsgaten kan faila (2026-10-24)
+
+Scope: `scripts/verify-fixes.mjs` (e4) + `scripts/verify-e4-order.mjs`.
+
+e4 mäter om P3D kördes FÖRE A i samma kedja. Gaten var FEL definierad: den
+tog "sista körningen" ur chain-overview.log, vilket numera kan vara en
+`--only <steg>`-körning från en verifierings-gate — en körning som varken
+har P3D eller A. Nu väljer gaten den senaste körning som har BÅDA stegen.
+Men en gata som bara kan ge grönt är inte ett bevis: E12 bygger en
+syntetisk logg där P3D avslutas EFTER A och kräver att e4 faller.
+
+- [x] E12: negativ kontroll — e4 faller när P3D kom efter A
+  CHECK: node scripts/verify-e4-order.mjs e1
+  EXPECT: /e1: e4 faller när P3D kommer efter A \(exit=\d+\) och passerar ordningsgranskningen när P3D kommer först — gaten kan faila pass/
+  EVIDENCE: automatic-evidence=v1; definition-sha256=bf9c19c1f8ff26f611a3b3441268c73415d6f1c5614cd1fc67475f8d0ff9632f; exit=0; EXPECT=matched; output-sha256=4fe1212983100417ff9d76f06118a6f610081b5e34af7ec0a8358882fdc2f432; output-bytes=129; shell=/bin/sh; cwd=/Users/claudgashi/EventPulse; path=29325ef63737/16 entries
+
+# C0 faller tillbaka till domänroten när källans URL inte svarar (2026-10-24)
+
+Scope: `02-Ingestion/C-htmlGate/C0-htmlFrontierDiscovery/C0-htmlFrontierDiscovery.ts` — kandidatdiscovery.
+
+Källans URL pekar ofta på EN event-sida. När evenemanget är slut ger sidan
+404, och C0 avslutade då med 0 kandidater FÖRE sitemap-discovery — även om
+domänroten levde och hade en sitemap med eventsidor.
+
+Mätt på riktiga spårade källor (`scripts/probe-root-fallback.mjs`): 4 av 189
+hade död URL men levande rot, över 3 domäner (3arena.se, aviciiarena.se ×2,
+billetto.se). Tre av dem var dubbletter av källor som redan täcker samma
+verket och är nu begravda som `coverage.duplicate_of`.
+
+Fixen är en RESILIENS-fallback: ingen IGNORE_PATTERN, ingen scoringvikt och
+ingen URL-token-regel ändras, och kandidatrankningen är oförändrad för
+sajter vars URL fungerar.
+
+- [x] RF0: enhetstest — fallbacken används, men bara när roten svarar (negativ kontroll med)
+  CHECK: npx vitest run 02-Ingestion/C-htmlGate/C0-htmlFrontierDiscovery/C0-htmlFrontierDiscovery.test.ts --reporter=verbose
+  EXPECT: /rot-fallback till domänroten > använder domänroten när källans URL inte svarar.*rot-fallback till domänroten > avslutar med 0 kandidater/s
+  EVIDENCE: automatic-evidence=v1; definition-sha256=ceebb143088f108903974c43e0b3935f8b00e713622d106f9edf99041042b2fd; exit=0; EXPECT=matched; output-sha256=3b334c2075ec0e9dbd1fc39207076a6115689418519651acffdf93bc2fc472c4; output-bytes=6539; shell=/bin/sh; cwd=/Users/claudgashi/EventPulse; path=29325ef63737/16 entries
+
+- [x] RF1: live — en spårad källa med död URL hittar kandidater via domänroten
+  CHECK: npx tsx scripts/verify-c0-root-fallback.mjs rf1
+  EXPECT: /rf1: billetto-stockholm .* föll tillbaka till https:\/\/billetto\.se och hittade \d+ kandidater .* pass/
+  EVIDENCE: automatic-evidence=v1; definition-sha256=cf83cb4613262ab3571d06826e58188576496ce26713bc223cf44fd45be7ee65; exit=0; EXPECT=matched; output-sha256=c16df30ab68182572e81f60de3e76f56f44200af3aa0e01b810e5eb7fed0d337; output-bytes=307; shell=/bin/sh; cwd=/Users/claudgashi/EventPulse; path=29325ef63737/16 entries
+
+# Handoff mellan gates räknas inte som fel (2026-10-24)
+
+Scope: `02-Ingestion/tools/sourceRegistry.ts` (status-maskinen),
+`02-Ingestion/A-directAPI-networkGate/runA.ts`, `02-Ingestion/B-JSON-feedGate/runB.ts`,
+`02-Ingestion/C-htmlGate/run-dynamic-pool.ts`, `scripts/requeue-sources.mjs`,
+`scripts/restore-handoff-quarantined.mjs`, `scripts/verify-handoff.ts`.
+
+B-gaten lämnade över källor till C-gaten med `success: false` utan error-sträng.
+Status-maskinen räknade det som ett fel → consecutiveFailures++ → auto-quarantine
+vid 5. Under en natt karantänades 56 källor, och C-gatens pool-build droppade
+dem innan de kördes: "[AUDIT] 56/64 sources dropped from postB-preC pool build:
+- astronomiska-huddinge: url_missing_from_sources". De körligheten var alltså
+aldrig fram till C.
+
+Fixen: en handoff får egen status `routed`, räknas aldrig som fel och kan
+aldrig auto-quarantenas. C-gaten skriver nu även sitt terminala utfall, så
+felräknaren speglar verkliga extraktionsfel i stället för handoffs.
+
+- [x] RQ0: handoff ger status routed, räknar inte fel och karantänens aldrig (negativ kontroll: verkligt fel karantänas vid 5)
+  CHECK: npx tsx scripts/verify-handoff.ts h1
+  EXPECT: /h1: 8 handoffs → status routed, consecutiveFailures=0, ingen karantän; negativ kontroll: 5 verkliga fel → karantän \(kontrollen kan faila\) pass/
+  EVIDENCE: automatic-evidence=v1; definition-sha256=7677a98bc40af4eaf8a32b5bea2bf5cee72dc5f36fbd27b7b4d92b7fbf32393c; exit=0; EXPECT=matched; output-sha256=cd2fdbc53c78b8af819f015c06bfb569621368870e749ae3ba9b16dba889ee2f; output-bytes=149; shell=/bin/sh; cwd=/Users/claudgashi/EventPulse; path=29325ef63737/16 entries
+
+- [x] RQ1: ingen källa ligger auto-karantänad med handoff-signatur (negativ kontroll: injicerad rad upptäcks)
+  CHECK: npx tsx scripts/verify-handoff.ts h2
+  EXPECT: /h2: \d+ karantänrader, ingen med handoff-signatur — ingen källa är begravd innan nästa gate kör den; injicerad rad upptäcks \(kontrollen kan faila\) pass/
+  EVIDENCE: automatic-evidence=v1; definition-sha256=b68098bc744f41bc681afe38e37c9a71dd007a14980a074754502b1e1464f410; exit=0; EXPECT=matched; output-sha256=41343abf8bdaf3de4a09bcca2669bd513eaedc5be97a1360b2917ba44d68a0b7; output-bytes=160; shell=/bin/sh; cwd=/Users/claudgashi/EventPulse; path=29325ef63737/16 entries
+
+- [x] RQ2: C-gatens senaste körning droppar 0 källor ur poolen (negativ kontroll: syntetisk logg upptäcks)
+  CHECK: npx tsx scripts/verify-handoff.ts h3
+  EXPECT: /h3: senaste C-körningen \(.*\) droppade 0 källor ur poolen; negativ kontroll: syntetisk logg med 56 droppade källor upptäcks \(kontrollen kan faila\) pass/
+  EVIDENCE: automatic-evidence=v1; definition-sha256=797c2169b2ba0a1235e2269f50ac339ae735d208e4f449adb70cb0a9c2a45f25; exit=0; EXPECT=matched; output-sha256=cc9bc6e395a921ee616a9059017b4f6e043d1887d2c6c198e1f6435764ef6a5b; output-bytes=192; shell=/bin/sh; cwd=/Users/claudgashi/EventPulse; path=29325ef63737/16 entries
+
+- [x] RQ3: A-gatens handoff-regel — routingbeslut är handoff, transportfel är fel (negativ kontroll: transportfel räknas inte som handoff)
+  CHECK: npx vitest run 02-Ingestion/A-directAPI-networkGate/handoffRule.test.ts --reporter=verbose
+  EXPECT: /(?=.*behandlar transportfel som fel, inte handoff)(?=.*behandlar "sidan svarade men saknar JSON-LD" som handoff)/s
+  EVIDENCE: automatic-evidence=v1; definition-sha256=c47e76c164c6c3d7b858ac33971837749e01cecf3c8cd28827b5124758e22598; exit=0; EXPECT=matched; output-sha256=e8f73298e8810bc4a4448d514bcf7c6ad8c3a33a30a438cbdc06445e0dc4c433; output-bytes=1073; shell=/bin/sh; cwd=/Users/claudgashi/EventPulse; path=29325ef63737/16 entries
+
+- [x] RQ4: återköningsverktyget lägger en spårad källa i preA-kön och avvisar en okänd (negativ kontroll med)
+  CHECK: node scripts/verify-requeue.mjs rq1
+  EXPECT: /rq1: .* lades i preA-kön \(reason=".*"\) och en okänd källa avvisades utan att skrivas — återköningsvägen fungerar och kan inte ta emot skräp pass/
+  EVIDENCE: automatic-evidence=v1; definition-sha256=dd49f97a392833e9c5a14f426098c1cefc2c20950057bb84ed8afe8f42d8f927; exit=0; EXPECT=matched; output-sha256=8df3eb980241fab9b016ab8d4a9bb70fb127edb5b5a491a1cd1bc8cfccb173ae; output-bytes=199; shell=/bin/sh; cwd=/Users/claudgashi/EventPulse; path=29325ef63737/16 entries
+
+- [x] RQ5: karantänindexet har inga stale rader (negativ kontroll: injicerad stale rad upptäcks)
+  CHECK: node scripts/verify-requeue.mjs qi1
+  EXPECT: /qi1: \d+ karantänrader har alla fil i sources\/_quarantine\/ — ingen källa är osynlig för A- och C-gaten, och reconcilen upptäcker en injicerad stale rad \(kontrollen kan faila\) pass/
+  EVIDENCE: automatic-evidence=v1; definition-sha256=6ba09773d3f3d8c61712272856499f6e8653f811a6486c3cbcdbd3afc4bcf19a; exit=0; EXPECT=matched; output-sha256=39ffcb141b6f3a554dc987ba1416c533c9de5597ffe3adbcc434163c5f84db50; output-bytes=187; shell=/bin/sh; cwd=/Users/claudgashi/EventPulse; path=29325ef63737/16 entries
+
+## Throttling (429) — självprovocerad WAF-blockering (2026-10-24)
+
+C-gaten anropar samma värd många gånger i samma körning (sitemap →
+kandidatsidor → C1-subpaths → C2/C3-hämtning, upp till 3 rundor). Flera
+svenska sajter svarar då 429. Uppmätt på blekholmen.se: ~12 snabba anrop →
+429 i ~30 s, sedan 200 igen. Utan retry skrev C-gaten det 429 som
+"fetch error" och begravde levande källor för att vi själva höll på för
+mycket.
+
+Samma mönster mättes på sju orelaterade domäner (blekholmen.se,
+momentsapp.no, cirkus.se, folketshus.se, galeasen.se, filborna.se,
+ifkstockholm.se) — generellt, inte sajt-specifikt. Användar-Agenten är
+irrelevant (identiska statuskoder för EventPulse/1.0 och Chrome/125.0).
+
+Fixen ligger i `02-Ingestion/tools/fetchTools.ts`: `fetchHtml` gör nu retry
+med backoff på 429/503 och respekterar `Retry-After`. 404/403/DNS är
+fortfarande omedelbara fel — de begravs korrekt.
+
+- [x] RQ6: throttle-retry — 429 försöks om, men ett 404 gör det inte (negativ kontroll med)
+  CHECK: npx vitest run 02-Ingestion/tools/fetchTools.throttle.test.ts --reporter=verbose
+  EXPECT: /försöker igen efter 429 och lyckas när sajten svarar 200.*NEGATIV KONTROLL — försöker inte om ett 404/s
+  EVIDENCE: automatic-evidence=v1; definition-sha256=4bcb253f4e5fe28cfb29cb4866e46f257fd703dc78fb9549a9f6f913f2233ef0; exit=0; EXPECT=matched; output-sha256=74c34eb3cad91582da5c71c3ebb953afae819846a06f53ae58a12ac724b0488b; output-bytes=690; shell=/bin/sh; cwd=/Users/claudgashi/EventPulse; path=29325ef63737/16 entries
+
+- [x] RQ7: live — de sju throttling-drabbade källorna begravs inte längre på grund av 429 i C-gaten (negativ kontroll: syntetisk 429-begravning upptäcks; positiv kontroll: 429-handoff flaggas inte)
+  CHECK: npx tsx scripts/verify-throttle.ts t1
+  EXPECT: /t1: ingen av 7 throttling-drabbade källor BEGRAVDES på grund av 429 i senaste C-körningen .*negativ kontroll: syntetisk 429-begravning upptäcks \(kontrollen kan faila\); positiv kontroll: 429-handoff flaggas inte pass/
+  EVIDENCE: automatic-evidence=v1; definition-sha256=84e7eee5119838ffeb0a41466a955c26c39c475a09107dae0e21eba0159789aa; exit=0; EXPECT=matched; output-sha256=5df0570538611ded4f07dae99deff2655a2a10e192a93a3fd09035974f5dad91; output-bytes=231; shell=/bin/sh; cwd=/Users/claudgashi/EventPulse; path=29325ef63737/16 entries
+
+- [x] RQ8: per-värd-spacing — samma värd får max ~6 anrop per 10 s (negativ kontroll: olika värd blockeras inte)
+  CHECK: npx vitest run 02-Ingestion/tools/fetchTools.spacing.test.ts --reporter=verbose
+  EXPECT: /håller minst ~2 s mellan anrop mot samma värd.*NEGATIV KONTROLL — blockerar inte anrop mot andra värd.*NEGATIV KONTROLL — 404 försöks inte om/s
+  EVIDENCE: automatic-evidence=v1; definition-sha256=e9bad280af71bb17405e3955dd44e4e8bd26fbabf60a4833752fcfe05bc4dead; exit=0; EXPECT=matched; output-sha256=23b8f174d2791ee2fc68520b502d0d5a481de63fa588a68140935843e344c9a0; output-bytes=638; shell=/bin/sh; cwd=/Users/claudgashi/EventPulse; path=29325ef63737/16 entries
+
+# D-gatens tvåstegs-listingcrawl (2026-10-24)
+
+Scope: en aggregator (billetto) har sina events bakom en JS-renderad
+listningssida. D-gatens vanliga väg renderar EN sida per källa — för en
+listningssida ger det 0 events, bara länkar. Tvåstegs-crawlen gör
+listningssidan → event-URL:er → event-sidor, där JSON-LD finns.
+
+Ny kod: `02-Ingestion/D-renderGate/runD-listing-crawl.ts` (körningen),
+`02-Ingestion/D-renderGate/listingCrawlCore.ts` (rena funktioner, 23
+enhetstester), `scripts/verify-listing-crawl.mjs` (gaterna nedan).
+
+Ingen C-lager-ändring gjordes — all billetto-specifik kunskap ligger i
+källans egen `metadata` (categoryUrls, eventHrefPattern, scope). Scope-
+filtret (postnummerprefix 1xxxx = Stockholms län + ortnamn) är generellt
+och mätt på riktiga körningar, inte sajt-specifikt.
+
+Varje gate bär en negativ kontroll. lc2 kör dessutom ordningskontrollen mot
+två medvetet felaktiga cron-texter, så kontrollen kan inte vara en gata som
+bara kan ge grönt.
+
+- [x] LC0: D-filen innehåller riktiga ParsedEvent-rader med listing-crawl-signal
+  CHECK: node scripts/verify-listing-crawl.mjs lc0
+  EXPECT: /lc0: \d+\/\d+ rader i D-filen är riktiga ParsedEvent.*pass/
+  EVIDENCE: automatic-evidence=v1; definition-sha256=e573a7d68994fce98e50db666182e84f2748d4f2d003c39c82ab63f32a690559; exit=0; EXPECT=matched; output-sha256=a7575fb8526ee682f0f0e119a36d4fb54f9c2f30b1f1d1059de83eb54046b320; output-bytes=191; shell=/bin/sh; cwd=/Users/claudgashi/EventPulse; path=29325ef63737/16 entries
+
+- [x] LC1: källans status speglar att crawlen gav events (inte "död")
+  CHECK: node scripts/verify-listing-crawl.mjs lc1
+  EXPECT: /lc1: källan "billetto-stockholm" har status success, lastEventsFound=\d+.*pass/
+  EVIDENCE: automatic-evidence=v1; definition-sha256=8798ae92cd785f71f285f636d57e82ae711c036e1e1cc591b53457f65969a32c; exit=0; EXPECT=matched; output-sha256=eca67b7404d3f1195c95fa88b8583382f2a374ebe115daa56aef9cce6dee5c6b; output-bytes=141; shell=/bin/sh; cwd=/Users/claudgashi/EventPulse; path=29325ef63737/16 entries
+
+- [x] LC2: cron-kedjan kör steget, i rätt ordning (negativ kontroll: båda felordningarna underkänns)
+  CHECK: node scripts/verify-listing-crawl.mjs lc2
+  EXPECT: /lc2: cron-kedjan kör D-listing-crawl efter D-renderGate och före import-to-eventpulse.*negativ kontroll.*pass/
+  EVIDENCE: automatic-evidence=v1; definition-sha256=cd0e7062b7b3db7435ce83b0f030f32db235a74f7b053bb77f43cd8d2a1c130d; exit=0; EXPECT=matched; output-sha256=60dfe231aa49f69dd21f43af31d95ac7e3ff8a06d8809f6900a7234d25f41b0a; output-bytes=170; shell=/bin/sh; cwd=/Users/claudgashi/EventPulse; path=29325ef63737/16 entries
+
+- [x] LC3: ett extraherat event-URL svarar 200 (eventsen är inte påhittade)
+  CHECK: node scripts/verify-listing-crawl.mjs lc3
+  EXPECT: /lc3: \d+\/\d+ kontrollerade event-URL:er svarade 200.*pass/
+  EVIDENCE: automatic-evidence=v1; definition-sha256=602c1c22b581d299ac1c758a23194a5cad87f61d9c6291a7868e19516b031e67; exit=0; EXPECT=matched; output-sha256=b4a4f1585553c9a0f42d08ae617d3deb2af1d36a3fed887cd46432e368d6b55c; output-bytes=95; shell=/bin/sh; cwd=/Users/claudgashi/EventPulse; path=29325ef63737/16 entries
+
+- [x] LC4: en riktig körning släppte igenom scope-filtret (negativ kontroll: Göteborg underkänns)
+  CHECK: node scripts/verify-listing-crawl.mjs lc4
+  EXPECT: /lc4: scope-filtret har underkänt \d+ utom-Stockholm-events.*negativ kontroll.*pass/
+  EVIDENCE: automatic-evidence=v1; definition-sha256=86308231b5750d50ad28c0d3570a30d6ae324cfdb41d85819b35742aa0246922; exit=0; EXPECT=matched; output-sha256=2c16d345d722836101a5706f4c90250844000279f25dc2c62f78f66bd760e27b; output-bytes=176; shell=/bin/sh; cwd=/Users/claudgashi/EventPulse; path=29325ef63737/16 entries
+
+- [x] LC5: listing-crawlens rena funktioner är enhetstestade (23 tester)
+  CHECK: npx vitest run 02-Ingestion/D-renderGate/listingCrawlCore.test.ts --reporter=verbose
+  EXPECT: /Tests\s+23 passed \(23\)/
+  EVIDENCE: automatic-evidence=v1; definition-sha256=180f94733cff1a2451612f10639dc5a4ced5e667c78fe5a06b91a2278c14488b; exit=0; EXPECT=matched; output-sha256=e40f4c1add2e5df303a07547411d7fa2c6b6c8c2381025997a4a46079e43eea2; output-bytes=2934; shell=/bin/sh; cwd=/Users/claudgashi/EventPulse; path=29325ef63737/16 entries
+
+# Källfilens format: sources/*.jsonl måste vara giltig JSONL (2026-10-24)
+
+Scope: `sources/*.jsonl` är "en källa per fil, ett JSON-objekt per rad".
+Flera läsare parsar bara första raden. `sourceRegistry.updateSourceMetadata()`
+skrev pretty-printad JSON, vilket gjorde de fem källor som fått en
+metadata-uppdatering OSYNLIGA för dem — tyst, utan fel. RF1-gaten sa
+"källan billetto-stockholm finns inte i sources/" fast källan var där.
+
+Fixen: registret skriver en rad (som discovery-promotorn alltid gjort),
+de fem befintliga filerna normaliserades, och läsarna använder nu
+`scripts/lib/readSourceFile.mjs` som tolererar båda formaten.
+
+- [x] SF1: registry skriver en rad, alla källfiler är giltig enradig JSON (negativ kontroll: flerradig/ogiltig/tom fil underkänns)
+  CHECK: npx tsx scripts/verify-source-file-format.ts sf1
+  EXPECT: /sf1: registry skriver en rad och alla \d+ källfiler i sources\/ är giltig enradig JSON; negativ kontroll: flerradig\/ogiltig\/tom fil underkänns pass/
+  EVIDENCE: automatic-evidence=v1; definition-sha256=812f9941a9045fe974646d657b5acd4027e5d39a36f7da2f93b9e25c7d8941cc; exit=0; EXPECT=matched; output-sha256=b9d6d01a7385b8ec129f9f044dbe77a21d4e7be23e4f490d908e538b8119c28e; output-bytes=150; shell=/bin/sh; cwd=/Users/claudgashi/EventPulse; path=29325ef63737/16 entries
