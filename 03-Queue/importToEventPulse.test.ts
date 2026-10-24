@@ -347,3 +347,125 @@ describe('selectImportableSources', () => {
     expect(skippedOut).toEqual([]);
   });
 });
+
+// 2026-10-24 — sluttiden försvann för 191 rader över 20 källor.
+// Adaptern lämnar `endTime` som ett rent klockslag ("15:00"), men
+// normalizern kräver en ISO-stämpel ("...T..."). Den rena klockslaget
+// skickades vidare rakt av och föll bort.
+describe('toRawEvent — sluttid', () => {
+  it('bygger ett rent klockslag till en ISO-stämpel på radens eget datum', () => {
+    const raw = toRawEvent('waldemarsudde', {
+      title: 'Höstlov för skollovslediga barn',
+      date: '2026-10-29',
+      time: '13:00',
+      endTime: '15:00',
+    });
+
+    expect(raw.start_time).toBe('2026-10-29T13:00:00.000Z');
+    expect(raw.end_time).toBe('2026-10-29T15:00:00.000Z');
+  });
+
+  it('NEGATIV KONTROLL — en rad utan sluttid får ingen sluttid', () => {
+    const raw = toRawEvent('waldemarsudde', {
+      title: 'Familjesöndag',
+      date: '2026-11-29',
+      time: '10:00',
+    });
+
+    expect(raw.end_time).toBeNull();
+  });
+
+  it('behåller en end_time som redan är en ISO-stämpel', () => {
+    const raw = toRawEvent('waldemarsudde', {
+      title: 'Skapa & skåla – collage',
+      date: '2026-11-12',
+      time: '17:30',
+      endTime: '2026-11-12T19:30:00.000Z',
+    });
+
+    expect(raw.end_time).toBe('2026-11-12T19:30:00.000Z');
+  });
+
+  it('lägger sluttiden på följande dag när den passerar midnatt (23:00 → 03:00)', () => {
+    // Mätt 2026-10-24: 26 rader har slut < start, mest Café Opera.
+    const raw = toRawEvent('cafe-opera', {
+      title: 'Café Opera - Saturday October 31',
+      date: '2026-10-31',
+      time: '23:00',
+      endTime: '03:00',
+    });
+
+    expect(raw.start_time).toBe('2026-10-31T23:00:00.000Z');
+    expect(raw.end_time).toBe('2026-11-01T03:00:00.000Z');
+  });
+
+  it('ett uttryckligt slutdatum EFTER starten vinner över midnattspassagen', () => {
+    const raw = toRawEvent('cafe-opera', {
+      title: 'Café Opera - explicit end date',
+      date: '2026-10-31',
+      time: '23:00',
+      endTime: '03:00',
+      endDate: '2026-11-01',
+    });
+
+    expect(raw.start_time).toBe('2026-10-31T23:00:00.000Z');
+    expect(raw.end_time).toBe('2026-11-01T03:00:00.000Z');
+  });
+
+  it('NEGATIV KONTROLL — ett slutdatum som ligger FÖRE starten skrivs inte', () => {
+    // Mätt 2026-10-24: visitstockholm-en ger utställningens slutuppdatum
+    // ("Prehistoric Planet" slutar 2026-01-10) medan starten är en enskild
+    // visning 2026-10-24. Skrivs det ut hamnar sluttiden FÖRE starten.
+    const raw = toRawEvent('visitstockholm-en', {
+      title: 'Prehistoric Planet: Discovering Dinosaurs',
+      date: '2026-10-24',
+      endDate: '2026-01-10',
+    });
+
+    expect(raw.start_time).toBe('2026-10-24T00:00:00.000Z');
+    expect(raw.end_time).toBeNull();
+  });
+
+  it('NEGATIV KONTROLL — noll längd (slut == start) skrivs inte', () => {
+    // Mätt 2026-10-24: sthlmlist ger JSON-LD med endDate == startDate.
+    const raw = toRawEvent('sthlmlist', {
+      title: 'Los Kjarkas',
+      date: '2026-10-18',
+      time: '17:30',
+      endDate: '2026-10-18',
+      endTime: '17:30',
+    });
+
+    expect(raw.start_time).toBe('2026-10-18T17:30:00.000Z');
+    expect(raw.end_time).toBeNull();
+  });
+
+  it('midnatt (00:00) på startdagen läggs på följande dag', () => {
+    // Mätt 2026-10-24: concerts50com ger slutdatum == startdatum och
+    // sluttid "00:00" — konserten slutar efter midnatt.
+    const raw = toRawEvent('concerts50com', {
+      title: 'Shinedown',
+      date: '2026-11-09',
+      time: '19:00',
+      endDate: '2026-11-09',
+      endTime: '00:00',
+    });
+
+    expect(raw.start_time).toBe('2026-11-09T19:00:00.000Z');
+    expect(raw.end_time).toBe('2026-11-10T00:00:00.000Z');
+  });
+
+  it('ett slutdatum utan sluttid blir slutet av dagen', () => {
+    // Mätt 2026-10-24: concerts50com ger slutdatum men tom sluttid.
+    const raw = toRawEvent('concerts50com', {
+      title: 'Shinedown',
+      date: '2026-11-09',
+      time: '19:00',
+      endDate: '2026-11-09',
+      endTime: '',
+    });
+
+    expect(raw.start_time).toBe('2026-11-09T19:00:00.000Z');
+    expect(raw.end_time).toBe('2026-11-09T23:59:59.000Z');
+  });
+});

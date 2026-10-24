@@ -18,8 +18,9 @@ import path from 'path';
 import { fileURLToPath, pathToFileURL } from 'url';
 import fs from 'fs';
 import { loadSkippedSourceIds } from '../02-Ingestion/lib/quarantineGuard.js';
+import { isExcludedTitle } from '../02-Ingestion/lib/sourceTitleExclusions.js';
 import { isEventPast } from './eventFreshness';
-import { eventStartTime } from '../02-Ingestion/F-eventExtraction/usableEvents';
+import { eventStartTime, toIsoEndTime } from '../02-Ingestion/F-eventExtraction/usableEvents';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -246,19 +247,97 @@ function extractStartTime(ev: ExtractedEvent): string {
   return eventStartTime(ev);
 }
 
-function extractEndTime(ev: ExtractedEvent): string | null {
+/**
+ * Sluttiden för en extraherad rad.
+ *
+ * 2026-10-24 — en adapter lämnar oftast `endTime` som ett REN klockslag
+ * ("15:00"). Det skickades vidare rakt av, och normalizern kastar bort
+ * sluttider som inte innehåller "T" (`end_time` ska vara en ISO-stämpel).
+ * Följd: 191 rader över 20 källor (billetto, waldemarsudde, cafe-opera,
+ * historiska-museet, …) förlorade sin sluttid helt.
+ *
+ * Nu byggs ett rent klockslag om till en ISO-stämpel på radens eget datum.
+ * `end_time` som redan är en ISO-stämpel används som den är.
+ *
+ * GRUNDREGEL: en sluttid skrivs bara om den ligger STRIKT EFTER starten.
+ * Mätt på verkliga rader (2026-10-24):
+ *   - 26 rader (mest Café Opera, 23:00 → 03:00) har en sluttid som är
+ *     tidigare än starttiden. När inget slutdatum anges ligger sluttiden på
+ *     följande dag — det är den enda legitima midnattspassagen.
+ *   - visitstockholm-en ger slutdatum som hör till en UTSTÄLLNINGS hela
+ *     gång ("Prehistoric Planet" 2026-01-10) medan starten är en enskild
+ *     visning (2026-10-24). Skrivs det ut blir sluttiden FÖRE starten.
+ *   - sthlmlist ger JSON-LD med `endDate` lika med `startDate` ("Los
+ *     Kjarkas" 17:30 → 17:30). Noll längd är inte en användbar sluttid.
+ *
+ * En sluttid som är före starten, eller lika med starten, skrivs alltså
+ * inte. Bättre ingen sluttid än en trasig.
+ */
+export function extractEndTime(ev: ExtractedEvent): string | null {
   if (ev.end_time) return ev.end_time;
-  if (ev.endTime) return ev.endTime;
-  return toIsoEndTime(ev.endDate, ev.endTime, ev.date, ev.time);
+
+  const start = eventStartTime(ev);
+  const startDay = start ? start.slice(0, 10) : null;
+  const clock = typeof ev.endTime === 'string' ? ev.endTime.trim() : '';
+  const hasClock = clock.length > 0;
+
+  // Redan en full stämpel (t.ex. "2026-11-12T19:30:00.000Z") — använd som den är.
+  if (hasClock && ev.endTime.includes('T')) return ev.endTime;
+
+  const endDay = typeof ev.endDate === 'string' ? ev.endDate.trim() : '';
+
+  // Slutdatum anges → använd källans egen dag.
+  if (endDay) {
+    const iso = toIsoEndTime(endDay, hasClock ? ev.endTime : null);
+    if (!iso) return null;
+    if (!start) return iso;
+    if (Date.parse(iso) > Date.parse(start)) return iso;
+    // Slutet före/med starten. Midnatt (00:00) på startdagen betyder
+    // "slutar efter midnatt" — då ligger sluttiden på följande dag.
+    if (hasClock && clockMinutes(clock) === 0 && endDay === startDay) {
+      const nextDay = addDays(startDay, 1);
+      if (nextDay) return toIsoEndTime(nextDay, ev.endTime);
+    }
+    return null;
+  }
+
+  // Endast en sluttid → startens egen dag.
+  if (!hasClock) return null;
+  const iso = toIsoEndTime(startDay, ev.endTime);
+  if (!iso) return null;
+  if (!start) return iso;
+
+  const endMinutes = clockMinutes(clock);
+  const startMinutes = clockMinutes(start.slice(11, 16));
+  if (endMinutes !== null && startMinutes !== null && endMinutes < startMinutes) {
+    // Midnattspassage: sluttiden ligger på följande dag.
+    const nextDay = addDays(startDay, 1);
+    if (nextDay) return toIsoEndTime(nextDay, ev.endTime);
+  }
+  if (Date.parse(iso) <= Date.parse(start)) return null;   // noll längd
+  return iso;
 }
 
-function toIsoEndTime(endDate?: string, endTime?: string, startDate?: string, startTime?: string): string | null {
-  if (endDate && endTime) {
-    const [h, m] = endTime.split(':');
-    return `${endDate}T${h.padStart(2, '0')}:${m.padStart(2, '0')}:00.000Z`;
-  }
-  if (endDate) return `${endDate}T23:59:59.000Z`;
-  return null;
+/** Klockslag ("23:00", "3:05") som minuter sedan midnatt. null om oläsligt. */
+function clockMinutes(value: string | null | undefined): number | null {
+  if (typeof value !== 'string') return null;
+  const m = /^(\d{1,2})[:.](\d{2})$/.exec(value.trim());
+  if (!m) return null;
+  const hours = Number(m[1]);
+  const minutes = Number(m[2]);
+  if (hours > 23 || minutes > 59) return null;
+  return hours * 60 + minutes;
+}
+
+/** "2026-10-31" + 1 dag = "2026-11-01". null om dagen inte är läsbar. */
+function addDays(day: string | null, days: number): string | null {
+  if (!day) return null;
+  const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(day);
+  if (!m) return null;
+  const d = new Date(Date.UTC(Number(m[1]), Number(m[2]) - 1, Number(m[3])));
+  if (Number.isNaN(d.getTime())) return null;
+  d.setUTCDate(d.getUTCDate() + days);
+  return d.toISOString().slice(0, 10);
 }
 
 /**
@@ -437,11 +516,11 @@ export async function importSource(
   sourceId: string,
   dryRun: boolean,
   rootOverride?: string,
-): Promise<{ enqueued: number; errors: number; skippedPast: number }> {
+): Promise<{ enqueued: number; errors: number; skippedPast: number; excludedTitles: number }> {
   const events = readExtractedEvents(sourceId, rootOverride);
   if (events.length === 0) {
     console.log(`[import] ${sourceId}: ingen event-data i extractedevents/ → hoppar`);
-    return { enqueued: 0, errors: 0, skippedPast: 0 };
+    return { enqueued: 0, errors: 0, skippedPast: 0, excludedTitles: 0 };
   }
 
   console.log(`[import] ${sourceId}: ${events.length} events`);
@@ -449,6 +528,7 @@ export async function importSource(
   let enqueued = 0;
   let errors = 0;
   let skippedPast = 0;
+  let excludedTitles = 0;
 
   for (const ev of events) {
     try {
@@ -463,6 +543,14 @@ export async function importSource(
       if (isEventPast(raw.start_time)) {
 
         skippedPast++;
+        continue;
+      }
+      // 2026-10-24 — källans egen uteslutningslista (metadata.ignoreTitles).
+      // Navigationsrubriker ("Hitta hit", "Om konserten", "Biljettinformation")
+      // är inte event. Uteslutningen är per källa, inte global — se
+      // 02-Ingestion/lib/sourceTitleExclusions.ts.
+      if (isExcludedTitle(sourceId, raw.title)) {
+        excludedTitles++;
         continue;
       }
       if (dryRun) {
@@ -481,13 +569,16 @@ export async function importSource(
   if (skippedPast > 0) {
     console.log(`[import] ${sourceId}: skip ${skippedPast} (passerat datum/saknar datum)`);
   }
+  if (excludedTitles > 0) {
+    console.log(`[import] ${sourceId}: skip ${excludedTitles} (källans egen uteslutningslista)`);
+  }
 
   if (!dryRun) {
     removeFromPreUI(sourceId);
     appendToEventPulseApp(sourceId, enqueued);
   }
 
-  return { enqueued, errors, skippedPast };
+  return { enqueued, errors, skippedPast, excludedTitles };
 }
 
 // ── CLI ─────────────────────────────────────────────────────────────────────
