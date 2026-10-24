@@ -19,6 +19,7 @@
 import { readdirSync, readFileSync, existsSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { readSourceFile } from './lib/readSourceFile.mjs';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.resolve(__dirname, '..');
@@ -49,14 +50,7 @@ function loadSources() {
   if (!existsSync(SOURCES_DIR)) return [];
   return readdirSync(SOURCES_DIR)
     .filter((f) => f.endsWith('.jsonl'))
-    .map((f) => {
-      try {
-        const first = readFileSync(path.join(SOURCES_DIR, f), 'utf8').trim().split('\n')[0];
-        return JSON.parse(first);
-      } catch {
-        return null;
-      }
-    })
+    .map((f) => readSourceFile(path.join(SOURCES_DIR, f)))
     .filter((s) => s && typeof s.url === 'string' && s.url.startsWith('http'));
 }
 

@@ -507,6 +507,7 @@ export function updateSourceStatus(
 
   } else if (!result.success && result.error?.includes('routing_review_required')) {
     current.status = 'routing_review_required';
+    current.consecutiveFailures++;
     current.lastError = result.error;
     current.ingestionStage = 'C';
 
@@ -698,7 +699,63 @@ export function updateSourceUrl(sourceId: string, newUrl: string): boolean {
   if (!parsed || !parsed.id) return false;
 
   parsed.url = newUrl;
-  writeFileSync(filePath, JSON.stringify(parsed, null, 2) + '\n', 'utf8');
+  writeFileSync(filePath, JSON.stringify(parsed) + '\n', 'utf8');
+  return true;
+}
+
+// ─── Source Metadata Update ────────────────────────────────────────────────────
+
+/**
+ * Slå ihop metadata (och valda toppnivå-fält) i en källas sanningsfil.
+ *
+ * Bakgrund (2026-10-24). Källfilerna i sources/ skrivs om av flera
+ * producenter — bl.a. description-URL-mining, som 2026-10-04 skrev över
+ * billetto-stockholm.jsonl och tappade `metadata.categoryUrls`,
+ * `preferredPath: 'render'` och `type: 'aggregator-listing'`. Utan dem kan
+ * D-gatens tvåstegs-listingkörning inte köras, och källan landade i
+ * manual-review i stället för D-gaten.
+ *
+ * `metadata` slås ihop nyckelvis (djupt) så att en befintlig nyckel inte
+ * försvinner när en ny läggs till. Övriga fält i patchen ersätts.
+ *
+ * FILEN SKRIVS SOM EN RAD JSON. sources/*.jsonl är JSONL — en källa per
+ * fil, ett JSON-objekt per rad. Flera radbaserade läsare (probe-fail-sources,
+ * probe-c0-candidates, probe-root-fallback, verify-c0-root-fallback) parsar
+ * bara första raden. När registry skrev pretty-printad JSON blev de fem
+ * berörda källorna OSYNLIGA för dem — tyst, utan fel. Skrivaren i
+ * 07-Discovery/src/sourceTesting/sandbox.ts har alltid skrivit en rad.
+ *
+ * @param patch  fält att skriva; `metadata` slås ihop, resten ersätts
+ */
+export function updateSourceMetadata(
+  sourceId: string,
+  patch: Record<string, unknown>
+): boolean {
+  const filePath = path.join(SOURCES_DIR, `${sourceId}.jsonl`);
+  if (!existsSync(filePath)) return false;
+
+  const content = readFileSync(filePath, 'utf8').trim();
+  if (!content) return false;
+
+  let parsed: (SourceTruth & Record<string, unknown>) | null = null;
+
+  try { parsed = JSON.parse(content) as SourceTruth & Record<string, unknown>; } catch {}
+  if (!parsed || !parsed.id) {
+    const firstLine = content.split('\n')[0].trim();
+    try { parsed = JSON.parse(firstLine) as SourceTruth & Record<string, unknown>; } catch {}
+  }
+
+  if (!parsed || !parsed.id) return false;
+
+  const { metadata: patchMetadata, ...topLevel } = patch;
+  const merged: SourceTruth & Record<string, unknown> = { ...parsed, ...topLevel };
+
+  if (patchMetadata && typeof patchMetadata === 'object') {
+    const existing = (parsed.metadata ?? {}) as Record<string, unknown>;
+    merged.metadata = { ...existing, ...(patchMetadata as Record<string, unknown>) };
+  }
+
+  writeFileSync(filePath, JSON.stringify(merged) + '\n', 'utf8');
   return true;
 }
 

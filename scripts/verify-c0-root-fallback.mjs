@@ -29,6 +29,7 @@
 import { existsSync, readFileSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { readSourceFile } from './lib/readSourceFile.mjs';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.resolve(__dirname, '..');
@@ -45,12 +46,7 @@ function fail(msg) { console.error(msg); process.exit(1); }
 function readSource(sourceId) {
   const file = path.join(ROOT, 'sources', `${sourceId}.jsonl`);
   if (!existsSync(file)) return null;
-  try {
-    const first = readFileSync(file, 'utf8').trim().split('\n')[0];
-    return JSON.parse(first);
-  } catch {
-    return null;
-  }
+  return readSourceFile(file);
 }
 
 // ── RF1: live — död URL, levande rot, kandidater hittas ───────────────────
