@@ -673,10 +673,26 @@ if (!skipImages) {
   // 492 kvar väntande varje natt — kön växte monotont. 90 min rymmer ~1 750
   // jobb, alltså en hel natt plus dagens utestående rest. Stegets egen gräns är
   // ändå STEP_TIMEOUT_MS (2 h), så en budget på 90 min kan aldrig hänga kedjan.
+  //
+  // 2026-10-24 — concurrency 5 → 20 efter mätning på riktig kö. Nattens
+  // import köade in 5 304 jobb och drainen hann med 3 483 på sin 90-minuters
+  // budget (38,7 jobb/min) — kön växte med ~1 800 jobb varje natt. Mätt med
+  // scripts/measure-drain-concurrency.mjs:
+  //   c=5  → 45,5 jobb/min   (0 fel)
+  //   c=10 → 88,5 och 91,5   (0 fel, två körningar)
+  //   c=20 → 382 och 321,6   (0 fel, två körningar, båda ordningarna)
+  // c=20 rymmer ~29 000 jobb på 90 min = 5,5× nattens volym, så kön kan inte
+  // växa igen även om källorna fördubblas. Smoke kör fortfarande med 5 — där
+  // ska latensen vara låg, inte genomströmningen hög.
   steps.push({
     name: 'worker-drain',
     cmd: 'npx',
-    args: ['tsx', '03-Queue/drainQueue.ts', '--max-ms', String(smoke ? 60_000 : 5_400_000)],
+    args: [
+      'tsx',
+      '03-Queue/drainQueue.ts',
+      '--max-ms', String(smoke ? 60_000 : 5_400_000),
+      '--concurrency', String(smoke ? 5 : 20),
+    ],
   });
 
   // ── P2C: Active-learning closed loop ──────────────────────────────────

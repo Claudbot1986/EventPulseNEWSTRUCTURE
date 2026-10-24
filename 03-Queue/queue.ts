@@ -16,6 +16,7 @@ dotenv.config({ path: path.resolve(__dirname, '../.env'), override: true });
 import { Queue, Worker, type Job, type ConnectionOptions } from 'bullmq';
 import IORedis from 'ioredis';
 import type { RawEventInput } from '@eventpulse/shared';
+import { DEFAULT_WORKER_CONCURRENCY } from './workerConcurrency';
 
 // Lazy connection to avoid ENOTFOUND at import time
 let _connection: IORedis | null = null;
@@ -84,14 +85,22 @@ export const imageGenerationQueue = new Queue<{ event_id: string }>(
   }
 );
 
+/**
+ * Skapa normalizer-workern.
+ *
+ * `concurrency` styr hur många events som normaliseras parallellt. Varje
+ * jobb gör två LLM-anrop, så fler workers = mer parallell modelltrafik.
+ * Se 03-Queue/workerConcurrency.ts för mätning och regler.
+ */
 export function createNormalizerWorker(
   processor: (job: Job<RawEventInput>) => Promise<void>,
-  queueName: string = 'raw_events'
+  queueName: string = 'raw_events',
+  concurrency: number = DEFAULT_WORKER_CONCURRENCY
 ) {
   const worker = new Worker<RawEventInput>(queueName, processor, {
     connection: { getConnection } as unknown as ConnectionOptions,
     prefix: 'bull',
-    concurrency: 5,
+    concurrency,
   });
 
   return worker;

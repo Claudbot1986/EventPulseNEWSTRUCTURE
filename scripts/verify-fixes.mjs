@@ -31,6 +31,7 @@
  *   e4 — discovery→ingestion går igenom på EN körning (promote före A)
  *   e5 — döda källor har orsak; uppenbart döda (404/DNS) ligger i kyrkogravet
  *   n1 — C3-AI:s "needs_render" routar till D-renderGate, inte till begravning
+ *   n2 — drainens worker-concurrency är mätbar och högre concurrency ger mer
  */
 
 import fs from 'node:fs';
@@ -1116,7 +1117,53 @@ function n1() {
   );
 }
 
-const gates = { g1, g2, g3, g4, g5, g6, h1, h2, h3, h4, h5, h6, e1, e2, e3, e4, e5, e6, e7, e8, e9, e10, e11, n1 };
+/**
+ * N2 — drainens worker-concurrency är mätbar, och högre concurrency ger mer.
+ *
+ * Bakgrund (2026-10-24). `03-Queue/queue.ts` hårdkodade concurrency till 5.
+ * Mätt 45,4 jobb/min. Nattens import köar ~5 300 jobb men cron-stegets budget
+ * är 90 minuter — 45,4 × 90 ≈ 4 086 jobb. Kön växte alltså varje natt, och
+ * de extragerade eventsen syntes i databasen först flera nätter senare.
+ *
+ * Gaten mäter på riktig kö: två drain-körningar (concurrency N och N+5),
+ * räknar "[worker] Job completed"-rader. Kräver att den högre concurrencyn
+ * ÄR snabbare — annars är höjningen värdelös. Ingen syntetisk data: varje
+ * räknad jobb är en riktig normalisering som persisterat ett event.
+ */
+function n2() {
+  const unit = spawnSync(
+    'npx',
+    ['vitest', 'run', '03-Queue/workerConcurrency.test.ts'],
+    { cwd: ROOT, encoding: 'utf8', timeout: 180_000, killSignal: 'SIGKILL' },
+  );
+  if (unit.status !== 0) {
+    return fail(`n2: FAIL enhetstestet för concurrency-tolkningen passerar inte:\n${(unit.stdout ?? '') + (unit.stderr ?? '')}`);
+  }
+
+  const r = spawnSync(
+    'node',
+    ['scripts/measure-drain-concurrency.mjs', '--low', '5', '--high', '10', '--seconds', '120', '--apply'],
+    { cwd: ROOT, encoding: 'utf8', timeout: 600_000, killSignal: 'SIGKILL' },
+  );
+  const out = `${r.stdout ?? ''}${r.stderr ?? ''}`;
+  if (r.status !== 0) {
+    return fail(`n2: FAIL mätningen av concurrency misslyckades:\n${out.split('\n').slice(-6).join('\n')}`);
+  }
+  let m;
+  try {
+    m = JSON.parse(out.slice(out.indexOf('{')));
+  } catch (e) {
+    return fail(`n2: FAIL kunde inte tolka mätningen: ${e.message}\n${out.split('\n').slice(-6).join('\n')}`);
+  }
+  return ok(
+    `n2: concurrency mätbar och högre ger mer pass ` +
+    `(c=${m.lowResult.concurrency}: ${m.lowResult.ratePerMin} jobb/min / ${m.jobsPerBudgetLow} per 90 min, ` +
+    `c=${m.highResult.concurrency}: ${m.highResult.ratePerMin} jobb/min / ${m.jobsPerBudgetHigh} per 90 min, ` +
+    `speedup=${m.speedup}×)`,
+  );
+}
+
+const gates = { g1, g2, g3, g4, g5, g6, h1, h2, h3, h4, h5, h6, e1, e2, e3, e4, e5, e6, e7, e8, e9, e10, e11, n1, n2 };
 if (!arg || !gates[arg]) {
   console.error(`usage: node scripts/verify-fixes.mjs <${Object.keys(gates).join('|')}>`);
   process.exit(2);

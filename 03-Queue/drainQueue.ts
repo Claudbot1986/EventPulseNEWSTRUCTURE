@@ -19,6 +19,7 @@
  * Usage:
  *   npx tsx 03-Queue/drainQueue.ts                    # töm kön, max 30 min
  *   npx tsx 03-Queue/drainQueue.ts --max-ms 300000   # max 5 min
+ *   npx tsx 03-Queue/drainQueue.ts --concurrency 10   # 10 workers parallellt
  *   npx tsx 03-Queue/drainQueue.ts --status           # bara djup, ingen drain
  */
 
@@ -57,6 +58,34 @@ const WORKER_CLOSE_TIMEOUT_MS = 30_000;
  */
 export { resolveDrainMode, type DrainMode } from './drainMode.js';
 import { resolveDrainMode } from './drainMode.js';
+import {
+  resolveWorkerConcurrency,
+  DEFAULT_WORKER_CONCURRENCY,
+} from './workerConcurrency.js';
+
+/**
+ * Hur många workers som ska köra. Flaggan `--concurrency N` vinner över
+ * miljövariabeln NORMALIZER_CONCURRENCY, som vinner över standardvärdet.
+ * Ett ogiltigt värde är ett fel — inte något att gissa bort.
+ */
+function resolveConcurrency(): number {
+  const flagIdx = args.indexOf('--concurrency');
+  const fromFlag = flagIdx !== -1 ? args[flagIdx + 1] : undefined;
+  const raw = fromFlag ?? process.env.NORMALIZER_CONCURRENCY;
+
+  if (raw === undefined || String(raw).trim() === '') {
+    return DEFAULT_WORKER_CONCURRENCY;
+  }
+
+  const resolved = resolveWorkerConcurrency(raw);
+  if (resolved === null) {
+    console.error(
+      `[drain] ogiltigt concurrency-värde "${raw}" — förväntar ett heltal >= 1`,
+    );
+    process.exit(2);
+  }
+  return resolved;
+}
 
 async function depth(): Promise<{ waiting: number; active: number; failed: number }> {
   // Utan argument returnerar getJobCounts alla typer. Med typer som argument
@@ -85,7 +114,11 @@ async function main(): Promise<void> {
     process.exit(0);
   }
 
-  console.log(`[drain] start: waiting=${start.waiting} active=${start.active} failed=${start.failed} maxMs=${maxMs}`);
+  const concurrency = resolveConcurrency();
+  console.log(
+    `[drain] start: waiting=${start.waiting} active=${start.active} failed=${start.failed} ` +
+      `maxMs=${maxMs} concurrency=${concurrency}`,
+  );
 
   let completed = 0;
   let failed = 0;
@@ -93,7 +126,7 @@ async function main(): Promise<void> {
     await processRawEvent(job);
     completed += 1;
     console.log(`[worker] Job completed — ${completed}/${start.waiting}`);
-  });
+  }, 'raw_events', concurrency);
   worker.on('failed', (_job, err) => {
     failed += 1;
     console.error(`[drain] job failed: ${err.message}`);

@@ -656,3 +656,55 @@ de fem befintliga filerna normaliserades, och läsarna använder nu
   CHECK: npx tsx scripts/verify-source-file-format.ts sf1
   EXPECT: /sf1: registry skriver en rad och alla \d+ källfiler i sources\/ är giltig enradig JSON; negativ kontroll: flerradig\/ogiltig\/tom fil underkänns pass/
   EVIDENCE: automatic-evidence=v1; definition-sha256=812f9941a9045fe974646d657b5acd4027e5d39a36f7da2f93b9e25c7d8941cc; exit=0; EXPECT=matched; output-sha256=b9d6d01a7385b8ec129f9f044dbe77a21d4e7be23e4f490d908e538b8119c28e; output-bytes=150; shell=/bin/sh; cwd=/Users/claudgashi/EventPulse; path=29325ef63737/16 entries
+
+# C3-AI needs_render → D-renderGate (2026-10-24)
+
+Scope: C3-AI kan säga att sidan BEHÖVER renderas (`aiVerdict='needs_render'`).
+Det är D-gatens signal, inte ett extraktionsfel. Signalen ignorerades, så
+källor med C2-score under tröskeln 20 hamnade i `manual-review` — alltså
+begravdes — i stället för att få en riktig render.
+
+Bevis (Generalization Protection Rule — 4 orelaterade domäner, samtliga med
+C2-score under tröskeln): vasamuseet.se (12), www.vasamuseet.se (9),
+www.botaniska.se (8), svenskfotboll.se (12). Kontrollfall med hög C2-score
+(lth 26, thatsup 46/47, kalmar 55, modernamuseet 39) gick redan till D via
+OPTIMIZATION B och ledde till 1–7 events — ingen av dem begravdes.
+
+- [x] N1: C3-AI:s "needs_render" routar till D-renderGate, inte till begravning
+  CHECK: node scripts/verify-fixes.mjs n1
+  EXPECT: /n1: needs_render → D-renderGate pass/
+
+# Datum-formade titlar är inte event-namn (2026-10-24)
+
+Scope: vasamuseet.se lägger datumet i en `<h2>` och evenemangets namn i en
+`<h3>` i samma kort. Extractorn tog den FÖRSTA rubriken → sex events med
+titeln "6 NOV, 14:30".
+
+Bevis (Generalization Protection Rule — 3 orelaterade domäner, samma mönster:
+datumrubrik före titelfrubrik i samma kort): vasamuseet.se (6 kort),
+fallan.nu (38 kort), folkoperan.se (1 kort).
+
+Negativ kontroll i samma gate: hela det extraherade korpuset (6383 rader)
+gicks igenom — endast 8 titlar var datumformade, samtliga verkliga
+skräptitlar. 47 tester, inklusive att en titel som BÖRJAR med ett datum
+("1 MAJ – EFTERFESTEN MED KSMB") behålls.
+
+- [x] DT1: en rubrik som bara är ett datum ger inte eventets titel (negativ kontroll: titel som börjar med datum behålls)
+  CHECK: npx vitest run 02-Ingestion/F-eventExtraction/dateOnlyTitles.test.ts 02-Ingestion/F-eventExtraction/universal-extractor-date-title.test.ts
+  EXPECT: /Tests\s+47 passed \(47\)/
+
+# Drainens worker-concurrency (2026-10-24)
+
+Scope: `03-Queue/queue.ts` hårdkodade worker-concurrency till 5. Mätt
+45,4 jobb/min. Nattens import köar ~5 300 jobb men cron-stegets budget är
+90 minuter — 45,4 × 90 ≈ 4 086 jobb. Kön växte alltså varje natt, och
+eventsen syntes i databasen först flera nätter senare.
+
+Gaten mäter på riktig kö (inga syntetiska jobb): två drain-körningar med
+concurrency 5 respektive 10, räknar "[worker] Job completed"-rader, och
+kräver att den högre concurrencyn ÄR snabbare. Varje räknat jobb är en
+riktig normalisering som persisterat ett event i Supabase.
+
+- [ ] N2: drainens worker-concurrency är mätbar, och högre concurrency ger mer
+  CHECK: node scripts/verify-fixes.mjs n2
+  EXPECT: /n2: concurrency mätbar och högre ger mer pass/
