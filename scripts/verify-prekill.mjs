@@ -69,12 +69,23 @@ function writeSleeper(file, label) {
   );
 }
 
-/** Starta en process och vänta tills den skrivit sin pid på stdout. */
+/**
+ * Starta en process och vänta tills den skrivit sin pid på stdout.
+ *
+ * stderr fångas också och läggs i felmeddelandet. Utan det är ett
+ * uppstartsfel osynligt — testet säger bara "startade inte", och man
+ * felsöker i fel riktning (testet i stället för barnprocessen).
+ */
 function startSleeper(file, label) {
   return new Promise((resolve, reject) => {
     const proc = spawn('node', [file], { stdio: ['ignore', 'pipe', 'pipe'] });
     let buf = '';
-    const timer = setTimeout(() => reject(new Error(`${label} startade inte`)), 15_000);
+    let errBuf = '';
+    const timer = setTimeout(() => {
+      const detail = errBuf.trim() ? `\n     stderr: ${errBuf.trim().slice(-800)}` : '';
+      reject(new Error(`${label} startade inte${detail}`));
+    }, 15_000);
+    proc.stderr.on('data', (d) => { errBuf += d.toString(); });
     proc.stdout.on('data', (d) => {
       buf += d.toString();
       const m = buf.match(/pid=(\d+)/);
@@ -84,6 +95,14 @@ function startSleeper(file, label) {
       }
     });
     proc.on('error', (e) => { clearTimeout(timer); reject(e); });
+    proc.on('exit', (code) => {
+      // Processen dog innan den skrev ut sin pid — det är ett uppstartsfel,
+      // inte ett "startade inte"-timeout.
+      if (buf.match(/pid=(\d+)/)) return;
+      clearTimeout(timer);
+      const detail = errBuf.trim() ? `\n     stderr: ${errBuf.trim().slice(-800)}` : '';
+      reject(new Error(`${label} dog med exit=${code} innan den skrev ut sin pid${detail}`));
+    });
   });
 }
 
@@ -112,10 +131,14 @@ async function buildFakeChain() {
   writeSleeper(childFile, 'child');
 
   // Kedjan startar barnet och skriver ut bådas pid.
+  //
+  // `spawn(cmd, args, opts)` kräver att args är en ARRAY. Att skicka
+  // sökvägen som en ren sträng ger ERR_INVALID_ARG_TYPE, kedjan dör
+  // vid start och hela den positiva kontrollen är värdelös.
   writeFileSync(
     chainFile,
     `import { spawn } from 'node:child_process';\n` +
-    `const child = spawn('node', ${JSON.stringify(childFile)}, { stdio: ['ignore', 'pipe', 'pipe'] });\n` +
+    `const child = spawn('node', [${JSON.stringify(childFile)}], { stdio: ['ignore', 'pipe', 'pipe'] });\n` +
     `child.stdout.on('data', (d) => process.stdout.write(d));\n` +
     `console.log('chain pid=' + process.pid);\n` +
     `setTimeout(() => process.exit(0), ${SLEEP_MS});\n`,
