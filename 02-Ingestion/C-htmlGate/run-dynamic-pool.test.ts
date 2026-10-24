@@ -15,6 +15,7 @@ import {
   determineOutcome,
   hasUnfinalizedCompletedActivePool,
   parseBatchNumberFromId,
+  resolveC4Route,
   resolveRoute,
   type CResult,
 } from './run-dynamic-pool.js';
@@ -361,6 +362,80 @@ describe('determineOutcome', () => {
 });
 
 // ---------------------------------------------------------------------------
+// TESTS: "källan lever men har inget" (SITE_ADAPTER_EMPTY)
+// ---------------------------------------------------------------------------
+
+describe('determineOutcome — levande men tom källa', () => {
+  /** Grundläge: adapter matchade, 0 rader, 0 sparbara datum, sidan läsbar. */
+  function emptySite(overrides: Partial<CResult> = {}): CResult {
+    return makeCResult({
+      c3: { ...BASE_C3, adapterMatched: 'pingstkyrkan' },
+      extract: { ...BASE_EXTRACT, eventsFound: 0, datedEventsFound: 0 },
+      ...overrides,
+    });
+  }
+
+  it('adaptern matchade + 0 sparbara events → empty_success (inte fel)', () => {
+    const r = emptySite();
+    determineOutcome(r, r.sourceUrl, 1, false, 'html');
+    expect(r.outcomeType).toBe('empty_success');
+    expect(r.exitReason).toBe('SITE_ADAPTER_EMPTY');
+    expect(r.success).toBe(true);
+    expect(r.exitReasonDetail).toContain('pingstkyrkan');
+  });
+
+  it('adaptern matchade men rader utan datum → fortfarande empty_success', () => {
+    // kungstradgarden-2: universalheuristiken hittar 1 rad utan datum,
+    // men sajten är tom (block-event-list finns, 0 artiklar).
+    const r = emptySite({ extract: { ...BASE_EXTRACT, eventsFound: 1, datedEventsFound: 0 } });
+    determineOutcome(r, r.sourceUrl, 1, false, 'html');
+    expect(r.outcomeType).toBe('empty_success');
+    expect(r.exitReason).toBe('SITE_ADAPTER_EMPTY');
+  });
+
+  it('NEGATIV KONTROLL: render-källa → regeln får INTE gälla', () => {
+    // riksarkivet: plain HTML ger 0 events, men render ger 20. preferredPath
+    // = 'render' betyder att plain HTML inte är vägen — 0 säger ingenting.
+    const r = emptySite({ c3: { ...BASE_C3, adapterMatched: 'riksarkivet' } });
+    determineOutcome(r, r.sourceUrl, 1, false, 'render');
+    expect(r.outcomeType).not.toBe('empty_success');
+    expect(r.exitReason).not.toBe('SITE_ADAPTER_EMPTY');
+  });
+
+  it('NEGATIV KONTROLL: universalheuristiken hittade riktiga events → extract_success', () => {
+    // folkoperan.se: adaptern matchar men ger 0, universal ger 30 daterade.
+    const r = emptySite({
+      extract: { ...BASE_EXTRACT, eventsFound: 30, datedEventsFound: 30 },
+    });
+    determineOutcome(r, r.sourceUrl, 1, false, 'html');
+    expect(r.outcomeType).toBe('extract_success');
+    expect(r.exitReason).toBe('EXTRACT_SUCCESS');
+  });
+
+  it('NEGATIV KONTROLL: ingen adapter matchade → oförändrad fail-väg', () => {
+    const r = emptySite({ c3: { ...BASE_C3 } });
+    determineOutcome(r, r.sourceUrl, 1, false, 'html');
+    expect(r.outcomeType).not.toBe('empty_success');
+    expect(r.exitReason).not.toBe('SITE_ADAPTER_EMPTY');
+  });
+
+  it('NEGATIV KONTROLL: JS-renderad sida → skickas till D, aldrig begravd som tom', () => {
+    const r = emptySite({ c1: { ...BASE_C1, likelyJsRendered: true } });
+    determineOutcome(r, r.sourceUrl, 1, false, 'html');
+    expect(r.outcomeType).not.toBe('empty_success');
+    expect(r.routeSuggestion).toBe('D');
+  });
+
+  it('NEGATIV KONTROLL: sidan var inte fetchbar → inte "tom", utan fel', () => {
+    const r = emptySite({
+      c1: { ...BASE_C1, fetchable: false, fetchError: 'HTTP 500' },
+    });
+    determineOutcome(r, r.sourceUrl, 1, false, 'html');
+    expect(r.outcomeType).not.toBe('empty_success');
+  });
+});
+
+// ---------------------------------------------------------------------------
 // TESTS: resolveRoute
 // ---------------------------------------------------------------------------
 
@@ -368,6 +443,11 @@ describe('resolveRoute', () => {
   it('extract_success ALWAYS goes to UI regardless of routeSuggestion', () => {
     const r = makeCResult({ outcomeType: 'extract_success', routeSuggestion: 'D' });
     expect(resolveRoute(r, 1).queueName).toBe('postTestC-UI');
+  });
+
+  it('empty_success lämnar poolen till manual-review (aldrig till UI/D)', () => {
+    const r = makeCResult({ outcomeType: 'empty_success', routeSuggestion: 'manual-review' });
+    expect(resolveRoute(r, 1).queueName).toBe('postTestC-manual-review');
   });
 
   it('routeSuggestion A/B/D routes correctly', () => {
@@ -386,6 +466,75 @@ describe('resolveRoute', () => {
     const r = makeCResult({ outcomeType: 'fail', routeSuggestion: 'manual-review' });
     expect(resolveRoute(r, 3).queueName).toBe('postTestC-manual-review');
     expect(resolveRoute(r, 4).queueName).toBe('postTestC-manual-review');
+  });
+
+  // 2026-10-24 — källspecifikt render-krav (source-specific config).
+  //
+  // Bakgrund: riksarkivet och hammarby gav 0 events via plain HTTP men
+  // 20 respektive 11 events via D-gatens riktiga render (mätt samma dag).
+  // C1:s `likelyJsRendered` är FALSE för dem, så de hamnade i
+  // postTestC-manual-review och nådde aldrig D-gaten.
+  it('preferredPath=render routar en fail till postTestC-D', () => {
+    const r = makeCResult({ outcomeType: 'fail', routeSuggestion: 'manual-review' });
+    expect(resolveRoute(r, 3, 'render').queueName).toBe('postTestC-D');
+  });
+
+  it('NEGATIV KONTROLL: preferredPath=html/unknown/null routas precis som innan', () => {
+    const r = makeCResult({ outcomeType: 'fail', routeSuggestion: 'manual-review' });
+    expect(resolveRoute(r, 3, 'html').queueName).toBe('postTestC-manual-review');
+    expect(resolveRoute(r, 3, 'unknown').queueName).toBe('postTestC-manual-review');
+    expect(resolveRoute(r, 3, null).queueName).toBe('postTestC-manual-review');
+  });
+
+  it('NEGATIV KONTROLL: extract_success vinner ALLTID över render-kravet', () => {
+    const r = makeCResult({ outcomeType: 'extract_success', routeSuggestion: 'manual-review' });
+    expect(resolveRoute(r, 1, 'render').queueName).toBe('postTestC-UI');
+  });
+});
+
+// ---------------------------------------------------------------------------
+// TESTS: C4-AI-vägens routing
+// ---------------------------------------------------------------------------
+
+describe('resolveC4Route', () => {
+  // 2026-10-24 — C4-AI-vägen raderar UT resolveRoute() helt och använder bara
+  // c4Result.nextQueue. Det är vägen som skickade riksarkivet och hammarby till
+  // postTestC-manual-review, trots att plain HTML gav 0 events och render
+  // bevisligen ger 20/11 events. Källspecifik konfiguration
+  // (preferredPath='render') ska vinna över C4:ns nextQueue.
+  it('preferredPath=render routar till postTestC-D även när C4 säger manual-review', () => {
+    const d = resolveC4Route({ nextQueue: 'manual-review', roundsParticipated: 3, isRenderPreferred: true });
+    expect(d.queueName).toBe('postTestC-D');
+    expect(d.queuePath).toContain('postTestC-D.jsonl');
+    expect(d.queueReason).toContain('preferredPath=render');
+  });
+
+  it('preferredPath=render routar till D även när C4 säger UI/A/B', () => {
+    for (const nextQueue of ['UI', 'A', 'B', 'retry-pool', 'unknown']) {
+      expect(resolveC4Route({ nextQueue, roundsParticipated: 3, isRenderPreferred: true }).queueName).toBe('postTestC-D');
+    }
+  });
+
+  it('NEGATIV KONTROLL: utan render-krav routas C4:ns nextQueue precis som innan', () => {
+    expect(resolveC4Route({ nextQueue: 'UI', roundsParticipated: 1, isRenderPreferred: false }).queueName).toBe('postTestC-UI');
+    expect(resolveC4Route({ nextQueue: 'A', roundsParticipated: 1, isRenderPreferred: false }).queueName).toBe('postTestC-A');
+    expect(resolveC4Route({ nextQueue: 'B', roundsParticipated: 1, isRenderPreferred: false }).queueName).toBe('postTestC-B');
+    expect(resolveC4Route({ nextQueue: 'D', roundsParticipated: 1, isRenderPreferred: false }).queueName).toBe('postTestC-D');
+  });
+
+  it('NEGATIV KONTROLL: manual-review med <3 rundor stannar i poolen, med >=3 går till manual-review', () => {
+    expect(resolveC4Route({ nextQueue: 'manual-review', roundsParticipated: 1, isRenderPreferred: false }).queueName).toBe('STAYS_IN_POOL');
+    expect(resolveC4Route({ nextQueue: 'manual-review', roundsParticipated: 2, isRenderPreferred: false }).queueName).toBe('STAYS_IN_POOL');
+    expect(resolveC4Route({ nextQueue: 'manual-review', roundsParticipated: 3, isRenderPreferred: false }).queueName).toBe('postTestC-manual-review');
+  });
+
+  it('NEGATIV KONTROLL: en render-preferrad källa ändrar INTE beteendet för andra nextQueue-värden', () => {
+    // render-kravet ska bara slå över när plain HTML faktiskt gav 0 events
+    // (dvs. källan stannar i C-gatens fail-väg). Övriga beslut oförändrade.
+    const withoutOverride = resolveC4Route({ nextQueue: 'manual-review', roundsParticipated: 1, isRenderPreferred: false });
+    const withOverride = resolveC4Route({ nextQueue: 'manual-review', roundsParticipated: 1, isRenderPreferred: true });
+    expect(withoutOverride.queueName).toBe('STAYS_IN_POOL');
+    expect(withOverride.queueName).toBe('postTestC-D');
   });
 });
 

@@ -45,12 +45,14 @@ import { evaluateAiExtract, type AiExtractResult, type AiVerdict } from './C3-ai
 import { extractFromHtml, type ExtractResult } from '../F-eventExtraction/universal-extractor';
 import { filterUsableEvents } from '../F-eventExtraction/usableEvents';
 import { buildFallbackCandidates } from './candidateFallback';
+import { eventIdentity, extractEventUrl } from './eventUrlExtraction';
+import { getEventUrls } from '../tools/eventUrls';
 import type { ParsedEvent } from '../F-eventExtraction/schema';
 import { runC4Analysis, type C4InputSource, type C4RoundAnalysis, type C4AnalysisResult, FailCategory } from './C4-ai-analysis';
 import { c4DeepAnalyze, verifyProposals, type C4PipelineResult, type C4DeepAnalysisResult } from './c4-deep-analysis';
 import { saveRoundDerivedRules, loadAllDerivedRules, isImprovementEnabled, proposeCandidateRulesAsImprovements, type DerivedRulesStore } from './c4-derived-rules';
 import { isSkipped } from '../lib/quarantineGuard.js';
-import { updateSourceStatus } from '../tools/sourceRegistry';
+import { updateSourceStatus, getSource } from '../tools/sourceRegistry';
 import { detectBotWall } from '../lib/botWallRule';
 import type { HtmlVerdict } from './C2-htmlGate/C2-htmlGate';
 import { readFileSync, writeFileSync, mkdirSync, appendFileSync, readdirSync, unlinkSync, rmdirSync, existsSync } from 'fs';
@@ -229,11 +231,11 @@ export interface PerSourceTrace {
   eventsFound: number;
   /** Rader med användbart datum — de som faktiskt kan hamna i databasen. */
   datedEventsFound: number;
-  outcomeType: 'extract_success' | 'route_success' | 'fail';
+  outcomeType: 'extract_success' | 'route_success' | 'fail' | 'empty_success';
   routeSuggestion: 'UI' | 'A' | 'B' | 'D' | 'manual-review' | 'Fail';
   exitReason: ExitReason;
   exitReasonDetail: string;
-  winningStage: 'C1' | 'C2' | 'C3' | 'C3-AI' | 'C4-AI';
+  winningStage: 'C1' | 'C1-EventUrl' | 'C2' | 'C3' | 'C3-AI' | 'C4-AI';
   success: boolean;
   derivedRuleApplied: boolean;
   error?: string;
@@ -260,11 +262,13 @@ export type ExitReason =
   | 'C1_NO_MAIN_ARTICLE'
   | 'C1_LIKELY_JS_RENDER_ROOT'
   | 'C1_STRONG_JS_RENDER_D_SIGNAL'
+  | 'C1_EVENT_URLS_EXTRACTED'
   | 'C2_BLOCKED'
   | 'C2_UNCLEAR'
   | 'EXTRACTION_ZERO_PROMISING_HTML'     // C2 promising but C3 returned 0
   | 'EXTRACTION_ZERO_C3_AI_ZERO'          // C3 failed + C3-AI also returned 0
   | 'EXTRACTION_ZERO_NO_USABLE_DATE'      // rader extraherades men inga har sparbart datum
+  | 'SITE_ADAPTER_EMPTY'                  // källan lever men har inga evenemang (sajtens egen adapter säger det)
   | 'C3_AI_NEEDS_RENDER_D_SIGNAL'         // C3-AI säger uttryckligen "needs_render"
   | 'ALL_ROUNDS_EXHAUSTED';
 
@@ -307,6 +311,13 @@ interface CStageResult {
     aiEventsFound?: number;
     aiDuration?: number;
     duration: number;
+    /**
+     * Namnet på den site-adapter som matchade sidan — även om den inte
+     * hittade något. 2026-10-24: utan detta kan C-gaten inte skilja på
+     * "ingen adapter äger URL:en" och "sajtens egen läsare säger att
+     * sidan är tom" (se exitReason SITE_ADAPTER_EMPTY).
+     */
+    adapterMatched?: string;
   };
   // eventsFound = rader som extraherats totalt.
   // datedEventsFound = rader med användbart datum (kan sparas i databasen).
@@ -324,8 +335,8 @@ interface CStageResult {
 export interface CResult extends CStageResult {
   sourceId: string;
   sourceUrl: string;  // original source.url (historical input only)
-  winningStage: 'C1' | 'C2' | 'C3' | 'C3-AI' | 'C4-AI';
-  outcomeType: 'extract_success' | 'route_success' | 'fail';
+  winningStage: 'C1' | 'C1-EventUrl' | 'C2' | 'C3' | 'C3-AI' | 'C4-AI';
+  outcomeType: 'extract_success' | 'route_success' | 'fail' | 'empty_success';
   routeSuggestion: 'UI' | 'A' | 'B' | 'D' | 'manual-review' | 'Fail';
   evidence: string;
   roundNumber: number;
@@ -423,17 +434,67 @@ const RUN_LOCK_DIR = join(REPORTS_DIR, '.run-dynamic-pool.lock');
 let releaseActiveRunLock: (() => void) | null = null;
 let handleActiveSigint: (() => void) | null = null;
 
+/**
+ * Är processen med det givna pid:et fortfarande igång?
+ * Används för att skilja en levande ägare av körningslåset från en
+ * efterlämnad lås-katalog efter ett avbrutet körning.
+ */
+function isProcessAlive(pid: number): boolean {
+  if (!Number.isInteger(pid) || pid <= 0) return false;
+  try {
+    process.kill(pid, 0);
+    return true;
+  } catch (err) {
+    // EPERM = processen finns men vi får inte signalera den → den lever.
+    return (err as NodeJS.ErrnoException).code === 'EPERM';
+  }
+}
+
+/**
+ * Ta över körningslåset om den tidigare ägaren inte längre lever.
+ * Utan detta brickas C-gaten permanent efter varje avbruten körning
+ * (Ctrl-C, SIGKILL, omstart): låset ligger kvar och varje ny körning
+ * kastar "Another run-dynamic-pool process is already active".
+ */
+function reclaimStaleRunLock(): boolean {
+  const ownerPath = join(RUN_LOCK_DIR, 'owner.json');
+  if (!existsSync(ownerPath)) {
+    // Lås utan ägare-info: kan inte avgöra ålder → rör inte.
+    return false;
+  }
+  let ownerPid: number | null = null;
+  try {
+    const parsed = JSON.parse(readFileSync(ownerPath, 'utf8'));
+    ownerPid = typeof parsed?.pid === 'number' ? parsed.pid : null;
+  } catch {
+    return false;
+  }
+  if (ownerPid !== null && isProcessAlive(ownerPid)) return false;
+  try {
+    unlinkSync(ownerPath);
+  } catch { /* already gone */ }
+  try {
+    rmdirSync(RUN_LOCK_DIR);
+  } catch { /* katalog inte tom → nästa mkdir misslyckas som förut */ }
+  return existsSync(RUN_LOCK_DIR) === false;
+}
+
 function acquireRunLock(): () => void {
   mkdirSync(REPORTS_DIR, { recursive: true });
   try {
     mkdirSync(RUN_LOCK_DIR);
-    writeFileSync(join(RUN_LOCK_DIR, 'owner.json'), JSON.stringify({
-      pid: process.pid,
-      startedAt: new Date().toISOString(),
-    }) + '\n');
   } catch {
-    throw new Error(`Another run-dynamic-pool process is already active (${RUN_LOCK_DIR}). Refusing overlapping queue drain.`);
+    // Låset fanns redan. Är ägaren död → ta över, annars → verklig konflikt.
+    if (!reclaimStaleRunLock()) {
+      throw new Error(`Another run-dynamic-pool process is already active (${RUN_LOCK_DIR}). Refusing overlapping queue drain.`);
+    }
+    log(`[Lock] Tog över efterlatnat körningslås (ägare process död).`);
+    mkdirSync(RUN_LOCK_DIR);
   }
+  writeFileSync(join(RUN_LOCK_DIR, 'owner.json'), JSON.stringify({
+    pid: process.pid,
+    startedAt: new Date().toISOString(),
+  }) + '\n');
 
   let released = false;
   return () => {
@@ -450,6 +511,26 @@ export function parseBatchNumberFromId(batchId: unknown): number | null {
   if (!match) return null;
   const parsed = parseInt(match[1], 10);
   return Number.isFinite(parsed) ? parsed : null;
+}
+
+/**
+ * Ska en körning resume:en sparad pool-state?
+ *
+ * 2026-10-24 — programmatiska ingången (runDynamicPoolBatch) saknade
+ * main()'s skydd mot att resume:a en gammal pool-state. Mätt fel:
+ * `--batch-id=1001` laddade pool-state från en tidigare körning, körde
+ * ingen källa och rapporterade den gamla körningens utfall.
+ *
+ * Resume är rätt för en avbruten körning (då är den sparade staten
+ * utfallet av en halvfärdig omgång) och fel för en operatörs omkörning
+ * (där avsikten är "kör exakt de här källorna nu").
+ */
+export function shouldResumePoolState(options: {
+  explicitSources: string[];
+  poolStateExists: boolean;
+}): boolean {
+  if (options.explicitSources.length > 0) return false;
+  return options.poolStateExists;
 }
 
 export function deriveCliBatchNumber(rawBatchState: any, cliBatchNum: number | null, fallback = 13): number {
@@ -1103,7 +1184,7 @@ async function runSourceOnPool(
     } else if (c0?.ruleApplied?.source === 'swedish-patterns') {
       console.log(`[Rule-Track] ${source.sourceId}: SWEDISH PATTERNS APPLIED — winner: ${c0?.winner?.href || 'none'}`);
     }
-    console.log(`C0: ${c0?.candidatesFound || 0} candidates, winner=${c0?.winner?.url || 'none'}`);
+    console.log(`[${source.sourceId}] C0: ${c0?.candidatesFound || 0} candidates, winner=${c0?.winner?.url || 'none'}`);
 
     // ── EFFECTIVE URL SELECTION ────────────────────────────────────────────────
     // Priority: C0 winner > url-variant (already set) > root
@@ -1148,7 +1229,71 @@ async function runSourceOnPool(
       bestSubpageFound: (c1 as any).bestSubpageUrl || null,
       subpagesTested: (c1 as any).testedSubpages || [],
     };
-    console.log(`C1: likelyJsRendered=${result.c1.likelyJsRendered} verdict=${result.c1.verdict} (fetchable=${result.c1.fetchable})`);
+    console.log(`[${source.sourceId}] C1: likelyJsRendered=${result.c1.likelyJsRendered} verdict=${result.c1.verdict} (fetchable=${result.c1.fetchable})`);
+
+    // ── EVENT-URL-HÄMTNING (2026-10-24) ──────────────────────────────────────
+    // En värd kan ha flera event-sidor (metadata.eventUrls). De sidor är
+    // INTE egna källor — de är sidor av samma venue. Utan detta skapade
+    // discovery en egen candidate-*-källa per sida (25 filer, 67 DB-rader med
+    // samma evenemang under flera source-namn).
+    //
+    // Varje event-URL extraheras för sig (sidan + de bästa C0-kandidaterna
+    // på den) och slås ihop med huvudkörningen. Dubbletter (samma titel +
+    // datum + tid) tas bort — listningssidan och detaljsidan innehåller
+    // ofta samma evenemang.
+    //
+    // Closure-formen är inte kosmetik: steget körs från TVÅ ställen — den
+    // vanliga vägen och från C1-DirectRoute-grenen. En JS-renderad värd
+    // (t.ex. visitstockholm.com) når aldrig C2/C3, så utan detta steg
+    // skulle dess event-URL:er aldrig hämtas alls.
+    const collectEventUrlEvents = async (): Promise<{ added: number; urlCount: number }> => {
+      const eventUrls = getEventUrls(source.sourceId);
+      if (eventUrls.length === 0) return { added: 0, urlCount: 0 };
+
+      const merged: ParsedEvent[] = [...(result.extract.extractedEvents ?? [])];
+      const seen = new Set(merged.map(eventIdentity));
+      let added = 0;
+
+      for (const eventUrl of eventUrls) {
+        const { events, outcome } = await extractEventUrl(eventUrl, source.sourceId, derivedRules, seen);
+        if (events.length > 0) {
+          merged.push(...events);
+          added += events.length;
+        }
+        console.log(
+          `[${source.sourceId}] [C-EventUrl] ${eventUrl}: ${outcome.pagesWithEvents} sida(r) gav events, ` +
+            `${outcome.candidatesTested} kandidat(er) testade, ${outcome.usable} nya sparbara`,
+        );
+      }
+
+      if (added > 0) {
+        result.extract.extractedEvents = merged;
+        result.extract.eventsFound = merged.length;
+        result.extract.datedEventsFound = filterUsableEvents(merged).length;
+        result.c3.universalEventsFound = merged.length;
+        console.log(
+          `[${source.sourceId}] [C-EventUrl] ${added} nya events från ${eventUrls.length} event-URL:er ` +
+            `(${result.extract.datedEventsFound} sparbara totalt)`,
+        );
+      } else {
+        console.log(`[${source.sourceId}] [C-EventUrl] ${eventUrls.length} event-URL:er gav inga nya events`);
+      }
+      return { added, urlCount: eventUrls.length };
+    };
+
+    // Rensa stale extracted-fil. Samma villkor på båda vägarna: sidan var
+    // fetchbar, vi körde på riktigt innehåll, och körningen gav inga
+    // sparbara datum — då är den gamla filen dödvitt.
+    const cleanupStaleExtractFile = (htmlAvailable: boolean) => {
+      if (!result.c1.fetchable) return;
+      if (!htmlAvailable) return;
+      if (result.extract.datedEventsFound > 0) return;
+      const staleFile = join(C_EXTRACTED_DIR, `${source.sourceId}.jsonl`);
+      if (existsSync(staleFile)) {
+        unlinkSync(staleFile);
+        console.log(`[${source.sourceId}] [C-Extract] Raderade stale extracted-fil (inga sparbara datum denna körning): ${staleFile}`);
+      }
+    };
 
     // ── C1 DIRECT D SIGNAL (early exit) ──────────────────────────────────────
     // Strong JS-render signal on root + no subpage found → D route
@@ -1159,16 +1304,34 @@ async function runSourceOnPool(
       !c0FoundWinner;
 
     if (c1Dsignal) {
-      console.log(`[C1-DirectRoute] Strong JS-render signal — short-circuit to D`);
+      console.log(`[${source.sourceId}] [C1-DirectRoute] Strong JS-render signal — short-circuit to D`);
       result.c2 = { verdict: 'skipped', score: 0, reason: 'c1-direct-route', duration: 0, htmlBytes: 0 };
       result.c3 = { universalEventsFound: 0, universalMethodsUsed: [], universalMethodBreakdown: {}, duration: 0 };
       result.extract = { eventsFound: 0, datedEventsFound: 0, duration: 0, htmlSize: 0 };
-      result.outcomeType = 'route_success';
-      result.winningStage = 'C1';
-      result.routeSuggestion = 'D';
-      result.evidence = `likelyJsRendered=true + no subpage winner found`;
-      result.exitReason = 'C1_STRONG_JS_RENDER_D_SIGNAL';
-      result.exitReasonDetail = `likelyJsRendered=true on root, timeTags=${result.c1.timeTagCount}, dates=${result.c1.dateCount}`;
+
+      // Event-URL:er hämtas INNAN D-routingen (2026-10-24). En JS-renderad
+      // värd når aldrig C2/C3, så utan detta steg skulle dess event-URL:er
+      // aldrig hämtas — källan skulle bara skickas vidare till D-gaten.
+      const eventUrlResult = await collectEventUrlEvents();
+
+      if (eventUrlResult.added > 0) {
+        result.outcomeType = 'extract_success';
+        result.winningStage = 'C1-EventUrl';
+        result.routeSuggestion = 'UI';
+        result.success = true;
+        result.evidence = `${eventUrlResult.added} sparbara events från event-URL:erna trots JS-renderad startsida`;
+        result.exitReason = 'C1_EVENT_URLS_EXTRACTED';
+        result.exitReasonDetail = `likelyJsRendered=true, men ${eventUrlResult.added} sparbara events från ${eventUrlResult.urlCount} event-URL(er)`;
+      } else {
+        result.outcomeType = 'route_success';
+        result.winningStage = 'C1';
+        result.routeSuggestion = 'D';
+        result.evidence = `likelyJsRendered=true + no subpage winner found`;
+        result.exitReason = 'C1_STRONG_JS_RENDER_D_SIGNAL';
+        result.exitReasonDetail = `likelyJsRendered=true on root, timeTags=${result.c1.timeTagCount}, dates=${result.c1.dateCount}`;
+      }
+
+      cleanupStaleExtractFile(!!(c1 as any).html);
       result.trace = buildTrace(result, source.url, roundNum);
       return result;
     }
@@ -1183,7 +1346,7 @@ async function runSourceOnPool(
       duration: Date.now() - c2Start,
       htmlBytes: Buffer.byteLength(c2.html || '', 'utf8'),
     };
-    console.log(`C2: verdict=${c2.verdict} score=${c2.score}`);
+    console.log(`[${source.sourceId}] C2: verdict=${c2.verdict} score=${c2.score}`);
 
     // ── C3: Universal Extraction ──────────────────────────────────────────────
     const extStart = Date.now();
@@ -1200,6 +1363,10 @@ async function runSourceOnPool(
       universalMethodsUsed: ['universal-extractor'],  // placeholder — extractFromHtml doesn't track methods
       universalMethodBreakdown: {},                  // placeholder — extractFromHtml doesn't track breakdown
       duration: Date.now() - extStart,
+      // 2026-10-24 — vilken site-adapter som matchade sidan (om någon).
+      // Behövs för att kunna skilja "sajten lever men är tom" från
+      // "vi kunde inte läsa sidan" (exitReason SITE_ADAPTER_EMPTY).
+      adapterMatched: ext.adapterMatched,
     };
     // 2026-10-24 — bara rader med användbart datum räknas som events.
     // Importen (importToEventPulse) kastar bort datumlösa och förflutna
@@ -1213,11 +1380,11 @@ async function runSourceOnPool(
       htmlSize,
       extractedEvents: primaryUsable,
     };
-    console.log(`C3: ${ext.events.length} events via [${ext.methodsUsed.join(', ')}] — ${primaryUsable.length} med användbart datum`);
+    console.log(`[${source.sourceId}] C3: ${ext.events.length} events via [${ext.methodsUsed.join(', ')}] — ${primaryUsable.length} med användbart datum`);
 
     // ── C3 AI FALLBACK: if universal returned 0 but C2 was promising ──────────
     if (ext.events.length === 0 && c2.verdict === 'promising') {
-      console.log(`[C3-AI] Universal=0 but C2=promising — trying AI extraction`);
+      console.log(`[${source.sourceId}] [C3-AI] Universal=0 but C2=promising — trying AI extraction`);
       const aiStart = Date.now();
       const aiResult = await evaluateAiExtract(effectiveUrl, extHtml, {
         useAi: true,
@@ -1235,9 +1402,9 @@ async function runSourceOnPool(
       // pre-existing contract break — cast preserves runtime; queue task.
       if (aiUsable.length > 0) result.extract.extractedEvents = aiUsable as unknown as ParsedEvent[];
       if (aiResult.events.length > 0) {
-        console.log(`[C3-AI] AI extraction: ${aiResult.events.length} events (${aiUsable.length} med användbart datum)`);
+        console.log(`[${source.sourceId}] [C3-AI] AI extraction: ${aiResult.events.length} events (${aiUsable.length} med användbart datum)`);
       } else {
-        console.log(`[C3-AI] AI extraction also returned 0 events`);
+        console.log(`[${source.sourceId}] [C3-AI] AI extraction also returned 0 events`);
       }
     }
 
@@ -1296,6 +1463,11 @@ async function runSourceOnPool(
       }
     }
 
+    // ── EVENT-URLS (2026-10-24) ───────────────────────────────────────────────
+    // Se closure `collectEventUrlEvents` ovan — samma steg körs även från
+    // C1-DirectRoute-grenen.
+    await collectEventUrlEvents();
+
     // ── Rensa stale extracted-fil (2026-10-23) ───────────────────────────────
     // C-gaten skriver extracted-filen bara NÄR den hittade events. En källa som
     // en tidigare körning genererade events för men som nu ger 0 behåller då
@@ -1311,13 +1483,7 @@ async function runSourceOnPool(
     // Raderas bara när sidan faktiskt var fetchbar och extraktionen kördes på
     // riktigt innehåll — annars skulle ett tillfälligt nätverksfel rensa
     // giltiga data.
-    if (result.c1.fetchable && extHtml && result.extract.datedEventsFound === 0) {
-      const staleFile = join(C_EXTRACTED_DIR, `${source.sourceId}.jsonl`);
-      if (existsSync(staleFile)) {
-        unlinkSync(staleFile);
-        console.log(`[C-Extract] Raderade stale extracted-fil (inga sparbara datum denna körning): ${staleFile}`);
-      }
-    }
+    cleanupStaleExtractFile(!!extHtml);
 
     // ── DETERMINE OUTCOME ─────────────────────────────────────────────────────
     determineOutcome(result, source.url, roundNum, c0FoundWinner);
@@ -1341,7 +1507,14 @@ async function runSourceOnPool(
  * Detailed outcome determination with precise exit reasons.
  * Each reason is actionable — it tells exactly what failed and why.
  */
-export function determineOutcome(result: CResult, sourceUrl: string, roundNum: number, c0FoundWinner: boolean): void {
+export function determineOutcome(
+  result: CResult,
+  sourceUrl: string,
+  roundNum: number,
+  c0FoundWinner: boolean,
+  /** Testhook: källans registry-värde för preferredPath. Utan det slås registryn upp. */
+  preferredPathOverride?: string | null,
+): void {
   // ── SUCCESS ──────────────────────────────────────────────────────────────────
   // 2026-10-24 — framgång kräver SPARBARA datum, inte bara rader.
   // Importen kastar bort rader som är datumlösa eller förflutna, så en
@@ -1369,6 +1542,50 @@ export function determineOutcome(result: CResult, sourceUrl: string, roundNum: n
     result.exitReason = 'C1_LIKELY_JS_RENDER_ROOT';
     result.exitReasonDetail = `likelyJsRendered=true, no subpage winner found via C0`;
     result.success = false;
+    return;
+  }
+
+  // ── LEVEN MEN TOM (2026-10-24) ─────────────────────────────────────────────
+  // Vissa källor lever (HTTP 200, riktigt innehåll) men publicerar inga
+  // evenemang just nu: en säsong som är slut, en park som inte arrangerar
+  // just nu, en kyrka utan gudstjänstschema publicerat.
+  //
+  // FÖRE detta var de döda i systemets ögon: 0 events ⇒ fail ⇒
+  // consecutiveFailures++ ⇒ auto-quarantine vid 5 nätter. Mätt: pingstkyrkan,
+  // ladan och kungstradgarden-2 stod på 1–2 fel och var på väg att begravas
+  // som "döda" — men alla tre svarar HTTP 200 och har riktigt innehåll.
+  //
+  // Kriteriet är medvetet SNÄVT — alla fyra villkor måste hålla:
+  //   1. en site-adapter matchade URL:en (sajtens egen läsare äger sidan),
+  //   2. 0 events med sparbart datum,
+  //   3. sidan var fetchbar och sågs INTE som JS-renderad (vi läste det
+  //      verkliga innehållet — annars vore "0" bara "vi kunde inte läsa"),
+  //   4. källans bekräftade väg är INTE render (preferredPath). För
+  //      render-källor betyder 0 i plain HTML bara "render kan ge mer"
+  //      (riksarkivet: plain 0 → render 20).
+  //
+  // Negativ kontroll: folkoperan.se matchar sin adapter men universalheuristiken
+  // ger 30 RIKTIGA daterade events — villkoret 2 fångar det, så den rödas
+  // INTE begravd. riksarkivet (villkor 4) skickas fortfarande till D-gaten.
+  const preferredPath = preferredPathOverride !== undefined
+    ? preferredPathOverride
+    : getSourcePreferredPath(result.sourceId);
+  const isSiteAdapterEmpty =
+    !!result.c3.adapterMatched &&
+    result.extract.datedEventsFound === 0 &&
+    result.c1.fetchable &&
+    !result.c1.likelyJsRendered &&
+    preferredPath !== 'render';
+
+  if (isSiteAdapterEmpty) {
+    result.outcomeType = 'empty_success';
+    result.winningStage = 'C3';
+    result.routeSuggestion = 'manual-review';
+    result.exitReason = 'SITE_ADAPTER_EMPTY';
+    result.exitReasonDetail =
+      `adaptern "${result.c3.adapterMatched}" matchade men hittade 0 sparbara events — källan lever, den har bara inget just nu`;
+    result.evidence = `C3: ${result.c3.adapterMatched} — 0 events (sajten lever men är tom)`;
+    result.success = true;
     return;
   }
 
@@ -1521,6 +1738,24 @@ function writeOutcomeStatus(result: CResult, queueName: string): void {
   // Skip-rad (karantän/begravd) — ska inte röra statusen alls.
   if (result.error?.startsWith('skipped:')) return;
 
+  // 2026-10-24 — källan lever men har inga evenemang. Detta är ett friskt
+  // resultat, inte ett fel: felräknaren nollställs och källan kan ALDRIG
+  // auto-quarantänas. Utan den här grenen räknades varje natt som ett fel →
+  // consecutiveFailures++ → begravd vid 5 (mätt: pingstkyrkan, ladan och
+  // kungstradgarden-2 — alla tre svarar HTTP 200 med riktigt innehåll).
+  if (result.outcomeType === 'empty_success') {
+    updateSourceStatus(result.sourceId, {
+      success: true,
+      eventsFound: 0,
+      pathUsed: 'html',
+      ingestionStage: 'completed',
+      noEventsReason: `C-htmlGate: ${result.exitReason ?? 'SITE_ADAPTER_EMPTY'} — ${result.evidence ?? ''}`.trim(),
+      lastRoutingReason: `C-htmlGate: ${result.exitReason ?? 'SITE_ADAPTER_EMPTY'} — ${result.evidence ?? ''}`.trim(),
+      lastRoutingSource: 'runtime_status',
+    });
+    return;
+  }
+
   // Success skrivs redan i routeResult.
   if (result.outcomeType === 'extract_success') return;
 
@@ -1563,13 +1798,152 @@ function writeOutcomeStatus(result: CResult, queueName: string): void {
  * och skrev; testerna testade därför en egen, förenklad kopia av logiken —
  * de kunde inte ha upptäckt en regression i den riktiga koden.
  */
+/**
+ * Källans registry-värde för `preferredPath` (null om okänd).
+ *
+ * Källspecifik konfiguration: `preferredPath === 'render'` betyder att den
+ * här källans innehåll är känt att inte gå att läsa ur plain HTTP. Det är
+ * source-specific config — tillåtet enligt Generalization Protection Rule.
+ *
+ * Negativ kontroll: källor UTAN `preferredPath='render'` (eller med
+ * 'html'/'unknown') påverkas inte — de routas precis som innan.
+ */
+function getSourcePreferredPath(sourceId: string): string | null {
+  if (!sourceId) return null;
+  try {
+    return getSource(sourceId)?.preferredPath ?? null;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Ska källan tvingas till D-renderGate?
+ *
+ * Källspecifik konfiguration (`preferredPath === 'render'` i registryn) =
+ * "plain HTML gav 0 events, render gav events — detta är bekräftat".
+ * Det är just det Generalization Protection Rule tillåter: source-specific
+ * config, ingen universell heuristik.
+ *
+ * Samma svar måste gälla på BÅDA routingvägarna i C-gaten:
+ *   1. standard-exit via resolveRoute()
+ *   2. C4-AI-vägen (nextQueue) — den raderar UT resolveRoute helt
+ * Utan punkt 2 gick bekräftat renderbara källor (riksarkivet, hammarby)
+ * till postTestC-manual-review via C4-AI:ns nextQueue, trots att plain
+ * HTML gav 0 events och render bevisligen ger events.
+ */
+export function isRenderPreferred(sourceId: string): boolean {
+  return getSourcePreferredPath(sourceId) === 'render';
+}
+
+export interface C4RouteDecision {
+  /** Sökväg till köfilen ('' = stanna i poolen). */
+  queuePath: string;
+  /** Könamn som skrivs i queueEntry.queueName. */
+  queueName: string;
+  /** Förklaring som skrivs i queueEntry.queueReason. */
+  queueReason: string;
+}
+
+/**
+ * Routing-beslut för C4-AI-vägen.
+ *
+ * C4-AI ger en `nextQueue` (t.ex. 'manual-review'). Den vägen raderar UT
+ * resolveRoute() helt — vilket gjorde att källor med bekräftat render-behov
+ * hamnade i postTestC-manual-review i stället för D-gaten.
+ *
+ * Här är samma sak på ett enda ställe, så att båda C4-vägarna i koden
+ * (pool-loopens och refill-vägen) delar logiken.
+ *
+ * Negativ kontroll: utan `isRenderPreferred` routas källor precis som
+ * innan — 'manual-review' med <3 rundor stannar i poolen, annars går de
+ * till postTestC-manual-review.
+ */
+export function resolveC4Route(params: {
+  nextQueue: string;
+  roundsParticipated: number;
+  isRenderPreferred: boolean;
+}): C4RouteDecision {
+  if (params.isRenderPreferred) {
+    return {
+      queuePath: QUEUES.D,
+      queueName: 'postTestC-D',
+      queueReason:
+        `preferredPath=render (källspecifik konfiguration) — plain HTML gav 0 events, ` +
+        `D-renderGate är bekräftat väg (C4-AI-nextQueue=${params.nextQueue} förbjuden)`,
+    };
+  }
+
+  switch (params.nextQueue) {
+    case 'UI':
+      return { queuePath: QUEUES.UI, queueName: 'postTestC-UI', queueReason: 'C4-AI: nextQueue=UI' };
+    case 'A':
+      return { queuePath: QUEUES.A, queueName: 'postTestC-A', queueReason: 'C4-AI: nextQueue=A' };
+    case 'B':
+      return { queuePath: QUEUES.B, queueName: 'postTestC-B', queueReason: 'C4-AI: nextQueue=B' };
+    case 'D':
+      return { queuePath: QUEUES.D, queueName: 'postTestC-D', queueReason: 'C4-AI: nextQueue=D' };
+    case 'manual-review':
+      if (params.roundsParticipated < 3) {
+        return {
+          queuePath: '',
+          queueName: 'STAYS_IN_POOL',
+          queueReason: `C4-AI: manual-review men roundsParticipated=${params.roundsParticipated} < 3 → retry-pool`,
+        };
+      }
+      return {
+        queuePath: QUEUES.MANUAL_REVIEW,
+        queueName: 'postTestC-manual-review',
+        queueReason: `C4-AI: manual-review (roundsParticipated=${params.roundsParticipated} ≥ 3)`,
+      };
+    default:
+      return { queuePath: '', queueName: 'STAYS_IN_POOL', queueReason: `C4-AI: nextQueue=${params.nextQueue} → retry-pool` };
+  }
+}
+
 export function resolveRoute(
   result: CResult,
-  roundsParticipated: number
+  roundsParticipated: number,
+  /** Testhook: källans registry-värde. Utan det slås registryn upp. */
+  preferredPathOverride?: string | null
 ): { queuePath: string; queueName: string } {
+  // 2026-10-24 — källan lever men publicerar inga evenemang. Den lämnar
+  // poolen (så den inte köras om varje natt) och hamnar i manual-review —
+  // en lista som bara en människa tittar i. Ingen gate efter C ska köra den:
+  // det finns inget att hämta, bara en levande sajt utan evenemang.
+  if (result.outcomeType === 'empty_success') {
+    return { queuePath: QUEUES.MANUAL_REVIEW, queueName: 'postTestC-manual-review' };
+  }
+
   // [SAFETY] extract_success MUST go to UI — no exceptions
   if (result.outcomeType === 'extract_success') {
     return { queuePath: QUEUES.UI, queueName: 'postTestC-UI' };
+  }
+
+  // 2026-10-24 — källspecifikt render-krav (source-specific config).
+  //
+  // Registry-fältet `preferredPath` är det BEKRÄFTADE svaret på "vilken
+  // metod fungerar för den här källan". Det är just det Generalization
+  // Protection Rule tillåter: source-specific config, inte universell
+  // heuristik. Ingen C0/C1/C2-regel ändras.
+  //
+  // Varför detta behövs (mätt 2026-10-24, D-gatens riktiga render):
+  //   riksarkivet  → plain HTTP 0 events → render 20 events (25 credits)
+  //   hammarby     → plain HTTP 0 events → render 11 events (25 credits)
+  //
+  // Utan den här regeln hamnade båda i postTestC-manual-review: C1:s
+  // `likelyJsRendered` är FALSE för dem (Next.js/React ger mycket HTML i
+  // första svaret — heuristiken letar efter en nätom mall), så vägen till
+  // D-gaten stängdes helt. Det är samma fel som RSS-vägen hade (fix
+  // 609de49b): ett bekräftat, källspecifikt metodval som kedjan inte hedrade.
+  //
+  // Endast när plain HTML INTE gav events — annars vinner alltid den
+  // billigare vägen.
+  const preferredPath = preferredPathOverride !== undefined
+    ? preferredPathOverride
+    : (getSourcePreferredPath(result.sourceId));
+  if (preferredPath === 'render') {
+    return { queuePath: QUEUES.D, queueName: 'postTestC-D' };
   }
 
   switch (result.routeSuggestion) {
@@ -1628,6 +2002,15 @@ function routeResult(result: CResult, roundsParticipated: number): string {
 
   const { queuePath, queueName } = resolveRoute(result, roundsParticipated);
 
+  // 2026-10-24 — spårbarhet: när routingen sker DÖR av den källspecifika
+  // render-regeln ska det stå i queueReason. Utan detta ser postTestC-D-rader
+  // ut som om de kommit dit via C1/C2 och audit-spåret blir vilselett.
+  if (queueName === 'postTestC-D' && isRenderPreferred(result.sourceId)) {
+    queueEntry.queueReason =
+      `preferredPath=render (källspecifik konfiguration) — plain HTML gav 0 events, D-renderGate är bekräftat väg; ` +
+      `${queueEntry.queueReason}`;
+  }
+
   if (result.outcomeType === 'extract_success') {
     // Write events to isolated C output folder (03-Queue/03-extractedevents/C/)
     const events = result.extract.extractedEvents;
@@ -1636,7 +2019,7 @@ function routeResult(result: CResult, roundsParticipated: number): string {
       const outFile = join(C_EXTRACTED_DIR, `${result.sourceId}.jsonl`);
       const lines = events.map(e => JSON.stringify(e)).join('\n') + '\n';
       writeFileSync(outFile, lines, 'utf-8');
-      console.log(`[C-Extract] Wrote ${events.length} events → ${outFile}`);
+      console.log(`[${result.sourceId}] [C-Extract] Wrote ${events.length} events → ${outFile}`);
 
       // 2026-10-23 — C skrev aldrig tillbaka till sources_status.jsonl, medan A
       // och B gör det. Varje källa som B routar till C ("[breadth] unclear")
@@ -1814,6 +2197,7 @@ function writeReports(
   let totalExtractSuccess = 0;
   let totalRouteSuccess = 0;
   let totalFail = 0;
+  let totalEmptySuccess = 0;
   let totalEvents = 0;
   const allResults: CResult[] = [];
 
@@ -1821,6 +2205,10 @@ function writeReports(
     totalExtractSuccess += round.results.filter(r => r.outcomeType === 'extract_success').length;
     totalRouteSuccess += round.results.filter(r => r.outcomeType === 'route_success').length;
     totalFail += round.results.filter(r => r.outcomeType === 'fail').length;
+    // 2026-10-24 — "källan lever men har inget" räknas som sitt eget
+    // utfall, inte som ett fel. Syns i rapporten så att en operatör ser
+    // att en källa inte är död utan tom.
+    totalEmptySuccess += round.results.filter(r => r.outcomeType === 'empty_success').length;
     totalEvents += round.results.reduce((s, r) => s + r.extract.datedEventsFound, 0);
     allResults.push(...round.results);
   }
@@ -1853,6 +2241,7 @@ NOT_CANONICAL_YET: first working version, not final canonical
 | sourcesIn | ${state.activePool.length + state.exited.length + state.newlyRefilled.length} |
 | extractSuccess | ${totalExtractSuccess} |
 | routeSuccess | ${totalRouteSuccess} |
+| emptySuccess (källan lever men har inget) | ${totalEmptySuccess} |
 | fail | ${totalFail} |
 | totalEventsExtracted | ${totalEvents} |
 | exits | ${state.exited.length} |
@@ -2244,7 +2633,31 @@ export async function runDynamicPoolBatch(options: DynamicPoolOptions = {}): Pro
   console.log(`[Init] Batch directory ready: ${BATCH_DIR}`);
 
   // Step 1: Check for existing pool state (resume scenario)
-  const savedState = loadPoolState(BATCH_NUM);
+  //
+  // 2026-10-24 — programmatiska ingången resume:ar INTE en gammal
+  // pool-state när operatören betyter "kör exakt de här källorna nu".
+  // main() har skyddet sedan länge (rad ~3067: färsk batch-start rensar
+  // stale pool-state), men den programmatiska vägen saknade det, och
+  // felet är tyst: mätt 2026-10-24 med --batch-id=1001 laddade
+  // pool-state från 10:54 samma dag, körde INGEN källa och rapporterade
+  // den gamla körningens siffror ("exited 2 → postTestC-UI: 2").
+  //
+  // Resume är rätt för en avbruten körning och fel för en operatörs
+  // omkörning. Med explicita källor är avsikten alltid en omkörning.
+  const poolStatePath = POOL_STATE_FILE(BATCH_NUM);
+  const resume = shouldResumePoolState({
+    explicitSources: sources,
+    poolStateExists: existsSync(poolStatePath),
+  });
+  let savedState: PoolState | null = null;
+  if (resume) {
+    savedState = loadPoolState(BATCH_NUM);
+  } else {
+    if (sources.length > 0) {
+      try { unlinkSync(poolStatePath); } catch { /* ingen gammal state */ }
+      console.log(`[Step 1] Explicita källor (${sources.join(', ')}) — färsk batch, gammal pool-state ignorerad`);
+    }
+  }
   let state: PoolState;
   let roundResults: { results: CResult[]; exits: { source: PoolSource; decision: string; result: CResult }[]; fails: PoolSource[] }[] = [];
   let c4AllResults: C4RoundAnalysis[] = [];
@@ -2368,8 +2781,11 @@ export async function runDynamicPoolBatch(options: DynamicPoolOptions = {}): Pro
       c4AnalysisResult = await runC4Analysis(c4InputSources, `batch-${BATCH_NUM}`, state.poolRoundNumber, BATCH_DIR);
 
       // [C4-DEEP-ANALYSIS] Run ground truth analysis on failed sources
+      // 2026-10-24 — "källan lever men har inget" (empty_success) är inte
+      // ett fail-underlag: C4-AI ska inte hitta på en render-väg för en sajt
+      // som helt enkelt inte publicerar något.
       const failedSourcesForC4: C4PipelineResult[] = roundOutput.results
-        .filter(r => r.outcomeType === 'fail' || r.extract.datedEventsFound === 0)
+        .filter(r => r.outcomeType !== 'empty_success' && (r.outcomeType === 'fail' || r.extract.datedEventsFound === 0))
         .map(r => ({
           sourceId: r.sourceId,
           url: r.sourceUrl,
@@ -2466,19 +2882,16 @@ export async function runDynamicPoolBatch(options: DynamicPoolOptions = {}): Pro
           queuePath = '';
           queueName = 'STAYS_IN_POOL';
         } else {
-          switch (c4Result.nextQueue) {
-            case 'UI': queuePath = QUEUES.UI; queueName = 'postTestC-UI'; break;
-            case 'A': queuePath = QUEUES.A; queueName = 'postTestC-A'; break;
-            case 'B': queuePath = QUEUES.B; queueName = 'postTestC-B'; break;
-            case 'D': queuePath = QUEUES.D; queueName = 'postTestC-D'; break;
-            case 'manual-review':
-              if (src.roundsParticipated < 3) {
-                queuePath = ''; queueName = 'STAYS_IN_POOL';
-              } else {
-                queuePath = QUEUES.MANUAL_REVIEW; queueName = 'postTestC-manual-review';
-              }
-              break;
-            default: queuePath = ''; queueName = 'STAYS_IN_POOL';
+          const decision = resolveC4Route({
+            nextQueue: c4Result.nextQueue,
+            roundsParticipated: src.roundsParticipated,
+            isRenderPreferred: isRenderPreferred(src.sourceId),
+          });
+          queuePath = decision.queuePath;
+          queueName = decision.queueName;
+          queueEntry.queueReason = decision.queueReason;
+          if (decision.queueName === 'postTestC-D' && decision.queueReason.includes('RENDER')) {
+            console.log(`  [RENDER-OVERRIDE] ${src.sourceId} → postTestC-D (preferredPath=render, C4-nextQueue=${c4Result.nextQueue})`);
           }
         }
 
@@ -3017,46 +3430,30 @@ async function main() {
         queueName = 'STAYS_IN_POOL';
         console.log(`  [Step3-Chain] ${c4Result.sourceId}: generated rule this round → FORCE STAY for rule-validation round`);
       } else {
-      switch (c4Result.nextQueue) {
-        case 'UI':
-          queuePath = QUEUES.UI;
-          queueName = 'postTestC-UI';
-          break;
-        case 'A':
-          queuePath = QUEUES.A;
-          queueName = 'postTestC-A';
-          break;
-        case 'B':
-          queuePath = QUEUES.B;
-          queueName = 'postTestC-B';
-          break;
-        case 'D':
-          queuePath = QUEUES.D;
-          queueName = 'postTestC-D';
-          break;
-        case 'manual-review':
-          // [P2-FIX] All sources get 2-3 subpage-path retries before manual-review.
-          // Override manual-review → retry-pool for any source with roundsParticipated < 3.
-          // Only send to manual-review after exhausting all retry rounds.
-          // Exception: if roundsParticipated >= 3, manual-review is final (no more retries possible).
-          if (src.roundsParticipated < 3) {
-            queuePath = '';
-            queueName = 'STAYS_IN_POOL';
-            console.log(`  [P2-Fix] ${c4Result.sourceId}: roundsParticipated=${src.roundsParticipated} < 3 — OVERRIDE manual-review → retry-pool (subpage-path retry #${src.roundsParticipated + 1})`);
-          } else {
-            queuePath = QUEUES.MANUAL_REVIEW;
-            queueName = 'postTestC-manual-review';
-          }
-          break;
-        case 'retry-pool':
-          // Stay in pool — no queue write
-          queuePath = '';
-          queueName = 'STAYS_IN_POOL';
-          break;
-        default:
-          queuePath = '';
-          queueName = 'STAYS_IN_POOL';
-      }
+        // 2026-10-24 — källspecifikt render-krav (source-specific config).
+        //
+        // C4-AI-vägen raderar UT resolveRoute() helt och använder bara
+        // c4Result.nextQueue. För källor med bekräftat render-behov blev
+        // nextQueue 'manual-review' → de hamnade i postTestC-manual-review
+        // i stället för D-gaten (riksarkivet, hammarby — båda mätta:
+        // plain HTML 0 events, render 20/11 events).
+        //
+        // Negativ kontroll: källor UTAN preferredPath='render' påverkas inte
+        // — de routas precis som innan via c4Result.nextQueue.
+        const decision = resolveC4Route({
+          nextQueue: c4Result.nextQueue,
+          roundsParticipated: src.roundsParticipated,
+          isRenderPreferred: isRenderPreferred(src.sourceId),
+        });
+        queuePath = decision.queuePath;
+        queueName = decision.queueName;
+        queueEntry.queueReason = decision.queueReason;
+        if (decision.queueName === 'STAYS_IN_POOL' && c4Result.nextQueue === 'manual-review') {
+          console.log(`  [P2-Fix] ${c4Result.sourceId}: roundsParticipated=${src.roundsParticipated} < 3 — OVERRIDE manual-review → retry-pool (subpage-path retry #${src.roundsParticipated + 1})`);
+        }
+        if (decision.queueName === 'postTestC-D' && decision.queueReason.includes('preferredPath=render')) {
+          console.log(`  [RENDER-OVERRIDE] ${src.sourceId} → postTestC-D (preferredPath=render, C4-nextQueue=${c4Result.nextQueue})`);
+        }
       } // end else (sourceGeneratedRuleThisRound)
 
       if (queuePath) {
