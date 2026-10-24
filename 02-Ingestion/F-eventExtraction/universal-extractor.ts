@@ -82,6 +82,38 @@ const SWE_WEEKDAY_MAP: Record<string, string> = {
   lordag:'06',sondag:'07',
 };
 
+/**
+ * Svenska månadsnamn som regex-alternativ.
+ *
+ * De äldre mönstren i den här filen har sina egna literaler — de lämnas
+ * orörda eftersom en sammanslagning skulle röra gruppnumreringen. Nya
+ * mönster använder den här konstanten.
+ */
+const SWE_MONTH_ALT =
+  'januari|februari|mars|april|maj|juni|juli|augusti|september|oktober|november|december|' +
+  'jan|feb|mar|apr|jun|jul|aug|sep|okt|nov|dec';
+
+/**
+ * Negativ lookahead: ett sifferpar får INTE tolkas som "dag/månad" när ett
+ * svenskt månadsnamn följer direkt efter. Då är det ett datumintervall
+ * ("12-14 januari"), inte "14 december".
+ */
+const SWE_MONTH_FOLLOWS_LOOKAHEAD = `(?!\\s*(?:${SWE_MONTH_ALT})\\b)`;
+
+/**
+ * Ett månadsnamn måste vara ett HELT ord — "mar" i "Maria" är inte mars,
+ * "jul" i "Julia" är inte juli, "jan" i "Janne" är inte januari.
+ *
+ * Efter månadsnamnet får därför inte komma en bokstav. Siffror är OK:
+ * "maj2026" ska fortfarande ge år 2026.
+ *
+ * Bevis (Generalization Protection Rule — General, samma regel på flera
+ * domäner): dn-kalendariet ("Maria Larkman" + "… lördag den 24/10 kl 12-17")
+ * lästes som intervallet 12–17 MARS. Samma felform finns i svenska
+ * namnlistor överallt: Julia, Janne, Maj, Sep.
+ */
+const SWE_MONTH_NOT_LETTER = `(?![a-zåäö])`;
+
 const DATE_PATTERNS = [
   // ISO 8601 full
   { rx: /(\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2})/, fmt: (m: string) => m.replace('T',' ') },
@@ -104,7 +136,11 @@ const DATE_PATTERNS = [
     }
   },
   // European short: 25/03 or 25-03 (no year — common in calendar grids, assumes current year)
-  { rx: /(\d{1,2})[/\-](\d{1,2})(?!\d)/,
+  //
+  // 2026-10-24 — negativ lookahead: ett sifferpar får INTE läsas som
+  // "dag/månad" när ett svenskt månadsnamn följer direkt efter ("12-14
+  // januari" är ett INTERVALL, inte "14 december").
+  { rx: new RegExp(`(\\d{1,2})[/\\-](\\d{1,2})(?!\\d)${SWE_MONTH_FOLLOWS_LOOKAHEAD}`),
     fmt: (_: string, a: string, b: string) => {
       // If a > 12, a is day; else b > 12 → b is day; else default SE (a=day, b=month)
       let day: string, month: string;
@@ -240,6 +276,303 @@ export function parseSwedishMonthDay(
   }
   return iso;
 }
+
+/**
+ * Året för ett ÅRSLÖST datumintervall ("23-28 oktober").
+ *
+ * Utgår från SLUTDAGEN: intervallet ska fortfarande kunna pågå. Den 26
+ * oktober ska "23-28 oktober" alltså bli 2026 (pågår just nu), inte 2027.
+ * Startdagen-baserad inferens (parseSwedishMonthDay) skulle hoppa ett år
+ * framåt och därmed tappa ett pågående evenemang helt.
+ *
+ * Bevis (regression på korpus, 2026-10-24):
+ *   dn-kalendariet "23–28 oktober" → 2026-10-23..2026-10-28
+ *   (start-dag-baserat inferens gav 2027-10-23, dvs. evenemanget försvann)
+ */
+function inferRangeYear(monthNum: string, endDay: number, now: Date): number {
+  const pad = (n: number) => String(n).padStart(2, '0');
+  const today = toIsoDate(now);
+  const thisYear = now.getUTCFullYear();
+
+  const endThisYear = `${thisYear}-${monthNum}-${pad(endDay)}`;
+  if (isValidIsoDate(endThisYear) && endThisYear >= today) return thisYear;
+
+  const nextYear = thisYear + 1;
+  const endNextYear = `${nextYear}-${monthNum}-${pad(endDay)}`;
+  if (isValidIsoDate(endNextYear)) return nextYear;
+
+  return thisYear;
+}
+
+/**
+ * Svenskt datumINTERVALL: "12-14 januari 2027", "3–5 maj", "12/13-14 mars".
+ *
+ * Lookbehind `(?<!\d)`: startdagen får inte vara de två sista siffrorna i
+ * ett år (samma skydd som SWE_DATE_NO_YEAR_RX).
+ *
+ * `\w*?` är LAT: det äter inte siffrorna i året ("maj2026" ska ge år 2026,
+ * inte ett årslöst "maj"). Årsgruppen är valfri — därför görs två passager
+ * (med år först, se parseSwedishDateRange).
+ */
+const SWE_DATE_RANGE_RX = new RegExp(
+  `(?<!\\d)(\\d{1,2})\\s*[-–—]\\s*(\\d{1,2})\\s+(${SWE_MONTH_ALT})${SWE_MONTH_NOT_LETTER}\\w*?(?:\\s*[.,]?\\s*(\\d{4}))?`,
+  'i',
+);
+
+/**
+ * Global variant av SWE_DATE_RANGE_RX — behövs för att hitta det FÖRSTA
+ * ÅRSLÖSA intervallet i en text där ett med år kan ligga före.
+ * lastIndex nollställs före varje skanning (se parseSwedishDateRangeWithoutYear).
+ */
+const SWE_DATE_RANGE_SCAN_RX = new RegExp(SWE_DATE_RANGE_RX.source, 'gi');
+
+/**
+ * KORSMÅNADSINTERVALL: "3 oktober 2026 – 28 februari 2027", "11 oktober –
+ * 23 november".
+ *
+ * VARFÖR: en utställning som pågår i fem månader är ETT event. Utan den här
+ * regeln fick "3 oktober 2026–28 februari 2027" bara startdatumet, och
+ * "30 oktober – 27 december" fick SLUTDAGEN som startdatum — evenemanget såg
+ * ut att började dagen det slutade.
+ *
+ * BEVIS (Generalization Protection Rule — General, 7 orelaterade domäner i
+ * korpuset): 3arena, aviciiarena, lokalhelhet-calendar, stockholmlive-evenemang,
+ * djurgarden, dn-kalendariet, kungsbacka.
+ *
+ * Grupper: 1=startdag, 2=startmånad, 3=startår, 4=slutdag, 5=slutmånad,
+ * 6=slutår.
+ */
+const SWE_CROSS_MONTH_RANGE_RX = new RegExp(
+  `(?<!\\d)(\\d{1,2})\\s+(${SWE_MONTH_ALT})${SWE_MONTH_NOT_LETTER}\\w*?(?:\\s*[.,]?\\s*(\\d{4}))?\\s*[-–—]\\s*(\\d{1,2})\\s+(${SWE_MONTH_ALT})${SWE_MONTH_NOT_LETTER}\\w*?(?:\\s*[.,]?\\s*(\\d{4}))?`,
+  'i',
+);
+
+/** Ett datumintervall: första och sista dag. */
+export interface SwedishDateRange {
+  start: string;
+  end: string;
+}
+
+/**
+ * Tolka ett svenskt datumintervall ("12-14 januari 2027") som start + slut.
+ *
+ * VARFÖR: "12-14 januari" är ETT event som pågår 12–14 januari. Utan den
+ * här tolkningen läste "European short"-mönstret (/(\d{1,2})[/\-](\d{1,2})/)
+ * sifferparet som dag 14 + månad 12 → 2026-12-14, nästan ett halvt år fel.
+ *
+ * BEVIS (Generalization Protection Rule — General, 2 orelaterade domäner):
+ *   pingst.se     — "12-14 januari 2027" → 2026-12-14 (fel)
+ *   dansenshus.se — "12-13 maj 2026"    → 2026-12-13 (fel)
+ * Formen "N-M månad" förekommer i minst nio orelaterade domäner i korpuset.
+ *
+ * ÅR: med år i texten används det. Utan år härleds året från SLUTDAGEN:
+ * intervallet ska fortfarande kunna pågå. "23-28 oktober" den 26 oktober
+ * blir alltså 2026-10-23..2026-10-28 (ett pågående evenemang), inte
+ * 2027 — att hoppa ett år framåt vore att förlora evenemanget. Året
+ * infereras bara om `allowInferredYear` är sant; på en arkivsida får ett
+ * årslöst datum inte få ett år infererat.
+ */
+export function parseSwedishDateRange(
+  text: string,
+  options: { now?: Date; allowInferredYear?: boolean } = {},
+): SwedishDateRange | null {
+  // 2026-10-24 — ett intervall MED år vinner ALLTID över ett årslöst, även
+  // om det årslösa står först i texten. Bevis: dansenshus.se ("7-8 maj 2026"
+  // + ett avklippt "5-13 maj…" i samma kort) — det egna datumet ska vinna
+  // över teasern.
+  return (
+    parseSwedishRangeWithYear(text, options) ??
+    parseSwedishRangeWithoutYear(text, options)
+  );
+}
+
+/**
+ * Bygg ett datumintervall från en regex-matchning. Året i texten används
+ * direkt; annars härleds det från SLUTDAGEN (se inferRangeYear).
+ */
+function buildSwedishDateRange(
+  m: RegExpMatchArray,
+  options: { now?: Date; allowInferredYear?: boolean } = {},
+): SwedishDateRange | null {
+  const d1 = parseInt(m[1], 10);
+  const d2 = parseInt(m[2], 10);
+  const mon = (m[3] || '').toLowerCase();
+  const monthNum = SWE_MONTH_MAP[mon];
+  if (!monthNum) return null;
+  if (!Number.isFinite(d1) || !Number.isFinite(d2)) return null;
+  if (d1 < 1 || d1 > 31 || d2 < 1 || d2 > 31) return null;
+
+  const pad = (n: number) => String(n).padStart(2, '0');
+  let year: number;
+
+  if (m[4]) {
+    year = parseInt(m[4], 10);
+    if (!Number.isFinite(year)) return null;
+  } else {
+    if (options.allowInferredYear === false) return null;
+    year = inferRangeYear(monthNum, d2, options.now ?? getToday());
+  }
+
+  const start = `${year}-${monthNum}-${pad(d1)}`;
+  if (!isValidIsoDate(start)) return null;
+
+  let end = `${year}-${monthNum}-${pad(d2)}`;
+  if (!isValidIsoDate(end)) return null;
+  // Intervallet får korsa årsskiftet ("29-31 december").
+  if (end < start) {
+    end = `${year + 1}-${monthNum}-${pad(d2)}`;
+    if (!isValidIsoDate(end)) return null;
+  }
+
+  return { start, end };
+}
+
+/**
+ * Global variant av SWE_CROSS_MONTH_RANGE_RX — för att hitta det första
+ * ÅRSLÖSA korsmånadsintervallet även när ett med år ligger längre fram.
+ */
+const SWE_CROSS_MONTH_RANGE_SCAN_RX = new RegExp(SWE_CROSS_MONTH_RANGE_RX.source, 'gi');
+
+/**
+ * Tolka ett KORSMÅNADSINTERVALL ("3 oktober 2026 – 28 februari 2027").
+ *
+ * ÅR:
+ *  - startår i texten används; annars härleds det från SLUTÅRET (årslöst
+ *    intervall ska fortfarande kunna pågå).
+ *  - slutår i texten används; annars är det startåret, ett år senare om
+ *    slutmånaden är FÖRE startmånaden ("3 oktober – 28 februari").
+ */
+function buildSwedishCrossMonthRange(
+  m: RegExpMatchArray,
+  options: { now?: Date; allowInferredYear?: boolean } = {},
+): SwedishDateRange | null {
+  const d1 = parseInt(m[1], 10);
+  const d2 = parseInt(m[4], 10);
+  const mon1 = (m[2] || '').toLowerCase();
+  const mon2 = (m[5] || '').toLowerCase();
+  const month1 = SWE_MONTH_MAP[mon1];
+  const month2 = SWE_MONTH_MAP[mon2];
+  if (!month1 || !month2) return null;
+  if (!Number.isFinite(d1) || !Number.isFinite(d2)) return null;
+  if (d1 < 1 || d1 > 31 || d2 < 1 || d2 > 31) return null;
+  // Samma månad = vanligt intervall, inte korsmånadsintervall.
+  if (month1 === month2) return null;
+
+  const pad = (n: number) => String(n).padStart(2, '0');
+  const now = options.now ?? getToday();
+  const year1 = m[3] ? parseInt(m[3], 10) : null;
+  const year2 = m[6] ? parseInt(m[6], 10) : null;
+  if (year1 !== null && !Number.isFinite(year1)) return null;
+  if (year2 !== null && !Number.isFinite(year2)) return null;
+
+  let startYear: number;
+  let endYear: number;
+
+  if (year2 !== null) {
+    // Slutåret står i texten. Startåret följer av månadernas ordning.
+    endYear = year2;
+    startYear = year1 ?? year2 - (month1 > month2 ? 1 : 0);
+  } else if (year1 !== null) {
+    startYear = year1;
+    endYear = year1 + (month2 < month1 ? 1 : 0);
+  } else {
+    if (options.allowInferredYear === false) return null;
+    // Årslöst: slutåret härleds från SLUTDAGEN (intervallet ska kunna pågå),
+    // startåret följer av månadernas ordning.
+    endYear = inferRangeYear(month2, d2, now);
+    startYear = endYear - (month1 > month2 ? 1 : 0);
+  }
+
+  const start = `${startYear}-${month1}-${pad(d1)}`;
+  const end = `${endYear}-${month2}-${pad(d2)}`;
+  if (!isValidIsoDate(start) || !isValidIsoDate(end)) return null;
+  if (end < start) return null;
+
+  return { start, end };
+}
+
+/**
+ * Ett intervall som hittats i en text, med sin PLATS i texten.
+ */
+interface RangeCandidate {
+  /** Startposition i texten — används för att välja det FÖRSTA intervallet. */
+  index: number;
+  /** Sant om ett år står utskrivet i texten (absolut datum). */
+  hasYear: boolean;
+  range: SwedishDateRange;
+}
+
+/**
+ * Samla ALLA datumintervall i en text — vanliga och korsmånadsintervall —
+ * sorterade på sin PLATS i texten.
+ *
+ * VARFÖR: en text kan nämna flera intervall. Då gäller det som nämns
+ * FÖRST: i svensk text nämns starten först. Utan den här regeln fick
+ * korsmånadsintervallet prioritet över ett tidigare, enklare intervall, så
+ * att djurgarden.se ("den 24–25 oktober och 31 oktober–1 november") fick
+ * starten 31 oktober i stället för 24 oktober.
+ *
+ * BEVIS (Generalization Protection Rule — General): att en text nämner två
+ * intervall i samma mening är generell svensk formulering, inte ett
+ * sitedomänsdrag. Korpuset: 4 av 128 kort med intervall har fler än ett,
+ * varav 3 upprepar samma intervall.
+ *
+ * Intervall slås INTE ihop: två skilda evenemang på samma kort ("konsert
+ * 12-14 januari, workshop 20-22 januari") ger två kandidater, och det
+ * första vinner. Sammanfogning skulle hitta på ett evenemang som inte finns.
+ */
+function collectRangeCandidates(
+  text: string,
+  options: { now?: Date; allowInferredYear?: boolean } = {},
+): RangeCandidate[] {
+  const out: RangeCandidate[] = [];
+
+  SWE_DATE_RANGE_SCAN_RX.lastIndex = 0;
+  let m: RegExpExecArray | null;
+  while ((m = SWE_DATE_RANGE_SCAN_RX.exec(text)) !== null) {
+    const range = buildSwedishDateRange(m, options);
+    if (!range) continue;
+    out.push({ index: m.index, hasYear: Boolean(m[4]), range });
+  }
+
+  SWE_CROSS_MONTH_RANGE_SCAN_RX.lastIndex = 0;
+  while ((m = SWE_CROSS_MONTH_RANGE_SCAN_RX.exec(text)) !== null) {
+    const range = buildSwedishCrossMonthRange(m, options);
+    if (!range) continue;
+    out.push({ index: m.index, hasYear: Boolean(m[3] || m[6]), range });
+  }
+
+  out.sort((a, b) => a.index - b.index);
+  return out;
+}
+
+/**
+ * Intervall där ett eller båda åren står utskrivna (absolut datum).
+ *
+ * Det FÖRSTA intervallet i texten vinner — oavsett om det är ett vanligt
+ * intervall eller ett korsmånadsintervall.
+ */
+export function parseSwedishRangeWithYear(
+  text: string,
+  options: { now?: Date; allowInferredYear?: boolean } = {},
+): SwedishDateRange | null {
+  const cands = collectRangeCandidates(text, options).filter(c => c.hasYear);
+  return cands.length > 0 ? cands[0].range : null;
+}
+
+/**
+ * Intervall där INGET år står utskrivet (året gissas). Det FÖRSTA intervallet
+ * i texten vinner.
+ */
+export function parseSwedishRangeWithoutYear(
+  text: string,
+  options: { now?: Date; allowInferredYear?: boolean } = {},
+): SwedishDateRange | null {
+  if (options.allowInferredYear === false) return null;
+  const cands = collectRangeCandidates(text, options).filter(c => !c.hasYear);
+  return cands.length > 0 ? cands[0].range : null;
+}
+
 
 /**
  * Element som bär en DEDIKERAD evenemangstitel ("kort-titel").
@@ -1529,7 +1862,7 @@ function extractHtmlHeuristics($: cheerio.CheerioAPI, source: string, baseUrl: s
     return { title: $card.find('img[alt]').attr('alt') || '', fromImgAlt: true };
   }
 
-  function extractDate($el: cheerio.CheerioAPI, $card: any): { date: string; time?: string } {
+  function extractDate($el: cheerio.CheerioAPI, $card: any): { date: string; time?: string; endDate?: string } {
     const $time = $card.find('time[datetime]').first();
     if ($time.length) {
       const dt = $time.attr('datetime') || '';
@@ -1540,6 +1873,77 @@ function extractHtmlHeuristics($: cheerio.CheerioAPI, source: string, baseUrl: s
       if (val) return parseDate(val);
     }
     const cardText = $card.text();
+
+    // ── Datum-precedens (2026-10-24) ────────────────────────────────────
+    // Ordningen nedan är medveten: ett datum som står UTSKRIVET med år är
+    // absolut och får aldrig förlora mot ett årslöst (infererat) datum.
+    //
+    //   1. intervall MED år          ("12-14 januari 2027",
+    //                                  "3 oktober 2026 – 28 februari 2027")
+    //   2. enstaka datum MED år      ("17 november 2026")
+    //   3. intervall UTAN år          ("23-28 oktober",
+    //                                  "11 oktober – 23 november")
+    //   4. European short            ("25/10")
+    //   5. enstaka datum UTAN år     ("24 okt")
+    //   6. relativt ("imorgon")
+    //   7. datum i länken
+    //
+    // Inom "intervall" gäller: det intervall som nämns FÖRST i texten
+    // vinner (se collectRangeCandidates).
+    //
+    // BEVIS för att 2 ska ligga före 4 (Generalization Protection Rule —
+    // General, 2 orelaterade domäner):
+    //   dansenshus.se — "Dansmässan 2026 17 november 2026" med adressen
+    //   "Barnhusgatan 12-14" gav 2026-12-14: sifferparet i ADRESSEN lästes
+    //   som dag 14 + månad 12. Rätt ordning ger 2026-11-17.
+    //   pingst.se — samma felform ("… 12-14 januari 2027" → 2026-12-14).
+    //
+    // BEVIS för att 2 ska ligga före 3:
+    //   dansenshus.se — teasertexten "5-13 maj…" (årslöst) i samma kort
+    //   som det egna datumet "7-8 maj 2026" tog över: 2026-05-05 i stället
+    //   för 2026-05-07.
+
+    // 1 — intervall med år ("12-14 januari 2027", "30 oktober – 27
+    // december 2026"). Det FÖRSTA intervallet i texten vinner, oavsett om
+    // det är vanligt eller korsmånadsintervall.
+    //
+    // Utan den här regeln fick "30 oktober – 27 december" SLUTDAGEN som
+    // startdatum: evenemanget såg ut att började dagen det slutade.
+    const rangeWithYear = parseSwedishRangeWithYear(cardText);
+    if (rangeWithYear) {
+      const t = TIME_RX.exec(cardText);
+      return {
+        date: rangeWithYear.start,
+        endDate: rangeWithYear.end,
+        time: t ? formatTime(t[1], t[2]) : undefined,
+      };
+    }
+
+    // 2 — enstaka datum med år ("17 november 2026").
+    const sweDateRx = /(?<!\d)(\d{1,2})\s+(januari|februari|mars|april|maj|juni|juli|augusti|september|oktober|november|december|jan|feb|mar|apr|maj|jun|jul|aug|sep|okt|nov|dec)\w*\s+(\d{4})/i;
+    if (cardText.match(sweDateRx)) {
+      const parsed = parseDate(cardText);
+      // parseDate faller tillbaka på "första 10 tecken" om inget mönster
+      // träffar — det är trasig text, inte ett datum. Då går vi vidare
+      // till nästa regel i stället för att skriva ut trasigheten.
+      if (parsed.date && isValidIsoDate(parsed.date)) return parsed;
+    }
+
+    // 3 — intervall utan år ("23-28 oktober", "11 oktober – 23 november").
+    // Året härleds från SLUTDAGEN (se inferRangeYear) så att ett pågående
+    // evenemang inte tappas.
+    const rangeWithoutYear = parseSwedishRangeWithoutYear(cardText, {
+      allowInferredYear: !isArchiveContext($, baseUrl),
+    });
+    if (rangeWithoutYear) {
+      const t = TIME_RX.exec(cardText);
+      return {
+        date: rangeWithoutYear.start,
+        endDate: rangeWithoutYear.end,
+        time: t ? formatTime(t[1], t[2]) : undefined,
+      };
+    }
+
     // European short: dd/mm or dd-mm without year (common in calendar grids).
     //
     // 2026-10-09 — Hallsberg-bug: `12.00-15.00` matchade som `00-15` →
@@ -1551,7 +1955,15 @@ function extractHtmlHeuristics($: cheerio.CheerioAPI, source: string, baseUrl: s
     // Fix: kolon blockeras BÅDE före första siffran (`:` i lookbehind) och
     // efter andra siffran (`:` i trailing-guard). `Event 25-10` och `5/12`
     // fungerar kvar — de föregås inte av kolon.
-    const shortDateRx = /(?<![\d.:])(\d{1,2})[/\-](\d{1,2})(?!\d|:)/;
+    //
+    // 2026-10-24 — negativ lookahead: ett sifferpar får INTE läsas som
+    // "dag/månad" när ett svenskt månadsnamn följer direkt efter — då är det
+    // ett interval ("12-14 januari"), inte "14 december". Intervallen ovan
+    // fångas redan; skydden här gäller intervall som inte går att tolka
+    // (ogiltiga datum) — då ska vi hellre sakna datum än hitta på ett.
+    const shortDateRx = new RegExp(
+      `(?<![\\d.:])(\\d{1,2})[/\\-](\\d{1,2})(?!\\d|:)${SWE_MONTH_FOLLOWS_LOOKAHEAD}`,
+    );
     const shortMatch = cardText.match(shortDateRx);
     if (shortMatch) {
       const a = shortMatch[1];
@@ -1571,9 +1983,6 @@ function extractHtmlHeuristics($: cheerio.CheerioAPI, source: string, baseUrl: s
         return { date: dateStr, time: t ? formatTime(t[1], t[2]) : undefined };
       }
     }
-    const sweDateRx = /(?<!\d)(\d{1,2})\s+(januari|februari|mars|april|maj|juni|juli|augusti|september|oktober|november|december|jan|feb|mar|apr|maj|jun|jul|aug|sep|okt|nov|dec)\w*\s+(\d{4})/i;
-    const m = cardText.match(sweDateRx);
-    if (m) return parseDate(cardText);
     // 2026-10-24 — årslöst svenskt datum ("23 okt", "24 okt lördag").
     // Utan detta ger venue-kalendrar NOLL events. Se parseSwedishMonthDay
     // för beviset (4 orelaterade domäner).
@@ -1724,7 +2133,7 @@ function extractHtmlHeuristics($: cheerio.CheerioAPI, source: string, baseUrl: s
       const { title, fromImgAlt } = extractTitle($, $card);
       if (!title || title.length < 2 || title.length > 200) return;
 
-      const { date, time } = extractDate($, $card);
+      const { date, time, endDate } = extractDate($, $card);
       if (!date) return;
 
       const { venue, city } = extractVenue($, $card);
@@ -1748,6 +2157,9 @@ function extractHtmlHeuristics($: cheerio.CheerioAPI, source: string, baseUrl: s
         const priceMin = price && !isFree ? parsePrice(price) : undefined;
         const evt = ParsedEventSchema.parse({
           title, date, time: time || undefined,
+          // 2026-10-24 — datumintervall ("12-14 januari 2027") ger både
+          // start och slut. Slutet skrivs som end_time i databasen.
+          endDate: endDate || undefined,
           venue: venue || undefined, city: city || undefined,
           description: desc || undefined,
           url: eventUrl || undefined, ticketUrl: ticketUrl || undefined,
@@ -1970,7 +2382,31 @@ function extractSwedishRelativeDates($: cheerio.CheerioAPI, source: string, base
     }
     if (title.length < 3 || title.length > 200) return;
 
-    let foundDate = '', foundTime = '';
+    let foundDate = '', foundTime = '', foundEndDate = '';
+
+    // 2026-10-24 — datumINTERVALL ("12-14 januari 2027") är ETT event som
+    // pågår 12–14 januari. Samma regel som i C1 (se extractDate).
+    //
+    // Intervallet kan ligga i kortet eller i texten bredvid kortet (t.ex. i
+    // en kalenderlist där kortet bara är en länk) — därför läses båda.
+    //
+    // PRECEDENS: ett intervall MED år vinner över ett årslöst, även om det
+    // årslösa ligger i kortet och det med år i texten bredvid. Ett utskrivet
+    // år är absolut; ett gissat år är en gissning.
+    //
+    // Bevis: dansenshus.se — kortet med "5-13 maj…" (årslöst) bredvid
+    // "7-8 maj 2026" gav 2026-05-05 i stället för 2026-05-07.
+    const siblingText = $card.parent().clone().children().remove().end().text();
+    const allowInferredYear = !isArchiveContext($, baseUrl);
+    const range =
+      parseSwedishRangeWithYear(cardText) ??
+      parseSwedishRangeWithYear(siblingText) ??
+      parseSwedishRangeWithoutYear(cardText, { allowInferredYear }) ??
+      parseSwedishRangeWithoutYear(siblingText, { allowInferredYear });
+    if (range) {
+      foundDate = range.start;
+      foundEndDate = range.end;
+    }
 
     // 2026-10-24 — ett EXPLICIT ÅRSLÖST datum ("24 okt") slår alltid en
     // veckodagsinferens. Annars får "31 okt lör" fel datum: nästa lördag
@@ -1981,7 +2417,7 @@ function extractSwedishRelativeDates($: cheerio.CheerioAPI, source: string, base
     // ligger i samma text och skulle bli ett påhittat event.
     const explicitRx = new RegExp(SWE_EXPLICIT_DATE_RX.source, 'gi');
     const explicit = explicitRx.exec(cardText);
-    if (explicit && !explicit[3]) {
+    if (!foundDate && explicit && !explicit[3]) {
       // Låt C1/C2 äga kortet om det har ett absolut <time datetime>, och
       // gissa aldrig ett år på en arkivsida.
       if ($card.find('time[datetime]').length > 0) return;
@@ -2010,8 +2446,6 @@ function extractSwedishRelativeDates($: cheerio.CheerioAPI, source: string, base
     }
 
     if (!foundDate) {
-      const $parent = $card.parent();
-      const siblingText = $parent.clone().children().remove().end().text();
       const sweDateRx = /(?<!\d)(\d{1,2})\s+(januari|februari|mars|april|maj|juni|juli|augusti|september|oktober|november|december|jan|feb|mar|apr|maj|jun|jul|aug|sep|okt|nov|dec)\w*\s+(\d{4})/i;
       const m = siblingText.match(sweDateRx);
       if (m) {
@@ -2039,6 +2473,7 @@ function extractSwedishRelativeDates($: cheerio.CheerioAPI, source: string, base
     try {
       const evt = ParsedEventSchema.parse({
         title, date: foundDate, time: foundTime || undefined,
+        endDate: foundEndDate || undefined,
         venue: venue || undefined, url: eventUrl || undefined,
         source, sourceUrl: eventUrl || baseUrl,
         confidence: {

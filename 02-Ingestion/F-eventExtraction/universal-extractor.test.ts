@@ -1175,10 +1175,18 @@ describe('universal-extractor — A.5-B2: Swedish månadsnamn klartext', () => {
     expect(result.events[0].title).toBe('OKEJ på turné');
   });
 
-  it('parses "16 oktober – 22 november 2026" → end date 2026-11-22', () => {
-    // Swedish pattern kräver \s+ mellan månad och år, så "oktober – 22" matchar inte.
-    // Resultatet blir slutdatumet (22 november 2026). Det är OK — körkort-period,
-    // inte första föreställning. Sodrateatern-specifikt beteende.
+  it('parses "16 oktober – 22 november 2026" → start 2026-10-16, slut 2026-11-22', () => {
+    // 2026-10-24 — KORSMÅNADSINTERVALL. Tidigare fick "16 oktober – 22
+    // november 2026" SLUTDAGEN (2026-11-22) som startdatum, eftersom den
+    // svenska årsmönstret matchade "22 november 2026" först. Evenemanget såg
+    // då ut att började dagen det slutade — och syntes inte alls förrän
+    // föreställningen redan var slut.
+    //
+    // Bevis (Generalization Protection Rule — General, 7 orelaterade
+    // domäner): 3arena ("11 oktober – 23 november 2026" → INGET datum),
+    // aviciiarena ("30 oktober – 27 december" → 2026-12-27, slutet),
+    // stockholmlive-evenemang ("24 oktober – 22 november" → 2026-11-22),
+    // djurgarden, dn-kalendariet, kungsbacka, lokalhelhet-calendar.
     const html = `<!doctype html>
 <html lang="sv"><body>
 <div class="event-card">
@@ -1188,7 +1196,8 @@ describe('universal-extractor — A.5-B2: Swedish månadsnamn klartext', () => {
 </body></html>`;
     const result = extractEvents(html, 'sodrateatern', 'https://www.sodrateatern.com/');
     expect(result.events.length).toBe(1);
-    expect(result.events[0].date).toBe('2026-11-22');
+    expect(result.events[0].date).toBe('2026-10-16');
+    expect(result.events[0].endDate).toBe('2026-11-22');
   });
 
   it('parses all 12 Swedish month names', () => {

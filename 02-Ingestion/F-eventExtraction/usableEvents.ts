@@ -21,6 +21,10 @@ export interface DateableEvent {
   time?: string | null;
   start_time?: string | null;
   startTime?: string | null;
+  endDate?: string | null;
+  end_date?: string | null;
+  end_time?: string | null;
+  endTime?: string | null;
   [key: string]: unknown;
 }
 
@@ -140,13 +144,32 @@ export function toIsoEndTime(endDate?: string | null, endTime?: string | null): 
 }
 
 /**
+ * Sluttid för en rad — speglar importens `extractEndTime`.
+ *
+ * 2026-10-24 — behövs för att ett PÅGÅENDE flerdagsevenemang ("23-28
+ * oktober") ska överleva datumvakten: starten har passerat men evenemanget
+ * pågår fortfarande. Slutdatumet är det som avgör.
+ */
+export function eventEndTime(ev: DateableEvent): string | null {
+  for (const candidate of [ev.end_time, ev.endTime]) {
+    if (isUsableIsoStamp(candidate)) return candidate.trim();
+  }
+  const day = typeof ev.endDate === 'string' ? ev.endDate.trim()
+    : typeof ev.end_date === 'string' ? ev.end_date.trim()
+    : '';
+  if (!day) return null;
+  const clock = typeof ev.endTime === 'string' ? ev.endTime.trim() : '';
+  return toIsoEndTime(day, clock);
+}
+
+/**
  * Sant om raden har ett datum som överlever importens datumvakt —
  * alltså om den faktiskt kan hamna i databasen.
  */
 export function hasUsableDate(ev: DateableEvent, nowMs: number = Date.now()): boolean {
   const start = eventStartTime(ev);
   if (!start) return false;
-  return !isEventPast(start, nowMs);
+  return !isEventPast(start, nowMs, eventEndTime(ev));
 }
 
 /**
