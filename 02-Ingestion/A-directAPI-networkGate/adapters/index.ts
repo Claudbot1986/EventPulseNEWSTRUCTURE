@@ -23,6 +23,42 @@ const registry: ApiAdapter[] = [
       return runConfettiAdapter(source);
     },
   },
+  {
+    // 2026-10-24 — universe.com:s egen GraphQL-sök-API. Källans URL
+    // (www.universe.com/events/stockholm) är en SPA-ruta som renderar tomt;
+    // API:t ger rader med datum, plats, adress och pris.
+    name: 'universe',
+    hostSuffixes: ['.universe.com'],
+    run: async (source: SourceTruth) => {
+      const { runUniverseAdapter } = await import('./universe');
+      return runUniverseAdapter(source);
+    },
+  },
+  {
+    // 2026-10-24 — vasalund.com (DM/360Player). /matcher renderar tomt
+    // (ScrapingBee-premium: loading-state hänger kvar, 0 match-rader i DOM),
+    // men DM:s collections-API ger framtida matcher med ren HTTP.
+    // Endast .com — .se är en parkerad domän ("TILL SALU") utan SiteAlias.
+    name: 'vasalund',
+    hostSuffixes: ['.vasalund.com'],
+    run: async (source: SourceTruth) => {
+      const { runVasalundAdapter } = await import('./vasalund');
+      return runVasalundAdapter(source);
+    },
+  },
+  {
+    // 2026-10-24 — stockholmjazz.se (Stockholms Jazzfestival). /program är
+    // ett SvelteKit-skal (~8 kB) utan JSON-LD; korten byggs client-side.
+    // Plattformens eget /api/concerts ger däremot 331 rader med datum,
+    // sluttid och plats — utan rendering.
+    // Endast .se — .com är en uppköpt spamdomän utan jazz.
+    name: 'stockholmjazz',
+    hostSuffixes: ['.stockholmjazz.se'],
+    run: async (source: SourceTruth) => {
+      const { runStockholmJazzAdapter } = await import('./stockholmJazz');
+      return runStockholmJazzAdapter(source);
+    },
+  },
 ];
 
 export function getApiAdapter(name: string | undefined | null): ApiAdapter | null {

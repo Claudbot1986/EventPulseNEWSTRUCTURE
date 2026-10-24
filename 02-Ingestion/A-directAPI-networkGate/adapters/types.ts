@@ -51,6 +51,16 @@ export interface ApiAdapterResult {
   /** Rader som faktiskt producerades. */
   events: AdapterEventRow[];
   error?: string;
+  /**
+   * Källan LEVER men har inget att leverera just nu — t.ex. en årsvis
+   * festival vars säsong är slut. Det är INTE ett fel: källan ska räknas
+   * som frisk, få felräknaren nollställd och ALDRIG auto-quarantänas
+   * för en sådan körning.
+   *
+   * Sätts bara när `status === 'completed'` OCH `events.length === 0` OCH
+   * adaptern vet varför. Utan den förklaringen är 0 rader ett verkligt fel.
+   */
+  noEventsReason?: string;
 }
 
 export interface ApiAdapter {
