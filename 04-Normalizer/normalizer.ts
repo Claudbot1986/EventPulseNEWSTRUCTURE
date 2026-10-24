@@ -19,6 +19,12 @@ import { shouldCaptureRawDescription, countFilledFacts } from './rawDescriptionR
 import { getDefaultCategorySlugForSource } from './sourceCategoryDefaults';
 import { canonicalizeCategorySlug } from './categoryCanonicalize';
 import { extractHeadliner, resolveArtist } from './artistResolver';
+// 2026-10-24 — Dedup via ticket_url: URL + kalenderdag = samma event.
+import {
+  selectTicketUrlCandidate,
+  calendarDay,
+  type TicketUrlCandidate,
+} from './deduplication/ticketUrlDedup';
 import { aiImageQueue, startAiImageWorker } from '../08-Agent/workers/aiImageWorker';
 import { enqueueSideEffect } from './sideEffectQueue';
 import { appendSkipLog } from '../08-Agent/utils/skipLog';
@@ -461,25 +467,49 @@ export async function processRawEvent(job: Job<RawEventInput>): Promise<void> {
 
   console.log(`[normalizer] Processing ${raw.source}:${raw.source_id ?? 'unknown'} "${raw.title}"`);
 
-  // Cross-source dedup via ticket_url (2026-09-29). Rent additivt — ändrar
-  // INTE dedup_hash-algoritmen (se repo-policy "Do not change dedup hash
-  // algorithm"). Konsoliderar events där flera source-adapters skrapar
+  // Dedup via ticket_url (2026-09-29, utvidgad 2026-10-24). Rent additivt —
+  // ändrar INTE dedup_hash-algoritmen (se repo-policy "Do not change dedup
+  // hash algorithm"). Konsoliderar events där flera source-adapters skrapar
   // samma URL — t.ex. lulea-hf-2/downtown-2/globen-3/halmstad-konserthus-2
   // (alla biljettshop.se Chicago-musikal): 228 duplicerade rader → 57.
+  //
+  // 2026-10-24 — BUGG: sökningen tog FÖRSTA raden med matchande URL och
+  // skrev över den. En URL som bär flera events kollapsade till EN rad:
+  // ifk-stockholms 3 event (Höstläger Katrineholm 13/11, IFK Klubbmästerskap
+  // 24/11, Lucia och Banana Cup 8/12) på samma sida → 1 rad i databasen.
+  // Mätt i korpusen: 370 rader i samma källa + 34 korssource-par med olika dag.
+  //
+  // NY REGEL: en rad är en FÖRETRÄDESDAG — samma ticket_url + samma
+  // kalenderdag = samma event (oavsett källa). Annan dag = annan företrädelse
+  // → ny rad. Se 04-Normalizer/deduplication/ticketUrlDedup.ts.
   let existing: { id: string; updated_at: string } | null = null;
   let existingViaTicketUrl = false;
   const ticketUrl = raw.url || raw.ticket_url || null;
   if (ticketUrl) {
     const { data: byUrl } = await supabase
       .from('events')
-      .select('id, updated_at')
+      .select('id, updated_at, source, start_time')
       .eq('ticket_url', ticketUrl)
-      .limit(1)
-      .maybeSingle();
-    if (byUrl) {
-      existing = byUrl;
+      .order('updated_at', { ascending: false })
+      .limit(50);
+    const candidates = (byUrl ?? []) as TicketUrlCandidate[];
+    const selection = selectTicketUrlCandidate({
+      incomingSource: raw.source,
+      incomingStartTime: raw.start_time,
+      candidates,
+    });
+    if (selection.candidate) {
+      existing = { id: selection.candidate.id, updated_at: selection.candidate.updated_at ?? '' };
       existingViaTicketUrl = true;
-      console.log(`[normalizer] 🔗 Cross-source dedup hit by ticket_url: ${byUrl.id} (source=${raw.source}, url=${ticketUrl})`);
+      console.log(
+        `[normalizer] 🔗 Dedup hit by ticket_url: ${selection.candidate.id} ` +
+          `(reason=${selection.reason}, source=${raw.source}, url=${ticketUrl})`,
+      );
+    } else if (candidates.length > 0) {
+      console.log(
+        `[normalizer] 🆕 ticket_url ${ticketUrl} matchade ${candidates.length} rad(er) ` +
+          `men på annan kalenderdag (source=${raw.source}, dag=${calendarDay(raw.start_time)}) — ny rad`,
+      );
     }
   }
 
