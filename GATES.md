@@ -44,6 +44,11 @@ Scope: bevis för var och en av de sex fixarna från planen "Fixa ingestion + di
   EXPECT: /g8: datumvakten behåller holdags-event dated idag och kastar bort gårdagens pass/
   EVIDENCE: automatic-evidence=v1; definition-sha256=160922fb4111a8347b2baeefe1e9c4db7f1034cdde4d5e386e92be3ed354d9bf; exit=0; EXPECT=matched; output-sha256=76189cd96e4ccaab26a3788ea66a81d2c9f8efbaf72f0c589591f2b9550f71a2; output-bytes=83; shell=/bin/sh; cwd=/Users/claudgashi/EventPulse; path=29325ef63737/16 entries
 
+- [x] G9: requeue-sources kan köa om en specifik källa i C-gaten (isolerat, idempotent, vägrar okända källor)
+  CHECK: node scripts/verify-fixes.mjs g9
+  EXPECT: /g9: requeue-sources köar en specifik källa i postB-preC, är idempotent och vägrar okända källor/
+  EVIDENCE: automatic-evidence=v1; definition-sha256=1a6ac57fe33f6b5b3f5bee396ced7a3251b4900bb93008683349b254609da00d; exit=0; EXPECT=matched; output-sha256=fe2b71c9426559f34f9fd820290b748205e3d11ced5408be09bfb0fbded9d8bf; output-bytes=102; shell=/bin/sh; cwd=/Users/claudgashi/EventPulse; path=29325ef63737/16 entries
+
 # Handoff: discovery → ingestion (2026-10-23)
 
 Scope: sex fel som höll kvar promoteade källor ute ur ingestion trots att P3D skrev

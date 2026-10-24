@@ -21,6 +21,7 @@
  *   g6 — discovery-loopen stängd: kandidater claimas, sandboxas, promote:as
  *   g7 — C-htmlGate:s programmatiska ingång avslutar rent på tom postB-preC-kö
  *   g8 — datumvakten behåller holdags-event dated idag (kastar bort gårdagens)
+ *   g9 — requeue-sources kan köa om en specifik källa i C-gaten (isolerat, idempotent)
  *   h1 — geoExpansion filtrerar på lat/lng, inte på venues.city
  *   h2 — city finns som kolumn och bärs hela vägen till promote
  *   h3 — slug-kollision i promote dödar inte batchen
@@ -256,6 +257,71 @@ function g8() {
     );
   }
   return ok('g8: datumvakten behåller holdags-event dated idag och kastar bort gårdagens pass');
+}
+
+// G9 — operatörverktyget requeue-sources kan faktiskt köa om en specifik
+// källa i C-gaten (plan: operatörverktyg för fail-källor).
+//
+// Kör det riktiga verktyget i en isolerad sandbox och mät tre saker:
+//   1. köposten hamnar i postB-preC med rätt format och status blir 'routed'
+//   2. en andra körning är idempotent (ingen dubblett)
+//   3. en okänd källa skriver INGEN post — negativ kontroll
+function g9() {
+  const r = spawnSync('npx', ['tsx', 'scripts/verify-requeue-gate.mts'], {
+    cwd: ROOT,
+    encoding: 'utf8',
+    timeout: 180_000,
+    killSignal: 'SIGKILL',
+  });
+  const out = `${r.stdout ?? ''}${r.stderr ?? ''}`;
+  if (r.status !== 0) {
+    return fail(
+      `g9: FAIL gateskriptet avslutade med exit=${r.status}.\n` +
+      `     Sista utdata:\n${out.split('\n').slice(-12).join('\n')}`,
+    );
+  }
+  const m = out.match(/^G9RESULT (\{.*\})$/m);
+  if (!m) {
+    return fail(
+      'g9: FAIL gateskriptet skrev inte ut någon G9RESULT-rad — gaten kunde inte avgöra något.\n' +
+      `     Sista utdata:\n${out.split('\n').slice(-12).join('\n')}`,
+    );
+  }
+  let res;
+  try {
+    res = JSON.parse(m[1]);
+  } catch (e) {
+    return fail(`g9: FAIL kunde inte tolka G9RESULT: ${e.message}`);
+  }
+  if (res.firstOutcome !== 'queued' || res.firstWritten !== 1) {
+    return fail(
+      `g9: FAIL källan köades inte (outcome=${res.firstOutcome}, written=${res.firstWritten}). ` +
+      'Operatören kan inte köra om en fail-källa.',
+    );
+  }
+  const entry = res.queueEntry;
+  if (!entry || entry.sourceId !== 'gate-source' || entry.queueName !== 'postB-preC') {
+    return fail(`g9: FAIL köposten har fel format: ${JSON.stringify(entry)}`);
+  }
+  if (res.status?.status !== 'routed' || res.status?.consecutiveFailures !== 0) {
+    return fail(
+      `g9: FAIL källans status blev inte 'routed' med nollställd felräknare: ` +
+      `${JSON.stringify(res.status)}`,
+    );
+  }
+  if (res.secondOutcome !== 'already_queued' || res.secondWritten !== 0 || res.queueRowsAfterSecond !== 1) {
+    return fail(
+      `g9: FAIL verktyget är inte idempotent: outcome=${res.secondOutcome}, ` +
+      `written=${res.secondWritten}, rader=${res.queueRowsAfterSecond}`,
+    );
+  }
+  if (res.unknownOutcome !== 'unknown_source' || res.unknownWritten !== 0 || res.queueRowsAfterUnknown !== 1) {
+    return fail(
+      `g9: FAIL negativ kontroll: en okänd källa skrev en köpost ` +
+      `(outcome=${res.unknownOutcome}, written=${res.unknownWritten}, rader=${res.queueRowsAfterUnknown})`,
+    );
+  }
+  return ok('g9: requeue-sources köar en specifik källa i postB-preC, är idempotent och vägrar okända källor');
 }
 
 // G4 — C-htmlGate avslutar rent exit=0 på tom postB-preC-kö (plan steg 2B).
@@ -1319,7 +1385,7 @@ function n2() {
   );
 }
 
-const gates = { g1, g2, g3, g4, g5, g6, g7, g8, h1, h2, h3, h4, h5, h6, e1, e2, e3, e4, e5, e6, e7, e8, e9, e10, e11, n1, n2 };
+const gates = { g1, g2, g3, g4, g5, g6, g7, g8, g9, h1, h2, h3, h4, h5, h6, e1, e2, e3, e4, e5, e6, e7, e8, e9, e10, e11, n1, n2 };
 if (!arg || !gates[arg]) {
   console.error(`usage: node scripts/verify-fixes.mjs <${Object.keys(gates).join('|')}>`);
   process.exit(2);
