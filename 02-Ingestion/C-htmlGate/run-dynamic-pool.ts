@@ -260,6 +260,7 @@ export type ExitReason =
   | 'C2_UNCLEAR'
   | 'EXTRACTION_ZERO_PROMISING_HTML'     // C2 promising but C3 returned 0
   | 'EXTRACTION_ZERO_C3_AI_ZERO'          // C3 failed + C3-AI also returned 0
+  | 'C3_AI_NEEDS_RENDER_D_SIGNAL'         // C3-AI säger uttryckligen "needs_render"
   | 'ALL_ROUNDS_EXHAUSTED';
 
 type ExitReasonDetail = string;
@@ -305,7 +306,7 @@ interface CStageResult {
   extract: { eventsFound: number; duration: number; htmlSize: number; extractedEvents?: ParsedEvent[] };
 }
 
-interface CResult extends CStageResult {
+export interface CResult extends CStageResult {
   sourceId: string;
   sourceUrl: string;  // original source.url (historical input only)
   winningStage: 'C1' | 'C2' | 'C3' | 'C3-AI' | 'C4-AI';
@@ -1303,7 +1304,7 @@ async function runSourceOnPool(
  * Detailed outcome determination with precise exit reasons.
  * Each reason is actionable — it tells exactly what failed and why.
  */
-function determineOutcome(result: CResult, sourceUrl: string, roundNum: number, c0FoundWinner: boolean): void {
+export function determineOutcome(result: CResult, sourceUrl: string, roundNum: number, c0FoundWinner: boolean): void {
   // ── SUCCESS ──────────────────────────────────────────────────────────────────
   if (result.extract.eventsFound > 0) {
     result.outcomeType = 'extract_success';
@@ -1400,6 +1401,29 @@ function determineOutcome(result: CResult, sourceUrl: string, roundNum: number, 
 
   // C2 promising but universal extraction returned 0 AND AI also returned 0
   if (result.c2.verdict === 'promising' && result.c3.universalEventsFound === 0 && (result.c3.aiEventsFound ?? 0) === 0) {
+    // C3-AI säger uttryckligen att sidan behöver renderas. Det är D-gatens
+    // signal — sidan lever, innehållet finns, men syns inte utan JS. Det är
+    // INTE ett extraktionsfel, så källan ska inte begravas.
+    //
+    // Bevis (Generalization Protection Rule — 4 orelaterade domäner med
+    // samma mönster, samtliga med C2-score UNDER tröskeln 20 som annars
+    // skickat dem till manual-review):
+    //   vasamuseet.se (12) · www.vasamuseet.se (9) · www.botaniska.se (8) ·
+    //   svenskfotboll.se (12)
+    // Kontroll: de fall där samma AI-verdict gav hög C2-score (lth 26,
+    // thatsup 46/47, kalmar 55, modernamuseet 39) gick redan till D via
+    // OPTIMIZATION B och ledde till 1–7 events via UI — ingen av dem gick
+    // till felaktig begravning.
+    if (result.c3.aiVerdict === 'needs_render') {
+      result.outcomeType = 'route_success';
+      result.winningStage = 'C3-AI';
+      result.routeSuggestion = 'D';
+      result.exitReason = 'C3_AI_NEEDS_RENDER_D_SIGNAL';
+      result.exitReasonDetail = `C3-AI verdict=needs_render — routed to D-renderGate`;
+      result.evidence = `C3-AI: needs_render (C2 score=${result.c2.score})`;
+      result.success = false;
+      return;
+    }
     if (result.c3.aiVerdict) {
       result.exitReason = 'EXTRACTION_ZERO_C3_AI_ZERO';
       result.exitReasonDetail = `C2=promising, universal=0, AI=0 (verdict=${result.c3.aiVerdict})`;
@@ -1471,6 +1495,61 @@ function writeOutcomeStatus(result: CResult, queueName: string): void {
   });
 }
 
+/**
+ * Vilken kö ska källan till? Rent beslut — ingen disk.
+ *
+ * Utdragt ur routeResult (2026-10-24) så att routingen kan prövas utan att
+ * röra filsystemet. Innan uttaget fanns bara en funktion som både bestämde
+ * och skrev; testerna testade därför en egen, förenklad kopia av logiken —
+ * de kunde inte ha upptäckt en regression i den riktiga koden.
+ */
+export function resolveRoute(
+  result: CResult,
+  roundsParticipated: number
+): { queuePath: string; queueName: string } {
+  // [SAFETY] extract_success MUST go to UI — no exceptions
+  if (result.outcomeType === 'extract_success') {
+    return { queuePath: QUEUES.UI, queueName: 'postTestC-UI' };
+  }
+
+  switch (result.routeSuggestion) {
+    case 'UI':
+      return { queuePath: QUEUES.UI, queueName: 'postTestC-UI' };
+    case 'A':
+      return { queuePath: QUEUES.A, queueName: 'postTestC-A' };
+    case 'B':
+      return { queuePath: QUEUES.B, queueName: 'postTestC-B' };
+    case 'D':
+      return { queuePath: QUEUES.D, queueName: 'postTestC-D' };
+    default: {
+      // [OPTIMIZATION A] Fast-exit for unfetchable sources after round 1
+      // These sources can never be fetched — testing them 3 times is wasteful
+      const isUnfetchableError = result.exitReason === 'FETCH_ERROR' || result.exitReason === 'NETWORK_ERROR';
+      if (isUnfetchableError && roundsParticipated >= 1) {
+        return { queuePath: QUEUES.MANUAL_REVIEW, queueName: 'postTestC-manual-review' };
+      }
+
+      // [OPTIMIZATION B] C2-hög + 0 events → D-renderGate
+      // High C2 score but no events extracted — likely JS-rendered content
+      // Route to D (JS rendering) instead of manual review
+      const isC2PromisingZeroEvents =
+        (result.exitReason === 'EXTRACTION_ZERO_PROMISING_HTML' ||
+         result.exitReason === 'EXTRACTION_ZERO_C3_AI_ZERO') &&
+        result.c2?.score >= 20;
+      if (isC2PromisingZeroEvents) {
+        return { queuePath: QUEUES.D, queueName: 'postTestC-D' };
+      }
+
+      // Default: check if this source has now participated in 3 rounds
+      if (roundsParticipated >= 3) {
+        return { queuePath: QUEUES.MANUAL_REVIEW, queueName: 'postTestC-manual-review' };
+      }
+      // Fail but not yet at 3 rounds — stays in pool (logged, not queued)
+      return { queuePath: '', queueName: 'STAYS_IN_POOL' };
+    }
+  }
+}
+
 function routeResult(result: CResult, roundsParticipated: number): string {
   const queueEntry = {
     sourceId: result.sourceId,
@@ -1487,13 +1566,9 @@ function routeResult(result: CResult, roundsParticipated: number): string {
     roundsParticipated,
   };
 
-  let queuePath: string;
-  let queueName: string;
+  const { queuePath, queueName } = resolveRoute(result, roundsParticipated);
 
-  // [SAFETY] extract_success MUST go to UI — no exceptions
   if (result.outcomeType === 'extract_success') {
-    queuePath = QUEUES.UI;
-    queueName = 'postTestC-UI';
     // Write events to isolated C output folder (03-Queue/03-extractedevents/C/)
     const events = result.extract.extractedEvents;
     if (events && events.length > 0) {
@@ -1519,58 +1594,6 @@ function routeResult(result: CResult, roundsParticipated: number): string {
         lastRoutingReason: `C-htmlGate: ${events.length} events`,
         lastRoutingSource: 'runtime_status',
       });
-    }
-  } else {
-    switch (result.routeSuggestion) {
-      case 'UI':
-        queuePath = QUEUES.UI;
-        queueName = 'postTestC-UI';
-        break;
-      case 'A':
-        queuePath = QUEUES.A;
-        queueName = 'postTestC-A';
-        break;
-      case 'B':
-        queuePath = QUEUES.B;
-        queueName = 'postTestC-B';
-        break;
-      case 'D':
-        queuePath = QUEUES.D;
-        queueName = 'postTestC-D';
-        break;
-      default: {
-        // [OPTIMIZATION A] Fast-exit for unfetchable sources after round 1
-        // These sources can never be fetched — testing them 3 times is wasteful
-        const isUnfetchableError = result.exitReason === 'FETCH_ERROR' || result.exitReason === 'NETWORK_ERROR';
-        if (isUnfetchableError && roundsParticipated >= 1) {
-          queuePath = QUEUES.MANUAL_REVIEW;
-          queueName = 'postTestC-manual-review';
-          break;
-        }
-
-        // [OPTIMIZATION B] C2-hög + 0 events → D-renderGate
-        // High C2 score but no events extracted — likely JS-rendered content
-        // Route to D (JS rendering) instead of manual review
-        const isC2PromisingZeroEvents =
-          (result.exitReason === 'EXTRACTION_ZERO_PROMISING_HTML' ||
-           result.exitReason === 'EXTRACTION_ZERO_C3_AI_ZERO') &&
-          result.c2?.score >= 20;
-        if (isC2PromisingZeroEvents) {
-          queuePath = QUEUES.D;
-          queueName = 'postTestC-D';
-          break;
-        }
-
-        // Default: check if this source has now participated in 3 rounds
-        if (roundsParticipated >= 3) {
-          queuePath = QUEUES.MANUAL_REVIEW;
-          queueName = 'postTestC-manual-review';
-        } else {
-          // Fail but not yet at 3 rounds — stays in pool (logged, not queued)
-          queuePath = '';
-          queueName = 'STAYS_IN_POOL';
-        }
-      }
     }
   }
 

@@ -12,8 +12,11 @@ import { fileURLToPath } from 'url';
 import {
   deriveCliBatchNumber,
   deriveCompletedBatchToReconcile,
+  determineOutcome,
   hasUnfinalizedCompletedActivePool,
   parseBatchNumberFromId,
+  resolveRoute,
+  type CResult,
 } from './run-dynamic-pool.js';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -43,59 +46,129 @@ function parseQueueSignals(reason: string | undefined | null): { errorCount: num
   return { errorCount, has404s };
 }
 
-type Outcome = 'extract_success' | 'route_success' | 'fail';
-
-interface CResult {
-  sourceId: string;
-  outcomeType: Outcome;
-  routeSuggestion: string;
-  eventsFound: number;
-  c0: { candidates: number; winnerUrl: string | null };
-  c2: { verdict: string; score: number };
-  c1: { likelyJsRendered: boolean; timeTagCount: number; dateCount: number; categorization: string };
-  derivedRuleApplied?: { ruleKey: string };
-}
-
-function determineOutcome(result: CResult): void {
-  if (result.eventsFound > 0) {
-    result.outcomeType = 'extract_success';
-    result.routeSuggestion = 'UI';
-    return;
-  }
-  if (result.c1.likelyJsRendered) {
-    result.outcomeType = 'route_success';
-    result.routeSuggestion = 'D';
-    return;
-  }
-  result.outcomeType = 'fail';
-  if (result.c0.winnerUrl === null && result.c0.candidates === 0) {
-    result.routeSuggestion = 'manual-review';
-  } else if (result.c2.verdict === 'unclear' || result.c2.verdict === 'blocked') {
-    result.routeSuggestion = 'manual-review';
-  } else {
-    result.routeSuggestion = 'manual-review';
-  }
-}
-
 interface PoolSource {
   sourceId: string;
   roundsParticipated: number;
 }
 
-function routeResult(result: CResult, roundsParticipated: number): string {
-  // SAFETY: extract_success MUST go to UI — no exceptions
-  if (result.outcomeType === 'extract_success') {
-    return 'postTestC-UI';
-  }
-  switch (result.routeSuggestion) {
-    case 'UI': return 'postTestC-UI';
-    case 'A': return 'postTestC-A';
-    case 'B': return 'postTestC-B';
-    case 'D': return 'postTestC-D';
-    default:
-      if (roundsParticipated >= 3) return 'postTestC-manual-review';
-      return 'STAYS_IN_POOL';
-  }
+// ---------------------------------------------------------------------------
+// CResult-fabrik
+//
+// Testerna testar den FAKTISKA koden i run-dynamic-pool.ts. Tidigare fanns
+// här en egen, förenklad kopia av determineOutcome/routeResult — den kunde
+// inte upptäcka en regression i den riktiga koden, bara bekräfta att
+//kopian gjorde vad kopian gjorde.
+// ---------------------------------------------------------------------------
+
+const BASE_C0: CResult['c0'] = {
+  candidates: 3,
+  winnerUrl: 'https://example.se/events',
+  winnerDensity: 1,
+  duration: 10,
+  rootFallback: false,
+  ruleAppliedSource: 'link-discovery',
+  ruleAppliedPaths: ['/events'],
+  ruleWinnerPath: '/events',
+};
+
+const BASE_C1: CResult['c1'] = {
+  verdict: 'strong',
+  likelyJsRendered: false,
+  timeTagCount: 0,
+  dateCount: 0,
+  duration: 10,
+  htmlBytes: 1000,
+  fetchable: true,
+};
+
+const BASE_C2: CResult['c2'] = {
+  verdict: 'promising',
+  score: 10,
+  reason: 'test',
+  duration: 10,
+  htmlBytes: 1000,
+};
+
+const BASE_C3: CResult['c3'] = {
+  universalEventsFound: 0,
+  universalMethodsUsed: [],
+  universalMethodBreakdown: {},
+  duration: 10,
+};
+
+const BASE_EXTRACT: CResult['extract'] = {
+  eventsFound: 0,
+  duration: 10,
+  htmlSize: 1000,
+};
+
+function makeCResult(overrides: Partial<CResult> = {}): CResult {
+  const c0 = { ...BASE_C0, ...(overrides.c0 ?? {}) } as CResult['c0'];
+  const c1 = { ...BASE_C1, ...(overrides.c1 ?? {}) } as CResult['c1'];
+  const c2 = { ...BASE_C2, ...(overrides.c2 ?? {}) } as CResult['c2'];
+  const c3 = { ...BASE_C3, ...(overrides.c3 ?? {}) } as CResult['c3'];
+  const extract = { ...BASE_EXTRACT, ...(overrides.extract ?? {}) } as CResult['extract'];
+
+  const base: CResult = {
+    sourceId: 'test',
+    sourceUrl: 'https://example.se',
+    winningStage: 'C3',
+    outcomeType: 'fail',
+    routeSuggestion: 'manual-review',
+    evidence: '',
+    roundNumber: 1,
+    success: false,
+    exitReason: 'ALL_ROUNDS_EXHAUSTED',
+    exitReasonDetail: '',
+    c0,
+    effectiveProcessingUrl: 'https://example.se/events',
+    effectiveProcessingUrlReason: 'test',
+    c1,
+    c2,
+    c3,
+    extract,
+    trace: {
+      sourceId: 'test',
+      sourceUrl: 'https://example.se',
+      round: 1,
+      c0Candidates: c0.candidates,
+      c0WinnerUrl: c0.winnerUrl,
+      c0WinnerDensity: c0.winnerDensity,
+      c0RuleSource: c0.ruleAppliedSource,
+      c0RulePathsTested: c0.ruleAppliedPaths,
+      c0RuleWinnerPath: c0.ruleWinnerPath,
+      effectiveUrl: 'https://example.se/events',
+      effectiveUrlReason: 'test',
+      c1Verdict: c1.verdict as CResult['trace']['c1Verdict'],
+      c1LikelyJsRendered: c1.likelyJsRendered,
+      c1TimeTagCount: c1.timeTagCount,
+      c1DateCount: c1.dateCount,
+      c1HtmlBytes: c1.htmlBytes,
+      c1Fetchable: c1.fetchable,
+      c1BestSubpageFound: null,
+      c1SubpagesTested: [],
+      c2Verdict: c2.verdict as CResult['trace']['c2Verdict'],
+      c2Score: c2.score,
+      c2Reason: c2.reason,
+      c2HtmlBytes: c2.htmlBytes,
+      c3EventsFound: c3.universalEventsFound,
+      c3MethodsUsed: c3.universalMethodsUsed,
+      c3MethodBreakdown: c3.universalMethodBreakdown,
+      c3AiVerdict: c3.aiVerdict,
+      c3AiEventsFound: c3.aiEventsFound,
+      c3AiDuration: c3.aiDuration,
+      eventsFound: extract.eventsFound,
+      outcomeType: 'fail',
+      routeSuggestion: 'manual-review',
+      exitReason: 'ALL_ROUNDS_EXHAUSTED',
+      exitReasonDetail: '',
+      winningStage: 'C3',
+      success: false,
+      derivedRuleApplied: false,
+    },
+  };
+
+  return { ...base, ...overrides, c0, c1, c2, c3, extract };
 }
 
 // Pool refill diversity scoring
@@ -228,76 +301,58 @@ describe('parseQueueSignals', () => {
 // ---------------------------------------------------------------------------
 
 describe('determineOutcome', () => {
-  const makeResult = (overrides: Partial<CResult> = {}): CResult => ({
-    sourceId: 'test',
-    outcomeType: 'fail',
-    routeSuggestion: 'manual-review',
-    eventsFound: 0,
-    c0: { candidates: 0, winnerUrl: null },
-    c2: { verdict: 'unknown', score: 0 },
-    c1: { likelyJsRendered: false, timeTagCount: 0, dateCount: 0, categorization: 'unknown' },
-    ...overrides,
-  });
-
   it('marks extract_success when events found', () => {
-    const r = makeResult({ eventsFound: 5 });
-    determineOutcome(r);
+    const r = makeCResult({ extract: { ...BASE_EXTRACT, eventsFound: 5 } });
+    determineOutcome(r, r.sourceUrl, 1, false);
     expect(r.outcomeType).toBe('extract_success');
     expect(r.routeSuggestion).toBe('UI');
+    expect(r.exitReason).toBe('EXTRACT_SUCCESS');
   });
 
   it('marks route_success with likelyJsRendered=true', () => {
-    const r = makeResult({ eventsFound: 0, c1: { likelyJsRendered: true, timeTagCount: 0, dateCount: 0, categorization: 'noise' } });
-    determineOutcome(r);
+    const r = makeCResult({ c1: { ...BASE_C1, likelyJsRendered: true } });
+    determineOutcome(r, r.sourceUrl, 1, false);
     expect(r.outcomeType).toBe('route_success');
     expect(r.routeSuggestion).toBe('D');
   });
 
   it('marks fail with no candidates and no winner', () => {
-    const r = makeResult({ eventsFound: 0, c0: { candidates: 0, winnerUrl: null }, c1: { likelyJsRendered: false, timeTagCount: 0, dateCount: 0, categorization: 'unknown' }, c2: { verdict: 'blocked', score: 0 } });
-    determineOutcome(r);
+    const r = makeCResult({
+      c0: { ...BASE_C0, candidates: 0, winnerUrl: null },
+      c2: { ...BASE_C2, verdict: 'blocked', score: 0 },
+    });
+    determineOutcome(r, r.sourceUrl, 1, false);
     expect(r.outcomeType).toBe('fail');
     expect(r.routeSuggestion).toBe('manual-review');
   });
 });
 
 // ---------------------------------------------------------------------------
-// TESTS: routeResult
+// TESTS: resolveRoute
 // ---------------------------------------------------------------------------
 
-describe('routeResult', () => {
-  const makeResult = (overrides: Partial<CResult> = {}): CResult => ({
-    sourceId: 'test',
-    outcomeType: 'fail',
-    routeSuggestion: 'manual-review',
-    eventsFound: 0,
-    c0: { candidates: 0, winnerUrl: null },
-    c2: { verdict: 'unknown', score: 0 },
-    c1: { likelyJsRendered: false, timeTagCount: 0, dateCount: 0, categorization: 'unknown' },
-    ...overrides,
-  });
-
+describe('resolveRoute', () => {
   it('extract_success ALWAYS goes to UI regardless of routeSuggestion', () => {
-    const r = makeResult({ outcomeType: 'extract_success', routeSuggestion: 'D' });
-    expect(routeResult(r, 1)).toBe('postTestC-UI');
+    const r = makeCResult({ outcomeType: 'extract_success', routeSuggestion: 'D' });
+    expect(resolveRoute(r, 1).queueName).toBe('postTestC-UI');
   });
 
   it('routeSuggestion A/B/D routes correctly', () => {
-    expect(routeResult(makeResult({ outcomeType: 'route_success', routeSuggestion: 'A' }), 1)).toBe('postTestC-A');
-    expect(routeResult(makeResult({ outcomeType: 'route_success', routeSuggestion: 'B' }), 1)).toBe('postTestC-B');
-    expect(routeResult(makeResult({ outcomeType: 'route_success', routeSuggestion: 'D' }), 1)).toBe('postTestC-D');
+    expect(resolveRoute(makeCResult({ outcomeType: 'route_success', routeSuggestion: 'A' }), 1).queueName).toBe('postTestC-A');
+    expect(resolveRoute(makeCResult({ outcomeType: 'route_success', routeSuggestion: 'B' }), 1).queueName).toBe('postTestC-B');
+    expect(resolveRoute(makeCResult({ outcomeType: 'route_success', routeSuggestion: 'D' }), 1).queueName).toBe('postTestC-D');
   });
 
   it('fail with roundsParticipated < 3 stays in pool', () => {
-    const r = makeResult({ outcomeType: 'fail', routeSuggestion: 'manual-review' });
-    expect(routeResult(r, 1)).toBe('STAYS_IN_POOL');
-    expect(routeResult(r, 2)).toBe('STAYS_IN_POOL');
+    const r = makeCResult({ outcomeType: 'fail', routeSuggestion: 'manual-review' });
+    expect(resolveRoute(r, 1).queueName).toBe('STAYS_IN_POOL');
+    expect(resolveRoute(r, 2).queueName).toBe('STAYS_IN_POOL');
   });
 
   it('fail with roundsParticipated >= 3 goes to manual-review', () => {
-    const r = makeResult({ outcomeType: 'fail', routeSuggestion: 'manual-review' });
-    expect(routeResult(r, 3)).toBe('postTestC-manual-review');
-    expect(routeResult(r, 4)).toBe('postTestC-manual-review');
+    const r = makeCResult({ outcomeType: 'fail', routeSuggestion: 'manual-review' });
+    expect(resolveRoute(r, 3).queueName).toBe('postTestC-manual-review');
+    expect(resolveRoute(r, 4).queueName).toBe('postTestC-manual-review');
   });
 });
 
@@ -422,29 +477,25 @@ describe('Pool Exit Conditions', () => {
 
   it('source exits after 3 rounds without meeting exit conditions', () => {
     // After 3 rounds, even if roundsParticipated >= 3, if not extract_success it goes to manual-review
-    const r: CResult = {
-      sourceId: 'test',
+    const r = makeCResult({
       outcomeType: 'fail',
       routeSuggestion: 'manual-review',
-      eventsFound: 0,
-      c0: { candidates: 0, winnerUrl: null },
-      c2: { verdict: 'blocked', score: 0 },
-      c1: { likelyJsRendered: false, timeTagCount: 0, dateCount: 0, categorization: 'unknown' },
-    };
-    expect(routeResult(r, 3)).toBe('postTestC-manual-review');
+      c0: { ...BASE_C0, candidates: 0, winnerUrl: null },
+      c2: { ...BASE_C2, verdict: 'blocked', score: 0 },
+    });
+    expect(resolveRoute(r, 3).queueName).toBe('postTestC-manual-review');
   });
 
   it('source with eventsFound > 0 exits immediately to UI', () => {
-    const r: CResult = {
-      sourceId: 'test',
+    const r = makeCResult({
       outcomeType: 'extract_success',
       routeSuggestion: 'UI',
-      eventsFound: 3,
-      c0: { candidates: 5, winnerUrl: '/events' },
-      c2: { verdict: 'promising', score: 90 },
-      c1: { likelyJsRendered: false, timeTagCount: 10, dateCount: 5, categorization: 'events' },
-    };
-    expect(routeResult(r, 1)).toBe('postTestC-UI');
+      extract: { ...BASE_EXTRACT, eventsFound: 3 },
+      c0: { ...BASE_C0, candidates: 5 },
+      c2: { ...BASE_C2, score: 90 },
+      c1: { ...BASE_C1, timeTagCount: 10, dateCount: 5 },
+    });
+    expect(resolveRoute(r, 1).queueName).toBe('postTestC-UI');
   });
 });
 
@@ -454,30 +505,113 @@ describe('Pool Exit Conditions', () => {
 
 describe('C2 Verdict → Exit Mapping', () => {
   it('verdict=unclear → manual-review', () => {
-    const r: CResult = {
-      sourceId: 'test',
-      outcomeType: 'fail',
-      routeSuggestion: 'manual-review',
-      eventsFound: 0,
-      c0: { candidates: 3, winnerUrl: '/events' },
-      c2: { verdict: 'unclear', score: 10 },
-      c1: { likelyJsRendered: false, timeTagCount: 0, dateCount: 0, categorization: 'unknown' },
-    };
-    determineOutcome(r);
+    const r = makeCResult({ c2: { ...BASE_C2, verdict: 'unclear', score: 10 } });
+    determineOutcome(r, r.sourceUrl, 1, false);
     expect(r.routeSuggestion).toBe('manual-review');
+    expect(r.exitReason).toBe('C2_UNCLEAR');
   });
 
   it('verdict=blocked → manual-review', () => {
-    const r: CResult = {
-      sourceId: 'test',
-      outcomeType: 'fail',
-      routeSuggestion: 'manual-review',
-      eventsFound: 0,
-      c0: { candidates: 3, winnerUrl: '/events' },
-      c2: { verdict: 'blocked', score: 5 },
-      c1: { likelyJsRendered: false, timeTagCount: 0, dateCount: 0, categorization: 'unknown' },
-    };
-    determineOutcome(r);
+    const r = makeCResult({ c2: { ...BASE_C2, verdict: 'blocked', score: 5 } });
+    determineOutcome(r, r.sourceUrl, 1, false);
     expect(r.routeSuggestion).toBe('manual-review');
+    expect(r.exitReason).toBe('C2_BLOCKED');
+  });
+});
+
+// ---------------------------------------------------------------------------
+// TESTS: C3-AI "needs_render" → D-renderGate
+//
+// Fix 2026-10-24: C3-AI kan uttrycka att sidan BEHÖVER renderas
+// (AiVerdict = 'needs_render'). Det är D-gatens signal, inte ett
+// extraktionsfel — men signalen ignorerades, så källorna hamnade i
+// manual-review (dvs. begravdes) i stället för att få en riktig render.
+//
+// Bevis (Generalization Protection Rule — 4 orelaterade domäner, samtliga
+// med C2-score UNDER tröskeln 20 som annars skickat dem till manual-review):
+//   vasamuseet.se (12) · www.vasamuseet.se (9) · www.botaniska.se (8) ·
+//   svenskfotboll.se (12)
+// Kontroll: samma AI-verdict med HÖG C2-score (lth 26, thatsup 46/47,
+// kalmar 55, modernamuseet 39) gick redan till D via OPTIMIZATION B och
+// ledde till 1–7 events via UI — ingen av dem begravdes.
+// ---------------------------------------------------------------------------
+
+describe('C3-AI needs_render → D-renderGate', () => {
+  /** Ett resultat som når "C2=promising men 0 events"-grenen. */
+  const promisingZero = (aiVerdict: 'success' | 'partial' | 'failed' | 'needs_render' | undefined, score = 12) =>
+    makeCResult({
+      c2: { ...BASE_C2, verdict: 'promising', score },
+      c3: { ...BASE_C3, aiVerdict, aiEventsFound: 0 },
+    });
+
+  it('routes needs_render to D-renderGate, not to manual-review', () => {
+    const r = promisingZero('needs_render');
+    determineOutcome(r, r.sourceUrl, 1, false);
+    expect(r.outcomeType).toBe('route_success');
+    expect(r.routeSuggestion).toBe('D');
+    expect(r.exitReason).toBe('C3_AI_NEEDS_RENDER_D_SIGNAL');
+    expect(r.winningStage).toBe('C3-AI');
+  });
+
+  it('lands in the postTestC-D queue — the routing that actually matters', () => {
+    const r = promisingZero('needs_render');
+    determineOutcome(r, r.sourceUrl, 1, false);
+    expect(resolveRoute(r, 3).queueName).toBe('postTestC-D');
+  });
+
+  it('works below the C2 score threshold (the bug: score 12 < 20)', () => {
+    // OPTIMIZATION B (score >= 20) är en separat väg. needs_render ska
+    // fungera oberoende av C2-score — annars faller källorna med låg
+    // score tillbaka till manual-review, vilket var hela felet.
+    const r = promisingZero('needs_render', 8);
+    determineOutcome(r, r.sourceUrl, 1, false);
+    expect(r.routeSuggestion).toBe('D');
+    expect(resolveRoute(r, 3).queueName).toBe('postTestC-D');
+  });
+
+  // ── Negativa kontroller ────────────────────────────────────────────────
+  // Utan dessa skulle testet ovan kunna passera på en regel som aldrig
+  // fyrar — t.ex. om 'D' nåddes av ett annat skäl.
+
+  it('NEGATIVE: aiVerdict=failed still goes to manual-review', () => {
+    const r = promisingZero('failed');
+    determineOutcome(r, r.sourceUrl, 1, false);
+    expect(r.exitReason).toBe('EXTRACTION_ZERO_C3_AI_ZERO');
+    expect(r.routeSuggestion).toBe('manual-review');
+    expect(resolveRoute(r, 3).queueName).toBe('postTestC-manual-review');
+  });
+
+  it('NEGATIVE: aiVerdict=partial still goes to manual-review', () => {
+    const r = promisingZero('partial');
+    determineOutcome(r, r.sourceUrl, 1, false);
+    expect(r.routeSuggestion).toBe('manual-review');
+    expect(resolveRoute(r, 3).queueName).toBe('postTestC-manual-review');
+  });
+
+  it('NEGATIVE: no AI verdict at all still goes to manual-review', () => {
+    const r = promisingZero(undefined);
+    determineOutcome(r, r.sourceUrl, 1, false);
+    expect(r.exitReason).toBe('EXTRACTION_ZERO_PROMISING_HTML');
+    expect(r.routeSuggestion).toBe('manual-review');
+    expect(resolveRoute(r, 3).queueName).toBe('postTestC-manual-review');
+  });
+
+  it('NEGATIVE: needs_render with a HIGH c2 score still lands in D (not double-routed)', () => {
+    // Kontrollfall: hög score gick redan till D via OPTIMIZATION B. Den
+    // nya regeln får inte ändra utfallet där.
+    const r = promisingZero('needs_render', 46);
+    determineOutcome(r, r.sourceUrl, 1, false);
+    expect(r.routeSuggestion).toBe('D');
+    expect(resolveRoute(r, 3).queueName).toBe('postTestC-D');
+  });
+
+  it('NEGATIVE: a failed verdict with a HIGH c2 score goes to D via OPTIMIZATION B', () => {
+    // Positiv kontroll för OPTIMIZATION B: score >= 20 skickar till D även
+    // utan needs_render. Bevisar att D-vägen i manual-review-testerna ovan
+    // beror på exitReason, inte på något annat.
+    const r = promisingZero('failed', 46);
+    determineOutcome(r, r.sourceUrl, 1, false);
+    expect(r.exitReason).toBe('EXTRACTION_ZERO_C3_AI_ZERO');
+    expect(resolveRoute(r, 3).queueName).toBe('postTestC-D');
   });
 });

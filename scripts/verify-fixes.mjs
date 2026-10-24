@@ -30,6 +30,7 @@
  *   e3 — kedjan producerar events (totalEventsPersisted > 0)
  *   e4 — discovery→ingestion går igenom på EN körning (promote före A)
  *   e5 — döda källor har orsak; uppenbart döda (404/DNS) ligger i kyrkogravet
+ *   n1 — C3-AI:s "needs_render" routar till D-renderGate, inte till begravning
  */
 
 import fs from 'node:fs';
@@ -1021,7 +1022,101 @@ function e11() {
   );
 }
 
-const gates = { g1, g2, g3, g4, g5, g6, h1, h2, h3, h4, h5, h6, e1, e2, e3, e4, e5, e6, e7, e8, e9, e10, e11 };
+/**
+ * N1 — C3-AI:s "needs_render" routar till D-renderGate, inte till begravning.
+ *
+ * Bakgrund (2026-10-24). `AiVerdict` har värdet 'needs_render' — C3-AI säger
+ * uttryckligen att sidan behöver JS-rendering. Det är D-gatens signal, men
+ * C-gaten läste aldrig värdet: källan föll i "extraction zero"-grenen och
+ * skickades till manual-review, vilket är samma sak som att begrava den.
+ * Fyra orelaterade domäner drabbades (vasamuseet 12, vasa-museum 9,
+ * botaniska-tradgarden 8, svenska-fotbollf-rbundet 12) — alla med C2-score
+ * under tröskeln 20 som annars skickat dem till D.
+ *
+ * Gaten kör två oberoende bevis:
+ *   1. Enhetstestet som träffar den RIKTIGA koden (inte en kopia). Kräver
+ *      att både fixens test OCH de negativa kontrollerna finns och passerar.
+ *      Utan de negativa kontrollerna skulle testet kunna passera på en regel
+ *      som aldrig fyrar.
+ *   2. Det levande beviset: audit-loggen ska innehålla en källa som lämnade
+ *      C-gaten mot postTestC-D med evidensen "needs_render".
+ */
+function n1() {
+  const VITEST = '02-Ingestion/C-htmlGate/run-dynamic-pool.test.ts';
+  const REQUIRED_TESTS = [
+    'routes needs_render to D-renderGate, not to manual-review',
+    'lands in the postTestC-D queue — the routing that actually matters',
+    'NEGATIVE: aiVerdict=failed still goes to manual-review',
+    'NEGATIVE: aiVerdict=partial still goes to manual-review',
+    'NEGATIVE: no AI verdict at all still goes to manual-review',
+  ];
+
+  const r = spawnSync(
+    'npx',
+    ['vitest', 'run', VITEST, '--reporter=json', '--outputFile', path.join(ROOT, 'runtime/n1-vitest.json')],
+    { cwd: ROOT, encoding: 'utf8', timeout: 300_000, killSignal: 'SIGKILL' },
+  );
+  const reportPath = path.join(ROOT, 'runtime/n1-vitest.json');
+  if (!existsSync(reportPath)) {
+    const why = `${r.stdout ?? ''}${r.stderr ?? ''}`.split('\n').filter((l) => /Error|error/i.test(l)).slice(0, 2).join(' / ');
+    return fail(`n1: FAIL vitest gav ingen rapport — ${why || 'okänt fel'}`);
+  }
+  let report;
+  try {
+    report = JSON.parse(readFileSync(reportPath, 'utf8'));
+  } catch (e) {
+    return fail(`n1: FAIL kunde inte tolka vitest-rapporten: ${e.message}`);
+  }
+
+  const testResults = report.testResults ?? [];
+  const allPassed = (report.numPassedTests ?? 0) === (report.numTotalTests ?? -1)
+    && (report.numFailedTests ?? 0) === 0;
+  if (!allPassed) {
+    return fail(
+      `n1: FAIL testerna i ${VITEST} passerar inte ` +
+      `(passed=${report.numPassedTests} failed=${report.numFailedTests} total=${report.numTotalTests})`,
+    );
+  }
+
+  const names = new Set();
+  for (const file of testResults) {
+    for (const t of file.assertionResults ?? []) names.add(t.title);
+  }
+  const missing = REQUIRED_TESTS.filter((t) => !names.has(t));
+  if (missing.length > 0) {
+    return fail(
+      `n1: FAIL följande test saknas i ${VITEST} — de är beviset och de negativa kontrollerna: ` +
+      missing.join(' | '),
+    );
+  }
+
+  // Levande bevis: audit-loggen ska ha en needs_render-källa som gick till D.
+  const auditPath = path.join(ROOT, 'runtime/sources_audit.jsonl');
+  if (!existsSync(auditPath)) {
+    return fail('n1: FAIL runtime/sources_audit.jsonl saknas — det levande beviset går inte att läsa');
+  }
+  const liveHits = readFileSync(auditPath, 'utf8')
+    .split('\n')
+    .filter((l) => l.trim())
+    .map((l) => { try { return JSON.parse(l); } catch { return null; } })
+    .filter((d) => d && d.event === 'exited_pool' && d.target === 'postTestC-D')
+    .filter((d) => /needs_render/.test(d.metadata?.evidence ?? ''));
+
+  if (liveHits.length === 0) {
+    return fail(
+      'n1: FAIL ingen källa har lämnat C-gaten mot postTestC-D med evidensen "needs_render" — ' +
+      'fixen är inte verksam i den levande koden',
+    );
+  }
+  const first = liveHits[0];
+  return ok(
+    `n1: needs_render → D-renderGate pass ` +
+    `(${report.numPassedTests} tester, ${REQUIRED_TESTS.length} kravda namn, ` +
+    `${liveHits.length} levande routed: ${first.sourceId} "${first.metadata.evidence}")`,
+  );
+}
+
+const gates = { g1, g2, g3, g4, g5, g6, h1, h2, h3, h4, h5, h6, e1, e2, e3, e4, e5, e6, e7, e8, e9, e10, e11, n1 };
 if (!arg || !gates[arg]) {
   console.error(`usage: node scripts/verify-fixes.mjs <${Object.keys(gates).join('|')}>`);
   process.exit(2);
