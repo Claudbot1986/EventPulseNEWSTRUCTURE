@@ -20,6 +20,7 @@ import * as eventbriteStockholm from './eventbriteStockholm';
 import * as visitstockholm from './visitstockholm';
 import * as billettoStockholm from './billettoStockholm';
 import * as biljettshop from './biljettshop';
+import * as momentsapp from './momentsapp';
 import type { ParsedEvent } from '../schema';
 
 export interface SiteAdapter {
@@ -72,6 +73,11 @@ export const ADAPTERS: SiteAdapter[] = [
     name: 'biljettshop',
     matches: biljettshop.matches,
     extract: biljettshop.extract,
+  },
+  {
+    name: 'momentsapp',
+    matches: momentsapp.matches,
+    extract: momentsapp.extract,
   },
 ];
 

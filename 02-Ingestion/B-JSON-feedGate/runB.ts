@@ -158,6 +158,26 @@ function readPostBPreCQueue(): PreBEntry[] {
 }
 
 function addToPostBPreCQueue(sourceId: string, reason: string): void {
+  // [FIX] Update sources_status with preferredPath=html and status=eligible
+  // This ensures the source is recognized as an eligible C-pool candidate
+  //
+  // 2026-10-24 — pendingNextTool: 'C-htmlGate' gör handoffen till en gate
+  // som INTE har körts än. Utan den skrev B-gaten success:false utan error,
+  // vilket status-maskinen räknade som ett fel: consecutiveFailures++ →
+  // auto-quarantine vid 5 → källan begravdes innan C-gaten ens körde den.
+  //
+  // Status skrivs FÖRE könens tidiga utgång: står källan redan i kön får
+  // handoff-markeringen inte försvinna.
+  updateSourceStatus(sourceId, {
+    success: false,
+    eventsFound: 0,
+    preferredPath: 'html',
+    ingestionStage: 'B',
+    pendingNextTool: 'C-htmlGate',
+    lastRoutingReason: `postB-preC: ${reason}`,
+    lastRoutingSource: 'runtime_status',
+  });
+
   removeSourceFromOtherQueues(sourceId, POSTB_PREC_FILE);
   const queue = readPostBPreCQueue();
   if (queue.some(e => e.sourceId === sourceId)) return;
@@ -170,17 +190,6 @@ function addToPostBPreCQueue(sourceId: string, reason: string): void {
     queueReason: reason,
   });
   writeFileSync(POSTB_PREC_FILE, queue.map(e => JSON.stringify(e)).join('\n') + '\n', 'utf8');
-
-  // [FIX] Update sources_status with preferredPath=html and status=eligible
-  // This ensures the source is recognized as an eligible C-pool candidate
-  updateSourceStatus(sourceId, {
-    success: false,
-    eventsFound: 0,
-    preferredPath: 'html',
-    ingestionStage: 'B',
-    lastRoutingReason: `postB-preC: ${reason}`,
-    lastRoutingSource: 'runtime_status',
-  });
 }
 
 // ─── B Tool Execution ─────────────────────────────────────────────────────────
@@ -339,20 +348,34 @@ async function runBOnSource(entry: PreBEntry): Promise<BResult> {
 function finalizeSource(entry: PreBEntry, result: BResult): void {
   const { sourceId } = entry;
 
-  updateSourceStatus(sourceId, {
-    success: result.success,
-    eventsFound: result.eventsFound,
-    pathUsed: 'network',
-    ingestionStage: result.ingestionStage,
-    lastRoutingReason: `toolB(preB): ${result.success ? `${result.eventsFound} events` : result.error}`,
-    lastRoutingSource: 'runtime_status',
-  });
-
+  // 2026-10-24 — statusen skrivs EFTER kö-hopet, så att rätt utfall skrivs
+  // EN gång. Tidigare skrevs den först (utan error-sträng → räknades som fel
+  // → consecutiveFailures++), och sedan skrevs den igen av queue-funktionen.
   if (result.success && result.eventsFound > 0) {
     addToPostBQueue(sourceId, `toolB(preB): ${result.eventsFound} events`, result.inspectorVerdict);
+    updateSourceStatus(sourceId, {
+      success: true,
+      eventsFound: result.eventsFound,
+      pathUsed: 'network',
+      ingestionStage: result.ingestionStage,
+      lastRoutingReason: `toolB(preB): ${result.eventsFound} events`,
+      lastRoutingSource: 'runtime_status',
+    });
   } else if (result.nextPath === 'network' && result.inspectorVerdict === 'promising') {
+    // Lämnad vidare till nätverksspåret — väntar, inte misslyckad.
     addToPostBQueue(sourceId, `toolB(preB): ${result.error ?? 'no events'}`, result.inspectorVerdict);
+    updateSourceStatus(sourceId, {
+      success: false,
+      eventsFound: 0,
+      pathUsed: 'network',
+      ingestionStage: 'B',
+      pendingNextTool: 'network_inspection',
+      error: result.error,
+      lastRoutingReason: `toolB(preB): ${result.error ?? 'no events'}`,
+      lastRoutingSource: 'runtime_status',
+    });
   } else {
+    // addToPostBPreCQueue skriver statusen själv (handoff → 'routed').
     addToPostBPreCQueue(sourceId, `toolB(preB): ${result.error ?? 'not network-accessible'}`);
   }
 

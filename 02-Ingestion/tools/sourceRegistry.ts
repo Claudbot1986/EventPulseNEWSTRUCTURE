@@ -58,7 +58,8 @@ export interface SourceStatus {
   sourceId: string;
   status: 'never_run' | 'success' | 'partial' | 'fail' | 'error' |
     'pending_render_gate' | 'pending_api_adapter' | 'pending_network_adapter' |
-    'triage_required' | 'routing_review_required' | 'needs_recheck';
+    'triage_required' | 'routing_review_required' | 'needs_recheck' |
+    'routed';
   ingestionStage: 'pending' | 'A' | 'B' | 'C' | 'D' | 'completed' | 'failed';
   lastRun: string | null;
   lastSuccess: string | null;
@@ -74,7 +75,8 @@ export interface SourceStatus {
   lastRoutingReason?: string;    // Varför detta path valdes (senaste körning)
   lastRoutingSource?: 'preferredPath' | 'runtime_status' | 'triage' | 'unknown';
   pendingNextTool?: 'D-renderGate' | 'api_adapter' | 'network_inspection' |
-                  'html_extraction_review' | 'preferredPath_recheck' | 'c1_gate';
+                  'html_extraction_review' | 'preferredPath_recheck' | 'c1_gate' |
+                  'C-htmlGate' | 'B-JSON-feedGate';
   triageAttempts?: number;       // Antal triage-försök för unknown sources
   routingReviewReason?: string;  // Varför routing review behövs
 
@@ -328,6 +330,7 @@ function deriveIngestionStage(status: SourceStatus): SourceStatus['ingestionStag
   if (status.status === 'pending_api_adapter') return 'A';
   if (status.status === 'pending_network_adapter') return 'B';
   if (status.status === 'triage_required' || status.status === 'routing_review_required') return 'C';
+  if (status.status === 'routed') return 'pending';
   if (status.status === 'never_run') return 'pending';
   // partial, error, needs_recheck — default to pending
   return 'pending';
@@ -409,7 +412,8 @@ export function updateSourceStatus(
     lastRoutingReason?: string;
     lastRoutingSource?: 'preferredPath' | 'runtime_status' | 'triage' | 'unknown';
     pendingNextTool?: 'D-renderGate' | 'api_adapter' | 'network_inspection' |
-                    'html_extraction_review' | 'preferredPath_recheck' | 'c1_gate';
+                    'html_extraction_review' | 'preferredPath_recheck' | 'c1_gate' |
+                    'C-htmlGate' | 'B-JSON-feedGate';
     triageAttempts?: number;
     routingReviewReason?: string;
     // C1 Triage Resultat
@@ -471,6 +475,14 @@ export function updateSourceStatus(
   }
 
   // ── Bestäm ny status ──────────────────────────────────────────────────────
+  // En källa som lämnats vidare till en SENARE gate (B→C, C→D, …) har inte
+  // misslyckats — gate som kan extrahera events har inte körts än. 2026-10-24:
+  // B-gatens handoff skrevs med success:false och ingen error-sträng, föll i
+  // generiska felgrenen och räknades som fel → consecutiveFailures++ →
+  // auto-quarantine vid 5 → källan försvann ur pipelinen innan C körde den.
+  // Handoff ger därför egen status 'routed' och räknas aldrig som fel.
+  const isHandoff = !!result.pendingNextTool;
+
   if (result.success && result.eventsFound > 0) {
     current.status = 'success';
     current.lastSuccess = now;
@@ -483,31 +495,26 @@ export function updateSourceStatus(
 
   } else if (!result.success && result.error?.includes('pending_render_gate')) {
     current.status = 'pending_render_gate';
-    current.consecutiveFailures++;
     current.lastError = result.error;
     current.ingestionStage = 'D';
 
   } else if (!result.success && result.error?.includes('pending_api_adapter')) {
     current.status = 'pending_api_adapter';
-    current.consecutiveFailures++;
     current.lastError = result.error;
     current.ingestionStage = 'A';
 
   } else if (!result.success && result.error?.includes('pending_network_adapter')) {
     current.status = 'pending_network_adapter';
-    current.consecutiveFailures++;
     current.lastError = result.error;
     current.ingestionStage = 'B';
 
   } else if (!result.success && result.error?.includes('triage_required')) {
     current.status = 'triage_required';
-    current.consecutiveFailures++;
     current.lastError = result.error;
     current.ingestionStage = 'C';
 
   } else if (!result.success && result.error?.includes('routing_review_required')) {
     current.status = 'routing_review_required';
-    current.consecutiveFailures++;
     current.lastError = result.error;
     current.ingestionStage = 'C';
 
@@ -515,6 +522,18 @@ export function updateSourceStatus(
     current.status = 'needs_recheck';
     current.lastError = result.error;
     current.ingestionStage = result.ingestionStage ?? 'pending';
+
+  } else if (!result.success && isHandoff) {
+    // Lämnad vidare till nästa gate — väntar, inte misslyckad.
+    current.status = 'routed';
+    current.lastError = result.error;
+    current.ingestionStage = result.ingestionStage ?? 'pending';
+    // Räknaren heter "consecutiveFailures" — CONSECUTIVA fel. En handoff är
+    // inte ett fel, så den bryter kedjan: källan har inte fallit igen, den
+    // har gått vidare. Utan nollställningen reste sig felräknaren från
+    // tidigare rounder (t.ex. fem bot-vägg-fel) och nästa verkliga fel
+    // begravde källan omedelbart.
+    current.consecutiveFailures = 0;
 
   } else if (!result.success) {
     current.status = result.eventsFound > 0 ? 'partial' : 'fail';
@@ -532,7 +551,15 @@ export function updateSourceStatus(
   // redan är quarantined/retired → flytta källfilen och uppdatera INDEX.
   // Race-safe: sker EFTER status är skrivet, så gates som läser status
   // ser aktuell counter även om de tävlar med denna move.
-  maybeAutoQuarantine(sourceId, current.consecutiveFailures, current.lastRoutingReason ?? current.lastError);
+  //
+  // Endast ett VERKLIGT fel kan auto-quarantenas. En handoff ('routed') eller
+  // en väntestatus (pending_*/triage_*) betyder att en senare gate ska köras —
+  // att flytta källan då vore att begrava den innan den ens fått chans.
+  const isRealFailure =
+    current.status === 'fail' || current.status === 'error' || current.status === 'partial';
+  if (isRealFailure) {
+    maybeAutoQuarantine(sourceId, current.consecutiveFailures, current.lastRoutingReason ?? current.lastError);
+  }
 }
 
 /**

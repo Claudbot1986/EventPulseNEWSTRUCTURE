@@ -37,6 +37,7 @@ import { getSource } from '../tools/sourceRegistry';
 import { extractFromHtml } from '../F-eventExtraction/universal-extractor';
 import type { ParsedEvent } from '../F-eventExtraction/schema';
 import { renderPage, type RenderBehavior } from './renderGate';
+import { resolveEntryUrls } from './sourceEntryUrls';
 import { isSkipped } from '../lib/quarantineGuard.js';
 import { loadDaiAdapter, extractWithDaiAdapter } from '../A-directAPI-networkGate/daiAdapterExtractor';
 
@@ -88,6 +89,12 @@ const RECOVERY_INPUT_QUEUES = new Set<string>([
 const DEFAULT_LIMIT = 50;
 const DEFAULT_WORKERS = 2;
 const DEFAULT_MAX_PAGES = 8;
+/**
+ * Säkerhetsnät för explicita ingångs-URL:er (se sourceEntryUrls.ts).
+ * En resolver bestämmer själv lista-längden; detta stoppar en trasig
+ * resolver från att bränna hundratals Scrapingbee-credits i en körning.
+ */
+const MAX_EXPLICIT_ENTRY_URLS = 16;
 const MIN_EVENTS_FOR_SUCCESS = 2;
 const SOURCE_TIMEOUT_MS = 120000;
 const EVENT_PATH_HINTS = [
@@ -307,11 +314,30 @@ async function processSource(entry: QueueEntry, maxPages: number, behavior: Rend
     return { sourceId: entry.sourceId, success: false, eventsFound: 0, reason: 'source not found', renderedPages: 0, creditsUsed: 0 };
   }
 
-  const targetUrls: string[] = [source.url];
-  let first = await renderPage(source.url, { timeout: 30000, behavior });
+  // Källspecifika ingångs-URL:er (t.ex. datumlåsta kalendersidor som måste
+  // pekas om till aktuell månad). Se sourceEntryUrls.ts — isolerat från
+  // C-lagret enligt Generalization Protection Rule.
+  //
+  // När källan har explicita ingångar renderas ALLTID alla — den vanliga
+  // "stoppa så fort första sidan ger events"-regeln skulle hoppa över
+  // månadssidorna efter att dagsidan träffat.
+  //
+  // `maxPages` gäller kandidatsökning (hur många sidor man hittar genom
+  // att gissa URL:er). En explicit ingångslista är däremot i förväg
+  // bestämd och vet exakt vilka sidor som ska hämtas, så den kapas inte —
+  // annars skulle månadssidor tyst försvinna. MAX_EXPLICIT_ENTRY_URLS finns
+  // som säkerhetsnät mot en trasig resolver.
+  const entryUrls = resolveEntryUrls(entry.sourceId, source.url);
+  const hasExplicitEntryUrls = entryUrls !== null;
+  const targetUrls: string[] = entryUrls
+    ? entryUrls.slice(0, MAX_EXPLICIT_ENTRY_URLS)
+    : [source.url];
+  const entryUrl = targetUrls[0];
+
+  let first = await renderPage(entryUrl, { timeout: 30000, behavior });
   let firstCredits = first.metrics?.creditsCharged ?? 0;
   if (!first.success && (first.error || '').toLowerCase().includes('timeout')) {
-    first = await renderPage(source.url, { timeout: 45000, behavior });
+    first = await renderPage(entryUrl, { timeout: 45000, behavior });
     firstCredits += first.metrics?.creditsCharged ?? 0;
   }
   if (!first.success || !first.html) {
@@ -325,27 +351,31 @@ async function processSource(entry: QueueEntry, maxPages: number, behavior: Rend
     };
   }
 
-  const candidates = discoverCandidateLinks(first.html, source.url, maxPages);
-  for (const c of candidates) {
-    if (targetUrls.length >= maxPages) break;
-    if (!targetUrls.includes(c)) targetUrls.push(c);
-  }
-
-  // Secondary discovery pass: parse script-embedded URLs for event-like paths.
-  if (targetUrls.length < Math.min(4, maxPages)) {
-    const scripted = discoverScriptEmbeddedCandidateLinks(first.html, source.url, maxPages);
-    for (const c of scripted) {
+  // Kandidatsökning hoppas över när källan har explicita ingångar — då är
+  // ingångarna redan bestämda och extra renderingar bara kostar credits.
+  if (!hasExplicitEntryUrls) {
+    const candidates = discoverCandidateLinks(first.html, source.url, maxPages);
+    for (const c of candidates) {
       if (targetUrls.length >= maxPages) break;
       if (!targetUrls.includes(c)) targetUrls.push(c);
     }
-  }
 
-  // Discovery fallback when anchor-based candidate discovery is weak.
-  if (targetUrls.length < Math.min(4, maxPages)) {
-    const fallback = fallbackEventPaths(source.url, maxPages);
-    for (const c of fallback) {
-      if (targetUrls.length >= maxPages) break;
-      if (!targetUrls.includes(c)) targetUrls.push(c);
+    // Secondary discovery pass: parse script-embedded URLs for event-like paths.
+    if (targetUrls.length < Math.min(4, maxPages)) {
+      const scripted = discoverScriptEmbeddedCandidateLinks(first.html, source.url, maxPages);
+      for (const c of scripted) {
+        if (targetUrls.length >= maxPages) break;
+        if (!targetUrls.includes(c)) targetUrls.push(c);
+      }
+    }
+
+    // Discovery fallback when anchor-based candidate discovery is weak.
+    if (targetUrls.length < Math.min(4, maxPages)) {
+      const fallback = fallbackEventPaths(source.url, maxPages);
+      for (const c of fallback) {
+        if (targetUrls.length >= maxPages) break;
+        if (!targetUrls.includes(c)) targetUrls.push(c);
+      }
     }
   }
 
@@ -369,10 +399,10 @@ async function processSource(entry: QueueEntry, maxPages: number, behavior: Rend
 
   // Reuse already rendered first page to avoid duplicate render.
   {
-    const extracted = extractSmart(first.html, entry.sourceId, source.url);
+    const extracted = extractSmart(first.html, entry.sourceId, entryUrl);
     for (const e of extracted) allEvents.push(e);
     const current = dedupeEvents(allEvents);
-    if (current.length >= MIN_EVENTS_FOR_SUCCESS) {
+    if (current.length >= MIN_EVENTS_FOR_SUCCESS && !hasExplicitEntryUrls) {
       writeExtractedEvents(entry.sourceId, current);
       return {
         sourceId: entry.sourceId,
@@ -397,7 +427,7 @@ async function processSource(entry: QueueEntry, maxPages: number, behavior: Rend
     const extracted = extractSmart(rr.html, entry.sourceId, url);
     for (const e of extracted) allEvents.push(e);
     const current = dedupeEvents(allEvents);
-    if (current.length >= MIN_EVENTS_FOR_SUCCESS) {
+    if (current.length >= MIN_EVENTS_FOR_SUCCESS && !hasExplicitEntryUrls) {
       writeExtractedEvents(entry.sourceId, current);
       return {
         sourceId: entry.sourceId,

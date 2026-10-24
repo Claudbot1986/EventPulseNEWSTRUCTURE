@@ -33,6 +33,7 @@ import { isSkipped } from '../lib/quarantineGuard.js';
 import { fetchHtml, queueEvents } from '../tools/fetchTools';
 import { extractFromJsonLd } from '../F-eventExtraction/extractor';
 import { enqueueDAI, dequeueDAI, runDaiForQueue } from './daiHook';
+import { classifyRoutingHandoff } from './handoffRule';
 import { findAdapterForSource } from './adapters';
 
 // ─── Queue File Paths ─────────────────────────────────────────────────────────
@@ -489,6 +490,17 @@ async function runAOnSource(item: SourceWithOrigin): Promise<AResult> {
 
 function finalizeSource(item: SourceWithOrigin, result: AResult): void {
   const { sourceId, queueOrigin } = item;
+  const isSuccess = result.success && result.eventsFound > 0;
+
+  // En HANDOFF är ett routing-beslut: källan svarade, men har ingen JSON-LD,
+  // så den prövas i nästa spår (B → nätverk/C). Det är inte ett fel.
+  //
+  // Ett TRANSPORTFEL ('Fetch failed: HTTP 404', timeout, SSL) är däremot ett
+  // verkligt fel — källan lever inte. Sådant ska räknas i felräknaren, annars
+  // kan en död sajt aldrig begravas (A-gaten är den enda gaten som ser
+  // transportfelet, och den skickar källan vidare till B/C utan att C
+  // nödvändigtvis kör den).
+  const isRoutingHandoff = classifyRoutingHandoff(isSuccess, result.error);
 
   // Uppdatera runtime status
   updateSourceStatus(sourceId, {
@@ -499,6 +511,14 @@ function finalizeSource(item: SourceWithOrigin, result: AResult): void {
     // En API-adapter är det bestämda spåret för källan — spara det så att
     // routingen inte senare skickar tillbaka den till HTML.
     ...(result.pathUsed === 'api' ? { preferredPath: 'api' as const } : {}),
+    // 2026-10-24 — när A hittade sidan men inte hittade JSON-LD lämnas
+    // källan ÖVER till B-gaten. Det är en handoff, inte ett fel: B-gaten ska
+    // hinna köra källan. Utan markeringen räknades varje A→B-handoff som ett
+    // fel, felräknaren växte, och källan auto-quarantänades innan C körde den.
+    //
+    // Transportfel (död sajt) är INTE en handoff — de räknas som fel så att
+    // källan kan begravas.
+    ...(isRoutingHandoff ? { pendingNextTool: 'B-JSON-feedGate' as const } : {}),
     lastRoutingReason: `toolA(${queueOrigin}): ${result.success ? `${result.eventsFound} events` : result.error}`,
     lastRoutingSource: 'runtime_status',
   });

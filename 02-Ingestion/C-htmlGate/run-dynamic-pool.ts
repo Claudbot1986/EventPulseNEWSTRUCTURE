@@ -49,6 +49,7 @@ import { c4DeepAnalyze, verifyProposals, type C4PipelineResult, type C4DeepAnaly
 import { saveRoundDerivedRules, loadAllDerivedRules, isImprovementEnabled, proposeCandidateRulesAsImprovements, type DerivedRulesStore } from './c4-derived-rules';
 import { isSkipped } from '../lib/quarantineGuard.js';
 import { updateSourceStatus } from '../tools/sourceRegistry';
+import { detectBotWall } from '../lib/botWallRule';
 import type { HtmlVerdict } from './C2-htmlGate/C2-htmlGate';
 import { readFileSync, writeFileSync, mkdirSync, appendFileSync, readdirSync, unlinkSync, rmdirSync, existsSync } from 'fs';
 import { join, dirname } from 'path';
@@ -248,6 +249,7 @@ export type ExitReason =
   // Fail paths — specific
   | 'NETWORK_ERROR'
   | 'FETCH_ERROR'
+  | 'FETCH_BLOCKED_BOT_WALL'
   | 'NO_CANDIDATES_NO_PATTERNS'
   | 'NO_CANDIDATES_SWEDISH_PATTERNS_EXHAUSTED'
   | 'WRONG_ENTRY_PAGE'
@@ -1334,6 +1336,25 @@ function determineOutcome(result: CResult, sourceUrl: string, roundNum: number, 
 
   // No fetch available at all
   if (!result.c1.fetchable) {
+    // Bot-vägg: sajten svarar, men vägrar plain HTTP-klienten. Sidan lever
+    // och har events — bara C-gatens fetch blir stoppad. D-renderGate kör en
+    // riktig browser (Scrapingbee) och tar sig förbi, så källan lämnas
+    // vidare dit i stället för att begravas.
+    // Mätt 2026-10-24: cirkus.se, momentsapp.no och dn.se hämtas ALLA med
+    // fullt innehåll via Scrapingbee. 404/5xx räknas inte hit — där är
+    // felet verkligt.
+    const botWallStatus = detectBotWall(result.c1.fetchError);
+    if (botWallStatus !== null) {
+      result.outcomeType = 'route_success';
+      result.winningStage = 'C1';
+      result.routeSuggestion = 'D';
+      result.exitReason = 'FETCH_BLOCKED_BOT_WALL';
+      result.exitReasonDetail = `client blocked (HTTP ${botWallStatus}) — plain HTTP refused, routed to D-renderGate`;
+      result.evidence = `bot-wall: HTTP ${botWallStatus}`;
+      result.success = false;
+      return;
+    }
+
     result.exitReason = result.c1.fetchError?.includes('network') ? 'NETWORK_ERROR' : 'FETCH_ERROR';
     result.exitReasonDetail = `fetch failed: ${result.c1.fetchError || 'unknown'}`;
     result.evidence = `fetch error: ${result.c1.fetchError}`;
@@ -1399,6 +1420,56 @@ function determineOutcome(result: CResult, sourceUrl: string, roundNum: number, 
 // ---------------------------------------------------------------------------
 // Step 4: Route result to appropriate queue
 // ---------------------------------------------------------------------------
+
+/**
+ * Skriv C-gatens utfall till sources_status.jsonl.
+ *
+ * 2026-10-24 — C-gaten skrev bara status vid SUCCESS (rad ~1443). En källa
+ * som gick igenom C utan events behöll därför B-gatens handoff-status, och
+ * felräknaren speglade aldrig extraktionsfelet. Nu är det C-gaten som
+ * avgör: efter C är källan antingen
+ *   - klar            → success (skrivs i routeResult),
+ *   - lämnad vidare   → routed (handoff till D/A/B — väntar, inte fel),
+ *   - terminal med 0  → fail (verkligt extraktionsfel; kan auto-quarantenas),
+ *   - kvar i poolen   → status lämnas orörd (fortfarande i arbete).
+ */
+function writeOutcomeStatus(result: CResult, queueName: string): void {
+  // Skip-rad (karantän/begravd) — ska inte röra statusen alls.
+  if (result.error?.startsWith('skipped:')) return;
+
+  // Success skrivs redan i routeResult.
+  if (result.outcomeType === 'extract_success') return;
+
+  // Fortfarande i poolen → ingen terminal status än.
+  if (queueName === 'STAYS_IN_POOL') return;
+
+  const detail = `${result.exitReason ?? 'NO_EVENTS'}${result.evidence ? ` — ${result.evidence}` : ''}`;
+
+  // Lämnad vidare till nästa gate — väntar, inte misslyckad.
+  if (result.outcomeType === 'route_success') {
+    updateSourceStatus(result.sourceId, {
+      success: false,
+      eventsFound: 0,
+      pathUsed: 'html',
+      ingestionStage: 'C',
+      pendingNextTool: 'D-renderGate',
+      lastRoutingReason: `C-htmlGate: ${detail}`,
+      lastRoutingSource: 'runtime_status',
+    });
+    return;
+  }
+
+  // Terminalt utfall utan events → verkligt fel.
+  updateSourceStatus(result.sourceId, {
+    success: false,
+    eventsFound: 0,
+    pathUsed: 'html',
+    ingestionStage: 'failed',
+    error: `C-htmlGate: ${detail}`,
+    lastRoutingReason: `C-htmlGate: ${detail}`,
+    lastRoutingSource: 'runtime_status',
+  });
+}
 
 function routeResult(result: CResult, roundsParticipated: number): string {
   const queueEntry = {
@@ -1517,6 +1588,9 @@ function routeResult(result: CResult, roundsParticipated: number): string {
       },
     });
   }
+
+  // Skriv C-gatens utfall till källstatusen (se writeOutcomeStatus).
+  writeOutcomeStatus(result, queueName);
 
   return queueName;
 }
