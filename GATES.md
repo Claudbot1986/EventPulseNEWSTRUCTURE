@@ -441,15 +441,15 @@ PK0 finns till för att fånga exakt den klassen.
   EXPECT: /pk0: full cmdline läst \(\d+ tecken\) och den falska kedjan hittades av liveChainPids\(\) — parsningen klipper inte pass/
   EVIDENCE: automatic-evidence=v1; definition-sha256=0ee84851d3c039c648e9c03f493538da3ee43a96764ce2218500efb73ff890ff; exit=0; EXPECT=matched; output-sha256=afd2ef9150c8b5dccfe7464a0a02537d68fa13c59cbea0bf4269cf1fa3849363; output-bytes=120; shell=/bin/sh; cwd=/Users/claudgashi/EventPulse; path=29325ef63737/16 entries
 
-- [ ] PK1: negativ kontroll — en orphan utan levande kedje-förfader döds fortfarande
+- [x] PK1: negativ kontroll — en orphan utan levande kedje-förfader döds fortfarande
   CHECK: node scripts/verify-prekill.mjs pk1
   EXPECT: /pk1: orphan utan levande kedje-förfader dödades \(pid \d+\) — städningen fungerar fortfarande pass/
-  EVIDENCE: pending
+  EVIDENCE: automatic-evidence=v1; definition-sha256=af8dbfd3d0125f8c5a3f948b9afddb872ea6d4fbe23a2829cddf2a88d12ff6a4; exit=0; EXPECT=matched; output-sha256=6c7d6c7cb8103fbcb9ebe11ee2cfc7beeb8313466ecc71e2ab56b1dd6347b21e; output-bytes=104; shell=/bin/sh; cwd=/Users/claudgashi/EventPulse; path=29325ef63737/16 entries
 
-- [ ] PK2: positiv kontroll — ett barn till en LEVANDE kedja överlever
+- [x] PK2: positiv kontroll — ett barn till en LEVANDE kedja överlever
   CHECK: node scripts/verify-prekill.mjs pk2
   EXPECT: /pk2: barn till levande kedja \(pid \d+\) skippades av pre-kill — kedjans pågående steg lever vidare pass/
-  EVIDENCE: pending
+  EVIDENCE: automatic-evidence=v1; definition-sha256=670b70409fe7601bec336dbc64d8f3fba849e9143fbd5cf8cb89a5c3e0a529b9; exit=0; EXPECT=matched; output-sha256=1cf30aa457ae4cd6f8d2aa54ab4c4d231836b8df370d2eb76843b3a68c7d7984; output-bytes=109; shell=/bin/sh; cwd=/Users/claudgashi/EventPulse; path=29325ef63737/16 entries
 
 # Gater vägrar köra parallellt med produktionen (2026-10-24)
 
@@ -673,6 +673,7 @@ OPTIMIZATION B och ledde till 1–7 events — ingen av dem begravdes.
 - [x] N1: C3-AI:s "needs_render" routar till D-renderGate, inte till begravning
   CHECK: node scripts/verify-fixes.mjs n1
   EXPECT: /n1: needs_render → D-renderGate pass/
+  EVIDENCE: automatic-evidence=v1; definition-sha256=588d63ffcc90b1ce8a49c7291adb79a811fc50ac644aba0dfbba1a48960d8334; exit=0; EXPECT=matched; output-sha256=8a1c51a5531c950a86d3e5abad07727d750a03ebbae5b83965cc22570ab435ed; output-bytes=132; shell=/bin/sh; cwd=/Users/claudgashi/EventPulse; path=29325ef63737/16 entries
 
 # Datum-formade titlar är inte event-namn (2026-10-24)
 
@@ -692,6 +693,7 @@ skräptitlar. 47 tester, inklusive att en titel som BÖRJAR med ett datum
 - [x] DT1: en rubrik som bara är ett datum ger inte eventets titel (negativ kontroll: titel som börjar med datum behålls)
   CHECK: npx vitest run 02-Ingestion/F-eventExtraction/dateOnlyTitles.test.ts 02-Ingestion/F-eventExtraction/universal-extractor-date-title.test.ts
   EXPECT: /Tests\s+47 passed \(47\)/
+  EVIDENCE: automatic-evidence=v1; definition-sha256=6d7e812df03a5cd2ea11b9242168341d95d218af358a6301ea171a0114ab37b7; exit=0; EXPECT=matched; output-sha256=226ec2e3ee8aa80e74522fd656271e60a30cd0853ea5ff8124b4dd3116a0a4cb; output-bytes=213; shell=/bin/sh; cwd=/Users/claudgashi/EventPulse; path=29325ef63737/16 entries
 
 # Drainens worker-concurrency (2026-10-24)
 
@@ -705,6 +707,7 @@ concurrency 5 respektive 10, räknar "[worker] Job completed"-rader, och
 kräver att den högre concurrencyn ÄR snabbare. Varje räknat jobb är en
 riktig normalisering som persisterat ett event i Supabase.
 
-- [ ] N2: drainens worker-concurrency är mätbar, och högre concurrency ger mer
+- [x] N2: drainens worker-concurrency är mätbar, och högre concurrency ger mer
   CHECK: node scripts/verify-fixes.mjs n2
   EXPECT: /n2: concurrency mätbar och högre ger mer pass/
+  EVIDENCE: automatic-evidence=v1; definition-sha256=ccb82c2dff51ac5bbbfaba8851cbdb81d14bb9fe2f452c15c94d6f6e22867d83; exit=0; EXPECT=matched; output-sha256=4efc6d16961d28d3a787b4902bca31d2bc8a6fead2b3a70bb1738ea467dc3743; output-bytes=179; shell=/bin/sh; cwd=/Users/claudgashi/EventPulse; path=29325ef63737/16 entries
