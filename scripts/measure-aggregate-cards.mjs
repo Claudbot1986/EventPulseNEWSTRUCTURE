@@ -84,7 +84,8 @@ function normalize(s) {
 /** Är månadsnamnet med i texten? Månadsnamn får följas av siffror ("29 oktober185"). */
 function monthMentioned(text, day, mi) {
   for (const name of [MONTHS[mi], MONTH_ABBR[mi]]) {
-    const rx = new RegExp(`\\b${day}\\s+${name}(?![a-zA-ZåäöÅÄÖ])`);
+    // Datumintervall ("6–7 november") räknas som en förekomst av dagen.
+    const rx = new RegExp(`\\b${day}(?:\\s*[–-]\\s*\\d{1,2})?\\s+${name}(?![a-zA-ZåäöÅÄÖ])`);
     if (rx.test(text)) return true;
   }
   return false;
@@ -132,21 +133,6 @@ function isTitleToken(token) {
   return !/subtitle/i.test(token);
 }
 
-/** Rubriktexterna i ett element (h1–h6 + titelklasser). */
-function headingTexts($, $el) {
-  const texts = [];
-  $el.find('h1, h2, h3, h4, h5, h6').each((_, e) => {
-    texts.push($(e).text().trim().replace(/\s+/g, ' '));
-  });
-  $el.find('*').each((_, e) => {
-    const cls = $(e).attr('class') || '';
-    if (cls.split(/\s+/).some(isTitleToken)) {
-      texts.push($(e).text().trim().replace(/\s+/g, ' '));
-    }
-  });
-  return texts.filter((t) => t.length > 0);
-}
-
 /**
  * Närmaste förfader till länken som innehåller en rubrik.
  *
@@ -171,11 +157,90 @@ function cardContainer($, $a) {
  * Då är titeln en BIT (t.ex. underrubriken "— Next Generation 14–16 år" i
  * "Streetstar Dance School Challenge 2026 — Next Generation 14–16 år"), inte
  * evenemangets namn.
+ *
+ * PRECIS FORM: titelelementet ligger INUTI en rubrik, och rubrikens text
+ * slutar med titeln. En lista där ett annat h-element råkar upprepa
+ * samma ord ("About the festival: Opera Kids Saturdays") är INTE en bit —
+ * då är "Opera Kids Saturdays" den riktiga titeln.
  */
-function titleIsFragment(headings, title) {
-  const t = String(title ?? '').trim();
-  if (!t) return false;
-  return headings.some((h) => h.length > t.length && h.trimEnd().endsWith(t));
+function isHeadingEl($, $el) {
+  const tag = ($el.prop('tagName') || '').toLowerCase();
+  if (/^h[1-6]$/.test(tag)) return true;
+  return (($el.attr('class') || '').split(/\s+/).some(isTitleToken));
+}
+
+function fragmentInfo($, $card, title) {
+  const t = normalize(title);
+  if (!t) return null;
+  let found = null;
+  $card.find('*').each((_, e) => {
+    if (found) return;
+    if (normalize($(e).text()) !== t) return;
+    let $p = $(e).parent();
+    while ($p.length && $p[0] && $p[0].tagName !== 'body' && $p[0].tagName !== 'html') {
+      if (isHeadingEl($, $p)) {
+        const pt = normalize($p.text());
+        if (pt.length > t.length && pt.endsWith(t)) {
+          found = {
+            cardHeading: $p.text().trim().replace(/\s+/g, ' '),
+            headingTag: $p.prop('tagName'),
+            headingClass: $p.attr('class') || '',
+          };
+          return;
+        }
+      }
+      $p = $p.parent();
+    }
+  });
+  return found;
+}
+
+/**
+ * Datum och namn som ligger i JSON-LD (A1) eller microdata (A2).
+ *
+ * En rad från A1/A2 har datumet i NYCKELDATA, inte i synlig text. Utan
+ * detta mäter oraklet sin egen felform: varje JSON-LD-rad såg ut som
+ * phantom för att datumet inte syntes i kortets text.
+ */
+function collectJsonLd($, html) {
+  const dates = new Set();
+  const names = new Set();
+
+  const addDatesFrom = (value) => {
+    if (typeof value === 'string') {
+      const m = value.match(/\d{4}-\d{2}-\d{2}/g);
+      if (m) m.forEach((d) => dates.add(d));
+      return;
+    }
+    if (Array.isArray(value)) {
+      value.forEach(addDatesFrom);
+      return;
+    }
+    if (value && typeof value === 'object') {
+      for (const [k, v] of Object.entries(value)) {
+        if (k === 'name' && typeof v === 'string') names.add(normalize(v));
+        addDatesFrom(v);
+      }
+    }
+  };
+
+  $('script[type="application/ld+json"]').each((_, el) => {
+    const raw = $(el).contents().text() || $(el).text() || '';
+    try {
+      addDatesFrom(JSON.parse(raw));
+    } catch {
+      // Trasig JSON-LD hoppas över — raden bedöms då mot synlig text.
+    }
+  });
+
+  // Microdata: <meta itemprop="startDate" content="2026-10-25">
+  $('[itemprop][content]').each((_, el) => {
+    const c = $(el).attr('content') || '';
+    const m = c.match(/\d{4}-\d{2}-\d{2}/g);
+    if (m) m.forEach((d) => dates.add(d));
+  });
+
+  return { dates, names };
 }
 
 async function fetchHtml(url) {
@@ -255,8 +320,24 @@ async function main() {
     const extracted = extractEvents(html, target.id, url);
     const events = extracted.events ?? [];
 
+    // JSON-LD/microdata-bärda värden. En rad som kommit från A1/A2 har
+    // datumet i NYCKELDATA, inte i den synliga texten — utan detta
+    // mäter oraklet sina egna felformer (jsonld-raderna såg ut som
+    // 1000-tals phantoms).
+    const jsonLd = collectJsonLd($, html);
+
+    // Klass-token som innehåller "subtitle" — sådana matchar
+    // `[class*="title"]` och kan bli fel titel.
+    const subtitleTokens = new Set();
+    $('*').each((_, e) => {
+      ($(e).attr('class') || '').split(/\s+/).forEach((t) => {
+        if (/subtitle/i.test(t)) subtitleTokens.add(t);
+      });
+    });
+
     const phantomRows = [];
     const fragmentRows = [];
+    const aggregateRows = [];
     for (const ev of events) {
       const evUrl = String(ev.url ?? '').trim();
       const title = normalize(ev.title);
@@ -280,12 +361,16 @@ async function main() {
       const cardAttrs = normalize(
         $card.find('time[datetime]').map((_, e) => $(e).attr('datetime') ?? '').get().join(' ') +
         ' ' +
-        $card.find('[data-date],[data-start],[data-event-date]').map((_, e) => $(e).attr('data-date') ?? $(e).attr('data-start') ?? '').get().join(' '),
+        $card.find('[data-date],[data-start],[data-event-date]').map((_, e) => $(e).attr('data-date') ?? $(e).attr('data-start') ?? '').get().join(' ') +
+        ' ' +
+        $card.find('[itemprop][content]').map((_, e) => $(e).attr('content') ?? '').get().join(' '),
       );
       const haystack = `${cardText} ${cardAttrs}`;
 
-      const titleOk = title.length > 0 && haystack.includes(title);
-      const dateOk = dateAppearsIn(haystack, ev.date, TODAY_ISO);
+      const titleOk =
+        (title.length > 0 && haystack.includes(title)) || jsonLd.names.has(title);
+      const dateOk =
+        dateAppearsIn(haystack, ev.date, TODAY_ISO) || jsonLd.dates.has(ev.date);
       if (!titleOk || !dateOk) {
         phantomRows.push({
           method,
@@ -296,15 +381,35 @@ async function main() {
         });
       }
 
-      // Titel-BIT: titeln är en avslutning av kortets rubriktext.
-      const headings = headingTexts($, $card);
-      if (titleIsFragment(headings, ev.title)) {
+      // Titel-BIT: titelelementet ligger inuti en rubrik som slutar med titeln.
+      const frag = fragmentInfo($, $card, ev.title);
+      if (frag) {
         fragmentRows.push({
           method,
           title: ev.title,
           date: ev.date,
           url: ev.url,
-          cardHeading: headings.find((h) => h.trimEnd().endsWith(String(ev.title).trim())) ?? '',
+          cardHeading: frag.cardHeading,
+          headingTag: frag.headingTag,
+          headingClass: frag.headingClass,
+        });
+      }
+
+      // AGGREGAT: kortet innehåller flera rubriker — dvs. det är en
+      // LISTA (sektion/carousel) och inte ett enskilt eventkort. Då
+      // är titel och datum hämtade ur olika barnkort, och raden är
+      // en phantom i produktsägar. 3arena: <section class="cards-events">
+      // innehåller "Kommande evenemang" + varje kort.
+      const headingCount = $card.find('h1,h2,h3,h4,h5,h6').length;
+      if (headingCount >= 2) {
+        aggregateRows.push({
+          method,
+          title: ev.title,
+          date: ev.date,
+          url: ev.url,
+          headings: headingCount,
+          cardTag: $card.prop('tagName'),
+          cardClass: $card.attr('class') || '',
         });
       }
     }
@@ -319,6 +424,9 @@ async function main() {
       phantomRows,
       fragments: fragmentRows.length,
       fragmentRows,
+      aggregates: aggregateRows.length,
+      aggregateRows,
+      subtitleTokens: [...subtitleTokens],
     });
   }
 
@@ -327,6 +435,7 @@ async function main() {
     events: results.reduce((s, r) => s + r.events, 0),
     phantoms: results.reduce((s, r) => s + r.phantoms, 0),
     fragments: results.reduce((s, r) => s + (r.fragments ?? 0), 0),
+    aggregates: results.reduce((s, r) => s + (r.aggregates ?? 0), 0),
   };
 
   if (asJson) {
@@ -336,7 +445,8 @@ async function main() {
   console.log(`domäner mätta: ${totals.domains}`);
   console.log(`events totalt: ${totals.events}`);
   console.log(`phantom-rader:  ${totals.phantoms}`);
-  console.log(`titel-bitar:    ${totals.fragments}\n`);
+  console.log(`titel-bitar:    ${totals.fragments}`);
+  console.log(`aggregat-rader: ${totals.aggregates ?? 0}\n`);
   for (const r of results) {
     if (r.status !== 'ok') {
       console.log(`  ${r.id.padEnd(24)} ${r.status}`);
@@ -354,6 +464,8 @@ async function main() {
     for (const f of (r.fragmentRows ?? []).slice(0, 3)) {
       console.log(`      ~ BIT [${f.method}] "${String(f.title).slice(0, 40)}" av "${String(f.cardHeading).slice(0, 60)}"`);
     }
+    const agg = r.aggregates ?? 0;
+    if (agg > 0) console.log(`      = AGG ${agg} (första: ${r.aggregateRows?.[0]?.cardTag}.${r.aggregateRows?.[0]?.cardClass})`);
   }
 }
 
