@@ -44,6 +44,7 @@ import { runAdapters } from './adapters/index.js';
 import { findKlockanInText } from '../lib/swedishTimeText.js';
 import { isNavigationTitle } from './navigationTitles.js';
 import { pickTitleCandidate } from './dateOnlyTitles.js';
+import { dedupeEvents, ALT_TEXT_TITLE_SIGNAL } from './eventDedup.js';
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -1486,7 +1487,15 @@ function extractHtmlHeuristics($: cheerio.CheerioAPI, source: string, baseUrl: s
     '.activity-item', '.activity-card',
   ];
 
-  function extractTitle($el: cheerio.CheerioAPI, $card: any): string {
+  /**
+   * Titel ur ett evenemangskort.
+   *
+   * `fromImgAlt` markerar när titeln KOM FRÅN bildens alt-text. Det är
+   * sista utväg, och alt-texten är en bildbeskrivning ("Komikern Kirsty
+   * Armstrong med rödlockigt hår och rosa pikétröja…"), inte ett
+   * eventnamn. Se eventDedup.ts (regel R2).
+   */
+  function extractTitle($el: cheerio.CheerioAPI, $card: any): { title: string; fromImgAlt: boolean } {
     const headingSelectors = [
       'h1', 'h2', 'h3', 'h4',
       '[class*="title"]', '[class*="heading"]', '[class*="namn"]', '[class*="name"]',
@@ -1502,12 +1511,12 @@ function extractHtmlHeuristics($: cheerio.CheerioAPI, source: string, baseUrl: s
       });
     }
     const heading = pickTitleCandidate(headingCandidates);
-    if (heading) return heading;
+    if (heading) return { title: heading, fromImgAlt: false };
     const anchorTitle = $card.find('a[title]').attr('title') || '';
-    if (anchorTitle.length > 2) return anchorTitle;
+    if (anchorTitle.length > 2) return { title: anchorTitle, fromImgAlt: false };
     const linkText = $card.find('a').first().text().trim();
-    if (linkText.length > 2) return linkText;
-    return $card.find('img[alt]').attr('alt') || '';
+    if (linkText.length > 2) return { title: linkText, fromImgAlt: false };
+    return { title: $card.find('img[alt]').attr('alt') || '', fromImgAlt: true };
   }
 
   function extractDate($el: cheerio.CheerioAPI, $card: any): { date: string; time?: string } {
@@ -1702,7 +1711,7 @@ function extractHtmlHeuristics($: cheerio.CheerioAPI, source: string, baseUrl: s
       }).length;
       if (newsAncestor > 0) return;
 
-      const title = extractTitle($, $card);
+      const { title, fromImgAlt } = extractTitle($, $card);
       if (!title || title.length < 2 || title.length > 200) return;
 
       const { date, time } = extractDate($, $card);
@@ -1716,7 +1725,12 @@ function extractHtmlHeuristics($: cheerio.CheerioAPI, source: string, baseUrl: s
       const desc = extractDescription($card);
       const ticketUrl = extractTicketUrl($card, baseUrl);
 
-      const key = `${title}|${date}|${time || ''}|${eventUrl}`;
+      // 2026-10-24 — url MÅSTE vara i identitetsnyckeln. Två olika
+      // företrädanden kan dela titel+datum+tid och ha klockan enbart i
+      // url:en (konserthuset: .../20261025-1000/ och .../20261025-1130/).
+      // Uppslagningen av url-lösa dubbletter sker i dedupeEvents (regel
+      // R1') efter att metoderna slagits ihop — se eventDedup.ts.
+      const key = `${title}|${date}|${time || ''}|${eventUrl || ''}`;
       if (seenKeys.has(key)) return;
       seenKeys.add(key);
 
@@ -1736,7 +1750,7 @@ function extractHtmlHeuristics($: cheerio.CheerioAPI, source: string, baseUrl: s
             hasTitle: true, hasDate: true, hasVenue: !!venue,
             hasUrl: !!eventUrl, hasDescription: !!desc,
             hasTicketInfo: !!(ticketUrl || isFree),
-            signals: ['html-rich-card'],
+            signals: fromImgAlt ? ['html-rich-card', ALT_TEXT_TITLE_SIGNAL] : ['html-rich-card'],
           },
         });
         events.push(evt);
@@ -2087,6 +2101,8 @@ export function extractEvents(html: string, source: string, baseUrl: string): Ex
         navSkipped[method] = (navSkipped[method] || 0) + 1;
         continue;
       }
+      // 2026-10-24 — url ingår i identitetsnyckeln (se C1-raderna ovan).
+      // Dubbletter slås ihop efteråt av dedupeEvents (regel R1').
       const key = `${evt.title}|${evt.date}|${evt.time || ''}|${evt.url || ''}`;
       if (seenKeys.has(key)) continue;
       seenKeys.add(key);
@@ -2141,15 +2157,27 @@ export function extractEvents(html: string, source: string, baseUrl: string): Ex
   addEvents(extractTimeAnchors($, source, baseUrl), 'C2');
   addEvents(extractSwedishRelativeDates($, source, baseUrl), 'C3');
 
+  // 2026-10-24 — slå ihop dubbletter mellan metoderna (R1 + R2).
+  // Samma evenemangskort läses på flera sätt: ena vägen ger rubrik + länk,
+  // andra ger bildens alt-text. Se eventDedup.ts för reglerna och mätningen.
+  const dedup = dedupeEvents(allEvents);
+  if (dedup.droppedDuplicate > 0 || dedup.droppedAltText > 0) {
+    console.log(
+      `[UniversalExtractor v2] dedup: ${dedup.droppedDuplicate} dubblett(er), ` +
+      `${dedup.droppedAltText} bildtext(er) borttaget — ${allEvents.length} → ${dedup.kept.length}`,
+    );
+  }
+  const dedupedEvents = dedup.kept;
+
   // Strategy A fallback — page-level og:image / twitter:image for events that
   // did not pick up an image from any of A1–C3. Per-page only (meta tags
   // describe the page, not individual events). JSON-LD / microdata wins.
   const pageOgImage = extractPageOgImage($);
   let enrichedEvents: ParsedEvent[] = pageOgImage
-    ? allEvents.map((evt) =>
+    ? dedupedEvents.map((evt) =>
         evt.imageUrl ? evt : { ...evt, imageUrl: absolutizeUrl(pageOgImage, baseUrl) }
       )
-    : allEvents;
+    : dedupedEvents;
 
   // 2026-10-02 — page-level description enrichment (Round 2 utökning).
   // Fångar fall där A1/A2/B/C hittade events men description är tom — sidan
