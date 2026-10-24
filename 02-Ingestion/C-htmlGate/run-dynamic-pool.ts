@@ -43,6 +43,8 @@ STATUS LABELS:
 import { discoverEventCandidates, screenUrl, screenUrlWithDerivedRules, evaluateHtmlGate, type PreGateCategorization } from './index';
 import { evaluateAiExtract, type AiExtractResult, type AiVerdict } from './C3-aiExtractGate/C3-aiExtractGate';
 import { extractFromHtml, type ExtractResult } from '../F-eventExtraction/universal-extractor';
+import { filterUsableEvents } from '../F-eventExtraction/usableEvents';
+import { buildFallbackCandidates } from './candidateFallback';
 import type { ParsedEvent } from '../F-eventExtraction/schema';
 import { runC4Analysis, type C4InputSource, type C4RoundAnalysis, type C4AnalysisResult, FailCategory } from './C4-ai-analysis';
 import { c4DeepAnalyze, verifyProposals, type C4PipelineResult, type C4DeepAnalysisResult } from './c4-deep-analysis';
@@ -225,6 +227,8 @@ export interface PerSourceTrace {
   c3AiDuration?: number;
   // Overall outcome
   eventsFound: number;
+  /** Rader med användbart datum — de som faktiskt kan hamna i databasen. */
+  datedEventsFound: number;
   outcomeType: 'extract_success' | 'route_success' | 'fail';
   routeSuggestion: 'UI' | 'A' | 'B' | 'D' | 'manual-review' | 'Fail';
   exitReason: ExitReason;
@@ -260,6 +264,7 @@ export type ExitReason =
   | 'C2_UNCLEAR'
   | 'EXTRACTION_ZERO_PROMISING_HTML'     // C2 promising but C3 returned 0
   | 'EXTRACTION_ZERO_C3_AI_ZERO'          // C3 failed + C3-AI also returned 0
+  | 'EXTRACTION_ZERO_NO_USABLE_DATE'      // rader extraherades men inga har sparbart datum
   | 'C3_AI_NEEDS_RENDER_D_SIGNAL'         // C3-AI säger uttryckligen "needs_render"
   | 'ALL_ROUNDS_EXHAUSTED';
 
@@ -303,7 +308,17 @@ interface CStageResult {
     aiDuration?: number;
     duration: number;
   };
-  extract: { eventsFound: number; duration: number; htmlSize: number; extractedEvents?: ParsedEvent[] };
+  // eventsFound = rader som extraherats totalt.
+  // datedEventsFound = rader med användbart datum (kan sparas i databasen).
+  // Skillnaden är hela poängen med fixen 2026-10-24: en källa som bara ger
+  // datumlösa/förflutna rader har INTE lyckats, även om den "fick events".
+  extract: {
+    eventsFound: number;
+    datedEventsFound: number;
+    duration: number;
+    htmlSize: number;
+    extractedEvents?: ParsedEvent[];
+  };
 }
 
 export interface CResult extends CStageResult {
@@ -955,6 +970,7 @@ function buildTrace(result: CResult, sourceUrl: string, roundNum: number): PerSo
     c3AiEventsFound: result.c3.aiEventsFound,
     c3AiDuration: result.c3.aiDuration,
     eventsFound: result.extract.eventsFound,
+    datedEventsFound: result.extract.datedEventsFound,
     outcomeType: result.outcomeType,
     routeSuggestion: result.routeSuggestion,
     exitReason: result.exitReason,
@@ -1058,7 +1074,7 @@ async function runSourceOnPool(
     c1: { verdict: 'unknown', likelyJsRendered: false, timeTagCount: 0, dateCount: 0, duration: 0, htmlBytes: 0, fetchable: false, bestSubpageFound: null, subpagesTested: [] },
     c2: { verdict: 'unknown', score: 0, reason: '', duration: 0, htmlBytes: 0 },
     c3: { universalEventsFound: 0, universalMethodsUsed: [], universalMethodBreakdown: {}, duration: 0 },
-    extract: { eventsFound: 0, duration: 0, htmlSize: 0 },
+    extract: { eventsFound: 0, datedEventsFound: 0, duration: 0, htmlSize: 0 },
     trace: {} as PerSourceTrace,
   };
 
@@ -1146,7 +1162,7 @@ async function runSourceOnPool(
       console.log(`[C1-DirectRoute] Strong JS-render signal — short-circuit to D`);
       result.c2 = { verdict: 'skipped', score: 0, reason: 'c1-direct-route', duration: 0, htmlBytes: 0 };
       result.c3 = { universalEventsFound: 0, universalMethodsUsed: [], universalMethodBreakdown: {}, duration: 0 };
-      result.extract = { eventsFound: 0, duration: 0, htmlSize: 0 };
+      result.extract = { eventsFound: 0, datedEventsFound: 0, duration: 0, htmlSize: 0 };
       result.outcomeType = 'route_success';
       result.winningStage = 'C1';
       result.routeSuggestion = 'D';
@@ -1185,8 +1201,19 @@ async function runSourceOnPool(
       universalMethodBreakdown: {},                  // placeholder — extractFromHtml doesn't track breakdown
       duration: Date.now() - extStart,
     };
-    result.extract = { eventsFound: ext.events.length, duration: Date.now() - extStart, htmlSize, extractedEvents: ext.events };
-    console.log(`C3: ${ext.events.length} events via [${ext.methodsUsed.join(', ')}]`);
+    // 2026-10-24 — bara rader med användbart datum räknas som events.
+    // Importen (importToEventPulse) kastar bort datumlösa och förflutna
+    // rader, så en källa som bara ger sådana rader har inte lyckats —
+    // den har bara producerat rader som försvinner igen.
+    const primaryUsable = filterUsableEvents(ext.events);
+    result.extract = {
+      eventsFound: ext.events.length,
+      datedEventsFound: primaryUsable.length,
+      duration: Date.now() - extStart,
+      htmlSize,
+      extractedEvents: primaryUsable,
+    };
+    console.log(`C3: ${ext.events.length} events via [${ext.methodsUsed.join(', ')}] — ${primaryUsable.length} med användbart datum`);
 
     // ── C3 AI FALLBACK: if universal returned 0 but C2 was promising ──────────
     if (ext.events.length === 0 && c2.verdict === 'promising') {
@@ -1199,14 +1226,16 @@ async function runSourceOnPool(
       result.c3.aiVerdict = aiResult.verdict;
       result.c3.aiEventsFound = aiResult.events.length;
       result.c3.aiDuration = Date.now() - aiStart;
+      const aiUsable = filterUsableEvents(aiResult.events);
       result.extract.eventsFound = aiResult.events.length;
+      result.extract.datedEventsFound = aiUsable.length;
       // NOTE (batch B K4): AiExtractedEvent does not conform to ParsedEvent
       // (optional date/venue; confidence: {overall, fields} vs schema
       // confidence). Storing AI events in a ParsedEvent[] field is a
       // pre-existing contract break — cast preserves runtime; queue task.
-      if (aiResult.events.length > 0) result.extract.extractedEvents = aiResult.events as unknown as ParsedEvent[];
+      if (aiUsable.length > 0) result.extract.extractedEvents = aiUsable as unknown as ParsedEvent[];
       if (aiResult.events.length > 0) {
-        console.log(`[C3-AI] AI extraction: ${aiResult.events.length} events`);
+        console.log(`[C3-AI] AI extraction: ${aiResult.events.length} events (${aiUsable.length} med användbart datum)`);
       } else {
         console.log(`[C3-AI] AI extraction also returned 0 events`);
       }
@@ -1231,15 +1260,17 @@ async function runSourceOnPool(
     // regler. Fallbacken triggar BARA när vinnaren gav 0 events → den kan
     // aldrig ta bort en lyckad körning, bara lägga till.
     const NEXT_CANDIDATE_LIMIT = 3;
-    if (result.extract.eventsFound === 0 && c0?.topCandidates?.length) {
-      const alreadyTried = new Set<string>([effectiveUrl]);
-      const alternatives = c0.topCandidates
-        .filter((c) => !alreadyTried.has(c.url))
-        .slice(0, NEXT_CANDIDATE_LIMIT);
+    if (result.extract.datedEventsFound === 0) {
+      const alternatives = buildFallbackCandidates(
+        c0?.topCandidates,
+        effectiveUrl,
+        urlVariant.url,
+        NEXT_CANDIDATE_LIMIT,
+      );
 
       for (const alt of alternatives) {
-        if (result.extract.eventsFound > 0) break;
-        console.log(`[C-NextCandidate] ${source.sourceId}: vinnaren gav 0 events — testar nästa kandidat ${alt.url} (density=${alt.eventDensityScore})`);
+        if (result.extract.datedEventsFound > 0) break;
+        console.log(`[C-NextCandidate] ${source.sourceId}: ingen sparbara datum — testar ${alt.reason}: ${alt.url}`);
         try {
           const altC1 = await screenUrl(alt.url);
           const altHtml = (altC1 as any).html as string | undefined;
@@ -1248,14 +1279,16 @@ async function runSourceOnPool(
             continue;
           }
           const altExt = extractFromHtml(altHtml, source.sourceId, alt.url);
-          console.log(`[C-NextCandidate] ${alt.url}: ${altExt.events.length} events via [${altExt.methodsUsed.join(', ')}]`);
-          if (altExt.events.length > 0) {
-            result.extract.extractedEvents = altExt.events;
+          const altUsable = filterUsableEvents(altExt.events);
+          console.log(`[C-NextCandidate] ${alt.url}: ${altExt.events.length} events (${altUsable.length} med användbart datum) via [${altExt.methodsUsed.join(', ')}]`);
+          if (altUsable.length > 0) {
+            result.extract.extractedEvents = altUsable;
             result.extract.eventsFound = altExt.events.length;
+            result.extract.datedEventsFound = altUsable.length;
             result.extract.htmlSize = Buffer.byteLength(altHtml, 'utf8');
             result.c3.universalEventsFound = altExt.events.length;
             result.effectiveProcessingUrl = alt.url;
-            result.effectiveProcessingUrlReason = `next-candidate (density=${alt.eventDensityScore})`;
+            result.effectiveProcessingUrlReason = alt.reason;
           }
         } catch (e: any) {
           console.log(`[C-NextCandidate] ${alt.url}: fel ${e?.message ?? String(e)}`);
@@ -1271,14 +1304,18 @@ async function runSourceOnPool(
     // (2026-00-17) i en tidigare körning; efter kolon-fixen ger teasern 0
     // events, men filen låg kvar med de 28 falska raderna.
     //
+    // 2026-10-24 — villkoret är "inga SPARBARA datum", inte "0 rader": en
+    // fil med 8 datumlösa rader är lika död som en fil med 0 rader, eftersom
+    // importen kastar bort båda.
+    //
     // Raderas bara när sidan faktiskt var fetchbar och extraktionen kördes på
     // riktigt innehåll — annars skulle ett tillfälligt nätverksfel rensa
     // giltiga data.
-    if (result.c1.fetchable && extHtml && result.extract.eventsFound === 0) {
+    if (result.c1.fetchable && extHtml && result.extract.datedEventsFound === 0) {
       const staleFile = join(C_EXTRACTED_DIR, `${source.sourceId}.jsonl`);
       if (existsSync(staleFile)) {
         unlinkSync(staleFile);
-        console.log(`[C-Extract] Raderade stale extracted-fil (0 events denna körning): ${staleFile}`);
+        console.log(`[C-Extract] Raderade stale extracted-fil (inga sparbara datum denna körning): ${staleFile}`);
       }
     }
 
@@ -1306,16 +1343,22 @@ async function runSourceOnPool(
  */
 export function determineOutcome(result: CResult, sourceUrl: string, roundNum: number, c0FoundWinner: boolean): void {
   // ── SUCCESS ──────────────────────────────────────────────────────────────────
-  if (result.extract.eventsFound > 0) {
+  // 2026-10-24 — framgång kräver SPARBARA datum, inte bara rader.
+  // Importen kastar bort rader som är datumlösa eller förflutna, så en
+  // källa som bara ger sådana rader har inte lyckats — den har producerat
+  // rader som försvinner igen. Mätt: storkyrkan-2 rapporterade "8 events"
+  // medan alla 8 var datumlösa och 0 hamnade i databasen.
+  if (result.extract.datedEventsFound > 0) {
     result.outcomeType = 'extract_success';
     result.winningStage = result.c3.aiVerdict ? 'C3-AI' : 'C3';
     result.routeSuggestion = 'UI';
-    result.evidence = `${result.extract.eventsFound} events via [${result.c3.universalMethodsUsed.join(', ')}]${result.c3.aiVerdict ? ' + AI' : ''}`;
+    result.evidence = `${result.extract.datedEventsFound} sparbara events via [${result.c3.universalMethodsUsed.join(', ')}]${result.c3.aiVerdict ? ' + AI' : ''}`;
     result.exitReason = 'EXTRACT_SUCCESS';
-    result.exitReasonDetail = `${result.extract.eventsFound} events found`;
+    result.exitReasonDetail = `${result.extract.datedEventsFound} sparbara events (${result.extract.eventsFound} rader extraherade)`;
     result.success = true;
     return;
   }
+
 
   // ── ROUTING SIGNALS ─────────────────────────────────────────────────────────
   if (result.c1.likelyJsRendered && !c0FoundWinner) {
@@ -1325,6 +1368,23 @@ export function determineOutcome(result: CResult, sourceUrl: string, roundNum: n
     result.evidence = 'C1: likelyJsRendered=true + no subpage winner';
     result.exitReason = 'C1_LIKELY_JS_RENDER_ROOT';
     result.exitReasonDetail = `likelyJsRendered=true, no subpage winner found via C0`;
+    result.success = false;
+    return;
+  }
+
+  // Rader extraherades, men ingen av dem har ett datum som överlever
+  // importens datumvakt. Källan har alltså producerat rader som försvinner
+  // igen — det är ett extraktionsfel, inte en framgång.
+  //
+  // Placerad EFTER routing-signalerna: en JS-renderad sida ska fortfarande
+  // skickas till D-gaten (render), inte begravas — D kan ge raden ett datum.
+  if (result.extract.eventsFound > 0) {
+    result.outcomeType = 'fail';
+    result.winningStage = 'C3';
+    result.routeSuggestion = 'manual-review';
+    result.exitReason = 'EXTRACTION_ZERO_NO_USABLE_DATE';
+    result.exitReasonDetail = `${result.extract.eventsFound} rader extraherade men 0 har användbart datum`;
+    result.evidence = `C3: ${result.extract.eventsFound} rader utan sparbart datum`;
     result.success = false;
     return;
   }
@@ -1761,7 +1821,7 @@ function writeReports(
     totalExtractSuccess += round.results.filter(r => r.outcomeType === 'extract_success').length;
     totalRouteSuccess += round.results.filter(r => r.outcomeType === 'route_success').length;
     totalFail += round.results.filter(r => r.outcomeType === 'fail').length;
-    totalEvents += round.results.reduce((s, r) => s + r.extract.eventsFound, 0);
+    totalEvents += round.results.reduce((s, r) => s + r.extract.datedEventsFound, 0);
     allResults.push(...round.results);
   }
 
@@ -1884,6 +1944,7 @@ ${remainingSources.length > 0
 | failType | ${result.failType ?? 'N/A'} |
 | evidence | ${result.evidence} |
 | eventsFound | ${result.extract.eventsFound} |
+| datedEventsFound | ${result.extract.datedEventsFound} |
 | c0Candidates | ${result.c0.candidates} |
 | winnerUrl | ${result.c0.winnerUrl ?? 'null'} |
 | c2Verdict | ${result.c2.verdict} |
@@ -1901,7 +1962,8 @@ ${remainingSources.length > 0
     const extractSuccess = round.results.filter(r => r.outcomeType === 'extract_success').length;
     const routeSuccess = round.results.filter(r => r.outcomeType === 'route_success').length;
     const failCount = round.results.filter(r => r.outcomeType === 'fail').length;
-    const eventsTotal = round.results.reduce((s, r) => s + r.extract.eventsFound, 0);
+    const eventsTotal = round.results.reduce((s, r) => s + r.extract.datedEventsFound, 0);
+    const rowsTotal = round.results.reduce((s, r) => s + r.extract.eventsFound, 0);
     const failedSources = round.fails.map(s => s.sourceId);
 
     const roundReport = `
@@ -1917,6 +1979,7 @@ ${remainingSources.length > 0
 | routeSuccess | ${routeSuccess} |
 | fail | ${failCount} |
 | totalEvents | ${eventsTotal} |
+| totalRowsExtracted | ${rowsTotal} |
 
 ### Sources that failed (stay in pool for next round)
 ${failedSources.length > 0 ? failedSources.map(s => `- ${s}`).join('\n') : '(none)'}
@@ -2258,7 +2321,7 @@ export async function runDynamicPoolBatch(options: DynamicPoolOptions = {}): Pro
     state.activePool = roundOutput.fails;
 
     const sourcesWithDerivedRuleApplied = roundOutput.results.filter(r => r.derivedRuleApplied);
-    const derivedRuleHits = sourcesWithDerivedRuleApplied.filter(r => r.extract.eventsFound > 0 || r.c0.candidates > 0);
+    const derivedRuleHits = sourcesWithDerivedRuleApplied.filter(r => r.extract.datedEventsFound > 0 || r.c0.candidates > 0);
     console.log(`\n[Rule-Effectiveness] Round ${state.poolRoundNumber}:`);
     console.log(`  Sources WITH derived rule applied: ${sourcesWithDerivedRuleApplied.length}`);
     console.log(`  Derived rule HITS: ${derivedRuleHits.length}`);
@@ -2306,7 +2369,7 @@ export async function runDynamicPoolBatch(options: DynamicPoolOptions = {}): Pro
 
       // [C4-DEEP-ANALYSIS] Run ground truth analysis on failed sources
       const failedSourcesForC4: C4PipelineResult[] = roundOutput.results
-        .filter(r => r.outcomeType === 'fail' || r.extract.eventsFound === 0)
+        .filter(r => r.outcomeType === 'fail' || r.extract.datedEventsFound === 0)
         .map(r => ({
           sourceId: r.sourceId,
           url: r.sourceUrl,
@@ -2785,7 +2848,7 @@ async function main() {
     // Compare outcomes for sources where derived rules were applied vs not
     const sourcesWithDerivedRuleApplied = roundOutput.results.filter(r => r.derivedRuleApplied);
     const sourcesWithoutRuleApplied = roundOutput.results.filter(r => !r.derivedRuleApplied);
-    const derivedRuleHits = sourcesWithDerivedRuleApplied.filter(r => r.extract.eventsFound > 0 || r.c0.candidates > 0);
+    const derivedRuleHits = sourcesWithDerivedRuleApplied.filter(r => r.extract.datedEventsFound > 0 || r.c0.candidates > 0);
     console.log(`\n[Rule-Effectiveness] Round ${state.poolRoundNumber}:`);
     console.log(`  Sources WITH derived rule applied: ${sourcesWithDerivedRuleApplied.length}`);
     console.log(`  Sources WITHOUT rule applied: ${sourcesWithoutRuleApplied.length}`);

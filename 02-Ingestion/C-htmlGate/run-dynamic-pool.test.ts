@@ -98,6 +98,7 @@ const BASE_C3: CResult['c3'] = {
 
 const BASE_EXTRACT: CResult['extract'] = {
   eventsFound: 0,
+  datedEventsFound: 0,
   duration: 10,
   htmlSize: 1000,
 };
@@ -158,6 +159,7 @@ function makeCResult(overrides: Partial<CResult> = {}): CResult {
       c3AiEventsFound: c3.aiEventsFound,
       c3AiDuration: c3.aiDuration,
       eventsFound: extract.eventsFound,
+      datedEventsFound: extract.datedEventsFound,
       outcomeType: 'fail',
       routeSuggestion: 'manual-review',
       exitReason: 'ALL_ROUNDS_EXHAUSTED',
@@ -302,11 +304,42 @@ describe('parseQueueSignals', () => {
 
 describe('determineOutcome', () => {
   it('marks extract_success when events found', () => {
-    const r = makeCResult({ extract: { ...BASE_EXTRACT, eventsFound: 5 } });
+    const r = makeCResult({ extract: { ...BASE_EXTRACT, eventsFound: 5, datedEventsFound: 5 } });
     determineOutcome(r, r.sourceUrl, 1, false);
     expect(r.outcomeType).toBe('extract_success');
     expect(r.routeSuggestion).toBe('UI');
     expect(r.exitReason).toBe('EXTRACT_SUCCESS');
+  });
+
+  // 2026-10-24 — framgång kräver SPARBARA datum. En rad utan datum
+  // (eller med ett förflutet datum) kastas bort av importen, så en källa
+  // som bara ger sådana rader har inte lyckats.
+  it('FAIL: rader utan användbart datum är inte extract_success', () => {
+    const r = makeCResult({ extract: { ...BASE_EXTRACT, eventsFound: 8, datedEventsFound: 0 } });
+    determineOutcome(r, r.sourceUrl, 1, false);
+    expect(r.outcomeType).toBe('fail');
+    expect(r.success).toBe(false);
+    expect(r.exitReason).toBe('EXTRACTION_ZERO_NO_USABLE_DATE');
+    expect(r.routeSuggestion).toBe('manual-review');
+  });
+
+  it('FAIL: blandade rader räknas bara de med datum', () => {
+    const r = makeCResult({ extract: { ...BASE_EXTRACT, eventsFound: 8, datedEventsFound: 3 } });
+    determineOutcome(r, r.sourceUrl, 1, false);
+    expect(r.outcomeType).toBe('extract_success');
+    expect(r.exitReasonDetail).toContain('3 sparbara events');
+  });
+
+  // Routing-signalen ska vinna över "inga sparbara datum": en JS-renderad
+  // sida ska skickas till D-gaten (render), inte begravas.
+  it('FAIL: JS-renderad källa routas till D även utan sparbara datum', () => {
+    const r = makeCResult({
+      extract: { ...BASE_EXTRACT, eventsFound: 4, datedEventsFound: 0 },
+      c1: { ...BASE_C1, likelyJsRendered: true },
+    });
+    determineOutcome(r, r.sourceUrl, 1, false);
+    expect(r.routeSuggestion).toBe('D');
+    expect(r.exitReason).toBe('C1_LIKELY_JS_RENDER_ROOT');
   });
 
   it('marks route_success with likelyJsRendered=true', () => {

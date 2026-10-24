@@ -19,6 +19,7 @@ import { fileURLToPath, pathToFileURL } from 'url';
 import fs from 'fs';
 import { loadSkippedSourceIds } from '../02-Ingestion/lib/quarantineGuard.js';
 import { isEventPast } from './eventFreshness';
+import { eventStartTime } from '../02-Ingestion/F-eventExtraction/usableEvents';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -238,25 +239,17 @@ function extractDescription(ev: ExtractedEvent): string | null {
   return null;
 }
 
+// 2026-10-24 — starttid-definitionen bor i F-eventExtraction/usableEvents.ts
+// så att C-gatens "har användbart datum?" och importens "kasta bort
+// förflutna/datumlösa" är Samma regel. Två kopior kan glida isär.
 function extractStartTime(ev: ExtractedEvent): string {
-  if (ev.start_time) return ev.start_time;
-  if (ev.startTime) return ev.startTime;
-  return toIsoStartTime(ev.date, ev.time);
+  return eventStartTime(ev);
 }
 
 function extractEndTime(ev: ExtractedEvent): string | null {
   if (ev.end_time) return ev.end_time;
   if (ev.endTime) return ev.endTime;
   return toIsoEndTime(ev.endDate, ev.endTime, ev.date, ev.time);
-}
-
-function toIsoStartTime(date?: string, time?: string): string {
-  if (!date) return '';
-  if (time) {
-    const [h, m] = time.split(':');
-    return `${date}T${h.padStart(2, '0')}:${m.padStart(2, '0')}:00.000Z`;
-  }
-  return `${date}T00:00:00.000Z`;
 }
 
 function toIsoEndTime(endDate?: string, endTime?: string, startDate?: string, startTime?: string): string | null {

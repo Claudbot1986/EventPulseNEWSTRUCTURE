@@ -182,3 +182,7 @@ tmp_image_corpus/_image_quota_plan_*.json
 /data/
 /test-results/
 /06-UI/test-results/
+
+# unlazy-pipeline — ledgers, lås och dispatch-state är maskinstate, inte kod.
+# Beviset ligger i scripts/verify-cgate-root-fallback.mjs som ÄR versionsstyrd.
+.unlazy/
