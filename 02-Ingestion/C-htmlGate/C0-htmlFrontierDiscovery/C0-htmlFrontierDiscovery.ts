@@ -13,7 +13,7 @@ import { fetchHtml, normalizeFetchUrl } from '../../tools/fetchTools';
 import { load } from 'cheerio';
 import type { DerivedRulesStore } from '../c4-derived-rules';
 import { FailCategory } from '../C4-ai-analysis';
-import { fetchAllSitemaps as fetchSitemapsDeep } from '../tools/scrapingBeeDeep';
+import { fetchSitemapEntries as fetchSitemapEntriesDeep } from '../tools/scrapingBeeDeep';
 
 export interface DiscoveredLink {
   url: string;
@@ -420,17 +420,38 @@ export async function discoverEventCandidates(
   // Filtret shouldIgnore() återanvänds rakt av — INGA nya IGNORE_PATTERNS.
   // Graceful degradation: om sitemap-miss, returnerar tom array → oförändrat beteende.
   //
-  // Generalization Protection: General (alla sajter som HAR sitemap följer samma
-  // XML-konvention; robots.txt-Sitemap-direktiv följer Google-spec).
-  // Inget sajtspecifikt — vi tar återan befintlig fetchAllSitemaps + parseXmlSitemap.
+  // FIX 2026-10-24 — sitemap-EXPANSION:
+  // Sitemapens <loc>-barn är INTE alltid event-sidor. På sajter med en
+  // sitemap-INDEX (vanligt i WordPress) är <loc>-barnen i stället
+  // sub-sitemap-FILER (/event-sitemap.xml). C0 mätte dem med HTML-formeln
+  // measureEventDensity, och eftersom varje <lastmod> räknas som ett datum
+  // fick .xml-filer 50–250× högre density än riktiga sidor → de vann
+  // tävlingslopet → C1 svarade "no <main>" → källan dog.
+  //
+  // Bevis (2026-10-24):
+  //   - 112 av 112 C-gate-traces med .xml som effectiveUrl slutade i
+  //     C1_NO_MAIN_ARTICLE. NOLL lyckades. XML:en gav alltså aldrig events,
+  //     så att ta bort den ur tävlingslopet kan inte förlora något.
+  //   - 21 av 30 live-källor med XML-vinnare gav events när sitemapen
+  //     expanderades till sina barn (teatrar, museum, jazzklubb, universitet).
+  //
+  // Generalization Protection: General — sitemap-INDEX och <lastmod> är
+  // Sitemap Protocol 1.1-standard, inte site-specifika konventioner.
+  // Ingen ny IGNORE_PATTERN, ingen ny scoring-vikt: barnen mäts med
+  // EXAKT samma formel som BFS-länkar.
   // -----------------------------------------------------------------------
   const sitemapUrls: string[] = [];
   let sitemapStats = { attempted: 0, found: 0, afterFilter: 0 };
+  let sitemapLastmod = new Map<string, string>();
   try {
-    const sitemapResult = await fetchSitemapsDeep(baseUrl);
+    const sitemapResult = await fetchSitemapEntriesDeep(baseUrl);
     sitemapStats.attempted = sitemapResult.attempts.length;
-    sitemapStats.found = sitemapResult.urls.length;
-    for (const u of sitemapResult.urls) {
+    sitemapStats.found = sitemapResult.entries.length;
+    for (const entry of sitemapResult.entries) {
+      const u = entry.loc;
+      // En .xml-rad är en index-pekare, inte en sida. Mäta den aldrig med
+      // HTML-formeln — det var exakt hur .xml:en vann densitetsloppet.
+      if (entry.isSitemapFile) continue;
       // Same-origin check (samma som collectLinks): hoppa externa
       try {
         const uObj = new URL(u);
@@ -445,18 +466,28 @@ export async function discoverEventCandidates(
       // Depth-cap (samma som BFS-länkar)
       if (getPathDepth(u, baseUrl) > MAX_DEPTH) continue;
       sitemapUrls.push(u);
+      if (entry.lastmod) sitemapLastmod.set(u, entry.lastmod);
     }
     sitemapStats.afterFilter = sitemapUrls.length;
     if (sitemapUrls.length > 0) {
-      console.log(`[C0] ${sourceId || rootUrl}: sitemap discovery found ${sitemapUrls.length} candidate URLs (raw=${sitemapResult.urls.length}, attempts=${sitemapResult.attempts.length}, sources=${sitemapResult.sources.length})`);
+      console.log(`[C0] ${sourceId || rootUrl}: sitemap discovery found ${sitemapUrls.length} candidate URLs (raw=${sitemapResult.entries.length}, attempts=${sitemapResult.attempts.length}, files=${sitemapResult.sitemapFiles.length})`);
     }
   } catch (err) {
     // Graceful: fortsätt med BFS-resultatet ensam
     console.warn(`[C0] ${sourceId || rootUrl}: sitemap discovery failed: ${err}`);
   }
 
+  // Sortera sitemap-barnen på <lastmod> (nyast ändrade först) så att vi mäter
+  // de AKTUELLA sidorna när sitemapen har tusentals barn. Barn utan <lastmod>
+  // hamnar sist (dokumentordning bevaras mellan dem).
+  const sitemapOrdered = [...sitemapUrls].sort((a, b) => {
+    const ta = sitemapLastmod.get(a) ? Date.parse(sitemapLastmod.get(a)!) || 0 : -1;
+    const tb = sitemapLastmod.get(b) ? Date.parse(sitemapLastmod.get(b)!) || 0 : -1;
+    return tb - ta;
+  });
+
   // Cap sitemap-össök så att vi inte överskrider MAX_CANDIDATES_TO_FETCH totalt
-  const sitemapTop = sitemapUrls.slice(0, MAX_CANDIDATES_TO_FETCH);
+  const sitemapTop = sitemapOrdered.slice(0, MAX_CANDIDATES_TO_FETCH);
 
   const candidates: CandidatePage[] = [];
 
@@ -487,7 +518,9 @@ export async function discoverEventCandidates(
     });
   }
 
-  // Mät density för sitemap-URL:er på samma sätt
+  // Mät density för sitemapens barn på samma sätt som BFS-länkar. Barnen är
+  // riktiga HTML-sidor (sitemap-index har redan expanderats), så samma formel
+  // ger en rättvis jämförelse.
   for (const url of sitemapTop) {
     try {
       const metrics = await measureEventDensity(url);
@@ -497,10 +530,10 @@ export async function discoverEventCandidates(
         metrics.eventBlockCount +
         metrics.ticketCtaCount +
         Math.min(metrics.linkCount, 10);
-      if (eventDensityScore === 0) continue; // sitemap-URL utan signaler → skippa (minskar brus)
+      if (eventDensityScore === 0) continue; // sida utan signaler → skippa (minskar brus)
       let urlPath = '';
       try { urlPath = new URL(url).pathname; } catch { /* keep empty */ }
-      // Steg 4: inlänk-räkning — sitemap-URL:er har ofta 0 inlänkar på root, men log2(1)=0 så de konkurrerar rättvist
+      // Steg 4: inlänk-räkning — sitemap-sidor har ofta 0 inlänkar på root, men log2(1)=0 så de konkurrerar rättvist
       const inboundCount = inboundCounts.get(url.split('#')[0]) ?? 0;
       const finalScore = eventDensityScore + Math.log2(inboundCount + 1);
       candidates.push({

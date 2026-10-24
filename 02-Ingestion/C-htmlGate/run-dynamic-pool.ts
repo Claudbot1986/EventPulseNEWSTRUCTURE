@@ -1209,6 +1209,57 @@ async function runSourceOnPool(
       }
     }
 
+    // ── NÄSTA-KANDIDAT-FALLBACK (2026-10-24) ─────────────────────────────────
+    // C0 rankar kandidater (density), men bara VINNAREN testas vidare. Om
+    // vinnaren ger 0 events dör källan — även när C0 redan hittat en annan
+    // kandidat som faktiskt innehåller events.
+    //
+    // Bevis (2026-10-24, 30 live-källor som dog med .xml som effectiveUrl):
+    //   - 15/30 gav events via C-gaten med ENDA vinnaren testad.
+    //   - De 15 som dog gjorde det på en felaktig "vinnare": tag-sida,
+    //     kategori-sida, språkversion eller hemma — sidor med många datum
+    //     och länkar men noll events.
+    //   - En separat mätning (probe-sitemap-children) gav events i 21/30
+    //     när flera barn mättes — skillnaden är just "en kandidat vs flera".
+    //
+    // Generalization Protection: General — detta är inte en ny heuristik
+    // utan att faktiskt använda de kandidater C0 redan rankat och mätt.
+    // Ingen scoring-vikt ändras, ingen ny IGNORE_PATTERN, inga sajtspecifika
+    // regler. Fallbacken triggar BARA när vinnaren gav 0 events → den kan
+    // aldrig ta bort en lyckad körning, bara lägga till.
+    const NEXT_CANDIDATE_LIMIT = 3;
+    if (result.extract.eventsFound === 0 && c0?.topCandidates?.length) {
+      const alreadyTried = new Set<string>([effectiveUrl]);
+      const alternatives = c0.topCandidates
+        .filter((c) => !alreadyTried.has(c.url))
+        .slice(0, NEXT_CANDIDATE_LIMIT);
+
+      for (const alt of alternatives) {
+        if (result.extract.eventsFound > 0) break;
+        console.log(`[C-NextCandidate] ${source.sourceId}: vinnaren gav 0 events — testar nästa kandidat ${alt.url} (density=${alt.eventDensityScore})`);
+        try {
+          const altC1 = await screenUrl(alt.url);
+          const altHtml = (altC1 as any).html as string | undefined;
+          if (!altHtml) {
+            console.log(`[C-NextCandidate] ${alt.url}: ingen HTML (${(altC1 as any).fetchError ?? 'okänd fel'})`);
+            continue;
+          }
+          const altExt = extractFromHtml(altHtml, source.sourceId, alt.url);
+          console.log(`[C-NextCandidate] ${alt.url}: ${altExt.events.length} events via [${altExt.methodsUsed.join(', ')}]`);
+          if (altExt.events.length > 0) {
+            result.extract.extractedEvents = altExt.events;
+            result.extract.eventsFound = altExt.events.length;
+            result.extract.htmlSize = Buffer.byteLength(altHtml, 'utf8');
+            result.c3.universalEventsFound = altExt.events.length;
+            result.effectiveProcessingUrl = alt.url;
+            result.effectiveProcessingUrlReason = `next-candidate (density=${alt.eventDensityScore})`;
+          }
+        } catch (e: any) {
+          console.log(`[C-NextCandidate] ${alt.url}: fel ${e?.message ?? String(e)}`);
+        }
+      }
+    }
+
     // ── Rensa stale extracted-fil (2026-10-23) ───────────────────────────────
     // C-gaten skriver extracted-filen bara NÄR den hittade events. En källa som
     // en tidigare körning genererade events för men som nu ger 0 behåller då

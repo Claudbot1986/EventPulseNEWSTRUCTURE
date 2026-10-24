@@ -33,6 +33,9 @@ vi.mock('../../../02-Ingestion/tools/fetchTools.js', () => ({
 // Importera EFTER mock
 const {
   parseXmlSitemap,
+  parseSitemapEntries,
+  looksLikeSitemapFile,
+  fetchSitemapEntries,
   fetchRobotsSitemaps,
   discoverSitemaps,
   fetchAllSitemaps,
@@ -240,6 +243,102 @@ describe('Step 2 — sitemap + robots.txt discovery', () => {
       const result = await fetchAllSitemaps('https://example.com/');
       expect(result.found).toBe(false);
       expect(result.urls).toEqual([]);
+    });
+  });
+
+  /**
+   * Sitemap-EXPANSION (2026-10-24).
+   *
+   * Sitemap-INDEX (/sitemap.xml → <loc> till /event-sitemap.xml) är
+   * Sitemap Protocol 1.1-standard. Utan expansion mäter C0 .xml-filer med
+   * HTML-formeln, och eftersom varje <lastmod> räknas som ett datum vinner
+   * .xml:en densitetsloppet → C1 svarar "no <main>" → källan dör.
+   *
+   * Bevis: 112 av 112 C-gate-traces med .xml som effectiveUrl slutade i
+   * C1_NO_MAIN_ARTICLE — noll lyckades. 21 av 30 live-källor med
+   * XML-vinnare gav events när sitemapen expanderades.
+   */
+  describe('sitemap-expansion', () => {
+    describe('parseSitemapEntries', () => {
+      it('läser <loc> + <lastmod> ur en <url>-post', () => {
+        const xml = `<?xml version="1.0"?><urlset>
+          <url><loc>https://example.com/a</loc><lastmod>2026-11-01</lastmod></url>
+          <url><loc>https://example.com/b</loc></url>
+        </urlset>`;
+        const entries = parseSitemapEntries(xml, 'https://example.com/sitemap.xml');
+        expect(entries).toHaveLength(2);
+        expect(entries[0]?.loc).toBe('https://example.com/a');
+        expect(entries[0]?.lastmod).toBe('2026-11-01');
+        expect(entries[1]?.lastmod).toBe('');
+        expect(entries[0]?.isSitemapFile).toBe(false);
+      });
+
+      it('flaggar .xml-rader som sitemap-filer', () => {
+        const xml = `<?xml version="1.0"?><urlset>
+          <url><loc>https://example.com/event-sitemap.xml</loc></url>
+          <url><loc>https://example.com/shower/abc</loc></url>
+        </urlset>`;
+        const entries = parseSitemapEntries(xml, 'https://example.com/sitemap.xml');
+        expect(entries[0]?.isSitemapFile).toBe(true);
+        expect(entries[1]?.isSitemapFile).toBe(false);
+      });
+    });
+
+    describe('looksLikeSitemapFile', () => {
+      it('känner igen .xml och .xml.gz men inte vanliga sidor', () => {
+        expect(looksLikeSitemapFile('https://example.com/sitemap.xml')).toBe(true);
+        expect(looksLikeSitemapFile('https://example.com/wp-sitemap.xml.gz')).toBe(true);
+        expect(looksLikeSitemapFile('https://example.com/shower/abc')).toBe(false);
+        expect(looksLikeSitemapFile('https://example.com/xml-guide')).toBe(false);
+      });
+    });
+
+    describe('fetchSitemapEntries', () => {
+      it('expanderar sitemap-index till sina barn och returnerar bara sidor', async () => {
+        // robots.txt → ingen Sitemap:-rad
+        fetchHtmlMock.mockResolvedValueOnce({ success: false, html: '' });
+        // /sitemap.xml → index med en .xml-rad
+        fetchHtmlMock.mockResolvedValueOnce({
+          success: true,
+          html: `<?xml version="1.0"?><sitemapindex>
+            <sitemap><loc>https://example.com/event-sitemap.xml</loc></sitemap>
+          </sitemapindex>`,
+        });
+        // /event-sitemap.xml → de riktiga sidorna
+        fetchHtmlMock.mockResolvedValueOnce({
+          success: true,
+          html: `<?xml version="1.0"?><urlset>
+            <url><loc>https://example.com/shower/abc</loc><lastmod>2026-11-01</lastmod></url>
+            <url><loc>https://example.com/shower/def</loc><lastmod>2026-10-01</lastmod></url>
+          </urlset>`,
+        });
+        // Övriga varianter → inga träffar
+        fetchHtmlMock.mockResolvedValue({ success: false, html: '' });
+
+        const result = await fetchSitemapEntries('https://example.com/');
+
+        // .xml-raden ska INTE finnas bland entries — annars vinner den igen
+        expect(result.entries.map((e) => e.loc)).toEqual([
+          'https://example.com/shower/abc',
+          'https://example.com/shower/def',
+        ]);
+        expect(result.entries.every((e) => !e.isSitemapFile)).toBe(true);
+        expect(result.entries[0]?.lastmod).toBe('2026-11-01');
+        expect(result.sitemapFiles).toContain('https://example.com/event-sitemap.xml');
+      });
+
+      it('behåller enkel urlset som den är (ingen index att expandera)', async () => {
+        fetchHtmlMock.mockResolvedValueOnce({ success: false, html: '' }); // robots
+        fetchHtmlMock.mockResolvedValueOnce({
+          success: true,
+          html: `<?xml version="1.0"?><urlset><url><loc>https://example.com/kalender</loc></url></urlset>`,
+        });
+        fetchHtmlMock.mockResolvedValue({ success: false, html: '' }); // övriga varianter
+
+        const result = await fetchSitemapEntries('https://example.com/');
+
+        expect(result.entries.map((e) => e.loc)).toEqual(['https://example.com/kalender']);
+      });
     });
   });
 

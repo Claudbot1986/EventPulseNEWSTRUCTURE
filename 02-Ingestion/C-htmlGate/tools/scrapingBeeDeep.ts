@@ -189,6 +189,132 @@ export function parseXmlSitemap(xml: string): string[] {
     .filter((url): url is string => url !== null && url.length > 0);
 }
 
+// ─── Sitemap-entry: <loc> + <lastmod> ────────────────────────────────────────
+
+export interface SitemapEntry {
+  loc: string;
+  /** Sitemap-protokollets <lastmod> ("senast ändrad"). Tom sträng om saknas. */
+  lastmod: string;
+  /** Vilken sitemap-fil entryn kom ifrån. */
+  sitemapUrl: string;
+  /** Sant om entryn är en sitemap-index-rad (pekar på en annan .xml). */
+  isSitemapFile: boolean;
+}
+
+/**
+ * Tolkar en sitemap-XML till poster med <loc> + <lastmod>.
+ *
+ * Sitemap-protokollet (sitemaps.org) definierar <lastmod> som "senast
+ * ändrad" för sidan. Det är en generell signal — alla sajter som har
+ * sitemap följer samma konvention.
+ */
+export function parseSitemapEntries(xml: string, sitemapUrl: string): SitemapEntry[] {
+  const out: SitemapEntry[] = [];
+  const blocks = xml.match(/<url>[\s\S]*?<\/url>/g);
+  const locs = blocks
+    ? blocks.map((b) => ({
+        loc: b.match(/<loc[^>]*>([^<]*)<\/loc>/i)?.[1]?.trim() ?? '',
+        lastmod: b.match(/<lastmod[^>]*>([^<]*)<\/lastmod>/i)?.[1]?.trim() ?? '',
+      }))
+    : parseXmlSitemap(xml).map((loc) => ({ loc, lastmod: '' }));
+
+  for (const { loc, lastmod } of locs) {
+    if (!loc) continue;
+    out.push({
+      loc,
+      lastmod,
+      sitemapUrl,
+      isSitemapFile: looksLikeSitemapFile(loc),
+    });
+  }
+  return out;
+}
+
+/**
+ * Är en URL en sitemap-fil? Sitemap-protokollet använder .xml (och .xml.gz)
+ * — det är formatets egen konvention, inte en site-specifik gissning.
+ */
+export function looksLikeSitemapFile(url: string): boolean {
+  try {
+    const p = new URL(url).pathname.toLowerCase();
+    return p.endsWith('.xml') || p.endsWith('.xml.gz');
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Hämta ALLA sitemap-poster för en baseUrl — inklusive en nivå av expansion.
+ *
+ * Varför expansion: de flesta sajterna (WordPress, många CMS) använder en
+ * sitemap-INDEX: /sitemap.xml innehåller <loc> till sub-sitemaps
+ * (/event-sitemap.xml), och det är först i sub-sitemapen som de riktiga
+ * sidorna ligger. Utan expansion skulle C0 mäta .xml-filer som om de vore
+ * event-sidor.
+ *
+ * Bevis för expansionen (2026-10-24):
+ *   - 112 av 112 C-gate-traces där effectiveUrl var en .xml slutade i
+ *     C1_NO_MAIN_ARTICLE. Noll av dem lyckades. XML:en kan alltså inte ha
+ *     gett något som går att förlora genom att tas bort ur tävlingslopet.
+ *   - 21 av 30 live-källor med XML-vinnare gav events när sitemapen
+ *     expanderades till sina barn (teatrar, museum, jazzklubb, universitet).
+ *
+ * Generalization Protection: General — sitemap-index är Sitemap Protocol
+ * 1.1-standard, inte en site-specifik konvention.
+ */
+export async function fetchSitemapEntries(baseUrl: string): Promise<{
+  entries: SitemapEntry[];
+  sitemapFiles: string[];
+  attempts: string[];
+}> {
+  const discovered = await discoverSitemaps(baseUrl);
+  const entries: SitemapEntry[] = [];
+  const sitemapFiles: string[] = [];
+
+  for (const sitemapUrl of discovered.urls) {
+    let fileEntries: SitemapEntry[] = [];
+    try {
+      const result = await fetchHtml(sitemapUrl, { timeout: 10000 });
+      if (result.success && result.html) {
+        fileEntries = parseSitemapEntries(result.html, sitemapUrl);
+      }
+    } catch {
+      // continue — nästa sitemap
+    }
+    if (fileEntries.length === 0) continue;
+
+    sitemapFiles.push(sitemapUrl);
+
+    // Endast SIDOR läggs i `entries` — en .xml-rad är en index-pekare, inte
+    // en sida. (Annars vinner .xml:en densitetsloppet igen — det var hela
+    // felet.) De expanderas nedan till sina egna barn.
+    entries.push(...fileEntries.filter((e) => !e.isSitemapFile));
+
+    // Expansion: en <loc> som pekar på en .xml-fil är en index-rad — hämta
+    // den filen och använd dess <loc>-barn (de riktiga sidorna).
+    for (const entry of fileEntries.filter((e) => e.isSitemapFile)) {
+      try {
+        const sub = await fetchHtml(entry.loc, { timeout: 10000 });
+        if (!sub.success || !sub.html) continue;
+        const subEntries = parseSitemapEntries(sub.html, entry.loc);
+        entries.push(...subEntries.filter((e) => !e.isSitemapFile));
+        sitemapFiles.push(entry.loc);
+      } catch {
+        // continue
+      }
+    }
+  }
+
+  const seen = new Set<string>();
+  const unique = entries.filter((e) => {
+    if (seen.has(e.loc)) return false;
+    seen.add(e.loc);
+    return true;
+  });
+
+  return { entries: unique, sitemapFiles, attempts: discovered.attemptedFrom };
+}
+
 // ─── Step 1b: robots.txt Sitemap directive (multi-site-verified) ────────────
 //
 // Per plan §Step 2: många sajter annonserar sin sitemap via `Sitemap:`-

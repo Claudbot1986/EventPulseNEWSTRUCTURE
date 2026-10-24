@@ -9,21 +9,26 @@ import { normalizeFetchUrl } from '../../tools/fetchTools.js';
 const sandbox = mkdtempSync(join(tmpdir(), 'c0-sitemap-'));
 process.env.EVENTPULSE_SANDBOX_ROOT = sandbox;
 
-// Mock fetchHtml + fetchAllSitemaps så att vi inte gör riktiga nätverksanrop
+// Mock fetchHtml + fetchSitemapEntries så att vi inte gör riktiga nätverksanrop
 const fetchHtmlMock = vi.fn();
 vi.mock('../../tools/fetchTools.js', () => ({
   fetchHtml: (...args: unknown[]) => fetchHtmlMock(...args),
   normalizeFetchUrl: (url: string) => url.startsWith('http') ? url : `https://${url}`,
 }));
 
-const fetchAllSitemapsMock = vi.fn();
+const fetchSitemapEntriesMock = vi.fn();
 vi.mock('../tools/scrapingBeeDeep.js', () => ({
-  fetchAllSitemaps: (...args: unknown[]) => fetchAllSitemapsMock(...args),
+  fetchSitemapEntries: (...args: unknown[]) => fetchSitemapEntriesMock(...args),
 }));
+
+/** Bygg en sitemap-post som fetchSitemapEntries skulle returnera. */
+function entry(loc: string, lastmod = '', isSitemapFile = false) {
+  return { loc, lastmod, sitemapUrl: 'https://example.com/sitemap.xml', isSitemapFile };
+}
 
 afterEach(() => {
   fetchHtmlMock.mockReset();
-  fetchAllSitemapsMock.mockReset();
+  fetchSitemapEntriesMock.mockReset();
 });
 
 describe('collectLinks', () => {
@@ -66,8 +71,8 @@ describe('discoverEventCandidates — sitemap discovery (Fas 2)', () => {
       success: true,
       html: '<html><body><p>No links here</p></body></html>',
     });
-    fetchAllSitemapsMock.mockResolvedValueOnce({
-      urls: [], found: false, sources: [], attempts: [],
+    fetchSitemapEntriesMock.mockResolvedValueOnce({
+      entries: [], sitemapFiles: [], attempts: [],
     });
     // Alla measureEventDensity-anrop returnerar tomma sidor (så inga 35-pattern-hits heller)
     fetchHtmlMock.mockResolvedValue({
@@ -87,8 +92,10 @@ describe('discoverEventCandidates — sitemap discovery (Fas 2)', () => {
       success: true,
       html: '<html><body><a href="/evenemang">Evenemang</a></body></html>',
     });
-    fetchAllSitemapsMock.mockResolvedValueOnce({
-      urls: ['https://example.com/kalender'], found: true, sources: ['https://example.com/sitemap.xml'], attempts: ['https://example.com/sitemap.xml'],
+    fetchSitemapEntriesMock.mockResolvedValueOnce({
+      entries: [entry('https://example.com/kalender', '2026-11-01')],
+      sitemapFiles: ['https://example.com/sitemap.xml'],
+      attempts: ['https://example.com/sitemap.xml'],
     });
     // Alla measureEventDensity-anrop — kalender-URL ger datum/time-taggar (score > 0), andra ger 0
     fetchHtmlMock.mockImplementation(async (url: string) => {
@@ -107,12 +114,13 @@ describe('discoverEventCandidates — sitemap discovery (Fas 2)', () => {
     expect(sitemapCandidate?.eventDensityScore).toBeGreaterThan(0);
   });
 
-  it('sitemap URLs som saknar signaler filtreras bort (minskar brus)', async () => {
+  it('sitemap-URL:er som saknar signaler filtreras bort (minskar brus)', async () => {
     fetchHtmlMock.mockResolvedValueOnce({
       success: true, html: '<html><body><p>no links</p></body></html>',
     });
-    fetchAllSitemapsMock.mockResolvedValueOnce({
-      urls: ['https://example.com/about', 'https://example.com/contact'], found: true, sources: [], attempts: [],
+    fetchSitemapEntriesMock.mockResolvedValueOnce({
+      entries: [entry('https://example.com/about'), entry('https://example.com/contact')],
+      sitemapFiles: [], attempts: [],
     });
     // Alla measureEventDensity-anrop returnerar tomma sidor (0 signaler)
     fetchHtmlMock.mockResolvedValue({
@@ -129,7 +137,7 @@ describe('discoverEventCandidates — sitemap discovery (Fas 2)', () => {
     fetchHtmlMock.mockResolvedValueOnce({
       success: true, html: '<html><body><a href="/evenemang">Evenemang</a></body></html>',
     });
-    fetchAllSitemapsMock.mockRejectedValueOnce(new Error('network timeout'));
+    fetchSitemapEntriesMock.mockRejectedValueOnce(new Error('network timeout'));
 
     // measureEventDensity för root (0 signaler)
     fetchHtmlMock.mockResolvedValueOnce({
@@ -144,6 +152,69 @@ describe('discoverEventCandidates — sitemap discovery (Fas 2)', () => {
 
     expect(result.candidatesFound).toBeGreaterThanOrEqual(1);
     expect(result.winner).toBeDefined();
+  });
+
+  /**
+   * NEGATIV KONTROLL för sitemap-expansionen (2026-10-24).
+   *
+   * En .xml-rad i sitemapen är en index-pekare, inte en sida. Om den mäts
+   * med HTML-formeln measureEventDensity vinner den densitetsloppet (varje
+   * <lastmod> räknas som ett datum) → C1 svarar "no <main>" → källan dör.
+   *
+   * Bevis: 112 av 112 C-gate-traces med .xml som effectiveUrl slutade i
+   * C1_NO_MAIN_ARTICLE, noll lyckades.
+   */
+  it('sitemap-filer (.xml) mäts aldrig som sidor — de kan inte vinna densitetsloppet', async () => {
+    fetchHtmlMock.mockResolvedValueOnce({
+      success: true, html: '<html><body><p>no links</p></body></html>',
+    });
+    // En .xml-rad som ser ut som en vanlig sitemap-post
+    fetchSitemapEntriesMock.mockResolvedValueOnce({
+      entries: [entry('https://example.com/event-sitemap.xml', '2026-11-01', true)],
+      sitemapFiles: ['https://example.com/sitemap.xml'],
+      attempts: [],
+    });
+    // Om .xml:en mäts skulle den få en density på 2 (ett datum) — vi vill se 0 kandidater
+    fetchHtmlMock.mockImplementation(async (url: string) => {
+      if (url.includes('.xml')) {
+        return { success: true, html: '<html><body><lastmod>2026-11-01</lastmod><lastmod>2026-11-02</lastmod></body></html>' };
+      }
+      return { success: true, html: '<html><body></body></html>' };
+    });
+
+    const result = await discoverEventCandidates('https://example.com/', undefined, 'test-xml-skip');
+
+    expect(result.topCandidates.filter((c) => c.sourceRegion === 'sitemap')).toHaveLength(0);
+    expect(result.topCandidates.some((c) => c.url.includes('.xml'))).toBe(false);
+  });
+
+  /**
+   * Nyast ändrade först: <lastmod> styr vilka barn som mäts när sitemapen
+   * har fler barn än MAX_CANDIDATES_TO_FETCH.
+   */
+  it('sitemap-barn ordnas på <lastmod> — nyast ändrade mäts först', async () => {
+    fetchHtmlMock.mockResolvedValueOnce({
+      success: true, html: '<html><body><p>no links</p></body></html>',
+    });
+    fetchSitemapEntriesMock.mockResolvedValueOnce({
+      entries: [
+        entry('https://example.com/gammal', '2026-01-01'),
+        entry('https://example.com/ny', '2026-12-01'),
+        entry('https://example.com/mellan', '2026-06-01'),
+      ],
+      sitemapFiles: [], attempts: [],
+    });
+    const measured: string[] = [];
+    fetchHtmlMock.mockImplementation(async (url: string) => {
+      measured.push(url);
+      return { success: true, html: '<html><body><time datetime="2026-11-15"></time></body></html>' };
+    });
+
+    await discoverEventCandidates('https://example.com/', undefined, 'test-lastmod');
+
+    expect(measured).toContain('https://example.com/ny');
+    expect(measured.indexOf('https://example.com/ny')).toBeLessThan(measured.indexOf('https://example.com/mellan'));
+    expect(measured.indexOf('https://example.com/mellan')).toBeLessThan(measured.indexOf('https://example.com/gammal'));
   });
 });
 
@@ -164,8 +235,8 @@ describe('discoverEventCandidates — inlänk-räkning (Steg 4)', () => {
       success: true,
       html: '<html><body><a href="/evenemang">Evenemang</a></body></html>',
     });
-    fetchAllSitemapsMock.mockResolvedValueOnce({
-      urls: [], found: false, sources: [], attempts: [],
+    fetchSitemapEntriesMock.mockResolvedValueOnce({
+      entries: [], sitemapFiles: [], attempts: [],
     });
     fetchHtmlMock.mockResolvedValueOnce({
       success: true, html: '<html><body></body></html>', // root density
@@ -195,8 +266,8 @@ describe('discoverEventCandidates — inlänk-räkning (Steg 4)', () => {
         </body></html>
       `,
     });
-    fetchAllSitemapsMock.mockResolvedValueOnce({
-      urls: [], found: false, sources: [], attempts: [],
+    fetchSitemapEntriesMock.mockResolvedValueOnce({
+      entries: [], sitemapFiles: [], attempts: [],
     });
     // Mät density: alla returnerar samma innehåll → samma eventDensityScore
     fetchHtmlMock.mockImplementation(async () => ({
@@ -217,10 +288,9 @@ describe('discoverEventCandidates — inlänk-räkning (Steg 4)', () => {
       success: true,
       html: '<html><body></body></html>', // root utan några evenemangslänkar
     });
-    fetchAllSitemapsMock.mockResolvedValueOnce({
-      urls: ['https://example.com/kalender'],
-      found: true,
-      sources: ['https://example.com/sitemap.xml'],
+    fetchSitemapEntriesMock.mockResolvedValueOnce({
+      entries: [entry('https://example.com/kalender')],
+      sitemapFiles: ['https://example.com/sitemap.xml'],
       attempts: ['https://example.com/sitemap.xml'],
     });
     fetchHtmlMock.mockImplementation(async (url: string) => {
@@ -253,8 +323,8 @@ describe('discoverEventCandidates — inlänk-räkning (Steg 4)', () => {
         </body></html>
       `,
     });
-    fetchAllSitemapsMock.mockResolvedValueOnce({
-      urls: [], found: false, sources: [], attempts: [],
+    fetchSitemapEntriesMock.mockResolvedValueOnce({
+      entries: [], sitemapFiles: [], attempts: [],
     });
     fetchHtmlMock.mockImplementation(async (url: string) => {
       if (url.includes('/evenemang')) {

@@ -330,3 +330,49 @@ postmuseum.se). Ingen syntetisk event-markup.
   CHECK: node scripts/verify-c3-extractor.mjs x5
   EXPECT: /x5: \d+ källor jämförda, \d+ nedgångar \(alla godkända: .*\) pass/
   EVIDENCE: automatic-evidence=v1; definition-sha256=2854a607d2e58e3d5dc6cc23186492367a236bd3e588669788b41e8ca8e2e8c7; exit=0; EXPECT=matched; output-sha256=6150292455665ea9806f42435b68da3c8a6d09212113cc465ca6b1a2d5134864; output-bytes=89; shell=/bin/sh; cwd=/Users/claudgashi/EventPulse; path=29325ef63737/16 entries
+
+---
+
+# C0: sitemap-index expanderas, nästa-kandidat lämnar inget på bordet (2026-10-24)
+
+Scope: C-gatens HTML-väg — hur kandidatsidor väljs (C0) och vad som
+händer när vinnaren ger 0 events.
+
+Två fel gjorde att källor dog trots att de hade events:
+
+  1. **.xml-filer vann densitetslopet.** En sitemap-INDEX (/sitemap.xml)
+     pekar på sub-sitemap-FILER (/event-sitemap.xml). Varje `<lastmod>` i
+     XML:en räknades som ett datum, så .xml-filen fick 50–250× högre
+     density än en riktig HTML-sida och vann → C1 svarade "no `<main>`" →
+     källan dog.
+  2. **Bara vinnaren testades.** C0 rankade och mätte flera kandidater men
+     körde vidare bara den bästa. När vinnaren gav 0 events dog källan —
+     trots att nästa kandidat hade events.
+
+Fix: sitemap-INDEX expanderas en nivå till sina `<loc>`-barn, `.xml`-rader
+mäts aldrig med HTML-formeln, och nästa-kandidat-fallbacken testar upp till
+3 alternativ NÄR OCH BARA NÄR vinnaren gav 0 events.
+
+Verifiering: riktiga sajter (moderna museet, Scalateatern, Postmuseum,
+Chinateatern) valda ur en riktig körning — de förlorade mot .xml i
+batch-214. Live-körningsbevis: 112 av 112 historiska .xml-vinnare gav 0
+events; de tre senaste batcharna har 0 .xml-vinnare och 465 events.
+
+Generalization Protection: General — sitemap-INDEX och `<lastmod>` är
+Sitemap Protocol 1.1-standard, inte site-specifika konventioner. Ingen ny
+IGNORE_PATTERN, ingen ny scoring-vikt.
+
+- [x] C1: positiv kontroll — indexet expanderas till riktiga sidor (live)
+  CHECK: node scripts/verify-c0-sitemap.mjs c1
+  EXPECT: /c1: \d+\/\d+ sajter expanderade indexet till \d+ sidor, 0 \.xml som sidor \(indexet hade \d+ \.xml-rader\) pass/
+  EVIDENCE: automatic-evidence=v1; definition-sha256=a11b42bff81fe3a2f4d08ca64c010e999bac7b6bce8320e270003e1ae9ec096d; exit=0; EXPECT=matched; output-sha256=1c58019144f25e6d29507c6f8f952c423182656e81abb88c96d5fb76f17de24f; output-bytes=104; shell=/bin/sh; cwd=/Users/claudgashi/EventPulse; path=29325ef63737/16 entries
+
+- [x] C2: negativ kontroll — före-fixens logik ger .xml-kandidater
+  CHECK: node scripts/verify-c0-sitemap.mjs c2
+  EXPECT: /c2: utan expansionen ger \d+\/\d+ sajter \d+ \.xml-kandidater .* — gaten kan faila pass/
+  EVIDENCE: automatic-evidence=v1; definition-sha256=058c11dab8cf11e27202f74f10e1ae4521e284774901b01c6f5aa274fe621fc8; exit=0; EXPECT=matched; output-sha256=69223492b7d68a8ac7f270278d1dfb52453a74f371c2e9519f7eaab6bb9f7c3c; output-bytes=134; shell=/bin/sh; cwd=/Users/claudgashi/EventPulse; path=29325ef63737/16 entries
+
+- [x] C3: live-körningsbevis — 0 .xml-vinnare, fallbacken sänker inget
+  CHECK: node scripts/verify-c0-sitemap.mjs c3
+  EXPECT: /c3: senaste batcharna .*: 0 \.xml-vinnare, \d+ events, \d+ nästa-kandidat-källor \(alla med events > 0\); historiskt \d+ \.xml-vinnare med \d+ events pass/
+  EVIDENCE: automatic-evidence=v1; definition-sha256=49181c4a29f595f592323e123b5c47df67ef7bdae1402b8d9903f28b5ad1ce23; exit=0; EXPECT=matched; output-sha256=ce48d462925d1571bd5d06a5b7526d8eec59771e89bfcfe1645e49ced292675f; output-bytes=179; shell=/bin/sh; cwd=/Users/claudgashi/EventPulse; path=29325ef63737/16 entries
