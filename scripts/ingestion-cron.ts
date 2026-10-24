@@ -112,6 +112,11 @@ const STEP_COUNT_RECIPES: Record<string, RegExp> = {
   // Det är INTE samma sak som worker-drain: detta steg räknar vad som
   // queue:as, drainQueue räknar vad som faktiskt skrivs till Supabase.
   'import-to-eventpulse': /KLAR\s+│\s+(\d+)\s+events till bullmq/m,
+  // 02-Ingestion/D-renderGate/runD-listing-crawl.ts — skriver en STATS-rad
+  // per källa: {"sourceId":"…","eventsExtracted":5,…}. eventsExtracted är de
+  // events som lämnar crawlen (alltså före BullMQ-importen) — samma
+  // avgränsning som övriga render-steg.
+  'D-listing-crawl': /"eventsExtracted":(\d+)/,
 };
 
 /**
@@ -238,6 +243,11 @@ const skipRedditIngest = args.includes('--skip-reddit');
 const skipSubpathDiscovery = args.includes('--skip-subpath');
 const skipLivespotIngest = args.includes('--skip-livespot');
 const skipDirectJsonld = args.includes('--skip-direct-jsonld');
+// 2026-10-24 — tvåstegs-listingcrawl (D-gatens listing-läge). En aggregator
+// som billetto har sina events bakom en JS-renderad listningssida; en enda
+// render räcker inte (listningssidan ger länkar, inte events). Steget kör
+// listningssidan → event-URL:er → event-sidor.
+const skipListingCrawl = args.includes('--skip-listing-crawl');
 // 2026-10-24 — `--only <steg[,steg2,...]>` kör BARA de angivna stegen.
 // Motiv: en verifiering ska kunna peka på ett enda steg (t.ex. bevisa
 // per-step-timeouten med INGESTION_STEP_TIMEOUT_MS=8000) utan att köra hela
@@ -510,6 +520,28 @@ const steps: Array<{ name: string; cmd: string; args: string[] }> = [
     name: 'D-renderGate',
     cmd: 'npx',
     args: ['tsx', '02-Ingestion/D-renderGate/runD-scrapingbee.ts', `--behavior=${effectiveDBehavior}`, `--limit=${effectiveLimit}`],
+  }] : []),
+
+  // ── P1A2: D-listing-crawl (tvåstegsrender för aggregator-listningar) ───
+  // 2026-10-24. En källa med `metadata.categoryUrls` har sina events bakom en
+  // JS-renderad listningssida (billetto, m.fl.). D-gatens vanliga väg renderar
+  // EN sida per källa — för en listningssida ger det 0 events, bara länkar.
+  // Detta steg gör listningssidan → event-URL:er → event-sidor, där
+  // event-sidorna har JSON-LD och kan extraheras.
+  //
+  // Kostnad: 25 cr per listningssida + ~10 cr per event-sida. 20 kategorier
+  // × 20 events ≈ 4 500 cr. I smoke läggs kategorierna/eventsen ner.
+  // Kör EFTER D-renderGate (så källan är redan testad enkelstegat) och
+  // FÖRE import-to-eventpulse (så de nya eventsen hinner med i samma natt).
+  ...((!skipRender && !skipListingCrawl) ? [{
+    name: 'D-listing-crawl',
+    cmd: 'npx',
+    args: [
+      'tsx',
+      '02-Ingestion/D-renderGate/runD-listing-crawl.ts',
+      `--categories=${smoke ? 1 : 20}`,
+      `--events=${smoke ? 3 : 20}`,
+    ],
   }] : []),
 
   // ── P2A: PDF/affisch-extraktion ────────────────────────────────────────
