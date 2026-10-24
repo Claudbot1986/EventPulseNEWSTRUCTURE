@@ -5,6 +5,7 @@ import {
   filterEventUrls,
   selectEventUrls,
   buildCandidateUrls,
+  unwrapCdata,
 } from './sitemapDiscovery.mjs';
 
 describe('sitemap-upptäckt', () => {
@@ -31,6 +32,62 @@ describe('sitemap-upptäckt', () => {
     const { urls, subSitemaps } = parseSitemapXml(xml);
     expect(urls).toHaveLength(0);
     expect(subSitemaps).toEqual(['https://x.se/sitemap-1.xml', 'https://x.se/sitemap-2.xml']);
+  });
+
+  /**
+   * CDATA (XML 1.0 §2.10) — AIOSEO skriver <loc> som CDATA.
+   *
+   * Bevis 2026-10-24 på riktiga sajter:
+   *   www.pingst.se/sitemap.xml → 11 <loc>, samtliga i CDATA
+   *   aioseo.com/sitemap.xml    → 12 <loc>, samtliga i CDATA
+   *   podbierak.pl/sitemap.xml  → 35 <loc>, samtliga i CDATA
+   */
+  describe('CDATA-<loc>', () => {
+    it('packar upp <![CDATA[url]]> i en urlset', () => {
+      const xml = `<?xml version="1.0"?>
+        <urlset>
+          <url><loc><![CDATA[https://x.se/evenemang/a]]></loc><lastmod><![CDATA[2026-10-23T14:35:37+00:00]]></lastmod></url>
+        </urlset>`;
+      const { urls, subSitemaps } = parseSitemapXml(xml);
+      expect(urls).toHaveLength(1);
+      expect(urls[0].url).toBe('https://x.se/evenemang/a');
+      expect(urls[0].lastmod).toBe('2026-10-23T14:35:37+00:00');
+      expect(subSitemaps).toHaveLength(0);
+    });
+
+    it('packar upp CDATA i en sitemap-index (AIOSEO-format)', () => {
+      const xml = `<?xml version="1.0"?>
+        <sitemapindex>
+          <sitemap><loc><![CDATA[https://x.se/page-sitemap.xml]]></loc><lastmod><![CDATA[2026-10-23T14:35:37+00:00]]></lastmod></sitemap>
+        </sitemapindex>`;
+      const { urls, subSitemaps } = parseSitemapXml(xml);
+      expect(urls).toHaveLength(0);
+      expect(subSitemaps).toEqual(['https://x.se/page-sitemap.xml']);
+    });
+
+    it('packar upp CDATA med radbrytningar runt värdet', () => {
+      const xml = `<urlset><url><loc>
+      <![CDATA[https://x.se/a]]>
+    </loc></url></urlset>`;
+      const { urls } = parseSitemapXml(xml);
+      expect(urls.map((u) => u.url)).toEqual(['https://x.se/a']);
+    });
+
+    it('hanterar plain och CDATA i samma fil', () => {
+      const xml = `<urlset>
+        <url><loc>https://x.se/plain</loc></url>
+        <url><loc><![CDATA[https://x.se/cdata]]></loc></url>
+      </urlset>`;
+      const { urls } = parseSitemapXml(xml);
+      expect(urls.map((u) => u.url)).toEqual(['https://x.se/plain', 'https://x.se/cdata']);
+    });
+
+    it('unwrapCdata rör inte vanlig text', () => {
+      expect(unwrapCdata('https://x.se/a')).toBe('https://x.se/a');
+      expect(unwrapCdata('<![CDATA[https://x.se/a]]>')).toBe('https://x.se/a');
+      expect(unwrapCdata('  <![CDATA[https://x.se/a]]>  ')).toBe('https://x.se/a');
+      expect(unwrapCdata('')).toBe('');
+    });
   });
 });
 

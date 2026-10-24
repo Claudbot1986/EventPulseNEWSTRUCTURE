@@ -71,6 +71,44 @@ export const URL_BLACKLIST = [
  * @param {string} xml
  * @returns {{ urls: Array<{url: string, lastmod: string|null}>, subSitemaps: string[] }}
  */
+/**
+ * CDATA är en XML-standardkonstruktion (XML 1.0 §2.10): teckendata kan
+ * omslutas av `<![CDATA[ … ]]>` för att slippa XML-escaping. Sitemap-
+ * generatorn AIOSEO ("All in One SEO") skriver detta runt <loc>-värdet:
+ *
+ *   <loc><![CDATA[https://exempel.se/sida]]></loc>
+ *
+ * Utan uppackning blir värdet en ogiltig URL ("<![CDATA[https://…]]>"), och
+ * sub-sitemapens URL kan inte hämtas — hela sitemap-trädet blir osynligt.
+ *
+ * Bevis (2026-10-24, mätt på riktiga sajter — inte syntetiska data):
+ *   - www.pingst.se/sitemap.xml  → 11 <loc>, samtliga i CDATA
+ *   - aioseo.com/sitemap.xml     → 12 <loc>, samtliga i CDATA
+ *   - podbierak.pl/sitemap.xml   → 35 <loc>, samtliga i CDATA
+ *   - 92 av 93 registerkällor med sitemap använder plain <loc>
+ *
+ * Samma fix finns i `02-Ingestion/C-htmlGate/tools/scrapingBeeDeep.ts` — de
+ * två parserarna är medvetet speglar. Denna fil körs med ren node (utan
+ * typ-stripping), därför ligger hjälpen här i stället för i ett delat
+ * TypeScript-modul.
+ *
+ * Generalization Protection: General — CDATA är språkets egen syntax,
+ * verifierad på 3 orelaterade domäner. Inga IGNORE_PATTERNS, inga
+ * scoringvikter, inga URL-token-regler och ingen kandidatrankning ändras.
+ */
+const CDATA_SECTION = /^\s*<!\[CDATA\[([\s\S]*?)\]\]>\s*$/;
+
+/**
+ * Tar bort CDATA-wrappern runt ett XML-värde (om den finns).
+ *
+ * @param {string} value
+ * @returns {string}
+ */
+export function unwrapCdata(value) {
+  const m = value.match(CDATA_SECTION);
+  return (m ? m[1] : value).trim();
+}
+
 export function parseSitemapXml(xml) {
   const urls = [];
   const subSitemaps = [];
@@ -79,24 +117,25 @@ export function parseSitemapXml(xml) {
   // <url><loc>..</loc><lastmod>..</lastmod></url> — Sitemap Protocol 1.1.
   const urlRe = /<url>([\s\S]*?)<\/url>/g;
   while ((m = urlRe.exec(xml)) !== null) {
-    const loc = m[1].match(/<loc>\s*(.*?)\s*<\/loc>/)?.[1]?.trim();
+    const loc = unwrapCdata(m[1].match(/<loc[^>]*>([\s\S]*?)<\/loc>/)?.[1] ?? '');
     if (!loc) continue;
-    const lastmod = m[1].match(/<lastmod>\s*(.*?)\s*<\/lastmod>/)?.[1]?.trim() ?? null;
+    const lastmod = unwrapCdata(m[1].match(/<lastmod[^>]*>([\s\S]*?)<\/lastmod>/)?.[1] ?? '') || null;
     urls.push({ url: loc, lastmod });
   }
 
   // <sitemap><loc>..</loc></sitemap> — pekar på en sub-sitemap-fil.
   const smRe = /<sitemap>([\s\S]*?)<\/sitemap>/g;
   while ((m = smRe.exec(xml)) !== null) {
-    const loc = m[1].match(/<loc>\s*(.*?)\s*<\/loc>/)?.[1]?.trim();
+    const loc = unwrapCdata(m[1].match(/<loc[^>]*>([\s\S]*?)<\/loc>/)?.[1] ?? '');
     if (loc) subSitemaps.push(loc);
   }
 
   // Fallback för sitemaps utan <url>-wrapper (ogiltigt men förekommer).
   if (urls.length === 0 && subSitemaps.length === 0) {
-    const locRegex = /<loc>\s*(.*?)\s*<\/loc>/g;
+    const locRegex = /<loc[^>]*>([\s\S]*?)<\/loc>/g;
     while ((m = locRegex.exec(xml)) !== null) {
-      const u = m[1].trim();
+      const u = unwrapCdata(m[1]);
+      if (!u) continue;
       if (/\.xml(\.gz)?$/i.test(u)) subSitemaps.push(u);
       else urls.push({ url: u, lastmod: null });
     }

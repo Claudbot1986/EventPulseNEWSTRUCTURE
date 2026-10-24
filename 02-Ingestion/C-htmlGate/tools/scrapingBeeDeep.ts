@@ -174,19 +174,49 @@ export async function fetchSitemap(baseUrl: string): Promise<SitemapResult> {
 }
 
 /**
+ * CDATA är en XML-standardkonstruktion (XML 1.0 §2.10): teckendata kan
+ * omslutas av `<![CDATA[ … ]]>` för att slippa XML-escaping. Sitemap-
+ * generatorn AIOSEO ("All in One SEO") skriver detta runt <loc>-värdet:
+ *
+ *   <loc><![CDATA[https://exempel.se/sida]]></loc>
+ *
+ * En regex som matchar "allt utan <" kan därför ALDRIG fånga CDATA-värdet —
+ * raden blir tom. Det är ett formatfel, inte en sitespecifik egenhet: CDATA
+ * är tillåtet i varje XML-dokument, och sitemaps.org tillåter det uttryckligen.
+ *
+ * Bevis (2026-10-24, mätt på riktiga sajter — inte syntetiska data):
+ *   - www.pingst.se/sitemap.xml  → 11 <loc>, samtliga i CDATA
+ *   - aioseo.com/sitemap.xml     → 12 <loc>, samtliga i CDATA
+ *   - podbierak.pl/sitemap.xml   → 35 <loc>, samtliga i CDATA
+ *   - 92 av 93 registerkällor med sitemap använder plain <loc>
+ * Samma fel fanns i `scripts/lib/sitemapDiscovery.mjs` (P0-sitemap-steget) och
+ * är fixat på samma sätt där — de två parserarna är medvetet speglar.
+ *
+ * Generalization Protection: General — CDATA är språkets egen syntax, verifierad
+ * på 3 orelaterade domäner. Inga IGNORE_PATTERNS, inga scoringvikter, inga
+ * URL-token-regler och ingen kandidatrankning ändras.
+ */
+const CDATA_SECTION = /^\s*<!\[CDATA\[([\s\S]*?)\]\]>\s*$/;
+
+/** Tar bort CDATA-wrappern runt ett XML-värde (om den finns). */
+export function unwrapCdata(value: string): string {
+  const m = value.match(CDATA_SECTION);
+  return (m ? m[1] : value).trim();
+}
+
+/**
  * Parse XML and extract all <loc> URLs.
  * Simple regex approach — avoids heavy XML parser dependency.
  */
 export function parseXmlSitemap(xml: string): string[] {
-  const locMatches = xml.match(/<loc[^>]*>([^<]*)<\/loc>/gi);
-  if (!locMatches) return [];
-
-  return locMatches
-    .map(loc => {
-      const match = loc.match(/<loc[^>]*>([^<]*)<\/loc>/i);
-      return match ? match[1].trim() : null;
-    })
-    .filter((url): url is string => url !== null && url.length > 0);
+  const out: string[] = [];
+  const re = /<loc[^>]*>([\s\S]*?)<\/loc>/gi;
+  let m: RegExpExecArray | null;
+  while ((m = re.exec(xml)) !== null) {
+    const loc = unwrapCdata(m[1]);
+    if (loc.length > 0) out.push(loc);
+  }
+  return out;
 }
 
 // ─── Sitemap-entry: <loc> + <lastmod> ────────────────────────────────────────
@@ -213,8 +243,8 @@ export function parseSitemapEntries(xml: string, sitemapUrl: string): SitemapEnt
   const blocks = xml.match(/<url>[\s\S]*?<\/url>/g);
   const locs = blocks
     ? blocks.map((b) => ({
-        loc: b.match(/<loc[^>]*>([^<]*)<\/loc>/i)?.[1]?.trim() ?? '',
-        lastmod: b.match(/<lastmod[^>]*>([^<]*)<\/lastmod>/i)?.[1]?.trim() ?? '',
+        loc: unwrapCdata(b.match(/<loc[^>]*>([\s\S]*?)<\/loc>/i)?.[1] ?? ''),
+        lastmod: unwrapCdata(b.match(/<lastmod[^>]*>([\s\S]*?)<\/lastmod>/i)?.[1] ?? ''),
       }))
     : parseXmlSitemap(xml).map((loc) => ({ loc, lastmod: '' }));
 

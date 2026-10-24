@@ -81,6 +81,53 @@ describe('Step 2 — sitemap + robots.txt discovery', () => {
       const xml = `<URLSet><URL><LOC>https://x.com/1</LOC></URL></URLSet>`;
       expect(parseXmlSitemap(xml)).toEqual(['https://x.com/1']);
     });
+
+    /**
+     * CDATA (XML 1.0 §2.10) — AIOSEO skriver <loc> som CDATA.
+     *
+     * Bevis 2026-10-24 på riktiga sajter:
+     *   www.pingst.se/sitemap.xml → 11 <loc>, samtliga i CDATA
+     *   aioseo.com/sitemap.xml    → 12 <loc>, samtliga i CDATA
+     *   podbierak.pl/sitemap.xml  → 35 <loc>, samtliga i CDATA
+     *
+     * Utan uppackning matchar regexen "allt utan <" inte CDATA-värdet, och
+     * hela sitemapen blir osynlig för C0.
+     */
+    describe('CDATA-<loc>', () => {
+      it('packar upp <![CDATA[url]]>', () => {
+        const xml = `<?xml version="1.0"?><urlset><url><loc><![CDATA[https://x.com/a]]></loc></url></urlset>`;
+        expect(parseXmlSitemap(xml)).toEqual(['https://x.com/a']);
+      });
+
+      it('packar upp CDATA med radbrytningar runt värdet (AIOSEO-format)', () => {
+        const xml = `<urlset>
+  <url>
+    <loc>
+      <![CDATA[https://x.com/a]]>
+    </loc>
+  </url>
+</urlset>`;
+        expect(parseXmlSitemap(xml)).toEqual(['https://x.com/a']);
+      });
+
+      it('hanterar plain <loc> och CDATA-<loc> i samma fil', () => {
+        const xml = `<urlset>
+  <url><loc>https://x.com/plain</loc></url>
+  <url><loc><![CDATA[https://x.com/cdata]]></loc></url>
+</urlset>`;
+        expect(parseXmlSitemap(xml)).toEqual(['https://x.com/plain', 'https://x.com/cdata']);
+      });
+
+      it('behåller en URL som innehåller "&" (CDATA-skyddad)', () => {
+        const xml = `<urlset><url><loc><![CDATA[https://x.com/?a=1&b=2]]></loc></url></urlset>`;
+        expect(parseXmlSitemap(xml)).toEqual(['https://x.com/?a=1&b=2']);
+      });
+
+      it('hittar inget i en <loc> som bara innehåller CDATA-markörer', () => {
+        const xml = `<urlset><url><loc><![CDATA[]]></loc></url></urlset>`;
+        expect(parseXmlSitemap(xml)).toEqual([]);
+      });
+    });
   });
 
   describe('fetchRobotsSitemaps', () => {
@@ -281,6 +328,25 @@ describe('Step 2 — sitemap + robots.txt discovery', () => {
         const entries = parseSitemapEntries(xml, 'https://example.com/sitemap.xml');
         expect(entries[0]?.isSitemapFile).toBe(true);
         expect(entries[1]?.isSitemapFile).toBe(false);
+      });
+
+      it('läser <loc> + <lastmod> när båda är CDATA-kapade', () => {
+        const xml = `<?xml version="1.0"?><urlset>
+          <url><loc><![CDATA[https://example.com/a]]></loc><lastmod><![CDATA[2026-11-01]]></lastmod></url>
+        </urlset>`;
+        const entries = parseSitemapEntries(xml, 'https://example.com/sitemap.xml');
+        expect(entries).toHaveLength(1);
+        expect(entries[0]?.loc).toBe('https://example.com/a');
+        expect(entries[0]?.lastmod).toBe('2026-11-01');
+      });
+
+      it('läser en sitemap-index vars <loc> är CDATA-kapade', () => {
+        const xml = `<?xml version="1.0"?><sitemapindex>
+          <sitemap><loc><![CDATA[https://example.com/event-sitemap.xml]]></loc></sitemap>
+        </sitemapindex>`;
+        const entries = parseSitemapEntries(xml, 'https://example.com/sitemap.xml');
+        expect(entries.map((e) => e.loc)).toEqual(['https://example.com/event-sitemap.xml']);
+        expect(entries[0]?.isSitemapFile).toBe(true);
       });
     });
 
