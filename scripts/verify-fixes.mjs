@@ -20,6 +20,7 @@
  *   g5 — pattern-promoter + manual-review-triage är borta ur cron
  *   g6 — discovery-loopen stängd: kandidater claimas, sandboxas, promote:as
  *   g7 — C-htmlGate:s programmatiska ingång avslutar rent på tom postB-preC-kö
+ *   g8 — datumvakten behåller holdags-event dated idag (kastar bort gårdagens)
  *   h1 — geoExpansion filtrerar på lat/lng, inte på venues.city
  *   h2 — city finns som kolumn och bärs hela vägen till promote
  *   h3 — slug-kollision i promote dödar inte batchen
@@ -206,6 +207,55 @@ function g7() {
     fs.writeFileSync(queueFile, original, 'utf8');
     fs.rmSync(backup, { force: true });
   }
+}
+
+// G8 — datumvakten ska BEHÅLLA ett holdags-event som pågår idag (2026-10-24).
+// Kör den riktiga importkoden i dry-run mot en temporär katalog med två
+// rader: en dated idag (ska behållas) och en dated i går (ska kastas bort).
+// Den andra raden är den negativa kontrollen — utan den skulle gaten "passa"
+// även om vakten kastade bort allt.
+function g8() {
+  const r = spawnSync('npx', ['tsx', 'scripts/verify-holdags-gate.mts'], {
+    cwd: ROOT,
+    encoding: 'utf8',
+    timeout: 180_000,
+    killSignal: 'SIGKILL',
+  });
+  const out = `${r.stdout ?? ''}${r.stderr ?? ''}`;
+  if (r.status !== 0) {
+    return fail(
+      `g8: FAIL gateskriptet avslutade med exit=${r.status}.\n` +
+      `     Sista utdata:\n${out.split('\n').slice(-12).join('\n')}`,
+    );
+  }
+  const m = out.match(/^G8RESULT (\{.*\})$/m);
+  if (!m) {
+    return fail(
+      'g8: FAIL gateskriptet skrev inte ut någon G8RESULT-rad — gaten kunde inte avgöra något.\n' +
+      `     Sista utdata:\n${out.split('\n').slice(-12).join('\n')}`,
+    );
+  }
+  let res;
+  try {
+    res = JSON.parse(m[1]);
+  } catch (e) {
+    return fail(`g8: FAIL kunde inte tolka G8RESULT: ${e.message}`);
+  }
+  if (res.enqueued !== 1) {
+    return fail(
+      `g8: FAIL holdags-eventet dated idag (${res.today}) blev INTE behållet ` +
+      `(enqueued=${res.enqueued}, skippedPast=${res.skippedPast}). ` +
+      'Det betyder att datumvakten fortfarande kastar bort event som pågår idag.',
+    );
+  }
+  if (res.skippedPast !== 1) {
+    return fail(
+      `g8: FAIL kontrollraden dated i går (${res.yesterday}) blev inte kastad bort ` +
+      `(skippedPast=${res.skippedPast}, enqueued=${res.enqueued}). ` +
+      'Vakten släpper igenom förflutna events.',
+    );
+  }
+  return ok('g8: datumvakten behåller holdags-event dated idag och kastar bort gårdagens pass');
 }
 
 // G4 — C-htmlGate avslutar rent exit=0 på tom postB-preC-kö (plan steg 2B).
@@ -1269,7 +1319,7 @@ function n2() {
   );
 }
 
-const gates = { g1, g2, g3, g4, g5, g6, g7, h1, h2, h3, h4, h5, h6, e1, e2, e3, e4, e5, e6, e7, e8, e9, e10, e11, n1, n2 };
+const gates = { g1, g2, g3, g4, g5, g6, g7, g8, h1, h2, h3, h4, h5, h6, e1, e2, e3, e4, e5, e6, e7, e8, e9, e10, e11, n1, n2 };
 if (!arg || !gates[arg]) {
   console.error(`usage: node scripts/verify-fixes.mjs <${Object.keys(gates).join('|')}>`);
   process.exit(2);

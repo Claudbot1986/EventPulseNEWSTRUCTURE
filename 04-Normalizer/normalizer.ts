@@ -4,6 +4,7 @@ import { createClient } from '@supabase/supabase-js';
 import type { Job } from 'bullmq';
 import type { RawEventInput, NormalizedEvent } from '@eventpulse/shared';
 import { searchSyncQueue } from '../03-Queue/queue';
+import { isEventPast } from '../03-Queue/eventFreshness';
 import { computeConfidenceV1 } from './confidence_v1';
 import { evaluateTitle, checkBlockB } from './title-quality-gate';
 // 2026-10-02 — Description routing-helper (5.2). Ren function: tar raw.description
@@ -425,8 +426,11 @@ export async function processRawEvent(job: Job<RawEventInput>): Promise<void> {
   // Datumvakt (2026-09-15): gamla/odöpta events ska aldrig insertas.
   // Primärt filter finns i importToEventPulse.importSource; detta är
   // defense-in-depth om någon enqueue:ar direkt (t.ex. manuella verktyg).
-  const startMs = raw.start_time ? Date.parse(raw.start_time) : NaN;
-  if (!Number.isFinite(startMs) || startMs < Date.now()) {
+  //
+  // 2026-10-24 — samma fix som i importen: holdags-events (bara datum) fick
+  // UTC-midnatt och föll bort så snart 00:00 UTC passerat. Se
+  // 03-Queue/eventFreshness.ts.
+  if (isEventPast(raw.start_time)) {
     console.log(`[normalizer] skip "${raw.title}" (passerat datum/saknar datum: ${raw.start_time || 'tom'})`);
     return;
   }

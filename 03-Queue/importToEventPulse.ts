@@ -18,6 +18,7 @@ import path from 'path';
 import { fileURLToPath, pathToFileURL } from 'url';
 import fs from 'fs';
 import { loadSkippedSourceIds } from '../02-Ingestion/lib/quarantineGuard.js';
+import { isEventPast } from './eventFreshness';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -433,8 +434,18 @@ export function toRawEvent(sourceId: string, ev: ExtractedEvent): RawEventInput 
 
 // ── Import logic ─────────────────────────────────────────────────────────────
 
-async function importSource(sourceId: string, dryRun: boolean): Promise<{ enqueued: number; errors: number; skippedPast: number }> {
-  const events = readExtractedEvents(sourceId);
+/**
+ * Importera EN källa.
+ *
+ * @param rootOverride Test-hook: låter verifieringsgater peka på en
+ *   temporär katalog så att de inte röör en pågående körnings artefakter.
+ */
+export async function importSource(
+  sourceId: string,
+  dryRun: boolean,
+  rootOverride?: string,
+): Promise<{ enqueued: number; errors: number; skippedPast: number }> {
+  const events = readExtractedEvents(sourceId, rootOverride);
   if (events.length === 0) {
     console.log(`[import] ${sourceId}: ingen event-data i extractedevents/ → hoppar`);
     return { enqueued: 0, errors: 0, skippedPast: 0 };
@@ -452,8 +463,12 @@ async function importSource(sourceId: string, dryRun: boolean): Promise<{ enqueu
       // Datumvakt (2026-09-15): gamla events ska aldrig in i databasen —
       // passerade eller odöpta rader hoppar vi över. Defense-in-depth:
       // samma guard finns i normalizerns processRawEvent.
-      const startMs = raw.start_time ? Date.parse(raw.start_time) : NaN;
-      if (!Number.isFinite(startMs) || startMs < Date.now()) {
+      //
+      // 2026-10-24 — bugg: holdags-events (bara datum) lades som UTC-midnatt
+      // och föll bort så snart 00:00 UTC passerat, alltså även event som
+      // pågår HELA dagen. Se 03-Queue/eventFreshness.ts.
+      if (isEventPast(raw.start_time)) {
+
         skippedPast++;
         continue;
       }

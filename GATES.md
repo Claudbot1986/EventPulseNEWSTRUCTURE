@@ -39,6 +39,11 @@ Scope: bevis för var och en av de sex fixarna från planen "Fixa ingestion + di
   EXPECT: /g7: programmatisk C-ingång avslutar rent exit=0 på tom postB-preC-kö pass/
   EVIDENCE: automatic-evidence=v1; definition-sha256=50e1a51f94e8284c730ca9f7f9484f310e3429f2e1a706eec4acfd05d619f6ea; exit=0; EXPECT=matched; output-sha256=19371a5183bdfa4f5f4ef951e954e70e77352af8f29185562d38b14fb2d295ed; output-bytes=77; shell=/bin/sh; cwd=/Users/claudgashi/EventPulse; path=29325ef63737/16 entries
 
+- [x] G8: datumvakten behåller ett holdags-event som pågår idag
+  CHECK: node scripts/verify-fixes.mjs g8
+  EXPECT: /g8: datumvakten behåller holdags-event dated idag och kastar bort gårdagens pass/
+  EVIDENCE: automatic-evidence=v1; definition-sha256=160922fb4111a8347b2baeefe1e9c4db7f1034cdde4d5e386e92be3ed354d9bf; exit=0; EXPECT=matched; output-sha256=76189cd96e4ccaab26a3788ea66a81d2c9f8efbaf72f0c589591f2b9550f71a2; output-bytes=83; shell=/bin/sh; cwd=/Users/claudgashi/EventPulse; path=29325ef63737/16 entries
+
 # Handoff: discovery → ingestion (2026-10-23)
 
 Scope: sex fel som höll kvar promoteade källor ute ur ingestion trots att P3D skrev
