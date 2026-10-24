@@ -927,3 +927,53 @@ Stockholm räknas inte — de hör till andra beslut.
   CHECK: npx vitest run 02-Ingestion/C-htmlGate/run-dynamic-pool.test.ts
   EXPECT: /Tests\s+\d+ passed/
   EVIDENCE: automatic-evidence=v1; definition-sha256=b6b66f30d0edb8b4b3f4be81c171e8e567fa760ade36d78e904c367e9817fef7; exit=0; EXPECT=matched; output-sha256=ad330bfd8708b4a2799f0bd81411f018ad57e3667b2148b9f57eba545d45ed1d; output-bytes=212; shell=/bin/sh; cwd=/Users/claudgashi/EventPulse; path=29325ef63737/16 entries
+
+## Månadsnamnens ordgräns (2026-10-24) — extraktorn
+
+Scope: `02-Ingestion/F-eventExtraction/universal-extractor.ts`,
+`02-Ingestion/F-eventExtraction/universal-extractor-month-boundary.test.ts`,
+`scripts/verify-month-boundary.mjs`.
+
+Månadsnamnen avslutades med `\b` (word boundary). Men en siffra ÄR ett
+word-tecken — mellan "oktober" och "1" finns ingen word boundary. Därför
+matchade aldrig "29 oktober185" (berwaldhallen.se: månad + pris utan
+mellanrum). Kortet fick ingen datum-signal, C3 expanderade upp till en granne
+med ett annat datum ("6 november"), och 21 av 22 konserter i listan fick
+samma feldatum.
+
+Filen innehåll redan den rätta regeln (`SWE_MONTH_NOT_LETTER` = "efter
+månadsnamnet får inte komma en bokstav"), men tre regexar använde ändå `\b`:
+`SWE_MONTH_FOLLOWS_LOOKAHEAD`, `SWE_DATE_NO_YEAR_RX`, `SWE_EXPLICIT_DATE_RX`.
+
+**Bevis för General (Generalization Protection Rule):** samma felform mätte på
+fem orelaterade domäner — berwaldhallen.se (22 rader), fotografiska.se (16),
+konserthuset-2 (1), nationalmuseum.se (1), rival.se (1). Det är HTML-kontraktet
+"månadsnamn följt av en siffra", inte ett sitedomänproblem.
+
+**Mätning före/efter (samma oracle, `scripts/measure-aggregate-cards.mjs`):**
+63 → 81 extraherade events över 14 domäner. De 18 nya raderna är riktiga
+konserter som före fixen inte alls fick datum.
+
+Negativa kontroller: "12 maria" får inte ge 12 mars, "Julia" får inte ge
+juli, och ett datumintervall med år ("12-14 januari 2027") ska överleva
+regeln oförändrat.
+
+- [x] MB1: enhetstesterna för månadsnamnens ordgräns passerar (6 tester, varav tre negativa kontroller)
+  CHECK: npx vitest run 02-Ingestion/F-eventExtraction/universal-extractor-month-boundary.test.ts
+  EXPECT: /Tests\s+\d+ passed/
+  EVIDENCE: automatic-evidence=v1; definition-sha256=f3785bfaf4fb2ccb6e6299e4fd007f04b653552acca685885deb403b202bad7c; exit=0; EXPECT=matched; output-sha256=da0a5686efdf596f0841cbccfac2e001325c54352cb916aa15adecc152957711; output-bytes=211; shell=/bin/sh; cwd=/Users/claudgashi/EventPulse; path=29325ef63737/16 entries
+
+- [x] MB2: hela extraktorns testsvit är grönt — ingen regression av ordgränsfixen
+  CHECK: npx vitest run 02-Ingestion/F-eventExtraction/
+  EXPECT: /Tests\s+\d+ passed/
+  EVIDENCE: automatic-evidence=v1; definition-sha256=13e312eff1060baa85c43d0b1abacf3cf3fc3096f20d14a3eaa75aff92efb95d; exit=0; EXPECT=matched; output-sha256=b62ac68df5bf4fd493754f2822553964db60fa04cc77c780db380a8c168d30e4; output-bytes=218; shell=/bin/sh; cwd=/Users/claudgashi/EventPulse; path=29325ef63737/16 entries
+
+- [x] MB3: LEVDAG — berwaldhallen.se hämtas och extraktorn ger konserten 29 oktober (före fixen: 6 november)
+  CHECK: npx tsx scripts/verify-month-boundary.mjs
+  EXPECT: /mb: live berwaldhallen streetstar=\d{4}-10-29 .*kontroller=3 pass/
+  EVIDENCE: automatic-evidence=v1; definition-sha256=551d6e77327e5039065fd906c0d7c070931c1f43367fb658f5e231b1c7ce49af; exit=0; EXPECT=matched; output-sha256=edd20e2f8f70785c9a84e41d326bba1b07e8700d9e8edf75c965fb08e28128fe; output-bytes=262; shell=/bin/sh; cwd=/Users/claudgashi/EventPulse; path=29325ef63737/16 entries
+
+- [x] MB4: negativ kontroll — samma kontroller mot en muterad före-fix-kopia ska FAIL:a (annars bevisar MB3 ingenting)
+  CHECK: npx tsx scripts/verify-month-boundary.mjs --negative-control
+  EXPECT: /mb-negativkontroll: före-fix-kopia FAIL:ar som väntat \(\d+ kontroller\) pass/
+  EVIDENCE: automatic-evidence=v1; definition-sha256=6e8f21c3995f85f9052400191a33c8ab84adadcbdf657440b2661a8f7eff8f48; exit=0; EXPECT=matched; output-sha256=11e4ea6eb997b2eff0043aab943e80244fc51eb8a91a82e38f4ad92c638b9581; output-bytes=178; shell=/bin/sh; cwd=/Users/claudgashi/EventPulse; path=29325ef63737/16 entries

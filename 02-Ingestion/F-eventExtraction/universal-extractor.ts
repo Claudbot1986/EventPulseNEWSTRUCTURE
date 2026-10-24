@@ -94,13 +94,6 @@ const SWE_MONTH_ALT =
   'jan|feb|mar|apr|jun|jul|aug|sep|okt|nov|dec';
 
 /**
- * Negativ lookahead: ett sifferpar får INTE tolkas som "dag/månad" när ett
- * svenskt månadsnamn följer direkt efter. Då är det ett datumintervall
- * ("12-14 januari"), inte "14 december".
- */
-const SWE_MONTH_FOLLOWS_LOOKAHEAD = `(?!\\s*(?:${SWE_MONTH_ALT})\\b)`;
-
-/**
  * Ett månadsnamn måste vara ett HELT ord — "mar" i "Maria" är inte mars,
  * "jul" i "Julia" är inte juli, "jan" i "Janne" är inte januari.
  *
@@ -111,8 +104,25 @@ const SWE_MONTH_FOLLOWS_LOOKAHEAD = `(?!\\s*(?:${SWE_MONTH_ALT})\\b)`;
  * domäner): dn-kalendariet ("Maria Larkman" + "… lördag den 24/10 kl 12-17")
  * lästes som intervallet 12–17 MARS. Samma felform finns i svenska
  * namnlistor överallt: Julia, Janne, Maj, Sep.
+ *
+ * 2026-10-24 — "29 oktober185" (månad + pris utan mellanrum) gav INGEN
+ * datumträff med `\b`: "r" och "1" är båda word-tecken, så det fanns ingen
+ * word boundary. Då lästes "29 oktober" aldrig, kortet fick ingen
+ * datum-signal, och C3 expanderade upp till en granne med ett annat datum.
+ * Bevis: berwaldhallen.se (21 felrader), fotografiska.se (16),
+ * konserthuset-2, nationalmuseum.se, rival.se — fem orelaterade domäner.
+ *
+ * Bokstäverna skrivs ut i båda casen, så att regeln gäller även i regexar
+ * utan `i`-flagga.
  */
-const SWE_MONTH_NOT_LETTER = `(?![a-zåäö])`;
+const SWE_MONTH_NOT_LETTER = `(?![a-zA-ZåäöÅÄÖ])`;
+
+/**
+ * Negativ lookahead: ett sifferpar får INTE tolkas som "dag/månad" när ett
+ * svenskt månadsnamn följer direkt efter. Då är det ett datumintervall
+ * ("12-14 januari"), inte "14 december".
+ */
+const SWE_MONTH_FOLLOWS_LOOKAHEAD = `(?!\\s*(?:${SWE_MONTH_ALT})${SWE_MONTH_NOT_LETTER})`;
 
 const DATE_PATTERNS = [
   // ISO 8601 full
@@ -187,8 +197,10 @@ function isArchiveContext($: cheerio.CheerioAPI, baseUrl: string): boolean {
  * "27 Sep" — ett påhittat datum från en nyhetsrubriks publiceringsår.
  * Bevis: rustourismnews.com (nyhetssida, 2 skräpevents före fixen).
  */
-const SWE_DATE_NO_YEAR_RX =
-  /(?<!\d)(\d{1,2})\s+(januari|februari|mars|april|maj|juni|juli|augusti|september|oktober|november|december|jan|feb|mar|apr|jun|jul|aug|sep|okt|nov|dec)\b(?!\s*,?\s*\d{4})/i;
+const SWE_DATE_NO_YEAR_RX = new RegExp(
+  `(?<!\\d)(\\d{1,2})\\s+(januari|februari|mars|april|maj|juni|juli|augusti|september|oktober|november|december|jan|feb|mar|apr|jun|jul|aug|sep|okt|nov|dec)${SWE_MONTH_NOT_LETTER}(?!\\s*,?\\s*\\d{4})`,
+  'i',
+);
 
 /**
  * Markörer för sidor med TIDIGARE evenemang. På sådana sidor får ett
@@ -588,8 +600,10 @@ const TITLE_ELEMENT_SELECTORS =
  * Lookbehind `(?<!\d)`: samma skydd som SWE_DATE_NO_YEAR_RX — dagen får
  * inte vara en del av ett år.
  */
-const SWE_EXPLICIT_DATE_RX =
-  /(?<!\d)(\d{1,2})\s+(januari|februari|mars|april|maj|juni|juli|augusti|september|oktober|november|december|jan|feb|mar|apr|jun|jul|aug|sep|okt|nov|dec)\b(?:\s*,?\s*(\d{4}))?/gi;
+const SWE_EXPLICIT_DATE_RX = new RegExp(
+  `(?<!\\d)(\\d{1,2})\\s+(januari|februari|mars|april|maj|juni|juli|augusti|september|oktober|november|december|jan|feb|mar|apr|jun|jul|aug|sep|okt|nov|dec)${SWE_MONTH_NOT_LETTER}(?:\\s*,?\\s*(\\d{4}))?`,
+  'gi',
+);
 
 /** Veckodag som eget ord ("lördag"). */
 const SWE_WEEKDAY_WORD_RX =
