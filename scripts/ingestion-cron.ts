@@ -695,6 +695,33 @@ if (!skipImages) {
     ],
   });
 
+  // ── reconcile-source-status: rätta källstatus mot databasens sanna siffra ──
+  //
+  // 2026-10-24 — en källa kan ha tusentals events i Supabase och ändå stå
+  // som 'fail' eller 'routed' i runtime/sources_status.jsonl. Mätt i dag:
+  // 22 av 24 "noll-event-källor" hade 5 327 / 3 495 / 797 / 513 / 298 … rader
+  // i databasen. Statusen ljög.
+  //
+  // Varför den ljög: specialimportscripten (ingest-livespot-stockholm.mjs,
+  // ingest-momentsapp, ingest-spelning, ingest-stampen, ingest-dn-kalendariet …)
+  // persisterar events direkt till Supabase men skriver ALDRIG källstatus.
+  // A-gatens HTML-försök misslyckas för samma källa (den har ju ingen HTML att
+  // hämta) → status 'fail' → dashboarden ser en död källa, och begravnings-
+  // listorna (classify-dead-sources, E5/E6/E10) byggs på status. En källa som
+  // råkar ligga i fel kön kan begravas med tusentals events i databasen.
+  //
+  // Placerat EFTER worker-drain: då är nattens events persisterade och
+  // lastEventsFound kan spegla verkligheten. Källor med 0 rader rörs INTE —
+  // där är statusen sann, de behöver orsaksutredning, inte bokföring.
+  // Karantänsatta och begravda källor rörs inte heller.
+  //
+  // I smoke: --dry (bara rapportera). Smoke ska inte mutera ledger.
+  steps.push({
+    name: 'reconcile-source-status',
+    cmd: 'node',
+    args: ['scripts/reconcile-source-status.mjs', ...(smoke ? ['--dry'] : [])],
+  });
+
   // ── P2C: Active-learning closed loop ──────────────────────────────────
   // Triggar review-flagga för låg-confidence events → record_feedback
   // → dashboard visar dem i human-review modal.
