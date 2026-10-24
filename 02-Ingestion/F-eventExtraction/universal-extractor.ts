@@ -116,7 +116,7 @@ const SWE_MONTH_NOT_LETTER = `(?![a-zåäö])`;
 
 const DATE_PATTERNS = [
   // ISO 8601 full
-  { rx: /(\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2})/, fmt: (m: string) => m.replace('T',' ') },
+  { rx: /(\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2})/, fmt: (m: string) => m.split('T')[0] },
   // ISO date only
   { rx: /(\d{4}-\d{2}-\d{2})/, fmt: (m: string) => m },
   // Swedish: 25 mars 2025 / 25 mar 2025
@@ -771,7 +771,20 @@ function parseDate(raw: string): { date: string; time?: string } {
   const relDate = parseRelativeSwedishDate(raw);
   if (relDate) return { date: relDate };
 
-  return { date: raw.slice(0, 10) };
+  // 2026-10-24 — sista utvägen ger ETT giltigt datum eller ingenting.
+  // Tidigare gav den `raw.slice(0, 10)` på godtycklig text. En tom
+  // datetime-attribut ("<time datetime='\n  '>") blev då ett "datum" av
+  // blanksteg, vilket (a) skrev trasiga datum till filen och (b) avslutade
+  // extraktorns datumjakt — kortets riktiga datum ("17 oktober 2026") lästes
+  // aldrig, så eventet försvann helt.
+  //
+  // Bevis: 15 orelaterade domaner gav blanksteg-datum — 3arena.se,
+  // liseberg.se, lund.se, malm-konserthus.se, molndals-futsal.se, oland.se,
+  // studio-acusticum.se med flera. Alltså General enligt Generalization
+  // Protection Rule.
+  const slice = raw.trim().slice(0, 10);
+  if (isValidIsoDate(slice)) return { date: slice };
+  return { date: '' };
 }
 
 // ─── URL Building ────────────────────────────────────────────────────────────
@@ -1866,11 +1879,20 @@ function extractHtmlHeuristics($: cheerio.CheerioAPI, source: string, baseUrl: s
     const $time = $card.find('time[datetime]').first();
     if ($time.length) {
       const dt = $time.attr('datetime') || '';
-      if (dt) return parseDate(dt);
+      // 2026-10-24 — en TOM datetime-attribut är INTE ett datum. Om
+      // attributet inte ger ett giltigt datum fortsätter sökningen i
+      // korttexten, där det riktiga datumet står ("17 oktober 2026").
+      // Tidigare avslutades sökningen här, och eventet försvann.
+      if (dt.trim()) {
+        const parsed = parseDate(dt);
+        if (parsed.date) return parsed;
+      }
     }
     for (const attr of ['data-date', 'data-start', 'data-event-date', 'data-datetime', 'data-time']) {
       const val = $card.attr(attr) || '';
-      if (val) return parseDate(val);
+      if (!val.trim()) continue;
+      const parsed = parseDate(val);
+      if (parsed.date) return parsed;
     }
     const cardText = $card.text();
 

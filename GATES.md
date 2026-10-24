@@ -813,25 +813,72 @@ sätt, en regel i tag, och kräver att varje mutation upptäcks av oracle.
 Mutationerna: "sista intervallet vinner", "lookbehind-skyddet bort" och
 "årslöst vinner före med år".
 
-- [ ] DR1: extraktorn ligger inom oracle-fönstret på hela korpusen och ger de handskrivna värdena på fixtursetet
+- [x] DR1: extraktorn ligger inom oracle-fönstret på hela korpusen och ger de handskrivna värdena på fixtursetet
   CHECK: node scripts/verify-fixes.mjs dr1
   EXPECT: /dr1: fixtrar=\d+ rader=\d+ avvikelser=0 pass/
-  EVIDENCE: pending
+  EVIDENCE: automatic-evidence=v1; definition-sha256=9b2c24b6589957d4679e66d17936453151045252375171734cd776d8db83422d; exit=0; EXPECT=matched; output-sha256=fb336f1db299468530704d73280d1b7a97f6fa5b8e7d58de8fcd3648069cc2eb; output-bytes=43; shell=/bin/sh; cwd=/Users/claudgashi/EventPulse; path=29325ef63737/16 entries
 
-- [ ] DR2: negativ kontroll — tre muterade extraktorkopior upptäcks av oracle (utan denna gate bevisar DR1 ingenting)
+- [x] DR2: negativ kontroll — tre muterade extraktorkopior upptäcks av oracle (utan denna gate bevisar DR1 ingenting)
   CHECK: node scripts/verify-fixes.mjs dr2
   EXPECT: /dr2: negativ kontroll .* fixtrar=\d+ pass/
-  EVIDENCE: pending
+  EVIDENCE: automatic-evidence=v1; definition-sha256=c50dc60b32b7d434a568d20fe4c8d36eb84836f69a9dec3e636206ad1e271f94; exit=0; EXPECT=matched; output-sha256=bebd15223091079b9c58e5d3e4f3a5e6778cd16e937782e06d330722a0fe7e84; output-bytes=250; shell=/bin/sh; cwd=/Users/claudgashi/EventPulse; path=29325ef63737/16 entries
 
-- [ ] DR3: live C-körning — de berörda källorna producerar events med giltiga datum
+- [x] DR3: live C-körning — de berörda källorna producerar events med giltiga datum (endast FRSKA filer, ändrade inom 24 timmar, räknas som bevis)
   CHECK: node scripts/verify-fixes.mjs dr3
   EXPECT: /dr3: källor=\d+ events=\d+ ogiltiga=0 pass/
-  EVIDENCE: pending
+  EVIDENCE: automatic-evidence=v1; definition-sha256=75227da629a416864a7e1f42f803f4efe6691e4fa95894b3c972ffad8042112f; exit=0; EXPECT=matched; output-sha256=2dcead8870505672a1abd765930253ccd0339cbd82dddc7618f47547bca7d930; output-bytes=43; shell=/bin/sh; cwd=/Users/claudgashi/EventPulse; path=29325ef63737/16 entries
 
-- [ ] DR4: enhetstesterna för datumintervall passerar (inklusive de negativa kontrollerna för månadsnamn och lookbehind)
+- [x] DR4: enhetstesterna för datumintervall passerar (inklusive de negativa kontrollerna för månadsnamn och lookbehind)
   CHECK: npx vitest run 02-Ingestion/F-eventExtraction/universal-extractor-date-range.test.ts
   EXPECT: /Tests\s+\d+ passed/
-  EVIDENCE: pending
+  EVIDENCE: automatic-evidence=v1; definition-sha256=2ca352849bbe02f1ab21a80d1af7b420a8720183c9e4b3f5570777c123bf6e0a; exit=0; EXPECT=matched; output-sha256=e77190b85c00e902664ce160b0c689d587c69345ff58ab97a0d7b0e5845abf94; output-bytes=213; shell=/bin/sh; cwd=/Users/claudgashi/EventPulse; path=29325ef63737/16 entries
+
+# Tom datetime-attribut: extraktorn ska inte hitta på ett datum av blanksteg (2026-10-24)
+
+Scope: `02-Ingestion/F-eventExtraction/universal-extractor.ts` (och dess
+tester), `02-Ingestion/F-eventExtraction/universal-extractor-blank-date.test.ts`.
+
+En tom `datetime`-attribut ("<time datetime='\n  '>") gav ett "datum" av
+blanksteg. Följden var dubbel:
+
+1. Importen kastade bort raden (datumet var inte giltigt), så eventet kom
+   aldrig in i databasen.
+2. Extraktorn AVSLUTADE sin datumjakt så fort den sett attributet — kortets
+   riktiga datum ("17 oktober 2026") lästes aldrig. Kortet gav därför 0
+   användbara events, varje gång, trots att datumet stod tydligt i brödtexten.
+
+Punkt 2 är den som gjorde källor "fastna".
+
+**Fixen (tre delar, alla General):**
+
+- `parseDate` ger ETT giltigt datum eller ingenting. Sista utvägen var
+  `raw.slice(0, 10)` på godtycklig text — den skrev ut blanksteg som datum.
+- `extractDate` fortsätter sökningen i korttexten när attributet inte ger
+  ett giltigt datum, i stället för att ge upp.
+- `DATE_PATTERNS[0]` skriver inte längre klockan in i date-fältet
+  ("2026-04-13 01:00:00" → "2026-04-13").
+
+**Bevis för General (Generalization Protection Rule):** 15 orelaterade
+domaner gav blanksteg-datum — 3arena.se, liseberg.se, lund.se,
+malm-konserthus.se, malm-live.se, molndals-futsal.se, oland.se,
+studio-acusticum.se, kungsbacka.se, goteborgs-litteraturhus.se,
+svenska-tennisf-rbundet.se, lth.se, malarenergi-arena.se, liseberg-n-je.se,
+malmo-live.se. Det är HTML-kontraktet, inte ett sitedomänsdrag.
+
+**Negativa kontroller i testet (fyra stycken):** kort utan datum ger INGA
+events (fixen får inte hitta på datum); en giltig `datetime` vinner
+fortfarande över brödtexten; `data-date` med blanksteg faller tillbaka till
+korttexten; date-fältet får aldrig bära en klocktid.
+
+- [x] BD1: enhetstesterna för blankstegsdatum passerar (7 tester, varav fyra negativa kontroller)
+  CHECK: npx vitest run 02-Ingestion/F-eventExtraction/universal-extractor-blank-date.test.ts
+  EXPECT: /Tests\s+\d+ passed/
+  EVIDENCE: automatic-evidence=v1; definition-sha256=68fd780268511197abf4c89e61bb971775fb33328a1d3442852de76593ced751; exit=0; EXPECT=matched; output-sha256=43555292ce4ba2e32d6f32bfe95f53e321e4fa3c00a5a3c7e7ca5ccdcaa13b9d; output-bytes=211; shell=/bin/sh; cwd=/Users/claudgashi/EventPulse; path=29325ef63737/16 entries
+
+- [x] BD2: hela extraktorns testsvit är grönt — ingen regression av de tre delfixarna
+  CHECK: npx vitest run 02-Ingestion/F-eventExtraction/
+  EXPECT: /Tests\s+\d+ passed/
+  EVIDENCE: automatic-evidence=v1; definition-sha256=13e312eff1060baa85c43d0b1abacf3cf3fc3096f20d14a3eaa75aff92efb95d; exit=0; EXPECT=matched; output-sha256=1c8f4311ee46ece5513938b804e1898392ceee95c041334b2deb0d514853cee3; output-bytes=218; shell=/bin/sh; cwd=/Users/claudgashi/EventPulse; path=29325ef63737/16 entries
 
 # Statusen i sources_status.jsonl får inte ljuga (2026-10-24)
 
@@ -866,17 +913,17 @@ credits), men ingen skrev bort `fail`. Källan stod som död medan den hade
 finns och `city = Stockholm`). Burkade/retirerade källor och källor utanför
 Stockholm räknas inte — de hör till andra beslut.
 
-- [ ] ST1: varje källa som D-gaten lyckades med står som success med nollställd felräknare och utan lastError
+- [x] ST1: varje källa som D-gaten lyckades med står som success med nollställd felräknare och utan lastError
   CHECK: node scripts/verify-fixes.mjs st1
   EXPECT: /st1: kontrollerade=\d+ statusfel=0 rensade_filer=\d+ pass/
-  EVIDENCE: pending
+  EVIDENCE: automatic-evidence=v1; definition-sha256=f2261fb4fea73f6f04f0aec1831e1659f68d49eef8fc661ed5600311c4d824b6; exit=0; EXPECT=matched; output-sha256=8db8fc1ae87bebd0a3bfba00883c53d001e199840717106db4b0ad64b4b3ff1d; output-bytes=55; shell=/bin/sh; cwd=/Users/claudgashi/EventPulse; path=29325ef63737/16 entries
 
-- [ ] ST2: negativ kontroll — en muterad kopia av statusfilen där felräknaren inte nollställs upptäcks (utan denna gate bevisar ST1 ingenting)
+- [x] ST2: negativ kontroll — en muterad kopia av statusfilen där felräknaren inte nollställs upptäcks (utan denna gate bevisar ST1 ingenting)
   CHECK: node scripts/verify-fixes.mjs st2
   EXPECT: /st2: negativ kontroll avvikelser=\d+ .* pass/
-  EVIDENCE: pending
+  EVIDENCE: automatic-evidence=v1; definition-sha256=bf43ba98378d6a60dc668f773c370290cdfe3273d66228eace92183f2751ace8; exit=0; EXPECT=matched; output-sha256=b2c2204c7e9f25b2028925306cf3b90919706940ddae2c348a6ac3d15387fa4c; output-bytes=60; shell=/bin/sh; cwd=/Users/claudgashi/EventPulse; path=29325ef63737/16 entries
 
-- [ ] ST3: render-override gäller på alla tre orphan-vägarna — 4 enhetstester inkl. två negativa kontroller
+- [x] ST3: render-override gäller på alla tre orphan-vägarna — 4 enhetstester inkl. två negativa kontroller
   CHECK: npx vitest run 02-Ingestion/C-htmlGate/run-dynamic-pool.test.ts
   EXPECT: /Tests\s+\d+ passed/
-  EVIDENCE: pending
+  EVIDENCE: automatic-evidence=v1; definition-sha256=b6b66f30d0edb8b4b3f4be81c171e8e567fa760ade36d78e904c367e9817fef7; exit=0; EXPECT=matched; output-sha256=ad330bfd8708b4a2799f0bd81411f018ad57e3667b2148b9f57eba545d45ed1d; output-bytes=212; shell=/bin/sh; cwd=/Users/claudgashi/EventPulse; path=29325ef63737/16 entries

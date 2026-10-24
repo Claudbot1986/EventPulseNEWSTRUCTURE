@@ -474,9 +474,18 @@ async function dr3(): Promise<void> {
     '3arena', 'aviciiarena', 'stockholmlive-evenemang', 'oscarsteatern',
     'billetto-stockholm', 'eventbrite-stockholm', 'vadkul-stockholm',
     'fotografiska', 'wwwtekniskamuseetse', 'pingstkyrkan',
+    'wwwmynewsdeskcom', 'wwwsvtse',
   ];
 
+  // 2026-10-24 — DR3 mätte förr ÄLDRE artefakter som om de vore live-evidens.
+  // 3arena.jsonl var från 2026-10-09, alltså före fixen, och fartyget därför
+  // med gammal kod. En gate som mäter gammal kod bevisar ingenting om dagens
+  // kod. Därför är bara FRISKA filer (ändrade inom FRESH_HOURS) bevis; äldre
+  // rapporteras men bedöms inte.
+  const FRESH_HOURS = 24;
+  const nowMs = Date.now();
   const found: string[] = [];
+  const stale: string[] = [];
   let total = 0;
   const bad: string[] = [];
   for (const source of AFFECTED) {
@@ -484,6 +493,11 @@ async function dr3(): Promise<void> {
     if (!fs.existsSync(file)) continue;
     const lines = fs.readFileSync(file, 'utf8').split('\n').filter((l) => l.trim());
     if (lines.length === 0) continue;
+    const ageHours = (nowMs - fs.statSync(file).mtimeMs) / 3_600_000;
+    if (ageHours > FRESH_HOURS) {
+      stale.push(`${source}(${Math.round(ageHours)}h)`);
+      continue;
+    }
     found.push(source);
     for (const line of lines) {
       let o: any;
@@ -497,7 +511,11 @@ async function dr3(): Promise<void> {
   }
 
   if (found.length === 0) {
-    fail(`dr3: FAIL ingen av de berörda källorna finns i ${outDir} — live-beviset saknas`);
+    fail(
+      `dr3: FAIL ingen FRSK fil bland de berörda källorna i ${outDir} ` +
+      `(ändrade inom ${FRESH_HOURS} timmar) — live-beviset saknas. ` +
+      `Gammala: ${stale.join(', ') || 'inga'}`,
+    );
   }
   if (bad.length > 0) {
     console.error(`dr3: FAIL ${bad.length}/${total} extraherade events har ogiltigt datum`);
