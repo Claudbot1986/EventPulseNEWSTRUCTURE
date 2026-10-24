@@ -340,3 +340,76 @@ describe('discoverEventCandidates — inlänk-räkning (Steg 4)', () => {
     expect(c?.inboundCount).toBe(1); // bara den interna länken räknas
   });
 });
+
+/**
+ * Rot-fallback (fix 2026-10-24).
+ *
+ * En källas URL pekar ofta på EN event-sida. När evenemanget är slut ger
+ * sidan 404, och C0 avslutade då med 0 kandidater FÖRE sitemap-discovery —
+ * även om domänroten levde och hade en sitemap med eventsidor.
+ *
+ * Mätt på riktiga spårade källor (scripts/probe-root-fallback.mjs):
+ * 4 av 189 hade död URL men levande rot (3arena.se, aviciiarena.se ×2,
+ * billetto.se). Fallbacken är en RESILIENS-ändring: ingen ranking,
+ * ingen scoringvikt, ingen IGNORE_PATTERN ändras.
+ */
+describe('discoverEventCandidates — rot-fallback till domänroten', () => {
+  it('använder domänroten när källans URL inte svarar', async () => {
+    fetchSitemapEntriesMock.mockResolvedValue({
+      entries: [], sitemapFiles: [], attempts: [],
+    });
+    const asked: string[] = [];
+    fetchHtmlMock.mockImplementation(async (url: string) => {
+      asked.push(url);
+      if (url === 'https://example.com/kalender/utgangen-konsert') {
+        return { success: false, html: undefined, error: 'HTTP 404' };
+      }
+      if (url === 'https://example.com') {
+        return {
+          success: true,
+          html: '<html><body><main><a href="/evenemang">Evenemang</a></main></body></html>',
+        };
+      }
+      if (url.includes('/evenemang')) {
+        return {
+          success: true,
+          html: '<html><body><time datetime="2026-11-15"></time><p>2026-11-15 Konsert</p><a href="/evenemang/a">a</a></body></html>',
+        };
+      }
+      return { success: true, html: '<html><body></body></html>' };
+    });
+
+    const result = await discoverEventCandidates(
+      'https://example.com/kalender/utgangen-konsert',
+      undefined,
+      'test-fallback',
+    );
+
+    expect(asked).toContain('https://example.com');
+    expect(result.rootFallbackUrl).toBe('https://example.com');
+    expect(result.candidatesFound).toBeGreaterThan(0);
+    expect(result.winner).toBeDefined();
+  });
+
+  it('avslutar med 0 kandidater när BÅDE URL:en och roten är döda (negativ kontroll)', async () => {
+    fetchSitemapEntriesMock.mockResolvedValue({
+      entries: [], sitemapFiles: [], attempts: [],
+    });
+    fetchHtmlMock.mockImplementation(async () => ({
+      success: false,
+      html: undefined,
+      error: 'fetch failed: ENOTFOUND',
+    }));
+
+    const result = await discoverEventCandidates(
+      'https://example.com/kalender/utgangen-konsert',
+      undefined,
+      'test-fallback-dead',
+    );
+
+    expect(result.candidatesFound).toBe(0);
+    expect(result.winner).toBeUndefined();
+    expect(result.rootFallbackUrl).toBeUndefined();
+    expect(result.winnerReason).toMatch(/fetch error/);
+  });
+});

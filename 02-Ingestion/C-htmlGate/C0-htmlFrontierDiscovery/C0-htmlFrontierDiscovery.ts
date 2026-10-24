@@ -69,6 +69,11 @@ export interface FrontierDiscoveryResult {
     pathsTested: string[];
     winnerPath: string | null;
   };
+  /**
+   * Om rot-URL:en inte svarade och domänroten användes i stället.
+   * Sätter lämpligen `rootUrl` till den URL som faktiskt hämtades.
+   */
+  rootFallbackUrl?: string;
 }
 
 const EVENT_CONCEPTS = [
@@ -323,9 +328,44 @@ export async function discoverEventCandidates(
 ): Promise<FrontierDiscoveryResult> {
   const normalizedRootUrl = normalizeFetchUrl(rootUrl);
   const baseUrl = getBaseUrl(normalizedRootUrl);
-  
-  const rootFetch = await fetchHtml(normalizedRootUrl, { timeout: 15000 });
-  
+
+  let rootFetch = await fetchHtml(normalizedRootUrl, { timeout: 15000 });
+  let rootFallbackUrl: string | undefined;
+
+  // -----------------------------------------------------------------------
+  // FIX 2026-10-24 — rot-fallback till domänroten.
+  //
+  // Problemet. Källans URL pekar ofta på EN event-sida (t.ex.
+  // /evenemang/musik-show/robyn/). Sådana sidor försvinner när evenemanget
+  // är slut — då ger rot-URL:en 404. C0 avslutade då med 0 kandidater
+  // FÖRE sitemap-discovery, så även om domänroten lever och har en
+  // sitemap full med eventsidor dog källan.
+  //
+  // Bevis (2026-10-24, `scripts/probe-root-fallback.mjs`):
+  //   4 av 189 spårade källor har en URL som inte svarar medan domänroten
+  //   svarar 200:
+  //     3arenase                          404 → rot 200   (3arena.se)
+  //     aviciiarenase                     404 → rot 200   (aviciiarena.se)
+  //     candidate-71e94a05-aviciiarenase  404 → rot 200   (aviciiarena.se)
+  //     billetto-stockholm                403 → rot 200   (billetto.se)
+  //   Tre domäner, två oberoende operatörer (Arena Group, Billetto).
+  //   Alla tre har robots.txt-sitemap → discovery kan fortsätta.
+  //
+  // Generalization Protection: General. Detta är en RESILIENS-fallback,
+  // inte en heuristik: inga IGNORE_PATTERNS ändras, inga scoringvikter
+  // ändras, inga URL-token-regler ändras, och kandidatrankningen är
+  // oförändrad för sajter vars URL fungerar. Mekanismen bakom är
+  // generell — en event-URL har ett utgångsdatum, domänroten gör det inte.
+  // -----------------------------------------------------------------------
+  const isRootUrl = baseUrl && baseUrl === normalizedRootUrl.replace(/\/$/, '');
+  if ((!rootFetch.success || !rootFetch.html) && baseUrl && !isRootUrl) {
+    const baseFetch = await fetchHtml(baseUrl, { timeout: 15000 });
+    if (baseFetch.success && baseFetch.html) {
+      rootFetch = baseFetch;
+      rootFallbackUrl = baseUrl;
+    }
+  }
+
   if (!rootFetch.success || !rootFetch.html) {
     // Distinguish between fetch errors and empty discovery
     const isNetworkError = rootFetch.error && (
@@ -344,12 +384,13 @@ export async function discoverEventCandidates(
       candidatesFound: 0,
       topCandidates: [],
       winner: undefined,
-      winnerReason: isNetworkError 
+      winnerReason: isNetworkError
         ? `fetch error: ${rootFetch.error}`
         : 'no internal event candidates discovered',
       rootRejected: false,
       debug: { allLinksByRegion: {}, topScoringLinks: [] },
       ruleApplied: { source: 'none', pathsTested: [], winnerPath: null },
+      ...(rootFallbackUrl ? { rootFallbackUrl } : {}),
     };
   }
   
@@ -710,5 +751,6 @@ export async function discoverEventCandidates(
       pathsTested,
       winnerPath: winner?.href || null,
     },
+    ...(rootFallbackUrl ? { rootFallbackUrl } : {}),
   };
 }
