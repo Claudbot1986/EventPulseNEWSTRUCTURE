@@ -78,6 +78,8 @@ TEMP/
 # / kørande batcher. Append-only; ska inte persisteras i git.
 /02-Ingestion/C-htmlGate/123-learning-memory.json
 /02-Ingestion/C-htmlGate/manual-review/resolved.jsonl
+# C4-mönsterkandidater — genereras av varje C-gate-körning
+/02-Ingestion/C-htmlGate/c4-*.jsonl
 /03-Queue/03-extractedevents/
 /conversations/
 
