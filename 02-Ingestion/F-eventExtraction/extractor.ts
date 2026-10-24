@@ -190,7 +190,7 @@ function extractFromArray(data: any[], source: string): JsonLdEvent[] {
  * `data['@type'] === 'Event'`, vilket missade spelning.se (MusicEvent),
  * sodrateatern (MusicEvent), m.fl. Nu tillåts alla Event-subtyper.
  */
-const EVENT_SUBTYPES = new Set([
+export const EVENT_SUBTYPES = new Set([
   'Event',
   'MusicEvent',
   'BusinessEvent',

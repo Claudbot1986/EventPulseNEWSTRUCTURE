@@ -726,3 +726,52 @@ riktig normalisering som persisterat ett event i Supabase.
   CHECK: node scripts/verify-fixes.mjs n2
   EXPECT: /n2: concurrency mätbar och högre ger mer pass/
   EVIDENCE: automatic-evidence=v1; definition-sha256=ccb82c2dff51ac5bbbfaba8851cbdb81d14bb9fe2f452c15c94d6f6e22867d83; exit=0; EXPECT=matched; output-sha256=4efc6d16961d28d3a787b4902bca31d2bc8a6fead2b3a70bb1738ea467dc3743; output-bytes=179; shell=/bin/sh; cwd=/Users/claudgashi/EventPulse; path=29325ef63737/16 entries
+
+# Sitemap-fixarna: subtyper, källans egen URL, levbevis (2026-10-24)
+
+Scope: `scripts/ingest-sitemap-discovery.mjs`, `scripts/lib/eventExtraction.mjs`,
+`scripts/lib/sitemapDiscovery.mjs`, `02-Ingestion/F-eventExtraction/extractor.ts`.
+
+Tre fel gjorde att sitemap-discovery persisterade nästan inget. Mätt på de
+189 spårade källorna: `future` 672 → 1153 och `persisted` 5 → 211 efter fixen.
+
+1. `@type === 'Event'` kastade bort ALLA schema.org-subtyper. Mätt:
+   MusicEvent (concerts50.com — 33 events), VisualArtsEvent
+   (konstkalendern.com), ExhibitionEvent (stockholm.fotografiska.com).
+   Listan speglar den kanoniska extractorn i
+   `02-Ingestion/F-eventExtraction/extractor.ts`, som själv grundades på
+   spelning.se + sodrateatern — alltså redan bevisad på flera orelaterade
+   domäner. Spegeln (.mjs) kan inte importera .ts (skriptet ska köras med
+   ren `node`), så listorna hålls i synk av paritetskontrollen i SM1.
+2. Källans EGEN URL var inte en kandidat. 124 framtida events ligger på
+   källans egen URL (t.ex. `nalen.com/sv/konsert/kleerup` bär JSON-LD men
+   finns ingen listing att hitta). Regeln ligger i
+   `scripts/lib/sitemapDiscovery.mjs` → `buildCandidateUrls`, så SM2 testar
+   samma kodväg som körningen använder.
+3. Urvalet tog sitemapsens huvud (arkivet) i stället för de nyaste via
+   `<lastmod>`, och sökvägen sökte på källans undersida i stället för
+   ursprunget. Det täcks av SM4.
+
+Varje gate har negativ kontroll, och varje gate är verifierad att KUNNA
+faila: med `MusicEvent` borttaget ur spegeln faller SM1, med regeln ur
+körvägen faller SM2, med spegeln utan källans URL faller SM2 igen.
+
+- [x] SM1: schema.org Event-subtyper accepteras, och spegeln är i paritet med den kanoniska extractorn
+  CHECK: node scripts/verify-fixes.mjs s1
+  EXPECT: /s1: subtyper=\d+ paritet=ok negativ=\d+ avvisade music=1 pass/
+  EVIDENCE: automatic-evidence=v1; definition-sha256=ad0e0482602fc6d8e10295c00e7b545f37607c140334a88dc27eb8b347b2a8dd; exit=0; EXPECT=matched; output-sha256=c8ace2af2d8a1fc7c6e5d1bc6be4de4e3d7d0eaedbe1c4f5467e482f2fd5405b; output-bytes=60; shell=/bin/sh; cwd=/Users/claudgashi/EventPulse; path=29325ef63737/16 entries
+
+- [x] SM2: källans egen URL är en kandidat och bär riktiga events (levbevis via riktiga skriptet)
+  CHECK: node scripts/verify-fixes.mjs s2
+  EXPECT: /s2: egen_url=1 .*fetched=\d+ egna_events=\d+ pass/
+  EVIDENCE: automatic-evidence=v1; definition-sha256=e0c106f91911d4e391f7b57aea10c8f9e52fd27d0f45b331a4aae10918ab6a4c; exit=0; EXPECT=matched; output-sha256=c71da719b6c7e80b81daf3b6f0282486fe1a75b6d9ff71f6dcefd51eead0a77d; output-bytes=90; shell=/bin/sh; cwd=/Users/claudgashi/EventPulse; path=29325ef63737/16 entries
+
+- [x] SM3: fixen öppnade källor har framtida rader i DB (negativ kontroll: spent källa ger noll)
+  CHECK: node scripts/verify-fixes.mjs s3
+  EXPECT: /s3: concerts50com=\d+ sodrateatern=\d+ aviciiarena=\d+ negativ=stockholmjazz noll av \d+ pass/
+  EVIDENCE: automatic-evidence=v1; definition-sha256=11e0c3e58a23d807470904ee4f46e7589530d6efb437a8eae2ae7ed190c35ea6; exit=0; EXPECT=matched; output-sha256=78124b3153c5c52c58ee22563450109c44cdfcc0934113facaaef7dd9090b169; output-bytes=90; shell=/bin/sh; cwd=/Users/claudgashi/EventPulse; path=29325ef63737/16 entries
+
+- [x] SM4: bibliotekets enhetstester — sitemap-urval via lastmod, sökväg vid ursprunget, subtyper, paritet
+  CHECK: npx vitest run scripts/lib/
+  EXPECT: /Tests\s+20 passed \(20\)/
+  EVIDENCE: automatic-evidence=v1; definition-sha256=f00b3804a6955057627fc05679502ae522131ae503197eb35e2b361642dd329c; exit=0; EXPECT=matched; output-sha256=fffac15e34622fa59345ad3d8c1d3f22dc0481501a83a8dc7a58ed73e6afe17f; output-bytes=211; shell=/bin/sh; cwd=/Users/claudgashi/EventPulse; path=29325ef63737/16 entries

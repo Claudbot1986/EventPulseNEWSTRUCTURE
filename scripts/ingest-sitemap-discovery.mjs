@@ -23,7 +23,8 @@ import { createHash } from 'crypto';
 import { createClient } from '@supabase/supabase-js';
 import { readFileSync, readdirSync, existsSync } from 'fs';
 import { join } from 'path';
-import * as cheerio from 'cheerio';
+import { parseSitemapXml, sitemapCandidates, filterEventUrls, selectEventUrls, buildCandidateUrls } from './lib/sitemapDiscovery.mjs';
+import { extractAllEvents } from './lib/eventExtraction.mjs';
 
 // ─── Config ──────────────────────────────────────────────────────────────────
 const CONCURRENCY = parseInt(process.env.SITEMAP_CONCURRENCY ?? '20', 10); // parallel workers
@@ -32,38 +33,6 @@ const PER_REQUEST_TIMEOUT = 8000;
 const SITEMAP_TIMEOUT = 8000;
 const PER_PAGE_EVENT_LIMIT = 30; // cap per source
 const SOURCE_FILE_PATTERN = /.*\.jsonl$/;
-
-const EVENT_PATH_PATTERNS = [
-  /\/event/,
-  /\/program/,
-  /\/forestallning/,
-  /\/konsert/,
-  /\/show/,
-  /\/repertoar/,
-  /\/utstallning/,
-  /\/exhibition/,
-  /\/calendar/,
-  /\/kalender/,
-  /\/agenda/,
-  /\/evenemang/,
-  /\/pagar/,
-  /\/forestallningar/,
-];
-
-const URL_BLACKLIST = [
-  /\/wp-content/,
-  /\/tag\//,
-  /\/category\//,
-  /\/author\//,
-  /\?add-to-cart/,
-  /\/cart\//,
-  /\/checkout/,
-  /\/login/,
-  /\/signup/,
-  /\/register/,
-  /\/feed\//,
-  /\/attachment-/,
-];
 
 const SUPABASE_URL_VAL = process.env.SUPABASE_URL;
 const SUPABASE_KEY_VAL = process.env.SUPABASE_SERVICE_ROLE_KEY;
@@ -80,18 +49,25 @@ function dedupHash(title, startTime, sourceId) {
 function sleep(ms) { return new Promise((r) => setTimeout(r, ms)); }
 
 async function fetchUrl(url, timeout = SITEMAP_TIMEOUT) {
+  // 2026-10-24 — abort-timern rensades FÖRE body-läsningen. En värd som
+  // skickar headers och sedan står still i strömmen hängde därför hela
+  // steget i det oändliga (mätt: en CloudFront-värd höll en etablerad
+  // socket i 20+ minuter). Timern måste gälla tills texten är läst.
+  const c = new AbortController();
+  const t = setTimeout(() => c.abort(), timeout);
   try {
-    const c = new AbortController();
-    const t = setTimeout(() => c.abort(), timeout);
     const r = await fetch(url, {
       headers: { 'User-Agent': 'EventPulse-Bot/1.0 (sitemap crawler)', Accept: '*/*' },
       signal: c.signal,
       redirect: 'follow',
     });
-    clearTimeout(t);
     if (!r.ok) return null;
     return await r.text();
-  } catch { return null; }
+  } catch {
+    return null;
+  } finally {
+    clearTimeout(t);
+  }
 }
 
 // ─── Concurrency limiter (semaphore) ─────────────────────────────────────────
@@ -108,172 +84,50 @@ class Sem {
   }
 }
 
-function parseSitemapXml(xml) {
-  const urls = [];
-  const subSitemaps = [];
-  // Extract <loc>...</loc> URLs
-  const locRegex = /<loc>\s*(.*?)\s*<\/loc>/g;
-  let m;
-  while ((m = locRegex.exec(xml)) !== null) {
-    const u = m[1].trim();
-    if (/\.xml(\.gz)?$/i.test(u)) subSitemaps.push(u);
-    else urls.push(u);
-  }
-  return { urls, subSitemaps };
-}
-
 async function fetchAllSitemapUrls(baseUrl, maxDepth = 2) {
   const seen = new Set();
-  const allUrls = new Set();
-  // If baseUrl is already a .xml file, use it directly. Otherwise probe standard sitemap paths.
-  const base = baseUrl.replace(/\/$/, '');
-  const queue = [];
-  if (/\.xml(\.gz)?$/i.test(baseUrl)) {
-    queue.push(base);
-  } else {
-    queue.push(`${base}/sitemap.xml`, `${base}/sitemap_index.xml`);
-  }
+  const allUrls = new Map(); // url → lastmod
+  const queue = sitemapCandidates(baseUrl);
   let depth = 0;
-  while (queue.length > 0 && depth <= maxDepth) {
+  // 2026-10-24 — gräns på hur många sitemap-FILER som läses per källa.
+  // En sajt med sitemap-index kan ha hundratals sub-filer, och varje fil
+  // kostar ett anrop + en sekunds rate-limit. Utan gräns ägde ett par
+  // stora sajter hela steget. Detta är en resursgräns, inte ett urval.
+  const MAX_FILES = 25;
+  let filesRead = 0;
+  while (queue.length > 0 && depth <= maxDepth && filesRead < MAX_FILES) {
     const nextBatch = [];
     for (const url of queue) {
       if (seen.has(url)) continue;
+      if (filesRead >= MAX_FILES) break;
       seen.add(url);
+      filesRead++;
       await sleep(RATE_LIMIT_MS);
       const xml = await fetchUrl(url);
       if (!xml) continue;
       const { urls, subSitemaps } = parseSitemapXml(xml);
-      for (const u of urls) allUrls.add(u);
+      for (const u of urls) if (!allUrls.has(u.url)) allUrls.set(u.url, u.lastmod);
       for (const s of subSitemaps) nextBatch.push(s);
     }
     queue.length = 0;
     queue.push(...nextBatch);
     depth++;
   }
-  return [...allUrls];
-}
-
-function filterEventUrls(urls) {
-  const out = [];
-  for (const u of urls) {
-    if (URL_BLACKLIST.some((re) => re.test(u))) continue;
-    if (EVENT_PATH_PATTERNS.some((re) => re.test(u))) out.push(u);
-  }
-  return out;
-}
-
-function extractJsonLdEvents(html, sourceId) {
-  const events = [];
-  const re = /<script\s+type=["']application\/ld\+json["']\s*>([\s\S]*?)<\/script>/gi;
-  let m;
-  while ((m = re.exec(html)) !== null) {
-    let data;
-    try { data = JSON.parse(m[1].trim()); } catch { continue; }
-    const arr = Array.isArray(data) ? data : [data];
-    for (const d of arr) {
-      // Direct Event
-      if (d['@type'] === 'Event' || (Array.isArray(d['@type']) && d['@type'].includes('Event'))) {
-        events.push({
-          name: d.name,
-          startDate: d.startDate,
-          endDate: d.endDate,
-          url: d.url || null,
-          venue: d.location?.name ?? null,
-          address: d.location?.address ? [d.location.address.streetAddress, d.location.address.postalCode, d.location.address.addressLocality].filter(Boolean).join(', ') : null,
-          lat: d.location?.geo?.latitude != null ? parseFloat(d.location.geo.latitude) : null,
-          lng: d.location?.geo?.longitude != null ? parseFloat(d.location.geo.longitude) : null,
-        });
-      }
-      // ItemList with events
-      if (d['@type'] === 'ItemList' && Array.isArray(d.itemListElement)) {
-        for (const li of d.itemListElement) {
-          const ev = li.item ?? li;
-          if (ev && (ev['@type'] === 'Event' || (Array.isArray(ev['@type']) && ev['@type'].includes('Event')))) {
-            events.push({
-              name: ev.name,
-              startDate: ev.startDate,
-              endDate: ev.endDate,
-              url: ev.url || null,
-              venue: ev.location?.name ?? null,
-              address: ev.location?.address ? [ev.location.address.streetAddress, d.location.address.postalCode, ev.location.address.addressLocality].filter(Boolean).join(', ') : null,
-              lat: ev.location?.geo?.latitude != null ? parseFloat(ev.location.geo.latitude) : null,
-              lng: ev.location?.geo?.longitude != null ? parseFloat(ev.location.geo.longitude) : null,
-            });
-          }
-        }
-      }
-    }
-  }
-  return events;
-}
-
-function extractMicrodataEvents(html) {
-  const events = [];
-  const $ = cheerio.load(html);
-  $('[itemtype="https://schema.org/Event"], [itemtype*="schema.org/Event"]').each((_, el) => {
-    const name = $(el).find('[itemprop="name"]').first().text().trim();
-    const start = $(el).find('[itemprop="startDate"]').attr('datetime') || $(el).find('[itemprop="startDate"]').text().trim();
-    const end = $(el).find('[itemprop="endDate"]').attr('datetime') || $(el).find('[itemprop="endDate"]').text().trim();
-    const url = $(el).find('[itemprop="url"]').attr('href') || null;
-    const venue = $(el).find('[itemprop="location"] [itemprop="name"]').first().text().trim() || null;
-    if (name && start) {
-      events.push({ name, startDate: start, endDate: end, url, venue, address: null, lat: null, lng: null });
-    }
-  });
-  return events;
-}
-
-function extractHtmlEvents(html, sourceUrl) {
-  const events = [];
-  const $ = cheerio.load(html);
-  // Pattern 1: <time datetime="..."> followed by nearby h1/h2/h3 with title
-  $('time[datetime]').each((_, timeEl) => {
-    const dt = $(timeEl).attr('datetime');
-    if (!dt) return;
-    const ts = new Date(dt).getTime();
-    if (isNaN(ts)) return;
-    // Walk up to container, then look for title
-    const container = $(timeEl).closest('article, .event, .event-card, .event-item, [class*="event"], section, li, div')
-      .first();
-    const titleEl = container.find('h1, h2, h3, h4, .title, [class*="title"]').first();
-    const title = titleEl.text().trim().slice(0, 200) || $(timeEl).parent().find('a').first().text().trim();
-    if (!title || title.length < 3) return;
-    const link = container.find('a').first().attr('href') || null;
-    const fullUrl = link ? (link.startsWith('http') ? link : new URL(link, sourceUrl).href) : sourceUrl;
-    events.push({
-      name: title,
-      startDate: dt,
-      endDate: null,
-      url: fullUrl,
-      venue: null, address: null, lat: null, lng: null,
-    });
-  });
-  return events;
-}
-
-function extractAllEvents(html, sourceUrl) {
-  const jsonLd = extractJsonLdEvents(html);
-  const microdata = extractMicrodataEvents(html);
-  const htmlEvents = extractHtmlEvents(html, sourceUrl);
-  // Dedup by (name, startDate) within this page
-  const seen = new Set();
-  const all = [];
-  for (const ev of [...jsonLd, ...microdata, ...htmlEvents]) {
-    const key = `${ev.name}|${ev.startDate}`;
-    if (seen.has(key)) continue;
-    seen.add(key);
-    all.push(ev);
-  }
-  return all;
+  return [...allUrls.entries()].map(([url, lastmod]) => ({ url, lastmod }));
 }
 
 async function processSource(source, args, sem) {
-  const stats = { sitemapUrls: 0, eventUrls: 0, fetched: 0, persisted: 0, duplicates: 0, errors: 0 };
+  const stats = { sitemapUrls: 0, eventUrls: 0, fetched: 0, future: 0, persisted: 0, duplicates: 0, errors: 0 };
   const maxPer = args.maxPerSource;
 
   const allUrls = await fetchAllSitemapUrls(source.url);
   stats.sitemapUrls = allUrls.length;
-  const eventUrls = filterEventUrls(allUrls).slice(0, maxPer);
+  const eventEntries = selectEventUrls(filterEventUrls(allUrls), maxPer);
+  const sitemapEventUrls = eventEntries.map((e) => e.url);
+  // 2026-10-24 — källans EGEN URL är också en kandidat (regeln ligger i
+  // scripts/lib/sitemapDiscovery.mjs → buildCandidateUrls, så gaten S2 kan
+  // testa samma kodväg som körningen använder).
+  const eventUrls = buildCandidateUrls(source.url, sitemapEventUrls);
   stats.eventUrls = eventUrls.length;
 
   // Parallel fetch of event URLs (sem-bounded)
@@ -293,15 +147,13 @@ async function processSource(source, args, sem) {
   for (const r of pageResults) {
     if (r.ok) {
       stats.fetched += r.events.length;
-      allEvents.push(...r.events);
+      // 2026-10-24 — sidan där eventet hittades följer med. Annars fick
+      // ticket_url-fallbacken peka på källans FÖRSTA event-URL — en helt
+      // orelaterad sida.
+      for (const ev of r.events) allEvents.push({ ...ev, pageUrl: r.url });
     } else {
       stats.errors++;
     }
-  }
-
-  if (allEvents.length === 0 || args.dryRun) {
-    console.log(`  ${source.slug}: sitemap=${stats.sitemapUrls} events=${stats.eventUrls} fetched=${stats.fetched} errors=${stats.errors}`);
-    return stats;
   }
 
   const now = Date.now();
@@ -311,8 +163,20 @@ async function processSource(source, args, sem) {
     return !isNaN(ts) && ts > now;
   });
 
+  stats.future = future.length;
+
+  if (allEvents.length === 0 || args.dryRun) {
+    // 2026-10-24 — dry-run-loggningen redovisade bara "fetched" (alla
+    // extraherade events). Det säger ingenting om hur många som faktiskt
+    // kan sparas — det är de FRAMTIDA som persisteras. Utan det gick det
+    // inte att skilja "sidan gav inget" från "sidan gav bara förflutna
+    // events" i loggen.
+    console.log(`  ${source.slug}: sitemap=${stats.sitemapUrls} events=${stats.eventUrls} urls=${JSON.stringify(eventUrls.slice(0, 3))} fetched=${stats.fetched} future=${future.length} errors=${stats.errors}`);
+    return stats;
+  }
+
   const inserts = future.map((ev) => {
-    const url = ev.url ?? eventUrls.find((u) => true);
+    const url = ev.url ?? ev.pageUrl ?? eventUrls[0];
     // 2026-10-05 — verklig geo från sitemap-event istället för Sergels-torg-fallback.
     const lat = (typeof ev.lat === 'number' && ev.lat !== 0) ? ev.lat : null;
     const lng = (typeof ev.lng === 'number' && ev.lng !== 0) ? ev.lng : null;
@@ -387,7 +251,7 @@ async function processSource(source, args, sem) {
     stats.persisted += data?.length ?? 0;
   }
 
-  console.log(`  ${source.slug}: sitemap=${stats.sitemapUrls} events=${stats.eventUrls} fetched=${stats.fetched} persisted=${stats.persisted} dupes=${stats.duplicates} errors=${stats.errors}`);
+  console.log(`  ${source.slug}: sitemap=${stats.sitemapUrls} events=${stats.eventUrls} urls=${JSON.stringify(eventUrls.slice(0, 3))} fetched=${stats.fetched} future=${future.length} persisted=${stats.persisted} dupes=${stats.duplicates} errors=${stats.errors}`);
   return stats;
 }
 
@@ -421,7 +285,7 @@ async function main() {
 
   console.log(`Sitemap ingestion — ${selected.length} sources dryRun=${dryRun} concurrency=${CONCURRENCY}`);
 
-  const totals = { sitemapUrls: 0, eventUrls: 0, fetched: 0, persisted: 0, duplicates: 0, errors: 0 };
+  const totals = { sitemapUrls: 0, eventUrls: 0, fetched: 0, future: 0, persisted: 0, duplicates: 0, errors: 0 };
   const sem = new Sem(CONCURRENCY);
   await Promise.all(selected.map(async (src) => {
     try {
@@ -434,7 +298,7 @@ async function main() {
   }));
 
   console.log(`\n=== TOTAL ===`);
-  console.log(`sitemap_urls=${totals.sitemapUrls} event_urls=${totals.eventUrls} fetched=${totals.fetched} persisted=${totals.persisted} duplicates=${totals.duplicates} errors=${totals.errors}`);
+  console.log(`sitemap_urls=${totals.sitemapUrls} event_urls=${totals.eventUrls} fetched=${totals.fetched} future=${totals.future} persisted=${totals.persisted} duplicates=${totals.duplicates} errors=${totals.errors}`);
 }
 
 main().then(() => process.exit(0)).catch((e) => {

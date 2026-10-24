@@ -35,12 +35,15 @@
  *   e5 — döda källor har orsak; uppenbart döda (404/DNS) ligger i kyrkogravet
  *   n1 — C3-AI:s "needs_render" routar till D-renderGate, inte till begravning
  *   n2 — drainens worker-concurrency är mätbar och högre concurrency ger mer
+ *   s1 — schema.org Event-subtyper accepteras + paritet med kanonisk extractor
+ *   s2 — källans egen URL är kandidat och bär riktiga events
+ *   s3 — fixen öppnade källor har framtida rader i DB (negativ kontroll: spent)
  */
 
 import fs from 'node:fs';
 import { readdirSync, readFileSync, existsSync } from 'node:fs';
 import path from 'node:path';
-import { fileURLToPath } from 'node:url';
+import { fileURLToPath, pathToFileURL } from 'node:url';
 import { spawnSync } from 'node:child_process';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -1385,7 +1388,182 @@ function n2() {
   );
 }
 
-const gates = { g1, g2, g3, g4, g5, g6, g7, g8, g9, h1, h2, h3, h4, h5, h6, e1, e2, e3, e4, e5, e6, e7, e8, e9, e10, e11, n1, n2 };
+// ─── S1/S2/S3 — sitemap-fixarna (2026-10-24) ────────────────────────────────
+//
+// Tre fel gjorde att sitemap-discovery persisterade nästan inget:
+//
+//   S1  @type === 'Event' kastade bort ALLA schema.org-subtyper.
+//       Mätt på 189 källor: MusicEvent (concerts50.com — 33 events),
+//       VisualArtsEvent (konstkalendern.com), ExhibitionEvent
+//       (stockholm.fotografiska.com). Listan speglar den kanoniska
+//       extractorn i 02-Ingestion/F-eventExtraction/extractor.ts, som själv
+//       grundades på spelning.se + sodrateatern — alltså redan bevisad på
+//       flera orelaterade domäner. Spegeln (.mjs) kan inte importera .ts
+//       (skriptet ska köras med ren node), så listorna hålls i synk av
+//       paritetskontrollen i s1.
+//   S2  Källans EGEN URL var inte en kandidat. 124 framtida events ligger
+//       på källans egen URL (t.ex. nalen.com/sv/konsert/kleerup — sidan
+//       bär JSON-LD men finns ingen listing att hitta). Regeln ligger i
+//       scripts/lib/sitemapDiscovery.mjs → buildCandidateUrls, så gaten
+//       testar samma kodväg som körningen använder.
+//   S3  LEVBEVIS: källorna som fixen öppnade har nu framtida rader i DB.
+//
+// Varje gate har negativ kontroll. Utan den kan en gate som mäter "inget"
+// se ut att passera.
+
+/**
+ * S1 — schema.org Event-subtyper accepteras, och spegeln är i paritet med
+ * den kanoniska extractorn.
+ */
+async function s1() {
+  const lib = await import(pathToFileURL(path.join(ROOT, 'scripts/lib/eventExtraction.mjs')).href);
+
+  // Positiv kontroll: subtyperna som föll bort före fixen.
+  const POSITIVE = ['Event', 'MusicEvent', 'VisualArtsEvent', 'ExhibitionEvent', 'TheaterEvent', 'Festival', 'ScreeningEvent'];
+  const missed = POSITIVE.filter((t) => !lib.isEventType(t));
+  if (missed.length > 0) return fail(`s1: FAIL subtyper avvisas fortfarande: ${missed.join(', ')}`);
+
+  // Negativ kontroll: listan får inte bli så generell att sidans egen
+  // webbplats-metadata plockas som event.
+  const NEGATIVE = ['WebSite', 'WebPage', 'Organization', 'BreadcrumbList', 'NewsArticle', 'Restaurant', 'TouristInformationCenter', 'EventSeries', 'Product', ''];
+  const accepted = NEGATIVE.filter((t) => lib.isEventType(t));
+  if (accepted.length > 0) return fail(`s1: FAIL negativ kontroll — icke-event-typer accepteras: ${accepted.join(', ')}`);
+
+  const wrap = (o) => `<script type="application/ld+json">${JSON.stringify(o)}</script>`;
+  for (const bad of [{ '@type': 'WebSite', name: 'Varumärke' }, { '@type': 'NewsArticle', name: 'Artikel', startDate: '2026-12-01' }]) {
+    const got = lib.extractJsonLdEvents(wrap(bad));
+    if (got.length !== 0) return fail(`s1: FAIL negativ kontroll — ${bad['@type']} gav ${got.length} events`);
+  }
+
+  const evs = lib.extractJsonLdEvents(wrap({
+    '@type': 'MusicEvent',
+    name: 'Shinedown',
+    startDate: '2026-11-09T19:00:00+01:00',
+    location: { name: 'Annexet', address: { streetAddress: 'Mäster Samuelsgatan 8' }, geo: { latitude: '59.3293', longitude: '18.0611' } },
+  }));
+  if (evs.length !== 1) return fail(`s1: FAIL MusicEvent gav ${evs.length} events (väntade 1)`);
+  if (evs[0].name !== 'Shinedown' || !evs[0].startDate) return fail(`s1: FAIL MusicEvent-fält fel: ${JSON.stringify(evs[0])}`);
+  if (Math.abs(evs[0].lat - 59.3293) > 0.001) return fail('s1: FAIL lat saknas i MusicEvent');
+
+  // PARITET med den kanoniska extractorn — spegeln får inte glida isär.
+  const tsPath = path.join(ROOT, '02-Ingestion/F-eventExtraction/extractor.ts');
+  if (!fs.existsSync(tsPath)) return fail('s1: FAIL extractor.ts saknas');
+  const ts = readFileSync(tsPath, 'utf8');
+  const block = ts.match(/EVENT_SUBTYPES\s*=\s*new Set(?:<[^>]*>)?\(\[([\s\S]*?)\]\)/);
+  if (!block) return fail('s1: FAIL kunde inte läsa EVENT_SUBTYPES ur extractor.ts');
+  const canonical = [...block[1].matchAll(/'([^']+)'/g)].map((m) => m[1]);
+  const mirror = [...lib.EVENT_SUBTYPES];
+  const onlyCanonical = canonical.filter((t) => !mirror.includes(t));
+  const onlyMirror = mirror.filter((t) => !canonical.includes(t));
+  if (onlyCanonical.length > 0 || onlyMirror.length > 0) {
+    return fail(`s1: FAIL paritet — bara i kanonisk: [${onlyCanonical.join(', ')}], bara i spegeln: [${onlyMirror.join(', ')}]`);
+  }
+
+  return ok(`s1: subtyper=${mirror.length} paritet=ok negativ=${NEGATIVE.length} avvisade music=1 pass`);
+}
+
+/**
+ * S2 — källans EGEN URL är en kandidat, och den bär riktiga events.
+ *
+ * Två delar: regeln i biblioteket (som skriptet anropar — annars vore det
+ * död kod) och ett levande bevis på att källans egen URL faktiskt ger
+ * events med den riktiga extractorn.
+ */
+async function s2() {
+  const lib = await import(pathToFileURL(path.join(ROOT, 'scripts/lib/sitemapDiscovery.mjs')).href);
+  const script = readFileSync(path.join(ROOT, 'scripts/ingest-sitemap-discovery.mjs'), 'utf8');
+  if (!/buildCandidateUrls\(source\.url/.test(script)) {
+    return fail('s2: FAIL skriptet anropar inte buildCandidateUrls(source.url, …) — regeln är inte i körvägen');
+  }
+
+  const OWN = 'https://nalen.com/sv/konsert/kleerup';
+  const cands = lib.buildCandidateUrls(OWN, ['https://nalen.com/evenemang/annat']);
+  if (cands[0] !== OWN) return fail(`s2: FAIL källans URL är inte först i kandidatmängden: ${JSON.stringify(cands)}`);
+  if (!cands.includes('https://nalen.com/evenemang/annat')) return fail('s2: FAIL sitemap-URL tappades ur kandidatmängden');
+  if (lib.buildCandidateUrls(OWN, [OWN]).length !== 1) return fail('s2: FAIL källans URL dubblerades');
+  if (lib.buildCandidateUrls('', ['https://x.se/a']).includes('')) return fail('s2: FAIL tom käll-URL blev kandidat');
+  // Negativ kontroll: kandidatmängden är inte "alla URL:er".
+  if (cands.includes('https://example.invalid/')) return fail('s2: FAIL negativ kontroll — främmande URL i kandidatmängden');
+
+  // LEVBEBIVS: kör det riktiga skriptet mot en källa vars egen URL bär
+  // events, och kontrollera att den faktiskt hämtas.
+  const SLUG = 'allevents-in-stockholm';
+  const OWN_URL = 'https://allevents.in/stockholm';
+  const r = spawnSync(
+    'node',
+    ['scripts/ingest-sitemap-discovery.mjs', '--dry-run', `--slug=${SLUG}`],
+    { cwd: ROOT, encoding: 'utf8', timeout: 300_000, killSignal: 'SIGKILL' },
+  );
+  const out = `${r.stdout ?? ''}${r.stderr ?? ''}`;
+  if (r.status !== 0) {
+    return fail(`s2: FAIL skriptet avslutade med ${r.status}:\n${out.split('\n').slice(-5).join('\n')}`);
+  }
+  const line = out.split('\n').find((l) => l.includes(`${SLUG}:`) && l.includes('fetched='));
+  if (!line) return fail(`s2: FAIL ingen rad för ${SLUG} i skriptets logg:\n${out.split('\n').slice(-5).join('\n')}`);
+  const urlsRaw = line.match(/urls=(\[[^\]]*\])/)?.[1];
+  if (!urlsRaw) return fail(`s2: FAIL loggen saknar urls= — gaten kan inte se vilka URL:er som hämtades: ${line.trim()}`);
+  let urls;
+  try { urls = JSON.parse(urlsRaw); } catch { return fail(`s2: FAIL urls= är inte giltig JSON: ${urlsRaw}`); }
+  if (!urls.includes(OWN_URL)) return fail(`s2: FAIL källans egen URL ${OWN_URL} är inte bland de hämtade: ${urlsRaw}`);
+  const fetched = Number(line.match(/fetched=(\d+)/)?.[1] ?? '0');
+  if (fetched < 1) return fail(`s2: FAIL ${SLUG} hämtade ${fetched} events — källans egen URL gav inget`);
+
+  // Mät samma sak oberoende: hämta källans egen URL och kör den riktiga
+  // extractorn på svaret.
+  const extraction = await import(pathToFileURL(path.join(ROOT, 'scripts/lib/eventExtraction.mjs')).href);
+  let html;
+  try {
+    const res = await fetch(OWN_URL, { headers: { 'User-Agent': 'EventPulse-Bot/1.0 (sitemap crawler)' } });
+    if (!res.ok) return fail(`s2: FAIL källans egen URL svarade HTTP ${res.status}`);
+    html = await res.text();
+  } catch (e) {
+    return fail(`s2: FAIL kunde inte hämta källans egen URL: ${e?.message ?? e}`);
+  }
+  const ownEvents = extraction.extractAllEvents(html, OWN_URL);
+  if (ownEvents.length === 0) return fail('s2: FAIL källans egen URL ger 0 events med den riktiga extractorn');
+
+  return ok(`s2: egen_url=1 sökväg=${urlsRaw} fetched=${fetched} egna_events=${ownEvents.length} pass`);
+}
+
+/**
+ * S3 — LEVBEBIVS: källorna som fixen öppnade har framtida rader i DB.
+ *
+ * Negativ kontroll: stockholmjazz har rader men bara i det förflutna —
+ * framtidsfiltret ska ge 0 för den. Utan den skulle "count > 0" vara en
+ * mätning som inte kan skilja framtid från dåtid.
+ */
+async function s3() {
+  const now = new Date().toISOString();
+  const POSITIVE = ['concerts50com', 'sodrateatern', 'aviciiarena'];
+  const NEGATIVE = 'stockholmjazz';
+  const counts = [];
+
+  for (const slug of POSITIVE) {
+    const { data, error } = await supabaseGet(
+      'events',
+      `select=id,title_sv,start_time&source=eq.${slug}&start_time=gt.${now}&limit=1000`,
+    );
+    if (error) return fail(`s3: FAIL DB-fel för ${slug}: ${error}`);
+    if (!Array.isArray(data)) return fail(`s3: FAIL oväntat svar för ${slug}: ${JSON.stringify(data).slice(0, 120)}`);
+    if (data.length === 0) return fail(`s3: FAIL ${slug} har 0 framtida events i DB — fixen gav ingen effekt`);
+    const broken = data.filter((r) => !r.title_sv || !r.start_time).length;
+    if (broken > 0) return fail(`s3: FAIL ${slug}: ${broken} rader saknar titel eller startdatum`);
+    counts.push(`${slug}=${data.length}`);
+  }
+
+  const negFuture = await supabaseGet('events', `select=id&source=eq.${NEGATIVE}&start_time=gt.${now}&limit=10`);
+  if (negFuture.error) return fail(`s3: FAIL DB-fel för negativ kontroll: ${negFuture.error}`);
+  if (!Array.isArray(negFuture.data)) return fail('s3: FAIL oväntat svar för negativ kontroll');
+  if (negFuture.data.length !== 0) return fail(`s3: FAIL negativ kontroll — ${NEGATIVE} har ${negFuture.data.length} framtida rader`);
+  const negAll = await supabaseGet('events', `select=id&source=eq.${NEGATIVE}&limit=10`);
+  if (!Array.isArray(negAll.data) || negAll.data.length === 0) {
+    return fail(`s3: FAIL negativ kontroll — ${NEGATIVE} har inga rader alls, så framtidsfiltret bevisar inget`);
+  }
+
+  return ok(`s3: ${counts.join(' ')} negativ=${NEGATIVE} noll av ${negAll.data.length} pass`);
+}
+
+const gates = { g1, g2, g3, g4, g5, g6, g7, g8, g9, h1, h2, h3, h4, h5, h6, e1, e2, e3, e4, e5, e6, e7, e8, e9, e10, e11, n1, n2, s1, s2, s3 };
 if (!arg || !gates[arg]) {
   console.error(`usage: node scripts/verify-fixes.mjs <${Object.keys(gates).join('|')}>`);
   process.exit(2);
