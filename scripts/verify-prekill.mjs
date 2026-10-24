@@ -54,7 +54,37 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const arg = process.argv[2];
 
 function ok(msg) { console.log(msg); }
-function fail(msg) { console.error(msg); process.exit(1); }
+
+/**
+ * Ett gate-fel.
+ *
+ * `fail()` KASTAR i stället för att göra `process.exit(1)`. Skälet: en gate
+ * som failar inuti ett `try { … } finally { cleanup() }` skulle annars
+ * avsluta direkt — `finally` körs inte vid `process.exit()` — och lämna
+ * den falska kedjan levande. Den levande kedjan gör då nästa körning
+ * vakuum ("en ingestion-kedja kör") och gaten kan inte köras om förrän
+ * processen har timeout:at.
+ *
+ * Kastet fångas i toppen av filen och blir då exit 1 med meddelandet på
+ * stderr — samma utdata som tidigare, men städningen hinns med först.
+ */
+class GateError extends Error {}
+function fail(msg) { throw new GateError(msg); }
+
+/**
+ * Fångar gate-felet på toppnivån och gör om det till exit 1.
+ *
+ * Felmeddelandet går till stderr, precis som tidigare, men nu har `finally`
+ * hunnit städa bort de falska processerna innan vi avslutar.
+ */
+process.on('uncaughtException', (err) => {
+  if (err instanceof GateError) {
+    console.error(err.message);
+  } else {
+    console.error(err);
+  }
+  process.exit(1);
+});
 
 const SLEEP_MS = 600_000; // 10 min — långt nog attprocessen inte dör av sig själv
 const TMP = mkdtempSync(path.join(os.tmpdir(), 'ep-prekill-'));
