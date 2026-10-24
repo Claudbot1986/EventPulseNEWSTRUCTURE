@@ -76,23 +76,23 @@ export const ZOOM_LEVELS: ZoomLevel[] = [
 ];
 
 /**
- * Viktad zoom-fördelning: EC/CU/MCU får 25% vardera, resterande 7 zoom delar 25%.
- * Användarens foto-redaktionella preferens: vill ha mer close-up/editorial,
- * mindre wide-shot. Verifierat med weighted distribution + largest-remainder.
+ * Viktad zoom-fördelning: XW/EST/AER får 25% vardera, resterande 7 zoom delar 25%.
+ * Användarens foto-redaktionella preferens 2026-10-21: vill ha mer wide/establishing/
+ * aerial, mindre close-up. Verifierat med weighted distribution + largest-remainder.
  */
 export const ZOOM_WEIGHTS: Record<string, number> = {
-  EC: 0.25,
-  CU: 0.25,
-  MCU: 0.25,
-  MED: 1 / 28,    // 0.0357
+  EC: 1 / 28,     // 0.0357
+  CU: 1 / 28,
+  MCU: 1 / 28,
+  MED: 1 / 28,
   MLS: 1 / 28,
   LS: 1 / 28,
   WIDE: 1 / 28,
-  XW: 1 / 28,
-  EST: 1 / 28,
-  AER: 1 / 28,
+  XW: 0.25,
+  EST: 0.25,
+  AER: 0.25,
 };
-// summan: 0.75 + 7×(1/28) = 0.75 + 0.25 = 1.0 ✓
+// summan: 7×(1/28) + 3×0.25 = 0.25 + 0.75 = 1.0 ✓
 
 // === HUMAN-READABLE SUB-VARIATION =========================================
 export const POSES = ['still', 'dynamic', 'silhouette'] as const;
@@ -144,9 +144,9 @@ export interface Combo {
 }
 
 /**
- * Viktad fördelning per zoom-nivå enligt ZOOM_WEIGHTS (close-ups prioriteras).
- * För count=10 → EC=4, CU=3, MCU=3 (med largest-remainder).
- * För count=20 → 6/6/6/1/1/0/0/0/0/0 (summa=20).
+ * Viktad fördelning per zoom-nivå enligt ZOOM_WEIGHTS (XW/EST/AER prioriteras).
+ * För count=10 → XW=3, EST=3, AER=3, EC=1 (largest-remainder).
+ * För count=30 → XW=8, EST=8, AER=7 + 1 per övrig zoom-nivå.
  * Inom varje zoom-nivå varieras pose+light cykliskt (round-robin per zoom).
  */
 function distributeZoomSlots(count: number, zooms: ZoomLevel[]): Map<string, number> {
@@ -177,7 +177,7 @@ function distributeZoomSlots(count: number, zooms: ZoomLevel[]): Map<string, num
 
 /**
  * Bygger count unika (zoom, pose, light)-kombinationer viktade mot ZOOM_WEIGHTS.
- * Close-ups (EC/CU/MCU) prioriteras enligt editorial-fotoönskemål.
+ * Wide/establishing/aerial (XW/EST/AER) prioriteras enligt editorial-fotoönskemål.
  */
 export function buildRoundRobin(
   count: number,
