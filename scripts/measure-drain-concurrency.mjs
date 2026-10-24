@@ -24,6 +24,8 @@
  *   node scripts/measure-drain-concurrency.mjs --low 5 --high 10 --seconds 120
  *   node scripts/measure-drain-concurrency.mjs --low 5 --high 10 --seconds 120 --apply
  *     (--apply: exit 1 om den högre concurrencyn INTE är snabbare)
+ *   node scripts/measure-drain-concurrency.mjs --low 5 --high 10 --seconds 120 --seed
+ *     (--seed: kör importToEventPulse först, så det finns något att mäta på)
  */
 
 import { spawn } from 'node:child_process';
@@ -43,6 +45,39 @@ const low = parseInt(argOf('--low', '5'), 10);
 const high = parseInt(argOf('--high', '10'), 10);
 const seconds = parseInt(argOf('--seconds', '120'), 10);
 const apply = argv.includes('--apply');
+const seed = argv.includes('--seed');
+
+/**
+ * Lägg riktiga jobb i kön så att det finns något att mäta på.
+ *
+ * Kör den VANLIGA importvägen (importToEventPulse) — inte en syntetisk
+ * queue. Importen är idempotent: den släpper terminala jobb och lägger
+ * in dem igen med samma jobId, och normalizern deduplar på
+ * (source, titel, start_time). Inga dubbletter i databasen.
+ *
+ * Utan detta är mätningen meningslös när kön är tom — då blir båda
+ * mätvärdena 0 jobb/min, vilket är korrekt men värdelöst.
+ */
+function seedQueue() {
+  return new Promise((resolve, reject) => {
+    const child = spawn('npx', ['tsx', '03-Queue/importToEventPulse.ts'], {
+      cwd: ROOT,
+      env: { ...process.env },
+    });
+    let out = '';
+    child.stdout.on('data', (c) => { out += c.toString(); });
+    child.stderr.on('data', (c) => { out += c.toString(); });
+    child.on('error', reject);
+    child.on('close', (code) => {
+      if (code !== 0) {
+        reject(new Error(`importToEventPulse avslutade med exit=${code}. Sista utdata:\n${out.slice(-1500)}`));
+        return;
+      }
+      const m = out.match(/(\d+)\s+events till bullmq/i);
+      resolve({ exitCode: code, enqueued: m ? parseInt(m[1], 10) : null, tail: out.slice(-400) });
+    });
+  });
+}
 
 /**
  * Kör drainen med given concurrency och räkna färdiga jobb.
@@ -77,6 +112,18 @@ async function measure(concurrency) {
         reject(new Error(`drain avslutade med exit=${code}. Sista utdata:\n${stdoutTail}`));
         return;
       }
+      // En mätning utan färdiga jobb är ogiltig — inte "låg hastighet".
+      // Utan denna vakt skulle en tomkö ge 0 jobb/min för BÅDA värdena, och
+      // jämförelsen "högre är snabbare" skulle aldrig fylla sitt syfte.
+      if (completed === 0 && failed === 0) {
+        reject(new Error(
+          `concurrency=${concurrency}: inga jobb slutfördes under ${seconds} s — ` +
+          `mätningen är ogiltig (kön var troligen tom). ` +
+          `Kör med --seed för att lägga in riktiga jobb först. ` +
+          `Sista utdata:\n${stdoutTail}`,
+        ));
+        return;
+      }
       resolve({
         concurrency,
         completed,
@@ -91,6 +138,11 @@ async function measure(concurrency) {
 const result = { low, high, seconds, measuredAt: new Date().toISOString() };
 
 try {
+  if (seed) {
+    console.error('[measure] seeder kön via importToEventPulse (riktiga events)...');
+    result.seed = await seedQueue();
+    console.error(`[measure] seed: ${result.seed.enqueued ?? '?'} events till bullmq`);
+  }
   console.error(`[measure] concurrency=${low} i ${seconds}s ...`);
   result.lowResult = await measure(low);
   console.error(`[measure] concurrency=${high} i ${seconds}s ...`);

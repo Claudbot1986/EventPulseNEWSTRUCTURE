@@ -47,6 +47,44 @@ const arg = process.argv[2];
 function ok(msg) { console.log(msg); }
 function fail(msg) { console.error(msg); process.exit(1); }
 
+/**
+ * Tolka ett JSON-objekt ur en text som kan innehålla loggrad före och
+ * efter. Letar efter det sista kompletta objektet (mätverktygen skriver
+ * JSONen sist på stdout).
+ */
+function parseJsonObject(text) {
+  const trimmed = (text ?? '').trim();
+  try {
+    return JSON.parse(trimmed);
+  } catch {
+    // fortsätt — försök hitta ett inbäddat objekt
+  }
+  for (let start = trimmed.indexOf('{'); start !== -1; start = trimmed.indexOf('{', start + 1)) {
+    let depth = 0;
+    let inString = false;
+    let escaped = false;
+    for (let i = start; i < trimmed.length; i++) {
+      const ch = trimmed[i];
+      if (escaped) { escaped = false; continue; }
+      if (ch === '\\') { escaped = true; continue; }
+      if (ch === '"') { inString = !inString; continue; }
+      if (inString) continue;
+      if (ch === '{') depth++;
+      else if (ch === '}') {
+        depth--;
+        if (depth === 0) {
+          try {
+            return JSON.parse(trimmed.slice(start, i + 1));
+          } catch {
+            break; // det här var inte ett JSON-objekt — fortsätt sökningen
+          }
+        }
+      }
+    }
+  }
+  throw new Error('hittade inget JSON-objekt i utdatan');
+}
+
 // G1 — parser för eventsExtracted (plan steg 1A)
 function g1() {
   const statusPath = path.join(ROOT, 'runtime/ingestion-cron.status.json');
@@ -1129,6 +1167,11 @@ function n1() {
  * räknar "[worker] Job completed"-rader. Kräver att den högre concurrencyn
  * ÄR snabbare — annars är höjningen värdelös. Ingen syntetisk data: varje
  * räknad jobb är en riktig normalisering som persisterat ett event.
+ *
+ * `--seed` kör den vanliga importvägen först, så det finns arbete att mäta
+ * på även när kön är tom. Utan seed ger en tomkö 0 jobb/min i båda
+ * mätningarna — korrekt, men värdelöst. Mätverktyget vägrar därför redovisa
+ * en mätning där inga jobb slutfördes.
  */
 function n2() {
   const unit = spawnSync(
@@ -1142,7 +1185,7 @@ function n2() {
 
   const r = spawnSync(
     'node',
-    ['scripts/measure-drain-concurrency.mjs', '--low', '5', '--high', '10', '--seconds', '120', '--apply'],
+    ['scripts/measure-drain-concurrency.mjs', '--low', '5', '--high', '10', '--seconds', '120', '--seed', '--apply'],
     { cwd: ROOT, encoding: 'utf8', timeout: 600_000, killSignal: 'SIGKILL' },
   );
   const out = `${r.stdout ?? ''}${r.stderr ?? ''}`;
@@ -1151,14 +1194,28 @@ function n2() {
   }
   let m;
   try {
-    m = JSON.parse(out.slice(out.indexOf('{')));
+    // Mätverktyget skriver JSON på stdout och loggar på stderr. Om man
+    // parsar concat(stdout+stderr) får man JSONen med loggraderna
+    // hängande efter — och JSON.parse fallerar. Parsa stdout ensamt, och
+    // falla tillbaka på att hitta det sista kompletta JSON-objektet.
+    m = parseJsonObject(r.stdout ?? '');
   } catch (e) {
     return fail(`n2: FAIL kunde inte tolka mätningen: ${e.message}\n${out.split('\n').slice(-6).join('\n')}`);
   }
+  // Mätningen måste ha haft arbete att göra — annars är "högre är snabbare"
+  // en jämförelse mellan två nollor.
+  if (!m.lowResult.completed || !m.highResult.completed) {
+    return fail(
+      `n2: FAIL mätningen utan arbete — ` +
+      `c=${m.lowResult.concurrency}: ${m.lowResult.completed} jobb, ` +
+      `c=${m.highResult.concurrency}: ${m.highResult.completed} jobb`,
+    );
+  }
   return ok(
     `n2: concurrency mätbar och högre ger mer pass ` +
-    `(c=${m.lowResult.concurrency}: ${m.lowResult.ratePerMin} jobb/min / ${m.jobsPerBudgetLow} per 90 min, ` +
-    `c=${m.highResult.concurrency}: ${m.highResult.ratePerMin} jobb/min / ${m.jobsPerBudgetHigh} per 90 min, ` +
+    `(seed=${m.seed?.enqueued ?? '?'} events, ` +
+    `c=${m.lowResult.concurrency}: ${m.lowResult.completed} jobb / ${m.lowResult.ratePerMin} jobb-min / ${m.jobsPerBudgetLow} per 90 min, ` +
+    `c=${m.highResult.concurrency}: ${m.highResult.completed} jobb / ${m.highResult.ratePerMin} jobb-min / ${m.jobsPerBudgetHigh} per 90 min, ` +
     `speedup=${m.speedup}×)`,
   );
 }
