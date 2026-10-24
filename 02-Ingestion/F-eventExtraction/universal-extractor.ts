@@ -43,6 +43,7 @@ import { detectCategoryFromContainerClass } from './categoryKeywords.js';
 import { runAdapters } from './adapters/index.js';
 import { findKlockanInText } from '../lib/swedishTimeText.js';
 import { isNavigationTitle } from './navigationTitles.js';
+import { pickTitleCandidate } from './dateOnlyTitles.js';
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -1491,10 +1492,17 @@ function extractHtmlHeuristics($: cheerio.CheerioAPI, source: string, baseUrl: s
       '[class*="title"]', '[class*="heading"]', '[class*="namn"]', '[class*="name"]',
       '[data-title]', '[data-name]',
     ];
+    // 2026-10-24 — vissa kort lägger datumet i den FÖRSTA rubriken och
+    // evenemangets namn i en senare ("<h2>6 NOV, 14:30</h2>" +
+    // "<h3>Gustav Adolf - dagen</h3>"). Se dateOnlyTitles.ts.
+    const headingCandidates: string[] = [];
     for (const sel of headingSelectors) {
-      const t = $card.find(sel).first().text().trim();
-      if (t && t.length >= 2 && t.length <= 200) return t;
+      $card.find(sel).each((_: any, el: any) => {
+        headingCandidates.push($(el).text().trim().replace(/\s+/g, ' '));
+      });
     }
+    const heading = pickTitleCandidate(headingCandidates);
+    if (heading) return heading;
     const anchorTitle = $card.find('a[title]').attr('title') || '';
     if (anchorTitle.length > 2) return anchorTitle;
     const linkText = $card.find('a').first().text().trim();
@@ -1774,11 +1782,15 @@ function extractTimeAnchors($: cheerio.CheerioAPI, source: string, baseUrl: stri
     const cardClass = $card.attr('class') || '';
     if (/news|article|blog|post/i.test(cardClass)) return;
 
-    let title = '';
+    // 2026-10-24 — samma datum-i-rubriken-problem som i extractTitle:
+    // hoppa över kandidater som bara är ett datum.
+    const headingCandidates: string[] = [];
     for (const sel of ['h1','h2','h3','h4','[class*="title"]','[class*="heading"]','[data-title]']) {
-      const t = $card.find(sel).first().text().trim();
-      if (t && t.length >= 2) { title = t; break; }
+      $card.find(sel).each((_: any, el: any) => {
+        headingCandidates.push($(el).text().trim().replace(/\s+/g, ' '));
+      });
     }
+    let title = pickTitleCandidate(headingCandidates);
     if (!title) title = $card.find('a[title]').attr('title') || '';
     if (!title) {
       const $link = $time.closest('a');
@@ -1915,7 +1927,13 @@ function extractSwedishRelativeDates($: cheerio.CheerioAPI, source: string, base
     const $cardTitle = $card.find(TITLE_ELEMENT_SELECTORS).first();
     let title: string;
     if ($ownTitle.length) {
-      title = $ownTitle.text().trim().replace(/\s+/g, ' ');
+      // 2026-10-24 — datum i första rubriken ("<h2>6 NOV, 14:30</h2>")
+      // hoppas över till förmån för den riktiga titeln i kortet.
+      const ownTitles: string[] = [];
+      $a.find(TITLE_ELEMENT_SELECTORS).each((_: any, el: any) => {
+        ownTitles.push($(el).text().trim().replace(/\s+/g, ' '));
+      });
+      title = pickTitleCandidate(ownTitles);
     } else if ($cardTitle.length) {
       // Kortet har en titel men ankaret bär den inte → ankaret är en
       // CTA-länk ("Läs mer", scen-filter). Bara kortets primära länk
