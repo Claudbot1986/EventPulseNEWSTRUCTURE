@@ -44,6 +44,7 @@ import { runAdapters } from './adapters/index.js';
 import { findKlockanInText } from '../lib/swedishTimeText.js';
 import { isNavigationTitle } from './navigationTitles.js';
 import { pickTitleCandidate } from './dateOnlyTitles.js';
+import { isTitleMarking, elementHasTitleishClass } from './titleClassTokens.js';
 import { dedupeEvents, ALT_TEXT_TITLE_SIGNAL } from './eventDedup.js';
 
 // ─── Types ───────────────────────────────────────────────────────────────────
@@ -592,6 +593,18 @@ export function parseSwedishRangeWithoutYear(
  */
 const TITLE_ELEMENT_SELECTORS =
   '[class*="title"], [class*="heading"], h1, h2, h3, h4, h5, h6';
+
+/**
+ * Element som bär en DEDIKERAD evenemangstitel.
+ *
+ * `[class*="title"]` matchar även underrubriker ("Blurb__subtitle").
+ * Underrubriken är inte evenemangets namn — 2026-10-25 gav det 20
+ * berwaldhallen-rader med titeln "— Next Generation 14–16 år".
+ * Se titleClassTokens.ts (bevis på sju orelaterade domäner).
+ */
+function findTitleMarkings($: cheerio.CheerioAPI, $root: any): any {
+  return $root.find(TITLE_ELEMENT_SELECTORS).filter((_: any, el: any) => isTitleMarking(el));
+}
 
 /**
  * Explicit kalenderdatum i svensk form: "24 okt", "3 nov 2026".
@@ -1876,7 +1889,11 @@ function extractHtmlHeuristics($: cheerio.CheerioAPI, source: string, baseUrl: s
     // "<h3>Gustav Adolf - dagen</h3>"). Se dateOnlyTitles.ts.
     const headingCandidates: string[] = [];
     for (const sel of headingSelectors) {
+      // 2026-10-25 — `[class*="title"]` matchar även "subtitle".
+      // Underrubriker är inte evenemangets namn. Se titleClassTokens.ts.
+      const classSelector = sel === '[class*="title"]' || sel === '[class*="heading"]';
       $card.find(sel).each((_: any, el: any) => {
+        if (classSelector && !elementHasTitleishClass(el)) return;
         headingCandidates.push($(el).text().trim().replace(/\s+/g, ' '));
       });
     }
@@ -2258,7 +2275,10 @@ function extractTimeAnchors($: cheerio.CheerioAPI, source: string, baseUrl: stri
     // hoppa över kandidater som bara är ett datum.
     const headingCandidates: string[] = [];
     for (const sel of ['h1','h2','h3','h4','[class*="title"]','[class*="heading"]','[data-title]']) {
+      const classSelector = sel === '[class*="title"]' || sel === '[class*="heading"]';
       $card.find(sel).each((_: any, el: any) => {
+        // 2026-10-25 — underrubriker ("…__subtitle") är inte titlar.
+        if (classSelector && !elementHasTitleishClass(el)) return;
         headingCandidates.push($(el).text().trim().replace(/\s+/g, ' '));
       });
     }
@@ -2395,14 +2415,14 @@ function extractSwedishRelativeDates($: cheerio.CheerioAPI, source: string, base
     // Företräde för den DEDIKERADE titelmarkeringen: ankarens egen
     // ("<a><div class="title">…") eller kortets ("<p class="title">…").
     // Ankartexten kan ju vara "19:30 Stora scen Humor, Stand up KRISTOFFER …".
-    const $ownTitle = $a.find(TITLE_ELEMENT_SELECTORS).first();
-    const $cardTitle = $card.find(TITLE_ELEMENT_SELECTORS).first();
+    const $ownTitle = findTitleMarkings($, $a).first();
+    const $cardTitle = findTitleMarkings($, $card).first();
     let title: string;
     if ($ownTitle.length) {
       // 2026-10-24 — datum i första rubriken ("<h2>6 NOV, 14:30</h2>")
       // hoppas över till förmån för den riktiga titeln i kortet.
       const ownTitles: string[] = [];
-      $a.find(TITLE_ELEMENT_SELECTORS).each((_: any, el: any) => {
+      findTitleMarkings($, $a).each((_: any, el: any) => {
         ownTitles.push($(el).text().trim().replace(/\s+/g, ' '));
       });
       title = pickTitleCandidate(ownTitles);

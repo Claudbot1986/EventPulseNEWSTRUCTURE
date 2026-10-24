@@ -977,3 +977,62 @@ regeln oförändrat.
   CHECK: npx tsx scripts/verify-month-boundary.mjs --negative-control
   EXPECT: /mb-negativkontroll: före-fix-kopia FAIL:ar som väntat \(\d+ kontroller\) pass/
   EVIDENCE: automatic-evidence=v1; definition-sha256=6e8f21c3995f85f9052400191a33c8ab84adadcbdf657440b2661a8f7eff8f48; exit=0; EXPECT=matched; output-sha256=11e4ea6eb997b2eff0043aab943e80244fc51eb8a91a82e38f4ad92c638b9581; output-bytes=178; shell=/bin/sh; cwd=/Users/claudgashi/EventPulse; path=29325ef63737/16 entries
+
+## Underrubrik är inte evenemangets namn (2026-10-25) — extraktorn
+
+Scope: `02-Ingestion/F-eventExtraction/titleClassTokens.ts` (ny),
+`02-Ingestion/F-eventExtraction/titleClassTokens.test.ts` (ny),
+`02-Ingestion/F-eventExtraction/universal-extractor-subtitle.test.ts` (ny),
+`02-Ingestion/F-eventExtraction/universal-extractor.ts`,
+`scripts/verify-subtitle-titles.mjs` (ny).
+
+Extraktorn hittar titlar med `[class*="title"]`. CSS-väljaren matchar varje
+klass som INNEHÅLLER strängen "title" — och det gör även "subtitle",
+"subTitle", "hero-video__subtitle". På berwaldhallen.se:
+
+    <h3 class="Blurb__heading">
+      <a href="…/streetstardanceschoolchallenge2026-14-16-ar">
+        Streetstar Dance School Challenge 2026
+        <span class="Blurb__subtitle"> — Next Generation 14–16 år</span>
+      </a>
+    </h3>
+
+Underrubriken matchade `[class*="title"]` och låg först i dokumentordningen —
+så 20 av berwaldhallens rader fick underrubriken som evenemangets namn i
+stället för konsertens titel.
+
+**Bevis för General (Generalization Protection Rule):** samma klassmönster
+fanns på sju ORELATERADE domäner, uppmätta 2026-10-25 över 112 aktiva
+källor — berwaldhallen.se ("Blurb__subtitle"), berwaldhallen-tixly.se
+("Blurb__subtitle"), concerts50.com ("subtitle2"),
+nobelprizemuseum.se ("hero-video__subtitle"), modernamuseet.se
+("post-carousel__item-subtitle"), scalateatern.se ("subtitle") och svt.se
+("RelatedLinkTeaser__subTitle___yWnZC"). Det är HTML-kontraktet "klassnamn
+med 'subtitle' betyder underrubrik", inte ett sitedomänproblem.
+
+Negativa kontroller: riktiga rubrik-klasser ("title", "event-title",
+"post__title", "Blurb__heading") ska INTE påverkas, och en rubrik utan
+klass ska alltid räknas.
+
+**Mätning före/efter (samma oracle, `scripts/measure-aggregate-cards.mjs`):**
+berwaldhallen titel-bitar 20 → 0. Övriga domäner: ingen försämring.
+
+- [x] SB1: enhetstesterna för rubrik-klasser passerar (8 tester, varav fyra negativa kontroller)
+  CHECK: npx vitest run 02-Ingestion/F-eventExtraction/titleClassTokens.test.ts
+  EXPECT: /Tests\s+\d+ passed/
+  EVIDENCE: automatic-evidence=v1; definition-sha256=2262f642b3416441d0ea6c6683e7e20802e40889279390f7b1b108dc975e51ed; exit=0; EXPECT=matched; output-sha256=cf2d4acc22972b68fcc32caef86cc2c785c930563a4c39092170c3777d3b2324; output-bytes=208; shell=/bin/sh; cwd=/Users/claudgashi/EventPulse; path=29325ef63737/16 entries
+
+- [x] SB2: extraktorns testvit är grönt — underrubrik-fixen ger ingen regression
+  CHECK: npx vitest run 02-Ingestion/F-eventExtraction/
+  EXPECT: /Tests\s+\d+ passed/
+  EVIDENCE: automatic-evidence=v1; definition-sha256=13e312eff1060baa85c43d0b1abacf3cf3fc3096f20d14a3eaa75aff92efb95d; exit=0; EXPECT=matched; output-sha256=3590fc43d13e5d144363400d846f4fac3d0b57ae94cff93b9b24545748c1b6d5; output-bytes=218; shell=/bin/sh; cwd=/Users/claudgashi/EventPulse; path=29325ef63737/16 entries
+
+- [x] SB3: LEVDAG — berwaldhallen.se hämtas live och ingen rad får en underrubrik som titel (före fixen: 20 rader)
+  CHECK: npx tsx scripts/verify-subtitle-titles.mjs
+  EXPECT: /sb: live berwaldhallen rader=\d+ .*kontroller=3 pass/
+  EVIDENCE: automatic-evidence=v1; definition-sha256=4f2366c4e3f785ce065723ecb86598329a33d1f75210721d987ed0c05eeba136; exit=0; EXPECT=matched; output-sha256=66e38e45414d50dac3b9e300100f88a83f1b10d146d27640389303bca5510193; output-bytes=350; shell=/bin/sh; cwd=/Users/claudgashi/EventPulse; path=29325ef63737/16 entries
+
+- [x] SB4: negativ kontroll — samma kontroller mot en muterad före-fix-kopia ska FAIL:a (annars bevisar SB3 ingenting)
+  CHECK: npx tsx scripts/verify-subtitle-titles.mjs --negative-control
+  EXPECT: /sb-negativkontroll: före-fix-kopia FAIL:ar som väntat \(\d+ kontroller\) pass/
+  EVIDENCE: automatic-evidence=v1; definition-sha256=fa2cfb3c7b2073587a10f142ee67c6fee38872fa51abc341b37e64ecede4f5b2; exit=0; EXPECT=matched; output-sha256=d5e8c8261677fcac081a9dfd8ab606877be9d1023f45d58159243f1d88d71531; output-bytes=304; shell=/bin/sh; cwd=/Users/claudgashi/EventPulse; path=29325ef63737/16 entries
