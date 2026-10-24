@@ -16,6 +16,7 @@ import {
   hasUnfinalizedCompletedActivePool,
   parseBatchNumberFromId,
   resolveC4Route,
+  resolveOrphanRoute,
   resolveRoute,
   type CResult,
 } from './run-dynamic-pool.js';
@@ -535,6 +536,54 @@ describe('resolveC4Route', () => {
     const withOverride = resolveC4Route({ nextQueue: 'manual-review', roundsParticipated: 1, isRenderPreferred: true });
     expect(withoutOverride.queueName).toBe('STAYS_IN_POOL');
     expect(withOverride.queueName).toBe('postTestC-D');
+  });
+});
+
+// ---------------------------------------------------------------------------
+// TESTS: orphan-vägarnas routing
+// ---------------------------------------------------------------------------
+
+describe('resolveOrphanRoute', () => {
+  // 2026-10-24 — riksarkivet är bekräftat att bara gå att läsa via render
+  // (plain HTTP gav 0 events, render gav 20). Tre orphan-vägar skrev ändå
+  // ALLTID till postTestC-manual-review och förbigick den källspecifika
+  // render-regeln:
+  //   [ORPHAN-FIX]  — efter loopens rundor
+  //   [IMP-001-FIX] — efter loopen avslutats
+  //   [RECOVERY]    — avbruten körning återupptas
+  // Mätbart i loggen: `[IMP-001-FIX] riksarkivet → postTestC-manual-review
+  // (rounds=1)`.
+  it('preferredPath=render routar orphan-källor till postTestC-D', () => {
+    const r = resolveOrphanRoute({ isRenderPreferred: true, marker: '[ORPHAN-FIX] test' });
+    expect(r.queueName).toBe('postTestC-D');
+    expect(r.queuePath).toContain('postTestC-D.jsonl');
+    expect(r.queueReason).toContain('preferredPath=render');
+  });
+
+  it('render-regeln gäller alla tre orphan-markörer', () => {
+    for (const marker of ['[ORPHAN-FIX] a', '[IMP-001-FIX] b', '[RECOVERY] c']) {
+      const r = resolveOrphanRoute({ isRenderPreferred: true, marker });
+      expect(r.queueName).toBe('postTestC-D');
+      expect(r.queueReason).toContain(marker);
+    }
+  });
+
+  it('NEGATIV KONTROLL: utan render-krav routas orphan-källor till manual-review precis som innan', () => {
+    for (const marker of ['[ORPHAN-FIX] a', '[IMP-001-FIX] b', '[RECOVERY] c']) {
+      const r = resolveOrphanRoute({ isRenderPreferred: false, marker });
+      expect(r.queueName).toBe('postTestC-manual-review');
+      expect(r.queuePath).toContain('postTestC-manual-review.jsonl');
+      expect(r.queueReason).toBe(marker);
+    }
+  });
+
+  it('NEGATIV KONTROLL: render-regeln ändrar INTE markören för andra källor', () => {
+    const plain = resolveOrphanRoute({ isRenderPreferred: false, marker: '[IMP-001-FIX] x' });
+    const render = resolveOrphanRoute({ isRenderPreferred: true, marker: '[IMP-001-FIX] x' });
+    // Samma markör i båda fallen — bara mottagarkön skiljer sig.
+    expect(plain.queueReason).toContain('[IMP-001-FIX]');
+    expect(render.queueReason).toContain('[IMP-001-FIX]');
+    expect(plain.queueName).not.toBe(render.queueName);
   });
 });
 

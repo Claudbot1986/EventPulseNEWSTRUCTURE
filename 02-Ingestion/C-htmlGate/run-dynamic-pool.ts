@@ -564,20 +564,31 @@ function reconcileUnfinalizedActivePool(savedState: PoolState, batchNum: number)
   if (savedState.activePool.length === 0) return savedState;
   console.log(`[Recovery] Finalizing ${savedState.activePool.length} active sources left in completed batch-${batchNum}`);
   const finalizedExits = savedState.activePool.map(src => {
+    // Samma regel som de två andra orphan-vägarna: källor med bekräftat
+    // render-behov går till D-gaten, inte till manual-review.
+    const orphanRoute = resolveOrphanRoute({
+      isRenderPreferred: isRenderPreferred(src.sourceId),
+      marker: '[RECOVERY] completed pool-state had active source after max rounds',
+    });
     const queueEntry = {
       sourceId: src.sourceId,
-      queueName: 'postTestC-manual-review',
+      queueName: orphanRoute.queueName,
       queuedAt: new Date().toISOString(),
       priority: 1,
       attempt: 1,
-      queueReason: '[RECOVERY] completed pool-state had active source after max rounds',
+      queueReason: orphanRoute.queueReason,
       workerNotes: `Recovered from batch-${batchNum} pool-state before advancing`,
       roundNumber: savedState.poolRoundNumber,
       roundsParticipated: src.roundsParticipated,
       queueOrigin: 'run-dynamic-pool-recovery',
     };
-    appendToManualReview(queueEntry);
-    return { source: src, decision: 'postTestC-manual-review', result: null };
+    if (orphanRoute.queueName === 'postTestC-D') {
+      appendFileSync(orphanRoute.queuePath, JSON.stringify(queueEntry) + '\n');
+      console.log(`  [RENDER-OVERRIDE] ${src.sourceId} → postTestC-D (preferredPath=render, RECOVERY)`);
+    } else {
+      appendToManualReview(queueEntry);
+    }
+    return { source: src, decision: orphanRoute.queueName, result: null };
   });
 
   const reconciled: PoolState = {
@@ -1901,6 +1912,46 @@ export function resolveC4Route(params: {
   }
 }
 
+/**
+ * Routing för "orphan"-källor — de som fastnat i poolen efter max rundor.
+ *
+ * Det finns TVÅ orphan-vägar: [ORPHAN-FIX] (efter loopens rundor) och
+ * [IMP-001-FIX] (efter loopen avslutats). Historisk gick ALLTID till
+ * postTestC-manual-review.
+ *
+ * Men det krockade med den källspecifika render-regeln (preferredPath=render):
+ * riksarkivet är bekräftat att bara gå att läsa via render (plain HTTP gav 0
+ * events, render gav 20) och ändå hamnade i manual-review via just den här
+ * orphan-vägen — mätbart i loggen som
+ * `[IMP-001-FIX] riksarkivet → postTestC-manual-review (rounds=1)`.
+ *
+ * Det är samma fel som C4-AI-vägen hade (fix: resolveC4Route) — bara på
+ * en tredje väg. Ingen universell heuristik ändras: källspecifik konfig.
+ *
+ * Negativ kontroll: utan `isRenderPreferred` routas orphan-källor precis
+ * som innan (postTestC-manual-review).
+ */
+export function resolveOrphanRoute(params: {
+  isRenderPreferred: boolean;
+  /** Prefix som skiljer [ORPHAN-FIX] från [IMP-001-FIX] i loggen. */
+  marker: string;
+}): { queuePath: string; queueName: string; queueReason: string } {
+  if (params.isRenderPreferred) {
+    return {
+      queuePath: QUEUES.D,
+      queueName: 'postTestC-D',
+      queueReason:
+        `${params.marker} preferredPath=render (källspecifik konfiguration) — ` +
+        `plain HTML gav 0 events, D-renderGate är bekräftat väg`,
+    };
+  }
+  return {
+    queuePath: QUEUES.MANUAL_REVIEW,
+    queueName: 'postTestC-manual-review',
+    queueReason: params.marker,
+  };
+}
+
 export function resolveRoute(
   result: CResult,
   roundsParticipated: number,
@@ -2919,25 +2970,35 @@ export async function runDynamicPoolBatch(options: DynamicPoolOptions = {}): Pro
     }
   }
 
-  // Route orphaned sources to manual-review
+  // Route orphaned sources to manual-review (eller till D-gaten för källor
+  // med bekräftat render-behov — se resolveOrphanRoute).
   if (state.activePool.length > 0) {
     for (const src of state.activePool) {
+      const orphanRoute = resolveOrphanRoute({
+        isRenderPreferred: isRenderPreferred(src.sourceId),
+        marker: '[ORPHAN-FIX] Orphaned after max rounds — STEP3-CHAIN forced stay',
+      });
       const queueEntry = {
         sourceId: src.sourceId,
-        queueName: 'postTestC-manual-review',
-        queueReason: `[ORPHAN-FIX] Orphaned after max rounds — STEP3-CHAIN forced stay`,
+        queueName: orphanRoute.queueName,
+        queueReason: orphanRoute.queueReason,
         winningStage: 'C4-AI' as const,
         outcomeType: 'fail' as const,
-        routeSuggestion: 'manual-review',
+        routeSuggestion: orphanRoute.queueName === 'postTestC-D' ? 'D' : 'manual-review',
         roundNumber: src.roundsParticipated,
         roundsParticipated: src.roundsParticipated,
         queuedAt: new Date().toISOString(),
         priority: 1,
         attempt: 1,
-        workerNotes: 'ORPHAN-FIX: routed to manual-review after max rounds',
+        workerNotes: `ORPHAN-FIX: routed to ${orphanRoute.queueName} after max rounds`,
       };
-      appendToManualReview(queueEntry);
-      state.exited.push({ source: src, decision: 'postTestC-manual-review', result: null as any });
+      if (orphanRoute.queueName === 'postTestC-D') {
+        appendFileSync(orphanRoute.queuePath, JSON.stringify(queueEntry) + '\n');
+        console.log(`  [RENDER-OVERRIDE] ${src.sourceId} → postTestC-D (preferredPath=render, ORPHAN-FIX)`);
+      } else {
+        appendToManualReview(queueEntry);
+      }
+      state.exited.push({ source: src, decision: orphanRoute.queueName, result: null as any });
     }
   }
 
@@ -3503,16 +3564,22 @@ async function main() {
   // These are orphaned sources that were forced to STAY via STEP3-CHAIN
   // but the loop terminated before they could exit.
   // This fix ensures no source is left in limbo after max rounds.
+  // Källor med bekräftat render-behov (preferredPath=render) går i stället
+  // till D-gaten — samma regel som resolveRoute() och resolveC4Route().
   if (state.activePool.length > 0) {
-    console.log(`\n[IMP-001-FIX] ${state.activePool.length} sources still in activePool after max rounds — routing to manual-review:`);
+    console.log(`\n[IMP-001-FIX] ${state.activePool.length} sources still in activePool after max rounds — routing:`);
     for (const src of state.activePool) {
+      const orphanRoute = resolveOrphanRoute({
+        isRenderPreferred: isRenderPreferred(src.sourceId),
+        marker: `[IMP-001-FIX] Orphaned: forced STAY via STEP3-CHAIN in round ${src.roundsParticipated}, loop terminated before exit`,
+      });
       const queueEntry = {
         sourceId: src.sourceId,
-        queueName: 'postTestC-manual-review',
-        queueReason: `[IMP-001-FIX] Orphaned: forced STAY via STEP3-CHAIN in round ${src.roundsParticipated}, loop terminated before exit`,
+        queueName: orphanRoute.queueName,
+        queueReason: orphanRoute.queueReason,
         winningStage: 'C4-AI',
         outcomeType: 'fail',
-        routeSuggestion: 'manual-review',
+        routeSuggestion: orphanRoute.queueName === 'postTestC-D' ? 'D' : 'manual-review',
         roundNumber: src.roundsParticipated,
         roundsParticipated: src.roundsParticipated,
         queuedAt: new Date().toISOString(),
@@ -3520,15 +3587,20 @@ async function main() {
         attempt: 1,
         workerNotes: `IMP-001-FIX: orphaned after max rounds (poolRoundNumber=3 reached while source was in STEP3-CHAIN forced stay)`,
       };
-      appendToManualReview(queueEntry);
-      console.log(`  [IMP-001-FIX] ${src.sourceId} → postTestC-manual-review (rounds=${src.roundsParticipated})`);
+      if (orphanRoute.queueName === 'postTestC-D') {
+        appendFileSync(orphanRoute.queuePath, JSON.stringify(queueEntry) + '\n');
+        console.log(`  [RENDER-OVERRIDE] ${src.sourceId} → postTestC-D (preferredPath=render, IMP-001-FIX)`);
+      } else {
+        appendToManualReview(queueEntry);
+        console.log(`  [IMP-001-FIX] ${src.sourceId} → postTestC-manual-review (rounds=${src.roundsParticipated})`);
+      }
       state.exited.push({
         source: src,
-        decision: 'postTestC-manual-review',
+        decision: orphanRoute.queueName,
         result: null as any,
       });
     }
-    console.log('[IMP-001-FIX] All orphaned sources routed to postTestC-manual-review');
+    console.log('[IMP-001-FIX] All orphaned sources routed (manual-review eller D-gaten)');
   }
 
   // Step 4: Final report

@@ -33,7 +33,7 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 dotenv.config({ path: path.resolve(process.cwd(), '.env'), override: true });
 
-import { getSource } from '../tools/sourceRegistry';
+import { getSource, updateSourceStatus } from '../tools/sourceRegistry';
 import { extractFromHtml } from '../F-eventExtraction/universal-extractor';
 import { filterUsableEvents } from '../F-eventExtraction/usableEvents';
 import type { ParsedEvent } from '../F-eventExtraction/schema';
@@ -581,6 +581,31 @@ async function main() {
         queueReason: `toolD: ${res.eventsFound} events found (input=${inputFilename}, behavior=${behavior})`,
         workerNotes: `renderedPages=${res.renderedPages}; creditsUsed=${res.creditsUsed}; ${res.reason}`,
       });
+      // 2026-10-24 — D-gaten skrev INTE sources_status. C-gaten skrev
+      // `fail` när plain HTML gav 0 events, och ingenting raderade det när
+      // D-gaten sedan lyckades. Resultatet: riksarkivet stod som `fail`
+      // i operatorvyn trots 20 events i databasen — statusen ljög om en
+      // källa som faktiskt fungerade.
+      //
+      // Bara SUCCESS skrivs här. Ett misslyckande i D skrivs redan av
+      // C-gaten; att skriva det igen skulle räkna ett fel två gånger och
+      // accelerera auto-quarantän (5 fel → begravd).
+      //
+      // Skyddad: statusfelet får ALDRIG kasta. Köerna skrivs efter den här
+      // loopen — ett throw här skulle slänga bort resultatet av en körning
+      // som redan bränt credits.
+      try {
+        updateSourceStatus(entry.sourceId, {
+          success: true,
+          eventsFound: res.eventsFound,
+          pathUsed: 'render',
+          ingestionStage: 'completed',
+          lastRoutingReason: `D-renderGate: ${res.eventsFound} events (renderedPages=${res.renderedPages}, creditsUsed=${res.creditsUsed})`,
+          lastRoutingSource: 'preferredPath',
+        });
+      } catch (statusErr) {
+        log(`[WARN] ${entry.sourceId} — statuskunde inte skrivas: ${(statusErr as Error)?.message ?? statusErr}`);
+      }
       log(`[OK] ${entry.sourceId} -> postD-UI (${res.eventsFound} events, credits=${res.creditsUsed})`);
     } else if (res.eventsFound === 1 || (res.reason || '').includes('only one event')) {
       toMan1.push({
