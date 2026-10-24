@@ -436,7 +436,10 @@ export async function processRawEvent(job: Job<RawEventInput>): Promise<void> {
   // 2026-10-24 — samma fix som i importen: holdags-events (bara datum) fick
   // UTC-midnatt och föll bort så snart 00:00 UTC passerat. Se
   // 03-Queue/eventFreshness.ts.
-  if (isEventPast(raw.start_time)) {
+  //
+  // Slutdagen skickas med: ett pågående flerdagsevenemang har en start i
+  // det förflutna men lever än.
+  if (isEventPast(raw.start_time, Date.now(), raw.end_time)) {
     console.log(`[normalizer] skip "${raw.title}" (passerat datum/saknar datum: ${raw.start_time || 'tom'})`);
     return;
   }

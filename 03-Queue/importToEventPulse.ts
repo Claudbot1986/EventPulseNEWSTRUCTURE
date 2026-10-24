@@ -540,7 +540,10 @@ export async function importSource(
       // 2026-10-24 — bugg: holdags-events (bara datum) lades som UTC-midnatt
       // och föll bort så snart 00:00 UTC passerat, alltså även event som
       // pågår HELA dagen. Se 03-Queue/eventFreshness.ts.
-      if (isEventPast(raw.start_time)) {
+      //
+      // 2026-10-24 — slutdagen skickas med: ett pågående flerdagsevenemang
+      // ("23-28 oktober") har en start i det förflutna men lever än.
+      if (isEventPast(raw.start_time, Date.now(), raw.end_time)) {
 
         skippedPast++;
         continue;

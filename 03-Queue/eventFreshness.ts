@@ -57,12 +57,45 @@ export function endOfLocalDayMs(isoDate: string): number {
  *
  * @param startTime start_time som den lagrades.
  * @param nowMs     referenstid (default: nu). Injicerbar för tester.
+ * @param endTime   slut_time om raden har ett (flerdagsevenemang).
+ *
+ * 2026-10-24 — PÅGÅENDE FLERDAGSEVENEMANG. Etter att extraktorn lärde sig
+ * läsa "23-28 oktober" som ett intervall (start 23 okt, slut 28 okt) blev
+ * ett pågående evenemang start i det förflutna — och vakten kastade bort
+ * det, trots att det fortfarande pågår. Ett evenemang som SLUTAR på en
+ * senare kalenderdag och ännu inte är slut är inte "past": slutet avgör.
+ *
+ * Avsiktligt snävt: det gäller bara när slutet ligger på en ANNAN
+ * kalenderdag än starten. En enskild kväll (start 19:00, slut 21:00) ska
+ * fortfarande hoppas över när starten passerat — annars skulle varje
+ * pågående timme läggas in i databasen.
  */
-export function isEventPast(startTime: string | null | undefined, nowMs: number = Date.now()): boolean {
+export function isEventPast(
+  startTime: string | null | undefined,
+  nowMs: number = Date.now(),
+  endTime?: string | null,
+): boolean {
   if (!startTime) return true;
 
   const startMs = Date.parse(startTime);
   if (!Number.isFinite(startMs)) return true;
+
+  // Pågående flerdagsevenemang: slutet ligger på en senare kalenderdag
+  // och är inte passerat → raden lever.
+  if (endTime) {
+    const endDay = endTime.slice(0, 10);
+    const startDay = startTime.slice(0, 10);
+    if (endDay > startDay) {
+      const endMs = Date.parse(endTime);
+      if (Number.isFinite(endMs)) {
+        if (isAllDayStart(endTime)) {
+          if (nowMs <= endOfLocalDayMs(endDay)) return false;
+        } else if (endMs >= nowMs) {
+          return false;
+        }
+      }
+    }
+  }
 
   if (isAllDayStart(startTime)) {
     // Heldags-event: gäller till slutet av sin egen kalenderdag.

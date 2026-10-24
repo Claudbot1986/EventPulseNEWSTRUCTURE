@@ -74,4 +74,41 @@ describe('isEventPast', () => {
   it('kastar bort rader med ogiltigt datum', () => {
     expect(isEventPast('inte-ett-datum', noon)).toBe(true);
   });
+
+  // 2026-10-24 — pågående flerdagsevenemang ("23-28 oktober"): starten
+  // har passerat men evenemanget lever. Slutet avgör.
+  describe('pågående flerdagsevenemang', () => {
+    it('behåller ett flerdagsevenemang vars slut ligger på en senare dag', () => {
+      expect(
+        isEventPast('2026-10-23T00:00:00.000Z', noon, '2026-10-28T23:59:59.000Z'),
+      ).toBe(false);
+    });
+
+    it('behåller ett flerdagsevenemang med klockslag som pågår', () => {
+      // Konferens 12 jan 10:00 – 14 jan 17:00, "nu" = 13 jan.
+      const mid = new Date(2026, 0, 13, 12, 0, 0, 0).getTime();
+      expect(
+        isEventPast('2026-01-12T09:00:00.000Z', mid, '2026-01-14T16:00:00.000Z'),
+      ).toBe(false);
+    });
+
+    it('kastar bort ett flerdagsevenemang som också är slut', () => {
+      expect(
+        isEventPast('2026-10-20T00:00:00.000Z', noon, '2026-10-22T23:59:59.000Z'),
+      ).toBe(true);
+    });
+
+    it('NEGATIV KONTROLL: ett ENDAK event som pågår kastas fortfarande bort', () => {
+      // Samma dag (24 okt), start 08:00Z har passerat (noon = 12:00 lokal
+      // = 10:00Z). Slut 10:00Z är samma kalenderdag → inte flerdag.
+      expect(
+        isEventPast('2026-10-24T08:00:00.000Z', noon, '2026-10-24T10:00:00.000Z'),
+      ).toBe(true);
+    });
+
+    it('NEGATIV KONTROLL: utan slutdatum är beteendet oförändrat', () => {
+      expect(isEventPast('2026-10-23T00:00:00.000Z', noon)).toBe(true);
+      expect(isEventPast('2026-10-23T00:00:00.000Z', noon, null)).toBe(true);
+    });
+  });
 });
