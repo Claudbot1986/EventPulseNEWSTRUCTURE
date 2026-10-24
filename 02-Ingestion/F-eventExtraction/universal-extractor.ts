@@ -55,6 +55,16 @@ export interface ExtractResult {
   sourceUrl: string;
   methodsUsed: string[];
   methodBreakdown: Record<string, number>;
+  /**
+   * Namnet på den site-adapter som matchade URL:en — även om den inte
+   * hittade något.
+   *
+   * 2026-10-24: utan detta kan ingen kallare skilja på "ingen adapter
+   * äger den här URL:en" och "sajtens egen läsare säger att det är tomt".
+   * Det behövs för regeln "källan lever men har inget att leverera"
+   * (C-gatens exitReason SITE_ADAPTER_EMPTY).
+   */
+  adapterMatched?: string;
 }
 
 // ─── Date Parsing ────────────────────────────────────────────────────────────
@@ -2139,6 +2149,26 @@ export function extractEvents(html: string, source: string, baseUrl: string): Ex
       sourceUrl: baseUrl,
       methodsUsed,
       methodBreakdown,
+      adapterMatched: adapterResult.adapter,
+    };
+  }
+
+  // 2026-10-24 — adaptern är AUKTORITATIV för sin sajt och hittade
+  // ingenting. "Inget" är då svaret: universalheuristiken får inte fylla
+  // på med något annat. Mätt bakom beslutet: på ladansthlm.se gör
+  // universalheuristiken ett falskt event av öppettiderna ("Vad är Lådan?",
+  // 2026-10-27 17:00). Negativ kontroll: folkoperan.se får INTE den här
+  // behandlingen — där ger universalheuristiken 30 riktiga events som
+  // adaptern inte hittar. Därför är flaggan opt-in per adapter.
+  if (adapterResult?.authoritative) {
+    return {
+      events: [],
+      rawCount: 0,
+      parseErrors: [],
+      sourceUrl: baseUrl,
+      methodsUsed: [adapterResult.adapter],
+      methodBreakdown: {},
+      adapterMatched: adapterResult.adapter,
     };
   }
 
@@ -2163,7 +2193,7 @@ export function extractEvents(html: string, source: string, baseUrl: string): Ex
   const dedup = dedupeEvents(allEvents);
   if (dedup.droppedDuplicate > 0 || dedup.droppedAltText > 0) {
     console.log(
-      `[UniversalExtractor v2] dedup: ${dedup.droppedDuplicate} dubblett(er), ` +
+      `[${source}] [UniversalExtractor v2] dedup: ${dedup.droppedDuplicate} dubblett(er), ` +
       `${dedup.droppedAltText} bildtext(er) borttaget — ${allEvents.length} → ${dedup.kept.length}`,
     );
   }
@@ -2209,7 +2239,7 @@ export function extractEvents(html: string, source: string, baseUrl: string): Ex
   const navSkippedTotal = Object.values(navSkipped).reduce((a, b) => a + b, 0);
 
   if (enrichedEvents.length > 0) {
-    console.log(`[UniversalExtractor v2] ${enrichedEvents.length} events via ${methodsUsed.join('+')} | ${Object.entries(methodBreakdown).map(([k,v]) => `${k}:${v}`).join(', ')}${pageOgImage ? ' | og-image-fallback applied' : ''}${navSkippedTotal ? ` | nav-skipped: ${Object.entries(navSkipped).map(([k,v]) => `${k}:${v}`).join(', ')}` : ''}`);
+    console.log(`[${source}] [UniversalExtractor v2] ${enrichedEvents.length} events via ${methodsUsed.join('+')} | ${Object.entries(methodBreakdown).map(([k,v]) => `${k}:${v}`).join(', ')}${pageOgImage ? ' | og-image-fallback applied' : ''}${navSkippedTotal ? ` | nav-skipped: ${Object.entries(navSkipped).map(([k,v]) => `${k}:${v}`).join(', ')}` : ''}`);
   }
 
   // Strategy 3b (2026-10-14): Swedish time-of-day text enrichment.
@@ -2272,6 +2302,7 @@ export function extractEvents(html: string, source: string, baseUrl: string): Ex
     sourceUrl: baseUrl,
     methodsUsed,
     methodBreakdown,
+    adapterMatched: adapterResult?.adapter,
   };
 }
 
