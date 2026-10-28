@@ -19,7 +19,18 @@ Do in this order. All items are launch blockers; nothing else enters NOW.
 ### Pre-launch (updated 2026-10-09)
 
 - ~~Analytics decision~~ **Resolved 2026-10-09** (`81b467d2` — Fas 1.5 #4 Val A): `user_interactions` enda funnel source. `analyticsClient` markerad non-funnel.
-- AI image top-up: BFL round 5 batch + backfill-verktyg klart (`1f81a149`, 2026-10-09). Kvar: kör backfill tills `image_status='pending'` = 0. Inte blocker innan launch point.
+- ~~AI image top-up~~ **Superseded 2026-10-28 — replaced by "Storage-restore" below.** BFL round 5 + backfill-verktyg var klart (`1f81a149`), men kvoten uppfylls inte: det stämpade biblioteket (`local_image_library_stamped/`, 488 webp) räcker inte till måltalet 990 (v2-formeln, användarbeslut 2026-10-18) — **kort 557 bilder**.
+
+### Storage-restore [BLOCKER — discovered 2026-10-28, verified against live feed]
+
+Supabase Storage-bucketen `event-posters` innehåller **0 objekt**. Varje `image_url` i databasen svarar HTTP 400 `NoSuchKey`, och det live-feedet appen läser (`eventpulse-agent.fly.dev/agent/feed`) levererar 15/15 events med trasiga bild-URL:er. UI saknar `onError` på `<Image>`, så tecknet blir en tom yta.
+
+- [ ] Ladda upp `local_image_library_stamped/` → `import-stamped/<kategori>/<fil>.webp` (488 filer, ~25 MB). Måste matcha DB `storage_path` — `scripts/_upload_stamped_to_storage.ts` tappar idag kategori-undermappen och laddar upp fel sökväg.
+- [ ] Återställ de 2 271 unika "flat" URL:erna (`import-stamped/bfl5v2_*.webp`) från `local_image_library/` (2 136 finns som `.png`) — konvertera PNG→WebP med stamp. 135 unika URL:er saknar helt lokal källa.
+- [ ] Kör `08-Agent/scripts/backfill_library_to_future.ts --apply` mot de 744 framtida events med `image_url IS NULL` (`image_generation_status='pending'`) — kräver att storage är populerat först. Ingen AI-image-worker körs (ingen launchd-job).
+- [ ] Lägg `onError` på `<Image>` i `06-UI/App.js` + `screens/HomeScreen.js` så en trasig URL renderar `emptyImageBoxStyle` i stället för tyst tom yta.
+- [ ] Fixa `scripts/_check_image_quota_v2.ts` (saknar `import 'dotenv/config'` → rapporterar "alla kategorier uppfyller kvoten" utan att mäta) och låt båda kvotskripten läsa `events_public` i stället för legacy `events` (kategori-slugs matchar inte `image_library`).
+
 
 ### Phase 1.5 levererat (för historik)
 
