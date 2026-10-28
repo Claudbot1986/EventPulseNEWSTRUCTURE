@@ -2,23 +2,27 @@
 
 ## Sub-features
 
-- **25 steg, men inte i listordning.** `const steps` (`:399-690`) deklarerar
-  dem i A→B→C→D→I-ordning, men en splice (`:626`) flyttar P3A–P3D till
+- **27 steg, men inte i listordning.** `const steps` (`:595-993`) deklarerar
+  dem i A→B→C→D→I-ordning, men en splice (`:996`) flyttar P3A–P3D till
   **förest** vid körning. Ordningen som faktiskt körs:
-  `P3A-discovery` (605) → `P3B-venue-graph-geo` (621) → `P3C-rss-discovery` (633)
-  → `P3D-source-candidate-tests` (672) → `A-directAPI` (402) → `B-network-api` (407)
-  → `eventbrite-pagination` (418) → `tribe-events` (429) → `sitemap-discovery` (438)
-  → `subpath-discovery` (447) → `direct-jsonld` (456) → `livespot-stockholm` (465)
-  → `C-htmlGate` (471) → `D-renderGate` (484) → `I-pdfExtraction` (493)
-  → `etag-refresh` (508) → `api-discovery` (518) → `luma-stockholm` (527)
-  → `ra-stockholm` (535) → `posh-stockholm` (543) → `reddit-stockholm` (551)
-  → `D-images` (573) → `import-to-eventpulse` (608) → `worker-drain` (630)
-  → `P2C-active-learning` (639).
+  `P3A-discovery` (906) → `P3B-venue-graph-geo` (922) → `P3C-rss-discovery` (934)
+  → `P3D-source-candidate-tests` (973) → `A-directAPI` (595) → `B-network-api` (600)
+  → `eventbrite-pagination` (611) → `tribe-events` (622) → `sitemap-discovery` (631)
+  → `subpath-discovery` (640) → `direct-jsonld` (649) → `livespot-stockholm` (658)
+  → `C-htmlGate` (664) → `D-renderGate` (677) → `D-listing-crawl` (694)
+  → `I-pdfExtraction` (708) → `etag-refresh` (723) → `api-discovery` (733)
+  → `luma-stockholm` (742) → `ra-stockholm` (750) → `posh-stockholm` (758)
+  → `reddit-stockholm` (766) → `D-images` (777) → `import-to-eventpulse` (812)
+  → `worker-drain` (851) → `reconcile-source-status` (883)
+  → `P2C-active-learning` (892).
+
+  *(Uppdaterad 2026-10-28: filen sade tidigare "25 steg" och utelämnade
+  `D-listing-crawl` och `reconcile-source-status`.)*
 
   **Varför flytten (2026-10-23):** en källa som P3D promote:ade var osynlig för
   A-gatet till nästa natt kl 02:00 — upp till 18 timmars latens. Nu promote:ar
   P3D och A-gatet kör samma natt.
-- **`import-to-eventpulse` (`:608`) — tillagd 2026-10-23.** Kedjan hade ingen
+- **`import-to-eventpulse` (`:812`) — tillagd 2026-10-23.** Kedjan hade ingen
   väg till `events`-tabellen: A/B/C/D/I skriver *filer* till
   `03-Queue/03-extractedevents/`, och importeraren hade 0 referenser här. Den
   kördes av `com.eventpulse.post-ingest` kl. 04:00, alltså på en klocka
@@ -28,7 +32,7 @@
   samma skäl som drainen ligger där. I `--smoke` får den `--dry-run --limit 5`
   så att en smoke inte skriver riktiga events. Räknare:
   `/KLAR\s+│\s+(\d+)\s+events till bullmq/`.
-- **`worker-drain` (`:630`)** — det ENDA steget som skriver till Supabase.
+- **`worker-drain` (`:851`)** — det ENDA steget som skriver till Supabase.
   `npx tsx 03-Queue/drainQueue.ts --max-ms <5400000|60000>` (90 min sedan
   2026-10-23, var 15 min); ligger före P2C som läser ur databasen. Placerat här
   för att kedjan annars slutar med jobb liggande i `raw_events`: mätt 2026-10-23
@@ -37,7 +41,7 @@
   **Processorn ÄR `processRawEvent`** (fix 2026-10-23). Tidigare skickades en
   räknande stub, som markerade varje jobb "completed" utan att persistera en
   rad — se Gotchas.
-- **Per-steg-timeout** — `STEP_TIMEOUT_MS` (`:266`), default 2 h, override via
+- **Per-steg-timeout** — `STEP_TIMEOUT_MS` (`:362`), default 2 h, override via
   `INGESTION_STEP_TIMEOUT_MS`. `SIGTERM` → 30 s → `SIGKILL`. Ett avbrutet steg
   loggas som `exitCode: 124` och `timedOut: true`.
 - **`--only <steg[,steg2]>`** (tillagd 2026-10-24) — kör ett eller flera
@@ -74,7 +78,7 @@
   med `lastGreenAt` **bevarad**. Före fixen skrevs filen bara i lyckad gren,
   så en misslyckad natt lät senaste gröna stå kvar som om allt var ok.
 - **`step-end` skrev ingen `pid` fram till 2026-10-23** — `step-start`,
-  `step-timeout` och `heartbeat` hade den, `step-end` (`:393`) inte. Effekt:
+  `step-timeout` och `heartbeat` hade den, `step-end` (`:511`) inte. Effekt:
   263 av `chain-overview.logs rader kunde inte kopplas till någon körning, och
   E2/E4 failade med "körningen saknar steg" trots att stegen fanns. En gate som
   väljer "sista körningen" ur loggen måste filtrera på `pid` — kontrollera att

@@ -24,7 +24,7 @@ Discovery-pipelinen ägs av launchd (`com.eventpulse.ingestion` plist) — **ald
 
 **Konvention:** behandla en körning som ett *read-only artefakt*. Innan du kan verifiera behöver en körning ha producerat sina filer. Normalt sker det nattetid via launchd; för manuell verifiering kör `npx tsx scripts/ingestion-cron.ts --smoke` EN gång i en separat terminal och låt den slutföras (~15–30 min). `--smoke` sätter `effectiveLimit = 1`, `effectiveDBehavior = 'static-only'`, `--queries 1 --per-query 1`, `--limit 5`, `--dry-run=true` på P3C, `--limit 1` på P3D-candidate-tests — alla på riktiga kodvägar men med minsta datamängd.
 
-Ready-signal = en komplitt `step-end` rad i `runtime/ingestion-cron/chain-overview.log` för **varje** steg i step-listan (se `scripts/ingestion-cron.ts:265–423`). Bekräfta med:
+Ready-signal = en komplitt `step-end` rad i `runtime/ingestion-cron/chain-overview.log` för **varje** steg i step-listan (se `scripts/ingestion-cron.ts:593-993`). Bekräfta med:
 
 ```bash
 # Räkna steg-start och steg-end i chain-overview.log
@@ -99,7 +99,7 @@ cd /Users/claudgashi/EventPulse
 # 1. Vilka stages kördes i senaste körningen?
 jq -r 'select(.event=="step-start") | .step' runtime/ingestion-cron/chain-overview.log \
   | tail -20
-# → jämför mot step-listan i scripts/ingestion-cron.ts:265–467
+# → jämför mot step-listan i scripts/ingestion-cron.ts:593-993
 
 # 2. Vilka stage:ar har step-end?
 jq -r 'select(.event=="step-end") | "\(.step)\texit=\(.exitCode)\tduration=\(.durationMs)ms"' \
@@ -206,7 +206,7 @@ Bevis (chain-overview.log, status.json, jsonl, supabase counts) lämnas intakta.
 
 **Watchdog hänger länge innan den agerar.** Om ett steg tar >10 min skriver watchdog in `chainPidAlive: false` i `runtime/ingestion-cron/watchdog.json` men cron-processen lever vidare. Heartbeat fortsätter — `step-end` kommer aldrig. Kolla `.reasons` i watchdog-filen för vad som faktiskt flaggades; det finns ingen `stalenessMin` att titta på.
 
-**`scripts/ingest-*.mjs` är .mjs, inte .ts** — `npx tsx` används bara på .ts-steg (A/B/C/D/I/pdf/etag/P3A). Cron-skriptet använder `node` för .mjs och `npx tsx` för .ts. Förväxla inte — Stage-listans `cmd:` i `ingestion-cron.ts:265–467` visar vilken som gäller.
+**`scripts/ingest-*.mjs` är .mjs, inte .ts** — `npx tsx` används bara på .ts-steg (A/B/C/D/I/pdf/etag/P3A). Cron-skriptet använder `node` för .mjs och `npx tsx` för .ts. Förväxla inte — Stage-listans `cmd:` i `ingestion-cron.ts:593-993` visar vilken som gäller.
 
 **`tribe-events` har en känd häng-pattern (2026-10-18):** wp-json endpoint svarar med 5xx utan att lämna retry-loopen. Hjälp-pattern: i `scripts/ingest-tribe-events.mjs`, varje page gör `await fetchWithRetry(...)` med för många retries på 5xx-svar — processen sitter fast i samma URL i timmar. Watchdog-flagga = `heartbeat age > 2h` på step `tribe-events`. **Kontroll-pattern:** leta efter samma URL i step-loggen >5 ggr i rad = häng.
 
@@ -227,7 +227,7 @@ Bevis (chain-overview.log, status.json, jsonl, supabase counts) lämnas intakta.
 Kör `/maintain-verification-skill` när något händer:
 - Ny `scripts/ingest-*.mjs` läggs till → feature-fil + stage-lista i doctor.
 - `07-Discovery/src/` får ny modul (t.ex., discoverySearch → vectorSearch) → ny feature-fil.
-- `scripts/ingestion-cron.ts:265–467` lägger till/tar bort steg → uppdatera step-listan + relevant feature.
+- `scripts/ingestion-cron.ts:593-993` lägger till/tar bort steg → uppdatera step-listan + relevant feature.
 - Wire-format i chain-overview.log ändras (`appendChainOverview`) → uppdatera drives som steg i jq.
 - Status-format ändras (`writeStatus` / `StatusFile` interface) → uppdatera doctor.
 

@@ -33,11 +33,29 @@
  *   e3 — kedjan producerar events (totalEventsPersisted > 0)
  *   e4 — discovery→ingestion går igenom på EN körning (promote före A)
  *   e5 — döda källor har orsak; uppenbart döda (404/DNS) ligger i kyrkogravet
+ *   e6 — ingen oanvändbar källa ligger kvar i sources/ (negativ kontroll:
+ *        begravd fil skiljs från levande; mäts ur INDEX.json, inte ur sources/)
+ *   e7 — P3D claimar bara kandidater som kan nå databasen (city='Stockholm');
+ *        läser den LEVENDE funktionsdefinitionen, inte migrationsfilen
+ *   e8 — cross-source dedup får inte skriva identitetskolumner på en annan
+ *        källas rad (replayar failed jobs; kräver noll unika-konstraint-brott)
+ *   e9 — drainQueue --status avslutar rent (ingen läckt Redis-socket)
+ *   e10 — källor som C lyckas extrahera ifrån får inte stå som fail
+ *   e11 — kedjan importerar extraherade events, och gör det FÖRE drain
  *   n1 — C3-AI:s "needs_render" routar till D-renderGate, inte till begravning
  *   n2 — drainens worker-concurrency är mätbar och högre concurrency ger mer
  *   s1 — schema.org Event-subtyper accepteras + paritet med kanonisk extractor
  *   s2 — källans egen URL är kandidat och bär riktiga events
  *   s3 — fixen öppnade källor har framtida rader i DB (negativ kontroll: spent)
+ *   dr1 — datumintervall: extraktorns datumfönster matchar en oberoende oracle
+ *   dr2 — negativ kontroll: en muterad KOPIA av extraktorn avviker från
+ *         oracle (annars bevisar dr1 ingenting)
+ *   dr3 — extraherade events från en FRSK-källa har inga ogiltiga datum
+ *   st1 — statusen i sources_status.jsonl får inte ljuga: en källa som
+ *         D-gaten lyckades extrahera ifrån står som success, felräknaren
+ *         nollställd, ingen kvarvarande lastError
+ *   st2 — negativ kontroll: en MUTERAD KOPIA av statusfilen där felräknaren
+ *         inte nollställs upptäcks (annars bevisar st1 ingenting)
  */
 
 import fs from 'node:fs';

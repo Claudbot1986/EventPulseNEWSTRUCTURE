@@ -532,12 +532,26 @@ if (GATE === 'db-delta') {
   // kalenderdag är INTE landad (annan företrädesdag). Samma URL + samma dag
   // ÄR landad. Kontrollerna körs mot en riktig DB-rad, så de bevisar att
   // gaten kan skilja de två fallen åt — inte bara att den är sträng.
-  const urlEntry = [...index.urlDays.entries()].find(([, days]) => days.size > 0);
+  //
+  // KONTROLLRADEN MÅSTE LIGGA I FRAMTID. Auditorn kör produktionens ordning
+  // (datumvakt → jobb-id → titel-gate → blockB → dedup), så en kontrollrad med
+  // ett förflutet datum fälls av datumvakten — och då mäter kontrollen
+  // datumvakten, inte dagregeringen. Utan det valet föll den positiva
+  // kontrollen med "URL-regeln är för strikt" (2026-10-28) fast regeln var
+  // korrekt: den första DB-raden med ticket_url (livespot.se, 27 okt) låg
+  // DAGEN FÖRE kontrollen.
+  const isFutureDay = (day) => !isEventPast(`${day}T00:00:00.000Z`);
+  const urlEntry = [...index.urlDays.entries()].find(([, days]) =>
+    [...days].some(isFutureDay),
+  );
   if (!urlEntry) {
-    fail('negativ kontroll — ingen DB-rad med ticket_url hittades, dag-regeln kan inte prövas');
+    fail(
+      'negativ kontroll — ingen DB-rad med ticket_url och framtida datum hittades, ' +
+        'dag-regeln kan inte prövas',
+    );
   }
   const [controlUrl, controlDays] = urlEntry;
-  const [controlDay] = controlDays;
+  const controlDay = [...controlDays].find(isFutureDay);
 
   const otherDay = new Date(`${controlDay}T00:00:00Z`);
   otherDay.setUTCDate(otherDay.getUTCDate() + 400);

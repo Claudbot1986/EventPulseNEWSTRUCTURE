@@ -1,6 +1,6 @@
 # verify-eventpulse-discovery/features — index
 
-Feature-map för discovery-pipelinen. Speglar steg-listan i `scripts/ingestion-cron.ts:265–467` + `09-ScrapingSupervisor/runDaily.ts` + `07-Discovery/src/`.
+Feature-map för discovery-pipelinen. Speglar steg-listan i `scripts/ingestion-cron.ts:593-993` + `09-ScrapingSupervisor/runDaily.ts` + `07-Discovery/src/`.
 
 | Steg | Stage-typ | Feature-fil | Status |
 |---|---|---|---|

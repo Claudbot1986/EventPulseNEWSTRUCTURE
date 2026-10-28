@@ -4,11 +4,13 @@
 
 ## Sub-features
 
-- Step-lista (`scripts/ingestion-cron.ts:351-611`, **23 steg**): A-directAPI → B-network-api → eventbrite-pagination → tribe-events → sitemap-discovery → subpath-discovery → direct-jsonld → livespot-stockholm → C-htmlGate → D-renderGate → I-pdfExtraction → etag-refresh → api-discovery → luma-stockholm → ra-stockholm → posh-stockholm → reddit-stockholm → D-images → P2C-active-learning → P3A-discovery → P3B-venue-graph-geo → P3C-rss-discovery → **P3D-source-candidate-tests** (ny 2026-10-21)
+- Step-lista (`scripts/ingestion-cron.ts:593-993`, **27 steg**): P3A-discovery → P3B-venue-graph-geo → P3C-rss-discovery → P3D-source-candidate-tests → A-directAPI → B-network-api → eventbrite-pagination → tribe-events → sitemap-discovery → subpath-discovery → direct-jsonld → livespot-stockholm → C-htmlGate → D-renderGate → D-listing-crawl → I-pdfExtraction → etag-refresh → api-discovery → luma-stockholm → ra-stockholm → posh-stockholm → reddit-stockholm → D-images → import-to-eventpulse → worker-drain → reconcile-source-status → P2C-active-learning
+  - **P3-stegen körs FÖRST**, inte sist. `const steps` deklarerar dem i A→B-ordning, men en `steps.splice` (`scripts/ingestion-cron.ts:996`) flyttar P3A–P3D till först vid körning. Orsak: en källa som P3D promote:ade var osynlig för A-gatet till nästa natt kl 02:00 — upp till 18 timmars latens (fix 2026-10-23).
+  - *(Uppdaterad 2026-10-28: raden sade tidigare "23 steg" och saknade `D-listing-crawl`, `import-to-eventpulse`, `worker-drain` och `reconcile-source-status`.)*
   - Verifiera listan mot koden, inte mot den här raden:
     ```bash
     grep -n "name: '" scripts/ingestion-cron.ts | sed "s/.*name: '\([^']*\)'.*/\1/" | tr '\n' ' '; echo
-    grep -c "name: '" scripts/ingestion-cron.ts   # ska vara 23
+    grep -c "name: '" scripts/ingestion-cron.ts   # ska vara 27
     ```
   - **`manual-review-triage` och `pattern-promoter` togs bort ur kedjan 2026-10-21.** Båda körde `runC-pattern-promoter.ts` vars producent (`runC-pattern-validator.ts`) aldrig skrevs → hela kedjan var bruten. Koden ligger kvar på disk; att aktivera den kräver ett eget validator-bygge (se `pattern-promoter.md`).
 - Per-step loggar: `runtime/ingestion-cron/steps/<name>-<ISO>.{log,err.log}`

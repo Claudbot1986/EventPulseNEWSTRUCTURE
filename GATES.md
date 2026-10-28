@@ -1071,3 +1071,97 @@ Mätning 2026-10-25: 130 aktiva källor, 127 med rader, 3 nollrader —
   CHECK: node scripts/verify-census-classification.mjs
   EXPECT: /cc: censusen skiljer fastnar från verifierat tomma — fastnar=\d+ verifierat=\d+ nollrad=\d+ kontroller=\d+ pass/
   EVIDENCE: automatic-evidence=v1; definition-sha256=a748b974737c044066388cb7f51fb9028b02f947a190bd2bda24f7cf94192bd5; exit=0; EXPECT=matched; output-sha256=b291ee80b6059cb2689fad74c48023fed2ad03bfd48cb8d3f8b6afa1768acb22; output-bytes=504; shell=/bin/sh; cwd=/Users/claudgashi/EventPulse; path=29325ef63737/16 entries
+
+# Kedjan producerar events under en riktig körning (2026-10-28)
+
+Scope: `scripts/lib/preflight.mjs` (ny), `scripts/lib/net-error.mjs` (ny),
+`scripts/verify-preflight.mjs` (ny), `scripts/verify-failfast.mjs` (ny),
+`scripts/verify-chain-live.mjs` (ny), `scripts/verify-env-integrity.mjs` (ny),
+`03-Queue/redisClient.mjs` (ny), `03-Queue/importLedger.mjs` (ny),
+`03-Queue/queue.ts`, `03-Queue/importToEventPulse.ts`,
+`09-ScrapingSupervisor/ingestionPipeline.ts`, `scripts/cron/runPostIngest.sh`,
+`scripts/ingestion-cron.ts`.
+
+Rotorsak: tre nätter i rad (26–28 okt) skrev kedjan "klart" med 0 events.
+Nätverksstacken dog (`EADDRNOTAVAIL` mot både `127.0.0.1:6379` och externa
+värdar) och felhanteringen översatte det tysta transportfelet till "klar".
+Importen hängde dessutom i två timmar (exit=124, 583 KB identiska felrader,
+0 events köade) för att BullMQ ignorerade `REDIS_URL` och ioredis hade
+`enableOfflineQueue: true` — kommandon läger i offline-kön i stället för
+att rejecta.
+
+De tidigare 103 gröna gaterna i den här filen var nästan alla filkontroller.
+Ingen av dem bevisade att kedjan producerar events. De fem gaterna nedan
+mäter en LEVANDE värld — Redis, Supabase, Exa, Scrapingbee — och varje
+negativ kontroll körs mot en medvetet trasig värld.
+
+Skillen: `.cursor/skills/verify-eventpulse-live/`.
+
+- [x] L1: preflight fångar nätverksfel under 30 s — både den levande världen
+  EVIDENCE: automatic-evidence=v1; definition-sha256=fc624e7281c83fc36ef60b509fc5c7fe1611600c41e3bca29e2ca47a70b83127; exit=0; EXPECT=matched; output-sha256=009a59be374e501e133e0523209f0b8666f3ccd550f128adbf89afc2618eb535; output-bytes=1639; shell=/bin/sh; cwd=/Users/claudgashi/EventPulse; path=b808bbbb1792/18 entries
+  (alla hårda kontroller gröna) och en simulerat trasig värld (upptäckt <30 s)
+  CHECK: node scripts/verify-preflight.mjs
+  EXPECT: /verify-preflight.*GATE L1: GRÖN/
+
+- [x] L2: importen fäller under 60 s i stället för att hänga — död Redis ger
+  EVIDENCE: automatic-evidence=v1; definition-sha256=638340df3f74b2f1f3b57eef7cfc78ba64ea66064fd933509691b714d5e2e90c; exit=0; EXPECT=matched; output-sha256=cb9340d5c77266ec1d04c4bc05d834cb014fb9caf95ff259f9d3bad807037d51; output-bytes=13593; shell=/bin/sh; cwd=/Users/claudgashi/EventPulse; path=b808bbbb1792/18 entries
+  exit 69 och en logg under 50 KB; negativ kontroll: samma kod mot den
+  levande Redis köar events
+  CHECK: node scripts/verify-failfast.mjs
+  EXPECT: /verify-failfast.*GATE L2: GRÖN/
+
+- [x] L3: kedjan producerar events OCH persisterar dem — importen köar N > 0
+  EVIDENCE: automatic-evidence=v1; definition-sha256=b6f46eac4fae6d4ecb6d1274c4eb2cabfd3f1cc3466486964136d5708a53d1f6; exit=0; EXPECT=matched; output-sha256=c7e9d33b6632345e4b68e0ee396c02d550c027eb7096193d5490e11627b310c0; output-bytes=2433; shell=/bin/sh; cwd=/Users/claudgashi/EventPulse; path=b808bbbb1792/18 entries
+  events, drainen slutför M > 0 jobb med 0 misslyckade, och `events_public`
+  minskar inte. "Slutförd" betyder inte "ny rad skapad": normalizern kan
+  hoppa över ett event (förgången datum, titel-gate, bulk-skydd) eller träffa
+  en befintlig rad (dedup). Antalet faktiskt skrivna rader mäts separat
+  (`eventsCreatedDuringRun` i bevisfilen). Måttet är INTE "nya rader i
+  events_public": dedup gör att en korrekt kedja ger 0 nya rader
+  trots tusentals skrivningar. Gaten tvingar fram produktion med
+  `--force-import-sources` (importeraren ignorerar ledger-skivan för de
+  angivna källorna) — ledgerfilen röds INTE.
+  CHECK: node scripts/verify-chain-live.mjs --only import-to-eventpulse,worker-drain --limit 50
+  EXPECT: /L3 OK:/
+
+- [x] L4: Redis-kön är tom efter körningen — `bull:raw_events:wait` == 0
+  CHECK: node scripts/verify-chain-live.mjs --queue-only
+  EXPECT: /L4 OK:/
+  EVIDENCE: automatic-evidence=v1; definition-sha256=c02c111843938378919743c56e84c60490c72f0c1e45aa2fbc92adb8ea8b75f5; exit=0; EXPECT=matched; output-sha256=e5891c6d9a2678561e2574fd59a38892be1b34b9d298b408340207462604b8dd; output-bytes=604; shell=/bin/sh; cwd=/Users/claudgashi/EventPulse; path=b808bbbb1792/18 entries
+
+- [x] L5: `status.json` ljuger inte om liveness — `running: true` ⇒ pid lever
+  CHECK: node scripts/verify-chain-live.mjs --no-run
+  EXPECT: /L5 OK:/
+  EVIDENCE: automatic-evidence=v1; definition-sha256=745144978c350ea29e2af3e4faf74c79aac97710b22f9ef79557548b6b704ca2; exit=0; EXPECT=matched; output-sha256=8321ec9e30f08dc40d69c87b0bb0037e84cf8948afee0bed0d06b34edef82a01; output-bytes=623; shell=/bin/sh; cwd=/Users/claudgashi/EventPulse; path=b808bbbb1792/18 entries
+
+- [x] L6: `.env` går att source:a av en shell — 0 olåsta rader, `bash source`
+  EVIDENCE: automatic-evidence=v1; definition-sha256=a2bd238fd8291508cc7e25716cfafc93072813687ed0d65179bde3ab6c7924f9; exit=0; EXPECT=matched; output-sha256=9f1b38925040e2f171cf5535dc953cf3e58fc5303fee68075c83221443738de2; output-bytes=365; shell=/bin/sh; cwd=/Users/claudgashi/EventPulse; path=b808bbbb1792/18 entries
+  går rent, och de fem nycklar kedjan behöver finns (aldrig placeholders)
+  CHECK: node scripts/verify-env-integrity.mjs
+  EXPECT: /verify-env-integrity.*GRÖN/
+
+- [x] L7: ledgerbeviset skrevs — källorna lämnar inte "queued" utan bevis
+  EVIDENCE: automatic-evidence=v1; definition-sha256=a549907fecc746e635e6cf9eadaa771c4a4325b9bd01be42a7bd6e6c6820efce; exit=0; EXPECT=matched; output-sha256=4ae26b8f9f8493e906e60aa7b493d7c050ff5b5c84b88a004ea81ebac6e7b012; output-bytes=2645; shell=/bin/sh; cwd=/Users/claudgashi/EventPulse; path=304ef23aef78/21 entries
+  Under tre nätter såg kedjan GRÖN ut medan ledger stod kvar på 'queued'.
+  Orsaken var ett stavnamn i drainen ('persistedBySource' istället för
+  'persistedByFile'): felet kastades i en catch som bara loggade, och kedjans
+  klassificering läste loggraden som 'logic' — alltså grönt. Ingenting skrev
+  bevis, och nästa natt hoppade importen över källorna. Events försvann utan
+  att en enda logg sa något.
+  Kontroller: (1) kedjans logg får INTE innehålla "kunde inte uppdatera/skriva
+  ledger"; (2) om dräneringen slutförde jobb får antalet 'queued'-rader inte
+  växa — jobb som kördes men inte gav bevis betyder att beviset inte skrevs.
+  CHECK: node scripts/verify-chain-live.mjs --only import-to-eventpulse,worker-drain --limit 50
+  EXPECT: /L7 OK:/
+
+- [x] L8: ledgerbeviset har en egen gata — detektorn FÅNAR den ursprungliga
+  EVIDENCE: automatic-evidence=v1; definition-sha256=d2109bff7a425ea5f82541500e1fa73146ad0b167ccb87774f3f8d10a9fe8a96; exit=0; EXPECT=matched; output-sha256=77da3177dd87e2070eb4d95f044568c0f0e9cb29e8871e4ab9fff0609cf74b67; output-bytes=650; shell=/bin/sh; cwd=/Users/claudgashi/EventPulse; path=304ef23aef78/21 entries
+  buggen, och live-ledgern mäter om rader står kvar i "queued" utan bevis
+  Utan den egna gaten är L7 värdelös: en detektor som inte fångar felet ger
+  samma gröna ljus som ingen detektor alls. Gaten har därför två delar —
+  negativa kontroller av detektorn (den måste fånga den ordagranna
+  felraden från buggen och inte larma på informationsrader) och en mätning
+  av den faktiska ledgerfilen (en rad i 'queued' med krav på persistering
+  betyder både en skuld och att bevisvägen inte fungerar).
+  CHECK: node scripts/verify-ledger-evidence.mjs
+  EXPECT: /verify-ledger-evidence.*GRÖN/
