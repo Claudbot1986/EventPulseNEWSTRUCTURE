@@ -238,7 +238,13 @@ Skriv EN kort bildprompt (max 40 ord) som visuellt representerar "${tag}" inom "
 - Position/rörelse: ${pose}
 - Ljus: ${light}
 - Sättet ska kännas Stockholm-redaktionellt, varmt men inte för polerat
-- Inga ansikten i förgrunden, inga läsbar text i bilden, inga varumärken
+- Inga ansikten i förgrunden
+- Ingen läsbar text, inga skyltar, inga logotyper, inga baner, inga affischer i bilden.
+  Skriv uttryckligen ut de orden "no text, no signage, no logos, no banners" i den engelska prompten.
+  (BUG-FIX 2026-10-28: tidigare rad ("Inga ansikten i förgrunden, inga läsbar text i bilden")
+  översattes av M3 till "no foreground faces, readable text or logos" — negationen tappades
+  och MiniMax ritade nonsenstext på bannrar. 4 av 60 bilder föll på detta i mätning 2026-10-28.)
+- Inga varumärken
 - Avsluta med en mood-setting mening ("..., Editorial style, ${light} tones")
 
 Svara BARA med prompttexten. Inget annat.`;
@@ -250,6 +256,11 @@ VIKTIGT FÖR ESTABLISHING SHOT:
 - Bred exteriör vy, byggnaden/lokalen synlig i sin helhet framför Stockholms skyline
 - Små människor (eller inga) i förgrunden — fokus är ARKITEKTUR + PLATS
 - INGA close-ups av ansikten eller instrument
+- Ingen skylt ovanför en dörr, ingen text på fasaden, ingen etikett på fönster —
+  fasaden ska vara helt ren och utan märkningar. (BUG-FIX 2026-10-28: MiniMax
+  sätter en skylt över varje entré "because a venue entrance needs a sign" —
+  mätt 2026-10-28: prompten hade redan "no signage" men bilden fick ändå
+  nonsenstexten "ΛƎᗡИHƆƎИΛ ɄƧ ᒪIT" över dörren.)
 - Tänk "architectural photography" — Consertgebouw, Sydney Opera House, Berwaldhallen
 - Solen ska vara synlig eller antydd (gul timme eller mulet dagsljus)
 - Exempel: "Berwaldhallen exterior at golden hour, snow-dusted entrance steps, Stockholm skyline behind, no people in foreground, Editorial style, cool daylight tones"`;
@@ -301,8 +312,15 @@ async function callM3(category: string, tag: string, z: ZoomLevel, pose: Pose, l
       model: M3_MODEL,
       messages: [{ role: 'user', content: buildPromptTemplate(category, tag, z, pose, light) }],
       temperature: 0.7,
-      max_tokens: 1500,
+      // BUG-FIX 2026-10-28: 1500 var för lågt. MiniMax-M3 kör extended thinking
+      // i samma content-fält, så tankeblocket åter budgeten och svaret blev
+      // "tomt efter think-strip" → tyst mock-fallback med generiska prompts.
+      // 4000 räcker för tanke + svar (mätt: reasoning_tokens 136, svar 198).
+      max_tokens: 4000,
     }),
+    // BUG-FIX 2026-10-28: utan timeout hängde en M3-request och låste hela
+    // workern (processen stod i uv__io_poll med 0% CPU). 60s per anrop.
+    signal: AbortSignal.timeout(60_000),
   });
   if (!res.ok) throw new Error(`M3 HTTP ${res.status}`);
   const data = await res.json() as { choices?: Array<{ message?: { content?: string } }> };
@@ -341,11 +359,21 @@ function readCache(category: string, rootDir: string): ZoomPromptCache | null {
 }
 
 function writeCache(category: string, rootDir: string, items: BuiltZoomPrompt[]): ZoomPromptCache {
+  // BUG-FIX 2026-10-28: skriv inte över. Varje anrop till buildZoomPrompts har
+  // en egen zoomFilter, så en "skriv bara den här körningens items"-semantik
+  // raderade cache-raderna för de övriga shot-nivåerna (community gick 26 → 21
+  // items) och tvingade om M3-anrop för redan betalda prompts.
+  // Nu slås befintliga items ihop med de nya (nyckel: tag::zoom::pose::light).
+  const existing = readCache(category, rootDir);
+  const key = (it: BuiltZoomPrompt) => `${it.cluster_tag}::${it.zoomId}::${it.pose}::${it.light}`;
+  const merged = new Map<string, BuiltZoomPrompt>();
+  for (const it of existing?.items ?? []) merged.set(key(it), it);
+  for (const it of items) merged.set(key(it), it);
   const cache: ZoomPromptCache = {
     category,
     generated_at: new Date().toISOString(),
     model: M3_MODEL,
-    items,
+    items: [...merged.values()],
   };
   const p = cachePath(category, rootDir);
   mkdirSync(dirname(p), { recursive: true });

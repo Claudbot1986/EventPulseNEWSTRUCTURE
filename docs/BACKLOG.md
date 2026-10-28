@@ -46,6 +46,16 @@ Användaren raderade de gamla bilderna ("fula"). Två konkreta orsaker hittade: 
 - [ ] Alternativ för visuell sammanhållning: `image-01-live` + `subject_reference:[{type:'character', image_file:'<url>'}]` (verifierat fungerande). Endast 1 referensbild per anrop; kontrollera pris/format innan bruk.
 - [ ] Beslut som behövs: ska `aspect_ratio` vara `16:9` (1280×720) eller `3:2` (1248×832)? Kortet är idag 1024×576 via explicit `width`/`height` (bara `image-01` stöder detta).
 
+### Adaptiv generering med grind [P1 — 2026-10-28, byggt och verifierat]
+
+Ny verktyg `scripts/adaptive_image_gen.ts`. Genererar i omgångar med ramp (5 → 2 → 4 → 8 → 16), **granskar varje bild med M3 vision (3 röster + majoritetsröstning)** och backar av vid fel. Mätt på community: 60 bilder, 56 godkända (93,3 %), producerad mix **100 % wide-family** mot 17 % i det gamla biblioteket.
+
+- [ ] **Kör resten av kategorierna.** community är klar (108 behov, 60 genererade). Övriga: music 54, theatre-drama 31, exhibition 17, kids 19, film 20, (null) 20, concert 20, opera 17, dance 17, sports 18, food 18, musical-theatre 19, family 19, talks-lectures 19, circus 16, classical 14, workshop 14, nightlife 18, wine-tasting 19, electronic 19, rock 18, theatre-comedy 15. Kommando: `node --env-file=.env --import tsx scripts/adaptive_image_gen.ts --start=5 --max-rounds=8 --max-total=60` (upprepas per kategori).
+- [ ] **Normalisera legacy-kategorislugs innan resten genereras.** `concert`, `Konsert`, `musical`, `cinema`, `Utställning`, `exhibitions`, `Musik på Historiska`, `Temavisning`, `hip-hop`, `sports & wellbeing` är duplicer/legacy-slugs som saknar eget cluster-underlag och skulle få 20 bilder vardera av ren slump. Bör mappas mot `music`/`exhibition`/`film` m.fl. — annars genereras ~200 bilder i fel kategorier.
+- [ ] **Publicera `local_image_library_stamped_v2/`** — ännu inte uppladdad till storage och inte registrerad i `image_library`-tabellen. Kräver samma path-fix som i Storage-restore-blocket (`import-stamped/<kategori>/<fil>.webp`).
+- [ ] **Kodfixar som redan gjorts i `zoom-prompter.ts` (2026-10-28)** — sammanfattning: cache-merge i stället för overwrite, `max_tokens` 1500→4000 (annars tyst mock-fallback), timeout 60 s på M3-anrop, no-text-klausul i promptmallen, EST-mallens krav på ren fasad. Verifierat: 3 av 4 tidigare text-fel rena, det fjärde (entréskylt) rensat med EST-fixen.
+
+
 
 
 ### Phase 1.5 levererat (för historik)

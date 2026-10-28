@@ -178,6 +178,10 @@ __pycache__/
 local_image_library_stamped/**
 !/local_image_library_stamped/README.md
 !/local_image_library_stamped/.gitkeep
+# local_image_library_stamped_v2/ — nytt bibliotek genererat av
+# scripts/adaptive_image_gen.ts (ny kompositionsmix + bottom-left-stämpel).
+# Binärer + regenererbara artefakter — återskapas via adaptive_image_gen.ts.
+local_image_library_stamped_v2/
 /stamping_local/
 /tmp_image_corpus/*.png
 /tmp_image_corpus/*.webp
