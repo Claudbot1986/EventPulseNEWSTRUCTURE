@@ -21,29 +21,25 @@
  */
 
 import 'dotenv/config';
-import { Queue } from 'bullmq';
-import IORedis from 'ioredis';
+import { createBullQueue } from '../03-Queue/redisClient.mjs';
+import { createQueueErrorTracker } from './lib/queue-errors.mjs';
 
 const SOURCE_ID = 'livespot-stockholm';
+
+// 2026-10-28 — köfelsamling: högst 3 provrader, och exit ≠ 0 om inget
+// kunde köas. Se scripts/lib/queue-errors.mjs.
+const queueErrors = createQueueErrorTracker();
 const RATE_LIMIT_MS = 1000;
 const DEFAULT_LIMIT = 100;
 
-const REDIS_URL = process.env.REDIS_URL || 'redis://localhost:6379';
 if (!process.env.SUPABASE_URL) { console.error('Missing SUPABASE_URL'); process.exit(2); }
 
-// ── Queue connection (lazy) ─────────────────────────────────────────────────
-let connection;
-function getConnection() {
-  if (!connection) {
-    connection = new IORedis(REDIS_URL, {
-      maxRetriesPerRequest: null,
-      enableReadyCheck: false,
-    });
-  }
-  return connection;
-}
-
-const rawEventsQueue = new Queue('raw_events', { connection: getConnection() });
+// ── Queue connection ────────────────────────────────────────────────────────
+// 2026-10-28 — central Redis-klient (03-Queue/redisClient.mjs). Den gamla
+// lazy-fabriken hade maxRetriesPerRequest: null UTAN enableOfflineQueue:
+// false — kommandon lade sig i offline-kön när Redis var borta och
+// skicket kom aldrig fram (del av 2-timmars-hängningen 2026-10-26).
+const rawEventsQueue = createBullQueue('raw_events');
 
 function sleep(ms) { return new Promise((r) => setTimeout(r, ms)); }
 
@@ -209,7 +205,7 @@ async function main() {
         });
         pageQueued++;
       } catch (e) {
-        console.error(`  page ${page}: queue.add failed for ${ev.id}: ${e.message}`);
+        queueErrors.record(e, `page ${page}: queue.add failed for ${ev.id}`);
       }
     }
 
@@ -229,7 +225,8 @@ async function main() {
   await sleep(500);
 
   await rawEventsQueue.close();
-  process.exit(0);
+  queueErrors.printSummary(SOURCE_ID);
+  process.exit(queueErrors.exitCode(totals.queued));
 }
 
 main().catch((err) => {

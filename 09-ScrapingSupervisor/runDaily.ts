@@ -151,11 +151,11 @@ function runSubprocessWithTimeout(name: string, scriptPath: string, fileLog: str
   });
 }
 
-function runSubprocess(name: string, scriptPath: string, fileLog: string): Promise<SubResult> {
+function runSubprocess(name: string, scriptPath: string, fileLog: string, extraArgs: string[] = []): Promise<SubResult> {
   const startedAt = Date.now();
   return new Promise((resolve) => {
-    log(`[step:${name}] start  ${path.relative(PROJECT_ROOT, scriptPath)}`, fileLog);
-    const proc = spawn(TSX_BIN, [scriptPath], {
+    log(`[step:${name}] start  ${path.relative(PROJECT_ROOT, scriptPath)} ${extraArgs.join(' ')}`, fileLog);
+    const proc = spawn(TSX_BIN, [scriptPath, ...extraArgs], {
       cwd: PROJECT_ROOT,
       env: { ...process.env, EVENTPULSE_PROJECT_ROOT: PROJECT_ROOT },
       stdio: ['ignore', 'pipe', 'pipe'],
@@ -206,8 +206,14 @@ async function main(): Promise<number> {
     }
 
     // Steg 2: ingestionPipeline (data flow — inkluderar bridge + runD-scrapingbee som steg 1d)
-    log(`[2/3] ingestionPipeline — start`, fileLog);
-    const pipeline = await runSubprocess('ingestionPipeline', PIPELINE_TS, fileLog);
+    // 2026-10-28 — i cron-sammanhang importerar vi INTE. Importen har EN
+    // ägare: cron 02:00 (scripts/ingestion-cron.ts). Två ägare gjorde att
+    // samma events köades upp två gånger per natt och att det gick att
+    // se " grönt" i två loggar samtidigt.
+    // Flaggan sätts av runPostIngest.sh (EVENTPULSE_IMPORT_MODE=never).
+    const pipelineArgs = process.env.EVENTPULSE_IMPORT_MODE === 'never' ? ['--import=never'] : [];
+    log(`[2/3] ingestionPipeline — start${pipelineArgs.length ? ' (import=never)' : ''}`, fileLog);
+    const pipeline = await runSubprocess('ingestionPipeline', PIPELINE_TS, fileLog, pipelineArgs);
     stages.push({ stage: 'B', ok: pipeline.exitCode === 0, durationMs: pipeline.durationMs, itemsOut: 0 });
     if (pipeline.exitCode !== 0) {
       log(`[2/3] ingestionPipeline — FAIL (exit=${pipeline.exitCode}) — fortsätter med dränering`, fileLog);

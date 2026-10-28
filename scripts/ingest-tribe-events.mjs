@@ -19,9 +19,14 @@
 import 'dotenv/config';
 import { createHash } from 'crypto';
 import { createClient } from '@supabase/supabase-js';
-import { Queue } from 'bullmq';
-import IORedis from 'ioredis';
+import { createBullQueue } from '../03-Queue/redisClient.mjs';
+import { createQueueErrorTracker } from './lib/queue-errors.mjs';
 import { readFileSync, existsSync } from 'fs';
+
+// 2026-10-28 — köfelsamling: högst 3 provrader, och exit ≠ 0 om inget
+// kunde köas. Se scripts/lib/queue-errors.mjs.
+const queueErrors = createQueueErrorTracker();
+let totalQueued = 0;
 
 // Sources known to expose /wp-json/tribe/events/v1/events
 // Upptäckta via discover-hidden-apis.mjs (2026-10-04). Uppdatera när nya hittas.
@@ -47,9 +52,12 @@ const supabase = createClient(SUPABASE_URL_VAL, SUPABASE_KEY_VAL, { auth: { pers
 
 // T0201.5: BullMQ raw_events-queue. Workern dränerar kön och bearbetar
 // varje event genom normalizer (kategori, dedup, venue_id, T0201).
-const rawEventsQueue = new Queue('raw_events', {
-  connection: new IORedis(process.env.REDIS_URL || 'redis://localhost:6379', { maxRetriesPerRequest: null, enableReadyCheck: false }),
-});
+// 2026-10-28 — central Redis-klient (03-Queue/redisClient.mjs).
+// Den gamla inline-optionen hade maxRetriesPerRequest: null UTAN
+// enableOfflineQueue: false — dvs. kommandon lade sig i offline-kön när
+// Redis var borta och skicket aldrig kom fram. Det var en del av
+// 2-timmars-hängningen 2026-10-26.
+const rawEventsQueue = createBullQueue('raw_events');
 
 function dedupHash(title, startTime, sourceId) {
   return createHash('sha256').update(`${sourceId}::${title}::${startTime}`).digest('hex');
@@ -224,10 +232,11 @@ async function fetchOneSource(src, args) {
         });
         pageQueued++;
       } catch (e) {
-        console.error(`queue.add failed for ${row.title_sv ?? row.title_en}: ${e.message}`);
+        queueErrors.record(e, `queue.add failed for ${row.title_sv ?? row.title_en}`);
       }
     }
     console.log(`  queued: ${pageQueued}`);
+    totalQueued += pageQueued;
     // 2026-10-24 — persisted-räknaren var död: den deklarerades och skrevs
     // ut men inkrementerades aldrig, så Tribe-raden lög ("persisted=0" trots
     // att 17 rader köades). Det som faktiskt persisteras här är kön
@@ -269,7 +278,10 @@ async function main() {
   console.log(`fetched=${totals.fetched} persisted=${totals.persisted} duplicates=${totals.duplicates} errors=${totals.errors}`);
 }
 
-main().then(() => process.exit(0)).catch((e) => {
+main().then(() => {
+  queueErrors.printSummary('tribe-events');
+  process.exit(queueErrors.exitCode(totalQueued));
+}).catch((e) => {
   console.error('FATAL:', e);
   process.exit(1);
 });

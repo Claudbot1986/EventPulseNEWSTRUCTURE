@@ -26,6 +26,10 @@ fi
 
 export EVENTPULSE_PROJECT_ROOT="$PROJECT_ROOT"
 export EVENTPULSE_VAULT_ROOT="${EVENTPULSE_VAULT_ROOT:-/Users/claudgashi/Desktop/MyVault/TomorGashi}"
+# 2026-10-28 — importen har EN ägare: cron 02:00 (scripts/ingestion-cron.ts).
+# Den här vägen (04:00) körde samma import igen, vilket gjorde att samma
+# events köades upp två gånger per natt. Flaggan gör vägen idempotent.
+export EVENTPULSE_IMPORT_MODE=never
 
 declare -a RES=()
 
@@ -39,6 +43,18 @@ run() {
 }
 
 echo "[post-ingest] ═══ START $(date -u +%Y-%m-%dT%H:%M:%SZ) ═══"
+
+# 2026-10-28 — preflight. Post-ingest får INTE köra i en trasig värld.
+# Samma skäl som nattkedjan: 26/27/28 okt dog nätverksstacken och kedjan
+# skrev "klart" med 0 events. Preflight mäter världen först och avbryter
+# med exit 69 i stället för att köra 13 steg mot död infrastruktur.
+# Mjuka kontroller (7777/7778) blockerar inte — bara hårda.
+echo "[post-ingest] ▶ preflight start $(date -u +%Y-%m-%dT%H:%M:%SZ)"
+if ! node "$PROJECT_ROOT/scripts/lib/preflight.mjs"; then
+  echo "[post-ingest] preflight MISSLYCKADES — post-ingest körs inte (exit 69)"
+  exit 69
+fi
+echo "[post-ingest] preflight exit=0"
 
 run link-health    "$TSX_BIN" 09-ScrapingSupervisor/check_link_health.ts --limit 200
 run purge          bash scripts/start-purge.sh

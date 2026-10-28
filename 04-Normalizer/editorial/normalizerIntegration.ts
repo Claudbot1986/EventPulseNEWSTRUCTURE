@@ -193,8 +193,15 @@ export async function maybeRunEditorial(
 
     await writeEditorialBack(deps.supabase, event.event_id, result, profile);
   } catch (err) {
+    // 2026-10-28 — DEGRADED-markören. Editorial är en VALFRI berikning: den
+    // fångar sitt eget fel och eventet sparas ändå. Utan markören klassade
+    // kedjan "fetch failed" i stderr som ett transportfel och slog kedjan
+    // röd (exit 69) på en körning som persisterade 5402 events — alltså en
+    // fullständigt lyckad körning rapporterad som trasig. Markören gör att
+    // raden räknas som en rapporterad försämring (syns i
+    // status.json:degradedSteps[]) i stället för som ett dolt fel.
     console.warn(
-      `[editorial] event ${event.event_id} misslyckades:`,
+      `[editorial] DEGRADED event ${event.event_id} misslyckades:`,
       err instanceof Error ? err.message : String(err),
     );
   }

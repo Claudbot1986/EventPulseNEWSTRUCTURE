@@ -18,6 +18,7 @@
  *   npx tsx 09-ScrapingSupervisor/ingestionPipeline.ts --force-d      # tvinga D-render även utanför cadence
  *   npx tsx 09-ScrapingSupervisor/ingestionPipeline.ts --skip-extract # hoppa över steg 2
  *   npx tsx 09-ScrapingSupervisor/ingestionPipeline.ts --skip-import  # hoppa över steg 3
+ *   npx tsx 09-ScrapingSupervisor/ingestionPipeline.ts --import=never # hoppa över steg 3 (cron-form)
  *   npx tsx 09-ScrapingSupervisor/ingestionPipeline.ts --limit N      # max N sources
  *   npx tsx 09-ScrapingSupervisor/ingestionPipeline.ts --dry-run      # logga men kör ej
  *
@@ -166,7 +167,12 @@ function parseArgs(argv: string[]): CliOptions {
     skipD: argv.includes('--skip-d'),
     forceD: argv.includes('--force-d'),
     skipExtract: argv.includes('--skip-extract'),
-    skipImport: argv.includes('--skip-import'),
+    // 2026-10-28 — `--import=never` är den explicita formen: importen har
+    // EN ägare (cron 02:00, scripts/ingestion-cron.ts). Den här vägen
+    // (04:00 → runDaily → ingestionPipeline) körs i cron-sammanhang och
+    // ska därför inte importera. `--skip-import` är kvar som alias så att
+    // gamla anropningar och dokumentation fortfarande fungerar.
+    skipImport: argv.includes('--skip-import') || argv.includes('--import=never'),
     dryRun: argv.includes('--dry-run'),
     limit: (() => {
       const idx = argv.indexOf('--limit');
@@ -294,8 +300,11 @@ async function main(): Promise<number> {
   }
 
   // Steg 3: importToEventPulse
+  // 2026-10-28 — i cron-sammanhang (04:00-vägen) körs detta med
+  // --import=never: importen har EN ägare, cron 02:00. Två ägare gjorde
+  // att samma events importerades två gånger per natt.
   if (opts.skipImport) {
-    log(`[step:importToEventPulse] SKIPPED (--skip-import)`, fileLog);
+    log(`[step:importToEventPulse] SKIPPED (--import=never) — importägare är cron 02:00`, fileLog);
     results.push({ step: 'importToEventPulse', exitCode: 0, durationMs: 0, skipped: true, stdoutTail: '', stderrTail: '' });
   } else {
     const args: string[] = [];

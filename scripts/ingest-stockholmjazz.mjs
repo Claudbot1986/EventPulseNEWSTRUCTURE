@@ -20,8 +20,8 @@
 import 'dotenv/config';
 import { createHash, randomUUID } from 'crypto';
 import { createClient } from '@supabase/supabase-js';
-import { Queue } from 'bullmq';
-import IORedis from 'ioredis';
+import { createBullQueue } from '../03-Queue/redisClient.mjs';
+import { createQueueErrorTracker } from './lib/queue-errors.mjs';
 
 const SUPABASE_URL_VAL = process.env.SUPABASE_URL;
 const SUPABASE_KEY_VAL = process.env.SUPABASE_SERVICE_ROLE_KEY;
@@ -30,11 +30,19 @@ const supabase = createClient(SUPABASE_URL_VAL, SUPABASE_KEY_VAL, { auth: { pers
 
 // T0201.5: BullMQ raw_events-queue. Workern dränerar kön och bearbetar
 // varje event genom normalizer (kategori, dedup, venue_id, T0201).
-const rawEventsQueue = new Queue('raw_events', {
-  connection: new IORedis(process.env.REDIS_URL || 'redis://localhost:6379', { maxRetriesPerRequest: null, enableReadyCheck: false }),
-});
+// 2026-10-28 — central Redis-klient (03-Queue/redisClient.mjs).
+// Den gamla inline-optionen hade maxRetriesPerRequest: null UTAN
+// enableOfflineQueue: false — dvs. kommandon lade sig i offline-kön när
+// Redis var borta och skicket aldrig kom fram. Det var en del av
+// 2-timmars-hängningen 2026-10-26.
+const rawEventsQueue = createBullQueue('raw_events');
 
 const SOURCE_ID = 'stockholmjazz';
+
+// 2026-10-28 — köfelsamling: högst 3 provrader, och exit ≠ 0 om inget
+// kunde köas. Se scripts/lib/queue-errors.mjs.
+const queueErrors = createQueueErrorTracker();
+let totalQueued = 0;
 const DRY = process.argv.includes('--dry-run');
 const args = process.argv.slice(2);
 const limitArg = args.find(a => a.startsWith('--limit='));
@@ -267,10 +275,11 @@ async function main() {
         });
         pageQueued++;
       } catch (e) {
-        console.error(`queue.add failed for ${row.title_sv ?? row.title_en}: ${e.message}`);
+        queueErrors.record(e, `queue.add failed for ${row.title_sv ?? row.title_en}`);
       }
     }
     console.log(`  queued: ${pageQueued}`);
+    totalQueued += pageQueued;
 
   console.log(`Upserted: ${upserted}`);
 
@@ -278,4 +287,7 @@ async function main() {
   console.log(`DB events_public for ${SOURCE_ID}: ${count}`);
 }
 
-main().catch((e) => { console.error(e); process.exit(1); });
+main().then(() => {
+  queueErrors.printSummary(SOURCE_ID);
+  process.exit(queueErrors.exitCode(totalQueued));
+}).catch((e) => { console.error(e); process.exit(1); });

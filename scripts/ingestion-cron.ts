@@ -27,6 +27,9 @@ import {
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { killLivingDiscoveryProcesses } from './lib/chain-guard.mjs';
+import { runPreflight, writePreflightArtifacts } from './lib/preflight.mjs';
+import { createStreamingClassifier, type ErrorClass } from './lib/net-error.mjs';
+import { createLastMatchScanner } from './lib/bounded-text.mjs';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -51,6 +54,14 @@ interface StepRecord {
    * är viktig: dashboarden ska visa "vet inte" som null, inte "noll".
    */
   eventsExtracted: number | null;
+  /**
+   * 2026-10-28 — ärlig felklassning. 'transport' betyder att servern aldrig
+   * nåddes (nätet dog). Det är farligare än 'http' (servern svarade fel) och
+   * får ALDRIG räknas som "klar" — kedjan går vidare men exit-koden blir 69.
+   */
+  errorClass?: 'transport' | 'auth' | 'http' | 'empty' | 'logic';
+  /** Sant = steget kördes men var delvis trasigt (t.ex. några felrader). */
+  degraded?: boolean;
 }
 
 interface StatusFile {
@@ -65,7 +76,35 @@ interface StatusFile {
   steps: StepRecord[];
   /** Summa av stegens eventsExtracted. Endast räkningsbara steg bidrar. */
   totalEventsExtracted: number;
+  /**
+   * 2026-10-28 — steg som var trasiga men inte nödvändigtvis stannade med
+   * exit≠0. T.ex. ett steg som loggade ett transportfel men avslutade med
+   * exit 0. Kedjan rapporterar dem, men kedjan kan inte vara "grön" om
+   * något av dem är ett transportfel.
+   */
+  degradedSteps?: Array<{ name: string; errorClass: string | null; exitCode: number }>;
+  /**
+   * 2026-10-28 — kedjans EGEN felklass (inte stegets). 'empty' betyder:
+   * kedjan svarade på allt, inget gick sönder, men den producerade INGA
+   * events. Det är inte ett fel — men det får aldrig rapporteras som
+   * "klar" utan att nämnas. Före detta skrev kedjan `ok: true` i
+   * skip-filen även när den persisterade 0 events, vilket gjorde
+   * verifieringen skippa sig själv just när den behövdes mest.
+   */
+  chainErrorClass?: 'empty' | null;
   lastError: string | null;
+  /**
+   * 2026-10-28 — preflight-resultat. Kedjan skriver detta INNAN första steget
+   * körs, så att en trasig värld syns i dashboarden som "startade aldrig"
+   * i stället för "körde i två timmar och skrev 0 events".
+   */
+  preflight?: {
+    ok: boolean;
+    failed: string[];
+    degraded: string[];
+    checkedAt: string;
+    durationMs: number;
+  } | null;
 }
 
 interface StepResult {
@@ -151,7 +190,18 @@ export function parseStepCounts(stepName: string, stdout: string): number | null
   }
   if (last === undefined) return null;
 
-  const n = Number.parseInt(last, 10);
+  return countFromCapture(last);
+}
+
+/**
+ * Gör en fångstgrupp ("1147") till ett antal.
+ *
+ * Delad av parseStepCounts (textvägen) och den strömmande skannern
+ * (kedjans körväg) — båda ska ge samma svar.
+ */
+function countFromCapture(capture: string | null | undefined): number | null {
+  if (capture === null || capture === undefined) return null;
+  const n = Number.parseInt(capture, 10);
   return Number.isFinite(n) ? n : null;
 }
 
@@ -186,11 +236,13 @@ function readStatus(): StatusFile {
       steps: raw.steps ?? [],
       totalEventsExtracted: raw.totalEventsExtracted ?? 0,
       lastError: raw.lastError ?? null,
+      preflight: raw.preflight ?? null,
     };
   } catch {
     return {
       running: false, pid: null, startedAt: null, finishedAt: null, exitCode: null,
       durationMs: null, lastHeartbeatAt: null, steps: [], totalEventsExtracted: 0, lastError: null,
+      preflight: null,
     };
   }
 }
@@ -268,6 +320,30 @@ const smoke = args.includes('--smoke');
 // för BFL-generering. Tänkt för nattläget tills BFL-credits fyllts på
 // (beslut 2026-09-15: biblioteket är fallback — se imageGen.matchLibraryFirst).
 const skipBfl = process.env.SKIP_BFL === '1' || args.includes('--skip-bfl');
+// 2026-10-28 — preflight-flaggor. Preflight är påslaget som standard: kedjan
+// ska INTE starta om världen är trasig (tre nätter i rad loggade "klart" med
+// 0 events för att nätet hade dött). `--skip-preflight` finns för felsökning
+// (när man VET att man vill köra mot en trasig värld). `--require-local-servers`
+// gör 7777/7778 till hårda krav i stället för mjuka.
+const skipPreflight = args.includes('--skip-preflight');
+// 2026-10-28 — `--strict-preflight`: gör TREDJEPARTskontrollerna (Exa,
+// ScrapingBee) hårda igen. Som standard är de mjuka: en tredjepartsoutage
+// ska inte stoppa kedjan från att importera de 24 andra stegens events.
+// Redis och Supabase är hårda oavsett.
+const strictPreflight = args.includes('--strict-preflight');
+// 2026-10-28 — `--force-import`: importen importerar även källor som redan
+// importerats med samma innehåll. Utan det hoppar ledger-skivan över
+// oförändrade källor, vilket är rätt för nattkörningen men gör det omöjligt
+// att bevisa att importen kan producera (gaterna L2/L3 tvingar fram
+// produktion med flaggan). Databasen påverkas inte — dedup-hashen skyddar.
+const forceImport = args.includes('--force-import');
+// --force-import-sources a,b: tvinga import av just dessa källor, även om
+// de redan importerats med samma innehåll.
+const forceImportSourcesIdx = args.indexOf('--force-import-sources');
+const forceImportSources = forceImportSourcesIdx !== -1 && args[forceImportSourcesIdx + 1]
+  ? args[forceImportSourcesIdx + 1].split(',').map((s) => s.trim()).filter(Boolean)
+  : [];
+const requireLocalServers = args.includes('--require-local-servers');
 
 /**
  * `--smoke` (2026-09-10): kör HELA pipelinen med minimal data så vi kan verifiera
@@ -303,6 +379,70 @@ interface SpawnResult {
   exitCode: number;
   sourcesProcessed: number | null;
   eventsExtracted: number | null;
+  /**
+   * 2026-10-28 — felklass för steget. Kan sättas ÄVEN när exitCode är 0:
+   * det är hela poängen. Ett steg som skriver "fetch failed" i stderr och
+   * sedan avslutar med exit 0 såg grönt ut i tre nätter i rad, medan nätet
+   * var dött och 0 events skrevs.
+   */
+  errorClass?: ErrorClass;
+  /** Sant = steget kördes men var delvis trasigt. */
+  degraded?: boolean;
+}
+
+/**
+ * Klassificera ett stegs fel från exitkod + stderr-text.
+ *
+ * Exitkoderna vi använder (se scripts/lib/net-error.mjs):
+ *   69 = EX_UNAVAILABLE → nätet nådde inte fram  → transport
+ *   77 = EX_NOPERM     → nyckel/auktorisering   → auth
+ *   70 = EX_SOFTWARE   → kodfel
+ *   124 = timeout      → steget kom aldrig tillbaka → transport
+ *
+ * @param {number} exitCode
+ * @param {string} stderrText
+ * @returns {{ errorClass?: ErrorClass; degraded?: boolean }}
+ */
+export function classifyStepFailure(exitCode: number, verdict: { worstClass: ErrorClass; degradedCount: number }): { errorClass?: ErrorClass; degraded?: boolean } {
+  // 2026-10-28 — rader som uttryckligen handlar om ett försök igen ska inte
+  // räknas som fel — en nätverksfläck som övergick till framgång är inte
+  // "transportfel".
+  //
+  // 2026-10-28 (andra rundan) — rader med DEGRADED-markören är FEL SOM
+  // DELSYSTEMET SJÄLV ÄGER: en valfri berikning (Editorial Engine) misslyckades
+  // för ett event, men eventet sparades ändå. Sådana rader ska rapporteras
+  // som försämring, inte som ett dolt transportfel. Utan detta fick en
+  // fullständigt lyckad körning (5402 persisterade events, exit=0) exit 69
+  // för att en LLM-anrop föll — vilket är lika skadligt som den gamla gröna
+  // ljugen: operatören slutar lita på exit 69.
+  // 2026-10-28 (tredje rundan) — klassningen sker på HELA stderr (strömmande),
+  // inte på en trunkerad buffert. Mätt på worker-drain …06-07-38-030Z.err.log
+  // (1 213 321 B) låg den enda transportmarkören på byte 119 988 — i den
+  // kastade mitten. Kedjan klassade steget 'logic', avslutade exit 0 och
+  // skrev "klar". Se createStreamingClassifier i scripts/lib/net-error.mjs.
+  const fromText = verdict.worstClass;
+  const hasDegraded = verdict.degradedCount > 0;
+
+  if (exitCode === 0) {
+    // Steget säger "klar" — men loggen säger annars. Det är den tysta
+    // felen. Endast transport/auth gör detta farligt; http/logic i stderr
+    // är normalt (t.ex. en 404 för en källa som inte finns).
+    if (fromText === 'transport') return { errorClass: 'transport', degraded: true };
+    if (fromText === 'auth') return { errorClass: 'auth', degraded: true };
+    if (hasDegraded) return { degraded: true };
+    return {};
+  }
+
+  if (exitCode === 69) return { errorClass: fromText === 'auth' ? 'auth' : 'transport', degraded: hasDegraded };
+  if (exitCode === 77) return { errorClass: 'auth', degraded: hasDegraded };
+  if (exitCode === 124) return { errorClass: 'transport', degraded: true };
+  // 2026-10-28 — 75 (EX_TEMPFAIL) = steget är OFULLSTÄNDIGT, inte trasigt.
+  // Dräneringen avslutades innan kön var tom (maxMs eller SIGTERM), så
+  // jobben ligger kvar i Redis och ska köras igen. Klassen 'empty' är
+  // slutet värdefärum och betyder "inget fel hände, men inget blevir klart";
+  // 'degraded' gör att steget syns i status.degradedSteps.
+  if (exitCode === 75) return { errorClass: 'empty', degraded: true };
+  return { errorClass: fromText, degraded: hasDegraded };
 }
 
 function runStep(name: string, cmd: string, args: string[]): Promise<SpawnResult> {
@@ -355,17 +495,38 @@ function runStep(name: string, cmd: string, args: string[]): Promise<SpawnResult
     let eventsExtracted: number | null = null;
     // Barnets stdout måste buffras för att kunna räknas ihop efteråt — utan
     // detta var eventsExtracted en konstant 0 sedan starten (2026-10-21).
-    let stdoutBuf = '';
+    // 2026-10-28 — stderr buffras också. Det är enda sättet att upptäcka
+    // ett steg som avslutar med exit 0 men skriver "fetch failed" i loggen.
+    //
+    // 2026-10-28 (andra rundan) — kedjan höll stegets stdout/stderr hela i
+    // RAM för att kunna klassa felet efteråt. Den 26 okt skrev importen 583 KB
+    // felrader — inget tog stopp för hur mycket ett steg kunde skriva.
+    //
+    // 2026-10-28 (tredje rundan) — lösningen är INTE att behålla mer text
+    // (då står vi tillbaka vid 583 KB), utan att inte kasta bort signal.
+    // Mätt på en verklig logg (worker-drain …06-07-38-030Z.err.log,
+    // 1 213 321 B): med en takad buffert (32 KB början + 32 KB slut) låg den
+    // enda transportmarkören på byte 119 988 — i den kastade mitten — och
+    // kedjan klassade steget 'logic', avslutade exit 0 och skrev "klar".
+    //
+    // Nu läses utdata STRÖMMANDE: klassningen behåller bara den värsta
+    // felklassen, antalsräkningen bara den sista träffen. O(1) minne oavsett
+    // hur mycket steget skriver, och ingen signal förlorad.
+    const stderrClassifier = createStreamingClassifier();
+    const stdoutCounts = createLastMatchScanner(
+      STEP_COUNT_RECIPES[name] ?? /^(?!)/,
+    );
 
     // Tee: varje chunk från child skrivs både till parent stdout/stderr OCH
     // till step-loggen. Håll koll på ordning så vi inte tappar rader vid ras.
     proc.stdout.on('data', (chunk) => {
       process.stdout.write(chunk);
-      stdoutBuf += chunk.toString('utf8');
+      stdoutCounts.append(chunk.toString('utf8'));
       try { writeSync(stepOutFd, chunk); } catch {}
     });
     proc.stderr.on('data', (chunk) => {
       process.stderr.write(chunk);
+      stderrClassifier.append(chunk.toString('utf8'));
       try { writeSync(stepErrFd, chunk); } catch {}
     });
 
@@ -402,6 +563,10 @@ function runStep(name: string, cmd: string, args: string[]): Promise<SpawnResult
     proc.on('exit', (code) => {
       clearInterval(heartbeat);
       clearTimeout(killTimer);
+      // Sista raden kan sakna avslutande newline — utan flush skulle den
+      // aldrig klassas.
+      stderrClassifier.flush();
+      stdoutCounts.flush();
       const finishedAt = new Date().toISOString();
       // Ett avbrutet steg är inte exit=0 — steget räknas som fel så att
       // green-filen skriver ok:false och nästa körning försöker igen.
@@ -413,20 +578,27 @@ function runStep(name: string, cmd: string, args: string[]): Promise<SpawnResult
         closeSync(stepOutFd);
         closeSync(stepErrFd);
       } catch {}
-      eventsExtracted = parseStepCounts(name, stdoutBuf);
+      // Antalet läses ur den STRÖMMANDE skannern (hela stdout), inte ur den
+      // trunkerade bufferten: "sista matchningen vinner" måste gälla hela
+      // utdata, annars kan en äldre rad i den kastade mitten vinna.
+      eventsExtracted = STEP_COUNT_EXCLUDED.has(name)
+        ? null
+        : countFromCapture(stdoutCounts.lastValue);
+      const { errorClass, degraded } = classifyStepFailure(exitCode, stderrClassifier);
       // 2026-10-23 — pid SAKNADES här, medan step-start/step-timeout hade det.
       // Effekten var att 263 av loggens rader inte kunde kopplas till någon
       // körning: E2 (step-start ska ha ett step-end) och E4 (promote före A)
       // gick att köra på "sista körningen" men hittade 0 step-end-rader och
       // failade med "körningen saknar steg". Loggen är observability — den måste
       // gå att fälla av per körning.
-      appendChainOverview({ event: 'step-end', step: name, pid: process.pid, exitCode, durationMs, eventsExtracted, timedOut });
+      appendChainOverview({ event: 'step-end', step: name, pid: process.pid, exitCode, durationMs, eventsExtracted, timedOut, errorClass: errorClass ?? null, degraded: degraded ?? false });
       console.log(
         `[ingestion-cron] ✓ ${name}: exit=${exitCode} duration=${durationMs}ms ` +
         `events=${eventsExtracted === null ? 'n/a' : eventsExtracted} ` +
+        `${errorClass ? `errorClass=${errorClass} ` : ''}` +
         `log=${path.relative(PROJECT_ROOT, stepLogPath)}`,
       );
-      resolve({ exitCode, sourcesProcessed, eventsExtracted });
+      resolve({ exitCode, sourcesProcessed, eventsExtracted, errorClass, degraded });
     });
   });
 }
@@ -654,7 +826,13 @@ if (!skipImages) {
   steps.push({
     name: 'import-to-eventpulse',
     cmd: 'npx',
-    args: ['tsx', '03-Queue/importToEventPulse.ts', ...(smoke ? ['--dry-run', '--limit', '5'] : [])],
+    args: [
+      'tsx',
+      '03-Queue/importToEventPulse.ts',
+      ...(smoke ? ['--dry-run', '--limit', '5'] : []),
+      ...(forceImportSources.length > 0 ? ['--force', '--source', forceImportSources.join(',')] : []),
+      ...(forceImport && forceImportSources.length === 0 ? ['--force'] : []),
+    ],
   });
 
   // ── worker-drain: sista milen till Supabase ───────────────────────────
@@ -864,12 +1042,70 @@ async function main(): Promise<void> {
     lastHeartbeatAt: startedAt,
     steps: [],
     totalEventsExtracted: 0,
+    chainErrorClass: null,
     lastError: null,
+    preflight: null,
   };
   writeStatus(status);
 
   console.log(`[ingestion-cron] ═══ START ═══ pid=${process.pid} startedAt=${startedAt}`);
   console.log(`[ingestion-cron] limit=${limit}, skipImages=${skipImages}`);
+
+  // ─── Preflight (2026-10-28) ───────────────────────────────────────────────
+  // Kedjan får INTE starta om världen är trasig.
+  //
+  // Varför: 26/27/28 okt loggade kedjan "exit=0" medan nätverksstacken hade
+  // dött (EADDRNOTAVAIL — ingen HTTP-status nåddes). Importen hängde i två
+  // timmar (exit=124) och skrev 0 events. Preflight mäter världen först och
+  // avbryter inom 30 s med exit 69 (EX_UNAVAILABLE) i stället för att bränna
+  // en natt och lämna status.json med running:true och en död pid.
+  if (!skipPreflight) {
+    console.log('[ingestion-cron] preflight: mäter världen innan kedjan startar…');
+    const pre = await runPreflight({
+      projectRoot: PROJECT_ROOT,
+      requireLocalServers,
+      allowDegraded: !strictPreflight,
+    });
+    status.preflight = {
+      ok: pre.ok,
+      failed: pre.failed,
+      degraded: pre.degraded,
+      checkedAt: new Date().toISOString(),
+      durationMs: pre.durationMs,
+    };
+    for (const check of pre.checks) {
+      const mark = check.ok ? 'OK  ' : 'FAIL';
+      const kind = check.blocking ? 'hard' : 'soft';
+      console.log(
+        `[ingestion-cron] preflight: [${mark}] ${kind} ${check.name} ${check.ms}ms — ${check.detail}`,
+      );
+    }
+    const { reportPath } = writePreflightArtifacts(pre, { projectRoot: PROJECT_ROOT });
+    console.log(
+      `[ingestion-cron] preflight: ${pre.ok ? 'OK' : 'MISSLYCKADES'} ` +
+      `(failed=${pre.failed.join(',') || 'none'}, degraded=${pre.degraded.join(',') || 'none'}, ${pre.durationMs}ms)` +
+      (reportPath ? ` → ${path.relative(PROJECT_ROOT, reportPath)}` : ''),
+    );
+
+    if (!pre.ok) {
+      // Kedjan startar INTE. Statusfilen ska säga sanning: inte running,
+      // exit 69, tydligt felmeddelande.
+      status.running = false;
+      status.finishedAt = new Date().toISOString();
+      status.exitCode = 69;
+      status.durationMs = Date.now() - new Date(startedAt).getTime();
+      status.lastError = `Preflight misslyckades: ${pre.failed.join(', ')} — kedjan startade inte`;
+      writeStatus(status);
+      appendChainOverview({ event: 'preflight-fail', failed: pre.failed, degraded: pre.degraded, durationMs: pre.durationMs });
+      console.error(
+        `[ingestion-cron] preflight MISSLYCKADES (${pre.failed.join(', ')}) — kedjan startar inte. exit=69`,
+      );
+      process.exit(69);
+    }
+  } else {
+    console.log('[ingestion-cron] preflight: --skip-preflight angiven — kontrollerna körs INTE');
+    appendChainOverview({ event: 'preflight-skipped' });
+  }
 
   // 2026-10-18 — pre-discovery kill-check. Innan step-loopen startar: döda
   // levande discovery/ingest-processer från en tidigare hängd körning.
@@ -910,7 +1146,15 @@ async function main(): Promise<void> {
           console.log(`[ingestion-cron] green-skip: discovery verifierades grön för ${ageH.toFixed(1)}h sedan (run=${skip.runId}) — skippar verify-skill-körning`);
           appendChainOverview({ event: 'green-skip', lastGreenAt, ageHours: ageH, runId: skip.runId });
         } else if (!skip.ok) {
-          console.log(`[ingestion-cron] green-skip: senaste verify är RÖD (exit=${skip.exitCode ?? '?'}, misslyckade steg: ${(skip.failedSteps ?? []).join(', ') || 'okänt'}) — verify-skill körs separat`);
+          // 2026-10-28 — 'empty' är inte samma sak som röd. Kedjan svarade
+          // men producerade inget — verifieringen ska köras, men skälet är
+          // "tomt", inte "trasigt".
+          const skipClass = skip.errorClass;
+          console.log(
+            skipClass === 'empty'
+              ? `[ingestion-cron] green-skip: senaste körning var TOM (0 events, exit=0) — verify-skill körs separat`
+              : `[ingestion-cron] green-skip: senaste verify är RÖD (exit=${skip.exitCode ?? '?'}, misslyckade steg: ${(skip.failedSteps ?? []).join(', ') || 'okänt'}) — verify-skill körs separat`,
+          );
         } else {
           console.log(`[ingestion-cron] green-skip: senaste verify är ${ageH.toFixed(1)}h gammal — verify-skill körs separat`);
         }
@@ -921,6 +1165,11 @@ async function main(): Promise<void> {
   }
 
   let totalExit = 0;
+  // 2026-10-28 — felklassen bestämmer slutkoden, inte "vilket steg som
+  // rörde sig sist". Före detta skrev ett senare steg med exit 1 över 69
+  // från ett transportfel: kedjan sa "ett steg gick sönder" när världen
+  // egentligen var död. Nu bärs den värsta klassen genom hela körningen.
+  let worstErrorClass: ErrorClass | null = null;
   let totalEvents = 0;
   const stepResults: StepRecord[] = [];
 
@@ -953,11 +1202,29 @@ async function main(): Promise<void> {
       exitCode: result.exitCode,
       sourcesProcessed: result.sourcesProcessed,
       eventsExtracted: result.eventsExtracted,
+      errorClass: result.errorClass,
+      degraded: result.degraded,
     });
 
     // Endast mätbara steg summeras — null betyder "vet inte", inte noll.
     if (result.eventsExtracted !== null) totalEvents += result.eventsExtracted;
     if (result.exitCode !== 0) totalExit = result.exitCode;
+
+    // 2026-10-28 — totalExit får ALDRIG bli 0 om ett steg haft ett
+    // transportfel. Utan den här regeln kunde ett steg som skrev
+    // "fetch failed" i stderr och avslutade med exit 0 lämna kedjan grön —
+    // exakt vad som hände nattet 26–28 oktober (0 events, exit 0).
+    if (result.errorClass === 'transport') {
+      worstErrorClass = 'transport';
+      if (result.exitCode === 0) {
+        console.error(
+          `[ingestion-cron] ⛔ ${step.name}: transportfel men exit=0 — kedjan kan inte rapporteras som grön (exit=69)`,
+        );
+        appendChainOverview({ event: 'silent-transport-error', step: step.name, exitCode: result.exitCode });
+      }
+    } else if (result.errorClass === 'auth' && worstErrorClass !== 'transport') {
+      worstErrorClass = 'auth';
+    }
 
     // Uppdatera status under körning så dashboard ser steg-för-steg
     status.steps = [...stepResults];
@@ -968,11 +1235,49 @@ async function main(): Promise<void> {
   const finishedAt = new Date().toISOString();
   const durationMs = new Date(finishedAt).getTime() - new Date(startedAt).getTime();
 
+  // 2026-10-28 — den värsta felklassen bestämmer slutkoden. Utan detta
+  // kunde ett senare steg med exit 1 skriva över 69 från ett transportfel
+  // (se deklarationen av worstErrorClass ovan).
+  if (worstErrorClass === 'transport') totalExit = 69;
+  else if (worstErrorClass === 'auth' && totalExit === 0) totalExit = 77;
+
+  // 2026-10-28 — 'empty'-klassen. Kedjan svarade på allt och inget gick
+  // sönder, men den producerade INGA events.
+  //
+  // Det är INTE ett fel — kedjan går vidare och avslutar exit 0. Men det får
+  // inte rapporteras som "klar" utan att nämnas: före detta skrev kedjan
+  // `ok: true` i skip-filen även när den persisterade 0 events, och då
+  // hoppade verifieringen över sig själv just när den behövdes mest.
+  //
+  // Villkoret kräver att vi faktiskt MÄTT antalet: minst ett steg måste ha
+  // ett mätbart count (annars vet vi ingenting, och "vet inte" får inte
+  // rapporteras som "tomt"). Observera att `measuredSteps.length > 0` INTE
+  // är alltid sant — det är falskt för avgränsade körningar (`--only`) vars
+  // steg saknar count-recept. Då vet vi ingenting, och "vet inte" ska inte
+  // rapporteras som "tomt".
+  //
+  // VARFÖR detta inte är en "frisk, tyst natt"-defekt (2026-10-28).
+  // "0 events, exit 0, inga felaktiga steg" går inte att skilja från "kedjan
+  // är tyst trasig" — det är exakt samma signal. Att klassa det som "tomt"
+  // gör att verifierings-skillen körs den natten i stället för att hoppa
+  // över sig själv. Det är dyrt, men det är den säkra riktningen: en
+  // misslyckad skip är en osynlig kedja, en extra körning är bara en
+  // extra körning. Ett "tomt"-omdöme får därför INTE räknas som grönt.
+  const measuredSteps = stepResults.filter((s) => s.eventsExtracted !== null);
+  const chainIsEmpty =
+    totalExit === 0 && measuredSteps.length > 0 && totalEvents === 0;
+  status.chainErrorClass = chainIsEmpty ? 'empty' : null;
+
   status.running = false;
   status.finishedAt = finishedAt;
   status.exitCode = totalExit;
   status.durationMs = durationMs;
   status.totalEventsExtracted = totalEvents;
+  // 2026-10-28 — vilka steg var trasiga, och hur. Dashboarden kan visa det
+  // utan att läsa loggfilerna.
+  status.degradedSteps = stepResults
+    .filter((s) => s.degraded || s.errorClass)
+    .map((s) => ({ name: s.name, errorClass: s.errorClass ?? null, exitCode: s.exitCode }));
   if (totalExit !== 0) status.lastError = `Step(s) failed with exit code ${totalExit}`;
   writeStatus(status);
 
@@ -988,7 +1293,7 @@ async function main(): Promise<void> {
     ? `cron-${status.pid}-${new Date(finishedAt).getTime()}`
     : `cron-${new Date(finishedAt).getTime()}`;
   try {
-    if (totalExit === 0) {
+    if (totalExit === 0 && !chainIsEmpty) {
       writeFileSync(skipFile, JSON.stringify({
         ok: true,
         lastGreenAt: finishedAt,
@@ -1007,7 +1312,17 @@ async function main(): Promise<void> {
         previousGreen = typeof prev?.lastGreenAt === 'string' ? prev.lastGreenAt : null;
       } catch { /* fil saknas eller är korrupt — inget att bevara */ }
 
-      const failedSteps = stepResults.filter((s) => s.exitCode !== 0).map((s) => s.name);
+      // 2026-10-28 — "misslyckade steg: okänt" var en sann men oanvändbar
+      // rapport. Steget som fällde kedjan (transportfel) kan ha exit=0, så
+      // filtret på exitCode !== 0 hittade ingenting. Nu listas BÅDE steg med
+      // fel och steg med rapporterad försämring — det är de som operatören
+      // behöver namnet på.
+      const failedSteps = stepResults
+        .filter((s) => s.exitCode !== 0 || s.errorClass || s.degraded)
+        .map((s) => s.name);
+      const degradedSteps = stepResults
+        .filter((s) => s.degraded || s.errorClass)
+        .map((s) => ({ name: s.name, errorClass: s.errorClass ?? null, exitCode: s.exitCode }));
       writeFileSync(skipFile, JSON.stringify({
         ok: false,
         lastGreenAt: previousGreen,
@@ -1015,12 +1330,22 @@ async function main(): Promise<void> {
         runId,
         exitCode: totalExit,
         failedSteps,
+        degradedSteps,
+        // 2026-10-28 — 'empty' förklarar VARFÖR filen inte är grön, även
+        // när exit=0 och inget steg gick sönder.
+        errorClass: chainIsEmpty ? 'empty' : null,
+        reason: chainIsEmpty
+          ? 'kedjan svarade på allt men producerade 0 events — verifieringen ska inte skippas'
+          : `steg med fel: ${failedSteps.join(', ') || 'okänt'}`,
         totalEventsExtracted: totalEvents,
         durationMs,
       }, null, 2), 'utf8');
       console.error(
-        `[ingestion-cron] green-skip: skrev RÖD ${path.relative(PROJECT_ROOT, skipFile)} ` +
-        `— exit=${totalExit}, misslyckade steg: ${failedSteps.join(', ') || 'okänt'}`,
+        chainIsEmpty
+          ? `[ingestion-cron] green-skip: skrev TOM ${path.relative(PROJECT_ROOT, skipFile)} — ` +
+            `exit=0 men 0 events producerade; verifieringen körs separat`
+          : `[ingestion-cron] green-skip: skrev RÖD ${path.relative(PROJECT_ROOT, skipFile)} ` +
+            `— exit=${totalExit}, misslyckade steg: ${failedSteps.join(', ') || 'okänt'}`,
       );
     }
   } catch (err) {

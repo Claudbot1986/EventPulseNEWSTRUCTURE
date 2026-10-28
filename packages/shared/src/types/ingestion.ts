@@ -33,6 +33,11 @@ export interface RawEventInput {
   image_url: string | null;
   source: string;
   source_id: string | null;
+  /** Vilken extractedevents-FIL jobbet kom från (ledger-radens nyckel).
+   *  Sätts av importen. Utan det kan dräneringen inte bevisa vilken fil
+   *  ett persisterat event hör till. Optional: jobb från andra vägar
+   *  (runB, scheduler) har det inte. */
+  import_file?: string | null;
   detected_language: 'sv' | 'en' | 'other' | null;
   raw_payload: Record<string, unknown>;
   // Optional singular-alias fields emitted by some adapters (e.g. Kulturhuset

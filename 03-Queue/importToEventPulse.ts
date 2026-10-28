@@ -10,6 +10,7 @@
  * Usage:
  *   npx tsx 03-Queue/importToEventPulse.ts              # alla extractedevents/
  *   npx tsx 03-Queue/importToEventPulse.ts --limit N     # N källor
+ *   npx tsx 03-Queue/importToEventPulse.ts --force        #ignorera ledger (tvinga import)
  *   npx tsx 03-Queue/importToEventPulse.ts --dry-run      # testa utan att köra
  */
 
@@ -17,10 +18,22 @@ import * as dotenv from 'dotenv';
 import path from 'path';
 import { fileURLToPath, pathToFileURL } from 'url';
 import fs from 'fs';
+import { createHash } from 'crypto';
 import { loadSkippedSourceIds } from '../02-Ingestion/lib/quarantineGuard.js';
 import { isExcludedTitle } from '../02-Ingestion/lib/sourceTitleExclusions.js';
 import { isEventPast } from './eventFreshness';
 import { eventStartTime, toIsoEndTime } from '../02-Ingestion/F-eventExtraction/usableEvents';
+import { withRedisTimeout } from './redisClient.mjs';
+import { classifyError, type ErrorClass } from '../scripts/lib/net-error.mjs';
+import {
+  loadLedger,
+  saveLedger,
+  isAlreadyImported,
+  recordImport,
+  mergeLedger,
+  ledgerChanged,
+  LEDGER_RELATIVE_PATH,
+} from './importLedger.mjs';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -31,9 +44,20 @@ const RUNTIME_DIR     = path.resolve(__dirname, '..');
 const PREUI_Q         = path.join(RUNTIME_DIR, 'runtime', 'preUI-queue.jsonl');
 const EVENTPULSE_Q    = path.join(RUNTIME_DIR, 'runtime', 'EVENTPULSE-APP-queue.jsonl');
 const EXTRACTED_DIR   = path.resolve(__dirname, '03-extractedevents');
+// 2026-10-28 — filnivå-idempotens. Se 03-Queue/importLedger.mjs.
+const LEDGER_PATH     = path.join(RUNTIME_DIR, LEDGER_RELATIVE_PATH);
 
 function loadCliEnv(): void {
-  dotenv.config({ path: path.resolve(__dirname, '../../.env'), override: true });
+  // 2026-10-28 — sökvägen var '../../.env', vilket från 03-Queue/ pekar på
+  // /Users/claudgashi/.env (en fil som INTE finns). Rätt sökväg är ett steg
+  // upp: 03-Queue/ → projektroten. Skadlig bara om det råkar finnas en
+  // /Users/claudgashi/.env med andra värden — då hade den overriding den
+  // projektets .env..queue.js laddar samma fil med rätt sökväg.
+  //
+  // 2026-10-28 — `override: false`: en explicit satt miljövariabel vinner
+  // över .env. Det gör det möjligt att peka importen mot en död Redis för
+  // att verifiera fail-fast (se scripts/verify-failfast.mjs).
+  dotenv.config({ path: path.resolve(__dirname, '../.env'), override: false });
 }
 
 // ── BullMQ ───────────────────────────────────────────────────────────────────
@@ -55,6 +79,9 @@ interface RawEventInput {
   image_url: string | null;
   source: string;
   source_id: string | null;
+  /** Vilken extractedevents-FIL detta event kom från. Sätts av toRawEvent
+   *  och följer med jobbet in i kön — dräneringen räknar bevis per fil. */
+  import_file?: string | null;
   detected_language: 'sv' | 'en' | 'other' | null;
   raw_payload: Record<string, unknown>;
 }
@@ -125,7 +152,24 @@ export function buildJobId(raw: RawEventInput): string {
   return `${raw.source}--${sanitize(raw.title)}--${sanitize(raw.start_time ?? '')}`;
 }
 
-async function enqueueRawEvent(raw: RawEventInput): Promise<void> {
+/**
+ * Lägg in ett event i kön och svara på om JOBBET bär VÅR fil.
+ *
+ * VARFÖR (2026-10-28). BullMQ dedupear på jobId: `add` med ett jobId som
+ * redan finns i ett icke-terminalt läge är en TYST no-op — jobbets data
+ * behåller den fil som lade in det. Två filer kan ge samma jobId (samma
+ * kanoniska källa + samma source_id, t.ex. `berwaldhallen` och
+ * `berwaldhallen-tixly`).
+ *
+ * Dräneringen räknar bevis PER FIL. Om filen B's event tyst kolliderade
+ * med filen A's jobb, så räknas det jobbet under A — inte B. Om B ändå
+ * räknade det som sitt eget bevis skulle B flippa till 'persisted' utan
+ * att B's event faktiskt gick igenom B's väg. Därför måste importen veta
+ * vilka jobb den FAKTISKT äger.
+ *
+ * @returns true om jobbet bär vår fil (och alltså räknas som vårt bevis)
+ */
+async function enqueueRawEvent(raw: RawEventInput): Promise<boolean> {
   // Reuse the canonical 'raw_events' queue instance from queue.js — it has the
   // same name/prefix/jobOptions this local duplicate built. The old code
   // imported a non-exported getConnection and passed it as a BullMQ
@@ -134,8 +178,49 @@ async function enqueueRawEvent(raw: RawEventInput): Promise<void> {
   const { rawEventsQueue: q } = await import('./queue.js');
 
   const jobId = buildJobId(raw);
-  await releaseTerminalJob(q, jobId);
+  const disposition = await releaseTerminalJob(q, jobId);
+  if (disposition === 'kept') {
+    // Jobbet finns kvar i kön (waiting/active/delayed) → `add` blir en no-op
+    // och jobbets data bär den fil som lade in det. Vårt bevis gäller bara
+    // jobb som bär VÅR fil.
+    const existing = await q.getJob(jobId);
+    return existing?.data?.import_file === raw.import_file;
+  }
+  // 'removed' (terminalt jobb togs bort) eller 'absent' → jobbet läggs in
+  // nu, med vår egen data.
   await q.add(jobId, raw, { jobId });
+  return true;
+}
+
+/**
+ * 2026-10-28 — tidsgräns runt varje köning.
+ *
+ * Varför: nattköningen 2026-10-26 hängde i två timmar (exit=124) med
+ * 583 KB identiska felrader. Orsaken var att `q.add()` aldrig rejectade
+ * när Redis var otillgänglig — ioredis lägger kommandon i offline-kön och
+ * väntar på återanslutning. Nu har optionerna `enableOfflineQueue: false`
+ * (se 03-Queue/redisClient.mjs), men en egen tidsgräns är ändå rätt: den
+ * fångar de fall där Redis svarar men inte gör framsteg.
+ *
+ * 15 s per event × tusentals events = alldeles för långt. 15 s är
+ * tillräckligt för ett normalt köanrop (några ms) och ger exit 70 inom
+ * en minut för en trasig kö.
+ */
+const ENQUEUE_TIMEOUT_MS = 15_000;
+
+/**
+ * Köa ett event med tidsgräns. Kastar vidare felet med en tydlig markering
+ * så att anroparen kan klassificera det som transportfel.
+ *
+ * @returns true om jobbet bär vår fil (se enqueueRawEvent)
+ */
+async function enqueueRawEventWithTimeout(raw: RawEventInput): Promise<boolean> {
+  const result = await withRedisTimeout(() => enqueueRawEvent(raw), ENQUEUE_TIMEOUT_MS);
+  if (result.ok) return result.value;
+  const error = result.error instanceof Error ? result.error : new Error(String(result.error));
+  // eslint-disable-next-line no-param-reassign
+  (error as Error & { redisTimeout?: boolean }).redisTimeout = result.timedOut === true;
+  throw error;
 }
 
 // ── Queue helpers ───────────────────────────────────────────────────────────
@@ -416,12 +501,12 @@ export function mergeExtractedEvents(artifacts: ExtractedEvent[][]): ExtractedEv
 }
 
 /**
- * Läs ALLA artefakter för en källa: top-level (A/B/C utan subdir) plus
- * gate-subdirs (A/, B/, C/, D/) — och slå ihop dem.
+ * Alla artefaktfiler som hör till en källa: top-level (A/B/C utan subdir)
+ * plus gate-subdirs (A/, B/, C/, D/).
  *
  * @param rootOverride Test-hook: låter tester peka på en temporär katalog.
  */
-export function readExtractedEvents(sourceId: string, rootOverride?: string): ExtractedEvent[] {
+function extractedArtifactFiles(sourceId: string, rootOverride?: string): Array<{ file: string; mtimeMs: number }> {
   const root = rootOverride ?? EXTRACTED_DIR;
   const candidates: { file: string; mtimeMs: number }[] = [];
 
@@ -435,6 +520,47 @@ export function readExtractedEvents(sourceId: string, rootOverride?: string): Ex
       candidates.push({ file: subFile, mtimeMs: fs.statSync(subFile).mtimeMs });
     }
   }
+  return candidates;
+}
+
+/**
+ * Fingerprint av en källas artefakter.
+ *
+ * fileMtime  — senaste mtime (för felsökning; räcker INTE som nyckel,
+ *              se importLedger.mjs).
+ * fileHash   — sha256 över filinnehållet. Det är denna som avgör om
+ *              källan redan importerats: samma innehåll ⇒ samma events ⇒
+ *              inget nytt att köa.
+ *
+ * @param rootOverride Test-hook: låter tester peka på en temporär katalog.
+ */
+export function extractedFilesFingerprint(
+  sourceId: string,
+  rootOverride?: string,
+): { fileMtime: number; fileHash: string } {
+  const artifacts = extractedArtifactFiles(sourceId, rootOverride);
+  if (artifacts.length === 0) return { fileMtime: 0, fileHash: '' };
+
+  const hash = createHash('sha256');
+  let fileMtime = 0;
+  // Sorterad på sökväg så att hashet är stabilt oberoende av läsordning.
+  for (const { file, mtimeMs } of [...artifacts].sort((a, b) => (a.file < b.file ? -1 : 1))) {
+    hash.update(path.basename(path.dirname(file)));
+    hash.update(path.basename(file));
+    hash.update(fs.readFileSync(file, 'utf-8'));
+    if (mtimeMs > fileMtime) fileMtime = mtimeMs;
+  }
+  return { fileMtime, fileHash: hash.digest('hex') };
+}
+
+/**
+ * Läs ALLA artefakter för en källa: top-level (A/B/C utan subdir) plus
+ * gate-subdirs (A/, B/, C/, D/) — och slå ihop dem.
+ *
+ * @param rootOverride Test-hook: låter tester peka på en temporär katalog.
+ */
+export function readExtractedEvents(sourceId: string, rootOverride?: string): ExtractedEvent[] {
+  const candidates = extractedArtifactFiles(sourceId, rootOverride);
   // Äldst först — så att "senaste raden vinner" i mergeExtractedEvents.
   candidates.sort((a, b) => a.mtimeMs - b.mtimeMs);
 
@@ -499,6 +625,9 @@ export function toRawEvent(sourceId: string, ev: ExtractedEvent): RawEventInput 
     image_url:      ev.image_url ?? ev.imageUrl ?? null,
     source:         canonicalSource,
     source_id:      effectiveSourceId,
+    // 2026-10-28 — vilken FIL eventet kom från. Följer med jobbet in i
+    // kön så att dräneringen kan räkna bevis per fil (ledger-rad).
+    import_file:    sourceId,
     detected_language: ev.detected_language ?? null,
     raw_payload:    ev.raw_payload ?? {},
   };
@@ -516,11 +645,18 @@ export async function importSource(
   sourceId: string,
   dryRun: boolean,
   rootOverride?: string,
-): Promise<{ enqueued: number; errors: number; skippedPast: number; excludedTitles: number }> {
+): Promise<{
+  enqueued: number;
+  jobs: number;
+  errors: number;
+  skippedPast: number;
+  excludedTitles: number;
+  errorClass: ErrorClass | null;
+}> {
   const events = readExtractedEvents(sourceId, rootOverride);
   if (events.length === 0) {
     console.log(`[import] ${sourceId}: ingen event-data i extractedevents/ → hoppar`);
-    return { enqueued: 0, errors: 0, skippedPast: 0, excludedTitles: 0 };
+    return { enqueued: 0, jobs: 0, errors: 0, skippedPast: 0, excludedTitles: 0, errorClass: null };
   }
 
   console.log(`[import] ${sourceId}: ${events.length} events`);
@@ -529,6 +665,24 @@ export async function importSource(
   let errors = 0;
   let skippedPast = 0;
   let excludedTitles = 0;
+  // 2026-10-28 — felrterna samlas, skrivs ut (max 3) och räknas. Tidigare
+  // skrevs varje felrad direkt → 583 KB identiska rader under en enda
+  // nattköring. Nu: högst 3 rader + en sammanfattning.
+  const errorSamples: string[] = [];
+  let errorClass: ErrorClass | null = null;
+  // 2026-10-28 — BEVIS för dräneringen, räknat PER FIL.
+  //
+  // En fil kan ge flera KANONISKA källor (t.ex. berwaldhallen-tixly →
+  // berwaldhallen), och två filer kan ge samma kanoniska källa. Därför
+  // räknas beviset per FIL — det är ledger-radens nyckel, och jobbets
+  // payload bär filen (`import_file`).
+  //
+  // jobId sätts på (source, source_id ?? titel) och BullMQ dedupear på jobId
+  // — två rader med samma identitet ger ETT jobb. Därför räknas DISTINKTA
+  // jobId, inte rader. Och ett jobb som tyst kolliderade med en annan fils
+  // jobb räknas inte (det bär den andra filens märke) — annars skulle
+  // beviset lånas mellan filer.
+  const ownedJobIds = new Set<string>();
 
   for (const ev of events) {
     try {
@@ -560,12 +714,41 @@ export async function importSource(
         console.log(`[import:dry-run]   "${raw.title}"`);
         enqueued++;
       } else {
-        await enqueueRawEvent(raw);
+        const owned = await enqueueRawEventWithTimeout(raw);
+        // Bara jobb som bär VÅR fil räknas som vårt bevis (se enqueueRawEvent).
+        if (owned) ownedJobIds.add(buildJobId(raw));
         enqueued++;
       }
     } catch (err) {
-      console.error(`[import]   ✗ fel: ${(err as Error).message}`);
       errors++;
+      const cls = classifyError(err);
+      // Transportfel väger tyngre än logikfel: det betyder att Redis inte
+      // svarade alls, och då är resten av kön meningslös.
+      if (errorClass === null || (cls === 'transport' && errorClass !== 'transport')) {
+        errorClass = cls;
+      }
+      if (errorSamples.length < MAX_ERROR_SAMPLES) {
+        errorSamples.push(`${sourceId}: ${(err as Error).message}`);
+      }
+      // När Redis är dött är det INTE meningsfullt att köa 5 436 events och
+      // skriva 5 436 felrader. Avbryt källan efter MAX_ERROR_SAMPLES fel.
+      if (errors >= MAX_ERROR_SAMPLES && cls === 'transport') {
+        console.error(
+          `[import] ${sourceId}: transport-fel efter ${errors} försök — avbryter källan ` +
+            `(${describeImportError(err)})`,
+        );
+        break;
+      }
+    }
+  }
+
+  if (errors > 0) {
+    console.error(`[import] ${sourceId}: ${errors} fel (klass=${errorClass})`);
+    for (const sample of errorSamples) {
+      console.error(`[import]   ✗ ${sample}`);
+    }
+    if (errors > errorSamples.length) {
+      console.error(`[import]   … och ${errors - errorSamples.length} till (utelämnade)`);
     }
   }
 
@@ -581,7 +764,21 @@ export async function importSource(
     appendToEventPulseApp(sourceId, enqueued);
   }
 
-  return { enqueued, errors, skippedPast, excludedTitles };
+  return { enqueued, jobs: ownedJobIds.size, errors, skippedPast, excludedTitles, errorClass };
+}
+
+/** Max antal felrader som skrivs ut per källa (2026-10-28). */
+const MAX_ERROR_SAMPLES = 3;
+
+/**
+ * Kort beskrivning av ett fel med errno, t.ex.
+ * "Redis unavailable (EADDRNOTAVAIL)".
+ */
+function describeImportError(err: unknown): string {
+  const code = (err as { code?: unknown })?.code;
+  const message = String((err as Error)?.message ?? err).replace(/\s+/g, ' ').trim();
+  const short = message.length > 160 ? `${message.slice(0, 157)}…` : message;
+  return typeof code === 'string' ? `${short} (${code})` : short;
 }
 
 // ── CLI ─────────────────────────────────────────────────────────────────────
@@ -619,6 +816,13 @@ export function selectImportableSources(
 async function main() {
   const args = process.argv.slice(2);
   const dryRun = args.includes('--dry-run');
+  // --force: importera även källor som redan importerats med samma innehåll.
+  // Ledgern hoppar annars över oförändrade källor, vilket är rätt för
+  // nattkörningen men gör det omöjligt att bevisa att importen FAKTISKT kan
+  // köa events (gaterna L2/L3 behöver kunna tvinga fram produktion).
+  // Påverkar inte databasen: dedup-hashen gör att samma event inte skapas
+  // två gånger.
+  const force = args.includes('--force');
   const limitIdx = args.indexOf('--limit');
   const limit = limitIdx !== -1 && args[limitIdx + 1]
     ? parseInt(args[limitIdx + 1], 10)
@@ -680,13 +884,101 @@ async function main() {
   let totalEnqueued = 0;
   let totalErrors = 0;
   let processed = 0;
+  // 2026-10-28 — felklassen spåras genom hela körningen. Om någon källa
+  // råkade ut för ett TRANSPORT-fel betyder det att Redis inte svarade:
+  // då är exit-koden 69 (EX_UNAVAILABLE), aldrig 0. Kedjan får inte se "grön"
+  // när världen inte fungerade.
+  let transportErrors = 0;
+  let authErrors = 0;
+
+  // 2026-10-28 — filnivå-idempotens. En källa vars innehåll redan importerats
+  // hoppas över. Det gör importen idempotent över de två vägarna (02:00 och
+  // 04:00) och hindrar att samma events köas upp varje natt.
+  let ledger = loadLedger(LEDGER_PATH);
+  let skippedByLedger = 0;
 
   for (const sourceId of sourceFiles) {
     processed++;
+    const fingerprint = extractedFilesFingerprint(sourceId);
+    if (!dryRun && !force && isAlreadyImported(ledger, sourceId, fingerprint.fileHash)) {
+      skippedByLedger++;
+      console.log(`  [${processed}/${sourceFiles.length}] ${sourceId}: redan importerad (oförändrad) — hoppar över`);
+      continue;
+    }
+
     const result = await importSource(sourceId, dryRun);
     totalEnqueued += result.enqueued;
     totalErrors += result.errors;
+    if (result.errorClass === 'transport') transportErrors++;
+    if (result.errorClass === 'auth') authErrors++;
     console.log(`  [${processed}/${sourceFiles.length}] ${sourceId}: ${result.enqueued} events`);
+    // Registrera importen — i fasen 'queued' (jobben ligger bara i Redis).
+    // Först när dräneringen skrivit dem till databasen blir källan
+    // 'persisted' (drainQueue.ts). Annars skulle en döende dränering lämna
+    // ledger med "importerad" medan jobben var borta — och nästa natt hoppar
+    // importen över källan. De eventen vore förlorade för alltid.
+    //
+    // 2026-10-28 (fjärde rundan) — en MISLYCKAD import registreras också,
+    // men med `failed: true`: raden får state 'failed' och kan därför aldrig
+    // flippas till 'persisted'. Före detta lämnades raden orörd, vilket gav
+    // en subtil förlust: om filens innehåll senare återgick till ett tidigare
+    // hash som stod som 'persisted' hoppades källan över nästa natt — och de
+    // event som den misslyckade importen tappade gick förlorade.
+    //
+    // 2026-10-28 (femte rundan) — `jobs` är antalet DISTINKTA jobb denna
+    // fil lade in. Det är KRAVET: dräneringen måste köra minst så många
+    // jobb med just denna fils märke innan raden får bli 'persisted'.
+    //
+    // 2026-10-28 (tredje rundan) — `--force` RÖR INTE ledger. En tvingad
+    // import är ett verktyg (gaten L3 använder den för att tvinga fram
+    // produktion). Om den skrev 'queued' skulle den nedgradera en redan
+    // 'persisted' rad och tvinga fram en onödig omimport nästa natt. Gaten
+    // L3 i GATES.md påstår "ledgerfilen röds INTE" — det påståendet ska vara
+    // sant.
+    if (!dryRun && !force) {
+      const failed = result.errors > 0 || result.errorClass !== null;
+      ledger = recordImport(
+        ledger,
+        sourceId,
+        fingerprint,
+        result.enqueued,
+        new Date().toISOString(),
+        result.jobs,
+        failed,
+      );
+    }
+  }
+
+  if (!dryRun) {
+    try {
+      // Slå ihop med det som ligger på disk JUST NU. Importen läste ledger
+      // i början; dräneringen kan ha flippat rader till 'persisted' under
+      // tiden. Utan sammanslagning skulle importens sparande skriva tillbaka
+      // dem till 'queued' — och källan importeras om varje natt.
+      const disk = loadLedger(LEDGER_PATH);
+      const merged = mergeLedger(disk, ledger);
+      // Skriv BARA om något faktiskt ändrats. `loadLedger` normaliserar gamla
+      // rader (utan 'state') till 'queued' — utan denna kontroll skrev varje
+      // importköring tillbaka samma rader med ett extra fält, och ledgerfilen
+      // "rördes" trots att ingenting importerats. Gaten L3 påstår "ledgerfilen
+      // röds INTE" — det ska vara sant.
+      if (ledgerChanged(disk, merged)) {
+        saveLedger(LEDGER_PATH, merged);
+        console.log(`\n  [ledger] ${merged.size} källor registrerade i ${path.relative(RUNTIME_DIR, LEDGER_PATH)} (${skippedByLedger} hoppades över som oförändrade)`);
+      } else {
+        console.log(`\n  [ledger] inget nytt — ${merged.size} källor oförändrade i ${path.relative(RUNTIME_DIR, LEDGER_PATH)} (${skippedByLedger} hoppades över som oförändrade)`);
+      }
+    } catch (err) {
+      // Ledger-fel får inte stoppa importen — den är bara en optimering.
+      //
+      // 2026-10-28 — men felet får INTE vara tyst. Utan DEGRADED-markören
+      // klassar kedjan raden som ett vanligt kodfel och går vidare som om
+      // inget hänt — och en import vars bevis aldrig skrivs gör att källan
+      // importeras om varje natt (dyrt) utan att någon ser varför.
+      console.error(
+        `  [ledger] DEGRADED kunde inte skriva ledger: ${err instanceof Error ? err.message : String(err)}`,
+      );
+    }
   }
 
   console.log();
@@ -694,6 +986,25 @@ async function main() {
   console.log(`  KLAR  │  ${totalEnqueued} events till bullmq  │  ${totalErrors} errors`);
   console.log('═══════════════════════════════════════════════════════════\n');
 
+  // 2026-10-28 — exitkoderna är sanningsenliga nu:
+  //   0  — inga fel
+  //   69 — transportfel (servern nåddes inte) eller inget köades trots fel
+  //   77 — authfel (nyckel saknas/nekad)
+  //   1  — andra fel
+  if (transportErrors > 0) {
+    console.error(
+      `[import] transport-fel i ${transportErrors} källa/källor — Redis svarade inte. exit=69`,
+    );
+    process.exit(69);
+  }
+  if (authErrors > 0) {
+    console.error(`[import] auth-fel i ${authErrors} källa/källor — exit=77`);
+    process.exit(77);
+  }
+  if (totalEnqueued === 0 && totalErrors > 0) {
+    console.error(`[import] 0 events köade och ${totalErrors} fel — avbryter. exit=70`);
+    process.exit(70);
+  }
   process.exit(totalErrors > 0 ? 1 : 0);
 }
 

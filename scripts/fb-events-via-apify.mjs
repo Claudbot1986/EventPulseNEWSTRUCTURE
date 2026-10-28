@@ -12,8 +12,8 @@
 import { readFileSync, writeFileSync } from 'fs';
 import { createHash } from 'crypto';
 import { createClient } from '@supabase/supabase-js';
-import { Queue } from 'bullmq';
-import IORedis from 'ioredis';
+import { createBullQueue } from '../03-Queue/redisClient.mjs';
+import { createQueueErrorTracker } from './lib/queue-errors.mjs';
 import { fetchHtml } from '../02-Ingestion/tools/fetchTools.js';
 
 const APIFY_API_KEY = process.env.APIFY_API_KEY;
@@ -28,11 +28,19 @@ const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, { auth: {
 
 // T0201.5: BullMQ raw_events-queue. Workern dränerar kön och bearbetar
 // varje event genom normalizer (kategori, dedup, venue_id, T0201).
-const rawEventsQueue = new Queue('raw_events', {
-  connection: new IORedis(process.env.REDIS_URL || 'redis://localhost:6379', { maxRetriesPerRequest: null, enableReadyCheck: false }),
-});
+// 2026-10-28 — central Redis-klient (03-Queue/redisClient.mjs).
+// Den gamla inline-optionen hade maxRetriesPerRequest: null UTAN
+// enableOfflineQueue: false — dvs. kommandon lade sig i offline-kön när
+// Redis var borta och skicket aldrig kom fram. Det var en del av
+// 2-timmars-hängningen 2026-10-26.
+const rawEventsQueue = createBullQueue('raw_events');
 
 const SOURCE_ID = 'fb-events-stockholm-apify';
+
+// 2026-10-28 — köfelsamling: högst 3 provrader, och exit ≠ 0 om inget
+// kunde köas. Se scripts/lib/queue-errors.mjs.
+const queueErrors = createQueueErrorTracker();
+let totalQueued = 0;
 
 // Curated list — verified live 2026-10-04 via web_search
 const KNOWN_FB_URLS = [
@@ -223,11 +231,12 @@ async function main() {
       });
       pageQueued++;
     } catch (e) {
-      console.error(`queue.add failed for ${row.title_sv ?? row.title_en}: ${e.message}`);
+      queueErrors.record(e, `queue.add failed for ${row.title_sv ?? row.title_en}`);
       failed++;
     }
   }
   console.log(`  queued: ${pageQueued}, failed: ${failed}`);
+  totalQueued += pageQueued;
 
   // Save raw for audit
   writeFileSync('/tmp/fb-apify-results.json', JSON.stringify(events, null, 2));
@@ -241,7 +250,10 @@ async function main() {
   console.log(`  events_public for ${SOURCE_ID}: ${count}`);
 }
 
-main().then(() => process.exit(0)).catch((err) => {
+main().then(() => {
+  queueErrors.printSummary(SOURCE_ID);
+  process.exit(queueErrors.exitCode(totalQueued));
+}).catch((err) => {
   console.error('FATAL:', err);
   process.exit(1);
 });

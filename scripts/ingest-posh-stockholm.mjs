@@ -15,11 +15,18 @@
 import 'dotenv/config';
 import { createHash } from 'crypto';
 import { createClient } from '@supabase/supabase-js';
-import { Queue } from 'bullmq';
-import IORedis from 'ioredis';
+import { createBullQueue } from '../03-Queue/redisClient.mjs';
+import { createQueueErrorTracker } from './lib/queue-errors.mjs';
 
 const SCRAPINGBEE = process.env.SCRAPINGBEE_API_KEY;
 const SOURCE_ID = 'posh-stockholm';
+
+// 2026-10-28 — köfelsamling. Före detta skrevs EN rad per misslyckad event
+// (nattet 26 okt: 583 KB identiska felrader) och skriptet avslutade exit 0
+// även när INGENTING kunde köas. Nu: högst 3 provrader, och exit ≠ 0 om
+// inget alls kom in.
+const queueErrors = createQueueErrorTracker();
+let totalQueued = 0;
 const RATE_LIMIT_MS = 2000;
 
 const SUPABASE_URL_VAL = process.env.SUPABASE_URL;
@@ -29,9 +36,12 @@ const supabase = createClient(SUPABASE_URL_VAL, SUPABASE_KEY_VAL, { auth: { pers
 
 // T0201.5: BullMQ raw_events-queue. Workern dränerar kön och bearbetar
 // varje event genom normalizer (kategori, dedup, venue_id, T0201).
-const rawEventsQueue = new Queue('raw_events', {
-  connection: new IORedis(process.env.REDIS_URL || 'redis://localhost:6379', { maxRetriesPerRequest: null, enableReadyCheck: false }),
-});
+// 2026-10-28 — central Redis-klient (03-Queue/redisClient.mjs).
+// Den gamla inline-optionen hade maxRetriesPerRequest: null UTAN
+// enableOfflineQueue: false — dvs. kommandon lade sig i offline-kön när
+// Redis var borta och skicket aldrig kom fram. Det var en del av
+// 2-timmars-hängningen 2026-10-26.
+const rawEventsQueue = createBullQueue('raw_events');
 
 function dedupHash(title, startTime) {
   return createHash('sha256').update(`${SOURCE_ID}::${title}::${startTime}`).digest('hex');
@@ -208,14 +218,19 @@ async function main() {
         });
         pageQueued++;
       } catch (e) {
-        console.error(`queue.add failed for ${row.title_sv ?? row.title_en}: ${e.message}`);
+        queueErrors.record(e, `queue.add failed for ${row.title_sv ?? row.title_en}`);
       }
     }
     console.log(`  queued: ${pageQueued}`);
+    totalQueued += pageQueued;
 
 
   const { count } = await supabase.from('events_public').select('*', { count: 'exact', head: true }).eq('source', SOURCE_ID);
   console.log(`\nDB ${SOURCE_ID} total: ${count}`);
 }
 
-main().then(async () => { await rawEventsQueue.close(); process.exit(0); }).catch((e) => { console.error('FATAL:', e); process.exit(1); });
+main().then(async () => {
+  await rawEventsQueue.close();
+  queueErrors.printSummary(SOURCE_ID);
+  process.exit(queueErrors.exitCode(totalQueued));
+}).catch((e) => { console.error('FATAL:', e); process.exit(1); });

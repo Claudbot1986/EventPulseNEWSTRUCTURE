@@ -11,70 +11,76 @@ const __dirname = path.dirname(__filename);
 // för varje CLI som importerar den här modulen utan att REDIS_URL redan
 // finns i miljön. Nightly-flödet har aldrig märkt det — launchd-plisten gör
 // `set -a; . ./.env`, så där är variabeln redan satt (2026-10-23).
-dotenv.config({ path: path.resolve(__dirname, '../.env'), override: true });
+//
+// 2026-10-28 — `override: false` i stället för true. Med true kunde .env
+// alltid skriva över ett explicit satt REDIS_URL, vilket gjorde det
+// omöjligt att peka ett steg mot en trasig Redis (fail-fast-testet gick
+// därför mot den levande Redis i stället). Miljövariabel vinner nu över
+// .env — rätt ordning. I launchd-fallet är värdena identiska (plisten
+// sourcar .env), så ingen beteendeförändring i nattkörningen.
+dotenv.config({ path: path.resolve(__dirname, '../.env'), override: false });
 
-import { Queue, Worker, type Job, type ConnectionOptions } from 'bullmq';
-import IORedis from 'ioredis';
+import { Queue, Worker, type Job } from 'bullmq';
 import type { RawEventInput } from '@eventpulse/shared';
 import { DEFAULT_WORKER_CONCURRENCY } from './workerConcurrency';
+import { producerOptions, workerOptions, reportQueueErrors } from './redisClient.mjs';
 
-// Lazy connection to avoid ENOTFOUND at import time
-let _connection: IORedis | null = null;
+// 2026-10-28 — kopplingen är nu PLAINA options, inte en `{ getConnection }`-
+// fabrik. BullMQ behandlar en fabrik som okänd RedisOption och ignorerar
+// den (redis-connection.js:35 gör `Object.assign({port,host,retryStrategy}, opts)`)
+// — så REDIS_URL användes aldrig och anslutningen gick mot 127.0.0.1:6379
+// av slump. Med optioner i stället:
+//   - REDIS_URL används som det ska,
+//   - `enableOfflineQueue: false` gör att ett kommando under en Redis-utfall
+//     misslyckas omedelbart i stället för att ligga i offline-kön i evighet
+//     (det var den 2-timmars-hängningen 2026-10-26),
+//   - `maxRetriesPerRequest: 1` på producentsidan (se redisClient.mjs).
+//
+// Se 03-Queue/redisClient.mjs för BullMQ-begränsningarna (blocking-
+// anslutningen tvingas till maxRetriesPerRequest=null).
 
-function getConnection(): IORedis {
-  if (!_connection) {
-    const redisUrl = process.env.REDIS_URL || 'redis://host.docker.internal:6379';
-    console.log('[queue] Using Redis URL:', redisUrl);
-    _connection = new IORedis(redisUrl, {
-      maxRetriesPerRequest: null,
-      enableReadyCheck: false,
-      tls: redisUrl.startsWith('rediss://') ? {} : undefined,
-    });
-  }
-  return _connection;
-}
-
-// RUNTIME-PRESERVING NOTE (2026-09-04, batch B K2): bullmq's
-// ConnectionOptions does not accept a { getConnection } factory. At runtime
-// bullmq treats this object as plain RedisOptions (unknown key ignored) and
-// connects with its own defaults — the lazy-connection factory above is never
-// invoked by bullmq. The cast below types the queue correctly WITHOUT changing
-// runtime; honest contract cleanup is a separate queue-task (see
-// 23-Active-Task-Queue).
-export const rawEventsQueue = new Queue<RawEventInput>('raw_events', {
-  connection: { getConnection } as unknown as ConnectionOptions,
-  prefix: 'bull',
-  defaultJobOptions: {
-    attempts: 3,
-    backoff: { type: 'exponential', delay: 5000 },
-    removeOnComplete: 100,
-    removeOnFail: 500,
-  },
-});
+export const rawEventsQueue = reportQueueErrors(
+  new Queue<RawEventInput>('raw_events', {
+    connection: producerOptions(),
+    prefix: 'bull',
+    defaultJobOptions: {
+      attempts: 3,
+      backoff: { type: 'exponential', delay: 5000 },
+      removeOnComplete: 100,
+      removeOnFail: 500,
+    },
+  }),
+  'queue:raw_events'
+);
 
 // Smoke test queue - uses separate queue name for isolation
-export const smokeTestQueue = new Queue<RawEventInput>('ingestion_smoke', {
-  connection: { getConnection } as unknown as ConnectionOptions,
-  prefix: 'bull',
-  defaultJobOptions: {
-    attempts: 3,
-    backoff: { type: 'exponential', delay: 5000 },
-    removeOnComplete: true,  // Clean up immediately in smoke test
-    removeOnFail: true,
-  },
-});
+export const smokeTestQueue = reportQueueErrors(
+  new Queue<RawEventInput>('ingestion_smoke', {
+    connection: producerOptions(),
+    prefix: 'bull',
+    defaultJobOptions: {
+      attempts: 3,
+      backoff: { type: 'exponential', delay: 5000 },
+      removeOnComplete: true,  // Clean up immediately in smoke test
+      removeOnFail: true,
+    },
+  }),
+  'queue:ingestion_smoke'
+);
 
-export const searchSyncQueue = new Queue<{ event_id: string; action: 'upsert' | 'delete' }>(
-  'search_sync',
-  { connection: { getConnection } as unknown as ConnectionOptions, prefix: 'bull' }
+export const searchSyncQueue = reportQueueErrors(
+  new Queue<{ event_id: string; action: 'upsert' | 'delete' }>('search_sync', {
+    connection: producerOptions(),
+    prefix: 'bull',
+  }),
+  'queue:search_sync'
 );
 
 // AI image generation queue — fired by normalizer after each upsert when
 // image_url is null. Processed by imageGenerationWorker.
-export const imageGenerationQueue = new Queue<{ event_id: string }>(
-  'image_generation',
-  {
-    connection: { getConnection } as unknown as ConnectionOptions,
+export const imageGenerationQueue = reportQueueErrors(
+  new Queue<{ event_id: string }>('image_generation', {
+    connection: producerOptions(),
     prefix: 'bull',
     defaultJobOptions: {
       attempts: 3,
@@ -82,7 +88,8 @@ export const imageGenerationQueue = new Queue<{ event_id: string }>(
       removeOnComplete: 500,
       removeOnFail: 500,
     },
-  }
+  }),
+  'queue:image_generation'
 );
 
 /**
@@ -98,12 +105,12 @@ export function createNormalizerWorker(
   concurrency: number = DEFAULT_WORKER_CONCURRENCY
 ) {
   const worker = new Worker<RawEventInput>(queueName, processor, {
-    connection: { getConnection } as unknown as ConnectionOptions,
+    connection: workerOptions(),
     prefix: 'bull',
     concurrency,
   });
 
-  return worker;
+  return reportQueueErrors(worker, `worker:${queueName}`);
 }
 
 /**
@@ -114,12 +121,12 @@ export function createSmokeTestWorker(
   processor: (job: Job<RawEventInput>) => Promise<void>
 ) {
   const worker = new Worker<RawEventInput>('ingestion_smoke', processor, {
-    connection: { getConnection } as unknown as ConnectionOptions,
+    connection: workerOptions(),
     prefix: 'bull',
     concurrency: 3,  // Lower concurrency for smoke test
   });
 
-  return worker;
+  return reportQueueErrors(worker, 'worker:ingestion_smoke');
 }
 
 /**
@@ -129,11 +136,12 @@ export function createSmokeTestWorker(
 export function createImageGenerationWorker(
   processor: (job: Job<{ event_id: string }>) => Promise<void>
 ) {
-  return new Worker<{ event_id: string }>('image_generation', processor, {
-    connection: { getConnection } as unknown as ConnectionOptions,
+  const worker = new Worker<{ event_id: string }>('image_generation', processor, {
+    connection: workerOptions(),
     prefix: 'bull',
     concurrency: 2,
   });
+  return reportQueueErrors(worker, 'worker:image_generation');
 }
 
 /**
