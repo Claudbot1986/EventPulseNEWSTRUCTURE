@@ -1,0 +1,13 @@
+{
+  "baseUrl": "http://localhost:9090",
+  "steps": [
+    { "action": "goto" },
+    { "action": "wait", "ms": 9000 },
+    { "action": "tapText", "text": "Karta", "label": "tab-karta" },
+    { "action": "wait", "ms": 6000 },
+    { "action": "textmap", "label": "01-after-karta" },
+    { "action": "tapText", "text": "Profil", "label": "tab-profil" },
+    { "action": "wait", "ms": 4000 },
+    { "action": "textmap", "label": "02-after-profil" }
+  ]
+}

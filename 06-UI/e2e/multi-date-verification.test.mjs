@@ -91,11 +91,13 @@ test('Hem laddar utan krasch (Home tab)', async ({ page }) => {
   expect(body.length).toBeGreaterThan(50);
   expect(errors).toEqual([]);
 
-  // Tab "Hem" ska vara aktiv vid första laddning (efter onboarding skip)
-  const homeActive = page.locator('[role="tab"][aria-selected="true"]').filter({ hasText: 'Hem' });
-  await expect(homeActive).toBeVisible({ timeout: 10000 });
+  // Tab "Hem" ska vara aktiv vid första laddning (efter onboarding skip).
+  // 2026-10-28 — `aria-selected` finns INTE i DOM (RNW mappar inte
+  // `accessibilityState.selected`), så "aktiv" verifieras via att Hem-vyn
+  // (data-testid="home-screen") är synlig, inte via tab-attribut.
+  await expect(page.getByTestId('home-screen')).toBeVisible({ timeout: 10000 });
 
-  await page.screenshot({ path: 'e2e/visual-regression/baseline/multi-date-home-tab.png', fullPage: true });
+  await page.screenshot({ path: 'runtime/verification-reports/multi-date/multi-date-home-tab.png', fullPage: true });
 });
 
 // ─── Test 2: Direct DB-check via service_role ──────────────────────────────
@@ -152,7 +154,7 @@ test('Utforska-tab laddar utan krasch', async ({ page }) => {
   const body = await page.textContent('body');
   expect(body.length).toBeGreaterThan(200);
 
-  await page.screenshot({ path: 'e2e/visual-regression/baseline/multi-date-utforska-tab.png', fullPage: true });
+  await page.screenshot({ path: 'runtime/verification-reports/multi-date/multi-date-utforska-tab.png', fullPage: true });
 });
 
 // ─── Test 5: HomeScreen visar multi-date-indikator där det finns ───────────
@@ -173,7 +175,7 @@ test('HomeScreen visar multi-date-indikator där det finns', async ({ page }) =>
   const allCardTitles = await page.locator('text=Chicago').count();
 
   await page.screenshot({
-    path: 'e2e/visual-regression/baseline/multi-date-home-after-load.png',
+    path: 'runtime/verification-reports/multi-date/multi-date-home-after-load.png',
     fullPage: true,
   });
 

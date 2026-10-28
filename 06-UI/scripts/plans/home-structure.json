@@ -1,0 +1,15 @@
+{
+  "baseUrl": "http://localhost:9090",
+  "steps": [
+    { "action": "goto" },
+    { "action": "wait", "ms": 9000 },
+    { "action": "structure", "label": "01-hem-top", "maxDepth": 16 },
+    { "action": "scroll", "y": 900, "settle": 1200 },
+    { "action": "structure", "label": "02-hem-mid", "maxDepth": 16 },
+    { "action": "scroll", "y": 1800, "settle": 1200 },
+    { "action": "structure", "label": "03-hem-low", "maxDepth": 16 },
+    { "action": "scroll", "y": 3000, "settle": 1200 },
+    { "action": "structure", "label": "04-hem-bottom", "maxDepth": 16 },
+    { "action": "shot", "label": "04-hem-bottom" }
+  ]
+}

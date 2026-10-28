@@ -1,0 +1,12 @@
+{
+  "baseUrl": "http://localhost:9090",
+  "steps": [
+    { "action": "goto" },
+    { "action": "wait", "ms": 9000 },
+    { "action": "tapText", "text": "Nate Smith", "label": "tap-card" },
+    { "action": "wait", "ms": 4000 },
+    { "action": "textmap", "label": "01-detail" },
+    { "action": "inventory", "label": "02-detail" },
+    { "action": "shot", "label": "01-detail" }
+  ]
+}

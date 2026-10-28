@@ -1,0 +1,21 @@
+{
+  "baseUrl": "http://localhost:9090",
+  "steps": [
+    { "action": "goto" },
+    { "action": "wait", "ms": 9000 },
+    { "action": "tapText", "text": "Nate Smith", "label": "open-card" },
+    { "action": "wait", "ms": 4000 },
+    { "action": "tapText", "text": "Tillbaka", "label": "back" },
+    { "action": "wait", "ms": 4000 },
+    { "action": "inventory", "label": "03-after-back" },
+    { "action": "shot", "label": "03-after-back" },
+    { "action": "tapText", "text": "Utforska", "label": "tab-utforska" },
+    { "action": "wait", "ms": 4000 },
+    { "action": "tapText", "text": "Opera", "label": "tile-opera" },
+    { "action": "wait", "ms": 5000 },
+    { "action": "tapText", "text": "Tillbaka", "label": "back-from-opera" },
+    { "action": "wait", "ms": 4000 },
+    { "action": "inventory", "label": "04-after-opera-back" },
+    { "action": "shot", "label": "04-after-opera-back" }
+  ]
+}

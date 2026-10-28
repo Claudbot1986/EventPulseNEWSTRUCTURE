@@ -1,0 +1,11 @@
+{
+  "baseUrl": "http://localhost:9090",
+  "steps": [
+    { "action": "goto" },
+    { "action": "wait", "ms": 9000 },
+    { "action": "eval", "label": "before-tap", "js": "() => ({ htmlHasMap: document.body.innerHTML.includes('Kartan är inte tillgänglig'), tabs: Array.from(document.querySelectorAll('[role=\"tab\"]')).map(t => ({ label: t.getAttribute('aria-label'), selected: t.getAttribute('aria-selected'), rect: t.getBoundingClientRect().top })) })" },
+    { "action": "tapText", "text": "Karta", "label": "tab-karta" },
+    { "action": "wait", "ms": 6000 },
+    { "action": "eval", "label": "after-tap", "js": "() => ({ htmlHasMap: document.body.innerHTML.includes('Kartan är inte tillgänglig'), htmlHasKartan: document.body.innerHTML.includes('Kartan'), tabs: Array.from(document.querySelectorAll('[role=\"tab\"]')).map(t => ({ label: t.getAttribute('aria-label'), selected: t.getAttribute('aria-selected') })), panels: Array.from(document.querySelectorAll('body *')).filter(e => e.textContent && e.textContent.trim().startsWith('Kartan är inte')).slice(0,2).map(e => ({ tag: e.tagName, display: getComputedStyle(e.parentElement).display, parentDisplay: getComputedStyle(e.parentElement.parentElement).display })) })" }
+  ]
+}

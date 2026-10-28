@@ -1,0 +1,18 @@
+{
+  "baseUrl": "http://localhost:9090",
+  "steps": [
+    { "action": "goto" },
+    { "action": "wait", "ms": 9000 },
+    { "action": "tapText", "text": "Karta", "label": "tab-karta" },
+    { "action": "wait", "ms": 6000 },
+    { "action": "inventory", "label": "01-karta" },
+    { "action": "shot", "label": "01-karta" },
+    { "action": "tapText", "text": "Notiser", "label": "tab-notiser" },
+    { "action": "wait", "ms": 4000 },
+    { "action": "inventory", "label": "02-notiser" },
+    { "action": "tapText", "text": "Profil", "label": "tab-profil" },
+    { "action": "wait", "ms": 4000 },
+    { "action": "inventory", "label": "03-profil" },
+    { "action": "shot", "label": "03-profil" }
+  ]
+}

@@ -1,0 +1,19 @@
+{
+  "baseUrl": "http://localhost:9090",
+  "steps": [
+    { "action": "goto" },
+    { "action": "wait", "ms": 9000 },
+    {
+      "action": "eval",
+      "label": "tabs-before",
+      "js": "() => Array.from(document.querySelectorAll('[role=\"tab\"]')).map(t => { const r = t.getBoundingClientRect(); const st = getComputedStyle(t); const p = t.closest('[style*=\"display\"]'); return { label: t.getAttribute('aria-label'), x: Math.round(r.x), y: Math.round(r.y), w: Math.round(r.width), h: Math.round(r.height), display: st.display, visibility: st.visibility, opacity: st.opacity, color: getComputedStyle(t).color, parentDisplay: p ? getComputedStyle(p).display : null, inExplorePanel: !!t.closest('div[class*=\"css-view\"]') }; })"
+    },
+    { "action": "tapText", "text": "Karta", "label": "tap-karta" },
+    { "action": "wait", "ms": 5000 },
+    {
+      "action": "eval",
+      "label": "tabs-after",
+      "js": "() => ({ tabs: Array.from(document.querySelectorAll('[role=\"tab\"]')).map(t => { const r = t.getBoundingClientRect(); const st = getComputedStyle(t); return { label: t.getAttribute('aria-label'), y: Math.round(r.y), w: Math.round(r.width), h: Math.round(r.height), display: st.display, color: getComputedStyle(t).color }; }), body: document.body.innerText.slice(0, 220) })"
+    }
+  ]
+}

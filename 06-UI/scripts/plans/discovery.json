@@ -1,0 +1,17 @@
+{
+  "baseUrl": "http://localhost:9090",
+  "steps": [
+    { "action": "goto" },
+    { "action": "wait", "ms": 9000 },
+    { "action": "inventory", "label": "01-boot" },
+    { "action": "shot", "label": "01-boot" },
+    { "action": "tapText", "text": "Utforska", "label": "tab-utforska" },
+    { "action": "wait", "ms": 5000 },
+    { "action": "inventory", "label": "02-utforska" },
+    { "action": "shot", "label": "02-utforska" },
+    { "action": "tapText", "text": "Hem", "label": "tab-hem" },
+    { "action": "wait", "ms": 4000 },
+    { "action": "inventory", "label": "03-hem" },
+    { "action": "shot", "label": "03-hem" }
+  ]
+}

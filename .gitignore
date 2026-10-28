@@ -72,6 +72,13 @@ TEMP/
 /Alltools-E2E/runtime/
 /09-MobileControl/runtime/
 /AUTONOMOUS-QUARANTINE/09-MobileControl/runtime/
+# 2026-10-28 — verifieringsbevis från verify-eventpulse-ui (screenshots +
+# JSON-rapporter från live-drives). Regenereras på varje körning.
+06-UI/runtime/
+# PID-fil för den verifieringsskillens Metro-instans (se 06-UI/scripts/).
+06-UI/.runtime-metro.pid
+# Playwrights HTML-rapport (genereras av varje körning).
+06-UI/playwright-report/
 **/reports/
 /02-Ingestion/C-htmlGate/reports/
 # Runtime state in C-htmlGate — auto-genereras av 123-systemet / janitor

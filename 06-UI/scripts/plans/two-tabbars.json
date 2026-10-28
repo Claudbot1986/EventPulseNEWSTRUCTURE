@@ -1,0 +1,15 @@
+{
+  "baseUrl": "http://localhost:9090",
+  "steps": [
+    { "action": "goto" },
+    { "action": "wait", "ms": 9000 },
+    { "action": "tapText", "text": "Utforska", "label": "tap-utforska" },
+    { "action": "wait", "ms": 5000 },
+    {
+      "action": "eval",
+      "label": "tabs-while-explore",
+      "js": "() => Array.from(document.querySelectorAll('[role=\"tab\"]')).map(t => { const r = t.getBoundingClientRect(); return { label: t.getAttribute('aria-label'), x: Math.round(r.x), y: Math.round(r.y), w: Math.round(r.width), h: Math.round(r.height), visible: r.width > 0 && r.height > 0 }; })"
+    },
+    { "action": "shot", "label": "utforska-med-två-tabbar" }
+  ]
+}

@@ -1,0 +1,14 @@
+{
+  "baseUrl": "http://localhost:9090",
+  "steps": [
+    { "action": "goto" },
+    { "action": "wait", "ms": 9000 },
+    { "action": "tapText", "text": "Utforska", "label": "tab-utforska" },
+    { "action": "wait", "ms": 4000 },
+    { "action": "tapText", "text": "Opera", "label": "tile-opera" },
+    { "action": "wait", "ms": 5000 },
+    { "action": "inventory", "label": "01-opera" },
+    { "action": "textmap", "label": "01-opera-text" },
+    { "action": "shot", "label": "01-opera" }
+  ]
+}

@@ -31,6 +31,12 @@ export default defineConfig({
     baseURL: process.env.BASE_URL || 'http://localhost:8081',
     trace: 'on-first-retry',
     screenshot: 'only-on-failure',
+    // 2026-10-28 — Appen läser språk från enhetens locale. Utan detta läge
+    // renderar RN-web den engelska fallback-texten ("Music", "Save", "Back")
+    // och alla svenska selektorer i e2e-specarna träffar ingenting.
+    // EventPulse är en svensk produkt → verifiera mot svensk locale.
+    locale: process.env.UI_LOCALE || 'sv-SE',
+    timezoneId: 'Europe/Stockholm',
   },
 
   projects: [
