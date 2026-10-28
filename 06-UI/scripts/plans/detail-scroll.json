@@ -1,0 +1,21 @@
+{
+  "baseUrl": "http://localhost:9090",
+  "steps": [
+    { "action": "goto" },
+    { "action": "wait", "ms": 9000 },
+    { "action": "tapText", "text": "Nate Smith", "label": "öppna-event" },
+    { "action": "wait", "ms": 4000 },
+    {
+      "action": "eval",
+      "label": "scrollbar",
+      "js": "() => Array.from(document.querySelectorAll('body *')).filter(e => e.scrollHeight > e.clientHeight + 20).map(e => ({ tag: e.tagName, cls: (e.className || '').toString().slice(0, 40), overflowY: getComputedStyle(e).overflowY, sh: e.scrollHeight, ch: e.clientHeight, rect: (r => ({ x: Math.round(r.x), y: Math.round(r.y), w: Math.round(r.width), h: Math.round(r.height) }))(e.getBoundingClientRect()) })).slice(0, 8)"
+    },
+    {
+      "action": "eval",
+      "label": "scrolla-alla",
+      "js": "() => { const out = []; for (const e of document.querySelectorAll('body *')) { if (e.scrollHeight > e.clientHeight + 20) { e.scrollTop = 500; out.push({ tag: e.tagName, scrollTop: e.scrollTop, sh: e.scrollHeight }); } } return out.slice(0, 8); }"
+    },
+    { "action": "wait", "ms": 1200 },
+    { "action": "shot", "label": "eventkort-knappar" }
+  ]
+}

@@ -34,6 +34,8 @@ Recept: öppna Hem → klicka första kortet → vänta på `event-card-read-mor
 
 ## Gotchas
 
+- **Detaljskärmen var INTE scrollbar (fixat 2026-10-28).** `DetailsScreen` och `NewEventCard` saknade båda `ScrollView`, så allt under skärmkanten (beskrivning, "Läs mer", footer) klipptes bort på native — ingen scroll, ingen väg dit. På webb scrollade *dokumentet* av en tillfällig anledning (`overflow: visible`), vilket gömt felet i webbbygget. Nu ligger kortet i en `ScrollView` (`detailsScroll` + `detailsScrollContent`, `paddingBottom: 96`) på båda plattformar.
+- **Tabbarn glidde bort när kortet scrollades (fixat 2026-10-28).** `AppShell.barWrapper` var `position: absolute` utan `position: relative` på en förfader → på webb positionerades den mot initial containing block och **scrollade med dokumentet** (742px → 245px, mitt på skärmen). På webb är den nu `fixed`; native behåller `absolute`.
 - **Nested button (fixat 2026-10-28):** kortets rot var ett `Pressable` med `accessibilityRole="button"` utan `onPress` → i webb blev det en tom `<button>` som innehöll de fem action-knapparna + "Läs mer" → "In HTML, `<button>` cannot be a descendant of `<button>`" (hydration error). Fix: roten renderas som `View` när `onPress` saknas.
 - **`Marker` var `null` i web-shimmen** → "Element type is invalid … got: null. Check the render method of `MapScreen`" när kartan öppnades. Fix: `Marker` är en no-op-komponent.
 - **Spara/♡ persisterar ingenting** på detaljskärmen: `NewEventCard.js` håller `useState(Boolean(saved))` och `saved` skickas aldrig in. Hjärtet är en bild i skärmminnet. Se `save-favorite.md`.

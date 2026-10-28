@@ -1749,29 +1749,44 @@ function DetailsScreen({ event, onBack }) {
           <Text style={styles.backButtonText}>{`< ${t('common.back')}`}</Text>
         </TouchableOpacity>
       </View>
-      <NewEventCard
-        id={event.id}
-        title={event.title}
-        badge={badge}
-        dateLine={dateLine}
-        // 2026-10-07: "Läs mer"-knappen (samma stil som MapEventCard.readMore)
-        // öppnar ticket-URL:en om sådan finns — samma kedja som
-        // handleOpenUrl / sheet-action 'open_tickets'. Knappen visas alltid
-        // (onReadMore alltid satt) — tom URL gör den no-op via
-        // Linking.canOpenURL-skyddet i handleOpenUrl.
-        onReadMore={handleOpenUrl}
-        meta={meta}
-        preview={preview}
-        imageSource={uri}
-        // lat/lng från events_public-joint (toDetailsScreenEvent). null →
-        // NewEventCard defaultar till Stockholm centrum (59.3326 / 18.0668).
-        lat={typeof event.lat === 'number' ? event.lat : 59.3326}
-        lng={typeof event.lng === 'number' ? event.lng : 18.0668}
-        onSave={handleSaveToggle}
-        onCalendar={handleAddToCalendar}
-        onShare={handleShare}
-        onMore={() => setSheetEvent(event)}
-      />
+      {/* 2026-10-28 — innehållet var INTE scrollbart. DetailsScreen och
+          NewEventCard saknade båda ScrollView, så allt under skärmkanten
+          (beskrivning, "Läs mer", footer) klipptes bort på native — ingen
+          scroll, ingen väg dit. På webb scrollade dokumentet av en tillfällig
+          anledning (overflow: visible), vilket gjorde att felet inte syntes
+          i webbbygget. Nu scrollar kortet på båda plattformar, och
+          detailsScrollContent ger bottenluft så sista knappen inte hamnar
+          under tabbarn (absolute/fixed ovanför panelen på båda plattformar). */}
+      <ScrollView
+        style={styles.detailsScroll}
+        contentContainerStyle={styles.detailsScrollContent}
+        showsVerticalScrollIndicator={false}
+        keyboardShouldPersistTaps="handled"
+      >
+        <NewEventCard
+          id={event.id}
+          title={event.title}
+          badge={badge}
+          dateLine={dateLine}
+          // 2026-10-07: "Läs mer"-knappen (samma stil som MapEventCard.readMore)
+          // öppnar ticket-URL:en om sådan finns — samma kedja som
+          // handleOpenUrl / sheet-action 'open_tickets'. Knappen visas alltid
+          // (onReadMore alltid satt) — tom URL gör den no-op via
+          // Linking.canOpenURL-skyddet i handleOpenUrl.
+          onReadMore={handleOpenUrl}
+          meta={meta}
+          preview={preview}
+          imageSource={uri}
+          // lat/lng från events_public-joint (toDetailsScreenEvent). null →
+          // NewEventCard defaultar till Stockholm centrum (59.3326 / 18.0668).
+          lat={typeof event.lat === 'number' ? event.lat : 59.3326}
+          lng={typeof event.lng === 'number' ? event.lng : 18.0668}
+          onSave={handleSaveToggle}
+          onCalendar={handleAddToCalendar}
+          onShare={handleShare}
+          onMore={() => setSheetEvent(event)}
+        />
+      </ScrollView>
       {saveToast ? <Toast message={saveToast} onHide={() => setSaveToast(null)} /> : null}
       <PushPromptModal
         visible={pushPromptVisible}
@@ -2817,6 +2832,14 @@ const styles = StyleSheet.create({
   detailsContainer: {
     flex: 1,
     backgroundColor: TOKENS.color.appBg,
+  },
+  // 2026-10-28 — scrollbart kortinnehåll (se kommentaren vid DetailsScreen).
+  detailsScroll: {
+    flex: 1,
+  },
+  detailsScrollContent: {
+    // Bottenluft så sista elementet ("Läs mer") inte hamnar under tabbarn.
+    paddingBottom: 96,
   },
   detailsHeader: {
     paddingHorizontal: TOKENS.space.lg,

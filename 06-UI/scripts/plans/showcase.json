@@ -1,0 +1,139 @@
+{
+  "baseUrl": "http://localhost:9090",
+  "steps": [
+    {
+      "action": "goto"
+    },
+    {
+      "action": "wait",
+      "ms": 9000
+    },
+    {
+      "action": "shot",
+      "label": "01-hem"
+    },
+    {
+      "action": "scroll",
+      "y": 760,
+      "settle": 1500
+    },
+    {
+      "action": "shot",
+      "label": "02-hem-sektioner"
+    },
+    {
+      "action": "scroll",
+      "y": 0,
+      "settle": 1200
+    },
+    {
+      "action": "tapText",
+      "text": "Nate Smith",
+      "label": "öppna-event"
+    },
+    {
+      "action": "wait",
+      "ms": 4000
+    },
+    {
+      "action": "shot",
+      "label": "03-eventkort-topp"
+    },
+    {
+      "action": "eval",
+      "label": "scrolla-kortet",
+      "js": "() => { const c = Array.from(document.querySelectorAll('body *')).filter(e => { const s = getComputedStyle(e); return (s.overflowY === 'auto' || s.overflowY === 'scroll') && e.scrollHeight > e.clientHeight + 40; }).sort((a,b) => b.scrollHeight - a.scrollHeight)[0]; if (c) c.scrollTop = 500; window.scrollTo(0, 520); return { c: c ? c.scrollTop : null, win: window.scrollY }; }"
+    },
+    {
+      "action": "wait",
+      "ms": 1200
+    },
+    {
+      "action": "shot",
+      "label": "04-eventkort-knappar"
+    },
+    {
+      "action": "tapText",
+      "text": "Tillbaka",
+      "label": "tillbaka"
+    },
+    {
+      "action": "wait",
+      "ms": 3000
+    },
+    {
+      "action": "tapText",
+      "text": "Utforska",
+      "label": "utforska"
+    },
+    {
+      "action": "wait",
+      "ms": 5000
+    },
+    {
+      "action": "shot",
+      "label": "05-utforska-kategorier"
+    },
+    {
+      "action": "tapText",
+      "text": "Opera",
+      "label": "opera"
+    },
+    {
+      "action": "wait",
+      "ms": 6000
+    },
+    {
+      "action": "shot",
+      "label": "06-kategori-opera"
+    },
+    {
+      "action": "eval",
+      "label": "öppna-aktionsblad",
+      "js": "() => { const el = Array.from(document.querySelectorAll('button, [role=\"button\"]')).filter(e => { const r = e.getBoundingClientRect(); return r.width > 0 && r.height > 0 && (e.getAttribute('aria-label') || '').trim() === 'Fler alternativ'; })[0]; if (!el) return { ok: false }; const o = { bubbles: true, cancelable: true, pointerType: 'touch', isPrimary: true, pointerId: 1 }; el.dispatchEvent(new PointerEvent('pointerdown', o)); el.dispatchEvent(new PointerEvent('pointerup', o)); el.dispatchEvent(new MouseEvent('click', o)); return { ok: true }; }"
+    },
+    {
+      "action": "wait",
+      "ms": 3000
+    },
+    {
+      "action": "shot",
+      "label": "07-aktionsblad"
+    },
+    {
+      "action": "tapText",
+      "text": "Tillbaka",
+      "label": "tillbaka-2"
+    },
+    {
+      "action": "wait",
+      "ms": 3000
+    },
+    {
+      "action": "tapText",
+      "text": "Karta",
+      "label": "karta"
+    },
+    {
+      "action": "wait",
+      "ms": 6000
+    },
+    {
+      "action": "shot",
+      "label": "08-karta"
+    },
+    {
+      "action": "tapText",
+      "text": "Profil",
+      "label": "profil"
+    },
+    {
+      "action": "wait",
+      "ms": 4000
+    },
+    {
+      "action": "shot",
+      "label": "09-profil"
+    }
+  ]
+}

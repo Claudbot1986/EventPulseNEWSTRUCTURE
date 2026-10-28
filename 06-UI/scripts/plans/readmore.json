@@ -1,0 +1,16 @@
+{
+  "baseUrl": "http://localhost:9090",
+  "steps": [
+    { "action": "goto" },
+    { "action": "wait", "ms": 9000 },
+    { "action": "tapText", "text": "Nate Smith", "label": "öppna-event" },
+    { "action": "wait", "ms": 4000 },
+    {
+      "action": "eval",
+      "label": "scrolla-botten",
+      "js": "() => { const c = Array.from(document.querySelectorAll('body *')).filter(e => { const s = getComputedStyle(e); return s.overflowY === 'auto' && e.scrollHeight > e.clientHeight + 40; })[0]; if (!c) return { ok: false }; c.scrollTop = c.scrollHeight; const rm = document.querySelector('[data-testid=\"event-card-read-more\"]'); const tab = Array.from(document.querySelectorAll('[role=\"tab\"]')).filter(e => { const r = e.getBoundingClientRect(); return r.width > 0 && r.height > 0; })[0]; const rr = rm.getBoundingClientRect(); const tr = tab.getBoundingClientRect(); return { ok: true, scrollTop: c.scrollTop, max: c.scrollHeight - c.clientHeight, readMoreBottom: Math.round(rr.bottom), tabTop: Math.round(tr.top), friHagel: rr.bottom < tr.top }; }"
+    },
+    { "action": "wait", "ms": 1200 },
+    { "action": "shot", "label": "eventkort-botten" }
+  ]
+}

@@ -1,0 +1,21 @@
+{
+  "baseUrl": "http://localhost:9090",
+  "steps": [
+    { "action": "goto" },
+    { "action": "wait", "ms": 9000 },
+    { "action": "tapText", "text": "Nate Smith", "label": "öppna-event" },
+    { "action": "wait", "ms": 4000 },
+    {
+      "action": "eval",
+      "label": "scroll-fönster",
+      "js": "() => { const before = window.scrollY; window.scrollTo(0, 600); const after = window.scrollY; const se = document.scrollingElement; const readMore = document.querySelector('[data-testid=\"event-card-read-more\"]'); const r = readMore ? readMore.getBoundingClientRect() : null; return { windowScrollBefore: before, windowScrollAfter: after, docScrollTop: se ? se.scrollTop : null, docScrollHeight: se ? se.scrollHeight : null, docClientHeight: se ? se.clientHeight : null, readMoreTop: r ? Math.round(r.top) : null, readMoreVisible: r ? (r.top >= 0 && r.top < window.innerHeight) : null }; }"
+    },
+    { "action": "wait", "ms": 1000 },
+    { "action": "shot", "label": "eventkort-scrollat" },
+    {
+      "action": "eval",
+      "label": "knappar-koordinater",
+      "js": "() => Array.from(document.querySelectorAll('button, [role=\"button\"]')).filter(e => { const r = e.getBoundingClientRect(); return r.width > 0 && r.height > 0; }).map(e => ({ aria: e.getAttribute('aria-label'), top: Math.round(e.getBoundingClientRect().top) })).slice(0, 10)"
+    }
+  ]
+}

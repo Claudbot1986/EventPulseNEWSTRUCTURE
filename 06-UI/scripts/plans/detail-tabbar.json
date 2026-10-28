@@ -1,0 +1,21 @@
+{
+  "baseUrl": "http://localhost:9090",
+  "steps": [
+    { "action": "goto" },
+    { "action": "wait", "ms": 9000 },
+    { "action": "tapText", "text": "Nate Smith", "label": "öppna-event" },
+    { "action": "wait", "ms": 4000 },
+    {
+      "action": "eval",
+      "label": "mät-före",
+      "js": "() => { const t = Array.from(document.querySelectorAll('[role=\"tab\"]')).filter(e => { const r = e.getBoundingClientRect(); return r.width > 0 && r.height > 0; })[0]; const r = t.getBoundingClientRect(); return { tabTop: Math.round(r.top), winH: window.innerHeight, scrollY: window.scrollY, docH: document.scrollingElement.scrollHeight }; }"
+    },
+    { "action": "scroll", "y": 500, "settle": 1200 },
+    {
+      "action": "eval",
+      "label": "mät-efter",
+      "js": "() => { const t = Array.from(document.querySelectorAll('[role=\"tab\"]')).filter(e => { const r = e.getBoundingClientRect(); return r.width > 0 && r.height > 0; })[0]; const r = t.getBoundingClientRect(); const rm = document.querySelector('[data-testid=\"event-card-read-more\"]'); const rr = rm ? rm.getBoundingClientRect() : null; return { tabTop: Math.round(r.top), winH: window.innerHeight, scrollY: window.scrollY, readMoreTop: rr ? Math.round(rr.top) : null, tabOverlapparKortet: rr ? (r.top < rr.bottom && r.bottom > rr.top) : null }; }"
+    },
+    { "action": "shot", "label": "detalj-scrollad" }
+  ]
+}

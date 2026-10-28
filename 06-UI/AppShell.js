@@ -666,7 +666,13 @@ const styles = StyleSheet.create({
     backgroundColor: '#000000',
   },
   barWrapper: {
-    position: 'absolute',
+    // 2026-10-28 — på webb måste fästas mot VIEWPORTEN (fixed). "absolute"
+    // utan position:relative på en förfader positioneras mot initial
+    // containing block och scrollar MED dokumentet: på detaljskärmen (där
+    // dokumentet scrollar) gled tabbarn från botten (742px → 245px) och
+    // hamnade mitt på skärmen. På native ligger ScrollViewen inuti
+    // viewporten, där fungerar "absolute" som avsett → därför webb-scopat.
+    position: Platform.OS === 'web' ? 'fixed' : 'absolute',
     left: 0,
     right: 0,
     bottom: 0,

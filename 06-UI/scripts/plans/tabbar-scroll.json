@@ -1,0 +1,28 @@
+{
+  "baseUrl": "http://localhost:9090",
+  "steps": [
+    { "action": "goto" },
+    { "action": "wait", "ms": 9000 },
+    { "action": "tapText", "text": "Utforska", "label": "utforska" },
+    { "action": "wait", "ms": 5000 },
+    {
+      "action": "eval",
+      "label": "tabbar-före",
+      "js": "() => { const t = Array.from(document.querySelectorAll('[role=\"tab\"]')).filter(e => { const r = e.getBoundingClientRect(); return r.width > 0 && r.height > 0; })[0]; const r = t.getBoundingClientRect(); return { top: Math.round(r.top), bottom: Math.round(r.bottom), winH: window.innerHeight, scrollY: window.scrollY }; }"
+    },
+    { "action": "tapText", "text": "Musik", "label": "musik" },
+    { "action": "wait", "ms": 6000 },
+    {
+      "action": "eval",
+      "label": "scrolla",
+      "js": "() => { window.scrollTo(0, 800); return { scrollY: window.scrollY, docH: document.scrollingElement.scrollHeight }; }"
+    },
+    { "action": "wait", "ms": 1200 },
+    {
+      "action": "eval",
+      "label": "tabbar-efter",
+      "js": "() => { const t = Array.from(document.querySelectorAll('[role=\"tab\"]')).filter(e => { const r = e.getBoundingClientRect(); return r.width > 0 && r.height > 0; })[0]; const r = t.getBoundingClientRect(); return { top: Math.round(r.top), bottom: Math.round(r.bottom), winH: window.innerHeight, scrollY: window.scrollY, synlig: r.top >= 0 && r.bottom <= window.innerHeight }; }"
+    },
+    { "action": "shot", "label": "tabbar-scrollad" }
+  ]
+}

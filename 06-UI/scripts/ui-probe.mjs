@@ -369,10 +369,20 @@ async function main() {
             const target = candidates.sort((a, b) => b.scrollHeight - a.scrollHeight)[0];
             if (target) {
               target.scrollTop = y;
-              return { ok: true, scrollTop: target.scrollTop, scrollHeight: target.scrollHeight };
+              if (target.scrollTop === 0) {
+                // Vissa RN-web-vyer (t.ex. DetailsScreen) scrollar i fönstret,
+                // inte i en inre container → scrolla även documentet.
+                window.scrollTo(0, y);
+              }
+              return {
+                ok: true,
+                containerScrollTop: target.scrollTop,
+                windowScrollY: window.scrollY,
+                scrollHeight: target.scrollHeight,
+              };
             }
             window.scrollTo(0, y);
-            return { ok: false, scrollY: window.scrollY };
+            return { ok: true, windowScrollY: window.scrollY };
           }, step.y ?? 0);
           await page.waitForTimeout(step.settle ?? 900);
           entry.ok = true;

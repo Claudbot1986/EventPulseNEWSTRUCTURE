@@ -185,6 +185,11 @@ ett känt bildproblem och **ska inte** räknas som UI-fel. Verifiera **innehåll
 
 **Sökfel sväljs tyst** (`agentClient.js` → `search.error`, ingen synlig feedback).
 
+**Scrollar på webb:** de flesta vyer scrollar i en inre container (`overflow-y:
+auto`). Detaljskärmen scrollar numera också (fix 2026-10-28 — den saknade
+ScrollView helt, vilket klippte innehållet på native). När du scrollar i en
+drive: sök den inre containern (`scrollHeight > clientHeight`), inte fönstret.
+
 ## Maintenance
 
 Kör `/maintain-verification-skill` när `06-UI/FEATURE_MAP.md` ändras (ny feature,
