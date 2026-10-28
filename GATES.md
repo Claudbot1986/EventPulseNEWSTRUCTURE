@@ -1091,11 +1091,23 @@ Importen hängde dessutom i två timmar (exit=124, 583 KB identiska felrader,
 att rejecta.
 
 De tidigare 103 gröna gaterna i den här filen var nästan alla filkontroller.
-Ingen av dem bevisade att kedjan producerar events. De fem gaterna nedan
+Ingen av dem bevisade att kedjan producerar events. De åtta gaterna nedan
 mäter en LEVANDE värld — Redis, Supabase, Exa, Scrapingbee — och varje
 negativ kontroll körs mot en medvetet trasig värld.
 
 Skillen: `.cursor/skills/verify-eventpulse-live/`.
+
+**Helkörningen 2026-10-28 (pid 82024, 13:34–14:39) — 27 av 27 steg, alla
+exit=0, 0 fel.** `DONE exit=0 events=2520 duration=3930854ms` (65 min).
+Preflight `ok:true, failed=[], degraded=[]`. `status.json` efter körningen:
+`running=false`, `exitCode=0` — ingen ZOMBIE-rad. Importen köade 396 events,
+drainen slutförde 1 253 jobb, kön efter körningen 0, `events_public` 17 895.
+Tre steg rapporterades som DEGRADED med exit 0 (`direct-jsonld`,
+`reddit-stockholm`, `worker-drain`) — de syns i `status.json:degradedSteps[]`
+och räknas alltså som försämringar, inte som fel.
+
+Det är den här körningen som skiljer "kedjan är grön" från "kedjan ljög":
+innan fixen skrev samma kedja "klart" med 0 events i tre nätter i rad.
 
 - [x] L1: preflight fångar nätverksfel under 30 s — både den levande världen
   EVIDENCE: automatic-evidence=v1; definition-sha256=fc624e7281c83fc36ef60b509fc5c7fe1611600c41e3bca29e2ca47a70b83127; exit=0; EXPECT=matched; output-sha256=009a59be374e501e133e0523209f0b8666f3ccd550f128adbf89afc2618eb535; output-bytes=1639; shell=/bin/sh; cwd=/Users/claudgashi/EventPulse; path=b808bbbb1792/18 entries
