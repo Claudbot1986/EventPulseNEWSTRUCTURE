@@ -31,6 +31,22 @@ Supabase Storage-bucketen `event-posters` innehåller **0 objekt**. Varje `image
 - [ ] Lägg `onError` på `<Image>` i `06-UI/App.js` + `screens/HomeScreen.js` så en trasig URL renderar `emptyImageBoxStyle` i stället för tyst tom yta.
 - [ ] Fixa `scripts/_check_image_quota_v2.ts` (saknar `import 'dotenv/config'` → rapporterar "alla kategorier uppfyller kvoten" utan att mäta) och låt båda kvotskripten läsa `events_public` i stället för legacy `events` (kategori-slugs matchar inte `image_library`).
 
+### Ny bildgenerering med MiniMax image-01 [P1 — 2026-10-28]
+
+Användaren raderade de gamla bilderna ("fula"). Två konkreta orsaker hittade: **kompositionsmixen är bakvänt** mot den dokumenterade foto-preferensen (2026-10-21: "mer wide/establishing/aerial, mindre close-up") — biblioteket är 68 % close-up mot ett mål på 10,7 % — och **legacy-stämpeln (240×64-pill) är bränd in i varje bild** i stället för den mindre `bottom-left`/150×36-variant som redan finns i `ai_compliance.ts`.
+
+**Modell: `image-01` ($0.0035/bild) — inte H3.** H3 är en videomodell (t2v/i2v, 768P/2K, 4–15 s) utan stillbildsmode. BFL FLUX1.1 [pro] kostar $0.04/bild → image-01 är 11,4× billigare. Befintlig `BFL-generator/bin/bfl-zoom-batch.ts` använder **redan `image-01`** — det är bara mixen och stämpeln som är fel.
+
+- [ ] **Regenerera biblioteket med korrekt kompositionsmix** (75 % wide/establishing/aerial, 10,7 % close-up) per `ZOOM_WEIGHTS` i `BFL-generator/lib/zoom-prompter.ts`. 488 bilder = **$1,71**. Körbart via `bfl-zoom-batch.ts` efter att `zoom-coverage-state.ts` rensats.
+- [ ] **Byt stämpelvariant** i `bfl-zoom-batch.ts` från hardkodad legacy (240×64/inset 24) till `applyAiCompliance({position:'bottom-left'})` 150×36 som redan finns i `08-Agent/tools/ai_compliance.ts`.
+- [ ] **Sänk concurrency 4 → 2 och använd `n=9`.** Rate limit är 10 RPM; concurrency 4 ger ~16 anrop/min (mätt latens 14,8 s) → 429. Med `n=9` (verifierat: 9 bilder på 16,7 s) räcker 2–3 anrop/min.
+- [ ] **Ladda ner direkt eller använd `response_format:'base64'`** — MiniMax-URL:er expirerar efter 24 h (verifierat: `Expires` 2026-10-29T18:12:34Z på 2026-10-28).
+- [ ] **Läs `metadata.success_count`/`failed_count`** — `failed_count` = "images blocked due to content safety"; ett `n:9`-anrop kan returnera 8 bilder och `failed_count:1` med `status_code:0`.
+- [ ] Sätt `prompt_optimizer:true` (verifierat stöds, kostnad $0) på bildanropet — förbättrar promptkvaliteten utan extra anrop.
+- [ ] Alternativ för visuell sammanhållning: `image-01-live` + `subject_reference:[{type:'character', image_file:'<url>'}]` (verifierat fungerande). Endast 1 referensbild per anrop; kontrollera pris/format innan bruk.
+- [ ] Beslut som behövs: ska `aspect_ratio` vara `16:9` (1280×720) eller `3:2` (1248×832)? Kortet är idag 1024×576 via explicit `width`/`height` (bara `image-01` stöder detta).
+
+
 
 ### Phase 1.5 levererat (för historik)
 
