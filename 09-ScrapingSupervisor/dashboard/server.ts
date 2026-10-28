@@ -1172,6 +1172,35 @@ async function toggleAnalyticsServer(): Promise<{
   const logFile = join(PROJECT_ROOT, 'runtime/analytics-server.log');
   const { execSync, spawn } = await import('child_process');
 
+  // 2026-10-28 — launchd-ägarskap. Analytics-servern har ett eget
+  // launchd-jobb (com.eventpulse.analytics) så att den startar om efter
+  // reboot och inte dödar med dashboarden. Utan det låg servern som ett
+  // barn av dashboarden och försvann vid varje omstart — användaren
+  // fick trycka på knappen manuellt (se 2026-10-28-rebooten).
+  //
+  // Knappen och launchd får INTE båda äga porten: om launchd startar om
+  // servern direkt efter att knappen dödat den blir det en flip-flop.
+  // Därför: stopp → bootout, start → bootstrap.
+  const LAUNCHD_LABEL = 'com.eventpulse.analytics';
+  const launchdTarget = `gui/${process.getuid?.() ?? 501}/${LAUNCHD_LABEL}`;
+  const launchdPlist = join(
+    process.env.HOME ?? '/Users/claudgashi',
+    'Library/LaunchAgents',
+    `${LAUNCHD_LABEL}.plist`,
+  );
+
+  const isLaunchdLoaded = (): boolean => {
+    try {
+      const out = execSync(`launchctl print ${launchdTarget} 2>/dev/null`, {
+        encoding: 'utf8',
+        timeout: 1500,
+      });
+      return out.includes(LAUNCHD_LABEL);
+    } catch {
+      return false;
+    }
+  };
+
   // PIDs som just nu lyssnar på porten (kan vara flera vid omstartsrace —
   // dödar vi bara den första kan en orphan behålla porten).
   const listenerPids = (): number[] => {
@@ -1193,6 +1222,14 @@ async function toggleAnalyticsServer(): Promise<{
   if (existing.length > 0) {
     // Stoppa: SIGTERM alla lyssnare, VERIFIERA att porten släpps, SIGKILL
     // de som vägrar. Sanningen är lsof — inte tilltro till kill-anropet.
+    //
+    // 2026-10-28 — om launchd äger servern måste jobbet tas ner FÖRST,
+    // annars startar KeepAlive om den direkt och porten släpps aldrig.
+    if (isLaunchdLoaded()) {
+      try {
+        execSync(`launchctl bootout ${launchdTarget} 2>/dev/null`, { encoding: 'utf8', timeout: 5000 });
+      } catch { /* jobbet kan redan vara avlastat — fortsätt ändå */ }
+    }
     for (const pid of existing) {
       try { process.kill(pid, 'SIGTERM'); } catch { /* redan död */ }
     }
@@ -1225,32 +1262,61 @@ async function toggleAnalyticsServer(): Promise<{
     if (!existsSync(tsxCli) || !existsSync(serverEntry)) {
       return { ok: false, action: 'noop', error: `saknas: ${!existsSync(tsxCli) ? tsxCli : serverEntry}` };
     }
-    const { openSync, closeSync } = await import('fs');
-    const logFd = openSync(logFile, 'a');
-    let child;
-    let spawnError: string | null = null;
-    try {
-      child = spawn(
-        process.execPath,
-        [tsxCli, serverEntry],
-        {
-          cwd: PROJECT_ROOT,
-          detached: true, // egen processgrupp → hela barnkedjan dör med kill(-pid)
-          stdio: ['ignore', logFd, logFd],
-          // PORT-isolation: dashboardens egen PORT (7777) får inte ärvas —
-          // analytics-serverns default läser process.env.PORT || 7778, så utan
-          // explicit override försöker den lyssna på 7777 och kraschar med
-          // EADDRINUSE.
-          env: { ...process.env, PORT: String(port) },
-        },
-      );
-      // spawn-fel (ENOENT etc.) kommer asynkront via 'error' — utan lyssnare
-      // dog de tyst och toggle rapporterade fel hälsokoll istället för orsak.
-      child.on('error', (err: NodeJS.ErrnoException) => { spawnError = String(err?.message ?? err); });
-    } finally {
-      closeSync(logFd); // barnet har egna fd:ar — läck inte vår kopia
+
+    // 2026-10-28 — om launchd-jobbet finns är det bättre ägare än en
+    // spawnad child: det startar om servern efter krasch och efter reboot.
+    // Då ska vi INTE också spawna — två processer på samma port ger
+    // EADDRINUSE för den andra. Fallback (spawn) behålls för miljöer där
+    // jobbet inte är installerat.
+    let launchdStarted = false;
+    if (existsSync(launchdPlist)) {
+      // `launchctl bootstrap <domain-target> <service-path>` — domänen är
+      // "gui/<uid>", INTE "gui/<uid>/<label>". Med fel domän svarar
+      // launchctl "Usage: …" (rc 64) och inget händer.
+      const domain = `gui/${process.getuid?.() ?? 501}`;
+      try {
+        execSync(`launchctl bootstrap ${domain} ${launchdPlist} 2>/dev/null`, {
+          encoding: 'utf8',
+          timeout: 5000,
+        });
+        launchdStarted = true;
+      } catch {
+        // Redan laddat — då räcker en kickstart.
+        try {
+          execSync(`launchctl kickstart -k ${launchdTarget} 2>/dev/null`, { encoding: 'utf8', timeout: 5000 });
+          launchdStarted = true;
+        } catch { /* fall tillbaka på spawn nedan */ }
+      }
     }
-    child.unref();
+
+    let child: ReturnType<typeof spawn> | undefined;
+    let spawnError: string | null = null;
+    if (!launchdStarted) {
+      const { openSync, closeSync } = await import('fs');
+      const logFd = openSync(logFile, 'a');
+      try {
+        child = spawn(
+          process.execPath,
+          [tsxCli, serverEntry],
+          {
+            cwd: PROJECT_ROOT,
+            detached: true, // egen processgrupp → hela barnkedjan dör med kill(-pid)
+            stdio: ['ignore', logFd, logFd],
+            // PORT-isolation: dashboardens egen PORT (7777) får inte ärvas —
+            // analytics-serverns default läser process.env.PORT || 7778, så utan
+            // explicit override försöker den lyssna på 7777 och kraschar med
+            // EADDRINUSE.
+            env: { ...process.env, PORT: String(port) },
+          },
+        );
+        // spawn-fel (ENOENT etc.) kommer asynkront via 'error' — utan lyssnare
+        // dog de tyst och toggle rapporterade fel hälsokoll istället för orsak.
+        child.on('error', (err: NodeJS.ErrnoException) => { spawnError = String(err?.message ?? err); });
+      } finally {
+        closeSync(logFd); // barnet har egna fd:ar — läck inte vår kopia
+      }
+      child.unref();
+    }
 
     // Liveness: polla /api/health var 500 ms, max 12 s. tsx-kallstart +
     // dotenv + supabase-init tar några sekunder (4,4 s sedda i loggen) — den
@@ -1268,14 +1334,20 @@ async function toggleAnalyticsServer(): Promise<{
     }
     if (healthy) {
       _analyticsServerCache = null;
-      return { ok: true, action: 'started', pid: child.pid ?? null };
+      return { ok: true, action: 'started', pid: child?.pid ?? listenerPids()[0] ?? null };
     }
     // Haveri — städa hela den egna processgruppen (barnet är group leader)
     // och rapportera den verkliga orsaken, inte en gissning.
-    if (child.pid) {
+    if (child?.pid) {
       try { process.kill(-child.pid, 'SIGKILL'); } catch {
         try { process.kill(child.pid, 'SIGKILL'); } catch { /* redan död */ }
       }
+    }
+    if (launchdStarted) {
+      // launchd äger servern — stanna inte kvar med ett halvdant jobb.
+      try {
+        execSync(`launchctl bootout ${launchdTarget} 2>/dev/null`, { encoding: 'utf8', timeout: 5000 });
+      } catch { /* redan avlastat */ }
     }
     return {
       ok: false,

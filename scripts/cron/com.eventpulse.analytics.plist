@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN"
+  "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!--
+  com.eventpulse.analytics.plist — launchd-jobb för 10-Analytics (port 7778).
+
+  Varför (2026-10-28): analytics-servern startades enbart via dashboardens
+  toggle-knapp, vilket gör den till ett barn av dashboard-processen. Efter
+  omstart (t.ex. nattens reboot 2026-10-28 05:12) var den BORTA tills
+  användaren tryckte på knappen igen. Kedjan behöver inte analytics-servern,
+  men "allt fungerar" gör det.
+
+  Ändringar mot dashboardens spawn:
+  - launchd startar om servern om den dör (KeepAlive).
+  - Ingen PATH-beroende: absolut sökväg till node och tsx-cli.
+
+  Installera:
+    cp scripts/cron/com.eventpulse.analytics.plist ~/Library/LaunchAgents/
+    launchctl bootstrap gui/$(id -u) ~/Library/LaunchAgents/com.eventpulse.analytics.plist
+
+  Ta bort:
+    launchctl bootout gui/$(id -u)/com.eventpulse.analytics
+    rm ~/Library/LaunchAgents/com.eventpulse.analytics.plist
+-->
+<plist version="1.0">
+<dict>
+  <key>Label</key>
+  <string>com.eventpulse.analytics</string>
+
+  <key>ProgramArguments</key>
+  <array>
+    <string>/opt/homebrew/bin/node</string>
+    <string>/Users/claudgashi/EventPulse/node_modules/tsx/dist/cli.mjs</string>
+    <string>/Users/claudgashi/EventPulse/10-Analytics/server.ts</string>
+  </array>
+
+  <key>WorkingDirectory</key>
+  <string>/Users/claudgashi/EventPulse</string>
+
+  <key>EnvironmentVariables</key>
+  <dict>
+    <key>EVENTPULSE_PROJECT_ROOT</key>
+    <string>/Users/claudgashi/EventPulse</string>
+    <key>PORT</key>
+    <string>7778</string>
+  </dict>
+
+  <key>RunAtLoad</key>
+  <true/>
+
+  <key>KeepAlive</key>
+  <dict>
+    <key>SuccessfulExit</key>
+    <false/>
+    <key>Crashed</key>
+    <true/>
+  </dict>
+
+  <key>StandardOutPath</key>
+  <string>/Users/claudgashi/EventPulse/runtime/analytics-server.log</string>
+  <key>StandardErrorPath</key>
+  <string>/Users/claudgashi/EventPulse/runtime/analytics-server.log</string>
+</dict>
+</plist>
