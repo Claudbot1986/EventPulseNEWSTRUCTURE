@@ -5,11 +5,39 @@ import type {
   SourceCandidateTestRepository,
   SourceCandidateTestRun,
 } from './types.js';
+import { classifyError, errorText, type ErrorClass } from '../../../scripts/lib/net-error.mjs';
 
 type SupabaseLikeClient = {
   from(table: string): any;
   rpc?(functionName: string, args?: Record<string, unknown>): any;
 };
+
+/**
+ * 2026-10-28 — bygg ett fel som BÄR med sig sin orsak och sin klass.
+ *
+ * Tidigare kastades `new Error('...: ' + error.message)` — cause-kedjan
+ * bröts, så classifyError() kunde inte skilja på "Supabase svarade 404"
+ * och "vi nådde aldrig Supabase". Med cause: error och errorClass kan
+ * anroparen (och kedjan) göra det.
+ *
+ * @param {string} context
+ * @param {unknown} error
+ * @returns {Error & { cause?: unknown; errorClass: ErrorClass }}
+ */
+function dbError(context: string, error: unknown): Error & { cause?: unknown; errorClass: ErrorClass } {
+  // 2026-10-28 — PostgREST-fel är plain objects ({code, message, details}),
+  // inte Errors. `String(error)` gav "[object Object]", så ett verkligt
+  // transportfel ("fetch failed") skrevs ut som "[object Object]" och gick
+  // inte att klassa. errorText() läser .message (och .code) i stället.
+  const message = errorText(error);
+  const code = typeof (error as { code?: unknown } | null)?.code === 'string'
+    ? String((error as { code: string }).code)
+    : null;
+  const err = new Error(`${context}: ${message}${code ? ` [${code}]` : ''}`) as Error & { cause?: unknown; errorClass: ErrorClass };
+  err.cause = error;
+  err.errorClass = classifyError(error);
+  return err;
+}
 
 function queueItemFromRow(row: any): SourceCandidateTestQueueItem {
   return {
@@ -67,7 +95,7 @@ export function createSupabaseSourceCandidateTestRepository(supabase: SupabaseLi
           task_limit: limit,
           target_phase: phase ?? null,
         });
-        if (error) throw new Error(`Failed to claim source candidate tests: ${error.message}`);
+        if (error) throw dbError('Failed to claim source candidate tests', error);
         return (data ?? []).map(queueItemFromRow);
       }
 
@@ -79,7 +107,7 @@ export function createSupabaseSourceCandidateTestRepository(supabase: SupabaseLi
         .limit(limit);
       if (phase) query = query.eq('phase', phase);
       const { data, error } = await query;
-      if (error) throw new Error(`Failed to fetch source candidate tests: ${error.message}`);
+      if (error) throw dbError('Failed to fetch source candidate tests', error);
       return (data ?? []).map(queueItemFromRow);
     },
 
@@ -89,7 +117,7 @@ export function createSupabaseSourceCandidateTestRepository(supabase: SupabaseLi
         .from('source_candidates')
         .select('id, metadata')
         .in('id', sourceCandidateIds);
-      if (error) throw new Error(`Failed to fetch source candidate metadata: ${error.message}`);
+      if (error) throw dbError('Failed to fetch source candidate metadata', error);
       const result: Record<string, Record<string, unknown>> = {};
       for (const row of data ?? []) {
         if (row?.id && row.metadata && typeof row.metadata === 'object') {
@@ -105,7 +133,7 @@ export function createSupabaseSourceCandidateTestRepository(supabase: SupabaseLi
         .insert(runRow(run))
         .select('id')
         .single();
-      if (error) throw new Error(`Failed to insert source candidate test run: ${error.message}`);
+      if (error) throw dbError('Failed to insert source candidate test run', error);
       return data.id;
     },
 
@@ -113,7 +141,7 @@ export function createSupabaseSourceCandidateTestRepository(supabase: SupabaseLi
       const { error } = await supabase
         .from('source_candidate_test_decisions')
         .insert(decisionRow(decision));
-      if (error) throw new Error(`Failed to insert source candidate test decision: ${error.message}`);
+      if (error) throw dbError('Failed to insert source candidate test decision', error);
     },
 
     async updateCandidateStatus(sourceCandidateId: string, status: SourceCandidateTestQueueItem['status'], error?: string): Promise<void> {
@@ -126,7 +154,7 @@ export function createSupabaseSourceCandidateTestRepository(supabase: SupabaseLi
           locked_at: null,
         })
         .eq('source_candidate_id', sourceCandidateId);
-      if (queueError) throw new Error(`Failed to update source candidate test queue: ${queueError.message}`);
+      if (queueError) throw dbError('Failed to update source candidate test queue', queueError);
 
       const { error: candidateError } = await supabase
         .from('source_candidates')
@@ -135,7 +163,7 @@ export function createSupabaseSourceCandidateTestRepository(supabase: SupabaseLi
           updated_at: new Date().toISOString(),
         })
         .eq('id', sourceCandidateId);
-      if (candidateError) throw new Error(`Failed to update source candidate status: ${candidateError.message}`);
+      if (candidateError) throw dbError('Failed to update source candidate status', candidateError);
     },
   };
 }

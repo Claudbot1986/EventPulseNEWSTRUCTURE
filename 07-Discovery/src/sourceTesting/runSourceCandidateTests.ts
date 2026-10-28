@@ -1,11 +1,19 @@
 import * as dotenv from 'dotenv';
+import path from 'path';
+import { fileURLToPath } from 'url';
 import { createClient } from '@supabase/supabase-js';
 import { RealAbcdSourceCandidateRunner } from './realToolRunner.js';
 import { runSourceCandidateTest } from './runner.js';
 import { createSupabaseSourceCandidateTestRepository } from './supabaseRepository.js';
 import type { SourceCandidate, SourceCandidateTestPhase } from './types.js';
+import { classifyWithCarried, describeError } from '../../../scripts/lib/net-error.mjs';
 
-dotenv.config({ path: '.env', override: true });
+// 2026-10-28 — .env laddas med override:false så att en explicit satt
+// miljövariabel (t.ex. i verifieringskörningar) vinner över .env. Med
+// override:true kunde .env peka om en avsiktligt trasig anslutning — det
+// var precis vad som gjorde fail-fast-testet grönt trots att världen var död.
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+dotenv.config({ path: path.resolve(__dirname, '../../../.env'), override: false });
 
 function argValue(name: string, fallback?: string): string | undefined {
   const arg = process.argv.find((item) => item.startsWith(`${name}=`));
@@ -57,7 +65,17 @@ async function main(): Promise<void> {
   }
 }
 
-main().catch((error) => {
-  console.error(error instanceof Error ? error.message : String(error));
-  process.exitCode = 1;
+main().catch((error: unknown) => {
+  // 2026-10-28 — ärlig exitkod. Ett transportfel (Supabase nåddes aldrig)
+  // är inte detsamma som ett kodfel, och P3D är ett kedjsteg: exit 1 där
+  // låg kedjan se "ett steg gick sönder", exit 69 säger "världen var död".
+  //
+  // classifyWithCarried: repository-lagret fångar felet, klassar det
+  // ORIGINELLA felet och lägger klassen på det omsluta Error-objektet.
+  // Klassar vi om det omsluta felet försvinner den informationen — ett
+  // transportfel i en insert blev 'logic' (exit 1) i stället för
+  // 'transport' (exit 69).
+  const cls = classifyWithCarried(error);
+  console.error(`[runSourceCandidateTests] ${describeError(error)} [${cls}]`);
+  process.exitCode = cls === 'transport' ? 69 : cls === 'auth' ? 77 : 1;
 });

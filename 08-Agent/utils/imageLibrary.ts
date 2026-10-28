@@ -197,8 +197,16 @@ export async function pickLibraryFallback(input: FallbackInput): Promise<Fallbac
       }
     } catch (err) {
       // Tyst — vi vill inte krascha ingestion pga v2-fel. Logga som varning.
+      //
+      // 2026-10-28 — DEGRADED-markören. Bildmatchningen är en VALFRI
+      // berikning: den fångar sitt eget fel och eventet sparas ändå (via
+      // venue+category). Utan markören klassade kedjans felklassning
+      // "v2-match timeout 5s" som ett TRANSPORTFEL — kedjan gick röd
+      // (exit 69) på en körning som persisterade 5420 events med 0 fel.
+      // Det är samma skada som den gamla gröna ljugen, fast åt andra hållet:
+      // operatören slutar lita på exit 69.
       console.warn(
-        `[imageLibrary] v2-match misslyckades (event=${input.event_id}): ${
+        `[imageLibrary] DEGRADED v2-match misslyckades (event=${input.event_id}): ${
           err instanceof Error ? err.message : 'okänt'
         } → faller igenom till venue+category`,
       );

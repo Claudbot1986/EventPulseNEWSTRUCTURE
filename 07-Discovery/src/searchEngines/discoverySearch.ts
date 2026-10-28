@@ -45,6 +45,7 @@ import { runGoogleCseDiscovery } from './googleCustomSearch.js';
 import * as dotenv from 'dotenv';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import { classifyError, classifyMessage, describeError, type ErrorClass } from '../../../scripts/lib/net-error.mjs';
 
 // P3A var det ENDA av de fyra discovery-stegen som inte laddade .env själv
 // (geoExpansion, rssDiscovery och runSourceCandidateTests gör det). Utan detta
@@ -98,6 +99,15 @@ export interface DiscoverySearchResult {
   candidatesRejected: number;
   placeholderExa: boolean;
   placeholderGoogle: boolean;
+  /**
+   * 2026-10-28 — ärlig felklassning. 'transport' betyder att motorn aldrig
+   * nåddes (nätet dog, DNS, timeout). Det får ALDRIG räknas som "klar":
+   * kedjan går vidare men exit-koden blir 69.
+   * 'auth' = nyckeln saknas/nekades — vi frågade aldrig (eller nekades).
+   */
+  errorClass: ErrorClass | null;
+  /** Sant = steget gjorde jobbet men något gick sönder på vägen. */
+  degraded: boolean;
 }
 
 // ── Discovery queries (samma som googleCustomSearch) ──────────────────────
@@ -163,6 +173,20 @@ function isPlaceholderKey(key: string | undefined): boolean {
   return /_FAKE_|_PLACEHOLDER_|REPLACE_ME|TODO|FIXME/i.test(key);
 }
 
+/**
+ * 2026-10-28 — rangordning av felklasser. När flera fel inträffar i samma
+ * körning gäller "värst fall": ett transportfel (nätet dog) väger tyngre än
+ * ett auth-fel, som väger tyngre än ett http-fel. Utan den ordningen kunde
+ * ett 404 efter ett nätverksfel maskera att kedjan aldrig nådde servern.
+ */
+const CLASS_PRIORITY: Record<ErrorClass, number> = {
+  transport: 4,
+  auth: 3,
+  http: 2,
+  logic: 1,
+  empty: 0,
+};
+
 // ── Exa client ─────────────────────────────────────────────────────────────
 
 interface ExaSearchResult {
@@ -196,7 +220,12 @@ async function exaSearch(
       signal: controller.signal,
     });
     if (!response.ok) {
-      throw new Error(`Exa HTTP ${response.status} ${response.statusText}`);
+      // 2026-10-28 — HTTP-status bärs med i felet så classifyError() kan
+      // skilja på "nätet dog" (transport) från "servern svarade 401" (auth).
+      // Utan statusen varje 4xx/5xx oskiljbar mot "kodfel".
+      const err = new Error(`Exa HTTP ${response.status} ${response.statusText}`) as Error & { status?: number };
+      err.status = response.status;
+      throw err;
     }
     const data = (await response.json()) as {
       results?: Array<{ url?: string; title?: string }>;
@@ -205,13 +234,21 @@ async function exaSearch(
     return results
       .filter((r): r is { url: string; title?: string } => typeof r.url === 'string')
       .map((r) => ({ url: r.url, title: r.title }));
+  } catch (err: unknown) {
+    // AbortError = vår egen timeout. Det är ett transportfel (vi nådde inte
+    // svaret inom 10 s) och ska inte rapporteras som kodfel.
+    if (err instanceof Error && err.name === 'AbortError') {
+      const abortErr = new Error(`Exa timeout efter ${EXA_TIMEOUT_MS} ms`) as Error & { cause?: unknown };
+      abortErr.cause = err;
+      throw abortErr;
+    }
+    throw err;
   } finally {
     clearTimeout(timer);
   }
 }
 
 // ── Dedup + write ──────────────────────────────────────────────────────────
-
 async function writeCandidates(
   urls: string[],
   origin: 'exa' | 'google',
@@ -294,6 +331,30 @@ export async function runDiscoverySearch(
     candidatesRejected: 0,
     placeholderExa: false,
     placeholderGoogle: false,
+    errorClass: null,
+    degraded: false,
+  };
+
+  /**
+   * Registrera ett fel med sin klass. Transport väger tyngre än auth, och
+   * auth tyngre än http — "värst fall" vinner, så att ett enda
+   * nätverksfel inte kan döljas av ett efterföljande 404.
+   */
+  const noteError = (err: unknown): void => {
+    const cls = classifyError(err);
+    if (CLASS_PRIORITY[cls] > CLASS_PRIORITY[result.errorClass ?? 'empty']) {
+      result.errorClass = cls;
+    }
+    result.degraded = true;
+  };
+
+  /** Samma som noteError, men för fel som redan är en text (Supabase-msg). */
+  const noteText = (text: string): void => {
+    const cls = classifyMessage(text);
+    if (CLASS_PRIORITY[cls] > CLASS_PRIORITY[result.errorClass ?? 'empty']) {
+      result.errorClass = cls;
+    }
+    result.degraded = true;
   };
 
   const exaKey = process.env.EXA_API_KEY;
@@ -327,9 +388,15 @@ export async function runDiscoverySearch(
         console.log(`[discoverySearch]   ✓ "${query}" → ${items.length} hits`);
       } catch (err: unknown) {
         exaErrors++;
-        const msg = err instanceof Error ? err.message : String(err);
+        // 2026-10-28 — logga orsaken, inte bara meddelandet. "Exa HTTP 500"
+        // säger att servern svarade; "fetch failed (ECONNREFUSED)" säger att
+        // vi aldrig nådde fram. Utan skillnaden såg transport och http lika
+        // ut i loggen — det var själva problemet i nattens körningar.
+        const cls = classifyError(err);
+        const msg = describeError(err);
         if (!result.exaError) result.exaError = msg;
-        console.log(`[discoverySearch]   ✗ "${query}" → ${msg}`);
+        noteError(err);
+        console.log(`[discoverySearch]   ✗ "${query}" → ${msg} [${cls}]`);
       } finally {
         done++;
         onProgress?.('exa', done, selectedQueries.length);
@@ -351,13 +418,21 @@ export async function runDiscoverySearch(
       );
       result.candidatesWritten = write.written;
       result.candidatesRejected += write.rejected;
-      if (write.firstError && !result.exaError) result.exaError = write.firstError;
+      if (write.firstError) {
+        if (!result.exaError) result.exaError = write.firstError;
+        noteText(write.firstError);
+      }
       return result;
     }
 
     console.log(`[discoverySearch] Exa underskred tröskel (${exaUrls.size} < ${minExa}); faller tillbaka till Google CSE`);
   } else {
     result.exaError = result.placeholderExa ? 'EXA_API_KEY saknas eller är placeholder' : 'EXA_API_KEY tom';
+    // En saknad/placeholder-nyckel är auth-klass: vi frågade aldrig Exa.
+    // (Preflight fångar samma sak innan nattkedjan startar — detta är
+    // för den som kör P3A direkt.)
+    result.errorClass = 'auth';
+    result.degraded = true;
     console.log(`[discoverySearch] Exa ej tillgänglig (${result.exaError}); faller tillbaka till Google CSE`);
   }
 
@@ -378,7 +453,10 @@ export async function runDiscoverySearch(
       });
       result.googleFound = g.candidatesFound;
       result.candidatesRejected += g.candidatesRejected;
-      if (g.firstError) result.googleError = g.firstError;
+      if (g.firstError) {
+        result.googleError = g.firstError;
+        noteText(g.firstError);
+      }
 
       // runGoogleCseDiscovery med dryRun skrev inte — vi har ingen URL-lista
       // från den. Kör igen med en intern loop för att samla URLs.
@@ -390,10 +468,14 @@ export async function runDiscoverySearch(
         await runGoogleCseDiscovery({ queries, perQuery, dryRun: false });
       }
     } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : String(err);
+      const msg = describeError(err);
       result.googleError = msg;
+      noteError(err);
     }
   } else {
+    // Google är placeholder → ingen motor att fråga. Det är INTE ett fel
+    // i sig (Exa kan ha gjort jobbet), så ingen felklass sätts här — men
+    // det får aldrig ensamt avgöra att steget är "klart".
     result.googleError = 'GOOGLE_API_KEY/GOOGLE_CSE_ID saknas eller är placeholder';
   }
 
@@ -411,7 +493,10 @@ export async function runDiscoverySearch(
     );
     result.candidatesWritten = write.written;
     result.candidatesRejected += write.rejected;
-    if (write.firstError && !result.exaError) result.exaError = write.firstError;
+    if (write.firstError) {
+      if (!result.exaError) result.exaError = write.firstError;
+      noteText(write.firstError);
+    }
   }
 
   return result;
@@ -445,11 +530,28 @@ if (isMainModule && cliArgs.length > 0) {
   runDiscoverySearch({ queries, perQuery, minExa, dryRun: dryRunFlag })
     .then((r) => {
       console.log(JSON.stringify(r, null, 2));
-      const fatal = r.exaError && r.googleError && !r.candidatesWritten;
-      process.exit(fatal ? 1 : 0);
+      // 2026-10-28 — ärlig exitkod. Tidigare var `fatal = exaError &&
+      // googleError && !candidatesWritten`, vilket gjorde att "Google är
+      // placeholder" räckte för att döda körningen, medan ett REN transportfel
+      // (nätet dog) bara gav exit 0. Nu är det tvärtom:
+      //   transport            → 69 (nätet nådde aldrig servern)
+      //   auth + inget skrivet → 77 (vi frågade aldrig / nekades)
+      //   allt annat           → 0
+      if (r.errorClass === 'transport') {
+        console.error(`[discoverySearch] transport-fel: ${r.exaError ?? r.googleError} — avbryter, exit=69`);
+        process.exit(69);
+      }
+      if (r.errorClass === 'auth' && r.candidatesWritten === 0) {
+        console.error(`[discoverySearch] auth-fel: ${r.exaError ?? r.googleError} — inga kandidater skrivna, exit=77`);
+        process.exit(77);
+      }
+      if (r.degraded) {
+        console.error(`[discoverySearch] degraderad körning (errorClass=${r.errorClass}) — se loggen ovan`);
+      }
+      process.exit(0);
     })
     .catch((e) => {
-      console.error('[discoverySearch] FATAL:', e);
-      process.exit(1);
+      console.error('[discoverySearch] FATAL:', describeError(e));
+      process.exit(classifyError(e) === 'transport' ? 69 : 70);
     });
 }

@@ -37,6 +37,7 @@ import { createClient, type SupabaseClient } from '@supabase/supabase-js';
 import * as dotenv from 'dotenv';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import { classifyMessage, type ErrorClass } from '../../../scripts/lib/net-error.mjs';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -108,6 +109,11 @@ export interface GeoExpansionResult {
   clustersWritten: number;
   dryRun: boolean;
   firstError: string | null;
+  /**
+   * 2026-10-28 — ärlig felklassning. 'transport' = Supabase nåddes aldrig
+   * (nätet dog) och får ALDRIG räknas som "klar" → exit 69.
+   */
+  errorClass: ErrorClass | null;
   /** Klustren som hittades (även de som inte skrevs p.g.a. limit). */
   topClusters: Array<{ size: number; representativeName: string; lat: number; lng: number }>;
 }
@@ -207,6 +213,7 @@ export async function run(opts: GeoExpansionOptions = {}): Promise<GeoExpansionR
     clustersWritten: 0,
     dryRun,
     firstError: null,
+    errorClass: null,
     topClusters: [],
   };
 
@@ -229,7 +236,11 @@ export async function run(opts: GeoExpansionOptions = {}): Promise<GeoExpansionR
     .lte('lng', bounds.maxLng);
 
   if (fetchErr) {
+    // 2026-10-28 — klassa felet. Supabase-klienten ger en textsträng, men
+    // underliggande är antingen "servern svarade fel" (http) eller "vi nådde
+    // aldrig fram" (transport). Utan klassningen såg båda ut som exit 1.
     result.firstError = `fetch failed: ${fetchErr.message}`;
+    result.errorClass = classifyMessage(fetchErr.message);
     return result;
   }
 
@@ -302,6 +313,7 @@ export async function run(opts: GeoExpansionOptions = {}): Promise<GeoExpansionR
 
   if (upsertErr) {
     result.firstError = `upsert failed: ${upsertErr.message}`;
+    result.errorClass = classifyMessage(upsertErr.message);
     return result;
   }
 
@@ -334,6 +346,11 @@ if (isMainModule && cliArgs.length > 0) {
   run({ radiusMeters, limit, city, dryRun: dryRunFlag })
     .then((r) => {
       console.log(JSON.stringify(r, null, 2));
+      // 2026-10-28 — transport ⇒ 69, aldrig "klar". Annars 1.
+      if (r.errorClass === 'transport') {
+        console.error(`[geoExpansion] transport-fel: ${r.firstError} — exit=69`);
+        process.exit(69);
+      }
       process.exit(r.firstError ? 1 : 0);
     })
     .catch((e) => {
