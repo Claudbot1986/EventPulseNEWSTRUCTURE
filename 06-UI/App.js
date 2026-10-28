@@ -2050,7 +2050,7 @@ function ExploreDetailScreen({ payload, onBack, onEventPress }) {
   );
 }
 
-export default function App({ onUserLoggedOut, onOpenLogin, chipNonce = 0, onExploreReady, isActive = true, onDetailBack }) {
+export default function App({ onUserLoggedOut, onOpenLogin, chipNonce = 0, onExploreReady, isActive = true, onDetailBack, hideInternalTabBar = false }) {
   const { t } = useI18n();
   const [selectedEvent, setSelectedEvent] = useState(null);
   const scrollPositionRef = useRef(0);
@@ -2310,7 +2310,18 @@ export default function App({ onUserLoggedOut, onOpenLogin, chipNonce = 0, onExp
   // 2026-10-02 (Utforska sök-UX): `showSearch` är inte längre en separat
 // vy (SearchScreen-overlay är borttagen) så tab-raden behöver inte döljas
 // för sök-läge längre.
-const showTabBar = !selectedEvent && !exploreDetail;
+  // 2026-10-28 — hideInternalTabBar: App.js renderade en EGEN 3-tabbar
+  // (Hem ● / Karta ◆ / Profil ◉) i botten, samtidigt som AppShell renderar
+  // sin synliga 5-tabbar (Hem/Utforska/Karta/Notiser/Profil) absolut över
+  // samma kant. Den interna stapeln låg UNDER den synliga och stackte ut
+  // ~14px ovanför den — dolda men klickbara knappar med samma etiketter.
+  // Konsekvenser: (a) två "Karta"-knappar i DOM med olika beteende
+  // (App.js:s MapScreen vs AppShell:s KartaScreen), (b) ett klick i den
+  // interna byter vy utan att AppShells flikindikator följer med,
+  // (c) skärmläsare får dubbla tablistor.
+  // App.js monteras bara av AppShell (index.js: registerRootComponent(AppShell)),
+  // som äger den synliga tabbarn → den interna är ren död UI och döljs.
+  const showTabBar = !hideInternalTabBar && !selectedEvent && !exploreDetail;
 
   return (
     <View style={styles.container}>

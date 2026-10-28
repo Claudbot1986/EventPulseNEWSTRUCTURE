@@ -136,6 +136,54 @@ export default function KartaScreen({ onEventPress }) {
     if (event) setSelectedEvent(event);
   }, []);
 
+  // 2026-10-28 — projectedMarkers FLYTTAD HIT. Den deklarerades tidigare
+  // nedanför handleMapPress, men handleMapPress läser projectedMarkers i sin
+  // dependency-array — som utvärderas under render, alltså FÖRE
+  // const-deklarationen. Det är en temporal dead zone: "Cannot access
+  // 'projectedMarkers' before initialization" → Karta-fliken kraschade
+  // HELA appen vid render (i webb OCH i Expo Go). Deklarationen måste ligga
+  // före första läsningen.
+  const counts = computeCountsByMode(events, FILTER_MODES);
+  const filteredEvents = filterEventsByMode(events, activeMode);
+
+  // Projicera lat/lng → skärm-koordinater för hit-detection-overlay.
+  // Bounds-baserad projektion gör att zoom-värdet inte spelar roll —
+  // det är bounds (region) som ger korrekt pixel-position.
+  // 2026-10-03 — hård cap på antal hit-detection-Pressables som renderas.
+  // Vid extremt liten latitudeDelta kan 200+ markers projiceras inom view;
+  // react-native-map-clustering klarar det visuellt, men vår overlay med
+  // en <Pressable> per marker kraschar layouten / RN-bryggan. Vi cappar
+  // på 80 — tillräckligt för att täcka alla rimligt synliga events i
+  // viewport, men stoppar OOM/UI-tråd-krasch vid super-zoom.
+  const HIT_OVERLAY_CAP = 80;
+
+  const projectedMarkers = useMemo(() => {
+    if (!mapSize.width || !mapSize.height) return [];
+    const customViewport = {
+      ...viewportFromCenter(
+        region.latitude,
+        region.longitude,
+        11, // godtycklig zoom — bounds styr projektionen
+        mapSize,
+      ),
+      bounds: {
+        minLat: region.latitude - region.latitudeDelta / 2,
+        maxLat: region.latitude + region.latitudeDelta / 2,
+        minLng: region.longitude - region.longitudeDelta / 2,
+        maxLng: region.longitude + region.longitudeDelta / 2,
+      },
+    };
+    const out = [];
+    for (const e of filteredEvents) {
+      if (!Number.isFinite(e.lat) || !Number.isFinite(e.lng)) continue;
+      const p = projectViewport(e.lat, e.lng, customViewport);
+      if (!p.visible) continue;
+      out.push({ event: e, x: p.x, y: p.y });
+      if (out.length >= HIT_OVERLAY_CAP) break;
+    }
+    return out;
+  }, [filteredEvents, region, mapSize]);
+
   // Tomt kart-tryck → stäng kort, MEN INTE om trycket är på en marker.
   //
   // Bugfix 2026-10-05: react-native-maps MapView.onPress fyrar på ALLA
@@ -212,47 +260,6 @@ export default function KartaScreen({ onEventPress }) {
     const payload = toDetailsScreenEvent(event);
     if (payload) onEventPress(payload);
   }, [onEventPress]);
-
-  const counts = computeCountsByMode(events, FILTER_MODES);
-  const filteredEvents = filterEventsByMode(events, activeMode);
-
-  // Projicera lat/lng → skärm-koordinater för hit-detection-overlay.
-  // Bounds-baserad projektion gör att zoom-värdet inte spelar roll —
-  // det är bounds (region) som ger korrekt pixel-position.
-  // 2026-10-03 — hård cap på antal hit-detection-Pressables som renderas.
-// Vid extremt liten latitudeDelta kan 200+ markers projiceras inom view;
-// react-native-map-clustering klarar det visuellt, men vår overlay med
-// en <Pressable> per marker kraschar layouten / RN-bryggan. Vi cappar
-// på 80 — tillräckligt för att täcka alla rimligt synliga events i
-// viewport, men stoppar OOM/UI-tråd-krasch vid super-zoom.
-const HIT_OVERLAY_CAP = 80;
-
-const projectedMarkers = useMemo(() => {
-    if (!mapSize.width || !mapSize.height) return [];
-    const customViewport = {
-      ...viewportFromCenter(
-        region.latitude,
-        region.longitude,
-        11, // godtycklig zoom — bounds styr projektionen
-        mapSize,
-      ),
-      bounds: {
-        minLat: region.latitude - region.latitudeDelta / 2,
-        maxLat: region.latitude + region.latitudeDelta / 2,
-        minLng: region.longitude - region.longitudeDelta / 2,
-        maxLng: region.longitude + region.longitudeDelta / 2,
-      },
-    };
-    const out = [];
-    for (const e of filteredEvents) {
-      if (!Number.isFinite(e.lat) || !Number.isFinite(e.lng)) continue;
-      const p = projectViewport(e.lat, e.lng, customViewport);
-      if (!p.visible) continue;
-      out.push({ event: e, x: p.x, y: p.y });
-      if (out.length >= HIT_OVERLAY_CAP) break;
-    }
-    return out;
-  }, [filteredEvents, region, mapSize]);
 
   // Loading / error / empty enligt SCREEN_STATES.md — ingen rubrik, minimal text.
   if (status === 'loading') {

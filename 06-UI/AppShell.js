@@ -586,6 +586,10 @@ export default function AppShell() {
             chipNonce={chipNonce}
             onExploreReady={handleExploreReady}
             isActive={activeTab === 'explore'}
+            // 2026-10-28 — AppShell äger den synliga tabbarn (BottomTabBar).
+            // App.js: egen 3-tabbar låg under den, överlappande och klickbar
+            // → dubbla "Karta"/"Profil"-knappar med olika beteende. Döljs.
+            hideInternalTabBar
             // 2026-10-02 (Utforska sök): showSearch + callbacks så App
             // kan rendera SearchScreen som overlay oavsett activeTab.
             showSearch={showSearch}

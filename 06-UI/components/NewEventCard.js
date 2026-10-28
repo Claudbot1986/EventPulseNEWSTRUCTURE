@@ -169,13 +169,25 @@ export default function NewEventCard({
     onPin?.();
   };
 
+  // 2026-10-28 — HTML-validitet i web-builden. Ett Pressable med
+  // accessibilityRole="button" renderas som ett riktigt <button>. I
+  // DetailsScreen (App.js) skickas ingen onPress, vilket gjorde kortet till
+  // en tom <button> som innehöll de fem action-knapparna + "Läs mer" →
+  // "In HTML, <button> cannot be a descendant of <button>" (hydration error).
+  // När kortet inte är tryckbart renderas roten som en vanlig View: kortet
+  // behåller sitt a11y-label men slutar vara en knapp.
+  const Root = onPress ? Pressable : View;
+  const rootProps = onPress
+    ? {
+        style: ({ pressed }) => [styles.card, pressed && styles.cardPressed],
+        onPress,
+        accessibilityRole: 'button',
+        accessibilityLabel: label,
+      }
+    : { style: styles.card, accessibilityLabel: label };
+
   return (
-    <Pressable
-      style={({ pressed }) => [styles.card, pressed && styles.cardPressed]}
-      onPress={onPress}
-      accessibilityRole="button"
-      accessibilityLabel={label}
-    >
+    <Root {...rootProps}>
       {/* Hero-bild (wrap-aspect sätts dynamiskt från useImageAspect() —
           bilden visas helt med contain-resize, ramen matchar bildens
           naturliga aspect). 2026-10-07-bytet: tidigare fast 1.15 + cover
@@ -353,7 +365,7 @@ export default function NewEventCard({
           </View>
         ) : null}
       </View>
-    </Pressable>
+    </Root>
   );
 }
 

@@ -11,7 +11,13 @@
  *   - Exporterar `MapView` som en View-formad komponent som visar en
  *     "Kartan är inte tillgänglig på webb"-panel. Kartfliken mountar
  *     rent; panelen förklarar varför.
- *   - Exporterar `Marker` som `null` (ingen native pin-stöd på web).
+ *   - Exporterar `Marker` (och övriga geometries) som no-op-komponenter.
+ *     2026-10-28 — de var tidigare `null`, vilket gjorde att React kastade
+ *     "Element type is invalid: expected a string ... but got: null.
+ *     Check the render method of `MapScreen`" och kraschade HELA appen så
+ *     snart Karta-fliken öppnades (och även NewEventCard:s 📍-knapp).
+ *     En komponent som renderar sina barn utan native-stöd är säker: den
+ *     renderar inget på kartan men kraschar aldrig.
  *   - Exporterar `PROVIDER_DEFAULT` som `'default'` för API-kompatibilitet.
  *
  * Används av metro.config.js → resolver.extraNodeModules.web['react-native-maps'].
@@ -29,6 +35,15 @@ function MapView(props) {
     React.createElement(Text, { style: styles.fallbackHint }, 'Öppna appen i Expo Go för full kartvy.'),
     children
   );
+}
+
+/**
+ * No-op geometries. Renderar barnen (t.ex. pin-label) men ingen karta.
+ * Får ALDRIG vara null — React kastar då på render och skärmen kraschar.
+ */
+function NoopGeometry(props) {
+  const { children } = props || {};
+  return React.createElement(React.Fragment, null, children);
 }
 
 const styles = StyleSheet.create({
@@ -55,9 +70,9 @@ const styles = StyleSheet.create({
 
 module.exports = MapView;
 module.exports.default = MapView;
-module.exports.Marker = null;
+module.exports.Marker = NoopGeometry;
 module.exports.PROVIDER_DEFAULT = 'default';
-module.exports.Polyline = null;
-module.exports.Polygon = null;
-module.exports.Circle = null;
-module.exports.Callout = null;
+module.exports.Polyline = NoopGeometry;
+module.exports.Polygon = NoopGeometry;
+module.exports.Circle = NoopGeometry;
+module.exports.Callout = NoopGeometry;

@@ -197,80 +197,88 @@ function EventRow({ event, onPress, onMenuPress }) {
   // subtitle om den finns. Använd getRowDescriptionPreview så samma regler
   // för placeholders och språk-fallback som DetailsScreen gäller.
   const preview = getRowDescriptionPreview(event);
+  // 2026-10-28 — HTML-validitet: raden och "⋯"-knappen var två element med
+  // accessibilityRole="button" i varandra. I web-builden blir de riktiga
+  // <button>-element → "button cannot be a descendant of <button>", och ett
+  // klick på ⋯ bubblar till raden så att menyn ÖPPNAS OCH detaljskärmen
+  // öppnas samtidigt. Nu är raden en View med en tryckbar yta (tumbild +
+  // text) och "⋯" en syskonknapp.
   return (
-    <Pressable
-      style={({ pressed }) => [styles.row, pressed && styles.rowPressed]}
-      onPress={() => onPress?.(event)}
-      accessibilityRole="button"
-      accessibilityLabel={`${event.title} — ${subtitleText}`}
-    >
-      {event.imageUrl ? (
-        <Image
-          source={{ uri: event.imageUrl }}
-          style={styles.thumb}
-          resizeMode="cover"
-          accessibilityIgnoresInvertColors
-        />
-      ) : (
-        <View style={styles.thumbFallback}>
-          <Text style={styles.thumbFallbackText}>
-            {(event.title || '?').slice(0, 1).toUpperCase()}
-          </Text>
-        </View>
-      )}
-      <View style={styles.middle}>
-        <Text style={styles.title} numberOfLines={1} ellipsizeMode="tail">
-          {event.title}
-        </Text>
-        {(line1 || line2) ? (
-          <View style={styles.subtitleColumn}>
-            {line1 ? (
-              <Text
-                style={styles.subtitle}
-                numberOfLines={1}
-                ellipsizeMode="tail"
-              >
-                {line1}
-              </Text>
-            ) : null}
-            {line2 ? (
-              <Text
-                style={styles.subtitle}
-                numberOfLines={1}
-                ellipsizeMode="tail"
-              >
-                {line2}
-              </Text>
-            ) : null}
+    <View style={styles.row}>
+      <Pressable
+        style={({ pressed }) => [styles.rowTarget, pressed && styles.rowPressed]}
+        onPress={() => onPress?.(event)}
+        accessibilityRole="button"
+        accessibilityLabel={`${event.title} — ${subtitleText}`}
+      >
+        {event.imageUrl ? (
+          <Image
+            source={{ uri: event.imageUrl }}
+            style={styles.thumb}
+            resizeMode="cover"
+            accessibilityIgnoresInvertColors
+          />
+        ) : (
+          <View style={styles.thumbFallback}>
+            <Text style={styles.thumbFallbackText}>
+              {(event.title || '?').slice(0, 1).toUpperCase()}
+            </Text>
           </View>
-        ) : null}
-        {preview ? (
-          // 2026-10-02 — description-preview-rad (5.1). numberOfLines={2}
-          // ellipsizeMode="tail" så långa beskrivningar inte trycker
-          // undan resten av listan. Hela texten finns på DetailsScreen.
-          <Text
-            style={styles.preview}
-            numberOfLines={2}
-            ellipsizeMode="tail"
-          >
-            {preview}
+        )}
+        <View style={styles.middle}>
+          <Text style={styles.title} numberOfLines={1} ellipsizeMode="tail">
+            {event.title}
           </Text>
-        ) : null}
-        {/* 2026-10-13 (FAS 3.2): Tier 1 attribution-rad. Visas UNDER
-            preview när preview finns, eller ISTÄLLET för preview när
-            den inte finns. Diskret (italic, opacity 0.7) — säger
-            "detta är verifierat öppen data" istället för "© 2026". */}
-        {event.dataSource ? (
-          <Text
-            style={styles.dataSource}
-            numberOfLines={1}
-            ellipsizeMode="tail"
-            accessibilityLabel={`Datakälla: ${event.dataSource}`}
-          >
-            {event.dataSource}
-          </Text>
-        ) : null}
-      </View>
+          {(line1 || line2) ? (
+            <View style={styles.subtitleColumn}>
+              {line1 ? (
+                <Text
+                  style={styles.subtitle}
+                  numberOfLines={1}
+                  ellipsizeMode="tail"
+                >
+                  {line1}
+                </Text>
+              ) : null}
+              {line2 ? (
+                <Text
+                  style={styles.subtitle}
+                  numberOfLines={1}
+                  ellipsizeMode="tail"
+                >
+                  {line2}
+                </Text>
+              ) : null}
+            </View>
+          ) : null}
+          {preview ? (
+            // 2026-10-02 — description-preview-rad (5.1). numberOfLines={2}
+            // ellipsizeMode="tail" så långa beskrivningar inte trycker
+            // undan resten av listan. Hela texten finns på DetailsScreen.
+            <Text
+              style={styles.preview}
+              numberOfLines={2}
+              ellipsizeMode="tail"
+            >
+              {preview}
+            </Text>
+          ) : null}
+          {/* 2026-10-13 (FAS 3.2): Tier 1 attribution-rad. Visas UNDER
+              preview när preview finns, eller ISTÄLLET för preview när
+              den inte finns. Diskret (italic, opacity 0.7) — säger
+              "detta är verifierat öppen data" istället för "© 2026". */}
+          {event.dataSource ? (
+            <Text
+              style={styles.dataSource}
+              numberOfLines={1}
+              ellipsizeMode="tail"
+              accessibilityLabel={`Datakälla: ${event.dataSource}`}
+            >
+              {event.dataSource}
+            </Text>
+          ) : null}
+        </View>
+      </Pressable>
       <Pressable
         onPress={() => onMenuPress?.(event)}
         hitSlop={12}
@@ -280,7 +288,7 @@ function EventRow({ event, onPress, onMenuPress }) {
       >
         <Text style={styles.menuDots}>⋯</Text>
       </Pressable>
-    </Pressable>
+    </View>
   );
 }
 
@@ -509,6 +517,15 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingVertical: TOKENS.space.rowPadV,
     borderBottomWidth: 0,
+    gap: TOKENS.space.middleGap,
+  },
+  // 2026-10-28 — tryckbar yta inuti raden (tumbild + text). Raden själv är
+  // en View så att "⋯"-knappen inte blir ett kapslat <button> i web-builden.
+  rowTarget: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flex: 1,
+    minWidth: 0,
     gap: TOKENS.space.middleGap,
   },
   rowPressed: {
