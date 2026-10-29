@@ -26,9 +26,8 @@
 import 'dotenv/config';
 import { readFileSync, writeFileSync, existsSync, mkdirSync, copyFileSync, readdirSync } from 'node:fs';
 import { join } from 'node:path';
-import sharp from 'sharp';
 import { createClient } from '@supabase/supabase-js';
-import { applyAiCompliance, checkAiStamp, buildAiXmp } from '../08-Agent/tools/ai_compliance';
+import { applyAiComplianceToWebp, checkAiStamp, parseXmp, readXmpPacket } from '../08-Agent/tools/ai_compliance';
 
 const SUPABASE_URL = process.env.SUPABASE_URL;
 const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
@@ -204,31 +203,46 @@ async function main(): Promise<void> {
   // Vi läser bytes från originalfilen EFTER kopian är gjord (read-only).
   copyFileSync(src.fullPath, join(stampedCatDir, src.filename));
   const rawBytes = await readFileSync(src.fullPath);
-  const stamped = await applyAiCompliance({
+  // Stämpla + konvertera till WebP med maskinläsbar XMP i samma steg.
+  // applyAiComplianceToWebp: (1) stämplar SVG, (2) sparar PNG med XMP,
+  // (3) konverterar till WebP MED withMetadata() så MiniMaxs egen AIGC-
+  // märkning (signerad TC260-metadata i EXIF) överlever, (4) injicerar
+  // XMP-paketet som RIFF-chunk "XMP " i WebP-filen (Sharp skriver inte
+  // XMP till WebP — det gör vår egen injector).
+  const webp = await applyAiComplianceToWebp({
     buffer: rawBytes,
     prompt,
     model,
     position: 'bottom-left',
   });
-  // Konvertera stämplad PNG → WebP q80 (samma konvention som bfl5-batch)
-  const webp = await sharp(stamped).webp({ quality: 80 }).toBuffer();
   writeFileSync(stampedPath, webp);
 
-  // XMP-sidecar: Sharp stöder inte XMP i WebP, så vi skriver den som
-  // separat .xmp-fil (DAM-standard). Laddas upp till storage bredvid.
-  const xmpPacket = buildAiXmp({ model, prompt });
-  writeFileSync(xmpPath, xmpPacket);
+  // XMP-sidecar (DAM-standard) — skrivs BESKRIVANDE av exakt samma paket
+  // som nu ligger inbäddad i WebP-filen (inte en ny tidsstämpel).
+  const xmpPacket = readXmpPacket(webp);
+  if (xmpPacket) writeFileSync(xmpPath, xmpPacket);
+  else console.warn('[stamp-event] VARNING: ingen XMP hittades i webp-filen — sidecar skippades.');
 
   // Verifiera med diff-metoden mot originalet (read-only — vi läser från rå fil)
   const refBytes = readFileSync(src.fullPath);
   const verify = await checkAiStamp(webp, 'bottom-left', refBytes);
   console.log(`[stamp-event] verify: method=${verify.method} ok=${verify.ok} changedRatio=${(verify.changedRatio ?? 0).toFixed(3)}`);
 
-  // XMP-check (maskinläsbar Art. 50-disclosure) — läs sidecar-filen
-  const xmpText = readFileSync(xmpPath, 'utf8');
-  const hasAi = /<EventPulse:AIGenerated>\s*true\s*<\/EventPulse:AIGenerated>/i.test(xmpText);
-  const hasPolicy = /<EventPulse:Policy>\s*(EU-AI-Act-Art-50|EU AI Act Art\.? 50)\s*<\/EventPulse:Policy>/i.test(xmpText);
-  console.log(`[stamp-event] xmp (sidecar): aiGenerated=${hasAi} policy=${hasPolicy}`);
+  // XMP-check (maskinläsbar Art. 50-disclosure) — läs den LEVERERADE
+  // WebP-filen, inte bara sidecar-filen. Det är webp-filen UI:t laddar,
+  // och det är den som förr tappar metadata (Sharp skriver inte XMP till
+  // WebP). Läs via parseXmp() som har inbyggt webp-stöd.
+  const xmp = parseXmp(webp);
+  const hasAi = xmp.found && xmp.hasAiGenerated;
+  const hasPolicy = xmp.found && xmp.hasPolicy;
+  console.log(
+    `[stamp-event] xmp (i webp-filen): source=${xmp.source} aiGenerated=${hasAi} ` +
+    `policy=${hasPolicy} model=${xmp.model ?? '—'}`,
+  );
+  // Leverantörens egen AIGC-märkning (MiniMax, signerad TC260-metadata i
+  // EXIF) ska också ha överlevt konverteringen.
+  const keepsProviderMark = webp.toString('latin1').includes('AIGC');
+  console.log(`[stamp-event] leverantörens AIGC-märkning kvar: ${keepsProviderMark}`);
 
   if (!verify.ok && !hasAi) {
     console.error(`[stamp-event] VERIFIERING MISSLYCKADES — ångrar inte ut skrivningen, men sätter INTE image_url.`);

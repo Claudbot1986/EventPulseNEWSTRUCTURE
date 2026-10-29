@@ -12,6 +12,7 @@
  */
 
 import { createClient } from '@supabase/supabase-js';
+import { injectXmpIntoWebp, readXmpPacket } from '../08-Agent/tools/ai_compliance';
 import { readFileSync } from 'node:fs';
 import { resolve, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -124,7 +125,12 @@ async function main() {
           continue;
         }
         const buf = Buffer.from(await dl.arrayBuffer());
-        const webp = await sharp(buf).webp({ quality: 80, effort: 4 }).toBuffer();
+        // withMetadata() behåller leverantörens AIGC-märkning (EXIF) och
+        // xmp-injektionen flyttar vår egen XMP-paket från PNG till WebP.
+        // Utan detta tappar den levererade filen ALL maskinläsbar märkning.
+        const xmpPacket = readXmpPacket(buf);
+        const webpRaw = await sharp(buf).withMetadata().webp({ quality: 80, effort: 4 }).toBuffer();
+        const webp = xmpPacket ? await injectXmpIntoWebp(webpRaw, xmpPacket) : webpRaw;
         const { error } = await supabase.storage.from(STORAGE_BUCKET).upload(webpPath, webp, {
           contentType: 'image/webp',
           upsert: true,

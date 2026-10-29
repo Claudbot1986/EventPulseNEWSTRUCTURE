@@ -22,6 +22,7 @@
  */
 
 import { createClient } from '@supabase/supabase-js';
+import { injectXmpIntoWebp, readXmpPacket } from '../08-Agent/tools/ai_compliance';
 import { readFileSync } from 'node:fs';
 import { resolve, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -122,7 +123,12 @@ async function main() {
         const pngBuffer = Buffer.from(await dl.arrayBuffer());
 
         // Konvertera till WebP
-        const webpBuffer = await sharp(pngBuffer).webp({ quality: 80, effort: 4 }).toBuffer();
+        // Se regenerate_missing_webp.ts: withMetadata() + XMP-injektion
+        // behövs för att den levererade WebP-filen ska behålla sin
+        // maskinläsbara Art. 50-märkning.
+        const xmpPacket = readXmpPacket(pngBuffer);
+        const webpRaw = await sharp(pngBuffer).withMetadata().webp({ quality: 80, effort: 4 }).toBuffer();
+        const webpBuffer = xmpPacket ? await injectXmpIntoWebp(webpRaw, xmpPacket) : webpRaw;
         const webpPath = pngPath.replace(/\.png$/i, '.webp');
 
         // Ladda upp WebP
