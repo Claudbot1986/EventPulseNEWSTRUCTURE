@@ -27,7 +27,7 @@
  *   node --env-file=.env --import tsx scripts/adaptive_image_gen.ts --start=5
  */
 
-import { existsSync, readFileSync, writeFileSync, mkdirSync, readdirSync, statSync } from 'node:fs';
+import { existsSync, readFileSync, writeFileSync, mkdirSync, readdirSync, statSync, rmSync } from 'node:fs';
 import path from 'node:path';
 import { createClient } from '@supabase/supabase-js';
 import sharp from 'sharp';
@@ -53,8 +53,29 @@ const VERIFY_LOG = path.join(STATE_DIR, 'verify.ndjson');
 const RPM_LIMIT = 10;
 const RPM_SAFE = 9; // säkerhetsmarginal under taket
 
-const IMG_W = 1280;
-const IMG_H = 720;
+// 2026-10-29 — aspect ratio 3:2, inte 16:9.
+// UI:ns huvudcontainer för biblioteksbilder är App.js `eventImage`
+// (maxWidth 420, height 280) = exakt 3:2, och den renderar med
+// resizeMode="cover". Mätt 2026-10-29:
+//   16:9 (1280x720) → cover-crop till 3:2 klipper av 15,6 % av bredden
+//                    → AI-stämpeln (nedre vänstra hörnet) blir AVKLIPPT
+//                      till "…erad" (verifierat visuellt + 0 orange pixlar
+//                      kvar i hörnet efter crop).
+//   3:2 (1248x832) → ingen beskärning i huvudcontainern, stämpeln
+//                    "AI-genererad" ligger helt intakt (verifierat).
+// Det är också EU AI Act Art. 50-märkningen som ska vara läsbar.
+// Övriga containrar: 56x56 och 72x72 thumbnails (1:1, cover) — där är
+// stämpeln för liten för att betyda något, men 3:2 beskär mindre (33 %
+// mot 44 % av bredden).
+//
+// BEMÄRK: eventkortet (EventPulseCard) sätter ramen till bildens EGNA
+// aspect och använder resizeMode="contain". Därför måste ALLA bilder i
+// biblioteket ha samma ratio, annars blir korten olika höga.
+// MiniMax: aspect_ratio '3:2' → 1248x832. width/height (bara image-01,
+// 512-2048, delbart med 8) används för att låsa storleken.
+const IMG_W = 1248;
+const IMG_H = 832;
+const IMG_ASPECT = '3:2';
 
 /** Skala-index: 0 = extrem närbild ... 9 = overhead. Används för toleransgrind. */
 const SHOT_SCALE: Record<string, number> = {
@@ -104,6 +125,7 @@ interface Args {
   concurrency: number;
   maxTotal: number;
   dryRun: boolean;
+  reset: boolean;
 }
 function parseArgs(): Args {
   const out: Args = {
@@ -113,6 +135,7 @@ function parseArgs(): Args {
     concurrency: 2,
     maxTotal: 200,
     dryRun: false,
+    reset: false,
   };
   for (const a of process.argv.slice(2)) {
     if (a.startsWith('--start=')) out.start = parseInt(a.slice(8), 10);
@@ -122,6 +145,7 @@ function parseArgs(): Args {
     else if (a.startsWith('--concurrency=')) out.concurrency = parseInt(a.slice(14), 10);
     else if (a.startsWith('--max-total=')) out.maxTotal = parseInt(a.slice(12), 10);
     else if (a === '--dry-run') out.dryRun = true;
+    else if (a === '--reset') out.reset = true;
   }
   return out;
 }
@@ -296,7 +320,7 @@ async function generateOne(slot: PromptSlot, guard: RpmGuard): Promise<GenResult
       response_format: 'url',
       width: IMG_W,
       height: IMG_H,
-      aspect_ratio: '16:9',
+      aspect_ratio: IMG_ASPECT,
       n: 1,
       prompt_optimizer: true,
     }),
@@ -561,6 +585,14 @@ function appendVerify(row: unknown): void {
 // === HUVUDLOOP ===========================================================
 async function main(): Promise<void> {
   const args = parseArgs();
+  if (args.reset) {
+    // Nollställ räknare + granskningslogg så en ny körning inte ärvde
+    // förra körningens totalsiffror (state.loadState() läser dem annars).
+    for (const p of [STATE_FILE, VERIFY_LOG]) {
+      if (existsSync(p)) rmSync(p);
+    }
+    log('state återställd (--reset)');
+  }
   const state = loadState();
   const plan = await buildPlan(args.categories);
 

@@ -64,8 +64,30 @@ Rotorsak: **WIDE ("scen + publik") hade bara 3,6 % vikt** medan XW ("hela lokale
 - [x] Vikterna ändrade i `BFL-generator/lib/zoom-prompter.ts` + egna promptsektioner för WIDE (scen + publik, "scenen utan publik är FEL"), XW (hela lokalen från balkongen) och EST ("riktigt konserthus eller teaterhus", inte betonglada).
 - [x] Verifierat med nygenererade prov per nivå — de tre nivåerna är nu visuellt åtskilda (se `.scratch/imgprobe/levels/`).
 - [x] `callM3` använder nu `thinking: {type:'disabled'}` — M3:s extended thinking åt hela `max_tokens`-budgeten på den längre mallen och svaret kom aldrig.
-- [ ] **Regenerera de 60 redan gjorda community-bilderna med den nya mixen.** De gjordes med gamla vikter och saknar "scen + publik". Kommando: `node --env-file=.env --import tsx scripts/adaptive_image_gen.ts --categories=community --start=5 --max-rounds=8 --max-total=60` (kör mot en tom `local_image_library_stamped_v2/`).
-- [ ] **Verifiera mot bildkortets beskärning.** Kortet är 5:3 (1,67) och 5:2 (2,5) men bilderna är 16:9 (1,78) — en 2,5-kort beskär 29 % av höjden. Kanske ska bilderna genereras i 3:2 (1248×832) i stället för 16:9.
+- [ ] **Regenerera de 60 redan gjorda community-bilderna med den nya mixen.** De gjordes med gamla vikter och saknar "scen + publik". Kommando: `node --env-file=.env --import tsx scripts/adaptive_image_gen.ts --categories=community --start=5 --max-rounds=8 --max-total=60 --reset` (tom `local_image_library_stamped_v2/`).
+
+### Aspect ratio 3:2 [P0 — 2026-10-29, verifierat mot UI]
+
+Användarens krav: *"alla bilder ska ha samma aspect ratio som förut (som i ui i appen?) — kör 3:2 om det är 3:2"*.
+
+**UI:s container för biblioteksbilder är exakt 3:2.** `06-UI/App.js` `eventImage` = `maxWidth: 420, height: 280` → 420/280 = 1,5 = 3:2, och den renderar med `resizeMode="cover"`.
+
+Mätt 2026-10-29 med den riktiga stämpeln (`bottom-left`, 150×36) och UI:s cover-crop:
+
+| Källa | Efter UI:s 3:2-cover-crop | Stämpeln |
+|---|---|---|
+| 16:9 (1280×720) | beskär 15,6 % av bredden | ❌ avklippt till "…erad" (0 orange pixlar kvar i hörnet) |
+| **3:2 (1248×832)** | ingen beskärning | ✅ "AI-genererad" helt intakt |
+
+Det är EU AI Act Art. 50-märkningen som ska vara läsbar — så 16:9 bryter faktiskt compliance-kravet i huvudvyn.
+
+Övriga containrar: 56×56 och 72×72 thumbnails (1:1, cover) — stämpeln är för liten för att betyda något där, men 3:2 beskär mindre (33 % mot 44 % av bredden). Utforska-tiles (5:2) använder statiska assets, inte biblioteket.
+
+- [x] `scripts/adaptive_image_gen.ts` genererar nu `aspect_ratio: '3:2'`, 1248×832. Verifierat: 1 ny bild 1248×832.
+- [x] `--reset`-flagg tillagd så en ny körning inte ärver förra körningens räknare ur `runtime/adaptive-image-gen/state.json`.
+- [ ] **Hela biblioteket måste regenereras i 3:2.** Eventkortet (`EventPulseCard`) sätter ramen till bildens EGNA aspect och använder `resizeMode="contain"` — blandade ratio ger olika höga kort, vilket bryter användarens krav från 2026-10-07 ("ramen runt bilden behöver vara samma aspect ratio"). 488 gamla bilder (16:9) + 60 v2-bilder (16:9) + ~790 nya = allt i 3:2.
+- [ ] **Mät konsekvensen för kortlayouten.** 3:2 ger 240 pt höjd mot 202 pt för 16:9 vid 360 pt bredd (+19 %). `EventPulseCard` använder fast `height: 280` med `maxWidth: 420` → ratio 1,5 → **passar exakt utan beskärning**. `EventPulseSenasteCard`/karuseller har däremot `aspectRatio: imageAspect` (följer bilden) → korten blir 19 % högre än i dag.
+
 
 
 
