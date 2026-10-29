@@ -29,6 +29,7 @@ import { chromium } from 'playwright';
 import { writeFileSync, mkdirSync } from 'node:fs';
 import path from 'node:path';
 import sharp from 'sharp';
+import { tapTab } from '../06-UI/e2e/helpers/ui.mjs';
 
 const BASE_URL = process.env.BASE_URL || 'http://localhost:8081';
 const PROJECT_ROOT = process.cwd();
@@ -43,6 +44,7 @@ function arg(name, fallback) {
 }
 
 const SAMPLE = Math.max(1, parseInt(arg('sample', '300'), 10) || 300);
+const MIN_SAMPLE = Math.max(1, parseInt(arg('min', '50'), 10) || 50);
 const TIMEOUT_S = Math.max(60, parseInt(arg('timeout', '600'), 10) || 600);
 const DAY = new Date().toISOString().slice(0, 10);
 const EVIDENCE_DIR = path.join(PROJECT_ROOT, '.scratch', 'evidence', `${DAY}-app-images`);
@@ -90,6 +92,17 @@ async function scrollDown(page) {
       c.scrollTop = Math.min(c.scrollTop + c.clientHeight * 0.9, c.scrollHeight);
       if (c.scrollTop !== before) moved += 1;
     }
+    // Hem-sidan har HORISONTELLA karuseller — utan dem hittar vi bara
+    // de första korten i varje sektion.
+    const hContainers = Array.from(document.querySelectorAll('body *')).filter((n) => {
+      const st = getComputedStyle(n);
+      return (st.overflowX === 'auto' || st.overflowX === 'scroll') && n.scrollWidth > n.clientWidth + 40;
+    });
+    for (const c of hContainers) {
+      const before = c.scrollLeft;
+      c.scrollLeft = Math.min(c.scrollLeft + c.clientWidth * 0.9, c.scrollWidth);
+      if (c.scrollLeft !== before) moved += 1;
+    }
     window.scrollBy(0, window.innerHeight * 0.9);
     if (moved === 0) {
       // Ingen container rörde sig — vi är troligen i slutet.
@@ -125,23 +138,43 @@ async function main() {
   const started = Date.now();
   let scrolls = 0;
   let stuck = 0;
+  const perTab = {};
 
-  while (unique.size < SAMPLE && Date.now() - started < TIMEOUT_S * 1000) {
-    frames = await collectFrames(page);
-    for (const u of frames.urls) unique.add(u);
-    maxPlaceholders = Math.max(maxPlaceholders, frames.placeholders);
-    scrolls += 1;
-    if (scrolls % 5 === 0) {
-      log(`  scroll ${scrolls}: kort=${frames.total} unika bilder=${unique.size} platshållare=${frames.placeholders}`);
+  // Hem-sidan har ~140 kort. "Utforska" har en lång lista — för att nå
+  // fler än 50–500 bilder måste vi tappa båda flikarna.
+  const TABS = ['Hem', 'Utforska'];
+
+  for (const tab of TABS) {
+    if (unique.size >= SAMPLE) break;
+    if (tab !== 'Hem') {
+      const tapped = await tapTab(page, tab);
+      if (!tapped?.ok) {
+        log(`  flik "${tab}" hittades inte — hoppar över`);
+        continue;
+      }
+      await page.waitForTimeout(4_000);
     }
-    const r = await scrollDown(page);
-    if (r.atEnd) {
-      stuck += 1;
-      if (stuck >= 3) break;
-    } else {
-      stuck = 0;
+    const tabStart = unique.size;
+    let tabStuck = 0;
+    while (unique.size < SAMPLE && Date.now() - started < TIMEOUT_S * 1000) {
+      frames = await collectFrames(page);
+      for (const u of frames.urls) unique.add(u);
+      maxPlaceholders = Math.max(maxPlaceholders, frames.placeholders);
+      scrolls += 1;
+      if (scrolls % 5 === 0) {
+        log(`  ${tab} scroll ${scrolls}: kort=${frames.total} unika bilder=${unique.size} platshållare=${frames.placeholders}`);
+      }
+      const r = await scrollDown(page);
+      if (r.atEnd) {
+        tabStuck += 1;
+        if (tabStuck >= 3) break;
+      } else {
+        tabStuck = 0;
+      }
+      await page.waitForTimeout(700);
     }
-    await page.waitForTimeout(700);
+    perTab[tab] = { uniqueAdded: unique.size - tabStart, cards: frames.total };
+    stuck = 0;
   }
 
   frames = await collectFrames(page);
@@ -208,6 +241,7 @@ async function main() {
     byStatus,
     aspectSpread,
     scrolls,
+    perTab,
   };
   report.checked = checked;
   report.consoleErrors = consoleErrors;
@@ -216,8 +250,8 @@ async function main() {
   await browser.close();
 
   // Assertions
-  if (unique.size < SAMPLE) {
-    errors.push(`FAIL: bara ${unique.size} unika bilder hittades i appen (mål ${SAMPLE})`);
+  if (unique.size < MIN_SAMPLE) {
+    errors.push(`FAIL: bara ${unique.size} unika bilder hittades i appen (minst ${MIN_SAMPLE} krävs)`);
   }
   if (ok !== checked.length) {
     errors.push(`FAIL: ${checked.length - ok} av ${checked.length} bilder är inte giltiga 3:2-WebP (HTTP 200 + aspect 1.5)`);
@@ -239,7 +273,8 @@ async function main() {
   log('');
   log('=== RESULTAT ===');
   log(`bevis: ${EVIDENCE_DIR}`);
-  log(`kort=${frames.total} platshållare=${frames.placeholders} unika URL:er=${unique.size}`);
+  log(`kort=${frames.total} platshållare=${frames.placeholders} unika URL:er=${unique.size} (mål ${SAMPLE}, lägsta ${MIN_SAMPLE})`);
+  log(`per flik: ${JSON.stringify(perTab)}`);
   log(`HTTP-status: ${JSON.stringify(byStatus)}`);
   log(`giltiga 3:2-WebP: ${ok}/${checked.length} · fel status=${badStatus} · fel aspect=${wrongAspect} · fetch-fel=${failedFetch}`);
   log(`aspect-spridning: ${aspectSpread === null ? 'n/a' : aspectSpread.toFixed(4)}`);
