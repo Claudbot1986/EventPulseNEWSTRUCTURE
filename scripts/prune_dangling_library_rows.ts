@@ -18,6 +18,7 @@
  */
 import 'dotenv/config';
 import { createClient } from '@supabase/supabase-js';
+import { mkdirSync, writeFileSync } from 'node:fs';
 
 const BUCKET = 'event-posters';
 const isApply = process.argv.includes('--apply');
@@ -86,6 +87,15 @@ async function main() {
     console.log('[prune] DRY-RUN. Kör med --apply för att ta bort raderna.');
     return;
   }
+
+  // Snapshot innan radering — raderna innehåller times_used-historik som
+  // inte går att återskapa.
+  const snapDir = 'local_image_library';
+  mkdirSync(snapDir, { recursive: true });
+  const stamp = new Date().toISOString().slice(0, 19).replace(/[:T]/g, '-');
+  const snapPath = `${snapDir}/image_library_pre_prune_${stamp}.json`;
+  writeFileSync(snapPath, JSON.stringify(dangling, null, 2));
+  console.log(`[prune] snapshot ${dangling.length} rader → ${snapPath}`);
 
   const ids = dangling.map((r) => (r as any).id as string);
   const { error: delErr } = await db.from('image_library').delete().in('id', ids);
