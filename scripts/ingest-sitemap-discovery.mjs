@@ -213,6 +213,14 @@ async function processSource(source, args, sem) {
       image_ai_generated: false,
       image_ai_optout: false,
       is_online: false,
+      // 2026-10-29 — samma fallback som ingest-eventbrite-stockholm.mjs
+      // ("T0201.4: category_slug-fallback 'community' för att undvika NULL i
+      // DB"). Utan kategori får eventet ALDRIG en biblioteksbild:
+      // pickLibraryFallback matchar på venue+category → category → kind →
+      // default, och det finns inga bilder med NULL-kategori. 59 events som
+      // skapades av det här steget 2026-10-29 stod därför kvar som
+      // platshållare i appen trots att biblioteket var fullt.
+      category_slug: 'community',
       dedup_hash: dedupHash(ev.name, ev.startDate, source.slug),
     };
   });
