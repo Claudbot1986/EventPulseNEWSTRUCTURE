@@ -76,23 +76,37 @@ export const ZOOM_LEVELS: ZoomLevel[] = [
 ];
 
 /**
- * Viktad zoom-fördelning: XW/EST/AER får 25% vardera, resterande 7 zoom delar 25%.
- * Användarens foto-redaktionella preferens 2026-10-21: vill ha mer wide/establishing/
- * aerial, mindre close-up. Verifierat med weighted distribution + largest-remainder.
+ * Viktad zoom-fördelning per zoom-nivå enligt ZOOM_WEIGHTS.
+ *
+ * 2026-10-29 (användarens visuella granskning av 60 genererade bilder):
+ * "vi saknar motiv där vi är ännu längre bort — tittar på självaste scenen OCH
+ * publiken samt en ytterligare där man tittar på självaste koncerthuset eller
+ * teaterhuset."
+ *
+ * Två ändringar mot 2026-10-21-vikterna:
+ * 1. WIDE ("scen + publik") var 1/28 = 3,6 % — den klassiska evenemangsbilden
+ *    var nästan frånvarande, samtidigt som XW ("hela lokalen") tog 25 %.
+ *    Nu: WIDE 25 %, XW 17,5 %.
+ * 2. EST ("byggnaden") behåller 25 % — det är nivån som visar själva
+ *    koncerthuset/teaterhuset, och dess prompt har skärpts (riktig
+ *    konsertthushus-arkitektur, inte en grå betonglada).
+ * 3. AER 25 % → 15 %: overhead-aktualiser är sällan användbara som
+ *    evenemangskort och tar resurser från de intervallåsta nivåerna.
+ *
+ * Summan: 5×(1/40) + 0,05 + 0,25 + 0,175 + 0,25 + 0,15 = 1,0 ✓
  */
 export const ZOOM_WEIGHTS: Record<string, number> = {
-  EC: 1 / 28,     // 0.0357
-  CU: 1 / 28,
-  MCU: 1 / 28,
-  MED: 1 / 28,
-  MLS: 1 / 28,
-  LS: 1 / 28,
-  WIDE: 1 / 28,
-  XW: 0.25,
-  EST: 0.25,
-  AER: 0.25,
+  EC: 1 / 40,     // 0.025
+  CU: 1 / 40,     // 0.025
+  MCU: 1 / 40,    // 0.025
+  MED: 1 / 40,    // 0.025
+  MLS: 1 / 40,    // 0.025
+  LS: 0.05,
+  WIDE: 0.25,     // scen + publik
+  XW: 0.175,      // hela lokalen
+  EST: 0.25,      // byggnaden
+  AER: 0.15,      // overhead
 };
-// summan: 7×(1/28) + 3×0.25 = 0.25 + 0.75 = 1.0 ✓
 
 // === HUMAN-READABLE SUB-VARIATION =========================================
 export const POSES = ['still', 'dynamic', 'silhouette'] as const;
@@ -252,10 +266,17 @@ Svara BARA med prompttexten. Inget annat.`;
   if (zoom.id === 'EST') {
     return basePrompt + `
 
-VIKTIGT FÖR ESTABLISHING SHOT:
+VIKTIGT FÖR ESTABLISHING SHOT (byggnaden):
 - Bred exteriör vy, byggnaden/lokalen synlig i sin helhet framför Stockholms skyline
 - Små människor (eller inga) i förgrunden — fokus är ARKITEKTUR + PLATS
 - INGA close-ups av ansikten eller instrument
+- Byggnaden ska LIGGA som ett RIKTIGT KONCERTHUS ELLER TEATERHUS: hög,
+  symmetrisk fasad i sten eller puts, stor entréportal, kolonner, fönster i
+  symmetriska rader, arkitektur med kvalitet och värde.
+  INGEN industriell verkstad, INGEN lagerlokal, INGEN tom tegelbox, ingen
+  taklös betonglada — det ska se ut som ett konserthus man stolpar för att
+  lyssna i. (Användarfeedback 2026-10-29: "tittar på självaste koncerthuset
+  eller teaterhuset"; mätning 2026-10-28 gav en grå betonglada.)
 - Ingen skylt ovanför en dörr, ingen text på fasaden, ingen etikett på fönster —
   fasaden ska vara helt ren och utan märkningar. (BUG-FIX 2026-10-28: MiniMax
   sätter en skylt över varje entré "because a venue entrance needs a sign" —
@@ -263,7 +284,7 @@ VIKTIGT FÖR ESTABLISHING SHOT:
   nonsenstexten "ΛƎᗡИHƆƎИΛ ɄƧ ᒪIT" över dörren.)
 - Tänk "architectural photography" — Consertgebouw, Sydney Opera House, Berwaldhallen
 - Solen ska vara synlig eller antydd (gul timme eller mulet dagsljus)
-- Exempel: "Berwaldhallen exterior at golden hour, snow-dusted entrance steps, Stockholm skyline behind, no people in foreground, Editorial style, cool daylight tones"`;
+- Exempel: "grand Stockholm concert hall facade at golden hour, tall symmetrical stone front with a grand arched entrance and columns, full building visible, city skyline behind, Editorial style, cool daylight tones"`;
   }
 
   if (zoom.id === 'AER') {
@@ -276,6 +297,31 @@ VIKTIGT FÖR AERIAL / TOP-DOWN:
 - Tänk "Google Maps satellite" eller "crowd from balcony"
 - Ljus kommer uppifrån, jämn belysning
 - Exempel: "Top-down view of concert audience from balcony, geometric pattern of seats and heads, stage visible below with warm spotlights, Editorial style, mixed tones"`;
+  }
+
+  if (zoom.id === 'WIDE') {
+    return basePrompt + `
+
+VIKTIGT FÖR WIDE SHOT — SCENEN OCH PUBLIKEN I SAMMA BILD:
+- Kameran står LÄNGST BAK i lokalen, ungefär ögonhöjd, mitt i publiken
+- HELA SCENEN syns i bakgrunden MED utspelare på scen
+- PUBLIKEN ÄR SYNLIG I FÖRGRUNDEN — rader med människor, fyllda stolar och
+  bänkar, silhuetter av åskådare. Scenen utan publik är FEL.
+- Scenens artister syns men är små i bildrutan — helheten är det viktiga
+- Avstånd 15-25 meter. INGEN close-up av händer eller ansikten.
+- Exempel: "wide shot from the back of a packed concert hall, full lit stage in the distance, rows of audience members in the foreground, stage haze and warm spotlights, Editorial style, warm tungsten tones"`;
+  }
+
+  if (zoom.id === 'XW') {
+    return basePrompt + `
+
+VIKTIGT FÖR VERY WIDE — HELA LOKALEN:
+- Kameran står allra längst bak eller i en sidolounge, lokalen syns i sin
+  helhet: scenvägg, tak, sidorna och hela publiken
+- Scen OCH publik syns samtidigt, men publiken får gärna vara silhuetter
+- Avstånd 25-40 meter — det ska kännas stort och översiktligt
+- INGA close-ups. Fokus är rummets skala och stämning.
+- Exempel: "very wide interior of a large Stockholm concert hall from the back of the balcony, entire stage and all seating visible, dramatic ceiling lines, Editorial style, mixed tones"`;
   }
 
   if (isWideShot) {
@@ -312,11 +358,12 @@ async function callM3(category: string, tag: string, z: ZoomLevel, pose: Pose, l
       model: M3_MODEL,
       messages: [{ role: 'user', content: buildPromptTemplate(category, tag, z, pose, light) }],
       temperature: 0.7,
-      // BUG-FIX 2026-10-28: 1500 var för lågt. MiniMax-M3 kör extended thinking
-      // i samma content-fält, så tankeblocket åter budgeten och svaret blev
-      // "tomt efter think-strip" → tyst mock-fallback med generiska prompts.
-      // 4000 räcker för tanke + svar (mätt: reasoning_tokens 136, svar 198).
-      max_tokens: 4000,
+      // BUG-FIX 2026-10-29: M3:s extended thinking kan springa iväg och äta
+      // hela budgeten (mätt: reasoning_tokens 3999 av 4000 → svaret kom aldrig
+      // → tyst mock-fallback). Promptgenereringen vill ha ett kort, rakt
+      // svar — inte resonemang. `thinking: disabled` ger reasoning=0.
+      thinking: { type: 'disabled' },
+      max_tokens: 1500,
     }),
     // BUG-FIX 2026-10-28: utan timeout hängde en M3-request och låste hela
     // workern (processen stod i uv__io_poll med 0% CPU). 60s per anrop.

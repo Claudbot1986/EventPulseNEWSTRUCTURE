@@ -55,6 +55,19 @@ Ny verktyg `scripts/adaptive_image_gen.ts`. Genererar i omgångar med ramp (5 �
 - [ ] **Publicera `local_image_library_stamped_v2/`** — ännu inte uppladdad till storage och inte registrerad i `image_library`-tabellen. Kräver samma path-fix som i Storage-restore-blocket (`import-stamped/<kategori>/<fil>.webp`).
 - [ ] **Kodfixar som redan gjorts i `zoom-prompter.ts` (2026-10-28)** — sammanfattning: cache-merge i stället för overwrite, `max_tokens` 1500→4000 (annars tyst mock-fallback), timeout 60 s på M3-anrop, no-text-klausul i promptmallen, EST-mallens krav på ren fasad. Verifierat: 3 av 4 tidigare text-fel rena, det fjärde (entréskylt) rensat med EST-fixen.
 
+### Ny kompositionsmix: scen + publik, och byggnaden [P1 — 2026-10-29, användarens beslut]
+
+Användarens granskning av de 60 bilderna: *"vi saknar motiv där vi är ännu längre bort — tittar på självaste scenen OCH publiken samt en ytterligare där man tittar på självaste koncerthuset eller teaterhuset."*
+
+Rotorsak: **WIDE ("scen + publik") hade bara 3,6 % vikt** medan XW ("hela lokalen") tog 25 %. Ny fördelning i `ZOOM_WEIGHTS` (summa 1,0): close-familjen 12,5 % · LS 5 % · **WIDE 25 %** · XW 17,5 % · **EST 25 %** · AER 15 %. För community (target 182): scen+publik 45, byggnad 45, hela lokalen 32, overhead 27.
+
+- [x] Vikterna ändrade i `BFL-generator/lib/zoom-prompter.ts` + egna promptsektioner för WIDE (scen + publik, "scenen utan publik är FEL"), XW (hela lokalen från balkongen) och EST ("riktigt konserthus eller teaterhus", inte betonglada).
+- [x] Verifierat med nygenererade prov per nivå — de tre nivåerna är nu visuellt åtskilda (se `.scratch/imgprobe/levels/`).
+- [x] `callM3` använder nu `thinking: {type:'disabled'}` — M3:s extended thinking åt hela `max_tokens`-budgeten på den längre mallen och svaret kom aldrig.
+- [ ] **Regenerera de 60 redan gjorda community-bilderna med den nya mixen.** De gjordes med gamla vikter och saknar "scen + publik". Kommando: `node --env-file=.env --import tsx scripts/adaptive_image_gen.ts --categories=community --start=5 --max-rounds=8 --max-total=60` (kör mot en tom `local_image_library_stamped_v2/`).
+- [ ] **Verifiera mot bildkortets beskärning.** Kortet är 5:3 (1,67) och 5:2 (2,5) men bilderna är 16:9 (1,78) — en 2,5-kort beskär 29 % av höjden. Kanske ska bilderna genereras i 3:2 (1248×832) i stället för 16:9.
+
+
 
 
 
