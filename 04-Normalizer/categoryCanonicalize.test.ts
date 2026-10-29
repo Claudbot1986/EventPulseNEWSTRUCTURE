@@ -101,7 +101,7 @@ describe('canonicalizeCategorySlug', () => {
 
   describe('giltiga Utforska-slugs passerar oförändrat', () => {
     it.each([
-      'music', 'pop-rock', 'jazz', 'classical', 'electronic', 'hip-hop',
+      'music', 'pop-rock', 'jazz', 'classical', 'electronic',
       'metal', 'world-folk', 'musical-theatre', 'rock', 'pop', 'opera',
       'theatre-comedy', 'theatre-drama', 'dance', 'circus', 'exhibition',
       'flea-market', 'food', 'wine-tasting', 'kids', 'family', 'film',
@@ -111,6 +111,16 @@ describe('canonicalizeCategorySlug', () => {
       expect(r?.slug).toBe(slug);
       expect(r?.changed).toBe(false);
       expect(r?.originalSlug).toBeNull();
+    });
+
+    // 'hip-hop' togs bort från listan ovan 2026-10-29 (Round 3): sluggen
+    // finns kvar i categories-tabellen men de 5 events som bar den var
+    // felmärkta (tech-konferens, bokprat, webinar, rockkonsert, party), så
+    // den canonicaliseras till 'community' tills riktiga hip-hop-events finns.
+    it('hip-hop → community (Round 3, 2026-10-29 — ej längre oförändrad)', () => {
+      const r = canonicalizeCategorySlug('hip-hop');
+      expect(r?.slug).toBe('community');
+      expect(r?.changed).toBe(true);
     });
   });
 
@@ -237,5 +247,123 @@ describe('listCanonicalCategoryMappings', () => {
     const a = listCanonicalCategoryMappings().map((m) => m.deprecated);
     const b = listCanonicalCategoryMappings().map((m) => m.deprecated);
     expect(a).toEqual(b);
+  });
+});
+// ─────────────────────────────────────────────────────────────────────────
+// Round 3 (verifierade 2026-10-29 — 1026 events i live-DB)
+// ─────────────────────────────────────────────────────────────────────────
+// Bakgrund: 20261018-0001-events-category-slug-validation.sql (CHECK-
+// constraint på events.category_slug) hade aldrig applicerats i live-DB.
+// Därför skrevs källornas egna kategoritaxonomier rakt in i DB: 'cinema'
+// (Zita), 'concert' (Nalen), 'Utställning' (Waldemarsudde), 'Lov' och
+// 'Temavisning' (Livrustkammaren) med flera till. Se
+// 05-Supabase/migrations/20261029-0001-normalize-legacy-category-slugs.sql.
+
+describe('canonicalizeCategorySlug — Round 3 (källtaxonomier, 2026-10-29)', () => {
+  it('cinema → film (Zita-filmvisningar)', () => {
+    const r = canonicalizeCategorySlug('cinema');
+    expect(r?.slug).toBe('film');
+    expect(r?.changed).toBe(true);
+    expect(r?.originalSlug).toBe('cinema');
+  });
+
+  it('concert → music (Nalen-konserter)', () => {
+    expect(canonicalizeCategorySlug('concert')?.slug).toBe('music');
+  });
+
+  it('Konsert → music (svensk variant av concert)', () => {
+    expect(canonicalizeCategorySlug('Konsert')?.slug).toBe('music');
+  });
+
+  it('Utställning → exhibition (svensk variant)', () => {
+    expect(canonicalizeCategorySlug('Utställning')?.slug).toBe('exhibition');
+  });
+
+  it('exhibitions → exhibition (pluralform)', () => {
+    expect(canonicalizeCategorySlug('exhibitions')?.slug).toBe('exhibition');
+  });
+
+  it('Temavisning → exhibition', () => {
+    expect(canonicalizeCategorySlug('Temavisning')?.slug).toBe('exhibition');
+  });
+
+  it('musical → musical-theatre (China Teatern)', () => {
+    expect(canonicalizeCategorySlug('musical')?.slug).toBe('musical-theatre');
+  });
+
+  it('sports & wellbeing → sports', () => {
+    expect(canonicalizeCategorySlug('sports & wellbeing')?.slug).toBe('sports');
+  });
+
+  it('stage & film → theatre-drama', () => {
+    expect(canonicalizeCategorySlug('stage & film')?.slug).toBe('theatre-drama');
+  });
+
+  it('guided tours & lectures → talks-lectures', () => {
+    expect(canonicalizeCategorySlug('guided tours & lectures')?.slug).toBe('talks-lectures');
+  });
+
+  it('Föreläsning → talks-lectures (svensk variant)', () => {
+    expect(canonicalizeCategorySlug('Föreläsning')?.slug).toBe('talks-lectures');
+  });
+
+  it('Musik på Historiska → classical', () => {
+    expect(canonicalizeCategorySlug('Musik på Historiska')?.slug).toBe('classical');
+  });
+
+  it('Barn och familj → kids', () => {
+    expect(canonicalizeCategorySlug('Barn och familj')?.slug).toBe('kids');
+  });
+
+  it('Lov → family', () => {
+    expect(canonicalizeCategorySlug('Lov')?.slug).toBe('family');
+  });
+
+  it('networking & community → community', () => {
+    expect(canonicalizeCategorySlug('networking & community')?.slug).toBe('community');
+  });
+
+  it('hip-hop → community (5/5 events felmärkta, fallback används)', () => {
+    expect(canonicalizeCategorySlug('hip-hop')?.slug).toBe('community');
+  });
+
+  it('Round 3: ingen target är en legacy-slug (inga kedjor)', () => {
+    const round3Targets = [
+      'film', 'music', 'exhibition', 'musical-theatre', 'sports',
+      'theatre-drama', 'talks-lectures', 'classical', 'kids', 'family',
+      'community',
+    ];
+    const legacy = new Set([
+      'cinema', 'concert', 'Konsert', 'Utställning', 'exhibitions',
+      'Temavisning', 'musical', 'sports & wellbeing', 'stage & film',
+      'guided tours & lectures', 'Föreläsning', 'Musik på Historiska',
+      'Barn och familj', 'Lov', 'networking & community', 'hip-hop',
+    ]);
+    for (const t of round3Targets) {
+      expect(legacy.has(t)).toBe(false);
+      // Varje target ska dessutom canonicalisera till sig själv (ingen kedja).
+      expect(canonicalizeCategorySlug(t)?.slug).toBe(t);
+    }
+  });
+
+  it('Round 3: varje legacy-slug mappar till en giltig Utforska-slug', () => {
+    const validTargets = new Set([
+      'music', 'jazz', 'classical', 'electronic', 'world-folk',
+      'musical-theatre', 'rock', 'pop', 'opera', 'theatre-comedy',
+      'theatre-drama', 'dance', 'circus', 'exhibition', 'flea-market',
+      'food', 'wine-tasting', 'kids', 'family', 'film', 'talks-lectures',
+      'workshop', 'sports', 'community', 'nightlife', 'comedy',
+    ]);
+    const legacy = [
+      'cinema', 'concert', 'Konsert', 'Utställning', 'exhibitions',
+      'Temavisning', 'musical', 'sports & wellbeing', 'stage & film',
+      'guided tours & lectures', 'Föreläsning', 'Musik på Historiska',
+      'Barn och familj', 'Lov', 'networking & community', 'hip-hop',
+    ];
+    for (const l of legacy) {
+      const target = canonicalizeCategorySlug(l)?.slug;
+      expect(target, `${l} → ${target}`).toBeTruthy();
+      expect(validTargets.has(target!), `${l} → ${target}`).toBe(true);
+    }
   });
 });

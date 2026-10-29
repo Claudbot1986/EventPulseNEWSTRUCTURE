@@ -12,7 +12,7 @@
 import { useState } from 'react';
 import { Image, Modal, Pressable, StyleSheet, Text, View } from 'react-native';
 import MapView, { PROVIDER_DEFAULT, Marker } from 'react-native-maps';
-import { useImageAspect } from '../hooks/useImageAspect.js';
+import { LOCKED_EVENT_IMAGE_ASPECT } from '../hooks/imageAspectCore.js';
 
 // Tokens speglar 06-UI:s mörka/beige/orange-estetik (DESIGN_SYSTEM.md binding).
 const T = {
@@ -44,8 +44,10 @@ const T = {
   space: {
     padX: 14,
     padY: 10,
-    // Wrap = 1.15:1 — samma hero-geometri som EventPulseCard.
-    heroAspect: 1.15,
+    // 2026-10-29 — heroAspect är DEPRECATED: hero-ramen använder nu den
+    // låsta 3:2-ratio (LOCKED_EVENT_IMAGE_ASPECT i imageAspectCore.js),
+    // samma som EventPulseCard. Kvar för bakåtkompatibilitet.
+    heroAspect: 1.5,
     heroRadius: 8,
     gap: 10,
     actionHit: 32,
@@ -144,8 +146,11 @@ export default function NewEventCard({
   const source = sourceOf(imageSource);
   // 2026-10-07 — wrap-aspect sätts till bildens naturliga aspect. Tidigare
   // fast 1.15 + cover cropade bilden (speciellt vertikala biblioteksbilder).
-  // Nu visas bilden helt (contain) och wrap-ramen matchar bildens aspect.
-  const { aspect: imageAspect } = useImageAspect(imageSource);
+  // Nu visas bilden helt (contain).
+  //
+  // 2026-10-29 — ramen LÅSES till 3:2 (användarbeslut) så alla kort blir
+  // lika höga. resizeMode stays "contain" — ingen beskärning.
+  const imageAspect = LOCKED_EVENT_IMAGE_ASPECT;
   const label = a11yLabel
     ?? [id ? `#${id}` : null, title, dateLine, meta, dataSource]
         .filter(Boolean).join(' — ');
@@ -188,7 +193,7 @@ export default function NewEventCard({
 
   return (
     <Root {...rootProps}>
-      {/* Hero-bild (wrap-aspect sätts dynamiskt från useImageAspect() —
+      {/* Hero-bild (wrap-aspect är låst till 3:2 —
           bilden visas helt med contain-resize, ramen matchar bildens
           naturliga aspect). 2026-10-07-bytet: tidigare fast 1.15 + cover
           cropade bilden. Nu visas allt i centrum utan crop. */}
@@ -396,9 +401,8 @@ const styles = StyleSheet.create({
     backgroundColor: T.color.surface,
     opacity: 0.85,
   },
-  // 2026-10-07 — wrap-aspect sätts dynamiskt från useImageAspect().
-  // Inget hård aspectRatio här — bilden får wrap:en att följa sina egna
-  // proportioner så hela bilden syns (contain-resize).
+  // 2026-10-29 — wrap-aspect är LÅST till 3:2 (LOCKED_EVENT_IMAGE_ASPECT),
+  // se EventPulseCard.js för resonemang. Alla kort får samma höjd.
   heroWrap: {
     marginHorizontal: T.space.padX,
     marginTop: T.space.padY,
@@ -411,14 +415,14 @@ const styles = StyleSheet.create({
     height: '100%',
     resizeMode: 'contain',
   },
-  // Placeholder behåller fast aspectRatio så layouten är stabil även
-  // innan/aspect när bilden inte finns.
+  // Placeholder har samma låsta 3:2 som hero-bilden, så layouten är
+  // stabil även när bilden inte finns (ingen layout-shift vid load).
   heroPlaceholder: {
     marginHorizontal: T.space.padX,
     marginTop: T.space.padY,
     borderRadius: T.space.heroRadius,
     backgroundColor: T.color.placeholder,
-    aspectRatio: T.space.heroAspect,
+    aspectRatio: LOCKED_EVENT_IMAGE_ASPECT,
     alignItems: 'center',
     justifyContent: 'center',
   },

@@ -16,6 +16,30 @@ import { Image } from 'react-native';
 
 export const FALLBACK_ASPECT = 1.15; // matchar tidigare hårdkodat värde (hero-geometri)
 
+/**
+ * Låst aspect ratio för eventbilder: 3:2 (1.5).
+ *
+ * 2026-10-29 — användarbeslut: "ramen runt bilden behöver vara samma aspect
+ * ratio" för ALLA bilder, så att korten i karusellen blir lika höga oavsett
+ * bildformat.
+ *
+ * Tidigare följde ramen bildens naturliga aspect (useImageAspect + contain).
+ * Med blandade format (16:9 i det gamla biblioteket, 3:2 i det nya) gav det
+ * kort med olika höjd — 16:9-bilder gav 202 pt och 3:2-bilder 240 pt vid
+ * 360 pt bredd (19 % högre).
+ *
+ * Varför 3:2 och inte 16:9: UI:s egen `eventImage`-container i App.js är
+ * maxWidth 420 × height 280 = exakt 3:2, och genereringen producerar nu
+ * 1248×832 (3:2). Med låst 3:2-ram och resizeMode="contain" fyller bilden
+ * ramen exakt utan beskärning och utan brevluckor — förutsatt att bilden
+ * också är 3:2. Äldre 16:9-bilder får då brevluckor ovan/under tills de
+ * regenereras, vilket är den avvägda kostnaden.
+ *
+ * resizeMode stays "contain" (aldrig "cover"): användaren krävde 2026-10-07
+ * att "bilderna i eventcard måste vara helt synliga, inget inzopmat".
+ */
+export const LOCKED_EVENT_IMAGE_ASPECT = 1.5;
+
 const aspectCache = new Map();
 
 function resolveFromCache(uri) {

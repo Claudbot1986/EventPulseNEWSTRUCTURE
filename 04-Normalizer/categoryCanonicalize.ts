@@ -67,6 +67,17 @@
  *     om någon adapter/normalizer fortsätter emittera legacy-slugs
  *     fångas de automatiskt vid insert.
  *
+ * Round 3 (verifierade 2026-10-29 — 1026 events i DB):
+ *   17 slugs som INTE fanns i categories-tabellen skrevs rakt in i DB
+ *   eftersom migrationen 20261018-0001 (CHECK-constraint på
+ *   events.category_slug) aldrig applicerades i live-DB. Slugs kommer från
+ *   källornas egna taxonomier (Zita → 'cinema', Nalen → 'concert',
+ *   Livrustkammaren → 'Lov'/'Temavisning', Waldemarsudde → 'Utställning').
+ *   Plus 831 events med NULL (före normalizerns fallback infördes).
+ *   DB-migration: 05-Supabase/migrations/
+ *   20261029-0001-normalize-legacy-category-slugs.sql (data + den
+ *   saknade constrainten).
+ *
  * Om en adapter fortsätter emittera en deprecated slug efter denna fix
  * förväntas CANONICALIZE fånga den. Om Supabase-kategori-tabellen tappar
  * sluggen helt (se migration 20260929-0001-deprecated-slug-cleanup) fångas
@@ -112,6 +123,46 @@ const CANONICAL_CATEGORY_SLUGS: Readonly<Record<string, string>> = Object.freeze
   'livepodd':       'talks-lectures',
   'festival':       'community',     // generisk festival
   'sport':          'sports',        // singularis → pluralis (nuvarande riktiga slug)
+  // Round 3 (verifierade 2026-10-29 — 1026 events i DB + live-katalog)
+  //
+  // Bakgrund: 20261018-0001-events-category-slug-validation.sql (CHECK-constraint
+  // på events.category_slug) hade ALDRIG applicerats i live-DB — varken
+  // funktionen is_valid_event_category_slug eller constrainten fanns. Därför
+  // kunde källornas egna kategoritaxonomier skrivas rakt in i DB:
+  //   cinema (72, Zita-filmvisningar), concert (63, Nalen), Utställning (17,
+  //   Waldemarsudde), exhibitions (10), musical (10, China Teatern),
+  //   hip-hop (5), Konsert (3), sports & wellbeing (3), stage & film (3),
+  //   guided tours & lectures (2), Musik på Historiska (2), Temavisning (1),
+  //   Barn och familj (1), Föreläsning (1), Lov (1), networking & community (1)
+  //   samt 831 events med NULL (före normalizerns fallback infördes).
+  //
+  // Slugs nedan kommer FRÅN KÄLLORNA (Zita → 'cinema', Nalen → 'concert',
+  // Livrustkammaren → 'Lov'/'Temavisning', Waldemarsudde → 'Utställning'),
+  // inte från EventPulses egen taxonomi. De är därför inte "deprecated" i
+  // vanlig mening — de är källtaxonomier som behöver översättas.
+  //
+  // Motsvarande DB-migration: 05-Supabase/migrations/
+  // 20261029-0001-normalize-legacy-category-slugs.sql
+  'cinema':                  'film',            // 72/72 samples = Zita-filmvisningar
+  'concert':                 'music',           // 63/63 samples = Nalen-konserter
+  'Konsert':                 'music',           // språkvariant av 'concert'
+  'Utställning':             'exhibition',      // språkvariant av 'exhibition'
+  'exhibitions':             'exhibition',      // pluralform
+  'Temavisning':             'exhibition',      // 1/1 sample = guidad visning på museum
+  'musical':                 'musical-theatre', // 10/10 samples = China Teatern-musikaler
+  'sports & wellbeing':      'sports',          // 3/3 samples = sport/upplevelser
+  'stage & film':            'theatre-drama',   // samma resonemang som 'theater' → 'theatre-drama'
+  'guided tours & lectures': 'talks-lectures',  // 2/2 samples = bokklubb/city walk
+  'Föreläsning':             'talks-lectures',  // språkvariant av föreläsning
+  'Musik på Historiska':     'classical',       // 2/2 samples = kammarmusik på Historiska
+  'Barn och familj':         'kids',            // svensk variant av 'barn-familj' → kids
+  'Lov':                     'family',          // 1/1 sample = lovaktivitet för familjen
+  'networking & community':  'community',       // 1/1 sample = community-format
+  'hip-hop':                 'community',       // 5/5 samples är FELMÄRKT (tech-konferens,
+                                                // bokprat, webinar, rockkonsert, party) —
+                                                // ingen verifierbar koppling till hip-hop,
+                                                // så source-default-fallbacken 'community'
+                                                // används (Generalization-regel 2 + 3).
 });
 
 /**

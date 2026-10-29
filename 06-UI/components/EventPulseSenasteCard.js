@@ -19,7 +19,7 @@
 // kort-variant.
 
 import { Image, Pressable, StyleSheet, Text, View } from 'react-native';
-import { useImageAspect } from '../hooks/useImageAspect.js';
+import { LOCKED_EVENT_IMAGE_ASPECT } from '../hooks/imageAspectCore.js';
 
 const TOKENS = {
   color: {
@@ -70,7 +70,10 @@ export default function EventPulseSenasteCard({
   const a11yLabel = accessibilityLabel ?? `${title} — ${subtitle}`;
   // 2026-10-07 — wrap-aspect sätts till bildens naturliga aspect. Tidigare
   // fast 1.15 + cover cropade bilden. Nu visas bilden helt (contain).
-  const { aspect: imageAspect } = useImageAspect(imageSource);
+  //
+  // 2026-10-29 — ramen LÅSES till 3:2 (användarbeslut) så alla kort i
+  // karusellen blir lika höga. resizeMode stays "contain" — ingen beskärning.
+  const imageAspect = LOCKED_EVENT_IMAGE_ASPECT;
 
   return (
     <Pressable
@@ -79,7 +82,8 @@ export default function EventPulseSenasteCard({
       accessibilityRole="button"
       accessibilityLabel={a11yLabel}
     >
-      <View style={[styles.imageWrap, { aspectRatio: imageAspect }]}>
+      {/* testID: mätbar i e2e/visual-regression — låser 3:2-ramen. */}
+      <View testID="event-card-image-latest" style={[styles.imageWrap, { aspectRatio: imageAspect }]}>
         {source ? (
           <Image
             source={source}
@@ -110,9 +114,8 @@ const styles = StyleSheet.create({
   cardPressed: {
     opacity: 0.7,
   },
-  // 2026-10-07 — wrap-aspect sätts dynamiskt från useImageAspect().
-  // Inget hård aspectRatio här — bilden ska få wrap:en att följa sina
-  // egna proportioner så hela bilden syns (contain-resize).
+  // 2026-10-29 — wrap-aspect är LÅST till 3:2 (LOCKED_EVENT_IMAGE_ASPECT),
+  // se EventPulseCard.js för resonemang. Alla kort får samma höjd.
   imageWrap: {
     width: '100%',
     overflow: 'hidden',

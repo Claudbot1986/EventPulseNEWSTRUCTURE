@@ -79,14 +79,32 @@ Mätt 2026-10-29 med den riktiga stämpeln (`bottom-left`, 150×36) och UI:s cov
 | 16:9 (1280×720) | beskär 15,6 % av bredden | ❌ avklippt till "…erad" (0 orange pixlar kvar i hörnet) |
 | **3:2 (1248×832)** | ingen beskärning | ✅ "AI-genererad" helt intakt |
 
-Det är EU AI Act Art. 50-märkningen som ska vara läsbar — så 16:9 bryter faktiskt compliance-kravet i huvudvyn.
+Stämpeln ska vara läsbar — det är själva poängen med Art. 50-märkningen. **Korrigering 2026-10-29:** "16:9 bryter compliance-kravet i huvudvyn" var för starkt. Art. 50 kräver maskinläsbar märkning (den överlever oavsett crop) och synlig etikett bara vid deepfake/allmänintressetext — inte för generiska atmosfärsbilder. Det som faktiskt gäller är att stämpeln blir oläslig, vilket är ett användarvärde-problem, inte ett juridiskt.
 
 Övriga containrar: 56×56 och 72×72 thumbnails (1:1, cover) — stämpeln är för liten för att betyda något där, men 3:2 beskär mindre (33 % mot 44 % av bredden). Utforska-tiles (5:2) använder statiska assets, inte biblioteket.
 
 - [x] `scripts/adaptive_image_gen.ts` genererar nu `aspect_ratio: '3:2'`, 1248×832. Verifierat: 1 ny bild 1248×832.
 - [x] `--reset`-flagg tillagd så en ny körning inte ärver förra körningens räknare ur `runtime/adaptive-image-gen/state.json`.
-- [ ] **Hela biblioteket måste regenereras i 3:2.** Eventkortet (`EventPulseCard`) sätter ramen till bildens EGNA aspect och använder `resizeMode="contain"` — blandade ratio ger olika höga kort, vilket bryter användarens krav från 2026-10-07 ("ramen runt bilden behöver vara samma aspect ratio"). 488 gamla bilder (16:9) + 60 v2-bilder (16:9) + ~790 nya = allt i 3:2.
-- [ ] **Mät konsekvensen för kortlayouten.** 3:2 ger 240 pt höjd mot 202 pt för 16:9 vid 360 pt bredd (+19 %). `EventPulseCard` använder fast `height: 280` med `maxWidth: 420` → ratio 1,5 → **passar exakt utan beskärning**. `EventPulseSenasteCard`/karuseller har däremot `aspectRatio: imageAspect` (följer bilden) → korten blir 19 % högre än i dag.
+- [x] **Ramen är LÅST till 3:2** (användarbeslut 2026-10-29: "ramen runt bilden behöver vara samma aspect ratio"). `LOCKED_EVENT_IMAGE_ASPECT = 1.5` i `06-UI/hooks/imageAspectCore.js` används av `EventPulseCard`, `EventPulseSenasteCard`, `NewEventCard` och de två skeletten. `resizeMode` stays `"contain"` — ingen beskärning, bilden är alltid helt synlig (kravet från 2026-10-07).
+  - Verifierat i riktig app (Expo-webb, Playwright): **100 karusellkort à 150×100 px och 5 "Senaste"-kort à 96×64 px — aspect exakt 1.500, höjdspridning 0,00 px.**
+  - Regressionstest: `06-UI/e2e/image-frame-aspect.test.mjs` (2/2 grönt).
+  - `testID="event-card-image"` / `"event-card-image-latest"` lades på bildramarna för att kunna mäta dem.
+- [ ] **Hela biblioteket måste regenereras i 3:2.** 488 gamla bilder (16:9) + 61 v2-bilder (16:9) + ~510 nya. Tills dess får 16:9-bilderna brevluckor ovan/under i den låsta 3:2-ramen (contain utan beskärning).
+- [x] **Konsekvensen för kortlayouten är mätt:** 3:2 ger 240 pt höjd mot 202 pt för 16:9 vid 360 pt bredd (+19 %) — och nu tillämpas detta på ALLA kort, oavsett bildformat.
+
+### Legacy-slugs normaliserade [P0 — 2026-10-29, KLART]
+
+Rotorsak till 43 kategorier (i stället för 27): **migrationen `20261018-0001-events-category-slug-validation.sql` hade aldrig applicerats i live-DB** — varken `is_valid_event_category_slug()` eller CHECK-constrainten fanns. Därför skrevs källornas egna kategoritaxonomier rakt in i DB: `cinema` (Zita, 72), `concert` (Nalen, 63), `Utställning` (Waldemarsudde, 17), `exhibitions` (10), `musical` (China Teatern, 10), `hip-hop` (5), `Konsert` (3), `sports & wellbeing` (3), `stage & film` (3), `guided tours & lectures` (2), `Musik på Historiska` (2), `Temavisning` (1), `Barn och familj` (1), `Föreläsning` (1), `Lov` (1), `networking & community` (1) samt **831 events med NULL** (före normalizerns fallback infördes).
+
+- [x] `04-Normalizer/categoryCanonicalize.ts` — **Round 3**: 16 nya mappingar, varje med verifierad motivering mot riktig DB-data.
+- [x] `05-Supabase/migrations/20261029-0001-normalize-legacy-category-slugs.sql` — städar 1026 events, deduplicerar `event_categories`, och LÄGGER PÅ den saknade CHECK-constrainten.
+- [x] `scripts/apply_migration_20261029_slug_normalization.ts` — applicerar SQL-filen ordagrant via direkt Postgres-anslutning (`DATABASE_URL`), med `--dry-run`.
+- [x] **Verifierat i live-DB:** 17149 events · 0 NULL · 0 legacy-slug · 0 slug utanför `categories` · 27 kategorier (var 44 + null) · constraint `validated=true`.
+- [x] **Kvoten räknad om:** 43 kategorier → 27. **799 nya bilder → 510** (−289). Varje engångskategori (cinema, concert, Utställning, ...) krävde minst 20 egna bilder.
+- [x] Tester: `04-Normalizer/categoryCanonicalize.test.ts` 81/81 grönt (16 nya Round 3-tester).
+- [x] `hip-hop` LÄMNAS kvar i `categories` (legitim genre-kategori, 0 events — samma status som `comedy`/`metal`/`pop-rock`). De 5 events som bar sluggen var felmärkta och flyttades till `community`.
+- [x] **Bugg hittad och fixat i applikatorn:** första `--dry-run` applicerade faktiskt migrationen — SQL-filen har sin egen `BEGIN/COMMIT` som överkörde den yttre `ROLLBACK:en`. Nu strippas `COMMIT;` i dry-run-läge. Verifierat med sentinel-test: ändring rullas tillbaka korrekt.
+
 
 
 
@@ -117,9 +135,10 @@ Utan fixen hade de bilder UI:t visar **ingen** maskinläsbar märkning alls — 
 - [x] `parseXmp()` läser nu WebP (source `webp-riff`) och fångar även `xmp:CreatorTool` i attributform (`xmp:CreatorTool="..."`), som tidigare alltid parsades som `null`.
 - [x] `.withMetadata()` i hela kedjan (`applyAiCompliance`, `applyAiComplianceToWebp`, `services/imageGen.ts`) så leverantörens AIGC-märkning överlever.
 - [x] Verifierat: 18/18 kontroller i `.scratch/xmptest/verify.mts` + 11/11 slutkontroller mot en rå MiniMax-JPEG. Pixeldata identisk med vanlig konvertering (diffBytes=0), `webpmux -info` hittar XMP, `parseXmp` läser tillbaka.
-- [ ] **Beslut: etikettens språk.** Lagtexten har ingen språkregel för Art. 50. Code of Practice Measure 1.1(a) kräver "AI" (samma på svenska) och *uppmuntrar* ordet "GENERATED"/"MODIFIED" — fritt val. Föreslagen: `AI-genererad` (svenska, plain language) eller Code-mönstret `AI` + `GENERERAD`.
+- [x] **Beslut: etikettens språk → "AI-genererad" på svenska** (användarbeslut 2026-10-29). Lagtexten har ingen språkregel för Art. 50. Code of Practice Measure 1.1(a) kräver "AI" (samma ord på svenska) och *uppmuntrar* ordet "GENERATED"/"MODIFIED" — fritt val. Svenska är tydligare ("plain language") i en svensk app.
 - [ ] **Öppen juridisk fråga: är EventPulse "provider"?** Guidelines (11) + Art. 3(3): en app som sätter ett AI-bildgenereringssystem i tjänst under eget namn kan vara provider → då är Art. 50(2) maskinläsbar märkning **vår** bindande skyldighet (från 2 aug 2026, botter upp till 3 % av omsättning). Vår XMP är tidsstämplad men **inte digitalt signerad** (Code of Practice Measure 1.1.1 kräver signatur för signerande parter).
-- [ ] **Beslut: ska den synliga etiketten ligga kvar?** Den är inte lagkrav för generiska atmosfärsbilder (varken deepfake eller allmänintressetext) — men Guidelines (114) säger att synlig märkning gör att kriterium 4 i deepfake-definitionen faller. Att ta bort etiketten kan alltså *öka* risken.
+- [x] **Beslut: den synliga etiketten STANNAR** (användarbeslut 2026-10-29). Den är inte lagkrav för generiska atmosfärsbilder (varken deepfake eller allmänintressetext) — men Guidelines (114) säger att synlig märkning gör att kriterium 4 i deepfake-definitionen faller. Att ta bort etiketten kan alltså *öka* risken.
+- [x] **Fynd 2026-10-29: MiniMax levererar maskinläsbar märkning — vi förstörde den.** `image-01` returnerar en **JPEG** med digitalt signerad AIGC-metadata i EXIF (Kinas TC260-standard, SM2/SM3-signaturer). Båda våra konverteringssteg (JPEG→PNG och PNG→WebP) tappade metadata eftersom Sharp strippar allt som standard. Fix: `.withMetadata()` i hela kedjan + `injectXmpIntoWebp()` (Sharp skriver inte XMP till WebP — verifierat med tre ordningar). Se commit `e16f9d0b`.
 
 
 ### Phase 1.5 levererat (för historik)

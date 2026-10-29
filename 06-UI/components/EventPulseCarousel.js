@@ -36,6 +36,7 @@ import {
   View,
 } from 'react-native';
 import EventPulseCard from './EventPulseCard';
+import { LOCKED_EVENT_IMAGE_ASPECT } from '../hooks/imageAspectCore.js';
 
 // 2026-09-25 — tokens från DESIGN_SYSTEM.md (binding). Identiska med
 // EventPulseCard förutom `header` (16pt / 800 / text) och `skeleton`.
@@ -61,9 +62,10 @@ const SKELETON_DEFAULT_COUNT = 4;
 const SCREEN_PADDING = 20;
 
 // Skeleton-kort med samma geometri som EventPulseCard (CARD_WIDTH=150,
-// aspectRatio 1.15) så layouten inte hoppar när datan landar. Återger
+// aspectRatio 3:2) så layouten inte hoppar när datan landar. Återger
 // inte hela EventPulseCard — skeleton behöver ingen bild/text, bara
 // samma "kostym".
+// 2026-10-29: 1.15 → 3:2 efter att event-kortens ram låstes till 3:2.
 function SkeletonCard() {
   return (
     <View
@@ -203,7 +205,8 @@ const skeletonStyles = StyleSheet.create({
   },
   image: {
     width: '100%',
-    aspectRatio: 1.15,
+    // 2026-10-29 — låst till 3:2, matchar EventPulseCard.imageWrap.
+    aspectRatio: LOCKED_EVENT_IMAGE_ASPECT,
     backgroundColor: TOKENS.color.skeleton,
     borderWidth: 0.5,
     borderColor: TOKENS.color.border,

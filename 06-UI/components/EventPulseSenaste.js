@@ -20,6 +20,7 @@
 
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import EventPulseSenasteCard from './EventPulseSenasteCard';
+import { LOCKED_EVENT_IMAGE_ASPECT } from '../hooks/imageAspectCore.js';
 
 const TOKENS = {
   color: {
@@ -42,7 +43,8 @@ const SKELETON_DEFAULT_COUNT = 4;
 const SCREEN_PADDING = 20;
 
 // Skelett-kort med samma geometri som EventPulseSenasteCard
-// (CARD_WIDTH=96, aspectRatio 1.15). Spegel av EventPulseCarousel/SkeletonCard.
+// (CARD_WIDTH=96, aspectRatio 3:2). Spegel av EventPulseCarousel/SkeletonCard.
+// 2026-10-29: 1.15 → 3:2 efter att event-kortens ram låstes till 3:2.
 function SkeletonCard() {
   return (
     <View
@@ -168,7 +170,7 @@ const skeletonStyles = StyleSheet.create({
     width: '100%',
     // Måste matcha EventPulseSenasteCard imageWrap — annars hoppar
     // layouten när datan landar.
-    aspectRatio: 1.15,
+    aspectRatio: LOCKED_EVENT_IMAGE_ASPECT,
     backgroundColor: TOKENS.color.skeleton,
     borderWidth: 0.5,
     borderColor: TOKENS.color.border,

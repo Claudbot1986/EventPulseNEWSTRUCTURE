@@ -5,7 +5,7 @@ import {
   Text,
   View,
 } from 'react-native';
-import { useImageAspect } from '../hooks/useImageAspect.js';
+import { LOCKED_EVENT_IMAGE_ASPECT } from '../hooks/imageAspectCore.js';
 
 // Tokens från DESIGN_SYSTEM.md (binding-värden 2026-09-24).
 const TOKENS = {
@@ -67,7 +67,13 @@ export default function EventPulseCard({
   // klagade: "bilderna i eventcard måste vara helt synliga, inget
   // inzopmat, ramen runt bilden / framen som bilden sitter mountad i
   // behöver vara samma aspect ratio".
-  const { aspect: imageAspect } = useImageAspect(imageSource);
+  //
+  // 2026-10-29 — ramen LÅSES till 3:2 (användarbeslut). Tidigare följde den
+  // bildens naturliga aspect, vilket gav kort med olika höjd när formaten
+  // blandades (16:9 → 202 pt, 3:2 → 240 pt vid 360 pt bredd). Med låst ram
+  // blir alla kort lika höga. resizeMode är fortfarande "contain" så ingen
+  // beskärning sker — bilden är alltid helt synlig.
+  const imageAspect = LOCKED_EVENT_IMAGE_ASPECT;
 
   return (
     <Pressable
@@ -76,7 +82,9 @@ export default function EventPulseCard({
       accessibilityRole="button"
       accessibilityLabel={a11yLabel}
     >
-      <View style={[styles.imageWrap, { aspectRatio: imageAspect }]}>
+      {/* testID: mätbar i e2e/visual-regression — låser 3:2-ramen
+          (se e2e/image-frame-aspect.test.mjs). */}
+      <View testID="event-card-image" style={[styles.imageWrap, { aspectRatio: imageAspect }]}>
         {source ? (
           <Image
             source={source}
@@ -121,9 +129,8 @@ const styles = StyleSheet.create({
   cardPressed: {
     opacity: 0.7,
   },
-  // 2026-10-07 — wrap-aspect sätts dynamiskt från useImageAspect().
-  // Inget hård aspectRatio här — bilden ska få wrap:en att följa sina
-  // egna proportioner så hela bilden syns (contain-resize).
+  // 2026-10-29 — wrap-aspect är LÅST till 3:2 (LOCKED_EVENT_IMAGE_ASPECT),
+  // se EventPulseCard.js för resonemang. Alla kort får samma höjd.
   imageWrap: {
     width: '100%',
     overflow: 'hidden',
