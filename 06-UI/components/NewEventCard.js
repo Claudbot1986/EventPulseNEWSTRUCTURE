@@ -13,6 +13,7 @@ import { useState } from 'react';
 import { Image, Modal, Pressable, StyleSheet, Text, View } from 'react-native';
 import MapView, { PROVIDER_DEFAULT, Marker } from 'react-native-maps';
 import { LOCKED_EVENT_IMAGE_ASPECT } from '../hooks/imageAspectCore.js';
+import { useBrokenImage } from '../hooks/useBrokenImage.js';
 
 // Tokens speglar 06-UI:s mörka/beige/orange-estetik (DESIGN_SYSTEM.md binding).
 const T = {
@@ -151,6 +152,8 @@ export default function NewEventCard({
   // 2026-10-29 — ramen LÅSES till 3:2 (användarbeslut) så alla kort blir
   // lika höga. resizeMode stays "contain" — ingen beskärning.
   const imageAspect = LOCKED_EVENT_IMAGE_ASPECT;
+  // 2026-10-29 — trasig bild-URL ska visa placeholder, inte en tyst tom yta.
+  const { broken: imageBroken, onError: onImageError } = useBrokenImage(source, 'NewEventCard');
   const label = a11yLabel
     ?? [id ? `#${id}` : null, title, dateLine, meta, dataSource]
         .filter(Boolean).join(' — ');
@@ -197,13 +200,14 @@ export default function NewEventCard({
           bilden visas helt med contain-resize, ramen matchar bildens
           naturliga aspect). 2026-10-07-bytet: tidigare fast 1.15 + cover
           cropade bilden. Nu visas allt i centrum utan crop. */}
-      {source ? (
+      {source && !imageBroken ? (
         <View style={[styles.heroWrap, { aspectRatio: imageAspect }]}>
           <Image
             source={source}
             style={styles.hero}
             resizeMode="contain"
             accessibilityIgnoresInvertColors
+            onError={onImageError}
           />
         </View>
       ) : (

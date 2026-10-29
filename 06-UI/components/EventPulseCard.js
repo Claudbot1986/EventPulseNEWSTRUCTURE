@@ -6,6 +6,7 @@ import {
   View,
 } from 'react-native';
 import { LOCKED_EVENT_IMAGE_ASPECT } from '../hooks/imageAspectCore.js';
+import { useBrokenImage } from '../hooks/useBrokenImage.js';
 
 // Tokens från DESIGN_SYSTEM.md (binding-värden 2026-09-24).
 const TOKENS = {
@@ -74,6 +75,8 @@ export default function EventPulseCard({
   // blir alla kort lika höga. resizeMode är fortfarande "contain" så ingen
   // beskärning sker — bilden är alltid helt synlig.
   const imageAspect = LOCKED_EVENT_IMAGE_ASPECT;
+  // 2026-10-29 — trasig bild-URL ska visa placeholder, inte en tyst tom yta.
+  const { broken: imageBroken, onError: onImageError } = useBrokenImage(source, 'EventPulseCard');
 
   return (
     <Pressable
@@ -85,12 +88,13 @@ export default function EventPulseCard({
       {/* testID: mätbar i e2e/visual-regression — låser 3:2-ramen
           (se e2e/image-frame-aspect.test.mjs). */}
       <View testID="event-card-image" style={[styles.imageWrap, { aspectRatio: imageAspect }]}>
-        {source ? (
+        {source && !imageBroken ? (
           <Image
             source={source}
             style={styles.image}
             resizeMode="contain"
             accessibilityIgnoresInvertColors
+            onError={onImageError}
           />
         ) : (
           <View style={styles.placeholder}>

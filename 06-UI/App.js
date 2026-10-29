@@ -13,6 +13,7 @@ import { resolvePromptIntent, intentHasFilters } from './utils/promptIntent';
 // 2026-10-02 — UI-fallback för saknade beskrivningar (5.1).
 import { getDetailsDescription, getDetailsDescriptionFallback } from './utils/descriptionFallback';
 import { useAiImageUrl } from './hooks/useAiImageUrl';
+import { useBrokenImage } from './hooks/useBrokenImage';
 import { getStockholmParts } from './services/localTime';
 import Toast from './components/Toast';
 import PushPromptModal from './components/PushPromptModal';
@@ -458,6 +459,8 @@ function EventItem({ event, onPress }) {
   // för alla kända UI-containrar) → resizeMode="cover" ger bild-i-ram utan
   // svart letterbox och stämpeln syns. See 08-Agent/tools/ai_compliance.ts.
   const { uri } = useAiImageUrl(event);
+  // 2026-10-29 — trasig bild-URL ska visa fallback-boxen, inte en tyst tom yta.
+  const { broken: imageBroken, onError: onImageError } = useBrokenImage(uri ? { uri } : null, 'App.EventItem');
 
   return (
     <TouchableOpacity
@@ -467,9 +470,14 @@ function EventItem({ event, onPress }) {
       delayLongPress={CARD_HOLD_MS}
       activeOpacity={0.7}
     >
-      {uri ? (
+      {uri && !imageBroken ? (
         // AI stamp (200×48 at top=740) lives inside cover-crop frame.
-        <Image source={{ uri }} style={styles.eventImage} resizeMode="cover" />
+        <Image
+          source={{ uri }}
+          style={styles.eventImage}
+          resizeMode="cover"
+          onError={onImageError}
+        />
       ) : (
         // Tom enhetlig box istället för text — UI ska INTE avslöja BFL-status.
         <View style={styles.eventImageFallback} />
@@ -507,6 +515,8 @@ function GroupedEventItem({ groupedEvent, onEventPress }) {
   const area = getAreaLabel(firstEvent);
   // AI image rollout (Utforska, 2026-08-26) — see EventItem above.
   const { uri } = useAiImageUrl(firstEvent);
+  // 2026-10-29 — trasig bild-URL ska visa fallback-boxen, inte en tyst tom yta.
+  const { broken: imageBroken, onError: onImageError } = useBrokenImage(uri ? { uri } : null, 'App.EventGroup');
 
   return (
     <TouchableOpacity
@@ -516,9 +526,14 @@ function GroupedEventItem({ groupedEvent, onEventPress }) {
       delayLongPress={CARD_HOLD_MS}
       activeOpacity={0.7}
     >
-      {uri ? (
+      {uri && !imageBroken ? (
         // AI stamp (200×48 at top=740) lives inside cover-crop frame.
-        <Image source={{ uri }} style={styles.eventImage} resizeMode="cover" />
+        <Image
+          source={{ uri }}
+          style={styles.eventImage}
+          resizeMode="cover"
+          onError={onImageError}
+        />
       ) : (
         // Tom enhetlig box istället för text — UI ska INTE avslöja BFL-status.
         <View style={styles.eventImageFallback} />

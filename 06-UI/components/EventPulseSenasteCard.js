@@ -20,6 +20,7 @@
 
 import { Image, Pressable, StyleSheet, Text, View } from 'react-native';
 import { LOCKED_EVENT_IMAGE_ASPECT } from '../hooks/imageAspectCore.js';
+import { useBrokenImage } from '../hooks/useBrokenImage.js';
 
 const TOKENS = {
   color: {
@@ -74,6 +75,8 @@ export default function EventPulseSenasteCard({
   // 2026-10-29 — ramen LÅSES till 3:2 (användarbeslut) så alla kort i
   // karusellen blir lika höga. resizeMode stays "contain" — ingen beskärning.
   const imageAspect = LOCKED_EVENT_IMAGE_ASPECT;
+  // 2026-10-29 — trasig bild-URL ska visa placeholder, inte en tyst tom yta.
+  const { broken: imageBroken, onError: onImageError } = useBrokenImage(source, 'EventPulseSenasteCard');
 
   return (
     <Pressable
@@ -84,12 +87,13 @@ export default function EventPulseSenasteCard({
     >
       {/* testID: mätbar i e2e/visual-regression — låser 3:2-ramen. */}
       <View testID="event-card-image-latest" style={[styles.imageWrap, { aspectRatio: imageAspect }]}>
-        {source ? (
+        {source && !imageBroken ? (
           <Image
             source={source}
             style={styles.image}
             resizeMode="contain"
             accessibilityIgnoresInvertColors
+            onError={onImageError}
           />
         ) : (
           <View style={styles.placeholder}>

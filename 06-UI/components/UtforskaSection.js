@@ -10,6 +10,7 @@
 import { Fragment, useRef, useState } from 'react';
 import { Image, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import UtforskaEventActionSheet from './UtforskaEventActionSheet';
+import { useBrokenImage } from '../hooks/useBrokenImage.js';
 // 2026-10-02 — UI-preview för description (5.1). Använd samma helper som
 // DetailsScreen för att hålla beskrivnings-källan konsistent (description-,
 // description_sv-, description_en-fälten) och ignorera placeholder-text.
@@ -189,6 +190,11 @@ function SkeletonRow() {
 }
 
 function EventRow({ event, onPress, onMenuPress }) {
+  // 2026-10-29 — trasig bild-URL ska visa thumbnail-fallback, inte en tyst tom ruta.
+  const { broken: thumbBroken, onError: onThumbError } = useBrokenImage(
+    event.imageUrl ? { uri: event.imageUrl } : null,
+    'UtforskaSection',
+  );
   const parts = event.subtitleParts.filter(Boolean);
   const line1 = parts.slice(0, 2).join(' · ');   // datum · tid
   const line2 = parts.slice(2).join(' · ');      // venue · area
@@ -211,12 +217,13 @@ function EventRow({ event, onPress, onMenuPress }) {
         accessibilityRole="button"
         accessibilityLabel={`${event.title} — ${subtitleText}`}
       >
-        {event.imageUrl ? (
+        {event.imageUrl && !thumbBroken ? (
           <Image
             source={{ uri: event.imageUrl }}
             style={styles.thumb}
             resizeMode="cover"
             accessibilityIgnoresInvertColors
+            onError={onThumbError}
           />
         ) : (
           <View style={styles.thumbFallback}>

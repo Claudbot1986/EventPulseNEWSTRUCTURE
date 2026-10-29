@@ -178,8 +178,24 @@ function distribute(count: number, weights: Record<string, number>): Record<stri
   return Object.fromEntries(floor.map((f) => [f.id, f.slots]));
 }
 
-/** Inventerar befintliga bilder per kategori + shot-nivå (från filnamn). */
-function inventoryExisting(dir: string): Record<string, Record<string, number>> {
+/**
+ * Inventerar befintliga bilder per kategori + shot-nivå (från filnamn).
+ *
+ * VIKTIGT (2026-10-29): bara bilder i **3:2** räknas som "klara".
+ *
+ * Utan detta filter räknades de gamla 16:9-bilderna i
+ * local_image_library_stamped/ som färdiga, och planen blev 328 bilder
+ * i stället för 762 — dvs. nästan hela biblioteket hade legat kvar i
+ * 16:9 med den gamla kompositionsmixen (68 % close-up) i stället för den
+ * nya (12,5 % close-up). Mätt 2026-10-29:
+ *   - med gamla biblioteket som "klart":  328 bilder
+ *   - endast 3:2 räknas som klart:        762 bilder
+ *
+ * Filformatet (16:9 vs 3:2) avgör om bilden behöver genereras om, så det
+ * ska utgå från bildens faktiska pixeldimensioner — inte från vilken
+ * mapp filen ligger i.
+ */
+async function inventoryExisting(dir: string): Promise<Record<string, Record<string, number>>> {
   const out: Record<string, Record<string, number>> = {};
   if (!existsSync(dir)) return out;
   for (const cat of readdirSync(dir)) {
@@ -190,6 +206,15 @@ function inventoryExisting(dir: string): Record<string, Record<string, number>> 
       if (!f.endsWith('.webp')) continue;
       const m = f.match(/^zoom_(.+?)_(extreme-closeup|medium-closeup|medium-long|long-wide|very-wide|medium|wide|closeup|aerial|establishing)_/);
       if (!m) continue;
+      // Endast 3:2 (tolerans ±1 %) räknas som färdig.
+      try {
+        const meta = await sharp(path.join(p, f)).metadata();
+        if (!meta.width || !meta.height) continue;
+        const aspect = meta.width / meta.height;
+        if (Math.abs(aspect - 1.5) / 1.5 > 0.01) continue;
+      } catch {
+        continue;
+      }
       out[cat][m[2]] = (out[cat][m[2]] ?? 0) + 1;
     }
   }
@@ -224,7 +249,22 @@ async function countFutureEvents(): Promise<Record<string, number>> {
 /** Bygger planen: per kategori, per shot-nivå, hur många bilder som SAKNAS. */
 async function buildPlan(categories: string[] | null): Promise<Need[]> {
   const events = await countFutureEvents();
-  const existing = inventoryExisting(SRC_LIB_DIR);
+  // Inventera BÅDA biblioteken. Efter 3:2-filtret bidrar det gamla
+  // biblioteket med 0 (alla dess bilder är 16:9), medan det nya v2-
+  // biblioteket bidrar med de bilder som redan är rätt format.
+  const inventories = await Promise.all([
+    inventoryExisting(SRC_LIB_DIR),
+    inventoryExisting(OUT_DIR),
+  ]);
+  const existing: Record<string, Record<string, number>> = {};
+  for (const inv of inventories) {
+    for (const [cat, shots] of Object.entries(inv)) {
+      existing[cat] ??= {};
+      for (const [shot, n] of Object.entries(shots)) {
+        existing[cat][shot] = (existing[cat][shot] ?? 0) + n;
+      }
+    }
+  }
   const hasCluster = new Set(
     readdirSync('BFL-generator/tmp')
       .filter((f) => f.startsWith('cluster_') && f.endsWith('.json'))
@@ -674,7 +714,14 @@ async function main(): Promise<void> {
 
     log(`--- omgång ${round}: ${batch.length} bilder (storlek=${size}, totalt ${generated}/${args.maxTotal}) ---`);
 
-    // Generera med begränsad parallellism (håll oss under RPM-taket)
+    // Generera med begränsad parallellism (håll oss under RPM-taket).
+    //
+    // 2026-10-29 — granskningen sker INNE i workern, inte i en separat fas
+    // efteråt. Förut var strukturen "generera omgång → granska omgång →
+    // nästa omgång", vilket gjorde att arbetarna stod stilla under
+    // granskningen. Mätt 2026-10-29: 3,3 bilder/min med separata faser,
+    // 2,8 bilder/min med concurrency 2. Med överlappande granskning blir
+    // flaskhalsen RPM-guarden (9/min) i stället för väntetiden.
     const results: GenResult[] = [];
     let idx = 0;
     const workers = Array.from({ length: Math.min(args.concurrency, batch.length) }, async () => {
@@ -682,25 +729,24 @@ async function main(): Promise<void> {
         const i = idx++;
         if (i >= batch.length) return;
         const res = await generateOne(batch[i], guard);
-        results.push(res);
         if (res.ok) {
           log(`  ✓ ${path.basename(res.file ?? '')}  [${res.slot.shotId}/${res.slot.clusterTag}]`);
+          // Granska direkt — 3 röster parallellt, medan andra workers
+          // fortsätter generera nästa bild.
+          res.verdict = await verifyImage(res.file as string, res.slot.shotId);
         } else {
           warn(`  ✗ ${res.slot.shotId}/${res.slot.clusterTag}: ${res.apiError}`);
         }
+        results.push(res);
       }
     });
     await Promise.all(workers);
 
-    // Granska varje bild (3 röster per bild, körs parallellt)
+    // Samla grindens utfall (granskningen har redan skett i workern).
     const okResults = results.filter((r) => r.ok);
     let roundFail = 0;
-    const verdicts = await Promise.all(
-      okResults.map((res) => verifyImage(res.file as string, res.slot.shotId)),
-    );
-    verdicts.forEach((v, i) => {
-      const res = okResults[i];
-      res.verdict = v;
+    for (const res of okResults) {
+      const v = res.verdict!;
       generated++;
       if (v.pass) passed++;
       else {
@@ -717,7 +763,7 @@ async function main(): Promise<void> {
         verdict: v,
       });
       log(`  ${v.pass ? '✓' : '✗'} ${res.slot.shotId}/${res.slot.clusterTag}: ${v.reason}${v.spread ? `  [${v.spread}]` : ''}${v.note ? `  (${v.note})` : ''}`);
-    });
+    }
     const roundApiErrors = results.length - okResults.length;
     apiErrors += roundApiErrors;
 
