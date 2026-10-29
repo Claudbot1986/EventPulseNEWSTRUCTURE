@@ -20,6 +20,11 @@ fyller diskbiblioteket. Bilderna syns i appen först efter fyra steg.
    biblioteksrader som pekar på filer som inte finns.
 4. **Reparering** — `scripts/repair_broken_event_images.ts --apply`. Pekar om
    events som pekar på döda bilder.
+   **Kör två gånger**: `--scope=future` (default) och `--scope=past`.
+   Appens "Beyond your bubble"-sektion läser `events_public` **utan**
+   `start_time`-filter och tar de events med lägst `confidence_score` — vilket
+   råkade vara förflutna events. Utan `--scope=past` stod 4 kort som
+   platshållare (fix 2026-10-29).
 
 ## How to get to it (user POV)
 
@@ -105,22 +110,33 @@ Verifierat mot den levande databasen 2026-10-29:
 
 ## Gotchas
 
-- **Prune måste köras FÖRE repair.** `pickLibraryFallback` rankar biblioteksrader
-  efter `usage_count` (och `rating`). De gamla döda raderna har rating 3, de
-  nya har `NULL` — så utan prune väljer appen de döda raderna igen och
-  visar trasiga bilder.
-- **`cluster_tags` måste registreras.** `pickLibraryFallback` filtrerar bort
-  rader med tomma `cluster_tags` ("tomma cluster_tags = ingen visuell signal").
-  En rad utan dem kan aldrig matchas mot ett event.
-- **`storage_path` är UNIQUE** (index `20261029-0002`). Samma fil kan inte
-  registreras två gånger — `prune` + `--register` är idempotent.
-- **`image_ai_generated` sätts till `false`** för biblioteksbilder och
-  `image_generation_status` till `'library_fallback'`. Stämpeln finns i
-  pixel-lagret; `stampVisible` används inte → ingen dubbelstämpel.
-- **MiniMax-URL:er i `.webp.json` expirerar** efter 24 h. De är bara
-  spårbarhetsdata — filerna är lokala kopior.
-- **Repareringen är kategori-baserad**, inte M3-matchning per event.
-  M3-matchning för 12 714 events skulle ta ~2,8 h; kategorivarianten tar
-  någon minut och är deterministisk.
-- **Bilder syns i appen först efter att de är uppladdade.** Under
+- **`storage_path` innehåller BUCKETNAMNET** (`event-posters/import-stamped/
+  <kat>/<fil>.webp`), medan en bucket-lista är bucket-RELATIV
+  (`import-stamped/...`). Jämförelser måste skala av prefixet — annars matchar
+  ingen rad. Detta buggade `repair_broken_event_images.ts` (fix 2026-10-29):
+  skriptet avslutade med "INGA användbara biblioteksbilder" trots 865 rader
+  och 865 objekt. `prune_dangling_library_rows.ts` har rätt logik — läs den
+  där om du skriver liknande kod.
+- **UNIQUE-indexen finns:** `image_library_storage_path_key` →
+  `CREATE UNIQUE INDEX ... USING btree (storage_path)`. 422 rader / 422 unika
+  storage-paths. En fil kan alltså bara registreras en gång — `--register`
+  är ett upsert, inte en append.
+- **Rangordningen i `pickLibraryFallback` är `rating DESC NULLS LAST`**
+  (index `idx_image_library_category`: `(category_slug, rating DESC NULLS
+  LAST, times_used DESC)`). De gamla raderna har `rating = 3`, de nya har
+  `NULL` → **de gamla döda raderna rankas FÖRE de nya**. Därför måste prune
+  köras före repair, annars väljer appen de döda raderna igen.
+- **`cluster_tags`-filtret är ett partiellt index:**
+  `idx_image_library_cluster_tags_gin ... WHERE (cardinality(cluster_tags) > 0)`.
+  Rader utan taggar är alltså inte bara "svåra att matcha" — de är ute ur
+  matchningen helt.
+- **`public_url` på de gamla raderna är `https://placeholder.local/...`** —
+  trasig URL. `storage_path` används först, så det fungerar, men datan är
+  fel och bör rättas vid registrering.
+- **Bucketen `event-posters` var tom (0 objekt)** efter storage-cleanup —
+  det är därför 16 452 events hade döda bild-URL:er.
+- **Bilderna syns i appen först efter att de är uppladdade.** Under
   genereringen ligger de bara på disk.
+- **Kedjan är inte idempotent över tid:** varje körning av upload-skriptet
+  läser bucketen, hoppar över redan uppladdade filer och registrerar det
+  som är nytt. Kör den gärna flera gånger — den är byggd för det.
