@@ -140,9 +140,10 @@ async function main() {
   let stuck = 0;
   const perTab = {};
 
-  // Hem-sidan har ~140 kort. "Utforska" har en lång lista — för att nå
-  // fler än 50–500 bilder måste vi tappa båda flikarna.
-  const TABS = ['Hem', 'Utforska'];
+  // Hem-sidan har ~140 kort. Appen kan köra på svenska eller engelska
+  // (språket styrs av användaren/localStorage) — därför provar vi båda
+  // etiketterna. "Utforska"/"Explore" har en lång lista.
+  const TABS = ['Hem', 'Home', 'Utforska', 'Explore'];
 
   for (const tab of TABS) {
     if (unique.size >= SAMPLE) break;

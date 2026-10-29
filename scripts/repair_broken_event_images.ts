@@ -98,6 +98,22 @@ function pathFromUrl(imageUrl: string | null): string | null {
   return imageUrl.slice(i + marker.length).split('?')[0];
 }
 
+/**
+ * Gör en storage_path bucket-relativ.
+ *
+ * image_library.storage_path innehåller bucketnamnet ("event-posters/import-
+ * stamped/<kat>/<fil>.webp"), medan bucketlistan är relativ ("import-stamped/
+ * ..."). Båda formerna kan förekomma — därför tar vi bort prefixet om det
+ * finns, oavsett om det är URL eller ren sökväg.
+ */
+function bucketRelative(storagePath: string): string {
+  const fromUrl = pathFromUrl(storagePath);
+  const raw = fromUrl ?? storagePath;
+  const withSlash = raw.startsWith('/') ? raw.slice(1) : raw;
+  const prefix = `${BUCKET}/`;
+  return withSlash.startsWith(prefix) ? withSlash.slice(prefix.length) : withSlash;
+}
+
 async function main() {
   console.log(`[repair] läge: ${isApply ? 'APPLY' : 'DRY-RUN'} · scope=${scope}`);
 
@@ -112,7 +128,12 @@ async function main() {
 
   const usable: LibRow[] = [];
   for (const r of (libRows ?? []) as LibRow[]) {
-    const rel = pathFromUrl(r.storage_path) ?? r.storage_path.replace(/^\//, '');
+    // 2026-10-29 — storage_path i image_library BÖRjar med bucketnamnet
+    // ("event-posters/import-stamped/<kat>/<fil>.webp"), men listBucket()
+    // returnerar sökvägar RELATIVT bucketen ("import-stamped/...").
+    // Utan att skala av bucketprefixet matchade ingen rad, och skriptet
+    // avslutade med "INGA användbara biblioteksbilder".
+    const rel = bucketRelative(r.storage_path);
     if (bucket.has(rel)) usable.push(r);
   }
   console.log(`[repair] image_library: ${libRows?.length ?? 0} rader, ${usable.length} pekar på en existerande fil`);
