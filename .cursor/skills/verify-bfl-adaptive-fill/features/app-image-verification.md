@@ -76,10 +76,17 @@ Exitkod: 0 = alla assertions passerade, 1 = assertionfel, 2 = fatalt fel.
 
 - **Appen renderar INTE `<img>`** — letar man efter `img` hittar man 0 st
   trots att bilderna laddas. Sök på `background-image` i stället.
-- **Hem-sidan är taket (~143 kort).** Det finns ingen separat sökvy i
-  webbbygget — `SearchScreen` finns kvar i git men monteras inte längre
-  (`06-UI/App.js`, kommentar vid rad 2321). Flikar visas inte i webbbygget
-  heller. Vill du fler än ~140 bilder måste du verifiera i API-läget.
+- **Språket styr flikarnas etikett** — appen kan köra på svenska
+  ("Utforska") eller engelska ("Explore"). Drivern testar båda.
+  Hem-sidan i webbbygget visar dessutom ALLTID engelska etiketter i vårt
+  testfall ("Discover", "Explore", "Home").
+- **Fliken "Utforska"/"Explore" ger inga nya bilder** i webbbygget — samma
+  event visas igen. Hem-sidan är alltså taket (~140 unika).
+- **"Beyond your bubble"-sektionen läser `events_public` UTAN
+  `start_time`-filter** och väljer de events med lägst `confidence_score` —
+  vilket kan vara förflutna events. Deras `image_url` repareras bara av
+  `repair_broken_event_images.ts --scope=past`. Utan den körningen står
+  några kort som platshållare trots att framtida events är fixade.
 - **`--sample` är ett mål, `--min` är ett golv.** Hem-sidan rymmer ~143 kort,
   så `--sample=300` uppnås aldrig — `--min=50` är det som avgör om
   verifieringen godkänns.
