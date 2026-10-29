@@ -93,6 +93,35 @@ Det är EU AI Act Art. 50-märkningen som ska vara läsbar — så 16:9 bryter f
 
 
 
+### EU AI Act Art. 50 — maskinläsbar märkning [P0 — 2026-10-29]
+
+Mätt mot lagtexten (AI Act Art. 50, Code of Practice 10 juni 2026, Guidelines C(2026) 5054) och mot faktiska bildfiler.
+
+**Fynd 1 — leverantörens märkning föll bort.** MiniMax `image-01` returnerar en **JPEG** (inte PNG) med en digitalt signerad maskinläsbar AIGC-märkning i EXIF (Kinas TC260-standard, `SecurityData` med SM2/SM3-signaturer). Vår pipeline konverterade JPEG → stämplad PNG → WebP, och **båda** stegen tappade metadata:
+
+| Steg | EXIF | AIGC-märkning | Vår XMP |
+|---|---|---|---|
+| rå MiniMax-JPEG | 1258 B | ✅ | — |
+| stämplad PNG (före fix) | ❌ | ❌ | ✅ (PNG iTXt) |
+| stämplad PNG (efter fix) | 1288 B | ✅ | ✅ |
+| levererad WebP (före fix) | ❌ | ❌ | ❌ |
+| **levererad WebP (efter fix)** | ✅ 1294 B | ✅ | ✅ 1229 B |
+
+Utan fixen hade de bilder UI:t visar **ingen** maskinläsbar märkning alls — varken leverantörens signerade eller vår egen.
+
+**Fynd 2 — Sharp skriver inte XMP till WebP.** Verifierat med tre ordningar (`.webp().withMetadata({xmp})`, `.withMetadata({xmp}).webp()`, `.keepMetadata().webp()`): samtliga gav `metadata.xmp === undefined` och noll "EventPulse"-byte i filen. Sharp **läser** XMP från WebP men skriver det aldrig. `parseXmp` hade dessutom ingen WebP-stöd alls.
+
+- [x] `08-Agent/tools/ai_compliance.ts`: `injectXmpIntoWebp()` — skriver RIFF-chunk "XMP " och VP8X-chunk med XMP-flaggan 0x04 (extended file format). Layouten verifierad byte-för-byte mot `webpmux -info`. Idempotent: befintlig XMP ersätts, aldrig dupliceras.
+- [x] `08-Agent/tools/ai_compliance.ts`: `applyAiComplianceToWebp()` — stämplar OCH konverterar OCH injicerar XMP i ett steg (samma XMP-paket som PNG-mastern, samma tidsstämpel).
+- [x] `08-Agent/tools/ai_compliance.ts`: `readXmpPacket()` + `readWebpXmp()` — flyttar en befintlig XMP till ett nytt format.
+- [x] `parseXmp()` läser nu WebP (source `webp-riff`) och fångar även `xmp:CreatorTool` i attributform (`xmp:CreatorTool="..."`), som tidigare alltid parsades som `null`.
+- [x] `.withMetadata()` i hela kedjan (`applyAiCompliance`, `applyAiComplianceToWebp`, `services/imageGen.ts`) så leverantörens AIGC-märkning överlever.
+- [x] Verifierat: 18/18 kontroller i `.scratch/xmptest/verify.mts` + 11/11 slutkontroller mot en rå MiniMax-JPEG. Pixeldata identisk med vanlig konvertering (diffBytes=0), `webpmux -info` hittar XMP, `parseXmp` läser tillbaka.
+- [ ] **Beslut: etikettens språk.** Lagtexten har ingen språkregel för Art. 50. Code of Practice Measure 1.1(a) kräver "AI" (samma på svenska) och *uppmuntrar* ordet "GENERATED"/"MODIFIED" — fritt val. Föreslagen: `AI-genererad` (svenska, plain language) eller Code-mönstret `AI` + `GENERERAD`.
+- [ ] **Öppen juridisk fråga: är EventPulse "provider"?** Guidelines (11) + Art. 3(3): en app som sätter ett AI-bildgenereringssystem i tjänst under eget namn kan vara provider → då är Art. 50(2) maskinläsbar märkning **vår** bindande skyldighet (från 2 aug 2026, botter upp till 3 % av omsättning). Vår XMP är tidsstämplad men **inte digitalt signerad** (Code of Practice Measure 1.1.1 kräver signatur för signerande parter).
+- [ ] **Beslut: ska den synliga etiketten ligga kvar?** Den är inte lagkrav för generiska atmosfärsbilder (varken deepfake eller allmänintressetext) — men Guidelines (114) säger att synlig märkning gör att kriterium 4 i deepfake-definitionen faller. Att ta bort etiketten kan alltså *öka* risken.
+
+
 ### Phase 1.5 levererat (för historik)
 
 - Stream A.1 — `02-Ingestion/gateEvalReport.{ts,test.ts}` (per-gate markdown-formatter, `compareGateReports(before, after)`) — `a6c45ea7`, 13/13 nya tester, 41/41 totalt.

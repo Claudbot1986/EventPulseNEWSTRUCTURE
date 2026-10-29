@@ -31,7 +31,7 @@ import { existsSync, readFileSync, writeFileSync, mkdirSync, readdirSync, statSy
 import path from 'node:path';
 import { createClient } from '@supabase/supabase-js';
 import sharp from 'sharp';
-import { applyAiCompliance } from '../08-Agent/tools/ai_compliance.js';
+import { applyAiComplianceToWebp } from '../08-Agent/tools/ai_compliance.js';
 import {
   buildZoomPrompts,
   buildFilenamePrefix,
@@ -344,13 +344,14 @@ async function generateOne(slot: PromptSlot, guard: RpmGuard): Promise<GenResult
   const raw = Buffer.from(await img.arrayBuffer());
 
   // Stämpel: bottom-left / 150x36 + XMP-metadata (EU AI Act Art. 50)
-  const stamped = await applyAiCompliance({
+  // applyAiComplianceToWebp stämpler OCH lägger in XMP-paketet i WebP-filen.
+  // (Sharp skriver inte XMP till WebP — måste göras efter konverteringen.)
+  const webp = await applyAiComplianceToWebp({
     buffer: raw,
     prompt: slot.prompt,
     model: IMAGE_MODEL,
     position: 'bottom-left',
   });
-  const webp = await sharp(stamped).webp({ quality: 82 }).toBuffer();
 
   const dir = path.join(OUT_DIR, slot.category);
   mkdirSync(dir, { recursive: true });

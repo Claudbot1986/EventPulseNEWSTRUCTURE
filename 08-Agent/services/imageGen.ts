@@ -31,7 +31,7 @@ import { readFileSync } from 'node:fs';
 import { resolve, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-import { applyAiCompliance, checkAiStamp } from '../tools/ai_compliance.js';
+import { applyAiCompliance, checkAiStamp, injectXmpIntoWebp, readXmpPacket } from '../tools/ai_compliance.js';
 import sharp from 'sharp';
 
 // ── Env loading ──────────────────────────────────────────────────────────────
@@ -416,11 +416,20 @@ async function uploadAndPersist(
   let imageUrl = pngUrl;
   if (mime === 'image/png') {
     try {
-      const webpBuffer = await sharp(buffer).webp({ quality: 80, effort: 4 }).toBuffer();
+      // withMetadata() behåller MiniMaxs egen maskinläsbara AIGC-märkning
+      // (signerad TC260-metadata i EXIF) genom PNG→WebP-konverteringen.
+      const webpBuffer = await sharp(buffer).withMetadata().webp({ quality: 80, effort: 4 }).toBuffer();
+      // Sharp skriver INTE XMP till WebP (verifierat 2026-10-29). Utan detta
+      // steg förlorar WebP-filen — den fil UI:t faktiskt laddar — den
+      // maskinläsbara Art. 50-märkningen som PNG-mastern bär.
+      const xmpPacket = readXmpPacket(buffer);
+      const compliantWebp = xmpPacket
+        ? await injectXmpIntoWebp(webpBuffer, xmpPacket)
+        : webpBuffer;
       const webpPath = `import-stamped/${storagePath}.webp`;
       const { error: webpErr } = await supabase.storage
         .from(STORAGE_BUCKET)
-        .upload(webpPath, webpBuffer, {
+        .upload(webpPath, compliantWebp, {
           contentType: 'image/webp',
           upsert: true,
           cacheControl: '31536000',

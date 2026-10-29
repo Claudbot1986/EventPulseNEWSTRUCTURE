@@ -327,6 +327,159 @@ function readPngXmp(buffer: Buffer): PngXmpResult {
   return { found: false, text: '', source: null };
 }
 
+// ── WebP (RIFF) XMP-chunk parser & injector ──────────────────────────────
+//
+// WebP-containerformaten (RIFF) bär XMP i en egen chunk: FourCC "XMP "
+// (trailing space), payload = XMP-paketet.
+//
+// Varför egen injector: Sharp 0.35.3 LÄSER XMP från WebP (`metadata().xmp`
+// returnerar paketet) men skriver det ALDRIG. Verifierat 2026-10-29 med tre
+// ordningar — `.webp().withMetadata({xmp})`, `.withMetadata({xmp}).webp()` och
+// `.keepMetadata().webp()` — gav samtliga `metadata.xmp === undefined` och
+// noll "EventPulse"-byte i filen. Följden: varje bild som konverterades PNG →
+// WebP efter stämpling förlorade den maskinläsbara Art. 50-märkningen, medan
+// projektets egna verifieringsskript (`08-Agent/scripts/verify_ai_compliance.ts`)
+// fortfarande rapporterade compliance.
+//
+// Formatet kräver "extended file format" när filen bär XMP: en VP8X-chunk
+// med flaggbit 0x04. Layouten är verifierad byte-för-byte mot referensverktyget
+// `webpmux` (/opt/homebrew/bin/webpmux -info): VP8X-payload = 1 byte flags +
+// 3 byte reserverade + 3 byte LE (canvasWidth-1) + 3 byte LE (canvasHeight-1).
+
+const WEBP_XMP_FOURCC = 'XMP ';
+const WEBP_VP8X_FOURCC = 'VP8X';
+const WEBP_ALPH_FOURCC = 'ALPH';
+/** VP8X-flagg: "XMP chunk is present" (0x04). Bekräftat mot webpmux. */
+const WEBP_FLAG_XMP = 0x04;
+/** VP8X-flagg: "alpha channel is present" (0x10). */
+const WEBP_FLAG_ALPHA = 0x10;
+
+interface WebpChunk {
+  fourcc: string;
+  payload: Buffer;
+}
+
+/** Läs RIFF-chunklistan ur en WebP-buffer. Kastar på icke-WebP. */
+function parseWebpChunks(webp: Buffer): WebpChunk[] {
+  if (webp.length < 12) throw new Error('parseWebpChunks: för kort buffer');
+  if (webp.subarray(0, 4).toString('latin1') !== 'RIFF') {
+    throw new Error('parseWebpChunks: saknar RIFF-signatur');
+  }
+  if (webp.subarray(8, 12).toString('latin1') !== 'WEBP') {
+    throw new Error('parseWebpChunks: saknar WEBP-signatur');
+  }
+  const chunks: WebpChunk[] = [];
+  let offset = 12;
+  while (offset + 8 <= webp.length) {
+    const fourcc = webp.subarray(offset, offset + 4).toString('latin1');
+    const size = webp.readUInt32LE(offset + 4);
+    const dataStart = offset + 8;
+    const dataEnd = dataStart + size;
+    if (dataEnd > webp.length) break;
+    chunks.push({ fourcc, payload: webp.subarray(dataStart, dataEnd) });
+    // RIFF-chunks paddas till jämn längd.
+    offset = dataEnd + (size % 2);
+  }
+  return chunks;
+}
+
+/** Bygg en RIFF-chunk (FourCC + storlek + payload + ev. padding-byte). */
+function buildRiffChunk(fourcc: string, payload: Buffer): Buffer {
+  const head = Buffer.alloc(8);
+  head.write(fourcc, 0, 'latin1');
+  head.writeUInt32LE(payload.length, 4);
+  const parts: Buffer[] = [head, payload];
+  if (payload.length % 2 === 1) parts.push(Buffer.from([0]));
+  return Buffer.concat(parts);
+}
+
+/**
+ * Läs XMP-paketet ur en WebP-buffer (RIFF-chunk "XMP ").
+ *
+ * Synkron — `parseXmp` är synkron och kan inte vänta på Sharp.
+ */
+export function readWebpXmp(buffer: Buffer): { found: boolean; text: string } {
+  try {
+    const chunk = parseWebpChunks(buffer).find((c) => c.fourcc === WEBP_XMP_FOURCC);
+    if (!chunk) return { found: false, text: '' };
+    return { found: true, text: chunk.payload.toString('utf8') };
+  } catch {
+    return { found: false, text: '' };
+  }
+}
+
+/**
+ * Injicera ett XMP-paket i en WebP-buffer som RIFF-chunk "XMP ".
+ *
+ * Idempotent: en befintlig "XMP "-chunk ersätts, aldrig dupliceras. Finns
+ * ingen VP8X-chunk skapas en (extended file format krävs för XMP) med
+ * XMP-flaggan satt och canvasmåtten från bildens faktiska pixeldimensioner.
+ *
+ * Returnerar en NY buffer. Input rörs inte.
+ */
+export async function injectXmpIntoWebp(webp: Buffer, xmp: string): Promise<Buffer> {
+  const chunks = parseWebpChunks(webp);
+  const meta = await sharp(webp).metadata();
+  const width = meta.width ?? 1024;
+  const height = meta.height ?? 1024;
+
+  const hasAlpha = chunks.some((c) => c.fourcc === WEBP_ALPH_FOURCC);
+  const existingVp8x = chunks.find((c) => c.fourcc === WEBP_VP8X_FOURCC);
+
+  let vp8xChunk: Buffer;
+  if (existingVp8x) {
+    // Behåll befintliga flaggor (ICCP/EXIF/alpha) och lägg bara till XMP-biten.
+    const payload = Buffer.from(existingVp8x.payload);
+    payload[0] = payload[0] | WEBP_FLAG_XMP;
+    vp8xChunk = buildRiffChunk(WEBP_VP8X_FOURCC, payload);
+  } else {
+    const payload = Buffer.alloc(10);
+    payload[0] = WEBP_FLAG_XMP | (hasAlpha ? WEBP_FLAG_ALPHA : 0);
+    payload.writeUIntLE(width - 1, 4, 3);
+    payload.writeUIntLE(height - 1, 7, 3);
+    vp8xChunk = buildRiffChunk(WEBP_VP8X_FOURCC, payload);
+  }
+
+  const body: Buffer[] = [];
+  let vp8xEmitted = false;
+  for (const chunk of chunks) {
+    if (chunk.fourcc === WEBP_VP8X_FOURCC) {
+      if (!vp8xEmitted) {
+        body.push(vp8xChunk);
+        vp8xEmitted = true;
+      }
+      continue;
+    }
+    // Befintlig XMP-chunk ersätts av den nya (se push nedan).
+    if (chunk.fourcc === WEBP_XMP_FOURCC) continue;
+    body.push(buildRiffChunk(chunk.fourcc, chunk.payload));
+  }
+  if (!vp8xEmitted) body.unshift(vp8xChunk);
+  // Specen säger att XMP-chunken ska ligga sist.
+  body.push(buildRiffChunk(WEBP_XMP_FOURCC, Buffer.from(xmp, 'utf8')));
+
+  const bodyBuf = Buffer.concat(body);
+  const header = Buffer.alloc(8);
+  header.write('RIFF', 0, 'latin1');
+  header.writeUInt32LE(bodyBuf.length + 4, 4); // storlek = allt efter de 8 headertyperna
+  return Buffer.concat([header, Buffer.from('WEBP', 'latin1'), bodyBuf]);
+}
+
+/**
+ * Hämta det råa XMP-paketet ur en bild (PNG iTXt-chunk eller WebP
+ * RIFF-chunk). Används när en redan stämplad bild konverteras till ett annat
+ * format — då ska samma maskinläsbara märkning följa med till den nya filen.
+ *
+ * Returnerar null om ingen XMP finns i filen.
+ */
+export function readXmpPacket(buffer: Buffer): string | null {
+  const png = readPngXmp(buffer);
+  if (png.found) return png.text;
+  const webp = readWebpXmp(buffer);
+  if (webp.found) return webp.text;
+  return null;
+}
+
 // ── Public API ────────────────────────────────────────────────────────────
 
 /**
@@ -414,6 +567,21 @@ export interface ApplyAiComplianceInput {
  * Ren lokal compute, ~10–50 ms per bild, ingen API-kostnad.
  */
 export async function applyAiCompliance(input: ApplyAiComplianceInput): Promise<Buffer> {
+  const { stamped } = await stampWithCompliance(input);
+  return stamped;
+}
+
+/**
+ * Applicera Art. 50-compliance och returnera både den stämplade PNG:en och
+ * det XMP-paket som ligger i den.
+ *
+ * `applyAiCompliance` och `applyAiComplianceToWebp` måste dela den här
+ * implementationen — annars får WebP-varianten en annan tidsstämpel i XMP:t
+ * än den PNG de härleds från.
+ */
+async function stampWithCompliance(
+  input: ApplyAiComplianceInput,
+): Promise<{ stamped: Buffer; xmp: string }> {
   const xmp = buildAiXmp({ model: input.model, prompt: input.prompt });
   // Explicit left/top istället för gravity — Sharp's gravity+offset-semantik
   // placerar input UTANFÖR bilden när inset>0.
@@ -428,11 +596,58 @@ export async function applyAiCompliance(input: ApplyAiComplianceInput): Promise<
   const stampBuffer = position === 'bottom-right' ? AI_STAMP_BUFFER_LEGACY : AI_STAMP_BUFFER;
   // Sharp ignorerar `.withMetadata({xmp})` för PNG-utdata — bara EXIF skrivs
   // till eXIf-chunken. XMP paketeras manuellt som PNG iTXt-chunk efter Sharp.
+  //
+  // `withMetadata()` (utan argument) är KRAFTIGT viktigt: utan den tappar
+  // Sharp all metadata från input, och med det MiniMaxs egen maskinläsbara
+  // AIGC-märkning (signerad TC260-metadata i EXIF). Verifierat 2026-10-29:
+  // rå JPEG → stämplad PNG AIGC=true, men utan withMetadata() AIGC=false.
+  // Att tappa leverantörens märkning vore ett brott mot Art. 50(2).
+  //
+  // Känd kant: medMetadata() bevarar EXIF-orienteringen. Om källan har
+  // orientation ≠ 1 roteras INTE pixlarna, så stämpeln hamnar i ett annat
+  // visuellt hörn efter att bildvisaren vänder bilden. Mätt 2026-10-29:
+  // 0 av 488 + 61 bilder i de två biblioteken har orientation-tag, och
+  // MiniMax image-01 levererar JPEG utan orientation. Skulle en sådan
+  // bild dyka upp ska pixlarna roteras FÖRE stämpling (sharp().rotate()).
   const stamped = await sharp(input.buffer)
+    .withMetadata()
     .composite([{ input: stampBuffer, left, top }])
     .png({ compressionLevel: 9 })
     .toBuffer();
-  return injectXmpIntoPng(stamped, xmp);
+  return { stamped: injectXmpIntoPng(stamped, xmp), xmp };
+}
+
+export interface ApplyAiComplianceWebpOptions {
+  /** WebP-kvalitet. Default 82 (nya bildgenereringen), 80 (produktionsvägen). */
+  quality?: number;
+  /** WebP-encoding-effort. Default 4. */
+  effort?: number;
+}
+
+/**
+ * Applicera Art. 50-compliance och leverera direkt en WebP med BÅDE synlig
+ * stämpel och maskinläsbar XMP.
+ *
+ * Detta är den väg som faktiskt levererar filer till UI:t. Konverteringen
+ * PNG → WebP måste ske EFTER stämpling, och XMP-paketet måste läggas in
+ * EFTER konverteringen — Sharp skriver inte XMP till WebP (verifierat
+ * 2026-10-29, tre ordningar testade). Därför injiceras XMP-chunken här
+ * istället för att hoppas på.
+ *
+ * Returnerar en NY WebP-buffer. Input rörs inte.
+ */
+export async function applyAiComplianceToWebp(
+  input: ApplyAiComplianceInput,
+  options: ApplyAiComplianceWebpOptions = {},
+): Promise<Buffer> {
+  const { stamped, xmp } = await stampWithCompliance(input);
+  // withMetadata() behövs här också: utan den tappar Sharp MiniMaxs
+  // maskinläsbara AIGC-märkning (EXIF) i PNG→WebP-steget.
+  const webp = await sharp(stamped)
+    .withMetadata()
+    .webp({ quality: options.quality ?? 82, effort: options.effort ?? 4 })
+    .toBuffer();
+  return injectXmpIntoWebp(webp, xmp);
 }
 
 /**
@@ -627,7 +842,7 @@ export interface XmpCheckResult {
   generatedAt: string | null;
   creatorTool: string | null;
   rightsMentionsAi: boolean;
-  source: 'png-itxt' | 'png-ascii' | 'jpeg-app1' | null;
+  source: 'png-itxt' | 'png-ascii' | 'jpeg-app1' | 'webp-riff' | null;
 }
 
 export function parseXmp(buffer: Buffer): XmpCheckResult {
@@ -651,10 +866,20 @@ export function parseXmp(buffer: Buffer): XmpCheckResult {
   // och täcker bilder producerade av applyAiCompliance().
   const pngXmp = readPngXmp(buffer);
   let block: string | null = null;
-  let source: 'png-ascii' | 'jpeg-app1' | 'png-itxt' | null = null;
+  let source: 'png-ascii' | 'jpeg-app1' | 'png-itxt' | 'webp-riff' | null = null;
   if (pngXmp.found) {
     block = pngXmp.text;
     source = 'png-itxt';
+  }
+
+  // Pass 0b: WebP RIFF-chunk "XMP ". Måste komma före ascii-fallthroughen,
+  // annars hittas paketet där men med fel source-etikett.
+  if (!block) {
+    const webpXmp = readWebpXmp(buffer);
+    if (webpXmp.found) {
+      block = webpXmp.text;
+      source = 'webp-riff';
+    }
   }
 
   // Pass 1: legacy PNG-ascii (inline <?xpacket begin...end>) — om någon
@@ -692,7 +917,12 @@ export function parseXmp(buffer: Buffer): XmpCheckResult {
 
   const re = (key: string) => {
     const m = block!.match(new RegExp(`<${key}>([\\s\\S]*?)</${key}>`, 'i'));
-    if (!m) return null;
+    if (!m) {
+      // Attributform: xmp:CreatorTool="..." — buildAiXmp skriver
+      // CreatorTool, CreateDate och MetadataDate som attribut, inte element.
+      const attr = block!.match(new RegExp(key + '="([^"]*)"', 'i'));
+      return attr ? attr[1].trim() : null;
+    }
     return m[1].replace(/<!\[CDATA\[([\s\S]*?)\]\]>/g, '$1').trim();
   };
 
