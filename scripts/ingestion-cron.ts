@@ -305,9 +305,20 @@ const skipListingCrawl = args.includes('--skip-listing-crawl');
 // per-step-timeouten med INGESTION_STEP_TIMEOUT_MS=8000) utan att köra hela
 // kedjan. Ett stegnamn som inte finns är ett FEL — annars kan en typo göra
 // att "ingen kördes" ser ut som "steget gick bra".
+// 2026-10-29 — `--only` lästes bara som `--only <värde>`. Formen
+// `--only=A,B,C` (likhetstecken) matchade INTE indexOf('--only') och
+// ignoreras tyst → hela kedjan kördes i stället för de valda stegen.
+// Nu accepteras båda formerna.
+const onlyEq = args.find((a) => a.startsWith('--only='));
 const onlyIdx = args.indexOf('--only');
-const onlyStepIds: string[] = onlyIdx !== -1 && args[onlyIdx + 1]
-  ? args[onlyIdx + 1].split(',').map((s) => s.trim()).filter(Boolean)
+const onlyRaw =
+  onlyIdx !== -1 && args[onlyIdx + 1]
+    ? args[onlyIdx + 1]
+    : onlyEq
+      ? onlyEq.slice('--only='.length)
+      : '';
+const onlyStepIds: string[] = onlyRaw
+  ? onlyRaw.split(',').map((s) => s.trim()).filter(Boolean)
   : [];
 const limitIdx = args.indexOf('--limit');
 // 2026-10-07 — default --limit höjt från 50 → 200. Bakgrund: tunga steg
