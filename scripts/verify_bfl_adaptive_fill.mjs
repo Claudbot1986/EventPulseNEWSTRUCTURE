@@ -125,6 +125,12 @@ async function main() {
       posts.push({ body: req.postData() });
     }
   });
+  const responses = [];
+  page.on('response', (res) => {
+    if (res.url().includes('/api/bfl/adaptive-run') && res.request().method() === 'POST') {
+      responses.push({ status: res.status() });
+    }
+  });
 
   log('Navigerar till ' + BASE_URL);
   await page.goto(BASE_URL, { waitUntil: 'domcontentloaded', timeout: 15000 });
@@ -180,15 +186,30 @@ async function main() {
   }
 
   // Om servern nekade med 409 (annan körning igång) — det är ett korrekt
-  // beteende, inte ett fel. Rapportera och avsluta utan fel.
+// beteende, inte ett fel. Men det MÅSTE vara en 409 och inte något annat,
+  // och det får inte skapa en ny run-mapp eller nollställa en pågående
+  // körnings progress.
+  const postStatus = responses[responses.length - 1]?.status ?? null;
+  report.postStatus = postStatus;
   if (afterClick.statusText && afterClick.statusText.startsWith('✗')) {
     log('Servern nekade starten:', afterClick.statusText);
-    report.skipped = true;
-    report.reason = afterClick.statusText;
+    report.refused = true;
+    if (postStatus !== 409) {
+      errors.push(`FAIL: start nekades med HTTP ${postStatus} (förväntat 409) — text: ${afterClick.statusText}`);
+    }
     await page.screenshot({ path: path.join(EVIDENCE_DIR, '03-refused.png'), clip: { x: 0, y: 0, width: 1400, height: 220 } });
+    // Balken får inte ha nollställts av det nekade anropet.
+    if (before.progressHidden === false && afterClick.progressAriaNow === '0' && before.progressAriaNow !== '0') {
+      errors.push(`FAIL: progress-baren nollställdes av ett nekade anrop (${before.progressAriaNow} → 0)`);
+    }
     await browser.close();
     writeFileSync(path.join(EVIDENCE_DIR, `report-${LABEL}.json`), JSON.stringify({ ...report, errors, consoleErrors }, null, 2));
-    log('AVSLUTAD: start nekades (väntar på att annan körning ska ta slut)');
+    if (errors.length) {
+      log(`✗ ${errors.length} fel`);
+      for (const e of errors) log(' ✗', e);
+      process.exit(1);
+    }
+    log('AVSLUTAD: start nekades korrekt med 409 (väntar på att annan körning ska ta slut)');
     process.exit(0);
   }
 
