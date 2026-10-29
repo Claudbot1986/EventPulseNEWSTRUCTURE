@@ -10,8 +10,8 @@
  */
 
 import { createServer, IncomingMessage, ServerResponse } from 'http';
-import { readFileSync, readdirSync, statSync, existsSync, mkdirSync, appendFileSync, writeFileSync, renameSync } from 'fs';
-import { spawn, execFile } from 'child_process';
+import { readFileSync, readdirSync, statSync, existsSync, mkdirSync, appendFileSync, writeFileSync, renameSync, openSync, closeSync } from 'fs';
+import { spawn, execFile, execFileSync } from 'child_process';
 import { dirname, join, resolve } from 'path';
 import { fileURLToPath, pathToFileURL } from 'url';
 import {
@@ -2913,6 +2913,339 @@ if (url === '/api/bfl/zoom-run/latest' && req.method === 'GET') {
     }
     return true;
   }
+
+// ─── Adaptive fill (2026-10-29) ─────────────────────────────────────────
+// Knappen "MiniMax image-01" på dashboarden fyller ut biblioteket med N nya
+// bilder via scripts/adaptive_image_gen.ts — samma logik som den
+// bakgrundsgående körningen (kvotplan + M3-granskning + grind).
+//
+// Varje körning får en egen mapp under runtime/adaptive-image-gen/runs/<id>/
+// med state.json, verify.ndjson, progress.json och run.log.
+
+const ADAPTIVE_RUNS_DIR = join(PROJECT_ROOT, 'runtime', 'adaptive-image-gen', 'runs');
+const ADAPTIVE_LOCK_FILE = join(PROJECT_ROOT, 'runtime', 'adaptive-image-gen', 'run.lock');
+
+interface AdaptiveRunMeta {
+  runId: string;
+  pid: number | null;
+  count: number;
+  extra: number;
+  concurrency: number;
+  start: number;
+  startedAt: string;
+  runDir: string;
+  logPath: string;
+}
+
+interface AdaptiveProgress {
+  startedAt: string;
+  updatedAt: string;
+  round: number;
+  size: number;
+  target: number;
+  remaining: number;
+  generated: number;
+  passed: number;
+  failed: number;
+  apiErrors: number;
+  lastFile: string | null;
+  lastCategory: string | null;
+  lastVerdict: string | null;
+  done: boolean;
+}
+
+/**
+ * Hittar pågående adaptive_image_gen-processer.
+ *
+ * RpmGuard i generatorn räknar per PROCESS, och MiniMax image_generation
+ * har 10 RPM tak. Två parallella körningar skulle tillsammans ge upp till
+ * 18 anrop/min → 429. Därför vägrar vi starta en ny körning när en redan
+ * pågår (även om den startats utanför dashboarden).
+ */
+function findAdaptiveRuns(): number[] {
+  try {
+    const out = execFileSync('ps', ['-ax', '-o', 'pid=,command='], {
+      encoding: 'utf8',
+      timeout: 4000,
+      maxBuffer: 4 * 1024 * 1024,
+    });
+    const pids: number[] = [];
+    for (const line of out.split('\n')) {
+      if (!line.includes('adaptive_image_gen.ts')) continue;
+      if (!/\bnode\b/.test(line)) continue;
+      const m = line.trim().match(/^(\d+)\s/);
+      if (m) pids.push(Number(m[1]));
+    }
+    return pids;
+  } catch {
+    return [];
+  }
+}
+
+/** Låset som generatorn sätter — läses för att ge en tydligare feltext. */
+function adaptiveLockOwner(): number | null {
+  try {
+    if (!existsSync(ADAPTIVE_LOCK_FILE)) return null;
+    const info = JSON.parse(readFileSync(ADAPTIVE_LOCK_FILE, 'utf8')) as { pid?: number };
+    const pid = Number(info?.pid ?? 0);
+    if (!pid) return null;
+    process.kill(pid, 0);
+    return pid;
+  } catch {
+    return null;
+  }
+}
+
+function readAdaptiveRunMeta(runId: string): AdaptiveRunMeta | null {
+  if (!/^[A-Za-z0-9_\-:]+$/.test(runId)) return null;
+  const p = join(ADAPTIVE_RUNS_DIR, runId, 'run.json');
+  if (!existsSync(p)) return null;
+  try {
+    return JSON.parse(readFileSync(p, 'utf8')) as AdaptiveRunMeta;
+  } catch {
+    return null;
+  }
+}
+
+function readAdaptiveProgress(runId: string): AdaptiveProgress | null {
+  if (!/^[A-Za-z0-9_\-:]+$/.test(runId)) return null;
+  const p = join(ADAPTIVE_RUNS_DIR, runId, 'progress.json');
+  if (!existsSync(p)) return null;
+  try {
+    return JSON.parse(readFileSync(p, 'utf8')) as AdaptiveProgress;
+  } catch {
+    return null;
+  }
+}
+
+function pidAlive(pid: number | null): boolean {
+  if (!pid) return false;
+  try {
+    process.kill(pid, 0);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+function tailFile(path: string, lines = 12): string[] {
+  try {
+    if (!existsSync(path)) return [];
+    const raw = readFileSync(path, 'utf8').trimEnd();
+    if (!raw) return [];
+    return raw.split('\n').slice(-lines);
+  } catch {
+    return [];
+  }
+}
+
+/** POST /api/bfl/adaptive-run — starta en adaptiv "fyll ut"-körning. */
+if (req.method === 'POST' && url === '/api/bfl/adaptive-run') {
+  try {
+    const body = await new Promise<string>((resolve, reject) => {
+      const chunks: Buffer[] = [];
+      req.on('data', (c: Buffer) => chunks.push(c));
+      req.on('end', () => resolve(Buffer.concat(chunks).toString('utf8')));
+      req.on('error', reject);
+    });
+    const parsed = JSON.parse(body || '{}') as {
+      count?: number;
+      extra?: number;
+      concurrency?: number;
+      start?: number;
+    };
+
+    const count = Math.max(1, Math.min(800, Math.floor(parsed.count ?? 300)));
+    const extra = Math.max(0, Math.min(800, Math.floor(parsed.extra ?? count)));
+    const concurrency = Math.max(1, Math.min(12, Math.floor(parsed.concurrency ?? 8)));
+    const start = Math.max(1, Math.min(64, Math.floor(parsed.start ?? 32)));
+
+    // 1) Ingen parallell körning (RPM-taket är per process).
+    const running = findAdaptiveRuns();
+    if (running.length > 0) {
+      res.writeHead(409, { 'Content-Type': 'application/json; charset=utf-8' });
+      res.end(
+        JSON.stringify({
+          ok: false,
+          error: `en bildgenerering körs redan (pid ${running.join(', ')}) — MiniMax-taket är 10 bilder/min, så två körningar samtidigt skulle ge 429-fel`,
+        }),
+      );
+      return true;
+    }
+    const lockOwner = adaptiveLockOwner();
+    if (lockOwner) {
+      res.writeHead(409, { 'Content-Type': 'application/json; charset=utf-8' });
+      res.end(
+        JSON.stringify({
+          ok: false,
+          error: `låset är taget av pid ${lockOwner} — en körning pågår redan`,
+        }),
+      );
+      return true;
+    }
+
+    // 2) Starta körningen i egen mapp med eget state.
+    const runId = newBflRunId();
+    const runDir = join(ADAPTIVE_RUNS_DIR, runId);
+    mkdirSync(runDir, { recursive: true });
+    const logPath = join(runDir, 'run.log');
+    const fd = openSync(logPath, 'a');
+
+    const args = [
+      '--env-file=.env',
+      '--import',
+      'tsx',
+      'scripts/adaptive_image_gen.ts',
+      `--run-dir=${runDir}`,
+      `--extra=${extra}`,
+      `--max-total=${count}`,
+      `--start=${start}`,
+      '--max-rounds=60',
+      `--concurrency=${concurrency}`,
+      '--reset',
+    ];
+
+    const child = spawn(process.execPath, args, {
+      cwd: PROJECT_ROOT,
+      env: { ...process.env },
+      stdio: ['ignore', fd, fd],
+      detached: true, // överlever om dashboarden startas om
+    });
+    child.unref();
+    closeSync(fd);
+
+    const meta: AdaptiveRunMeta = {
+      runId,
+      pid: child.pid ?? null,
+      count,
+      extra,
+      concurrency,
+      start,
+      startedAt: new Date().toISOString(),
+      runDir,
+      logPath,
+    };
+    writeFileSync(join(runDir, 'run.json'), JSON.stringify(meta, null, 2));
+
+    res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
+    res.end(JSON.stringify({ ok: true, runId, pid: meta.pid, count, extra, concurrency, runDir }));
+  } catch (err) {
+    res.writeHead(500, { 'Content-Type': 'application/json; charset=utf-8' });
+    res.end(JSON.stringify({ ok: false, error: String((err as Error)?.message ?? err) }));
+  }
+  return true;
+}
+
+// GET /api/bfl/adaptive-run/:id/status
+const adaptiveStatusMatch = url.match(/^\/api\/bfl\/adaptive-run\/([^/]+)\/status$/);
+if (adaptiveStatusMatch && req.method === 'GET') {
+  const runId = adaptiveStatusMatch[1];
+  const meta = readAdaptiveRunMeta(runId);
+  if (!meta) {
+    res.writeHead(404, { 'Content-Type': 'application/json; charset=utf-8' });
+    res.end(JSON.stringify({ ok: false, error: 'run not found' }));
+    return true;
+  }
+  const prog = readAdaptiveProgress(runId);
+  const alive = pidAlive(meta.pid);
+  const status = prog?.done ? 'success' : alive ? 'running' : 'failed';
+  const generated = prog?.generated ?? 0;
+  res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'no-cache' });
+  res.end(
+    JSON.stringify({
+      ok: true,
+      result: {
+        runId,
+        status,
+        pid: meta.pid,
+        count: meta.count,
+        extra: meta.extra,
+        concurrency: meta.concurrency,
+        generated,
+        passed: prog?.passed ?? 0,
+        failed: prog?.failed ?? 0,
+        apiErrors: prog?.apiErrors ?? 0,
+        round: prog?.round ?? 0,
+        size: prog?.size ?? 0,
+        target: prog?.target ?? 0,
+        remaining: prog?.remaining ?? 0,
+        percent: meta.count > 0 ? Math.min(100, Math.round((generated / meta.count) * 100)) : 0,
+        startedAt: meta.startedAt,
+        updatedAt: prog?.updatedAt ?? meta.startedAt,
+        done: prog?.done ?? false,
+        lastFile: prog?.lastFile ?? null,
+        lastCategory: prog?.lastCategory ?? null,
+        lastVerdict: prog?.lastVerdict ?? null,
+        logTail: tailFile(meta.logPath),
+      },
+    }),
+  );
+  return true;
+}
+
+// GET /api/bfl/adaptive-run/latest — senaste körningens state.
+if (url === '/api/bfl/adaptive-run/latest' && req.method === 'GET') {
+  try {
+    if (!existsSync(ADAPTIVE_RUNS_DIR)) {
+      res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
+      res.end(JSON.stringify({ ok: true, result: null }));
+      return true;
+    }
+    const dirs = readdirSync(ADAPTIVE_RUNS_DIR)
+      .filter((d) => existsSync(join(ADAPTIVE_RUNS_DIR, d, 'run.json')))
+      .sort()
+      .reverse();
+    let latest: AdaptiveRunMeta | null = null;
+    for (const d of dirs) {
+      try {
+        latest = JSON.parse(readFileSync(join(ADAPTIVE_RUNS_DIR, d, 'run.json'), 'utf8')) as AdaptiveRunMeta;
+        break;
+      } catch { /* skip */ }
+    }
+    if (!latest) {
+      res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
+      res.end(JSON.stringify({ ok: true, result: null }));
+      return true;
+    }
+    const prog = readAdaptiveProgress(latest.runId);
+    const alive = pidAlive(latest.pid);
+    const generated = prog?.generated ?? 0;
+    res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
+    res.end(
+      JSON.stringify({
+        ok: true,
+        result: {
+          runId: latest.runId,
+          status: prog?.done ? 'success' : alive ? 'running' : 'failed',
+          pid: latest.pid,
+          count: latest.count,
+          extra: latest.extra,
+          concurrency: latest.concurrency,
+          generated,
+          passed: prog?.passed ?? 0,
+          failed: prog?.failed ?? 0,
+          apiErrors: prog?.apiErrors ?? 0,
+          round: prog?.round ?? 0,
+          target: prog?.target ?? 0,
+          remaining: prog?.remaining ?? 0,
+          percent: latest.count > 0 ? Math.min(100, Math.round((generated / latest.count) * 100)) : 0,
+          startedAt: latest.startedAt,
+          updatedAt: prog?.updatedAt ?? latest.startedAt,
+          done: prog?.done ?? false,
+          lastFile: prog?.lastFile ?? null,
+          lastCategory: prog?.lastCategory ?? null,
+          lastVerdict: prog?.lastVerdict ?? null,
+          logTail: tailFile(latest.logPath),
+        },
+      }),
+    );
+  } catch (err) {
+    res.writeHead(500, { 'Content-Type': 'application/json; charset=utf-8' });
+    res.end(JSON.stringify({ ok: false, error: String((err as Error)?.message ?? err) }));
+  }
+  return true;
+}
+
 
   return false;
 }

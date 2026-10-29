@@ -31,11 +31,13 @@
           <span class="bfl-generate-btn-sub">välj kategori + antal</span>
         </span>
       </button>
-      <!-- ─── BFL model-compare knappar (2026-10-18) ─────────────────────
-           Parallella knappar för modell-jämförelse. Rör INTE befintlig
-           btn-bfl-generate eller dess modal — dessa egna endpoints kör
-           tools/bfl-model-compare.mjs med EN modell per klick och öppnar
-           en gemensam parent-mapp för inspektion. -->
+      <!-- ─── BFL model-compare + adaptiv fill (2026-10-29) ───────────────
+           btn-bfl-compare-flux2: 3 testbilder med BFL flux-2-pro (oförändrat).
+           btn-bfl-compare-minimax: BYTT 2026-10-29 — från "3 bilder · jämför-test"
+           till adaptiv fill: fyller biblioteket med N nya bilder via
+           scripts/adaptive_image_gen.ts (samma logik som bakgrundskörningen:
+           kvotplan + M3-granskning + grind). Har status + progress-bar.
+           Rör INTE befintlig btn-bfl-generate eller dess modal. -->
       <button type="button" id="btn-bfl-compare-flux2" class="bfl-generate-btn bfl-generate-btn--compare" aria-label="Generate 3 test images with BFL flux-2-pro">
         <span class="bfl-generate-btn-icon" aria-hidden="true">🅱️</span>
         <span class="bfl-generate-btn-text">
@@ -43,13 +45,25 @@
           <span class="bfl-generate-btn-sub">3 bilder · jämför-test</span>
         </span>
       </button>
-      <button type="button" id="btn-bfl-compare-minimax" class="bfl-generate-btn bfl-generate-btn--compare bfl-generate-btn--minimax" aria-label="Generate 3 test images with MiniMax image-01">
-        <span class="bfl-generate-btn-icon" aria-hidden="true">🟧</span>
-        <span class="bfl-generate-btn-text">
-          <span class="bfl-generate-btn-title">MiniMax image-01</span>
-          <span class="bfl-generate-btn-sub">3 bilder · jämför-test</span>
-        </span>
-      </button>
+      <div class="bfl-adaptive-wrap">
+        <button type="button" id="btn-bfl-compare-minimax" class="bfl-generate-btn bfl-generate-btn--compare bfl-generate-btn--minimax" aria-label="Fyll ut bildbiblioteket med nya bilder via MiniMax image-01">
+          <span class="bfl-generate-btn-icon" aria-hidden="true">🟧</span>
+          <span class="bfl-generate-btn-text">
+            <span class="bfl-generate-btn-title">MiniMax image-01</span>
+            <span class="bfl-generate-btn-sub" id="bfl-adaptive-sub">300 bilder · adaptiv fill</span>
+          </span>
+        </button>
+        <input type="number" id="bfl-adaptive-count" class="bfl-adaptive-count" min="1" max="800" step="1" value="300" title="Antal nya bilder som ska genereras" aria-label="Antal nya bilder" />
+        <div id="bfl-adaptive-progress" class="bfl-adaptive-progress" hidden>
+          <div class="bfl-adaptive-progress-track" id="bfl-adaptive-progress-bar" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" aria-label="Genereringsframsteg">
+            <div class="bfl-adaptive-progress-fill" id="bfl-adaptive-progress-fill"></div>
+          </div>
+          <span class="bfl-adaptive-progress-text" id="bfl-adaptive-progress-text">0 / 0</span>
+        </div>
+      </div>
+      <div id="bfl-adaptive-status" class="bfl-ingestion-status bfl-ingestion-status--hidden" aria-live="polite" aria-atomic="true">
+        <span id="bfl-adaptive-status-text">redo</span>
+      </div>
       <div id="bfl-compare-status" class="bfl-ingestion-status bfl-ingestion-status--hidden" aria-live="polite" aria-atomic="true">
         <span id="bfl-compare-status-text">redo</span>
       </div>

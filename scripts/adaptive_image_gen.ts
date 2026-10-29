@@ -27,7 +27,7 @@
  *   node --env-file=.env --import tsx scripts/adaptive_image_gen.ts --start=5
  */
 
-import { existsSync, readFileSync, writeFileSync, mkdirSync, readdirSync, statSync, rmSync } from 'node:fs';
+import { existsSync, readFileSync, writeFileSync, mkdirSync, readdirSync, statSync, rmSync, openSync, closeSync, renameSync } from 'node:fs';
 import path from 'node:path';
 import { createClient } from '@supabase/supabase-js';
 import sharp from 'sharp';
@@ -46,9 +46,20 @@ const M3_MODEL = 'MiniMax-M3';
 
 const OUT_DIR = 'local_image_library_stamped_v2';
 const SRC_LIB_DIR = 'local_image_library_stamped';
-const STATE_DIR = 'runtime/adaptive-image-gen';
-const STATE_FILE = path.join(STATE_DIR, 'state.json');
-const VERIFY_LOG = path.join(STATE_DIR, 'verify.ndjson');
+
+// 2026-10-29 — tillståndet kan ligga i en egen mapp per körning (--run-dir).
+// Bakgrundskörningen och dashboard-körningen får inte dela state-fil:
+// räknarna (round/size/generated) skulle annars blandas ihop.
+const DEFAULT_STATE_DIR = 'runtime/adaptive-image-gen';
+let STATE_DIR = DEFAULT_STATE_DIR;
+let STATE_FILE = path.join(STATE_DIR, 'state.json');
+let VERIFY_LOG = path.join(STATE_DIR, 'verify.ndjson');
+let PROGRESS_FILE = path.join(STATE_DIR, 'progress.json');
+
+// Låset är GLOBAL (inte per run-dir). RpmGuard räknar per process, så två
+// parallella körningar skulle tillsammans ge upp till 18 anrop/min mot
+// MiniMax taket 10/min → 429. Låset gör att bara en körning går åt gång.
+const LOCK_FILE = path.resolve('runtime/adaptive-image-gen/run.lock');
 
 const RPM_LIMIT = 10;
 const RPM_SAFE = 9; // säkerhetsmarginal under taket
@@ -126,6 +137,10 @@ interface Args {
   maxTotal: number;
   dryRun: boolean;
   reset: boolean;
+  /** EXTRA bilder utöver kvotplanen (dashboardens "fyll ut"-knapp). */
+  extra: number;
+  /** Egen mapp för state/verify/progress. Tomt = standardmappen. */
+  runDir: string | null;
 }
 function parseArgs(): Args {
   const out: Args = {
@@ -136,6 +151,8 @@ function parseArgs(): Args {
     maxTotal: 200,
     dryRun: false,
     reset: false,
+    extra: 0,
+    runDir: null,
   };
   for (const a of process.argv.slice(2)) {
     if (a.startsWith('--start=')) out.start = parseInt(a.slice(8), 10);
@@ -144,6 +161,8 @@ function parseArgs(): Args {
       out.categories = a.slice(13).split(',').map((s) => s.trim()).filter(Boolean);
     else if (a.startsWith('--concurrency=')) out.concurrency = parseInt(a.slice(14), 10);
     else if (a.startsWith('--max-total=')) out.maxTotal = parseInt(a.slice(12), 10);
+    else if (a.startsWith('--extra=')) out.extra = Math.max(0, parseInt(a.slice(8), 10) || 0);
+    else if (a.startsWith('--run-dir=')) out.runDir = a.slice(10) || null;
     else if (a === '--dry-run') out.dryRun = true;
     else if (a === '--reset') out.reset = true;
   }
@@ -246,8 +265,15 @@ async function countFutureEvents(): Promise<Record<string, number>> {
   return out;
 }
 
-/** Bygger planen: per kategori, per shot-nivå, hur många bilder som SAKNAS. */
-async function buildPlan(categories: string[] | null): Promise<Need[]> {
+/**
+ * Bygger planen: per kategori, per shot-nivå, hur många bilder som SAKNAS.
+ *
+ * `extra` lägger till N bilder UTÖVER kvotplanen, proportionellt mot
+ * kategorins antal framtida events. Användarens knapp på dashboarden
+ * ("fyll ut med 300 nya bilder") använder detta: kvoten är då uppfylld,
+ * men knappen ska kunna fylla på biblioteket ändå.
+ */
+async function buildPlan(categories: string[] | null, extra = 0): Promise<Need[]> {
   const events = await countFutureEvents();
   // Inventera BÅDA biblioteken. Efter 3:2-filtret bidrar det gamla
   // biblioteket med 0 (alla dess bilder är 16:9), medan det nya v2-
@@ -278,8 +304,23 @@ async function buildPlan(categories: string[] | null): Promise<Need[]> {
     .filter((c) => (categories ? categories.includes(c) : true))
     .sort((a, b) => events[b] - events[a]);
 
+  // EXTRA-fördelning: störst andel till kategorin med flest events.
+  // Largest-remainder så att summan blir exakt `extra`.
+  const extraByCat: Record<string, number> = {};
+  if (extra > 0 && cats.length > 0) {
+    const totalEvents = cats.reduce((a, c) => a + events[c], 0);
+    const raw = cats.map((c) => ({ c, exact: (extra * events[c]) / totalEvents }));
+    const floor = raw.map((r) => ({ c: r.c, slots: Math.floor(r.exact), rem: r.exact - Math.floor(r.exact) }));
+    let used = floor.reduce((a, r) => a + r.slots, 0);
+    floor.sort((a, b) => b.rem - a.rem);
+    for (let i = 0; used < extra && floor.length > 0; i++, used++) {
+      floor[i % floor.length].slots++;
+    }
+    for (const f of floor) extraByCat[f.c] = f.slots;
+  }
+
   for (const c of cats) {
-    const target = quotaTarget(events[c]);
+    const target = quotaTarget(events[c]) + (extraByCat[c] ?? 0);
     const have = existing[c] ?? {};
     const desired = distribute(target, ZOOM_WEIGHTS);
     const perShot: Record<string, number> = {};
@@ -616,16 +657,102 @@ function loadState(): State {
 }
 function saveState(s: State): void {
   mkdirSync(STATE_DIR, { recursive: true });
-  writeFileSync(STATE_FILE, JSON.stringify(s, null, 2));
+  writeFileSync(`${STATE_FILE}.tmp`, JSON.stringify(s, null, 2));
+  renameSync(`${STATE_FILE}.tmp`, STATE_FILE);
 }
 function appendVerify(row: unknown): void {
   mkdirSync(STATE_DIR, { recursive: true });
   writeFileSync(VERIFY_LOG, `${JSON.stringify(row)}\n`, { flag: 'a' });
 }
 
+// === PROGRESS ============================================================
+// Dashboardens progress-bar läser den här filen. Den skrivs efter VARJE
+// bild (inte bara per omgång) så att baren rör sig jämnt.
+interface Progress {
+  startedAt: string;
+  updatedAt: string;
+  round: number;
+  size: number;
+  target: number;
+  remaining: number;
+  generated: number;
+  passed: number;
+  failed: number;
+  apiErrors: number;
+  lastFile: string | null;
+  lastCategory: string | null;
+  lastVerdict: string | null;
+  done: boolean;
+}
+function writeProgress(p: Progress): void {
+  try {
+    mkdirSync(STATE_DIR, { recursive: true });
+    writeFileSync(`${PROGRESS_FILE}.tmp`, JSON.stringify(p, null, 2));
+    renameSync(`${PROGRESS_FILE}.tmp`, PROGRESS_FILE);
+  } catch { /* progress får aldrig fälla genereringen */ }
+}
+
+// === LÅS ================================================================
+// Globalt lås så att bara EN adaptive_image_gen-process kan köra åt gång.
+// MiniMax image_generation har 10 RPM tak — två processer (t.ex.
+// bakgrundskörning + dashboardknapp) skulle tillsammans köra in i 429-fel.
+// Låset tas över automatiskt om ägaren dog (stale PID).
+function acquireLock(): (() => void) | null {
+  mkdirSync(path.dirname(LOCK_FILE), { recursive: true });
+  for (let attempt = 0; attempt < 3; attempt++) {
+    try {
+      const fd = openSync(LOCK_FILE, 'wx');
+      writeFileSync(fd, JSON.stringify({ pid: process.pid, startedAt: new Date().toISOString() }));
+      closeSync(fd);
+      const release = () => {
+        try {
+          const cur = JSON.parse(readFileSync(LOCK_FILE, 'utf8'));
+          if (cur.pid === process.pid) rmSync(LOCK_FILE, { force: true });
+        } catch { /* ignore */ }
+      };
+      process.on('exit', release);
+      return release;
+    } catch {
+      // Låset finns — lever ägaren?
+      let ownerPid = 0;
+      try {
+        ownerPid = Number(JSON.parse(readFileSync(LOCK_FILE, 'utf8'))?.pid ?? 0);
+      } catch { /* trasig låsfil */ }
+      if (ownerPid > 0) {
+        try {
+          process.kill(ownerPid, 0);
+          warn(`en annan körning har låset (pid ${ownerPid}) — avbryter`);
+          return null;
+        } catch {
+          /* ägaren lever inte → ta över */
+        }
+      }
+      try { rmSync(LOCK_FILE, { force: true }); } catch { /* ignore */ }
+    }
+  }
+  return null;
+}
+
 // === HUVUDLOOP ===========================================================
 async function main(): Promise<void> {
   const args = parseArgs();
+
+  // Egen mapp för state/verify/progress (dashboardens körningar).
+  if (args.runDir) {
+    STATE_DIR = path.resolve(args.runDir);
+    STATE_FILE = path.join(STATE_DIR, 'state.json');
+    VERIFY_LOG = path.join(STATE_DIR, 'verify.ndjson');
+    PROGRESS_FILE = path.join(STATE_DIR, 'progress.json');
+  }
+
+  // Globalt lås — bara en körning åt gång (RPM-taket är per process).
+  const releaseLock = acquireLock();
+  if (!releaseLock) {
+    log('avbryter: en annan adaptive_image_gen-körning pågår');
+    process.exitCode = 2;
+    return;
+  }
+
   if (args.reset) {
     // Nollställ räknare + granskningslogg så en ny körning inte ärvde
     // förra körningens totalsiffror (state.loadState() läser dem annars).
@@ -635,10 +762,26 @@ async function main(): Promise<void> {
     log('state återställd (--reset)');
   }
   const state = loadState();
-  const plan = await buildPlan(args.categories);
+  const plan = await buildPlan(args.categories, args.extra);
 
   if (!plan.length) {
     log('ingen plan — inget att generera');
+    writeProgress({
+      startedAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+      round: 0,
+      size: 0,
+      target: 0,
+      remaining: 0,
+      generated: 0,
+      passed: 0,
+      failed: 0,
+      apiErrors: 0,
+      lastFile: null,
+      lastCategory: null,
+      lastVerdict: 'ingen plan',
+      done: true,
+    });
     return;
   }
   const planTotal = plan.reduce((a, p) => a + p.total, 0);
@@ -647,6 +790,14 @@ async function main(): Promise<void> {
     log(`  ${p.category.padEnd(18)} events=${String(p.events).padStart(5)} target=${String(p.target).padStart(3)} behov=${String(p.total).padStart(3)}  ${Object.entries(p.perShot).map(([k, v]) => `${k}:${v}`).join(' ')}`);
   }
   if (plan.length > 8) log(`  ... + ${plan.length - 8} till`);
+
+  // --dry-run: visa planen men generera ingenting. Används för att verifiera
+  // planberäkningen (t.ex. --extra) utan att spendera API-anrop.
+  if (args.dryRun) {
+    log(`DRY-RUN: skulle generera ${planTotal} bilder i ${plan.length} kategorier`);
+    releaseLock?.();
+    return;
+  }
 
   // Prompt-materialisering är LAZY: en shot-nivås prompts byggs först när
   // slingan faktiskt behöver dem. Annars skulle varje körning vänta på hundratals
@@ -706,6 +857,40 @@ async function main(): Promise<void> {
   const remainingTotal = (): number =>
     providers.slice(providerIdx).reduce((a, p) => a + p.remaining + p.buf.length, 0);
 
+  // Progress skrivs efter VARJE bild så att dashboardens bar rör sig jämnt.
+  const startedAt = new Date().toISOString();
+  const lastInfo: { file: string | null; category: string | null; verdict: string | null } = {
+    file: null,
+    category: null,
+    verdict: null,
+  };
+  const emitProgress = (
+    info?: { file: string; category: string; verdict: string },
+    done = false,
+  ): void => {
+    if (info) {
+      lastInfo.file = info.file;
+      lastInfo.category = info.category;
+      lastInfo.verdict = info.verdict;
+    }
+    writeProgress({
+      startedAt,
+      updatedAt: new Date().toISOString(),
+      round,
+      size,
+      target: planTotal,
+      remaining: remainingTotal(),
+      generated,
+      passed,
+      failed,
+      apiErrors,
+      lastFile: lastInfo.file,
+      lastCategory: lastInfo.category,
+      lastVerdict: lastInfo.verdict,
+      done,
+    });
+  };
+
   while (round < args.maxRounds && remainingTotal() > 0 && generated < args.maxTotal) {
     round++;
     const take = Math.min(size, remainingTotal(), args.maxTotal - generated);
@@ -734,25 +919,33 @@ async function main(): Promise<void> {
           // Granska direkt — 3 röster parallellt, medan andra workers
           // fortsätter generera nästa bild.
           res.verdict = await verifyImage(res.file as string, res.slot.shotId);
+          // Räknarna uppdateras per bild (inte per omgång) så att
+          // progress-baren i dashboarden följer med i realtid.
+          generated++;
+          if (res.verdict.pass) passed++;
+          else failed++;
+          emitProgress({
+            file: path.basename(res.file ?? ''),
+            category: res.slot.category,
+            verdict: `${res.verdict.pass ? '✓' : '✗'} ${res.slot.shotId}/${res.slot.clusterTag}: ${res.verdict.reason}`,
+          });
         } else {
           warn(`  ✗ ${res.slot.shotId}/${res.slot.clusterTag}: ${res.apiError}`);
+          apiErrors++;
+          emitProgress();
         }
         results.push(res);
       }
     });
     await Promise.all(workers);
 
-    // Samla grindens utfall (granskningen har redan skett i workern).
+    // Samla grindens utfall (granskningen har redan skett i workern och
+    // räknarna är redan uppdaterade där).
     const okResults = results.filter((r) => r.ok);
     let roundFail = 0;
     for (const res of okResults) {
       const v = res.verdict!;
-      generated++;
-      if (v.pass) passed++;
-      else {
-        failed++;
-        roundFail++;
-      }
+      if (!v.pass) roundFail++;
       appendVerify({
         ts: new Date().toISOString(),
         round,
@@ -765,7 +958,6 @@ async function main(): Promise<void> {
       log(`  ${v.pass ? '✓' : '✗'} ${res.slot.shotId}/${res.slot.clusterTag}: ${v.reason}${v.spread ? `  [${v.spread}]` : ''}${v.note ? `  (${v.note})` : ''}`);
     }
     const roundApiErrors = results.length - okResults.length;
-    apiErrors += roundApiErrors;
 
     // GRIND
     const sizeBefore = size;
@@ -784,13 +976,16 @@ async function main(): Promise<void> {
     }
 
     saveState({ round, size, generated, passed, failed, apiErrors, planCursor: {} });
+    emitProgress();
     log(
       `  status: genererade=${generated} godkända=${passed} underkända=${failed} api-fel=${apiErrors} kvar=${remainingTotal()}`,
     );
   }
 
+  emitProgress(undefined, true);
   log(`KLART. genererade=${generated} godkända=${passed} underkända=${failed} api-fel=${apiErrors}`);
   log(`logg: ${VERIFY_LOG}`);
+  releaseLock?.();
 
   // SLUTRAPPORT: producerad mix vs målmix
   const rows = fs_exists(VERIFY_LOG)

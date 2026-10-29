@@ -2848,6 +2848,117 @@ async function startCompareRun(model) {
   }
 }
 
+// ─── Adaptive fill (2026-10-29) ──────────────────────────────
+// Knappen "MiniMax image-01" fyller ut biblioteket med N nya bilder via
+// scripts/adaptive_image_gen.ts — samma logik som bakgrundskörningen
+// (kvotplan → generering → M3-granskning → grind). Har status + progress-bar.
+const adaptiveState = { pollTimer: null, runId: null };
+
+function setAdaptiveStatus(text, kind) {
+  const wrap = document.getElementById('bfl-adaptive-status');
+  const span = document.getElementById('bfl-adaptive-status-text');
+  if (span) span.textContent = text;
+  if (wrap) {
+    wrap.classList.remove('bfl-ingestion-status--hidden', 'bfl-ingestion-status--unknown', 'bfl-ingestion-status--ok', 'bfl-ingestion-status--warn');
+    wrap.classList.add(kind === 'ok' ? 'bfl-ingestion-status--ok' : kind === 'warn' ? 'bfl-ingestion-status--warn' : 'bfl-ingestion-status--unknown');
+    wrap.classList.remove('bfl-ingestion-status--hidden');
+  }
+}
+
+function setAdaptiveProgress(percent, label) {
+  const wrap = document.getElementById('bfl-adaptive-progress');
+  const fill = document.getElementById('bfl-adaptive-progress-fill');
+  const bar = document.getElementById('bfl-adaptive-progress-bar');
+  const text = document.getElementById('bfl-adaptive-progress-text');
+  if (!wrap) return;
+  wrap.hidden = false;
+  const p = Math.max(0, Math.min(100, Math.round(percent || 0)));
+  if (fill) fill.style.width = `${p}%`;
+  if (bar) bar.setAttribute('aria-valuenow', String(p));
+  if (text) text.textContent = label;
+}
+
+function setAdaptiveButtonsDisabled(disabled) {
+  const b = document.getElementById('btn-bfl-compare-minimax');
+  if (b) b.disabled = disabled;
+  const inp = document.getElementById('bfl-adaptive-count');
+  if (inp) inp.disabled = disabled;
+}
+
+async function pollAdaptiveRun(runId) {
+  if (adaptiveState.pollTimer) clearInterval(adaptiveState.pollTimer);
+  adaptiveState.pollTimer = setInterval(async () => {
+    try {
+      const r = await fetch(`/api/bfl/adaptive-run/${runId}/status`);
+      if (!r.ok) return;
+      const j = await r.json();
+      const s = j.result;
+      if (!s) return;
+      setAdaptiveProgress(s.percent ?? 0, `${s.generated ?? 0} / ${s.count ?? 0}`);
+      if (s.status === 'running') {
+        const last = s.lastVerdict ? ` · ${s.lastVerdict}` : '';
+        setAdaptiveStatus(`genererar… ${s.generated}/${s.count}${last}`, 'warn');
+      } else {
+        clearInterval(adaptiveState.pollTimer);
+        adaptiveState.pollTimer = null;
+        setAdaptiveButtonsDisabled(false);
+        if (s.status === 'success') {
+          setAdaptiveStatus(
+            `✓ klar — ${s.generated} bilder (${s.passed} godkända, ${s.failed} underkända, ${s.apiErrors} API-fel)`,
+            'ok',
+          );
+        } else {
+          setAdaptiveStatus(`✗ misslyckades efter ${s.generated} bilder`, 'warn');
+        }
+      }
+    } catch { /* ignore poll-fel */ }
+  }, 1500);
+}
+
+async function startAdaptiveRun() {
+  const inp = document.getElementById('bfl-adaptive-count');
+  const count = Math.max(1, Math.min(800, parseInt(inp?.value ?? '300', 10) || 300));
+  setAdaptiveButtonsDisabled(true);
+  setAdaptiveStatus(`startar ${count} bilder…`, 'warn');
+  setAdaptiveProgress(0, `0 / ${count}`);
+  try {
+    const r = await fetch('/api/bfl/adaptive-run', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ count }),
+    });
+    const j = await r.json();
+    if (!r.ok || !j.ok) {
+      setAdaptiveStatus(`✗ ${j.error || 'okänt fel'}`, 'warn');
+      setAdaptiveButtonsDisabled(false);
+      return;
+    }
+    adaptiveState.runId = j.runId;
+    pollAdaptiveRun(j.runId);
+  } catch (err) {
+    setAdaptiveStatus(`✗ ${err.message}`, 'warn');
+    setAdaptiveButtonsDisabled(false);
+  }
+}
+
+/** Efter sidladdning: häng med i en körning som redan pågår. */
+async function resumeAdaptiveRun() {
+  try {
+    const r = await fetch('/api/bfl/adaptive-run/latest');
+    if (!r.ok) return;
+    const j = await r.json();
+    const s = j.result;
+    if (!s) return;
+    setAdaptiveProgress(s.percent ?? 0, `${s.generated ?? 0} / ${s.count ?? 0}`);
+    if (s.status === 'running') {
+      setAdaptiveStatus(`genererar… ${s.generated}/${s.count}`, 'warn');
+      setAdaptiveButtonsDisabled(true);
+      adaptiveState.runId = s.runId;
+      pollAdaptiveRun(s.runId);
+    }
+  } catch { /* ignore */ }
+}
+
 function initBflCompareButtons() {
   const btnFlux = document.getElementById('btn-bfl-compare-flux2');
   const btnMiniMax = document.getElementById('btn-bfl-compare-minimax');
@@ -2857,8 +2968,22 @@ function initBflCompareButtons() {
   }
   if (btnMiniMax && !btnMiniMax.dataset.wired) {
     btnMiniMax.dataset.wired = '1';
-    btnMiniMax.addEventListener('click', () => startCompareRun('minimax-image-01'));
+    // 2026-10-29: MiniMax-knappen är inte längre en jämförelsetest —
+    // den fyller ut biblioteket med nya bilder (adaptiv fill).
+    btnMiniMax.addEventListener('click', startAdaptiveRun);
   }
+  const inp = document.getElementById('bfl-adaptive-count');
+  const sub = document.getElementById('bfl-adaptive-sub');
+  if (inp && !inp.dataset.wired) {
+    inp.dataset.wired = '1';
+    const sync = () => {
+      const n = Math.max(1, Math.min(800, parseInt(inp.value ?? '300', 10) || 300));
+      if (sub) sub.textContent = `${n} bilder · adaptiv fill`;
+    };
+    inp.addEventListener('input', sync);
+    sync();
+  }
+  resumeAdaptiveRun();
 }
 
 // ─── BFL zoom-variation (2026-10-18) ────────────────────────
