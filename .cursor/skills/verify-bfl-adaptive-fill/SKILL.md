@@ -203,6 +203,10 @@ Att generera bilder är bara halva jobbet. Bilderna syns i appen först efter
 uppladdning + registrering + reparation:
 
 ```bash
+# 0. Karantän av underkända bilder (M3-granskningen underkände dem).
+#    Utan detta laddas underkända bilder upp till appen.
+node --env-file=.env --import tsx scripts/quarantine_rejected_images.ts --apply
+
 # 1. Kvalitetsgrind (3:2 + XMP + synlig stämpel + kompositionsmix) — STÄR vid fel
 node --import tsx .scratch/xmptest/quality-gate.mts
 
@@ -218,7 +222,11 @@ node --env-file=.env --import tsx scripts/repair_broken_event_images.ts --apply
 ```
 
 Steg 3 måste köras **före** steg 4: annars väljer `pickLibraryFallback` de döda
-raderna (de har rating 3, de nya har `NULL`).
+raderna (de har rating 3, de nya har `NULL` — indexet är
+`(category_slug, rating DESC NULLS LAST, times_used DESC)`).
+
+Samma kedja finns som ett körande skript: `.scratch/run-publish-chain.sh`
+(väntar på att genereringen ska avslutas och kör sedan stegen i ordning).
 
 ## Evidence-platser
 

@@ -54,15 +54,18 @@ Verifiera resultatet i databasen:
 SOURCE=$(grep '^SUPABASE_URL=' .env | cut -d= -f2-)
 KEY=$(grep '^SUPABASE_SERVICE_ROLE_KEY=' .env | cut -d= -f2-)
 
-# Hur många biblioteksrader finns, och hur många pekar på döda filer?
-curl -s "$SOURCE/rest/v1/image_library?select=storage_path,cluster_tags&limit=2000" \
-  -H "apikey: $KEY" -H "Authorization: Bearer $KEY" \
-  | python3 -c '
-import json,sys
-rows = json.load(sys.stdin)
-print("rader:", len(rows))
-print("utan cluster_tags:", sum(1 for r in rows if not r.get("cluster_tags")))
-'
+# Antal biblioteksrader + hur många som har tomma cluster_tags.
+# OBS: PostgREST har en max-rows-gräns — dela upp i flera anrop
+# (Range-headern) om du vill räkna över fler tusen rader.
+node --env-file=.env --import tsx -e "
+import { createClient } from '@supabase/supabase-js';
+const db = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY, { auth: { persistSession: false } });
+const { data, count } = await db.from('image_library').select('*', { count: 'exact' });
+const withTags = data.filter(r => (Array.isArray(r.cluster_tags) ? r.cluster_tags.length : 0) > 0).length;
+console.log('rader:', count, '| med cluster_tags:', withTags);
+const { data: objs } = await db.storage.from('event-posters').list('', { limit: 1000 });
+console.log('objekt i event-posters:', objs.length);
+"
 ```
 
 **Förväntat:**
@@ -74,7 +77,31 @@ print("utan cluster_tags:", sum(1 for r in rows if not r.get("cluster_tags")))
 | `image_library`-rader efter registrering | ≥ antal uppladdade filer |
 | Rader med tomma `cluster_tags` | 0 |
 | Rader som pekar på raderade filer | 0 (efter prune) |
+| Objekti i `event-posters` | = antal uppladdade filer |
 | Events med `image_url` som svarar 200 | ökade (efter repair) |
+
+## Skalldetaljer som påverkar resultatet
+
+Verifierat mot den levande databasen 2026-10-29:
+
+- **UNIQUE-indexen finns:** `image_library_storage_path_key` →
+  `CREATE UNIQUE INDEX ... USING btree (storage_path)`. 422 rader / 422 unika
+  storage-paths. En fil kan alltså bara registreras en gång — `--register`
+  är ett upsert, inte en append.
+- **Rangordningen i `pickLibraryFallback` är `rating DESC NULLS LAST`**
+  (index `idx_image_library_category`: `(category_slug, rating DESC NULLS
+  LAST, times_used DESC)`). De gamla raderna har `rating = 3`, de nya har
+  `NULL` → **de gamla döda raderna rankas FÖRE de nya**. Därför måste prune
+  köras före repair, annars väljer appen de döda raderna igen.
+- **`cluster_tags`-filtret är ett partiellt index:**
+  `idx_image_library_cluster_tags_gin ... WHERE (cardinality(cluster_tags) > 0)`.
+  Rader utan taggar är alltså inte bara "svåra att matcha" — de är ute ur
+  matchningen helt.
+- **`public_url` på de gamla raderna är `https://placeholder.local/...`** —
+  trasig URL. `storage_path` används först, så det fungerar, men datan är
+  fel och bör rättas vid registrering.
+- **Bucketen `event-posters` var tom (0 objekt)** efter storage-cleanup —
+  det är därför 16 452 events hade döda bild-URL:er.
 
 ## Gotchas
 

@@ -47,6 +47,16 @@ const M3_MODEL = 'MiniMax-M3';
 
 const OUT_DIR = 'local_image_library_stamped_v2';
 const SRC_LIB_DIR = 'local_image_library_stamped';
+// 2026-10-29 — underkända bilder flyttas HIT istället för att ligga kvar i
+// biblioteket. Tidigare skrevs bilden till disk FÖRE granskningen, och
+// ingenting raderade den efteråt → underkända bilder laddades upp till
+// Supabase och räknades som "klara" i nästa körnings inventering.
+//
+// Mappen ligger UTANFÖR OUT_DIR med flit: uppladdningsskriptet och
+// inventeringen tittar bara i OUT_DIR, så karantänen syns inte i något
+// av dem. (Uppladdningsskriptet skippar också `_quarantine`-mappar, men
+// det är ett extra säkerhetsnät, inte mekanismen.)
+const QUARANTINE_DIR = 'local_image_library_stamped_v2_quarantine';
 
 // 2026-10-29 — tillståndet kan ligga i en egen mapp per körning (--run-dir).
 // Bakgrundskörningen och dashboard-körningen får inte dela state-fil:
@@ -132,6 +142,33 @@ function log(msg: string): void {
 
 function warn(msg: string): void {
   console.warn(`[adaptive] ⚠ ${msg}`);
+}
+
+/**
+ * Flyttar en underkänd bild (och dess sidecar) till karantän.
+ *
+ * Bilden skrivs till disk FÖRE granskningen — så utan detta steg hade
+ * underkända bilder laddats upp till appen och räknats som klara nästa
+ * omgång. Karantänen ligger utanför OUT_DIR och syns därför varken i
+ * uppladdningen eller inventeringen.
+ */
+function quarantineImage(file: string, category: string): void {
+  try {
+    const dir = path.join(QUARANTINE_DIR, category);
+    mkdirSync(dir, { recursive: true });
+    const target = path.join(dir, path.basename(file));
+    if (existsSync(target)) rmSync(target, { force: true });
+    renameSync(file, target);
+    const sidecar = `${file}.json`;
+    if (existsSync(sidecar)) {
+      const sidecarTarget = `${target}.json`;
+      if (existsSync(sidecarTarget)) rmSync(sidecarTarget, { force: true });
+      renameSync(sidecar, sidecarTarget);
+    }
+    log(`  ⛔ karantän: ${path.basename(file)}`);
+  } catch (e) {
+    warn(`  karantän kunde inte flytta ${file}: ${String((e as Error)?.message ?? e)}`);
+  }
 }
 
 // === CLI ==================================================================
@@ -959,7 +996,11 @@ async function main(): Promise<void> {
           // progress-baren i dashboarden följer med i realtid.
           generated++;
           if (res.verdict.pass) passed++;
-          else failed++;
+          else {
+            failed++;
+            // Underkänd bild → karantän (skickas inte vidare till appen).
+            quarantineImage(res.file as string, res.slot.category);
+          }
           emitProgress({
             file: path.basename(res.file ?? ''),
             category: res.slot.category,
