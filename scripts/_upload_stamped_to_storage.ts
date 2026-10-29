@@ -183,17 +183,54 @@ async function uploadOne(job: FileJob): Promise<{ ok: boolean; err?: string }> {
   }
 }
 
+/**
+ * Läser sidospaketet (.webp.json) bredvid bilden — det innehåller
+ * category, cluster_tags, zoomId, pose, light, model och stämpelvariant.
+ *
+ * VIKTIGT: cluster_tags MÅSTE registreras. pickLibraryFallback filtrerar
+ * bort rader med tomma/null cluster_tags ("tomma cluster_tags = ingen
+ * visuell signal = ska inte användas i auto-match") — en biblioteksrad
+ * utan cluster_tags skulle aldrig kunna matchas mot ett event.
+ */
+function readSidecar(localPath: string): Record<string, unknown> | null {
+  const sidecarPath = `${localPath}.json`;
+  if (!existsSync(sidecarPath)) return null;
+  try {
+    return JSON.parse(readFileSync(sidecarPath, 'utf-8')) as Record<string, unknown>;
+  } catch {
+    return null;
+  }
+}
+
 async function registerInLibrary(jobs: FileJob[]): Promise<{ ok: number; err: number }> {
   const base = process.env.SUPABASE_STORAGE_URL
     || 'https://bsllkpvkowwndhhxtlln.supabase.co/storage/v1/object/public';
   let ok = 0, err = 0;
   for (const j of jobs) {
+    const side = readSidecar(j.localPath);
+    const clusterTags = Array.isArray(side?.cluster_tags)
+      ? (side!.cluster_tags as string[]).filter((t) => typeof t === 'string' && t.length > 0)
+      : [];
+    const category = typeof side?.category === 'string' && side.category.length > 0
+      ? (side.category as string)
+      : (j.category === '(root)' ? null : j.category);
+
     const { error } = await db.from('image_library').upsert(
       {
         storage_path: j.dbStoragePath,
         public_url: `${base}/${j.dbStoragePath}`,
-        category_slug: j.category === '(root)' ? null : j.category,
-        tags: ['minimax', 'image-01', 'zoom-variation', 'stamped-2026-10-29'],
+        category_slug: category,
+        // Utan cluster_tags väljer pickLibraryFallback aldrig raden.
+        cluster_tags: clusterTags.length > 0 ? clusterTags : [category ?? 'okategori'],
+        tags: [
+          'minimax',
+          'image-01',
+          'zoom-variation',
+          'stamped-2026-10-29',
+          ...(typeof side?.zoomId === 'string' ? [`shot:${side.zoomId}`] : []),
+          ...(typeof side?.pose === 'string' ? [`pose:${side.pose}`] : []),
+          ...(typeof side?.light === 'string' ? [`light:${side.light}`] : []),
+        ],
         approved_by: 'auto',
         added_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
