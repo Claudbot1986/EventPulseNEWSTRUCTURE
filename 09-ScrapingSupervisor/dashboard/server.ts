@@ -2964,22 +2964,59 @@ interface AdaptiveProgress {
  */
 function findAdaptiveRuns(): number[] {
   try {
-    const out = execFileSync('ps', ['-ax', '-o', 'pid=,command='], {
+    // `comm` = det körbara programmet (t.ex. "node"), `args` = hela
+    // kommandoraden. VI MÅSTE matcha på comm — en ren substring-sökning på
+    // args ger falska träffar: varje rad som *nämner* både "node" och
+    // "adaptive_image_gen.ts" (t.ex. en bash-rad, en grep, en editor) sågs
+    // tidigare som en pågående körning, och dashboarden vägrade starta.
+    const out = execFileSync('ps', ['-ax', '-o', 'pid=,comm=,args='], {
       encoding: 'utf8',
       timeout: 4000,
       maxBuffer: 4 * 1024 * 1024,
     });
     const pids: number[] = [];
     for (const line of out.split('\n')) {
-      if (!line.includes('adaptive_image_gen.ts')) continue;
-      if (!/\bnode\b/.test(line)) continue;
-      const m = line.trim().match(/^(\d+)\s/);
-      if (m) pids.push(Number(m[1]));
+      const m = line.trim().match(/^(\d+)\s+(\S+)\s+(.*)$/);
+      if (!m) continue;
+      const [, pidStr, comm, args] = m;
+      const exe = comm.split('/').pop() ?? '';
+      if (exe !== 'node') continue; // endast riktiga node-processer
+      if (!args.includes('adaptive_image_gen.ts')) continue;
+      pids.push(Number(pidStr));
     }
     return pids;
   } catch {
     return [];
   }
+}
+
+/**
+ * Körningar som startats via dashboarden (run.json med levande pid).
+ *
+ * Skiljer sig från findAdaptiveRuns(): denna fångar körningar vars argv
+ * inte längre syns (t.ex. efter en omstart av dashboarden) och täcker
+ * fönstret mellan två samtidiga POST-anrop — där hinner ingen process-scan
+ * se den andra.
+ */
+function findLiveAdaptiveRuns(): Array<{ runId: string; pid: number }> {
+  if (!existsSync(ADAPTIVE_RUNS_DIR)) return [];
+  const out: Array<{ runId: string; pid: number }> = [];
+  for (const dir of readdirSync(ADAPTIVE_RUNS_DIR)) {
+    const p = join(ADAPTIVE_RUNS_DIR, dir, 'run.json');
+    if (!existsSync(p)) continue;
+    try {
+      const meta = JSON.parse(readFileSync(p, 'utf8')) as { runId?: string; pid?: number };
+      const pid = Number(meta?.pid ?? 0);
+      if (!pid) continue;
+      try {
+        process.kill(pid, 0);
+        out.push({ runId: String(meta?.runId ?? dir), pid });
+      } catch {
+        /* processen är död → ingen levande körning */
+      }
+    } catch { /* trasig run.json → hoppa över */ }
+  }
+  return out;
 }
 
 /** Låset som generatorn sätter — läses för att ge en tydligare feltext. */
@@ -3039,6 +3076,20 @@ function tailFile(path: string, lines = 12): string[] {
   }
 }
 
+/**
+ * Klippar ett numeriskt värde till [min, max].
+ *
+ * Viktigt: `Math.floor(Number('abc'))` → NaN, och `Math.max(1, NaN)` → NaN.
+ * Ett NaN värde nådde tidigare CLI:n som `--max-total=NaN`, där
+ * `parseInt('NaN')` → NaN → generatorn slutar omedelbart. Oklippbara
+ * värden (tom sträng, "abc") ska alltså FALLBACKA, inte passera igenom.
+ */
+function clampInt(value: unknown, min: number, max: number, fallback: number): number {
+  const n = Math.floor(Number(value));
+  if (!Number.isFinite(n)) return fallback;
+  return Math.max(min, Math.min(max, n));
+}
+
 /** POST /api/bfl/adaptive-run — starta en adaptiv "fyll ut"-körning. */
 if (req.method === 'POST' && url === '/api/bfl/adaptive-run') {
   try {
@@ -3055,12 +3106,18 @@ if (req.method === 'POST' && url === '/api/bfl/adaptive-run') {
       start?: number;
     };
 
-    const count = Math.max(1, Math.min(800, Math.floor(parsed.count ?? 300)));
-    const extra = Math.max(0, Math.min(800, Math.floor(parsed.extra ?? count)));
-    const concurrency = Math.max(1, Math.min(12, Math.floor(parsed.concurrency ?? 8)));
-    const start = Math.max(1, Math.min(64, Math.floor(parsed.start ?? 32)));
+    const count = clampInt(parsed.count, 1, 800, 300);
+    const extra = clampInt(parsed.extra ?? parsed.count, 0, 800, count);
+    const concurrency = clampInt(parsed.concurrency, 1, 12, 8);
+    const start = clampInt(parsed.start, 1, 64, 32);
 
     // 1) Ingen parallell körning (RPM-taket är per process).
+    //    Tre oberoende kontroller:
+    //    a) process-scan (fångar körningar startade utanför dashboarden)
+    //    b) run.json med levande pid (fångar dashboardkörningar)
+    //    c) låsfilen (fångar en körning som håller på att starta)
+    //    (b) täcker också fönstret mellan två samtidiga POST-anrop, där
+    //    process-scanen ännu inte ser den andra processen.
     const running = findAdaptiveRuns();
     if (running.length > 0) {
       res.writeHead(409, { 'Content-Type': 'application/json; charset=utf-8' });
@@ -3068,6 +3125,17 @@ if (req.method === 'POST' && url === '/api/bfl/adaptive-run') {
         JSON.stringify({
           ok: false,
           error: `en bildgenerering körs redan (pid ${running.join(', ')}) — MiniMax-taket är 10 bilder/min, så två körningar samtidigt skulle ge 429-fel`,
+        }),
+      );
+      return true;
+    }
+    const live = findLiveAdaptiveRuns();
+    if (live.length > 0) {
+      res.writeHead(409, { 'Content-Type': 'application/json; charset=utf-8' });
+      res.end(
+        JSON.stringify({
+          ok: false,
+          error: `en bildgenerering körs redan (pid ${live.map((r) => r.pid).join(', ')}) — MiniMax-taket är 10 bilder/min, så två körningar samtidigt skulle ge 429-fel`,
         }),
       );
       return true;
@@ -3226,6 +3294,7 @@ if (url === '/api/bfl/adaptive-run/latest' && req.method === 'GET') {
           failed: prog?.failed ?? 0,
           apiErrors: prog?.apiErrors ?? 0,
           round: prog?.round ?? 0,
+          size: prog?.size ?? 0,
           target: prog?.target ?? 0,
           remaining: prog?.remaining ?? 0,
           percent: latest.count > 0 ? Math.min(100, Math.round((generated / latest.count) * 100)) : 0,

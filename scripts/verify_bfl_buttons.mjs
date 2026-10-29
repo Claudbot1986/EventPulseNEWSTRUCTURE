@@ -183,8 +183,10 @@ async function main() {
   if (!feature || feature === 'model-compare') {
     await reload();
     allErrors.push(...(await verifyModelCompare(page, 'bfl-flux-2-pro')));
-    await reload();
-    allErrors.push(...(await verifyModelCompare(page, 'minimax-image-01')));
+    // 2026-10-29 — MiniMax-knappen är inte längre en compare-test:
+    // den kör adaptiv fill (biblioteksfyllning). Den täcks av
+    // scripts/verify_bfl_adaptive_fill.mjs / verify-bfl-adaptive-fill.
+    // Klickar vi här skulle vi starta en riktig 300-körning.
   }
 
   await browser.close();

@@ -23,10 +23,15 @@ dashboard header
   ├─ #btn-bfl-zoom-auto   (grön)    → POST /api/bfl/zoom-run {auto:true}
   ├─ #bfl-zoom-count      (input)   → tal 1–500, klipptes till POST body
   ├─ #btn-bfl-compare-flux2  (blå)  → POST /api/bfl/compare-test {model:"bfl-flux-2-pro"}
-  └─ #btn-bfl-compare-minimax (orange) → POST /api/bfl/compare-test {model:"minimax-image-01"}
+  └─ #btn-bfl-compare-minimax (orange) → POST /api/bfl/adaptive-run {count:N}  (ADAPTIV FILL sedan 2026-10-29)
 ```
 
 Befintlig `btn-bfl-generate` och dess modal ligger utanför denna skill (äldre pipeline, annan status-rad).
+
+> **2026-10-29:** `#btn-bfl-compare-minimax` byttes från "3 bilder · jämför-test"
+> till **adaptiv fill** (biblioteksfyllning via `scripts/adaptive_image_gen.ts`).
+> Den täcks nu av `verify-bfl-adaptive-fill`. `POST /api/bfl/compare-test` finns
+> kvar och fungerar för `minimax-image-01`, men ingen UI-knapp leder dit.
 
 ## Pipeline (recap)
 
@@ -42,12 +47,17 @@ btn-bfl-zoom-run / btn-bfl-zoom-auto
             → local_image_library_stamped/<cat>/zoom_<cat>_<slug>_<pose>_<light>_<runTag>_<idx>.webp + .json
             → writeRunStateProgress()  → tmp/bfl_runs/zoom_<runId>.json  (UI-räknare)
 
-btn-bfl-compare-flux2 / btn-bfl-compare-minimax
+btn-bfl-compare-flux2
   → POST /api/bfl/compare-test  (server.ts:2613)
     → spawn tools/bfl-model-compare.mjs  (icke-detached)
         → 3 bilder (3 default-kategorier: music, theatre-drama, community)
         → tmp/bfl_model_compare_<runId>/<model>_<category>_<idx>.png + .json
         → Skriver INTE till image_library / Supabase / local_image_library
+
+btn-bfl-compare-minimax  (ADAPTIV FILL sedan 2026-10-29 — se verify-bfl-adaptive-fill)
+  → POST /api/bfl/adaptive-run  {count:N}
+    → spawn scripts/adaptive_image_gen.ts  (detached, unref'd)
+        → local_image_library_stamped_v2/<cat>/zoom_<cat>_<slug>_<pose>_<light>_adp_<idx>.webp + .json
 ```
 
 ## Pre-conditions

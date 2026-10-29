@@ -8,9 +8,17 @@ Detta är feature-map för BFL-header-knapparna på dashboarden (port 7777). Spe
 | 2 | `btn-bfl-zoom-auto` (grön) | `auto-fill.md` | live (delvis — UX-buggar kända) | `POST /api/bfl/zoom-run {auto: true}` | `computeAutoFillCount()` i `server.ts:2398` → samma som #1 |
 | 3 | `bfl-zoom-count` (input) | `zoom-count-input.md` | live | input till #1 | klient-validering i `app.js:2925` |
 | 4 | `btn-bfl-compare-flux2` (blå) | `model-compare-flux2.md` | live (experiment) | `POST /api/bfl/compare-test {model:"bfl-flux-2-pro"}` | `tools/bfl-model-compare.mjs` |
-| 5 | `btn-bfl-compare-minimax` (orange) | `model-compare-minimax.md` | live (experiment) | `POST /api/bfl/compare-test {model:"minimax-image-01"}` | samma som #4 |
+| 5 | `btn-bfl-compare-minimax` (orange) | `model-compare-minimax.md` | **flyttad 2026-10-29** | `POST /api/bfl/adaptive-run {count:N}` | `scripts/adaptive_image_gen.ts` |
 
 Status-kolumnen speglar dashboardens faktiska beteende. `live` = knappen fungerar via UI-klick; `experiment` = lever men är inte en del av produkt-flödet (modell-jämförelse).
+
+**Ändring 2026-10-29:** `btn-bfl-compare-minimax` slutade vara en
+modell-jämförelsetest (3 bilder → `tmp/bfl_model_compare_*/`) och blev i stället
+**adaptiv fill** — den fyller bildbiblioteket med N nya bilder via
+`scripts/adaptive_image_gen.ts`. Knappen täcks nu av
+`verify-bfl-adaptive-fill`; `model-compare-minimax.md` här är bara en
+övergångsnotering. `POST /api/bfl/compare-test` finns kvar och är fortfarande
+användbart för `minimax-image-01` — men ingen UI-knapp längre leder dit.
 
 ## Cross-cutting concerns (INTE egna feature-filer)
 

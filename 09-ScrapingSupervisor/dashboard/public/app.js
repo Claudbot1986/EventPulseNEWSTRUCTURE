@@ -2887,10 +2887,30 @@ function setAdaptiveButtonsDisabled(disabled) {
 
 async function pollAdaptiveRun(runId) {
   if (adaptiveState.pollTimer) clearInterval(adaptiveState.pollTimer);
+  let fails = 0;
   adaptiveState.pollTimer = setInterval(async () => {
     try {
       const r = await fetch(`/api/bfl/adaptive-run/${runId}/status`);
-      if (!r.ok) return;
+      if (!r.ok) {
+        // 404 = körningen finns inte (t.ex. felaktigt runId). Då ska vi
+        // SLUTA polla — annars står knappen låst för alltid.
+        if (r.status === 404) {
+          clearInterval(adaptiveState.pollTimer);
+          adaptiveState.pollTimer = null;
+          setAdaptiveButtonsDisabled(false);
+          setAdaptiveStatus('✗ körningen hittades inte', 'warn');
+          return;
+        }
+        fails += 1;
+        if (fails >= 10) {
+          clearInterval(adaptiveState.pollTimer);
+          adaptiveState.pollTimer = null;
+          setAdaptiveButtonsDisabled(false);
+          setAdaptiveStatus('✗ status slutar svara — kontrollera dashboarden', 'warn');
+        }
+        return;
+      }
+      fails = 0;
       const j = await r.json();
       const s = j.result;
       if (!s) return;
@@ -2920,7 +2940,6 @@ async function startAdaptiveRun() {
   const count = Math.max(1, Math.min(800, parseInt(inp?.value ?? '300', 10) || 300));
   setAdaptiveButtonsDisabled(true);
   setAdaptiveStatus(`startar ${count} bilder…`, 'warn');
-  setAdaptiveProgress(0, `0 / ${count}`);
   try {
     const r = await fetch('/api/bfl/adaptive-run', {
       method: 'POST',
@@ -2929,10 +2948,13 @@ async function startAdaptiveRun() {
     });
     const j = await r.json();
     if (!r.ok || !j.ok) {
+      // Viktigt: nollställ INTE progress-baren här. Om servern nekade
+      // (409) kan en annan körning pågå, och dess framsteg ska synas.
       setAdaptiveStatus(`✗ ${j.error || 'okänt fel'}`, 'warn');
       setAdaptiveButtonsDisabled(false);
       return;
     }
+    setAdaptiveProgress(0, `0 / ${count}`);
     adaptiveState.runId = j.runId;
     pollAdaptiveRun(j.runId);
   } catch (err) {
@@ -2949,8 +2971,10 @@ async function resumeAdaptiveRun() {
     const j = await r.json();
     const s = j.result;
     if (!s) return;
-    setAdaptiveProgress(s.percent ?? 0, `${s.generated ?? 0} / ${s.count ?? 0}`);
+    // Visa balken BARA om en körning faktiskt pågår — annars skulle den
+    // ligga kvar från en avslutad körning och visa en gammal siffra.
     if (s.status === 'running') {
+      setAdaptiveProgress(s.percent ?? 0, `${s.generated ?? 0} / ${s.count ?? 0}`);
       setAdaptiveStatus(`genererar… ${s.generated}/${s.count}`, 'warn');
       setAdaptiveButtonsDisabled(true);
       adaptiveState.runId = s.runId;

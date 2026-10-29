@@ -10,20 +10,28 @@ Progress-baren är operatörens enda visuella signal om att en lång körning
 ## Sub-features
 
 - **`#bfl-adaptive-progress`** — `hidden` tills en körning startar.
+  Efter en sidladdning visas balken **bara om en körning pågår** (`resumeAdaptiveRun`
+  sätter den bara för `status === 'running'`). Efter en avslutad körning är den
+  alltså dold igen.
 - **`#bfl-adaptive-progress-bar`** — `role="progressbar"`,
   `aria-valuemin="0"`, `aria-valuemax="100"`, `aria-valuenow` uppdateras.
 - **`#bfl-adaptive-progress-fill`** — `style.width = "<procent>%"`.
 - **`#bfl-adaptive-progress-text`** — `"<generated> / <count>"`.
 - **Källa** — `GET /api/bfl/adaptive-run/:id/status` → `percent` + `generated`.
-  Servern räknar `percent = round(generated / count * 100)`.
-- **Uppdateringsfrekvens** — `app.js` pollar var 1,5 s.
+  Servern räknar `percent = min(100, round(generated / count * 100))`.
+  Taket på 100 betyder att **beställningen** är uppfylld, inte att planen är
+  slut.
+- **Uppdateringsfrekvens** — `app.js` pollar var 1,5 s. De första 1,5 s efter
+  klick står balken på 0 %.
 
 ## How to get to it (user POV)
 
 1. Starta en körning med knappen.
 2. Progress-baren visas direkt under/ bredvid knappen med `0 / N`.
 3. Under körningen fylls balken och texten räknar upp `7 / 300`.
-4. Vid slutet står balken på 100 % och texten `300 / 300`.
+4. Vid slutet står balken på 100 % och texten `300 / 300` — **förutsatt att
+   inga API-fel inträffade**. API-fel räknas inte som genererade bilder, så
+   en körning med fel slutar under 100 %.
 5. Statusraden ovanför visar sista bedömningen: `genererar… 7/300 · ✓ WIDE/konst`.
 
 ## Driving it with curl
@@ -54,12 +62,18 @@ och verifierar att `aria-valuenow` går 0 → 100 och att slutvärdet är `"100"
 
 | check | förväntat |
 |---|---|
-| `#bfl-adaptive-progress` `hidden` före start | true |
+| `#bfl-adaptive-progress` `hidden` före start | true (om ingen körning pågår) |
 | `hidden` efter klick | false |
 | `aria-valuenow` efter start | 0 |
-| `aria-valuenow` vid slut | 100 |
+| `aria-valuenow` vid slut | 100 (utan API-fel) |
 | `#bfl-adaptive-progress-text` vid slut | `"<count> / <count>"` |
 | Fill-bredden | motsvarar `aria-valuenow` |
+
+**Vad drivern faktiskt assertar:** slutvärdet `aria-valuenow === "100"` och
+att inga nya fel rapporterats. Den assertar **inte** att värdet går 0 → 100
+monotont — värdet 0 efter start är inte heller assertat. Om du vill bevisa
+monotonicitet, jämför `progressTimeline` i rapport-JSON:en mot `aria-valuenow`
+i varje poll.
 
 ## Gotchas
 
@@ -67,11 +81,22 @@ och verifierar att `aria-valuenow` går 0 → 100 och att slutvärdet är `"100"
   `target`.** När kvoten är uppfylld och `--extra` används kan `target` vara
   större än `count` — baren når då 100 % medan `remaining` i `progress.json`
   fortfarande är > 0. Det är korrekt: beställningen är uppfylld.
+- **Formeln är `min(100, round(generated / count * 100))`.** Taket på 100
+  betyder att beställningen är uppfylld — planen kan alltså fortfarande ha
+  kvarvarande slots.
+- **100 % är inte garanterat vid API-fel.** `apiErrors` räknas inte som
+  genererade bilder, så en körning med 429-fel slutar under 100 %.
 - **Baren fylls ihop med `generated`, som räknas per bild** — inte per omgång.
   Den är därför jämn, inte stegvis.
+- **Balken nollställs INTE av ett nekade anrop.** `setAdaptiveProgress(0, …)`
+  körs först efter ett godkänt POST-svar. Ett 409 lämnar en pågående körnings
+  framsteg synliga (fix 2026-10-29 — tidigare nollställdes balken och
+  statusraden sade "✗" medan balken sade 0 %).
 - **`aria-valuenow` sätts som attribut** (inte bara via bredd) — det gör att
   skärmläsare kan läsa framsteget.
 - **Balken har ingen etiketttext** utöver `aria-label="Genereringsframsteg"`.
 - **Baren visas även vid fel** (t.ex. 409) — då står den på 0 % med en
   feltext i statusraden. Det är avsiktligt: operatören ska se att något
   hände.
+- **`/latest` och `/:id/status` har nu samma fältmängd** (14 st) — tidigare
+  saknade `/latest` fältet `size`.

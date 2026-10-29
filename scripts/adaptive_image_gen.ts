@@ -29,6 +29,7 @@
 
 import { existsSync, readFileSync, writeFileSync, mkdirSync, readdirSync, statSync, rmSync, openSync, closeSync, renameSync } from 'node:fs';
 import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { createClient } from '@supabase/supabase-js';
 import sharp from 'sharp';
 import { applyAiComplianceToWebp } from '../08-Agent/tools/ai_compliance.js';
@@ -59,7 +60,12 @@ let PROGRESS_FILE = path.join(STATE_DIR, 'progress.json');
 // Låset är GLOBAL (inte per run-dir). RpmGuard räknar per process, så två
 // parallella körningar skulle tillsammans ge upp till 18 anrop/min mot
 // MiniMax taket 10/min → 429. Låset gör att bara en körning går åt gång.
-const LOCK_FILE = path.resolve('runtime/adaptive-image-gen/run.lock');
+//
+// Sökvägen härleds från SKRIPTETS placering, inte från cwd: dashboarden
+// läser låset via PROJECT_ROOT. Ett cwd-beroende lås skulle kunna hamna på
+// en annan plats än servern tittar efter → ingen mutual exclusion.
+const PROJECT_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
+const LOCK_FILE = path.join(PROJECT_ROOT, 'runtime', 'adaptive-image-gen', 'run.lock');
 
 const RPM_LIMIT = 10;
 const RPM_SAFE = 9; // säkerhetsmarginal under taket
@@ -392,21 +398,30 @@ async function generateOne(slot: PromptSlot, guard: RpmGuard): Promise<GenResult
   const apiKey = env('MINIMAX_API_KEY');
   if (!apiKey) return { slot, ok: false, apiError: 'MINIMAX_API_KEY saknas' };
 
-  const r = await fetch(`${MINIMAX_BASE}/image_generation`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${apiKey}` },
-    body: JSON.stringify({
-      model: IMAGE_MODEL,
-      prompt: slot.prompt,
-      response_format: 'url',
-      width: IMG_W,
-      height: IMG_H,
-      aspect_ratio: IMG_ASPECT,
-      n: 1,
-      prompt_optimizer: true,
-    }),
-    signal: AbortSignal.timeout(180_000),
-  });
+  // 2026-10-29 — nätverksfel (connect timeout, socket reset) är INTE ett
+  // HTTP-fel: `fetch` kastar. Utan try/catch dödar en sådan avbruten
+  // anslutning HELA körningen (observerat 2026-10-29 efter 553 bilder).
+  // Ett nätverksfel ska vara ett api-fel som grinden hanterar.
+  let r: Response;
+  try {
+    r = await fetch(`${MINIMAX_BASE}/image_generation`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${apiKey}` },
+      body: JSON.stringify({
+        model: IMAGE_MODEL,
+        prompt: slot.prompt,
+        response_format: 'url',
+        width: IMG_W,
+        height: IMG_H,
+        aspect_ratio: IMG_ASPECT,
+        n: 1,
+        prompt_optimizer: true,
+      }),
+      signal: AbortSignal.timeout(180_000),
+    });
+  } catch (e) {
+    return { slot, ok: false, apiError: `nätverksfel: ${String((e as Error)?.message ?? e)}` };
+  }
   if (!r.ok) return { slot, ok: false, apiError: `HTTP ${r.status}` };
   const j = (await r.json()) as {
     base_resp?: { status_code?: number; status_msg?: string };
@@ -420,7 +435,12 @@ async function generateOne(slot: PromptSlot, guard: RpmGuard): Promise<GenResult
   const url = j?.data?.image_urls?.[0];
   if (!url) return { slot, ok: false, apiError: 'inget image_urls i svaret' };
 
-  const img = await fetch(url, { signal: AbortSignal.timeout(60_000) });
+  let img: Response;
+  try {
+    img = await fetch(url, { signal: AbortSignal.timeout(60_000) });
+  } catch (e) {
+    return { slot, ok: false, apiError: `nedladdning nätverksfel: ${String((e as Error)?.message ?? e)}` };
+  }
   if (!img.ok) return { slot, ok: false, apiError: `download ${img.status}` };
   const raw = Buffer.from(await img.arrayBuffer());
 
@@ -542,28 +562,35 @@ async function checkOnce(file: string): Promise<RawVerdict | null> {
   const apiKey = env('MINIMAX_API_KEY');
   const buf = await sharp(file).resize({ width: 768 }).jpeg({ quality: 80 }).toBuffer();
   const dataUrl = `data:image/jpeg;base64,${buf.toString('base64')}`;
-  const res = await fetch(`${MINIMAX_BASE}/chat/completions`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${apiKey}` },
-    body: JSON.stringify({
-      model: M3_MODEL,
-      messages: [
-        {
-          role: 'user',
-          content: [
-            { type: 'text', text: VERIFY_PROMPT },
-            { type: 'image_url', image_url: { url: dataUrl } },
-          ],
-        },
-      ],
-      temperature: 0.1,
-      // M3 kör extended thinking i samma fält — med 300 tokens ägdes hela
-      // budgeten av tankarna och svaret kom aldrig. 2000 räcker (mätt:
-      // reasoning_tokens 244–363).
-      max_tokens: 2000,
-    }),
-    signal: AbortSignal.timeout(120_000),
-  });
+  let res: Response;
+  try {
+    res = await fetch(`${MINIMAX_BASE}/chat/completions`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${apiKey}` },
+      body: JSON.stringify({
+        model: M3_MODEL,
+        messages: [
+          {
+            role: 'user',
+            content: [
+              { type: 'text', text: VERIFY_PROMPT },
+              { type: 'image_url', image_url: { url: dataUrl } },
+            ],
+          },
+        ],
+        temperature: 0.1,
+        // M3 kör extended thinking i samma fält — med 300 tokens ägdes hela
+        // budgeten av tankarna och svaret kom aldrig. 2000 räcker (mätt:
+        // reasoning_tokens 244–363).
+        max_tokens: 2000,
+      }),
+      signal: AbortSignal.timeout(120_000),
+    });
+  } catch (e) {
+    // Nätverksfel ska ge "ingen giltig granskning", inte döda körningen.
+    warn(`  M3-anrop misslyckades: ${String((e as Error)?.message ?? e)}`);
+    return null;
+  }
   if (!res.ok) return null;
   const j = (await res.json()) as { choices?: Array<{ message?: { content?: string } }> };
   return extractJson(j?.choices?.[0]?.message?.content ?? '');
@@ -711,6 +738,15 @@ function acquireLock(): (() => void) | null {
         } catch { /* ignore */ }
       };
       process.on('exit', release);
+      // 'exit'-eventet körs INTE vid SIGINT/SIGTERM — utan dessa handlers
+      // ligger låsfilen kvar efter en avbruten körning. (Stale lås tas
+      // över av nästa start, men operatören ska inte behöva veta det.)
+      for (const sig of ['SIGINT', 'SIGTERM'] as const) {
+        process.on(sig, () => {
+          release();
+          process.exit(sig === 'SIGINT' ? 130 : 143);
+        });
+      }
       return release;
     } catch {
       // Låset finns — lever ägaren?
