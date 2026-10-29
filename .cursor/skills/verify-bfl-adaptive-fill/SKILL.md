@@ -228,6 +228,51 @@ raderna (de har rating 3, de nya har `NULL` — indexet är
 Samma kedja finns som ett körande skript: `.scratch/run-publish-chain.sh`
 (väntar på att genereringen ska avslutas och kör sedan stegen i ordning).
 
+## Drive — ge nytillkomna events bilder (check/följ)
+
+Ingestion-kedjan kör `D-images` **innan** `import-to-eventpulse`. Events som
+importeras under samma körning får därför ingen bild från den passen. Kör en
+extra D-images-pass efteråt:
+
+```bash
+# 1. Kör ingestion-kedjan
+npx tsx scripts/ingestion-cron.ts --limit 30 --skip-bfl
+
+# 2. Ge de nyimporterade eventsen biblioteksbilder
+npx tsx --eval "import('./08-Agent/services/imageGen.matchLibraryFirst.ts')
+  .then(m => m.matchLibraryFirst({ limit: 500, onlyMissing: true,
+    libraryConcurrency: 5, bflConcurrency: 0, skipBflFallback: true }))
+  .then(r => console.log(JSON.stringify(r)))"
+
+# 3. Verifiera att de nya eventsen faktiskt har bilder
+node --env-file=.env --import tsx -e "
+import { createClient } from '@supabase/supabase-js';
+const db = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY, { auth: { persistSession: false } });
+const { data } = await db.from('events')
+  .select('id, title_sv, source, category_slug, image_url')
+  .gte('created_at', '<NY_SEDAN>')
+  .order('created_at');
+const med = (data ?? []).filter(e => e.image_url && !e.image_url.includes('placeholder.local'));
+console.log('nya events:', data?.length ?? 0, '| med levande bild-URL:', med.length);
+"
+```
+
+**Varför `--skip-bfl`:** biblioteket är fullt; BFL-generering ska inte köras.
+`skipBflFallback: true` gör att matchar utan biblioteksbild INTE försöker BFL.
+
+**Förväntat:** `libraryMatched` ≈ antalet nya events, `unmatched` = 0.
+
+**Fynd 2026-10-29:** `scripts/ingest-sitemap-discovery.mjs` skapade events
+UTAN `category_slug`. Utan kategori kan `pickLibraryFallback` inte matcha
+någon bild (biblioteket har inga NULL-kategori-bilder). 59 events stod därför
+kvar utan bild tills kategorin backfillas till `community`
+(`scripts/backfill_null_category.ts`). **Kontrollera alltid att nytillkomna
+events har en kategori** innan du förväntar dig bilder på dem.
+
+**`--only` på ingestion-cron:** flaggan läses som `--only A,B,C` **eller**
+`--only=A,B,C` (båda fungerar sedan fixen 2026-10-29). Ett okänt stegnamn är
+ett FEL (exit 2), inte en tyst "inget att göra".
+
 ## Evidence-platser
 
 | Bevis | Sökväg |
