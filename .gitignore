@@ -182,6 +182,9 @@ local_image_library_stamped/**
 # scripts/adaptive_image_gen.ts (ny kompositionsmix + bottom-left-stämpel).
 # Binärer + regenererbara artefakter — återskapas via adaptive_image_gen.ts.
 local_image_library_stamped_v2/
+# local_image_library_stamped_v2_quarantine/ — underkända bilder som
+# M3-granskningen avvisade (2026-10-29). Regenererbara, laddas aldrig upp.
+local_image_library_stamped_v2_quarantine/
 /stamping_local/
 /tmp_image_corpus/*.png
 /tmp_image_corpus/*.webp
