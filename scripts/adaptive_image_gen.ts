@@ -1037,16 +1037,36 @@ async function main(): Promise<void> {
     const roundApiErrors = results.length - okResults.length;
 
     // GRIND
+    //
+    // 2026-10-29 — den halverade storleken vid VARJE innehållsfel. Med ett
+    // felrate på ~5 % per bild har en omgång på 32 bilder ~80 % sannolikhet
+    // att ha minst ett fel → storleken kollapserade 32→16→8→4 och körningen
+    // krympte till 4 bilder per omgång (mätt i körning 2026-10-29T17-42).
+    //
+    // Nu är beslutsgränsen FELRATE, inte antal fel:
+    //   < 3 %  → dubbla storleken (AIMD: additiv ökning)
+    //   ≤ 12 % → behåll storleken
+    //   > 12 % → halvera (multiplikativ minskning)
+    //   API-fel → halvera (nätverks-/rate-limit-problem är ett annat problem
+    //             än bildkvalitet och ska inte slås ihop med innehållsfel)
     const sizeBefore = size;
-    if (roundApiErrors > 0 || roundFail > 0) {
+    const failRate = okResults.length > 0 ? roundFail / okResults.length : 1;
+    if (roundApiErrors > 0) {
       size = Math.max(1, Math.floor(size / 2));
       warn(
-        `omgång ${round}: ${roundApiErrors} API-fel, ${roundFail} innehålls-fel → storlek ${sizeBefore} → ${size}`,
+        `omgång ${round}: ${roundApiErrors} API-fel → storlek ${sizeBefore} → ${size}`,
       );
-      if (roundApiErrors > 0) {
-        log('vänta 20s (rate limit / nätverksproblem) ...');
-        await sleep(20_000);
-      }
+      log('vänta 20s (rate limit / nätverksproblem) ...');
+      await sleep(20_000);
+    } else if (failRate > 0.12) {
+      size = Math.max(1, Math.floor(size / 2));
+      warn(
+        `omgång ${round}: ${roundFail}/${okResults.length} innehålls-fel (${(failRate * 100).toFixed(0)} %) → storlek ${sizeBefore} → ${size}`,
+      );
+    } else if (failRate > 0.03) {
+      log(
+        `omgång ${round}: ${roundFail}/${okResults.length} innehålls-fel (${(failRate * 100).toFixed(0)} %) → storlek ${sizeBefore} (oförändrad)`,
+      );
     } else {
       size = Math.min(size * 2, 64);
       log(`omgång ${round}: allt godkänt → storlek ${sizeBefore} → ${size}`);

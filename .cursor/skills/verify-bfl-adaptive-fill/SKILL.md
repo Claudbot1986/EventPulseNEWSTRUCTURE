@@ -233,11 +233,13 @@ Samma kedja finns som ett körande skript: `.scratch/run-publish-chain.sh`
 | Bevis | Sökväg |
 |---|---|
 | Playwright-screenshots + JSON-rapport | `.scratch/evidence/<YYYY-MM-DD>-adaptive-fill/` |
+| Slutverifiering i appen (screenshots + rapport) | `.scratch/evidence/<YYYY-MM-DD>-app-images/` |
 | Run-metadata (pid, count, logPath) | `runtime/adaptive-image-gen/runs/<runId>/run.json` |
 | Progress (skrivs efter varje bild) | `runtime/adaptive-image-gen/runs/<runId>/progress.json` |
 | Granskningslogg (en rad per bild) | `runtime/adaptive-image-gen/runs/<runId>/verify.ndjson` |
 | Körningslogg (stdout) | `runtime/adaptive-image-gen/runs/<runId>/run.log` |
 | Genererade bilder | `local_image_library_stamped_v2/<category>/zoom_*_adp_*.webp` |
+| Underkända bilder (karantän) | `local_image_library_stamped_v2_quarantine/<category>/` |
 | Metadata per bild | samma filnamn + `.webp.json` |
 | Låsfil | `runtime/adaptive-image-gen/run.lock` |
 

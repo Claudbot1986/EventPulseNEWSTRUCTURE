@@ -11,6 +11,7 @@ Feature-map för dashboardens adaptiva bildfyllning (port 7777). Speglar
 | 3 | `bfl-adaptive-progress` (bar) | `progress-bar.md` | live | `GET /api/bfl/adaptive-run/:id/status` | `progress.json` |
 | 4 | Serverns körningsskydd | `concurrency-guard.md` | live | 409 + `run.lock` | `findAdaptiveRuns()` + `acquireLock()` |
 | 5 | Publicering till appen | `publish-to-app.md` | live | — | upload → prune → repair |
+| 6 | Slutverifiering i appen | `app-image-verification.md` | live | — | `scripts/verify_app_event_images.mjs` |
 
 ## Cross-cutting concerns (INTE egna feature-filer)
 
