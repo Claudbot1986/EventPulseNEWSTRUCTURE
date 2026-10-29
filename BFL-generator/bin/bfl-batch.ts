@@ -20,6 +20,31 @@
  *   - BFL-nyckel läses från BFL_API_KEY
  *   - M3-nyckel läses från MINIMAX_API_KEY
  *   - Retry 429: vänta 30s och gör ett nytt försök
+ * ═══════════════════════════════════════════════════════════════════════════
+ * ⚠️ DEPRECATED (2026-10-29) — LÄGG INTE NYA BILDER MED DETTA SKRIPT.
+ *
+ * Detta skript har en EGEN stämpelgenerator (`buildStampSvg`) som duplicerar
+ * 08-Agent/tools/ai_compliance.ts — och skillnaden är inte kosmetisk:
+ *
+ *   - Ingen maskinläsbar XMP skrivs alls (skriptet använder aldrig
+ *     applyAiCompliance / buildAiXmp).
+ *   - Ingen withMetadata() → leverantörens signerade AIGC-märkning i EXIF
+ *     (MiniMax image-01) försvinner i konverteringen.
+ *   - Aspect ratio 16:9 (1280×720), inte 3:2 som UI:t kräver.
+ *   - Stämpeln är den engelska legacy-pillen 240×64 ("AI-generated") i nedre
+ *     högra hörnet — användarbeslutet 2026-10-29 är "AI-genererad" på svenska
+ *     i nedre vänstra hörnet (150×36).
+ *
+ * Det är så här de 488 gamla bilderna i local_image_library_stamped/ blev
+ * till — de har ingen maskinlösbar märkning alls.
+ *
+ * ANVÄND I STÄLLET: scripts/adaptive_image_gen.ts
+ *   → applyAiComplianceToWebp() i 08-Agent/tools/ai_compliance.ts
+ *   (stämplar, bevarar AIGC-märkningen, skriver XMP in i WebP-filen, 3:2)
+ *
+ * Att köra det här skriptet igen skulle reproducera de gamla problemen.
+ * ═══════════════════════════════════════════════════════════════════════════
+
  */
 
 import { readFileSync, writeFileSync, mkdirSync, existsSync, unlinkSync } from 'node:fs';

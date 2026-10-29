@@ -39,6 +39,12 @@
  *   npx tsx scripts/_stamp_bulk.ts --only exhibition --apply --force
  *   npx tsx scripts/_stamp_bulk.ts --apply --force          # alla kategorier
  */
+/**
+ * ⚠️ LEGACY (2026-10-29): använd applyAiComplianceToWebp() i
+ * 08-Agent/tools/ai_compliance.ts i stället. Detta skript konverterar med
+ * sharp(...).webp() utan withMetadata() och utan XMP-injektion — den
+ * levererade filen får alltså ingen maskinläsbar Art. 50-märkning.
+ */
 import 'dotenv/config';
 import {
   readFileSync, writeFileSync, existsSync, mkdirSync, readdirSync,
