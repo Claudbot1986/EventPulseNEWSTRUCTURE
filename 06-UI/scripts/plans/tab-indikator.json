@@ -1,0 +1,20 @@
+{
+  "baseUrl": "http://localhost:9090",
+  "steps": [
+    { "action": "goto" },
+    { "action": "wait", "ms": 9000 },
+    {
+      "action": "eval",
+      "label": "indikator-efter-hem",
+      "js": "() => Array.from(document.querySelectorAll('[role=\"tab\"]')).filter(e => { const r = e.getBoundingClientRect(); return r.width > 0 && r.height > 0; }).map(t => { const label = Array.from(t.querySelectorAll('div')).find(d => d.children.length === 0 && (d.textContent||'').trim()); return { flik: t.getAttribute('aria-label'), färg: label ? getComputedStyle(label).color : null, ikonFärg: getComputedStyle(t.querySelector('svg') || t).color }; })"
+    },
+    { "action": "tapText", "text": "Utforska", "label": "till-utforska" },
+    { "action": "wait", "ms": 4000 },
+    {
+      "action": "eval",
+      "label": "indikator-efter-utforska",
+      "js": "() => Array.from(document.querySelectorAll('[role=\"tab\"]')).filter(e => { const r = e.getBoundingClientRect(); return r.width > 0 && r.height > 0; }).map(t => { const label = Array.from(t.querySelectorAll('div')).find(d => d.children.length === 0 && (d.textContent||'').trim()); return { flik: t.getAttribute('aria-label'), färg: label ? getComputedStyle(label).color : null, ikonFärg: getComputedStyle(t.querySelector('svg') || t).color }; })"
+    },
+    { "action": "shot", "label": "indikator-utforska" }
+  ]
+}
