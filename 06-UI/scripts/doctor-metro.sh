@@ -42,10 +42,17 @@ fi
 
 # 4. Agent-API svarar? (från EXPO_PUBLIC_AGENT_URL i .env)
 cd "$UI_DIR"
+# Ett externt satt EXPO_PUBLIC_AGENT_URL vinner över .env — samma regel som
+# launch-metro.sh. Utan detta skulle doktorn rapportera om prod-agenten medan
+# appen i verkligheten pratar med den lokala agenten.
+AGENT_URL_OVERRIDE="${EXPO_PUBLIC_AGENT_URL:-}"
 set -a
 # shellcheck disable=SC1091
 . ./.env 2>/dev/null || true
 set +a
+if [ -n "${AGENT_URL_OVERRIDE}" ]; then
+  export EXPO_PUBLIC_AGENT_URL="${AGENT_URL_OVERRIDE}"
+fi
 AGENT_URL="${EXPO_PUBLIC_AGENT_URL:-https://eventpulse-agent.fly.dev}"
 agent=$(curl -s -m 15 "${AGENT_URL}/agent/health" 2>/dev/null || echo "")
 if echo "${agent}" | grep -q '"ok":true'; then

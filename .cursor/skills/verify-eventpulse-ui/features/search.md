@@ -4,7 +4,7 @@
 
 - Sök sker **i Utforska-fliken**, i en ruta högst upp (`data-testid="explore-search-input"`, textfältet `explore-search-textinput`).
 - `06-UI/screens/SearchScreen.js` finns kvar men **monteras inte** — `App.js` kommenterar ut att SearchScreen byts mot in-söking i samma vy.
-- Sökfrågan skickas till agent-API:t (`/agent/feed` med `q=`), träffarna visas i samma lista som Utforska.
+- Sökfrågan skickas till agent-API:t (`GET /agent/feed?q=<text>`), träffarna visas i samma lista som Utforska. Anropet bär **alltid** `?locale=<uiLanguage>`, vilket styr översättning och skript-skydd för titel och lokalnamn.
 - **Sökfel visas inte för användaren** — `agentClient.js` fångar felet och returnerar `search.error`, UI:t visar inget.
 
 ## How to get to it (user POV)
@@ -19,7 +19,7 @@ Nycklar:
 
 - Fältet: `data-testid="explore-search-input"` (behållaren) / `explore-search-textinput"` (själva input-elementet).
 - Submit: tryck Enter i fältet, eller tryck sökknappen i fältets högra kant.
-- Resultatet listas i Utforska-listan; varje rad är `<button>` med `aria-label="<titel> — <undertext>"`.
+- Resultatet listas i Utforska-listan; varje rad är `div[role="button"]` (inte `<button>`) med `aria-label="<titel> — <undertext>"`.
 
 Recept: öppna Utforska → fyll i "konsert" → tryck Enter → vänta på att minst en rad har `aria-label` med en titel → öppna första raden → detaljskärmen ska visas.
 

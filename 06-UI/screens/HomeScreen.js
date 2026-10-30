@@ -45,6 +45,7 @@ import { useAiImageUrl } from '../hooks/useAiImageUrl';
 // lives in HEM-QUARANTINE för vitest-testbarhet (mobileHomeScreen.test.ts
 // kan pinna semantiken utan React Native testing-library).
 import { shouldRenderPersonalized } from '../HEM-QUARANTINE/screens/home/personalizedGate';
+import { attachDisplayTitles, pickDisplayTitle } from '../utils/displayTitles';
 
 const TOKENS = {
   color: {
@@ -71,8 +72,12 @@ const IKVALL_HOUR = 18;
 const IKVALL_GRACE_MS = 20 * 60 * 1000;
 const UPPTACK_LIMIT = 5;
 
+// 2026-10-30 (textintegritet) — Hem läser `events_public` direkt och passerar
+// därför INTE agentens `?locale=`-översättning. `pickDisplayTitle` ger samma
+// beteende: översättning ur `event_translations` om titeln har ett främmande
+// skript, annars skyddsfilter. Se 06-UI/utils/displayTitles.js.
 function pickTitle(event) {
-  return event?.title_sv || event?.title_en || 'Evenemang';
+  return pickDisplayTitle(event);
 }
 
 // Pool-poster för Senaste: title, subtitle, imageUrl. imageUrl=null tillåter
@@ -161,7 +166,14 @@ function toDetailsScreenEvent(row) {
   // OCH mapAgentEventToRow-rad (title/description/url/category). Hem, Karta
   // och Utforska-flödet kör nu alla genom samma mapper → garanterat
   // identisk DetailsScreen-payload oavsett källa.
-  const title = row.title || row.title_sv || row.title_en || 'Evenemang';
+  // 2026-10-30 (textintegritet) — samma visningsregel som korten: den
+  // redan upplösta titeln (agent-flödet) vinner framför råfält, och
+  // främmande skript tas bort.
+  const title = pickDisplayTitle({
+    title_display: row.title || row.title_display,
+    title_sv: row.title_sv,
+    title_en: row.title_en,
+  }) || 'Evenemang';
   const { stripHtml } = require('../utils/stripHtml.js');
   const description = stripHtml(row.description || row.description_sv || row.description_en || null);
   const ticketUrl = row.ticket_url || row.url || null;
@@ -329,6 +341,22 @@ export default function HomeScreen({ onCardPress, userState }) {
 
   const unknownError = t('home.subtitle.errorUnknown');
 
+  // 2026-10-30 (textintegritet) — Hem läser `events_public` direkt, så
+  // agentens `?locale=`-översättning når inte hit. Den här hjälpen ger
+  // samma beteende: events vars titel har ett främmande skript hämtar en
+  // översättning ur `event_translations`. För övriga rader görs inget
+  // extra anrop.
+  const withDisplayTitles = async (rows) => {
+    const list = rows || [];
+    try {
+      await attachDisplayTitles(supabase, list);
+    } catch (_) {
+      // Översättning är en förbättring, inte ett krav — titta aldrig bort
+      // en hel sektion för att den inte kunde hämtas.
+    }
+    return list;
+  };
+
   // Hämta alla 5 sektioner parallellt vid mount. Ofullständigt fel på en
   // sektion kraschar inte de andra — varje sektion har egen loading/error.
   useEffect(() => {
@@ -351,7 +379,7 @@ export default function HomeScreen({ onCardPress, userState }) {
         if (error) {
           setFordig({ status: 'error', data: [], error: error.message });
         } else {
-          setFordig({ status: 'ready', data: data || [], error: null });
+          setFordig({ status: 'ready', data: await withDisplayTitles(data), error: null });
         }
       } catch (e) {
         if (!cancelled) setFordig({ status: 'error', data: [], error: e?.message || unknownError });
@@ -374,7 +402,7 @@ export default function HomeScreen({ onCardPress, userState }) {
         if (error) {
           setSenastePool({ status: 'error', data: [], error: error.message });
         } else {
-          setSenastePool({ status: 'ready', data: data || [], error: null });
+          setSenastePool({ status: 'ready', data: await withDisplayTitles(data), error: null });
         }
       } catch (e) {
         if (!cancelled) setSenastePool({ status: 'error', data: [], error: e?.message || unknownError });
@@ -414,7 +442,7 @@ export default function HomeScreen({ onCardPress, userState }) {
             const hh = Number(formatLocalTime(e.start_time).slice(0, 2));
             return Number.isFinite(hh) && hh >= IKVALL_HOUR;
           });
-          setIkvall({ status: 'ready', data: filtered, error: null });
+          setIkvall({ status: 'ready', data: await withDisplayTitles(filtered), error: null });
         }
       } catch (e) {
         if (!cancelled) setIkvall({ status: 'error', data: [], error: e?.message || unknownError });
@@ -438,7 +466,7 @@ export default function HomeScreen({ onCardPress, userState }) {
         if (error) {
           setHelgen({ status: 'error', data: [], error: error.message });
         } else {
-          setHelgen({ status: 'ready', data: data || [], error: null });
+          setHelgen({ status: 'ready', data: await withDisplayTitles(data), error: null });
         }
       } catch (e) {
         if (!cancelled) setHelgen({ status: 'error', data: [], error: e?.message || unknownError });
@@ -455,7 +483,7 @@ export default function HomeScreen({ onCardPress, userState }) {
         if (error) {
           setUpptack({ status: 'error', data: [], error: error.message });
         } else {
-          setUpptack({ status: 'ready', data: data || [], error: null });
+          setUpptack({ status: 'ready', data: await withDisplayTitles(data), error: null });
         }
       } catch (e) {
         if (!cancelled) setUpptack({ status: 'error', data: [], error: e?.message || unknownError });
@@ -479,7 +507,7 @@ export default function HomeScreen({ onCardPress, userState }) {
         if (error) {
           setImorgon({ status: 'error', data: [], error: error.message });
         } else {
-          setImorgon({ status: 'ready', data: data || [], error: null });
+          setImorgon({ status: 'ready', data: await withDisplayTitles(data), error: null });
         }
       } catch (e) {
         if (!cancelled) setImorgon({ status: 'error', data: [], error: e?.message || unknownError });
@@ -498,7 +526,7 @@ export default function HomeScreen({ onCardPress, userState }) {
         if (error) {
           setFoodies({ status: 'error', data: [], error: error.message });
         } else {
-          setFoodies({ status: 'ready', data: data || [], error: null });
+          setFoodies({ status: 'ready', data: await withDisplayTitles(data), error: null });
         }
       } catch (e) {
         if (!cancelled) setFoodies({ status: 'error', data: [], error: e?.message || unknownError });
@@ -517,7 +545,7 @@ export default function HomeScreen({ onCardPress, userState }) {
         if (error) {
           setGratis({ status: 'error', data: [], error: error.message });
         } else {
-          setGratis({ status: 'ready', data: data || [], error: null });
+          setGratis({ status: 'ready', data: await withDisplayTitles(data), error: null });
         }
       } catch (e) {
         if (!cancelled) setGratis({ status: 'error', data: [], error: e?.message || unknownError });
@@ -552,7 +580,7 @@ export default function HomeScreen({ onCardPress, userState }) {
         if (error) {
           setNyttEventpulse({ status: 'error', data: [], error: error.message });
         } else {
-          setNyttEventpulse({ status: 'ready', data: finalData, error: null });
+          setNyttEventpulse({ status: 'ready', data: await withDisplayTitles(finalData), error: null });
         }
       } catch (e) {
         if (!cancelled) setNyttEventpulse({ status: 'error', data: [], error: e?.message || unknownError });

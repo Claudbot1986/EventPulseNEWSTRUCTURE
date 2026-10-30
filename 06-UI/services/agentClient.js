@@ -30,7 +30,7 @@ import { getOrCreateAnonUserId, isAuthenticated, loadAuthSession } from './stora
 import { markOnline as notifyNetworkOnline } from './networkContext';
 // UI-language text for labels baked into event objects by the mappers below
 // (chip + details CTA). i18n/uiText tracks the LanguageProvider's language.
-import { uiText } from '../i18n/uiText';
+import { uiText, getUiLanguage } from '../i18n/uiText';
 
 /** Never let connectivity bookkeeping fail a successful fetch. */
 function markOnline() {
@@ -754,6 +754,15 @@ async function fetchFeedOnce({ baseUrl, from, days, mood, limit, offset, categor
   if (q && typeof q === 'string' && q.trim()) {
     url.searchParams.set('q', q.trim().slice(0, 200));
   }
+  // 2026-10-30 (textintegritet): skicka visningsspråket med. Servern
+  // slår då upp event_translations för det språk appen visar och väljer den
+  // titeltext som passar språket — annars kan appen visa t.ex. en kinesisk
+  // eller koreansk titel i en svensk app. Språket kommer från den
+  // icke-React-kanalen (i18n/uiText.js) som LanguageProvider håller
+  // uppdaterad, så detta gäller ALLA feed-anrop utan att varje anropställe
+  // behöver ändras.
+  const uiLocale = getUiLanguage();
+  if (uiLocale) url.searchParams.set('locale', uiLocale);
   // 2026-10-02 (Utforska sök datumintervall): explicit övre gräns.
   // När satt ersätter dateTo den dagars-baserade `to` så användaren
   // kan välja "1–14 november" exakt. Klippte format-checkas på serversidan.
@@ -956,6 +965,11 @@ export async function fetchRecommendedEvents({ limit = 10, signal, timeoutMs = 1
   const baseUrl = requireAgentBaseUrl();
   const url = new URL(`${baseUrl}/agent/recommended`);
   url.searchParams.set('limit', String(limit));
+  // 2026-10-30 (textintegritet): servern stöder `?locale=` även här, så
+  // "Rekommenderat"-karusellen visar titlar i appens visningsspråk — precis
+  // som Hem och Utforska gör nu.
+  const uiLocale = getUiLanguage();
+  if (uiLocale) url.searchParams.set('locale', uiLocale);
 
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), timeoutMs);

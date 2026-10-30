@@ -4,6 +4,7 @@
 // behöva parsa JSX. Mönstret är samma som AppleMapsScreen.helpers.js.
 
 import { formatStartLabel } from './mapTime.js';
+import { pickDisplayTitle } from '../utils/displayTitles';
 
 const CATEGORY_LABELS = {
   'musical-theatre': 'Musikal',
@@ -20,11 +21,15 @@ const CATEGORY_LABELS = {
 };
 
 /**
- * Plocka bästa titeln (sv > en > fallback).
+ * Plocka bästa titeln.
+ *
+ * Kedja: översättning (satt av KartaScreen.helpers) → svenska → engelska →
+ * generell fallback. Sedan skyddsfilter: innehåller titeln tecken från ett
+ * skript som inte hör hemma i visningsspråket, tas de bort. Ett tomt
+ * resultat ger "Evenemang" — aldrig främmande tecken i en svensk app.
  */
-export function pickTitle(event) {
-  if (!event) return '';
-  return event.title_sv || event.title_en || 'Evenemang';
+export function pickTitle(event, language = null) {
+  return pickDisplayTitle(event, language);
 }
 
 /**

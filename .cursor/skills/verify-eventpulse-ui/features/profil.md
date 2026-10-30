@@ -6,7 +6,7 @@
 - **Gästgren** (inte inloggad): "Lägg till e-post"-knapp, språkchips, "Om EventPulse".
 - **Inloggad gren**: Konto/Logga ut, Radera konto, Följer-chips, push-växlar, **Integritet**-sektionen med GDPR-växeln, Integritetspolicy, Användarvillkor, språk, About.
 - GDPR-växeln: "Anonym användarstatistik" → consent-nyckel `analytics.consent` (i `services/analyticsClient.js`, **inte** i `storage.js`).
-- Språkbyte: chips (Svenska/English) → `eventpulse.language` i localStorage.
+- Språkbyte: **alla 15 språk** som chips, varje språk **med sitt eget namn** (`Svenska`, `English`, `Deutsch`, `简体中文`, `العربية`, `فارسی` …) → `eventpulse.language` (AsyncStorage; på web = `localStorage`). Icke-latina namn är **korrekta**, inte fel.
 
 ## How to get to it (user POV)
 

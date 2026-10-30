@@ -32,6 +32,7 @@ import type { SupabaseClient } from '@supabase/supabase-js';
 import type { EventCard } from '../types';
 import { fetchArtistSlugsByEventIds } from './search_events';
 import { MOOD_IDS, matchMood } from './moods';
+import { pickDisplayText, guardDisplayTextWithFallback } from './textIntegrity';
 
 export interface FeedEventsInput {
   /** ISO date inclusive lower bound (YYYY-MM-DD). */
@@ -151,6 +152,10 @@ const FEED_SELECT_COLUMNS = [
   'editorial_description', 'editorial_description_generated_at', 'event_profile',
   'start_time', 'end_time',
   'venue_id',
+  // 2026-10-30 — källans eget lokalnamn. Används som reserv när den
+  // kurerade lokalen (venues.name) bär ett skript som inte passar
+  // visningsspråket (t.ex. den koreanska lokalen "왕의 정원").
+  'venue_full_name',
   'category_slug', 'is_free', 'price_min_sek', 'price_max_sek',
   'ticket_url', 'image_url',
   'image_license', 'image_attribution', 'image_source_url',
@@ -653,11 +658,20 @@ export async function feedEvents(
       // Translation > Swedish > English > 'Untitled'. Per Språkstöd plan
       // 2026-09-21 — search/ranking intentionally remains sv-only; this
       // only affects what the card displays client-side.
-      title:
-        translationByEvent.get(idStr)?.title ||
-        (r.title_sv as string) ||
-        (r.title_en as string) ||
-        'Untitled',
+      //
+      // 2026-10-30 (textintegritet): pickDisplayText väljer den första
+      // varianten som passar visningsspråket. En event vars titel är på
+      // ryska ska inte visas som ryska i en svensk app om vi har en
+      // översättning — och den ska inte tyst bytas ut mot en tom rad.
+      title: pickDisplayText(
+        [
+          translationByEvent.get(idStr)?.title,
+          r.title_sv as string,
+          r.title_en as string,
+          'Untitled',
+        ],
+        input.locale,
+      ),
       // T0201 (2026-10-05): eventpulse_summary primärt, sen licens-tillåten
       // description_sv/en. events_public view sätter description_* till
       // NULL när license='unknown' (20261010-0001-linter-cleanup-alt-a).
@@ -679,7 +693,11 @@ export async function feedEvents(
       event_profile: (r.event_profile as Record<string, unknown> | null) ?? null,
       start_time: r.start_time as string,
       end_time: (r.end_time as string | null) ?? null,
-      venue_name: venue.name ?? '',
+      venue_name: guardDisplayTextWithFallback(
+        venue.name,
+        r.venue_full_name as string | null,
+        input.locale,
+      ),
       venue_id: (r.venue_id as string | null) ?? null,
       city: venue.city ?? input.city ?? 'Stockholm',
       venue_lat: typeof r.lat === 'number' ? r.lat : undefined,

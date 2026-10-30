@@ -4,14 +4,14 @@
 
 - **Nio karuseller**, i ordning: För dig, Senaste, Ikväll, Imorgon, Helgen, Foodies, Gratis, Nytt på Eventpulse, Upptäck.
 - Varje karusell är en horisontell lista av eventkort (tumbild + titel + undertext).
-- Alla nio sektioner läser direkt från Supabase-vyn `events_public` — **ingen agent-API**.
+- Alla nio sektioner läser direkt från Supabase-vyn `events_public` — **ingen agent-API**. Därför når agentens `?locale=`-översättning inte hit: Hem hämtar i stället översättningen själv för de få titlar som har ett främmande skript (`06-UI/utils/displayTitles.js` → `attachDisplayTitles`), och `pickDisplayTitle` skyddar resten.
 - En gäst ser samma nio sektioner som en inloggad användare.
 - Kortet "Rekommenderad" är ett *underetikett* på kortet, inte en sektion.
 - Tappas ett kort → händelsen skrivs till `eventpulse.pending_event`, skalet byter till Utforska-fliken och App.js öppnar gemensamma DetailsScreen.
 
 ## How to get to it (user POV)
 
-Appen startar på Hem. Hem är första-fliken i den synliga bottenstapeln (Appen har två tabbares i kod — App.js:s är dold; använd alltid den synliga).
+Appen startar på Hem. Hem är första-fliken i den synliga bottenstapeln. Det finns **en** synlig tabbar i DOM — AppShell passerar `hideInternalTabBar`, så App.js:s egen tabbar renderas inte alls.
 
 ## Driving it with Playwright
 
@@ -21,7 +21,7 @@ Nycklar:
 
 - Hem-roten bär `testID="home-screen"` → `data-testid="home-screen"`.
 - Varje karusell bär `accessibilityRole="list"` + `aria-label="<Rubrik> — karusell"`. **Använd det som sektions-handle**, inte rubriktexten.
-- Eventkort är `<button>` med `aria-label="<underetikett> — <titel>"`. De saknar `data-testid` (propen `testID` droppas i `EventPulseCarousel`).
+- Eventkort är `<button>` med `aria-label`. I de åtta `EventPulseCarousel`-sektionerna är formatet **`<underetikett> — <titel>`**, i **Senaste** är det **`<titel> — <underetikett>`** (ordningen är omvänd mellan komponenterna). De saknar `data-testid` (propen `testID` droppas i `EventPulseCarousel`).
 - Tillbaka-knappen på detaljskärmen är en `TouchableOpacity` **utan** `accessibilityRole`/`testID` → den är INTE ett `<button>`. Hitta den på texten `"< Tillbaka"`.
 
 Recept i korthet:

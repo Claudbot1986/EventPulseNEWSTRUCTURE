@@ -2,9 +2,9 @@
 
 ## Sub-features
 
-Öppnas från Hem, Utforska, Karta och agent-chattens rekommendationer — **samma** `DetailsScreen` (`06-UI/App.js`) med `NewEventCard`.
+Öppnas från Hem, Utforska och Karta — **samma** `DetailsScreen` (`06-UI/App.js`) med `NewEventCard`. Ingen agent-chattyta monteras.
 
-- Rubrik: kategori-badge, datum/tid (`localTime`), plats.
+- Rubrik: kategori-badge, datum/tid (`localTime`) och **plats bara när payloaden har venue/area** — Hem- och Karta-flödet har ingen venue, så där visas ingen metarad.
 - Titel, beskrivning (eller "Ingen beskrivning finns från …"), "Läs mer"-knapp (`testID="event-card-read-more"`).
 - **Fem action-knappar** i kortets ikonrad:
   - `aria-label="Spara"` — hjärta (♡/♥)
@@ -12,7 +12,7 @@
   - `aria-label="Lägg till i kalender"` — ◷
   - `aria-label="Dela"` — ↗
   - `aria-label="Fler alternativ"` — ⋯ (öppnar sheet)
-- "Läs mer" expanderar beskrivningen.
+- "Läs mer" **öppnar ticket-URL:en** (`onReadMore={handleOpenUrl}`) — beskrivningen klipps efter 10 rader och expanderas inte.
 - Tillbaka: `"< Tillbaka"` (TouchableOpacity utan role/testID).
 
 ## How to get to it (user POV)

@@ -81,5 +81,23 @@ echo ""
 echo "=== 4. APPVERIFIERING ==="
 node scripts/verify_app_event_images.mjs --sample=500 --min=50 --timeout=600 2>&1 | tail -14
 
+# ── 5. Teckenkontroll: kinesiska/asiatiska tecken i events ─────────────────
+#
+# Körs sist: när allt är klart. Skannar ALLA publicerade events och
+# rapporterar fält som innehåller tecken från ett skript som inte hör hemma
+# i visningsspråket (svenska). Skillnaden mellan "defekt" (vår egen text) och
+# "källinnehåll" (legitim främmande titel) styrs i rapporten.
+echo ""
+echo "=== 5. TECKENKONTROLL (kinesiska/asiatiska tecken) ==="
+npx tsx --env-file=.env scripts/check_asian_chars.ts \
+  --json "runtime/text-integrity/asian-chars-$(date +%Y%m%d-%H%M%S).json" 2>&1 | tail -14
+TECKEN_EXIT="${PIPESTATUS[0]}"
+if [ "$TECKEN_EXIT" != "0" ]; then
+  echo "TECKENKONTROLL: fynd (exit ${TECKEN_EXIT}) — se rapporten ovan och runtime/text-integrity/."
+  echo "  Reparera med: npx tsx --env-file=.env scripts/repair_asian_text.ts --dry-run"
+else
+  echo "TECKENKONTROLL: inga fynd."
+fi
+
 echo ""
 echo "=== FÖLJDSKONTROLL KLAR $(date +%H:%M:%S) ==="

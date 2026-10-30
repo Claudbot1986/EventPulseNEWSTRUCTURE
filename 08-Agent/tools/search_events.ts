@@ -20,6 +20,7 @@
 
 import type { SupabaseClient } from '@supabase/supabase-js';
 import type { EventCard } from '../types';
+import { pickDisplayText, guardDisplayTextWithFallback } from './textIntegrity';
 
 export interface SearchEventsInput {
   city?: string;
@@ -116,6 +117,9 @@ export interface EventRow {
   start_time: string;
   end_time: string | null;
   venue_id: string | null;
+  // 2026-10-30 (textintegritet) — källans eget lokalnamn. Reserv när den
+  // kurerade lokalen bär ett skript som inte passar visningsspråket.
+  venue_full_name?: string | null;
   is_free: boolean | null;
   price_min_sek: number | null;
   price_max_sek: number | null;
@@ -147,7 +151,10 @@ const EVENT_SELECT_COLUMNS =
   'category_slug, source, confidence_score, freshness_at, status_expanded, ' +
   // FAS 5.4 2026-10-14: editorial_description behövs så sök-träffar visar
   // samma primära beskrivning som Hem/Utforska (06-UI/utils/descriptionFallback.js).
-  'editorial_description, editorial_description_generated_at';
+  'editorial_description, editorial_description_generated_at, ' +
+  // 2026-10-30 (textintegritet): källans eget lokalnamn som reserv när
+  // den kurerade lokalen bär ett skript som inte passar visningsspråket.
+  'venue_full_name';
 
 const VENUE_SELECT_COLUMNS = 'id, name, city, address';
 
@@ -367,17 +374,27 @@ function toCard(
   // Språkstöd 2026-09-21 — optional translation from event_translations.
   // Falls back to Swedish/English silently when null/undefined.
   translation?: { title?: string | null; description?: string | null } | null,
+  // 2026-10-30 (textintegritet) — visningsspråket. Används för att välja
+  // den titeltext som passar språket och för att skydda lokalnamnet.
+  locale?: string | null,
 ): EventCard {
   const txTitle = translation?.title ?? null;
   const txDesc = translation?.description ?? null;
   return {
     id: r.id,
     // Translation > Swedish > English > 'Untitled' (defensive).
-    title: txTitle || r.title_sv || r.title_en || 'Untitled',
+    title: pickDisplayText(
+      [txTitle, r.title_sv, r.title_en, 'Untitled'],
+      locale ?? null,
+    ),
     description: txDesc ?? r.description_sv ?? r.description_en ?? null,
     start_time: r.start_time,
     end_time: r.end_time ?? null,
-    venue_name: venue?.name ?? '',
+    venue_name: guardDisplayTextWithFallback(
+      venue?.name,
+      r.venue_full_name ?? null,
+      locale ?? null,
+    ),
     venue_id: r.venue_id ?? null,
     city: venue?.city ?? fallbackCity,
     category_slug: r.category_slug ?? '',
@@ -528,6 +545,7 @@ export async function searchEvents(
       artistMap.get(r.id),
       availabilityMap.get(r.id),
       translationByEvent.get(r.id) ?? null,
+      input.locale ?? null,
     ),
   );
 

@@ -8,6 +8,9 @@
 
 import { computeTimeWindow, isFutureEvent } from './mapTime.js';
 import { STOCKHOLM_BOUNDS, STOCKHOLM_CENTER } from './mapProjection.js';
+import { attachDisplayTitles } from '../utils/displayTitles';
+
+export { attachDisplayTitles };
 
 // 2026-10-03: sänkt från 1000×10 för att PostgREST inte ska time:a ut
 // (error 57014: canceling statement due to statement timeout).
@@ -75,6 +78,11 @@ export async function fetchFutureEvents(supabase, onBatch) {
     if (error) return { events: [], error };
     const rows = data || [];
     all.push(...rows);
+    // 2026-10-30 (textintegritet): Karta läser Supabase direkt och passerar
+    // därför INTE agentens feed. Events vars titel innehåller ett främmande
+    // skript hämtar vi en översättning för visningsspråket — bara för de
+    // få raderna som behöver det, inte för hela sidan.
+    await attachDisplayTitles(supabase, rows);
     // Fire batch-callback efter varje sida så KartaScreen kan progressivt
     // rendera markers och flippa status='ready' efter första batchen.
     if (typeof onBatch === 'function') {
@@ -89,6 +97,7 @@ export async function fetchFutureEvents(supabase, onBatch) {
   }
   return { events: all, error: null };
 }
+
 
 /**
  * Översätt rå Supabase/PostgREST-fel till användarvänlig svenska.

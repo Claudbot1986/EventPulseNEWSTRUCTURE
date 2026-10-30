@@ -32,6 +32,7 @@ import { projectViewport, viewportFromCenter } from '../components/mapProjection
 import { supabase } from '../services/supabaseClient';
 import MapFilterBar from '../components/MapFilterBar';
 import MapEventCard from '../components/MapEventCard';
+import { pickTitle } from '../components/MapEventCard.helpers';
 import { toDetailsScreenEvent } from './HomeScreen';
 import {
   FILTER_MODES,
@@ -340,7 +341,7 @@ export default function KartaScreen({ onEventPress }) {
               ]}
               onPress={() => handleMarkerPress(event)}
               accessibilityRole="button"
-              accessibilityLabel={`Öppna ${event.title_sv || event.title_en || 'event'}`}
+              accessibilityLabel={`Öppna ${pickTitle(event)}`}
               testID={`marker-hit-${event.id}`}
             />
           ))}

@@ -4,7 +4,7 @@
 
 - Fliken "Notiser" visar en lista över påminnelser, matchningar och svar.
 - För en gäst utan notifier: tomt läge — "NOTISER / Dina påminnelser och svar / … / **Inga notiser än.** Spara ett event …".
-- Listan kommer från `notificationsClient` (lokal cache) och från agent-API:t vid inloggad session.
+- Listan kommer **enbart från agent-API:t** via `notificationsClient` (`GET /agent/notifications`) — **ingen lokal cache** finns. En session krävs (appen bootar en anonym Supabase-session); saknas session visas inloggningsprompten i stället för tomt läge. En **andra** datakälla är `GET /agent/attendance` → sektionen "betygsättning".
 
 ## How to get to it (user POV)
 

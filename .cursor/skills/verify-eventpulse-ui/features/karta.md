@@ -5,7 +5,7 @@
 - Fliken "Karta" visar Stockholmskartan med eventmarkörer, räknare ("Idag · 881", "Helgen · 883", "Alla · 3500"), ett TOTAL/VISIBLE-metrorum och filterlägen.
 - Under/över kartan läggs en **hit-detection-overlay** med en osynlig `Pressable` per marker (`testID="marker-hit-<event-id>"`), max 80 st. Overlayen renderas även på web — ett osynligt tryck kan därför öppna `MapEventCard` där.
 - `MapView` + `Marker` kommer från `react-native-maps` → **native-only**. På web renderar shimmen en panel: "Kartan är inte tillgänglig på webb / Öppna appen i Expo Go för full kartvy."
-- `MapEventCard` (radlistan under kartan) visas när en marker/overlay trycks; "Läs mer" öppnar samma detaljskärm som Hem.
+- `MapEventCard` är ett **overlay-kort** fäst i kartans nederkant (inte en radlista under kartan) och visas när en marker/overlay trycks; "Läs mer" öppnar samma detaljskärm som Hem. Kortet visar titel + metarad + pillor — **ingen lokalnamn, ingen beskrivning**.
 
 ## How to get to it (user POV)
 
@@ -31,6 +31,6 @@ Native-verifiering (kräver Expo Go + GPS): öppna Karta, tryck en markör, läs
   2. `KartaScreen.js` läste `projectedMarkers` i `useCallback`-deps långt **före** `const projectedMarkers = useMemo(...)` → "Cannot access 'projectedMarkers' before initialization" (temporal dead zone) vid render. **Detta fel uppmättes live i webb-bundlen** (stack: `at KartaScreen`) och försvann efter flytten — det är alltså inte en källkodshypotes utan ett reproducerat fel. Deklarationen är nu flyttad ovanför första läsningen.
 - `Marker` får aldrig vara `null` i shimmen — komponenten måste finnas även om den inte gör något. Det finns **ingen ErrorBoundary i 06-UI**, så en null-export avmonterar hela trädet (vit skärm).
 - Shimmens `MapView` sprider alla props vidare på en `View` → native-only-proppar (`provider`, `showsCompass`, `clusterColor`) hamnar som ogiltiga DOM-attribut.
-- Räknarna ("Idag · 881") kommer från serverns `total`, inte från antalet renderade rader.
+- Räknarna ("Idag · 881") räknas **klient-side** över de hämtade Supabase-raderna — Karta-tabben frågar inte `/agent/feed` och har ingen server-`total`.
 - `react-native-maps` importerar native-only moduler → shimmen i `metro.config.js` är obligatorisk för webbbygget.
 - FEATURE_MAP § 6 pekar på `06-UI/utils/mapProjection.js` — filen ligger i `06-UI/components/mapProjection.js`.
