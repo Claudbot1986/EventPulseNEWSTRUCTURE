@@ -1,7 +1,7 @@
 /**
  * auth.ts — bearer token middleware for the analytics service.
  *
- * Mirrors the model used by 09-MobileControl and 09-ScrapingSupervisor:
+ * Mirrors the model used by 09-ScrapingSupervisor:
  * a single bearer token from env, mandatory for all admin endpoints.
  * Public endpoints (POST /api/events, GDPR endpoints) accept only
  * device_id_hash — no token required.
