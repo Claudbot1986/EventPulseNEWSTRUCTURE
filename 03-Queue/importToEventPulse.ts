@@ -23,6 +23,7 @@ import { loadSkippedSourceIds } from '../02-Ingestion/lib/quarantineGuard.js';
 import { isExcludedTitle } from '../02-Ingestion/lib/sourceTitleExclusions.js';
 import { isEventPast } from './eventFreshness';
 import { eventStartTime, toIsoEndTime } from '../02-Ingestion/F-eventExtraction/usableEvents';
+import { toStockholmDate, toStockholmClock } from '../02-Ingestion/lib/stockholmTime';
 import { withRedisTimeout } from './redisClient.mjs';
 import { classifyError, type ErrorClass } from '../scripts/lib/net-error.mjs';
 import {
@@ -362,7 +363,11 @@ export function extractEndTime(ev: ExtractedEvent): string | null {
   if (ev.end_time) return ev.end_time;
 
   const start = eventStartTime(ev);
-  const startDay = start ? start.slice(0, 10) : null;
+  // 2026-10-30 — startens dag och klockslag räknas i STOCKHOLMS ZON, inte
+  // i UTC. En stämpel på 23:30Z är 00:30 lokalt NÄSTA dag; `.slice(0,10)`
+  // på UTC-strängen gav då föregående dag, och sluttiden lades på fel dag.
+  const startDay = start ? toStockholmDate(start) : null;
+  const startClock = start ? toStockholmClock(start) : null;
   const clock = typeof ev.endTime === 'string' ? ev.endTime.trim() : '';
   const hasClock = clock.length > 0;
 
@@ -393,7 +398,7 @@ export function extractEndTime(ev: ExtractedEvent): string | null {
   if (!start) return iso;
 
   const endMinutes = clockMinutes(clock);
-  const startMinutes = clockMinutes(start.slice(11, 16));
+  const startMinutes = clockMinutes(startClock);
   if (endMinutes !== null && startMinutes !== null && endMinutes < startMinutes) {
     // Midnattspassage: sluttiden ligger på följande dag.
     const nextDay = addDays(startDay, 1);

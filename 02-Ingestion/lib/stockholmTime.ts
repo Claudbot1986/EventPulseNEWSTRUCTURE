@@ -149,6 +149,22 @@ export function toStockholmDate(utcIso: string | undefined | null): string | nul
 }
 
 /**
+ * Klockslaget ("HH:MM") som ett UTC-instant har i Europe/Stockholm.
+ *
+ * Samma motivering som `toStockholmDate`: en stämpel på 23:30Z är 00:30
+ * lokalt NÄSTA dag — både dagen och klockan måste räknas i zonen.
+ */
+export function toStockholmClock(utcIso: string | undefined | null): string | null {
+  if (!utcIso) return null;
+  const d = new Date(utcIso);
+  if (isNaN(d.getTime())) return null;
+  const zoned = toZonedTime(d, STOCKHOLM_TZ);
+  const h = String(zoned.getHours()).padStart(2, '0');
+  const m = String(zoned.getMinutes()).padStart(2, '0');
+  return `${h}:${m}`;
+}
+
+/**
  * Debug-hjälpare: returnerar vilken offset (i minuter) som gäller för ett
  * visst datum i Europe/Stockholm. Användbart för tester.
  */

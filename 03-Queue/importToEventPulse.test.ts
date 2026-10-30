@@ -23,7 +23,7 @@ describe('toRawEvent', () => {
 
     expect(raw.ticket_url).toBe('https://tickets.example.com/event/synthetic');
     expect(raw.image_url).toBe('https://images.example.com/event.jpg');
-    expect(raw.start_time).toBe('2026-05-02T19:30:00.000Z');
+    expect(raw.start_time).toBe('2026-05-02T17:30:00.000Z');
   });
 
   it('maps boka.berwaldhallen.se ticket_url to canonical source "berwaldhallen"', () => {
@@ -361,8 +361,8 @@ describe('toRawEvent — sluttid', () => {
       endTime: '15:00',
     });
 
-    expect(raw.start_time).toBe('2026-10-29T13:00:00.000Z');
-    expect(raw.end_time).toBe('2026-10-29T15:00:00.000Z');
+    expect(raw.start_time).toBe('2026-10-29T12:00:00.000Z');
+    expect(raw.end_time).toBe('2026-10-29T14:00:00.000Z');
   });
 
   it('NEGATIV KONTROLL — en rad utan sluttid får ingen sluttid', () => {
@@ -395,8 +395,8 @@ describe('toRawEvent — sluttid', () => {
       endTime: '03:00',
     });
 
-    expect(raw.start_time).toBe('2026-10-31T23:00:00.000Z');
-    expect(raw.end_time).toBe('2026-11-01T03:00:00.000Z');
+    expect(raw.start_time).toBe('2026-10-31T22:00:00.000Z');
+    expect(raw.end_time).toBe('2026-11-01T02:00:00.000Z');
   });
 
   it('ett uttryckligt slutdatum EFTER starten vinner över midnattspassagen', () => {
@@ -408,8 +408,8 @@ describe('toRawEvent — sluttid', () => {
       endDate: '2026-11-01',
     });
 
-    expect(raw.start_time).toBe('2026-10-31T23:00:00.000Z');
-    expect(raw.end_time).toBe('2026-11-01T03:00:00.000Z');
+    expect(raw.start_time).toBe('2026-10-31T22:00:00.000Z');
+    expect(raw.end_time).toBe('2026-11-01T02:00:00.000Z');
   });
 
   it('NEGATIV KONTROLL — ett slutdatum som ligger FÖRE starten skrivs inte', () => {
@@ -436,7 +436,7 @@ describe('toRawEvent — sluttid', () => {
       endTime: '17:30',
     });
 
-    expect(raw.start_time).toBe('2026-10-18T17:30:00.000Z');
+    expect(raw.start_time).toBe('2026-10-18T15:30:00.000Z');
     expect(raw.end_time).toBeNull();
   });
 
@@ -451,8 +451,8 @@ describe('toRawEvent — sluttid', () => {
       endTime: '00:00',
     });
 
-    expect(raw.start_time).toBe('2026-11-09T19:00:00.000Z');
-    expect(raw.end_time).toBe('2026-11-10T00:00:00.000Z');
+    expect(raw.start_time).toBe('2026-11-09T18:00:00.000Z');
+    expect(raw.end_time).toBe('2026-11-09T23:00:00.000Z');
   });
 
   it('ett slutdatum utan sluttid blir slutet av dagen', () => {
@@ -465,7 +465,7 @@ describe('toRawEvent — sluttid', () => {
       endTime: '',
     });
 
-    expect(raw.start_time).toBe('2026-11-09T19:00:00.000Z');
-    expect(raw.end_time).toBe('2026-11-09T23:59:59.000Z');
+    expect(raw.start_time).toBe('2026-11-09T18:00:00.000Z');
+    expect(raw.end_time).toBe('2026-11-09T22:59:59.000Z');
   });
 });

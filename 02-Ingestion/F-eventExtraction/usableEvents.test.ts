@@ -25,12 +25,18 @@ import {
 const NOON = new Date(2026, 9, 24, 12, 0, 0, 0).getTime();
 
 describe('toIsoStartTime', () => {
-  it('datum utan klockslag blir midnatt', () => {
+  it('datum utan klockslag blir midnatt (markör för okänd tid)', () => {
     expect(toIsoStartTime('2026-11-20', undefined)).toBe('2026-11-20T00:00:00.000Z');
   });
 
-  it('datum med klockslag behåller tiden', () => {
-    expect(toIsoStartTime('2026-11-20', '18:30')).toBe('2026-11-20T18:30:00.000Z');
+  it('tolkar tiden som Stockholms LOKALA tid, inte UTC', () => {
+    // 2026-10-30: adaptrorna ger lokal väggtid. Att skriva den som UTC
+    // lade varje kvällsevenemang 1–2 timmar fel i appen (se
+    // 02-Ingestion/lib/stockholmTime.ts).
+    // 2026-11-20 är CET (+01:00) → 18:30 lokal = 17:30Z.
+    expect(toIsoStartTime('2026-11-20', '18:30')).toBe('2026-11-20T17:30:00.000Z');
+    // 2026-10-24 är CEST (+02:00) → 18:30 lokal = 16:30Z.
+    expect(toIsoStartTime('2026-10-24', '18:30')).toBe('2026-10-24T16:30:00.000Z');
   });
 
   it('saknat datum ger tom stämpel', () => {
@@ -39,7 +45,7 @@ describe('toIsoStartTime', () => {
   });
 
   it('mellanslag runt datum och tid ignoreras', () => {
-    expect(toIsoStartTime(' 2026-11-20 ', ' 18:30 ')).toBe('2026-11-20T18:30:00.000Z');
+    expect(toIsoStartTime(' 2026-11-20 ', ' 18:30 ')).toBe('2026-11-20T17:30:00.000Z');
   });
 });
 
@@ -92,11 +98,16 @@ describe('isValidDateString', () => {
 
 describe('toIsoEndTime', () => {
   it('slutdatum med sluttid ger en ISO-stämpel', () => {
-    expect(toIsoEndTime('2026-11-20', '21:30')).toBe('2026-11-20T21:30:00.000Z');
+    // 2026-10-30 — slutdatum + sluttid är STOCKHOLMS LOKALA VÄGGTID och
+    // konverteras till UTC. 2026-11-20 är CET (+01:00) → 21:30 lokal
+    // = 20:30Z. Samma tidsbas som starttiden (annars jämförs start och
+    // slut i olika baser, och "noll längd"-skyddet slutar fungera).
+    expect(toIsoEndTime('2026-11-20', '21:30')).toBe('2026-11-20T20:30:00.000Z');
   });
 
   it('slutdatum utan sluttid ger slutet av dagen', () => {
-    expect(toIsoEndTime('2026-11-20')).toBe('2026-11-20T23:59:59.000Z');
+    // Slutet av LOKALA dagen = 23:59:59 CET = 22:59:59Z.
+    expect(toIsoEndTime('2026-11-20')).toBe('2026-11-20T22:59:59.000Z');
   });
 
   it('saknat slutdatum ger null', () => {
@@ -105,7 +116,7 @@ describe('toIsoEndTime', () => {
 
   it('trasig slutklocka kastar inte — raden behåller sitt slutdatum', () => {
     expect(() => toIsoEndTime('2026-11-20', '21')).not.toThrow();
-    expect(toIsoEndTime('2026-11-20', '21')).toBe('2026-11-20T23:59:59.000Z');
+    expect(toIsoEndTime('2026-11-20', '21')).toBe('2026-11-20T22:59:59.000Z');
   });
 
   it('trasigt slutdatum ger null', () => {
@@ -123,13 +134,14 @@ describe('eventStartTime', () => {
     expect(eventStartTime({ startTime: '2027-01-01T10:00:00.000Z' })).toBe('2027-01-01T10:00:00.000Z');
   });
 
-  it('annars byggs stämpeln av date + time', () => {
-    expect(eventStartTime({ date: '2026-11-20', time: '19:00' })).toBe('2026-11-20T19:00:00.000Z');
+  it('annars byggs stämpeln av date + time (lokal tid → UTC)', () => {
+    // 2026-11-20 är CET (+01:00): 19:00 lokal = 18:00Z.
+    expect(eventStartTime({ date: '2026-11-20', time: '19:00' })).toBe('2026-11-20T18:00:00.000Z');
   });
 
   it('en trasig start_time blockerar inte ett bra date/time under sig', () => {
     expect(eventStartTime({ start_time: 'unknown', date: '2026-11-20', time: '19:00' }))
-      .toBe('2026-11-20T19:00:00.000Z');
+      .toBe('2026-11-20T18:00:00.000Z');
   });
 
   it('en omöjlig dag i start_time rullar inte framåt', () => {

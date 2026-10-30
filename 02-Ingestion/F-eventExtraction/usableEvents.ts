@@ -14,6 +14,7 @@
  */
 
 import { isEventPast } from '../../03-Queue/eventFreshness';
+import { toUtcIsoFromStockholm } from '../lib/stockholmTime';
 
 /** Minimal struktur som både ParsedEvent och AiExtractedEvent uppfyller. */
 export interface DateableEvent {
@@ -74,6 +75,28 @@ export function isValidDateString(value: string | null | undefined): boolean {
  *    undefined. Nu tolkas raden som ett heldags-event: DAGEN är känd,
  *     klockan är det inte, så dagen behålls och ingen klocksaga luras på.
  *  3. Mellanslag runt datum och tid ignoreras.
+ *
+ * 2026-10-30 — TIDEN ÄR STOCKHOLMS LOKALA VÄGGTID, inte UTC.
+ *
+ * Adaptrorna levererar `date` + `time` som LOKAL tid: momentsapp-adaptern
+ * gör t.ex. `toStockholm()` på källans tidsstämpel innan den skriver ut
+ * "19:30". Att skriva den som UTC lagrade varje kvällsevenemang 1–2
+ * timmar FEL i appen (Stockholm är UTC+1/+2) — och, värre, gjorde att
+ * samma evenemang fick olika identitetsnyckel beroende på väg:
+ *
+ *   livespot (F-gate)   "President" 19:30 lokal → 18:30Z  ← korrekt
+ *   momentsapp (kö)     "President" 19:30 lokal → 19:30Z  ← 1h fel
+ *
+ * Identitetsnyckeln räknar på UTC-instantet, så de två raderna matchade
+ * inte → samma evenemang syndes som två kort i Utforska.
+ *
+ * `toUtcIsoFromStockholm` är DST-medveten (CEST +02:00 sommar, CET +01:00
+ * vinter) och är samma regel som resten av ingestionskedjan använder
+ * (se 02-Ingestion/lib/stockholmTime.ts).
+ *
+ * Datumlösa rader (ingen klocka) behåller "midnatt UTC" som markör för
+ * "okänd tid" — det är den markören identitetsmodellen känner igen
+ * (04-Normalizer/deduplication/crossSourceIdentity.ts).
  */
 export function toIsoStartTime(date?: string | null, time?: string | null): string {
   const day = typeof date === 'string' ? date.trim() : '';
@@ -87,7 +110,8 @@ export function toIsoStartTime(date?: string | null, time?: string | null): stri
   if (!m) return `${day}T00:00:00.000Z`;
   if (Number(m[1]) > 23 || Number(m[2]) > 59) return `${day}T00:00:00.000Z`;
 
-  return `${day}T${m[1]}:${m[2]}:00.000Z`;
+  const utc = toUtcIsoFromStockholm(day, `${m[1]}:${m[2]}`);
+  return utc ?? `${day}T${m[1]}:${m[2]}:00.000Z`;
 }
 
 /**
@@ -131,6 +155,18 @@ export function eventStartTime(ev: DateableEvent): string {
  * bort hela raden i importen trots att starttiden var bra. Nu: trasig
  * slutklocka → slutet av dagen (23:59:59), trasigt slutdatum → inget
  * slutdatum. Starttiden bär fortfarande raden.
+ *
+ * 2026-10-30 — SLUTTIDEN ÄR STOCKHOLMS LOKALA VÄGGTID, precis som
+ * starttiden (se `toIsoStartTime`).
+ *
+ * När starttiden räknades om till UTC men sluttiden inte gjorde det, blev
+ * de två jämförda mot varandra i olika tidsbaser: starten i UTC, slutet
+ * som lokaltid-märkt-som-UTC. Följder:
+ *   - sluttiden hamnade 1–2 h fel (en 19:00–21:00-scen blev 2 h lång)
+ *   - "noll längd"-skyddet slutade fungera (slut == start såg ut att vara
+ *     2 h långt, så skyddet skrev inte ut sluttiden)
+ *   - midnattspassagen lade slutet på FEL DAG (00:00 lokal → nästa dag
+ *     00:00Z i stället för samma dag 23:00Z)
  */
 export function toIsoEndTime(endDate?: string | null, endTime?: string | null): string | null {
   const day = typeof endDate === 'string' ? endDate.trim() : '';
@@ -139,8 +175,11 @@ export function toIsoEndTime(endDate?: string | null, endTime?: string | null): 
 
   const clock = typeof endTime === 'string' ? endTime.trim() : '';
   const m = clock ? TIME_RX.exec(clock) : null;
-  if (!m || Number(m[1]) > 23 || Number(m[2]) > 59) return `${day}T23:59:59.000Z`;
-  return `${day}T${m[1]}:${m[2]}:00.000Z`;
+  if (!m || Number(m[1]) > 23 || Number(m[2]) > 59) {
+    // Slutet av dagen — LOKALT 23:59:59.
+    return toUtcIsoFromStockholm(day, '23:59:59') ?? `${day}T23:59:59.000Z`;
+  }
+  return toUtcIsoFromStockholm(day, `${m[1]}:${m[2]}`) ?? `${day}T${m[1]}:${m[2]}:00.000Z`;
 }
 
 /**
