@@ -884,6 +884,38 @@ if (!skipImages) {
     ],
   });
 
+  // ── dedup-audit: slå ihop dubbletter som nattens ingestion lagt in ─────
+  //
+  // 2026-10-30 — ROTSAK till de dubblettkort som syntes i appen
+  // ("MAFFIA COMEDY SUPERWEEKEND" i Utforska → Comedy: två kort,
+  // identisk titel/datum/tid, från livespot + evensos).
+  //
+  // Två lager:
+  //   1. Write-time: normalizern slår upp `event_identity` (titel | dag |
+  //      tid | plats) innan den skriver → nya dubbletter läggs inte in.
+  //   2. Read-time: det här steget. Det fångar (a) dubbletter som redan
+  //      fanns, (b) dubbletter från direkta insert-scripts som bypassar
+  //      normalizern, och (c) de fall där källorna lägger in samma
+  //      evenemang med olika klockslag (t.ex. "Spawner & ånghäst parken"
+  //      som livespot listar 17:00, nalen.se 18:00 och nalen.com 19:30).
+  //
+  // Steget kör EFTER worker-drain: då är nattens events persisterade.
+  // Slås ihop med `merged_into` (raderna finns kvar, men döljs ur
+  // events_public) → appen visar ett kort per evenemang.
+  //
+  // Exit 1 = det finns kvar dubbletter efter merge. Kedjan blir då röd,
+  // vilket är korrekt: nattens ingestion lämnade dubbletter kvar.
+  // I smoke: bara rapport (--dry), ingen mutation.
+  steps.push({
+    name: 'dedup-audit',
+    cmd: 'npx',
+    args: [
+      'tsx',
+      'scripts/audit-duplicates.ts',
+      ...(smoke ? ['--dry', '--limit', '5'] : ['--apply', '--quiet']),
+    ],
+  });
+
   // ── reconcile-source-status: rätta källstatus mot databasens sanna siffra ──
   //
   // 2026-10-24 — en källa kan ha tusentals events i Supabase och ändå stå

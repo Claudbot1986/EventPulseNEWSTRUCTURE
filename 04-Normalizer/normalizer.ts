@@ -25,6 +25,15 @@ import {
   calendarDay,
   type TicketUrlCandidate,
 } from './deduplication/ticketUrlDedup';
+// 2026-10-30 — Korskälls-identitet: titel | dag | tid | plats.
+// Stoppar att INGASTION/discovery lägger in samma evenemang två gånger
+// från två olika källor (t.ex. MAFFIA COMEDY SUPERWEEKEND, livespot +
+// evensos). Se 04-Normalizer/deduplication/crossSourceIdentity.ts för
+// nyckelns form och varför den är så konservativ.
+import { crossSourceIdentity } from './deduplication/crossSourceIdentity';
+// 2026-10-30 — källspecifika platsnamn (t.ex. kulturhuset-skickar området
+// i stället för salnamnet). Se 02-Ingestion/lib/sourceVenueRules.ts.
+import { canonicalVenueForSource, canonicalVenueName } from '../02-Ingestion/lib/sourceVenueRules';
 import { aiImageQueue, startAiImageWorker } from '../08-Agent/workers/aiImageWorker';
 import { enqueueSideEffect } from './sideEffectQueue';
 import { appendSkipLog } from '../08-Agent/utils/skipLog';
@@ -321,10 +330,19 @@ async function findVenueByAddress(address: string): Promise<{ id: string; name: 
 
 /** Resolve venue_id from name + address, creating a new venue record if needed */
 async function resolveVenue(raw: RawEventInput): Promise<string | null> {
-  // 2026-10-23 — Samma validering som för raw_payload-fallbacken. Utan den
-  // skapades venue-rader med namnet "undefined"/"[object Object]" direkt från
-  // källans venue_name.
-  let venueName = isValidVenueName(raw.venue_name) ? raw.venue_name.trim() : null;
+  // 2026-10-30 — källspecifik platsregel. Vissa källor skriver OMRÅDET i
+  // platsfältet ("Sergels torg", "Husby") i stället för salnamnet. Det gör
+  // att samma föreställning syntes som dubblett (t.ex. "Upploppet" i
+  // Utforska: livespot "Kulturhuset Stadsteatern" + kulturhuset "Husby").
+  // Regeln ligger i 02-Ingestion/lib/sourceVenueRules.ts och appliceras
+  // HÄR — vid persistensgränsen — så att alla ingångar (dedikerad adapter,
+  // sitemap/C-htmlGate, direkta insert-script) fångas.
+  const sourceVenue = canonicalVenueForSource(raw.source);
+  // 2026-10-30 — granskade plats-alias ("Konsistoriegatan 7" → "Garden,
+  // Konsert & Kongress"). Se VENUE_NAME_ALIASES i sourceVenueRules.ts.
+  const aliasVenue = canonicalVenueName(raw.venue_name);
+  let venueName =
+    sourceVenue ?? aliasVenue ?? (isValidVenueName(raw.venue_name) ? raw.venue_name.trim() : null);
 
   // Fallback: try to extract from raw_payload
   if (!venueName) {
@@ -487,6 +505,7 @@ export async function processRawEvent(job: Job<RawEventInput>): Promise<void> {
   // → ny rad. Se 04-Normalizer/deduplication/ticketUrlDedup.ts.
   let existing: { id: string; updated_at: string } | null = null;
   let existingViaTicketUrl = false;
+  let existingViaIdentity = false;
   const ticketUrl = raw.url || raw.ticket_url || null;
   if (ticketUrl) {
     const { data: byUrl } = await supabase
@@ -588,8 +607,52 @@ export async function processRawEvent(job: Job<RawEventInput>): Promise<void> {
     // Ingen venue-rad (t.ex. venues-inserten misslyckades) — eventets egen
     // platsnamn är ändå bättre än tomt för appen. Men bara om det är ett
     // giltigt namn: '[object Object]' är inte en plats.
-    venueFullName = isValidVenueName(raw.venue_name) ? raw.venue_name.trim() : undefined;
+    // 2026-10-30 — källspecifik regel har företräde (kulturhuset m.m.).
+    const sourceVenueName = canonicalVenueForSource(raw.source);
+    venueFullName = sourceVenueName
+      ?? canonicalVenueName(raw.venue_name)
+      ?? (isValidVenueName(raw.venue_name) ? raw.venue_name.trim() : undefined);
     venueFullAddress = isUsableText(raw.venue_address) ? raw.venue_address.trim() : undefined;
+  }
+
+  // ── Korskälls-dedup (2026-10-30) ────────────────────────────────────────
+  // ROTSAK: "MAFFIA COMEDY SUPERWEEKEND" syndes två gånger i Utforska
+  // (livespot + evensos, identisk titel/datum/tid). `dedup_hash` kan
+  // aldrig fånga det eftersom källan ingår i hashen, och ticket_url
+  // bara matchar när källorna publicerar samma url-sträng.
+  //
+  // Här slås den INGEN eventet upp på identitetsnyckeln
+  // (titel | Stockholmsdatum | lokal tid | plats). Nyckeln ligger i en
+  // indexerad kolumn (events.event_identity), så detta är en indexerad
+  // likhetsteckning — inte en fulltextscan.
+  //
+  // Nyckeln beräknas AV samma modul som audit-skriptet använder
+  // (crossSourceIdentity.ts), så skrivväg och läsväg kan inte glida isär.
+  // Platsnyckeln använder venue_full_name när det finns (det är det
+  // källorna delar) och faller tillbaka på venue_id.
+  const eventIdentity = crossSourceIdentity({
+    title: raw.title,
+    startTime: raw.start_time,
+    venueId: venue_id,
+    venueName: venueFullName,
+  });
+
+  if (!existing && eventIdentity) {
+    const { data: byIdentity } = await supabase
+      .from('events')
+      .select('id, updated_at')
+      .eq('event_identity', eventIdentity)
+      .order('updated_at', { ascending: false })
+      .limit(1)
+      .maybeSingle();
+    if (byIdentity) {
+      existing = byIdentity;
+      existingViaIdentity = true;
+      console.log(
+        `[normalizer] 🔗 Dedup hit by identity: ${byIdentity.id} ` +
+          `(source=${raw.source}, identity=${eventIdentity})`,
+      );
+    }
   }
 
   // MusicBrainz + Last.fm authoritativ artist-uppslagning (2026-09-30).
@@ -811,6 +874,10 @@ export async function processRawEvent(job: Job<RawEventInput>): Promise<void> {
     // stämplingen och AI-tracking-kolumnerna.
     image_url: null,
     dedup_hash: dedupHash,
+    // 2026-10-30 — Korskälls-identitetsnyckel (indexerad). Skrivs på varje
+    // insert/update så att write-time-dedup och audit-skriptet räknar på
+    // samma nyckel. Se 04-Normalizer/deduplication/crossSourceIdentity.ts.
+    event_identity: eventIdentity ?? null,
     category_slug,  // Denormalized for direct filtering
     status: 'published',
     // status_expanded (sold_out / cancelled / not_yet_on_sale / etc.) flows
@@ -874,12 +941,14 @@ export async function processRawEvent(job: Job<RawEventInput>): Promise<void> {
     // inte längre hitta den på hash.
     // På hash-vägen är dedupHash per definition redan radens egen — skriv
     // samma värde igen är en no-op — så beteendet där är oförändrat.
-    const dedupHashToWrite = existingViaTicketUrl ? undefined : dedupHash;
-    if (existingViaTicketUrl) {
+    const crossSourceHit = existingViaTicketUrl || existingViaIdentity;
+    const dedupHashToWrite = crossSourceHit ? undefined : dedupHash;
+    if (crossSourceHit) {
       console.log(
         `[normalizer] keeping existing identity (cross-source hit — writing ` +
         `dedup_hash=${dedupHash.slice(0, 12)}…/source=${raw.source} would ` +
-        `violate events_dedup_hash_key / idx_events_source_source_id_uniq)`,
+        `violate events_dedup_hash_key / idx_events_source_source_id_uniq)` +
+        (existingViaIdentity ? ' [via identity]' : ' [via ticket_url]'),
       );
     }
     const { data: updated, error: updateError } = await supabase
@@ -889,8 +958,8 @@ export async function processRawEvent(job: Job<RawEventInput>): Promise<void> {
         // Identitetskolumner tillhör raden, inte den här körningen. undefined
         // → Supabase hoppar över dem. Samma mönster som freshness_at nedan.
         dedup_hash: dedupHashToWrite,
-        source: existingViaTicketUrl ? undefined : raw.source,
-        source_id: existingViaTicketUrl ? undefined : raw.source_id,
+        source: crossSourceHit ? undefined : raw.source,
+        source_id: crossSourceHit ? undefined : raw.source_id,
         freshness_at: undefined, // keep prior freshness on update
         updated_at: observedAt,
       })

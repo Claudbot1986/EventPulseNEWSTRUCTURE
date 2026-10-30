@@ -2003,7 +2003,23 @@ function ExploreDetailScreen({ payload, onBack, onEventPress }) {
       try {
         const { rows, hasMore: more } = await fetchPage(nextOffset, controller.signal);
         if (!controller.signal.aborted) {
-          setRealEvents((prev) => [...(prev || []), ...rows]);
+          // 2026-10-30 — dedup även MELLAN sidor, inte bara inom en sida.
+          //
+          // Rotorsak till att samma event kortades två gånger i Utforska:
+          // feedens sortering var icke-total (start_time ensamt), så
+          // OFFSET-sidor överlappade. Servern är nu fixad
+          // (start_time.asc,id.asc), men klienten ska inte kunna visa
+          // samma rad två gånger oavsett — det är försvar i djupet och
+          // skyddar även mot en framtida ordningsregression.
+          setRealEvents((prev) => {
+            const seen = new Set((prev || []).map((r) => r.id));
+            const fresh = rows.filter((r) => {
+              if (seen.has(r.id)) return false;
+              seen.add(r.id);
+              return true;
+            });
+            return [...(prev || []), ...fresh];
+          });
           setHasMore(more);
           setNextOffset((prev) => prev + rows.length);
           // total sätts från initial-fetch (route-egenskap, inte sid-egenskap).

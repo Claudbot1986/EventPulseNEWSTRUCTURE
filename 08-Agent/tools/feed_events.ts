@@ -371,7 +371,21 @@ function buildMainReadParams(input: {
   params.append('start_time', `gt.${input.nowIso}`);
   params.append('start_time', `gte.${expandDateFloor(input.fromIso)}`);
   params.append('start_time', `lte.${expandDateCeil(input.toIso)}`);
-  params.set('order', 'start_time.asc');
+  // 2026-10-30 — SORTERINGEN MÅSTE VARA TOTAL.
+  //
+  // `start_time.asc` ensamt är inte en total ordning: många event har
+  // samma start_time (alla 18:00-showen en kväll), så Postgres får
+  // returnera dem i valfri ordning mellan två anrop. OFFSET-paginering
+  // över en icke-total ordning gör att SIDOR ÖVERLAPPAR — samma event
+  // hamnar på både sida 1 och sida 2.
+  //
+  // Mätt 2026-10-30 i Utforska → Komedi: 75 eventpar renderades två
+  // gånger med identisk etikett (t.ex. "StandUpSverige - Din Guide Till
+  // Gratis Skratt" 1 nov 18:00, en enda rad i databasen). Rotorsak:
+  // icke-total sortering + att klienten appendar utan dedup.
+  //
+  // `id.asc` som brytare gör ordningen total → OFFSET ger stabila sidor.
+  params.set('order', 'start_time.asc,id.asc');
   params.set('limit', String(input.limit + 1)); // +1 sentinel for has_more
   params.set('offset', String(input.offset));
   if (input.category) params.set('category_slug', `eq.${input.category}`);
