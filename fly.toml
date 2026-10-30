@@ -25,7 +25,12 @@ primary_region = "arn"
   AGENT_PORT = "8787"
   # Internal allowlist for the deployed app itself + any future admin.
   # Add the Expo app's origin here once it is known. Multiple origins = comma list.
-  AGENT_ALLOWED_ORIGINS = "https://eventpulse-agent.fly.dev"
+  # 2026-10-30: the Expo web dev build (localhost:8081) was rejected with 403
+  # "origin not allowed", which broke the Explore tab in the local web app.
+  # The origin string must match the browser's origin EXACTLY — an http://
+  # origin is correct here because the agent itself is served over https
+  # (http page -> https request is not mixed content).
+  AGENT_ALLOWED_ORIGINS = "https://eventpulse-agent.fly.dev,http://localhost:8081,http://127.0.0.1:8081"
 
 # Run as a single small shared-cpu-1x instance. The agent is an Express server
 # calling Supabase + MiniMax; it is not compute-bound and does not need
