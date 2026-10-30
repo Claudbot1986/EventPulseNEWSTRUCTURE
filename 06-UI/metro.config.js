@@ -36,7 +36,12 @@
  * Web:s default-resolver stannar i workspace-roten.
  */
 
-import { getDefaultConfig } from 'expo/metro-config.js';
+// 2026-10-30 — SDK 58: sökvägen är `expo/metro-config` (UTAN `.js`).
+// I SDK 57 var den `expo/metro-config.js`; i SDK 58 mappar exports-mappen
+// `"./*": "./*.js"`, så `expo/metro-config.js` slutar i sökvägen
+// `expo/metro-config.js.js` → ERR_MODULE_NOT_FOUND → hela Metro-configen
+// fallerar och appen går inte att starta.
+import { getDefaultConfig } from 'expo/metro-config';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
