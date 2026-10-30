@@ -57,6 +57,15 @@ interface Args {
   json?: string;
   limit: number;
   quiet: boolean;
+  /**
+   * Manuella merge-par: "<loserId>:<winnerId>".
+   *
+   * Vissa par kan INTE upptäckas av reglerna — t.ex. samma föreställning
+   * som arrangören listat en andra gång med egen tid och egen platstext.
+   * Då granskar operatören och pekar ut paren explicit. Samma merge-väg,
+   * samma backup, samma återställning som de automatiska fallen.
+   */
+  merge?: string[];
 }
 
 function parseArgs(argv: string[]): Args {
@@ -77,6 +86,14 @@ function parseArgs(argv: string[]): Args {
       }
       args.json = next;
     } else if (a === '--limit') args.limit = Number(argv[++i] ?? 25);
+    else if (a === '--merge') {
+      const next = argv[++i];
+      if (!next || next.startsWith('--')) {
+        console.error('[audit] --merge kräver ett par "loserId:winnerId"');
+        process.exit(2);
+      }
+      args.merge = [...(args.merge ?? []), ...next.split(',').map((p) => p.trim()).filter(Boolean)];
+    }
     else if (a === '--help' || a === '-h') {
       console.log(
         [
@@ -87,6 +104,7 @@ function parseArgs(argv: string[]): Args {
           '  --gate         CI-gate: exit 1 om det finns dubbletter kvar (rapporterar bara)',
           '  --json <fil>   skriv rapporten som JSON',
           '  --limit <n>    antal grupper i textrapporten (default 25)',
+          '  --merge <l:w>  slå ihop ett granskat par manuellt (loserId:winnerId, kan kommaseparera flera)',
           '  --quiet        bara sammanfattningen',
         ].join('\n'),
       );
@@ -242,7 +260,9 @@ async function main(): Promise<void> {
       venueAddress: r.venue_address,
       ticketUrl: r.ticket_url,
     }));
-    const groups = groupDuplicateEvents(groupable);
+    const groups = args.merge
+      ? buildManualGroups(args.merge, groupable)
+      : groupDuplicateEvents(groupable);
     const extras = duplicateExtras(groups);
 
     const byRule = new Map<string, number>();
@@ -493,7 +513,12 @@ async function mergeGroups(
       // gissa fel — appen ska visa den tid de flesta källorna anger.
       const timeVotes = new Map<string, number>();
       for (const m of live) {
-        const dt = stockholmLocalDateTime(m.startTime);
+        // 2026-10-30 — `members` är DB-rader (EventRow) som har
+        // `start_time`. Koden läste `startTime` (finns bara på
+        // grupperingsobjekten) → värdet var alltid undefined → den
+        // modala tiden räknades aldrig ut och tiebreaken (+3) slog
+        // aldrig till. Här är fältet rätt.
+        const dt = stockholmLocalDateTime(m.start_time);
         if (!dt?.time) continue;
         timeVotes.set(dt.time, (timeVotes.get(dt.time) ?? 0) + 1);
       }
@@ -507,13 +532,19 @@ async function mergeGroups(
       }
 
       const scored = live.map((r) => {
-        const dt = stockholmLocalDateTime(r.startTime);
+        const dt = stockholmLocalDateTime(r.start_time);
         let score = completeness(r);
         if (modalTime && dt?.time === modalTime && modalVotes > 1) score += 3;
         return { r, score };
       });
       scored.sort((a, b) => b.score - a.score);
-      const winner = scored[0].r;
+      // En manuellt granskad grupp har en uttrycklig huvudrad — riktningen
+      // är ett beslut, inte en poängfråga.
+      const explicit = g.winnerId ? live.find((r) => r.id === g.winnerId) : undefined;
+      if (g.winnerId && !explicit) {
+        throw new Error(`--merge: huvudraden ${g.winnerId} finns inte bland de levande raderna`);
+      }
+      const winner = explicit ?? scored[0].r;
       for (const loser of [...live.filter((r) => r.id !== winner.id), ...deadRows]) {
         mapping.push({ loser: loser.id, winner: winner.id });
       }
@@ -623,6 +654,43 @@ async function mergeGroups(
     console.log(`[audit] slog ihop ${merged} rader (beroende rader flyttade, merged_into satt)`);
   }
   return merged;
+}
+
+/**
+ * Bygg en grupp per manuellt par: "<loserId>:<winnerId>".
+ *
+ * Riktningen är uttrycklig: operatören har granskat källorna och vet
+ * vilken rad som är den riktiga. Reglerna kan inte avgöra det — t.ex.
+ * samma föreställning listad av arrangören med egen tid och egen
+ * platstext ser strukturellt ut som en matiné.
+ */
+function buildManualGroups(
+  pairs: string[],
+  groupable: Array<{
+    id: string;
+    source: string;
+    title: string | null;
+    startTime: string | Date | null;
+    venueId: string | null;
+    venueName: string | null;
+    ticketUrl: string | null;
+  }>,
+): DuplicateGroup<(typeof groupable)[number]>[] {
+  const byId = new Map(groupable.map((r) => [r.id, r]));
+  const groups: DuplicateGroup<(typeof groupable)[number]>[] = [];
+  for (const pair of pairs) {
+    const [loserId, winnerId] = pair.split(':').map((x) => x.trim());
+    if (!loserId || !winnerId) {
+      throw new Error(`ogiltigt --merge-par "${pair}" (förväntat loserId:winnerId)`);
+    }
+    const loser = byId.get(loserId);
+    const winner = byId.get(winnerId);
+    if (!loser) throw new Error(`--merge-par "${pair}": raden ${loserId} hittades inte`);
+    if (!winner) throw new Error(`--merge-par "${pair}": raden ${winnerId} hittades inte`);
+    if (loserId === winnerId) throw new Error(`--merge-par "${pair}": samma rad två gånger`);
+    groups.push({ members: [winner, loser], rules: ['manual'], reason: 'manual', winnerId });
+  }
+  return groups;
 }
 
 main().catch((err: unknown) => {

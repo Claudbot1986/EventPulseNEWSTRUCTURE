@@ -81,7 +81,7 @@ export interface DuplicateGroup<T extends GroupableEvent> {
   /** Alla rader i gruppen (inklusive den "vinnande" raden). */
   members: T[];
   /** Vilka regler som bidrog till gruppen. */
-  rules: Array<'identity' | 'same-listing' | 'cross-source' | 'venue-alias' | 'date-only-bridge'>;
+  rules: Array<'identity' | 'same-listing' | 'cross-source' | 'venue-alias' | 'date-only-bridge' | 'manual'>;
   /**
    * Varför gruppen bildades — den regel som är mest specifik för gruppen.
    *
@@ -94,6 +94,14 @@ export interface DuplicateGroup<T extends GroupableEvent> {
    * svagare av dem och ska synas.
    */
   reason: DuplicateGroup<T>['rules'][number];
+  /**
+   * Uttrycklig huvudrad, när operatören har granskat ett par manuellt.
+   *
+   * Utan den väljs vinnaren av poängskalningen (beskrivning, bild,
+   * kategori, titel, plats) — bra för automatiska grupper, men fel för ett
+   * manuellt par där riktningen är ett beslut, inte en gissning.
+   */
+  winnerId?: string;
 }
 
 export interface DuplicateRuleOptions {
@@ -546,6 +554,7 @@ export function groupDuplicateEvents<T extends GroupableEvent>(
  * säkert "samma evenemang".
  */
 const RULE_PRIORITY: Array<DuplicateGroup<GroupableEvent>['rules'][number]> = [
+  'manual',
   'identity',
   'same-listing',
   'venue-alias',

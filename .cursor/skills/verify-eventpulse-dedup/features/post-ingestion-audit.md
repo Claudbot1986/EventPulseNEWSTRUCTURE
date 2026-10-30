@@ -17,6 +17,8 @@ before the identity key existed).
 - `audit-undoable` the merge is reversible; the pre-merge snapshot is written
   by the script itself, with the exact loser→winner mapping.
 - `cron-wired` the nightly chain runs the audit after `worker-drain`.
+- `manual-merge` a reviewed pair that the rules cannot see can be merged
+  explicitly, through the same merge path.
 
 ## How to get to it (user POV)
 
@@ -52,6 +54,17 @@ Preconditions:
   exits `1` and prints `GATE FAIL: N dubblettgrupper kvar bland synliga
   events` when two visible rows still share an identity; otherwise it prints
   `GATE OK: inga dubblettgrupper (N events skannade)`. It writes nothing.
+- **Merge a reviewed pair.** Some pairs cannot be found by the rules: the
+  same production listed twice by the organiser — once on the venue's
+  curated livespot page (18:00, with a venue id and coordinates) and once
+  as the organiser's own listing (19:00, free-text place, `venue_id` NULL).
+  Structurally that is identical to a matiné and an evening performance, so
+  no rule may merge it. An operator who has checked the source decides:
+  `npx tsx scripts/audit-duplicates.ts --apply --merge "<loserId>:<winnerId>"`.
+  Several pairs can be given at once, comma-separated. The direction is
+  explicit — the rules do not get a vote — and the run uses the same merge
+  path, the same dependent-row moves and the same backup as an automatic
+  merge. `--dry` shows what would happen.
 - **Confirm the cron step.** Read `scripts/ingestion-cron.ts` and find the
   `dedup-audit` step. It runs `scripts/audit-duplicates.ts --apply --quiet`
   after `worker-drain`, and `--dry --limit 5` in smoke mode. `--quiet`
@@ -90,7 +103,16 @@ Preconditions:
 - The post-merge check groups by `event_identity` only. Residue that the
   venue-alias and cross-source rules would have caught does not fail it.
   The `--gate` mode runs the full rule set and is the stronger check.
-- `04-Normalizer/deduplication/duplicateGroups.test.ts` has one failing
-  test: it documents a date-only bridging rule (a row without a clock links
-  to a timed row when there is exactly one candidate) that was never
-  implemented. Treat that rule as unimplemented until it lands.
+- The date-only bridging rule now exists as R6 (`date-only-bridge`) and its
+  test is green. It is deliberately narrow: the bucket must hold exactly two
+  rows, one with a clock and one without, from the same source. A wider rule
+  would merge matiné and evening performances of the same production.
+- The modal-time tiebreak ("when the sources disagree about the clock, the
+  time most of them agree on wins") only works for groups of **two or more
+  rows that agree on a time** — `modalVotes > 1`. For a pair that disagrees
+  there is no majority, and the winner is picked by completeness instead.
+- A manual merge does not stop the source from publishing the duplicate
+  again — but the merged row keeps its `ticket_url`, and the write-time
+  `ticket_url` lookup does not filter out merged rows. The next ingestion
+  run therefore *updates* the merged row instead of inserting a new one, so
+  the duplicate does not come back.
