@@ -9,7 +9,7 @@
  *
  * Vad skriptet gör:
  *   1. Hittar events med start_time < midnatt igår
- *   2. Sparade events (user_interaction_save) flyttas till
+ *   2. Sparade events (`user_interactions` med interaction='save') flyttas till
  *      runtime/archive/saved-events.jsonl som backup (förstörs inte)
  *   3. Övriga events raderas permanent från Supabase
  *
@@ -17,6 +17,11 @@
  *   - --dry-run som default (ingen data ändras)
  *   - --apply för skarp körning (från launchd-jobb eller manuellt)
  *   - Idempotent: kan köras flera gånger utan sidoeffekter
+ *   - 2026-10-31 — SKYDDEN ÄR FAIL-CLOSED. Skriptet frågade tidigare tabellen
+ *     `user_interaction_save`, som inte finns i live-DB; felet svaldes till en
+ *     varning och purgen raderade 1 000 events/natt även om användaren sparat
+ *     dem. Nu läses sparade event ur `user_interactions`, och kan frågan inte
+ *     besvaras avbryts körningen UTAN att något raderas.
  *
  * Körs dagligen kl 03:00 via scripts/com.eventpulse.purge.plist.
  *
@@ -30,6 +35,11 @@ import { readFileSync } from 'node:fs';
 import { resolve, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { mkdirSync, appendFileSync } from 'node:fs';
+import {
+  fetchSavedEventIds,
+  partitionBySaved,
+  type SavedEventsClient,
+} from './lib/saved-events.js';
 
 // ── Env loading ─────────────────────────────────────────────────────────────
 const __filename = fileURLToPath(import.meta.url);
@@ -97,21 +107,30 @@ async function main() {
     return;
   }
 
-  // 2. Separera: events med saves (skyddade) vs utan
-  const { data: savedRows, error: savedErr } = await supabase
-    .from('user_interaction_save')
-    .select('event_id');
+  // 2. Separera: events med saves (skyddade) vs utan.
+  //    Fail-closed: kan vi inte avgöra vad som är sparat raderas ingenting.
+  const saved = await fetchSavedEventIds(supabase as unknown as SavedEventsClient);
 
-  if (savedErr) {
-    console.warn(`[purge] kunde inte hämta saves (fortsätter utan skydd): ${savedErr.message}`);
+  if (!saved.ok) {
+    console.error(
+      `[purge] kunde inte avgöra vilka events som är sparade — avbryter UTAN att radera: ${saved.error}`,
+    );
+    console.error(
+      '[purge] detta betyder att skydden för sparade events inte fungerar; inga data rördes.',
+    );
+    process.exit(1);
   }
 
-  const savedSet = new Set((savedRows ?? []).map((r) => r.event_id));
-  const toArchive = oldEvents.filter((e) => savedSet.has(e.id));
-  const toDelete = oldEvents.filter((e) => !savedSet.has(e.id));
+  const { toArchive: archiveIds, toDelete: deleteIds } = partitionBySaved(
+    (oldEvents ?? []).map((e) => e.id),
+    saved.eventIds,
+  );
+  const toArchive = (oldEvents ?? []).filter((e) => archiveIds.includes(e.id));
+  const toDelete = (oldEvents ?? []).filter((e) => deleteIds.includes(e.id));
 
-  console.log(`[purge]   → ${toArchive.length} sparas lokalt (har saves)`);
-  console.log(`[purge]   → ${toDelete.length} raderas permanent (inga saves)`);
+  console.log(
+    `[purge]   → ${toArchive.length} sparas lokalt (har saves) · ${toDelete.length} raderas permanent (inga saves)`,
+  );
 
   if (!isApply) {
     console.log('[purge] dry-run — ingen data ändrad. Kör med --apply för skarp körning.');
