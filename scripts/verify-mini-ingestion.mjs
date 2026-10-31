@@ -59,6 +59,16 @@ const explicitSources =
   sourceIdx !== -1 && args[sourceIdx + 1]
     ? args[sourceIdx + 1].split(',').map((s) => s.trim()).filter(Boolean)
     : null;
+// --recheck <rapport.json>: mät om M4/M5 mot en KÖRD kedja utan att köra
+// kedjan igen. Behövs när kedjan avbröts efter att A/B/C hunnit köra (t.ex.
+// avbruten drain) — då är rapportens "events före" fortfarande giltigt, men
+// "events efter" måste mätas igen när drainen är slut.
+// --chain-started <ISO>: kedjans starttid (för färskhetskravet i M5).
+const recheckIdx = args.indexOf('--recheck');
+const recheckReport = recheckIdx !== -1 ? args[recheckIdx + 1] : null;
+const chainStartedIdx = args.indexOf('--chain-started');
+const explicitChainStarted =
+  chainStartedIdx !== -1 && args[chainStartedIdx + 1] ? args[chainStartedIdx + 1] : null;
 
 const SUPABASE_URL = process.env.SUPABASE_URL;
 const SERVICE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
@@ -221,6 +231,41 @@ function latestStepLog(step, sinceMs = 0) {
   };
 }
 
+/**
+ * Stegloggen för en given kedjekörning.
+ *
+ * Filnamnet bär starttiden (`A-directAPI-2026-10-31T09-04-26-442Z.log`), så
+ * vi kan identifiera rätt logg för en körning utan att gissa på mtime —
+ * mtime ändras när kedjan skriver i loggen efteråt.
+ */
+function stepLogForRun(step, notAfterIso) {
+  if (!fs.existsSync(STEP_LOG_DIR)) return null;
+  const cutoff = notAfterIso ? Date.parse(notAfterIso) : Infinity;
+  const files = fs
+    .readdirSync(STEP_LOG_DIR)
+    .filter((f) => f.startsWith(`${step}-`) && f.endsWith('.log') && !f.endsWith('.err.log'))
+    .map((f) => {
+      const stamp = f.slice(step.length + 1, -'.log'.length);
+      // Filnamnets tidsstämpel har `:` ersatta med `-` (t.ex.
+      // 2026-10-31T09-04-26-442Z) — det är inte giltig ISO, så det måste
+      // återställas innan Date.parse kan läsa den.
+      const iso = stamp.replace(
+        /^(\d{4}-\d{2}-\d{2})T(\d{2})-(\d{2})-(\d{2})-(\d{3})Z$/,
+        '$1T$2:$3:$4.$5Z',
+      );
+      return { name: f, startedAt: Date.parse(iso) };
+    })
+    .filter((f) => Number.isFinite(f.startedAt) && f.startedAt <= cutoff)
+    .sort((a, b) => a.startedAt - b.startedAt);
+  const last = files[files.length - 1];
+  if (!last) return null;
+  return {
+    file: path.join(STEP_LOG_DIR, last.name),
+    startedAt: new Date(last.startedAt).toISOString(),
+    content: fs.readFileSync(path.join(STEP_LOG_DIR, last.name), 'utf8'),
+  };
+}
+
 async function countEventsFor(sourceIds) {
   const out = {};
   for (const id of sourceIds) {
@@ -253,9 +298,140 @@ function readSourceStatus(sourceId) {
   return null;
 }
 
+/**
+ * Recheck — mät om M4 och M5 mot en kedja som ALREADY körts.
+ *
+ * När kan det behövas? När kedjan avbröts efter att A/B/C hunnit köra men
+ * innan drainen persisterat eventsen (t.ex. avbruten av en operatör eller av
+ * en yttre SIGTERM). Då är rapportens "events före" fortfarande giltigt, men
+ * "events efter" måste mätas om när drainen är slut — och A-gatens logg finns
+ * kvar som bevis.
+ *
+ * Recheck kör INTE kedjan. Den mäter mot rapporten + databasen + stegloggen.
+ */
+async function recheck(reportPath) {
+  console.log(`\n  recheck av ${path.basename(reportPath)}\n`);
+  if (!fs.existsSync(reportPath)) {
+    console.error(`[verify-mini-ingestion] rapporten finns inte: ${reportPath}`);
+    process.exit(1);
+  }
+  const report = JSON.parse(fs.readFileSync(reportPath, 'utf8'));
+  const sources = report.sources ?? [];
+  const limit = report.limit ?? sources.length;
+  const beforeById = {};
+  for (const s of report.perSource ?? []) beforeById[s.sourceId] = s.eventsBefore ?? 0;
+
+  // Kedjans starttid: explicit flagga > rapporten > A-stegloggens filnamn.
+  let chainStarted = explicitChainStarted ?? report.chainStartedAt ?? null;
+  const aLog = stepLogForRun('A-directAPI', report.startedAt);
+  if (!chainStarted && aLog) chainStarted = aLog.startedAt;
+  if (!chainStarted) {
+    console.error(
+      '[verify-mini-ingestion] kan inte härleda kedjans starttid — ange --chain-started <ISO>',
+    );
+    process.exit(1);
+  }
+  console.log(`  kedjans starttid: ${chainStarted}`);
+
+  // ── M4: A-gaten körde exakt N källor i DENNA körning ─────────────────────
+  let aTotal = null;
+  if (aLog) {
+    const m = aLog.content.match(/Total:\s*(\d+)/);
+    if (m) aTotal = Number(m[1]);
+  }
+  gate(
+    'M4',
+    'A-gaten körde N källor (mätt ur stegloggen från DENNA körning)',
+    aTotal !== null && aTotal === limit,
+    aTotal === null
+      ? `kunde inte läsa "Total:" ur A-logg för körningen (${aLog ? aLog.file : 'ingen logg hittades'})`
+      : `Total=${aTotal} (förväntat ${limit}) · logg: ${path.basename(aLog.file)}`,
+  );
+
+  // ── M5: landade resultatet i DB? ─────────────────────────────────────────
+  const chainStartedMs = Date.parse(chainStarted);
+  const eventsAfter = await countEventsFor(sources);
+  const perSource = [];
+  let okCount = 0;
+  for (const id of sources) {
+    const before = beforeById[id] ?? 0;
+    const after = eventsAfter[id] ?? 0;
+    const status = readSourceStatus(id);
+    const grew = after > before;
+    const ranAt = status?.lastRun ? Date.parse(status.lastRun) : NaN;
+    const isFresh = Number.isFinite(ranAt) && ranAt >= chainStartedMs - 60_000;
+    const hasReason = Boolean(status && status.lastRoutingReason);
+    const ok = grew || (hasReason && isFresh);
+    if (ok) okCount++;
+    perSource.push({
+      sourceId: id,
+      eventsBefore: before,
+      eventsAfter: after,
+      grew,
+      status: status?.status ?? null,
+      lastRun: status?.lastRun ?? null,
+      routingReasonFresh: hasReason && isFresh,
+      lastRoutingReason: status?.lastRoutingReason ?? null,
+      lastSuccess: status?.lastSuccess ?? null,
+      ok,
+    });
+  }
+  gate(
+    'M5',
+    'varje discovery-källa gav events ELLER registrerade ett FRISKT routing-skäl',
+    okCount === sources.length,
+    `${okCount}/${sources.length} st`,
+  );
+  for (const s of perSource) {
+    console.log(
+      `    ${s.ok ? '✓' : '✗'} ${s.sourceId}: events ${s.eventsBefore} → ${s.eventsAfter}` +
+        (s.grew
+          ? ''
+          : ` · skäl: ${String(s.lastRoutingReason).slice(0, 90)}${s.routingReasonFresh ? '' : ' (FÄRSKT? nej)'}`),
+    );
+  }
+
+  const failed = results.filter((r) => !r.ok).map((r) => r.id);
+  const ok = failed.length === 0;
+  fs.mkdirSync(REPORT_DIR, { recursive: true });
+  const reportPath2 = path.join(REPORT_DIR, `mini-ingestion-recheck-${ts()}.json`);
+  fs.writeFileSync(
+    reportPath2,
+    `${JSON.stringify(
+      {
+        recheckOf: reportPath,
+        startedAt: new Date().toISOString(),
+        chainStartedAt: chainStarted,
+        originalChainExit: report.chainExit ?? null,
+        limit,
+        sources,
+        gates: results,
+        failed,
+        perSource,
+      },
+      null,
+      2,
+    )}\n`,
+    'utf8',
+  );
+
+  console.log('\n═══ RESULTAT (recheck) ═══');
+  console.log(`bevis: ${reportPath2}`);
+  console.log(
+    `original kedje-exit: ${report.chainExit ?? 'okänd'} · recheck: ${ok ? '✓ alla gater passerade' : `✗ röda gater: ${failed.join(', ')}`}`,
+  );
+  process.exit(ok ? 0 : 1);
+}
+
 async function main() {
   console.log('═══ verify-mini-ingestion ═══');
   console.log(`   ${new Date().toISOString()}`);
+
+  // ── Recheck: mät om M4/M5 mot en redan körd kedja ───────────────────────
+  if (recheckReport) {
+    await recheck(recheckReport);
+    return;
+  }
 
   // ── M0: ingen annan kedje-körning får pågå ──────────────────────────────
   const live = liveChainPids();
@@ -465,6 +641,7 @@ async function main() {
     `${JSON.stringify(
       {
         startedAt: new Date().toISOString(),
+        chainStartedAt: new Date(chainStartedAt).toISOString(),
         limit,
         sources: chosen,
         gates: results,
