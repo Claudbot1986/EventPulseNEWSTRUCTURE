@@ -49,6 +49,45 @@ export interface MiniMaxConfig {
  * slutgiltiga content-svaret. Vi strippar det deterministiskt — samma approach
  * som 02-Ingestion/AI/minimaxConfig.ts använder för category-classification.
  */
+/**
+ * 2026-10-31 — retrypolicy för MiniMax-klienten.
+ *
+ * Bakgrund: nattkörningen 2026-10-31 loggade ~14 "DEGRADED event ...
+ * MiniMax 429" — alltså events som sparades UTAN LLM-beskrivning, bara för
+ * att MiniMax-kontots RPM-tak var nått. Klienten kastade direkt på 429 och
+ * editorial-pipelinen (maxAttempts=2) försökte igen omedelbart — när taket
+ * fortfarande var nått.
+ *
+ * Policy:
+ *   - 429 (rate limit) och 5xx (serverfel) → retry med backoff.
+ *   - 401/403/400 (auth/bad request) → INTE retrybara, de ska falla snabbt.
+ */
+export const MINIMAX_MAX_ATTEMPTS = 4;
+const MINIMAX_BASE_DELAY_MS = 2_000;
+const MINIMAX_MAX_DELAY_MS = 20_000;
+
+/** Är felet retrybart? 429 och 5xx ja, övriga 4xx nej. */
+export function isRetryableMiniMaxError(err: unknown): boolean {
+  const message = err instanceof Error ? err.message : String(err);
+  const match = message.match(/^MiniMax (\d{3})/);
+  if (!match) return false;
+  const status = Number(match[1]);
+  return status === 429 || (status >= 500 && status < 600);
+}
+
+/**
+ * Hur länge ska vi vänta innan nästa försök?
+ * `Retry-After` från servern vinner (sekunder), annars exponentiell backoff.
+ */
+export function retryDelayMs(err: unknown, attempt: number): number {
+  const message = err instanceof Error ? err.message : String(err);
+  const retryAfter = message.match(/retry-after=(\d+)/i);
+  if (retryAfter) {
+    return Math.min(Number(retryAfter[1]) * 1000, MINIMAX_MAX_DELAY_MS);
+  }
+  return Math.min(MINIMAX_BASE_DELAY_MS * 2 ** (attempt - 1), MINIMAX_MAX_DELAY_MS);
+}
+
 export class MiniMaxM3LlmClient implements LlmClient {
   readonly name = 'minimax-M3';
   private apiKey: string;
@@ -63,6 +102,28 @@ export class MiniMaxM3LlmClient implements LlmClient {
 
   async generate(args: LlmGenerateArgs): Promise<string> {
     const model = args.model ?? this.defaultModel;
+    // 2026-10-31 — 429 (RPM-tak) hanterades som ett vanligt fel: klienten
+    // kastade direkt, och editorial-pipelinen (maxAttempts=2) försökte igen
+    // omedelbart — när taket var nått. Resultatet i nattens körning: ~14
+    // events utan LLM-beskrivning ("DEGRADED event ... MiniMax 429").
+    // Nu vänter vi ut taket (Retry-After om servern skickar det, annars
+    // exponentiell backoff) innan vi ger upp. 429 och 5xx är retrybara;
+    // 4xx i övrigt (401/403/400) är inte — de ska falla snabbt.
+    let lastError: unknown = null;
+    for (let attempt = 1; attempt <= MINIMAX_MAX_ATTEMPTS; attempt++) {
+      try {
+        return await this.generateOnce(args, model);
+      } catch (err) {
+        lastError = err;
+        if (!isRetryableMiniMaxError(err) || attempt === MINIMAX_MAX_ATTEMPTS) break;
+        const waitMs = retryDelayMs(err, attempt);
+        await new Promise((resolve) => setTimeout(resolve, waitMs));
+      }
+    }
+    throw lastError instanceof Error ? lastError : new Error(String(lastError));
+  }
+
+  private async generateOnce(args: LlmGenerateArgs, model: string): Promise<string> {
     const res = await fetch(`${this.baseUrl}/chat/completions`, {
       method: 'POST',
       headers: {
@@ -87,7 +148,10 @@ export class MiniMaxM3LlmClient implements LlmClient {
 
     if (!res.ok) {
       const errText = await res.text();
-      throw new Error(`MiniMax ${res.status}: ${errText.slice(0, 200)}`);
+      const retryAfter = res.headers.get('retry-after');
+      throw new Error(
+        `MiniMax ${res.status}: ${errText.slice(0, 200)}${retryAfter ? ` retry-after=${retryAfter}` : ''}`,
+      );
     }
 
     const data = (await res.json()) as {
