@@ -49,6 +49,12 @@ Regler för "match":
 - match=false endast om bilden visar en HELT ANNAN aktivitet, sak eller
   situation — inte bara en variant, en miljö eller ett tillfälle av ordet.
   En närbild av en fotbollsmatch ÄR match=true för ordet "match".
+- ORD SOM ÄR BÅDE VANLIGT ORD OCH EVENEMANGSNAMN: räcker det med den
+  GENERELLA formen. "motorbaletten" → en klassikbilstur i en gata ÄR en
+  bild av motorbaletten. "expo" → en mässa med bås och besökare ÄR en bild
+  av expo. Kräv inte att bilden föreställer exakt en viss organiserad
+  tävling eller ett visst evenemang med just det namnet — kortet ska visa
+  VAD det är, inte vilket evenemang det är.
 - match=false också om bilden är för generisk för ordet (t.ex. ett tomt rum
   för ordet "julbord").
 - confidence = hur säker du är på ditt svar (0.0–1.0).
