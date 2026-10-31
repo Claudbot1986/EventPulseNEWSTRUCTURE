@@ -1027,10 +1027,19 @@ if (!skipCandidateTests) {
   //                sanity/breadth ger manual_review även för bra kandidater.
   // --limit: varje kandidat spawnar e2e.py --from-preA --limit 1 --apply,
   //         alltså riktiga nätanrop. Kör inte för stort.
+  //
+  // 2026-10-31 — limit 20 → 8. Innan testkön matades (P3D anropade aldrig
+  // enqueue_source_candidate_tests) steget tog 0,7 s. Nu testar det ~2,5 min
+  // per kandidat: 20 kandidater ≈ 50 min, vilket skulle förlänga nattkedjan
+  // från ~52 till ~100 min. Kedjan startar 02:00 och post-ingest kör 04:00 —
+  // med 20 kandidater blev marginalen 20 min, och ett långt steg därefter
+  // riskerar överlapp. 8 kandidater ≈ 20 min (kedjan ~72 min, marginal 48
+  // min) och ger ~1–2 nya källor per natt, vilket räcker för en agent som
+  // ska växa i Stockholms tätort.
   steps.push({
     name: 'P3D-source-candidate-tests',
     cmd: 'npx',
-    args: ['tsx', '07-Discovery/src/sourceTesting/runSourceCandidateTests.ts', '--phase=smoke', `--limit=${smoke ? '1' : '20'}`],
+    args: ['tsx', '07-Discovery/src/sourceTesting/runSourceCandidateTests.ts', '--phase=smoke', `--limit=${smoke ? '1' : '8'}`],
   });
 }
 

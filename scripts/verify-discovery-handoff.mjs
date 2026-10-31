@@ -155,6 +155,9 @@ function runP3D(limit) {
 async function gateRealRun(limit) {
   console.log(`\n[D2] Kör P3D med riktiga A/B/C/D-gates (limit=${limit})…`);
   const startedAt = Date.now();
+  // Bindning till DENNA körning: utan tidsgränsen kan rader från tidigare
+  // nätter uppfylla D2b/D3 (negativa kontrollerna ska gälla det vi körde).
+  const runStartedAt = new Date().toISOString();
   const run = runP3D(limit);
   const durationMs = Date.now() - startedAt;
 
@@ -180,9 +183,11 @@ async function gateRealRun(limit) {
   );
 
   // Negativ kontroll: testkörningarna ska ha anropat den RIKTIGA e2e.py-gaten.
+  // Bara rader från denna körning räknas.
   const { data: runs } = await sb
     .from('source_candidate_test_runs')
     .select('source_candidate_id, commands_run, tool_a, tool_b, tool_c, tool_d, created_at')
+    .gte('created_at', runStartedAt)
     .order('created_at', { ascending: false })
     .limit(limit * 3);
 
@@ -194,12 +199,15 @@ async function gateRealRun(limit) {
     'D2b',
     'NEGATIV KONTROLL: testerna körde Alltools-E2E/e2e.py (ingen simulering)',
     withRealTool.length > 0,
-    `${withRealTool.length}/${recent.length} senaste körningarna använde e2e.py`,
+    `${withRealTool.length}/${recent.length} körningar från denna körning använde e2e.py`,
   );
 
   const { data: decisionsRows } = await sb
     .from('source_candidate_test_decisions')
-    .select('source_candidate_id, decision, reason, created_at')
+    // `promoted_source_id` MÅSTE vara med — utan det kan D4 aldrig veta vilken
+    // fil som skapades (2026-10-31: D4 var död av just den anledningen).
+    .select('source_candidate_id, decision, reason, promoted_source_id, created_at')
+    .gte('created_at', runStartedAt)
     .order('created_at', { ascending: false })
     .limit(limit * 3);
   const decisionRows = decisionsRows ?? [];
@@ -207,7 +215,7 @@ async function gateRealRun(limit) {
     'D3',
     'beslut sparades för testade kandidater',
     decisionRows.length > 0,
-    `${decisionRows.length} beslutsrader (senaste: ${decisionRows[0]?.decision ?? '?'})`,
+    `${decisionRows.length} beslutsrader från denna körning (senaste: ${decisionRows[0]?.decision ?? '?'})`,
   );
 
   return { decisions, recentRuns: recent, decisionRows, durationMs, exitCode: run.status };
@@ -322,7 +330,10 @@ async function main() {
     run = await gateRealRun(LIMIT);
   }
 
-  const d4 = await gatePromote(run.decisionRows);
+  // I state-only läge körs bara D1 (kön matad?). D2–D4 kräver en körning, och
+  // en promote-gate utan promote-beslut skulle ge ett rött läge som inte
+  // betyder något.
+  const d4 = stateOnly ? { promoted: [] } : await gatePromote(run.decisionRows);
 
   const failed = results.filter((r) => !r.ok).map((r) => r.id);
   const ok = failed.length === 0;

@@ -79,10 +79,46 @@ function ts() {
 }
 
 /**
- * Discovery-källor = källor som P3D promote:at (de ligger i
- * `runtime/discovery-ui-queue.jsonl`, dit promote skriver), plus källor med
- * prefixet `candidate-` i `sources/` (P3D:s filnamnsmönster).
+ * Discovery-källor = kandidater som P3D promote:at. Promote skriver
+ * `sources/<slug>.jsonl` och en rad i `runtime/discovery-ui-queue.jsonl`.
+ *
+ * 2026-10-31 — viktig lärdom från källgenomgången: **UI-köns `sourceId` är
+ * inte alltid filnamnet i `sources/`.** Av 89 rader resolve bara 36 direkt;
+ * 47 matchar en källfil på samma värd men under ett annat id (t.ex. UI
+ * `wwwdramatense` ↔ fil `dramaten.jsonl`), och 52 har ingen URL-träff alls.
+ * En id som inte finns → A-gaten hittar ingen källfil och **raderar posten
+ * ur preA-kön tyst** (`runA.ts:293-298`) → gaten skulle se "M2 grön, M5 röd".
+ * Därför resolve:ar vi varje post mot verkliga källfiler innan vi köar.
  */
+function resolveSourceFile(sourceId, url) {
+  const sourcesDir = path.join(PROJECT_ROOT, 'sources');
+  const direct = path.join(sourcesDir, `${sourceId}.jsonl`);
+  if (fs.existsSync(direct)) return { file: direct, id: sourceId, via: 'id' };
+
+  // Matcha på värd: UI-rader och källfiler kan ha olika id men samma domän.
+  let host = null;
+  try {
+    host = new URL(url).hostname.replace(/^www\./, '').toLowerCase();
+  } catch {
+    host = null;
+  }
+  if (host) {
+    for (const f of fs.readdirSync(sourcesDir)) {
+      if (!f.endsWith('.jsonl')) continue;
+      try {
+        const parsed = JSON.parse(fs.readFileSync(path.join(sourcesDir, f), 'utf8').trim());
+        const h = String(parsed.url ?? '').match(/^https?:\/\/([^/]+)/)?.[1];
+        if (h && h.replace(/^www\./, '').toLowerCase() === host) {
+          return { file: path.join(sourcesDir, f), id: f.replace(/\.jsonl$/, ''), via: 'host' };
+        }
+      } catch {
+        /* trasig fil — hoppa över */
+      }
+    }
+  }
+  return null;
+}
+
 function discoverySources() {
   const out = [];
   const uiQueue = path.join(PROJECT_ROOT, 'runtime', 'discovery-ui-queue.jsonl');
@@ -92,7 +128,15 @@ function discoverySources() {
       try {
         const row = JSON.parse(line);
         const id = row.sourceId ?? row.slug ?? null;
-        if (id) out.push({ id, promotedAt: row.promotedAt ?? null, from: 'discovery-ui-queue', row });
+        if (!id) continue;
+        const resolved = resolveSourceFile(id, row.url ?? '');
+        out.push({
+          id,
+          url: row.url ?? null,
+          promotedAt: row.promotedAt ?? null,
+          from: 'discovery-ui-queue',
+          resolved,
+        });
       } catch {
         /* trasig rad — hoppa över */
       }
@@ -103,7 +147,14 @@ function discoverySources() {
     for (const f of fs.readdirSync(sourcesDir)) {
       if (!f.endsWith('.jsonl')) continue;
       if (!f.startsWith('candidate-')) continue;
-      out.push({ id: f.replace(/\.jsonl$/, ''), promotedAt: null, from: 'sources/candidate-*' });
+      const id = f.replace(/\.jsonl$/, '');
+      out.push({
+        id,
+        url: null,
+        promotedAt: null,
+        from: 'sources/candidate-*',
+        resolved: { file: path.join(sourcesDir, f), id, via: 'id' },
+      });
     }
   }
   const seen = new Set();
@@ -154,24 +205,34 @@ function runChain(limit) {
   return { status: res.status, stdout: res.stdout ?? '', stderr: res.stderr ?? '' };
 }
 
-function latestStepLog(step) {
+function latestStepLog(step, sinceMs = 0) {
   if (!fs.existsSync(STEP_LOG_DIR)) return null;
   const files = fs
     .readdirSync(STEP_LOG_DIR)
-    .filter((f) => f.startsWith(`${step}-`) && f.endsWith('.log'))
-    .sort();
+    .filter((f) => f.startsWith(`${step}-`) && f.endsWith('.log') && !f.endsWith('.err.log'))
+    .map((f) => ({ name: f, mtime: fs.statSync(path.join(STEP_LOG_DIR, f)).mtimeMs }))
+    .filter((f) => f.mtime >= sinceMs)
+    .sort((a, b) => a.mtime - b.mtime);
   const last = files[files.length - 1];
   if (!last) return null;
-  return { file: path.join(STEP_LOG_DIR, last), content: fs.readFileSync(path.join(STEP_LOG_DIR, last), 'utf8') };
+  return {
+    file: path.join(STEP_LOG_DIR, last.name),
+    content: fs.readFileSync(path.join(STEP_LOG_DIR, last.name), 'utf8'),
+  };
 }
 
 async function countEventsFor(sourceIds) {
   const out = {};
   for (const id of sourceIds) {
-    const { count } = await sb
+    // `events_public` har kolumnen `source` (INTE `source_id`) — mätt på
+    // fel kolumn ger tyst 0 i stället för ett fel.
+    const { count, error } = await sb
       .from('events_public')
       .select('id', { count: 'exact', head: true })
-      .eq('source_id', id);
+      .eq('source', id);
+    if (error) {
+      console.error(`[verify-mini-ingestion] kunde inte räkna events för ${id}: ${error.message}`);
+    }
     out[id] = count ?? 0;
   }
   return out;
@@ -207,17 +268,37 @@ async function main() {
   }
 
   // ── M1: vilka discovery-källor? ──────────────────────────────────────────
-  const found = explicitSources
-    ? explicitSources.map((id) => ({ id, from: 'explicit' }))
+  const allFound = explicitSources
+    ? explicitSources.map((id) => ({
+        id,
+        url: null,
+        promotedAt: null,
+        from: 'explicit',
+        resolved: resolveSourceFile(id, ''),
+      }))
     : discoverySources();
+
+  // Endast källor som faktiskt finns som källfil kan köas — annars raderar
+  // A-gaten posten ur preA-kön tyst och körden blir en tyst no-op.
+  const found = allFound.filter((s) => s.resolved);
+  const unresolvable = allFound.filter((s) => !s.resolved);
+
   gate(
     'M1',
-    'det finns discovery-källor att köa',
+    'det finns discovery-källor att köa (med verklig källfil)',
     found.length > 0,
     found.length === 0
-      ? 'inga promote:ade källor hittades (kör verify-discovery-handoff.mjs först)'
-      : `${found.length} st: ${found.map((s) => s.id).join(', ')}`,
+      ? `inga promote:ade källor med källfil hittades (${unresolvable.length} poster utan källfil)`
+      : `${found.length} st: ${found.map((s) => s.resolved.id).join(', ')}`,
   );
+  if (unresolvable.length > 0) {
+    console.log(
+      `  ℹ ${unresolvable.length} discovery-poster saknar källfil (äldre domän-sluggar) — hoppas över: ${unresolvable
+        .slice(0, 5)
+        .map((s) => s.id)
+        .join(', ')}${unresolvable.length > 5 ? ' …' : ''}`,
+    );
+  }
   if (found.length === 0) {
     fs.mkdirSync(REPORT_DIR, { recursive: true });
     fs.writeFileSync(
@@ -228,21 +309,27 @@ async function main() {
     process.exit(1);
   }
 
-  const limit = explicitLimit ?? found.length;
-
   // Företräde för de FÄRSKASTE promote:ade källorna, och för de som ännu inte
   // gett några events — det är de som bevisar att discovery→ingestion bär
   // nya event, inte bara att en gammal källa körs igen.
-  const eventsAll = await countEventsFor(found.map((s) => s.id));
+  const eventsAll = await countEventsFor(found.map((s) => s.resolved.id));
   const fresh = found
-    .map((s) => ({ ...s, events: eventsAll[s.id] ?? 0 }))
+    .map((s) => ({ ...s, events: eventsAll[s.resolved.id] ?? 0 }))
     .sort((a, b) => {
       const aFresh = a.events === 0 ? 0 : 1;
       const bFresh = b.events === 0 ? 0 : 1;
       if (aFresh !== bFresh) return aFresh - bFresh;
       return String(b.promotedAt ?? '').localeCompare(String(a.promotedAt ?? ''));
     });
-  const chosen = fresh.slice(0, limit).map((s) => s.id);
+
+  // Standard-N: de källor som ännu inte gett events, högst 5. Utan ett
+  // tak vore det "alla 89 historiska" — det är inte en mini-ingestion.
+  const defaultLimit = Math.min(
+    fresh.filter((s) => s.events === 0).length || fresh.length,
+    5,
+  );
+  const limit = explicitLimit ?? defaultLimit;
+  const chosen = fresh.slice(0, limit).map((s) => s.resolved.id);
   console.log(
     `\n  valda källor (N=${chosen.length}): ${chosen.join(', ')}`,
   );
@@ -269,14 +356,31 @@ async function main() {
       : `saknas: ${missing.join(', ')}`,
   );
 
+  // M2b — position i kön. preA-kön har ingen kapacitet och ingen
+  // åldersfilter, och nya poster appenderas SIST. En kö med gamla poster kan
+  // därför skjuta våra källor bakom `--limit N`, så att de aldrig körs.
+  const positions = {};
+  preAfter.forEach((e, i) => {
+    positions[e.sourceId] = i + 1;
+  });
+  const beyondLimit = chosen.filter((id) => (positions[id] ?? 999) > limit);
+  gate(
+    'M2b',
+    'valda källor ligger inom de första N platserna i preA-kön',
+    beyondLimit.length === 0,
+    beyondLimit.length === 0
+      ? `positioner: ${chosen.map((id) => `${id}=${positions[id]}`).join(', ')}`
+      : `bakom gränsen: ${beyondLimit.map((id) => `${id}=${positions[id]}`).join(', ')} (gräns ${limit}) — gamla poster i kön blockerar`,
+  );
+
   // ── Före-mätning i DB ────────────────────────────────────────────────────
   const eventsBefore = await countEventsFor(chosen);
 
   // ── M3: kör kedjan med --limit N (endast N ändras) ───────────────────────
   console.log(`\n[M3] Kör hela kedjan med --limit ${limit} (N ändras, inget annat)…`);
-  const startedAt = Date.now();
+  const chainStartedAt = Date.now();
   const chain = runChain(limit);
-  const durationMs = Date.now() - startedAt;
+  const durationMs = Date.now() - chainStartedAt;
 
   gate(
     'M3a',
@@ -286,19 +390,21 @@ async function main() {
   );
 
   // ── M4: A-gaten körde exakt N källor ─────────────────────────────────────
-  const aLog = latestStepLog('A-directAPI');
+  // Loggen MÄSTE vara skriven under just den här körningen — annars mäter vi
+  // en tidigare natt.
+  const aLog = latestStepLog('A-directAPI', chainStartedAt);
   let aTotal = null;
   if (aLog) {
     const m = aLog.content.match(/Total:\s*(\d+)/);
     if (m) aTotal = Number(m[1]);
-    const fail = aLog.content.match(/fail:\s*(\d+)/);
-    if (fail) aTotal = aTotal;
   }
   gate(
     'M4',
-    'A-gaten körde N källor (mätt ur stegloggen)',
-    aTotal !== null && aTotal <= limit,
-    aTotal === null ? 'kunde inte läsa "Total:" ur A-loggen' : `Total=${aTotal} (gräns ${limit})`,
+    'A-gaten körde N källor (mätt ur stegloggen från DENNA körning)',
+    aTotal !== null && aTotal === limit,
+    aTotal === null
+      ? `kunde inte läsa "Total:" ur en A-logg från denna körning (${aLog ? aLog.file : 'ingen logg hittades'})`
+      : `Total=${aTotal} (förväntat ${limit})`,
   );
 
   // ── M5: landade resultatet i DB? ─────────────────────────────────────────
