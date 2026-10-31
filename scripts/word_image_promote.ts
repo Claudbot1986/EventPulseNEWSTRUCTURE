@@ -67,7 +67,27 @@ async function main() {
   const files = readdirSync(QUAR_DIR).filter((f) => f.endsWith('.webp')).sort();
   console.log(`[promote] karantänbilder: ${files.length}`);
 
+  // Nycklar som redan har en godkänd bild i biblioteksmappen. Utan detta
+  // skulle en gammal karantänbild kunna släppas in bredvid en nyare bild för
+  // samma ord — och tilldelningen plockar bara en av dem, godtyckligt.
+  const takenKeys = new Set<string>();
+  if (existsSync(WORD_DIR)) {
+    for (const f of readdirSync(WORD_DIR).filter((x) => x.endsWith('.webp'))) {
+      const side = path.join(WORD_DIR, `${f}.json`);
+      let key = f.split('__')[0].toLowerCase();
+      if (existsSync(side)) {
+        try {
+          const j = JSON.parse(readFileSync(side, 'utf8')) as Sidecar;
+          key = String(j.image_key ?? key).toLowerCase();
+        } catch { /* trasig sidecar → använd filnamnet */ }
+      }
+      takenKeys.add(key);
+    }
+  }
+  console.log(`[promote] ord som redan har en godkänd bild: ${takenKeys.size}`);
+
   const promoted: string[] = [];
+  const superseded: string[] = [];
   const stillFailing: Array<{ ord: string; why: string }> = [];
   let cursor = 0;
 
@@ -82,6 +102,11 @@ async function main() {
       const j = JSON.parse(readFileSync(qSide, 'utf8')) as Sidecar;
       const ord = String(j.ord ?? f.split('__')[0]);
       const meaning = String(j.meaning ?? j.stam ?? ord);
+      const key = String(j.image_key ?? f.split('__')[0]).toLowerCase();
+
+      // Ord som redan har en godkänd bild: den gamla karantänbilden är
+      // överflödig. Den lämnas i karantän (som bevis) och räknas inte.
+      if (takenKeys.has(key)) { superseded.push(ord); continue; }
 
       const verdict = await verifyImageFile(qFile, ord, meaning, KEY!);
       if (!verdict) { stillFailing.push({ ord, why: 'ingen granskning' }); continue; }
@@ -124,6 +149,7 @@ async function main() {
         writeFileSync(`${target}.json`, JSON.stringify(j, null, 2));
       }
       promoted.push(ord);
+      takenKeys.add(key);
       console.log(`  [OK  ] ${ord.padEnd(16)} conf=${verdict.confidence.toFixed(2)} → ${f}`);
     }
   }
@@ -135,10 +161,11 @@ async function main() {
   const report = path.join(REPORT_DIR, `word-promote-${stamp}.json`);
   writeFileSync(report, JSON.stringify({
     promote: 'word-images', at: new Date().toISOString(), dryRun: IS_DRY,
-    inspected: files.length, promoted, stillFailing,
+    inspected: files.length, promoted, superseded, stillFailing,
   }, null, 2));
 
   console.log(`\n[promote] ${IS_DRY ? 'dry-run — ' : ''}släppta in: ${promoted.length} / ${files.length}`);
+  console.log(`[promote] överkörda av nyare bild: ${superseded.length}`);
   console.log(`[promote] kvar i karantän: ${stillFailing.length}`);
   console.log(`[promote] rapport: ${report}`);
 }
