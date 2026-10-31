@@ -513,6 +513,12 @@ async function main() {
         const tag = passes ? 'OK ' : 'FEL';
         console.log(`  [${tag}] ${w.ord.padEnd(18)} conf=${(verdict?.confidence ?? 0).toFixed(2)} ${verdictReason(verdict)}`);
 
+        // Nyckeln läggs in i `done` så att ett senare ord med samma nyckel
+        // hoppas över. Utan detta skapas dubbletter: `done` var en ögonblicks-
+        // bild från start, så ett ord som genererades under körningen syntes
+        // inte som "klart" (2026-10-31: ateljé, läslov, utställning).
+        if (passes) done.add(key);
+
         if (passes) break;
 
         // Underkänd bild → karantän (den ska inte ligga kvar och se användbar ut)
