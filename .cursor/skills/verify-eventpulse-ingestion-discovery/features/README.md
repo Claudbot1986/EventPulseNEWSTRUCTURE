@@ -6,6 +6,7 @@
 | Ingestion persisterar events | chain-live | `node scripts/verify-chain-live.mjs --limit 200` | `features/ingestion-live.md` |
 | Discovery hittar + promote:ar | discovery-handoff | `node scripts/verify-discovery-handoff.mjs --limit 5` | `features/discovery-handoff.md` |
 | Mini-ingestion över discovery-källor | mini-ingestion | `node scripts/verify-mini-ingestion.mjs` | `features/mini-ingestion.md` |
+| Stoppregler (om något inte fungerar) | — | se SKILL.md | `features/stop-rules.md` |
 
 **Ordning:** alive → ingestion-live → discovery-handoff → mini-ingestion.
 Steg 3 före 4 före 5 är fastställt av användaren 2026-10-31: ingestion bevisas
