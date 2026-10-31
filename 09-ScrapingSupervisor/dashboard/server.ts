@@ -3354,7 +3354,7 @@ if (req.method === 'POST' && url === '/api/bfl/word-run') {
       return true;
     }
     const word = (parsed.word ?? '').trim().slice(0, 60);
-    const concurrency = clampInt(parsed.concurrency, 1, 6, 3);
+    const concurrency = clampInt(parsed.concurrency, 1, 6, 6);
 
     // Ingen parallell körning — MiniMax-taket är 10 bilder/min och delas
     // mellan BÅDA generatorerna (orange knapp + titalanpassad).

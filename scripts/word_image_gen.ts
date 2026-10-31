@@ -33,6 +33,7 @@ import { existsSync, readFileSync, writeFileSync, mkdirSync, readdirSync, append
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { applyAiComplianceToWebp } from '../08-Agent/tools/ai_compliance.js';
+import { imageKey } from './lib/word-image-match.js';
 import {
   verifyImageFile, verdictPasses, verdictReason,
   type WordVerdict,
@@ -63,7 +64,7 @@ const RPM_SAFE = 9;
 const CONCURRENCY = (() => {
   const raw = argValue('--concurrency');
   const n = raw ? parseInt(raw, 10) : NaN;
-  return Number.isFinite(n) ? Math.max(1, Math.min(6, n)) : 3;
+  return Number.isFinite(n) ? Math.max(1, Math.min(6, n)) : 6;
 })();
 
 // ── Args ──────────────────────────────────────────────────────────────────
@@ -142,29 +143,6 @@ interface WordRow {
 }
 
 /** Bildnyckel: "bastun" -> "bastu" (bestämd form), "dambastu" -> "dambastu" (modifier). */
-const INFL = ['n', 'en', 'ar', 'er', 'or', 'et', 's', 'na', 'orna', 'arna'];
-function imageKey(word: string, stem: string): string {
-  const w = word.toLowerCase();
-  const s = stem.toLowerCase();
-  if (!s || s === w) return w;
-  if (w.startsWith(s)) {
-    const rest = w.slice(s.length);
-    if (INFL.includes(rest)) return s;      // bestämd form -> samma sak
-  }
-  return w;                                  // modifier + stam -> egen bild
-}
-
-/** Modifier som gör ett sammansatt ord visuellt annorlunda. */
-const VISUAL_MODIFIERS = new Set([
-  'dam', 'herre', 'dam', 'barn', 'ungdom', 'senior', 'kvinn', 'poang', 'flick', 'kill',
-  'mix', 'jul', 'nyår', 'pask', 'advents', 'lucia', 'kräft', 'skär', 'sommar', 'vinter',
-  'höst', 'vår', 'midsommar', 'konst', 'film', 'bok', 'musik', 'teater', 'dans', 'design',
-  'foto', 'historia', 'språk', 'hälso', 'mental', 'digital', 'teknik', 'miljö', 'klimat',
-  'bostadsrätt', 'industri', 'student', 'jobb', 'antik', 'vintage', 'retro', 'skatt',
-  'fisk', 'jakt', 'vandring', 'kajak', 'kanot', 'segling', 'skidor', 'katt', 'dog',
-  'bil', 'motor', 'cykel', 'lant', 'tradition', 'kultur', 'story', 'standup', 'open',
-  'quiz', 'karaoke', 'vin', 'öl', 'mat', 'choklad', 'bageri', 'kaffe', 'fika',
-]);
 
 function loadWords(): WordRow[] {
   if (!existsSync(INVENTORY)) { console.error(`Saknar ${INVENTORY}`); process.exit(2); }

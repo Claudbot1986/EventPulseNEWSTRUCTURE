@@ -19,6 +19,7 @@
 import { existsSync, readFileSync, readdirSync, writeFileSync, mkdirSync } from 'node:fs';
 import path from 'node:path';
 import { verifyImageFile, verdictPasses, verdictReason, type WordVerdict } from './lib/word-image-verdict.js';
+import { buildWordIndex, matchKeysInTitle } from './lib/word-image-match.js';
 import { fileURLToPath } from 'node:url';
 
 const PROJECT_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
@@ -82,6 +83,9 @@ async function main() {
   }
   const inventory = new Set(parseCsv(readFileSync(INVENTORY_CSV, 'utf8')).map((r) => (r.ord ?? '').toLowerCase()));
   const nameWords = new Set(parseCsv(readFileSync(NAMES_CSV, 'utf8')).map((r) => (r.ord ?? '').toLowerCase()));
+  // Ordlistan är facit — samma index som tilldelningen använder.
+  const invRows = parseCsv(readFileSync(INVENTORY_CSV, 'utf8'));
+  const wordIndex = buildWordIndex(invRows.map((r) => ({ ord: r.ord ?? '', stam: r.stam ?? '' })));
 
   const allFiles = readdirSync(WORD_DIR).filter((f) => f.endsWith('.webp'));
   const files = WORD_ARG
@@ -107,12 +111,11 @@ async function main() {
     const titles: string[] = j.exempel_titlar ?? [];
 
     // ── TEST 1: finns ordet i titeln? (deterministisk) ──────────────────
-    const forms = [...new Set([key.toLowerCase(), ord.toLowerCase()])];
-    const tokenize = (s: string) => s.toLowerCase().split(/[^a-z0-9åäöéüæøèáàíóúúñç]+/i).filter(Boolean);
-    const inTitle = (w: string, toks: string[]) => toks.some((t) => t === w || (t.length > w.length && t.endsWith(w)));
+    // Samma matchning som tilldelningen: ordlistan är facit, ingen
+    // suffixgissning ("Ludwig Hart" slutar med "art" men är INTE konst).
     const titleHit = titles.some((t) => {
-      const toks = tokenize(t);
-      return forms.some((w) => inTitle(w, toks));
+      const tk = matchKeysInTitle(t, wordIndex);
+      return tk.has(key.toLowerCase()) || tk.has(ord.toLowerCase());
     });
     const inInventory = inventory.has(ord.toLowerCase()) || inventory.has(key.toLowerCase());
     const isName = nameWords.has(ord.toLowerCase());

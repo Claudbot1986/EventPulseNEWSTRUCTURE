@@ -32,6 +32,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { createClient } from '@supabase/supabase-js';
 import { verdictPasses } from './lib/word-image-verdict.js';
+import { buildWordIndex, matchKeysInTitle, matchForms as matchFormsOf } from './lib/word-image-match.js';
 
 const PROJECT_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const WORD_DIR = path.join(PROJECT_ROOT, 'local_image_library_stamped_v2', 'word');
@@ -133,19 +134,9 @@ function loadWordImages(): WordImage[] {
   return out;
 }
 
-/**
- * Ordet förekommer i titeln? (helt ord ELLER som del av sammansatt ord)
- * Matchar på BÅDE den kanoniska nyckeln ("bastu") och ordformen ("bastun"),
- * så "bastun" som ensamt ord också träffar bastu-bilden.
- */
-function wordInTitle(word: string, titleTokens: string[]): boolean {
-  const w = word.toLowerCase();
-  return titleTokens.some((t) => t === w || (t.length > w.length && t.endsWith(w)));
-}
-
-/** Ordformer som ska matcha samma bild (nyckel + ordform). */
+/** Ordformer som ska matcha samma bild (nyckel + ordform) — se lib/word-image-match.ts. */
 function matchForms(img: WordImage): string[] {
-  return [...new Set([img.key.toLowerCase(), img.ord.toLowerCase()].filter(Boolean))];
+  return matchFormsOf(img.key, img.ord);
 }
 
 // ── Main ──────────────────────────────────────────────────────────────────
@@ -161,6 +152,8 @@ async function main() {
   // som över huvud taget är giltiga för bildgenerering.
   const invRows = existsSync(INVENTORY_CSV) ? parseCsv(readFileSync(INVENTORY_CSV, 'utf8')) : [];
   const inventoryWords = new Set(invRows.map((r) => (r.ord ?? '').toLowerCase()).filter(Boolean));
+  // Ordlistan är facit: varje ord -> dess bildnyckel (stam + beständ form).
+  const wordIndex = buildWordIndex(invRows.map((r) => ({ ord: r.ord ?? '', stam: r.stam ?? '' })));
 
   // Ord med en verifierad bild, filtrerat på ordfilen.
   let candidates = usable;
@@ -233,21 +226,26 @@ async function main() {
   }
   console.log(`[assign] events hämtade: ${events.length}`);
 
-  const tokenize = (s: string) => s.toLowerCase()
-    .split(/[^a-z0-9åäöéüæøèáàíóúñç]+/i)
-    .filter(Boolean);
-
   const rows: string[] = ['event_id,titel,ord,bildfil,image_url_fbefore,image_url_fafter,status'];
   let assigned = 0, unmatched = 0, skipped = 0;
 
   for (const ev of events) {
     const title = ev.title_sv || ev.title_en || '';
     if (!title) continue;
-    const toks = tokenize(title);
+    // ORDLISTAN ÄR FACIT. Vi delar titeln i tokens och slår upp varje
+    // token i inventeringen — en token som inte finns i ordlistan
+    // matchar ingenting.
+    //
+    // FÖRUT gissades suffixer ("tokenet slutar med nyckeln"), vilket gav
+    // 922 FALSA träffar: "Ludwig Hart" -> "hart" slutar med "art" (konst),
+    // "Digitalt Forum" -> "digitalt" slutar med "alt", "Tennis" -> "tennis"
+    // slutar med "is" (isbana). Ingen gissning.
+    const titleKeys = matchKeysInTitle(title, wordIndex);
     // Ordmatchning: längsta ordet vinner (mest specifikt). "Dambastu" (8)
     // slår "bastu" (5) på titeln "Dambastu lördagmorgon Inre Bastu".
     const hits = candidates
-      .filter((c) => matchForms(c).some((f) => wordInTitle(f, toks)))
+      .filter((c) => titleKeys.has(c.key)
+        || matchForms(c.key, c.ord).some((f) => titleKeys.has(f)))
       .sort((a, b) => b.key.length - a.key.length || b.ord.length - a.ord.length);
     if (!hits.length) continue;
     const hit = hits[0];

@@ -1,0 +1,108 @@
+/**
+ * scripts/lib/word-image-match.ts — DELAD matchningslogik för ordbilder.
+ *
+ * Används av generatorn, tilldelningen och gaten så att de aldrig kan
+ * glida isär i vad som räknas som "samma ord".
+ *
+ * ── Varför inte suffixmatchning? ──────────────────────────────────────────
+ *
+ * En tidigare version matchade med "tokenet SLUTAR med nyckeln" för att
+ * fånga sammansatta ord ("dambastu" innehåller "bastu"). Men det ger
+ * 922 FALSA träffar i det riktiga korpuset:
+ *
+ *   "Ludwig Hart"        → "hart" slutar med "art"   → konstbild på en konsert
+ *   "Svart Samtid"       → "svart" slutar med "art"  → konstbild på en konsert
+ *   "Digitalt Forum"     → "digitalt" slutar med "alt"
+ *   "Tennis"             → "tennis" slutar med "is"  → isbana på en tennismatch
+ *
+ * Suffixen är alltså ingen Morphologisk regel — den är bara ett rimligt
+ * gissningsheuristik som går sönder för korta ord.
+ *
+ * ── Lösningen: ordlistan är facit ────────────────────────────────────────
+ *
+ * Ord-inventeringen innehåller ALLA ord som förekommer i eventtitlarna, med
+ * sin stam. Den vet redan vilka ord som är sammansatta och med vad:
+ *   "bastun"  → stam "bastu"  → bildnyckel "bastu"     (bestämd form)
+ *   "dambastu" → stam "bastu" → bildnyckel "dambastu" (modifier + stam)
+ *
+ * Alltså: dela titeln i TOKENS och slå upp varje token i ordlistan. En
+ * token som inte finns i ordlistan matchar ingenting. Ingen gissning.
+ */
+
+/** Bestända former som är samma sak som stammen. */
+const INFL = ['n', 'en', 'ar', 'er', 'or', 'et', 's', 'na', 'orna', 'arna'];
+
+/**
+ * Bildnyckel för ett ord: "bastun" → "bastu" (bestämd form),
+ * "dambastu" → "dambastu" (modifier + stam → egen bild).
+ */
+export function imageKey(word: string, stem: string): string {
+  const w = word.toLowerCase();
+  const s = stem.toLowerCase();
+  if (!s || s === w) return w;
+  if (w.startsWith(s)) {
+    const rest = w.slice(s.length);
+    if (INFL.includes(rest)) return s;      // bestämd form -> samma sak
+  }
+  return w;                                  // modifier + stam -> egen bild
+}
+
+/** En rad i ord-inventeringen. */
+export interface InventoryRow {
+  ord: string;
+  stam?: string;
+  antal_titlar?: string;
+  antal_events?: string;
+}
+
+/** Ord → bildnyckel. */
+export type WordIndex = Map<string, string>;
+
+/**
+ * Bygger indexet: varje ord i inventeringen → dess bildnyckel.
+ * Flera ordformer kan peka på samma nyckel ("bastu" och "bastun" → "bastu").
+ */
+export function buildWordIndex(rows: InventoryRow[]): WordIndex {
+  const index: WordIndex = new Map();
+  for (const r of rows) {
+    const ord = (r.ord ?? '').trim().toLowerCase();
+    if (!ord) continue;
+    const key = imageKey(ord, (r.stam ?? '').trim());
+    // Flera ordformer pekar på samma nyckel ("bastu" och "bastun" → "bastu").
+    // Det är avsett — de ska dela bild.
+    index.set(ord, key);
+  }
+  return index;
+}
+
+/** Delar en titel i tokens (gemenerade, diacritiska bevarade). */
+export function tokenizeTitle(s: string): string[] {
+  return s.toLowerCase()
+    .split(/[^a-z0-9åäöéüæøèáàíóúñç]+/i)
+    .filter(Boolean);
+}
+
+/**
+ * Vilka bildnycklar som en titel berör?
+ *
+ * Endast ord som finns i ordlistan räknas — därav inga falsa suffixträffar.
+ */
+export function matchKeysInTitle(title: string, index: WordIndex): Set<string> {
+  const keys = new Set<string>();
+  for (const token of tokenizeTitle(title)) {
+    const key = index.get(token);
+    if (key) keys.add(key);
+  }
+  return keys;
+}
+
+/**
+ * Ordformer som ska matcha samma bild (nyckel + ordform).
+ *
+ * Används för att hitta en bild för ett ord INTE finns i ordlistan (t.ex.
+ * en ny titel som kom in efter att inventeringen gjordes). Här används
+ * EXAKT matchning — aldrig suffix.
+ */
+export function matchForms(key: string, ord: string): string[] {
+  return [...new Set([key.toLowerCase(), ord.toLowerCase()].filter(Boolean))];
+}
