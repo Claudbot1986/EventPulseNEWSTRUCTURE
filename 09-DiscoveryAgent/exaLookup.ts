@@ -22,6 +22,9 @@
 
 const EXA_API_URL = 'https://api.exa.ai/search';
 const EXA_TIMEOUT_MS = 10_000;
+// 2026-10-31 — transienta nätverksfel ska inte fälla hela fasen.
+const EXA_ATTEMPTS = 2;
+const EXA_RETRY_DELAY_MS = 1_500;
 const DEFAULT_MAX_URLS = 3;
 const EXA_NUM_RESULTS = 8;
 
@@ -178,6 +181,25 @@ interface ExaHit {
 }
 
 async function exaSearch(query: string, apiKey: string): Promise<ExaHit[]> {
+  // 2026-10-31 — ett försök räckte inte. En transient nätverksbläck
+  // ("fetch failed") föll ut HELA heal-fasen (runs.jsonl 2026-10-26:
+  // "Exa search failed: fetch failed") och gav 0 nya kandidater. Nu görs två
+  // försök med 1,5 s paus emellan; nätverksfel (inte HTTP-fel) triggar retry.
+  let lastError: unknown = null;
+  for (let attempt = 1; attempt <= EXA_ATTEMPTS; attempt++) {
+    try {
+      return await exaSearchOnce(query, apiKey);
+    } catch (err) {
+      lastError = err;
+      const isHttpError = err instanceof Error && /^HTTP \d+/.test(err.message);
+      if (isHttpError || attempt === EXA_ATTEMPTS) break;
+      await new Promise((resolve) => setTimeout(resolve, EXA_RETRY_DELAY_MS));
+    }
+  }
+  throw lastError instanceof Error ? lastError : new Error(String(lastError));
+}
+
+async function exaSearchOnce(query: string, apiKey: string): Promise<ExaHit[]> {
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), EXA_TIMEOUT_MS);
   try {

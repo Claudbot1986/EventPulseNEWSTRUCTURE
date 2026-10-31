@@ -89,6 +89,24 @@ function decisionRow(decision: SourceCandidateDecision): Record<string, unknown>
 
 export function createSupabaseSourceCandidateTestRepository(supabase: SupabaseLikeClient): SourceCandidateTestRepository {
   return {
+    async enqueuePendingCandidates(phase: SourceCandidateTestPhase): Promise<number> {
+      if (!supabase.rpc) {
+        throw dbError('Supabase client saknar rpc() — kan inte mata testkön', { message: 'rpc unavailable' });
+      }
+      const { data, error } = await supabase.rpc('enqueue_source_candidate_tests', {
+        target_phase: phase,
+      });
+      if (error) throw dbError('Failed to enqueue source candidate tests', error);
+      return Number(data ?? 0);
+    },
+
+    async syncQueueCity(): Promise<number> {
+      if (!supabase.rpc) return 0;
+      const { data, error } = await supabase.rpc('sync_source_candidate_queue_city');
+      if (error) throw dbError('Failed to sync source candidate queue city', error);
+      return Number(data ?? 0);
+    },
+
     async claimCandidates(limit: number, phase?: SourceCandidateTestPhase): Promise<SourceCandidateTestQueueItem[]> {
       if (supabase.rpc) {
         const { data, error } = await supabase.rpc('claim_source_candidate_test_queue', {

@@ -29,6 +29,22 @@ async function main(): Promise<void> {
 
   const repository = createSupabaseSourceCandidateTestRepository(createClient(url, key));
   const toolRunner = new RealAbcdSourceCandidateRunner();
+
+  // 2026-10-31 — MATA KÖN INNAN CLAIM. Detta var den brutenaste länken i
+  // hela discovery→ingestion-kedjan: P3A skriver ~90 nya kandidater per natt
+  // till `source_candidates`, men ingenting anropade
+  // `enqueue_source_candidate_tests()`, så `source_candidate_test_queue` var
+  // fryst sedan 2026-10-23. Följden: P3D claimade 0 rader (746 ms, exit=0,
+  // ingen utdata), inga källor promotades, inga nya events.
+  // Mätt före fixen: 116 pending-kandidater med city='Stockholm' väntade i
+  // `source_candidates` och 215 kö-rader hade city=NULL (= oclaimbara, eftersom
+  // claim-funktionen filtrerar på `city = 'Stockholm'`).
+  const synced = await repository.syncQueueCity();
+  const enqueued = await repository.enqueuePendingCandidates(phase);
+  console.log(
+    `[runSourceCandidateTests] kön matad: ${enqueued} nya rader, ${synced} rader city-synkade (fas=${phase})`,
+  );
+
   const claimed = await repository.claimCandidates(limit, phase);
   // Kön har ingen metadata-kolumn — hämta den ur kandidattabellen så att den
   // följer med till promote.

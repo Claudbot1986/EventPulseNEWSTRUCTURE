@@ -22,6 +22,11 @@
  * cron jobs must not flap.
  */
 
+// 2026-10-31 — .env MÅSTE laddas före alla andra moduler (EXA_API_KEY,
+// ScrapingBee-nyckel). Importen ligger först med flit: ESM utvärderar
+// dependencies i deklarationsordning.
+import './env.js';
+
 import {
   readFailingSources,
   readUnexploredCandidates,

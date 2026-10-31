@@ -35,6 +35,9 @@ const DISCOVERY_CANDIDATES_FILE = path.resolve(RUNTIME_DIR, 'discovery-candidate
 
 const EXA_API_URL = 'https://api.exa.ai/search';
 const EXA_TIMEOUT_MS = 10_000;
+// 2026-10-31 — transienta nätverksfel ska inte fälla hela expand-fasen.
+const EXA_ATTEMPTS = 2;
+const EXA_RETRY_DELAY_MS = 1_500;
 const DEFAULT_MAX_NEW = 5;
 
 const DEFAULT_QUERIES = [
@@ -175,6 +178,24 @@ interface ExaSearchResult {
 }
 
 async function exaSearch(query: string, apiKey: string): Promise<ExaSearchResult[]> {
+  // 2026-10-31 — ett försök räckte inte: en transient bläck ("fetch failed")
+  // föll ut hela expand-fasen (runs.jsonl 2026-10-26) och gav 0 nya
+  // kandidater — veckans enda producent av nya discovery-kandidater.
+  let lastError: unknown = null;
+  for (let attempt = 1; attempt <= EXA_ATTEMPTS; attempt++) {
+    try {
+      return await exaSearchOnce(query, apiKey);
+    } catch (err) {
+      lastError = err;
+      const isHttpError = err instanceof Error && /^HTTP \d+/.test(err.message);
+      if (isHttpError || attempt === EXA_ATTEMPTS) break;
+      await new Promise((resolve) => setTimeout(resolve, EXA_RETRY_DELAY_MS));
+    }
+  }
+  throw lastError instanceof Error ? lastError : new Error(String(lastError));
+}
+
+async function exaSearchOnce(query: string, apiKey: string): Promise<ExaSearchResult[]> {
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), EXA_TIMEOUT_MS);
   try {

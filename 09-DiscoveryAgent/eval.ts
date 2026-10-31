@@ -312,12 +312,44 @@ export function markCandidateTested(
 
 // ─── Convenience: count helpers (for self-eval baseline) ──────────────────
 
+/**
+ * 2026-10-31 — ROTORSAK. `runtime/sources_status.jsonl` innehåller 365 rader,
+ * men bara 140 av dem hör till källor som finns i `sources/`-registry. De 225
+ * övriga är ORPHAN-rader: käll-id som inte längre finns (källan arkiverad,
+ * bytt namn eller nollställd). Eftersom countarna räknade direkt på statusfilen
+ * rapporterade de "177 failing sources" när det i verkligheten var 0 aktiva
+ * källor som misslyckas — ett tal som fick dashboarden att se sjuk ut.
+ *
+ * Samma join som `readFailingSources()` gör (registry × status) är nu
+ * obligatoriskt i countarna. `scope: 'all'` används så att en källa utanför
+ * Stockholm-scopen inte räknas som orphan.
+ */
+function activeSourceIds(): Set<string> {
+  return new Set(getAllSources({ scope: 'all' }).map((s) => s.id));
+}
+
 export function countHealthySources(): number {
-  return getAllStatuses().filter((s) => s.consecutiveFailures === 0).length;
+  const active = activeSourceIds();
+  return getAllStatuses().filter(
+    (s) => active.has(s.sourceId) && s.consecutiveFailures === 0,
+  ).length;
 }
 
 export function countFailingSources(minFails: number = 2): number {
-  return getAllStatuses().filter((s) => s.consecutiveFailures >= minFails).length;
+  const active = activeSourceIds();
+  return getAllStatuses().filter(
+    (s) => active.has(s.sourceId) && s.consecutiveFailures >= minFails,
+  ).length;
+}
+
+/**
+ * Statusrader vars källa inte längre finns i `sources/`. Inert information —
+ * men de skräpar ned statusfilen och förvirrar alla som läser den rakt.
+ * Kan rensas med `scripts/prune-orphan-source-status.mjs`.
+ */
+export function countOrphanStatusRows(): number {
+  const active = activeSourceIds();
+  return getAllStatuses().filter((s) => !active.has(s.sourceId)).length;
 }
 
 // ─── Permanent-error detection (Fas 1.2) ───────────────────────────────────

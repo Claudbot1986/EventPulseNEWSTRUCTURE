@@ -28,6 +28,8 @@ function candidate(overrides: Partial<SourceCandidate> = {}): SourceCandidate {
 
 function repository(overrides: Partial<SourceCandidateTestRepository> = {}): SourceCandidateTestRepository {
   return {
+    enqueuePendingCandidates: vi.fn(async () => 0),
+    syncQueueCity: vi.fn(async () => 0),
     claimCandidates: vi.fn(async () => []),
     getCandidateMetadata: vi.fn(async () => ({})),
     insertRun: vi.fn(async () => 'run-1'),

@@ -122,6 +122,27 @@ export interface SourceCandidateToolRunner {
 }
 
 export interface SourceCandidateTestRepository {
+  /**
+   * 2026-10-31 — MATA KÖN. Utan detta steg claimar P3D 0 rader varje natt:
+   * P3A skriver nya kandidater till `source_candidates`, men ingen kod
+   * anropar `enqueue_source_candidate_tests()`, så `source_candidate_test_queue`
+   * fylls aldrig på. Mätt 2026-10-31: 116 Stockholm-kandidater väntade i
+   * `source_candidates`, 0 i kön, 0 testade.
+   *
+   * Funktionerna finns redan i live-DB (migration 20261021-0003):
+   *   - `enqueue_source_candidate_tests(phase)` — kopplar pending-kandidater
+   *     till testkön (idempotent via ON CONFLICT DO NOTHING, och den kopierar
+   *     kandidatens `city`, vilket claim-filtret kräver).
+   *   - `sync_source_candidate_queue_city()` — fyller city/priority på rader
+   *     som redan ligger i kön (äldre rader har city=NULL och är då
+   *     oclaimbara).
+   *
+   * @param phase fasen att köa till (t.ex. 'smoke')
+   * @returns antal rader som lades i kön
+   */
+  enqueuePendingCandidates(phase: SourceCandidateTestPhase): Promise<number>;
+  /** Synka city/priority från kandidattabellen till kön. */
+  syncQueueCity(): Promise<number>;
   claimCandidates(limit: number, phase?: SourceCandidateTestPhase): Promise<SourceCandidateTestQueueItem[]>;
   /**
    * Läs kandidaternas metadata ur `source_candidates`.
