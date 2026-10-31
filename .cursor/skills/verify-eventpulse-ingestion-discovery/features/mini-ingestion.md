@@ -37,7 +37,7 @@ node scripts/verify-mini-ingestion.mjs --source id1,id2
 | M2b | De ligger inom de första N platserna i kön | ✅ gamla poster i kön kan skjuta dem bakom `--limit N` |
 | M3 | Kedjan avslutades exit 0 | — |
 | M4 | A-gaten körde **exakt N** källor — ur loggen från **denna** körning | ✅ föregående nattens logg får inte räknas |
-| M5 | Varje källa gav events i `events_public` **eller** registrerade ett routing-skäl | ✅ varken/eller = rött |
+| M5 | Varje källa gav events i `events_public` **eller** registrerade ett **friskt** routing-skäl (från denna körning) | ✅ varken/eller = rött; ✅ routing-skäl från en tidigare körning räknas inte |
 
 **PASS** = exit 0 + `✓ alla gater passerade` + rapporten i
 `runtime/verification-reports/mini-ingestion-<TS>.json` med `failed: []` och
@@ -66,6 +66,16 @@ node scripts/verify-mini-ingestion.mjs --source id1,id2
 - **Import-steget hoppar över oförändrade källor** (ingen `--force-import`),
   så `events_public` kan inte växa för en källa som redan importerats. M5
   vilar då på `lastRoutingReason` — en legitimt "inga framtida event"-utfall.
+- **Ett routing-skäl i `runtime/sources_status.jsonl` är inte i sig bevis.**
+  Filen innehåller även skäl från tidigare körningar, så en källa som hoppades
+  över helt i kedjan kan ändå se ut att ha en anledning. M5 kräver därför att
+  skälets `lastRun` ligger **efter** kedjans start (`updateSourceStatus` sätter
+  `lastRun = now`, `sourceRegistry.ts:451`). Eventstillväxt är per definition
+  färsk — den mäts före/efter körningen.
+- **Kedjans stegloggar skrivs delvis EFTER att steget avslutats.** Kedjan
+  skriver barnets stdout till stegloggen när data kommer, men "finished"-raden
+  skrivs när barnet avslutar — en logg kan alltså se komplett ut innan den
+  är det. Läs loggen efter att **hela kedjan** är klar, inte mitt i körningen.
 - **Kedjan får inte köra parallellt** med en nattlig körning. Gaten vägrar
   starta om `liveChainPids()` hittar en levande kedja.
 - **Mini-ingestionen är inte en särskild extraction.** Samma

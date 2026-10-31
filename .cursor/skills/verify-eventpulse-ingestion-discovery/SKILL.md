@@ -152,7 +152,7 @@ annars preA → api-adapter → rss → never_run, så en ny discovery-källa �
 | M2 | Alla ligger i preA-kön |
 | M3 | Kedjan avslutades exit 0 |
 | M4 | A-gaten körde **N** källor — mätt ur stegloggen, inte antaget |
-| M5 | Varje källa gav events i `events_public` **eller** registrerade ett routing-skäl |
+| M5 | Varje källa gav events i `events_public` **eller** registrerade ett **friskt** routing-skäl (från denna körning) |
 
 ### Stoppreglerna
 
