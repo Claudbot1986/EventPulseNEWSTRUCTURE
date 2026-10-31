@@ -192,6 +192,11 @@ discovery gömde sig i sex dagar.
 - **"Inga events" är inte samma som "trasig".** En källa utan framtida event är
   ett legitimt utfall; gaten M5 skiljer på *inget resultat* (rött) och
   *resultat: inga framtida event, med registrerat skäl* (grönt).
+- **"Rader i databasen" är inte samma som "evenemang".** M5 mäter antal
+  rader. En grön M5 kan bära bloggposter som "events" (mätt 2026-10-31:
+  `kollaborationse` → 8 rader med titlar som *"Rätt säsong för din resa till
+  Thailand"*). Läs faktiskt **titlarna** i `events_public` för de källor
+  gaten godkänner — en grön gata är inte en kvalitetsgaranti.
 - Rapportera `[VERIFIED]` (körning) och `[UNVERIFIED]` (läst kod) separat.
 
 ## Cleanup

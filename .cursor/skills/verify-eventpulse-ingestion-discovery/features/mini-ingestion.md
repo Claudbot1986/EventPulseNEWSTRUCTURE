@@ -28,6 +28,7 @@ cd /Users/claudgashi/EventPulse
 node scripts/verify-mini-ingestion.mjs            # N = de färskaste källorna (max 5)
 node scripts/verify-mini-ingestion.mjs --limit 3
 node scripts/verify-mini-ingestion.mjs --source id1,id2
+node scripts/verify-mini-ingestion.mjs --recheck runtime/verification-reports/mini-ingestion-<TS>.json
 ```
 
 | Gate | Krav | Negativ kontroll |
@@ -78,6 +79,31 @@ node scripts/verify-mini-ingestion.mjs --source id1,id2
   är det. Läs loggen efter att **hela kedjan** är klar, inte mitt i körningen.
 - **Kedjan får inte köra parallellt** med en nattlig körning. Gaten vägrar
   starta om `liveChainPids()` hittar en levande kedja.
+- **M5 mäter ANTAL, inte kvalitet.** Ett rött-grönt M5 betyder "källan
+  levererade rader" — inte "raderna är evenemang". Mätt 2026-10-31:
+  `kollaborationse` levererade 8 rader i `events_public` med titlar som
+  *"Rätt säsong för din resa till Thailand"* och *"Så väljer du ekologisk
+  gurkmeja"* — bloggposter, inte evenemang. Två andra rader fick titeln
+  *"idag 31/10"* (ett datum som titel). Källpromoteringen (P3D) accepterade
+  alltså en **blogg- och nyhetssida** som eventkälla, och C-gatens
+  kandidatval landade på `kollaboration.se/category/blogg/` (en
+  kategorilista, inte en evenemangssida).
+  **Kvalitetsgranskning av promote:ade källor är en egen, ännu ogjord sak.**
 - **Mini-ingestionen är inte en särskild extraction.** Samma
   `scripts/ingestion-cron.ts`, samma gates, samma filter. Enda skillnaden är
   `--limit N` och vad som står i preA-kön.
+- **Kedjan kan avbrytas efter att den kört A/B/C.** Om drainen inte hinner
+  persistera eventsen är "events efter" felaktigt noll. Då: kör kedjans
+  återstående steg (`npx tsx scripts/ingestion-cron.ts --limit 3 --only
+  worker-drain,dedup-audit,reconcile-source-status,P2C-active-learning`) och
+  mät sedan om med `--recheck <rapport.json>`. Recheck kör **inte** kedjan.
+- **`--only` är kedjans eget filter** (`scripts/ingestion-cron.ts:1228`). Ett
+  okänt stegnamn är ett fel (exit 2), inte en tyst no-op — bra för att en
+  typo inte ska få verifieringen att se grön ut.
+- **Stegloggarnas filnamn bär stegets starttid** (`A-directAPI-<ISO>.log`),
+  inte mtime. Kedjan skriver i loggen även efter att steget avslutats, så
+  mtime pekar på ett senare läge än steget egentligen började.
+- **Kedjan kan ta längre än en timme.** Mätt: 3 956 s med `--limit 3`
+  (subpath-discovery ensamt tog 40 min). Ett verktyg som sätter en hård
+  tak-tid på en halvtimme kan avbryta kedjan mitt i en drain — avbryt då
+  **kedjans egna steg**, inte slumpmässiga jobb.
