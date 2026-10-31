@@ -408,6 +408,12 @@ async function main() {
   );
 
   // ── M5: landade resultatet i DB? ─────────────────────────────────────────
+  // 2026-10-31 — gate-brag: routing-skälet i `runtime/sources_status.jsonl`
+  // är FÄRSKT (från en tidigare körning) om källan inte kördes i den här
+  // kedjan. Utan färskhetskravet blevir M5 grönt av en gammal rad — källan
+  // kan ha hoppats över helt och gaten mäter ändå "routing-skäl".
+  // `lastRun` sätts till `now` i `updateSourceStatus` (sourceRegistry.ts:451),
+  // så det är det enda fältet som bevisar att källan faktiskt rördes här.
   const eventsAfter = await countEventsFor(chosen);
   const perSource = [];
   let okCount = 0;
@@ -416,8 +422,10 @@ async function main() {
     const after = eventsAfter[id] ?? 0;
     const status = readSourceStatus(id);
     const grew = after > before;
+    const ranAt = status?.lastRun ? Date.parse(status.lastRun) : NaN;
+    const isFresh = Number.isFinite(ranAt) && ranAt >= chainStartedAt - 60_000;
     const hasReason = Boolean(status && status.lastRoutingReason);
-    const ok = grew || hasReason;
+    const ok = grew || (hasReason && isFresh);
     if (ok) okCount++;
     perSource.push({
       sourceId: id,
@@ -425,6 +433,8 @@ async function main() {
       eventsAfter: after,
       grew,
       status: status?.status ?? null,
+      lastRun: status?.lastRun ?? null,
+      routingReasonFresh: hasReason && isFresh,
       lastRoutingReason: status?.lastRoutingReason ?? null,
       lastSuccess: status?.lastSuccess ?? null,
       ok,
@@ -432,14 +442,16 @@ async function main() {
   }
   gate(
     'M5',
-    'varje discovery-källa gav events ELLER registrerade ett routing-skäl',
+    'varje discovery-källa gav events ELLER registrerade ett FRISKT routing-skäl',
     okCount === chosen.length,
     `${okCount}/${chosen.length} st`,
   );
   for (const s of perSource) {
     console.log(
       `    ${s.ok ? '✓' : '✗'} ${s.sourceId}: events ${s.eventsBefore} → ${s.eventsAfter}` +
-        (s.grew ? '' : ` · skäl: ${String(s.lastRoutingReason).slice(0, 90)}`),
+        (s.grew
+          ? ''
+          : ` · skäl: ${String(s.lastRoutingReason).slice(0, 90)}${s.routingReasonFresh ? '' : ' (FÄRSKT? nej)'}`),
     );
   }
 
