@@ -465,6 +465,7 @@ function applyAnalyticsServerState(as) {
   wireReviewButtons();
   initBflGenerateModal();
   initBflCompareButtons();
+  initWordButton();
   initBflZoomButton();
 })();
 
@@ -2960,6 +2961,120 @@ async function startAdaptiveRun() {
   } catch (err) {
     setAdaptiveStatus(`✗ ${err.message}`, 'warn');
     setAdaptiveButtonsDisabled(false);
+  }
+}
+
+// ─── Titalanpassad bildgen (2026-10-31) ───────────────────────────────
+// Kopia av den ORANGE knappens flöde, men enheten är ett ORD.
+const wordState = { runId: null, pollTimer: null };
+
+function setWordButtonsDisabled(disabled) {
+  const b = document.getElementById('btn-bfl-word');
+  if (b) b.disabled = disabled;
+  const inp = document.getElementById('bfl-word-count');
+  if (inp) inp.disabled = disabled;
+  const f = document.getElementById('bfl-word-filter');
+  if (f) f.disabled = disabled;
+}
+
+function setWordStatus(text, kind) {
+  const box = document.getElementById('bfl-word-status');
+  const t = document.getElementById('bfl-word-status-text');
+  if (!box || !t) return;
+  box.classList.remove('bfl-ingestion-status--hidden');
+  box.classList.toggle('bfl-ingestion-status--ok', kind === 'ok');
+  box.classList.toggle('bfl-ingestion-status--warn', kind === 'warn');
+  t.textContent = text;
+}
+
+function setWordProgress(p, label) {
+  const wrap = document.getElementById('bfl-word-progress');
+  const fill = document.getElementById('bfl-word-progress-fill');
+  const bar = document.getElementById('bfl-word-progress-bar');
+  const text = document.getElementById('bfl-word-progress-text');
+  if (wrap) wrap.hidden = false;
+  if (fill) fill.style.width = `${p}%`;
+  if (bar) bar.setAttribute('aria-valuenow', String(p));
+  if (text) text.textContent = label;
+}
+
+async function pollWordRun(runId) {
+  if (wordState.pollTimer) clearInterval(wordState.pollTimer);
+  let fails = 0;
+  wordState.pollTimer = setInterval(async () => {
+    try {
+      const r = await fetch(`/api/bfl/word-run/${runId}/status`);
+      if (!r.ok) {
+        if (r.status === 404) {
+          clearInterval(wordState.pollTimer);
+          wordState.pollTimer = null;
+          setWordButtonsDisabled(false);
+          setWordStatus('✗ körningen hittades inte', 'warn');
+          return;
+        }
+        fails += 1;
+        if (fails >= 10) {
+          clearInterval(wordState.pollTimer);
+          wordState.pollTimer = null;
+          setWordButtonsDisabled(false);
+          setWordStatus('✗ status slutar svara — kontrollera dashboarden', 'warn');
+        }
+        return;
+      }
+      fails = 0;
+      const j = await r.json();
+      const s = j.result;
+      if (!s) return;
+      setWordProgress(s.percent ?? 0, `${s.verified ?? 0} / ${s.limit ?? 0}`);
+      if (s.status === 'running') {
+        const last = s.logTail && s.logTail.length ? s.logTail[s.logTail.length - 1] : '';
+        setWordStatus(`genererar… ${s.verified}/${s.limit} ord${last ? ` · ${last}` : ''}`, 'warn');
+      } else {
+        clearInterval(wordState.pollTimer);
+        wordState.pollTimer = null;
+        setWordButtonsDisabled(false);
+        // Granskningsraderna: ord,key,match,lämplig,conf,shows,reason,note,fil
+        const rows = s.verifiedRows || [];
+        const ok = rows.filter((r) => r.includes(',true,true,')).length;
+        setWordStatus(`✓ klar — ${rows.length} ord granskade, ${ok} godkända`, 'ok');
+      }
+    } catch { /* ignore poll-fel */ }
+  }, 1500);
+}
+
+async function startWordRun() {
+  const inp = document.getElementById('bfl-word-count');
+  const filt = document.getElementById('bfl-word-filter');
+  const limit = Math.max(1, Math.min(200, parseInt(inp?.value ?? '10', 10) || 10));
+  const word = (filt?.value ?? '').trim();
+  setWordButtonsDisabled(true);
+  setWordStatus(`startar ${limit} ord${word ? ` (${word})` : ''}…`, 'warn');
+  try {
+    const r = await fetch('/api/bfl/word-run', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ limit, word }),
+    });
+    const j = await r.json();
+    if (!r.ok || !j.ok) {
+      setWordStatus(`✗ ${j.error || 'okänt fel'}`, 'warn');
+      setWordButtonsDisabled(false);
+      return;
+    }
+    setWordProgress(0, `0 / ${limit}`);
+    wordState.runId = j.runId;
+    pollWordRun(j.runId);
+  } catch (err) {
+    setWordStatus(`✗ ${err.message}`, 'warn');
+    setWordButtonsDisabled(false);
+  }
+}
+
+function initWordButton() {
+  const btn = document.getElementById('btn-bfl-word');
+  if (btn && !btn.dataset.wired) {
+    btn.dataset.wired = '1';
+    btn.addEventListener('click', startWordRun);
   }
 }
 

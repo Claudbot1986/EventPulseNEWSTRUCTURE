@@ -2925,6 +2925,19 @@ if (url === '/api/bfl/zoom-run/latest' && req.method === 'GET') {
 const ADAPTIVE_RUNS_DIR = join(PROJECT_ROOT, 'runtime', 'adaptive-image-gen', 'runs');
 const ADAPTIVE_LOCK_FILE = join(PROJECT_ROOT, 'runtime', 'adaptive-image-gen', 'run.lock');
 
+// Titalanpassad bildgen (2026-10-31) — egen körningsmapp.
+const WORD_RUNS_DIR = join(PROJECT_ROOT, 'runtime', 'word-image-gen', 'runs');
+
+/**
+ * Generatorer som använder MiniMax-bild-API:t. Taket är 10 bilder/min och
+ * gäller per API-nyckel, inte per knapp — så en orange körning och en
+ * titalanpassad körning får INTE pågå samtidigt.
+ */
+const IMAGE_GEN_SCRIPTS = ['adaptive_image_gen.ts', 'word_image_gen.ts'] as const;
+
+/** Run-mappar som ska scannas efter levande körningar. */
+const IMAGE_GEN_RUNS_DIRS = [ADAPTIVE_RUNS_DIR, WORD_RUNS_DIR] as const;
+
 interface AdaptiveRunMeta {
   runId: string;
   pid: number | null;
@@ -2962,7 +2975,7 @@ interface AdaptiveProgress {
  * 18 anrop/min → 429. Därför vägrar vi starta en ny körning när en redan
  * pågår (även om den startats utanför dashboarden).
  */
-function findAdaptiveRuns(): number[] {
+function findImageGenRuns(): number[] {
   try {
     // `comm` = det körbara programmet (t.ex. "node"), `args` = hela
     // kommandoraden. VI MÅSTE matcha på comm — en ren substring-sökning på
@@ -2981,7 +2994,9 @@ function findAdaptiveRuns(): number[] {
       const [, pidStr, comm, args] = m;
       const exe = comm.split('/').pop() ?? '';
       if (exe !== 'node') continue; // endast riktiga node-processer
-      if (!args.includes('adaptive_image_gen.ts')) continue;
+      // Båda generatorerna delar MiniMax-kvoten — den ena eller andra
+      // blockerar den andra (buggfix 2026-10-31: ordkörningar syntes inte).
+      if (!IMAGE_GEN_SCRIPTS.some((s) => args.includes(s))) continue;
       pids.push(Number(pidStr));
     }
     return pids;
@@ -2993,28 +3008,32 @@ function findAdaptiveRuns(): number[] {
 /**
  * Körningar som startats via dashboarden (run.json med levande pid).
  *
- * Skiljer sig från findAdaptiveRuns(): denna fångar körningar vars argv
+ * Skiljer sig från findImageGenRuns(): denna fångar körningar vars argv
  * inte längre syns (t.ex. efter en omstart av dashboarden) och täcker
  * fönstret mellan två samtidiga POST-anrop — där hinner ingen process-scan
  * se den andra.
+ *
+ * Scannar BÅDA generatorernas körningsmappar: adaptive + word.
  */
-function findLiveAdaptiveRuns(): Array<{ runId: string; pid: number }> {
-  if (!existsSync(ADAPTIVE_RUNS_DIR)) return [];
+function findLiveImageGenRuns(): Array<{ runId: string; pid: number }> {
   const out: Array<{ runId: string; pid: number }> = [];
-  for (const dir of readdirSync(ADAPTIVE_RUNS_DIR)) {
-    const p = join(ADAPTIVE_RUNS_DIR, dir, 'run.json');
-    if (!existsSync(p)) continue;
-    try {
-      const meta = JSON.parse(readFileSync(p, 'utf8')) as { runId?: string; pid?: number };
-      const pid = Number(meta?.pid ?? 0);
-      if (!pid) continue;
+  for (const baseDir of IMAGE_GEN_RUNS_DIRS) {
+    if (!existsSync(baseDir)) continue;
+    for (const dir of readdirSync(baseDir)) {
+      const p = join(baseDir, dir, 'run.json');
+      if (!existsSync(p)) continue;
       try {
-        process.kill(pid, 0);
-        out.push({ runId: String(meta?.runId ?? dir), pid });
-      } catch {
-        /* processen är död → ingen levande körning */
-      }
-    } catch { /* trasig run.json → hoppa över */ }
+        const meta = JSON.parse(readFileSync(p, 'utf8')) as { runId?: string; pid?: number };
+        const pid = Number(meta?.pid ?? 0);
+        if (!pid) continue;
+        try {
+          process.kill(pid, 0);
+          out.push({ runId: String(meta?.runId ?? dir), pid });
+        } catch {
+          /* processen är död → ingen levande körning */
+        }
+      } catch { /* trasig run.json → hoppa över */ }
+    }
   }
   return out;
 }
@@ -3118,7 +3137,7 @@ if (req.method === 'POST' && url === '/api/bfl/adaptive-run') {
     //    c) låsfilen (fångar en körning som håller på att starta)
     //    (b) täcker också fönstret mellan två samtidiga POST-anrop, där
     //    process-scanen ännu inte ser den andra processen.
-    const running = findAdaptiveRuns();
+    const running = findImageGenRuns();
     if (running.length > 0) {
       res.writeHead(409, { 'Content-Type': 'application/json; charset=utf-8' });
       res.end(
@@ -3129,7 +3148,7 @@ if (req.method === 'POST' && url === '/api/bfl/adaptive-run') {
       );
       return true;
     }
-    const live = findLiveAdaptiveRuns();
+    const live = findLiveImageGenRuns();
     if (live.length > 0) {
       res.writeHead(409, { 'Content-Type': 'application/json; charset=utf-8' });
       res.end(
@@ -3248,6 +3267,159 @@ if (adaptiveStatusMatch && req.method === 'GET') {
       },
     }),
   );
+  return true;
+}
+
+// ─── Titalanpassad bildgen (2026-10-31) ─────────────────────────────────
+// POST /api/bfl/word-run        — starta ord-driven bildgenerering
+// GET  /api/bfl/word-run/:id/status — status + verifieringsresultat
+//
+// Enheten är ETT UNIKT ORD från eventtiteln ("dambastu", "tipspromenad",
+// "julmässa"), inte kategori × kluster som i den orange knappen.
+// Ord-inventeringen är filtrerad till INNEHÅLLSORD — artistnamn, pjästitel
+// och lokalnamn genereras aldrig.
+// WORD_RUNS_DIR deklareras högre upp tillsammans med de övriga
+// körningskonstanterna (det delade körningsskyddet refererar till den).
+
+/** GET /api/bfl/word-run/:id/status */
+const wordStatusMatch = url.match(/^\/api\/bfl\/word-run\/([^/]+)\/status$/);
+if (wordStatusMatch && req.method === 'GET') {
+  const runId = wordStatusMatch[1];
+  const runDir = join(WORD_RUNS_DIR, runId);
+  const metaPath = join(runDir, 'run.json');
+  if (!existsSync(metaPath)) {
+    res.writeHead(404, { 'Content-Type': 'application/json; charset=utf-8' });
+    res.end(JSON.stringify({ ok: false, error: 'run not found' }));
+    return true;
+  }
+  let meta: { pid: number | null; limit: number; word?: string; startedAt: string; logPath: string } | null = null;
+  try { meta = JSON.parse(readFileSync(metaPath, 'utf8')); } catch { /* skip */ }
+
+  // Granskningsresultat: en rad per ord (ord,key,match,lämplig,conf,...)
+  const verifyPath = join(runDir, 'verify.csv');
+  const verified: string[] = [];
+  if (existsSync(verifyPath)) {
+    const lines = readFileSync(verifyPath, 'utf8').split('\n').filter((l) => l.trim().length > 0);
+    for (const l of lines.slice(1)) verified.push(l);
+  }
+
+  const alive = pidAlive(meta?.pid ?? null);
+  const done = !alive;
+  const logTail = meta ? tailFile(meta.logPath, 20) : [];
+  const status = alive ? 'running' : 'success';
+
+  res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'no-cache' });
+  res.end(JSON.stringify({
+    ok: true,
+    result: {
+      runId,
+      status,
+      pid: meta?.pid ?? null,
+      limit: meta?.limit ?? 0,
+      word: meta?.word ?? '',
+      verified: verified.length,
+      verifiedRows: verified,
+      startedAt: meta?.startedAt ?? null,
+      done,
+      percent: meta && meta.limit > 0 ? Math.min(100, Math.round((verified.length / meta.limit) * 100)) : 0,
+      logTail,
+    },
+  }));
+  return true;
+}
+
+/** POST /api/bfl/word-run — starta titalanpassad bildgenerering. */
+if (req.method === 'POST' && url === '/api/bfl/word-run') {
+  try {
+    const body = await new Promise<string>((resolve, reject) => {
+      const chunks: Buffer[] = [];
+      req.on('data', (c: Buffer) => chunks.push(c));
+      req.on('end', () => resolve(Buffer.concat(chunks).toString('utf8')));
+      req.on('error', reject);
+    });
+    const parsed = JSON.parse(body || '{}') as { limit?: number; word?: string; apply?: boolean };
+
+    // `limit` MÅSTE anges. Utan det startar ett av misstag en riktig
+    // körning på 10 bilder — varför fältet inte har ett defaultvärde.
+    // (Buggar 2026-10-31: ett tomt POST-anrop startade en 10-bilds-körning.)
+    if (parsed.limit === undefined || parsed.limit === null) {
+      res.writeHead(400, { 'Content-Type': 'application/json; charset=utf-8' });
+      res.end(JSON.stringify({ ok: false, error: 'limit saknas — ange hur många ord som ska få en bild (1–200)' }));
+      return true;
+    }
+    const limit = clampInt(parsed.limit, 1, 200, 0);
+    if (limit < 1) {
+      res.writeHead(400, { 'Content-Type': 'application/json; charset=utf-8' });
+      res.end(JSON.stringify({ ok: false, error: `ogiltigt limit-värde: ${JSON.stringify(parsed.limit)} (måste vara ett heltal 1–200)` }));
+      return true;
+    }
+    const word = (parsed.word ?? '').trim().slice(0, 60);
+    const apply = parsed.apply === true;
+
+    // Ingen parallell körning — MiniMax-taket är 10 bilder/min och delas
+    // mellan BÅDA generatorerna (orange knapp + titalanpassad).
+    const running = findImageGenRuns();
+    if (running.length > 0) {
+      res.writeHead(409, { 'Content-Type': 'application/json; charset=utf-8' });
+      res.end(JSON.stringify({
+        ok: false,
+        error: `en bildgenerering körs redan (pid ${running.join(', ')}) — MiniMax-taket är 10 bilder/min, så två körningar samtidigt skulle ge 429-fel`,
+      }));
+      return true;
+    }
+    const live = findLiveImageGenRuns();
+    if (live.length > 0) {
+      res.writeHead(409, { 'Content-Type': 'application/json; charset=utf-8' });
+      res.end(JSON.stringify({
+        ok: false,
+        error: `en bildgenerering körs redan (pid ${live.map((r) => r.pid).join(', ')}) — MiniMax-taket är 10 bilder/min, så två körningar samtidigt skulle ge 429-fel`,
+      }));
+      return true;
+    }
+
+    const runId = `word-${Date.now().toString(36)}`;
+    const runDir = join(WORD_RUNS_DIR, runId);
+    mkdirSync(runDir, { recursive: true });
+    const logPath = join(runDir, 'run.log');
+    const fd = openSync(logPath, 'a');
+
+    const args = [
+      '--env-file=.env',
+      '--import',
+      'tsx',
+      'scripts/word_image_gen.ts',
+      `--limit=${limit}`,
+      `--state-dir=${runDir}`,
+    ];
+    if (word) args.push(`--word=${word}`);
+    if (apply) args.push('--apply');
+
+    const child = spawn(process.execPath, args, {
+      cwd: PROJECT_ROOT,
+      env: { ...process.env },
+      stdio: ['ignore', fd, fd],
+      detached: true,
+    });
+    child.unref();
+    closeSync(fd);
+
+    writeFileSync(join(runDir, 'run.json'), JSON.stringify({
+      runId,
+      pid: child.pid ?? null,
+      limit,
+      word,
+      apply,
+      startedAt: new Date().toISOString(),
+      runDir,
+      logPath,
+    }, null, 2));
+
+    res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
+    res.end(JSON.stringify({ ok: true, runId, pid: child.pid ?? null, limit, word, apply, runDir }));
+  } catch (err) {
+    res.writeHead(500, { 'Content-Type': 'application/json; charset=utf-8' });
+    res.end(JSON.stringify({ ok: false, error: String((err as Error)?.message ?? err) }));
+  }
   return true;
 }
 

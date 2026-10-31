@@ -1714,6 +1714,41 @@ body:not(.sidebar-open) .sidebar {
   cursor: wait;
 }
 
+/* ─── Titalanpassad bildgen (2026-10-31) ───────────────────
+   Egen färg (grönt/teal) så den inte blandas ihop med den
+   ORANGE knappen (MiniMax adaptiv fill) eller de blå
+   compare-knapparna. Enheten är ett ORD, inte en kategori. */
+.bfl-generate-btn--word {
+  background: linear-gradient(135deg, #12332b, #1c4a3e);
+  border-color: #3f9a7d;
+  font-size: 12px;
+  padding: 7px 12px;
+}
+.bfl-generate-btn--word:hover {
+  background: linear-gradient(135deg, #1c4a3e, #2b6b57);
+  box-shadow: 0 4px 12px rgba(63, 154, 125, 0.4);
+}
+.bfl-generate-btn--word:disabled {
+  opacity: 0.55;
+  cursor: wait;
+}
+.bfl-word-wrap {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+.bfl-word-filter {
+  width: 110px;
+  padding: 6px 8px;
+  background: #0f2a24;
+  color: #dff3ea;
+  border: 1px solid #3f9a7d;
+  border-radius: 6px;
+  font-size: 12px;
+}
+.bfl-word-filter::placeholder { color: #7fae9c; }
+
 /* ─── BFL zoom-variation (2026-10-18) ───────────────────
    Egen färgskala (lila/mörk) — tydligt experiment. */
 .bfl-zoom-wrap {

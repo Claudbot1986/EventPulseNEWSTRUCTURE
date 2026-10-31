@@ -185,6 +185,10 @@ local_image_library_stamped_v2/
 # local_image_library_stamped_v2_quarantine/ — underkända bilder som
 # M3-granskningen avvisade (2026-10-29). Regenererbara, laddas aldrig upp.
 local_image_library_stamped_v2_quarantine/
+# local_image_library_stamped_v2_word_quarantine/ — underkända ORDBILDER som
+# M3-granskningen avvisade (2026-10-31). Samma princip som ovan: regenererbara,
+# laddas aldrig upp, ligger utanför biblioteksmappen.
+local_image_library_stamped_v2_word_quarantine/
 /stamping_local/
 /tmp_image_corpus/*.png
 /tmp_image_corpus/*.webp

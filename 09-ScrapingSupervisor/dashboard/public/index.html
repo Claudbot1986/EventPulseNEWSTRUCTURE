@@ -64,6 +64,34 @@
       <div id="bfl-adaptive-status" class="bfl-ingestion-status bfl-ingestion-status--hidden" aria-live="polite" aria-atomic="true">
         <span id="bfl-adaptive-status-text">redo</span>
       </div>
+      <!-- ─── Titalanpassad bildgen (2026-10-31) ───────────────────────────
+           Kopia av den ORANGE knappen (MiniMax image-01), men enheten är
+           ETT UNIKT ORD från eventtiteln ("dambastu", "tipspromenad",
+           "julmässa") i stället för kategori × kluster.
+           Ord-inventeringen (docs/audit/data/…-ord-inventering.csv) är
+           filtrerad: endast INNEHÅLLSORD — ord som är artistnamn, pjästitel
+           eller lokalnamn genereras INTE.
+           Kör: scripts/word_image_gen.ts -->
+      <div class="bfl-word-wrap">
+        <button type="button" id="btn-bfl-word" class="bfl-generate-btn bfl-generate-btn--word" aria-label="Generera bilder per unikt ord i eventtiteln">
+          <span class="bfl-generate-btn-icon" aria-hidden="true">🔤</span>
+          <span class="bfl-generate-btn-text">
+            <span class="bfl-generate-btn-title">Titalanpassad bildgen</span>
+            <span class="bfl-generate-btn-sub" id="bfl-word-sub">ett ord i taget · ord-inventering</span>
+          </span>
+        </button>
+        <input type="number" id="bfl-word-count" class="bfl-adaptive-count" min="1" max="200" step="1" value="10" title="Antal ord som ska få en egen bild" aria-label="Antal ord" />
+        <input type="text" id="bfl-word-filter" class="bfl-word-filter" placeholder="ord (tomt = alla)" title="Filtrera på ett enskilt ord, t.ex. bastu" aria-label="Filtrera på ord" />
+        <div id="bfl-word-progress" class="bfl-adaptive-progress" hidden>
+          <div class="bfl-adaptive-progress-track" id="bfl-word-progress-bar" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" aria-label="Genereringsframsteg">
+            <div class="bfl-adaptive-progress-fill" id="bfl-word-progress-fill"></div>
+          </div>
+          <span class="bfl-adaptive-progress-text" id="bfl-word-progress-text">0 / 0</span>
+        </div>
+      </div>
+      <div id="bfl-word-status" class="bfl-ingestion-status bfl-ingestion-status--hidden" aria-live="polite" aria-atomic="true">
+        <span id="bfl-word-status-text">redo</span>
+      </div>
       <div id="bfl-compare-status" class="bfl-ingestion-status bfl-ingestion-status--hidden" aria-live="polite" aria-atomic="true">
         <span id="bfl-compare-status-text">redo</span>
       </div>
