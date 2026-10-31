@@ -56,9 +56,33 @@ Env vars vid körning:
 | `EXPO_PUBLIC_SUPABASE_URL` | `SUPABASE_URL` från `.env` | ja |
 | `EXPO_PUBLIC_SUPABASE_ANON_KEY` | `SB_PUBLISHABLE_KEY` från `.env` | ja |
 | `EXPO_PUBLIC_AGENT_URL` | `http://localhost:8787` (lokal agent) | ja för feed/Utforska/Karta |
+| `EXPO_PUBLIC_AGENT_URL_LAN` | `http://<dev-maskinens LAN-IP>:8787` | **ja för telefonen (Expo Go)** |
 | `EXPO_PUBLIC_PUSH_ENABLED` | **används ingenstans i koden** — pushytan styrs av `isPushRuntimeAvailable()` + `eventpulse.din_helg_push_prompt_shown` | ignorera |
 
 `EXPO_PUBLIC_*` läses vid **bundle-time** — ändra `.env` och starta om Metro.
+
+### Telefonen (Expo Go) når agenten via LAN, inte via localhost
+
+`localhost` betyder olika saker i de två klienterna:
+
+| Klient | `localhost:8787` pekar på | Agenten nås via |
+|---|---|---|
+| Webbbygget i Chrome (på dev-maskinen) | dev-maskinen | `EXPO_PUBLIC_AGENT_URL` |
+| Appen i Expo Go (iPhone) | **telefonen själv** | `EXPO_PUBLIC_AGENT_URL_LAN` |
+
+Telefonen kan därför INTE använda `localhost`. Saknas LAN-kandidaten svarar
+iOS med `fetch failed: Could not connect to the server.`
+(NSURLErrorCannotConnectToHost) och appen loggar "Failed to load events"
+(`06-UI/App.js` → `loadEvents`).
+
+`agentClient.pickReachableAgentBase` provar kandidaterna i ordning och tar den
+första som svarar `{"ok":true}` på `/agent/health` — telefonen hoppar då förbi
+`localhost` (refused) och landar på LAN-adressen. Samma agent, samma kod,
+samma data; bara olika väg dit.
+
+`launch-metro.sh` sätter LAN-kandidaten automatiskt från nätverksgränssnittet
+när den saknas i `.env`. Kontrollera med `./scripts/doctor-metro.sh` (raden
+"Agent LAN API").
 
 ## Doctor
 
@@ -172,6 +196,10 @@ session. Lämna baseline-screenshots och rapporter intakta.
 **CORS/origin:** prod-agenten svarar 403 på origins som inte står i
 `AGENT_ALLOWED_ORIGINS`. Filtera INTE bort detta i specar — kör mot den lokala
 agenten (Launch) så är det inte miljöbrus.
+
+**Telefonen når inte `localhost`:** i Expo Go är `localhost` = telefonen själv.
+Appen måste peka på LAN-kandidaten `EXPO_PUBLIC_AGENT_URL_LAN` — annars loggar
+iOS "fetch failed: Could not connect to the server." Se "Telefonen (Expo Go)".
 
 **Rate limit:** agent-API:t har en token bucket (5 rps, burst 20 per IP).
 Utforska gör **två** anrop per kategori → snabb kategoribrowsing ger **429**.

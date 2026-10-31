@@ -9,6 +9,9 @@
 #
 # Env-variablerna (EXPO_PUBLIC_*) laddas från 06-UI/.env → projektets .env.
 # De läses vid bundle-time: ändra .env och starta om Metro.
+#
+# Telefonen (Expo Go) når dev-agenten via LAN-kandidaten
+# EXPO_PUBLIC_AGENT_URL_LAN — inte via localhost. Se LAN-blocket nedan.
 
 set -euo pipefail
 
@@ -42,6 +45,29 @@ set +a
 if [ -n "${AGENT_URL_OVERRIDE}" ]; then
   export EXPO_PUBLIC_AGENT_URL="${AGENT_URL_OVERRIDE}"
   echo "Agent URL override: ${EXPO_PUBLIC_AGENT_URL}"
+fi
+
+# LAN-agent för telefonen (Expo Go). "localhost" i telefonen = telefonen
+# själv, inte dev-maskinen: appen når aldrig dev-agenten via localhost och
+# får "fetch failed: Could not connect to the server" (2026-10-31).
+# Därför behövs LAN-kandidaten http://<dev-maskinens IP>:8787 som
+# agentClient provar NÄR localhost inte svarar. Finns ingen i .env härleds
+# IP:t från nätverksgränssnittet, så ett bytt LAN-adress inte tyst bryter
+# telefonen.
+if [ -z "${EXPO_PUBLIC_AGENT_URL_LAN:-}" ]; then
+  LAN_IP=""
+  for IFACE in en0 en1; do
+    LAN_IP="$(ipconfig getifaddr "${IFACE}" 2>/dev/null || true)"
+    if [ -n "${LAN_IP}" ]; then
+      break
+    fi
+  done
+  if [ -n "${LAN_IP}" ]; then
+    export EXPO_PUBLIC_AGENT_URL_LAN="http://${LAN_IP}:8787"
+    echo "Agent LAN URL (auto): ${EXPO_PUBLIC_AGENT_URL_LAN}"
+  else
+    echo "WARNING: could not detect a LAN IP — the phone on Expo Go will not reach the agent." >&2
+  fi
 fi
 
 nohup npx expo start --host lan --port "${PORT}" >"${LOG}" 2>&1 &

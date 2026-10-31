@@ -62,4 +62,25 @@ else
   fail=1
 fi
 
+# 5. LAN-agent för telefonen? "localhost" i telefonen = telefonen själv, så
+# Expo Go når agenten via LAN-kandidaten (EXPO_PUBLIC_AGENT_URL_LAN). Utan den
+# svarar telefonen med "fetch failed: Could not connect to the server"
+# (2026-10-31). Webbdriven behöver den inte → saknas den varnar vi bara.
+LAN_AGENT_URL="${EXPO_PUBLIC_AGENT_URL_LAN:-}"
+if [ -z "${LAN_AGENT_URL}" ]; then
+  echo "WARN Agent LAN URL          saknas — telefonen (Expo Go) når inte agenten"
+elif [ "${LAN_AGENT_URL}" = "${AGENT_URL}" ]; then
+  echo "OK   Agent LAN API          samma som agent-API:t (${LAN_AGENT_URL})"
+else
+  lan_agent=$(curl -s -m 15 "${LAN_AGENT_URL}/agent/health" 2>/dev/null || echo "")
+  if echo "${lan_agent}" | grep -q '"ok":true'; then
+    echo "OK   Agent LAN API          ${LAN_AGENT_URL} -> ${lan_agent}"
+  else
+    echo "FAIL Agent LAN API          ${LAN_AGENT_URL} -> ${lan_agent:-<no response>}"
+    echo "     Telefonen (Expo Go) når agenten via den här URL:en — starta den"
+    echo "     lokala agenten (npm --prefix .. run start:agent) eller uppdatera IP:t."
+    fail=1
+  fi
+fi
+
 exit "${fail}"

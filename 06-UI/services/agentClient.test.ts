@@ -602,4 +602,65 @@ describe('agentClient auth guard (guest mode)', () => {
       expect(String(feedCall?.[0])).toContain('http://portal.test/agent/feed');
     });
   });
+
+  describe('pickReachableAgentBase — an unreachable primary falls through to the LAN candidate', () => {
+    // Phone reality 2026-10-31: the app runs in Expo Go on the iPhone and the
+    // dev agent is reached at http://localhost:8787 — but on the phone
+    // "localhost" IS the phone, so nothing listens there and iOS fails the
+    // request with "fetch failed: Could not connect to the server." The LAN
+    // candidate (the dev machine's IP) is the only URL the phone can reach.
+    // The probe loop must swallow the network error and try the NEXT
+    // candidate — falling back to urls[0] would keep the phone broken.
+    it('a refused connection on the primary candidate falls through to the LAN candidate', async () => {
+      process.env.EXPO_PUBLIC_AGENT_URL = 'http://localhost:8787';
+      process.env.EXPO_PUBLIC_AGENT_URL_LAN = 'http://192.168.68.107:8787';
+      const { fetchFeed } = await importClient();
+      fetchMock.mockImplementation((url: unknown) => {
+        const s = String(url);
+        if (s.startsWith('http://localhost:8787')) {
+          // Exactly what iOS RN throws when the port refuses the connection.
+          return Promise.reject(new Error('fetch failed: Could not connect to the server.'));
+        }
+        if (s.startsWith('http://192.168.68.107:8787/agent/health')) {
+          return Promise.resolve({ ok: true, status: 200, json: async () => ({ ok: true, phase: 0 }) });
+        }
+        return Promise.resolve({
+          ok: true,
+          status: 200,
+          json: async () => ({ events: [{ id: 'e1', start_time: '2026-09-25T18:00:00' }] }),
+        });
+      });
+      const res = await fetchFeed({ from: '2026-09-25', days: 1 });
+      expect(res.events).toHaveLength(1);
+      const feedCall = fetchMock.mock.calls.find(([u]) => String(u).includes('/agent/feed'));
+      expect(String(feedCall?.[0])).toContain('http://192.168.68.107:8787/agent/feed');
+    });
+
+    it('the LAN candidate is only probed after the primary one fails', async () => {
+      process.env.EXPO_PUBLIC_AGENT_URL = 'http://localhost:8787';
+      process.env.EXPO_PUBLIC_AGENT_URL_LAN = 'http://192.168.68.107:8787';
+      const { fetchFeed } = await importClient();
+      const probes: string[] = [];
+      fetchMock.mockImplementation((url: unknown) => {
+        const s = String(url);
+        if (s.includes('/agent/health')) {
+          probes.push(s);
+          if (s.startsWith('http://localhost:8787')) {
+            return Promise.reject(new Error('fetch failed: Could not connect to the server.'));
+          }
+          return Promise.resolve({ ok: true, status: 200, json: async () => ({ ok: true, phase: 0 }) });
+        }
+        return Promise.resolve({
+          ok: true,
+          status: 200,
+          json: async () => ({ events: [{ id: 'e1', start_time: '2026-09-25T18:00:00' }] }),
+        });
+      });
+      await fetchFeed({ from: '2026-09-25', days: 1 });
+      expect(probes).toEqual([
+        'http://localhost:8787/agent/health',
+        'http://192.168.68.107:8787/agent/health',
+      ]);
+    });
+  });
 });
