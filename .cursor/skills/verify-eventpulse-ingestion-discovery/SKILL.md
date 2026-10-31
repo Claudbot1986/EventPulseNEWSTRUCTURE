@@ -129,7 +129,7 @@ Kör P3D mot den **riktiga** A/B/C/D-gaten
 | D2a | P3D claimade minst en kandidat | ✅ 0 claimade = samma fel som 2026-10-31 |
 | D2b | testerna körde `e2e.py` | ✅ rad utan `e2e.py` = simulering, förbjuden |
 | D3 | beslut sparades i `source_candidate_test_decisions` | — |
-| D4a | promote skrev `sources/<slug>.jsonl` | — |
+| D4a | promote-mekanismen har skrivit källfiler (senaste 24 h) | ✅ rött betyder "mekanismen är trasig" — INTE "denna körning råkade inte hitta någon promote" (reject är ett legitimt utfall) |
 | D4b | filen bär `city=Stockholm` | ✅ saknad city → A-gatens `isInScope` kastar bort källan |
 | D4c | kandidaten är `verified` i kandidattabellen | — |
 | D4d | promote finns i `runtime/discovery-ui-queue.jsonl` | — |

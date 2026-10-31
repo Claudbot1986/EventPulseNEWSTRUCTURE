@@ -38,7 +38,7 @@ node scripts/verify-discovery-handoff.mjs --limit 5       # 5 kandidater, riktig
 | D2a | P3D claimade minst en kandidat | ✅ 0 claimade = samma fel som 2026-10-31 |
 | D2b | testerna körde `e2e.py` | ✅ rad utan `e2e.py` = simulering, förbjuden |
 | D3 | beslut sparades i `source_candidate_test_decisions` | — |
-| D4a | promote skrev `sources/<slug>.jsonl` | — |
+| D4a | promote-mekanismen har skrivit källfiler (senaste 24 h) | ✅ rött = mekanismen är trasig; "0 promotes i denna körning" är legitimt (reject) |
 | D4b | filen bär `city=Stockholm` | ✅ saknad city → A-gatens `isInScope` kastar bort källan |
 | D4c | kandidaten är `verified` i kandidattabellen | — |
 | D4d | promote finns i `runtime/discovery-ui-queue.jsonl` | — |
@@ -76,4 +76,7 @@ D2b och D3 är bundna till **den körning** gaten gjorde (tidsgräns på
   A-gaten samma natt.
 - **Gaten konkurrerar om samma testkö som en pågående P3D.** Kör den inte
   parallellt med en nattlig kedja.
+- **Supabase REST läser från replika.** En rad som P3D skrev ~1 s innan gaten
+  läser kan saknas → D2b läser om upp till 3 gånger med 1,5 s mellan. Utan det
+  gav gaten ett falskt "0/0" (2026-10-31).
 - **`--no-promote` gör D4a mjuk** — men hoppar då över D4b–D4d helt.
